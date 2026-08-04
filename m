@@ -1,204 +1,191 @@
-Received: from mail-ej1-f70.google.com (mail-ej1-f70.google.com [209.85.218.70])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.17])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E9D8343849B
-	for <linux-pci@vger.kernel.org>; Tue,  4 Aug 2026 13:31:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.70
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC786463B61;
+	Tue,  4 Aug 2026 13:38:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.17
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785850271; cv=none; b=tKlj5TIR5JxVI4aacxcvCkse+K4Sxj5rTROS3wNqY1nVTGehZi5cB8BH9FXPuSJCurD5lYoswyjXYKomJjzCgVR1YFceXDA9p08JfjlE9AqThbtRc/5N2GCFnejEog3jw4EvMnhqzE8fmz6L8aLC/MPw8iRqdT0SHDO4MXFYxp4=
+	t=1785850705; cv=none; b=aFzTNh0hoxqQxfXKKj2N3pIbRjwnKr13+UvSj0T5ZpbyLrg7fEaEgxcUWTF2OljTDm8Ls1XiecueiI/JghGJ0yis18zUAzy1sU51/z0BWSqVkAkaDuVzFZPQ6Wr/1yBWGkDSzlwqwHxyQlMErAZ2oD1mymRMP269cqdawpjE5vw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785850271; c=relaxed/simple;
-	bh=dHe6hFKUiPx1NwjcvhZwwCq4ahAyTLRZM00WXff3YfY=;
-	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=sZnq3guy2Yca8psYHMh2mVRoAfwo3/+ZUpicUkZtatHsQ2+/LHxAWLChohti2PaXKFDXd+z9vt6tNzRWBgsFblW4tDNGlU0QLik293RyakgDw8FsSIcx+awny5+VhnNrlv2AMHbcb1U1Uj+laL8ihKmlJEXmdOPr2bUU2u9daZo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--tarunsahu.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=OTkIRQz2; arc=none smtp.client-ip=209.85.218.70
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--tarunsahu.bounces.google.com
+	s=arc-20240116; t=1785850705; c=relaxed/simple;
+	bh=pVljT0jLCyGb2kBPGUTd7yl2MbPvOv6Y5IWyas+K8+g=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=oIiBQHL9ag815tNoG6pa6gAcDihmFaM7FJL4exHhqy0i4yNn/OfJ2Tr5Y7oPouzmwt614RNdc8cqAuyOG0QFCSyqqy/OdqdkZ+NuvOXeKOgTuaZgyIa2m4y4peIVqSBZ0xtqTn9x3VHOUuNrjhJUpBLrhbbUj3PdgakBgpuALuY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=C2WPv2Pi; arc=none smtp.client-ip=198.175.65.17
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="OTkIRQz2"
-Received: by mail-ej1-f70.google.com with SMTP id a640c23a62f3a-c15eb4015e7so425904466b.3
-        for <linux-pci@vger.kernel.org>; Tue, 04 Aug 2026 06:31:09 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1785850268; x=1786455068; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:from:subject
-         :message-id:references:mime-version:in-reply-to:date:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=PFR8gEiHLck6mqB8cHj4+FSK3ntr9JI1+jIZkdbZdrg=;
-        b=OTkIRQz2cHkVvTkx3V//ezyCkJku/syMTnBHvPPVCnCzTBSby7s/PUgavqG0umK/vC
-         hdbBU39kLEXjt5JOOKIP+q8NDBi49vLgY3SzyePrfe603t4q+cP6obmEKPX1d7Fv0K+Q
-         wOGv55vyp0W6JlzdFOIikGUcsgoqbz9Uxvo1STxowthdMNFZXboxZhXs0YKTowmmr+AJ
-         NxOWNdeUa5r/s/cKeEjTz07oEMKWpKraxlYBl2RDJos0YAhxbn0X31SxPYCc56fa+ZoR
-         L2rono3So5nZ15dgbt1UqYdNAO3jMXDpu5GAVwUGmTiRdlW7CqhJjNX5i8UiBBjZ7z6v
-         5lDA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785850268; x=1786455068;
-        h=content-transfer-encoding:content-type:cc:to:from:subject
-         :message-id:references:mime-version:in-reply-to:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=PFR8gEiHLck6mqB8cHj4+FSK3ntr9JI1+jIZkdbZdrg=;
-        b=FhswBn7IK2jazH11XJzTaaDhefVHkZo2Iy3W2bkFENdWtkWHPbW5Kx5qP7KVwFC2u9
-         9VWRwZC2R/dYEPAwb9xAUeM//ydLHdr3FeCSQjxbksgtOhIh2SiXRWdPXNTBbJ1I0iHP
-         8Ovc9Cyhf5VYnNK6DWMQe4V8axjIuDNOT4PFCdgU/LTDETg5/S3xNYMbu95IcisuH4QM
-         jhfKMFRcM3OhbgrAJD3v5fZSMQ6piLK/pTLVM/9wsag2dGvenvejhKlgWTA6evTRpSUX
-         aVuOzcz4WrYocX/ITDv4K8Xt29aUTz3kRGl2p9ivf3zN6mFl6smgrRDBua6TOjECWkYS
-         yzjg==
-X-Gm-Message-State: AOJu0YywAiK9e6loifWsRcYlOMUMlIXsQZYznJlG768oh3NZ+qLcS7JM
-	PkwQ9xGAft9UIVpRuOvS7RR2Y5JmqKrPqiBCSEzlqSWSJQU6y0mfJQ2Uiv28B/qiImP9uYXszyP
-	x7blLpIuDG5nLQRJ5Zw==
-X-Received: from edse18.prod.google.com ([2002:aa7:d7d2:0:b0:69f:a77c:6456])
- (user=tarunsahu job=prod-delivery.src-stubby-dispatcher) by
- 2002:a17:906:ee8e:b0:c1f:7c45:2dfa with SMTP id a640c23a62f3a-c1ff2ea19d8mr1021988166b.7.1785850267802;
- Tue, 04 Aug 2026 06:31:07 -0700 (PDT)
-Date: Tue, 04 Aug 2026 13:31:06 +0000
-In-Reply-To: <20260726093200.146111-2-rihyeon8648@gmail.com>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="C2WPv2Pi"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1785850702; x=1817386702;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=pVljT0jLCyGb2kBPGUTd7yl2MbPvOv6Y5IWyas+K8+g=;
+  b=C2WPv2PiU7CxVEQ/UFM1RwTDmi9ReIHELRhCQNIkvdc+5vckldN0EVpr
+   WfEVN/bbwy6yNKyHF/GV1PRhN9H16l0qZOctl4rYh8m/Ik5avdobsQwad
+   WUQlG8AYxL4zcPPeR7ofr01C+NuNMqlwswQ7iZVsCfpWDzOKGQZh5ZQmp
+   QIrU+t8E7KK5HHRNm2ClqzCrpvEcobbMYAJdJ5gk3XY/dJlgwTkxLXJOg
+   q6qUx5ka4beo5Js0ynfaJb7f9roGvh4K/GjMSxDb7vpSvkqAPYa9LnYs1
+   tL9AGearbsn2IBks6ZYbFkQMYKhGpZO1k5ertXmXGTjV38v9tUdZjPkFe
+   w==;
+X-CSE-ConnectionGUID: AONNaK5+Q2y6KLxhqKcXDA==
+X-CSE-MsgGUID: plNnBJICT2WI4Deo+maREw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11864"; a="86410079"
+X-IronPort-AV: E=Sophos;i="6.25,204,1779174000"; 
+   d="scan'208";a="86410079"
+Received: from fmviesa004.fm.intel.com ([10.60.135.144])
+  by orvoesa109.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Aug 2026 06:38:21 -0700
+X-CSE-ConnectionGUID: 9zoJFC4DSwuuBTTeSu2JyA==
+X-CSE-MsgGUID: 0f5b06qbSLeAJv+Q567URQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.25,204,1779174000"; 
+   d="scan'208";a="263500995"
+Received: from mkosciow-mobl1.ger.corp.intel.com (HELO ahunter6-desk) ([10.245.245.132])
+  by fmviesa004-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Aug 2026 06:38:19 -0700
+From: Adrian Hunter <adrian.hunter@intel.com>
+To: alexandre.belloni@bootlin.com
+Cc: Frank.Li@nxp.com,
+	akhilrajeev@nvidia.com,
+	rafael@kernel.org,
+	linux-i3c@lists.infradead.org,
+	linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-pm@vger.kernel.org
+Subject: [PATCH V3 00/14] i3c: Support IBI-based system wakeup
+Date: Tue,  4 Aug 2026 16:37:56 +0300
+Message-ID: <20260804133810.184905-1-adrian.hunter@intel.com>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-References: <20260726093200.146111-1-rihyeon8648@gmail.com> <20260726093200.146111-2-rihyeon8648@gmail.com>
-Message-ID: <9huz1pcem2qt.fsf@tarunix.c.googlers.com>
-Subject: Re: [PATCH v2 1/2] PCI: Handle dev_set_name() failure in pci_setup_device()
-From: tarunsahu@google.com
-To: Rihyeon Kim <rihyeon8648@gmail.com>, bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	gregkh@linuxfoundation.org, djeffery@redhat.com, 
-	"Krzysztof =?utf-8?Q?Wilc?= =?utf-8?Q?zy=C5=84ski?=" <kwilczynski@kernel.org>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+Organization: Intel Finland Oy, Registered Address: c/o Alberga Business Park, 6 krs, Bertel Jungin Aukio 5, 02600 Espoo, Business Identity Code: 0357606 - 4, Domiciled in Helsinki
+Content-Transfer-Encoding: 8bit
+
+Hi
+
+Intel LPSS I3C controllers support up to two I3C busses and can wake the
+system from an In-Band Interrupt (IBI) via a PCI PME.  Today that wakeup
+capability lives only at the PCI function, with no way to express which
+I3C device is actually responsible for waking the system, and no way for
+user space to enable or disable wakeup on a per-device basis.
+
+This series pushes the wakeup capability down to the individual I3C
+devices and then aggregates the resulting wakeup state back up to the PCI
+device.
+
+An IBI-capable I3C device on a bus whose controller can wake the system
+is marked as wakeup capable, so it can be managed through the standard
+device wakeup framework (e.g. via power/wakeup in sysfs).  When such a
+device is enabled for wakeup, a wakeup event is reported each time it
+queues an IBI.
+
+At suspend time, the mipi-i3c-hci PCI driver aggregates the wakeup
+configuration of the I3C devices across its HCI instances (up to two I3C
+busses) and enables PCI wakeup (PME) only when at least one attached I3C
+device is enabled as a wakeup source and has IBI enabled.  This keeps
+the PCI wakeup state in sync with the actual requirements of the devices
+on the busses.
+
+The series is organised as follows:
+
+ - Patch 1 fixes a pre-existing recursive acquisition of the bus rwsem
+   in i3c_master_register_new_i3c_devs().  The remaining patches add
+   work to that same function, so the locking is corrected first.
+
+ - Patches 2-7 fix use-after-free and unlocked accesses of the i3c_device
+   desc pointer.  Moving device registration out from under the bus lock
+   in patch 1 is what makes it possible to take the bus lock in the
+   helpers that run during registration.
+
+ - Patches 8-11 add the generic I3C core support: an ibi_wakeup flag for
+   controllers, marking IBI-capable devices as wakeup capable, reporting
+   wakeup events on IBIs, a helper to query whether any device on a bus
+   has both wakeup and IBI enabled, and a fix to reject IBI requests
+   from devices that do not advertise IBI capability.
+
+ - Patches 12-14 wire this up for the mipi-i3c-hci driver: propagate the
+   aggregated I3C wakeup requirements to the PCI function, factor out
+   i3c_hci_sysdev() for the shared device lookup, and advertise IBI
+   wakeup capability when the underlying system device can wake the
+   system.
+
+Note, since the PCI wakeup state is now derived from the wakeup
+configuration of the attached I3C devices, the PCI device's
+power/wakeup sysfs attribute no longer provides independent wakeup
+control.
 
 
-Hi,
+Changes in V3:
 
-Thanks for this resolution!
-Sashiko's comment seems valid and related to what we are resolving
-in this series. So We can add one more to resolve the other issue.
+    Added 6 patches (2-7) that fix use-after-free and unlocked accesses
+    of the i3c_device desc pointer.  Moving device registration out from
+    under the bus lock in patch 1 is what allows that pointer to be
+    protected in the helpers that run during registration.
 
-Feel free to add:
-Reviewed-by: Tarun Sahu <tarunsahu@google.com>
+    i3c: master: Fix recursive locking during device registration
+	Added Cc: stable@vger.kernel.org
 
-Rihyeon Kim <rihyeon8648@gmail.com> writes:
+    i3c: master: Add helper to query bus wakeup requirements
+	Skip the master device explicitly.  Noted in the kernel-doc that
+	wakeup enablement is user space policy, so the helper is meant to
+	be called from a system suspend callback.
 
-> pci_setup_device() calls dev_set_name() but ignores its return value.
-> dev_set_name() calls kobject_set_name_vargs(), which in turn allocates th=
-e
-> name with kvasprintf_const() and can fail, leaving dev->dev.kobj.name NUL=
-L.
->
-> Enumeration then continues with an unnamed device.  device_add() rejects
-> it with -EINVAL because dev_name() returns NULL and pci_bus_type has no
-> ->dev_name callback, but pci_device_add() only warns about that failure:
->
->   pci (null): [8086:2934] type 00 class 0x0c0300 conventional PCI endpoin=
-t
->   pci (null): BAR 4 [io  0xc0e0-0xc0ff]
->   ------------[ cut here ]------------
->   ret < 0
->   WARNING: drivers/pci/probe.c:2768 at pci_device_add+0x133b/0x1810
->   Call Trace:
->    pci_scan_single_device+0x1d0/0x240
->    pci_scan_slot+0x1c9/0x7c0
->    pci_scan_child_bus_extend+0x6b/0x7b0
->    pci_rescan_bus+0x18/0x40
->    rescan_store+0xfb/0x130
->
-> The device was already added to bus->devices before device_add() ran and
-> is not removed from it, so pci_bus_add_devices() later in the same
-> pci_rescan_bus() call finds it and passes it to __device_attach(), which
-> dereferences dev->p.  device_add() freed dev->p on its error path, so thi=
-s
-> is a NULL pointer dereference:
->
->   Oops: general protection fault, probably for non-canonical address ...
->   KASAN: null-ptr-deref in range [0x0000000000000108-0x000000000000010f]
->   RIP: 0010:__device_attach+0xb0/0x4d0
->   Call Trace:
->    device_initial_probe+0xaf/0xd0
->    pci_bus_add_device+0xc5/0x100
->    pci_bus_add_devices+0x9a/0x1f0
->    pci_rescan_bus+0x2a/0x40
->    rescan_store+0xfb/0x130
->   Kernel panic - not syncing: Fatal exception
->
-> Check the return value and propagate the error instead.  pci_setup_device=
-()
-> already returns int, and both callers, pci_scan_device() and
-> pci_iov_scan_device(), already release the device when it fails.  Release
-> the OF node first, like the existing unknown header type path does, and
-> update the kernel-doc for the new return value.
->
-> Fixes: 1fa5ae857bb1 ("driver core: get rid of struct device's bus_id stri=
-ng array")
-> Reported-by: syzbot+87bb32e345aa80c0554b@syzkaller.appspotmail.com
-> Closes: https://syzkaller.appspot.com/bug?extid=3D87bb32e345aa80c0554b
-> Tested-by: syzbot+87bb32e345aa80c0554b@syzkaller.appspotmail.com
-> Reviewed-by: Krzysztof Wilczy=C5=84ski <kwilczynski@kernel.org>
-> Assisted-by: Claude:claude-opus-5 sparse
-> Signed-off-by: Rihyeon Kim <rihyeon8648@gmail.com>
-> ---
-> The reproducer is the one from the syzbot report, unmodified.  Tested on
-> 48a5a7ab8d6a with syzbot's config for this bug (x86_64, KASAN,
-> CONFIG_FAILSLAB), under QEMU with "-machine q35 -usb" so that the
-> 0000:00:1d.0 it removes and rescans exists.  Without the patch it gives t=
-he
-> WARNING and then the panic quoted above; with it the allocation still fai=
-ls
-> in dev_set_name(), enumeration skips the device, and the device comes bac=
-k
-> on the next rescan.  syzbot tested it as well.
->
-> The report also has an arm64 crash at 0000:00:01.0 with a virtio device, =
-so
-> this is not specific to that controller.
->
-> v2:
->  - Fixes: points at 1fa5ae857bb1 rather than eebfcfb52ce7 (Krzysztof)
->  - update the kernel-doc for the new return value (Krzysztof)
->  - say kvasprintf_const() rather than kvasprintf() in the commit log
->    (Krzysztof)
->  - pick up Reviewed-by
->
->  drivers/pci/probe.c | 15 ++++++++++-----
->  1 file changed, 10 insertions(+), 5 deletions(-)
->
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index dd0abbc63e18..3e6f0eb7d456 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -2010,8 +2010,9 @@ static const char *pci_type_str(struct pci_dev *dev=
-)
->   * Initialize the device structure with information about the device's
->   * vendor,class,memory and IO-space addresses, IRQ lines etc.
->   * Called at initialisation of the PCI subsystem and by CardBus services=
-.
-> - * Returns 0 on success and negative if unknown type of device (not norm=
-al,
-> - * bridge or CardBus).
-> + * Returns 0 on success, -ENOMEM if the device name could not be allocat=
-ed,
-> + * and -EIO if the device is of an unknown type (not normal, bridge or
-> + * CardBus).
->   */
->  int pci_setup_device(struct pci_dev *dev)
->  {
-> @@ -2052,9 +2053,13 @@ int pci_setup_device(struct pci_dev *dev)
->  	 */
->  	dev->msi_addr_mask =3D DMA_BIT_MASK(64);
-> =20
-> -	dev_set_name(&dev->dev, "%04x:%02x:%02x.%d", pci_domain_nr(dev->bus),
-> -		     dev->bus->number, PCI_SLOT(dev->devfn),
-> -		     PCI_FUNC(dev->devfn));
-> +	err =3D dev_set_name(&dev->dev, "%04x:%02x:%02x.%d",
-> +			   pci_domain_nr(dev->bus), dev->bus->number,
-> +			   PCI_SLOT(dev->devfn), PCI_FUNC(dev->devfn));
-> +	if (err) {
-> +		pci_release_of_node(dev);
-> +		return err;
-> +	}
-> =20
->  	class =3D pci_class(dev);
-> =20
-> --=20
-> 2.43.0
+    Added Frank Li's Reviewed-by tags.
+
+    Rebased onto i3c/next.
+
+
+Changes in V2:
+
+    Dropped the RFC tag.
+
+    i3c: master: Fix recursive locking during device registration
+	New patch
+
+    i3c: master: Support IBI-based wakeup capability
+	Dropped the redundant #include <linux/pm_wakeup.h>.  That header
+	must not be included directly, and linux/device.h, which is
+	already included, provides device_set_wakeup_capable().
+
+    i3c: master: Add helper to query bus wakeup requirements
+	i3c_master_any_wakeup_enabled() now also requires the device to
+	have IBI enabled, not just system wakeup enabled, so that a
+	device with no active IBI request does not keep PCI PME enabled.
+	desc->ibi_lock is taken while checking.  The commit message and
+	kernel-doc are updated to match.
+
+    Rebased onto i3c/next.
+
+
+Adrian Hunter (14):
+      i3c: master: Fix recursive locking during device registration
+      i3c: Fix unlocked dereference of dev->desc in i3c_device_get_supported_xfer_mode()
+      i3c: master: Do not treat master device as a duplicate target
+      i3c: master: Fix use-after-free of master->this
+      i3c: Make dev->desc locking assumptions explicit
+      i3c: master: Fix potential UAF in i3c_device_uevent()
+      i3c: master: Fix potential UAF in i3c_device_match()
+      i3c: master: Support IBI-based wakeup capability
+      i3c: master: Report wakeup events for IBIs
+      i3c: master: Add helper to query bus wakeup requirements
+      i3c: master: Reject IBI requests from non-IBI-capable devices
+      i3c: mipi-i3c-hci-pci: Propagate I3C wakeup requirements to PCI
+      i3c: mipi-i3c-hci: Factor out i3c_hci_sysdev()
+      i3c: mipi-i3c-hci: Advertise IBI wakeup capability
+
+ drivers/i3c/device.c                               |  13 +--
+ drivers/i3c/internals.h                            |   5 +
+ drivers/i3c/master.c                               | 120 ++++++++++++++++-----
+ drivers/i3c/master/mipi-i3c-hci/core.c             |  15 +++
+ drivers/i3c/master/mipi-i3c-hci/dma.c              |  15 +--
+ drivers/i3c/master/mipi-i3c-hci/hci.h              |   2 +
+ drivers/i3c/master/mipi-i3c-hci/mipi-i3c-hci-pci.c |  23 +++-
+ include/linux/i3c/master.h                         |   5 +
+ 8 files changed, 150 insertions(+), 48 deletions(-)
+
+
+Regards
+Adrian
