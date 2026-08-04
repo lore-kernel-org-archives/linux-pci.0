@@ -1,125 +1,125 @@
-Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9555DDA9;
-	Tue,  4 Aug 2026 19:48:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=204.191.154.188
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 15C1146A5E1;
+	Tue,  4 Aug 2026 19:49:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785872923; cv=none; b=TlL358jHUNRG9ply2QDFqeNKxzoUhQxl66LjsA24XCvrsMsITI90RBrezQVBAZWkbeHIx9OIenbOAnf/idvy11xCDBbUOzUDhfkz/Nuz2yWoL7u5vH8HQgapTojPUWa1ljDfS8VP0v+HKKUyka8+/MjWoVLwcDo4Q1vtbPxknEM=
+	t=1785872992; cv=none; b=pgDefmPq7a8R2Sb1Lmiaz3Vlj5e7TbI0mf2gpiW6SrOp91jwzFTId9l0KqsmPtIefRMs8zmiedsNzCQqBg/5bo8rDkJZyOnRXlpEYvYDUaJSu/+tUQO0FFQdrN3hf9SjSpbMMWsAcoLLb4T+fsaGNeDvfY5JqIhUCgvpXaNgv0A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785872923; c=relaxed/simple;
-	bh=2X9+9e+touMKxvGwVexLbuExPMjfwhPrmfG6ISa0Kuc=;
-	h=Message-ID:Date:MIME-Version:To:References:From:In-Reply-To:
-	 Content-Type:Subject; b=B75SzvnNvphMYA32NRnE8BrsytCvLZ3lFrE0ANr/u4DYiTk55M1MiaySZMu37vDOBbAngPJrWUbtN/hROQj9JqZZ8q8ssek8uRKyUlElhb9xr6Ii9q340wLMoNuyElpet/nug1B7mIBSha5fntypvIQfTh+wFD3oUQOgyfGet70=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com; spf=pass smtp.mailfrom=deltatee.com; dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b=gdJtIxAx; arc=none smtp.client-ip=204.191.154.188
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=deltatee.com
+	s=arc-20240116; t=1785872992; c=relaxed/simple;
+	bh=tNXF8j7VrIfLS0XxoghC25GZpRC0Oa1lBtrS1tkqpR0=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=Hovnim9bv2GAHo8KShgLcY637MCY6zFKF3Ly9XStwwKNqxlMab5+tV+nHW6IXEam3yyEdc5lBl/TNFa09p713qhpTDlMj14Ph2RXCDIqsCiGr1NpA6imRA1GLZzNGlG2wuoQlEof62VPldkUm/5mxSLM/TVw7nAVYTgG9wZ02+8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oPmJDSF+; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b="gdJtIxAx"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:To:
-	MIME-Version:Date:Message-ID:cc:content-disposition;
-	bh=SIweWhV/tAxWJHuUbt3e32uO5CVnDWITQnVjU/T358s=; b=gdJtIxAxZWh9VdUhGa9PlKc91g
-	n3Gaj79MLChmcy70c5Dw06BD6Pe2hFZ++nhrI7uYh0qJEypfl2OMvTcyZXrjdJQOllAfZA9cEBcZT
-	9qVQDKPO21ry1lrUlZvk/cqyHBl2wYJv8VuSKVKGWOhtSS4OdVXYvHxV6E0PgORxyAkniX76kBQ2Z
-	G4fkLGbqz5VInpUspbni3hSEb9R1SrUDLq3WSG61RLXc+f9/aadCv9gN+curimy/tcIMwNZLHstO7
-	wMO44LZgK3FXvEeqnbltFoiGF6I/mY7AoNICAL0Uu7UUGTxUkzJhqRNjR8SmmczpCVevDWf1VRcUz
-	sDJrzoDw==;
-Received: from guinness.priv.deltatee.com ([172.16.1.162])
-	by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-	(Exim 4.98.2)
-	(envelope-from <logang@deltatee.com>)
-	id 1wrL7w-000000000cw-2UGB;
-	Tue, 04 Aug 2026 13:48:41 -0600
-Message-ID: <a619d2d6-5a6e-4173-9342-8186cce0eef1@deltatee.com>
-Date: Tue, 4 Aug 2026 13:48:34 -0600
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oPmJDSF+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 789C31F000E9;
+	Tue,  4 Aug 2026 19:49:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1785872990;
+	bh=rqCYr62xs9dAw4288zOnrA2/ffqzdVWlWyO9J08wGWQ=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=oPmJDSF+s/F6P9RSLEJeWsh7VKBcxQPeTQ0b2bWMpx4MfJlQXTvpRabL5huS455G+
+	 OaILp+EiFtIcdbwvW2zYBQ+aZVp0bxDn7M7kLmoCU++Imwbsi0Q4D4Hs3ExDjN4nGk
+	 53B2NZZxjCVTqcR7bjwunV+rhSM20tNZzqGPd3k+JFg3vHL16dtamlKU071l0A/pkW
+	 EPCITVWdVVcjisRtiHE+xTdR2ExTiEsD6qjd6YusTAMNTfJ3F94yXcO93jehlchViB
+	 eUaWJi3euFiSMhkP69Lbm27kANSLgn3CKkPt9gG/6RQ7g3M17ghkxp/HaCYvPb01W1
+	 xLykCCyEEojKg==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v10 02/12] cxl: Pass decoder settings to HDM commit
+ helpers
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Srirangan Madhavan" <smadhavan@nvidia.com>
+Cc: linux-pci@vger.kernel.org, linux-cxl@vger.kernel.org
+In-Reply-To: <20260804192958.1823952-3-smadhavan@nvidia.com>
+References: <20260804192958.1823952-1-smadhavan@nvidia.com>
+ <20260804192958.1823952-3-smadhavan@nvidia.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Tue, 04 Aug 2026 19:49:49 +0000
+Message-Id: <20260804194950.789C31F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-To: Pei Xiao <xiaopei01@kylinos.cn>, kurt.schwemmer@microsemi.com,
- bhelgaas@google.com, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <6fdcbfa869f707cad783c7f92d1681f0a2bd9a7c.1785813784.git.xiaopei01@kylinos.cn>
-Content-Language: en-CA
-From: Logan Gunthorpe <logang@deltatee.com>
-In-Reply-To: <6fdcbfa869f707cad783c7f92d1681f0a2bd9a7c.1785813784.git.xiaopei01@kylinos.cn>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-SA-Exim-Connect-IP: 172.16.1.162
-X-SA-Exim-Rcpt-To: xiaopei01@kylinos.cn, kurt.schwemmer@microsemi.com, bhelgaas@google.com, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-X-SA-Exim-Mail-From: logang@deltatee.com
-X-Spam-Level: 
-Subject: Re: [PATCH] PCI: switchtec: Fix use-after-free in
- switchtec_pci_remove due to race condition
-X-SA-Exim-Version: 4.2.1 (built Sun, 23 Feb 2025 07:57:16 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [High] New pre-checks in `setup_hw_decoder()` permanently wedge the decod=
+er after an error and cause spurious failures during quick reset-recommit c=
+ycles.
+--
 
+--- Patch [2]: [PATCH v10 02/12] cxl: Pass decoder settings to HDM commit h=
+elpers ---
+commit e130015805d1a3746154432a62193b6dcb3f71f9
+Author: Srirangan Madhavan <smadhavan@nvidia.com>
 
-On 2026-08-03 21:24, Pei Xiao wrote:
-> In stdev_create, &stdev->mrpc_work is bound with mrpc_event_work, and
-> &stdev->link_event_work is bound with link_event_work. The IRQ handlers
-> switchtec_event_isr and switchtec_dma_mrpc_isr can schedule these works
-> on system_wq (via schedule_work() in the ISRs and via
-> check_link_state_events()).
-> 
-> If we remove the device, switchtec_pci_remove makes cleanup and the
-> memory allocated for stdev is released by put_device() ->
-> stdev_release() -> kfree(stdev), while the works mentioned above may
-> still be pending or running. The sequence of operations that may lead
-> to a UAF bug is as follows:
-> 
-> CPU0                                      CPU1
-> 
->                                           | switchtec_event_isr
->                                           | schedule_work(&stdev->mrpc_work)
-> switchtec_pci_remove                      |
-> cdev_device_del(&stdev->cdev,             |
->                 &stdev->dev)              |
-> stdev_kill(stdev)                         |
-> switchtec_exit_pci(stdev)                 |
-> pci_dev_put(stdev->pdev)                  |
-> put_device(&stdev->dev)                   |
-> // stdev_release -> kfree(stdev)          |
->                                           | mrpc_event_work
->                                           | // use stdev (use-after-free)
-> 
-> Fix it by canceling the works after the sources that can schedule them
-> have been stopped: stdev_kill() first clears PCI bus mastering, which
-> prevents the MSI/MSI-X based IRQ handlers from firing and scheduling
-> new works, and the works are then canceled before the remaining
-> cleanup and the release of stdev. This also covers the probe error
-> path, which calls stdev_kill().
-> 
-> Fixes: 080b47def5e5 ("MicroSemi Switchtec management interface driver")
-> Fixes: 48c302dc8f3a ("NTB: switchtec: Add link event notifier callback")
-> Assisted-by: Codex:deepseek-v4-flash
-> Signed-off-by: Pei Xiao <xiaopei01@kylinos.cn>
-> ---
->  drivers/pci/switch/switchtec.c | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/drivers/pci/switch/switchtec.c b/drivers/pci/switch/switchtec.c
-> index 5711aaa5df11..f339ea54aa38 100644
-> --- a/drivers/pci/switch/switchtec.c
-> +++ b/drivers/pci/switch/switchtec.c
-> @@ -1319,6 +1319,8 @@ static void stdev_kill(struct switchtec_dev *stdev)
->  	pci_clear_master(stdev->pdev);
->  
->  	cancel_delayed_work_sync(&stdev->mrpc_timeout);
-> +	cancel_work_sync(&stdev->mrpc_work);
-> +	cancel_work_sync(&stdev->link_event_work);
+cxl: Pass decoder settings to HDM commit helpers
 
-I'm wondering if these should come before the mrpc_timeout sync.
-Otherwise, hypothetically, new work could be added and another timeout
-could be in progress.
+Introduce struct cxl_decoder_settings as a plain snapshot of HDM decoder
+programming state and pass it to the shared commit helpers. Split the helper
+entry points into cxl_commit_start() and cxl_commit_wait() so hdm.c keeps
+the existing DPA-lock and commit policy flow while later reset restore code
+can reuse the register programming sequence.
 
-Also, I'm not sure, but seems like the interrupt should be disabled
-before this as well?
+> diff --git a/drivers/cxl/core/resource.c b/drivers/cxl/core/resource.c
+> index dd8bed3d3ff0c..dd5e0cc82da49 100644
+> --- a/drivers/cxl/core/resource.c
+> +++ b/drivers/cxl/core/resource.c
 
-Thanks!
+[ ... ]
 
-Logan
+> +static int setup_hw_decoder(struct cxl_decoder_settings *settings,
+> +			    void __iomem *hdm)
+>  {
+> -	int id =3D cxld->id;
+> +	int id =3D settings->id;
+> +	u64 target_or_skip;
+>  	u64 base, size;
+>  	u32 ctrl;
+> =20
+> -	/* common decoder settings */
+> -	ctrl =3D readl(hdm + CXL_HDM_DECODER0_CTRL_OFFSET(cxld->id));
+> -	cxld_set_interleave(cxld, &ctrl);
+> -	cxld_set_type(cxld, &ctrl);
+> -	base =3D cxld->hpa_range.start;
+> -	size =3D range_len(&cxld->hpa_range);
+> +	ctrl =3D readl(hdm + CXL_HDM_DECODER0_CTRL_OFFSET(id));
+> +	if (ctrl & CXL_HDM_DECODER0_CTRL_COMMITTED)
+> +		return -EBUSY;
+> +	if (ctrl & CXL_HDM_DECODER0_CTRL_COMMIT)
+> +		return -ETIMEDOUT;
+> +	if (ctrl & CXL_HDM_DECODER0_CTRL_COMMIT_ERROR)
+> +		return -EIO;
+
+[Severity: High]
+Will these new pre-checks permanently wedge the decoder if a previous commit
+attempt timed out or encountered an error?
+
+If a commit times out, cxld_await_commit() returns -ETIMEDOUT leaving the
+CXL_HDM_DECODER0_CTRL_COMMIT bit set. Because CXL_DECODER_F_ENABLE is not s=
+et
+on failure, cxl_decoder_reset() refuses to run, so the COMMIT bit is never
+cleared.
+
+When a subsequent commit attempt occurs, won't it immediately return
+-ETIMEDOUT from these checks without attempting to clear the error?
+
+Similarly, for quick reset-recommit cycles, cxl_decoder_reset() clears
+the COMMIT bit but does not wait for the hardware to clear COMMITTED.
+Could this leave the hardware in a transient state that triggers the newly
+added -EBUSY check?
+
+> +	cxld_set_interleave(settings, &ctrl);
+> +	cxld_set_type(settings, &ctrl);
+> +	base =3D settings->hpa_range.start;
+> +	size =3D range_len(&settings->hpa_range);
+
+[ ... ]
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260804192958.1823=
+952-1-smadhavan@nvidia.com?part=3D2
