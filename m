@@ -1,66 +1,63 @@
-Received: from TYVP286CU001.outbound.protection.outlook.com (mail-japaneastazon11021112.outbound.protection.outlook.com [52.101.125.112])
+Received: from OS0P286CU010.outbound.protection.outlook.com (mail-japanwestazon11021134.outbound.protection.outlook.com [40.107.74.134])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 43090238C36;
-	Tue,  4 Aug 2026 00:55:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.125.112
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E475350A35
+	for <linux-pci@vger.kernel.org>; Tue,  4 Aug 2026 01:41:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.74.134
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785804949; cv=fail; b=e6C+Ufgc/h/WXmDJ6hicHzM4H3jQjEjB65BKDBTa7L7uCmLQsqyxTfKblJ6VqxHqsESUEDGvcwmlF3q8Ryprqsuoo/OVWx2KETH83XypHwIYcuyzCCcyx1pwb/BVX/du2l1EMtBi+Nqt8GOOT10ZFw42UGya7i3kfztfIz1yV04=
+	t=1785807667; cv=fail; b=fV0dZzxR38nl7AeLXTkr/SUxGIUqF6kMUsDRpR25kG9v+/Vf4wwQWZGngEIOGAgnGmaHCD7MajiJxZyqoCh7FYWwTEP6wPMx3F5A8CPDouYuWnWavC3GPR4Wam8tjoqLu17iTSyLEYJvr8P66HJmm4D/aXBQ2Z1YJtduAy6zkqw=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785804949; c=relaxed/simple;
-	bh=6TGPsKYwNdzTjv56bpYw7uCLNkRXCmV5A1ftp2bRlJs=;
+	s=arc-20240116; t=1785807667; c=relaxed/simple;
+	bh=HitzByGBKrkKaLKLi+/6smXv2wcohOSwB6JrQMW01uI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=V3cKye9dlImpsdZ2NxFd/N4/HFLfQW7XFbyU4ITaBgFYhjwo1hcbyHzBnDrwulHmToli5NkpNhDA7DbvX9vypD4N0Ar0IRGQPkvhIn/YJZKme/BgrTKU2ujmY+Gb8n59tP7iDD+iXIyeWmvRbqp477RzprkQ934xSWcReB19LSo=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp; spf=pass smtp.mailfrom=valinux.co.jp; dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b=C1PxbXIX; arc=fail smtp.client-ip=52.101.125.112
+	 Content-Disposition:In-Reply-To:MIME-Version; b=iRUc3W9TARq/gV/UsLOc0371/524uRAL1qB833X4exXm7swh2zwk4R2V9kONx18DAT4teUgZAVRFk32jcitjACtmz5PxcUiAQq8dEQGACVg/W4DShftW4otYNn9PD66yhDWER9//Tzosbet4cr3jSBneu8zzPFXa0fz0rVQTc40=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp; spf=pass smtp.mailfrom=valinux.co.jp; dkim=fail (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b=ICESS+lf reason="signature verification failed"; arc=fail smtp.client-ip=40.107.74.134
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=valinux.co.jp
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b="C1PxbXIX"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b="ICESS+lf"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=o/QIdT50DEsuSCPiC9FYk2wa8apqKCUox7nUOOJWMc35j9gGwpvtNUguDZ1SKbtJwhoAnvayQEcZOhXNKjMND82UYYhGcTZRmYoEVa7wpxsHG1k8iyJHYc70a/CEQfdZR2AWgFB0wRAC/C8Fd83wzg8kudEI8atPjljNKG/GDXa9jXtrdzvzeMsrdhnZM0EWhXG8z6IV1iVI1cYKxEAzbFAHP6Pnk6xE5dOGuFXCb9jpIH7eN3/S8MHZkHvvVKAsMfriBRt/Qb2LZNDW4JZaNyrMe2k1Kg1BrIhDCSclDG3L19gCrkIEulzMuiSWTQykG2djxSgV6N6QGrEFluKNBg==
+ b=ZUyCCkUim6hZx7ZbyteHU+1+9c4B3rNSoecI5vZJDRdW4qJLuyJFhiQNDLXmlPC+X2KrLj8pHZSgr3nFK/ojvRH/q14+4WOW4TM13XZiTa5h/tT6/p5GECaDPmx4Aq7P4SO+cPhpZdMvezxxX5QMikKzwynXWzPmACQk2Lhio4P7j1KM/y8iyJFxnO8HMR/QinYySkKnlXf8qdcquxNYe+Qc2Vw78n/8Z2YKLMJQcKwiPins9NsAat1gyf4vhf7STnuIkZJbBGb7Sx4QxJZrtZHmHyqQtlDEc9vVwMUiq5ulYn0XStbAay9u8F3XDXnK0RSNjWDt14QFjGnz186UNQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=ltzvRcluSb0Aoo9qx9udtamBhCz/kzvJs1yOeZBSZzw=;
- b=XtMUNfmZTTjWeO2g0KhJ/IrCFA34CH7WPUjLyElmoHrmMUroQcchPV2aSsS94uY/Fv8NttCqPFYHxWVhrdHb1doGP7WvS1UQrFfcvFt3gd0p6Z7aoCMlmJj4mrztSDXm9hi+A/AiojkHQtduINqcQCkC270LjMwiciEegzi9tLV6kSvsRYIR7i4biUodZCzjvv3uOGi8vG8bKKWF+LEdrHCXowAoUlpEqv0H0UF0vF2tMJLCRuHSV0zdRFshefN223747qDln/WumazvCWXhMIRgG0WO7M/7EedgGxg0a40KZJAgHgM4yC2oIDEph4srwQ2jhavQqj/LsT4BMxCPYA==
+ bh=4AnG8xZP3jbycUTCSQKmvBJU9ylX4BYKiEWnhWrWB9c=;
+ b=MubMjfZctE920d/O36VkC+Ny3oeMBRmaofv2whwzOIJtwtqVzsmM/wlWC4r37WUODeytzE770HwqNPaPqpk/jMN4N1VXsDfGYa+OmYZZO07gqEDbhgJKFuMo/f9nDh3WHWhcKWyzJku4DZbkkVHSre3bGDGfzs3fovqnjGgjdbuAqsyVEUxdliAtSNAcIl1L4dspYvT23LOTnmSTjXkITNg4i5s08tkfw96gRbNwfC9FoymFfnRfY+ksI+ioHF4hHRVdfF89R4tZ7eRn+bOqEhab5jFrSM8L5FffEtgXzGywLBrAIaMU4cF3X/oonPKnbGmzsPFwxPojpnvSiq4TTQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=valinux.co.jp; dmarc=pass action=none
  header.from=valinux.co.jp; dkim=pass header.d=valinux.co.jp; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=valinux.co.jp;
  s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ltzvRcluSb0Aoo9qx9udtamBhCz/kzvJs1yOeZBSZzw=;
- b=C1PxbXIXD/d5d8bTJmES7Dyw5yfiiotJZ8NxOGSnzM7z1ofI00yqkQCei6SwoFpzZFYvH7ClsZVC3imLRSbR1RFjdWAEdgkqPJ//eNaaolEqf9oJR4dgFivfirrrub6Y+kxnjgpx4+x87WOyDhWkn0Xf0rPMwc5UYQ4Vl4Gz0NM=
+ bh=4AnG8xZP3jbycUTCSQKmvBJU9ylX4BYKiEWnhWrWB9c=;
+ b=ICESS+lfKl7hNxxgWXpuyXkT2+vSeqNg4Q+hHu48rJ1+KTnTe3LEZk5E54Uy2NF18W9rmQZGRY8Xbw7r3cNnx3MQGUgAeQt8JeBco6//LXgXtbOjn+4J1l+L1AI49JLciIoq2ABV46wzVh7Fx7JsFsjJ9tYqqWyc0CxuuiwjAd4=
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=valinux.co.jp;
 Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:38f::10)
- by TY4P286MB7778.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:34a::8) with
+ by TYCP286MB2974.JPNP286.PROD.OUTLOOK.COM (2603:1096:400:309::6) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.270.18; Tue, 4 Aug
- 2026 00:55:43 +0000
+ 2026 01:41:01 +0000
 Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
  ([fe80::2305:327c:28ec:9b32]) by TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
  ([fe80::2305:327c:28ec:9b32%3]) with mapi id 15.21.0270.017; Tue, 4 Aug 2026
- 00:55:42 +0000
-Date: Tue, 4 Aug 2026 09:55:39 +0900
+ 01:41:01 +0000
+Date: Tue, 4 Aug 2026 10:41:00 +0900
 From: Koichiro Den <den@valinux.co.jp>
-To: Randy Dunlap <rdunlap@infradead.org>
-Cc: Manivannan Sadhasivam <mani@kernel.org>, Frank Li <Frank.Li@nxp.com>, 
-	Niklas Cassel <cassel@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Kishon Vijay Abraham I <kishon@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Jonathan Corbet <corbet@lwn.net>, Shuah Khan <skhan@linuxfoundation.org>, 
-	Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>, 
-	Allen Hubbe <allenbh@gmail.com>, Jerome Brunet <jbrunet@baylibre.com>, linux-pci@vger.kernel.org, 
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, ntb@lists.linux.dev
-Subject: Re: [PATCH 00/11] PCI/NTB: endpoint: packed vNTB memory windows
-Message-ID: <u776ognl4xwd5yzbhlcnsgn4ekhxifqwpuo5h4zsh3xzfnj4ae@n7h3vo4ij352>
+To: sashiko-reviews@lists.linux.dev
+Cc: linux-pci@vger.kernel.org, ntb@lists.linux.dev
+Subject: Re: [PATCH 04/11] PCI: endpoint: pci-epf-vntb: Implement MW group
+ translation callbacks
+Message-ID: <hkosyefqeihyinvzj7kc5lq4c3ox7t2kcmmprqkitziic4kpjc@tqbthc4hjl6y>
 References: <20260803180439.1963864-1-den@valinux.co.jp>
- <91244d6e-8fb3-4b0a-abde-ac8809368bde@infradead.org>
-Content-Type: text/plain; charset=us-ascii
+ <20260803180439.1963864-5-den@valinux.co.jp>
+ <20260803182528.750A91F000E9@smtp.kernel.org>
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <91244d6e-8fb3-4b0a-abde-ac8809368bde@infradead.org>
-X-ClientProxiedBy: TY4P286CA0077.JPNP286.PROD.OUTLOOK.COM
- (2603:1096:405:36d::6) To TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260803182528.750A91F000E9@smtp.kernel.org>
+X-ClientProxiedBy: TY4P286CA0094.JPNP286.PROD.OUTLOOK.COM
+ (2603:1096:405:369::13) To TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
  (2603:1096:405:38f::10)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -69,275 +66,162 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: TY7P286MB7722:EE_|TY4P286MB7778:EE_
-X-MS-Office365-Filtering-Correlation-Id: 4022f81a-23b3-4530-edee-08def1c31b98
+X-MS-TrafficTypeDiagnostic: TY7P286MB7722:EE_|TYCP286MB2974:EE_
+X-MS-Office365-Filtering-Correlation-Id: b71866d9-caaa-4026-ff8f-08def1c970c4
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|10070799003|23010399003|376014|7416014|1800799024|366016|4143699003|56012099006|3023799007|6133799003|10067099003|18002099003|22082099003;
+	BCL:0;ARA:13230040|10070799003|23010399003|376014|1800799024|366016|56012099006|4143699003|6133799003|10067099003|18002099003|22082099003;
 X-Microsoft-Antispam-Message-Info:
-	oP1Cn0apqTfqkkhciQ8hfljv2PRTNcltDuAS4/KrHT2GXZkVg0QyidEmEe1cTUbpze/W9QtUuVaYEPAvTQJ9BOt1mdY9z3T+59JSTno/90utq92YTVXtPpaCb1/4cMFWEmTMFbyEjHp7JxfROxsO8hpE+kG9W8oEqj2UWEzG1kcNEcuKefz4j65BIJX9qSQcJuKzoERxI+tM5pASDo4EBmo0UDFzyADJ33IkxVCRZoNzUh8vWMDPGi6UbibL4SVjrpIJX+HBlGS/r1sv5stiaJwnCUZmgfqHVjDH7XvIzet9u5AnVvvTZ8ANtD6IlS+U3HO/ZD76iOeTr8a9YefMWx9Zop78uOJl+jpFZ4qRoJSB6n1GpXDOK0zC3VPIBsFbdZRFrnqhsGQmjWqhh03n2GhO74FpyEo3fdAmb2gKhycuT1hfugiy5IhRVAmgPjd9P1dy9J7Z6NpFAx7XmBlHtx3r79YF2VXiwlEXj+G/fMEyz8LEjWvXkombwq44xeP7/yCG/MejdVbfkbbpNX/68fNRY6gCzZ7YFHVW4FonRHeHYbxtuxu4bJe9S7bo5mLqRG298vY9q1KQO2lTL+ng9XISQL2DAi7AlcGKiloP7CeeeAOAcKFVNKsCKFD+CYvn4VC1XA8/oPPPnQK9WutJJ/xz2f7EbiLcVhXI/f8NEAc=
+	RkLObWNQuQH00lI4kstn7l6VUhWPZin3RoME0Ofs4tGcyTy3KIBMTlHbBOlKTIEylmYu4p0cXpinpsU/BbxRkERqHKPT8SuoL2BAHbbtBIkOE4S4+09pFCizT+EdAs1gSF1pgXQe5NUd7Ca+F+RSRJt61QH6plQ6vPNlFaOkj2DhsEsg2rpW2rjdqyZNxtb48+/1d23MP2AFHgTsbqUcnmJIJnxdqTCYEf6cvtiSVfFKsjiI9KiSbnoh9yK7QebE0MH+657vRVKmoioMtsR30uai5MqLlCMTlsmXffjz4BozSOKEUWQwIw5B5Wix9A8RObmJGjcQg042qW8L4Dw5r+/z4kLUmlPIQMZFRvWD/uF87LVcEk885t6bLttZU3t66jXVxQ+yMzH2EY+M3JW+qqajpIFPw9OtaVr0YJfyoXP2z+VLsDoDsO8rGqpGCYEPngG9vIJMwwOsZpgENiJDmEcM9wlHAcMyuIU+XqOF49hEh9w7TstIv540fY1XVV5i9YUexYvA0GktQvmWwnDwqmzV7qA3QTeYHW6oGlfXdvXFPIAWTM/e20+LHUguCsDBjyn/Z05zFzRudDU3GkNMFhrXNLKAn+Ewg2T6Qi/vI2I=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(10070799003)(23010399003)(376014)(7416014)(1800799024)(366016)(4143699003)(56012099006)(3023799007)(6133799003)(10067099003)(18002099003)(22082099003);DIR:OUT;SFP:1102;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(10070799003)(23010399003)(376014)(1800799024)(366016)(56012099006)(4143699003)(6133799003)(10067099003)(18002099003)(22082099003);DIR:OUT;SFP:1102;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?kks8OXojDGBMustslshng84WfHSvpF8g6oOSeky4Ql16YPNXrJDOu8pCa7BH?=
- =?us-ascii?Q?Lmg8TxKAwG6UgHHuov5iwsZJ++hkIeewAWsk3yf1wts0TA3PG3h5PCAtPLXy?=
- =?us-ascii?Q?eRgW2sP87iHUiCrnq186ihQE9X2HWndfUlkxHzCFqwJT97xefcrCWpszOt8Z?=
- =?us-ascii?Q?MjuHYkmUxWkqGUHzaXFRg1z5t4+2WFf/AHM5y5T2NMvyrPA+xbMeYE6PZgXE?=
- =?us-ascii?Q?mqpuger/Glhm0kA1OOKa8OfKe+68AFjcMg6i3CCVUZlyFWAUa95s6grxrfcv?=
- =?us-ascii?Q?cA6z+mJVr7sYMGPbUXiTzFDdMW8OE6MbFo1GfNIgRG22H7SmBvXgBiyvif7j?=
- =?us-ascii?Q?P9WxoceksNTXdP6DNRJ0svvvkBRB0w7o8BCmhlRnNdAFkXqXeXmPTqYjGYdK?=
- =?us-ascii?Q?sWsRedmXTk7kpVi2WF3Ntz0awQC4S7wX4M9ELt37clQ29uHma73WHwDFk8XP?=
- =?us-ascii?Q?N7KgQ5SU9Sq7CVspPnKQwtjVgrvPMXmmk0RGO3+8lbwLrvRsFR/c4A9cb3fh?=
- =?us-ascii?Q?S95Rj0HPvxB3Sc0w2SXKkAbQDXKSoMsIJYLmJ8I1AqfVOcBaHivxORWwDhoK?=
- =?us-ascii?Q?1rNFEltgSk5ShcX4Pjc26PA9dWn8NSzyvky15dDK38T67Ixyhwy3UNYGBSfT?=
- =?us-ascii?Q?lIyEI3an0Pl8ttH6jYCwK0ZMFFvLHcnkh44kqrwZURRgUzx3aB4q7g/EokTk?=
- =?us-ascii?Q?Lptah0Xoi8ZuLDJWp2/jZMauJjELnvj1CYCun/YiaqkZrJ9jjMPxuoobp8fk?=
- =?us-ascii?Q?vTnB1u2OVSDyBzUP56HZICGUf+mLiZfhEfpOsR0feQ8KY4CKKmB5bhzdSsp3?=
- =?us-ascii?Q?Sce9gYgcU8y0c41k9kIwrpvvkGBrUF8rdoF2bPgFL67tLBWjlmAiaD1ncrj+?=
- =?us-ascii?Q?VYZHE1FZYNkaBYwMvHIwgK8YO9vJGg/5go6de0ZnAbgTkCcpR3PvdBmUAsM3?=
- =?us-ascii?Q?qZoSSsJV3fuQWxVyCyYocFguR1pkQS2HGFYZTkFxjj7zHUcJo644uuevTOvd?=
- =?us-ascii?Q?10n2v+F/8E25HzBr1dETgPk18PhGuYadgM22pFfous51eT6Z1gpca7fHJHx/?=
- =?us-ascii?Q?UqGRT7uHoQOCefZBQW0+kuUDJp0EzD6eg+MwRMjFV7JCQ7Oe3yc4sFZmZXuQ?=
- =?us-ascii?Q?EBeSwRJw1TEC+whJd8B9ovufDIBICJ90mkzm2zlGNtjbFd3Mu2M0uH48wa6h?=
- =?us-ascii?Q?xNYVtuuH8RMWBOvD9CpLJtq/qFrmqifKG2bmywgQRXbO2Bmtjx6s00xgHPgF?=
- =?us-ascii?Q?eNyBLsi5F03127Ej7c1bo10pjsdaxHJTLpUls0Hi7IM4ZNp5WnN3B99oKH4s?=
- =?us-ascii?Q?dKhJeriEQavFtlaQNbVIkD4raEwncfAuS9ObqIJYYKvLbaPG84rUq/+U/sWD?=
- =?us-ascii?Q?ABBFiDY//mVVJq7trBvugYudx/xrax1SQCRZnvyPaG47rWNMcXhRmTRzPnxw?=
- =?us-ascii?Q?554L9UfU69v4fWoyNJbhF6AO16LaoJ6uWhxMBwHCxXxwQwMI0j7qxMfLlCRw?=
- =?us-ascii?Q?ptKrwyqdTYOfSMys7M1v/lndnHagVG9o1jyTPJZnw5/dPXiyFVOG1ZeP+5De?=
- =?us-ascii?Q?RlE4N468zxqAbJJhqEtwTVwRov5C4ZcFjRoM1OLl1sg0JSEDg1RlXgX5LsQZ?=
- =?us-ascii?Q?V/PQsmGnxsSoklE8wQYJZjtcHjdl7P+35B0m+ARNlq26hcqy0oR8hvoBE+r7?=
- =?us-ascii?Q?T365sRshpg2mWiMxw1IsKgSNGyysD5LkSyDsVNGNER4RhNBvZraX4eUOX8tU?=
- =?us-ascii?Q?ytdHBadWWlQDat2LkpxtB424O8N2f/mq54v7642tJqbGsGeqZljE?=
+	=?iso-8859-1?Q?EpP1r/YBW3w4rHo4ur0MGWyrsTNxsdoirDM8T8fKAqxr4W9uLe1uKr7rEX?=
+ =?iso-8859-1?Q?GCRlEhVeryFeztQtDC/Lt3oPibFNhOtaS+JVfCa5n2v9wXTRXXEz/ikFB7?=
+ =?iso-8859-1?Q?eMC/32nwERHEATbs43ZJsupkx2nx2QwHx/O+/quofKuDwCfCNt6ZIvNRYQ?=
+ =?iso-8859-1?Q?H/U9CE1znqQCoF/ET1IDblzIw/ScBcKxMWvKF6xER/oViC93mTkwzHdBBt?=
+ =?iso-8859-1?Q?2QGJaogQ1zWfO6CcWO4vr0B+a80seHdM0X/NEyTLYjlCDbmsbabJopJhzv?=
+ =?iso-8859-1?Q?j+5wSY9AUyii25CT0y0LyCIKzMnsi5l2XjQ9UmTkIcFbQgb3h/f+Ye0s3u?=
+ =?iso-8859-1?Q?oZ/5Ob6Qg8USP5ZueM7CMzyuTChXpsvryADs/g9OZXFbznmx7jWGO9wkBw?=
+ =?iso-8859-1?Q?TU9DN/xsuu8uWHbmMx+OES3mu2MC4dJrH0T4WPeslA9whAlBSxmixvE4UF?=
+ =?iso-8859-1?Q?3/yKqOG+/7yLMhrgSd20O7nCjn2wDr5BRKKJn3jCCxH+QTkNeXLWU9QUuf?=
+ =?iso-8859-1?Q?BCxxvrpG9TQmTTW0H/sEG+xiBLRVd9Rdzm2grZqHvCorvhgBSGFFC+k2HP?=
+ =?iso-8859-1?Q?AaYjuoHorUxCQDCvbGTrJKA5Sa9qKexNDsCV0spfXHMQ5lb2CKH9Jn/gm4?=
+ =?iso-8859-1?Q?XJNcSqjHTLxAVOKo9hcDc3qlE24bCW9Sx5hM9JzEQ45cKs5JP/ky1x/o+n?=
+ =?iso-8859-1?Q?6m3r53oJawT1Eu7T8ogScTmtq2rENPpUF3AF5KPE29L5ZMSUdRWECYO73u?=
+ =?iso-8859-1?Q?n9N81S7H4wSfVjuRUP/31ERr+zOfIBGOdLjdH5q6T1TKiDTU2bX+prQnqy?=
+ =?iso-8859-1?Q?aNawdf8m4TCXnpm/QRH7YG3GR6PyXcOW0yTsix3LKmWXiIMsrMW5jZk6U2?=
+ =?iso-8859-1?Q?/O3gVGBzL+gDFC2fjtNdzhCmftTo63yfjzdlrrkdw8PuIkiU4dOUzAFtGl?=
+ =?iso-8859-1?Q?gSpAIu1UqW2iwgE+ypGkH5Pb4WmbHaT8FzgSUY8FDCIiaFjln/T3dGxYaM?=
+ =?iso-8859-1?Q?UKakZ2QZhDtsMn1E997fGc3GgO3u8rJEI0lUuZ5UtQpxLaHksXx0hpA1V3?=
+ =?iso-8859-1?Q?17ohXr6lkHZzqKb6aUKt1GVy1mIf92BxTB2IF+OYFWVbTX9daAgAQNy0gz?=
+ =?iso-8859-1?Q?BXHM4raxnk5c5o3180vJ1nqfpLz0rvIMz6wQk7Trvy2VDLWitjL1G4ueNJ?=
+ =?iso-8859-1?Q?5wUkP+fDvKFnGPOCtpIXG2WXie+NQSBu6GVyiqXCH3i26v/WPJxYckbsgY?=
+ =?iso-8859-1?Q?BKzF4AcOsI4RDNafwKRBN4d5fklB63c4JpVmIkHydOEw2E9S0iVe8M44fx?=
+ =?iso-8859-1?Q?9jNppM97qOhTWJTOcud/jP8pJ0asCABpnec8xzTX8RTSRI1KU8CSRy0yXC?=
+ =?iso-8859-1?Q?bQVdaxr3hz3Ms4/15P3z4am91m83mLXQfbzyv0P0IEkpMhToC/9QEhGa5P?=
+ =?iso-8859-1?Q?5VJW2Sk7fzXbjPiM4uC/x8keMjwaYsyuzpS1IOfh9WszUz4n0sgFdDsQ1F?=
+ =?iso-8859-1?Q?ypMtwsMh8FQi3En1bclwZSOv+feczu14T8qVoM3eGyp3MrAKfbq1Bg80j2?=
+ =?iso-8859-1?Q?Wu5fyklmehAMBerMnS7X5kJJACf8wforLmIQjdIT6eWhJ+6TCi2G3/NnYA?=
+ =?iso-8859-1?Q?Z62PppQ84PPAcPFT9zRfxgPEwMXGsNZRI1B+0d6ZhThm3zpJ98wfA4fk41?=
+ =?iso-8859-1?Q?z20fCGCaXCpZE3Yqr1kVqZJT+c0BkpmzYKtAPwIczGbduFCN8bugGp9Lnv?=
+ =?iso-8859-1?Q?DcOk46yEwt3UxHTUrwS5W37Ta/3cygnJ2y/nNRrUSE3rq1W3rgFpkPlcLB?=
+ =?iso-8859-1?Q?UgFjzB30OI9pnKmBEXUi+4+jIGV2WKXapn3t2qmI/5qocAgpK9KE?=
 X-OriginatorOrg: valinux.co.jp
-X-MS-Exchange-CrossTenant-Network-Message-Id: 4022f81a-23b3-4530-edee-08def1c31b98
+X-MS-Exchange-CrossTenant-Network-Message-Id: b71866d9-caaa-4026-ff8f-08def1c970c4
 X-MS-Exchange-CrossTenant-AuthSource: TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 04 Aug 2026 00:55:42.2151
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 04 Aug 2026 01:41:01.7633
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 7a57bee8-f73d-4c5f-a4f7-d72c91c8c111
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 4gEG2+rOyjes9aB1x6jhYe2ydl9ZSkpxqB6QmBETcIrVLab4hKph3aL3IbNZI6xHm9MbAhGRXLGt5mF5pLeZrQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: TY4P286MB7778
+X-MS-Exchange-CrossTenant-UserPrincipalName: qt6zaydldPWMjaavbXyCNsJ527fAwlsfrVzSuY9tOqYkk0XtRnv45NHaitk9cLKK9B4ASxyGAfoRS/YApr4bkg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYCP286MB2974
 
-On Mon, Aug 03, 2026 at 04:00:45PM -0700, Randy Dunlap wrote:
+On Mon, Aug 03, 2026 at 06:25:28PM +0000, sashiko-bot@kernel.org wrote:
+> Thank you for your contribution! Sashiko AI review found 3 potential issue(s) to consider:
 > 
-> 
-> On 8/3/26 11:04 AM, Koichiro Den wrote:
-> > Hi,
-> > 
-> > vNTB currently spends one BAR per MW. BAR count therefore limits the
-> > number of MWs, even when one BAR has room for several. A large BAR,
-> > especially a Resizable BAR, can instead be split into logical MWs and
-> > leave more BARs for config and doorbells.
-> > 
-> > This series adds packed_mws, which exposes up to 16 equal-sized logical
-> > MWs in one BAR. ntb_transport uses the new group operations to configure
-> > them atomically.
-> > 
-> > The immediate use case is increasing the number of ntb_transport queues.
-> > The resulting performance gain is shown in the Testing section.
-> > 
-> > Based on the latest pci/endpoint.
-> > 
-> > 
-> > Why not BAR subrange mappings?
-> > ==============================
-> > 
-> > An earlier proposal used mwN_offset and BAR subrange mappings to place
-> > independently backed MWs in one BAR:
-> > 
-> >   https://lore.kernel.org/r/20260312165005.1148676-11-den@valinux.co.jp/
-> > 
-> > BAR subrange mapping is currently implemented only by DWC, and that
-> > design still needs one hardware mapping per MW in each direction. This
-> > series instead requires one contiguous backing range and maps the whole
-> > group once in each direction. The initial implementation intentionally
-> > trades arbitrary MW placement for a constant mapping count as the MW
-> > count grows. More flexible layouts can be added when a concrete use
-> > case requires them.
-> > 
-> 
-> Hi,
-> To be clear, this is totally outside of the scope of any PCI or NTB
-> standards or specs?  or did I overlook that part of the discussion?
-> Thanks.
+> Pre-existing issues:
+> - [Critical] DMA Use-After-Free due to `vntb_epf_mw_clear_trans_group()` and `vntb_epf_mw_clear_trans()` returning success (0) without actually disabling the inbound hardware translations.
 
-Hi Randy,
+To be clear, vntb_epf_mw_clear_trans_group() is intentionally left as a no-op,
+matching the existing the existing vntb_epf_mw_clear_trans() behavior. This
+series does not try to fix that pre-existing limitation.
+See the "About existing inbound MW clear behavior" note in the cover letter.
 
-No, you didn't overlook anything. This isn't part of any PCI or NTB spec.
-This series just proposes a new 'packed_mws' configfs knob for the
-vNTB/ntb_hw_epf pair. PCI still sees a normal BAR.
-
-Thanks,
 Koichiro
 
+> - [High] The `vntb_epf_mw_set_trans()` function incorrectly hardcodes `func_no` and `vfunc_no` to 0 when invoking `pci_epc_set_bar()`, whereas other EPF APIs (including the newly added group API) correctly use the endpoint's configured function numbers.
+> - [High] The `vntb_pci_driver` structure is missing a `.remove` callback, causing NTB device leaks and use-after-free conditions when the endpoint function is unbound.
+> --
 > 
-> > 
-> > Testing
-> > =======
-> > 
-> > The packed data path was tested with ntb_transport and ntb_netdev. An
-> > `iperf3 -ub0 -l 65482 -P 2` UDP saturation run produced the following
-> > results when only one Resizable BAR was available for MWs:
-> > 
-> >   Configuration                                   Receiver throughput
-> >   ----------------------------------------------  -------------------
-> >   num_mws=1, packed_mws unset (default 0)         607 Mbits/sec
-> >   num_mws=2, packed_mws=2, combined channels=2    1.19 Gbits/sec
-> > 
-> > Meanwhile, I realized that the in-tree ntb_test.sh does not fully pass
-> > with the pci-epf-vntb/ntb_hw_epf setup on the base tree. I had to apply
-> > a separate collection of local PCI endpoint and NTB fixes before this
-> > setup could be used for regression testing. These fixes address
-> > pre-existing issues and are not prerequisites of the packed MW
-> > implementation.
-> > 
-> > With packed_mws unset and ntb_msi_tests disabled, ntb_test.sh reported
-> > the same pass/unsupported results before and after this series. One run
-> > follows:
-> > 
-> >   $ sudo ./ntb_test.sh -r ${EP} -m 1048576 -p 28 0000:01:00.0 0001:10:00.0
-> >   Starting ntb_tool tests...
-> >   Running port tests on: 0000:01:00.0 / 0001:10:00.0
-> >   Local port 0 with index 0 on remote host
-> >   Peer port 0 with index 0 on local host
-> >     Passed
-> >   Running link tests on: 0000:01:00.0 / 0001:10:00.0
-> >     Passed
-> >   Running link tests on: 0001:10:00.0 / 0000:01:00.0
-> >     Passed
-> >   Running db tests on: 0000:01:00.0 / 0001:10:00.0
-> >     Passed
-> >   Running db tests on: 0001:10:00.0 / 0000:01:00.0
-> >     Passed
-> >   Running spad tests on: 0000:01:00.0 / 0001:10:00.0
-> >     Passed
-> >   Running spad tests on: 0001:10:00.0 / 0000:01:00.0
-> >     Passed
-> >   Running msg tests on: 0000:01:00.0 / 0001:10:00.0
-> >     Unsupported
-> >   Running msg tests on: 0001:10:00.0 / 0000:01:00.0
-> >     Unsupported
-> >   Running mw0 tests on: 0000:01:00.0 /  0001:10:00.0
-> >     Passed
-> >   Running mw0 tests on: 0001:10:00.0 /  0000:01:00.0
-> >     Passed
-> > 
-> >   Starting ntb_pingpong tests...
-> >   Running ping pong tests on: 0000:01:00.0 / 0001:10:00.0
-> >     Passed
-> > 
-> >   Starting ntb_perf tests...
-> >   Running local perf test without DMA
-> >         Peer 0 test statistics:
-> >   0: copied 268435456 bytes in 137063 usecs, 1958 MBytes/s
-> >     Passed
-> >   Running remote perf test without DMA
-> >         Peer 0 test statistics:
-> >   0: copied 268435456 bytes in 139188 usecs, 1928 MBytes/s
-> >     Passed
-> > 
-> > For comparison, the before-series run reported 1997 MBytes/s locally
-> > and 1950 MBytes/s remotely. No obvious regression was seen in this
-> > single-run comparison.
-> > 
-> > 
-> > Control layout compatibility
-> > ============================
-> > 
-> > The endpoint selects the control layout. Non-packed pci-epf-vntb keeps
-> > the version 0 layout. packed_mws selects version 1. "Old" and "new"
-> > below mean ntb_hw_epf without and with this series.
-> > 
-> >   EP configuration  Old ntb_hw_epf            New ntb_hw_epf
-> >   ----------------  ------------------------  ------------------------
-> >   non-packed (v0)   Supported                 Supported
-> >   packed (v1)       Not supported [1]         Supported
-> > 
-> > [1] The old driver accepts two or four MWs but looks for a separate BAR
-> >     for each MW. It rejects larger MW counts at probe.
-> > 
-> > 
-> > Packed MW compatibility with in-tree NTB clients
-> > ================================================
-> > 
-> > The in-tree clients handle a packed MW group as follows:
-> > 
-> >   Client          Behavior
-> >   --------------  ------------------------------------------------------
-> >   ntb_transport   Uses group operations. Without a singleton MW, MSI
-> >                   mode falls back to doorbells.
-> >   ntb_perf        Rejects a non-singleton MW group at probe.
-> >   ntb_tool        Loads normally. Per-MW inbound translation setup
-> >                   returns -EOPNOTSUPP for a non-singleton group.
-> >                   Doorbell and scratchpad access is unaffected.
-> >   ntb_msi_test    Fails probe unless the MW reserved for MSI is a
-> >                   singleton.
-> >   ntb_pingpong    Does not use MWs and is unaffected.
-> > 
-> > Further client support can be added separately when needed. A final
-> > singleton MW on another BAR can also be added later if MSI mode is needed
-> > with packed MWs.
-> > 
-> > 
-> > Notes
-> > =====
-> > 
-> > * About pci-epf-ntb:
-> > 
-> >   pci-epf-ntb remains on the legacy version 0 layout; this series does
-> >   not add version 1 layout support to it. A pci-epf-ntb bridge should
-> >   therefore keep its existing behavior even when its nodes run a mix of
-> >   old and new kernels. I do not have hardware for the pci-epf-ntb bridge
-> >   topology.
-> > 
-> > * About existing inbound MW clear behavior:
-> > 
-> >   pci-epf-vntb already leaves the inbound BAR mapping in place when an
-> >   MW translation is cleared. This series keeps that behavior for packed
-> >   MWs. This limitation is independent of packing.
-> > 
-> >   pci_epc_clear_bar() is not suitable here because it can clear the BAR
-> >   address assigned by the host. An EPF can instead restore a persistent
-> >   fallback mapping with pci_epc_set_bar(), as pci-epf-test does:
-> > 
-> >     https://lore.kernel.org/r/20250908161942.534799-2-cassel@kernel.org/
-> > 
-> >   pci-epf-vntb has no such fallback mapping today. Adding one, or an EPC
-> >   operation to unmap only the inbound translation, should be separate
-> >   work.
-> > 
-> > Best regards,
-> > Koichiro
-> > 
-> > 
-> > Koichiro Den (11):
-> >   NTB: Add atomic MW translation group operations
-> >   NTB: epf: Parse a versioned packed MW layout
-> >   PCI: endpoint: pci-epf-vntb: Add packed MW layout handling
-> >   PCI: endpoint: pci-epf-vntb: Implement MW group translation callbacks
-> >   PCI: endpoint: pci-epf-vntb: Allocate packed outbound MW space
-> >   PCI: endpoint: pci-epf-vntb: Add outbound MW group commands
-> >   NTB: epf: Implement MW group translation callbacks
-> >   NTB: perf: Reject grouped memory windows
-> >   NTB/msi: Require a singleton memory window
-> >   NTB: ntb_transport: Use atomic MW translation groups
-> >   PCI: endpoint: pci-epf-vntb: Expose packed MWs through configfs
-> > 
-> >  Documentation/PCI/endpoint/pci-vntb-howto.rst |  16 +-
-> >  drivers/ntb/hw/epf/ntb_hw_epf.c               | 143 +++++-
-> >  drivers/ntb/msi.c                             |  19 +-
-> >  drivers/ntb/ntb_transport.c                   | 127 +++++-
-> >  drivers/ntb/test/ntb_perf.c                   |  16 +-
-> >  drivers/pci/endpoint/functions/pci-epf-vntb.c | 423 ++++++++++++++++--
-> >  include/linux/ntb.h                           | 133 +++++-
-> >  7 files changed, 801 insertions(+), 76 deletions(-)
-> > 
+> --- Patch [4]: [PATCH 04/11] PCI: endpoint: pci-epf-vntb: Implement MW group translation callbacks ---
+> commit 419429d9534b2c856c11cb4a4a4107e84a87fe8e
+> Author: Koichiro Den <den@valinux.co.jp>
+> 
+> PCI: endpoint: pci-epf-vntb: Implement MW group translation callbacks
+> 
+> All RC-to-EP MWs in a packed group share one inbound BAR. Setting each
+> MW separately would keep replacing that BAR and could expose a partial
+> group. Add group callbacks that program the shared BAR once for the
+> complete backing range.
+> 
+> > diff --git a/drivers/pci/endpoint/functions/pci-epf-vntb.c b/drivers/pci/endpoint/functions/pci-epf-vntb.c
+> > index f22459e5a8c69..0c72b907c2896 100644
+> > --- a/drivers/pci/endpoint/functions/pci-epf-vntb.c
+> > +++ b/drivers/pci/endpoint/functions/pci-epf-vntb.c
+> > @@ -1622,6 +1622,31 @@ static int vntb_epf_mw_clear_trans(struct ntb_dev *ntb, int pidx, int idx)
+> >  	return 0;
+> >  }
+> 
+> [Severity: High]
+> This isn't a bug introduced by this patch, but while looking at this context,
+> I noticed that the existing vntb_epf_mw_set_trans() hardcodes the function
+> numbers to 0:
+> 
+> drivers/pci/endpoint/functions/pci-epf-vntb.c:vntb_epf_mw_set_trans() {
+>     ...
+> 	ret = pci_epc_set_bar(ntb->epf->epc, 0, 0, epf_bar);
+>     ...
+> }
+> 
+> Does this incorrectly configure the BAR for function 0 when the virtual NTB
+> device is bound to a non-zero endpoint function or virtual function?
+> 
+> If the device is configured via configfs with a non-zero function, could this
+> lead to silent failures in memory window translation or corrupt the ATU
+> configuration of function 0?
+> 
+> > +
+> > +static int
+> > +vntb_epf_mw_set_trans_group(struct ntb_dev *ndev, int pidx, int widx,
+> > +			    dma_addr_t addr, resource_size_t size)
+> > +{
+> [ ... ]
+> > +	return pci_epc_set_bar(ntb->epf->epc, ntb->epf->func_no,
+> > +			       ntb->epf->vfunc_no, epf_bar);
+> > +}
+> > +
+> > +static int vntb_epf_mw_clear_trans_group(struct ntb_dev *ndev, int pidx,
+> > +					 int widx)
+> > +{
+> > +	return 0;
+> > +}
+> 
+> [Severity: Critical]
+> This is a pre-existing issue perpetuated here by the new group API, but does
+> returning 0 without actually disabling the inbound hardware translations create a
+> DMA use-after-free window?
+> 
+> When an NTB client unmaps a memory window group and frees the backing memory,
+> the hardware BAR mapping will remain active.
+> 
+> If the local host frees this memory, won't the endpoint hardware continue
+> translating incoming PCIe accesses to the freed physical address, allowing a
+> remote peer to access arbitrary new allocations on the endpoint?
+> 
+> [Severity: High]
+> This is another pre-existing issue, but I noticed the vntb_pci_driver structure
+> is missing a .remove callback:
+> 
+> drivers/pci/endpoint/functions/pci-epf-vntb.c:
+> static struct pci_driver vntb_pci_driver = {
+> 	.name           = "pci-vntb",
+> 	.id_table       = pci_vntb_table,
+> 	.probe          = pci_vntb_probe,
+> };
+> 
+> Without a .remove callback, ntb_unregister_device() is never called when the
+> EPF device is unbound via configfs.
+> 
+> Does this cause NTB device leaks and driver state use-after-free?
+> 
+> If the endpoint function is unbound, won't the NTB clients remain active and
+> bound to a device whose backing EPF structures, DMA masks, and hardware
+> mappings have been destroyed?
 > 
 > -- 
-> ~Randy
-> 
+> Sashiko AI review · https://sashiko.dev/#/patchset/20260803180439.1963864-1-den@valinux.co.jp?part=4
