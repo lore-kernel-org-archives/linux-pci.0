@@ -1,409 +1,257 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.13])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D3162476064
-	for <linux-pci@vger.kernel.org>; Tue,  4 Aug 2026 16:11:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785859878; cv=none; b=E8fweBCbbYOYN8TmfMkNA1d06WX7ffANuyKGH1Ok4pls9QfaWIXvUL3CDALtmEPpHb5sp7V+OnFfxZQGOHyx43Ex3si9MosR2hOPpsDVQvCJMgC/fkztg8ygEKeXV3itdcLHTY9rliTCAWJnIPAeJixbRDGzz8B0avJNzjMyDOQ=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785859878; c=relaxed/simple;
-	bh=ZP3KH57ZR7DYSSfY/GQK1FfefC8tW7EZbiLzIbD9N/o=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ZDyln1mRbAbfHrLb6XM52/4zaRicH4K3cflg/PlryWf/czshjNQvvxyBg9fcjqhJIYdLBljGEoLt/e5Fyxeb3HUw7S2jPBzdO9hXdpxl6iEjLZvKcYcU/r2qOAKD+zLJh0+olcMpiqbm+vVi/DDmdNP8kzRBCE6IjmBm8DljzrY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=SmAQTP5d; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=kOnlEkYv; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 53ADA473C60
+	for <linux-pci@vger.kernel.org>; Tue,  4 Aug 2026 16:12:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=192.198.163.13
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1785859954; cv=fail; b=uEB1bER6MWgczU8O547idBidvN+dVIqC6yaxMAz85+BduMalAFqONb4L5ZvtAbs9/Y2pBgzIa2hI3r0DZ9HY+bFBVdHG5dP8wgCrQZucFXVnGTOI5XIt/jRlLBZvRg4Gr5JLee3SBlw7jQfWzn/9FJE2eT14hq4lNbe2TvL9d8g=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1785859954; c=relaxed/simple;
+	bh=TdO5RWh/+1vTu2RxSl/CD9q9aytP+R0eVpORkW1iJxo=;
+	h=Message-ID:Date:Subject:To:CC:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=e2tDuvbEgFCbfaPmyh0e+YJ8Dy42ZOrLxMqt+jzCpbd1JhZzpTuy0iQ8XP2oSPr2YhWcfcz+V/Vqbf4CsDwHNdkTE/Rmqckf84bLvjqIzuSExdGrNTsbhmZzaoYB4Thqt4kj8G/ur6ndRDIWH7vP7b2Ph7A1wOi6WOoD1+ydckw=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=QNSWGijG; arc=fail smtp.client-ip=192.198.163.13
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="SmAQTP5d";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="kOnlEkYv"
-Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 674Ffeu21255088
-	for <linux-pci@vger.kernel.org>; Tue, 4 Aug 2026 16:11:11 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	te+2b+J4wuZdOreQbWtcR1gW8u417OS8wKw5ezP58Ho=; b=SmAQTP5dD0nWzWWL
-	1uz2PGUclWIcbSaYkWP7qW57fC1YdhdDI0Lz5dAzU1LScvkTt1imsPAB0UOMSw4h
-	qWSDkMBCuDX2sIsfcUGhjwNgbkLRPuCtZyJ2m5wU8JDdhtd/UneMb795K5XUPuYp
-	czzsppnezT2Jk3SLywqwUpHVqzALCg0vYaK0Q84bzfba/nduWUjdmTaF8+nTNLWg
-	lx6tNzTdO7WCmMHK/836euOJUcUpOKXk6P+tgdeEfUa8VD/gfdKaRF7jbfBh8pLv
-	GLO9B1Nx/RIzY9jbbSKFOmDLu4pPuTtyxZ1GUsJJ+xpzHvz3qhV4QfZgjt/MUoDW
-	ZpXxTg==
-Received: from mail-pl1-f197.google.com (mail-pl1-f197.google.com [209.85.214.197])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4fud1dhwvq-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Tue, 04 Aug 2026 16:11:10 +0000 (GMT)
-Received: by mail-pl1-f197.google.com with SMTP id d9443c01a7336-2cec4226c70so343465ad.1
-        for <linux-pci@vger.kernel.org>; Tue, 04 Aug 2026 09:11:10 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1785859870; x=1786464670; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=te+2b+J4wuZdOreQbWtcR1gW8u417OS8wKw5ezP58Ho=;
-        b=kOnlEkYv37tli5YpMFyE4a3WrFp29ifhSEWt1Yy6RtxCaqFsy5ar/D+rEivtIyux1H
-         xpKl1Hl2Yl+Ssh7nHa0HT6FBCgT0xS3fO3qcTfTK7pi9HhAJVn8FBBH7KLlL0m9SrYLu
-         9iCzI4F22ALJPv0xP06I/mblN9bVygDNNugCR6jm5xQoXHS0cVjgOyCJisyzthpV06Np
-         WNqotKXeiHrFIk+EQqMdO+zU0uv2l6kp3s3XUtKoIJz0PRQ9L6Q0iuWbB8Cqbxh9Uvaf
-         RU96BUMll3ZbEROpAyTE6QJHuJ/ReD41GgP+VqSCydjoTIDB9Qs8s+0K4hyqGvjhXrhD
-         z0bg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785859870; x=1786464670;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=te+2b+J4wuZdOreQbWtcR1gW8u417OS8wKw5ezP58Ho=;
-        b=aNCWZ6BObkYPYvmTNZAassB05EHHw3HFyeaeXGc/pDnN/DaNy6l4jJ3yXutuO2kL+s
-         p/iW28IRh1GKX57JAJTR4IPaq3/Tu1ctymY4ggWIdkwv2xBPH1pR5qrWTeHzVhQ5RZgU
-         XilsPS5+FK0QOziOkU0QffYUBc73uHFuo3RdDbW/dcMTPMG476GWBawLUGahXAoUg/HR
-         Ppivm16H8EyraGbJswAnLTckHPQPkAxST0su7W6I19gHbT1wuKJu33dicHHHnzgo3g4/
-         FrqfCBSlryOsMCO5TpJY15Trbd/6z358iQQGJNpU2KzMW6H4ZPXjnoIY/y8UJJULFsjh
-         6eZA==
-X-Gm-Message-State: AOJu0YxWbT5H1K8KeY3kqLSGsqnNpJmTYy0YDfhrDIDCDf4TkreqM/NZ
-	LevrgndITxelMCl2vz/gDTwaBKiyxBj25kW9y2IgSj73g3jjtuoA0/SlR7MOC1uPQfyg8Ls3YkW
-	CA4HvsU4NxogoCr1Pkxi+mYemcsWCq7NrrWoxA72k47JA1AJo8Z1fG2iWeZbkWaE=
-X-Gm-Gg: AR+sD13akBXdIVW4QiZNiUZB7zmqJQt4oZwRWbJqtXPmiXbhHFvyy1lGDzRThnXFrYr
-	+H+q527f65C5WJcP39clp+jdESDldiuyMY/gAm6Uukjb+lEA9BNQUgpjsmRogamu9dX5iFWetWI
-	gG5DepJ9/eDtQgF3q9buge/BLjXznKigI2OzeTHVcAW39a8+ErZxdIH8x9VZunJwrgANQPLFX7o
-	pAgqVNP1mkKiTEFG7GBL/Cg31zzz1P4IeYroYuFZe4zCxZYUKtFquQ2TaU+9MWzV1oCLovdd+Uy
-	c9nCWWHydPYvRvNz3NGDqjNVbQ3+iZXwAVlrtDXLsog93gaG7Y0a9wBoMaPlrhdOWRS0HGlq1If
-	Tl85K6/62PDz5u90jckKssWdiC5603ZrdnQ==
-X-Received: by 2002:a17:902:cf09:b0:2cc:9179:32e with SMTP id d9443c01a7336-2d0521e90c3mr157918095ad.10.1785859870106;
-        Tue, 04 Aug 2026 09:11:10 -0700 (PDT)
-X-Received: by 2002:a17:902:cf09:b0:2cc:9179:32e with SMTP id d9443c01a7336-2d0521e90c3mr157917035ad.10.1785859869402;
-        Tue, 04 Aug 2026 09:11:09 -0700 (PDT)
-Received: from [192.168.29.63] ([49.43.230.78])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2d0aa013dafsm10095525ad.35.2026.08.04.09.11.07
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 04 Aug 2026 09:11:08 -0700 (PDT)
-Message-ID: <720fd45f-fa5e-4c64-b3a3-05b33004815c@oss.qualcomm.com>
-Date: Tue, 4 Aug 2026 21:41:04 +0530
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="QNSWGijG"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1785859952; x=1817395952;
+  h=message-id:date:subject:to:cc:references:from:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=TdO5RWh/+1vTu2RxSl/CD9q9aytP+R0eVpORkW1iJxo=;
+  b=QNSWGijGZaFXlYbbh/yl5/t7hOxswBCpFmI5tw2eiHxXYZGYStvNHqNh
+   xWr8x1YzSygsf2sR9oeLhuDOVc3oRIYgCvtlrdv+d5fvQXjz11UG0g5qY
+   SNXy6o1JhgRKgSN4Wpz/sJP4ZN1tlTfKuxKsbYgU28coyiOnBAcx+Frfx
+   1FHeadUxAT5FhhRj2rSwAwABv8fKLcvTU6g6YxPcr6urmIzqxIn/bZTRZ
+   YZ5WbN1SvpMK8j+WJQpQ9qiL+e+o9burG2QQIgfLBb6HBjZvba3NB4fVz
+   jzK4I77LuZs0Z9gJ7/lGhREzlbuIPGNLnMzS+MnlYYGcCXX+uhQiJfxpx
+   w==;
+X-CSE-ConnectionGUID: eT2H+gW6SAipEgcrRqWJYQ==
+X-CSE-MsgGUID: iCsI+WvNRuCrWzWYXTNUFg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11865"; a="88944002"
+X-IronPort-AV: E=Sophos;i="6.25,204,1779174000"; 
+   d="scan'208";a="88944002"
+Received: from orviesa003.jf.intel.com ([10.64.159.143])
+  by fmvoesa107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Aug 2026 09:12:32 -0700
+X-CSE-ConnectionGUID: tiuuXPKoRkeAcvxs8nXDwA==
+X-CSE-MsgGUID: xG2nU/ZSRB6qNYiw0ti5jQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.25,204,1779174000"; 
+   d="scan'208";a="265050268"
+Received: from orsmsx901.amr.corp.intel.com ([10.22.229.23])
+  by orviesa003.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Aug 2026 09:12:31 -0700
+Received: from ORSMSX903.amr.corp.intel.com (10.22.229.25) by
+ ORSMSX901.amr.corp.intel.com (10.22.229.23) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.45; Tue, 4 Aug 2026 09:12:31 -0700
+Received: from ORSEDG903.ED.cps.intel.com (10.7.248.13) by
+ ORSMSX903.amr.corp.intel.com (10.22.229.25) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.45 via Frontend Transport; Tue, 4 Aug 2026 09:12:31 -0700
+Received: from PH7PR06CU001.outbound.protection.outlook.com (52.101.201.49) by
+ edgegateway.intel.com (134.134.137.113) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.45; Tue, 4 Aug 2026 09:12:30 -0700
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=FMB4vYPWMgfYsR/s1S60/RtVW+50Ek+05lpsZc6Aa7KlzNp1EO01OMGPeGFqnQ1lup/949eDbI/NhdMRnPu7o5U0LXtQ0WuJdNwJn4xITCo8Vy6olYz7jixxqcw+kBimTMTnuHtOKYqI2Az0f/RMi4oy5CwJ/OdtV9tYC63I68/U/YG/cZwIydSmiDMq8OYob+gR4rkNmllqNG19fQcQqGALzwMQzlngYMt9f+nOY74mGz3BnZLfdFxKK35hxEEwAr08yhB8L/3Snc2ClYncPUpTLoQFA4Ufrpnf0fgt8/Yfljbxaa+NF9T9GPK7RuOZqwX1/uFO5WLuDA/47x34+w==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=G+5phHjW+YZ3I62rFaDdfm8etpb7+VUTSdaML9GM0vw=;
+ b=eSk/veXN4aFStE+OkedE0+xa+0CWgMdAAQn/yn9aea1yyHPFqDS9x1ZeGqQ4GsahM6/McoxLBzTS7dA5xnG+q4Jts9cZZ5kq1IlbYBhZ7csPgzWELbO68rUq4gnbOe/7FIhOPkYmSPusp6u562KhWkBBpFXxrUyHAZ8dJuhKUBTy5ocIYLP8uIYidPLkbJs0fBmrWTz8xUYa5mLLcGWy0UZifSYFJ/dbd5yCX7XrNo2xV2EpuD3BGd1m9ECmce2rqUtoTFaIMEv0T+ix76myyH1VS1mYA+4wQButGsZrcjN/JCjrs5zHOngl1BecgDrS+IrmKz12PFLEUg9wa9ExQQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
+ dkim=pass header.d=intel.com; arc=none
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=intel.com;
+Received: from IA1PR11MB7198.namprd11.prod.outlook.com (2603:10b6:208:419::15)
+ by PH0PR11MB4790.namprd11.prod.outlook.com (2603:10b6:510:40::17) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.292.15; Tue, 4 Aug
+ 2026 16:12:24 +0000
+Received: from IA1PR11MB7198.namprd11.prod.outlook.com
+ ([fe80::2c4e:e92a:4fa:a456]) by IA1PR11MB7198.namprd11.prod.outlook.com
+ ([fe80::2c4e:e92a:4fa:a456%3]) with mapi id 15.21.0292.013; Tue, 4 Aug 2026
+ 16:12:23 +0000
+Message-ID: <59d05b05-37a6-498e-8dc4-3d4ba1c83d93@intel.com>
+Date: Tue, 4 Aug 2026 19:12:19 +0300
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH V3 09/14] i3c: master: Report wakeup events for IBIs
+To: <sashiko-reviews@lists.linux.dev>
+CC: <Frank.Li@kernel.org>, Alexandre Belloni <alexandre.belloni@bootlin.com>,
+	<linux-pci@vger.kernel.org>, <linux-i3c@lists.infradead.org>
+References: <20260804133810.184905-1-adrian.hunter@intel.com>
+ <20260804133810.184905-10-adrian.hunter@intel.com>
+ <20260804151019.BCAA81F000E9@smtp.kernel.org>
+Content-Language: en-US
+From: Adrian Hunter <adrian.hunter@intel.com>
+Organization: Intel Finland Oy, Registered Address: c/o Alberga Business Park,
+ 6 krs, Bertel Jungin Aukio 5, 02600 Espoo, Business Identity Code: 0357606 -
+ 4, Domiciled in Helsinki
+In-Reply-To: <20260804151019.BCAA81F000E9@smtp.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: DUZPR01CA0076.eurprd01.prod.exchangelabs.com
+ (2603:10a6:10:46a::7) To IA1PR11MB7198.namprd11.prod.outlook.com
+ (2603:10b6:208:419::15)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] PCI: dwc: Add sysfs for local loopback interface
-To: sashiko-reviews@lists.linux.dev
-Cc: linux-pci@vger.kernel.org
-References: <20260803-loopback-v1-1-508f7f19e47a@oss.qualcomm.com>
- <20260803094710.5F1301F00A3A@smtp.kernel.org>
-Content-Language: en-US
-From: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-In-Reply-To: <20260803094710.5F1301F00A3A@smtp.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-ORIG-GUID: Z6_fsa2ST8kaNoEjZnt6SELZFav8hvVa
-X-Authority-Analysis: v=2.4 cv=SJRykuvH c=1 sm=1 tr=0 ts=6a720f1e cx=c_pps
- a=cmESyDAEBpBGqyK7t0alAg==:117 a=81uY1gJ5F700u46DBsPqIQ==:17
- a=IkcTkHD0fZMA:10 a=Sv0fKeRqtYgA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=eoimf2acIAo5FJnRuUoq:22
- a=VwQbUJbxAAAA:8 a=EUspDBNiAAAA:8 a=iYw6Kr4hDCYGKP7cAK0A:9 a=3ZKOabzyN94A:10
- a=QEXdDO2ut3YA:10 a=1OuFwYUASf3TG4hYMiVC:22
-X-Proofpoint-GUID: Z6_fsa2ST8kaNoEjZnt6SELZFav8hvVa
-X-Proofpoint-Spam-Info: AW1haW4tMjYwODA0MDEyOSBTYWx0ZWRfX7kcBCCTP0s8v
- BRmeQ6gyrSygjB42ifaasTCIs9ZebsloJ8qEyg7HiayKoggOtCQNyReZ2queWxkpqp247jhCSLa
- rm7WtZ/FxPYM2lOV3Ck5sKPlXK0bg+s=
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODA0MDEyOSBTYWx0ZWRfX+Lr0N7cCuIgj
- aVA7GraWQ2DgnNviZ3mzIJ4vB8QbbQrWRKUIOAlYZbFObDnKBTxXoxxzfoe99H/dFYiLWTM3KX4
- WfUhwFHPN2sG2GOuktmrDxKzdfoHnAQfgEgJ/0WfaGVBEHAkz66iZ48ODshU1PpU552O+0vjO+I
- WTn5N2bvt/CBkDxluEIenqVgdxhyyJtixPB5YhToSkZVcuQf/P9XlK5ieC/V6bie/EgKi3wm5IQ
- Kvx+LBgvBPwjR7XXzNNXnY74uub7npThCjM1m2yJc8d3b1shFGWwHXH4Y1dPBVozsO3HiO1Nuq+
- XgJfe0DNAW8MRC7LX/hmjS+ZHTfA4Mpm+HDlBYJc5rHaVZGoOeNFSpS6BoZG/4yVsFTA4JmKw17
- CfxKB+lFNVtxIjzaBpLyAw4o+enbpRECfQcGBE6sDk4+kSkP88+9FKjmW94JnetrcQ8CpA3+D5S
- 97bGT9mMoNeP9SqKJ4A==
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-08-04_03,2026-08-04_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- phishscore=0 spamscore=0 bulkscore=0 malwarescore=0 suspectscore=0
- lowpriorityscore=0 priorityscore=1501 adultscore=0 impostorscore=0
- clxscore=1015 classifier=typeunknown authscore=0 authtc= authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2606150000
- definitions=main-2608040129
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: IA1PR11MB7198:EE_|PH0PR11MB4790:EE_
+X-MS-Office365-Filtering-Correlation-Id: d795e937-e9e8-4866-34bb-08def2432b44
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230040|376014|366016|1800799024|23010399003|18002099003|22082099003|4143699003|11063799006|56012099006|10063799003|6133799003|10067099003;
+X-Microsoft-Antispam-Message-Info: 9Fzr8XLhgNzUKXtowSfB+9d/S7MRM59pXdFP2edaZz3uaGH88VKywdZ9YgU/RZRUR2MhWe61yxAGlT3hp8q7A+Fw0zVQJXPznodBllDlMwh+Mq5CyjBenQoqukVA0kMOJzrZXTAbbu0hPCrLf8I32FschW7AWT4ePUvRoDfzUm9oja4q7X9Y2eAWH9JPnX2WEWGTeROoF6xcsZ6BanI+5cjVByRHpnEm/krYwVFFl9ikm5dmwbzEqQiW7saf0YpFP0pf0+HTq0ewE02txuo2Rlpz7dEAik9hsJgE0A/QBNWF1Vu3alPadAiU9cM9U70pIoExC5uurvkxWNQO1pFlqpgo9EkAUdVnyOjPMiWqbFPvKuQNJ4q5ihz5N8lHDCeyIgDT25pfcVsKb97Ay7AhMFhwPApcthhsLxllTcPAm00zrD1g1YEUF69Z18Gb35M79/Xf2kfzzDj3kATJrb5x+aCyL9HIa2RrhDknEnn1HkD2FIlbyIXqpkGQy62HcAHpA7+9jQ4p019ZzDPdNQvbrXbMwe34Nku2Y8kP5fnDPD39ClmztTdhQFFhVZk3MTDCOf0c7ROmooSVnQAgnPIlut6AgWVbISDEYOmvz12Uw8hf6/v8IefDRLZ+yTFm/l966ECEzQasXSGneyCLQuLixNJ64Y8SXgTFbgCKwv/7gaY=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:IA1PR11MB7198.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(366016)(1800799024)(23010399003)(18002099003)(22082099003)(4143699003)(11063799006)(56012099006)(10063799003)(6133799003)(10067099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?RGQxb1o5SFQ5bDFweUU5UXVnZmZmUEtDUlh4dU9neHJFVk9wMmlxZXZCa0xC?=
+ =?utf-8?B?Q0NkN2s0MjMzZVF0UDBhZnZFbm02UU42L21QdmVRV2lPUUZPT3doSEM3T3dh?=
+ =?utf-8?B?eFNDbE9mV2VXcHNuNnFZemdsNlNXMENuTXU2TzdzQ3JyNkdnK1J5MTkzcDNo?=
+ =?utf-8?B?aC8ydXNzckRneklZMW9pVXM2blFYODJ5dHBTR1FNbTZ3YldUSU95TzF5dUNH?=
+ =?utf-8?B?UHNvQUVGcTA1UVdBUjBQMnNVblh2UjVPdjZsUXR3eXFabEo1WnVhY1ZxMWlR?=
+ =?utf-8?B?bDRUNTFyYUZGUkFsRGFySWRyVjhQUExLaHIwN3JlM2tnWFJ4UUYxNit4S1Ni?=
+ =?utf-8?B?VldXc0FMempSYzFKckYycVBiSCt5bUNDUUlsZmdEN0RObm15eVdid1Vyb29a?=
+ =?utf-8?B?ci9nYmJZcFhvSkliQzIvTlZBMml3Yy9EekhOekxUQXBlZVlyM0JVS1pvc1hP?=
+ =?utf-8?B?ZExON0Zzb1VPdjRlN21FbWFFRFltWHAwSFVsckFtb0tBTldoQ0dVaXE3Mi9i?=
+ =?utf-8?B?Myt5Q3JhdURBOFZmUW1CVVJOZ3BBVVJOL3QwMElOZDMzVUxzNnE0L0RacjZR?=
+ =?utf-8?B?N25iRHN3WnRqTklUSU5oVU5NUGNBYUpiOXdFaS94M3lRUmxWYTJJMEMzTVhp?=
+ =?utf-8?B?a003UitXbHF2UW5wVDhDMkdiVDh0VUZSV3VTMDJJUGljZ29hOHFEN2NOQ1NR?=
+ =?utf-8?B?UHJMS2NkenM1SVBEMVdxRGNhRjhNeml0ZWZIYkxkbzVBdVc0K1BBeElHTHA5?=
+ =?utf-8?B?SVVHbkpvOFFKTHd0NjVpbHQrdVpJRUE4S2M2WTdhSWV1c09ZNG9kV1ZINjRH?=
+ =?utf-8?B?WUFBR1Rmdm56RFF5cFA3ZTRrWTRuSkFJeElrWVhBM2Y3NTIzZUt6TWZ5ekxq?=
+ =?utf-8?B?ZHhwTzhJMFZiZkRvaW9BVm9oTjJvWjFUZU1NakRyc2tHTXYydy9qUmRBaHlj?=
+ =?utf-8?B?NzBsK1VVeTh1eWZBRGVUNWMvdlJuRTBFMWpsQjc0ZHY4NFE2VVpkbmFqV1Rt?=
+ =?utf-8?B?Q1pQYlRyVXhtQm4wS2lRTk5saEcyQXpDWVBUQjhjeFNyQitUZXNURG5ZL2Vm?=
+ =?utf-8?B?eEpyeWVrZEtrbnZISTBTczlKK3o4bmpGRmR0VkVZUGQ2cW5iT1A5aDNNMmFh?=
+ =?utf-8?B?NGNnd0x4MC9hVHFWS1Bha2FtUkg3QUZKREUyS2F3emxrQjVKQlZ1UTVkZDhQ?=
+ =?utf-8?B?QzRNc1p5MTgydkVZTXN2ZnhEcnBoR01STTdtb1ZpTGIxR21QN1hVbnIrWVVt?=
+ =?utf-8?B?RXZoQ2gwUmNuc2FrRkxJbXV3OFU5eDNaVTNqckZxMmZiTngzWDVTc3JJaVY5?=
+ =?utf-8?B?aWY3RDBHV3p4cmlPMDMrcVZ0WlY0b3F1T2Z1ZmwySkpsR1JwRnVDdXF6TlA5?=
+ =?utf-8?B?aVBIdEdDN0ZVQlpUMzNoK2U3TlJQSHNmbm5Ha3NacHY2b1JwTVpQYWFZUCtZ?=
+ =?utf-8?B?ODZuM3hOTEE4S0p3SFhIUmI5d3h4VEl6YldvaVNhOCt5YWR1ejNLNC9xMmND?=
+ =?utf-8?B?ZnZhcGNhV1BHb25pcitIYmxaVGdRK0dZRzRnVXRodUdYTXh2dC9Kelk4VEd6?=
+ =?utf-8?B?Yi9FenZ1VmZaNWlWUDYyZGxYbVdOTEZqTDlsZURyODRDc2JBcExYbVZONGY0?=
+ =?utf-8?B?YlB1QlRQdzVKNW5nT1lzUWxJeXUvZXc3ZE0yUHUzaWlVazhTWEw1U0NtWk1H?=
+ =?utf-8?B?VEpPZDVxeTZiYXg5UjdwaC9Dam1BU3c0WEpzVERIaVpTSEVLQUtmM0VkVGIx?=
+ =?utf-8?B?VVlyeTJnbHhzYjVvTkhlWUpFNTdUdkpLTDR1UGx0SktzNTFZb201VHlDbU9I?=
+ =?utf-8?B?ZHlweFdSeUFUSHhacjlscE10ekVWMXdLY3d3d3VQQ3d0K3VSZUNiU2lMZGVB?=
+ =?utf-8?B?R1UzUDFuUG8waW9qNG0wbml4WUpqYllNcFhON21HbVQveFRKSXlwaTM4ZlV6?=
+ =?utf-8?B?Mmt5NHRDUXVyL2d6WSttckVkTHdUMEJUN2Jrcnc0YTR3TjN2bERDRExCYjBF?=
+ =?utf-8?B?UCtESE5OV3FSMUltN0o0THJqbXlqMW1aTmMwWm0xaHBCaUJ1YU5EeUhOTEV6?=
+ =?utf-8?B?WHlUTy8wOVIyNzhNMExUT1Z5RURSRnlVM3h0dWRLdzlVMGFuRnEvMTMzdFhj?=
+ =?utf-8?B?MEdwdndMZWR4RE1zT295Um0yT3IxVElWTTVhMDFDd09ncktNbHFpUlU2YXJq?=
+ =?utf-8?B?bzdvSkgvYVVnWnBScXNvb0pxTEF3Ri9RQkV1czNMcjBESFdFTkJENzVRenZV?=
+ =?utf-8?B?K0pUcTEydE5aMGVTZ3ZFNzh0SXk0eElyZ1Z3REYxcE5sYkJXdVVwb1YvSVhW?=
+ =?utf-8?B?ZWpSVDBsYWRzY3RKZXNtb2NmT3llMDZ0RSs0S2dUOGkvaVU4aWdIUC9HdDBQ?=
+ =?utf-8?Q?CkvaelPvsUTNztVo=3D?=
+X-Exchange-RoutingPolicyChecked: m8XC6rEx/Vd9eS4pNHngYV134/95sCDKfBSNpiXU4t4H2ttHZc/TySX1L0yOQjortegVXGIisjGCiXUx7nwujOH8MCuKZ28aa53H133Y7c3qR41ggfje7tbxyb11DRx7pEngeaW/8ehwCTrk/T+CPtmqN3eRftOeoD/wJ0N94v84fhzO4mL2/aHXl9b7phoFdcf2kTgnxbzL1iOeF3N/uJe9e5K+ozFe7iZmXcrnQFvkLwXnM7h++9B5YyQd2v64HzQ+NnFcMov63QbJNmd/TWloAVM5r4397513zxNCEVUeCzhVBz9vXv5PP8lvn5K2et4W11eGdmORYI2X+yNPqQ==
+X-MS-Exchange-CrossTenant-Network-Message-Id: d795e937-e9e8-4866-34bb-08def2432b44
+X-MS-Exchange-CrossTenant-AuthSource: IA1PR11MB7198.namprd11.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 04 Aug 2026 16:12:23.8331
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 5pCWS9UAOVOCls4nRLi1Y141NBR5KhEe8pf0ACLFtTJNrpX1bMc0v2TSj0kSxvnWeR8Ksw+xzZExU4OuDOpCgQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR11MB4790
+X-OriginatorOrg: intel.com
 
+On 04/08/2026 18:10, sashiko-bot@kernel.org wrote:
+> Thank you for your contribution! Sashiko AI review found 2 potential issue(s) to consider:
+> 
+> New issues:
+> - [High] Unprotected dereference of dev->dev in i3c_master_queue_ibi() leading to NULL pointer dereference or Use-After-Free during teardown.
 
+dev->dev is always valid.  It is use of the first 'dev' (struct i3c_dev_desc *)
+that is questionable because of the oldev/newdev dance in
+__i3c_master_add_i3c_dev_locked().  As it says there, olddev does not
+exist on the bus, so it is unlikely there are any IBIs inflight from
+when it did exist.  It would be strange if a newly DAA'ed device
+started issuing IBIs, but most controller drivers do not accept IBIs
+from newly DAA'ed devices anyway, so there ought not to be any IBIs
+inflight for newdev either.
 
-On 8/3/2026 3:17 PM, sashiko-bot@kernel.org wrote:
-> Thank you for your contribution! Sashiko AI review found 9 potential issue(s) to consider:
-> - [Critical] `pcibios_align_resource` is used as an alignment callback but receives a `struct device *` instead of a `struct pci_dev *`.
-> - [High] The inbound iATU is programmed with the CPU physical address instead of the PCIe bus address.
-> - [High] Inbound ATU window configuration is overwritten and permanently disabled, silently destroying prior hardware mappings.
-> - [High] Hardware recovery via `dw_pcie_resume_noirq()` will unconditionally fail and mask test outcomes.
-> - [High] The inbound iATU window programmed for the loopback test is not disabled if the controller requires reinitialization, leaving a hardware mapping to freed memory active.
-> - [High] Missing pm_runtime_get_sync() before accessing hardware registers in the sysfs handler.
-> - [High] Calling `deinit` and `resume_noirq` during active system operation without blocking concurrent config space accesses will cause a system crash.
-> - [Medium] The loopback test uses `kmalloc()` to allocate an arbitrarily large test buffer (up to 1 MiB), which is highly susceptible to allocation failure due to fragmentation.
-> - [Medium] TOCTOU race in link status check can cause disruption of an active link.
+It is fragile, but it is not a new issue because struct i3c_dev_desc *dev
+was/is being used anyway.
+
+> 
+> Pre-existing issues:
+> - [High] Race condition between hardware IBI interrupts and IBI teardown leading to Use-After-Free of dev->ibi.
 > --
->
-> --- Patch [1]: [PATCH] PCI: dwc: Add sysfs for local loopback interface ---
-> commit 4f4d57ae54b60f668971d41c20d2d0f542109200
-> Author: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
->
-> PCI: dwc: Add sysfs for local loopback interface
->
-> This patch adds a loopback sysfs interface to trigger a local
-> data-integrity test on DesignWare PCIe root ports. It works by allocating
-> a DMA buffer, redirecting PCIe writes to it via an inbound iATU window,
-> and verifying the data byte-by-byte. It also includes a recovery mechanism
-> to handle LTSSM state issues after the test completes.
->
->> diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
->> index 06722259d2e37..f0cfe9e885204 100644
->> --- a/drivers/pci/controller/dwc/pcie-designware-host.c
->> +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-> [ ... ]
->
->> @@ -567,6 +569,297 @@ static int dw_pcie_host_get_resources(struct dw_pcie_rp *pp)
->>  	return 0;
->>  }
+> 
+> --- Patch [9]: [PATCH V3 09/14] i3c: master: Report wakeup events for IBIs ---
+> commit 044b30e8813c466ee0c955f282a081170370a564
+> Author: Adrian Hunter <adrian.hunter@intel.com>
+> 
+> i3c: master: Report wakeup events for IBIs
+> 
+> When an IBI is queued for processing, this commit records a wakeup event
+> for the device if wakeup is enabled. It uses a 100 ms processing interval
+> to give the I3C device driver time to process the IBI.
+> 
+>> diff --git a/drivers/i3c/master.c b/drivers/i3c/master.c
+>> index e6b320da475e0..8c9e62e6f1469 100644
+>> --- a/drivers/i3c/master.c
+>> +++ b/drivers/i3c/master.c
+>> @@ -3398,6 +3401,9 @@ void i3c_master_queue_ibi(struct i3c_dev_desc *dev, struct i3c_ibi_slot *slot)
+>>  	if (!dev->ibi || !slot)
+>>  		return;
 >>  
->> +#define DW_PCIE_LB_BUF_SIZE_MIN	SZ_4K
->> +#define DW_PCIE_LB_BUF_SIZE_MAX	SZ_1M
->> +#define DW_PCIE_LB_SETTLE_MS		100
->> +#define DW_PCIE_LB_LTSSM_SETTLE_US	(DW_PCIE_LB_SETTLE_MS * USEC_PER_MSEC)
->> +#define DW_PCIE_LB_LTSSM_POLL_US	1000
+>> +	if (device_may_wakeup(&dev->dev->dev))
+>> +		pm_wakeup_event(&dev->dev->dev, I3C_WAKEUP_PROCESSING_TIME_MS);
 >> +
->> +static int dw_pcie_loopback_run(struct dw_pcie_rp *pp, size_t buf_size)
->> +{
->> +	struct resource lb_res = { .name = "pcie-loopback",
->> +				   .flags = IORESOURCE_MEM };
->> +	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
->> +	enum dw_pcie_ltssm ltssm;
->> +	void __iomem *src_base;
->> +	u32 plc, gen3, pipe_lb;
->> +	dma_addr_t dst_dma;
->> +	void *dst_virt;
->> +	int ret, rret;
->> +	void *tx_buf;
->> +	int ib_index;
->> +
->> +	ib_index = pci->num_ib_windows - 1;
+> 
 > [Severity: High]
-> Does this code safely reserve the inbound ATU window? It seems the index
-> is hardcoded to the last available window without checking if it is already
-> in use.
->
-> If the platform driver or PCIe host core had previously programmed this
-> window (for example, to map system RAM for incoming endpoint DMA or to
-> route MSI interrupts), could this unconditionally overwrite and permanently
-> destroy that configuration?
-Ack,  I will create new element to track the number of inbound iatu's used.
->> +
->> +	ret = pci_bus_alloc_resource(pp->bridge->bus, &lb_res,
->> +				     buf_size, buf_size,
->> +				     PCIBIOS_MIN_MEM, 0,
->> +				     pcibios_align_resource,
->> +				     &pp->bridge->dev);
-> [Severity: Critical]
-> Is the alignment data parameter passed to pci_bus_alloc_resource()
-> correct here?
->
-> The pcibios_align_resource callback expects a struct pci_dev pointer, but
-> &pp->bridge->dev is a struct device pointer. Architecture implementations
-> often cast this parameter directly to struct pci_dev and access its fields.
->
-> Since struct device is embedded inside struct pci_dev at a non-zero offset,
-> could this cause out-of-bounds memory accesses?
-ack.
->> +	if (ret) {
->> +		dev_err(pci->dev, "loopback: failed to alloc PCIe MEM resource: %d\n", ret);
->> +		return ret;
->> +	}
->> +
->> +	src_base = ioremap(lb_res.start, buf_size);
->> +	if (!src_base) {
->> +		dev_err(pci->dev, "loopback: ioremap of PCIe source window failed\n");
->> +		ret = -ENOMEM;
->> +		goto err_release_res;
->> +	}
->> +
->> +	dst_virt = dma_alloc_coherent(pci->dev, buf_size, &dst_dma, GFP_KERNEL);
->> +	if (!dst_virt) {
->> +		ret = -ENOMEM;
->> +		goto err_iounmap;
->> +	}
->> +
->> +	ret = dw_pcie_prog_inbound_atu(pci, ib_index, PCIE_TLP_TYPE_MEM_RDWR,
->> +				       dst_dma, lb_res.start, buf_size);
+> Is it possible for an IBI interrupt to fire concurrently with device
+> unregistration?
+> 
+> Looking at i3c_master_unregister_i3c_devs(), the teardown path sets
+> dev->dev to NULL:
+> 
+> drivers/i3c/master.c:i3c_master_unregister_i3c_devs() {
+>     ...
+>     i3cdev->dev->desc = NULL;
+>     put_device(&i3cdev->dev->dev);
+>     i3cdev->dev = NULL;
+>     ...
+> }
+> 
+> If an interrupt occurs during or just after this unregistration, could
+> dev->dev be NULL when device_may_wakeup() dereferences it here?
+> 
+>>  	atomic_inc(&dev->ibi->pending_ibis);
+>>  	queue_work(dev->ibi->wq, &slot->work);
+>>  }
+> 
 > [Severity: High]
-> Does the inbound ATU programming use the correct address space?
->
-> pci_bus_alloc_resource() populates lb_res.start with a CPU physical
-> address, and this is passed directly to dw_pcie_prog_inbound_atu() as the
-> PCIe bus address.
->
-> On platforms where the CPU physical address space has an offset from the
-> PCIe bus address space (such as those specifying dma-ranges), will the ATU
-> expect the wrong address and cause the loopback test to fail?
-I will check from dma-ranges perspective and fix it if required.
->
->> +	if (ret) {
->> +		dev_err(pci->dev, "loopback: inbound iATU programming failed: %d\n", ret);
->> +		goto err_free_dma;
->> +	}
->> +
->> +	plc = dw_pcie_readl_dbi(pci, PCIE_PORT_LINK_CONTROL);
->> +
->> +	gen3 = dw_pcie_readl_dbi(pci, GEN3_RELATED_OFF);
->> +	dw_pcie_writel_dbi(pci, GEN3_RELATED_OFF,
->> +			   gen3 | GEN3_RELATED_OFF_GEN3_EQ_DISABLE);
->> +
->> +	pipe_lb = dw_pcie_readl_dbi(pci, PCIE_PIPE_LOOPBACK_CONTROL);
->> +	dw_pcie_writel_dbi(pci, PCIE_PIPE_LOOPBACK_CONTROL,
->> +			   pipe_lb | PCIE_PIPE_LOOPBACK_EN);
->> +
->> +	dw_pcie_writel_dbi(pci, PCIE_PORT_LINK_CONTROL, plc | PORT_LINK_LOOPBACK_EN);
->> +
->> +	msleep(DW_PCIE_LB_SETTLE_MS);
->> +
->> +	tx_buf = kmalloc(buf_size, GFP_KERNEL);
-> [Severity: Medium]
-> Could this memory allocation fail on systems with fragmented memory?
->
-> The loopback test can request a buffer up to 1 MiB via the sysfs attribute,
-> which requires an order-8 physically contiguous page block.
->
-> Since tx_buf is solely used as a virtual buffer to hold random data before
-> copying via memcpy_toio(), would it be more reliable to use kvmalloc() to
-> avoid disruptive page allocator warnings?
-ack
->> +	if (!tx_buf) {
->> +		ret = -ENOMEM;
->> +		goto err_restore_link;
->> +	}
-> [ ... ]
->
->> +err_restore_link:
->> +	dw_pcie_writel_dbi(pci, PCIE_PORT_LINK_CONTROL, plc);
->> +	dw_pcie_writel_dbi(pci, PCIE_PIPE_LOOPBACK_CONTROL, pipe_lb);
->> +	dw_pcie_writel_dbi(pci, GEN3_RELATED_OFF, gen3);
->> +
->> +	if (read_poll_timeout(dw_pcie_get_ltssm, ltssm,
->> +			      ltssm == DW_PCIE_LTSSM_DETECT_QUIET,
->> +			      DW_PCIE_LB_LTSSM_POLL_US, DW_PCIE_LB_LTSSM_SETTLE_US,
->> +			      false, pci)) {
->> +		/*
->> +		 * LTSSM has been observed stuck outside DETECT_QUIET on some
->> +		 * platforms; only a full controller reinit (mirroring system
->> +		 * suspend/resume) reliably recovers it.
->> +		 */
->> +		dev_warn(pci->dev,
->> +			 "loopback: LTSSM did not settle in DETECT_QUIET (in %s), reinitializing controller\n",
->> +			 dw_pcie_ltssm_status_string(ltssm));
->> +
->> +		if (pp->ops->deinit)
->> +			pp->ops->deinit(pp);
->> +
->> +		pci->suspended = true;
-> [Severity: High]
-> Does powering down the controller here pose a risk of a system crash?
->
-> This recovery runs in a sysfs handler while the rest of the system is fully
-> active, without blocking concurrent accesses to the PCIe config space.
->
-> If another task attempts a config read (for example, from lspci) while the
-> clocks are disabled by the deinit callback, could the unclocked access
-> trigger an AXI bus fault?
-Will not expect user to do this test and in parallel he will run lspci and also
-expects this deinit and reinit happens quickly before axi detects this as a
-error.
->> +
->> +		rret = dw_pcie_resume_noirq(pci);
->> +		if (rret) {
->> +			dev_err(pci->dev, "loopback: controller reinit failed: %d\n", rret);
->> +			if (!ret)
->> +				ret = rret;
->> +		}
-> [Severity: High]
-> Will this hardware recovery unconditionally fail?
->
-> The loopback test runs strictly when the PCIe link is down (no endpoint is
-> connected). However, dw_pcie_resume_noirq() starts the link and waits for
-> it to become UP. Because no endpoint is physically connected, this wait
-> will time out and return -ETIMEDOUT.
->
-> This seems to overwrite a potentially successful test result with -ETIMEDOUT
-> and abandon the controller in a broken, suspended state.
-ack 
->> +
->> +		ltssm = dw_pcie_get_ltssm(pci);
->> +	} else {
->> +		dw_pcie_disable_atu(pci, PCIE_ATU_REGION_DIR_IB, ib_index);
->> +	}
->> +
->> +	dev_info(pci->dev, "PCIe LTSSM state after loopback exit: %s\n",
->> +		 dw_pcie_ltssm_status_string(ltssm));
->> +
->> +err_free_dma:
->> +	dma_free_coherent(pci->dev, buf_size, dst_virt, dst_dma);
-> [Severity: High]
-> Does this leave a hardware mapping to freed memory active?
->
-> When the LTSSM poll times out, the code skips the else block containing
-> dw_pcie_disable_atu(). Execution falls through to err_free_dma, where
-> dma_free_coherent() frees the DMA buffer back to the kernel.
->
-> If the link later becomes active, could incoming memory writes from an
-> endpoint corrupt kernel memory through the still-active inbound ATU window?
->
-> [ ... ]
-as part resume_noirq IATU will be cleared.
->> +static ssize_t run_store(struct device *dev,
->> +			 struct device_attribute *attr,
->> +			 const char *buf, size_t count)
->> +{
->> +	struct dw_pcie_loopback *lb =
->> +		container_of(attr, struct dw_pcie_loopback, attr_run);
->> +	struct dw_pcie_rp *pp = lb->pp;
->> +	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
->> +	size_t buf_size;
->> +	int ret;
->> +
->> +	if (!sysfs_streq(buf, "local"))
->> +		return -EINVAL;
->> +
->> +	if (dw_pcie_link_up(pci)) {
->> +		dev_err(pci->dev,
->> +			"loopback: refusing to run while the link is up\n");
->> +		return -EBUSY;
->> +	}
-> [Severity: High]
-> Are the power domains and clocks guaranteed to be active here?
->
-> The run_store() handler directly checks the link state by reading the
-> PCIE_PORT_DEBUG1 MMIO register via dw_pcie_link_up(), and then proceeds
-> to modify numerous controller registers in dw_pcie_loopback_run().
->
-> Since the test intentionally runs when the link is down, is it possible
-> the driver core has runtime-suspended the PCIe controller to save power?
-> Accessing MMIO registers without calling pm_runtime_get_sync() first
-> could trigger a synchronous bus fault.
->
-> [Severity: Medium]
-> Is there a race condition between checking the link status and executing
-> the test?
->
-> The code locklessly checks dw_pcie_link_up() here, and later acquires
-> lb->lock and performs sleeping allocations in dw_pcie_loopback_run(),
-> such as dma_alloc_coherent() and kmalloc().
->
-> If an endpoint is hotplugged or finishes link training during this sleep
-> window, the link will transition to the UP state. Will the loopback test
-> then blindly overwrite the PCIE_PORT_LINK_CONTROL register, forcefully
-> disrupting the newly active link?
-User might not do link init and do a hotplug of a devcie.
-
-- Krishna Chaitanya.
->> +
->> +	if (mutex_lock_interruptible(&lb->lock))
->> +		return -ERESTARTSYS;
-> [ ... ]
->
+> This is a pre-existing issue, but is there a race condition between hardware
+> IBI interrupts and IBI teardown leading to a use-after-free of dev->ibi?
+> 
+> In i3c_dev_disable_ibi_locked(), the code checks the pending_ibis counter:
+> 
+> drivers/i3c/master.c:i3c_dev_disable_ibi_locked() {
+>     ...
+>     if (atomic_read(&dev->ibi->pending_ibis))
+>         wait_for_completion(&dev->ibi->all_ibis_handled);
+>     ...
+> }
+> 
+> If a hardirq handler is already executing but has not yet called
+> i3c_master_queue_ibi() to increment pending_ibis, the teardown path might
+> assume no IBIs are pending and proceed to free dev->ibi in
+> i3c_dev_free_ibi_locked().
+> 
+> When the interrupted CPU resumes, wouldn't it execute this atomic_inc() and
+> queue_work() on the freed dev->ibi pointer since there is no
+> synchronize_irq() to drain active hardirqs?
+> 
 
