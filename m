@@ -1,136 +1,100 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 84E9F3DBD5E;
-	Tue,  4 Aug 2026 12:51:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D36BC44E646
+	for <linux-pci@vger.kernel.org>; Tue,  4 Aug 2026 13:08:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785847867; cv=none; b=Chq5gUET60g/CY+5ww9kZgtg3K1kIld121dnykJxhNRDaxiMvA5EgPTqj0kF/tuxzArqBtdGjRawVLxS+8EyeBVcvIjFT36mXzrQwQ2IjAgYUeDqPAEDk71pRGUJemfbj4VcoZL8f04hOdne76YKcColtIjKxC+QkF4dEWHRaEE=
+	t=1785848921; cv=none; b=utieUbkjGYrlSch2upNPKJ6R9hgNs6pMiHEwA225ZOqEgzxfWTToy053gPeG/CgZcJD8BigqMHqmgFcFCZK/VNeRGZWu9ir1epSVWRr+z+mWDPM+Od3zqFylni40GFSuawmBFB/gEyi8goeTVzIFhMJBslaIy4bQ/c9ZaGcSFPs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785847867; c=relaxed/simple;
-	bh=ze2NKcp1Ur92lXklztz77pARWs2VrCoUl9y46wg+PDI=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=siz4VQ/jN7WS2l1dAOx7P5i5ZlTTZp8HetEM56z7Z3CHdJwvX7mmqw+SuxZrI+ok1iZnD0l0MlD5A5f/bQSir/a2wtyKLKs5iqAhYULxB2srGWPkjdjWIxlPNvB7DVN6XASIgoVJbZ101yRZXrOvd0TtbvrSaov4QXjnd9aljME=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NotD7S8r; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785848921; c=relaxed/simple;
+	bh=xHZo1A1VtDJYlY6EkrWMbjKGxYCuZXgRF6NwfwHiDRg=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=ugESUdi8GNGs/qCEuYChDd+TXbxWYFb0CIuEDqnqV6vUfnh7+YGy8YRn+sDfqZHHWHhL3ixOiBgWrpDvyfTBLi4+b2pj/pza+H6NZa9D3/OY3Yx0QNjn0N0rommdLyBcS86MPV6eG1Nx210QSsTAXD1MpRaNjrWivPdyXMAULoc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LlmJGv5v; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NotD7S8r"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A58871F000E9;
-	Tue,  4 Aug 2026 12:50:58 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LlmJGv5v"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9FF411F00AC4
+	for <linux-pci@vger.kernel.org>; Tue,  4 Aug 2026 13:08:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785847858;
-	bh=/Ic2b8esDfm00wQm8WodgOpVR7+0Q8spRsCljIJsje8=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=NotD7S8rP6w1nuiTKm5/hfabEr/pEp92em01z9rz6orn+5A2ZPotdYZOdKqQdXa10
-	 3OyDLP0EK3RO66S78ON4WB0UyZuzvoJDUUqQ1bLeRAOWxts2HRfj09/0Uc3V6QATVs
-	 5DQpBBBzn6OxSUZNBDErjuU50S1YYsi0cY/6uxwHsqSaYGrFcIDhZJTfruAcw5yRvK
-	 tKjspKcJjEy/0pu29nKWbdEnuK+ep8klVx2fSFuHPvekA5NameOtF01FqNXfd6/Hfs
-	 wyigQePDrD7NU3+A73A2c7qJ1pW3XU+AlaaQLdKfbbvntF4q0vmTZ16J8SlKh5aj81
-	 uk+IZz4LEIiUg==
-Date: Tue, 4 Aug 2026 07:50:57 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Han / =?utf-8?B?7ZWc7IOB7JqwU2FuZ3dvbw==?= <sangwoo.han@nearthlab.com>
-Cc: jim2101024@gmail.com, florian.fainelli@broadcom.com,
-	lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org,
-	bhelgaas@google.com, bcm-kernel-feedback-list@broadcom.com,
-	robh@kernel.org, linux-pci@vger.kernel.org,
-	linux-rpi-kernel@lists.infradead.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	Marc Zyngier <maz@kernel.org>, Thomas Gleixner <tglx@kernel.org>
-Subject: Re: [PATCH] PCI: brcmstb: Reserve only the MSI vectors that are
- handed out
-Message-ID: <20260804125057.GA1834533@bhelgaas>
+	s=k20260515; t=1785848919;
+	bh=ofJRSLDs8195GpMm/ynERVjZK0A8UzqOhqpVsGdmDLs=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc;
+	b=LlmJGv5vhzU3z0OGaoe3PB5BvaoAx7xwKrXTnNVxSrF3xDB9dJJnj7ZOscyGbq4Vu
+	 cn2ynLxR82mF0sJU8L+IfdiGborxOlxYIhn1/EUKmJeR2LNp528Xej9LR+n7fXaElj
+	 FRiXUftAdejARtTUPtrAxltFnFB9rNWnGI8HJWYtgZ6QluWMjdWEJxpSEVEdo62iy2
+	 Y04xdDXOzJtDQvjYM2Asl2dZk1AN0JSRs1LxeDjFet2neblKD/LJOrQRufExC516oi
+	 iwahGEyO0pisahZvwXy4bj6MQdPy2twGvlTqtSsOsNm/bucYg1XE8lFSf+ZofKmJ7w
+	 njGNimNRhplcA==
+Received: by mail-lj1-f173.google.com with SMTP id 38308e7fff4ca-39c9452244aso43678681fa.3
+        for <linux-pci@vger.kernel.org>; Tue, 04 Aug 2026 06:08:39 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AHgh+Rp9Ljl1nync2tSUAh0NySKv+fNF5sPdBw6Q/phUY+RDmwDqovUrjwAvKw32L1+X6sdzVL6qNkA/oIc=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw6HaV1ZqPxMVr9ambk2thNk9KGEJOCeITxt9B7LGpjSGuhf9rN
+	tDz5d646StzGzJwRbd8FWP776jtTmg35hRZNqOTX6Cn9UnnEBfLA8rKv6zMridToQ2xG1e+oMxP
+	/HzGSwdxpUxKB3ZW9OnBTSHj28k266cw=
+X-Received: by 2002:a2e:b8d5:0:b0:39c:60f3:5baf with SMTP id
+ 38308e7fff4ca-39f8613febcmr31970411fa.4.1785848918039; Tue, 04 Aug 2026
+ 06:08:38 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAFg7d9YX3dXYHFvhXX6VBR_Wd5QzAD77Rgugso5sYD-SwANnLQ@mail.gmail.com>
+References: <20260803203459.10680-1-derekjohn.clark@gmail.com> <CAJZ5v0h78CSSORe_td1gp0n5DDWXN4zcnuXJsz247KYxgs-mdg@mail.gmail.com>
+In-Reply-To: <CAJZ5v0h78CSSORe_td1gp0n5DDWXN4zcnuXJsz247KYxgs-mdg@mail.gmail.com>
+From: "Rafael J. Wysocki (Intel)" <rafael@kernel.org>
+Date: Tue, 4 Aug 2026 15:08:26 +0200
+X-Gmail-Original-Message-ID: <CAJZ5v0iY-SjCG3hdqggbchBA1DrYw04ARyNuzoyO67NF0dt2Ww@mail.gmail.com>
+X-Gm-Features: AUfX_mx7PXL7rR74DC0X7XWaCgLchj17rF888okLUpxtINtQeJL297Ya49o15-k
+Message-ID: <CAJZ5v0iY-SjCG3hdqggbchBA1DrYw04ARyNuzoyO67NF0dt2Ww@mail.gmail.com>
+Subject: Re: [PATCH] acpi: pci_root: Add quirks table for _OSC support
+To: "Derek J. Clark" <derekjohn.clark@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, 
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	"Pierre-Loup A . Griffais" <pgriffais@valvesoftware.com>, David Box <david.e.box@linux.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-[+cc Marc, author of 4615fbc3788d ("genirq/irqdomain: Don't try to
-free an interrupt that has no mapping"), Thomas; beginning of thread
-about multiple MSI vector alloc/free:
-https://lore.kernel.org/all/20260730072215.2090974-1-sangwoo.han@nearthlab.com]
+On Tue, Aug 4, 2026 at 2:46=E2=80=AFPM Rafael J. Wysocki (Intel)
+<rafael@kernel.org> wrote:
+>
+> On Mon, Aug 3, 2026 at 10:35=E2=80=AFPM Derek J. Clark
+> <derekjohn.clark@gmail.com> wrote:
+> >
+> > The MSI Claw A8 hard-locks on resume from s2idle whenever an SD/MMC
+> > card is present in the RTS525A card reader (10ec:525a, PCI ID). This
+> > issue is not present on the Lenovo Legion Go with the same card reader.
+> > The primary difference is that the Claw A8 withholds LTR and DPC while
+> > granting ASPM control to the OS, leading to a split ownership. The issu=
+e
+> > can be mitigated by passing pcie_asmp=3Doff, but quirking on the pci_de=
+v
+>
+> You mean pcie_aspm=3Doff I suppose.
+>
+> > in pci/quirks has no effect.
+> >
+> > Attempted quirks included use of pci_disable_link_state(),
+> > dev->link_state =3D NULL, manually zeroing aspm_l0s_support/aspm_l1_sup=
+port
+> > via DECLARE_PCI_FIXUP_FINAL, and pcie_aspm_remove_cap() on
+> > DECLARE_PCI_FIXUP_HEADER. Only by disabling ASPM on the root hub is the
+> > system able to resume successfully.
+>
+> So if there is a clash between the firmware and the OS, the question
+> is why it only happens during system resume and only for this specific
+> device in this specific configuration.
+>
+> If disabling ASPM globally makes the symptom go away, it certainly is
+> related to ASPM, but it is kind of hard to say what exactly the
+> relationship is at this point.
 
-On Tue, Aug 04, 2026 at 08:31:23PM +0900, Han / 한상우Sangwoo wrote:
-> > Several other PCI controller drivers have similar code.
-> 
-> I agree - eleven of them look like they can have the same problem.
-> 
-> > I think we should fix them all at once (or explain why they don't need
-> > similar fixes).  Might be worth a little helper so they all work the
-> > same way (e.g., some use order_base_2(), others use get_count_order(),
-> > which seems like a pointless difference).
-> 
-> I am working on a related fix for drivers/irqchip/irq-bcm2712-mip.c,
+Besides, does disabling ASPM globally affect what happens to LTR and
+DPC?  I think so.
 
-Similar pattern there, but it uses ilog2(), which differs from
-order_base_2() and get_count_order() in more cases.
-
-> which I can test here.  I would rather not send changes to drivers I
-> cannot test, though, so I am leaving the eleven to whoever has the boards.
-> What I looked at is in the appendix, in case it is useful to them.
-> 
-> Two things seem more useful from where I am sitting.
-> 
->  - The failure is silent.  Appendix A describes the symptom, so that
->    anyone who hits it later can find this thread.
-> 
->  - The contract is not written down.  It changed in 4615fbc3788d, where
->    irq_domain_free_irqs_hierarchy() started freeing one vector at a time.
-> 
-> order_base_2() and get_count_order() give the same answer for any
-> nr_irqs >= 1, so consolidating those two is just cleanup.  Where a shared
-> helper should live I am not sure either.
-
-I don't know either, but I hate fixing an issue in one place and
-leaving the same issue unfixed nearby.
-
-> Appendix A - the symptom
-> ========================
-> 
-> A PCIe device whose driver is unbound and rebound a few times, or whose
-> module is reloaded, ends up with fewer MSI vectors than it asked for.  It
-> does not recover until reboot.
-> 
-> Two things have to be true for it to happen: the device uses multi-MSI,
-> and the vector count it asks for is not a power of two.  Devices that ask
-> for a power of two are unaffected, and so is anything on MSI-X.
-> 
-> I have only seen the reduced-vector case.  A driver that insists on the
-> full count would fail to probe instead, but I have not seen that happen.
-> 
-> 
-> Appendix B - how I sorted the drivers
-> =====================================
-> 
-> I went through drivers/pci/controller/ while working out what my own fix
-> had to do, so this is that rather than a full audit.  Twenty of the
-> drivers own an MSI hwirq pool.  I asked three things about each:
-> 
->  - does .alloc reserve a rounded-up block, or a single slot
->  - does the core hand .free one vector at a time
->  - can nr_irqs > 1 reach the driver at all
-> 
-> Eleven answer yes to all three:
-> 
->   dwc/pcie-designware-host.c   pci-aardvark.c        pcie-apple.c
->   pcie-aspeed.c                pcie-iproc-msi.c      pcie-mediatek-gen3.c
->   pcie-rcar-host.c             pcie-rzg3s-host.c     pcie-xilinx-dma-pl.c
->   pcie-xilinx-nwl.c            pci-hyperv.c
-> 
-> The other nine:
-> 
->  - five reserve a single slot, so nothing rounds up:
->    mobiveil/pcie-mobiveil-host.c, pci-xgene-msi.c, pcie-altera-msi.c,
->    pcie-mediatek.c, plda/pcie-plda-host.c
-> 
->  - vmd.c keeps a per-vector refcount instead of a bitmap
-> 
->  - pci-tegra.c and pcie-xilinx.c reserve a rounded-up block, but neither
->    lists MSI_FLAG_MULTI_PCI_MSI in msi_parent_ops.supported_flags
-> 
->  - pcie-brcmstb.c is the one you applied
+If that is the case, maybe the suspend-resume code paths skip LTR and
+DPC if ASPM is disabled and they do something to those capabilities
+otherwise?  LTR and DPC generally should not be touched by the system
+suspend-resume paths if native_ltr and native_dpc are zero,
+respectively.
