@@ -1,27 +1,28 @@
-Received: from CY7PR03CU001.outbound.protection.outlook.com (mail-westcentralusazon11010052.outbound.protection.outlook.com [40.93.198.52])
+Received: from CH1PR05CU001.outbound.protection.outlook.com (mail-northcentralusazon11010023.outbound.protection.outlook.com [52.101.193.23])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 24C4D28B7DA;
-	Tue,  4 Aug 2026 16:16:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.198.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D1203F65E7;
+	Tue,  4 Aug 2026 16:17:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.193.23
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785860218; cv=fail; b=klq3yusmOnxxYN54M1otN+qBHOdNSWTyW/al/uSMhzQpaFwuMYKMLggs18V7QQmE9Q8uTgS7nEyrax2Gc5B8ER3g5EWvCp+CqFOoIaR4TIm1HY8dwowutv0ZF4d1EBYcz5AyIGCA2pWby2dAZFOx9tzj7+1m4iLNawoXkowBit0=
+	t=1785860227; cv=fail; b=Oj5/NCIKwExh6iH1B33K+gNbDeCQ5LQJIsAQUBIDQJ5uMSCN98Eeg6zW0m859m4EM6t0onvbXlKwzVcFyUPGdfkZeY9gSPNjCNlvihECo4LyYrFinMtbcBwtrf1co/TgYfZT8SY6KI+ZhyRGJf59XuOAGQpzHWoPsR3oU55zIg8=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785860218; c=relaxed/simple;
-	bh=j6iRxEX4bao3PaH9l0Uns7uPNixGAV6FDUeTGDBRcsk=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=igyhvqmFVEdnX5eobo9xzGcRNu9NhQCmQxUEyoYeUCuqh1AFlFEB7cIWZCXn9fhudRGVI8q97Y0ooT8mwwLUM034gZfAzr6+M27RgG86isbBJIYHqdQSMkTqFjDpN9TjJPIUqDdd4ePhkMtUrVC4/Dca5nQUqdxKcfZkS9X4CVg=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=RVHQUOT2; arc=fail smtp.client-ip=40.93.198.52
+	s=arc-20240116; t=1785860227; c=relaxed/simple;
+	bh=SljnaXXsqNbqpWtetZovimwvPTR6tXlEu6QRLLBPF68=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=XW/gnlGqTX+4ju33XUjxNWPz/wsGiL+1hGA6Z9JotAqPmFFgcZcPSxH9ZC1636mjvBOV7A4C1BJwb+gUfSgZz+DGkH5uHgqU8INGtscTmiRsRYCJgUuDFn5ij4/pbynM6mUUH8vKs43Ol5PWqYHds8yLoQvmmPCh4Zn/OPFv0js=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=mKX/6aMo; arc=fail smtp.client-ip=52.101.193.23
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="RVHQUOT2"
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="mKX/6aMo"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=C5ds9qDMosb53qdMsqhT85gnPU9uqUIAm6gSV8hcH1w/GDOp70kzqhVXPtLLcU4qDOvvoatKwirz9rQEu/r3pfZKvF7NeIk0SYgX2ezSd5m9xSo4TGUAQusWbnxyh6dYCpEBejxig66WtHg7UzJgumLCFWfk6XihPMOq1sImtZLNzonecU7o2npmBIDdS8PMQH2K7wNLDoU/8gSB76NDZYqEPv0tLf3BQBzqAXPLopaJCoBFlzFhZjP6FKT9RaqXqRgZtILaRn/H2CyRgrCDBiG0HgyskqsHCHucYQ+p/o/PTvkJ6ZDPpNxlj6vJ+aDSGsrtIj205KAvgyfeOLT2zQ==
+ b=P6XEy/LJprsnEV4R8uFDfmpUFOAizMWzONd0c6m6IoGtuooNkEUDOoJgnOm9skNdG2UJgwvmoSxiZ9NZ7SMbcZOMbrHqNt5G8RLEnCV9baCumF8Cdc7uy2G5Jphop+Aqq0NowsedUVKVTySri5kjS5AkBUZUOelY85qI/lFche3KgzdSMY2K3CJ8aiY+9xH75R71ngz9QZjSzepLbe81c7zl7/Itg3faoPlNMqy9gBhM31Cp0xOJec29BHiIsehHKpsiiRNtlIK9e9fbE2L5/qRvl91arz6Ns8in0f4aomWhC8bJP5mT7yI3xRsU3B23qr3clBWw0R1h5zGMb8gZKQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=2260ZyVlAiJVC870oAq0DDE6CGiUspoSvGJZp4JYaME=;
- b=HPXRwcbz01w2eCIq/LL48kDlUZT0qfvckxe7Ou9pNHp4g5o2R59EAgHyoSFd4EQTYEtj95gyuyR+YHJHRqX6pk9HxgrG+uornaY1N5ibK2FPrQNcW7t0HmQJt80r4NPnx/aetMDBNM021rpDNke1ODpAS0Np7vFyntVoRE3DWho+2lol1Zs7RVISE8qYBq6kM7CrETmrRaVMUV2t0dDY74IFZsvAgIQJ7ZiZ9ArMmvUp3Net5e8WgaxBezLnq0/L9J1z5xvKbsVegxfJLgrojZ14AxoOkDfNa4eChZecgFZNgXH5astr0N6E89zv5Bb8z71j4QJkBxvdgfBlFTbV3A==
+ bh=CnUlqSltrEl15CJ0cdMKMnWbi1VWI0Idg6iOQE2AaA8=;
+ b=uAptSNuV2KC75RUTZIhccglx8qwswyNBz5Z5frGhJ8HqVPdEV5H0RyWQNVJJIG5TkP4vsJjkeW7gWy+44sPIkG5U7Ew8qFb7+5wcbeHBLlv2DuDAEnkCihxDOaxpeV9zS1bheFVwMFEk9UKz8zusDI4Wmo274gvuuXKrsfj1LFmpTTk7ujMKw1lBf61Q3RdbsayCtrhHpHaANP5tquMbU5rSLzedaTYrEVOPY+paa1LxYzTTjxGOP1LjgjIDMwO44vmjVNVeXKfnc+aijdp8tyCmPWSoMtMPlXAv1IgkxaCIkypqu+6V+OmIeGzC6B+nWYvx5Zzr8KXPeRaGzBMSJw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  216.228.118.233) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=nvidia.com;
  dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
@@ -29,18 +30,18 @@ ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=2260ZyVlAiJVC870oAq0DDE6CGiUspoSvGJZp4JYaME=;
- b=RVHQUOT21Yo7/0abG6Ungya1nw0X8xSusmBRdtWjsjt+PNvnBcKqt5ekxILDmBYvtejrhT3Sxv3EyVmZimqxsKUH1BqVR1IWLL4ANzJFkjdIo1FYnRdyB35w+/8g1ZbVv6P8CPrIWkyNeMHN83rKKdl3W6R700afnlHw0U2QcjaKxOMoV6xBkku6o5dKVmGK0EnICVS293qscW0u6J2DFsf4FjjEgdcPEC2STHWRKDGTH/zzffey+4HLlbmBQDsT7qT9B1nIC0cZvUwLiYNSPT/+XEk+iHHJ+HGaCQ9+lyYgNRyZ3iDqfC4bSQUCnC9+vpjrZJq5A87K1ThqJ4MeSA==
-Received: from SJ2P221CA0008.NAMP221.PROD.OUTLOOK.COM (2603:10b6:a03:5db::11)
- by PH7PR12MB6666.namprd12.prod.outlook.com (2603:10b6:510:1a8::8) with
+ bh=CnUlqSltrEl15CJ0cdMKMnWbi1VWI0Idg6iOQE2AaA8=;
+ b=mKX/6aMoxVU2zIpoFRJUgT1glPLnKXCIUn/ulfFz4NyS+Cm9iEt3iovdDUS3vadwG7S4pUI4B2Ke74//HfQWvsEAqj/Oi3iL7aekb/07cMBiWfzdSrASRX1LSKvKKt+RkJ+UDg7t4UVXdRhgJbY3aHp6g2whStjmtFfE953m2dWzMFPu+hbn72hJiS5a4jD1C1jthUuoIOPI1HYj3XAjBe4XX6swWhNgbhWkYoLBLk+R+A7d78pGO8oNwkeIQQwnUVloZk0JEH1vNaOQ/jYCMt83E8IKCbyLnxIKq7NdImvr1EL8U+cJxdabqR/tcBawf/Y2SvZxdFhdM2x4KahbLQ==
+Received: from BY3PR03CA0005.namprd03.prod.outlook.com (2603:10b6:a03:39a::10)
+ by SA1PR12MB8644.namprd12.prod.outlook.com (2603:10b6:806:384::17) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.292.16; Tue, 4 Aug
- 2026 16:16:50 +0000
-Received: from BY1PEPF0001AE1D.namprd04.prod.outlook.com
- (2603:10b6:a03:5db:cafe::e) by SJ2P221CA0008.outlook.office365.com
- (2603:10b6:a03:5db::11) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.21.292.16 via Frontend Transport; Tue, 4
- Aug 2026 16:16:48 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.270.18; Tue, 4 Aug
+ 2026 16:16:55 +0000
+Received: from BY1PEPF0001AE1B.namprd04.prod.outlook.com
+ (2603:10b6:a03:39a:cafe::20) by BY3PR03CA0005.outlook.office365.com
+ (2603:10b6:a03:39a::10) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.21.292.15 via Frontend Transport; Tue, 4
+ Aug 2026 16:16:53 +0000
 X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.118.233)
  smtp.mailfrom=nvidia.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=nvidia.com;
@@ -48,20 +49,20 @@ Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
  216.228.118.233 as permitted sender) receiver=protection.outlook.com;
  client-ip=216.228.118.233; helo=mail.nvidia.com; pr=C
 Received: from mail.nvidia.com (216.228.118.233) by
- BY1PEPF0001AE1D.mail.protection.outlook.com (10.167.242.106) with Microsoft
+ BY1PEPF0001AE1B.mail.protection.outlook.com (10.167.242.103) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.292.8 via Frontend Transport; Tue, 4 Aug 2026 16:16:48 +0000
-Received: from drhqmail203.nvidia.com (10.126.190.182) by mail.nvidia.com
+ 15.21.292.8 via Frontend Transport; Tue, 4 Aug 2026 16:16:53 +0000
+Received: from drhqmail202.nvidia.com (10.126.190.181) by mail.nvidia.com
  (10.127.129.6) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Tue, 4 Aug
- 2026 09:16:26 -0700
+ 2026 09:16:34 -0700
 Received: from drhqmail203.nvidia.com (10.126.190.182) by
- drhqmail203.nvidia.com (10.126.190.182) with Microsoft SMTP Server
+ drhqmail202.nvidia.com (10.126.190.181) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.20; Tue, 4 Aug 2026 09:16:25 -0700
+ 15.2.2562.20; Tue, 4 Aug 2026 09:16:34 -0700
 Received: from inno-dell.home (10.127.8.14) by mail.nvidia.com
  (10.126.190.182) with Microsoft SMTP Server id 15.2.2562.20 via Frontend
- Transport; Tue, 4 Aug 2026 09:16:17 -0700
+ Transport; Tue, 4 Aug 2026 09:16:26 -0700
 From: Zhi Wang <zhiw@nvidia.com>
 To: <rust-for-linux@vger.kernel.org>, <linux-pci@vger.kernel.org>,
 	<linux-kernel@vger.kernel.org>
@@ -75,169 +76,437 @@ CC: <dakr@kernel.org>, <aliceryhl@google.com>, <bhelgaas@google.com>,
 	<joelagnelf@nvidia.com>, <jhubbard@nvidia.com>, <zhiwang@kernel.org>, "Zhi
  Wang" <zhiw@nvidia.com>, <daniel.almeida@collabora.com>, <tamird@kernel.org>,
 	<work@onurozkan.dev>
-Subject: [PATCH v7 0/1] Rust PCI capability infrastructure and SR-IOV support
-Date: Tue, 4 Aug 2026 19:16:10 +0300
-Message-ID: <20260804161612.776752-1-zhiw@nvidia.com>
+Subject: [PATCH v7 1/1] rust: pci: add extended capability and SR-IOV support
+Date: Tue, 4 Aug 2026 19:16:11 +0300
+Message-ID: <20260804161612.776752-2-zhiw@nvidia.com>
 X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20260804161612.776752-1-zhiw@nvidia.com>
+References: <20260804161612.776752-1-zhiw@nvidia.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
 X-NV-OnPremToCloud: ExternallySecured
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BY1PEPF0001AE1D:EE_|PH7PR12MB6666:EE_
-X-MS-Office365-Filtering-Correlation-Id: e78c63ac-4207-4aa8-09c4-08def243c916
+X-MS-TrafficTypeDiagnostic: BY1PEPF0001AE1B:EE_|SA1PR12MB8644:EE_
+X-MS-Office365-Filtering-Correlation-Id: 8b598721-aff3-4fa3-33ae-08def243cc11
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|36860700016|23010399003|82310400026|376014|7416014|5023799004|11063799006|56012099006|10067099003|6133799003|18002099003;
+	BCL:0;ARA:13230040|23010399003|1800799024|7416014|376014|36860700016|82310400026|10067099003|11063799006|6133799003|56012099006|22082099003|18002099003;
 X-Microsoft-Antispam-Message-Info:
-	hk9uVaa3DpJdLxWDn2xsWay8QTUl6ypQFUdcMTJ5OV6UHIN8MKFvD/KOxLn4PLVk6KmujOSOHgZDnU96ZdDDCd7oUGf8kzVgJGUOzVGrw15DXI52QBfsWP3OS9W+FjrvzSoDzeEYJ38lk0w1S6ktN14HD4aW1aWLF4PnOm6+3edPfX+XLHd1c2Xv+KqBDDKZLULHvMtcHO1XwCXoAMypSS9o3Ql10eav7akpWc4EfwfX/42TnirpLARnxSgVqgvvSKqND1XrS8afpBuF+4AMDBYBK53Mm2PYmUI3JKpto/Fw7iXLrqY/ERpAz1yBwvrLPgrOiF0RTFPNkjIbQca+lLNMFU0da9pXUT4grb8MojJvWP5zO5T6Ddt8rHWN1JNQVUz1RqlnYI5o1zUBjHSDEL7JhI90mCS8kWKuEHYyG2eKGLVtxbLqateukv/MvEYKnz70AHjLJmMyPp4gxafZn9TZVbYekuIEojysiymQPA0AeeTaI+HebZAnVGIgeQxzKw6C+sBX+5pCBQtsawzwN1A8ko0Y8zRQc/teoO2znqnNB8U/uHHe6JSYbfsj3ETkeUszhcYI/8d3ZlQqUIQX0eLX0kCffH9GPSgjzFBA6xtSswG61nJ495XJlP7qTAIXimimrhTn4l7CZqbG333/DBt5jfc9+Sid4S572E10BKI2EPmDIADvlx8A7YgFzeZM0Ovio1y85coD/34hYwU0/w==
+	Mt7Kod5j2jMo5SewUaRFJy2hEoW7YK259E1hplQ76mwCQG+55zIGal0mlS8xwn5I2XIWngUpBdLx8ScOfd86rdiqxqIdEn9a/bpgAdvcc3PiWLEs/Z0AE9KgA60wZ/9EZMuy4lQfMPXj6svLr16HhrpjO08xAx/Fmscn5k2rHK+buDvNr/JU+yI4byNK0ttgrQVQJ/CI4uaXUR7GodwgtF/r7qpSXOIvxxWMpqK6NW/KDgk6hO7R9+mieTBI90vLbP9oaLwS3yEKUkgjDNGOlacch7NVBEVypyKsEWd/j/arnwcErCxuIHYjwkUDsu5jXVVtwOyYpK7g5cawyPRrYBmtWikkWZDdSDzuiY0QbxU5zUbfCs1XgGHZTOYu/nvHFomBOW6EDPmfzxAyz5qqqTmzmJDc3+hUp2xCBXSXxWnX2p59s/rtPaUKGsGPRRXBs/fZVZTpdZWIHt01WSQZK4nzALfZheCFkpz7JmRNmltJaDMocYHU5NGtUvbY30h7MBR2jmrKKarVaUl2DWP8er9nRMZZWzwr0d/QDepzCKeucNWz3141+9m7c/kdKZO060Q/4Nb9usoLvOy8eyDLTH7sKj4ymAC9ENpVIZNuYmgeDEeV4HPdHPSp4zugO1cfbsGy4HrNIfU2h8XWkFzsl+LOLMOcc+rjwwKcxQYpHb4onNz1K7AQTYmQ0qPR1iKdUVpO5xKiZYzvsdmC0hmhWQ==
 X-Forefront-Antispam-Report:
-	CIP:216.228.118.233;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc7edge2.nvidia.com;CAT:NONE;SFS:(13230040)(1800799024)(36860700016)(23010399003)(82310400026)(376014)(7416014)(5023799004)(11063799006)(56012099006)(10067099003)(6133799003)(18002099003);DIR:OUT;SFP:1101;
+	CIP:216.228.118.233;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc7edge2.nvidia.com;CAT:NONE;SFS:(13230040)(23010399003)(1800799024)(7416014)(376014)(36860700016)(82310400026)(10067099003)(11063799006)(6133799003)(56012099006)(22082099003)(18002099003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	JkbHVEp/REWccHL3cwE9T2O/UpPOFes87Pe6zsqiSyG3SnGKrkfOu0UjYy/WJYDACye5M2dDzM9hs2Ks7bUq06d0GyfqINuSME2gtdI5IIZPYcKI5MQvayCBIy4uJBAfESPDbB35HJj7OUJwdS8rfB/gnQ41WGI1Rp8/rSV3+eTbO192iFLxKnt2rf+1hLH7ttV7wptHM7KPRfOixXrJjHIbFTOS/b+xYi4RRa5AMsXTB8nzy+cmsafCfFI9IK09Igv1wyTanlwsN/QMwMoOCUiX55cPJN1S7avuMQ2dDlDCVgnG2d1DjlvdbxO7PjUu6w8d720jqgcdTUqEXQkPtimRS3KqorZ98CIRHSoOL9DZnTw5jJuyle02J+aGvcXarIy7EYJXZqE4Bcyb+xw8ogr7/wVquzAl/oyEmIWpUbsPkGaOwvugA3XcHeyUWYfU
+	en6iwQozezjJgM+S8u1SQtBOsuKm6H+lsXlKUr1hGuLJHtVL2RsfZn4QL7MLgbun4ejB/XLsQ2KTilpFrNhYEKb5cKrwGEKcSQ4kamWjlSO5I/JjI+S5BPKaN5Kt+z5MWFUiVNkSH2yOVgndjSu8Vu7xInnWdB2KJCkz/44FYwCrruSLk32qktXe1thHzN52mtHuAhGkjbihJ8j7/oTJgkm9HDcrfNHpTH0LiMXNGtOO+fPLe4rkocnp5brPxkGYQlVGVyM7Sn2JGnukgxCx6oGjKQqS+LWW2hnMDxxPQEnOe6ZOL06mGlO0oU/Tadhi7PCWAKAu/k3AmMIe+8YiZY0AScF6WgZDzuwQVyyAmTtEPvnsKAa5Og3z7IKfkphIydRiSXAjy0CqvcxzwhJ0eh3ymHDz/miwJ6rCIOkvE0GJoPs2ZbOZZAu5tzbGQtp0
 X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 04 Aug 2026 16:16:48.3399
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 04 Aug 2026 16:16:53.3043
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: e78c63ac-4207-4aa8-09c4-08def243c916
+X-MS-Exchange-CrossTenant-Network-Message-Id: 8b598721-aff3-4fa3-33ae-08def243cc11
 X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.118.233];Helo=[mail.nvidia.com]
 X-MS-Exchange-CrossTenant-AuthSource:
-	BY1PEPF0001AE1D.namprd04.prod.outlook.com
+	BY1PEPF0001AE1B.namprd04.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH7PR12MB6666
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA1PR12MB8644
 
-This is a follow-up to v6 [10].
+Rust PCI drivers have no typed interface for locating and accessing PCIe
+extended capabilities.
 
-This patch has been used in the Boot GSP with vGPU enabled series [6].
+The SR-IOV extended capability describes VF topology and VF BARs. Expose
+this information through the Rust PCI abstraction so drivers can use the
+existing typed configuration-space accessors instead of raw bindings.
 
-The patch defines an ExtCapability trait that associates an extended
-capability ID with its register layout. The generic
-ConfigSpace::find_ext_capability() finder locates the capability, bounds
-it at the next capability or the end of extended configuration space,
-and projects the ConfigSpace view to the requested layout. It returns
-None when the capability is absent and propagates errors encountered
-while constructing the view. This lets the existing I/O projection and
-access macros operate on capability registers.
+Define ExtCapability to associate a capability ID with a register layout,
+and add ConfigSpace::find_ext_capability() to locate and project that
+layout. Bound the view at the next capability or the end of extended
+configuration space. Add ExtSriovRegs and a decoded VF BAR iterator that
+reads and validates all six VF BAR register slots up front, yields decoded
+BAR addresses and widths in logical order, and keeps the raw
+configuration-space slot advancement internal. Since PCI_EXT_CAP_NEXT() is
+a function-like macro, expose it through a Rust helper.
 
-ExtSriovRegs provides the SR-IOV register layout.
-ExtSriovCapability::vf_bars() validates the six raw VF BAR slots and
-returns an iterator over logical BARs. The iterator handles the different
-slot widths of 32-bit and 64-bit BARs internally and yields decoded
-ExtSriovVfBar values containing the address and width. A typed bitfield
-decodes each low DWORD while the register layout remains an array of raw
-u32 values. ExtSriovCapability remains as a convenience alias.
-
-Changes since v6:
-- Changed ConfigSpace::find_ext_capability() to return
-  Result<Option<...>>, using None rather than ENODEV when the capability
-  is absent. (Gary)
-- Made calculate_ext_cap_size() propagate errors instead of treating a
-  failed read as the end of capability. (Alex)
-- Replaced indexed VF BAR access with an iterator so callers cannot select
-  the high DWORD of a 64-bit BAR. (Gary, Alex)
-- Validated all six VF BAR slots before iteration, made normal iterator
-  exhaustion return None, and logged invalid BAR encodings before returning
-  EINVAL. (Gary)
-- Decoded VF BAR low DWORDs through a typed bitfield while retaining u32 in
-  ExtSriovRegs for entries that may be 64-bit BAR high DWORDs. (Alex)
-- Made ExtSriovVfBar fields public and documented, removed their trivial
-  getters, used the ExtSriovCapability alias for its impl block, and applied
-  the suggested local cleanups. (Alex)
-- Updated the doctest for the optional finder result and VF BAR iterator.
-  (Zhi)
-- Added #[inline] to the ExtCapId::as_raw() abstraction method. (Sashiko)
-- Rebased onto the latest drm-rust-next. (Zhi)
-
-Changes since v5:
-- Removed the unused ConfigSpace<Region<0>> offset() and size() inherent
-  methods; ConfigSpace already provides size through the Io trait.
-  (Sashiko, Zhi)
-- Removed the doctest write to the SR-IOV NumVFs register, avoiding an
-  example that bypasses PCI core SR-IOV state management. (Sashiko)
-- Corrected Function Dependency Link to an 8-bit field followed by its
-  reserved byte, matching the PCIe SR-IOV register layout. (Sashiko)
-
-Changes since v4:
-- Replaced the separate is_vf_bar_64bit() and read_vf_bar64() helpers
-  with read_vf_bar(), returning a decoded ExtSriovVfBar. (Zhi)
-- Moved memory BAR attribute stripping into the PCI abstraction and used
-  named PCI attribute definitions rather than an open-coded mask. (Zhi)
-- Exposed the next logical BAR slot so callers can walk mixed 32-bit and
-  64-bit VF BAR layouts without duplicating slot arithmetic. (Zhi)
-- Updated the doctest and PCI exports for the decoded BAR API. (Zhi)
-
-Changes since v3:
-- Replaced the custom ExtCapability<T> I/O wrapper with the existing
-  ConfigSpace view infrastructure. (Alex)
-- Reused ExtCapability as a trait carrying the capability ID, and made
-  ConfigSpace::find_ext_capability() generic over register layouts.
-  (Alex)
-- Removed public cast_sized() and unused find_next_ext_capability().
-  (Alex)
-- Kept capability construction in the generic finder and documented
-  calculate_ext_cap_size(). (Alex)
-- Used PCI_SRIOV_NUM_BARS rather than a literal VF BAR count.
-  (Alex, Zhi)
-- Added is_vf_bar_64bit() and made read_vf_bar64() reject BARs that are
-  not 64-bit memory BARs. (Alex, Zhi)
-- Kept indexed VF BAR helpers because the Nova user accesses fixed BAR
-  slots rather than iterating over them. (Alex)
-- Adapted the implementation and doctest to the current ConfigSpace I/O
-  APIs. (Zhi)
-
-Changes since RFC v2:
-- Hardened calculate_ext_cap_size() against corrupt capability lists.
-  (Zhi)
-- Added // INVARIANT: comments at all ExtCapability construction sites
-  (make_ext_capability and cast_sized). (Zhi)
-- Added #[inline] to small forwarding methods (find, read_vf_bar64).
-  (Zhi)
-
-Changes since RFC:
-- Rebased on io_projection branch, using Gary's Io/IoCapable traits.
-  (Gary)
-- ExtCapability implements Io and delegates IoCapable to ConfigSpace
-  instead of duplicating config read/write logic. (Gary)
-- Dropped the fallible I/O patch (now upstream in this tree). (Zhi)
-- Added Rust helper for PCI_EXT_CAP_NEXT() macro. (Zhi)
-- Replaced raw `as` casts with From conversions where possible. (Zhi)
-- Renamed SriovRegs/SriovCapability to ExtSriovRegs/ExtSriovCapability.
-  (Zhi)
-
-[1] https://lore.kernel.org/rust-for-linux/20260409185254.3869808-1-zhiw@nvidia.com/
-[2] https://lore.kernel.org/rust-for-linux/DHRTUAF52GNI.1J98TSAG1LS6Q@nvidia.com/
-[3] https://lore.kernel.org/rust-for-linux/DI2SL4G5INLY.2W1IFTR081ID3@nvidia.com/
-[4] https://lore.kernel.org/rust-for-linux/20260225180449.1813833-1-zhiw@nvidia.com/
-[5] https://lore.kernel.org/rust-for-linux/20260323153807.1360705-1-gary@kernel.org/
-[6] https://lore.kernel.org/rust-for-linux/20260313165336.935771-1-zhiw@nvidia.com/
-[7] https://lore.kernel.org/rust-for-linux/20260714165827.2937960-1-zhiw@nvidia.com/
-[8] https://lore.kernel.org/rust-for-linux/20260730180349.771719-1-zhiw@nvidia.com/
-[9] https://sashiko.dev/#/patchset/20260730180349.771719-2-zhiw@nvidia.com?part=1
-[10] https://lore.kernel.org/rust-for-linux/20260730182954.783568-1-zhiw@nvidia.com/
-[11] https://lore.kernel.org/rust-for-linux/DKC4MR1ZBQMP.3L7X2C96OJLFU@garyguo.net/
-[12] https://lore.kernel.org/rust-for-linux/DKCOUE9DRG5R.2VAVA78UTVKST@nvidia.com/
-[13] https://lore.kernel.org/rust-for-linux/DKCRGMZJXO6X.1SWGREC78DH0W@garyguo.net/
-[14] https://lore.kernel.org/linux-pci/20260730183913.B00061F000E9@smtp.kernel.org/
-
-Zhi Wang (1):
-  rust: pci: add extended capability and SR-IOV support
-
+Link: https://lore.kernel.org/rust-for-linux/20260730182954.783568-1-zhiw@nvidia.com/
+Cc: Alexandre Courbot <acourbot@nvidia.com>
+Cc: Gary Guo <gary@garyguo.net>
+Signed-off-by: Zhi Wang <zhiw@nvidia.com>
+---
  rust/helpers/pci.c     |   5 +
  rust/kernel/pci.rs     |   8 ++
  rust/kernel/pci/cap.rs | 317 +++++++++++++++++++++++++++++++++++++++++
  3 files changed, 330 insertions(+)
  create mode 100644 rust/kernel/pci/cap.rs
 
-
-base-commit: 44e7e7f7cffb10a93bb88e7cb59b7b8b3e2deb1c
+diff --git a/rust/helpers/pci.c b/rust/helpers/pci.c
+index 4ebf256dff23..b946b14d79e4 100644
+--- a/rust/helpers/pci.c
++++ b/rust/helpers/pci.c
+@@ -24,6 +24,11 @@ __rust_helper bool rust_helper_dev_is_pci(const struct device *dev)
+ 	return dev_is_pci(dev);
+ }
+ 
++__rust_helper u32 rust_helper_pci_ext_cap_next(u32 header)
++{
++	return PCI_EXT_CAP_NEXT(header);
++}
++
+ #ifndef CONFIG_PCI_IOV
+ __rust_helper unsigned int
+ rust_helper_pci_sriov_get_totalvfs(struct pci_dev *pdev)
+diff --git a/rust/kernel/pci.rs b/rust/kernel/pci.rs
+index 9f19ccd5905c..008c2770a3f3 100644
+--- a/rust/kernel/pci.rs
++++ b/rust/kernel/pci.rs
+@@ -32,10 +32,18 @@
+     },
+ };
+ 
++mod cap;
+ mod id;
+ mod io;
+ mod irq;
+ 
++pub use self::cap::{
++    ExtCapId,
++    ExtCapability,
++    ExtSriovCapability,
++    ExtSriovRegs,
++    ExtSriovVfBar, //
++};
+ pub use self::id::{
+     Class,
+     ClassMask,
+diff --git a/rust/kernel/pci/cap.rs b/rust/kernel/pci/cap.rs
+new file mode 100644
+index 000000000000..c49de8682f6d
+--- /dev/null
++++ b/rust/kernel/pci/cap.rs
+@@ -0,0 +1,317 @@
++// SPDX-License-Identifier: GPL-2.0
++
++//! PCI extended capability support.
++
++use super::{
++    io::ConfigSpaceBackend,
++    ConfigSpace,
++    Extended, //
++};
++use crate::{
++    bindings,
++    io::{
++        Io,
++        IoBackend,
++        Region, //
++    },
++    num::Bounded,
++    prelude::*,
++};
++
++/// Number of VF BAR register slots in an SR-IOV capability.
++// CAST: `PCI_SRIOV_NUM_BARS` is 6, which fits in `usize`.
++const NUM_VF_BARS: usize = bindings::PCI_SRIOV_NUM_BARS as usize;
++
++/// PCI extended capability IDs.
++#[repr(u16)]
++#[derive(Debug, Clone, Copy, PartialEq, Eq)]
++pub enum ExtCapId {
++    /// Single Root I/O Virtualization.
++    // CAST: `PCI_EXT_CAP_ID_SRIOV` is `0x10`, which fits in `u16`.
++    Sriov = bindings::PCI_EXT_CAP_ID_SRIOV as u16,
++}
++
++impl ExtCapId {
++    #[inline]
++    fn as_raw(self) -> u16 {
++        self as u16
++    }
++}
++
++/// A typed PCI extended capability register layout.
++///
++/// Implementors describe the register layout of one extended capability. The layout must start at
++/// the extended capability header, and [`Self::ID`] must identify that layout.
++pub trait ExtCapability: FromBytes + IntoBytes {
++    /// PCI extended capability ID for this register layout.
++    const ID: ExtCapId;
++}
++
++impl<'a> ConfigSpace<'a, Extended> {
++    /// Finds and projects an extended capability into its typed register layout.
++    ///
++    /// Returns [`None`] if the device does not implement the capability.
++    ///
++    /// # Examples
++    ///
++    /// ```no_run
++    /// use kernel::pci;
++    ///
++    /// fn probe_sriov(
++    ///     pdev: &pci::Device<kernel::device::Bound>,
++    /// ) -> Result<(), kernel::error::Error> {
++    ///     let Some(sriov) = pdev
++    ///         .config_space_extended()?
++    ///         .find_ext_capability::<pci::ExtSriovRegs>()?
++    ///     else {
++    ///         return Ok(());
++    ///     };
++    ///
++    ///     let total_vfs = kernel::io_read!(sriov, .total_vfs);
++    ///     let vf_offset = kernel::io_read!(sriov, .vf_offset);
++    ///     let mut vf_bars = sriov.vf_bars()?;
++    ///     let bar0 = vf_bars.next().ok_or(kernel::error::code::EINVAL)?;
++    ///     let bar1 = vf_bars.next().ok_or(kernel::error::code::EINVAL)?;
++    ///     let bar2 = vf_bars.next().ok_or(kernel::error::code::EINVAL)?;
++    ///
++    ///     Ok(())
++    /// }
++    /// ```
++    pub fn find_ext_capability<C: ExtCapability>(&self) -> Result<Option<ConfigSpace<'a, C>>> {
++        let offset = usize::from(
++            // SAFETY: `self.pdev` is valid by the type invariant of `ConfigSpace`.
++            unsafe {
++                bindings::pci_find_ext_capability(self.pdev.as_raw(), i32::from(C::ID.as_raw()))
++            },
++        );
++
++        if offset == 0 {
++            return Ok(None);
++        }
++
++        let size = self.calculate_ext_cap_size(offset)?;
++
++        let base = ConfigSpaceBackend::as_ptr(*self)
++            .cast::<u8>()
++            .wrapping_add(offset);
++        let ptr = Region::<0>::ptr_try_from_raw_parts_mut(base, size)?;
++
++        // SAFETY: `offset` was returned by `pci_find_ext_capability`, and
++        // `calculate_ext_cap_size` bounds `ptr` at the next capability or the end of the extended
++        // configuration space. `ptr_try_from_raw_parts_mut` verified the region layout.
++        let capability = unsafe { ConfigSpaceBackend::project_view(*self, ptr) };
++
++        capability.try_cast::<C>().map(Some)
++    }
++
++    /// Calculates the size of the extended capability at `offset`.
++    ///
++    /// The capability extends to the next extended capability, or to the end of the extended
++    /// configuration space if it is the last one. `offset` must be a DWORD-aligned offset within
++    /// the extended configuration space returned by `pci_find_ext_capability`. Returns an error if
++    /// the capability header is outside the extended configuration space.
++    fn calculate_ext_cap_size(&self, offset: usize) -> Result<usize> {
++        let header = self.try_read32(offset)?;
++        // SAFETY: Pure bit manipulation, no preconditions.
++        // CAST: The next-cap pointer is a 12-bit field (max 0xFFC), always fits in `usize`.
++        let next = unsafe { bindings::pci_ext_cap_next(header) } as usize;
++
++        Ok(if next > offset {
++            next - offset
++        } else {
++            self.size() - offset
++        })
++    }
++}
++
++/// SR-IOV register layout per PCIe spec (64 bytes starting at cap offset).
++#[repr(C)]
++#[derive(FromBytes, IntoBytes)]
++pub struct ExtSriovRegs {
++    /// Extended capability header.
++    pub header: u32,
++    /// SR-IOV capabilities.
++    pub cap: u32,
++    /// SR-IOV control.
++    pub ctrl: u16,
++    /// SR-IOV status.
++    pub status: u16,
++    /// Initial VFs.
++    pub initial_vfs: u16,
++    /// Total VFs.
++    pub total_vfs: u16,
++    /// Number of VFs.
++    pub num_vfs: u16,
++    /// Function dependency link.
++    pub func_dep_link: u8,
++    _reserved_0: u8,
++    /// First VF offset.
++    pub vf_offset: u16,
++    /// VF stride.
++    pub vf_stride: u16,
++    _reserved_1: u16,
++    /// VF device ID.
++    pub vf_device_id: u16,
++    /// Supported page sizes.
++    pub supported_page_sizes: u32,
++    /// System page size.
++    pub system_page_size: u32,
++    /// VF BARs (BAR0–BAR5).
++    pub vf_bar: [u32; NUM_VF_BARS],
++    /// VF migration state array offset.
++    pub migration_state: u32,
++}
++
++impl ExtCapability for ExtSriovRegs {
++    const ID: ExtCapId = ExtCapId::Sriov;
++}
++
++/// A typed view of an SR-IOV extended capability.
++pub type ExtSriovCapability<'a> = ConfigSpace<'a, ExtSriovRegs>;
++
++#[derive(Debug, Clone, Copy, PartialEq, Eq)]
++enum VfBarMemoryType {
++    Bits32,
++    Bits64,
++}
++
++impl TryFrom<Bounded<u32, 2>> for VfBarMemoryType {
++    type Error = Error;
++
++    fn try_from(value: Bounded<u32, 2>) -> Result<Self> {
++        match value.get() {
++            0b00 => Ok(Self::Bits32),
++            0b10 => Ok(Self::Bits64),
++            _ => Err(EINVAL),
++        }
++    }
++}
++
++impl From<VfBarMemoryType> for Bounded<u32, 2> {
++    fn from(value: VfBarMemoryType) -> Self {
++        match value {
++            VfBarMemoryType::Bits32 => Self::new::<0b00>(),
++            VfBarMemoryType::Bits64 => Self::new::<0b10>(),
++        }
++    }
++}
++
++crate::bitfield! {
++    /// Low DWORD of an SR-IOV VF BAR.
++    struct VfBarLow(u32) {
++        /// Base address bits 31:4.
++        31:4 address;
++        /// Whether the address range is prefetchable.
++        3:3 prefetchable => bool;
++        /// Memory BAR type.
++        2:1 memory_type ?=> VfBarMemoryType;
++        /// Whether this is an I/O-space BAR.
++        0:0 io_space => bool;
++    }
++}
++
++/// A decoded VF BAR register encoding.
++#[derive(Debug, Clone, Copy, PartialEq, Eq)]
++pub struct ExtSriovVfBar {
++    /// The BAR address without PCI attribute bits.
++    pub address: u64,
++
++    /// Whether the BAR is 64-bit.
++    pub is_64bit: bool,
++}
++
++/// Iterator over decoded VF BAR register encodings.
++///
++/// `slots` contains the six consecutive 32-bit registers VF BAR0 through VF BAR5. A 32-bit
++/// memory BAR encoding uses one register. A 64-bit memory BAR encoding uses that register for
++/// bits 31:0 and the immediately following register for bits 63:32.
++///
++/// # Invariants
++///
++/// - `config_slot <= NUM_VF_BARS`.
++/// - If `config_slot < NUM_VF_BARS`, it identifies the next register to interpret as a BAR low
++///   DWORD. Its address-space encoding is memory and its type encoding is either 32-bit or 64-bit.
++/// - If that low DWORD encodes a 64-bit BAR, `config_slot + 1 < NUM_VF_BARS`, and the register at
++///   `config_slot + 1` is its upper DWORD.
++struct ExtSriovVfBars {
++    slots: [u32; NUM_VF_BARS],
++    config_slot: usize,
++}
++
++impl ExtSriovVfBars {
++    fn new(slots: [u32; NUM_VF_BARS]) -> Result<Self> {
++        let mut config_slot = 0;
++
++        while config_slot < NUM_VF_BARS {
++            let low = VfBarLow::from(slots[config_slot]);
++
++            if low.io_space() {
++                return Err(EINVAL);
++            }
++
++            let is_64bit = low.memory_type()? == VfBarMemoryType::Bits64;
++
++            if is_64bit {
++                if config_slot + 1 >= NUM_VF_BARS {
++                    return Err(EINVAL);
++                }
++
++                config_slot += 2;
++            } else {
++                config_slot += 1;
++            }
++        }
++
++        Ok(Self {
++            slots,
++            config_slot: 0,
++        })
++    }
++}
++
++impl Iterator for ExtSriovVfBars {
++    type Item = ExtSriovVfBar;
++
++    fn next(&mut self) -> Option<Self::Item> {
++        if self.config_slot >= NUM_VF_BARS {
++            return None;
++        }
++
++        let config_slot = self.config_slot;
++        let low = VfBarLow::from(self.slots[config_slot]);
++        let is_64bit = matches!(low.memory_type(), Ok(VfBarMemoryType::Bits64));
++        let low_address = u64::from(low.address()) << VfBarLow::ADDRESS_SHIFT;
++
++        let address = if is_64bit {
++            let high = self.slots[config_slot + 1];
++            self.config_slot += 2;
++            (u64::from(high) << 32) | low_address
++        } else {
++            self.config_slot += 1;
++            low_address
++        };
++
++        Some(ExtSriovVfBar { address, is_64bit })
++    }
++}
++
++impl ExtSriovCapability<'_> {
++    /// Returns an iterator over decoded VF BAR register encodings.
++    ///
++    /// The iterator tracks the six raw VF BAR register slots internally. A 32-bit encoding yields
++    /// one entry and advances by one slot; a 64-bit encoding combines two slots into one entry.
++    ///
++    /// A zero-valued low DWORD is yielded as a 32-bit BAR at address zero; this method does not
++    /// probe whether a BAR is implemented.
++    ///
++    /// Returns [`EINVAL`] and logs an error if a BAR low DWORD does not encode a 32-bit or 64-bit
++    /// memory BAR, or if a 64-bit encoding has no upper DWORD.
++    pub fn vf_bars(&self) -> Result<impl Iterator<Item = ExtSriovVfBar>> {
++        let slots: [u32; NUM_VF_BARS] =
++            core::array::from_fn(|slot| crate::io_read!(*self, .vf_bar[panic: slot]));
++
++        ExtSriovVfBars::new(slots).inspect_err(|_| {
++            dev_err!(self.pdev, "invalid VF BAR encoding in SR-IOV capability\n");
++        })
++    }
++}
 -- 
 2.53.0
+
