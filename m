@@ -1,134 +1,86 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 07D06DDA9;
-	Tue,  4 Aug 2026 21:17:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE21F42AF9B;
+	Tue,  4 Aug 2026 21:39:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785878280; cv=none; b=Mztyvj6e/oWBDBq3M7uxKsebm/nyMAhfaXiEubvSkj5A+29ARHo5+3QqyRAtNROiy3aA5+iREYERGrlum6F0ukwY2vr70CxIxEFx5HKcrIMyDtzmxDQliwbZlYTRIolBFjL1VA2IrHtqaOgKUxeX0YY1xfyL+exXixGuQXayfHk=
+	t=1785879575; cv=none; b=E4CVzvqqH8wqMvpxS5edV9ypp6j3P8gnaPjo/3pQrhTPC6p6m0/X8HNmjIrwV3PcZNg3UxSHu5NAMr5c2mzx/edn2FkQen2RnGs5Fa+tXoTTiodK9kgJ0FYYwXfhuYxlwIx6Ke8p/0eCt8BkgYkIqZyBZslMX+PPeXjDmD9dpOE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785878280; c=relaxed/simple;
-	bh=+uxQVz9jZ0K4nTxCgsBfvyx21/GHrvr1dCNICfTR52g=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=QwdgJh5+RoM4tUSfuU/CgJs/hQwahOJPhWiSVw/n60vmp/2FZiJSj6BC1IASE6kIVTl31HjBNRyqDglj2duyzmuDT50oVVQBqSMpJPwHnj66ZLJwhSb6eibjoHj0gD4pPXHAkX0Z6slynS0iV/CvbhL86zBq5yv60yYV9fOHy34=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dYwAg0te; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785879575; c=relaxed/simple;
+	bh=zp1fLwWCJ6LNSOrwZWOzElY5hBEEUV4U5GqD2qYs8Ec=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=dmblH73bqk2gF1DXD+0jy57uRn3Sf1xmRUNfOoLNavLJBOXq9FW6w2mtbjjQGkbD6LPsQp+a+FBiqB3IQCiLYF2JAWVcEZ+ignJ+ZnkONXa4fPjh/hakiQy6mBr1V6z+5OTVQUJgvTiPwNBrMQUKMqoJoF2mr4gW8tLEGi9XAGU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Bppwne7x; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dYwAg0te"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4B0CC1F000E9;
-	Tue,  4 Aug 2026 21:17:58 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Bppwne7x"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 343D61F000E9;
+	Tue,  4 Aug 2026 21:39:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785878278;
-	bh=zInXWsYZop6MOqA1Jea68UbD+uK3ZrLZybcKPUeETww=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=dYwAg0teI19butiV68RAAYo4Ver3YCvkTrBL3sdf5qvYBOwbg3GPowTAdUbSOPaez
-	 xN0UPCXQFVW0Nma+CN4PhwCExmof6WpYifltCgCAUHEIv2N0LGdmWwUVkqM11rP37r
-	 Rig6dDxpOQ+IwI4DjSqaIcboifgtNRBmVYEjSfaf/HkNmd7MF6qSCdvOCwi3v8nzwO
-	 Dc4i99vrOm6cRKXqYZcN9+PIONSOswMUuCW8KyJ0cjdD2xnu5jBujJa7Y31UTOOwUk
-	 6jSBYeSFxPqsZ8INlt2DJmdayLNYs3UP179p4oYeKuKwp6GaUJXwm+Gx2gpVWpVfBM
-	 uDyIakPhOlktQ==
-Date: Tue, 4 Aug 2026 16:17:56 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Randy Dunlap <rdunlap@infradead.org>
-Cc: Mark Brown <broonie@kernel.org>,
-	Linux Next Mailing List <linux-next@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	linux-pci@vger.kernel.org, Takuma Fujiwara <t-fujiwara1@ti.com>,
-	Hans Zhang <18255117159@163.com>,
-	Pengpeng Hou <pengpeng@iscas.ac.cn>,
-	Manivannan Sadhasivam <mani@kernel.org>, Yao Zi <me@ziyao.cc>,
-	Aksh Garg <a-garg7@ti.com>, Felix Gu <ustc.gu@gmail.com>,
-	Siddharth Vadapalli <s-vadapalli@ti.com>,
-	Manikandan K Pillai <mpillai@cadence.com>
-Subject: Re: linux-next: Tree for Jul 30 (pci/controller/cadence/)
-Message-ID: <20260804211756.GA1938423@bhelgaas>
+	s=k20260515; t=1785879574;
+	bh=T0suM6UH5omDWTHGSbQmtey3p4lq91BG7bOsmDfbIyM=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=Bppwne7xQQZwr7TThnswEzpERjk/8JMDlvyQbeA75aneml9dBULglzSnzxEO1D5JS
+	 i5+MwOSjGqSBMJrThH6TM7uCI5x65/j9s7bKDn0ra+KZEx6MzONVz2pwgtZSRLT1KT
+	 szU7igR3aIxS3ADMViuiBS7LSV1Eq/dpCXoZSjOhxbF5V2QZp1JfJd9tngfmkbWahr
+	 H8UBo0a4nEy2JnWzEe7aUOl+VGJi3ZtmAswCOmUBcm1wXEGaV/Nj7gNn4oToovRLYY
+	 6nh567y5d3760qAPpdlCNYD4DdPgzolWpaYZkFYpRCdH9lQMe7YrI4SLQ/KffM+Qth
+	 Bm5RyLqtDGisg==
+From: Danilo Krummrich <dakr@kernel.org>
+To: Danilo Krummrich <dakr@kernel.org>
+Cc: aliceryhl@google.com,
+	daniel.almeida@collabora.com,
+	ojeda@kernel.org,
+	boqun@kernel.org,
+	gary@garyguo.net,
+	bjorn3_gh@protonmail.com,
+	lossin@kernel.org,
+	a.hindborg@kernel.org,
+	tmgross@umich.edu,
+	tamird@kernel.org,
+	acourbot@nvidia.com,
+	work@onurozkan.dev,
+	bhelgaas@google.com,
+	kwilczynski@kernel.org,
+	gregkh@linuxfoundation.org,
+	rafael@kernel.org,
+	mhi@mailbox.org,
+	driver-core@lists.linux.dev,
+	rust-for-linux@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] rust: irq: make Registration compatible with lifetime-bound drivers
+Date: Tue,  4 Aug 2026 23:39:16 +0200
+Message-ID: <20260804213915.788349-2-dakr@kernel.org>
+X-Mailer: git-send-email 2.55.0
+In-Reply-To: <20260719153631.559341-1-dakr@kernel.org>
+References: <20260719153631.559341-1-dakr@kernel.org>
+X-Patch-Reply: applied
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <b99bef0f-7694-4aff-949e-d289d8ddb10e@infradead.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-[+cc recent committers in drivers/pci/controller/cadence/]
-
-On Fri, Jul 31, 2026 at 05:12:03PM -0700, Randy Dunlap wrote:
-> On 7/31/26 2:41 PM, Bjorn Helgaas wrote:
-> > On Thu, Jul 30, 2026 at 07:27:42PM -0500, Bjorn Helgaas wrote:
-> >> [+cc authors of everything on pci/controller/cadence; I haven't
-> >> triaged this at all, sorry, and don't have time right now to drop that
-> >> branch from pci/next]
-
-Thanks, Randy, I reproduced this problem on v7.1 in an x86_64 build
-with the config-r1495.gz you posted at
-https://lore.kernel.org/all/b99bef0f-7694-4aff-949e-d289d8ddb10e@infradead.org
-
-Per MAINTAINERS, drivers/pci/controller/cadence/ is orphaned.  If
-anybody cares about this, please take a look and fix this issue.
-
-> >> On Thu, Jul 30, 2026 at 04:06:44PM -0700, Randy Dunlap wrote:
-> >>>
-> >>>
-> >>> On 7/30/26 8:02 AM, Mark Brown wrote:
-> >>>> Hi all,
-> >>>>
-> >>>> Changes since 20260729:
-> >>>>
-> >>>
-> >>> (1) /usr/bin/ld.bfd: drivers/pci/controller/cadence/pcie-cadence-plat.o: in function `cdns_plat_pcie_probe':
-> >>> pcie-cadence-plat.c:(.text+0x2f8): undefined reference to `cdns_pcie_ep_setup'
-> >>>
-> >>> In this case, a builtin driver attempts to call into a loadable module:
-> >>>
-> >>> #
-> >>> # Cadence-based PCIe controllers
-> >>> #
-> >>> CONFIG_PCIE_CADENCE=y
-> >>> # CONFIG_PCIE_CADENCE_DEBUGFS is not set
-> >>> CONFIG_PCIE_CADENCE_HOST=y
-> >>> CONFIG_PCIE_CADENCE_EP=m
-> >>> CONFIG_PCIE_CADENCE_PLAT=y
-> >>> CONFIG_PCIE_CADENCE_PLAT_HOST=y
-> >>> CONFIG_PCIE_CADENCE_PLAT_EP=m
-> >>> # end of Cadence-based PCIe controllers
-> > 
-> > I was unable to reproduce this issue, so I didn't do anything.  I
-> > didn't figure out how to make CONFIG_PCIE_CADENCE_EP=m; the config I
-> > used was:
-> > 
-> >   CONFIG_PCIE_CADENCE=y
-> >   # CONFIG_PCIE_CADENCE_DEBUGFS is not set
-> >   CONFIG_PCIE_CADENCE_HOST=y
-> >   CONFIG_PCIE_CADENCE_EP=y
-> >   CONFIG_PCIE_CADENCE_PLAT=y
-> >   CONFIG_PCIE_CADENCE_PLAT_HOST=y
-> >   CONFIG_PCIE_CADENCE_PLAT_EP=m
-> > 
-> >>> (2) /usr/bin/ld.bfd: drivers/pci/controller/cadence/pcie-cadence-plat.o: in function `cdns_plat_pcie_probe':
-> >>> pcie-cadence-plat.c:(.text+0x11f): undefined reference to `cdns_pcie_host_setup'
-> >>>
-> >>>
-> >>> This is similar, just a different driver is =m in the failure case.
-> >>>
-> >>> #
-> >>> # Cadence-based PCIe controllers
-> >>> #
-> >>> CONFIG_PCIE_CADENCE=y
-> >>> CONFIG_PCIE_CADENCE_DEBUGFS=y
-> >>> CONFIG_PCIE_CADENCE_HOST=m
-> >>> CONFIG_PCIE_CADENCE_EP=y
-> >>> CONFIG_PCIE_CADENCE_PLAT=y
-> >>> CONFIG_PCIE_CADENCE_PLAT_HOST=m
-> >>> CONFIG_PCIE_CADENCE_PLAT_EP=y
-> 
-> I have reproduced it several times in cases that were
-> generated by 'make randconfig'.
-> I am attaching the 2 failing randconfig files (both for x86_64
-> and linux-next).
-> 
-> -- 
-> ~Randy
-
-
-
+On Sun, 19 Jul 2026 17:36:05 +0200, Danilo Krummrich wrote:=0D
+> [PATCH v2] rust: irq: make Registration compatible with lifetime-bound dr=
+ivers=0D
+=0D
+Applied, thanks!=0D
+=0D
+  Branch: driver-core-testing=0D
+  Tree:   git://git.kernel.org/pub/scm/linux/kernel/git/driver-core/driver-=
+core.git=0D
+=0D
+[1/1] rust: irq: make Registration compatible with lifetime-bound drivers=0D
+      commit: 98c63ce4d760=0D
+=0D
+The patch will appear in the next linux-next integration (typically within =
+24=0D
+hours on weekdays).=0D
+=0D
+The patch is in the driver-core-testing branch and will be promoted to=0D
+driver-core-next after validation.=0D
