@@ -1,280 +1,230 @@
-Received: from mail-pl1-f175.google.com (mail-pl1-f175.google.com [209.85.214.175])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF2703E16A4
-	for <linux-pci@vger.kernel.org>; Tue,  4 Aug 2026 19:02:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4068B4908A8
+	for <linux-pci@vger.kernel.org>; Tue,  4 Aug 2026 19:28:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785870126; cv=none; b=fW0JnNwAKQ3mFHjmHmeykuI/t827N+K4RDbh7kyWPoNh3h5Wd6BQETD9EyWWhhSCzphPXta59U1nRe/9Kz7+EpSbDcIgvcnTN1B5+d8Bd/ZyS2Badlb3/f0mewZliY3XacZLAP8qRUb6FRlFXJSA6U0KVojs6LcZ3rAN5piV8Qw=
+	t=1785871727; cv=none; b=emR15dp1LiZZQLZ+DgFdQbsuPirA5AIJo5FIXSoeCE3p4sr7gqXxejhguqSk4lL86IqRb+l431dOO3mp7MOTDO1jCrDEjYc8CDLgjVbOQz1gtAeMTJ9Vp5YFrkSl34I4yP7dNrJEcf1NCnS4TeMorS8dBkTuSMg/3XdY1EgqSQE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785870126; c=relaxed/simple;
-	bh=QWLw5d3PsFELUOtZXKJPtt4CkxNmtXjChuvttT4vh7o=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=hYKaPaMpYvpvtSiEi3iI401Frvkpyw/J0cOY54oBp3/P0A5L0y0Nizq5+mhkt/k/sagZjHTTJ2jIqRMSEI9X0moJ3TIhNDyXaXaHzXuuR6oLqwTAEKEJejTDBRZSNfp715ar9HTN0cDz/FXeEV6NRC2o3f+OfatZtqxdIEJVrpk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=V2XPeA19; arc=none smtp.client-ip=209.85.214.175
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	s=arc-20240116; t=1785871727; c=relaxed/simple;
+	bh=wc3Al0KPAQCWRKRVJpBGFdV79fWyCpOeBTms/ZpfcBE=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=d0QeODD9H+V56SvVeooM402dqcSLe0DqoTzvLADONhTneVJXpyeKdSPZUkXA9W6jK6b/WAX18IKkUFMsSaZssh2l05mJCM2zMuK90H6JqOxeheTzxJRWCCePzgg3q4t7rOC06nt0bgJc4XZmsu1tlJFxxcNVpsSjKNeoRR7CbUk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=FtoZWcBQ; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=VEa6dC/4; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="V2XPeA19"
-Received: by mail-pl1-f175.google.com with SMTP id d9443c01a7336-2cacef7d299so23835ad.1
-        for <linux-pci@vger.kernel.org>; Tue, 04 Aug 2026 12:02:04 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="FtoZWcBQ";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="VEa6dC/4"
+Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 674J07d9326339
+	for <linux-pci@vger.kernel.org>; Tue, 4 Aug 2026 19:28:43 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	MhA2IU8196JWiRByXGGWXt3G4pGVswpFZCS5BuGud3c=; b=FtoZWcBQaIRPkYal
+	jZp2fkeDjiWsLFp6JJZovb7cSZqmsLq3f2SU8fyla0+5dREDVS8kDvqBltSv+Ffb
+	gfGmdJxPsaIobwrsD5aKZakAqkBzV4UD1PiL1trVoG1XVlsJ/guKpsp/WHv9Gpqe
+	fGLOaOq18enyM+G6fB0eOCiFlv98DeIfb8N+nx/UzNIqbQhEOIpJ+4MoNhwuXqkU
+	grGy5whG2gKlk8jq54G1BPWhwE7FxPnexC8CLzaSsDd3ETy/+Ep7vx3t2DdELTep
+	ig7FGsXx7bWAdVhnOrKPAjju6YVHVK6NOSyJ34fKIATrpNEjmV1Lu7natRrkMpiz
+	dOUtIw==
+Received: from mail-pg1-f198.google.com (mail-pg1-f198.google.com [209.85.215.198])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4fugmghvx9-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Tue, 04 Aug 2026 19:28:42 +0000 (GMT)
+Received: by mail-pg1-f198.google.com with SMTP id 41be03b00d2f7-c9fe4c5eb39so86696a12.1
+        for <linux-pci@vger.kernel.org>; Tue, 04 Aug 2026 12:28:42 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1785870124; x=1786474924; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=o7hc3yljc5+LxUHQxs78+dkD3Zfo1reE/uEECJBVPac=;
-        b=V2XPeA19gXM3fPDmK7dnIChkFnwwjxXN1IothHoQUIofnJI1gMnfkmzOggGxj1rsd2
-         OupN0NEGnmjWbtz6eF7r6SJFNDqzx7iQIjnT7689gnKak6T9dnv11BFnWs1r//hr/nNP
-         Qw0wMI2ec73uAdmw1tN4In4tpWaJFKQ/dDEgx4r4PQ1f3REfkcsXhqGqoT28dWuJ4WAy
-         NtM3+HP0DpSPWSN2VocUCR2ybCWPISC9T5PfuoHL/jFvE3HXvCI73hvR6W20vaYLescI
-         xyY5eir22E6fPeJrESKjwEse3WRoOmVrMyI5D3mzuPwAF22qjH4wmz9ybeeL9LO45aM5
-         FIuw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785870124; x=1786474924;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+        d=oss.qualcomm.com; s=google; t=1785871722; x=1786476522; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=o7hc3yljc5+LxUHQxs78+dkD3Zfo1reE/uEECJBVPac=;
-        b=RZxH0UQFE4Hsr0hqSzH7vvPXHM/HY9fFwLr1w8HMEARBINR2WrZzGZDWxZLyv461dW
-         sFoMR3wabKZUIOc2WZqNLJMmg/523UvKYz+HZ+q1vDD74noZUGYfqqypzkkVDOBB+bMx
-         VZPB54+k5XJLz5hNLPQ7iZxZYMTXPcOB6nnt7Vt8ituRS7fcDcIrbdw0U8/pe2YDQCP/
-         UG2Cd2W28bHvcjlmxrr+YhORljgM8YhzPbjvTrB9Xtl7gPJXDBI0xssw5mBraLIWtyK7
-         VC6nLIWrFTxlYQS1AXffPZbIzNqrAG2Nr6zqmDNIMiepnSgd387UboqaJGrSkrUOUDZj
-         5ctg==
-X-Forwarded-Encrypted: i=1; AHgh+RpWOez2PJmhISOxLPkzoRquFydk4pqQqqknEYfAiD0c865Pvy6wz1El60oTZAG3GPwvb8CHVtzT0Ck=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy0+T42ZCcJwV+XHlqdf37UdBg7RXIw8BAJLkqpdv45y0iP1hX+
-	veIVtva2dSatSUaov4S+K7Rc4A91LuTmH0NP9AN5ok+mjGBKJk/SpO6T5yDV747Q7w==
-X-Gm-Gg: AR+sD10KfpM4CHQgn0H/Aseu3gjb+VG31TPl2VEkdS09/G2QYNU8DmKnevGWLXuaojz
-	jV6rwgtdYzp74rUst6+/Ut07Az3vDRmMPBc6YikM9g9j/p3g8SvDaKhXe2/WM2clUA1kYsA4kzi
-	VP/bd/0iwLFIl16NJmWG4o/+RuXcgkfDspgqmphhYvMSMPbha3LdGaUXdCM1EQZS8CjpdUN1NQT
-	pgPTTp8hxBcwCPh1+BSCCmp/uTSJVzYnSIraQrGXbA6Au8Ny+t1+pEhSavfLiuZUkWy17J9BXDl
-	0CfiNx06TGhZSmqOaJjAZehGo0pgwZMuexkhDP81FoZoyDAIBJSyZKti4GAjhFJVEYWjrJFFaBS
-	0Ovaetg1VjTEpMScG/ANwgEWUvDfbRiF+ciVAnIWZG1iIFTOnH7sEBfwB3kYRF5lKIvyekFb1c2
-	j3VBw0dz48dF0C/cbmPzEG/D8a2dn2zY0lVs/FOU+av/C1+tFeNt2zxUA4OXqDsh9Wg6qNzFcTf
-	mI4ilZQw4FQofy0qkD6xzY=
-X-Received: by 2002:a17:903:3c23:b0:2ca:cbe5:c3af with SMTP id d9443c01a7336-2d0caf6bbb3mr2044475ad.7.1785870123058;
-        Tue, 04 Aug 2026 12:02:03 -0700 (PDT)
-Received: from google.com (21.168.124.34.bc.googleusercontent.com. [34.124.168.21])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-84f2e2c2326sm201840b3a.10.2026.08.04.12.01.57
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 04 Aug 2026 12:02:02 -0700 (PDT)
-Date: Tue, 4 Aug 2026 19:01:53 +0000
-From: Pranjal Shrivastava <praan@google.com>
-To: Matt Evans <matt@ozlabs.org>
-Cc: Alex Williamson <alex@shazbot.org>, Leon Romanovsky <leon@kernel.org>,
-	Jason Gunthorpe <jgg@nvidia.com>, Alex Mastro <amastro@fb.com>,
-	Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Logan Gunthorpe <logang@deltatee.com>,
-	Kevin Tian <kevin.tian@intel.com>,
-	Longfang Liu <liulongfang@huawei.com>,
-	Mahmoud Adam <mngyadam@amazon.de>,
-	David Matlack <dmatlack@google.com>,
-	=?iso-8859-1?Q?Bj=F6rn_T=F6pel?= <bjorn@kernel.org>,
-	Sumit Semwal <sumit.semwal@linaro.org>,
-	Ankit Agrawal <ankita@nvidia.com>,
-	Alistair Popple <apopple@nvidia.com>,
-	Vivek Kasireddy <vivek.kasireddy@intel.com>,
-	linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
-	dri-devel@lists.freedesktop.org, linaro-mm-sig@lists.linaro.org,
-	kvm@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v5 3/9] vfio/pci: Add a helper to look up PFNs for DMABUFs
-Message-ID: <anI3IZVZm16BOIc5@google.com>
-References: <20260715174737.15287-1-matt@ozlabs.org>
- <20260715174737.15287-4-matt@ozlabs.org>
- <amvWXNRtviKEuUoV@google.com>
- <ecf9b355-9fe1-440b-9281-08671a995139@ozlabs.org>
- <cfae30ec-18ed-4f06-bf96-ef294a8c2744@ozlabs.org>
+        bh=MhA2IU8196JWiRByXGGWXt3G4pGVswpFZCS5BuGud3c=;
+        b=VEa6dC/4fJ8wb+qivVu5NGT0utzHGkhsJb7/VhpmLEki8LrojGEpnvQxrD4oWkgp8f
+         XivUVwFVUt3g/+qt0j81MBJx2AmQlvS2G/NodHTqCrvYHkGeVPf3W2Yc0dQaIcOQi3D8
+         OREph5b4B2L/ayT0o8WeezguHX0O/eEll3n+BPduyQDQqzTujHrp8kDwnuu812ISwdGq
+         vDnDN52gp8CP/umB8sa+fwp4mbP9/GxLEtK0Yf7s3Ka3Q4vCeLTrcTwMsil6yDACeo3y
+         t4opB+sm2uytA7kTC4Cpo72notQ229Q/7agn8vRguLySv8mUvzMU3w4m1f8Gl0rr8hFO
+         3Yow==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1785871722; x=1786476522;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=MhA2IU8196JWiRByXGGWXt3G4pGVswpFZCS5BuGud3c=;
+        b=c0uKsKbI4fn3iqjipoqR1ldikSLF/le0IQDXuANkr3RU9j+Ed52WknYnkMgNIDo4Ts
+         ocL5QtSu74JPTpc/zCLV1QBg0n1c8LuNua0FfUOCWrlOcS5pryYD3+NftttGANPCbJhr
+         /v4Rp1pjmWQbDZV0f7YQJjeoaEgisycYWVaCDX2W7cXiNUrfUr5eds0WhwFkiQ/ctUMJ
+         fIWoyoCBUxLbN7Ay6UcEj5kes/JApz1eFey2Td78q7RXJggYEEVPW7tkH7qUACKw50j4
+         KCFBXKNdW0eJHM2x0+fU+jDonoTBPfKJCA2mBvGc+NC/pCFMQqMCJvjCFeGgn4nCCBll
+         LHXg==
+X-Forwarded-Encrypted: i=1; AHgh+RqQDMlm+to0DX7tzSvvYdydBqZep6aCZW/QSM9F6qgzn0y/GF7nYIb1PB2H/JO+1UbtHl+bNsHhpl8=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy39GU2WTSbqCMOxWYiV5RTC1tjSg2QOLieiaJwqdVa+jcuvozB
+	xJCSxu6Y/sczmj5EzbgYEtoj0/Ix+N2FkZvDYEUJaXtcuhw4KzzcsvI5T6T0p/aFRWRNhVPcUn3
+	9Lu3aeOykWgyAP08yTsKQ58Tek3LHjK4bV5E+TKJ0fy+g8tPCzepTuyOQSTsAoeI=
+X-Gm-Gg: AR+sD10xfs/0k1N1sNAtKRO24QtKeZU6Yxs9pL30OQ+7LRVcdKAXDBog6KexkQTlb9q
+	jvfvGImhrIcLuKrgyLr8lVjql0074AG8DJZOiibIXF6pMLgDRkkPStOtTs3I4PkC/AMYezASJvU
+	PWqR21WnmvyANeOy2bPEwfSjBHtdNJ65UbHtL9tQVGtZSbhqtzyQktbv8cRXFw2UC0COlvK+aL2
+	suZATWMlNSAIwDOp1d4+rz665XVVT6LrtDfU/C1Yzd9+HmVSH2T/MxuJttqzIuTY45CjHkt7FKM
+	L4NFbG0mrTpnVihOQf8JVBBKnS9VrJRRJCTj0vjcTNwex76qKbAsP9Hhxj4Q2GdVRHikVUvCy4T
+	mHP7NPNNjhoMTak+LxDuAi0TzzhQEFQzpfg==
+X-Received: by 2002:a05:6a20:2447:b0:3bb:2883:a723 with SMTP id adf61e73a8af0-3cb86075abamr805121637.35.1785871722311;
+        Tue, 04 Aug 2026 12:28:42 -0700 (PDT)
+X-Received: by 2002:a05:6a20:2447:b0:3bb:2883:a723 with SMTP id adf61e73a8af0-3cb86075abamr805086637.35.1785871721856;
+        Tue, 04 Aug 2026 12:28:41 -0700 (PDT)
+Received: from [192.168.1.8] ([106.222.234.41])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3158678ec37sm7150623eec.23.2026.08.04.12.28.38
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 04 Aug 2026 12:28:41 -0700 (PDT)
+Message-ID: <6698bed9-373f-40f3-819a-25203245f733@oss.qualcomm.com>
+Date: Wed, 5 Aug 2026 00:58:36 +0530
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <cfae30ec-18ed-4f06-bf96-ef294a8c2744@ozlabs.org>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH V3 13/14] i3c: mipi-i3c-hci: Factor out i3c_hci_sysdev()
+To: Adrian Hunter <adrian.hunter@intel.com>, alexandre.belloni@bootlin.com
+Cc: Frank.Li@nxp.com, akhilrajeev@nvidia.com, rafael@kernel.org,
+        linux-i3c@lists.infradead.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
+References: <20260804133810.184905-1-adrian.hunter@intel.com>
+ <20260804133810.184905-14-adrian.hunter@intel.com>
+Content-Language: en-US
+From: Mukesh Savaliya <mukesh.savaliya@oss.qualcomm.com>
+In-Reply-To: <20260804133810.184905-14-adrian.hunter@intel.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODA0MDE1NyBTYWx0ZWRfXynH2svhWXI0l
+ 5H4+aSkL8LFf0pCFseGtOwW/HT8d3YeU//MzPcMoq20VPASaIYgjL5nCB+/FDmdsLjHHr78Kgjt
+ Wk34S8aX2XP+phsWn7j5YI34FbljbuQEo9327B4iDmz75qASGy3YEbJt1npVryhYZRTfn9FKXt1
+ HwA22UTpiAar8zIQP3xA1VBcETs7auN3rsSyHYK+/1Mb8qU8xsgG/uoYNvbjJxhSqwhOx9B2Qpu
+ JhDQltojA8tHJlQHJT0o/2GJNwIuCw7sFeFcPBIrmHqBnuza7AvVal9enAtyYrq1JSIGtD6jAXU
+ 6j6TrpupHS46Qoy/1ZYOBGsendi75jlLv4Ru16g88EBhbAVRVKcT83kewgH/mdMDjT2+l9slCw7
+ wHXRIDdD4uARkH988cXSUWnKfbRd0QXXT634Z+DHMCRaxLXloSgeDPQiAj3Eordv1MgfOGa3Xdy
+ HV+1mULgtLS9vka/JPA==
+X-Proofpoint-GUID: ga2BmMohzKysM27EyiBPGWhJPwXCEzcH
+X-Proofpoint-ORIG-GUID: ga2BmMohzKysM27EyiBPGWhJPwXCEzcH
+X-Proofpoint-Spam-Info: AW1haW4tMjYwODA0MDE1NyBTYWx0ZWRfX/pmkdGnNdqAS
+ IqPWPWsQBHfh1P14P+XYGzwwZQYYqpVz7YgiP+Siy8qDP+dlOGF5+tWAorj9HjUqy8fJaaP5ie4
+ K3+G1usbkShVqZYEtC3fM3zRlKONRfo=
+X-Authority-Analysis: v=2.4 cv=XYC5Co55 c=1 sm=1 tr=0 ts=6a723d6b cx=c_pps
+ a=Qgeoaf8Lrialg5Z894R3/Q==:117 a=/lQgZcjXNA7ZrIsIl4Cfeg==:17
+ a=IkcTkHD0fZMA:10 a=Sv0fKeRqtYgA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=_K5XuSEh1TEqbUxoQ0s3:22
+ a=RAI3vUJYwi-tdmbA44AA:9 a=QEXdDO2ut3YA:10 a=x9snwWr2DeNwDh03kgHS:22
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-08-04_03,2026-08-04_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ phishscore=0 lowpriorityscore=0 adultscore=0 malwarescore=0 spamscore=0
+ clxscore=1015 bulkscore=0 impostorscore=0 priorityscore=1501 suspectscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2608040157
 
-On Mon, Aug 03, 2026 at 07:22:06PM +0100, Matt Evans wrote:
+Hi Adrian,
 
-Hi Matt,
+On 8/4/2026 7:08 PM, Adrian Hunter wrote:
 
-> Hi Praan,
-> 
-> On 31/07/2026 18:43, Matt Evans wrote:
-> > Hi Praan,
-> > 
-> > On 30/07/2026 23:55, Pranjal Shrivastava wrote:
-> >> On Wed, Jul 15, 2026 at 06:47:26PM +0100, Matt Evans wrote:
-> >>> Add vfio_pci_dma_buf_find_pfn(), which a VMA fault handler can use to
-> >>> find a PFN.
-> >>>
-> >>> This supports multi-range DMABUFs, which typically would be used to
-> >>> represent scattered spans but might even represent overlapping or
-> >>> aliasing spans of PFNs.
-> >>>
-> >>> Because this is intended to be used in vfio_pci_core.c, we also need
-> >>> to expose the struct vfio_pci_dma_buf in the vfio_pci_priv.h header.
-> >>>
-> >>> Signed-off-by: Matt Evans <matt@ozlabs.org>
-> >>> ---
-> >>>  drivers/vfio/pci/vfio_pci_dmabuf.c | 153 ++++++++++++++++++++++++++---
-> >>>  drivers/vfio/pci/vfio_pci_priv.h   |  20 ++++
-> >>>  2 files changed, 160 insertions(+), 13 deletions(-)
-> >>>
-> >>> diff --git a/drivers/vfio/pci/vfio_pci_dmabuf.c b/drivers/vfio/pci/vfio_pci_dmabuf.c
-> >>> index c16f460c01d6..7c047400dfd1 100644
-> >>> --- a/drivers/vfio/pci/vfio_pci_dmabuf.c
-> >>> +++ b/drivers/vfio/pci/vfio_pci_dmabuf.c
-> >>> @@ -9,19 +9,6 @@
-> >>>  
-> >>>  MODULE_IMPORT_NS("DMA_BUF");
-> >>>  
-> >>> -struct vfio_pci_dma_buf {
-> >>> -	struct dma_buf *dmabuf;
-> >>> -	struct vfio_pci_core_device *vdev;
-> >>> -	struct list_head dmabufs_elm;
-> >>> -	size_t size;
-> >>> -	struct phys_vec *phys_vec;
-> >>> -	struct p2pdma_provider *provider;
-> >>> -	u32 nr_ranges;
-> >>> -	struct kref kref;
-> >>> -	struct completion comp;
-> >>> -	u8 revoked : 1;
-> >>> -};
-> >>> -
-> >>>  static int vfio_pci_dma_buf_attach(struct dma_buf *dmabuf,
-> >>>  				   struct dma_buf_attachment *attachment)
-> >>>  {
-> >>> @@ -106,6 +93,146 @@ static const struct dma_buf_ops vfio_pci_dmabuf_ops = {
-> >>>  	.release = vfio_pci_dma_buf_release,
-> >>>  };
-> >>>  
-> >>> +int vfio_pci_dma_buf_find_pfn(struct vfio_pci_dma_buf *priv,
-> >>> +			      struct vm_area_struct *vma,
-> >>> +			      unsigned long fault_addr,
-> >>> +			      unsigned int order,
-> >>> +			      unsigned long *out_pfn)
-> >>> +{
-> >>> +	/*
-> >>> +	 * Given a VMA (start, end, pgoffs) and a fault address,
-> >>> +	 * search the corresponding DMABUF's phys_vec[] to find the
-> >>> +	 * range representing the address's offset into the VMA, and
-> >>> +	 * its PFN.
-> >>> +	 *
-> >>> +	 * The phys_vec[] ranges represent contiguous spans of VAs
-> >>> +	 * upwards from the buffer offset 0; the actual PFNs might be
-> >>> +	 * in any order, overlap/alias, etc.  Calculate an offset of
-> >>> +	 * the desired page given VMA start/pgoff and address, then
-> >>> +	 * search upwards from 0 to find which span contains it.
-> >>> +	 *
-> >>> +	 * On success, a valid PFN for a page sized by 'order' is
-> >>> +	 * returned into out_pfn.
-> >>> +	 *
-> >>> +	 * Failure occurs if:
-> >>> +	 * - A hugepage would cross the edge of the VMA,
-> >>> +	 * - A hugepage isn't entirely contained within a range
-> >>> +	 *   (including where it straddles the boundary between
-> >>> +	 *   ranges),
-> >>> +	 * - We find a range, but the final PFN isn't aligned to the
-> >>> +	 *   requested order.
-> >>> +	 *
-> >>> +	 * Upon failure, -EAGAIN is returned and the caller is
-> >>> +	 * expected to try again with a smaller order, which will
-> >>> +	 * eventually succeed (order=0 will always work).
-> >>> +	 *
-> >>> +	 * It's suboptimal if DMABUFs are created with neighbouring
-> >>> +	 * ranges that are physically contiguous, since hugepages
-> >>> +	 * can't straddle range boundaries.  (The construction of the
-> >>> +	 * ranges should merge them in this case.)
-> >>> +	 *
-> >>> +	 * Finally, vma_pgoff_adjust is used with a DMABUF created for
-> >>> +	 * a VFIO BAR mmap: a BAR mapped with vm_pgoff > 0 creates a
-> >>> +	 * DMABUF such that byte 0 of the VMA corresponds to byte 0 of
-> >>> +	 * the DMABUF and byte 'vm_pgoff << PAGE_SHIFT' into the BAR.
-> >>> +	 * To avoid double-offsetting in this scenario, subtracting
-> >>> +	 * vma_pgoff_adjust from this (non-zero) vm_pgoff generates
-> >>> +	 * the effective offset.
-> >>> +	 */
-> >>> +
-> >>> +	const unsigned long pagesize = PAGE_SIZE << order;
-> >>> +	unsigned long vma_off = ((vma->vm_pgoff - priv->vma_pgoff_adjust) <<
-> >>> +				 PAGE_SHIFT) & VFIO_PCI_OFFSET_MASK;
-> >>
-> >> Maybe I'm getting ahead of myself here.. but it seems like this
-> >> restricts us to only mapping DMABUFs at offsets < 1TB due to the 
-> >> VFIO_PCI_OFFSET_MASK (since we have HBMs on PCI devices now, hitting 1TB
-> >> may not be a very distant future).
-> > 
-> > This is a really good question, thanks for raisiing it.  It is not too
-> > forward-thinking at all.
-> > 
-> >> While I understand this mask is needed to drop the BAR encoding in the
-> >> high bits. 
-> >>
-> >> My worry is, if in the future a user were to export a massive
-> >> contiguous DMABUF (e.g., >1TB of aggregated HBM) and tried to mmap deep
-> >> into it (passing an offset >= 1TB), this bitwise AND would silently drop
-> >> the high bits, leading to silent data corruption.
-> > 
-> > One of the big advantages of DMABUF export was that the range could be
-> > huge and unencumbered by the VFIO_PCI_OFFSET_SHIFT of the traditional
-> > mmap() interface.  It's a way to mmap huge BARs without having to change
-> > the user-visible shift).  So definitely this is a relevant concern.
-> > 
-> >> I think we should explicitly reject such an mmap with -EINVAL like:
-> >>
-> >> +const unsigned long pagesize = PAGE_SIZE << order;
-> >> +unsigned long vma_off = (vma->vm_pgoff - priv->vma_pgoff_adjust) << PAGE_SHIFT;
-> >>
-> >> +/*
-> >> + * Prevent silent wrap-around if the user mmaps a DMABUF at an
-> >> + * offset greater than the VFIO index mask allows.
-> >> + */
-> >> +if (unlikely(vma_off > VFIO_PCI_OFFSET_MASK))
-> >> +    return -EINVAL;
-> >>
-> >> +vma_off &= VFIO_PCI_OFFSET_MASK;
-> > 
-> > Agreed, for now this absolutely should not silently wrap if the offset
-> > is > 1TB, and we live with the restriction that a DMABUF sized >1TB
-> > can't be mapped with such an offset.  (We can still, say, map all of a
-> > 16TB DMABUF with offset=0, which is good.).  I'll add a check, thanks
-> > for pointing this out.
-> > 
-> > I suggest as something to revisit later, we flag for a DMABUF (maybe an
-> > evolution of vma_pgoff_adjust) to differentiate whether this masking
-> > needs to be applied (traditional mmap() path) or not (DMABUF mmap()),
-> > and then offsets can be arbitrarily large.
-> 
-> Having tinkered, the two-step approach I suggested isn't great because
-> userspace has no easy way to know that step 2 has occurred and that
-> large offsets are "now supported".
-> 
-> The second problem is this isn't just a limitation to not do an mmap()
-> with offset approaching 1TB, because you could run into trouble just
-> mapping, say, a 2TB BAR and then splitting it by unmapping a hole in the
-> middle:  the second VMA now has a huge offset.
-> 
-> It seems a proper fix is easy though:
-> 
->  unsigned long vma_off = (vma->vm_pgoff - priv->vma_pgoff_adjust) <<
-> 	 		  PAGE_SHIFT;  /* No masking! */
-> 
-> Then in vfio_pci_core_mmap_prep_dmabuf(),
-> 
->  priv->vma_pgoff_adjust = vma->vm_pgoff;
-> 
-> I.e., if vma_pgoff_adjust just includes the region index up high, it
-> cancels out the (same) index in the vm_pgoff.  Thus regular mmap should
-> work (up to the 1TB offset), and DMABUF VMAs can have arbitrarily large
-> offsets.
+[...]
 
-This looks good to me! I traced through both mmap paths to verify how 
-vma_pgoff_adjust handles the offsets and it looks like this works 
-perfectly for both.
+> @@ -117,6 +118,17 @@ static inline struct i3c_hci *to_i3c_hci(struct i3c_master_controller *m)
+>   	return container_of(m, struct i3c_hci, master);
+>   }
+>   
+> +/*
+> + * Determine the device that does PM / DMA and has IOMMU setup done for it in
+> + * case of enabled IOMMU (for use with the DMA API).
+> + * Such device is either "mipi-i3c-hci" platform device (OF/ACPI enumeration)
+> + * parent or grandparent (PCI enumeration).
+> + */
+I was kind of confused and could not understand much (excuse me!). But 
+could draft below from function definition. I know comments removed from 
+below function and kept here.
 
-Cheers,
-Praan
+Hope this can be simplified or improved further if possible.
+
+/**
+* i3c_hci_sysdev() - Get the device used for system PM and DMA
+* operations
+* @dev: HCI device
+*
+* Return the PCI parent device when the HCI controller is attached
+* through PCI, otherwise return @dev itself. The returned device can
+* be used for system power management and wakeup configuration.
+*
+* Return: Device to use for system PM and wakeup handling.
+*/
+> +struct device *i3c_hci_sysdev(struct device *dev)
+> +{
+> +	return dev->parent && dev_is_pci(dev->parent) ? dev->parent : dev;
+> +}
+> +
+>   static void i3c_hci_set_master_dyn_addr(struct i3c_hci *hci)
+>   {
+>   	reg_write(MASTER_DEVICE_ADDR,
+> diff --git a/drivers/i3c/master/mipi-i3c-hci/dma.c b/drivers/i3c/master/mipi-i3c-hci/dma.c
+> index 0672ed1132f8..7c2b20474130 100644
+> --- a/drivers/i3c/master/mipi-i3c-hci/dma.c
+> +++ b/drivers/i3c/master/mipi-i3c-hci/dma.c
+> @@ -15,7 +15,6 @@
+>   #include <linux/errno.h>
+>   #include <linux/i3c/master.h>
+>   #include <linux/io.h>
+> -#include <linux/pci.h>
+>   
+>   #include "hci.h"
+>   #include "cmd.h"
+> @@ -301,23 +300,11 @@ static int hci_dma_init(struct i3c_hci *hci)
+>   {
+>   	struct hci_rings_data *rings;
+>   	struct hci_rh_data *rh;
+> -	struct device *sysdev;
+>   	u32 regval;
+>   	unsigned int i, nr_rings, xfers_sz, resps_sz;
+>   	unsigned int ibi_status_ring_sz, ibi_data_ring_sz;
+>   	int ret;
+>   
+> -	/*
+> -	 * Set pointer to a physical device that does DMA and has IOMMU setup
+> -	 * done for it in case of enabled IOMMU and use it with the DMA API.
+> -	 * Here such device is either
+> -	 * "mipi-i3c-hci" platform device (OF/ACPI enumeration) parent or
+> -	 * grandparent (PCI enumeration).
+> -	 */
+> -	sysdev = hci->master.dev.parent;
+> -	if (sysdev->parent && dev_is_pci(sysdev->parent))
+> -		sysdev = sysdev->parent;
+> -
+>   	regval = rhs_reg_read(CONTROL);
+>   	nr_rings = FIELD_GET(MAX_HEADER_COUNT_CAP, regval);
+>   	dev_dbg(&hci->master.dev, "%d DMA rings available\n", nr_rings);
+> @@ -332,7 +319,7 @@ static int hci_dma_init(struct i3c_hci *hci)
+>   		return -ENOMEM;
+>   	hci->io_data = rings;
+>   	rings->total = nr_rings;
+> -	rings->sysdev = sysdev;
+> +	rings->sysdev = i3c_hci_sysdev(hci->master.dev.parent);
+>   
+>   	for (i = 0; i < rings->total; i++) {
+>   		u32 offset = rhs_reg_read(RHn_OFFSET(i));
+> diff --git a/drivers/i3c/master/mipi-i3c-hci/hci.h b/drivers/i3c/master/mipi-i3c-hci/hci.h
+> index b3d9803b1968..b8d2a3d680f8 100644
+> --- a/drivers/i3c/master/mipi-i3c-hci/hci.h
+> +++ b/drivers/i3c/master/mipi-i3c-hci/hci.h
+> @@ -184,6 +184,8 @@ void amd_set_resp_buf_thld(struct i3c_hci *hci);
+>   void i3c_hci_sync_irq_inactive(struct i3c_hci *hci);
+>   int i3c_hci_process_xfer(struct i3c_hci *hci, struct hci_xfer *xfer, int n);
+>   
+> +struct device *i3c_hci_sysdev(struct device *dev);
+> +
+>   #define DEFAULT_AUTOSUSPEND_DELAY_MS 1000
+>   
+>   int i3c_hci_rpm_suspend(struct device *dev);
+
