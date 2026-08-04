@@ -1,112 +1,225 @@
-Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id C1768340A6B;
-	Tue,  4 Aug 2026 12:16:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 74CAB3D9525
+	for <linux-pci@vger.kernel.org>; Tue,  4 Aug 2026 12:46:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785845818; cv=none; b=Pki3PhKSiAx0em1pwo1PZZc1UX0AI6e390BEqyAVE8gRMnLOZtziwEx3rcSDtMsK/TNVDQUQvreq3rYO2Is7bOkMoCse4OEMYV7MJy5EONaAXkmGfTnc59ez0XipgmO6MSXOBWsx3QYIfJd0xSLRJUYM7HLsTiSGlltWXPojdlw=
+	t=1785847604; cv=none; b=tVwdx678RpBV4eLlyuXDbTbLOjOEh3c/OeLEIHR+jP+UC/bybCXGkzsI86YwIinvCDB4ZObj7diG2mI3J92m3/5p/NB3Yo/YGXw7sVgYlnltLiMb9x2k8bmp+IcPKOs1XDmU8G6h2wCPzd5wKv2xL+LbKZaHog18OrG3TxXJ/7c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785845818; c=relaxed/simple;
-	bh=B6/WRddiaYtxSye2QXK20TGfRHU0iPsemPBwQ0yTEdw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=fzenQeRczw5AIlT+8byg7kUm+1arXmwPP4HwKnwo4LB+iZxTtDO8J3hBdnQysYD9jIkwbvzHkIL4aF6xd8/3d3KhWnxtukTuUkr2HRHpwoxcaidkz4JJYi6gKpU9baH2MmZ3CPpIQssfxYH36uCEHntZasUPgKvwk4VbNvhKDHg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=j3Zdtqsj; arc=none smtp.client-ip=13.77.154.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
+	s=arc-20240116; t=1785847604; c=relaxed/simple;
+	bh=LYzrSwBFbfl22TyOkFOzeEjPlc63rtVaztyq2FVmUuU=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=R4uOM2etQ5wovrI9Zl2C1mzYRX6UxNJxsw2lmXpJL1IwExWwp1Y+GEU0NP1z1Rul+RMIXn5gaQSv4O8/MPefcMrhnhGW5W53bb+p4TcBPYCYCyOj74HJyZ5bG4dTLk2LJ+D5Pwhn7OqVUERG7nmmz5ntqPe3tgr4VhZa/Kpw6+w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TefkPpql; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="j3Zdtqsj"
-Received: by linux.microsoft.com (Postfix, from userid 1134)
-	id 8155120B7168; Tue,  4 Aug 2026 05:16:36 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 8155120B7168
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
-	s=default; t=1785845796;
-	bh=aTqXnV7ZBoFAQTtt7IICjqfQNaAMMc/7wWeZF7s6F8M=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=j3ZdtqsjxFxsinSa0gq66Hbv5nOsVFaN/IkBlbFVrNI7CmSYLoxsWWW4VtbEU7vtj
-	 2to0kxeiA1Sy25zsRX2edmwbxGxuuHSM/AWyEohK6DPUp9A/WUU2Lwxka/DQFNyY/6
-	 dCzACpgmVEp9U7CpC1qPcp/3ZrojV3+ou9fE3lhE=
-Date: Tue, 4 Aug 2026 05:16:36 -0700
-From: Shradha Gupta <shradhagupta@linux.microsoft.com>
-To: Naman Jain <namjain@linux.microsoft.com>
-Cc: "K. Y. Srinivasan" <kys@microsoft.com>,
-	Haiyang Zhang <haiyangz@microsoft.com>,
-	Wei Liu <wei.liu@kernel.org>, Dexuan Cui <decui@microsoft.com>,
-	Long Li <longli@microsoft.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>,
-	Borislav Petkov <bp@alien8.de>,
-	Dave Hansen <dave.hansen@linux.intel.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Joerg Roedel (AMD)" <joro@8bytes.org>,
-	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
-	Vasant Hegde <vasant.hegde@amd.com>, Will Deacon <will@kernel.org>,
-	Robin Murphy <robin.murphy@arm.com>, x86@kernel.org,
-	Jake Oshins <jakeo@microsoft.com>, linux-hyperv@vger.kernel.org,
-	linux-pci@vger.kernel.org, iommu@lists.linux.dev,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 0/3] x86/irq: Fix lost interrupts on CPU hot-unplug for
- Hyper-V PCI/MSI
-Message-ID: <anHYJEeHlszuj/38@linuxonhyperv3.guj3yctzbm1etfxqx2vob5hsef.xx.internal.cloudapp.net>
-References: <20260728135117.2888175-1-namjain@linux.microsoft.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TefkPpql"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7115A1F00A3D
+	for <linux-pci@vger.kernel.org>; Tue,  4 Aug 2026 12:46:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1785847601;
+	bh=sQ3/NC+3cpmXFMYetYl7lO8X8YpBbpgvgulg/NkNMQ0=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc;
+	b=TefkPpqls1ZZTAGa4/z92f6he8C1TE1kWASWEntglG+IE1MYuZfISroWLw84x9WcG
+	 3UdJ0oBAlSo36pUfeppT0sY1Zf5S8mNP5Td2lRgrUQ+JKGBufhaZE+RF2h+ausTaDX
+	 zpKhp/I1u1xTy3R4aejECKkGnQ4Q8sqWRaCR9UjFrURorWC20PbpdR3hd1bY2PQp8Y
+	 6IYow8nWHAPU1Y5d8caCWKuwk9/PnSKMZ6RaJE8OYN6TcJOOLMbIwm2GDzMiu6+S9X
+	 fr7b7RgOhYnfEwIXkh/8YO/nmpPpcQLCC7dij5OPyWVztvuAs0+64HEhh8yZN4sp9Q
+	 EvwpRQ5+wSMGQ==
+Received: by mail-lf1-f53.google.com with SMTP id 2adb3069b0e04-5b2a4359d16so4155766e87.3
+        for <linux-pci@vger.kernel.org>; Tue, 04 Aug 2026 05:46:41 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AHgh+RppI7UF6uy+X4NOGNjnATBkV9us9kOKdeJd00vlABpzOaHjlWCZiZqgVo7sQqXb4JmWotiwQ4RvFmo=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzWnwFhgSf9F9AEqqEYBCnszpCRizZ9xzObvoi6C/gVQnlF1dvY
+	IcwygZahOKb5//06zNvKyv/wcM8jnSDLa6kjexCNbrAh+L5/OidLPWUB8LHqH36oP46O7RWTIE6
+	c95BFWac+FjHVIPyut2V1evUNCIFxbvg=
+X-Received: by 2002:a05:6512:3991:b0:5ae:b136:acdc with SMTP id
+ 2adb3069b0e04-5b2e4f6e8f6mr2869316e87.35.1785847599905; Tue, 04 Aug 2026
+ 05:46:39 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260728135117.2888175-1-namjain@linux.microsoft.com>
+References: <20260803203459.10680-1-derekjohn.clark@gmail.com>
+In-Reply-To: <20260803203459.10680-1-derekjohn.clark@gmail.com>
+From: "Rafael J. Wysocki (Intel)" <rafael@kernel.org>
+Date: Tue, 4 Aug 2026 14:46:27 +0200
+X-Gmail-Original-Message-ID: <CAJZ5v0h78CSSORe_td1gp0n5DDWXN4zcnuXJsz247KYxgs-mdg@mail.gmail.com>
+X-Gm-Features: AUfX_mz1srr2nF8qgwOyctaxm3G1UWnLyBr6WGtF7SuwYoBl4ClgZzzFQY9hT2A
+Message-ID: <CAJZ5v0h78CSSORe_td1gp0n5DDWXN4zcnuXJsz247KYxgs-mdg@mail.gmail.com>
+Subject: Re: [PATCH] acpi: pci_root: Add quirks table for _OSC support
+To: "Derek J. Clark" <derekjohn.clark@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, 
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	"Pierre-Loup A . Griffais" <pgriffais@valvesoftware.com>, David Box <david.e.box@linux.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Tue, Jul 28, 2026 at 01:51:14PM +0000, Naman Jain wrote:
-> On CPU hot-unplug, fixup_irqs() re-injects interrupts that are still
-> pending in the outgoing CPU's IRR via the irqchip's irq_retrigger()
-> callback. The Hyper-V vPCI MSI irqchip never installs one, so such a
-> pending interrupt is silently dropped, leading to lost interrupts, stalls
-> and "No irq handler for vector" messages.
-> 
-> Patch 1 is the minimal, backportable fix (Fixes:/Cc: stable) that installs
-> irq_chip_retrigger_hierarchy() on the Hyper-V PCI/MSI chip. Patch 2 then
-> switches fixup_irqs() to call irq_chip_retrigger_hierarchy() directly, so
-> the retrigger works for any stacked irqchip without a per-chip callback.
-> Patch 3 drops the now-redundant irq_retrigger() initializations.
-> This way, patch 2 and 3 do not need to be backported.
+On Mon, Aug 3, 2026 at 10:35=E2=80=AFPM Derek J. Clark
+<derekjohn.clark@gmail.com> wrote:
+>
+> The MSI Claw A8 hard-locks on resume from s2idle whenever an SD/MMC
+> card is present in the RTS525A card reader (10ec:525a, PCI ID). This
+> issue is not present on the Lenovo Legion Go with the same card reader.
+> The primary difference is that the Claw A8 withholds LTR and DPC while
+> granting ASPM control to the OS, leading to a split ownership. The issue
+> can be mitigated by passing pcie_asmp=3Doff, but quirking on the pci_dev
 
-Thanks Naman, the series looks good to me.
+You mean pcie_aspm=3Doff I suppose.
 
-I just have a small nit. In the old code, VECTOR_RETRIGGERED is set
-unconditionally after calling chip->irq_retrigger(), regardless of its
-return value. In the new code, VECTOR_RETRIGGERED is only set when
-irq_chip_retrigger_hierarchy() returns non-zero. So retrigger failures
-would now result in VECTOR_UNUSED instead of VECTOR_RETRIGGERED.
+> in pci/quirks has no effect.
+>
+> Attempted quirks included use of pci_disable_link_state(),
+> dev->link_state =3D NULL, manually zeroing aspm_l0s_support/aspm_l1_suppo=
+rt
+> via DECLARE_PCI_FIXUP_FINAL, and pcie_aspm_remove_cap() on
+> DECLARE_PCI_FIXUP_HEADER. Only by disabling ASPM on the root hub is the
+> system able to resume successfully.
 
-In practice this doesn't matter since apic_retrigger_irq() always returns
-1, but it is technically a behavior change and I think it is a correct
-one. Just that it might be worth noting this in the commit message to
-avoid confusion.
+So if there is a clash between the firmware and the OS, the question
+is why it only happens during system resume and only for this specific
+device in this specific configuration.
 
-Reviewed-by: Shradha Gupta <shradhagupta@linux.microsoft.com>
+If disabling ASPM globally makes the symptom go away, it certainly is
+related to ASPM, but it is kind of hard to say what exactly the
+relationship is at this point.
 
-> 
-> The series follows the original RFC:
-> Link: https://lore.kernel.org/all/87y0f3jhd6.ffs@fw13/
-> 
-> Naman Jain (3):
->   PCI: hv: Set irq_retrigger callback for the Hyper-V PCI MSI irqchip
->   x86/irq: Use irq_chip_retrigger_hierarchy() in fixup_irqs()
->   x86/irq, iommu/amd, PCI: Drop redundant irq_retrigger inits
-> 
->  arch/x86/kernel/apic/io_apic.c |  2 --
->  arch/x86/kernel/apic/msi.c     |  4 +---
->  arch/x86/kernel/hpet.c         |  1 -
->  arch/x86/kernel/irq.c          | 23 +++++++----------------
->  drivers/iommu/amd/init.c       |  1 -
->  5 files changed, 8 insertions(+), 23 deletions(-)
-> 
-> 
-> base-commit: 0d33d21e47d9dc66f91e44da3fc9220c74d93df7
-> -- 
-> 2.43.0
-> 
+> This strongly suggests a race between
+> the OS resuming the link under its own ASPM assumptions and firmware
+> independently acting on the same link based on state it never
+> relinquished.
+
+I'd like to see a boot log from the affected platform including the
+entire PCI _OSC negotiation.
+
+There actually is no way for the firmware to grant or refuse the ASPM
+control to the OS separately.  It is part of the PCI Express
+Capability Structure covered by OSC_PCI_EXPRESS_CAPABILITY_CONTROL, so
+if that control bit is acknowledged via _OSC, the OS is supposed to
+control ASPM (among other things).
+
+The LTR and DPC are extended capabilities, so in principle they may be
+controlled separately, if the OS controls the PCI Express Capability
+structure, and there is no formal requirement to grant control of any
+of them for ASPM to work.
+
+> As an attempt to localize the workaround to as low level as possible
+> while also being effective, introduce a quirk system to the existing
+> acpi pci_root calculate_support() mechanism.
+
+I'm not sure if there is a need to tell the firmware that ASPM is not
+supported.  You may as well avoid asking for
+OSC_PCI_EXPRESS_CAPABILITY_CONTROL on the affected platform.
+
+> Signed-off-by: Derek J. Clark <derekjohn.clark@gmail.com>
+> ---
+>  drivers/acpi/pci_root.c | 68 +++++++++++++++++++++++++++++++++++++++--
+>  1 file changed, 66 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+> index 6f78f96332ea..abd436a10438 100644
+> --- a/drivers/acpi/pci_root.c
+> +++ b/drivers/acpi/pci_root.c
+> @@ -422,7 +422,69 @@ static acpi_status acpi_pci_osc_control_set(acpi_han=
+dle handle, u32 *mask,
+>         return AE_OK;
+>  }
+>
+> -static u32 calculate_support(void)
+> +/*
+> + * Some platforms advertise ASPM support in _OSC but withhold related
+> + * control (e.g. LTR, DPC) from the OS on a specific root complex. The
+> + * resulting split ownership between OS-managed ASPM and firmware-owned
+> + * LTR/DPC can cause resume failures on s2idle. Rather than disabling
+> + * ASPM system-wide, strip the offending support bits only on the
+> + * affected root bridge so the OS abstains from requesting _OSC control
+> + * there, leaving every other root complex on the system unaffected.
+> + */
+> +struct osc_support_quirk {
+> +       const struct dmi_system_id dmi_match[2];
+> +       u16 segment;
+> +       u8 bus;
+> +       u32 strip_support;
+> +};
+> +
+> +static const struct osc_support_quirk osc_support_quirks[] =3D {
+> +       /*
+> +        * MSI Claw A8 (MS-1T8K): firmware withholds LTR/DPC control on
+> +        * the primary root complex despite advertising ASPM support,
+> +        * causing a hard lock on s2idle resume when the onboard RTS525A
+> +        * SD card reader is populated.
+> +        */
+> +       {
+> +               .dmi_match =3D {
+> +                       {
+> +                               .ident =3D "MSI Claw A8 BZ2EM",
+> +                               .matches =3D {
+> +                                       DMI_MATCH(DMI_SYS_VENDOR,
+> +                                                 "Micro-Star Internation=
+al Co., Ltd."),
+> +                                       DMI_MATCH(DMI_BOARD_NAME, "MS-1T8=
+K"),
+> +                               },
+> +                       },
+> +                       {}
+> +               },
+> +               .segment =3D 0,
+> +               .bus =3D 0,
+> +               .strip_support =3D OSC_PCI_ASPM_SUPPORT | OSC_PCI_CLOCK_P=
+M_SUPPORT,
+> +       },
+> +};
+> +
+> +static u32 pci_osc_support_quirk_mask(struct acpi_pci_root *root)
+> +{
+> +       int i;
+> +
+> +       for (i =3D 0; i < ARRAY_SIZE(osc_support_quirks); i++) {
+> +               const struct osc_support_quirk *q =3D &osc_support_quirks=
+[i];
+> +
+> +               if (dmi_first_match(q->dmi_match) &&
+> +                   root->segment =3D=3D q->segment &&
+> +                   root->secondary.start =3D=3D q->bus) {
+> +                       dev_info(&root->device->dev,
+> +                                "PCI Root Bridge [%04x:%02x] _OSC quirk:=
+ stripping support 0x%08x (%s)\n",
+> +                                root->segment, (unsigned int)root->secon=
+dary.start,
+> +                                q->strip_support, q->dmi_match[0].ident)=
+;
+> +                       return ~q->strip_support;
+> +               }
+> +       }
+> +
+> +       return ~0;
+> +}
+> +
+> +static u32 calculate_support(struct acpi_pci_root *root)
+>  {
+>         u32 support;
+>
+> @@ -441,6 +503,8 @@ static u32 calculate_support(void)
+>         if (IS_ENABLED(CONFIG_PCIE_EDR))
+>                 support |=3D OSC_PCI_EDR_SUPPORT;
+>
+> +       support &=3D pci_osc_support_quirk_mask(root);
+> +
+>         return support;
+>  }
+>
+> @@ -571,7 +635,7 @@ static void negotiate_os_control(struct acpi_pci_root=
+ *root, int *no_aspm)
+>                 return;
+>         }
+>
+> -       support =3D calculate_support();
+> +       support =3D calculate_support(root);
+
+This will delay the initialization of any system, not just the quirky
+one.  Is there any way to avoid that?
+
+>         decode_osc_support(root, "OS supports", support);
+>
+> --
