@@ -1,171 +1,171 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 804904963B3
-	for <linux-pci@vger.kernel.org>; Tue,  4 Aug 2026 18:12:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 744D632E6BD;
+	Tue,  4 Aug 2026 18:18:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785867141; cv=none; b=N5nzHc84GqbmtyGj26QhubYZJLb4Nvl9h3AIPRpovnarUFDmTQjx7FWro7DyUZbdDrgc8CxPD73DVWTFcP65gze7gP9ci0quV/qmmKLVejqsGJvkc1YSGQES1k1AASVYJYS0vxPr90e90JwQLvOXA2b8iddOijellA5RXQBb/WY=
+	t=1785867529; cv=none; b=rZer6mUx/WOfM9csj13DNaJeyb7Y0IG+96r6zppu+ZE6euAzROagWS/hQ+1+9YPbtzFvGK0p1Is6dL5KBICWFInmyuj32oVhgTXvSyA4bRlU10K+zwT5CDt77vtPIQDokv6osYBfXX414K8Vnwf/182Hv27fNtgTmjvQ1PA/JTE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785867141; c=relaxed/simple;
-	bh=AhED4tqTrGP4lTLdsnRoUZrZzBvGyQOjHem5uxoluE8=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Vnq7i7xniGemkdGEyrezL/ICNKIm+SvlGSGXnGTeLXYqISmDyUPfJZfY8MWWEb9gOmFj2fqRwx54rNDrlK3HmmSpn5NBTfBhVRR+A2BHjpBT+wsHecasuNbzgUAntm2Mkpy9Vc/CYSSE9AnePsrdOR+KB3K3GdFdc5udPKhm1KQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=hPKdfl2K; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=dc28tqxI; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1785867529; c=relaxed/simple;
+	bh=LW2ITypd6tg5gKL3iF/5UMbxTReTj5ZF3A4KI8v9fl0=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=NV+TLhNcXEZJP941YX4rF8CwC1oxpGMki1YCdWGVNzBEaAFT1AH8FIgHW9LrVkFbnjHxjNKLJJ7JplntqvHl9yrJW9DUef7KOuhdGacMsimGE+EbVLM/B13gvCeCMJBNp4fdbZrzFUrRDYQGK6dKSW/rXAAzxe+LTF2fDubOCNo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=J3uYFMY1; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="hPKdfl2K";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="dc28tqxI"
-Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 674FfTZI070729
-	for <linux-pci@vger.kernel.org>; Tue, 4 Aug 2026 18:12:16 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	ASyHTNEVNi5r18fBCeervNjdQdHm+MvkAMt4iPH0kVo=; b=hPKdfl2Kzb0PMnWL
-	wyJfm/ZTqLS6zb6najKVX6yGOjgKyPcdo45pD3b1SeTjF5K5u3BG1jC8DifV/4Da
-	vXJCDtyAcaIsrw8hx7JLXQrn/Oz2cS+5thCdWTkAaDOoGKfJPvduQJa7MucvDJGU
-	vVhODXcHwRSASU5Dhac4mkYQkO7udgkE2f26FEsmYRLxvS3jZhrr/V/RP2E3knnG
-	2ECZpJm54y3AL3a2v1L3+Xl5Tt6wZeqpQrpDppned1mHKk+l4h+UsIFDk6ft3v5w
-	kO6FS4900XVSwB977dTh5UWS1XnzeM39wVB4C6uuIul9GMlJSlKF/O+FktxZvKq7
-	nho9FA==
-Received: from mail-pj1-f70.google.com (mail-pj1-f70.google.com [209.85.216.70])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4fujwsgryj-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Tue, 04 Aug 2026 18:12:16 +0000 (GMT)
-Received: by mail-pj1-f70.google.com with SMTP id 98e67ed59e1d1-38e475f83a2so140681a91.1
-        for <linux-pci@vger.kernel.org>; Tue, 04 Aug 2026 11:12:16 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1785867130; x=1786471930; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=ASyHTNEVNi5r18fBCeervNjdQdHm+MvkAMt4iPH0kVo=;
-        b=dc28tqxIDqzCkVIhhqkH+2ebwNTNrT3rjAqFOoeUpRO5+xRM1UJpKEkt5bKOQSLmbh
-         byeSeSHxRBt6ktg4xXm0LzTSte5ccYUdrTBATz9mYxlM+HKl5Bmw85/rrXh8hvUK/KJZ
-         nTp0Vp5pvAOh6OdgoaEh6uhUa0mvGIePFkas0gCzTuegTBURlgle5+Tqh1pAOCc4BTni
-         qWj/NF5/pYDojRKPWn7Q2WR0j1ubjKWntPO3C//+UeNAxQaS0RJm1snV1AbdYca526TA
-         UIi/WcpIH9AUpVhydYPuEbs2ZizwtRIs8liICsO24aG40QS5tHRMDw/Szg+yP+/Lzpe2
-         93NA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785867130; x=1786471930;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=ASyHTNEVNi5r18fBCeervNjdQdHm+MvkAMt4iPH0kVo=;
-        b=mA0YTYSHUh//FuyRep6ENmJdB8BED2NzOOP3IOs6Y5mZNp0FayC5fz+4GraMzCyrUz
-         NGMRnafKYr4GyajqxNhhNVoR6t61rq8gmrWngjqtgaBPW6G7EqIIOnKX8icu5t8KCaTj
-         fGmIgEuI0d6Dc8Tq0iJLE7IGtRproKEvzLeNFq+O/Y24C1qpGa9hEBoe/xaEi6rtcl0p
-         hU7w4Fun6/RHumG1EiZrLXRoktSwARmOqTDsp4JhOIsU6SRGiMB5SBPR1bXgRsaCynfQ
-         fF3Fg9bj+piBHkDljhS1HPrj7wGCwZIHYuu3b9Fc9V29g/Vi6JaW+crVKxK5GjvVC8Su
-         qUVg==
-X-Forwarded-Encrypted: i=1; AHgh+RpzHTC4WUS7FBfFwWUbU6cyGIfvN7/nsv1aZSw/qWYEdFgSB9AQhukDWbFe1I0rqwpcRHwPA15C2mk=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzUKnCvlWh32iGc5W8+YMWlMS33ByFdYR50VbkXkC2VhdEIHFrQ
-	c7/XGKDOOwhS+2t4p495UOUtypPNB1tLel5bbvVjgqk2lSfhBLXXQOze6mPD5r/58kazRgSl1aM
-	CEU5Ju10QLWk/+o9+N+D8wbNaKTJomH1UjMo4LAAn9p6kc6BuCzhxMmU4IWJ5IIE=
-X-Gm-Gg: AR+sD125LijDPXF2d7NiLuCqzyY9PWgm4LX8G0tQfkgIgoC/MJCSUg74FYnrvLqy99J
-	ep7uc4lZ0CR+HEbktLhZhTeRB4klPPh5g2QXtq3JhmszP4EXo1EOgrrv5Ks4fNVVt2kgX0uJqJP
-	gXUhgMfE86uS+oWh3gibBNX38sWZ18pZFvrgLDdrplnpHh5a03zTRKfCMl98WmeILSFqZ8xtC1g
-	ztAc2aCLCQXO7VKWpzZwEP9RptzpZWgi/J0xh1AJOJQOpqTNBmGhYc85rgKa9bLPgvN2oFZ2sXh
-	xJUHMazRSQW2EkldP8k4iQCcT/g6Tb4ML5Wa08vjherL3yOvQ7URkwJdFZu/ymrDpR8hiktw+A6
-	+JXJDd3MeQpJwelA+WnI+wuLATrNWS6qYZA==
-X-Received: by 2002:a17:90b:4983:b0:37f:9ce3:ca95 with SMTP id 98e67ed59e1d1-3903c6e051amr654634a91.30.1785867130259;
-        Tue, 04 Aug 2026 11:12:10 -0700 (PDT)
-X-Received: by 2002:a17:90b:4983:b0:37f:9ce3:ca95 with SMTP id 98e67ed59e1d1-3903c6e051amr654595a91.30.1785867129813;
-        Tue, 04 Aug 2026 11:12:09 -0700 (PDT)
-Received: from [192.168.1.8] ([106.222.234.41])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-13fca2e8ae2sm5560935c88.0.2026.08.04.11.12.04
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 04 Aug 2026 11:12:09 -0700 (PDT)
-Message-ID: <0d5dd29e-ced0-4c3f-a507-ebcd52f919da@oss.qualcomm.com>
-Date: Tue, 4 Aug 2026 23:42:01 +0530
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="J3uYFMY1"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C547A1F00A3A;
+	Tue,  4 Aug 2026 18:18:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1785867528;
+	bh=HxUB6Z4K2mKjd5j2OvvjwhXSYwxJocB8Ks6X4koqnfs=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=J3uYFMY1dmtijKe5ohxsAzFTRApS3sfdyCi5AMyHvUewsSjxGnsTOSQK+p+zzMz4y
+	 j8UXER1eACo3HzW/tcEkpJeWwqMbdyDuD3Di0hxYpM6W5h6bioMHPav2CJHMVH3dKe
+	 U24sdl47d0N6hTMqmlmDjyDCW2LH2fMXH2FBsG1G0ZZw5cK2tOrqFQErWVSZigf72j
+	 2Qv/qyWFPTuwvrs6cO397CcmsCl+RZM2J8fcuEsCYyQ8qW3RAyUu05pWpBJINK5WkD
+	 PjLyurGWHSexn5VMdtCC4vxU+9qIf0+UWGYwqrOey+UFVdoNy0RKMCr3IVQIf36Stp
+	 ordibkCsZqDqg==
+Date: Tue, 4 Aug 2026 13:18:46 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: "Hongxing Zhu (OSS)" <hongxing.zhu@oss.nxp.com>
+Cc: Manivannan Sadhasivam <mani@kernel.org>, Frank Li <frank.li@nxp.com>,
+	"l.stach@pengutronix.de" <l.stach@pengutronix.de>,
+	"lpieralisi@kernel.org" <lpieralisi@kernel.org>,
+	"kwilczynski@kernel.org" <kwilczynski@kernel.org>,
+	"robh@kernel.org" <robh@kernel.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"s.hauer@pengutronix.de" <s.hauer@pengutronix.de>,
+	"kernel@pengutronix.de" <kernel@pengutronix.de>,
+	"festevam@gmail.com" <festevam@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+	"imx@lists.linux.dev" <imx@lists.linux.dev>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Hongxing Zhu <hongxing.zhu@nxp.com>
+Subject: Re: [PATCH v2] PCI: dwc: Add suspend_poweroff flag for platforms
+ with RC power loss
+Message-ID: <20260804181846.GA1846400@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH V3 06/14] i3c: master: Fix potential UAF in
- i3c_device_uevent()
-To: Adrian Hunter <adrian.hunter@intel.com>, alexandre.belloni@bootlin.com
-Cc: Frank.Li@nxp.com, akhilrajeev@nvidia.com, rafael@kernel.org,
-        linux-i3c@lists.infradead.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
-References: <20260804133810.184905-1-adrian.hunter@intel.com>
- <20260804133810.184905-7-adrian.hunter@intel.com>
-Content-Language: en-US
-From: Mukesh Savaliya <mukesh.savaliya@oss.qualcomm.com>
-In-Reply-To: <20260804133810.184905-7-adrian.hunter@intel.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-GUID: _b3oBnPM5am9aHKwywHKm5O1zSJP7nRR
-X-Proofpoint-ORIG-GUID: _b3oBnPM5am9aHKwywHKm5O1zSJP7nRR
-X-Proofpoint-Spam-Info: AW1haW4tMjYwODA0MDE0NyBTYWx0ZWRfX2SNa19CHfuK8
- umkBSgBFK/7kWWji/ERq+7wMBHgJiYyAyJJ6xGMut5NLfdDrVxdl2TJ64W6cXgE2490iaOfRHIZ
- LE19iQYttRSURvhpMEXYXeUxHiLUjok=
-X-Authority-Analysis: v=2.4 cv=Lu6iDHdc c=1 sm=1 tr=0 ts=6a722b80 cx=c_pps
- a=0uOsjrqzRL749jD1oC5vDA==:117 a=/lQgZcjXNA7ZrIsIl4Cfeg==:17
- a=IkcTkHD0fZMA:10 a=Sv0fKeRqtYgA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=rJkE3RaqiGZ5pbrm-msn:22
- a=VwQbUJbxAAAA:8 a=QyXUC8HyAAAA:8 a=EUspDBNiAAAA:8 a=ohCnSGWktmBL-HYrFGoA:9
- a=QEXdDO2ut3YA:10 a=mQ_c8vxmzFEMiUWkPHU9:22
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODA0MDE0NyBTYWx0ZWRfX4dyD1QL0qTRy
- VQWkiHTuGJh36oAaZceiYQmunRxtQgwMvrFnxmwq4NPBjCrCpwbZUIG06xQ5mXwBb753W+gi9Bo
- o+yvg+xWIGCUPj/dKVTnfuJHWjr5V3MyQH2dwwUBN4TrUVIhjV5jAHUNnHuqf3GCwv69j5XJFAv
- NxM992Aku4FSeBQREBOuBbs87N5eBonOH0tfI9ZMnWgEPeXYnwMrSKXUKdrmA8hTj461jl6lfix
- ghQAznv39gr2SClq4/mDGlDSFGngLjAFffppafL9010CfskhZCvdv6oFM3XDpEc+rTWCGSg0sn5
- fxeC94rdLbWnUebeaDqeGdTBu803VZzFcDqc5TNI877QYl/vPvK0Shy4z2qfQBY6NPtAh9LvltF
- 3pe2mwM/EiZoGTl/oBvdxiq7uqh7t0xtxKDJ80BNmzqjTl0LKR3piOSHZLI1Sk5HSqv01OrJZnq
- XkITa+08kX9nWgmTEDA==
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-08-04_03,2026-08-04_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- phishscore=0 adultscore=0 impostorscore=0 malwarescore=0 spamscore=0
- priorityscore=1501 clxscore=1015 bulkscore=0 lowpriorityscore=0
- suspectscore=0 classifier=typeunknown authscore=0 authtc= authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2606150000
- definitions=main-2608040147
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <GV2PR04MB12019D498722B4C8A94C2A1A28CD42@GV2PR04MB12019.eurprd04.prod.outlook.com>
 
+On Tue, Aug 04, 2026 at 06:32:26AM +0000, Hongxing Zhu (OSS) wrote:
+> > -----Original Message-----
+> > From: Manivannan Sadhasivam <mani@kernel.org>
+> > Sent: Monday, August 3, 2026 11:33 PM
+> ...
 
+> > On Thu, Jul 30, 2026 at 07:09:13AM -0500, Bjorn Helgaas wrote:
+> > > On Thu, Jul 30, 2026 at 08:16:36AM +0000, Hongxing Zhu (OSS) wrote:
+> > > > > -----Original Message-----
+> > > > > From: Bjorn Helgaas <helgaas@kernel.org>
+> > > > > Sent: Thursday, July 30, 2026 6:30 AM
+> > > > ...
+> > >
+> > > > > On Fri, Jul 17, 2026 at 03:41:21PM +0800, hongxing.zhu@oss.nxp.com
+> > wrote:
+> > > > > > From: Richard Zhu <hongxing.zhu@nxp.com>
+> > > > > >
+> > > > > > Some platforms like i.MX power off their PCIe RC
+> > > > > > controllers during system suspend, requiring full
+> > > > > > re-initialization on resume. These platforms need to enter
+> > > > > > L2 state to properly notify endpoints before power loss.
+> > > > > >
+> > > > > > According to PCIe base spec r7.0, sec 5.2, the system
+> > > > > > software should transition the device into D3Hot before
+> > > > > > broadcasting the PME_Turn_Off message to initiate L2
+> > > > > > entry. However, some endpoint devices fail the D3cold
+> > > > > > capability check in pci_host_common_d3cold_possible(),
+> > > > > > which would normally prevent L2 entry.
+> > > > >
+> > > > > Wakeup devices that don't support PME from D3cold will fail
+> > > > > the D3cold capability check, but I don't think those are the
+> > > > > problem you're solving.
+> > > > >
+> > > > You're right.
+> > > >
+> > > > > This appears to handle devices that are not in D3hot, and
+> > > > > that's not a property of the endpoint; it's a property of
+> > > > > its driver.  Is the problem here that some driver didn't put
+> > > > > its device in D3hot?
+> > > > >
+> > > > I observed some endpoint devices failing the D3cold capability
+> > > > check, but I haven't identified the root cause.
+> > >
+> > > Seems like some instrumentation in
+> > > pci_host_common_d3cold_possible() could tell us which
+> > > devices/drivers are relevant.
+> > >
+> > > > > > For platforms where the RC loses power during suspend, L2
+> > > > > > entry is essential regardless of D3cold support, as the
+> > > > > > link will be lost anyway.  Add a suspend_poweroff flag to
+> > > > > > force L2 entry in such cases, and enable it for i.MX PCIe
+> > > > > > controllers.
+> > > > > >
+> > > > > > Note: This violates the spec requirement that devices be
+> > > > > > in D3Hot before PME_Turn_Off, but is necessary for proper
+> > > > > > operation on platforms with RC power loss during suspend.
+> > > > >
+> > > > > If the device isn't in D3hot, it may still be active, and I
+> > > > > think the PME_Turn_Off will abort any DMAs in progress,
+> > > > > which doesn't sound like proper operation of the endpoint.
+> > > >
+> > > > You're correct - this isn't ideal for endpoint operation.
+> > > > However, on i.MX platforms, the RC controller will lose power
+> > > > during system suspend regardless. Without sending
+> > > > PME_Turn_Off, endpoints would have no notification before the
+> > > > link abruptly goes down.
+> > >
+> > > The PME_Turn_Off is some notification, but I don't think the
+> > > endpoint can do DMA or MSI, so its driver won't be involved.  It
+> > > may be able to do things internally, e.g., write caches to an
+> > > SSD or transmit packets from its internal buffers.  But I think
+> > > it might still lose power in the middle of operations like that,
+> > > so it doesn't sound reliable.
+> > >
+> > > > This patch adds a flag to force L2 entry for such platforms,
+> > > > choosing to notify endpoints (even if not ideal) rather than
+> > > > having the link drop unexpectedly. I'm appreciated for
+> > > > suggestions if there's a better approach to handle this
+> > > > scenario.
+> > >
+> > > Mani recently added pci_suspend_retains_context(), and I think
+> > > it returns "true" on i.MX.  But if the RC is powered off and all
+> > > the devices need full re-initialization on resume, it sounds
+> > > like it *should* return "false".
+> > 
+> > Right. pci_suspend_retains_context() was added just for that
+> > purpose of telling client drivers to prepare for context loss. So
+> > if this API returns 'false', then they should not hold the device
+> > in D0.
+>
+> Thanks for your comments.
+> 
+> If I update dw_pcie_suspend_noirq() to use
+> pci_suspend_retains_context() to determine whether to proceed with
+> L2 entry and RC power down. The new logic would be changed as below:
 
-On 8/4/2026 7:08 PM, Adrian Hunter wrote:
-> i3c_device_uevent() dereferences i3cdev->desc without holding the bus
-> normal-use lock.  Since the descriptor pointer can be replaced
-> concurrently, including when a uevent is generated from sysfs, this can
-> result in dereferencing a stale descriptor and lead to a use-after-free.
-> 
-> Use i3c_device_get_info() instead, which protects access to the
-> descriptor with the normal-use lock.
-> 
-> Commit 6cf7b65f7029 ("i3c: Use i3cdev->desc->info instead of calling
-> i3c_device_get_info() to avoid deadlock") replaced the accessor with a
-> direct descriptor dereference because i3c_device_get_info() would
-> recursively acquire bus->lock during device registration.
-> 
-> This change depends on "i3c: master: Fix recursive locking during device
-> registration", which moves device registration out from under bus->lock
-> and removes the possibility of that deadlock.  Without that change,
-> restoring the i3c_device_get_info() call would reintroduce the deadlock.
-> 
-> Fixes: 6cf7b65f7029 ("i3c: Use i3cdev->desc->info instead of calling i3c_device_get_info() to avoid deadlock")
-> Cc: stable@vger.kernel.org # requires "i3c: master: Fix recursive locking during device registration"
-> Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
-> ---
-> 
-> 
-> Changes in V3:
-> 
-> 	New patch
-> 
-> 
->   drivers/i3c/master.c | 3 +--
->   1 file changed, 1 insertion(+), 2 deletions(-)
-> 
-> diff --git a/drivers/i3c/master.c b/drivers/i3c/master.c
+I'm not suggesting using pci_suspend_retains_context() in
+dw_pcie_suspend_noirq().  pci_suspend_retains_context() is for
+endpoint drivers.
 
-Acked-by: Mukesh Savaliya <mukesh.savaliya@oss.qualcomm.com>
+I think pci_suspend_retains_context() should return 'false' on any
+platform where dw_pcie_suspend_noirq() is going to send PME_Turn_Off.
+Sending PME_Turn_Off means we intend to remove main power.  When main
+power is removed, devices will be in D3cold and they will not retain
+their internal context.
+
+If pci_suspend_retains_context() returns 'false' and
+pci_host_common_d3cold_possible() returns also returns 'false', it
+means some driver didn't put its device in D3hot when it should have.
+
+In that case, I think you should either fix that driver so it *does*
+put the device in D3hot (based on pci_suspend_retains_context()), or
+just accept that you can't power off the RC.
