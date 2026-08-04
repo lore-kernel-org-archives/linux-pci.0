@@ -1,162 +1,196 @@
-Received: from DM1PR04CU001.outbound.protection.outlook.com (mail-centralusazon11010002.outbound.protection.outlook.com [52.101.61.2])
+Received: from microway.com (mail.microway.com [50.217.201.37])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 175BC3655CA
-	for <linux-pci@vger.kernel.org>; Tue,  4 Aug 2026 20:33:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.61.2
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785875624; cv=fail; b=nleluKic1wnZccqVbJ1VEx7854bKcb6S4Eoyh/hXy0w3zNyFKV1EtPtUxM2x5PXfsF3V2SnCgHMkbyGAxlU8L4s1EeYpSuHHe4ts9EhzFokhdDFP/cmaZWTHs5qQHFuHViRuQmsmCWOi8tdTsCESZYrhuXQAKkmq7gmuWSK8Y40=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785875624; c=relaxed/simple;
-	bh=nzy8EsmG/DeO/ZI4JJlnryBWPnR/mzfT32FzjTXqUSc=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=KRRv60PTdqhKGFMSqr1LP1yMqoGYOVmOypABdOacDA+0/UfE1Ppqo+ptcKelpKuVPSewE63WQhyJ+e1oKp/n1OARjzrARLpLAlzQm19IB9j96k2o2G+KOKKkCaDL8T5SmUSVhXTd4RqqTQn5WxUBgNikuCiQULIMZ6JywB9vEWk=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=ZF8XBF8w; arc=fail smtp.client-ip=52.101.61.2
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EED78384CDF;
+	Tue,  4 Aug 2026 20:48:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=50.217.201.37
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1785876539; cv=none; b=Co0JgXRqIxEoBxUBYLKrF1BkZM0r3WaATbkUUCGjEENDnl3by7d6/foDZ316QkYywj/UVo42OmUUVr8zEwcA34Onued98rVRl98fGbfKbSx42H8ht/Q/MMiUxw+B6PKCyy4kWSftph0mPe5ZlFTlyCDBMruKbNijx2SylOzdrVM=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1785876539; c=relaxed/simple;
+	bh=3CZU9YGQBE1cT7UpGgX9bQSGoRgummebLIMPdk7GMp0=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=KwtkNRsiLqXHJrq4fTREfZlFJpBIHvDoQUqMx9HQC+/ZfepdxCKjmLVSoYtv67b1alTNgMV69vCZKaJ3uv+eFrkO5HEAIGnTBqnznuy2bhOxY2BPp7dN9ugVUzkmvCiO7sS+bP3+I6ArFSi0Og7U3AZrVS+lqz+4hwlQhWsNrOY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=microway.com; spf=pass smtp.mailfrom=microway.com; dkim=pass (2048-bit key) header.d=microway.com header.i=@microway.com header.b=Pus5hBWz; arc=none smtp.client-ip=50.217.201.37
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=microway.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=microway.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="ZF8XBF8w"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=N8jnVOFzvCZxjmK7OpYZ+BHkIbZhI0xHHMGE8zHLTsxpMFhrzORXY7bbky7abhA1KVxfBX1UVo+Zp1pAFa0M2tEhr/aZ99Dxl3Y5sia+t+cnjvECzzDWtLTU7wzOq21C0mTC4eOt98lCv7id6Ueiiux48B4XUDah/xuTcmw2QAo/F/Jrzut0imeYjABNXws0/G7P0rJC4jBjt3sLCNMKskTThxsVrRwU9kaF3ZeEy+2XpfWGcGKRyovB8eckeeDZ2B/BfKRjFaXzp0FRh/AutNSoXD6dQSEsvOsNXRmELkm2+w/E0C+aMXF+2MeMGLZ7t1MyWI/cukvsPxh+rpB9Lg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=nzy8EsmG/DeO/ZI4JJlnryBWPnR/mzfT32FzjTXqUSc=;
- b=Y+okJ4Na7MdHM37TO9RIR9g0Tkuo85hO3k+gz3USW4mq/TSk0gjmQjlcpTlOMqvTQtekmItYH2qkqzrh3EKyqbNOLAwJYQiQKAkHVuoN01Mx9D3l6Ls7YxoodR1JrhUqDz9W2SBbXpV8+yibyw/XtuIiG13Vz3Tn3xwDc5P1jhFyTiMsKCCdRUxnHrieOubkceMe44bOC5Jcnqk2uMQ8KMuIjQm+y1Wj8uocLrSxlH3o0BkmzykSzgI80eKuBcj1Ufxj+lgy5MsbUY6VQ8lqFQMKs4kARkzNwnzLde/li4G2/btq5o6SJVIo2xgxv4z1ckMj0X0VYHgVvw343SMvXA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=nzy8EsmG/DeO/ZI4JJlnryBWPnR/mzfT32FzjTXqUSc=;
- b=ZF8XBF8wdnSbQqEFaIVcJznC4a3aeCyqoUlbmft88V2yvwrjiBl3zd1WddDMbMTCQW4c/VS5B6/pS3wI7YK0pONGuFQ4J55t4JiqKKJSa+3UvXJdRJwYlgS/1Q0xMgrgrn1fp4V0bk2SXeYtGZalev/6CiGjIdLgNHQBP0TnlU/D2UL1FWQMexschJKjBIU/HuHbuaa11Kl3V7vT9bIgtfjtiZWBQ0e46r1MQl2UJhLbAQz85MU/olqbbD0R6OwFs5KCIBsSy5iOQ3g+r/LLlBoMQw3ViN6WKZctkB2GkWZUZSlXloAFOUe5GkrjGc3Ga5JUNNInHuNz+rmNQoaY6g==
-Received: from SAWPR12MB999267.namprd12.prod.outlook.com
- (2603:10b6:806:55f::17) by DS7PR12MB5741.namprd12.prod.outlook.com
- (2603:10b6:8:70::7) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.292.15; Tue, 4 Aug
- 2026 20:33:35 +0000
-Received: from SAWPR12MB999267.namprd12.prod.outlook.com
- ([fe80::fe35:8a00:d9eb:40f9]) by SAWPR12MB999267.namprd12.prod.outlook.com
- ([fe80::fe35:8a00:d9eb:40f9%6]) with mapi id 15.21.0292.013; Tue, 4 Aug 2026
- 20:33:35 +0000
-From: Ankit Agrawal <ankita@nvidia.com>
-To: Xu Yilun <yilun.xu@linux.intel.com>, Jason Gunthorpe <jgg@ziepe.ca>
-CC: Alexey Kardashevskiy <aik@amd.com>, "linux-coco@lists.linux.dev"
-	<linux-coco@lists.linux.dev>, "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>, "driver-core@lists.linux.dev"
-	<driver-core@lists.linux.dev>, Aaron Tomlin <atomlin@atomlin.com>, Alistair
- Francis <alistair.francis@wdc.com>, "Aneesh Kumar K.V"
-	<aneesh.kumar@kernel.org>, Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas
-	<bhelgaas@google.com>, Daniel Gomez <da.gomez@kernel.org>, Danilo Krummrich
-	<dakr@kernel.org>, Dexuan Cui <decui@microsoft.com>, Donald Hunter
-	<donald.hunter@gmail.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Jakub Kicinski <kuba@kernel.org>, Luis Chamberlain <mcgrof@kernel.org>, Lukas
- Wunner <lukas@wunner.de>, Petr Pavlu <petr.pavlu@suse.com>, "Rafael J.
- Wysocki" <rafael@kernel.org>, Robin Murphy <robin.murphy@arm.com>, Sami
- Tolvanen <samitolvanen@google.com>, Samuel Ortiz <sameo@rivosinc.com>,
-	Saravana Kannan <saravanak@google.com>, Will Deacon <will@kernel.org>,
-	"Fontenot, Nathan" <Nathan.Fontenot@amd.com>, "rick.p.edgecombe@intel.com"
-	<rick.p.edgecombe@intel.com>
-Subject: Re: [PATCH 00/15] Device Evidence and Trust for PCI Security Protocol
- (TDISP)
-Thread-Topic: [PATCH 00/15] Device Evidence and Trust for PCI Security
- Protocol (TDISP)
-Thread-Index: AQHdDMrOwfwmCkkN7EeGRZV1a3LRYbaCujkAgAD+F4CACZTNAIABNzrX
-Date: Tue, 4 Aug 2026 20:33:35 +0000
-Message-ID:
- <SAWPR12MB999267F65E7DEB49B1F4D9FD58B0D42@SAWPR12MB999267.namprd12.prod.outlook.com>
-References: <20260705220819.2472765-1-djbw@kernel.org>
- <4c43da3e-c598-48cf-8491-cb958e574c9c@amd.com> <amk7Xzm5jmz+6SPJ@ziepe.ca>
- <anFE7m164AmchTy/@yilunxu-OptiPlex-7050>
-In-Reply-To: <anFE7m164AmchTy/@yilunxu-OptiPlex-7050>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-msip_labels:
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: SAWPR12MB999267:EE_|DS7PR12MB5741:EE_
-x-ms-office365-filtering-correlation-id: 66f6dec5-7a9f-4602-0334-08def267a84a
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam:
- BCL:0;ARA:13230040|7416014|1800799024|376014|23010399003|366016|38070700021|10067099003|11063799006|4143699003|56012099006|18002099003|22082099003;
-x-microsoft-antispam-message-info:
- 5cTFJAnhmU97DKF9+viIgDGreyG3iWzxqvD8QXSEtJtQLqh3oyocN/fQP8BaJBXmqFDSzmnaovCuMPzUyN4mrxl8ybOW9IINTPORo801uRFL6e0WOmsonm/gN+Wnv1ocS9m+6O9M4BQyPudfBd4U6bcwy0+K9Vf5pSmuDhd9PA2OBW9XI1LANIUNz7NLixllVNsHChsuOxPUinQ5DIiuXHnI9GzQ9GQS5Y686W+RlsYT9RPTlgKRngXui/LU5puHKfFF7bv6XA9s52nKZVh/pCAHhANkhayUAmruKBp2NHL1hwb7XrJxs4rFVxsrKaA7LRylMjCvUpjswy888LWw5cwWqPXS8BKS8fAOpx3tKSdv7uJwl585Wab1F2Kou1Rqj0tQJYA+CT2ng3lRPT0jbAQuS34JAM33GCJXiKdnug59xgDTshtzxfU5yKd5WhvWjh4L+DfhHNG25wH1eelQCi24AAU/PlfRkBqouPperfXExzOFncyi2BW3omISQZm4yYSAfVEKeMDSXXVl0bl1nJ7j91g/lCf16KZFJVe44h3jjdesVV/BeeioubkJwoGrAL/2ChNq2Hndxcmfc07nPpKDQk0NzOAtQVBRWxU91cMqni+xPRlZW8pOPUyE7u9lxitYPfBrYIywMsL0meUVNfOjXVy8uc6CmBH/LvQYf2pLGoHKH7Gs0U8O7M09fz/SbU2c65sBxQHIlGGp32DkKe6EKOy9Di1MYFwCKJSun0w=
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SAWPR12MB999267.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(1800799024)(376014)(23010399003)(366016)(38070700021)(10067099003)(11063799006)(4143699003)(56012099006)(18002099003)(22082099003);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?iso-8859-1?Q?BKik5NDNhxvSH1CN8bNfTmpu1d0j6YGrFTO7yYYTYmqPXW/a44EY1HQrcl?=
- =?iso-8859-1?Q?eCdnLVpZBzabczXjpX0yWGkBkmeMXyOJe4v9b8F5QELxQZQKLD/EHTgi3o?=
- =?iso-8859-1?Q?9sNEfl+JmEOO7o16R3L/p3FJn4zfevO81fpUB7Zi26j1MdImmF9poa9xU2?=
- =?iso-8859-1?Q?zRnBqcJtqrUE05JzMQItJOXkQH4TA7B/vseQLgeZzii01eR6YhFg6wtZZV?=
- =?iso-8859-1?Q?6e7a5LMTQUwSXUa+mfKXZsU1EwJqlERac25llajt9Po5Sx3rE7YwewoNNk?=
- =?iso-8859-1?Q?nMPSARYRUzyIsQb8Ltl91+3HanRkdiVCVfDWyhB7UqKAQdsYfkpK59bD7C?=
- =?iso-8859-1?Q?L+dPs9MBRbsXgCYU9YfH9htgkvAAkFHTHnUMqdINB05dSaMz7lizJRd4TY?=
- =?iso-8859-1?Q?Wel2TV2CCNr9CutoNUW4kR8EWT86/0fprtSj/hXeH3VZqshIUKn1tqX80H?=
- =?iso-8859-1?Q?zy7cqVyuhymE33SK4Ji5vyMmsM4TpUoj4zvicxaL11x5Pq6gV/YiOSs9hZ?=
- =?iso-8859-1?Q?d0AePNIHqiS/mmiw1BvIwzINfl7RoyNzXpgOFu0nXECUgPLmrGWcOcdnKV?=
- =?iso-8859-1?Q?ogsM+GDDV7S4EYb57fle6daletkTDfcaG0/J2PCqt0VR57LXI3ZCRrdm2C?=
- =?iso-8859-1?Q?nGSScmsDUVqlL66nS7o2GHr1AhRYAFflSh+24+099UIZx2lrZGmzY+F3G2?=
- =?iso-8859-1?Q?BgJfiTHoUGSDQpAXtW+FPZX0eGWc0a5jkk76mpdAvLd5AAMwxVJoJDa+d7?=
- =?iso-8859-1?Q?37brePpUjkBP6dH+zPmnJnRsEWxEnEHqsq6tK5XBWEjnSRC5Qr/XAqJCam?=
- =?iso-8859-1?Q?GP5hlTcGFwfDNtOdGEpSc8p3KTfpTQmsFesYCUypNyZA1RpvuSNCCT6ule?=
- =?iso-8859-1?Q?TXP8IcS3ayOhl9UvlmTbHbpPqOpBXbXAZlgw3tgiFy1p3J4UnCBW8xDp3O?=
- =?iso-8859-1?Q?xSePRsTs4YSVmoT7Hw/65ZPWj6OG3tHN8WL1h+fNEI0ORTK+B9wX9FDRU6?=
- =?iso-8859-1?Q?2MKED+1Ym3JvjiP1p0xMCMrd/JiCDHhgytkPDjICbwc74simkny7UPhaQ6?=
- =?iso-8859-1?Q?DCdIYiTvspEAmNWDYXkX0SvZBDEzqA03ZOe974n+Xpac7mLVacm5pcKHmt?=
- =?iso-8859-1?Q?AVDrjq1c+hthcgY36N8Wg9wTfEnZBtSvea8bNQQJqUOZlx26cP10UDmr9z?=
- =?iso-8859-1?Q?nKAXDItWqydNZOysS48FyS0LMkLQdz0DXKihD2VmUpTkpM0ShL4AJ9imQ4?=
- =?iso-8859-1?Q?K7/gUk+WffhF+RrDjT8Qj97pM4olW9ZCLGC4R1/ZqvRuuZbuKwyiIwApmg?=
- =?iso-8859-1?Q?GJj31WAJ9er2g/MDYy4xrVxLahQUex8QzoNbZGIH4qZT27Z9ouNpcKKToH?=
- =?iso-8859-1?Q?BFegOT3rqf8UGMWT+9m04r+bmQOFNJFGRf0nkBtfGcvqTlweYFVnB0N6ff?=
- =?iso-8859-1?Q?BLEYjsSsKvilqnd5jcmC5CpGjDqu7fIfVB1MD+KZAq+4M26bZA1ga4mKrC?=
- =?iso-8859-1?Q?W+6fppnfB3qRMcuFSuDNHTlERk0yODWHtMmL4HRGTRskSJdQU1+G+EMPQY?=
- =?iso-8859-1?Q?pVzeXECe+Ig5ce+pe74ZVUSlUgG17Ku0ECOK7yJvPxV01+XlSrRQIpaiXC?=
- =?iso-8859-1?Q?lDkTOqbJE1Sfmytoxuk9Ua0rO+ZH327BLQMgu1xIv7MIXIbEKiJInnA2IG?=
- =?iso-8859-1?Q?5FL8u9QlZY8GBU+iG7EUGdZnHGYaxJSfzeLQVvkWYQdQBq4y0WHpagass9?=
- =?iso-8859-1?Q?qqJYkxA8jf/gOS21KVhAfL6jkb5bVgYFM9GbHJSnu/kydj?=
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (2048-bit key) header.d=microway.com header.i=@microway.com header.b="Pus5hBWz"
+Received: from dragon.microway.com (unknown [10.200.120.6])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by microway.com (Postfix) with ESMTPSA id 748D28FD0;
+	Tue,  4 Aug 2026 16:48:56 -0400 (EDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 microway.com 748D28FD0
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microway.com;
+	s=byedon; t=1785876536;
+	bh=2T+pOxr+2nPV2Oh/iOvNu51V2gphKRShvM+YUj0d0Eg=;
+	h=From:To:Cc:Subject:Date:From;
+	b=Pus5hBWz/8MVDtU71G1Qz/v+VbAYm0xM6bGK60CIFwiKtbgwa3Q2l3mstKNsxDbE7
+	 sDwWFkLiQIVa3xCixKRcDb8NJOxnT4x+wG6880gIIL/I1v09iqKk556IE9TEqYuiky
+	 SJpr1XvYB0hzfTwwyrSnGVokslout7St1Yoawy+fTxtTaOhRE5Loi7E39XceqssOCx
+	 xL50o767duLLLwLTOhFA7rLZKzesPvwqw9un9ZfK1R5EdUfRipskqViMjEhtOaEeNI
+	 hepIoiVU3sY713sxf53s9IWICjtrxItU/vLW1z+KvRxSV35JFEQSERwtTETlqmqwTi
+	 F2hChYKxKZ0OA==
+From: Rick Warner <rick@microway.com>
+To: helgaas@kernel.org
+Cc: ilpo.jarvinen@linux.intel.com,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	rhoughton@microway.com,
+	ssingh@microway.com,
+	rick@microway.com,
+	lukas@wunner.de
+Subject: [PATCH v2] PCI: Fix Intel Xeon 6 x2 quirk collateral damage on adjacent x4 endpoints
+Date: Tue,  4 Aug 2026 16:48:45 -0400
+Message-ID: <20260804204845.171483-1-rick@microway.com>
+X-Mailer: git-send-email 2.52.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: SAWPR12MB999267.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 66f6dec5-7a9f-4602-0334-08def267a84a
-X-MS-Exchange-CrossTenant-originalarrivaltime: 04 Aug 2026 20:33:35.1789
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: oC94ke0OJOzEy5fVXxJCEQ/efknZnz9tuiD6jQD92P4XB1pPNBIVo0eiHa4DeGpJUt+CY46dKZrAEOG2dTaQzQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS7PR12MB5741
+Content-Transfer-Encoding: 8bit
 
-> Hi Jason & Ankit:=0A=
-> =0A=
-> Glad to see you all here to make progress! Intel can also help on this.=
-=0A=
-> Can we have a meeting to discuss on these topics? As Alexey mentioned,=0A=
-> previously we had a bi-weekly call, perhaps use that for our first=0A=
-> meeting? Or what time works best for everyone?=0A=
->=0A=
-> https://zoom-lfx.platform.linuxfoundation.org/meeting/93219227394?passwor=
-d=3D80705486-101a-4e19-8f11-0baaf92104be=0A=
-=0A=
-Hi Yilun & Alexey=0A=
-=0A=
-Thanks for the suggestion for the Aug 6 bi-weekly call. Unfortunately I'm o=
-n vacation=0A=
-for the rest of the week and the meeting timing is inconvenient for Jason (=
-PST+4).=0A=
-=0A=
-We can perhaps consider syncup sometime after Aug 16th. Does that sound fin=
-e?=
+commit a22250fe933d ("PCI: Add Extended Tag + MRRS quirk for Xeon 6")
+introduced a traffic mitigation quirk for Intel Xeon 6 root ports that
+negotiate down to an x2 lane width. However, that patch manipulated host
+bridge properties globally via 'bridge->no_ext_tags = 1' and by hooking
+'bridge->enable_device'.
+
+Because multiple unrelated root ports can reside under the exact same
+global pci_host_bridge domain structure, this overly aggressive mitigation
+causes severe collateral damage. When a low-speed or bifurcated secondary
+device (such as an onboard ASMedia SATA controller or BMC graphics link)
+matches the x2 condition, the kernel strips away Extended Tags and forces
+a 128B MRRS restriction across that ENTIRE host bridge. This instantly
+breaks or starves adjacent high-performance, unrelated x4 endpoints
+(such as NVMe drives), resulting in controller timeouts, initialization
+failures, and missing drives at boot.
+
+Fix this by refactoring the quirk logic to be completely per-device and
+downstream-isolated. Remove the broad host bridge no_ext_tags and
+enable_device = limit_mrrs_to_128 assignments, instead setting only
+no_inc_mrrs = 1 to prevent increases from vfio, VM, etc usage.
+
+DECLARE_PCI_FIXUP_HEADER then registers pci_xeon6_x2_local_endpoint_fixup
+to check every pci device as it initializes to see if it is downstream of
+an affected x2 port, and if so, the device has extended tags disabled and
+mrrs set to 128. This enforces Intel's stability parameters locally on the
+bottlenecked lane branches while fully protecting the parallel x4 channels.
+
+Fixes: a22250fe933d ("PCI: Add Extended Tag + MRRS quirk for Xeon 6")
+Signed-off-by: Rick Warner <rick@microway.com>
+---
+v2
+Original submission did a single pci bus walk and didn't handle hot
+plugged devices.  This has been rewritten to handle the quirk per
+device during initialization by checking if it's a descendant of a x2 port.
+
+This was tested successfully on a Gigabyte MS74-HB0 motherboard with a
+Seagate ZP4000GM30063 M.2 drive in the 2nd slot. With the stock 7.0 kernel,
+the drive fails to initialize and is unavailable once booted. Testing showed
+that extended tags (vs mrrs) are the key to getting this drive working.
+
+Concerns were raised about vfio/VM usage being able to re-enable extended 
+tags if bridge->no_ext_tags is not set.  I'm not sure how to best address 
+that if it's needed. The best option I've come up with is adding
+DECLARE_PCI_FIXUP_FINAL calls for 0x0db0-0xdb9 that set no_ext_tags after
+the initial pci bus walk is done. That would enable the already 
+initialized devices to maintain their configured extended tag support 
+but would block all newly hotplugged devices on that bridge from using
+extended tags, even if they weren't downstream of a x2 port. That might be
+good enough, as it would at least solve this issue for NVME drives not
+initializing. Otherwise I think bigger changes might be required to 
+handle it more cleanly.
+
+ arch/x86/pci/fixup.c | 58 +++++++++++++++++++++++++++++++++++---------
+ 1 file changed, 46 insertions(+), 12 deletions(-)
+
+diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
+index b301c6c8df75..0ab92a5cc0d1 100644
+--- a/arch/x86/pci/fixup.c
++++ b/arch/x86/pci/fixup.c
+@@ -301,15 +301,6 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_MCH_PC1,	pcie_r
+  *
+  * https://cdrdv2.intel.com/v1/dl/getContent/837176
+  */
+-static int limit_mrrs_to_128(struct pci_host_bridge *b, struct pci_dev *pdev)
+-{
+-	int readrq = pcie_get_readrq(pdev);
+-
+-	if (readrq > 128)
+-		pcie_set_readrq(pdev, 128);
+-
+-	return 0;
+-}
+ 
+ static void pci_xeon_x2_bifurc_quirk(struct pci_dev *pdev)
+ {
+@@ -320,9 +311,8 @@ static void pci_xeon_x2_bifurc_quirk(struct pci_dev *pdev)
+ 	if (FIELD_GET(PCI_EXP_LNKCAP_MLW, linkcap) != 0x2)
+ 		return;
+ 
+-	bridge->no_ext_tags = 1;
+-	bridge->enable_device = limit_mrrs_to_128;
+-	pci_info(pdev, "Disabling Extended Tags and limiting MRRS to 128B (performance reasons due to x2 PCIe link)\n");
++	bridge->no_inc_mrrs = 1;
++	pci_info(pdev, "Blocking devices on this bridge from increasing MRRS for performance reasons due to x2 PCIe link)\n");
+ }
+ 
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x0db0, pci_xeon_x2_bifurc_quirk);
+@@ -334,6 +324,50 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x0db7, pci_xeon_x2_bifurc_quirk);
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x0db8, pci_xeon_x2_bifurc_quirk);
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x0db9, pci_xeon_x2_bifurc_quirk);
+ 
++/* Helper to check if a device descends from an affected Xeon 6 x2 Root Port */
++static bool is_descendant_of_xeon6_x2_rp(struct pci_dev *pdev)
++{
++	u32 linkcap;
++	struct pci_dev *upstream = pci_upstream_bridge(pdev);
++
++	while (upstream) {
++		if (upstream->vendor == PCI_VENDOR_ID_INTEL &&
++		    upstream->device >= 0x0db0 &&
++		    upstream->device <= 0x0db9) {
++			pcie_capability_read_dword(upstream, PCI_EXP_LNKCAP, &linkcap);
++			if (FIELD_GET(PCI_EXP_LNKCAP_MLW, linkcap) != 0x2)
++				return false;
++			else
++				return true;
++		}
++		upstream = pci_upstream_bridge(upstream);
++	}
++	return false;
++}
++
++static void pci_xeon6_x2_local_endpoint_fixup(struct pci_dev *pdev)
++{
++	/* Skip bridges/switches; only target actual endpoints */
++	if (pci_is_bridge(pdev))
++		return;
++
++	/* Only apply to devices under the x2 branch; leaves x4 branches completely untouched */
++	if (!is_descendant_of_xeon6_x2_rp(pdev))
++		return;
++
++	pci_info(pdev, "Applying local Xeon 6 x2 quirk: Disabling Extended Tags and locking MRRS to 128B\n");
++
++	pcie_capability_clear_word(pdev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_EXT_TAG);
++	pcie_capability_clear_word(pdev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_READRQ);
++}
++
++/*
++ * HEADER fixups run for EVERY endpoint during its initial discovery phase.
++ * This natively catches boot devices, hotplugged devices, and SR-IOV VFs.
++ */
++DECLARE_PCI_FIXUP_HEADER(PCI_ANY_ID, PCI_ANY_ID, pci_xeon6_x2_local_endpoint_fixup);
++
++
+ /*
+  * Fixup to mark boot BIOS video selected by BIOS before it changes
+  *
+-- 
+2.52.0
+
