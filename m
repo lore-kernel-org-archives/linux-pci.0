@@ -1,63 +1,71 @@
-Received: from CH1PR05CU001.outbound.protection.outlook.com (mail-northcentralusazon11010018.outbound.protection.outlook.com [52.101.193.18])
+Received: from AS8PR04CU009.outbound.protection.outlook.com (mail-westeuropeazon11011039.outbound.protection.outlook.com [52.101.70.39])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A354E47042C;
-	Tue,  4 Aug 2026 16:20:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.193.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 990D7474261;
+	Tue,  4 Aug 2026 16:24:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.70.39
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785860426; cv=fail; b=H4SRZVKYYDd5rMphS4Up+F9OeVjxFbvKOhr5G3cmBLf7dimYcZnunbdNTmqtDJi1+Qls30vRDxPRw643wKjlKk7OQ54a4er/hXrgADuOx3mHHCeRZTbMdriw6dOo7ucOkIlFmmVPRZimoHkFmlLbftqNT0uGbRx8ofyHb2+h4FY=
+	t=1785860642; cv=fail; b=e5oJUt+RHf8V4OfVh+d+g7DRRQPQDOKVGmgvDTR0ezXjb8+Jj0qf5VuzRRA6wiqV3mB0uEsgrfrwMzTeEVn0w+gItWB9Q+FmTvEbkgvyr7CEqOQK2f4Fuleiz1+UIaqPLTR9gKtIEvrtPGSfhW0c/aa82X1UvkDM6ib1AZ2m4cs=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785860426; c=relaxed/simple;
-	bh=C7CKP7Rfb2UuNSpbtJwb+fIhwHn6OYHwbHNndkaC8MM=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=GaJsTQ89eGeOuYHG346OSaX5AlpilqKPAaXIqL+vZo5JLfZIUX/MUj+Bi95Iw91+ALtVP96GxlfnNVTqdLIuo52QeU1pe4WWN5vHGfjJitavaM+9az+BkFuHKsx7N1Ng8DFz+udbclkQLwjSHibRcwDK6hGgOR2V0BwgGhdMurk=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=NekRAiz2; arc=fail smtp.client-ip=52.101.193.18
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
+	s=arc-20240116; t=1785860642; c=relaxed/simple;
+	bh=eydRNqe8TLIQGDOlqLcNe2Qc93thsqcTrAMdjhO6lBw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=jI8Vvq2mXo9Ifx9P9PJtWqbWHysYEh/PfJbKghSHcj/GrMJH5k4EeWU7B8qwWzzd/fyB4M2A7JVOHmgJPO99p57NyBzZwGefXtnboWyuHVk7lkgHwktdk0pMbtVaSXa6pqm3z8a0ZcM0toMpV9b9XRcXe6hon3B6HDa0POf2Q20=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com; spf=pass smtp.mailfrom=oss.nxp.com; dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b=bPSVijUz; arc=fail smtp.client-ip=52.101.70.39
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="NekRAiz2"
+	dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b="bPSVijUz"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=KclcfxkPg7XiEgsg7cG24JjOmyIj0B+h6k62fhgsQNxq70vpGnEslgTs1+HFrnI0U0GUpey9V+B/AckktTQy5CBU3iuPaa3eUqSTdqgpwjTyzHgs5EDIMEeM4EHpUa+jxc7Bv0CS6j1nBo5QutZE1RaQdJcHbwoLHUk1nbfFc8XoH8gHsYQLiVF84gDvaMADFg4o2PKiHklSnQZMPfjcC0txUANGU7EmilSm0GVw8FORKSFoccMGRnALoOBa4FjsM3L+pP3PhsQ4Z0sRhEQ3YJ1eSf2vwxJvmmVZ+WqFg1SE4oaJgEdxzIkszbODzZQ9m/7I4cGGOetOTeR8NFDzcg==
+ b=rybBUhhurW7VeH/TdRzqQsgPJUtcIb3pfqU69uZ1MSN7R/U8u2kE2vjTEUfoUZR0KjjiDZOgv6idI4vbregcEPsxQ45/UXvnAvxfhWkkzx/4cPGbvsLmHGjHoYmPxm2MsWgJdK3G3EF3u/K0A92SCoeWfLTiCmAUFqaT3hugjYsUJyDV2VhuXke4adyP4jxvWuFttSj6SFKfeeXNMkJbjfgcAgf3wnWobaZfyWLDb+FprcZZy0ds+TzRY28H3RWBNPYfLuIdPY5uBTB2ARmZN1quR9mCVL6JRvBxPA/IdiOhsAPxrmzFS42u8LYeOffD4Jnciry3tZ3/Hem8eoxYBA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=e6Iq5GjPyMTElVSwyPn03ZcRxVvDJqEJG2TO0x9g0PM=;
- b=SSGm1CY3CUhjkbMS3UJGq//SGOZuKZrXWOzDYhrQXqXBbg6P+Uqb5nhv4m7OVC3eNWMTrAt6cY/W0tL7wH8AX7aC969nZH4DYVU2+1pZqt6yAvNro+p6YSnpeOdCJ5qZ4jxOJWPjg5zIxKTeKoSKYsxEnFVS8kzxZ4d2yc14BV06kp8pgag8OZUYiVkoPyIU9huw/6WTSXHCI2ZzUmf/DGJ74guBqc08S7tBUbES/GHje4X53b7kkIqzXj1U/twlgbgqANErnN7LkSMPcoTxzoFO9a7rYyoFkUoa0KzhjfKL+uMUMvtnaLgm7T3WhDj0amnRtecYPAcKk1YH8CZ0/A==
+ bh=29k0D9g3N50kndX4AaKvwO/kXxZrDrYk7s5BMSI/YdE=;
+ b=waozzt5bY1ilsHOBU5zgcqLWl5Z9UfulhP4HoSib2g7y5oRj8lBGjVfNuSLlAW5AyUvvO3wK3YCrspkrgMnPz8pFMYgizyKI2Yywv+gPxyK6sJHm/TSDXlDA/2c5p7PxYpxx9+IzlQokbk/K0f+Xk3ZTScNYszLHCnWGVrn6JY5CzK27BCdiFhzl+cJ0BunmMsanHT3EuRpl924KzOzEweWiPwV4+GhLP6InZNX1L7mfiXRvh8JPRt+6Ae1X3PYrv8sbflZpTMbbwCNixCmKIqUcWNGgBJWpkD1UGUJi3YLMhwZdCs1uAyuXj7WukFYJ9jlHEUIfi5cZULhpTcVsXA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
- header.d=amd.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ smtp.mailfrom=oss.nxp.com; dmarc=pass action=none header.from=oss.nxp.com;
+ dkim=pass header.d=oss.nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=NXP1.onmicrosoft.com;
+ s=selector1-NXP1-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=e6Iq5GjPyMTElVSwyPn03ZcRxVvDJqEJG2TO0x9g0PM=;
- b=NekRAiz28Arq5oK18fI8LhASHH1jOUqC1nCU6gnWfpUiBP8PrO7LrZQFYS/JhbfisLghv/jrzsNUgPAPKfIhomNXRT/HOWeGZXmgYjybHSw3h+kFKO/dwJfik6HmFBtFf/vzKrTe5mcrD4ZM6mjTqI3E1gehaKzXtHY6+jE3JPE=
+ bh=29k0D9g3N50kndX4AaKvwO/kXxZrDrYk7s5BMSI/YdE=;
+ b=bPSVijUz7EHMDP01lw8TyPaLR+ezjt8NBbXj2QZSM4zJO9UWeHU1rLMiRubPqFroi/bcF5z/vO4x/hn9ZdwCY637ELRxGd0AVNzpcS1J3pR7B59i75dFSQmpVVXZefFXAVRR3KYvO8iQGGuJVHgvCAr+BE2daWiBbxW9uTlYgObrhm2O0jt9m7+RpjdPhEWY7/iUsji182YtFsZB55TUaZc0w/+M20v0BVVrlOg03P1kWlOeAipucbBS7EWHdREXkJ56zH3E+A5i4W7cCY0HHx8zr3bAlsZKF2C7cuqhY4HKf+pHRu7EMzllUIIz41eyCXIa3MwolpA0M4z7kIWegA==
 Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=amd.com;
-Received: from CH8PR12MB9766.namprd12.prod.outlook.com (2603:10b6:610:2b6::10)
- by CY5PR12MB6180.namprd12.prod.outlook.com (2603:10b6:930:23::8) with
+ header.d=none;dmarc=none action=none header.from=oss.nxp.com;
+Received: from GV2PR04MB11799.eurprd04.prod.outlook.com (2603:10a6:150:2cf::9)
+ by DU4PR04MB12025.eurprd04.prod.outlook.com (2603:10a6:10:640::24) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.270.18; Tue, 4 Aug
- 2026 16:20:20 +0000
-Received: from CH8PR12MB9766.namprd12.prod.outlook.com
- ([fe80::be0f:431f:5f27:96d9]) by CH8PR12MB9766.namprd12.prod.outlook.com
- ([fe80::be0f:431f:5f27:96d9%5]) with mapi id 15.21.0292.013; Tue, 4 Aug 2026
- 16:20:20 +0000
-Message-ID: <1ca568f6-b9f5-45f6-a362-5ba0be8272f9@amd.com>
-Date: Tue, 4 Aug 2026 11:20:18 -0500
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v19 01/14] cxl/ras: Fix cxl_rch_get_aer_info()
- out-of-bounds AER register read
-To: sashiko-reviews@lists.linux.dev
-Cc: linux-pci@vger.kernel.org, linux-cxl@vger.kernel.org
-References: <20260803221810.3685703-1-terry.bowman@amd.com>
- <20260803221810.3685703-2-terry.bowman@amd.com>
- <20260803224230.85CD81F000E9@smtp.kernel.org>
-Content-Language: en-US
-From: "Bowman, Terry" <terry.bowman@amd.com>
-In-Reply-To: <20260803224230.85CD81F000E9@smtp.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: DSSP220CA0013.NAMP220.PROD.OUTLOOK.COM (2603:10b6:8:3d3::8)
- To CH8PR12MB9766.namprd12.prod.outlook.com (2603:10b6:610:2b6::10)
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.292.15; Tue, 4 Aug
+ 2026 16:23:57 +0000
+Received: from GV2PR04MB11799.eurprd04.prod.outlook.com
+ ([fe80::2146:83a2:5329:b7c]) by GV2PR04MB11799.eurprd04.prod.outlook.com
+ ([fe80::2146:83a2:5329:b7c%7]) with mapi id 15.21.0270.017; Tue, 4 Aug 2026
+ 16:23:57 +0000
+Date: Tue, 4 Aug 2026 11:23:47 -0500
+From: Frank Li <Frank.li@oss.nxp.com>
+To: Koichiro Den <den@valinux.co.jp>
+Cc: Manivannan Sadhasivam <mani@kernel.org>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Kishon Vijay Abraham I <kishon@kernel.org>,
+	Frank Li <Frank.Li@kernel.org>,
+	Marek Vasut <marek.vasut+renesas@mailbox.org>,
+	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v6 4/6] dmaengine: dw-edma: Add delegated channel request
+ helpers
+Message-ID: <anISE4zj1odwT2aJ@SMW015318>
+References: <20260804033855.2115817-1-den@valinux.co.jp>
+ <20260804033855.2115817-5-den@valinux.co.jp>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260804033855.2115817-5-den@valinux.co.jp>
+X-ClientProxiedBy: PH7P223CA0004.NAMP223.PROD.OUTLOOK.COM
+ (2603:10b6:510:338::12) To GV2PR04MB11799.eurprd04.prod.outlook.com
+ (2603:10a6:150:2cf::9)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -65,124 +73,227 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CH8PR12MB9766:EE_|CY5PR12MB6180:EE_
-X-MS-Office365-Filtering-Correlation-Id: 363e7e5a-8f9a-4293-78e5-08def2444772
+X-MS-TrafficTypeDiagnostic: GV2PR04MB11799:EE_|DU4PR04MB12025:EE_
+X-MS-Office365-Filtering-Correlation-Id: f6d9e1ad-773b-4431-0568-08def244c89d
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|23010399003|376014|1800799024|366016|18002099003|22082099003|56012099006|4143699003|11063799006|10067099003|6133799003;
+	BCL:0;ARA:13230040|7416014|1800799024|376014|23010399003|19092799006|366016|6133799003|11063799006|10067099003|4143699003|56012099006|18002099003|22082099003;
 X-Microsoft-Antispam-Message-Info:
-	caWBhTClJEMVpDTf8wYS+FjG+wglVujm/FRLwSfVodwrnjDSNNZ73Z/QhlGsPm1o7G8sSFzKCb/1m0q5grnwBQkYOWA7StOtxg5h7zwx1ObCGnFaErC2ujlH8O0QktV9yNc94fZGb6zVNzoSZL0l3ZDJus3BZhzfvorqi3G22jztXF1mDIUjkaGr3MAvOGHQRNftJ/iLfuTNDzqQrKx27USJKJe4jXUp5+rNzv+5ZKTKunfQunPKCdx+s8PZYwVh4Cal/HIW4cro09A6Ta3uTqI3xc3jbvtJu3Yi2POrL+qKtH6A/PP23qevQbBaGCY5aNvQx+PIQj/7BU1GQjbRK00ojUiitryg8i4ylyUDOyJpcQps9+mRJzvscLyUfMK2SYFj/XlRNbwp98MWu6b5H6Ey/TrR/cNnOXoSzJUZ+qxTimGF+mYtuym1leA5nvRss1QP/7i2C0PVe4HAkMqfFW5y7Gvs5WW4REJHJMlxP+TZAHE6tAmbv/YoerTwnQ4O2XYwcaVUPIuw4T2D0wqRoLCsi3G5fgGSXoU6lgKTh39+1Zdoe495vTuGLv3TpTH7JnGawpDZmPzchGUiPOD4m1QL/+xPgrn9+Uq7gce1kTxqDzgpSIxzWgHfVbqsOL23x2K4xrPIdXqYKqYQP/HX5mhkEOUd+SykfLqphWMFqlg=
+	CfriXbA7uAoKIjZKfGtiqJQ6ogWdK/Pxe3cP7yEVstw68MdluVOkPS/lPSvncmQOQW+1XOvvPuiqJ3ot1MZ/CakBDO3+ukI1KtMibUl1/EeNRnyYWMA1FxhP2TbweAWoMiA0EDmm6xyY59+wcG4wm6hORlruw0WZIpMVQ/fpGY/BwIbA6OJB0mq/7VyjKzXm0GQDRzR/WnWfl34xxC5hS++TLaKU8MfXFSrFkajLJN5VaOLU5StKWlP5C0LwVfXMK/G8uBda01MaOUtMYPpugs+QabxogfqBKYC3iJ7Ci3Uf1EYRHkO547FSrP9Azn+jL5OhUCeZ5ciS1HMKq5Yq0aa0GdVFBRIv5kgfllR1L4UXjYWuYCOh4hm2lkxSQ6TjUq+bpzJEXfVgNzlZKNzehli+bkvlESUBbjfMH/8UfbqLyion/eOGQvjIGVF8RoUPM7wcbLdn5jVmydHJ/2DzVnmwrt+YpgckMJbDAR9jZsxdHVzXp2OjTlYq7JbpSuEIdR61tSXnO0Ay+4nGOg1D81/gs5hUDZR5mj6FvYeT97AME+cMP/Ri+6wWZAkRXoB5s/Y8gqCi1azCqvtN7qV4Q0ejIWlEXHEYmLtviQAKSNUgkI9WVOdA4A+WZ5QhrKrs7N7UoQfH2EmzDqRFVSN7UHQDintlkCFIlm0qS9SyOzg=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH8PR12MB9766.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(376014)(1800799024)(366016)(18002099003)(22082099003)(56012099006)(4143699003)(11063799006)(10067099003)(6133799003);DIR:OUT;SFP:1101;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:GV2PR04MB11799.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(1800799024)(376014)(23010399003)(19092799006)(366016)(6133799003)(11063799006)(10067099003)(4143699003)(56012099006)(18002099003)(22082099003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?N1NuWkNrRWR6RXgyQmsxNE4xWUhIZlN1bzRaa0Q1T3Ftc01rNjhEbVEvSGdG?=
- =?utf-8?B?MzhQK2MzZEJkKzZNTlBBR20xL2N0d212alU1ODMvSW9iSHljd3Evb1RIcU5M?=
- =?utf-8?B?SlYxeUUwVXI5Qkd5S3JZZXZUdm1qSU8ydVBvT1FLbzVmeXZyVnNvSEZkRmMx?=
- =?utf-8?B?YjBuZ05vQTZlcVN3bVQ4L3hSUzBoRnRvQjQxRjduVnFnQk9majUzVi82MnJL?=
- =?utf-8?B?ZWt4QnVwcWFSWlJGSkpjQm1RQ2wyRDIydFkxNSsxQktXRCt3YzJXYmxZUGJl?=
- =?utf-8?B?VEFZQ0dxc0o3VDlxMjdPajhydXZiQXlBR0FjN3VwV2VwY0YyMytDaU1qVHF2?=
- =?utf-8?B?cTZqbzlkR2dwTGliN25udTZ0UnJXU09KUERnNlJtcXh0VWtEQWJkQ2ErSUND?=
- =?utf-8?B?SmxOT1QzejQzOTUyNlU5NThBQ2pXd29XWEJtRjdoVGYrOVJQNHNGQUVRYTgv?=
- =?utf-8?B?STFndzFiUElFbmx2elBwbGk4YlM2N2M0d01wZ2VubVMvNUY5UU9POStyZHd3?=
- =?utf-8?B?SHdZSG9WRSt4WkRaYnlrT0tTSENhb09BRVFsb0dka3J2SFZ3aHJtMG9vcklP?=
- =?utf-8?B?ejZIK1dBT3pQZ0U2bnlOcFgxY2pBK0FOaHNLTmhWWTZEdW43clBxc1NaN1JE?=
- =?utf-8?B?OTliV3dBVlN0SE5LOVAwTVNZNlRYQUpLdWVmUUNPbHhRZU1IUXgyVFpDblRJ?=
- =?utf-8?B?WG1nRUhsMWp2U0ZDWThQNkhiSHRab1l3cThZc0lQTVRHMVRnQys0SmIvcDFm?=
- =?utf-8?B?MFFyTVN4T2N6UlJrU1lIWWY0eTMrUStSVG5nbTI1TkczeU5SV1dRYmNpWHZt?=
- =?utf-8?B?cFpvZi9PL2JLdkJ1azcxQkJpQWVvaElGUFduSDFhc216cW9Lc2RFbzdvQ1d4?=
- =?utf-8?B?RFJ4VmVDdm93cEFLNldISDd1MmZDM3BrZmw0UFpRQlVnK3pGWFVsMU5LUnVm?=
- =?utf-8?B?TWh2elZLS1RsdkxtTzhhZHZzYmQ3am93U0w1eGlqWmhEc2ZacGxxcXZTRURG?=
- =?utf-8?B?R2NQUmErdU5ocjN2Y2xnRFI0NTBJdjIvQXFEL011VHlQZWptK0duaEpQWFNu?=
- =?utf-8?B?cldFckdQdUhCei85R20vSUEvQ2pVS21vVmorekQwRUlsZ1U1MkxhL1FLbE9m?=
- =?utf-8?B?Mmlua01KNlozZC91OFZuUEdsRmVTR1dBTzY0RUN2OXBTeVVja1NVL1FMbFk5?=
- =?utf-8?B?V0g0N1UwdzQ3Y2gvcVVvdVcwYktHQ0tyYkNMSUwxb01sWDRUOWYvbEpuVnNv?=
- =?utf-8?B?aGZXbUhjTHB2V1NieUdNcE5uMmo0a1VRL0VEN2M5QWRjdEhLUm83TnVUcWVR?=
- =?utf-8?B?dnFLYVk2WnpvRDM1MDg2MEdSTjZsNFBoY0djWmVEN1VqUy91alpZZG1KOWVH?=
- =?utf-8?B?WWpCUnlIK0lIeUYwTlROaS9GVXFBa1QzS0YwNnhMV2s0clpFQnhpeVdjRFNu?=
- =?utf-8?B?dExkR3M0MGlmcVZCcDkxc252Zmh3UEUwNmJNd3M4Q2dDdkZHKzU2M2Y1VjIx?=
- =?utf-8?B?WVErbHdLNWxnZHpqNkgxMmFUMGh4SDFrcGxoaW8veGZwVkhqV1gzeXhpUWh5?=
- =?utf-8?B?dkxLT05BT2lrT1Q5YTlLUFF2S1J6N2J2NWc4WXpubkN6R0p4bXE1eWtUbGVI?=
- =?utf-8?B?dFozSW5HOEpqSHBKQUh1ZGthVTQ1NXB5aVF5ODUvNUpNc1hvcXZ5Qi80czJW?=
- =?utf-8?B?L0tCeFV5Zzk0V1puT2hiNWZhT25vdEkzRVhIZGVpZDNUWjB0SGRWUW9IMjVQ?=
- =?utf-8?B?bjQ2VVBkZHNaSFNLNjJVeno3QjREc2JmV3A1MnlKQVMza05ub1MwRjNsZG54?=
- =?utf-8?B?VnFEZmh5aEw4Szd3WmJHNE1DaTUyTlFrV2hSYkU4SmZzVXpIY3FkbThleHZQ?=
- =?utf-8?B?bzFWbzdqUkhtL2hqNVV4N0R6WVJ2NXlNQ0lrUkNRUHArbjVtV25mcXZVUkxj?=
- =?utf-8?B?MmJkUkFoZlFDNDBwRTk5bmpFLzk0NWhzdHNrd3pWNUwrT1VMQ2dXM29wb1V2?=
- =?utf-8?B?OE5wUmRBb0V0bHZXUjNWWDZnckYrNkJjbW5WQ0RsSHdnWDRWN0NscnBrWUVh?=
- =?utf-8?B?MXlGQ1pqRGdTaUh1TjFMT2dqZkFVZzAwNEVEckQ2aG56WHp3b2Q2SkVxdzht?=
- =?utf-8?B?SnNKT2JDTk1FNjRmYU1XSm5WVU5TZXZxYk1QQkNXbFM4NmpEODNvR0NQaFZh?=
- =?utf-8?B?aUtlYW1tS0htU2RvcmlidjFwejRhUlR6MTN0bjROaCtzU2lnaUdEQUFua1Uy?=
- =?utf-8?B?dzREaG1NampZcnZ1UFp4V3hzUnFPNWVtU1JxQ3Z0Rm5OR3R2NDFId3FId0ha?=
- =?utf-8?Q?FSam9HY7L35sMBUMyV?=
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 363e7e5a-8f9a-4293-78e5-08def2444772
-X-MS-Exchange-CrossTenant-AuthSource: CH8PR12MB9766.namprd12.prod.outlook.com
+	=?us-ascii?Q?TR97+gbWrMUM0G0CTJ7chkazMRiRcwNtsggxDyFuvNI5RaHA4wgpSohVVA2s?=
+ =?us-ascii?Q?G6rDmt3LnMYMxjtfijqTqrdeMR+8YUoFpqGD8uJ4x2I4aJguo0/x/X/aC0zC?=
+ =?us-ascii?Q?p8+Mw34kjK3ZHJHiGAFjENso4R2ow5m5mniNwXNlFShbevppI2dRyUNb7odr?=
+ =?us-ascii?Q?pFCttd3OmYAkLcrQoDnxdDggNad4YNJZOUdeFXVFsFJRCOf4KP5VniAmB1X1?=
+ =?us-ascii?Q?3Lu75e+FVh6pp5VEfnxPyLJ+7ZOx9qngnDh5rGknMgU+Stjp/9jhUyDE7/SJ?=
+ =?us-ascii?Q?6iGNWjC6+9wQt1hOvTDaXpr3EJ56EjyD1/LmIEWYtGzda9iWFdamVAgX4UN6?=
+ =?us-ascii?Q?6NtunqENWz5Wgzm7f/ijEamSmZ8ZBfU4b83G4nFMNy3SAzaZ+C8cJYx1D6EJ?=
+ =?us-ascii?Q?266WEKW//aZBp3gwM7aEaYyNaU4wW0J6lDvQBeOTzBFez+flBTC+t91Y9FoG?=
+ =?us-ascii?Q?c/QI/mV5ehR1vWI6iutkDYdTiyNKXfmDUlovVlcUIQWu+B79ter86oJV00KC?=
+ =?us-ascii?Q?5HS/+kWv+tNekX7bDaUDjt0TcnQUXx9nSSVvpmabGrYQ6MngIZoin96AUUvg?=
+ =?us-ascii?Q?r/9GRaEtww4xOG4un9dLQmuuJkLn4Fgqeo0mGo5rR+UUt9IM8BW5z0sV4Dc4?=
+ =?us-ascii?Q?zHZQ1sVctV1fZ/IMRBzRccjNx9PuajWZ5r7AFd9IXyilZmMCrrdQQ/0MqJC8?=
+ =?us-ascii?Q?1dkyjN6SiktPpGgWSYTv0jLBu6JEL45aCyuTlmDpFGgDJo8z7XBkXmkvRolN?=
+ =?us-ascii?Q?i5lFxS/sgPT0QEpuggXf28HMLrB0Qv06UWmzEv3mnyDU9IZeRZ+dGi3AVkwy?=
+ =?us-ascii?Q?6rHJbRXkzG8AV4H29WG4EwNfwWF42AsvNHzJFc4N0VlupYSXlZe7ogFkIcMK?=
+ =?us-ascii?Q?4BfOr9qd9XJRYDAXi1SdNeFRh1tdM/dmLXs/r/aE8OHP0J23q51JTrbOQ3Fp?=
+ =?us-ascii?Q?/SdhxAjhOS8sGXpSJerWc8/Edv3YU2ZEieHZuX5laqLmTFSTE0oIczyrMLZZ?=
+ =?us-ascii?Q?zvGDB8bVOGkh9hPXsRtfXajM2zgPdkSNX/VeoKS9+Usb9kjs7TaqqjXpwaMj?=
+ =?us-ascii?Q?S/sQHecMVsb7rDUFJ5mMUYEHMbXy3GUkiCXEpBLnqHPPxBg7bD9YxZmB7jTF?=
+ =?us-ascii?Q?3YJpAQQYNy+/olbs0JFICOK36XNNTIOM6XAYe45JHXhkT9sMv2k5ScT+3YjR?=
+ =?us-ascii?Q?Hy2t/fQQi44cVp9GhMxQMwP9wgyS65378FFUT4hR2ttX/NjCYB3rIezwomex?=
+ =?us-ascii?Q?QB72Vcdt1QW1qrLRPW+Pb3GUhgAd9vpMHiYfqpappRqbM4LJQNw+gELqWJAX?=
+ =?us-ascii?Q?GlHu6Kv4Fwc92Q/sGNkZAa8YwXNomBkI7RhfK6+qY9kVkRmWiALkV22VVZyo?=
+ =?us-ascii?Q?fVPF4BISo/O3tADeCRrW1UJ+VIxB4BxspVYH4FNLgFG3EQNgEH9Q14GfJHQ2?=
+ =?us-ascii?Q?SJ44rKX0z/Gd1PXhliuiKtnMEAXX3MrEizYP2z2wQLOLLLVTJ9X3mzWGVanF?=
+ =?us-ascii?Q?AC/CWUUCNKN3ZHTA7ICZkADGFN2VhJuoe/qj6YOyJENWmpgxNFWhS6+Wmj2w?=
+ =?us-ascii?Q?BeKfZ0PGm6SlLYA7749Ss3z9yvGuNqR7su52ea/xzCyTEkmdpMgBTwGQy9j7?=
+ =?us-ascii?Q?Z/lc46sVXUzRE3m5WjHlC39ytVaLcI53bHBM0AEuiRhxB27v89L5TTLJUlmI?=
+ =?us-ascii?Q?aO0KxmZB8l+sD4VxNwwI69SJCXOxw4LBo8hTxTx5Q4G2gfsiMUxCZhCNopcZ?=
+ =?us-ascii?Q?GEqgiah+0GPT9pA4fkRgu0R74oS20WF+AldNsR9QQ4+sWCW3PKPl?=
+X-OriginatorOrg: oss.nxp.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: f6d9e1ad-773b-4431-0568-08def244c89d
+X-MS-Exchange-CrossTenant-AuthSource: GV2PR04MB11799.eurprd04.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 04 Aug 2026 16:20:20.4724
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 04 Aug 2026 16:23:57.3518
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: ZzuxV0t1VruH+lVu1pW9nrD1h+aUdYd9BtfmirJ1RYbb+O/JCImTZeTFyGWAH30iKCNlzTY/ylMDFsX3XtE5Tg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY5PR12MB6180
+X-MS-Exchange-CrossTenant-UserPrincipalName: 2rafxm4V9OBn/7ve8IPWdg5oaPnO1J5yLsEDuUlc5vJG9glEq7wLs5BRCDODMGJL8bwXDYoBD872qdIIPPCg2ZVL+UJqaNJ0jcuQ1hojcr/uVa9zNqGZLb5XzAQM2CU+
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DU4PR04MB12025
 
-On 8/3/2026 5:42 PM, sashiko-bot@kernel.org wrote:
-> Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
-> 
-> Pre-existing issues:
-> - [High] cxl_dport_map_rch_aer() requests an MMIO region using the software-only size of struct aer_capability_regs, over-reserving memory beyond the physical capability.
+On Tue, Aug 04, 2026 at 12:38:53PM +0900, Koichiro Den wrote:
+> Endpoint functions that expose endpoint-local DesignWare eDMA channels
+> to a remote host need to reserve exact hardware channels and hand
+> interrupt ownership to the remote side before publishing the channels.
+>
+> Add DW eDMA-specific helpers that request a write/read hardware channel
+> through DMAengine, keep the hardware-channel filter private to dw-edma,
+> and switch the selected endpoint-local channel to remote interrupt
+> routing after the channel has been successfully reserved. The matching
+> release helper can quiesce the channel while it is still remote-routed,
+> then restores the channel's default routing before releasing the
+> DMAengine reservation. This lets callers skip quiesce when unwinding a
+> reservation that was never exposed to host programming.
+>
+> Release is best-effort because its callers cannot abort teardown. Report
+> a quiesce failure locally, but always restore the default routing and
+> release the DMAengine reservation.
+>
+> Signed-off-by: Koichiro Den <den@valinux.co.jp>
+> ---
+> Changes in v6:
+>   - No changes.
+>
+>  drivers/dma/dw-edma/dw-edma-core.c | 91 ++++++++++++++++++++++++++++++
+>  include/linux/dma/edma.h           | 14 +++++
+>  2 files changed, 105 insertions(+)
+>
+> diff --git a/drivers/dma/dw-edma/dw-edma-core.c b/drivers/dma/dw-edma/dw-edma-core.c
+> index 1f893dc54c79..4c0d2bba755b 100644
+> --- a/drivers/dma/dw-edma/dw-edma-core.c
+> +++ b/drivers/dma/dw-edma/dw-edma-core.c
+> @@ -1302,6 +1302,97 @@ int dw_edma_remove(struct dw_edma_chip *chip)
+>  }
+>  EXPORT_SYMBOL_GPL(dw_edma_remove);
+>
+> +struct dw_edma_delegated_chan_filter_args {
+> +	struct device *dma_dev;
+> +	bool write;
+> +	u16 id;
+> +};
+> +
+> +static bool dw_edma_delegated_chan_filter(struct dma_chan *dchan, void *param)
+> +{
+> +	struct dw_edma_delegated_chan_filter_args *filter = param;
+> +	struct dw_edma_chan *chan;
+> +
+> +	if (!filter || dchan->device->dev != filter->dma_dev)
+> +		return false;
+> +
+> +	chan = dchan2dw_edma_chan(dchan);
+> +
+> +	return chan->dir == (filter->write ? EDMA_DIR_WRITE : EDMA_DIR_READ) &&
+> +	       chan->id == filter->id;
+> +}
+> +
+> +static int dw_edma_delegate_chan(struct dma_chan *dchan)
+> +{
+> +	struct dw_edma_chan *chan = dchan2dw_edma_chan(dchan);
+> +	int ret = 0;
+> +
+> +	if (!(chan->dw->chip->flags & DW_EDMA_CHIP_LOCAL))
+> +		return -EINVAL;
+> +
+> +	guard(spinlock_irqsave)(&chan->vc.lock);
+> +
+> +	if (chan->configured || chan->status != EDMA_ST_IDLE ||
+> +	    chan->request != EDMA_REQ_NONE)
+> +		ret = -EBUSY;
+> +	else
+> +		chan->irq_mode = DW_EDMA_CH_IRQ_REMOTE;
+> +
+> +	return ret;
+> +}
+> +
+> +struct dma_chan *dw_edma_request_delegated_chan(struct device *dma_dev,
+> +						bool write, u16 id)
+> +{
+> +	struct dw_edma_delegated_chan_filter_args filter = {
+> +		.dma_dev = dma_dev,
+> +		.write = write,
+> +		.id = id,
+> +	};
+> +	struct dma_chan *dchan;
+> +	dma_cap_mask_t mask;
+> +
+> +	if (!dma_dev)
+> +		return NULL;
+> +
+> +	dma_cap_zero(mask);
+> +	dma_cap_set(DMA_SLAVE, mask);
+> +
+> +	dchan = dma_request_channel(mask, dw_edma_delegated_chan_filter,
+> +				    &filter);
+> +	if (!dchan)
+> +		return NULL;
+
+I forget, why need export delegrated dma channel to dmanegine? If EP
+driver doesn't report delegrated channel to dma engine, what's happen?
+
+Frank
+
+> +
+> +	if (dw_edma_delegate_chan(dchan)) {
+> +		dma_release_channel(dchan);
+> +		return NULL;
+> +	}
+> +
+> +	return dchan;
+> +}
+> +EXPORT_SYMBOL_GPL(dw_edma_request_delegated_chan);
+> +
+> +void dw_edma_release_delegated_chan(struct dma_chan *dchan, bool quiesce)
+> +{
+> +	struct dw_edma_chan *chan;
+> +
+> +	if (!dchan)
+> +		return;
+> +
+> +	chan = dchan2dw_edma_chan(dchan);
+> +	if (quiesce && dw_edma_core_ch_quiesce(chan))
+> +		dev_warn(chan->dw->chip->dev,
+> +			 "failed to quiesce delegated %s channel %u\n",
+> +			 chan->dir == EDMA_DIR_WRITE ? "write" : "read",
+> +			 chan->id);
+> +
+> +	scoped_guard(spinlock_irqsave, &chan->vc.lock)
+> +		chan->irq_mode = dw_edma_get_default_irq_mode(chan);
+> +
+> +	dma_release_channel(dchan);
+> +}
+> +EXPORT_SYMBOL_GPL(dw_edma_release_delegated_chan);
+> +
+>  MODULE_LICENSE("GPL v2");
+>  MODULE_DESCRIPTION("Synopsys DesignWare eDMA controller core driver");
+>  MODULE_AUTHOR("Gustavo Pimentel <gustavo.pimentel@synopsys.com>");
+> diff --git a/include/linux/dma/edma.h b/include/linux/dma/edma.h
+> index 3c8e2ef9dee0..944469258b8b 100644
+> --- a/include/linux/dma/edma.h
+> +++ b/include/linux/dma/edma.h
+> @@ -153,6 +153,9 @@ struct dw_edma_chip {
+>  #if IS_REACHABLE(CONFIG_DW_EDMA)
+>  int dw_edma_probe(struct dw_edma_chip *chip);
+>  int dw_edma_remove(struct dw_edma_chip *chip);
+> +struct dma_chan *dw_edma_request_delegated_chan(struct device *dma_dev,
+> +						bool write, u16 id);
+> +void dw_edma_release_delegated_chan(struct dma_chan *chan, bool quiesce);
+>  #else
+>  static inline int dw_edma_probe(struct dw_edma_chip *chip)
+>  {
+> @@ -163,6 +166,17 @@ static inline int dw_edma_remove(struct dw_edma_chip *chip)
+>  {
+>  	return 0;
+>  }
+> +
+> +static inline struct dma_chan *
+> +dw_edma_request_delegated_chan(struct device *dma_dev, bool write, u16 id)
+> +{
+> +	return NULL;
+> +}
+> +
+> +static inline void dw_edma_release_delegated_chan(struct dma_chan *chan,
+> +						  bool quiesce)
+> +{
+> +}
+>  #endif /* CONFIG_DW_EDMA */
+>
+>  #endif /* _DW_EDMA_H */
 > --
-> 
-> --- Patch [1]: [PATCH v19 01/14] cxl/ras: Fix cxl_rch_get_aer_info() out-of-bounds AER register read ---
-> commit b208d5e7d4a18c48dd06f33bc3c5667e9a2c13dd
-> Author: Terry Bowman <terry.bowman@amd.com>
-> 
-> cxl/ras: Fix cxl_rch_get_aer_info() out-of-bounds AER register read
->     
-> cxl_rch_get_aer_info() copies the RCH Downstream Port AER capability from
-> the RCRB MMIO block using a readl() loop bounded by sizeof(struct
-> aer_capability_regs). This struct is a software layout and its embedded
-> struct pcie_tlp_log is larger than the on-wire AER capability. As a
-> result the loop reads past the mapped AER register block.
-> 
->> diff --git a/drivers/cxl/core/ras_rch.c b/drivers/cxl/core/ras_rch.c
->> index 0a8b3b9b63884..8a3965edaa12c 100644
->> --- a/drivers/cxl/core/ras_rch.c
->> +++ b/drivers/cxl/core/ras_rch.c
->> @@ -58,13 +58,28 @@ void cxl_disable_rch_root_ints(struct cxl_dport *dport)
->>  static bool cxl_rch_get_aer_info(void __iomem *aer_base,
->>  				 struct aer_capability_regs *aer_regs)
->>  {
->> -	int read_cnt = sizeof(struct aer_capability_regs) / sizeof(u32);
->> +	/*
->> +	 * Bound the copy to the physically-defined AER registers (header
->> +	 * through the 16-byte Header Log). struct aer_capability_regs is a
->> +	 * software layout whose embedded struct pcie_tlp_log is larger than
->> +	 * the on-wire AER capability; copying sizeof(*aer_regs) would
->> +	 * over-read the RCRB-mapped MMIO block.
->> +	 */
->> +	int read_cnt = (PCI_ERR_HEADER_LOG + 16) / sizeof(u32);
-> 
-> [Severity: High]
-> This is a pre-existing issue, but since you are fixing the oversized read
-> here, should we also fix the initial mapping size in cxl_dport_map_rch_aer()?
-> 
-> In drivers/cxl/core/ras_rch.c:cxl_dport_map_rch_aer():
-> 
-> 	dport->regs.dport_aer =
-> 		devm_cxl_iomap_block(host, aer_phys,
-> 				     sizeof(struct aer_capability_regs));
-> 
-> This uses the same oversized software struct size to request the MMIO region.
-> 
-> If another CXL Extended Capability is densely packed immediately following the
-> AER block, won't any subsequent driver attempting to map it (e.g.,
-> cxl_dport_map_rcd_linkcap()) fail with a -EBUSY conflict and break device
-> initialization?
-> 
-I will be adding a patch fix to v20 for the existing cxl_dport_map_rch_aer() 
-issue reported by sashiko.
-
-- Terry 
+> 2.51.0
+>
