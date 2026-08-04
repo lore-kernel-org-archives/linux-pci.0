@@ -1,48 +1,48 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.17])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E6A4046D0AD;
-	Tue,  4 Aug 2026 13:38:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 81C8646D0B1;
+	Tue,  4 Aug 2026 13:38:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.17
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785850736; cv=none; b=C9HSkx6TnG7ZvWd0rcpn2AEzfbeLwQPc/gRA4RQAZANfm18Nkzt5GSJnnk/hhRP/dChX6teQpO7MgzszTe/ppejkBxAKDUYengsEi5JYjLE7mHoeaBBVWcB5iBiRUcelalYaeyK4EWYgzj9lhphSs/KY/sCoGs1DCCMd/fMLpds=
+	t=1785850739; cv=none; b=V0oJUc6jtVa5f2+GDtZAqRuzS5A2iMNEWsMYKJw/np3ytoqIfyc9qup/JZffK8Kt/gJNWLvAt7jXFWxTHwkwOz+VwlZzYICcpqLSGo1ZV5668U/g45m060s2g9phqqtcwuwjZ3ayQsV5TUYNw9oPBB9dqwZIV6NjbCkVpbXhBjk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785850736; c=relaxed/simple;
-	bh=qVCDtVw4YXVPC2Lgfv+Ullr3SJrYay9qNnR41X2bZPc=;
+	s=arc-20240116; t=1785850739; c=relaxed/simple;
+	bh=fL5R1x9TZFT+HG95wJ+SGsMrSYKHX0Fo52jLM1Vj45E=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=FtUGCm9upBsQ8wE4R0y0hMrYqGmloodeAvuEFndOrJyF9QogusqHG6ydgV05IrzgZjqz/iXg77w1pBmEB4mo3J+0gyaUr1/mk+DWcw4zgoybA8ezrb6S2RkIJRbHtAkzmO8e8F8SHRUYxrZtNaPOwERpUGYNUiYkwzseU9tBSiA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=n1WH23uJ; arc=none smtp.client-ip=198.175.65.17
+	 MIME-Version; b=HiuYAvhUcMMaZX6Ed+kPFF5mKD2NYHBuGwYmO8eFcRdFbzG/t6xIy0MVgBUMdZLeUEYstkvMgF8LYqcJZjho1Cjy08ORPCqMPmCmF+w3EoLzO5ccW6/ntGG3tn4JvSyFrhhNVaJeX+COV0KIE/2iZVvpK+DwRgGdOSXpgxugqO8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=bEYC1Ogn; arc=none smtp.client-ip=198.175.65.17
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="n1WH23uJ"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="bEYC1Ogn"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1785850735; x=1817386735;
+  t=1785850739; x=1817386739;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=qVCDtVw4YXVPC2Lgfv+Ullr3SJrYay9qNnR41X2bZPc=;
-  b=n1WH23uJt/C9A8MzD2xTRBu2Nc+dNhH9gDbMT/Ust6suJEUXVN8rhsfM
-   u/D1RbhNDOZMU/YpLAmHJvUipsXCarwVz3ppjkZKcBjX3leyOgFIZNxFO
-   WVNDgKTtD1VgLrgLPR2bJfdfnR97H9Bfi1aMlsCfPlM3gnYe3aSKlB7wT
-   VnnjxAy2mos3guIsxxXjPgwX3eGW4TdU5/I1F+zxAGYCpWq4axdu4iwpE
-   Y10JqblR5jF2d5NxM1sCQ2xO7qjo4iom4/b38kHP1VG8TOCijA+YqpLL9
-   cfWSjoAKEL6ihXnmUAVrMaZ6BMr5+r4UDZdE7cY/C1EtSZ33KIlQvYDlp
-   w==;
-X-CSE-ConnectionGUID: JPN3u7mfRbWMNpri4h49jw==
-X-CSE-MsgGUID: GxtXM+7DT6aZtTnJo0OriQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11864"; a="86410184"
+  bh=fL5R1x9TZFT+HG95wJ+SGsMrSYKHX0Fo52jLM1Vj45E=;
+  b=bEYC1OgnvbKmv1p6ZUFXB/975dfV6E2OI0pu+91PkI2M5JXtjckHB9gD
+   SWsfOB2Xnikq+WquOSkvC7Q97QAPS8vxPArJ/uFDc4BmjeMxScFXYlwL9
+   kNHtYyOcGvxC/Jr/M1R1qbumKoUJhWGnfOI+BO+b/fV4kSGqhxtsX8JTC
+   1Ql54r6D27Qx6kf97IUO3mH3jk3rtZ6x+qU+j+RZXymx2AgsjBH/fhBYi
+   B8aJeHCLoTt2Eyh/72sfAz8LcMVHUX2BNpoTBJ3VF2vxncHQ2pqT0KSUt
+   zNwC9oLRZwl9HX1GsKclcBWXO4PNg3gea/3+w5onnDpP6xBBw8XMvdjiI
+   Q==;
+X-CSE-ConnectionGUID: qMRvnyTAS9SXZyLYrkKGxg==
+X-CSE-MsgGUID: X09rv+wfQrGtn7kz5osaaQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11864"; a="86410195"
 X-IronPort-AV: E=Sophos;i="6.25,204,1779174000"; 
-   d="scan'208";a="86410184"
+   d="scan'208";a="86410195"
 Received: from fmviesa004.fm.intel.com ([10.60.135.144])
-  by orvoesa109.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Aug 2026 06:38:55 -0700
-X-CSE-ConnectionGUID: ZO6mh3C7R1GaEHjcXJHSPg==
-X-CSE-MsgGUID: xJXLWcKXTgidilOngklmhA==
+  by orvoesa109.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Aug 2026 06:38:57 -0700
+X-CSE-ConnectionGUID: HvgyCBfORymBzck8FInXbQ==
+X-CSE-MsgGUID: s8v2B4aqRKuzsdG0ghgOWA==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.25,204,1779174000"; 
-   d="scan'208";a="263501068"
+   d="scan'208";a="263501071"
 Received: from mkosciow-mobl1.ger.corp.intel.com (HELO ahunter6-desk) ([10.245.245.132])
-  by fmviesa004-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Aug 2026 06:38:52 -0700
+  by fmviesa004-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Aug 2026 06:38:55 -0700
 From: Adrian Hunter <adrian.hunter@intel.com>
 To: alexandre.belloni@bootlin.com
 Cc: Frank.Li@nxp.com,
@@ -52,9 +52,9 @@ Cc: Frank.Li@nxp.com,
 	linux-kernel@vger.kernel.org,
 	linux-pci@vger.kernel.org,
 	linux-pm@vger.kernel.org
-Subject: [PATCH V3 13/14] i3c: mipi-i3c-hci: Factor out i3c_hci_sysdev()
-Date: Tue,  4 Aug 2026 16:38:09 +0300
-Message-ID: <20260804133810.184905-14-adrian.hunter@intel.com>
+Subject: [PATCH V3 14/14] i3c: mipi-i3c-hci: Advertise IBI wakeup capability
+Date: Tue,  4 Aug 2026 16:38:10 +0300
+Message-ID: <20260804133810.184905-15-adrian.hunter@intel.com>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260804133810.184905-1-adrian.hunter@intel.com>
 References: <20260804133810.184905-1-adrian.hunter@intel.com>
@@ -67,115 +67,56 @@ MIME-Version: 1.0
 Organization: Intel Finland Oy, Registered Address: c/o Alberga Business Park, 6 krs, Bertel Jungin Aukio 5, 02600 Espoo, Business Identity Code: 0357606 - 4, Domiciled in Helsinki
 Content-Transfer-Encoding: 8bit
 
-The MIPI I3C HCI driver needs to identify the underlying system device
-used for DMA mapping and PM operations. The logic for determining that
-device is currently embedded in the DMA implementation.
+Set master->ibi_wakeup during probe when the associated system device
+advertises wakeup capability, allowing the I3C core to mark IBI-capable
+I3C devices as wakeup capable.
 
-Factor this code out into i3c_hci_sysdev() so it can be shared by other
-parts of the driver and keep the device-selection logic in one place.
+Tweak the comment for i3c_hci_sysdev() to mention the new usage.
 
 Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
+Reviewed-by: Frank Li <Frank.Li@nxp.com>
 ---
 
 
-Changes in V2 and V3:
+Changes in V3:
+
+	Added Frank's Rev-by tag
+
+Changes in V2:
 
 	None
 
 
- drivers/i3c/master/mipi-i3c-hci/core.c | 12 ++++++++++++
- drivers/i3c/master/mipi-i3c-hci/dma.c  | 15 +--------------
- drivers/i3c/master/mipi-i3c-hci/hci.h  |  2 ++
- 3 files changed, 15 insertions(+), 14 deletions(-)
+ drivers/i3c/master/mipi-i3c-hci/core.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/i3c/master/mipi-i3c-hci/core.c b/drivers/i3c/master/mipi-i3c-hci/core.c
-index cfe9b5390b56..0212c9e984cf 100644
+index 0212c9e984cf..5d92cf0645ef 100644
 --- a/drivers/i3c/master/mipi-i3c-hci/core.c
 +++ b/drivers/i3c/master/mipi-i3c-hci/core.c
-@@ -15,6 +15,7 @@
- #include <linux/interrupt.h>
- #include <linux/iopoll.h>
- #include <linux/module.h>
-+#include <linux/pci.h>
- #include <linux/platform_data/mipi-i3c-hci.h>
- #include <linux/platform_device.h>
- #include <linux/pm_runtime.h>
-@@ -117,6 +118,17 @@ static inline struct i3c_hci *to_i3c_hci(struct i3c_master_controller *m)
- 	return container_of(m, struct i3c_hci, master);
+@@ -120,9 +120,9 @@ static inline struct i3c_hci *to_i3c_hci(struct i3c_master_controller *m)
+ 
+ /*
+  * Determine the device that does PM / DMA and has IOMMU setup done for it in
+- * case of enabled IOMMU (for use with the DMA API).
+- * Such device is either "mipi-i3c-hci" platform device (OF/ACPI enumeration)
+- * parent or grandparent (PCI enumeration).
++ * case of enabled IOMMU (for use with the DMA API). It is also used to check
++ * for wakeup capability. Such device is either "mipi-i3c-hci" platform device
++ * (OF/ACPI enumeration) parent or grandparent (PCI enumeration).
+  */
+ struct device *i3c_hci_sysdev(struct device *dev)
+ {
+@@ -1176,6 +1176,9 @@ static int i3c_hci_probe(struct platform_device *pdev)
+ 	if (hci->quirks & HCI_QUIRK_RPM_IBI_ALLOWED)
+ 		hci->master.rpm_ibi_allowed = true;
+ 
++	if (device_can_wakeup(i3c_hci_sysdev(&pdev->dev)))
++		hci->master.ibi_wakeup = true;
++
+ 	return i3c_master_register(&hci->master, &pdev->dev, &i3c_hci_ops, false);
  }
  
-+/*
-+ * Determine the device that does PM / DMA and has IOMMU setup done for it in
-+ * case of enabled IOMMU (for use with the DMA API).
-+ * Such device is either "mipi-i3c-hci" platform device (OF/ACPI enumeration)
-+ * parent or grandparent (PCI enumeration).
-+ */
-+struct device *i3c_hci_sysdev(struct device *dev)
-+{
-+	return dev->parent && dev_is_pci(dev->parent) ? dev->parent : dev;
-+}
-+
- static void i3c_hci_set_master_dyn_addr(struct i3c_hci *hci)
- {
- 	reg_write(MASTER_DEVICE_ADDR,
-diff --git a/drivers/i3c/master/mipi-i3c-hci/dma.c b/drivers/i3c/master/mipi-i3c-hci/dma.c
-index 0672ed1132f8..7c2b20474130 100644
---- a/drivers/i3c/master/mipi-i3c-hci/dma.c
-+++ b/drivers/i3c/master/mipi-i3c-hci/dma.c
-@@ -15,7 +15,6 @@
- #include <linux/errno.h>
- #include <linux/i3c/master.h>
- #include <linux/io.h>
--#include <linux/pci.h>
- 
- #include "hci.h"
- #include "cmd.h"
-@@ -301,23 +300,11 @@ static int hci_dma_init(struct i3c_hci *hci)
- {
- 	struct hci_rings_data *rings;
- 	struct hci_rh_data *rh;
--	struct device *sysdev;
- 	u32 regval;
- 	unsigned int i, nr_rings, xfers_sz, resps_sz;
- 	unsigned int ibi_status_ring_sz, ibi_data_ring_sz;
- 	int ret;
- 
--	/*
--	 * Set pointer to a physical device that does DMA and has IOMMU setup
--	 * done for it in case of enabled IOMMU and use it with the DMA API.
--	 * Here such device is either
--	 * "mipi-i3c-hci" platform device (OF/ACPI enumeration) parent or
--	 * grandparent (PCI enumeration).
--	 */
--	sysdev = hci->master.dev.parent;
--	if (sysdev->parent && dev_is_pci(sysdev->parent))
--		sysdev = sysdev->parent;
--
- 	regval = rhs_reg_read(CONTROL);
- 	nr_rings = FIELD_GET(MAX_HEADER_COUNT_CAP, regval);
- 	dev_dbg(&hci->master.dev, "%d DMA rings available\n", nr_rings);
-@@ -332,7 +319,7 @@ static int hci_dma_init(struct i3c_hci *hci)
- 		return -ENOMEM;
- 	hci->io_data = rings;
- 	rings->total = nr_rings;
--	rings->sysdev = sysdev;
-+	rings->sysdev = i3c_hci_sysdev(hci->master.dev.parent);
- 
- 	for (i = 0; i < rings->total; i++) {
- 		u32 offset = rhs_reg_read(RHn_OFFSET(i));
-diff --git a/drivers/i3c/master/mipi-i3c-hci/hci.h b/drivers/i3c/master/mipi-i3c-hci/hci.h
-index b3d9803b1968..b8d2a3d680f8 100644
---- a/drivers/i3c/master/mipi-i3c-hci/hci.h
-+++ b/drivers/i3c/master/mipi-i3c-hci/hci.h
-@@ -184,6 +184,8 @@ void amd_set_resp_buf_thld(struct i3c_hci *hci);
- void i3c_hci_sync_irq_inactive(struct i3c_hci *hci);
- int i3c_hci_process_xfer(struct i3c_hci *hci, struct hci_xfer *xfer, int n);
- 
-+struct device *i3c_hci_sysdev(struct device *dev);
-+
- #define DEFAULT_AUTOSUSPEND_DELAY_MS 1000
- 
- int i3c_hci_rpm_suspend(struct device *dev);
 -- 
 2.53.0
 
