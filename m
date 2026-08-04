@@ -1,56 +1,56 @@
-Received: from mail-pf1-f199.google.com (mail-pf1-f199.google.com [209.85.210.199])
+Received: from mail-pl1-f199.google.com (mail-pl1-f199.google.com [209.85.214.199])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 94A0A4483AD
-	for <linux-pci@vger.kernel.org>; Tue,  4 Aug 2026 18:51:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.199
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 23E304746DA
+	for <linux-pci@vger.kernel.org>; Tue,  4 Aug 2026 18:51:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.199
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785869479; cv=none; b=MX92env09TypEb1VWLxfS0GjUhuwlDrfdeQXtoODmWnukI0SIUsPyblnRKAROXm7AtTO3FwKIAoSf3KBBCbaWh7YmZ5YouZSliOklwWlKBPLhrWDzjhQud654hkpdk+qCiDhq5BdkX45TWFKIP5pQTEUbqdiluYzMfeSWvq0L30=
+	t=1785869480; cv=none; b=XBVGZp6RfVa+HQLgRkCJS/zFHGddYl8UbgWmUquwggxmrnS52KgJKWwtkHI9n9n/SsmNKmq6IhPs6HAZQw3B2l4kkVxpJsW4LAmAYmiWzQOTADpOA5Ur7zXnI1CnqAmUzIfHTdnANmFLHo/IqlhGXGPWqLMchmBUJzS7+2rg6qs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785869479; c=relaxed/simple;
-	bh=/pi0kNXNY1h1pfxpiwUj6T06M1fqxSotc6q0idZPb1E=;
+	s=arc-20240116; t=1785869480; c=relaxed/simple;
+	bh=OaugovGo8M5rh58RDPkwKXsvwT8IoPdNluV2OPhfr0s=;
 	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=WH07XEIIDILVLubz3gXmEVfEbMptIfab9w6JeQpTlYOeRKz7IRUMGaV4SzA9VeqX+Cry1b5+lGUpTL35DA/A0a5Es2iJd/V5JvGRb91D6eA+VBfso1hB1tZeM06MySmqv0HpOyOhkdmxlbjRpZzeBM9XmwFiJs7NB0JyZXHKQVQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--praan.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=r7NToLc2; arc=none smtp.client-ip=209.85.210.199
+	 To:Cc:Content-Type; b=gjw4sZtLbvpB+2T4wSn0jtdtsxuwZH9vp31Z8s2AGjrqlZzWk3mxlsHnh54SrzOmewFFog8ML5/qBX5Kj08Lhar0Szol9TiSiPBv5pVAB94h0EG3xkhcgMNU2UH8Iz8EBNMFVELR+pNVQkQeF2d/dCW0XmOkv0WzUpwrbU3Y290=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--praan.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=fZ68KxaO; arc=none smtp.client-ip=209.85.214.199
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--praan.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="r7NToLc2"
-Received: by mail-pf1-f199.google.com with SMTP id d2e1a72fcca58-84e1da97175so180863b3a.0
-        for <linux-pci@vger.kernel.org>; Tue, 04 Aug 2026 11:51:13 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="fZ68KxaO"
+Received: by mail-pl1-f199.google.com with SMTP id d9443c01a7336-2d001671a54so2940035ad.2
+        for <linux-pci@vger.kernel.org>; Tue, 04 Aug 2026 11:51:19 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1785869473; x=1786474273; darn=vger.kernel.org;
+        d=google.com; s=20251104; t=1785869478; x=1786474278; darn=vger.kernel.org;
         h=content-type:cc:to:from:subject:message-id:references:mime-version
          :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=6S00Ge/ZDy4xJEvv5eN0PZrlFX4UFgt2/k8ihNKAOGs=;
-        b=r7NToLc206L8dkkIq/zyZt4LEG/oj1/vjEU+dV2kdHLgIViXtVxjBXt4utVsjYPnkg
-         GxOahNhBqnXoK1qG7AjVt25/deKwt3kNftL44X81bN/C9aQGHTsjdJafvs6aS6WQtkYW
-         9okE9Vti/5ca7kCR7NnUSWbbpQEDOq8T0/Iucgmbr4kIyP+6fEq0hZw9hXFMbFvh+MBc
-         ms42DINkwgPbSLdodwpJZobm5JVcwbDE/9j7tGiq+AkFtVURqzG5cHMARe+FX+GJCTeF
-         KXX2L0muy/dvchat20y512DiOXDm6sgHN46yTxQeNrfxNnwPNf1KAeIK5cXAJBfG1oHN
-         o7cg==
+        bh=/Bk0wJpGkJMlNuWfWqjZwkLVn4Nu2iokWTbQfTLl/80=;
+        b=fZ68KxaOm5tZu/cbwRjC14KtHWg7rYobIAq3Th8H8Zt19sbeCPeR+a0Fb4ZY2AUc/O
+         h7mhpyQ+nw6iBRsED423veUEQijZZMwVLsajMgeoeBNKmH4OGfZnLAlSX+JLU9fO0XjR
+         lVZlglu6Mt+59Ie7/qbHngARlmHfRGrI0PjHy1uZqmVmneyeWRtpNFSkitFJqswICxqj
+         LAFzf/VtTvO8ztQ3zyrj43Wo5RvMcxqB6OaHw20XX2B+0O6wgHioo/BCkVHJY4mZVu0c
+         GGLgtN6yMeWFSegZS5TGXE0ElOuvPFxrwVgfbZiq4sk/BuFoaphSFJzBVZjAKN37W/bg
+         iNJQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785869473; x=1786474273;
+        d=1e100.net; s=20251104; t=1785869478; x=1786474278;
         h=content-type:cc:to:from:subject:message-id:references:mime-version
          :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=6S00Ge/ZDy4xJEvv5eN0PZrlFX4UFgt2/k8ihNKAOGs=;
-        b=kIo4oVhj2YxSk/Em6rwg8doZwFwWURJppXyAmlY15IYXy1825lYIkdjF3mvASGDeuS
-         bPc/pxIUj7SLLjUW1aPQMn4nRGkszzhpJR3w5C3cZcVqWuFMjfAiYiRJolZz+veKQK55
-         DSiGfObJf4FUv8kRtEwOneSKik+oXytYPZQXFm6wDAfAX94b/26kcNroL7feyUrJvHS9
-         XVxoskrgDyBa+p1v3uNp7bw8rMYQ9DOSrwTk8Q0AJYNWp99eJjG6Dn52t9cH2Zqwsbxz
-         CdcTEeQCRvXs0CwueaLVmR7H8lguhRwND24jcj3p2mThXdfZyh1DqgSA8gpBvcAn6zoj
-         RYIw==
-X-Gm-Message-State: AOJu0YzaWC3g1kitZ7/PQstvM/K8ykpVov1Tx0NxmaI/PkQVhaGXbTkt
-	wU65gF7nEAvLsj1kEYMEvT/GupOQ0lNqXyBJmWHGoGMH4Pw6cRhByKkm3zidjI+8jC8Uv0kgqnX
-	M1KvKXMRfYAxMOS4ILEFDlTtVpYljzvRI/molxwZ6hbpmvPhEZzsDmFooWhDxIk7/xa/9SUXw3H
-	24QoFy11f4+y79M9bD6aNslwu+JDWR3yuJ8pU=
-X-Received: from pgvm5.prod.google.com ([2002:a65:62c5:0:b0:cb5:3dd0:cdbd])
- (user=praan job=prod-delivery.src-stubby-dispatcher) by 2002:a05:6a00:348d:b0:842:706e:ad43
- with SMTP id d2e1a72fcca58-84f2e0ccba3mr802967b3a.33.1785869472550; Tue, 04
- Aug 2026 11:51:12 -0700 (PDT)
-Date: Tue,  4 Aug 2026 18:50:48 +0000
+        bh=/Bk0wJpGkJMlNuWfWqjZwkLVn4Nu2iokWTbQfTLl/80=;
+        b=AG3jeXZUS1s5X7EJECU6uASvzNTzuN+ovz2GZKmki4Like22V0xeA8BCWkX1O36WMZ
+         6f5y8UsiV4aBpTw5NRSEist86f3882AJnQdppErg9PI6RqqxeZqDfmwvwaODOG17k0eJ
+         HczxiuRc3AOLMWvNg+Rs8h0fcHsY/SJ0JUWHJ0YkWqFbnyshVHceifPeS35hkeuoJnJy
+         9eNVZb99fRi0I4jBP4qrmIo4jze4m+TGO99vskUBBC107xkesBQ5r1NJEEuRbvmTlHb9
+         SMiJCsY9sTq20QQxUAARUsfz0qxtsw2rVSIWmKkfpJbxCw+4nLL8wScDTvLDF+/nupwm
+         L0jA==
+X-Gm-Message-State: AOJu0YwQJ2ngw5jFtZugVOpy6vQQQuuUMyX8df2G7IymOr59X0rhSwMN
+	wTj0fkaq5/jCUylXAUleFPp3x5L+tumMZu7pjrMqqoMAQBvhFXoTEy6G9f/VH3OaOprq4VkB0pc
+	w1d3PqSn5RjkYa0j5XBhAmESc2T5VrO3NQRJfhHnYw+ghm/hXqqUcMThoGuasuDBgCSzsX1d2G/
+	2EEJyPoCFYN7hc0ehbDtOPRuz1qCQDCfeZu6M=
+X-Received: from pljs12.prod.google.com ([2002:a17:903:3bac:b0:2cc:61be:8bbb])
+ (user=praan job=prod-delivery.src-stubby-dispatcher) by 2002:a17:902:da82:b0:2cf:7bfe:6043
+ with SMTP id d9443c01a7336-2d0ca949b71mr6594885ad.19.1785869477691; Tue, 04
+ Aug 2026 11:51:17 -0700 (PDT)
+Date: Tue,  4 Aug 2026 18:50:50 +0000
 In-Reply-To: <20260804185050.2053672-1-praan@google.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -60,8 +60,8 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
 References: <20260804185050.2053672-1-praan@google.com>
 X-Mailer: git-send-email 2.55.0.571.g244d577d93-goog
-Message-ID: <20260804185050.2053672-4-praan@google.com>
-Subject: [RFC PATCH v2 3/5] vfio/pci: Implement page-backed .map_dma_buf handler
+Message-ID: <20260804185050.2053672-6-praan@google.com>
+Subject: [RFC PATCH v2 5/5] vfio/pci: Add revocation fence for ZONE_DEVICE DMABUFs
 From: Pranjal Shrivastava <praan@google.com>
 To: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
 	kvm@vger.kernel.org
@@ -73,132 +73,97 @@ Cc: Bjorn Helgaas <bhelgaas@google.com>, Logan Gunthorpe <logang@deltatee.com>,
 	Unnati Sachan <unnatisachan@google.com>
 Content-Type: text/plain; charset="UTF-8"
 
-When a DMABUF is backed by ZONE_DEVICE pages, the standard raw PFN
-scatterlist builder (dma_buf_phys_vec_to_sgt) cannot be used because
-it explicitly drops page metadata pointers. Implement a map_dma_buf
-helper that loops through existing contiguous physical ranges and
-generates SGL entries directly via sg_set_page while maps using the
-standard dma_map_sgtable. Implement a corresponding .unmap_dma_buf as
-well.
+Implement a synchronization fence to safely revoke ZONE_DEVICE-backed
+DMABUFs. Introduce a fence in vfio_pci_dma_buf_set_status(). The fence
+waits for all struct page refcounts to drop to 1.
 
 Signed-off-by: Pranjal Shrivastava <praan@google.com>
 ---
- drivers/vfio/pci/vfio_pci_dmabuf.c | 81 ++++++++++++++++++++++++++++--
- 1 file changed, 77 insertions(+), 4 deletions(-)
+ drivers/vfio/pci/vfio_pci_dmabuf.c | 55 ++++++++++++++++++++++++++++++
+ 1 file changed, 55 insertions(+)
 
 diff --git a/drivers/vfio/pci/vfio_pci_dmabuf.c b/drivers/vfio/pci/vfio_pci_dmabuf.c
-index 900ac1851c9f..b936da3bcada 100644
+index b582e856ba7a..b4284b5cad03 100644
 --- a/drivers/vfio/pci/vfio_pci_dmabuf.c
 +++ b/drivers/vfio/pci/vfio_pci_dmabuf.c
-@@ -55,6 +55,7 @@ static int vfio_pci_dma_buf_mmap(struct dma_buf *dmabuf, struct vm_area_struct *
- 	/* See comments in vfio_pci_core_mmap() re VM_ALLOW_ANY_UNCACHED. */
- 	vm_flags_set(vma, VM_ALLOW_ANY_UNCACHED | VM_IO | VM_PFNMAP |
- 		     VM_DONTEXPAND | VM_DONTDUMP);
-+
- 	vma->vm_private_data = priv;
- 	vfio_pci_set_vma_ops(vma);
+@@ -4,6 +4,7 @@
+ #include <linux/dma-buf-mapping.h>
+ #include <linux/pci-p2pdma.h>
+ #include <linux/dma-resv.h>
++#include <linux/iopoll.h>
+ #include <linux/sched.h>
+ #include <uapi/linux/dma-buf.h>
  
-@@ -70,6 +71,66 @@ static void vfio_pci_dma_buf_done(struct kref *kref)
- 	complete(&priv->comp);
+@@ -745,6 +746,44 @@ int vfio_pci_core_mmap_prep_dmabuf(struct vfio_pci_core_device *vdev,
+ 	return ret;
  }
  
-+/*
-+ * For ZONE_DEVICE-backed DMABUFs, populate the scatterlist with struct page
-+ * pointers so that dma_map_sgtable() can detect MEMORY_DEVICE_PCI_P2PDMA and
-+ * perform peer-to-peer DMA mappings for importing devices.
-+ */
-+static struct sg_table *
-+vfio_pci_dma_buf_map_page_backed(struct dma_buf_attachment *attachment,
-+				 enum dma_data_direction dir)
++static void vfio_pci_zone_device_wait_fence(struct vfio_pci_dma_buf *priv)
 +{
-+	struct vfio_pci_dma_buf *priv = attachment->dmabuf->priv;
-+	struct sg_table *sgt;
-+	struct scatterlist *sgl;
-+	unsigned int nents = 0;
-+	int i, ret;
++	unsigned int i;
 +
++	if (!priv->zone_device_backed)
++		return;
++
++	/*
++	 * Fence: Wait for any active references to the ZONE_DEVICE
++	 * pages to be dropped. A refcount of 1 represents the base
++	 * ownership.
++	 */
 +	for (i = 0; i < priv->nr_ranges; i++) {
-+		unsigned int added = DIV_ROUND_UP(priv->phys_vec[i].len,
-+						 (UINT_MAX & PAGE_MASK));
-+
-+		if (check_add_overflow(nents, added, &nents))
-+			return ERR_PTR(-EOVERFLOW);
-+	}
-+
-+	sgt = kzalloc(sizeof(*sgt), GFP_KERNEL);
-+	if (!sgt)
-+		return ERR_PTR(-ENOMEM);
-+
-+	ret = sg_alloc_table(sgt, nents, GFP_KERNEL);
-+	if (ret) {
-+		kfree(sgt);
-+		return ERR_PTR(ret);
-+	}
-+
-+	sgl = sgt->sgl;
-+	for (i = 0; i < priv->nr_ranges; i++) {
-+		size_t range_len = priv->phys_vec[i].len;
 +		unsigned long pfn = priv->phys_vec[i].paddr >> PAGE_SHIFT;
++		unsigned long npgs = PAGE_ALIGN(priv->phys_vec[i].len) >> PAGE_SHIFT;
 +
-+		while (range_len > 0) {
-+			unsigned int chunk_len = min_t(size_t, range_len, (UINT_MAX & PAGE_MASK));
-+			struct page *page = pfn_to_page(pfn);
++		while (npgs--) {
++			struct page *page = pfn_to_page(pfn++);
++			int count, ret;
 +
-+			sg_set_page(sgl, page, chunk_len, 0);
-+			sgl = sg_next(sgl);
-+
-+			range_len -= chunk_len;
-+			pfn += chunk_len >> PAGE_SHIFT;
++			/*
++			 * Poll page_count() and block indefinitely until all
++			 * refs drop to avoid DMA-after-free.
++			 */
++			do {
++				ret = read_poll_timeout(page_count, count,
++							(count == 1),
++							1000, 10000000,
++							false, page);
++				if (ret)
++					dev_warn(&priv->vdev->pdev->dev,
++						 "Waiting for GUP pins to drop on PFN 0x%lx... (importer hung?)\n",
++						 pfn - 1);
++			} while (ret);
 +		}
 +	}
-+
-+	ret = dma_map_sgtable(attachment->dev, sgt, dir, 0);
-+	if (ret) {
-+		sg_free_table(sgt);
-+		kfree(sgt);
-+		return ERR_PTR(ret);
-+	}
-+
-+	return sgt;
 +}
 +
- static struct sg_table *
- vfio_pci_dma_buf_map(struct dma_buf_attachment *attachment,
- 		     enum dma_data_direction dir)
-@@ -82,9 +143,14 @@ vfio_pci_dma_buf_map(struct dma_buf_attachment *attachment,
- 	if (priv->status != VFIO_PCI_DMABUF_OK)
- 		return ERR_PTR(-ENODEV);
- 
--	ret = dma_buf_phys_vec_to_sgt(attachment, priv->provider,
--				      priv->phys_vec, priv->nr_ranges,
--				      priv->size, dir);
-+	if (priv->zone_device_backed) {
-+		ret = vfio_pci_dma_buf_map_page_backed(attachment, dir);
-+	} else {
-+		ret = dma_buf_phys_vec_to_sgt(attachment, priv->provider,
-+					      priv->phys_vec, priv->nr_ranges,
-+					      priv->size, dir);
-+	}
+ /* Set the DMABUF's revocation status (OK or temporarily/permanently revoked) */
+ static void vfio_pci_dma_buf_set_status(struct vfio_pci_dma_buf *priv,
+ 					enum vfio_pci_dma_buf_status new_status)
+@@ -779,8 +818,24 @@ static void vfio_pci_dma_buf_set_status(struct vfio_pci_dma_buf *priv,
+ 		dma_resv_unlock(priv->dmabuf->resv);
+ 		kref_put(&priv->kref, vfio_pci_dma_buf_done);
+ 		wait_for_completion(&priv->comp);
 +
- 	if (IS_ERR(ret))
- 		return ret;
- 
-@@ -100,7 +166,14 @@ static void vfio_pci_dma_buf_unmap(struct dma_buf_attachment *attachment,
- 
- 	dma_resv_assert_held(priv->dmabuf->resv);
- 
--	dma_buf_free_sgt(attachment, sgt, dir);
-+	if (priv->zone_device_backed) {
-+		dma_unmap_sgtable(attachment->dev, sgt, dir, 0);
-+		sg_free_table(sgt);
-+		kfree(sgt);
-+	} else {
-+		dma_buf_free_sgt(attachment, sgt, dir);
-+	}
++		/*
++		 * Note: Rmap Deadlocks
++		 * unmap_mapping_range() is safe to call here within memory_lock
++		 * despite the VMA being VM_MIXEDMAP. Because our ZONE_DEVICE pages
++		 * are allocated via devm_memremap_pages(), page->mapping is never
++		 * set which makes them invisible to rmap.
++		 *
++		 * If this changes in the future, this call must be factored outside
++		 * the memory_lock to prevent a 3-way circular deadlock:
++		 * (mmap_lock -> memory_lock -> i_mmap_rwsem).
++		 */
+ 		unmap_mapping_range(priv->dmabuf->file->f_mapping,
+ 				    0, 0, true);
 +
- 	kref_put(&priv->kref, vfio_pci_dma_buf_done);
- }
- 
++		/* Wait for all page refs to drop if ZONE_DEVICE registered */
++		vfio_pci_zone_device_wait_fence(priv);
++
+ 		/*
+ 		 * Re-arm the registered kref reference and the
+ 		 * completion so the post-revoke state matches the
 -- 
 2.55.0.571.g244d577d93-goog
 
