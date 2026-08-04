@@ -1,225 +1,136 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 74CAB3D9525
-	for <linux-pci@vger.kernel.org>; Tue,  4 Aug 2026 12:46:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 84E9F3DBD5E;
+	Tue,  4 Aug 2026 12:51:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785847604; cv=none; b=tVwdx678RpBV4eLlyuXDbTbLOjOEh3c/OeLEIHR+jP+UC/bybCXGkzsI86YwIinvCDB4ZObj7diG2mI3J92m3/5p/NB3Yo/YGXw7sVgYlnltLiMb9x2k8bmp+IcPKOs1XDmU8G6h2wCPzd5wKv2xL+LbKZaHog18OrG3TxXJ/7c=
+	t=1785847867; cv=none; b=Chq5gUET60g/CY+5ww9kZgtg3K1kIld121dnykJxhNRDaxiMvA5EgPTqj0kF/tuxzArqBtdGjRawVLxS+8EyeBVcvIjFT36mXzrQwQ2IjAgYUeDqPAEDk71pRGUJemfbj4VcoZL8f04hOdne76YKcColtIjKxC+QkF4dEWHRaEE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785847604; c=relaxed/simple;
-	bh=LYzrSwBFbfl22TyOkFOzeEjPlc63rtVaztyq2FVmUuU=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=R4uOM2etQ5wovrI9Zl2C1mzYRX6UxNJxsw2lmXpJL1IwExWwp1Y+GEU0NP1z1Rul+RMIXn5gaQSv4O8/MPefcMrhnhGW5W53bb+p4TcBPYCYCyOj74HJyZ5bG4dTLk2LJ+D5Pwhn7OqVUERG7nmmz5ntqPe3tgr4VhZa/Kpw6+w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TefkPpql; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785847867; c=relaxed/simple;
+	bh=ze2NKcp1Ur92lXklztz77pARWs2VrCoUl9y46wg+PDI=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=siz4VQ/jN7WS2l1dAOx7P5i5ZlTTZp8HetEM56z7Z3CHdJwvX7mmqw+SuxZrI+ok1iZnD0l0MlD5A5f/bQSir/a2wtyKLKs5iqAhYULxB2srGWPkjdjWIxlPNvB7DVN6XASIgoVJbZ101yRZXrOvd0TtbvrSaov4QXjnd9aljME=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NotD7S8r; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TefkPpql"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7115A1F00A3D
-	for <linux-pci@vger.kernel.org>; Tue,  4 Aug 2026 12:46:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NotD7S8r"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A58871F000E9;
+	Tue,  4 Aug 2026 12:50:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785847601;
-	bh=sQ3/NC+3cpmXFMYetYl7lO8X8YpBbpgvgulg/NkNMQ0=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc;
-	b=TefkPpqls1ZZTAGa4/z92f6he8C1TE1kWASWEntglG+IE1MYuZfISroWLw84x9WcG
-	 3UdJ0oBAlSo36pUfeppT0sY1Zf5S8mNP5Td2lRgrUQ+JKGBufhaZE+RF2h+ausTaDX
-	 zpKhp/I1u1xTy3R4aejECKkGnQ4Q8sqWRaCR9UjFrURorWC20PbpdR3hd1bY2PQp8Y
-	 6IYow8nWHAPU1Y5d8caCWKuwk9/PnSKMZ6RaJE8OYN6TcJOOLMbIwm2GDzMiu6+S9X
-	 fr7b7RgOhYnfEwIXkh/8YO/nmpPpcQLCC7dij5OPyWVztvuAs0+64HEhh8yZN4sp9Q
-	 EvwpRQ5+wSMGQ==
-Received: by mail-lf1-f53.google.com with SMTP id 2adb3069b0e04-5b2a4359d16so4155766e87.3
-        for <linux-pci@vger.kernel.org>; Tue, 04 Aug 2026 05:46:41 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AHgh+RppI7UF6uy+X4NOGNjnATBkV9us9kOKdeJd00vlABpzOaHjlWCZiZqgVo7sQqXb4JmWotiwQ4RvFmo=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzWnwFhgSf9F9AEqqEYBCnszpCRizZ9xzObvoi6C/gVQnlF1dvY
-	IcwygZahOKb5//06zNvKyv/wcM8jnSDLa6kjexCNbrAh+L5/OidLPWUB8LHqH36oP46O7RWTIE6
-	c95BFWac+FjHVIPyut2V1evUNCIFxbvg=
-X-Received: by 2002:a05:6512:3991:b0:5ae:b136:acdc with SMTP id
- 2adb3069b0e04-5b2e4f6e8f6mr2869316e87.35.1785847599905; Tue, 04 Aug 2026
- 05:46:39 -0700 (PDT)
+	s=k20260515; t=1785847858;
+	bh=/Ic2b8esDfm00wQm8WodgOpVR7+0Q8spRsCljIJsje8=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=NotD7S8rP6w1nuiTKm5/hfabEr/pEp92em01z9rz6orn+5A2ZPotdYZOdKqQdXa10
+	 3OyDLP0EK3RO66S78ON4WB0UyZuzvoJDUUqQ1bLeRAOWxts2HRfj09/0Uc3V6QATVs
+	 5DQpBBBzn6OxSUZNBDErjuU50S1YYsi0cY/6uxwHsqSaYGrFcIDhZJTfruAcw5yRvK
+	 tKjspKcJjEy/0pu29nKWbdEnuK+ep8klVx2fSFuHPvekA5NameOtF01FqNXfd6/Hfs
+	 wyigQePDrD7NU3+A73A2c7qJ1pW3XU+AlaaQLdKfbbvntF4q0vmTZ16J8SlKh5aj81
+	 uk+IZz4LEIiUg==
+Date: Tue, 4 Aug 2026 07:50:57 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Han / =?utf-8?B?7ZWc7IOB7JqwU2FuZ3dvbw==?= <sangwoo.han@nearthlab.com>
+Cc: jim2101024@gmail.com, florian.fainelli@broadcom.com,
+	lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org,
+	bhelgaas@google.com, bcm-kernel-feedback-list@broadcom.com,
+	robh@kernel.org, linux-pci@vger.kernel.org,
+	linux-rpi-kernel@lists.infradead.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	Marc Zyngier <maz@kernel.org>, Thomas Gleixner <tglx@kernel.org>
+Subject: Re: [PATCH] PCI: brcmstb: Reserve only the MSI vectors that are
+ handed out
+Message-ID: <20260804125057.GA1834533@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260803203459.10680-1-derekjohn.clark@gmail.com>
-In-Reply-To: <20260803203459.10680-1-derekjohn.clark@gmail.com>
-From: "Rafael J. Wysocki (Intel)" <rafael@kernel.org>
-Date: Tue, 4 Aug 2026 14:46:27 +0200
-X-Gmail-Original-Message-ID: <CAJZ5v0h78CSSORe_td1gp0n5DDWXN4zcnuXJsz247KYxgs-mdg@mail.gmail.com>
-X-Gm-Features: AUfX_mz1srr2nF8qgwOyctaxm3G1UWnLyBr6WGtF7SuwYoBl4ClgZzzFQY9hT2A
-Message-ID: <CAJZ5v0h78CSSORe_td1gp0n5DDWXN4zcnuXJsz247KYxgs-mdg@mail.gmail.com>
-Subject: Re: [PATCH] acpi: pci_root: Add quirks table for _OSC support
-To: "Derek J. Clark" <derekjohn.clark@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, 
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	"Pierre-Loup A . Griffais" <pgriffais@valvesoftware.com>, David Box <david.e.box@linux.intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAFg7d9YX3dXYHFvhXX6VBR_Wd5QzAD77Rgugso5sYD-SwANnLQ@mail.gmail.com>
 
-On Mon, Aug 3, 2026 at 10:35=E2=80=AFPM Derek J. Clark
-<derekjohn.clark@gmail.com> wrote:
->
-> The MSI Claw A8 hard-locks on resume from s2idle whenever an SD/MMC
-> card is present in the RTS525A card reader (10ec:525a, PCI ID). This
-> issue is not present on the Lenovo Legion Go with the same card reader.
-> The primary difference is that the Claw A8 withholds LTR and DPC while
-> granting ASPM control to the OS, leading to a split ownership. The issue
-> can be mitigated by passing pcie_asmp=3Doff, but quirking on the pci_dev
+[+cc Marc, author of 4615fbc3788d ("genirq/irqdomain: Don't try to
+free an interrupt that has no mapping"), Thomas; beginning of thread
+about multiple MSI vector alloc/free:
+https://lore.kernel.org/all/20260730072215.2090974-1-sangwoo.han@nearthlab.com]
 
-You mean pcie_aspm=3Doff I suppose.
+On Tue, Aug 04, 2026 at 08:31:23PM +0900, Han / 한상우Sangwoo wrote:
+> > Several other PCI controller drivers have similar code.
+> 
+> I agree - eleven of them look like they can have the same problem.
+> 
+> > I think we should fix them all at once (or explain why they don't need
+> > similar fixes).  Might be worth a little helper so they all work the
+> > same way (e.g., some use order_base_2(), others use get_count_order(),
+> > which seems like a pointless difference).
+> 
+> I am working on a related fix for drivers/irqchip/irq-bcm2712-mip.c,
 
-> in pci/quirks has no effect.
->
-> Attempted quirks included use of pci_disable_link_state(),
-> dev->link_state =3D NULL, manually zeroing aspm_l0s_support/aspm_l1_suppo=
-rt
-> via DECLARE_PCI_FIXUP_FINAL, and pcie_aspm_remove_cap() on
-> DECLARE_PCI_FIXUP_HEADER. Only by disabling ASPM on the root hub is the
-> system able to resume successfully.
+Similar pattern there, but it uses ilog2(), which differs from
+order_base_2() and get_count_order() in more cases.
 
-So if there is a clash between the firmware and the OS, the question
-is why it only happens during system resume and only for this specific
-device in this specific configuration.
+> which I can test here.  I would rather not send changes to drivers I
+> cannot test, though, so I am leaving the eleven to whoever has the boards.
+> What I looked at is in the appendix, in case it is useful to them.
+> 
+> Two things seem more useful from where I am sitting.
+> 
+>  - The failure is silent.  Appendix A describes the symptom, so that
+>    anyone who hits it later can find this thread.
+> 
+>  - The contract is not written down.  It changed in 4615fbc3788d, where
+>    irq_domain_free_irqs_hierarchy() started freeing one vector at a time.
+> 
+> order_base_2() and get_count_order() give the same answer for any
+> nr_irqs >= 1, so consolidating those two is just cleanup.  Where a shared
+> helper should live I am not sure either.
 
-If disabling ASPM globally makes the symptom go away, it certainly is
-related to ASPM, but it is kind of hard to say what exactly the
-relationship is at this point.
+I don't know either, but I hate fixing an issue in one place and
+leaving the same issue unfixed nearby.
 
-> This strongly suggests a race between
-> the OS resuming the link under its own ASPM assumptions and firmware
-> independently acting on the same link based on state it never
-> relinquished.
-
-I'd like to see a boot log from the affected platform including the
-entire PCI _OSC negotiation.
-
-There actually is no way for the firmware to grant or refuse the ASPM
-control to the OS separately.  It is part of the PCI Express
-Capability Structure covered by OSC_PCI_EXPRESS_CAPABILITY_CONTROL, so
-if that control bit is acknowledged via _OSC, the OS is supposed to
-control ASPM (among other things).
-
-The LTR and DPC are extended capabilities, so in principle they may be
-controlled separately, if the OS controls the PCI Express Capability
-structure, and there is no formal requirement to grant control of any
-of them for ASPM to work.
-
-> As an attempt to localize the workaround to as low level as possible
-> while also being effective, introduce a quirk system to the existing
-> acpi pci_root calculate_support() mechanism.
-
-I'm not sure if there is a need to tell the firmware that ASPM is not
-supported.  You may as well avoid asking for
-OSC_PCI_EXPRESS_CAPABILITY_CONTROL on the affected platform.
-
-> Signed-off-by: Derek J. Clark <derekjohn.clark@gmail.com>
-> ---
->  drivers/acpi/pci_root.c | 68 +++++++++++++++++++++++++++++++++++++++--
->  1 file changed, 66 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-> index 6f78f96332ea..abd436a10438 100644
-> --- a/drivers/acpi/pci_root.c
-> +++ b/drivers/acpi/pci_root.c
-> @@ -422,7 +422,69 @@ static acpi_status acpi_pci_osc_control_set(acpi_han=
-dle handle, u32 *mask,
->         return AE_OK;
->  }
->
-> -static u32 calculate_support(void)
-> +/*
-> + * Some platforms advertise ASPM support in _OSC but withhold related
-> + * control (e.g. LTR, DPC) from the OS on a specific root complex. The
-> + * resulting split ownership between OS-managed ASPM and firmware-owned
-> + * LTR/DPC can cause resume failures on s2idle. Rather than disabling
-> + * ASPM system-wide, strip the offending support bits only on the
-> + * affected root bridge so the OS abstains from requesting _OSC control
-> + * there, leaving every other root complex on the system unaffected.
-> + */
-> +struct osc_support_quirk {
-> +       const struct dmi_system_id dmi_match[2];
-> +       u16 segment;
-> +       u8 bus;
-> +       u32 strip_support;
-> +};
-> +
-> +static const struct osc_support_quirk osc_support_quirks[] =3D {
-> +       /*
-> +        * MSI Claw A8 (MS-1T8K): firmware withholds LTR/DPC control on
-> +        * the primary root complex despite advertising ASPM support,
-> +        * causing a hard lock on s2idle resume when the onboard RTS525A
-> +        * SD card reader is populated.
-> +        */
-> +       {
-> +               .dmi_match =3D {
-> +                       {
-> +                               .ident =3D "MSI Claw A8 BZ2EM",
-> +                               .matches =3D {
-> +                                       DMI_MATCH(DMI_SYS_VENDOR,
-> +                                                 "Micro-Star Internation=
-al Co., Ltd."),
-> +                                       DMI_MATCH(DMI_BOARD_NAME, "MS-1T8=
-K"),
-> +                               },
-> +                       },
-> +                       {}
-> +               },
-> +               .segment =3D 0,
-> +               .bus =3D 0,
-> +               .strip_support =3D OSC_PCI_ASPM_SUPPORT | OSC_PCI_CLOCK_P=
-M_SUPPORT,
-> +       },
-> +};
-> +
-> +static u32 pci_osc_support_quirk_mask(struct acpi_pci_root *root)
-> +{
-> +       int i;
-> +
-> +       for (i =3D 0; i < ARRAY_SIZE(osc_support_quirks); i++) {
-> +               const struct osc_support_quirk *q =3D &osc_support_quirks=
-[i];
-> +
-> +               if (dmi_first_match(q->dmi_match) &&
-> +                   root->segment =3D=3D q->segment &&
-> +                   root->secondary.start =3D=3D q->bus) {
-> +                       dev_info(&root->device->dev,
-> +                                "PCI Root Bridge [%04x:%02x] _OSC quirk:=
- stripping support 0x%08x (%s)\n",
-> +                                root->segment, (unsigned int)root->secon=
-dary.start,
-> +                                q->strip_support, q->dmi_match[0].ident)=
-;
-> +                       return ~q->strip_support;
-> +               }
-> +       }
-> +
-> +       return ~0;
-> +}
-> +
-> +static u32 calculate_support(struct acpi_pci_root *root)
->  {
->         u32 support;
->
-> @@ -441,6 +503,8 @@ static u32 calculate_support(void)
->         if (IS_ENABLED(CONFIG_PCIE_EDR))
->                 support |=3D OSC_PCI_EDR_SUPPORT;
->
-> +       support &=3D pci_osc_support_quirk_mask(root);
-> +
->         return support;
->  }
->
-> @@ -571,7 +635,7 @@ static void negotiate_os_control(struct acpi_pci_root=
- *root, int *no_aspm)
->                 return;
->         }
->
-> -       support =3D calculate_support();
-> +       support =3D calculate_support(root);
-
-This will delay the initialization of any system, not just the quirky
-one.  Is there any way to avoid that?
-
->         decode_osc_support(root, "OS supports", support);
->
-> --
+> Appendix A - the symptom
+> ========================
+> 
+> A PCIe device whose driver is unbound and rebound a few times, or whose
+> module is reloaded, ends up with fewer MSI vectors than it asked for.  It
+> does not recover until reboot.
+> 
+> Two things have to be true for it to happen: the device uses multi-MSI,
+> and the vector count it asks for is not a power of two.  Devices that ask
+> for a power of two are unaffected, and so is anything on MSI-X.
+> 
+> I have only seen the reduced-vector case.  A driver that insists on the
+> full count would fail to probe instead, but I have not seen that happen.
+> 
+> 
+> Appendix B - how I sorted the drivers
+> =====================================
+> 
+> I went through drivers/pci/controller/ while working out what my own fix
+> had to do, so this is that rather than a full audit.  Twenty of the
+> drivers own an MSI hwirq pool.  I asked three things about each:
+> 
+>  - does .alloc reserve a rounded-up block, or a single slot
+>  - does the core hand .free one vector at a time
+>  - can nr_irqs > 1 reach the driver at all
+> 
+> Eleven answer yes to all three:
+> 
+>   dwc/pcie-designware-host.c   pci-aardvark.c        pcie-apple.c
+>   pcie-aspeed.c                pcie-iproc-msi.c      pcie-mediatek-gen3.c
+>   pcie-rcar-host.c             pcie-rzg3s-host.c     pcie-xilinx-dma-pl.c
+>   pcie-xilinx-nwl.c            pci-hyperv.c
+> 
+> The other nine:
+> 
+>  - five reserve a single slot, so nothing rounds up:
+>    mobiveil/pcie-mobiveil-host.c, pci-xgene-msi.c, pcie-altera-msi.c,
+>    pcie-mediatek.c, plda/pcie-plda-host.c
+> 
+>  - vmd.c keeps a per-vector refcount instead of a bitmap
+> 
+>  - pci-tegra.c and pcie-xilinx.c reserve a rounded-up block, but neither
+>    lists MSI_FLAG_MULTI_PCI_MSI in msi_parent_ops.supported_flags
+> 
+>  - pcie-brcmstb.c is the one you applied
