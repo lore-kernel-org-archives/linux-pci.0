@@ -1,569 +1,269 @@
-Received: from mail.ozlabs.org (gandalf.ozlabs.org [150.107.74.76])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.20])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5EA7382F28;
-	Tue,  4 Aug 2026 15:43:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=150.107.74.76
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785858189; cv=none; b=dBU+stN60+kIt/OO4jufVuhwZmURF9vO5byhk/aSGVkFpK5/flfo2aoJz2sk/d1Y08qHDFvYaylBaaKWKUycj9Wg3BlUyw+3/wGKeUZTNch8PnDjhFiQ330G9FH/JC1firh9LcDEsCPhNzPt1iUVUavfshL9poOIY/oyE5KtYAw=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785858189; c=relaxed/simple;
-	bh=OsitEDEFewo9FvrDOmBUm6+vM6vVeU+4fVaXsbikIwY=;
-	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
-	 In-Reply-To:Content-Type; b=aaKIWa6gSxjgQ5eA2kv8hJua34ImoTTcqI2WWx6WFma30ACAdl9/Qo0tiSiwpG0Avy3nS0f1hTeLcsZ4TXOXXyfvH+FlywShazqVHQ/vR7lmXlKz9KKjasfOwZ4BDP5vipS+ZCOHdbCceLMWwvGK5TLmlbaTfWyz41PZkl89xdw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ozlabs.org; spf=pass smtp.mailfrom=ozlabs.org; dkim=pass (2048-bit key) header.d=ozlabs.org header.i=@ozlabs.org header.b=uofpU6qW; arc=none smtp.client-ip=150.107.74.76
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ozlabs.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ozlabs.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E7783CB562
+	for <linux-pci@vger.kernel.org>; Tue,  4 Aug 2026 15:51:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=198.175.65.20
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1785858676; cv=fail; b=UUfdmKSO83myEA576Y4vt5NszMLYgMbG7aNzJGXCcaa2elrVVI/xyi9+8rMbIeeKFwcIXg9fsZf+9GxoZnE2lE0RZKXabRt130rHJrwDZgQGLLmMRE0AxC18ndVoXIDZNfI77T0ic2YNv+/VXqHOAqoeXVUf0wRAom0zJcDR/CQ=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1785858676; c=relaxed/simple;
+	bh=XTn8IlSa+A+jkdtVQW7KyvrclD+Lxx4pQbjm3wKh3mo=;
+	h=Message-ID:Date:Subject:To:CC:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=DaO4/dGILfP4cvXLuHTf+gAqeU/JlRTrDqQaPj4FrP/JbdcVNm7GW8CqttuPjqmI97eTt9++TjB/L8QiYmWAEYNwM5rKRAwSH8LVQj7xn6NK1t0OAy0n9iuxvO6MloCcCEEVethcatHyoW0Pnxipdr4o+Kb+3PhGJt/gM2ZcqN0=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=StbDLutu; arc=fail smtp.client-ip=198.175.65.20
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ozlabs.org header.i=@ozlabs.org header.b="uofpU6qW"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ozlabs.org;
-	s=201707; t=1785858178;
-	bh=CSUh0CjnXihmDwp4dxmB3uYnTg/QYI+2ipEdAUCOaHo=;
-	h=Date:Subject:From:To:Cc:References:In-Reply-To:From;
-	b=uofpU6qW6cPD6PRpQnWaV4LTFG8Yht5PB/nxIzZQtcaqimpArzG54zEt5FWrTN558
-	 obo73u/TyRUdHUvyNq6QCN2sVzw07NCBC3uxm1Ye0Lz7eTAFp/ABcqjDrALZxHHLR6
-	 zGyaLqI9W7YBe9XjjAhjcbxTfS61H860RdpY9Zgq/cpPRzZaXxV+LbUwsiOGAAbCDY
-	 jtQ8izDud0AuWbLQwuc58IBH/fXLLP7x5eXYEkHzbVzCwT2497xot8vSatNnjN//zG
-	 A2fPhaQfRntbutB/CDE9yAGatJy5MwK2nKiZeY7TMAtBnHC/E8N/sA7GPjX5kqlLRp
-	 vtR8bKXYKP1tw==
-Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(Client did not present a certificate)
-	by mail.ozlabs.org (Postfix) with ESMTPSA id 4hDyVH2lhhz4w1k;
-	Wed, 05 Aug 2026 01:42:47 +1000 (AEST)
-Message-ID: <e90b0bd0-fb8e-4d4e-b282-609c26692e4a@ozlabs.org>
-Date: Tue, 4 Aug 2026 16:42:43 +0100
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="StbDLutu"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1785858673; x=1817394673;
+  h=message-id:date:subject:to:cc:references:from:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=XTn8IlSa+A+jkdtVQW7KyvrclD+Lxx4pQbjm3wKh3mo=;
+  b=StbDLutu3f2vmnSraG4Bz0cfidSGER5puYyQ4uiyUxMTjrIoFe3unlCC
+   zNJR5Y/G29i27rhS+CJRuTEi0yQmerCCGvWpa8uMMcaZdtRnzc7x5qrWY
+   yyhLFsSaB7Ju4WCYakfID1JlwLpHUKFcFJ2ayRKCKxVqNue3RCclp+wHs
+   0uOWPRp6W2VAy6N87wiSka/rITxAcoBVY35UhTvZ1SStJEI+00Wym6ADS
+   YaFyN2KedkNcA8N+uoO8TSyeXP6j+9NJRZ1odE0PuZ/quC6m9lcU8fyV6
+   QEnaaD1ivakNcEXCbV3OdF3QGzwFw7fyYDZimjRP6/cPItN6G085sUyEg
+   g==;
+X-CSE-ConnectionGUID: qwSFLE7lRniB6tfMmxzHhA==
+X-CSE-MsgGUID: 2X0jiPuRRkyHI6IXBt/9ng==
+X-IronPort-AV: E=McAfee;i="6800,10657,11865"; a="86182106"
+X-IronPort-AV: E=Sophos;i="6.25,204,1779174000"; 
+   d="scan'208";a="86182106"
+Received: from orviesa004.jf.intel.com ([10.64.159.144])
+  by orvoesa112.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Aug 2026 08:51:07 -0700
+X-CSE-ConnectionGUID: i0rmANfGSpGeBr59IedRzA==
+X-CSE-MsgGUID: LfrJTHJXS7Ofxk/pSmtAYg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.25,204,1779174000"; 
+   d="scan'208";a="265366626"
+Received: from fmsmsx903.amr.corp.intel.com ([10.18.126.92])
+  by orviesa004.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Aug 2026 08:51:07 -0700
+Received: from FMSMSX901.amr.corp.intel.com (10.18.126.90) by
+ fmsmsx903.amr.corp.intel.com (10.18.126.92) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.45; Tue, 4 Aug 2026 08:51:06 -0700
+Received: from fmsedg903.ED.cps.intel.com (10.1.192.145) by
+ FMSMSX901.amr.corp.intel.com (10.18.126.90) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.45 via Frontend Transport; Tue, 4 Aug 2026 08:51:06 -0700
+Received: from BN1PR04CU002.outbound.protection.outlook.com (52.101.56.3) by
+ edgegateway.intel.com (192.55.55.83) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.45; Tue, 4 Aug 2026 08:51:06 -0700
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=sQy89lMya9467vjLcy0vZx9ukOZbCAfutLVY7oWlI0Bxvkxlk2TOCXLD2r/3scPTlMEwXdciCc8cPYq+fnj+HMZdoKJCWTlMAYzVQxI2torKMZT9DC3wSsQcv0GK9x8FgZAOaCSvNsb25bUcAFK9DMhBz68h7CZvOihk2Dp9ux2S8D+3PsyOwbqMdtL7+2qW6hce3nSYd/S2mhK8fCx178zdAlYV36EaxqgjYFnof2gRSxJuL0koxVDCMSc4m5IqciJ4TCh+0BbBVVFmyvL4kU5je7IdULSHEteJOiWcqZEyJC27AeyRQh1lJS00YWNfVRvlNMjPA9uk6Hr+AApwhg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=YCkR/P+F5cE2I12cm6AxGxQZpvJ6RXJ5GdIZCWwKPKk=;
+ b=ooaaa0+Wh3H9V498Rajl41azgQlTEYumRJBOtmrxA1+b74oi3TgBL/5qy9Qqdds6Z/zuAgLEMNGkfxxQqgTTcdvKwfhChJedjlze9Z5zlCk6E9DHSROfaPttsv3OOMlXZknX87M4gua10foQ2FtNZ8m79ooiKAfxoUCnmae5/UqGxMu/sJkhF5unVIdDfnFp0hvvJbhI2uPJ0SO69sE2oexwSj8Rwo8cqOlL95No4GFJoGTTctTRsJEfdK9StrzZ4l4YJd59RCocyDCZKjNcxZZR/NE/BecCxilNkVEYMKcXzBwCEu0hBVa5VMEvr72c7R0FV0z1nqATlep13eb+Jg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
+ dkim=pass header.d=intel.com; arc=none
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=intel.com;
+Received: from IA1PR11MB7198.namprd11.prod.outlook.com (2603:10b6:208:419::15)
+ by PH7PR11MB6833.namprd11.prod.outlook.com (2603:10b6:510:1ec::15) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.270.17; Tue, 4 Aug
+ 2026 15:51:02 +0000
+Received: from IA1PR11MB7198.namprd11.prod.outlook.com
+ ([fe80::2c4e:e92a:4fa:a456]) by IA1PR11MB7198.namprd11.prod.outlook.com
+ ([fe80::2c4e:e92a:4fa:a456%3]) with mapi id 15.21.0292.013; Tue, 4 Aug 2026
+ 15:51:02 +0000
+Message-ID: <31bc5433-0edb-452d-aa32-bfb2f891f155@intel.com>
+Date: Tue, 4 Aug 2026 18:50:57 +0300
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH V3 04/14] i3c: master: Fix use-after-free of master->this
+To: <sashiko-reviews@lists.linux.dev>
+CC: <Frank.Li@kernel.org>, Alexandre Belloni <alexandre.belloni@bootlin.com>,
+	<linux-i3c@lists.infradead.org>, <linux-pci@vger.kernel.org>
+References: <20260804133810.184905-1-adrian.hunter@intel.com>
+ <20260804133810.184905-5-adrian.hunter@intel.com>
+ <20260804141015.8B9641F000E9@smtp.kernel.org>
+Content-Language: en-US
+From: Adrian Hunter <adrian.hunter@intel.com>
+Organization: Intel Finland Oy, Registered Address: c/o Alberga Business Park,
+ 6 krs, Bertel Jungin Aukio 5, 02600 Espoo, Business Identity Code: 0357606 -
+ 4, Domiciled in Helsinki
+In-Reply-To: <20260804141015.8B9641F000E9@smtp.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: DUZPR01CA0150.eurprd01.prod.exchangelabs.com
+ (2603:10a6:10:4bd::7) To IA1PR11MB7198.namprd11.prod.outlook.com
+ (2603:10b6:208:419::15)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 2/9] PCI/P2PDMA: Add CONFIG_PCI_P2PDMA_CORE
-Content-Language: en-GB
-From: Matt Evans <matt@ozlabs.org>
-To: Leon Romanovsky <leon@kernel.org>, Jason Gunthorpe <jgg@nvidia.com>,
- Logan Gunthorpe <logang@deltatee.com>
-Cc: Alex Williamson <alex@shazbot.org>, Alex Mastro <amastro@fb.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Kevin Tian <kevin.tian@intel.com>,
- Pranjal Shrivastava <praan@google.com>, Mahmoud Adam <mngyadam@amazon.de>,
- David Matlack <dmatlack@google.com>, =?UTF-8?B?QmrDtnJuIFTDtnBlbA==?=
- <bjorn@kernel.org>, Sumit Semwal <sumit.semwal@linaro.org>,
- Ankit Agrawal <ankita@nvidia.com>, =?UTF-8?Q?Christian_K=C3=B6nig?=
- <christian.koenig@amd.com>, Alistair Popple <apopple@nvidia.com>,
- Vivek Kasireddy <vivek.kasireddy@intel.com>, linux-kernel@vger.kernel.org,
- linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org,
- linaro-mm-sig@lists.linaro.org, kvm@vger.kernel.org,
- linux-pci@vger.kernel.org, Longfang Liu <liulongfang@huawei.com>
-References: <20260715174737.15287-1-matt@ozlabs.org>
- <20260715174737.15287-3-matt@ozlabs.org>
-In-Reply-To: <20260715174737.15287-3-matt@ozlabs.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: IA1PR11MB7198:EE_|PH7PR11MB6833:EE_
+X-MS-Office365-Filtering-Correlation-Id: 716d2b9e-caf3-4fa5-b471-08def2402f69
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230040|376014|1800799024|23010399003|366016|4143699003|18002099003|22082099003|3023799007|6133799003|56012099006|10067099003|11063799006;
+X-Microsoft-Antispam-Message-Info: C35fHBxT0GCxpsKCrpsbPyhz7mUazpQt4WX3D+CdUEuqSdWU//jy32FvW1gEf1W5Y3Y30m28UotCGMiVFACZxXV3V4yfJ3KsBQnylM64ojeil56XamHDV+BUSsunhgmnou3PTwAaFbvkDBhYPlL7+9BbZUgoU3PreDlG+n/RNqdE/Bgip3SDrUYs/Sewwa0cMPBtXl5YSvPueFazws8DVaPdgB1HoCNn7T6IPOFY49n1cbdad/khyOXAUyatCxOt6UtPJ7JiF5J01pKLEtFYKkm9xpChKeYP61wz6d5ZnB5EMGg7hbsbIEI+RKeP6dRTe36XgDUM2Kw/AMRPjT6v/A9aOCqGuXGIrTbPWVDJrFN8abCMDsZyq4oQqkx8mddAcMqiwkrqryKSAQ3FHXsa2LBaazgLWB+awYBwr/ybPUPkqHRwcw9s7HCW1b2gQzan9jgPXKRQQOQV+meEck4mfbfPR473dNNE3IfhLfGRdP0NVS1j1N8wTE4T9n0yso97GAEkiwpNeufwt3uCfp24ndQdxIGJ601rEES1kdPRZ61JV/knvaip714A3HiamoferfZ/2TkvEQTpP+09s+DhLG4U5oZFoi/TXXaj5chRPE4CJ4limqag3/yB3UOIw0vMZ/zTmweRoscfs1OmJ3o8eKfmFAVJIrghQCtz/5LgxAg=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:IA1PR11MB7198.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(1800799024)(23010399003)(366016)(4143699003)(18002099003)(22082099003)(3023799007)(6133799003)(56012099006)(10067099003)(11063799006);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?dXpNWi9zVUc3dUo0SEZMSVd4UEQ2STZJellnMjB3dWpZalZ3bllaNmgxRTFR?=
+ =?utf-8?B?REJiTThjbGZaS2NOZTlvSTlsY250aHNsUWNscXdPaTZWRnpEZmhZVGQ4bUYx?=
+ =?utf-8?B?akJabzlhYnNIMUFuQ1AwREM5YWtRNXVOcFRnTk1ZbkU4Rm9Ga3FTNEgyNXU1?=
+ =?utf-8?B?ODJhTXR0THJ0ZTI3WFpnOTNmMWN5M2picEJ5bTJMV2paaEFpMTFldm05Wllr?=
+ =?utf-8?B?dktobUFoZW44TVgyTnNDMUF0eGdrQ0FTOURNQmhrRlRmeE1pZW0vQllSaTAr?=
+ =?utf-8?B?c3JmOUdjcWtWSnM3TVhzSHpNbi9uQTBVQ2pscnBNWU5FYjdrMmVFSnZXRFJt?=
+ =?utf-8?B?T3ZvT25XTmFsZmNwemtYSEdOcmRueUhkZkhkNytFQW9yVXI1aEdTdHlHbGpi?=
+ =?utf-8?B?N1lUQVlmUzRWeWF4OHVraUVqQlVoRGxNQ2QwbXRtWVhDck42VHRhZWtlR3Y0?=
+ =?utf-8?B?cDR1cXp5UENlcVRvdndRUHlVTkNlY2dyUWtTbGxWcTlUZ243a1JzWXBQUndY?=
+ =?utf-8?B?RDhIdWNYY25CbC9HcE1ZWnhpek9yMUdWd0dRRzRsLzB6Z2xhNU9yUXN5OElU?=
+ =?utf-8?B?Y01vR1RVMVpjVkQydWpaakM2NXVmOVpGS0RtU2h6OVh6Vk81WXFpRUR0eUxJ?=
+ =?utf-8?B?ci9GZldiRUt3R2FEVE1ST2k2MER4WkFMOStBcGYxYVM3anp5NHJpOGR5YTZO?=
+ =?utf-8?B?ckMzZnNsdzI3eUZianlyZzlHNVhQMW42UzNIYzlNRXdQUTlkY1QrOUU3Z0k4?=
+ =?utf-8?B?cmJraG40VVUrYm50THRGT013TER4VElzR3drb09yY2JIMVg4K3hTNll0ZzRM?=
+ =?utf-8?B?QmJyY2NwRUVLU0pDSkdxNnEwcndiUFN3ZERQZVMwQjNqQktScGJoVm9XeHJW?=
+ =?utf-8?B?RnZzMlpJanV4dktmckJlcCtxVXZNU3lOdDBkNE1rYnZBeXlrc2pobVllRHBW?=
+ =?utf-8?B?eGdVbkY2WVhCMHhVZzgwTnhkSHUxdnhqOGU1RnZNV1NuOTBPNWd4TUd4NUdW?=
+ =?utf-8?B?bnUwcmtBbmFrZGhVSG5sUGF2eGN0eWZBd21zczFpa3RMbVJCemtLQTVXN1lt?=
+ =?utf-8?B?WW04NVoyWkI3K2RKK0EyOEdNTlRCWUJCemhjQzdTVmhYMGttRXAvM1B3dEh6?=
+ =?utf-8?B?VEZsSE9QeW84anRtTlFMRGdhNnNyRzdhaDdCNVNVanpVYVRLWURkZks1VTBy?=
+ =?utf-8?B?QzNDanNkNktDOTE5VElyUUJ3aUhwaFlMY09BRmtqbGt2dEx5K2ZnemRpQzZo?=
+ =?utf-8?B?WnJicHNIc0lPcnYwb2pqZG1DMVdDMWE3TUEva2hqdFVQQnoyektvSmdxZGxG?=
+ =?utf-8?B?VHp4a3NGaW1NZWlHS1psdWlTODJSaGZPUnUvaUxkU2t6c0hPS1pvbE9ja3Iw?=
+ =?utf-8?B?K0ErVWhPYnZSbnMwV0JPak5HU1I5WENXUEVXalpGRnJsc3F6ZXI5RTl4a2Rs?=
+ =?utf-8?B?dTRiSS9qSEdKOVNMamV4SnNJdXdYQmhoZEtRUE9YcTZhWm5VV0MvODdvbllV?=
+ =?utf-8?B?aWVkR3g3RG1kWGc2OWt5eEU3NFYray9ZT2pXSWhXcXRlK1loNWR0ZlEzOURm?=
+ =?utf-8?B?N0JuVHUrcjdMeGxRc2VHd3djWU5saFlOVnhHL0NJKzF3TjlQaUhvODBvODR3?=
+ =?utf-8?B?b2dkLzg5WGRzc1plYXdyeUJVU2pDeUZQZ3Mvdk43d013Q1RuWERmeURENXgx?=
+ =?utf-8?B?S2lxMXdOcFRJLzB4WE9rSzIyWHRpZFRCM1F4aTg2TmNLS1NpSVBLNjRpZWhr?=
+ =?utf-8?B?VGFnbUp4QTVON0s3Q3JVdHdoWTdkc3NMWm9Vc3liczJ5eTRQWkM5Z01xcjYz?=
+ =?utf-8?B?RG9OWVNrbEJVUW13cERZQ2xIYWJBcUgrMml1ZmRXcmE0dG1DNTNhZEYweFZZ?=
+ =?utf-8?B?SjF2VzhHNVZqcVVqbTlFbGd1T3ZiM1Y0VC9yOEVFRThFS0lqSytrQk4yQ3Yx?=
+ =?utf-8?B?VWJzb08yMUdGRnRBRi94VFRXY3ZES2orWk5ob2JwU2hlTllaV2FrV2gySkhS?=
+ =?utf-8?B?a2pMdkdMcHUwVkNLbkR2UkRZcjg3RzNSUXRITWxOREtCK1RETCtUcFZ1M2d2?=
+ =?utf-8?B?TlRGWEtwZTBwU2QxOGlVdHZpU2Nwem1ZeGl0UU9BeEYwMnpBM0FEQUZQbk1C?=
+ =?utf-8?B?V1Fjd05BbEl6aHhGTGJHNzlIaTBKV1lNRFo4L1l0TWVpdDVNWVpXbnM2dFdy?=
+ =?utf-8?B?YkNZS1Y5L1lUWHhDMlpuNUd1WUlRZFQ0NU12SWVzN1RDc3RQQ3ZETnk2NXV6?=
+ =?utf-8?B?T0hKazViL0dTTmh4ZmNJTVYvYWR1SC9PeGUyU3ZjTzlrcWo2aDhjeDlDaGx2?=
+ =?utf-8?B?WWpXVzVvZExaQ2tFaEFlejBRaHZmOGdXRlpkTzJPRHBwL2ZneS9PU2hvOG9u?=
+ =?utf-8?Q?KeZwX6HdPA3KkMR0=3D?=
+X-Exchange-RoutingPolicyChecked: sTvtQVEE5ZOyJRrAh66d2qGqm6MDh32qWlRddhIJPmIQDqYyGVpfdPAJPRUnRQB3crnqyc467G780O1sljIlBig/HzZd6H4vgxVVBJ0iwG30yj/CVBR4g2vgS6czjLjD2TT6a34//FhmiX0DikslD7cJIVp+NYtBbFo/t1BiLOSTIWb9bfxiPasTvn0PC6cm0vJIHSdBchXoY0u3PyhkOQcpvv8XqsZPaUhrEtKig7yBMRZ4mNfKXwxV6bwgzk1OVdIEHni/KS/YF+vGdgDKtaLl5pC1ZhWnrkWeYUo3lPR0ZGjGYnzCNRx5iDgwxZxsiVpNcz06fl1kYdKvxPK3aQ==
+X-MS-Exchange-CrossTenant-Network-Message-Id: 716d2b9e-caf3-4fa5-b471-08def2402f69
+X-MS-Exchange-CrossTenant-AuthSource: IA1PR11MB7198.namprd11.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 04 Aug 2026 15:51:02.2677
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: cZE66H8BOVbMqXEa9sSUaC/91kwZGtTDkfIiJy4gVSEgzkZMAYkmYwvXMW/zuzRnp2+2BPAnZ511RcO2Oo+zcw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH7PR11MB6833
+X-OriginatorOrg: intel.com
 
-Hi Leon, Jason, Logan,
-
-
-I want to ask for your input on a small issue, please:
-
-On 15/07/2026 18:47, Matt Evans wrote:
-> The P2PDMA code currently provides two features under the same
-> CONFIG_PCI_P2PDMA option:
+On 04/08/2026 17:10, sashiko-bot@kernel.org wrote:
+> Thank you for your contribution! Sashiko AI review found 2 potential issue(s) to consider:
 > 
->  1.  Locate providers via pcim_p2pdma_provider()
->  2.  Manage actual P2P DMA
-> 
-> Some drivers (such as vfio-pci) depend on (1), without having a hard
-> dependency on (2).
-> 
-> A future vfio-pci commit will rely on pcim_p2pdma_provider() always
-> being present.  If that depended on CONFIG_PCI_P2PDMA, it would make
-> vfio-pci only available if CONFIG_ZONE_DEVICE is present (e.g. 64-bit
-> systems), even when P2P is not needed.
+> New issues:
+> - [High] A double free occurs in the error path of `i3c_master_set_info()` because `master->this` is left as a dangling pointer and is subsequently freed again in `i3c_masterdev_release()`.
 
-(As a reminder, this exists so that vfio-pci can always export a DMABUF
-for mmap() even if !P2PDMA.)
-
-The (in-kernel) users of pcim_p2pdma_provider() are vfio-pci, its
-nvgrace-gpu driver, and (since d6c58f4eb3d0 "RDMA/mlx5: Implement DMABUF
-export ops") the mlx5 driver.
-
-The vfio-pci drivers gate an actual export on CONFIG_VFIO_PCI_DMABUF
-(.'. CONFIG_PCI_P2PDMA), but a comment (in a Claude review!) just
-flagged that mlx5 uses the success of pcim_p2pdma_provider() as a sign
-that P2PDMA is also supported:
-
-  drivers/infiniband/hw/mlx5/main.c:mlx5_ib_mmap_get_pfns():
-
-        *provider = pcim_p2pdma_provider(pdev, bar);
-        /* If the kernel was not compiled with CONFIG_PCI_P2PDMA the
-         * functionality is not supported.
-         */
-        if (!*provider)
-                return -EOPNOTSUPP;
-
-This will return success even without CONFIG_PCI_P2PDMA, then
-UVERBS_METHOD_DMABUF_ALLOC won't fail early anymore.  Even though the
-export's attach ultimately fails, moving the point of failure is ugly.
-
-Just shoving an #ifdef in mlx5 isn't right, so would be grateful for
-your advice on the most tasteful resolution:
-
- 1. Imagining future drivers might use pcim_p2pdma_provider(), maybe
-    p2pdma could export a `pcim_p2pdma_supported()` or similar which
-    returns whether CONFIG_PCI_P2PDMA is present and P2P can ever work.
-    A user of pcim_p2pdma_provider() is required to also check if P2P is
-    overall supported.
-
-    Ugliness aside, a driver could use #ifdef CONFIG_PCI_P2PDMA to test
-    whether P2P is expected to work, except that doesn't stop modules
-    falling into the same trap.  I think a function export is better.
-
- 2. And/or a test (such the function from #1, or an #ifdef) in the IB
-    core DMABUF path, to avoid individual drivers from doing the test in
-    their .mmap_get_pfns().  Other future drivers would be expected to
-    do similar.
-
-Any better ideas?  Sorry I didn't catch this earlier in the review
-cycles, I know we've looked at this patch a few times now.
-
-
-Many thanks,
-
-
-Matt
-
+That is valid.  i3c_master_set_info() needs to be amended either to set
+master->this = NULL on the error path, or just don't call
+i3c_master_free_i3c_dev() since it will get cleaned up in
+i3c_masterdev_release() anyway.
 
 > 
-> To resolve this, introduce CONFIG_PCI_P2PDMA_CORE and refactor the
-> basic provider functionality into a new p2pdma_core.c file.  This is
-> available even if the CONFIG_PCI_P2PDMA feature is disabled (or
-> unavailable due to !CONFIG_ZONE_DEVICE), satisfying (1).
+> Pre-existing issues:
+> - [High] Devres lifetime mismatch allows use-after-free of the master controller struct in `i3c_masterdev_release()`.
+> --
 > 
-> Then, when the original CONFIG_PCI_P2PDMA is set, drivers have access
-> to the additional P2P features of (2).  This still depends on
-> CONFIG_ZONE_DEVICE.
+> --- Patch [4]: [PATCH V3 04/14] i3c: master: Fix use-after-free of master->this ---
+> commit e74d33e25ba87fdc800277aa5702a984d20076ca
+> Author: Adrian Hunter <adrian.hunter@intel.com>
+> i3c: master: Fix use-after-free of master->this
 > 
-> Signed-off-by: Matt Evans <matt@ozlabs.org>
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-> Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
-> ---
->  MAINTAINERS                |   2 +-
->  drivers/pci/Kconfig        |   5 ++
->  drivers/pci/Makefile       |   1 +
->  drivers/pci/p2pdma.c       | 111 +--------------------------------
->  drivers/pci/p2pdma.h       |  29 +++++++++
->  drivers/pci/p2pdma_core.c  | 122 +++++++++++++++++++++++++++++++++++++
->  include/linux/pci-p2pdma.h |  24 +++++---
->  include/linux/pci.h        |   2 +-
->  8 files changed, 175 insertions(+), 121 deletions(-)
->  create mode 100644 drivers/pci/p2pdma.h
->  create mode 100644 drivers/pci/p2pdma_core.c
+> This patch delays freeing master->this until i3c_masterdev_release(). By
+> doing this, it keeps master->this alive until all users of the master
+> device have gone away and the sysfs state is torn down.
 > 
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index 806bd2d80d15..192029942145 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -20867,7 +20867,7 @@ B:	https://bugzilla.kernel.org
->  C:	irc://irc.oftc.net/linux-pci
->  T:	git git://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git
->  F:	Documentation/driver-api/pci/p2pdma.rst
-> -F:	drivers/pci/p2pdma.c
-> +F:	drivers/pci/p2pdma*
->  F:	include/linux/pci-p2pdma.h
->  
->  PCI POWER CONTROL
-> diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
-> index 0c7408509ba2..c991e92bcb85 100644
-> --- a/drivers/pci/Kconfig
-> +++ b/drivers/pci/Kconfig
-> @@ -211,6 +211,7 @@ config PCI_P2PDMA
->  	# requires 64bit
->  	#
->  	depends on 64BIT
-> +	select PCI_P2PDMA_CORE
->  	select GENERIC_ALLOCATOR
->  	select NEED_SG_DMA_FLAGS
->  	help
-> @@ -226,6 +227,10 @@ config PCI_P2PDMA
->  
->  	  If unsure, say N.
->  
-> +config PCI_P2PDMA_CORE
-> +	default n
-> +	bool
-> +
->  config PCI_LABEL
->  	def_bool y if (DMI || ACPI)
->  	select NLS
-> diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
-> index 41ebc3b9a518..0b32572d57a1 100644
-> --- a/drivers/pci/Makefile
-> +++ b/drivers/pci/Makefile
-> @@ -30,6 +30,7 @@ obj-$(CONFIG_PCI_SYSCALL)	+= syscall.o
->  obj-$(CONFIG_PCI_STUB)		+= pci-stub.o
->  obj-$(CONFIG_PCI_PF_STUB)	+= pci-pf-stub.o
->  obj-$(CONFIG_PCI_ECAM)		+= ecam.o
-> +obj-$(CONFIG_PCI_P2PDMA_CORE)	+= p2pdma_core.o
->  obj-$(CONFIG_PCI_P2PDMA)	+= p2pdma.o
->  obj-$(CONFIG_XEN_PCIDEV_FRONTEND) += xen-pcifront.o
->  obj-$(CONFIG_VGA_ARB)		+= vgaarb.o
-> diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
-> index 498bca257419..607580f58c26 100644
-> --- a/drivers/pci/p2pdma.c
-> +++ b/drivers/pci/p2pdma.c
-> @@ -21,12 +21,7 @@
->  #include <linux/seq_buf.h>
->  #include <linux/xarray.h>
->  
-> -struct pci_p2pdma {
-> -	struct gen_pool *pool;
-> -	bool p2pmem_published;
-> -	struct xarray map_types;
-> -	struct p2pdma_provider mem[PCI_STD_NUM_BARS];
-> -};
-> +#include "p2pdma.h"
->  
->  struct pci_p2pdma_pagemap {
->  	struct dev_pagemap pgmap;
-> @@ -226,8 +221,7 @@ static const struct dev_pagemap_ops p2pdma_pgmap_ops = {
->  	.folio_free = p2pdma_folio_free,
->  };
->  
-> -static void pci_p2pdma_release_pool(struct pci_dev *pdev,
-> -				    struct pci_p2pdma *p2pdma)
-> +void pci_p2pdma_release_pool(struct pci_dev *pdev, struct pci_p2pdma *p2pdma)
->  {
->  	if (!p2pdma->pool)
->  		return;
-> @@ -237,107 +231,6 @@ static void pci_p2pdma_release_pool(struct pci_dev *pdev,
->  	sysfs_remove_group(&pdev->dev.kobj, &p2pmem_group);
->  }
->  
-> -static void pci_p2pdma_release(void *data)
-> -{
-> -	struct pci_dev *pdev = data;
-> -	struct pci_p2pdma *p2pdma;
-> -
-> -	p2pdma = rcu_dereference_protected(pdev->p2pdma, 1);
-> -	if (!p2pdma)
-> -		return;
-> -
-> -	/* Flush and disable pci_alloc_p2p_mem() */
-> -	pdev->p2pdma = NULL;
-> -	pci_p2pdma_release_pool(pdev, p2pdma);
-> -	xa_destroy(&p2pdma->map_types);
-> -}
-> -
-> -/**
-> - * pcim_p2pdma_init - Initialise peer-to-peer DMA providers
-> - * @pdev: The PCI device to enable P2PDMA for
-> - *
-> - * This function initializes the peer-to-peer DMA infrastructure
-> - * for a PCI device. It allocates and sets up the necessary data
-> - * structures to support P2PDMA operations, including mapping type
-> - * tracking.
-> - */
-> -int pcim_p2pdma_init(struct pci_dev *pdev)
-> -{
-> -	struct pci_p2pdma *p2p;
-> -	int i, ret;
-> -
-> -	if (pdev->non_mappable_bars)
-> -		return -EOPNOTSUPP;
-> -
-> -	p2p = rcu_dereference_protected(pdev->p2pdma, 1);
-> -	if (p2p)
-> -		return 0;
-> -
-> -	p2p = devm_kzalloc(&pdev->dev, sizeof(*p2p), GFP_KERNEL);
-> -	if (!p2p)
-> -		return -ENOMEM;
-> -
-> -	xa_init(&p2p->map_types);
-> -	/*
-> -	 * Iterate over all standard PCI BARs and record only those that
-> -	 * correspond to MMIO regions. Skip non-memory resources (e.g. I/O
-> -	 * port BARs) since they cannot be used for peer-to-peer (P2P)
-> -	 * transactions.
-> -	 */
-> -	for (i = 0; i < PCI_STD_NUM_BARS; i++) {
-> -		if (!(pci_resource_flags(pdev, i) & IORESOURCE_MEM))
-> -			continue;
-> -
-> -		p2p->mem[i].owner = &pdev->dev;
-> -		p2p->mem[i].bus_offset =
-> -			pci_bus_address(pdev, i) - pci_resource_start(pdev, i);
-> -	}
-> -
-> -	ret = devm_add_action_or_reset(&pdev->dev, pci_p2pdma_release, pdev);
-> -	if (ret)
-> -		goto out_p2p;
-> -
-> -	rcu_assign_pointer(pdev->p2pdma, p2p);
-> -	return 0;
-> -
-> -out_p2p:
-> -	devm_kfree(&pdev->dev, p2p);
-> -	return ret;
-> -}
-> -EXPORT_SYMBOL_GPL(pcim_p2pdma_init);
-> -
-> -/**
-> - * pcim_p2pdma_provider - Get peer-to-peer DMA provider
-> - * @pdev: The PCI device to enable P2PDMA for
-> - * @bar: BAR index to get provider
-> - *
-> - * This function gets peer-to-peer DMA provider for a PCI device. The lifetime
-> - * of the provider (and of course the MMIO) is bound to the lifetime of the
-> - * driver. A driver calling this function must ensure that all references to the
-> - * provider, and any DMA mappings created for any MMIO, are all cleaned up
-> - * before the driver remove() completes.
-> - *
-> - * Since P2P is almost always shared with a second driver this means some system
-> - * to notify, invalidate and revoke the MMIO's DMA must be in place to use this
-> - * function. For example a revoke can be built using DMABUF.
-> - */
-> -struct p2pdma_provider *pcim_p2pdma_provider(struct pci_dev *pdev, int bar)
-> -{
-> -	struct pci_p2pdma *p2p;
-> -
-> -	if (!(pci_resource_flags(pdev, bar) & IORESOURCE_MEM) ||
-> -	    pdev->non_mappable_bars)
-> -		return NULL;
-> -
-> -	p2p = rcu_dereference_protected(pdev->p2pdma, 1);
-> -	if (WARN_ON(!p2p))
-> -		/* Someone forgot to call to pcim_p2pdma_init() before */
-> -		return NULL;
-> -
-> -	return &p2p->mem[bar];
-> -}
-> -EXPORT_SYMBOL_GPL(pcim_p2pdma_provider);
-> -
->  static int pci_p2pdma_setup_pool(struct pci_dev *pdev)
->  {
->  	struct pci_p2pdma *p2pdma;
-> diff --git a/drivers/pci/p2pdma.h b/drivers/pci/p2pdma.h
-> new file mode 100644
-> index 000000000000..946383809981
-> --- /dev/null
-> +++ b/drivers/pci/p2pdma.h
-> @@ -0,0 +1,29 @@
-> +/* SPDX-License-Identifier: GPL-2.0 */
-> +/*
-> + * PCI peer-to-peer DMA support.
-> + */
-> +
-> +#ifndef _PCI_P2PDMA_H
-> +#define _PCI_P2PDMA_H
-> +
-> +#include <linux/genalloc.h>
-> +#include <linux/pci-p2pdma.h>
-> +#include <linux/xarray.h>
-> +
-> +struct pci_p2pdma {
-> +	struct gen_pool *pool;
-> +	bool p2pmem_published;
-> +	struct xarray map_types;
-> +	struct p2pdma_provider mem[PCI_STD_NUM_BARS];
-> +};
-> +
-> +#ifdef CONFIG_PCI_P2PDMA
-> +void pci_p2pdma_release_pool(struct pci_dev *pdev, struct pci_p2pdma *p2pdma);
-> +#else
-> +static inline void pci_p2pdma_release_pool(struct pci_dev *pdev,
-> +					   struct pci_p2pdma *p2pdma)
-> +{
-> +}
-> +#endif
-> +
-> +#endif
-> diff --git a/drivers/pci/p2pdma_core.c b/drivers/pci/p2pdma_core.c
-> new file mode 100644
-> index 000000000000..9e997f373b1e
-> --- /dev/null
-> +++ b/drivers/pci/p2pdma_core.c
-> @@ -0,0 +1,122 @@
-> +// SPDX-License-Identifier: GPL-2.0
-> +/*
-> + * PCI peer-to-peer DMA support core, providing a bare-bones
-> + * pcim_p2pdma_provider() interface to drivers even if full P2PDMA
-> + * isn't present.  The full P2PDMA feature is in p2pdma.c (see
-> + * CONFIG_PCI_P2PDMA).
-> + *
-> + * Copyright (c) 2016-2018, Logan Gunthorpe
-> + * Copyright (c) 2016-2017, Microsemi Corporation
-> + * Copyright (c) 2017, Christoph Hellwig
-> + * Copyright (c) 2018, Eideticom Inc.
-> + */
-> +
-> +#define pr_fmt(fmt) "pci-p2pdma: " fmt
-> +#include <linux/ctype.h>
-> +#include <linux/genalloc.h>
-> +#include <linux/memremap.h>
-> +#include <linux/pci-p2pdma.h>
-> +#include <linux/xarray.h>
-> +
-> +#include "p2pdma.h"
-> +
-> +static void pci_p2pdma_release(void *data)
-> +{
-> +	struct pci_dev *pdev = data;
-> +	struct pci_p2pdma *p2pdma;
-> +
-> +	p2pdma = rcu_dereference_protected(pdev->p2pdma, 1);
-> +	if (!p2pdma)
-> +		return;
-> +
-> +	/* Flush and disable pci_alloc_p2p_mem() */
-> +	pdev->p2pdma = NULL;
-> +	pci_p2pdma_release_pool(pdev, p2pdma);
-> +	xa_destroy(&p2pdma->map_types);
-> +}
-> +
-> +/**
-> + * pcim_p2pdma_init - Initialise peer-to-peer DMA providers
-> + * @pdev: The PCI device to enable P2PDMA for
-> + *
-> + * This function initializes the peer-to-peer DMA infrastructure
-> + * for a PCI device. It allocates and sets up the necessary data
-> + * structures to support P2PDMA operations, including mapping type
-> + * tracking.
-> + */
-> +int pcim_p2pdma_init(struct pci_dev *pdev)
-> +{
-> +	struct pci_p2pdma *p2p;
-> +	int i, ret;
-> +
-> +	if (pdev->non_mappable_bars)
-> +		return -EOPNOTSUPP;
-> +
-> +	p2p = rcu_dereference_protected(pdev->p2pdma, 1);
-> +	if (p2p)
-> +		return 0;
-> +
-> +	p2p = devm_kzalloc(&pdev->dev, sizeof(*p2p), GFP_KERNEL);
-> +	if (!p2p)
-> +		return -ENOMEM;
-> +
-> +	xa_init(&p2p->map_types);
-> +	/*
-> +	 * Iterate over all standard PCI BARs and record only those that
-> +	 * correspond to MMIO regions. Skip non-memory resources (e.g. I/O
-> +	 * port BARs) since they cannot be used for peer-to-peer (P2P)
-> +	 * transactions.
-> +	 */
-> +	for (i = 0; i < PCI_STD_NUM_BARS; i++) {
-> +		if (!(pci_resource_flags(pdev, i) & IORESOURCE_MEM))
-> +			continue;
-> +
-> +		p2p->mem[i].owner = &pdev->dev;
-> +		p2p->mem[i].bus_offset =
-> +			pci_bus_address(pdev, i) - pci_resource_start(pdev, i);
-> +	}
-> +
-> +	ret = devm_add_action_or_reset(&pdev->dev, pci_p2pdma_release, pdev);
-> +	if (ret)
-> +		goto out_p2p;
-> +
-> +	rcu_assign_pointer(pdev->p2pdma, p2p);
-> +	return 0;
-> +
-> +out_p2p:
-> +	devm_kfree(&pdev->dev, p2p);
-> +	return ret;
-> +}
-> +EXPORT_SYMBOL_GPL(pcim_p2pdma_init);
-> +
-> +/**
-> + * pcim_p2pdma_provider - Get peer-to-peer DMA provider
-> + * @pdev: The PCI device to enable P2PDMA for
-> + * @bar: BAR index to get provider
-> + *
-> + * This function gets peer-to-peer DMA provider for a PCI device. The lifetime
-> + * of the provider (and of course the MMIO) is bound to the lifetime of the
-> + * driver. A driver calling this function must ensure that all references to the
-> + * provider, and any DMA mappings created for any MMIO, are all cleaned up
-> + * before the driver remove() completes.
-> + *
-> + * Since P2P is almost always shared with a second driver this means some system
-> + * to notify, invalidate and revoke the MMIO's DMA must be in place to use this
-> + * function. For example a revoke can be built using DMABUF.
-> + */
-> +struct p2pdma_provider *pcim_p2pdma_provider(struct pci_dev *pdev, int bar)
-> +{
-> +	struct pci_p2pdma *p2p;
-> +
-> +	if (!(pci_resource_flags(pdev, bar) & IORESOURCE_MEM) ||
-> +	    pdev->non_mappable_bars)
-> +		return NULL;
-> +
-> +	p2p = rcu_dereference_protected(pdev->p2pdma, 1);
-> +	if (WARN_ON(!p2p))
-> +		/* Someone forgot to call to pcim_p2pdma_init() before */
-> +		return NULL;
-> +
-> +	return &p2p->mem[bar];
-> +}
-> +EXPORT_SYMBOL_GPL(pcim_p2pdma_provider);
-> diff --git a/include/linux/pci-p2pdma.h b/include/linux/pci-p2pdma.h
-> index 873de20a2247..4c42a7b2ee85 100644
-> --- a/include/linux/pci-p2pdma.h
-> +++ b/include/linux/pci-p2pdma.h
-> @@ -67,9 +67,22 @@ enum pci_p2pdma_map_type {
->  	PCI_P2PDMA_MAP_THRU_HOST_BRIDGE,
->  };
->  
-> -#ifdef CONFIG_PCI_P2PDMA
-> +#ifdef CONFIG_PCI_P2PDMA_CORE
->  int pcim_p2pdma_init(struct pci_dev *pdev);
->  struct p2pdma_provider *pcim_p2pdma_provider(struct pci_dev *pdev, int bar);
-> +#else
-> +static inline int pcim_p2pdma_init(struct pci_dev *pdev)
-> +{
-> +	return -EOPNOTSUPP;
-> +}
-> +static inline struct p2pdma_provider *pcim_p2pdma_provider(struct pci_dev *pdev,
-> +							   int bar)
-> +{
-> +	return NULL;
-> +}
-> +#endif
-> +
-> +#ifdef CONFIG_PCI_P2PDMA
->  int pci_p2pdma_add_resource(struct pci_dev *pdev, int bar, size_t size,
->  		u64 offset);
->  int pci_p2pdma_distance_many(struct pci_dev *provider, struct device **clients,
-> @@ -89,15 +102,6 @@ ssize_t pci_p2pdma_enable_show(char *page, struct pci_dev *p2p_dev,
->  enum pci_p2pdma_map_type pci_p2pdma_map_type(struct p2pdma_provider *provider,
->  					     struct device *dev);
->  #else /* CONFIG_PCI_P2PDMA */
-> -static inline int pcim_p2pdma_init(struct pci_dev *pdev)
-> -{
-> -	return -EOPNOTSUPP;
-> -}
-> -static inline struct p2pdma_provider *pcim_p2pdma_provider(struct pci_dev *pdev,
-> -							   int bar)
-> -{
-> -	return NULL;
-> -}
->  static inline int pci_p2pdma_add_resource(struct pci_dev *pdev, int bar,
->  		size_t size, u64 offset)
->  {
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 64b308b6e61c..8adbabbec5bf 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -556,7 +556,7 @@ struct pci_dev {
->  	u16		pasid_cap;	/* PASID Capability offset */
->  	u16		pasid_features;
->  #endif
-> -#ifdef CONFIG_PCI_P2PDMA
-> +#ifdef CONFIG_PCI_P2PDMA_CORE
->  	struct pci_p2pdma __rcu *p2pdma;
->  #endif
->  #ifdef CONFIG_PCI_DOE
+>> diff --git a/drivers/i3c/master.c b/drivers/i3c/master.c
+>> index abb582645a2ed..4839c1c186eb0 100644
+>> --- a/drivers/i3c/master.c
+>> +++ b/drivers/i3c/master.c
+> [ ... ]
+>> @@ -842,6 +842,11 @@ static struct attribute *i3c_masterdev_attrs[] = {
+>>  };
+>>  ATTRIBUTE_GROUPS(i3c_masterdev);
+>>  
+>> +static void i3c_master_free_i3c_dev(struct i3c_dev_desc *dev)
+>> +{
+>> +	kfree(dev);
+>> +}
+>> +
+>>  static void i3c_masterdev_release(struct device *dev)
+>>  {
+>>  	struct i3c_master_controller *master = dev_to_i3cmaster(dev);
+>>  	struct i3c_bus *bus = dev_to_i3cbus(dev);
+> 
+> [Severity: High]
+> This is a pre-existing issue, but does this release function dereference
+> fields in the master struct after the driver's devres cleanup has already
+> freed the surrounding memory?
+> 
+> Master controller structures are typically allocated using devm_kzalloc().
+> When a driver is unbound, devres cleanup frees the master controller
+> structure. However, if userspace holds an open file descriptor to a sysfs
+> attribute (like /sys/class/i3c/i3c-0/bcr), the kobject refcount doesn't drop
+> to zero.
+> 
+> When the sysfs file is later closed, the final put_device() calls this
+> i3c_masterdev_release() function, which then dereferences fields like
+> master->wq, bus->devs, and now master->this, leading to a use-after-free.
+> 
+>>  	if (master->wq)
+>>  		destroy_workqueue(master->wq);
+>>  
+>>  	WARN_ON(!list_empty(&bus->devs.i2c) || !list_empty(&bus->devs.i3c));
+>>  	i3c_bus_cleanup(bus);
+>>  
+>>  	fwnode_handle_put(dev->fwnode);
+>> +
+>> +	i3c_master_free_i3c_dev(master->this);
+> 
+> [Severity: High]
+> Does unconditionally freeing master->this here cause a double free on the
+> error path of i3c_master_set_info()?
+> 
+> If i3c_master_attach_i3c_dev() fails during initialization in
+> i3c_master_set_info(), the allocated i3cdev is freed via
+> i3c_master_free_i3c_dev().
+> 
+> However, master->this and master->bus.cur_master were already assigned to
+> point to i3cdev and are not set back to NULL:
+> 
+> drivers/i3c/master.c:i3c_master_set_info() {
+> 	...
+> 	master->this = i3cdev;
+> 	master->bus.cur_master = master->this;
+> 
+> 	ret = i3c_master_attach_i3c_dev(master, i3cdev);
+> 	if (ret)
+> 		goto err_free_dev;
+> 	...
+> err_free_dev:
+> 	i3c_master_free_i3c_dev(i3cdev);
+> 	return ret;
+> }
+> 
+> The failure propagates to i3c_master_register(), which calls
+> put_device(&master->dev) to abort driver registration. This calls
+> i3c_masterdev_release(), which now unconditionally frees master->this,
+> leading to a double free of the dangling pointer.
+> 
+>>  }
+> 
 
