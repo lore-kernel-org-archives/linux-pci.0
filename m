@@ -1,208 +1,337 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.7])
+Received: from DU2PR03CU002.outbound.protection.outlook.com (mail-northeuropeazon11011052.outbound.protection.outlook.com [52.101.65.52])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CCC4C470103
-	for <linux-pci@vger.kernel.org>; Tue,  4 Aug 2026 15:58:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=192.198.163.7
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 46981476CE0;
+	Tue,  4 Aug 2026 16:06:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.65.52
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785859085; cv=fail; b=t0vdogQj/YSu/GaDZtWRk+S4a6ezDTizt63+3Et/IvozeGEW2V7c3qsJEl4mamwhyb0EDwq8MZcokqMNs48iX60i+SB4iryTyb5CyzxpqDFkf1ip/aJIC4RbhHanDL0O1ljGFZ++enLb6qX46rec+y+GiACqXnPnNF3c+V8Tx4U=
+	t=1785859624; cv=fail; b=ByMumOgT/PS5ih7TfwVKu/p+aeFfshygATRV+LRwCKpXqpOfFYwR3JjUb17MfTY2e3OGc12sM+2QPdZiS7omijbD/8MVLPullVCIphMIpEYi+9bc2aW+PK7IPbLfaipsxA+OjrlJXcuyUJ5C7/JGUMI532zRlybbcd8wuaJQSR8=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785859085; c=relaxed/simple;
-	bh=lAMbc03m/VN6qPW4PlG1z1p8hOsqh8W6j9zF+iwcehs=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=AXfPFD6btONidQ7DKPClCY+pJSsHl5+hgcrjTnwOUoDywXpwMq8TrIEB6xjJ+M6bpd5mQpBEXZd5ardIFfkb0gdHURXl4w1omD3lPD90MYfrB47hG1x8abdqAKk9xUs9FCSyN2UBjeFfqr57jVUahlWScPKE4aJOHaW05t17Sk8=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=GYR0lL4d; arc=fail smtp.client-ip=192.198.163.7
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1785859624; c=relaxed/simple;
+	bh=xsT6KynSJWbc6c0UfgsFQUjPUl9eFaOHF7SigaswSDY=;
+	h=Date:From:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=f48hK89vYmPyT072u3Ao0kDs90qSjr5Msqh8JOWcO2lwQp58/QvYaQ+qCza94us2y+x/U+suqAjTFs4wdB0trHGYuSoS/l5IvlAA5bxDzwQJ1lEqNZtFRjcSUir6BaDXmFlNPai1KlWGakHL4pNOzXoiM8wv0nzZ6/oNgPEfEUE=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com; spf=pass smtp.mailfrom=oss.nxp.com; dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b=knpRGS3G; arc=fail smtp.client-ip=52.101.65.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="GYR0lL4d"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1785859082; x=1817395082;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-id:content-transfer-encoding:
-   mime-version;
-  bh=lAMbc03m/VN6qPW4PlG1z1p8hOsqh8W6j9zF+iwcehs=;
-  b=GYR0lL4dxYF2prkTTig8zqyoOfr4ymfrG27mbVaTZ6588cQS2UMRjm/c
-   JDoAhvkAbP4Z0gEil2Je7Idnl2dOUMBBRkPtsKTKtWB7dXCT0+HKA4OJZ
-   YwMmlH/juQ/5bgvw4KwCzweBulh38nWScckw06QDLrbeabHHmsvRZb6Oy
-   hSBF6Hlq1nG8yd6+szr5l610o+nqhRUtdEB0RcYbesD7HrlJw2cU3X6KD
-   9KWY7FUP8s2Cj2Bm03tpUJytgViWjw41NOjpzC7cbCyiy1ZGhHKau30pc
-   Qy7nt+XgHN4rGQZw0cjUDCQK5u7kUC/fZJgAgkqETeBV/1mCKzuqU7Ssz
-   g==;
-X-CSE-ConnectionGUID: +m8nkhUdSzm2lT5GJ82CYg==
-X-CSE-MsgGUID: Gya0Uo0eT4uk4kEUJw6ECA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11865"; a="111966182"
-X-IronPort-AV: E=Sophos;i="6.25,204,1779174000"; 
-   d="scan'208";a="111966182"
-Received: from orviesa002.jf.intel.com ([10.64.159.142])
-  by fmvoesa101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Aug 2026 08:58:00 -0700
-X-CSE-ConnectionGUID: ly0QgdCTQJu2pFzfDi6a1w==
-X-CSE-MsgGUID: 2O0JnXUpQBSDNTMMFShdHA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.25,204,1779174000"; 
-   d="scan'208";a="291482762"
-Received: from orsmsx902.amr.corp.intel.com ([10.22.229.24])
-  by orviesa002.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Aug 2026 08:57:59 -0700
-Received: from ORSMSX901.amr.corp.intel.com (10.22.229.23) by
- ORSMSX902.amr.corp.intel.com (10.22.229.24) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.45; Tue, 4 Aug 2026 08:57:59 -0700
-Received: from ORSEDG901.ED.cps.intel.com (10.7.248.11) by
- ORSMSX901.amr.corp.intel.com (10.22.229.23) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.45 via Frontend Transport; Tue, 4 Aug 2026 08:57:59 -0700
-Received: from PH0PR06CU001.outbound.protection.outlook.com (40.107.208.53) by
- edgegateway.intel.com (134.134.137.111) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.45; Tue, 4 Aug 2026 08:57:55 -0700
+	dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b="knpRGS3G"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=RcEDYMMF8KJapnLOE3xk6AfaHXr7KGXcpYVNvYubsdNu0lDdLzThgkMZyA2OCcal4kCcsShIXX2IVQ4Nhjv7742Ug3DpYVAV0kQIgLhyi2Rz5FyC9u97scf2IL/oRIZkQRQ3qvm+R/lBx18CkGILtzfPabcXGuDZQC0h/zME8vsGyOzUEV6jCl1SAjdjZj875vLyiu8Jm8sBoQJ2DHx+lF3QCIfLuGAyjHGMnI3ZhKbw9D887j2ZQ+RoB0kfsZCtaO5XFVYljhaFH83Vt6YfApqvEoCOQQ8ZNsYFrJTOgc5e8ERl3mqgPgD/X2GTuYMe0/SHTxCSJ1xyWVLCOwoBCw==
+ b=LCPY6o9J4hx2JD9Ln8Wv5pJ5/P+Y3gVDiFoVxNowvPUJp1Xm5TsBbIpQ/iC10WuxIDPS8GvVVgnxKtQkfhNIiTFWQM/OKXPhKkDoEDj1g7ENLX9rjCuhhSBS9bNjI1jBRVRe+W/6wnbPlZmD+/cNyKbFK96boCa3y2FLhTrF93ukTEf7/GxzjJqjbA4W5pdlYkXlycVtezKW1kYPvD5phokcEYhDbMRMwgG50YnsERXc0pt0dGlyBPdy5yuLazFSoI+Jx05LjwdwYg6iGFgXCZq86ky4R7gEsPRjIANrZzKT8fUjJXDxaz2tHPF1HVRkDH8SoTwlR2MS0AKAz7NwRA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=lAMbc03m/VN6qPW4PlG1z1p8hOsqh8W6j9zF+iwcehs=;
- b=v+WM+ePvqUn8AJP8K4pekfK/zz22ZLeIf5+mZouPp9YvTlXNe5zw7QgxqjPrtRiqZpOyb6HnHK2jZRYAZiM7znVtHQVlob/yGesYQSGcDZIvbfzH/FZW8VXNpm1z0WRRuhVAW8rT0KJ9UnIr2+WNCDD1RPAcMCIUq5W4DLRRP3WEkCCYFtU4jUuNq3aZV7vPz7G+r9Nh8M6R7dKOg+oUfPsKl6byP7sXWT8dK7xBKvbnRwRqw+UXu4YRDLiLdfeFp0OrFft9mSaV0s2DvYftDsrM7SyF+ae37gUOg+fRIbtVQTN69zWT3y1f/0vcNgHHQYeFFon61YIyAMw5sci0pg==
+ bh=tjnZRDgHcY0DHo0vdc5RS4lFDi/YZnamksacuoVeZa0=;
+ b=JmGOnUIFa26tfQMubqM3XgP7XgKd3yzKrX3E4t2JPI7d73AHZxscYipBDSDW40oayVNpMzBNFfORW+eFB5QXvECMuZN2SObeKbUzVnVkYJ6tinqMtIAOpsk0mRYp4IBP/qrUsuk9qWrF8ErAWmXlQyZ2axH1lQnmDZk/2nriE4BCrJr5/PjAy15kkWyA/hdB7rXMaCOwfRJAA36hq5CsP/6Wc6YjbGVMVTLj0jKLRbQDzMEQqKHB0qMSWsvITod8vz47p29MLkgE9qjzasasfSCS+FzxCo+BTLkSkK3HRePj9Yxw6W4DAmKfKw1JHRoBPJuFstC6+6t0V3ufKtpWHw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
- dkim=pass header.d=intel.com; arc=none
-Received: from PH0PR11MB7494.namprd11.prod.outlook.com (2603:10b6:510:283::18)
- by CH3PR11MB8545.namprd11.prod.outlook.com (2603:10b6:610:1bc::11) with
+ smtp.mailfrom=oss.nxp.com; dmarc=pass action=none header.from=oss.nxp.com;
+ dkim=pass header.d=oss.nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=NXP1.onmicrosoft.com;
+ s=selector1-NXP1-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=tjnZRDgHcY0DHo0vdc5RS4lFDi/YZnamksacuoVeZa0=;
+ b=knpRGS3GJrDKvGO064mjjZTI/kvchL6sH+ph+/hl0cB04Rq0g7yYTHH5JI+dcfgqQ/FIYjgVKDErowFNlAOwe1zS4XJM7an0VRGGRGuU/hEg1zn6LsAgiaZ4DVsFPVJyFqO/ydEspUg9ZuAm+jzRvXlEWOHB8LGnYAr5e0Q1fJdpgEuU6Q3Shcga9bnranqNvd4fbzBCaG2GHzBUn0lfRVG5ZV2qFtgYYQWb1sz63+cGCIkPegzrv0Kbq40kBGhBCXSG+P1KR8utv93kUIm44hTkfyFVrjcfSI6+ehCR+JeCbc5+KXHElV7hHyQoAQIS0fIvEVopdpuZzTA2ABxs/w==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=oss.nxp.com;
+Received: from GV2PR04MB11799.eurprd04.prod.outlook.com (2603:10a6:150:2cf::9)
+ by DBBPR04MB7753.eurprd04.prod.outlook.com (2603:10a6:10:1e1::5) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.292.15; Tue, 4 Aug
- 2026 15:57:52 +0000
-Received: from PH0PR11MB7494.namprd11.prod.outlook.com
- ([fe80::e642:c73c:6d80:5083]) by PH0PR11MB7494.namprd11.prod.outlook.com
- ([fe80::e642:c73c:6d80:5083%5]) with mapi id 15.21.0270.017; Tue, 4 Aug 2026
- 15:57:51 +0000
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: "helgaas@kernel.org" <helgaas@kernel.org>
-CC: "thierry.reding@kernel.org" <thierry.reding@kernel.org>,
-	"mmaddireddy@nvidia.com" <mmaddireddy@nvidia.com>, "lukas@wunner.de"
-	<lukas@wunner.de>, "sashiko-reviews@lists.linux.dev"
-	<sashiko-reviews@lists.linux.dev>, "Korenblit, Miriam Rachel"
-	<miriam.rachel.korenblit@intel.com>, "treding@nvidia.com"
-	<treding@nvidia.com>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH] PCI: Disable NoSnoop and Relaxed ordering for Intel
- wireless BE200
-Thread-Topic: [PATCH] PCI: Disable NoSnoop and Relaxed ordering for Intel
- wireless BE200
-Thread-Index: AQHdAUruh/HWEZwEC0iMA6tK8iUSn7ZImB0AgAAE6oCAMTTxAIAABOIAgAAe6wCAARjQAIAAHZOAgAhH+4CAAAUPAIAAEYwAgAAGZYCAAAi/gIAAsEyAgAFxSwCAANOCgIAAFZ0AgAAXJoCAAAJLAIABQL+AgAZSnQA=
-Date: Tue, 4 Aug 2026 15:57:51 +0000
-Message-ID: <6c067883cd68a835a4ab5432e2b509b3686257b5.camel@intel.com>
-References: <20260731152431.GA1566014@bhelgaas>
-In-Reply-To: <20260731152431.GA1566014@bhelgaas>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-user-agent: Evolution 3.60.2 (3.60.2-1.fc44) 
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=intel.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: PH0PR11MB7494:EE_|CH3PR11MB8545:EE_
-x-ms-office365-filtering-correlation-id: c1ac4dc2-2c0f-46ed-01ec-08def2412396
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;ARA:13230040|366016|376014|1800799024|23010399003|18002099003|22082099003|11063799006|38070700021|6133799003|10067099003|56012099006;
-x-microsoft-antispam-message-info: /J4j4nJmXBSacDIqjbXKryEZwV7ndi1ILb/e4dK6yggA5M1VWeKUKBon1iotcZlWjsMPcPoS5Rnk+4iHRAGgtOTKm9xIH7aYA3f3VAFdF0gnTOinqYp9XCgEgw+kbGfdrwUW7Cds5kXIfb4RlOTnEi779ecIkNdjU0kbyqgg0/Dft18Y9lk0aZNxr/8PStXq76wx7gcsZWg0je8BIeFv28gycLeXR9tcmDUC8ZWGsZQE7g8B6xb9S/pEX1NJOixYO6iO9VafWXUAwtiEMIGlPVOjxg/1TjYTE/qhpyh8EgJTvuC3qdH0Gzg15LkCAZhDuxGmhIKi+FNmTj+2eBYjJEwE3qWgbH1GD0zSs6ya8z6i0pq7UpSAbLUGCkCMTwrARfJpbJ+VKYSLFRNrQAS7LBo89vi6Sm2SRGTWICLr2CE5kgdXf3tkp8nRTlycDVobxLJAbJ6eMii5VaeoQNJUp8xgTjQJgcYJ/qiPcYVBrp4I6DC0tffHoddrSodEEoX8KfnQKnoztdwr8O4W7zW1kU9lxCsrOcH3z0nvM+eKMfmTZKwp2vowTvbAiA1A2A/L+mfRd/LkUwhrz+JQy/jMF1ZwDmNzNp/T+Uxi6foxw+ItLYSH+TtTw+2erNWmhHaqelqVDok/Gr4tjiNliA+CtElFSrB7KIBVrM/4pTmlY5lvVhgu4PSXTWdqLo3NGpCpEiWMMKUOAmn+y6B1jL+WV15Z59N1lMobtu3nvSenS0E=
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR11MB7494.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(376014)(1800799024)(23010399003)(18002099003)(22082099003)(11063799006)(38070700021)(6133799003)(10067099003)(56012099006);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?utf-8?B?WmhwblZHQXZQekVxcHBieTF4azVTdWtIK2NQU3lod01lWUpOdzdreWI5dlE4?=
- =?utf-8?B?aTB5dlZEZTVjUDIzQkdaTlV5eUx0M3NPUTZmTllSZGhxVkJaMmVqenN3RzBG?=
- =?utf-8?B?MkpPdkhDNHM5Nk90M0ZibEFiZE80cCs2Y0dUbzFUQ1FPV0tGa0QrdStFbU5D?=
- =?utf-8?B?Y0t5bVFvR1prck15MS9YcS85V0RiN0ZEVVdwaFhWUnlZZW5lT1RRa094dGlQ?=
- =?utf-8?B?S2JqeXI1YTFVNERBM3ZRY0JNeTJtQ3NVUEVtQ2oxTlgvTU0wQmF3MW8yM0cv?=
- =?utf-8?B?SHFOYVgrR1ZCOS9lQ0NKU2VyZWNHNkozVllOa3pPUk5FQjFKVnhjQ0x3a1RD?=
- =?utf-8?B?V1JObzFKRjBnL0RxR1FGaFBkRExZQVEvdXdSSUdSdFZTWnhEWHdQT2luS3Zw?=
- =?utf-8?B?TjJzTmRaQ2hiMHRvbnRCc015OGpzbzhscFV4bGhKWnIrRDlNTFBmc3Z6Q0J3?=
- =?utf-8?B?amY3eFNpU1BkSUVLOW5IalZxRG1BUWZHTTg2bFVQQitKNDZaVWtGbzlGMlFn?=
- =?utf-8?B?NjQ4bW9CbFozdno2UzhXUGMyM0RtTGF2Mm5IdHZpQnlwRGEyYVJiVDNIZ0Uw?=
- =?utf-8?B?VHgwSXRHTFkvVFlSNkRJQkNQK08wUFNON3RRbnZUZ1VvcEpvOXdCTjFzWVFS?=
- =?utf-8?B?aUpQUkMrN3h0ZzI3dW9EejBhd0VESE9YakRKQklrQlU0VlBnTXhXZDk0M3dV?=
- =?utf-8?B?NnorZDR3V2dMZnlLTnpOQ0RMZXdESUZ3NHh6UTNhQ1FGMVc4Um1sbUxjcHBv?=
- =?utf-8?B?cEkrZDd3QzNra0NTNUFNazBBaCtnR25qVm1pa0pyelpweUlIc3B6M2Vwak90?=
- =?utf-8?B?YTFETFhOd2VLQ1RSODBOenl0NmJWdkg0amxwVXF4ekJ1Z2lPako4NXVKNlVz?=
- =?utf-8?B?aUNaQ0hwQmcvZG9PTUsvZXRSeXVRVkpUZlRGajc0Q08yS3poVko0WUllVlJq?=
- =?utf-8?B?RTJ6VG9JK1JSR2dKOE9LTjA4ZmIwcTZWdkFQT2V0ZStvU3BZd3hxZmk0aVRX?=
- =?utf-8?B?ZHdOd2xLMmQrS013djJWOHFLd1RaUlhHVXdFRXZxOUszdmhqdUdMQlpyVXFw?=
- =?utf-8?B?WW9zVnF3Nnd3QUxmWTJDeEdWK2lDS29XQXk2cEFUSm9qTEl4bHB0V2U3SXJ3?=
- =?utf-8?B?S0ZzM2V3aGN2azkxcUxQbGs1MVIxWFhSR3dBOUJ0LzdMT2UrZFZ3MjhIbFB3?=
- =?utf-8?B?eVZweDR3Y1M4U2xKYjVwREQ5T0wvTW9mYmFHVjl6U0pxcHRxSktiRzdwNHlZ?=
- =?utf-8?B?VDhldlpZNnRCWnVXUWI5UEkyeDkzaitWQXdlVDNXT3VEMzFmeE5SclhEL3NU?=
- =?utf-8?B?MUFWam5Ja0FMTDY5YWFhTjVJcDMyVjA0dU1neXdSZTlINU5Ub1dhMEFrQUNp?=
- =?utf-8?B?SFlta3IxNkpQRnh5MElSRVNubFNGR3FOaTdEQnhvKzZrcDlsSWRTSVJDaGJI?=
- =?utf-8?B?d2pFOVpoVW1qY2JkblV5Z1dmcnZaOW5pUXpPZFlZRFBtQU05K1VVblZzTFVF?=
- =?utf-8?B?Y3JaZmo0Q2dIVVhMMzUwQ2pTZzBVQnRkTzdISlY0RmZQTG9lVzdjL0ZEOFA3?=
- =?utf-8?B?SDJiNExkRW9rcW1vcmd6SlhrK2FSdlhsMUd6Y3ZneDVGNHJpZXVzc3VHOFg4?=
- =?utf-8?B?OUFNWXFNUXVMcTk3dzJlV2RrVzhZajZnNnpUeFNYSXphVnNRRnUwQjNnQlpK?=
- =?utf-8?B?dm9ZTkFuSDR4eEpEV3lZaXE5TmRxK3VWWHBhYmEwV3dNUTZ5c05XTDNHV3Bw?=
- =?utf-8?B?QTFWQjJnWUdoeUJYSEpwMTFHRERDZzJZNHQ2ZHg2bzIxdks3bWxnWitkQlc3?=
- =?utf-8?B?N2Jwc2oyWElSVjBXb2hqTzdadFZ6ck9jN1NrY3p3YjhLS2NoRkI2VXEwSTRM?=
- =?utf-8?B?ZWUwWHo5UitmT3ZrbjJkWksvWStZWHA1ZURkblFjamVCeHpoYkJHRWw4MFph?=
- =?utf-8?B?MjlOMHlJZCthS3ZXL2d6eEp2TFl6T0hENTk4dTRvUEV2Q3ZzR25kL1FudkhW?=
- =?utf-8?B?VjE4aENPWmtaNjd4SDQ5OXA3cjJuWnVJRC9VSFdMTEJ3QnFFM1FTekFTSWwr?=
- =?utf-8?B?QkQzK1VPRTYvSTdrQVR5L0JyNjFZNDg1V1dpZDgyTy96NGo3R2ZkNE93UDlW?=
- =?utf-8?B?VWtUeFczSzd5cnYzNjVWMXVuQ3pUYk1Sd1JzS0Ewc05pTlVpZ3IyWE1sL25n?=
- =?utf-8?B?VmdrSXd4Q1dBTURlQ2tSYUlIVVBGNU1YMHQyL0MzRVRpaUN4cTVsZTF1VXdo?=
- =?utf-8?B?K21yMllCYTBDS0xRci9kV2U4YkUzN2VKREladFpkSkxMbEs0M0ZSVEwzekRJ?=
- =?utf-8?B?c01wUjJEVEtxdWh4MnpqU1R0Ry9xN29nZU45a2xqcVAzbWwwUTdMUTZBY3dq?=
- =?utf-8?Q?lVp9c8nTn5lgTgZ4=3D?=
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <DC91F2FBF25D374EA7EEBC17B1A3A65B@namprd11.prod.outlook.com>
-Content-Transfer-Encoding: base64
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.270.18; Tue, 4 Aug
+ 2026 16:06:55 +0000
+Received: from GV2PR04MB11799.eurprd04.prod.outlook.com
+ ([fe80::2146:83a2:5329:b7c]) by GV2PR04MB11799.eurprd04.prod.outlook.com
+ ([fe80::2146:83a2:5329:b7c%7]) with mapi id 15.21.0270.017; Tue, 4 Aug 2026
+ 16:06:55 +0000
+Date: Tue, 4 Aug 2026 11:06:45 -0500
+From: Frank Li <Frank.li@oss.nxp.com>
+Cc: Manivannan Sadhasivam <mani@kernel.org>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Kishon Vijay Abraham I <kishon@kernel.org>,
+	Frank Li <Frank.Li@kernel.org>,
+	Marek Vasut <marek.vasut+renesas@mailbox.org>,
+	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v6 3/6] PCI: endpoint: Add API to delegate EPC DMA
+ channels to the host
+Message-ID: <anIOFfPBRuNkr2hL@SMW015318>
+References: <20260804033855.2115817-1-den@valinux.co.jp>
+ <20260804033855.2115817-4-den@valinux.co.jp>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260804033855.2115817-4-den@valinux.co.jp>
+X-ClientProxiedBy: PH7P223CA0016.NAMP223.PROD.OUTLOOK.COM
+ (2603:10b6:510:338::23) To GV2PR04MB11799.eurprd04.prod.outlook.com
+ (2603:10a6:150:2cf::9)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Exchange-RoutingPolicyChecked: SrYAmfzTubVQml4NV2pfnx9R0yWey2nZ+GRqvEVQNrPR03mjRmLipHvljbtF4QVu9pSkpCkPMIa2af/QGqFvk1EjJYJ6aPaqIdlfoBykWEriz7jjhNEZX1EvBf45EBHh68AsR+RZpDquFLWiXEL3zmTbP1hS9XV7uDOk/JDMFiGestoGXPWd91tfFHw4qXnMrwblp6tYazXj5FF+HJWceklH4+NbkJ1o8pVw3YOPrE50C/Si3O4QNikuLMW48fZqGM0TtjlCuRm4LR6Uh7iFytXnp/uFfws8Hy6PPuSCMKWqRAnUMzBmeGuchFeyG5Uwd+soggKaTDa6mtRPG1TP/w==
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: GV2PR04MB11799:EE_|DBBPR04MB7753:EE_
+X-MS-Office365-Filtering-Correlation-Id: a2584f72-62bd-4236-cd6c-08def2426765
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|366016|19092799006|376014|1800799024|7416014|23010399003|6133799003|11063799006|3023799007|4143699003|56012099006|18002099003|22082099003|10067099003;
+X-Microsoft-Antispam-Message-Info:
+	OzniDl6sa7+COzAnP/aEmAfOxOjf80flZlIVps6PCutUZr40twisrWFsgeddfeM67bsx2GhEdCzbSKUIJd2jjhe1y4+fbz8GSp2cuawbsU6KfJS1KWyJ7x89erhbTWFUeqX7Wrwup0xjyjqxsOXhY+1NxJmovkNeieXF/3a1BY0GkSLSIbA4pyZIBJcNmOST4144KsfeYr2f/4+nguA7B7TnY7YQyi1KCqlGWxRR0XkkGg2oazJ69YsmNzc4mpZhZlJz/uxod8Va+1LbJNNp2OazOBLbxt9pa/1Lq38IZQew1EyalT5oM/0xSvOgHIGDS3wr1dSJas2AbRbqjArMNFxz8afsivX3/F2G3nYxeZ83WfL4jc4QfMZjhPjW0+5L5+oYdIPuJjt85tUnvGCqpW18hXOSGymZm447dh/3SKumU/b6ibNMI3uTWSpJA50TNiUSVVFsL5DkObTXzBLcOOmXb02mEUB4YThvY1mWEjdvXodY+AS+Qnr17AqE2dcAtwBwWrY2YJFr9Qho7EESgMqooQVuA4oZxNMlfjIFzJ0zXyDdgO0lV1PPlZnaYAlpWxDhcU4s7G0GeZynI4gP58p9YxOmbPNvVRMv5vxp+3aht6oO1H1QEvDQ3JLH0sj5N/Qxh3sZ7bi//kj9SRY68D2qpB9CAQF3g6hBQuoyrcc=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:GV2PR04MB11799.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(19092799006)(376014)(1800799024)(7416014)(23010399003)(6133799003)(11063799006)(3023799007)(4143699003)(56012099006)(18002099003)(22082099003)(10067099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?5E1RZJqLkSeCIWB7cIEfrDh0FCEYLMYe9ghI7TnYP+cJYJ2F0feCYI8oQvKT?=
+ =?us-ascii?Q?OeyO6docNsU4QEQdM8lZfqPxFKvv6JUyVjZAA2BHPj+yxj1phcyLo4lcZrLc?=
+ =?us-ascii?Q?+3envAr3jIdchVnY2ce25xxEIW7zALcSexrAPAhHsmU7IID+TS4fBht37tpE?=
+ =?us-ascii?Q?a0/0DMZI75JdOS/ZVZzhz12XqEnpAB9cL+nVZQ1e9QPo1/l3cGyc8d4OM/hP?=
+ =?us-ascii?Q?LiyHywfKvouxfq60Hsa/G1D6VZLuKkt71WWa4E9PI70SHuP5mFdam3RBX2vj?=
+ =?us-ascii?Q?T1UM9oTXCzAmRM/jKQ5DaInndyjyoTzfffdiX4wvh9Rx07yxAPwVUiEKVq/4?=
+ =?us-ascii?Q?Eunb+KXl7ibDUuuLHHKPcdUhO7BZXyUxc1FdOf35H4XkTqSLrCR+GHH/CADo?=
+ =?us-ascii?Q?vuGS+SIRwS1II/T2EQPRrb30EzyPDntGYq+wK8hzu5aLsmjkYCzJtbwTkHkg?=
+ =?us-ascii?Q?jVg9Kg+fg2wntlFmHYoTB7S773mozfGM5kz6u5XtJY0W8YGz6uINat9rkfXi?=
+ =?us-ascii?Q?Q3hW0vn83dtmGiFgGOJsuexuRW+1bL/kCcH4UoAKzA0KKbTSqp3ix1QVz6lZ?=
+ =?us-ascii?Q?Nr4EMt58cc1DVtsNUkbVmv0sBADdPxICL8+lm/Lid82rUBhgn68xo3hHuBoR?=
+ =?us-ascii?Q?zN8X4mMo4zZtSPtKkMSrqBu/JUucVDfh3SbqMv7wY8yoB5nO6rHwv39ntk07?=
+ =?us-ascii?Q?5WY66rxAzkP0xwgCYe7I2teSowLy5Jn9ArHvz3vXqekMnwjnVLwmKHjJCoN2?=
+ =?us-ascii?Q?2kBIv9pTzHRzcqRniWT66xMewJLlcC5z1v0/NeWObZgJ1NFd+F3ekKtEl3az?=
+ =?us-ascii?Q?+1sA1ARnD8szwakLT+A4A0yUsnGlNKLBUMWSajkeCoIoDF8NEu/brWuAaSct?=
+ =?us-ascii?Q?KUyiExll48APmmqKu77/XyYGKa+emxzFhKLDU5DbYkbfA5kqBv6OaP1y9agr?=
+ =?us-ascii?Q?+K1QdYOsVxtA/q0s1a2Cpeu4z0IVSiQ6yLIMggzTHNdXuHMhlkbn0X1cXUnJ?=
+ =?us-ascii?Q?uuRxzhGz30NRZvwtbolo1fTZlBxDMLxg7rtZIlvzcB7ov8rXmD9NVV4Qw4o2?=
+ =?us-ascii?Q?jj+N+QjP1h++A+eraXsh88eFB+EGzlPXoYGwNJMZE2FzFtip/ZNugD7VqGWh?=
+ =?us-ascii?Q?7/dnGJrWCqEGfiHwkkZ5/S0kAX9m1UC8ZkcrUza/O8u9qrpnq/JK/e7I7CjR?=
+ =?us-ascii?Q?fwbl+6ML5/weCdwKm/1SpZa+wTg1bfDaatOkY88n4gbPR1rEje+zZCU16v+z?=
+ =?us-ascii?Q?BJSqGeRDlzkob0hfmzAP9BD+nFO5csZa5diR+9/gbtNqPcYGsTO3ubWOned/?=
+ =?us-ascii?Q?TOSGKMaWWCgFIpbLbzS4TnQsJWGv2nnIHtug/JmDxmMJnXlCKF8pyZBe9pd+?=
+ =?us-ascii?Q?2CtE6C5UxWcrjAEdHH+t+SQy+ElY4pjae7HYfEfvAvR8HHLo4d5eJnAqdLCw?=
+ =?us-ascii?Q?05Qujxyi9AVe/7s7tz7wFV+5r9+3D1OSmt+GVCYjC2IHDJAwZezrpp00spXP?=
+ =?us-ascii?Q?IdHA2pwfWXifqNK6j7Juk5j7WxUi9dMxYApA1McYzbJT3qgdZseU4JatAuTX?=
+ =?us-ascii?Q?URNBlIffXT2/YlJYNOh25sgMdiWlTTaJsDwrcsgs0DWhyzyonDNT492dP7j4?=
+ =?us-ascii?Q?mW2hinX9g/zUEf3y2onw+lpUrekayVOXf0z208j+wv+Xq07b3Fi88lmfK4d2?=
+ =?us-ascii?Q?v0NzM5tN7UI6w1+bFbgYC3KvLCAuRh7yKBEnDASX27OrL9k9RBf3iR9tG9yw?=
+ =?us-ascii?Q?b4WgTIJvwvq+i9LJfVOAbCbxaqhqst5FtGe+PeVBhUcWj1/VgxzV?=
+X-OriginatorOrg: oss.nxp.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: a2584f72-62bd-4236-cd6c-08def2426765
+X-MS-Exchange-CrossTenant-AuthSource: GV2PR04MB11799.eurprd04.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: PH0PR11MB7494.namprd11.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: c1ac4dc2-2c0f-46ed-01ec-08def2412396
-X-MS-Exchange-CrossTenant-originalarrivaltime: 04 Aug 2026 15:57:51.6900
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 04 Aug 2026 16:06:55.4327
  (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 46c98d88-e344-4ed4-8496-4ed7712e255d
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: e+SAdDkbq0brnUwc8DKSBN9XSrct3w2tfIEI+ER2/01Cc0PC7Udh0QjHb/ir1UVGjk/VVH07XgsxWhRkbDi6rnEeoASBEkcrwERGVMN2tCs=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH3PR11MB8545
-X-OriginatorOrg: intel.com
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: kO4g2GBQkdfc0PpiR+N71EulGzFSTZVp1+rWtFVUHBtzNJdh1zE30VuB8cqEKXkPHdwPECKYvIkKY2z52HzMdKzEDzPb8oZBaHKAoIi7JgBuOF50Ap9kRkRAdjTcSdeP
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DBBPR04MB7753
 
-T24gRnJpLCAyMDI2LTA3LTMxIGF0IDEwOjI0IC0wNTAwLCBCam9ybiBIZWxnYWFzIHdyb3RlOg0K
-PiBPbiBUaHUsIEp1bCAzMCwgMjAyNiBhdCAwODoxNjozM1BNICswMDAwLCBHcnVtYmFjaCwgRW1t
-YW51ZWwgd3JvdGU6DQo+ID4gT24gVGh1LCAyMDI2LTA3LTMwIGF0IDE1OjA4IC0wNTAwLCBCam9y
-biBIZWxnYWFzIHdyb3RlOg0KPiA+IC4uLg0KPiANCj4gPiA+IEkgd29uZGVyIGlmIHRoZSBQQ0kg
-Y29yZSBzaG91bGQgZGlzYWJsZSBSTyBhbmQgTm9Tbm9vcCBvbiBSb290DQo+ID4gPiBQb3J0cyBh
-Y3Jvc3MgdGhlIGJvYXJkPw0KPiA+ID4gDQo+ID4gPiBJIHRoaW5rIHRoaXMgd291bGQgbWFpbmx5
-IGFmZmVjdCBNTUlPIGFjY2Vzc2VzIHBlcmZvcm1lZCBieQ0KPiA+ID4gZHJpdmVycywgYW5kIEkg
-c3VzcGVjdCBkcml2ZXJzIGV4cGVjdCB0aG9zZSB3cml0ZXMgdG8gYmUNCj4gPiA+IHBlcmZvcm1l
-ZA0KPiA+ID4gaW4gb3JkZXIsIGUuZy4sIGlmIHRoZSBkcml2ZXIgd3JpdGVzIERNQSBkZXNjcmlw
-dG9ycyB0byB0aGUNCj4gPiA+IGRldmljZQ0KPiA+ID4gZm9sbG93ZWQgYnkgYSB3cml0ZSB0byBh
-IGRvb3JiZWxsLCB0aG9zZSBzaG91bGQgc3RheSBpbiBvcmRlci7CoA0KPiA+ID4gSWYNCj4gPiA+
-IHRoZSBSUCBoYXMgUk8gZW5hYmxlZCwgdGhvc2Ugd3JpdGVzIG1heSBiZSByZW9yZGVyZWQuDQo+
-ID4gDQo+ID4gQXMgYSBkZXZpY2Ugd3JpdGVyIEknZCBzYXkgd2UnZCBiZSByZXF1aXJlZCB0byBh
-ZGQgYSBtZW1vcnkgYmFycmllcg0KPiA+IGluIHRoYXQgY2FzZSwgYnV0IHdlIHVzZSB3cml0ZWwg
-dXN1YWxseS4NCj4gPiBEb2VzIHRoYXQgaW5jbHVkZSBhIHdyaXRlIHZzIHdyaXRlIG9yZGVyaW5n
-PyBIbS4uLg0KPiANCj4gTm90IGJlaW5nIGFuIG9yZGVyaW5nIGV4cGVydCwgSSdtIG5vdCBzdXJl
-IEkgY2FuIG1ha2UgYSBjb252aW5jaW5nDQo+IGFyZ3VtZW50IGZvciB3aGV0aGVyIFJPIHNob3Vs
-ZCBiZSBlbmFibGVkIG9yIGRpc2FibGVkIGZvciBSb290IFBvcnRzLg0KPiANCj4gTWF5YmUgaXQn
-cyBlYXNpZXIgdG8gYXJndWUgdGhhdCB3aGF0ZXZlciB0aGUgUk8gc2V0dGluZyBpcywgaXQgc2hv
-dWxkDQo+IGJlIHRoZSBzYW1lIGFjcm9zcyBhbGwgcGxhdGZvcm1zIGJlY2F1c2UgZHJpdmVycyBz
-aG91bGRuJ3QgaGF2ZSB0bw0KPiBhZGFwdCB0byBwbGF0Zm9ybSBkaWZmZXJlbmNlcy4NCg0KVGhh
-dCdzIHBsYXlpbmcgc2FmZSwgd2hpY2ggaXMgbmV2ZXIgYSBiYWQgb3B0aW9uIGlmIHRoZSBwZXJm
-b3JtYW5jZSBoaXQNCmlzIG5vdCBzaWduaWZpY2FudCwgYnV0IEkgY2FuJ3QgdGVsbCBJIGNhbiBj
-bGFpbSB0aGF0IGhhdmUgYW55DQpleHBlcnRpc2UgaGVyZS4NCg0KPiANCj4gUm9vdCBQb3J0IHNl
-dHRpbmdzIHBvdGVudGlhbGx5IGFmZmVjdCBzZXZlcmFsIGVuZHBvaW50cywgYW5kIEkgdGhpbmsN
-Cj4gaXQNCj4gd291bGQgYmUgaW1wcmFjdGljYWwgZm9yIGRyaXZlcnMgdG8gcmVxdWVzdCBSTyBz
-ZXR0aW5ncyB0aGF0IG1pZ2h0DQo+IGNvbmZsaWN0IHdpdGggZWFjaCBvdGhlci4NCj4gDQo+IERv
-IHlvdSBoYXZlIGFueSB2aXNpYmlsaXR5IGludG8gd2hldGhlciBhbmQgaG93IG90aGVyIE9TZXMg
-YWN0aXZlbHkNCj4gY29uZmlndXJlIFJvb3QgUG9ydCBSTyBhbmQgTm9Tbm9vcCBhY3Jvc3MgdGhl
-IGJvYXJkLCBpbmRlcGVuZGVudCBvZg0KPiBpbmRpdmlkdWFsIGRyaXZlcnM/DQoNCkkgYXNrZWQg
-aW50ZXJuYWxseSBhbmQgd2UgZG9uJ3QgcmVhbGx5IGtub3cgd2hhdCBXaW5kb3dzIGRvZXMgd2hl
-biB0aGUNClBDSSByb290IHBvcnQgaGFzIHRob3NlIGJpdHMgc2V0cy4gV2UgbW9zdGx5IHRlc3Qg
-d2l0aCBJbnRlbCAvIEFNRA0Kc3lzdGVtcyBhbmQgdGhvc2Ugc3lzdGVtcyBoYXZlIHRob3NlIGJp
-dHMgY2xlYXIuDQoNCkJUVyAtIGNhbiB5b3UgcGxlYXNlIHBvaW50IHRvIHRoZSByZWxldmFudCBw
-YXJhZ3JhcGggaW4gdGhlIFBDSSBzcGVjDQp0aGF0IHN0YXRlcyBSZWxheGVkT3JkZXIgYW5kIE5v
-U25vb3Agc2hvdWxkIGJlIHNldCBieSBkZWZhdWx0IG9uIHRoZQ0KUlA/DQo=
+On Tue, Aug 04, 2026 at 12:38:52PM +0900, Koichiro Den wrote:
+> Some endpoint functions expose an EPC-integrated DMA controller to the
+> host. The endpoint function should not need to know the backend-specific
+> mechanism used to reserve a channel locally and hand its programming
+> interface to the host.
+>
+> Add pci_epc_delegate_dma_chan() and pci_epc_reclaim_dma_chan().
+> Add matching EPC operations. The public API returns an opaque handle,
+> while the EPC backend keeps any private channel state. This lets generic
+> endpoint functions delegate channels without depending on a specific
+> DMAengine provider.
+>
+> Let reclaim callers tell the backend whether hardware exposed to host
+> programming needs to be quiesced before local ownership is restored.
+> The quiesce may cover a provider-defined sharing group, so callers must
+> hold every delegated member and stop peer programming before reclaim.
+> Bind failure paths that only unwind local reservations can skip quiesce.
+>
+> Reclaim is best-effort because it runs from teardown paths that cannot be
+> aborted. The backend always consumes the delegation and reports any
+> quiesce failure itself. The opaque handle is always freed.
+>
+> Signed-off-by: Koichiro Den <den@valinux.co.jp>
+> ---
+
+Reviewed-by: Frank Li <Frank.Li@nxp.com>
+
+> Changes in v6:
+>   - No changes.
+>
+>  drivers/pci/endpoint/pci-epc-core.c | 105 ++++++++++++++++++++++++++++
+>  include/linux/pci-epc.h             |  16 +++++
+>  2 files changed, 121 insertions(+)
+>
+> diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/pci-epc-core.c
+> index 831b40458dcd..344e54677bfa 100644
+> --- a/drivers/pci/endpoint/pci-epc-core.c
+> +++ b/drivers/pci/endpoint/pci-epc-core.c
+> @@ -18,6 +18,13 @@ static const struct class pci_epc_class = {
+>  	.name = "pci_epc",
+>  };
+>
+> +struct pci_epc_dma_chan {
+> +	struct pci_epc *epc;
+> +	u8 func_no;
+> +	u8 vfunc_no;
+> +	void *data;
+> +};
+> +
+>  static void devm_pci_epc_release(struct device *dev, void *res)
+>  {
+>  	struct pci_epc *epc = *(struct pci_epc **)res;
+> @@ -236,6 +243,104 @@ int pci_epc_get_aux_resources(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
+>  }
+>  EXPORT_SYMBOL_GPL(pci_epc_get_aux_resources);
+>
+> +/**
+> + * pci_epc_delegate_dma_chan() - delegate an EPC-owned DMA channel to the host
+> + * @epc: EPC device
+> + * @func_no: function number
+> + * @vfunc_no: virtual function number
+> + * @dir: DMA channel direction relative to the endpoint
+> + * @hw_ch: hardware channel number
+> + * @chan: output delegated-channel handle
+> + *
+> + * Some EPC backends integrate DMA channels that can be exposed to the host.
+> + * This helper asks the backend to reserve the specified channel locally and
+> + * place it in a state where the host driver may program it through the exposed
+> + * register window.
+> + *
+> + * Return: 0 on success, -EOPNOTSUPP if the backend does not support DMA channel
+> + * delegation, or another -errno on failure.
+> + */
+> +int pci_epc_delegate_dma_chan(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
+> +			      enum pci_epc_aux_dma_dir dir, u16 hw_ch,
+> +			      struct pci_epc_dma_chan **chan)
+> +{
+> +	struct pci_epc_dma_chan *epc_chan;
+> +	void *data = NULL;
+> +	int ret;
+> +
+> +	if (!pci_epc_function_is_valid(epc, func_no, vfunc_no))
+> +		return -EINVAL;
+> +
+> +	if (!chan)
+> +		return -EINVAL;
+> +	*chan = NULL;
+> +
+> +	if (dir != PCI_EPC_AUX_DMA_EP_TO_RC &&
+> +	    dir != PCI_EPC_AUX_DMA_RC_TO_EP)
+> +		return -EINVAL;
+> +
+> +	if (!epc->ops->delegate_dma_chan || !epc->ops->reclaim_dma_chan)
+> +		return -EOPNOTSUPP;
+> +
+> +	epc_chan = kzalloc_obj(*epc_chan, GFP_KERNEL);
+> +	if (!epc_chan)
+> +		return -ENOMEM;
+> +
+> +	mutex_lock(&epc->lock);
+> +	ret = epc->ops->delegate_dma_chan(epc, func_no, vfunc_no, dir, hw_ch,
+> +					  &data);
+> +	mutex_unlock(&epc->lock);
+> +	if (ret) {
+> +		kfree(epc_chan);
+> +		return ret;
+> +	}
+> +
+> +	epc_chan->epc = epc;
+> +	epc_chan->func_no = func_no;
+> +	epc_chan->vfunc_no = vfunc_no;
+> +	epc_chan->data = data;
+> +	*chan = epc_chan;
+> +
+> +	return 0;
+> +}
+> +EXPORT_SYMBOL_GPL(pci_epc_delegate_dma_chan);
+> +
+> +/**
+> + * pci_epc_reclaim_dma_chan() - reclaim a delegated EPC-owned DMA channel
+> + * @chan: delegated-channel handle returned by pci_epc_delegate_dma_chan()
+> + * @quiesce: quiesce affected hardware before reclaiming the channel
+> + *
+> + * Reclaim a channel previously delegated to the host. Set @quiesce for channels
+> + * that may have been exposed to host programming. Bind failure paths that are
+> + * unwinding local reservations before exposure may leave it clear.
+> + *
+> + * Some providers share enable and interrupt controls among channels. The
+> + * caller must retain every delegated member of that sharing group and prevent
+> + * further peer programming before requesting reclaim.
+> + *
+> + * Reclaim is best-effort because it runs from teardown paths that cannot be
+> + * aborted. The backend always consumes the delegation and reports any quiesce
+> + * failure itself.
+> + */
+> +void pci_epc_reclaim_dma_chan(struct pci_epc_dma_chan *chan, bool quiesce)
+> +{
+> +	struct pci_epc *epc;
+> +
+> +	if (!chan)
+> +		return;
+> +
+> +	epc = chan->epc;
+> +	if (epc && epc->ops && epc->ops->reclaim_dma_chan) {
+> +		mutex_lock(&epc->lock);
+> +		epc->ops->reclaim_dma_chan(epc, chan->func_no, chan->vfunc_no,
+> +					    chan->data, quiesce);
+> +		mutex_unlock(&epc->lock);
+> +	}
+> +
+> +	kfree(chan);
+> +}
+> +EXPORT_SYMBOL_GPL(pci_epc_reclaim_dma_chan);
+> +
+>  /**
+>   * pci_epc_stop() - stop the PCI link
+>   * @epc: the link of the EPC device that has to be stopped
+> diff --git a/include/linux/pci-epc.h b/include/linux/pci-epc.h
+> index 8c89cb6d6733..2d15194a126b 100644
+> --- a/include/linux/pci-epc.h
+> +++ b/include/linux/pci-epc.h
+> @@ -11,7 +11,9 @@
+>
+>  #include <linux/pci-epf.h>
+>
+> +struct device;
+>  struct pci_epc;
+> +struct pci_epc_dma_chan;
+>
+>  enum pci_epc_interface_type {
+>  	UNKNOWN_INTERFACE = -1,
+> @@ -174,6 +176,11 @@ struct pci_epc_aux_resource {
+>   * @get_aux_resources_count: ops to get the number of controller-owned
+>   *                           auxiliary resources
+>   * @get_aux_resources: ops to retrieve controller-owned auxiliary resources
+> + * @delegate_dma_chan: ops to delegate a controller-owned DMA channel to the
+> + *                     host
+> + * @reclaim_dma_chan: ops to reclaim a previously delegated DMA channel.
+> + *		      The callback quiesces the channel or its provider-defined
+> + *		      sharing group when requested.
+>   * @owner: the module owner containing the ops
+>   */
+>  struct pci_epc_ops {
+> @@ -210,6 +217,11 @@ struct pci_epc_ops {
+>  	int	(*get_aux_resources)(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
+>  				     struct pci_epc_aux_resource *resources,
+>  				     int num_resources);
+> +	int	(*delegate_dma_chan)(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
+> +				     enum pci_epc_aux_dma_dir dir, u16 hw_ch,
+> +				     void **data);
+> +	void	(*reclaim_dma_chan)(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
+> +				    void *data, bool quiesce);
+>  	struct module *owner;
+>  };
+>
+> @@ -443,6 +455,10 @@ int pci_epc_get_aux_resources_count(struct pci_epc *epc, u8 func_no,
+>  int pci_epc_get_aux_resources(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
+>  			      struct pci_epc_aux_resource *resources,
+>  			      int num_resources);
+> +int pci_epc_delegate_dma_chan(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
+> +			      enum pci_epc_aux_dma_dir dir, u16 hw_ch,
+> +			      struct pci_epc_dma_chan **chan);
+> +void pci_epc_reclaim_dma_chan(struct pci_epc_dma_chan *chan, bool quiesce);
+>  enum pci_barno
+>  pci_epc_get_first_free_bar(const struct pci_epc_features *epc_features);
+>  enum pci_barno pci_epc_get_next_free_bar(const struct pci_epc_features
+> --
+> 2.51.0
+>
