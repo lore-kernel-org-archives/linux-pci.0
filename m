@@ -1,123 +1,112 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.14])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B943355F5C;
-	Tue,  4 Aug 2026 11:39:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.14
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id C1768340A6B;
+	Tue,  4 Aug 2026 12:16:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785843549; cv=none; b=rMRbdXRNtSPzA/Z7U0R0LwJPz6VQ91/yvUaI+LxeU7+XycMCYmRP38MYzIrfY3qKdJ2zISLo+5fEqZxfWOZWdGKp3J1fXkDTvlKH7T3rtbfBryzHZV1JGzD01Q7uixYX9UiIA60IgplHyuQmiHmib/Mjn7e5JGeOk+A0Ik8ZMmE=
+	t=1785845818; cv=none; b=Pki3PhKSiAx0em1pwo1PZZc1UX0AI6e390BEqyAVE8gRMnLOZtziwEx3rcSDtMsK/TNVDQUQvreq3rYO2Is7bOkMoCse4OEMYV7MJy5EONaAXkmGfTnc59ez0XipgmO6MSXOBWsx3QYIfJd0xSLRJUYM7HLsTiSGlltWXPojdlw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785843549; c=relaxed/simple;
-	bh=p+DJFh7RLq7GaqRkqbH6BV95W4PmMYR+V5BcC9qDWCE=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=XunDAVG1HEVFIR6E5hRvXJvEaO0lNT3Iu+QaRLBz1No4q5tCpgqwDmWHChhxeVITEHKOx2xv7w/0Z0qhGjt1av2g/YLTNegGlIDVuS3Ii1FQrYzzM529E8vG78CsGkbfiq2lRqVzaVreP/HlyCktmPbIMc63IZEvXOTxCQxp3hE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=G2ixbB06; arc=none smtp.client-ip=192.198.163.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1785845818; c=relaxed/simple;
+	bh=B6/WRddiaYtxSye2QXK20TGfRHU0iPsemPBwQ0yTEdw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=fzenQeRczw5AIlT+8byg7kUm+1arXmwPP4HwKnwo4LB+iZxTtDO8J3hBdnQysYD9jIkwbvzHkIL4aF6xd8/3d3KhWnxtukTuUkr2HRHpwoxcaidkz4JJYi6gKpU9baH2MmZ3CPpIQssfxYH36uCEHntZasUPgKvwk4VbNvhKDHg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=j3Zdtqsj; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="G2ixbB06"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1785843547; x=1817379547;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=p+DJFh7RLq7GaqRkqbH6BV95W4PmMYR+V5BcC9qDWCE=;
-  b=G2ixbB063h8mh/A3Ta1vi+NiOOXuZPdI2ZkzeGVAyLm05rkESxinkj5s
-   AOAOvhNtV5KLQFnopp63XOr8yUOtrr1fhof/4yPlH7+9ou7Oa4694amSV
-   szJorLdYoDEv+IQ2soOJ6YKHoeSPAw8HeQ/kfNJZ8pbTF3usBo0bOyzFd
-   R/wDgel7Tq3g3VVL8B1UW6BjeqWdDkRcvRROwhYed7TDTT/C9cdac5Wku
-   A2ZVzVTQoADnJKYDZX5Rvmlk2UJbGy/ptoIwmV35759TwV/tbk1HsYcuX
-   MsOKxvYlnbuAz/JM5LrqowQIM3tKfhH5bMuAoIwDMc99AeSiYIgZ8NLeY
-   A==;
-X-CSE-ConnectionGUID: 13StSBLdQYGH1kM5+klgZg==
-X-CSE-MsgGUID: j9OTHTdmS62GWrDHzhOgdg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11864"; a="86424808"
-X-IronPort-AV: E=Sophos;i="6.25,204,1779174000"; 
-   d="scan'208";a="86424808"
-Received: from orviesa010.jf.intel.com ([10.64.159.150])
-  by fmvoesa108.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Aug 2026 04:39:05 -0700
-X-CSE-ConnectionGUID: SRO4CRgeTq6Mf9pVouNmpg==
-X-CSE-MsgGUID: UqvoBGmARlyz3EuREoIUng==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.25,204,1779174000"; 
-   d="scan'208";a="260239707"
-Received: from soc-5cg43972f8.clients.intel.com (HELO [172.28.182.68]) ([172.28.182.68])
-  by orviesa010-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Aug 2026 04:39:03 -0700
-Message-ID: <3d43f08a-cbc2-4491-b563-244d321242e2@linux.intel.com>
-Date: Tue, 4 Aug 2026 13:39:01 +0200
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="j3Zdtqsj"
+Received: by linux.microsoft.com (Postfix, from userid 1134)
+	id 8155120B7168; Tue,  4 Aug 2026 05:16:36 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 8155120B7168
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1785845796;
+	bh=aTqXnV7ZBoFAQTtt7IICjqfQNaAMMc/7wWeZF7s6F8M=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=j3ZdtqsjxFxsinSa0gq66Hbv5nOsVFaN/IkBlbFVrNI7CmSYLoxsWWW4VtbEU7vtj
+	 2to0kxeiA1Sy25zsRX2edmwbxGxuuHSM/AWyEohK6DPUp9A/WUU2Lwxka/DQFNyY/6
+	 dCzACpgmVEp9U7CpC1qPcp/3ZrojV3+ou9fE3lhE=
+Date: Tue, 4 Aug 2026 05:16:36 -0700
+From: Shradha Gupta <shradhagupta@linux.microsoft.com>
+To: Naman Jain <namjain@linux.microsoft.com>
+Cc: "K. Y. Srinivasan" <kys@microsoft.com>,
+	Haiyang Zhang <haiyangz@microsoft.com>,
+	Wei Liu <wei.liu@kernel.org>, Dexuan Cui <decui@microsoft.com>,
+	Long Li <longli@microsoft.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>,
+	Borislav Petkov <bp@alien8.de>,
+	Dave Hansen <dave.hansen@linux.intel.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Joerg Roedel (AMD)" <joro@8bytes.org>,
+	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
+	Vasant Hegde <vasant.hegde@amd.com>, Will Deacon <will@kernel.org>,
+	Robin Murphy <robin.murphy@arm.com>, x86@kernel.org,
+	Jake Oshins <jakeo@microsoft.com>, linux-hyperv@vger.kernel.org,
+	linux-pci@vger.kernel.org, iommu@lists.linux.dev,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 0/3] x86/irq: Fix lost interrupts on CPU hot-unplug for
+ Hyper-V PCI/MSI
+Message-ID: <anHYJEeHlszuj/38@linuxonhyperv3.guj3yctzbm1etfxqx2vob5hsef.xx.internal.cloudapp.net>
+References: <20260728135117.2888175-1-namjain@linux.microsoft.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 0/3] PCI/IOV: Restore initial VF BAR sizing after VF
- ReBAR
-To: Simon Richter <Simon.Richter@hogyros.de>,
- Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org
-Cc: Michal Wajdeczko <michal.wajdeczko@intel.com>,
- =?UTF-8?Q?Micha=C5=82_Winiarski?= <michal.winiarski@intel.com>,
- =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
- =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
- =?UTF-8?Q?Thomas_Hellstr=C3=B6m?= <thomas.hellstrom@linux.intel.com>,
- Rodrigo Vivi <rodrigo.vivi@intel.com>, intel-xe@lists.freedesktop.org
-References: <20260505170010.3414074-1-marcin.bernatowicz@linux.intel.com>
- <20260803103007.209625-1-marcin.bernatowicz@linux.intel.com>
- <be4bffdc-7e41-4fa9-a8df-c41dc6357225@hogyros.de>
-Content-Language: en-US
-From: "Bernatowicz, Marcin" <marcin.bernatowicz@linux.intel.com>
-In-Reply-To: <be4bffdc-7e41-4fa9-a8df-c41dc6357225@hogyros.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260728135117.2888175-1-namjain@linux.microsoft.com>
 
+On Tue, Jul 28, 2026 at 01:51:14PM +0000, Naman Jain wrote:
+> On CPU hot-unplug, fixup_irqs() re-injects interrupts that are still
+> pending in the outgoing CPU's IRR via the irqchip's irq_retrigger()
+> callback. The Hyper-V vPCI MSI irqchip never installs one, so such a
+> pending interrupt is silently dropped, leading to lost interrupts, stalls
+> and "No irq handler for vector" messages.
+> 
+> Patch 1 is the minimal, backportable fix (Fixes:/Cc: stable) that installs
+> irq_chip_retrigger_hierarchy() on the Hyper-V PCI/MSI chip. Patch 2 then
+> switches fixup_irqs() to call irq_chip_retrigger_hierarchy() directly, so
+> the retrigger works for any stacked irqchip without a per-chip callback.
+> Patch 3 drops the now-redundant irq_retrigger() initializations.
+> This way, patch 2 and 3 do not need to be backported.
 
-On 8/3/2026 1:17 PM, Simon Richter wrote:
-> Hi,
->
-> On 8/3/26 7:30 PM, Marcin Bernatowicz wrote:
->> PF drivers can resize a VF BAR using VF Resizable BAR (ReBAR) support 
->> via
->> pci_iov_vf_bar_set_size(). The new size persists in the SR-IOV 
->> capability
->> config space. A later reprobe / unplug-rescan / next pci_enable_sriov()
->> then sees the inflated VF BAR registers, and the PCI core reserves MMIO
->> based on that size multiplied by TotalVFs.
->
-> Would it make sense for pci_enable_sriov() to check for a ReBAR 
-> capability in the VF and set it to the smallest possible setting, so 
-> we get the same behaviour regardless of whether this was cleaned up 
-> correctly?
->
-> Also, should it be "previous" or "smallest" size (in order to not make 
-> a missed cleanup permanent)?
->
-> I'm a bit worried about POWER, while we do have lots of MMIO space, we 
-> also use kexec() quite a lot because on several machines, the 
-> bootloader is some ancient minimal Linux system.
->
->    Simon
+Thanks Naman, the series looks good to me.
 
-Hi Simon,
+I just have a small nit. In the old code, VECTOR_RETRIGGERED is set
+unconditionally after calling chip->irq_retrigger(), regardless of its
+return value. In the new code, VECTOR_RETRIGGERED is only set when
+irq_chip_retrigger_hierarchy() returns non-zero. So retrigger failures
+would now result in VECTOR_UNUSED instead of VECTOR_RETRIGGERED.
 
-Thanks for the point.
+In practice this doesn't matter since apic_retrigger_irq() always returns
+1, but it is technically a behavior change and I think it is a correct
+one. Just that it might be worth noting this in the commit message to
+avoid confusion.
 
-I think an unconditional reset in pci_enable_sriov() would conflict with 
-PF drivers
-that intentionally set VF ReBAR before enable (Xe does this in its 
-sriov_configure flow).
-A core reset-to-smallest would override that policy.
+Reviewed-by: Shradha Gupta <shradhagupta@linux.microsoft.com>
 
-For this reason, this series restores the initial-at-probe size in 
-SR-IOV lifecycle cleanup paths
-(disable, enable failure, PF remove), which fixes persistence from this 
-kernel without forcing a global sizing policy.
-
-You are right that kexec can inherit an already mutated value from an 
-older kernel;
-that limitation exists, but this series prevents further drift once 
-running on a patched kernel.
-
-Thanks,
-Marcin
+> 
+> The series follows the original RFC:
+> Link: https://lore.kernel.org/all/87y0f3jhd6.ffs@fw13/
+> 
+> Naman Jain (3):
+>   PCI: hv: Set irq_retrigger callback for the Hyper-V PCI MSI irqchip
+>   x86/irq: Use irq_chip_retrigger_hierarchy() in fixup_irqs()
+>   x86/irq, iommu/amd, PCI: Drop redundant irq_retrigger inits
+> 
+>  arch/x86/kernel/apic/io_apic.c |  2 --
+>  arch/x86/kernel/apic/msi.c     |  4 +---
+>  arch/x86/kernel/hpet.c         |  1 -
+>  arch/x86/kernel/irq.c          | 23 +++++++----------------
+>  drivers/iommu/amd/init.c       |  1 -
+>  5 files changed, 8 insertions(+), 23 deletions(-)
+> 
+> 
+> base-commit: 0d33d21e47d9dc66f91e44da3fc9220c74d93df7
+> -- 
+> 2.43.0
+> 
