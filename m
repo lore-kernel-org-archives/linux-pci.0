@@ -1,129 +1,142 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3322A44998F
-	for <linux-pci@vger.kernel.org>; Tue,  4 Aug 2026 15:10:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F277E3921E0
+	for <linux-pci@vger.kernel.org>; Tue,  4 Aug 2026 15:11:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785856221; cv=none; b=pCDtV8nnHi3pmnUOduPPe060aBfpHJYj3vplK32qAUKijcgox8SQhHqPglr3IoM+kIHasJzC/jQzso4hosaZGLOd4EO1jY1Rh6EO0KVnCp/bwW8u78534Spnxd2Qp42nM5xfInCDDArG0icXePFKhNYgkSfgszyi4wW8oIM3xXo=
+	t=1785856273; cv=none; b=SUwt6xFM7x1DxUNyO2kUh66L+kU+wo97tyrOzf5SrMXfCU6ID+29fTJZq7Ph8EGu3DqG1gytskbpF2JQeBs/HlUP9UlMaScHZiWNB2K0P3fw5q+Z3CsH6Il84+DAbXgKAuMJFCH374fhjgu0fm96EgMVp15oLz0eLZT1IZy8Fgg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785856221; c=relaxed/simple;
-	bh=k7P3vAykQxhoTnZYgczKRcOcTyFzTw7xSuo/AgCWTS0=;
+	s=arc-20240116; t=1785856273; c=relaxed/simple;
+	bh=ZVSoRw0A3XxKjePxP3T6mIHi/kG5JI+mL5D/pTQTNTY=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=s/dhAGCLMHLqg2CMqXgXjNj+O/9frJXxcRn6BMgIjRjKCZe8M3YOCOIYpiGir3pjif9IVF7tckwI5faDfeu51PddPcMkOHmwSnAIqlBQ4PFk9nYA+Ay3KCoTMP9UyXNwpU24yhp8AulDpQO8nc7Tk0CSFHCrzDV5m1nvLZdU9MY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JDgk2ZdY; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=cHIPfHnJfqJKUwDinEabEdS6UhfcAkeYQkO5nVbj0F8/nynzMV6nZh2gjzwkokUpACWxIu5eIwmGE2rQO/Kvkl2DX1FlBgVVUKk29wtfVNqtBFmLeq30Acx32Hx4OkoHb7HZkhbgXLu/Qx+fUhB2QlsuWrmRZ2734F2Gf7AC1pU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Xcsy5jWh; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JDgk2ZdY"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BCAA81F000E9;
-	Tue,  4 Aug 2026 15:10:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Xcsy5jWh"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 333DF1F000E9;
+	Tue,  4 Aug 2026 15:11:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785856220;
-	bh=Cnsggypc6ihctNmR1lbKZANczuzfHh4gesfVpYky0YE=;
+	s=k20260515; t=1785856267;
+	bh=0BfEsiuGtJ1q8aQ1OAIg3K8HEz5qNqgcILIY4mnu/HI=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=JDgk2ZdYO5vCgGD9y4AmAM3B+ZOwSzgisvRETDrsFBRcISKeSXYMFzhhr8FzcKytq
-	 NuDXvysD7uvkY2J3YSVVpRpoCAi0hemdNiqh8broJrByhtYRoktmmzIdlGdLok+ZZu
-	 +BTH/mrvrbV366swbqXIM3bumuaLLoCisEyAA+BVhQUb961jL/nfEVEQAtfw6hb4mx
-	 /Fde/Toc2vF1TIdtDBbA1BbzdLLWZ7nrEqBwXiYvN0J44EcpWKEBMvGbKU7a6q3fuY
-	 U6JR+lkXVHY899LsyuHgCzqYAjAc3605zq4HOHiqrdxZBDA2kCKQQZ20J7FfWAJAPk
-	 hO4Z2cVrb4J7Q==
+	b=Xcsy5jWhPQtKnrt396hoz8FyJfEe13tylAhDvkthxgh1sUZxqvDJG2mAcsfBOD9hT
+	 I0BOV4KbGxRBq3HyuA7Nq9isVMO9yuqxfxpUOoB41PBEROHveE7RXmD7hVSPosIWkP
+	 VspZzJ8JFHBQiKIhZTQx//58yCVN/ZOR+v5S7TQU9RD0yn0eTAm+cZyB5sj+VS8T0U
+	 dBEPLm9YhrOb7lz8BneogJQiNPbQDmMQx9EAv8+SFnx2WPctqz6wVTmfybaA0MnhUu
+	 tKRuzwQF3kphCHDHnQccVnyTYvx2z4Dfb9bu4bn7R1GsGXZcLRv9UV8Pwr/VIjw24d
+	 hHZ1ouwTmqrbA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH V3 09/14] i3c: master: Report wakeup events for IBIs
+Subject: Re: [PATCH V3 07/14] i3c: master: Fix potential UAF in
+ i3c_device_match()
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Adrian Hunter" <adrian.hunter@intel.com>
-Cc: Frank.Li@kernel.org, "Alexandre Belloni" <alexandre.belloni@bootlin.com>, linux-pci@vger.kernel.org, linux-i3c@lists.infradead.org
-In-Reply-To: <20260804133810.184905-10-adrian.hunter@intel.com>
+Cc: linux-pci@vger.kernel.org, Frank.Li@kernel.org, "Alexandre Belloni" <alexandre.belloni@bootlin.com>, linux-i3c@lists.infradead.org
+In-Reply-To: <20260804133810.184905-8-adrian.hunter@intel.com>
 References: <20260804133810.184905-1-adrian.hunter@intel.com>
- <20260804133810.184905-10-adrian.hunter@intel.com>
+ <20260804133810.184905-8-adrian.hunter@intel.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 04 Aug 2026 15:10:18 +0000
-Message-Id: <20260804151019.BCAA81F000E9@smtp.kernel.org>
+Date: Tue, 04 Aug 2026 15:11:06 +0000
+Message-Id: <20260804151107.333DF1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
 s) to consider:
 
 New issues:
-- [High] Unprotected dereference of dev->dev in i3c_master_queue_ibi() lead=
-ing to NULL pointer dereference or Use-After-Free during teardown.
+- [High] Removal of the NULL check for `i3cdev->desc` introduces a guarante=
+ed NULL pointer dereference in concurrent unregistration paths.
+- [High] Unconditional access to `i3cdev->bus` in `i3c_device_match()` caus=
+es a Use-After-Free if the parent master controller has been freed.
 
 Pre-existing issues:
-- [High] Race condition between hardware IBI interrupts and IBI teardown le=
-ading to Use-After-Free of dev->ibi.
+- [High] Preexisting use-after-free race condition in AMD SBRMI (`sbrmi_i3c=
+_probe`) accessing `i3cdev->desc` without holding the bus lock.
 --
 
---- Patch [9]: [PATCH V3 09/14] i3c: master: Report wakeup events for IBIs =
----
-commit 044b30e8813c466ee0c955f282a081170370a564
+--- Patch [7]: [PATCH V3 07/14] i3c: master: Fix potential UAF in i3c_devic=
+e_match() ---
+commit d088359c0cccb56067d426e92d0a49f24376de53
 Author: Adrian Hunter <adrian.hunter@intel.com>
 
-i3c: master: Report wakeup events for IBIs
+i3c: master: Fix potential UAF in i3c_device_match()
 
-When an IBI is queued for processing, this commit records a wakeup event
-for the device if wakeup is enabled. It uses a 100 ms processing interval
-to give the I3C device driver time to process the IBI.
+This commit protects access to i3cdev->desc with the bus normal-use lock
+in i3c_device_match() to prevent a use-after-free during concurrent
+descriptor replacement. It also removes the NULL check for i3cdev->desc,
+assuming the lock guarantees validity.
 
 > diff --git a/drivers/i3c/master.c b/drivers/i3c/master.c
-> index e6b320da475e0..8c9e62e6f1469 100644
+> index 947ab3c681d5e..e7ea410078891 100644
 > --- a/drivers/i3c/master.c
 > +++ b/drivers/i3c/master.c
-> @@ -3398,6 +3401,9 @@ void i3c_master_queue_ibi(struct i3c_dev_desc *dev,=
- struct i3c_ibi_slot *slot)
->  	if (!dev->ibi || !slot)
->  		return;
+> @@ -347,8 +347,10 @@ static int i3c_device_match(struct device *dev, cons=
+t struct device_driver *drv)
+>  	i3cdev =3D dev_to_i3cdev(dev);
+>  	i3cdrv =3D drv_to_i3cdrv(drv);
 > =20
-> +	if (device_may_wakeup(&dev->dev->dev))
-> +		pm_wakeup_event(&dev->dev->dev, I3C_WAKEUP_PROCESSING_TIME_MS);
-> +
+> -	if (i3cdev->desc && i3cdev->desc->boardinfo)
+> +	i3c_bus_normaluse_lock(i3cdev->bus);
 
 [Severity: High]
-Is it possible for an IBI interrupt to fire concurrently with device
-unregistration?
+Does accessing i3cdev->bus here risk a use-after-free if the parent master
+controller has been freed?
 
-Looking at i3c_master_unregister_i3c_devs(), the teardown path sets
-dev->dev to NULL:
+During unregistration, i3c_master_unregister() unregisters child devices,
+and device_del() drops the child's reference to the parent by calling
+put_device(parent). Once unregistration finishes, the parent platform device
+unbinds and its devres frees the I3C master struct.=20
 
-drivers/i3c/master.c:i3c_master_unregister_i3c_devs() {
-    ...
-    i3cdev->dev->desc =3D NULL;
-    put_device(&i3cdev->dev->dev);
-    i3cdev->dev =3D NULL;
-    ...
-}
+If a concurrent bus_for_each_dev() iterator (such as from driver registrati=
+on)
+holds a reference to the child device, the child outlives the parent. The
+child's i3cdev->bus pointer would then remain pointing to the freed master
+memory, leading to a use-after-free when acquiring the lock.
 
-If an interrupt occurs during or just after this unregistration, could
-dev->dev be NULL when device_may_wakeup() dereferences it here?
-
->  	atomic_inc(&dev->ibi->pending_ibis);
->  	queue_work(dev->ibi->wq, &slot->work);
->  }
+> +	if (i3cdev->desc->boardinfo)
 
 [Severity: High]
-This is a pre-existing issue, but is there a race condition between hardware
-IBI interrupts and IBI teardown leading to a use-after-free of dev->ibi?
+Could removing the NULL check for i3cdev->desc lead to a NULL pointer
+dereference during concurrent unregistration?
 
-In i3c_dev_disable_ibi_locked(), the code checks the pending_ibis counter:
+In i3c_master_unregister_i3c_devs(), i3cdev->dev->desc =3D NULL; is set wit=
+hout
+holding any bus locks.=20
 
-drivers/i3c/master.c:i3c_dev_disable_ibi_locked() {
-    ...
-    if (atomic_read(&dev->ibi->pending_ibis))
-        wait_for_completion(&dev->ibi->all_ibis_handled);
-    ...
-}
+If a concurrent driver matching thread invokes i3c_device_match(), it can
+proceed in parallel because driver_match_device() operates outside
+device_lock(). The thread acquires the bus lock, but since unregistration
+doesn't hold it, it could read desc as NULL and crash when accessing
+i3cdev->desc->boardinfo.
 
-If a hardirq handler is already executing but has not yet called
-i3c_master_queue_ibi() to increment pending_ibis, the teardown path might
-assume no IBIs are pending and proceed to free dev->ibi in
-i3c_dev_free_ibi_locked().
+>  		static_addr_method =3D i3cdev->desc->boardinfo->static_addr_method;
+> +	i3c_bus_normaluse_unlock(i3cdev->bus);
+> =20
+>  	/*
+>  	 * SETAASA-based devices need not always have a matching ID since
 
-When the interrupted CPU resumes, wouldn't it execute this atomic_inc() and
-queue_work() on the freed dev->ibi pointer since there is no
-synchronize_irq() to drain active hardirqs?
+[Severity: High]
+This is a pre-existing issue, but I noticed a similar locking problem in
+the AMD SBRMI driver.
+
+In drivers/misc/amd-sbi/rmi-i2c.c:sbrmi_i3c_probe():
+
+    if (I3C_PID_INSTANCE_ID(i3cdev->desc->info.pid) !=3D 1)
+
+This dereferences i3cdev->desc without acquiring i3c_bus_normaluse_lock()
+or using the safe i3c_device_get_info() API.
+
+Since probe runs holding device_lock(), it is not mutually exclusive with
+the bus maintenance write-lock used for descriptor replacement in
+__i3c_master_add_i3c_dev_locked(). If a device's address is concurrently
+re-assigned during DAA hot-join, could probe dereference a freed descriptor
+when it resumes?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260804133810.1849=
-05-1-adrian.hunter@intel.com?part=3D9
+05-1-adrian.hunter@intel.com?part=3D7
