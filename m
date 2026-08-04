@@ -1,70 +1,104 @@
-Received: from OSPPR02CU001.outbound.protection.outlook.com (mail-norwayeastazon11013068.outbound.protection.outlook.com [40.107.159.68])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B60B455183;
-	Tue,  4 Aug 2026 15:26:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.159.68
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 606AE3515C9
+	for <linux-pci@vger.kernel.org>; Tue,  4 Aug 2026 15:38:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=198.175.65.12
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785857206; cv=fail; b=hKW5A4Fha22QgHMyeRFdKt6GLqL47eF73xK2sGL35ugerLh/WbG7lFqfZUS94RSzOfnSe6PEZxPMHBgqt1CEsGPAcMnJy6mEem95HVTbn/+Cw3hGni/x05Y0uVSBaYO14ikzsZhk0h42CLzaLkWvh0sREZf4aAQ1tg7ZlglbUAU=
+	t=1785857895; cv=fail; b=O+CAIdweW18ienle4NyaJT43Nk14y8bY2WqgNZr/ZMcdoTJtTSGFo0PykeMAq9jS9YJCzHKbtoG7csN45ufeCFnmaoaFHGLV9+/OoDAwdGOneSSyUzQ+fLnRmPmT4WknJ9MgYpfRAfROzY92EWopj/CGyVc+UWJRz59hWV99ZaM=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785857206; c=relaxed/simple;
-	bh=ZCOR2S8Vd8jqWqDu0V/+xiav4uXRi1OqG3i1Y3SP1LM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=SDMAow1Wqy0b5zU1W7qQ/r4cX/Z630nkT6iBMZuJq407IA92t9DZaHUNQ+4q9K1EvaBVPz/YX+FRHwOGqW0asMNqqbetRDymlW9XWdjyafqAwMAeAU58amOK/g2E+xNxSHkc6ylw0CHzjqWbwMx0DssZCQEL9sgoV1JOWqC9Q2I=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com; spf=pass smtp.mailfrom=oss.nxp.com; dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b=w0VZlBwZ; arc=fail smtp.client-ip=40.107.159.68
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.nxp.com
+	s=arc-20240116; t=1785857895; c=relaxed/simple;
+	bh=psUQG3xPhb+lFfDN7jgAe41gYG6Y5erY+XATk+1xH8U=;
+	h=Message-ID:Date:Subject:To:CC:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=m5sIQ1h9sfFFYHxra0o4pLsCQzMEbff0aIc8/SEuq7ycg8cTcs2eRSeKew540EnarhSvCH4m58ZhEwpAFk1zm+oedtKeFWnB2ZQ6xH+xVvxMo5Eme64NyUgzeY7xYKt7Rm7ktZkINmBMywlbnrnTzyw9KwL11JeX8TJuUKcUCQE=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=SMY47Pf5; arc=fail smtp.client-ip=198.175.65.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b="w0VZlBwZ"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="SMY47Pf5"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1785857894; x=1817393894;
+  h=message-id:date:subject:to:cc:references:from:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=psUQG3xPhb+lFfDN7jgAe41gYG6Y5erY+XATk+1xH8U=;
+  b=SMY47Pf5pZco/VVXw+AW/vZUbuZ6aZUAIhhz8gQUGEcsrIezGgC1Xonh
+   ajau3hYJjoK4TumR8IWj8w+vkTxFieHAUvoL8UqLipoSjPMhRb8uM2Zv1
+   CpMsiDYaVkzEKY+YRMnIpHd6V6D0sQCQYH5l2HvYy6HKsRKZh0XIzvBGm
+   Vi6xaiy0b877U5+clGoniQMPWg446VsVLvC0a+25EmS6Z2kGQ8DhhAzFX
+   f6APNpxg1mw5Qp904bVNTugCqmP02OVfDOeb100s0trqR9D6U8t5bOGsC
+   jjZ1z9hr3DhxqiVldn4VuJj+fHRMOPFy1dFLw3iNbHlJA6NXhajojraP1
+   w==;
+X-CSE-ConnectionGUID: SvjXlM2URSWlm5yB3iu4Kw==
+X-CSE-MsgGUID: sp6Q4L5CTpmV8UH6v2CCmQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11865"; a="97918268"
+X-IronPort-AV: E=Sophos;i="6.25,204,1779174000"; 
+   d="scan'208";a="97918268"
+Received: from orviesa008.jf.intel.com ([10.64.159.148])
+  by orvoesa104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Aug 2026 08:38:13 -0700
+X-CSE-ConnectionGUID: xDHMW25HQzCVp6OlZeqh1Q==
+X-CSE-MsgGUID: jOgWrLUISwu1oIUe+Lvv6Q==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.25,204,1779174000"; 
+   d="scan'208";a="260959678"
+Received: from orsmsx902.amr.corp.intel.com ([10.22.229.24])
+  by orviesa008.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Aug 2026 08:38:13 -0700
+Received: from ORSMSX901.amr.corp.intel.com (10.22.229.23) by
+ ORSMSX902.amr.corp.intel.com (10.22.229.24) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.45; Tue, 4 Aug 2026 08:38:12 -0700
+Received: from ORSEDG901.ED.cps.intel.com (10.7.248.11) by
+ ORSMSX901.amr.corp.intel.com (10.22.229.23) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.45 via Frontend Transport; Tue, 4 Aug 2026 08:38:12 -0700
+Received: from BYAPR05CU005.outbound.protection.outlook.com (52.101.85.1) by
+ edgegateway.intel.com (134.134.137.111) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.45; Tue, 4 Aug 2026 08:38:12 -0700
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=sKPsoGbytPGy5y140NKuqBc6jEOs1Qc1Un9MVoeC7Ie94NTa06CFipMBE4jRA1zYsyvhXljMHvcYpac5bgYsEyfIsq3zFamQ56DTyDuFAmYmSyWLc0l0qrIAJeTEEwSm+8DywDMiix/znGji2GDTlMIfnhr4q2lc2r4Fzf7QiSz12sOlz0FFJ5lX4BjxhI5TrPrEqMgWMlJZSAHRxaZF3+XPC8HhfWRMtiC8iRDhnXmmpW7g0OJUhYvo/VwnADL/I4YQIGRiLTvJBYpdMQXCbYzPAWWl//yGzbwpJN6C/XKtcUJOAwuH7jw1xIK0StKboNPBtfWVKoP7KT7B4sfh+Q==
+ b=su//xpkQvYWDoL20zuMw4PSg1M0+yeB45wkPAlAHnQ2mSDr1UZErLzbJiESsSPL3/sa/Uma2a3Wm4y6BrHmeOOG7oOIwbe8fSF9dnpzT7IE7UQxLXdLDl4r1lof1bcndFNqFkNq7BSkn0e5QXNf4uFmnf9rcmUrf37lxjoP41gnpPVhjS2gtPAyfHP1azt8wPxml8ULZ5Hv8eydGTAuNWPxGO4LQZYQ0LLXJKG8T0OWkyEdtJtMQ5+a1yuvqp6KfBZ4rs7dQutPqkNtr4iDucAtTHVDgSL+TfAcmFy6g2aEqdgpK9Y9W/UA5RgFFcPu6TkHqf85Y3/iOd+X4aDFQlQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=qlWViD5TqkXsZPqOopXgJURRJLNp4/8VXk3vfpui6Ak=;
- b=iXJmdnDR5LT3IbenNSQMheX2Hq4aNlWIWtR7BcqsLNeMUdYtyq9YqubFWpkXoyOh52PnTEQWHMk2MqAAgNhltzi5fDJN9q2mLm0IydQtaDjXkwHeGWzKy4b3okNdbQIT/6vBp+ri4CthfBM1iID/fM1ESmGXdbc+lD8bpzv1in2/pIwsPNWXr7IoKXnxsGRv7YRt0hLhqzqI32fjy3XJkDh16WFIkz289Z3svgFko5URIIdf05ga79GviATygocqGMXIKv3fA5y5B2wgziJFHwCtQK3OmHv2fe4G9tXTSEBDKECSrr0vpgRREQHOqPmchhkFvzDbV1OT2FqrMefgew==
+ bh=VfNalzrnBliBcgoxOgAg6Kfanq6DobJBZdYj5ATJOmI=;
+ b=SV8SW2zH56Tce4g0KJR0ijpXi5keSCXc1Litc9b3rVfMLvbr3svl0wue8tGWRc4MrQ5ypXWQ+oTJi6Vx8a/IeiUXEmyKbJc3noTsHSSpFnZJtTJsorfV5chIeH13jcHc0dZDGsEwe+1fB9xqbgJPGiVDOmKt4jbFkIydwwXQaHglvDb2HXfQQEeNFllM4FFpznY7d5Em8wL809dgW/E+wD1RoS3HisFbVRDLSGxsdI8dXQPoXz26zIW1MK4kUkBkH7EsyiMcAYNXQ/59slazambauBDuoKgBTJ/2YPcVcfUwM2N9SYpnflIFey7Aj4s890e+tKDfHL1vD5kUQMnIOA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oss.nxp.com; dmarc=pass action=none header.from=oss.nxp.com;
- dkim=pass header.d=oss.nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=NXP1.onmicrosoft.com;
- s=selector1-NXP1-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=qlWViD5TqkXsZPqOopXgJURRJLNp4/8VXk3vfpui6Ak=;
- b=w0VZlBwZbOtzlsYkI0Qa0mG8d6IOvJ7WYNaNG4zHxGSxk2VXlXpK+4tYZfuOe2rNGQh5BvddpnxNu6KZW4FY33eS8vqurGt4EGSeXN0cdjh4BOQFCvDSoHGJooIO534q2kUzd7I5fPRc2vZ9eABYPkfuCrRWFySnsjsksCFzqJ/vceMegMIUHyuu6bsvpKcTkbsRFEweTcFW7t/TgvKdNrs2nM7wIOAPZ+6g6VvtBy3J9yF0sbUZH14PAIrWnSWgVwE3O1uIIXVcnmUdefirtI3SWybZ3QeVHow16F5pMPdo5yyaw9Mrp+KNm0nZH7ipx93BkWrh1qzrk4a1lI6pCw==
+ smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
+ dkim=pass header.d=intel.com; arc=none
 Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=oss.nxp.com;
-Received: from GV2PR04MB11799.eurprd04.prod.outlook.com (2603:10a6:150:2cf::9)
- by DU2PR04MB8919.eurprd04.prod.outlook.com (2603:10a6:10:2e2::17) with
+ header.d=none;dmarc=none action=none header.from=intel.com;
+Received: from IA1PR11MB7198.namprd11.prod.outlook.com (2603:10b6:208:419::15)
+ by MW6PR11MB8410.namprd11.prod.outlook.com (2603:10b6:303:249::17) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.292.15; Tue, 4 Aug
- 2026 15:26:41 +0000
-Received: from GV2PR04MB11799.eurprd04.prod.outlook.com
- ([fe80::2146:83a2:5329:b7c]) by GV2PR04MB11799.eurprd04.prod.outlook.com
- ([fe80::2146:83a2:5329:b7c%7]) with mapi id 15.21.0270.017; Tue, 4 Aug 2026
- 15:26:41 +0000
-Date: Tue, 4 Aug 2026 10:26:33 -0500
-From: Frank Li <Frank.li@oss.nxp.com>
-To: Koichiro Den <den@valinux.co.jp>
-Cc: Manivannan Sadhasivam <mani@kernel.org>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Kishon Vijay Abraham I <kishon@kernel.org>,
-	Frank Li <Frank.Li@kernel.org>,
-	Marek Vasut <marek.vasut+renesas@mailbox.org>,
-	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v6 2/6] PCI: endpoint: Add DMA auxiliary resource metadata
-Message-ID: <anIEqUqEni_CDVFi@SMW015318>
-References: <20260804033855.2115817-1-den@valinux.co.jp>
- <20260804033855.2115817-3-den@valinux.co.jp>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260804033855.2115817-3-den@valinux.co.jp>
-X-ClientProxiedBy: SA9P221CA0028.NAMP221.PROD.OUTLOOK.COM
- (2603:10b6:806:25::33) To GV2PR04MB11799.eurprd04.prod.outlook.com
- (2603:10a6:150:2cf::9)
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.270.18; Tue, 4 Aug
+ 2026 15:38:09 +0000
+Received: from IA1PR11MB7198.namprd11.prod.outlook.com
+ ([fe80::2c4e:e92a:4fa:a456]) by IA1PR11MB7198.namprd11.prod.outlook.com
+ ([fe80::2c4e:e92a:4fa:a456%3]) with mapi id 15.21.0292.013; Tue, 4 Aug 2026
+ 15:38:09 +0000
+Message-ID: <bd6a9e30-7536-47cb-aa71-b160ffbf3ccf@intel.com>
+Date: Tue, 4 Aug 2026 18:38:04 +0300
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH V3 02/14] i3c: Fix unlocked dereference of dev->desc in
+ i3c_device_get_supported_xfer_mode()
+To: <sashiko-reviews@lists.linux.dev>
+CC: <linux-i3c@lists.infradead.org>, Alexandre Belloni
+	<alexandre.belloni@bootlin.com>, <Frank.Li@kernel.org>,
+	<linux-pci@vger.kernel.org>
+References: <20260804133810.184905-1-adrian.hunter@intel.com>
+ <20260804133810.184905-3-adrian.hunter@intel.com>
+ <20260804150922.01A091F000E9@smtp.kernel.org>
+Content-Language: en-US
+From: Adrian Hunter <adrian.hunter@intel.com>
+Organization: Intel Finland Oy, Registered Address: c/o Alberga Business Park,
+ 6 krs, Bertel Jungin Aukio 5, 02600 Espoo, Business Identity Code: 0357606 -
+ 4, Domiciled in Helsinki
+In-Reply-To: <20260804150922.01A091F000E9@smtp.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: DU7P251CA0005.EURP251.PROD.OUTLOOK.COM
+ (2603:10a6:10:551::32) To IA1PR11MB7198.namprd11.prod.outlook.com
+ (2603:10b6:208:419::15)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -72,161 +106,160 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: GV2PR04MB11799:EE_|DU2PR04MB8919:EE_
-X-MS-Office365-Filtering-Correlation-Id: ede33dc4-da91-4708-8072-08def23cc8da
+X-MS-TrafficTypeDiagnostic: IA1PR11MB7198:EE_|MW6PR11MB8410:EE_
+X-MS-Office365-Filtering-Correlation-Id: fac6b6e2-d881-4a4f-1dc9-08def23e62d9
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|19092799006|23010399003|376014|7416014|366016|1800799024|10067099003|56012099006|22082099003|18002099003|6133799003|11063799006|4143699003;
-X-Microsoft-Antispam-Message-Info:
-	V3C15IyMWgbki1N39hpHYl/cSLyiH3Qgz1uiko3mnRsrRPEH25/+sWX9IV0KR1SUM7OO4lQK5qCFljlW9xulT4zpqP7RGt9R9nVVP+nUqow6kA22jEZgXukJz6pbBOZasTUjLvcYKG8Mqq2fC29To6I1T/1uxIwNXmVKCNJwWZ2CWCYqdQbZeij/Ey3yxkLoHjEBPgaR36Y5ynsghs0u2SA92qz1lNbd/gMcpn3dFQ6J//UIa7yh4HEX7v/dNxc4ibv/E/sqAIMqJLndGn7jWsDeWedLvTHpqVvgmjbaoIGOW0Mk9oiqa1eDxul0ycw3SzZOhwFh0BnNCNlLJhRlVtJ/AlUJkm/abgstYFhlTLgpurljtGEjLcDwQPfhpXvrOoKlYNtF378FJMAv6NfDMaZdwrd9nL2j2uoVo1hFyq1NV3XoeF2ejQUqVKDCAQar01HMO3HtPUbGnGdlFMSgRjURosfaZq4ko/UkROK1hvJkZPGF5j/W5D9rDLLeu83CC26WQJ04z9BxLAPEUoZPpy2wpwxw0JdXGmL0xnOh7FWoxyPpSdDC+GzTVl7TcQb9uy+y4ifdtnOVHL134OiF6VJhcM6kjiL80LQprY0qdGTz3cFeg6h8105Opa+lqhGJsWoTKQ6qsrV70IznMB0Fy99u/CZs6SIk7awBVYb84fc=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:GV2PR04MB11799.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(19092799006)(23010399003)(376014)(7416014)(366016)(1800799024)(10067099003)(56012099006)(22082099003)(18002099003)(6133799003)(11063799006)(4143699003);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam: BCL:0;ARA:13230040|376014|366016|1800799024|23010399003|11063799006|5023799004|56012099006|4143699003|10067099003|18002099003|22082099003|3023799007;
+X-Microsoft-Antispam-Message-Info: BmqDwkTv5KnV2Vctl5dGTe9eHoC5ILu5rJReoLHpcTVD8UfklAqHEjs3+yqFcYf4U/qmyOgl+o5yyoOk+wpdys16gcOkf0XvV6QmQ/5ZILWVL+nmfLQMedHJxwfcrRrtAit1MtyH10ZC0kNXmSM5xwCaOEvgNnkjKc78h4IUdnotFR/skbBDCGqkzQjggWnAGP+pas2SFoaWKpKvoDKEqsyHj4TLF4vsZU65SxEHzKwzPED6bm5pRPFV138t9Nqai57T6vKxOC/iCs/zwKFGWO4zZou60noMfic95cie49xTqbwlpl7YmEVpDr50dOCTEvOh/6J7tSwITfI31Emua3VwYkMCVCoG8/f24qK1ein1MgP8rEEnawVFkkX4/CGv0MCB4SmAwWItGNHgre4hjzMSiXUtxPXw33oCPwjYHIwTGvTVm4JzHgCKUDvMeaGVWvdKXbSsOYysyK1RJv8ZLwDIsMhMgHVavEx/iaDOlNawJtn+DVjVGhSiPRsN2eqFP6BMGurVWqmn7w95/ndoDtgiBF6PyLndG28PhIS4q/BOux4XzI2rKj4PY7dmgoKfYhsSl7EjFB/ZylSAd4ekAiE3osH7MTorGHHMAyd37WkAGx5LH+ktuYJqVmXwpItJD1fsXp6w4Pw5Met/auovilTZC/SdCb7n/8CddN+m1hA=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:IA1PR11MB7198.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(366016)(1800799024)(23010399003)(11063799006)(5023799004)(56012099006)(4143699003)(10067099003)(18002099003)(22082099003)(3023799007);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?ayMO9zZ4hnFMAolt3CM3iiKcWEiNLNt7D9PGxAcdogu2UiLVzisQGcrcnILg?=
- =?us-ascii?Q?XqmMAPU7bi1rgPHV9R39rljNMSsIXd9uNXzkWJj34dAv8zYpgzMfxvP5mU8/?=
- =?us-ascii?Q?pjoOFo6KkhQYvSijTrgqN4T8syy/vtL73GNkuvtxKQWbGJR4xz1PI35Eovvu?=
- =?us-ascii?Q?1dU/GzkSLjyjgebpMNU3D1O9WKmAo+UYhQOW+UpAdXf7OQEJSOJBGQs6y31W?=
- =?us-ascii?Q?7tAkG5NlWlysYzRQTsdep2VJR0oW9vffOlMjGtW0tlKkkLawhvML7JVL0ZHI?=
- =?us-ascii?Q?NF1Fm3hV2aM6Dshd0kHs7+1ASh6gtm85V2A6RNyDjWVx1wt3JdqWuwUnqEVe?=
- =?us-ascii?Q?8NvBskfijLI2WPluul497JJWpY6yN+lhNY5cGuTQ05QFQ8hJ+ZmgDvc/1Z3y?=
- =?us-ascii?Q?TQpZIrrdAaww2QlE8VMvU5A1K1t17ldZhXnvDwqvUVb2OYLoLqIcbNwAoEis?=
- =?us-ascii?Q?vG/eEFHXDmvL10/Iy+cY8Gx483t4gRL2eA6eAr/nKb8CgabtC8/lQbEs/4Kw?=
- =?us-ascii?Q?Gl2oCZzSYWUT9slTGTGubpcIuKcMTSg0XMUpHLxG78taUYBeaQIjRYTT12BD?=
- =?us-ascii?Q?ZRIxlpAQ8GIc0OdoBj+FCEerY8L8Bb6kQfSP+PEXiepmN6GEyxjx8dYz1vKv?=
- =?us-ascii?Q?RE/mHJ6i6b3h8pGPuOsXmplJjuqGHFsyBLBN43CZq0HFR9AulPJjqyV76dEJ?=
- =?us-ascii?Q?9n7L3N9nosJ1KXri9xQRIFj+6EL2FZWFmoIVVmdnkHDUm9pzXixDo36jHT1p?=
- =?us-ascii?Q?wrUFxKMXDwTRJbto9W8STR7PFK0ZP3k/Gd9RTeXuftCpnSON8obOu2lSAOS1?=
- =?us-ascii?Q?WUe5vliQv8Aed+d3Q/xd+DWfaOVhEbecCL24jBQV8kYj/chx4VaKdr1Df6hD?=
- =?us-ascii?Q?uBCbwZbH139g5+OaLYwKj9/pcKgXML3pYSjPhxgOD4/lE1oFdHKxFW4IGJH8?=
- =?us-ascii?Q?2FqfGBUuymIp5uipBBJy2D274+HYeV5dCkZjhRFKkYKj3nlpjo+GAxYy6K5O?=
- =?us-ascii?Q?CDi8YFltW2FD2vwXjzraJ0F3ZpEG2vKr7iICIyKpiayOjVLQgcu9pEGQChbo?=
- =?us-ascii?Q?Nv6V1EE/pBvJOYGUtRh5ABSQ1GRm454D02Mb8UgvkGl3BXvOL3Ext2iJvXXa?=
- =?us-ascii?Q?tYGBiDMlafzlagfBY3VEYt997GWwRHt4oyg9BlSR2q39iROMwUETrs4iiMFX?=
- =?us-ascii?Q?3Wt8cU7+TyY6S7x2dFjbZKvIPNcz1hSwXGVhksCvya3/JdLbCmiRAgSnVtbw?=
- =?us-ascii?Q?S9lPm/bPbt55RwtwQjbqheriH1T/eTtLfnjX5Hbuu9KCA6BpiuNC60Q0Y3k0?=
- =?us-ascii?Q?TzbIOvMQR/EVtJPGDKj1n6p5jVYiXKfYvLyhMfPkTSjv+8x7ySbGo+oaSEMt?=
- =?us-ascii?Q?hpYq1MepwRWDOYBRf9H2Hg5Vo5F/zuvUSVcR1pX57CSSi0UWywSae8YzJPbs?=
- =?us-ascii?Q?8UJWq5q2a0rAXRnq3bJf133P6k4+gZ8ByOvKvtv3F63fNknSzRAJHPvlhUCN?=
- =?us-ascii?Q?bFjX6ZhjFKRR+f0EuNghmoG6xZXrY2aNU+AeIk9o4DmsKjVgJ5IGhhVdkiGB?=
- =?us-ascii?Q?BbhP6Kg2uO6Vxz5WLjuV0f3IpMlypI3jRlXg+aXm2Q05C+WA+O/gA/vhmBau?=
- =?us-ascii?Q?fiZj493c1sPNVGCQF9XqsqK3agtfJdwVVZCWS6imeCvL1yORrr/W3AOg/xpU?=
- =?us-ascii?Q?d5TlP7F/pQ2KdC1Jji0fvU8rQgdx7U6FszClv+2/71I4r/SKtMWGbygqdV2Y?=
- =?us-ascii?Q?e4ELYadv8lIdfO/slUTs7AEuj2sBEDkIW7wsqEhS2T6zCKg2C9Mm?=
-X-OriginatorOrg: oss.nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: ede33dc4-da91-4708-8072-08def23cc8da
-X-MS-Exchange-CrossTenant-AuthSource: GV2PR04MB11799.eurprd04.prod.outlook.com
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?eERQUWhZMUVUMW16VlZ4QXJXb3RkSFVTRHF1TzFHNmQwaFpRWk9ld0J2eTZL?=
+ =?utf-8?B?WDgydTJIMmR4cGVEQ0lmcTkzaEw5Sk9MVHNxbFRDZ00wbGljM1BpWGFrMUFl?=
+ =?utf-8?B?VDlCZmJCZHVUY2FTWGlZVGpOK0RydElLU0ZmMnJUM3ZSblBYWDlwOEdvbWg4?=
+ =?utf-8?B?QXpyWEtTako1RFNidTJiUUJoRmRtWWJNR1puK3MvMGJlVTJUYVpxazZJU1Nu?=
+ =?utf-8?B?WkpSclRSRkEvcWFYNGpPYm40a0hlWHFGUWY0NWhrNnZMaXB5Tm5BbWFCRFJJ?=
+ =?utf-8?B?SndQWWp4NWV0Y2YvWnpXYWw5WnhRTHp2VVJ0QUluUXJVdXRrRmNOVHFTK2Rl?=
+ =?utf-8?B?a3RQTUVtUXhzeC9vT3BCQWYwMmI3YXM0cTA3Tkw1RThoblpVRHhXNmJNT0FD?=
+ =?utf-8?B?TVJZc0pzdG1YcVJvSjJZNytpRzh1TzdpVm5WWXh2NG04dXBSclVTWlRUUVdL?=
+ =?utf-8?B?aHVYUTFlbCtHc2l3WkF4cHMyZERNMVowUUZianEwVzFVVXIyMWVrckU3VFZm?=
+ =?utf-8?B?QjNDWFBnZm9nQUdnUms3YmdZM2oyaFJmNHNTVW9DU2VsUHh3aUJpU0ZqZDRx?=
+ =?utf-8?B?eDJhTUMzYXN4Y21ZdGJDeVYxeUx1K3pXZ0J5VXRqSXJDSTN5VHlGZmhRR05t?=
+ =?utf-8?B?Tjc3RFg1ei82TlU4ZmhxL3VLYW1HRDNmVUwxVnZMeTdjamU2bWV6aFFpZncr?=
+ =?utf-8?B?cXVBNmJGNzlhbkkwZTFJL1NvcVJxWEV1TjlPTWZISUdKOVB3K2prQlhlKzA2?=
+ =?utf-8?B?Wkw5RzJUcTlIY0pLZHY3czB4OE5vUmZRSnkwUXFaaWxSd2lQdU1DUklEcm5p?=
+ =?utf-8?B?a2h6V3J4QkhvQlUwcDZGUStHc3pON3RhdkRqcTJVVnNKblBka1c2MkEzOFhG?=
+ =?utf-8?B?cThCRmtXamdpK04vK0tHbFJLN1c1N1BRTWUvZERYampwMmFpenU3WWNjRFdD?=
+ =?utf-8?B?aVJFSzRUNzRXMXF1Uk9YZUlITFRveWNJWkZrY1hKVmQ0TzB1eUJnYS9xWWE1?=
+ =?utf-8?B?MDNFOUdCRm1vd0tVbExwVTJtVno4YnR1MnAxVDdSTGxiT2dSRzM0Rk94UVhP?=
+ =?utf-8?B?bU5hbGt1M1E3NDdpbmJjTkJuZUhWVE5Za0FnYy9pODdma2d6d0FBSGd1YVhR?=
+ =?utf-8?B?TnBTV1hTeExVZXVJQ0psMStnY2p5VWs4aDB2R3FONHVPOUFjTDhmUDBxQVJC?=
+ =?utf-8?B?TVZqSXJXdHprTDIwOHNqK3BqakZ1QlFMTmNvYnRCUDAxakFlMFRJbU04dVNm?=
+ =?utf-8?B?SStjMlVXSG91dTh5VDRTS214NGlWRUw3RitkazgxajREK25vejVlamhuN3lm?=
+ =?utf-8?B?NzcrdTl0bmFPOUxiR2FoTFRZWTZlbC92SzlOWjlyT0dpcEQvLzM0SXpsTFJK?=
+ =?utf-8?B?aUk5aWk4U1BjclcwRHI3cGl3cGQrUE03eUhiUVVPbGhlOUdWYkt3bnljOUNQ?=
+ =?utf-8?B?dXY4aWR4ajcyWTV4NXZoQXl1Q3dWT1ZKRHNhMDdjTmVSVFpjeWpmdE5GMXJ3?=
+ =?utf-8?B?d3I1Rk5tMDhHZmFkUUZyYTdwdnFaNUkyODkwOGhmRldJOWFjbTRQc0FwS0ow?=
+ =?utf-8?B?MXJKZE1BbGU1aEV3TUxPdGRueFJOclRDOU5YUTFIK1NTMFZZWEdUR3FXTHlm?=
+ =?utf-8?B?ZDBmTnNZcE1oaXc5Q2sxV3Z4Qy90NmRrRERMb2FWUFRBL1pEa2N1ZFhQWFRr?=
+ =?utf-8?B?UW9RVEJrVjZBZGZualNiZGpIczZUQnhBckdnSGtQend3NElnQnpIV2pHUnAx?=
+ =?utf-8?B?N25WSWNjbDRna1lDNGo0d1F0UTJwSFdsWjM2S2txYTgrT2hnOXM1bHJNb0lw?=
+ =?utf-8?B?MXhpb2NsSXMyYlNNbVhBTm9tZW0rcVA1OXNoUXh0aE5lQ3BKWnJ2cUllZ2tB?=
+ =?utf-8?B?bHdKNUxYbW5oNmZVd0NBT2JOdk5tVmZ1ZHJzUVFWY201Q25WMnoweWFueFo3?=
+ =?utf-8?B?Q2pLT2c1bEZlWTFLRi9IZFJPeGJoc2JnWXFlcHRTY0c3akxDQ2NNaFdYY0tW?=
+ =?utf-8?B?ZXp2Y3kvVzdOOHpDWUJEYjlOb0p0aUROYUxMQjJaMFZGVWRQNi9hSEMyNmlU?=
+ =?utf-8?B?RDBvV3FGVzlwbG9wZERRczFnV1FtZmhKNkpFVVZmNGRWN3dLam1rTWtNbDJp?=
+ =?utf-8?B?Nm8zMko3YkpaUHdkMnUxVDlIdmpyZGp6dlBNR2w0V2dROFZiRGZ1MEN0b1hI?=
+ =?utf-8?B?NTF3NVJmQng1Y202Y3BCREF1N0x6ZlMrbG12SzJaNzhzZGFHVVRSZnJsRWE5?=
+ =?utf-8?B?S3pRbko0cElldTJ2VldWc3AxRElMd3Y3Wk5ma3V5SittNnBBeE5wRVlua2xj?=
+ =?utf-8?B?MThjZmlQM2wvTWNGcTVyYk1GTFFKQzcrNkRXem9HaFVvcWhXVm80Y2xJdG9Z?=
+ =?utf-8?Q?Bb7VNrsJsz+lYjsc=3D?=
+X-Exchange-RoutingPolicyChecked: hk8uS76yYOUL7doXWdA0rOqNXQENITrD5xQkdhy2cqyJHA78N15OhrldIY0N649MF4mZt6ZoDCx1BQOSc+Wk9W7+YlzhKGZ7ygOLzKs2DID2zythaBIuzg7Bx1oz3Qj1IBejKhMIl6DyxSlF+rfGm8ktBTBqgXLHgGajNzzKMfcg8KC1mdKi6UQ+tam6mezedPA3upTRb3FQHIsFNcsd65CavgxHSYaiUThzPXd0Lw6OdvTCfs1kR2FYC2oq7n826WOQE2pN0LuwhOpbZEcaBe/R0Q0V6hKgIgXP4KTj5s3KXAZUqOQzTRC2flBgKJ/oJJI9IQ59W/nc5T+puzTjYA==
+X-MS-Exchange-CrossTenant-Network-Message-Id: fac6b6e2-d881-4a4f-1dc9-08def23e62d9
+X-MS-Exchange-CrossTenant-AuthSource: IA1PR11MB7198.namprd11.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 04 Aug 2026 15:26:41.7715
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 04 Aug 2026 15:38:09.5632
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: sv/7O30R8UuN5srrLsugsCHsVTKnSFcyE6kr2plUsZO0jZTNnOHPbybU4w4GIx6JtKFan3JxZe7Pd43+i3C5rDMvwCzyCal5slSbHJnsbmiSKY/hRkWkV2a0i/5CQZbE
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DU2PR04MB8919
+X-MS-Exchange-CrossTenant-UserPrincipalName: ITwX1ppfcqi/SJOFJ+3F6umO/fFSqN7HCjTn5GWZa55m5FiR8Uz7cEf8Y7/7XMp/mnwzGw1Os6NGOEhuOk+8AA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW6PR11MB8410
+X-OriginatorOrg: intel.com
 
-On Tue, Aug 04, 2026 at 12:38:51PM +0900, Koichiro Den wrote:
-> Extend EPC auxiliary resource metadata so endpoint functions can
-> discover controller-owned DMA registers, logical DMA channels, and
-> descriptor memory.
->
-> The DMA metadata is intentionally generic at the EPC layer. A backend
-> reports the register layout, channel counts, logical channel resources,
-> and descriptor memory resources. Logical channels carry hardware channel
-> numbers and refer to descriptor memory by ID; reserving or delegating
-> those channels is handled by separate EPC operations so resource metadata
-> stays independent of any backend-specific DMA provider. Descriptor memory
-> is identified separately so one memory resource can be shared by multiple
-> channels.
->
-> For DesignWare controllers, reg_layout_data carries the eDMA/HDMA map
-> format so a consumer can distinguish legacy, unroll, HDMA compatible,
-> and HDMA native register layouts without making the EPC API itself
-> DesignWare-specific.
->
-> Signed-off-by: Koichiro Den <den@valinux.co.jp>
-> ---
+On 04/08/2026 18:09, sashiko-bot@kernel.org wrote:
+> Thank you for your contribution! Sashiko AI review found 3 potential issue(s) to consider:
+> 
+> New issues:
+> - [Critical] The patch transforms a predictable NULL pointer dereference into an exploitable Use-After-Free of `master->this` when an I3C device outlives its master controller's unregistration.
 
-Reviewed-by: Frank Li <Frank.Li@nxp.com>
+No. 'desc' is never NULL however it could be being changed concurrently
+prior to being freed.  UAF of 'desc' is no different to UAF of master->this
+(which is anyway being addressed by a different patch
+"i3c: master: Fix use-after-free of master->this"),
+so nothing "transforms" here.
 
-> Changes in v6:
->   - No changes.
->
->  include/linux/pci-epc.h | 46 +++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 46 insertions(+)
->
-> diff --git a/include/linux/pci-epc.h b/include/linux/pci-epc.h
-> index f247cf9bcf1a..8c89cb6d6733 100644
-> --- a/include/linux/pci-epc.h
-> +++ b/include/linux/pci-epc.h
-> @@ -65,6 +65,9 @@ struct pci_epc_map {
->   * enum pci_epc_aux_resource_type - auxiliary resource type identifiers
->   * @PCI_EPC_AUX_DOORBELL_MMIO: Doorbell MMIO, that might be outside the DMA
->   *                             controller register window
-> + * @PCI_EPC_AUX_DMA_CTRL_MMIO: DMA controller MMIO register window
-> + * @PCI_EPC_AUX_DMA_CHAN: Logical DMA channel
-> + * @PCI_EPC_AUX_DMA_DESC_MEM: DMA descriptor memory
->   *
->   * EPC backends may expose auxiliary blocks (e.g. DMA engines) by mapping their
->   * register windows and descriptor memories into BAR space. This enum
-> @@ -72,6 +75,29 @@ struct pci_epc_map {
->   */
->  enum pci_epc_aux_resource_type {
->  	PCI_EPC_AUX_DOORBELL_MMIO,
-> +	PCI_EPC_AUX_DMA_CTRL_MMIO,
-> +	PCI_EPC_AUX_DMA_CHAN,
-> +	PCI_EPC_AUX_DMA_DESC_MEM,
-> +};
-> +
-> +/**
-> + * enum pci_epc_aux_dma_reg_layout - DMA controller register layout
-> + * @PCI_EPC_AUX_DMA_REG_LAYOUT_UNKNOWN: unknown or uninitialized layout
-> + * @PCI_EPC_AUX_DMA_REG_LAYOUT_DW_EDMA: Synopsys DesignWare eDMA/HDMA layout
-> + */
-> +enum pci_epc_aux_dma_reg_layout {
-> +	PCI_EPC_AUX_DMA_REG_LAYOUT_UNKNOWN = 0,
-> +	PCI_EPC_AUX_DMA_REG_LAYOUT_DW_EDMA,
-> +};
-> +
-> +/**
-> + * enum pci_epc_aux_dma_dir - DMA channel direction relative to the endpoint
-> + * @PCI_EPC_AUX_DMA_EP_TO_RC: channel moves data from endpoint to root complex
-> + * @PCI_EPC_AUX_DMA_RC_TO_EP: channel moves data from root complex to endpoint
-> + */
-> +enum pci_epc_aux_dma_dir {
-> +	PCI_EPC_AUX_DMA_EP_TO_RC,
-> +	PCI_EPC_AUX_DMA_RC_TO_EP,
->  };
->
->  /**
-> @@ -99,6 +125,26 @@ struct pci_epc_aux_resource {
->  			int irq; /* IRQ number for the doorbell handler */
->  			u32 data; /* write value to ring the doorbell */
->  		} db_mmio;
-> +
-> +		/* PCI_EPC_AUX_DMA_CTRL_MMIO */
-> +		struct {
-> +			enum pci_epc_aux_dma_reg_layout reg_layout;
-> +			u32 reg_layout_data;
-> +			u16 ep_to_rc_ch_cnt;
-> +			u16 rc_to_ep_ch_cnt;
-> +		} dma_ctrl;
-> +
-> +		/* PCI_EPC_AUX_DMA_CHAN */
-> +		struct {
-> +			enum pci_epc_aux_dma_dir dir;
-> +			u16 hw_ch;
-> +			u16 desc_mem_id;
-> +		} dma_chan;
-> +
-> +		/* PCI_EPC_AUX_DMA_DESC_MEM */
-> +		struct {
-> +			u16 id;
-> +		} dma_desc;
->  	} u;
->  };
->
+> 
+> Pre-existing issues:
+> - [High] Uninitialized stack memory (`devinfo`) is used for driver matching when `i3cdev->desc` is NULL.
+> - [High] A Time-of-Check to Time-of-Use (TOCTOU) race condition exists when accessing `i3cdev->desc->boardinfo`, leading to a Use-After-Free or NULL pointer dereference.
 > --
-> 2.51.0
->
+> 
+> --- Patch [2]: [PATCH V3 02/14] i3c: Fix unlocked dereference of dev->desc in i3c_device_get_supported_xfer_mode() ---
+> commit 97cfccca08da732124561cbc1aa49b571a84dd8c
+> Author: Adrian Hunter <adrian.hunter@intel.com>
+> 
+> i3c: Fix unlocked dereference of dev->desc in i3c_device_get_supported_xfer_mode()
+> 
+> This patch modifies i3c_device_get_supported_xfer_mode() to use dev->bus
+> instead of dev->desc to obtain the master controller. This avoids a potential
+> unlocked dereference of dev->desc.
+> 
+>> diff --git a/drivers/i3c/device.c b/drivers/i3c/device.c
+>> index 101eaa77de686..a3778282e84c2 100644
+>> --- a/drivers/i3c/device.c
+>> +++ b/drivers/i3c/device.c
+>> @@ -309,7 +309,7 @@ EXPORT_SYMBOL_GPL(i3c_device_match_id);
+>>   */
+>>  u32 i3c_device_get_supported_xfer_mode(struct i3c_device *dev)
+>>  {
+>> -	return i3c_dev_get_master(dev->desc)->this->info.hdr_cap | BIT(I3C_SDR);
+>> +	return i3c_bus_to_i3c_master(dev->bus)->this->info.hdr_cap | BIT(I3C_SDR);
+> 
+> [Severity: Critical]
+> Does this change introduce a use-after-free if the device outlives the master
+> controller?
+> 
+> When a master is unregistered, i3c_master_unregister() calls
+> i3c_master_unregister_i3c_devs() to unregister child devices. If a child
+> device has an elevated refcount (e.g., from an open file descriptor), its
+> struct i3c_device outlives the unregistration.
+> 
+> i3c_master_bus_cleanup() then calls i3c_master_detach_free_devs(), which
+> explicitly frees master->this.
+> 
+> If the child device later calls i3c_device_get_supported_xfer_mode(), it
+> would dereference the explicitly freed master->this pointer. The previous
+> code safely faulted on a NULL dev->desc, but this new path appears to access
+> freed memory.
+> 
+> [ ... ]
+> 
+> [Severity: High]
+> This is a pre-existing issue, but does i3c_device_match() have a TOCTOU race
+> condition leading to a use-after-free?
+> 
+> drivers/i3c/master.c:i3c_device_match() {
+>         if (i3cdev->desc && i3cdev->desc->boardinfo)
+>                 static_addr_method = i3cdev->desc->boardinfo->static_addr_method;
+> }
+> 
+> If i3c_device_match() accesses i3cdev->desc without holding the device lock
+> during concurrent master unregistration, a context switch could occur right
+> after i3cdev->desc is checked.
+> 
+> If the unregistration thread then frees the descriptor via kfree() in
+> i3c_master_bus_cleanup(), the subsequent evaluation of
+> i3cdev->desc->boardinfo will dereference a freed pointer.
+> 
+> [Severity: High]
+> This isn't a bug introduced by this patch, but can i3c_device_match_id()
+> evaluate uninitialized stack memory?
+> 
+> During concurrent driver registration and master unregistration, if
+> i3c_master_unregister_i3c_devs() sets i3cdev->dev->desc = NULL,
+> i3c_device_match() might still proceed to call i3c_device_match_id().
+> 
+> drivers/i3c/device.c:i3c_device_match_id() {
+>         struct i3c_device_info devinfo;
+>         ...
+>         i3c_device_get_info(i3cdev, &devinfo);
+>         
+>         manuf = I3C_PID_MANUF_ID(devinfo.pid);
+> }
+> 
+> If i3cdev->desc is NULL, i3c_device_get_info() bails out safely without
+> populating devinfo, leaving the stack memory completely uninitialized when
+> it is subsequently read for driver matching.
+> 
+
