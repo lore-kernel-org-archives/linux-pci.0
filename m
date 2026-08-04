@@ -1,81 +1,114 @@
-Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E144033937F;
-	Tue,  4 Aug 2026 19:55:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=204.191.154.188
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A3D74BC001;
+	Tue,  4 Aug 2026 19:59:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785873317; cv=none; b=MwpOfD2JwpOcVzdDu5pDEtGvrM0AQpcnRwdnth4ba8+9pHCjsZFcIPRB374gIuh9VLKOtsT4ifER9/reEVOtlBPz6y4UkpnKSnGDJN8aSRQXUnewpWxxBueWXu7GnAPDA8q0jwcVI1FDuTzABJCL3mwhTDhVRCyTNh9n9Ys3cUI=
+	t=1785873592; cv=none; b=DQ8Hn1OZsUN00Y0uk3Tem+Jn61GSX0dh5O1/RSUepR/0z6aS99L0GzRu114Tso6ZOyGa4nFS5vjILN1UgbVRSQvB5yIigozIfh7ALkhJJMm9cumT5tDvCmnuD4j0qSnHqtBB19UBKuQL8d0l+5gQvOghT/FHjO++d5HL8D4pO0w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785873317; c=relaxed/simple;
-	bh=vvX0SUrqtLD2pui/FRqfojoBMRp5wiNUILlNKOl4gTo=;
-	h=Message-ID:Date:MIME-Version:To:Cc:References:From:In-Reply-To:
-	 Content-Type:Subject; b=F76QhzLx6gAhuYRK17kqLPQZqaEq+xl8Up1KegGNIejjrWkeJixWAMggM/tvhToma3kCQgo6gybE/Ki3c8BJb14JkB2nHiybo/IEbHbdlsVSjeWze/1iLusbq7gSh0fRujki0xLfjF5i0npAZpvGHm75jhzlgiCCSD6N2sb9/co=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com; spf=pass smtp.mailfrom=deltatee.com; dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b=aI8HQUHT; arc=none smtp.client-ip=204.191.154.188
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=deltatee.com
+	s=arc-20240116; t=1785873592; c=relaxed/simple;
+	bh=kAcLG07OvZRp1iCxt+6RcMROQaTZug33aGgdbvq81Ro=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=kjaZO+fNQslKuKcD1uQjM6SgFc35dMiuPjooim7dPmPn+5fIBcbxXb9nGn6hYP6lQjO38Jrn7C5gvd4ulx6BgW38vfBxY/ITCUlg9LLfo2/MTVjFGmuPAB/dOejSelxfEDw17rYKX/4s3lgX/suKL6kRQey4+i85NZsMsJ2AV6g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eEqSW24Y; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b="aI8HQUHT"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
-	MIME-Version:Date:Message-ID:content-disposition;
-	bh=bsnCJMRW1Wojan2LSrAzGGxy38kiy/p2s1JUs40QzZQ=; b=aI8HQUHTXi5qWuc7EJvAsYdr94
-	lqSFrmp8J/9XetxN+cPUxt+Uub3KaSeA1Junv4OalKW1O29smsm6xTaTGoveUP4q/npRPOe8F2xjD
-	3y617RUcHo/sALDW/UffWAtNJAz94cQ5qL1KGcSZqcArc1xb8pl1IuX7o7U8iU5cEpps7NLUxVQtm
-	N9/v/3Uw1+CJQjDtWnXv49+2ZcwQVOQdISdaqm1geY4HYfhyMMsFKq+jWrNmTK66bP1F1wdnb7AL4
-	yegS3U1GcYUxPQ2AmUb8trXfjXPGTZzZmAEpbC5eIHiwG7ZR8HsVF79Hju9QjkUWbgY2toBB6XdXQ
-	+KY4Gonw==;
-Received: from guinness.priv.deltatee.com ([172.16.1.162])
-	by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-	(Exim 4.98.2)
-	(envelope-from <logang@deltatee.com>)
-	id 1wrLEH-000000000hg-37jK;
-	Tue, 04 Aug 2026 13:55:14 -0600
-Message-ID: <e7c63c88-e6c9-4788-b772-8903511f07e6@deltatee.com>
-Date: Tue, 4 Aug 2026 13:55:13 -0600
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eEqSW24Y"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 23B5E1F00A3A;
+	Tue,  4 Aug 2026 19:59:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1785873591;
+	bh=RkHJTJ2QZf9oj93grXxeMt8a4/zlOUVSAUpSVYFXD1M=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=eEqSW24Yuu+OvN0BZAhwDCmck4bfrtbseJrHVIwNLvNUFpKxI3X/rqxXlnQzOQJWY
+	 5TjLsPJQpv2YMep4R9S44Iq2b1kUv/dhXEE6TZS+BJ62MKjHEirrRgcJxyMRQAf79l
+	 PmQma5iZOQXbpvEVJovOkLOKPr/QCsMUg7r7xmr2ZI++Z/a+5MRfhI4HujRiyjo6rV
+	 Dah2t2JIfVNnSHPsBT+UvA47ahx6ENUpSeZjAhvOk6eNpHKefVpXCnIbTj22zf4P89
+	 S3weXA0jV97jpirfNiRo8pfgI/K9i71ZL8kYlkOu/XRchvMkjwja+R+2GZQvswAYx5
+	 GW0NYdw+i+WGg==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v10 12/12] PCI/CXL: Restore HDM state after CXL bus
+ reset
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Srirangan Madhavan" <smadhavan@nvidia.com>
+Cc: linux-cxl@vger.kernel.org, linux-pci@vger.kernel.org
+In-Reply-To: <20260804192958.1823952-13-smadhavan@nvidia.com>
+References: <20260804192958.1823952-1-smadhavan@nvidia.com>
+ <20260804192958.1823952-13-smadhavan@nvidia.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Tue, 04 Aug 2026 19:59:50 +0000
+Message-Id: <20260804195951.23B5E1F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-To: Leon Romanovsky <leon@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
- Jonathan Corbet <corbet@lwn.net>, Shuah Khan <skhan@linuxfoundation.org>,
- Alex Williamson <alex@shazbot.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-doc@vger.kernel.org
-References: <20260802-fix-p2p-acs-v1-0-a7c5eb64fff6@nvidia.com>
- <20260802-fix-p2p-acs-v1-3-a7c5eb64fff6@nvidia.com>
-Content-Language: en-CA
-From: Logan Gunthorpe <logang@deltatee.com>
-In-Reply-To: <20260802-fix-p2p-acs-v1-3-a7c5eb64fff6@nvidia.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-SA-Exim-Connect-IP: 172.16.1.162
-X-SA-Exim-Rcpt-To: leon@kernel.org, bhelgaas@google.com, corbet@lwn.net, skhan@linuxfoundation.org, alex@shazbot.org, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org
-X-SA-Exim-Mail-From: logang@deltatee.com
-X-Spam-Level: 
-Subject: Re: [PATCH 03/13] PCI/P2PDMA: Document the Address Type assumption
-X-SA-Exim-Version: 4.2.1 (built Sun, 23 Feb 2025 07:57:16 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
 
+Pre-existing issues:
+- [High] cxl_bus reset method is bypassed by standard bus reset if SBR is u=
+nmasked, silently dropping HDM state.
+--
 
-On 2026-08-02 09:09, Leon Romanovsky wrote:
-> From: Leon Romanovsky <leonro@nvidia.com>
-> 
-> P2PDMA selects a mapping from the ACS controls that govern Requests
-> carrying an Untranslated address. PCIe r7.0, sec 6.12.3 routes a Request
-> carrying a Translated address directly to the peer whenever ACS Direct
-> Translated P2P is enabled, regardless of P2P Request Redirect and P2P
-> Egress Control.
-> 
-> An ATS capable client can therefore reach the peer on the direct path
-> whichever mapping is selected. Record that assumption.
-> 
-> Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
+--- Patch [12]: [PATCH v10 12/12] PCI/CXL: Restore HDM state after CXL bus =
+reset ---
+commit 40f2649e2ecc899dc17ea040e81eb83bfd2d204c
+Author: Srirangan Madhavan <smadhavan@nvidia.com>
 
-LGTM
+PCI/CXL: Restore HDM state after CXL bus reset
 
-Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
+The commit attempts to restore CXL HDM decoder state after a successful CXL
+bus reset while the IOMMU reset block is active. It restores PCI config
+state first so BARs are valid before HDM MMIO access. It also adds a check
+to reject CXL bus reset for multifunction devices.
+
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index ef25ba5f7fe95..7d1e968a2aa2d 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+
+[ ... ]
+
+> @@ -5004,6 +5007,9 @@ static int cxl_reset_bus_function(struct pci_dev *d=
+ev, bool probe)
+>  		pci_write_config_word(bridge, dvsec + PCI_DVSEC_CXL_PORT_CTL,
+>  				      reg);
+> =20
+> +	if (!rc)
+> +		rc =3D cxl_restore_hdm_after_pci_reset(dev);
+> +
+[Severity: High]
+This isn't a bug introduced by this patch, but is there a situation where
+cxl_reset_bus_function() is bypassed by the standard bus reset?
+
+Looking at the pci_reset_fn_methods array in drivers/pci/pci.c:
+
+const struct pci_reset_fn_method pci_reset_fn_methods[] =3D {
+	...
+	{ pci_pm_reset, .name =3D "pm" },
+	{ pci_reset_bus_function, .name =3D "bus" },
+	{ cxl_reset_bus_function, .name =3D "cxl_bus" },
+};
+
+The standard "bus" reset precedes the "cxl_bus" reset.
+
+If a CXL device has its Secondary Bus Reset (SBR) unmasked, will the
+standard bus reset probe successfully and handle the reset instead?
+
+If so, does this cause the new cxl_restore_hdm_after_pci_reset() logic to
+be silently skipped during a PCI reset (e.g., from VFIO or sysfs)?
+
+Could this result in the CXL HDM decoder state being wiped without getting
+restored, potentially breaking CXL memory access and leading to Machine
+Check Exceptions?
+
+>  	pci_dev_reset_iommu_done(dev);
+>  	return rc;
+>  }
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260804192958.1823=
+952-1-smadhavan@nvidia.com?part=3D12
