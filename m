@@ -1,120 +1,172 @@
-Received: from relay.yourmailgateway.de (relay.yourmailgateway.de [185.244.194.184])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.13])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE7F22D1911;
-	Tue,  4 Aug 2026 05:34:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.244.194.184
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D11C3B0AE9
+	for <linux-pci@vger.kernel.org>; Tue,  4 Aug 2026 05:52:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.13
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785821649; cv=none; b=pDUOKbBaisZ/lQhcSKcRDEA2ZCmxFrBsVo6X3wLP2Q/16iF5FQThzSPyIM5CCVgjhg6TG+Ud4NCd0UvOhdks2CdXUSxo0XrZWyLNoc22NvV+nw+1YuS9n/WyDASSnyko7HMH4TqZrJa+SVt48bHmd/pEiJjo1+A+GCDSt9aTEXs=
+	t=1785822742; cv=none; b=QVTezWEGeT1EReviO5g0azNN75CyljdYSHp5Sh0kZU46m4LU4KbyKw8bTF9S8CVa99feu/c5o+EKYEOtDV8CVVA3NuQwSWw5pMREXpFjPJvCE7jz/2EBq4afRTxVwAxq8V6jHdr5AJ2c9QB8NW3Q9fBzDOBrw3JZH9tI7nHA2gw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785821649; c=relaxed/simple;
-	bh=XDX3InHnxqjE04awZn3vDAys7rMEwbepeIgctIbhiWA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=UggQSVVuyTIHV1So5vYR1n13gZotKCgnBkUMQReO7VG8c7G/8KESy9dQyvlI/MA+ZhxzMVUCGlb9RHX61uMj2jYfEw+nD9f95/dAWj06fBmWISNDlRZW7yedbhtt53g5xCOZN6OIzwbpNzZE5l5S9PkjdabjweKY/kWWMqGRRLw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=leemhuis.info; spf=pass smtp.mailfrom=leemhuis.info; dkim=pass (2048-bit key) header.d=leemhuis.info header.i=@leemhuis.info header.b=CASGFBRi; arc=none smtp.client-ip=185.244.194.184
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=leemhuis.info
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=leemhuis.info
+	s=arc-20240116; t=1785822742; c=relaxed/simple;
+	bh=EBZGhpgEDLjrNkrKLN5Se4wtHvoA/Vpb3h9Auuvp0RI=;
+	h=Date:From:To:Cc:Subject:Message-ID; b=tw2QkCQgbLLRV7vbML+mjeAHx2nT2RZgHJFWvT1gPpy/IC7sdsb3slk9lI3+BNJYtectuVjrXZ3oPjykR3TnMNjEZPafZUjgAur+WVbIExqy2dUbytB7mX/rydmf96Ucb0Sw+Bd+4wCJ0t1E+M0DVCWiD3CRbOqnbXBDGRJ8eFQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=lxiLN+1a; arc=none smtp.client-ip=198.175.65.13
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=leemhuis.info header.i=@leemhuis.info header.b="CASGFBRi"
-Received: from relay01-mors.netcup.net (localhost [127.0.0.1])
-	by relay01-mors.netcup.net (Postfix) with ESMTPS id 4hDhyg53pKz963V;
-	Tue,  4 Aug 2026 07:32:59 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=leemhuis.info;
-	s=key2; t=1785821579;
-	bh=XDX3InHnxqjE04awZn3vDAys7rMEwbepeIgctIbhiWA=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=CASGFBRiZpaYijzCssEQUbz2LB8oxjAR54XFjzl1QV22p5vqSgK5aKKbjxrVHcVTB
-	 aliTgpl3AnT4Co4ZIAVeWvC5o0ATJ+xYLiM/dRlHpR1M0QhYCd4ZjuozuWtG3JFb4b
-	 VeE/6qsMVPeDucYLi2XEWCpxgBbfQ5ssjunmQ/qeWD+vqEfrGhokU6+Xy4rjOFUhHz
-	 voThhKpbxxEmpdxqFsjUF4aB8V56DCN8YJ1yXVwwhaWdpOT6JLb9UG0D3FPNMyfuf4
-	 b8M4Ndusl9mjHgKG712pd+0RIdLOD/1qTAY3RGbsllfx/rG1F1UNJUks622U+kc4jm
-	 gma8FDVkDwC3A==
-Received: from policy02-mors.netcup.net (unknown [46.38.225.35])
-	by relay01-mors.netcup.net (Postfix) with ESMTPS id 4hDhyg4MQRz7wL5;
-	Tue,  4 Aug 2026 07:32:59 +0200 (CEST)
-Received: from mxe9fb.netcup.net (unknown [10.243.12.53])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by policy02-mors.netcup.net (Postfix) with ESMTPS id 4hDhyg0KG1z8sZg;
-	Tue,  4 Aug 2026 07:32:59 +0200 (CEST)
-Received: from [IPV6:2a02:8108:8984:1d00:a0cf:1912:4be:477f] (unknown [IPv6:2a02:8108:8984:1d00:a0cf:1912:4be:477f])
-	by mxe9fb.netcup.net (Postfix) with ESMTPSA id 3B5585FC6C;
-	Tue,  4 Aug 2026 07:32:54 +0200 (CEST)
-Authentication-Results: mxe9fb;
-        spf=pass (sender IP is 2a02:8108:8984:1d00:a0cf:1912:4be:477f) smtp.mailfrom=regressions@leemhuis.info smtp.helo=[IPV6:2a02:8108:8984:1d00:a0cf:1912:4be:477f]
-Received-SPF: pass (mxe9fb: connection is authenticated)
-Message-ID: <d4d79c76-7fdb-4c80-b332-cdd2aea91971@leemhuis.info>
-Date: Tue, 4 Aug 2026 07:32:53 +0200
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="lxiLN+1a"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1785822740; x=1817358740;
+  h=date:from:to:cc:subject:message-id;
+  bh=EBZGhpgEDLjrNkrKLN5Se4wtHvoA/Vpb3h9Auuvp0RI=;
+  b=lxiLN+1aYZg94v9Qn8/QVotUwQokF1bg5NhfdyZP6MBCLE5sIleFPfTy
+   AZH6Aym00sNAEqur6wggzLTbAfF9J24br/9WnNKUDdGog0eTcOkMQBxR0
+   5+VM56btP7paYTwrp5qBHdl4GBlIaMrVG/hGFnEam19kDKx54m5vrobgq
+   LAY+f4khGomN0mjj1y6u65hL0wu5Z6TE6nlqrOSdLQhsW0RNHV2nYEiQS
+   2udY9uIr/sc421xybBHGxxBrGziZ8qCRqL4kE4jhP9COgHyGWj3LRXj56
+   YSMoVspkDay2YQtBcGCU/7SAsqf9x38OJasC6ZBpG/Hq84L684MUvhb8v
+   A==;
+X-CSE-ConnectionGUID: 0roUiSV0StqTOiE7qbpDEw==
+X-CSE-MsgGUID: IyX4F70MTi2HAxhlEpGzIA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11864"; a="97521712"
+X-IronPort-AV: E=Sophos;i="6.25,203,1779174000"; 
+   d="scan'208";a="97521712"
+Received: from orviesa006.jf.intel.com ([10.64.159.146])
+  by orvoesa105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Aug 2026 22:52:20 -0700
+X-CSE-ConnectionGUID: BnURvo4jQjivuxUEMGIRIw==
+X-CSE-MsgGUID: 8gSfqdBmR6O6zZyT5Rhhkg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.25,203,1779174000"; 
+   d="scan'208";a="259618805"
+Received: from lkp-server01.sh.intel.com (HELO 6eda058d650d) ([10.239.97.150])
+  by orviesa006.jf.intel.com with ESMTP; 03 Aug 2026 22:52:19 -0700
+Received: from kbuild by 6eda058d650d with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1wr84W-0000000093C-1k1J;
+	Tue, 04 Aug 2026 05:52:16 +0000
+Date: Tue, 04 Aug 2026 13:52:11 +0800
+From: kernel test robot <lkp@intel.com>
+To: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Cc: linux-pci@vger.kernel.org
+Subject: [pci:controller/dwc] BUILD SUCCESS
+ 9de09b807a1942d179ac5dbcb4982b5301dcc8fd
+Message-ID: <202608041357.B5SetMqc-lkp@intel.com>
+User-Agent: s-nail v14.9.25
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3] PCI: Skip Target Speed quirk on clamped ports with no
- link
-To: "Maciej W. Rozycki" <macro@orcam.me.uk>
-Cc: Andreas Wild <andiwild@gmail.com>, linux-pci@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
- Linux kernel regressions list <regressions@lists.linux.dev>,
- edwardmalik95@icloud.com
-References: <20260801201244.4421-1-andiwild@gmail.com>
- <4cf40370-47e8-4143-bebe-bfab78ac2fd4@leemhuis.info>
- <alpine.DEB.2.21.2608032257510.55540@angie.orcam.me.uk>
-From: Thorsten Leemhuis <regressions@leemhuis.info>
-Content-Language: de-DE, en-US
-In-Reply-To: <alpine.DEB.2.21.2608032257510.55540@angie.orcam.me.uk>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-PPP-Message-ID: <178582157456.4181348.101007266583932573@mxe9fb.netcup.net>
-X-Rspamd-Server: rspamd-worker-8404
-X-Rspamd-Queue-Id: 3B5585FC6C
-X-NC-CID: 1wtP2G6TdxS0AIFxFTNZ9JZH7VaCKKmrQx2Tenof0khfD4jxq6I=
 
-On 8/4/26 00:07, Maciej W. Rozycki wrote:
-> On Mon, 3 Aug 2026, Thorsten Leemhuis wrote:
->>> Since commit 72780f796468 ("PCI: Always lift 2.5GT/s restriction in PCIe
->>> failed link retraining") the Target Speed quirk lifts a firmware-imposed
->>> 2.5GT/s restriction on any downstream port, without checking whether the
->>> link is up.  Where nothing is plugged in, the retraining that follows can
->>> never complete, so each attempt costs PCIE_LINK_RETRAIN_TIMEOUT_MS.  The
->>> quirk makes two of them -- the initial one and the restore on the error
->>> path -- adding a fixed 2 s to every boot.
->>
->> TWIMC, this patch fixes a regression Edward reported here:
->> https://bugzilla.kernel.org/show_bug.cgi?id=221801
-> 
->  Thank you for the pointer.
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/dwc
+branch HEAD: 9de09b807a1942d179ac5dbcb4982b5301dcc8fd  PCI: dwc: ep: Fix unmap potentially unmapping the wrong iATU
 
-yw
->  As it happens attempts were made to cc me on that bug, which however went 
-> nowhere as messages were sent to my long-defunct <macro@linux-mips.org> 
-> e-mail address, a clear oversight of mine as I went, back in the day, 
-> through numerous sites to get this updated.
-> 
->  I have now asked bugzilla admins to help me recover my account.
+elapsed time: 728m
 
-FWIW, Artem does that and I'm not a fan of it at all -- I think it is
-only appropriate when one knows the person occasionally interacts
-directly (e.g. not via mail) with bugzilla (and thus I only do it in
-those cases).
->> [side note: the report could be more specific, yes -- I wanted to ask
->> Edward to clarify a few things (like the actual slowdown) before
->> forwarding it, but it didn't came to that when I noticed this patch and
->> asked Edward to just check if it helped -- which is did.]
-> 
->  Tested-by tags welcome!
+configs tested: 95
+configs skipped: 1
 
-FWIW, as I forgot to mention it easlier: Edward is CCed.
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
-@Edward, if you'd like a record of your test result end up in the
-history, reply with
+tested configs:
+alpha                            allnoconfig    gcc-16.1.0
+alpha                           allyesconfig    gcc-16.1.0
+alpha                              defconfig    gcc-16.1.0
+arc                             allmodconfig    gcc-16.1.0
+arc                             allyesconfig    gcc-16.1.0
+arc                  randconfig-001-20260804    gcc-8.5.0
+arc                  randconfig-002-20260804    gcc-8.5.0
+arm                  randconfig-001-20260804    gcc-8.5.0
+arm                  randconfig-002-20260804    gcc-8.5.0
+arm                  randconfig-003-20260804    gcc-8.5.0
+arm                  randconfig-004-20260804    gcc-8.5.0
+arm64                randconfig-001-20260804    gcc-11.5.0
+arm64                randconfig-002-20260804    gcc-11.5.0
+arm64                randconfig-003-20260804    gcc-11.5.0
+arm64                randconfig-004-20260804    gcc-11.5.0
+csky                            allmodconfig    gcc-16.1.0
+csky                 randconfig-001-20260804    gcc-11.5.0
+csky                 randconfig-002-20260804    gcc-11.5.0
+hexagon              randconfig-001-20260804    gcc-16.1.0
+hexagon              randconfig-002-20260804    gcc-16.1.0
+i386                            allmodconfig    gcc-14
+i386       buildonly-randconfig-001-20260804    gcc-14
+i386       buildonly-randconfig-002-20260804    gcc-14
+i386       buildonly-randconfig-003-20260804    gcc-14
+i386       buildonly-randconfig-004-20260804    gcc-14
+i386       buildonly-randconfig-005-20260804    gcc-14
+i386       buildonly-randconfig-006-20260804    gcc-14
+i386                 randconfig-001-20260804    clang-22
+i386                 randconfig-002-20260804    clang-22
+i386                 randconfig-003-20260804    clang-22
+i386                 randconfig-004-20260804    clang-22
+i386                 randconfig-005-20260804    clang-22
+i386                 randconfig-006-20260804    clang-22
+i386                 randconfig-007-20260804    clang-22
+i386                 randconfig-011-20260804    gcc-13
+i386                 randconfig-012-20260804    gcc-13
+i386                 randconfig-013-20260804    gcc-13
+i386                 randconfig-014-20260804    gcc-13
+i386                 randconfig-015-20260804    gcc-13
+i386                 randconfig-016-20260804    gcc-13
+i386                 randconfig-017-20260804    gcc-13
+loongarch                          defconfig    clang-24
+loongarch            randconfig-001-20260804    gcc-16.1.0
+loongarch            randconfig-002-20260804    gcc-16.1.0
+m68k                         atari_defconfig    gcc-16.1.0
+nios2                           allmodconfig    gcc-11.5.0
+nios2                            allnoconfig    gcc-11.5.0
+nios2                randconfig-001-20260804    gcc-16.1.0
+nios2                randconfig-002-20260804    gcc-16.1.0
+parisc                          allmodconfig    gcc-16.1.0
+parisc                          allyesconfig    gcc-16.1.0
+parisc                             defconfig    gcc-16.1.0
+parisc               randconfig-001-20260804    gcc-8.5.0
+parisc               randconfig-002-20260804    gcc-8.5.0
+powerpc                      eiger_defconfig    clang-24
+powerpc              randconfig-001-20260804    gcc-8.5.0
+powerpc              randconfig-002-20260804    gcc-8.5.0
+powerpc64            randconfig-001-20260804    gcc-8.5.0
+powerpc64            randconfig-002-20260804    gcc-8.5.0
+sh                                 defconfig    gcc-16.1.0
+sparc                randconfig-001-20260804    gcc-16.1.0
+sparc                randconfig-002-20260804    gcc-16.1.0
+sparc64              randconfig-001-20260804    gcc-16.1.0
+sparc64              randconfig-002-20260804    gcc-16.1.0
+um                   randconfig-001-20260804    gcc-16.1.0
+um                   randconfig-002-20260804    gcc-16.1.0
+x86_64     buildonly-randconfig-001-20260804    gcc-14
+x86_64     buildonly-randconfig-002-20260804    gcc-14
+x86_64     buildonly-randconfig-003-20260804    gcc-14
+x86_64     buildonly-randconfig-004-20260804    gcc-14
+x86_64     buildonly-randconfig-005-20260804    gcc-14
+x86_64     buildonly-randconfig-006-20260804    gcc-14
+x86_64                                 kexec    clang-22
+x86_64               randconfig-001-20260804    gcc-14
+x86_64               randconfig-002-20260804    gcc-14
+x86_64               randconfig-003-20260804    gcc-14
+x86_64               randconfig-004-20260804    gcc-14
+x86_64               randconfig-005-20260804    gcc-14
+x86_64               randconfig-006-20260804    gcc-14
+x86_64               randconfig-011-20260804    clang-22
+x86_64               randconfig-012-20260804    clang-22
+x86_64               randconfig-013-20260804    clang-22
+x86_64               randconfig-014-20260804    clang-22
+x86_64               randconfig-015-20260804    clang-22
+x86_64               randconfig-016-20260804    clang-22
+x86_64                        randconfig-071    clang-22
+x86_64               randconfig-071-20260804    clang-22
+x86_64               randconfig-072-20260804    clang-22
+x86_64               randconfig-073-20260804    clang-22
+x86_64               randconfig-074-20260804    clang-22
+x86_64               randconfig-075-20260804    clang-22
+x86_64               randconfig-076-20260804    clang-22
+x86_64                          rhel-9.4-bpf    gcc-14
+xtensa               randconfig-001-20260804    gcc-16.1.0
+xtensa               randconfig-002-20260804    gcc-16.1.0
 
- Tested-by: Full Name <email address>
-
-to this thread, just omit the space in the beginning and change it
-accordingly.
-
-Ciao, Thorsten
+--
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
