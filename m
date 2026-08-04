@@ -1,150 +1,125 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 657A1DDA9;
-	Tue,  4 Aug 2026 19:46:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9555DDA9;
+	Tue,  4 Aug 2026 19:48:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=204.191.154.188
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785872792; cv=none; b=Ent3C3GMFWTbGB1AYLOanrObTPl2/7/EtAFQ+hLWys4yZ3+KTj4RNRNvPn2LOjIXdxo1WpobcyEQOLYkN8RJZFt8hY/uRvAZkE6SYUArLU6QP9pCgVU4rr2h0jcYDaphOU3ujscV/nlpVUCTjzJfaNVKN4WpyjRO7p8l+tim6OU=
+	t=1785872923; cv=none; b=TlL358jHUNRG9ply2QDFqeNKxzoUhQxl66LjsA24XCvrsMsITI90RBrezQVBAZWkbeHIx9OIenbOAnf/idvy11xCDBbUOzUDhfkz/Nuz2yWoL7u5vH8HQgapTojPUWa1ljDfS8VP0v+HKKUyka8+/MjWoVLwcDo4Q1vtbPxknEM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785872792; c=relaxed/simple;
-	bh=5dcAamCGWtoFox+9QQfum1yD/Fj2Cra+CZl2c5X8fHw=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=A/JBKzDVT3BPjpcRYWc+z9tUYvkNW2mDmBZRNbOsF7FuHQ13tZb90rXmiuakq8dFEMi47ol5ak0Bi/ouDuhWnDCY/mAxIamcjep2VxwjsfkyKPzRKcLulGXwa4JJz+hJDomVIpyGwskeSOYYqBz23G8+OGKwmsECxuBiultli9o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ep+B2D3/; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785872923; c=relaxed/simple;
+	bh=2X9+9e+touMKxvGwVexLbuExPMjfwhPrmfG6ISa0Kuc=;
+	h=Message-ID:Date:MIME-Version:To:References:From:In-Reply-To:
+	 Content-Type:Subject; b=B75SzvnNvphMYA32NRnE8BrsytCvLZ3lFrE0ANr/u4DYiTk55M1MiaySZMu37vDOBbAngPJrWUbtN/hROQj9JqZZ8q8ssek8uRKyUlElhb9xr6Ii9q340wLMoNuyElpet/nug1B7mIBSha5fntypvIQfTh+wFD3oUQOgyfGet70=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com; spf=pass smtp.mailfrom=deltatee.com; dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b=gdJtIxAx; arc=none smtp.client-ip=204.191.154.188
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=deltatee.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ep+B2D3/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D91171F000E9;
-	Tue,  4 Aug 2026 19:46:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785872791;
-	bh=WPM6Q6OX/AqWOOo8tOJa/2NqvRjLYHNHNCu5VtvWoa0=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Ep+B2D3/IMGjmkoTPcNrgzq4gAT8v6ArWGvAIMhkT0uABoXXOQSWCO7jUe6zF/lmY
-	 ZIdINEmm11XNIJnYPuq9MfnB7qb06xsIjtbBAeYx11zHwztFbA2nU56n4cHjJZ993o
-	 +I0RfNa6td57ht7zRhWauty7vlIJ1uZfkPuT+mHGLBqv8RZno/kGfnglaLYS6t/GFJ
-	 dQyOd5tnOg3L2KMnmA1xJgQZTTBwUwrIwKWPKp75GpcL3zAqTrDotUPP1jyWUAxg+z
-	 +tgty7f6ygBs34EOBjq2j8zxQcHOJSBmIwmhrsashmkSx/J+hU7LSzpZxSJfTbKyp5
-	 FdutM8+pt938g==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v10 01/12] cxl: Move HDM decoder programming helpers
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Srirangan Madhavan" <smadhavan@nvidia.com>
-Cc: linux-pci@vger.kernel.org, linux-cxl@vger.kernel.org
-In-Reply-To: <20260804192958.1823952-2-smadhavan@nvidia.com>
-References: <20260804192958.1823952-1-smadhavan@nvidia.com>
- <20260804192958.1823952-2-smadhavan@nvidia.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 04 Aug 2026 19:46:30 +0000
-Message-Id: <20260804194630.D91171F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b="gdJtIxAx"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:To:
+	MIME-Version:Date:Message-ID:cc:content-disposition;
+	bh=SIweWhV/tAxWJHuUbt3e32uO5CVnDWITQnVjU/T358s=; b=gdJtIxAxZWh9VdUhGa9PlKc91g
+	n3Gaj79MLChmcy70c5Dw06BD6Pe2hFZ++nhrI7uYh0qJEypfl2OMvTcyZXrjdJQOllAfZA9cEBcZT
+	9qVQDKPO21ry1lrUlZvk/cqyHBl2wYJv8VuSKVKGWOhtSS4OdVXYvHxV6E0PgORxyAkniX76kBQ2Z
+	G4fkLGbqz5VInpUspbni3hSEb9R1SrUDLq3WSG61RLXc+f9/aadCv9gN+curimy/tcIMwNZLHstO7
+	wMO44LZgK3FXvEeqnbltFoiGF6I/mY7AoNICAL0Uu7UUGTxUkzJhqRNjR8SmmczpCVevDWf1VRcUz
+	sDJrzoDw==;
+Received: from guinness.priv.deltatee.com ([172.16.1.162])
+	by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+	(Exim 4.98.2)
+	(envelope-from <logang@deltatee.com>)
+	id 1wrL7w-000000000cw-2UGB;
+	Tue, 04 Aug 2026 13:48:41 -0600
+Message-ID: <a619d2d6-5a6e-4173-9342-8186cce0eef1@deltatee.com>
+Date: Tue, 4 Aug 2026 13:48:34 -0600
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+To: Pei Xiao <xiaopei01@kylinos.cn>, kurt.schwemmer@microsemi.com,
+ bhelgaas@google.com, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <6fdcbfa869f707cad783c7f92d1681f0a2bd9a7c.1785813784.git.xiaopei01@kylinos.cn>
+Content-Language: en-CA
+From: Logan Gunthorpe <logang@deltatee.com>
+In-Reply-To: <6fdcbfa869f707cad783c7f92d1681f0a2bd9a7c.1785813784.git.xiaopei01@kylinos.cn>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-SA-Exim-Connect-IP: 172.16.1.162
+X-SA-Exim-Rcpt-To: xiaopei01@kylinos.cn, kurt.schwemmer@microsemi.com, bhelgaas@google.com, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+X-SA-Exim-Mail-From: logang@deltatee.com
+X-Spam-Level: 
+Subject: Re: [PATCH] PCI: switchtec: Fix use-after-free in
+ switchtec_pci_remove due to race condition
+X-SA-Exim-Version: 4.2.1 (built Sun, 23 Feb 2025 07:57:16 +0000)
+X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [Low] `resource.o` is incorrectly compiled as a built-in object when `CON=
-FIG_CXL_BUS` is a module, causing fatal linker errors and breaking kernel m=
-odularity.
---
 
---- Patch [1]: [PATCH v10 01/12] cxl: Move HDM decoder programming helpers =
----
-commit b0d203a772e57924b3e867594bb9a15ce55bf00c
-Author: Srirangan Madhavan <smadhavan@nvidia.com>
 
-cxl: Move HDM decoder programming helpers
+On 2026-08-03 21:24, Pei Xiao wrote:
+> In stdev_create, &stdev->mrpc_work is bound with mrpc_event_work, and
+> &stdev->link_event_work is bound with link_event_work. The IRQ handlers
+> switchtec_event_isr and switchtec_dma_mrpc_isr can schedule these works
+> on system_wq (via schedule_work() in the ISRs and via
+> check_link_state_events()).
+> 
+> If we remove the device, switchtec_pci_remove makes cleanup and the
+> memory allocated for stdev is released by put_device() ->
+> stdev_release() -> kfree(stdev), while the works mentioned above may
+> still be pending or running. The sequence of operations that may lead
+> to a UAF bug is as follows:
+> 
+> CPU0                                      CPU1
+> 
+>                                           | switchtec_event_isr
+>                                           | schedule_work(&stdev->mrpc_work)
+> switchtec_pci_remove                      |
+> cdev_device_del(&stdev->cdev,             |
+>                 &stdev->dev)              |
+> stdev_kill(stdev)                         |
+> switchtec_exit_pci(stdev)                 |
+> pci_dev_put(stdev->pdev)                  |
+> put_device(&stdev->dev)                   |
+> // stdev_release -> kfree(stdev)          |
+>                                           | mrpc_event_work
+>                                           | // use stdev (use-after-free)
+> 
+> Fix it by canceling the works after the sources that can schedule them
+> have been stopped: stdev_kill() first clears PCI bus mastering, which
+> prevents the MSI/MSI-X based IRQ handlers from firing and scheduling
+> new works, and the works are then canceled before the remaining
+> cleanup and the release of stdev. This also covers the probe error
+> path, which calls stdev_kill().
+> 
+> Fixes: 080b47def5e5 ("MicroSemi Switchtec management interface driver")
+> Fixes: 48c302dc8f3a ("NTB: switchtec: Add link event notifier callback")
+> Assisted-by: Codex:deepseek-v4-flash
+> Signed-off-by: Pei Xiao <xiaopei01@kylinos.cn>
+> ---
+>  drivers/pci/switch/switchtec.c | 2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/drivers/pci/switch/switchtec.c b/drivers/pci/switch/switchtec.c
+> index 5711aaa5df11..f339ea54aa38 100644
+> --- a/drivers/pci/switch/switchtec.c
+> +++ b/drivers/pci/switch/switchtec.c
+> @@ -1319,6 +1319,8 @@ static void stdev_kill(struct switchtec_dev *stdev)
+>  	pci_clear_master(stdev->pdev);
+>  
+>  	cancel_delayed_work_sync(&stdev->mrpc_timeout);
+> +	cancel_work_sync(&stdev->mrpc_work);
+> +	cancel_work_sync(&stdev->link_event_work);
 
-Move the low-level HDM decoder programming helpers from hdm.c into
-resource.c so they can be shared by later reset restore code.
+I'm wondering if these should come before the mrpc_timeout sync.
+Otherwise, hypothetically, new work could be added and another timeout
+could be in progress.
 
-> diff --git a/drivers/cxl/Kconfig b/drivers/cxl/Kconfig
-> --- a/drivers/cxl/Kconfig
-> +++ b/drivers/cxl/Kconfig
-[ ... ]
-> @@ -243,4 +244,7 @@ config CXL_ATL
->  	depends on CXL_REGION
->  	depends on ACPI_PRMT && AMD_NB
-> =20
-> +config CXL_HDM
-> +	bool
-> +
->  endif
-> diff --git a/drivers/cxl/core/Makefile b/drivers/cxl/core/Makefile
-> --- a/drivers/cxl/core/Makefile
-> +++ b/drivers/cxl/core/Makefile
-> @@ -1,5 +1,6 @@
->  # SPDX-License-Identifier: GPL-2.0
->  obj-$(CONFIG_CXL_BUS) +=3D cxl_core.o
-> +obj-$(CONFIG_CXL_HDM) +=3D resource.o
+Also, I'm not sure, but seems like the interrupt should be disabled
+before this as well?
 
-[Severity: Low]
-When CONFIG_CXL_BUS is configured as a loadable module (m), CONFIG_CXL_HDM
-evaluates to 'y' because it is defined as a bool in the Kconfig.
+Thanks!
 
-Does this incorrectly assign resource.o to the built-in obj-y list instead
-of appending it to the cxl_core-y list?
-
-[ ... ]
-> diff --git a/drivers/cxl/core/resource.c b/drivers/cxl/core/resource.c
-> --- /dev/null
-> +++ b/drivers/cxl/core/resource.c
-> @@ -0,0 +1,138 @@
-> +// SPDX-License-Identifier: GPL-2.0-only
-> +/* Copyright (c) 2026 NVIDIA Corporation & Affiliates */
-> +#include <linux/delay.h>
-> +#include <linux/bug.h>
-> +#include <linux/errno.h>
-> +#include <linux/export.h>
-> +#include <linux/kernel.h>
-> +
-> +#include "cxl.h"
-> +#include "core.h"
-> +
-> +struct cxl_rwsem cxl_rwsem =3D {
-> +	.region =3D __RWSEM_INITIALIZER(cxl_rwsem.region),
-> +	.dpa =3D __RWSEM_INITIALIZER(cxl_rwsem.dpa),
-> +};
-> +EXPORT_SYMBOL_FOR_MODULES(cxl_rwsem, "cxl_core");
-
-[Severity: Low]
-Are these internal locks being unnecessarily exported to the global
-symbol table as a workaround for the Makefile defect?
-
-If resource.o is properly compiled as part of the cxl_core module, we
-shouldn't need to export them here.
-
-[ ... ]
-> +void cxl_setup_hw_decoder(struct cxl_decoder *cxld, void __iomem *hdm)
-> +{
-> +	int id =3D cxld->id;
-> +	u64 base, size;
-> +	u32 ctrl;
-> +
-> +	/* common decoder settings */
-> +	ctrl =3D readl(hdm + CXL_HDM_DECODER0_CTRL_OFFSET(cxld->id));
-> +	cxld_set_interleave(cxld, &ctrl);
-> +	cxld_set_type(cxld, &ctrl);
-> +	base =3D cxld->hpa_range.start;
-> +	size =3D range_len(&cxld->hpa_range);
-> +
-> +	writel(upper_32_bits(base), hdm + CXL_HDM_DECODER0_BASE_HIGH_OFFSET(id)=
-);
-> +	writel(lower_32_bits(base), hdm + CXL_HDM_DECODER0_BASE_LOW_OFFSET(id));
-> +	writel(upper_32_bits(size), hdm + CXL_HDM_DECODER0_SIZE_HIGH_OFFSET(id)=
-);
-> +	writel(lower_32_bits(size), hdm + CXL_HDM_DECODER0_SIZE_LOW_OFFSET(id));
-> +
-> +	if (is_switch_decoder(&cxld->dev)) {
-
-[Severity: Low]
-Because resource.o may be built-in, won't this call to is_switch_decoder()
-cause an undefined reference linker error when it attempts to resolve this
-module-bound symbol from cxl_core.ko?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260804192958.1823=
-952-1-smadhavan@nvidia.com?part=3D1
+Logan
