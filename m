@@ -1,41 +1,48 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BEF1247CA8A;
-	Wed,  5 Aug 2026 15:51:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87EB547D476;
+	Wed,  5 Aug 2026 15:55:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785945078; cv=none; b=Lhm/4aRC5hyyygtmeobTTklt158uw6bW8Y2QmzpA80XlfBMwPEdr11HTCpNutMCzme1IMqWHUxqO6oQ4pNfhmFNPGXm0BdUR1npLEjm7pC5p5p1BCKgGW49MyzNEEQuFCPG+fbqgxGsxrE/UPokbbTUkv1UB60zbjOLqWIaw60A=
+	t=1785945335; cv=none; b=Iow43gGyQwgkODhiPHcsO+wPdArf6/Pb8cejV1SYnQIlvS4Et857kypShm/Cyk6dxd2tegPg20+gw+nff219ZpJRBeNahgvfOziNrT+wyEDbT4uIUsKfUXJVEncUHG6uV50GQm/q86vua4YQtvHReZr3POWaZQBOQOmCyY0BN3w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785945078; c=relaxed/simple;
-	bh=yOHojtbsy7asVZONusiKHGghzG0ww997+oWVpPx8PRY=;
+	s=arc-20240116; t=1785945335; c=relaxed/simple;
+	bh=rUGboeri6ktZTRV2oeqR5l37M6QCHKbQNKBeC4pEino=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Bd5MuJwNCY7EehnkFziMQiPtCUAMMgswmoOjdEIxcAmujoBLyUReksw4gGnFhiccLKvB1cFfCFmXOxvCJvCe7TliuDKGsFSCkZffcIlkHC7m529IVmWmAo68/i1YMAxfKIZo6nD293JWBgoWVkBuJ26HGyv8ZIO4RjzVhgqbO+M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dv8YZNOS; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=UcRl4AQbHd2lNUo3tNL4xOZs2rVp8MLxLfbOKXOnkYWtsAmXnknkMmmCg7XHirQygr7VurvlXqnTg8qN+QxJS5uz7UbdiMV2Ca1tHvXnX9ieWcNehZ8U6DvpjA4TmWGxaU/9j5h8Rzt5GQXHEcYga/vJ3xXG8xjWXqYrnLz+meM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cfQdXRbV; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dv8YZNOS"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0F8191F000E9;
-	Wed,  5 Aug 2026 15:51:13 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cfQdXRbV"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2DB5E1F000E9;
+	Wed,  5 Aug 2026 15:55:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785945076;
-	bh=c9MHgAu1BNJWML3hh9rzfWyC7GeIWT1JJVI3P1bX+C0=;
+	s=k20260515; t=1785945334;
+	bh=LFQGI06kexFLiZXhN70EcO5t/AU5IXTV7xLphoVtzPM=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=dv8YZNOSek5XxHmILrO3OB8qkT7s6kPVgbfprX49cdT+tOKloB2Gn+17ogK3m1zKS
-	 2dVhu/MYpg2mJlTaNFn85Vjpgxwwt+nS2hQL+tZ6OcdkkycbgxyfqlYkhaeea4IcJu
-	 6iV6IuFkzbgOgeb10g1NfFRwJ8ofU739irmY3Wn3ZRsfHPGv1c5mrqRBN5aDWQEQMK
-	 NIDs2H5iiYysakwTUye09xYXk0J42dKgZUpvCyKoowdLPWDksA8eRTiklVmdv2ejM4
-	 TGFPZ+985BLAf5XjOQ8TU4RaX7lXicn9U9lf76U/UXFxIsVX8TlvsS0Ejzv5KFlwsu
-	 BujI5xl1zeRXg==
-Date: Wed, 5 Aug 2026 17:51:06 +0200
+	b=cfQdXRbVh2zU0daL1aTm2PkOw3nd2jbX4SNmALPqeFqA9rbj49tHS0IgFRRBUa4K/
+	 qDSyTt+0yRHzkEBqc+nC2lhJgL0ZsmbyC3M/SvuvPVhhwH6Q3OSjAwytBxRzxp2+3P
+	 8iI+M+Z5GoGb4ch4C8JwGc+OM0aL1gmP4/8InTCLgEkDC7ZIvsKNe5JQtvrzWfvSlN
+	 t8lgJTmom++iihD2H1K3JajA7h/ZSzE5Xkq1GMKT7jl3p8MmV1j1YAxyccQyI/MFSP
+	 AUh+KkpiyL7psqQSkEjRVQL9HAYrNe8LcGlNBTAwxQHWQg/rZV/CuOGGlXhsJ/EQks
+	 T/W2sx51PldwQ==
+Date: Wed, 5 Aug 2026 17:55:11 +0200
 From: Manivannan Sadhasivam <mani@kernel.org>
-To: sashiko-reviews@lists.linux.dev
-Cc: Thierry Reding <thierry.reding@kernel.org>, linux-pci@vger.kernel.org, 
-	conor+dt@kernel.org, robh@kernel.org, devicetree@vger.kernel.org
-Subject: Re: [PATCH v9 3/5] PCI: tegra: Add Tegra264 support
-Message-ID: <sdpakcbeferzpxn6bf2acic4kfnfoaa6kgxmmi3asw7jqprekf@66cnwvuwk4ye>
+To: Thierry Reding <thierry.reding@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, 
+	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+	Conor Dooley <conor+dt@kernel.org>, Thierry Reding <thierry.reding@gmail.com>, 
+	Jonathan Hunter <jonathanh@nvidia.com>, Karthikeyan Mitran <m.karthikeyan@mobiveil.co.in>, 
+	Hou Zhiqiang <Zhiqiang.Hou@nxp.com>, Thomas Petazzoni <thomas.petazzoni@bootlin.com>, 
+	Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>, Michal Simek <michal.simek@amd.com>, 
+	Kevin Xie <kevin.xie@starfivetech.com>, Aksh Garg <a-garg7@ti.com>, linux-pci@vger.kernel.org, 
+	devicetree@vger.kernel.org, linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-arm-kernel@lists.infradead.org, Thierry Reding <treding@nvidia.com>
+Subject: Re: [PATCH v9 5/5] arm64: tegra: Add PCIe root ports on Tegra264
+Message-ID: <y7bq45p7dmy7zoz3kpwqzr77kmjr6ce52vukjeec2yvpni4twc@ale6wgwp7eos>
 References: <20260805-tegra264-pcie-v9-0-fa2ed7350ae1@nvidia.com>
- <20260805-tegra264-pcie-v9-3-fa2ed7350ae1@nvidia.com>
- <20260805121039.A79921F00A3A@smtp.kernel.org>
+ <20260805-tegra264-pcie-v9-5-fa2ed7350ae1@nvidia.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -45,61 +52,32 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260805121039.A79921F00A3A@smtp.kernel.org>
+In-Reply-To: <20260805-tegra264-pcie-v9-5-fa2ed7350ae1@nvidia.com>
 
-On Wed, Aug 05, 2026 at 12:10:38PM +0000, sashiko-bot@kernel.org wrote:
-> Thank you for your contribution! Sashiko AI review found 2 potential issue(s) to consider:
-> - [High] The driver incorrectly accesses the ECAM window via `pcie->cfg->win` to read the root port configuration space, causing an out-of-bounds heap read on 32-bit platforms.
-> - [High] The driver incorrectly uses the Negotiated Link Width (NLW) to set interconnect bandwidth for hotplug-capable ports when the link is down, permanently setting it to 0.
-> --
+On Wed, Aug 05, 2026 at 01:57:24PM +0200, Thierry Reding wrote:
+> From: Thierry Reding <treding@nvidia.com>
 > 
-> --- Patch [3]: [PATCH v9 3/5] PCI: tegra: Add Tegra264 support ---
-> commit af63006f768e2991e49a48de9855ea58d20662ed
-> Author: Thierry Reding <treding@nvidia.com>
+> The bindings have been updated to use the PCIe root port bindings, so
+> the nodes for the root ports must be added.
 > 
->     PCI: tegra: Add Tegra264 support
->     
->     Add a driver for the PCIe controller found on NVIDIA Tegra264 SoCs. The
->     driver is very small, with its main purpose being to set up the address
->     translation registers and then creating a standard PCI host using ECAM.
+> Signed-off-by: Thierry Reding <treding@nvidia.com>
+> ---
+>  arch/arm64/boot/dts/nvidia/tegra264.dtsi | 66 +++++++++++++++++++++++++++++---
+>  1 file changed, 60 insertions(+), 6 deletions(-)
 > 
-> > diff --git a/drivers/pci/controller/pcie-tegra264.c b/drivers/pci/controller/pcie-tegra264.c
-> > new file mode 100644
-> > index 0000000000000..e0c5b9d0d20bf
-> > --- /dev/null
-> > +++ b/drivers/pci/controller/pcie-tegra264.c
-> [ ... ]
-> > +static void tegra264_pcie_icc_set(struct tegra264_pcie *pcie)
-> > +{
-> > +	u32 value, speed, width;
-> > +	int err;
-> > +
-> > +	value = readw(pcie->ecam + XTL_RC_PCIE_CFG_LINK_STATUS);
-> > +	speed = FIELD_GET(PCI_EXP_LNKSTA_CLS, value);
-> > +	width = FIELD_GET(PCI_EXP_LNKSTA_NLW, value);
-> > +
-> > +	value = Mbps_to_icc(width * PCIE_SPEED2MBS_ENC(pcie_link_speed[speed]));
-> 
-> [Severity: High]
-> Will this permanently set the interconnect bandwidth to 0 for hotplug-capable
-> ports if the link is initially down?
-> 
-> When the link is down, the Negotiated Link Width (NLW) is 0, which means
-> the bandwidth value will be calculated as 0. Since the generic pciehp driver
-> handles hotplug but doesn't know about this driver's specific interconnect
-> bandwidth requirements, it appears there is no way to dynamically increase
-> the bandwidth later when a device is actually inserted.
-> 
+> diff --git a/arch/arm64/boot/dts/nvidia/tegra264.dtsi b/arch/arm64/boot/dts/nvidia/tegra264.dtsi
+> index cf9760c681b1..31bd29df8e46 100644
+> --- a/arch/arm64/boot/dts/nvidia/tegra264.dtsi
+> +++ b/arch/arm64/boot/dts/nvidia/tegra264.dtsi
+> @@ -3562,10 +3562,19 @@ pci@c000000 {
+>  			ranges = <0x81000000 0x00 0x84000000 0xd0 0x84000000 0x00 0x00200000>, /* I/O */
+>  				 <0x82000000 0x00 0x20000000 0x00 0x20000000 0x00 0x08000000>, /* non-prefetchable memory (128 MiB) */
+>  				 <0xc3000000 0xd0 0xc0000000 0xd0 0xc0000000 0x07 0xc0000000>; /* prefetchable memory */
+> -			bus-range = <0x0 0xff>;
 
-I think this is a valid concern. If the ICC BW is set to 0, then the hotplugged
-device won't work properly.
-
-> Should this read the Maximum Link Width and Speed from PCI_EXP_LNKCAP
-> instead of PCI_EXP_LNKSTA to properly reserve bandwidth for a hotplug slot?
-> 
-
-If possible, BW should be updated once the device is added, but that requires
-detecting Link Up using some custom IRQ if available.
+bus-range for Host Bridge is still a valid property and the drivers are already
+parsing it. Even though it usually pass the default values, I don't see a need
+to remove it.
 
 - Mani
 
