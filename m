@@ -1,674 +1,317 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE3103F23A6;
-	Wed,  5 Aug 2026 19:34:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 551473D5C23;
+	Wed,  5 Aug 2026 20:12:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785958459; cv=none; b=T3GTGvlsLwEB5NGG5FdKb5jSwVvBIKaAKJWpkKDQQ/YNxD6zq17yq0Mm7V0GZ4CjzE2FE5F2R/Y25zwsibh+n9utAJSILzZY5YsxFMffcgO0wvynMmEN2u+lK7f7ypT8ZN4mPEUilTyQLnJMbhLl9eBLk4umkH42Zo5U4y/Wwlc=
+	t=1785960750; cv=none; b=P4m3Mfd6r8JEOsD3LXwEb0p8cNZA8RlCDT6sN5t/wa2AdLRQUA7JqVK+AuV+Ho5xPBeRO6nIq+0DzoqGZVyLFLvec5Vz92CAgTuCbEb+3U4Z75uSSW52fmz0GTMwWHU4cEXrn0yBugRUDspxJk6G0m+az4MOfOXhkrKxpZN+jMk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785958459; c=relaxed/simple;
-	bh=A4+UWd+S2zuQg+pEOfGKB325ob4AXa2S2dmuOZgAhvw=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=IlIAPM3A+BaZgWdhzXssTKrla+iI/n+0r6vWJQbieMOKV0SKvtjSdekvgqzio5DHC609TtzTfPk/Vncyk1QqbXGvZlxk7Bb795tixB/1anlU5UeigwXwMT/dXc0HoBcqHvTr0FRz2kJrbPrR8hmj0Ht27iJQL6dqV9b7Ar3waXE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kApSYA70; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1785960750; c=relaxed/simple;
+	bh=HpPe5n1hdt+tdtFIiHbWgETDQGeqXLmppg4EelkUM3g=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=cO9DpV5tU1CtAQiKvGwiH3L+FDIJJkhYJQOnm/vFtswrZCddOHsYYbYQ/Z/FdsytpGpjB8rFyEyNz3bN4vjnA5HYVeOunDH9gLw4BRVGCPFkjP2oQbqY8P7G+vNm1sHeQpx0ogsTJM6pGi5cPxwLxgltbHxhqfSHf2lOt6cwoYM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mT+XTq2B; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kApSYA70"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 7C7C3C2BCF6;
-	Wed,  5 Aug 2026 19:34:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1785958458;
-	bh=A4+UWd+S2zuQg+pEOfGKB325ob4AXa2S2dmuOZgAhvw=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=kApSYA705bNNhIauMR2TsB3VSkw6aJUacp0IbFyu86rLxQNlceqUxM+enuiZf1gMs
-	 e0nRwz4dIkkU1GzroQTYMH6gb+Bq0nErTBpHzB/rvbX9cAuXxTGa+KAyltYPDweFfl
-	 grQRxtk4bCNnpIw036cdx15Dgn2xQRs/JRPOZZiom7aVaXT3PQGadE4N2y76/LVWel
-	 kD42zHtReHL726fuMbLMd1zLadCgEw8BXqgeP2KpTWM10pepOX0SnQ2YjUz4udRRJE
-	 6IBFK+6iRnNgOzg4EVeHydbKEvdwACHH24SDA2oBPzO+xb0NmOqCVZ22VTGqMQypPb
-	 sVeCM6Xg4SQAw==
-Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BA08C55ABA;
-	Wed,  5 Aug 2026 19:34:18 +0000 (UTC)
-From: Markus Probst via B4 Relay <devnull+markus.probst.posteo.de@kernel.org>
-Date: Wed, 05 Aug 2026 21:34:10 +0200
-Subject: [PATCH RESEND v23 1/3] rust: leds: add basic led classdev
- abstractions
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mT+XTq2B"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 834D11F000E9;
+	Wed,  5 Aug 2026 20:12:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1785960748;
+	bh=qKhFZjwoh9Z7eU7u5SE3stvRd+5tWHmU3iujv6Zqs9o=;
+	h=Subject:From:To:Cc:Date:In-Reply-To:References;
+	b=mT+XTq2BfoSjPDlU9PyzvB/WtaP3b68LUWHOQJXMFIbiI7NOPxSmb38BPMhlBg1OJ
+	 urrSbyln5OArGUsMad+g7iB3f8FeTYULIrs87MlqNJzaHF+Gzxy/h8XRlsI25BHBwQ
+	 YJq2oxxs6qJInAoMUR44sdNNjikbXHW5BgCxi4Mzlyh8s8Vzbd3derZbGrDlliQpcL
+	 B58XbcZGE1s/a8zi2D7+VRUoOOIxndMbaxkYaGKUd6ZtvrH0CrLEv38GqBmlhoa4lq
+	 9CwWzvbJ2GtuGi927kivy1AHfPZDYkcK/bfp5lyIpLVH4sed4b8sWuFCtIwVSlgCL2
+	 Al1My28izQvzA==
+Message-ID: <a7fe5eadb2999b8d95595e73d3b99d76df6895a4.camel@kernel.org>
+Subject: Re: [PATCH v3 5/5] nfs: introduce nfs_direct_extract_pages helper
+From: Trond Myklebust <trondmy@kernel.org>
+To: Pranjal Shrivastava <praan@google.com>, Anna Schumaker
+ <anna@kernel.org>, 	linux-nfs@vger.kernel.org
+Cc: Chuck Lever <cel@kernel.org>, Jeff Layton <jlayton@kernel.org>, 
+	linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Logan
+ Gunthorpe	 <logang@deltatee.com>, Jason Gunthorpe <jgg@ziepe.ca>, 
+	linux-pci@vger.kernel.org, linux-rdma@vger.kernel.org, Shivaji Kant	
+ <shivajikant@google.com>
+Date: Wed, 05 Aug 2026 13:12:28 -0700
+In-Reply-To: <20260715143540.3597616-6-praan@google.com>
+References: <20260715143540.3597616-1-praan@google.com>
+	 <20260715143540.3597616-6-praan@google.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.60.2 (3.60.2-1.fc44) 
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20260805-rust_leds-v23-1-b2fea4290ee6@posteo.de>
-References: <20260805-rust_leds-v23-0-b2fea4290ee6@posteo.de>
-In-Reply-To: <20260805-rust_leds-v23-0-b2fea4290ee6@posteo.de>
-To: Lee Jones <lee@kernel.org>, Pavel Machek <pavel@kernel.org>, 
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
- Dave Ertman <david.m.ertman@intel.com>, Leon Romanovsky <leon@kernel.org>, 
- Miguel Ojeda <ojeda@kernel.org>, Alex Gaynor <alex.gaynor@gmail.com>, 
- Gary Guo <gary@garyguo.net>, 
- =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, 
- Benno Lossin <lossin@kernel.org>, Andreas Hindborg <a.hindborg@kernel.org>, 
- Alice Ryhl <aliceryhl@google.com>, Trevor Gross <tmgross@umich.edu>, 
- Danilo Krummrich <dakr@kernel.org>, "Rafael J. Wysocki" <rafael@kernel.org>, 
- Bjorn Helgaas <bhelgaas@google.com>, 
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
- Boqun Feng <boqun@kernel.org>, 
- Daniel Almeida <daniel.almeida@collabora.com>, 
- Tamir Duberstein <tamird@kernel.org>, 
- Alexandre Courbot <acourbot@nvidia.com>, 
- =?utf-8?q?Onur_=C3=96zkan?= <work@onurozkan.dev>, 
- Ira Weiny <iweiny@kernel.org>, Boqun Feng <boqun@kernel.org>
-Cc: rust-for-linux@vger.kernel.org, linux-leds@vger.kernel.org, 
- linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, 
- Markus Probst <markus.probst@posteo.de>
-X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=openpgp-sha256; l=20400;
- i=markus.probst@posteo.de; h=from:subject:message-id;
- bh=fdGk/gdmV/cdseByoK3a2f3vDhDE4dxg8Ca14hgbA9Y=;
- b=owEBiQJ2/ZANAwAIATR2H/jnrUPSAcsmYgBqc5A4tGNAvK7Thj/aAY/7HzfbxDrMmVTkxdktp
- 5rjtSsCutqJAk8EAAEIADkWIQSCdBjE9KxY53IwxHM0dh/4561D0gUCanOQOBsUgAAAAAAEAA5t
- YW51MiwyLjUrMS4xMiwyLDIACgkQNHYf+OetQ9J/nRAAtKD4u2SM9C0kzrzF/iEpMqdqGpW43bX
- ctayrG9iJbDWBvUsTUOWyYkQv/uTNYG1WqEPWfjMXcWn1hAbe4pr4q7wIYixBaPTgGPpIGT2Ttw
- dECEwgDOJMDNLe5jzofI4qzLZJ0rZV5g4FV/AyM8j7B5D7uudd0XafMyTclscdYfr3YS4LgPjVv
- YyE2WSL32nP4yirdGPhouE+/ep6o1niR60tDX6pcyMtrbhsk/g+opCMisvnNBYm4ub0pSwATGNv
- 9kmq4o+vO3+rVed+WC0kSj7M8Ehx8nkfPiH86BgzEsbRMuOw4mM9sqKroEsiBYuy5umcM/QMBgF
- acPhsMioiPxP2DovoHSLqrcOjeakoVcqCvGckFJ2v0YWbYaXK0+BPmFA9o424Xcz0SCIW7K3tPQ
- yh5vziRvGUZqPZmzCduKaxob6jWN/ZyyQ2DUuID9QWikGBNek8PcQgCuZNakrAa4DRPjzfgpwmf
- WiV5T3eRHpwBjoyItIXUV5l9lonQRgb8iRUcY9TwgPXH4XmuMBm6OBWqwYR/+g80alts5l4vEED
- ZmiTy+cx/FNmRmHtWh6KHc5F4RnTAUFWQjqC+EVjb6G5FljxdBs5oAWMa7v1oAHvHUaQ+pQAMWV
- b+RkEgKt9F5vfEmxWhxvorqyWEAEbkC3UJZdvdAkoAi9Rug01ivY=
-X-Developer-Key: i=markus.probst@posteo.de; a=openpgp;
- fpr=827418C4F4AC58E77230C47334761FF8E7AD43D2
-X-Endpoint-Received: by B4 Relay for markus.probst@posteo.de/default with
- auth_id=680
-X-Original-From: Markus Probst <markus.probst@posteo.de>
-Reply-To: markus.probst@posteo.de
 
-From: Markus Probst <markus.probst@posteo.de>
+On Wed, 2026-07-15 at 14:35 +0000, Pranjal Shrivastava wrote:
+> Introduce nfs_direct_extract_pages() in direct.c to centralize page
+> extraction and request creation for the Direct I/O path. The helper
+> manages extraction from the iters and builds a list of nfs_page
+> requests
+>=20
+> Refactor nfs_direct_read_schedule_iovec() and
+> nfs_direct_write_schedule_iovec() to utilize the new helper, unifying
+> the extraction logic on both paths.
+>=20
+> Signed-off-by: Pranjal Shrivastava <praan@google.com>
+> ---
+> =C2=A0fs/nfs/direct.c | 127 ++++++++++++++++++++++++---------------------=
+-
+> --
+> =C2=A01 file changed, 64 insertions(+), 63 deletions(-)
+>=20
+> diff --git a/fs/nfs/direct.c b/fs/nfs/direct.c
+> index b9ac0a67693c..d31e4720ffff 100644
+> --- a/fs/nfs/direct.c
+> +++ b/fs/nfs/direct.c
+> @@ -178,6 +178,50 @@ static void nfs_direct_release_pages(struct page
+> **pages, unsigned int npages,
+> =C2=A0	}
+> =C2=A0}
+> =C2=A0
+> +static ssize_t nfs_direct_extract_pages(struct nfs_direct_req *dreq,
+> +					 struct iov_iter *iter,
+> +					 size_t size, loff_t *pos,
+> +					 struct list_head *list)
+> +{
+> +	bool pinned =3D iov_iter_extract_will_pin(iter);
+> +	struct page **pagevec =3D NULL;
+> +	ssize_t result, bytes =3D 0;
+> +	unsigned int npages, i;
+> +	size_t pgbase;
+> +
+> +	result =3D iov_iter_extract_pages(iter, &pagevec, size, ~0U,
+> 0, &pgbase);
+> +	if (result <=3D 0)
+> +		return result;
+> +
+> +	npages =3D (result + pgbase + PAGE_SIZE - 1) >> PAGE_SHIFT;
+> +	for (i =3D 0; i < npages; i++) {
+> +		struct nfs_page *req;
+> +		unsigned int req_len =3D min_t(size_t, result - bytes,
+> PAGE_SIZE - pgbase);
+> +
+> +		req =3D nfs_page_create_from_page(dreq->ctx,
+> pagevec[i],
+> +						pinned, pgbase,
+> *pos,
+> +						req_len);
+> +		if (IS_ERR(req)) {
+> +			if (!bytes)
+> +				bytes =3D PTR_ERR(req);
+> +			break;
+> +		}
+> +
+> +		list_add_tail(&req->wb_list, list);
+> +		pgbase =3D 0;
+> +		bytes +=3D req_len;
+> +		*pos +=3D req_len;
+> +	}
+> +
+> +	if (i < npages) {
+> +		iov_iter_revert(iter, result - bytes);
 
-Implement the core abstractions needed for led class devices, including:
+Oopsable if bytes =3D=3D PTR_ERR(req)
 
-* `led::LedOps` - the trait for handling leds, including
-  `brightness_set`, `brightness_get` and `blink_set`
+> +		nfs_direct_release_pages(pagevec + i, npages - i,
+> pinned);
 
-* `led::DeviceBuilder` - the builder for the led class device
+See what happens above with swap over NFS (which sets pinned =3D false).
 
-* `led::Device` - a safe wrapper around `led_classdev`
+> +	}
+> +
+> +	kvfree(pagevec);
+> +	return bytes;
+> +}
+> +
+> =C2=A0void nfs_init_cinfo_from_dreq(struct nfs_commit_info *cinfo,
+> =C2=A0			=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 struct nfs_direct_req *dreq)
+> =C2=A0{
+> @@ -346,6 +390,7 @@ static ssize_t
+> nfs_direct_read_schedule_iovec(struct nfs_direct_req *dreq,
+> =C2=A0	ssize_t result =3D -EINVAL;
+> =C2=A0	size_t requested_bytes =3D 0;
+> =C2=A0	size_t rsize =3D max_t(size_t, NFS_SERVER(inode)->rsize,
+> PAGE_SIZE);
+> +	LIST_HEAD(nfs_page_list);
+> =C2=A0
+> =C2=A0	nfs_pageio_init_read(&desc, dreq->inode, false,
+> =C2=A0			=C2=A0=C2=A0=C2=A0=C2=A0 &nfs_direct_read_completion_ops);
+> @@ -354,43 +399,23 @@ static ssize_t
+> nfs_direct_read_schedule_iovec(struct nfs_direct_req *dreq,
+> =C2=A0	inode_dio_begin(inode);
+> =C2=A0
+> =C2=A0	while (iov_iter_count(iter)) {
+> -		struct page **pagevec =3D NULL;
+> -		size_t bytes;
+> -		size_t pgbase;
+> -		unsigned npages, i;
+> -		bool pinned =3D iov_iter_extract_will_pin(iter);
+> -
+> -		result =3D iov_iter_extract_pages(iter, &pagevec,
+> -						rsize, ~0U, 0,
+> &pgbase);
+> +		result =3D nfs_direct_extract_pages(dreq, iter, rsize,
+> &pos, &nfs_page_list);
+> =C2=A0		if (result < 0)
+> =C2=A0			break;
+> =C2=A0
+> -		bytes =3D result;
+> -		npages =3D (result + pgbase + PAGE_SIZE - 1) /
+> PAGE_SIZE;
+> -		for (i =3D 0; i < npages; i++) {
+> -			struct nfs_page *req;
+> -			unsigned int req_len =3D min_t(size_t, bytes,
+> PAGE_SIZE - pgbase);
+> -			/* XXX do we need to do the eof zeroing
+> found in async_filler? */
+> -			req =3D nfs_page_create_from_page(dreq->ctx,
+> pagevec[i],
+> -							pinned,
+> pgbase, pos,
+> -							req_len);
+> -			if (IS_ERR(req)) {
+> -				result =3D PTR_ERR(req);
+> -				break;
+> -			}
+> +		while (!list_empty(&nfs_page_list)) {
+> +			struct nfs_page *req =3D
+> nfs_list_entry(nfs_page_list.next);
+> +			size_t req_len =3D req->wb_bytes;
+> +
+> +			nfs_list_remove_request(req);
+> =C2=A0			if (!nfs_pageio_add_request(&desc, req)) {
+> =C2=A0				result =3D desc.pg_error;
+> =C2=A0				nfs_release_request(req);
+> +				nfs_release_request_list(&nfs_page_l
+> ist);
+> =C2=A0				break;
+> =C2=A0			}
+> -			pgbase =3D 0;
+> -			bytes -=3D req_len;
+> =C2=A0			requested_bytes +=3D req_len;
+> -			pos +=3D req_len;
+> =C2=A0		}
+> -		if (i < npages)
+> -			nfs_direct_release_pages(pagevec + i, npages
+> - i, pinned);
+> -		kvfree(pagevec);
+> =C2=A0		if (result < 0)
+> =C2=A0			break;
+> =C2=A0	}
+> @@ -881,6 +906,7 @@ static ssize_t
+> nfs_direct_write_schedule_iovec(struct nfs_direct_req *dreq,
+> =C2=A0	ssize_t result =3D 0;
+> =C2=A0	size_t requested_bytes =3D 0;
+> =C2=A0	size_t wsize =3D max_t(size_t, NFS_SERVER(inode)->wsize,
+> PAGE_SIZE);
+> +	LIST_HEAD(nfs_page_list);
+> =C2=A0	bool defer =3D false;
+> =C2=A0
+> =C2=A0	trace_nfs_direct_write_schedule_iovec(dreq);
+> @@ -893,55 +919,32 @@ static ssize_t
+> nfs_direct_write_schedule_iovec(struct nfs_direct_req *dreq,
+> =C2=A0
+> =C2=A0	NFS_I(inode)->write_io +=3D iov_iter_count(iter);
+> =C2=A0	while (iov_iter_count(iter)) {
+> -		struct page **pagevec =3D NULL;
+> -		size_t bytes;
+> -		size_t pgbase;
+> -		unsigned npages, i;
+> -		bool pinned =3D iov_iter_extract_will_pin(iter);
+> -
+> -		result =3D iov_iter_extract_pages(iter, &pagevec,
+> -						wsize, ~0U, 0,
+> &pgbase);
+> +		result =3D nfs_direct_extract_pages(dreq, iter, wsize,
+> &pos, &nfs_page_list);
+> =C2=A0		if (result < 0)
+> =C2=A0			break;
+> =C2=A0
+> -		bytes =3D result;
+> -		npages =3D (result + pgbase + PAGE_SIZE - 1) /
+> PAGE_SIZE;
+> -		for (i =3D 0; i < npages; i++) {
+> -			struct nfs_page *req;
+> -			unsigned int req_len =3D min_t(size_t, bytes,
+> PAGE_SIZE - pgbase);
+> -
+> -			req =3D nfs_page_create_from_page(dreq->ctx,
+> pagevec[i],
+> -							pinned,
+> pgbase, pos,
+> -							req_len);
+> -			if (IS_ERR(req)) {
+> -				result =3D PTR_ERR(req);
+> -				break;
+> -			}
+> -
+> -			if (desc.pg_error < 0) {
+> -				nfs_free_request(req);
+> -				result =3D desc.pg_error;
+> -				break;
+> -			}
+> -
+> -			pgbase =3D 0;
+> -			bytes -=3D req_len;
+> -			requested_bytes +=3D req_len;
+> -			pos +=3D req_len;
+> +		while (!list_empty(&nfs_page_list)) {
+> +			struct nfs_page *req =3D
+> nfs_list_entry(nfs_page_list.next);
+> +			size_t req_len =3D req->wb_bytes;
+> =C2=A0
+> +			nfs_list_remove_request(req);
+> =C2=A0			if (defer) {
+> =C2=A0				nfs_mark_request_commit(req, NULL,
+> &cinfo, 0);
+> +				requested_bytes +=3D req_len;
+> =C2=A0				continue;
+> =C2=A0			}
+> =C2=A0
+> =C2=A0			nfs_lock_request(req);
+> -			if (nfs_pageio_add_request(&desc, req))
+> +			if (nfs_pageio_add_request(&desc, req)) {
+> +				requested_bytes +=3D req_len;
+> =C2=A0				continue;
+> +			}
+> =C2=A0
+> =C2=A0			/* Exit on hard errors */
+> =C2=A0			if (desc.pg_error < 0 && desc.pg_error !=3D -
+> EAGAIN) {
+> =C2=A0				result =3D desc.pg_error;
+> =C2=A0				nfs_unlock_and_release_request(req);
+> +				nfs_release_request_list(&nfs_page_l
+> ist);
+> =C2=A0				break;
+> =C2=A0			}
+> =C2=A0
+> @@ -952,12 +955,10 @@ static ssize_t
+> nfs_direct_write_schedule_iovec(struct nfs_direct_req *dreq,
+> =C2=A0			spin_unlock(&dreq->lock);
+> =C2=A0			nfs_unlock_request(req);
+> =C2=A0			nfs_mark_request_commit(req, NULL, &cinfo,
+> 0);
+> +			requested_bytes +=3D req_len;
+> =C2=A0			desc.pg_error =3D 0;
+> =C2=A0			defer =3D true;
+> =C2=A0		}
+> -		if (i < npages)
+> -			nfs_direct_release_pages(pagevec + i, npages
+> - i, pinned);
+> -		kvfree(pagevec);
+> =C2=A0		if (result < 0)
+> =C2=A0			break;
+> =C2=A0	}
 
-Signed-off-by: Markus Probst <markus.probst@posteo.de>
----
- MAINTAINERS               |   8 ++
- rust/kernel/led.rs        | 288 ++++++++++++++++++++++++++++++++++++++++++++++
- rust/kernel/led/normal.rs | 230 ++++++++++++++++++++++++++++++++++++
- rust/kernel/lib.rs        |   1 +
- 4 files changed, 527 insertions(+)
-
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 806bd2d80d15..70989c4c693c 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -14662,6 +14662,14 @@ F:	drivers/leds/
- F:	include/dt-bindings/leds/
- F:	include/linux/leds.h
- 
-+LED SUBSYSTEM [RUST]
-+M:	Markus Probst <markus.probst@posteo.de>
-+L:	linux-leds@vger.kernel.org
-+L:	rust-for-linux@vger.kernel.org
-+S:	Maintained
-+F:	rust/kernel/led.rs
-+F:	rust/kernel/led/
-+
- LEGO MINDSTORMS EV3
- R:	David Lechner <david@lechnology.com>
- S:	Maintained
-diff --git a/rust/kernel/led.rs b/rust/kernel/led.rs
-new file mode 100644
-index 000000000000..596975e103b8
---- /dev/null
-+++ b/rust/kernel/led.rs
-@@ -0,0 +1,288 @@
-+// SPDX-License-Identifier: GPL-2.0
-+
-+//! Abstractions for the leds driver model.
-+//!
-+//! C header: [`include/linux/leds.h`](srctree/include/linux/leds.h)
-+
-+use core::{
-+    marker::PhantomData,
-+    mem::transmute,
-+    ptr::NonNull, //
-+};
-+
-+use crate::{
-+    container_of,
-+    device::{
-+        self,
-+        property::FwNode,
-+        AsBusDevice,
-+        Bound, //
-+    },
-+    error::{
-+        from_result,
-+        to_result,
-+        VTABLE_DEFAULT_ERROR, //
-+    },
-+    macros::vtable,
-+    prelude::*,
-+    str::CStrExt,
-+    sync::aref::ARef,
-+    types::Opaque, //
-+};
-+
-+mod normal;
-+
-+pub use normal::Device;
-+
-+/// The name of the led is determined by the driver.
-+pub enum Named {}
-+/// The name of the led is determined by its fwnode.
-+pub enum Unnamed {}
-+
-+/// How the name of the led should be determined.
-+pub trait DeviceBuilderState: private::Sealed {}
-+
-+impl DeviceBuilderState for Named {}
-+impl private::Sealed for Named {}
-+impl DeviceBuilderState for Unnamed {}
-+impl private::Sealed for Unnamed {}
-+
-+/// The builder to register a led class device.
-+///
-+/// See [`LedOps`].
-+pub struct DeviceBuilder<'init, S> {
-+    fwnode: Option<ARef<FwNode>>,
-+    name: Option<&'init CStr>,
-+    devicename: Option<&'init CStr>,
-+    devname_mandatory: bool,
-+    initial_brightness: u32,
-+    color: Color,
-+    _p: PhantomData<S>,
-+}
-+
-+impl<S: DeviceBuilderState> DeviceBuilder<'static, S> {
-+    /// Creates a new [`DeviceBuilder`].
-+    #[inline]
-+    #[expect(
-+        clippy::new_without_default,
-+        reason = "no need and derive is prevented by S"
-+    )]
-+    pub fn new() -> Self {
-+        Self {
-+            fwnode: None,
-+            name: None,
-+            devicename: None,
-+            devname_mandatory: false,
-+            initial_brightness: 0,
-+            color: Color::default(),
-+            _p: PhantomData,
-+        }
-+    }
-+}
-+
-+impl<'init> DeviceBuilder<'init, Unnamed> {
-+    /// Sets the firmware node.
-+    #[inline]
-+    pub fn fwnode(self, fwnode: Option<ARef<FwNode>>) -> Self {
-+        Self { fwnode, ..self }
-+    }
-+
-+    /// Sets the device name.
-+    #[inline]
-+    pub fn devicename(self, devicename: &'init CStr) -> Self {
-+        Self {
-+            devicename: Some(devicename),
-+            ..self
-+        }
-+    }
-+
-+    /// Sets if a device name is mandatory.
-+    #[inline]
-+    pub fn devicename_mandatory(self, mandatory: bool) -> Self {
-+        Self {
-+            devname_mandatory: mandatory,
-+            ..self
-+        }
-+    }
-+}
-+
-+impl<'init, S: DeviceBuilderState> DeviceBuilder<'init, S> {
-+    /// Sets the initial brightness value for the led.
-+    ///
-+    /// The default brightness is 0.
-+    /// If [`LedOps::brightness_get`] is implemented, this value will be ignored.
-+    #[inline]
-+    pub fn initial_brightness(self, brightness: u32) -> Self {
-+        Self {
-+            initial_brightness: brightness,
-+            ..self
-+        }
-+    }
-+
-+    /// Sets the color of the led.
-+    ///
-+    /// This value can be overwritten by the "color" fwnode property.
-+    #[inline]
-+    pub fn color(self, color: Color) -> Self {
-+        Self { color, ..self }
-+    }
-+}
-+
-+impl<'init> DeviceBuilder<'init, Named> {
-+    /// Sets the name of the led.
-+    ///
-+    /// Setting this will prevent the fwnode from being used and prevents automatic name
-+    /// composition.
-+    #[inline]
-+    pub fn name(self, name: &'init CStr) -> Self {
-+        Self {
-+            name: Some(name),
-+            ..self
-+        }
-+    }
-+}
-+
-+/// Trait defining the operations for a LED driver.
-+///
-+/// # Examples
-+/// ```
-+/// use kernel::{
-+///      device,
-+///      devres::Devres,
-+///      led,
-+///      macros::vtable,
-+///      platform,
-+///      prelude::*, //
-+///  };
-+///
-+/// struct MyLedOps;
-+///
-+///
-+/// #[vtable]
-+/// impl led::LedOps for MyLedOps {
-+///     type Bus = platform::Device<device::Bound>;
-+///     const BLOCKING: bool = false;
-+///     const MAX_BRIGHTNESS: u32 = 255;
-+///
-+///     fn brightness_set<'bound>(
-+///         &self,
-+///         _dev: &'bound platform::Device<device::Bound>,
-+///         _classdev: &led::Device<'bound, Self>,
-+///         _brightness: u32
-+///     ) -> Result<()> {
-+///         // Set the brightness for the led here
-+///         Ok(())
-+///     }
-+/// }
-+/// ```
-+/// Led drivers must implement this trait in order to register and handle a [`Device`].
-+#[vtable]
-+pub trait LedOps: Send + Sync + Sized {
-+    /// The bus device required by the implementation.
-+    #[allow(private_bounds)]
-+    type Bus: AsBusDevice<Bound>;
-+
-+    /// If set true, [`LedOps::brightness_set`] and [`LedOps::blink_set`] must perform the
-+    /// operation immediately. If set false, they must not sleep.
-+    const BLOCKING: bool;
-+    /// The max brightness level.
-+    const MAX_BRIGHTNESS: u32;
-+
-+    /// Sets the brightness level.
-+    ///
-+    /// See also [`LedOps::BLOCKING`].
-+    fn brightness_set<'bound>(
-+        &self,
-+        dev: &'bound Self::Bus,
-+        classdev: &Device<'bound, Self>,
-+        brightness: u32,
-+    ) -> Result<()>;
-+
-+    /// Gets the current brightness level.
-+    fn brightness_get<'bound>(
-+        &self,
-+        dev: &'bound Self::Bus,
-+        classdev: &Device<'bound, Self>,
-+    ) -> Result<u32> {
-+        let _ = (dev, classdev);
-+        build_error!(VTABLE_DEFAULT_ERROR)
-+    }
-+
-+    /// Activates hardware accelerated blinking.
-+    ///
-+    /// delays are in milliseconds. If both are zero, a sensible default should be chosen.
-+    /// The caller should adjust the timings in that case and if it can't match the values
-+    /// specified exactly. Setting the brightness to 0 will disable the hardware accelerated
-+    /// blinking.
-+    ///
-+    /// See also [`LedOps::BLOCKING`].
-+    fn blink_set<'bound>(
-+        &self,
-+        dev: &'bound Self::Bus,
-+        classdev: &Device<'bound, Self>,
-+        delay_on: &mut usize,
-+        delay_off: &mut usize,
-+    ) -> Result<()> {
-+        let _ = (dev, classdev, delay_on, delay_off);
-+        build_error!(VTABLE_DEFAULT_ERROR)
-+    }
-+}
-+
-+/// Led colors.
-+#[derive(Copy, Clone, Debug, Default, PartialEq, Eq)]
-+#[repr(u32)]
-+#[non_exhaustive]
-+#[expect(
-+    missing_docs,
-+    reason = "it shouldn't be necessary to document each color"
-+)]
-+pub enum Color {
-+    #[default]
-+    White = bindings::LED_COLOR_ID_WHITE,
-+    Red = bindings::LED_COLOR_ID_RED,
-+    Green = bindings::LED_COLOR_ID_GREEN,
-+    Blue = bindings::LED_COLOR_ID_BLUE,
-+    Amber = bindings::LED_COLOR_ID_AMBER,
-+    Violet = bindings::LED_COLOR_ID_VIOLET,
-+    Yellow = bindings::LED_COLOR_ID_YELLOW,
-+    Ir = bindings::LED_COLOR_ID_IR,
-+    Multi = bindings::LED_COLOR_ID_MULTI,
-+    Rgb = bindings::LED_COLOR_ID_RGB,
-+    Purple = bindings::LED_COLOR_ID_PURPLE,
-+    Orange = bindings::LED_COLOR_ID_ORANGE,
-+    Pink = bindings::LED_COLOR_ID_PINK,
-+    Cyan = bindings::LED_COLOR_ID_CYAN,
-+    Lime = bindings::LED_COLOR_ID_LIME,
-+}
-+static_assert!(bindings::LED_COLOR_ID_MAX == 15);
-+
-+impl Color {
-+    /// Name of the color
-+    #[inline]
-+    pub fn as_c_str(self) -> &'static CStr {
-+        // SAFETY:
-+        // - `self as u8` is a valid led color id.
-+        // - `led_get_color_name` always returns a valid C string pointer.
-+        unsafe { CStr::from_char_ptr(bindings::led_get_color_name(self as u8)) }
-+    }
-+}
-+
-+impl TryFrom<u32> for Color {
-+    type Error = Error;
-+
-+    fn try_from(value: u32) -> core::result::Result<Self, Self::Error> {
-+        if value < bindings::LED_COLOR_ID_MAX {
-+            // SAFETY:
-+            // - `Color` is represented as `u32`
-+            // - the static_assert above guarantees that no additional color has been added
-+            // - `value` is guaranteed to be in the color id range
-+            Ok(unsafe { transmute::<u32, Color>(value) })
-+        } else {
-+            Err(EINVAL)
-+        }
-+    }
-+}
-+
-+mod private {
-+    pub trait Sealed {}
-+}
-diff --git a/rust/kernel/led/normal.rs b/rust/kernel/led/normal.rs
-new file mode 100644
-index 000000000000..816db7c57689
---- /dev/null
-+++ b/rust/kernel/led/normal.rs
-@@ -0,0 +1,230 @@
-+// SPDX-License-Identifier: GPL-2.0
-+
-+//! Led mode for the `struct led_classdev`.
-+//!
-+//! C header: [`include/linux/leds.h`](srctree/include/linux/leds.h)
-+
-+use super::*;
-+
-+/// The led class device representation.
-+///
-+/// This structure represents the Rust abstraction for a led class device.
-+#[pin_data(PinnedDrop)]
-+pub struct Device<'bound, T: LedOps + 'bound> {
-+    #[pin]
-+    ops: T,
-+    #[pin]
-+    classdev: Opaque<bindings::led_classdev>,
-+    _p: PhantomData<&'bound ()>,
-+}
-+
-+impl<'init, S: DeviceBuilderState> DeviceBuilder<'init, S> {
-+    /// Registers a new [`Device`].
-+    pub fn build<'bound: 'init, T: LedOps + 'bound>(
-+        self,
-+        parent: &'bound T::Bus,
-+        ops: impl PinInit<T, Error> + 'init,
-+    ) -> impl PinInit<Device<'bound, T>, Error> + 'init {
-+        const_assert!(T::MAX_BRIGHTNESS <= i32::MAX.unsigned_abs() || !T::HAS_BRIGHTNESS_GET);
-+
-+        try_pin_init!(Device {
-+            ops <- ops,
-+            classdev <- Opaque::try_ffi_init(|ptr: *mut bindings::led_classdev| {
-+                // SAFETY: `try_ffi_init` guarantees that `ptr` is valid for write.
-+                // `led_classdev` gets fully initialized in-place by
-+                // `led_classdev_register_ext` including `mutex` and `list_head`.
-+                unsafe {
-+                    ptr.write(bindings::led_classdev {
-+                        brightness_set: (!T::BLOCKING)
-+                            .then_some(Adapter::<T>::brightness_set_callback),
-+                        brightness_set_blocking: T::BLOCKING
-+                            .then_some(Adapter::<T>::brightness_set_blocking_callback),
-+                        brightness_get: T::HAS_BRIGHTNESS_GET
-+                            .then_some(Adapter::<T>::brightness_get_callback),
-+                        blink_set: T::HAS_BLINK_SET.then_some(Adapter::<T>::blink_set_callback),
-+                        max_brightness: T::MAX_BRIGHTNESS,
-+                        brightness: self.initial_brightness,
-+                        color: self.color as u32,
-+                        name: self.name.map_or(core::ptr::null(), CStrExt::as_char_ptr),
-+                        ..bindings::led_classdev::default()
-+                    })
-+                };
-+
-+                let mut init_data = bindings::led_init_data {
-+                    fwnode: self
-+                        .fwnode
-+                        .as_ref()
-+                        .map_or(core::ptr::null_mut(), |fwnode| fwnode.as_raw()),
-+                    default_label: core::ptr::null(),
-+                    devicename: self
-+                        .devicename
-+                        .map_or(core::ptr::null(), CStrExt::as_char_ptr),
-+                    devname_mandatory: self.devname_mandatory,
-+                };
-+
-+                // SAFETY:
-+                // - `parent.as_ref().as_raw()` is guaranteed to be a pointer to a valid
-+                //    `device`.
-+                // - `ptr` is guaranteed to be a pointer to an initialized `led_classdev`.
-+                to_result(unsafe {
-+                    bindings::led_classdev_register_ext(
-+                        parent.as_ref().as_raw(),
-+                        ptr,
-+                        if self.name.is_none() {
-+                            &raw mut init_data
-+                        } else {
-+                            core::ptr::null_mut()
-+                        },
-+                    )
-+                })?;
-+
-+                core::mem::forget(self.fwnode); // keep the reference count incremented
-+
-+                Ok::<_, Error>(())
-+            }),
-+            _p: PhantomData,
-+        })
-+    }
-+}
-+
-+impl<'bound, T: LedOps + 'bound> Device<'bound, T> {
-+    /// # Safety
-+    /// `led_cdev` must be a valid pointer to a `led_classdev` embedded within a
-+    /// `led::Device`.
-+    #[inline]
-+    unsafe fn from_raw<'a>(led_cdev: *mut bindings::led_classdev) -> &'a Self {
-+        // SAFETY: The function's contract guarantees that `led_cdev` points to a `led_classdev`
-+        // field embedded within a valid `led::Device`. `container_of!` can therefore
-+        // safely calculate the address of the containing struct.
-+        unsafe { &*container_of!(Opaque::cast_from(led_cdev), Self, classdev) }
-+    }
-+
-+    #[inline]
-+    fn parent(&self) -> &'bound device::Device<Bound> {
-+        // SAFETY: `self.classdev.get()` is guaranteed to be a valid pointer to `led_classdev`.
-+        unsafe { device::Device::from_raw((*(*self.classdev.get()).dev).parent) }
-+    }
-+}
-+
-+// SAFETY: A `led::Device` can be unregistered from any thread.
-+unsafe impl<'bound, T: LedOps + 'bound + Send> Send for Device<'bound, T> {}
-+
-+// SAFETY: `led::Device` can be shared among threads because all methods of `led::Device`
-+// are thread safe.
-+unsafe impl<'bound, T: LedOps + 'bound + Sync> Sync for Device<'bound, T> {}
-+
-+struct Adapter<T: LedOps> {
-+    _p: PhantomData<T>,
-+}
-+
-+impl<T: LedOps> Adapter<T> {
-+    /// # Safety
-+    /// `led_cdev` must be a valid pointer to a `led_classdev` embedded within a
-+    /// `led::Device`.
-+    /// This function is called on setting the brightness of a led.
-+    unsafe extern "C" fn brightness_set_callback(
-+        led_cdev: *mut bindings::led_classdev,
-+        brightness: u32,
-+    ) {
-+        // SAFETY: The function's contract guarantees that `led_cdev` is a valid pointer to a
-+        // `led_classdev` embedded within a `led::Device`.
-+        let classdev = unsafe { Device::<T>::from_raw(led_cdev) };
-+        // SAFETY: `classdev.parent()` is guaranteed to be contained in `T::Bus`.
-+        let parent = unsafe { T::Bus::from_device(classdev.parent()) };
-+
-+        let _ = classdev.ops.brightness_set(parent, classdev, brightness);
-+    }
-+
-+    /// # Safety
-+    /// `led_cdev` must be a valid pointer to a `led_classdev` embedded within a
-+    /// `led::Device`.
-+    /// This function is called on setting the brightness of a led immediately.
-+    unsafe extern "C" fn brightness_set_blocking_callback(
-+        led_cdev: *mut bindings::led_classdev,
-+        brightness: u32,
-+    ) -> i32 {
-+        from_result(|| {
-+            // SAFETY: The function's contract guarantees that `led_cdev` is a valid pointer to a
-+            // `led_classdev` embedded within a `led::Device`.
-+            let classdev = unsafe { Device::<T>::from_raw(led_cdev) };
-+            // SAFETY: `classdev.parent()` is guaranteed to be contained in `T::Bus`.
-+            let parent = unsafe { T::Bus::from_device(classdev.parent()) };
-+
-+            classdev.ops.brightness_set(parent, classdev, brightness)?;
-+            Ok(0)
-+        })
-+    }
-+
-+    /// # Safety
-+    /// `led_cdev` must be a valid pointer to a `led_classdev` embedded within a
-+    /// `led::Device`.
-+    /// This function is called on getting the brightness of a led.
-+    unsafe extern "C" fn brightness_get_callback(led_cdev: *mut bindings::led_classdev) -> u32 {
-+        // SAFETY: The function's contract guarantees that `led_cdev` is a valid pointer to a
-+        // `led_classdev` embedded within a `led::Device`.
-+        let classdev = unsafe { Device::<T>::from_raw(led_cdev) };
-+        // SAFETY: `classdev.parent()` is guaranteed to be contained in `T::Bus`.
-+        let parent = unsafe { T::Bus::from_device(classdev.parent()) };
-+
-+        // CAST: Resulting value will be casted back to i32 in the led subsystem.
-+        from_result(|| {
-+            classdev
-+                .ops
-+                .brightness_get(parent, classdev)
-+                .inspect(|val| debug_assert!(*val <= T::MAX_BRIGHTNESS))
-+                .and_then(|val| Ok(i32::try_from(val)?))
-+        }) as u32
-+    }
-+
-+    /// # Safety
-+    /// `led_cdev` must be a valid pointer to a `led_classdev` embedded within a
-+    /// `led::Device`.
-+    /// `delay_on` and `delay_off` must be valid pointers to `usize` and have
-+    /// exclusive access for the period of this function.
-+    /// This function is called on enabling hardware accelerated blinking.
-+    unsafe extern "C" fn blink_set_callback(
-+        led_cdev: *mut bindings::led_classdev,
-+        delay_on: *mut usize,
-+        delay_off: *mut usize,
-+    ) -> i32 {
-+        from_result(|| {
-+            // SAFETY: The function's contract guarantees that `led_cdev` is a valid pointer to a
-+            // `led_classdev` embedded within a `led::Device`.
-+            let classdev = unsafe { Device::<T>::from_raw(led_cdev) };
-+            // SAFETY: `classdev.parent()` is guaranteed to be contained in `T::Bus`.
-+            let parent = unsafe { T::Bus::from_device(classdev.parent()) };
-+
-+            classdev.ops.blink_set(
-+                parent,
-+                classdev,
-+                // SAFETY: The function's contract guarantees that `delay_on` points to a `usize`
-+                // and is exclusive for the period of this function.
-+                unsafe { &mut *delay_on },
-+                // SAFETY: The function's contract guarantees that `delay_off` points to a `usize`
-+                // and is exclusive for the period of this function.
-+                unsafe { &mut *delay_off },
-+            )?;
-+            Ok(0)
-+        })
-+    }
-+}
-+
-+#[pinned_drop]
-+impl<'bound, T: LedOps + 'bound> PinnedDrop for Device<'bound, T> {
-+    fn drop(self: Pin<&mut Self>) {
-+        let raw = self.classdev.get();
-+        // SAFETY: The existence of `self` guarantees that `self.classdev.get()` is a pointer to a
-+        // valid `led_classdev`.
-+        let dev: &device::Device = unsafe { device::Device::from_raw((*raw).dev) };
-+
-+        let _fwnode = dev
-+            .fwnode()
-+            // SAFETY: the reference count of `fwnode` has previously been
-+            // incremented in `led::DeviceBuilder::build`.
-+            .map(|fwnode| unsafe { ARef::from_raw(NonNull::from(fwnode)) });
-+
-+        // SAFETY: The existence of `self` guarantees that `self.classdev` has previously been
-+        // successfully registered with `led_classdev_register_ext`.
-+        unsafe { bindings::led_classdev_unregister(raw) };
-+    }
-+}
-diff --git a/rust/kernel/lib.rs b/rust/kernel/lib.rs
-index 9512af7156df..09e4cc7a14db 100644
---- a/rust/kernel/lib.rs
-+++ b/rust/kernel/lib.rs
-@@ -90,6 +90,7 @@
- pub mod jump_label;
- #[cfg(CONFIG_KUNIT)]
- pub mod kunit;
-+pub mod led;
- pub mod list;
- pub mod maple_tree;
- pub mod miscdevice;
-
--- 
-2.54.0
-
-
+--=20
+Trond Myklebust
+Linux NFS client maintainer, Hammerspace
+trondmy@kernel.org, trond.myklebust@hammerspace.com
