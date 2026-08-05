@@ -1,169 +1,183 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from SN4PR2101CU001.outbound.protection.outlook.com (mail-southcentralusazon11012041.outbound.protection.outlook.com [40.93.195.41])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87F113655C4;
-	Wed,  5 Aug 2026 14:36:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785940610; cv=none; b=NlRIMuwdwba6zEOpFLC6aVv3JS0eKD4eYKWSGC8hvCXksfiNr/fNCB6E3dm/8Uwr9wg0msBJaCtNBxOEnMsTDZ6j+iYMy5ILKmxmTjF2JMM84ar14cQP0V8420VX2DYEC0jgFBDzFH5ueGdHiNQYPNTsj++Qyw9noU6mFBY32Ws=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785940610; c=relaxed/simple;
-	bh=7GoSDoB93OWd6S7TY2lJhVqrkySeLyhqBbvZ98qHgmY=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=J9fwB8rgUrhMQLV9fKtH7yyvqoYPNnU+OO3z2t/TayPBdVRbLdGgU88cGiUlyddJ7FyKR8tqFzlC3zKvnFa0BlJLeXW75FZ55oh97OPEzv6JGYh4FCpdlj0nAExujac933Fz1OqqNgjTSFqseWMAkIXeTZgEPlfTG8s4S3BnG/o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=N64w5yGZ; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A86343B637A
+	for <linux-pci@vger.kernel.org>; Wed,  5 Aug 2026 14:38:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.195.41
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1785940689; cv=fail; b=XsiOQM74kzTIgG+jfh16H0geUYM3U5mm81Yoiubxvv0vgiVwSRJice0GRygRh+Ol1mj1RD6Sk+0svJxQmbqus6Yaws/37cFFqt9gLjgnA8eOmVl1xW0SBtnD0SRYVaDNrqYvG15nI78DdegSKFyTpcNfffylYX5O5jFOC7uGliI=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1785940689; c=relaxed/simple;
+	bh=df1t0hYE7X+OCKovcvGFrcI0lHdqRbnup0WHuM8zyuM=;
+	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=JkkKdNEpT8tPy77CTC9veKUDxtfw7Mpy2i5T2NvSQ4iiejovz32noWEqMczoDEmM4S6trE0rnmmhphsXeTXCUj3m+hQPTtH0N1EKOPJw1d1racwqX+o1hWP1DH1kbSMfMrr5Jfr7mBOz2rsEU9gKlmwcbsqraox2kdYb0zHTnto=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=vq+0PE+F; arc=fail smtp.client-ip=40.93.195.41
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="N64w5yGZ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3ED911F00A3A;
-	Wed,  5 Aug 2026 14:36:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785940601;
-	bh=tM1i/5O7X4rW++TCZUi84s5/0oEu0OW0LHTYnEXJIaY=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=N64w5yGZESz9WHBxo9icgkwglEJW/VSUyFIb4U/m50LvuvBibNYhDhSm47JTui3g9
-	 ftQV9U3RjxqTLipFGG+AccUh8bZxfHzo4B4KkK+KqWHgwzUxge1oMIzIRhtymGj4N8
-	 l+zgpB4RgaIotfSiGovMPaqnneqj1Ff5YaBCOiyUWGHgiNP0EIAVQa70ZzU2TI53nN
-	 q6hWRnHLer9uHb73k2lNtC0HfeR2gDEl3BubWRIVkgAAA0yKztH0evocxmC6LfJdNv
-	 W2lEUye2EIWwQjlAFPhvZ07tWwqtiXg2TRt3Rx2JBPpxSGNzv93Tau0+7QBbuS+mP/
-	 dTvy7w23wVKGQ==
-Message-ID: <768142f0-2638-41f3-a34f-dc80bb99eb7f@kernel.org>
-Date: Wed, 5 Aug 2026 16:36:31 +0200
+	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="vq+0PE+F"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=kJfFGvK5/RoVUwsraahNi3JLr9T6kM8zsXCxnIdyxTgaZV+/SAhOxo4waNMry9gmQ2bmGB2k0eK+vDB3x7D4UHbiinBIVnRoNnVcbeU9zNnoADa+nqeC5jeA4wm0l4G7XGsCmF8kBiamDZK+SIWAU8+2cSf+xLVlp0dfwsaGZTtqPkFPjBEuWrW85HjH8jn9EHzEejmpdFYo2fFHp0LbBJ4nW1YCqcBeFTsnNb7GWBNrA4H/SX4kcf1fys7VEkSDP5LKwtITVmogccSE9WnzHe2JWtmcfK/3YTp+ZiHKFH5MBW5NXf5PWW8QzE+P25M+vgTtf4bpfhp9q3DsFGbfPQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=yy/tT8AW5bLf6B0KGBkC9iszuBbdUSABlWI1rrAYTEw=;
+ b=oBQt10yYOJ9TLqGS/Ht9vjzifnP2+XNC3vV7df2vlSUlP1syMu85mRk57wDr1mXyiPqxPBZIgFFZTPM4Pz/9eocBAFD/cdwlh4Ig81JcWrXfPJPckgVEab5JhMakHM2CudtZMaU3gx0MDRBY0BWNptr3+O2kbNtQMZOjr5TCBqDEPVSsEclFQfijttLeUOAYRvPHUqNnCsEWVXyLcVsb3MLk15OkxuZ0TfbvNWEs8SQH4SLoPKrgIKPBl2HU8GAIbssdvihtSf5YRbnfREkx1yhvaJteyCkJb1lERad5m4Lm0ySd6r6V+fCyLHytJW3r7zKozs+JlTKDIBsKGRhTmw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
+ header.d=amd.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=yy/tT8AW5bLf6B0KGBkC9iszuBbdUSABlWI1rrAYTEw=;
+ b=vq+0PE+FTsNLBC+hxPikfjm6oPERCNlkKPzLHxtOWcHEGAjmgV8OheuOMq9IfdDhhfcROxlzi3igGShsSfaUMeM+0T+R4VbA9OhIaBFKuZOxQ2PJ8q69fhsGxTICdW1b13bXafBD3aBIIcldH3+ueTIUuSqlx7j9zMilRm1V2EA=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=amd.com;
+Received: from PH7SPRMB0047.namprd12.prod.outlook.com (2603:10b6:510:1f6::14)
+ by PH0PR12MB999114.namprd12.prod.outlook.com (2603:10b6:510:390::9) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.270.17; Wed, 5 Aug
+ 2026 14:37:58 +0000
+Received: from PH7SPRMB0047.namprd12.prod.outlook.com
+ ([fe80::b54e:e6eb:405a:218c]) by PH7SPRMB0047.namprd12.prod.outlook.com
+ ([fe80::b54e:e6eb:405a:218c%3]) with mapi id 15.21.0270.017; Wed, 5 Aug 2026
+ 14:37:57 +0000
+Message-ID: <39ce2a2f-3bb8-43e7-9446-a67551cce104@amd.com>
+Date: Wed, 5 Aug 2026 20:07:50 +0530
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 2/2] iommu/amd: Force identity mode for selected GPUs only
+To: Jason Gunthorpe <jgg@ziepe.ca>
+Cc: Mario Limonciello <mario.limonciello@amd.com>,
+ "Kuehling, Felix" <felix.kuehling@amd.com>,
+ "Deucher, Alexander" <Alexander.Deucher@amd.com>, iommu@lists.linux.dev,
+ joro@8bytes.org, linux-pci@vger.kernel.org, will@kernel.org,
+ robin.murphy@arm.com, suravee.suthikulpanit@amd.com, bhelgaas@google.com,
+ Amandeep Kaur Longia <AmandeepKaur.Longia@amd.com>
+References: <20260723061548.10187-1-vasant.hegde@amd.com>
+ <20260723061548.10187-3-vasant.hegde@amd.com> <amOBkJ4BaZ4qnkpc@ziepe.ca>
+ <a2f38742-c8a1-4dd5-9fcb-120c1c989203@amd.com>
+ <ed296c0d-246f-492b-970b-49c45e25f5f6@amd.com>
+ <f4355034-d40a-4d11-ab98-eef0f2991f33@amd.com>
+ <838281e9-8ee7-433a-b06c-68675e9b285f@amd.com>
+ <2f400c7f-eada-45e3-9079-7b5727ecb5c3@amd.com>
+ <bacdf160-8ab2-4bd6-aa9d-ab63b16527fa@amd.com>
+ <08f2e48e-6e98-4fde-af71-cb8cde666bdf@amd.com>
+ <20260805010706.GC28508@ziepe.ca>
+Content-Language: en-US
+From: Vasant Hegde <vasant.hegde@amd.com>
+In-Reply-To: <20260805010706.GC28508@ziepe.ca>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: MA5PR01CA0243.INDPRD01.PROD.OUTLOOK.COM
+ (2603:1096:a01:223::18) To PH7SPRMB0047.namprd12.prod.outlook.com
+ (2603:10b6:510:1f6::14)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 1/6] dt-bindings: bluetooth: qca: add QCC2072
-To: Manivannan Sadhasivam <mani@kernel.org>
-Cc: Rahul Samana <rahul.samana@oss.qualcomm.com>,
- Bartosz Golaszewski <brgl@kernel.org>, Marcel Holtmann
- <marcel@holtmann.org>, Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
- Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>,
- Conor Dooley <conor+dt@kernel.org>,
- Balakrishna Godavarthi <quic_bgodavar@quicinc.com>,
- Rocky Liao <quic_rjliao@quicinc.com>, Bjorn Andersson
- <andersson@kernel.org>, Konrad Dybcio <konradybcio@kernel.org>,
- Bartosz Golaszewski <brgl@bgdev.pl>, linux-arm-msm@vger.kernel.org,
- linux-bluetooth@vger.kernel.org, devicetree@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
- linux-pm@vger.kernel.org, quic_mohamull@quicinc.com,
- quic_hbandi@quicinc.com, quic_anubhavg@quicinc.com
-References: <20260727-rb3-industrial-bt-uart-v2-1-2d100f30e202@oss.qualcomm.com>
- <20260731-first-righteous-bear-dd72ed@quoll>
- <712f8a14-d2a1-4a90-82f9-05cd694f2658@oss.qualcomm.com>
- <c1875dd6-fe3a-4a69-a6fd-b461c8fba6e4@kernel.org>
- <6d6465bb-47ac-464c-af4e-0ca72325705f@oss.qualcomm.com>
- <8a388310-d3cc-4d02-abb6-0eb98c24cfce@kernel.org>
- <4523441f-498a-4bbd-80f3-97a7a9206c00@oss.qualcomm.com>
- <6e0b9e79-ccd4-4689-9a6b-9b4fc556d5e4@kernel.org>
- <gfhlyvoefcsvtjuxfo75qeham272cc5g2r3npjenzs5esjifiy@ro7dtkpxwizk>
- <8ab6c26f-b648-447c-9fdd-f1424beb44f4@kernel.org>
- <sewfntbhqtj2apfdi4ouan27artvj4lyxqizvinsvzltbofqu2@riuoo3fmczff>
-From: Krzysztof Kozlowski <krzk@kernel.org>
-Content-Language: en-US
-Autocrypt: addr=krzk@kernel.org; keydata=
- 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
-In-Reply-To: <sewfntbhqtj2apfdi4ouan27artvj4lyxqizvinsvzltbofqu2@riuoo3fmczff>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: PH7SPRMB0047:EE_|PH0PR12MB999114:EE_
+X-MS-Office365-Filtering-Correlation-Id: cf3b27a4-7220-4f80-15eb-08def2ff2478
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|376014|1800799024|23010399003|366016|56012099006|4143699003|10067099003|11063799006|18002099003|22082099003;
+X-Microsoft-Antispam-Message-Info:
+	q5sTNTqa9uWGu0kTqKhcLwTyUy7ly9at/EIzuqkD5o+Onl7NyoQuO6P7R+25Xep7MO8Vl7XKlDaaZcQPZrtwZX56M8NAjS5y7MzzcxE7Qvb3qlgr/dNoQ5yZtlvW4cylffeexnyHj69BxZzsSb8fRy0jfLz+NPTpOxt5cyTAeF0Sxr/rmI5WXyURRAz4F/JyNmBok6F8bPeD0u3edToypxiajZqZmgvsyCRxUTXIlrGykDxCmXnLjAc6px7m+tjcJaCSJPO2uYFUWXGV10OdbD+H2gVRDGN8HE4BqmYAjZ2lNMTHvGRFPlEnDLtKfMix5kcNnkbFo2aU4UBn1cZXg8YjEFuXvdbSRE9UYYiWGOKBEMkIX2Zck+gm3mBxZzoa3VtvBUMIrREBFtzEECc2oUsQ7EDgWg/PdZc141aZ75/MpzJ8OB74b1d7xbWvAFL0QnemMgwZLkbbC5iqMSwh5LrGFGH5bYFZceisBBPbHPG5+2ytf2hTVv8lkwXa2uQ/1tmIZgtMUG0ybR8257d4jJZ6T6xIC5boV1mJRey/qja/WzsMjJOSrrnq7ANzP7SC43O3dwNPzRQmD/FWKZEWC9xbv1ZjYDor1j5479XRKpyrGc0gsMCSrfiE7Pb93gn/Mrx134NkYsNV9koJYFJ15uMs7vXKuM1hEv3Mev7/hKU=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH7SPRMB0047.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(1800799024)(23010399003)(366016)(56012099006)(4143699003)(10067099003)(11063799006)(18002099003)(22082099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?eldhQi9XVjFmK2tQajlpak15OFpCd0xhZlpuOGpxL2FOdWxwaGY3djI3Rzd5?=
+ =?utf-8?B?YlpIQnhpWGRHRWd1WjJGM2FPOUR3T1p0a2krMW9lT09oNnI5WDdhOGdlZUJi?=
+ =?utf-8?B?ZmtKRVFZQmFFampvZ3JhdzBtZ2tjMjVaS3FOYzAyd3ZibDhYNkJ6eUdTQ2Na?=
+ =?utf-8?B?aVlIemNnTWRDUU50Sit2cnpucnZCQWd6YXU4M1Q5RXd3cHY0VjhkQkZJeTVL?=
+ =?utf-8?B?Q1ZLMXBUdUwyaW9veElzQmVOcXdKM0xqTmczZG95N2F3WTFPYUEwK0J2aFBq?=
+ =?utf-8?B?VENhbHFaZU8remtzTklHMlZEcmh1aFFadWRpa3NScHZZSmdvYWw3TjVpUmRi?=
+ =?utf-8?B?ckE3dEFyUWk0NTU1VHRlZTVhUVlxc1pGSVVsaUF4S1dKYlNvUjRhVWEyYnFE?=
+ =?utf-8?B?YUNadmFxQmsxM2ZaY3g2TTZxY1oxVEFVRWFYZnJ2RXhUbkRYV3p3Zmt6Z3Jz?=
+ =?utf-8?B?alJ6T1dJWWs2bm5reFQ3QndQN0tIWjVpZDZqbEpPQlR6eFhkWU8wUDBmOVdC?=
+ =?utf-8?B?NWlGKzhwcU00ekpEajNOV2NCNmVRSkhvTUJ1Q0VYaVdyNWlmQk52d1h0L2g3?=
+ =?utf-8?B?dCt0TkVqRmVzTXgxMmpQYTZDazlwMFMzL3czVytPWEJVSGdoa3B2Q3ZjTjFI?=
+ =?utf-8?B?OXNqb0NWMzI4OFIrMm9iM1JneTdvOGc5KzBNcnZST2hVNTdVSW8rQW93dkZT?=
+ =?utf-8?B?MXJ0cUhHeWtFYWZSL3UzNjRVVDNkYlhwTWUrbHhYc2pmZFFQTmhXSCtSUUE1?=
+ =?utf-8?B?RllFaDJ1VjR0OU5zYmFlSi9ZU090NFNZSERpQ1hFZUJLU3FpRm5wSElic0JV?=
+ =?utf-8?B?cVpBNkJaSDIvOWpHekp6NzVTcDVRb280TUppblpjMWhaalpZN2ZGdWxpbkJC?=
+ =?utf-8?B?bXVlNVpmbjJvOSs2S2pYUW5kK2VNaVF1YmtKL3lXT2tJRU55U211OXl4RUlL?=
+ =?utf-8?B?eXZBenNTd1VreXRhdlNVVTE5Q25mbDhESWEwRFB5a1d2dGo2dElKOGM3N1dl?=
+ =?utf-8?B?NVBYUVZleWVQOUlqTk8zbU1TbDR1L1BSTzFEbTZNL21PYnNjcEMyY25VMjd3?=
+ =?utf-8?B?YmFMano4YktQUjhWTFY0ZXFlaFJwMUdHYlZmMERwUlh1MGs3SVZ3bTVkcXJY?=
+ =?utf-8?B?N211ZGY0M1dvV1ZLNUYrVngyOHRMZUJacVZUci9BK0tVaENXejVuVUpmZE1a?=
+ =?utf-8?B?QnBYZ3Vzb01ZWDFxZ0ROMWJRaU9XNmg1ZVpaK0RVWW5RbUVZdXZqeE1Ldk5L?=
+ =?utf-8?B?WmVnSHZzWUNtK3NZcURGc3hXdnhYL2hLN1gvN3lta3ZBeE94dTE5SS93Tmdv?=
+ =?utf-8?B?WlFMK1RDYVZWWDdXdjh1cVdKdWVhZit6aVhNZGxWSmluRFdrWE13dHl6QVJZ?=
+ =?utf-8?B?N3JFSEpqTFZYalk0VUd4OGJrQVFpOFdZRHVYdzlMdkk1aGZkSzZYeXpSTG0r?=
+ =?utf-8?B?QzNkd3BHZWJreTVBMjRyVlU1R1NrVHRZd25Yd0tqTGRwUlVyemhmTmRTaUNF?=
+ =?utf-8?B?ekZPamo0VENITUlZaFlGZk1uVWIxV2pSd3JFQ2YwLzJIYytzbSt5MndRL1pO?=
+ =?utf-8?B?dEh5VkVHTU5xbXdpOUpkb0syWkNlK0dTUjFTWTMreHhCSTgvRGMyZnhjREJS?=
+ =?utf-8?B?aHFsQlhrWCs2UWtLOC8xZk4vdHFIQzdqYjZIODlMZnVFbUZ5bkdTb2Y0WlJy?=
+ =?utf-8?B?THB3cnJkNkRESmhGMjdOemFjL1VvdlZ0ZGtpWHNnL3ZXaUUvY0NFTnA3RnVo?=
+ =?utf-8?B?M1BLczAwRVdMYkl3NUliK2ZQT0xheWhqbktNNUtaeDdQcU9xRkMzVk1UUzM5?=
+ =?utf-8?B?bnlQTk1WaVN0S3R4QlgzL2FEUkkwNzduWXJzVTN6N1d2V01aTDVEdVV5d0E1?=
+ =?utf-8?B?NEFlUEQyNmRsSGk0eFhjcnFJQkRWUDF6bjVMK0NNMnNod29XTHRxVjZyS3ll?=
+ =?utf-8?B?VU1RWDdiQ0NSbmp1VUZURWZrdHN5bnRwSVp4cDdiL1RMWWZWWjhQT1hFS2xa?=
+ =?utf-8?B?YmNkeWZnbjN5MklUd2dXbzN4YXBXaGtENzNCVzdaLzUyTldpK2xGV2FTdUVx?=
+ =?utf-8?B?SmlXa1FuMW9zSFZzMGpUL3ArbXF5TlVQZno3enMwTzNzcG12M2VET2xpWTd6?=
+ =?utf-8?B?TVVWejJoVmVUSFRVZkswQ1lsdFVrS29RaEU4dDVMWGw5bW1XRUMrWnlxUCtO?=
+ =?utf-8?B?bk1QRVgrYjVidEhDYi9FSmlmWE1kUmM2M2YzRnNEdUNDOXN5TS80TEZtQ0Iz?=
+ =?utf-8?B?K00ycEZIaURzdXpldldmd2w1OWh3YnloWU1aQkpKRmY3UFhESHpJdURDdzM4?=
+ =?utf-8?B?aWxudlUvMmVXQU1IcVFuMGp2VXhBS3BBRHVoSG9iUzJWQWxiV2RjZz09?=
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: cf3b27a4-7220-4f80-15eb-08def2ff2478
+X-MS-Exchange-CrossTenant-AuthSource: PH7SPRMB0047.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Aug 2026 14:37:57.7309
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 8d/S0YDEOvhc/bx2ZoAE076OWQnc70zSiSSsr8zEbkTryUGXGZ2GnKEs/RpDIKjy7X/XEwLgYDyPmE41S3Id8g==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR12MB999114
 
-On 05/08/2026 16:12, Manivannan Sadhasivam wrote:
-> On Wed, Aug 05, 2026 at 02:33:51PM +0200, Krzysztof Kozlowski wrote:
->> DT is not representation of internal device driver instantiation mechanism.
->>
+Jason,
+
+
+On 8/5/2026 6:37 AM, Jason Gunthorpe wrote:
+> On Thu, Jul 30, 2026 at 04:56:37PM +0530, Vasant Hegde wrote:
 > 
-> Here, the driver is just creating compatible for a real device. What difference
-> does it make if the BT node was defined statically in the DT vs created
-> dynamically? Both nodes do represent a real BT device, not driver's own
-> representation. And by the time the node was created, the device is physically
-> attached to the system.
+>> Based on discussion so far in this thread and the link Mario shared earlier [1]:
+>>   - We still need identity mapping for APUs. I will fine tune the patch based on
+>> the discussion in this thread.
+> 
+> IMHO if certain HW has broken support for PAGING (eg because it can't
+> handle the isochronous needs) then it should be quirked and blocked
+> properly.
+> 
+> I thought the issue here was the PASID check forcing identity and
+> accidently capturing these raven chips too? It should just be moved
+> out to a normal quirk..
+> 
+>>   - Its fine to drop SNP check
+>>   - I am still not sure its safe to drop SME check (CC_ATTR_MEM_ENCRYPT)
+>>     Because here were are putting all APUs in identity mode.
+>>     Commit ea68573d408f explicitly error out for RAVEN and some of the older APU
+>> platform didn't support SME. But not sure about newer ones.
+> 
+> That's quite a hacky check to make in that commit..
+> 
+>> So I am inclined to keep SME check for now. Once this patch stabilized we can
+>> revisit the SME check?
+> 
+> The SME check makes no sense either, but if you want to stage things
+> I'm OK with it.
 
-What stops this power sequencing drivers, after more driver patches, the
-best if being part of some bigger series, to add properties like
-"linux,name-of-driver-to-bind" or whatever other SW properties?
+Right. Eventually it should remove SME as well. But I am concerned about any
+regression. Also I don't have all these devices to test it. Hence for now I will
+limit to APUs, keep SME check and drop SNP check. Once it settle, we can go with
+next step.
 
-This is what happened in that linked thread:
-https://lore.kernel.org/all/20260326-pci-m2-e-v7-8-43324a7866e6@oss.qualcomm.com/
-The driver code is adding children under other nodes (references by
-graph) and it is nowhere documented. Maybe bindings of these other nodes
-allow it, maybe not. How do you even validate that?
+I will respin the patch later this week.
 
-So answering your question - yes, there is a difference because:
-1. DTS we validate but whatever you add to driver code we do not and we
-cannot,
-2. DTS represents hardware but whatever you do in your driver code
-represents who knows what (maybe hardware, maybe not, can represent
-anything)
+-Vasant
 
-And if you claim "I add hardware in the driver!", I respond - maybe
-true, maybe not, but look at this crap:
-https://web.git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=687bfbba5a1cb15cee51519c210141ed1c4b0ec7
-
-Since we DISALLOWED venus-decoder and venus-encoder DT nodes, what did
-Bryan do? Squeezed via driver code fake disallowed nodes and even gave
-them compatibles not looking like compatibles, so any regex won't work.
-
-This power sequencing work here has the same problem of sneaking ABI,
-which I pointed out here:
-https://lore.kernel.org/all/9cc5af16-d95e-4f10-8b4a-5e29c136079c@kernel.org/
-
-Look at above patch - nothing documents that ABI. The same as Bryan's
-fake venus-decoder and encore (not only fake but actually rejected). And
-to avoid ABI-check tools (or incoming tools), this power sequencing code
-does not even call a "compatible" a "compatible". No, it calls it
-"driver_data" nicely avoiding detection.
-
-This is terrible practice and I feel like allowing this patch is silent
-acknowledgment or agreement of such practice.
-
-It's about basic ABI principles - if you have DT ABI, it must be both
-clear in the drivers code and in DT bindings, instead of obfuscated
-calling a compatible driver data. If you don't, then this is not DT ABI
-and you are not allowed to use OF code to instantiate drivers. Use SW
-nodes or KHO-style whatever else is there.
-
-Best regards,
-Krzysztof
