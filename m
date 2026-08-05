@@ -1,85 +1,83 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87EB547D476;
-	Wed,  5 Aug 2026 15:55:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9AF347DF9A;
+	Wed,  5 Aug 2026 16:05:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=204.191.154.188
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785945335; cv=none; b=Iow43gGyQwgkODhiPHcsO+wPdArf6/Pb8cejV1SYnQIlvS4Et857kypShm/Cyk6dxd2tegPg20+gw+nff219ZpJRBeNahgvfOziNrT+wyEDbT4uIUsKfUXJVEncUHG6uV50GQm/q86vua4YQtvHReZr3POWaZQBOQOmCyY0BN3w=
+	t=1785945932; cv=none; b=i23rTXY0kputY0CSYlK+/evVWfql0j5r5vDoWhI83HFF+u/iaLg/VR89URKezfqQyrR+oIiUVmIP3AfhIq6Hzgf4acvGuXYuDDpkLjRgIdJYldUfn68tRoG8WIfM1lQeixlcM2/zizOvC31BhlS1GWkvZbPaUR4Vd7mspAtSQPU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785945335; c=relaxed/simple;
-	bh=rUGboeri6ktZTRV2oeqR5l37M6QCHKbQNKBeC4pEino=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=UcRl4AQbHd2lNUo3tNL4xOZs2rVp8MLxLfbOKXOnkYWtsAmXnknkMmmCg7XHirQygr7VurvlXqnTg8qN+QxJS5uz7UbdiMV2Ca1tHvXnX9ieWcNehZ8U6DvpjA4TmWGxaU/9j5h8Rzt5GQXHEcYga/vJ3xXG8xjWXqYrnLz+meM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cfQdXRbV; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785945932; c=relaxed/simple;
+	bh=3lrnARUnktHPOU4i5ZDfbc0l5WLcosy1AhKaYNTjuNA=;
+	h=Message-ID:Date:MIME-Version:To:References:From:In-Reply-To:
+	 Content-Type:Subject; b=BlC1GWKOrClOUfWvTYoro393H0tr3JTwVAtO3jMfL0IxMZpZn4AaMO+lGI5XB+HT9EtCZ/Y9ul1V9Cb6I1WB+r90hWlCrVgyTcZChepjd+70oXWR8exrdZnftxOJ959YsSkwBWck0JJwyePUkdJ6ph5s2ccObu0AvP0jpxRpGmg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com; spf=pass smtp.mailfrom=deltatee.com; dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b=QVVGOjSf; arc=none smtp.client-ip=204.191.154.188
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=deltatee.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cfQdXRbV"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2DB5E1F000E9;
-	Wed,  5 Aug 2026 15:55:25 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785945334;
-	bh=LFQGI06kexFLiZXhN70EcO5t/AU5IXTV7xLphoVtzPM=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=cfQdXRbVh2zU0daL1aTm2PkOw3nd2jbX4SNmALPqeFqA9rbj49tHS0IgFRRBUa4K/
-	 qDSyTt+0yRHzkEBqc+nC2lhJgL0ZsmbyC3M/SvuvPVhhwH6Q3OSjAwytBxRzxp2+3P
-	 8iI+M+Z5GoGb4ch4C8JwGc+OM0aL1gmP4/8InTCLgEkDC7ZIvsKNe5JQtvrzWfvSlN
-	 t8lgJTmom++iihD2H1K3JajA7h/ZSzE5Xkq1GMKT7jl3p8MmV1j1YAxyccQyI/MFSP
-	 AUh+KkpiyL7psqQSkEjRVQL9HAYrNe8LcGlNBTAwxQHWQg/rZV/CuOGGlXhsJ/EQks
-	 T/W2sx51PldwQ==
-Date: Wed, 5 Aug 2026 17:55:11 +0200
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Thierry Reding <thierry.reding@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, 
-	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
-	Conor Dooley <conor+dt@kernel.org>, Thierry Reding <thierry.reding@gmail.com>, 
-	Jonathan Hunter <jonathanh@nvidia.com>, Karthikeyan Mitran <m.karthikeyan@mobiveil.co.in>, 
-	Hou Zhiqiang <Zhiqiang.Hou@nxp.com>, Thomas Petazzoni <thomas.petazzoni@bootlin.com>, 
-	Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>, Michal Simek <michal.simek@amd.com>, 
-	Kevin Xie <kevin.xie@starfivetech.com>, Aksh Garg <a-garg7@ti.com>, linux-pci@vger.kernel.org, 
-	devicetree@vger.kernel.org, linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-arm-kernel@lists.infradead.org, Thierry Reding <treding@nvidia.com>
-Subject: Re: [PATCH v9 5/5] arm64: tegra: Add PCIe root ports on Tegra264
-Message-ID: <y7bq45p7dmy7zoz3kpwqzr77kmjr6ce52vukjeec2yvpni4twc@ale6wgwp7eos>
-References: <20260805-tegra264-pcie-v9-0-fa2ed7350ae1@nvidia.com>
- <20260805-tegra264-pcie-v9-5-fa2ed7350ae1@nvidia.com>
+	dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b="QVVGOjSf"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:To:
+	MIME-Version:Date:Message-ID:cc:content-disposition;
+	bh=8NLF8Fcb2T4FSDq/Fi3CnAvV0uLZJax5mT7k9EdSauQ=; b=QVVGOjSfUnzTat43DP0HQZvzB1
+	1IJn2u0tzAe4vwGw7LOd61nhZG+2YxvbkaDwGrDe+Mh1WXfQTOiJ4Cz7zsSfaonpiMPueOV/bv8Nx
+	zqj6grLNTprVimCqWJJKzAflg1EsLqCDua4+u8x/aebthvTYAnE05/CTPkOdRaJsZVLbll63NHrew
+	Gpg4bXAdwiTqWg/xpnpUR4fPFSctleSRFb1gqUAmBczsdVzlGsfKIuiEnG/3pXL4/+nV3Ai+n5Ilm
+	Mip+Zmy091cJCT1Mi4Fz0NlMN7G21l1iGXRsOyAI9bhOtgMP96/C2BqIp3YUbFOUTN6fz44IjRkcF
+	O0aYrryg==;
+Received: from d172-219-145-25.abhsia.telus.net ([172.219.145.25] helo=[192.168.11.155])
+	by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+	(Exim 4.98.2)
+	(envelope-from <logang@deltatee.com>)
+	id 1wre7V-00000000llA-0bYv;
+	Wed, 05 Aug 2026 10:05:29 -0600
+Message-ID: <19968e2f-8ba3-40b5-ba7f-f1be0850f925@deltatee.com>
+Date: Wed, 5 Aug 2026 10:05:25 -0600
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260805-tegra264-pcie-v9-5-fa2ed7350ae1@nvidia.com>
+User-Agent: Mozilla Thunderbird
+To: Pei Xiao <xiaopei01@kylinos.cn>, kurt.schwemmer@microsemi.com,
+ bhelgaas@google.com, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <6fdcbfa869f707cad783c7f92d1681f0a2bd9a7c.1785813784.git.xiaopei01@kylinos.cn>
+ <a619d2d6-5a6e-4173-9342-8186cce0eef1@deltatee.com>
+ <1b8d6927-68d5-4ab1-bd09-959a90cc3c72@kylinos.cn>
+Content-Language: en-US
+From: Logan Gunthorpe <logang@deltatee.com>
+In-Reply-To: <1b8d6927-68d5-4ab1-bd09-959a90cc3c72@kylinos.cn>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-SA-Exim-Connect-IP: 172.219.145.25
+X-SA-Exim-Rcpt-To: xiaopei01@kylinos.cn, kurt.schwemmer@microsemi.com, bhelgaas@google.com, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+X-SA-Exim-Mail-From: logang@deltatee.com
+X-Spam-Level: 
+Subject: Re: [PATCH] PCI: switchtec: Fix use-after-free in
+ switchtec_pci_remove due to race condition
+X-SA-Exim-Version: 4.2.1 (built Sun, 23 Feb 2025 07:57:16 +0000)
+X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 
-On Wed, Aug 05, 2026 at 01:57:24PM +0200, Thierry Reding wrote:
-> From: Thierry Reding <treding@nvidia.com>
+
+
+On 2026-08-04 19:28, Pei Xiao wrote:
+>> I'm wondering if these should come before the mrpc_timeout sync.
+>> Otherwise, hypothetically, new work could be added and another timeout
+>> could be in progress.
+>>
+> yes,
+>   	
+> +	cancel_work_sync(&stdev->mrpc_work);
+> +	cancel_work_sync(&stdev->link_event_work);
+> 	cancel_delayed_work_sync(&stdev->mrpc_timeout);
 > 
-> The bindings have been updated to use the PCIe root port bindings, so
-> the nodes for the root ports must be added.
-> 
-> Signed-off-by: Thierry Reding <treding@nvidia.com>
-> ---
->  arch/arm64/boot/dts/nvidia/tegra264.dtsi | 66 +++++++++++++++++++++++++++++---
->  1 file changed, 60 insertions(+), 6 deletions(-)
-> 
-> diff --git a/arch/arm64/boot/dts/nvidia/tegra264.dtsi b/arch/arm64/boot/dts/nvidia/tegra264.dtsi
-> index cf9760c681b1..31bd29df8e46 100644
-> --- a/arch/arm64/boot/dts/nvidia/tegra264.dtsi
-> +++ b/arch/arm64/boot/dts/nvidia/tegra264.dtsi
-> @@ -3562,10 +3562,19 @@ pci@c000000 {
->  			ranges = <0x81000000 0x00 0x84000000 0xd0 0x84000000 0x00 0x00200000>, /* I/O */
->  				 <0x82000000 0x00 0x20000000 0x00 0x20000000 0x00 0x08000000>, /* non-prefetchable memory (128 MiB) */
->  				 <0xc3000000 0xd0 0xc0000000 0xd0 0xc0000000 0x07 0xc0000000>; /* prefetchable memory */
-> -			bus-range = <0x0 0xff>;
+>> Also, I'm not sure, but seems like the interrupt should be disabled
+>> before this as well?
+> I looked it up and it appears that pci_clear_master cannot disable
+> interrupt enabling. Should I use devm_free_irq?
 
-bus-range for Host Bridge is still a valid property and the drivers are already
-parsing it. Even though it usually pass the default values, I don't see a need
-to remove it.
+Yes, I believe a couple calls to devm_free_irq() is what will be needed
+here.
 
-- Mani
-
--- 
-மணிவண்ணன் சதாசிவம்
+Logan
