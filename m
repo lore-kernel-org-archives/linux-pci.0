@@ -1,177 +1,128 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f173.google.com (mail-pl1-f173.google.com [209.85.214.173])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 524D23CE096;
-	Wed,  5 Aug 2026 17:18:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785950323; cv=none; b=mHH/avdEN0lo5WpmucrFAwA2R5G0WqTO/tjRyXFg8gdwYAFGFNIyG9u5WNFP0NomG2yJ9nDOBz5pfww8f6rYRt90JOoyikOF+lDs96dtZ0qa/qBmrvWuCWWWQ04ypDXLPASirfg76BRHA5+yAuWNatLET+yNzKqFSvJ4BjwhE/8=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785950323; c=relaxed/simple;
-	bh=ZYas7iAbegBnESMCIuQtfTs6Dk0qFddxJOEQxCcG8dk=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=PThW/sKWSMRr9S6LMPAqA+L+cu8hYeErhpk5t8qQxqOy3qnuw6nF3mHcAdQrxRRCEBhFy5nzmC49L/JwexJvaxTTdpIp7JHh0e5zvZYihQym8GEI0sr6hsEl3ooqrx8tNF6afg/+SPtREWQNTioJY69JbamvfKkaRgdIf5MklW8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=N/HuuOGd; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E877D3CE096
+	for <linux-pci@vger.kernel.org>; Wed,  5 Aug 2026 17:21:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.214.173
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1785950465; cv=pass; b=XasnzmHQl356pzbdLrq4U0P+mStJCzwBwGtzv44w6iCTXmkVlxRFMgtoTrfBC7qP/Ehr6svqvC5qXspSUuxh4LOhIntvU31AkxPdKIrNwZBriq4VAoYLforgV4EeD/mCc1VXE0o2y7Trv+wHIZo0rfasVW5UjIlP/h4LKlj67p0=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1785950465; c=relaxed/simple;
+	bh=f+1hgjoLe+9OAau5GDXmSyjb/F1lcu3rz3NObPtffwY=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=CPUIxs0ifErgOorFbPL6NJWwlqKvHG/5hTjVNLVl2XPtGs9tfKtoqJNUIr9/o/8vGkB0+BcNWKhvHaSExEExzwBbbYW1u/HoDI4DEGCCQjBwG9jN+DYLKm4W7vT3lsjcM1ZI2A3Gjht7UGoc8t7ekCSdNsuKAUcGDuZD3sdIPUU=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ZT1xHc2x; arc=pass smtp.client-ip=209.85.214.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="N/HuuOGd"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A10C71F000E9;
-	Wed,  5 Aug 2026 17:18:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785950321;
-	bh=cS+1OPt43LY9PVcLmNXnPTuZJ4WgQujUCM/knEjl0HU=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=N/HuuOGdJ4jfuVsLPVIvPkgZ2xNnrprRB7r/nUGJooGCbWrE139e6SSrx7FR0hjRI
-	 +TyBc/fziElSkTuwBIQAVqWtVWSFfwAcdYNOi3cJjZv8O6rbCo2qlNMk63qoF5/wk5
-	 kuZWcKDDZ932oqPNnVIJ+HdWY6q2GH3ORzcRGbgpxJc6OsqQTQgTp6+UQfiw0a8KpW
-	 fRMjh+lGP77i/eMjTki89xfFrULwI18IME78CpglYlx2twmiBE640OTeGkyE+XGHs7
-	 lu3yg5x/qAc7tkFFRUugrtpqqTt9jvM9chRi8C/NK+tbdlisXGkYjQrMrjYN9XQEGn
-	 ogQhEdgpLFOFQ==
-Date: Wed, 5 Aug 2026 12:18:40 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Avinash Roy <avinash@linux.ibm.com>
-Cc: maddy@linux.ibm.com, mpe@ellerman.id.au, bhelgaas@google.com,
-	npiggin@gmail.com, chleroy@kernel.org, sbhat@linux.ibm.com,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Avinash Roy <avinash.roy1@linux.ibm.com>
-Subject: Re: [PATCH] PCI: quirks: Add warm reset quirk for IBM Spyre
- accelerator
-Message-ID: <20260805171840.GA2126423@bhelgaas>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ZT1xHc2x"
+Received: by mail-pl1-f173.google.com with SMTP id d9443c01a7336-2cf420670bbso2244495ad.1
+        for <linux-pci@vger.kernel.org>; Wed, 05 Aug 2026 10:21:02 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1785950460; cv=none;
+        d=google.com; s=arc-20260327;
+        b=P/R2FkvSsp6GQeB4c2AwVdXKVwTRscYfc8TlfQUPcpLJj9Iz9gRh6cfwspV7OFEkm3
+         cO0GmsuWI85YSiB1WttozRtD3frn6gPevOYEI33S47Yt8I8KFySJNw5V2eBXbb6xN3e4
+         rY1WwbWRqc1KvehnqaMX5eZOmNz37fIuoiZOiq4LHe/+wE+g1lWD7rarQYCS2hP3TnVc
+         nvy61HdQ+jyQHU01AFMwSpVUr1yvatAXR36zRgrfHae+BqLuaK7mK0+dhLuRxq7TV6So
+         8DDC8QlHH603FDTGNfXfhMkBuR1GV7EaY7JflfsTUGZlnPnEjfJi3bb01oo9xxI4phe7
+         UQEQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=Cz1E8dA+nCFkDM0OHZhKzEI4Qib+t52DoabszOc2ICI=;
+        fh=Dg5AW7qQXdyS1FYsvdikMLEVB7rxjVjaA1bLqldthFU=;
+        b=qrXtUdYSq3CH5GRfikKerRlnI/uMY81GsJYhhpAPRorgMyfYCwhscgzoK6cv1dBF2r
+         AGy1+cnDE+CkH6Ft3XfpUeQPXRQAh86T/jqty3K2NUT7pDM/Fyj55CAU1/gKyraso31y
+         fE8DMOv/F+xm+tPIAJEy++LuEjXSXVolhOy7nGqfq0zopcpNbVTr5yxaWo9U2CYnlCTy
+         cOZpSrJMnK5AM9D8tQGyvYHdVdCxTSk7Ve4AIN4EeIJGXa8xfUd55bTNW01OjaIaSBSG
+         125CpEF+9NM5auMSheIxY/NVuf8CmvMFJ61SJAloSA1VacgNCtfaNCuVJgQCSgwFCjEh
+         +KWQ==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1785950460; x=1786555260; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=Cz1E8dA+nCFkDM0OHZhKzEI4Qib+t52DoabszOc2ICI=;
+        b=ZT1xHc2xyP9XYk8PUPnDAntsicElF5elLjXJHYxK/dTIRxhOXP4BYmKyaAm7D4myJe
+         FXySCyN7nRIDJjvQu9UXCW9eDvMXBTKWNXVzmoLwbtoeTkM+2avemvUwcCdFVmdxcM5y
+         HMcojfHT74MtjHUYX3FGuPiSQu6CG9RcMZN10Jij5DCneHFtm2g+5oKnouFZiqpXEehp
+         s6g/qW8DnpBdkqN4RMvOha0mJmzKRXFYxdpGFxxrgKrHq8SOqH3+XjNo42K8aYfHQQpY
+         ieaRXp6TarxQO7iZdwat5LWdNaE6ED/8Ui2j8nc1nYOEyzIfdGs6la8xuL4tQi7opQXq
+         gWug==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1785950460; x=1786555260;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=Cz1E8dA+nCFkDM0OHZhKzEI4Qib+t52DoabszOc2ICI=;
+        b=mUbjaSPfDzM1LTYnJuLF7ebQn6HhI0dl4kIMWRn1/oCPqNZ2F+sbrSYNh4xcG4r/oM
+         HHr3L13QfTeUnDFgDCQo/9AJxOdTcwTr2gn5+T4e/2QpSizXOiualmykW3+KS246UhgO
+         WNrX7o5SvOibTjzaTC9HddPY7wTW8QEuo9oH/YkB0ZP9lHUFFQ4pdyRyhVwwEdCxhq8H
+         fVyRBSYdYUWIMT84/sulZg0OCn/uj9549Kn9padhjuWMqsRrKe3fdkamRW2J2oIINpXh
+         zPazRQ0EUJkb3gZSWMjExSJ0grF+AzabuikevltieaDVtFxJZwjQdJuz0P1dmTzKoOGT
+         6h/A==
+X-Forwarded-Encrypted: i=1; AHgh+RpY2X7VKgGrXs0Db30PYkC6YvIQlB1Q7L6ueFKyBVB4w4jqFyFn1sWL499/VgA3RrHdZ/sIGs3F4as=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzbWLXQ05h6S7XlbxxrnFtn+pStCTQwPICXw8j1MqeT/ozwMF3L
+	OM0U+Hbz1Fzn6XATbXbWaBxSHiwrPheePz/BmXC+c4ouLtNi5Z8Nig8LfZQp9p4nM0O6aXG1Kij
+	LqrZi8s7xdRXkpma3Id7daps/QhT52fg=
+X-Gm-Gg: AR+sD10SVWuFJOfXqXPGIle0UVpTASAM5MMnVRUCDtMbpkzMbAHPtY478PPfGGWDQet
+	GoR5N5i4Rgo158aD/gEGgtnwLTeoWXo3DTjkY7VB69FR6Dp5jXMfonvEnZmolpi9GkoseZpwfku
+	Fg0CrtLnnTBJkNHegF1fHpWvz161ErWDASOJjVA0qKFQabnmEVFas/iyGpgCXmVbTV2GfGidhvs
+	8mN9IJUTg/RIqdyp+GFT1YKRg8i/uYTnFDcY4/R1/Q+vq8n4jxvUxnyBeXaEvDo0ILSl6zzOcv2
+	YSYJ/0KqiA9487fSlOS21wErRApFcPlssm97MEbU9Xh0NwAdYzkNDlNvyDAfYVcTy/9z79yNJwV
+	bHCM8JXUtP+iwf36ADtn6sS5U4s3vsIz95abtTwKposxxm8TY2I6TSvIoa1Ws
+X-Received: by 2002:a17:902:ec8a:b0:2c9:ed4a:c3a4 with SMTP id
+ d9443c01a7336-2d0ca1658f2mr73522915ad.0.1785950460122; Wed, 05 Aug 2026
+ 10:21:00 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260805125132.941270-1-avinash@linux.ibm.com>
+References: <0CoR7Z5B4-PH8GYYbWlZysVJpMnNLTFzTO0tBlOpJQNFiQ2CPrhdjyD4-4jQs4n0J_1QqovCd_EaYpclyigEKw==@protonmail.internalid>
+ <20260628095132.47753-1-trev@trevrosa.dev> <87pkzw9aut.fsf@t14s.mail-host-address-is-not-set>
+In-Reply-To: <87pkzw9aut.fsf@t14s.mail-host-address-is-not-set>
+From: Miguel Ojeda <miguel.ojeda.sandonis@gmail.com>
+Date: Wed, 5 Aug 2026 19:20:45 +0200
+X-Gm-Features: AUfX_mwN2wRwvmcNPuq0EpEyS5qgayFtXbsdflDPhbgmFxUJf-YMOIqJTLTJEvs
+Message-ID: <CANiq72=wo4LOfa3hrJhTFr8UzkchW4QQtUespCTq7qRJvrr6CA@mail.gmail.com>
+Subject: Re: [PATCH v6] rust: aref: make `AlwaysRefCounted::inc_ref` an
+ associated function
+To: Andreas Hindborg <a.hindborg@kernel.org>
+Cc: Trevor Chan <trev@trevrosa.dev>, gregkh@linuxfoundation.org, rafael@kernel.org, 
+	dakr@kernel.org, ojeda@kernel.org, paul@paul-moore.com, aliceryhl@google.com, 
+	airlied@gmail.com, simona@ffwll.ch, viro@zeniv.linux.org.uk, 
+	brauner@kernel.org, igor.korotin@linux.dev, vireshk@kernel.org, nm@ti.com, 
+	sboyd@kernel.org, m.wilczynski@samsung.com, boqun@kernel.org, 
+	gary@garyguo.net, axboe@kernel.dk, daniel.almeida@collabora.com, 
+	shankari.ak0208@gmail.com, lyude@redhat.com, j@jananu.net, lossin@kernel.org, 
+	acourbot@nvidia.com, markus.probst@posteo.de, driver-core@lists.linux.dev, 
+	rust-for-linux@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-block@vger.kernel.org, linux-security-module@vger.kernel.org, 
+	dri-devel@lists.freedesktop.org, linux-fsdevel@vger.kernel.org, 
+	linux-mm@kvack.org, linux-pm@vger.kernel.org, linux-pci@vger.kernel.org, 
+	linux-pwm@vger.kernel.org, david.m.ertman@intel.com, iweiny@kernel.org, 
+	leon@kernel.org, bjorn3_gh@protonmail.com, tmgross@umich.edu, 
+	tamird@kernel.org, work@onurozkan.dev, sergeh@kernel.org, 
+	matthew.brost@intel.com, thomas.hellstrom@linux.intel.com, jack@suse.cz, 
+	ljs@kernel.org, liam@infradead.org, bhelgaas@google.com, 
+	kwilczynski@kernel.org, ptikhomirov@virtuozzo.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Wed, Aug 05, 2026 at 06:21:32PM +0530, Avinash Roy wrote:
-> From: Shivaprasad G Bhat <sbhat@linux.ibm.com>
-> 
-> The IBM Spyre accelerator (PCI ID 1014:06a7) requires a dedicated warm
-> reset method for reliable EEH recovery on pSeries/ppc64 platforms.
-> 
-> FLR alone is insufficient because it does not re-initialize the Spyre
-> firmware state machine. On ppc64 with EEH enabled,
-> pcibios_set_pcie_reset_state() is overridden in
-> arch/powerpc/kernel/eeh.c to drive the platform-level PERST# signal via
-> EEH PE operations, which is the correct mechanism for full device
-> recovery after an EEH event.
+On Wed, Aug 5, 2026 at 11:26=E2=80=AFAM Andreas Hindborg <a.hindborg@kernel=
+.org> wrote:
+>
+> Reviewed-by: Andreas Hindborg <a.hindborg@kernel.org>
 
-This makes it sound like this mechanism is needed for EEH recovery for
-*all* devices, not just Spyre.  If that's the case it sounds like we
-need more than just a Spyre-specific quirk.
+In case it helps, there was a v7 of this one:
 
-> The reset function is placed in arch/powerpc/platforms/pseries/pci.c
-> where the EEH infrastructure is already present, declared in
-> pseries.h, and registered in the generic pci_dev_reset_methods[] table
-> in drivers/pci/quirks.c under a CONFIG_PPC_PSERIES guard.
-> 
-> This reset method is only registered when CONFIG_PPC_PSERIES is enabled, 
-> so it is not available on other platforms.
-> 
-> Reset sequence:
->   - Assert PERST# via pcie_warm_reset, hold 250 ms
->   - Deassert PERST# via pcie_deassert_reset
->   - Wait 250 ms for PCIe link retrain and device recovery
-> 
-> Signed-off-by: Avinash Roy <avinash.roy1@linux.ibm.com>
-> Signed-off-by: Shivaprasad G Bhat <sbhat@linux.ibm.com>
-> ---
-> diff --git a/arch/powerpc/platforms/pseries/pci.c b/arch/powerpc/platforms/pseries/pci.c
-> index 84e4ffe957a8..7aa58d57208f 100644
-> --- a/arch/powerpc/platforms/pseries/pci.c
-> +++ b/arch/powerpc/platforms/pseries/pci.c
-> @@ -11,6 +11,7 @@
->  #include <linux/kernel.h>
->  #include <linux/pci.h>
->  #include <linux/string.h>
-> +#include <linux/delay.h>
->  
->  #include <asm/eeh.h>
->  #include <asm/pci-bridge.h>
-> @@ -236,6 +237,41 @@ static void fixup_winbond_82c105(struct pci_dev* dev)
->  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_WINBOND, PCI_DEVICE_ID_WINBOND_82C105,
->  			 fixup_winbond_82c105);
->  
-> +/*
-> + * Reset Spyre adapter using pci_set_pcie_reset_state()
-> + * This is specifically for PPC platforms where EEH (Enhanced Error Handling)
-> + * requires this reset method for proper device recovery.
-> + */
-> +int reset_spyre(struct pci_dev *dev, bool probe)
-> +{
-> +	int ret;
-> +
-> +	if (probe)
-> +		return 0;
-> +
-> +	/* Assert warm reset */
-> +	ret = pci_set_pcie_reset_state(dev, pcie_warm_reset);
-> +	if (ret) {
-> +		pci_err(dev, "Failed to assert reset: %d\n", ret);
-> +		return ret;
-> +	}
-> +
-> +	/* Wait for reset to take effect */
-> +	msleep(250);
-> +
-> +	/* Deassert reset */
-> +	ret = pci_set_pcie_reset_state(dev, pcie_deassert_reset);
-> +	if (ret) {
-> +		pci_err(dev, "Failed to deassert reset: %d\n", ret);
-> +		return ret;
-> +	}
-> +
-> +	/* Wait for device to recover */
-> +	msleep(250);
-> +
-> +	return 0;
-> +}
-> +
->  static enum pci_bus_speed prop_to_pci_speed(u32 prop)
->  {
->  	switch (prop) {
-> diff --git a/arch/powerpc/platforms/pseries/pseries.h b/arch/powerpc/platforms/pseries/pseries.h
-> index 3968a6970fa8..79c194aeb3c6 100644
-> --- a/arch/powerpc/platforms/pseries/pseries.h
-> +++ b/arch/powerpc/platforms/pseries/pseries.h
-> @@ -92,6 +92,10 @@ extern struct pci_controller_ops pseries_pci_controller_ops;
->  int pseries_msi_allocate_domains(struct pci_controller *phb);
->  void pseries_msi_free_domains(struct pci_controller *phb);
->  
-> +/* PCI device reset method for Spyre adapter */
-> +struct pci_dev;
-> +int reset_spyre(struct pci_dev *dev, bool probe);
-> +
->  extern int CMO_PrPSP;
->  extern int CMO_SecPSP;
->  extern unsigned long CMO_PageSize;
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index b09f27f7846f..1b8ab5d9764b 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -4237,6 +4237,11 @@ static int reset_hinic_vf_dev(struct pci_dev *pdev, bool probe)
->  	return 0;
->  }
->  
-> +#ifdef CONFIG_PPC_PSERIES
-> +/* Defined in arch/powerpc/platforms/pseries/pci.c */
-> +int reset_spyre(struct pci_dev *dev, bool probe);
-> +#endif
-> +
->  static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
->  	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82599_SFP_VF,
->  		 reset_intel_82599_sfp_virtfn },
-> @@ -4252,6 +4257,10 @@ static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
->  		reset_chelsio_generic_dev },
->  	{ PCI_VENDOR_ID_HUAWEI, PCI_DEVICE_ID_HINIC_VF,
->  		reset_hinic_vf_dev },
-> +#ifdef CONFIG_PPC_PSERIES
-> +	{ PCI_VENDOR_ID_IBM, 0x06a7,
-> +		reset_spyre},
-> +#endif
->  	{ 0 }
->  };
+  https://lore.kernel.org/rust-for-linux/20260628100731.64885-1-trev@trevro=
+sa.dev/#r
+
+Cheers,
+Miguel
