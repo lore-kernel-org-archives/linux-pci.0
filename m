@@ -1,131 +1,276 @@
-Received: from mail-qt1-f182.google.com (mail-qt1-f182.google.com [209.85.160.182])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 912363D6CB0
-	for <linux-pci@vger.kernel.org>; Wed,  5 Aug 2026 19:11:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.182
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B59BC3DCD80;
+	Wed,  5 Aug 2026 19:34:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785957080; cv=none; b=D3fLwqWf369ZYz4+C6BY5LDQ2owFCYnAj5gV037OYhj2eIYWuzulH33QlsIi/4tkxy4GQ5iTye/kUgLlT/lJYpoh2RGKmRGgSdk1QLu0C8DedWtHgsDTr7PNrBAmNAS5ALCU5yD6RGUd82IaDXJ+HrvsRo+oA0GqYP74mdIHJs8=
+	t=1785958458; cv=none; b=NzqASeBpIajJqb+GkY9JZGdVPz0O9iGbNb2EUL9J1EI0W2xhI3T+DQSVQxH78J2ek626YJsxE3nnIVvqLRHtbIcE54hlLXoo6ZgRnbOLYPMK620VZU4r2u7Rc9vrKDV5s5m7ZpXNNnTJAaadBZF/fpt/8yjuOGMKnq9ydrSWAy0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785957080; c=relaxed/simple;
-	bh=g6HU23i5fSRX/KH4Y44SrBTLW+Efym3AnaxqepOQoxU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=cFZ+rrfx5zlRVLz5veeT4W3x/iYA3cYXc8tId/rJ9BCva0mhF3IrTuyasqFcS+KFc2AumM4HS5zjFrazn18M6Mr+QAWIcQBk9yxNRc78YzY+QnaRtgnzuUnA7YcA6Oos/MTaU2cgqhhBsIPy43LRLBxBp6Ocopmmy4I7wiL0HKQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca; spf=pass smtp.mailfrom=ziepe.ca; dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b=pOA63DnS; arc=none smtp.client-ip=209.85.160.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
+	s=arc-20240116; t=1785958458; c=relaxed/simple;
+	bh=zGS+pHmcvZFLDW8eeNijg5dlAWoeDvQik7KumTC5XcA=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=DI/M1P6vMdPRz6Hq/wIJm9+EHb2rGbpYEwUJ8xFTnJjI0+az26/zb46UuaChmHn5SCRTIPziNNPuJa9FxDFQOfaNo3AYDdGjnlmIJbejqYewv6vOD3lW6lGQO490Lfh5vwuaDjvqcsfPAKWg5j0ott5pEEQdHODlEbznNcAEsW4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gFTLw4br; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="pOA63DnS"
-Received: by mail-qt1-f182.google.com with SMTP id d75a77b69052e-527e352a167so8915981cf.1
-        for <linux-pci@vger.kernel.org>; Wed, 05 Aug 2026 12:11:18 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ziepe.ca; s=google; t=1785957077; x=1786561877; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=b0xkTaFSxQkbT4PpYQuH0yFvquaeQpeK5woUXN7RqdE=;
-        b=pOA63DnSFQWKBMbGCC3N0TvHyPzPLnoupxk9N5OQwIGuWwLTXOmT0+/a4kTjMyiqHd
-         46LF9Gjw2OLdsQM44ukt+mx5ssTdmkBJq5pOtiNJ6t0ddlbA7Zpz0/GYmUKdX0yyq5Yz
-         UnC0ICazuqrSHLBoaXHnITIw9eRLA2q1HjFiaLDglUPjSfJ2klroUBzTCFLr3ehIryjK
-         olk7TegfGqwG9L66Yv2d1EsLbHE4H5UxiD5yfEl9v52wT4KFbJaHfEzTNLnelZPteB8v
-         jBMgMfZC57RAR+7QVusD3c0h/Jkfuv1fgIDrwSdvZy1CzNfsf+Mn7AeKQnTn+5SrOIc9
-         JQig==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785957077; x=1786561877;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=b0xkTaFSxQkbT4PpYQuH0yFvquaeQpeK5woUXN7RqdE=;
-        b=ohizNr+dbhWvYk7nKBQCtPAP4yOwUZiwo0jYVSSJcWN5BPOe17mP++zxIiz+hAYQmN
-         1AWezLHtapMGhv1BZNdbU4OTQNc1c1bQh8RHqCw6P/5HS2m+B817vKpzYBiHWs40qeYd
-         V4jXxSgdgLH9eFhmy5pp6JxUW4bf/+JjDnTI9YVtHRBLBjveeR4mybasTM2VKKX1okXh
-         cmik1F4reFWZLxK6Zz1x8wGm03NoUow6BeX2HVlQusjbMniok9BZL3scToEgxhyty41V
-         Z35vAhS4PJsYd5hqEKzq1n2eueUe1wi/X5CWJG3e92dqmAQcag7ZZkfdI/Ly2fScicoN
-         RgjQ==
-X-Forwarded-Encrypted: i=1; AHgh+Rq/nGxYmOYkr+kNL2rvgf0Yn1y41h4LW/1dM4ab6NsJs/7FaaPsrZy/ZG86OSDBsFpWN55xNfyxUWU=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxDdNebivO63HDR3aDglRXhsY4LLteZT3uedSEcHNu+0/bJjwDi
-	jsQG/8SafgnL5WZE2lDqzOwLI1BRWhOqOuKoFQJ28je8bIIwAx0ifXoq0/bZCQ1/8v8=
-X-Gm-Gg: AR+sD11Davrpq4XJWBZayUspH9lX7Ec/G3v4W7KmECsREPWn+eNXQqbjnEIytXscWlj
-	iwZOrc+jpvbV3EgttgQYseSTm8rCe5oJ8v0fyIZOyVU4xYA0DRC6pdfGKY0UkPFydQrlNc5qE2c
-	166k+n0VKXPtE6CxlgaP/x/QTUs+8Kll6VYWh7bDIK5Sn1gytr0U1TG9sXQGAZirZvJ5SUaJtl4
-	SqKplj+H33t6wioWwegULHZItb5RtGAfQpf0jdGXg13z+bcOL5wj65rDLVBkxS7Qo+734xlp+f1
-	eU/HXQoBXQz40FZsfrZooSKUCIcDZfUdVb/gwA/gGTM7qvCQQQphU1bJX7QiVNFLR+PGOcW6deg
-	NzeqJpFmV7ZQMMKsrj3ig0A5BmrRm63rUiyBKHs+jIuNCFk2XsIPwzxcD+n12Mu3xJ52xpTDoWQ
-	8qApL294HXHfVo8/d6pMbm7w0ItlL5qkKZKrQr6g==
-X-Received: by 2002:a05:622a:480c:b0:51c:1c73:5943 with SMTP id d75a77b69052e-52ce6145233mr106545321cf.23.1785957077642;
-        Wed, 05 Aug 2026 12:11:17 -0700 (PDT)
-Received: from ziepe.ca ([142.166.156.215])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-9087ffe0f93sm32516756d6.21.2026.08.05.12.11.16
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 05 Aug 2026 12:11:16 -0700 (PDT)
-Received: from jgg by wakko with local (Exim 4.97)
-	(envelope-from <jgg@ziepe.ca>)
-	id 1wrh1I-00000000NIN-0fnn;
-	Wed, 05 Aug 2026 16:11:16 -0300
-Date: Wed, 5 Aug 2026 16:11:16 -0300
-From: Jason Gunthorpe <jgg@ziepe.ca>
-To: "Deucher, Alexander" <Alexander.Deucher@amd.com>
-Cc: "Hegde, Vasant" <Vasant.Hegde@amd.com>,
-	"Limonciello, Mario" <Mario.Limonciello@amd.com>,
-	"Kuehling, Felix" <Felix.Kuehling@amd.com>,
-	"iommu@lists.linux.dev" <iommu@lists.linux.dev>,
-	"joro@8bytes.org" <joro@8bytes.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"will@kernel.org" <will@kernel.org>,
-	"robin.murphy@arm.com" <robin.murphy@arm.com>,
-	"Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"Longia, Amandeep Kaur" <AmandeepKaur.Longia@amd.com>
-Subject: Re: [PATCH 2/2] iommu/amd: Force identity mode for selected GPUs only
-Message-ID: <20260805191116.GE28508@ziepe.ca>
-References: <f4355034-d40a-4d11-ab98-eef0f2991f33@amd.com>
- <838281e9-8ee7-433a-b06c-68675e9b285f@amd.com>
- <2f400c7f-eada-45e3-9079-7b5727ecb5c3@amd.com>
- <bacdf160-8ab2-4bd6-aa9d-ab63b16527fa@amd.com>
- <08f2e48e-6e98-4fde-af71-cb8cde666bdf@amd.com>
- <20260805010706.GC28508@ziepe.ca>
- <39ce2a2f-3bb8-43e7-9446-a67551cce104@amd.com>
- <BN9PR12MB5146934D584CF0A2A9DD8CFCF7D32@BN9PR12MB5146.namprd12.prod.outlook.com>
- <20260805175308.GD28508@ziepe.ca>
- <BN9PR12MB51467229315BC8D731239E80F7D32@BN9PR12MB5146.namprd12.prod.outlook.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gFTLw4br"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 70304C19425;
+	Wed,  5 Aug 2026 19:34:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1785958458;
+	bh=zGS+pHmcvZFLDW8eeNijg5dlAWoeDvQik7KumTC5XcA=;
+	h=From:Subject:Date:To:Cc:Reply-To:From;
+	b=gFTLw4br5EIYU09AyjhvUAj9G9WcTvZpOHZF+wIUxNZKe1cK44sTsfhd46P04egMZ
+	 qQIjIfTv2csQi4gfDt4e+DJXliNicGzcFjXVWWIyEZtZAfVP4QWBOm0g0k96YRovnj
+	 8GqOztLBMCDocZG3w2zCoYYJ5j4StZpSqBh6cSIruwxpHbw8MFYAxTQAIGuCqa757o
+	 Ly1oEW401hEeKUL8ywlUtT2qD4H1yBpzOczVAPldeJm+BRiCo8wQUMHF40Fp+Fp138
+	 p7BPGzA4Lxd+mu2rsZUky+kXeQ5KAJ+6rnz6TBGBin7x1oyRD/9TLYthfMCtaQ0WUI
+	 mNTkzZ269E//A==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 48325C561E6;
+	Wed,  5 Aug 2026 19:34:18 +0000 (UTC)
+From: Markus Probst via B4 Relay <devnull+markus.probst.posteo.de@kernel.org>
+Subject: [PATCH RESEND v23 0/3] rust: leds: add led classdev abstractions
+Date: Wed, 05 Aug 2026 21:34:09 +0200
+Message-Id: <20260805-rust_leds-v23-0-b2fea4290ee6@posteo.de>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <BN9PR12MB51467229315BC8D731239E80F7D32@BN9PR12MB5146.namprd12.prod.outlook.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+To: Lee Jones <lee@kernel.org>, Pavel Machek <pavel@kernel.org>, 
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+ Dave Ertman <david.m.ertman@intel.com>, Leon Romanovsky <leon@kernel.org>, 
+ Miguel Ojeda <ojeda@kernel.org>, Alex Gaynor <alex.gaynor@gmail.com>, 
+ Gary Guo <gary@garyguo.net>, 
+ =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, 
+ Benno Lossin <lossin@kernel.org>, Andreas Hindborg <a.hindborg@kernel.org>, 
+ Alice Ryhl <aliceryhl@google.com>, Trevor Gross <tmgross@umich.edu>, 
+ Danilo Krummrich <dakr@kernel.org>, "Rafael J. Wysocki" <rafael@kernel.org>, 
+ Bjorn Helgaas <bhelgaas@google.com>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ Boqun Feng <boqun@kernel.org>, 
+ Daniel Almeida <daniel.almeida@collabora.com>, 
+ Tamir Duberstein <tamird@kernel.org>, 
+ Alexandre Courbot <acourbot@nvidia.com>, 
+ =?utf-8?q?Onur_=C3=96zkan?= <work@onurozkan.dev>, 
+ Ira Weiny <iweiny@kernel.org>, Boqun Feng <boqun@kernel.org>
+Cc: rust-for-linux@vger.kernel.org, linux-leds@vger.kernel.org, 
+ linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, 
+ Markus Probst <markus.probst@posteo.de>
+X-Mailer: b4 0.15.2
+X-Developer-Signature: v=1; a=openpgp-sha256; l=6897;
+ i=markus.probst@posteo.de; h=from:subject:message-id;
+ bh=zGS+pHmcvZFLDW8eeNijg5dlAWoeDvQik7KumTC5XcA=;
+ b=owEBiQJ2/ZANAwAIATR2H/jnrUPSAcsmYgBqc5A3BzcF00KzieQe/gRq1VmdHNS/oRlZS/X05
+ uxIIa8y12OJAk8EAAEIADkWIQSCdBjE9KxY53IwxHM0dh/4561D0gUCanOQNxsUgAAAAAAEAA5t
+ YW51MiwyLjUrMS4xMiwyLDIACgkQNHYf+OetQ9Kw9xAAjl0Ah5Z27NwBqESI2vpiavRDP0QKBN+
+ uAvT0UgWS+EaEZtf0J8gq7zp0ielbgmuPeodG9/unnqc+oZ/dSPvHv3xa37Vp/vc7tsKvGzK8hK
+ 5EAPM7XZNj1upYR/+F1OMG0TTykGi54MY6PCD7XkFOgBC/LcgsMw2WJDlOR5NStVsTPDqpyiLa6
+ vdzaKFFDfQ8NZDgKU5spAxAxcKfYyJqewGW9RvJMLvAsSjDqmvxhiPDW7CdtSSzoJU41KS1HkPV
+ CJibeRatJgo3DoRuI4xX6HixXsFG5E7vMFJkcsipf3+IlXxqe6f6LMW5lRNNFBNl5QyVQ1/4o7B
+ SaX9BDM34v85op84/d7V+CdtUt3P8PUivZWLjLoGbaeDkPumcYPQ1kiHck5LIKzMF2PYH2AghmK
+ gWqwjsC4SgYc3iWeJCU5aaB4v+M9c4CVs/pQWQadQEMrsF9SR2tD64GGMpCHnIno8meRj2k0LE1
+ e3y74sfLyFDCjOcOCJW9ffRnY7p6UsR12EZqJaRzJdxrNvQ/lqU9aTFhLlbqnLBruF7lyq9xhMj
+ qF/ZR12L6jcJwjGdUFtgkMJOLRcFaBtAyXJYiTILKyP1MFZsr4nBDWvwRRFACKv/bOLnIpgvKu1
+ luuKT4DfN0gZWzLY552DO5sirXIOj3EZlg7HXQyY7u7S9GRZs3r0=
+X-Developer-Key: i=markus.probst@posteo.de; a=openpgp;
+ fpr=827418C4F4AC58E77230C47334761FF8E7AD43D2
+X-Endpoint-Received: by B4 Relay for markus.probst@posteo.de/default with
+ auth_id=680
+X-Original-From: Markus Probst <markus.probst@posteo.de>
+Reply-To: markus.probst@posteo.de
 
-On Wed, Aug 05, 2026 at 06:12:05PM +0000, Deucher, Alexander wrote:
+This patch series has previously been contained in
+https://lore.kernel.org/rust-for-linux/20251008181027.662616-1-markus.probst@posteo.de/T/#t
+which added a rust written led driver for a microcontroller via i2c.
 
-> > On Wed, Aug 05, 2026 at 05:22:22PM +0000, Deucher, Alexander wrote:
-> >
-> > > IIRC, they supported SME, but it wasn't usable due to other
-> > > limitations (e.g., the requirement for identity mappings due to the
-> > > display hw bug and the latency impact of encryption for displays in
-> > > system memory).  Do you could effectively pick either SME or displays.
-> >
-> > IMHO the GPU driver should fail if it cannot work because it can't reach the
-> > IOVA space requried for SME ...
-> >
-> > I don't think this should be a iommu problem to deal with
-> 
-> That means no display for the user which is a not a good user
-> experience. Most users of systems with integrated graphics would
-> probably prefer displays over SME.
+As the reading and writing to the i2c client via the register!
+macro has not been implemented yet [1], the patch series will only
+contain the additional abstractions required.
 
-You said IOVA translation doesn't work at all on these devices due to
-a bug, so what is the iommu even supposed to do? It can't select
-identity because the device doesn't work that way and it can't select
-paging because it doesn't work that way either.
+This series depends on [1].
 
-Or are you saying paging sort of works enough to do something
-half-busted?
+[1] https://lore.kernel.org/rust-for-linux/20260525202921.124698-1-dakr@kernel.org/
 
-Why did AMD even offer SME in the BIOS on these systems if it doesn't
-even work and turn it into Linux's problem?
+The following changes were made:
+* add basic led classdev abstractions to register and unregister leds
 
-Jason
+* add basic led classdev abstractions to register and unregister
+  multicolor leds
+
+Changes since v22:
+* readded CStrExt import, because it is imported with `as _` in prelude.
+  A `# CONFIG_RUST is not set` sneaked into my .config while
+  development, so the compile error was unnoticed.
+
+Changes since v21:
+* use 'init for lifetime that is only alive during initialization
+* remove unnecessary CStrExt import
+
+Changes since v20:
+* resolve Sashiko regressions:
+  * fix typo
+  * fix fwnode refcount decremented too early
+
+Changes since v19:
+* rebase on v7.2-rc1:
+  * Add `max_intensity` to `MultiColorSubLed`
+* use safer `KBox::pin_slice` instead of `KVec`
+  (len might not equal capacity)
+* explicitly call `FwNode::dec_ref` instead of dropping a reconstructed
+  `ARef<FwNode>`.
+* remove direct access to `intensity` and `brightness` fields,
+  which may get mutated concurrently by the C side
+* fix safety comments pointing to functions from previous revisions
+
+Changes since v18:
+* add inlines
+* fix invalid documentation
+* improve led color duplicate checking
+
+Changes since v17:
+* use lifetimes instead of Devres
+
+Changes since v16:
+* use for loops for duplicate checking
+
+Changes since v15:
+* fix issues reported by Sashiko bot:
+  * fix returning error not possible on `brightness_get` callback
+
+Changes since v14:
+* fix issues reported by Sashiko bot:
+  * add missing inlines
+  * add missing Sync trait bound
+  * fix vertical import layout for public export of private types
+  * fix potential memory leak, if a multicolor led device with over
+    `u32::MAX` subleds is registered
+* remove default_trigger option
+* fix missing CAST doc
+
+Changes since v13:
+* rebased onto v7.1-rc1
+
+Changes since v12:
+* add `led::DeviceBuilder::name()` and `DeviceBuilderState'
+* add `led::Color::as_c_str`
+
+Changes since v11:
+* use `led::DeviceBuilder` instead of `led::InitData`
+* use static_assert instead of const { assert!(...) }
+* restructured patches to avoid moving `led::Device` from
+  rust/kernel/led.rs to rust/kernel/led/normal.rs in the 2. patch
+
+Changes since v10:
+* allow in-place initialization of `LedOps`
+* run rustfmt for code inside `try_pin_init!`
+
+Changes since v9:
+* add missing periods in documentation
+* duplicate `led::Device` and `led::Adapter` instead of using a complex
+  trait
+* fix imports not using prelude
+* adapt to CStr change
+* documented `led::Color::Multi` and `led::Color::Rgb`
+
+Changes since v8:
+* accept `Option<ARef<Fwnode>>` in `led::InitData::fwnode()`
+* make functions in `MultiColorSubLed` const
+* drop the "rust: Add trait to convert a device reference to a bus
+  device reference" patch, as it has been picked into driver-core
+
+Changes since v7:
+* adjusted import style
+* added classdev parameter to callback functions in `LedOps`
+* implement `led::Color`
+* extend `led::InitData` with
+  - initial_brightness
+  - default_trigger
+  - default_color
+* split generic and normal led classdev abstractions up (see patch 3/4)
+* add multicolor led class device abstractions (see patch 4/4)
+* added MAINTAINERS entry
+
+Changes since v6:
+* fixed typos
+* improved documentation
+
+Changes since v5:
+* rename `IntoBusDevice` trait into `AsBusDevice`
+* fix documentation about `LedOps::BLOCKING`
+* removed dependency on i2c bindings
+* added `AsBusDevice` implementation for `platform::Device`
+* removed `device::Device` fallback implementation
+* document that `AsBusDevice` must not be used by drivers and is
+  intended for bus and class device abstractions only.
+
+Changes since v4:
+* add abstraction to convert a device reference to a bus device
+  reference
+* require the bus device as parent device and provide it in class device
+  callbacks
+* remove Pin<Vec<_>> abstraction (as not relevant for the led
+  abstractions)
+* fixed formatting in `led::Device::new`
+* fixed `LedOps::BLOCKING` did the inverse effect
+
+Changes since v3:
+* fixed kunit tests failing because of example in documentation
+
+Changes since v2:
+* return `Devres` on `led::Device` creation
+* replace KBox<T> with T in struct definition
+* increment and decrement reference-count of fwnode
+* make a device parent mandatory for led classdev creation
+* rename `led::Handler` to `led::LedOps`
+* add optional `brightness_get` function to `led::LedOps`
+* use `#[vtable]` instead of `const BLINK: bool`
+* use `Opaque::cast_from` instead of casting a pointer
+* improve documentation
+* improve support for older rust versions
+* use `&Device<Bound>` for parent
+
+Changes since v1:
+* fixed typos noticed by Onur Özkan
+
+Signed-off-by: Markus Probst <markus.probst@posteo.de>
+---
+Markus Probst (3):
+      rust: leds: add basic led classdev abstractions
+      rust: leds: add Mode trait
+      rust: leds: add multicolor classdev abstractions
+
+ MAINTAINERS                     |   8 +
+ rust/bindings/bindings_helper.h |   1 +
+ rust/kernel/led.rs              | 339 +++++++++++++++++++++++++++++
+ rust/kernel/led/multicolor.rs   | 460 ++++++++++++++++++++++++++++++++++++++++
+ rust/kernel/led/normal.rs       | 238 +++++++++++++++++++++
+ rust/kernel/lib.rs              |   1 +
+ 6 files changed, 1047 insertions(+)
+---
+base-commit: 1137d8b5df06137fb49513cc923b3b24d94cb809
+change-id: 20251114-rust_leds-a959f7c2f7f9
+-----BEGIN PGP SIGNATURE-----
+
+iQJPBAABCAA5FiEEgnQYxPSsWOdyMMRzNHYf+OetQ9IFAmpZGhcbFIAAAAAABAAO
+bWFudTIsMi41KzEuMTIsMiwyAAoJEDR2H/jnrUPSIFkQAIJHfAe6S+v8u4v29fke
+uLDop7Ga9Ujz38DD9iMIdnRhgDeh3eN7boFgMab3XM2JhFEuseCkDwIGdybF+zPx
+EEoXxpXZp8KcTR26ryN4RuFax/q4nwZaXnZt133COFMPSiHswyn0ZjjlZQb5pK4L
+ikKXcCCTWouQkdVD/WB0bTW1Bo065QpCvMP5NTWWQ109EnFTGOofbWv9FV+YzOy0
+/baQI/20IRW8CU4s3FG8/LKc5F7yHCYkX89hmUtK9+xiuoNgZgCyt1kuXASRB1ol
+jVP1TGauphC0WC/DqL0U4OQcJfMF4vSFblAaLiEnp+YkTj/A/e3T+Y8sLGWI876T
+9juYGeGbX8Lupsa3OzFe2csfYJwrMZzL7iOkugJQlVLWxsrTFAZsdStwZDx6mV7k
+g1oeux9d9P+lM3gG6HT2jobC7Y+7hD3Z9qFnxQ4vP2tSpcQb0s9emO26JE7hvh9x
+oK9C3XUa7Yan3umqeqU9Iz3fJ0w2ZFDNTK5P8LtBJnlagqlRWDCDVu+nx9rsaxXf
+S3wh5LktdUB8Xi+qigybTwqjV1SMocfBciVmYJrP4xjhkz8z32WCZdLHY8rpFZ1h
+kcVy33DBzv8wPK+fCntQVm9rDC5qmrVpfNOYrg1ZYDCG3Yd/ilL/7VxnR0boQ/5W
+qvNRlYVg/i4TsPhwgFacMPzv
+=wKUV
+-----END PGP SIGNATURE-----
+-- 
+Markus Probst <markus.probst@posteo.de>
+
+
