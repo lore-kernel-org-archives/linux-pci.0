@@ -1,44 +1,45 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7569D4315A
-	for <linux-pci@vger.kernel.org>; Wed,  5 Aug 2026 16:50:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4434637AA92
+	for <linux-pci@vger.kernel.org>; Wed,  5 Aug 2026 16:51:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785948646; cv=none; b=UwPG3BRXr9wQgy3xNk7uWGXV/lWFhjK95h4ehyup9XC8gTdF0mYuEIhRNtJdV388iXrPgQdo+xvWwFcesis2LeXWl6HzrR6jr9KT33kdQfbDi9CQAP8QtDt0wA3a1z3xMQYJlO03SS7YvpLpy/GLOCTeuIuJj22DGa0LYfZDogc=
+	t=1785948674; cv=none; b=Lo7pEyCRvb+B0RVhac0mgapS3PXDK9SNZUCiwHhraD5gfnaM9xgy6ji9/VoD4XmMBRbd2ZTHzPsta0wfThano1/+EvxNxUyrPWp5JI2FZIQlkTz+0zJoavOoCDW1w7ycEas9cljvQTZ3ZMfxSdpfioYzPJeD4Ms//pfS8n/LtQQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785948646; c=relaxed/simple;
-	bh=evBwSUZay5gC27rbHzX6q0tL3oq0Q7NRLU+jfDOR38k=;
+	s=arc-20240116; t=1785948674; c=relaxed/simple;
+	bh=B18Z85AwEk7ieXnEbNQ3ACD5iwth4eZ47nxViY+8MrE=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=sPOl4CZ7i70s6Ojeplj0bNQfbCKa5CVi1SJ945NxT8tKaVaFphpNfVkyytCYEXsbiHgdRSA1fPklXWAfh4eAwfkSF/wM3UOHp8j9MRwPs1F/UoEBvEmAIT9kdtzZAUJug2iBOMXTk5ChzxA7mqirhi2iVhGQmDYWeowdaWSE9Jc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NQsP2bWB; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=NamuVQANTQAEf8frHpYSTi0wJKjiNhBYrcickdlGk0fuhRWnKZac+PGBYtqpmxmNEYcTzi4DhUhMWp2C4zxLNy+vtSyWD0K6NaXkaDVSkCRHWr+JYIm7e1GtYbKLS2FZxnM/amyfTPEtCYAMB60wByWOGCGRMD8EM7XUWOxRQPg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=V1RTxSih; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NQsP2bWB"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BA6741F00A3A;
-	Wed,  5 Aug 2026 16:50:44 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="V1RTxSih"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8CB7A1F000E9;
+	Wed,  5 Aug 2026 16:51:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785948645;
-	bh=MoasSD73pAI5Xdm0WX/ZbP8bYG7kfU/musfgvZMBGJA=;
+	s=k20260515; t=1785948671;
+	bh=iKC88PlcMQAy72Vp4zYxUh+UBhe4tddg7eRlo0Qvf/Q=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=NQsP2bWBFzgjdfTfQch0/gVnYIpUiBFENaRzqfkizRpeuucyL0ZzxXEapxPm+fQjI
-	 fMv/TLd7y2yrl/RuwJvIlXku5rdqe+uCA2BUghzkymu7yQNAFkDx3CUeuoGzoKJZbI
-	 MYektPRDjPlTCb7QaL0Cb/ylEj1i5ll8G2iZBL9mnLPjXjiHmfzCs4jN4bLV+0bQ03
-	 SQ/Gq+Ib+A8zCwrLEuRCt4yCoOxK5O7ousOm2MBrMa5TGVr2DRlGpAsKVzYYsLr1zQ
-	 o+6n/NCq1oUK97pyLb7ZD/NXjOFQOnnmiTQntKlGXkKOpCAbzf5rGZ7AcT/xaXtTFp
-	 dCOejhLdRL3AQ==
+	b=V1RTxSihuVi8C9O/cfFnLvaC1QV2+byc2NyH9Fekj8rpivMVn7hkBuJVAzraxJ1Hj
+	 AEo+QiYjhIX2tHt6V0ghEun7yeqrgRzNherRjhjnlYIODmvBPr1gsyc/swIyZuWhK+
+	 H79TMnfaJzY5xR2oqbfhF2JTNJ7U/nFX4KMyC3lPtxpArCshHAR1gSgjy6acvfTu/I
+	 mjIvjQDgucd/tqiePTi3F+tnu3/3jqUqrNQK0Hcq5rxf7tFA0RgbfadA5fCkVFDdUi
+	 9NwgIyRBUtbMUrzJPLKCtvSvvSk4n0TJDoCgUzEhAU1kaIK8h5dqOukremrD+NwwFF
+	 8Wei4ujpsoynQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 01/16] rust: io: add static `cast()` method for views
+Subject: Re: [PATCH v2 16/16] rust: io: register: unify handling of register
+ with/without bitfields
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Gary Guo" <gary@garyguo.net>
-Cc: "Alexandre Courbot" <acourbot@nvidia.com>, linux-pci@vger.kernel.org, dri-devel@lists.freedesktop.org, "Danilo
- Krummrich" <dakr@kernel.org>, ojeda@kernel.org
-In-Reply-To: <20260805-typed_register-v2-1-c3ca142220a0@garyguo.net>
+Cc: linux-pci@vger.kernel.org, "Danilo Krummrich" <dakr@kernel.org>, "Alexandre
+ Courbot" <acourbot@nvidia.com>, dri-devel@lists.freedesktop.org, ojeda@kernel.org
+In-Reply-To: <20260805-typed_register-v2-16-c3ca142220a0@garyguo.net>
 References: <20260805-typed_register-v2-0-c3ca142220a0@garyguo.net>
- <20260805-typed_register-v2-1-c3ca142220a0@garyguo.net>
+ <20260805-typed_register-v2-16-c3ca142220a0@garyguo.net>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 05 Aug 2026 16:50:44 +0000
-Message-Id: <20260805165044.BA6741F00A3A@smtp.kernel.org>
+Date: Wed, 05 Aug 2026 16:51:10 +0000
+Message-Id: <20260805165111.8CB7A1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -47,76 +48,53 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-
-Pre-existing issues:
-- [High] Soundness hole: `KnownSize` is an unsealed safe trait, but its con=
-stants and methods are relied upon for memory safety in unsafe projections.
+- [Low] The documentation comment for `FixedIoLoc::Location` references `[`=
+FixedIoLoc::location`]`, which does not exist.
 --
 
---- Patch [1]: [PATCH v2 01/16] rust: io: add static `cast()` method for vi=
-ews ---
-commit 5783172643ee35d4a1864537f0c76cc527b2cad9
+--- Patch [16]: [PATCH v2 16/16] rust: io: register: unify handling of regi=
+ster with/without bitfields ---
+commit eee244bc141adb8220a5c6420bc3a94addf8572c
 Author: Gary Guo <gary@garyguo.net>
 
-rust: io: add static `cast()` method for views
+rust: io: register: unify handling of register with/without bitfields
 
-This commit adds a compile-time checked cast() method for I/O views in the
-Rust subsystem. It uses minimum size and alignment information to statically
-verify that the target type is of the same or smaller size and properly
-aligned, allowing conversion without runtime checks.
+This commit unifies the handling of registers with and without bitfields by=
+ making the fixed location a property of the type. It replaces FixedRegiste=
+r with a new FixedIoLoc trait to indicate if a type's I/O location is uniqu=
+e for a specific base.
 
-> diff --git a/rust/kernel/io.rs b/rust/kernel/io.rs
-> index a38c20ba3d23e..adfc555de7d0d 100644
-> --- a/rust/kernel/io.rs
-> +++ b/rust/kernel/io.rs
+> diff --git a/rust/kernel/io/register.rs b/rust/kernel/io/register.rs
+> index fe0e6763a600e..80282c423868a 100644
+> --- a/rust/kernel/io/register.rs
+> +++ b/rust/kernel/io/register.rs
 
 [ ... ]
 
-> +    #[inline]
-> +    fn cast<U>(self) -> <Self::Backend as IoBackend>::View<'a, U>
-> +    where
-> +        Self::Target: FromBytes + IntoBytes,
-> +        U: FromBytes + IntoBytes,
-> +    {
-> +        let view =3D self.as_view();
-> +        let ptr =3D Self::Backend::as_ptr(view);
+> @@ -265,6 +224,17 @@ fn try_at(idx: usize) -> Option<RegisterArrayLoc<Sel=
+f>>
+>      }
+>  }
+> =20
+> +/// Trait implemented by types that indicate there is a fixed I/O locati=
+on for this given type.
+> +///
+> +/// Implementors can be used with [`Io::write_reg`](super::Io::write_reg=
+).
+> +pub trait FixedIoLoc<Base: ?Sized>: Sized {
+> +    /// Type of [`FixedIoLoc::location`].
+
+[Severity: Low]
+This isn't a bug, but does this intra-doc link point to a non-existent item?
+The trait defines a Location type and a LOCATION constant, but no location
+method or field, which will likely result in a broken rustdoc link.
+
+> +    type Location: IoLoc<Base, Self>;
 > +
-> +        const_assert!(size_of::<U>() <=3D Self::Target::MIN_SIZE);
-> +        const_assert!(align_of::<U>() <=3D Self::Target::MIN_ALIGN.as_us=
-ize());
-> +
-> +        // SAFETY: We have checked bounds and alignment, so this is a va=
-lid projection.
-> +        unsafe { Self::Backend::project_view(view, ptr.cast()) }
-           ^^^^^^
-
-[Severity: High]
-This is a pre-existing issue, but does relying on KnownSize constants for
-memory safety create a soundness hole?
-
-KnownSize is an unsealed safe trait that provides the constants and methods
-relied upon for these safety guarantees. Because it is a safe trait, safe
-code could provide an incorrect implementation for a custom dynamically siz=
-ed
-type (DST), specifying an excessively large MIN_SIZE or size().
-
-If this happens, the bounds checks in cast() or try_cast() would pass based
-on bogus values from the safe trait. The unsafe project_view() projection
-would then proceed, potentially creating an out-of-bounds pointer projection
-and leading to memory corruption.
-
-Since implementing a safe trait shouldn't be able to trigger undefined
-behavior in safe code, should KnownSize be marked unsafe or sealed to preve=
-nt
-unsound implementations?
-
-> +    }
-> +
->      /// Try to convert into a different typed I/O view.
->      ///
->      /// A runtime check is performed to ensure that the target type is o=
-f same or smaller size to
+> +    /// Location of this type within given base.
+> +    const LOCATION: Self::Location;
+> +}
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260805-typed_regi=
-ster-v2-0-c3ca142220a0@garyguo.net?part=3D1
+ster-v2-0-c3ca142220a0@garyguo.net?part=3D16
