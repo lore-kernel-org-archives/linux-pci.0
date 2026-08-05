@@ -1,271 +1,303 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from DM5PR21CU001.outbound.protection.outlook.com (mail-centralusazon11011038.outbound.protection.outlook.com [52.101.62.38])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F2332F7F1C;
-	Wed,  5 Aug 2026 12:34:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785933242; cv=none; b=m/ugzvcVC2eD00p6BuQiJU7WeBcU9iIyJDW+cV/hM4yIMHEelPN09I/jxd4pdeUOGfcmnbsW0xmPtHC3Ze2HuKGXkfT9M6CBjpc9ZC/doUThxWWU+eBJIXhKSPSG1ehNH7NgNQ84p7Aba/kpCGtsSuwEwbuS7yzW4ZxS2x8A2B0=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785933242; c=relaxed/simple;
-	bh=8yWTpkhnKpM634lwFrGrIHnPXohxkjE0F48iMxwAimQ=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=C0LlspgISj2IutewRSX9JhuHSOFbAsRSnKEPCEOz6465js5xtHHDV4nDJ6cDbkV7Wy/noB4DqKf0rk228BINef46Z5E7/sP1SpDKg3Ugnq2l0uoIad43KkB/+khWMZRRE5gbsgmFjbSExE/zTZU1UB3DHBO+J/YzXNbLgd98cVU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=D2Wwd4y9; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B5B933EFD07;
+	Wed,  5 Aug 2026 12:48:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.62.38
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1785934125; cv=fail; b=Mk10rOgjFheBUUetbMPBAgc0PxwTZtc+b1YhfXWZAVP+o+aLoP5zxzBRDYcUZXvcJ4f1AGjxZfV9xExQR0fb2l/drj9vYVrPg/RoTuvYIAiZYvCZWtBCCApGbHsN5VpQ7nvQrUIEHnu0aot7vX4TRNfPuxGwkcgeaZRzs/WywQ8=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1785934125; c=relaxed/simple;
+	bh=hcMuFzdX5cAzu8HlLbRqECTFtjYxf4tjVb2lkYzd98w=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=SbIaiAUQQAXymTIFiga0tQNo5CWLTerW3TNrgZW8EJlCObaFHnATriCd+j0vXce9sqQhpMf6wRD0YdBot+0Cii685IGzpch3ox/HGkuDikfhL8QxdM/snc04pqbaM9lPfwR2hWHJvA5rH09WI4WqXZAi3nHGTe8WjNfIvyLRzZM=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=FiOyoeiY; arc=fail smtp.client-ip=52.101.62.38
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="D2Wwd4y9"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D39D81F000E9;
-	Wed,  5 Aug 2026 12:33:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785933241;
-	bh=faziCBXSUs4f1fN5QGqJBFJJO8BhYf4C5QWrpWwCjGM=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=D2Wwd4y9VAlmraPLc9gLm8As/wTO5ULYU6/adndyRCv/NFz1HCcw4aZjl7YybzRDN
-	 qRu9OOQBVslng9u+2HVBmTbM6kYr8UnE3wG9k0Y+lM2DDnLlYLh2gnWBcJS+udIUIC
-	 PxHc2kQmEzunGzwL3I1edbRVFxkunbqvo26dvo568E1jcWYkO2nlqVyWT/hlu/94Jk
-	 HuxD0D/wZ5uty3mGaLMea7pcfbJmpiHZkvDwci/gWduHgPbLA2+S2yTAd/oDx4k//F
-	 jrXqpMiGznlpS45wVJIttU3orJcWZ89WPFLbfcYzwtC5MctFPZyAasIUXqlJmuyrt6
-	 6yk9Gb6udN4HA==
-Message-ID: <8ab6c26f-b648-447c-9fdd-f1424beb44f4@kernel.org>
-Date: Wed, 5 Aug 2026 14:33:51 +0200
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="FiOyoeiY"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=C1eBLRUg1lhUuDcyibtOMoVPR5CBy6Ph46NOi667cRnquFZKzKPl99EkONT7PsYz4AHagFShFlCyba0cHjzr2/zyaNEngbF+kNvo2i0kO25Ne3b5/bKgWHvn/doYmhzSds7ptMz16IX088NrHKZPbC9jjYZ7frrvnmP2HM1wqCfGYsKWr7QnJB6MGO0dRnDx/Q8RY8ubprfcD4VRVqHw5j9RdtiG6xuylBc0zlcUEvMjNvVcCj0gt0/ZUYBVFULejyrtldws1JNqAumS5DJyBLZMnMuua29nkrYs8XPTwK2ei8+2HqJOCv5nJJk4qoUr/jI5MWW2ncEu8FB7vJkB8w==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=ycYvnxE/eOm6nqFDykATtT41QOY/J7JDOmwAeOSfjkc=;
+ b=eqkadu0pWNRAcovIgdgMuzTQsB+s+I+ReIJXJq1ccnZXEJJuDiY6ZYIg/CSTdF8esSBoJCWp4W1NMUXQ5jfVgE9VXcPvzuqPI9e32YZpmabU5juo7LeqBJ1XJhqmXSyEw/6ZtJTCuCURkyzJ+s79xU44f+3Tes7gO0f5+O11vfbYk1Z7XvJWEd0y0Y0U+AMmiD9ToL3ynsoLAQfysmmHQ5SMxtHfBd84Hf4NarXKsVcoaM1ORzVSV8XHq7OcQQIIZEEePc8kXp/1y7yhDS9VwxKQolJGsyh7nPtpN2f8DQTC/OEc29hgmPnrvpxDfq9bIoDy+IfXkKAwNWB0F29U0w==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=ycYvnxE/eOm6nqFDykATtT41QOY/J7JDOmwAeOSfjkc=;
+ b=FiOyoeiYyWmxDRNu9hZCxVRWh9UzAZmEN9u9BFOYI4iD+8lJJ/4ZB4v/q8IWZN76Boohe6ymecFrXAannc8qpzwu+dbuMO50kOT8RadSDPQjgg7ztyIbJtFnyIfuRXcAdx/Yuv+1ub78CxCW/TQtyKRaxlc3WrOAV5LvVM50bSczvnLM/qpAFD1ngtrPVMfOY2Ynb5O3AANa2ETAABfJBcrpZT9rb7AoWQQDjdXHQcz0KGrRhUcqODzC81qGPjnxo0oONeyzFtEOZhYXvzlNIh0QOAi9NWNHKq+bdth8P7Asm11Ok0O2qcekkuQj+FO2S/7RKwuBeuO24Ihy3Eu1VQ==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from LV8PR12MB9620.namprd12.prod.outlook.com (2603:10b6:408:2a1::19)
+ by CY8PR12MB7682.namprd12.prod.outlook.com (2603:10b6:930:85::15) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.292.19; Wed, 5 Aug
+ 2026 12:48:39 +0000
+Received: from LV8PR12MB9620.namprd12.prod.outlook.com
+ ([fe80::299d:f5e0:3550:1528]) by LV8PR12MB9620.namprd12.prod.outlook.com
+ ([fe80::299d:f5e0:3550:1528%4]) with mapi id 15.21.0292.015; Wed, 5 Aug 2026
+ 12:48:39 +0000
+Date: Wed, 5 Aug 2026 09:48:38 -0300
+From: Jason Gunthorpe <jgg@nvidia.com>
+To: Mukesh R <mrathor@linux.microsoft.com>
+Cc: hpa@zytor.com, robin.murphy@arm.com, robh@kernel.org,
+	wei.liu@kernel.org, mhklinux@outlook.com, muislam@microsoft.com,
+	namjain@linux.microsoft.com, magnuskulke@linux.microsoft.com,
+	anbelski@linux.microsoft.com, linux-kernel@vger.kernel.org,
+	linux-hyperv@vger.kernel.org, iommu@lists.linux.dev,
+	linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
+	kys@microsoft.com, haiyangz@microsoft.com, decui@microsoft.com,
+	longli@microsoft.com, tglx@kernel.org, mingo@redhat.com,
+	bp@alien8.de, dave.hansen@linux.intel.com, x86@kernel.org,
+	joro@8bytes.org, will@kernel.org, lpieralisi@kernel.org,
+	kwilczynski@kernel.org, bhelgaas@google.com, arnd@arndb.de,
+	jacob.pan@linux.microsoft.com
+Subject: Re: [PATCH v5 7/9] x86/hyperv: Implement Hyper-V virtual IOMMU
+Message-ID: <20260805124838.GP27883@nvidia.com>
+References: <20260731223427.2554388-1-mrathor@linux.microsoft.com>
+ <20260731223427.2554388-8-mrathor@linux.microsoft.com>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260731223427.2554388-8-mrathor@linux.microsoft.com>
+X-ClientProxiedBy: YT4PR01CA0491.CANPRD01.PROD.OUTLOOK.COM
+ (2603:10b6:b01:10c::28) To LV8PR12MB9620.namprd12.prod.outlook.com
+ (2603:10b6:408:2a1::19)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 1/6] dt-bindings: bluetooth: qca: add QCC2072
-To: Manivannan Sadhasivam <mani@kernel.org>
-Cc: Rahul Samana <rahul.samana@oss.qualcomm.com>,
- Bartosz Golaszewski <brgl@kernel.org>, Marcel Holtmann
- <marcel@holtmann.org>, Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
- Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>,
- Conor Dooley <conor+dt@kernel.org>,
- Balakrishna Godavarthi <quic_bgodavar@quicinc.com>,
- Rocky Liao <quic_rjliao@quicinc.com>, Bjorn Andersson
- <andersson@kernel.org>, Konrad Dybcio <konradybcio@kernel.org>,
- Bartosz Golaszewski <brgl@bgdev.pl>, linux-arm-msm@vger.kernel.org,
- linux-bluetooth@vger.kernel.org, devicetree@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
- linux-pm@vger.kernel.org, quic_mohamull@quicinc.com,
- quic_hbandi@quicinc.com, quic_anubhavg@quicinc.com
-References: <20260727-rb3-industrial-bt-uart-v2-0-2d100f30e202@oss.qualcomm.com>
- <20260727-rb3-industrial-bt-uart-v2-1-2d100f30e202@oss.qualcomm.com>
- <20260731-first-righteous-bear-dd72ed@quoll>
- <712f8a14-d2a1-4a90-82f9-05cd694f2658@oss.qualcomm.com>
- <c1875dd6-fe3a-4a69-a6fd-b461c8fba6e4@kernel.org>
- <6d6465bb-47ac-464c-af4e-0ca72325705f@oss.qualcomm.com>
- <8a388310-d3cc-4d02-abb6-0eb98c24cfce@kernel.org>
- <4523441f-498a-4bbd-80f3-97a7a9206c00@oss.qualcomm.com>
- <6e0b9e79-ccd4-4689-9a6b-9b4fc556d5e4@kernel.org>
- <gfhlyvoefcsvtjuxfo75qeham272cc5g2r3npjenzs5esjifiy@ro7dtkpxwizk>
-From: Krzysztof Kozlowski <krzk@kernel.org>
-Content-Language: en-US
-Autocrypt: addr=krzk@kernel.org; keydata=
- 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
-In-Reply-To: <gfhlyvoefcsvtjuxfo75qeham272cc5g2r3npjenzs5esjifiy@ro7dtkpxwizk>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: LV8PR12MB9620:EE_|CY8PR12MB7682:EE_
+X-MS-Office365-Filtering-Correlation-Id: aa83bf02-51f1-4223-2d69-08def2efdf55
+X-LD-Processed: 43083d15-7273-40c1-b7db-39efd9ccc17a,ExtAddr
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|7416014|23010399003|376014|366016|1800799024|10067099003|5023799004|11063799006|56012099006|4143699003|22082099003|18002099003|3023799007;
+X-Microsoft-Antispam-Message-Info:
+	EnQ+ie4+EsF6YgdEN418pctYbDeLyrZVn7dIWrdp1FT4d2zcaqY7VktWiIJTV3iprUl8hJFB7pLcLcC1ZQk1h/GJxdDb+80leRlrLWJ4M/Uovyf1lJ8R5lhwWZz8+ZdYUiLb+rufHT9df32BOgWhfcgGl5AmT7n52uunWOhRQvT6dlo21hGCx2z7DD0wpTwf+kmY33+TbZ3vBHYOg7RwyiPxk9WXX2mRdfHiwGi+4zwBad8iYRChdjE9Okg8jDMoFGlblLMp2gwcWQ50lUOR3dJhXXMovw8w9TyTngXQtT1vdDUYSirJ0lHH63CMst2QD9lTspOePV/qMWUqynTmG08O3ljEyOL+fu8R4Hn9vLkCu68cBki7GpwA/fs7JvhdGP5j32xj8wUXymUy+sW54QJfTsqjPI9mqBzZWKlC/YOdMhKRp0gW4RvA+duxogIV1Hj4Wi5QceG2PDhYvUol3bLYmZXnvVZw8nhfPlRkWnNP5xMmll+1FIZ+Hsavx1Y6Eyp/nxJhD+ks8RTsnuSH6eI37Y0OyqoFi5kOvIEi81NT9Twz0LOPrRkv59uXHC42At0vmif2isFb/kUGkFLq+4aJNWO/d0iT+WVJoTunLojmqptxZcwQfVihDVQuF7YkAXrjeQVRBsD6Khq/5sae1V2Wp60uMD1cY+HfMScqOJQ=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LV8PR12MB9620.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(23010399003)(376014)(366016)(1800799024)(10067099003)(5023799004)(11063799006)(56012099006)(4143699003)(22082099003)(18002099003)(3023799007);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?7bIMdNG3ksBeVm7wITuJfzaGxczF9Io3E9Cknb3kXjR1Vwti38BKdIA/Pkyi?=
+ =?us-ascii?Q?WZ4eHTtlt+r5Knx81Q9XrSNa/Sl2zsC3feBNLOb57kglIjC9j0NR9UTAlKVA?=
+ =?us-ascii?Q?uH0a+FKbW0E5S5tVuFIo3f6S7fs8d+oXCN7SFg/hjsirtL5IrLZ47aIAcVNx?=
+ =?us-ascii?Q?k0VQmhCeRFIeuOBdw8mjTD1pLd37jpUUoG0A0EOL5Rfx10fQt2C8TPzn5ja3?=
+ =?us-ascii?Q?WGyF72zGbBFvUHKV98P9Ck0gycJ2iNfToXxShCip0/vbM/zovHBG8dg0+IjD?=
+ =?us-ascii?Q?1oyj//ZC+hMuIOxxZPvJhIZXgsdTs7cdRBJlwEpEQNC9tDwGOIsVXeyQPFFW?=
+ =?us-ascii?Q?91G7shoDeDx42Rd+bj+D887DufIZV42slNj8pOCEVYXTQANOsZlw0TaSiaZs?=
+ =?us-ascii?Q?7WWaQYqcOTM2FD5d66vO2+uekaD3nCiL9VL6Hm5Vm0xOvpimXf+3RyKMBK26?=
+ =?us-ascii?Q?UqCtKGBKzyYi39LZM0IhuHRcYgOpFsZX4AY3Nzjyvk2JTv3hCzJGAZG5vu4M?=
+ =?us-ascii?Q?OtWMv12fcH/059sVwJ/niSFSIKcsnf1r8zyWe5zCkYmvO8MZ/wxPkuTNEply?=
+ =?us-ascii?Q?8Yy/ONZ8OHIJY3mfKPS5L7RJe6d2iAEJPXH3TDEm00zpPUWTcb7G7yp0hWjh?=
+ =?us-ascii?Q?1T0dIcvAWOZoC5Lqy8Hljm8bYqd4D3h8KTCUTD4B7KzkMDZ4H3MZjRR8ZYyP?=
+ =?us-ascii?Q?voegasEgrOLICm5s48jaCxxOFgM+PWqTnGdyGGOjCFUdprrlH6kw5wMNFuwC?=
+ =?us-ascii?Q?4+AH91bQHD0/1PHApbLOqxyD8WD4BDhiYHVhuIGAAmJ1N3VjBK2VZrrJScz3?=
+ =?us-ascii?Q?RlkeN52T0zcpO0ASgbGaJ2lfAm89ydxWy4eIcYR1MYhEikfAL72c6m6gJwre?=
+ =?us-ascii?Q?FGGgXxLx02tJJ4kyEZj2EDt+CMpJpKBrbiNfcvdKVf25cfUY71ZFSSY8Y4Iu?=
+ =?us-ascii?Q?sCuFYpBTsD8/JtAfETSZZBgiXZHQeKahHrVDERU1Bdeb2TKMdKpkWXw1wYLA?=
+ =?us-ascii?Q?CpH+miRRJ/5r83tTHo8f7l05NCZY2TE3AqtfX4qLA0HKzDhdicit5A44VYuT?=
+ =?us-ascii?Q?TVTl97fhnuPtZ3/+jGuSO7EgfGyxifYR4Yvf3nOH6vIIrRviNl4JxpxlCdr1?=
+ =?us-ascii?Q?eSpHxk1F1YO5VjLSa/+rf/+yP+ucUAQGpURrFDY3GRAzwCW//c7KKp00cPdA?=
+ =?us-ascii?Q?pU9n5tAsZL2mESS2FSCwiaPBOP6EXXu3G6WNodROhx/YhO1XIQK5Dppme36J?=
+ =?us-ascii?Q?T+zPi2D6R8rDj51cSXmwnofvLVA3eIKMcq/BT7Su+L/lP2bTn2zMImck54GH?=
+ =?us-ascii?Q?9qniuhzZr1aZ3bs1tyrRK5fKdD6JaA3gyGMKYQxvzxib6ZCa5NgiNalq7jkZ?=
+ =?us-ascii?Q?Zo7+dQ+0YAMOf4Ap0rbGN72P4h6xf5tuQLpC1xDFb4pyic8W7PMOBzjQk+xf?=
+ =?us-ascii?Q?Fq+HEpPwgNrGaGsoxR4kbg9E7x7N7F/yeFXsrHYKFivhsjLBdDduRnQ8wL3U?=
+ =?us-ascii?Q?pR4RR1O8w7gkyMh94UQXXN6arMBopE23NJrvHBFyIcquu4N4p5w2/GU+9AbN?=
+ =?us-ascii?Q?3jvXqvXGMTYDG3ClucJHue5CrwsKqupXbsEiOwA3eQI51tAK9V/kRp1FQHGz?=
+ =?us-ascii?Q?b7VfpNpyETSDpq6M4FIMAKpphb1R9NgRxn6AT+WhXSqxDj788ja20NZN4Ts7?=
+ =?us-ascii?Q?/nXC2zSqxiRjtmWJNvF7e+zGxpiP+OUYtgr2ipTQMvjgubJe7/GcOa9xbxoD?=
+ =?us-ascii?Q?opbw02otkA=3D=3D?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: aa83bf02-51f1-4223-2d69-08def2efdf55
+X-MS-Exchange-CrossTenant-AuthSource: LV8PR12MB9620.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Aug 2026 12:48:39.4634
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: zpdtwQlOJgugqzbLb80PHStx8gzIQBv3vHIqCMt+S/8mBR6poRkv83j6CcEPyEP3
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY8PR12MB7682
 
-On 05/08/2026 14:09, Manivannan Sadhasivam wrote:
-> On Sat, Aug 01, 2026 at 05:49:53PM +0200, Krzysztof Kozlowski wrote:
->> On 01/08/2026 17:31, Rahul Samana wrote:
->>>
->>>
->>> On 01-08-2026 20:18, Krzysztof Kozlowski wrote:
->>>> On 31/07/2026 17:51, Rahul Samana wrote:
->>>>>
->>>>>
->>>>> On 31-07-2026 20:34, Krzysztof Kozlowski wrote:
->>>>>> On 31/07/2026 16:45, Rahul Samana wrote:
->>>>>>>
->>>>>>>
->>>>>>> On 31-07-2026 15:16, Krzysztof Kozlowski wrote:
->>>>>>>> On Mon, Jul 27, 2026 at 09:15:01PM +0530, Rahul Samana wrote:
->>>>>>>>> QCC2072 can be used on M.2 E-key cards where the card power resources are
->>>>>>>>> described by the pcie-m2-e-connector node. In that setup, the M.2 power
->>>>>>>>> sequencing provider creates the Bluetooth serdev child after matching the
->>>>>>>>> QCC2072 PCI function.
->>>>>>>>>
->>>>>>>>> Integrated non-M.2 designs need board-specific power resources. Document
->>>>>>>>> only the compatible for now and leave those properties to be added with
->>>>>>>>> matching driver support.
->>>>>>>>>
->>>>>>>>> Document the qcom,qcc2072-bt compatible used for QCC2072 Bluetooth
->>>>>>>>> controllers connected over UART.
->>>>>>>>>
->>>>>>>>> Signed-off-by: Rahul Samana <rahul.samana@oss.qualcomm.com>
->>>>>>>>
->>>>>>>> NAK, exactly same comments as before.
->>>>>>>>
->>>>>>>> Nothing got improved, although what is weird - original SoB is gone, so
->>>>>>>> this is legally dubious work.
->>>>>>>>
->>>>>>>> Best regards,
->>>>>>>> Krzysztof
->>>>>>>>
->>>>>>>
->>>>>>> Hi Krzysztof,
->>>>>>>
->>>>>>> Thanks for the review.
->>>>>>>
->>>>>>> For the binding contents, I tried to capture the current scope in the binding
->>>>>>> description itself. This series supports QCC2072 only as an M.2 E-key card,
->>>>>>> where the card power resources are described by the pcie-m2-e-connector node
->>>>>>> and the M.2 pwrseq provider creates the Bluetooth serdev child.
->>>>>>>
->>>>>>> The binding also says:
->>>>>>>
->>>>>>>   Integrated non-M.2 designs require board-specific power resources. Those
->>>>>>>   properties, together with a static devicetree example, should be added when
->>>>>>>   integrated non-M.2 support is added.
->>>>>>
->>>>>> Bindings must be complete and your driver support is irrelevant here.
->>>>>>
->>>>>> If you claim this is a PCI device thus you do not need any resources,
->>>>>> then the binding is not needed either. PCI devices are enumerable. And
->>>>>> to prove it: look at your DTS. Do you see qcom,qcc2072-bt being used? No.
->>>>>>
->>>>>>>
->>>>>>> We do not currently have an integrated non-M.2 QCC2072 design, so I do not
->>>>>>> have board-specific regulator supplies to document for that topology.
->>>>>>>
->>>>>>> Could you please suggest how you would prefer this binding to be handled for
->>>>>>> the current M.2-only use case? 
->>>>>>
->>>>>> Drop the binding, you do not need it.
->>>>>>
->>>>>> Anyway the problem is that more comments were ignored.
->>>>>>
->>>>>
->>>>> Hi Krzysztof,
->>>>>
->>>>> Just to clarify the reason for adding this binding in v2: 
->>>>> v1 did not add a binding because this series only targets the M.2 use case.
->>>>>
->>>>> I added the minimal binding in v2 because checkpatch reported
->>>>> qcom,qcc2072-bt as an undocumented compatible, and I interpreted the request
->>>>> to fix the checkpatch warnings as requiring this compatible to be documented.
->>>>> I also had the earlier feedback in mind, where the indirect
->>>>> qcom,qcc2072-bt compatible was pushed back because it was undocumented:
->>>>>
->>>>> https://lore.kernel.org/all/20260703-eliza_evk-v1-3-7624440bd76d@oss.qualcomm.com/
->>>>>
->>>>> Based on your clarification here, I will drop the binding patch in v3 and
->>>>> keep qcom,qcc2072-bt only as the pwrseq-created child compatible for this
->>>>> M.2 case.
->>>>
->>>> My previous statement is also valid, please read entire threads.
->>>>
->>>> You cannot have undocumented qcom,qcc2072-bt.
->>>>
->>>> I ask you to drop both, because they are not needed. But feel free to
->>>> prove me wrong, see my first paragraph in the previous reply.
->>>>
->>>>
->>> The PCIe M.2 power sequencing driver, pwrseq-pcie-m2.c, uses
->>> pwrseq_m2_pci_ids to translate the enumerated PCI function into the
->>> Bluetooth compatible used for the generated serdev child.
->>>
->>> For example, WCN7850 maps PCI ID 17cb:1107 to qcom,wcn7850-bt, then hci_qca
->>> matches that compatible to select qca_soc_data_wcn7850.
->>>
->>> For QCC2072, pwrseq-pcie-m2.c matches PCI ID 17cb:1112 and creates the
->>> generated Bluetooth serdev child with compatible "qcom,qcc2072-bt". The
->>> hci_qca driver then matches "qcom,qcc2072-bt" and uses qca_soc_data_qcc2072
->>> as the controller-specific data.
->>
->> The purpose of Devicetree is not to describe Linux internal driver
->> matching. Do not use compatibles for that.
->>
->>
->>>
->>> That match data is needed by hci_qca to select the QCC2072 soc_type,
->>> firmware/NVM naming, calibration handling, and capabilities. Without some
->>> identity being passed from the PCI match to the generated serdev child,
->>> hci_qca cannot distinguish QCC2072 from the other Qualcomm UART Bluetooth
->>> controllers on this path.
->>>
->>> Please correct me if I misunderstood the concern or if you are asking for
->>> this identity to be passed from pwrseq-pcie-m2.c to hci_qca through a
->>> different mechanism.
->>>
->>> I can drop the binding patch, but unless there is a preferred alternative
->>> mechanism, I think we still need the pwrseq-pcie-m2 QCC2072 PCI ID support
->>> from patch 3 so the power sequencing driver can pass the QCC2072 identity
->>> into hci_qca through the generated serdev child:
->>
->> You have plenty of options, starting from what is very common already -
->> driver name used by MFD or aux devices.
->>
-> 
-> It is not just a driver matching problem, but ensuring that we properly describe
-> the BT device in DT. Since the BT interface of the M.2 device is not
+On Fri, Jul 31, 2026 at 03:34:25PM -0700, Mukesh R wrote:
+> +struct iommu_domain_geometry default_geometry = (struct iommu_domain_geometry) {
+> +	.aperture_start = 0,
+> +	.aperture_end = -1UL,
+> +	.force_aperture = true,
+> +};
 
-This device does not exist in DT. This is the problem which started my
-entire investigation and above email.
+This should not exist
 
-I am happy to see proofs of it existing in DTS.
+> +/*
+> + * If the current thread is a VMM thread, return the partition id of the VM it
+> + * is managing, else return HV_PARTITION_ID_INVALID.
+> + */
+> +static u64 hv_get_current_partid(void)
+> +{
 
-My proof:
-1. copy-paste the compatible (qcom,qcc2072-bt) from the binding.
-2. Open each DTS patch and look for that compatible: no results.
+No, you cannot transparently detect VMMs and link them like this. The
+VMM makes it self visible to the iommu driver via the viommu interface
+and you get a kvm FD to fish your partid out of. This is hackery not OK.
 
+You should come with VMM support as a followup once you get a basic
+kernel-only iommu driver working.
 
+> +static struct iommu_domain *hv_iommu_domain_alloc_paging(struct device *dev)
+> +{
+> +	struct hv_domain *hvdom;
+> +	int rc;
+> +	u32 unique_id;
+> +	u64 ptid = hv_get_current_partid();
+> +
+> +	if (ptid == HV_PARTITION_ID_INVALID)
+> +		return NULL;
+> +
+> +	hvdom = kzalloc_obj(struct hv_domain);
+> +	if (hvdom == NULL)
+> +		return NULL;
+> +
+> +	spin_lock_init(&hvdom->mappings_lock);
+> +	hvdom->mappings_tree = RB_ROOT_CACHED;
+> +
+> +	unique_id = (u32)atomic_inc_return(&hv_unique_id);
+> +	if (unique_id == HV_DEVICE_DOMAIN_ID_S2_NULL)	/* ie, UINTMAX */
+> +		goto out_err;
+> +
+> +	hvdom->domid_num = unique_id;
+> +	hvdom->partid = ptid;
+> +	hvdom->iommu_dom.geometry = default_geometry;
+> +	hvdom->iommu_dom.pgsize_bitmap = HV_IOMMU_PGSIZES;
 
-> discoverable, we are currently using the PCIe IDs of the M.2 device to create
-> the BT node dynamically under UART node using OF_DYNAMIC as proposed in this
-> patch which got merged already [1]. Then we also create the serdev device and
-> allow the existing BT hci_qca driver to probe and make use of the created DT
-> node.
+This is the only place that needs it, and I somehow doubt -1 is the
+right end value since that isn't supported by most HW.
 
-Your Linux drivers are not supposed to create internal OF for regular
-DT. Please drop that patch. I do not get why that patch was merged
-without any DT approval.
+> +static int hv_iommu_attach_dev(struct iommu_domain *immdom, struct device *dev,
+> +			       struct iommu_domain *old)
+> +{
+> +	struct pci_dev *pdev;
+> +	int rc;
+> +	struct hv_domain *hvdom_new = to_hv_domain(immdom);
+> +	struct hv_domain *hvdom_prev = to_hv_domain(old);
+> +
+> +	/* Only allow PCI devices for now */
+> +	if (!dev_is_pci(dev))
+> +		return -EINVAL;
+> +
+> +	pdev = to_pci_dev(dev);
+> +
+> +	/* There are no explicit detach calls, hence check if we need to detach
+> +	 * first. Also, in case of guest shutdown, it's the VMM thread that
+> +	 * attaches it back to the hv_def_identity_dom, and hvdom_prev will not
+> +	 * be null then. It is null during boot.
+> +	 */
+> +	if (hvdom_prev && !hv_special_domain(hvdom_prev))
+> +		hv_iommu_detach_dev(hvdom_prev, dev);
 
-DT is not representation of internal device driver instantiation mechanism.
+What translation does this set? If it is anything other than blocking
+it is security broken for VFIO.
 
-Best regards,
-Krzysztof
+If it is blocking then why does  this:
+
+> +	rc = hv_iommu_att_dev2dom(hvdom_new, pdev);
+
+Attach HV_DEVICE_DOMAIN_ID_S2_NULL ?
+
+> +	if (rc == 0)
+> +		dev_iommu_priv_set(dev, hvdom_new);  /* sets "private" field */
+
+The only thing the priv is used for is release_device ?
+
+It would be better to have a 'detach domain' as the
+release_domain so you don't need this.
+
+> +static void hv_iommu_probe_finalize(struct device *dev)
+> +{
+> +	struct iommu_domain *immdom = iommu_get_domain_for_dev(dev);
+> +
+> +	if (immdom && immdom->type == IOMMU_DOMAIN_DMA)
+> +		iommu_setup_dma_ops(dev, immdom);
+> +	else
+> +		set_dma_ops(dev, NULL);
+> +}
+
+I've forgotten now, but I thought we had reached the point of getting
+rid of this from most drivers? amd and vtd do not implement this, why
+does this need it?
+
+> +static void hv_iommu_release_device(struct device *dev)
+> +{
+> +	struct hv_domain *hvdom = dev_iommu_priv_get(dev);
+> +
+> +	/* Need to detach device from device domain if necessary. */
+> +	if (hvdom)
+> +		hv_iommu_detach_dev(hvdom, dev);
+
+What does "detach" actually do? What translation will be in effect for
+the device?
+
+Ideally you should set the release_domain to blocking or identity and
+arrange things so that is enough to destroy the iommu attachment. But
+I see both blocking and identity do new attaches so IDK what this
+trying to do..
+
+> +static int hv_iommu_def_domain_type(struct device *dev)
+> +{
+> +	/* The hypervisor always creates this by default during boot */
+> +	return IOMMU_DOMAIN_IDENTITY;
+> +}
+
+That isn't what this does, it overrides the policy set by Linux. Fully
+functional HW should not implement this function, please remove it.
+
+> +static struct iommu_ops hv_iommu_ops = {
+> +	.capable	    = hv_iommu_capable,
+> +	.domain_alloc_paging	= hv_iommu_domain_alloc_paging,
+> +	.probe_device	    = hv_iommu_probe_device,
+> +	.probe_finalize     = hv_iommu_probe_finalize,
+> +	.release_device     = hv_iommu_release_device,
+> +	.def_domain_type    = hv_iommu_def_domain_type,
+> +	.device_group	    = hv_iommu_device_group,
+> +	.default_domain_ops = &(const struct iommu_domain_ops) {
+> +		.attach_dev   = hv_iommu_attach_dev,
+> +		.map_pages    = hv_iommu_map_pages,
+> +		.unmap_pages  = hv_iommu_unmap_pages,
+> +		.iova_to_phys = hv_iommu_iova_to_phys,
+> +		.free	      = hv_iommu_domain_free,
+> +	},
+
+Please don't use default_domain_ops, this should a new struct
+hv_paging_domain_ops
+
+> +	.owner		    = THIS_MODULE,
+> +	.identity_domain = &hv_def_identity_dom.iommu_dom,
+> +	.blocked_domain  = &hv_null_dom.iommu_dom,
+
+Can we call null dom blocked dom please?
+
+> +static void __init hv_initialize_special_domains(void)
+> +{
+> +	hv_def_identity_dom.iommu_dom.type = IOMMU_DOMAIN_IDENTITY;
+> +	hv_def_identity_dom.iommu_dom.ops = &hv_special_domain_ops;
+> +	hv_def_identity_dom.iommu_dom.owner = &hv_iommu_ops;
+> +	hv_def_identity_dom.iommu_dom.geometry = default_geometry;
+> +	hv_def_identity_dom.domid_num = HV_DEVICE_DOMAIN_ID_S2_DEFAULT; /* 0 */
+> +
+> +	hv_null_dom.iommu_dom.type = IOMMU_DOMAIN_BLOCKED;
+> +	hv_null_dom.iommu_dom.ops = &hv_special_domain_ops;
+> +	hv_null_dom.iommu_dom.owner = &hv_iommu_ops;
+> +	hv_null_dom.iommu_dom.geometry = default_geometry;
+> +	hv_null_dom.domid_num = HV_DEVICE_DOMAIN_ID_S2_NULL;  /* INTMAX */
+
+These ones don't use geometry. Didn't I say this once before?
+
+Jason
