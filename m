@@ -1,182 +1,177 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9903B3EFFC4;
-	Wed,  5 Aug 2026 17:12:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 524D23CE096;
+	Wed,  5 Aug 2026 17:18:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785949983; cv=none; b=JiRO2BaYJ6qD4tNa1CbIqCyjp2THnxHOQv11eOx/CO9DyDif2MkETaUJcpo1lMJXcd5fJBzxOKfjEtP3XNtIjv2kDqmGcfFKbwM+XEeLdHrWqWdfc4Z/EDNzjq/eu5XCdo/QM0Ks3sGmU+QgMZlPAZYsDHoES6iWpn0N/hrK0UE=
+	t=1785950323; cv=none; b=mHH/avdEN0lo5WpmucrFAwA2R5G0WqTO/tjRyXFg8gdwYAFGFNIyG9u5WNFP0NomG2yJ9nDOBz5pfww8f6rYRt90JOoyikOF+lDs96dtZ0qa/qBmrvWuCWWWQ04ypDXLPASirfg76BRHA5+yAuWNatLET+yNzKqFSvJ4BjwhE/8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785949983; c=relaxed/simple;
-	bh=XMiiEV2qO9APBrkUw7FkYeRSlJcchtR1yRuXLLnN6T8=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=M0ulspoztwpWxV9G1uYFtjucHLdwkgBxXMcbcIKvc6hFA02nbmA6Yq0HU5SWI2lMVYcexn1uoCxbaEf65IvXc38aPMoQb29sCQ80d/m6Ln1fkOjSlnv68zao5z8QbeS9xj0U7VwT9TeiqrK28k+8Z1v/9ZCxZ4vSYMNVf10aWKg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZDM74lTu; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785950323; c=relaxed/simple;
+	bh=ZYas7iAbegBnESMCIuQtfTs6Dk0qFddxJOEQxCcG8dk=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=PThW/sKWSMRr9S6LMPAqA+L+cu8hYeErhpk5t8qQxqOy3qnuw6nF3mHcAdQrxRRCEBhFy5nzmC49L/JwexJvaxTTdpIp7JHh0e5zvZYihQym8GEI0sr6hsEl3ooqrx8tNF6afg/+SPtREWQNTioJY69JbamvfKkaRgdIf5MklW8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=N/HuuOGd; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZDM74lTu"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A68561F000E9;
-	Wed,  5 Aug 2026 17:12:56 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="N/HuuOGd"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A10C71F000E9;
+	Wed,  5 Aug 2026 17:18:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785949977;
-	bh=SKXWU1fFqhRJpMm/Y+nvvfH6MERrE3YMNRo4mQryhAk=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=ZDM74lTutDP+buX08qcLaOFaVMHTbCFJevOR5Val7iFr4fBGp2e0ngsvnowDMTMkP
-	 xpVa2xR84EVDtxZfNVVCmzaex1VY+YpLmf/gaxVhp3LUkqN23e5gGiAI8h+0WAmUsS
-	 oK8UsgOdQsh+zIo2X/K5OuzCDIxYlJz/YD8k5QIeTBGVT/YQT3aqpAe0iWQ3XWAs6j
-	 pnfMo78XL7h9Bm8HvVUnAlAZ1EUzp1g0ywHzJjzcm1IWXWAKBROK/B7fVtahvTR+rt
-	 ukynVScVFOZ5PRMw01biHCEKojxNnzqxHIXCTe7FAFD6MHj2s2XLW4yp8fNzPR7AKS
-	 q3J2p5UeX9d6A==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v23 2/5] PCI: Allow per function PCI slots to fix slot
- reset on s390
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Farhan Ali" <alifm@linux.ibm.com>
-Cc: "Heiko Carstens" <hca@linux.ibm.com>, linux-s390@vger.kernel.org, "Vasily
- Gorbik" <gor@linux.ibm.com>, "Alexander Gordeev" <agordeev@linux.ibm.com>, linux-pci@vger.kernel.org
-In-Reply-To: <20260805165518.794-3-alifm@linux.ibm.com>
-References: <20260805165518.794-1-alifm@linux.ibm.com>
- <20260805165518.794-3-alifm@linux.ibm.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 05 Aug 2026 17:12:56 +0000
-Message-Id: <20260805171256.A68561F000E9@smtp.kernel.org>
+	s=k20260515; t=1785950321;
+	bh=cS+1OPt43LY9PVcLmNXnPTuZJ4WgQujUCM/knEjl0HU=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=N/HuuOGdJ4jfuVsLPVIvPkgZ2xNnrprRB7r/nUGJooGCbWrE139e6SSrx7FR0hjRI
+	 +TyBc/fziElSkTuwBIQAVqWtVWSFfwAcdYNOi3cJjZv8O6rbCo2qlNMk63qoF5/wk5
+	 kuZWcKDDZ932oqPNnVIJ+HdWY6q2GH3ORzcRGbgpxJc6OsqQTQgTp6+UQfiw0a8KpW
+	 fRMjh+lGP77i/eMjTki89xfFrULwI18IME78CpglYlx2twmiBE640OTeGkyE+XGHs7
+	 lu3yg5x/qAc7tkFFRUugrtpqqTt9jvM9chRi8C/NK+tbdlisXGkYjQrMrjYN9XQEGn
+	 ogQhEdgpLFOFQ==
+Date: Wed, 5 Aug 2026 12:18:40 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Avinash Roy <avinash@linux.ibm.com>
+Cc: maddy@linux.ibm.com, mpe@ellerman.id.au, bhelgaas@google.com,
+	npiggin@gmail.com, chleroy@kernel.org, sbhat@linux.ibm.com,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Avinash Roy <avinash.roy1@linux.ibm.com>
+Subject: Re: [PATCH] PCI: quirks: Add warm reset quirk for IBM Spyre
+ accelerator
+Message-ID: <20260805171840.GA2126423@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260805125132.941270-1-avinash@linux.ibm.com>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
+On Wed, Aug 05, 2026 at 06:21:32PM +0530, Avinash Roy wrote:
+> From: Shivaprasad G Bhat <sbhat@linux.ibm.com>
+> 
+> The IBM Spyre accelerator (PCI ID 1014:06a7) requires a dedicated warm
+> reset method for reliable EEH recovery on pSeries/ppc64 platforms.
+> 
+> FLR alone is insufficient because it does not re-initialize the Spyre
+> firmware state machine. On ppc64 with EEH enabled,
+> pcibios_set_pcie_reset_state() is overridden in
+> arch/powerpc/kernel/eeh.c to drive the platform-level PERST# signal via
+> EEH PE operations, which is the correct mechanism for full device
+> recovery after an EEH event.
 
-New issues:
-- [High] Unconditionally enabling per_func_slot on S390 breaks standard PCI=
-e hotplug (e.g., pciehp), PCI_SLOT_ALL_DEVICES assignment, and physical slo=
-t matching.
+This makes it sound like this mechanism is needed for EEH recovery for
+*all* devices, not just Spyre.  If that's the case it sounds like we
+need more than just a Spyre-specific quirk.
 
-Pre-existing issues:
-- [High] Lockless access to `dev->slot` allows a Use-After-Free if a hotplu=
-g slot is concurrently destroyed.
---
-
---- Patch [2]: [PATCH v23 2/5] PCI: Allow per function PCI slots to fix slo=
-t reset on s390 ---
-commit 5800507f8f4f03803f3a4540f211363e22c66b48
-Author: Farhan Ali <alifm@linux.ibm.com>
-
-PCI: Allow per function PCI slots to fix slot reset on s390
-
-This patch introduces a per_func_slot flag for struct pci_slot to allow
-per-function PCI slots on s390. It modifies slot matching logic and changes
-the slot number field to a u16 to accommodate special values.
-
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 77b17b13ee615..350bae907ebf8 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -4897,8 +4897,9 @@ static int pci_reset_hotplug_slot(struct hotplug_sl=
-ot *hotplug, bool probe)
-> =20
->  static int pci_dev_reset_slot_function(struct pci_dev *dev, bool probe)
+> The reset function is placed in arch/powerpc/platforms/pseries/pci.c
+> where the EEH infrastructure is already present, declared in
+> pseries.h, and registered in the generic pci_dev_reset_methods[] table
+> in drivers/pci/quirks.c under a CONFIG_PPC_PSERIES guard.
+> 
+> This reset method is only registered when CONFIG_PPC_PSERIES is enabled, 
+> so it is not available on other platforms.
+> 
+> Reset sequence:
+>   - Assert PERST# via pcie_warm_reset, hold 250 ms
+>   - Deassert PERST# via pcie_deassert_reset
+>   - Wait 250 ms for PCIe link retrain and device recovery
+> 
+> Signed-off-by: Avinash Roy <avinash.roy1@linux.ibm.com>
+> Signed-off-by: Shivaprasad G Bhat <sbhat@linux.ibm.com>
+> ---
+> diff --git a/arch/powerpc/platforms/pseries/pci.c b/arch/powerpc/platforms/pseries/pci.c
+> index 84e4ffe957a8..7aa58d57208f 100644
+> --- a/arch/powerpc/platforms/pseries/pci.c
+> +++ b/arch/powerpc/platforms/pseries/pci.c
+> @@ -11,6 +11,7 @@
+>  #include <linux/kernel.h>
+>  #include <linux/pci.h>
+>  #include <linux/string.h>
+> +#include <linux/delay.h>
+>  
+>  #include <asm/eeh.h>
+>  #include <asm/pci-bridge.h>
+> @@ -236,6 +237,41 @@ static void fixup_winbond_82c105(struct pci_dev* dev)
+>  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_WINBOND, PCI_DEVICE_ID_WINBOND_82C105,
+>  			 fixup_winbond_82c105);
+>  
+> +/*
+> + * Reset Spyre adapter using pci_set_pcie_reset_state()
+> + * This is specifically for PPC platforms where EEH (Enhanced Error Handling)
+> + * requires this reset method for proper device recovery.
+> + */
+> +int reset_spyre(struct pci_dev *dev, bool probe)
+> +{
+> +	int ret;
+> +
+> +	if (probe)
+> +		return 0;
+> +
+> +	/* Assert warm reset */
+> +	ret = pci_set_pcie_reset_state(dev, pcie_warm_reset);
+> +	if (ret) {
+> +		pci_err(dev, "Failed to assert reset: %d\n", ret);
+> +		return ret;
+> +	}
+> +
+> +	/* Wait for reset to take effect */
+> +	msleep(250);
+> +
+> +	/* Deassert reset */
+> +	ret = pci_set_pcie_reset_state(dev, pcie_deassert_reset);
+> +	if (ret) {
+> +		pci_err(dev, "Failed to deassert reset: %d\n", ret);
+> +		return ret;
+> +	}
+> +
+> +	/* Wait for device to recover */
+> +	msleep(250);
+> +
+> +	return 0;
+> +}
+> +
+>  static enum pci_bus_speed prop_to_pci_speed(u32 prop)
 >  {
-> -	if (dev->multifunction || dev->subordinate || !dev->slot ||
-> -	    dev->dev_flags & PCI_DEV_FLAGS_NO_BUS_RESET)
-> +	if (dev->subordinate || !dev->slot ||
-> +	    dev->dev_flags & PCI_DEV_FLAGS_NO_BUS_RESET ||
-> +	    (dev->multifunction && !dev->slot->per_func_slot))
-
-[Severity: High]
-This is a pre-existing issue, but does reading dev->slot here and accessing
-dev->slot->per_func_slot allow a use-after-free?
-
-__pci_reset_function_locked() acquires device_lock(&dev->dev) but calls
-pci_dev_reset_slot_function(), which reads dev->slot locklessly.
-
-Concurrently, if a hotplug driver is removed, pci_destroy_slot() drops
-the kobject refcount and triggers pci_slot_release().
-
-pci_slot_release() frees the slot and sets dev->slot =3D NULL:
-
-pci_slot_release() {
-	...
-	list_for_each_entry(dev, &slot->bus->devices, bus_list)
-		if (pci_dev_matches_slot(dev, slot))
-			dev->slot =3D NULL;
-	...
-	kfree(slot);
-}
-
-If the reset thread is preempted after checking dev->slot but before
-dereferencing dev->slot->per_func_slot, could it dereference the freed
-pointer?
-
->  		return -ENOTTY;
-> =20
->  	return pci_reset_hotplug_slot(dev->slot->hotplug, probe);
-> diff --git a/drivers/pci/slot.c b/drivers/pci/slot.c
-> index 42ff66461f74a..897223f01f6ac 100644
-> --- a/drivers/pci/slot.c
-> +++ b/drivers/pci/slot.c
-> @@ -72,6 +72,23 @@ static ssize_t cur_speed_read_file(struct pci_slot *sl=
-ot, char *buf)
->  	return bus_speed_read(slot->bus->cur_bus_speed, buf);
+>  	switch (prop) {
+> diff --git a/arch/powerpc/platforms/pseries/pseries.h b/arch/powerpc/platforms/pseries/pseries.h
+> index 3968a6970fa8..79c194aeb3c6 100644
+> --- a/arch/powerpc/platforms/pseries/pseries.h
+> +++ b/arch/powerpc/platforms/pseries/pseries.h
+> @@ -92,6 +92,10 @@ extern struct pci_controller_ops pseries_pci_controller_ops;
+>  int pseries_msi_allocate_domains(struct pci_controller *phb);
+>  void pseries_msi_free_domains(struct pci_controller *phb);
+>  
+> +/* PCI device reset method for Spyre adapter */
+> +struct pci_dev;
+> +int reset_spyre(struct pci_dev *dev, bool probe);
+> +
+>  extern int CMO_PrPSP;
+>  extern int CMO_SecPSP;
+>  extern unsigned long CMO_PageSize;
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index b09f27f7846f..1b8ab5d9764b 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -4237,6 +4237,11 @@ static int reset_hinic_vf_dev(struct pci_dev *pdev, bool probe)
+>  	return 0;
 >  }
-> =20
-> +static bool pci_dev_matches_slot(struct pci_dev *dev, struct pci_slot *s=
-lot)
-> +{
-> +	if (slot->per_func_slot)
-> +		return dev->devfn =3D=3D slot->number;
+>  
+> +#ifdef CONFIG_PPC_PSERIES
+> +/* Defined in arch/powerpc/platforms/pseries/pci.c */
+> +int reset_spyre(struct pci_dev *dev, bool probe);
+> +#endif
 > +
-> +	return slot->number =3D=3D PCI_SLOT_ALL_DEVICES ||
-> +		PCI_SLOT(dev->devfn) =3D=3D slot->number;
-> +}
-> +
-> +static bool pci_slot_enabled_per_func(void)
-> +{
-> +	if (IS_ENABLED(CONFIG_S390))
-> +		return true;
-> +
-> +	return false;
-> +}
-> +
-
-[ ... ]
-
-> @@ -299,6 +314,9 @@ struct pci_slot *pci_create_slot(struct pci_bus *pare=
-nt, int slot_nr,
->  	slot->bus =3D pci_bus_get(parent);
->  	slot->number =3D slot_nr;
-> =20
-> +	if (pci_slot_enabled_per_func())
-> +		slot->per_func_slot =3D 1;
-> +
-
-[Severity: High]
-Does unconditionally setting per_func_slot for all slots on S390 break
-standard PCIe hotplug topologies?
-
-When generic PCIe hotplug drivers like pciehp create a bus-wide slot, they
-pass PCI_SLOT_ALL_DEVICES (now 0xfeff). Because pci_slot_enabled_per_func()
-globally forces per_func_slot =3D 1 on S390, pci_dev_matches_slot() will
-evaluate:
-
-	dev->devfn =3D=3D 0xfeff
-
-Since devfn is an 8-bit value (0-255), this will never match, leaving
-dev->slot unassigned for all devices on those buses.
-
-Similarly, if a generic driver specifies a physical slot number (like 2),
-it will evaluate dev->devfn =3D=3D 2, which incorrectly matches Function 2 =
-of
-Device 0 rather than matching all functions of Device 2.
-
-Will this cause generic hotplug slots to fail matching on S390, breaking
-sysfs linkages and PCI resets?
-
->  	slot->kobj.kset =3D pci_slots_kset;
->
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260805165518.794-=
-1-alifm@linux.ibm.com?part=3D2
+>  static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
+>  	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82599_SFP_VF,
+>  		 reset_intel_82599_sfp_virtfn },
+> @@ -4252,6 +4257,10 @@ static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
+>  		reset_chelsio_generic_dev },
+>  	{ PCI_VENDOR_ID_HUAWEI, PCI_DEVICE_ID_HINIC_VF,
+>  		reset_hinic_vf_dev },
+> +#ifdef CONFIG_PPC_PSERIES
+> +	{ PCI_VENDOR_ID_IBM, 0x06a7,
+> +		reset_spyre},
+> +#endif
+>  	{ 0 }
+>  };
