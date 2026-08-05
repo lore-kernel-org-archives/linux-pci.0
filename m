@@ -1,277 +1,231 @@
-Received: from PA4PR04CU001.outbound.protection.outlook.com (mail-francecentralazon11013041.outbound.protection.outlook.com [40.107.162.41])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 10B113AC0F5;
-	Wed,  5 Aug 2026 02:07:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.162.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D186018E02A;
+	Wed,  5 Aug 2026 02:13:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=192.198.163.12
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785895647; cv=fail; b=FkAgixPGzWO1tqonD9hXGOZ9l9zFfVpTYMKaYVoOOP8HkGtN+8PZ/HP0J2U2uUuJyNGVapy/2X5WeHDJa0ncCSnDqYcK0A0cfBdZBcd3myjFA1DxQepUnysn5YulsVnianWpvpMrSguqlQ3+miO6/2Zg8ixfeLGWM8zpK1OfKVs=
+	t=1785896024; cv=fail; b=GcI4KAM0lahk+YcVC86JdNgvRjuYyyZoo3Bzgl8lNQ+2Wp0wY2o5CY6UOu3/bYH35dPrFjzvF3aJ3dwehjxtUwqWNCsq87+1pqsqzBZMXjyoHp3uEYlnFqnHXxkQbqxUq47V3e/3t3/YMJBYPorTjlc54Mw61yguBXdFHeduuD8=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785895647; c=relaxed/simple;
-	bh=uclxwe2xQlFIBzjb5Ik6gcfWbipd4wNMHGS0xh41KZI=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=rh3+Xr5ZRUUcXsXnD3Bwa8hwCxtmzAONKo+O9jmgbU8gLWVHOprI7BltCy2XCJcOczcyvGu6fc9MRewSoKwioVJZzzpgBqGu1FSJXQdvPwUbBvSbPOvcLdEKMU3K+5/Wykfzg7jHDZ//LJBHyF53fBTYwD6SOW0TM05EtFSf64I=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com; spf=pass smtp.mailfrom=oss.nxp.com; dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b=bHbSpQRp; arc=fail smtp.client-ip=40.107.162.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.nxp.com
+	s=arc-20240116; t=1785896024; c=relaxed/simple;
+	bh=zQ1s7oFPX7q5O45MfL+syO0QmzzOj9SbXM9NTdb0UaY=;
+	h=Date:From:To:CC:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=TATj6+cBCDR20r5muGYeeCE4+Itfr6USxY6bDUCpOi6/NWtTUeTokvjZHpAb/l6WeAzPhYtu8w291of/FlVMaHZTkGZklrexhmerN0WPGlifOjPk4eqoGxvWxmfNMpNMgTelbiuQrn+Jdntn0O7577hxz94zPVKegkBoMR99JdQ=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=LcCfIVSt; arc=fail smtp.client-ip=192.198.163.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b="bHbSpQRp"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="LcCfIVSt"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1785896021; x=1817432021;
+  h=date:from:to:cc:subject:message-id:references:
+   in-reply-to:mime-version;
+  bh=zQ1s7oFPX7q5O45MfL+syO0QmzzOj9SbXM9NTdb0UaY=;
+  b=LcCfIVStSPwf4pEZt+9Tsj7MpewUbHj/lyPLD+IfPcRaPyr00wlWnt90
+   4Lh0eDuO/cA+BVLmsXTUD5cgMYExMAZKcdTKsYPRSa6wccQAVapUyHVgz
+   dTBIswA/Pv50yCCWBpPbq0OCI+aGTw4/tAoFVgJi/N28el+4/liLuEDSa
+   9Zelq61XUs6V4HEf/00n4dOmY4y1SdjV6qHI6Iwf0kHuUmGvyY1BNcula
+   CJvyqiC9TQFyrYjdkHJwLOkb24gS5bpYIJp8CYAtXxScZIh2cwALtNx/w
+   RMPSdyQu0L3v2ujFhyVIfCie7mKOTSZ+zVxhtL+UNAQSyUuAG8gyXHtt7
+   A==;
+X-CSE-ConnectionGUID: +meDkdoEQyyOwUb04pOjlA==
+X-CSE-MsgGUID: nAg6+w0/TFqOOouZPI/qmw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11865"; a="90271608"
+X-IronPort-AV: E=Sophos;i="6.25,205,1779174000"; 
+   d="scan'208";a="90271608"
+Received: from orviesa006.jf.intel.com ([10.64.159.146])
+  by fmvoesa106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Aug 2026 19:13:39 -0700
+X-CSE-ConnectionGUID: 2mBC9VCRSe6cirUs7oeI7w==
+X-CSE-MsgGUID: +3t/OL3CR52elWVcJt5/bg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.25,205,1779174000"; 
+   d="scan'208";a="259904413"
+Received: from orsmsx901.amr.corp.intel.com ([10.22.229.23])
+  by orviesa006.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Aug 2026 19:13:39 -0700
+Received: from ORSMSX902.amr.corp.intel.com (10.22.229.24) by
+ ORSMSX901.amr.corp.intel.com (10.22.229.23) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.45; Tue, 4 Aug 2026 19:13:38 -0700
+Received: from ORSEDG903.ED.cps.intel.com (10.7.248.13) by
+ ORSMSX902.amr.corp.intel.com (10.22.229.24) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.45 via Frontend Transport; Tue, 4 Aug 2026 19:13:38 -0700
+Received: from CH5PR02CU005.outbound.protection.outlook.com (40.107.200.68) by
+ edgegateway.intel.com (134.134.137.113) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.45; Tue, 4 Aug 2026 19:13:38 -0700
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=Dt7OO/Amqp8gspFkZFNSObl2qSBab7/dyvMOUm1T4AaLvfzCdbgA9zTsLCP612NiEM8H2KkGlfFxx7lXKsFILkuKONeTJ4ktLf/Uf3FoIxsyz3TmrPcPDjrKnouZwRg/ByFQPU1QxRDwmdL2/dyfpC1LCz0vtUrWL59+bAfOIWgXd0v8dK2WVgdhtOT+HPygbfG19Wc0YaU2oaX51uR2VWtxFWBqqSo90HQaygoFb4bG8BlY2VAVO3VE4iSn12Q+0gfJCk+AwxlspwT6/g3ot6lqGYHa3O0nW74sdElAqb3naJ0IYotMQq62wczgo3V3FVBQPWuP77xnNTk7zAgdbA==
+ b=r2Mp3G9528YTUcWCh6pjvDXrMg0VGntfP9iOGxGq/pdKVkENtJdiLz9xoE7+uo6XusCFZPGcmezlJWy1w6cmt54hhPoQAZ6Sbf1QdoWED6UlshBax+8q+CwObZ4ZGicHnhLmuas4RsLDMKyitsuzUt+YmLzKB3ko4qB08cwh9rH3jbwQJ+eOo2q2Yspv3OMmohZbgiVG7ZedBZMZjmA1Ft28Ww6qPT0eLTeHxvhE0iDVhYKUezjcRQQl8AzwGHWxqB9QqJXGDvTLhEXotpCyibbhSuWJOFqtWwOLwr9nRfa0b8fobKMVfiyUbOaGPNOxuaPhABt5MvNL8N0cytTkgw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=D8DyK/ulKJwNN6aJvX6Mim9Twe4oXqSZwoNIsM/EOFo=;
- b=dGrZH4n60D7f/xn6dHwzreat6raBYkPMBzYHfrXCJ2BFVacdwVA6sLCygFR8BZrnEzgGQGTI27/81vU009O5PND7FuBCaY+9r+lcgovcQEJvtAJpRXcMulgRukyyArhSKgcFdHwtHLFIYtwBCXmWVRP+4gbSHQGgb4NB8IyNcCHWE5ptGw8iKNFVt25x9CiNZOTwVfw3LoDCDrkwDJz7PNsNrKdkiixG3fseFvAnjABwzxq1U0/Ew5v1eYLOhvVmFjHDu0peKhhYVqlTBU2jeIjTOswbRC75edSrgK0wEOIGZnCGcRAeLqDNN2kmslSoOOn5pc8Gzm28kKle5G9T8w==
+ bh=vEfyIiM2UEdwETRX2+gllQR+kpA40ekW7aFK1fpGXA0=;
+ b=jxNBFZpg7pBDG3ekwIH+jtQ8f+MiGRsIjri6yC/eiSNVV22LysvRZXT3KWS0WqI63QBTwv+K5k4W/bd8hiQRLMOB8Ejr3cBrZPqplOHnPuPIfQRqsTHIFLLY5QKWky0vjnV6X8sMP8FLOiT0pQUe+PgyqklJuXAEsQuO+OoBPV0CvyCkwGsD+Gn262vF+GNWuWS6LI+J6PfPsPw+BJMA9diazfluVfhUcVfZ/tU12DdU1X25WkWfaspgh+T+vWfj3XeGGDQkvc8Kq7x1yZyl23WXxCVYNbnpmwLCSWjcVgFeiKCnmPrnN4lZFkFI5pWd3JCVHhmoZPf/5qikDra99A==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oss.nxp.com; dmarc=pass action=none header.from=oss.nxp.com;
- dkim=pass header.d=oss.nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=NXP1.onmicrosoft.com;
- s=selector1-NXP1-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=D8DyK/ulKJwNN6aJvX6Mim9Twe4oXqSZwoNIsM/EOFo=;
- b=bHbSpQRpHqcQNdnQCkRdJjYoMjLUZr5kaJUjEVjKD9Yw7EQDo6BrjzDW9uUCySa4y6/QNuAE2Tt2wc9Dr5pFU8+YRjiV/nnTbyzHYASOQzADZGwezj09SvYXFqO4UCLRkoEYbeYJqKM+yUUd9inxeOF94NmV1tYt+kwBSTNmDrwcmcsKlxfGC/iXTDWW/CbTSI8ei16kA9Mirja9z6jawKtGlAmhz0KK/AgKhrrqlA31sNrVx7gK5Il6P5AgkEugU2+Sx5HzHvDblWtd0rvayJ5a9AjlCaOWWnYwQx+ntbZQcNoYOMT7UOyZB4VQ/o7dwIg1g7e5tOnhh/SSrh7r2Q==
-Received: from GV2PR04MB12019.eurprd04.prod.outlook.com
- (2603:10a6:150:30c::14) by MI9PR04MB149546.eurprd04.prod.outlook.com
- (2603:10a6:290:bb::17) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.292.16; Wed, 5 Aug
- 2026 02:07:22 +0000
-Received: from GV2PR04MB12019.eurprd04.prod.outlook.com
- ([fe80::ed75:bac1:2554:5cbe]) by GV2PR04MB12019.eurprd04.prod.outlook.com
- ([fe80::ed75:bac1:2554:5cbe%4]) with mapi id 15.21.0292.013; Wed, 5 Aug 2026
- 02:07:22 +0000
-From: "Hongxing Zhu (OSS)" <hongxing.zhu@oss.nxp.com>
-To: Bjorn Helgaas <helgaas@kernel.org>, "Hongxing Zhu (OSS)"
-	<hongxing.zhu@oss.nxp.com>
-CC: Manivannan Sadhasivam <mani@kernel.org>, Frank Li <frank.li@nxp.com>,
-	"l.stach@pengutronix.de" <l.stach@pengutronix.de>, "lpieralisi@kernel.org"
-	<lpieralisi@kernel.org>, "kwilczynski@kernel.org" <kwilczynski@kernel.org>,
-	"robh@kernel.org" <robh@kernel.org>, "bhelgaas@google.com"
-	<bhelgaas@google.com>, "s.hauer@pengutronix.de" <s.hauer@pengutronix.de>,
-	"kernel@pengutronix.de" <kernel@pengutronix.de>, "festevam@gmail.com"
-	<festevam@gmail.com>, "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>, "imx@lists.linux.dev"
-	<imx@lists.linux.dev>, "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>, Hongxing Zhu <hongxing.zhu@nxp.com>
-Subject: RE: [PATCH v2] PCI: dwc: Add suspend_poweroff flag for platforms with
- RC power loss
-Thread-Topic: [PATCH v2] PCI: dwc: Add suspend_poweroff flag for platforms
- with RC power loss
-Thread-Index:
- AQHdH6nG8t4d/+36IkayVsl6C+RRu7aFt+kQgABBO4CABoJRAIAA+yKwgADFdgCAAILrkA==
-Date: Wed, 5 Aug 2026 02:07:22 +0000
-Message-ID:
- <GV2PR04MB12019B910276AFAA820373C028CD32@GV2PR04MB12019.eurprd04.prod.outlook.com>
-References:
- <GV2PR04MB12019D498722B4C8A94C2A1A28CD42@GV2PR04MB12019.eurprd04.prod.outlook.com>
- <20260804181846.GA1846400@bhelgaas>
-In-Reply-To: <20260804181846.GA1846400@bhelgaas>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=oss.nxp.com;
-x-ms-exchange-messagesentrepresentingtype: 1
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: GV2PR04MB12019:EE_|MI9PR04MB149546:EE_
-x-ms-office365-filtering-correlation-id: fa25a95c-6f42-4a55-73fb-08def296499e
-x-ms-exchange-sharedmailbox-routingagent-processed: True
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam:
- BCL:0;ARA:13230040|1800799024|19092799006|376014|7416014|366016|23010399003|4143699003|22082099003|18002099003|38070700021|6133799003|10067099003|56012099006|11063799006;
-x-microsoft-antispam-message-info:
- f/UGbHU/v5DZc6sJwVn8xDk3SGfmHaES/wyj5X7g/utBatOOC6B2M6g5fOcBHwtNglotLfIoL0Rp04g+nHbVJIVsrgY5mlAoLQBkcZ3DgJ0ukMqjtlzHX9/aHibZBFrp08sOQ2UEvuHUx+ebpuxnoOnQWLLyzZI2htZDVfLK/FxebfeS/5XB8CuoUdS9VGp7xP/W6aJ1MILrWLKNcyFTROg8UBo+7HCPfIGpKKJo1MwF+liy5bBhpmElxV8Jsi8mavLvdUtEHIFqj7qzorSduoB7X//WfHOYXk+XhlcEkqSsNLQiKhhMWK7OeBXrMov3B+30NnWKQdHdKcU2qbIvc/T6XaBLtnEU+hqUzsbXLaRKKDomQQHYguUoVBznG1cSE0BbaFXdCwfCysiZIpCqiI+gvQitFAxoYb0UD920oo6smwlt6jeDHEv0FNet9DnOfkE8ODswPFCO6SAZpC5PfGLUImghsAqVUydkeGi7wCZdjnlvO1v0ZkWxrsbglRqlBI2ED8+Viq2cC2UV6pjTiEBocsJrPzIUZTXxN86s+yAAZXhfOZvv61JpQxuu/uwsFC0664ecZaZhKhKoB/RCU0n6dMceq7m0DzbWxQ75wS/XV8kspbcLmFt8CVoRxO5qNBBpSSH957BURWW1Ea9PQ0ewMHi3vpszHwuflcumABjAE97Acg63/CFU8AFJ4UsWaF0PgejobHRMvjyBUpWy014hJUebK5Q9p3+uKyYzLYI=
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:GV2PR04MB12019.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(19092799006)(376014)(7416014)(366016)(23010399003)(4143699003)(22082099003)(18002099003)(38070700021)(6133799003)(10067099003)(56012099006)(11063799006);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?us-ascii?Q?dSpnHcHcwnOH3SNvSgWaXUaRhRxywP3XntFLWvxDQVfN8LIFKxEGfZjigAOR?=
- =?us-ascii?Q?ppA/GoNwCEVEWdg3fnxInX3LmsmR59X/VqnRovKeReOXKR5e2njnU2Hb1ooW?=
- =?us-ascii?Q?aRHsFz1IDbuGGZM6y6fgPgoz5nT/KY4xlglatj0GU0qbK/llx39fgoWd5rVl?=
- =?us-ascii?Q?MPk5v6LnyOIo/2AgR3s4JwbXs8RZUu/QexfFvdaq+0qKRaFXeth4O17sb5NS?=
- =?us-ascii?Q?xUYGt1+7C0ELbOM5TNnv/lkNwPILMtmf/DygEqovLGt9jqiICqa46Zw8hlGA?=
- =?us-ascii?Q?XZWpnKGlpAqKdmEr1YUWYSlebXtq5Mc3ySvVbfkklhEr6WwVaUks/fltKBqe?=
- =?us-ascii?Q?UMboXIdJg0qX8wjco9t0tgW3GQqH2XMsqx8RJZ/OgWvvo0kRC4REBGOCSk9O?=
- =?us-ascii?Q?FMuek/4ToF3dloR4v7lmcgKDAAnI/WOnHpKkKfSexn6PHKIGIUVP5ebrD61I?=
- =?us-ascii?Q?X99WPKUGZuXlmj8aj8m5cVRqR8BWkYKM0a0XtwGgCBloV4TuxtfrDouLJJhW?=
- =?us-ascii?Q?Z5XdovjkjyNDFIRlKJ+JEX7h0hR+DXkMnsCnfTg+BY6Ahq9O2N/mB7yGIA/F?=
- =?us-ascii?Q?jhdS9Fd9g1eEnrOrwiqJHzQXvf4tVDB/gGIIjjs9Vz42E2Inj8fcmRsjR4va?=
- =?us-ascii?Q?LvvTl9x+LWoQX2R2HJTVJdglSW08DBZcOxHL+mVnnIfbc9+iCdKqJqUMavED?=
- =?us-ascii?Q?nstXcT3M/MrLQs54mGNNWhmj+gopdDpS7I9lkxrM5Z9M+HWzBtpMjLo2uf0k?=
- =?us-ascii?Q?B/lNwV6M65KmekW21PTrzmbvTxA8pra0Ag/f9c9/dPkYomGnKZ7TtTejyTDe?=
- =?us-ascii?Q?bnPOLilAo3nvIlUviuTCse74JsgpjgPoEa6FZdfszYY8uiklAgw0q1ZmYhMT?=
- =?us-ascii?Q?9/qqn6WT39W8JKz56YrMpdUfbqoHmUpeCxvpmDo4/HFA3RI8kMWOkStDDUDy?=
- =?us-ascii?Q?LqmtZuCXCRXNfTG8uTP/yTr9Fpi/8fG3WVLmgB8BEVS3Zpg2MtGP1+yS3h+h?=
- =?us-ascii?Q?5sWplcBSAePRtrbhLGrcQHgBgwHrTqonHIHMXfWm/nhGKuOe4hhUPUB7sFtw?=
- =?us-ascii?Q?L/68z0cK0iSv4+uisCH32Mb8shQAyKtGTrpfSDCoOTPU3rdDp1EGWjCwW6vN?=
- =?us-ascii?Q?Am9eXR0f/M1RCibENgWR0n1BLJtJUJv3ys17SHn0L/YOuYYPoirT551ujeFN?=
- =?us-ascii?Q?CcNbryMHCPD/M8hgewsJDQeDl73T0oIdiIFXIcDRR3MVSsf/sU/dEv/RyXiV?=
- =?us-ascii?Q?dPxTik8l+M3VH8nCrLA9CQdvdJkZdgGfH5dkP4OJzVLPIu/JTfNnKBB1zGII?=
- =?us-ascii?Q?2qVzx1efkmul4VChuKnxC5YQe3nAIAEA9eULOd6kf2lR1jNJJ3UaG2QrnGwA?=
- =?us-ascii?Q?/Jk4RBPXHSiy7zlOE1Bv+1vtgEE5Q3oyMEZ1ephcT0kSRyCk+32ba83ZwCte?=
- =?us-ascii?Q?zZsza1txVpgLn1sU8R1Zek/jNl6vjNGjWLPe98Px99bfgwossTRMjnjMtofQ?=
- =?us-ascii?Q?6rOwIicZvEc2pxJGfzU4KwGfpk5YPdG/lNrLoRmSw6F48YN5svoozEJnUJ2P?=
- =?us-ascii?Q?AlKRxZF2pqpfxF+VHzAIg06bK3n33BxZzgr+LHRKWF9E9MeAjEoS7HJXJIkD?=
- =?us-ascii?Q?V+GiKhqnucHzs/YTogYEqJwvo7UZNH/SFVcJ8wrt7lhvW3S9olotWy9sjvJW?=
- =?us-ascii?Q?Y91gKyzAbOcBCh7g/TbgP2tZ9R2txGEo6q6IqxXHkWzpDk/XmnYiuQtekCac?=
- =?us-ascii?Q?4psxslG5vA=3D=3D?=
+ smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
+ dkim=pass header.d=intel.com; arc=none
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=intel.com;
+Received: from DS4PPF0BAC23327.namprd11.prod.outlook.com (2603:10b6:f:fc02::9)
+ by CH3PR11MB7868.namprd11.prod.outlook.com (2603:10b6:610:12e::5) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.270.18; Wed, 5 Aug
+ 2026 02:13:36 +0000
+Received: from DS4PPF0BAC23327.namprd11.prod.outlook.com
+ ([fe80::e721:90d7:9214:2d53]) by DS4PPF0BAC23327.namprd11.prod.outlook.com
+ ([fe80::e721:90d7:9214:2d53%6]) with mapi id 15.21.0292.013; Wed, 5 Aug 2026
+ 02:13:35 +0000
+Date: Tue, 4 Aug 2026 19:13:28 -0700
+From: Alison Schofield <alison.schofield@intel.com>
+To: Srirangan Madhavan <smadhavan@nvidia.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>, Dave Jiang <dave.jiang@intel.com>,
+	Davidlohr Bueso <dave@stgolabs.net>, Ira Weiny <ira.weiny@intel.com>,
+	Jonathan Cameron <jic23@kernel.org>, Vishal Verma <vishal.l.verma@intel.com>,
+	<linux-cxl@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, Alex Williamson <alex.williamson@redhat.com>,
+	<vsethi@nvidia.com>, <alwilliamson@nvidia.com>, Sai Yashwanth Reddy Kancherla
+	<skancherla@nvidia.com>, Vishal Aslot <vaslot@nvidia.com>, Manish Honap
+	<mhonap@nvidia.com>, Jiandi An <jan@nvidia.com>, Richard Cheng
+	<icheng@nvidia.com>, <linux-tegra@vger.kernel.org>
+Subject: Re: [PATCH v10 01/12] cxl: Move HDM decoder programming helpers
+Message-ID: <anKcSN63nh3CgtEQ@aschofie-mobl2.lan>
+References: <20260804192958.1823952-1-smadhavan@nvidia.com>
+ <20260804192958.1823952-2-smadhavan@nvidia.com>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
+In-Reply-To: <20260804192958.1823952-2-smadhavan@nvidia.com>
+X-ClientProxiedBy: SJ0PR03CA0146.namprd03.prod.outlook.com
+ (2603:10b6:a03:33c::31) To DS4PPF0BAC23327.namprd11.prod.outlook.com
+ (2603:10b6:f:fc02::9)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-OriginatorOrg: oss.nxp.com
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DS4PPF0BAC23327:EE_|CH3PR11MB7868:EE_
+X-MS-Office365-Filtering-Correlation-Id: cfd5b053-cef0-4ad2-d50c-08def29727dd
+X-LD-Processed: 46c98d88-e344-4ed4-8496-4ed7712e255d,ExtAddr
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230040|376014|23010399003|7416014|1800799024|366016|6133799003|56012099006|11063799006|10067099003|4143699003|22082099003|18002099003;
+X-Microsoft-Antispam-Message-Info: x2sLPESzUilpcFsTykpjwI+iJ/gbr4omz+PtGPqwJx1KgUSt2SqFs4nK/SnmREf8clPKcUL3MLe5y6AfJyfhAHE6Kc/YKcnQjkwxhOk9VjFxiFsKkhoQLtgpuTT6+uymZIfC/icCysQBgjp++gwSdA6U893dLgmdqhmh1317PdGqVGLg5xSWlVO8l8EHNibEEyTFQZWLOXhhB8sGd10tBQf96eM7Q+F3Od9r8Oi14e/d/OsMwTxWL83wcMrBC89LEtKeMGFpx+wWQJvQc4CHxsxyVXZxKmdffRbqWTdNIf0FxsFQ3xIO0c0Vy9llCe+Y4u8wZDYTjztMOg67epqfp2UiNm+py+Q+5Td7CbKTAMa9UKR4v3BTlt1GAc7gGPKAt4UKZ+dcD6czYqs2tCr98DPQiL2l2CgkshPrLvwqPSTNnKJW9TMQz1mfRek6xmzR3zRQgdvKI/KjMQt+Ykh0E/6yYYgO8rR4npS10KaWSh9DRbOqNofou5N0Q98kRmwhuRlAI6zAVYDh0pBLCyg2DyNfF8Qkcyl1ymhxqz/kcSf/nNmBLDJLFOw2e0o0mIuaOXnM+3KwyK89w2dT+yFFfOO848g2wReUOXn63Ktvjxd66q9cyw3sOGPs3ewbEKW//xng0jVHjc38y4iS5oSNALM5vnwd3Jm1gvs8WCgmBW8=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DS4PPF0BAC23327.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(23010399003)(7416014)(1800799024)(366016)(6133799003)(56012099006)(11063799006)(10067099003)(4143699003)(22082099003)(18002099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?V+v3A7XRpmfrhb20IDdF43Itiviu0mx7eSFupWT4ihpqIIc3AJ+g8EPj3NaO?=
+ =?us-ascii?Q?6wQOI3Ablqh3QceN5/H8UefWfRXWfjgauKmAPnvqKSIixRJsvB9RKVmz6Kcy?=
+ =?us-ascii?Q?Qo+QXlJeDwjFwcr5EmT+9uwrnbB+Xx3PagzFuuS5j1HnOhsBEXBb11AMOAQn?=
+ =?us-ascii?Q?076MsJ/2NgX1x9p8We63CMPMqOXvhvCix+5R/oMoy0sSnSeJ+4fgtq3pCJHS?=
+ =?us-ascii?Q?XY/APHFXO0FEYd0oIFs9FM3W/yVb2xpoSEqHT6kynZ7Ncb+g09ZOy8hwoX/D?=
+ =?us-ascii?Q?I7Zs41eALBqJTPIFFRhsecN/xc76bynn4aswYoEt1HE/mholHXZtF2bhFn3S?=
+ =?us-ascii?Q?1OFUIFArVM8YP8Cr240SNVDOxDgym2GC59GZ3v/UyM+UPgBhanD/ZXKdXHFT?=
+ =?us-ascii?Q?vXyBGc8rVcMjPj8mOMuqbbEgO53QUBzLAh5/Ivs46BS609+OERn+Be4aEeal?=
+ =?us-ascii?Q?sMWWFElRfgsv/LR1UQGIJsZW9zRo/DTVFMSNbSqA1kFU6WPkFiTGMknPRROk?=
+ =?us-ascii?Q?QovZmC4GUEj2ck9XB/lQMXe83ExquwokC9AwG9nEVLF1lUjtRpEggmzasCD6?=
+ =?us-ascii?Q?dx4MPua2TTJpZL78snQh5tasygaSYus88G9xEUDWAAukR31doWKPAs3pHdpE?=
+ =?us-ascii?Q?2SqLw0v/dJrVxaPTsCO3xXmE05jMyRt/RKva9GZSIPFKYHylmzVK6/MDfIN8?=
+ =?us-ascii?Q?b+ctu9Kdc0Q/hWA7LzUabaDDI4AQNjsgRRmshdy92qRRwRP/zg+LJqzEUMXF?=
+ =?us-ascii?Q?vCiE44KJJmc2PP2ZqW1Mjgo0umjovKQFmSljKdBh4qHBuHXFqZdvU2puy60j?=
+ =?us-ascii?Q?ILWkClix8Z36XkjnzIyICLCTuI9T1lOVGLRNarPWfls9/uDHl+scrOzlvTpQ?=
+ =?us-ascii?Q?d5AFzFKnHHWrl98+1WLboATNKGXaF2Sfz+ijsAsd4anXHKB3NxF8ArHs/yhm?=
+ =?us-ascii?Q?MtrotfgpsUH/UyBUa9llxQrcJVQS/CZRwo3dan9j3R7T83LzBxUOJi7yAqC+?=
+ =?us-ascii?Q?N+tzgekdpDguGuZl6W3U938ReHLnbual55ORiJUv40k3wK481Qnu0yw3Mdnd?=
+ =?us-ascii?Q?b92EVbHwJHs9h5eNctZwIYtBFpM8esqP9fDdUViXVr7ZCimLwOCJ+EIR3CVB?=
+ =?us-ascii?Q?G3N8WKRCHaI6vKxZKYbRmhhxPxovn0CnCvMSPKfuY2MlBR1jd+kd7qOcU790?=
+ =?us-ascii?Q?Bb0mHedJwH8zhCv7SWlJ9jnek+fUvZ86Inl7OyWlStr0h9pb1hCMypxBWWfQ?=
+ =?us-ascii?Q?yEk1ss/iH3w02S7QXDk6Ee4G84bW0g9Bm9FHCkTtyO3nc+KsWHqLAQzWe0IO?=
+ =?us-ascii?Q?dqupY9TZd6jnwf8PT4iiI7xWe9NY9vezCFL2adgA0z7IupKHPV1QkuuTYe60?=
+ =?us-ascii?Q?vZQWydvZjPKSUK3WJ2ftirALXOEWcHy0Z6f2h9Z4hNL0IsNnv6xMcER8MRLA?=
+ =?us-ascii?Q?HLM5YX0tH1jnw3pRKI+fT0RWgisr96PDSz7g1NI4TOoS6YFPuiXGoBrem6jX?=
+ =?us-ascii?Q?20EfWO6lh6TMbGa4hIYziramXW53oSFGFEGErduaR0whE8kqE+arxbVM9EqV?=
+ =?us-ascii?Q?b8nbr4eXFKHbttogMI+FedyiurwSgVTAGq/E4tpF7He5Seb/rnnRBfs5XgfX?=
+ =?us-ascii?Q?a59TYtr87gwMdGCiR3Dvhyxo4CcePUk0ez2HgL1hqBoQrisLHN/D5it8B9Fc?=
+ =?us-ascii?Q?KcdUzFtgPl3Flr982hvKcanhiB48sdwsIOvv+xSuhvtHxn0jI129KhsL7IJ3?=
+ =?us-ascii?Q?JOxYsrwq8KjNHLOhlTh7n68A7keDSkU=3D?=
+X-Exchange-RoutingPolicyChecked: h7lxidu0+VXaSEwyxAHWsBdzmZsGTkec5AISe/++8E5GbVoDE1bIXzD2Jp7wVnXzLo0q25jXF4YyV5PWsIz6EFQnjOktt4aCi6+OmJBfGEQgMoJJqsQRRx7lSKwUZjtcxBqgeFGjRBNmdwnO1XTuktAE8tUDCG/8yiqa33xi34cHbxEkAAuFz2dUgx7cAz65ylYgoMg0Fa9abrAtO0C/OTIBPRoJszXk/eBpWA+A6xLMwceeI1NO7JKz8Xn7diztJQkM29hlQFHnYfoCkjp6A7e18Q+3tgmEcSCMNnITOeBoAUgOwGn9wv9IIzVG0dJ46lCsXdb45PP3It/7l/OUkw==
+X-MS-Exchange-CrossTenant-Network-Message-Id: cfd5b053-cef0-4ad2-d50c-08def29727dd
+X-MS-Exchange-CrossTenant-AuthSource: DS4PPF0BAC23327.namprd11.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: GV2PR04MB12019.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: fa25a95c-6f42-4a55-73fb-08def296499e
-X-MS-Exchange-CrossTenant-originalarrivaltime: 05 Aug 2026 02:07:22.7307
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Aug 2026 02:13:35.8269
  (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: J65q6j8lkkCRDXVYXQHED61L8+genoYPJU8FepHWLGbKt9jkll1KTizWWOghvbFG1dwZyymSS74K8zW/R98cVA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MI9PR04MB149546
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 50aiWmVh2sX+Dhp2kFUPibOONK3mAavGOYG8cj7c8SfDPAgE6MyfxM2Toj42HUBqgwTSzPbv1kF/jLJgcT+PAWeMiouIt5DOi0XxfCUDm2U=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH3PR11MB7868
+X-OriginatorOrg: intel.com
 
-> -----Original Message-----
-> From: Bjorn Helgaas <helgaas@kernel.org>
-> Sent: Wednesday, August 5, 2026 2:19 AM
-> To: Hongxing Zhu (OSS) <hongxing.zhu@oss.nxp.com>
-> Cc: Manivannan Sadhasivam <mani@kernel.org>; Frank Li <frank.li@nxp.com>;
-> l.stach@pengutronix.de; lpieralisi@kernel.org; kwilczynski@kernel.org;
-> robh@kernel.org; bhelgaas@google.com; s.hauer@pengutronix.de;
-> kernel@pengutronix.de; festevam@gmail.com; linux-pci@vger.kernel.org; lin=
-ux-
-> arm-kernel@lists.infradead.org; imx@lists.linux.dev; linux-
-> kernel@vger.kernel.org; Hongxing Zhu <hongxing.zhu@nxp.com>
-> Subject: Re: [PATCH v2] PCI: dwc: Add suspend_poweroff flag for platforms=
- with
-> RC power loss
->=20
-> On Tue, Aug 04, 2026 at 06:32:26AM +0000, Hongxing Zhu (OSS) wrote:
-> > > -----Original Message-----
-> > > From: Manivannan Sadhasivam <mani@kernel.org>
-> > > Sent: Monday, August 3, 2026 11:33 PM
-> > ...
->=20
-> > > On Thu, Jul 30, 2026 at 07:09:13AM -0500, Bjorn Helgaas wrote:
-> > > > On Thu, Jul 30, 2026 at 08:16:36AM +0000, Hongxing Zhu (OSS) wrote:
-> > > > > > -----Original Message-----
-> > > > > > From: Bjorn Helgaas <helgaas@kernel.org>
-> > > > > > Sent: Thursday, July 30, 2026 6:30 AM
-> > > > > ...
-> > > >
-> > > > > > On Fri, Jul 17, 2026 at 03:41:21PM +0800,
-> > > > > > hongxing.zhu@oss.nxp.com
-> > > wrote:
-> > > > > > > From: Richard Zhu <hongxing.zhu@nxp.com>
-> > > > > > >
-> > > > > > > Some platforms like i.MX power off their PCIe RC controllers
-> > > > > > > during system suspend, requiring full re-initialization on
-> > > > > > > resume. These platforms need to enter
-> > > > > > > L2 state to properly notify endpoints before power loss.
-> > > > > > >
-> > > > > > > According to PCIe base spec r7.0, sec 5.2, the system
-> > > > > > > software should transition the device into D3Hot before
-> > > > > > > broadcasting the PME_Turn_Off message to initiate L2 entry.
-> > > > > > > However, some endpoint devices fail the D3cold capability
-> > > > > > > check in pci_host_common_d3cold_possible(),
-> > > > > > > which would normally prevent L2 entry.
-> > > > > >
-> > > > > > Wakeup devices that don't support PME from D3cold will fail
-> > > > > > the D3cold capability check, but I don't think those are the
-> > > > > > problem you're solving.
-> > > > > >
-> > > > > You're right.
-> > > > >
-> > > > > > This appears to handle devices that are not in D3hot, and
-> > > > > > that's not a property of the endpoint; it's a property of its
-> > > > > > driver.  Is the problem here that some driver didn't put its
-> > > > > > device in D3hot?
-> > > > > >
-> > > > > I observed some endpoint devices failing the D3cold capability
-> > > > > check, but I haven't identified the root cause.
-> > > >
-> > > > Seems like some instrumentation in
-> > > > pci_host_common_d3cold_possible() could tell us which
-> > > > devices/drivers are relevant.
-> > > >
-> > > > > > > For platforms where the RC loses power during suspend, L2
-> > > > > > > entry is essential regardless of D3cold support, as the link
-> > > > > > > will be lost anyway.  Add a suspend_poweroff flag to force
-> > > > > > > L2 entry in such cases, and enable it for i.MX PCIe
-> > > > > > > controllers.
-> > > > > > >
-> > > > > > > Note: This violates the spec requirement that devices be in
-> > > > > > > D3Hot before PME_Turn_Off, but is necessary for proper
-> > > > > > > operation on platforms with RC power loss during suspend.
-> > > > > >
-> > > > > > If the device isn't in D3hot, it may still be active, and I
-> > > > > > think the PME_Turn_Off will abort any DMAs in progress, which
-> > > > > > doesn't sound like proper operation of the endpoint.
-> > > > >
-> > > > > You're correct - this isn't ideal for endpoint operation.
-> > > > > However, on i.MX platforms, the RC controller will lose power
-> > > > > during system suspend regardless. Without sending PME_Turn_Off,
-> > > > > endpoints would have no notification before the link abruptly
-> > > > > goes down.
-> > > >
-> > > > The PME_Turn_Off is some notification, but I don't think the
-> > > > endpoint can do DMA or MSI, so its driver won't be involved.  It
-> > > > may be able to do things internally, e.g., write caches to an SSD
-> > > > or transmit packets from its internal buffers.  But I think it
-> > > > might still lose power in the middle of operations like that, so
-> > > > it doesn't sound reliable.
-> > > >
-> > > > > This patch adds a flag to force L2 entry for such platforms,
-> > > > > choosing to notify endpoints (even if not ideal) rather than
-> > > > > having the link drop unexpectedly. I'm appreciated for
-> > > > > suggestions if there's a better approach to handle this
-> > > > > scenario.
-> > > >
-> > > > Mani recently added pci_suspend_retains_context(), and I think it
-> > > > returns "true" on i.MX.  But if the RC is powered off and all the
-> > > > devices need full re-initialization on resume, it sounds like it
-> > > > *should* return "false".
-> > >
-> > > Right. pci_suspend_retains_context() was added just for that purpose
-> > > of telling client drivers to prepare for context loss. So if this
-> > > API returns 'false', then they should not hold the device in D0.
-> >
-> > Thanks for your comments.
-> >
-> > If I update dw_pcie_suspend_noirq() to use
-> > pci_suspend_retains_context() to determine whether to proceed with
-> > L2 entry and RC power down. The new logic would be changed as below:
->=20
-> I'm not suggesting using pci_suspend_retains_context() in
-> dw_pcie_suspend_noirq().  pci_suspend_retains_context() is for endpoint
-> drivers.
->=20
-> I think pci_suspend_retains_context() should return 'false' on any platfo=
-rm
-> where dw_pcie_suspend_noirq() is going to send PME_Turn_Off.
-> Sending PME_Turn_Off means we intend to remove main power.  When main
-> power is removed, devices will be in D3cold and they will not retain thei=
-r
-> internal context.
->=20
-> If pci_suspend_retains_context() returns 'false' and
-> pci_host_common_d3cold_possible() returns also returns 'false', it means =
-some
-> driver didn't put its device in D3hot when it should have.
->=20
-> In that case, I think you should either fix that driver so it *does* put =
-the device
-> in D3hot (based on pci_suspend_retains_context()), or just accept that yo=
-u can't
-> power off the RC.
-Understood, thanks for your explanation.
+On Tue, Aug 04, 2026 at 07:29:47PM +0000, Srirangan Madhavan wrote:
+> Move the low-level HDM decoder programming helpers from hdm.c into
+> resource.c so they can be shared by later reset restore code.
+> 
+> Keep the existing decoder commit flow and register programming sequence
+> unchanged. This patch is intended to be a mechanical move. Follow-on
+> patches update the helper interface for reset restore.
+> 
+> Signed-off-by: Srirangan Madhavan <smadhavan@nvidia.com>
+> ---
+>  drivers/cxl/Kconfig         |   4 ++
+>  drivers/cxl/core/Makefile   |   1 +
+>  drivers/cxl/core/core.h     |   2 +
+>  drivers/cxl/core/hdm.c      | 124 +-------------------------------
+>  drivers/cxl/core/resource.c | 138 ++++++++++++++++++++++++++++++++++++
+>  drivers/cxl/cxl.h           |  41 -----------
+>  include/cxl/cxl.h           |  45 +++++++++++-
+>  tools/testing/cxl/Kbuild    |   1 +
+>  8 files changed, 191 insertions(+), 165 deletions(-)
+>  create mode 100644 drivers/cxl/core/resource.c
+> 
 
-Best Regards
-Richard Zhu
+Hi Srirangan,
+
+A bit of deja-vu here but on a different file this time.
+
+
+snip
+
+> diff --git a/drivers/cxl/core/Makefile b/drivers/cxl/core/Makefile
+> index ce7213818d3c..0df4178bbbaa 100644
+> --- a/drivers/cxl/core/Makefile
+> +++ b/drivers/cxl/core/Makefile
+> @@ -1,5 +1,6 @@
+>  # SPDX-License-Identifier: GPL-2.0
+>  obj-$(CONFIG_CXL_BUS) += cxl_core.o
+> +obj-$(CONFIG_CXL_HDM) += resource.o
+>  obj-$(CONFIG_CXL_SUSPEND) += suspend.o
+
+We can't add resource.o to both the built-in set above, and to
+cxl_core-y below. The mock cxl_core.ko must not build an object
+that is already in vmlinux. resource.o gets compiled twice and
+modpost rejects the duplicate exports like this-
+
+$ make M=tools/testing/cxl/
+ERROR: modpost: cxl_core: 'cxl_rwsem' exported twice. Previous export was in vmlinux
+ERROR: modpost: cxl_core: 'cxl_commit_start' exported twice. Previous export was in vmlinux
+ERROR: modpost: cxl_core: 'cxl_commit_wait' exported twice. Previous export was in vmlinux
+ERROR: modpost: cxl_core: 'cxl_hdm_decode_decoder' exported twice. Previous export was in vmlinux
+
+So, remove from tools/testing/cxl/Kbuild below.
+
+To catch this, run the mock build after any change to
+drivers/cxl/core/Makefile or tools/testing/cxl/Kbuild:
+  $ make vmlinux modules
+  $ make M=tools/testing/cxl/
+
+> diff --git a/tools/testing/cxl/Kbuild b/tools/testing/cxl/Kbuild
+> index 2be1df80fcc9..6c09932587ce 100644
+> --- a/tools/testing/cxl/Kbuild
+> +++ b/tools/testing/cxl/Kbuild
+> @@ -60,6 +60,7 @@ cxl_core-y += $(CXL_CORE_SRC)/memdev.o
+>  cxl_core-y += $(CXL_CORE_SRC)/mbox.o
+>  cxl_core-y += $(CXL_CORE_SRC)/pci.o
+>  cxl_core-y += $(CXL_CORE_SRC)/hdm.o
+> +cxl_core-y += $(CXL_CORE_SRC)/resource.o
+>  cxl_core-y += $(CXL_CORE_SRC)/pmu.o
+>  cxl_core-y += $(CXL_CORE_SRC)/cdat.o
+>  cxl_core-$(CONFIG_TRACING) += $(CXL_CORE_SRC)/trace.o
+> -- 
+> 2.43.0
+> 
