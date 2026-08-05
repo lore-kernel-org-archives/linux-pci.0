@@ -1,219 +1,270 @@
 Received: from mx0a-0002e601.pphosted.com (mx0a-0002e601.pphosted.com [148.163.150.75])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6AFD13CB2E0;
-	Wed,  5 Aug 2026 10:50:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1660422531;
+	Wed,  5 Aug 2026 10:55:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=148.163.150.75
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785927054; cv=fail; b=hBiYVgJTeKOwND4b96HHzyNVne2piRRsslmdEIxVbGSZvRMf7+OYrPzdDpiYaHKmalEeLRN9jO6AXOMHj5T0pIRyu+8qH8VWSzYnDanDC18vB74UoilZLA+/UB7eHkxGOlp211s02VabEaDbXKZt0Pcl14knGA3/LuTpqxLHjhU=
+	t=1785927305; cv=fail; b=J58ddrNegvnkIEtI2dWREl+Hx9CrWBG+j9KvVGe3ifg/2i2qYcTMPKxDf/HAm+KpsGKbzKb3WyCEFJhvROU2AByPeRw/3o0QLuZU+avM2rG5LiSv7YYFmsYKJocCua5/MbZpnF2U3dozFc0hv67xEGlM8Ek/2h3h+PasLWCYxQ4=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785927054; c=relaxed/simple;
-	bh=WBhT/aRwydqj4meOWrOeWj2EIYx45aefE7C8CpM7iW4=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=blcbZUcIha5VHCjd6AEJivjdhLzmy7jalr988QWfT6AwWlcawP8jFxoOt/jtPM6HKt61TllWVLTk0VoKJOXs6f7a1X4ac7dvwTvg0tpLPZ8QNWTuLZIvNy9GoHOyU/Xb1AbUQ3YTHMndpO6EIEdaqD1S4YhpiXr+mIcb8NHPWOQ=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com; spf=pass smtp.mailfrom=ti.com; dkim=pass (2048-bit key) header.d=ti.com header.i=@ti.com header.b=oBczXfR4; dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b=eFRALH40; arc=fail smtp.client-ip=148.163.150.75
+	s=arc-20240116; t=1785927305; c=relaxed/simple;
+	bh=PNTirG8Ba17KUyDTO/1KPiLMECf6OXz3H2fY5gvuUg8=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=u5vlEg+tP7uGXZO/VA5dmq9USYaRm7RlBY34yKBXvnD2R5V2BYpyEqTwHfljoU1gZZeiisF12JH3QmscXqR3z3bOVd+MRUeAdgBg7Zri32BS0FStZu/yaJ5mojBr6Ooiftn51HI0sTT0/pQ7AVMt8CzsyvCpbyzkvh74Be/+OM4=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com; spf=pass smtp.mailfrom=ti.com; dkim=pass (2048-bit key) header.d=ti.com header.i=@ti.com header.b=Prq7sLo3; dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b=HyqS6Kpz; arc=fail smtp.client-ip=148.163.150.75
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ti.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ti.com header.i=@ti.com header.b="oBczXfR4";
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="eFRALH40"
-Received: from pps.filterd (m0384305.ppops.net [127.0.0.1])
-	by m0384305.ppops.net (8.18.1.11/8.18.1.11) with ESMTP id 6758dd9c1847099;
-	Wed, 5 Aug 2026 05:50:26 -0500
+	dkim=pass (2048-bit key) header.d=ti.com header.i=@ti.com header.b="Prq7sLo3";
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="HyqS6Kpz"
+Received: from pps.filterd (m0380145.ppops.net [127.0.0.1])
+	by m0380145.ppops.net (8.18.1.11/8.18.1.11) with ESMTP id 6758dVrw869749;
+	Wed, 5 Aug 2026 05:54:45 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com; h=cc
-	:content-transfer-encoding:content-type:date:from:message-id
-	:mime-version:subject:to; s=proofpoint-05-2026; bh=LdEn8oE4JMtm5
-	K3DrrplrsVup9dHgVHMweshSC6WYQU=; b=oBczXfR4sI0XqQ5iZJr0DmpdABeap
-	HNNjWu864K3xDwYfKrLTQdi3/PlBos2hOe/pW0lRR++zzGFg1dOMheWcleKr6yiG
-	fqUfVhzmUEEZrz4WoNBPfdqWRx58u+BswXuLfZmAwPApevhFCj41WEiyiz9WKbEn
-	R8HMt7YHuMNgRyiAS1Lve1ByrhJO4RBzW7o5I1s/g+gqN3FQH0RdAn7ZPTNAXJZC
-	cP7E07kU48DFcMP15q6UAXRcK/GwcPe34EPR9Bx+Bf3nk+NYVObYXaYwX92FsNkk
-	sGOqMu+0H1/wFv/Qycaldow/EtDpnI8MPKyydRRKWxT+qOuKbqO5LlQcA==
-Received: from sa9pr02cu001.outbound.protection.outlook.com (mail-southcentralusazon11013054.outbound.protection.outlook.com [40.93.196.54])
-	by m0384305.ppops.net (PPS) with ESMTPS id 4fuuxtu75x-1
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=
+	proofpoint-05-2026; bh=v5MO8RE53DzyVvAAC6Q5dsTDIEU32HojBSEbRAksW
+	UM=; b=Prq7sLo3wZHm7qRDZuWwgncbD7EOojxVXJggRF3b0NHJhMNeh88wntJiz
+	unY70IJsGDmLn9AV4KzknczSPubHhwmX5/8+qTHoLdPjolRDT8EfJG0XH8XNtufR
+	C335/wM8iI1FpfCp8s66tXEWg6Ay2rhyvjj4hEUgab+TWmqhaDdmTXzo0JkUboeA
+	5gdbVbTKto+ATSoe7hgk+qEYrIIZV6OvtqSB4Qwg8HZZg33RwaxdsBvvTgXS7Dtp
+	h5g2vgbekp3vVMzhAgTfjd/d01mlZngQdblvZgTonA1wnr1iRrYn8RKyPLjTCmTP
+	MShORL0qUF8kpwaJX+l7DuZiZt0hA==
+Received: from sa9pr02cu001.outbound.protection.outlook.com (mail-southcentralusazon11013030.outbound.protection.outlook.com [40.93.196.30])
+	by m0380145.ppops.net (PPS) with ESMTPS id 4fux6u2bx7-1
 	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
-	Wed, 05 Aug 2026 05:50:26 -0500 (CDT)
+	Wed, 05 Aug 2026 05:54:45 -0500 (CDT)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=TTjZmodKdC3CwdDd4HaAwT3llFJjGbHT4nPsg62kqUzto7zCwopSWis2zVTOnNuRZEBvLEEbkgx6Aan0h2zlqbcTwwSSqBa2dD5q659and+C+e1r4SHkEUoVEHn9/e9JexuTaph0gtwpETfVF/eY2Z3y4+J1vcAHguQpYoiXtBUe9BRP21ggMifvl1aTOXqbunW4wi9t7FXfdf4EdflcOT2rfkVUJt6b47MGNu+JdPtTURwTJBn122Xgy2NnApXQEpRoplSBjdu9ngf9Igjs1s9bx+SQoW1lNqN1PjOOKaaDbU6Ukj6b7/9d72VBzJoRLNIzSBe696UNuCW+xxDH4g==
+ b=nVnabYYbHH3a7ppkZpznhHj5w48hVoEWa8AlSiOT1SJKDPrD0DGsmcR3HzvVd0qDBxsODhxB2w/mxV7HiCMBykjFpvROuR9ctJsZFQ3JgQiwzCUMKmbkk2TuDVeMg/CnvRw9WTF8SbZKgSqPhxpzUwEYN0KFW4qe8wl0sXWHt8XNhv4dH3mh5lk1gWgTVubcFt4K5tfvla6v79Reel41/psnLLcg85Eed1nkF3Q0sDiPFtCKtDMEw5lfnkcg3weUi27yWEcr6ciFOjcxXciwEcykrsfe4/4fKF+lUUlaInQ7WjulwTuRriA6+tD4c7FAPO56Xu7Qk3HUP/xNbwksEg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=LdEn8oE4JMtm5K3DrrplrsVup9dHgVHMweshSC6WYQU=;
- b=W2WL52Ys2zRYmAierMa69sxaabqcAc1folBHWf/vfJoNSiaK317YLTrAq7j5ox5uEjBG0REQiCj6/XosEiQysZxJF7e1LMx24AdiW+SWeUDOYa6SmPLi1W1gK2F9Af4JO3mi9WI9yOntssE6G3/5EwasLFtLabQs3QeKYKK1AD3U40rwIzePIvIZFM78TmrBPW1Uzd5gdY5X7X3jQ3+4RPxbYVOdPPXtf6WlleIV2wbANQXFdhbJEp0L3s8iJG1l/R35qIUSWSKu8JIM+SaTJI2eIlUftM9jzUL2lRLG2Cr5J8WTsT2non7BM8MilYCUekZBZNMfWz0Abd7y+Pk6xQ==
+ bh=v5MO8RE53DzyVvAAC6Q5dsTDIEU32HojBSEbRAksWUM=;
+ b=yIQ4DlJ7LNzDq/LDsgSj8Vvimxv6/kTPkloxwTiJYPVa36kD4EPPMHRXgmK/9+0Rf1Q5Pvdwu0Q+k1cosJTkOdlgH7/yKMiI3YgeeHzcSBCgce58XzQ0xVxG6RBkUCjsF9oV3GnqLRq3Gqj4PB9J+wK+yj7TRfSqIPMkANe4D0qVgk+n5uT6Q16t4l0cC/hvhRaSINMAAWYeJG6cXjQNm/MMIq8doLKpXh1P2ch0iz6jjp6J0XdbT/HFA2gCGCBjfhUZzDcnFLqXa5I/ltFlbqC3vCNxxVI4N6S8Qs9K9qaPSvtEtyUta1EyMj01Er4OWB0PFrx5YjDVKZX7PuSgNA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 198.47.21.195) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=ti.com;
- dmarc=pass (p=quarantine sp=none pct=100) action=none header.from=ti.com;
- dkim=none (message not signed); arc=none (0)
+ 198.47.21.194) smtp.rcpttodomain=cadence.com smtp.mailfrom=ti.com; dmarc=pass
+ (p=quarantine sp=none pct=100) action=none header.from=ti.com; dkim=none
+ (message not signed); arc=none (0)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=LdEn8oE4JMtm5K3DrrplrsVup9dHgVHMweshSC6WYQU=;
- b=eFRALH40mhOpY4KLKZc5LBidfjNnRmWMRxdHikchTTTs8sHFwRV9TbAP0Whh+kf5vpuw+IutMG8rAv49wr9MNCoU8K4y4fwUshnm/kB4Z2nC/wC91xvI+JsNP4LrjKBnIEJZpq6Ww3f2rU6FEK1rjJIfJWocPoyNsmvVXGiTBH8=
-Received: from CH2PR07CA0058.namprd07.prod.outlook.com (2603:10b6:610:5b::32)
- by PH3PPF0C5C46881.namprd10.prod.outlook.com (2603:10b6:518:1::789) with
+ bh=v5MO8RE53DzyVvAAC6Q5dsTDIEU32HojBSEbRAksWUM=;
+ b=HyqS6Kpz7rpfZPaXSay+eNtjsjRjJVBzkE4l32cKPAyReJAaX1GMqrCXY51iEQw+Gi7JyVJZILjd/aWlH05pIg9WBuoJ2sGPJGqHjeLbQRzoJ+VBZ0cr3R//a6gHTmjV5qYnjbueG/sD8DFx2LwafYGxh12ZzxrPeV9gvxw7CwU=
+Received: from PH7P220CA0178.NAMP220.PROD.OUTLOOK.COM (2603:10b6:510:33b::17)
+ by SJ5PPFA7D84DD83.namprd10.prod.outlook.com (2603:10b6:a0f:fc02::7c0) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.292.15; Wed, 5 Aug
- 2026 10:50:22 +0000
-Received: from DS2PEPF00003444.namprd04.prod.outlook.com
- (2603:10b6:610:5b:cafe::75) by CH2PR07CA0058.outlook.office365.com
- (2603:10b6:610:5b::32) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.270.18; Wed, 5 Aug
+ 2026 10:54:41 +0000
+Received: from MW1PEPF0001615E.namprd21.prod.outlook.com
+ (2603:10b6:510:33b:cafe::11) by PH7P220CA0178.outlook.office365.com
+ (2603:10b6:510:33b::17) with Microsoft SMTP Server (version=TLS1_3,
  cipher=TLS_AES_256_GCM_SHA384) id 15.21.292.16 via Frontend Transport; Wed, 5
- Aug 2026 10:50:22 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 198.47.21.195)
+ Aug 2026 10:54:41 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 198.47.21.194)
  smtp.mailfrom=ti.com; dkim=none (message not signed) header.d=none;dmarc=pass
  action=none header.from=ti.com;
 Received-SPF: Pass (protection.outlook.com: domain of ti.com designates
- 198.47.21.195 as permitted sender) receiver=protection.outlook.com;
- client-ip=198.47.21.195; helo=flwvzet201.ext.ti.com; pr=C
-Received: from flwvzet201.ext.ti.com (198.47.21.195) by
- DS2PEPF00003444.mail.protection.outlook.com (10.167.17.71) with Microsoft
+ 198.47.21.194 as permitted sender) receiver=protection.outlook.com;
+ client-ip=198.47.21.194; helo=flwvzet200.ext.ti.com; pr=C
+Received: from flwvzet200.ext.ti.com (198.47.21.194) by
+ MW1PEPF0001615E.mail.protection.outlook.com (10.167.249.89) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.292.8 via Frontend Transport; Wed, 5 Aug 2026 10:50:21 +0000
-Received: from DFLE211.ent.ti.com (10.64.6.69) by flwvzet201.ext.ti.com
- (10.248.192.32) with Microsoft SMTP Server (version=TLS1_2,
+ 15.21.315.0 via Frontend Transport; Wed, 5 Aug 2026 10:54:40 +0000
+Received: from DFLE212.ent.ti.com (10.64.6.70) by flwvzet200.ext.ti.com
+ (10.248.192.31) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.37; Wed, 5 Aug
- 2026 05:50:19 -0500
-Received: from DFLE209.ent.ti.com (10.64.6.67) by DFLE211.ent.ti.com
- (10.64.6.69) with Microsoft SMTP Server (version=TLS1_2,
+ 2026 05:54:37 -0500
+Received: from DFLE214.ent.ti.com (10.64.6.72) by DFLE212.ent.ti.com
+ (10.64.6.70) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.37; Wed, 5 Aug
- 2026 05:50:19 -0500
-Received: from lelvem-mr06.itg.ti.com (10.180.75.8) by DFLE209.ent.ti.com
- (10.64.6.67) with Microsoft SMTP Server (version=TLS1_2,
+ 2026 05:54:37 -0500
+Received: from lelvem-mr05.itg.ti.com (10.180.75.9) by DFLE214.ent.ti.com
+ (10.64.6.72) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.37 via Frontend
- Transport; Wed, 5 Aug 2026 05:50:19 -0500
-Received: from a0507033-hp.dhcp.ti.com (a0507033-hp.dhcp.ti.com [10.24.68.129])
-	by lelvem-mr06.itg.ti.com (8.18.1/8.18.1) with ESMTP id 675AoEuh1269457;
-	Wed, 5 Aug 2026 05:50:15 -0500
-From: Aksh Garg <a-garg7@ti.com>
-To: <linux-pci@vger.kernel.org>, <lpieralisi@kernel.org>,
-        <kwilczynski@kernel.org>, <mani@kernel.org>, <robh@kernel.org>,
-        <bhelgaas@google.com>, <mpillai@cadence.com>, <rdunlap@infradead.org>,
-        <18255117159@163.com>, <unicorn_wang@outlook.com>
-CC: <linux-kernel@vger.kernel.org>, <s-vadapalli@ti.com>, <danishanwar@ti.com>,
-        <a-garg7@ti.com>
-Subject: [PATCH] PCI: cadence-plat: Fix host/endpoint dependencies
-Date: Wed, 5 Aug 2026 16:20:14 +0530
-Message-ID: <20260805105014.3952686-1-a-garg7@ti.com>
-X-Mailer: git-send-email 2.34.1
+ Transport; Wed, 5 Aug 2026 05:54:37 -0500
+Received: from [10.24.68.129] (a0507033-hp.dhcp.ti.com [10.24.68.129])
+	by lelvem-mr05.itg.ti.com (8.18.1/8.18.1) with ESMTP id 675AsXuu2021582;
+	Wed, 5 Aug 2026 05:54:33 -0500
+Message-ID: <849b0837-e3c3-4dc5-9e6f-b8b0ff48ed83@ti.com>
+Date: Wed, 5 Aug 2026 16:24:32 +0530
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
+User-Agent: Mozilla Thunderbird
+Subject: Re: linux-next: Tree for Jul 30 (pci/controller/cadence/)
+To: Bjorn Helgaas <helgaas@kernel.org>, Randy Dunlap <rdunlap@infradead.org>
+CC: Mark Brown <broonie@kernel.org>,
+        Linux Next Mailing List
+	<linux-next@vger.kernel.org>,
+        Linux Kernel Mailing List
+	<linux-kernel@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, Takuma Fujiwara
+	<t-fujiwara1@ti.com>,
+        Hans Zhang <18255117159@163.com>, Pengpeng Hou
+	<pengpeng@iscas.ac.cn>,
+        Manivannan Sadhasivam <mani@kernel.org>, Yao Zi
+	<me@ziyao.cc>,
+        Felix Gu <ustc.gu@gmail.com>,
+        Siddharth Vadapalli
+	<s-vadapalli@ti.com>,
+        Manikandan K Pillai <mpillai@cadence.com>
+References: <20260804211756.GA1938423@bhelgaas>
+Content-Language: en-US
+From: Aksh Garg <a-garg7@ti.com>
+In-Reply-To: <20260804211756.GA1938423@bhelgaas>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
 X-C2ProcessedOrg: 333ef613-75bf-4e12-a4b1-8e3623f5dcea
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DS2PEPF00003444:EE_|PH3PPF0C5C46881:EE_
-X-MS-Office365-Filtering-Correlation-Id: 421f57e8-2b3d-4acd-cd91-08def2df58a9
+X-MS-TrafficTypeDiagnostic: MW1PEPF0001615E:EE_|SJ5PPFA7D84DD83:EE_
+X-MS-Office365-Filtering-Correlation-Id: ca5e3bc9-7580-4285-827d-08def2dff33c
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|36860700016|32650700020|23010399003|7416014|376014|82310400026|1800799024|13003099007|921020|56012099006|10067099003|18002099003;
+	BCL:0;ARA:13230040|82310400026|36860700016|23010399003|376014|7416014|1800799024|13003099007|56012099006|10067099003|18002099003|22082099003;
 X-Microsoft-Antispam-Message-Info:
-	qN60iV9M/CX3GtbYnMJDZDjSFTyekaz2otCd4beI2s7LC6kxf8qGwzMqTZeIhNUkqs4odyRUhZEsoakGvbBScosi5V5p2wS6ujurUePDe+ABC0ui/l0nDgdo1GZkNQAM3nQjaOUPW5hI+emdmQYBQLJqq65iYRY9SI/1w9PxXLi/SLyOSmrbd2koUfNaC862YoY2xksgJfhj2KeSRkxs9Ug86Z1D9NIUeZGbvMOo9begV67Syl7IAS+uCb1XTGEmhbR9Z98jr/dwD/FzPHGst3s9z5RS3qvWZeD3OZr6L9UX6ApG4Nmb4FA3tM8End9gfX87SGy5kgEee/BcANswC1BuWd4p+TNhtaDQgVrEIrNr5lEZbL01R8ZW+X7dgZglQyqVY/wpJj9DZdvTbhpLYfbjgDpO8rdFFn6n32Wa1q6P+VApIZ8Mq/f+QOuWt5CQooYYNgaBfg2nFOysaACkQ1UKCC9UwCVNpA0DGExpUx9TPN8Cr4jJ9nWy9yJT5k9i96W0WWr0hqRV417hYdfZ3nzRnPt2yGddigQS/3evd2TjCCgnYhapjhaxJHZGXl7rbm9dQuXyMHTcLd5xc5GkqrYhtY+FysX1Q0MLtxdnYYyIg3QpB66lSjCeTOmvIDuUbZEGCUiL4NVHGmLcfRpTPHHJTN4wG+p1me8LrkrgjdEwt+zbXM7wTAj3qHrGXKdf9YMFQAHT3I1FS6Quxonc7CqGZCHKZA24EKYHtGrL2/lIzx+cvOYfExR4/YU5MGMA
+	nDMkqgQ0vHsZUy1D1dwRwpmBIYW4QSU8lT+XP94a0zhfHKg+gE78E0JesF+7FEts0J/vz1annX6T8bN12io1dV+fGLRJTPc1+Wpeg5wDCJOfERqhFvVvVOqFbOwntsS0VMsoG6mxjfRZL0GwwT/bSXQreN2sijq5Vv8WB2Wv1r0s5VycWhebX2JCKI3Gj43n0XqyAskzXKSLV/W76pjkkmWEcNr7J8hWxZZqJrde5gX8TZ/3GN2MjV7xPXRpYS0ZzB5OQQVSXMFgkf2syh5IiPg1Yo1FJ4Kt0cEEDXv5cH2XVrWIu21V14CEcTiBszBcwjBToZcDPgePAzB8P6cSMzUgVye8FFq+zbfB4pJNaJxieQgelooSc121YZxyoxgZHIvwWvXUHbJDzB46QIRRlXxG++PKOrGG/5bdW5XUq61HwL9Uk7J0f23F0msZCK1VxyDHxr2a76miWT/0tYCd63waasVmVYRLPzsYIbRRN5vW0ZXXsz/HVMo/TfPzcJv2QxDRSPQKOoqKsC1wscJ9LiHixqpOwuUUc2S1YjHauPUPSnkHFFD2dDLnhl9qfviYhgSCSGxbiz0vmc0pJz7adltwByr081N5/ucL+CJuMNb469UEJQ4jGJrDQyZNUg/Fekl5bCXsTRsvKOyuZ6G7q7QwTQ30KeNQCcDS8J8AQlBcRpMZ/8htk64A2oAztrk1FrcE1pBAfudfybbGaSuv+g==
 X-Forefront-Antispam-Report:
-	CIP:198.47.21.195;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:flwvzet201.ext.ti.com;PTR:ErrorRetry;CAT:NONE;SFS:(13230040)(36860700016)(32650700020)(23010399003)(7416014)(376014)(82310400026)(1800799024)(13003099007)(921020)(56012099006)(10067099003)(18002099003);DIR:OUT;SFP:1101;
+	CIP:198.47.21.194;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:flwvzet200.ext.ti.com;PTR:ErrorRetry;CAT:NONE;SFS:(13230040)(82310400026)(36860700016)(23010399003)(376014)(7416014)(1800799024)(13003099007)(56012099006)(10067099003)(18002099003)(22082099003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	GXCxZ19g4KY2dDyT1jKFcWN9iNfk0wgYAKVDL8GxVS09CgSTwEo5x9I6ALbByvGKrADzvQ3sluU2W6iZWKo8MbTqDvh3mBa1K5H74tyHk9zn8YkJdrB4XG0QMsloWlqDxBXIDwso0Ap0pnZfm3nO70m9PbQeTG5rV4AhwqATZqHr+TWWx3yAT97f3gWbc8JprG0S3XLMoxQqGaHj23Czxas0Ru4fwRjVt6tVyNTQa738X2MOXS5eBmgWj90jgOEuQEdEGct4Es6hBJdwfwXrVd6bFAT39Nl23sv7YNkIWZlPunP+htPCWlVtDq4lYpKh4WoxcVfq9YesQfqUkCIw3LePDD2fS4tAe2jFNKnVV9QnD4ScVWOrPW8gWpi3OwpZ11708RQzu06P7PB/9wrC22tBLlq6NtT8kXQ8zmryvS+5I3kd7A2OVbFhtRRBKMsD
+	FJnirA9QwAbiuU8MyTEUGatkh+rXPaAW24VxUnNQ+/2v4WQWaRePj6W+7ZtMT0TJz2sYM6uWvt/DLy+qiH8chH6U6rWq6Fgi+8xCQgS90cXWsGZfjIFt7IZiPO513eoxHCKfglUekIs7c/Z+x0XWFzfLvZHdVCQ/fX0PDaGPCE6TfCYb1M/4jFRFhR1WvouO54fZlY7qph8ZbrorRL/kdbIO3Au51VXoA+NTL1JvjSrW76nURoPPS5RIRnlMRrDNrUGeLd/Nk7csROyjgkcJn184g5Qn/FS+abaqqYb4L0AZ2N04jrNC1efcfWjMT6DNeMFd7AuLUxLrd1aXurUwCvyAHKKFJqMDBhXszNguUvdNzMDPyJMMI0p/D8GvGM+u/If+FMBq2GObH68Jchw9gCmOxPvBiGxseWXro9uwvveuFSrIyqLT7Zt/xctjgEDo
 X-Exchange-RoutingPolicyChecked:
-	E+fZ0K6khETkPBwqiDJPqWji1OdMlLlQhaJlTr5mnQ96KDUZrsbF9vhYR+DxlfKF+oqBI+tLYf2iIsXtz+BHt9q6n8Z36DWX25cp+kyJauNPBha5ThEm2gyKv4c9DtrsF0aP4U8Dd8q4DvLnUQyfs4RQAOWw7a+6lv8YNKwV40H8LnJNxJoffvghxRieUCAnGOW/eqCIRITrZfriMr6ICHfIibQxSJJeS6Z5n07wI9Wl+nzGphZDclIlQjaGIPxdXx9nZ4Hx0UsuHGxUm/ZRKDzDjC1OnvNvH5BKvyI68l5ZqRZyN2IeTXAiEIzHAprYDKWx1UHl0Lnatgmtmk5jkw==
+	H6u+PCP3+6sf8WmjQIqjO1zPEoVj096XMBbaiL9sqcVeIHglFK7LnPW7LsunEANazTXwEMIO3hz2h3ktDo4CE5ek9ILu3PPD6BUt+Y3VoNLVxw0HcVbgPns4l7F/cKLUBJjKxNxTmubH1js0qKVt9JHBXG3k9xtY5KsvqvCuPQclm8QgI8xw9YnwQ9EBAT8okyLERBobpqgyMjY1Q72UGVsUXDpJQL0JeBlYlTXT6KWjCIt1SApaPlntxPPfGcu3j4wEFMAuQXjxXYy2+JxMp7guDcPnFID1lUvGPvr9EmUgvSFM2IH7fLJdJkLTxA5//7Z2sPBTX7/uykZBonmYdQ==
 X-OriginatorOrg: ti.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Aug 2026 10:50:21.1424
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Aug 2026 10:54:40.4368
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 421f57e8-2b3d-4acd-cd91-08def2df58a9
+X-MS-Exchange-CrossTenant-Network-Message-Id: ca5e3bc9-7580-4285-827d-08def2dff33c
 X-MS-Exchange-CrossTenant-Id: e5b49634-450b-4709-8abb-1e2b19b982b7
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=e5b49634-450b-4709-8abb-1e2b19b982b7;Ip=[198.47.21.195];Helo=[flwvzet201.ext.ti.com]
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=e5b49634-450b-4709-8abb-1e2b19b982b7;Ip=[198.47.21.194];Helo=[flwvzet200.ext.ti.com]
 X-MS-Exchange-CrossTenant-AuthSource:
-	DS2PEPF00003444.namprd04.prod.outlook.com
+	MW1PEPF0001615E.namprd21.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH3PPF0C5C46881
-X-Proofpoint-ORIG-GUID: cWt1V4u1HXpanB9ePWnGSdSg5otKHRBZ
-X-Proofpoint-Spam-Info: AW1haW4tMjYwODA1MDA4NiBTYWx0ZWRfXxdG13d7ArHG5
- nW8HbNNc4GXgRJsK88Z2bVArwuG+eV8mGIk1Udt/JzYOjkWNGABFijCu48GLxT06twMNFdmy6IT
- qUesPG/Z8nYwTXdRdpdTXGzuYKaoHC4=
-X-Proofpoint-GUID: cWt1V4u1HXpanB9ePWnGSdSg5otKHRBZ
-X-Authority-Analysis: v=2.4 cv=fZKdDUQF c=1 sm=1 tr=0 ts=6a731572 cx=c_pps
- a=S/uo/C2bPHUhgLefKkPNaQ==:117 a=tJyPKKxUohctrY4NYmUjkA==:17
- a=6eWqkTHjU83fiwn7nKZWdM+Sl24=:19 a=Sv0fKeRqtYgA:10 a=V5UXEbMT0ywA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=Z8NIEmU8O1QQgoT56wFK:22 a=taLDd7a_hP9WKsMzeGRc:22
- a=VwQbUJbxAAAA:8 a=JfrnYn6hAAAA:8 a=sozttTNsAAAA:8 a=Am7_wLxxUhO668IP2vAA:9
- a=1CNFftbPRP8L7MoqJWF3:22
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODA1MDA4NiBTYWx0ZWRfX4EUNj5knvu1k
- NObJfUiB+j/vXAc/O4reI5dtVlx5AFibaiFSma2wdPWyH+mZL4kbyMmEpCypQ+xAXZ/BxABBECF
- hPPQcJz7+FfXtT60QxsO9nDfm0IQGdRaHKT+rX9Zbr1yzSdw/9UHk+ITTcWzc2SZeolTusIFieo
- +vpOPp7JVKycHAFfnWLn6szgD0h1UjYIZTHE2zjnxqJ999Tner+5D05jG2Sqnly2RIabCeBktkE
- LcZXrTXN4uceHeARBK1TRGXffLNJN9kUmEJZtoY/eeB10PKY3tXlR16SjPUF25uzEciFWRAXeOz
- t+GTh6U/CUcNcW+Gd/5TCq4nfb67dKWxtbAVu2gmKtrWppWgpodru1DWdQ+n4XFS2wzWfWUCfnj
- EMh61kq16qnrVtWQwmDofQSuGNv6zwgffqaBXOPsy6qpkw+j+Vrj+FBzFkGDpQEACuUzDU107nY
- SJguWPpG4E6oOcKsi1g==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ5PPFA7D84DD83
+X-Proofpoint-GUID: KIOnv7ygopapiVwsrN32q6HmZ3R5W3el
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODA1MDA4NyBTYWx0ZWRfXxCufMsCNckM4
+ Ak2HMNvCiU4ORHnthoM/uOmq1I04YG2cNE+H2T/Lb5NWBiPI8voHPA2kCYQKHRsgk4rO+31v9Ew
+ 1TsvRctU9XU/mKZbLJ/Zyx4u+P5vIAr3ZYGy+TewdQcFBNDwcdWNqEztRt0980gtzMQBoe0VJ3P
+ oKCb4kj7hEYUGinMxk/eOuwba/PTr8u0XCBtFQUfPSbrXWqfoO6JHH+G2vSOBCYPqqZTHyhSrvC
+ Oaf+JC3iNxoRqi28h0MSCFXB3YW5tRDQ1PX059qwosz2iLGv0FRdKfN7xBBSBqmGOaNlQpzj2gv
+ LppDvDqdzUO076E/CWPLJG8csNtAmGPS0P5WlSm/1qlB1GqQejPrBRg2GlYgtyqK28/lJwjLRF4
+ I6kTkY8mR8phr+Q0qw/Ppi6sxJs9MACd3ktHGxI9lWXLI92nyD64icvXAY8Ssazh7KvUksbkvQy
+ BQiNa9X8wHOdL3+JurA==
+X-Authority-Analysis: v=2.4 cv=X9Zi7mTe c=1 sm=1 tr=0 ts=6a731675 cx=c_pps
+ a=Ky5N4DqHy2xmpABslddG/A==:117 a=iwqwCZQqcuTv3JOpYdM7/Q==:17
+ a=6eWqkTHjU83fiwn7nKZWdM+Sl24=:19 a=IkcTkHD0fZMA:10 a=Sv0fKeRqtYgA:10
+ a=V5UXEbMT0ywA:10 a=VkNPw1HP01LnGYTKEx00:22 a=Z8NIEmU8O1QQgoT56wFK:22
+ a=gO1vWkAQAl3rybz1DQOp:22 a=VwQbUJbxAAAA:8 a=JfrnYn6hAAAA:8 a=sozttTNsAAAA:8
+ a=dd2aNVyslHAJAqqMqhkA:9 a=QEXdDO2ut3YA:10 a=1CNFftbPRP8L7MoqJWF3:22
+X-Proofpoint-Spam-Info: AW1haW4tMjYwODA1MDA4NyBTYWx0ZWRfX92YOw/FxIPow
+ ha7nNMHugO+nY7884GU1B4fTsmtS4UTCLcsqK4/kNDRfekuF6wr2Sa7wOSDvQuKdJi8Tokqty44
+ b6HJ7JMIOQjlNzXyYdT2zD/8l7LohUI=
+X-Proofpoint-ORIG-GUID: KIOnv7ygopapiVwsrN32q6HmZ3R5W3el
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
  definitions=2026-08-05_03,2026-08-04_02,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- phishscore=0 priorityscore=1501 lowpriorityscore=0 adultscore=0
- malwarescore=0 clxscore=1011 bulkscore=0 spamscore=0 impostorscore=0
- suspectscore=0 classifier=typeunknown authscore=0 authtc= authcc=
+ adultscore=0 clxscore=1011 priorityscore=1501 lowpriorityscore=0
+ suspectscore=0 impostorscore=0 bulkscore=0 spamscore=0 phishscore=0
+ malwarescore=0 classifier=typeunknown authscore=0 authtc= authcc=
  route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2606150000
- definitions=main-2608050086
+ definitions=main-2608050087
 
-The cadence-plat driver has a single platform driver that can be built-in
-or a loadable module, but it calls two separate backend drivers depending
-on whether it is a host or endpoint.
 
-If one of the mode is build as built-in and another as loadable module,
-we end up with a situation where the built-in pcie-cadence-plat driver
-tries to call the modular host or endpoint driver, which causes a link
-failure:
 
-  ld: error: undefined symbol: cdns_pcie_ep_setup
-  >>> referenced by pcie-cadence-plat.c
-  >>>               drivers/pci/controller/cadence/pcie-cadence-plat.o:(cdns_plat_pcie_probe) in archive vmlinux.a
+On 05/08/26 02:47, Bjorn Helgaas wrote:
+> [+cc recent committers in drivers/pci/controller/cadence/]
+> 
+> On Fri, Jul 31, 2026 at 05:12:03PM -0700, Randy Dunlap wrote:
+>> On 7/31/26 2:41 PM, Bjorn Helgaas wrote:
+>>> On Thu, Jul 30, 2026 at 07:27:42PM -0500, Bjorn Helgaas wrote:
+>>>> [+cc authors of everything on pci/controller/cadence; I haven't
+>>>> triaged this at all, sorry, and don't have time right now to drop that
+>>>> branch from pci/next]
+> 
+> Thanks, Randy, I reproduced this problem on v7.1 in an x86_64 build
+> with the config-r1495.gz you posted at
+> https://lore.kernel.org/all/b99bef0f-7694-4aff-949e-d289d8ddb10e@infradead.org
+> 
+> Per MAINTAINERS, drivers/pci/controller/cadence/ is orphaned.  If
+> anybody cares about this, please take a look and fix this issue.
+> 
 
-  ld: error: undefined symbol: cdns_pcie_host_setup
-  >>> referenced by pcie-cadence-plat.c
-  >>>               drivers/pci/controller/cadence/pcie-cadence-plat.o:(cdns_plat_pcie_probe) in archive vmlinux.a
+Hi,
 
-Fix this by moving the 'select' of PCIE_CADENCE_HOST and PCIE_CADENCE_EP
-from the individual PLAT_HOST/PLAT_EP symbols into the common PCIE_CADENCE_PLAT
-symbol, conditioned on which backends (modes) are enabled.
+I have posted the fix at:
+https://lore.kernel.org/all/20260805105014.3952686-1-a-garg7@ti.com/
 
-Fixes: 611627a4e5e4 ("PCI: cadence: Add module support for platform controller driver")
-Reported-by: Randy Dunlap <rdunlap@infradead.org>
-Closes: https://lore.kernel.org/linux-next/589ea512-93c6-4e1c-83d7-ba45a0b35843@infradead.org/
-Signed-off-by: Aksh Garg <a-garg7@ti.com>
----
- drivers/pci/controller/cadence/Kconfig | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Regards,
+Aksh Garg
 
-diff --git a/drivers/pci/controller/cadence/Kconfig b/drivers/pci/controller/cadence/Kconfig
-index 9e651d545973..fd704dec47dd 100644
---- a/drivers/pci/controller/cadence/Kconfig
-+++ b/drivers/pci/controller/cadence/Kconfig
-@@ -20,11 +20,12 @@ config PCIE_CADENCE_EP
- 
- config PCIE_CADENCE_PLAT
- 	tristate
-+	select PCIE_CADENCE_HOST if PCIE_CADENCE_PLAT_HOST != n
-+	select PCIE_CADENCE_EP if PCIE_CADENCE_PLAT_EP != n
- 
- config PCIE_CADENCE_PLAT_HOST
- 	tristate "Cadence platform PCIe controller (host mode)"
- 	depends on OF
--	select PCIE_CADENCE_HOST
- 	select PCIE_CADENCE_PLAT
- 	help
- 	  Say Y here if you want to support the Cadence PCIe platform controller in
-@@ -35,7 +36,6 @@ config PCIE_CADENCE_PLAT_EP
- 	tristate "Cadence platform PCIe controller (endpoint mode)"
- 	depends on OF
- 	depends on PCI_ENDPOINT
--	select PCIE_CADENCE_EP
- 	select PCIE_CADENCE_PLAT
- 	help
- 	  Say Y here if you want to support the Cadence PCIe platform controller in
--- 
-2.34.1
+>>>> On Thu, Jul 30, 2026 at 04:06:44PM -0700, Randy Dunlap wrote:
+>>>>>
+>>>>>
+>>>>> On 7/30/26 8:02 AM, Mark Brown wrote:
+>>>>>> Hi all,
+>>>>>>
+>>>>>> Changes since 20260729:
+>>>>>>
+>>>>>
+>>>>> (1) /usr/bin/ld.bfd: drivers/pci/controller/cadence/pcie-cadence-plat.o: in function `cdns_plat_pcie_probe':
+>>>>> pcie-cadence-plat.c:(.text+0x2f8): undefined reference to `cdns_pcie_ep_setup'
+>>>>>
+>>>>> In this case, a builtin driver attempts to call into a loadable module:
+>>>>>
+>>>>> #
+>>>>> # Cadence-based PCIe controllers
+>>>>> #
+>>>>> CONFIG_PCIE_CADENCE=y
+>>>>> # CONFIG_PCIE_CADENCE_DEBUGFS is not set
+>>>>> CONFIG_PCIE_CADENCE_HOST=y
+>>>>> CONFIG_PCIE_CADENCE_EP=m
+>>>>> CONFIG_PCIE_CADENCE_PLAT=y
+>>>>> CONFIG_PCIE_CADENCE_PLAT_HOST=y
+>>>>> CONFIG_PCIE_CADENCE_PLAT_EP=m
+>>>>> # end of Cadence-based PCIe controllers
+>>>
+>>> I was unable to reproduce this issue, so I didn't do anything.  I
+>>> didn't figure out how to make CONFIG_PCIE_CADENCE_EP=m; the config I
+>>> used was:
+>>>
+>>>    CONFIG_PCIE_CADENCE=y
+>>>    # CONFIG_PCIE_CADENCE_DEBUGFS is not set
+>>>    CONFIG_PCIE_CADENCE_HOST=y
+>>>    CONFIG_PCIE_CADENCE_EP=y
+>>>    CONFIG_PCIE_CADENCE_PLAT=y
+>>>    CONFIG_PCIE_CADENCE_PLAT_HOST=y
+>>>    CONFIG_PCIE_CADENCE_PLAT_EP=m
+>>>
+>>>>> (2) /usr/bin/ld.bfd: drivers/pci/controller/cadence/pcie-cadence-plat.o: in function `cdns_plat_pcie_probe':
+>>>>> pcie-cadence-plat.c:(.text+0x11f): undefined reference to `cdns_pcie_host_setup'
+>>>>>
+>>>>>
+>>>>> This is similar, just a different driver is =m in the failure case.
+>>>>>
+>>>>> #
+>>>>> # Cadence-based PCIe controllers
+>>>>> #
+>>>>> CONFIG_PCIE_CADENCE=y
+>>>>> CONFIG_PCIE_CADENCE_DEBUGFS=y
+>>>>> CONFIG_PCIE_CADENCE_HOST=m
+>>>>> CONFIG_PCIE_CADENCE_EP=y
+>>>>> CONFIG_PCIE_CADENCE_PLAT=y
+>>>>> CONFIG_PCIE_CADENCE_PLAT_HOST=m
+>>>>> CONFIG_PCIE_CADENCE_PLAT_EP=y
+>>
+>> I have reproduced it several times in cases that were
+>> generated by 'make randconfig'.
+>> I am attaching the 2 failing randconfig files (both for x86_64
+>> and linux-next).
+>>
+>> -- 
+>> ~Randy
+> 
+> 
+> 
 
