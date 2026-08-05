@@ -1,305 +1,277 @@
-Received: from OS0P286CU010.outbound.protection.outlook.com (mail-japanwestazon11021082.outbound.protection.outlook.com [40.107.74.82])
+Received: from PA4PR04CU001.outbound.protection.outlook.com (mail-francecentralazon11013041.outbound.protection.outlook.com [40.107.162.41])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 355E639934C;
-	Wed,  5 Aug 2026 02:05:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.74.82
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 10B113AC0F5;
+	Wed,  5 Aug 2026 02:07:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.162.41
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785895527; cv=fail; b=DU3o5AH9wDwoBdObYMNnPhROtQ5qzo6aCpFRID0d83srRkmFmNlB+tX/HOrVClkm7b61RnTFFFf8YPbASK4qG0HfyNGHp5wxao7UQPPBPv0XkTrzJNXrWxZoPwYAekXgnL3/Rx8E2tZWpCHAonL7sCsFts5ShX7elVjgKl/6P8E=
+	t=1785895647; cv=fail; b=FkAgixPGzWO1tqonD9hXGOZ9l9zFfVpTYMKaYVoOOP8HkGtN+8PZ/HP0J2U2uUuJyNGVapy/2X5WeHDJa0ncCSnDqYcK0A0cfBdZBcd3myjFA1DxQepUnysn5YulsVnianWpvpMrSguqlQ3+miO6/2Zg8ixfeLGWM8zpK1OfKVs=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785895527; c=relaxed/simple;
-	bh=jfVhlQJfzPPa0wZaGwmDkZatPnunjjswkxoXidYiavk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=pLUAupY0mJcxSiW0snyGi+1y9D5PJWJTHuckuK/zpWpFBP5HxyEx6vbcOLeqV+nflxs1BwlK/ot4EnUNCM9UnpIkpVcdYw1Mv2+LZiPSyxOsU42oIOk+/uKR37Z3sK9VvPuNvagh1vcfEyEjvbiYKNTcGRGFD9Ef1qATdKjfs5Y=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp; spf=pass smtp.mailfrom=valinux.co.jp; dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b=OwWKmnvx; arc=fail smtp.client-ip=40.107.74.82
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=valinux.co.jp
+	s=arc-20240116; t=1785895647; c=relaxed/simple;
+	bh=uclxwe2xQlFIBzjb5Ik6gcfWbipd4wNMHGS0xh41KZI=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=rh3+Xr5ZRUUcXsXnD3Bwa8hwCxtmzAONKo+O9jmgbU8gLWVHOprI7BltCy2XCJcOczcyvGu6fc9MRewSoKwioVJZzzpgBqGu1FSJXQdvPwUbBvSbPOvcLdEKMU3K+5/Wykfzg7jHDZ//LJBHyF53fBTYwD6SOW0TM05EtFSf64I=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com; spf=pass smtp.mailfrom=oss.nxp.com; dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b=bHbSpQRp; arc=fail smtp.client-ip=40.107.162.41
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b="OwWKmnvx"
+	dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b="bHbSpQRp"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=fSledEdlLTDM8Th2L3z3Cciof33qIrVRv4mgbYaN5dEfyTOGYkTZTCchK25qEDFqIQMrYGEgvJIzWwqxdyASgoXs+d9fMBNnTBA4wg0E1hiO4KNLLQQCftidBylyQOekFFKmyYTeWGavC3bQBeyNFOQ/jipf4jHN2NWmsGTQGZA2KSovPEVnAOGbrhdwxDg4YARITVYDKpUTwmRDCJPdrqqrBRilPdyfy1atk9B0wy01nMOGlG+K2EZ83A99SqU1Zn4oedjk0Tlt127ORWGdYSd/t3K117Lxh8AiUCRPIwOJgrLXxEdI2jUydf4rDKOSTaa6DNAuqAtmdz8P9X1tQQ==
+ b=Dt7OO/Amqp8gspFkZFNSObl2qSBab7/dyvMOUm1T4AaLvfzCdbgA9zTsLCP612NiEM8H2KkGlfFxx7lXKsFILkuKONeTJ4ktLf/Uf3FoIxsyz3TmrPcPDjrKnouZwRg/ByFQPU1QxRDwmdL2/dyfpC1LCz0vtUrWL59+bAfOIWgXd0v8dK2WVgdhtOT+HPygbfG19Wc0YaU2oaX51uR2VWtxFWBqqSo90HQaygoFb4bG8BlY2VAVO3VE4iSn12Q+0gfJCk+AwxlspwT6/g3ot6lqGYHa3O0nW74sdElAqb3naJ0IYotMQq62wczgo3V3FVBQPWuP77xnNTk7zAgdbA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=AuEh+xAokU2zcZ77mAJBY4GWdGh8U6T70NQS1Hl+4BQ=;
- b=trQ2lns0H/QrCKKI9/x4Ax7mxgosQRk8EN5AtTDYTpj8EVKjhic6XgHoOVn2ePj9skpGKWUhR4WeDA+f9uJ+1OiPVU+l18EdXHZDHJl8SpMrCsTrCCanoqwBj0qt94FI+Gti/K9N7iEn9ZlyiwxfAHTzF10T8af4cys5aaCZKUg/ZgyFMY8k6oQWXKr6L68fEo1EAxzmvXbhxg0Bd/otHx7aRYg5NWCnvaIu+1PcMhmYmVf0D2zt91l4hbZPfS+w6KNUF7UcByBaJ9K1JwndqE8NaxR0+86OGLstmqGovht6zOFOl87ef0+QglGjxgU7WMisHke1HAOhScZVVxLHAg==
+ bh=D8DyK/ulKJwNN6aJvX6Mim9Twe4oXqSZwoNIsM/EOFo=;
+ b=dGrZH4n60D7f/xn6dHwzreat6raBYkPMBzYHfrXCJ2BFVacdwVA6sLCygFR8BZrnEzgGQGTI27/81vU009O5PND7FuBCaY+9r+lcgovcQEJvtAJpRXcMulgRukyyArhSKgcFdHwtHLFIYtwBCXmWVRP+4gbSHQGgb4NB8IyNcCHWE5ptGw8iKNFVt25x9CiNZOTwVfw3LoDCDrkwDJz7PNsNrKdkiixG3fseFvAnjABwzxq1U0/Ew5v1eYLOhvVmFjHDu0peKhhYVqlTBU2jeIjTOswbRC75edSrgK0wEOIGZnCGcRAeLqDNN2kmslSoOOn5pc8Gzm28kKle5G9T8w==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=valinux.co.jp; dmarc=pass action=none
- header.from=valinux.co.jp; dkim=pass header.d=valinux.co.jp; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=valinux.co.jp;
- s=selector1;
+ smtp.mailfrom=oss.nxp.com; dmarc=pass action=none header.from=oss.nxp.com;
+ dkim=pass header.d=oss.nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=NXP1.onmicrosoft.com;
+ s=selector1-NXP1-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=AuEh+xAokU2zcZ77mAJBY4GWdGh8U6T70NQS1Hl+4BQ=;
- b=OwWKmnvxeYItT9MipWMGaOiEMm/TcS3pe8kLZZFrjNw+MK3Stq7e6Kq4D5/V2ra3GhIMEvljRCcvT4v2NJwTZJqtcW0Nu3b2O1+vFefOXva7t/V1W38NTwbR27fz/7BmldcBnc0kGygl4lkk9nzHlxt8wJ+bC85gJVwHtjxh3bQ=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=valinux.co.jp;
-Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:38f::10)
- by TY7P286MB5363.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:1f2::14) with
- Microsoft SMTP Server (version=TLS1_2,
+ bh=D8DyK/ulKJwNN6aJvX6Mim9Twe4oXqSZwoNIsM/EOFo=;
+ b=bHbSpQRpHqcQNdnQCkRdJjYoMjLUZr5kaJUjEVjKD9Yw7EQDo6BrjzDW9uUCySa4y6/QNuAE2Tt2wc9Dr5pFU8+YRjiV/nnTbyzHYASOQzADZGwezj09SvYXFqO4UCLRkoEYbeYJqKM+yUUd9inxeOF94NmV1tYt+kwBSTNmDrwcmcsKlxfGC/iXTDWW/CbTSI8ei16kA9Mirja9z6jawKtGlAmhz0KK/AgKhrrqlA31sNrVx7gK5Il6P5AgkEugU2+Sx5HzHvDblWtd0rvayJ5a9AjlCaOWWnYwQx+ntbZQcNoYOMT7UOyZB4VQ/o7dwIg1g7e5tOnhh/SSrh7r2Q==
+Received: from GV2PR04MB12019.eurprd04.prod.outlook.com
+ (2603:10a6:150:30c::14) by MI9PR04MB149546.eurprd04.prod.outlook.com
+ (2603:10a6:290:bb::17) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.292.16; Wed, 5 Aug
- 2026 02:05:22 +0000
-Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
- ([fe80::2305:327c:28ec:9b32]) by TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
- ([fe80::2305:327c:28ec:9b32%3]) with mapi id 15.21.0270.017; Wed, 5 Aug 2026
- 02:05:21 +0000
-Date: Wed, 5 Aug 2026 11:05:21 +0900
-From: Koichiro Den <den@valinux.co.jp>
-To: Frank Li <Frank.li@oss.nxp.com>
-Cc: Manivannan Sadhasivam <mani@kernel.org>, 
-	Jingoo Han <jingoohan1@gmail.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Rob Herring <robh@kernel.org>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Kishon Vijay Abraham I <kishon@kernel.org>, 
-	Frank Li <Frank.Li@kernel.org>, Marek Vasut <marek.vasut+renesas@mailbox.org>, 
-	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v6 4/6] dmaengine: dw-edma: Add delegated channel request
- helpers
-Message-ID: <eu5iqhvvnpklaudcb7tkbjp3hpzecyzqxdbf4u7fnh6bjjgcqe@6hpimw5vu62m>
-References: <20260804033855.2115817-1-den@valinux.co.jp>
- <20260804033855.2115817-5-den@valinux.co.jp>
- <anISE4zj1odwT2aJ@SMW015318>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <anISE4zj1odwT2aJ@SMW015318>
-X-ClientProxiedBy: TYCP286CA0104.JPNP286.PROD.OUTLOOK.COM
- (2603:1096:400:2b4::20) To TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
- (2603:1096:405:38f::10)
+ 2026 02:07:22 +0000
+Received: from GV2PR04MB12019.eurprd04.prod.outlook.com
+ ([fe80::ed75:bac1:2554:5cbe]) by GV2PR04MB12019.eurprd04.prod.outlook.com
+ ([fe80::ed75:bac1:2554:5cbe%4]) with mapi id 15.21.0292.013; Wed, 5 Aug 2026
+ 02:07:22 +0000
+From: "Hongxing Zhu (OSS)" <hongxing.zhu@oss.nxp.com>
+To: Bjorn Helgaas <helgaas@kernel.org>, "Hongxing Zhu (OSS)"
+	<hongxing.zhu@oss.nxp.com>
+CC: Manivannan Sadhasivam <mani@kernel.org>, Frank Li <frank.li@nxp.com>,
+	"l.stach@pengutronix.de" <l.stach@pengutronix.de>, "lpieralisi@kernel.org"
+	<lpieralisi@kernel.org>, "kwilczynski@kernel.org" <kwilczynski@kernel.org>,
+	"robh@kernel.org" <robh@kernel.org>, "bhelgaas@google.com"
+	<bhelgaas@google.com>, "s.hauer@pengutronix.de" <s.hauer@pengutronix.de>,
+	"kernel@pengutronix.de" <kernel@pengutronix.de>, "festevam@gmail.com"
+	<festevam@gmail.com>, "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>, "imx@lists.linux.dev"
+	<imx@lists.linux.dev>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>, Hongxing Zhu <hongxing.zhu@nxp.com>
+Subject: RE: [PATCH v2] PCI: dwc: Add suspend_poweroff flag for platforms with
+ RC power loss
+Thread-Topic: [PATCH v2] PCI: dwc: Add suspend_poweroff flag for platforms
+ with RC power loss
+Thread-Index:
+ AQHdH6nG8t4d/+36IkayVsl6C+RRu7aFt+kQgABBO4CABoJRAIAA+yKwgADFdgCAAILrkA==
+Date: Wed, 5 Aug 2026 02:07:22 +0000
+Message-ID:
+ <GV2PR04MB12019B910276AFAA820373C028CD32@GV2PR04MB12019.eurprd04.prod.outlook.com>
+References:
+ <GV2PR04MB12019D498722B4C8A94C2A1A28CD42@GV2PR04MB12019.eurprd04.prod.outlook.com>
+ <20260804181846.GA1846400@bhelgaas>
+In-Reply-To: <20260804181846.GA1846400@bhelgaas>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=oss.nxp.com;
+x-ms-exchange-messagesentrepresentingtype: 1
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: GV2PR04MB12019:EE_|MI9PR04MB149546:EE_
+x-ms-office365-filtering-correlation-id: fa25a95c-6f42-4a55-73fb-08def296499e
+x-ms-exchange-sharedmailbox-routingagent-processed: True
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam:
+ BCL:0;ARA:13230040|1800799024|19092799006|376014|7416014|366016|23010399003|4143699003|22082099003|18002099003|38070700021|6133799003|10067099003|56012099006|11063799006;
+x-microsoft-antispam-message-info:
+ f/UGbHU/v5DZc6sJwVn8xDk3SGfmHaES/wyj5X7g/utBatOOC6B2M6g5fOcBHwtNglotLfIoL0Rp04g+nHbVJIVsrgY5mlAoLQBkcZ3DgJ0ukMqjtlzHX9/aHibZBFrp08sOQ2UEvuHUx+ebpuxnoOnQWLLyzZI2htZDVfLK/FxebfeS/5XB8CuoUdS9VGp7xP/W6aJ1MILrWLKNcyFTROg8UBo+7HCPfIGpKKJo1MwF+liy5bBhpmElxV8Jsi8mavLvdUtEHIFqj7qzorSduoB7X//WfHOYXk+XhlcEkqSsNLQiKhhMWK7OeBXrMov3B+30NnWKQdHdKcU2qbIvc/T6XaBLtnEU+hqUzsbXLaRKKDomQQHYguUoVBznG1cSE0BbaFXdCwfCysiZIpCqiI+gvQitFAxoYb0UD920oo6smwlt6jeDHEv0FNet9DnOfkE8ODswPFCO6SAZpC5PfGLUImghsAqVUydkeGi7wCZdjnlvO1v0ZkWxrsbglRqlBI2ED8+Viq2cC2UV6pjTiEBocsJrPzIUZTXxN86s+yAAZXhfOZvv61JpQxuu/uwsFC0664ecZaZhKhKoB/RCU0n6dMceq7m0DzbWxQ75wS/XV8kspbcLmFt8CVoRxO5qNBBpSSH957BURWW1Ea9PQ0ewMHi3vpszHwuflcumABjAE97Acg63/CFU8AFJ4UsWaF0PgejobHRMvjyBUpWy014hJUebK5Q9p3+uKyYzLYI=
+x-forefront-antispam-report:
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:GV2PR04MB12019.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(19092799006)(376014)(7416014)(366016)(23010399003)(4143699003)(22082099003)(18002099003)(38070700021)(6133799003)(10067099003)(56012099006)(11063799006);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?us-ascii?Q?dSpnHcHcwnOH3SNvSgWaXUaRhRxywP3XntFLWvxDQVfN8LIFKxEGfZjigAOR?=
+ =?us-ascii?Q?ppA/GoNwCEVEWdg3fnxInX3LmsmR59X/VqnRovKeReOXKR5e2njnU2Hb1ooW?=
+ =?us-ascii?Q?aRHsFz1IDbuGGZM6y6fgPgoz5nT/KY4xlglatj0GU0qbK/llx39fgoWd5rVl?=
+ =?us-ascii?Q?MPk5v6LnyOIo/2AgR3s4JwbXs8RZUu/QexfFvdaq+0qKRaFXeth4O17sb5NS?=
+ =?us-ascii?Q?xUYGt1+7C0ELbOM5TNnv/lkNwPILMtmf/DygEqovLGt9jqiICqa46Zw8hlGA?=
+ =?us-ascii?Q?XZWpnKGlpAqKdmEr1YUWYSlebXtq5Mc3ySvVbfkklhEr6WwVaUks/fltKBqe?=
+ =?us-ascii?Q?UMboXIdJg0qX8wjco9t0tgW3GQqH2XMsqx8RJZ/OgWvvo0kRC4REBGOCSk9O?=
+ =?us-ascii?Q?FMuek/4ToF3dloR4v7lmcgKDAAnI/WOnHpKkKfSexn6PHKIGIUVP5ebrD61I?=
+ =?us-ascii?Q?X99WPKUGZuXlmj8aj8m5cVRqR8BWkYKM0a0XtwGgCBloV4TuxtfrDouLJJhW?=
+ =?us-ascii?Q?Z5XdovjkjyNDFIRlKJ+JEX7h0hR+DXkMnsCnfTg+BY6Ahq9O2N/mB7yGIA/F?=
+ =?us-ascii?Q?jhdS9Fd9g1eEnrOrwiqJHzQXvf4tVDB/gGIIjjs9Vz42E2Inj8fcmRsjR4va?=
+ =?us-ascii?Q?LvvTl9x+LWoQX2R2HJTVJdglSW08DBZcOxHL+mVnnIfbc9+iCdKqJqUMavED?=
+ =?us-ascii?Q?nstXcT3M/MrLQs54mGNNWhmj+gopdDpS7I9lkxrM5Z9M+HWzBtpMjLo2uf0k?=
+ =?us-ascii?Q?B/lNwV6M65KmekW21PTrzmbvTxA8pra0Ag/f9c9/dPkYomGnKZ7TtTejyTDe?=
+ =?us-ascii?Q?bnPOLilAo3nvIlUviuTCse74JsgpjgPoEa6FZdfszYY8uiklAgw0q1ZmYhMT?=
+ =?us-ascii?Q?9/qqn6WT39W8JKz56YrMpdUfbqoHmUpeCxvpmDo4/HFA3RI8kMWOkStDDUDy?=
+ =?us-ascii?Q?LqmtZuCXCRXNfTG8uTP/yTr9Fpi/8fG3WVLmgB8BEVS3Zpg2MtGP1+yS3h+h?=
+ =?us-ascii?Q?5sWplcBSAePRtrbhLGrcQHgBgwHrTqonHIHMXfWm/nhGKuOe4hhUPUB7sFtw?=
+ =?us-ascii?Q?L/68z0cK0iSv4+uisCH32Mb8shQAyKtGTrpfSDCoOTPU3rdDp1EGWjCwW6vN?=
+ =?us-ascii?Q?Am9eXR0f/M1RCibENgWR0n1BLJtJUJv3ys17SHn0L/YOuYYPoirT551ujeFN?=
+ =?us-ascii?Q?CcNbryMHCPD/M8hgewsJDQeDl73T0oIdiIFXIcDRR3MVSsf/sU/dEv/RyXiV?=
+ =?us-ascii?Q?dPxTik8l+M3VH8nCrLA9CQdvdJkZdgGfH5dkP4OJzVLPIu/JTfNnKBB1zGII?=
+ =?us-ascii?Q?2qVzx1efkmul4VChuKnxC5YQe3nAIAEA9eULOd6kf2lR1jNJJ3UaG2QrnGwA?=
+ =?us-ascii?Q?/Jk4RBPXHSiy7zlOE1Bv+1vtgEE5Q3oyMEZ1ephcT0kSRyCk+32ba83ZwCte?=
+ =?us-ascii?Q?zZsza1txVpgLn1sU8R1Zek/jNl6vjNGjWLPe98Px99bfgwossTRMjnjMtofQ?=
+ =?us-ascii?Q?6rOwIicZvEc2pxJGfzU4KwGfpk5YPdG/lNrLoRmSw6F48YN5svoozEJnUJ2P?=
+ =?us-ascii?Q?AlKRxZF2pqpfxF+VHzAIg06bK3n33BxZzgr+LHRKWF9E9MeAjEoS7HJXJIkD?=
+ =?us-ascii?Q?V+GiKhqnucHzs/YTogYEqJwvo7UZNH/SFVcJ8wrt7lhvW3S9olotWy9sjvJW?=
+ =?us-ascii?Q?Y91gKyzAbOcBCh7g/TbgP2tZ9R2txGEo6q6IqxXHkWzpDk/XmnYiuQtekCac?=
+ =?us-ascii?Q?4psxslG5vA=3D=3D?=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: TY7P286MB7722:EE_|TY7P286MB5363:EE_
-X-MS-Office365-Filtering-Correlation-Id: e1d91ce1-d449-4a6d-d645-08def296016d
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|366016|1800799024|23010399003|10070799003|376014|7416014|56012099006|4143699003|10067099003|6133799003|18002099003|22082099003;
-X-Microsoft-Antispam-Message-Info:
-	lsP5j4VYxyKjEXeSjxUHbkpNqGf3FG/z8sUvPo6AX4v45eT0trqmsO2CsJMDz1VcyVCnt4x47TqSXJdEFpwQNnXHvylWgthY+uZIs8mWp36yLd81IPmHZoHJqUedJxgy8z/QtAZ3fPSrdHxlU7wkL2q4292tATk+S4KW2/5NVzFiwcaOJfpCHdneN/P6aI3m0O5/CMv0WS9jELDWZg89Ttk4D/fe3vaytOL1t1GIQYY1vI86NNsjK4JgT7GRJ4wmVkp+lrom/NTPuUMIk2lsI/NVTB+dk8kTMn5PvTdol1BsCNYMZ3V0tXB+xJ0nNv89qgK2AW+kax1XLax1iTSS4ZdlAMqW9WvUDwEXH25Id+rsYXSn2DBWGYIQKnXIX4TREoMmWu0U73h5jerHFtgxUzIw0GWBRULAloeIvt2b1bMVr60f322S8pfm0wsbS0DRHeJ/GejyFLHNQhRzkmTI6GCxis3mTs6/t1I1EE4oPoqyuxYiyibbkIJMybsZCZnpx7FKBCCriX9NIr0cBjUyF7NR51Lyr3et9PSdZzG57ip/daaOQO8ilEQeDjOo42SXZcB9robx2kM6ezS3HLAfOccdkmvijFsfS1u9Cnt7EGDPuJgo6UxcoJcTRXK0xbJwJPPGltsPfM4VboZk7HjxPflFAVog+4sArwTAuYm4avY=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(23010399003)(10070799003)(376014)(7416014)(56012099006)(4143699003)(10067099003)(6133799003)(18002099003)(22082099003);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?get/E+8pVSFi5XIFASsxh4khMr1/ZlOIBjVBI/TKhyI6Ujubgj2bLDx4Uk4E?=
- =?us-ascii?Q?GjaJTE3o0b9C2bMlNIDSusC89gOLM4bCUlPcO2YZJ5ob66yLqYil/s08781g?=
- =?us-ascii?Q?KZ1naMh/7PMm3M37lwf7ZTRPfGAG9oJOmND2++Wtv4q3aNA+y0sYLVU4A2KK?=
- =?us-ascii?Q?n3IIWPbRnPTJUTxiVOiPhZg19oXhfI2tUB+9fHaqESzO8bKPMZc+tV3lZ0iz?=
- =?us-ascii?Q?F9O6GtkhhhrA1VQ4XoNXS4uX6hxrnMi+TV4/56ED/zL0+ionOb7BZNB8tKMo?=
- =?us-ascii?Q?T4BYN0fxI4Yeeyp0Z2fFEqeTgkDpv7kWC39zCozVsscJrLwN+LQR7ppMnLqJ?=
- =?us-ascii?Q?yb7LqpLEZNW6FG1ZgVGxkbxSAML1PEcoNXqoHw3cXetwmteMIkHB8wQtw1AA?=
- =?us-ascii?Q?NDRlYsOwla/9WO7LPm6Evx3hyHWnmRIBIu10yM0qLHl6xAwJfmA8wFErdLOy?=
- =?us-ascii?Q?BdglWXbu6lAhOzY/+dkLRMI8fmA+OGCxxnW9VHrYFBMSHp2izjuaMdmRi91k?=
- =?us-ascii?Q?7oxPNi+sipzcpJJHk5qK4gSjvDMRD8XRevg5Mvoauox4IQyNPQQLPTXi0hRD?=
- =?us-ascii?Q?m/XeFGupYopNScZkx0LmjHPaOcEgIELbZr+RQl6PSEVc2MB6wF6AKulexVXo?=
- =?us-ascii?Q?yinNaX1lN3WwSzC+togkbvX9isoyEsBVjy//8S15cndDC/n5m9J04atkw2yv?=
- =?us-ascii?Q?jPTk1A7OSgNOPNz/EK3kNJvjh0ka2wq/rEPUBmY4dhzdfHbjKV+RcabxoHUY?=
- =?us-ascii?Q?1Vyf0gc6n8YryYxRPcWp3SBz5bTs2UyY34Qg3NESnjQeBxvUZSQVcgDwQECr?=
- =?us-ascii?Q?9tp6evibeMnkkSSwJ2iG7NkgTLYHtokIYmy5eCuEg4A+kQ1NlpzbVWIZc/6r?=
- =?us-ascii?Q?5m6adGKjI91PMRKKIpejEDtcVlMYtMAUTowJ1o+oRIb11iWk0Wyam7BgU0GR?=
- =?us-ascii?Q?Jl+FVK7EdLmzoKT9o5MD2LXnSU3+Z1rDcI4xoD1g72zBA5njxO2voQVx4t0h?=
- =?us-ascii?Q?jeqHmuuimsyJPNZcwX0+wNus7gUuwzCz2cBVfpq/VbTTZYp+WXaUuqKhiyWp?=
- =?us-ascii?Q?3KQjXA16ukK9MpCb9F6HnWdRCmh+LB8WgLbhFpMg8cm8ZG+5g78UIBTlOyHR?=
- =?us-ascii?Q?FnsWLAAdR2s74u59yPv+okOaaG13IMXVnwdd5/cnz8KBVH5o/2yES9Xqog1i?=
- =?us-ascii?Q?69l4qMUa8iIYgKRn8PH7a54wSqDMBEkEbFAizNWp+G5PaY+9SnTPyTeOLBGZ?=
- =?us-ascii?Q?8x6LxkryObGfcjQX41X/riams8Bh6Yn1qbe7O6uhpsyGNh+fc8qA7xc6DQN5?=
- =?us-ascii?Q?cMXz1e+mTIkqiQCVwLzHCqNFYZ+tLeRQwQLIxBo5zErhXfk8FHkJRTLi6mtw?=
- =?us-ascii?Q?s3dBd0Pr6eG4bzNFzfo9KbcXdcgKJJes5+5N3Y/jV/1deMS1IcQBJh9Eydrb?=
- =?us-ascii?Q?5zotymtLoITSGyC0uoLHwavBtU1eayR6bw5OjYKcxHjRfSwM1hy/cipvUZh8?=
- =?us-ascii?Q?g5BDweTvI4wHksMccEzD6sB2OsvG2OeY6yq6gtCGGngXgKsC8BQPqnTmRZGs?=
- =?us-ascii?Q?41gXewxmwHPs7a2kJ1x5lnyyME4267XLVsmMWb6aOOFHFkFVz9oFjDjttFO/?=
- =?us-ascii?Q?JxvzCrm4/JUFxoYger+ZFvrbzqt2d8XSb1RGY+CCkOnJUWUm5ZwXbZZo1old?=
- =?us-ascii?Q?wIoxCsVMqWoACOhXYRSMBo0LR7mmhSEABWkQj6c2OqIn3KsdOzbcoiI1qtZI?=
- =?us-ascii?Q?usXEKw0IzDzBVAboTEdyBrEXTFHEXaEwz7iMyRMWyvUrLlEWburq?=
-X-OriginatorOrg: valinux.co.jp
-X-MS-Exchange-CrossTenant-Network-Message-Id: e1d91ce1-d449-4a6d-d645-08def296016d
-X-MS-Exchange-CrossTenant-AuthSource: TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+X-OriginatorOrg: oss.nxp.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Aug 2026 02:05:21.7800
+X-MS-Exchange-CrossTenant-AuthSource: GV2PR04MB12019.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: fa25a95c-6f42-4a55-73fb-08def296499e
+X-MS-Exchange-CrossTenant-originalarrivaltime: 05 Aug 2026 02:07:22.7307
  (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 7a57bee8-f73d-4c5f-a4f7-d72c91c8c111
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 4fnTpkeszT7MAttb2NVfSFJPDtaca3ruf9exB6MAN476cHNDfZcmQCXeLw89tGDx3LmK+fXAcz5Ccwps1x55Sg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: TY7P286MB5363
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: J65q6j8lkkCRDXVYXQHED61L8+genoYPJU8FepHWLGbKt9jkll1KTizWWOghvbFG1dwZyymSS74K8zW/R98cVA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MI9PR04MB149546
 
-On Tue, Aug 04, 2026 at 11:23:47AM -0500, Frank Li wrote:
-> On Tue, Aug 04, 2026 at 12:38:53PM +0900, Koichiro Den wrote:
-> > Endpoint functions that expose endpoint-local DesignWare eDMA channels
-> > to a remote host need to reserve exact hardware channels and hand
-> > interrupt ownership to the remote side before publishing the channels.
+> -----Original Message-----
+> From: Bjorn Helgaas <helgaas@kernel.org>
+> Sent: Wednesday, August 5, 2026 2:19 AM
+> To: Hongxing Zhu (OSS) <hongxing.zhu@oss.nxp.com>
+> Cc: Manivannan Sadhasivam <mani@kernel.org>; Frank Li <frank.li@nxp.com>;
+> l.stach@pengutronix.de; lpieralisi@kernel.org; kwilczynski@kernel.org;
+> robh@kernel.org; bhelgaas@google.com; s.hauer@pengutronix.de;
+> kernel@pengutronix.de; festevam@gmail.com; linux-pci@vger.kernel.org; lin=
+ux-
+> arm-kernel@lists.infradead.org; imx@lists.linux.dev; linux-
+> kernel@vger.kernel.org; Hongxing Zhu <hongxing.zhu@nxp.com>
+> Subject: Re: [PATCH v2] PCI: dwc: Add suspend_poweroff flag for platforms=
+ with
+> RC power loss
+>=20
+> On Tue, Aug 04, 2026 at 06:32:26AM +0000, Hongxing Zhu (OSS) wrote:
+> > > -----Original Message-----
+> > > From: Manivannan Sadhasivam <mani@kernel.org>
+> > > Sent: Monday, August 3, 2026 11:33 PM
+> > ...
+>=20
+> > > On Thu, Jul 30, 2026 at 07:09:13AM -0500, Bjorn Helgaas wrote:
+> > > > On Thu, Jul 30, 2026 at 08:16:36AM +0000, Hongxing Zhu (OSS) wrote:
+> > > > > > -----Original Message-----
+> > > > > > From: Bjorn Helgaas <helgaas@kernel.org>
+> > > > > > Sent: Thursday, July 30, 2026 6:30 AM
+> > > > > ...
+> > > >
+> > > > > > On Fri, Jul 17, 2026 at 03:41:21PM +0800,
+> > > > > > hongxing.zhu@oss.nxp.com
+> > > wrote:
+> > > > > > > From: Richard Zhu <hongxing.zhu@nxp.com>
+> > > > > > >
+> > > > > > > Some platforms like i.MX power off their PCIe RC controllers
+> > > > > > > during system suspend, requiring full re-initialization on
+> > > > > > > resume. These platforms need to enter
+> > > > > > > L2 state to properly notify endpoints before power loss.
+> > > > > > >
+> > > > > > > According to PCIe base spec r7.0, sec 5.2, the system
+> > > > > > > software should transition the device into D3Hot before
+> > > > > > > broadcasting the PME_Turn_Off message to initiate L2 entry.
+> > > > > > > However, some endpoint devices fail the D3cold capability
+> > > > > > > check in pci_host_common_d3cold_possible(),
+> > > > > > > which would normally prevent L2 entry.
+> > > > > >
+> > > > > > Wakeup devices that don't support PME from D3cold will fail
+> > > > > > the D3cold capability check, but I don't think those are the
+> > > > > > problem you're solving.
+> > > > > >
+> > > > > You're right.
+> > > > >
+> > > > > > This appears to handle devices that are not in D3hot, and
+> > > > > > that's not a property of the endpoint; it's a property of its
+> > > > > > driver.  Is the problem here that some driver didn't put its
+> > > > > > device in D3hot?
+> > > > > >
+> > > > > I observed some endpoint devices failing the D3cold capability
+> > > > > check, but I haven't identified the root cause.
+> > > >
+> > > > Seems like some instrumentation in
+> > > > pci_host_common_d3cold_possible() could tell us which
+> > > > devices/drivers are relevant.
+> > > >
+> > > > > > > For platforms where the RC loses power during suspend, L2
+> > > > > > > entry is essential regardless of D3cold support, as the link
+> > > > > > > will be lost anyway.  Add a suspend_poweroff flag to force
+> > > > > > > L2 entry in such cases, and enable it for i.MX PCIe
+> > > > > > > controllers.
+> > > > > > >
+> > > > > > > Note: This violates the spec requirement that devices be in
+> > > > > > > D3Hot before PME_Turn_Off, but is necessary for proper
+> > > > > > > operation on platforms with RC power loss during suspend.
+> > > > > >
+> > > > > > If the device isn't in D3hot, it may still be active, and I
+> > > > > > think the PME_Turn_Off will abort any DMAs in progress, which
+> > > > > > doesn't sound like proper operation of the endpoint.
+> > > > >
+> > > > > You're correct - this isn't ideal for endpoint operation.
+> > > > > However, on i.MX platforms, the RC controller will lose power
+> > > > > during system suspend regardless. Without sending PME_Turn_Off,
+> > > > > endpoints would have no notification before the link abruptly
+> > > > > goes down.
+> > > >
+> > > > The PME_Turn_Off is some notification, but I don't think the
+> > > > endpoint can do DMA or MSI, so its driver won't be involved.  It
+> > > > may be able to do things internally, e.g., write caches to an SSD
+> > > > or transmit packets from its internal buffers.  But I think it
+> > > > might still lose power in the middle of operations like that, so
+> > > > it doesn't sound reliable.
+> > > >
+> > > > > This patch adds a flag to force L2 entry for such platforms,
+> > > > > choosing to notify endpoints (even if not ideal) rather than
+> > > > > having the link drop unexpectedly. I'm appreciated for
+> > > > > suggestions if there's a better approach to handle this
+> > > > > scenario.
+> > > >
+> > > > Mani recently added pci_suspend_retains_context(), and I think it
+> > > > returns "true" on i.MX.  But if the RC is powered off and all the
+> > > > devices need full re-initialization on resume, it sounds like it
+> > > > *should* return "false".
+> > >
+> > > Right. pci_suspend_retains_context() was added just for that purpose
+> > > of telling client drivers to prepare for context loss. So if this
+> > > API returns 'false', then they should not hold the device in D0.
 > >
-> > Add DW eDMA-specific helpers that request a write/read hardware channel
-> > through DMAengine, keep the hardware-channel filter private to dw-edma,
-> > and switch the selected endpoint-local channel to remote interrupt
-> > routing after the channel has been successfully reserved. The matching
-> > release helper can quiesce the channel while it is still remote-routed,
-> > then restores the channel's default routing before releasing the
-> > DMAengine reservation. This lets callers skip quiesce when unwinding a
-> > reservation that was never exposed to host programming.
+> > Thanks for your comments.
 > >
-> > Release is best-effort because its callers cannot abort teardown. Report
-> > a quiesce failure locally, but always restore the default routing and
-> > release the DMAengine reservation.
-> >
-> > Signed-off-by: Koichiro Den <den@valinux.co.jp>
-> > ---
-> > Changes in v6:
-> >   - No changes.
-> >
-> >  drivers/dma/dw-edma/dw-edma-core.c | 91 ++++++++++++++++++++++++++++++
-> >  include/linux/dma/edma.h           | 14 +++++
-> >  2 files changed, 105 insertions(+)
-> >
-> > diff --git a/drivers/dma/dw-edma/dw-edma-core.c b/drivers/dma/dw-edma/dw-edma-core.c
-> > index 1f893dc54c79..4c0d2bba755b 100644
-> > --- a/drivers/dma/dw-edma/dw-edma-core.c
-> > +++ b/drivers/dma/dw-edma/dw-edma-core.c
-> > @@ -1302,6 +1302,97 @@ int dw_edma_remove(struct dw_edma_chip *chip)
-> >  }
-> >  EXPORT_SYMBOL_GPL(dw_edma_remove);
-> >
-> > +struct dw_edma_delegated_chan_filter_args {
-> > +	struct device *dma_dev;
-> > +	bool write;
-> > +	u16 id;
-> > +};
-> > +
-> > +static bool dw_edma_delegated_chan_filter(struct dma_chan *dchan, void *param)
-> > +{
-> > +	struct dw_edma_delegated_chan_filter_args *filter = param;
-> > +	struct dw_edma_chan *chan;
-> > +
-> > +	if (!filter || dchan->device->dev != filter->dma_dev)
-> > +		return false;
-> > +
-> > +	chan = dchan2dw_edma_chan(dchan);
-> > +
-> > +	return chan->dir == (filter->write ? EDMA_DIR_WRITE : EDMA_DIR_READ) &&
-> > +	       chan->id == filter->id;
-> > +}
-> > +
-> > +static int dw_edma_delegate_chan(struct dma_chan *dchan)
-> > +{
-> > +	struct dw_edma_chan *chan = dchan2dw_edma_chan(dchan);
-> > +	int ret = 0;
-> > +
-> > +	if (!(chan->dw->chip->flags & DW_EDMA_CHIP_LOCAL))
-> > +		return -EINVAL;
-> > +
-> > +	guard(spinlock_irqsave)(&chan->vc.lock);
-> > +
-> > +	if (chan->configured || chan->status != EDMA_ST_IDLE ||
-> > +	    chan->request != EDMA_REQ_NONE)
-> > +		ret = -EBUSY;
-> > +	else
-> > +		chan->irq_mode = DW_EDMA_CH_IRQ_REMOTE;
-> > +
-> > +	return ret;
-> > +}
-> > +
-> > +struct dma_chan *dw_edma_request_delegated_chan(struct device *dma_dev,
-> > +						bool write, u16 id)
-> > +{
-> > +	struct dw_edma_delegated_chan_filter_args filter = {
-> > +		.dma_dev = dma_dev,
-> > +		.write = write,
-> > +		.id = id,
-> > +	};
-> > +	struct dma_chan *dchan;
-> > +	dma_cap_mask_t mask;
-> > +
-> > +	if (!dma_dev)
-> > +		return NULL;
-> > +
-> > +	dma_cap_zero(mask);
-> > +	dma_cap_set(DMA_SLAVE, mask);
-> > +
-> > +	dchan = dma_request_channel(mask, dw_edma_delegated_chan_filter,
-> > +				    &filter);
-> > +	if (!dchan)
-> > +		return NULL;
-> 
-> I forget, why need export delegrated dma channel to dmanegine? If EP
-> driver doesn't report delegrated channel to dma engine, what's happen?
+> > If I update dw_pcie_suspend_noirq() to use
+> > pci_suspend_retains_context() to determine whether to proceed with
+> > L2 entry and RC power down. The new logic would be changed as below:
+>=20
+> I'm not suggesting using pci_suspend_retains_context() in
+> dw_pcie_suspend_noirq().  pci_suspend_retains_context() is for endpoint
+> drivers.
+>=20
+> I think pci_suspend_retains_context() should return 'false' on any platfo=
+rm
+> where dw_pcie_suspend_noirq() is going to send PME_Turn_Off.
+> Sending PME_Turn_Off means we intend to remove main power.  When main
+> power is removed, devices will be in D3cold and they will not retain thei=
+r
+> internal context.
+>=20
+> If pci_suspend_retains_context() returns 'false' and
+> pci_host_common_d3cold_possible() returns also returns 'false', it means =
+some
+> driver didn't put its device in D3hot when it should have.
+>=20
+> In that case, I think you should either fix that driver so it *does* put =
+the device
+> in D3hot (based on pci_suspend_retains_context()), or just accept that yo=
+u can't
+> power off the RC.
+Understood, thanks for your explanation.
 
-This just reserves the exact channel against any dmaengine clients before
-handing its programming ownership to the host. Without it, a local client
-could request the same channel too.
-
-Best regards,
-Koichiro
-
-> 
-> Frank
-> 
-> > +
-> > +	if (dw_edma_delegate_chan(dchan)) {
-> > +		dma_release_channel(dchan);
-> > +		return NULL;
-> > +	}
-> > +
-> > +	return dchan;
-> > +}
-> > +EXPORT_SYMBOL_GPL(dw_edma_request_delegated_chan);
-> > +
-> > +void dw_edma_release_delegated_chan(struct dma_chan *dchan, bool quiesce)
-> > +{
-> > +	struct dw_edma_chan *chan;
-> > +
-> > +	if (!dchan)
-> > +		return;
-> > +
-> > +	chan = dchan2dw_edma_chan(dchan);
-> > +	if (quiesce && dw_edma_core_ch_quiesce(chan))
-> > +		dev_warn(chan->dw->chip->dev,
-> > +			 "failed to quiesce delegated %s channel %u\n",
-> > +			 chan->dir == EDMA_DIR_WRITE ? "write" : "read",
-> > +			 chan->id);
-> > +
-> > +	scoped_guard(spinlock_irqsave, &chan->vc.lock)
-> > +		chan->irq_mode = dw_edma_get_default_irq_mode(chan);
-> > +
-> > +	dma_release_channel(dchan);
-> > +}
-> > +EXPORT_SYMBOL_GPL(dw_edma_release_delegated_chan);
-> > +
-> >  MODULE_LICENSE("GPL v2");
-> >  MODULE_DESCRIPTION("Synopsys DesignWare eDMA controller core driver");
-> >  MODULE_AUTHOR("Gustavo Pimentel <gustavo.pimentel@synopsys.com>");
-> > diff --git a/include/linux/dma/edma.h b/include/linux/dma/edma.h
-> > index 3c8e2ef9dee0..944469258b8b 100644
-> > --- a/include/linux/dma/edma.h
-> > +++ b/include/linux/dma/edma.h
-> > @@ -153,6 +153,9 @@ struct dw_edma_chip {
-> >  #if IS_REACHABLE(CONFIG_DW_EDMA)
-> >  int dw_edma_probe(struct dw_edma_chip *chip);
-> >  int dw_edma_remove(struct dw_edma_chip *chip);
-> > +struct dma_chan *dw_edma_request_delegated_chan(struct device *dma_dev,
-> > +						bool write, u16 id);
-> > +void dw_edma_release_delegated_chan(struct dma_chan *chan, bool quiesce);
-> >  #else
-> >  static inline int dw_edma_probe(struct dw_edma_chip *chip)
-> >  {
-> > @@ -163,6 +166,17 @@ static inline int dw_edma_remove(struct dw_edma_chip *chip)
-> >  {
-> >  	return 0;
-> >  }
-> > +
-> > +static inline struct dma_chan *
-> > +dw_edma_request_delegated_chan(struct device *dma_dev, bool write, u16 id)
-> > +{
-> > +	return NULL;
-> > +}
-> > +
-> > +static inline void dw_edma_release_delegated_chan(struct dma_chan *chan,
-> > +						  bool quiesce)
-> > +{
-> > +}
-> >  #endif /* CONFIG_DW_EDMA */
-> >
-> >  #endif /* _DW_EDMA_H */
-> > --
-> > 2.51.0
-> >
+Best Regards
+Richard Zhu
