@@ -1,146 +1,210 @@
-Received: from mail.ozlabs.org (gandalf.ozlabs.org [150.107.74.76])
+Received: from CWXP265CU009.outbound.protection.outlook.com (mail-ukwestazon11021138.outbound.protection.outlook.com [52.101.100.138])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D68CA3E7624;
-	Wed,  5 Aug 2026 16:28:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=150.107.74.76
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785947325; cv=none; b=Jmyo+/vCCfEYvMksgwttPF1L+TwjxaeCXIS664CT1zv36CEFtVMCwA+T4Q1KyKoyOKwAQVggLCywJeU+r1dN9tyRr1HM4Wl3I9INzft2b8o7h9GNwwuBr+v00cfe5/tvdMqwtKLrSh1gaWsiCw26RibCxE2bShPK10rIf/VOzwU=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785947325; c=relaxed/simple;
-	bh=UC+0+PLfHTPTHDNTKDbyDhy6KVKZjo9o+zKkqnY0JpU=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=G1cXjuVmR5BjvwWcOHlPcK3ywdqyq8VKFs5eJuS2b2EeyfpMsRu8IBPd2SFZwr20bxod1hM0PZpFQGsRwBXap0nd8iOXVrQKnmThSQPdV4TDZ0/3kbKL3UOxlF/nC9w8nvPGjKVAMqqmOtBnJjCH8bN3DN+5XziEeOs+pvG9SWc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ozlabs.org; spf=pass smtp.mailfrom=ozlabs.org; dkim=pass (2048-bit key) header.d=ozlabs.org header.i=@ozlabs.org header.b=pLiGjIXv; arc=none smtp.client-ip=150.107.74.76
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ozlabs.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ozlabs.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D2F543F12EF;
+	Wed,  5 Aug 2026 16:37:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.100.138
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1785947825; cv=fail; b=a9WdIgeuXm/hsIY3P4gtkqdTto5N53hsT1mS5Ha8vETZm2AgF6AcV5AMyRydepNTeMajcegQaW5t9vawd2pP3bAoitCcrKlk0LwCAk1FhhLRNVzCqbzLAcD5LkVKAigiE3YnzCqj3d2YOwlQG9mwaW/wY4RwNOZic2TDb04xzWY=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1785947825; c=relaxed/simple;
+	bh=o9NP3KChQiiuJi1QX3sJ7C+sxJNUC14IZemxkEQI+tE=;
+	h=From:Date:Subject:Content-Type:Message-Id:References:In-Reply-To:
+	 To:Cc:MIME-Version; b=FgCdPdgyzGGnue4TXSHgkWuCDBX8PtZw7jwa255Z2sreYQ8CimsUcN35QZ+HXQ/74I7H/rXdIt4eRZHwR3Ds2we1RLENxGRVWQgqYz2Bx4DAK+OgmncR/QZv/1WpyqlAS6NmFoaY2sNi+ekjaBnGqR5sQMn2iKo+SWEMwzR9pIE=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net; spf=pass smtp.mailfrom=garyguo.net; dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b=gi7hOpYg; arc=fail smtp.client-ip=52.101.100.138
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=garyguo.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ozlabs.org header.i=@ozlabs.org header.b="pLiGjIXv"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ozlabs.org;
-	s=201707; t=1785947320;
-	bh=yiJ0+hNTlQaOQvii0b1/wQkPz1RfzFD08P9jZ5t1mCM=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=pLiGjIXvuuBR0foWf+7hbol+tQ2nqtHgBTowXwiG/iVfYgg5DzvokbKKtw7zqgG/R
-	 AuiEghtscPfI8zQ+ywOuqeT7a8ZJe83SbP8PeAW5Q0v07W5NbGH38FDIF8xH7Kh3+/
-	 pETfzzbLWjT37tneMWCwUDqIToWOJNUEq1adNmvrFxXfNHk3rNc/9BfSyMdY04nbZu
-	 Uqymsh6DW9R7SRZc526cKtU95caOMNzc6cK1iJUkzdUR5a4nKPU27UW6wLYUJrxU83
-	 bmzxNoG1faU5G84PcehHrAa+OC2MGPmnLqCBCOcDueljKnUVfjoKSOgp7EEqeM/EH0
-	 4ox3yohMVB8Qg==
-Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(Client did not present a certificate)
-	by mail.ozlabs.org (Postfix) with ESMTPSA id 4hFbSb5XpRz4w9d;
-	Thu, 06 Aug 2026 02:28:31 +1000 (AEST)
-Message-ID: <554c73c8-bc17-4336-8e38-f4cfe8d8b3fe@ozlabs.org>
-Date: Wed, 5 Aug 2026 17:28:27 +0100
+	dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b="gi7hOpYg"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=t18cnuhC0wIAiLB+gkWXOLP0Mi3uWdtWokXdgzFwDFvfW7koXpMS7FsdvO8R5aLE/qGbNIELpK5Nwta7OyNjmJmVbXVrMl8MmRj+leSn79tkM4/LDRI/fvHyyP4p/+cJyi8/duuI5B0/P8+K0xLLwkOsDLEkUEbhMMwkFFA31X9Nklx1PPYkfhQ4w/1VTMurgsR4vASNiqzVyjuEuO30dP3Twkt3Em5l55aFym0cSTaWotBdLfHfZWbAdLcZe2i0nclLoFA3QYub80oPbnLoxf/XPirRixSeiBLrf8PWI/D2haXItA+3nVMpiVqjP6UQBGJea9JBXk9fd9mb9sYXBg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=d8OQ7ZBrw0of9g3HlhJ/tG/nL4mq7cL7aN4guX+dW9k=;
+ b=dGZKsKb+Y1bBSsGVBkFCnX5rkHKUFQhAOj2/ulTk35Iol6T2M5IB0kJ3U0TbHMqLWwcr8KL0jlR/AsB4L6LY7kA7lyTR7ujQCTUqdYAAVPpaVHbXRcsS0W+PabknDPX0XKYwHIhs6XlJucNxWTsQ3CBAKDk+VWNAvkKWqiEPM4e6PZuiv7jqekFTG+7Rn9Mdpy1t294hDKxHdxowtDk24cxgGKuMteg2DdjPJWto3MCoKsZZZ7zCN+0N/YFea9L9q3bVDiPt5QeKmYsgfc2PJNr5jNpc5I4Xo2s+rC5b/OpGhJBtNMAxsjmLMiVhEpY+BZT9og2JI11yGpVGcfR8BA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=garyguo.net; dmarc=pass action=none header.from=garyguo.net;
+ dkim=pass header.d=garyguo.net; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=garyguo.net;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=d8OQ7ZBrw0of9g3HlhJ/tG/nL4mq7cL7aN4guX+dW9k=;
+ b=gi7hOpYgdwjMN/2S8aqSQquJQXAr4oqOPZdhq/J45CVom678CFjtPp5Xo1EbGEKa+X/EYgXYwKR9sSMsSLMroBHyXTU8AvXSjfcSxTHZsd8kzcm+eb8N0dRMmT9f2XHVBDeHQfOXnSmlTT/6fTXLZ3ouHfnL5bIPwlq8x3neziA=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=garyguo.net;
+Received: from LOZP265MB8551.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:4b4::24)
+ by LO2P265MB5822.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:26c::11) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.292.19; Wed, 5 Aug
+ 2026 16:37:00 +0000
+Received: from LOZP265MB8551.GBRP265.PROD.OUTLOOK.COM
+ ([fe80::c07d:488c:d4aa:2a4a]) by LOZP265MB8551.GBRP265.PROD.OUTLOOK.COM
+ ([fe80::c07d:488c:d4aa:2a4a%4]) with mapi id 15.21.0270.017; Wed, 5 Aug 2026
+ 16:37:00 +0000
+From: Gary Guo <gary@garyguo.net>
+Date: Wed, 05 Aug 2026 17:35:44 +0100
+Subject: [PATCH v2 01/16] rust: io: add static `cast()` method for views
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20260805-typed_register-v2-1-c3ca142220a0@garyguo.net>
+References: <20260805-typed_register-v2-0-c3ca142220a0@garyguo.net>
+In-Reply-To: <20260805-typed_register-v2-0-c3ca142220a0@garyguo.net>
+To: Danilo Krummrich <dakr@kernel.org>, Alice Ryhl <aliceryhl@google.com>, 
+ Daniel Almeida <daniel.almeida@collabora.com>, 
+ Miguel Ojeda <ojeda@kernel.org>, Boqun Feng <boqun@kernel.org>, 
+ =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, 
+ Benno Lossin <lossin@kernel.org>, Andreas Hindborg <a.hindborg@kernel.org>, 
+ Trevor Gross <tmgross@umich.edu>, Tamir Duberstein <tamird@kernel.org>, 
+ Alexandre Courbot <acourbot@nvidia.com>, 
+ =?utf-8?q?Onur_=C3=96zkan?= <work@onurozkan.dev>, 
+ David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>, 
+ Bjorn Helgaas <bhelgaas@google.com>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>
+Cc: driver-core@lists.linux.dev, rust-for-linux@vger.kernel.org, 
+ linux-kernel@vger.kernel.org, nova-gpu@lists.linux.dev, 
+ dri-devel@lists.freedesktop.org, linux-pci@vger.kernel.org, 
+ Gary Guo <gary@garyguo.net>
+X-Mailer: b4 0.15.2
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1785947818; l=1983;
+ i=gary@garyguo.net; s=20221204; h=from:subject:message-id;
+ bh=o9NP3KChQiiuJi1QX3sJ7C+sxJNUC14IZemxkEQI+tE=;
+ b=Y9PkUbJayNfxosKzmqJ6X77HKBe9iumC0tPSdx2YmBMhDdke89n1toW4uBDid5n7dd3/ROQFf
+ PRt6SuZupqWCFcmnnoTFjnW6saMjrlIISm3b8mUz/+/EPeyUDWQa5XL
+X-Developer-Key: i=gary@garyguo.net; a=ed25519;
+ pk=vB3uIX95SM4eVrIqo1DWNWKDKD2xzB+yLLLr0yOPYMo=
+X-ClientProxiedBy: LO4P123CA0608.GBRP123.PROD.OUTLOOK.COM
+ (2603:10a6:600:314::8) To LOZP265MB8551.GBRP265.PROD.OUTLOOK.COM
+ (2603:10a6:600:4b4::24)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 2/9] PCI/P2PDMA: Add CONFIG_PCI_P2PDMA_CORE
-Content-Language: en-GB
-To: Jason Gunthorpe <jgg@nvidia.com>, Logan Gunthorpe <logang@deltatee.com>
-Cc: Leon Romanovsky <leon@kernel.org>, Alex Williamson <alex@shazbot.org>,
- Alex Mastro <amastro@fb.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Kevin Tian <kevin.tian@intel.com>, Pranjal Shrivastava <praan@google.com>,
- Mahmoud Adam <mngyadam@amazon.de>, David Matlack <dmatlack@google.com>,
- =?UTF-8?B?QmrDtnJuIFTDtnBlbA==?= <bjorn@kernel.org>,
- Sumit Semwal <sumit.semwal@linaro.org>, Ankit Agrawal <ankita@nvidia.com>,
- =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>,
- Alistair Popple <apopple@nvidia.com>,
- Vivek Kasireddy <vivek.kasireddy@intel.com>, linux-kernel@vger.kernel.org,
- linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org,
- linaro-mm-sig@lists.linaro.org, kvm@vger.kernel.org,
- linux-pci@vger.kernel.org, Longfang Liu <liulongfang@huawei.com>
-References: <20260715174737.15287-1-matt@ozlabs.org>
- <20260715174737.15287-3-matt@ozlabs.org>
- <e90b0bd0-fb8e-4d4e-b282-609c26692e4a@ozlabs.org>
- <b30e75d8-37d6-478d-bc72-a9ed0b7e200c@deltatee.com>
- <20260805003914.GK27883@nvidia.com>
-From: Matt Evans <matt@ozlabs.org>
-In-Reply-To: <20260805003914.GK27883@nvidia.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: LOZP265MB8551:EE_|LO2P265MB5822:EE_
+X-MS-Office365-Filtering-Correlation-Id: f10805a9-3732-4fc8-ba03-08def30fc5bf
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|10070799003|7416014|1800799024|376014|23010399003|366016|6133799003|22082099003|18002099003|56012099006|10067099003|921020;
+X-Microsoft-Antispam-Message-Info:
+	ITjJ+jFpHKnua7K7h47B2fuzAV7o9YGoU8aUi8qXE9Z3QMA78qQI4E70QTA95+qQIN+bOxgB6nqnWxpMESCA6aK/xH3ikAC8NceP+N3mz4khG8u5OQwymjLiAianavdklXHqrMK0SyGbKyinXZP/0LUEuhvrCSJILaTI3DAwUSasxnP9VscIGlayksSIOJWbe0e/jAoeEb5DVxcDcAOjCguXB+Imm/SQZTqp8a8XILJJYU88IJS0EVCiNPPQtGwN+dVUJTktwCOfeOrgRXx/uad8XmA+YCtuH149Emo4P5PaFOnBbJeXzN4jBG0g9p7JRyj4fHRdZjK3InNSiUrGT41znVLXZyIEMqlhOc3BFfSbT98y/SjX2HAjnhURabgtJx5WKrLCROXfdhhPj7vHRU6VD1Av2g5+y4OXXnYR0mlSwPDi1/NZC7XhBLmb2rW8pW5NVBzh5O8pD/0XRdZbafANkayv8r9dqqd7cxLV7Ia+NHgRIaJHzElXEfC4oZzLLC6hWPLBVs8B05Mx0F2Loq/am4c6fDbDt7WYaISi0vrFVcbpDz02GkK9dS5qvj3s1hVu7umpoNDl/yzehC60uPte9HadmXX0Rpy8UnwzGx31gUSOkoNksobDHXzrPmIckcSvsWrteKHdAkzbDXA+S9e7p8Sd2IGexjyYTHMiTNVsOIEIPmcryWZr3mpQZvTPLxju1/fQf0xfrWmBV1ZaUA==
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LOZP265MB8551.GBRP265.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(10070799003)(7416014)(1800799024)(376014)(23010399003)(366016)(6133799003)(22082099003)(18002099003)(56012099006)(10067099003)(921020);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?RXk5emlJZWRlV2ExdTFOWmFLeDc3WTdoM0U0RmEra0tOVUcvWENiaUhLYUU1?=
+ =?utf-8?B?WFhzU3RmVFlpR1lRMEFlU2MyeXduR09qSlRTUGdncGhRdXJOWWZYbXFtOTkw?=
+ =?utf-8?B?a3Nwb3huZVVzSVE3Y0ZrYldWTnpsRWlDS0l3Mm5MdmN2ZHQ0alBQODVPUWR1?=
+ =?utf-8?B?QjNSUmdqRkp0R2NTREtyTVBMeHJKc3dmbUdLeFdlbjNKaVd2N3RBb21HaldH?=
+ =?utf-8?B?MHBuRkNpc0RIMlZKWmk0OWE0VXowY01LRmRvK3crcmZHcU4ySU5mYkNYdllJ?=
+ =?utf-8?B?akpsdjIwRE5NUVczbnUwMVVaVTlsbHFwazIwUHVoZW5kK3p0cmljSkFueFdX?=
+ =?utf-8?B?RVdSVHh1dTRkcnYvUXl5bVc5RGs5NzI3TE10K1BIQWIwWElVRytQRDl4Z3Rh?=
+ =?utf-8?B?TmFIWTIyYXFyK1R1WmpSeDR4TUlaRHVHZlgyMkxkV21MNHQ2QkdZMm1IQ1FW?=
+ =?utf-8?B?d1kzcGd1RXhTcnNkZCtBKzNoL3ZjTXVaeUJMbmx0SEJuYVFlYmFZaUUrYTho?=
+ =?utf-8?B?YVlFQkVNc3JQMC9VQk9HVDRJV0tDUitxTzFMUlg5bW4weWFkT2w5QjFuQS9G?=
+ =?utf-8?B?aFNoVjRadDFibzVoRzNWNDkzYXNNaGFGelJkbWxGa3NsSVlUZ21hejNPeXpp?=
+ =?utf-8?B?Ti9WYmJoUDFycmJlaThqNGxqMS9GV3poWnVpUnloOE1kYmpRbzdpRjI1endI?=
+ =?utf-8?B?ejJHbFlZTkJUUFZybzc3SUtKeHJuUjJSNFVQajNUcmduRDZ3OFdVUHlCUmRy?=
+ =?utf-8?B?RDJHV1REOVg5Tmc3dmlXSmxsa0hPWjA4cWphVERpczRXOVNIYk5yQ1VFVmxu?=
+ =?utf-8?B?WXN6VUY0d2VKNkZSaXdDeUxHdjlSUTFzYUdWZHJzUXBxZE1OUEwyd1NEdDcr?=
+ =?utf-8?B?SWs0UFl4U0FEYjZHeGlDZndCSEZtM3BzWWVZZlF4cEVkdnJoQmZFOEZBVTRt?=
+ =?utf-8?B?eERPbm16bUNTT3czbmdCNzA5SGJmbGVBRTFxcEdVbHZ4djFBRjZJWUNNeGEw?=
+ =?utf-8?B?MExQT2ZxUEo3djNzeTBGbHRWOGVhYVpEei9oelRTWFVYdHhiRTlDempzKzhL?=
+ =?utf-8?B?eXRyaXZkLzVianppL1dPRVZ6Ui91N3hLUzlWdThUNmI5aG5zTVdZeHZmNGhQ?=
+ =?utf-8?B?S3llY21RakE2bFBBME0zYnRncGk0bEdRMkdlbFRaWjZaV01HcVNLQ3RiQ21p?=
+ =?utf-8?B?SHRGWXlCcG1EclgzMnR0WW5kZ2NQTDFpKzBKY0phRzRXREtFTlpkU0VwbXpD?=
+ =?utf-8?B?UVQ3ZzlIaTVCMWVLQVVQb3k5cTM1MnFYYUlmSlpRZFQyVExPTkQrSkovT3kx?=
+ =?utf-8?B?YUREaVJCY3BPUGgrcU95akxtbS94QmVnZE5HM0c0WEpKQ3RPajdHNDlHaUdS?=
+ =?utf-8?B?M0l5U05qT2VoMmw5Vi9tUjNqLzVxUENpMU94VDYvZS9qdFJhUnIyUWw3a0N4?=
+ =?utf-8?B?LzI5ZGNwZTM4aDNoV21yOXkvUUQvZmNMeFZSd1ZpZ1R1aER4S0pkSThXTC9W?=
+ =?utf-8?B?bzJ2SEZIVFV2RVBvejd3MUcwT1l2THhaWTlLcENqOGZrS0g3N2ZWVU5LbldQ?=
+ =?utf-8?B?UDh4MTlKMUJxN25wYVhlTUtuZzluTHc4aDhFUDd1TzViaE1zb1dhalhYdG90?=
+ =?utf-8?B?QXJ3czdZMk8zcXgvZTZRQVJ2QnFIZ1hsZTNvUDh3QVVTSHltZk1qdWNBd3cz?=
+ =?utf-8?B?MUlDdFQzWFlnaEErWU5PYVM1UXh1emZ2Q1VzbTBDSm1pZTZpdVovcEFwYkhl?=
+ =?utf-8?B?NU9wQ0dxNU8rU05QZzBmTEZKSyt6cWhlaU9WbksrN25TUGRMamdqTml2VHBp?=
+ =?utf-8?B?Nm1FVGl2ZC9TMlk2VmtNNTdlbm94ZkRhYmFNendVSnE0dkI2WG1xemR4Rkpj?=
+ =?utf-8?B?K05xZ2ZtQjZ4Zmd6UmQ3VDBNZjdOcGVqWW8xSkczNjRITWhzWHJmQ0RYeCt0?=
+ =?utf-8?B?RTE5Q2pNRFUxS2dRNEl1cFlyZjhWUzN4ejNuSWc5UTUxa0lUZ1d5ZWZDZWtG?=
+ =?utf-8?B?MHgyWjFFRGxxTDNIb1pOSnJaRGpJWWJ5Z3ZudHVXK2hsNEM0Y1JxWjRnM29l?=
+ =?utf-8?B?cGtRdUp0QnBsUDNJVW1BbmtoQUxHMkdxNXRoSnJsN2p6NVR2QVlBRitDM1JC?=
+ =?utf-8?B?OWc3dnhJdTliRXpEV09zRHdOZjR2L0dqYlpCUHZLOTRGeFhYZW5LMFpBQ0Ra?=
+ =?utf-8?B?NDlKUm5hMlppZkxQZk5LTWFybTVvc1A1a3NzL3MrdUNRd1JBN2d6ZTBFcnVX?=
+ =?utf-8?B?aEF5R0pLTVZZUzIzTVRtUVF5TWxyaFFLZUc3NHI0WXVKZDhPdEEwd2JHdnJv?=
+ =?utf-8?B?TWxidUZaZFRIYTArVXhxdGI1SFY4Q2FZdUhGTFdlZHdQMW5nWHhNZz09?=
+X-OriginatorOrg: garyguo.net
+X-MS-Exchange-CrossTenant-Network-Message-Id: f10805a9-3732-4fc8-ba03-08def30fc5bf
+X-MS-Exchange-CrossTenant-AuthSource: LOZP265MB8551.GBRP265.PROD.OUTLOOK.COM
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Aug 2026 16:37:00.1889
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: bbc898ad-b10f-4e10-8552-d9377b823d45
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 06dmyMOBJ4f5dyBayBbBYdRoVJ4BHKlmjNdFiOv9YQb50mYiVwYpg4qLyF/ONQ7sTl8+946EqluBLoph1Jl2cw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: LO2P265MB5822
 
-Hi both (Logan thanks for your comments!),
+Add a compile-time checked variant of `try_cast()` using the minimum size
+and alignment information.
 
-On 05/08/2026 01:39, Jason Gunthorpe wrote:
-> On Tue, Aug 04, 2026 at 10:19:11AM -0600, Logan Gunthorpe wrote:
-> 
->> There's a vague convention for this already: the term 'p2pmem' is often
->> used for cases where the driver uses the allocator, etc. (I think I had
->> this intention when I wrote the code and have since forgotten about
->> it).
-> 
-> I've been calling it the genalloc layer and the core layer. p2pmem
-> would be OK to refer to the genalloc stuff. So if you want to have
-> CONFIG_PCI_P2PDMA and CONFIG_PCI_P2PMEM that seem sOk
-> 
->> code into it's own file, potentially renaming some functions. Then, in
->> the end, we would probably have a pcim_p2pdma_supported() function and a
->> pcim_p2pmem_supported() function, the latter being used by existing use
->> cases.
-> 
-> Not quite sure why we need this?
+Signed-off-by: Gary Guo <gary@garyguo.net>
+---
+ rust/kernel/io.rs | 39 +++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 39 insertions(+)
 
-( [1] )
+diff --git a/rust/kernel/io.rs b/rust/kernel/io.rs
+index a38c20ba3d23..adfc555de7d0 100644
+--- a/rust/kernel/io.rs
++++ b/rust/kernel/io.rs
+@@ -436,6 +436,45 @@ fn is_empty<T>(self) -> bool
+         self.len() == 0
+     }
+ 
++    /// Convert into a different typed I/O view.
++    ///
++    /// The target type must be known (statically) to be of the same or smaller size to current
++    /// type, and the current view is properly aligned for the target type.
++    ///
++    /// # Examples
++    ///
++    /// ```no_run
++    /// use kernel::io::{
++    ///     io_project,
++    ///     Mmio,
++    ///     Io,
++    ///     Region,
++    /// };
++    /// #[derive(FromBytes, IntoBytes)]
++    /// #[repr(C)]
++    /// struct MyStruct { field: u32, }
++    ///
++    /// # fn test(mmio: &Mmio<'_, Region<0x1000>>) {
++    /// // let mmio: Mmio<'_, Region>;
++    /// let whole: Mmio<'_, MyStruct> = mmio.cast();
++    /// # }
++    /// ```
++    #[inline]
++    fn cast<U>(self) -> <Self::Backend as IoBackend>::View<'a, U>
++    where
++        Self::Target: FromBytes + IntoBytes,
++        U: FromBytes + IntoBytes,
++    {
++        let view = self.as_view();
++        let ptr = Self::Backend::as_ptr(view);
++
++        const_assert!(size_of::<U>() <= Self::Target::MIN_SIZE);
++        const_assert!(align_of::<U>() <= Self::Target::MIN_ALIGN.as_usize());
++
++        // SAFETY: We have checked bounds and alignment, so this is a valid projection.
++        unsafe { Self::Backend::project_view(view, ptr.cast()) }
++    }
++
+     /// Try to convert into a different typed I/O view.
+     ///
+     /// A runtime check is performed to ensure that the target type is of same or smaller size to
 
-> Matt, the mlx5 stuff is the same as VFIO, it just uses the "core"
-> layer and does not use the genalloc. So there shouldn't be an issue
-> here, if the genalloc is off then the mlx5 stuff should still
-> work. There shouldn't be a case where CONFIG_PCI_P2PDMA=y and mlx5 is
-> broken?
-
-Oh, when CONFIG_PCI_P2PDMA=y it's all good.
-
-The issue is when CONFIG_PCI_P2PDMA=n, as mlx5 still seems to permit a
-DMABUF export solely because pcim_p2pdma_provider() succeeds.  (This
-patch's CONFIG_PCI_P2PDMA_CORE enables that.)  mlx5 assumes that getting
-a provider means P2P DMA is also available.
-
-Later, DMABUF attach would fail, but it'd be good to keep the original
-failure mode where UVERBS_METHOD_DMABUF_ALLOC fails early if no P2PDMA.
-
-I was thinking something trivial like the following would let things
-like IB fail the DMABUF_ALLOC early still, instead of making the
-assupmtion that having a provider means having P2P DMA.  E.g. OK
-provider's available, but test for P2P DMA support too:
-
- bool pcim_p2pdma_supported(void)
- {
- #ifdef CONFIG_P2PDMA
-	return true;
- #else
-	/* CONFIG_P2PDMA_CORE only */
-	return false;
- #endif
- }
-
-I can't yet see places [1] would be used (IIUC that's indicating "core
-is present"? and feels ~similar to _provider returning something) but I
-don't know all the consumers well enough yet.  Agree the two groups of
-functionality could be named more distinctly, though.
-
-
-Cheers,
-
-
-Matt
-
-(PS: Wanted to v.tactfully ask, as I'm eager to avoid as much
-renaming/refactoring in this pair of P2PDMA patches as possible since
-folks now seem happy with them, what could be a fix in this series vs a
-revisit.)
-
-
-> Did some of APIs get mixed into the genalloc family that should not
-> have?
-> 
-> Jason
-> 
-
+-- 
+2.54.0
 
