@@ -1,91 +1,102 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 91B98184524
-	for <linux-pci@vger.kernel.org>; Wed,  5 Aug 2026 03:27:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 961F41D47AC;
+	Wed,  5 Aug 2026 04:44:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785900448; cv=none; b=ofQY1Bwacd2Ca2Nd9bhUh8fLvIRP3LcDygL3CGfBJXz3hGbD3p2uLPUk5VDj59M5GY97ke4Yfyc3uktpO8h4c2OjQSYt7blcdw2Ug75WyNycoFDq4YdIf5J7+1KiLfrKyy1O+v12/DkSo+YwvJ39DuqEqK5r6pjUUcTUIBdsHVU=
+	t=1785905044; cv=none; b=MgK234wX+QVOd2uMqKWqyNQly2p8bXw7WZzhxbH3wqDcD3IAZE3BHh0P+TIvBl5ZbPiBhlObGhl+CC4Lqsm/vcOcKLXeqoc3OC/DBrbnpp2WL9oQTLKB+o4gumSdoCjJdQor1uVk6677jdI9PHq/CpOF5+fU7bJLUhfqteKSqTc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785900448; c=relaxed/simple;
-	bh=ro+iN22prWGUFX2ViFmEFgE8JxHDuMYUKRrnqLplzto=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Lyb4FU9Ty1seKVdG9y+UoeVJUS25OEm4aMjL7wyoNond7VMOBbtT40HSj8j7cIz7vQA5n0QDHafwjHH3Gk6xcljQnwaDoxQ4jJW0VDNw29SJcGWM4K4PDZ/YkY4S263+Tz24gg1pZVdn+23uzY6m/LM0T4Y9YARZSBUdDSpX2RI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ny+UuD31; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785905044; c=relaxed/simple;
+	bh=n2P6idRe3RqOB1keZ96ibxRUsaj0qnSuENYCvkqZ2E4=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=XRBs8p05sDqPNU3bucI/PokG2Wv0mzIBx4dKm7eH1Fc8rbFyfJMe7mxRQ4uEQ5hucLYre8cwMP0+SR5aFigS+jklJbPzZhzN/vBz63Rt2TxXTWivpdDYd9NNxKdB5bsdaNxAQKqgq1iD5zzu4koK9AElpYeYAujRsi2lzy8/Bfc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=VOfJdR5V; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ny+UuD31"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A8D031F000E9;
-	Wed,  5 Aug 2026 03:27:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785900447;
-	bh=lJuxAvkvVjnJNLXJ8yx7ZltWa64ZRYUBnq8sFCsN5+Q=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=ny+UuD31Vve44avE0kjG2AUDdcpfYby4ur20BSXot4zx6JMdm4zu0D6S0tq3TteqJ
-	 lP7k5RowZ7n+arlvU3y+WHrqQ/E4r7d+GsrL4ZRnA7mMhzv2HqKUt1udRNzS0JbfLz
-	 Jg/g71m39T6xVrRThqUN2JoPBnQbnJgvWDPieMUCEt6IKSB5Jm7SkZ3l3AJso6EDF4
-	 qpFKd+mJP1sx/D1DVnCdmKaIfBYWg5fLRe8JGFf7HL9noYbQ8NxTKBa56y0WNQ+Tnx
-	 5tzjrdtnq/tS8u4+PEFkxLqjypPs/lAv+UPVb7ma9DPAf6i6Mcuq59VCLn42sdQUfy
-	 gfrFYk6zJTJ5w==
-Date: Wed, 5 Aug 2026 12:27:24 +0900
-From: Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>
-To: Bjorn Helgaas <helgaas@kernel.org>, 
-	Szymon Durawa <szymon.durawa@linux.intel.com>, Nirmal Patel <nirmal.patel@linux.intel.com>, 
-	Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-Cc: Lin Mohan <linmhwork@outlook.com>, 
-	Ali Alaei <ali.alaei.tabatabaei@gmail.com>, Jonathan Derrick <jonathan.derrick@linux.dev>, 
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v3] PCI: vmd: Handle BUS_RESTRICT_CFG value 3 for Arrow
- Lake-HX
-Message-ID: <20260805031714.GA464895@rocinante>
-References: <191EE983-DD30-4B14-9B63-93AA0BF750DB@outlook.com>
- <20260721164231.GA621153@bhelgaas>
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="VOfJdR5V"
+Received: from [10.7.58.6] (unknown [4.194.122.162])
+	by linux.microsoft.com (Postfix) with ESMTPSA id A423420B7169;
+	Tue,  4 Aug 2026 21:43:31 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com A423420B7169
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1785905021;
+	bh=CRiTfhhHlWQ+Wky5oSEnJr3z9b/fF7IvnlsFt1kRh1o=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=VOfJdR5VPx/n8VqYGq2vionMO1cw1homB43MhJCFnPjYAnK6wgb1aYjSoTI+BKaPw
+	 bcWFBRY0CuUsAvuGDeJI0Vwg3rkezK4+Jo/yddqIMF5vmvKtwSXy6y7JUtcYF8hNv6
+	 C2z5aex/xEHzLKPraj0lg4auiprjbwRvjj605VoE=
+Message-ID: <750adee2-e934-4907-ae54-d01e7d3defc4@linux.microsoft.com>
+Date: Wed, 5 Aug 2026 10:13:47 +0530
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260721164231.GA621153@bhelgaas>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 0/3] x86/irq: Fix lost interrupts on CPU hot-unplug for
+ Hyper-V PCI/MSI
+To: Shradha Gupta <shradhagupta@linux.microsoft.com>
+Cc: "K. Y. Srinivasan" <kys@microsoft.com>,
+ Haiyang Zhang <haiyangz@microsoft.com>, Wei Liu <wei.liu@kernel.org>,
+ Dexuan Cui <decui@microsoft.com>, Long Li <longli@microsoft.com>,
+ Lorenzo Pieralisi <lpieralisi@kernel.org>,
+ =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+ Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Thomas Gleixner <tglx@kernel.org>,
+ Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
+ Dave Hansen <dave.hansen@linux.intel.com>, "H. Peter Anvin" <hpa@zytor.com>,
+ "Joerg Roedel (AMD)" <joro@8bytes.org>,
+ Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
+ Vasant Hegde <vasant.hegde@amd.com>, Will Deacon <will@kernel.org>,
+ Robin Murphy <robin.murphy@arm.com>, x86@kernel.org,
+ Jake Oshins <jakeo@microsoft.com>, linux-hyperv@vger.kernel.org,
+ linux-pci@vger.kernel.org, iommu@lists.linux.dev,
+ linux-kernel@vger.kernel.org
+References: <20260728135117.2888175-1-namjain@linux.microsoft.com>
+ <anHYJEeHlszuj/38@linuxonhyperv3.guj3yctzbm1etfxqx2vob5hsef.xx.internal.cloudapp.net>
+Content-Language: en-US
+From: Naman Jain <namjain@linux.microsoft.com>
+In-Reply-To: <anHYJEeHlszuj/38@linuxonhyperv3.guj3yctzbm1etfxqx2vob5hsef.xx.internal.cloudapp.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Hello,
 
-Added Szymon and Mariusz here directly, and moved Nirmal from Cc to To,
-so he can get this message directly, too.
-  
-> > I am Lin Mohan, the reporter of
-> > https://bugzilla.kernel.org/show_bug.cgi?id=221137.
-> > 
-> > Since commit 22b47bd49e45 ("PCI: vmd: Handle BUS_RESTRICT_CFG value 3
-> > for Arrow Lake-HX") has already been merged, could you please add the
-> > following tags in a follow-up fix?
-> > 
-> > Reported-by: Lin Mohan <linmhwork@outlook.com>
-> > Closes: https://bugzilla.kernel.org/show_bug.cgi?id=221137
-> > Closes: https://bugzilla.kernel.org/show_bug.cgi?id=221136
-> > 
-> > This patch fixes the same Mode 3 / Dynamic Bus Offset issue I
-> > reported on the 8086:09ab VMD device (Arrow Lake-S).
+
+On 8/4/2026 5:46 PM, Shradha Gupta wrote:
+> On Tue, Jul 28, 2026 at 01:51:14PM +0000, Naman Jain wrote:
+>> On CPU hot-unplug, fixup_irqs() re-injects interrupts that are still
+>> pending in the outgoing CPU's IRR via the irqchip's irq_retrigger()
+>> callback. The Hyper-V vPCI MSI irqchip never installs one, so such a
+>> pending interrupt is silently dropped, leading to lost interrupts, stalls
+>> and "No irq handler for vector" messages.
+>>
+>> Patch 1 is the minimal, backportable fix (Fixes:/Cc: stable) that installs
+>> irq_chip_retrigger_hierarchy() on the Hyper-V PCI/MSI chip. Patch 2 then
+>> switches fixup_irqs() to call irq_chip_retrigger_hierarchy() directly, so
+>> the retrigger works for any stacked irqchip without a per-chip callback.
+>> Patch 3 drops the now-redundant irq_retrigger() initializations.
+>> This way, patch 2 and 3 do not need to be backported.
 > 
-> Thanks very much for confirming this!
+> Thanks Naman, the series looks good to me.
 > 
-> I added the tags to the commit on pci/controller/vmd.
+> I just have a small nit. In the old code, VECTOR_RETRIGGERED is set
+> unconditionally after calling chip->irq_retrigger(), regardless of its
+> return value. In the new code, VECTOR_RETRIGGERED is only set when
+> irq_chip_retrigger_hierarchy() returns non-zero. So retrigger failures
+> would now result in VECTOR_UNUSED instead of VECTOR_RETRIGGERED.
 > 
-> I do still question whether that commit includes sufficient support
-> for this Mode 3 feature, so I'm hoping Nirmal or someone else from
-> Intel will chime in.
+> In practice this doesn't matter since apic_retrigger_irq() always returns
+> 1, but it is technically a behavior change and I think it is a correct
+> one. Just that it might be worth noting this in the commit message to
+> avoid confusion.
+> 
+> Reviewed-by: Shradha Gupta <shradhagupta@linux.microsoft.com>
+> 
+>>
 
-There was a series[1] posted not that long time ago, which seemed to have
-been also incorporating work around the same thing that this patch aims to
-fix, albeit with more details, at the first glance.  The progress on the
-series seemed to have stalled, though, sadly.
+Thank you Shradha. I'll address this in the next patch version.
 
-I am including both authors directly here, alongside Nirmal, hopefully for
-some comment and perhaps a review, etc.
+Regards,
+Naman
 
-1. https://lore.kernel.org/linux-pci/20260625082940.1290740-8-szymon.durawa@linux.intel.com/
-
-Thank you!
-
-	Krzysztof
