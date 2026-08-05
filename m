@@ -1,103 +1,64 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.12])
+Received: from OS0P286CU011.outbound.protection.outlook.com (mail-japanwestazon11020126.outbound.protection.outlook.com [52.101.228.126])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D186018E02A;
-	Wed,  5 Aug 2026 02:13:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=192.198.163.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5621913B293
+	for <linux-pci@vger.kernel.org>; Wed,  5 Aug 2026 02:15:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.228.126
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785896024; cv=fail; b=GcI4KAM0lahk+YcVC86JdNgvRjuYyyZoo3Bzgl8lNQ+2Wp0wY2o5CY6UOu3/bYH35dPrFjzvF3aJ3dwehjxtUwqWNCsq87+1pqsqzBZMXjyoHp3uEYlnFqnHXxkQbqxUq47V3e/3t3/YMJBYPorTjlc54Mw61yguBXdFHeduuD8=
+	t=1785896129; cv=fail; b=omoWg0nPjOTW+IZog2pDMyAa0GVYD8EddC//9LG5uoCsrF/QnfZqUhwi6NrIwJcUX0KjEwPTwQ40FZwG2sC7LixgQQbzilXvNzofLBdpLc/Dt/C7OQ290IK5ttY2co5Kleer3hGt1KCqBF71+u0roBnCgeMVy5HeCzswxhZElq0=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785896024; c=relaxed/simple;
-	bh=zQ1s7oFPX7q5O45MfL+syO0QmzzOj9SbXM9NTdb0UaY=;
-	h=Date:From:To:CC:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=TATj6+cBCDR20r5muGYeeCE4+Itfr6USxY6bDUCpOi6/NWtTUeTokvjZHpAb/l6WeAzPhYtu8w291of/FlVMaHZTkGZklrexhmerN0WPGlifOjPk4eqoGxvWxmfNMpNMgTelbiuQrn+Jdntn0O7577hxz94zPVKegkBoMR99JdQ=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=LcCfIVSt; arc=fail smtp.client-ip=192.198.163.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1785896129; c=relaxed/simple;
+	bh=oGtbDbDN+qi0FKR5Aq3KCnDOijDzPPiViTsfXZCwFao=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=m26m57ysEX1sVJwRVR+K2xB38d+LN+TrWXN30LenES77Dn5GFXGS9Eh9YtDD6p6U6BWbw66HDYzZc7vstzlCq61vaohkgiW7f3Jwjv5qi7DtqfqV4omMYmb0CruiOORFp0CAYIGob4a+mHBmt+09IT2q5+5Ec+uuaJ58yXCebiI=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp; spf=pass smtp.mailfrom=valinux.co.jp; dkim=fail (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b=c2B+ogon reason="signature verification failed"; arc=fail smtp.client-ip=52.101.228.126
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=valinux.co.jp
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="LcCfIVSt"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1785896021; x=1817432021;
-  h=date:from:to:cc:subject:message-id:references:
-   in-reply-to:mime-version;
-  bh=zQ1s7oFPX7q5O45MfL+syO0QmzzOj9SbXM9NTdb0UaY=;
-  b=LcCfIVStSPwf4pEZt+9Tsj7MpewUbHj/lyPLD+IfPcRaPyr00wlWnt90
-   4Lh0eDuO/cA+BVLmsXTUD5cgMYExMAZKcdTKsYPRSa6wccQAVapUyHVgz
-   dTBIswA/Pv50yCCWBpPbq0OCI+aGTw4/tAoFVgJi/N28el+4/liLuEDSa
-   9Zelq61XUs6V4HEf/00n4dOmY4y1SdjV6qHI6Iwf0kHuUmGvyY1BNcula
-   CJvyqiC9TQFyrYjdkHJwLOkb24gS5bpYIJp8CYAtXxScZIh2cwALtNx/w
-   RMPSdyQu0L3v2ujFhyVIfCie7mKOTSZ+zVxhtL+UNAQSyUuAG8gyXHtt7
-   A==;
-X-CSE-ConnectionGUID: +meDkdoEQyyOwUb04pOjlA==
-X-CSE-MsgGUID: nAg6+w0/TFqOOouZPI/qmw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11865"; a="90271608"
-X-IronPort-AV: E=Sophos;i="6.25,205,1779174000"; 
-   d="scan'208";a="90271608"
-Received: from orviesa006.jf.intel.com ([10.64.159.146])
-  by fmvoesa106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Aug 2026 19:13:39 -0700
-X-CSE-ConnectionGUID: 2mBC9VCRSe6cirUs7oeI7w==
-X-CSE-MsgGUID: +3t/OL3CR52elWVcJt5/bg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.25,205,1779174000"; 
-   d="scan'208";a="259904413"
-Received: from orsmsx901.amr.corp.intel.com ([10.22.229.23])
-  by orviesa006.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Aug 2026 19:13:39 -0700
-Received: from ORSMSX902.amr.corp.intel.com (10.22.229.24) by
- ORSMSX901.amr.corp.intel.com (10.22.229.23) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.45; Tue, 4 Aug 2026 19:13:38 -0700
-Received: from ORSEDG903.ED.cps.intel.com (10.7.248.13) by
- ORSMSX902.amr.corp.intel.com (10.22.229.24) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.45 via Frontend Transport; Tue, 4 Aug 2026 19:13:38 -0700
-Received: from CH5PR02CU005.outbound.protection.outlook.com (40.107.200.68) by
- edgegateway.intel.com (134.134.137.113) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.45; Tue, 4 Aug 2026 19:13:38 -0700
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b="c2B+ogon"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=r2Mp3G9528YTUcWCh6pjvDXrMg0VGntfP9iOGxGq/pdKVkENtJdiLz9xoE7+uo6XusCFZPGcmezlJWy1w6cmt54hhPoQAZ6Sbf1QdoWED6UlshBax+8q+CwObZ4ZGicHnhLmuas4RsLDMKyitsuzUt+YmLzKB3ko4qB08cwh9rH3jbwQJ+eOo2q2Yspv3OMmohZbgiVG7ZedBZMZjmA1Ft28Ww6qPT0eLTeHxvhE0iDVhYKUezjcRQQl8AzwGHWxqB9QqJXGDvTLhEXotpCyibbhSuWJOFqtWwOLwr9nRfa0b8fobKMVfiyUbOaGPNOxuaPhABt5MvNL8N0cytTkgw==
+ b=YTWYlWbpuVg8v0dqJZMHbOcDE/dvc2P/khQ8lSwX3JePKb5fwEAOWSLvGhIjaah5m/yForQBvSJPb3484X8+hAu5+9dJ1vsBScDK6cbqeOsItmDN8YB0Buk1rqBttrjT8IEOSWZcRvb+m9ISQDIwdss8kXcxoG3nNyGPqPPzEa0G+7KIpUqkwxh7GdPW7ZZrHXOpEjYteh/RGui1gVg6ocJPF5H35tPmaYfAyy/KZbrlqfH3o/U7KdSCj2gw+fEhWo2g5/PZdFJR4pkR9tKze8G+tSkJ+PxIYCeD/dyZ4tDg9kAdVDhZUvEKgZxeMk6ucMBoHnTj26A/dJw06uN3vg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=vEfyIiM2UEdwETRX2+gllQR+kpA40ekW7aFK1fpGXA0=;
- b=jxNBFZpg7pBDG3ekwIH+jtQ8f+MiGRsIjri6yC/eiSNVV22LysvRZXT3KWS0WqI63QBTwv+K5k4W/bd8hiQRLMOB8Ejr3cBrZPqplOHnPuPIfQRqsTHIFLLY5QKWky0vjnV6X8sMP8FLOiT0pQUe+PgyqklJuXAEsQuO+OoBPV0CvyCkwGsD+Gn262vF+GNWuWS6LI+J6PfPsPw+BJMA9diazfluVfhUcVfZ/tU12DdU1X25WkWfaspgh+T+vWfj3XeGGDQkvc8Kq7x1yZyl23WXxCVYNbnpmwLCSWjcVgFeiKCnmPrnN4lZFkFI5pWd3JCVHhmoZPf/5qikDra99A==
+ bh=Ufnu1cyJ1PqdxaJ8xlROMTwtI0CkYUNpMFCJbar1TI8=;
+ b=zFCcDWcS1jYEYomycJJpvZunfdeWlZZ6Xod3afY+KpmPCQ87iT3W/zENHNYD6lLmWTcfV3sGtbC4klee6Rl9iKnR1mOTpBUBvlcTFxeYlmkQCXt0AvG7HeOUg9g/5ekrr11iGJ+fpKA0ss7Tdi3j3l4qw8MZTSxKt3D4iQx9J8Dpi9DnTeulDU+IA7LMEj1VH0uS/N4gmLrcU6LnLX2Hg4nR6pVOCzR8ODlgDXVWAse8IV0w1XXHqLddyJsrvvGjBNRlWLhkGZmsIXH9QMEHZOcE8tOk6TdMWsQL9V2YbKPnX2565MHZHX4B9NtvZt7lb3s0byVT6HrCpCsfh0DPoQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
- dkim=pass header.d=intel.com; arc=none
+ smtp.mailfrom=valinux.co.jp; dmarc=pass action=none
+ header.from=valinux.co.jp; dkim=pass header.d=valinux.co.jp; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=valinux.co.jp;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=Ufnu1cyJ1PqdxaJ8xlROMTwtI0CkYUNpMFCJbar1TI8=;
+ b=c2B+ogon7sGuoKpVDqSF5IcKMWbhlAiUbIYuII+9L0WnWxiNN9X86Knw9TVFH11feoMF3Kb+2eJ3chT3RWVqHjbQdyTGzNGoSWhp4cL2Ardot9mXz/VoDt7hglIEPElTGQQOvUgVDFGIglVrltGszn3l1WodnyNb/+e5weazaco=
 Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=intel.com;
-Received: from DS4PPF0BAC23327.namprd11.prod.outlook.com (2603:10b6:f:fc02::9)
- by CH3PR11MB7868.namprd11.prod.outlook.com (2603:10b6:610:12e::5) with
+ header.d=none;dmarc=none action=none header.from=valinux.co.jp;
+Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:38f::10)
+ by TY7P286MB5326.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:1f4::10) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.270.18; Wed, 5 Aug
- 2026 02:13:36 +0000
-Received: from DS4PPF0BAC23327.namprd11.prod.outlook.com
- ([fe80::e721:90d7:9214:2d53]) by DS4PPF0BAC23327.namprd11.prod.outlook.com
- ([fe80::e721:90d7:9214:2d53%6]) with mapi id 15.21.0292.013; Wed, 5 Aug 2026
- 02:13:35 +0000
-Date: Tue, 4 Aug 2026 19:13:28 -0700
-From: Alison Schofield <alison.schofield@intel.com>
-To: Srirangan Madhavan <smadhavan@nvidia.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>, Dave Jiang <dave.jiang@intel.com>,
-	Davidlohr Bueso <dave@stgolabs.net>, Ira Weiny <ira.weiny@intel.com>,
-	Jonathan Cameron <jic23@kernel.org>, Vishal Verma <vishal.l.verma@intel.com>,
-	<linux-cxl@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, Alex Williamson <alex.williamson@redhat.com>,
-	<vsethi@nvidia.com>, <alwilliamson@nvidia.com>, Sai Yashwanth Reddy Kancherla
-	<skancherla@nvidia.com>, Vishal Aslot <vaslot@nvidia.com>, Manish Honap
-	<mhonap@nvidia.com>, Jiandi An <jan@nvidia.com>, Richard Cheng
-	<icheng@nvidia.com>, <linux-tegra@vger.kernel.org>
-Subject: Re: [PATCH v10 01/12] cxl: Move HDM decoder programming helpers
-Message-ID: <anKcSN63nh3CgtEQ@aschofie-mobl2.lan>
-References: <20260804192958.1823952-1-smadhavan@nvidia.com>
- <20260804192958.1823952-2-smadhavan@nvidia.com>
-Content-Type: text/plain; charset="us-ascii"
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.292.16; Wed, 5 Aug
+ 2026 02:15:24 +0000
+Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ ([fe80::2305:327c:28ec:9b32]) by TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ ([fe80::2305:327c:28ec:9b32%3]) with mapi id 15.21.0270.017; Wed, 5 Aug 2026
+ 02:15:24 +0000
+Date: Wed, 5 Aug 2026 11:15:23 +0900
+From: Koichiro Den <den@valinux.co.jp>
+To: sashiko-reviews@lists.linux.dev
+Cc: linux-pci@vger.kernel.org
+Subject: Re: [PATCH v6 4/6] dmaengine: dw-edma: Add delegated channel request
+ helpers
+Message-ID: <6squdujudud4uhgr72wzhnbiq6rg3b56vsazdxztgscbhpehsz@nz4njedhvcdy>
+References: <20260804033855.2115817-1-den@valinux.co.jp>
+ <20260804033855.2115817-5-den@valinux.co.jp>
+ <20260804035230.538CD1F000E9@smtp.kernel.org>
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <20260804192958.1823952-2-smadhavan@nvidia.com>
-X-ClientProxiedBy: SJ0PR03CA0146.namprd03.prod.outlook.com
- (2603:10b6:a03:33c::31) To DS4PPF0BAC23327.namprd11.prod.outlook.com
- (2603:10b6:f:fc02::9)
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260804035230.538CD1F000E9@smtp.kernel.org>
+X-ClientProxiedBy: TYWPR01CA0004.jpnprd01.prod.outlook.com
+ (2603:1096:400:a9::9) To TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ (2603:1096:405:38f::10)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -105,127 +66,143 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DS4PPF0BAC23327:EE_|CH3PR11MB7868:EE_
-X-MS-Office365-Filtering-Correlation-Id: cfd5b053-cef0-4ad2-d50c-08def29727dd
-X-LD-Processed: 46c98d88-e344-4ed4-8496-4ed7712e255d,ExtAddr
+X-MS-TrafficTypeDiagnostic: TY7P286MB7722:EE_|TY7P286MB5326:EE_
+X-MS-Office365-Filtering-Correlation-Id: f2025f98-22db-469d-06f7-08def29768b4
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|376014|23010399003|7416014|1800799024|366016|6133799003|56012099006|11063799006|10067099003|4143699003|22082099003|18002099003;
-X-Microsoft-Antispam-Message-Info: x2sLPESzUilpcFsTykpjwI+iJ/gbr4omz+PtGPqwJx1KgUSt2SqFs4nK/SnmREf8clPKcUL3MLe5y6AfJyfhAHE6Kc/YKcnQjkwxhOk9VjFxiFsKkhoQLtgpuTT6+uymZIfC/icCysQBgjp++gwSdA6U893dLgmdqhmh1317PdGqVGLg5xSWlVO8l8EHNibEEyTFQZWLOXhhB8sGd10tBQf96eM7Q+F3Od9r8Oi14e/d/OsMwTxWL83wcMrBC89LEtKeMGFpx+wWQJvQc4CHxsxyVXZxKmdffRbqWTdNIf0FxsFQ3xIO0c0Vy9llCe+Y4u8wZDYTjztMOg67epqfp2UiNm+py+Q+5Td7CbKTAMa9UKR4v3BTlt1GAc7gGPKAt4UKZ+dcD6czYqs2tCr98DPQiL2l2CgkshPrLvwqPSTNnKJW9TMQz1mfRek6xmzR3zRQgdvKI/KjMQt+Ykh0E/6yYYgO8rR4npS10KaWSh9DRbOqNofou5N0Q98kRmwhuRlAI6zAVYDh0pBLCyg2DyNfF8Qkcyl1ymhxqz/kcSf/nNmBLDJLFOw2e0o0mIuaOXnM+3KwyK89w2dT+yFFfOO848g2wReUOXn63Ktvjxd66q9cyw3sOGPs3ewbEKW//xng0jVHjc38y4iS5oSNALM5vnwd3Jm1gvs8WCgmBW8=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DS4PPF0BAC23327.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(23010399003)(7416014)(1800799024)(366016)(6133799003)(56012099006)(11063799006)(10067099003)(4143699003)(22082099003)(18002099003);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|366016|1800799024|23010399003|10070799003|376014|56012099006|4143699003|10067099003|18002099003|22082099003;
+X-Microsoft-Antispam-Message-Info:
+	eVo7n2orHCsoPDIziHMrp3wgsGr+9j/J5qEEg3j/zqcPEN+qF/hXIb0xEj08RFoRfPudM0QWtnCT5nCVFfCU1//4XAKbK5fE4NlHYvnHmB9T66je6uvxIYH1/DvtwMy1eJ41M8WSpfsUDODbpni8gan8Sgwkwox1WbrXzoXTT6HFMjBNgWfGExztcoj77HBVNT+VnpmpAXRePmJ9Uz/G1fIUE/CcokeK38hftydOleY3y9H7RULDuur9e6KnGsE+LHdZkezO3o3gsrGxe764l8Dtl2AVGdGql+zzEwzaIomZ7Szq9IU7Ty/IOIpti0WCWD+JkioLcSknViliF2w5qPayadDAX2sIRFw0D1zQwbw2k1qpo92wldadVMX45Q+skqi+YFK/BpunGBvudNK/GemhSRo0H71pY9xvjA4s+opqOoX03/AK20fmPAueU4M13fYjUiu7YoU0pES5hZockerkKEelNkga5YjgJAmpPV9AaXwSIB2smkFJ66jYmUO1ZPvxeJbu4PTujlAWyTGWgqhpF+UZgLqTX7Aot6xVS18BJSStnaXuaSTXoWzdx1r8CYx+3p8ejRAqm0LnrbcKtIN+E249Dhx2GBCQ4fUzgRU=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(23010399003)(10070799003)(376014)(56012099006)(4143699003)(10067099003)(18002099003)(22082099003);DIR:OUT;SFP:1102;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?V+v3A7XRpmfrhb20IDdF43Itiviu0mx7eSFupWT4ihpqIIc3AJ+g8EPj3NaO?=
- =?us-ascii?Q?6wQOI3Ablqh3QceN5/H8UefWfRXWfjgauKmAPnvqKSIixRJsvB9RKVmz6Kcy?=
- =?us-ascii?Q?Qo+QXlJeDwjFwcr5EmT+9uwrnbB+Xx3PagzFuuS5j1HnOhsBEXBb11AMOAQn?=
- =?us-ascii?Q?076MsJ/2NgX1x9p8We63CMPMqOXvhvCix+5R/oMoy0sSnSeJ+4fgtq3pCJHS?=
- =?us-ascii?Q?XY/APHFXO0FEYd0oIFs9FM3W/yVb2xpoSEqHT6kynZ7Ncb+g09ZOy8hwoX/D?=
- =?us-ascii?Q?I7Zs41eALBqJTPIFFRhsecN/xc76bynn4aswYoEt1HE/mholHXZtF2bhFn3S?=
- =?us-ascii?Q?1OFUIFArVM8YP8Cr240SNVDOxDgym2GC59GZ3v/UyM+UPgBhanD/ZXKdXHFT?=
- =?us-ascii?Q?vXyBGc8rVcMjPj8mOMuqbbEgO53QUBzLAh5/Ivs46BS609+OERn+Be4aEeal?=
- =?us-ascii?Q?sMWWFElRfgsv/LR1UQGIJsZW9zRo/DTVFMSNbSqA1kFU6WPkFiTGMknPRROk?=
- =?us-ascii?Q?QovZmC4GUEj2ck9XB/lQMXe83ExquwokC9AwG9nEVLF1lUjtRpEggmzasCD6?=
- =?us-ascii?Q?dx4MPua2TTJpZL78snQh5tasygaSYus88G9xEUDWAAukR31doWKPAs3pHdpE?=
- =?us-ascii?Q?2SqLw0v/dJrVxaPTsCO3xXmE05jMyRt/RKva9GZSIPFKYHylmzVK6/MDfIN8?=
- =?us-ascii?Q?b+ctu9Kdc0Q/hWA7LzUabaDDI4AQNjsgRRmshdy92qRRwRP/zg+LJqzEUMXF?=
- =?us-ascii?Q?vCiE44KJJmc2PP2ZqW1Mjgo0umjovKQFmSljKdBh4qHBuHXFqZdvU2puy60j?=
- =?us-ascii?Q?ILWkClix8Z36XkjnzIyICLCTuI9T1lOVGLRNarPWfls9/uDHl+scrOzlvTpQ?=
- =?us-ascii?Q?d5AFzFKnHHWrl98+1WLboATNKGXaF2Sfz+ijsAsd4anXHKB3NxF8ArHs/yhm?=
- =?us-ascii?Q?MtrotfgpsUH/UyBUa9llxQrcJVQS/CZRwo3dan9j3R7T83LzBxUOJi7yAqC+?=
- =?us-ascii?Q?N+tzgekdpDguGuZl6W3U938ReHLnbual55ORiJUv40k3wK481Qnu0yw3Mdnd?=
- =?us-ascii?Q?b92EVbHwJHs9h5eNctZwIYtBFpM8esqP9fDdUViXVr7ZCimLwOCJ+EIR3CVB?=
- =?us-ascii?Q?G3N8WKRCHaI6vKxZKYbRmhhxPxovn0CnCvMSPKfuY2MlBR1jd+kd7qOcU790?=
- =?us-ascii?Q?Bb0mHedJwH8zhCv7SWlJ9jnek+fUvZ86Inl7OyWlStr0h9pb1hCMypxBWWfQ?=
- =?us-ascii?Q?yEk1ss/iH3w02S7QXDk6Ee4G84bW0g9Bm9FHCkTtyO3nc+KsWHqLAQzWe0IO?=
- =?us-ascii?Q?dqupY9TZd6jnwf8PT4iiI7xWe9NY9vezCFL2adgA0z7IupKHPV1QkuuTYe60?=
- =?us-ascii?Q?vZQWydvZjPKSUK3WJ2ftirALXOEWcHy0Z6f2h9Z4hNL0IsNnv6xMcER8MRLA?=
- =?us-ascii?Q?HLM5YX0tH1jnw3pRKI+fT0RWgisr96PDSz7g1NI4TOoS6YFPuiXGoBrem6jX?=
- =?us-ascii?Q?20EfWO6lh6TMbGa4hIYziramXW53oSFGFEGErduaR0whE8kqE+arxbVM9EqV?=
- =?us-ascii?Q?b8nbr4eXFKHbttogMI+FedyiurwSgVTAGq/E4tpF7He5Seb/rnnRBfs5XgfX?=
- =?us-ascii?Q?a59TYtr87gwMdGCiR3Dvhyxo4CcePUk0ez2HgL1hqBoQrisLHN/D5it8B9Fc?=
- =?us-ascii?Q?KcdUzFtgPl3Flr982hvKcanhiB48sdwsIOvv+xSuhvtHxn0jI129KhsL7IJ3?=
- =?us-ascii?Q?JOxYsrwq8KjNHLOhlTh7n68A7keDSkU=3D?=
-X-Exchange-RoutingPolicyChecked: h7lxidu0+VXaSEwyxAHWsBdzmZsGTkec5AISe/++8E5GbVoDE1bIXzD2Jp7wVnXzLo0q25jXF4YyV5PWsIz6EFQnjOktt4aCi6+OmJBfGEQgMoJJqsQRRx7lSKwUZjtcxBqgeFGjRBNmdwnO1XTuktAE8tUDCG/8yiqa33xi34cHbxEkAAuFz2dUgx7cAz65ylYgoMg0Fa9abrAtO0C/OTIBPRoJszXk/eBpWA+A6xLMwceeI1NO7JKz8Xn7diztJQkM29hlQFHnYfoCkjp6A7e18Q+3tgmEcSCMNnITOeBoAUgOwGn9wv9IIzVG0dJ46lCsXdb45PP3It/7l/OUkw==
-X-MS-Exchange-CrossTenant-Network-Message-Id: cfd5b053-cef0-4ad2-d50c-08def29727dd
-X-MS-Exchange-CrossTenant-AuthSource: DS4PPF0BAC23327.namprd11.prod.outlook.com
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?iso-8859-1?Q?MgE3zMqIcRmidrdkQxIfHgjQyOjxOTTgKNm+FBGQ14Hm6XEkiiOdweBuzd?=
+ =?iso-8859-1?Q?ril9T2sth16GyzAK0PypVpXdu3UUq6hE3vJl7aPwaXb6xv3llLehk9XU0/?=
+ =?iso-8859-1?Q?V2C0N8J47lR3Fyf5gPRPkZW6lKappjN7oGvN1plBFwu8zhoxmEiPE8jPia?=
+ =?iso-8859-1?Q?trudSDekQLISNAK68ZZNuUEyhCrcauYPEIFdoeLyAME2XoH4yjhzlUAqeg?=
+ =?iso-8859-1?Q?6WeHyeJ5Gg7o4ZlaGktrLgvJAvSgnu3qrwbcyFb3JuLcCVgmQEiEAh/Eel?=
+ =?iso-8859-1?Q?j/t7Luq2+NGxl0GZKJKTjmZrF1m02lsgm7d6IcyAkaMc0ZZwkPBHhMv6zc?=
+ =?iso-8859-1?Q?03PlwFpiKJ2nTXvn8leTDdQRk7oaQoGUinpc/gn6maNLX9iz3IU+XvY9ad?=
+ =?iso-8859-1?Q?w8iHYQEuiqOEmUa2WRoa6hGsfJAFReziluns43NgHbyWR0zPsWSsPq8frF?=
+ =?iso-8859-1?Q?7uOexzNagoQRCfeRzij+pqjfPeTceTVx+0+uk7KW1OwwYRQabWJIsbv+4H?=
+ =?iso-8859-1?Q?+MqsxlMMiTk93jtWZFNGEfCAA1/zRhOSvdoXuWmCxKyYmoosm/cVNCPa2X?=
+ =?iso-8859-1?Q?te8qWXFF0tTsJSKRWxUSWS9XxS92zhKlbHo3agSW9wcCp+o2/FjmTCYLmF?=
+ =?iso-8859-1?Q?7MWCmaRSoUYx9TLHzp1IKYh8Ec/xFoJT7o4VDEshqL2KfbJV/x3cvmHSaE?=
+ =?iso-8859-1?Q?uaDH0qX6EtHjZUdErQFs5y3ZQiNvxEMqOxuyNmWCtxB9PaEawy+dWr+vdt?=
+ =?iso-8859-1?Q?YZbsD51H/2fWNhZQfvo30OONZVXuKdcRmQn7HjtZ+VhdJhazgoY4bWykUO?=
+ =?iso-8859-1?Q?Oo7hwPBGOIo8nw/AmQM6/dOLJfXMnuka6Pub0rvilRLAp3D/9Aykx5Izl1?=
+ =?iso-8859-1?Q?dIRu86bf40gPuwnvM/4lhfEDr5px0ITkuEdx9GOBJUtn9tI65LiQgOamcL?=
+ =?iso-8859-1?Q?oGe0n2ljx1dIBkK6+ctL8Q8j/K+fBnj/WQmWeGII7952iY1bray9o0332F?=
+ =?iso-8859-1?Q?4g9wY0E54GFQVCJJEt3nPTRxSQPJXToyiIYOj4DmBT9Y1fQgLNX7ODD6Rk?=
+ =?iso-8859-1?Q?5WqlCFZvUTvV0ZzKAfbbDz9TB9F3VupFnnrBMmwptrsSKOAAXVGD8fpogU?=
+ =?iso-8859-1?Q?GrYXnQAdwofGckRWely081T9ObeoPa3bx83yEyaKfBXkG/NbAw0QuJI19n?=
+ =?iso-8859-1?Q?Q6uOYQGpXWogYb/k7+gM3iLBvcblR7J2iWmsoePxm4ZWJ8w6jnNQXNmgwr?=
+ =?iso-8859-1?Q?xGnixoCbuvQQ4fYlrKLOEpQO56gWth79LJReIVGD72Whjzc8ZWgEaPIFkX?=
+ =?iso-8859-1?Q?tYWXwGhr8O1r8uxXinikEzqXQggSPN0ucHbGGOlnrnElNwEsK4WNARNRZB?=
+ =?iso-8859-1?Q?X2zdERRNWX9SRRg+wz7+dzXEi5fuDzU+ng+QDMt065KF7l0pi4HVE39nvP?=
+ =?iso-8859-1?Q?gb17WKVPp9b37sNTymlvu2bHysUEyAnUrZTZu5+tm1oYHAMqegnY87wcbt?=
+ =?iso-8859-1?Q?NzeCFd5R9AFQTIBjT0NLEHwBMVshzMiRgFW6NDEsPaEI/1GABYC+GdAGj4?=
+ =?iso-8859-1?Q?JeAmga9saaY4qIKH5oXlqn0MrmmMRhp+dqEbhYoxuQKoENMR+6vsV2IttW?=
+ =?iso-8859-1?Q?XiOYT7X0SRUYPS8mUIACL07UiG8jvGyDJktjEtdDTGY9l5FHQjw1OmzCOd?=
+ =?iso-8859-1?Q?FojswevLKGFgO46n/BhDy+TiIZnQi3NvbUT/3wPoX+zigD7hUz58DtNWA0?=
+ =?iso-8859-1?Q?qiHfg78W/MQYbGpECXbf2U+vt4P+Miv9yjH5lpmg5gOBxBTzuIjFo+83bz?=
+ =?iso-8859-1?Q?1Cx89sheDmWSEoAF5+rF0NN7jw18rGqhkcjRPAti9chr9cYVXJMv?=
+X-OriginatorOrg: valinux.co.jp
+X-MS-Exchange-CrossTenant-Network-Message-Id: f2025f98-22db-469d-06f7-08def29768b4
+X-MS-Exchange-CrossTenant-AuthSource: TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Aug 2026 02:13:35.8269
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Aug 2026 02:15:24.4609
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
+X-MS-Exchange-CrossTenant-Id: 7a57bee8-f73d-4c5f-a4f7-d72c91c8c111
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 50aiWmVh2sX+Dhp2kFUPibOONK3mAavGOYG8cj7c8SfDPAgE6MyfxM2Toj42HUBqgwTSzPbv1kF/jLJgcT+PAWeMiouIt5DOi0XxfCUDm2U=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH3PR11MB7868
-X-OriginatorOrg: intel.com
+X-MS-Exchange-CrossTenant-UserPrincipalName: 6iMhq/R05A8W6OXGmzsikKVF50iINxg+XVJEbJdL7pfU35G+thwyVTBO10E8tWH2fa/TPLrXY67ta5Q7OOy0Lg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: TY7P286MB5326
 
-On Tue, Aug 04, 2026 at 07:29:47PM +0000, Srirangan Madhavan wrote:
-> Move the low-level HDM decoder programming helpers from hdm.c into
-> resource.c so they can be shared by later reset restore code.
+On Tue, Aug 04, 2026 at 03:52:29AM +0000, sashiko-bot@kernel.org wrote:
+> Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
+> - [High] Releasing a single delegated channel with `quiesce=true` on eDMA v0 hardware causes a data race on `engine_en` and incorrectly shuts down the entire DMA direction, disrupting all other local channels.
+> --
 > 
-> Keep the existing decoder commit flow and register programming sequence
-> unchanged. This patch is intended to be a mechanical move. Follow-on
-> patches update the helper interface for reset restore.
+> --- Patch [4]: [PATCH v6 4/6] dmaengine: dw-edma: Add delegated channel request helpers ---
+> commit 0987248b986738e4870e25b1f36d8c9f2eb69d8b
+> Author: Koichiro Den <den@valinux.co.jp>
 > 
-> Signed-off-by: Srirangan Madhavan <smadhavan@nvidia.com>
-> ---
->  drivers/cxl/Kconfig         |   4 ++
->  drivers/cxl/core/Makefile   |   1 +
->  drivers/cxl/core/core.h     |   2 +
->  drivers/cxl/core/hdm.c      | 124 +-------------------------------
->  drivers/cxl/core/resource.c | 138 ++++++++++++++++++++++++++++++++++++
->  drivers/cxl/cxl.h           |  41 -----------
->  include/cxl/cxl.h           |  45 +++++++++++-
->  tools/testing/cxl/Kbuild    |   1 +
->  8 files changed, 191 insertions(+), 165 deletions(-)
->  create mode 100644 drivers/cxl/core/resource.c
+> dmaengine: dw-edma: Add delegated channel request helpers
 > 
+> This commit adds DesignWare eDMA-specific helpers to request and release
+> hardware channels for delegation to a remote host. The release helper
+> supports quiescing the channel before restoring default routing and
+> releasing the DMAengine reservation.
+> 
+> > diff --git a/drivers/dma/dw-edma/dw-edma-core.c b/drivers/dma/dw-edma/dw-edma-core.c
+> > index 1f893dc54c793..4c0d2bba755b5 100644
+> > --- a/drivers/dma/dw-edma/dw-edma-core.c
+> > +++ b/drivers/dma/dw-edma/dw-edma-core.c
+> [ ... ]
+> > +void dw_edma_release_delegated_chan(struct dma_chan *dchan, bool quiesce)
+> > +{
+> > +	struct dw_edma_chan *chan;
+> > +
+> > +	if (!dchan)
+> > +		return;
+> > +
+> > +	chan = dchan2dw_edma_chan(dchan);
+> > +	if (quiesce && dw_edma_core_ch_quiesce(chan))
+> 
+> [Severity: High]
+> Does releasing a delegated channel with quiesce set to true unintentionally
+> disrupt all other active local channels in the same direction?
+> 
+> If an endpoint driver uses some channels locally while delegating others to a
+> remote host, this call to dw_edma_core_ch_quiesce() appears to escalate to a
+> direction-wide shutdown on eDMA v0 hardware:
+> 
+> drivers/dma/dw-edma/dw-edma-v0-core.c:dw_edma_v0_core_ch_quiesce() {
+>     ...
+>     return dw_edma_v0_core_dir_off(chan->dw, chan->dir);
+> }
+> 
+> dw_edma_v0_core_dir_off() forcefully masks interrupts for all channels in the
+> direction and locklessly clears the engine_en register via
+> dw_edma_v0_core_engine_disable():
+> 
+> drivers/dma/dw-edma/dw-edma-v0-core.c:dw_edma_v0_core_engine_disable() {
+>     ...
+>     SET_RW_32(dw, dir, engine_en, 0);
+> }
+> 
+> Since the per-channel delegation API does not enforce exclusive ownership of
+> the direction, does this cause a data race and abort ongoing DMA transfers on
+> unrelated active local channels?
 
-Hi Srirangan,
+That does not happen with the current consumer.
 
-A bit of deja-vu here but on a different file this time.
+Patch 3 documents that the caller must own the whole provider sharing group and
+stop peer programming before reclaim. pci_epf_dma follows it, ie. for eDMA
+unroll and HDMA compatibility maps, it rejects partial delegation of a
+direction. Native HDMA quiesce is per-channel.
 
+A future consumer could miss this rule, yes. But adding group tracking to this
+generic per-channel API feels too much. I think the documented caller
+requirement is enough and keeps the design simple.
 
-snip
+Best regards,
+Koichiro
 
-> diff --git a/drivers/cxl/core/Makefile b/drivers/cxl/core/Makefile
-> index ce7213818d3c..0df4178bbbaa 100644
-> --- a/drivers/cxl/core/Makefile
-> +++ b/drivers/cxl/core/Makefile
-> @@ -1,5 +1,6 @@
->  # SPDX-License-Identifier: GPL-2.0
->  obj-$(CONFIG_CXL_BUS) += cxl_core.o
-> +obj-$(CONFIG_CXL_HDM) += resource.o
->  obj-$(CONFIG_CXL_SUSPEND) += suspend.o
-
-We can't add resource.o to both the built-in set above, and to
-cxl_core-y below. The mock cxl_core.ko must not build an object
-that is already in vmlinux. resource.o gets compiled twice and
-modpost rejects the duplicate exports like this-
-
-$ make M=tools/testing/cxl/
-ERROR: modpost: cxl_core: 'cxl_rwsem' exported twice. Previous export was in vmlinux
-ERROR: modpost: cxl_core: 'cxl_commit_start' exported twice. Previous export was in vmlinux
-ERROR: modpost: cxl_core: 'cxl_commit_wait' exported twice. Previous export was in vmlinux
-ERROR: modpost: cxl_core: 'cxl_hdm_decode_decoder' exported twice. Previous export was in vmlinux
-
-So, remove from tools/testing/cxl/Kbuild below.
-
-To catch this, run the mock build after any change to
-drivers/cxl/core/Makefile or tools/testing/cxl/Kbuild:
-  $ make vmlinux modules
-  $ make M=tools/testing/cxl/
-
-> diff --git a/tools/testing/cxl/Kbuild b/tools/testing/cxl/Kbuild
-> index 2be1df80fcc9..6c09932587ce 100644
-> --- a/tools/testing/cxl/Kbuild
-> +++ b/tools/testing/cxl/Kbuild
-> @@ -60,6 +60,7 @@ cxl_core-y += $(CXL_CORE_SRC)/memdev.o
->  cxl_core-y += $(CXL_CORE_SRC)/mbox.o
->  cxl_core-y += $(CXL_CORE_SRC)/pci.o
->  cxl_core-y += $(CXL_CORE_SRC)/hdm.o
-> +cxl_core-y += $(CXL_CORE_SRC)/resource.o
->  cxl_core-y += $(CXL_CORE_SRC)/pmu.o
->  cxl_core-y += $(CXL_CORE_SRC)/cdat.o
->  cxl_core-$(CONFIG_TRACING) += $(CXL_CORE_SRC)/trace.o
+> 
+> > +		dev_warn(chan->dw->chip->dev,
+> > +			 "failed to quiesce delegated %s channel %u\n",
+> > +			 chan->dir == EDMA_DIR_WRITE ? "write" : "read",
+> > +			 chan->id);
+> > +
+> > +	scoped_guard(spinlock_irqsave, &chan->vc.lock)
+> > +		chan->irq_mode = dw_edma_get_default_irq_mode(chan);
+> > +
+> > +	dma_release_channel(dchan);
+> > +}
+> 
 > -- 
-> 2.43.0
-> 
+> Sashiko AI review · https://sashiko.dev/#/patchset/20260804033855.2115817-1-den@valinux.co.jp?part=4
