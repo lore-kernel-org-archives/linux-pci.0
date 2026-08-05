@@ -1,45 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 896F03C768B
-	for <linux-pci@vger.kernel.org>; Wed,  5 Aug 2026 16:50:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7569D4315A
+	for <linux-pci@vger.kernel.org>; Wed,  5 Aug 2026 16:50:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785948646; cv=none; b=cXbr6m+3zN4R96Jii84lW04VkZkLEh4xNTFeyQxmqlf8WEQv+DppkNOeZltVD4oLZTlJNdXLxIA501c+IS2mH+KAL4KHg0u+htMTSI5LnvD7yHsPh+L0lyCOgWoQVZpnN9rOJrNtDa+SxK5h8fSVSCOtVrY/ypzeEbxwCEYycc0=
+	t=1785948646; cv=none; b=UwPG3BRXr9wQgy3xNk7uWGXV/lWFhjK95h4ehyup9XC8gTdF0mYuEIhRNtJdV388iXrPgQdo+xvWwFcesis2LeXWl6HzrR6jr9KT33kdQfbDi9CQAP8QtDt0wA3a1z3xMQYJlO03SS7YvpLpy/GLOCTeuIuJj22DGa0LYfZDogc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1785948646; c=relaxed/simple;
-	bh=grqY32JNCIxsC2tvz4cPccskguZusY8o2AWDy6Qa9/k=;
+	bh=evBwSUZay5gC27rbHzX6q0tL3oq0Q7NRLU+jfDOR38k=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=JAzPBQuQ7DFSn3HTef9TCiemGveNJ1uPUw0ERzqteTiTTSXaWCEg+5TlvOQW/oTBQaStfb6qf6TeBJzcSuBRKvnT9M6zfxmQkQ3d5vRJBJj5g9Wfr7XfMjkZ837zCv8auLv/j7jLQ8kcUIacAgpG0KXhCz4oncUZ0VypsrW4kNg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PC0KKQUv; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=sPOl4CZ7i70s6Ojeplj0bNQfbCKa5CVi1SJ945NxT8tKaVaFphpNfVkyytCYEXsbiHgdRSA1fPklXWAfh4eAwfkSF/wM3UOHp8j9MRwPs1F/UoEBvEmAIT9kdtzZAUJug2iBOMXTk5ChzxA7mqirhi2iVhGQmDYWeowdaWSE9Jc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NQsP2bWB; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PC0KKQUv"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0F7161F000E9;
-	Wed,  5 Aug 2026 16:50:43 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NQsP2bWB"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BA6741F00A3A;
+	Wed,  5 Aug 2026 16:50:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785948644;
-	bh=P2L6oRPUJO/v08DM1Y+l9EsgkljWMl9aO19tJttgYC0=;
+	s=k20260515; t=1785948645;
+	bh=MoasSD73pAI5Xdm0WX/ZbP8bYG7kfU/musfgvZMBGJA=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=PC0KKQUv+HPlTrpkmBkx+Mf0isYy4kSpmhXtCBsfJvFSj/uhV3Qepzhq+kyzbqjOv
-	 4pqO2S0+s0JNNdNxpvaGnEj3ybG5TaHlQGvTvx6V2X5JRRvvcvN3oyRxPD+gSqFmmA
-	 J4jY664TyK2mZAqTpcNwEdHKxr899rWWqiEq5EplMuEUzYNxPHPPVdwoSsszY19QX7
-	 Eu4BIft28yNxfLpgDhLkiWQQfovaLTHgjuDLkm0AosdlboW2PHqFbUHdT0Zmy7310R
-	 43MR4N2BE4Z7ul0wYsqpoRFuF8EPKBe6eGHFHjTmRjIoGz5QBMwPZRfvyakCcLOlT1
-	 JQ0THy8c1ncDQ==
+	b=NQsP2bWBFzgjdfTfQch0/gVnYIpUiBFENaRzqfkizRpeuucyL0ZzxXEapxPm+fQjI
+	 fMv/TLd7y2yrl/RuwJvIlXku5rdqe+uCA2BUghzkymu7yQNAFkDx3CUeuoGzoKJZbI
+	 MYektPRDjPlTCb7QaL0Cb/ylEj1i5ll8G2iZBL9mnLPjXjiHmfzCs4jN4bLV+0bQ03
+	 SQ/Gq+Ib+A8zCwrLEuRCt4yCoOxK5O7ousOm2MBrMa5TGVr2DRlGpAsKVzYYsLr1zQ
+	 o+6n/NCq1oUK97pyLb7ZD/NXjOFQOnnmiTQntKlGXkKOpCAbzf5rGZ7AcT/xaXtTFp
+	 dCOejhLdRL3AQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 11/16] rust: io: register: support fixed offset
- register without bitfield
+Subject: Re: [PATCH v2 01/16] rust: io: add static `cast()` method for views
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Gary Guo" <gary@garyguo.net>
-Cc: "Alexandre Courbot" <acourbot@nvidia.com>, linux-pci@vger.kernel.org, ojeda@kernel.org, dri-devel@lists.freedesktop.org, "Danilo
- Krummrich" <dakr@kernel.org>
-In-Reply-To: <20260805-typed_register-v2-11-c3ca142220a0@garyguo.net>
+Cc: "Alexandre Courbot" <acourbot@nvidia.com>, linux-pci@vger.kernel.org, dri-devel@lists.freedesktop.org, "Danilo
+ Krummrich" <dakr@kernel.org>, ojeda@kernel.org
+In-Reply-To: <20260805-typed_register-v2-1-c3ca142220a0@garyguo.net>
 References: <20260805-typed_register-v2-0-c3ca142220a0@garyguo.net>
- <20260805-typed_register-v2-11-c3ca142220a0@garyguo.net>
+ <20260805-typed_register-v2-1-c3ca142220a0@garyguo.net>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 05 Aug 2026 16:50:42 +0000
-Message-Id: <20260805165043.0F7161F000E9@smtp.kernel.org>
+Date: Wed, 05 Aug 2026 16:50:44 +0000
+Message-Id: <20260805165044.BA6741F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -48,99 +47,76 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [Low] The `register!` macro documentation provides an example defining a =
-FIFO register (`TX_FIFO`) with a `u32` type. This violates the subsystem gu=
-idelines which mandate that FIFOs must use stream accessors (no byteswappin=
-g). Using a `u32` register type implies standard register access (e.g., `wr=
-itel`), which will byteswap on big-endian architectures and corrupt stream =
-data. Additionally, the macro's syntax rule `$ty: ident $(:: $path_frag:ide=
-nt)*` restricts the type to paths, preventing developers from directly spec=
-ifying a byte array (e.g., `[u8; 4]`) as the type to properly model a bytes=
-wap-free stream.
+
+Pre-existing issues:
+- [High] Soundness hole: `KnownSize` is an unsealed safe trait, but its con=
+stants and methods are relied upon for memory safety in unsafe projections.
 --
 
---- Patch [11]: [PATCH v2 11/16] rust: io: register: support fixed offset r=
-egister without bitfield ---
-commit a13a899311e93c249f5925eff4ce304f82a4cb69
+--- Patch [1]: [PATCH v2 01/16] rust: io: add static `cast()` method for vi=
+ews ---
+commit 5783172643ee35d4a1864537f0c76cc527b2cad9
 Author: Gary Guo <gary@garyguo.net>
 
-rust: io: register: support fixed offset register without bitfield
+rust: io: add static `cast()` method for views
 
-Add a rule to allow creating `IoLoc` in `regiser!()` using an existing type
-and not create a bitfield. Add an example to demonstrate this for FIFO
-registers.
+This commit adds a compile-time checked cast() method for I/O views in the
+Rust subsystem. It uses minimum size and alignment information to statically
+verify that the target type is of the same or smaller size and properly
+aligned, allowing conversion without runtime checks.
 
-> diff --git a/rust/kernel/io/register.rs b/rust/kernel/io/register.rs
-> index dc800fc711722..49a61da106c7d 100644
-> --- a/rust/kernel/io/register.rs
-> +++ b/rust/kernel/io/register.rs
-
-[ ... ]
-
-> @@ -499,6 +516,19 @@ fn into_io_op(self) -> (FixedRegisterLoc<T>, T) {
->  /// In this example, `SCRATCH_BOOT_STATUS` uses the same I/O address as =
-`SCRATCH`, while providing
->  /// its own `completed` field.
->  ///
-> +/// If you do not wish to have a bitfield defined, you can also create a=
- register using an existing
-> +/// type.
-> +///
-> +/// ```no_run
-> +/// # use kernel::io::*;
-> +/// register! {
-> +///     base: Region<0x1000>;
-> +///
-> +///     /// TX FIFO register.
-> +///     pub TX_FIFO: u32 @ 0x00001000;
-
-[Severity: Low]
-Does this example promote an anti-pattern for FIFO access?
-
-Using u32 for a FIFO implies standard register I/O accessors (like writel or
-readl), which will perform byte-swapping on big-endian architectures.
-According to the I/O accessor subsystem guidelines, FIFOs should use stream
-accessors without byteswapping to prevent data corruption.
-
-Would it be better to avoid using a FIFO as the example here, or use a type
-that enforces stream semantics?
-
-> +/// }
-> +/// ```
-> +///
->  /// ## Relative registers
+> diff --git a/rust/kernel/io.rs b/rust/kernel/io.rs
+> index a38c20ba3d23e..adfc555de7d0d 100644
+> --- a/rust/kernel/io.rs
+> +++ b/rust/kernel/io.rs
 
 [ ... ]
 
-> @@ -826,6 +856,23 @@ fn into_io_op(self) -> (FixedRegisterLoc<T>, T) {
->  macro_rules! register {
->      (base: $reg_base:ty;) =3D> {};
-> =20
-> +    // Creates a register at a fixed offset of the MMIO space with provi=
-ded type.
-> +    (
-> +        base: $reg_base:ty;
-> +        // `$ty` cannot be `:ty` due to follow-set restrictions.
-> +        $(#[$attr:meta])* $vis:vis $name:ident: $ty: ident $(:: $path_fr=
-ag:ident)*
+> +    #[inline]
+> +    fn cast<U>(self) -> <Self::Backend as IoBackend>::View<'a, U>
+> +    where
+> +        Self::Target: FromBytes + IntoBytes,
+> +        U: FromBytes + IntoBytes,
+> +    {
+> +        let view =3D self.as_view();
+> +        let ptr =3D Self::Backend::as_ptr(view);
+> +
+> +        const_assert!(size_of::<U>() <=3D Self::Target::MIN_SIZE);
+> +        const_assert!(align_of::<U>() <=3D Self::Target::MIN_ALIGN.as_us=
+ize());
+> +
+> +        // SAFETY: We have checked bounds and alignment, so this is a va=
+lid projection.
+> +        unsafe { Self::Backend::project_view(view, ptr.cast()) }
+           ^^^^^^
 
-[Severity: Low]
-Does this macro rule prevent developers from specifying inline byte arrays
-(like [u8; 4]) as the register type?
+[Severity: High]
+This is a pre-existing issue, but does relying on KnownSize constants for
+memory safety create a soundness hole?
 
-Since the type matcher is restricted to identifiers and paths, it seems
-developers wouldn't be able to directly define a byte array to properly mod=
-el
-a byteswap-free stream without defining a separate type alias first.
+KnownSize is an unsealed safe trait that provides the constants and methods
+relied upon for these safety guarantees. Because it is a safe trait, safe
+code could provide an incorrect implementation for a custom dynamically siz=
+ed
+type (DST), specifying an excessively large MIN_SIZE or size().
 
-Could this be adjusted to support array syntax, or is the limitation strict
-enough to require type aliases for stream buffers?
+If this happens, the bounds checks in cast() or try_cast() would pass based
+on bogus values from the safe trait. The unsafe project_view() projection
+would then proceed, potentially creating an out-of-bounds pointer projection
+and leading to memory corruption.
 
-> +            $(@ $offset:literal)?
-> +            $(=3D> $alias:path $([$alias_idx:expr])? )?;
-> +        $($rest:tt)*
-> +    ) =3D> {
+Since implementing a safe trait shouldn't be able to trigger undefined
+behavior in safe code, should KnownSize be marked unsafe or sealed to preve=
+nt
+unsound implementations?
+
+> +    }
+> +
+>      /// Try to convert into a different typed I/O view.
+>      ///
+>      /// A runtime check is performed to ensure that the target type is o=
+f same or smaller size to
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260805-typed_regi=
-ster-v2-0-c3ca142220a0@garyguo.net?part=3D11
+ster-v2-0-c3ca142220a0@garyguo.net?part=3D1
