@@ -1,223 +1,192 @@
-Received: from OS0P286CU011.outbound.protection.outlook.com (mail-japanwestazon11010044.outbound.protection.outlook.com [52.101.228.44])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC85C436355;
-	Wed,  5 Aug 2026 11:28:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.228.44
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785929296; cv=fail; b=exdhl0dAWjv+HUokymaNSJk70R/a6S/JvMcLcEBrAAwrCFW2RoyYXbL6TPz45shaqeGwDoDQpx7mfjaL/NRz7jaEctNMDIddO+mP1rPrzY1x965TkC5cPPGmy708cJ57qD6jLYv0AfRAWagkzsiRVhoUjfdkObwpD9XfWuFQix4=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785929296; c=relaxed/simple;
-	bh=ZAPEmzSd81tTQdSE+wL6LcNJb1wIruVA/coSMwiufoU=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=fVegU9yWOSfWCuF99298AocRSFSX+5LZO15r+s/R3oitjL1IPR8D5d401buUlXavev/cWZ+nlAvcSYuNCBTZ9LTIXwix8DJOqbG+cgXTtEVlSVW7kV5/3vWXmkXK6vTT9TZrxaHe0UKxBR8lvv/knG5y/v357uWrGegPShVeUpE=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nec.com; spf=pass smtp.mailfrom=nec.com; dkim=pass (2048-bit key) header.d=nec.com header.i=@nec.com header.b=HcQ1m5gy; arc=fail smtp.client-ip=52.101.228.44
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nec.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nec.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B595449B20;
+	Wed,  5 Aug 2026 11:57:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1785931061; cv=none; b=HRrjP2pcb3QrEuG+cyl8Fhp7DVOgVCyvIZ96zTeRIC570kKCglasetfzcORbPMyl6Whgyk4rha8OCHnvmN9bX5QvlC8NIlqXG/H3DtHC39FR1Ki2SXb1e2h4/TVzrOQEYhjNrGeogAky/ecqq98dK3ptl+jE5DLhKkSiRGeEX4Q=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1785931061; c=relaxed/simple;
+	bh=JxlEQYuD/RMUaMbTTKAWKthJxwX173QM/DF1i5aw3Fs=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=s7MG89pbPenoKLbCj44iC2m9dc6O843tEHsgoQlhm/hlixCe2SzOM4cBZQ+92Y7z8HY7fHZuFP7RXN99Y/kH3PelpboqyA1Mf4PrtuzibxZ6WgzzFqxebJFfR5ZvpRbVopvZyIfZ1vtLcmPsd5I6/2+XNf7izm7vGEdzXOyXq+I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=i+bopj1q; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=nec.com header.i=@nec.com header.b="HcQ1m5gy"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=oL+XOVwXYBQrILej7Opf0J5XUAz5v3wNyM7jO+1ju3nSHVpwbn+OxRzht81dcjVP7lBHQsiqXbY+ESMCUskRSw13vSAxEU8lHGN9CuvbllETjkKmeckOPDn4rYMgDU03fwJxxGSYGPBCYc6POXgeimzLRolOG04S+1qK+pO1L82nm3BdL7M1Mprns5rB5W8vpAdLEx/qwZN+CKHNt6YdPT1FocbTh5ROVgVurcc4R+aVOOAbM7wIb7sefNKj42RfQiyEtAjRqVLCph2R+gBVAvGGeN8EQbeTe0FjU4kTX6yVAvF2t+cz3sRX4z5TRBTrz3NNhaUSLtt0DEcKE8AhCQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=ZAPEmzSd81tTQdSE+wL6LcNJb1wIruVA/coSMwiufoU=;
- b=sU1yT/iBV5rJ/0kC+NdjHsMC0bGlIs6pKXkDZZGwnozwkVeIRzxFGy1E0y29itiG907qKHRo1WgfOWa9O7grT78jA2ykcDbg47rH6QPF/iv330LJCj+Kt9T3OwTGi25u6Ptt1lkxtIsSLH4G9Ac1mRt4c3CFg8sOHBUvjOe/SYgkFTWegBbRzXOaD5Qr7bmDslDJvLVSDcBOKstwABiP1TD9A0jyAnnHS0tS1S+eMGsayvsR7qLkyAaYfhBkUlmbXW2/Orpbx+XFZA0QoZtCHtsC/spqrv49kBDBE2kfPHT3LU7mSQPdbCVnE3aH9J9DH/0Pp3vJeB9/TJgwvsGK8w==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nec.com; dmarc=pass action=none header.from=nec.com; dkim=pass
- header.d=nec.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nec.com; s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ZAPEmzSd81tTQdSE+wL6LcNJb1wIruVA/coSMwiufoU=;
- b=HcQ1m5gyxX0CyYpWLG52F0A/IyRg19AuAlWgJsxnO0RvJ90okokCyT40Z45RBHCYkuSPHsVu8l2d/SGdbigDDCfpKtzNK3iU9aGVqJTNYYEJjSrPhBw18iZWidjqhHcA2aLK2SSVtQwf1RZ9NTndiQ63Iq7OJv7gqstUzZrYx5A8GTQj4ORs1sG++4gmIR1DGX6qJNH3rjOKFng7JxusYfUvC2MIVpiag/P8Dmj3v/ELzYAzPZegr1XcbzFNxiAibe9K+ttOPZABEDjvh5W3CfFHGQO4oHXUHrt63YCrmreuqv6531gJAaA44cQ6+Qn3rL3UTrsWfoUAKyUyNo8x6w==
-Received: from TY6PR01MB17394.jpnprd01.prod.outlook.com (2603:1096:405:362::9)
- by OS3PR01MB9318.jpnprd01.prod.outlook.com (2603:1096:604:1c6::13) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.270.19; Wed, 5 Aug
- 2026 11:28:05 +0000
-Received: from TY6PR01MB17394.jpnprd01.prod.outlook.com
- ([fe80::4c13:be46:256e:c1d5]) by TY6PR01MB17394.jpnprd01.prod.outlook.com
- ([fe80::4c13:be46:256e:c1d5%5]) with mapi id 15.21.0292.018; Wed, 5 Aug 2026
- 11:28:05 +0000
-From: =?utf-8?B?S09ORE8gS0FaVU1BKOi/keiXpOOAgOWSjOecnyk=?=
-	<kazuma-kondo@nec.com>
-To: "Rafael J. Wysocki (Intel)" <rafael@kernel.org>
-CC: "bhelgaas@google.com" <bhelgaas@google.com>, "linux-acpi@vger.kernel.org"
-	<linux-acpi@vger.kernel.org>, "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>, "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] ACPI: PCI: Avoid misleading _OSC messages for non-PCIe
- host bridges without _OSC
-Thread-Topic: [PATCH] ACPI: PCI: Avoid misleading _OSC messages for non-PCIe
- host bridges without _OSC
-Thread-Index: AQHdIMw9rF/Py4ZE00CoCPvRVB+Hj7aHWmyAgATDPQCAABx9AIADHzcA
-Date: Wed, 5 Aug 2026 11:28:05 +0000
-Message-ID: <d0355280-96dc-4e5e-bfd3-f0c3f77acfa3@nec.com>
-References: <20260731090820.493064-1-kazuma-kondo@nec.com>
- <20260731092147.B7C531F00A3F@smtp.kernel.org>
- <c8b237c8-6e2a-4648-99ea-a28fdd2404d4@nec.com>
- <CAJZ5v0iNndQe9q4sK-4b6ZBH3ZRPTE+6eTiNQRwVdtazi=KvCQ@mail.gmail.com>
-In-Reply-To:
- <CAJZ5v0iNndQe9q4sK-4b6ZBH3ZRPTE+6eTiNQRwVdtazi=KvCQ@mail.gmail.com>
-Accept-Language: ja-JP, en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nec.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: TY6PR01MB17394:EE_|OS3PR01MB9318:EE_
-x-ms-office365-filtering-correlation-id: b2a330c2-4bfb-4747-97cb-08def2e49e2f
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam:
- BCL:0;ARA:13230040|366016|1800799024|376014|23010399003|18002099003|22082099003|11063799006|56012099006|4143699003|38070700021|10067099003;
-x-microsoft-antispam-message-info:
- vvJsFYJpAv7n9ig2jMa38AZnjQfa/ToDunl12TonDou/TMRe2Orc3ZipYqSpI9BqQPcqq0Bg5prvVAIWm05FcSWfzSKkIqLRqg2azjo0KEZocWpl4p9UtVern/+/zzoXu5xPRaBxAPR4xQSZHg6Ty+1q1GzBsLiZeEA9074C+teDd++B0j+p2G29eZi/tKySRPXDIn7O2Z0sEttG7iJNWp+9sNgq31yOVpVZFEMUJ6d4jgyUgUlB4sOab3fJ3HcQ9I45kf4/vqnIjMcAsjTWPM/M1eMpQB9adFTpgwn9HlBP22LboucgYHjqIY69UWOuRQAOsOTch6uMrccnrGeShXDlVM3RnIaznG2J2nwDLcoHG4RWeDSok3BZ9WGjV5FMzLwIyOFeSkFYnwtVcIcQFjBjaTvL6qDcTtgkEFYQFRFT+pu+pm8Mk/BxHjbZUn0usKjDlSyJZjYPacv41w+f4fedDgL2PDj9jqEPWY30nwIvtgYbOkwq8rKWX7JtJ9EL3I2Egt0qdUMrFALTRBSVjSjpyYJgnqCCCaCWyRPuePVNhE1qGVqZe0EY5NyY4JaCXum6Q4PrSwHS80PJdzHbIub6rRj1Eoox2bnGYAqKYseVya4VXHGzoZDB8rVif5qReFE5COLWpkaMTgUQT26LoYmtyJcMw6VPEMJHNwNxcBo=
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY6PR01MB17394.jpnprd01.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(376014)(23010399003)(18002099003)(22082099003)(11063799006)(56012099006)(4143699003)(38070700021)(10067099003);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?utf-8?B?T3VraGduYURTbS9xcE1PZE5kQ0tReDkzSkpYSWREQURsNXUraWhURDBCbUFB?=
- =?utf-8?B?VmNoN09nSWZqK0YrbFNybnc0d0VRYkE4dy9QczlsMXVRVjdlYkovM1FDb0k4?=
- =?utf-8?B?RWxzY0s3SThSejZBNmxpaEtxSks1V0E0WFpkbjd1M0g5a25jS3R4WmcyNjZa?=
- =?utf-8?B?b3RHZFUyL0REeHRhb1F0M09XS2x1TWlwcVZydVlmRVJYNzV6ZFpnRW04VEJw?=
- =?utf-8?B?ZmZRRmhZN0hhcVFmY29mZWtSTU1Hd2FBQlNJTkxCTzg4UkJaTkNpS3ZUcnRP?=
- =?utf-8?B?dE85OWlZbnhyZk1MNFh3OXNoWi8yOXFGNXNkWndOSjdGMUMyV2ZoczZtdURv?=
- =?utf-8?B?YkdhN0hQUGZDdHIveW9wdlZMa0NQOVluWGFTdlNwWmhFY2ZYcFBoS3Z0WTkw?=
- =?utf-8?B?Ly9hQUJhdTFZdlJzb3owQmt0R0h1Tk1COS91bHQvWDVCV2ZIeGRUWUs4aVZK?=
- =?utf-8?B?K2daK3FqMFdXVGgvU0VEejNON05BSEdwSG5uTXVROUx4dlZpc2JWN1UwQ0Rv?=
- =?utf-8?B?UEg5WGNLZFRUM1ZXV3JnK0xEQlh1Vk5YUFpBMlF3TTcwSnUrUEVrVTdVenNY?=
- =?utf-8?B?Y3AvUzhiS3RzZ2Z3ODkxMW1ialFXVlhqM1M1T2p2NjFMK1BwSWN2YmUvRkZU?=
- =?utf-8?B?ZHZQL2ZYbnFHSWtUU0hPakNLMG1wcGJkN1VTQnNwSVR5NnFCanVESU9tU3hJ?=
- =?utf-8?B?NURJakhyYzR3ZWhVM0RnUFJhZnFHZVh2dC9BNC93OFF1bkN5d3p6QWFUa3l0?=
- =?utf-8?B?dW9xalpIR2JXODhQVk92VnZpM1JnR1p4Y2Q5RzR5WjU4YXZOV3oxRFVEbmRV?=
- =?utf-8?B?YVM1eWtKSGFkWVZuZGp1UEtjQ0ZwOTJlM2RYUVEwMzc2Z1kxU3VzMU1JUzNp?=
- =?utf-8?B?VkE3UmYvZHBqMzNTT3RqZkxad0wwTUV0QWF0emJoMTNseHdMT2FoL2czbS9X?=
- =?utf-8?B?MFArL0puZzZZcWNkWGFBYjg4OVg5cHpRT2tDbnZPN25oclpyQklqVGFJbVdN?=
- =?utf-8?B?ZnZoN3ZnK0lLelQ2ZnlIdmpucGl0OUdtNzIzWGVHUHJUNFJkYW5xR1FFUGVH?=
- =?utf-8?B?WS9LQitEUHdoR3BhTEZ6dDVzMUwwaDZva05NTmtnclJhRjVva3ovem1qeVd4?=
- =?utf-8?B?UGtEazhKR0VrWUY4UWFVOWtFUmNBd3lhV3VDSTZJSDdJMTdKUEg1Q2NXWDZh?=
- =?utf-8?B?Z2w0OWxaRTRoSzVUcC9OcWttWFlxUkxXaU1udkxnWEU2NEdLYmVQWlRVOFpa?=
- =?utf-8?B?dGlwOEFCM2tvb1pqbmFyekJZcFpySmZqN2VLZ0JxbEVaTU5YdE5kTHptRHly?=
- =?utf-8?B?WURlRzJRQmpTMDg4UnJ6a0N4d283NVgvNStrUTBncHVEVERXZzB5cm1rcUx3?=
- =?utf-8?B?S1JpdlVSOVg0cFA5aWY3ckJUQUJCS0ZYWWluK29QNGZrYWxUdks0ajZ3ZUVO?=
- =?utf-8?B?enRmbGtkT0wvMFpOWEtjWkVTT0pmTVlnNWRURDA0cG14bkhuL2xveU1Bc2Ft?=
- =?utf-8?B?eFpjd2ZySFUySGZTTGFDdzAxdGxWeVVZdTQ1eVlzUmZtWjU1VzBVbERHNm43?=
- =?utf-8?B?aFZBUXNkaC9kbkRiamdaaWMwZHJnNllhZWJXUFg1WHAyQWZWZWQ1Z1R4NDFZ?=
- =?utf-8?B?TDlLN3pyY1NEM3NYcUFyb1Y4aSsvODN3L0VDK0pxeUd0bUt1azhBR3V5LzFN?=
- =?utf-8?B?L2JCRjRwTEtrck1tVHllN1oyMDVHS21qYlNGb2dBZUkyNFA3ejg2NVNqbjhJ?=
- =?utf-8?B?NDNrS29ab0xSMFczS0tya0JDcTZUOVlJdG1ZQzduTHl1MzNTUWdYdlFZd010?=
- =?utf-8?B?dGF4NkpybFU2K0VraTlCM1E5WnZKa1lES2lxUWErNnZsWTdYVjB4d29pTkI4?=
- =?utf-8?B?OUlvR3FYTWFtRWwzNTBIVFFHYktNWUpaNHRzcGpXdHVUdTZ1QzhRWVcrU2x0?=
- =?utf-8?B?NzEvNjlDeXFzREJMK0RHMVpBLzh5dGVHTVJaTVpGN1BKTFk2dEdka3RKL1JW?=
- =?utf-8?B?QkxjWnE3bWJWdjROYnRKQkZhVG5GaVhMU1AxL1JwZFFvWDFtL2lNcDBTR1BP?=
- =?utf-8?B?UHFpaWg3RUEwT3EwQ2ZXV3FiWWpGK01RVUp6TFZYa2RsMW9QOWFLTndxSmhB?=
- =?utf-8?B?VEt2UUhRaTJJUlFsbENvT3BjWjFyTzErK05ONmNiRnF2cmNJUWlYZ2VPekpY?=
- =?utf-8?B?UHozZHBOSWt6eE1zRUFpVkpEcjdCeVkwTUgxNXZzUEFGY2pCZFlSbHBDelNQ?=
- =?utf-8?B?MURZQ1pCYm1HM242OTlXdWlML1dyQTBiSUxzenBGdnBsbVZtRUtvTVl2V1Nw?=
- =?utf-8?B?S0RRNXVIeXphQmVhcmpSZ1k3bjFOSngybGdSOEFQSHZCZ3IydGg1dz09?=
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <B34B1FFC55C17D49A2C7CEA03D0735CC@jpnprd01.prod.outlook.com>
-Content-Transfer-Encoding: base64
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="i+bopj1q"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 54CAB1F000E9;
+	Wed,  5 Aug 2026 11:57:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1785931059;
+	bh=18CzF+TNYcC8Y8fgnqebRv8rsE1KTXFZ483SOTufpbk=;
+	h=From:Subject:Date:To:Cc;
+	b=i+bopj1q3cqmJQTG6AiyH02/P489Dk6RYPRaMU1z5dK6l/zqGlQnOAIAKOJd8DSlD
+	 hjYN7JGqWjGFRY4KWMvWwY1Ac+5b9+oWCwGuW8eA/gdKcfam3ZwYfK7Zy2iz9OfBO/
+	 qQjK2Hb9lFYUcb5AnQfRa0xe+wkL8srhBqM5MfPF6+rKVXFz0mxsfPjEVu9JXkU892
+	 r4v8zQ98oEJv6AyS31ULdt67cLFaizRgVDEAdbU8JWHklj77bMJIJqMx7p5/i+Zxp9
+	 z7pXaZ+r9QuipSCU2CLaqKhTWyDXgSESpmmS5B0mnaW0FeFULCkCBF1Rw8vRN26EH3
+	 Fi6b27PwYvBug==
+From: Thierry Reding <thierry.reding@kernel.org>
+Subject: [PATCH v9 0/5] PCI: tegra: Add Tegra264 support
+Date: Wed, 05 Aug 2026 13:57:19 +0200
+Message-Id: <20260805-tegra264-pcie-v9-0-fa2ed7350ae1@nvidia.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-OriginatorOrg: nec.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: TY6PR01MB17394.jpnprd01.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: b2a330c2-4bfb-4747-97cb-08def2e49e2f
-X-MS-Exchange-CrossTenant-originalarrivaltime: 05 Aug 2026 11:28:05.2966
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: e67df547-9d0d-4f4d-9161-51c6ed1f7d11
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: twgkxXg7B72GI6juIzwI/Oeir2ok3XeNlwmO/bDUu71f9Zlne9SoQB3wmNMHXqPMFsH8gNzaxQ/3lti5QAl0eg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: OS3PR01MB9318
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIAAAAAAAC/4XSS26DMBAG4KtErGvkGb+zyj2qqjIwSdwmQGxCW
+ 0W5e02olLQsukEe5O8fY+ZSJIqBUrFeXYpIY0iha3PhnlZFvfftjlhocl0gR80lRzbQLnrUkvV
+ 1IEaC+4pQNJ6bIps+0jZ83vKeX+Y6nas3qocpZNqxD2no4tet4QjTvjlbgAPNAXiJkNdKMmDDP
+ lCMX2WkJrS7zTvFlg5lF3fFlD3ig85PVFKKEpUBh/x/LR61BqGsUiUap0C6/7W86+WtjJJxhkB
+ I4Jw1ZDftGJrgy7o7zlzduUL9l6vMrfQWROWMa8yC6zvXy+46c2qqeuuNN3ZLC24eOJi/3Ezck
+ /HktNToFtzeuYHF4e307YIUKOsQXfWLX+eZiHQ651Eb5kEpjpSSv43aejXHcsM+/DuFeHpN577
+ v4sBGwPxbKimV2Kqqrp3ZdCmVp7M/5OjjLT+nVz4Rm16EYb1q6XNgPweVufv1G+Sox8TwAgAA
+X-Change-ID: 20260402-tegra264-pcie-e30abe23da07
+To: Bjorn Helgaas <bhelgaas@google.com>, 
+ Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+ Conor Dooley <conor+dt@kernel.org>, 
+ Thierry Reding <thierry.reding@gmail.com>, 
+ Jonathan Hunter <jonathanh@nvidia.com>, 
+ Karthikeyan Mitran <m.karthikeyan@mobiveil.co.in>, 
+ Hou Zhiqiang <Zhiqiang.Hou@nxp.com>, 
+ Thomas Petazzoni <thomas.petazzoni@bootlin.com>, 
+ =?utf-8?q?Pali_Roh=C3=A1r?= <pali@kernel.org>, 
+ Michal Simek <michal.simek@amd.com>, Kevin Xie <kevin.xie@starfivetech.com>, 
+ Thierry Reding <thierry.reding@kernel.org>, Aksh Garg <a-garg7@ti.com>
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org, 
+ linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ linux-arm-kernel@lists.infradead.org, Thierry Reding <treding@nvidia.com>, 
+ Manikanta Maddireddy <mmaddireddy@nvidia.com>
+X-Mailer: b4 0.15.2
+X-Developer-Signature: v=1; a=openpgp-sha256; l=4444; i=treding@nvidia.com;
+ h=from:subject:message-id; bh=JxlEQYuD/RMUaMbTTKAWKthJxwX173QM/DF1i5aw3Fs=;
+ b=owEBbQKS/ZANAwAKAd0jrNd/PrOhAcsmYgBqcyUrF3AVx3y+b0eqzDZgHBN8bJjaPFZjnLcd+
+ 1B1N5Kx4q2JAjMEAAEKAB0WIQSI6sMIAUnM98CNyJ/dI6zXfz6zoQUCanMlKwAKCRDdI6zXfz6z
+ oQtyEACdiZrGuVJeUEYcnmvcJA8HWr9ZsqT2QOhDX7Rd8O0iJlnrzv53ckk6TcIkVydY24w1rtF
+ 4O+wf/jAZeQdMhcKPBqiliwJxtSMFgO1P3wFr6OHOfo2kHgy5Txnn30iltGHVhvHZBxZfsQL2KH
+ vRNMB3aokcNigA6d0rBQq9v/QhBlSw0uhtOZO/LRO1BGIi4TSfe+PaqWZ+6Jgl7ukc8Ny6AB+fi
+ V+N8fla2lh1rgIsFzDDIZvTpIFOdJv6cGPagG7qItSwIJCbOimoh9hHSN3G7U2u3xYY66UbOHvH
+ rAYQ71dhGJG7fJUHw6YJns5TST25sjHlzhuJ+W6ztsPaDbfHmNGGBFVfHBOp2AnTUdOFDQoNjNj
+ avq+fzfB+c8hQv+jm8QyWXb9W+ZQIE2QvH3AxzcgqjqJeeRmd1/2z/chNoDtF0kkVZZJZ9G7V1y
+ A195MrRwlw4xmbOG60AyrS7xjmFbC3wJlJJ7lyuqhXMtYbxFlt/zQBgjMZn+riw31CRzHcfeSxo
+ hG80ihmAtNt8o6gToD/GbhcViKfMWsHluuQgfB0a8jZTwD9GvUtWWAZTtFbxssB1X/MTBhCfhI8
+ rwZpJSFSZzMuxEd5AriNNuyc3XfFzSjo4FG3d8pE0liRKndE3w22adzmtNVu96Fx2si3sBTzk2W
+ SFFJEU1jKNoOkng==
+X-Developer-Key: i=treding@nvidia.com; a=openpgp;
+ fpr=88EAC3080149CCF7C08DC89FDD23ACD77F3EB3A1
 
-SGVsbG8sDQoNCk9uIDIwMjYvMDgvMDMgMjA6NDcsIFJhZmFlbCBKLiBXeXNvY2tpIChJbnRlbCkg
-d3JvdGU6DQo+IE9uIE1vbiwgQXVnIDMsIDIwMjYgYXQgMTI6MDXigK9QTSBLT05ETyBLQVpVTUEo
-6L+R6Jek44CA5ZKM55yfKQ0KPiA8a2F6dW1hLWtvbmRvQG5lYy5jb20+IHdyb3RlOg0KPj4NCj4+
-IEhlbGxvLA0KPj4NCj4+IEkgcmVjZWl2ZWQgcmV2aWV3IGNvbW1lbnRzIGZyb20gU2FzaGlrbzoN
-Cj4+IGh0dHBzOi8vc2FzaGlrby5kZXYvIy9wYXRjaHNldC8yMDI2MDczMTA5MDgyMC40OTMwNjQt
-MS1rYXp1bWEta29uZG9AbmVjLmNvbT9wYXJ0PTENCj4+DQo+PiBPbiAyMDI2LzA3LzMxIDE4OjIx
-LCBzYXNoaWtvLWJvdEBrZXJuZWwub3JnIHdyb3RlOg0KPj4+IFRoYW5rIHlvdSBmb3IgeW91ciBj
-b250cmlidXRpb24hIFNhc2hpa28gQUkgcmV2aWV3IGZvdW5kIDEgcG90ZW50aWFsIGlzc3VlKHMp
-IHRvIGNvbnNpZGVyOg0KPj4+IC0gW0hpZ2hdIEVhcmx5IHJldHVybiBieXBhc3NlcyBBU1BNIGRp
-c2FibGVtZW50IGZvciBub24tUENJZSBhbmQgQ1hMIGhvc3QgYnJpZGdlcyB3aXRob3V0IF9PU0Ms
-IGNhdXNpbmcgYW4gdW5kb2N1bWVudGVkIGZ1bmN0aW9uYWwgY2hhbmdlIGFuZCBwb3RlbnRpYWwg
-aW5zdGFiaWxpdHkNCj4+PiAtLQ0KPj4+DQo+Pj4gLS0tIFBhdGNoIFsxXTogW1BBVENIXSBBQ1BJ
-OiBQQ0k6IEF2b2lkIG1pc2xlYWRpbmcgX09TQyBtZXNzYWdlcyBmb3Igbm9uLVBDSWUgaG9zdCBi
-cmlkZ2VzIHdpdGhvdXQgX09TQyAtLS0NCj4+PiBjb21taXQgZTY4ZDI5ZjY1M2ExYzM0ZjhiN2Iw
-OGJhYWE1NDhlMmZmMmQzNjYzZg0KPj4+IEF1dGhvcjogS09ORE8gS0FaVU1BKCAkQjZhRiMhIU9C
-Pz8gKEIpIDxrYXp1bWEta29uZG9AbmVjLmNvbT4NCj4+Pg0KPj4+IEFDUEk6IFBDSTogQXZvaWQg
-bWlzbGVhZGluZyBfT1NDIG1lc3NhZ2VzIGZvciBub24tUENJZSBob3N0IGJyaWRnZXMgd2l0aG91
-dCBfT1NDDQo+Pj4NCj4+PiBUaGlzIHBhdGNoIHNraXBzIF9PU0MgbmVnb3RpYXRpb24gZm9yIG5v
-bi1QQ0llIGhvc3QgYnJpZGdlcyB0aGF0IGRvIG5vdCBkZWZpbmUNCj4+PiBhbiBfT1NDIG1ldGhv
-ZCBiZWZvcmUgYXR0ZW1wdGluZyB0byBldmFsdWF0ZSBpdC4gSXQgYWltcyB0byBwcmV2ZW50IG1p
-c2xlYWRpbmcNCj4+PiBtZXNzYWdlcyBpbiB0aGUgbG9ncyBvbiBzb21lIEludGVsIHNlcnZlcnMg
-d2hlcmUgdGhlIE9TIGFwcGVhcnMgdG8gbmVnb3RpYXRlDQo+Pj4gd2l0aCB0aGUgcGxhdGZvcm0g
-ZGVzcGl0ZSB0aGUgbGFjayBvZiBhbiBfT1NDIG1ldGhvZC4NCj4+Pg0KPj4+IExpbms6IGh0dHBz
-Oi8vbG9yZS5rZXJuZWwub3JnL2xpbnV4LWFjcGkvZDBiZTk0OWQtMGUyMS00NzJlLWE0NGItY2Vk
-YjFkZDg2OTVkQG5lYy5jb20vDQo+Pj4NCj4+Pj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvYWNwaS9w
-Y2lfcm9vdC5jIGIvZHJpdmVycy9hY3BpL3BjaV9yb290LmMNCj4+Pj4gaW5kZXggNGMwNmMzZmZk
-MGNiYi4uM2EyNGQwMTg0MzZiNCAxMDA2NDQNCj4+Pj4gLS0tIGEvZHJpdmVycy9hY3BpL3BjaV9y
-b290LmMNCj4+Pj4gKysrIGIvZHJpdmVycy9hY3BpL3BjaV9yb290LmMNCj4+Pj4gQEAgLTU3NCw2
-ICs1NzQsMTIgQEAgc3RhdGljIHZvaWQgbmVnb3RpYXRlX29zX2NvbnRyb2woc3RydWN0IGFjcGlf
-cGNpX3Jvb3QgKnJvb3QsIGludCAqbm9fYXNwbSkNCj4+Pj4gICAgICAgICAgICAgIHJldHVybjsN
-Cj4+Pj4gICAgICB9DQo+Pj4+DQo+Pj4+ICsgICAgLyogX09TQyBpcyBvcHRpb25hbCBmb3IgUENJ
-IGhvc3QgYnJpZGdlcyAqLw0KPj4+PiArICAgIGlmICghaXNfcGNpZShyb290KSAmJiAhYWNwaV9o
-YXNfbWV0aG9kKGhhbmRsZSwgIl9PU0MiKSkgew0KPj4+PiArICAgICAgICAgICAgZGV2X2RiZygm
-ZGV2aWNlLT5kZXYsICJfT1NDOiBuZWdvdGlhdGlvbiBza2lwcGVkIChtZXRob2Qgbm90IHByZXNl
-bnQgZm9yIG5vbi1QQ0llIGhvc3QgYnJpZGdlKVxuIik7DQo+Pj4+ICsgICAgICAgICAgICByZXR1
-cm47DQo+Pj4+ICsgICAgfQ0KPj4+PiArDQo+Pj4NCj4+PiBbU2V2ZXJpdHk6IEhpZ2hdDQo+Pj4g
-RG9lcyB0aGlzIGVhcmx5IHJldHVybiB1bmludGVudGlvbmFsbHkgc2tpcCBkaXNhYmxpbmcgQVNQ
-TSBmb3IgdGhlc2UgaG9zdA0KPj4+IGJyaWRnZXM/DQo+Pj4NCj4+PiBUaGUgY29tbWl0IG1lc3Nh
-Z2Ugc3RhdGVzIHRoaXMgY2hhbmdlIHByb2R1Y2VzIG5vIGZ1bmN0aW9uYWwgaXNzdWVzIGFuZCBv
-bmx5DQo+Pj4gcmVtb3ZlcyBtaXNsZWFkaW5nIG1lc3NhZ2VzLiBIb3dldmVyLCBiZWZvcmUgdGhp
-cyBwYXRjaCwgaWYgdGhlIF9PU0MgbWV0aG9kDQo+Pj4gd2FzIG1pc3NpbmcsIHRoZSBmdW5jdGlv
-biB3b3VsZCBwcm9jZWVkLCBmYWlsIHRoZSBuZWdvdGlhdGlvbiwgYW5kIGZhbGwNCj4+PiB0aHJv
-dWdoIHRvIHRoZSBmYWlsdXJlIHBhdGggd2hlcmUgKm5vX2FzcG0gPSAxIGlzIHVuY29uZGl0aW9u
-YWxseSBzZXQuDQo+Pj4NCj4+PiBCeSByZXR1cm5pbmcgZWFybHkgaGVyZSwgaXQgbG9va3MgbGlr
-ZSAqbm9fYXNwbSA9IDEgaXMgY29tcGxldGVseSBieXBhc3NlZA0KPj4+IGZvciBsZWdhY3kgaG9z
-dCBicmlkZ2VzLg0KPj4+DQo+Pj4gQWRkaXRpb25hbGx5LCBpc19wY2llKCkgb25seSBjaGVja3Mg
-Zm9yIEFDUElfQlJJREdFX1RZUEVfUENJRS4gQ291bGQgdGhpcw0KPj4+IGNhdXNlIENYTCBob3N0
-IGJyaWRnZXMgKEFDUElfQlJJREdFX1RZUEVfQ1hMKSB0byBldmFsdWF0ZSB0byBmYWxzZSBoZXJl
-Pw0KPj4+IElmIGEgQ1hMIGJyaWRnZSBsYWNrcyBhbiBfT1NDIG1ldGhvZCwgaXQgd291bGQgdGFr
-ZSB0aGlzIGVhcmx5IHJldHVybiBhbmQgc2tpcA0KPj4+IEFTUE0gZGlzYWJsZW1lbnQgZW50aXJl
-bHksIHdoaWNoIGNvdWxkIGxlYXZlIEFTUE0gZW5hYmxlZCBpbmFwcHJvcHJpYXRlbHkNCj4+PiB3
-aXRob3V0IGZpcm13YXJlIG5lZ290aWF0aW9uLg0KPj4NCj4+IEkgdGhpbmsgU2FzaGlrbydzIHJl
-dmlldyBpcyByZWFzb25hYmxlLiBBY2NvcmRpbmcgdG8gWzFdLCB1bmxlc3MgdGhlDQo+PiBwbGF0
-Zm9ybSBleHBsaWNpdGx5IGdyYW50cyB0aGUgT1MgY29udHJvbCBvdmVyIEFTUE0gdmlhIF9PU0Ms
-IHRoZSBPUw0KPj4gc2hvdWxkIG5vdCBjaGFuZ2UgdGhlIEFTUE0gc3RhdGUgY29uZmlndXJlZCBi
-eSB0aGUgcGxhdGZvcm0uDQo+IA0KPiBUaG91Z2ggQVNQTSBvbmx5IGlzIGEgdGhpbmcgZm9yIFBD
-SWUsIGlzbid0IGl0Pw0KDQpZb3UncmUgcmlnaHQuIEkgd2FzIHRyeWluZyB0byB1bmRlcnN0YW5k
-IHRoZSByYXRpb25hbGUgZm9yIGRpc2FibGluZw0KQVNQTSB3aGVuIF9PU0MgbmVnb3RpYXRpb24g
-aXMgc2tpcHBlZCwgYnV0IGl0IGFwcGVhcnMgdGhhdCBJIGhhdmUgYmVlbg0KbG9va2luZyBhdCB0
-aGlzIHRoZSB3cm9uZyB3YXkuDQoNCj4gDQo+PiBBbHNvLCBhcyBkZXNjcmliZWQgaW4gWzJdLCBp
-ZiBDWEwgMS4xIGhvc3RzIGRvIG5vdCBwdWJsaXNoIGEgQ1hMIF9PU0MsDQo+PiB0aGUgT1Mgc2hv
-dWxkIGZhbGwgYmFjayB0byB0aGUgUENJZSBfT1NDIChqdXN0IGFzIGFjcGlfcGNpX3F1ZXJ5X29z
-YygpDQo+PiBkb2VzKS4NCj4+DQo+PiBTbywgbmVnb3RpYXRlX29zX2NvbnRyb2woKSBzaG91bGQg
-c2tpcCBfT1NDIG5lZ290aWF0aW9uIG9ubHkgd2hlbiBhDQo+PiBsZWdhY3kgUENJIGhvc3QgYnJp
-ZGdlIGRvZXMgbm90IGhhdmUgX09TQy4gRm9yIGV4YW1wbGU6DQo+Pg0KPj4gICAgICAgICAvKiBf
-T1NDIGlzIG9wdGlvbmFsIGZvciBQQ0kgaG9zdCBicmlkZ2VzICovDQo+IA0KPiBUaGUgY29tbWVu
-dCBhYm92ZSBpcyBzb21ld2hhdCByZWR1bmRhbnQgSU1PLg0KPiANCj4+ICAgICAgICAgaWYgKCFp
-c19wY2llKHJvb3QpICYmICFpc19jeGwocm9vdCkgJiYNCj4+ICAgICAgICAgICAgICFhY3BpX2hh
-c19tZXRob2QoaGFuZGxlLCAiX09TQyIpKSB7DQo+PiAgICAgICAgICAgICAgICAgZGV2X2RiZygm
-ZGV2aWNlLT5kZXYsICJfT1NDOiBuZWdvdGlhdGlvbiBza2lwcGVkIChtZXRob2Qgbm90IHByZXNl
-bnQgZm9yIGxlZ2FjeSBQQ0kgaG9zdCBicmlkZ2UpXG4iKTsNCj4gDQo+IFBsZWFzZSBtYWtlIHRo
-ZSBjb21tZW50IHNheSAiU2tpcHBpbmcgYSBub24tUENJZSByb290IHdpdGhvdXQgX09TQyIgb3Ig
-c2ltaWxhci4NCj4gDQo+Pg0KPj4gICAgICAgICAgICAgICAgIC8qDQo+PiAgICAgICAgICAgICAg
-ICAgICogRGlzYWJsZSBBU1BNIHVubGVzcyB0aGUgT1MgaGFzIGJlZW4gZ3JhbnRlZCBjb250cm9s
-IG92ZXIgaXQNCj4+ICAgICAgICAgICAgICAgICAgKiB2aWEgX09TQy4NCj4+ICAgICAgICAgICAg
-ICAgICAgKi8NCj4+ICAgICAgICAgICAgICAgICAqbm9fYXNwbSA9IDE7DQo+IA0KPiBTbyBJIGFn
-cmVlIHRoYXQgc2V0dGluZyAqbm9fYXNwbSB0byAxIGluIHRoaXMgY2FzZSBpcyBhIGdvb2QgaWRl
-YSwgYnV0DQo+IHRoZSBjb21tZW50IGFib3ZlIGlzIHNsaWdodGx5IG1pc2xlYWRpbmcuDQoNClRo
-YW5rIHlvdSBmb3IgeW91ciBhZHZpY2UhIEknbGwgZml4IHRoZSBkZWJ1ZyBtZXNzYWdlIGFuZCB0
-aGUgY29tbWVudC4NCg0KVGhhbmtzLA0KS2F6dW1hDQoNCj4gDQo+IEkgd291bGQganVzdCBtYWtl
-IGl0IHNheSAiTm8gQVNQTSBmb3Igbm9uLVBDSSBob3N0IGJyaWRnZXMiIG9yIGVxdWl2YWxlbnQu
-DQo+IA0KPj4gICAgICAgICAgICAgICAgIHJldHVybjsNCj4+ICAgICAgICAgfQ0KPj4NCj4+IElm
-IEkgaGF2ZSBtaXN1bmRlcnN0b29kIGFueXRoaW5nLCBwbGVhc2UgbGV0IG1lIGtub3cuDQo=
+Hi,
+
+this series adds support for the PCIe controllers found on the Tegra264
+SoC. There are six instances, one of which is for internal purposes only
+and the other five are general purpose.
+
+The first patch tweaks the DT bindings slightly to avoid new DT compiler
+warnings that slipped through because they are now disabled by default
+(-Wno-unit_address_vs_reg). The second patch references PCIe root port
+bindings from the controller bindings, which will allow using the
+standard WAKE# handling, among other things.
+
+Patch 3 introduces the driver for Tegra264 and patch 4 reorders the reg
+and reg-names property entries to match the bindings changes from patch
+1. Finally, patch 6 adds the PCIe root port nodes required by the DT
+binding changes in patch 2.
+
+As previously mentioned, this depends on Krishna's PCIe WAKE# interrupt
+support from here:
+
+    https://lore.kernel.org/all/20260707-wakeirq_support-v12-1-b4453f5bcc97@oss.qualcomm.com/
+
+Since it is only a runtime dependency, the series can be applied
+independently, though.
+
+I can pick up patches 4 and 5 into the Tegra tree, but there should be
+no conflicts, so they should be fine to go in with the rest of the
+patches. Either way works fine for me.
+
+Thanks,
+Thierry
+
+Changes in v9:
+- remove suspend/resume support, it doesn't work on Tegra264 yet
+- use pm_runtime_resume_and_get() instead of pm_runtime_get_sync()
+- drop common wait times patch, it was applied already
+- rename tegra264_pcie_check_ranges() for clarity
+- remove unused header includes
+- Link to v8: https://patch.msgid.link/20260716-tegra264-pcie-v8-0-23e51589229b@nvidia.com
+
+Changes in v8:
+- track hotplug support separately from link up state for clarity
+- remove unneeded controller deinitialization, done by firmware
+- fail probe if the link is down and not hotplug-capable
+- select pinctrl sleep state on suspend for symmetry
+- switch to PCIe root port bindings (new patches)
+- add Reviewed-by and Acked-by tags
+- add err_ prefix to goto labels
+- use generic WAKE# IRQ support
+- Link to v7: https://patch.msgid.link/20260617-tegra264-pcie-v7-0-eae7ae964629@nvidia.com
+
+Changes in v7:
+- fix build dependency on PCI_ECAM
+- remove pre-silicon support code
+- Link to v6: https://patch.msgid.link/20260602-tegra264-pcie-v6-0-edbcfa7a78fe@nvidia.com
+
+Changes in v6:
+- address review comments from Sashiko
+- rebase onto v7.1-rc1, adjust DT bindings patch accordingly
+- Link to v5: https://patch.msgid.link/20260526-tegra264-pcie-v5-0-84a813b979d7@nvidia.com
+
+Changes in v5:
+- address review comments for the PCI driver patch
+- Link to v4: https://patch.msgid.link/20260402-tegra264-pcie-v4-0-21e2e19987e8@nvidia.com
+
+Changes in v4:
+- strip out dependencies that are going in through the ARM SoC tree
+- revert bindings to oneOf construct so that we don't produce new DTC
+  warnings
+- Link to v3: https://patch.msgid.link/20260326135855.2795149-1-thierry.reding@kernel.org
+
+Changes in v3:
+- integrate PCI standard wait times patch into the series to maintain
+  bisectability
+- fix review comments from Mikko
+- Link to v2: https://patch.msgid.link/20260320225443.2571920-1-thierry.reding@kernel.org
+
+Changes in v2:
+- fix an issue with sanity-checking disabled BARs
+- address review comments
+- Link to v1: https://patch.msgid.link/20260319160110.2131954-1-thierry.reding@kernel.org
+
+Thanks,
+Thierry
+
+---
+Thierry Reding (5):
+      dt-bindings: pci: tegra264: Strictly distinguish C0 from C1-C5
+      dt-bindings: pci: tegra264: Switch to PCIe root port bindings
+      PCI: tegra: Add Tegra264 support
+      arm64: tegra: Reorder reg and reg-names to match bindings
+      arm64: tegra: Add PCIe root ports on Tegra264
+
+ .../bindings/pci/nvidia,tegra264-pcie.yaml         | 109 +++--
+ arch/arm64/boot/dts/nvidia/tegra264.dtsi           | 114 ++++--
+ drivers/pci/controller/Kconfig                     |  10 +-
+ drivers/pci/controller/Makefile                    |   1 +
+ drivers/pci/controller/pcie-tegra264.c             | 450 +++++++++++++++++++++
+ 5 files changed, 623 insertions(+), 61 deletions(-)
+---
+base-commit: 8306754e0e226390edafb50b0f2c85f7e703077d
+change-id: 20260402-tegra264-pcie-e30abe23da07
+prerequisite-message-id: 20260707-wakeirq_support-v12-1-b4453f5bcc97@oss.qualcomm.com
+prerequisite-patch-id: 0f984d1bf11850bb8f833a26f6945ecf18a9a816
+
+Best regards,
+--  
+Thierry Reding <treding@nvidia.com>
+
