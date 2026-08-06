@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA2454398E6;
-	Thu,  6 Aug 2026 11:25:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 46B8C43BDCD;
+	Thu,  6 Aug 2026 11:25:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786015540; cv=none; b=sR4bolD/5BwLRGVhtCeuWhKvSrBhfYARfYsH3WZOgocaDXez/Qvp1fzuxH0DOgvIBvwyRwINf1//7NVew+9wlNP7tUKDu2yFywFmje2f1ZnM83P2BdVp2TlNFIK4TE2W3VJV+OsOcFksm5BFOzZi8iaiI43FjQR25Z3xmLPrMNU=
+	t=1786015545; cv=none; b=AQM8rVrbqWlQujwZpngfSrO7hGm4m2sR+mnoTAx/WdEM06HXxQBT0v2OfMxLAAWQMyBi6B9SvmSNKqIJyEyqR343/qdsXZEhscF+K5/wjYos9HuKdjsyZCvSrjkVFftSdfEL6h0YaNGzVRT8vT2yQ/CBBvlHT77WTyoZUXgfc/U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786015540; c=relaxed/simple;
-	bh=YcTPNaanc4zi3EnHUuMUJFdaiYNjCbvS3ExEPIrRpRM=;
+	s=arc-20240116; t=1786015545; c=relaxed/simple;
+	bh=nynccnadfP7oBkpYJx7nlv1LiYLH9K/Ri7uFu4DBtzw=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=r2SGD8NpIgl8/X0uadfPIFl4LtNsF06WBZsq/ZAnhIvbad8WJyV9vTK1MAA69bggnHhI/qNwaFd8V7cS3xTQXNF/ONohTPzScWezgNjwfhc2u+a4DXhon1lRGQIMW/aC3mEz90vvHnCA7nVVWsBMRTUSPiaUglT6TXGSLU/nGew=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hZ8X2W6C; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=V/hjEjOfbTmo+kT0FhHw7EAtygEUYy/qjGLYMTupgyQA1jFERwh0aaEitNXQ7OWk6Sy7XAfzkb/DTF5+VknZS8qkDwyGyTYok0eJdL6hBz9bjMyc4VV7tAwn18bcpfNyjjSs0QrzT5T7lwv2OHbmoDjw+xoEc06eGWkeNS5pO5g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UnMpCbhC; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hZ8X2W6C"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7C02D1F000E9;
-	Thu,  6 Aug 2026 11:25:38 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UnMpCbhC"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4B3471F000E9;
+	Thu,  6 Aug 2026 11:25:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786015539;
-	bh=Hdl2AAiA9M9dHtxvXCxfpdCmuaqrjic2cUmo6rODBtI=;
+	s=k20260515; t=1786015544;
+	bh=Xf1hpnFV1gAlg+YZ6rAGiEiOotBe5WvmqLB9CnbDV3A=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=hZ8X2W6CIhAD+pQo2WQ/n+aOpBoQp7CdhWisQLJxG9kuti9J2MgeiF2S813rrZIyS
-	 FHOuLHmR3XydZH7SozbXbW0oeJsm/GAxj/Yh7UeoTIJi3GVgZv/qzmDMVq93D2L2g/
-	 0Kpil/cklu1h8fg6U/X8wOY3ycU+XuuLadIFzv9rA86sLnnt6N96rxtqZfY+AI5geN
-	 aGo26EYMK1bNUJyKfSswxuQF2FDSYEmZwERcGZP1ER4eOj+Hra7mnmXng4suH1fcCw
-	 mt4HElacJq79Ydrc62x22iAYB/abFcWKoafbP8QwmKa8OScOETK9wEahnRJab5ge5M
-	 CHLKrW6AHNaSQ==
+	b=UnMpCbhCThGD1Qf5sXU6UL90VqBh+J/Wpssa160kng1wZPpUelpZreCor2JX7MtIS
+	 JkbrLOpTNMQGx1HpwTzln/+ZiFCgn8Pv4pz99aHicFP0v33xeCBdCmdNXYpMP23vCc
+	 AeLYgE+XSl7tqZTzuxDU4zg9HD61MCc9wkAtehPFxVEZ/Hq1nynpvKTSmRX84BviMM
+	 OXG71GsInGVnAildrHEi06luFoQXQUhtPSuNVu0IAL8mKbrrA45X9dvaA+Vd2y0I2c
+	 1W8AHFuFMLUfHdBSSkrcQXCjCwKYijNuWe+DlcwVVJAYEn3bjZ++GkiuVLSbtxRrcc
+	 vsgzd60KnOrYQ==
 From: Leon Romanovsky <leon@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
 	Logan Gunthorpe <logang@deltatee.com>,
@@ -35,9 +35,9 @@ To: Bjorn Helgaas <bhelgaas@google.com>,
 Cc: linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	linux-doc@vger.kernel.org
-Subject: [PATCH v2 04/13] PCI: Account for Direct Translated P2P in ACS isolation checks
-Date: Thu,  6 Aug 2026 14:24:11 +0300
-Message-ID: <20260806-fix-p2p-acs-v2-4-0cec14812965@nvidia.com>
+Subject: [PATCH v2 05/13] PCI: Add ACS egress control vector accessor
+Date: Thu,  6 Aug 2026 14:24:12 +0300
+Message-ID: <20260806-fix-p2p-acs-v2-5-0cec14812965@nvidia.com>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260806-fix-p2p-acs-v2-0-0cec14812965@nvidia.com>
 References: <20260806-fix-p2p-acs-v2-0-0cec14812965@nvidia.com>
@@ -53,81 +53,103 @@ Content-Transfer-Encoding: 8bit
 
 From: Leon Romanovsky <leonro@nvidia.com>
 
-PCIe r7.0, sec 6.12.3:
+Whether ACS P2P Egress Control routes, redirects, or blocks a peer-to-peer
+request depends on the Egress Control Vector bit for the target port, not
+on the enable bit alone (PCIe r7.0, sec 6.12.3).
 
-  peer-to-peer Memory Requests whose Address Type (AT) field indicates a
-  Translated address must be routed to the peer Port/Function without
-  redirection, regardless of ACS P2P Request Redirect and ACS P2P Egress
-  Control settings.
+Provide a helper to read that bit for a peer Root or Switch Downstream
+Port. Report an unreadable or uncovered vector as an error rather than as
+a clear bit, so callers do not mistake it for permission to route
+directly.
 
-Request Redirect therefore does not isolate devices below a Port with
-ACS Direct Translated P2P enabled.
-
-Sec 6.12.1.1 makes such a Request an ACS Violation once Translation
-Blocking is enabled, and that error "must take precedence over ... ACS
-P2P control mechanisms". Report isolation only in that case. Without
-Translation Blocking, devices below such a Port now share an IOMMU
-group.
-
-Fixes: ad805758c0eb ("PCI: add ACS validation utility")
 Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
 Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
 ---
- drivers/pci/pci.c    | 10 ++++++++++
- drivers/pci/quirks.c |  5 +++++
- 2 files changed, 15 insertions(+)
+ drivers/pci/pci.c | 58 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/pci/pci.h |  1 +
+ 2 files changed, 59 insertions(+)
 
 diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 77b17b13ee61..c586481949dc 100644
+index c586481949dc..154eb08036ad 100644
 --- a/drivers/pci/pci.c
 +++ b/drivers/pci/pci.c
-@@ -3547,6 +3547,7 @@ void pci_configure_ari(struct pci_dev *dev)
+@@ -3545,6 +3545,64 @@ void pci_configure_ari(struct pci_dev *dev)
+ 	}
+ }
  
++/*
++ * PCIe r7.0, sec 7.7.12: only for Root Ports and Switch Downstream Ports does
++ * each Egress Control Vector bit correspond to a Port Number.  Elsewhere the
++ * vector is indexed by Function or Function Group Number, so a Link
++ * Capabilities Port Number must not be used to select a bit.
++ *
++ * pcie_downstream_port() is too permissive here because it also accepts a
++ * PCI/PCI-X to PCIe Bridge.
++ */
++static bool pci_acs_egress_vector_port(const struct pci_dev *dev)
++{
++	int type = pci_pcie_type(dev);
++
++	return type == PCI_EXP_TYPE_ROOT_PORT ||
++	       type == PCI_EXP_TYPE_DOWNSTREAM;
++}
++
++/**
++ * pci_acs_egress_ctrl_set - Read an ACS Egress Control Vector bit
++ * @pdev: ingress Root or Switch Downstream Port
++ * @target: target Root or Switch Downstream Port
++ *
++ * Return: 1 if @pdev's Egress Control Vector bit for @target is set, 0 if
++ * it is clear, or a negative errno if the bit cannot be determined.
++ */
++int pci_acs_egress_ctrl_set(struct pci_dev *pdev, struct pci_dev *target)
++{
++	unsigned int vector_size;
++	u32 lnkcap, vector;
++	u8 target_port;
++	int ret;
++
++	if (!(pdev->acs_capabilities & PCI_ACS_EC) ||
++	    !pci_acs_egress_vector_port(pdev) ||
++	    !pci_acs_egress_vector_port(target))
++		return -EOPNOTSUPP;
++
++	ret = pcie_capability_read_dword(target, PCI_EXP_LNKCAP, &lnkcap);
++	if (ret)
++		return pcibios_err_to_errno(ret);
++
++	target_port = FIELD_GET(PCI_EXP_LNKCAP_PN, lnkcap);
++	vector_size = pdev->acs_capabilities >> 8;
++
++	/* An Egress Control Vector Size of 0 encodes 256 bits. */
++	if (vector_size && target_port >= vector_size)
++		return -ERANGE;
++
++	ret = pci_read_config_dword(pdev,
++				    pdev->acs_cap + PCI_ACS_EGRESS_CTL_V +
++				    (target_port / 32) * sizeof(vector),
++				    &vector);
++	if (ret)
++		return pcibios_err_to_errno(ret);
++
++	return !!(vector & BIT(target_port % 32));
++}
++
  static bool pci_acs_flags_enabled(struct pci_dev *pdev, u16 acs_flags)
  {
-+	bool request_redirect = acs_flags & PCI_ACS_RR;
- 	int pos;
- 	u16 ctrl;
+ 	bool request_redirect = acs_flags & PCI_ACS_RR;
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 4469e1a77f3c..5da067f8abc3 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -1045,6 +1045,7 @@ resource_size_t pci_min_window_alignment(struct pci_bus *bus,
  
-@@ -3562,6 +3563,15 @@ static bool pci_acs_flags_enabled(struct pci_dev *pdev, u16 acs_flags)
- 	acs_flags &= (pdev->acs_capabilities | PCI_ACS_EC);
- 
- 	pci_read_config_word(pdev, pos + PCI_ACS_CTRL, &ctrl);
-+
-+	/*
-+	 * Direct Translated P2P routes a Translated Request to the peer
-+	 * regardless of Request Redirect, so Request Redirect does not
-+	 * isolate unless Translation Blocking rejects the request first.
-+	 */
-+	if (request_redirect && (ctrl & PCI_ACS_DT) && !(ctrl & PCI_ACS_TB))
-+		return false;
-+
- 	return (ctrl & acs_flags) == acs_flags;
- }
- 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index b09f27f7846f..bb4c09cbbd10 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -4978,6 +4978,7 @@ static bool pci_quirk_intel_spt_pch_acs_match(struct pci_dev *dev)
- 
- static int pci_quirk_intel_spt_pch_acs(struct pci_dev *dev, u16 acs_flags)
- {
-+	bool request_redirect = acs_flags & PCI_ACS_RR;
- 	int pos;
- 	u32 cap, ctrl;
- 
-@@ -4994,6 +4995,10 @@ static int pci_quirk_intel_spt_pch_acs(struct pci_dev *dev, u16 acs_flags)
- 
- 	pci_read_config_dword(dev, pos + INTEL_SPT_ACS_CTRL, &ctrl);
- 
-+	/* Direct Translated P2P may bypass Request Redirect. */
-+	if (request_redirect && (ctrl & PCI_ACS_DT) && !(ctrl & PCI_ACS_TB))
-+		return 0;
-+
- 	return pci_acs_ctrl_enabled(acs_flags, ctrl);
- }
- 
+ void pci_acs_init(struct pci_dev *dev);
+ void pci_enable_acs(struct pci_dev *dev);
++int pci_acs_egress_ctrl_set(struct pci_dev *pdev, struct pci_dev *target);
+ #ifdef CONFIG_PCI_QUIRKS
+ int pci_dev_specific_acs_enabled(struct pci_dev *dev, u16 acs_flags);
+ int pci_dev_specific_enable_acs(struct pci_dev *dev);
 
 -- 
 2.55.0
