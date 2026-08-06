@@ -1,57 +1,57 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.17])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 83FDE4CA273
-	for <linux-pci@vger.kernel.org>; Thu,  6 Aug 2026 19:22:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9D2D4CA297
+	for <linux-pci@vger.kernel.org>; Thu,  6 Aug 2026 19:22:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.17
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786044135; cv=none; b=iKG/FCW32Q9n2rVD78VhJjGVcoWkiP+Vezgn3mGHRZD/CNnD35iDgxJeNQKCvmu4dpzJkSv3gp6bva1Sd+SAzJ9keBgGzlewSLSefT+3aAoX8cToQSHUoQmcTzAPGith7yOxjdshIm713Bly1CS2GeZNoq+98Wp1u7zZKhIGcUg=
+	t=1786044139; cv=none; b=WufM8FYGUf2YZI6jBXdTPpbaPeBfwOUO1ilEe7VM7JsFLZl0bhSGR8wwLh1njXQkPtlGlm41kNZeKdC+E4OTpcRP0wqTnspq5eL7Q8EkRPf7tH5qMv7xv56AMTup3eH4YKe8SOTlgeYbSF/jwczfgS5onNvVBxdDdINzcCXSfBY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786044135; c=relaxed/simple;
-	bh=38EqDnElI9QICLQrFcXXj3ILcrT1rsYTmwx80ij0h8I=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=JeEAuFspaYJTKR5m+RSnQ5GcGImvYgV4Wo0E1GzM+zwtmHv4md45U3FWbpxRLDt5ehAadBAHKKV0mgANhp42s9wJhVM/1VsbeX6tM5KbY2TnJPwVJLcLlY/mk790/yVkEDcyunmlGVmqo+2GPHB10fqTw9hE+ntrqm7U+jxne7Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=ML5x4DZj; arc=none smtp.client-ip=198.175.65.17
+	s=arc-20240116; t=1786044139; c=relaxed/simple;
+	bh=JbyJybdebG7iSLqYLG5dHxX1veVSeBkGC2IbK21W434=;
+	h=Date:From:To:Cc:Subject:Message-ID; b=cgCFbgL0x+AmlLtHxdL2Vob4C/HNb18seQsEb9zW7E1t4CxpLxWyRZHy/heNJX5DXnfxv1hq/fcWXmxE24QsPdM4FzRYVD7R5U3PNzabJADsRrMuXDZaBB6QRgvEow6zFctagIHP38AGNVQnTKwsE6MW5iHTRPyO3AuKahW3jo8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=EAPRusjc; arc=none smtp.client-ip=198.175.65.17
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="ML5x4DZj"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="EAPRusjc"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1786044130; x=1817580130;
+  t=1786044136; x=1817580136;
   h=date:from:to:cc:subject:message-id;
-  bh=38EqDnElI9QICLQrFcXXj3ILcrT1rsYTmwx80ij0h8I=;
-  b=ML5x4DZjTOksE3Dr6OTE/LwWZxtJORYUCK2sQagYBMUOBBvd4eaUuof3
-   rb9HsuQCTrfbnod721IeQrPvJ4gAjQ7GXsv5q2SG62HfDP0/6fPu4y8mZ
-   ztFfOpoCXXNK9xBYBiwqnyC3YeHL5/1WhRis020qvuf5r5oHypRIj9pNT
-   VU9lZz9/X3vrsRnvPjjk/LWOnoGlSumHC0Zur2ileNYxK+vcoGz2SQYiR
-   VThjgbTvRjvBiglToY6FfrTNdSGtsdrTnOz019eKgyUEh1iLkKQ54DfG3
-   HucB5bgm+fPulnhJL4YiTkSMuX746yWGkzZDvB0jfe96aPj0GZUatPxsQ
-   g==;
-X-CSE-ConnectionGUID: JpL3gRfnS9aUldCrLLNYXw==
-X-CSE-MsgGUID: L7R/HYamTSOEgnC4ZlWyTQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11867"; a="86659793"
+  bh=JbyJybdebG7iSLqYLG5dHxX1veVSeBkGC2IbK21W434=;
+  b=EAPRusjcm6tqHFo3kvUATdu3WUk10EnYFT9xNIvN1ImLqhda7+LkJiGG
+   Hs4U5Uqib/8XaXL3WTQPqkXFqe1Zx/AXIc+hacSQ1A1BAzr/aNiSZ06sz
+   M1vP6Q/IJLkxUI1soG1GnypPV21egcbsqVjRcL2Sk9yUu3KfS8zaM5vJ2
+   Ly2DYXHV7ApNbiOXAm336aeijsnaYByNySFbXi9X3oablGvECXUrw4AZQ
+   tgNP6iC8CsrRNmPWWHXSi3BnJccw9RL7fszMHgppUR7Trw7GauFJrh3h8
+   67QqvwVsyadkEt1fiZX5cnw2Upa3Z3tjcCKZltIBfrihDVyAZiuWXo3K5
+   A==;
+X-CSE-ConnectionGUID: fPB5c2zwQ0igROo1NrKiwA==
+X-CSE-MsgGUID: 9Q4I2SN9QcSP8eL3yXb/7w==
+X-IronPort-AV: E=McAfee;i="6800,10657,11867"; a="86659795"
 X-IronPort-AV: E=Sophos;i="6.25,209,1779174000"; 
-   d="scan'208";a="86659793"
+   d="scan'208";a="86659795"
 Received: from fmviesa001.fm.intel.com ([10.60.135.141])
   by orvoesa109.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Aug 2026 12:22:08 -0700
-X-CSE-ConnectionGUID: Mel/loHoRqSH5zQtI/U6Ng==
-X-CSE-MsgGUID: p205eGXbSPeWNAbbeg6c5A==
+X-CSE-ConnectionGUID: uuk4w3kFSq2Fe2yg/3WjVg==
+X-CSE-MsgGUID: MKUdn34oR62F2/AbGMvkHw==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.25,209,1779174000"; 
-   d="scan'208";a="286866735"
+   d="scan'208";a="286866737"
 Received: from lkp-server01.sh.intel.com (HELO 6eda058d650d) ([10.239.97.150])
   by fmviesa001.fm.intel.com with ESMTP; 06 Aug 2026 12:22:07 -0700
 Received: from kbuild by 6eda058d650d with local (Exim 4.98.2)
 	(envelope-from <lkp@intel.com>)
-	id 1ws3fI-00000000G1S-2KDt;
+	id 1ws3fI-00000000G1U-2UM2;
 	Thu, 06 Aug 2026 19:22:04 +0000
-Date: Fri, 07 Aug 2026 03:21:14 +0800
+Date: Fri, 07 Aug 2026 03:21:30 +0800
 From: kernel test robot <lkp@intel.com>
 To: Bjorn Helgaas <helgaas@kernel.org>
 Cc: linux-pci@vger.kernel.org
-Subject: [pci:controller/root-port-reset] BUILD SUCCESS
- 29e179cb7f636dca79b047db3dd7f0e588fdba37
-Message-ID: <202608070302.JwNK79Rx-lkp@intel.com>
+Subject: [pci:procfs] BUILD SUCCESS
+ f82f53e75eff382fc8f56b73279b54f7cf5a5c65
+Message-ID: <202608070319.X1anhAm3-lkp@intel.com>
 User-Agent: s-nail v14.9.25
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -59,13 +59,13 @@ List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/root-port-reset
-branch HEAD: 29e179cb7f636dca79b047db3dd7f0e588fdba37  misc: pci_endpoint_test: Add AER error handlers
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git procfs
+branch HEAD: f82f53e75eff382fc8f56b73279b54f7cf5a5c65  PCI/proc: Use file_ns_capable() when checking config space read access
 
 elapsed time: 1870m
 
 configs tested: 131
-configs skipped: 0
+configs skipped: 1
 
 The following configs have been built successfully.
 More configs may be tested in the coming days.
@@ -142,6 +142,7 @@ parisc               randconfig-001-20260806    gcc-8.5.0
 parisc               randconfig-001-20260807    gcc-8.5.0
 parisc               randconfig-002-20260806    gcc-8.5.0
 parisc               randconfig-002-20260807    gcc-8.5.0
+powerpc                    ppa8548_defconfig    gcc-16.1.0
 powerpc              randconfig-001-20260806    gcc-8.5.0
 powerpc              randconfig-001-20260807    gcc-8.5.0
 powerpc              randconfig-002-20260806    gcc-8.5.0
@@ -164,7 +165,6 @@ sh                   randconfig-001-20260806    gcc-13.4.0
 sh                   randconfig-001-20260807    gcc-12.5.0
 sh                   randconfig-002-20260806    gcc-13.4.0
 sh                   randconfig-002-20260807    gcc-12.5.0
-sh                         urquell_defconfig    gcc-16.1.0
 sparc                         randconfig-001    gcc-8.5.0
 sparc                randconfig-001-20260806    gcc-8.5.0
 sparc                randconfig-002-20260806    gcc-8.5.0
