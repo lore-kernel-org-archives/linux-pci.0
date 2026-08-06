@@ -1,205 +1,166 @@
-Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com [209.85.214.169])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD9BC3F20FC
-	for <linux-pci@vger.kernel.org>; Wed,  5 Aug 2026 21:54:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.169
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 83C173B4EB6;
+	Thu,  6 Aug 2026 02:12:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785966862; cv=none; b=X88VglwG9NtwjC2KbWIk+qEtgzGnDSeAJyg0pYrinTNtLaXaBw5FoAosZl+yw9rI6S50yyM+yXcC+ZCRekEPmwVO5wPwycEzK5n+yenkM45YulKx5J9JVpw6Ejnjp0awEOdmEINu5RU36RUKEphaRcWxcvymBrKpD3N9wCaxEH0=
+	t=1785982379; cv=none; b=TMeAtdivZMYpIO/3dmStRZqbPsNGYa1YN039xeoPWARRcsd3nDe7SLrnrNUDxjcq3sc0ipWDOEluf3gAkQpSA1kvRfEoluQAjsbHBYxc7lbWrJE5vj/5x0mvAkwOisal2bhwY1OvEm8VWol3qUTL0OxM9UmfPXBqHRXl0Mmh9BU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785966862; c=relaxed/simple;
-	bh=YeZlZj/6yv0tuSwXK9NUXrB4B2FjLvdl1dODfySsUIo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=CMy2bTgZks7ErN2Ka+ch0tdBzbl7Bb+qzwy8NcqxslWVlhYchY61F24t5syZqJAy/DnkogDW4EnBmEPqj50YIongoBstk6V/Ao6ffs1O17qV0vT3comtTXE+F/eg8OBJJWlZlmbVF085FNHc2fL75qCSuO9jED2M1my/XGopadQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=hQx5Xi/B; arc=none smtp.client-ip=209.85.214.169
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="hQx5Xi/B"
-Received: by mail-pl1-f169.google.com with SMTP id d9443c01a7336-2cede6375caso35345ad.0
-        for <linux-pci@vger.kernel.org>; Wed, 05 Aug 2026 14:54:21 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1785966861; x=1786571661; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :content-type:mime-version:references:message-id:subject:cc:to:from
-         :date:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=DmFR1tIG37Sn8lWSRTTHmCfFrbBwlyIU1WQoL0/U/C4=;
-        b=hQx5Xi/BdqG12bOjGJ/7e6u1rmA9vrukjDSBqLXdP5FAqtTc69F/oO4xeD1KG+uPyY
-         PuHFTti5iP2c5Hmzh2x78kaaeuhOtZV4xn7YWddfFxSV3sgrxbx147wR9Dpqw5iuT7qY
-         oymg3C9fCZ33U08UnY7GjKnLIL9UFSH0tUT16NOdGL+1mCWMD2ACvRcsrXsQX/1Gcsce
-         wXBKgihZ3uRVH+ZKEZ8hHD/tLIndCLqT9i1rzpsgsOYNDoQRvXzANmxOaX8QP9X7ZeU8
-         9yLerjMlA4aznuFCiydSxk3oUhxeRsejaugX9o8gF40xEh64HCUXsp1UFS+ma1JYrKkh
-         W5lQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785966861; x=1786571661;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :content-type:mime-version:references:message-id:subject:cc:to:from
-         :date:x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=DmFR1tIG37Sn8lWSRTTHmCfFrbBwlyIU1WQoL0/U/C4=;
-        b=HsnxM5zmIgJPoPfA1mK0VVv864zTsXAGIqugBuzdGDLzOuDdjjkfSv6vQMRWqcJcBM
-         kvPZk9PJv8XJqJhTfEXUbHPnjBaGnr5QdpAyA2OYLY1yfrRoxWN4VOT3nbrh6v2Y1Ke0
-         /ZI/czQ4967ou3hjWDnu9uYhTRv9O//UBuj1zBPKPsijh3Xu+Mmy6S5MaaA+TTDQbsHS
-         IwWkIdWc7qkCOKwJXF4OEUvsLLNLP6i61luk79tbx8qqjeRqR2ADVTPidKcRN1EoEJb9
-         ABlupfQDpbYuMy4G/K3QkbUk2/l6XXSJKvajXBBcXtw3HE4DqbP105hyS8s4Xkowp0+X
-         /l4Q==
-X-Forwarded-Encrypted: i=1; AHgh+RpVyfZlOc2w34vMONt/2UrXUub5uivUB6uMkHh0OvgA0wmP5N0yuP29khbEQyS2ssB9/d8hqnbqof0=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyT/l+0/c7BE+0guGPCqEtD7xCa/XOjHPrC7pZjEX9Ldb50Oygp
-	RWMwbbsLIWWoW/UTBsW7j9tSu+NUkMpzBSf88f2WRqqJ+g6Tf22n0kG928CDL1VroA==
-X-Gm-Gg: AR+sD13b+3u/PN2AtEiVfCcag526rKT3jkuiSoQfumuTNU5NLY208qUfX0lqydpQ1xR
-	U1VQrilpfV8CIXMlRSMBOVZxnfuF50CVPzQlSj0eAfwT2Rt+yOqmOojR6Nq+spluKUNCEX1QKwJ
-	kz7EPK+RWgwE/D5Zu4E2W0tF/ET+AnyCHh7Oc4XnkHnnxDlpX5fZzpjBbCZChWBBRzTh2csw6W4
-	jsIAVF7U2WkdVU3jzrdqqb4M1lpd12P+PaV0ifvKoh3a/foKY3kDJ758Nbnv8E3Sa/WoekYX0g+
-	AS9jF5kS8yBuBLZ8z7ARDmdCyjjj/nuHCXg2kbUaSDmjmWT8BYkrLMsETXpuScv/T3WQiH9eX61
-	TEKtRvx2hxYeEOcR62KDcztuStZwImEeX00hCdyZOUXqearTk8Y22Sln3O0mG6I5u52ru7PN001
-	/vkBCsrYVtsnXVWxjQXPiKK30Ce0qhogJ/ipVMQq5vHmgt6+4bv8dYXMjYM4ZADmuuF+/Y7d+be
-	E1/6mfsXsK3FPZIjOMZ+V4=
-X-Received: by 2002:a17:902:d58e:b0:2cf:41ba:96b8 with SMTP id d9443c01a7336-2d0f2d40656mr2783555ad.6.1785966860447;
-        Wed, 05 Aug 2026 14:54:20 -0700 (PDT)
-Received: from google.com (21.168.124.34.bc.googleusercontent.com. [34.124.168.21])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-315863fb350sm20223659eec.8.2026.08.05.14.54.17
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 05 Aug 2026 14:54:19 -0700 (PDT)
-Date: Wed, 5 Aug 2026 21:54:13 +0000
-From: Pranjal Shrivastava <praan@google.com>
-To: Trond Myklebust <trondmy@kernel.org>
-Cc: Anna Schumaker <anna@kernel.org>, linux-nfs@vger.kernel.org,
-	Chuck Lever <cel@kernel.org>, Jeff Layton <jlayton@kernel.org>,
-	linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
-	Logan Gunthorpe <logang@deltatee.com>,
-	Jason Gunthorpe <jgg@ziepe.ca>, linux-pci@vger.kernel.org,
-	linux-rdma@vger.kernel.org, Shivaji Kant <shivajikant@google.com>
-Subject: Re: [PATCH v3 5/5] nfs: introduce nfs_direct_extract_pages helper
-Message-ID: <anOxBdQYqAB3LV64@google.com>
-References: <20260715143540.3597616-1-praan@google.com>
- <20260715143540.3597616-6-praan@google.com>
- <a7fe5eadb2999b8d95595e73d3b99d76df6895a4.camel@kernel.org>
+	s=arc-20240116; t=1785982379; c=relaxed/simple;
+	bh=iOb2zI1KWnJNpVTeM+vMRf9/hmqt+jS1X7qPeQ3v868=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=IMLHhAv/vq/gzttSERO6BrJjEVUnWRs58EKveThYpOPUS8OIVADQ7UVoWfkB72YUE3abCgU+Hp6b3Pmu+9AKZSMzjombspGtiIJ0Lb0vsBPwrb4sx2dwjNu/8lsWMJg16PHgwkTNRY6xYR6CHA1+fI5MBhD88s+C9ra2+VjvzuI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
+X-UUID: 52a05772913c11f1aa26b74ffac11d73-20260806
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.12,REQID:24db2f76-e2b8-4d5c-8812-154772a9980c,IP:0,U
+	RL:0,TC:0,Content:-5,EDM:25,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
+	N:release,TS:20
+X-CID-META: VersionHash:e7bac3a,CLOUDID:b98f0a07d7686603e28e600726bbf0a4,BulkI
+	D:nil,BulkQuantity:0,Recheck:0,SF:102|850|865|898,TC:nil,Content:0|15|50,E
+	DM:5,IP:nil,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:
+	0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 2,SSN|SDN
+X-CID-BAS: 2,SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: 52a05772913c11f1aa26b74ffac11d73-20260806
+X-User: xiaopei01@kylinos.cn
+Received: from localhost.localdomain [(10.44.16.150)] by mailgw.kylinos.cn
+	(envelope-from <xiaopei01@kylinos.cn>)
+	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
+	with ESMTP id 1006690362; Thu, 06 Aug 2026 10:12:49 +0800
+From: Pei Xiao <xiaopei01@kylinos.cn>
+To: kurt.schwemmer@microsemi.com,
+	logang@deltatee.com,
+	bhelgaas@google.com,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: Pei Xiao <xiaopei01@kylinos.cn>,
+	stable@vger.kernel.org
+Subject: [PATCH v2] PCI: switchtec: Fix use-after-free in switchtec_pci_remove due to race condition
+Date: Thu,  6 Aug 2026 10:12:46 +0800
+Message-Id: <1f52d931ec7a7f5b36837cabf07b36e0463bf182.1785982054.git.xiaopei01@kylinos.cn>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <a7fe5eadb2999b8d95595e73d3b99d76df6895a4.camel@kernel.org>
 
-On Wed, Aug 05, 2026 at 01:12:28PM -0700, Trond Myklebust wrote:
+In stdev_create, &stdev->mrpc_work is bound with mrpc_event_work, and
+&stdev->link_event_work is bound with link_event_work. The IRQ handlers
+switchtec_event_isr and switchtec_dma_mrpc_isr can schedule these works
+on system_wq (via schedule_work() in the ISRs and via
+check_link_state_events()).
 
-Hi Trond,
+If we remove the device, switchtec_pci_remove makes cleanup and the
+memory allocated for stdev is released by put_device() ->
+stdev_release() -> kfree(stdev), while the works mentioned above may
+still be pending or running. The sequence of operations that may lead
+to a UAF bug is as follows:
 
-> On Wed, 2026-07-15 at 14:35 +0000, Pranjal Shrivastava wrote:
-> > Introduce nfs_direct_extract_pages() in direct.c to centralize page
-> > extraction and request creation for the Direct I/O path. The helper
-> > manages extraction from the iters and builds a list of nfs_page
-> > requests
-> > 
-> > Refactor nfs_direct_read_schedule_iovec() and
-> > nfs_direct_write_schedule_iovec() to utilize the new helper, unifying
-> > the extraction logic on both paths.
-> > 
-> > Signed-off-by: Pranjal Shrivastava <praan@google.com>
-> > ---
-> >  fs/nfs/direct.c | 127 ++++++++++++++++++++++++----------------------
-> > --
-> >  1 file changed, 64 insertions(+), 63 deletions(-)
-> > 
-> > diff --git a/fs/nfs/direct.c b/fs/nfs/direct.c
-> > index b9ac0a67693c..d31e4720ffff 100644
-> > --- a/fs/nfs/direct.c
-> > +++ b/fs/nfs/direct.c
-> > @@ -178,6 +178,50 @@ static void nfs_direct_release_pages(struct page
-> > **pages, unsigned int npages,
-> >  	}
-> >  }
-> >  
-> > +static ssize_t nfs_direct_extract_pages(struct nfs_direct_req *dreq,
-> > +					 struct iov_iter *iter,
-> > +					 size_t size, loff_t *pos,
-> > +					 struct list_head *list)
-> > +{
-> > +	bool pinned = iov_iter_extract_will_pin(iter);
-> > +	struct page **pagevec = NULL;
-> > +	ssize_t result, bytes = 0;
-> > +	unsigned int npages, i;
-> > +	size_t pgbase;
-> > +
-> > +	result = iov_iter_extract_pages(iter, &pagevec, size, ~0U,
-> > 0, &pgbase);
-> > +	if (result <= 0)
-> > +		return result;
-> > +
-> > +	npages = (result + pgbase + PAGE_SIZE - 1) >> PAGE_SHIFT;
-> > +	for (i = 0; i < npages; i++) {
-> > +		struct nfs_page *req;
-> > +		unsigned int req_len = min_t(size_t, result - bytes,
-> > PAGE_SIZE - pgbase);
-> > +
-> > +		req = nfs_page_create_from_page(dreq->ctx,
-> > pagevec[i],
-> > +						pinned, pgbase,
-> > *pos,
-> > +						req_len);
-> > +		if (IS_ERR(req)) {
-> > +			if (!bytes)
-> > +				bytes = PTR_ERR(req);
-> > +			break;
-> > +		}
-> > +
-> > +		list_add_tail(&req->wb_list, list);
-> > +		pgbase = 0;
-> > +		bytes += req_len;
-> > +		*pos += req_len;
-> > +	}
-> > +
-> > +	if (i < npages) {
-> > +		iov_iter_revert(iter, result - bytes);
-> 
-> Oopsable if bytes == PTR_ERR(req)
-> 
+CPU0                                      CPU1
 
-Ack. I'll catch errors in a separate variable something like:
+                                          | switchtec_event_isr
+                                          | schedule_work(&stdev->mrpc_work)
+switchtec_pci_remove                      |
+cdev_device_del(&stdev->cdev,             |
+                &stdev->dev)              |
+stdev_kill(stdev)                         |
+switchtec_exit_pci(stdev)                 |
+pci_dev_put(stdev->pdev)                  |
+put_device(&stdev->dev)                   |
+// stdev_release -> kfree(stdev)          |
+                                          | mrpc_event_work
+                                          | // use stdev (use-after-free)
 
- ...
-    for (i = 0; i < npages; i++) {
- ...
-        req = nfs_page_create_from_page(...);
-        if (IS_ERR(req)) {
-            err = PTR_ERR(req);
-            break;
-        }
- ...
-        bytes += req_len;
-    }
+Fix it by quiescing the interrupt sources before canceling the works:
+stdev_kill() first clears PCI bus mastering, then explicitly frees both
+IRQs, so no handler can be running and scheduling new work while the works
+are canceled.
 
-    if (i < npages) {
-        iov_iter_revert(iter, result - bytes);
-        nfs_direct_release_pages(pagevec + i, npages - i, pinned);
-    }
+Fixes: 080b47def5e5 ("MicroSemi Switchtec management interface driver")
+Fixes: 48c302dc8f3a ("NTB: switchtec: Add link event notifier callback")
+Cc: stable@vger.kernel.org
+Assisted-by: Codex:deepseek-v4-flash
+Signed-off-by: Pei Xiao <xiaopei01@kylinos.cn>
+---
+changes in v2:
+1.Add explicitly devm_free_irq
+2.cacel mrpc_work and link_event_work move to before mrpc_timeout
+3.Add event_irq and dma_mrpc_irq in struct stdev
+4.Add Cc: stable@vger.kernel.org
+---
+ drivers/pci/switch/switchtec.c | 16 +++++++++++++++-
+ include/linux/switchtec.h      |  2 ++
+ 2 files changed, 17 insertions(+), 1 deletion(-)
 
-    kvfree(pagevec);
-    return bytes ? bytes : err;
+diff --git a/drivers/pci/switch/switchtec.c b/drivers/pci/switch/switchtec.c
+index 5711aaa5df11..235ca1877b6c 100644
+--- a/drivers/pci/switch/switchtec.c
++++ b/drivers/pci/switch/switchtec.c
+@@ -1318,6 +1318,13 @@ static void stdev_kill(struct switchtec_dev *stdev)
+ 
+ 	pci_clear_master(stdev->pdev);
+ 
++	if (stdev->event_irq >= 0)
++		devm_free_irq(&stdev->pdev->dev, stdev->event_irq, stdev);
++	if (stdev->dma_mrpc_irq >= 0)
++		devm_free_irq(&stdev->pdev->dev, stdev->dma_mrpc_irq, stdev);
++
++	cancel_work_sync(&stdev->mrpc_work);
++	cancel_work_sync(&stdev->link_event_work);
+ 	cancel_delayed_work_sync(&stdev->mrpc_timeout);
+ 
+ 	/* Mark the hardware as unavailable and complete all completions */
+@@ -1356,6 +1363,8 @@ static struct switchtec_dev *stdev_create(struct pci_dev *pdev)
+ 	INIT_LIST_HEAD(&stdev->mrpc_queue);
+ 	mutex_init(&stdev->mrpc_mutex);
+ 	stdev->mrpc_busy = 0;
++	stdev->event_irq = -1;
++	stdev->dma_mrpc_irq = -1;
+ 	INIT_WORK(&stdev->mrpc_work, mrpc_event_work);
+ 	INIT_DELAYED_WORK(&stdev->mrpc_timeout, mrpc_timeout_work);
+ 	INIT_WORK(&stdev->link_event_work, link_event_work);
+@@ -1513,6 +1522,7 @@ static int switchtec_init_isr(struct switchtec_dev *stdev)
+ 
+ 	if (rc)
+ 		return rc;
++	stdev->event_irq = event_irq;
+ 
+ 	if (!stdev->dma_mrpc)
+ 		return rc;
+@@ -1529,7 +1539,11 @@ static int switchtec_init_isr(struct switchtec_dev *stdev)
+ 				switchtec_dma_mrpc_isr, 0,
+ 				KBUILD_MODNAME, stdev);
+ 
+-	return rc;
++	if (rc)
++		return rc;
++	stdev->dma_mrpc_irq = dma_mrpc_irq;
++
++	return 0;
+ }
+ 
+ static void init_pff(struct switchtec_dev *stdev)
+diff --git a/include/linux/switchtec.h b/include/linux/switchtec.h
+index 724da6c08bf7..fd38d3e7f3b6 100644
+--- a/include/linux/switchtec.h
++++ b/include/linux/switchtec.h
+@@ -500,6 +500,8 @@ struct switchtec_dev {
+ 	struct mutex mrpc_mutex;
+ 	struct list_head mrpc_queue;
+ 	int mrpc_busy;
++	int event_irq;
++	int dma_mrpc_irq;
+ 	struct work_struct mrpc_work;
+ 	struct delayed_work mrpc_timeout;
+ 	bool alive;
+-- 
+2.25.1
 
-> > +		nfs_direct_release_pages(pagevec + i, npages - i,
-> > pinned);
-> 
-> See what happens above with swap over NFS (which sets pinned = false).
-> 
-
-I see what you mean, we never got a ref (after patch 4) but we'll call
-put_page() if pinned == false. I'll reduce the nfs_direct_release_pages
-to the following in patch 4 (when we start using the new extract API):
-
-static void nfs_direct_release_pages(struct page **pages, unsigned int npages,
-				     bool pinned)
-{
-	if (pinned) 
-		unpin_user_pages(pages, npages);
-}
-
-
-Sounds good for v5? 
-
-Thanks,
-Praan
