@@ -1,74 +1,229 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3773A3E1203
-	for <linux-pci@vger.kernel.org>; Thu,  6 Aug 2026 21:56:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92F2C3C3F40;
+	Thu,  6 Aug 2026 23:03:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786053382; cv=none; b=WxTFdSIsog7f8mk3b66R9VtcX13wTSDLMRHTP8F5zPVHym3zP0mm/BQtUyWtnb6SYcXUAFEP3C+sxN/dgWnkrtHSbkFuOwWaoy0YGy/G883doDYbRRQe8EcNxdTIbWTVwUzVpXJoRulLC1VzVyhbDXXrviIWDOLqmjbM6RQHxPI=
+	t=1786057381; cv=none; b=NIwL+6Y7e9b44IRW+uSIZd186V5RrXigNN0OZiJZd1JABjLS6Deda14eeZPOADprP5EBaHCeuBPVM/pqj4cHfED9GwCyfX3c/r+nse6W0SWudAoPcemYSeOwAww+5BwnlaLjblIUAtqjIb4MTrFU3ufAK78ZsOTisNCFvSVqtRU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786053382; c=relaxed/simple;
-	bh=XYziaCo28uf7ZwP+NSoidVHFz3k5BswnDog++S2C5Vs=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=S4bBuLY5rqTVgdN0E36pp6fsSQg5pbHfCh9xHbQdKoDuRnVPd1CYfZUV06kCsJUMY5kdG4/y7Qr+P5LtqUIOwxBwsR6rtoPP0ccN5hmPONaqvM6YDJrWlKyzxGCpDviU51rW7RrxszBOkoPupGnbX3KaGd+S7pWTi06g6AV6nIY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DUngYIO/; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1786057381; c=relaxed/simple;
+	bh=a/01b8sD9zIGPSc2JMt+xKNlmwk4MxTk+yXjBOK3Urs=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=iVwRNstxSlEPYaRIYU69WApmPhu6xFpgFeuZP71qEQkecC855IPcKUPsho05lUEN6r/wiFNO4v5ltczp0tHXOdp0/kUwIlJ6j3Z94OWgyQjGnLbIsVuFBN5+U79OVLuuK3r67kbdNpIWk59XPbliEwzRN32oYClfuqc2bzG8EF8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=F4oGabaE; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DUngYIO/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BBC0D1F000E9;
-	Thu,  6 Aug 2026 21:56:20 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="F4oGabaE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B633E1F000E9;
+	Thu,  6 Aug 2026 23:02:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786053380;
-	bh=XYziaCo28uf7ZwP+NSoidVHFz3k5BswnDog++S2C5Vs=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=DUngYIO/FbGYrRq3CD3cuTX33CiGw4hrogLOK1nwvFcQyGLdLgGU4nABYs7s+qGbF
-	 Ih7f8e7XmHXf9jw3ydaGVlCiDx0m2bC51z2eiMDZjOCLMxDT5ziUfNL93HY5DCETBY
-	 T9p16MhehhkSPdYipps41WMV4R1fEgZZtbwaHf00CpBMZbexz/lODvNkb9a0ZxXnR6
-	 OsG97741MyyqVh/KHU9dq38j81DFLSUZkN5in4K2GilJ3VLTIjpsYx3MNEAuNj074g
-	 zy2hGFfvddpeqaKG4A2YZHvDG6NCm0keZElkj6e78X5MHVqIVA2utOHYP2jPlqGELJ
-	 9L9SRHcwM7oqw==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2] pci: quirks: Disable native PCIe hotplug on MSI Claw
- A8 root bridge
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Derek J. Clark" <derekjohn.clark@gmail.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260806214808.1202819-1-derekjohn.clark@gmail.com>
-References: <20260806214808.1202819-1-derekjohn.clark@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 06 Aug 2026 21:56:19 +0000
-Message-Id: <20260806215620.BBC0D1F000E9@smtp.kernel.org>
+	s=k20260515; t=1786057380;
+	bh=ya3F+JYCuxaItWlW05Rm+GX7ajI5CM/X3K+sFJTZFC8=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=F4oGabaEGxQXh55uqEDFuXc0lrSGATbDod9Fkho17EJgwC2HSf/mscz8w++7KPXAg
+	 IcYj8IMrVHcdFmMHI2laiOrXu10TzZ9UMvJ3eZHA2cTLi5I6E3XByHHH4XP1aBAT+x
+	 XtQQQiq5femdvrdyVlFXrz/qJGkrZvs6hziBikd2p3dgQjuMPa8QKaaNBngbvLCRLD
+	 9KlrK9cf606zGNnhEyQFHtM9D8UvhofWnjFIq/15Hk9SV/ir+SbxHIy4I0L1HYRf3r
+	 ZTE823OcHfKVDSjBN3xIwXMjNcqWdQ2+EXJH84OBOIMoPAHa7n9QH91mtBdPmyNgvU
+	 Uwhl4x4n2C+zA==
+Date: Thu, 6 Aug 2026 18:02:56 -0500
+From: Bjorn Andersson <andersson@kernel.org>
+To: Rahul Samana <rahul.samana@oss.qualcomm.com>
+Cc: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>, 
+	Bartosz Golaszewski <brgl@kernel.org>, Marcel Holtmann <marcel@holtmann.org>, 
+	Luiz Augusto von Dentz <luiz.dentz@gmail.com>, Rob Herring <robh@kernel.org>, 
+	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
+	Balakrishna Godavarthi <quic_bgodavar@quicinc.com>, Rocky Liao <quic_rjliao@quicinc.com>, 
+	Manivannan Sadhasivam <mani@kernel.org>, Konrad Dybcio <konradybcio@kernel.org>, 
+	Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>, Bartosz Golaszewski <brgl@bgdev.pl>, 
+	linux-arm-msm@vger.kernel.org, linux-bluetooth@vger.kernel.org, devicetree@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, linux-pm@vger.kernel.org, 
+	quic_mohamull@quicinc.com, quic_hbandi@quicinc.com, quic_anubhavg@quicinc.com
+Subject: Re: [PATCH v2 6/6] arm64: dts: qcom: rb3gen2: add Industrial BT UART
+ overlay
+Message-ID: <anURderHHz5WHIRe@baldur>
+References: <20260727-rb3-industrial-bt-uart-v2-0-2d100f30e202@oss.qualcomm.com>
+ <20260727-rb3-industrial-bt-uart-v2-6-2d100f30e202@oss.qualcomm.com>
+ <794424df-4714-43a4-b4b8-e960998ad1f1@oss.qualcomm.com>
+ <ce283ef7-2460-4fa4-a1f5-9757fd6b42b5@oss.qualcomm.com>
+ <6d61d749-440f-40ad-82e5-e1e909afad06@oss.qualcomm.com>
+ <b47345f1-1c7b-4424-9c6b-3dd02c0f4ab6@oss.qualcomm.com>
+ <bf7821a2-d813-4f89-b891-9c26d228ae67@oss.qualcomm.com>
+ <b5afd21c-4516-4a8c-bc8f-6598ec385d27@oss.qualcomm.com>
+ <am6572YrbAULTa88@baldur>
+ <a86124c9-a5ff-4265-8a14-68b25f010577@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <a86124c9-a5ff-4265-8a14-68b25f010577@oss.qualcomm.com>
 
-> The MSI Claw A8 (MS-1T8K) hard-locks on resume from s2idle whenever an
-> SD/MMC card is present in the onboard Realtek RTS525A card reader
-> (10ec:525a), which sits behind root port 0000:00:02.2. The reader's
-> PCIe endpoint is fixed/soldered and not user-hotpluggable.
->=20
-> Firmware advertises this root port as PCIe hotplug-capable, and _OSC
-> grants the OS native hotplug control. When native hotplug is OS-owned,
-> resuming from s2idle races the port's hotplug/PME resume handling
-> against the RTS525A's own resume sequence when a card is present,
-> hard-locking the system.
->=20
-> Two kernel command line parameters were confirmed to prevent the hang:
-> pcie_aspm=3Doff and pcie_ports=3Dcompat. Both stop the OS from running
-> its own hotplug/PME resume path against this port. The former does
-> so by dropping _OSC negotiation during boot, skipping the path that
-> [ ... ]
->=20
-> SD card insertion is handled entirely by rtsx_pci's own card-detect logic,
-> so is unaffected by this quirk.
->=20
-> Signed-off-by: Derek J. Clark <derekjohn.clark@gmail.com>
+On Wed, Aug 05, 2026 at 11:48:48AM +0530, Rahul Samana wrote:
+> 
+> 
+> On 02-08-2026 09:08, Bjorn Andersson wrote:
+> > On Fri, Jul 31, 2026 at 11:20:07PM +0530, Rahul Samana wrote:
+> >>
+> >>
+> >> On 31-07-2026 21:19, Konrad Dybcio wrote:
+> >>> On 7/31/26 4:48 PM, Rahul Samana wrote:
+> >>>>
+> >>>>
+> >>>> On 31-07-2026 18:20, Konrad Dybcio wrote:
+> >>>>> On 7/31/26 8:53 AM, Rahul Samana wrote:
+> >>>>>>
+> >>>>>>
+> >>>>>> On 29-07-2026 18:01, Konrad Dybcio wrote:
+> >>>>>>> On 7/27/26 5:45 PM, Rahul Samana wrote:
+> >>>>>>>> The reworked RB3 Gen 2 Industrial mezzanine keeps the common Industrial
+> >>>>>>>> mezzanine hardware description but routes QCC2072 Bluetooth over UART4
+> >>>>>>>> instead of the default Bluetooth-over-USB path.
+> >>>
+> >>> I only noticed this now - are there 2 variants of the industrial
+> >>> mezz being sold concurrently? Is the already-in-kernel one some
+> >>> sort of a prototype SKU? i.e. should we support both?
+> >>>
+> >>>>>>>>
+> >>>>>>>> Build this variant by applying the common Industrial mezzanine overlay
+> >>>>>>>> first, followed by the BT UART overlay. The overlay models the M.2 E-key
+> >>>>>>>> connector graph endpoints for PCIe and UART, and disables the on-board
+> >>>>>>>> WCN6750 PMU and UART7 path so the M.2 QCC2072 Bluetooth controller can be
+> >>>>>>>> used instead.
+> >>>>>>>
+> >>>>>>> So is the onboard module disabled? Can we not just use two in parallel?
+> >>>>>>>
+> >>>>>>
+> >>>>>> The Industrial mezzanine variants do not support the on-board WCN6750
+> >>>>>> wireless path. The common Industrial mezzanine overlay already disables
+> >>>>>> the on-board Wi-Fi node.
+> >>>>>
+> >>>>> What does 'do not support' it mean here? They are physically present
+> >>>>> as part of the SoM, so unless the lanes are somehow diverted away,
+> >>>>> why is it not?
+> >>>>>
+> >>>>> Konrad
+> >>>>
+> >>>> Hi Konrad,
+> >>>>
+> >>>> The WCN6750 module is physically present on the SoM. What I meant is that
+> >>>> the current Industrial mezzanine devicetree already disables the on-board
+> >>>> Wi-Fi path, and this BT UART variant followed the same board-level policy
+> >>>> for the on-board Bluetooth UART/PMU path.
+> >>>
+> >>> Okay, and do we know why that's the case in the first place?
+> >>>
+> >>>> For the endpoint labels, I can move the UART endpoint to the SoC DTSI,
+> >>>> kodiak.dtsi, as uart4_ep.
+> >>>
+> >>> Please do
+> >>>
+> >>>> For the PCIe endpoint, the PCIe path to the M.2 QCC2072 device is not the
+> >>>> PCIe0 root port in kodiak.dtsi. In the composed devicetree, it is
+> >>>> behind the Industrial mezzanine PCIe switch, under:
+> >>>>
+> >>>>     /soc@0/pcie@1c00000/pcie@0/pcie@0,0/pcie@2,0
+> >>>>
+> >>>>
+> >>>> So placing pcie0_port0_ep in kodiak.dtsi would not describe the actual
+> >>>> topology.
+> >>>
+> >>> Yes, that was an omission from my side
+> >>>
+> >>>
+> >>>> I tried adding a generic label/endpoint to that downstream port in the
+> >>>> Industrial mezzanine overlay and referencing it from the BT UART overlay.
+> >>>> However, when the overlays are compiled separately and then composed, that
+> >>>> label is not available while applying the BT UART overlay, so the composed
+> >>>> DTB build fails with FDT_ERR_NOTFOUND.
+> >>>
+> >>> I think this generic description is simply not achievable today without
+> >>> a bigger plan in place
+> >>>
+> >>> Konrad
+> >>
+> >> Hi Konrad, Dmitry,
+> >>
+> >> Yes, both Industrial Kit variants need to be supported.
+> >>
+> >> The default Industrial Kit uses the common Industrial mezzanine hardware
+> >> description and continues to use the existing Bluetooth-over-USB path.
+> > 
+> > "Kit uses the common" what do you even mean?! The mezzanine is a
+> > physical thing, it doesn't _use_ anything! The mezzanine exists and the
+> > DeviceTree describe what it is.
+> > 
+> >> The
+> >> reworked Industrial Kit variant keeps the rest of the Industrial mezzanine
+> >> hardware the same, but routes Bluetooth over UART4 instead.
+> >>
+> > 
+> > Does "reworked mezzanine" mean what it usually does? I.e. that you have
+> > taken the mezzanine and modified it?
+> > 
+> 
+> Hi Bjorn,
+> 
+> Let me clarify.
+> 
+> There are two physical RB3 Gen 2 Industrial mezzanine variants that need
+> to be supported:
+> 
+> 1. The existing RB3 Gen 2 Industrial mezzanine variant currently
+>    described in-tree, where the M.2 E-key interface routes Bluetooth over
+>    USB.
+> 
+> 2. A reworked RB3 Gen 2 Industrial mezzanine variant, where the
+>    mezzanine board was reworked to make the existing M.2 E-key interface
+>    route Bluetooth over UART4.
+> 
 
-Sashiko has reviewed this patch and found no issues. It looks great!
+Reworked as in: "there exist a dozen such boards in the world" or is
+this an actually supported configuration that can be purchased?
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260806214808.1202=
-819-1-derekjohn.clark@gmail.com?part=3D1
 
+The fact that you call this mezzanine "the BT-UART mezzanine" forces me
+to assume that this isn't an actual product, prove me wrong please.
+
+> The reworked variant is a physical mezzanine board variant, not a
+> software-only configuration of the same board.
+> 
+
+That's obvious.
+
+> The intent of this overlay is to describe only that board-level
+> difference while reusing the common Industrial mezzanine description for
+> the hardware that remains unchanged.
+> 
+
+But then you need to clearly describe what the difference between the
+two boards is and model that in a clear way.
+
+Regards,
+Bjorn
+
+> Thanks,
+> Rahul
+> 
+> 
+> > [..]
+> >>
+> >> I am open to other suggestions if there is a better way to model this within
+> >> the current overlay structure.
+> >>
+> > 
+> > I don't think it's possible to give you other suggestions as you haven't
+> > described what this thing is, you just explaining how you're hacking
+> > something together and ask us to help adjust your hack without knowing
+> > what it is you're trying to describe with your DeviceTree.
+> > 
+> > Regards,
+> > Bjorn
+> > 
+> >> Thanks,
+> >> Rahul
+> >>
+> 
