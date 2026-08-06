@@ -1,288 +1,155 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.12])
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 25E8D379C28
-	for <linux-pci@vger.kernel.org>; Thu,  6 Aug 2026 16:47:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=198.175.65.12
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786034841; cv=fail; b=uDJyhYW44hsVpeV1/nJndDykPt/V3sPLHnWh1GkhJjO2z7ml6s72pFi4ArOsXoBtcH9J5uHs/HHsKVsNcVz+x9RVIoh/XLAvRqcJosi5I+heVQJrgT4CD3zVwMcPBAdbTju5ZUWgfvjrXBckNJvUCcx/OqFHJDUDwY0jgOe4cG8=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786034841; c=relaxed/simple;
-	bh=KxR492NqnvaUS38YWFMpxHiZw2tPew8liS8vXmIAFqI=;
-	h=Message-ID:Date:Subject:To:CC:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=EHyilI8DrTonmwil+tddPXDyNdA0LeUQkAzu2Nz1K3EqVj3+C+zm0+CDrvQDWMeLlCKuZLSFCuf3dG9P3JzZEj0+BSXr7w/7fr5+97N+tNrGqrw4OxYDG3RMS2LlONhNtq4wvVk6sGZIPEVOmQYhcnqvgmjTKJsW22JJKKvbSzs=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=ifo5xm+8; arc=fail smtp.client-ip=198.175.65.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7461537D133;
+	Thu,  6 Aug 2026 16:50:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1786035039; cv=none; b=EJPfD03IUNe2NtzDePbcw5tG2a7dGspXH0s9lTZCqJytTKM+OmNxfae4IF9zRyC3LJ2kagMDb4fKv9TIdyBwkco0AzaNxOE1vteH7idG4QJ8uisGn0Aen1W4Cr0PJMI7N/rydpyp5O3RWPdWpg2lhl05Duc+VRZYB2GQLdDFKrY=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1786035039; c=relaxed/simple;
+	bh=dgojdZlq0aFZ2udUsDeqEs8qOj+jZTbzbnvUb+gaBks=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=LRWwb2m1i6bt5zFudbOIvaCmU23osU2CwYOW66Bw+Pj8o3a5hTU9709Zb4pLhRnbYu3Wzy5uIQyGP/6JVk9QMuWm1q1gnjH6BPCYEidv8h7TA+zUWdDvX6fRIqXbUaC4igi2+uGfiLcDwYZl2p5SlmU+dB8huyICoG3hRo8AZZE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=PWgW/xsI; arc=none smtp.client-ip=148.163.156.1
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="ifo5xm+8"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1786034838; x=1817570838;
-  h=message-id:date:subject:to:cc:references:from:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=KxR492NqnvaUS38YWFMpxHiZw2tPew8liS8vXmIAFqI=;
-  b=ifo5xm+8zxOg+caMMWKzDBPDU2LJ9rjhD4m6XyU3dkrUMyp1Ly4KLDH+
-   Ekv+hJyrWq4cd/66jTXOuo8wMeFF59DEWB55zo2ozyG9BKf7OX7cETUU8
-   I2YWQqc8LFrAoKmJvKHNEeR0PDl02IsxeVe88NLB3krrQBBl1Mwd4SGii
-   Un4oz+v2GHJl7XWKCjCTxf7JhjTIk5xnrdt/1YF5tShhKYPVFmebejOtg
-   84jjzCzLQR8vpVOQl3j0aSWFeP5CYLNFUnZW0HAUXfYSpTzOK+6H1j3+7
-   AzA5C8vhS9torJ8SGLnPPNEyE8L/gERW0rdYmdDMmpgTbbsTYdDaxlwRj
-   Q==;
-X-CSE-ConnectionGUID: 63Gsl7S3SjiGlAKe9dpjsQ==
-X-CSE-MsgGUID: FApq9plbTxOzZwsunIRZ4A==
-X-IronPort-AV: E=McAfee;i="6800,10657,11867"; a="98146231"
-X-IronPort-AV: E=Sophos;i="6.25,208,1779174000"; 
-   d="scan'208";a="98146231"
-Received: from fmviesa005.fm.intel.com ([10.60.135.145])
-  by orvoesa104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Aug 2026 09:47:10 -0700
-X-CSE-ConnectionGUID: jdbWYpLtR62qteBKiN+QOg==
-X-CSE-MsgGUID: dVTkJ2JHTwCR1nXr2I2NQw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.25,208,1779174000"; 
-   d="scan'208";a="267295709"
-Received: from fmsmsx901.amr.corp.intel.com ([10.18.126.90])
-  by fmviesa005.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Aug 2026 09:47:07 -0700
-Received: from FMSMSX901.amr.corp.intel.com (10.18.126.90) by
- fmsmsx901.amr.corp.intel.com (10.18.126.90) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.45; Thu, 6 Aug 2026 09:47:06 -0700
-Received: from fmsedg903.ED.cps.intel.com (10.1.192.145) by
- FMSMSX901.amr.corp.intel.com (10.18.126.90) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.45 via Frontend Transport; Thu, 6 Aug 2026 09:47:06 -0700
-Received: from PH0PR06CU001.outbound.protection.outlook.com (40.107.208.58) by
- edgegateway.intel.com (192.55.55.83) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.45; Thu, 6 Aug 2026 09:47:06 -0700
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=yOVqY0cyPib4SkPGXE9tMZkmR6y65P2hVqeLuGas6dF42LZAH/9iMBKpUEH6naa1qEImnYJf/KqbEgS54LEFwMdCreupxHmfOYPGc5jLhIUo8Ni5WkhgWl2rpoe56mT5pvCo/nSIIcg1g4Bx4XAjQXAahv+DbpcuPdIYNamEwxGwiqOE0s/hNnoEUydbUueYnWZlryD2et5hH2+jl+aiYYuh4yx8Igu9lReKASgDmJvnSZCkOg8nqaKLS5sbeD7fRl6LXRUe0NkRU6muFghu8l3itJxY4nQTZG3AQGeGSSUnyh328D1WKNOFpizNM8A3Wc49Tcz7ScuudOVo2uXcoQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=oPOqMvBwtDdSOMO1FRHbR3CirWtBqoaKUduNxsmE6Yc=;
- b=AkquOwN7LRHWq5ypeemH8nv9f7SABnFBAkSz2oeCIwYsgcH14HzdJwcIzAB6Nmb9yODHlsofMHMuhsOiXYamfA30wjTd3q1gvbpXef7F9EAFUYqq/JqyU0V7HG2umDDNY68/w2xVaaQh4NDxLf6UKqVGQeAJ5haL4S1fbSRM0145zkfF7FtkfKBVl8qHG3lYnFAPiMiSZp7sajW4x53rxYjhosTCIXDKkCr8FBHTMPpxQEZLSlC2+6PdMd1f7r7+JJ2qxvxLOCjPYBhdwQolFnoZB08pdFIicz4lB6Vck/CvRBrZ4zJftlg3An1ufj6cu1W4E24wqmCOYKVzJBM54Q==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
- dkim=pass header.d=intel.com; arc=none
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=intel.com;
-Received: from IA1PR11MB7198.namprd11.prod.outlook.com (2603:10b6:208:419::15)
- by BL4PR11MB8869.namprd11.prod.outlook.com (2603:10b6:208:5a8::20) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.292.16; Thu, 6 Aug
- 2026 16:47:03 +0000
-Received: from IA1PR11MB7198.namprd11.prod.outlook.com
- ([fe80::2c4e:e92a:4fa:a456]) by IA1PR11MB7198.namprd11.prod.outlook.com
- ([fe80::2c4e:e92a:4fa:a456%3]) with mapi id 15.21.0292.019; Thu, 6 Aug 2026
- 16:47:03 +0000
-Message-ID: <a36226d9-0f1a-45d7-80fb-39d22ce6aff7@intel.com>
-Date: Thu, 6 Aug 2026 19:46:59 +0300
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH V4 01/14] i3c: master: Fix recursive locking during device
- registration
-To: <sashiko-reviews@lists.linux.dev>
-CC: Alexandre Belloni <alexandre.belloni@bootlin.com>,
-	<linux-pci@vger.kernel.org>, <Frank.Li@kernel.org>,
-	<linux-i3c@lists.infradead.org>
-References: <20260806131857.119830-1-adrian.hunter@intel.com>
- <20260806131857.119830-2-adrian.hunter@intel.com>
- <20260806133914.EDA761F000E9@smtp.kernel.org>
-Content-Language: en-US
-From: Adrian Hunter <adrian.hunter@intel.com>
-Organization: Intel Finland Oy, Registered Address: c/o Alberga Business Park,
- 6 krs, Bertel Jungin Aukio 5, 02600 Espoo, Business Identity Code: 0357606 -
- 4, Domiciled in Helsinki
-In-Reply-To: <20260806133914.EDA761F000E9@smtp.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: DUZPR01CA0294.eurprd01.prod.exchangelabs.com
- (2603:10a6:10:4b7::13) To IA1PR11MB7198.namprd11.prod.outlook.com
- (2603:10b6:208:419::15)
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="PWgW/xsI"
+Received: from pps.filterd (m0360083.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 676EnA1b2939527;
+	Thu, 6 Aug 2026 16:50:16 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=pp1; bh=dI/JUW
+	OXVfmk03QoibAP+70rE2yFJwykSpSDH95V5/w=; b=PWgW/xsI4pebgAH/BV1kz8
+	PrYpd0TU18Kia8wtq8jNczblGnJT/lUvsuDMqLGrIaUzrXtht7DadTOtm4lj/qni
+	m0P8s1ENRkiLbGPy/n9Z8COsJwxLX2UopugiFKvIKg6TPEWepo0IXQ669a7grjwB
+	cp4t90+FIFaG9AWMHBmV4UpXr93ak5TjfjsH3BqSKb+78bV45ydLtW28McSyON2o
+	dHCKK5TvclBcyZ+FCsCShJFdSahmvkmqB0RF0Aufvki2M31Jra3lJpp/e1EaqUrG
+	znpkB6gk97y7VWWEZlJDHtNGlSHjvbhLOki+2cau6+h9f6OzjuzRGpOQ9MMwxd3w
+	==
+Received: from ppma11.dal12v.mail.ibm.com (db.9e.1632.ip4.static.sl-reverse.com [50.22.158.219])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4fs8a49cn5-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 06 Aug 2026 16:50:15 +0000 (GMT)
+Received: from pps.filterd (ppma11.dal12v.mail.ibm.com [127.0.0.1])
+	by ppma11.dal12v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 676GfRJL018806;
+	Thu, 6 Aug 2026 16:50:14 GMT
+Received: from smtprelay06.fra02v.mail.ibm.com ([9.218.2.230])
+	by ppma11.dal12v.mail.ibm.com (PPS) with ESMTPS id 4fswtyutnm-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 06 Aug 2026 16:50:14 +0000 (GMT)
+Received: from smtpav04.fra02v.mail.ibm.com (smtpav04.fra02v.mail.ibm.com [10.20.54.103])
+	by smtprelay06.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 676Go8OS30933476
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Thu, 6 Aug 2026 16:50:08 GMT
+Received: from smtpav04.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id C1C3120043;
+	Thu,  6 Aug 2026 16:50:08 +0000 (GMT)
+Received: from smtpav04.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 11FB120040;
+	Thu,  6 Aug 2026 16:50:04 +0000 (GMT)
+Received: from [9.67.65.218] (unknown [9.67.65.218])
+	by smtpav04.fra02v.mail.ibm.com (Postfix) with ESMTP;
+	Thu,  6 Aug 2026 16:50:03 +0000 (GMT)
+Message-ID: <72ce5fa7-d12b-40e5-a4a2-f2de414088d1@linux.ibm.com>
+Date: Thu, 6 Aug 2026 22:20:02 +0530
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: IA1PR11MB7198:EE_|BL4PR11MB8869:EE_
-X-MS-Office365-Filtering-Correlation-Id: 1fc37602-d73e-449b-5193-08def3da5795
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|366016|23010399003|1800799024|376014|11063799006|56012099006|10067099003|6133799003|18002099003|22082099003|4143699003;
-X-Microsoft-Antispam-Message-Info: UPzHwX0Imt4ZPJ/fRUQoOojFuxIUPSBBOpzQQkvQw9aUPxfctAI5fpdWGhmMefzM4XT7POsyGm5o+FOoJkxU/Lf6gca7H+3fx1h9B/DSul8LG9gqAkHNdW8XmBXG1jUkQOu4on8WVmSVfSXJC3PpsUQP9qw3/xjxn7m84WSTQv1FNVXQD1E7tbb/Ed8R3zzed0miKQ/97Ky8im8wAbLLjwx2LT+s+Mz95lMSxs9TwXmH74EPwODpnllgZXeM1YkRGWvS5Btq19Zv45OtDLQSqPHHLjE6MHuJMtnrF13h8yk5aILmnP71w43IfrsTcgDP93AL9sTCGYeESQE/WaoOGXrHfX1/dM7w0cXW1sXnhFLIPmAnxYdQR3v4HoxHdryuo3OORjDL1fYoghcRgPT+ghe61w/V5bQ9MLiQPkHsLAwdkQ1m+3wUv5EDhjo9fCj8Ulg7eiRVlN6sptFwVBWPf3QkGg/MjN59wJNvcqSEq4C8zr7VZu+qtkAd6vN32TbDBSb8k/fpvv8HTUx95saBp6j1DblOjnvIWLr4i36EGU2nZFoCqmYbwapru1BDRmeWXfq6RTeTKDXpCDJHSrbCva0gT2KrBlYnjaASmYJZ3eZnmDtZOTmV4eOaB1Sr3L8hAQDBOTAdanp0O9f2lIsEQva9WVhqzL8lIdxo1yuWjYA=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:IA1PR11MB7198.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(23010399003)(1800799024)(376014)(11063799006)(56012099006)(10067099003)(6133799003)(18002099003)(22082099003)(4143699003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?emtZNi8wRStwR3JKam5KSGR5RDN1TFpITVllUVRabG93Zkt5amdKcWxGU1hS?=
- =?utf-8?B?N2hsdmJBS3Ird0haYzRsQUFwZmhDODlUZklLQnMzZU1FbFVGWWxHbXEydmpt?=
- =?utf-8?B?L2lndlRIZHlub1d0OEpJdVJRSWhZYVhqNnRnUm1YdXRSRHZaM3BXMmNSVE15?=
- =?utf-8?B?REJkd3dmY2lwek1CSzdPS3RkUW8raU84M3Y5Y2ZMR3BxYXhacHhEeWlPZnVO?=
- =?utf-8?B?d0U5TjU5YVMvZ1g2WXdLL1dHRjU0TVNWVER1NThNNlhKWTN5Ums0SW8xYkkz?=
- =?utf-8?B?WTd6UEJzK2V5SnFaVjNMUGpnVFprTmhhbHh3bm5WTTNZZCtvSVlqcnBFT3Y2?=
- =?utf-8?B?VVZTbGQwR1FvK3ZPajVheGpEREdaQkR6MktRMnVvdm11WHFwODlBYzlqSFRW?=
- =?utf-8?B?dm55WWN1TGZRdHZkc2R2cW5OcGtYSXRQc2llVXJuZE1IdUxBWms4UklGNkll?=
- =?utf-8?B?MUNMZUI0WGRvOElkUUp1SVpZb241VzVBaDk1aEhnUXJ4TVRjL1k0bWZnd2Fv?=
- =?utf-8?B?QlRUYnQ2andIazNBaG5EVkU3K1lobGp2enVJRFNPVGU0L3FwM09yMXhYQjZp?=
- =?utf-8?B?QlZ1NnE2WkcrTFdTNURMR0pRNDRnS1lENmhjYnBZK0dESmcwajBRMm81cXA0?=
- =?utf-8?B?M3ZCYVdMRWRVNE1uYjE5T0JGSjFYTVVTWVBYVGRFR2ZnRk1OS0hNTTRCeTIv?=
- =?utf-8?B?QWZEelNGU2w2UU9EUndWUG83ckdMS1V6OGcrNk5KeFIyZjJNWWRGL1JZdWdR?=
- =?utf-8?B?UFVjeEFIY0QxWFhRdy8zemFYcFRiRVdnc0RwRXFMTFhXcC81UXczTUh2bmlF?=
- =?utf-8?B?VVU2OVVmMUhROWhlUVJmZTYwYkFXczFkVnhTblk0eUpLTG4rQXVRTGhLd1pK?=
- =?utf-8?B?N3pZUy9XNEpCY1pEcTJxTmZleDQzMjUrQlJ2RTAzQ3g1L2loaXc2TXU1QWxv?=
- =?utf-8?B?dDB1ZjdiclhsYmpDYWhQM0xXNFJHRndNTERKbXhCVHA3OFZ5TVVJVVZmZVMz?=
- =?utf-8?B?TFdjUU5wQWRRNDJsLzhUOG1kMHlqT3VqRHRMZFN5NkJCN1JHdy95S0JCTUhm?=
- =?utf-8?B?bThZdldYblJ2S2VGTnlTY3BxcEZwalVxNUZoOE1ZMENyVnN0NkVUaDdaekJB?=
- =?utf-8?B?dHhGcjR5TTViOGFTYXRRTlpObFMvekRWdHFKb05tRFd5c1RWQ3lyUVhlVjVo?=
- =?utf-8?B?RDVydHY0RjhtZmlvUFlpbGRXVWNLS001Y1dKUGpvM1lEcEZKUGxxVDFXeFJm?=
- =?utf-8?B?dGJxbzhLS2J4anJTSG56SVlOWVJQUi9GbUlZRW9hZ2FlekNWb0lrZ3ZGNUVq?=
- =?utf-8?B?UTVUZzVYSzBGeEYrb0pNd2JHT2tubHpqOFVEWUV1S05EZnJtZ3NyQ2VYbUta?=
- =?utf-8?B?WTZuNHFmeTA3RHFweWY4YTZyM0sycHFVS0VtTllaVzYzQVptOGttMkdibjJL?=
- =?utf-8?B?U0Joc1dRTjBqY3d0TTdBbTFwZ080MGZjS2FGVTZvTkZLZWVpMVBJakFLUkll?=
- =?utf-8?B?TmRnSzM4SGFrTlZHYzg3MHYvSU1xSkVIZXgxdXUwNXV3NUJqVTZidDd3ZGNJ?=
- =?utf-8?B?Q3IxZHVXeGpUaC9xVFBpL1N0QWhnZUZNQkdoM3ovdTNibTRXMGdCenJPUSs3?=
- =?utf-8?B?c3UyMDl5TjVzLysrdmF0czVaeVhpbnkvZnBPMUlHRUNZL3pmdk5lVzVCVlFZ?=
- =?utf-8?B?elJEQy82MWZBcWRQVGFrSk8xK2ZadkZuRzI0MFgzZVBUSDR4Rld5NUZVMFg0?=
- =?utf-8?B?QjJkQklBNS9kZW9RY2srcS9Rd0pDK2xYczVkejVicXZRQ0lwcFk4VVI5dVE3?=
- =?utf-8?B?SThWVTVUNm14czI3QUw5NEZHa3N2UWRkSGRhME5OSG9uUTRudld3bUIycXhk?=
- =?utf-8?B?RzFGMlZQTjFQMVJuUXBJUmVrSkZwbUZLTW9rZVJwWHRUZGYyaG9ZRTZFU1JG?=
- =?utf-8?B?VmhDZ25jNXl6TGpoQTA3NnFpS3pFR2VmUjlONHYyV0pmcmdMT3VJdGlYcDBs?=
- =?utf-8?B?UW1aQ0k2ZEtsZnFRbkg3ZHRBZTJTSGxmV1doYkVvWitUSDBIWU9RdXE4YkZS?=
- =?utf-8?B?dkpxeVk4bW5uaTViaUJzaDU3dFJjVnNjNWpWcG9FYzZ5UUYwZ2lpU1drbWw2?=
- =?utf-8?B?VDlFNW9jVDIwRWx0aFQ4cExMSXpMZnR5ZEh5Y1BzUi8vYWpqTkg2YVllVXUx?=
- =?utf-8?B?WVpqYmw5SzYxaUdHanJpZFZMQS9mbUZOaUhUWmoxN0tnUHZLUVNFNFFnVy8y?=
- =?utf-8?B?YkM1aWkwN3JIM3NabU1uMW9td0UzZjhQRjhXL3pTUSt0dktSY3c3dThuc0dG?=
- =?utf-8?B?Y2FmY3ZXczJvSjI4Tk14cGswUU53dFplZXU3bjhwY0dQUnQzV0JxTnhua3py?=
- =?utf-8?Q?4VsxQSuy5YVz5bHs=3D?=
-X-Exchange-RoutingPolicyChecked: eNfQTtZyd0/U09rBVeV7s/jcRZknDbiHmR0zR/BOOyAJTdrh8URLAKJRa8/x/v1qMABgZ5cmH1ufoN+eG/TfK9YcQ3XmKYd0SEWkT/zMpvpoV2LvsFl8pYwZEbNbmhdVGJWzelopoApMarUrCTpxsOYBivSaIaHZbs3i/1sdVggYu/DrjI0P/sp6cbjdeTHtRABcII5QN0IdQ9CYjSwBj7SpOzEhJBiXfRUoqzHoQGvonfIb+qWrNeiz65/hsmHsXypgtZopkpHLfxaMEuvSgfHQow011S4RD+CjUAIXuGkQ78gFZrRLeBnjA4KcvdCkPyoBaNpTOeTozjxaJnS15g==
-X-MS-Exchange-CrossTenant-Network-Message-Id: 1fc37602-d73e-449b-5193-08def3da5795
-X-MS-Exchange-CrossTenant-AuthSource: IA1PR11MB7198.namprd11.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 06 Aug 2026 16:47:03.3443
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 1IX/DL3RvZrq0evKA721KN7zRvSibop1WvWOzpsPxN5Ro3v3m/S5O4xs6zdcWSHKn4p4FQsYLfA8bCP2tCfYBg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BL4PR11MB8869
-X-OriginatorOrg: intel.com
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] PCI: quirks: Add warm reset quirk for IBM Spyre
+ accelerator
+To: Bjorn Helgaas <helgaas@kernel.org>, Avinash Roy <avinash@linux.ibm.com>
+Cc: maddy@linux.ibm.com, mpe@ellerman.id.au, bhelgaas@google.com,
+        npiggin@gmail.com, chleroy@kernel.org, linuxppc-dev@lists.ozlabs.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Avinash Roy <avinash.roy1@linux.ibm.com>
+References: <20260805171840.GA2126423@bhelgaas>
+Content-Language: en-US
+From: Shivaprasad G Bhat <sbhat@linux.ibm.com>
+In-Reply-To: <20260805171840.GA2126423@bhelgaas>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-Reinject: loops=2 maxloops=12
+X-Authority-Analysis: v=2.4 cv=E6P9Y6dl c=1 sm=1 tr=0 ts=6a74bb47 cx=c_pps
+ a=aDMHemPKRhS1OARIsFnwRA==:117 a=aDMHemPKRhS1OARIsFnwRA==:17
+ a=IkcTkHD0fZMA:10 a=Sv0fKeRqtYgA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=RnoormkPH1_aCDwRdu11:22 a=iQ6ETzBq9ecOQQE5vZCe:22 a=VnNF1IyMAAAA:8
+ a=lNBmhb5rY3KJr28suEEA:9 a=QEXdDO2ut3YA:10
+X-Proofpoint-ORIG-GUID: A9CrAhuigwKofBxmnfCcLJ4S9jqP9RFJ
+X-Proofpoint-GUID: LvFnR9t07Rol95n-wE_uOh-qTWiH2Xy5
+X-Proofpoint-Spam-Info: AW1haW4tMjYwODA2MDEzMSBTYWx0ZWRfX0srVlo17IyM8
+ GCHvlg1eoQf97TwPNmj+IylyERYu1FuQTYWGmHs50pmU+6n2tg6c0oSLjGXSbrhEoHYhQWc8VOv
+ UdNoe+xstgmTo7URo3sFwRlW3YQecTw=
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODA2MDEzMSBTYWx0ZWRfX30k6tIyX9/0Y
+ hVu7CVXerDNsdRZJrSmUneKKfa3juUzkXerZqx+WirCXg/F2vfcpx/mY1HSK3ova3muZyDR+S+F
+ Hq53TLO/FazxXFQ1hKKGINeRxJjurSA0g4u6B4gKjT1k1+nlTOfqFz86ySi0yrrXU6YMieGduQo
+ x25UeGLgZEHHkyAN2JELunV5ridXnuO7zLv2jC+w4PAC4xiQ1mZ8RWf500JGH0wpo9oepIb+itM
+ q4jeQxrN5bKhwDMo1uibRRPtQv7MxJ79gUWPpT159LewXCX9mOBanP/NSt9wRq2ORzrZklPlBs/
+ /j6m+PYBpXFS7sXl9Hdci90tFoZbshL0efZPKuygf+odI70Aj/9HPk0ymazRuXVcKTCPJpF9JLG
+ ChLELbKXInS8PqDr2ydbS3F0C+i6oxT6A7/2NsoDXQw/4ANKvXqh2OZzUDwcnsPlWCo6Yjh+iAj
+ CXRbGxkcql8Y62t3I6w==
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-08-06_01,2026-08-05_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ bulkscore=0 clxscore=1011 lowpriorityscore=0 priorityscore=1501
+ suspectscore=0 adultscore=0 spamscore=0 malwarescore=0 impostorscore=0
+ phishscore=0 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2606150000
+ definitions=main-2608060131
 
-On 06/08/2026 16:39, sashiko-bot@kernel.org wrote:
-> Thank you for your contribution! Sashiko AI review found 2 potential issue(s) to consider:
-> 
-> New issues:
-> - [High] Dropping the bus maintenance lock around device_register() exposes the I3C device descriptor to concurrent Use-After-Free.
-> 
-> Pre-existing issues:
-> - [High] Unbalanced fwnode reference count decrement in i3c_device_release() leads to Use-After-Free.
-> --
-> 
-> --- Patch [1]: [PATCH V4 01/14] i3c: master: Fix recursive locking during device registration ---
-> commit b31a8482aa2ea710ccc853d0c74b77edebb131ff
-> Author: Adrian Hunter <adrian.hunter@intel.com>
-> Date:   Thu Aug 6 13:18:44 2026 +0000
-> 
->     i3c: master: Fix recursive locking during device registration
-> 
-> This commit addresses a recursive locking lockdep warning by decoupling
-> device creation from registration. It collects newly populated devices into a
-> temporary list under the maintenance lock, then releases the lock prior to
-> invoking device_register() to prevent probe deadlocks. Finally, the lock is
-> re-acquired to clean up any devices that failed registration.
-> 
->> diff --git a/drivers/i3c/master.c b/drivers/i3c/master.c
->> --- a/drivers/i3c/master.c
->> +++ b/drivers/i3c/master.c
->> @@ -2104,25 +2113,37 @@ i3c_master_register_new_i3c_devs(struct i3c_master_controller *master)
-> 
-> [ ... ]
-> 
->> +		list_add_tail(&desc->dev->node, &i3c_unreg_devs);
->> +	}
->> +
->> +	i3c_bus_maintenance_unlock(&master->bus);
->> +
->> +	list_for_each_entry_safe(i3cdev, tmp, &i3c_unreg_devs, node) {
->> +		ret = device_register(&i3cdev->dev);
-> 
-> [Severity: High]
-> Does dropping the bus maintenance lock around device_register() expose the
-> I3C device descriptor to a concurrent use-after-free?
-> 
-> During registration, the driver core can call subsystem functions like
-> i3c_device_match(), which read i3cdev->desc locklessly:
-> 
-> drivers/i3c/master.c:i3c_device_match() {
->     ...
->     if (i3cdev->desc && i3cdev->desc->boardinfo)
->         static_addr_method = i3cdev->desc->boardinfo->static_addr_method;
+Hi Bjorn,
 
-The fix is in patch 7 "i3c: master: Fix potential UAF in i3c_device_match()"
+Thanks for taking a look.
 
->     ...
-> }
+On 8/5/26 10:48 PM, Bjorn Helgaas wrote:
+> On Wed, Aug 05, 2026 at 06:21:32PM +0530, Avinash Roy wrote:
+>> From: Shivaprasad G Bhat <sbhat@linux.ibm.com>
+>>
+>> The IBM Spyre accelerator (PCI ID 1014:06a7) requires a dedicated warm
+>> reset method for reliable EEH recovery on pSeries/ppc64 platforms.
+>>
+>> FLR alone is insufficient because it does not re-initialize the Spyre
+>> firmware state machine. On ppc64 with EEH enabled,
+>> pcibios_set_pcie_reset_state() is overridden in
+>> arch/powerpc/kernel/eeh.c to drive the platform-level PERST# signal via
+>> EEH PE operations, which is the correct mechanism for full device
+>> recovery after an EEH event.
 > 
-> Concurrently, an I3C Hot-Join or sysfs-triggered Dynamic Address Assignment
-> (DAA) could execute i3c_master_do_daa(), take the i3c_bus_maintenance_lock,
-> and call __i3c_master_add_i3c_dev_locked(). If DAA detects the device as a
-> duplicate, it replaces the descriptor and frees the old one:
-> 
-> drivers/i3c/master.c:__i3c_master_add_i3c_dev_locked() {
->     ...
->     i3c_master_detach_i3c_dev(olddev);
->     i3c_master_free_i3c_dev(olddev);
->     ...
-> }
-> 
-> If the registering thread is actively evaluating i3cdev->desc when this
-> happens, will it lead to memory corruption when reading fields like
-> desc->boardinfo?
-> 
->> +		if (ret)
->> +			dev_err(&master->dev, "Failed to add I3C device (err = %d)\n", ret);
->> +		else
->> +			list_del_init(&i3cdev->node);
->> +	}
->> +
->> +	i3c_bus_maintenance_lock(&master->bus);
->> +
->> +	list_for_each_entry_safe(i3cdev, tmp, &i3c_unreg_devs, node) {
->> +		list_del(&i3cdev->node);
->> +		desc = i3cdev->desc;
->> +		i3cdev->desc = NULL;
->> +		put_device(&i3cdev->dev);
-> 
-> [Severity: High]
-> This is a pre-existing issue, but does this error path cause an unbalanced
-> fwnode reference count decrement leading to a use-after-free?
-> 
-> During device initialization, device_set_node() assigns the fwnode without
-> incrementing its reference count:
-> 
-> drivers/i3c/master.c:i3c_master_register_new_i3c_devs() {
->     ...
->     if (desc->boardinfo)
->         device_set_node(&desc->dev->dev, desc->boardinfo->fwnode);
->     ...
-> }
-> 
-> However, when put_device() is called here on registration failure,
-> the release function unconditionally drops a reference:
-> 
-> drivers/i3c/master.c:i3c_device_release() {
->     ...
->     fwnode_handle_put(dev->fwnode);
->     ...
-> }
-> 
-> Since the device object never acquired a reference to the boardinfo's fwnode,
-> will repeated registration failures or unbind operations drop the refcount
-> below zero, eventually prematurely freeing the fwnode?
-> 
->> +		desc->dev = NULL;
->>  	}
->> +
->> +	i3c_bus_maintenance_unlock(&master->bus);
->>  }
-> 
+> This makes it sound like this mechanism is needed for EEH recovery for
+> *all* devices, not just Spyre.  If that's the case it sounds like we
+> need more than just a Spyre-specific quirk.
 
+Now I re-read it, The second statement needs to be re-worded. It does 
+sound like its true for all devices. Quirk is only for the Spyre card.
+
+Will post a v2 fixing the same.
+
+Thanks and Regards,
+Shivaprasad
+
+> 
+>> The reset function is placed in arch/powerpc/platforms/pseries/pci.c
+>> where the EEH infrastructure is already present, declared in
+>> pseries.h, and registered in the generic pci_dev_reset_methods[] table
+>> in drivers/pci/quirks.c under a CONFIG_PPC_PSERIES guard.
+>>
+>> This reset method is only registered when CONFIG_PPC_PSERIES is enabled,
+>> so it is not available on other platforms.
+>>
+>> Reset sequence:
+>>    - Assert PERST# via pcie_warm_reset, hold 250 ms
+>>    - Deassert PERST# via pcie_deassert_reset
+>>    - Wait 250 ms for PCIe link retrain and device recovery
+>>
+>> Signed-off-by: Avinash Roy <avinash.roy1@linux.ibm.com>
+>> Signed-off-by: Shivaprasad G Bhat <sbhat@linux.ibm.com>
+>> ---
+</snip>
