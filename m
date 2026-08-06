@@ -1,48 +1,48 @@
 Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA7CD336EC0;
-	Thu,  6 Aug 2026 13:19:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6421E2F8EA1;
+	Thu,  6 Aug 2026 13:19:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786022364; cv=none; b=kRFasMSDIQquGrtA1igI9Uc2hxV7DM6sYNZHlkoXRSqRzHgWitXh9JFoOTQ3jeVNArPpUSBNCxDuB+gITCbm1o5/qPMHv19s4hEnOKBFQ9Rd/kK14qGOOw6P8OtFIDYyJT7Tto3kvyf2w0KKUFoK4C6s2MvpBJPGHlXnoz/DiG8=
+	t=1786022373; cv=none; b=g/7fWd+ujtXgSLDXx766SMTb8aCyMdCvADZay1LuVLXWTZ6nzEx/IHX6PVBKQEafvVvZBTq+i7uvUQW6y0c03yX3+Db9iu6MIDZeGyBYOXysAZV/HKfYr1x4U6XHFc31kImPDgaZ0OfoANC6g8a2cX71zQ8HtVuTmg25SqmfWcI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786022364; c=relaxed/simple;
-	bh=8qnas1z0yzFN13YNJ/JLjoAtaKWli/KcWEU4XZkGZg4=;
+	s=arc-20240116; t=1786022373; c=relaxed/simple;
+	bh=m+vaP+hUhXQyQtti8rw2K8d44e4Og780oMqT54taEy0=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=jsveZx9ELPWbph3rkzacppFTiLSDPjzC0J/8T3IC74tBTQyfJvA1SYMcq4S2kWY7mqOV2aL2O0pmiG2wt37rpvWbpXYwsM8jjbwqGD/mrm4Afo9Xjg4iZPhCYDnZjFedJyR+1PPlJYdIJANAXIh51akyqh+OVF/QTv1r74XTf94=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=lXqWuE9C; arc=none smtp.client-ip=192.198.163.16
+	 MIME-Version; b=PancwcQ7zhb21MzpOKCn/6RWg/BLKvzlfdWpQHhx9uOmpvmN6b20kWXU2r8T4rJn91/BKFx6Nibknl7lOekIusboTGiY34x4QUeQuT5gcpwA3TYu/r4haPVvfSC+YEQ8UCEI/QTeOx1MvZUPohz5HUL+9r7iBS4rC4MvVoJS4WA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=PlWj2KDx; arc=none smtp.client-ip=192.198.163.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="lXqWuE9C"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="PlWj2KDx"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1786022360; x=1817558360;
+  t=1786022363; x=1817558363;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=8qnas1z0yzFN13YNJ/JLjoAtaKWli/KcWEU4XZkGZg4=;
-  b=lXqWuE9COGOAw4UA2n2IuItTXNIiWo9wyOMLHlCkecFxarZ6NLEUHVEU
-   Z+qQucHVKB4XfAT5Dem9ajBj+rFUmUW0VX0ORgbXt1JhM3DsTpML+qSBT
-   VNkLGf6XN5AjvGqV3u8eP+PXurnHvXTnCsagABMzkFk4/gttX6P2O+CR/
-   Zx6OLTsFtIhtIzuzE43F7YhAMl0fcbOcPDzfoE5l+FACof1MWfjH1S5jn
-   kNnX8mmVgIBMLhyRyi9S3+eBsxw0rN/Tmm9V2UHNzFqw0WPZwn2GgoVlu
-   /sXQ/0fdblGs1mOImBBLXHLIqoNrCL8OpS2FUAmzzzeVIdLfFAt+5DSwh
+  bh=m+vaP+hUhXQyQtti8rw2K8d44e4Og780oMqT54taEy0=;
+  b=PlWj2KDxNOjTtxHbHLml7T7gPJ0qn89zWx1rLHhYjlq1iuiMtyrjnbyJ
+   7N8hNBtr+I9liLrm3p6C4CNbklRtpONLLw8bILQR66TjR38zP9iPrM+L6
+   dyHg6hD6BXtGecSTXEgQSEk5NCJjtFFSEvxUbV1m2qU0zf+Qnk4+POq+5
+   9LJqk2H/F9yFYSeQzZGonbtnKKVQ77jCWEeIjtZhnVLPn4ZiB2zy0JYYT
+   aP7VkA1gw7+6wi6Eu1TIC+srxII3mMxtKWJFSLxc1uA102GtVlgkSxdES
+   skOWyj5IihbdWeDvea7ZOzkNRYgeirUfx4nmbPxMSFUtFSw9DIU8vR7MG
    Q==;
-X-CSE-ConnectionGUID: s2dDDLr+SKuxZW9BJ6q4EQ==
-X-CSE-MsgGUID: 4mIFs2lTQz2mTKKmOG4KqQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11867"; a="74149511"
+X-CSE-ConnectionGUID: pAD6bb9lSOyFGPs8JjSHqQ==
+X-CSE-MsgGUID: rUf8cEIsRTym0qOBmLsh0A==
+X-IronPort-AV: E=McAfee;i="6800,10657,11867"; a="74149526"
 X-IronPort-AV: E=Sophos;i="6.25,208,1779174000"; 
-   d="scan'208";a="74149511"
+   d="scan'208";a="74149526"
 Received: from orviesa006.jf.intel.com ([10.64.159.146])
-  by fmvoesa110.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Aug 2026 06:19:11 -0700
-X-CSE-ConnectionGUID: 9ZPlh3lCTs6KcgQ5p0szrg==
-X-CSE-MsgGUID: vBveXvr1SjOXi5CNKQYXuQ==
+  by fmvoesa110.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Aug 2026 06:19:14 -0700
+X-CSE-ConnectionGUID: MxIAstuiTqe+XZrgiAh09Q==
+X-CSE-MsgGUID: EAitVmDZRfeBsJWc2EOqCQ==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.25,208,1779174000"; 
-   d="scan'208";a="260338057"
+   d="scan'208";a="260338080"
 Received: from mkosciow-mobl1.ger.corp.intel.com (HELO ahunter6-desk) ([10.245.244.200])
-  by orviesa006-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Aug 2026 06:19:08 -0700
+  by orviesa006-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Aug 2026 06:19:11 -0700
 From: Adrian Hunter <adrian.hunter@intel.com>
 To: alexandre.belloni@bootlin.com
 Cc: Frank.Li@nxp.com,
@@ -53,9 +53,9 @@ Cc: Frank.Li@nxp.com,
 	linux-kernel@vger.kernel.org,
 	linux-pci@vger.kernel.org,
 	linux-pm@vger.kernel.org
-Subject: [PATCH V4 01/14] i3c: master: Fix recursive locking during device registration
-Date: Thu,  6 Aug 2026 16:18:44 +0300
-Message-ID: <20260806131857.119830-2-adrian.hunter@intel.com>
+Subject: [PATCH V4 02/14] i3c: Fix unlocked dereference of dev->desc in i3c_device_get_supported_xfer_mode()
+Date: Thu,  6 Aug 2026 16:18:45 +0300
+Message-ID: <20260806131857.119830-3-adrian.hunter@intel.com>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260806131857.119830-1-adrian.hunter@intel.com>
 References: <20260806131857.119830-1-adrian.hunter@intel.com>
@@ -68,38 +68,15 @@ MIME-Version: 1.0
 Organization: Intel Finland Oy, Registered Address: c/o Alberga Business Park, 6 krs, Bertel Jungin Aukio 5, 02600 Espoo, Business Identity Code: 0357606 - 4, Domiciled in Helsinki
 Content-Transfer-Encoding: 8bit
 
-i3c_master_register_new_i3c_devs() registers newly discovered devices
-while holding i3c_bus_normaluse_lock(), a down_read().  device_register()
-can immediately probe the device, and probe callbacks typically invoke
-I3C helpers that take i3c_bus_normaluse_lock() again, leading to a
-recursive acquisition of the same rwsem.  rwsems do not support recursive
-read locking and can deadlock when a writer is waiting.  See the
-"Recursive read locks" section of Documentation/locking/lockdep-design.rst.
+i3c_device_get_supported_xfer_mode() uses dev->desc to obtain the
+master controller.  However, dev->desc must not be dereferenced unless
+bus->lock is held, and this function does not take that lock.
 
-For example, with Intel LPSS I3C, LOCKDEP generates a WARNING like:
-  # echo intel-lpss-i3c.0 > /sys/bus/platform/drivers/mipi-i3c-hci/unbind
-  # echo intel-lpss-i3c.0 > /sys/bus/platform/drivers/mipi-i3c-hci/bind
-  WARNING: possible recursive locking detected
-  kworker/5:1/94 is trying to acquire lock:
-  ffff88811c810d78 (&i3cbus->lock){++++}-{4:4}, at: i3c_device_match_id+0x45/0x370
-  but task is already holding lock:
-  ffff88811c810d78 (&i3cbus->lock){++++}-{4:4}, at: i3c_master_reg_work_fn+0x21/0x5f0
+The function only needs access to the master controller associated with
+the device's bus.  Use dev->bus instead, which is always valid for the
+lifetime of the device and does not require dereferencing dev->desc.
 
-Fix this by separating device creation from device registration.
-Populate desc->dev under the maintenance lock, collect the devices that
-still need registration into a local list, then release the lock before
-calling device_register().  Finally retake the lock and clean up any
-devices that failed to register.
-
-Use the maintenance lock rather than the normal-use lock while adding
-device objects.  A write-side maintenance lock prevents readers from
-observing a partially initialized desc->dev during initial device
-population, or desc->dev disappearing if registration fails.
-
-The local list requires a list node, so add a list node member to struct
-i3c_device.
-
-Fixes: 3a379bbcea0a ("i3c: Add core I3C infrastructure")
+Fixes: 256a21743d91 ("i3c: Add HDR API support")
 Cc: stable@vger.kernel.org
 Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
 ---
@@ -107,121 +84,62 @@ Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
 
 Changes in V4:
 
-	Expanded the kernel-doc for the new struct i3c_device @node
-	member to note that it is only for use by
-	i3c_master_register_new_i3c_devs() and is not protected by a
-	lock.
+	None
 
 Changes in V3:
-
-	Added Cc: stable@vger.kernel.org
-
-Changes in V2:
 
 	New patch
 
 
- drivers/i3c/master.c       | 45 ++++++++++++++++++++++++++++----------
- include/linux/i3c/master.h |  3 +++
- 2 files changed, 36 insertions(+), 12 deletions(-)
+ drivers/i3c/device.c    | 2 +-
+ drivers/i3c/internals.h | 5 +++++
+ drivers/i3c/master.c    | 6 ------
+ 3 files changed, 6 insertions(+), 7 deletions(-)
 
+diff --git a/drivers/i3c/device.c b/drivers/i3c/device.c
+index 101eaa77de68..a3778282e84c 100644
+--- a/drivers/i3c/device.c
++++ b/drivers/i3c/device.c
+@@ -309,7 +309,7 @@ EXPORT_SYMBOL_GPL(i3c_device_match_id);
+  */
+ u32 i3c_device_get_supported_xfer_mode(struct i3c_device *dev)
+ {
+-	return i3c_dev_get_master(dev->desc)->this->info.hdr_cap | BIT(I3C_SDR);
++	return i3c_bus_to_i3c_master(dev->bus)->this->info.hdr_cap | BIT(I3C_SDR);
+ }
+ EXPORT_SYMBOL_GPL(i3c_device_get_supported_xfer_mode);
+ 
+diff --git a/drivers/i3c/internals.h b/drivers/i3c/internals.h
+index 0f1f3f766623..86a36b951e0d 100644
+--- a/drivers/i3c/internals.h
++++ b/drivers/i3c/internals.h
+@@ -72,4 +72,9 @@ static inline void i3c_readl_fifo(const void __iomem *addr, void *buf,
+ 	}
+ }
+ 
++static inline struct i3c_master_controller *i3c_bus_to_i3c_master(struct i3c_bus *i3cbus)
++{
++	return container_of(i3cbus, struct i3c_master_controller, bus);
++}
++
+ #endif /* I3C_INTERNAL_H */
 diff --git a/drivers/i3c/master.c b/drivers/i3c/master.c
-index f485b98805cf..d2fb1a110521 100644
+index d2fb1a110521..c7bb52b71d88 100644
 --- a/drivers/i3c/master.c
 +++ b/drivers/i3c/master.c
-@@ -2069,12 +2069,21 @@ static int i3c_master_early_i3c_dev_add(struct i3c_master_controller *master,
- static void
- i3c_master_register_new_i3c_devs(struct i3c_master_controller *master)
- {
-+	struct i3c_device *i3cdev, *tmp;
- 	struct i3c_dev_desc *desc;
-+	LIST_HEAD(i3c_unreg_devs);
- 	int ret;
- 
- 	if (!master->init_done)
- 		return;
- 
-+	i3c_bus_maintenance_lock(&master->bus);
-+
-+	if (master->shutting_down) {
-+		i3c_bus_maintenance_unlock(&master->bus);
-+		return;
-+	}
-+
- 	i3c_bus_for_each_i3cdev(&master->bus, desc) {
- 		if (desc->dev || !desc->info.dyn_addr || desc == master->this)
- 			continue;
-@@ -2104,25 +2113,37 @@ i3c_master_register_new_i3c_devs(struct i3c_master_controller *master)
- 		if (desc->boardinfo)
- 			device_set_node(&desc->dev->dev, desc->boardinfo->fwnode);
- 
--		ret = device_register(&desc->dev->dev);
--		if (ret) {
--			dev_err(&master->dev,
--				"Failed to add I3C device (err = %d)\n", ret);
--			desc->dev->desc = NULL;
--			put_device(&desc->dev->dev);
--			desc->dev = NULL;
--		}
-+		list_add_tail(&desc->dev->node, &i3c_unreg_devs);
-+	}
-+
-+	i3c_bus_maintenance_unlock(&master->bus);
-+
-+	list_for_each_entry_safe(i3cdev, tmp, &i3c_unreg_devs, node) {
-+		ret = device_register(&i3cdev->dev);
-+		if (ret)
-+			dev_err(&master->dev, "Failed to add I3C device (err = %d)\n", ret);
-+		else
-+			list_del_init(&i3cdev->node);
-+	}
-+
-+	i3c_bus_maintenance_lock(&master->bus);
-+
-+	list_for_each_entry_safe(i3cdev, tmp, &i3c_unreg_devs, node) {
-+		list_del(&i3cdev->node);
-+		desc = i3cdev->desc;
-+		i3cdev->desc = NULL;
-+		put_device(&i3cdev->dev);
-+		desc->dev = NULL;
- 	}
-+
-+	i3c_bus_maintenance_unlock(&master->bus);
+@@ -102,12 +102,6 @@ void i3c_bus_normaluse_unlock(struct i3c_bus *bus)
+ 	up_read(&bus->lock);
  }
  
- static void i3c_master_reg_work_fn(struct work_struct *work)
+-static struct i3c_master_controller *
+-i3c_bus_to_i3c_master(struct i3c_bus *i3cbus)
+-{
+-	return container_of(i3cbus, struct i3c_master_controller, bus);
+-}
+-
+ static struct i3c_master_controller *dev_to_i3cmaster(struct device *dev)
  {
- 	struct i3c_master_controller *master = container_of(work, typeof(*master), reg_work);
- 
--	i3c_bus_normaluse_lock(&master->bus);
--	if (!master->shutting_down)
--		i3c_master_register_new_i3c_devs(master);
--	i3c_bus_normaluse_unlock(&master->bus);
-+	i3c_master_register_new_i3c_devs(master);
- }
- 
- /**
-diff --git a/include/linux/i3c/master.h b/include/linux/i3c/master.h
-index 2dc139a217bf..26535beb1e77 100644
---- a/include/linux/i3c/master.h
-+++ b/include/linux/i3c/master.h
-@@ -238,6 +238,8 @@ struct i3c_dev_desc {
-  *	  every time the I3C device is rediscovered with a different dynamic
-  *	  address assigned
-  * @bus: I3C bus this device is attached to
-+ * @node: unregistered device list node, only for use by
-+ *	  i3c_master_register_new_i3c_devs(), it is not protected by a lock
-  *
-  * I3C device object exposed to I3C device drivers. The takes care of linking
-  * this object to the relevant &struct_i3c_dev_desc one.
-@@ -248,6 +250,7 @@ struct i3c_device {
- 	struct device dev;
- 	struct i3c_dev_desc *desc;
- 	struct i3c_bus *bus;
-+	struct list_head node;
- };
- 
- /*
+ 	return container_of(dev, struct i3c_master_controller, dev);
 -- 
 2.53.0
 
