@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A972B46D2DD
-	for <linux-pci@vger.kernel.org>; Thu,  6 Aug 2026 11:35:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 72DC846EF71
+	for <linux-pci@vger.kernel.org>; Thu,  6 Aug 2026 11:37:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786016158; cv=none; b=TDzawiexYutM10062hDHSGkz60BARmdgg9Lo6X31IQ3BLUSwqWc0OFH7GwVqmFYHbo+wNgbRvt63Q8jsuI4u2ydyuZeBRxXVz0rkBKD4LVlNERQ+MhYl4JppuloOYnsS+gKlAcLNrozT+4RrSEZqZLR5vYaKTafs/XQJbnzej/w=
+	t=1786016273; cv=none; b=LwsZWuXsGQUyjcnvAIsGlaaqb4wm3bXKBiVqUY/3nZwxLu+JZt3h+BzKtYzeXUdjNW6SGkGMe8HYC1G7xrGKxh3Z/H06HDdBozbZxDl6m+Quo9/IVGBKrbDH4jV05i3JW0f4OmH8UGERXD2UXK2KSkxtk+1cR6rE11Dor4M2ShQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786016158; c=relaxed/simple;
-	bh=tM5hZYiig8YT/S0RJlTortLynbrDkT0AmDnMWgCOgBw=;
+	s=arc-20240116; t=1786016273; c=relaxed/simple;
+	bh=VTqvagnywLMRBzrV3LPXhIpFmA85X+BnH8lQV1916ko=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=kzoPWVIKk8Ynsa4rvzex52DatSaL2wbMoHjX+WQPYtjrcz9cP5VO5U8i2pYjvHXYS/iGNTNnoufeH1MDwV7EdFdd+XcsM3MazCDFEu+cvhCC0Jqg9mVc06yilVfz/2dVV3k90ltc9aNEF5L/mkzEnaXcrinN78Npiv64vy+hTPE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=M3SeHJab; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=LRig959V3cIwv5KOk4/MprLCuO85nrijBpmyXJuXPMvnelVVNiznZZ8Qt5wj83S4dCHKEDlB4nq74te7p/gyFq+jQoHHS9hhN0h13GTm4G0ANtSTvs/Ah0IPvRQ9qxFQCpUrhu+6+99LleayrtturVBv416XbNlor76OPw/Gpgg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ROSYvLO1; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="M3SeHJab"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8B1E71F000E9;
-	Thu,  6 Aug 2026 11:35:52 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ROSYvLO1"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D12601F000E9;
+	Thu,  6 Aug 2026 11:37:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786016152;
-	bh=1s834RycEyayE9TkDpN5oF9x+wvPfOBD2DGtSWs/Ky4=;
+	s=k20260515; t=1786016264;
+	bh=VTqvagnywLMRBzrV3LPXhIpFmA85X+BnH8lQV1916ko=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=M3SeHJab6Ozdy+iqQ7RpU99qC7PfqqAE7rn7SEbtUrleFzmMglYgccbbM/lX3XJOm
-	 +xMudoZ6NSmWoHYvaYDCt+gnl4XhlWm43EWDtgNY16FByeGM7NfVEM+aZm953OZaRO
-	 gmVOgkUeZCCZu8CGNmP28dyDFkGdFdi+n3OOv66nkMLfY6YtN1dU5M1T8sUfQgwTAh
-	 99tGIaxaXd0N+lP/JmQStfx0pvKnyPPIgaotUHeeMZQK9WwhNAuU+ov5JNisniNu3W
-	 GoYOVI228TjUtCQqOqHL/iFFib2wcVo7bipYMaL+ldu+Z4kaPM4T8r6NSisgwn5bxW
-	 tVEYt4/tcVXcg==
+	b=ROSYvLO1blaLJgqxDx+GNpk/50jbboxxHtPGgb10fk5cca/4m4Nlj30Hk+swzGeI0
+	 r1JvsbMj09fClaybPGd+uvoalwdpSj2tLJuM1Le6WzR1c8Pb6ui9jCi1ugq56sAr9Z
+	 3J8R8Wyd0QURDFDM+B4cqd3ZTiUin3NZu/U+iE5m+yIhOB62UDzqliaor5ZmIBqvdF
+	 zBETgZ7PJI74Yo2Ct6tc1lr69fxEEqfy/fEvkiFJ9tsMk3kAP3oDKQDYc4EtSva5Ju
+	 sCFh1aqad0OpL2+8sq688zdzWjagMPzuY3iN+D4x84kFOEUYj1mH4eIl5CH0L6fb7s
+	 82TdpN56lgWmA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 04/13] PCI: Account for Direct Translated P2P in ACS
- isolation checks
+Subject: Re: [PATCH v2 13/13] PCI: Add KUnit coverage for ACS isolation
+ checks
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Leon Romanovsky" <leon@kernel.org>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260806-fix-p2p-acs-v2-4-0cec14812965@nvidia.com>
+In-Reply-To: <20260806-fix-p2p-acs-v2-13-0cec14812965@nvidia.com>
 References: <20260806-fix-p2p-acs-v2-0-0cec14812965@nvidia.com>
- <20260806-fix-p2p-acs-v2-4-0cec14812965@nvidia.com>
+ <20260806-fix-p2p-acs-v2-13-0cec14812965@nvidia.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 06 Aug 2026 11:35:51 +0000
-Message-Id: <20260806113552.8B1E71F000E9@smtp.kernel.org>
+Date: Thu, 06 Aug 2026 11:37:43 +0000
+Message-Id: <20260806113743.D12601F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -47,29 +47,23 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
 > From: Leon Romanovsky <leonro@nvidia.com>
 >=20
-> PCIe r7.0, sec 6.12.3:
+> Direct Translated P2P and Egress Control both let a peer request reach
+> the peer without Request Redirect, and whether Request Redirect still
+> isolates depends further on Translation Blocking and on the flags the
+> caller requests. Firmware owns these bits, so the combinations are not
+> reachable on a given machine.
 >=20
->   peer-to-peer Memory Requests whose Address Type (AT) field indicates a
->   Translated address must be routed to the peer Port/Function without
->   redirection, regardless of ACS P2P Request Redirect and ACS P2P Egress
->   Control settings.
+> Drive pci_acs_flags_enabled() with a fake pci_ops supplying the ACS
+> Control register and check each combination. The function is exposed
+> under CONFIG_KUNIT via VISIBLE_IF_KUNIT.
 >=20
-> Request Redirect therefore does not isolate devices below a Port with
-> ACS Direct Translated P2P enabled.
->=20
-> Sec 6.12.1.1 makes such a Request an ACS Violation once Translation
-> Blocking is enabled, and that error "must take precedence over ... ACS
-> P2P control mechanisms". Report isolation only in that case. Without
-> Translation Blocking, devices below such a Port now share an IOMMU
-> group.
->=20
-> Fixes: ad805758c0eb ("PCI: add ACS validation utility")
 > Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
+> Assisted-by: Claude Opus 5 <noreply@anthropic.com>
 > Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
 
 Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260806-fix-p2p-ac=
-s-v2-0-0cec14812965@nvidia.com?part=3D4
+s-v2-0-0cec14812965@nvidia.com?part=3D13
 
