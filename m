@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 86A14448B84;
-	Thu,  6 Aug 2026 11:25:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 721CC42AFA7;
+	Thu,  6 Aug 2026 11:25:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786015550; cv=none; b=njsAaENBV/MYbPr4scKNMtpQaCRzPG/dwqYOqS2Ieuh9IgPJ3UUMtobQIqqFGxaMATtQeNQ/2SAqDBugwA63O71ZOKs60j3vDqKBs6QksD4gSFXdcP2dpFyXAXL0iROD7b3bk+zh6MDeaZhlBG9EzEWUxLwnC/1bZJiwjQ/C09c=
+	t=1786015556; cv=none; b=lrv44JfZjbc3bheph/P0GY69fDzNfLWahBJ0WNCHmPl1KFovuWqOpRwf6FOnlanVu/i5MPcneJznwPsWbrDNdExj2KUAmtestKcUNt42pKf0C+ePkWuYi6T4nEuEpsQ+68KkPDL1J5c9Fg/M6Tp2OGhJw/rY9NzSFc0vH6roLnA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786015550; c=relaxed/simple;
-	bh=r38pIzC0p+LQUUpxadctWU7eSlja8Oao0spWZDX3pTM=;
+	s=arc-20240116; t=1786015556; c=relaxed/simple;
+	bh=Rsztl0wRdH7emGkUIVxDm9nPwiptRTJ33/0ZalySuAQ=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=A3I/Iatz/GmiVOzEwTvCxxCBWfLEHQ/2w93Gh+39Fu0sqgkD+VrvyyoUFFoDtHHKD5F0Ie0j1IK9/ft3bS8U+lTd6FeP1w7ihC4FzFJDB7cGCMLDMd+yRSEytVcwU00sqdDYhjoiODn6ywygRtBrORD5qk6ADLTEedDzQ+kWBKM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KH+Q5NuG; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=VhGSKc+WMpMZ3c9NadsvVeEb40CgT+tRcGPfsOZZz/oLHG1xG67Hy+9dn2vv6yND4+7KTV0MPsMuDi4+y8oiu0OAC5o0VsURcbJokKdoc6VEAxC2N6H+rL/svtAlRq+7k9zUpKasT5lEVoVu1tLsSK0Wp3fTIukuZA9/u8poVx8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lKX1Yfl2; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KH+Q5NuG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 80E3B1F00A3A;
-	Thu,  6 Aug 2026 11:25:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lKX1Yfl2"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D55771F000E9;
+	Thu,  6 Aug 2026 11:25:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786015549;
-	bh=8qB2IxVto5TkweZOPktEIgL7ELDxeJGNd3yvs7+VilI=;
+	s=k20260515; t=1786015555;
+	bh=kRCVsJQxui+jwy9YKej4wasXhPcjnuXQRvBcbVRYV74=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=KH+Q5NuG7c/74UeyxzObqoS9owWjYw2KrL9zl5RsLTt7zfN4+bZJDL6ANku8FBh1C
-	 ZxPcG0Pg4K4XhcczcN9iFYFd9Kz9Zivr6gUAjDHzDodMUhrnmB3LtAmsMo6VXuRm24
-	 Mi28+DkasIJ2wDNd/m272Pt1HzlRUCfG8yZNxwWFzQyJuxFcbnk8Y2wOWRCGYYPjKk
-	 AqnXsehZ2wSU7Nw+/VsDn6yj9lJSyAAzu5gdSjrE0ET2uGi2sLuePAootfUegspvpZ
-	 GwdmJ17FS+c4NHDRheotdwPvBpSwlnzKjXVGyDzbkn8C30PBldKTIFB5Mim5udZxPw
-	 GqN4Z9Hg9SJ1g==
+	b=lKX1Yfl2F23rsy1fdZadFzgSegMHYx2q3Cld49itRQHjU+riMrE+RoU1niTabuzMg
+	 oViJorx4sVJXiLuzrbRAZ+ZdItaRs3yHy+o7KVka7cKCJY9eDHdSxQ+31Au/OL4Fs/
+	 S1mLMeX2cTC8BBuQF92q+z6k/X9uUe9f+xOaSQRHiWeBuZ2ZyEFGmY1ttwmqxVAj/N
+	 Rm4pPY6LlCqghTcupPwcV5CXhz3D349S3vMWH1yBWbJuNGLj/ReVKNxC1U+sGLvvpx
+	 Tv6oYaz0qpmxL09KUHEBj7TSbT78vAkhUoywNCHrZFHaVnzaD31P9tL0MoSrMMzwjz
+	 qf2+gprzlDn1g==
 From: Leon Romanovsky <leon@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
 	Logan Gunthorpe <logang@deltatee.com>,
@@ -35,9 +35,9 @@ To: Bjorn Helgaas <bhelgaas@google.com>,
 Cc: linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	linux-doc@vger.kernel.org
-Subject: [PATCH v2 06/13] PCI: Account for ACS egress control in isolation checks
-Date: Thu,  6 Aug 2026 14:24:13 +0300
-Message-ID: <20260806-fix-p2p-acs-v2-6-0cec14812965@nvidia.com>
+Subject: [PATCH v2 02/13] PCI/P2PDMA: Report ACS ports when the paths share no upstream bridge
+Date: Thu,  6 Aug 2026 14:24:09 +0300
+Message-ID: <20260806-fix-p2p-acs-v2-2-0cec14812965@nvidia.com>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260806-fix-p2p-acs-v2-0-0cec14812965@nvidia.com>
 References: <20260806-fix-p2p-acs-v2-0-0cec14812965@nvidia.com>
@@ -53,84 +53,58 @@ Content-Transfer-Encoding: 8bit
 
 From: Leon Romanovsky <leonro@nvidia.com>
 
-pci_acs_enabled() treats P2P Request Redirect as effective whenever its
-control bit is set. PCIe r7.0, sec 6.12.3, table 6-11 lets an enabled
-Egress Control Vector override it: a clear vector bit routes the request
-directly.
+A provider and a client below different Root Ports share no upstream
+bridge, so the search ends without a match and the walk takes the
+host-bridge route directly. Neither path is examined for ACS, so no
+redirect diagnostic is emitted and the host-bridge whitelist warning
+stays suppressed.
 
-IOMMU grouping uses this check to prove peer requests cannot bypass the
-IOMMU, but cannot know every applicable vector bit, so Request Redirect
-gives no such guarantee while Egress Control is enabled.
-
-Report Request Redirect as ineffective there, merging the devices into
-one IOMMU group, and report no isolation when the register cannot be
-read. Apply the same rule to the Intel SPT PCH quirk.
+Examine the paths before taking that route, so every redirecting port is
+named in the pci=disable_acs_redir= hint. The mapping type is unchanged.
 
 Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
 Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
 ---
- drivers/pci/pci.c    | 12 +++++++++++-
- drivers/pci/quirks.c | 10 ++++++++--
- 2 files changed, 19 insertions(+), 3 deletions(-)
+ drivers/pci/p2pdma.c | 12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 154eb08036ad..bc1c3b68c131 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3620,7 +3620,8 @@ static bool pci_acs_flags_enabled(struct pci_dev *pdev, u16 acs_flags)
- 	 */
- 	acs_flags &= (pdev->acs_capabilities | PCI_ACS_EC);
+diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
+index 2d3b380cc578..801c183ae6b7 100644
+--- a/drivers/pci/p2pdma.c
++++ b/drivers/pci/p2pdma.c
+@@ -703,6 +703,7 @@ calc_map_type_and_dist(struct pci_dev *provider, struct pci_dev *client,
+ {
+ 	enum pci_p2pdma_map_type map_type = PCI_P2PDMA_MAP_THRU_HOST_BRIDGE;
+ 	struct pci_dev *a = provider, *b = client, *bb;
++	bool no_common_upstream = false;
+ 	bool acs_redirects = false;
+ 	struct pci_p2pdma *p2pdma;
+ 	struct seq_buf acs_list;
+@@ -740,8 +741,12 @@ calc_map_type_and_dist(struct pci_dev *provider, struct pci_dev *client,
+ 		dist_a++;
+ 	}
  
--	pci_read_config_word(pdev, pos + PCI_ACS_CTRL, &ctrl);
-+	if (pci_read_config_word(pdev, pos + PCI_ACS_CTRL, &ctrl))
-+		return false;
- 
- 	/*
- 	 * Direct Translated P2P routes a Translated Request to the peer
-@@ -3630,6 +3631,15 @@ static bool pci_acs_flags_enabled(struct pci_dev *pdev, u16 acs_flags)
- 	if (request_redirect && (ctrl & PCI_ACS_DT) && !(ctrl & PCI_ACS_TB))
- 		return false;
- 
+-	*dist = dist_a + dist_b;
+-	goto map_through_host_bridge;
 +	/*
-+	 * Egress Control can override Request Redirect for peer requests.
-+	 * This target-independent check cannot prove that every applicable
-+	 * Egress Control Vector bit is set, so RR does not guarantee isolation
-+	 * while EC is enabled.
++	 * The paths share no upstream bridge, so the request can only reach
++	 * the peer through the host bridge. Examine the client path anyway,
++	 * so the diagnostics below name every ACS port on both paths.
 +	 */
-+	if (request_redirect && (ctrl & PCI_ACS_EC))
-+		return false;
++	no_common_upstream = true;
+ 
+ check_b_path_acs:
+ 	bb = b;
+@@ -761,6 +766,9 @@ calc_map_type_and_dist(struct pci_dev *provider, struct pci_dev *client,
+ 	*dist = dist_a + dist_b;
+ 
+ 	if (!acs_cnt) {
++		if (no_common_upstream)
++			goto map_through_host_bridge;
 +
- 	return (ctrl & acs_flags) == acs_flags;
- }
- 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index bb4c09cbbd10..ebfe902b0118 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -4990,15 +4990,21 @@ static int pci_quirk_intel_spt_pch_acs(struct pci_dev *dev, u16 acs_flags)
- 		return -ENOTTY;
- 
- 	/* see pci_acs_flags_enabled() */
--	pci_read_config_dword(dev, pos + PCI_ACS_CAP, &cap);
-+	if (pci_read_config_dword(dev, pos + PCI_ACS_CAP, &cap))
-+		return 0;
- 	acs_flags &= (cap | PCI_ACS_EC);
- 
--	pci_read_config_dword(dev, pos + INTEL_SPT_ACS_CTRL, &ctrl);
-+	if (pci_read_config_dword(dev, pos + INTEL_SPT_ACS_CTRL, &ctrl))
-+		return 0;
- 
- 	/* Direct Translated P2P may bypass Request Redirect. */
- 	if (request_redirect && (ctrl & PCI_ACS_DT) && !(ctrl & PCI_ACS_TB))
- 		return 0;
- 
-+	/* Egress Control may override Request Redirect for peer requests. */
-+	if (request_redirect && (ctrl & PCI_ACS_EC))
-+		return 0;
-+
- 	return pci_acs_ctrl_enabled(acs_flags, ctrl);
- }
- 
+ 		map_type = PCI_P2PDMA_MAP_BUS_ADDR;
+ 		goto done;
+ 	}
 
 -- 
 2.55.0
