@@ -1,155 +1,368 @@
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+Received: from AS8PR04CU009.outbound.protection.outlook.com (mail-westeuropeazon11011027.outbound.protection.outlook.com [52.101.70.27])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7461537D133;
-	Thu,  6 Aug 2026 16:50:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786035039; cv=none; b=EJPfD03IUNe2NtzDePbcw5tG2a7dGspXH0s9lTZCqJytTKM+OmNxfae4IF9zRyC3LJ2kagMDb4fKv9TIdyBwkco0AzaNxOE1vteH7idG4QJ8uisGn0Aen1W4Cr0PJMI7N/rydpyp5O3RWPdWpg2lhl05Duc+VRZYB2GQLdDFKrY=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786035039; c=relaxed/simple;
-	bh=dgojdZlq0aFZ2udUsDeqEs8qOj+jZTbzbnvUb+gaBks=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=LRWwb2m1i6bt5zFudbOIvaCmU23osU2CwYOW66Bw+Pj8o3a5hTU9709Zb4pLhRnbYu3Wzy5uIQyGP/6JVk9QMuWm1q1gnjH6BPCYEidv8h7TA+zUWdDvX6fRIqXbUaC4igi2+uGfiLcDwYZl2p5SlmU+dB8huyICoG3hRo8AZZE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=PWgW/xsI; arc=none smtp.client-ip=148.163.156.1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A1BD37F317;
+	Thu,  6 Aug 2026 16:50:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.70.27
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1786035058; cv=fail; b=eTnvICvQ5PRpFQkPaJJZIT5KqQ8P+edW6e+vLzqd991ZkPiukqIXFjK5gagvcg7OUh4gGBRRnuKQ4yjJFz1fLB/GCHw7y5tjrwbuIDPKZvccYmBgTJXv99NSjhXZ3VV80tJ8aL+AOb4qQVDKnLU2psfh5LGY5lgkuv4tdKwPcbQ=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1786035058; c=relaxed/simple;
+	bh=lHKN8ykqxqgmrsh5qdPMOgmSqUEYZSzleizGCBVCeoQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=FLZgFefdce/wyh6NhSnayHsstdx2ehaspoIXztQW67s+j/Tj0ukC3kgcjntNTyTkyA2URLhpeLC/nvdYeli/3i3Oh+s/yTfLiDqZZ/c/3rVY+Gnmucubmtq3BRYNbKkG/VgjdzKrsNhHA2BdBydhvSNKuwQNeWyQ3HMP7bsi+dw=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com; spf=pass smtp.mailfrom=oss.nxp.com; dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b=l03iV8Jd; arc=fail smtp.client-ip=52.101.70.27
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="PWgW/xsI"
-Received: from pps.filterd (m0360083.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 676EnA1b2939527;
-	Thu, 6 Aug 2026 16:50:16 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pp1; bh=dI/JUW
-	OXVfmk03QoibAP+70rE2yFJwykSpSDH95V5/w=; b=PWgW/xsI4pebgAH/BV1kz8
-	PrYpd0TU18Kia8wtq8jNczblGnJT/lUvsuDMqLGrIaUzrXtht7DadTOtm4lj/qni
-	m0P8s1ENRkiLbGPy/n9Z8COsJwxLX2UopugiFKvIKg6TPEWepo0IXQ669a7grjwB
-	cp4t90+FIFaG9AWMHBmV4UpXr93ak5TjfjsH3BqSKb+78bV45ydLtW28McSyON2o
-	dHCKK5TvclBcyZ+FCsCShJFdSahmvkmqB0RF0Aufvki2M31Jra3lJpp/e1EaqUrG
-	znpkB6gk97y7VWWEZlJDHtNGlSHjvbhLOki+2cau6+h9f6OzjuzRGpOQ9MMwxd3w
-	==
-Received: from ppma11.dal12v.mail.ibm.com (db.9e.1632.ip4.static.sl-reverse.com [50.22.158.219])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4fs8a49cn5-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 06 Aug 2026 16:50:15 +0000 (GMT)
-Received: from pps.filterd (ppma11.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma11.dal12v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 676GfRJL018806;
-	Thu, 6 Aug 2026 16:50:14 GMT
-Received: from smtprelay06.fra02v.mail.ibm.com ([9.218.2.230])
-	by ppma11.dal12v.mail.ibm.com (PPS) with ESMTPS id 4fswtyutnm-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 06 Aug 2026 16:50:14 +0000 (GMT)
-Received: from smtpav04.fra02v.mail.ibm.com (smtpav04.fra02v.mail.ibm.com [10.20.54.103])
-	by smtprelay06.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 676Go8OS30933476
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 6 Aug 2026 16:50:08 GMT
-Received: from smtpav04.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id C1C3120043;
-	Thu,  6 Aug 2026 16:50:08 +0000 (GMT)
-Received: from smtpav04.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 11FB120040;
-	Thu,  6 Aug 2026 16:50:04 +0000 (GMT)
-Received: from [9.67.65.218] (unknown [9.67.65.218])
-	by smtpav04.fra02v.mail.ibm.com (Postfix) with ESMTP;
-	Thu,  6 Aug 2026 16:50:03 +0000 (GMT)
-Message-ID: <72ce5fa7-d12b-40e5-a4a2-f2de414088d1@linux.ibm.com>
-Date: Thu, 6 Aug 2026 22:20:02 +0530
+	dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b="l03iV8Jd"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=YKUaCIdKC3oRFtmCw1yH7RPvim42HdnjizcFMxiVaRMPGbUX45yu5DfWm46bm7i0jzdd0NYhpXnlnP0qbbaRH6lyZ1tqVBQonrQY/PkzVs+kPsqbUozHPjjG25VANJtwZDFUFFQq6rBeZ3tI8BTKaS7wYLVW5FwNW3L6BJJFDr+bjnZZLxmMrxF1FMoO636fzWIF9aVtQ99SBMl/zoByr71h9iQTR7UWoSLrPjR/65u7KZI4UvEdvav7kX9JrZPDUq8yP27zvz/N7mJI8RF3y3yiRIwKVLucBM8+DykuFCnd2xxxPZS3Nf7dR0g/Vhm0C39EFxS46C6iGaO3l2nGWQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=e8SDgbWEwNhfawAEykhh//t6Xq3+o37OV3gcRWpZ0iQ=;
+ b=nUTEsnSdCz8LamTEJmrdvbQMy0XCgN65Myd84FQKDcTi/PHpLEDpfmwxXhUJUN3j9zkQ36ZrJk6UsgSKU2AD4ZIRCnQtysOT70oLQX0UEv1QFgejBeZ2j4qxkrOJ1/SyR3Iq9Vu/AxlaMm6uTK2Bxulu2Ex5mymMhQ9QVhRpLZhOce0hIwgK/LfdoUEOha2R7BwbRUn3iVoi4/WacmUSrZ5pKTUMO5PyNcPIDMBRInlV0IWFHzPIwiOZOCKGQs/bC9qOiLx2EECjB8sKT5fGcyE3h9AHZtDqYg9z847b3Vd6Dft8P09J/K91OWchSqlyqiVYnkwTU2LEArUzwJBnnA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oss.nxp.com; dmarc=pass action=none header.from=oss.nxp.com;
+ dkim=pass header.d=oss.nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=NXP1.onmicrosoft.com;
+ s=selector1-NXP1-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=e8SDgbWEwNhfawAEykhh//t6Xq3+o37OV3gcRWpZ0iQ=;
+ b=l03iV8JdNyh9zuoVR42naUXs14uWvDEvx/srdBI1WV/MGYf+u0hEgZFFoBrAaUS0F1du/w/l23R2pE6Biz9ZAqXwanKQpo4rZCssDPHSTk6ifwZyu2f6jpQwFKBAw3b9wdDtAimdt3TqU9y0MS4zFP+LFcIOc+ycELfBQLa57T7TmO9ozE8PXX0dR+fJ6Jt3xtx6wgnAljsZ2urBkYtAVMG0BhsLNwrraGe5T+VVePfP8OtgTviTMqBzNHS/UonkbeTeuqTKUeaCeEmEsBGqajRORzjXcBCC8UBq4gaICF8WkXtB8tjORCy68q/QXrlEiTq0rzbQoyxtyXNk4PN5Rg==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=oss.nxp.com;
+Received: from GV2PR04MB11799.eurprd04.prod.outlook.com (2603:10a6:150:2cf::9)
+ by VI2PR04MB10956.eurprd04.prod.outlook.com (2603:10a6:800:276::5) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.292.19; Thu, 6 Aug
+ 2026 16:50:42 +0000
+Received: from GV2PR04MB11799.eurprd04.prod.outlook.com
+ ([fe80::2146:83a2:5329:b7c]) by GV2PR04MB11799.eurprd04.prod.outlook.com
+ ([fe80::2146:83a2:5329:b7c%7]) with mapi id 15.21.0292.018; Thu, 6 Aug 2026
+ 16:50:42 +0000
+Date: Thu, 6 Aug 2026 11:50:33 -0500
+From: Frank Li <Frank.li@oss.nxp.com>
+To: Koichiro Den <den@valinux.co.jp>
+Cc: Manivannan Sadhasivam <mani@kernel.org>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Kishon Vijay Abraham I <kishon@kernel.org>,
+	Frank Li <Frank.Li@kernel.org>,
+	Marek Vasut <marek.vasut+renesas@mailbox.org>,
+	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v6 4/6] dmaengine: dw-edma: Add delegated channel request
+ helpers
+Message-ID: <anS7WQ-b4y1_wwY-@SMW015318>
+References: <20260804033855.2115817-1-den@valinux.co.jp>
+ <20260804033855.2115817-5-den@valinux.co.jp>
+ <anISE4zj1odwT2aJ@SMW015318>
+ <eu5iqhvvnpklaudcb7tkbjp3hpzecyzqxdbf4u7fnh6bjjgcqe@6hpimw5vu62m>
+ <anOFUSDiDjD0jvei@SMW015318>
+ <ni6sfv45mypgxncitlstnqxgpqwn5ocxkns6kv3nez6hnq4x5m@setbl5dlfqdr>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ni6sfv45mypgxncitlstnqxgpqwn5ocxkns6kv3nez6hnq4x5m@setbl5dlfqdr>
+X-ClientProxiedBy: PH0PR07CA0115.namprd07.prod.outlook.com
+ (2603:10b6:510:4::30) To GV2PR04MB11799.eurprd04.prod.outlook.com
+ (2603:10a6:150:2cf::9)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] PCI: quirks: Add warm reset quirk for IBM Spyre
- accelerator
-To: Bjorn Helgaas <helgaas@kernel.org>, Avinash Roy <avinash@linux.ibm.com>
-Cc: maddy@linux.ibm.com, mpe@ellerman.id.au, bhelgaas@google.com,
-        npiggin@gmail.com, chleroy@kernel.org, linuxppc-dev@lists.ozlabs.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Avinash Roy <avinash.roy1@linux.ibm.com>
-References: <20260805171840.GA2126423@bhelgaas>
-Content-Language: en-US
-From: Shivaprasad G Bhat <sbhat@linux.ibm.com>
-In-Reply-To: <20260805171840.GA2126423@bhelgaas>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-Reinject: loops=2 maxloops=12
-X-Authority-Analysis: v=2.4 cv=E6P9Y6dl c=1 sm=1 tr=0 ts=6a74bb47 cx=c_pps
- a=aDMHemPKRhS1OARIsFnwRA==:117 a=aDMHemPKRhS1OARIsFnwRA==:17
- a=IkcTkHD0fZMA:10 a=Sv0fKeRqtYgA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=RnoormkPH1_aCDwRdu11:22 a=iQ6ETzBq9ecOQQE5vZCe:22 a=VnNF1IyMAAAA:8
- a=lNBmhb5rY3KJr28suEEA:9 a=QEXdDO2ut3YA:10
-X-Proofpoint-ORIG-GUID: A9CrAhuigwKofBxmnfCcLJ4S9jqP9RFJ
-X-Proofpoint-GUID: LvFnR9t07Rol95n-wE_uOh-qTWiH2Xy5
-X-Proofpoint-Spam-Info: AW1haW4tMjYwODA2MDEzMSBTYWx0ZWRfX0srVlo17IyM8
- GCHvlg1eoQf97TwPNmj+IylyERYu1FuQTYWGmHs50pmU+6n2tg6c0oSLjGXSbrhEoHYhQWc8VOv
- UdNoe+xstgmTo7URo3sFwRlW3YQecTw=
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODA2MDEzMSBTYWx0ZWRfX30k6tIyX9/0Y
- hVu7CVXerDNsdRZJrSmUneKKfa3juUzkXerZqx+WirCXg/F2vfcpx/mY1HSK3ova3muZyDR+S+F
- Hq53TLO/FazxXFQ1hKKGINeRxJjurSA0g4u6B4gKjT1k1+nlTOfqFz86ySi0yrrXU6YMieGduQo
- x25UeGLgZEHHkyAN2JELunV5ridXnuO7zLv2jC+w4PAC4xiQ1mZ8RWf500JGH0wpo9oepIb+itM
- q4jeQxrN5bKhwDMo1uibRRPtQv7MxJ79gUWPpT159LewXCX9mOBanP/NSt9wRq2ORzrZklPlBs/
- /j6m+PYBpXFS7sXl9Hdci90tFoZbshL0efZPKuygf+odI70Aj/9HPk0ymazRuXVcKTCPJpF9JLG
- ChLELbKXInS8PqDr2ydbS3F0C+i6oxT6A7/2NsoDXQw/4ANKvXqh2OZzUDwcnsPlWCo6Yjh+iAj
- CXRbGxkcql8Y62t3I6w==
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-08-06_01,2026-08-05_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- bulkscore=0 clxscore=1011 lowpriorityscore=0 priorityscore=1501
- suspectscore=0 adultscore=0 spamscore=0 malwarescore=0 impostorscore=0
- phishscore=0 classifier=typeunknown authscore=0 authtc= authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2606150000
- definitions=main-2608060131
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: GV2PR04MB11799:EE_|VI2PR04MB10956:EE_
+X-MS-Office365-Filtering-Correlation-Id: 17c1ba8c-c846-4d30-faaf-08def3dad9fe
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|1800799024|366016|23010399003|7416014|376014|19092799006|22082099003|18002099003|11063799006|56012099006|4143699003|6133799003|10067099003;
+X-Microsoft-Antispam-Message-Info:
+	30eDx330ioNZZt5ry4198Sm8oQt61InKNW0Y5eeaobilIq0qRExolKqqQmImVFmljAPQ3aVlzYeCD0bCdqqooK7l/kiTntjgsiyA5fhUtKyxuGdFdetWEjkIVzaYxzBsTYs1dmcz8/tOFajP11UAq9WMgyKi0cEoduZ1wQYDcGD2loh6+/TqKcQ9A5TjsiMTvYNTZclODF2MBAssMwVmH2dNplPG0yqzOdaNMExBgFBsP+sAdQurWwj88qhAUWoPuVzsvvzoB1yQ7jITyKsms5Oup6HU+Pay3XABfXWXKOoKH0vuuigiAPu9l5m5qo0vrYljjWd+ilh9CG2iAuO6VifTO5CUCRjGK6u2jjg34ZGaoLJCwQxxY6UAbo9tDX5tsQ6OxJujwjgpxdc29buLoxUfTjaIx7Z4wwaWCm0fMHeYw3XdhQBnMnHvP0WKiDrIegv7VUECqJbG/br33hTrEJPHKUpy9QRjDuZACTAHYNUiU/M4UVUF2RKrPZ1t1Tgl7gtF4v7ALfzH7LcXQOz4yNJYWdiTsoB8Iqc7CwabtXHvllN8NgbPCFVh0H5Rq3AiAyRWn8WRTPQKCLx3QX/PrnY6+17CUZTqVXqYDjRg5V27CQHSTHDgtKFvW+y4fhuz8/T6Xvhil+G4m1jup7nmAMA/FdvyPR3dtbRkg7hrYfU=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:GV2PR04MB11799.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(23010399003)(7416014)(376014)(19092799006)(22082099003)(18002099003)(11063799006)(56012099006)(4143699003)(6133799003)(10067099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?OHsZeJGHknYBUpeVZ5WqRv54Dz4M/O7iLogD1cXchCoeAEh0TMBmOBm8Bbor?=
+ =?us-ascii?Q?66MDZ2JZdmZCiyYfxiscJ/eyjC1eMT09k1VWKLDnz3ytfnFYar5MoHp1LiQn?=
+ =?us-ascii?Q?aXeP8mLaI/LxyF/uCKY0cvepRFjunkfpdkglr2nU763wfJaUFluJagIWOTpm?=
+ =?us-ascii?Q?sZfqFYu8g3Wey5Cm2y3PjErmw/XYQLYvYAQRd5SN5HO9wOBQUlxPMmaAJ9oN?=
+ =?us-ascii?Q?FMAxyBoUZOH3LeqTSe7OR1aXesqacUXREIczgjA5SJNEwNay5Wxx6vAb+Fl5?=
+ =?us-ascii?Q?F+cZSSx6UX8q80TyHhcoXOwNBEFYETVvdEWtrUTUPkr1U/fS/lpqiZm+5K1T?=
+ =?us-ascii?Q?EsHCmX6zVeJmPGYStaEHFNFEzT7apBXo6x6zlT8U2tBm6N3oqupaUt4v+Izo?=
+ =?us-ascii?Q?0TKoMPRV5euuPXyOv+y9KJmfOS+fe1cPmekpg6IYoCQUcTgRP6K7p1JTILVL?=
+ =?us-ascii?Q?b7HByEuEwgB063mtoF5D6cZZ5Q+baIdNeLDQlY0G36+GEoErR2Kr/v8zjB/b?=
+ =?us-ascii?Q?qHioIqvCch8NbsDiBm9RG2bl2HIuS00c9jARKF3u6TgsesPLhOn6NzwHQY2v?=
+ =?us-ascii?Q?OIKSPJVALMEqJw0xMCVsParArgE+9RiDqx9iRTSrBDkjZGbxFGi/IG0GePaF?=
+ =?us-ascii?Q?xacJnBVdZi5c+dmOVPObiCJT/Clm6EMPLlzt6oKSKBvoaNSdK3hrC1LOErcQ?=
+ =?us-ascii?Q?t002u6zPT3fwC0LEM/R7EOws4GOja4+A5P0X8LU8BDqtcgCLMLnT1+SdWuFW?=
+ =?us-ascii?Q?nUtRknqphOPynvgE8D3XJqb/+uqh0OoVJktpnBgBq2Y6/GJxqqHpVt+dCXe9?=
+ =?us-ascii?Q?/QEfT1qQhey5rCY/VciuAaWX1jJKIES/hgYJxGLEE9QDbk0hw1kyBDhCIVK+?=
+ =?us-ascii?Q?DVu6E5OfGoJxsYcY0WtTv38UHQMFxGATGVDd3fMWD+CFxq1zLqGkKc3lKiLJ?=
+ =?us-ascii?Q?L2zcbFLKZM+99sNeBPgk13jtP6VVB2o8iKS9HPeO11iND9aupSsfD1LbG8Ki?=
+ =?us-ascii?Q?TcDhfJvj/IL9GPkAhDbEW+qH2G1dz9iECbsgm3cVFPIqKpCUNMH3gjg25WXA?=
+ =?us-ascii?Q?d0urWGdM0Lbdi7xk88WVf5vsSN7eif5OJ5pM37eZse52MqEbi0mnmkQHMo0/?=
+ =?us-ascii?Q?zNhc2b+1OG7zTBMyUJBPLNH/I12d5Z68zd4bUePAiuuA9ofgPva5pqROoucL?=
+ =?us-ascii?Q?WYVInHc46yyq6BCLGgraAMlX2QMJJFRjmtZ0VakFmlXbnBJFJYNhU242+qiU?=
+ =?us-ascii?Q?9WJ6ID1AZDSkGm2QAqYr526BoMTh65ucRHgq2LBpIS46XvFwDFA6ugUBd3gN?=
+ =?us-ascii?Q?fEmVP4rt2UTa9rgx7kdejCsyicLusjVunE07Qj0e+e1etPThtMlFyCGXJ90v?=
+ =?us-ascii?Q?YfXrylu0rWS5uxsDlQlINMLg9qsUKG6njLMdg35qsAr+aj0wnStUcSCHdHy0?=
+ =?us-ascii?Q?b4PhgaH4McmIXfWbUdG0CgMw0JXFUEYzhRLYDaspBZVKBoOBrlWF3FUa6sLf?=
+ =?us-ascii?Q?jzH6yz6wlauTn8QHq4iWwUCQYutw79XJ8Dh9MX3XzOFbHOqXahvQlm3eh5iw?=
+ =?us-ascii?Q?55TmfMptniPTiQHJO+KR+FHPTpp2UlWUl19NDCcgMIhfgWsptQu0yW1C73qo?=
+ =?us-ascii?Q?rRLFOhLw6R75k+UUkcZkeO6rbyWg3yjvleFGUPtVNfMMZhxIDm++KMiXH+Dv?=
+ =?us-ascii?Q?wzDRUpl/GCTaE8TgAFXjRFMg9XpHtBsyvqGpVdm3l6tObyJ5vcimLADK+Jjt?=
+ =?us-ascii?Q?1W0nJSqxGulfZuICHqEezYROgV+oYtj+t0yypJ8D8B9bMLGAkqWZ?=
+X-OriginatorOrg: oss.nxp.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 17c1ba8c-c846-4d30-faaf-08def3dad9fe
+X-MS-Exchange-CrossTenant-AuthSource: GV2PR04MB11799.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 06 Aug 2026 16:50:42.2334
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: YEP27uxvJIL10+NGFf3Zn4KBs6RLX2ZKxriR+vlZqgLJxxqDdpsrXmotfy3oqdmNb0leG9raoWq4XtzRHG0KbisDlbYnfx5Q9XO0n67oDFmyK1A49dMwmZ7DpKf2SWpH
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: VI2PR04MB10956
 
-Hi Bjorn,
+On Thu, Aug 06, 2026 at 12:45:13PM +0900, Koichiro Den wrote:
+> On Wed, Aug 05, 2026 at 01:47:45PM -0500, Frank Li wrote:
+> > On Wed, Aug 05, 2026 at 11:05:21AM +0900, Koichiro Den wrote:
+> > > On Tue, Aug 04, 2026 at 11:23:47AM -0500, Frank Li wrote:
+> > > > On Tue, Aug 04, 2026 at 12:38:53PM +0900, Koichiro Den wrote:
+> > > > > Endpoint functions that expose endpoint-local DesignWare eDMA channels
+> > > > > to a remote host need to reserve exact hardware channels and hand
+> > > > > interrupt ownership to the remote side before publishing the channels.
+> > > > >
+> > > > > Add DW eDMA-specific helpers that request a write/read hardware channel
+> > > > > through DMAengine, keep the hardware-channel filter private to dw-edma,
+> > > > > and switch the selected endpoint-local channel to remote interrupt
+> > > > > routing after the channel has been successfully reserved. The matching
+> > > > > release helper can quiesce the channel while it is still remote-routed,
+> > > > > then restores the channel's default routing before releasing the
+> > > > > DMAengine reservation. This lets callers skip quiesce when unwinding a
+> > > > > reservation that was never exposed to host programming.
+> > > > >
+> > > > > Release is best-effort because its callers cannot abort teardown. Report
+> > > > > a quiesce failure locally, but always restore the default routing and
+> > > > > release the DMAengine reservation.
+> > > > >
+> > > > > Signed-off-by: Koichiro Den <den@valinux.co.jp>
+> > > > > ---
+> > > > > Changes in v6:
+> > > > >   - No changes.
+> > > > >
+> > > > >  drivers/dma/dw-edma/dw-edma-core.c | 91 ++++++++++++++++++++++++++++++
+> > > > >  include/linux/dma/edma.h           | 14 +++++
+> > > > >  2 files changed, 105 insertions(+)
+> > > > >
+> > > > > diff --git a/drivers/dma/dw-edma/dw-edma-core.c b/drivers/dma/dw-edma/dw-edma-core.c
+> > > > > index 1f893dc54c79..4c0d2bba755b 100644
+> > > > > --- a/drivers/dma/dw-edma/dw-edma-core.c
+> > > > > +++ b/drivers/dma/dw-edma/dw-edma-core.c
+> > > > > @@ -1302,6 +1302,97 @@ int dw_edma_remove(struct dw_edma_chip *chip)
+> > > > >  }
+> > > > >  EXPORT_SYMBOL_GPL(dw_edma_remove);
+> > > > >
+> > > > > +struct dw_edma_delegated_chan_filter_args {
+> > > > > +	struct device *dma_dev;
+> > > > > +	bool write;
+> > > > > +	u16 id;
+> > > > > +};
+> > > > > +
+> > > > > +static bool dw_edma_delegated_chan_filter(struct dma_chan *dchan, void *param)
+> > > > > +{
+> > > > > +	struct dw_edma_delegated_chan_filter_args *filter = param;
+> > > > > +	struct dw_edma_chan *chan;
+> > > > > +
+> > > > > +	if (!filter || dchan->device->dev != filter->dma_dev)
+> > > > > +		return false;
+> > > > > +
+> > > > > +	chan = dchan2dw_edma_chan(dchan);
+> > > > > +
+> > > > > +	return chan->dir == (filter->write ? EDMA_DIR_WRITE : EDMA_DIR_READ) &&
+> > > > > +	       chan->id == filter->id;
+> > > > > +}
+> > > > > +
+> > > > > +static int dw_edma_delegate_chan(struct dma_chan *dchan)
+> > > > > +{
+> > > > > +	struct dw_edma_chan *chan = dchan2dw_edma_chan(dchan);
+> > > > > +	int ret = 0;
+> > > > > +
+> > > > > +	if (!(chan->dw->chip->flags & DW_EDMA_CHIP_LOCAL))
+> > > > > +		return -EINVAL;
+> > > > > +
+> > > > > +	guard(spinlock_irqsave)(&chan->vc.lock);
+> > > > > +
+> > > > > +	if (chan->configured || chan->status != EDMA_ST_IDLE ||
+> > > > > +	    chan->request != EDMA_REQ_NONE)
+> > > > > +		ret = -EBUSY;
+> > > > > +	else
+> > > > > +		chan->irq_mode = DW_EDMA_CH_IRQ_REMOTE;
+> > > > > +
+> > > > > +	return ret;
+> > > > > +}
+> > > > > +
+> > > > > +struct dma_chan *dw_edma_request_delegated_chan(struct device *dma_dev,
+> > > > > +						bool write, u16 id)
+> > > > > +{
+> > > > > +	struct dw_edma_delegated_chan_filter_args filter = {
+> > > > > +		.dma_dev = dma_dev,
+> > > > > +		.write = write,
+> > > > > +		.id = id,
+> > > > > +	};
+> > > > > +	struct dma_chan *dchan;
+> > > > > +	dma_cap_mask_t mask;
+> > > > > +
+> > > > > +	if (!dma_dev)
+> > > > > +		return NULL;
+> > > > > +
+> > > > > +	dma_cap_zero(mask);
+> > > > > +	dma_cap_set(DMA_SLAVE, mask);
+> > > > > +
+> > > > > +	dchan = dma_request_channel(mask, dw_edma_delegated_chan_filter,
+> > > > > +				    &filter);
+> > > > > +	if (!dchan)
+> > > > > +		return NULL;
+> > > >
+> > > > I forget, why need export delegrated dma channel to dmanegine? If EP
+> > > > driver doesn't report delegrated channel to dma engine, what's happen?
+> > >
+> > > This just reserves the exact channel against any dmaengine clients before
+> > > handing its programming ownership to the host. Without it, a local client
+> > > could request the same channel too.
+> >
+> > why not epf function driver call dma_request_channel() to decide which
+> > channel pass to ownership to the host.
+>
+> I actually tried that model in v2. pci_epf_dma called dma_request_channel() with
+> a filter supplied through the EPC resource.
+>
+>   In v2, .filter_fn was part of the pci_epc_aux_resource definition:
+>   https://lore.kernel.org/r/20260525063129.3316894-3-den@valinux.co.jp/
+>   ... and pci_epf_dma_claim_channel() used it to claim the channel here:
+>   https://lore.kernel.org/r/20260525063456.3317509-3-den@valinux.co.jp/
+>
+> I changed that in v3 after your comment about why the dw-edma filter needed to
+> be public. The replacement kept the filter inside dw-edma, and moved channel
+> reservation, IRQ ownership handoff and reclaim there too. The current EPC
+> delegation API follows that model.
+>
+> Or is that v2 model what you prefer here?
+>
+> That said, dma_get_slave_channel() might be sufficient inside dw-edma here,
+> since it already knows the exact channel from the direction and hw channel id.
+>
+> P.S. For clarity, the options tried or discussed so far are:
+>
+>   (a) Expose dma_chan directly through the EPC resource, then let the EPF
+>       reserve it with dma_get_slave_channel(). This was v1.
+>       (https://lore.kernel.org/r/20260521063405.2842644-3-den@valinux.co.jp/)
+>
+>   (b) Expose the hardware ID, direction and a provider filter, then let the
+>       EPF call dma_request_channel(). This was v2.
+>       (https://lore.kernel.org/r/20260525062420.3315904-2-den@valinux.co.jp/)
+>
+>   (c) Pass the hardware ID and direction to pci_epc_delegate_dma_chan(), then
+>       let the backend reserve and delegate the channel. This is the current
+>       v6 design.
+>       (https://lore.kernel.org/r/20260804033855.2115817-5-den@valinux.co.jp/)
+>
+>   (d) Request channels normally and correlate them with EPC resources through
+>       a generic dma_slave_caps.hw_id. I proposed this in a much older series.
+>       (https://lore.kernel.org/r/20260204145440.950609-2-den@valinux.co.jp/)
 
-Thanks for taking a look.
+Thank you for your great work, let me read and feedback to you, do you have
+irc, discord or other instance message channel.
 
-On 8/5/26 10:48 PM, Bjorn Helgaas wrote:
-> On Wed, Aug 05, 2026 at 06:21:32PM +0530, Avinash Roy wrote:
->> From: Shivaprasad G Bhat <sbhat@linux.ibm.com>
->>
->> The IBM Spyre accelerator (PCI ID 1014:06a7) requires a dedicated warm
->> reset method for reliable EEH recovery on pSeries/ppc64 platforms.
->>
->> FLR alone is insufficient because it does not re-initialize the Spyre
->> firmware state machine. On ppc64 with EEH enabled,
->> pcibios_set_pcie_reset_state() is overridden in
->> arch/powerpc/kernel/eeh.c to drive the platform-level PERST# signal via
->> EEH PE operations, which is the correct mechanism for full device
->> recovery after an EEH event.
-> 
-> This makes it sound like this mechanism is needed for EEH recovery for
-> *all* devices, not just Spyre.  If that's the case it sounds like we
-> need more than just a Spyre-specific quirk.
+Frank
 
-Now I re-read it, The second statement needs to be re-worded. It does 
-sound like its true for all devices. Quirk is only for the Spyre card.
-
-Will post a v2 fixing the same.
-
-Thanks and Regards,
-Shivaprasad
-
-> 
->> The reset function is placed in arch/powerpc/platforms/pseries/pci.c
->> where the EEH infrastructure is already present, declared in
->> pseries.h, and registered in the generic pci_dev_reset_methods[] table
->> in drivers/pci/quirks.c under a CONFIG_PPC_PSERIES guard.
->>
->> This reset method is only registered when CONFIG_PPC_PSERIES is enabled,
->> so it is not available on other platforms.
->>
->> Reset sequence:
->>    - Assert PERST# via pcie_warm_reset, hold 250 ms
->>    - Deassert PERST# via pcie_deassert_reset
->>    - Wait 250 ms for PCIe link retrain and device recovery
->>
->> Signed-off-by: Avinash Roy <avinash.roy1@linux.ibm.com>
->> Signed-off-by: Shivaprasad G Bhat <sbhat@linux.ibm.com>
->> ---
-</snip>
+>
+> Best regards,
+> Koichiro
+>
+> >
+> > Frank
+> >
+> > >
+> > > Best regards,
+> > > Koichiro
+> > >
+> > > >
+> > > > Frank
+> > > >
+> > > > > +
+> > > > > +	if (dw_edma_delegate_chan(dchan)) {
+> > > > > +		dma_release_channel(dchan);
+> > > > > +		return NULL;
+> > > > > +	}
+> > > > > +
+> > > > > +	return dchan;
+> > > > > +}
+> > > > > +EXPORT_SYMBOL_GPL(dw_edma_request_delegated_chan);
+> > > > > +
+> > > > > +void dw_edma_release_delegated_chan(struct dma_chan *dchan, bool quiesce)
+> > > > > +{
+> > > > > +	struct dw_edma_chan *chan;
+> > > > > +
+> > > > > +	if (!dchan)
+> > > > > +		return;
+> > > > > +
+> > > > > +	chan = dchan2dw_edma_chan(dchan);
+> > > > > +	if (quiesce && dw_edma_core_ch_quiesce(chan))
+> > > > > +		dev_warn(chan->dw->chip->dev,
+> > > > > +			 "failed to quiesce delegated %s channel %u\n",
+> > > > > +			 chan->dir == EDMA_DIR_WRITE ? "write" : "read",
+> > > > > +			 chan->id);
+> > > > > +
+> > > > > +	scoped_guard(spinlock_irqsave, &chan->vc.lock)
+> > > > > +		chan->irq_mode = dw_edma_get_default_irq_mode(chan);
+> > > > > +
+> > > > > +	dma_release_channel(dchan);
+> > > > > +}
+> > > > > +EXPORT_SYMBOL_GPL(dw_edma_release_delegated_chan);
+> > > > > +
+> > > > >  MODULE_LICENSE("GPL v2");
+> > > > >  MODULE_DESCRIPTION("Synopsys DesignWare eDMA controller core driver");
+> > > > >  MODULE_AUTHOR("Gustavo Pimentel <gustavo.pimentel@synopsys.com>");
+> > > > > diff --git a/include/linux/dma/edma.h b/include/linux/dma/edma.h
+> > > > > index 3c8e2ef9dee0..944469258b8b 100644
+> > > > > --- a/include/linux/dma/edma.h
+> > > > > +++ b/include/linux/dma/edma.h
+> > > > > @@ -153,6 +153,9 @@ struct dw_edma_chip {
+> > > > >  #if IS_REACHABLE(CONFIG_DW_EDMA)
+> > > > >  int dw_edma_probe(struct dw_edma_chip *chip);
+> > > > >  int dw_edma_remove(struct dw_edma_chip *chip);
+> > > > > +struct dma_chan *dw_edma_request_delegated_chan(struct device *dma_dev,
+> > > > > +						bool write, u16 id);
+> > > > > +void dw_edma_release_delegated_chan(struct dma_chan *chan, bool quiesce);
+> > > > >  #else
+> > > > >  static inline int dw_edma_probe(struct dw_edma_chip *chip)
+> > > > >  {
+> > > > > @@ -163,6 +166,17 @@ static inline int dw_edma_remove(struct dw_edma_chip *chip)
+> > > > >  {
+> > > > >  	return 0;
+> > > > >  }
+> > > > > +
+> > > > > +static inline struct dma_chan *
+> > > > > +dw_edma_request_delegated_chan(struct device *dma_dev, bool write, u16 id)
+> > > > > +{
+> > > > > +	return NULL;
+> > > > > +}
+> > > > > +
+> > > > > +static inline void dw_edma_release_delegated_chan(struct dma_chan *chan,
+> > > > > +						  bool quiesce)
+> > > > > +{
+> > > > > +}
+> > > > >  #endif /* CONFIG_DW_EDMA */
+> > > > >
+> > > > >  #endif /* _DW_EDMA_H */
+> > > > > --
+> > > > > 2.51.0
+> > > > >
