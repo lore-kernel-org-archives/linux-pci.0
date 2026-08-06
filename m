@@ -1,48 +1,48 @@
 Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D92E331ECB;
-	Thu,  6 Aug 2026 13:19:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E1FB3382DA;
+	Thu,  6 Aug 2026 13:19:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786022377; cv=none; b=DqoRBLrg6RN1AI8ch8yZSZ1V78nyosBeVKtiaNyU1mgX8hOp0w8Ag7Zy7KzVSfZ4wMNLILlEYLzLArhsGJFdWiOqRn0HXsXhd7VK/AqnxWyANfipX+Ztjbys5EnVDgzEWe/y+QW5hcAh++pjLQHt4blC6XH/Zq110Val1VK2Zfc=
+	t=1786022376; cv=none; b=EXbkYc7CBLDMM8jWuQZzJlxqBffGmcQiShIu2riGjEqpc3Jt7d9Fxr+7lkoLSO6eaIubgy+hl2kqlX2yVmDgiYPwHisMBADRlimXAJ9kGqpj0bwDFIO6v4x5P6a7f5OqkNrXRiScwFD+ldFpvm3Y9B9PMJUWAuphVpZfGTczduo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786022377; c=relaxed/simple;
-	bh=HlQruraA7agKiqxVYRqDPlUkqImO4uUYgYC2j57DVk0=;
+	s=arc-20240116; t=1786022376; c=relaxed/simple;
+	bh=ABmprPYDSs94JgmPD621KnGiMs78sdq749qZ4lkLmek=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ggJuGLQnC667o9Acm4NBDmXfBhtv4tn9806kaxR0aesaO+S47hLTEfiZE8OrK+RNCQixyggIOaBa7jA6Gj+Ix+Fec/8R9zTISc7NS9lgfTEhu3vDEk0cogn2EpdVctbsH/4E6D6ejxfpeJ7ekCDHlH+W/ssEFSEDk15zeoR9M/U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=nZNWwiCe; arc=none smtp.client-ip=192.198.163.16
+	 MIME-Version; b=rJpkIT4M/AxQsbhqNybrsoNLgDtHxxC6fMQh6yMZwe4+wECcdcrhSbIww5QPWFsZzq7fAaFD8/8ZtrZVVCqsJJSmKt7jcP7bAQ1387RfCQiUs+cfD7zuBzW9QaeDYWMNAG7wIpdNM7PylWKdJxFoMXcXfYwbXux7xX1uKfgTJf4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=TtFIE6Jv; arc=none smtp.client-ip=192.198.163.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="nZNWwiCe"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="TtFIE6Jv"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
   t=1786022374; x=1817558374;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=HlQruraA7agKiqxVYRqDPlUkqImO4uUYgYC2j57DVk0=;
-  b=nZNWwiCe6dTqvBpkTV1Rik7MLN3yXYksHTVWBFV+wEtqBRlzTRpjEK4Q
-   olbGU+QoRRaUGEs+keTewWWzhjR1csB9wN9cBKCG7gzVsuSec9Frt86QX
-   aWsy6NJOxbPs+hjDvSEOIWaXObVGCt7453nDtL4BoZBB8l8lUi2DjjX5F
-   YYJR+kREfAht+89/vxsXP4Tf5M9wNQL/zmjLONkNyvTmt72kXrmS4tbMi
-   S4WwFqAAEeif5eUDBL4TpBAKBJL7HE5Hiu48OObC8A/rqQKCgQ2T+0XfC
-   ODEs+6g1HdIyfTgGGuRlCYi1+zDTaxDIBETEavOO5wZ/teAqFGj1ldqsE
+  bh=ABmprPYDSs94JgmPD621KnGiMs78sdq749qZ4lkLmek=;
+  b=TtFIE6JvJZbZz9tXcNLO5VZKQwawqCh9752i1jXbJC/FF+Z7AJKb3YWB
+   LoCO2WIoABLZhRMnhymv20cJP8fclnHbTqS+yqNgbyLoT/5q1lX5vxWtJ
+   6J3xZV3O3Um0Xkh3+NWaE0DfVgjsc/odoIS5IKQIGTw9uQThR8I7sWZlP
+   wdEsFj4TeZpsyHI33IZZoCnksviIimV5og6jmUe+wim52PaVqUNu1T+4L
+   wSiR/YMt6wJZSlsEiaT8t+bu7ry+5hqtROSjUscUmkhAAZFmhaaeluBWh
+   2s/TkqskwBfPPnIzfnbC18vN+3CA7vYCfyDtV3Nt3U92499TKtLD9MbzR
    A==;
-X-CSE-ConnectionGUID: zswBaQKxRFuRARiVjoxdrg==
-X-CSE-MsgGUID: by4cdbdoQ1SZDqNzzA14Gg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11867"; a="74149577"
+X-CSE-ConnectionGUID: WBGFVekRRsWdqqPUwaCLIA==
+X-CSE-MsgGUID: qo1rvv+NTvKTTosQjl7GjA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11867"; a="74149567"
 X-IronPort-AV: E=Sophos;i="6.25,208,1779174000"; 
-   d="scan'208";a="74149577"
+   d="scan'208";a="74149567"
 Received: from orviesa006.jf.intel.com ([10.64.159.146])
-  by fmvoesa110.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Aug 2026 06:19:26 -0700
-X-CSE-ConnectionGUID: ECrO4ecXS0atukBeJI+Grw==
-X-CSE-MsgGUID: fXyMbzWIRK+RDz74/dKaqg==
+  by fmvoesa110.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Aug 2026 06:19:23 -0700
+X-CSE-ConnectionGUID: hxxvVUh9TtWk+NcT2tyG7A==
+X-CSE-MsgGUID: GBW5ajFkQ7a/wN46BVX+NA==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.25,208,1779174000"; 
-   d="scan'208";a="260338168"
+   d="scan'208";a="260338139"
 Received: from mkosciow-mobl1.ger.corp.intel.com (HELO ahunter6-desk) ([10.245.244.200])
-  by orviesa006-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Aug 2026 06:19:23 -0700
+  by orviesa006-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Aug 2026 06:19:20 -0700
 From: Adrian Hunter <adrian.hunter@intel.com>
 To: alexandre.belloni@bootlin.com
 Cc: Frank.Li@nxp.com,
@@ -53,9 +53,9 @@ Cc: Frank.Li@nxp.com,
 	linux-kernel@vger.kernel.org,
 	linux-pci@vger.kernel.org,
 	linux-pm@vger.kernel.org
-Subject: [PATCH V4 06/14] i3c: master: Fix potential UAF in i3c_device_uevent()
-Date: Thu,  6 Aug 2026 16:18:49 +0300
-Message-ID: <20260806131857.119830-7-adrian.hunter@intel.com>
+Subject: [PATCH V4 05/14] i3c: Make dev->desc locking assumptions explicit
+Date: Thu,  6 Aug 2026 16:18:48 +0300
+Message-ID: <20260806131857.119830-6-adrian.hunter@intel.com>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260806131857.119830-1-adrian.hunter@intel.com>
 References: <20260806131857.119830-1-adrian.hunter@intel.com>
@@ -68,26 +68,13 @@ MIME-Version: 1.0
 Organization: Intel Finland Oy, Registered Address: c/o Alberga Business Park, 6 krs, Bertel Jungin Aukio 5, 02600 Espoo, Business Identity Code: 0357606 - 4, Domiciled in Helsinki
 Content-Transfer-Encoding: 8bit
 
-i3c_device_uevent() dereferences i3cdev->desc without holding the bus
-normal-use lock.  Since the descriptor pointer can be replaced
-concurrently, including when a uevent is generated from sysfs, this can
-result in dereferencing a stale descriptor and lead to a use-after-free.
+i3c_device_get_info() takes the bus normal-use lock before accessing
+dev->desc. Under that lock, the descriptor pointer is guaranteed to be
+valid for the duration of the access.
 
-Use i3c_device_get_info() instead, which protects access to the
-descriptor with the normal-use lock.
+Remove the unnecessary NULL check on dev->desc so the code more clearly
+reflects the locking rules and expected descriptor lifetime.
 
-Commit 6cf7b65f7029 ("i3c: Use i3cdev->desc->info instead of calling
-i3c_device_get_info() to avoid deadlock") replaced the accessor with a
-direct descriptor dereference because i3c_device_get_info() would
-recursively acquire bus->lock during device registration.
-
-This change depends on "i3c: master: Fix recursive locking during device
-registration", which moves device registration out from under bus->lock
-and removes the possibility of that deadlock.  Without that change,
-restoring the i3c_device_get_info() call would reintroduce the deadlock.
-
-Fixes: 6cf7b65f7029 ("i3c: Use i3cdev->desc->info instead of calling i3c_device_get_info() to avoid deadlock")
-Cc: stable@vger.kernel.org # requires "i3c: master: Fix recursive locking during device registration"
 Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
 Acked-by: Mukesh Savaliya <mukesh.savaliya@oss.qualcomm.com>
 ---
@@ -102,23 +89,23 @@ Changes in V3:
 	New patch
 
 
- drivers/i3c/master.c | 3 +--
+ drivers/i3c/device.c | 3 +--
  1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/i3c/master.c b/drivers/i3c/master.c
-index 2357874bb9d6..ee771ac0b203 100644
---- a/drivers/i3c/master.c
-+++ b/drivers/i3c/master.c
-@@ -316,8 +316,7 @@ static int i3c_device_uevent(const struct device *dev, struct kobj_uevent_env *e
- 	struct i3c_device_info devinfo;
- 	u16 manuf, part, ext;
+diff --git a/drivers/i3c/device.c b/drivers/i3c/device.c
+index a3778282e84c..5e6df6de0283 100644
+--- a/drivers/i3c/device.c
++++ b/drivers/i3c/device.c
+@@ -101,8 +101,7 @@ void i3c_device_get_info(const struct i3c_device *dev,
+ 		return;
  
--	if (i3cdev->desc)
--		devinfo = i3cdev->desc->info;
-+	i3c_device_get_info(i3cdev, &devinfo);
- 	manuf = I3C_PID_MANUF_ID(devinfo.pid);
- 	part = I3C_PID_PART_ID(devinfo.pid);
- 	ext = I3C_PID_EXTRA_INFO(devinfo.pid);
+ 	i3c_bus_normaluse_lock(dev->bus);
+-	if (dev->desc)
+-		*info = dev->desc->info;
++	*info = dev->desc->info;
+ 	i3c_bus_normaluse_unlock(dev->bus);
+ }
+ EXPORT_SYMBOL_GPL(i3c_device_get_info);
 -- 
 2.53.0
 
