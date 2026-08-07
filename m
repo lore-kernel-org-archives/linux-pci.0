@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E7A337F334
-	for <linux-pci@vger.kernel.org>; Fri,  7 Aug 2026 15:13:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1ADA241DDF3
+	for <linux-pci@vger.kernel.org>; Fri,  7 Aug 2026 15:14:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786115586; cv=none; b=NvvCCi0cG3+Nrpf0A4ZAJet+PFzAzMgo9etUx6y4hRXYy8aJHjPN97hkbASf3a1Yamipnyb+o8rMWhZYLgu9VrVcJ1RekxKgcB3v2s/TDIlGKhWgyYLzlDRRgDpxKuxdwZnWObmvZ/JPIs93pjdF1Ynz8K+I9xTRHcdnMZY5SvY=
+	t=1786115643; cv=none; b=toYc5Uj+R7NSpc3YQB/wCPkWPTQlFRkKCaE6BBkFGJNzSAtElripJ+iF/r/GwQO6qCxF7lbcHXVilzPPMTw32xmMCTWpxvchiNw+lVjpbWubi3n3fKhsH51gHL9FzItJvV9MhSC4EpK4HorVVBdz3UnXO7Zjo05EdhuyXSVg+N8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786115586; c=relaxed/simple;
-	bh=wnxj7PvH2/Sdh5Y4IL1zSQEA5WErpQxqebL2AocF5Jw=;
+	s=arc-20240116; t=1786115643; c=relaxed/simple;
+	bh=UO01WflE6dFaN1f8ivnoJjK2eyJH32/59M80sagQhpY=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=QebmJtZqzi3L7odfpPZ2BHnjQzc9c3ERpp9Wl4QzV7ZUXyJkIvQOjbytYsSwJsCkxQh0Rct6Aaxbk0hD0z/wTiXjymZbSzUD1w6wjRSNFAoNTs0pL152HQvE/eGPA3RjdJH+UsKkQZ2hv5XqPj2e6ZONwt1Ai0WdoUYG6K7PR54=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IO/OLbzH; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=oaTJHAJjZ+C4QoLdfuR1XwcNP1EwtxczSpWj1n3IDmttNTMai20nOKYIjNNup/a8RmEPDkUScFkkRTFjjckZf6C1NEBg8AMk+Nv/qZlL3W7VckjacxxCfJt+TBW3JLW0ZvrAKg7KpL9xTsVOntGX/SKlCCrea4bboqGjk9q+TFE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=V47o/WVl; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IO/OLbzH"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 486AA1F00A3A;
-	Fri,  7 Aug 2026 15:13:05 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="V47o/WVl"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8ACEF1F00A3D;
+	Fri,  7 Aug 2026 15:14:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786115585;
-	bh=jnmmGHDprAsNByhOkoHlwimX7baEFFIV0uZ433cWhw8=;
+	s=k20260515; t=1786115641;
+	bh=DhdB/UGVLYJ89IcMlowUAfjwOsMPFcyVrvw9QolcNno=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=IO/OLbzHw22+3EDGKynmzj+2kup0AkTVFRpYy/0uRVdderh4ld+NkFLDLUcDzyvg2
-	 dXR46Q/ZmGJutjcQLhNoQnFlGQIIuWOPbUVVnS1Lb2KY6x/U6ZyNKGqPRWDhJBiwBc
-	 LOkmvvP8fX3KtqLsIbA8FTmyB8hZoewBpPz0BYC/Gog4cazd6xfJ/H9glKZAl0bvt4
-	 ihJ3f4s/d+czfi/cjDxXjqD0cwxIjhPfFjjsIVf/EK3vQ9brnHgdc0Ih0N51RAKplZ
-	 CHBYrq5/6WUlrS6BS4JEqLNcfWeNnf6OiWPsAJZSnrszWVWR2ix2SqfyeHJIKlgYwE
-	 XBHHfEVFnyfLA==
+	b=V47o/WVlHMz+xbJYF8F+RIZRy6049k0qQeRN9/GM3/1FKgzyJDl9HH6Qr+tCnGHxz
+	 ab9ajQgP4SlLrmRW5Sifkp0z+og3bJ5Ol+kVcHZFczzRcRR68Kole9josJ6al9NyHF
+	 vc1n/LffZZcq/uDBDrjgZzbnLgiGKYtCqkcCJ1xn6t1ERYXkalVossTUF/12veoC0a
+	 Qv/0JkRpDjyucwasEJvPHHVGgitCH/snDjwcGyp3CKY9L2JtU5TJIfKkyJtO+Pefef
+	 SsVrxRombemPEQLLjx6eMB8NGJ0KTrFURgJx0H3qSB+Y2jLcCuHb4pEiwlBl6cOzOc
+	 DalNIx8TMg9ag==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH V5 02/14] i3c: Fix unlocked dereference of dev->desc in
- i3c_device_get_supported_xfer_mode()
+Subject: Re: [PATCH V5 04/14] i3c: master: Fix use-after-free of
+ master->this
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Adrian Hunter" <adrian.hunter@intel.com>
-Cc: Frank.Li@kernel.org, "Alexandre Belloni" <alexandre.belloni@bootlin.com>, linux-i3c@lists.infradead.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260807145638.168865-3-adrian.hunter@intel.com>
+Cc: linux-pci@vger.kernel.org, "Alexandre Belloni" <alexandre.belloni@bootlin.com>, linux-i3c@lists.infradead.org, Frank.Li@kernel.org
+In-Reply-To: <20260807145638.168865-5-adrian.hunter@intel.com>
 References: <20260807145638.168865-1-adrian.hunter@intel.com>
- <20260807145638.168865-3-adrian.hunter@intel.com>
+ <20260807145638.168865-5-adrian.hunter@intel.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 07 Aug 2026 15:13:04 +0000
-Message-Id: <20260807151305.486AA1F00A3A@smtp.kernel.org>
+Date: Fri, 07 Aug 2026 15:14:00 +0000
+Message-Id: <20260807151401.8ACEF1F00A3D@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -49,106 +49,87 @@ Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
 
 Pre-existing issues:
-- [High] Unresolved lockless dereferences of `i3cdev->desc` and uninitializ=
-ed stack memory leaks to user-space.
-- [High] I3C master controllers are allocated using `devm_kzalloc` while em=
-bedding a `struct device`, leading to a Use-After-Free during unbinding.
+- [High] Pre-existing devres lifetime mismatch causing Use-After-Free in i3=
+c_masterdev_release(), exacerbated by the patch's newly added kfree().
+- [High] Pre-existing IDR state corruption due to missing error handling ar=
+ound i3cbus->id in probe failure path.
 --
 
---- Patch [2]: [PATCH V5 02/14] i3c: Fix unlocked dereference of dev->desc =
-in i3c_device_get_supported_xfer_mode() ---
-commit e7d56c173e65ff36b79485393042fbeb29cba21d
+--- Patch [4]: [PATCH V5 04/14] i3c: master: Fix use-after-free of master->=
+this ---
+commit aad15513dbf2d559bf893789d55a331f522383d1
 Author: Adrian Hunter <adrian.hunter@intel.com>
+Subject: i3c: master: Fix use-after-free of master->this
 
-i3c: Fix unlocked dereference of dev->desc in i3c_device_get_supported_xfer=
-_mode()
+The patch fixes a use-after-free by keeping master->this alive until
+i3c_masterdev_release(). It also resets master->this and bus.cur_master to
+NULL on the error path in i3c_master_set_info() before freeing the
+allocated device.
 
-This patch resolves an unlocked dereference of dev->desc by using dev->bus
-to obtain the master controller instead. The commit notes that dev->desc
-must not be dereferenced unless bus->lock is held.
+Cc: stable@vger.kernel.org
 
-> i3c_device_get_supported_xfer_mode() uses dev->desc to obtain the
-> master controller.  However, dev->desc must not be dereferenced unless
-> bus->lock is held, and this function does not take that lock.
+> diff --git a/drivers/i3c/master.c b/drivers/i3c/master.c
+> index abb582645a2ed..2357874bb9d6a 100644
+> --- a/drivers/i3c/master.c
+> +++ b/drivers/i3c/master.c
+> @@ -842,6 +842,11 @@ static struct attribute *i3c_masterdev_attrs[] =3D {
+>  };
+>  ATTRIBUTE_GROUPS(i3c_masterdev);
+> =20
+> +static void i3c_master_free_i3c_dev(struct i3c_dev_desc *dev)
+> +{
+> +	kfree(dev);
+> +}
+> +
+>  static void i3c_masterdev_release(struct device *dev)
+>  {
+>  	struct i3c_master_controller *master =3D dev_to_i3cmaster(dev);
+> @@ -854,6 +859,8 @@ static void i3c_masterdev_release(struct device *dev)
+>  	i3c_bus_cleanup(bus);
 
 [Severity: High]
-This isn't a bug introduced by this patch, but since we are establishing
-that dev->desc must not be dereferenced without bus->lock, are there
-similar unresolved lockless dereferences elsewhere?
+This isn't a bug introduced by this patch, but does the error path in probe
+corrupt the IDR if idr_alloc() fails?
 
-For example, looking at drivers/i3c/master.c:i3c_device_uevent():
+If idr_alloc() fails in i3c_bus_init(), i3cbus->id is not updated and remai=
+ns
+at its kzalloc-initialized value of 0.
 
-	if (i3cdev->desc)
-		devinfo =3D i3cdev->desc->info;
-	manuf =3D I3C_PID_MANUF_ID(devinfo.pid);
+The error path in i3c_master_register() calls put_device(&master->dev), whi=
+ch
+invokes this i3c_masterdev_release() callback.
 
-If this races with descriptor freeing (such as during DAA/Hot-Join events
-that swap or free descriptors), could this cause a Use-After-Free?
+That unconditionally calls i3c_bus_cleanup(bus), which executes
+idr_remove(&i3c_bus_idr, i3cbus->id). This effectively deletes ID 0 from the
+IDR, even though that ID might belong to another successfully initialized b=
+us.
 
-Additionally, if i3cdev->desc is NULL, devinfo remains completely
-uninitialized on the stack. The function then unconditionally formats
-devinfo.pid and devinfo.dcr into the MODALIAS string, which is exposed to
-user-space via the uevent sysfs file. Could this leak kernel stack memory?
+> =20
+>  	fwnode_handle_put(dev->fwnode);
+> +
+> +	i3c_master_free_i3c_dev(master->this);
 
-Similar lockless or NULL-unsafe accesses appear to exist in
-drivers/i3c/device.c:i3c_device_match_id(),
-drivers/i3c/master.c:i3c_device_match(), and driver probes like
-drivers/misc/amd-sbi/rmi-i2c.c:sbrmi_i3c_probe().
+[Severity: High]
+This is a pre-existing issue, but can this devres lifetime mismatch lead
+to a use-after-free when sysfs files are held open?
+
+The i3c_master_controller struct is typically allocated via devm_kzalloc()
+by the parent driver. If an unprivileged user holds a sysfs file open (like
+the mode or current_master attributes), device_unregister() drops a
+reference, but the sysfs node prevents the kobject from being released.
+
+When the driver is unbound and remove() returns, devres frees the master
+struct.
+
+Later, when the sysfs file is closed, the refcount drops to 0 and
+i3c_masterdev_release() executes, dereferencing the already-freed master
+struct to access master->wq, bus, and the newly added
+i3c_master_free_i3c_dev(master->this).
+
+>  }
 
 [ ... ]
 
-> diff --git a/drivers/i3c/master.c b/drivers/i3c/master.c
-> index d2fb1a1105218..c7bb52b71d884 100644
-> --- a/drivers/i3c/master.c
-> +++ b/drivers/i3c/master.c
-> @@ -102,12 +102,6 @@ void i3c_bus_normaluse_unlock(struct i3c_bus *bus)
->  	up_read(&bus->lock);
->  }
-> =20
-> -static struct i3c_master_controller *
-> -i3c_bus_to_i3c_master(struct i3c_bus *i3cbus)
-> -{
-> -	return container_of(i3cbus, struct i3c_master_controller, bus);
-> -}
-> -
->  static struct i3c_master_controller *dev_to_i3cmaster(struct device *dev)
->  {
->  	return container_of(dev, struct i3c_master_controller, dev);
-
-[Severity: High]
-This is a pre-existing issue, but looking at the master controller lifecycle
-managed here, is there a Use-After-Free risk during unbinding?
-
-Almost all I3C master drivers (e.g. drivers/i3c/master/dw-i3c-master.c)
-allocate their master controller structure using devm_kzalloc():
-
-drivers/i3c/master/dw-i3c-master.c:dw_i3c_probe() {
-...
-	master =3D devm_kzalloc(&pdev->dev, sizeof(*master), GFP_KERNEL);
-...
-}
-
-This structure embeds a struct i3c_master_controller, which in turn embeds a
-struct device (accessed right here via dev_to_i3cmaster()).
-
-When the driver is unbound, devres automatically frees the devm_kzalloc
-memory once the remove callback finishes. If a user holds a sysfs attribute
-open, the device reference count doesn't immediately drop to zero. Later,
-when the sysfs file is closed, the driver core invokes the device's release
-callback:
-
-drivers/i3c/master.c:i3c_masterdev_release() {
-...
-	struct i3c_master_controller *master =3D dev_to_i3cmaster(dev);
-...
-	if (master->wq)
-		destroy_workqueue(master->wq);
-...
-}
-
-Since the memory was already freed by devres, won't accessing master->wq
-here trigger a Use-After-Free?
-
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260807145638.1688=
-65-1-adrian.hunter@intel.com?part=3D2
+65-1-adrian.hunter@intel.com?part=3D4
