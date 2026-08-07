@@ -1,96 +1,76 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mailout1.hostsharing.net (mailout1.hostsharing.net [83.223.95.204])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CFF2537B02E;
-	Fri,  7 Aug 2026 06:03:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 89ACE41B8D5;
+	Fri,  7 Aug 2026 08:17:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.223.95.204
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786082635; cv=none; b=jKFc3QZMTSM9dXcQLYfa7RZwUN7RsRGp88vYQD7XhZhFok+fbLHVEypJBSoAfugqj3qCc+thQTjAX930c547Dkd3OJwHBloeHqR47yDxlfIWoI30GdGAhgza3jD7DZFtZ8zJ+ahhuQoXz4Jsvn8M7cjD87TxvYyHr3AaSquK4xw=
+	t=1786090649; cv=none; b=pXlm4eDZy6ugtmdRKgRlupeh1FZ4h6XVCdSUvysfQxRXy2TX/HPgNavtay6IzNMfL9UCVR9feEKWopgHp0hTV01d3OzRB42CN6jvW2NmntluY0FMC0J9NsDPdPppVX93kGb815lsYJ9P+ggOWc6qEbVlQSlqNx0lJjvndFbTa+Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786082635; c=relaxed/simple;
-	bh=r79KBSafuypr2IL7FZR5tHn+AYGzsbkYbXZeTVqxWeI=;
+	s=arc-20240116; t=1786090649; c=relaxed/simple;
+	bh=Lmp9nhyGbsc18daKj04uPFwcMV7wBRWnVZH0fpng2wQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=MVGljVta2GzyxccQ4BpV0uMyrLCRC2/J8vcxTkU/pkg8/ldQA/CFLmDW3t+2q/Q+UO4kFcsgjdL4V5htEWgnvex+n4E0umBTYEvs0z9hVpBgQQ9Ctjweyl1GQ1wtR3inKJMjPG71O+B6kGTTjMBW70EhNEc46Hd87yZL+hMPw/k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JQG+Okni; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JQG+Okni"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4E6771F000E9;
-	Fri,  7 Aug 2026 06:03:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786082634;
-	bh=OnjnoPTc2IU8C5hw2ZSi8CiARlOXZApAwqNm8RU5PYc=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=JQG+OknipBtwjmOkl7R15Eji5ytxCL9qh/lVqe+DB/hJhj5SWrf+zLf4cNaj/CHCV
-	 xaDVax4X+pBh+FN2ei6AHbq0oyqY8A4+C0tj59Qi4UgqS8BPeLkO96Xo+LfcDtcjbP
-	 QoojMnK3xxD1VsakhQMR7w50A3/YBnlX6nG+3p3SmLVoHGyW4Xj8DBiUoO28VqID7I
-	 /y2iock8d2/fQ8Tt55Cdzl0NuuHxBxZq07PK52xtrFY3UDvLCuluegTT2Z/X5ltIbK
-	 uY1p1d7YLHEgIhy+Msw45EdRmIPtxMpGRNuI/9cFGi+k7kBCXMqrJRyuy+8YxhaOq7
-	 k5J1uKW/EV05A==
-Date: Fri, 7 Aug 2026 08:03:30 +0200
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
-Cc: Bartosz Golaszewski <brgl@kernel.org>, 
-	Jonathan Corbet <corbet@lwn.net>, Shuah Khan <skhan@linuxfoundation.org>, 
-	Marcel Holtmann <marcel@holtmann.org>, Luiz Augusto von Dentz <luiz.dentz@gmail.com>, 
-	Alessio Belle <alessio.belle@imgtec.com>, Luigi Santivetti <luigi.santivetti@imgtec.com>, 
-	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, Maxime Ripard <mripard@kernel.org>, 
-	Thomas Zimmermann <tzimmermann@suse.de>, David Airlie <airlied@gmail.com>, 
-	Simona Vetter <simona@ffwll.ch>, Jeff Johnson <jjohnson@kernel.org>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Chen-Yu Tsai <wens@kernel.org>, 
-	Loic Poulain <loic.poulain@oss.qualcomm.com>, linux-pm@vger.kernel.org, linux-doc@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-bluetooth@vger.kernel.org, 
-	imagination@lists.freedesktop.org, dri-devel@lists.freedesktop.org, linux-wireless@vger.kernel.org, 
-	ath10k@lists.infradead.org, linux-pci@vger.kernel.org, 
-	Jeff Johnson <jeff.johnson@oss.qualcomm.com>
-Subject: Re: [PATCH v3] power: sequencing: rename pwrseq_power_on/off() to
- pwrseq_enable/disable()
-Message-ID: <nbsevqzspfbiptmq2mlxx2yo5z2wk5hdbc6f66yfjklmtl6hc7@ut47v44qgzgu>
-References: <20260731-pwrseq-vote-rename-v3-1-44e60b8be053@oss.qualcomm.com>
+	 Content-Type:Content-Disposition:In-Reply-To; b=QKngslm5RBbYIdc3qni/mSnlg93odenV/wtKoVDYJ4JatpLRIGpSth8s8uCLKkAQJKdmbYmbeQ/lKGmO54pYzh1YXYrG9jtkz2/dp1tw3V6dMIs7Dl+uggMsdK7w2d68zW/qDhVfu/DFyKnc6m8nzUC8R4s9hPg2hOTMyttnlE8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=83.223.95.204
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
+Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
+	 client-signature ECDSA (secp384r1) client-digest SHA384)
+	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
+	by mailout1.hostsharing.net (Postfix) with ESMTPS id 900E2F43;
+	Fri, 07 Aug 2026 10:07:48 +0200 (CEST)
+Received: by h08.hostsharing.net (Postfix, from userid 100393)
+	id 1E934603403F; Fri,  7 Aug 2026 10:07:48 +0200 (CEST)
+Date: Fri, 7 Aug 2026 10:07:48 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Manivannan Sadhasivam <mani@kernel.org>
+Cc: Max Lee <max.lee@canonical.com>, bhelgaas@google.com,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	acelan.kao@canonical.com, helgaas@kernel.org, kaihengf@nvidia.com,
+	victorshihgli@gmail.com, pandoh@google.com
+Subject: Re: [PATCH v3] PCI: Disable ASPM L0s for Realtek RTS525A
+Message-ID: <anWSVNqltYAjvq2p@wunner.de>
+References: <20260610024723.188514-1-max.lee@canonical.com>
+ <20260706025358.516607-1-max.lee@canonical.com>
+ <jnxtx4pl36dzuddqugpfack5hfmwo2wazg5t7g2sill37urtng@3bvsmzehfygl>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260731-pwrseq-vote-rename-v3-1-44e60b8be053@oss.qualcomm.com>
+In-Reply-To: <jnxtx4pl36dzuddqugpfack5hfmwo2wazg5t7g2sill37urtng@3bvsmzehfygl>
 
-On Fri, Jul 31, 2026 at 03:42:18PM +0200, Bartosz Golaszewski wrote:
-> The way power sequencing works means that a call to pwrseq_power_on()
-> does not necessarily result in the pwrseq target being powered-on at
-> that time: it may have already been powered on before. Similarly: a call
-> to pwrseq_power_off() does not have to result in an actual powering off
-> of resources: there may still be other users that requested a power-on
-> before.
-> 
-> We will also introduce the concept of "non-controllable" pwrseq targets
-> soon which further increases the disconnect between the naming
-> convention and the actual semantics.
-> 
-> What consumers of pwrseq descriptors actually do is: they *vote* for a
-> powering on of a given target or retract that vote. These operations
-> could be called get/put in line with runtime PM but this could become
-> confusing since we already provide pwrseq_get/put() for a different
-> purpose. pwrseq_vote_on/off() also have been rejected as unusual in
-> the tree.
-> 
-> Change the name of the two functions to pwrseq_enable/disable() which
-> better reflects their purpose and semantics and also mirrors other
-> enable-counted resources like regulators and clocks. No functional change
-> intended.
-> 
-> If at any point users need to know *when* the exact power event happens,
-> we can provide that information in the form of a notifier.
-> 
-> Acked-by: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-> Signed-off-by: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
+Hi Mani,
 
-Acked-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+On Mon, Jul 06, 2026 at 12:20:07PM +0200, Manivannan Sadhasivam wrote:
+> On Mon, Jul 06, 2026 at 10:53:58AM +0800, Max Lee wrote:
+> > Prevent the broken L0s configuration by removing L0s from the RTS525A
+> > advertised ASPM capability.  This avoids enabling the non-working ASPM
+> > state instead of masking the resulting AER Replay Timer Timeout reports.
+> > 
+> 
+> If you can add the AER log snippet here, it will help others to find
+> this quirk in the future.
+[...]
+> s/Replay Timer Timeouts/Replay Timer Timeout Storm
+> 
+> to stress the severity.
 
-- Mani
+Max submitted a v4 which I believe addresses your comments,
+but it hasn't been applied yet.  Would you be able to apply it?
 
--- 
-மணிவண்ணன் சதாசிவம்
+https://lore.kernel.org/r/20260707021527.639611-1-max.lee@canonical.com/
+
+I'm asking because there's now another ASPM problem report pending
+for the RTS525A:
+
+https://lore.kernel.org/r/20260806214808.1202819-1-derekjohn.clark@gmail.com/
+
+Thanks,
+
+Lukas
