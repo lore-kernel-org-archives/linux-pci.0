@@ -1,109 +1,237 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.20])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 26425385D86;
-	Fri,  7 Aug 2026 14:35:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B03E37757C;
+	Fri,  7 Aug 2026 14:57:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.20
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786113341; cv=none; b=E3Ie0MQJWkc8zDEpGUw8cNt/AefDptugzzGCxz+/4eF2XdMngtV8bsA9xF19J73+0vSDoyzGblvAsKRs8kykUxWgYPYvLp90aMgbTEhSkIt4e7Y4akizpWxoLjPGHcD1+G30extf4M4qQrNTtTjXZwgPfOOk26PqloPLg/IwRd4=
+	t=1786114647; cv=none; b=S/psDBsejc39cFkru5Rjx5AcULTjsz9aJLxzSvl962Z22J28EPE6Nu0JVUXqQtRn4KbrnGiYyygvBcRltP1tC1Zhup/aUW/NtkJ9f6SZeuv5TCsGZ0zpGoz1Uw4NOsjYgZYt5lMgB2TgrrOKIkS/al1jTnwfVx5dBviZQbSNbag=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786113341; c=relaxed/simple;
-	bh=C2OTVueqfd2/Jh/F3j/AcYAmMiVvJg8oGPsLPiXbAIg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=dPrY+TtAm1s2JEdWH6cDmgkwlItS9i5LePcy4o2LotjrY5NHPTa4dh/nW+vzY1R4qP0ZW5NDvX/biLl4KP2BkD08rNT1xCgbTFRClaEOTrAWaZEgWSsYu92gFV1XoBeWotV8+YtvNsYHOaE7OHCsCP9+SOrxc1FxXKFl5gOZbmc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cMRexnow; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1786114647; c=relaxed/simple;
+	bh=2WaCSZxGgKegINJiKaWcVoLXmsHSne+ig0soIFKdlOc=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=HoCcLjkINycDAEB6aIhnVc04zrIvQ522CqUkhcdELsGSdhLwuf+y18DQTzb/ehFl7diVA6mvnVktUb2MyO1Z+xV7OFYOw4c6P6mtWJQY0fIXdR4YYMzYi9WFmqdjUXE8wUeNXHPQP6xeztE2QxKMABFXj1QmfxtYxpvn5wjTCYc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=ceUTztws; arc=none smtp.client-ip=198.175.65.20
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cMRexnow"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0D8F41F00A3A;
-	Fri,  7 Aug 2026 14:35:38 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786113339;
-	bh=2BhZV9hE6NivFxtTnmzUAFdrm+S/v55unHEL9hiBJEM=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=cMRexnow7w4cND1WHzXmInqfF9JPHr0OFaOfcFMfLDPLWqM95yJO6GT5giP9UfBSN
-	 sCgS/b3UGDEXreE7wfXjCXMexszndFYMx0MfLOrwpDr4XQ6wbX2eBWVjREvqNKIfbR
-	 ujtx+Y2qup3DcnLR+JWolSR8/oVsU4S/x9yVDSY60Em3B+khc6VjXCJb476ETdkXY0
-	 hON1mQeOYIYFbfsdIKvMhlQ5ubeO7FxW0qTuifNw4+ORlpSkXZbsTHaqclBlHC8XMv
-	 wB2S0M8+7e6YDpM7mYVsU1G+WuJUAVOdJGLharAsv+zZ5EvP8smbIUMwlZdYF9CHyh
-	 xR0261f6GXvwQ==
-Date: Fri, 7 Aug 2026 17:35:34 +0300
-From: Leon Romanovsky <leon@kernel.org>
-To: sashiko-reviews@lists.linux.dev
-Cc: linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 02/13] PCI/P2PDMA: Report ACS ports when the paths
- share no upstream bridge
-Message-ID: <20260807143534.GA424187@unreal>
-References: <20260806-fix-p2p-acs-v2-0-0cec14812965@nvidia.com>
- <20260806-fix-p2p-acs-v2-2-0cec14812965@nvidia.com>
- <20260806113754.C38101F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="ceUTztws"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1786114645; x=1817650645;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=2WaCSZxGgKegINJiKaWcVoLXmsHSne+ig0soIFKdlOc=;
+  b=ceUTztwsnV2EN18DqlafzS7jfiCZARcYpVkDAMFnawV18HjT7AIBUbjW
+   zJauM9j5Y8tOcv0z9iZCezOdvdA1EEg4sPpxpldFJ3kizTNvtGzAidvjH
+   ouaHSj4AIMf/NqVhiNWmXMNaj9UvpJRALowpcVY6lHFC2cduMt8hJv81V
+   UFbahztoMLQz1GA5Tui6CAvJxs+HAEUgvIkYVMVfHhI8Jc3rEGostSp9Z
+   eoYnjL/1kuaClR0c5b5uS89fW2DI8N2KMgA98Ws8XSeY7TZlqHLqXUTJQ
+   DnMFtdv/g7HjWfswPe1cjfPguUKI0u0r4bYhVM8O73Wj83tMRZudH3Lae
+   Q==;
+X-CSE-ConnectionGUID: q/LUZLRbSQ6RhdSZRNFcng==
+X-CSE-MsgGUID: gMGR95WxQsak7UBpGzxGIA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11868"; a="86485177"
+X-IronPort-AV: E=Sophos;i="6.25,210,1779174000"; 
+   d="scan'208";a="86485177"
+Received: from fmviesa008.fm.intel.com ([10.60.135.148])
+  by orvoesa112.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Aug 2026 07:57:24 -0700
+X-CSE-ConnectionGUID: LTUT01a3QiGxeOn43IKJ6A==
+X-CSE-MsgGUID: AysX7V1uQ/OddxOyWtxgVQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.25,210,1779174000"; 
+   d="scan'208";a="259809873"
+Received: from amilburn-desk.amilburn-desk (HELO ahunter6-desk) ([10.245.245.114])
+  by fmviesa008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Aug 2026 07:56:46 -0700
+From: Adrian Hunter <adrian.hunter@intel.com>
+To: alexandre.belloni@bootlin.com
+Cc: Frank.Li@nxp.com,
+	akhilrajeev@nvidia.com,
+	mukesh.savaliya@oss.qualcomm.com,
+	rafael@kernel.org,
+	linux-i3c@lists.infradead.org,
+	linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-pm@vger.kernel.org
+Subject: [PATCH V5 00/14] i3c: Support IBI-based system wakeup
+Date: Fri,  7 Aug 2026 17:56:24 +0300
+Message-ID: <20260807145638.168865-1-adrian.hunter@intel.com>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+Organization: Intel Finland Oy, Registered Address: c/o Alberga Business Park, 6 krs, Bertel Jungin Aukio 5, 02600 Espoo, Business Identity Code: 0357606 - 4, Domiciled in Helsinki
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260806113754.C38101F000E9@smtp.kernel.org>
 
-On Thu, Aug 06, 2026 at 11:37:54AM +0000, sashiko-bot@kernel.org wrote:
-> Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
-> - [Medium] Unconditional host bridge whitelist warnings cause severe log spam during silent P2P provider discovery.
-> --
-> 
-> --- Patch [2]: [PATCH v2 02/13] PCI/P2PDMA: Report ACS ports when the paths share no upstream bridge ---
-> commit b1b70f40984c0b642c7221458a704c5fa967c62e
-> Author: Leon Romanovsky <leon@kernel.org>
-> 
-> PCI/P2PDMA: Report ACS ports when the paths share no upstream bridge
-> 
-> A provider and a client below different Root Ports share no upstream
-> bridge, so the search ends without a match and the walk takes the
-> host-bridge route directly. Neither path is examined for ACS, so no
-> redirect diagnostic is emitted and the host-bridge whitelist warning
-> stays suppressed.
-> 
-> Examine the paths before taking that route, so every redirecting port is
-> named in the pci=disable_acs_redir= hint.
-> 
-> > diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
-> > index 2d3b380cc5781..801c183ae6b7e 100644
-> > --- a/drivers/pci/p2pdma.c
-> > +++ b/drivers/pci/p2pdma.c
-> > @@ -740,8 +741,12 @@ calc_map_type_and_dist(struct pci_dev *provider, struct pci_dev *client,
-> >  		dist_a++;
-> >  	}
-> >  
-> > -	*dist = dist_a + dist_b;
-> > -	goto map_through_host_bridge;
-> > +	/*
-> > +	 * The paths share no upstream bridge, so the request can only reach
-> > +	 * the peer through the host bridge. Examine the client path anyway,
-> > +	 * so the diagnostics below name every ACS port on both paths.
-> > +	 */
-> > +	no_common_upstream = true;
-> >  
-> >  check_b_path_acs:
-> >  	bb = b;
-> 
-> [ ... ]
-> 
-> > @@ -761,6 +766,9 @@ calc_map_type_and_dist(struct pci_dev *provider, struct pci_dev *client,
-> >  	*dist = dist_a + dist_b;
-> >  
-> >  	if (!acs_cnt) {
-> > +		if (no_common_upstream)
-> > +			goto map_through_host_bridge;
-> > +
-> >  		map_type = PCI_P2PDMA_MAP_BUS_ADDR;
-> >  		goto done;
-> >  	}
-> 
-> [Severity: Medium]
-> Will this change cause severe log spam during silent P2P discovery?
+Hi
 
-“Severe” is an exaggeration. The issue already existed prior to
-this patch, which merely increased the number of log messages.
 
-Thanks
+	Note: all patches except patch 7 now have Frank's Rev'd-by
+
+
+Intel LPSS I3C controllers support up to two I3C busses and can wake the
+system from an In-Band Interrupt (IBI) via a PCI PME.  Today that wakeup
+capability lives only at the PCI function, with no way to express which
+I3C device is actually responsible for waking the system, and no way for
+user space to enable or disable wakeup on a per-device basis.
+
+This series pushes the wakeup capability down to the individual I3C
+devices and then aggregates the resulting wakeup state back up to the PCI
+device.
+
+An IBI-capable I3C device on a bus whose controller can wake the system
+is marked as wakeup capable, so it can be managed through the standard
+device wakeup framework (e.g. via power/wakeup in sysfs).  When such a
+device is enabled for wakeup, a wakeup event is reported each time it
+queues an IBI.
+
+At suspend time, the mipi-i3c-hci PCI driver aggregates the wakeup
+configuration of the I3C devices across its HCI instances (up to two I3C
+busses) and enables PCI wakeup (PME) only when at least one attached I3C
+device is enabled as a wakeup source and has IBI enabled.  This keeps
+the PCI wakeup state in sync with the actual requirements of the devices
+on the busses.
+
+The series is organised as follows:
+
+ - Patch 1 fixes a pre-existing recursive acquisition of the bus rwsem
+   in i3c_master_register_new_i3c_devs().  The remaining patches add
+   work to that same function, so the locking is corrected first.
+
+ - Patches 2-7 fix use-after-free and unlocked accesses of the i3c_device
+   desc pointer.  Moving device registration out from under the bus lock
+   in patch 1 is what makes it possible to take the bus lock in the
+   helpers that run during registration.
+
+ - Patches 8-11 add the generic I3C core support: an ibi_wakeup flag for
+   controllers, marking IBI-capable devices as wakeup capable, reporting
+   wakeup events on IBIs, a helper to query whether any device on a bus
+   has both wakeup and IBI enabled, and a fix to reject IBI requests
+   from devices that do not advertise IBI capability.
+
+ - Patches 12-14 wire this up for the mipi-i3c-hci driver: propagate the
+   aggregated I3C wakeup requirements to the PCI function, factor out
+   i3c_hci_sysdev() for the shared device lookup, and advertise IBI
+   wakeup capability when the underlying system device can wake the
+   system.
+
+Note, since the PCI wakeup state is now derived from the wakeup
+configuration of the attached I3C devices, the PCI device's
+power/wakeup sysfs attribute no longer provides independent wakeup
+control.
+
+
+Changes in V5:
+
+    Added Frank Li's Reviewed-by and Mukesh Savaliya's Acked-by tags.
+
+
+Changes in V4:
+
+    i3c: master: Fix recursive locking during device registration
+	Expanded the kernel-doc for the new struct i3c_device @node
+	member to note that it is only for use by
+	i3c_master_register_new_i3c_devs() and is not protected by a
+	lock.
+
+    i3c: master: Fix use-after-free of master->this
+	Also reset master->this and bus.cur_master to NULL on the
+	i3c_master_set_info() error path before freeing the allocated
+	device.  Tidied up the commit message wording.
+
+    i3c: master: Support IBI-based wakeup capability
+	Shortened the comment about IBI-capable devices being wakeup
+	capable.
+
+    i3c: master: Add helper to query bus wakeup requirements
+	Renamed i3c_master_any_wakeup_enabled() to
+	i3c_master_has_wakeup_enabled_devs().
+
+    i3c: mipi-i3c-hci-pci: Propagate I3C wakeup requirements to PCI
+	Updated for the rename of i3c_master_any_wakeup_enabled() to
+	i3c_master_has_wakeup_enabled_devs().
+
+    i3c: mipi-i3c-hci: Factor out i3c_hci_sysdev()
+	Reworked the comment that moves with the code into kernel-doc,
+	and mentioned that in the commit message.
+
+    i3c: mipi-i3c-hci: Advertise IBI wakeup capability
+	Updated the i3c_hci_sysdev() kernel-doc to mention system PM and
+	wakeup, in place of the old comment tweak.
+
+    Added Frank Li's Reviewed-by and Mukesh Savaliya's Acked-by tags.
+
+
+Changes in V3:
+
+    Added 6 patches (2-7) that fix use-after-free and unlocked accesses
+    of the i3c_device desc pointer.  Moving device registration out from
+    under the bus lock in patch 1 is what allows that pointer to be
+    protected in the helpers that run during registration.
+
+    i3c: master: Fix recursive locking during device registration
+	Added Cc: stable@vger.kernel.org
+
+    i3c: master: Add helper to query bus wakeup requirements
+	Skip the master device explicitly.  Noted in the kernel-doc that
+	wakeup enablement is user space policy, so the helper is meant to
+	be called from a system suspend callback.
+
+    Added Frank Li's Reviewed-by tags.
+
+    Rebased onto i3c/next.
+
+
+Changes in V2:
+
+    Dropped the RFC tag.
+
+    i3c: master: Fix recursive locking during device registration
+	New patch
+
+    i3c: master: Support IBI-based wakeup capability
+	Dropped the redundant #include <linux/pm_wakeup.h>.  That header
+	must not be included directly, and linux/device.h, which is
+	already included, provides device_set_wakeup_capable().
+
+    i3c: master: Add helper to query bus wakeup requirements
+	i3c_master_any_wakeup_enabled() now also requires the device to
+	have IBI enabled, not just system wakeup enabled, so that a
+	device with no active IBI request does not keep PCI PME enabled.
+	desc->ibi_lock is taken while checking.  The commit message and
+	kernel-doc are updated to match.
+
+    Rebased onto i3c/next.
+
+
+Adrian Hunter (14):
+      i3c: master: Fix recursive locking during device registration
+      i3c: Fix unlocked dereference of dev->desc in i3c_device_get_supported_xfer_mode()
+      i3c: master: Do not treat master device as a duplicate target
+      i3c: master: Fix use-after-free of master->this
+      i3c: Make dev->desc locking assumptions explicit
+      i3c: master: Fix potential UAF in i3c_device_uevent()
+      i3c: master: Fix potential UAF in i3c_device_match()
+      i3c: master: Support IBI-based wakeup capability
+      i3c: master: Report wakeup events for IBIs
+      i3c: master: Add helper to query bus wakeup requirements
+      i3c: master: Reject IBI requests from non-IBI-capable devices
+      i3c: mipi-i3c-hci-pci: Propagate I3C wakeup requirements to PCI
+      i3c: mipi-i3c-hci: Factor out i3c_hci_sysdev()
+      i3c: mipi-i3c-hci: Advertise IBI wakeup capability
+
+ drivers/i3c/device.c                               |  13 +--
+ drivers/i3c/internals.h                            |   5 +
+ drivers/i3c/master.c                               | 119 ++++++++++++++++-----
+ drivers/i3c/master/mipi-i3c-hci/core.c             |  20 ++++
+ drivers/i3c/master/mipi-i3c-hci/dma.c              |  15 +--
+ drivers/i3c/master/mipi-i3c-hci/hci.h              |   2 +
+ drivers/i3c/master/mipi-i3c-hci/mipi-i3c-hci-pci.c |  23 +++-
+ include/linux/i3c/master.h                         |   6 ++
+ 8 files changed, 155 insertions(+), 48 deletions(-)
+
+
+Regards
+Adrian
