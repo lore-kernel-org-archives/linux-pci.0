@@ -1,135 +1,197 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E1C983DEAF6
-	for <linux-pci@vger.kernel.org>; Fri,  7 Aug 2026 15:37:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA27D4749C6
+	for <linux-pci@vger.kernel.org>; Fri,  7 Aug 2026 15:38:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786117076; cv=none; b=cJiWhkTrsCuCojRz58jyI8RyvycYcVqGs0mt54SFMPDSfl68bu/CwM1s1TwU5d4RtyVSa0z1zAgzI9v1PSfDJLZCa1brXYx9Lff/ryqqD0g1czqINc9d7VjeXj6ub5L6CEw+Iq9nqHgxvi2gucxyvaVJwWNLmGjCcuEomgI2Ms0=
+	t=1786117108; cv=none; b=Kl+L/oz9A7ySr/cmERPd6utQv7+OkFqBN3jYCqCnmL332dYbhYsPa/KrNyvB6GDa20nWaXK3IAjyiD+MCAs8tOvuug66ct+/upU93QBFSDKdC8xW34nGm0Gj2Jr8jUVu30wzC6X/zP7joJaduJIrVsk/KgXjKXKIgy3/tKJg4oA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786117076; c=relaxed/simple;
-	bh=v/fFT5eFjTNJO9E9qngkeCz9OfX7EkUidOwl3XB6jSQ=;
+	s=arc-20240116; t=1786117108; c=relaxed/simple;
+	bh=cV1QgGCFy2l4WDm+WmRY86Rd1B2k0Gq3H/jBDj8QVfQ=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=nQB8iLpuLPVclPszHes0HQCZ7bFlxLPVYeNDCG9f+GBsCbVia8Z4aRMcqSvNgtaqibpXhSo3zdo+24EBojxoFT8UDtOGfRUEwGyThkqN2v6gyBynDB9F03XfQvYloTSZoqAVZhFJ3kAIcCio7alFMUfc5ud82Q36W+W1pC6TkCw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aJjTf1ky; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=pYTyhMlvlYbWjatGALiVOtuUzYY+vhoDxE4TFtk7qFeqOO8cef512Pmb8nLBROamjnzEwtV4lsAgkgVlzWUreojCRmlyraK+Xyl5+6LiX9snt1r24lLh8NQOYwViBYi5w61gSHieFwlkzBJ3KjlYgMIa7YlIb1jlXJiul/XceoA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UqyvEgKc; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aJjTf1ky"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 859531F00A3E;
-	Fri,  7 Aug 2026 15:37:54 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UqyvEgKc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4A1551F00A3A;
+	Fri,  7 Aug 2026 15:38:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786117074;
-	bh=riTa3Zbq54AVhARcmN/uFqzfqv2PhOheVrOCKAtLRNA=;
+	s=k20260515; t=1786117106;
+	bh=wX8wnn5tWZD1NDyCyctGWv4IdM5dnIRcbylzvy8b18g=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=aJjTf1kyw4UMF9UK5+WflERvANNU6oecLq6iJ0+KW3JfNpIp1uXdOLw7Ing3I4532
-	 vb99/v8cwDxPE2MPoS+9KWNAT4k49u7jFXUFuzTBoylbYQpWeHRenvJR6YI3VE5kep
-	 nhV89KlPZvwecSFqWKmawHent4f5VgCfNBfbaysNyNHZMnbLxuatwb1jLRkUVGUaKC
-	 KadfgZuOXI/fOnjUU3dVeuuueDcudJl/1d5ulkI9lVApkBHler9e4pjLezPDKHE5Hf
-	 dP1QqyTL5cBer5K4YaQOEm6SdKbcBJSwcyX0H1fbUPzPs0uI3z9jwC4iKWmXX2aci1
-	 BUMvrNa38wfUA==
+	b=UqyvEgKcQ3k7sLhs1kaiJYmklIYdBwG8i3AIFbswCkGb594vTGA4vj/uEsXXIr15l
+	 PrEAgf6chOU2t9zPfqzB5sYWwOSJ1Pi3HCXpJoU9cXtDJ5f6XjMcPgxACjBqggDjr9
+	 Fi6ZReHtzQGJUT3NGOA+XNaALhz9j3r6k/xNThmEbsF9Ff31f41lmNpS1TiywHbpGq
+	 yxaSt4oFZ0aUtA06Qw9bZTER0j0qR+ruN23myetoaBqE3CJ5AVnwKq4GrKBJOQg90o
+	 aGI5c88cXXmFTzZd1HR7rgDuAu4ynOzZxcOooAjM+KnC5SHFFPzBC30j+LdDNyqJFC
+	 r5PtPy+6XMTfg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH V5 07/14] i3c: master: Fix potential UAF in
- i3c_device_match()
+Subject: Re: [PATCH V5 12/14] i3c: mipi-i3c-hci-pci: Propagate I3C wakeup
+ requirements to PCI
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Adrian Hunter" <adrian.hunter@intel.com>
-Cc: "Alexandre Belloni" <alexandre.belloni@bootlin.com>, Frank.Li@kernel.org, linux-i3c@lists.infradead.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260807145638.168865-8-adrian.hunter@intel.com>
+Cc: "Alexandre Belloni" <alexandre.belloni@bootlin.com>, linux-i3c@lists.infradead.org, Frank.Li@kernel.org, linux-pci@vger.kernel.org
+In-Reply-To: <20260807145638.168865-13-adrian.hunter@intel.com>
 References: <20260807145638.168865-1-adrian.hunter@intel.com>
- <20260807145638.168865-8-adrian.hunter@intel.com>
+ <20260807145638.168865-13-adrian.hunter@intel.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 07 Aug 2026 15:37:54 +0000
-Message-Id: <20260807153754.859531F00A3E@smtp.kernel.org>
+Date: Fri, 07 Aug 2026 15:38:25 +0000
+Message-Id: <20260807153826.4A1551F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
 s) to consider:
 
 New issues:
-- [High] The removal of the `i3cdev->desc` NULL check introduces a determin=
-istic NULL pointer dereference in `i3c_device_match` during concurrent driv=
-er binding.
+- [High] AB-BA deadlock between I3C subsystem locks (bus.lock / ibi_lock) a=
+nd PCI runtime suspend.
+- [Medium] Dynamically modifying user-controlled sysfs wakeup attribute dur=
+ing suspend.
 
 Pre-existing issues:
-- [High] Incomplete fix: A Use-After-Free of the descriptor is still possib=
-le during master unregistration because it executes locklessly.
+- [High] Missing child driver bound check and PM API bypass leads to NULL p=
+ointer dereferences.
 --
 
---- Patch [7]: [PATCH V5 07/14] i3c: master: Fix potential UAF in i3c_devic=
-e_match() ---
-commit 8aa5de79b60445da0abee6c6a17c70b1b9ec8be9
+--- Patch [12]: [PATCH V5 12/14] i3c: mipi-i3c-hci-pci: Propagate I3C wakeu=
+p requirements to PCI ---
+commit 84ca2ce77fe5f7e3e2fb196059be4ac7c80842fc
 Author: Adrian Hunter <adrian.hunter@intel.com>
+Subject: i3c: mipi-i3c-hci-pci: Propagate I3C wakeup requirements to PCI
 
-i3c: master: Fix potential UAF in i3c_device_match()
+This patch aligns the PCI controller's wakeup state with the wakeup
+requirements of its attached I3C devices. During suspend, it enables PCI
+wakeup only if at least one I3C device has wakeup enabled.
 
-i3c_device_match() dereferences i3cdev->desc without holding the bus
-normal-use lock.  Since the descriptor pointer can be replaced
-concurrently, the dereference can race with descriptor replacement and
-result in a use-after-free.
+> diff --git a/drivers/i3c/master/mipi-i3c-hci/mipi-i3c-hci-pci.c b/drivers=
+/i3c/master/mipi-i3c-hci/mipi-i3c-hci-pci.c
+> index 5a9e2a43eff8d..42c172e82622f 100644
+> --- a/drivers/i3c/master/mipi-i3c-hci/mipi-i3c-hci-pci.c
+> +++ b/drivers/i3c/master/mipi-i3c-hci/mipi-i3c-hci-pci.c
 
-Protect access to i3cdev->desc with the normal-use lock.  While the lock
-is held, the descriptor is guaranteed to remain valid, so the NULL check
-is also unnecessary and can be removed.
+[ ... ]
 
-> diff --git a/drivers/i3c/master.c b/drivers/i3c/master.c
-> index ee771ac0b203e..83e04a2c202a9 100644
-> --- a/drivers/i3c/master.c
-> +++ b/drivers/i3c/master.c
-> @@ -347,8 +347,10 @@ static int i3c_device_match(struct device *dev, cons=
-t struct device_driver *drv)
->  	i3cdev =3D dev_to_i3cdev(dev);
->  	i3cdrv =3D drv_to_i3cdrv(drv);
+> @@ -272,6 +274,13 @@ static bool mipi_i3c_hci_pci_is_mfd(struct device *d=
+ev)
+>  	return dev_is_platform(dev) && mfd_get_cell(to_platform_device(dev));
+>  }
 > =20
-> -	if (i3cdev->desc && i3cdev->desc->boardinfo)
-> +	i3c_bus_normaluse_lock(i3cdev->bus);
-> +	if (i3cdev->desc->boardinfo)
+> +static bool mipi_i3c_hci_pci_any_wakeup_enabled(struct device *dev)
+> +{
+> +	struct i3c_hci *hci =3D dev_get_drvdata(dev);
+> +
+> +	return i3c_master_has_wakeup_enabled_devs(&hci->master);
+> +}
+> +
 
 [Severity: High]
-Can removing this NULL check lead to a NULL pointer dereference during
-concurrent driver binding?
+This is a pre-existing issue, but does this code dereference the driver data
+without checking if it is NULL?
 
-Looking at master unregistration, the descriptor pointer is cleared
-locklessly:
+If the child mipi-i3c-hci driver fails to probe or is unbound by a user via
+sysfs, dev_get_drvdata() returns NULL.
 
-drivers/i3c/master.c:i3c_master_unregister_i3c_devs() {
-        ...
-        i3cdev->dev->desc =3D NULL;
-        ...
-}
+The parent PCI driver iterates over child devices during suspend and checks
+if the hardware is running:
 
-If a concurrent sysfs bind operation triggers i3c_device_match(), it might
-acquire the read lock but still observe a NULL descriptor since unregistrat=
-ion
-does not acquire i3c_bus_normaluse_lock(). Does the removed NULL check
-now guarantee a crash in this race condition?
+mipi_i3c_hci_pci_suspend_instance()
+    if (!mipi_i3c_hci_pci_is_mfd(dev) ||
+        !mipi_i3c_hci_pci_is_operational(dev, true))
+        return 0;
+
+Because the hardware can still be operational even if unbound, the code
+proceeds to call i3c_hci_rpm_suspend() and now
+mipi_i3c_hci_pci_any_wakeup_enabled(), both of which blindly dereference
+the unverified driver data.
+
+>  static int mipi_i3c_hci_pci_suspend_instance(struct device *dev, void *d=
+ata)
+>  {
+
+[ ... ]
+
+> @@ -287,6 +296,9 @@ static int mipi_i3c_hci_pci_suspend_instance(struct d=
+evice *dev, void *data)
+> =20
+>  	pm_data->dev[pm_data->dev_cnt++] =3D dev;
+> =20
+> +	if (pm_data->can_wakeup && mipi_i3c_hci_pci_any_wakeup_enabled(dev))
+> +		pm_data->may_wakeup =3D true;
+> +
 
 [Severity: High]
-This is a pre-existing issue, but does taking the normal-use lock fully
-prevent the use-after-free this patch aims to fix?
+Is there a potential AB-BA deadlock between the I3C subsystem locks and the
+PCI runtime suspend lock here?
 
-Master unregistration modifies and initiates cleanup of descriptors without
-acquiring any bus locks, bypassing this protection entirely:
+The new i3c_master_has_wakeup_enabled_devs() function is called during the
+PCI device's suspend, acquiring bus.lock and ibi_lock:
 
-drivers/i3c/master.c:i3c_master_bus_cleanup() {
-        ...
-        i3c_master_detach_free_devs(master);
-        ...
-}
+mipi_i3c_hci_pci_suspend_instance()
+  mipi_i3c_hci_pci_any_wakeup_enabled()
+    i3c_master_has_wakeup_enabled_devs()
+      i3c_bus_normaluse_lock(&master->bus);
+      guard(mutex)(&desc->ibi_lock);
 
-If a concurrent sysfs bind operation reads i3cdev->desc just before it is
-cleared, the read lock here doesn't seem to serialize against the
-unregistration thread proceeding to free the descriptor. Can the descriptor
-still be freed while i3c_device_match() is dereferencing it?
+However, other I3C core paths take these locks first before triggering a PM
+operation that requires the PM lock:
 
->  		static_addr_method =3D i3cdev->desc->boardinfo->static_addr_method;
-> +	i3c_bus_normaluse_unlock(i3cdev->bus);
+i3c_device_free_ibi()
+  i3c_bus_normaluse_lock(dev->bus);
+  mutex_lock(&dev->desc->ibi_lock);
+  i3c_dev_free_ibi_locked(dev->desc);
+    ...
+    i3c_master_rpm_get()
+      pm_runtime_resume_and_get()
+
+If an IBI is freed concurrently while the PCI parent enters autosuspend, one
+thread holds bus.lock waiting for the PM lock, while the suspend path holds
+the PM lock waiting for bus.lock.
+
+>  	return 0;
+>  }
 > =20
->  	/*
->  	 * SETAASA-based devices need not always have a matching ID since
+> @@ -317,12 +329,19 @@ static int mipi_i3c_hci_pci_suspend(struct device *=
+dev)
+>  	if (!hci->info->control_instance_pm)
+>  		return 0;
+> =20
+> +	pm_data.can_wakeup =3D device_can_wakeup(dev);
+> +
+>  	ret =3D device_for_each_child_reverse(dev, &pm_data, mipi_i3c_hci_pci_s=
+uspend_instance);
+> -	if (ret)
+> +	if (ret) {
+>  		for (int i =3D 0; i < pm_data.dev_cnt; i++)
+>  			i3c_hci_rpm_resume(pm_data.dev[i]);
+> +		return ret;
+> +	}
+> =20
+> -	return ret;
+> +	if (device_may_wakeup(dev) !=3D pm_data.may_wakeup)
+> +		device_set_wakeup_enable(dev, pm_data.may_wakeup);
+> +
+
+[Severity: Medium]
+Does this directly overwrite the user-controlled sysfs wakeup attribute
+during suspend?
+
+The official driver API guidelines mandate that device drivers should not
+call device_set_wakeup_enable() directly, as this field is reserved for
+sysfs user policy.
+
+Should the driver align its hardware PME registers directly without modifyi=
+ng
+the generic PM subsystem's sysfs toggle?
+
+> +	return 0;
+>  }
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260807145638.1688=
-65-1-adrian.hunter@intel.com?part=3D7
+65-1-adrian.hunter@intel.com?part=3D12
