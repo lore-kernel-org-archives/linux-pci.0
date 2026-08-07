@@ -1,48 +1,48 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.20])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CCF274746AE;
-	Fri,  7 Aug 2026 14:57:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 348354749EF;
+	Fri,  7 Aug 2026 14:57:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.20
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786114660; cv=none; b=cUxc6y+f9vPkTvlG4qlHFOB7JTWshsupTjvZPWQu7B/pQSU0hSz+7XpC18Z3E2doLoDnAqtvIErEYjLnHOPtJZ7cemIB5tE3k2Cm8M7ICXlHF6jpCz80tquA4atjmZC3VD9QoZ3hn3lpqYHN2hJ7vufJirgyQ42JGOfXI/LZbek=
+	t=1786114661; cv=none; b=V+EvYzsAc29CEzEJs8n+rNfB6++Xw7yMKiG90RxB5yT25aZAlTARU54dlcAl9NAJDSV5xeuNHU5D68p8pqTLsLE+traREmnz+o2J2Q0VDwu6LWFb80KjpKfYip9dKYL9zWq17ueiRji92bKcW1HeLnV7UZAxJZbM6u2JN00h2jM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786114660; c=relaxed/simple;
-	bh=GXla3rEiuoVy1r6X2ffYoXaqd7/8Dw7PH/mGtXsD/VQ=;
+	s=arc-20240116; t=1786114661; c=relaxed/simple;
+	bh=3YumbivJ97gedr33UQLGzZZ9HmKGhUq7z+4nWTxukeo=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=U3e8LtKpaUqpGz2gCnYRj5Vzz7JNqqWMzhWRLkAWqn6J9h0sLswRaCgFkM/fPfyNFw2ad1J7LC5wcjatGDN1Xc1itpGk4qaAeSTFzDTd7G0wLFtUDzq8eVJo8hzvIYags/8yheojFY+WwuQp7/NvBKjcBsK6jV2Mpi8xeQ1rw+U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Cc98RoWm; arc=none smtp.client-ip=198.175.65.20
+	 MIME-Version; b=nBBx/7hiyeookdKdazALYoKGBYvwVXOJlsC5cLMT4vKwlix2wrn/tWsZ0a01KNcIJdIIOUtAfuKxf9gf6l01r6sQqkPpuAlByDb9ykBtsjtQpURoLXEev+8Rei8MXrIkm3g6bmbsltQhrt+tNFWurCMyxrZ/lyt5c2xx0HEE9pQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=VO3YoW5D; arc=none smtp.client-ip=198.175.65.20
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Cc98RoWm"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="VO3YoW5D"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1786114659; x=1817650659;
+  t=1786114660; x=1817650660;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=GXla3rEiuoVy1r6X2ffYoXaqd7/8Dw7PH/mGtXsD/VQ=;
-  b=Cc98RoWmUCZfKHGXvnKJ/mjk97muZ8CaX8vpHLREkp6JhwM4SGqKtKDG
-   y9S4iPjZiZr5C4Y6rGDfrmCpN5nYZwweeW6CMW/pYKCmTdfAFfIpiFX8z
-   z4ss4amer1cta3jXuv8KL2ZxF4XbA8jn46xzEYoZyba8+aPJBqCZiVbD+
-   LdwfV+ZLaVist13WevlATlYsajr0Jzd7QkA1Uv0Tx4h5upllHFWQI5MYG
-   c3yHj15/sJRDVhyioeta6e270v6bZeBRKlPOCTgP6D8JGOm7eBNJ3Kvu6
-   PzqiLga4MBLZfZRew21QWgeIR53P4Jymy7R023cwrG2yCtolvF1eisYZ6
-   w==;
-X-CSE-ConnectionGUID: FIEDZ6fbT1+4P+XMJEuJ7A==
-X-CSE-MsgGUID: Ybe+CbuLQ6+BflilYcSY1g==
-X-IronPort-AV: E=McAfee;i="6800,10657,11868"; a="86485235"
+  bh=3YumbivJ97gedr33UQLGzZZ9HmKGhUq7z+4nWTxukeo=;
+  b=VO3YoW5DtORaAga4DynmrNayK+fmn+ZtboGXMOa9YREg/Oz6LEVF46qb
+   /es5ZC7F2Ckx4O0x5RvpAkd5t/H7rjbY46rIKNijq1+Dik2uHS1MO/y9h
+   M0jxnTQPimNM6A1T7WG/eIRghc/ELhIq6080wqezLNBHUVV4DuyNeUYx7
+   xBO90EPKD7PeDSkPGnMZO2DalQkrD7WiZ9e9mqrt2JA7x4y7tGmcVouHt
+   BUOWZztMrcM3dppk8JHrXP7AQS/6B0hWvT8SuSuAv96gETqnhZA5Ym55m
+   YKnM1zCe8JdyO0gtgyfrLq+0/T2fASihEkJB8Aly44ihMFIu+fswOVpIv
+   A==;
+X-CSE-ConnectionGUID: R3Pb47Q4RgCxntZsYBO+MA==
+X-CSE-MsgGUID: z4tvnLkHRfSzuVPNRfTT4w==
+X-IronPort-AV: E=McAfee;i="6800,10657,11868"; a="86485239"
 X-IronPort-AV: E=Sophos;i="6.25,210,1779174000"; 
-   d="scan'208";a="86485235"
+   d="scan'208";a="86485239"
 Received: from fmviesa008.fm.intel.com ([10.60.135.148])
-  by orvoesa112.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Aug 2026 07:57:37 -0700
-X-CSE-ConnectionGUID: Pw3PS3EnSdCoM/ktTPGfNQ==
-X-CSE-MsgGUID: KSHIWB1ST56hZfekZ230Sw==
+  by orvoesa112.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Aug 2026 07:57:40 -0700
+X-CSE-ConnectionGUID: 4fbKvVegQLK4jH6l8hSZMg==
+X-CSE-MsgGUID: Vz6NQqQ5Sl2PQMy0eTRKJA==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.25,210,1779174000"; 
-   d="scan'208";a="259809936"
+   d="scan'208";a="259809938"
 Received: from amilburn-desk.amilburn-desk (HELO ahunter6-desk) ([10.245.245.114])
-  by fmviesa008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Aug 2026 07:57:05 -0700
+  by fmviesa008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Aug 2026 07:57:08 -0700
 From: Adrian Hunter <adrian.hunter@intel.com>
 To: alexandre.belloni@bootlin.com
 Cc: Frank.Li@nxp.com,
@@ -53,9 +53,9 @@ Cc: Frank.Li@nxp.com,
 	linux-kernel@vger.kernel.org,
 	linux-pci@vger.kernel.org,
 	linux-pm@vger.kernel.org
-Subject: [PATCH V5 07/14] i3c: master: Fix potential UAF in i3c_device_match()
-Date: Fri,  7 Aug 2026 17:56:31 +0300
-Message-ID: <20260807145638.168865-8-adrian.hunter@intel.com>
+Subject: [PATCH V5 08/14] i3c: master: Support IBI-based wakeup capability
+Date: Fri,  7 Aug 2026 17:56:32 +0300
+Message-ID: <20260807145638.168865-9-adrian.hunter@intel.com>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260807145638.168865-1-adrian.hunter@intel.com>
 References: <20260807145638.168865-1-adrian.hunter@intel.com>
@@ -68,54 +68,83 @@ MIME-Version: 1.0
 Organization: Intel Finland Oy, Registered Address: c/o Alberga Business Park, 6 krs, Bertel Jungin Aukio 5, 02600 Espoo, Business Identity Code: 0357606 - 4, Domiciled in Helsinki
 Content-Transfer-Encoding: 8bit
 
-i3c_device_match() dereferences i3cdev->desc without holding the bus
-normal-use lock.  Since the descriptor pointer can be replaced
-concurrently, the dereference can race with descriptor replacement and
-result in a use-after-free.
+An I3C controller acts as a bus controller for one or more I3C devices.
+If the controller can wake the system in response to an In-Band
+Interrupt (IBI), then any device on that bus that is capable of
+generating IBIs can potentially be used as a wakeup source.
 
-Protect access to i3cdev->desc with the normal-use lock.  While the lock
-is held, the descriptor is guaranteed to remain valid, so the NULL check
-is also unnecessary and can be removed.
+Add an ibi_wakeup flag to struct i3c_master_controller so controller
+drivers can advertise support for IBI-based wakeup.
 
-This change depends on "i3c: master: Fix recursive locking during device
-registration".  Prior to that change, taking the normal-use lock in
-i3c_device_match() could recurse on bus->lock during device
-registration.
-
-This fixes "i3c: master: match I3C device through DT and ACPI".
+If set, mark IBI-capable I3C devices as wakeup capable when they are
+registered, allowing wakeup management through the standard device
+wakeup framework.
 
 Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
+Reviewed-by: Frank Li <Frank.Li@nxp.com>
+Acked-by: Mukesh Savaliya <mukesh.savaliya@oss.qualcomm.com>
 ---
 
 
-Changes in V4 and V5:
+Changes in V5:
 
-	None
+	Added Mukesh's Ack'd-by
+
+Changes in V4:
+
+	Shortened the comment about IBI-capable devices being wakeup
+	capable.
 
 Changes in V3:
 
-	New patch
+	None
+
+Changes in V2:
+
+	Dropped the redundant #include <linux/pm_wakeup.h>.  That header
+	must not be included directly, and linux/device.h, which is
+	already included, provides device_set_wakeup_capable().
 
 
- drivers/i3c/master.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/i3c/master.c       | 4 ++++
+ include/linux/i3c/master.h | 2 ++
+ 2 files changed, 6 insertions(+)
 
 diff --git a/drivers/i3c/master.c b/drivers/i3c/master.c
-index ee771ac0b203..83e04a2c202a 100644
+index 83e04a2c202a..2616354dbe54 100644
 --- a/drivers/i3c/master.c
 +++ b/drivers/i3c/master.c
-@@ -347,8 +347,10 @@ static int i3c_device_match(struct device *dev, const struct device_driver *drv)
- 	i3cdev = dev_to_i3cdev(dev);
- 	i3cdrv = drv_to_i3cdrv(drv);
+@@ -2110,6 +2110,10 @@ i3c_master_register_new_i3c_devs(struct i3c_master_controller *master)
+ 		if (desc->boardinfo)
+ 			device_set_node(&desc->dev->dev, desc->boardinfo->fwnode);
  
--	if (i3cdev->desc && i3cdev->desc->boardinfo)
-+	i3c_bus_normaluse_lock(i3cdev->bus);
-+	if (i3cdev->desc->boardinfo)
- 		static_addr_method = i3cdev->desc->boardinfo->static_addr_method;
-+	i3c_bus_normaluse_unlock(i3cdev->bus);
++		/* If the device has IBI capability, set as wakeup capable */
++		if (master->ibi_wakeup && (desc->info.bcr & I3C_BCR_IBI_REQ_CAP))
++			device_set_wakeup_capable(&desc->dev->dev, true);
++
+ 		list_add_tail(&desc->dev->node, &i3c_unreg_devs);
+ 	}
  
- 	/*
- 	 * SETAASA-based devices need not always have a matching ID since
+diff --git a/include/linux/i3c/master.h b/include/linux/i3c/master.h
+index 26535beb1e77..9d675d01522c 100644
+--- a/include/linux/i3c/master.h
++++ b/include/linux/i3c/master.h
+@@ -524,6 +524,7 @@ struct i3c_master_controller_ops {
+  * @hotjoin: true if the master support hotjoin
+  * @rpm_allowed: true if Runtime PM allowed
+  * @rpm_ibi_allowed: true if IBI and Hot-Join allowed while runtime suspended
++ * @ibi_wakeup: IBI can wakeup the system
+  * @shutting_down: set to true when master begins shutdown or unregister
+  * @boardinfo.i3c: list of I3C  boardinfo objects
+  * @boardinfo.i2c: list of I2C boardinfo objects
+@@ -563,6 +564,7 @@ struct i3c_master_controller {
+ 	unsigned int hotjoin: 1;
+ 	unsigned int rpm_allowed: 1;
+ 	unsigned int rpm_ibi_allowed: 1;
++	unsigned int ibi_wakeup: 1;
+ 	bool shutting_down;
+ 	struct {
+ 		struct list_head i3c;
 -- 
 2.53.0
 
