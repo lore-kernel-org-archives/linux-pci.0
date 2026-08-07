@@ -1,160 +1,119 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB8A44756AB
-	for <linux-pci@vger.kernel.org>; Fri,  7 Aug 2026 15:26:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8DB1A33C1AD;
+	Fri,  7 Aug 2026 15:27:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786116414; cv=none; b=ABuowSXovTxrQfbymh9UWpHv7kM6bOyjXl0enORU44wJxF0LyZu1r1l6Ezte+dwIjI7pmfiAeCx+/LWSXpEc7q7r6bjqkBPYrgL3ECYfMZq4OQpvr65W/r55qG/65uUjxbJ+G+7EVRGyLuJ9Eb/YR2D7e5KGJZAjq9ir8e6+qxo=
+	t=1786116428; cv=none; b=SUS32NSpsUMV4hWqt9yFC837UHLogiz9s8lHpnyR5ZPltJLwKdUcs1K4ijsqZH5DgoqbfHZy5XGgvZ3vUyXA/0DM8ZZ6BSGGBLwG08fRvtXcl878oTSx6vfTflqH5YIPYATxB1ZDgUR6KtGMGLFw5aalO3VJS+HTw765s5OzOs4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786116414; c=relaxed/simple;
-	bh=yZkKHiK4Mgh+GC1Fi3tFP328yXtBeBViDtawa98+kzo=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=TBHZdkHMvdufa/bCL4XVHztB1QTQk8eDkHyDjxvDPv5WbpMV4ENFYycOmmWf7SjQoxiITKF4tdfhivjc1APP4b/YtqKQwbkiDBxD38yoi5HV0p2xJPXwx963iZ1Y8bttFQnCis/+juNpSu6xl/Au6d4ibjEKmTdR9H9tRcBEwEk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ODKXERnA; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1786116428; c=relaxed/simple;
+	bh=hF+na2MtvclSaqOXAtrOqON++Jg3yIgxvrmQkUCszi8=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=Sa8ajJJFqZjPqAjuUhZTkX/EK53b3oNrxr/Korq7zy6VNfNxDJ4KgeyNQrqIg5lAARKkHU0fvwzpKd32ilE7YiHAiHs1dk4Svtv+GgGNBb5B1f1hAp3JBg1v5ciOzxJ2eMahwTGd/fP65NS8qN59Y5gzHM21TT62ZSCkjgy0Wf8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jdJIsFI0; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ODKXERnA"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D73EA1F00A3A;
-	Fri,  7 Aug 2026 15:26:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jdJIsFI0"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4117B1F00A3A;
+	Fri,  7 Aug 2026 15:27:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786116412;
-	bh=tjoL1P0VLWdpJPH2opD9TVkxhURrfC0eqWluaf/3ii4=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=ODKXERnAHXuJgji0ztzHFg79Vz2vBEN8mNC1NxMVlJoH0CHM7lSgcoyFFoxDoIl2G
-	 nww+t3lvo9xSDFJJRhnrm8rrf0b0A70zgaxWcdDMUB/i6Z7Ekt2UQYUOo2OdapH8YP
-	 BYex+xFj92fx/3DxnngImOyMuxnPg9Yh9KtrWJ/9qmhm8Cj4Q7zR/oL9h6czQVLacA
-	 cKYlYq35bKwRwm/i+KP8LZRCUOdHjIIf3s4HWrs6IgewLyONIvZ11aS4YFeaiA14Oj
-	 Kv4WPvsGlYKOb5zga4ciZj5bKgugCacfJovdH709hwAdafwvSVJrlP0/sC+OdO4kMK
-	 p/14Yixhb3x1A==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH V5 01/14] i3c: master: Fix recursive locking during
- device registration
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Adrian Hunter" <adrian.hunter@intel.com>
-Cc: "Alexandre Belloni" <alexandre.belloni@bootlin.com>, Frank.Li@kernel.org, linux-pci@vger.kernel.org, linux-i3c@lists.infradead.org
-In-Reply-To: <20260807145638.168865-2-adrian.hunter@intel.com>
-References: <20260807145638.168865-1-adrian.hunter@intel.com>
- <20260807145638.168865-2-adrian.hunter@intel.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Fri, 07 Aug 2026 15:26:51 +0000
-Message-Id: <20260807152651.D73EA1F00A3A@smtp.kernel.org>
+	s=k20260515; t=1786116427;
+	bh=wgQmbdtHCvFqRoxry1i5eNtqIyEJ55658yXkZlfsF0U=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=jdJIsFI0Qs6Wn39qAN5JJDiHURWIakvyX4ZSUoNU9gQPOoVlMP0cx5y1oCrn66tZ/
+	 zLNtCtCf5Verm0hPGdraL2Sq4Ox2tKNS3nu3Vk8h3J4PxoZkcNQIGN83HnfkDdpizK
+	 UfdnnrIEhvtyh1k7mUjq9fJT6hOp/SfN6i9uzsq28/fmT7QOXlWJpUr6Un1CTaKdtT
+	 HtDQg9oRmv3YL3Qhd76Xm9xnrC9XZbmVBykeLG6VivnemPoN3xak5yEc55VP8PsxhJ
+	 qeUGkIzBQhS8IkKU5uw/a7lUrU/Se+JhIObBxJ0Sues/ttjDaUFzTDLLvOAmFCA3l9
+	 ucpk0NIwKKouA==
+Date: Fri, 7 Aug 2026 10:27:05 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Semih Baskan <strst.gs@gmail.com>
+Cc: lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org,
+	robh@kernel.org, bhelgaas@google.com, rjui@broadcom.com,
+	sbranden@broadcom.com, bcm-kernel-feedback-list@broadcom.com,
+	rafal@milecki.pl, florian.fainelli@broadcom.com, arnd@arndb.de,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org, rosenp@gmail.com, rani.hod@gmail.com
+Subject: Re: [PATCH v2] PCI: iproc: Use the EROM outbound window on BCMA
+Message-ID: <20260807152705.GA59586@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260807035726.387-1-strst.gs@gmail.com>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
+On Fri, Aug 07, 2026 at 06:57:26AM +0300, Semih Baskan wrote:
+> The PCIe outbound window base on Northstar depends on the PCIe Gen2 core
+> revision. Revision 0x01 uses 0x08000000, 0x40000000 and 0x48000000 for
+> controllers 0 to 2, while revision 0x07 (NS-B0) uses 0x08000000,
+> 0x20000000 and 0x28000000. Broadcom's own driver branches on the core
+> revision for exactly this reason.
+> 
+> bcm-ns.dtsi is shared by every Northstar SoC, so it cannot carry a value
+> that is correct on both. Commit 767012397976 ("ARM: dts: BCM5301X:
+> Describe PCIe controllers fully") gave the controllers a ranges property.
+> The commit shipped in v7.1.
+> 
+> With that property present, two things go wrong with this driver:
 
-New issues:
-- [High] Dropping the bus lock during device_register() allows concurrent D=
-ynamic Address Assignment (DAA) to free the underlying I3C device descripto=
-r (i3cdev->desc), leading to a Use-After-Free in the uevent callback.
+It looks like you're going to present two problems next.  They should
+be bullets so it's obvious what the first is and what the second is,
+e.g.,
 
-Pre-existing issues:
-- [High] Unbalanced fwnode_handle_put in i3c_device_release leads to a refc=
-ount underflow of the boardinfo fwnode on device registration failure.
---
+  - devm_pci_alloc_host_bridge() parses ...
 
---- Patch [1]: [PATCH V5 01/14] i3c: master: Fix recursive locking during d=
-evice registration ---
-commit 7ad9b7134d768d59739289af1d4be93dc5d74a13
-Author: Adrian Hunter <adrian.hunter@intel.com>
+  - When the DT window ...
 
-i3c: master: Fix recursive locking during device registration
-   =20
-i3c_master_register_new_i3c_devs() registers newly discovered devices
-while holding i3c_bus_normaluse_lock(), leading to a recursive
-acquisition of the same rwsem. Fix this by separating device creation
-from device registration.
+(or whatever the second item is, I'm not sure where it starts)
 
-> diff --git a/drivers/i3c/master.c b/drivers/i3c/master.c
-> index f485b98805cf6..d2fb1a1105218 100644
-> --- a/drivers/i3c/master.c
-> +++ b/drivers/i3c/master.c
+> devm_pci_alloc_host_bridge() parses those ranges and requests them, then
+> this driver adds its own window and requests the whole list a second
+> time, so every controller fails to probe with -EBUSY.
+> 
+> When the DT window is used, it is only correct on core revision 0x07. On
+> revision 0x01 it points at an address the hardware does not decode, and
+> the first MMIO access to a BAR takes an imprecise external abort.
+> 
+> The enumeration ROM reports the correct base for the revision actually
+> present, and bcma already provides it as addr_s[0]. Drop any memory
+> window that came from the device tree and use that instead, requesting
+> only the window this driver owns. This makes the driver correct whether
+> or not the DT describes a window.
+> 
+> When a dropped window does not match what the EROM reports, print a
+> warning naming both. The mismatch means the devicetree describes a
+> window the hardware does not decode, and that should be fixed in the
+> dts rather than ignored silently.
+> 
+> The same commit also added compatible = "brcm,iproc-pcie", so these
+> nodes now match pcie-iproc-platform. With CONFIG_PCIE_IPROC_PLATFORM
+> enabled, which is the default on ARCH_BCM_IPROC, that driver binds them
+> first and this driver's probe fails inside devm_pci_alloc_host_bridge().
+> This patch fixes the configurations where the BCMA driver is the one in
+> use; OpenWrt builds that way, with PCIE_IPROC_PLATFORM disabled. The
+> platform path takes the DT window as-is and has the same wrong address
+> on core revision 0x01, so that side needs a devicetree fix either way.
+> 
+> Tested on an ASUS RT-N18U (BCM47081) and a Linksys EA9200 (BCM4709),
+> both core revision 0x01.
+> 
+> Fixes: 767012397976 ("ARM: dts: BCM5301X: Describe PCIe controllers fully")
+> Tested-by: Rani Hod <rani.hod@gmail.com>
+> Cc: stable@vger.kernel.org # v7.1+
+> Signed-off-by: Semih Baskan <strst.gs@gmail.com>
+> ---
+> v1 -> v2: print a warning for every devicetree memory window that does
+> not match the EROM window. Requested by Arnd Bergmann:
+> https://lore.kernel.org/all/d05ffeca-f289-42dd-b454-5a7c7741c6d5@app.fastmail.com/
+> 
+> v1: https://lore.kernel.org/all/20260727140939.389-1-strst.gs@gmail.com/
+> Applies to v7.2-rc5 and unchanged through v7.2-rc6; the file has no
+> commits in between.
 
-[ ... ]
-
-> @@ -2104,25 +2113,37 @@ i3c_master_register_new_i3c_devs(struct i3c_maste=
-r_controller *master)
->  		if (desc->boardinfo)
->  			device_set_node(&desc->dev->dev, desc->boardinfo->fwnode);
-> =20
-
-[Severity: High]
-This is a pre-existing issue, but does device_set_node() take a reference to
-the fwnode here?
-
-When an i3c boardinfo is added, a reference to the fwnode is acquired.
-However, it appears device_set_node() assigns this fwnode without
-incrementing the reference count. When the device is freed, the reference is
-unconditionally dropped:
-
-drivers/i3c/master.c:i3c_device_release() {
-    ...
-    fwnode_handle_put(dev->fwnode);
-    ...
-}
-
-If device_register() fails, put_device() will invoke i3c_device_release()
-and drop the fwnode reference. If the device is subsequently rediscovered, a
-new device is created with the same fwnode assigned, potentially leading to=
- a
-refcount underflow and a use-after-free.
-
-> -		ret =3D device_register(&desc->dev->dev);
-> -		if (ret) {
-> -			dev_err(&master->dev,
-> -				"Failed to add I3C device (err =3D %d)\n", ret);
-> -			desc->dev->desc =3D NULL;
-> -			put_device(&desc->dev->dev);
-> -			desc->dev =3D NULL;
-> -		}
-> +		list_add_tail(&desc->dev->node, &i3c_unreg_devs);
-> +	}
-> +
-> +	i3c_bus_maintenance_unlock(&master->bus);
-> +
-> +	list_for_each_entry_safe(i3cdev, tmp, &i3c_unreg_devs, node) {
-> +		ret =3D device_register(&i3cdev->dev);
-
-[Severity: High]
-Could dropping the bus lock around device_register() allow a concurrent
-dynamic address assignment operation to free the i3c device descriptor?
-
-During device_register(), the driver core invokes i3c_device_uevent(), which
-accesses the descriptor without taking the bus lock:
-
-drivers/i3c/master.c:i3c_device_uevent() {
-    ...
-    if (i3cdev->desc)
-        devinfo =3D i3cdev->desc->info;
-    ...
-}
-
-If a concurrent dynamic address assignment operation (like a hot-join)
-executes, it takes the bus lock in write mode. If it detects the device as a
-duplicate, it replaces the descriptor and frees the old one:
-
-drivers/i3c/master.c:__i3c_master_add_i3c_dev_locked() {
-    ...
-    newdev->dev->desc =3D newdev;
-    ...
-    i3c_master_free_i3c_dev(olddev);
-    ...
-}
-
-If i3c_device_uevent() fetches i3cdev->desc before the swap and dereferences
-it after the free, is it possible this leads to a use-after-free?
-
-> +		if (ret)
-> +			dev_err(&master->dev, "Failed to add I3C device (err =3D %d)\n", ret);
-> +		else
-> +			list_del_init(&i3cdev->node);
-> +	}
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260807145638.1688=
-65-1-adrian.hunter@intel.com?part=3D1
+FWIW, there's no need to rebase for new -rcs.  We always apply PCI
+patches on -rc1 anyway.
