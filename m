@@ -1,44 +1,51 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E6E13F39FF;
-	Fri,  7 Aug 2026 05:20:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CFF2537B02E;
+	Fri,  7 Aug 2026 06:03:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786080029; cv=none; b=OYUuSB4mpmFk3VTZopSmCd+KBCYLVCeDR12BeQ30d9O9p43drKhAlMxtEaPFhFTgDve/rIMYmqI4xBgOuxds8SqN4UITKeszSxCK85o44p6ccixzWXyNBXlTyrqu9EyJkMSqixZNpdXV95eEnd3d+09sFIEEiQIRJrtiYR8wuSY=
+	t=1786082635; cv=none; b=jKFc3QZMTSM9dXcQLYfa7RZwUN7RsRGp88vYQD7XhZhFok+fbLHVEypJBSoAfugqj3qCc+thQTjAX930c547Dkd3OJwHBloeHqR47yDxlfIWoI30GdGAhgza3jD7DZFtZ8zJ+ahhuQoXz4Jsvn8M7cjD87TxvYyHr3AaSquK4xw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786080029; c=relaxed/simple;
-	bh=gcVMBKePjvoLma3pUiI9XIayU3YaiGEgoyKCSpWOliM=;
+	s=arc-20240116; t=1786082635; c=relaxed/simple;
+	bh=r79KBSafuypr2IL7FZR5tHn+AYGzsbkYbXZeTVqxWeI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ZIn9AGLlkStLzp+e37ocaApAptcGK56B1Arqt2IjQ1lDKbhaHV2S9r1CyEHjM4x82aP+1LE0SORJi/oYRcn9E0XbC8AQAOslARvEstBs5q8lbAqun0DJpEfdWejcj9kUi+dY1L6PvpsnpXVUqjtQ40lU0sZQAg2vbLFMGVoKNLU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oN9cwaix; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=MVGljVta2GzyxccQ4BpV0uMyrLCRC2/J8vcxTkU/pkg8/ldQA/CFLmDW3t+2q/Q+UO4kFcsgjdL4V5htEWgnvex+n4E0umBTYEvs0z9hVpBgQQ9Ctjweyl1GQ1wtR3inKJMjPG71O+B6kGTTjMBW70EhNEc46Hd87yZL+hMPw/k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JQG+Okni; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oN9cwaix"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 84A931F000E9;
-	Fri,  7 Aug 2026 05:20:11 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JQG+Okni"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4E6771F000E9;
+	Fri,  7 Aug 2026 06:03:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786080014;
-	bh=+KtEZyQf0X70BuqHmgO5EuQqaCcj/hmsg61NBYDnlPM=;
+	s=k20260515; t=1786082634;
+	bh=OnjnoPTc2IU8C5hw2ZSi8CiARlOXZApAwqNm8RU5PYc=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=oN9cwaixhVG7q+WqTwISJOGan4fULIYIxOo9sWbAxUqYRNTYfzKPVR5TsJEBilcFI
-	 rYMn107SYaX4kEF5hSBGZ4cXMrcvkmD3N8MwuZ/bkFQcinzs+ftmCIw+8xNy0SWMdn
-	 NJiWxXcPOBamwUMvN4AXynBUEtfG6AhMTR9ZMOrHT/rVFSAp5v3iheubguupKA/F2v
-	 iqVWShd/kWfuzX99Qt2qA/BCxv6xnEoBjK8TXq9eeSZ9B4LDbMatFv2C276wsuIiIu
-	 9OOVrqJi6FEj4sGVY+xQ8PdpZu1hAHfigQXCHTbgjALUoUeaJRqs9025RblUxnNqWO
-	 kSTHpSTREL9dg==
-Date: Fri, 7 Aug 2026 07:19:57 +0200
+	b=JQG+OknipBtwjmOkl7R15Eji5ytxCL9qh/lVqe+DB/hJhj5SWrf+zLf4cNaj/CHCV
+	 xaDVax4X+pBh+FN2ei6AHbq0oyqY8A4+C0tj59Qi4UgqS8BPeLkO96Xo+LfcDtcjbP
+	 QoojMnK3xxD1VsakhQMR7w50A3/YBnlX6nG+3p3SmLVoHGyW4Xj8DBiUoO28VqID7I
+	 /y2iock8d2/fQ8Tt55Cdzl0NuuHxBxZq07PK52xtrFY3UDvLCuluegTT2Z/X5ltIbK
+	 uY1p1d7YLHEgIhy+Msw45EdRmIPtxMpGRNuI/9cFGi+k7kBCXMqrJRyuy+8YxhaOq7
+	 k5J1uKW/EV05A==
+Date: Fri, 7 Aug 2026 08:03:30 +0200
 From: Manivannan Sadhasivam <mani@kernel.org>
-To: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Cc: sashiko-reviews@lists.linux.dev, 
-	Thierry Reding <thierry.reding@kernel.org>, linux-pci@vger.kernel.org, conor+dt@kernel.org, robh@kernel.org, 
-	devicetree@vger.kernel.org
-Subject: Re: [PATCH v9 3/5] PCI: tegra: Add Tegra264 support
-Message-ID: <lgtaaastqoikhq2btjqgnlqml35phsevfykuf6ernmd2hz2lmz@wsx62f3pvzpx>
-References: <20260805-tegra264-pcie-v9-0-fa2ed7350ae1@nvidia.com>
- <20260805-tegra264-pcie-v9-3-fa2ed7350ae1@nvidia.com>
- <20260805121039.A79921F00A3A@smtp.kernel.org>
- <sdpakcbeferzpxn6bf2acic4kfnfoaa6kgxmmi3asw7jqprekf@66cnwvuwk4ye>
- <9cc29a0b-6a9c-4b97-9cfd-f24ccad654fc@nvidia.com>
+To: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
+Cc: Bartosz Golaszewski <brgl@kernel.org>, 
+	Jonathan Corbet <corbet@lwn.net>, Shuah Khan <skhan@linuxfoundation.org>, 
+	Marcel Holtmann <marcel@holtmann.org>, Luiz Augusto von Dentz <luiz.dentz@gmail.com>, 
+	Alessio Belle <alessio.belle@imgtec.com>, Luigi Santivetti <luigi.santivetti@imgtec.com>, 
+	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, Maxime Ripard <mripard@kernel.org>, 
+	Thomas Zimmermann <tzimmermann@suse.de>, David Airlie <airlied@gmail.com>, 
+	Simona Vetter <simona@ffwll.ch>, Jeff Johnson <jjohnson@kernel.org>, 
+	Bjorn Helgaas <bhelgaas@google.com>, Chen-Yu Tsai <wens@kernel.org>, 
+	Loic Poulain <loic.poulain@oss.qualcomm.com>, linux-pm@vger.kernel.org, linux-doc@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-bluetooth@vger.kernel.org, 
+	imagination@lists.freedesktop.org, dri-devel@lists.freedesktop.org, linux-wireless@vger.kernel.org, 
+	ath10k@lists.infradead.org, linux-pci@vger.kernel.org, 
+	Jeff Johnson <jeff.johnson@oss.qualcomm.com>
+Subject: Re: [PATCH v3] power: sequencing: rename pwrseq_power_on/off() to
+ pwrseq_enable/disable()
+Message-ID: <nbsevqzspfbiptmq2mlxx2yo5z2wk5hdbc6f66yfjklmtl6hc7@ut47v44qgzgu>
+References: <20260731-pwrseq-vote-rename-v3-1-44e60b8be053@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -48,84 +55,40 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <9cc29a0b-6a9c-4b97-9cfd-f24ccad654fc@nvidia.com>
+In-Reply-To: <20260731-pwrseq-vote-rename-v3-1-44e60b8be053@oss.qualcomm.com>
 
-On Fri, Aug 07, 2026 at 10:35:30AM +0530, Manikanta Maddireddy wrote:
+On Fri, Jul 31, 2026 at 03:42:18PM +0200, Bartosz Golaszewski wrote:
+> The way power sequencing works means that a call to pwrseq_power_on()
+> does not necessarily result in the pwrseq target being powered-on at
+> that time: it may have already been powered on before. Similarly: a call
+> to pwrseq_power_off() does not have to result in an actual powering off
+> of resources: there may still be other users that requested a power-on
+> before.
 > 
+> We will also introduce the concept of "non-controllable" pwrseq targets
+> soon which further increases the disconnect between the naming
+> convention and the actual semantics.
 > 
-> On 05/08/26 9:21 pm, Manivannan Sadhasivam wrote:
-> > On Wed, Aug 05, 2026 at 12:10:38PM +0000, sashiko-bot@kernel.org wrote:
-> > > Thank you for your contribution! Sashiko AI review found 2 potential issue(s) to consider:
-> > > - [High] The driver incorrectly accesses the ECAM window via `pcie->cfg->win` to read the root port configuration space, causing an out-of-bounds heap read on 32-bit platforms.
-> > > - [High] The driver incorrectly uses the Negotiated Link Width (NLW) to set interconnect bandwidth for hotplug-capable ports when the link is down, permanently setting it to 0.
-> > > --
-> > > 
-> > > --- Patch [3]: [PATCH v9 3/5] PCI: tegra: Add Tegra264 support ---
-> > > commit af63006f768e2991e49a48de9855ea58d20662ed
-> > > Author: Thierry Reding <treding@nvidia.com>
-> > > 
-> > >      PCI: tegra: Add Tegra264 support
-> > >      Add a driver for the PCIe controller found on NVIDIA Tegra264 SoCs. The
-> > >      driver is very small, with its main purpose being to set up the address
-> > >      translation registers and then creating a standard PCI host using ECAM.
-> > > 
-> > > > diff --git a/drivers/pci/controller/pcie-tegra264.c b/drivers/pci/controller/pcie-tegra264.c
-> > > > new file mode 100644
-> > > > index 0000000000000..e0c5b9d0d20bf
-> > > > --- /dev/null
-> > > > +++ b/drivers/pci/controller/pcie-tegra264.c
-> > > [ ... ]
-> > > > +static void tegra264_pcie_icc_set(struct tegra264_pcie *pcie)
-> > > > +{
-> > > > +	u32 value, speed, width;
-> > > > +	int err;
-> > > > +
-> > > > +	value = readw(pcie->ecam + XTL_RC_PCIE_CFG_LINK_STATUS);
-> > > > +	speed = FIELD_GET(PCI_EXP_LNKSTA_CLS, value);
-> > > > +	width = FIELD_GET(PCI_EXP_LNKSTA_NLW, value);
-> > > > +
-> > > > +	value = Mbps_to_icc(width * PCIE_SPEED2MBS_ENC(pcie_link_speed[speed]));
-> > > 
-> > > [Severity: High]
-> > > Will this permanently set the interconnect bandwidth to 0 for hotplug-capable
-> > > ports if the link is initially down?
-> > > 
-> > > When the link is down, the Negotiated Link Width (NLW) is 0, which means
-> > > the bandwidth value will be calculated as 0. Since the generic pciehp driver
-> > > handles hotplug but doesn't know about this driver's specific interconnect
-> > > bandwidth requirements, it appears there is no way to dynamically increase
-> > > the bandwidth later when a device is actually inserted.
-> > > 
-> > 
-> > I think this is a valid concern. If the ICC BW is set to 0, then the hotplugged
-> > device won't work properly.
-> > 
-> > > Should this read the Maximum Link Width and Speed from PCI_EXP_LNKCAP
-> > > instead of PCI_EXP_LNKSTA to properly reserve bandwidth for a hotplug slot?
-> > > 
-> > 
-> > If possible, BW should be updated once the device is added, but that requires
-> > detecting Link Up using some custom IRQ if available.
-> > 
-> > - Mani
-> > 
+> What consumers of pwrseq descriptors actually do is: they *vote* for a
+> powering on of a given target or retract that vote. These operations
+> could be called get/put in line with runtime PM but this could become
+> confusing since we already provide pwrseq_get/put() for a different
+> purpose. pwrseq_vote_on/off() also have been rejected as unusual in
+> the tree.
 > 
-> Custom IRQ support for link up and down events is not available in this IP.
-> For now, we have two options:
+> Change the name of the two functions to pwrseq_enable/disable() which
+> better reflects their purpose and semantics and also mirrors other
+> enable-counted resources like regulators and clocks. No functional change
+> intended.
 > 
-> 1. Don’t set ICC BW for the hot-plug controller.
+> If at any point users need to know *when* the exact power event happens,
+> we can provide that information in the form of a notifier.
 > 
-> 2. Set ICC BW according to the Link Cap settings when the link is down and
-> it is a hot-plug controller. When the link is up, use the Link Status
-> settings.
-> 
-> We can get changes in link speed/width from the BW notification status.
-> IIRC, the BW notification port driver has been reverted. If it comes back,
-> we can consider integrating the ICC BW set logic into it instead of
-> implementing it in each controller driver.
-> 
+> Acked-by: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+> Signed-off-by: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
 
-Yeah sure. Option 2 sounds sensible to me.
+Acked-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 
 - Mani
 
