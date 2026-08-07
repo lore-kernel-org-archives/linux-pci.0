@@ -1,46 +1,45 @@
-Received: from SN4PR0501CU005.outbound.protection.outlook.com (mail-southcentralusazon11011047.outbound.protection.outlook.com [40.93.194.47])
+Received: from DM5PR21CU001.outbound.protection.outlook.com (mail-centralusazon11011068.outbound.protection.outlook.com [52.101.62.68])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C9E636B92A;
-	Fri,  7 Aug 2026 14:02:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.194.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E038360EFF;
+	Fri,  7 Aug 2026 14:03:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.62.68
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786111386; cv=fail; b=HmXIip4X6RoTDFAInRex3AumVo+Dyjxvw14fvM6LhjrVweWTW/5ncIXWZITcEOJQlI+LHCcr8XiUHOvMV0tH5FtSTqQNjKD37WOX2XKRaCrswrZkC/sGCMd6B0Mxnop3b56kSivdi2dU0RCUazw0g1rVh2QlMJ8JURN3piFMKQM=
+	t=1786111394; cv=fail; b=Jloy0d+Ks0f8BL0YQgk0S3roHxYaJ2Oav5DHbcDZ1nARRNms8gh8OcLDjmcxcoJ6vHAIdAFhaS0k/eye2e/bjdKEIoUDtOLWY9bMCoBjZKPmESD48FjjP/RYY6YLmTWYa3GgifxYXm1vlEgM6lpxkeeOTQaov0fFROD28osb6EY=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786111386; c=relaxed/simple;
-	bh=u0Z2/xn2aapVzM20fYZZhEOPXGwE3RU7Lg2mGbv98u4=;
+	s=arc-20240116; t=1786111394; c=relaxed/simple;
+	bh=/COGqerGjwc1zYoTqeMuFhiTZwbzWYWRpIiv11o7V2k=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=T3ll5hNP/N/iT17z09bY5gEK1KaBfWSWZDLu39STQ5tf/XOi8efScMc4vImpTSHDbBHXPXoywuYoPMRW+aVVShTLpjvvt5GUg4YEVr/0sOhZAIlAs1sGsicEaDHp8Bs7zj7rpXslu8O2FmTPyADsqfu8Dc6eFxi5yIsZEzKmX5k=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=HKNvIg0o; arc=fail smtp.client-ip=40.93.194.47
+	 MIME-Version:Content-Type; b=lFTXoEThtOfsFBtJJr8Qr/M7Mbs7s7MvNAtPi3n28+QxlZPZmzUrkYQu0wC1oNtSr5iQBoIR/3mxLuBSHFwn+ECmZ/XWcfTLqMBOBgdS7F4ZdCre5SQLoSzAv3/vNUrX/BHU1ani/ubDutQ9hAzCOVPiGwJNavGE4iXZneoLzhs=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=BrMH26bX; arc=fail smtp.client-ip=52.101.62.68
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="HKNvIg0o"
+	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="BrMH26bX"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=GSt0Z4XiRFVJYnUvTVDU9Bxv6O5yjEkW967bqWJK/fxVd2TCQImh5T6DmnMxzwkz6AWOwC95xjo1OKogNOmEDGtwAy9wd5aYIQcXBVIaxocHkssmHoqnmF063fZZwWtOJMsI9ir+WZTYBGtAx8TXyALtTGJi3H09CR3QdYwjPfMMNYjrwv8J8c/jRhT4bh1E+mI+/+phkk4j1/uWgDX9gzpMZFz4XRi0fosm+EgoIkmI+uLKji8W5DI798iGWvZexVSMTio3ZbCum394diX1SespZJlRD4B6EJtVgIt0t6z6raRWeMLyDELjPS/VVtBF5tJqx+jANBmTZWFjAWkfVw==
+ b=PTJ3tdxFjJegphxUs0lYNJb4BlUdd2vNrL1zBAl+qrQFoDg/cZ1AT7kt8SpG0xq59TpWyI4TTiHin5HUoBnAs+qqNgCyijvl5RqdCbO5KQsEXkvCtF1nIYsfo1IaaNoCN1NofbllRJW70sJLj8msrNlTkruzMFYCK55EGI4EAFpbrQCKZ+F2aofGUVxDPh4Xkmvp3bwMUv+dK8caRhPAanGMUguGC1JvU1Fm6+hm0mr6UsbIKc6R5TZdt6cjn0MWIZtvVfMpdDwZ+n7o5CfcqPM1FzO5Y59du2WZnSIJ1O2PAkxzSaRiVDEJovKyixup/83sg/TzctAjnifDS4tFrw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=AXUy2EQEK5H8VaPwpCXqxogEH0BeUCEkgSx4SacTc3I=;
- b=Rdn2yl2RJ4qoO8tNY3k9p2l7utaOlU4omwgFP3tKcbpvKW2u5LLiGBLIUgmPG5lQt9lNsHUC5nkaDUxAiFOt/dtJgiNynyJW+eP3Sq1Em1b5+PA2BVdg/9dFIN31PE3ItIprm/eRYBWn4YsTWsCQp+u1xCQMCQq/YyYD1N9iI8JyIfIqmhG/WLwk/AiIiZ+mkdNtebf5jpSpzQwcJXo06xvAJUBAisKJuIHojdkyWWXfiUbgAgXYQNvZn4UUSWVxGpb8GE2pmmkrEbwHGD1iF8fpmOlYi00y4qS2yugV+ucqPUNiS6duV+NY4OTu+3kSCqAzjrmiOXxtrXSZPVEAtA==
+ bh=ENuupXfSWvIhPZoAuuR1HHzU4yDZrhbQiDvfdrN9ty4=;
+ b=QWyVyRU58f0c48FMWZ/w2QxvBHfRNdybJnPu57R9/ve4iFC1Cek8ReRxeC3CtoDOBx/vGOR1D/iXu0z07MfA3tf1CiiVLDQMq6bdhbGTBBtpCW2WoRYDt3LhhIGktgKd3/gdMpPPtBkgYYuO7t9eYLxsz1OFKS+Uj08AWLN1w98jUL14hK2a9pY3cfhpp0R2emO0r7OvQI7fy3VFQjvBKsy/u3fNYWrhX/LVGP4Uj7ISUeY9Me3kJo2A9QN0g9lHtsjwo8XYbU0TRpVuWVqkOZ8IoGgtTq7CmOhLjW5b/0dI1FkYK+JJnYrJffgWN5Ro8XGYwfJ3u26iRLcE3mUwgw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  165.204.84.17) smtp.rcpttodomain=google.com smtp.mailfrom=amd.com; dmarc=pass
  (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
  dkim=none (message not signed); arc=none (0)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=AXUy2EQEK5H8VaPwpCXqxogEH0BeUCEkgSx4SacTc3I=;
- b=HKNvIg0orXGJrspLZHSLuECjyMfQuc42L/i15IpwOW5dER9v3+P8FfnEg4Si/qn9KkAO9HQNxGuQ8Pm9OP5Qvl098HxS6rzUHT1EZZCLbYASGWh+hgISb48573Tz0mkqkcp6rUtRqwEGD5/URoMfXv1ZYSgQTpVcFHAmbjl6afA=
-Received: from SA0PR11CA0120.namprd11.prod.outlook.com (2603:10b6:806:d1::35)
- by IA1PR12MB8287.namprd12.prod.outlook.com (2603:10b6:208:3f5::14) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.292.23; Fri, 7 Aug
- 2026 14:02:50 +0000
-Received: from SA2PEPF00001507.namprd04.prod.outlook.com
- (2603:10b6:806:d1:cafe::96) by SA0PR11CA0120.outlook.office365.com
- (2603:10b6:806:d1::35) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.21.292.24 via Frontend Transport; Fri, 7
- Aug 2026 14:02:50 +0000
+ bh=ENuupXfSWvIhPZoAuuR1HHzU4yDZrhbQiDvfdrN9ty4=;
+ b=BrMH26bXb+t+xTiqaoT1NwK7Fab0hlygre3+X5lhmENpS6lhvYg6Xg3hQ9qnrcmKjJooYPnwb0q+RXFagkZVtQ1fZ8r6zfU459gnVZPWTv1ROH5KiRyxgeXmTIXu7zv8jx+XCskoTzYXNO9sCFr1Q1OxeJFDl/hGLSS6VZpVRwg=
+Received: from DS7PR05CA0107.namprd05.prod.outlook.com (2603:10b6:8:56::25) by
+ DS2PR12MB9613.namprd12.prod.outlook.com (2603:10b6:8:276::20) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.21.292.23; Fri, 7 Aug 2026 14:02:53 +0000
+Received: from DM2PEPF00003FC9.namprd04.prod.outlook.com
+ (2603:10b6:8:56:cafe::5) by DS7PR05CA0107.outlook.office365.com
+ (2603:10b6:8:56::25) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.21.315.10 via Frontend Transport; Fri, 7
+ Aug 2026 14:02:53 +0000
 X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
  smtp.mailfrom=amd.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=amd.com;
@@ -48,20 +47,16 @@ Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
  165.204.84.17 as permitted sender) receiver=protection.outlook.com;
  client-ip=165.204.84.17; helo=satlexmb07.amd.com; pr=C
 Received: from satlexmb07.amd.com (165.204.84.17) by
- SA2PEPF00001507.mail.protection.outlook.com (10.167.242.39) with Microsoft
+ DM2PEPF00003FC9.mail.protection.outlook.com (10.167.23.27) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.315.6 via Frontend Transport; Fri, 7 Aug 2026 14:02:50 +0000
-Received: from satlexmb10.amd.com (10.181.42.219) by satlexmb07.amd.com
+ 15.21.315.6 via Frontend Transport; Fri, 7 Aug 2026 14:02:52 +0000
+Received: from satlexmb07.amd.com (10.181.42.216) by satlexmb07.amd.com
  (10.181.42.216) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.41; Fri, 7 Aug
- 2026 09:02:17 -0500
-Received: from satlexmb07.amd.com (10.181.42.216) by satlexmb10.amd.com
- (10.181.42.219) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.41; Fri, 7 Aug
- 2026 09:02:17 -0500
+ 2026 09:02:21 -0500
 Received: from xhdlc250064.xilinx.com (10.180.168.240) by satlexmb07.amd.com
  (10.181.42.216) with Microsoft SMTP Server id 15.2.2562.41 via Frontend
- Transport; Fri, 7 Aug 2026 09:02:13 -0500
+ Transport; Fri, 7 Aug 2026 09:02:17 -0500
 From: Sai Krishna Musham <sai.krishna.musham@amd.com>
 To: <bhelgaas@google.com>, <lpieralisi@kernel.org>, <kw@linux.com>,
 	<mani@kernel.org>, <robh@kernel.org>, <krzk+dt@kernel.org>,
@@ -70,9 +65,9 @@ CC: <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
 	<linux-kernel@vger.kernel.org>, <michal.simek@amd.com>,
 	<bharat.kumar.gogada@amd.com>, <thippeswamy.havalige@amd.com>,
 	<sai.krishna.musham@amd.com>
-Subject: [PATCH v9 1/2] dt-bindings: PCI: xilinx-versal-cpm: Add PERST# and reset support
-Date: Fri, 7 Aug 2026 19:32:04 +0530
-Message-ID: <20260807140205.1070367-2-sai.krishna.musham@amd.com>
+Subject: [PATCH v9 2/2] PCI: xilinx-cpm: Add support for PCIe RP PERST# signal
+Date: Fri, 7 Aug 2026 19:32:05 +0530
+Message-ID: <20260807140205.1070367-3-sai.krishna.musham@amd.com>
 X-Mailer: git-send-email 2.44.4
 In-Reply-To: <20260807140205.1070367-1-sai.krishna.musham@amd.com>
 References: <20260807140205.1070367-1-sai.krishna.musham@amd.com>
@@ -86,136 +81,242 @@ Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: SA2PEPF00001507:EE_|IA1PR12MB8287:EE_
-X-MS-Office365-Filtering-Correlation-Id: cc627fc5-3973-4cbb-d041-08def48c9135
+X-MS-TrafficTypeDiagnostic: DM2PEPF00003FC9:EE_|DS2PR12MB9613:EE_
+X-MS-Office365-Filtering-Correlation-Id: 395f71ee-afc8-4b21-5cb6-08def48c92ec
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|82310400026|1800799024|36860700016|7416014|376014|23010399003|22082099003|18002099003|11063799006|56012099006|3023799007|10067099003;
+	BCL:0;ARA:13230040|1800799024|7416014|36860700016|376014|23010399003|82310400026|56012099006|18002099003|22082099003|6133799003|10067099003|11063799006|13003099007;
 X-Microsoft-Antispam-Message-Info:
-	MPgELmpX87FeQln80FQOtKWC44W33MFwLLKnhPfIKScdFl/wh89IEGf6qrDmuIcTwvNWtf1Qckh5UoVUuKVJDVqiQevRXRZeSTTYcjsutJc6qICPhOC3fUzq3Xz0qSMJPKRrrmnoMdp7ozTZZifwYzcwHmbBP7g4bnGUXezN8fZKylPU/8t5hXlSFfeUzlrTxgZlHBNtI0wYqRD8tf+FUsKGoEsHSuU6cS3VdMdcQi46d7iMTz7EgSUj8lGm/iFfiTtRtVRcczMBMAL/FF5ycKzbMha76HiO8a4OxWg5QHpi9ymsEWfpZATy8ZtEoUYC6WGXSGuUIuibPAv2D3GQffQIWT2iLD5I8A4ksM6hWDyA2A/Dtvi6X/Hwf9pIeWSM0JqThXJtq+DcgBWvsx3CtoIhPGEoDK6jwtdwufCDB2J6GwIPdBcDc0iU1gMAs/8KAQZFCcAdlFGvYO5XN/phgVip1tzD1CazcAzZJ0RNemAq/P6OuhT9MKyBLHIxC8zmNScFcRqIsioMAz+efchTHirxGcHzgjjczR7LqegpaCE3FOLdOesb5H7BPsoy53Z1JE5t6BeH24Zcqa2adnn0l5Og+Jdf61DZLFqu1ZN2rISbmP1YEuxf1do7lTyYLcaG4cyxH6o8+wttA0Ner0A+Mrra5kz+dQ2wqd84Ruwhby4Kk3WVQ+EahpFTLwstfZ8sLh9EMFu7fqImDFYuBhrmjg==
+	IvfKcnJsYyY2HPyd6sFMmz3DrW8NSGg2k87Qu6PhtpNr5mdyc8eZnoTmYD6HxXJYrxi9dANoWhVefskkgjQqJkokfNGq8OB4eo0jYI/8zZ9UwfTDmq8kVx9v3xJwiIf9JZsG8lLqNPK19x3wIi8qToubnuua/4iTZtKXYKVUKIP3zQmrnfWO1en8LUiCpTKAkWmCFwoCqtyWjXG5lRQ3ssQ/zfOO39XAUjVabPGeGgTUoOhsLHzK/QiDBhNdYcWSei8VRC8uFDfxGG8swPOZeLXbfeFMwcxNkEnpb87ov7hy6qrNjnsoY4wElYegOs5Z4xA2cgc/OHbj1thqsv3+hsXoifFjgA+ZH4SonfjMy9V+iBuQQgwlRA0odDUFKnO9XSQKC9VDQXXQYdrkhGocJyNimWKIUajZexCR5hvFMZk2/RTBWcNJZWCN6IDDm7duW2IQ2OrXKRr/Vmbn2tC8ZRk6buGpEdK1A+xfU8F+tyeF6/zxwPUrr/OJt+sgcJPgV74HDbNhmGC7qjITbF7NIRR6lfAh/y9FDUinYtBF71QaE3A/gvih65UhU+hfbODmP0OV3OBn2rEY5alUTTmy1IvUEoZuQGf79kiGAGMtWHwvDylCHDrHJQMVK8O/Zgznm1KEeS/z4LBVANE2dKq/fnWxzoZedaArKbDY2iw0L86pszf7pHlA7iJ6ur4j4ac4TgZhSemxg/ePNE9dmj5NDg==
 X-Forefront-Antispam-Report:
-	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:satlexmb07.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(82310400026)(1800799024)(36860700016)(7416014)(376014)(23010399003)(22082099003)(18002099003)(11063799006)(56012099006)(3023799007)(10067099003);DIR:OUT;SFP:1101;
+	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:satlexmb07.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(1800799024)(7416014)(36860700016)(376014)(23010399003)(82310400026)(56012099006)(18002099003)(22082099003)(6133799003)(10067099003)(11063799006)(13003099007);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	iFDb3KyJ5MNr+yww0yZpyq/sOq8V6ixB+G4ZY9+U35GQDW38VLYyjq2PTzS0JoF2So70iIcr1t+3H+PQISfD8E1W5NzVo5uORC0V3aomITMnKi5FkQ4WUHzT5cBPLepe9J9b+0pP0CbhPfXlPsTy6jTSBh9VCeq3VOB+RN1Sobr8pp2WV8GQTE2YsG9nWsAVA7Om5QlkNulo+yrkSMOex1/3ULicocar7U/ghsTTxcf43nt1t66CsYyKXN6nmZVzSYNBRwj9SkUqktHVoIhLt7RlAcvlAscb9Q6lPELCWa6cpn8oyIYmHf5to2c+Ti/5E8xBH+nLMeZRvYnhR9nyZSCvEuUkLXP5OCWfrGDpOjxe8VeigNnWAbBx1O0OTRD2j7oWZLZy8ZtznHjlCljc/q/QACLdhjMRU1Ai3aWaI+c9uszhhRRH1m7QJ1/c+rFV
+	X2vLCZIoe1wm4F2pA+GHv/aCw70xY7sdnePY5vzPfo3DO5GZHSDqk5JWXBtjbdXpL4r6WTjGN66NwkaTKvJvSlwD8+fUfHQEDwdukTb7jtIu9/Dp+1Ni6eayK4QcXEov2dWR2NShU9+IzwkP+HzQSchpHFfa5PpSW7DevPf4EOeFCCh37Kjz0DyQmD6H0yCPTDRf3vCRhZ9ARaGY+f6PJ0zefC1O6kIdmh36YT763hJrgVzCPqagAYDLKX86Tpne6Kxz3wp12qJ59IBIEXqDLEDZpWQfSpmprF7Or3Tvqo50C8Ni8uapq6wqEEs0aqLtCXSKwQLJxGXKBMZjXtTnq5mw/ANLqTci/TGSJ5WyZeJa2GWroeLg2095JyOZGSGFvwNLre6Sajlj3hy66UhV2enTz/dG1beyoNgUFmd0J9cod9p1xvl6of7+wQjDMNTr
 X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 07 Aug 2026 14:02:50.1354
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 07 Aug 2026 14:02:52.9962
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: cc627fc5-3973-4cbb-d041-08def48c9135
+X-MS-Exchange-CrossTenant-Network-Message-Id: 395f71ee-afc8-4b21-5cb6-08def48c92ec
 X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[satlexmb07.amd.com]
 X-MS-Exchange-CrossTenant-AuthSource:
-	SA2PEPF00001507.namprd04.prod.outlook.com
+	DM2PEPF00003FC9.namprd04.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA1PR12MB8287
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS2PR12MB9613
 
-Add the optional 'resets' property to manage the PCIe IP reset, and the
-'reset-gpios' property on the Root Port child node for GPIO-based control
-of the PCIe RP PERST# signal (assert/deassert). Both are optional to keep
-backward compatibility with existing device trees.
+Add support for the PCIe Root Port PERST# signal using the GPIO
+framework, along with the PCIe IP reset. This reset is managed
+by the driver and occurs after the Initial Power Up sequence
+(PCIe CEM r6.0, 2.2.1) is handled in hardware before the driver's
+probe function is called.
 
-Update the examples to show the reset controller and PERST# GPIO wiring.
+This is useful in warm reset scenarios where the power rails stay stable
+and only PERST# is toggled. Applying both the IP reset and PERST# resets
+the Root Port controller and Endpoint synchronously, improving
+reliability and avoiding lane errors.
+
+Both the reset GPIO and the reset controller are optional to keep
+backward compatibility with existing DTBs. Also add a PCIE_T_PERST_US
+(100 us) macro in pci.h for the PERST# active time (PCIe CEM r6.0,
+sec 2.11.2, "T_PERST").
+
+As part of this, update the interrupt controller node parsing to use
+of_get_child_by_name() instead of of_get_next_child(), since the PCIe
+host bridge node now has multiple children. This ensures the correct
+node is selected during initialization.
 
 Signed-off-by: Sai Krishna Musham <sai.krishna.musham@amd.com>
 ---
 Changes in v9:
-- None
+- Fix reset sequence when only PERST# GPIO is present.
+- Replace mdelay() with msleep() to avoid busy-waiting.
+- Remove explicit declaration of `pcie_port_node`
 
 Changes in v8:
-- Add resets property.
-- Move reset-gpios property to child node and update the example.
+- Use resets framework for handling PCIe IP reset.
+- Update source to parse reset-gpios from child node.
+- Update PCIE_T_PERST_US macro in pci.h
+- Remove PERST# support for CPM5NC.
 
-v1: https://lore.kernel.org/all/20250224063046.1438006-2-sai.krishna.musham@amd.com/
-v2: https://lore.kernel.org/all/20250226124358.88227-2-sai.krishna.musham@amd.com/
-v3: https://lore.kernel.org/all/20250227042454.907182-2-sai.krishna.musham@amd.com/
-v4: https://lore.kernel.org/all/20250318092648.2298280-2-sai.krishna.musham@amd.com/
-v5: https://lore.kernel.org/all/20250321114211.2185782-2-sai.krishna.musham@amd.com/
-v6: https://lore.kernel.org/all/20250326022811.3090688-2-sai.krishna.musham@amd.com/
-v7: https://lore.kernel.org/all/20250414032304.862779-2-sai.krishna.musham@amd.com/
-v8: https://lore.kernel.org/all/20260807123507.3418671-2-sai.krishna.musham@amd.com/
+v1: https://lore.kernel.org/all/20250224063046.1438006-3-sai.krishna.musham@amd.com/
+v2: https://lore.kernel.org/all/20250226124358.88227-3-sai.krishna.musham@amd.com/
+v3: https://lore.kernel.org/all/20250227042454.907182-3-sai.krishna.musham@amd.com/
+v4: https://lore.kernel.org/all/20250318092648.2298280-3-sai.krishna.musham@amd.com/
+v5: https://lore.kernel.org/all/20250321114211.2185782-3-sai.krishna.musham@amd.com/
+v6: https://lore.kernel.org/all/20250326022811.3090688-3-sai.krishna.musham@amd.com/
+v7: https://lore.kernel.org/all/20250414032304.862779-3-sai.krishna.musham@amd.com/
+v8: https://lore.kernel.org/all/20260807123507.3418671-3-sai.krishna.musham@amd.com/
 ---
- .../bindings/pci/xilinx-versal-cpm.yaml       | 38 +++++++++++++++++++
- 1 file changed, 38 insertions(+)
+ drivers/pci/controller/pcie-xilinx-cpm.c | 77 +++++++++++++++++++++++-
+ drivers/pci/pci.h                        |  9 +++
+ 2 files changed, 85 insertions(+), 1 deletion(-)
 
-diff --git a/Documentation/devicetree/bindings/pci/xilinx-versal-cpm.yaml b/Documentation/devicetree/bindings/pci/xilinx-versal-cpm.yaml
-index 9823456addea..a28a88dc8e88 100644
---- a/Documentation/devicetree/bindings/pci/xilinx-versal-cpm.yaml
-+++ b/Documentation/devicetree/bindings/pci/xilinx-versal-cpm.yaml
-@@ -41,6 +41,10 @@ properties:
-     description:
-       Maps a Requester ID to an MSI controller and associated MSI sideband data.
+diff --git a/drivers/pci/controller/pcie-xilinx-cpm.c b/drivers/pci/controller/pcie-xilinx-cpm.c
+index d38f27e20761..1fdd7f920590 100644
+--- a/drivers/pci/controller/pcie-xilinx-cpm.c
++++ b/drivers/pci/controller/pcie-xilinx-cpm.c
+@@ -6,6 +6,8 @@
+  */
  
-+  resets:
-+    description: Reset for the PCIe controller.
-+    maxItems: 1
-+
-   ranges:
-     maxItems: 2
+ #include <linux/bitfield.h>
++#include <linux/delay.h>
++#include <linux/gpio/consumer.h>
+ #include <linux/interrupt.h>
+ #include <linux/irq.h>
+ #include <linux/irqchip.h>
+@@ -16,6 +18,7 @@
+ #include <linux/of_address.h>
+ #include <linux/of_pci.h>
+ #include <linux/of_platform.h>
++#include <linux/reset.h>
  
-@@ -61,6 +65,17 @@ properties:
+ #include "../pci.h"
+ #include "pcie-xilinx-common.h"
+@@ -113,6 +116,8 @@ struct xilinx_cpm_variant {
+  * @irq: Error interrupt number
+  * @lock: lock protecting shared register access
+  * @variant: CPM version check pointer
++ * @perst_gpio: GPIO descriptor for PERST# signal handling
++ * @rstc: Pointer to the PCIe controller reset
+  */
+ struct xilinx_cpm_pcie {
+ 	struct device			*dev;
+@@ -125,6 +130,8 @@ struct xilinx_cpm_pcie {
+ 	int				irq;
+ 	raw_spinlock_t			lock;
+ 	const struct xilinx_cpm_variant   *variant;
++	struct gpio_desc		*perst_gpio;
++	struct reset_control		*rstc;
+ };
  
-       interrupt-controller: true
+ static u32 pcie_read(struct xilinx_cpm_pcie *port, u32 reg)
+@@ -389,7 +396,7 @@ static int xilinx_cpm_pcie_init_irq_domain(struct xilinx_cpm_pcie *port)
+ 	struct device_node *pcie_intc_node;
  
-+patternProperties:
-+  '^pcie@[0-2],0$':
-+    type: object
-+    $ref: /schemas/pci/pci-pci-bridge.yaml#
-+
-+    properties:
-+      reg:
-+        maxItems: 1
-+
-+    unevaluatedProperties: false
-+
- required:
-   - reg
-   - reg-names
-@@ -76,6 +91,9 @@ unevaluatedProperties: false
+ 	/* Setup INTx */
+-	pcie_intc_node = of_get_next_child(node, NULL);
++	pcie_intc_node = of_get_child_by_name(node, "interrupt-controller");
+ 	if (!pcie_intc_node) {
+ 		dev_err(dev, "No PCIe Intc node found\n");
+ 		return -EINVAL;
+@@ -469,6 +476,22 @@ static int xilinx_cpm_setup_irq(struct xilinx_cpm_pcie *port)
+ 	return 0;
+ }
  
- examples:
-   - |
-+    #include <dt-bindings/gpio/gpio.h>
-+    #include <dt-bindings/reset/xlnx-versal-resets.h>
++/**
++ * xilinx_cpm_pcie_reset - Reset the PCIe controller and deassert PERST#
++ * @port: PCIe port information
++ *
++ * Reset the PCIe controller and then release the PERST# signal so that the
++ * link can train once the bridge is enabled.
++ */
++static void xilinx_cpm_pcie_reset(struct xilinx_cpm_pcie *port)
++{
++	reset_control_assert(port->rstc);
++	udelay(PCIE_T_PERST_US);
++	reset_control_deassert(port->rstc);
++	gpiod_set_value_cansleep(port->perst_gpio, 0);
++	msleep(PCIE_RESET_CONFIG_WAIT_MS);
++}
 +
-     versal {
-         #address-cells = <2>;
-         #size-cells = <2>;
-@@ -99,6 +117,16 @@ examples:
-             reg = <0x0 0xfca10000 0x0 0x1000>,
-                   <0x6 0x00000000 0x0 0x10000000>;
-             reg-names = "cpm_slcr", "cfg";
-+            resets = <&versal_reset VERSAL_RST_PCIE_CORE0>;
-+
-+            pcie@0,0 {
-+                device_type = "pci";
-+                reg = <0x0 0x0 0x0 0x0 0x0>;
-+                reset-gpios = <&gpio1 38 GPIO_ACTIVE_LOW>;
-+                #address-cells = <3>;
-+                #size-cells = <2>;
-+                ranges;
-+            };
-             pcie_intc_0: interrupt-controller {
-                     #address-cells = <0>;
-                     #interrupt-cells = <1>;
-@@ -127,6 +155,16 @@ examples:
-                   <0x06 0x00000000 0x00 0x1000000>,
-                   <0x00 0xfce20000 0x00 0x1000000>;
-             reg-names = "cpm_slcr", "cfg", "cpm_csr";
-+            resets = <&versal_reset VERSAL_RST_PCIE_CORE0>;
-+
-+            pcie@0,0 {
-+                device_type = "pci";
-+                reg = <0x0 0x0 0x0 0x0 0x0>;
-+                reset-gpios = <&gpio1 38 GPIO_ACTIVE_LOW>;
-+                #address-cells = <3>;
-+                #size-cells = <2>;
-+                ranges;
-+            };
+ /**
+  * xilinx_cpm_pcie_init_port - Initialize hardware
+  * @port: PCIe port information
+@@ -480,6 +503,9 @@ static void xilinx_cpm_pcie_init_port(struct xilinx_cpm_pcie *port)
+ 	if (variant->version == CPM5NC_HOST)
+ 		return;
  
-             pcie_intc_1: interrupt-controller {
-                 #address-cells = <0>;
++	if (port->perst_gpio || port->rstc)
++		xilinx_cpm_pcie_reset(port);
++
+ 	if (cpm_pcie_link_up(port))
+ 		dev_info(port->dev, "PCIe Link is UP\n");
+ 	else
+@@ -512,6 +538,42 @@ static void xilinx_cpm_pcie_init_port(struct xilinx_cpm_pcie *port)
+ 		   XILINX_CPM_PCIE_REG_RPSC);
+ }
+ 
++/**
++ * xilinx_cpm_pcie_parse_port - Parse the PCIe Root Port child node
++ * @port: PCIe port information
++ *
++ * Read the PERST# GPIO from the Root Port child node.
++ *
++ * Return: '0' on success and error value on failure
++ */
++static int xilinx_cpm_pcie_parse_port(struct xilinx_cpm_pcie *port)
++{
++	struct device *dev = port->dev;
++
++	/*
++	 * This platform currently supports only one Root Port, so the loop
++	 * will execute only once.
++	 * TODO: Enhance the driver to handle multiple Root Ports in the future.
++	 */
++	for_each_child_of_node_with_prefix(dev->of_node, pcie_port_node, "pcie") {
++		port->perst_gpio = devm_fwnode_gpiod_get(dev,
++							 of_fwnode_handle(pcie_port_node),
++							 "reset", GPIOD_OUT_HIGH,
++							 NULL);
++		if (IS_ERR(port->perst_gpio)) {
++			if (PTR_ERR(port->perst_gpio) == -ENOENT) {
++				port->perst_gpio = NULL;
++				return 0;
++			}
++			return dev_err_probe(dev, PTR_ERR(port->perst_gpio),
++					     "Failed to request reset GPIO\n");
++		}
++		return 0;
++	}
++
++	return 0;
++}
++
+ /**
+  * xilinx_cpm_pcie_parse_dt - Parse Device tree
+  * @port: PCIe port information
+@@ -525,6 +587,19 @@ static int xilinx_cpm_pcie_parse_dt(struct xilinx_cpm_pcie *port,
+ 	struct device *dev = port->dev;
+ 	struct platform_device *pdev = to_platform_device(dev);
+ 	struct resource *res;
++	int ret;
++
++	/* CPM5NC does not support PERST# handling yet */
++	if (port->variant->version != CPM5NC_HOST) {
++		port->rstc = devm_reset_control_get_optional_exclusive(dev, NULL);
++		if (IS_ERR(port->rstc))
++			return dev_err_probe(dev, PTR_ERR(port->rstc),
++					     "Failed to request reset\n");
++
++		ret = xilinx_cpm_pcie_parse_port(port);
++		if (ret)
++			return ret;
++	}
+ 
+ 	port->cpm_base = devm_platform_ioremap_resource_byname(pdev,
+ 							       "cpm_slcr");
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 4469e1a77f3c..bf53354dc5a9 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -39,6 +39,15 @@ struct pcie_tlp_log;
+  */
+ #define PCIE_T_PERST_CLK_US		100
+ 
++/*
++ * PERST# active time.
++ *
++ * See the "Power Sequencing and Reset Signal Timings" table of the PCI Express
++ * Card Electromechanical Specification, Revision 6.0, Section 2.11.2, Symbol
++ * "T_PERST".
++ */
++#define PCIE_T_PERST_US			100
++
+ /*
+  * PCIe r6.0, sec 5.3.3.2.1 <PME Synchronization>
+  * Recommends 1ms to 10ms timeout to check L2 ready.
 -- 
 2.44.4
 
