@@ -1,95 +1,77 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 071E328E0;
-	Fri,  7 Aug 2026 15:21:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F15633DEF7
+	for <linux-pci@vger.kernel.org>; Fri,  7 Aug 2026 15:21:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786116062; cv=none; b=ML/7HVOGOSODx6x/wvcYdsiCwJxjM6dHzSrT6+kHuHZrXitEQapOOoDvTm8El9gqf3sb9b5ENdEKfkl9OwsBw5sczC4HBkXqA3Z7asIb3y6C1zDx37IbarFpCgsCwwXChlmr0Sbu8jWnaydsTCdZE5s1Tbf6CiFWnDa41Rz7yQQ=
+	t=1786116098; cv=none; b=TWFyG9AbtYSHQTafW2fTgHZK+AgvWF++9bzwq5yEHb0RC3/65/7u9yKVcFgliKqgHA+Tc1QQTJ4VAxMp+59vezty4LIwnvXq2oTUCWL9Bu4vq20AUgyvDb/oAnvUxVqLMtkh00YRbSA937N4orTs4BzDHrsY/j4+lfEweUn4Rlk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786116062; c=relaxed/simple;
-	bh=PbNt4F/P/wppwX1+x/KePCIBTY2Raux48TqnbFQCG7k=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=NBAbfTdsow70dqoIoOKwucMY1yu4OJn5B+ILBx2xcV4jnBUxUazF+cW0GfZObG5nXofNv0ei9tAGloA5AaAeXrjCKPRyJD0waEOcxv8sJEqwCHeuL47bA4SGBlQIB3ABd9j0EFYoL2DLxkM+xgGkJYjFevpDmcauPUlq9r/pf8E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=F9xIqInD; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1786116098; c=relaxed/simple;
+	bh=SueEk+pdLn2UYpDYmCTLlZtZf4v4PMCnFUZgOCjZ0hQ=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=bYL757lcsh+P4B1nVTgGMJLkvaqqOxGGFhr3dhZvEZSNPrx2W8syExc0DBBIJ4Rwd3rpY5yBhYQ+R8VDDpmu/SLKSEwdYlU8dAVZilPqpKXkTMd5VU/LyGlMiMq/Rdfu5sGoipUK5UKozbv+7G/YcKfWlzoXimI+V9aYEdu0xUc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gU3TFgOr; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="F9xIqInD"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9306F1F00A3A;
-	Fri,  7 Aug 2026 15:21:00 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gU3TFgOr"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C661E1F00A3A;
+	Fri,  7 Aug 2026 15:21:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786116060;
-	bh=iG4zfB3mkX/9JfpqPZptcO7ZZiGhOcnJC3Whi+Knzc4=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=F9xIqInDTiHDd/d8qIPuMoAMNRb5iBY71TAvq+QxygVPo9hlrdSmDykOOI5fL7COR
-	 XMJ6uE2TqHIUe+3as/KvudQnR7vISAqZwIouja74y8krfv/MwVOwvFYSaZKAAJjQjW
-	 HDDueZ+wGHviBXEfWMtMA3jkh4fXG74jJGz/FD1FVPnzyTf7qczyJYLZ2yX6QGZ1R7
-	 SYsmiN1aGKmSSwD01XgaHxh2r3sKkWm0xkzX52rL5GDETPOAfb1RZtn10uWVIMGKbd
-	 WYlW4bZeRrJ2fMJRYlXjo9Dz6c+o+a8sttqPE6WPAeteHnZ2+Q0De82rsr1surN7v8
-	 8uBZ1OdrsSuwg==
-Date: Fri, 7 Aug 2026 10:20:59 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Chen-Yu Tsai <wenst@chromium.org>
-Cc: Christian Marangi <ansuelsmth@gmail.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Ryder Lee <ryder.lee@mediatek.com>,
-	Philipp Zabel <p.zabel@pengutronix.de>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
-	Jianjun Wang <jianjun.wang@mediatek.com>, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-mediatek@lists.infradead.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH v5 0/2] PCI: mediatek-gen3: Add 2-lanes mode support +
- clock
-Message-ID: <20260807152059.GA39821@bhelgaas>
+	s=k20260515; t=1786116097;
+	bh=HvfVx2px783ZK0zxIrZXbXck7O6Nyc6MDpDYDMfNcPM=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=gU3TFgOrXlcPIeUMQxlEsp+IDdIX4DN+oysi9xzBL0LXAWPDbpZGxEI2eOH3GoWzG
+	 yuVjphiINBt/9Hk75w/gSb0aNuFho1K4UMWGRzD5xivmmAVfMnO4j8DGfls7HJL9Cq
+	 5y/GjOwk4jsID94fz1ZJP2KZC4zOJa/mMTZGfIxn8i2U6Gq+Tw+OO34c62lllnMevR
+	 9gdcXlxa8I2l4jmEPmVaEU+Qq3ZT6ZAUam2q+OS1fpXXIXHaEGb9tEUh8+xhHuoxZU
+	 KViux5NJg4n0Yd65gCmcEzYVFTz+vz6A4LHt2OiJsy95go3f0DIWgPY8KSREmVPMmN
+	 VWmMwF5YsQtsg==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH V5 06/14] i3c: master: Fix potential UAF in
+ i3c_device_uevent()
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Adrian Hunter" <adrian.hunter@intel.com>
+Cc: "Alexandre Belloni" <alexandre.belloni@bootlin.com>, Frank.Li@kernel.org, linux-i3c@lists.infradead.org, linux-pci@vger.kernel.org
+In-Reply-To: <20260807145638.168865-7-adrian.hunter@intel.com>
+References: <20260807145638.168865-1-adrian.hunter@intel.com>
+ <20260807145638.168865-7-adrian.hunter@intel.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Fri, 07 Aug 2026 15:21:35 +0000
+Message-Id: <20260807152136.C661E1F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAGXv+5HrDw8GWb9zp1AaQU9UW+0FGcr7jOV2jt_zi_2KgfgBqA@mail.gmail.com>
 
-On Fri, Aug 07, 2026 at 11:24:09AM +0800, Chen-Yu Tsai wrote:
-> On Fri, Aug 7, 2026 at 12:53 AM Christian Marangi <ansuelsmth@gmail.com> wrote:
-> > This small series introduce support for 2-lanes mode for Airoha AN7581
-> 
-> Just a nitpick, but I would probably name this something else, like
-> "cross-controller lane-bonding mode" or "lane stealing"? PCIe already
-> has 2x lanes as a standard feature, so this naming is a bit confusing.
-> It's not like dual-LVDS display in which LVDS is only a single lane.
+> i3c_device_uevent() dereferences i3cdev->desc without holding the bus
+> normal-use lock.  Since the descriptor pointer can be replaced
+> concurrently, including when a uevent is generated from sysfs, this can
+> result in dereferencing a stale descriptor and lead to a use-after-free.
+>=20
+> Use i3c_device_get_info() instead, which protects access to the
+> descriptor with the normal-use lock.
+>=20
+> Commit 6cf7b65f7029 ("i3c: Use i3cdev->desc->info instead of calling
+> i3c_device_get_info() to avoid deadlock") replaced the accessor with a
+> direct descriptor dereference because i3c_device_get_info() would
+> recursively acquire bus->lock during device registration.
+>=20
+> This change depends on "i3c: master: Fix recursive locking during device
+> registration", which moves device registration out from under bus->lock
+> and removes the possibility of that deadlock.  Without that change,
+> restoring the i3c_device_get_info() call would reintroduce the deadlock.
+>=20
+> Fixes: 6cf7b65f7029 ("i3c: Use i3cdev->desc->info instead of calling i3c_=
+device_get_info() to avoid deadlock")
+> Cc: stable@vger.kernel.org # requires "i3c: master: Fix recursive locking=
+ during device registration"
+> Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
 
-I suggested the "2-lane" and "x2" terminology because I assumed the
-result is what the PCIe spec would describe as a "x2 Link" consisting
-of two Lanes. 
+Sashiko has reviewed this patch and found no issues. It looks great!
 
-If that's not the case, maybe "cross-controller lane-bonding mode" or
-"lane stealing" would be more accurate, but I don't know what those
-mean, so if we use them I would also like to know what the result
-looks like in standard PCIe terms.
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260807145638.1688=
+65-1-adrian.hunter@intel.com?part=3D6
 
-> > SoC. This is needed for correctly functionality of Eagle WiFi Card
-> > normally attached to this SoC that require a 2-line PCIe card to
-> > correctly work (and give the proper performance)
-> >
-> > The first 2 patch address a limitation of the PCIe implementation
-> > where the PERSTOUT reset were indirectly asserted and deasserted
-> > all at the same time (for all the 3 PCIe card) with PCIe
-> > enable and disable.
-> > The 2 patch address this and introduce correct reset to control
-> > reset line for the relevant PCIe line.
-> >
-> > The last 2 patch add additional logic and support to assert
-> > and deassert the PERSTOUT and also apply the required configuration
-> > for 2-lanes mode.
-> >
-> > 2-lanes mode is implemented in DT by adding the required property
-> > and by defining the "num-lanes" to 2.
