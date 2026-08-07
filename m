@@ -1,66 +1,68 @@
-Received: from mail-qk1-f173.google.com (mail-qk1-f173.google.com [209.85.222.173])
+Received: from mail-qk1-f179.google.com (mail-qk1-f179.google.com [209.85.222.179])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B9C035AC03
-	for <linux-pci@vger.kernel.org>; Fri,  7 Aug 2026 20:58:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C0CCD3C10A3
+	for <linux-pci@vger.kernel.org>; Fri,  7 Aug 2026 20:58:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786136299; cv=none; b=L/ADdQjMqo1Dgjd8IXvhLFxOeGfkFJt+6sOwG0gaa9vW0fAAOnSCgWEDWXfKXJURJ5De5fb2sFN/IjCrXDIzbN8hXijMax8m/WcRwsZYvhA1mha+SMqXlH0c/Jk47eVhWv2u12XupMtPFzwO5vq2mikbEKeefL4JWUodYYXSq8o=
+	t=1786136301; cv=none; b=khYl5BjvsRrjs7CxZtBGC2e58M3ZxDwQc5VMH3GywoCDMtf4sm0IlkgaBRQjS8NvuXmrfC7tsOyp9OPXSCmOpJKxNyZWV11R9ZT11X9qI1d9xE/gvYRMc3qWjty0Rvoc1bCh2p2cwJybWDcCB1BOZIEg0He8E4RhsrdJUmaetwI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786136299; c=relaxed/simple;
-	bh=QD8HDsLorTOwKnowHDnWqEIpmV2BBsi6qi+p+7WJzwA=;
+	s=arc-20240116; t=1786136301; c=relaxed/simple;
+	bh=lAG1g6NCiRgJ72AI59x0RziGscPAlXlsBwHZP4rfx7A=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=URnaTMaNpPNKbfkmO5+Stf8Fpbh71tRv/7HOEh1davA8n3+Hlfe1GTHIrmaUqMFkzUyzJDBllnkDj/h/LWOB5vlfOirygegkBpUMYSC9U5R4M83bzvO9bIDL4jThobUtJt7gm3lSmzji5owIGSisgamT4Aw3gzTuoDM20EMB1RA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=riscstar.com; spf=pass smtp.mailfrom=riscstar.com; dkim=pass (2048-bit key) header.d=riscstar-com.20251104.gappssmtp.com header.i=@riscstar-com.20251104.gappssmtp.com header.b=JfA8ehcE; arc=none smtp.client-ip=209.85.222.173
+	 In-Reply-To:Content-Type; b=A7TRJUJBWGFngE9PMWceB0QW2oh15igfBSALeVnI6wzjlSnwXv4mmmiHzQqKLyQPNyEnUm0FHSPjviTU8OXmIs5UsqVhnUcBCLSv5gvPCqwOhn5NeUC6GvSYsLLaQvm7vLc0iorACXe88mzIRwc78b+T9A8CEACyuzEdc+MpFsw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=riscstar.com; spf=pass smtp.mailfrom=riscstar.com; dkim=pass (2048-bit key) header.d=riscstar-com.20251104.gappssmtp.com header.i=@riscstar-com.20251104.gappssmtp.com header.b=XgbwTxf4; arc=none smtp.client-ip=209.85.222.179
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=riscstar.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=riscstar.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=riscstar-com.20251104.gappssmtp.com header.i=@riscstar-com.20251104.gappssmtp.com header.b="JfA8ehcE"
-Received: by mail-qk1-f173.google.com with SMTP id af79cd13be357-930c0f9c1b1so240186485a.1
-        for <linux-pci@vger.kernel.org>; Fri, 07 Aug 2026 13:58:18 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=riscstar-com.20251104.gappssmtp.com header.i=@riscstar-com.20251104.gappssmtp.com header.b="XgbwTxf4"
+Received: by mail-qk1-f179.google.com with SMTP id af79cd13be357-934a3d14924so372986785a.2
+        for <linux-pci@vger.kernel.org>; Fri, 07 Aug 2026 13:58:19 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=riscstar-com.20251104.gappssmtp.com; s=20251104; t=1786136297; x=1786741097; darn=vger.kernel.org;
+        d=riscstar-com.20251104.gappssmtp.com; s=20251104; t=1786136299; x=1786741099; darn=vger.kernel.org;
         h=content-transfer-encoding:content-type:in-reply-to:from
          :content-language:references:cc:to:subject:user-agent:mime-version
          :date:message-id:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=pd1I5KUa8f+9TeyWUaIVVVrtIGXgdlxuJMrpjZwfZjM=;
-        b=JfA8ehcEwSsb0dYI8sUurakn1AqTAntPNwgfuzVABs3SxvLoJDg+nB70MvYyYGkbiy
-         uwrgNGIql4pqqbUVlLPpk/IMmeXkmdTJyaSfj4drr/N3rd8XPpb6N+MpUO7/tg0yO1IH
-         6Gdvor6UVDnb8mA5OoehjXlAW0HlPrnLHWtjkzp760/XD2kC+XAvmX189MPpxsP6E0pl
-         fGdRM9knf2NLbs/LuMfD4oEfAOpB8TIVbbLIyMILirpun82bTVPsqmB7veXzP4077NQ5
-         NG0LbTuX+jrUeABCVzLBrNJPaih/6cOaYJTV1TlExe/3scnircSHd+s3lwaQr804WF5i
-         82Wg==
+        bh=WJPO/O+fbYB5hoAWGFXpSodw1GgptFASJAHcUDxPHkY=;
+        b=XgbwTxf4DcfkkTbTTtYCXlt5kwcnCNkNj/6j64kZiwOhHACDYZw/bCk6ELDbulTgND
+         8qndkqCDFdkEaQkYQd8T7x9oUzE9XzoshIj+JQjb1KtZqEEfs+QKpoX5LAPnuKUV1KBO
+         ONvnX+3rUB8w97vS+EeDApxZ0fPEhZVMxBTCoDIxgY1zT3Uh3MXhsOn5rl0nYSkSpeP0
+         d1HhkyRrhWZTJ8UcWkKvgK8B6wm4WyWUTpFLOnILRZyQrByuPt2F8sgQrzhT/vbKCTTP
+         tMwVDB2rZhKHumR3XNde+XljMfCHp9ejpqRv1GFGd1jWN/Xy5ex6uWgC5NcFytg/Mxba
+         LkkQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786136297; x=1786741097;
+        d=1e100.net; s=20251104; t=1786136299; x=1786741099;
         h=content-transfer-encoding:content-type:in-reply-to:from
          :content-language:references:cc:to:subject:user-agent:mime-version
          :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=pd1I5KUa8f+9TeyWUaIVVVrtIGXgdlxuJMrpjZwfZjM=;
-        b=HNFdNulhRr5kwJ0X4NC2UWr4rxkHW4exKdQmzVQ4Qc9fPH91Wp8RtOzHGLKMcjmNNp
-         dp+T2S/nLgTdofemSTyvuwJ1VyhJYTTR5aZc0sO3Qu/O424yhTvOzFgDeQBa/goI81Pi
-         nyx1nBuwYXYvBLcSEegk6En6UoTup3VLvtNL1nMC4Gmfqr2N7rrl27tcE1fcnblsp989
-         R5hqn/DQD4JuWVZ5MnVOsRhiRivjmEdQ4jNZ/4Y5hUZRwOhX7FSIXEfLtoakGTmQIXby
-         EzP7LxQ/3r9WuzjS8inAtKIy42wFY+1Tj5PcboNZn3jMYhI+qAv5MYYesSGWKDh89XRg
-         OaGA==
-X-Gm-Message-State: AOJu0YyDOQNxa4CXVatk1HqqtZX3ypfoiXjdc1fvyBKlKtEn7gOTVAVg
-	JpFk8JUgcdY2MaBi0n2nLVdsARBeJZ6Hiueuggv9MtZM9SijKUPkMWAm0nYqAkJRzxM=
-X-Gm-Gg: AR+sD13Fmsl9TFSyH0zoEEJ7JxyP8S7kGjo8QHumH8XXpgfxaWJY94dOrr+4seQfabp
-	zE1G0V9jHMqDXPiVY9f2XVmfJVzvABuSTX0f+iaoQQ4/DrqSsxDGbV/8z8lN3UIX6I3aP2P6ryX
-	lb8xoPcwPbHN26Lnx/NfeXyBhs3sFC5ZB/pRDmctdNj3PITS935lXtjLB1D2I2nxKq/6rgZVWAB
-	K76GyBMJG2+DS7k2FT2GETodwMiOtEt0gNM0VhLLIaTo/e3+cnKqgGiA7GGud1q7NOSdohomVr3
-	cmzIiMU1LOQ/n0ds/YktWpeuarlD6teAJ74hLZZwMx87v0uNagM422Uol88yJH6G+Cg8SWwujm/
-	PIEUgip/7aoSdrKoqL5KNqTg/VHv4vH5u3wp0XIQQmPBqADjAInyxXg3miLIF2JUASAF9GpqE4c
-	vxAT3zaiz2KE4FnFVhuvgKIkj6mE2WZxvCDm7HGoDiGN0PTLw8hZUP58OFi3b8NoEtZE5euBw=
-X-Received: by 2002:a05:620a:12c3:b0:8cf:c106:faca with SMTP id af79cd13be357-93649267a91mr2416475185a.36.1786136297181;
-        Fri, 07 Aug 2026 13:58:17 -0700 (PDT)
+        bh=WJPO/O+fbYB5hoAWGFXpSodw1GgptFASJAHcUDxPHkY=;
+        b=YDtSQcX9VUiBIds5sto8ut1dBE6J9rdcCQHgZtgR4QkPUzVfTIyIPF4H2Qomu7oKAY
+         rvc8dRrNyJfPT98ptVTEVpWAJnbbgC02WSad/N9/iILiADpxt6dam9O794BXgHsjG+Ay
+         jOH6RjRc/bYN2PBJrquVvqMPqVs82Ag3MG4yQsIwLksH63AM+tQp2518TSglEkJLRLw7
+         mwT5phtiNTq2Iu+sUCnFYF4vIc9bMscc3nnlajjUDG06dDulUvCHK5UP/e7xtYzRl2jr
+         R4lrODCQ4ZgiYaJV3kGhfrmSYy2oRR/B/wepf/i7dgP8akHoNpeUYd0KmjBqvRPrAlQ4
+         hx1g==
+X-Forwarded-Encrypted: i=1; AHgh+Ro1RCMlP52I1nyMvs8pm7b4nqo0YHYe4HuLL+nUIuCE6SsC6riLnHSFVY+T3yUT0rDOsO0jTEPAiAg=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxzpwsAfyAyrSKLfysV1czRg9nYClzgQxEOcEL+xrh8xqwYyTBB
+	BDhWRK1PHFRg5QUvKD+jXjHFvJ8L8pJIbF7fWRoJ599cUGQeAsZHSXWk87NPoApUpFQtqeZx5Bg
+	0rzsPSUg=
+X-Gm-Gg: AR+sD12OallveSuddnSks7ZfAaL8bjXdWuCI3mXh+er1dKMfbR9CGtWU9riMicuuHn0
+	UN3NEqWV5XMHfTNjk7ziNMznDgKnXnoUQflvbviyc688IKd6Xarhz3XKP02dcJwWT+PhXgbTjLK
+	bRiPr5wuLIXOSmZHNlC66yMl4srkJo0R+vQt3CN3s4SBeJ/Jn96og6/Sg0/KWkOQexUqxfQW7Mr
+	fwIwQbNa8lgA4WCAYY7uJQhW9VfxqW3xynw/qO2OO7FPBmDfpexJ5/XvLwFu88lbRSpUhd0LCXG
+	DiSBlLoSoh3j1LPyr1i90bVHB7mPjENG+/yDIsPHw88+ifHAVIw8AwGPTPZr1kcqIE4glbWe9Uk
+	1WukApxeaelSWI0RYByRsB3Qj/sET+45eUP4DoKJFPT3AIkB+Pnt2rMFr61Cw8CKbf/IG1uUbAJ
+	ciXEnBoG4lz1Dww3/f8Kt1cAelUjFMIUEKrmYRJGYXYd4AzJabndkDAD7ZgOuK
+X-Received: by 2002:a05:620a:1b98:b0:92e:8a8d:ec1f with SMTP id af79cd13be357-9366655b1aemr1521961885a.24.1786136298765;
+        Fri, 07 Aug 2026 13:58:18 -0700 (PDT)
 Received: from [172.22.22.28] ([73.62.185.64])
-        by smtp.gmail.com with ESMTPSA id af79cd13be357-9366e09dc07sm233090185a.15.2026.08.07.13.58.15
+        by smtp.gmail.com with ESMTPSA id af79cd13be357-9366e09dc07sm233090185a.15.2026.08.07.13.58.17
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 07 Aug 2026 13:58:16 -0700 (PDT)
-Message-ID: <a647bd56-7dc8-4fec-9d96-834622054cdf@riscstar.com>
-Date: Fri, 7 Aug 2026 15:58:15 -0500
+        Fri, 07 Aug 2026 13:58:18 -0700 (PDT)
+Message-ID: <3d1d9c63-9be5-4f24-8133-2d93925ee0f4@riscstar.com>
+Date: Fri, 7 Aug 2026 15:58:17 -0500
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -68,181 +70,99 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/4] PCI: of: drop the reg_num argument to
- of_pci_set_address()
+Subject: Re: [PATCH 2/4] PCI: of: don't zero flags in of_pci_get_addr_flags()
 To: sashiko-reviews@lists.linux.dev
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org, robh@kernel.org,
- conor+dt@kernel.org
+Cc: conor+dt@kernel.org, devicetree@vger.kernel.org, robh@kernel.org,
+ linux-pci@vger.kernel.org
 References: <20260807194100.455599-1-elder@riscstar.com>
- <20260807194100.455599-2-elder@riscstar.com>
- <20260807195451.C3BAC1F000E9@smtp.kernel.org>
+ <20260807194100.455599-3-elder@riscstar.com>
+ <20260807195604.277C31F000E9@smtp.kernel.org>
 Content-Language: en-US
 From: Alex Elder <elder@riscstar.com>
-In-Reply-To: <20260807195451.C3BAC1F000E9@smtp.kernel.org>
+In-Reply-To: <20260807195604.277C31F000E9@smtp.kernel.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 8/7/26 2:54 PM, sashiko-bot@kernel.org wrote:
-> Thank you for your contribution! Sashiko AI review found 2 potential issue(s) to consider:
+On 8/7/26 2:56 PM, sashiko-bot@kernel.org wrote:
+> Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
 > 
 > Pre-existing issues:
-> - [High] Missing `of_node_put()` in `of_pci_prop_intr_map()` causes a memory leak of interrupt parent device nodes.
-> - [High] Missing NULL checks for `kasprintf()` returns in `of_pci_prop_compatible()` leads to a kernel crash via `strlen(NULL)`.
+> - [High] The function `of_pci_is_range_resource()` incorrectly evaluates `IORESOURCE_MEM_64` using the `resource_type()` macro. The `resource_type(res)` macro applies the `IORESOURCE_TYPE_BITS` mask (`0x1f00`). Because `IORESOURCE_MEM_64` is defined as `0x00100000`, it falls completely outside this mask. Consequently, `resource_type(res) & IORESOURCE_MEM_64` evaluates to a constant 0.
+> 
+> As a result, the condition `!(resource_type(res) & IORESOURCE_MEM_64)` is unconditionally `true`. This simplifies the entire filter condition to `!(resource_type(res) & IORESOURCE_MEM)`. Any resource that does not have the `IORESOURCE_MEM` bit set—such as `IORESOURCE_IO` (`0x100`)—will cause the condition to evaluate to true, making the function return `false`.
+> 
+> This logic flaw inadvertently filters out `IORESOURCE_IO` resources entirely, which prevents PCI host bridges from exposing IO space mappings via the dynamically generated device tree `ranges` property. Furthermore, if a 64-bit memory resource were defined with `IORESOURCE_MEM_64` but without `IORESOURCE_MEM`, it would also be incorrectly rejected.
 > --
 > 
-> --- Patch [1]: [PATCH 1/4] PCI: of: drop the reg_num argument to of_pci_set_address() ---
-> commit 2224ebd8fd372dc1822f3ceaf7519520a5ca9bdf
+> --- Patch [2]: [PATCH 2/4] PCI: of: don't zero flags in of_pci_get_addr_flags() ---
+> commit d6dba8ef5457a1efb23f2b68f270883ef856bbdb
 > Author: Alex Elder <elder@riscstar.com>
 > 
-> PCI: of: drop the reg_num argument to of_pci_set_address()
+> PCI: of: don't zero flags in of_pci_get_addr_flags()
 > 
-> The reg_num argument passed to of_pci_set_address() is always zero,
-> so get rid of it.
+> The flags variable whose address is passed to of_pci_get_addr_flags()
+> is zeroed before assigning a value to it. Skip the zeroing and just
+> assign it instead.
 > 
 >> diff --git a/drivers/pci/of_property.c b/drivers/pci/of_property.c
->> index 75a358f73e694..505226b876c56 100644
+>> index 505226b876c56..22fea1905a080 100644
 >> --- a/drivers/pci/of_property.c
 >> +++ b/drivers/pci/of_property.c
 > 
 > [ ... ]
 > 
-> [Severity: High]
-> This isn't a bug introduced by this patch, but while reviewing this file I
-> noticed a potential resource leak in of_pci_prop_intr_map().
-> 
-> Does this code leak the interrupt parent device nodes?
-
-There are two device nodes at play here.  The first is
-passed in as an argument, np, and although this is referring
-to the other one, I analyzed it anyway.
-
-The only place that pointer is used is in the three
-of_changeset_add_prop_u32*() calls at the end of the
-function.  No reference is taken or dropped to that
-node in this function, and presumably that is up to
-the caller to manage.
-
-The only caller is of_pci_add_properties(), which similarly
-gets the node pointer as an argument, and relies on its
-caller for managing its references.  This function's only
-caller is of_pci_make_dev_node(), whose purpose is literally
-to create a new device node for the purpose of attaching
-it to a PCI device node that has none.
-
-So I don't think there is any leak of the np variable passed
-in as an argument.
-
-
-The second device node is pnode, which comes either from
-pci_device_to_OF_node() or from pci_bus_to_OF_node().
-Neither of those functions takes a reference to the
-node pointer they return (assuming it's non-null).
-
-That pointer is assigned to each out_irq[x].np field
-before it's passed to of_irq_parse_raw().  The value
-returned from of_irq_parse_raw() will either be a null
-pointer or will be another device node *with a reference*.
-
-We'll refer to this as *THE* reference.
-
-If this branch is taken:
-
-         if (out_irq->args_count != intsize)
-                 goto fail;
-
-The code at fail will properly drop the reference:
-
-fail:
-         of_node_put(ipar);
-
-         return rc;
-
-The next block of code gets *another* reference to ipar,
-then follows the OF parent pointers up, dropping the
-reference taken as each new parent is found.  Once
-that loop exits, we still seem to hold THE reference,
-though others seem to come and go properly.
-
-Next there is a "big while loop", and it looks to me
-like this return statement:
-
-                         pr_debug(" -> got it !\n");
-                         return 0;
-
-...does indeed leak a reference to ipar.
-
-There is more to study on this function to be sure this is
-right.  But based on this quick look, the Sashiko report
-seems right.
-
-==> Can anyone else confirm or refute this?
-
-If nobody tells me this is wrong, I will plan to submit
-a bug fix for this.
-
-> 
-> drivers/pci/of_property.c:of_pci_prop_intr_map() {
->      ...
->      for (pin = 1; pin <= OF_PCI_MAX_INT_PIN;  pin++) {
->          i = pin - 1;
->          out_irq[i].np = pnode;
->          out_irq[i].args_count = 1;
->          out_irq[i].args[0] = pin;
->          ret = of_irq_parse_raw(laddr, &out_irq[i]);
->          if (ret) {
->              out_irq[i].np = NULL;
->              pci_dbg(pdev, "parse irq %d failed, ret %d", pin, ret);
->              continue;
->          }
->          of_property_read_u32(out_irq[i].np, "#address-cells",
->                               &addr_sz[i]);
->      }
->      ...
->      return 0;
-> 
-> failed:
->      kfree(int_map);
->      return ret;
-> }
-> 
-> of_irq_parse_raw() populates out_irq[i].np with a device node that has an
-> incremented reference count.
-> 
-> Should there be a matching of_node_put() called on these successfully parsed
-> nodes before the function returns?
+>> static bool of_pci_is_range_resource(const struct resource *res, u32 *flags)
+>> {
+> [ ... ]
+>> 	if (!(resource_type(res) & IORESOURCE_MEM) &&
+>> 	    !(resource_type(res) & IORESOURCE_MEM_64))
+>> 		return false;
 > 
 > [Severity: High]
-> This is a pre-existing issue, but I also noticed a potential NULL pointer
-> dereference in of_pci_prop_compatible().
+> This is a pre-existing issue, but does this correctly evaluate
+> IORESOURCE_MEM_64?
+
+It is incorrect to apply the IORESOURCE_MEM_64 flag mask
+to the result of resource_type().
+
+> The resource_type() macro applies the IORESOURCE_TYPE_BITS mask (0x1f00).
+> Because IORESOURCE_MEM_64 is defined as 0x00100000, it falls outside this
+> mask, causing resource_type(res) & IORESOURCE_MEM_64 to evaluate to a
+> constant 0.
 > 
-> Can this crash the kernel if memory allocation fails?
+> This makes the condition !(resource_type(res) & IORESOURCE_MEM_64)
+> unconditionally true. This simplifies the logic to reject any resource
+> that does not have the IORESOURCE_MEM bit set, such as IORESOURCE_IO.
+> 
+> Could this inadvertently filter out IORESOURCE_IO resources entirely when
+> called from of_pci_host_bridge_prop_ranges()?
 
-Yes it can.  of_changeset_add_prop_string_array() blindly calls
-strlen() on each array string provided.
+No, this is not an issue because the purpose of this test was
+to make the function only apply to memory resources (MEM or MEM64).
+It's *possible* it will skip MEM64 resources, though in some cases,
+IORESOURCE_MEM and IORESOURCE_MEM_64 are *both* set in the flags
+field (see decode_bar()).
 
-I will create a bug fix for this issue as well.
+So I don't think there is an issue with skipping I/O resources,
+but as stated above, this bit of code is at least wrong, and
+it *could* be wrong in a way that affects correct behavior.
+
+This function is only called by of_pci_host_bridge_prop_ranges().
+I'll create a fix that at least fixes the bogus test, and in
+the process will try to confirm that the result is correct.
 
 					-Alex
 
-> 
-> drivers/pci/of_property.c:of_pci_prop_compatible() {
->      ...
->      compat_strs[PROP_COMPAT_PCI_VVVV_DDDD] =
->          kasprintf(GFP_KERNEL, "pci%x,%x", pdev->vendor, pdev->device);
->      compat_strs[PROP_COMPAT_PCICLASS_CCSSPP] =
->          kasprintf(GFP_KERNEL, "pciclass,%06x", pdev->class);
->      compat_strs[PROP_COMPAT_PCICLASS_CCSS] =
->          kasprintf(GFP_KERNEL, "pciclass,%04x", pdev->class >> 8);
-> 
->      ret = of_changeset_add_prop_string_array(ocs, np, "compatible",
->                                               compat_strs, PROP_COMPAT_NUM);
->      ...
+> drivers/pci/of_property.c:of_pci_host_bridge_prop_ranges() {
+> 	...
+> 	resource_list_for_each_entry(window, &bridge->windows) {
+> 		res = window->res;
+> 		if (!of_pci_is_range_resource(res, &flags))
+> 			continue;
+> 	...
 > }
 > 
-> If kasprintf() returns NULL, the compat_strs array will contain NULL pointers.
-> 
-> When this unvalidated array is passed to
-> of_changeset_add_prop_string_array(), could it lead to a kernel crash when
-> the string array is processed and strlen() is called on a NULL element?
+> If IO windows are wrongly skipped here, will dynamically created PCI host
+> bridge device tree nodes lack IO mappings in their ranges property?
 > 
 
