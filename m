@@ -1,221 +1,112 @@
-Received: from mail-wm1-f43.google.com (mail-wm1-f43.google.com [209.85.128.43])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mailout1.hostsharing.net (mailout1.hostsharing.net [83.223.95.204])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BFF5B3B7B6E
-	for <linux-pci@vger.kernel.org>; Sat,  8 Aug 2026 06:31:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F0A2D18A6CF;
+	Sat,  8 Aug 2026 08:16:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.223.95.204
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786170672; cv=none; b=IQ3yvqZpUCRaVuJ8ourWwnoPQdLRS+DrD0A/3jBB///XhESF+AJz6tuLoAUFjoJnJXLYkQi5TMoPBqgLie4MliN2onU1gJPZOKNLoaySpR/3Nl/15DQ1HED4NGZ+sTvFPyILU4CEaq/sikVDeMZLAag3wElN8zfN1iobdUbSso0=
+	t=1786177013; cv=none; b=YcQb9GFPV/cdhK9OvqumePozCcO1ZXnZ8PyKSaMXADLdoNDSFe+7wybcWyhZ7G51TzbKhh1Cqg+01Mp1pI6ZysDatyRdSNpNktZ9hSGMF16WYU5DMrrZesJu3RLbJeoY2VkJgNB5VnDkT/GHoIhfmIMjHbO0k5N/Pp6NxQZqnr4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786170672; c=relaxed/simple;
-	bh=LA5QlPc4q+6c5UX/OWdNhPZhd+ekRRm7oX/f3Lx3tmk=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=FRJ1/1quQkjP6Zk0zAGGah1Ztcf4HI+ZE28JCPYGQdjco1b2mIW9D4GnTTSm3h0gVPY/BekBzooNnbyDNCMdGL2zmcy4hKhIHU3wTG0IBMpExFmqLhzMDfIPSBF5Ok2QjKxYfWM6A5SpPg4a4A57x8SRL68wMpHR01aDgUN76eA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=K/98ezge; arc=none smtp.client-ip=209.85.128.43
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="K/98ezge"
-Received: by mail-wm1-f43.google.com with SMTP id 5b1f17b1804b1-4957eefd361so1548235e9.1
-        for <linux-pci@vger.kernel.org>; Fri, 07 Aug 2026 23:31:09 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1786170668; x=1786775468; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=cMoo6yfItMXQZdH4h0GQ/fgmLIRHwVqfY6tNNASMxyk=;
-        b=K/98ezgeSNCqFfwDNHZWn0mG8Fpz2DZMPP4T5sn4f7JyCUT76spjpp77jOBUNYB6AT
-         afiqeqPnHC93Kd9nwHswNwE6gLAro/xNLoY0PmC/kKZrFIYH6HiHJ0oaZQ/PRro7FO2s
-         abClCPtFXHt/H881W7izpsVhAOfpqj97lD0a8yjKnfayyLwOfqAw/keAb/N8R0f7rgQk
-         GGLNOrJj4rsTfUq9PgnUyGYRnAKyY/qMcRGTNYjz/HSOcjgbdBQSBamZzsH+SWHrKz3E
-         b6veMbGx0AEdxl+h9EJRRNWK+/zNNlcLX+PWCfSLvkt1W53DKMV6L4WFzUxFOJl1mF3C
-         8wNQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786170668; x=1786775468;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=cMoo6yfItMXQZdH4h0GQ/fgmLIRHwVqfY6tNNASMxyk=;
-        b=ctxvAoI12ighJDXzkWdh6m5ojzwLwrhoepyxMogTlKrb9Gg8rLsNMF51Hz3DA1r+Ju
-         2Td5Jr6Q2ANyyodx0Hs5SqmRWhoxqu7h6W36hESACk8XNhDBLqxV1uMdJDWmfiiUqLBa
-         H7N3wMbjyJvHw3qxK5U+gLmQRDoModnFkXyrq7Bh9JC4GqclZTsL3rFG0AqQPuedKDs1
-         ThqxtMpSOHnp20zEsPBpgFmhdII0ZTPbaVAHRv095te615FE5F1YqveU2dYQNKSHzL/w
-         5GJLi9GL18EmQzdEx6sn7TO5Ao6cnv8cMwMVAVHDo0MjffkZtlYTYRIJibyZ6upiR4Gm
-         +HOg==
-X-Gm-Message-State: AOJu0YwmGPXg1IAejwJE3QfgD4nAQRV6FdEXcdIm9j+otGPZOheSlsB9
-	da0NALyOCHuWn73L8XzvjZS9Zx7PilclZZg61WZSsKTqCA2stsguzOGK
-X-Gm-Gg: AR+sD132tOrsb3xFTMJYEUT1tjj7twtkZPNgUop5nIf0Ri3ic0XBGpSQFGiKpgvnzDh
-	wnpoSxOET1MugcXqoiynFVSwT0u0RobZ7fjdfU78fFL8D7N61CrS97vddAwvMnYnckTvHAp6z6B
-	aPsONFxJoGJ36C3p+0hnMiSP47imVUfboqwSQutEC9hET1d5BHoupSDOPswWBNTrDCTcN9BIBUF
-	kLzMEh0JHsCcHmEFEccgfV9lBvsV2CnPyycW1rREO0/P0pHBsT12V2CXNEe+nDDvLZBqToSuZP/
-	BlvIzmJHsCp7Ejz/Sfadd1huVU0qrL7dWOYiwKBKRXUup0pANompIyMhUb13246HLREXCIxJOaZ
-	UqpafzeONLushilVZVMYgJuuDg35U27GM70QNLIomeyWanYte2u5JxjY+KGIBibRpQixNU63yJn
-	tDoGkN9VjX1HTIP/V9uqEziIMKh6l8/KkGosnsRsXhLNGAO2ueC8bY/9xNaBKrE/gyKXuxsAqx8
-	SVV4I5di9fa0S8bnQ4/Dj7eDWcqfezHifEBFWOFps//mYTrg/sT7GyAxzuw0ee38DWLD1/Fr8Dl
-	iSYbz8qAEW/5AdUgE8i1
-X-Received: by 2002:a05:600c:6612:b0:495:4811:7998 with SMTP id 5b1f17b1804b1-4995e0ebf84mr132716055e9.17.1786170667423;
-        Fri, 07 Aug 2026 23:31:07 -0700 (PDT)
-Received: from corecachy.localdomain (p200300eca72356fc3569cec583d57196.dip0.t-ipconnect.de. [2003:ec:a723:56fc:3569:cec5:83d5:7196])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4995c7a56c5sm127821935e9.3.2026.08.07.23.31.06
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 07 Aug 2026 23:31:07 -0700 (PDT)
-From: Andreas Wild <andiwild@gmail.com>
-To: Aoxtj <aoxtj@axtjblog.cc>
-Cc: linux-pci@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Maciej W. Rozycki" <macro@orcam.me.uk>,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3] PCI: Skip Target Speed quirk on clamped ports with no link
-Date: Sat,  8 Aug 2026 08:31:02 +0200
-Message-ID: <20260808063103.10940-1-andiwild@gmail.com>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <331e97c7-e422-420d-9f3e-5d9f734464b3@axtjblog.cc>
-References: <20260801201244.4421-1-andiwild@gmail.com> <331e97c7-e422-420d-9f3e-5d9f734464b3@axtjblog.cc>
+	s=arc-20240116; t=1786177013; c=relaxed/simple;
+	bh=p9kPq5CdDiEfes4ZCJEd5qRdu3FhJdJ3v66HITtK//I=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=EylxSf/DrGQju3Djn1gNS0W1LVMjfJ3yOKVJFxfkZUYclz+aiHsf3k6SbMJezu8VK7e6pdnND1QZlqnf78jR8PYX0mDLFgo62OP/xUMjqU+wnvsnwwd0TOJICx1Wmk3xNp7jXaZS0+I5ilHVNDNxGA3+T6kKLTlv++JpTvWHhiY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=83.223.95.204
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
+Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
+	 client-signature ECDSA (secp384r1) client-digest SHA384)
+	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
+	by mailout1.hostsharing.net (Postfix) with ESMTPS id 4A67C1A02;
+	Sat, 08 Aug 2026 10:16:42 +0200 (CEST)
+Received: by h08.hostsharing.net (Postfix, from userid 100393)
+	id 3257360A8A5F; Sat,  8 Aug 2026 10:16:42 +0200 (CEST)
+Date: Sat, 8 Aug 2026 10:16:42 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Derek John Clark <derekjohn.clark@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"Pierre-Loup A . Griffais" <pgriffais@valvesoftware.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] pci: quirks: Disable native PCIe hotplug on MSI Claw
+ A8 root bridge
+Message-ID: <anbl6j9DWiyVQLqS@wunner.de>
+References: <20260806214808.1202819-1-derekjohn.clark@gmail.com>
+ <anWdGzfD7HxglsOB@wunner.de>
+ <CAFqHKTm_dHnSP-ceJhbsm3Zsiif+vxM-xqK27b4eXQGQo1Y7Eg@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAFqHKTm_dHnSP-ceJhbsm3Zsiif+vxM-xqK27b4eXQGQo1Y7Eg@mail.gmail.com>
 
-On Sat, 1 Aug 2026, Aoxtj wrote:
+On Fri, Aug 07, 2026 at 05:31:04PM -0700, Derek John Clark wrote:
+> [   25.686128] rtsx_pci 0000:c2:00.0: pciehp: pdev subsystem vendor ID mismatch
+[...]
+> reg=0x525a10ec expected=0x14af1462
 
-> - 7.0.14-8 + revert 72780f796468: boots reliably.
-> - 7.0.14-8 + this v3 patch: only boots sometimes; failed boots lose the
-> drive the same way.
+The subsystem vendor ID was 0x1462 (MSI) when the card reader was
+enumerated on boot and it is 0x10ec (Realtek) on resume.
 
-Thanks for testing it.  v3 only covers ports with no link at all, so it
-does not address your case.
+Likewise the subystem device ID was 0x14af on boot, 0x525a on resume.
 
-72780f796468 removed two guards at once: the Data Link Layer Link Active
-check, and the device ID match against the ASMedia ASM2824.  My
-regression comes from losing the first; yours looks like it comes from
-losing the second.
+It's another bug in the MSI BIOS (in addition to marking the Root Port
+hotplug-capable):  The BIOS neglected to re-initialize the subsystem
+vendor/device ID registers in config space on resume to the same
+values that it set on boot.  The card reader was likely reset while
+going through the system sleep transition and its config space
+thus needs to be re-initialized.
 
-v3 only bails out where DLLLA is clear.  Your link is up:
+What happens is that pciehp marks the card reader disconnected
+because it assumes that it was replaced during system sleep.
+It then synthesizes a Presence Detect Changed event:
 
->      LnkSta:  Speed 2.5GT/s, Width x2, DLActive+
+https://elixir.bootlin.com/linux/v7.2-rc6/source/drivers/pci/hotplug/pciehp_core.c#L300
 
-so the quirk runs past the v3 early return, lifts the restriction and
-retrains at 8GT/s, exactly as it did before.  Reverting works for you
-because your AMD Renoir Root Port didn't match the ASM2824 ID list that
-used to gate this.
+So the pciehp interrupt thread pciehp_ist() will remove the
+rtsx_pci driver and de-enumerate the device.
 
-A possible workaround:
+Replacing or removing PCIe devices during system sleep happens
+all the time (e.g. with Thunderbolt) and we haven't seen issues
+with regards to that.  The likelihood is higher that the lockup
+is caused by rtsx_pci.
 
-If your BIOS lets you pin that slot to Gen1, you could try that.  With
-the Root Port advertising only 2.5GT/s the quirk never reaches the
-retrain at all: on current mainline it returns at
+Maybe rtsx_pci_remove() blocks somewhere and prevents forward
+progress of the resume transition.  In particular, it calls
+pm_runtime_get_sync() and cancel_delayed_work_sync(), which are
+blocking calls, i.e. they wait for something else to happen.
+You could try commenting those calls out and see if it avoids
+the lockup:
 
-	speed_cap = pcie_get_speed_cap(dev);
-	if (speed_cap <= PCIE_SPEED_2_5GT)
-		return ret;
+https://elixir.bootlin.com/linux/v7.2-rc6/source/drivers/misc/cardreader/rtsx_pcr.c#L1608
 
-and on the older code your 7.0.14 backport is based on, the
-(lnkcap & PCI_EXP_LNKCAP_SLS) != PCI_EXP_LNKCAP_SLS_2_5GB condition is
-false, so the restriction is never lifted.
+Another possibility is a crash due to a NULL pointer deref or
+GPF somewhere in that driver.  This is pretty difficult to debug
+if there's no possibility to see any dmesg output.
 
-Since the link already runs at 2.5GT/s x2, that should cost you nothing
-- it just makes the Root Port advertise what the link can actually do.
+Even if we manage to find the root cause of the lockup, as long as
+the BIOS isn't fixed, the card reader will always be de-enumerated
+and re-enumerated on resume and consequently the card will briefly
+disappear.  This will make it impossible to use the card as root
+filesystem.
 
-Something that is different in your case:
+> I've been using a SanDisk Ultra 32GB microSDHC UHS-I Card. And yes, it
+> only happens when the card is present.
 
-Your Root Port reports
+If you go to sleep and resume without SD card, do you then see in dmesg
+that the card reader was de-enumerated and re-enumerated?  Normally
+there should be at least a "Card not present" / "Card present" message
+from pciehp, if it sensed a replaced device.  ("Card" refers to PCIe card,
+not SD card.)
 
->      LnkCtl2: Target Link Speed: 2.5GT/s, SpeedDis+
+Also, what's the subsystem vendor/device ID as seen with lspci after
+a successful system sleep transition (successful = without SD card)?
 
-where mine reports the same clamp with SpeedDis-.  SpeedDis is
-PCI_EXP_LNKCTL2_HASD, and as far as I can tell the quirk never looks at
-it; the only user in the tree is pcie-designware.c.  Firmware setting
-both the clamp and Hardware Autonomous Speed Disable looks like a
-deliberate pin rather than an incidental one.
+Thanks,
 
-I am aware that HASD is specified as disabling *hardware autonomous*
-speed changes and so does not literally forbid a software-initiated
-retrain, so this is just a heuristic about firmware intent.
-
-About the drive disappearing:
-
-The error path is
-
-	err:
-		pci_info(dev, "retraining failed\n");
-		pcie_set_target_speed(dev, PCIE_LNKCTL2_TLS2SPEED(oldlnkctl2), true);
-
-which reaches pcie_retrain_link(pdev, use_lt=true), whose last wait is
-
-	rc = pcie_wait_for_link_status(pdev, use_lt, !use_lt);
-
-With use_lt set that waits for the Link Training bit to clear (for
-training to stop) and not for DLLLA to come back.  So the restore can
-return having never confirmed the link recovered.  Since the quirk runs
-from pci_device_add(), before pci_scan_bridge_extend() creates the
-subordinate bus, a link that comes up shortly afterwards is never
-scanned and the device behind it is simply not there.  That would fit
-only booting sometimes better than anything about speed policy does.
-
-I could easily be wrong about this - I am just reading the code, and I
-came to the PCI core a few days ago via this one bug.
-
-Since you offered to test a diagnostic, here is one.  It only touches the
-err: block, which is identical in mainline and in the 7.0.14 code your
-backport is based on, so it should apply to your tree (it applied to
-v7.1.5 here with a -2 line offset):
-
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index b09f27f..e4fcdfb 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -126,7 +126,32 @@ int pcie_failed_link_retrain(struct pci_dev *dev)
- 	return ret;
- err:
- 	pci_info(dev, "retraining failed\n");
-+	{
-+		/* DIAGNOSTIC ONLY -- not for merging */
-+		u16 sta = 0, ctl2 = 0;
-+
-+		pcie_capability_read_word(dev, PCI_EXP_LNKSTA, &sta);
-+		pcie_capability_read_word(dev, PCI_EXP_LNKCTL2, &ctl2);
-+		pci_info(dev, "diag: pre ret=%d DLLLA=%d sta=%#06x ctl2=%#06x\n",
-+			 ret, !!(sta & PCI_EXP_LNKSTA_DLLLA), sta, ctl2);
-+	}
- 	pcie_set_target_speed(dev, PCIE_LNKCTL2_TLS2SPEED(oldlnkctl2), true);
-+	{
-+		/* DIAGNOSTIC ONLY -- not for merging */
-+		u16 sta = 0, ctl2 = 0;
-+		int i;
-+
-+		for (i = 0; i <= 100; i++) {
-+			pcie_capability_read_word(dev, PCI_EXP_LNKSTA, &sta);
-+			if (sta & PCI_EXP_LNKSTA_DLLLA)
-+				break;
-+			msleep(10);
-+		}
-+		pcie_capability_read_word(dev, PCI_EXP_LNKCTL2, &ctl2);
-+		pci_info(dev, "diag: post DLLLA=%d after %dms sta=%#06x\n",
-+			 !!(sta & PCI_EXP_LNKSTA_DLLLA), i * 10, sta);
-+		pci_info(dev, "diag: post ctl2=%#06x\n", ctl2);
-+	}
- 	return ret;
- }
-
-
-Expected output:
-
-- "diag: pre" gives the error the retrain returned and whether the
-  link was already down at that point.
-- "diag: post DLLLA=1 after <n>ms" would mean the link does come back,
-  just not before pci_device_add() returns and the bus below is
-  scanned.  That would point at the error path needing to wait for
-  DLLLA rather than only for the Link Training bit to clear.
-- "diag: post DLLLA=0 after 1000ms" would mean the link is genuinely
-  down and staying down, which is a different problem and
-  probably a worse one.
-
-One caveat: the poll loop waits up to a second in the error path, so it
-changes timing.  If the diagnostic build happens to boot reliably where
-the plain v3 build did not, that is also worth reporting.
-
-Best regards,
-Andreas Wild
+Lukas
