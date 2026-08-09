@@ -1,118 +1,202 @@
-Received: from mailout1.hostsharing.net (mailout1.hostsharing.net [83.223.95.204])
+Received: from mout-p-102.mailbox.org (mout-p-102.mailbox.org [80.241.56.152])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D66421C5F1B;
-	Sun,  9 Aug 2026 15:57:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.223.95.204
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 009E134887B;
+	Sun,  9 Aug 2026 20:04:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.152
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786291056; cv=none; b=s4DYJhAF5Y0V9EoKfnULTUJWF6HRbU7nAif2q2Q37OImMHrB+bxvUfgs4hEgMQ/gHZMl9l4bwPK0LN9gjQMxCTeq0JayeWVe61ZFZamvN07tHvJlljdZs+MXHEgeWRMUPPGaMsrsWZf7LK4IFfmdyeuG5wTEItzMpzR/udZBR7E=
+	t=1786305884; cv=none; b=Y+Vsgyh0ezPPHlkAZwGGJ4YOUbF4ZDh1WyiPL0BW0wup0hOoAYOCic+387bdJqt8fMFwRCIfhz+fAqiMHqsDtgG2DCI0PeQYms9JRC3Hy9pl9yRrRqIuOm/osIfTCq++VMhOJLCBJ9N7wyW+cUZa7oN56ha0MKHMisEFUdbgX3E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786291056; c=relaxed/simple;
-	bh=Zy1vgel1zUMweUYLVamNGU6I19RYrsIGKTEU6Gy754M=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=iR3NW6yZrc5VDZuFWr7OwpjkSGqM/I2j73Yz97By0pil3eHYxcEBaIVj9xhoxCx19QAG/pPi5sEQo1S/VPiSCy+gp1CLJF+XjT3i/11wNHg8XYnIgtu6aKOhJUTO3QZlpDqgUw0orVGWYR3YcKipwBdYaR5jxpcBhRzUHmidQI8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=83.223.95.204
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
-Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
+	s=arc-20240116; t=1786305884; c=relaxed/simple;
+	bh=B32I2jC2YoNZzrMUSuNEKwPuDw9B8MxYkRgONyYOcEY=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=o06pT6LO/ooqr+YHVEYjH0W3wqzMkAhiVawVB9pVwK1EoBHxA0F2B5sTKzFrh37Bfi90zZgd4XRf/prnf3hqx2wGa7SgS1c8LAIQNju2jkfk8jWKvq8Mk6VLLXgBuXs+pQCN7CxcMqibhLSA7bAEIvn1hAkuvO7X4MXBJQN8/ag=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=a2+CVD9L; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=se4mBIMA; arc=none smtp.client-ip=80.241.56.152
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="a2+CVD9L";
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="se4mBIMA"
+Received: from smtp2.mailbox.org (smtp2.mailbox.org [10.196.197.2])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
-	 client-signature ECDSA (secp384r1) client-digest SHA384)
-	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
-	by mailout1.hostsharing.net (Postfix) with ESMTPS id 1110B677;
-	Sun, 09 Aug 2026 17:57:23 +0200 (CEST)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-	id 0C2796035055; Sun,  9 Aug 2026 17:57:23 +0200 (CEST)
-Date: Sun, 9 Aug 2026 17:57:23 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Terry Bowman <terry.bowman@amd.com>
-Cc: Jonathan Cameron <jic23@kernel.org>, Dave Jiang <dave.jiang@intel.com>,
-	Alison Schofield <alison.schofield@intel.com>,
-	Vishal Verma <vishal.l.verma@intel.com>,
-	Davidlohr Bueso <dave@stgolabs.net>,
+	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mout-p-102.mailbox.org (Postfix) with ESMTPS id 4hJ8490swSzKvtw;
+	Sun, 09 Aug 2026 22:04:41 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
+	t=1786305881;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=Z93uE4/r1UQkwFumvu0mkUNxJAMlPsUl9RAgdSah1oQ=;
+	b=a2+CVD9LvOFjq6ld5g6/dYnu+lx57YFoGwPCawVTeKQYKG1RfLmZicGy9kHCSMM8KZvN4p
+	iTCcRbs+c3fJcyZlAvOk8ZKh93ONVPWYUOiHp4K58ujYoC0XOdvBkd/PL6Ye6dRnllw1wN
+	HGuAmql8nS4gChpRe7/rC/yjJdKYq/B3z/o1GiLTD3fglYTSLziSX313MG1ptUaWdvQdgl
+	VPxMHZbNZePVqiCjBF9tcFqphXobxx6k7LtXejnInrmG7RnhpE76KbMaZovOow1YDaV13f
+	EsozPhEgP6u/SAb51smrzCHTyy+Z168bdMBKmBkAlDdnnAZE1g8go/+NJNnYOw==
+From: Marek Vasut <marek.vasut+renesas@mailbox.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
+	t=1786305878;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=Z93uE4/r1UQkwFumvu0mkUNxJAMlPsUl9RAgdSah1oQ=;
+	b=se4mBIMAVxkevZPSBkxdkyBpnZpgek38D8uUunZBL77VOdeQ8nre5fXr7HlcCLifyxHhEl
+	ndkG3fZ3VMwb1lSAf0gv9v+ZwYiTQAcmvExmLOQn2GwQJ2+ZVefTMHix8helub7YjCjmCC
+	rveaXZKnFAD8QlBzEk2ItL20qM3F9AS/MRsgVzvw8KUgihZxlSEWGeSqUTWgn5LRIsfYv0
+	VTlbdXB4/CnuFl83mCVoTLhm7x99nHRRTG7C4cRKVWCLxOFOKX60voSOo42YbrjNQr6BtK
+	GIJRvP59RTdPCesJCTuTKvQuPu9c4sA+imWKagPRM/OURCNvuIHpN6glPaquqQ==
+To: linux-arm-kernel@lists.infradead.org
+Cc: Marek Vasut <marek.vasut+renesas@mailbox.org>,
+	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J . Wysocki" <rafael@kernel.org>,
-	Jonathan Corbet <corbet@lwn.net>, linux-cxl@vger.kernel.org,
-	Tony Luck <tony.luck@intel.com>, Borislav Petkov <bp@alien8.de>,
-	Hanjun Guo <guohanjun@huawei.com>,
-	Mauro Carvalho Chehab <mchehab@kernel.org>,
-	Shuai Xue <xueshuai@linux.alibaba.com>, Len Brown <lenb@kernel.org>,
-	Ira Weiny <iweiny@kernel.org>, Li Ming <ming.li@zohomail.com>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Ben Cheatham <Benjamin.Cheatham@amd.com>,
-	Richard Cheng <icheng@nvidia.com>,
-	Robert Richter <rrichter@amd.com>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v19 02/14] cxl/ras: Fix cxl_rch_get_aer_severity() wrong
- severity register
-Message-ID: <anijY3eTVWSqHLxh@wunner.de>
-References: <20260803221810.3685703-1-terry.bowman@amd.com>
- <20260803221810.3685703-3-terry.bowman@amd.com>
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Geert Uytterhoeven <geert+renesas@glider.be>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Marc Zyngier <maz@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	devicetree@vger.kernel.org,
+	linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-renesas-soc@vger.kernel.org
+Subject: [PATCH v5] arm64: dts: renesas: r8a779g0: Add GICv3 ITS and update PCIe nodes
+Date: Sun,  9 Aug 2026 22:03:12 +0200
+Message-ID: <20260809200429.843212-1-marek.vasut+renesas@mailbox.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260803221810.3685703-3-terry.bowman@amd.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-MBO-RS-ID: 64ff6ec87305477dde9
+X-MBO-RS-META: c7cjzmhzmepqoji4ioca17k4ik4ouxto
 
-On Mon, Aug 03, 2026 at 05:17:58PM -0500, Terry Bowman wrote:
-> +++ b/drivers/cxl/core/ras_rch.c
-> @@ -94,11 +94,11 @@ static bool cxl_rch_get_aer_info(void __iomem *aer_base,
->  static bool cxl_rch_get_aer_severity(struct aer_capability_regs *aer_regs,
->  				     int *severity)
->  {
-> -	if (aer_regs->uncor_status & ~aer_regs->uncor_mask) {
-> -		if (aer_regs->uncor_status & PCI_ERR_ROOT_FATAL_RCV)
-> -			*severity = AER_FATAL;
-> -		else
-> -			*severity = AER_NONFATAL;
-> +	u32 uncor_status = aer_regs->uncor_status & ~aer_regs->uncor_mask;
-> +
-> +	if (uncor_status) {
-> +		*severity = (uncor_status & aer_regs->uncor_severity) ?
-> +			     AER_FATAL : AER_NONFATAL;
->  		return true;
->  	}
->  
+This SoC implements GIC600 with GICv3 ITS and PCIe host mode on this
+SoC can use it. Add GIC ITS node into GIC node, update interrupt-map
+and add msi-map into PCIe controller node.
 
-Independently of this patch, I'm wondering why the severity is inferred
-from the AER registers.  I would assume that the severity always equals
-the message received by the RCEC (ERR_COR, ERR_NONFATAL or ERR_FATAL).
+The GIC ITS does have master interface to issue transactions to RAM.
+The interface does support cacheable transactions, however, it does
+not support shareable attribute, because the AXI port signals are tied
+to inactive in this implementation. Therefore, add "dma-noncoherent"
+DT property into the GIC ITS subnode.
 
-So the severity could be passed to cxl_handle_rdport_errors() from its
-callers:  cxl_cor_err_detected() would pass AER_CORRECTABLE and
-cxl_error_detected() would pass ERR_NONFATAL or ERR_FATAL (depending
-on the "state" variable).
+The GIC redistributor does not have cacheable/shareable, therefore
+add "dma-noncoherent" DT property into the GIC node.
 
-cxl_handle_rdport_errors() would no longer need to call
-cxl_rch_get_aer_severity(), so the latter could be removed.
+Co-developed-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Signed-off-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
+---
+NOTE: This would not be possible without prior work from Shimoda-san
+      https://lore.kernel.org/all/20240214052144.1966569-1-yoshihiro.shimoda.uh@renesas.com/
+---
+Cc: "Krzysztof Wilczyński" <kwilczynski@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Catalin Marinas <catalin.marinas@arm.com>
+Cc: Conor Dooley <conor+dt@kernel.org>
+Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+Cc: Krzysztof Kozlowski <krzk+dt@kernel.org>
+Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>
+Cc: Manivannan Sadhasivam <mani@kernel.org>
+Cc: Marc Zyngier <maz@kernel.org>
+Cc: Rob Herring <robh@kernel.org>
+Cc: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Cc: devicetree@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org
+Cc: linux-doc@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+Cc: linux-renesas-soc@vger.kernel.org
+---
+V2: No change
+V3: Add Co-developed-by to credit Shimoda-san
+V4: No change
+V5: Rebase on current next-20260807
+---
+ arch/arm64/boot/dts/renesas/r8a779g0.dtsi | 31 ++++++++++++++++-------
+ 1 file changed, 22 insertions(+), 9 deletions(-)
 
-Am I missing something?  Is a scenario ever conceivable where the RCEC
-receives a message with different severity than what is inferred from
-the registers by cxl_rch_get_aer_severity()?
+diff --git a/arch/arm64/boot/dts/renesas/r8a779g0.dtsi b/arch/arm64/boot/dts/renesas/r8a779g0.dtsi
+index c25642a620db8..dba46499b5e9c 100644
+--- a/arch/arm64/boot/dts/renesas/r8a779g0.dtsi
++++ b/arch/arm64/boot/dts/renesas/r8a779g0.dtsi
+@@ -809,6 +809,7 @@ pciec0: pcie@e65d0000 {
+ 			resets = <&cpg 624>;
+ 			reset-names = "pwr";
+ 			max-link-speed = <4>;
++			msi-parent = <&its>;
+ 			num-lanes = <2>;
+ 			#address-cells = <3>;
+ 			#size-cells = <2>;
+@@ -819,10 +820,10 @@ pciec0: pcie@e65d0000 {
+ 			dma-ranges = <0x42000000 0 0x00000000 0 0x00000000 1 0x00000000>;
+ 			#interrupt-cells = <1>;
+ 			interrupt-map-mask = <0 0 0 7>;
+-			interrupt-map = <0 0 0 1 &gic GIC_SPI 449 IRQ_TYPE_LEVEL_HIGH>,
+-					<0 0 0 2 &gic GIC_SPI 449 IRQ_TYPE_LEVEL_HIGH>,
+-					<0 0 0 3 &gic GIC_SPI 449 IRQ_TYPE_LEVEL_HIGH>,
+-					<0 0 0 4 &gic GIC_SPI 449 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-map = <0 0 0 1 &gic 0 0 GIC_SPI 449 IRQ_TYPE_LEVEL_HIGH>,
++					<0 0 0 2 &gic 0 0 GIC_SPI 449 IRQ_TYPE_LEVEL_HIGH>,
++					<0 0 0 3 &gic 0 0 GIC_SPI 449 IRQ_TYPE_LEVEL_HIGH>,
++					<0 0 0 4 &gic 0 0 GIC_SPI 449 IRQ_TYPE_LEVEL_HIGH>;
+ 			snps,enable-cdm-check;
+ 			status = "disabled";
+ 
+@@ -856,6 +857,7 @@ pciec1: pcie@e65d8000 {
+ 			resets = <&cpg 625>;
+ 			reset-names = "pwr";
+ 			max-link-speed = <4>;
++			msi-parent = <&its>;
+ 			num-lanes = <2>;
+ 			#address-cells = <3>;
+ 			#size-cells = <2>;
+@@ -866,10 +868,10 @@ pciec1: pcie@e65d8000 {
+ 			dma-ranges = <0x42000000 0 0x00000000 0 0x00000000 1 0x00000000>;
+ 			#interrupt-cells = <1>;
+ 			interrupt-map-mask = <0 0 0 7>;
+-			interrupt-map = <0 0 0 1 &gic GIC_SPI 456 IRQ_TYPE_LEVEL_HIGH>,
+-					<0 0 0 2 &gic GIC_SPI 456 IRQ_TYPE_LEVEL_HIGH>,
+-					<0 0 0 3 &gic GIC_SPI 456 IRQ_TYPE_LEVEL_HIGH>,
+-					<0 0 0 4 &gic GIC_SPI 456 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-map = <0 0 0 1 &gic 0 0 GIC_SPI 456 IRQ_TYPE_LEVEL_HIGH>,
++					<0 0 0 2 &gic 0 0 GIC_SPI 456 IRQ_TYPE_LEVEL_HIGH>,
++					<0 0 0 3 &gic 0 0 GIC_SPI 456 IRQ_TYPE_LEVEL_HIGH>,
++					<0 0 0 4 &gic 0 0 GIC_SPI 456 IRQ_TYPE_LEVEL_HIGH>;
+ 			snps,enable-cdm-check;
+ 			status = "disabled";
+ 
+@@ -2148,11 +2150,22 @@ ipmmu_mm: iommu@eefc0000 {
+ 		gic: interrupt-controller@f1000000 {
+ 			compatible = "arm,gic-v3";
+ 			#interrupt-cells = <3>;
+-			#address-cells = <0>;
++			#address-cells = <2>;
++			#size-cells = <2>;
+ 			interrupt-controller;
+ 			reg = <0x0 0xf1000000 0 0x20000>,
+ 			      <0x0 0xf1060000 0 0x110000>;
+ 			interrupts = <GIC_PPI 9 IRQ_TYPE_LEVEL_HIGH>;
++			dma-noncoherent;
++
++			ranges = <0x0 0x0 0x0 0xf1000000 0x0 0x200000>;
++
++			its: msi-controller@40000 {
++				compatible = "arm,gic-v3-its";
++				reg = <0x0 0x40000 0x0 0x20000>;
++				dma-noncoherent;
++				msi-controller;
++			};
+ 		};
+ 
+ 		gpu: gpu@fd000000 {
+-- 
+2.53.0
 
-And a related question:  linux-next commit 21963e6e4e04 ("PCI/AER:
-Support Advisory Non-Fatal Errors") enables support for Non-Fatal
-Errors which are signaled with an ERR_COR message.
-
-These so-called Advisory Non-Fatal Errors set one bit in the Correctable
-Error Status Register (Advisory Non-Fatal Error Status, bit 13) and
-additionally one or more bits in the Uncorrectable Error Status Register
-(see the commit for details).
-
-cxl_rch_get_aer_severity() is not able to cope with such errors and
-will incorrectly infer that the severity is AER_NONFATAL.
-
-Now I *think* this is not a problem because Advisory Non-Fatal Errors
-are masked by default and the commit only unmasks them on regular PCI
-devices, not in the RCRB of a CXL device.  Only once bit 13 in the
-Correctable Error Mask Register is cleared in the RCRB will
-cxl_rch_get_aer_severity() fail.  Right?
-
-Thanks,
-
-Lukas
