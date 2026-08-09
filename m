@@ -1,209 +1,110 @@
-Received: from mail-qt1-f175.google.com (mail-qt1-f175.google.com [209.85.160.175])
+Received: from mail-pj1-f48.google.com (mail-pj1-f48.google.com [209.85.216.48])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9927C3033D6
-	for <linux-pci@vger.kernel.org>; Sun,  9 Aug 2026 03:34:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.160.175
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786246492; cv=pass; b=RkE6vYpwq+EExvNaizxJpqc6ARxLp+faQEP3lk7tXafTFZc/ihRS/aD2NNh2pKNb+YfLH3tbIrVxrzUpxHGIWPlpb4cWnL6GpiUBKX/Mo0DocRTtBtsW0d6gie9VyLBXg3UA+9iaXvgWuFHudyDDQw5u07obEuxbD9Xon+QAnjM=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786246492; c=relaxed/simple;
-	bh=Bf/vujSfVqMLMaDqbzEpJ3OJOm+OAXyoCa73VkkDcCs=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=WPPHJPqryJ50LyAeZrhTZTvB6CQioVdpE+pYWoLDADWGF6sCZoJL3Z0jQ4nhe46duSh55i8XNI7zKEswAge7EHoucFZh+t1VIuRPCiTyZVhk4tgd6q4ZKaUVd3W2lcAdETjh9WpoXOBCB0OTvUlI5dup3eefPmgArweCZEFwPCI=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=eVjuPi0q; arc=pass smtp.client-ip=209.85.160.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B4FA3286A4
+	for <linux-pci@vger.kernel.org>; Sun,  9 Aug 2026 04:59:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.48
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1786251596; cv=none; b=ffnoKgk8Iwi4M8+6lWGTNOHUaB7Fz4A9NtvwfZVmgEj16UgYV1nmOny7DP15f+JVo2BzzmsWdVztNZkIvKfmRP20wOuhKqMRTmWBwNCccxE1Y7+QWByFKt9su4gxqwgDUPns5NcxPDTc9wmPf4XiKvCDrsSpuZd+JoU4saQNjMI=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1786251596; c=relaxed/simple;
+	bh=Dy2SW52S6wIHzgh5Fk0hmevYpwcxuvjho96umBZ0ZNU=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=iDELB7HzZfaSPNTFf2suj+xqdpdgMECigoy3ZnSXeOKcxpf8zYKHPuyQevO1z3njnX6BL89pPWcf7upf6uuTAXaJKsuFaFOWSlVhIeDJHAKdDd1PdpJ0gFyzLzxN2j5d90oOXJXcvOkSOLi1nRwcAehAnH8T3Wpdyelu6dYpkZU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=kpNW5aLm; arc=none smtp.client-ip=209.85.216.48
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="eVjuPi0q"
-Received: by mail-qt1-f175.google.com with SMTP id d75a77b69052e-51c05dcdf49so8760311cf.0
-        for <linux-pci@vger.kernel.org>; Sat, 08 Aug 2026 20:34:50 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1786246489; cv=none;
-        d=google.com; s=arc-20260327;
-        b=Iuxp+KNFHpjok2NV+Cn/rQM8CYiJOHUf2ordP6tVe+qHHXBBq8QrjzFvMSpmrTj/Vl
-         fECgBYMRBx2jR/4utchyYQQCgW3vQERbnQgtLWvlCYKyHCcH+IOu6HGaLIVCyhJkBmWm
-         MOUD2zQN46Bm5nArPgEBufQWf8HGPPDchG++Pu5/rQoExRnBcxm66WJNpnjH4tVp3AAm
-         2lcypTjDuEbVxBxmvFUmN0CRfI1oop/ONZcs4ORQjFH6fqcIU9ArAl/P+m1503vs4xUB
-         hsIJufKhSj4EuFDAKuqrbq9g3w3quMe15Vqc1JO1fJfGQ2rSIY41UDasMD1KAu3QkhCj
-         RGBw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=9IO4AifK8fBY15try5faT6rvnEHQf7Lfuh0u8UNGjhA=;
-        fh=CRf9rTm497KkSv3V6FWQE3Gss6S2jRUA16yDkeWYb8Q=;
-        b=lTJINwyRfJ5iR8/3Hk0lQ4hRFdsQDqlTASnL++/Dectf6z4/TfD/pPbEOIF5e3Rkct
-         4gigkH/jd89XkcqLPHCza1sNBlO2LWtKy4o6vMuPXcLO2MD/03EXU9+yetGz2YID9a5L
-         Ou2rpi85r8MRz2EpahxUBEAb6OkVA9yaO/63ikJAljF38Y79xzAvBt/x5iqvsK+QxD02
-         y38gdeOFCJCtIUWGlzjw8Y5Voa9cARCuJo9GpeTRPpg7GsXyENZenJSI409e+9+lyran
-         Pt7E6FZqfjkL7/9gVO+bgKh5RTwUj63yNzM+kixrKZgS9nw2kUiDEv7O/baH/3OJoK3v
-         uVGA==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="kpNW5aLm"
+Received: by mail-pj1-f48.google.com with SMTP id 98e67ed59e1d1-3856d6fbcb3so679652a91.2
+        for <linux-pci@vger.kernel.org>; Sat, 08 Aug 2026 21:59:54 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1786246489; x=1786851289; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=9IO4AifK8fBY15try5faT6rvnEHQf7Lfuh0u8UNGjhA=;
-        b=eVjuPi0qMMHdVTlb+P/7kQue7pSpt6uStedzwkfr0gMwbYVMKqh67RACnOGImW+nOi
-         R7o7xS+P3dyZrE2khkErtC5gUvEjlk8IW1sCFbamHPaWxwtY9WjSseZPEcxCv9Nh6czt
-         FWoFTATBVnSi9kHO5wozx+K2jkv92UAS6Fo2EM0JbQAaZ6gwTQlX4uUKASUXWBAZgFQD
-         YpELJ//0Nard/dmMsxrFsqj4q8OTwF0TmIqIlTNJ2KL0N2cT3dnYQqVRX165yjvHdGRm
-         TYpqk6Wngm8UR8sWsjFYLUv+utyO5sAw4DVwdRVKktTRHEVsdn5cPf2TF2Kazti8SkZ4
-         GSsw==
+        d=gmail.com; s=20251104; t=1786251594; x=1786856394; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=aOAGGIInYSgX9juJ4EdGcal8nKqpzOwqusrNGyQRlsA=;
+        b=kpNW5aLmA5a0kDJUD7IpqmPFjW5E0hXmn38AEov/b9TBCANhb/ydObMuiq81/D9zpT
+         apsKWatREBieefiB3C9lNKZ76XxcFwKoB9Hr+gVuE/Rg31Czueh0QoJCMe4if9+j+qMY
+         ggo0LAqSeAEQKiDw3BYJzbb0wKgryrUKa97RIzgc0EiftKMv9GdhNq1O6B/QniJCBZcx
+         Z3+ioe7NHNk0jqjdCbNbn1I/1Ro/9tTkrgVZh2OBEnL+kpUauBKVzbpSjvI5cPxjXxJZ
+         aLAdKejLC4H7L/TCnkTZjVsNNrkKLvlW8h5hedRz6gx6k/hRsXtL1YdNgHJiSX7H3eum
+         c8QA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786246489; x=1786851289;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=9IO4AifK8fBY15try5faT6rvnEHQf7Lfuh0u8UNGjhA=;
-        b=It2vT6K83W0GOE6pnog4D1yPoJYo4h9TSCNcWPlwoo2QXxGw6/AQsGHPxPVpoUcWNZ
-         iG2ZlbROAbhA91Np4xgq1YYHaxCJo3fwMXKao4vjz/UG7RQmmsZnp4ahcnPbrkUSZh3D
-         hTDCduh95kjq7o3KeKmPme1o0AL3W8PFI1KS/sw5Z1QCUiy3zkZoTi8mx6G25C2UpXZB
-         TUkQ5BndI1CCHZrpeBXTNL55NADzY7fEbWBR6XFzbQ6rX41OAYwpEzv7NTP9lwEahjIN
-         lsMs/Ij9oyVbjXP3dUdVb3h4E/NUBi4vgUoc5cT0Z2yKNHmdzs7aEezo70PIdvjwZvZH
-         twYQ==
-X-Forwarded-Encrypted: i=1; AHgh+RpcCUqWxNJVETqGt2NOKTYTRSq6O0KH7RHm4VHeH4/mTacGpqt1It1N+0B2xWogf41kuhyKrOy0Cqk=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzUlP4qSl25o8aG8x8GhDZvAwKXfsP1Edb2S2VP2oXzrf7Fm4t/
-	vtqdudQmZYmpXcQ8GIO75z2hrySP8mCkBT0J62CG2BmSLPzRNwFCCBxkOlEdhk6ElH+ZWdYsL5d
-	RumN2t4dikBdRNuCzHxf+VwPxdm/F604VOzpI
-X-Gm-Gg: AR+sD13kc4M5BVg7ICYiouMFel7MCChWPyuD098QlEq12lrO7ZDWQviwW8dmqa1CdOL
-	ccS4EldqTSnLcTPedV6TJmwiaxEs0lZ9Hfj9cpZ307Jm24p21YOnRKwzzhKfB1wCUtfk0ynYnp1
-	Ir+usOR85dqnX++y4f40k07+FSFjRxx6wZTSCJ8vbwy8+tBOHtky2tglaKhwdykIc+uXe/X8nV0
-	Vch35r3LUH8Bdd27+JbgjioG/HEAoriHGUel/nzt4B/+yJm2tOZbhGWwP/iwRegBgctMv1iePHI
-	fFXrKnSDZx421y6iVT5XDk1bZ+y+jBqTWuKUo8hOoFFutAjenuijtaNyxf0H6swVW3R4VHySo0/
-	PC1LwBf5bDG/YDQ==
-X-Received: by 2002:ac8:5d4b:0:b0:51c:849b:86b with SMTP id
- d75a77b69052e-52ce620024cmr339604871cf.43.1786246489424; Sat, 08 Aug 2026
- 20:34:49 -0700 (PDT)
+        d=1e100.net; s=20251104; t=1786251594; x=1786856394;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=aOAGGIInYSgX9juJ4EdGcal8nKqpzOwqusrNGyQRlsA=;
+        b=WW10qR3Yk6B16RN8wzvj9OCEJ6N4uErrUicQQXZ6YZ5KIM1ezhmIeMmDAvu8rkTXNG
+         2RGhfS9OasrkN4LoJR1XCZLSylYfnih9YDe2H8aYo75sfbySdyFFriGroj1/OLYaFIkc
+         U4MYD8qZAhLOFqlkY/u6+UHClCGWQJfOqS/DAhE3j+MM8UlNwOAtacCI9RVLjOi+KXtW
+         CSjku9POdGL73+kHnHh2rNdkT8Of5LVHhfLTITwpcCFDn93RRO3LOHTTaXYOAlNscREK
+         MhZgqBaXZGHgBQoR/415XEZZJHV7+XHOlfTmkW14tAmATljtKdy78vKfy9Ki3ANPj+uN
+         HkVw==
+X-Gm-Message-State: AOJu0YyC/I0HPq9tVGrBKBQSPCqxpmgq1WarUeED3Jxw0Y+ZywDQf3PY
+	wcLjHU4DfplZtCp4dNiEdR2oZrLXuPZ0dVVc3HYEuPK1G7i2+ifFM54N
+X-Gm-Gg: AR+sD12Aw4/Hs6RhKiJsdV0hsmmmxDTA84dFXbg3i8sQFq0Y2SfnAyqu8pRXcQwjeyY
+	tkFN9J05JJkTQgyhk8y4EO/dzGKqKO5qGp/su9lmv7kpFPDjJYmOBSKp0dkRkI2BO4eAN+Hep71
+	B2A9dfYdaWzKTrBN+C8RRu6ykEwp2rpE4AyMdWPptG8SJNmOZzvDYEkWmtUG7qYFR/rZhVGNEPm
+	ERTMmXVvKC9c5HwXWsM4Y+TSVnXsVBv2xmtkFSl60Q3YOB2GP37kepDAxGZ7/sTH44vrRQmx6XZ
+	4qfkruK41ji75wK9bx8qLBI2LKnV7+zN05cSYE2x8mcJJW9/MQPTDN/ev7IFVFKvl4Hnt3Hr80q
+	BIiwn8Ya908mWIfXYeCC9VHtLS13dUu8mYVZNKMIss1jngLj8LGOPLlJeORZDe5u5GgMHnEtTZ4
+	03UTA0eQsEre1nHtZO6qE3G7+sTJ53a4FGsW1epoVr2kYmFzMJJD0kuowEE9FcCP2HUMYrel24s
+	S/RsKw0A8FE8q+N1IAgKGR/YROo8AVsQBhNmsS7JKC1
+X-Received: by 2002:a17:90b:5444:b0:381:1f51:1ff0 with SMTP id 98e67ed59e1d1-392821fc107mr10923812a91.2.1786251593992;
+        Sat, 08 Aug 2026 21:59:53 -0700 (PDT)
+Received: from deepanshu-kernel-hacker.. ([2405:201:682f:383f:746c:8928:e990:23a8])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-315bec128a0sm30150480eec.25.2026.08.08.21.59.50
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 08 Aug 2026 21:59:53 -0700 (PDT)
+From: Deepanshu Kartikey <kartikey406@gmail.com>
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Deepanshu Kartikey <kartikey406@gmail.com>,
+	syzbot+7134530b25073b4ef373@syzkaller.appspotmail.com
+Subject: [PATCH] PCI: sysfs: Reject unaligned resource I/O port accesses
+Date: Sun,  9 Aug 2026 10:29:46 +0530
+Message-ID: <20260809045946.15638-1-kartikey406@gmail.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260806214808.1202819-1-derekjohn.clark@gmail.com>
- <anWdGzfD7HxglsOB@wunner.de> <CAFqHKTm_dHnSP-ceJhbsm3Zsiif+vxM-xqK27b4eXQGQo1Y7Eg@mail.gmail.com>
- <anbl6j9DWiyVQLqS@wunner.de>
-In-Reply-To: <anbl6j9DWiyVQLqS@wunner.de>
-From: Derek John Clark <derekjohn.clark@gmail.com>
-Date: Sat, 8 Aug 2026 20:34:38 -0700
-X-Gm-Features: AUfX_mweyjkX-F38sOyUWrypLnlW8oBVW_ltzBHFvQ_K6j2MYCQhsWjJcW5n_4Y
-Message-ID: <CAFqHKT=ZzWRdnNCixY5BeLsVE2JUhfmPSNnpw5TFjzu76AocrA@mail.gmail.com>
-Subject: Re: [PATCH v2] pci: quirks: Disable native PCIe hotplug on MSI Claw
- A8 root bridge
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, 
-	"Pierre-Loup A . Griffais" <pgriffais@valvesoftware.com>, linux-pci@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-On Sat, Aug 8, 2026 at 1:16=E2=80=AFAM Lukas Wunner <lukas@wunner.de> wrote=
-:
->
-> On Fri, Aug 07, 2026 at 05:31:04PM -0700, Derek John Clark wrote:
-> > [   25.686128] rtsx_pci 0000:c2:00.0: pciehp: pdev subsystem vendor ID =
-mismatch
-> [...]
-> > reg=3D0x525a10ec expected=3D0x14af1462
->
-> The subsystem vendor ID was 0x1462 (MSI) when the card reader was
-> enumerated on boot and it is 0x10ec (Realtek) on resume.
->
-> Likewise the subystem device ID was 0x14af on boot, 0x525a on resume.
->
-> It's another bug in the MSI BIOS (in addition to marking the Root Port
-> hotplug-capable):  The BIOS neglected to re-initialize the subsystem
-> vendor/device ID registers in config space on resume to the same
-> values that it set on boot.  The card reader was likely reset while
-> going through the system sleep transition and its config space
-> thus needs to be re-initialized.
->
-> What happens is that pciehp marks the card reader disconnected
-> because it assumes that it was replaced during system sleep.
-> It then synthesizes a Presence Detect Changed event:
->
-> https://elixir.bootlin.com/linux/v7.2-rc6/source/drivers/pci/hotplug/pcie=
-hp_core.c#L300
->
-> So the pciehp interrupt thread pciehp_ist() will remove the
-> rtsx_pci driver and de-enumerate the device.
->
-> Replacing or removing PCIe devices during system sleep happens
-> all the time (e.g. with Thunderbolt) and we haven't seen issues
-> with regards to that.  The likelihood is higher that the lockup
-> is caused by rtsx_pci.
->
-> Maybe rtsx_pci_remove() blocks somewhere and prevents forward
-> progress of the resume transition.  In particular, it calls
-> pm_runtime_get_sync() and cancel_delayed_work_sync(), which are
-> blocking calls, i.e. they wait for something else to happen.
-> You could try commenting those calls out and see if it avoids
-> the lockup:
->
-> https://elixir.bootlin.com/linux/v7.2-rc6/source/drivers/misc/cardreader/=
-rtsx_pcr.c#L1608
+pci_resource_io() validates that off+count stays within the BAR's
+range but never checks that the resulting port is aligned to the
+access size. A pwrite64()/pread64() on a resourceN file with an odd
+offset and count=2 or count=4 reaches outw()/outl() with a misaligned
+address. On arm64 this becomes a store/load to a Device-memory
+mapping (PCI_IOBASE + port), which architecturally requires natural
+alignment, causing an alignment fault and kernel oops.
 
-This was good instinct. I was able to drill down and find
-approximately where it is hanging.
+Reject misaligned accesses before they reach the low-level accessor.
 
-rtsx_pci_remove() ->mfd_remove_devices() -> mfd_remove_devices_fn() ->
-platform_device_unregister() -> platform_device_del() -> device_del()
--> bus_remove_device() -> device_release_driver() ->
-device_release_driver_internal() -> __device_release_driver() ->
-device_remove()
+Reported-by: syzbot+7134530b25073b4ef373@syzkaller.appspotmail.com
+Closes: https://syzkaller.appspot.com/bug?extid=7134530b25073b4ef373
+Signed-off-by: Deepanshu Kartikey <kartikey406@gmail.com>
+---
+ drivers/pci/pci-sysfs.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-In device_remove() (drivers/base/dd.c) it gets past
-device_remove_groups() and hangs before completing this if block:
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 5ec0b245a69b..72f0404a34e9 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -1175,6 +1175,9 @@ static ssize_t pci_resource_io(struct file *filp, struct kobject *kobj,
+ 	if (port + count - 1 > pci_resource_end(pdev, bar))
+ 		return -EINVAL;
+ 
++	if (!IS_ALIGNED(port, count))
++		return -EINVAL;
++
+ 	switch (count) {
+ 	case 1:
+ 		if (write)
+-- 
+2.43.0
 
-if (dev->bus && dev->bus->remove)
-    dev->bus->remove(dev);
-else if (dev->driver->remove)
-    dev->driver->remove(dev);
-
-After this logging stops.
-
-- Derek
-
-
-> Another possibility is a crash due to a NULL pointer deref or
-> GPF somewhere in that driver.  This is pretty difficult to debug
-> if there's no possibility to see any dmesg output.
-
-> Even if we manage to find the root cause of the lockup, as long as
-> the BIOS isn't fixed, the card reader will always be de-enumerated
-> and re-enumerated on resume and consequently the card will briefly
-> disappear.  This will make it impossible to use the card as root
-> filesystem.
-
-I agree. Even if we were to convince them to fix it, there are plenty
-of devices in the wild that will likely never get the BIOS update
-since MSI isn't using LFVS for this device. (I'm not sure if they do
-that for any device)
-> > I've been using a SanDisk Ultra 32GB microSDHC UHS-I Card. And yes, it
-> > only happens when the card is present.
->
-> If you go to sleep and resume without SD card, do you then see in dmesg
-> that the card reader was de-enumerated and re-enumerated?  Normally
-> there should be at least a "Card not present" / "Card present" message
-> from pciehp, if it sensed a replaced device.  ("Card" refers to PCIe card=
-,
-> not SD card.)
-
-i get card not present, then card present, then link up.
->
-> Also, what's the subsystem vendor/device ID as seen with lspci after
-> a successful system sleep transition (successful =3D without SD card)?
-
-it reflects the Realtek device VID/PID. I also tested resume after the
-1 cycle with it re-inserted and it works fine after the first cycle,
-presumably because the device id matches on the second run and beyond
-
-Thanks,
-Derek.
-
-> Thanks,
->
-> Lukas
