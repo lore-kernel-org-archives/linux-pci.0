@@ -1,99 +1,99 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mailout3.hostsharing.net (mailout3.hostsharing.net [144.76.133.104])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F3F001F16B
-	for <linux-pci@vger.kernel.org>; Sun,  9 Aug 2026 05:16:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4829A3911BC;
+	Sun,  9 Aug 2026 06:30:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=144.76.133.104
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786252614; cv=none; b=q1ZVMs1lI+MmfsoET98FkwHi2YSJtw4tHbAIyYwRaFeG5Ux1xf+1CjBY4GhjEnY69HdykyLGodek0YDHqG30t5Aw7uVxLO0Pr6PSXymkaMwU9tMaw/7PXQftXa4gbsbCng62f0T7TPPohsXpjInQTdWM+f1zmTJyoSV0JVdn1Xs=
+	t=1786257010; cv=none; b=tS/6bQQ5Qf0tV/DrUp/IV4ns1B4lv6Jk8WuePS/fMKx2S3pspOa9sBOV3+y9WsnKxXnwWZznQF/JpAWLXnKrGUAgcVo1OCrOD8gRUDRdmLG9dMPu/ALgT83Z0d7tSsZtxnIsMYEXuRlVExcYdnd8IOLuLlDjNL/2Cb+bmPjCmZY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786252614; c=relaxed/simple;
-	bh=e3NXT56jov/YXHNllaRe/Frdpa4+K+yN9wf/iOO4i+Y=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=IDLn7mu2yWHbyDSBZHaec2u5nvX2+2YujXJR3csRQlEQ6x3wo4ZLQL+aap1l5wIFvsDkG2H6f5Vegjy8qTDf7dKmv9SzO2zpCrAdcdQs65rLyBGqUGVkakxNOgoSwPJ8/Q+ffFaTJV4R6aYcdJs1u9KMLE5fhUB583PdWqo0KrY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=F5BsQ9X8; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="F5BsQ9X8"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 36BA31F000E9;
-	Sun,  9 Aug 2026 05:16:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786252612;
-	bh=g/SrY+628knRzdMLqZmaKm1TLrfle2PsxZtWARRaZCo=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=F5BsQ9X8xVgquUXTDt6e+NMkvk4SPzvapj0oAUBpQ5x6uRp95BsERS+lhvjt9/xzv
-	 vBya+IItO6seV8wdRrVzuR/uteNCuxWcPYvrACdSt6TNOXTVlGPR2bwFUYOHJ5IQmr
-	 JrewU45ZkaHrdS2+CSwncOOrYSKmFcBZqihYe3FS83vG5fku7R2QWFVw/YZO/2rCoA
-	 xLey7kt8d/YN5MirEWj85ZQae7RmeH8d9CrUGX5yUARvOAQ5V0THjqneg2D/GpCp1Q
-	 MJSPzRbjaOY7psGlO4vgjeG7ab2hRcNpUA6TrZzSB1CYXZbFVHil5aAr6Sshx7xF7y
-	 vii8eBpX8Pd2Q==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] PCI: sysfs: Reject unaligned resource I/O port accesses
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Deepanshu Kartikey" <kartikey406@gmail.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260809045946.15638-1-kartikey406@gmail.com>
-References: <20260809045946.15638-1-kartikey406@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Sun, 09 Aug 2026 05:16:51 +0000
-Message-Id: <20260809051652.36BA31F000E9@smtp.kernel.org>
+	s=arc-20240116; t=1786257010; c=relaxed/simple;
+	bh=GpkzSxGnkF7y7Fgqr25lG8BAFcc7bBpNvHUNc0MUHXs=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Htxw1G5NlCbuNt4zIoYjSGAjmAfVMhAZwHDLEhGguucnDoRP7WSizZYUFbjxtZJ15xKXkEzh6qUsBoY6csTtfGgmes4TatPxFLhGkQujL5CXNkMtlH0T4okvJem1Zi83EyyiuiKGNKvKbiH9Drc9kaJUO70W2Z/yRUKL832bS9Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=144.76.133.104
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
+Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
+	 client-signature ECDSA (secp384r1) client-digest SHA384)
+	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
+	by mailout3.hostsharing.net (Postfix) with ESMTPS id 2F3EBC30;
+	Sun, 09 Aug 2026 08:22:04 +0200 (CEST)
+Received: by h08.hostsharing.net (Postfix, from userid 100393)
+	id EBA73600D16B; Sun,  9 Aug 2026 08:22:03 +0200 (CEST)
+Date: Sun, 9 Aug 2026 08:22:03 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Derek John Clark <derekjohn.clark@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"Pierre-Loup A . Griffais" <pgriffais@valvesoftware.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] pci: quirks: Disable native PCIe hotplug on MSI Claw
+ A8 root bridge
+Message-ID: <angci4oGyGFtvbSQ@wunner.de>
+References: <20260806214808.1202819-1-derekjohn.clark@gmail.com>
+ <anWdGzfD7HxglsOB@wunner.de>
+ <CAFqHKTm_dHnSP-ceJhbsm3Zsiif+vxM-xqK27b4eXQGQo1Y7Eg@mail.gmail.com>
+ <anbl6j9DWiyVQLqS@wunner.de>
+ <CAFqHKT=ZzWRdnNCixY5BeLsVE2JUhfmPSNnpw5TFjzu76AocrA@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAFqHKT=ZzWRdnNCixY5BeLsVE2JUhfmPSNnpw5TFjzu76AocrA@mail.gmail.com>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [Low] The `IS_ALIGNED()` macro is invoked with a user-controlled argument=
- (`count`) that is not guaranteed to be a power of two.
---
+On Sat, Aug 08, 2026 at 08:34:38PM -0700, Derek John Clark wrote:
+> This was good instinct. I was able to drill down and find
+> approximately where it is hanging.
+> 
+> rtsx_pci_remove() ->mfd_remove_devices() -> mfd_remove_devices_fn() ->
+> platform_device_unregister() -> platform_device_del() -> device_del()
+> -> bus_remove_device() -> device_release_driver() ->
+> device_release_driver_internal() -> __device_release_driver() ->
+> device_remove()
+> 
+> In device_remove() (drivers/base/dd.c) it gets past
+> device_remove_groups() and hangs before completing this if block:
+> 
+> if (dev->bus && dev->bus->remove)
+>     dev->bus->remove(dev);
+> else if (dev->driver->remove)
+>     dev->driver->remove(dev);
 
---- Patch [1]: [PATCH] PCI: sysfs: Reject unaligned resource I/O port acces=
-ses ---
-commit 5ca53d551b5755e8c03169b8a70d53f035905df7
-Author: Deepanshu Kartikey <kartikey406@gmail.com>
+Okay, that ->remove callback should be rtsx_pci_sdmmc_drv_remove()
+in drivers/mmc/host/rtsx_pci_sdmmc.c.  Can you maybe identify where
+execution stops in that function?
 
-PCI: sysfs: Reject unaligned resource I/O port accesses
+Basically the rtsx_pci driver creates a child device of the PCI device
+and the mmc host driver binds to that child device.  Removing the
+mmc host driver fails here for some reason.
 
-This commit adds a check in pci_resource_io() to validate that the requested
-port is aligned to the access size. This prevents alignment faults and kern=
-el
-oopses on architectures like arm64 when accessing Device-memory mappings.
+> > If you go to sleep and resume without SD card, do you then see in dmesg
+> > that the card reader was de-enumerated and re-enumerated?  Normally
+> > there should be at least a "Card not present" / "Card present" message
+> > from pciehp, if it sensed a replaced device.  ("Card" refers to PCIe card,
+> > not SD card.)
+> 
+> i get card not present, then card present, then link up.
+> 
+> > Also, what's the subsystem vendor/device ID as seen with lspci after
+> > a successful system sleep transition (successful = without SD card)?
+> 
+> it reflects the Realtek device VID/PID. I also tested resume after the
+> 1 cycle with it re-inserted and it works fine after the first cycle,
+> presumably because the device id matches on the second run and beyond
 
-Closes: https://syzkaller.appspot.com/bug?extid=3D7134530b25073b4ef373
+Right, when the device is re-enumerated after the first system sleep
+transition, the Realtek subdevice vendor/device ID is cached and that
+matches on all subsequent system sleep transitions.  So if we manage
+to find and eliminate the cause of the hang, there'll only be the
+inconvenience of the removal/re-enumeration on first sleep.
 
-> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-> index 5ec0b245a69bd..72f0404a34e99 100644
-> --- a/drivers/pci/pci-sysfs.c
-> +++ b/drivers/pci/pci-sysfs.c
-> @@ -1175,6 +1175,9 @@ static ssize_t pci_resource_io(struct file *filp, s=
-truct kobject *kobj,
->  	if (port + count - 1 > pci_resource_end(pdev, bar))
->  		return -EINVAL;
-> =20
-> +	if (!IS_ALIGNED(port, count))
-> +		return -EINVAL;
-> +
+Thanks,
 
-[Severity: Low]
-Does this code call IS_ALIGNED() with an unvalidated user input for the
-alignment argument?
-
-The IS_ALIGNED() macro strictly requires its alignment argument to be a pow=
-er
-of two, but count comes from user space (via pread or pwrite) and could be a
-non-power-of-two value like 3. Passing a non-power-of-two value results in
-meaningless bitwise operations.
-
-While the subsequent switch (count) statement catches and rejects invalid
-sizes by returning -EINVAL, would it be more appropriate to perform this
-alignment check after validating that count is actually 1, 2, or 4?
-
->  	switch (count) {
->  	case 1:
->  		if (write)
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260809045946.1563=
-8-1-kartikey406@gmail.com?part=3D1
+Lukas
