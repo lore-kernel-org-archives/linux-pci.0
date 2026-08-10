@@ -1,175 +1,224 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.17])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f200.google.com (mail-pg1-f200.google.com [209.85.215.200])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 21F11342CBA;
-	Mon, 10 Aug 2026 19:26:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.17
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D8D843F091
+	for <linux-pci@vger.kernel.org>; Mon, 10 Aug 2026 19:50:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.200
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786389985; cv=none; b=vGN4zvKPyEeJH44pSdfvw4VXszJl6soHkX7bKB3ivghmc21qc7xk9kHat5qG4jlAbPXSPc7DVUwPCNNmNkQ3nMzDouQrRdlV6JlV3pnpqq41VsqIcogLktGvisG69UTYaNZKn06M4RFqCjJV8X479452TT3gT+72G/w3KnLdMTE=
+	t=1786391446; cv=none; b=MXs4bug4IQr7ZxSFcEEcHGlRne3V6LEp9sj14iqhA6haVNJlX8MkZ+O4Ow5CVMthV47uvdyVC/xpLX0OtY4Bl4zCfnuqmjbQ5tQO+aJh/n65p8psnYiA5CA8tQo88CwWrHQZ5ffOL0cFIu1qOkUhVG+aFOmjI+neufP1bS10KAE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786389985; c=relaxed/simple;
-	bh=GCKXdOc28NC5OnXa1/mzOFkq4JmD7AhEVOgj5N6tN5k=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=QussJWp8k2lwyiHYRzXIcPhgpA1udAyLFecQzmkFiyKRmUzLMgOX+adUdY/3Fg4PNZ4xFhNTlJABm5Mzx3wq7bAeELHyh4u26L/p3UMAhxHh0uhTqjlC6rXtj/VIpOWmpENRA/L8TdMnpGyXO0n/TJfMEfp6zxE8bxh0YQLV2GI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=jyCeUZqY; arc=none smtp.client-ip=192.198.163.17
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1786391446; c=relaxed/simple;
+	bh=jllGw4LDGlYPMXCqbk8a2XlOmYYFkoF1/M0iq9XzDcs=;
+	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=B7sBF92W7T3kddnUa4hL1KDbOM5qCCf0x0PTSO6597kS6HF1TN3jJh4GQADZY7LBekkyTrfI6DmiO+EZaWikZoJHhpcSBGN7SblMaih+aBtQYVjm72n0yb+bdRRymFQrO9Wa8gYKO8CRuc+q5PJm0TZ/BahC63VgNFMOkKFj2wI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--praan.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=rncho+ma; arc=none smtp.client-ip=209.85.215.200
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--praan.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="jyCeUZqY"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1786389983; x=1817925983;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=GCKXdOc28NC5OnXa1/mzOFkq4JmD7AhEVOgj5N6tN5k=;
-  b=jyCeUZqYnb2cxEsHIx40ac4s+ZeeOAPB7kF+urR7p1I6D/ZfCWL35Uy6
-   ASK0gTCIpz9m0PjfPMQzM30xBoiF8eAW6x4r2ndQdKfoMTiz6Oug65yEp
-   VzZD9vMgFpiQpPU+4rBxQfRzbG70vprpOtSb07/oMvTbqfHIJ9IyJtwc+
-   Xoqtq3zBl7OjuDog7KZRolSjyrFnyW1Y59yuVnWlktqI9srxYjnRbOXeq
-   O/+gnWQUavabfH2mhj0K0SjFZPUo0Z/wvDamdkhfCczfIVnXJij1x61HL
-   WzFnk0G6Kr+1ABrgmejeFM6k0tm516vpUcu0q03b+PirHGreLTxFBE1lQ
-   w==;
-X-CSE-ConnectionGUID: QatpoJhjQkqFpIf34CJrGA==
-X-CSE-MsgGUID: 0PCXQNV6RL6wf841RPPSvg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11871"; a="86793154"
-X-IronPort-AV: E=Sophos;i="6.25,216,1779174000"; 
-   d="scan'208";a="86793154"
-Received: from fmviesa007.fm.intel.com ([10.60.135.147])
-  by fmvoesa111.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Aug 2026 12:26:22 -0700
-X-CSE-ConnectionGUID: k/JuUWB9RUahXHf7zbkVEg==
-X-CSE-MsgGUID: oCH/whz2SUKhdpn+p+oIQA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.25,216,1779174000"; 
-   d="scan'208";a="259819073"
-Received: from lkp-server01.sh.intel.com (HELO 6eda058d650d) ([10.239.97.150])
-  by fmviesa007.fm.intel.com with ESMTP; 10 Aug 2026 12:26:19 -0700
-Received: from kbuild by 6eda058d650d with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1wtVdZ-00000000Neo-0AdI;
-	Mon, 10 Aug 2026 19:26:17 +0000
-Date: Tue, 11 Aug 2026 03:25:51 +0800
-From: kernel test robot <lkp@intel.com>
-To: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>, bhelgaas@google.com,
-	alex@shazbot.org, mani@kernel.org
-Cc: oe-kbuild-all@lists.linux.dev, jjohnson@kernel.org,
-	linux-pci@vger.kernel.org, linux-wireless@vger.kernel.org,
-	ath11k@lists.infradead.org, ath12k@lists.infradead.org,
-	mhi@lists.linux.dev, linux-kernel@vger.kernel.org,
-	Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-Subject: Re: [PATCH v11] PCI: Add device-specific reset for Qualcomm devices
-Message-ID: <202608110204.wb17Qqit-lkp@intel.com>
-References: <20260626055023.197470-1-jtornosm@redhat.com>
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="rncho+ma"
+Received: by mail-pg1-f200.google.com with SMTP id 41be03b00d2f7-cb733fc5024so176555a12.2
+        for <linux-pci@vger.kernel.org>; Mon, 10 Aug 2026 12:50:43 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1786391443; x=1786996243; darn=vger.kernel.org;
+        h=content-type:cc:to:from:subject:message-id:mime-version:date:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=IcwW5XREirtrofqhtr/U6RYRn5/QoCTQXeXDcDL2gg4=;
+        b=rncho+majOoSw08b+7rQicHedJ1dU/sLKK1XaA6ONBZRELGk0BgCkBeDpEbKt840bH
+         0AeugHszWJ83xI+aRv7UYqaH4ZzgWaC+OydwEujs8TgLQhmgHCfOzaxL62YUfDVWEv6f
+         fx7Wu0Jayb2Bhd1Vhm9dPorJ/Lxz1zdyuS1dEdCd4pvah6aypLFJMzHT4DB5V0my8gud
+         DZ2Q4B6p+/N0YnRRdxSRI007n1yr4mWa+36K4ttqwjIbqPpj9SmTouTZQg2JIthKujsY
+         WXj72suqgPIY7aJr/h4OwD1G2IMoaX6J/VDoH4+bI9XUsBwNYlQw0xbLGU3yKHwIlAUb
+         KWtA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1786391443; x=1786996243;
+        h=content-type:cc:to:from:subject:message-id:mime-version:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=IcwW5XREirtrofqhtr/U6RYRn5/QoCTQXeXDcDL2gg4=;
+        b=C4cnoZKkkUPDWaEfg3322Cmu2YHO1VU3EV5QcAjiOD217GAJ7AHxmTeOC97ct02Voj
+         mmLpwfM91Mpa78snoXBwBCkudzqmobbSk94QL+V/9v5/7JQInezYZc1Ngw0mWxOBxClZ
+         62U+FshrmFyaelhuiztsr/RPpe+WADlzWSGYACuQDeElT/FaLk2qUvaACizz4ss4Uu68
+         99XYDaSxv/sL1bM13+HkmfS2sO20Vgf83HL4Y7IECHtMGtavEfTL3RI6JddwTKeShDW+
+         03AQKBL1mdFve7w+P2nWMJk3uJ0lScwFF6z8cmXUObs8HIVOzdkorEpHPasRUag44nuw
+         0jmA==
+X-Forwarded-Encrypted: i=1; AHgh+RqDik8IdOsqm/1oAcJITDsfW2zmUbKzEA4ArI9Lr7VxSeFXRXiHkYBZYfAW67zwZigGWhO3d1vh44I=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzBZzy/tM4w97kOzmds3CSB7eSvvRA2htTD2541bmZNwfQ91xO9
+	3CKHESiuUMiPQC5+2CRIdTxWDJbsckEq/Oq6KRjPBZCLe3Qq7cfR3rMj7bmqSUgZmq5gnOgdnfE
+	8MQ==
+X-Received: from pgeq25.prod.google.com ([2002:a63:bc19:0:b0:c96:6f3e:49c9])
+ (user=praan job=prod-delivery.src-stubby-dispatcher) by 2002:a05:6a00:6c82:b0:847:5ec6:3afe
+ with SMTP id d2e1a72fcca58-84f2e0588demr53176267b3a.31.1786391442581; Mon, 10
+ Aug 2026 12:50:42 -0700 (PDT)
+Date: Mon, 10 Aug 2026 19:50:34 +0000
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260626055023.197470-1-jtornosm@redhat.com>
+Mime-Version: 1.0
+X-Mailer: git-send-email 2.55.0.679.g6767b8d81c-goog
+Message-ID: <20260810195040.2877784-1-praan@google.com>
+Subject: [PATCH v4 0/5] nfs: modernize direct I/O path
+From: Pranjal Shrivastava <praan@google.com>
+To: linux-nfs@vger.kernel.org, Trond Myklebust <trondmy@kernel.org>, 
+	Anna Schumaker <anna@kernel.org>
+Cc: Chuck Lever <cel@kernel.org>, Jeff Layton <jlayton@kernel.org>, linux-kernel@vger.kernel.org, 
+	Christoph Hellwig <hch@lst.de>, Logan Gunthorpe <logang@deltatee.com>, Jason Gunthorpe <jgg@ziepe.ca>, 
+	linux-pci@vger.kernel.org, linux-rdma@vger.kernel.org, 
+	Shivaji Kant <shivajikant@google.com>, Pranjal Shrivastava <praan@google.com>
+Content-Type: text/plain; charset="UTF-8"
 
-Hi Jose,
+Modernize the NFS Direct I/O path as a preparatory step to enable PCI
+Peer-to-Peer DMA (P2PDMA) support. Following feedback on the initial
+RFC [1], the modernization and architectural changes are split into
+different series. Additionally, based on the discussion in the v2 [2]
+of this series, the migration of NFS Direct I/O to folios would be
+handled in a separate follow-up series.
 
-kernel test robot noticed the following build warnings:
+Currently, NFS O_DIRECT relies on the legacy iov_iter_get_pages_alloc2()
+API which does not support the pinning requirements for P2P memory.
+The implementation moves NFS to the modern iov_iter_extract_pages() API.
 
-[auto build test WARNING on pci/next]
-[also build test WARNING on pci/for-linus linus/master v7.2-rc6 next-20260807]
-[cannot apply to linux-review/Jose-Ignacio-Tornos-Martinez/Add-device-specific-reset-for-Qualcomm-devices/20260804-001013]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+Design
+======
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Jose-Ignacio-Tornos-Martinez/PCI-Add-device-specific-reset-for-Qualcomm-devices/20260810-131417
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git next
-patch link:    https://lore.kernel.org/r/20260626055023.197470-1-jtornosm%40redhat.com
-patch subject: [PATCH v11] PCI: Add device-specific reset for Qualcomm devices
-config: um-randconfig-r073-20260810 (https://download.01.org/0day-ci/archive/20260811/202608110204.wb17Qqit-lkp@intel.com/config)
-compiler: gcc-14 (Debian 14.2.0-19) 14.2.0
-smatch: v0.5.0-9187-g5189e3fb
+1. Pin-Awareness
+Standard NFS requests use get_page() and put_page() for memory
+management. However, memory extracted via iov_iter_extract_pages()
+requires explicit pinning.
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202608110204.wb17Qqit-lkp@intel.com/
+Introduce a PG_PINNED flag and a wb_nr_pinned count to struct nfs_page.
+This allows the request lifecycle to track ownership of physical pins
+and ensure that unpinning is performed only when the I/O is complete.
 
-smatch warnings:
-drivers/pci/quirks.c:4278 reset_qualcomm_wifi() warn: always true condition '(val != (~0)) => (0-u32max != u64max)'
+2. API Migration
+Migrate the Direct I/O path to the modern iov_iter_extract_pages()
+API. This aligns NFS with the modern extraction model and serves as
+the foundation for passing ITER_ALLOW_P2PDMA in a follow-up series.
 
-vim +4278 drivers/pci/quirks.c
+Upcoming Work / Roadmap
+================================
 
-  4234	
-  4235	/*
-  4236	 * Qualcomm WiFi device-specific reset using SoC global reset via BAR0
-  4237	 * registers.
-  4238	 */
-  4239	static int reset_qualcomm_wifi(struct pci_dev *pdev, bool probe)
-  4240	{
-  4241		bool link_recovered = false;
-  4242		unsigned long timeout;
-  4243		void __iomem *bar;
-  4244		u32 val;
-  4245		u16 cmd;
-  4246	
-  4247		if (probe)
-  4248			return 0;
-  4249	
-  4250		if (pdev->current_state != PCI_D0)
-  4251			return -EINVAL;
-  4252	
-  4253		pci_read_config_word(pdev, PCI_COMMAND, &cmd);
-  4254		pci_write_config_word(pdev, PCI_COMMAND, cmd | PCI_COMMAND_MEMORY);
-  4255	
-  4256		bar = pci_iomap(pdev, 0, 0);
-  4257		if (!bar) {
-  4258			pci_write_config_word(pdev, PCI_COMMAND, cmd);
-  4259			return -ENODEV;
-  4260		}
-  4261	
-  4262		val = ioread32(bar + QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET);
-  4263		val |= QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET_V;
-  4264		iowrite32(val, bar + QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET);
-  4265		ioread32(bar + QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET);
-  4266	
-  4267		msleep(10);
-  4268	
-  4269		val &= ~QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET_V;
-  4270		iowrite32(val, bar + QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET);
-  4271		ioread32(bar + QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET);
-  4272	
-  4273		msleep(10);
-  4274	
-  4275		timeout = jiffies + msecs_to_jiffies(5000);
-  4276		while (time_before(jiffies, timeout)) {
-  4277			val = ioread32(bar + QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET);
-> 4278			if (val != PCI_ERROR_RESPONSE) {
-  4279				link_recovered = true;
-  4280				break;
-  4281			}
-  4282			msleep(20);
-  4283		}
-  4284	
-  4285		if (!link_recovered) {
-  4286			pci_err(pdev, "PCIe link failed to recover after reset\n");
-  4287			goto out_restore;
-  4288		}
-  4289	
-  4290		/* After SOC_GLOBAL_RESET, MHISTATUS may still have SYSERR bit set
-  4291		 * and thus need to set MHICTRL_RESET to clear SYSERR.
-  4292		 */
-  4293		iowrite32(QUALCOMM_WIFI_MHICTRL_RESET_MASK, bar + QUALCOMM_WIFI_MHICTRL);
-  4294		ioread32(bar + QUALCOMM_WIFI_MHICTRL);
-  4295	
-  4296		msleep(10);
-  4297	
-  4298	out_restore:
-  4299		pci_iounmap(pdev, bar);
-  4300		pci_write_config_word(pdev, PCI_COMMAND, cmd);
-  4301	
-  4302		return link_recovered ? 0 : -ETIMEDOUT;
-  4303	}
-  4304	
+As decided in the RFC [1] & v2 [2], there will be separate series for
+P2PDMA Enablement and Migrating NFS Direct I/O to use folios.
 
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+This series lays the necessary groundwork for the upcoming work.
+Following this, two additional series are planned:
+
+1. Migrating NFS Direct I/O to Folios
+A series that introduces and exports helper from iov_iter.c to allow
+the nfs_direct_extract_pages() helper introduced here to aggregate
+multiple pages into a single large folio-based request, aiming to reduce
+the RPC overhead for hugepage I/O.
+
+2. P2PDMA Enablement for NFS
+Enabling ITER_ALLOW_P2PDMA for the Direct I/O path and introducing transport-level
+negotiation (discovery of P2P-capable RDMA/NVMe devices). This will build
+upon the PG_PINNED infrastructure introduced by this series.
+
+Testing
+=======
+This series has been tested with xfstests [3] on RDMA & TCP transports
+by running the quick test suite for each transport vs. version combo:
+
+./check -g quick -s rdma3 -s rdma40 -s rdma41 -s rdma42 -s tcp3 -s tcp40 -s tcp41 -s tcp42
+
+The tests were run before & after applying the series. No regressions were observed. 
+
+The following summary was tabulated via a custom script [4] (on github)
+to depict that the tests failing in v1 [5] are now passing.
+
+python3 display.py results/*/check.log
+
++--------------+--------------+--------------+--------------+--------------+--------------+--------------+--------------+--------------+
+| testcase     | rdma-sys-3   | rdma-sys-4.0 | rdma-sys-4.1 | rdma-sys-4.2 | tcp-sys-3    | tcp-sys-4.0  | tcp-sys-4.1  | tcp-sys-4.2  |
++--------------+--------------+--------------+--------------+--------------+--------------+--------------+--------------+--------------+
+| generic/091  | pass         | pass         | pass         | pass         | pass         | pass         | pass         | pass         |
+| generic/130  | pass         | pass         | pass         | pass         | pass         | pass         | pass         | pass         |
+| generic/139  | pass         | pass         | pass         | pass         | pass         | pass         | pass         | pass         |
+| generic/143  | pass         | pass         | pass         | pass         | pass         | pass         | pass         | pass         |
+| generic/154  | pass         | pass         | pass         | pass         | pass         | pass         | pass         | pass         |
+| generic/155  | pass         | pass         | pass         | pass         | pass         | pass         | pass         | pass         |
+| generic/183  | skipped      | skipped      | skipped      | pass         | skipped      | skipped      | skipped      | pass         |
+| generic/188  | skipped      | skipped      | skipped      | pass         | skipped      | skipped      | skipped      | pass         |
+| generic/190  | skipped      | skipped      | skipped      | pass         | skipped      | skipped      | skipped      | pass         |
+| generic/196  | skipped      | skipped      | skipped      | pass         | skipped      | skipped      | skipped      | pass         |
+| generic/198  | pass         | pass         | pass         | pass         | pass         | pass         | pass         | pass         |
+| generic/203  | skipped      | skipped      | skipped      | pass         | skipped      | skipped      | skipped      | pass         |
+| generic/214  | pass         | pass         | pass         | pass         | pass         | pass         | pass         | pass         |
+| generic/240  | pass         | pass         | pass         | pass         | pass         | pass         | pass         | pass         |
+| generic/263  | pass         | pass         | pass         | pass         | pass         | pass         | pass         | pass         |
+| generic/287  | skipped      | skipped      | skipped      | pass         | skipped      | skipped      | skipped      | pass         |
+| generic/290  | skipped      | skipped      | skipped      | pass         | skipped      | skipped      | skipped      | pass         |
+| generic/292  | skipped      | skipped      | skipped      | pass         | skipped      | skipped      | skipped      | pass         |
+| generic/330  | skipped      | skipped      | skipped      | pass         | skipped      | skipped      | skipped      | pass         |
+| generic/444  | skipped      | skipped      | skipped      | skipped      | skipped      | skipped      | skipped      | skipped      |
+| generic/450  | pass         | pass         | pass         | pass         | pass         | pass         | pass         | pass         |
+| generic/451  | pass         | pass         | pass         | pass         | pass         | pass         | pass         | pass         |
+| generic/586  | pass         | pass         | pass         | pass         | pass         | pass         | pass         | pass         |
+| generic/647  | pass         | pass         | pass         | pass         | pass         | pass         | pass         | pass         |
+| generic/708  | pass         | pass         | pass         | pass         | pass         | pass         | pass         | pass         |
+| generic/729  | pass         | pass         | pass         | pass         | pass         | pass         | pass         | pass         |
+| generic/760  | pass         | pass         | pass         | pass         | pass         | pass         | pass         | pass         |
++--------------+--------------+--------------+--------------+--------------+--------------+--------------+--------------+--------------+
+
+Thanks,
+Praan
+
+[1] https://lore.kernel.org/all/20260401194501.2269200-1-praan@google.com/
+[2] https://lore.kernel.org/all/ak8-NMsNPOB3zpF-@infradead.org/
+[3] https://git.kernel.org/pub/scm/fs/xfs/xfstests-dev.git
+[4] https://github.com/pran005/tools/blob/main/display.py
+[5] https://lore.kernel.org/all/29a0511d-5216-46f2-a7e4-9c04ae9b1890@app.fastmail.com/
+
+[v5]
+ - Fixed an iov_iter_revert oops in nfs_direct_extract_pages().
+ - Fixed a refcount underflow in nfs_direct_release_pages() during
+   swap-over-NFS by ensuring we do not call put_page() on unpinned memory.
+ - Rebased on fs-next
+
+[v4]
+ - https://lore.kernel.org/all/20260720150601.2702700-1-praan@google.com/
+ - Dropped superfluous externs in include/linux/nfs_page.h
+ - Scoped `req` locally inside the loop in nfs_release_request_list()
+ - Wrapped >80 character lines in Patch 1 to adhere to coding style.
+ - Fixed typos and capitalization convention in the commit msgs
+ - Collected Reviewed-by tags from Christoph and Shivaji
+ - Rebased on fs-next
+
+[v3]
+ - https://lore.kernel.org/all/20260715143540.3597616-1-praan@google.com/
+ - Dropped patches that added folio support for NFS Direct I/O
+ - Folded requested_bytes accounting in patch 5 due to dropped folio support
+ - Rebased on fs-next
+
+[v2] 
+ - https://lore.kernel.org/all/20260616134000.2733403-1-praan@google.com/
+ - Fix data corruption in nfs_direct_extract_pages() by correctly
+   calculating intra-page offsets using offset_in_page().
+ - Fix requested_bytes accounting in direct read/write paths to only
+   increment after successful RPC scheduling.
+ - Add missing kernel-doc descriptions for the @pinned parameter in
+   nfs_page_create_from_page() and nfs_page_create_from_folio().
+ - Rebase on fs-next/
+
+[v1] https://lore.kernel.org/all/20260603053033.3300318-1-praan@google.com/
+
+Pranjal Shrivastava (5):
+  nfs: make nfs_page pin-aware
+  nfs: track number of pinned pages in nfs_page
+  nfs: introduce nfs_release_request_list helper
+  nfs: migrate direct I/O to iov_iter_extract_pages
+  nfs: introduce nfs_direct_extract_pages helper
+
+ fs/nfs/direct.c          | 139 ++++++++++++++++++++-------------------
+ fs/nfs/pagelist.c        |  62 ++++++++++++++---
+ fs/nfs/read.c            |   2 +-
+ fs/nfs/write.c           |   2 +-
+ include/linux/nfs_page.h |   8 ++-
+ 5 files changed, 130 insertions(+), 83 deletions(-)
+
+
+base-commit: 5b57716ed7ad2f4b1724461c8777015c4e4befb1
+-- 
+2.55.0.679.g6767b8d81c-goog
+
