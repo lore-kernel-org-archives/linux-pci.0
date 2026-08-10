@@ -1,44 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2BADB2FFF90
-	for <linux-pci@vger.kernel.org>; Mon, 10 Aug 2026 12:56:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED47A3D9DA8
+	for <linux-pci@vger.kernel.org>; Mon, 10 Aug 2026 12:58:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786366603; cv=none; b=fLKcz9FW2FVl7j5iwNNvBc+x2VZ3mDAte85yfGypHPKMU44ROVSNFSPZvfWS46WjvdVAVfzPhlwzNEY70Wm/qg94itU59bQhjcE5b9DEjEPkiQM+9KI3kD9VZ1xuovQ7z1CH4URrUR5cPHnoeu4iLMvQJtE96asHkKnNEVRKIEk=
+	t=1786366717; cv=none; b=PcNs3vrlILXI2C7zOj3Ag30bbHM14EitJbkHmmzzxImlqF1YiPa4J1+lrJafuXwOyxvtlvabp5ylDU63dpL2fHWFyG0NJaXCDb1lzyuDqz5qEeFhsVX9lt2TnoeUmBkFUktEzDg5xLgp9HzIHE1lIOXCe2GRuv8EkJTuh9eT0ds=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786366603; c=relaxed/simple;
-	bh=Xnasg6Df+wi943m10/98QKY6A7Y5YcE58RyedchM8VM=;
+	s=arc-20240116; t=1786366717; c=relaxed/simple;
+	bh=2pgNg8cZTfwPHA5aSUN9EL8grbPNaPDK6GzN0g5o0vk=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=D8ac9aIJkdDm3M32kPCiZ9h7YtVEaGXkzRf279pqB4xgrxqRa4QwNXJyvsCsB0KjNGbqLiWFwWWeii7WSMfQ9uFeS2JPJAYJG9jB35UX11dsbG9ujyzTENvRA9VQEdq9SbzbIxIUEPy/GRYJsmObx2q4MNr38BKJSA41ZwI+c6o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=apkbuNN2; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=Xr+L3qTjIcQ3Pu8reKEnI/YfFjoodCZc+/5SzUKjvXzm5fqhX/UgAgOSGdSBv6ltl2x5QiIBg2qws0/S5fFv37djN/YrFZL4cQwgzZtWYOigS2HrgIWcgo54F9GitSWsrK+5IuhPQBuftSaU6JXBjE9e7FV7RSonzgJystIpn9A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NsMzAGLs; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="apkbuNN2"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A875C1F000E9;
-	Mon, 10 Aug 2026 12:56:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NsMzAGLs"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 803E61F000E9;
+	Mon, 10 Aug 2026 12:58:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786366601;
-	bh=wIk/RmYnfT5bbCBxd6eDL5xmjHkleE+ShTiLTEBeh7s=;
+	s=k20260515; t=1786366715;
+	bh=ItJjRXDkto/6XYH0Gi4ohebXZsEF0BkZ14MTkXQpAcY=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=apkbuNN2lWR7hs2xMPgvUGt2IyoFop5MZ7Vl+W4mkQmwWe9iBtio72gIg/mNm5jmT
-	 r5VcBVAjL7oJD3CKcsrsQIYHJtZSK/GQDa2E3AgNwS47OfbDwR0tQ8yJ1KGvTVcWK/
-	 ubuArcJoRVACwcoMU+l0nvFpFDz1c6qcBpbh8Ku2SJCweVnNVNp2K9e1yiqrTRW7Aw
-	 n2XFw3rTRDIuEP3GIiaDIMYwIKpLg0qAnlmXxmzaaNV1rdWUwhXM7WUpdTpgbq/us9
-	 Q/BMBNDiMYs6vzWYf4KjKDNyS6vwyrjo0/06hMEtKsG9tSp/a3KGj9+Db2F/ViP2gq
-	 +c1udSmUleWoA==
+	b=NsMzAGLsWqHjZN7QQrU+S4BxkEf9hupPTdeHS5wQGfdb/IIONX/uiL0vY+k9jU3s6
+	 /3KJgqV3pIhJiEbJWLAgvvB5hIJseVzUgNZWSXqP6xi4SiTkmzm4xkxu6Lm3uTj5DU
+	 En/TEUiSj5i1T7roSNe8qMW5rOR5PtZKcnkgCr1loXBsfUzeg2/u16raaAWVUMc4sH
+	 Oadp7NKsdLhRkvt+aUdhf1HOVHqaPLnc07s5DB297SO6BjMBzsq36KSVsJJW8imUJw
+	 VnuXE93tjbcXtsV7Xilapad05w0Oxw1d4wQ1+H7IY5pUzKUlt/ZdT41xpHce7l1xwV
+	 y+8BYRIlZW81A==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v9 1/3] PCI: cadence: Preserve all error codes in
- cdns_plat_pcie_probe()
+Subject: Re: [PATCH v9 3/3] PCI: Remove device links to PHY
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Vladimir Oltean" <vladimir.oltean@nxp.com>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260810124315.433448-2-vladimir.oltean@nxp.com>
+In-Reply-To: <20260810124315.433448-4-vladimir.oltean@nxp.com>
 References: <20260810124315.433448-1-vladimir.oltean@nxp.com>
- <20260810124315.433448-2-vladimir.oltean@nxp.com>
+ <20260810124315.433448-4-vladimir.oltean@nxp.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 10 Aug 2026 12:56:41 +0000
-Message-Id: <20260810125641.A875C1F000E9@smtp.kernel.org>
+Date: Mon, 10 Aug 2026 12:58:35 +0000
+Message-Id: <20260810125835.803E61F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -49,77 +48,70 @@ Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
 
 Pre-existing issues:
-- [High] The driver lacks a `.remove` callback and does not set `.suppress_=
-bind_attrs =3D true`, leading to severe resource leaks and a potential use-=
-after-free when unbound via sysfs.
+- [High] The Keystone PCIe driver completely skips deinitializing the Desig=
+nWare host or endpoint during module removal, leading to severe resource le=
+aks and Use-After-Free conditions.
 --
 
---- Patch [1]: [PATCH v9 1/3] PCI: cadence: Preserve all error codes in cdn=
-s_plat_pcie_probe() ---
-commit 8180a8544f7ea362a9f7505de96e98a724635cba
+--- Patch [3]: [PATCH v9 3/3] PCI: Remove device links to PHY ---
+commit dba6a718906e10ffe3960ba8d21e61e4e4e62e26
 Author: Vladimir Oltean <vladimir.oltean@nxp.com>
+Subject: PCI: Remove device links to PHY
 
-PCI: cadence: Preserve all error codes in cdns_plat_pcie_probe()
+This commit removes explicit device links between the PCIe controllers and
+PHY providers in Cadence, DRA7xx, and Keystone drivers. The PHY core has
+automatically added consumer device link support since 2019, making the
+manual link management redundant.
 
-This commit modifies the error path of cdns_plat_pcie_probe() to correctly
-propagate error codes instead of returning zero. Errors from pm_runtime_get=
-_sync()
-and setup functions are now correctly handled.
-
-> diff --git a/drivers/pci/controller/cadence/pcie-cadence-plat.c b/drivers=
-/pci/controller/cadence/pcie-cadence-plat.c
-> index a1ea24fc3b63f..8aed8b4c3e11c 100644
-> --- a/drivers/pci/controller/cadence/pcie-cadence-plat.c
-> +++ b/drivers/pci/controller/cadence/pcie-cadence-plat.c
-> @@ -126,7 +126,7 @@ static int cdns_plat_pcie_probe(struct platform_devic=
-e *pdev)
->  	while (phy_count--)
->  		device_link_del(cdns_plat_pcie->pcie->link[phy_count]);
+> diff --git a/drivers/pci/controller/dwc/pci-keystone.c b/drivers/pci/cont=
+roller/dwc/pci-keystone.c
+> index e9b012a5ea9a2..8085c4f614031 100644
+> --- a/drivers/pci/controller/dwc/pci-keystone.c
+> +++ b/drivers/pci/controller/dwc/pci-keystone.c
+[ ... ]
+> @@ -1337,25 +1321,18 @@ static int ks_pcie_probe(struct platform_device *=
+pdev)
+>  	pm_runtime_disable(dev);
+>  	ks_pcie_disable_phy(ks_pcie);
 > =20
-> -	return 0;
-> +	return ret;
+> -err_link:
+> -	while (--i >=3D 0 && link[i])
+> -		device_link_del(link[i]);
+> -
+> +err:
+>  	return ret;
 >  }
 > =20
->  static void cdns_plat_pcie_shutdown(struct platform_device *pdev)
+>  static void ks_pcie_remove(struct platform_device *pdev)
+>  {
+>  	struct keystone_pcie *ks_pcie =3D platform_get_drvdata(pdev);
+> -	struct device_link **link =3D ks_pcie->link;
+> -	int num_lanes =3D ks_pcie->num_lanes;
+>  	struct device *dev =3D &pdev->dev;
+> =20
+>  	pm_runtime_put(dev);
+>  	pm_runtime_disable(dev);
+>  	ks_pcie_disable_phy(ks_pcie);
 
 [Severity: High]
-This is a pre-existing issue, but since you are fixing the probe path, coul=
-d we
-also address the missing driver removal handling?
+This is a pre-existing issue, but is the driver missing a call to
+deregister the dw_pcie core during module removal?
 
-Looking at cdns_plat_pcie_driver:
+The ks_pcie_remove() function does not call dw_pcie_host_deinit() or
+dw_pcie_ep_deinit(). This could leave the PCI controller registered in the
+kernel's PCI subsystem while its backing memory (allocated via
+devm_kzalloc) is freed by devres when the driver is unbound.=20
 
-static struct platform_driver cdns_plat_pcie_driver =3D {
-	.driver =3D {
-		.name =3D "cdns-pcie",
-		.of_match_table =3D cdns_plat_pcie_of_match,
-		.pm =3D &cdns_pcie_pm_ops,
-	},
-	.probe =3D cdns_plat_pcie_probe,
-	.shutdown =3D cdns_plat_pcie_shutdown,
-};
+If this happens, wouldn't subsequent access to the PCI bus (e.g. via sysfs
+or background polling) dereference freed pointers and cause a
+use-after-free panic?
 
-The driver lacks a .remove callback and does not set .suppress_bind_attrs =
-=3D true.
-
-If a user unbinds the driver via sysfs or unloads the module, the platform
-driver core will successfully unbind it. The devm subsystem will then
-automatically free all managed resources, including cdns_plat_pcie, the host
-bridge, and memory mappings.
-
-However, since pci_stop_root_bus() and pci_remove_root_bus() are never expl=
-icitly
-called, the PCI root bus and its child devices remain registered in the sys=
-tem.
-
-Could any subsequent access to the PCI bus (such as running lspci) derefere=
-nce
-the freed host bridge structure and cause a use-after-free panic?
-
-Would it make sense to set .suppress_bind_attrs =3D true to prevent unbindi=
-ng
-via sysfs, or implement a proper .remove callback?
+> -	while (num_lanes--)
+> -		device_link_del(link[num_lanes]);
+>  }
+> =20
+>  static struct platform_driver ks_pcie_driver =3D {
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260810124315.4334=
-48-1-vladimir.oltean@nxp.com?part=3D1
+48-1-vladimir.oltean@nxp.com?part=3D3
