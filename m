@@ -1,83 +1,41 @@
-Received: from mail-pf1-f181.google.com (mail-pf1-f181.google.com [209.85.210.181])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 13205242D65
-	for <linux-pci@vger.kernel.org>; Mon, 10 Aug 2026 18:26:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.181
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 79087439F90;
+	Mon, 10 Aug 2026 18:55:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786386398; cv=none; b=lvqLlNfIzm6q+9ozU8fKxZxwg9G3R1GEqbw2IeTcmJn5ElC/+pBz/IFpNOt8kYCIyBT+CXNlOTS0fVNMktGv6Vs8Xse1hVR/Q9AaQvi7CejRf1+kOB8il2sp6cXgGA29x9/RW0Lv4O+ZTJbKHoiV4DKE+a7z7QUnex7ncxshV5c=
+	t=1786388149; cv=none; b=UD1VyCCM3nKtHnuq/VsGkHR0xTkSnA3XRAeHi9n7UjCnGlJKJuMTcySfGZG/1DutbA9OZL4BIBUfr9nKn2AcbGu3T9Vlf10gW/NOwYK54lGGtD8dum3SFsool6xwOpGI0UtgHtknzNJLnTV1ZNJuWBh9Ew1RLh9y4p0gTVYK8G0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786386398; c=relaxed/simple;
-	bh=uckYMfA+3rj5zvRzcktnwG8O/XsnyeXAICZ5/FhxyPo=;
+	s=arc-20240116; t=1786388149; c=relaxed/simple;
+	bh=dYcouYbgcszfoZP7xxZHfNu+BNKAGfkYKmm5DvZFUV8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ckhhx2UmjolZYKVbfpAnPXaINY03jRPyDQGjuMNzboZTF+AGja1ADRho+zfLjx544mtTIg0OsTArNxt4QhRiXQRptGTzwZUl1LA5tBkNH1H6mNBzDxJJHPdT7Ha8Ia+CrCdLgfIH0sP0qi0pqttLDv1KgecgMm5I1tGhgz5i+kI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=frnqZfV8; arc=none smtp.client-ip=209.85.210.181
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=nyj8O7v6iBBeAQOHaWFuyi+BIfwu0lU1QkokrC8xmtCqIJa241M/kzlkLDsJa9BzV2pGLH1P+vmZeVCmfBSbHfdUVdFL8IS9lx4F1cbGQMqVubhfp9j7qFrv9w3wN3gXktlneu6tEBwLj113v4Hb/fmDTEwRHtPD8UPFOWdt8O8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ozQuxWrC; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="frnqZfV8"
-Received: by mail-pf1-f181.google.com with SMTP id d2e1a72fcca58-8487b7b3fc8so2355493b3a.3
-        for <linux-pci@vger.kernel.org>; Mon, 10 Aug 2026 11:26:37 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1786386396; x=1786991196; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=kImCXwl4S/l00e8WQ0YV3wOiF3iZg+3YUcCfhwwyF/0=;
-        b=frnqZfV8P9aTuXNyKpaJFbWuYPwhG7HziqAZ0oh0NkkiBgd40nuw2TJ0tki/D6fnD0
-         1mQUog4omfSyQ9hLjTgctFfxPJ6HF7BklaRntYFMz3WmlRNVY0n9nymD1gtAsPAK2jH4
-         xiYzj9eRQ/OT2GbFpbtRTAuwzeJ/iNNot3uThIU/sg7arK8954O8H71i2TyscoTc/ryC
-         qj6XnxcBFwgUmKMj9gs2zc7SNbzE1FyryBSkVg6VxdIX4hnGtXpVn5u5+KEhSuOjE2K1
-         iuw40Mh8PCT1nXUdQd/g0Mk04pBlqdROKFw3UbsnTYad4twTISNsD3QozIkIvkMY3GtD
-         FA+A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786386396; x=1786991196;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=kImCXwl4S/l00e8WQ0YV3wOiF3iZg+3YUcCfhwwyF/0=;
-        b=F8NeULOqBXbD4+K/YVk7jgRtHbyjudHkAc8gCraP1bIY7zCkJZ1OAJkA51fwZU2XXo
-         649n39ZQMCxaNKxc3T+vNm0hPYYAyPLhHQgEgGauZSmUETa0dFfgd7Vm+EjAoooP2asI
-         Ho4rhCy3TVSSIIGjXA1OWwGSnUOPXhijoW0IhXNsBFgkjC5v9rAhMiY3vs4QZTqklde6
-         5+tWti7wyllcbqLHkmRk2k2Rc58QBxfCFMUlH3HjH4PKpHhbG4OtDO1KMZFVptepUFZW
-         nGd8ML0TgEKynTrocMhNvArUjBtH06idHcKBKvzpzxdZgOl3bNO+BD6WXiyOY4/zw90+
-         ULYQ==
-X-Forwarded-Encrypted: i=1; AHgh+RoWY5Ravh2HldeCZvyM2WQcqBaVvFF4lb1Ytu/9tWhdNB4EPS7HV0zIn+jPi9IVS9lkhg3Q92g6ixw=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxI7LqlyKKsE0L+WtxYwtxCpzOh7poK4a3NqtAs4gMgiHTrslBq
-	SNDIBjbprBkquzC+1kAzAV8ofpl6mzboV64+d26Q1Rccb0/kNs5FoETE
-X-Gm-Gg: AR+sD10c04NyigvDGyfvKiFbBR065CzWvaL8zOAY7jEk2zEaziG7JOZKAVLlFE6KtBy
-	G1MmpCwR/CTgcork56hcK2q1rWCYX9rUr+NzTBBuYk2y4ugLaAuvahU9JVe5PVrBYMUi3BsUjU7
-	uvhRhIySjoqGGHaC07dxFndJSPAjVwLHD72rj24B55S2tleNfjsUu9vepQF6r7o5kbJn3VAZWQw
-	L5VH1AdRs7ARPuzm5Mqj415I5oU7Uhj5PrabU2QsiDtDFBAwV8nayi/vKayaihdUFw/KbgZ+LAV
-	udR8T9zBfVLgO8jmPYtQDUb9P/jwp/Xj7BokyFB2La2CqGHf3mnX4Efe/4a11Cw9xMKhj/ZUq3l
-	cUFDk85ev87Dko/9PnbguFJ+P2ckMTUaNKapY1Qupn0EJKhJCqwos8m3PTO1UPAy43IV9zNJT6O
-	GncEqbhJwu+vP7FVVAsBFaqBeKoxjqDNs53S7fMCEcn2//gtqhIRmhzDQggcx5/SAJpC0=
-X-Received: by 2002:a05:6a00:6c82:b0:847:5ec6:3afe with SMTP id d2e1a72fcca58-84f2e0588demr52646678b3a.31.1786386396492;
-        Mon, 10 Aug 2026 11:26:36 -0700 (PDT)
-Received: from leonardoc-nb ([67.159.246.222])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-84f5a3cadf2sm4377478b3a.22.2026.08.10.11.26.31
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 10 Aug 2026 11:26:36 -0700 (PDT)
-Date: Mon, 10 Aug 2026 15:26:29 -0300
-From: Leonardo Costa <leoreis.costa@gmail.com>
-To: "Hongxing Zhu (OSS)" <hongxing.zhu@oss.nxp.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, 
-	"robh@kernel.org" <robh@kernel.org>, "krzk+dt@kernel.org" <krzk+dt@kernel.org>, 
-	"conor+dt@kernel.org" <conor+dt@kernel.org>, Frank Li <frank.li@nxp.com>, 
-	"s.hauer@pengutronix.de" <s.hauer@pengutronix.de>, "kernel@pengutronix.de" <kernel@pengutronix.de>, 
-	"festevam@gmail.com" <festevam@gmail.com>, "leonardo.costa@toradex.com" <leonardo.costa@toradex.com>, 
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "imx@lists.linux.dev" <imx@lists.linux.dev>, 
-	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, 
-	"regressions@lists.linux.dev" <regressions@lists.linux.dev>, Sherry Sun <sherry.sun@nxp.com>, 
-	Manivannan Sadhasivam <mani@kernel.org>, Hongxing Zhu <hongxing.zhu@nxp.com>, 
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [REGRESSION] mainline/master: Apalis iMX6 no longer boots
-Message-ID: <3hxiy6aaiagt5zunntpidaeqc4or4wrebf7mu7asvyyibqmvo2@xhvasdqp64rw>
-References: <20260629143439.361560-1-leoreis.costa@gmail.com>
- <20260715234736.GA288957@bhelgaas>
- <VI0PR04MB1200862BE9B7C137EC7C18AF18CC72@VI0PR04MB12008.eurprd04.prod.outlook.com>
- <i6x6wpua7wlwmdq3hitoo53wkptgp62tvegmkabcru3d54eqg3@yk4eehwaarn2>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ozQuxWrC"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0AE171F000E9;
+	Mon, 10 Aug 2026 18:55:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1786388147;
+	bh=aQ75Op3u4ovI2w7uoxlbwZuzzJOOlbqAnY/+5K3a0Vk=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=ozQuxWrChfMzyS/tJ9PNoBL+h4h6xocxxhGybly23sRMKgXd03tfcz5bKthgb1k2P
+	 mD5XUIJb1BGI0yx0w++wKmnqgMHtiNIPrdosDyaXVxlOnvpIMxtQcpDzy6P0WZZ2iB
+	 tB0ysp0YVh0mllXnAF1haSgwScnmqG2VjuqYzyDFAUA1h7PoktU7RBDeogEX18sziM
+	 Pa0qYpN5ua4n79UTKl0p6z857kNaSmx3zZ6AKVrer7VU9xZnnS2I0OI4GNHhAO48lB
+	 KOOBAE6t021jzxHzRvcnWJ95HawX/PVEWD+6uyfEhGZ5STA3sKvDXuX3fR3PjZY02p
+	 kN9fAGKfYlu1A==
+Date: Mon, 10 Aug 2026 11:55:45 -0700
+From: Wei Liu <wei.liu@kernel.org>
+To: Linux on Hyper-V List <linux-hyperv@vger.kernel.org>,
+	linux-pci@vger.kernel.org
+Cc: Wei Liu <wei.liu@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH RFC 1/2] PCI: Add controller reset method
+Message-ID: <20260810185545.GC2496954@liuwe-devbox-debian-v2.local>
+References: <20260724230844.3259741-1-wei.liu@kernel.org>
+ <20260724230844.3259741-2-wei.liu@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -86,33 +44,111 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <i6x6wpua7wlwmdq3hitoo53wkptgp62tvegmkabcru3d54eqg3@yk4eehwaarn2>
+In-Reply-To: <20260724230844.3259741-2-wei.liu@kernel.org>
 
-On Thu, Jul 16, 2026 at 02:09:19PM -0300, Leonardo Costa wrote:
-> On Thu, Jul 16, 2026 at 02:15:42AM +0000, Hongxing Zhu (OSS) wrote:
-> > Hi Leonardo,
-> > 
-> > Would you be able to test this patch on your affected boards? Your testing
-> > would help expedite the merge process and ensure the fix resolves the boot
-> > issue you're experiencing.
-> > 
-> > Best Regards
-> > Richard Zhu
+Hi Bjorn,
+
+Since this is adding to the PCI reset framework, this patch needs your
+approval.
+
+Please see below for my questions. I'm happy to change the code however
+you see fit.
+
+On Fri, Jul 24, 2026 at 04:08:42PM -0700, wei.liu@kernel.org wrote:
+> From: Wei Liu <wei.liu@kernel.org>
 > 
-> Hi Richard,
+> Some PCI controllers provide a function reset mechanism that is not
+> advertised in PCI configuration space. Allow them to expose it through an
+> optional pci_ops callback.
 > 
-> Sorry for taking long to respond, I was caught up with something. I
-> tested the patch and it solved the issue. I sent a Tested-by tag there.
-> Thanks for looking into this!
+> Add the controller reset method to the standard reset_method interface.
+> Prefer FLR and AF FLR by default, and use the controller operation before
+> PM and bus reset fallbacks.
 > 
-> Best Regards
-> Leonardo
+> Signed-off-by: Wei Liu <wei.liu@kernel.org>
+> ---
+>  drivers/pci/pci.c   | 22 ++++++++++++++++++++++
+>  include/linux/pci.h |  3 ++-
+>  2 files changed, 24 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 77b17b13ee61..4e55da202cad 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -4962,6 +4962,27 @@ static int pci_reset_bus_function(struct pci_dev *dev, bool probe)
+>  	return rc;
+>  }
+>  
+> +static int pci_controller_reset(struct pci_dev *dev, bool probe)
+> +{
+> +	int rc;
+> +
+> +	if (!dev->bus->ops->reset)
+> +		return -ENOTTY;
+> +
+> +	if (probe)
+> +		return dev->bus->ops->reset(dev, probe);
+> +
+> +	rc = pci_dev_reset_iommu_prepare(dev);
+> +	if (rc) {
+> +		pci_err(dev, "failed to stop IOMMU for a PCI reset: %d\n", rc);
+> +		return rc;
+> +	}
+> +
+> +	rc = dev->bus->ops->reset(dev, probe);
+> +	pci_dev_reset_iommu_done(dev);
+> +	return rc;
+> +}
+> +
 
-Hi Richard,
+The first question is whether modelling this on the controller level
+is the correct approach.
 
-That patch might have introduced/exposed a second regression where PCI
-devices are not linked properly during the initialization. Sorry for not 
-catching this before, as I didn't have any device connected during the
-previous test.
+Please refer to the second patch for the intended usage in the Hyper-V
+vPCI code.
 
-Link: https://lore.kernel.org/all/bl7i3obu2clzsgeoct2a4mtfhv6typcjdqmgneropf3hpgwve6@n2m5uhlduw57/T/#u
+Whatever is added here, a new reset_method value will be added to the
+table. I chose "controller" to reflect the decision above.
+
+
+>  static int cxl_reset_bus_function(struct pci_dev *dev, bool probe)
+>  {
+>  	struct pci_dev *bridge;
+> @@ -5094,6 +5115,7 @@ const struct pci_reset_fn_method pci_reset_fn_methods[] = {
+>  	{ pci_dev_acpi_reset, .name = "acpi" },
+>  	{ pcie_reset_flr, .name = "flr" },
+>  	{ pci_af_flr, .name = "af_flr" },
+> +	{ pci_controller_reset, .name = "controller" },
+
+The second question is whether this ordering is okay.
+
+Thanks,
+Wei
+
+>  	{ pci_pm_reset, .name = "pm" },
+>  	{ pci_reset_bus_function, .name = "bus" },
+>  	{ cxl_reset_bus_function, .name = "cxl_bus" },
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 64b308b6e61c..d7759ee70670 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -52,7 +52,7 @@
+>  			       PCI_STATUS_PARITY)
+>  
+>  /* Number of reset methods used in pci_reset_fn_methods array in pci.c */
+> -#define PCI_NUM_RESET_METHODS 8
+> +#define PCI_NUM_RESET_METHODS 9
+>  
+>  #define PCI_RESET_PROBE		true
+>  #define PCI_RESET_DO_RESET	false
+> @@ -875,6 +875,7 @@ struct pci_ops {
+>  	void __iomem *(*map_bus)(struct pci_bus *bus, unsigned int devfn, int where);
+>  	int (*read)(struct pci_bus *bus, unsigned int devfn, int where, int size, u32 *val);
+>  	int (*write)(struct pci_bus *bus, unsigned int devfn, int where, int size, u32 val);
+> +	int (*reset)(struct pci_dev *dev, bool probe);
+>  };
+>  
+>  /*
+> -- 
+> 2.53.0
+> 
