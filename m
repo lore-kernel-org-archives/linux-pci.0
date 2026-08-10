@@ -1,229 +1,413 @@
-Received: from mail-qv1-f54.google.com (mail-qv1-f54.google.com [209.85.219.54])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from CWXP265CU010.outbound.protection.outlook.com (mail-ukwestazon11022078.outbound.protection.outlook.com [52.101.101.78])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7435D3BD22E
-	for <linux-pci@vger.kernel.org>; Mon, 10 Aug 2026 10:55:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.219.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D7A63BD228;
+	Mon, 10 Aug 2026 11:21:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.101.78
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786359344; cv=pass; b=q4/o/QyG9L0tmtflOOqiCgUAozY/reKvFg2pUioIwtmAPzfAfN10dmxKpVnxhXE9DO3BMhJo0v+Wcp125r3iXoSZYhpnnayMZc2exAaMlHru4RE6KeShFBNm2iQhOFSf9bdbe1Zjta4UWehX0HUt/UhM+oz6g48DmuxoKZzH9CE=
+	t=1786360905; cv=fail; b=OiLkvQd46Yt1ZH6kbCTwrrKtnSlRnjsWQl0VtlULrqsXBAjF+ThnJXlR4inmObzTe/czG02lj5gsNTmEZhyZzhOj0rfPByri/2LDfJoAJzJo2JRkat825swxinYr1oEM2Dgj9j8RyenmDXgwR9efvTFyAYFzwKD2W/68WboD6Ng=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786359344; c=relaxed/simple;
-	bh=whp17tHwzK4LQg7Nc9ShOMIrpcTZjYnNPpwNE+2pyaw=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=g0ul+xbjAiv5hu3hCmX+hr2UVA7C8T0o+gChu4bhLUXXpPwHlcFCxkohS3W1A3c7L3PLl63muZDOCAhmvoKsoFDTocCuS2lbBvBf5395gjh9KRk00RckMWjMt9ZJIqXh6/SJZTZmWDmjzbRQ1dhe/bk2RqwL7VGI7bMg/NfktsI=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=qf0K5z/w; arc=pass smtp.client-ip=209.85.219.54
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1786360905; c=relaxed/simple;
+	bh=Tngc5GrMxDtJPOkZtuEvzBIM2/i9eskjdQOp9IL003k=;
+	h=Content-Type:Date:Message-Id:From:To:Cc:Subject:References:
+	 In-Reply-To:MIME-Version; b=gUDR81bIUokN3vhgo0oZD6uVtk3qGLheYUXvHRK8Iho8k9K7vCQli308VhUwjKB335xWN/rX6tmsjalti0owBXS0vidWhEzKNB+rtwVenye982fX9J5nPALpq32Mzi1LXDFG/EtPkJ9/xN8aTGQg5iAHGVzMj+tbfsK3MoAotmM=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net; spf=pass smtp.mailfrom=garyguo.net; dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b=Cttdo2sT; arc=fail smtp.client-ip=52.101.101.78
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=garyguo.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="qf0K5z/w"
-Received: by mail-qv1-f54.google.com with SMTP id 6a1803df08f44-8f186025973so15877576d6.0
-        for <linux-pci@vger.kernel.org>; Mon, 10 Aug 2026 03:55:42 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1786359341; cv=none;
-        d=google.com; s=arc-20260327;
-        b=C6LFA1r6IYlMJBmVtEiHg/Qci9YwqvDXoam3FiVeG+/ZYwit4KcfEz9eswVgyCP+22
-         fBBmg3dHobIPKPa/B/2xdZrk4xoDKwl5ZJcaAIusGGJVTo2pk4vg7jz5ugOGK7JTdfd1
-         FcCAoQXMc20YvHhQk4qzZxLCKJpZdY2HlP0HGeCBexSebYFZwjBaN0mK5T4AsTBaDlsd
-         G5WuzNfZsnvj4gH5mR3wmXAiF1CxzJwaxMrzdrKj6y32AUiJk5O4YAzjHypECTNBl7R1
-         Lbx5E45p3Ukrw5m/CAoioGK+pIfFpq8tUi6VBtI8+SOn2V40VrKA95VRRKrHbKqXzOPN
-         2vpQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=whp17tHwzK4LQg7Nc9ShOMIrpcTZjYnNPpwNE+2pyaw=;
-        fh=N6VImbXMp7ifA6WeGUCxk+btV1uQ3lYN+1XlxQs+Sks=;
-        b=Hk6LGX2VQvmdpRgzGDJJTMaKCkOTjcujgtwFtQm8ySitzmdJBu1VYMuMsvsDzubLrX
-         5tR5LhIXqE10MbWuQBqqiusxIzCAuyYFFmOay7mGQcyBbSfdTYmSNXjIQXAgVYNR+r4G
-         vhkisKR3YPQYKJ5dnEM9sCRkC562M0C5f+QsCwUwxoF1GXSuBIXIu9/8pjVKqc8aixSf
-         M/ls+5NrK4IyiXMOLo2Ov8HOVsP0Igji1J8csT7K9wLlkvQEQv0lNflTMssWMrPAZbFB
-         pOM20nHRSAz8gV6Qe7QeflBqoA70upmcyYKxkDNB5nRRPPRNPKJBHybXGAxNhpkFNXFg
-         sBDA==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1786359341; x=1786964141; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=whp17tHwzK4LQg7Nc9ShOMIrpcTZjYnNPpwNE+2pyaw=;
-        b=qf0K5z/wmI0MGkjG9LElKPMAChuA5q8ZuxKNcWtevm/xbFl820k3gvzWEuiKjHW0IU
-         CJC8jtunxe8hWmvIXsfhUEDcKb1KFbJhNCnME9LDa4WLrLEzCq+t8Xp4S4wr0OtTegaz
-         DF9lUOS8pi+oQUp2RKxmNnzUnAP7KczfjQu/2FL2vqGhqAVnNzbXzOERNNKI2kw3uOp7
-         JkjbQ6fgYu4Jur+oYhYmEJrupUBZnfhkKb2sDo3yY5JiTqt1QQm7bqZ2SDBJeNbOg4I5
-         sw9sNu6ik/nssQ5EqyjaKmsYDj/IZrZIkEKtqrJXcPXwTMzyIiSE89Ewq9sUundTJx0j
-         HfIw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786359341; x=1786964141;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=whp17tHwzK4LQg7Nc9ShOMIrpcTZjYnNPpwNE+2pyaw=;
-        b=s3GFkavtCd+DDP9DLlAEQE8rVXVsJTjybBe3gQWO1osjF/GAR4hOisU6kh+W/NPucR
-         yNW7/BkqpKLs500L3pklG8Pt0eWEVl/GqEjiaVN0O0NoA5EszT2hp51iR6MXuQgnaCTA
-         2D2CrhU8DTbsiabFgLREPmEtB1LhI8aySdCuUJ+W1NSZtw2kKv1pwSZTg1VMl/sFFMW/
-         6XPdpXityzejdo+8fQr5f8RDkvIusR4y39lt3qI8g9E9a5CEbObw6bNks/2y8y77jN10
-         sUwI5vzpvOeMzZ000w3SqcGoPuMZHaM575w8fzZbdW8Q1279agMC6l+rfItdQ03i8s3u
-         W20A==
-X-Forwarded-Encrypted: i=1; AHgh+RqIxtO6wJC91UXeVzzXBsXkCwdevDsP8d59jvA4nC5wvuFJgHUEYQUj3YB5bm5Py+PR/5oebrjM5Ec=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwBDGDRmbO4rmOhJQz3sSnEAg6fRp/VvhMcml4NCnNoOW/XDuPa
-	mISo3mDARaQtXzpK/KwHGi35Dff4AW3WeZLY/DsOCwOPNVDo5IncKQYpWlFT2EsNoYLa2Q+Pj5I
-	DQQBDpOh0kfJAT3f3freh639KYHFRLkU=
-X-Gm-Gg: AR+sD13avQe+9Ll6D9/tg4rZ09oU2/WfW1SuizwMApw+muvNcqZpj3iNnPZTeHrBBJX
-	vpY/uVr1bVbzpNe9v3qgGMFXFB+k65V4oFzRENTFPFTldqzO3wgI2ZKT/90iIehAfJYGtGqV/3V
-	ORhIs0PYirUMBJlaXoeDJQPGfkaguzyp9jzW/WoSEfwioBVtize1VGQmqsjnIPo6qtkji6k8eKL
-	kdxfeVpbsCf5mCFA0/3ezsphsxghj/eR6NDbhwR87DE1CZ0p66dJ4Q9cetmY+1boP4+HCDH6IMC
-	Evu0KSMACk+co5LBX4Hf48RcA2PgI8aoYc/g3Rfw9w==
-X-Received: by 2002:a05:6214:2684:b0:908:9fd5:ed42 with SMTP id
- 6a1803df08f44-90a34707604mr228548096d6.28.1786359341307; Mon, 10 Aug 2026
- 03:55:41 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b="Cttdo2sT"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=Off2ILzdTIrNBpsW8B86VbBSqcKwlTHEl7phueu5JBPkw72QUB4Uzsrj66v4JlFw8tnK/N4S8KaK+CK+w13mBaCfd7QrAusA3zsVmCOQII70NV6FLyN5QzJnKTg9mbu6c0cnmAkzU1xv8IbKQcw/cnzOpNY9HQ4q7UNOmRbmIOZ23epxTtc179xjXM7MezIdKN36UxuspbM4K1RcxZMnJijywgM15KHznABY0NauMXCvF2IDPqj9x2bYQhw5tF1TuxWEsbBJhrAhyTy+mfzdhbv4fbrdfCNVK0CzxRIrCvZMVgNju8kXMVUq3P4wTaMbXyRCnYqF4YXHlvaBZmDcgA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=Dt0/8c5S3U5GQtrTBhUZp6Emr5f92yZPhPC+zVxfY3I=;
+ b=ZHpLvC1QM2ZK40C6/5skVZjEJuLKluNNR6SAQHxcLAhBd5y8tBnBYFw45xAWUwkSQb/R3QX7WkSb2/uN0Jvw7eb78HpJ/sfCwO6BA0nMDZhOWsGwuZ4SpPlNfHV463/G0aiydWFjtPXQwQViz0X1R40w7Pz/uxJXy0MMpje6BJaH8Q5EUesP/CAQxFKO9NI2ayJJ7NFJeCz7m9j+Osgm4nZRNhHViw8dJHeZgAXCmXnPLK5nuuxyhZucsweKi82eV+2SaoUsc/f/d2tKYZVuXrCyuvLugTmXiaYnv5j3BvAuRRCMNc5KSND1MQIsPqbqBlJCHurtf0remR1tFlCA+g==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=garyguo.net; dmarc=pass action=none header.from=garyguo.net;
+ dkim=pass header.d=garyguo.net; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=garyguo.net;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=Dt0/8c5S3U5GQtrTBhUZp6Emr5f92yZPhPC+zVxfY3I=;
+ b=Cttdo2sTTaXo7THyJIfiaHeyUxwQptofx1tesSk6QA5DuAYrOu6svvIZ1oXxpnr7jSzlUHVqnlCJKsqyCVzU8q1z8gqNQi0M4SkipjzRrN0rZqztARbezhkDbbCHrqn2cT1LufNvPGjkk0GnYGm6SGz9UDwVt8J+YBbUyNix7Eo=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=garyguo.net;
+Received: from LOAP265MB8560.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:4ab::19)
+ by LO8P265MB7485.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:3b5::13) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.292.25; Mon, 10 Aug
+ 2026 11:21:39 +0000
+Received: from LOAP265MB8560.GBRP265.PROD.OUTLOOK.COM
+ ([fe80::f60b:1537:68d7:4fc1]) by LOAP265MB8560.GBRP265.PROD.OUTLOOK.COM
+ ([fe80::f60b:1537:68d7:4fc1%4]) with mapi id 15.21.0292.024; Mon, 10 Aug 2026
+ 11:21:39 +0000
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Mon, 10 Aug 2026 12:21:38 +0100
+Message-Id: <DKL837PVU38R.3OONERSO8RMOW@garyguo.net>
+From: "Gary Guo" <gary@garyguo.net>
+To: "Alexandre Courbot" <acourbot@nvidia.com>, "Gary Guo" <gary@garyguo.net>
+Cc: "Danilo Krummrich" <dakr@kernel.org>, "Alice Ryhl"
+ <aliceryhl@google.com>, "Daniel Almeida" <daniel.almeida@collabora.com>,
+ "Miguel Ojeda" <ojeda@kernel.org>, "Boqun Feng" <boqun@kernel.org>,
+ =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, "Benno Lossin"
+ <lossin@kernel.org>, "Andreas Hindborg" <a.hindborg@kernel.org>, "Trevor
+ Gross" <tmgross@umich.edu>, "Tamir Duberstein" <tamird@kernel.org>,
+ =?utf-8?q?Onur_=C3=96zkan?= <work@onurozkan.dev>, "David Airlie"
+ <airlied@gmail.com>, "Simona Vetter" <simona@ffwll.ch>, "Bjorn Helgaas"
+ <bhelgaas@google.com>, =?utf-8?q?Krzysztof_Wilczy=C5=84ski?=
+ <kwilczynski@kernel.org>, <driver-core@lists.linux.dev>,
+ <rust-for-linux@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+ <nova-gpu@lists.linux.dev>, <dri-devel@lists.freedesktop.org>,
+ <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v2 02/16] rust: io: add `IoRepr` trait
+X-Mailer: aerc 0.21.0
+References: <20260805-typed_register-v2-0-c3ca142220a0@garyguo.net>
+ <20260805-typed_register-v2-2-c3ca142220a0@garyguo.net>
+ <DKL5Q2P868GQ.29WSPCWX4HTHJ@nvidia.com>
+In-Reply-To: <DKL5Q2P868GQ.29WSPCWX4HTHJ@nvidia.com>
+X-ClientProxiedBy: LO4P302CA0030.GBRP302.PROD.OUTLOOK.COM
+ (2603:10a6:600:2c1::16) To LOAP265MB8560.GBRP265.PROD.OUTLOOK.COM
+ (2603:10a6:600:4ab::19)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CAGXv+5HrDw8GWb9zp1AaQU9UW+0FGcr7jOV2jt_zi_2KgfgBqA@mail.gmail.com>
- <20260807152059.GA39821@bhelgaas> <CAGXv+5GNvV0yfX2v7E9HxvFpm0xwhGMQLjec=_xV_6YipXFcbw@mail.gmail.com>
-In-Reply-To: <CAGXv+5GNvV0yfX2v7E9HxvFpm0xwhGMQLjec=_xV_6YipXFcbw@mail.gmail.com>
-From: "Christian Marangi (Ansuel)" <ansuelsmth@gmail.com>
-Date: Mon, 10 Aug 2026 12:55:28 +0200
-X-Gm-Features: AUfX_mybRPX8_wU1Vtkqf_AyjNZAKV0N0JAhtDmUF1bKQ7p9IPinpVnjULwvpq0
-Message-ID: <CA+_ehUxa6U+0FEFuptJXQZ0kwbthYjshZftx32CmwkisAyo=+A@mail.gmail.com>
-Subject: Re: [PATCH v5 0/2] PCI: mediatek-gen3: Add 2-lanes mode support + clock
-To: Chen-Yu Tsai <wenst@chromium.org>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
-	=?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
-	Ryder Lee <ryder.lee@mediatek.com>, Philipp Zabel <p.zabel@pengutronix.de>, 
-	Matthias Brugger <matthias.bgg@gmail.com>, 
-	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>, 
-	Jianjun Wang <jianjun.wang@mediatek.com>, linux-pci@vger.kernel.org, 
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-mediatek@lists.infradead.org, linux-arm-kernel@lists.infradead.org, 
-	Benjamin Larsson <benjamin.larsson@genexis.eu>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: LOAP265MB8560:EE_|LO8P265MB7485:EE_
+X-MS-Office365-Filtering-Correlation-Id: 924a46ae-14ab-45d5-427d-08def6d18c1f
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|376014|366016|7416014|1800799024|23010399003|10070799003|6133799003|4143699003|5023799004|56012099006|10067099003|3023799007|18002099003|22082099003;
+X-Microsoft-Antispam-Message-Info:
+	x8e+mAErGsQDeX5bVPpsyrzArXP9vtt1xLfsuW89onBo/vLDjicbKQJsa4/8P3LfQfrxTFFRCdevcyncDNiyDAOMQQUKAQf0z4Ak/YsShFxNwx5XUmPtt/CbjdClRQ1ecwgdfzO/OxfCqQYUNQQHC5S3K5tStnP6iq9YjXiz9kYAdVBSK8k7g8SAWdkRP7JIeT/DM6BkAImhD5fGR2Hv5tPpXYtwJFxKJj+G56D4dipJ/Vf+BPcWAx5rzEkk0a5NsidOHWhR8EtJTme0OLoFNQ9cUEut8Vc/rqqhFgvUHmI51n1kjF3XEcQhB8suiYRxqQFxU00ZU0ZoudengHXor7t0S41VXDloaQC9YIBJpDbdNLnBa0ycGDRCf2sT0BbZeofS4mawgY6owNC8f7S5bLAFp+QxJLAphQgSdjR/79lpFUvpyQD84lMFK5QdxcOoDC2t7tXu9h5DYKTP/qzjd56+Xn0FzIU+3ANq+cHXd6Cj8KsFXvff9K4y0dzc/r1GItqtU8bpuTHGAFU50PaUbo/bzaHfGkwWMZjsCKjjGb2gjKWG3X9aTYy2HHyk0vlnw00CZvdzUVkFN3i5TbLGVMVK9BeDbSfQjHvwngjCHo8gDy0l5c98RtSOxEkkSIy/wlOYnKuO6FNFUCG2HPf/iwyEhtt5Z3XIbN4ijy80cOY=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LOAP265MB8560.GBRP265.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(376014)(366016)(7416014)(1800799024)(23010399003)(10070799003)(6133799003)(4143699003)(5023799004)(56012099006)(10067099003)(3023799007)(18002099003)(22082099003);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?WE9JOVhwQTZUVmdKZTdlenRnVVZDRVMyTVg0YzJOVnA3N0l6WDZidFl2eXBy?=
+ =?utf-8?B?elJHZ3FuNVJRZmVWK0M1dVB3K1NTdERseHh6OERLR1VaUnFnQWEyYzdRaURj?=
+ =?utf-8?B?c280SGx6UDJUdEs3dm1EdSs0ZVF1N3hLcURBWW5hVWFJOXRRM05NaUlxamV1?=
+ =?utf-8?B?WGlsN1ZWME1BcU5ERDRBQktzYkhmd2VxcTZuMU1zc09lanZjemdEMC9menJT?=
+ =?utf-8?B?MWRzRHRiWTA3UnVZQVpLZGEyNm12VkQ4akF4NmJTRnM0L21Kc2NHSFREUWVL?=
+ =?utf-8?B?MGFMZkhqWDZ4MU51UUduemdkTHg4MGkyaEk2ZkVHOHZmeDdxNXV6aitzdWpk?=
+ =?utf-8?B?OGtkVmJLUW95RGpmR3J0VDVFL1FIRlZYV2RZZDhFMERIWGpaOThyOWxMUnZE?=
+ =?utf-8?B?RVZXVjFyWm9FdnZTNXdrd2R0UFBXWnlIZW4wdGFHM1kwcXREazZNeVlRTDRq?=
+ =?utf-8?B?b0xmdW5WaWh6Sk12U2JIMGl0RURGUlVRVERiUzREVnpmNVgvMTVud3FSNmMy?=
+ =?utf-8?B?dEhHeW1NMU9ZbHhUUk5LQ3QvR0gvN1FqS2M1R3ZwK253SlpUcUdOY2szK0Mx?=
+ =?utf-8?B?T0dhM2p3Y1hiWGo2aGQ1dGdsUnpnaCtSS01sOE1ydFNTS0ozZERQck1BaU1Q?=
+ =?utf-8?B?dDNkK3p0L0I5M2pVZkJQaitOVjRyRDBKdEFWTlM1ZklKZ0VuRllrVUI2UDMv?=
+ =?utf-8?B?VTRFcTZYSGFrSVEwZHhIWFYzVFhoVkRwWlNaU0tvWjErMVZGcUJPQzZSNDRk?=
+ =?utf-8?B?aWhFcmhZaEZZV2x0TFhXbWVXa2lGZE4zcTF2V1FxV3N1MCtqOTVTYW1LZThj?=
+ =?utf-8?B?VysxNUdhYjNQclk1WW1SaHd2TE1HUFNpUktkajlVdmZ2RCtYdkVLekVvSHRj?=
+ =?utf-8?B?b0UwWThsSkdEVTFxemM3cVF3aHFrNWRtaEhPeDRHdytVcC9vdmxDUWhkaGU5?=
+ =?utf-8?B?VVE2Wk0yb1NMdkRoZ2UwM1N4enRCS2wyNmFPOWIyUWNPY0RjZTl6YmRTbDJj?=
+ =?utf-8?B?MzFQcmdLVkxiOGFVL2VlZFVKTWNjMWdaRm5vWWN2NTBocEE2alljSXZmeDdi?=
+ =?utf-8?B?RkJPM2tYWFdMempsbGVJSHByaFM2OTlFRWhBRzFiK0trdktsWGQxTHF5VUZz?=
+ =?utf-8?B?OGNiZEpuV21CU1NQSFM1a2hBMVFITUcwcU55ZXlRMSt1Yk5TUkdRTFNvUVBl?=
+ =?utf-8?B?Ymp3TEdneTQ1d29ISklDMGh0WUcySnRxZWRXTDNGM0RTeUZrY2tkeHhrQUw5?=
+ =?utf-8?B?eTJCN0IxdUIvQnd5UUJTMC90WFVLRlRYV29saVFKU3hySXpIamh2SU0wTFds?=
+ =?utf-8?B?WGJyWExsbk5mRG1RMjVXNEEwcDlZYzFQYVdYLzBOVWVhY29zU0U5OW9NMDlz?=
+ =?utf-8?B?blc3UWRpMzhHZGU4SGRGZmpnQytXdUFlUWp5STZCSTh3RFloK2hIZ1dRMzBU?=
+ =?utf-8?B?RndheEM0dmpsY3FtbTRPbC9FWG5jd3AySUpsSXJZUVZrNWlpRk02S05Ia1U3?=
+ =?utf-8?B?SVUvM0piNUxPWkc4QURFZW5NRVJCdmJrK0I5cFkrcnpUaWJ4R2dYY2liVHdz?=
+ =?utf-8?B?MjlSWDVPdnBUdDFxRmdPL3Q4c0d1NFZHclkvaEY1UlhKWlR2RG9jSlMxYWNS?=
+ =?utf-8?B?Y09BKzFGUCtISnpoNkZtL3AvQm9mOUs2TEVSWE9HZkNyaVVuRFZMVWpKczIr?=
+ =?utf-8?B?S3FuOVVFcHphK3RSbHdLMndUV1gwZFJ6YWdLNzd5ZFZKRG1qQU9QenVxMktn?=
+ =?utf-8?B?eUgrK0lwdUkwQy9ZbTZrYjBzcEVET1V5eTJFYWlEbTcvYTJzNzQyUTdwdWZW?=
+ =?utf-8?B?Zm1ya2pxanlFOGRhb2pBeEdRQVVqNnErWkdXV0wvcnp3dlRtelM0NmNYUzlu?=
+ =?utf-8?B?SUt3ZnRrL1lleXNXMFpjY2hQS0wxUDh6dndvWEN0UGZMbXB3ODBsT2VCYmdD?=
+ =?utf-8?B?dFdVcHNjbk4ydVg5aEZ3OXl2ajJaVXlGZDNSUGw5N0tuWVlSYzVvOXorMXAw?=
+ =?utf-8?B?MVNiTGlCM3pZa1dIT3c1aWdiQnMrRUR3WkpVbUhzZXdORG1HdXFaa2gzNmtu?=
+ =?utf-8?B?TlVZejlEQldyR3krZGoxZ3NrY25nTXZOZmdzQWFwMElJZUdocFhVcWxvUVJs?=
+ =?utf-8?B?dlc1Z01RakpNb3E0NFNmN2Z4cnhDNUZ0TGtmUHBuN2hjUUlRcUc2MXRWRVhL?=
+ =?utf-8?B?VTJXUmxxMzFTcTJTZkt6S0lyanhrNXpyUmpxZlFsOC9BSm5RTG9kTmQzWUpl?=
+ =?utf-8?B?K1k5S1Fyb0V4WWVENVJySUpIN0phMVAwcUpBeElYK0hlcmVYRHB5UXhaZ0xL?=
+ =?utf-8?B?aEthQmltQlN6WGpPNjFlMWxFNkU1QTFlRStTdDU5Y3M5Yy9LNExjQT09?=
+X-OriginatorOrg: garyguo.net
+X-MS-Exchange-CrossTenant-Network-Message-Id: 924a46ae-14ab-45d5-427d-08def6d18c1f
+X-MS-Exchange-CrossTenant-AuthSource: LOAP265MB8560.GBRP265.PROD.OUTLOOK.COM
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 10 Aug 2026 11:21:39.3933
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: bbc898ad-b10f-4e10-8552-d9377b823d45
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 3Ku28JySzzHK+8z9BYLUF53W/3+WCSnkZ0z8sPKyWXzpvXMb4O80JtwA7fu0bXf1dF4IoDsyEDZb00+/9Kn/gQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: LO8P265MB7485
 
-Il giorno lun 10 ago 2026 alle ore 12:33 Chen-Yu Tsai
-<wenst@chromium.org> ha scritto:
+On Mon Aug 10, 2026 at 10:30 AM BST, Alexandre Courbot wrote:
+> On Thu Aug 6, 2026 at 1:35 AM JST, Gary Guo wrote:
+>> For types that are layout-compatible with an I/O capable type, we would
+>> want the ability to use them directly for I/O operations. E.g.
+>>
+>>     bitfield! {
+>>         pub struct Foo(u32) {
+>>             ...
+>>         }
+>>     }
+>>
+>>     #[repr(C)]
+>>     struct Bar {
+>>         foo: Foo,
+>>     }
+>>
+>>     let mmio: Mmio<'_, Bar> =3D ...;
+>>     io_read!(mmio, .foo)
+>>
+>> Currently this feature is available from `register!()` macro but not
+>> otherwise available with `io_read!`, `io_write!`. Support this by adding=
+ a
+>> `IoRepr` type to denote the underlying I/O type to use for a specific ty=
+pe.
+>>
+>> This makes the `IoLoc::IoType` and `Register::Storage` redundant; thus
+>> remove them; also convert register methods to use the `read_val` and
+>> `write_val` instead.
 >
-> On Fri, Aug 7, 2026 at 11:21=E2=80=AFPM Bjorn Helgaas <helgaas@kernel.org=
-> wrote:
-> >
-> > On Fri, Aug 07, 2026 at 11:24:09AM +0800, Chen-Yu Tsai wrote:
-> > > On Fri, Aug 7, 2026 at 12:53=E2=80=AFAM Christian Marangi <ansuelsmth=
-@gmail.com> wrote:
-> > > > This small series introduce support for 2-lanes mode for Airoha AN7=
-581
-> > >
-> > > Just a nitpick, but I would probably name this something else, like
-> > > "cross-controller lane-bonding mode" or "lane stealing"? PCIe already
-> > > has 2x lanes as a standard feature, so this naming is a bit confusing=
-.
-> > > It's not like dual-LVDS display in which LVDS is only a single lane.
-> >
-> > I suggested the "2-lane" and "x2" terminology because I assumed the
-> > result is what the PCIe spec would describe as a "x2 Link" consisting
-> > of two Lanes.
-> >
-> > If that's not the case, maybe "cross-controller lane-bonding mode" or
-> > "lane stealing" would be more accurate, but I don't know what those
-> > mean, so if we use them I would also like to know what the result
-> > looks like in standard PCIe terms.
+> Ah that's nice, I was a bit bothered that `IoType` and `Storage`
+> basically defined the same thing.
 >
-> Benjamin pointed out later in the thread that it is just bifurcation.
+>>
+>> Signed-off-by: Gary Guo <gary@garyguo.net>
+>> ---
+>>  rust/kernel/bitfield.rs    |   5 ++
+>>  rust/kernel/io.rs          | 203 ++++++++++++++++++++++++++++++++------=
+-------
+>>  rust/kernel/io/register.rs |  59 +++++--------
+>>  3 files changed, 170 insertions(+), 97 deletions(-)
+>>
+>> diff --git a/rust/kernel/bitfield.rs b/rust/kernel/bitfield.rs
+>> index 35ede53f2b8e..4bc92c62da06 100644
+>> --- a/rust/kernel/bitfield.rs
+>> +++ b/rust/kernel/bitfield.rs
+>> @@ -308,6 +308,7 @@ macro_rules! bitfield {
+>>          $(#[$attr])*
+>>          #[repr(transparent)]
+>>          #[derive(Clone, Copy, PartialEq, Eq)]
+>> +        #[derive($crate::prelude::FromBytes, $crate::prelude::IntoBytes=
+)]
+>>          $vis struct $name {
+>>              inner: $storage,
+>>          }
+>> @@ -346,6 +347,10 @@ fn from(val: $storage) -> $name {
+>>                  Self::from_raw(val)
+>>              }
+>>          }
+>> +
+>> +        impl $crate::io::IoRepr for $name {
+>> +            type Repr =3D $storage;
+>> +        }
 >
-
-Yes but as me, you, Benjamin and Bjorn people who weren't there with the HW
-team at times the SoC was created, and given how the internal documentation
-these are just assumption and observation... Everyone can be correct and wr=
-ong.
-
-> I would assume "PCIe bifurcation" is a standard term, so maybe we could
-> call this "Support un-bifurcated 2-lane operation"?
+> This introduces a dependency from `bitfield` to `io`, which looks like
+> inconsistent layering. But thankfully there is an easy fix - see below.
 >
-
-And how coming from PCIe bifurcation to un-bifurcated 2-lane operation keep=
-s
-the standard meaning?
-
-This terms is equally custom as the previous "cross-controller
-lane-bonding mode"
-and "lane stealing"
-
-I want to be honest... I'm not following why we are trying in every
-way possible to find
-a standard meaning for an highly integrated PCIe controller for a vendor So=
-C.
-It's not like there are devices shipped with PCIe slot where you can
-insert whatever
-card you want. (there is only a single RFB board but that is really to
-debug stuff and
-develop)
-
-The SoC is designed to have WiFi cards attached and only a subset of them.
-And some of them require 2 lanes mode to work with this special configurati=
-on.
-
-Even the DT bindings are not that specific to the details... at the
-end of the day
-everything is modelled as simple as "num-lanes =3D <2>;"
-
-And that is effectively what the HW gets configured to. If then a
-robbery is done
-internally to the HW to get the second lane with probably some criminal act=
- and
-some murder then those are just details. But unless we have a correct polic=
-e
-report on that (Documentation) we can't assume someone got shot in the
-process.
-(sorry for the joke around the stealing thing)
-
-> On the implementation side, having to reach into the second PCIe controll=
-er
-> is a bit messy :(
+>>      };
+>> =20
+>>      // Definitions requiring knowledge of individual fields: private an=
+d public field accessors,
+>> diff --git a/rust/kernel/io.rs b/rust/kernel/io.rs
+>> index adfc555de7d0..71c6180ed745 100644
+>> --- a/rust/kernel/io.rs
+>> +++ b/rust/kernel/io.rs
+>> @@ -276,6 +276,91 @@ pub trait IoCapable<T>: IoBackend {
+>>      fn io_write<'a>(view: Self::View<'a, T>, value: T);
+>>  }
+>> =20
+>> +/// Safe transmute that performs size check on monomorphization-time.
+>> +///
+>> +/// Can be considered as generic version of [`zerocopy::transmute!`] ma=
+cro but using the unstable
+>> +/// `core::mem::transmute_neo` instead of [`core::mem::transmute`].
+>> +#[inline(always)] // This is a no-op.
+>> +fn transmute_neo<Src: IntoBytes, Dst: FromBytes>(val: Src) -> Dst {
+>> +    const_assert!(size_of::<Src>() =3D=3D size_of::<Dst>());
+>> +
+>> +    // SAFETY: `Src: IntoBytes` and `Dst: FromBytes` and we've checked =
+size is the same.
+>> +    unsafe { core::mem::transmute_copy(&core::mem::ManuallyDrop::new(va=
+l)) }
+>> +}
 >
+> This is universally useful, so let's move this to the `transmute` module?
 
-I can assure you vendor hide all kind of bad stuff behind single register..=
-.
-It's just Airoha that loves to expose godzillion registers and configure
-everything clearly... Something that most of the time is better than hiding
-everything behind ATF with SCM commands (or even configure stuff
-in bootloader from HW strap)
-
-A bonding solution where 2 controllers are configured and then bonded might
-also be problematic as for 2 lanes mode the configuration needs to be done
-in the same time segment. (and that would introduce lots of complexity in
-both DT and driver for the sake of just having an additional reset and
-an additional reg)
-
-Aside from these 2 point... I'm open to any kind of naming and change
-but it seems sad to me to delay this feature for these details that would
-only affect the commit description and nothing else... This is currently ne=
-eded
-for Eagle WiFi card to correctly works... With the current code it works bu=
+I think we can just have a `kernel::mem` and put it there so it's consisten=
 t
-sometimes it doesn't as the reset and configuration phase is not well defin=
-ed.
-This series fix exactly that to have stable functionality (tested on OpenWr=
-t
-from at least half a year)
+with std naming. The `transmute` module just contains two types that are go=
+ing
+away.
 
-> > > > SoC. This is needed for correctly functionality of Eagle WiFi Card
-> > > > normally attached to this SoC that require a 2-line PCIe card to
-> > > > correctly work (and give the proper performance)
-> > > >
-> > > > The first 2 patch address a limitation of the PCIe implementation
-> > > > where the PERSTOUT reset were indirectly asserted and deasserted
-> > > > all at the same time (for all the 3 PCIe card) with PCIe
-> > > > enable and disable.
-> > > > The 2 patch address this and introduce correct reset to control
-> > > > reset line for the relevant PCIe line.
-> > > >
-> > > > The last 2 patch add additional logic and support to assert
-> > > > and deassert the PERSTOUT and also apply the required configuration
-> > > > for 2-lanes mode.
-> > > >
-> > > > 2-lanes mode is implemented in DT by adding the required property
-> > > > and by defining the "num-lanes" to 2.
+Ideally we have this function in `zerocopy`. But my understanding is that t=
+his
+depends on inline const which is stable since 1.79 but zerocopy's MSRV is 1=
+.56.
+
+>
+>> +
+>> +/// Trait indicating the underlying primitive types to be used for I/O =
+operations.
+>> +///
+>> +/// Implementing trait allows arbitrary types to be used for I/O operat=
+ions, not just raw
+>> +/// primitives.
+>> +///
+>> +/// The layout of the type and the underlying primitive must match; thi=
+s is enforced via const
+>> +/// assertions when I/O methods are used, as the type system cannot rep=
+resent this.
+>> +/// [`IoRepr::from_repr`] and [`IoRepr::into_expr`] can be overridden f=
+or conversions, however it
+>> +/// should be noted that they are only invoked on value read/write oper=
+ations and are not invoked
+>> +/// on byte operations such as [`Io::copy_read`].
+>> +///
+>> +/// # Examples
+>> +///
+>> +/// ```
+>> +/// # use kernel::io::*;
+>> +/// #[repr(transparent)]
+>> +/// #[derive(FromBytes, IntoBytes)]
+>> +/// pub struct MyNewType(u32);
+>> +///
+>> +/// impl IoRepr for MyNewType {
+>> +///     type Repr =3D u32;
+>> +/// }
+>> +///
+>> +/// #[repr(C)]
+>> +/// pub struct MyStruct {
+>> +///     raw: u32,
+>> +///     new_type: MyNewType,
+>> +/// }
+>> +///
+>> +/// # fn test(mmio: Mmio<'_, MyStruct>) {
+>> +/// // let mmio: Mmio<'_, MyStruct>;
+>> +/// let val: u32 =3D io_read!(mmio, .raw); // Raw primitive read
+>> +/// io_write!(mmio, .raw, val);          // Raw primitve write
+>> +/// let val: MyNewType =3D io_read!(mmio, .new_type); // Read via `IoRe=
+pr`.
+>> +/// io_write!(mmio, .new_type, val);                // Write via `IoRep=
+r`.
+>> +/// # }
+>> +/// ```
+>> +pub trait IoRepr: FromBytes + IntoBytes + Sized {
+>> +    /// The backing I/O capable type.
+>> +    type Repr: FromBytes + IntoBytes;
+>> +
+>> +    /// Convert from [`IoRepr::Repr`] to `Self`.
+>> +    #[inline(always)]
+>> +    fn from_repr(repr: Self::Repr) -> Self {
+>> +        transmute_neo(repr)
+>> +    }
+>> +
+>> +    /// Convert from `Self` to [`IoRepr::Repr`].
+>> +    #[inline(always)]
+>> +    fn into_repr(this: Self) -> Self::Repr {
+>> +        transmute_neo(this)
+>> +    }
+>> +}
+>> +
+>> +macro_rules! impl_io_repr {
+>> +    ($($ty:ty =3D> $backing:ty,)*) =3D> {
+>> +        $(impl IoRepr for $ty {
+>> +            type Repr =3D $backing;
+>> +        })*
+>> +    };
+>> +}
+>> +
+>> +impl_io_repr! {
+>> +    u8 =3D> u8,
+>> +    u16 =3D> u16,
+>> +    u32 =3D> u32,
+>> +    u64 =3D> u64,
+>> +    i8 =3D> u8,
+>> +    i16 =3D> u16,
+>> +    i32 =3D> u32,
+>> +    i64 =3D> u64,
+>> +}
+>
+> ... and `IoRepr` and its implementations for primitive types should also
+> be part of `transmute` IMHO (after being renamed to e.g. `Repr`), for
+> there is nothing I/O exclusive to it. It just indicates that one type
+> can be represented by another, a property that is again useful outside
+> of I/O.
+
+I tried to be a little bit forward looking in designing this, so I ended up
+with a design that provides conversion functions instead of just transmutat=
+ion.
+If we're moving it we should probably just get rid of these and just requir=
+e a
+transmutability with the raw repr.
+
+Note that there is `AtomicType` which has similar (but not equivalent
+requirement). `AtomicType` requires a round-trip transmutability only, and
+`IoRepr` needs both directions. So `repr(C)` enums (that is not used up all=
+ its
+variant reprs) can be `AtomicType` but not `IoRepr`.
+
+>
+> That way `bitfield` gets a dependency on `transmute` rather than `io`,
+> which doesn't break layering.
+
+We can also avoid breaking layering by requiring user to need to specify
+`#[derive(IoRepr)]` when declaring bitfield.
+
+Best,
+Gary
+
+>
+> In order to avoid `Repr::Repr` we can also rename the associated type to
+> `Raw` and update the method names accordingly to `from_raw`/`into_raw` -
+> which would have allowed us to remove the `bitfield` methods of the same
+> name if they weren't needed in const context! But at least it makes
+> things align nicely.
+>
+> <...>
+>> @@ -831,8 +816,8 @@ macro_rules! register {
+>>              { $($fields:tt)* }
+>>      ) =3D> {
+>>          $crate::register!(@bitfield $(#[$attr])* $vis struct $name($sto=
+rage) { $($fields)* });
+>> -        $crate::register!(@io_base $name($storage) @ $offset);
+>> -        $crate::register!(@io_fixed $(#[$attr])* $vis $name($storage));
+>> +        $crate::register!(@io_base $name @ $offset);
+>> +        $crate::register!(@io_fixed $(#[$attr])* $vis $name);
+>>      };
+>> =20
+>>      };
+>> [snip]
+>> =20
+>>      // Implementations of register arrays.
+>> -    (@io_array $vis:vis $name:ident ($storage:ty) [ $size:expr, stride =
+=3D $stride:expr ]) =3D> {
+>> +    (@io_array $vis:vis $name:ident [ $size:expr, stride =3D $stride:ex=
+pr ]) =3D> {
+>>          impl $crate::io::register::Array for $name {}
+>> =20
+>>          impl $crate::io::register::RegisterArray for $name {
+>> @@ -1008,7 +991,7 @@ impl $crate::io::register::RegisterArray for $name =
+{
+>> =20
+>>      // Implementations of relative array registers.
+>>      (
+>> -        @io_relative_array $vis:vis $name:ident ($storage:ty) [ $size:e=
+xpr, stride =3D $stride:expr ]
+>> +        @io_relative_array $vis:vis $name:ident [ $size:expr, stride =
+=3D $stride:expr ]
+>>              @ $base:ident + $offset:literal
+>>      ) =3D> {
+>>          impl $crate::io::register::WithBase for $name {
+>
+> These appear to repeat quite a bit of [1] which is already in
+> `driver-core-next`. You'll want to rebase, I think the only difference
+> between the two is the removal of $storage from @io_base.
+
+I'm thinking of moving this entire thing to syn :)
+
+Best,
+Gary
+
+
