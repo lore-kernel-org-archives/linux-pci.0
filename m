@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C324939AD3B;
-	Mon, 10 Aug 2026 22:50:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3574439AD3B;
+	Mon, 10 Aug 2026 22:50:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786402214; cv=none; b=gCj1h4jc8/S7t5D+iuDx0yUTT4r6h92K+PiTH7001aS2xp/PI8C2lCWXh//qSerHibLyRaZYl0iwgJ3qVbuIhMxn2V/HTgw71+LPtjqA0oGuiaCBvWld497qCtPCO7heV0JRHyAeHe23FabiNzG3eGQaHF1ONEr+xX3KqfBSQEc=
+	t=1786402219; cv=none; b=ACikwXA1ImdgDiVMdeKr5VJN7RM79uS5/On6KoXeGOT39LInAp2FUf6bnkoD0F3vaiqk/kLv9W013RbZ+4Mk5vKAAHE371aQvSEZ9mQtEvFzvRizFEEd2GWFdbGwgUmphF+SOI+YxaaGB25VD5oxy3qnj0Toj/N1zXbL2W514kY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786402214; c=relaxed/simple;
-	bh=fVhkaAYsHwHl2ZNPSTLjEiNP4c8pdj212fQ2gFanOrc=;
+	s=arc-20240116; t=1786402219; c=relaxed/simple;
+	bh=gP/fNVBFjn0Rdf4qPPe94sujlET025pmS/jkSNT7CXk=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=sayN762SxEwlUUun0VrrSjl+J8/NLWnugaUl7QWUJC4onYECKKkBMkEHT3pxRZMFaY/6YWgoo072BnALvQ/FxucQWnsiVvNI7YVmIrxA3qHY/gpUXE6Acm9Oo/Ktc/rZDSYtYF82oVQQMgNxLhONphpsrYusdkAUjlhH5C1J6sA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=otj9Z5At; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=XAlwIuH/5cVwS6FdfDtzB27Q5/oYK81zfUanNtLxnNbLiWHOypSIggAd7QKjQ12fNi72rccg6NfihAkp938OcV65j358aghv3DGGbAMvCUuQKxY2pkkP09oNVwDl2T/KGgsvqiqVEOa+RR3W7h9Fzox1EkswxLWsucNXQXBm5Ro=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JX90LC4J; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="otj9Z5At"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9121E1F000E9;
-	Mon, 10 Aug 2026 22:50:07 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JX90LC4J"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E6DE01F00A3A;
+	Mon, 10 Aug 2026 22:50:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786402212;
-	bh=w2oNiNgPZWWxJG/BlshTlKa5yCRKRo3XyNXanMUjbsw=;
+	s=k20260515; t=1786402217;
+	bh=+D4M/uHINnEQaeAisENwcFYZdRyOd0W8ZlKKo1bHHe4=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=otj9Z5AtirQQb1ZuJlRqiGIJ7hCqdiVS48Ti913qz1cP+yceqUe5Ho2SSCB+jodG8
-	 y0d9cFiQodSvpneg6zrOXhS/VDftD+Mv+D/btv7wVqcDXZW+K2HJuAUroFIpGTG+6e
-	 0EEpvjZVqDql0CrcL23N4SaIKmYuGr8HHS7mhoe61NVaqD9Ll3kGJrJ45VdDcWC5Ek
-	 8yWXSFVkw9aTTgovgDomxHvBQtXbggy5DQ1b+7M1lWk3BJHCGrFx78cLZrT9pvcLWC
-	 sNwCpbjAn36FAxseHUykiWRfTUhzvdiKS2/UQQnU3uu6EgUwMfMKQVnheLgXCyLOoq
-	 0uF7YQLeW4XOg==
+	b=JX90LC4JDSOGj/m4G6MJBm87B083EOWD/lEMpNFvsFMP8+D1aJ4ujqlGPMB7SzjfJ
+	 BpKYfsrVBXJl5k/dugHYt2niL/COIDKQ61wzEtuHlMcrBE16rLatdpyJ4SKfDLcyu8
+	 Ooc/IGPl2RzOZhrmzs6dLDyRgO1br6CdIMUo127xkxhaOYEG4Aqm4f+6kBlXMBY/cl
+	 P9Y+Wjr39uv5l9JokCI0fXvEueUAJpw8V5MWVIEcko45nQSYkfTKeg5jP2/IMzqCGj
+	 PM9vYpVGnWuVutmmMWD1v3+EwvTDauRwRcnv/m8MHeOoI1YJADEJiLM6sGPufPW35c
+	 vQwlnl55l4whA==
 From: Danilo Krummrich <dakr@kernel.org>
 To: bhelgaas@google.com,
 	dakr@kernel.org,
@@ -52,9 +52,9 @@ Cc: driver-core@lists.linux.dev,
 	linux-pci@vger.kernel.org,
 	rust-for-linux@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH 3/5] rust: pci: remove IrqVector and resolve IrqRequest directly
-Date: Tue, 11 Aug 2026 00:47:42 +0200
-Message-ID: <20260810224800.2314458-4-dakr@kernel.org>
+Subject: [PATCH 4/5] PCI: add pci_irq_type() to query the allocated interrupt type
+Date: Tue, 11 Aug 2026 00:47:43 +0200
+Message-ID: <20260810224800.2314458-5-dakr@kernel.org>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260810224800.2314458-1-dakr@kernel.org>
 References: <20260810224800.2314458-1-dakr@kernel.org>
@@ -66,194 +66,67 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Remove the IrqVector intermediate type; IrqVectorRegistration::request()
-now resolves a vector index to an IrqRequest directly, combining the
-bounds check and pci_irq_vector() call in one step.
+Add a helper that returns PCI_IRQ_MSIX, PCI_IRQ_MSI, or PCI_IRQ_INTX
+based on the interrupt type the PCI core selected after
+pci_alloc_irq_vectors().
 
-Also remove Device::request_irq() and Device::request_threaded_irq(),
-which only exist to convert IrqVector to IrqRequest. Drivers pass the
-IrqRequest from IrqVectorRegistration::request() to
-irq::Registration::new() directly.
+Several drivers already open-code this check against pdev->msix_enabled
+and pdev->msi_enabled, or even open code this helper [1].
 
+A common helper avoids the duplication and keeps drivers from accessing
+the bitfield directly (see also [2]).
+
+Link: https://elixir.bootlin.com/linux/v7.1/source/drivers/net/ethernet/aquantia/atlantic/aq_pci_func.c#L196 [1]
+Inspired-by: John Hubbard <jhubbard@nvidia.com>
+Link: https://lore.kernel.org/all/DKKG2QM3YJYB.Z2H2B2UXJ75N@kernel.org/ [2]
 Signed-off-by: Danilo Krummrich <dakr@kernel.org>
 ---
- rust/kernel/pci.rs     |   1 -
- rust/kernel/pci/irq.rs | 109 +++++------------------------------------
- 2 files changed, 13 insertions(+), 97 deletions(-)
+ include/linux/pci.h | 25 +++++++++++++++++++++++++
+ 1 file changed, 25 insertions(+)
 
-diff --git a/rust/kernel/pci.rs b/rust/kernel/pci.rs
-index 2757a0cc0f11..f7f6b21f64bf 100644
---- a/rust/kernel/pci.rs
-+++ b/rust/kernel/pci.rs
-@@ -51,7 +51,6 @@
- pub use self::irq::{
-     IrqType,
-     IrqTypes,
--    IrqVector,
-     IrqVectorRegistration, //
- };
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 64b308b6e61c..80b8561b5be0 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1783,6 +1783,26 @@ void pci_free_irq_vectors(struct pci_dev *dev);
+ int pci_irq_vector(struct pci_dev *dev, unsigned int nr);
+ const struct cpumask *pci_irq_get_affinity(struct pci_dev *pdev, int vec);
  
-diff --git a/rust/kernel/pci/irq.rs b/rust/kernel/pci/irq.rs
-index 38a7d72dcda7..d69ab6435a80 100644
---- a/rust/kernel/pci/irq.rs
-+++ b/rust/kernel/pci/irq.rs
-@@ -9,7 +9,6 @@
-     device::Bound,
-     error::to_result,
-     irq::{
--        self,
-         IrqRequest,
-         IrqRequestAnchor, //
-     },
-@@ -69,35 +68,6 @@ const fn as_raw(self) -> u32 {
-     }
- }
- 
--/// Represents an allocated IRQ vector for a specific PCI device.
--///
--/// This type ties an IRQ vector to the device it was allocated for,
--/// ensuring the vector is only used with the correct device.
--#[derive(Clone, Copy)]
--pub struct IrqVector<'a> {
--    dev: &'a Device<Bound>,
--    reg: &'a IrqVectorRegistration<'a>,
--    index: u32,
--}
--
--impl<'a> IrqVector<'a> {
--    /// Creates a new [`IrqVector`] for the given device and index.
--    ///
--    /// # Safety
--    ///
--    /// - `index` must be a valid IRQ vector index for `reg`.
--    /// - `dev` must be the device `reg` was allocated from.
--    #[inline]
--    unsafe fn new(dev: &'a Device<Bound>, reg: &'a IrqVectorRegistration<'a>, index: u32) -> Self {
--        Self { dev, reg, index }
--    }
--
--    /// Returns the raw vector index.
--    fn index(&self) -> u32 {
--        self.index
--    }
--}
--
- impl IrqRequestAnchor for &IrqVectorRegistration<'_> {}
- 
- impl<'a> IrqRequest<'a, &'a IrqVectorRegistration<'a>> {
-@@ -107,20 +77,6 @@ pub fn vectors(&self) -> &'a IrqVectorRegistration<'a> {
-     }
- }
- 
--impl<'a> TryInto<IrqRequest<'a, &'a IrqVectorRegistration<'a>>> for IrqVector<'a> {
--    type Error = Error;
--
--    fn try_into(self) -> Result<IrqRequest<'a, &'a IrqVectorRegistration<'a>>> {
--        // SAFETY: `self.dev.as_raw()` returns a valid pointer to a `struct pci_dev`.
--        let irq = unsafe { bindings::pci_irq_vector(self.dev.as_raw(), self.index()) };
--        if irq < 0 {
--            return Err(crate::error::Error::from_errno(irq));
--        }
--        // SAFETY: `irq` is guaranteed to be a valid IRQ number for `self.dev`.
--        Ok(unsafe { IrqRequest::new_anchored(self.dev.as_ref(), irq as u32, self.reg) })
--    }
--}
--
- /// An allocation of PCI interrupt vectors for a device.
- ///
- /// This type owns the vector allocation; dropping it frees the vectors. IRQ handlers borrow from
-@@ -143,19 +99,23 @@ pub fn vector_count(&self) -> usize {
-         self.count.get()
-     }
- 
--    /// Returns the [`IrqVector`] at `index`.
-+    /// Resolves the vector at `index` to an [`IrqRequest`].
-     ///
--    /// The returned [`IrqVector`] borrows from this registration, ensuring the vector allocation
-+    /// The returned [`IrqRequest`] borrows from this registration, ensuring the vector allocation
-     /// remains live while any handler is registered on it.
--    #[inline]
--    pub fn vector(&self, index: usize) -> Result<IrqVector<'_>> {
-+    pub fn request(&self, index: usize) -> Result<IrqRequest<'_, &'_ Self>> {
-         if index >= self.count.get() {
-             return Err(EINVAL);
-         }
- 
--        // SAFETY: `index` is within bounds of this registration's allocation, and `self.dev` is
--        // the device it was allocated from.
--        Ok(unsafe { IrqVector::new(self.dev, self, index as u32) })
-+        // SAFETY: `self.dev.as_raw()` is a valid pointer to a `struct pci_dev`.
-+        let irq = unsafe { bindings::pci_irq_vector(self.dev.as_raw(), index as u32) };
-+        if irq < 0 {
-+            return Err(Error::from_errno(irq));
-+        }
++/**
++ * pci_irq_type - Get the interrupt type of a PCI device
++ * @pdev: the PCI device to operate on
++ *
++ * Discriminate the interrupt type the PCI core selected for this device
++ * after a successful pci_alloc_irq_vectors() call.
++ *
++ * Return: %PCI_IRQ_MSIX, %PCI_IRQ_MSI, or %PCI_IRQ_INTX.
++ */
++static inline unsigned int pci_irq_type(struct pci_dev *pdev)
++{
++	if (pdev->msix_enabled)
++		return PCI_IRQ_MSIX;
 +
-+        // SAFETY: `irq` is a valid IRQ number for `self.dev`.
-+        Ok(unsafe { IrqRequest::new_anchored(self.dev.as_ref(), irq as u32, self) })
-     }
++	if (pdev->msi_enabled)
++		return PCI_IRQ_MSI;
++
++	return PCI_IRQ_INTX;
++}
++
+ #else
+ static inline int pci_msi_vec_count(struct pci_dev *dev) { return -ENOSYS; }
+ static inline void pci_disable_msi(struct pci_dev *dev) { }
+@@ -1845,6 +1865,11 @@ static inline const struct cpumask *pci_irq_get_affinity(struct pci_dev *pdev,
+ {
+ 	return cpu_possible_mask;
  }
++
++static inline unsigned int pci_irq_type(struct pci_dev *pdev)
++{
++	return PCI_IRQ_INTX;
++}
+ #endif
  
-@@ -169,49 +129,6 @@ fn drop(&mut self) {
- }
- 
- impl Device<device::Bound> {
--    /// Returns a [`kernel::irq::Registration`] for the given IRQ vector.
--    ///
--    /// # Safety
--    ///
--    /// Callers must not `mem::forget()` the resulting [`irq::Registration`] or otherwise prevent
--    /// its [`Drop`] implementation from running.
--    pub unsafe fn request_irq<'a, T: crate::irq::Handler + 'a>(
--        &'a self,
--        vector: IrqVector<'a>,
--        flags: irq::Flags,
--        name: &'static CStr,
--        handler: impl PinInit<T, Error> + 'a,
--    ) -> impl PinInit<irq::Registration<'a, T, &'a IrqVectorRegistration<'a>>, Error> + 'a {
--        pin_init::pin_init_scope(move || {
--            let request = vector.try_into()?;
--
--            // SAFETY: Caller guarantees the Registration will not be leaked.
--            Ok(unsafe { irq::Registration::new(request, flags, name, handler) })
--        })
--    }
--
--    /// Returns a [`kernel::irq::ThreadedRegistration`] for the given IRQ vector.
--    ///
--    /// # Safety
--    ///
--    /// Callers must not `mem::forget()` the resulting [`irq::ThreadedRegistration`] or otherwise
--    /// prevent its [`Drop`] implementation from running.
--    pub unsafe fn request_threaded_irq<'a, T: crate::irq::ThreadedHandler + 'a>(
--        &'a self,
--        vector: IrqVector<'a>,
--        flags: irq::Flags,
--        name: &'static CStr,
--        handler: impl PinInit<T, Error> + 'a,
--    ) -> impl PinInit<irq::ThreadedRegistration<'a, T, &'a IrqVectorRegistration<'a>>, Error> + 'a
--    {
--        pin_init::pin_init_scope(move || {
--            let request = vector.try_into()?;
--
--            // SAFETY: Caller guarantees the Registration will not be leaked.
--            Ok(unsafe { irq::ThreadedRegistration::new(request, flags, name, handler) })
--        })
--    }
--
-     /// Allocate IRQ vectors for this PCI device.
-     ///
-     /// Allocates between `min_vecs` and `max_vecs` interrupt vectors for the device.
-@@ -220,8 +137,8 @@ pub unsafe fn request_threaded_irq<'a, T: crate::irq::ThreadedHandler + 'a>(
-     /// will try them in order of preference: MSI-X first, then MSI, then INTx interrupts.
-     ///
-     /// The allocated vectors are freed when the returned [`IrqVectorRegistration`] is dropped.
--    /// IRQ handlers registered via [`Self::request_irq`] or [`Self::request_threaded_irq`]
--    /// borrow from the registration, so the compiler ensures they are freed first.
-+    /// Use [`IrqVectorRegistration::request`] to obtain an [`IrqRequest`] for a given vector
-+    /// index.
-     ///
-     /// # Arguments
-     ///
+ /**
 -- 
 2.55.0
 
