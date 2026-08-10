@@ -1,193 +1,156 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yx1-f50.google.com (mail-yx1-f50.google.com [74.125.224.50])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 801CE3AE187;
-	Mon, 10 Aug 2026 10:28:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786357730; cv=none; b=nFEFu+a5rTXbmcA2d6WQF9x02+VePOgbo3fJrcYg43P0LzAV0L2LlyIojZfFnUnM6oX3D6XAjMmBgrBGom7xqUBg2D4+1nvOoILtGXkeC7HMgwQbw4k1wU9jINE4f5M8tt9LIXE2mkLwudxmG/dOlZbOXW5Zx+gTSKzvp7iYwgQ=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786357730; c=relaxed/simple;
-	bh=maqLFykox4FH0KHiP8TnBxvurfPRTkEhw7HCpnqJSOI=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=FLuh3vMFE4UmdV9Yhb8CcmnNBp3qZiPgN94YYUPLU8pPoTkUXueH0JkXev32xumqep+MTPCCe4uw1PI//BK2YhK2ywy5SjmHmdZ5qtxAxQAsn1jjNVPI57O2HiMaFiXHMqoS6Dg8nG+4LSVxk559FeIrNuOpmuJIKsZUdJgm4yU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VNWlz5is; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0ED03AFD1E
+	for <linux-pci@vger.kernel.org>; Mon, 10 Aug 2026 10:33:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.224.50
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1786358006; cv=pass; b=anQmgw+2rtHjAr2ibt+Tdlu6luy6e2tc1sJxGU1xzcISpp+R2vFm7t7O0e6uS4lbJ1SVQ2aL0MDSY/Jhtj737yZV/U4qKHRBCcRyr8kM9GQPMI3oCLFQxsXRSAN0jYWcb3OV9FPvuDnnWUUQBD9uhka6dY1noM+EK11UgrMmrPk=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1786358006; c=relaxed/simple;
+	bh=zDZgGtDZA2SodhjUYL0QDlYRHGpmrmtit/UzUDZv+M8=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=LV0JwA5TdkF2dhghbzD/t2/gojStrRnbSJ8tmF2MbGNUU/oScyCBGaIpoalVDw3RBSR2s4oORq5Ha4RbZfDZZFFV2TZXldpUi4J8DMovG4o41nR1CqGOQpIk7hhZrRRBzcOD1g3r0PGRM0p6fQB6f+KFWptzIheA2XYSjXmpb98=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org; spf=pass smtp.mailfrom=chromium.org; dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b=NHmWkar2; arc=pass smtp.client-ip=74.125.224.50
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=chromium.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VNWlz5is"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1EC5B1F000E9;
-	Mon, 10 Aug 2026 10:28:38 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786357728;
-	bh=HgXIrs2B3DfHBP5nxGyXdoxDZ3P+3le6QMIeyZwLRVM=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=VNWlz5isL+Wt0l8KtVvJpm0kw1mzGgAyZajrwxKfI7Pf0qgoMF33QcDhFAN4nJV/Y
-	 j06/8hXpGIkUiM0CDqI43+YLSqK+2eoPaFcKytISFTkM4NP5AjhFlXTGFDbPUjGB5W
-	 3Afd1IU2O40xsmCrVHb9a+BmmOs3C+NCdRD7Yi9nKiG4ingJxgmyr+hmV3S1xlrqbS
-	 qBm/0Gqe1+z7Yoa3upftAHXC9SF3aJm39IlHcbHI6eX6YVkmyN6GmxKPsrzVEM+8HW
-	 suSFs+u4pASKoE3AXWQ181pZ9RPwZfLLfuRYl3LMHdU6rHR28RFzAM7lmvDz+oA3r4
-	 HjNeuwD0NfZhQ==
-Message-ID: <5330838e-d3f0-454a-b856-bd8fc3e941aa@kernel.org>
-Date: Mon, 10 Aug 2026 12:28:36 +0200
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="NHmWkar2"
+Received: by mail-yx1-f50.google.com with SMTP id 956f58d0204a3-664e3ed58bcso6159607d50.1
+        for <linux-pci@vger.kernel.org>; Mon, 10 Aug 2026 03:33:24 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1786358004; cv=none;
+        d=google.com; s=arc-20260327;
+        b=bFNkJBdElFEjpGo/7bMQ+NbgZ9slqOyQXYVxKuUhjXUxGT7X82aTJvA+StaGlndzIH
+         jCgKbE/ZQro8bSVo8dImt/eA4/IxKfQlnvUq4h1cQ9KUXT2Wu2BSeg8WYzQ5hEBDOiiw
+         AUezF+zUxFGGaPJeUfC9WjoDVVZr+p2HogCOLeeBSuOYFfV/B8+CTpdah4taik+9Aj3n
+         nCAZPTFkJaSX4Vl9s1ExJa0BmDoCc4F+3Rlryx0n8sJZ6fz0178bcCc1bX6UiAAYAJKV
+         /vUE9Th5b7q3mg6zLe1rbNECL7cuJna09IsEYjQDwRcIS8H+EJW8xDJ2FVuQIYDFgky5
+         mJLw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=zDZgGtDZA2SodhjUYL0QDlYRHGpmrmtit/UzUDZv+M8=;
+        fh=CbqkC8e9UWjOE2kVXaaZJzuVSGvj9WJHMza3QCt6+PU=;
+        b=C7JFH/EosAt2/WDrDk2u4vczqI6CELbXSm2LPwGBhqvw8vwVsundlOz008yqK6rXQA
+         Nb4q4OUoIdYqFO3Anhl2mUnmQ2jR2K/9sXiSALmKPCbkGYJLd0T/2LEU07q3ONplL3C/
+         5Bbg2C4vctyXPRT/4nb0yahtT3+rgNRl9zsfLCQ7iLgbSKUqYOk0pDJLyjiEcsyGPh38
+         KMrOMGaUaFEdm3tzWmCjAUOEX1pyzs9yjevwwfr2tRb5osTKpa5p0h5Ytp+Cfmq5r58D
+         mLhKFCZCTNe6m6pK1WOH4DOOMz4Bcfw/4h3TvawTvwRNTnyGmZoDJT8+nGnvg2Mrq/ru
+         s9NA==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google; t=1786358004; x=1786962804; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=zDZgGtDZA2SodhjUYL0QDlYRHGpmrmtit/UzUDZv+M8=;
+        b=NHmWkar2TDJGLoP5nF7FPqt/P5hhoYuW0myeMoLI+fAw9HSTdxpvWgXHLZ3L5ysMqa
+         0yQo0zrzuvHOHm+dNQ3sCXgZiE8DHSJSO+f0ZyXENdX1LINduBo11/t7Lsb2AMxIXhZe
+         PiJ7Ks7hDEptIA78yZpn8nbvZZQzMxcZmlpVQ=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1786358004; x=1786962804;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=zDZgGtDZA2SodhjUYL0QDlYRHGpmrmtit/UzUDZv+M8=;
+        b=DmCJct6bBjUV8XNdvqHWeUZn3JedYamz78ZihwOGFMBZ1WtiAeTJbv0gq86xRpQrFv
+         yxRg1cydtdmmhO/HI4DNquWZOGw8TXjQqqHUx4XTGsxG0iPSV+dNtShf+5rpyMdsWfIv
+         W+Ipc105M0E/bVzut1tkRFTgUN2otjTMXoWWWo4KLjshoTWNPiRUws3FTepUCWXDIWUq
+         sHRwhSy4vnR7eD3z/qv44up37r+EI+bcKwEu9DMEiXe3povH7jiyUOfjDsLy7OAScIdd
+         VravCstCltDBP3YGKeL8P7kPQ/i9k3uuNmmxrwswGQpaHFwEE7xZUPqhTywfLb6OEzOc
+         DZHQ==
+X-Forwarded-Encrypted: i=1; AHgh+RoZQICSDo+LOab5gNcXbTp1GOX2D9RdCibPbR0VNujEPMdudp764Jyg64TlA3pfoc9aLfJVTzAUxOg=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yyp3PA2ZSmphG6UWGv2MS/FEbo4oiCMxbnqbb1qrdXy25KVTrSq
+	l4LHIeehGMZ8VKqz3DhxEjQeF4RaaAg1PO9mXW85RW+GFt9vY7G39kIuAxfoelJznUtmgIHAsmg
+	n6bLGcYwTprrAU+DTeC1MUsLjnFYT9X3Hd4ZH7G5lDWuuVIKLrz3EYg==
+X-Gm-Gg: AR+sD10U4XZW2ppF0LyBfQnP6wGKWQIDuIUbyA326YCEEmK1SpXSDzQAYqlIXqXm3aE
+	Y5d+4kkUMR6Q3/WDwslQs4okxljetarEnmJ2G6q/X1PG6QQ8s/urqBYc8wUSrr0+5wECEWjCf3R
+	26m4VVMZqaSrSrc+cQa2gv5SZ0dt7SKiWc68kfWQAReQRm6Evlpdb4Iv3Z+9g4qgO+5jgHGjvY2
+	ijsDGF0jHSmmS5E5f+2ABzZ3avpsZOJnAC1jBYOYNlqsw4c4LkG2A0YvilITPVtg/LMwG+PjFEl
+	K+09QmaEHneVtCGKgOvfnvW+/hqsXZNjzqEYwsvK8nj6BTPZOtqofRyO9pGYmDhiQdINdwG+Z7E
+	=
+X-Received: by 2002:a05:690e:244b:b0:667:ef7f:c37e with SMTP id
+ 956f58d0204a3-66ada8434d8mr7210260d50.8.1786358003849; Mon, 10 Aug 2026
+ 03:33:23 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 1/6] dt-bindings: bluetooth: qca: add QCC2072
-To: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>,
- Manivannan Sadhasivam <mani@kernel.org>
-Cc: Rahul Samana <rahul.samana@oss.qualcomm.com>,
- Bartosz Golaszewski <brgl@kernel.org>, Marcel Holtmann
- <marcel@holtmann.org>, Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
- Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>,
- Conor Dooley <conor+dt@kernel.org>,
- Balakrishna Godavarthi <quic_bgodavar@quicinc.com>,
- Rocky Liao <quic_rjliao@quicinc.com>, Bjorn Andersson
- <andersson@kernel.org>, Konrad Dybcio <konradybcio@kernel.org>,
- Bartosz Golaszewski <brgl@bgdev.pl>, linux-arm-msm@vger.kernel.org,
- linux-bluetooth@vger.kernel.org, devicetree@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
- linux-pm@vger.kernel.org, quic_mohamull@quicinc.com,
- quic_hbandi@quicinc.com, quic_anubhavg@quicinc.com
-References: <c1875dd6-fe3a-4a69-a6fd-b461c8fba6e4@kernel.org>
- <6d6465bb-47ac-464c-af4e-0ca72325705f@oss.qualcomm.com>
- <8a388310-d3cc-4d02-abb6-0eb98c24cfce@kernel.org>
- <4523441f-498a-4bbd-80f3-97a7a9206c00@oss.qualcomm.com>
- <6e0b9e79-ccd4-4689-9a6b-9b4fc556d5e4@kernel.org>
- <gfhlyvoefcsvtjuxfo75qeham272cc5g2r3npjenzs5esjifiy@ro7dtkpxwizk>
- <8ab6c26f-b648-447c-9fdd-f1424beb44f4@kernel.org>
- <sewfntbhqtj2apfdi4ouan27artvj4lyxqizvinsvzltbofqu2@riuoo3fmczff>
- <768142f0-2638-41f3-a34f-dc80bb99eb7f@kernel.org>
- <5tkajres2vjkt436teaujcqyc3mjqr65rsfvwhjbmlk3fc3gpt@j6ozyfattae3>
- <2iymaoj6ryayvsyfnrkwf6ldq57lkitoyqrazytxh7wxnpeoeo@vg6q35cua2oy>
-From: Krzysztof Kozlowski <krzk@kernel.org>
-Content-Language: en-US
-Autocrypt: addr=krzk@kernel.org; keydata=
- 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
-In-Reply-To: <2iymaoj6ryayvsyfnrkwf6ldq57lkitoyqrazytxh7wxnpeoeo@vg6q35cua2oy>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+References: <CAGXv+5HrDw8GWb9zp1AaQU9UW+0FGcr7jOV2jt_zi_2KgfgBqA@mail.gmail.com>
+ <20260807152059.GA39821@bhelgaas>
+In-Reply-To: <20260807152059.GA39821@bhelgaas>
+From: Chen-Yu Tsai <wenst@chromium.org>
+Date: Mon, 10 Aug 2026 18:33:12 +0800
+X-Gm-Features: AUfX_mxe5L1RZVyMRQ0Vt-LD7TRaHThgwqJqmmrQKlLCig1wrp3paWSMXqZXYyM
+Message-ID: <CAGXv+5GNvV0yfX2v7E9HxvFpm0xwhGMQLjec=_xV_6YipXFcbw@mail.gmail.com>
+Subject: Re: [PATCH v5 0/2] PCI: mediatek-gen3: Add 2-lanes mode support + clock
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Christian Marangi <ansuelsmth@gmail.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	=?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
+	Ryder Lee <ryder.lee@mediatek.com>, Philipp Zabel <p.zabel@pengutronix.de>, 
+	Matthias Brugger <matthias.bgg@gmail.com>, 
+	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>, 
+	Jianjun Wang <jianjun.wang@mediatek.com>, linux-pci@vger.kernel.org, 
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-mediatek@lists.infradead.org, linux-arm-kernel@lists.infradead.org, 
+	Benjamin Larsson <benjamin.larsson@genexis.eu>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 07/08/2026 11:40, Dmitry Baryshkov wrote:
-> On Wed, Aug 05, 2026 at 04:52:15PM +0200, Manivannan Sadhasivam wrote:
->> On Wed, Aug 05, 2026 at 04:36:31PM +0200, Krzysztof Kozlowski wrote:
->>> On 05/08/2026 16:12, Manivannan Sadhasivam wrote:
->>>> On Wed, Aug 05, 2026 at 02:33:51PM +0200, Krzysztof Kozlowski wrote:
->>>>> DT is not representation of internal device driver instantiation mechanism.
->>>>>
->>>>
->>>> Here, the driver is just creating compatible for a real device. What difference
->>>> does it make if the BT node was defined statically in the DT vs created
->>>> dynamically? Both nodes do represent a real BT device, not driver's own
->>>> representation. And by the time the node was created, the device is physically
->>>> attached to the system.
->>>
->>> What stops this power sequencing drivers, after more driver patches, the
->>> best if being part of some bigger series, to add properties like
->>> "linux,name-of-driver-to-bind" or whatever other SW properties?
->>>
->>> This is what happened in that linked thread:
->>> https://lore.kernel.org/all/20260326-pci-m2-e-v7-8-43324a7866e6@oss.qualcomm.com/
->>> The driver code is adding children under other nodes (references by
->>> graph) and it is nowhere documented. Maybe bindings of these other nodes
->>> allow it, maybe not. How do you even validate that?
->>>
->>
->> So the concern is validating the properties that get added dynamically and I get
->> that. How about inserting an overlay for the BT node instead of creating the
->> node on the fly? Like, drivers/misc/lan966x_pci.dtso
->>
->> This way, the overlay would be validated against a binding and the driver would
->> just be inserting it.
->>
->>> So answering your question - yes, there is a difference because:
->>> 1. DTS we validate but whatever you add to driver code we do not and we
->>> cannot,
->>> 2. DTS represents hardware but whatever you do in your driver code
->>> represents who knows what (maybe hardware, maybe not, can represent
->>> anything)
->>>
->>> And if you claim "I add hardware in the driver!", I respond - maybe
->>> true, maybe not, but look at this crap:
->>> https://web.git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=687bfbba5a1cb15cee51519c210141ed1c4b0ec7
->>>
->>> Since we DISALLOWED venus-decoder and venus-encoder DT nodes, what did
->>> Bryan do? Squeezed via driver code fake disallowed nodes and even gave
->>> them compatibles not looking like compatibles, so any regex won't work.
->>>
->>> This power sequencing work here has the same problem of sneaking ABI,
->>> which I pointed out here:
->>> https://lore.kernel.org/all/9cc5af16-d95e-4f10-8b4a-5e29c136079c@kernel.org/
->>>
->>> Look at above patch - nothing documents that ABI. The same as Bryan's
->>> fake venus-decoder and encore (not only fake but actually rejected). And
->>> to avoid ABI-check tools (or incoming tools), this power sequencing code
->>> does not even call a "compatible" a "compatible". No, it calls it
->>> "driver_data" nicely avoiding detection.
->>>
->>> This is terrible practice and I feel like allowing this patch is silent
->>> acknowledgment or agreement of such practice.
->>>
->>> It's about basic ABI principles - if you have DT ABI, it must be both
->>> clear in the drivers code and in DT bindings, instead of obfuscated
->>> calling a compatible driver data. If you don't, then this is not DT ABI
->>> and you are not allowed to use OF code to instantiate drivers. Use SW
->>> nodes or KHO-style whatever else is there.
->>>
->>
->> I did propose using SW nodes initially, but then it got changed to
-> 
-> If I remember previous discussions, SW nodes can be used to provide
-> additional information about the existing devices. They should not be
-> used for matching.
+On Fri, Aug 7, 2026 at 11:21=E2=80=AFPM Bjorn Helgaas <helgaas@kernel.org> =
+wrote:
+>
+> On Fri, Aug 07, 2026 at 11:24:09AM +0800, Chen-Yu Tsai wrote:
+> > On Fri, Aug 7, 2026 at 12:53=E2=80=AFAM Christian Marangi <ansuelsmth@g=
+mail.com> wrote:
+> > > This small series introduce support for 2-lanes mode for Airoha AN758=
+1
+> >
+> > Just a nitpick, but I would probably name this something else, like
+> > "cross-controller lane-bonding mode" or "lane stealing"? PCIe already
+> > has 2x lanes as a standard feature, so this naming is a bit confusing.
+> > It's not like dual-LVDS display in which LVDS is only a single lane.
+>
+> I suggested the "2-lane" and "x2" terminology because I assumed the
+> result is what the PCIe spec would describe as a "x2 Link" consisting
+> of two Lanes.
+>
+> If that's not the case, maybe "cross-controller lane-bonding mode" or
+> "lane stealing" would be more accurate, but I don't know what those
+> mean, so if we use them I would also like to know what the result
+> looks like in standard PCIe terms.
 
-Yeah, matching is via standard driver name for example like MFD is doing
-for platform bus.
+Benjamin pointed out later in the thread that it is just bifurcation.
 
-This is not that different than MFD.
+I would assume "PCIe bifurcation" is a standard term, so maybe we could
+call this "Support un-bifurcated 2-lane operation"?
 
-Best regards,
-Krzysztof
+On the implementation side, having to reach into the second PCIe controller
+is a bit messy :(
+
+
+ChenYu
+
+> > > SoC. This is needed for correctly functionality of Eagle WiFi Card
+> > > normally attached to this SoC that require a 2-line PCIe card to
+> > > correctly work (and give the proper performance)
+> > >
+> > > The first 2 patch address a limitation of the PCIe implementation
+> > > where the PERSTOUT reset were indirectly asserted and deasserted
+> > > all at the same time (for all the 3 PCIe card) with PCIe
+> > > enable and disable.
+> > > The 2 patch address this and introduce correct reset to control
+> > > reset line for the relevant PCIe line.
+> > >
+> > > The last 2 patch add additional logic and support to assert
+> > > and deassert the PERSTOUT and also apply the required configuration
+> > > for 2-lanes mode.
+> > >
+> > > 2-lanes mode is implemented in DT by adding the required property
+> > > and by defining the "num-lanes" to 2.
