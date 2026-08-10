@@ -1,181 +1,133 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.18])
+Received: from SN4PR2101CU001.outbound.protection.outlook.com (mail-southcentralusazon11012049.outbound.protection.outlook.com [40.93.195.49])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D78993B5841;
-	Mon, 10 Aug 2026 09:58:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786355892; cv=none; b=V9FFNFrZCOqsiL6fbVihrqSqGQxwYwP2AjLe1bozqX58CHWPoLPO2dhGrjgnguzPAD1SOsCamAGAI1oQrgb1JNxIvn5IhiXkMoVawLilbaNBrddza24ucaMTfiXxtGaKzkPYXfi1pHHjTsoZeDra8H7nQfNWa8QL1VP2sDTExK4=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786355892; c=relaxed/simple;
-	bh=OIBLn+vI6UtjzTR690g/0/DqXLgizFSN5e6xNFRiIQY=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=uBzoYaKqwHd5HPsX7fQsh3mCy0ObYwqmVHmG2waafjTMy/mIhEV0532IoJAkA462kANvLqIMyiG8XA/r42aM/DNlR9+k5frGZf4OFLaluYtoJtQatqANO407ATQO8/2o+v+fWT0cdA9+W36ubV0+7l/NrL4cUnkDenAw5Zph+Ak=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=P043AHYZ; arc=none smtp.client-ip=198.175.65.18
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 64EA73B6352;
+	Mon, 10 Aug 2026 10:10:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.195.49
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1786356622; cv=fail; b=AHiYJue618aTwY2rOvjN+qrkVMRzHLdgBItZ9mMiommK4RRTbGHRB7FbQqhCL2nQifHsLxcHJRVmH0S7jXZA+aRDec515BDW0P7Tm3SbMVk+3yUD1KHHOp3aeDCvFjG44GMX35jANXZMkC48A+vwjeCnv9uZi7v9/vgylMdFAFc=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1786356622; c=relaxed/simple;
+	bh=6uK05L0olvQowdfE/g6vew9Eb2llVSWfPF2LfGJeFD4=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=SDvO+1HegapvS616/aykUn2QvxvN8TMFzbC53e2eY6b3hZrOZ7134o7q+Xy7rXWsgPyckiyEOW65w+UomskSzoWetodAaCjm7BHoE0cnyQ0QNvX+mPbLANSuzq4X5+B12egKYcvEDIeKHUaTTFNst1QTTeTCLhdEDjKIjncduhc=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=lKfiTSq5; arc=fail smtp.client-ip=40.93.195.49
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="P043AHYZ"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1786355887; x=1817891887;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=OIBLn+vI6UtjzTR690g/0/DqXLgizFSN5e6xNFRiIQY=;
-  b=P043AHYZOWripuvjotgNunh45t3GH2X1xQu6NDJB/UstrSVx0SwQ5flT
-   QKDVCa86vMC3jHyre8TWhXUoKiwFCLPFX7BtDrz8xHGgcmahmOY+9IZPI
-   mCsr0t7rkhGhIb9B3bsNXdPr9y/TbkqRIvSyhLkHHSj8cfRiNvv1VVRcO
-   vdkHRrbbKqvrD48q9jFcX9i1Ost9zgj7SnADgub1Wdu8j4uTV8NrRt32g
-   gQArl9RYe27SrlCTQ4v0WHUS+rAC85CmLocrdkuORUqYNooTbaajKszbF
-   /45bsK2cpHAmlZiIqepc68LdBkk7HU5yGsWMOWEGhWQP2FuUTwpNTAHvs
-   A==;
-X-CSE-ConnectionGUID: 33RjamcmQqKVWrVpxF8Yhg==
-X-CSE-MsgGUID: UeBG106hT7uMh3gvIT/iMA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11870"; a="86941073"
-X-IronPort-AV: E=Sophos;i="6.25,215,1779174000"; 
-   d="scan'208";a="86941073"
-Received: from orviesa010.jf.intel.com ([10.64.159.150])
-  by orvoesa110.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Aug 2026 02:58:01 -0700
-X-CSE-ConnectionGUID: 1s6lpu4bQyymJDs4F82TDA==
-X-CSE-MsgGUID: PFzlndWpT9OR6jAyiitIZA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.25,215,1779174000"; 
-   d="scan'208";a="261708904"
-Received: from lkp-server01.sh.intel.com (HELO 6eda058d650d) ([10.239.97.150])
-  by orviesa010.jf.intel.com with ESMTP; 10 Aug 2026 02:57:58 -0700
-Received: from kbuild by 6eda058d650d with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1wtMlX-00000000N6k-1EnS;
-	Mon, 10 Aug 2026 09:57:55 +0000
-Date: Mon, 10 Aug 2026 17:57:15 +0800
-From: kernel test robot <lkp@intel.com>
-To: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>, bhelgaas@google.com,
-	alex@shazbot.org, mani@kernel.org
-Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
-	jjohnson@kernel.org, linux-pci@vger.kernel.org,
-	linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
-	ath12k@lists.infradead.org, mhi@lists.linux.dev,
-	linux-kernel@vger.kernel.org,
-	Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-Subject: Re: [PATCH v11] PCI: Add device-specific reset for Qualcomm devices
-Message-ID: <202608101710.4bALXXJf-lkp@intel.com>
-References: <20260626055023.197470-1-jtornosm@redhat.com>
+	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="lKfiTSq5"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=eDKCyJQh45Uze2SSH39iZq8+AVG2uc3sD6pq9D7C1G3OaQs6KN0PMgtoT2ZbqZae9+wnlShlWN3RyhHoijSVNqwV6aCccbinkji65SmZOb8hfp/n0OxQJFhxAGt3I0JvEUHdUkloAItHpwX3OLt/25Ke3Mxr7ThHtQQlOF50fic/+LtJFIMC/t9l4XgmlOlQ+2JRYOy+S45rfWRYizoGbl7eOss+DekJK5hn0EA/8j8OO/Gi87XJD0GQd1eEQ8rTqR9qDIPdLkOTU0AzaL6MVn3fW0bRTdBuigvQsd4UTj4I4atzwPzC8O1LC1vzRKyrCFzJQH8Yun0SKarhP26tWQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=cpPmMuN+WvICnPdJYm7pCwyF8+RZ0c0oy8WNS1ncPEQ=;
+ b=ravVy3z6whX79CU+JnpDfn3GhKiDE/rXumgCAluCR72T1SOqBzxf87lM1i9QIGEnMrg3yOdaSJ/pgT9ZeKtjQua/6h9qJF5Tj98uhqWx6u8FuLKVtE2YOz6A6FqSNtw/HEtGQKJ+tWEKPWnTrSiUexql1Vp5D23hpsviqzzERe5P8QA+2RdA66DlgpEmfIK/U/84Qb0STAmIPVCdT3FjjGBDxFhHJtzHrcO4khvXAhD/N7vZq6j9iUdIAxymugjXwgBtxYVjZ3ShMyPeJ7aernBGidjHTobSQojdfXXvStBc9BSriphd43QLGPaXINgk+PcU7MAOKUj3tUeOwhPeEw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 165.204.84.17) smtp.rcpttodomain=kernel.org smtp.mailfrom=amd.com; dmarc=pass
+ (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
+ dkim=none (message not signed); arc=none (0)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=cpPmMuN+WvICnPdJYm7pCwyF8+RZ0c0oy8WNS1ncPEQ=;
+ b=lKfiTSq5Prq86YnviD7X5k4V/lzdhQNeUsH+4cfxBRPMCqkLeEtjHhR6GXdcmKjxOBk0TrfLjCtKt6lyIQLibEzo6SQSkZdVjApIAvP1XIi4mC8vyXLh/WML3Vf/HzhBjvCFLQ4D3mQ+mwsktZQKDDkcCUA7U+oWbyqCqzkarQY=
+Received: from SJ0PR05CA0054.namprd05.prod.outlook.com (2603:10b6:a03:33f::29)
+ by SA1PR12MB8642.namprd12.prod.outlook.com (2603:10b6:806:383::11) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.292.25; Mon, 10 Aug
+ 2026 10:10:18 +0000
+Received: from SJ1PEPF00001CE9.namprd03.prod.outlook.com
+ (2603:10b6:a03:33f:cafe::26) by SJ0PR05CA0054.outlook.office365.com
+ (2603:10b6:a03:33f::29) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.21.315.11 via Frontend Transport; Mon,
+ 10 Aug 2026 10:10:17 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
+ smtp.mailfrom=amd.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=amd.com;
+Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
+ 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
+ client-ip=165.204.84.17; helo=satlexmb08.amd.com; pr=C
+Received: from satlexmb08.amd.com (165.204.84.17) by
+ SJ1PEPF00001CE9.mail.protection.outlook.com (10.167.242.25) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.21.315.6 via Frontend Transport; Mon, 10 Aug 2026 10:10:17 +0000
+Received: from satlexmb08.amd.com (10.181.42.217) by satlexmb08.amd.com
+ (10.181.42.217) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.45; Mon, 10 Aug
+ 2026 05:10:05 -0500
+Received: from xhddevverma40x.xilinx.com (10.180.168.240) by
+ satlexmb08.amd.com (10.181.42.217) with Microsoft SMTP Server id 15.2.2562.45
+ via Frontend Transport; Mon, 10 Aug 2026 05:10:02 -0500
+From: Devendra K Verma <devverma@amd.com>
+To: <mani@kernel.org>, <vkoul@kernel.org>, <frank.li@kernel.org>,
+	<den@valinux.co.jp>
+CC: <dmaengine@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <michal.simek@amd.com>, <devverma@amd.com>
+Subject: [PATCH v3 0/2] CPM6 Channel Separation Support
+Date: Mon, 10 Aug 2026 15:40:00 +0530
+Message-ID: <20260810101002.1726131-1-devverma@amd.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260626055023.197470-1-jtornosm@redhat.com>
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: SJ1PEPF00001CE9:EE_|SA1PR12MB8642:EE_
+X-MS-Office365-Filtering-Correlation-Id: e631684f-8eec-47eb-ca94-08def6c79418
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|36860700016|82310400026|1800799024|23010399003|376014|11063799006|56012099006|10067099003|6133799003|18002099003;
+X-Microsoft-Antispam-Message-Info:
+	FU6BBNqkbeqXOxhf8aRoL3yeaqloKKkbxM/BKjvbrr7nE88JxbljCq3LIzLCtGpYKXFQiarEDCCQUppN9tZM2Or0VsAgvvOGizyNeFJaqB9jGs/VeMsvmvlP0bLwCzoMpWSP+YiMBrzJrxcaSv/e3H1HLQhawQOvgfZPYcsM8WXvOG7KKG4wOAUC6Y0czPPNAUQEWUnidq1QHgbPEoLT8IGN1CFTbH4atYLIU2IG7GFSEaI3i8EThUvvXAhqpMpcyb75u+aCpfL9X7ikwAsT91GNY0XaHLgYniGXUD15AJCTI+rigpLyR+sdGNgSmNspfXMp+8SU/lWPJ1m8n6NZhkpZXDn0mXD6Q65IYl2+KwTJIqvQBO+A/jAEgCUk1DtWX/sn0xG9V7gijrtyK/3PULW6vF9ypOgvQIx4iQ5ylZJan8U4k46LQb3CtHoBPpLAQKBQinWWwMsOPlVH4iWJ37mqfIJ3zCLH1smbl8fxQMKuTGEhSJbuBQJskj1cmJw1xVCVbIj4Xy+PtZgxC8gdxQ4GUV7KFfY7yoO7SRpaFyJFnFG7LlawdmETT5wGAbslTpVlqNoika5cL07wU/vAltbzCxbtmsIH3bGM+kG+kYOmf6EOB0/MSwMzVzbDqb+ok9AoyoshK0FCaBIiq5oll49gdxu5TzZ8K7gnXHIx96Expavmpafilz7iS1FhKbiW2XX/RgxLvmnLTbdliyqgFA==
+X-Forefront-Antispam-Report:
+	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:satlexmb08.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(36860700016)(82310400026)(1800799024)(23010399003)(376014)(11063799006)(56012099006)(10067099003)(6133799003)(18002099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	vNAYK1D03mVxlah0KckJOpeq80ZlGGyKh8cWwjt3gapxo0zPjPpNH8D4CYsN8nO8T+HdendqSQO4pKLE1qidooVPg24VlZUH77N/h5h0AE5aZXNRHfsoUY9j1LrNr/7fD6H/w0q9nJIi7bqLdaen/L4gwVKiZP9LDm8Nbl68Qa72mRU0dfbWoqrsRZW6KjnU2QWtGIgV9wgXyLZsfozqsFTptauhWjUWYKmTYKesf3KmnCY715rNFS0/kpjM46+oqVLyl3+chX1NDAtPRWOqcV6MaFk+OJ8/FF+lUJHy/2utwxy9yc8W70LxwIb9T0+lG2J+1DA0/2viX9l/srAF2fN762NAbWFgedfZNtj0gOlL8avzUKLS7jgfACcafMrH3G13PDMy6C+U8esieSazv8ieSjqvcMUGtWPl9+KHFQdi5v1Ck4cXO8npe2MAHduH
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 10 Aug 2026 10:10:17.5656
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: e631684f-8eec-47eb-ca94-08def6c79418
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[satlexmb08.amd.com]
+X-MS-Exchange-CrossTenant-AuthSource:
+	SJ1PEPF00001CE9.namprd03.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA1PR12MB8642
 
-Hi Jose,
+'Designware Cores PCI Express DM Controller - Reference
+Manual', section 3.2.34.3, VSEC for DEVICE INFORMATION supports
+the channel separation mechanisms. Basically, the HDMA IP allows
+the user to configure the separation between DMA channel
+registers and retrieve it via the VSEC capability mentioned
+above.
+In order to use the VSEC functionality following changes have
+been made:
 
-kernel test robot noticed the following build warnings:
+o Utilize the existing VSEC implementation to retrieve
+  the channel separation and translate it to correct size.
+o Modify the structs and functions to calculate correct
+  DMA channel register base using the channel, direction
+  and channel separation selected.
 
-[auto build test WARNING on pci/next]
-[also build test WARNING on pci/for-linus linus/master v7.2-rc6 next-20260807]
-[cannot apply to linux-review/Jose-Ignacio-Tornos-Martinez/Add-device-specific-reset-for-Qualcomm-devices/20260804-001013]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+Devendra K Verma (2):
+  dmaengine: dw-edma: Enable Chan Separation via VSEC
+  dmaengine: dw-edma: Add changes to support Channel Separation
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Jose-Ignacio-Tornos-Martinez/PCI-Add-device-specific-reset-for-Qualcomm-devices/20260810-131417
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git next
-patch link:    https://lore.kernel.org/r/20260626055023.197470-1-jtornosm%40redhat.com
-patch subject: [PATCH v11] PCI: Add device-specific reset for Qualcomm devices
-config: loongarch-defconfig (https://download.01.org/0day-ci/archive/20260810/202608101710.4bALXXJf-lkp@intel.com/config)
-compiler: clang version 24.0.0git (https://github.com/llvm/llvm-project 12df34b8469b8095359de8c249cb1b2753fadeea)
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260810/202608101710.4bALXXJf-lkp@intel.com/reproduce)
+ drivers/dma/dw-edma/dw-edma-pcie.c           | 24 +++++++++++++++++---
+ drivers/dma/dw-edma/dw-hdma-v0-core.c        | 23 +++++++++++--------
+ drivers/dma/dw-edma/dw-hdma-v0-debugfs.c     | 17 +++++---------
+ drivers/dma/dw-edma/dw-hdma-v0-regs.h        | 10 --------
+ drivers/pci/controller/dwc/pcie-designware.c |  1 +
+ include/linux/dma/edma.h                     |  1 +
+ 6 files changed, 43 insertions(+), 33 deletions(-)
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202608101710.4bALXXJf-lkp@intel.com/
+-- 
+2.43.0
 
-All warnings (new ones prefixed by >>):
-
->> drivers/pci/quirks.c:4278:11: warning: result of comparison of constant 18446744073709551615 with expression of type 'u32' (aka 'unsigned int') is always true [-Wtautological-constant-out-of-range-compare]
-    4278 |                 if (val != PCI_ERROR_RESPONSE) {
-         |                     ~~~ ^  ~~~~~~~~~~~~~~~~~~
-   1 warning generated.
-
-
-vim +4278 drivers/pci/quirks.c
-
-  4234	
-  4235	/*
-  4236	 * Qualcomm WiFi device-specific reset using SoC global reset via BAR0
-  4237	 * registers.
-  4238	 */
-  4239	static int reset_qualcomm_wifi(struct pci_dev *pdev, bool probe)
-  4240	{
-  4241		bool link_recovered = false;
-  4242		unsigned long timeout;
-  4243		void __iomem *bar;
-  4244		u32 val;
-  4245		u16 cmd;
-  4246	
-  4247		if (probe)
-  4248			return 0;
-  4249	
-  4250		if (pdev->current_state != PCI_D0)
-  4251			return -EINVAL;
-  4252	
-  4253		pci_read_config_word(pdev, PCI_COMMAND, &cmd);
-  4254		pci_write_config_word(pdev, PCI_COMMAND, cmd | PCI_COMMAND_MEMORY);
-  4255	
-  4256		bar = pci_iomap(pdev, 0, 0);
-  4257		if (!bar) {
-  4258			pci_write_config_word(pdev, PCI_COMMAND, cmd);
-  4259			return -ENODEV;
-  4260		}
-  4261	
-  4262		val = ioread32(bar + QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET);
-  4263		val |= QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET_V;
-  4264		iowrite32(val, bar + QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET);
-  4265		ioread32(bar + QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET);
-  4266	
-  4267		msleep(10);
-  4268	
-  4269		val &= ~QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET_V;
-  4270		iowrite32(val, bar + QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET);
-  4271		ioread32(bar + QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET);
-  4272	
-  4273		msleep(10);
-  4274	
-  4275		timeout = jiffies + msecs_to_jiffies(5000);
-  4276		while (time_before(jiffies, timeout)) {
-  4277			val = ioread32(bar + QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET);
-> 4278			if (val != PCI_ERROR_RESPONSE) {
-  4279				link_recovered = true;
-  4280				break;
-  4281			}
-  4282			msleep(20);
-  4283		}
-  4284	
-  4285		if (!link_recovered) {
-  4286			pci_err(pdev, "PCIe link failed to recover after reset\n");
-  4287			goto out_restore;
-  4288		}
-  4289	
-  4290		/* After SOC_GLOBAL_RESET, MHISTATUS may still have SYSERR bit set
-  4291		 * and thus need to set MHICTRL_RESET to clear SYSERR.
-  4292		 */
-  4293		iowrite32(QUALCOMM_WIFI_MHICTRL_RESET_MASK, bar + QUALCOMM_WIFI_MHICTRL);
-  4294		ioread32(bar + QUALCOMM_WIFI_MHICTRL);
-  4295	
-  4296		msleep(10);
-  4297	
-  4298	out_restore:
-  4299		pci_iounmap(pdev, bar);
-  4300		pci_write_config_word(pdev, PCI_COMMAND, cmd);
-  4301	
-  4302		return link_recovered ? 0 : -ETIMEDOUT;
-  4303	}
-  4304	
-
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
