@@ -1,50 +1,50 @@
-Received: from CH5PR02CU005.outbound.protection.outlook.com (mail-northcentralusazon11012003.outbound.protection.outlook.com [40.107.200.3])
+Received: from BN1PR04CU002.outbound.protection.outlook.com (mail-eastus2azon11010037.outbound.protection.outlook.com [52.101.56.37])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 82D2D3B14CE;
-	Mon, 10 Aug 2026 09:30:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.200.3
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66A423B3BF1;
+	Mon, 10 Aug 2026 09:30:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.56.37
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786354239; cv=fail; b=m4LOsAorJY1GAlkZEhT4Sv8eaIgqVDH7CQPuWanTiUKjTGGQidu55gSGiQh/Q2/dRqVmgKLSRCL70ZOgHy7RBR3ORTzEAtweyjS7UW0rhKnZAq4uyiKF5SYJJVEtyFMGUA8Ia4EuUQkvGP23yyQpjkGFRa6PVnURdipJwyLqGiY=
+	t=1786354254; cv=fail; b=eyzULFwbjVYvrQ4ZpL1Wc86vb/5QTlyJEoRMh2T/Ytt4aoGU45loDOcjcHGvPNtl1SIWiReUw41tUy30uR4JHCz50mj4YO36vAcsNpY+jNl8vgn2mCF24mNluMya6FvI1iBji7L35gcAY+MPbHrBRE7eOlAHNRm24D39tS1b8ug=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786354239; c=relaxed/simple;
-	bh=LZ9ssQogF5dQaaLbNCGRUeAc2DpqJY+FdqGEkIme4ZU=;
+	s=arc-20240116; t=1786354254; c=relaxed/simple;
+	bh=IRLBC44b8bWMNz+MNoE90g5G1HdSDlKdbK73UoOBTc4=;
 	h=Content-Type:Date:Message-Id:Cc:Subject:From:To:References:
-	 In-Reply-To:MIME-Version; b=GaufC+7M8QuWDuCl7rt2egq52cXhXaZuThweOBICSQTLQx/ZDv1wTMdCdGuFyHETtuN1erY8PoQMooNFQLEHSfoeMTCL9D/ZFbqBV2fugLj6fZxLbJdIpikZ4/zwVeHrhZ/TAecQ6EpkC0U+P1t0l1p7tIykf/rlyLwQJ9F4YwE=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=BKEsJtsR; arc=fail smtp.client-ip=40.107.200.3
+	 In-Reply-To:MIME-Version; b=mHfdDDMTQpJVNBH+IMZxaw//pR0PeFGah9p034WYSASPCMTUtuBAX09RtjzfBbYQaYL+5DnfN1nX9IiOn3gFL/BHE7eKl8Gch2MclsttagUcHDREcLMIaf47AbvpUEMex81mQtyNC+vSgJVeyGuwIg1Q+XsBO25urZ7j0fG87oM=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=amxsZVDW; arc=fail smtp.client-ip=52.101.56.37
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="BKEsJtsR"
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="amxsZVDW"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=BYb5PPv1YnWNNrFq+t+pQfBfoV9yIiA/oXjpS6Zn/sTYaYyTtgC9pnJ3+vghgFbAuHbNZb+0Jfvxd7FnKdSpkjwzFbgmmrIMrww8E+wG5pXMNJaPdWKRuCzAGyYZG1XvXn8nj19kcstM9s06rvjQ1Y9+bkQfS7kuU2XrLZcPUaRJjAiPiKmM1ukkj3tw/o+We9AvRRo7MSm9fgbug4JqBTmYSibfuUcpRlOnPMhWafJ9GaS12880/XD/94SNwx7Hjozwdusd1AQorR8yNHQm6kjoGv6smVjXr5kdraW9qsn/RZ8IC6K1KHgiPGCo+UGvI8JmKTIpMUf1smwEL2Q0Rw==
+ b=jFKOCENTRbRYhmGcPm8ax2baAdr3ATaYft2ZgT72bdLS5RYBbNF3cYpP5mIJHlS4tJwmy7pDjrx7nS9eSYb47iyLxUyiPZYeCngllgEhddO6QgBcOMe3sA5OLYf/fOe/f4vTgBb9TNczMkLeil51o5XYPMgEthTsvI6rcEPHy5yKUtfKsegvkAg4V2cr9COKGVSlVU6vJv20IGXWhhaMU+ofoZ94EJSl1wf0OB5KRhOV1zT/bBdhSVL7yBZ4xAseXJpeTQ79HlfcUHE37OZHkhdktJlAyWroh5rp2sVbnPhV7OAlH4G00TGySSMK9U+14nB6+JwQYbgIykmhy0xc5Q==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=j6F2s32+2nhz0zcX4Y/v7xsUFoT1iz40D2GA538oMB4=;
- b=Ep9Ujg1F8TxmI8/wGt0UaI5VQswM9OR6dCFuzg8frM+oCPqtnn2FVg1Dn3mwFj6NMLtcEEey67bH0WFUjEdAKu9d+RJhm0XUFMnzDMdchFC131v82ixro86XGeoQR6jMUgs6w66530FGFJLyS2F1uVU2aS5GhPqNfk8REhLq5nyh2r1W/XuycbUAY8FhNRX+nqyjCMFN/ZSqSogTpa/zaTm3QF/yZBh8eOp/7tCI0Hp+7599IBE1G4zJX6SYq5/pE7a4TtCsvIwVqMgVUvstd+oL5GxDGLFBVPZuxo/LU6y3feEvRhWhkKqFaqb/yGUBo9M6FooUmQNnkgQxKYnC1w==
+ bh=8CDu8z5LkGELa+v9oEEsDxCOZqzEvep9+iG89VZOOHE=;
+ b=tJUNORxrwlvAF3cSvOkVeYVLRGxv+tDL3NZ4dvPWKbiv4HlKdnKw2+EeybS/NAPcv8NuRalQj4wr2lx+NTwi3IB9j2v6zZSCaWT+owtw82yzw/YHPCAUK695gEN6oH6cC+IjYFGSiTDWV1lC5mjnsXTkiiK/zWFhKc6rtMxORFNFiYmWT3OmDP9GpWdfU7iDRjhwzdmYGYGqKLDKXv1DhFMezh85YXKX5G9dTqJVkFtik05PQhlJncsYNVBxCvJKqcA56iZRxdSplocQS+EejAXUrZJ9g6r3wj3iYTrflHTJocQmY0MvteFEGHEt5fcInOr4ogunVlxfbSIVcqroRQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
  dkim=pass header.d=nvidia.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=j6F2s32+2nhz0zcX4Y/v7xsUFoT1iz40D2GA538oMB4=;
- b=BKEsJtsRsh57gFVGWThmGR5IEs0hqZY/Iky0ERnOSIJmeyG5khdZYI2v7FLlmXcDEbDCfveS2McQKUI9nj0W6BN8P4wpAXqbnQmPq7vFb48yQqiL328oPBM/nRcDlSxJBTRHhNCCyX80gbREeHHPI213bAad9Ig0cc+IjwoapYVIKoZdSIDzpHGVpSbC/ccsY0MbVeG9FgWgeg8aIqF4KHyqVeu3aiAYCtC49StCe+j+mVJ6GvaQ/dKKEKNE1d/M2kP1DskSYNaeI0vuxP8A+OZ51fzyTMu/Gu8zFpF6mRYFFhxaTU0ufE92vh1zgFnmSgEro0LR6UHGrp+NF3yzjg==
+ bh=8CDu8z5LkGELa+v9oEEsDxCOZqzEvep9+iG89VZOOHE=;
+ b=amxsZVDWtc1S43aV6eu7KZO9oMUEKiSe1QwsO66cmycbga7cA9WriIvNVKq1VUlJOkGYOiPRAmOyAEWFfjY3X4BIjleOdsEGingHyMqgmlYx56xAX/vwfcybVy/qsZ0ct/EYigMOPdZFq4t1xSnC6/w/RQEiD8a2TWoU8uSG8DKCErDNSPTAvCDE6Ml6NTFkBlQ5gddGH04fBKicSNIutWUnzIhpfOZD2pcnEBCfS7k6nGurzwoDQr//Dl+aKUEkhl3wtRk79BwkspfTDBdow5hAxKh+J3E380OZOo3W5tGzJOfTVTepp7IUE24QD0mm6N/VYaHge3wtW7XkzTL4Zg==
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=nvidia.com;
 Received: from CH2PR12MB3990.namprd12.prod.outlook.com (2603:10b6:610:28::18)
  by DM4PR12MB8570.namprd12.prod.outlook.com (2603:10b6:8:18b::14) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.292.25; Mon, 10 Aug
- 2026 09:30:30 +0000
+ 2026 09:30:46 +0000
 Received: from CH2PR12MB3990.namprd12.prod.outlook.com
  ([fe80::7de1:4fe5:8ead:5989]) by CH2PR12MB3990.namprd12.prod.outlook.com
  ([fe80::7de1:4fe5:8ead:5989%4]) with mapi id 15.21.0292.024; Mon, 10 Aug 2026
- 09:30:30 +0000
+ 09:30:46 +0000
 Content-Type: text/plain; charset=UTF-8
-Date: Mon, 10 Aug 2026 18:30:26 +0900
-Message-Id: <DKL5Q2P868GQ.29WSPCWX4HTHJ@nvidia.com>
+Date: Mon, 10 Aug 2026 18:30:43 +0900
+Message-Id: <DKL5QACM4OTZ.2Y8RLMSPRCXJ5@nvidia.com>
 Cc: "Danilo Krummrich" <dakr@kernel.org>, "Alice Ryhl"
  <aliceryhl@google.com>, "Daniel Almeida" <daniel.almeida@collabora.com>,
  "Miguel Ojeda" <ojeda@kernel.org>, "Boqun Feng" <boqun@kernel.org>,
@@ -58,15 +58,15 @@ Cc: "Danilo Krummrich" <dakr@kernel.org>, "Alice Ryhl"
  <rust-for-linux@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
  <nova-gpu@lists.linux.dev>, <dri-devel@lists.freedesktop.org>,
  <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v2 02/16] rust: io: add `IoRepr` trait
+Subject: Re: [PATCH v2 03/16] rust: io: support register projections
 From: "Alexandre Courbot" <acourbot@nvidia.com>
 To: "Gary Guo" <gary@garyguo.net>
 Content-Transfer-Encoding: quoted-printable
 References: <20260805-typed_register-v2-0-c3ca142220a0@garyguo.net>
- <20260805-typed_register-v2-2-c3ca142220a0@garyguo.net>
-In-Reply-To: <20260805-typed_register-v2-2-c3ca142220a0@garyguo.net>
-X-ClientProxiedBy: TY4P301CA0096.JPNP301.PROD.OUTLOOK.COM
- (2603:1096:405:37a::19) To CH2PR12MB3990.namprd12.prod.outlook.com
+ <20260805-typed_register-v2-3-c3ca142220a0@garyguo.net>
+In-Reply-To: <20260805-typed_register-v2-3-c3ca142220a0@garyguo.net>
+X-ClientProxiedBy: TYCP286CA0256.JPNP286.PROD.OUTLOOK.COM
+ (2603:1096:400:455::14) To CH2PR12MB3990.namprd12.prod.outlook.com
  (2603:10b6:610:28::18)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -76,441 +76,192 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: CH2PR12MB3990:EE_|DM4PR12MB8570:EE_
-X-MS-Office365-Filtering-Correlation-Id: 7f3740bb-b1cc-49da-2c16-08def6c204d7
+X-MS-Office365-Filtering-Correlation-Id: c0059860-dc42-48fd-9141-08def6c20e93
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
 	BCL:0;ARA:13230040|7416014|376014|10070799003|1800799024|23010399003|366016|11063799006|5023799004|4143699003|3023799007|56012099006|6133799003|10067099003|18002099003|22082099003;
 X-Microsoft-Antispam-Message-Info:
-	FrxsG29BKSBx2BLARnfsFwDKAJ+FffuUSFKrTxT4WGF5ZHsGrerFyyGQTuyxEAkn7AW3ou+lE+19iU1O/XK1rRdNhmdyGwHz4MesXWRNgy+8IcBRfra4P+9CRQlMA3yGe7wWUoqJG/C3SrlLzydG8zPbmmGvZhDqS1u41c2bxi+gqqHgFXzSfbMR6+6//pm76mRYbwaCdUEhgWoBIk+SRb+U8y/K8qyir0lf9OsCHfGIzSaHwkLw6x29T9rUk5YxDan8A3KiAz4OpdfBzTEL9D0FmnjKMCTj3zWEo6ME4xLnz1nYrBBG9Yz4DtZeIkGMt/sOY334cZZ+bNZvVpmIoHu/276LhzmC1Li/v9tCeRoYZkd9lUkQee+i1tKHTSLJ3+XSA9cJRTbydnWwR7IBK4DULctV3qvLOH9oW9EODolxvCvX50Trbzi8AEsFVU6uZHfXzBPI0IKAlD5iYDrw3SOD5iBBFtR5mmaiTfy37DUAaefZC9Tv1zXaaHngIeiPOVueKZ3YdKPm7RRzKeWpvBo7JgbtVOF5h0QZETStRsZccBRuajUMDF6MHUQYDyZjSZToLa6NCfTkTgN+m7NCew5S4I67yCXFl6EmOOOURKsfRBlbeMJwzZ8ICBZatavDfgeBPVeFOYYF2jCbjx02N9Im0XcTCBVZcBZhu6JDTz0=
+	o1NxRyUp8zMVjkjvGGJv5/GPl2Rg73frAOrdyEyAPCDKjm6yfpDeaXBePkKNMp+D3msw9adcP4Aq972lz9XcEJW6f5LO09PfT5Wk+cBE9B2P7D2TkZsXA97H8LYd7/B/BeNWwKo92O6Xcd/yvZQFFslnQFlB+opR8WWnfgp9CdIYajYjG4hLDSkxSiJ8ahMvEeFu6bVYZAFCNpBtwnzduGj5IsEEVHIbuE3HBtnzcBdbl/bPV9i03roJI7zMORxhcE37+240Ob0u2OtW7E2TDnruBRMoAig25gh4ixqZx9wya+2GElwxAhdUol3RzadNhqBOh7TD71N//Xj7pQ4g6ycUTOtbLiXWlSsvrBZjcvcAA1MHJMy6g9ODK/kfkD1649xnnqVSej6oSQkonnLFdI90aELrM5n7C2xJl0rAWx757rLEVFxhNehtdmTECHxySPPa8sfQhd2y2sflXow71eDPkV5KgKT6dqYN0l/976zcFR2ueoIbXQDkkYoSsXB6fJFfZf/gfI9FCSrL0PoqEddCg1C4tmwNks4ShJQd3VoPSBm/TI9mMt77k2zMOLepdZycxhfRciQcGmQeq+4Cm93uxFO881JbI0xMirNt4BaUGUy9n+DDeWxp8kyqZgN2wR1NB4imyFktRyAOSc8O0G8WVjzbrMs5CD3vR9B9hPY=
 X-Forefront-Antispam-Report:
 	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH2PR12MB3990.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(376014)(10070799003)(1800799024)(23010399003)(366016)(11063799006)(5023799004)(4143699003)(3023799007)(56012099006)(6133799003)(10067099003)(18002099003)(22082099003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?dEFqbE44dGl2MitVZ1RMVGtrY1k0bnNyNmsrM2ViRVFrbUdHbythMDZ5S2xO?=
- =?utf-8?B?RndHb01CUnN1MEFRYStodkhxUzhyRnpPeUFTeU4vek02dTc3MUVDMUZRZU9B?=
- =?utf-8?B?TG1RUDlBNmVLRXJsTXYyRlpIVFJGSXpJdjFJNU80VkkzdTBSbFlsZnRVa0hK?=
- =?utf-8?B?bmtyOS9rSy90ckRSRGxCcXpmeWZrUlFobS9vSEZKcHIxRVR1ekZ3TEFQTkQx?=
- =?utf-8?B?SkJYdjNPRjI2QWNUVnBmUWtMaDhVOUkrUjJpTUJhMk82UGNyYTZWUjNLU3Nj?=
- =?utf-8?B?b3NvUG1HMFhrYjYrd2c3MVZyRE1iTllmL3E3UjVzbkFCWmRmOWJ1dEJEMDJH?=
- =?utf-8?B?WmRxYWVYUlpramQ5cGpKa21RN1dVZ0M3MVJSSEhqZEUwekVsaFRLL0hJV2Nw?=
- =?utf-8?B?TTRkNmJGZXJzMnJsT2tkUnNpaVZ0aEhoZEFwZ2RiMUY4M01YaXhHRk1QVlFO?=
- =?utf-8?B?WnJ5K2hxSU1ZZkdFV2pucitod1E0NmNmOUQwZUFaNWlUK3BsemRRL0Rjbng3?=
- =?utf-8?B?U2ducWJCdGRlUWYvNS9uU2h4UjdSTHpPVEhDa0xwREJ3WkJqQlduV1B6MXRU?=
- =?utf-8?B?b01IcFowbW9TU01QREFIRHJpV3o3MTVHYUxTUllIVG1JZndWTHAyWWw0K1Vw?=
- =?utf-8?B?Wm1ZVVhGLzhPNWhZeTV3KzJrSnJTMVRxMTVobVU1ODZxTVhlWDF1ZTFpVG0y?=
- =?utf-8?B?RE1HaFFROHJZZUlIVjV5aTc4WHFmYXZqRk02Y3hBRXltWlhZUWNySmEwYnJu?=
- =?utf-8?B?UmYrVHUwK0tGd0hFTG5veWVnSzlaVE9QbHZxY0thY1BkbGZzcVlnVXprVTlJ?=
- =?utf-8?B?VFI2MENEV2FVNVA1S3cveDMyWldqWFJ5YWtQbkZrTURKdDBFalFicGxVSkI1?=
- =?utf-8?B?ZThSa3ByR3dhR1UxMVU0SXFtR2l6NW1IUkdqMnJpQ3BJNnVTZ0RUeVE0NUVr?=
- =?utf-8?B?emlHY01abjdTaElFUkVINUxmbGpLVWVKMlhtdkZZY0xQdTRCNkcrUkU2OTNw?=
- =?utf-8?B?Wk9JcE15VkRXWXBtVGszZEZ3M3EvUDVqNGVmUWgxMitGaExXREhsS1NZM0dC?=
- =?utf-8?B?Q2gyaHJwZGdrZ2hLWjFKY2Nia0V0ckdLbHo2T2RpQ1FRQnFPcyt6dDJjYUZz?=
- =?utf-8?B?SHUzVFRJUDl3ZE8yRHBxdTNxUDIzamdaajk2N0pMRFZyazhjdmkzRVN2OXFL?=
- =?utf-8?B?cElBZm83dHlybGw4WHJLMks0WWZLOExsNGJnMnQydjZZSGJsV0ZLM3FJanVx?=
- =?utf-8?B?Y0V1ZkM5U09QQWw2a0doYUY1K1FNNXo4Y09SZEpYdXBFR3NDcnRPcVA4K3lt?=
- =?utf-8?B?cTVPTVpjSlFRZWpQY2ZHdk1qakJZREFEeHhwNmFBTHZCMFlocFovc0FmemVB?=
- =?utf-8?B?aEF2c3BiMVY4WWxONUZ6M2xDaVdwbWFVZ0FFYVJsYm5tdms3UDRKZHBVUHFT?=
- =?utf-8?B?YkRSSjVRTVFsTmxnQzIzaHlzbUVGRlJLazQ1OTQ1UTdJYTlROXZDNkZtdVVw?=
- =?utf-8?B?UUZOV3JiRGdmY0hmN0JrWkRzZm1ScEs1dU5xVnVYUGlxOGhNS2kyM2JreXlC?=
- =?utf-8?B?T05JemdiYnhDZjdaNmU4RmRLT21hWGVPNlNBSEczendYOHluenNsWlphT29L?=
- =?utf-8?B?OXJ5aVBhMmR5cDNHNVpJVzIzR2w2VytxRHJJTEhjNmF6VkY0UVBMWUVldjZx?=
- =?utf-8?B?U2VSTE1CcHZRb2dJa1Z6a1VWQkUzcXY3U3dzSDcyVi8zWmNCVjNyUDdJUUg2?=
- =?utf-8?B?NktMblVzRDl3WkJvRWhpelJnSGpUTWtTR3lCT2tMQUNSazRrMXNZcGcyWm51?=
- =?utf-8?B?TU1CV0hhdHlhK3ViZ0drU215Qy9ncEk1SGhEUWtqWnh4V21PNU5zSnF0ZVlU?=
- =?utf-8?B?bG5heGg0N1BZV3JuYUxNcDNHQmN2VWxQQll2bkxXM3pVcVdOY1BsN0EvaHE4?=
- =?utf-8?B?VER3Z1JSVUJkVVBxaG9lL1B0M0lRc2E3MS9OVWs4T2IxZ3RZSHFLMXoxWFkr?=
- =?utf-8?B?TiticDNXMjl6WW1IbUNVa21MMno4M2Q5QnBwT1Zxbk5QdHJWWlNkbXV6bk14?=
- =?utf-8?B?U0o0cnhJTXh5NzM5WTIxRXRuUFl0OFdIVnN3S2taR2RJMWQyYU00NHNCYkZI?=
- =?utf-8?B?M0s2cllaTjcwT2VlSUwzYjdxdlh5SExjUnVLQW9vZ29KaTI1UGh5bVNHaUdt?=
- =?utf-8?B?MExlbzMwT1FWd2o5ME5VcUZGcHQzL0RsY2xnTlRRbEMwbWFJYzFiK1YvOTJS?=
- =?utf-8?B?bHBzM0lqaTZTdlI1Q3hzUEpNR3FkdmcxNm9ITjVOaDRxOGEvSk1EMTBUR0J0?=
- =?utf-8?B?aDNLV3doNDRqck81VWJnVGYrV2YvWmdZNzR6QVdBeFVwa29VQzVJS1pRTHF4?=
- =?utf-8?Q?tU+FMklBhEibSF7gVk8BjTOZ8Yhb+jVTizcCDo/yqvseP?=
-X-MS-Exchange-AntiSpam-MessageData-1: IkLpjw2ZKQla/A==
+	=?utf-8?B?Z0dlZ3B2MkNKc3JwQXpMQVlDdEg3S3ZOUHQvbTVYZk1HR3JTSjFDdEdxNC9j?=
+ =?utf-8?B?T0RmNHNQN3VJVXdXcHJXdmM1MDZka2NNZ29iRGpiSkFXQTh4VjFVSTJkSmMw?=
+ =?utf-8?B?SDMwWmFyd0JneWQvTXRsYUV6aEhJcHFTWEEyam8yWUxXa3lmRVhuRy9NcS9N?=
+ =?utf-8?B?ZHJJQ0hPRHBKdlhrWnV4NWtCREhXZ2RMZFkvQ2hhMWdMeDB3My9YTTJBdGhM?=
+ =?utf-8?B?cXBYdFlIKzBVdFMybnZ3MEs3M1VwNWJObGd4VDZiQnU2VnhlR3Axd2pXdlQ4?=
+ =?utf-8?B?VkJieG5ubjJGbENocXJjemd3Z1RUcEh1UnYwQzBCYlFhWXl0anV6QmdPMW8y?=
+ =?utf-8?B?cmtoRFJCdUR1cE10cm02akxyR01aQlU1eUFGSDNPWUh0alN6bkdsTzlFaUVz?=
+ =?utf-8?B?ZGFxOEFuam8yUEoyUWZ3THV4cGJDZmUweEg3YlJRZlJxTXk0OXUxcTdxUHBQ?=
+ =?utf-8?B?N29qelVSa0xmVlk3c3RKbXJqYjBnQmMvUWxnR0tiR1JzUUlBYjdmTzlHbzF5?=
+ =?utf-8?B?T2Y4Wkt5WHU4dFRCS0JvS3NiTUc0Y08rVnEzMWxmRkZrRWlra0NRSUM3R1lQ?=
+ =?utf-8?B?Umx3Z2ZqdXhhRndteGFvaUNHYWtSWFk1MjhvcXRnSTAvTHVDLzh1clNuUTRv?=
+ =?utf-8?B?aFlmUnhnT1h5elB2RmhYc3cxNHlFdlEzWjF6Rzc3a08xTmd1cWZsTDhXMi82?=
+ =?utf-8?B?TGhQNnNheFZhVElWckxxUUJhbHBFZVpIRzhhenRWS3RkSW05L01Sc0xuT0RU?=
+ =?utf-8?B?YWZjMnJ2ZnlTNGluaGhHY2xyY2xlSkxTbS9WTDRNZjRNdlJtb05qN3Vla2E1?=
+ =?utf-8?B?UnVTYVRvUjgrSlVxWThCcDhIU3F4UC9pbUNwSnhBV2NvSFAzWWI5QUVsMFNy?=
+ =?utf-8?B?Y2ZNQVdZcEZEdXVxQ0lDRjRRb0ErdkFRMDNXeVdXRlRVZVQrR0VVNGFNeDdH?=
+ =?utf-8?B?S1JIUE5pTmVyMlgwN25zZmJ2R0hLZkJURE1xYmdBeS9yU09UTFZCSWd0YUNQ?=
+ =?utf-8?B?eDdoRFZ4SkJtaXEvYU12Y2JKY0RWZENlYWZZTzJjS0ZxWDlaSk1tYzlxaDZy?=
+ =?utf-8?B?L3AxamhNMmNnY0l2Tko1S1F6ZC9VWk5YTTdaWkduOGJWYzhEdEJHeHMzZnBp?=
+ =?utf-8?B?Ym1QN2JKVG9GTXVwL1RxZzJlQ0tsOU9Ya3F2alZ2NjR0enB1R1dxeUZBNlFl?=
+ =?utf-8?B?L3dYaHBWYnh5ZEYwOHRrR3lKZFNjSXNIWFQyT2QvR3dtdThQMjdvNFEzaUZY?=
+ =?utf-8?B?Vk5saUw3MHN0ZGhxVTI5MENudTBhSGxTZnBjTUhUK1NLWGhEOTdla2wzYVR1?=
+ =?utf-8?B?eXI2Nk9XcVNCeklFalBmMiszQ2h2VzRudHc4dFhpTUF3UTZBL2syZDBEUWxs?=
+ =?utf-8?B?alFaZkdVb000RlZOdm9FM0N5eVlZaVlxbldhS3lIYUdDWlM5QVFXUXdvNWFa?=
+ =?utf-8?B?dEVsUjBQai94SWQwblZsbDNSUktkTlNmZkxlWXNvTVR3MzB0cS9MYk92RWcw?=
+ =?utf-8?B?RWIweE1Cc0xSSzlBSzNKdTUzSnFuL3VFL2lyQnNpelk1YlZFOFN1SzVNWi9x?=
+ =?utf-8?B?UzErVzBpeEJmUHhEWlc3c2RPZ3hZejdKdkQxald2MHJtRitUSHBhenlaRncv?=
+ =?utf-8?B?dlVZYUFReXh1ck5wYWtSOWtHL3JpekVMeTI5c3NLYmRVaG5GQkZXbEVaRDJo?=
+ =?utf-8?B?RFZEL1NFWjNwWVRtamRUb2FzN293dllPWitEUjFUSjF4VmZwWCs1NlZPczh6?=
+ =?utf-8?B?OFRnTnZ6WjdZMkhnUVdOMzUybU9MWmNjZ2lPSzVpamhJcXJWTUoydGhabUFS?=
+ =?utf-8?B?aWZWZE50TFV4NzZqOTNVV292VjFXODM4Q2djQ2JFUVhRZ2NKSDRPSHM1UkZO?=
+ =?utf-8?B?aFg2M1U0KzhZREpjS3BkcWZUWWU0OUFFdXAwcDJFQzBVR3RDVXZQYVc5N2tB?=
+ =?utf-8?B?R3FjOGQ4d0NlS0J4R0lwRW11ajBrdWpQRWxjbFVzeDFlMEQ2OENtTktnb2l0?=
+ =?utf-8?B?czAvaXJMQTRYZHd4WUhpa0taRnUwR1g3VHFKSVNoOFcvZFBHRWJYazFLVnRt?=
+ =?utf-8?B?L3BKS0ZNTXhmM2hsUmtyd2JNZTA0RnJsSUM2OWcxQVZKYWo5RlArbWN6RlQw?=
+ =?utf-8?B?MDRqL2RDNUdQNi9uTUwyZHFpbmNPTWdkTG93eWFncE1MOGJST2VRSkFkZGww?=
+ =?utf-8?B?M2pvUTFQcVRxY2pFYjM2ck4wQlNmNlFIVFdRRDN0VDBjQWt1M1pza2pBZi9j?=
+ =?utf-8?B?a2dVNWR3NHRRU05KWGtqeXhvVFBKbGUzUStzRjg2TU1mMTFwNHRaNWo3VHNj?=
+ =?utf-8?B?M1BreHd5RTRVWTBmR240eVFVdml4RnAvbHpuWXdVa3QwbUtMVXkwam9vZHVM?=
+ =?utf-8?Q?zQWiXmeBM/nycAlsruwzFCP6XoYc1w64CjGQx/x22jKbd?=
+X-MS-Exchange-AntiSpam-MessageData-1: Io8ujwKsEvvIUw==
 X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 7f3740bb-b1cc-49da-2c16-08def6c204d7
+X-MS-Exchange-CrossTenant-Network-Message-Id: c0059860-dc42-48fd-9141-08def6c20e93
 X-MS-Exchange-CrossTenant-AuthSource: CH2PR12MB3990.namprd12.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 10 Aug 2026 09:30:30.1516
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 10 Aug 2026 09:30:46.2985
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: JrNG9S1rD5DFiwWyqmmr62qWs3Py7D5bVBQZEZLN/6ckQgOw9E7s9div4Pxt8Qu21MilipHoxbGgCKCm1eJnoQ==
+X-MS-Exchange-CrossTenant-UserPrincipalName: Oontu7audz/pcuCYnKrzzapBi/VGPC4ZJpxqDFuy0adzvsrrARLgGBPBRv642xLOuFcHefoxEWFNr+do1IOEPQ==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM4PR12MB8570
 
 On Thu Aug 6, 2026 at 1:35 AM JST, Gary Guo wrote:
-> For types that are layout-compatible with an I/O capable type, we would
-> want the ability to use them directly for I/O operations. E.g.
+> `IoLoc`s themselves just describe a projection from a region to a concret=
+e
+> register. Thus, support it in `io_project` macro too. Also, update method=
+s
+> that operate on `IoLoc` to use I/O projection.
 >
->     bitfield! {
->         pub struct Foo(u32) {
->             ...
->         }
->     }
->
->     #[repr(C)]
->     struct Bar {
->         foo: Foo,
->     }
->
->     let mmio: Mmio<'_, Bar> =3D ...;
->     io_read!(mmio, .foo)
->
-> Currently this feature is available from `register!()` macro but not
-> otherwise available with `io_read!`, `io_write!`. Support this by adding =
-a
-> `IoRepr` type to denote the underlying I/O type to use for a specific typ=
-e.
->
-> This makes the `IoLoc::IoType` and `Register::Storage` redundant; thus
-> remove them; also convert register methods to use the `read_val` and
-> `write_val` instead.
-
-Ah that's nice, I was a bit bothered that `IoType` and `Storage`
-basically defined the same thing.
-
+> Documentation of `io_project!` is not expanded yet as the example works
+> better when `register!` type can specify base type. `io_read!` and
+> `io_write!` gains the ability to operate on registers as corollary of the
+> capability of `io_project!`. Examples are not added because `read` and
+> `write` is still preferrably used instead.
 >
 > Signed-off-by: Gary Guo <gary@garyguo.net>
 > ---
->  rust/kernel/bitfield.rs    |   5 ++
->  rust/kernel/io.rs          | 203 ++++++++++++++++++++++++++++++++-------=
+>  rust/kernel/io.rs | 58 ++++++++++++++++++++++++++++++++++++++++++++-----=
 ------
->  rust/kernel/io/register.rs |  59 +++++--------
->  3 files changed, 170 insertions(+), 97 deletions(-)
+>  1 file changed, 47 insertions(+), 11 deletions(-)
 >
-> diff --git a/rust/kernel/bitfield.rs b/rust/kernel/bitfield.rs
-> index 35ede53f2b8e..4bc92c62da06 100644
-> --- a/rust/kernel/bitfield.rs
-> +++ b/rust/kernel/bitfield.rs
-> @@ -308,6 +308,7 @@ macro_rules! bitfield {
->          $(#[$attr])*
->          #[repr(transparent)]
->          #[derive(Clone, Copy, PartialEq, Eq)]
-> +        #[derive($crate::prelude::FromBytes, $crate::prelude::IntoBytes)=
-]
->          $vis struct $name {
->              inner: $storage,
->          }
-> @@ -346,6 +347,10 @@ fn from(val: $storage) -> $name {
->                  Self::from_raw(val)
->              }
->          }
-> +
-> +        impl $crate::io::IoRepr for $name {
-> +            type Repr =3D $storage;
-> +        }
-
-This introduces a dependency from `bitfield` to `io`, which looks like
-inconsistent layering. But thankfully there is an easy fix - see below.
-
->      };
-> =20
->      // Definitions requiring knowledge of individual fields: private and=
- public field accessors,
 > diff --git a/rust/kernel/io.rs b/rust/kernel/io.rs
-> index adfc555de7d0..71c6180ed745 100644
+> index 71c6180ed745..ae18890866b6 100644
 > --- a/rust/kernel/io.rs
 > +++ b/rust/kernel/io.rs
-> @@ -276,6 +276,91 @@ pub trait IoCapable<T>: IoBackend {
->      fn io_write<'a>(view: Self::View<'a, T>, value: T);
->  }
-> =20
-> +/// Safe transmute that performs size check on monomorphization-time.
-> +///
-> +/// Can be considered as generic version of [`zerocopy::transmute!`] mac=
-ro but using the unstable
-> +/// `core::mem::transmute_neo` instead of [`core::mem::transmute`].
-> +#[inline(always)] // This is a no-op.
-> +fn transmute_neo<Src: IntoBytes, Dst: FromBytes>(val: Src) -> Dst {
-> +    const_assert!(size_of::<Src>() =3D=3D size_of::<Dst>());
-> +
-> +    // SAFETY: `Src: IntoBytes` and `Dst: FromBytes` and we've checked s=
-ize is the same.
-> +    unsafe { core::mem::transmute_copy(&core::mem::ManuallyDrop::new(val=
-)) }
-> +}
-
-This is universally useful, so let's move this to the `transmute` module?
-
-> +
-> +/// Trait indicating the underlying primitive types to be used for I/O o=
-perations.
-> +///
-> +/// Implementing trait allows arbitrary types to be used for I/O operati=
-ons, not just raw
-> +/// primitives.
-> +///
-> +/// The layout of the type and the underlying primitive must match; this=
+> @@ -295,7 +295,7 @@ fn transmute_neo<Src: IntoBytes, Dst: FromBytes>(val:=
+ Src) -> Dst {
+>  ///
+>  /// The layout of the type and the underlying primitive must match; this=
  is enforced via const
-> +/// assertions when I/O methods are used, as the type system cannot repr=
+>  /// assertions when I/O methods are used, as the type system cannot repr=
 esent this.
-> +/// [`IoRepr::from_repr`] and [`IoRepr::into_expr`] can be overridden fo=
+> -/// [`IoRepr::from_repr`] and [`IoRepr::into_expr`] can be overridden fo=
 r conversions, however it
-> +/// should be noted that they are only invoked on value read/write opera=
+> +/// [`IoRepr::from_repr`] and [`IoRepr::into_repr`] can be overridden fo=
+r conversions, however it
+
+This typo was introduced in patch 2, let's fix it there.
+
+>  /// should be noted that they are only invoked on value read/write opera=
 tions and are not invoked
-> +/// on byte operations such as [`Io::copy_read`].
-> +///
-> +/// # Examples
-> +///
-> +/// ```
-> +/// # use kernel::io::*;
-> +/// #[repr(transparent)]
-> +/// #[derive(FromBytes, IntoBytes)]
-> +/// pub struct MyNewType(u32);
-> +///
-> +/// impl IoRepr for MyNewType {
-> +///     type Repr =3D u32;
-> +/// }
-> +///
-> +/// #[repr(C)]
-> +/// pub struct MyStruct {
-> +///     raw: u32,
-> +///     new_type: MyNewType,
-> +/// }
-> +///
-> +/// # fn test(mmio: Mmio<'_, MyStruct>) {
-> +/// // let mmio: Mmio<'_, MyStruct>;
-> +/// let val: u32 =3D io_read!(mmio, .raw); // Raw primitive read
-> +/// io_write!(mmio, .raw, val);          // Raw primitve write
-> +/// let val: MyNewType =3D io_read!(mmio, .new_type); // Read via `IoRep=
-r`.
-> +/// io_write!(mmio, .new_type, val);                // Write via `IoRepr=
-`.
-> +/// # }
-> +/// ```
-> +pub trait IoRepr: FromBytes + IntoBytes + Sized {
-> +    /// The backing I/O capable type.
-> +    type Repr: FromBytes + IntoBytes;
+>  /// on byte operations such as [`Io::copy_read`].
+>  ///
+> @@ -970,8 +970,7 @@ fn try_read<T, L>(self, location: L) -> Result<T>
+>          L: IoLoc<Self::Target, T>,
+>          Self::Backend: IoCapable<<T as IoRepr>::Repr>,
+>      {
+> -        let view =3D io_view::<Self, T>(self, location.offset())?;
+> -        Ok(view.read_val())
+> +        Ok(io_read!(self, try: location))
+>      }
+> =20
+>      /// Generic fallible write with runtime bounds check.
+> @@ -1004,8 +1003,7 @@ fn try_write<T, L>(self, location: L, value: T) -> =
+Result
+>          L: IoLoc<Self::Target, T>,
+>          Self::Backend: IoCapable<<T as IoRepr>::Repr>,
+>      {
+> -        let view =3D io_view::<Self, T>(self, location.offset())?;
+> -        view.write_val(value);
+> +        io_write!(self, try: location, value);
+>          Ok(())
+>      }
+> =20
+> @@ -1084,7 +1082,7 @@ fn try_update<T, L, F>(self, location: L, f: F) -> =
+Result
+>          Self::Backend: IoCapable<<T as IoRepr>::Repr>,
+>          F: FnOnce(T) -> T,
+>      {
+> -        let view =3D io_view::<Self, T>(self, location.offset())?;
+> +        let view =3D io_project!(self, try: location);
+>          view.write_val(f(view.read_val()));
+>          Ok(())
+>      }
+> @@ -1117,8 +1115,7 @@ fn read<T, L>(self, location: L) -> T
+>          L: IoLoc<Self::Target, T>,
+>          Self::Backend: IoCapable<<T as IoRepr>::Repr>,
+>      {
+> -        let view =3D io_view_assert::<Self, T>(self, location.offset());
+> -        view.read_val()
+> +        io_read!(self, build: location)
+>      }
+> =20
+>      /// Generic infallible write with compile-time bounds check.
+> @@ -1149,8 +1146,7 @@ fn write<T, L>(self, location: L, value: T)
+>          L: IoLoc<Self::Target, T>,
+>          Self::Backend: IoCapable<<T as IoRepr>::Repr>,
+>      {
+> -        let view =3D io_view_assert::<Self, T>(self, location.offset());
+> -        view.write_val(value)
+> +        io_write!(self, build: location, value);
+>      }
+> =20
+>      /// Generic infallible write of a fully-located register value.
+> @@ -1227,7 +1223,7 @@ fn update<T, L, F>(self, location: L, f: F)
+>          Self::Backend: IoCapable<<T as IoRepr>::Repr>,
+>          F: FnOnce(T) -> T,
+>      {
+> -        let view =3D io_view_assert::<Self, T>(self, location.offset());
+> +        let view =3D io_project!(self, build: location);
+>          view.write_val(f(view.read_val()));
+>      }
+>  }
+> @@ -1772,6 +1768,25 @@ pub unsafe fn project_view<U: ?Sized + KnownSize>(
+>          // SAFETY: Per safety requirement.
+>          unsafe { T::Backend::project_view::<T::Target, _>(self.0, ptr) }
+>      }
 > +
-> +    /// Convert from [`IoRepr::Repr`] to `Self`.
 > +    #[inline(always)]
-> +    fn from_repr(repr: Self::Repr) -> Self {
-> +        transmute_neo(repr)
+> +    pub fn try_project_loc<U, L>(
+
+nit: missing documentation
+
+> +        self,
+> +        location: L,
+> +    ) -> Result<<T::Backend as IoBackend>::View<'a, U>>
+> +    where
+> +        L: IoLoc<T::Target, U>,
+> +    {
+> +        io_view::<_, U>(self.0, location.offset())
 > +    }
 > +
-> +    /// Convert from `Self` to [`IoRepr::Repr`].
 > +    #[inline(always)]
-> +    fn into_repr(this: Self) -> Self::Repr {
-> +        transmute_neo(this)
-> +    }
-> +}
-> +
-> +macro_rules! impl_io_repr {
-> +    ($($ty:ty =3D> $backing:ty,)*) =3D> {
-> +        $(impl IoRepr for $ty {
-> +            type Repr =3D $backing;
-> +        })*
-> +    };
-> +}
-> +
-> +impl_io_repr! {
-> +    u8 =3D> u8,
-> +    u16 =3D> u16,
-> +    u32 =3D> u32,
-> +    u64 =3D> u64,
-> +    i8 =3D> u8,
-> +    i16 =3D> u16,
-> +    i32 =3D> u32,
-> +    i64 =3D> u64,
-> +}
+> +    pub fn project_loc<U, L>(self, location: L) -> <T::Backend as IoBack=
+end>::View<'a, U>
 
-... and `IoRepr` and its implementations for primitive types should also
-be part of `transmute` IMHO (after being renamed to e.g. `Repr`), for
-there is nothing I/O exclusive to it. It just indicates that one type
-can be represented by another, a property that is again useful outside
-of I/O.
-
-That way `bitfield` gets a dependency on `transmute` rather than `io`,
-which doesn't break layering.
-
-In order to avoid `Repr::Repr` we can also rename the associated type to
-`Raw` and update the method names accordingly to `from_raw`/`into_raw` -
-which would have allowed us to remove the `bitfield` methods of the same
-name if they weren't needed in const context! But at least it makes
-things align nicely.
-
-<...>
-> @@ -831,8 +816,8 @@ macro_rules! register {
->              { $($fields:tt)* }
->      ) =3D> {
->          $crate::register!(@bitfield $(#[$attr])* $vis struct $name($stor=
-age) { $($fields)* });
-> -        $crate::register!(@io_base $name($storage) @ $offset);
-> -        $crate::register!(@io_fixed $(#[$attr])* $vis $name($storage));
-> +        $crate::register!(@io_base $name @ $offset);
-> +        $crate::register!(@io_fixed $(#[$attr])* $vis $name);
->      };
-> =20
->      // Creates an alias register of fixed offset register `alias` with i=
-ts own fields.
-> @@ -842,10 +827,10 @@ macro_rules! register {
->      ) =3D> {
->          $crate::register!(@bitfield $(#[$attr])* $vis struct $name($stor=
-age) { $($fields)* });
->          $crate::register!(
-> -            @io_base $name($storage) @
-> +            @io_base $name @
->              <$alias as $crate::io::register::Register>::OFFSET
->          );
-> -        $crate::register!(@io_fixed $(#[$attr])* $vis $name($storage));
-> +        $crate::register!(@io_fixed $(#[$attr])* $vis $name);
->      };
-> =20
->      // Creates a register at a relative offset from a base address provi=
-der.
-> @@ -854,8 +839,8 @@ macro_rules! register {
->              { $($fields:tt)* }
->      ) =3D> {
->          $crate::register!(@bitfield $(#[$attr])* $vis struct $name($stor=
-age) { $($fields)* });
-> -        $crate::register!(@io_base $name($storage) @ $offset);
-> -        $crate::register!(@io_relative $vis $name($storage) @ $base);
-> +        $crate::register!(@io_base $name @ $offset);
-> +        $crate::register!(@io_relative $vis $name @ $base);
->      };
-> =20
->      // Creates an alias register of relative offset register `alias` wit=
-h its own fields.
-> @@ -865,9 +850,9 @@ macro_rules! register {
->      ) =3D> {
->          $crate::register!(@bitfield $(#[$attr])* $vis struct $name($stor=
-age) { $($fields)* });
->          $crate::register!(
-> -            @io_base $name($storage) @ <$alias as $crate::io::register::=
-Register>::OFFSET
-> +            @io_base $name @ <$alias as $crate::io::register::Register>:=
-:OFFSET
->          );
-> -        $crate::register!(@io_relative $vis $name($storage) @ $base);
-> +        $crate::register!(@io_relative $vis $name @ $base);
->      };
-> =20
->      // Creates an array of registers at a fixed offset of the MMIO space=
-.
-> @@ -878,8 +863,8 @@ macro_rules! register {
->          $crate::build_assert::static_assert!(::core::mem::size_of::<$sto=
-rage>() <=3D $stride);
-> =20
->          $crate::register!(@bitfield $(#[$attr])* $vis struct $name($stor=
-age) { $($fields)* });
-> -        $crate::register!(@io_base $name($storage) @ $offset);
-> -        $crate::register!(@io_array $vis $name($storage) [ $size, stride=
- =3D $stride ]);
-> +        $crate::register!(@io_base $name @ $offset);
-> +        $crate::register!(@io_array $vis $name [ $size, stride =3D $stri=
-de ]);
->      };
-> =20
->      // Shortcut for contiguous array of registers (stride =3D=3D size of=
- element).
-> @@ -904,11 +889,11 @@ macro_rules! register {
-> =20
->          $crate::register!(@bitfield $(#[$attr])* $vis struct $name($stor=
-age) { $($fields)* });
->          $crate::register!(
-> -            @io_base $name($storage) @
-> +            @io_base $name @
->              <$alias as $crate::io::register::Register>::OFFSET
->                  + $idx * <$alias as $crate::io::register::RegisterArray>=
-::STRIDE
->          );
-> -        $crate::register!(@io_fixed $(#[$attr])* $vis $name($storage));
-> +        $crate::register!(@io_fixed $(#[$attr])* $vis $name);
->      };
-> =20
->      // Creates an array of registers at a relative offset from a base ad=
-dress provider.
-> @@ -920,9 +905,9 @@ macro_rules! register {
->          $crate::build_assert::static_assert!(::core::mem::size_of::<$sto=
-rage>() <=3D $stride);
-> =20
->          $crate::register!(@bitfield $(#[$attr])* $vis struct $name($stor=
-age) { $($fields)* });
-> -        $crate::register!(@io_base $name($storage) @ $offset);
-> +        $crate::register!(@io_base $name @ $offset);
->          $crate::register!(
-> -            @io_relative_array $vis $name($storage) [ $size, stride =3D =
-$stride ] @ $base + $offset
-> +            @io_relative_array $vis $name [ $size, stride =3D $stride ] =
-@ $base + $offset
->          );
->      };
-> =20
-> @@ -949,11 +934,11 @@ macro_rules! register {
-> =20
->          $crate::register!(@bitfield $(#[$attr])* $vis struct $name($stor=
-age) { $($fields)* });
->          $crate::register!(
-> -            @io_base $name($storage) @
-> +            @io_base $name @
->                  <$alias as $crate::io::register::Register>::OFFSET +
->                  $idx * <$alias as $crate::io::register::RegisterArray>::=
-STRIDE
->          );
-> -        $crate::register!(@io_relative $vis $name($storage) @ $base);
-> +        $crate::register!(@io_relative $vis $name @ $base);
->      };
-> =20
->      // Generates the bitfield for the register.
-> @@ -970,16 +955,14 @@ macro_rules! register {
->      };
-> =20
->      // Implementations shared by all registers types.
-> -    (@io_base $name:ident($storage:ty) @ $offset:expr) =3D> {
-> +    (@io_base $name:ident @ $offset:expr) =3D> {
->          impl $crate::io::register::Register for $name {
-> -            type Storage =3D $storage;
-> -
->              const OFFSET: usize =3D $offset;
->          }
->      };
-> =20
->      // Implementations of fixed registers.
-> -    (@io_fixed $(#[$attr:meta])* $vis:vis $name:ident ($storage:ty)) =3D=
-> {
-> +    (@io_fixed $(#[$attr:meta])* $vis:vis $name:ident) =3D> {
->          impl $crate::io::register::FixedRegister for $name {}
-> =20
->          $(#[$attr])*
-> @@ -988,7 +971,7 @@ impl $crate::io::register::FixedRegister for $name {}
->      };
-> =20
->      // Implementations of relative registers.
-> -    (@io_relative $vis:vis $name:ident ($storage:ty) @ $base:ident) =3D>=
- {
-> +    (@io_relative $vis:vis $name:ident @ $base:ident) =3D> {
->          impl $crate::io::register::WithBase for $name {
->              type BaseFamily =3D $base;
->          }
-> @@ -997,7 +980,7 @@ impl $crate::io::register::RelativeRegister for $name=
- {}
->      };
-> =20
->      // Implementations of register arrays.
-> -    (@io_array $vis:vis $name:ident ($storage:ty) [ $size:expr, stride =
-=3D $stride:expr ]) =3D> {
-> +    (@io_array $vis:vis $name:ident [ $size:expr, stride =3D $stride:exp=
-r ]) =3D> {
->          impl $crate::io::register::Array for $name {}
-> =20
->          impl $crate::io::register::RegisterArray for $name {
-> @@ -1008,7 +991,7 @@ impl $crate::io::register::RegisterArray for $name {
-> =20
->      // Implementations of relative array registers.
->      (
-> -        @io_relative_array $vis:vis $name:ident ($storage:ty) [ $size:ex=
-pr, stride =3D $stride:expr ]
-> +        @io_relative_array $vis:vis $name:ident [ $size:expr, stride =3D=
- $stride:expr ]
->              @ $base:ident + $offset:literal
->      ) =3D> {
->          impl $crate::io::register::WithBase for $name {
-
-These appear to repeat quite a bit of [1] which is already in
-`driver-core-next`. You'll want to rebase, I think the only difference
-between the two is the removal of $storage from @io_base.
-
-[1] https://lore.kernel.org/all/20260724-registers_fix-v2-2-a0fb58b02185@nv=
-idia.com/
+ditto.
