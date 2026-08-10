@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 260F73B19D9;
-	Mon, 10 Aug 2026 22:50:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 724193B71DD;
+	Mon, 10 Aug 2026 22:50:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786402203; cv=none; b=XebNFjLdRwWGn3HedKmqZxwGKBf8cHPBKZSUaM2uR5G+3spdG4Av+Z/P58kC8y3CWldBaRNwpwtHTZOvOmq4ipoPi8m1MYqeSYZXci+1hYMdM6u/Atf9uXMsZaaAninFXYYp3meR7K4BimpAHDRCXrWqIKlscjHPZhXEhhx+VD0=
+	t=1786402209; cv=none; b=aWxqdjwc+PeqtUqtd5+5K840ugFNiEGH/dGJpzvOeofhC+STYOsNQOFEO5eB058r11dRpdpT9BIKcMajX+dO7AfKLR4d8ZPK3XJyAPvUntNTox5fS93nBO7zGA47yBAsrQwtDF1YvW6h81J9zXvf2lRbOu0/KQh00XuxSlpxHsA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786402203; c=relaxed/simple;
-	bh=wMqEVW5kWhDeIECn7gd5WW2NWRQ88U2SA09YBzsxIWQ=;
+	s=arc-20240116; t=1786402209; c=relaxed/simple;
+	bh=Lvfzj5zN7Zwm6y+3PnVJ3bn6c9irRDFYizK1UrugL98=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=E/TR7K730T5I1zali24oH9k66UWW+W+2kqAMogYDQ0hHnTJvY33ziTnxgFT2KOk0M8MbXOI+/HjAUAMxulpfP9UD1kAihb6FwuvDS4OpV/Lp/wsXgRN5n2lGZ6mUlumP7vxxl625Xer8Nu56WuganN24xuq/uFl5xAJ5ZvegN6o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=O96udFG4; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=eHy4fMrtWj5dbIYpQZ9Ti9xZjJ4rOq343anNSXAhM1oj3fxpgioTqeqmZoQ1jAk7hk8Sqo8qkmzoQRMhbs4nvHKy+/f7aw5teOm4cSlIrbrC4/B/G6JG3dNTRkPPxmFkkZlL2vTVGeK5brbBd9wDKp2nx6n5mhq8plp6k17oCXI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UcQLSXWl; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="O96udFG4"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D1BB71F00A3A;
-	Mon, 10 Aug 2026 22:49:56 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UcQLSXWl"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 367D61F00A3D;
+	Mon, 10 Aug 2026 22:50:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786402201;
-	bh=37IhENiCIf1Rxw+TUNdCHt8A5GZ16leg1dT5esUP9zE=;
+	s=k20260515; t=1786402207;
+	bh=3Uy2Drsg3lgnFSs2+IXD1x4C86h7DBNQn78tkm2llMk=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=O96udFG4ZkgHwcvEbW8Kwb0fguD6dKXMADB8xh/Wday4AU0IPJLxZ5a/EUFZVd/sH
-	 0bl4Ik5Z8DnDPjfi56IV8EIvaA7kBFDNmE7s2x5GKL+VefkCD2RtGNzuSw5CFFYT9L
-	 9InXtj6Yp2Gz5ZzIE6PlqusUe0YhEotu5FRw8otelEEf5UPIEczgKP9WPiV1ylsjNV
-	 IzZUMkpbapa8VfqNUzn29l7vBvmVEJEcqlf2TvSCH9uK2WrYWEy0qpp6J6wbmGxpoC
-	 6v3o6HLpUen1xppY9OsCekWrxy2SCVIhAbvvC6QjS/WdZYdo/Drs0qix2cH0Xs9/7Y
-	 kForV2k4FXapw==
+	b=UcQLSXWl2BEvzt+25JfScVknhOOhojUcIXGowv42zyYP2IytncG+/s5LgFSbyhd+7
+	 FCl7FiLKURliVcnCoy04MR1SZhoY8CQpvaLg1BdcRyIG2rfjsOpMyoHzNJw8QCmVVB
+	 jqZS8GUlShhLdEqUiz3Vu/NnVkrn7dhQqsrvRFVcCnvc6GvvmHnIFKEqwzq78MexMp
+	 o2SDl1brrwXK5DpATJqEn8tjt3UlwwDC02xB62uLhFHOObKD3zWnt8YoqOp6zBAU0o
+	 TZFYyDoXvQMfzDwPvXs1aObz4ZV4N4dkUqBVWDfd4z+ixaEu56BokuqoS4X4AExspB
+	 zINfjcXE60JCQ==
 From: Danilo Krummrich <dakr@kernel.org>
 To: bhelgaas@google.com,
 	dakr@kernel.org,
@@ -52,9 +52,9 @@ Cc: driver-core@lists.linux.dev,
 	linux-pci@vger.kernel.org,
 	rust-for-linux@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH 1/5] rust: irq: add anchor generic to IrqRequest and Registration
-Date: Tue, 11 Aug 2026 00:47:40 +0200
-Message-ID: <20260810224800.2314458-2-dakr@kernel.org>
+Subject: [PATCH 2/5] rust: pci: convert IrqVectorRegistration to a lifetime-managed owning type
+Date: Tue, 11 Aug 2026 00:47:41 +0200
+Message-ID: <20260810224800.2314458-3-dakr@kernel.org>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260810224800.2314458-1-dakr@kernel.org>
 References: <20260810224800.2314458-1-dakr@kernel.org>
@@ -64,266 +64,295 @@ List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-Add an IrqRequestAnchor marker trait and a generic parameter A
-(defaulting to ()) on IrqRequest, Registration, and
-ThreadedRegistration.
+Convert IrqVectorRegistration from a devres-managed internal type to a
+lifetime-annotated type that owns the PCI interrupt vector allocation.
+Dropping it frees the vectors.
 
-Bus-specific IRQ sources can implement IrqRequestAnchor for a reference
-to their allocation type, so that the Registration stores a real borrow
-of the allocation and prevents it from being dropped while the handler
-is live.
+IrqVector gains a reference to the IrqVectorRegistration it was derived
+from. This reference flows through IrqRequest (via the IrqRequestAnchor
+generic) into irq::Registration, creating a borrow chain that prevents
+the vector allocation from being dropped while any handler is still
+registered.
 
-The default anchor () keeps all existing behavior unchanged; platform
-devices are unaffected.
-
-Add a new constructor IrqRequest::new_anchored() that accepts the anchor
-value. The existing IrqRequest::new() continues to produce
-IrqRequest<'a, ()>.
+alloc_irq_vectors() returns IrqVectorRegistration<'_> directly, giving
+drivers explicit control over the allocation lifetime. This is also
+needed by e.g. net and block drivers that re-allocate vectors, e.g.
+during queue reconfiguration or device recovery.
 
 Signed-off-by: Danilo Krummrich <dakr@kernel.org>
 ---
- rust/kernel/irq.rs         | 10 ++++-
- rust/kernel/irq/request.rs | 86 ++++++++++++++++++++++++++++----------
- 2 files changed, 71 insertions(+), 25 deletions(-)
+ rust/kernel/pci.rs     |   3 +-
+ rust/kernel/pci/irq.rs | 149 ++++++++++++++++++++++-------------------
+ 2 files changed, 83 insertions(+), 69 deletions(-)
 
-diff --git a/rust/kernel/irq.rs b/rust/kernel/irq.rs
-index 09ef1e7f853c..dd3cc6969ebf 100644
---- a/rust/kernel/irq.rs
-+++ b/rust/kernel/irq.rs
-@@ -19,6 +19,12 @@
- pub use flags::Flags;
- 
- pub use request::{
--    Handler, IrqRequest, IrqReturn, Registration, ThreadedHandler, ThreadedIrqReturn,
--    ThreadedRegistration,
-+    Handler,
-+    IrqRequest,
-+    IrqRequestAnchor,
-+    IrqReturn,
-+    Registration,
-+    ThreadedHandler,
-+    ThreadedIrqReturn,
-+    ThreadedRegistration, //
+diff --git a/rust/kernel/pci.rs b/rust/kernel/pci.rs
+index c6417af2bb17..2757a0cc0f11 100644
+--- a/rust/kernel/pci.rs
++++ b/rust/kernel/pci.rs
+@@ -51,7 +51,8 @@
+ pub use self::irq::{
+     IrqType,
+     IrqTypes,
+-    IrqVector, //
++    IrqVector,
++    IrqVectorRegistration, //
  };
-diff --git a/rust/kernel/irq/request.rs b/rust/kernel/irq/request.rs
-index c1c6525a676a..760381a07816 100644
---- a/rust/kernel/irq/request.rs
-+++ b/rust/kernel/irq/request.rs
-@@ -44,17 +44,31 @@ pub trait Handler: Sync {
-     fn handle(&self) -> IrqReturn;
+ 
+ /// An adapter for the registration of PCI drivers.
+diff --git a/rust/kernel/pci/irq.rs b/rust/kernel/pci/irq.rs
+index fea484dcf9cf..38a7d72dcda7 100644
+--- a/rust/kernel/pci/irq.rs
++++ b/rust/kernel/pci/irq.rs
+@@ -7,17 +7,15 @@
+     bindings,
+     device,
+     device::Bound,
+-    devres,
+     error::to_result,
+     irq::{
+         self,
+-        IrqRequest, //
++        IrqRequest,
++        IrqRequestAnchor, //
+     },
+-    prelude::*,
+-    str::CStr,
+-    sync::aref::ARef, //
++    prelude::*, //
+ };
+-use core::ops::RangeInclusive;
++use core::num::NonZero;
+ 
+ /// IRQ type flags for PCI interrupt allocation.
+ #[derive(Debug, Clone, Copy)]
+@@ -78,6 +76,7 @@ const fn as_raw(self) -> u32 {
+ #[derive(Clone, Copy)]
+ pub struct IrqVector<'a> {
+     dev: &'a Device<Bound>,
++    reg: &'a IrqVectorRegistration<'a>,
+     index: u32,
  }
  
-+/// Marker trait for the anchor stored in an [`IrqRequest`].
-+///
-+/// Bus-specific IRQ sources can implement this for a reference to their allocation type, so that
-+/// the [`Registration`] that stores the request keeps the allocation alive. The default `()`
-+/// imposes no constraint beyond the device lifetime.
-+pub trait IrqRequestAnchor: Send + Sync {}
-+
-+impl IrqRequestAnchor for () {}
-+
- /// A request for an IRQ line for a given device.
- ///
-+/// The anchor `A` is stored in the [`Registration`] built from this request. When `A` is a
-+/// reference to a bus-specific allocation, the borrow prevents the allocation from being dropped
-+/// before the handler is freed.
-+///
- /// # Invariants
- ///
- /// - `ìrq` is the number of an interrupt source of `dev`.
- /// - `irq` has not been registered yet; this is consumed by [`Registration::new()`].
--pub struct IrqRequest<'a> {
-+pub struct IrqRequest<'a, A: IrqRequestAnchor = ()> {
-     irq: u32,
-     /// Proves the device is bound at registration time and ties `'a` to the device's bound
-     /// lifetime, ensuring the [`Registration`] cannot outlive it.
-     _dev: PhantomData<&'a Device<Bound>>,
-+    anchor: A,
- }
- 
- impl<'a> IrqRequest<'a> {
-@@ -63,14 +77,34 @@ impl<'a> IrqRequest<'a> {
+@@ -86,10 +85,11 @@ impl<'a> IrqVector<'a> {
+     ///
      /// # Safety
      ///
-     /// - `irq` should be a valid IRQ number for `dev`.
+-    /// - `index` must be a valid IRQ vector index for `dev`.
+-    /// - `dev` must point to a [`Device`] that has successfully allocated IRQ vectors.
+-    unsafe fn new(dev: &'a Device<Bound>, index: u32) -> Self {
+-        Self { dev, index }
++    /// - `index` must be a valid IRQ vector index for `reg`.
++    /// - `dev` must be the device `reg` was allocated from.
 +    #[inline]
-     pub(crate) unsafe fn new(_dev: &'a Device<Bound>, irq: u32) -> Self {
-+        // SAFETY: Caller guarantees `irq` is valid for `dev`.
-+        unsafe { Self::new_anchored(_dev, irq, ()) }
++    unsafe fn new(dev: &'a Device<Bound>, reg: &'a IrqVectorRegistration<'a>, index: u32) -> Self {
++        Self { dev, reg, index }
+     }
+ 
+     /// Returns the raw vector index.
+@@ -98,75 +98,72 @@ fn index(&self) -> u32 {
+     }
+ }
+ 
+-impl<'a> TryInto<IrqRequest<'a>> for IrqVector<'a> {
++impl IrqRequestAnchor for &IrqVectorRegistration<'_> {}
++
++impl<'a> IrqRequest<'a, &'a IrqVectorRegistration<'a>> {
++    /// Returns the [`IrqVectorRegistration`] this request was derived from.
++    pub fn vectors(&self) -> &'a IrqVectorRegistration<'a> {
++        self.anchor()
 +    }
 +}
 +
-+impl<'a, A: IrqRequestAnchor> IrqRequest<'a, A> {
-+    /// Creates a new IRQ request with an anchor to a bus-specific resource allocation.
-+    ///
-+    /// # Safety
-+    ///
-+    /// `irq` must be a valid IRQ number for `dev`.
-+    #[inline]
-+    pub(crate) unsafe fn new_anchored(_dev: &'a Device<Bound>, irq: u32, anchor: A) -> Self {
-         // INVARIANT: `irq` is a valid IRQ number for `dev`.
-         IrqRequest {
-             irq,
-             _dev: PhantomData,
-+            anchor,
++impl<'a> TryInto<IrqRequest<'a, &'a IrqVectorRegistration<'a>>> for IrqVector<'a> {
+     type Error = Error;
+ 
+-    fn try_into(self) -> Result<IrqRequest<'a>> {
+-        // SAFETY: `self.as_raw` returns a valid pointer to a `struct pci_dev`.
++    fn try_into(self) -> Result<IrqRequest<'a, &'a IrqVectorRegistration<'a>>> {
++        // SAFETY: `self.dev.as_raw()` returns a valid pointer to a `struct pci_dev`.
+         let irq = unsafe { bindings::pci_irq_vector(self.dev.as_raw(), self.index()) };
+         if irq < 0 {
+             return Err(crate::error::Error::from_errno(irq));
          }
+-        // SAFETY: `irq` is guaranteed to be a valid IRQ number for `&self`.
+-        Ok(unsafe { IrqRequest::new(self.dev.as_ref(), irq as u32) })
++        // SAFETY: `irq` is guaranteed to be a valid IRQ number for `self.dev`.
++        Ok(unsafe { IrqRequest::new_anchored(self.dev.as_ref(), irq as u32, self.reg) })
+     }
+ }
+ 
+-/// Represents an IRQ vector allocation for a PCI device.
++/// An allocation of PCI interrupt vectors for a device.
+ ///
+-/// This type ensures that IRQ vectors are properly allocated and freed by
+-/// tying the allocation to the lifetime of this registration object.
++/// This type owns the vector allocation; dropping it frees the vectors. IRQ handlers borrow from
++/// this registration and must be dropped before it is.
+ ///
+ /// # Invariants
+ ///
+-/// The [`Device`] has successfully allocated IRQ vectors.
+-struct IrqVectorRegistration {
+-    dev: ARef<Device>,
++/// `dev` has an allocation of `count` interrupt vectors.
++pub struct IrqVectorRegistration<'a> {
++    dev: &'a Device<Bound>,
++    count: NonZero<usize>,
+ }
+ 
+-impl IrqVectorRegistration {
+-    /// Allocate and register IRQ vectors for the given PCI device.
++impl<'a> IrqVectorRegistration<'a> {
++    /// Returns the number of allocated vectors.
+     ///
+-    /// Allocates IRQ vectors and registers them with devres for automatic cleanup.
+-    /// Returns a range of valid IRQ vectors.
+-    fn register<'a>(
+-        dev: &'a Device<Bound>,
+-        min_vecs: u32,
+-        max_vecs: u32,
+-        irq_types: IrqTypes,
+-    ) -> Result<RangeInclusive<IrqVector<'a>>> {
+-        // SAFETY:
+-        // - `dev.as_raw()` is guaranteed to be a valid pointer to a `struct pci_dev`
+-        //   by the type invariant of `Device`.
+-        // - `pci_alloc_irq_vectors` internally validates all other parameters
+-        //   and returns error codes.
+-        let ret = unsafe {
+-            bindings::pci_alloc_irq_vectors(dev.as_raw(), min_vecs, max_vecs, irq_types.as_raw())
+-        };
+-
+-        to_result(ret)?;
+-        let count = ret as u32;
+-
+-        // SAFETY:
+-        // - `pci_alloc_irq_vectors` returns the number of allocated vectors on success.
+-        // - Vectors are 0-based, so valid indices are [0, count-1].
+-        // - `pci_alloc_irq_vectors` guarantees `count >= min_vecs > 0`, so both `0` and
+-        //   `count - 1` are valid IRQ vector indices for `dev`.
+-        let range = unsafe { IrqVector::new(dev, 0)..=IrqVector::new(dev, count - 1) };
++    /// This is at least the `min_vecs` that [`Device::alloc_irq_vectors`] was asked for.
++    #[inline]
++    pub fn vector_count(&self) -> usize {
++        self.count.get()
++    }
+ 
+-        // INVARIANT: The IRQ vector allocation for `dev` above was successful.
+-        let irq_vecs = Self { dev: dev.into() };
+-        devres::register(dev.as_ref(), irq_vecs, GFP_KERNEL)?;
++    /// Returns the [`IrqVector`] at `index`.
++    ///
++    /// The returned [`IrqVector`] borrows from this registration, ensuring the vector allocation
++    /// remains live while any handler is registered on it.
++    #[inline]
++    pub fn vector(&self, index: usize) -> Result<IrqVector<'_>> {
++        if index >= self.count.get() {
++            return Err(EINVAL);
++        }
+ 
+-        Ok(range)
++        // SAFETY: `index` is within bounds of this registration's allocation, and `self.dev` is
++        // the device it was allocated from.
++        Ok(unsafe { IrqVector::new(self.dev, self, index as u32) })
+     }
+ }
+ 
+-impl Drop for IrqVectorRegistration {
++impl Drop for IrqVectorRegistration<'_> {
++    #[inline]
+     fn drop(&mut self) {
+-        // SAFETY:
+-        // - By the type invariant, `self.dev.as_raw()` is a valid pointer to a `struct pci_dev`.
+-        // - `self.dev` has successfully allocated IRQ vectors.
++        // SAFETY: By the type invariant, `self.dev.as_raw()` is a valid pointer to a
++        // `struct pci_dev` that has successfully allocated IRQ vectors.
+         unsafe { bindings::pci_free_irq_vectors(self.dev.as_raw()) };
+     }
+ }
+@@ -184,12 +181,12 @@ pub unsafe fn request_irq<'a, T: crate::irq::Handler + 'a>(
+         flags: irq::Flags,
+         name: &'static CStr,
+         handler: impl PinInit<T, Error> + 'a,
+-    ) -> impl PinInit<irq::Registration<'a, T>, Error> + 'a {
++    ) -> impl PinInit<irq::Registration<'a, T, &'a IrqVectorRegistration<'a>>, Error> + 'a {
+         pin_init::pin_init_scope(move || {
+             let request = vector.try_into()?;
+ 
+             // SAFETY: Caller guarantees the Registration will not be leaked.
+-            Ok(unsafe { irq::Registration::<T>::new(request, flags, name, handler) })
++            Ok(unsafe { irq::Registration::new(request, flags, name, handler) })
+         })
      }
  
-+    /// Returns a reference to the anchor.
-+    pub fn anchor(&self) -> &A {
-+        &self.anchor
-+    }
+@@ -205,24 +202,26 @@ pub unsafe fn request_threaded_irq<'a, T: crate::irq::ThreadedHandler + 'a>(
+         flags: irq::Flags,
+         name: &'static CStr,
+         handler: impl PinInit<T, Error> + 'a,
+-    ) -> impl PinInit<irq::ThreadedRegistration<'a, T>, Error> + 'a {
++    ) -> impl PinInit<irq::ThreadedRegistration<'a, T, &'a IrqVectorRegistration<'a>>, Error> + 'a
++    {
+         pin_init::pin_init_scope(move || {
+             let request = vector.try_into()?;
+ 
+             // SAFETY: Caller guarantees the Registration will not be leaked.
+-            Ok(unsafe { irq::ThreadedRegistration::<T>::new(request, flags, name, handler) })
++            Ok(unsafe { irq::ThreadedRegistration::new(request, flags, name, handler) })
+         })
+     }
+ 
+-    /// Allocate IRQ vectors for this PCI device with automatic cleanup.
++    /// Allocate IRQ vectors for this PCI device.
+     ///
+     /// Allocates between `min_vecs` and `max_vecs` interrupt vectors for the device.
+     /// The allocation will use MSI-X, MSI, or INTx interrupts based on the `irq_types`
+     /// parameter and hardware capabilities. When multiple types are specified, the kernel
+     /// will try them in order of preference: MSI-X first, then MSI, then INTx interrupts.
+     ///
+-    /// The allocated vectors are automatically freed when the device is unbound, using the
+-    /// devres (device resource management) system.
++    /// The allocated vectors are freed when the returned [`IrqVectorRegistration`] is dropped.
++    /// IRQ handlers registered via [`Self::request_irq`] or [`Self::request_threaded_irq`]
++    /// borrow from the registration, so the compiler ensures they are freed first.
+     ///
+     /// # Arguments
+     ///
+@@ -232,8 +231,8 @@ pub unsafe fn request_threaded_irq<'a, T: crate::irq::ThreadedHandler + 'a>(
+     ///
+     /// # Returns
+     ///
+-    /// Returns a range of IRQ vectors that were successfully allocated, or an error if the
+-    /// allocation fails or cannot meet the minimum requirement.
++    /// Returns the IRQ vector registration, or an error if `min_vecs` vectors cannot be
++    /// allocated.
+     ///
+     /// # Examples
+     ///
+@@ -256,7 +255,21 @@ pub fn alloc_irq_vectors(
+         min_vecs: u32,
+         max_vecs: u32,
+         irq_types: IrqTypes,
+-    ) -> Result<RangeInclusive<IrqVector<'_>>> {
+-        IrqVectorRegistration::register(self, min_vecs, max_vecs, irq_types)
++    ) -> Result<IrqVectorRegistration<'_>> {
++        // SAFETY:
++        // - `self.as_raw()` is guaranteed to be a valid pointer to a `struct pci_dev`
++        //   by the type invariant of `Device`.
++        // - `pci_alloc_irq_vectors` internally validates all other parameters
++        //   and returns error codes.
++        let ret = unsafe {
++            bindings::pci_alloc_irq_vectors(self.as_raw(), min_vecs, max_vecs, irq_types.as_raw())
++        };
 +
-     /// Returns the IRQ number of an [`IrqRequest`].
-     #[inline]
-     pub fn irq(&self) -> u32 {
-@@ -154,8 +188,8 @@ pub fn irq(&self) -> u32 {
- ///
- /// * We own an irq handler registered via `request_irq` whose cookie is a pointer to `Self`.
- #[pin_data(PinnedDrop)]
--pub struct Registration<'a, T: Handler> {
--    request: IrqRequest<'a>,
-+pub struct Registration<'a, T: Handler, A: IrqRequestAnchor = ()> {
-+    request: IrqRequest<'a, A>,
- 
-     #[pin]
-     handler: T,
-@@ -166,7 +200,7 @@ pub struct Registration<'a, T: Handler> {
-     _pin: PhantomPinned,
++        to_result(ret)?;
++
++        let count = NonZero::new(ret as usize).ok_or(EINVAL)?;
++
++        // INVARIANT: `pci_alloc_irq_vectors()` allocated `count` vectors for `self`.
++        Ok(IrqVectorRegistration { dev: self, count })
+     }
  }
- 
--impl<'a, T: Handler> Registration<'a, T> {
-+impl<'a, T: Handler, A: IrqRequestAnchor + 'a> Registration<'a, T, A> {
-     /// Registers the IRQ handler with the system for the given IRQ number.
-     ///
-     /// # Safety
-@@ -174,7 +208,7 @@ impl<'a, T: Handler> Registration<'a, T> {
-     /// Callers must not `mem::forget()` the returned [`Registration`] or otherwise prevent its
-     /// [`Drop`] implementation from running.
-     pub unsafe fn new(
--        request: IrqRequest<'a>,
-+        request: IrqRequest<'a, A>,
-         flags: Flags,
-         name: &'static CStr,
-         handler: impl PinInit<T, Error> + 'a,
-@@ -199,7 +233,7 @@ pub unsafe fn new(
-                 to_result(unsafe {
-                     bindings::request_irq(
-                         request.irq,
--                        Some(handle_irq_callback::<T>),
-+                        Some(handle_irq_callback::<T, A>),
-                         flags.into_inner(),
-                         name.as_char_ptr(),
-                         this.as_ptr().cast::<c_void>(),
-@@ -223,7 +257,7 @@ pub fn synchronize(&self) {
- }
- 
- #[pinned_drop]
--impl<T: Handler> PinnedDrop for Registration<'_, T> {
-+impl<T: Handler, A: IrqRequestAnchor> PinnedDrop for Registration<'_, T, A> {
-     fn drop(self: Pin<&mut Self>) {
-         // SAFETY: The cookie was set to a pointer to `Self` in `Registration::new()`. This blocks
-         // until all in-flight handlers complete, so no references to `self` remain after this
-@@ -240,9 +274,12 @@ fn drop(self: Pin<&mut Self>) {
- /// # Safety
- ///
- /// This function should be only used as the callback in `request_irq`.
--unsafe extern "C" fn handle_irq_callback<T: Handler>(_irq: i32, ptr: *mut c_void) -> c_uint {
--    let ptr = ptr.cast_const().cast::<Registration<'_, T>>();
--    // SAFETY: `ptr` is a pointer to `Registration<'_, T>` set in `Registration::new()`.
-+unsafe extern "C" fn handle_irq_callback<T: Handler, A: IrqRequestAnchor>(
-+    _irq: i32,
-+    ptr: *mut c_void,
-+) -> c_uint {
-+    let ptr = ptr.cast_const().cast::<Registration<'_, T, A>>();
-+    // SAFETY: `ptr` is a pointer to `Registration<'_, T, A>` set in `Registration::new()`.
-     let registration = unsafe { &*ptr };
- 
-     T::handle(&registration.handler) as c_uint
-@@ -371,8 +408,8 @@ fn handle(&self) -> ThreadedIrqReturn {
- /// * We own an irq handler registered via `request_threaded_irq` whose cookie is a pointer to
- ///   `Self`.
- #[pin_data(PinnedDrop)]
--pub struct ThreadedRegistration<'a, T: ThreadedHandler> {
--    request: IrqRequest<'a>,
-+pub struct ThreadedRegistration<'a, T: ThreadedHandler, A: IrqRequestAnchor = ()> {
-+    request: IrqRequest<'a, A>,
- 
-     #[pin]
-     handler: T,
-@@ -383,7 +420,7 @@ pub struct ThreadedRegistration<'a, T: ThreadedHandler> {
-     _pin: PhantomPinned,
- }
- 
--impl<'a, T: ThreadedHandler> ThreadedRegistration<'a, T> {
-+impl<'a, T: ThreadedHandler, A: IrqRequestAnchor + 'a> ThreadedRegistration<'a, T, A> {
-     /// Registers the IRQ handler with the system for the given IRQ number.
-     ///
-     /// # Safety
-@@ -391,7 +428,7 @@ impl<'a, T: ThreadedHandler> ThreadedRegistration<'a, T> {
-     /// Callers must not `mem::forget()` the returned [`ThreadedRegistration`] or otherwise prevent
-     /// its [`Drop`] implementation from running.
-     pub unsafe fn new(
--        request: IrqRequest<'a>,
-+        request: IrqRequest<'a, A>,
-         flags: Flags,
-         name: &'static CStr,
-         handler: impl PinInit<T, Error> + 'a,
-@@ -416,8 +453,8 @@ pub unsafe fn new(
-                 to_result(unsafe {
-                     bindings::request_threaded_irq(
-                         request.irq,
--                        Some(handle_threaded_irq_callback::<T>),
--                        Some(thread_fn_callback::<T>),
-+                        Some(handle_threaded_irq_callback::<T, A>),
-+                        Some(thread_fn_callback::<T, A>),
-                         flags.into_inner(),
-                         name.as_char_ptr(),
-                         this.as_ptr().cast::<c_void>(),
-@@ -441,7 +478,7 @@ pub fn synchronize(&self) {
- }
- 
- #[pinned_drop]
--impl<T: ThreadedHandler> PinnedDrop for ThreadedRegistration<'_, T> {
-+impl<T: ThreadedHandler, A: IrqRequestAnchor> PinnedDrop for ThreadedRegistration<'_, T, A> {
-     fn drop(self: Pin<&mut Self>) {
-         // SAFETY: The cookie was set to a pointer to `Self` in `ThreadedRegistration::new()`. This
-         // blocks until all in-flight handlers complete, so no references to `self` remain after
-@@ -458,12 +495,12 @@ fn drop(self: Pin<&mut Self>) {
- /// # Safety
- ///
- /// This function should be only used as the callback in `request_threaded_irq`.
--unsafe extern "C" fn handle_threaded_irq_callback<T: ThreadedHandler>(
-+unsafe extern "C" fn handle_threaded_irq_callback<T: ThreadedHandler, A: IrqRequestAnchor>(
-     _irq: i32,
-     ptr: *mut c_void,
- ) -> c_uint {
--    let ptr = ptr.cast_const().cast::<ThreadedRegistration<'_, T>>();
--    // SAFETY: `ptr` is a pointer to `ThreadedRegistration<'_, T>` set in
-+    let ptr = ptr.cast_const().cast::<ThreadedRegistration<'_, T, A>>();
-+    // SAFETY: `ptr` is a pointer to `ThreadedRegistration<'_, T, A>` set in
-     // `ThreadedRegistration::new()`.
-     let registration = unsafe { &*ptr };
- 
-@@ -473,9 +510,12 @@ fn drop(self: Pin<&mut Self>) {
- /// # Safety
- ///
- /// This function should be only used as the callback in `request_threaded_irq`.
--unsafe extern "C" fn thread_fn_callback<T: ThreadedHandler>(_irq: i32, ptr: *mut c_void) -> c_uint {
--    let ptr = ptr.cast_const().cast::<ThreadedRegistration<'_, T>>();
--    // SAFETY: `ptr` is a pointer to `ThreadedRegistration<'_, T>` set in
-+unsafe extern "C" fn thread_fn_callback<T: ThreadedHandler, A: IrqRequestAnchor>(
-+    _irq: i32,
-+    ptr: *mut c_void,
-+) -> c_uint {
-+    let ptr = ptr.cast_const().cast::<ThreadedRegistration<'_, T, A>>();
-+    // SAFETY: `ptr` is a pointer to `ThreadedRegistration<'_, T, A>` set in
-     // `ThreadedRegistration::new()`.
-     let registration = unsafe { &*ptr };
- 
 -- 
 2.55.0
 
