@@ -1,212 +1,213 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from PA4PR04CU001.outbound.protection.outlook.com (mail-francecentralazon11023114.outbound.protection.outlook.com [40.107.162.114])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6DC9434C134;
-	Tue, 11 Aug 2026 18:17:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786472277; cv=none; b=kkH7Fp+D6q1LVeTN4uXUtQLKnchhqMK4E+AcGHV1mhIqCnJkWj44ndAtejKdV1CR8xNr1+wUCe191B/jhFV1ictMZAKvQrpZw5skEyU/Now2qlgNpz8vD2fkjp+ePVqaJhADNMo+nHn3sLiURiAAkWfoaRJcy1Jc0enoCBaUQJA=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786472277; c=relaxed/simple;
-	bh=ZqFeWVnSTuBGtX7dL1mnUogVZ5R+NXTnsk0RRJlmLuw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=cyCHZ3DvILe91FG6dNFdYouurHXFmboCF4x0joNLRf4J2ulrufAshScCzzr7BGAfcTJpRvOw3+q/rDLDhAI8OhoUxLbMGKTJhi9l5FBpsygW5nOU1JI619hw/qw8sb8/ZOcBe+GcynPWARzoDZfLB2pTzfz8GTi9zmJ3cIwuT4Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hAkrRFs5; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 893293403FA;
+	Tue, 11 Aug 2026 19:44:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.162.114
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1786477445; cv=fail; b=WReoYleATv7Pq+ge9VYbXrOjnFnUgKUD8HDQSad8syym9ZNK3pHZLpFmPSyAiH0OrT2R07u3c5X0qELaS0ZXUl+iF8cd1uv4CeydZHKYbdsFsHbZuvqCsxocTV+a6DkEakqXJPs6oxQJqO1NCfXmTVONie0CHiAoSed1lE02bTs=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1786477445; c=relaxed/simple;
+	bh=2FD1D4pmunTZUZc7/XPWbmJJz0fvUPya7KIRLwuAlio=;
+	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=mpmBp9AWhHkpheqWLkz7RfAsG41Tu8wNCA7UWd0xsol1vH2po0fhQKmAYE8u08PxyWHoq9WIahQ18X16x+IcX8LwXFfm2U5kqFGULDXGi6WAZqvR//iIhMcemb+KWN547fl0GMhrCKdm2uGWAi3P3FaqTHL+BJPgcMxaSuPS2z0=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=genexis.eu; spf=pass smtp.mailfrom=genexis.eu; dkim=pass (2048-bit key) header.d=genexis.eu header.i=@genexis.eu header.b=qmBf5FD9; arc=fail smtp.client-ip=40.107.162.114
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=genexis.eu
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=genexis.eu
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hAkrRFs5"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 19D031F000E9;
-	Tue, 11 Aug 2026 18:17:54 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786472276;
-	bh=Nxsm3UN9crkMzRNRrmCWYDT+hoxeo7lmSvkODAHKJdE=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=hAkrRFs5ZnBXEKzaKcZaPnX0VNxAySGm8fUPE900vv7SzUmZstmHmyZZy9vPpBjuT
-	 JIupNrLdyf9CrvJlD0QUleogpQ2aegHc1BLiB/vIQLcEgDVrsEHaylMT8L0ummkGbx
-	 PfEZvvgonygLpJKghJRUi8s7ykX9DkqP4cdbdflZgllvZ/v8WsSQcYrxXZjtLPxLhS
-	 O0wKjtUFqiADZqdrvN7TNLU4qE2yWObUF89OsXmFDA+1xDsC/kDvKn0xrh5xJGTdv/
-	 yc6ZVATGj670euwhM451PxMKrudhb77rYXWE0WZ6uzv8fBRVI8WFLiTtE89137mnKY
-	 8e33v4tz3vMCg==
-Date: Tue, 11 Aug 2026 23:47:51 +0530
-From: Vinod Koul <vkoul@kernel.org>
-To: Sumit Kumar <sumit.kumar@oss.qualcomm.com>
-Cc: Frank Li <Frank.Li@kernel.org>, Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Jeff Hugo <jeff.hugo@oss.qualcomm.com>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Kishon Vijay Abraham I <kishon@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, dmaengine@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	mhi@lists.linux.dev, linux-arm-msm@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 1/5] dmaengine: Add DMA_SG support for multi-buffer
- scatter-gather transfers
-Message-ID: <antnT5DtrICNPvKO@vaman>
-References: <20260803-dma_multi_sg-v2-0-c12bb05e42d6@oss.qualcomm.com>
- <20260803-dma_multi_sg-v2-1-c12bb05e42d6@oss.qualcomm.com>
+	dkim=pass (2048-bit key) header.d=genexis.eu header.i=@genexis.eu header.b="qmBf5FD9"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=yECU/sB+oG7N4NUS277OWHxoAgAGWFpeDolKYIH+o0tZMqwhmmk/zPOQe9/f048q245NBTVHJIq6i19DG5qBCcfOqoD19KFwonjpxudjhImLzeXd/ok4Xta3AQXuFiPS/BsL4zfzIL3LaN4tpNVY2VLjYTGwtqIa47HYUipu3p70mkBwYwnqp/NEZRkX0ZzDa+q51X8IzafP6w1+cH6lZxXw8Q3jbHp5mZoRzsZ/qVxv2OYX1RsIZ03h61CNEuXr7xF/vM4SsMi57Cwxjmc+Xh6VLV3kBLqjiqGlY0Zr6ei8mUFaCB1XLiRYpyEV+vJSy2LyO0gQSbV9qhzVh/iXGg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=gNFkO+x0mjF4mAfDJy/FdbQ6Cn0lxAaHjOtiBN9eQY4=;
+ b=DLmjXjUBNJqvaMTraEawPLYyHMqgb/Px5CXgpAwOGC6DqPQEp2FseD3voLlxMUcMfd0zqiGYTQb790ufCK+zKcSEcPQm/N89SK4XE3BEbdgbFESs82RSczUFXDFyS71NMvc8DW5zcueTehpEaTvfX7ZLArKhSCUAdeiYoPL5nfnzPoPgcbCtu9RobEl29UZ1wApRRx6/0MmnZgwuAISlwg+AJB2EuzQiBm7xgdciK2uPQVnp2/E4y4P9ne2f84CM2ELXHa7gSzJHnSXr9dE4KouWvHjY6NaA3VGGvAZQlvvg0YGcddzieD6bwcy4wG9h9EZLYevCa5FHHNnS9HYWIQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=genexis.eu; dmarc=pass action=none header.from=genexis.eu;
+ dkim=pass header.d=genexis.eu; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=genexis.eu;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=gNFkO+x0mjF4mAfDJy/FdbQ6Cn0lxAaHjOtiBN9eQY4=;
+ b=qmBf5FD95vB+GbyYjVxvCHkFDDoYQmYCGmutJaCZn2GcV+pKcD+9xgVkw0zjg2i3Q7J9b7kNcRTIqy6Y3KaplFR0P0/3b4CWX9PIh7zILt072IQ/Wlfs+sKWh6172U6EHTP2eEJE34fS5s5HdDW7+uU7+z0jjYIg6tYlXWv22sNQ2uQJeIKehUzPAdvljErFYft87huf641JJLR4A5RSbOIAsiKttsI6ev+t3rmYtuqPbWFbs2ML3aIgKJnmbmq5tW2o0lmAEVvJ8tvQp6IuQ1PqJeDS3EIbGQjHqUqkoorhHHDm7wvnp0La5U/+FmdRxx5U6wNKIsuTIES7a5IdGQ==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=genexis.eu;
+Received: from DB9PR08MB6697.eurprd08.prod.outlook.com (2603:10a6:10:2ad::14)
+ by PAWPR08MB9891.eurprd08.prod.outlook.com (2603:10a6:102:33b::22) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.292.25; Tue, 11 Aug
+ 2026 19:43:56 +0000
+Received: from DB9PR08MB6697.eurprd08.prod.outlook.com
+ ([fe80::bdec:3e95:6614:441f]) by DB9PR08MB6697.eurprd08.prod.outlook.com
+ ([fe80::bdec:3e95:6614:441f%6]) with mapi id 15.21.0315.012; Tue, 11 Aug 2026
+ 19:43:56 +0000
+Message-ID: <8e235c79-9b16-4f06-ba46-da7f28a2804a@genexis.eu>
+Date: Tue, 11 Aug 2026 21:43:54 +0200
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v5 0/2] PCI: mediatek-gen3: Add 2-lanes mode support +
+ clock
+To: "Christian Marangi (Ansuel)" <ansuelsmth@gmail.com>,
+ Chen-Yu Tsai <wenst@chromium.org>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+ Lorenzo Pieralisi <lpieralisi@kernel.org>,
+ =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+ Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Krzysztof Kozlowski
+ <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>,
+ Ryder Lee <ryder.lee@mediatek.com>, Philipp Zabel <p.zabel@pengutronix.de>,
+ Matthias Brugger <matthias.bgg@gmail.com>,
+ AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+ Jianjun Wang <jianjun.wang@mediatek.com>, linux-pci@vger.kernel.org,
+ devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-mediatek@lists.infradead.org, linux-arm-kernel@lists.infradead.org
+References: <CAGXv+5HrDw8GWb9zp1AaQU9UW+0FGcr7jOV2jt_zi_2KgfgBqA@mail.gmail.com>
+ <20260807152059.GA39821@bhelgaas>
+ <CAGXv+5GNvV0yfX2v7E9HxvFpm0xwhGMQLjec=_xV_6YipXFcbw@mail.gmail.com>
+ <CA+_ehUxa6U+0FEFuptJXQZ0kwbthYjshZftx32CmwkisAyo=+A@mail.gmail.com>
+Content-Language: en-US
+From: Benjamin Larsson <benjamin.larsson@genexis.eu>
+In-Reply-To: <CA+_ehUxa6U+0FEFuptJXQZ0kwbthYjshZftx32CmwkisAyo=+A@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: GVZP280CA0075.SWEP280.PROD.OUTLOOK.COM
+ (2603:10a6:150:274::9) To DB9PR08MB6697.eurprd08.prod.outlook.com
+ (2603:10a6:10:2ad::14)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260803-dma_multi_sg-v2-1-c12bb05e42d6@oss.qualcomm.com>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DB9PR08MB6697:EE_|PAWPR08MB9891:EE_
+X-MS-Office365-Filtering-Correlation-Id: 6b151501-2933-47f3-b41d-08def7e0e160
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|7416014|376014|1800799024|366016|23010399003|18002099003|22082099003|56012099006|11063799006|6133799003|4143699003|10067099003;
+X-Microsoft-Antispam-Message-Info:
+	7BYloVijwKGKvQCAlTJW3JvY7iVsWDJb7nFRiEduo5BLB47iSAmsYX5wqdVLxwaqp9bi6mlqn0lg5ay6CSw7HVzwNVKEI0XyyRq5zgneXivd78QQJSQsr9s+rLZz2HNWknBZHGUvlOEcVntm/pB0rriQ7Q5Xj3Gd248ARCMFIkIVlMmwAbBwj1C60ysIsNYO7VAtnBiIDxAlvONhQuD2Y+/JSIrv3BbG/bfcng+qhLoiByYpNCWDRyr2IIWfRAkFJq1YHXz33Igj/U8qG7bPoSf+5CJlDGNNlHGrj8np8hDvVgl0XN9NiX/h0IHtmUuVuqktFHThp2JjTmEJXasbiFuX3ORHzD2IoCjvBkkBLEzMW54DXBz+hJQ8MYsjuFD06yF1QcBhZ2xObplyIlw4wXAlaHenM0b27YN8kxfaEUCXfiCknL78T/D2BV7A6V97QuijxGcsv7qT+orbUWyN0bMCjrwldqFPkxFNY/f5UencA30XsSJDlXxEK7gILKQFYFCeh9M36NZY4EU3UjAH/N9a4NuZIyHfv5pLjMO2r4JmGS26/+Jkqe+xFE8nSzwEwqh2atTT9RkctBk19wE2Yb/BKyQCrz/BhNGI8+IxktzZKAmYKCMbbBxL1LG5W/choYaxheTZ3JCfTQ7EMGznX4p2lCz8VMaLxqVxN6+3lmw=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DB9PR08MB6697.eurprd08.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(376014)(1800799024)(366016)(23010399003)(18002099003)(22082099003)(56012099006)(11063799006)(6133799003)(4143699003)(10067099003);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?WGdDWCt2U2lmR3pGeW5aeTFjbU5lUXg0Rk5RbDhtaHNFSXV4aFpsWlVCY0Ew?=
+ =?utf-8?B?YmlpWmtxNXZ6TW8xODlxZWJvVlVFRUQySysvdENPQlZMNkVrZWMxRW9aQ0N1?=
+ =?utf-8?B?YVZDeHM1cUhGcmE3dG44NjJBQnBqL2I4YWJxNkVUUHlZaVo3ZWJodGVEaEcz?=
+ =?utf-8?B?UUwrcjRaWXZjVkxDK1h2R01qbnpRSUpmRHpXSmRMWGw5WFFZNVpzcSt6a1pK?=
+ =?utf-8?B?L1J6dUtETFl6MlN6a3cvR0djNDdIcTVNcWovNk1MOW1NbHFEZDNMZHU5ckhC?=
+ =?utf-8?B?SjRocVpZNFJRZzBaZlpLQkVWSE8zOGRXSno1SUhUYVJZUU8xYzg4M0JJMzlv?=
+ =?utf-8?B?TCsrOGJxdWMvRFMzZDNNN3BiR3BjZ1VtNmNJaTE5WmcxSStCL1dtM0J5NHFi?=
+ =?utf-8?B?NGVYSSs4ZitLK1k2WXR6SWRaUEQ1b001dWpEQVZWVzJ3VUIvbVNzNFE4L1Fa?=
+ =?utf-8?B?OE9uMkZDMGNTaUw4b0dGSnM3cFM3TytNdkhIVGFFODczQXEyNVBGTWFtMUMw?=
+ =?utf-8?B?R2VzZ3JGOXkrYUxJa0ROY2FpU3dUdU1oZ3pCV3lEYW8zR1BrYmRNTFpOUVpq?=
+ =?utf-8?B?OGNYY2s4NVVodzVmVGhNcUR5YjhDL2ZaTThrcTAvVmNySWoxSFJqN2NmMzlC?=
+ =?utf-8?B?ZnY4OXVzRU82SlZPSlVjN09JNFJaSVYrV1k1WGx5MDFuOEd4VisyYzlHRm1a?=
+ =?utf-8?B?R0J5OVdWRGc0VGp5UGQ4bkd1WEJqbld0by81TVdUZXhNS3pxSFFxdmVUb1Q4?=
+ =?utf-8?B?M1dSQ1ZhRVgwVk9PcEY2a2NoVXNpZWlKV1JWRDdGb0swR0xkZ051OUFwWm44?=
+ =?utf-8?B?dVpXSWxod3ZHRHRkNy9sRkpraUFCQlhSK0c3NFRsQ09FSlhKTEh4N04wMlBr?=
+ =?utf-8?B?UVBDWFFZSDlMUmY2UE5KVUlxWUJtWUxWNE1uV0R4N00wZWF4Q1pmVmVDSDYy?=
+ =?utf-8?B?QXplRHVLL1N0Ym9kY1JyR0NRREZXZVh1RXhtSkZLWXNsNmtZeXQ3MHVaR014?=
+ =?utf-8?B?WVBFSE84Vys4WFRVWHNLenk3TnEwMkQvVkFtL2k3SDlUZEJEam9NaUo0RmhH?=
+ =?utf-8?B?WXZ5dU1HbEVYdXdRS04vQ1krcm0zdWxCQzFsSXJoWElCTEVRSm5hNVhJbThj?=
+ =?utf-8?B?VXZXUGVxVVdIbWhNb1VrcSs2bE5UeU1MVVdaaUw2OVVFaFlsRXkvOFptL3ox?=
+ =?utf-8?B?SmJVYXNoeHNVZTY3ejZwcEt6MUF4dUZxN3RLd1pJeDlpbXpTWTJIYkJ0TDh6?=
+ =?utf-8?B?L1VMekdjSEliRFJwK2Irb0dKeVpuak15T2xuOUI1dTdFSnVFd0c1RGd3MGd6?=
+ =?utf-8?B?aVRzTGlQWDFHVUZ1V0lHQUNYMjdEL0tCakM4ZUc0VUJjTFVoMnRjWDJ1dHBv?=
+ =?utf-8?B?bzlYQlMwRElKWjBKRkZ4T0ZlRXVzV1JxR3d6cUR0UGhPTTZxM1pVUkErcVdo?=
+ =?utf-8?B?ZCtxdDJYb1NCWDUyS2Y2VjFabDVUS2ZaZCtvL25IMWxxUUY5YWhjdVp6SHZk?=
+ =?utf-8?B?TzBkM2Y1Qy9xaWlTM05SbkcwYlk1RTh4Smh0R2Z4WURmUW9sUUV3Y09VNkc3?=
+ =?utf-8?B?aVhjY1NrQTdZcEJuUWY5M0gzZWtzNmZPTW9XcURseXBmbS9ZdkpDWlNvM09l?=
+ =?utf-8?B?ZlZqbkdOcDlhSTRpSkxDcTlVOE14cStpWStIUzYvRXpxVGFUUzcrSGx6RUNw?=
+ =?utf-8?B?aHMvb3drYUU5S1hMdkp3cDdna3ByWEVRZEFjZW5vODdIWmd6cEpoelRLL2Ju?=
+ =?utf-8?B?YUpQOFliUU9WSXhZbHNROTFFVk5QTGU1M0lFQlJJU1ZobkVGTllrcHd2Vjl1?=
+ =?utf-8?B?UlgvVEJtdTdqUEs4MlgwZUFuSGZvTUMyZmoxclJxeTZoekFUZCtrTnE0VThh?=
+ =?utf-8?B?cERlM0F0cHFnTnJ0a0drSkVuUEM5bUVyKzYyaGg3SkMxMkZMTy9uWHY5cVM1?=
+ =?utf-8?B?TlhpblVqMytLaE9vN0huWXRPWHM5QkRIYjhUMjdjakJOY3AvWkJ2Wm0veUds?=
+ =?utf-8?B?QkxKNE4reDRxUXdKZk5HUWY1c2pob2dUeWo3N3Ayd09IdHpqWHpqbzhMRGlL?=
+ =?utf-8?B?dGxuWjcrbEQ2YzNpRUExa3kzZDJzYW5TYkpueXdqc1NHa2k4bUJIMkFpdEFl?=
+ =?utf-8?B?RDdFWWtMY3d0d0g3eEozL0hjZ1p2aEpIL0dudlZUTVF2ME1DdEtPZ2ExRFBH?=
+ =?utf-8?B?YjJtZGc0bitTUHdEMzN6OTVRcEp4THdVZHhCemlIenFXNFhDTktNTnVXWVg5?=
+ =?utf-8?B?SHlkeFcrWVk2SWhQSHZwaTZUN051eHF2d1dWd0dQVytDN3g5R3NhM1hJS1JX?=
+ =?utf-8?B?QnR0RXVYc3hoS0VhMHd6Sk5SUzlsQmhRcEVtVkk3UmY0UjlJTjA3Uk94T1p3?=
+ =?utf-8?Q?Xpzv6s5eHQDXlhE4=3D?=
+X-OriginatorOrg: genexis.eu
+X-MS-Exchange-CrossTenant-Network-Message-Id: 6b151501-2933-47f3-b41d-08def7e0e160
+X-MS-Exchange-CrossTenant-AuthSource: DB9PR08MB6697.eurprd08.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 Aug 2026 19:43:56.2996
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 8d891be1-7bce-4216-9a99-bee9de02ba58
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: ye29xgv6lqewVT3HkIuiZdm5MwwlEqFioE8zJ3iOYp8tVoV30Y5fy+KrkjGrJ6u7sw50UNw1vezBZ4gCPThjVsE0zqg18aIJQ18BkYEpNB0=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PAWPR08MB9891
 
-On 03-08-26, 16:01, Sumit Kumar wrote:
-> A client that needs to copy several independent, non-contiguous memory
-> regions in one operation currently has to submit one DMA_MEMCPY
-> transaction per region, each with its own completion interrupt, even
-> when every region is known up front and the copies could be described
-> as a single hardware transaction.
-> 
-> Partially reintroduce the DMA_SG transaction type and device_prep_dma_sg()
-> API that was removed in commit c678fa66341c ("dmaengine: remove DMA_SG as
-> it is dead code in kernel"). Only the core API is restored here.
-> 
-> The API accepts separate source and destination scatter-gather lists,
-> where entry i of the source list is transferred to entry i of the
-> destination list. This allows multiple independent (src[i] -> dst[i])
-> transfers to be batched into a single DMA transaction instead of N
-> separate submissions, reducing submission and interrupt overhead.
-> 
-> DMA_SG is a memcpy-class operation: both endpoints are memory buffers,
-> and neither DMA address is a FIFO-style peripheral register. The source
-> and destination scatter-gather lists must contain the same number of
-> entries; providers reject requests where the entry counts differ.
-> 
-> Restore the DMA_SG entry in
-> Documentation/driver-api/dmaengine/provider.rst and add
-> CHECK_CAP(dma_sg, DMA_SG) to dma_async_device_register() to validate
-> that drivers setting the capability provide the corresponding function
-> pointer.
-> 
-> Signed-off-by: Sumit Kumar <sumit.kumar@oss.qualcomm.com>
-> ---
->  Documentation/driver-api/dmaengine/provider.rst | 21 +++++++++++++++
->  drivers/dma/dmaengine.c                         |  1 +
->  include/linux/dmaengine.h                       | 35 +++++++++++++++++++++++++
->  3 files changed, 57 insertions(+)
-> 
-> diff --git a/Documentation/driver-api/dmaengine/provider.rst b/Documentation/driver-api/dmaengine/provider.rst
-> index f4ed98f701c918ff81bc674845880f8d01efbf1d..638e4b83e9a2f90c056111dbdd7572a4ed0f536d 100644
-> --- a/Documentation/driver-api/dmaengine/provider.rst
-> +++ b/Documentation/driver-api/dmaengine/provider.rst
-> @@ -210,6 +210,27 @@ Currently, the types available are:
->    - Used by the client drivers to register a callback that will be
->      called on a regular basis through the DMA controller interrupt
->  
-> +- DMA_SG
-> +
-> +  - The device supports memory to memory scatter-gather transfers
-> +    using paired source and destination scatter-gather lists, where
-> +    entry ``i`` of the source list is transferred to entry ``i`` of
-> +    the destination list in a single DMA transaction.
-> +
-> +  - The source and destination scatter-gather lists must contain the
-> +    same number of entries; providers reject (return NULL for) requests
-> +    where the entry counts differ. Providers that walk the two lists in
-> +    lockstep pair them entry-by-entry as passed in, so clients that
-> +    DMA-map the lists must ensure the mapped segmentation stays aligned
-> +    between the two lists (for example by not relying on the DMA layer
-> +    to merge entries of one list but not the other).
-> +
-> +  - Unlike DMA_MEMCPY, neither the source nor destination is a
-> +    FIFO-style peripheral register; both are memory buffers. Multiple
-> +    independent (src[i] -> dst[i]) copies are submitted as a single
-> +    DMA transaction, reducing submission and interrupt overhead
-> +    compared to N separate DMA_MEMCPY operations.
-> +
->  - DMA_PRIVATE
->  
->    - The devices only supports slave transfers, and as such isn't
-> diff --git a/drivers/dma/dmaengine.c b/drivers/dma/dmaengine.c
-> index 6ffd8bd82154af2af2807d1c8b7ae7475eab56d3..9e790b9f165063d696438ace6370df98dffb8a32 100644
-> --- a/drivers/dma/dmaengine.c
-> +++ b/drivers/dma/dmaengine.c
-> @@ -1211,6 +1211,7 @@ int dma_async_device_register(struct dma_device *device)
->  	CHECK_CAP(dma_pq_val,      DMA_PQ_VAL);
->  	CHECK_CAP(dma_memset,      DMA_MEMSET);
->  	CHECK_CAP(dma_interrupt,   DMA_INTERRUPT);
-> +	CHECK_CAP(dma_sg,          DMA_SG);
->  	CHECK_CAP(dma_cyclic,      DMA_CYCLIC);
->  	CHECK_CAP(interleaved_dma, DMA_INTERLEAVE);
->  
-> diff --git a/include/linux/dmaengine.h b/include/linux/dmaengine.h
-> index fe33a20abc6146d539670e0e6fe6c9d27d96aa2a..61aa72149f5d5cf1828b89d13d0b35f1a12bb000 100644
-> --- a/include/linux/dmaengine.h
-> +++ b/include/linux/dmaengine.h
-> @@ -65,6 +65,7 @@ enum dma_transaction_type {
->  	DMA_COMPLETION_NO_ORDER,
->  	DMA_REPEAT,
->  	DMA_LOAD_EOT,
-> +	DMA_SG,
->  /* last transaction type for creation of the capabilities mask */
->  	DMA_TX_TYPE_END,
->  };
-> @@ -848,6 +849,7 @@ struct dma_filter {
->   *	The function takes a buffer of size buf_len. The callback function will
->   *	be called after period_len bytes have been transferred.
->   * @device_prep_interleaved_dma: Transfer expression in a generic way.
-> + * @device_prep_dma_sg: prepares a memory to memory scatter-gather operation
->   * @device_caps: May be used to override the generic DMA slave capabilities
->   *	with per-channel specific ones
->   * @device_config: Pushes a new configuration to a channel, return 0 or an error
-> @@ -954,6 +956,11 @@ struct dma_device {
->  	struct dma_async_tx_descriptor *(*device_prep_interleaved_dma)(
->  		struct dma_chan *chan, struct dma_interleaved_template *xt,
->  		unsigned long flags);
-> +	struct dma_async_tx_descriptor *(*device_prep_dma_sg)
-> +		(struct dma_chan *chan,
-> +		 struct scatterlist *dst_sg, unsigned int dst_nents,
-> +		 struct scatterlist *src_sg, unsigned int src_nents,
-> +		 unsigned long flags);
->  
->  	void (*device_caps)(struct dma_chan *chan, struct dma_slave_caps *caps);
->  	int (*device_config)(struct dma_chan *chan, struct dma_slave_config *config);
-> @@ -1194,6 +1201,34 @@ static inline struct dma_async_tx_descriptor *dmaengine_prep_interleaved_dma(
->  	return chan->device->device_prep_interleaved_dma(chan, xt, flags);
->  }
->  
-> +/**
-> + * dmaengine_prep_dma_sg() - Prepare a memory-to-memory scatter-gather DMA descriptor.
-> + * @chan: The channel to be used for this descriptor
-> + * @dst_sg: Destination scatter list
-> + * @dst_nents: Number of entries in destination scatter list
-> + * @src_sg: Source scatter list
-> + * @src_nents: Number of entries in source scatter list
-> + * @flags: DMA engine flags
-> + *
-> + * Prepares a DMA transaction that copies data from multiple source memory
-> + * regions to multiple destination memory regions in a single DMA transaction.
-> + * Entry i of the source list is paired with entry i of the destination list,
-> + * so both lists must contain the same number of entries; the call returns
-> + * NULL otherwise.
-> + */
-> +static inline struct dma_async_tx_descriptor *dmaengine_prep_dma_sg
-> +		(struct dma_chan *chan,
-> +		 struct scatterlist *dst_sg, unsigned int dst_nents,
-> +		 struct scatterlist *src_sg, unsigned int src_nents,
-> +		 unsigned long flags)
-> +{
-> +	if (!chan || !chan->device || !chan->device->device_prep_dma_sg)
-> +		return NULL;
+Hi.
 
-Can we check if  dst_nents is same as src_nents... or should we drop
-src/dst and just say nents to imply both...
-
-> +
-> +	return chan->device->device_prep_dma_sg(chan, dst_sg, dst_nents,
-> +			src_sg, src_nents, flags);
-> +}
-> +
->  /**
->   * dmaengine_prep_dma_memset() - Prepare a DMA memset descriptor.
->   * @chan: The channel to be used for this descriptor
+On 10/08/2026 12:55, Christian Marangi (Ansuel) wrote:
+> Il giorno lun 10 ago 2026 alle ore 12:33 Chen-Yu Tsai
+> <wenst@chromium.org> ha scritto:
+>>
+>> On Fri, Aug 7, 2026 at 11:21 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
+>>>
+>>> On Fri, Aug 07, 2026 at 11:24:09AM +0800, Chen-Yu Tsai wrote:
+>>>> On Fri, Aug 7, 2026 at 12:53 AM Christian Marangi <ansuelsmth@gmail.com> wrote:
+>>>>> This small series introduce support for 2-lanes mode for Airoha AN7581
+>>>>
+>>>> Just a nitpick, but I would probably name this something else, like
+>>>> "cross-controller lane-bonding mode" or "lane stealing"? PCIe already
+>>>> has 2x lanes as a standard feature, so this naming is a bit confusing.
+>>>> It's not like dual-LVDS display in which LVDS is only a single lane.
+>>>
+>>> I suggested the "2-lane" and "x2" terminology because I assumed the
+>>> result is what the PCIe spec would describe as a "x2 Link" consisting
+>>> of two Lanes.
+>>>
+>>> If that's not the case, maybe "cross-controller lane-bonding mode" or
+>>> "lane stealing" would be more accurate, but I don't know what those
+>>> mean, so if we use them I would also like to know what the result
+>>> looks like in standard PCIe terms.
+>>
+>> Benjamin pointed out later in the thread that it is just bifurcation.
+>>
 > 
-> -- 
-> 2.34.1
+> Yes but as me, you, Benjamin and Bjorn people who weren't there with the HW
+> team at times the SoC was created, and given how the internal documentation
+> these are just assumption and observation... Everyone can be correct and wrong.
+> 
+>> I would assume "PCIe bifurcation" is a standard term, so maybe we could
+>> call this "Support un-bifurcated 2-lane operation"?
+>>
+> 
+> And how coming from PCIe bifurcation to un-bifurcated 2-lane operation keeps
+> the standard meaning?
+> 
+> This terms is equally custom as the previous "cross-controller
+> lane-bonding mode"
+> and "lane stealing"
+> 
+> I want to be honest... I'm not following why we are trying in every
+> way possible to find
+> a standard meaning for an highly integrated PCIe controller for a vendor SoC.
+> It's not like there are devices shipped with PCIe slot where you can
+> insert whatever
+> card you want. (there is only a single RFB board but that is really to
+> debug stuff and
+> develop)
+> 
+> The SoC is designed to have WiFi cards attached and only a subset of them.
+> And some of them require 2 lanes mode to work with this special configuration.
+> 
+> Even the DT bindings are not that specific to the details... at the
+> end of the day
+> everything is modelled as simple as "num-lanes = <2>;"
+> 
+Hi, I agree with Christian here. The property num-lanes will be able to 
+describe all possible pcie configurations of the AN7581 and AN7563 SoCs 
+(the AN7563 is using the same pci controller if I understand things 
+correctly). Adding more properties will not make it less complex.
 
--- 
-~Vinod
+MvH
+Benjamin Larsson
