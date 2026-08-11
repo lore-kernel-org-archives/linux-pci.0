@@ -1,125 +1,143 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 13F2B388E69;
-	Tue, 11 Aug 2026 21:11:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 59E1C3BB11A;
+	Tue, 11 Aug 2026 21:28:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786482697; cv=none; b=cchWeK4Kd2WsAW4BiBBQ845WWK6BCJcNDNnMpjF/c53nuYM7GQSn+Tf/shblIYIvMo0n5q4X4wxpepMvh9wbMjwM3elVcSFPEFK74KUFGdz64/398EeAzM/YAE7+M0jwGixWJ9psAeJITJm0B0jS5Nb5icPbTePos0kfN5BCFBI=
+	t=1786483718; cv=none; b=WPJjnFuGM9CYC3QsZfr6FlHt4d7hSvcmazDp6V1itH4PzyvD5/ELagOxG6rCDDAlZ4f57SL605APRBem3Dv7r/7+ksHzBLVecQsAPSLXuuDpqLQ/rmsxiW3Uz8gUSnaaWo1sCIMH7yhWSV5i7BR1kePpoQocmPp1T27Mi4ZQ+Gc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786482697; c=relaxed/simple;
-	bh=726ER7+Rkh0JZGmxUeVNdHZr78o6KgDj3SrToq7xTXA=;
+	s=arc-20240116; t=1786483718; c=relaxed/simple;
+	bh=wDZVs8XU90w/eIPzfxPozO/j2bHvEcbcgxVrhSx0P20=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=OfZao2lckIND0oz7I9//3yVExICewAYLbTXdJV+PvbHcKCVM/FNUipH1bztXF5CsmIu4GmHp/rI1BN3cSubBlG+mXmpfr28lu+rzojU5riyX8HFcT+oFIdcDtgWz9AEUv5OvEYGtyJ8yKQIX0wisMILAvZsR+esAneUgl97t8QQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QfUz9R4O; arc=none smtp.client-ip=100.103.45.18
+	 Content-Disposition:In-Reply-To; b=gjCmNJS3Qd1SAn8IMXFsaclQrkYNDcpsKmkk8kvAbKd+idla/yYk+8DqbJtNZJzwE65ruFMZxz0MMujuC7uk+CRvBaY6VI0AzRQ3E0XwJd+Zq+Px+PwMyOMkWGb9xwgRVy6OUtcctKBPpBPOn5glLwgu9g55quJWNMbtcYMCrRI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=B58w71Bk; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QfUz9R4O"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 531041F000E9;
-	Tue, 11 Aug 2026 21:11:35 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="B58w71Bk"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C43C51F000E9;
+	Tue, 11 Aug 2026 21:28:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786482695;
-	bh=ILHdH4cXPBLxh6nT49wDappOv61AuAEjgVWm00tLVfU=;
+	s=k20260515; t=1786483717;
+	bh=gS25S6JlZpqu1IUqlPefyLcaBuGPtqnLlkKcj17r50M=;
 	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=QfUz9R4OiStbSCsEWR+GbTH/C+WSY/eyjF+98JE0AfmbQtgLP4sijxWm3jsSFksuU
-	 1X1tpASEr0+RciwCt7XEHtZxfN0I4XEfi188aY46wrzit4wPixGDZwST0bDBJ8n7Sp
-	 E4/Tzdi5cYLl7TSIMvkkzHvx+r2V25+coW7XG0UdWVNCxJrdP79YtoKR0CLf2ZXbK1
-	 uLvCsUG5XfI/f6AAO58IGlLZPcKtOE1RhQmIqn3z6SNbA5NoKXM4EjdBKAo+oGQyJ8
-	 j9TFkOVr1+wWFiU5MwIZ2BFRzgY8JC3JBh0SJJciMsw/+UZRDvL67d1iSFG9yBMgqs
-	 v0037z5NTLzrA==
-Date: Tue, 11 Aug 2026 16:11:34 -0500
+	b=B58w71BkZBBH8vuUMnMS+tctnVV7aOIHstxoS4PYgGpnPCvcLN4DSsy2bcxY5PpiS
+	 R3Y+mp4Cld7bRU038yTUpFHIhFzPH/fXT+dcTyJnqh2COFtPACIQjz/qLI/YqYHjUo
+	 boXlwQec9niyApjVsq1Izl70EYpVngu3FMQa0XFlvAobZvXiK+xllcC2CtPHWBe5wf
+	 ISc5rwGiRtIr2JeS0x5Jzqf2CN4r0J98+Gg8JZCzVWKQS1CG56QigQPckENJCgPD9q
+	 msBJ7irlqWlFenzXRqjQNSYsHNEyiqo7mnZX37hBWUiinKK0T3M4/vkRf0NHV2fJOy
+	 VYHibof3G2ZsA==
+Date: Tue, 11 Aug 2026 16:28:35 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Danilo Krummrich <dakr@kernel.org>
-Cc: bhelgaas@google.com, kwilczynski@kernel.org, aliceryhl@google.com,
-	daniel.almeida@collabora.com, ojeda@kernel.org, boqun@kernel.org,
-	gary@garyguo.net, bjorn3_gh@protonmail.com, lossin@kernel.org,
-	a.hindborg@kernel.org, tmgross@umich.edu, tamird@kernel.org,
-	acourbot@nvidia.com, work@onurozkan.dev, jhubbard@nvidia.com,
-	ttabi@nvidia.com, apopple@nvidia.com, ecourtney@nvidia.com,
-	shashanks@nvidia.com, zhiw@nvidia.com, driver-core@lists.linux.dev,
-	linux-pci@vger.kernel.org, rust-for-linux@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 4/5] PCI: add pci_irq_type() to query the allocated
- interrupt type
-Message-ID: <20260811211134.GA678959@bhelgaas>
+To: Max Stevens <thinker.healer@gmail.com>
+Cc: linux-pci@vger.kernel.org, bhelgaas@google.com, nathan@nathanrossi.com,
+	nicolas.cavallari@green-communications.fr,
+	linux-usb@vger.kernel.org
+Subject: Re: Pericom PI7C9X2G608 =?utf-8?B?KDEyZDg6?=
+ =?utf-8?Q?2608=29_missing_from_ACS_quirk_?= =?utf-8?B?4oCU?= breaks Renesas
+ uPD720202 USB3 cards when IOMMU is on
+Message-ID: <20260811212835.GA711008@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20260810224800.2314458-5-dakr@kernel.org>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CADoo8ux-r7jnwO=PqTK_aZaJBrpM5P3W5fRNWeNxCi+FpP8G0w@mail.gmail.com>
 
-On Tue, Aug 11, 2026 at 12:47:43AM +0200, Danilo Krummrich wrote:
-> Add a helper that returns PCI_IRQ_MSIX, PCI_IRQ_MSI, or PCI_IRQ_INTX
-> based on the interrupt type the PCI core selected after
-> pci_alloc_irq_vectors().
+On Tue, Aug 11, 2026 at 05:57:33AM -0500, Max Stevens wrote:
+> Hi Bjorn,
 > 
-> Several drivers already open-code this check against pdev->msix_enabled
-> and pdev->msi_enabled, or even open code this helper [1].
+> Thanks for the quick patch. I tested its effect on my PI7C9X2G608GP
+> (12d8:2608) by replicating what pci_fixup_pericom_acs_store_forward()
+> does, using setpci at runtime (I have not built a patched kernel —
+> happy to do that too if you want a test of the actual binary).
 > 
-> A common helper avoids the duplication and keeps drivers from accessing
-> the bitfield directly (see also [2]).
+> Findings on the 2G608:
 > 
-> Link: https://elixir.bootlin.com/linux/v7.1/source/drivers/net/ethernet/aquantia/atlantic/aq_pci_func.c#L196 [1]
-> Inspired-by: John Hubbard <jhubbard@nvidia.com>
-> Link: https://lore.kernel.org/all/DKKG2QM3YJYB.Z2H2B2UXJ75N@kernel.org/ [2]
-> Signed-off-by: Danilo Krummrich <dakr@kernel.org>
+> The mode register exists at the same offset as on the smaller
+> switches: upstream port config 0x74. Value on my system before any
+> test: 0x0102 (store-forward bit clear).
+> With ACS on all four downstream ports set to what the kernel normally
+> enables here (ACSCtl = SrcValid+ ReqRedir+ CmpltRedir+ UpstreamFwd+),
+> and 0x74 bit 0 CLEAR, device enumeration on the downstream xHCI
+> controllers fails: [43069.603242] xhci-pci-renesas 0000:0c:00.0: Error
+> while assigning device slot ID: Command Aborted [43069.603270] usb
+> usb9-port1: couldn't allocate usb_device
+> Setting 0x74 to 0x0103 (bit 0, store-forward) with ACS unchanged, then
+> rebinding the xHCI drivers: the same device on the same port
+> enumerates immediately and works fully: [43071.971147] usb 9-1: new
+> full-speed USB device number 2 using xhci-pci-renesas [43072.132176]
+> usb 9-1: Product: Azeron Keypad [43072.218656] hid-generic
+> 0003:16D0:113C.0017: input,hidraw12: USB HID v1.11 Keyboard [Azeron
+> LTD Azeron Keypad] on usb-0000:0c:00.0-1/input1
+> I toggled the bit back and forth across several driver rebinds. Every
+> "Command Aborted" failure I have logged (both today and across earlier
+> debugging) occurred with the bit clear; none with it set.
+> 
+> One honest nuance: with the bit clear the failure is not 100% — I saw
+> one enumeration attempt start successfully during a bit-clear window.
+> That intermittency is consistent with the load-dependent packet
+> buffering behaviour described in Nathan's original erratum writeup,
+> and with this card family's long history of "sometimes almost works"
+> reports on various forums.
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+If it's an improvement, I think it's worth applying even if it's not a
+100% fix.
 
-In the subject line, to match drivers/pci/ history,
-
-  PCI: Add pci_irq_type() ...
-
-> ---
->  include/linux/pci.h | 25 +++++++++++++++++++++++++
->  1 file changed, 25 insertions(+)
+> So on this hardware the store-forward workaround behaves exactly as it
+> does on the already-quirked siblings, and the patch looks correct to
+> me.
 > 
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 64b308b6e61c..80b8561b5be0 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1783,6 +1783,26 @@ void pci_free_irq_vectors(struct pci_dev *dev);
->  int pci_irq_vector(struct pci_dev *dev, unsigned int nr);
->  const struct cpumask *pci_irq_get_affinity(struct pci_dev *pdev, int vec);
->  
-> +/**
-> + * pci_irq_type - Get the interrupt type of a PCI device
-> + * @pdev: the PCI device to operate on
-> + *
-> + * Discriminate the interrupt type the PCI core selected for this device
-> + * after a successful pci_alloc_irq_vectors() call.
-> + *
-> + * Return: %PCI_IRQ_MSIX, %PCI_IRQ_MSI, or %PCI_IRQ_INTX.
-> + */
-> +static inline unsigned int pci_irq_type(struct pci_dev *pdev)
-> +{
-> +	if (pdev->msix_enabled)
-> +		return PCI_IRQ_MSIX;
-> +
-> +	if (pdev->msi_enabled)
-> +		return PCI_IRQ_MSI;
-> +
-> +	return PCI_IRQ_INTX;
-> +}
-> +
->  #else
->  static inline int pci_msi_vec_count(struct pci_dev *dev) { return -ENOSYS; }
->  static inline void pci_disable_msi(struct pci_dev *dev) { }
-> @@ -1845,6 +1865,11 @@ static inline const struct cpumask *pci_irq_get_affinity(struct pci_dev *pdev,
->  {
->  	return cpu_possible_mask;
->  }
-> +
-> +static inline unsigned int pci_irq_type(struct pci_dev *pdev)
-> +{
-> +	return PCI_IRQ_INTX;
-> +}
->  #endif
->  
->  /**
-> -- 
-> 2.55.0
-> 
+> Tested-by: Maximo Paulino Thinker.Healer@gmail.com
+
+Thanks for doing this.  I'll queue up the patch below for v7.3 without
+your explicit tested-by because quirks run at different times than
+setpci, and the timing/ordering is often important.
+
+
+commit c56a7c02e664 ("PCI: Add ACS quirk for Pericom PI7C9X2G404 switches [12d8:2608]")
+Author: Bjorn Helgaas <bhelgaas@google.com>
+Date:   Mon Aug 10 20:20:26 2026 -0500
+
+    PCI: Add ACS quirk for Pericom PI7C9X2G404 switches [12d8:2608]
+    
+    Max reported that PI7C9X2G608GP (12d8:2608), the 6-port variant, has the
+    same erratum and makes an entire class of consumer USB 3.0 cards completely
+    non-functional on any system with the IOMMU enabled.
+    
+    On a system with a StarTech PEXUSB3S44V-style 4-port USB 3.0 card With
+    IOMMU on, ACS on the switch's downstream ports is enabled (ACSCtl:
+    SrcValid+ ReqRedir+ CmpltRedir+ UpstreamFwd+). The four xHCI controllers
+    then probe cleanly, register their buses, upload firmware, and report port
+    connect status normally — but any device plugged into any port fails
+    enumeration with:
+    
+      xhci-pci-renesas 0000:09:00.0: Error while assigning device slot ID: Command Aborted
+      xhci-pci-renesas 0000:09:00.0: Max number of devices this xHCI host supports is 32.
+      usb usb3-port1: couldn't allocate usb_device
+    
+    Apply the same workaround used for other related Pericom switches.
+    
+    Reported-by: Max Stevens <thinker.healer@gmail.com>
+    Closes: https://lore.kernel.org/all/CADoo8uyrmw_GkNgNf+bV_pieYN_gn5i49rOF8jUvSsfPOcqCJA@mail.gmail.com
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+
+
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index b09f27f7846f..27f7d56c9ac3 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -6263,6 +6263,10 @@ DECLARE_PCI_FIXUP_ENABLE(PCI_VENDOR_ID_PERICOM, 0xb404,
+ 			 pci_fixup_pericom_acs_store_forward);
+ DECLARE_PCI_FIXUP_RESUME(PCI_VENDOR_ID_PERICOM, 0xb404,
+ 			 pci_fixup_pericom_acs_store_forward);
++DECLARE_PCI_FIXUP_ENABLE(PCI_VENDOR_ID_PERICOM, 0x2608,
++			 pci_fixup_pericom_acs_store_forward);
++DECLARE_PCI_FIXUP_RESUME(PCI_VENDOR_ID_PERICOM, 0x2608,
++			 pci_fixup_pericom_acs_store_forward);
+ 
+ static void nvidia_ion_ahci_fixup(struct pci_dev *pdev)
+ {
