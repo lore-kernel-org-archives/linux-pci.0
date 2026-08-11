@@ -1,44 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 54606339362
-	for <linux-pci@vger.kernel.org>; Tue, 11 Aug 2026 20:12:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 133563FAE19
+	for <linux-pci@vger.kernel.org>; Tue, 11 Aug 2026 20:16:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786479167; cv=none; b=Qt4hZK3FX9go/gRTnosNiT4FiIYDO1BuivPy6UXSzM/cHA89BFlCblPpRq1bd3+bN0NJspbgxqVhKT7vZ1MNNRAW8Ff8BdsUw9sUm3Kb1y1v0YH4HNUMbxG+aKkr72YfB7aX1cz3J3KPI92RPNyo+YbxshlyepyMBxMXerjD+wI=
+	t=1786479401; cv=none; b=FcWXkugfmucNLAG6/PEOphwPs9svxVBuD36/Hh5Tv17EPizksZyHpuilCWecioiu1DDedoWEHL7CFRYVLGbiZqjSMu5woWf2Jun+fGy6zQF0yIuZ94COnkuRr8lk0MANnllANKSxbeT1hxntYDdX5tjKrRlARI7X5kL5t/qw2BY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786479167; c=relaxed/simple;
-	bh=rwVHIQ+2FuCbuGk8btw8Ewl3RzEb4gDLY1l79QK+twY=;
+	s=arc-20240116; t=1786479401; c=relaxed/simple;
+	bh=LeOPM1sG91Nkc9aEnA/lRZbTL2CLgTXyArQe37BU/5w=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=YAe6zCu6eXa1IORd1kSu0zN88hN57k1aRHbAKSZBZP+U/Q5rRIHajvuW76eCzZdTVrhtXvuBTLs8f7QLYaqHUrtpsd+DDanSBAPzmYTqk6QFW6TjsNwnbdluO0n5poYD0iPYI/z/nsyDz0E/nmTLkOrCV6KT5wSlUL5n8a4AvfU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eXm72QMo; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=l6a5smy+TgOV7vwOvD4/oAPlB9jtDXQmFlW+3WmQc4f/GXzU8sPGN+TfX6WvCWC5fnMIvK4zBOqMV18mORY5rVyBJcxfjCVS/MYK+ze04bAKVLwDS/0UT7CKKXfAD2c1Rfurm3XkBB74go2OErFrR0+DLDxuE6Rk5Z2oSmRQqtE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hd0MA+P6; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eXm72QMo"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 028D01F000E9;
-	Tue, 11 Aug 2026 20:12:45 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hd0MA+P6"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 521741F000E9;
+	Tue, 11 Aug 2026 20:16:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786479166;
-	bh=vk+m3b0R7i+yaqkRp4N8wnVlPnXlnOkHFnOIA/8UAJU=;
+	s=k20260515; t=1786479399;
+	bh=mLRy4B1qdg5TAZcddJYpe7PBUtyDdKJx6CH/AmNSjBQ=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=eXm72QModdwsmknWH6FvBhG/h3eM7SaaD6OHlLfGLdXQQvMJi5SS4fOUc/nAgpxuD
-	 p585bEAK+4tSqX+4bQxspPedfslnxoXGTV/Vb1APbdRF3rxMFBG0bCZ/0orvj+4trJ
-	 y59NvmPRGV2UfRXbnxzffkPQEM/nK0ZG/3y+Bl5SZNY655FhbB+FJJ+SDa0ehjenTK
-	 3wZGy7SqpsnR/f1s3c0Tiv3CuhGwmrPigsQ5DMOdkuMSGYxO3JpudESIdd4suWGpQ9
-	 D6LAzIbMm9raOg/Xly54LIefNcMcR9/KKpOI6iabT5QPH3yYhl8G3DMuRder2hNOvb
-	 Bv2u1TD1Ki8aA==
+	b=hd0MA+P689uFEtR+TTazLxCTLnUxokBgn7fsh0oK/VgPva+gOYjaZbnryRyNO4jeA
+	 K+IKC07mCHvNI/4PxiHCEc+NADOnvFWeh+r2HtvYx1Sh9/Cfqukc6dEUgzJ6kMZm74
+	 X6mBmlswfiVvs8m/CkoYdchpCyM1wqfN0C7MPRnFiVqpy1rP+luVmTw/5SaUjv3nl8
+	 qdl5SMN2KXt8eu/2drHB3QTOaa2iClRQHC4w6kdlJ+Y6OnuJXbgb0F0Df6eFVv6w0t
+	 IlKhfoJ2Yb5b+IZt15Wb8ei7xqK1EDGQHXe6X4HV9uqot8Wd/s0ghvGW5lrbDTEaLT
+	 1mAXEC1EXsRNA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 2/3] PCI: rzg3s: Propagate platform_get_irq_byname()
- errors
+Subject: Re: [PATCH v3 1/3] PCI: rzg3s: Disable refclk on probe failure
 Reply-To: sashiko-reviews@lists.linux.dev
 To: Prabhakar <prabhakar.csengg@gmail.com>
 Cc: wsa+renesas@sang-engineering.com, linux-pci@vger.kernel.org
-In-Reply-To: <20260811200013.185956-3-prabhakar.mahadev-lad.rj@bp.renesas.com>
+In-Reply-To: <20260811200013.185956-2-prabhakar.mahadev-lad.rj@bp.renesas.com>
 References: <20260811200013.185956-1-prabhakar.mahadev-lad.rj@bp.renesas.com>
- <20260811200013.185956-3-prabhakar.mahadev-lad.rj@bp.renesas.com>
+ <20260811200013.185956-2-prabhakar.mahadev-lad.rj@bp.renesas.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 11 Aug 2026 20:12:45 +0000
-Message-Id: <20260811201246.028D01F000E9@smtp.kernel.org>
+Date: Tue, 11 Aug 2026 20:16:38 +0000
+Message-Id: <20260811201639.521741F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -49,84 +48,95 @@ Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
 
 Pre-existing issues:
-- [High] Missing cleanup of chained IRQ handlers triggers a Use-After-Free =
-panic on probe failure.
-- [High] Logic error due to false assumption of contiguous virtual IRQ numb=
-ers leads to unhandled INTx interrupts.
+- [High] System suspend is unconditionally aborted due to incorrect pm_runt=
+ime_put_sync() usage in the suspend_noirq phase.
+- [High] Use-after-free vulnerability due to missing chained IRQ handler cl=
+eanup on probe error paths.
 --
 
---- Patch [2]: [PATCH v3 2/3] PCI: rzg3s: Propagate platform_get_irq_byname=
-() errors ---
-commit 398dc4c2681ec621a5ea3ee51113abc78f26854a
+--- Patch [1]: [PATCH v3 1/3] PCI: rzg3s: Disable refclk on probe failure -=
+--
+commit 7f97e9f3db5d36293fbc8938e90e7f9e5ceaa52c
 Author: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
 
-PCI: rzg3s: Propagate platform_get_irq_byname() errors
+PCI: rzg3s: Disable refclk on probe failure
 
-platform_get_irq_byname() may return specific error codes such as
--EPROBE_DEFER, but rzg3s_pcie_init_irqdomain() replaces all failures
-with -EINVAL. This commit propagates the original error code instead to
-allow probe deferral.
+rzg3s_pcie_host_init_port() enables the PCIe reference clock using
+clk_prepare_enable(), but if rzg3s_pcie_probe() subsequently fails, for
+example because pci_host_probe() returns an error, the probe error path
+only releases the clock handle with clk_put().
+
+Balance clk_prepare_enable() by calling clk_disable_unprepare() in the
+probe cleanup path before releasing the clock, ensuring the reference
+clock is properly disabled on probe failure.
+
+Fixes: 7ef502fb35b28 ("PCI: Add Renesas RZ/G3S host controller driver")
+Cc: stable@vger.kernel.org
 
 > diff --git a/drivers/pci/controller/pcie-rzg3s-host.c b/drivers/pci/contr=
 oller/pcie-rzg3s-host.c
-> index bd6471a7fb7a1..92371310d313b 100644
+> index 66f687304c1cb..bd6471a7fb7a1 100644
 > --- a/drivers/pci/controller/pcie-rzg3s-host.c
 > +++ b/drivers/pci/controller/pcie-rzg3s-host.c
-> @@ -975,7 +975,7 @@ static int rzg3s_pcie_init_irqdomain(struct rzg3s_pci=
-e_host *host)
+> @@ -1762,6 +1762,7 @@ static int rzg3s_pcie_probe(struct platform_device =
+*pdev)
+>  	return 0;
 > =20
->  		irq =3D platform_get_irq_byname(pdev, irq_name);
->  		if (irq < 0)
-> -			return dev_err_probe(dev, -EINVAL,
-> +			return dev_err_probe(dev, irq,
+>  host_probe_teardown:
+> +	clk_disable_unprepare(host->port.refclk);
+>  	rzg3s_pcie_teardown_irqdomain(host);
 
 [Severity: High]
-This is a pre-existing issue, but does this error path leave chained handle=
-rs
-registered?
+This is a pre-existing issue, but does this teardown path leave dangling
+pointers in the chained IRQ handlers?
 
-If rzg3s_pcie_init_irqdomain() successfully maps INTA but fails on a
-subsequent INTx setup like an INTB probe deferral, returning directly leaves
-the earlier chained handlers active. This same unhandled registration happe=
-ns=20
-if irq_domain_create_linear() fails later, or if the teardown function=20
-omits unregistering the INTx chained handlers.
+Looking at rzg3s_pcie_init_irqdomain(), chained handlers are registered
+with the devres-managed host pointer:
 
-Since the device probe fails, the devres framework will free the host
-structure. If the unhandled chained interrupt fires later, it will
-dereference the freed host pointer, leading to a use-after-free panic:
-
-rzg3s_pcie_intx_irq_handler()
-    struct rzg3s_pcie_host *host =3D irq_desc_get_handler_data(desc);
-    // UAF on host access
-
->  					     "Failed to parse and map INT%c IRQ\n",
->  					     'A' + i);
-> =20
-
-[Severity: High]
-This isn't a bug introduced by this patch, but while reviewing the INTx=20
-handling in this file, I noticed a potential issue in=20
-rzg3s_pcie_intx_irq_handler().
-
-Is the calculation for the INTx index assuming contiguous virtual IRQ numbe=
-rs?
-
-drivers/pci/controller/pcie-rzg3s-host.c:rzg3s_pcie_intx_irq_handler() {
+drivers/pci/controller/pcie-rzg3s-host.c:rzg3s_pcie_init_irqdomain() {
     ...
-    u32 intx =3D irq - host->intx_irqs[0];
+    irq_set_chained_handler_and_data(irq,
+                                     rzg3s_pcie_intx_irq_handler,
+                                     host);
     ...
-    generic_handle_domain_irq(host->intx_domain, intx);
 }
 
-If the OS allocates non-contiguous virqs (for example, due to concurrent IRQ
-allocation or ID reuse by the IDR), this calculation will yield an invalid
-out-of-bounds index or underflow.
+But rzg3s_pcie_teardown_irqdomain() does not clear them:
 
-Can this cause the generic handler lookup to fail? If so, leaving the INTx
-interrupt unhandled might lead to an IRQ storm that permanently disables
-the interrupt line and breaks downstream PCIe devices.
+drivers/pci/controller/pcie-rzg3s-host.c:rzg3s_pcie_teardown_irqdomain() {
+    if (IS_ENABLED(CONFIG_PCI_MSI))
+        rzg3s_pcie_teardown_msi(host);
+    irq_domain_remove(host->intx_domain);
+}
+
+If the probe fails and the host structure is freed, wouldn't a subsequent
+spurious interrupt on any INTx line trigger a use-after-free when the chain=
+ed
+handler dereferences the freed host pointer?
+
+Should this call irq_set_chained_handler_and_data() with NULL to clean up?
+
+[Severity: High]
+This isn't a bug introduced by this patch, but while reviewing this file I
+noticed a potential issue with the suspend sequence:
+
+drivers/pci/controller/pcie-rzg3s-host.c:rzg3s_pcie_suspend_noirq() {
+    ...
+    ret =3D pm_runtime_put_sync(dev);
+    if (ret)
+        return ret;
+    ...
+}
+
+Will this unconditionally abort the system suspend?
+
+During the system suspend transition, the PM core disables runtime PM in the
+suspend_late phase.
+
+When suspend_noirq is later called, wouldn't pm_runtime_put_sync() return
+-EACCES since runtime PM is disabled, causing the entire system suspend to
+fail?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260811200013.1859=
-56-1-prabhakar.mahadev-lad.rj@bp.renesas.com?part=3D2
+56-1-prabhakar.mahadev-lad.rj@bp.renesas.com?part=3D1
