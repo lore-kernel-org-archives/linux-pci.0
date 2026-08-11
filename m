@@ -1,142 +1,125 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 133563FAE19
-	for <linux-pci@vger.kernel.org>; Tue, 11 Aug 2026 20:16:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 13F2B388E69;
+	Tue, 11 Aug 2026 21:11:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786479401; cv=none; b=FcWXkugfmucNLAG6/PEOphwPs9svxVBuD36/Hh5Tv17EPizksZyHpuilCWecioiu1DDedoWEHL7CFRYVLGbiZqjSMu5woWf2Jun+fGy6zQF0yIuZ94COnkuRr8lk0MANnllANKSxbeT1hxntYDdX5tjKrRlARI7X5kL5t/qw2BY=
+	t=1786482697; cv=none; b=cchWeK4Kd2WsAW4BiBBQ845WWK6BCJcNDNnMpjF/c53nuYM7GQSn+Tf/shblIYIvMo0n5q4X4wxpepMvh9wbMjwM3elVcSFPEFK74KUFGdz64/398EeAzM/YAE7+M0jwGixWJ9psAeJITJm0B0jS5Nb5icPbTePos0kfN5BCFBI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786479401; c=relaxed/simple;
-	bh=LeOPM1sG91Nkc9aEnA/lRZbTL2CLgTXyArQe37BU/5w=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=l6a5smy+TgOV7vwOvD4/oAPlB9jtDXQmFlW+3WmQc4f/GXzU8sPGN+TfX6WvCWC5fnMIvK4zBOqMV18mORY5rVyBJcxfjCVS/MYK+ze04bAKVLwDS/0UT7CKKXfAD2c1Rfurm3XkBB74go2OErFrR0+DLDxuE6Rk5Z2oSmRQqtE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hd0MA+P6; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1786482697; c=relaxed/simple;
+	bh=726ER7+Rkh0JZGmxUeVNdHZr78o6KgDj3SrToq7xTXA=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=OfZao2lckIND0oz7I9//3yVExICewAYLbTXdJV+PvbHcKCVM/FNUipH1bztXF5CsmIu4GmHp/rI1BN3cSubBlG+mXmpfr28lu+rzojU5riyX8HFcT+oFIdcDtgWz9AEUv5OvEYGtyJ8yKQIX0wisMILAvZsR+esAneUgl97t8QQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QfUz9R4O; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hd0MA+P6"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 521741F000E9;
-	Tue, 11 Aug 2026 20:16:39 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QfUz9R4O"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 531041F000E9;
+	Tue, 11 Aug 2026 21:11:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786479399;
-	bh=mLRy4B1qdg5TAZcddJYpe7PBUtyDdKJx6CH/AmNSjBQ=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=hd0MA+P689uFEtR+TTazLxCTLnUxokBgn7fsh0oK/VgPva+gOYjaZbnryRyNO4jeA
-	 K+IKC07mCHvNI/4PxiHCEc+NADOnvFWeh+r2HtvYx1Sh9/Cfqukc6dEUgzJ6kMZm74
-	 X6mBmlswfiVvs8m/CkoYdchpCyM1wqfN0C7MPRnFiVqpy1rP+luVmTw/5SaUjv3nl8
-	 qdl5SMN2KXt8eu/2drHB3QTOaa2iClRQHC4w6kdlJ+Y6OnuJXbgb0F0Df6eFVv6w0t
-	 IlKhfoJ2Yb5b+IZt15Wb8ei7xqK1EDGQHXe6X4HV9uqot8Wd/s0ghvGW5lrbDTEaLT
-	 1mAXEC1EXsRNA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 1/3] PCI: rzg3s: Disable refclk on probe failure
-Reply-To: sashiko-reviews@lists.linux.dev
-To: Prabhakar <prabhakar.csengg@gmail.com>
-Cc: wsa+renesas@sang-engineering.com, linux-pci@vger.kernel.org
-In-Reply-To: <20260811200013.185956-2-prabhakar.mahadev-lad.rj@bp.renesas.com>
-References: <20260811200013.185956-1-prabhakar.mahadev-lad.rj@bp.renesas.com>
- <20260811200013.185956-2-prabhakar.mahadev-lad.rj@bp.renesas.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 11 Aug 2026 20:16:38 +0000
-Message-Id: <20260811201639.521741F000E9@smtp.kernel.org>
+	s=k20260515; t=1786482695;
+	bh=ILHdH4cXPBLxh6nT49wDappOv61AuAEjgVWm00tLVfU=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=QfUz9R4OiStbSCsEWR+GbTH/C+WSY/eyjF+98JE0AfmbQtgLP4sijxWm3jsSFksuU
+	 1X1tpASEr0+RciwCt7XEHtZxfN0I4XEfi188aY46wrzit4wPixGDZwST0bDBJ8n7Sp
+	 E4/Tzdi5cYLl7TSIMvkkzHvx+r2V25+coW7XG0UdWVNCxJrdP79YtoKR0CLf2ZXbK1
+	 uLvCsUG5XfI/f6AAO58IGlLZPcKtOE1RhQmIqn3z6SNbA5NoKXM4EjdBKAo+oGQyJ8
+	 j9TFkOVr1+wWFiU5MwIZ2BFRzgY8JC3JBh0SJJciMsw/+UZRDvL67d1iSFG9yBMgqs
+	 v0037z5NTLzrA==
+Date: Tue, 11 Aug 2026 16:11:34 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Danilo Krummrich <dakr@kernel.org>
+Cc: bhelgaas@google.com, kwilczynski@kernel.org, aliceryhl@google.com,
+	daniel.almeida@collabora.com, ojeda@kernel.org, boqun@kernel.org,
+	gary@garyguo.net, bjorn3_gh@protonmail.com, lossin@kernel.org,
+	a.hindborg@kernel.org, tmgross@umich.edu, tamird@kernel.org,
+	acourbot@nvidia.com, work@onurozkan.dev, jhubbard@nvidia.com,
+	ttabi@nvidia.com, apopple@nvidia.com, ecourtney@nvidia.com,
+	shashanks@nvidia.com, zhiw@nvidia.com, driver-core@lists.linux.dev,
+	linux-pci@vger.kernel.org, rust-for-linux@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 4/5] PCI: add pci_irq_type() to query the allocated
+ interrupt type
+Message-ID: <20260811211134.GA678959@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260810224800.2314458-5-dakr@kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
+On Tue, Aug 11, 2026 at 12:47:43AM +0200, Danilo Krummrich wrote:
+> Add a helper that returns PCI_IRQ_MSIX, PCI_IRQ_MSI, or PCI_IRQ_INTX
+> based on the interrupt type the PCI core selected after
+> pci_alloc_irq_vectors().
+> 
+> Several drivers already open-code this check against pdev->msix_enabled
+> and pdev->msi_enabled, or even open code this helper [1].
+> 
+> A common helper avoids the duplication and keeps drivers from accessing
+> the bitfield directly (see also [2]).
+> 
+> Link: https://elixir.bootlin.com/linux/v7.1/source/drivers/net/ethernet/aquantia/atlantic/aq_pci_func.c#L196 [1]
+> Inspired-by: John Hubbard <jhubbard@nvidia.com>
+> Link: https://lore.kernel.org/all/DKKG2QM3YJYB.Z2H2B2UXJ75N@kernel.org/ [2]
+> Signed-off-by: Danilo Krummrich <dakr@kernel.org>
 
-Pre-existing issues:
-- [High] System suspend is unconditionally aborted due to incorrect pm_runt=
-ime_put_sync() usage in the suspend_noirq phase.
-- [High] Use-after-free vulnerability due to missing chained IRQ handler cl=
-eanup on probe error paths.
---
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
---- Patch [1]: [PATCH v3 1/3] PCI: rzg3s: Disable refclk on probe failure -=
---
-commit 7f97e9f3db5d36293fbc8938e90e7f9e5ceaa52c
-Author: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+In the subject line, to match drivers/pci/ history,
 
-PCI: rzg3s: Disable refclk on probe failure
+  PCI: Add pci_irq_type() ...
 
-rzg3s_pcie_host_init_port() enables the PCIe reference clock using
-clk_prepare_enable(), but if rzg3s_pcie_probe() subsequently fails, for
-example because pci_host_probe() returns an error, the probe error path
-only releases the clock handle with clk_put().
-
-Balance clk_prepare_enable() by calling clk_disable_unprepare() in the
-probe cleanup path before releasing the clock, ensuring the reference
-clock is properly disabled on probe failure.
-
-Fixes: 7ef502fb35b28 ("PCI: Add Renesas RZ/G3S host controller driver")
-Cc: stable@vger.kernel.org
-
-> diff --git a/drivers/pci/controller/pcie-rzg3s-host.c b/drivers/pci/contr=
-oller/pcie-rzg3s-host.c
-> index 66f687304c1cb..bd6471a7fb7a1 100644
-> --- a/drivers/pci/controller/pcie-rzg3s-host.c
-> +++ b/drivers/pci/controller/pcie-rzg3s-host.c
-> @@ -1762,6 +1762,7 @@ static int rzg3s_pcie_probe(struct platform_device =
-*pdev)
->  	return 0;
-> =20
->  host_probe_teardown:
-> +	clk_disable_unprepare(host->port.refclk);
->  	rzg3s_pcie_teardown_irqdomain(host);
-
-[Severity: High]
-This is a pre-existing issue, but does this teardown path leave dangling
-pointers in the chained IRQ handlers?
-
-Looking at rzg3s_pcie_init_irqdomain(), chained handlers are registered
-with the devres-managed host pointer:
-
-drivers/pci/controller/pcie-rzg3s-host.c:rzg3s_pcie_init_irqdomain() {
-    ...
-    irq_set_chained_handler_and_data(irq,
-                                     rzg3s_pcie_intx_irq_handler,
-                                     host);
-    ...
-}
-
-But rzg3s_pcie_teardown_irqdomain() does not clear them:
-
-drivers/pci/controller/pcie-rzg3s-host.c:rzg3s_pcie_teardown_irqdomain() {
-    if (IS_ENABLED(CONFIG_PCI_MSI))
-        rzg3s_pcie_teardown_msi(host);
-    irq_domain_remove(host->intx_domain);
-}
-
-If the probe fails and the host structure is freed, wouldn't a subsequent
-spurious interrupt on any INTx line trigger a use-after-free when the chain=
-ed
-handler dereferences the freed host pointer?
-
-Should this call irq_set_chained_handler_and_data() with NULL to clean up?
-
-[Severity: High]
-This isn't a bug introduced by this patch, but while reviewing this file I
-noticed a potential issue with the suspend sequence:
-
-drivers/pci/controller/pcie-rzg3s-host.c:rzg3s_pcie_suspend_noirq() {
-    ...
-    ret =3D pm_runtime_put_sync(dev);
-    if (ret)
-        return ret;
-    ...
-}
-
-Will this unconditionally abort the system suspend?
-
-During the system suspend transition, the PM core disables runtime PM in the
-suspend_late phase.
-
-When suspend_noirq is later called, wouldn't pm_runtime_put_sync() return
--EACCES since runtime PM is disabled, causing the entire system suspend to
-fail?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260811200013.1859=
-56-1-prabhakar.mahadev-lad.rj@bp.renesas.com?part=3D1
+> ---
+>  include/linux/pci.h | 25 +++++++++++++++++++++++++
+>  1 file changed, 25 insertions(+)
+> 
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 64b308b6e61c..80b8561b5be0 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1783,6 +1783,26 @@ void pci_free_irq_vectors(struct pci_dev *dev);
+>  int pci_irq_vector(struct pci_dev *dev, unsigned int nr);
+>  const struct cpumask *pci_irq_get_affinity(struct pci_dev *pdev, int vec);
+>  
+> +/**
+> + * pci_irq_type - Get the interrupt type of a PCI device
+> + * @pdev: the PCI device to operate on
+> + *
+> + * Discriminate the interrupt type the PCI core selected for this device
+> + * after a successful pci_alloc_irq_vectors() call.
+> + *
+> + * Return: %PCI_IRQ_MSIX, %PCI_IRQ_MSI, or %PCI_IRQ_INTX.
+> + */
+> +static inline unsigned int pci_irq_type(struct pci_dev *pdev)
+> +{
+> +	if (pdev->msix_enabled)
+> +		return PCI_IRQ_MSIX;
+> +
+> +	if (pdev->msi_enabled)
+> +		return PCI_IRQ_MSI;
+> +
+> +	return PCI_IRQ_INTX;
+> +}
+> +
+>  #else
+>  static inline int pci_msi_vec_count(struct pci_dev *dev) { return -ENOSYS; }
+>  static inline void pci_disable_msi(struct pci_dev *dev) { }
+> @@ -1845,6 +1865,11 @@ static inline const struct cpumask *pci_irq_get_affinity(struct pci_dev *pdev,
+>  {
+>  	return cpu_possible_mask;
+>  }
+> +
+> +static inline unsigned int pci_irq_type(struct pci_dev *pdev)
+> +{
+> +	return PCI_IRQ_INTX;
+> +}
+>  #endif
+>  
+>  /**
+> -- 
+> 2.55.0
+> 
