@@ -1,103 +1,502 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D2B0930566B;
-	Tue, 11 Aug 2026 21:49:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 78F953FFAC3;
+	Tue, 11 Aug 2026 23:19:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786484943; cv=none; b=QhrGwYG7pR28rE6GekzHCCSkmgZ2iIkfOtwxNzx9TVoSbp/s2TdouhvzELX/loGGT1FYICUHrAAoSwVsq3AlLu29l+OQMOKa1Ev0Jv+Sk8k0ZY8UP24YxpxMmVR2gH4jMs4yjQP8JLRHuKFeLsf3gBzLs6rQf+6+HYBbrdQBi3o=
+	t=1786490360; cv=none; b=F0uJdiDIsMigDzsoIX6xYbIELJSGS4FkmRf1eFNhp9svCw5rX89iHZ1GM5d7yHqF4FJ8PG/+P71GXhjxpI35cpJmzYErRd7G7B5A8nFTuTLcBM5TDIBvke5i0Rx8iK04/e7XkJdWouNY/BTuIlAHadjdheMGCHYiNtRHmzNunLU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786484943; c=relaxed/simple;
-	bh=uKQMt6+SE2ZF5aqnMiLFGwt0Tm8Sg7up0mLVgeB2w5c=;
+	s=arc-20240116; t=1786490360; c=relaxed/simple;
+	bh=aBivkTnAapzKlmdqq0/O0qqdnhzrkMQ1sNOx04UnEc0=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=b5UlQbBw5I21k7FRGD1OJxHB4EpPqg1MaAyGcO/G3Bx6M0f58q+ZquohZoJ2ujeq2rMYqknXy1Yct2c6XHXoAMasMhuwXYtk+WNFNHLcTX+I1W45Q4zQeiAIAJOoFY7XqxxhHkI7gRaX+RSU8cum8eFvlFCBqsPqxt966DaBl20=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lwEC3WWH; arc=none smtp.client-ip=100.103.45.18
+	 Content-Disposition:In-Reply-To; b=Oyx26kbtY2hUbxvQtJDCnhmmtAsnQ1GxoSqnM85dHWv42gtX2sDsglqSUQ250yhwvVI83zk4NUfZVfnBAWWKPRyMCdtssB3fjgVLL7H9m/r54zmLMN/WGtr1LjkH13T3QzVK/IoU/kTCKY6Mz8NohtOSAJn6tfR//r6SRJ4UIKk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KzwRvOyr; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lwEC3WWH"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 209A71F000E9;
-	Tue, 11 Aug 2026 21:49:02 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KzwRvOyr"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D8A301F000E9;
+	Tue, 11 Aug 2026 23:19:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786484942;
-	bh=B0X6XgAAAhF113rxevrEnj0y6G30X+VD38KOAafz1OM=;
+	s=k20260515; t=1786490358;
+	bh=NLItohxX3Sjvtc6LzUunhUw3YmpVj5sG0RpYzBnLj4s=;
 	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=lwEC3WWHEQGp0yk5pVCvSu2dvNiQss7sYpsE3idAKf0KzdjtaDZWhYvKYqw8nLF0P
-	 QEyD6V6EofaEHC/iNXhyKxA7T3YVu5pjcc1WUX311W3d8AW75Mtjhg11vL0CX2mTUj
-	 ngGaB9jWe3sL2m9mCs0xf1ch80+mYKMfLs5e1p0/kK7QjM6cYeFCLqaQKmVtwLmObv
-	 l84skZmivfPK0UZYK1DtX75+sygQ9UWLjG6muqhNuO72EvwUWdg8snaGtm4TjliBfA
-	 WVZpNLFnn4v8qmYKu1B/FINCQqE7giW3hsPjL+R4zxMai/rMe5Tmb3aq0nJJ0gOC83
-	 z1FXacHYaWRAw==
-Date: Tue, 11 Aug 2026 16:49:00 -0500
+	b=KzwRvOyrgzMfVc7yLmyB7sEKmx9yRCaRk1rsQmeZzwCD3VwVCrz/HNNnFyAF6UeBh
+	 PFVV3MsWate76Ntp0PzeiCZW+OJuhqQuhbAo60erR3r7wqXiAr3yw+/AT4OLIWeApF
+	 8B05KohbLK03fEBaoPKhbVT9TnVPrM/lf3BSv+FmXaNTCVOB1HUVhEdsHslcAFIFgz
+	 noNBRyH7+i9lwAkI1KneW7k58IH+slR6gHAdylVTFcnER5EC0Xi9iv6hqFvPKtuGWe
+	 eutO1Rx9IgrHMIHQSw7ilqMZmbqy37FnbB78V+EF8biDEQt751UvOJYGWN9B6SMaUG
+	 pZDciGXwm6RSA==
+Date: Tue, 11 Aug 2026 18:19:16 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Leonardo Costa <leoreis.costa@gmail.com>
-Cc: hongxing.zhu@nxp.com, l.stach@pengutronix.de, lpieralisi@kernel.org,
-	kwilczynski@kernel.org, mani@kernel.org, robh@kernel.org,
-	bhelgaas@google.com, Frank.Li@nxp.com, s.hauer@pengutronix.de,
-	kernel@pengutronix.de, festevam@gmail.com,
-	regressions@lists.linux.dev, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, imx@lists.linux.dev,
-	linux-kernel@vger.kernel.org, leonardo.costa@toradex.com,
-	francesco@dolcini.it, Sherry Sun <sherry.sun@nxp.com>
-Subject: Re: [REGRESSION] mainline/master: PCI link creation fails on Apalis
- iMX6
-Message-ID: <20260811214900.GA763236@bhelgaas>
+To: manivannan.sadhasivam@oss.qualcomm.com
+Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Shuah Khan <skhan@linuxfoundation.org>, linux-pci@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] Documentation: PCI: Document how to write PCI Host
+ Controller drivers
+Message-ID: <20260811231916.GA801676@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <bl7i3obu2clzsgeoct2a4mtfhv6typcjdqmgneropf3hpgwve6@n2m5uhlduw57>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260803-pci-doc-v1-1-2814f8672cad@oss.qualcomm.com>
 
-[+cc Sherry]
-
-On Mon, Aug 10, 2026 at 02:54:45PM -0300, Leonardo Costa wrote:
-> Hello,
+On Mon, Aug 03, 2026 at 09:25:24AM +0200, Manivannan Sadhasivam via B4 Relay wrote:
+> From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 > 
-> We are seeing a regression on Apalis iMX6 where connected PCI device
-> links fail to come up at initialization, as shown below. The issue is
-> not on the devices' physical connection, as they worked properly on v7.1
-> and are working on other stable kernel versions.
+> Writing a PCI Host Controller driver requires bringing up the Root Complex
+> hardware and registering it with the PCI core in a specific sequence.
+> Add a guide describing these steps to help developers write new drivers.
 > 
->     [    0.154243] imx6q-pcie 1ffc000.pcie: host bridge /soc/pcie@1ffc000 ranges:
->     [    0.154400] imx6q-pcie 1ffc000.pcie:       IO 0x0001f80000..0x0001f8ffff -> 0x0000000000
->     [    0.154439] imx6q-pcie 1ffc000.pcie:      MEM 0x0001000000..0x0001efffff -> 0x0001000000
->     [    0.154553] imx6q-pcie 1ffc000.pcie: config reg[1] 0x01f00000 == cpu 0x01f00000
->     [    0.356072] imx6q-pcie 1ffc000.pcie: iATU: unroll F, 4 ob, 4 ib, align 64K, limit 4G
->     [    0.356181] imx6q-pcie 1ffc000.pcie: Link: Only Gen1 is enabled
->     [    1.364757] imx6q-pcie 1ffc000.pcie: Link failed to come up. LTSSM: POLL_CONFIG
->     [    1.365056] imx6q-pcie 1ffc000.pcie: probe with driver imx6q-pcie failed with error -110
+> It covers the Root Complex topology and enumeration, and walks through the
+> driver flow, including resource setup, Configuration Space accessors,
+> address translation, interrupt handling, Link training, power management,
+> shutdown and removal, using standard guidelines/best practices.
 > 
-> Complete logs: https://paste.debian.net/hidden/f08cdf68
+> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+
+Beautiful, thank you for doing this!
+
+Applied to pci/doc for v7.3.
+
+> ---
+>  Documentation/PCI/controller/index.rst             |   1 +
+>  .../PCI/controller/pci-controller-drivers.rst      | 388 +++++++++++++++++++++
+>  MAINTAINERS                                        |   1 +
+>  3 files changed, 390 insertions(+)
 > 
-> This may have been caused by commit [1], which was introduced to solve
-> an issue where the Apalis iMX6 module wasn't booting, and this second
-> regression went unnoticed since then.
+> diff --git a/Documentation/PCI/controller/index.rst b/Documentation/PCI/controller/index.rst
+> index c2ce9ccdcfa0..c15e2c9ac855 100644
+> --- a/Documentation/PCI/controller/index.rst
+> +++ b/Documentation/PCI/controller/index.rst
+> @@ -7,4 +7,5 @@ PCI Native Host Bridge and Endpoint Drivers
+>  .. toctree::
+>     :maxdepth: 2
+>  
+> +   pci-controller-drivers
+>     rcar-pcie-firmware
+> diff --git a/Documentation/PCI/controller/pci-controller-drivers.rst b/Documentation/PCI/controller/pci-controller-drivers.rst
+> new file mode 100644
+> index 000000000000..76ab8f71da7d
+> --- /dev/null
+> +++ b/Documentation/PCI/controller/pci-controller-drivers.rst
+> @@ -0,0 +1,388 @@
+> +.. SPDX-License-Identifier: GPL-2.0
+> +
+> +===================================
+> +Writing PCI Host Controller Drivers
+> +===================================
+> +
+> +:Author: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+> +
+> +Introduction
+> +============
+> +
+> +A PCI Host Controller driver is used to control a PCI Root Complex (RC) hardware
+> +inside an SoC. The Root Complex hardware comprises a single PCI Host Bridge
+> +and one or more Root Port or Root Complex Integrated Endpoint (RCiEP) devices::
+> +
+> +                     +------------------+
+> +                     |       CPU        |
+> +                     +------------------+
+> +                              |
+> +        +--------------------------------------------+
+> +        |                     |               Root   |
+> +        |            +------------------+   Complex  |
+> +        |            |   Host Bridge    |            |
+> +        |            +------------------+            |
+> +        |                     |                      |
+> +        |               Bus 0 |                      |
+> +        |        +------------|----------+           |
+> +        |        |            |          |           |
+> +        |  +----------+ +----------+ +-------+       |
+> +        |  |  Root    | |  Root    | | RCiEP |       |
+> +        |  |  Port    | |  Port    | +-------+       |
+> +        |  +----------+ +----------+                 |
+> +        |       |             |                      |
+> +        | Bus 1 |       Bus 2 |                      |
+> +        |       |             |                      |
+> +        +-------|-------------|----------------------+
+> +                |             |
+> +          +-----------+ +-----------+
+> +          | Endpoint  | | Endpoint  |
+> +          +-----------+ +-----------+
+> +
+> +Host Bridge: Used to connect CPU(s) to the PCI hierarchy.
+> +Root Port: Virtual PCI-PCI bridge connecting the Host Bridge to a PCI bus.
+> +RCiEP: Embedded PCIe Endpoint inside Root Complex connected to the Host Bridge.
+> +Endpoint: PCIe device connected to a Root Port through a Link.
+> +
+> +Enumeration
+> +===========
+> +
+> +The Host Bridge device is not discoverable, so it is typically enumerated with
+> +the help of the firmware interface like ACPI or Devicetree. But the Root Port
+> +and RCiEP devices are discoverable through the standard enumeration process
+> +defined in the PCIe spec.
+> +
+> +A Host Controller driver usually configures both Host Bridge and Root Port(s)
+> +based on the platform requirement. In the case of ACPI on standardized platforms
+> +(e.g. x86), no platform specific host controller driver is required as the
+> +firmware configures the Root Complex before OS boot and exposes the resource
+> +information through ACPI tables. For more info, refer to :doc:`../acpi-info`.
+> +
+> +But for the Devicetree platforms, a dedicated host controller driver is often
+> +required because the Root Complex hardware typically needs vendor specific
+> +initialization like PHY, clocks, power domains and there is no standard
+> +mechanism equivalent to ACPI/MCFG to convey resource information to the OS. So
+> +on these platforms, Root Complex hardware is enumerated through Devicetree
+> +nodes as below::
+> +
+> +        pcie@10000000 {
+> +            compatible = "vendor,soc-pcie";
+> +            reg = <0x0 0x10000000 0x0 0x1000>,
+> +                  <0x0 0x10001000 0x0 0x1000>;
+> +            reg-names = "cfg", "app";
+> +            device_type = "pci";
+> +            bus-range = <0x00 0xff>;
+> +            linux,pci-domain = <0>;
+> +            num-lanes = <4>;
+> +
+> +            #address-cells = <3>;
+> +            #size-cells = <2>;
+> +
+> +            ranges = <0x01000000 0x0 0x00000000 0x0 0x20000000 0x0 0x00100000>,
+> +                     <0x02000000 0x0 0x20100000 0x0 0x20100000 0x0 0x1ff00000>;
+> +            dma-ranges = <0x02000000 0x0 0x0 0x0 0x0 0x0 0x80000000>;
+> +
+> +            clocks = <&clkc PCIE_CORE_CLK>,
+> +                     <&clkc PCIE_AUX_CLK>;
+> +            clock-names = "core", "aux";
+> +            resets = <&reset PCIE_RESET>;
+> +            power-domains = <&power PCIE_PD>;
+> +
+> +            #interrupt-cells = <1>;
+> +            interrupt-map-mask = <0 0 0 0x7>;
+> +            interrupt-map = <0 0 0 1 &gic 0 0 GIC_SPI 100 IRQ_TYPE_LEVEL_HIGH>,
+> +                            <0 0 0 2 &gic 0 0 GIC_SPI 101 IRQ_TYPE_LEVEL_HIGH>,
+> +                            <0 0 0 3 &gic 0 0 GIC_SPI 102 IRQ_TYPE_LEVEL_HIGH>,
+> +                            <0 0 0 4 &gic 0 0 GIC_SPI 103 IRQ_TYPE_LEVEL_HIGH>;
+> +            interrupts = <GIC_SPI 104 IRQ_TYPE_LEVEL_HIGH>;
+> +            interrupt-names = "msi";
+> +
+> +            pcie@0 {
+> +                compatible = "pciclass,0604";
+> +                device_type = "pci";
+> +                reg = <0x0 0x0 0x0 0x0 0x0>;
+> +                bus-range = <0x01 0xff>;
+> +
+> +                #address-cells = <3>;
+> +                #size-cells = <2>;
+> +                ranges;
+> +
+> +                phys = <&pcie_phy>;
+> +                reset-gpios = <&gpio 10 GPIO_ACTIVE_LOW>;
+> +                wake-gpios = <&gpio 11 GPIO_ACTIVE_LOW>;
+> +            };
+> +        };
+> +
+> +
+> +Note the presence of two nodes in the above example. ``pcie@10000000`` node
+> +represents a PCI Host Bridge device and ``pcie@0`` represents a single Root Port
+> +device. The Host Bridge node should contain the properties associated with the
+> +Host Bridge device such as ranges, interrupts, clocks, power-domains etc... and
+> +the Root Port node should contain the port specific properties such as phys,
+> +reset-gpios, wake-gpios etc...
+> +
+> +NOTE: Legacy Devicetrees used a single node to describe both Host Bridge and
+> +Root Port devices. But that design is now deprecated.
+> +
+> +Driver Design
+> +=============
+> +
+> +Prerequisites
+> +-------------
+> +
+> +Before starting to write a new Host Controller driver, check if any of the
+> +existing drivers can be reused. For example, if the Root Complex supports
+> +Enhanced Configuration Access Mechanism (ECAM) and the bootloader has configured
+> +the ECAM mapping before OS boot, ``CONFIG_PCI_HOST_GENERIC`` driver can be used.
+> +
+> +If the Root Complex hardware (IP) is from known IP vendors such as Synopsys or
+> +Cadence, then the existing ``CONFIG_PCIE_DW_PLAT_HOST`` and
+> +``CONFIG_PCIE_CADENCE_PLAT_HOST`` drivers can be reused. If not, then check if
+> +any of the existing glue drivers available for these IPs could be reused.
+> +
+> +Or if the Root Complex hardware is designed in-house by the SoC vendor, then
+> +check if there is an existing driver from the vendor for their previous
+> +generation Root Complex hardware. Often, the existing driver could be reused
+> +with minimal modifications.
+> +
+> +Only if the Root Complex doesn't satisfy above prerequisites, a new Host
+> +Controller driver should be written.
+> +
+> +Probe
+> +-----
+> +
+> +During the Host Controller driver probe(), it initializes the Root Complex
+> +hardware and registers the Host Bridge with the PCI core. The typical steps
+> +are described below.
+> +
+> +Initialize Resources
+> +~~~~~~~~~~~~~~~~~~~~
+> +
+> +At the start of the probe(), initialize all the Host Bridge specific
+> +resources such as clocks, PHY, regulators, resets. These resources are
+> +described in the Host Bridge Devicetree node and should be brought up before
+> +accessing the controller hardware.
+> +
+> +NOTE: Use the devm_*() managed APIs wherever possible, so that the resources
+> +are released automatically on probe failure and on driver detach.
+> +
+> +Configuration Space Access
+> +~~~~~~~~~~~~~~~~~~~~~~~~~~
+> +
+> +The PCI core accesses the Configuration Space of the enumerated devices
+> +through the callbacks provided by the driver in struct pci_ops. These
+> +callbacks abstract how the Root Complex generates a Configuration Request for
+> +a given Bus, Device and Function number.
+> +
+> +If the Root Complex supports ECAM, the generic accessors can be reused by
+> +using pci_ecam_map_bus() along with pci_generic_config_read() and
+> +pci_generic_config_write(). Such drivers can often be built on top of
+> +pci_host_common_probe() without providing any custom accessors.
+> +
+> +Setup Address Translation
+> +~~~~~~~~~~~~~~~~~~~~~~~~~
+> +
+> +The Host Bridge translates accesses between the CPU address domain and the
+> +PCI address domain in both directions:
+> +
+> +- Outbound: CPU addresses are translated to PCI bus addresses for the Memory
+> +  and I/O accesses initiated by the CPU towards the downstream devices. These
+> +  windows are derived from the ``ranges`` property of the Host Bridge Devicetree
+> +  node.
+> +
+> +- Inbound: PCI bus addresses are translated to system memory addresses for the
+> +  accesses (such as DMA) initiated by the downstream devices. These windows
+> +  are derived from the ``dma-ranges`` property.
+> +
+> +The PCI core parses ``ranges`` and ``dma-ranges`` into the Host Bridge resource
+> +lists, and the driver programs one translation window per entry. Note that the
+> +CPU address and the PCI bus address of a window may differ, so the offset
+> +between them has to be accounted for while programming the windows.
+> +
+> +NOTE: If the hardware supports ECAM, it is strongly recommended to use ECAM
+> +for the Configuration Space, so that a translation window need not be
+> +reprogrammed for every Configuration access.
+> +
+> +Interrupt Handling
+> +~~~~~~~~~~~~~~~~~~
+> +
+> +Downstream devices can signal interrupts either through INTx or through
+> +Message Signaled Interrupts (MSI/MSI-X). The driver has to enable the
+> +mechanisms supported by the Root Complex.
+> +
+> +INTx interrupts are conveyed to the Root Complex through the Assert_INTx and
+> +Deassert_INTx messages and are then reported as system interrupts. The driver
+> +typically creates an IRQ domain for the four interrupts (INTA to INTD) and
+> +demultiplexes an incoming interrupt to the corresponding virtual IRQ.
+> +
+> +An MSI/MSI-X is signaled by the downstream device as a Memory Write to a Root
+> +Complex specific address. There are two ways to handle them:
+> +
+> +- If the Root Complex integrates its own MSI controller, the driver has to
+> +  create an MSI IRQ domain, program the MSI target address and demultiplex the
+> +  incoming MSIs to the corresponding virtual IRQs. MSI-X is handled through the
+> +  same domain.
+> +
+> +- If the MSIs are handled by an external interrupt controller (such as the GIC
+> +  ITS), the Root Complex Devicetree node needs to have ``msi-parent`` property
+> +  and the driver need not implement an MSI controller.
+> +
+> +
+> +Powering up the Slot/Endpoint
+> +~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+> +
+> +Power ON any slots or Endpoints connected to the bus with the help of the
+> +PWRCTRL subsystem APIs such as pci_pwrctrl_create_devices() and
+> +pci_pwrctrl_power_on_devices(). Note that this requires defining the supplies
+> +in the Root Port or Endpoint Devicetree node.
+> +
+> +Link Training
+> +~~~~~~~~~~~~~
+> +
+> +Once the resources are initialized, the driver has to initiate Link training
+> +by enabling the LTSSM (Link Training and Status State Machine) of the Root
+> +Port. If a PERST# signal is present, it should be deasserted to bring the
+> +downstream device out of fundamental reset before enabling the LTSSM.
+> +
+> +Before PERST# is deasserted, the driver must satisfy the power sequencing
+> +delays defined by the PCI Express Card Electromechanical (CEM) Specification.
+> +The power supplies must be stable for at least T_PVPERL
+> +(``PCIE_T_PVPERL_MS``, 100 ms) and the reference clock must be stable for at
+> +least T_PERST-CLK (``PCIE_T_PERST_CLK_US``, 100 us) before PERST# is
+> +deasserted.
+> +
+> +After the LTSSM is enabled, the driver should wait (with a timeout) for the
+> +LTSSM to reach the L0 state, indicating that the Link is up.
+> +
+> +Once the Link is up, the PCI Express Base Specification (Conventional Reset)
+> +requires software to wait for at least ``PCIE_RESET_CONFIG_WAIT_MS`` (100 ms)
+> +before sending the first Configuration Request to the downstream device. For a
+> +Link operating up to 5.0 GT/s, this delay is counted from the exit of the
+> +Conventional Reset (PERST# deassertion), while for a Link operating above
+> +5.0 GT/s it is counted from the completion of Link training. The driver should
+> +honor this delay before the bus is scanned.
+> +
+> +NOTE: A failure to establish the Link should NOT be treated as a probe
+> +failure, unless the Root Port is not Hotplug capable. If the Root Port is
+> +Hotplug capable, then the driver should still register the Host Bridge and scan
+> +the bus, so that the downstream device can be discovered later when the Link
+> +comes up.
+> +
+> +Register the Host Bridge
+> +~~~~~~~~~~~~~~~~~~~~~~~~
+> +
+> +Finally, allocate the Host Bridge device with devm_pci_alloc_host_bridge(),
+> +assign the Configuration Space accessors (struct pci_ops) to it, and start the
+> +bus scan by calling pci_host_probe(). This is the last step of the probe().
+> +pci_host_probe() creates the Root bus for the Host Bridge and scans/enumerates
+> +all the Root Port, RCiEP and Endpoint devices connected to the bus.
+> +
+> +If the Root Complex IP is from a known IP vendor, the IP specific helpers
+> +should be reused for the above operations wherever applicable.
+> +
+> +Power Management
+> +----------------
+> +
+> +A Host Controller driver participates in both runtime and system-wide power
+> +management. In both cases, the driver is responsible for the power state of the
+> +Root Complex hardware, while the PCI core manages the power state of the
+> +enumerated devices.
+> +
+> +Runtime PM
+> +~~~~~~~~~~
+> +
+> +Runtime PM allows the Root Complex hardware to be powered down when it is idle.
+> +The driver typically enables runtime PM with pm_runtime_enable() and takes a
+> +reference with pm_runtime_get_sync() during probe(), so that the controller
+> +stays powered while it is in use. The reference is dropped in remove().
+> +
+> +If the Root Complex can be powered down when idle, the driver implements the
+> +runtime_suspend and runtime_resume callbacks to disable and enable the
+> +controller resources such as the clocks, PHY and power domain. These callbacks
+> +should manage only the controller resources and must not touch the state of the
+> +enumerated devices, which is handled by the PCI core.
+> +
+> +System PM
+> +~~~~~~~~~
+> +
+> +During system suspend and resume, the driver has to save and restore the state
+> +of the Root Complex and put the Link into a low power state.
+> +
+> +These operations are performed in the _noirq() PM callbacks (for example, using
+> +NOIRQ_SYSTEM_SLEEP_PM_OPS()), because the controller resources such as the
+> +clocks and PHY are shared by all the child devices. Suspending them earlier
+> +would break the child devices whose own suspend callbacks may still access
+> +their Configuration Space.
+> +
+> +In the suspend callback, the driver should:
+> +
+> +- Broadcast a PME_Turn_Off message and wait for the PME_TO_Ack, so that the
+> +  Link can transition to the L2/L3 state.
+> +- Stop the LTSSM and disable the controller resources such as the clocks, PHY
+> +  and power domain.
+> +- Save any controller state that is not retained across the low power state.
+> +- Power off the downstream devices using pci_pwrctrl_power_off_devices().
+> +
+> +In the resume callback, the driver should reverse the above by enabling the
+> +controller resources, restoring the saved state, re-initializing the Root
+> +Complex and re-establishing the Link as done during probe().
+> +
+> +NOTE: If the Link is in the ASPM L1 (or L1 substates) state, some drivers keep
+> +the Link in L1 across suspend for a faster resume, instead of transitioning it
+> +to L2/L3. This is a driver policy decision based on the platform and the
+> +devices connected.
+> +
+> +Shutdown
+> +--------
+> +
+> +The shutdown() callback is invoked during system reboot or when transitioning
+> +to a new kernel through kexec. Its purpose is to quiesce the Root Complex so
+> +that the downstream devices cannot corrupt the memory or interrupt the new
+> +kernel.
+> +
+> +The driver should:
+> +
+> +- Disable the interrupts (INTx and MSI) reported by the Root Complex, so that
+> +  no spurious interrupt is delivered to the new kernel.
+> +- Broadcast a PME_Turn_Off message and stop the LTSSM to bring the Link down,
+> +  so that any in-flight DMA from the downstream devices is stopped before the
+> +  reset.
+> +- Power down the controller resources.
+> +
+> +Unlike remove(), shutdown() does not need to tear down the software state such
+> +as the Root bus, since the system is going down anyway.
+> +
+> +NOTE: shutdown() is optional. It is mainly required on platforms where the
+> +downstream devices could perform DMA or raise interrupts during the transition
+> +to reboot or kexec.
+> +
+> +Remove
+> +------
+> +
+> +remove() is called when the driver is detached and it should undo everything
+> +done in probe(), in the reverse order.
+> +
+> +The first step is to remove the enumerated devices and the Root bus, by calling
+> +pci_stop_root_bus() followed by pci_remove_root_bus(), under the
+> +pci_lock_rescan_remove() lock. This detaches all the child devices before the
+> +controller resources are released.
+> +
+> +After the bus is removed, the driver should:
+> +
+> +- Disable the interrupts reported by the Root Complex.
+> +- Stop the LTSSM to bring the Link down.
+> +- Power down the PHY and disable the clocks, regulators and resets.
+> +- Drop the runtime PM reference with pm_runtime_put_sync() and disable runtime
+> +  PM with pm_runtime_disable().
+> +
+> +Resources allocated through the devm_*() APIs are released automatically after
+> +remove() returns and need not be freed explicitly.
+> +
+> +NOTE: A Host Controller driver is encouraged to be built as a loadable module,
+> +but it should not be removed at runtime if it implements its own IRQ domains
+> +such as MSI or INTx controllers. The IRQ mappings created for such domains can
+> +persist even after the interrupts are released and cannot be disposed of
+> +safely, so tearing down the IRQ domains on removal is fragile. Such drivers
+> +should therefore prevent their removal. See the following thread for more
+> +details:
+> +https://lore.kernel.org/linux-pci/87k085xekg.wl-maz@kernel.org/
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index 55af015174a5..6c915dff6c0a 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -20395,6 +20395,7 @@ B:	https://bugzilla.kernel.org
+>  C:	irc://irc.oftc.net/linux-pci
+>  T:	git git://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git
+>  F:	Documentation/ABI/testing/debugfs-pcie-ptm
+> +F:	Documentation/PCI/controller/
+>  F:	Documentation/devicetree/bindings/pci/
+>  F:	drivers/pci/controller/
+>  F:	drivers/pci/pci-bridge-emul.c
 > 
-> Is it possible for all PCI changes to be reverted back to how they were
-> in v7.1 before the next release?
-
-It's *possible*, but it's tight and it would be a lot to revert.  I
-think all these have been added since v7.1:
-
-  aad953fb4eed ("PCI: imx6: Fix IMX6SX_GPR12_PCIE_TEST_POWERDOWN handling")
-  610fa91d9863 ("PCI: imx6: Assert PERST# before enabling regulators")
-  250eea5c06f5 ("PCI: imx6: Parse 'reset-gpios' in Root Port nodes")
-  0c26b1c34d12 ("PCI: imx6: Configure REF_USE_PAD before PHY reset for i.MX95")
-  9dda3f83ba67 ("PCI: imx6: Assert ref_clk_en after reference clock stabilizes on i.MX95")
-  85c1fcfa740d ("PCI: imx6: Integrate new pwrctrl API")
-  d4b52f83f198 ("of: Add convenience wrappers for of_map_id()")
-  f71f07bee9b5 ("of: Factor arguments passed to of_map_id() into a struct")
-  3567bcf0e985 ("PCI: host-generic: Move legacy DT binding fallback decision to caller of pci_host_common_parse_ports()")
-  2c5768344f88 ("PCI: imx6: Move pci_pwrctrl_create_devices() to imx_pcie_probe()")
-  f26b1c697a2b ("PCI: imx6: Add 'skip_pwrctrl_off' flag support")
-  c2b9620359b7 ("PCI: imx6: Add runtime PM support for i.MX95")
-  7678e81498e2 ("PCI: imx6: Fix i.MX6Q/DL boot hang caused by improper PHY power sequencing")
-
-I'm hoping Richard and Sherry can resolve this issue.  I guess maybe
-the config details needed to reproduce it are in
-https://lore.kernel.org/all/20260811063752.GA7332@francesco-nb ?
-
-> [1] 7678e81498e2 ("PCI: imx6: Fix i.MX6Q/DL boot hang caused by improper PHY power sequencing")
-> Link: https://lore.kernel.org/all/20260629143439.361560-1-leoreis.costa@gmail.com/
+> ---
+> base-commit: 6de23f81a5e08be8fbf5e8d7e9febc72a5b5f27f
+> change-id: 20260803-pci-doc-acd5f2e9f640
+> 
+> Best regards,
+> --  
+> மணிவண்ணன் சதாசிவம்
+> 
+> 
