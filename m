@@ -1,34 +1,34 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C4F1400DE9;
-	Tue, 11 Aug 2026 06:41:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2756B40B0FF;
+	Tue, 11 Aug 2026 06:41:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786430468; cv=none; b=KDx+c2d4zZG0uTs1aj7dI3LrOqr3pIXZ5QEFt8uttm1Noxe1Ep9ErGXB8oJwfz5GfKbgeI4viBIwwAUa4qqUgQorZgl6jKuWaucXr/5G/A8KS0eCxkBC9pJBn5Xwu3xGHTfWUYTCvcQyfAcLchplLiBrUxQwFksLS34vx35+QPA=
+	t=1786430468; cv=none; b=AQetlsa+s6h1z2dIrntqeBrx9yC4OB/LvINlgOxpR73QMIe5mbYMopbegqOR4R7R94rAiXFqJ64esNyXuQWeLd4iSDo2353ojkvvZaSSR7hlRSpIYBDWwI/ogGa6Ek7L4s4vdSqiYgHz5Lw0l+rC4JJnNSLWWNJjPV1ZsIxIAvM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1786430468; c=relaxed/simple;
-	bh=F2CI+FBdyNzgpm/+lalqrgOCl4op0DIet6QiBNuXJNI=;
+	bh=zEzC1bDm4qRA6ByKIEshYxS19LhaxWKaqPARicYVbSg=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=hHXT2YH/tslbrawmUjyE6xpuzheThRs5n5G78TeaJmVsS/C9t33mPtt3GQJsAbkVGaNIAA984/2E6aEoIVrwTu9Yx63c7ZmafCca5+cHEdC6gCzfuvLRAUKLJYa7/rrzi5R3eNnM+nspVIHWO+8rQMdxJCVUuxtxr2oEB7CqPIo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=ufE6cNt8; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:To:Cc; b=k88C4J7kmyvZNHYyh04U8vClG1V2frcwy0sqHn3zDxPmkiKiyDGF4gCWtvWAb/MqzirlEaFFYpoCxhvbL064gwVG8MyuJ6fJAHRRw2I6MfGaePBIUK/wkI/h4LM96RCn17K9DaipiQt3w5EwiLSnSJ+K0/Mjm7uC3E52d9yDN6A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=gVnrPEdQ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="ufE6cNt8"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 55300C2BD01;
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="gVnrPEdQ"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 8CA27C2BCFB;
 	Tue, 11 Aug 2026 06:41:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linux.dev; s=korg;
-	t=1786430466; bh=F2CI+FBdyNzgpm/+lalqrgOCl4op0DIet6QiBNuXJNI=;
+	t=1786430466; bh=zEzC1bDm4qRA6ByKIEshYxS19LhaxWKaqPARicYVbSg=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=ufE6cNt8jyTWXj0/mNEc4dX0t4TBjYEveM2h84ST9bNNuA2+nc+dih6QfJ+RXBL/c
-	 rCuvvC1ThTHO2rKfqpLiwt+BywYUPBTx21Yn7maCAC3Os7OBa+NsdeJjyxX7Riotjt
-	 AxOqxrKLjfvsf1muvwnoxSk3n5CZk2/De8Q7f+po=
+	b=gVnrPEdQyYQrhY0CGZgW9mqhSovyj0KXiXIkzCwjd8sZL6dnbOx4Qt9e+wbfmZ4ck
+	 GoOuW+qMngYtkZ3LGsKH3eoemVxWp5u5uTu0wejFg5X91LisNDXCfzagmjCuutvUQh
+	 RXON1VjUvXChdcDxP5WTnym5S7OIxQtS8edlyhD8=
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 405E5C5B575;
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 74074C5B573;
 	Tue, 11 Aug 2026 06:41:06 +0000 (UTC)
 From: Alvin Sun <alvin.sun@linux.dev>
-Date: Tue, 11 Aug 2026 14:39:48 +0800
-Subject: [PATCH v10 06/10] rust: miscdevice: set fops.owner from driver
- module pointer
+Date: Tue, 11 Aug 2026 14:39:51 +0800
+Subject: [PATCH v10 09/10] rust: macros: remove `THIS_MODULE` static from
+ `module!`
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -37,7 +37,7 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260811-fix-fops-owner-v10-6-7e71776f9dbe@linux.dev>
+Message-Id: <20260811-fix-fops-owner-v10-9-7e71776f9dbe@linux.dev>
 References: <20260811-fix-fops-owner-v10-0-7e71776f9dbe@linux.dev>
 In-Reply-To: <20260811-fix-fops-owner-v10-0-7e71776f9dbe@linux.dev>
 To: Miguel Ojeda <ojeda@kernel.org>, Boqun Feng <boqun@kernel.org>, 
@@ -70,58 +70,60 @@ Cc: rust-for-linux@vger.kernel.org, linux-modules@vger.kernel.org,
  linux-kernel@vger.kernel.org, netdev@vger.kernel.org, 
  linux-pci@vger.kernel.org, Alvin Sun <alvin.sun@linux.dev>
 X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1786430463; l=1259;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1786430463; l=1900;
  i=alvin.sun@linux.dev; s=20260317; h=from:subject:message-id;
- bh=F2CI+FBdyNzgpm/+lalqrgOCl4op0DIet6QiBNuXJNI=;
- b=EJ3bMKafIBn0BzL/3jyQvOv2GiyZE2Njy0dBDaRcyZM4AO0JV7ER9G1TyS7H86j2XJlNkOGSK
- bAdKReXiJpYDqauJju9Kb5cBEWogL3s343zXeLqnY1fst0Qphr1aMSg
+ bh=zEzC1bDm4qRA6ByKIEshYxS19LhaxWKaqPARicYVbSg=;
+ b=1SXXwL7/69fdog+H6q3ZRl9P8x/rjYjfRmiehW4bWBKNYp4nPWk+Je87t4b4KfsnjyrypfK/1
+ Lxu1/mVohceBQLDHbZR5t5DJznfUigOJPExFIKwJMlSTyvnqql21+v2
 X-Developer-Key: i=alvin.sun@linux.dev; a=ed25519;
  pk=CHcwQp8GSoj25V/L1ZWNSQjWp9eSIb0s9LKr0Nm3WuE=
 X-Endpoint-Received: by B4 Relay for alvin.sun@linux.dev/20260317 with
  auth_id=684
 
-Set the miscdevice fops owner field from the driver module pointer
-via the `this_module::<T::OwnerModule>()` helper, instead of
-defaulting to null.
+All users have been migrated to `ModuleMetadata::THIS_MODULE` const or
+`this_module::<LocalModule>()` helper. The `static THIS_MODULE`
+generated by the `module!` macro is no longer referenced anywhere,
+so remove it to avoid having two sources of the same `ThisModule`
+pointer.
 
 Assisted-by: opencode:glm-5.2
 Reviewed-by: Andreas Hindborg <a.hindborg@kernel.org>
 Reviewed-by: Gary Guo <gary@garyguo.net>
 Acked-by: Danilo Krummrich <dakr@kernel.org>
-Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 Reviewed-by: Alice Ryhl <aliceryhl@google.com>
+Acked-by: Petr Pavlu <petr.pavlu@suse.com>
 Signed-off-by: Alvin Sun <alvin.sun@linux.dev>
 ---
- rust/kernel/miscdevice.rs | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ rust/macros/module.rs | 16 ----------------
+ 1 file changed, 16 deletions(-)
 
-diff --git a/rust/kernel/miscdevice.rs b/rust/kernel/miscdevice.rs
-index 83ce50def5ac9..2a4329f98614e 100644
---- a/rust/kernel/miscdevice.rs
-+++ b/rust/kernel/miscdevice.rs
-@@ -24,12 +24,13 @@
-         IovIterSource, //
-     },
-     mm::virt::VmaNew,
-+    module::this_module,
-     prelude::*,
-     seq_file::SeqFile,
-     types::{
-         ForeignOwnable,
-         Opaque, //
--    },
-+    }, //
- };
- use core::marker::PhantomData;
+diff --git a/rust/macros/module.rs b/rust/macros/module.rs
+index aa9a618d5d19e..23b6a1b456b80 100644
+--- a/rust/macros/module.rs
++++ b/rust/macros/module.rs
+@@ -497,22 +497,6 @@ pub(crate) fn module(info: ModuleInfo) -> Result<TokenStream> {
+         /// Used by the printing macros, e.g. [`info!`].
+         const __LOG_PREFIX: &[u8] = #name_cstr.to_bytes_with_nul();
  
-@@ -430,6 +431,7 @@ impl<T: MiscDevice> MiscdeviceVTable<T> {
-         } else {
-             None
-         },
-+        owner: this_module::<T::OwnerModule>().as_ptr(),
-         ..pin_init::zeroed()
-     };
- 
+-        // SAFETY: `__this_module` is constructed by the kernel at load time and will not be
+-        // freed until the module is unloaded.
+-        #[cfg(MODULE)]
+-        static THIS_MODULE: ::kernel::ThisModule = unsafe {
+-            extern "C" {
+-                static __this_module: ::kernel::types::Opaque<::kernel::bindings::module>;
+-            };
+-
+-            ::kernel::ThisModule::from_ptr(__this_module.get())
+-        };
+-
+-        #[cfg(not(MODULE))]
+-        static THIS_MODULE: ::kernel::ThisModule = unsafe {
+-            ::kernel::ThisModule::from_ptr(::core::ptr::null_mut())
+-        };
+-
+         /// The `LocalModule` type is the type of the module created by `module!`,
+         /// `module_pci_driver!`, `module_platform_driver!`, etc.
+         type LocalModule = #type_;
 
 -- 
 2.43.0
