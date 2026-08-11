@@ -1,106 +1,103 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 427BC353A7E;
-	Tue, 11 Aug 2026 21:31:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D2B0930566B;
+	Tue, 11 Aug 2026 21:49:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786483873; cv=none; b=tJ2ir9dkIQOXE+Xk8GvJzTV1CPDLnE0E2A5MyP/Ghg9UIsCUz+oShOu0vsiWlZaXJQjs6QLgRDDgwvw0RtV+FpO7lMgD8vrpwGv9iMzXqEnQF50bl8vP8OmO9/RWdWXaEGT376IyKh5h9RUIVrDA85u7hDXgA+jfVpSK+3be04E=
+	t=1786484943; cv=none; b=QhrGwYG7pR28rE6GekzHCCSkmgZ2iIkfOtwxNzx9TVoSbp/s2TdouhvzELX/loGGT1FYICUHrAAoSwVsq3AlLu29l+OQMOKa1Ev0Jv+Sk8k0ZY8UP24YxpxMmVR2gH4jMs4yjQP8JLRHuKFeLsf3gBzLs6rQf+6+HYBbrdQBi3o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786483873; c=relaxed/simple;
-	bh=mgqN/AWASF09/wUke41fqUY2l81S38h13Mw2AwFq3Hk=;
+	s=arc-20240116; t=1786484943; c=relaxed/simple;
+	bh=uKQMt6+SE2ZF5aqnMiLFGwt0Tm8Sg7up0mLVgeB2w5c=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=kNzs6KvIV+oE8PGxr1MhF6HU+w4lL+sC5fADjOZxFj94cmrQ6y5nDRXW2X4TmXYDo0kYUaUFG9Rt0kaBw8kLQXR4NDOI/YCba0sZHmocOECqd3I8Hj6NjaOKuilqwEsy9liXPga7+PMgw+SVDIR0jqrWJAr5K9Ri6xcJ87Ka7DY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZhAAIE3J; arc=none smtp.client-ip=100.103.45.18
+	 Content-Disposition:In-Reply-To; b=b5UlQbBw5I21k7FRGD1OJxHB4EpPqg1MaAyGcO/G3Bx6M0f58q+ZquohZoJ2ujeq2rMYqknXy1Yct2c6XHXoAMasMhuwXYtk+WNFNHLcTX+I1W45Q4zQeiAIAJOoFY7XqxxhHkI7gRaX+RSU8cum8eFvlFCBqsPqxt966DaBl20=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lwEC3WWH; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZhAAIE3J"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B000B1F000E9;
-	Tue, 11 Aug 2026 21:31:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lwEC3WWH"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 209A71F000E9;
+	Tue, 11 Aug 2026 21:49:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786483868;
-	bh=fgomf3OxQMJ0XaTGNcMUjOJnKZRCWXcp1zfIgodCWmA=;
+	s=k20260515; t=1786484942;
+	bh=B0X6XgAAAhF113rxevrEnj0y6G30X+VD38KOAafz1OM=;
 	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=ZhAAIE3Jknf1hk9S3z35dbF1EOgKcBtaaKAHFVrHF6GLMCgx1oasWLw+KsGly5v8G
-	 eOwOAML1pl7Xkp2Q1WuhOZEk0p/5o05jjD9FqzIB+RgMuMhQdKnZy4xOWWOc1Txn9p
-	 7zVYsYFozGgz3gVPf3PEGtP+gLWtZHkyrA589N838btuVxPfPTiIgTJftJzl/kELDJ
-	 8x23aMvwaNhmkP5cRhuFlGh1bJwyDabvASuPVTx1SbNqQFFAoR1D0Sn3oi1l38UscL
-	 NzSOvIyxIHvMwaeIL1Mq3nWGXaUesVwBHpneC1qF1fi48MSvzV6qyHZQsszwqwgZkk
-	 IGE5SWgxAH+DA==
-Date: Tue, 11 Aug 2026 16:31:07 -0500
+	b=lwEC3WWHEQGp0yk5pVCvSu2dvNiQss7sYpsE3idAKf0KzdjtaDZWhYvKYqw8nLF0P
+	 QEyD6V6EofaEHC/iNXhyKxA7T3YVu5pjcc1WUX311W3d8AW75Mtjhg11vL0CX2mTUj
+	 ngGaB9jWe3sL2m9mCs0xf1ch80+mYKMfLs5e1p0/kK7QjM6cYeFCLqaQKmVtwLmObv
+	 l84skZmivfPK0UZYK1DtX75+sygQ9UWLjG6muqhNuO72EvwUWdg8snaGtm4TjliBfA
+	 WVZpNLFnn4v8qmYKu1B/FINCQqE7giW3hsPjL+R4zxMai/rMe5Tmb3aq0nJJ0gOC83
+	 z1FXacHYaWRAw==
+Date: Tue, 11 Aug 2026 16:49:00 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Max Stevens <thinker.healer@gmail.com>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com, nathan@nathanrossi.com,
-	nicolas.cavallari@green-communications.fr,
-	linux-usb@vger.kernel.org, Tim Harvey <tharvey@gateworks.com>
-Subject: Re: Pericom PI7C9X2G608 =?utf-8?B?KDEyZDg6?=
- =?utf-8?Q?2608=29_missing_from_ACS_quirk_?= =?utf-8?B?4oCU?= breaks Renesas
- uPD720202 USB3 cards when IOMMU is on
-Message-ID: <20260811213107.GA758429@bhelgaas>
+To: Leonardo Costa <leoreis.costa@gmail.com>
+Cc: hongxing.zhu@nxp.com, l.stach@pengutronix.de, lpieralisi@kernel.org,
+	kwilczynski@kernel.org, mani@kernel.org, robh@kernel.org,
+	bhelgaas@google.com, Frank.Li@nxp.com, s.hauer@pengutronix.de,
+	kernel@pengutronix.de, festevam@gmail.com,
+	regressions@lists.linux.dev, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, imx@lists.linux.dev,
+	linux-kernel@vger.kernel.org, leonardo.costa@toradex.com,
+	francesco@dolcini.it, Sherry Sun <sherry.sun@nxp.com>
+Subject: Re: [REGRESSION] mainline/master: PCI link creation fails on Apalis
+ iMX6
+Message-ID: <20260811214900.GA763236@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260811212835.GA711008@bhelgaas>
+In-Reply-To: <bl7i3obu2clzsgeoct2a4mtfhv6typcjdqmgneropf3hpgwve6@n2m5uhlduw57>
 
-[+cc Tim]
+[+cc Sherry]
 
-On Tue, Aug 11, 2026 at 04:28:37PM -0500, Bjorn Helgaas wrote:
-> On Tue, Aug 11, 2026 at 05:57:33AM -0500, Max Stevens wrote:
-> > Hi Bjorn,
-> > 
-> > Thanks for the quick patch. I tested its effect on my PI7C9X2G608GP
-> > (12d8:2608) by replicating what pci_fixup_pericom_acs_store_forward()
-> > does, using setpci at runtime (I have not built a patched kernel —
-> > happy to do that too if you want a test of the actual binary).
-> > 
-> > Findings on the 2G608:
-> > 
-> > The mode register exists at the same offset as on the smaller
-> > switches: upstream port config 0x74. Value on my system before any
-> > test: 0x0102 (store-forward bit clear).
-> > With ACS on all four downstream ports set to what the kernel normally
-> > enables here (ACSCtl = SrcValid+ ReqRedir+ CmpltRedir+ UpstreamFwd+),
-> > and 0x74 bit 0 CLEAR, device enumeration on the downstream xHCI
-> > controllers fails: [43069.603242] xhci-pci-renesas 0000:0c:00.0: Error
-> > while assigning device slot ID: Command Aborted [43069.603270] usb
-> > usb9-port1: couldn't allocate usb_device
-> > Setting 0x74 to 0x0103 (bit 0, store-forward) with ACS unchanged, then
-> > rebinding the xHCI drivers: the same device on the same port
-> > enumerates immediately and works fully: [43071.971147] usb 9-1: new
-> > full-speed USB device number 2 using xhci-pci-renesas [43072.132176]
-> > usb 9-1: Product: Azeron Keypad [43072.218656] hid-generic
-> > 0003:16D0:113C.0017: input,hidraw12: USB HID v1.11 Keyboard [Azeron
-> > LTD Azeron Keypad] on usb-0000:0c:00.0-1/input1
-> > I toggled the bit back and forth across several driver rebinds. Every
-> > "Command Aborted" failure I have logged (both today and across earlier
-> > debugging) occurred with the bit clear; none with it set.
-> > 
-> > One honest nuance: with the bit clear the failure is not 100% — I saw
-> > one enumeration attempt start successfully during a bit-clear window.
-> > That intermittency is consistent with the load-dependent packet
-> > buffering behaviour described in Nathan's original erratum writeup,
-> > and with this card family's long history of "sometimes almost works"
-> > reports on various forums.
+On Mon, Aug 10, 2026 at 02:54:45PM -0300, Leonardo Costa wrote:
+> Hello,
 > 
-> If it's an improvement, I think it's worth applying even if it's not a
-> 100% fix.
+> We are seeing a regression on Apalis iMX6 where connected PCI device
+> links fail to come up at initialization, as shown below. The issue is
+> not on the devices' physical connection, as they worked properly on v7.1
+> and are working on other stable kernel versions.
 > 
-> > So on this hardware the store-forward workaround behaves exactly as it
-> > does on the already-quirked siblings, and the patch looks correct to
-> > me.
-> > 
-> > Tested-by: Maximo Paulino Thinker.Healer@gmail.com
+>     [    0.154243] imx6q-pcie 1ffc000.pcie: host bridge /soc/pcie@1ffc000 ranges:
+>     [    0.154400] imx6q-pcie 1ffc000.pcie:       IO 0x0001f80000..0x0001f8ffff -> 0x0000000000
+>     [    0.154439] imx6q-pcie 1ffc000.pcie:      MEM 0x0001000000..0x0001efffff -> 0x0001000000
+>     [    0.154553] imx6q-pcie 1ffc000.pcie: config reg[1] 0x01f00000 == cpu 0x01f00000
+>     [    0.356072] imx6q-pcie 1ffc000.pcie: iATU: unroll F, 4 ob, 4 ib, align 64K, limit 4G
+>     [    0.356181] imx6q-pcie 1ffc000.pcie: Link: Only Gen1 is enabled
+>     [    1.364757] imx6q-pcie 1ffc000.pcie: Link failed to come up. LTSSM: POLL_CONFIG
+>     [    1.365056] imx6q-pcie 1ffc000.pcie: probe with driver imx6q-pcie failed with error -110
 > 
-> Thanks for doing this.  I'll queue up the patch below for v7.3 without
-> your explicit tested-by because quirks run at different times than
-> setpci, and the timing/ordering is often important.
+> Complete logs: https://paste.debian.net/hidden/f08cdf68
+> 
+> This may have been caused by commit [1], which was introduced to solve
+> an issue where the Apalis iMX6 module wasn't booting, and this second
+> regression went unnoticed since then.
+> 
+> Is it possible for all PCI changes to be reverted back to how they were
+> in v7.1 before the next release?
 
-Actually, I take that back because the same patch is already queued up
-from Tim Harvey:
+It's *possible*, but it's tight and it would be a lot to revert.  I
+think all these have been added since v7.1:
 
-  https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git/commit/?h=virtualization&id=062fb7f816439da6bf3860386889343482a66bd4
+  aad953fb4eed ("PCI: imx6: Fix IMX6SX_GPR12_PCIE_TEST_POWERDOWN handling")
+  610fa91d9863 ("PCI: imx6: Assert PERST# before enabling regulators")
+  250eea5c06f5 ("PCI: imx6: Parse 'reset-gpios' in Root Port nodes")
+  0c26b1c34d12 ("PCI: imx6: Configure REF_USE_PAD before PHY reset for i.MX95")
+  9dda3f83ba67 ("PCI: imx6: Assert ref_clk_en after reference clock stabilizes on i.MX95")
+  85c1fcfa740d ("PCI: imx6: Integrate new pwrctrl API")
+  d4b52f83f198 ("of: Add convenience wrappers for of_map_id()")
+  f71f07bee9b5 ("of: Factor arguments passed to of_map_id() into a struct")
+  3567bcf0e985 ("PCI: host-generic: Move legacy DT binding fallback decision to caller of pci_host_common_parse_ports()")
+  2c5768344f88 ("PCI: imx6: Move pci_pwrctrl_create_devices() to imx_pcie_probe()")
+  f26b1c697a2b ("PCI: imx6: Add 'skip_pwrctrl_off' flag support")
+  c2b9620359b7 ("PCI: imx6: Add runtime PM support for i.MX95")
+  7678e81498e2 ("PCI: imx6: Fix i.MX6Q/DL boot hang caused by improper PHY power sequencing")
+
+I'm hoping Richard and Sherry can resolve this issue.  I guess maybe
+the config details needed to reproduce it are in
+https://lore.kernel.org/all/20260811063752.GA7332@francesco-nb ?
+
+> [1] 7678e81498e2 ("PCI: imx6: Fix i.MX6Q/DL boot hang caused by improper PHY power sequencing")
+> Link: https://lore.kernel.org/all/20260629143439.361560-1-leoreis.costa@gmail.com/
