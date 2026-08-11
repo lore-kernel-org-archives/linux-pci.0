@@ -1,73 +1,132 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8BAE9379C34
-	for <linux-pci@vger.kernel.org>; Tue, 11 Aug 2026 20:07:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 54606339362
+	for <linux-pci@vger.kernel.org>; Tue, 11 Aug 2026 20:12:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786478859; cv=none; b=c8gXhIVjPz0a7/bx4K3ykA04V0l75IqzVx83Wedc1zR2LwmxCesBgS1g2vDHN84mz4JOWod0vZkPk5ga2F+Ito7fKL7cUjQJvReZeC7H/w7ZJR4PuBfVOdeu5qohAy9Boxga8V0gEsFDH3Fje6j6B5duClY4aSzPOVWoRbnaEPc=
+	t=1786479167; cv=none; b=Qt4hZK3FX9go/gRTnosNiT4FiIYDO1BuivPy6UXSzM/cHA89BFlCblPpRq1bd3+bN0NJspbgxqVhKT7vZ1MNNRAW8Ff8BdsUw9sUm3Kb1y1v0YH4HNUMbxG+aKkr72YfB7aX1cz3J3KPI92RPNyo+YbxshlyepyMBxMXerjD+wI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786478859; c=relaxed/simple;
-	bh=ebQ7rx5B8yA/1NWkSdnxm9VOTtNBCQXWX+7Aq76fS6Q=;
+	s=arc-20240116; t=1786479167; c=relaxed/simple;
+	bh=rwVHIQ+2FuCbuGk8btw8Ewl3RzEb4gDLY1l79QK+twY=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=ci/XvoodrTbpoy4+GckYxe/Q7my+MULu28AVMODPB/SYTI7MV2dOP97yvgwXTr/E110Qy18zfjuIiIQQoiHPJ8DTRBmFs+D43+cYCGDFjeUh/8KkjiFmGTM+Jj7Q1RiLCOceskxRhchAmFRFBV394ABS8FbtFaxFJ8cY0wZk7sc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WucDD096; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=YAe6zCu6eXa1IORd1kSu0zN88hN57k1aRHbAKSZBZP+U/Q5rRIHajvuW76eCzZdTVrhtXvuBTLs8f7QLYaqHUrtpsd+DDanSBAPzmYTqk6QFW6TjsNwnbdluO0n5poYD0iPYI/z/nsyDz0E/nmTLkOrCV6KT5wSlUL5n8a4AvfU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eXm72QMo; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WucDD096"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E05781F000E9;
-	Tue, 11 Aug 2026 20:07:37 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eXm72QMo"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 028D01F000E9;
+	Tue, 11 Aug 2026 20:12:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786478858;
-	bh=ebQ7rx5B8yA/1NWkSdnxm9VOTtNBCQXWX+7Aq76fS6Q=;
+	s=k20260515; t=1786479166;
+	bh=vk+m3b0R7i+yaqkRp4N8wnVlPnXlnOkHFnOIA/8UAJU=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=WucDD096S9sOH1wHS//qsum6uvt840jtjzzoTICoQxh3Qk7bCOUepfVDH65V1pP4G
-	 uYIIGstiYVuM5vRHzp4Dyapmw54RW+5V/I8uh3G1p1N+Zixo0qLot29eeBlL2NBY4O
-	 jL9Ktqsa6oTGMQy0g1UPVSoYzw4j7qXVS7RP9cG+N1eMQkWczfPyprnBxNWX7tQm7f
-	 IFHuFJ5OVzNg/z8ATZLX3hJ7w6I/Mm0JST6Jq1Kn/rWh5+xjSa6bKHskUrNVzjED1/
-	 9v9dc2FHemBacAyznKhee0q1QUiYYza6My2aUWfr4TWxgwtrXmI1/Echy3yNLYqvRf
-	 K08z7JOLzVYfA==
+	b=eXm72QModdwsmknWH6FvBhG/h3eM7SaaD6OHlLfGLdXQQvMJi5SS4fOUc/nAgpxuD
+	 p585bEAK+4tSqX+4bQxspPedfslnxoXGTV/Vb1APbdRF3rxMFBG0bCZ/0orvj+4trJ
+	 y59NvmPRGV2UfRXbnxzffkPQEM/nK0ZG/3y+Bl5SZNY655FhbB+FJJ+SDa0ehjenTK
+	 3wZGy7SqpsnR/f1s3c0Tiv3CuhGwmrPigsQ5DMOdkuMSGYxO3JpudESIdd4suWGpQ9
+	 D6LAzIbMm9raOg/Xly54LIefNcMcR9/KKpOI6iabT5QPH3yYhl8G3DMuRder2hNOvb
+	 Bv2u1TD1Ki8aA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 3/3] PCI: rzg3s: Fix IRQ domain initialization error
- handling
+Subject: Re: [PATCH v3 2/3] PCI: rzg3s: Propagate platform_get_irq_byname()
+ errors
 Reply-To: sashiko-reviews@lists.linux.dev
 To: Prabhakar <prabhakar.csengg@gmail.com>
-Cc: linux-pci@vger.kernel.org, wsa+renesas@sang-engineering.com
-In-Reply-To: <20260811200013.185956-4-prabhakar.mahadev-lad.rj@bp.renesas.com>
+Cc: wsa+renesas@sang-engineering.com, linux-pci@vger.kernel.org
+In-Reply-To: <20260811200013.185956-3-prabhakar.mahadev-lad.rj@bp.renesas.com>
 References: <20260811200013.185956-1-prabhakar.mahadev-lad.rj@bp.renesas.com>
- <20260811200013.185956-4-prabhakar.mahadev-lad.rj@bp.renesas.com>
+ <20260811200013.185956-3-prabhakar.mahadev-lad.rj@bp.renesas.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 11 Aug 2026 20:07:37 +0000
-Message-Id: <20260811200737.E05781F000E9@smtp.kernel.org>
+Date: Tue, 11 Aug 2026 20:12:45 +0000
+Message-Id: <20260811201246.028D01F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-> From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
->=20
-> rzg3s_pcie_init_irqdomain() installs chained handlers for the INTx
-> parent interrupts before creating the INTx irqdomain and initializing
-> MSI support.
->=20
-> If any subsequent step fails, such as obtaining an INTx IRQ,
-> creating the irqdomain, or initializing MSI, the error path returns
-> without removing any chained handlers that were already installed.
-> This leaves stale handler and data pointers attached to the parent
-> interrupts.
->=20
-> Add a helper to tear down the INTx IRQ setup, including removing the IRQ
-> domain and clearing the chained handlers. Use it to unwind partially
-> completed initialization and from the normal IRQ domain teardown path.
->=20
-> Fixes: 7ef502fb35b28 ("PCI: Add Renesas RZ/G3S host controller driver")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
 
-Sashiko has reviewed this patch and found no issues. It looks great!
+Pre-existing issues:
+- [High] Missing cleanup of chained IRQ handlers triggers a Use-After-Free =
+panic on probe failure.
+- [High] Logic error due to false assumption of contiguous virtual IRQ numb=
+ers leads to unhandled INTx interrupts.
+--
+
+--- Patch [2]: [PATCH v3 2/3] PCI: rzg3s: Propagate platform_get_irq_byname=
+() errors ---
+commit 398dc4c2681ec621a5ea3ee51113abc78f26854a
+Author: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+
+PCI: rzg3s: Propagate platform_get_irq_byname() errors
+
+platform_get_irq_byname() may return specific error codes such as
+-EPROBE_DEFER, but rzg3s_pcie_init_irqdomain() replaces all failures
+with -EINVAL. This commit propagates the original error code instead to
+allow probe deferral.
+
+> diff --git a/drivers/pci/controller/pcie-rzg3s-host.c b/drivers/pci/contr=
+oller/pcie-rzg3s-host.c
+> index bd6471a7fb7a1..92371310d313b 100644
+> --- a/drivers/pci/controller/pcie-rzg3s-host.c
+> +++ b/drivers/pci/controller/pcie-rzg3s-host.c
+> @@ -975,7 +975,7 @@ static int rzg3s_pcie_init_irqdomain(struct rzg3s_pci=
+e_host *host)
+> =20
+>  		irq =3D platform_get_irq_byname(pdev, irq_name);
+>  		if (irq < 0)
+> -			return dev_err_probe(dev, -EINVAL,
+> +			return dev_err_probe(dev, irq,
+
+[Severity: High]
+This is a pre-existing issue, but does this error path leave chained handle=
+rs
+registered?
+
+If rzg3s_pcie_init_irqdomain() successfully maps INTA but fails on a
+subsequent INTx setup like an INTB probe deferral, returning directly leaves
+the earlier chained handlers active. This same unhandled registration happe=
+ns=20
+if irq_domain_create_linear() fails later, or if the teardown function=20
+omits unregistering the INTx chained handlers.
+
+Since the device probe fails, the devres framework will free the host
+structure. If the unhandled chained interrupt fires later, it will
+dereference the freed host pointer, leading to a use-after-free panic:
+
+rzg3s_pcie_intx_irq_handler()
+    struct rzg3s_pcie_host *host =3D irq_desc_get_handler_data(desc);
+    // UAF on host access
+
+>  					     "Failed to parse and map INT%c IRQ\n",
+>  					     'A' + i);
+> =20
+
+[Severity: High]
+This isn't a bug introduced by this patch, but while reviewing the INTx=20
+handling in this file, I noticed a potential issue in=20
+rzg3s_pcie_intx_irq_handler().
+
+Is the calculation for the INTx index assuming contiguous virtual IRQ numbe=
+rs?
+
+drivers/pci/controller/pcie-rzg3s-host.c:rzg3s_pcie_intx_irq_handler() {
+    ...
+    u32 intx =3D irq - host->intx_irqs[0];
+    ...
+    generic_handle_domain_irq(host->intx_domain, intx);
+}
+
+If the OS allocates non-contiguous virqs (for example, due to concurrent IRQ
+allocation or ID reuse by the IDR), this calculation will yield an invalid
+out-of-bounds index or underflow.
+
+Can this cause the generic handler lookup to fail? If so, leaving the INTx
+interrupt unhandled might lead to an IRQ storm that permanently disables
+the interrupt line and breaks downstream PCIe devices.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260811200013.1859=
-56-1-prabhakar.mahadev-lad.rj@bp.renesas.com?part=3D3
-
+56-1-prabhakar.mahadev-lad.rj@bp.renesas.com?part=3D2
