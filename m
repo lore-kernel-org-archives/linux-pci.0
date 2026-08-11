@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 03428437847;
-	Tue, 11 Aug 2026 09:31:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A6E3D4399E3;
+	Tue, 11 Aug 2026 09:32:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786440720; cv=none; b=PXMreIEmAwbv9McU+JT7ALS3Ft6gXOOEcs5BYC1BPGc1FbnP6lxFLIUQfzvhJUjy0o6yLhiNqGDAE55aaDwyCOZwTUg0EQ4xiEEgv3dCB4v+ExiQlWPH0KIOSZCx3K6Jfc+RpFiMCclsJrQIsxUkUePRaNqlyCb+KVOpmeTpEy4=
+	t=1786440723; cv=none; b=DgJ50gl0BuOAfh6HYYEhrg024dyhbVuFPUlanwvtvDhEWIGLvOp6sERib7ZbnryKdPs1WNrWGgEb6Qk/6yWfY3GO2TrO/bkPf7kQ0Zj1DpbSOlPW9dpa9bYwIi9v0LELEvNdWyK8+4Zzn6nhB8DwPY32J1rPNBCuhWsV21+4Qqc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786440720; c=relaxed/simple;
-	bh=eTInsLR85gfWDKjsvkqG7KAzrkPcyAsKb8FqdKSMXPA=;
+	s=arc-20240116; t=1786440723; c=relaxed/simple;
+	bh=sDeEMTnZhYHGCJpPaFb0hBaDV1Kogv9eqZ8Om7GiYrM=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=K6oTpBnBuOSHfsGRrxoWz05REkmV/eFGa+RaQM28D91l6nM41+w+WN7Bpc3IH7ZZY5BibT204jiUBY35XEAI7FoMMeifG+DoiSDm3GY523IICk7+ACR5MrS5s2MWoT6INu4QbjesuGFVxx3yvAMrg62V5256LNzoqw36fDyOCf0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hBjyWbfm; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=ZjQj8flbxf4tfbBfi2TE0uyIaS9sC5ZH86reSQCjGXS48ZL0vRe63yfXtqkCuhVoF/drD3i+m7mylKdij9LAUlDNxMbvvpRy6Be6q4idIUDVIuo5Tg71pzYicudHdqTMAds4zaRET2ZuwSgj9j53gkWPeMK37LJe0fRzKijh4y8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=byi4owM9; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hBjyWbfm"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EB4021F000E9;
-	Tue, 11 Aug 2026 09:31:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="byi4owM9"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0AE191F000E9;
+	Tue, 11 Aug 2026 09:32:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786440718;
-	bh=1lqvi2W8LPNtWb/wvNjdUeGAFyD0nbgTZu4Qg0okxTY=;
+	s=k20260515; t=1786440721;
+	bh=D2EpG6HPdiSnlBbrmNMridF7es1dC7ICUwry8aozP2I=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=hBjyWbfmrP7U8ajJNRSTArgqifEy21v0yjeVilRNJOaKDBqGQrp7erwxfyNiV6z60
-	 Q5Wx9nr6HBXmDfI3EHAu4iM9l2POicFusC1RHnDDDpFmC341DoFjtCT6vJp6+pTctU
-	 gpMIiF+drFvyZisTTorUSLfAwuHM2E+sjlWjD8deeL1yF+NgnhbkXhrsEkOeexzVzn
-	 Vw/MqdWPtlfpMEJaFuxS6Q7lOpXX+Q4unMXe8CIqMlJmB7lzBJWzPO45AKbdOHTeR0
-	 Q915Kg9ri/EbuCSZcPFvEGqM73oqfVPmwXdS1W7N6R0I+WoY7FGePEYjGjJT6K2MAw
-	 uw9O1VHIxTZGg==
+	b=byi4owM9wyN1ThEoTwczNy5HmqXDW8QjvsruNitcmmzYzt97GxX5l3BA1mVc7hd9w
+	 Mkv0QcOtrXLK0LZBgUjG5Sf0ZMur1EwN/63BCNxZZwXSbblGLy2Ud5mRPeiAhOQzd3
+	 OQCL7zP3D2Y3CglPfeH6+3qYZ/gmJW1jElXYUWXDWsgIr/1+Lc3xlReQlWUMDoL3Fk
+	 6aYX0mPbYDNm5SdsgrkFu9+fJDmsCLPIAtTdXR0oz3IQZnjQINmZ/AqCTWy9DxmuQA
+	 SkgA7p9mlLJZD4ae0TPMxvxW4yHFQAf9lKT0favd55XGp/L9G3ZM/mTni4/j64iChv
+	 xiUYUZ3exoVsg==
 From: Leon Romanovsky <leon@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
 	Logan Gunthorpe <logang@deltatee.com>,
@@ -44,11 +44,10 @@ To: Bjorn Helgaas <bhelgaas@google.com>,
 Cc: linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	linux-doc@vger.kernel.org,
-	iommu@lists.linux.dev,
-	Matt Evans <matt@ozlabs.org>
-Subject: [PATCH v3 05/17] PCI/P2PDMA: Document the pdev->p2pdma lifetime and RCU rules
-Date: Tue, 11 Aug 2026 12:30:47 +0300
-Message-ID: <20260811-fix-p2p-acs-v3-5-efc488ee7c03@nvidia.com>
+	iommu@lists.linux.dev
+Subject: [PATCH v3 12/17] PCI/P2PDMA: Honor ACS egress control vectors
+Date: Tue, 11 Aug 2026 12:30:54 +0300
+Message-ID: <20260811-fix-p2p-acs-v3-12-efc488ee7c03@nvidia.com>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260811-fix-p2p-acs-v3-0-efc488ee7c03@nvidia.com>
 References: <20260811-fix-p2p-acs-v3-0-efc488ee7c03@nvidia.com>
@@ -64,109 +63,227 @@ Content-Transfer-Encoding: 8bit
 
 From: Leon Romanovsky <leonro@nvidia.com>
 
-pdev->p2pdma has two lifetime models. Provider-based entry points are
-quiesced by their driver before remove completes. pci_p2pmem_find_many()
-and the p2pmem sysfs attributes can race with unbind and therefore rely
-on the teardown grace period.
+An enabled Egress Control bit does not itself send a peer request
+upstream. PCIe r7.0, sec 6.12.3, table 6-11 makes the outcome depend on
+the Egress Control Vector bit for the target port: a clear bit routes the
+request directly regardless of P2P Request Redirect.
 
-Document publication, teardown, and how the grace period protects both
-the struct pci_p2pdma object and its optional gen_pool.
+Read the vector where the paths diverge below their common upstream port.
+Keep a clear vector bit on the direct path, subject to P2P Completion
+Redirect.
 
-Cc: Alex Williamson <alex@shazbot.org>
-Cc: Matt Evans <matt@ozlabs.org>
+A set bit with Request Redirect clear is an ACS Violation. ACS acts only
+on peer-to-peer Requests, so route it, and an indeterminate vector,
+through the host bridge.
+
+Fixes: 52916982af48 ("PCI/P2PDMA: Support peer-to-peer memory")
+Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
 Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
 ---
- drivers/pci/p2pdma.c | 54 +++++++++++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 53 insertions(+), 1 deletion(-)
+ drivers/pci/p2pdma.c | 114 +++++++++++++++++++++++++++++++++------------------
+ 1 file changed, 75 insertions(+), 39 deletions(-)
 
 diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
-index a77ef9deb3c6..49bc8cf06240 100644
+index 69cef8ca9557..879c92d66f5b 100644
 --- a/drivers/pci/p2pdma.c
 +++ b/drivers/pci/p2pdma.c
-@@ -21,6 +21,39 @@
- #include <linux/seq_buf.h>
- #include <linux/xarray.h>
+@@ -541,12 +541,13 @@ static struct pci_dev *find_parent_pci_dev(struct device *dev)
+ enum pci_acs_p2pdma_state {
+ 	PCI_ACS_P2PDMA_DIRECT,
+ 	PCI_ACS_P2PDMA_REDIRECT,
++	PCI_ACS_P2PDMA_NOT_SUPPORTED,
+ };
  
-+/*
-+ * Lifetime and RCU usage
-+ *
-+ * Within one driver bind, pdev->p2pdma is published exactly once, by
-+ * pcim_p2pdma_init(), and cleared exactly once, by the pci_p2pdma_release()
-+ * devres action that the same function installs. It is never re-pointed at a
-+ * second struct pci_p2pdma, so a reader that observes a non-NULL pointer
-+ * always observes the same, fully initialised object. That object is devres
-+ * memory allocated before the action is installed, so devres frees it only
-+ * after pci_p2pdma_release() has returned.
-+ *
-+ * Most exported entry points reach pdev->p2pdma through a struct pci_dev or a
-+ * struct p2pdma_provider owned by the provider driver, and
-+ * pcim_p2pdma_provider() requires callers to drop those references before the
-+ * driver's remove() completes. Those cannot run concurrently with
-+ * pci_p2pdma_release(), and their rcu_dereference() calls are simply how an
-+ * __rcu pointer is read.
-+ *
-+ * pci_p2pmem_find_many() and the p2pmem sysfs attributes are the exceptions.
-+ * The first walks every PCI device, so it can reach a provider whose driver is
-+ * unbinding: pci_get_device() pins the struct pci_dev, not the driver. The
-+ * second is reachable from userspace until sysfs_remove_group() runs at the end
-+ * of the release. pci_has_p2pmem() must dereference the object to determine
-+ * whether it owns a gen_pool, so even a poolless object must remain alive until
-+ * that RCU reader exits. The sysfs group is created with the pool.
-+ *
-+ * The grace period in pci_p2pdma_release() first protects the struct
-+ * pci_p2pdma itself from being freed while pci_has_p2pmem() is using it. For a
-+ * pool-backed provider it also fences the gen_pool: gen_pool_alloc_owner()
-+ * walks pool->chunks under RCU and gen_pool_destroy() frees those chunks
-+ * without waiting for a grace period of its own, so pci_alloc_p2pmem() and
-+ * p2pmem_alloc_mmap() hold rcu_read_lock() across the allocation.
-+ */
- struct pci_p2pdma {
- 	struct gen_pool *pool;
- 	bool p2pmem_published;
-@@ -235,9 +268,19 @@ static void pci_p2pdma_release(void *data)
- 	if (!p2pdma)
- 		return;
- 
--	/* Flush and disable pci_alloc_p2p_mem() */
-+	/*
-+	 * Stop new RCU readers and wait for readers that observed p2pdma before
-+	 * allowing devres to free it. This is required even without a pool,
-+	 * because pci_has_p2pmem() dereferences every non-NULL p2pdma it finds.
-+	 * For a pool-backed provider this also fences gen_pool_destroy().
-+	 */
- 	RCU_INIT_POINTER(pdev->p2pdma, NULL);
- 	synchronize_rcu();
-+
-+	/*
-+	 * The grace period also ensures no RCU reader can still be accessing
-+	 * map_types here.
-+	 */
- 	xa_destroy(&p2pdma->map_types);
- 
- 	if (!p2pdma->pool)
-@@ -255,6 +298,9 @@ static void pci_p2pdma_release(void *data)
-  * for a PCI device. It allocates and sets up the necessary data
-  * structures to support P2PDMA operations, including mapping type
-  * tracking.
-+ *
-+ * The state is published once per driver bind and torn down by a devres
-+ * action on unbind. Repeated calls for the same device are a no-op.
-  */
- int pcim_p2pdma_init(struct pci_dev *pdev)
+ static enum pci_acs_p2pdma_state
+ pci_acs_p2pdma_state(struct pci_dev *pdev, struct pci_dev *target)
  {
-@@ -786,6 +832,12 @@ calc_map_type_and_dist(struct pci_dev *provider, struct pci_dev *client,
- 		map_type = PCI_P2PDMA_MAP_NOT_SUPPORTED;
+-	int pos;
++	int pos, ret;
+ 	u16 ctrl;
+ 
+ 	pos = pdev->acs_cap;
+@@ -554,26 +555,26 @@ pci_acs_p2pdma_state(struct pci_dev *pdev, struct pci_dev *target)
+ 		return PCI_ACS_P2PDMA_DIRECT;
+ 
+ 	if (pci_read_config_word(pdev, pos + PCI_ACS_CTRL, &ctrl))
+-		return PCI_ACS_P2PDMA_REDIRECT;
++		return PCI_ACS_P2PDMA_NOT_SUPPORTED;
+ 
+-	if (!(ctrl & PCI_ACS_EC))
++	/* EC applies only at the path divergence where the target is known. */
++	if (!target || !(ctrl & PCI_ACS_EC))
+ 		return ctrl & (PCI_ACS_RR | PCI_ACS_CR) ?
+ 			PCI_ACS_P2PDMA_REDIRECT : PCI_ACS_P2PDMA_DIRECT;
+ 
+ 	/*
+-	 * The vector cannot be read without the peer target, so redirect
+-	 * upstream until the paths diverge.
++	 * PCIe r7.0, sec 6.12.3, table 6-11: a set Egress Control Vector
++	 * bit redirects the request only when Request Redirect is set.  With
++	 * Request Redirect clear, the request is handled as an ACS Violation.
++	 * A clear vector bit permits direct routing, subject to Completion
++	 * Redirect.
+ 	 */
+-	if (!target)
+-		return PCI_ACS_P2PDMA_REDIRECT;
+-
+-	/*
+-	 * PCIe r7.0, sec 6.12.3, table 6-11: a set or indeterminate egress
+-	 * control vector bit keeps the request off the direct path; a clear
+-	 * bit permits it, subject only to completion redirect.
+-	 */
+-	if (pci_acs_egress_ctrl_is_set(pdev, target))
+-		return PCI_ACS_P2PDMA_REDIRECT;
++	ret = pci_acs_egress_ctrl_is_set(pdev, target);
++	if (ret < 0)
++		return PCI_ACS_P2PDMA_NOT_SUPPORTED;
++	if (ret)
++		return ctrl & PCI_ACS_RR ? PCI_ACS_P2PDMA_REDIRECT :
++						PCI_ACS_P2PDMA_NOT_SUPPORTED;
+ 
+ 	return ctrl & PCI_ACS_CR ? PCI_ACS_P2PDMA_REDIRECT :
+ 				    PCI_ACS_P2PDMA_DIRECT;
+@@ -754,9 +755,9 @@ static unsigned long map_types_idx(struct pci_dev *client)
+  * then to Device B. The mapping type returned depends on the ACS
+  * redirection setting of the ports along the path.
+  *
+- * If ACS redirect is set on any port in the path, traffic between the
+- * devices will go through the host bridge, so return
+- * PCI_P2PDMA_MAP_THRU_HOST_BRIDGE; otherwise return
++ * If ACS redirects traffic on any port in the path, or blocks the direct
++ * path or leaves its routing indeterminate, return
++ * PCI_P2PDMA_MAP_THRU_HOST_BRIDGE. Otherwise, return
+  * PCI_P2PDMA_MAP_BUS_ADDR.
+  *
+  * Any two devices that have a data path that goes through the host bridge
+@@ -770,10 +771,13 @@ calc_map_type_and_dist(struct pci_dev *provider, struct pci_dev *client,
+ 		int *dist, bool verbose)
+ {
+ 	enum pci_p2pdma_map_type map_type = PCI_P2PDMA_MAP_THRU_HOST_BRIDGE;
+-	struct pci_dev *a = provider, *b = client, *bb;
++	struct pci_dev *a = provider, *b = client, *bb, *target;
++	struct pci_dev *a_child = NULL, *b_child = NULL;
++	struct pci_dev *acs_unsupported = NULL;
++	enum pci_acs_p2pdma_state state;
+ 	struct pci_p2pdma *p2pdma;
+ 	struct seq_buf acs_list;
+-	int acs_cnt = 0;
++	int acs_redirect_cnt = 0;
+ 	int dist_a = 0;
+ 	int dist_b = 0;
+ 	char buf[128];
+@@ -787,60 +791,92 @@ calc_map_type_and_dist(struct pci_dev *provider, struct pci_dev *client,
+ 	 */
+ 	while (a) {
+ 		dist_b = 0;
+-
+-		if (pci_acs_p2pdma_state(a, NULL) ==
+-		    PCI_ACS_P2PDMA_REDIRECT) {
+-			seq_buf_print_bus_devfn(&acs_list, a);
+-			acs_cnt++;
+-		}
+-
++		b_child = NULL;
+ 		bb = b;
+ 
+ 		while (bb) {
+ 			if (a == bb)
+-				goto check_b_path_acs;
++				goto check_paths_acs;
+ 
++			b_child = bb;
+ 			bb = pci_upstream_bridge(bb);
+ 			dist_b++;
+ 		}
+ 
++		a_child = a;
+ 		a = pci_upstream_bridge(a);
+ 		dist_a++;
  	}
- done:
+ 
 +	/*
-+	 * pci_p2pmem_find_many() reaches this with a provider whose driver may
-+	 * be unbinding, so the store runs under RCU: pci_p2pdma_release()
-+	 * clears the pointer and waits for readers before destroying
-+	 * map_types. See "Lifetime and RCU usage" above.
++	 * The paths share no upstream bridge, so there is no direct path for
++	 * ACS to gate: PCI_P2PDMA_MAP_BUS_ADDR is not reachable here and the
++	 * request can only get to the peer through the host bridge.
 +	 */
- 	rcu_read_lock();
- 	p2pdma = rcu_dereference(provider->p2pdma);
- 	if (p2pdma)
+ 	*dist = dist_a + dist_b;
+ 	goto map_through_host_bridge;
+ 
+-check_b_path_acs:
+-	bb = b;
++check_paths_acs:
++	*dist = dist_a + dist_b;
++	bb = provider;
+ 
+ 	while (bb) {
++		target = bb == a_child ? b_child : NULL;
++		state = pci_acs_p2pdma_state(bb, target);
++		if (state != PCI_ACS_P2PDMA_DIRECT) {
++			seq_buf_print_bus_devfn(&acs_list, bb);
++			if (state == PCI_ACS_P2PDMA_REDIRECT)
++				acs_redirect_cnt++;
++			else if (!acs_unsupported)
++				acs_unsupported = bb;
++		}
++
+ 		if (a == bb)
+ 			break;
+ 
+-		if (pci_acs_p2pdma_state(bb, NULL) ==
+-		    PCI_ACS_P2PDMA_REDIRECT) {
++		bb = pci_upstream_bridge(bb);
++	}
++
++	bb = client;
++
++	while (bb && a != bb) {
++		target = bb == b_child ? a_child : NULL;
++		state = pci_acs_p2pdma_state(bb, target);
++		if (state != PCI_ACS_P2PDMA_DIRECT) {
+ 			seq_buf_print_bus_devfn(&acs_list, bb);
+-			acs_cnt++;
++			if (state == PCI_ACS_P2PDMA_REDIRECT)
++				acs_redirect_cnt++;
++			else if (!acs_unsupported)
++				acs_unsupported = bb;
+ 		}
+ 
+ 		bb = pci_upstream_bridge(bb);
+ 	}
+ 
+-	*dist = dist_a + dist_b;
+-
+-	if (!acs_cnt) {
++	/*
++	 * Below a shared upstream bridge, a path that no port redirects or
++	 * blocks routes the request directly.
++	 */
++	if (!acs_unsupported && !acs_redirect_cnt) {
+ 		map_type = PCI_P2PDMA_MAP_BUS_ADDR;
+ 		goto done;
+ 	}
+ 
++	/*
++	 * ACS controls only act on Requests routed peer-to-peer, so a blocked
++	 * or indeterminate direct path still leaves the host-bridge route.
++	 */
+ 	if (verbose) {
+ 		/* Drop the final semicolon; the list is not empty here. */
+ 		if (!seq_buf_has_overflowed(&acs_list))
+ 			acs_list.buffer[acs_list.len - 1] = '\0';
+-		pci_warn(client, "ACS redirect is set between the client and provider (%s)\n",
+-			 pci_name(provider));
+-		pci_warn(client, "to disable ACS redirect for this path, add the kernel parameter: pci=disable_acs_redir=%s\n",
++		if (acs_unsupported)
++			pci_warn(client, "ACS leaves no usable direct P2P path to provider %s at %s\n",
++				 pci_name(provider), pci_name(acs_unsupported));
++		else
++			pci_warn(client, "ACS redirect is set between the client and provider (%s)\n",
++				 pci_name(provider));
++		pci_warn(client, "to disable ACS controls for this path, add the kernel parameter: pci=disable_acs_redir=%s\n",
+ 			 seq_buf_str(&acs_list));
+ 	}
+ 
 
 -- 
 2.55.0
