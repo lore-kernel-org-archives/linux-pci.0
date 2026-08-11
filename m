@@ -1,34 +1,34 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0C0F3B6359;
-	Tue, 11 Aug 2026 06:41:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C4F1400DE9;
+	Tue, 11 Aug 2026 06:41:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786430467; cv=none; b=QXEYuWOgxKb6ixT418Jk+9oa4gEkSg+tOTa19mm17DLX0xK9guj87PhegRtThsvUv/ZgGVMnhbbK149z6nJZnn//AZrFoTCs90jmtd+LbCXqIc3cWnb72d308i8TgtPidFavXQ3CxoNGypcjTu2NxiNQ2X/E3BS6xyJMMTxZgu0=
+	t=1786430468; cv=none; b=KDx+c2d4zZG0uTs1aj7dI3LrOqr3pIXZ5QEFt8uttm1Noxe1Ep9ErGXB8oJwfz5GfKbgeI4viBIwwAUa4qqUgQorZgl6jKuWaucXr/5G/A8KS0eCxkBC9pJBn5Xwu3xGHTfWUYTCvcQyfAcLchplLiBrUxQwFksLS34vx35+QPA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786430467; c=relaxed/simple;
-	bh=5g0b55B6S/yvpbDZLPQQ4JslG2F9/7Iv2yWJsU/nQqQ=;
+	s=arc-20240116; t=1786430468; c=relaxed/simple;
+	bh=F2CI+FBdyNzgpm/+lalqrgOCl4op0DIet6QiBNuXJNI=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=GpicwIzpbc8txuVjFTl9EIIusK4BmL9OVK8bdd1D0F78RfO7YURq76k/VprcnZfAjHIA4TsNhfU1DppWQcB6U4XmzJVdaAJ9kRMHUMLaIST34T/UaFDP0WHzVZnFtmLP0jnrtR6BCCTtuDNd/9s68doqBLnQF3oNVF2pw+uzA7Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=Qj0aA8a2; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:To:Cc; b=hHXT2YH/tslbrawmUjyE6xpuzheThRs5n5G78TeaJmVsS/C9t33mPtt3GQJsAbkVGaNIAA984/2E6aEoIVrwTu9Yx63c7ZmafCca5+cHEdC6gCzfuvLRAUKLJYa7/rrzi5R3eNnM+nspVIHWO+8rQMdxJCVUuxtxr2oEB7CqPIo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=ufE6cNt8; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="Qj0aA8a2"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 18E83C2BCFC;
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="ufE6cNt8"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 55300C2BD01;
 	Tue, 11 Aug 2026 06:41:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linux.dev; s=korg;
-	t=1786430466; bh=5g0b55B6S/yvpbDZLPQQ4JslG2F9/7Iv2yWJsU/nQqQ=;
+	t=1786430466; bh=F2CI+FBdyNzgpm/+lalqrgOCl4op0DIet6QiBNuXJNI=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=Qj0aA8a2FoJH8FGaBBoCqhjXSSEEOYaSkxfQHcyxD7zN5P2foVbuRpmOdhtGLeVKj
-	 J9ap4tpG25cDkOriDnh4ue/Q3GwkxMq5dbABUxUE/H5n04xdP+TWjx9m3bPanWUJcE
-	 BYlmnmDCn4CZ181Z18kuOYXhczuKTP9ce3kGwNa8=
+	b=ufE6cNt8jyTWXj0/mNEc4dX0t4TBjYEveM2h84ST9bNNuA2+nc+dih6QfJ+RXBL/c
+	 rCuvvC1ThTHO2rKfqpLiwt+BywYUPBTx21Yn7maCAC3Os7OBa+NsdeJjyxX7Riotjt
+	 AxOqxrKLjfvsf1muvwnoxSk3n5CZk2/De8Q7f+po=
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EDB95C5B572;
-	Tue, 11 Aug 2026 06:41:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 405E5C5B575;
+	Tue, 11 Aug 2026 06:41:06 +0000 (UTC)
 From: Alvin Sun <alvin.sun@linux.dev>
-Date: Tue, 11 Aug 2026 14:39:44 +0800
-Subject: [PATCH v10 02/10] rust: module: add `THIS_MODULE` const to
- `ModuleMetadata` trait
+Date: Tue, 11 Aug 2026 14:39:48 +0800
+Subject: [PATCH v10 06/10] rust: miscdevice: set fops.owner from driver
+ module pointer
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -37,7 +37,7 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260811-fix-fops-owner-v10-2-7e71776f9dbe@linux.dev>
+Message-Id: <20260811-fix-fops-owner-v10-6-7e71776f9dbe@linux.dev>
 References: <20260811-fix-fops-owner-v10-0-7e71776f9dbe@linux.dev>
 In-Reply-To: <20260811-fix-fops-owner-v10-0-7e71776f9dbe@linux.dev>
 To: Miguel Ojeda <ojeda@kernel.org>, Boqun Feng <boqun@kernel.org>, 
@@ -70,99 +70,58 @@ Cc: rust-for-linux@vger.kernel.org, linux-modules@vger.kernel.org,
  linux-kernel@vger.kernel.org, netdev@vger.kernel.org, 
  linux-pci@vger.kernel.org, Alvin Sun <alvin.sun@linux.dev>
 X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1786430463; l=3686;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1786430463; l=1259;
  i=alvin.sun@linux.dev; s=20260317; h=from:subject:message-id;
- bh=5g0b55B6S/yvpbDZLPQQ4JslG2F9/7Iv2yWJsU/nQqQ=;
- b=5qBQF/1C8pGNUIzZ/6zcrZeog3L/b0vn5XTS1q7ArLxYhVH25uxlWi3sbyxHidxZa+WoS2cMK
- Mwt2oJcJCvoBVWBI+Ih6Su8aqg/lZf8kjKCCmHE5WK0OKTObhNZ02pL
+ bh=F2CI+FBdyNzgpm/+lalqrgOCl4op0DIet6QiBNuXJNI=;
+ b=EJ3bMKafIBn0BzL/3jyQvOv2GiyZE2Njy0dBDaRcyZM4AO0JV7ER9G1TyS7H86j2XJlNkOGSK
+ bAdKReXiJpYDqauJju9Kb5cBEWogL3s343zXeLqnY1fst0Qphr1aMSg
 X-Developer-Key: i=alvin.sun@linux.dev; a=ed25519;
  pk=CHcwQp8GSoj25V/L1ZWNSQjWp9eSIb0s9LKr0Nm3WuE=
 X-Endpoint-Received: by B4 Relay for alvin.sun@linux.dev/20260317 with
  auth_id=684
 
-Since `const_refs_to_static` has been stable as of the MSRV bump, a
-`ThisModule` pointer can now be used in const contexts.
-
-Add a `THIS_MODULE` const to the `ModuleMetadata` trait so that modules
-can provide their `ThisModule` pointer in const contexts such as static
-`file_operations`.
-
-Add a `this_module()` helper to retrieve the `THIS_MODULE` pointer of a
-given module type, and update `__init` to use it instead of the
-`THIS_MODULE` static generated by the `module!` macro.
-
-The `static THIS_MODULE` generated by the `module!` macro is retained
-for backwards compatibility with existing users and removed in a later
-patch once all references have been migrated.
+Set the miscdevice fops owner field from the driver module pointer
+via the `this_module::<T::OwnerModule>()` helper, instead of
+defaulting to null.
 
 Assisted-by: opencode:glm-5.2
 Reviewed-by: Andreas Hindborg <a.hindborg@kernel.org>
 Reviewed-by: Gary Guo <gary@garyguo.net>
 Acked-by: Danilo Krummrich <dakr@kernel.org>
+Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 Reviewed-by: Alice Ryhl <aliceryhl@google.com>
-Acked-by: Petr Pavlu <petr.pavlu@suse.com>
 Signed-off-by: Alvin Sun <alvin.sun@linux.dev>
 ---
- rust/kernel/module.rs |  9 +++++++++
- rust/macros/module.rs | 18 +++++++++++++++++-
- 2 files changed, 26 insertions(+), 1 deletion(-)
+ rust/kernel/miscdevice.rs | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/rust/kernel/module.rs b/rust/kernel/module.rs
-index be242a82e86d2..d713705984477 100644
---- a/rust/kernel/module.rs
-+++ b/rust/kernel/module.rs
-@@ -42,6 +42,15 @@ fn init(module: &'static ThisModule) -> impl pin_init::PinInit<Self, crate::erro
- pub trait ModuleMetadata {
-     /// The name of the module as specified in the `module!` macro.
-     const NAME: &'static crate::str::CStr;
-+
-+    /// The module's `THIS_MODULE` pointer.
-+    const THIS_MODULE: ThisModule;
-+}
-+
-+/// Returns a reference to the `THIS_MODULE` of the given module type.
-+#[inline]
-+pub const fn this_module<M: ModuleMetadata>() -> &'static ThisModule {
-+    &M::THIS_MODULE
- }
+diff --git a/rust/kernel/miscdevice.rs b/rust/kernel/miscdevice.rs
+index 83ce50def5ac9..2a4329f98614e 100644
+--- a/rust/kernel/miscdevice.rs
++++ b/rust/kernel/miscdevice.rs
+@@ -24,12 +24,13 @@
+         IovIterSource, //
+     },
+     mm::virt::VmaNew,
++    module::this_module,
+     prelude::*,
+     seq_file::SeqFile,
+     types::{
+         ForeignOwnable,
+         Opaque, //
+-    },
++    }, //
+ };
+ use core::marker::PhantomData;
  
- /// Equivalent to `THIS_MODULE` in the C API.
-diff --git a/rust/macros/module.rs b/rust/macros/module.rs
-index 06c18e2075083..aa9a618d5d19e 100644
---- a/rust/macros/module.rs
-+++ b/rust/macros/module.rs
-@@ -519,6 +519,22 @@ pub(crate) fn module(info: ModuleInfo) -> Result<TokenStream> {
+@@ -430,6 +431,7 @@ impl<T: MiscDevice> MiscdeviceVTable<T> {
+         } else {
+             None
+         },
++        owner: this_module::<T::OwnerModule>().as_ptr(),
+         ..pin_init::zeroed()
+     };
  
-         impl ::kernel::ModuleMetadata for #type_ {
-             const NAME: &'static ::kernel::str::CStr = #name_cstr;
-+
-+            #[cfg(MODULE)]
-+            const THIS_MODULE: ::kernel::ThisModule = {
-+                extern "C" {
-+                    static __this_module: ::kernel::types::Opaque<::kernel::bindings::module>;
-+                }
-+
-+                // SAFETY: `__this_module` is constructed by the kernel at load time
-+                // and lives until the module is unloaded.
-+                unsafe { ::kernel::ThisModule::from_ptr(__this_module.get()) }
-+            };
-+
-+            #[cfg(not(MODULE))]
-+            const THIS_MODULE: ::kernel::ThisModule = unsafe {
-+                ::kernel::ThisModule::from_ptr(::core::ptr::null_mut())
-+            };
-         }
- 
-         // Double nested modules, since then nobody can access the public items inside.
-@@ -616,7 +632,7 @@ pub extern "C" fn #ident_exit() {
-                 /// This function must only be called once.
-                 unsafe fn __init() -> ::kernel::ffi::c_int {
-                     let initer = <super::super::LocalModule as ::kernel::InPlaceModule>::init(
--                        &super::super::THIS_MODULE
-+                        ::kernel::module::this_module::<super::super::LocalModule>()
-                     );
-                     // SAFETY: No data race, since `__MOD` can only be accessed by this module
-                     // and there only `__init` and `__exit` access it. These functions are only
 
 -- 
 2.43.0
