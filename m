@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E6381430CE1;
-	Tue, 11 Aug 2026 09:31:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B4128430CF4;
+	Tue, 11 Aug 2026 09:31:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786440698; cv=none; b=FydxmHvWphVDDcJuCZ/l9EA8Zqj4zIpIrBqwZ9p+LNU4WeTeItikXWeWdHedw6aS7DyE7wVX9X8mSSI9rCopgT3c+YCxp9wPx4p4Ixcw4eydcPZjC8X51A4cwvYc36m2FavBHU6DDPpWs6B/3IRLf7vxgwcFStX+GH2urGVqIJk=
+	t=1786440701; cv=none; b=NiNydqV3QR7D7FPzA169jGf/+oaUJzatt+qlYV0ri83Qzk5bW45MQWTPhBeBvvUPceTw+mY8HivFoAHB9bsGKrPzU/GceUwBxB/Fuly6YM+fdY4CbYynEoYMnQJ3Rk/F92IUYJMmf4YyH6OaxncDhKu6x95/V/k1czztTIFrbyg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786440698; c=relaxed/simple;
-	bh=Jvc8O9aB4fr5CPxCyMYzfrAWdkXrm+ubP7j0sCQsulE=;
+	s=arc-20240116; t=1786440701; c=relaxed/simple;
+	bh=8QU1iUG0ifUlrmzPk7uU396y3BChOzVOZzCpIp3VUz0=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=e9vbsl/tq0/QZFfzzDEy7qMzWCpteKzABHiqYGxy+pY5C5Q45nKIBM30wFFTXL+BtrQYJ9VgRz70lRlZ4e+iUczH33K3VStI5Bz7YYH+N3KmujGpSEwW9ZzPB83IDGTxPdeDgUZjoL0R/N1Iaxin6XIXjDYeTnA/nChqR/yOiG0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BAb95SzX; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=Loa/mGkdBUmVry7R5If20/qJOHcIMefnnEMrtaXeWq9Mw5MoUi8zyQeqribUdFuHTZ2NtCN1DsxpDn0uRu8a7Gj+u0oXA5g0CxxDS+MxdY9DVmW7iVBocD/weVAUCiFWcn+wmnd4BQDNe6gtQNjTb3+fhEU3ZMozWQdtiPEiYO4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=evGaNcXC; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BAb95SzX"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E9BE31F000E9;
-	Tue, 11 Aug 2026 09:31:35 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="evGaNcXC"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 12EA51F000E9;
+	Tue, 11 Aug 2026 09:31:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786440696;
-	bh=atU9QUcTmgMbDE3QFRiM5Hhj+AAChNXCTaJk5Hfy/L4=;
+	s=k20260515; t=1786440699;
+	bh=5l7GlFPrn2SHLxQ09KpxmwggPPwZjLWS1qYbOKh84Fs=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=BAb95SzXBW2y2NX3+VCObdFzlsE2VUWRMJYljCDqk/vzYrpKXfm7iG7kSnqZ7SaWa
-	 qUf+LaaM4NyxyTD2jiSXHYR9Dnu26BpOW7HDlHZTxi6KmYcVyrTmrCbgxTSrtp+2X9
-	 6bIWaXIAzO3MZqqPmYd732dLO/RUet3pq36WeSAy9zPVzaadikKsmvHNWxixu4l5Fd
-	 7vO/XqCxHXYe+nrLu1Y20+lp6ukVRS6DztmlSkv92ThXWDKXDjPPPF7cEaqo0FGNJu
-	 zQFs5XIS5sm5zO8DeaANeocGC+E7o2NjAePVu6Kak8t1NXuno+Pg6+icQmhh8n32HH
-	 UyCDG4zLIXdcg==
+	b=evGaNcXCZyMHjQ21iq4yxq/PEGO3lOnbtrF7MkGEOl0HCOOYhpa1LcxQ7uMIJrYJ7
+	 smHycGuJ7ykSpKAOxjNJNeT0u6i8Q4DNF5VDVDnDZpqsXR7hhEqWxOjUtbVgUldoas
+	 G3jzULvd6GZgNJujDAkJ5eSQVL+8qpedceUkJotTP7EXT3Y+UWXmbSsxWRiQO0qSWm
+	 KZJaEGhtCd1fVGzd2kJM6Vc+p5HDMombQV/Wbw7a5FAcm/AUCu2YrpOq7xQxTsRciO
+	 oEBX2RpIwohh3qnrGHTIGjsMEgC6j1nz4XfZ1++RzGIQB25SWBPwfiq2+JuNSdS0Kx
+	 oWFiao4/WkH3Q==
 From: Leon Romanovsky <leon@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
 	Logan Gunthorpe <logang@deltatee.com>,
@@ -45,9 +45,9 @@ Cc: linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	linux-doc@vger.kernel.org,
 	iommu@lists.linux.dev
-Subject: [PATCH v3 04/17] PCI/P2PDMA: Safely terminate ACS redirect lists
-Date: Tue, 11 Aug 2026 12:30:46 +0300
-Message-ID: <20260811-fix-p2p-acs-v3-4-efc488ee7c03@nvidia.com>
+Subject: [PATCH v3 01/17] PCI/P2PDMA: Do not tear down the allocate attribute on registration failure
+Date: Tue, 11 Aug 2026 12:30:43 +0300
+Message-ID: <20260811-fix-p2p-acs-v3-1-efc488ee7c03@nvidia.com>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260811-fix-p2p-acs-v3-0-efc488ee7c03@nvidia.com>
 References: <20260811-fix-p2p-acs-v3-0-efc488ee7c03@nvidia.com>
@@ -63,41 +63,76 @@ Content-Transfer-Encoding: 8bit
 
 From: Leon Romanovsky <leonro@nvidia.com>
 
-seq_buf marks an overflow by setting len to size + 1. The ACS diagnostic
-path unconditionally writes a terminator to buffer[len - 1], so a path
-with enough ACS ports to fill the 128-byte buffer writes one byte beyond
-the buffer when verbose diagnostics are requested.
+pci_p2pdma_add_resource() installs pci_p2pdma_unmap_mappings() as a devres
+action with the devres allocated p2p_pgmap as its data, and only then adds
+the range to the pool:
 
-Use seq_buf_str() to terminate truncated output safely and remove the final
-semicolon only when the buffer did not overflow.
+	error = devm_add_action_or_reset(&pdev->dev, pci_p2pdma_unmap_mappings,
+					 p2p_pgmap);
+	if (error)
+		goto pages_free;
 
-Fixes: 52916982af48 ("PCI/P2PDMA: Support peer-to-peer memory")
-Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
+	p2pdma = rcu_dereference_protected(pdev->p2pdma, 1);
+	error = gen_pool_add_owner(p2pdma->pool, ...);
+	if (error)
+		goto pages_free;
+
+The action removes the allocate attribute for the whole device, which
+tears down existing userspace mappings of every BAR already registered on
+it. Both failures here get that wrong, in opposite ways.
+
+devm_add_action_or_reset() runs the action when it cannot allocate its
+devres node, so an -ENOMEM while registering a second BAR unmaps the
+first one. Use devm_add_action() and let the error path unwind only what
+this call created.
+
+gen_pool_add_owner() allocates a chunk and can also fail with -ENOMEM.
+There the action is registered, and the error path frees p2p_pgmap with
+devm_kfree() while leaving the action pointing at it. On unbind devres
+runs the action and pci_p2pdma_unmap_mappings() dereferences
+p2p_pgmap->mem->owner->kobj, which is freed memory. Give that failure its
+own label and drop the action with devm_remove_action(), which removes it
+without running it.
+
+Fixes: 7e9c7ef83d78 ("PCI/P2PDMA: Allow userspace VMA allocations through sysfs")
+Fixes: f58ef9d1d135 ("PCI/P2PDMA: Separate the mmap() support from the core logic")
 Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
 ---
- drivers/pci/p2pdma.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ drivers/pci/p2pdma.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
-index 6618ef170ce1..a77ef9deb3c6 100644
+index b2d5266f8653..dc7aaa990fed 100644
 --- a/drivers/pci/p2pdma.c
 +++ b/drivers/pci/p2pdma.c
-@@ -767,11 +767,13 @@ calc_map_type_and_dist(struct pci_dev *provider, struct pci_dev *client,
+@@ -440,8 +440,8 @@ int pci_p2pdma_add_resource(struct pci_dev *pdev, int bar, size_t size,
+ 		goto pgmap_free;
  	}
  
- 	if (verbose) {
--		acs_list.buffer[acs_list.len-1] = 0; /* drop final semicolon */
-+		/* Drop the final semicolon; the list is not empty here. */
-+		if (!seq_buf_has_overflowed(&acs_list))
-+			acs_list.buffer[acs_list.len - 1] = '\0';
- 		pci_warn(client, "ACS redirect is set between the client and provider (%s)\n",
- 			 pci_name(provider));
- 		pci_warn(client, "to disable ACS redirect for this path, add the kernel parameter: pci=disable_acs_redir=%s\n",
--			 acs_list.buffer);
-+			 seq_buf_str(&acs_list));
- 	}
- 	acs_redirects = true;
+-	error = devm_add_action_or_reset(&pdev->dev, pci_p2pdma_unmap_mappings,
+-					 p2p_pgmap);
++	error = devm_add_action(&pdev->dev, pci_p2pdma_unmap_mappings,
++				p2p_pgmap);
+ 	if (error)
+ 		goto pages_free;
  
+@@ -451,13 +451,15 @@ int pci_p2pdma_add_resource(struct pci_dev *pdev, int bar, size_t size,
+ 			range_len(&pgmap->range), dev_to_node(&pdev->dev),
+ 			&pgmap->ref);
+ 	if (error)
+-		goto pages_free;
++		goto mappings_remove;
+ 
+ 	pci_info(pdev, "added peer-to-peer DMA memory %#llx-%#llx\n",
+ 		 pgmap->range.start, pgmap->range.end);
+ 
+ 	return 0;
+ 
++mappings_remove:
++	devm_remove_action(&pdev->dev, pci_p2pdma_unmap_mappings, p2p_pgmap);
+ pages_free:
+ 	devm_memunmap_pages(&pdev->dev, pgmap);
+ pgmap_free:
 
 -- 
 2.55.0
