@@ -1,143 +1,131 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 59DD12472AA;
-	Tue, 11 Aug 2026 01:21:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+Received: from zg8tmtyylji0my4xnjeumjiw.icoremail.net (zg8tmtyylji0my4xnjeumjiw.icoremail.net [162.243.161.220])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 7390739479C;
+	Tue, 11 Aug 2026 02:54:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=162.243.161.220
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786411283; cv=none; b=QkOomdFKTW8/9AK4EeAEdaKFQztu53yaIaSAFO6dgzMKSvocFSTduFuOZEh7+ItFopNWA6+4SWfmhfyo+UFzYFz/itf7entm1InZYwZMGWQJLbXqQjsskhTJcuQ64zW9eM/F2z9CEsnDMPjf1C4hVc93gSkxyyWrNpDgZVL4CW4=
+	t=1786416873; cv=none; b=ZNRQdmUBX/j3zfs7/DVh3nSSheZFZAmxTqve2MHE/r+QN5pPIBdObKarP5uVxZDdzolHzPrp5SaknQ+A09K5O1VXR8gDr5QRnHIMRkSTSxKT5tivEazW02wAKS4kNI8OQ3n7WT6n1fd2Od1ygeGoeCBEsCkLfvlKUTkNZvHPi5M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786411283; c=relaxed/simple;
-	bh=4VsyuwtkTUhrXnk3KWbSs/NUQXtBKbDWKCu0CkbAeq0=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=A0PxDF/W0Rt+d0oaMzduks9mtLajRXupiossxr+jWslCaZR9/+w3mKl8jgwdq0ebwqSmtIK3kCNKr9oLdU5FIKW+CsSbBUaZJF+mNHcB+wrvcGIk7ehV60cKHD/F8Zq9fvqJv/bSgJEh6L7R0G8efz7iCI3X3HkMdlV4+fz02Nc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=l2KzuHx1; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="l2KzuHx1"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 115701F000E9;
-	Tue, 11 Aug 2026 01:21:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786411282;
-	bh=GzcC4f8yWV7bjtoALTklsfI0DAvnCEcaSlGVdwZz3Jo=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=l2KzuHx1GvPyVMJ4BABHXJDXzvCbQJPQ91zgDsrLWEl43ipWJNPvqd67RAutLJDzl
-	 q+biFLe/sDX0JY0rZ77LOFo/YhHFtHRmPaTqF6uSCoRTpzl7zoywvZr7EzpRJ+NSxW
-	 z4avT9uuAaInoDzPKjC+0AWJGnyAPvJyRWC8+D/ZLdfpBEhMplT9a0Di0JZI5OKWMm
-	 rl7ymqr1NH+RMmnKnooZTP1+5YMsjSZD8CSQBvBZv0wjiupZApsHca81H3nGneWeQF
-	 VyVVag99p08Zfi4PV3l9rWDUKdpI1BDe5wnHoc5sCM5MIkdgUJ3dAbBxPTgGnFpPw5
-	 6QEm6Rl8/Xt2g==
-Date: Mon, 10 Aug 2026 20:21:20 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Max Stevens <thinker.healer@gmail.com>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com, nathan@nathanrossi.com,
-	nicolas.cavallari@green-communications.fr,
-	linux-usb@vger.kernel.org
-Subject: Re: Pericom PI7C9X2G608 =?utf-8?B?KDEyZDg6?=
- =?utf-8?Q?2608=29_missing_from_ACS_quirk_?= =?utf-8?B?4oCU?= breaks Renesas
- uPD720202 USB3 cards when IOMMU is on
-Message-ID: <20260811012120.GA565400@bhelgaas>
+	s=arc-20240116; t=1786416873; c=relaxed/simple;
+	bh=ET1OJw7WESzCPoYn4USG0tMq037PFmMMhLU31lwuiq0=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=gJdNEfQ66zdAQnaeNff4qVwOMioKC3FZbh3nB5JiULlpOu0wCMAfhJHohqyleBzCE0B1a//VjWp0R1fpUKdyx/qPa+rhIbbukQk+rdOJQL30TAiNFM4gVTuuKv66/q9ttnSJSbgOx0IEp7yzmd/1ncQVFiGWSfFrVOC3DzdSkXc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zju.edu.cn; spf=pass smtp.mailfrom=zju.edu.cn; arc=none smtp.client-ip=162.243.161.220
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zju.edu.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zju.edu.cn
+Received: from zju.edu.cn (unknown [10.98.66.117])
+	by mtasvr (Coremail) with SMTP id _____wBHIX7SjnpqOeiCAA--.156S3;
+	Tue, 11 Aug 2026 10:54:10 +0800 (CST)
+Received: from localhost.localdomain (unknown [10.98.66.117])
+	by mail-app2 (Coremail) with SMTP id zC_KCgB3CtHSjnpqsZ7DAw--.40592S2;
+	Tue, 11 Aug 2026 10:54:10 +0800 (CST)
+From: Fan Wu <fanwu01@zju.edu.cn>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: shawn.lin@rock-chips.com,
+	lpieralisi@kernel.org,
+	kwilczynski@kernel.org,
+	mani@kernel.org,
+	robh@kernel.org,
+	heiko@sntech.de,
+	dlemoal@kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-rockchip@lists.infradead.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org,
+	Fan Wu <fanwu01@zju.edu.cn>
+Subject: [PATCH] PCI: rockchip-ep: disable link training work on remove
+Date: Tue, 11 Aug 2026 02:53:15 +0000
+Message-Id: <20260811025315.136998-1-fanwu01@zju.edu.cn>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <CADoo8uyrmw_GkNgNf+bV_pieYN_gn5i49rOF8jUvSsfPOcqCJA@mail.gmail.com>
+X-CM-TRANSID:zC_KCgB3CtHSjnpqsZ7DAw--.40592S2
+X-CM-SenderInfo: qrstjiaswqq6lmxovvfxof0/
+X-CM-DELIVERINFO: =?B?MEjT9gXKKxbFmtjJiESix3B1w3vZ3A9ovKVTomAyoQazvoRs/NHSP8GI2EvgeEEW7R
+	sfncGSG+szpQCInt5Y8rbJUI0qI+tQE2w8INGKFcJ8d4DzpU4NXfzY/1BP2O6TETYvPXes
+	MwOqRdL0lUKjDUkPxayp9E6mavGmQbzmcFsnzP86
+X-Coremail-Antispam: 1Uk129KBj93XoW7AF4fXw48tF1DXF48CryDurX_yoW8ZF4Upa
+	4DXry3ArykWF42vwnxA3ZxZayYq3Zavay7Wwn7G3WfZ3WavF1UG34jgFnrArZxJrW8ZF17
+	Crs8tayUuF43WFgCm3ZEXasCq-sJn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7KY7ZEXa
+	sCq-sGcSsGvfJ3Ic02F40EFcxC0VAKzVAqx4xG6I80ebIjqfuFe4nvWSU5nxnvy29KBjDU
+	0xBIdaVrnRJUUUP0b4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2
+	IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48v
+	e4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI
+	0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AK
+	xVW0oVCq3wAac4AC62xK8xCEY4vEwIxC4wAS0I0E0xvYzxvE52x082IY62kv0487Mc804V
+	CY07AIYIkI8VC2zVCFFI0UMc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AK
+	xVWUXVWUAwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48Icx
+	kI7VAKI48JM4x0Y48IcxkI7VAKI48G6xCjnVAKz4kxM4IIrI8v6xkF7I0E8cxan2IY04v7
+	MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr
+	0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0E
+	wIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8JV
+	WxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAI
+	cVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7IU818BUUUUUU==
 
-On Mon, Aug 10, 2026 at 08:00:59PM -0500, Max Stevens wrote:
-> Hello,
-> 
-> I'd like to report that the Pericom PI7C9X2G ACS erratum handled by
-> pci_fixup_pericom_acs_store_forward() also affects the 6-port variant
-> of the switch, PI7C9X2G608GP (12d8:2608), which is not covered by the
-> existing quirk (2404/2304/2303, and b404 recently proposed by Nicolas
-> Cavallari). On this switch the erratum is severe enough to make an
-> entire class of consumer USB 3.0 cards completely non-functional on
-> any system with the IOMMU enabled.
-> 
-> Hardware
-> 
-> StarTech PEXUSB3S44V-style 4-port USB 3.0 card ("one dedicated channel
-> per port", widely sold ~2016 for Oculus Rift sensors). Topology:
-> 
-> 00:1d.0 Intel Z690 PCH root port 07:00.0 Pericom PI7C9X2G608GP switch
-> upstream [12d8:2608] (x4 gen2) 08:01.0 - 08:04.0 switch downstream
-> ports [12d8:2608] 09:00.0 - 0c:00.0 4x Renesas uPD720202 xHCI
-> [1912:0015] (rev 02)
-> 
-> System: Alder Lake / Z690, kernel 6.18.43 (Void Linux), VT-d enabled,
-> booted with iommu=pt (default domain: passthrough). Firmware for the
-> uPD720202s is the correct v2.0.2.6 image (sha256 177560c2...) and
-> uploads successfully on every probe.
-> 
-> Symptom
-> 
-> With the IOMMU on, the kernel enables ACS on the switch's downstream
-> ports (ACSCtl: SrcValid+ ReqRedir+ CmpltRedir+ UpstreamFwd+). The four
-> xHCI controllers then probe cleanly, register their buses, upload
-> firmware, and report port connect status normally — but any device
-> plugged into any port fails enumeration with:
-> 
-> xhci-pci-renesas 0000:09:00.0: Error while assigning device slot ID:
-> Command Aborted xhci-pci-renesas 0000:09:00.0: Max number of devices
-> this xHCI host supports is 32. usb usb3-port1: couldn't allocate
-> usb_device
-> 
-> All four controllers fail identically. xhci debugfs portsc shows the
-> port stuck at "Connected ... Link:Polling" while the Enable Slot
-> command times out. Posted writes from the endpoints still work (MSI-X
-> interrupts for port change events are delivered), but the controllers
-> appear unable to complete DMA reads (command ring fetch) — consistent
-> with the known PI7C9X2G packet-buffering erratum when P2P Request
-> Redirect is enabled. No AER/DMAR errors are logged for the failed
-> requests.
-> 
-> Confirmation
-> 
-> Clearing ACS control on the downstream ports at runtime and rebinding
-> the drivers immediately and fully fixes the card:
-> 
-> for p in 08:01.0 08:02.0 08:03.0 08:04.0; do setpci -s $p
-> ECAP_ACS+6.w=0x0000 done
-> 
-> + unbind/rebind xhci-pci-renesas for each 0x:00.0
-> 
-> After this, all four controllers enumerate devices normally and the
-> card works (tested with HID devices, hubs, and mass storage).
-> "pci=disable_acs_redir=pci:12d8:2608" is my current persistent
-> workaround.
-> 
-> Given that the 2G404/2G304/2G303 (and b404) already have the
-> store-and-forward fixup, could 12d8:2608 be added as well? I'm happy
-> to test a patch, and can provide full lspci -vv dumps, dmesg, or
-> register reads from the switch on request. I can't say whether the
-> store-and-forward vendor register of the smaller switches exists at
-> the same offset on the 2G608, but I'm glad to poke it under
-> instruction.
-> 
-> These cards were sold in large numbers and every Linux report I can
-> find about them (Arch, FreeBSD, Proxmox, Unraid forums) describes
-> unexplained failures or dropped input events with no root cause
-> identified — this quirk gap likely explains most of them.
+The endpoint driver has no .remove callback, so on unbind the
+link_training work can keep running after the devm-allocated ep is freed,
+causing a use-after-free.  Add a .remove() callback that disables the
+worker.
 
-Can you test the patch below?
+This issue was found by an in-house static analysis tool.
 
+Fixes: bd6e61df4b2e ("PCI: rockchip-ep: Improve link training")
+Cc: stable@vger.kernel.org
+Assisted-by: Codex:gpt-5.6
+Signed-off-by: Fan Wu <fanwu01@zju.edu.cn>
+---
+ drivers/pci/controller/pcie-rockchip-ep.c | 21 +++++++++++++++++++++
+ 1 file changed, 21 insertions(+)
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index b09f27f7846f..27f7d56c9ac3 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -6263,6 +6263,10 @@ DECLARE_PCI_FIXUP_ENABLE(PCI_VENDOR_ID_PERICOM, 0xb404,
- 			 pci_fixup_pericom_acs_store_forward);
- DECLARE_PCI_FIXUP_RESUME(PCI_VENDOR_ID_PERICOM, 0xb404,
- 			 pci_fixup_pericom_acs_store_forward);
-+DECLARE_PCI_FIXUP_ENABLE(PCI_VENDOR_ID_PERICOM, 0x2608,
-+			 pci_fixup_pericom_acs_store_forward);
-+DECLARE_PCI_FIXUP_RESUME(PCI_VENDOR_ID_PERICOM, 0x2608,
-+			 pci_fixup_pericom_acs_store_forward);
+diff --git a/drivers/pci/controller/pcie-rockchip-ep.c b/drivers/pci/controller/pcie-rockchip-ep.c
+index 7994613..fbc2470 100644
+--- a/drivers/pci/controller/pcie-rockchip-ep.c
++++ b/drivers/pci/controller/pcie-rockchip-ep.c
+@@ -860,6 +860,7 @@ static int rockchip_pcie_ep_probe(struct platform_device *pdev)
+ 	}
  
- static void nvidia_ion_ahci_fixup(struct pci_dev *pdev)
- {
+ 	ep->epc = epc;
++	platform_set_drvdata(pdev, ep);
+ 	epc_set_drvdata(epc, ep);
+ 
+ 	err = rockchip_pcie_ep_get_resources(rockchip, ep);
+@@ -899,12 +900,32 @@ err_exit_ob_mem:
+ 	return err;
+ }
+ 
++static void rockchip_pcie_ep_remove(struct platform_device *pdev)
++{
++	struct rockchip_pcie_ep *ep = platform_get_drvdata(pdev);
++	struct rockchip_pcie *rockchip = &ep->rockchip;
++
++	if (rockchip->perst_gpio) {
++		ep->perst_asserted = true;
++		disable_irq(ep->perst_irq);
++	}
++
++	/* Disable, not cancel like .stop(): a racing .start() cannot re-arm it. */
++	disable_delayed_work_sync(&ep->link_training);
++
++	rockchip_pcie_write(rockchip,
++			    PCIE_CLIENT_CONF_DISABLE |
++			    PCIE_CLIENT_LINK_TRAIN_DISABLE,
++			    PCIE_CLIENT_CONFIG);
++}
++
+ static struct platform_driver rockchip_pcie_ep_driver = {
+ 	.driver = {
+ 		.name = "rockchip-pcie-ep",
+ 		.of_match_table = rockchip_pcie_ep_of_match,
+ 	},
+ 	.probe = rockchip_pcie_ep_probe,
++	.remove = rockchip_pcie_ep_remove,
+ };
+ 
+ builtin_platform_driver(rockchip_pcie_ep_driver);
+-- 
+2.34.1
+
