@@ -1,71 +1,96 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 24DAA4302FA
-	for <linux-pci@vger.kernel.org>; Tue, 11 Aug 2026 23:44:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F45ACA6B
+	for <linux-pci@vger.kernel.org>; Tue, 11 Aug 2026 23:46:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786491850; cv=none; b=ackae2LnqYhZN3bVjmz4vEUF23U5BWxx7N/UenIc6X7BY3rSpNh0hvThoUFS57XHAlCV9aoMvGdC38j0Yt0Vp1fUqcWaOj3S26F2DD6s7LmE4AOvLMxdfTokg2jj/eIQC3Rve4WGAcx+uYTcqtHp+CPnnEAXaud5/R23GA9Fn4g=
+	t=1786492008; cv=none; b=aX3pKu1zXem2CNGUyhtXS/KsVby7TV493oenX6IwRkZoMIMmkZzYwO92lhkfhif6nzyFQhrgfv9XlKIiILQe233MpC5KkPD+KWiHleHM0xVQ3toa4iyQmzNDGUBuomBCcUtEELm6swx62YHF8ytL7ptuhGkE7+e5Dh7IwdInyKo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786491850; c=relaxed/simple;
-	bh=jUT0m+GcPezAl/JXNnlBBWoADnwR5EHJs1DlkyvRe+U=;
+	s=arc-20240116; t=1786492008; c=relaxed/simple;
+	bh=zgt9CrVbkbphKr46U2UbtrjU2xCjJtmceL1CZbevJd8=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=t448n8vbE4oE8vzsFJqOyAMhsdgLmT8TWF2s8zqZa5BNqCmAB4gRawzdrpD5l9ijflMlf1RZXA4niBqDhbPmBF8TqugAa1NdgmGm5B4O/B+FdsFNJnKdOEHxOALGF3CpG9vA33wvOKNm+F/R8NHMrpfyJYyw/3A4CQLed8itxkI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=j0ovCtLG; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=Wac5mIGP3H81eEKVEjJ11jK+b3LBZHKIZPT26QZW8uQyiFuoubcDhLWQDCa19gUPg/SNlYOPhl/yVTCMhpypThYeHqB6Lt0gzcvvf2kdnBMNIzCAD2niuh2MRwupTAmpCCFwV/nxp+5mNBoCZp5I50JwGHTwGQ43R1k0tToOII0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=l8kZa1px; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="j0ovCtLG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 83AD61F000E9;
-	Tue, 11 Aug 2026 23:44:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="l8kZa1px"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AF4921F000E9;
+	Tue, 11 Aug 2026 23:46:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786491848;
-	bh=jUT0m+GcPezAl/JXNnlBBWoADnwR5EHJs1DlkyvRe+U=;
+	s=k20260515; t=1786492006;
+	bh=hzdPTbkODH0sfkC4bP3/9KCGw+2yFZSW4H4T9ih5SU0=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=j0ovCtLGbZaQJ+hG89XO/zIHyb8mUZDO5zyY6WMHSwjdNpgSSjdGB0Fpkj7//RagM
-	 zhfIxFyX1CzL2EbcFqO9SST1gz+otHHTC63R3C1MbYQqHj8Y+j4Pn6tz850UBm8EVX
-	 FqsVq6HVyViP5Dlk7URb6XNxLr2zJ6x+d1XZ5iLvQZ3zTLzjZsRVvOzRIj424U7fy8
-	 gNsPVUzhHM2fD89OR0BiV37AFNkHhSq8Cyg5J86c95v1b3F5Mj3WnhXkW44pYir7zU
-	 UVnxVzeYA3j6Dd/M+V83g8glMkRiYolNLTQIb2iWd+QcfZ/aNM39NpqPwTyAsmV8um
-	 GyTZIYEnhuYNQ==
+	b=l8kZa1px9rHYMCYD7XG5cJghZjSC1ynwWSYdOGqgrCTGc1QX1NlGkf31ynafH2M/t
+	 XYeP3T9dq6vFsIXjNp93nOxEXikM/bctz4oBpwoMdn/dXBjMy6I99+pK3ig1H7q+pe
+	 9LZnkeSByBfD6xyu1kAZCpe7tm8Z8Q83RbiEoAQXJpX6oiZit4voN43FUeJp5DJJ9K
+	 NUy7p1aX3T2o0lSt4Ud9rKD8QiFE+tRqBvCr6zothItFJI8GqyUg3S0CUTokWQG3kB
+	 GbFBnCrrNerDqUTM33sLsRG2qGyyBYl+K6M7hJAT5ATERrtxuRlVBJYQJIIma4ZWCU
+	 36t79GHxMuz1g==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 4/5] PCI: Add pci_irq_type() to query the allocated
- interrupt type
+Subject: Re: [PATCH v2 5/5] rust: pci: expose the allocated interrupt type
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Danilo Krummrich" <dakr@kernel.org>
-Cc: ojeda@kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260811233952.3000968-5-dakr@kernel.org>
+Cc: linux-pci@vger.kernel.org, ojeda@kernel.org
+In-Reply-To: <20260811233952.3000968-6-dakr@kernel.org>
 References: <20260811233952.3000968-1-dakr@kernel.org>
- <20260811233952.3000968-5-dakr@kernel.org>
+ <20260811233952.3000968-6-dakr@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 11 Aug 2026 23:44:07 +0000
-Message-Id: <20260811234408.83AD61F000E9@smtp.kernel.org>
+Date: Tue, 11 Aug 2026 23:46:46 +0000
+Message-Id: <20260811234646.AF4921F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-> Add a helper that returns PCI_IRQ_MSIX, PCI_IRQ_MSI, or PCI_IRQ_INTX
-> based on the interrupt type the PCI core selected after
-> pci_alloc_irq_vectors().
->=20
-> Several drivers already open-code this check against pdev->msix_enabled
-> and pdev->msi_enabled, or even open code this helper [1].
->=20
-> A common helper avoids the duplication and keeps drivers from accessing
-> the bitfield directly (see also [2]).
->=20
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-> Link: https://elixir.bootlin.com/linux/v7.1/source/drivers/net/ethernet/a=
-quantia/atlantic/aq_pci_func.c#L196 [1]
-> Inspired-by: John Hubbard <jhubbard@nvidia.com>
-> Link: https://lore.kernel.org/all/DKKG2QM3YJYB.Z2H2B2UXJ75N@kernel.org/ [=
-2]
-> Signed-off-by: Danilo Krummrich <dakr@kernel.org>
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [Low] The `irq_type` method on `IrqVector` is missing the `#[inline]` att=
+ribute, which is required by the subsystem guidelines for small forwarding =
+functions in abstractions.
+--
 
-Sashiko has reviewed this patch and found no issues. It looks great!
+--- Patch [5]: [PATCH v2 5/5] rust: pci: expose the allocated interrupt typ=
+e ---
+commit 2729ea5a5c9bd73b2db961974f58b91749e6fbc9
+Author: Danilo Krummrich <dakr@kernel.org>
+
+rust: pci: expose the allocated interrupt type
+
+This commit adds irq_type() methods to IrqVectorRegistration and IrqVector =
+to
+wrap the pci_irq_type() C function. This allows drivers to query the interr=
+upt
+type rather than assuming which type the PCI core selected.
+
+Link: https://lore.kernel.org/all/20260808031120.363869-4-jhubbard@nvidia.c=
+om/
+
+> diff --git a/rust/kernel/pci/irq.rs b/rust/kernel/pci/irq.rs
+> index b3dce5b49d571..41059b922492e 100644
+> --- a/rust/kernel/pci/irq.rs
+> +++ b/rust/kernel/pci/irq.rs
+[ ... ]
+> @@ -106,6 +116,11 @@ pub fn index(&self) -> usize {
+>      pub fn vectors(&self) -> &'a IrqVectorRegistration<'a> {
+>          self.reg
+>      }
+> +
+> +    /// Returns the interrupt type the PCI core selected for this vector=
+'s allocation.
+> +    pub fn irq_type(&self) -> IrqType {
+> +        self.reg.irq_type()
+> +    }
+
+[Severity: Low]
+This isn't a bug, but should this method have an #[inline] annotation?
+
+The Rust subsystem guidelines specify that small or forwarding functions in
+abstractions should be annotated with #[inline]. Since this just forwards to
+self.reg.irq_type(), adding the annotation would ensure it aligns with the
+coding guidelines.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260811233952.3000=
-968-1-dakr@kernel.org?part=3D4
-
+968-1-dakr@kernel.org?part=3D5
