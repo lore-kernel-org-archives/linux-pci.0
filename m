@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 457EA37E5F3;
-	Wed, 12 Aug 2026 19:48:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5B4238C2A0;
+	Wed, 12 Aug 2026 19:48:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786564116; cv=none; b=HgzaQmbOOUdY7o3/1fKy/Vlp8CPuJHxJ5S/fPS6QsoFE0N6TEcH1DU5fmiAvAW6x8Sk1+N13wlPwKzhDF/VrBsHLDs4E8HA3ZDUI2M+4cU48VqMV8bz+9lkyssl+93TyxMzPDrLc4ohf5+F4vxDnxr78Ofqpe8e0e99u1BoC9eU=
+	t=1786564122; cv=none; b=rw7KI/3AU3zso6gGMCw1Ujtre8xraveIN6fh3t1DQcv8YZ7up1K7Q2DMvMWDKF+8aBB0Oit7Yw/4ZJlYR5A1ASsvwTDn2CSWLAQnkChKooaDCbcvNfm2RZlL68MwjL5ZHIicfsrzVh2mm0zxEevVL5RGjEeVkFUC1iJGpKGyktg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786564116; c=relaxed/simple;
-	bh=Xn3BHUbFeDliXn0HA3Ojms95yrXnmIM+N1GKT1Q/gB0=;
+	s=arc-20240116; t=1786564122; c=relaxed/simple;
+	bh=IqkbhDYVxi4XRyFWLlh0UkIZAig09Qd5urtlS0t1fL4=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=GII+Vu4ci5NBETxK7qNNWAF5fGtymG/WEs2Mpv/kBLv2alhnLxKAUKYL2/x252jxmjDM5lSjWoUKJmIo5gqugNl4r+TY4oNerNBujYoX2K3cFfHxvCjMbtjKMiNJewJUi222kinoSYZBuZ3NnOQYQFi7Xjm/82CKWF7gyD8dDt4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TXBZTCJV; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=pRhKjA2YtV0ZrxADPGtZwng1SNux9K+cFQz73aq7uEU6S1xySUGfx1O+ywUIjlIGEmV+TzRQpT52TqCbId2Nn0vj+myLvNzfHvsQHERmpR4Y3m8wF9siGUtX5Mymsw3trZjASsU2Pdor0slaaLDBjUimFQJAL+iQQLQRi52xwWU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ewgC4cfK; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TXBZTCJV"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 08F3C1F00A3F;
-	Wed, 12 Aug 2026 19:48:32 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ewgC4cfK"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C1F501F000E9;
+	Wed, 12 Aug 2026 19:48:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786564113;
-	bh=AXZdG7M0VrErwh7NZPRJ8Bs/LnfE9o7nQ0Rnvb44ZOs=;
+	s=k20260515; t=1786564118;
+	bh=wisKwVPEElrvONf5rRtr8KM+Nr29VeD4HMledrPRMPY=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=TXBZTCJVDi9C7CxurPy/Po97diHZ1jBQDLmV+YFigXOnfEqTE2wzW3cBDa019/4ZQ
-	 9jhKIwtCgRD7//0QVoJ6R0+Z0II6H38YGQOpqZ0G4oMdpIhD4xipZw+97parJ0ICrs
-	 Ez9GWX82o7UQMo+o/638kW+QM95ZQjRpeDZ7L7Ore4BvJW7WP8+pNziPRSbGcdsH0Y
-	 6zuzO5nPKP1wFqzduY2kmhLcpF6NBAJm7cIcb9fNIKkceI7tjCeyVnKdVNS8XUbF+V
-	 nf3WKFywy4s98Ca4br5vMEtwzMMWIUo5FFaCaRnRhiTL2fBJc5Ve8y4GigHKDMQ/KU
-	 ir74FJn3Aiyqg==
+	b=ewgC4cfKYscyrYLJ0naOZtl3UAq0OWRx80mQLjvkCtVTeCXaMkmJBRJ8XOeeUu5Jn
+	 ofPQB/ScZLmCddK9hUSw5S6on/cVH+VrwPJkVxzUQF3/IyLiMVNwnJ2UUFdT7+Myv5
+	 jlx3amjRWuopkcSsdkY/6RzdXC6DNy1qcsjswNnrHKtCxA6nyBi+xXuTOGkqB853ba
+	 Wr1w5MCCr8DI/6ZSOxTwX9ui4rZteSzPywPlDhhFvsffXiaZliV3dljtEO3g2yRGjG
+	 4N8NciYrdxT0jlvV74FUTi974mw6MDAkTcbzfzmWqyajuPDcApzangGJmAbNqVo3lD
+	 GSU3POOhaA4bw==
 From: Leon Romanovsky <leon@kernel.org>
 To: "Rafael J. Wysocki" <rafael@kernel.org>,
 	Len Brown <lenb@kernel.org>,
@@ -38,9 +38,9 @@ Cc: linux-acpi@vger.kernel.org,
 	linux-pci@vger.kernel.org,
 	Lukas Wunner <lukas@wunner.de>,
 	"Natu, Mahesh" <mahesh.natu@intel.com>
-Subject: [PATCH RFC 5/7] ACPI: HMAT: Add KUnit tests for PCIe P2P matrix semantics
-Date: Wed, 12 Aug 2026 22:47:42 +0300
-Message-ID: <20260812-hmat-p2p-v1-5-75ac41380585@nvidia.com>
+Subject: [PATCH RFC 6/7] PCI/P2PDMA: Add KUnit tests for HMAT policy boundaries
+Date: Wed, 12 Aug 2026 22:47:43 +0300
+Message-ID: <20260812-hmat-p2p-v1-6-75ac41380585@nvidia.com>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260812-hmat-p2p-v1-0-75ac41380585@nvidia.com>
 References: <20260812-hmat-p2p-v1-0-75ac41380585@nvidia.com>
@@ -56,529 +56,416 @@ Content-Transfer-Encoding: 8bit
 
 From: Leon Romanovsky <leonro@nvidia.com>
 
-HMAT P2P matrices are directional and merge independent records for ordered
-and UIO traffic. An indexing, normalization, or merge regression could turn
-an unreachable entry into another host bridge's usable path and corrupt
-P2PDMA policy.
+HMAT becomes an authorization input for cross-host-bridge DMA. Reversing
+the requester and completer or accepting UIO-only data for ordered traffic
+could permit unsafe DMA.
 
-Protect this firmware trust boundary with coverage for matrix direction,
-normalization, traffic-class merging, malformed tables, missing pairs, and
-unreachable paths.
+Protect the directional lookup and the ordered-traffic requirement. A
+missing proximity domain or a missing, unreachable, or UIO-only path must
+produce PCI_P2PDMA_MAP_NOT_SUPPORTED, and a path the CPU already permits
+must not consult firmware at all.
 
 Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
 ---
- drivers/acpi/numa/Kconfig     |  13 +++
- drivers/acpi/numa/Makefile    |   1 +
- drivers/acpi/numa/hmat.c      |  95 ++++++++++++------
- drivers/acpi/numa/hmat_test.c | 223 ++++++++++++++++++++++++++++++++++++++++++
- drivers/acpi/numa/hmat_test.h |  17 ++++
- 5 files changed, 317 insertions(+), 32 deletions(-)
+ drivers/acpi/numa/hmat.c  |   4 +
+ drivers/pci/Kconfig       |  13 +++
+ drivers/pci/Makefile      |   1 +
+ drivers/pci/p2pdma.c      |  33 ++++----
+ drivers/pci/p2pdma_test.c | 210 ++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/pci/pci.h         |   2 +
+ 6 files changed, 249 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/acpi/numa/Kconfig b/drivers/acpi/numa/Kconfig
-index f33194d1e43f..fed47ae67a38 100644
---- a/drivers/acpi/numa/Kconfig
-+++ b/drivers/acpi/numa/Kconfig
-@@ -13,3 +13,16 @@ config ACPI_HMAT
- 	 register memory initiators with their targets, and export
- 	 performance attributes through the node's sysfs device if
- 	 provided.
-+
-+config ACPI_HMAT_KUNIT_TEST
-+	bool "KUnit tests for ACPI HMAT P2P matrices" if !KUNIT_ALL_TESTS
-+	depends on ACPI_HMAT && KUNIT=y
-+	default KUNIT_ALL_TESTS
-+	help
-+	  Enable KUnit coverage for parsing and querying the PCIe P2P
-+	  Latency and Bandwidth Information Structure, including directional
-+	  matrix indexing, traffic classes, normalization, and unreachable
-+	  entries.
-+
-+	  For more information on KUnit and unit tests in general, refer to
-+	  the KUnit documentation in Documentation/dev-tools/kunit/.
-diff --git a/drivers/acpi/numa/Makefile b/drivers/acpi/numa/Makefile
-index 517a6c689a94..3c1a35be85bf 100644
---- a/drivers/acpi/numa/Makefile
-+++ b/drivers/acpi/numa/Makefile
-@@ -1,3 +1,4 @@
- # SPDX-License-Identifier: GPL-2.0-only
- obj-$(CONFIG_ACPI_NUMA) += srat.o
- obj-$(CONFIG_ACPI_HMAT) += hmat.o
-+obj-$(CONFIG_ACPI_HMAT_KUNIT_TEST) += hmat_test.o
 diff --git a/drivers/acpi/numa/hmat.c b/drivers/acpi/numa/hmat.c
-index d06a62b38fff..d2964548aaaf 100644
+index d2964548aaaf..4593cccf9b9e 100644
 --- a/drivers/acpi/numa/hmat.c
 +++ b/drivers/acpi/numa/hmat.c
 @@ -10,6 +10,7 @@
  
  #define pr_fmt(fmt) "acpi/hmat: " fmt
  
-+#include <kunit/visibility.h>
++#include <kunit/static_stub.h>
+ #include <kunit/visibility.h>
  #include <linux/acpi.h>
  #include <linux/bitops.h>
- #include <linux/device.h>
-@@ -26,6 +27,8 @@
- #include <linux/dax.h>
- #include <linux/memory-tiers.h>
- 
-+#include "hmat_test.h"
-+
- static u8 hmat_revision;
- static int hmat_disable __initdata;
- 
-@@ -238,11 +241,12 @@ EXPORT_SYMBOL_GPL(acpi_get_genport_proximity_domain);
-  * boot and is never modified afterwards, so runtime readers below walk it
-  * without holding target_lock.
-  */
--static struct memory_p2p_locality *find_p2p_locality(int initiator, int target)
-+static struct memory_p2p_locality *
-+find_p2p_locality(struct list_head *localities, int initiator, int target)
- {
- 	struct memory_p2p_locality *loc;
- 
--	list_for_each_entry(loc, &p2p_localities, node)
-+	list_for_each_entry(loc, localities, node)
- 		if (loc->initiator == initiator && loc->target == target)
- 			return loc;
- 	return NULL;
-@@ -254,6 +258,23 @@ static bool p2p_coord_populated(const struct access_coordinate *coord)
- 	       coord->read_latency || coord->write_latency;
- }
- 
-+VISIBLE_IF_KUNIT int
-+hmat_get_p2p_coordinates(struct list_head *localities, int initiator_pxm,
-+			 int target_pxm, enum hmat_p2p_class class,
-+			 struct access_coordinate *coord)
-+{
-+	struct memory_p2p_locality *loc;
-+
-+	loc = find_p2p_locality(localities, initiator_pxm, target_pxm);
-+	if (!loc)
-+		return -ENOENT;
-+	if (!(loc->valid & BIT(class)) || !p2p_coord_populated(&loc->coord[class]))
-+		return -ENODATA;
-+
-+	*coord = loc->coord[class];
-+	return 0;
-+}
-+
- /**
-  * acpi_get_p2p_coordinates - Retrieve the P2P access coordinates between two
-  *			      generic ports (PCIe host bridges)
-@@ -269,19 +290,10 @@ int acpi_get_p2p_coordinates(int initiator_pxm, int target_pxm,
+@@ -290,6 +291,9 @@ int acpi_get_p2p_coordinates(int initiator_pxm, int target_pxm,
  			     enum hmat_p2p_class class,
  			     struct access_coordinate *coord)
  {
--	struct memory_p2p_locality *loc;
++	KUNIT_STATIC_STUB_REDIRECT(acpi_get_p2p_coordinates, initiator_pxm,
++				   target_pxm, class, coord);
++
+ 	return hmat_get_p2p_coordinates(&p2p_localities, initiator_pxm,
+ 					 target_pxm, class, coord);
+ }
+diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+index 30ad7f407c6f..47b92b289faf 100644
+--- a/drivers/pci/Kconfig
++++ b/drivers/pci/Kconfig
+@@ -241,6 +241,19 @@ config PCI_ACS_KUNIT_TEST
+ 
+ 	  If unsure, say N.
+ 
++config PCI_P2PDMA_HMAT_KUNIT_TEST
++	tristate "KUnit tests for PCI P2PDMA HMAT routing" if !KUNIT_ALL_TESTS
++	depends on PCI_P2PDMA && ACPI_HMAT && KUNIT
++	default KUNIT_ALL_TESTS
++	help
++	  Enable KUnit coverage for authorizing cross-host-bridge P2P DMA
++	  through ordered HMAT paths.
++
++	  For more information on KUnit and unit tests in general, refer to
++	  the KUnit documentation in Documentation/dev-tools/kunit/.
++
++	  If unsure, say N.
++
+ config PCI_LABEL
+ 	def_bool y if (DMI || ACPI)
+ 	select NLS
+diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
+index 6305d128d3df..b0c392d5c8a3 100644
+--- a/drivers/pci/Makefile
++++ b/drivers/pci/Makefile
+@@ -32,6 +32,7 @@ obj-$(CONFIG_PCI_PF_STUB)	+= pci-pf-stub.o
+ obj-$(CONFIG_PCI_ECAM)		+= ecam.o
+ obj-$(CONFIG_PCI_P2PDMA)	+= p2pdma.o
+ obj-$(CONFIG_PCI_ACS_KUNIT_TEST) += pci_acs_test.o
++obj-$(CONFIG_PCI_P2PDMA_HMAT_KUNIT_TEST) += p2pdma_test.o
+ obj-$(CONFIG_XEN_PCIDEV_FRONTEND) += xen-pcifront.o
+ obj-$(CONFIG_VGA_ARB)		+= vgaarb.o
+ obj-$(CONFIG_PCI_DOE)		+= doe.o
+diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
+index 88119620890f..fe3e7ea0776c 100644
+--- a/drivers/pci/p2pdma.c
++++ b/drivers/pci/p2pdma.c
+@@ -9,6 +9,7 @@
+  */
+ 
+ #define pr_fmt(fmt) "pci-p2pdma: " fmt
++#include <kunit/static_stub.h>
+ #include <linux/acpi.h>
+ #include <linux/ctype.h>
+ #include <linux/dma-map-ops.h>
+@@ -613,8 +614,10 @@ static void seq_buf_print_bus_devfn(struct seq_buf *buf, struct pci_dev *pdev)
+ 	seq_buf_printf(buf, "%s;", pci_name(pdev));
+ }
+ 
+-static bool cpu_supports_p2pdma(void)
++VISIBLE_IF_KUNIT bool cpu_supports_p2pdma(void)
+ {
++	KUNIT_STATIC_STUB_REDIRECT(cpu_supports_p2pdma);
++
+ #ifdef CONFIG_X86
+ 	struct cpuinfo_x86 *c = &cpu_data(0);
+ 
+@@ -625,6 +628,7 @@ static bool cpu_supports_p2pdma(void)
+ 
+ 	return false;
+ }
++EXPORT_SYMBOL_IF_KUNIT(cpu_supports_p2pdma);
+ 
+ static const struct pci_p2pdma_whitelist_entry {
+ 	unsigned short vendor;
+@@ -751,13 +755,15 @@ static bool host_bridge_whitelist(struct pci_dev *a, struct pci_dev *b,
+ }
+ 
+ #ifdef CONFIG_ACPI
+-static int pci_host_bridge_pxm(struct pci_dev *pdev)
++VISIBLE_IF_KUNIT int pci_host_bridge_pxm(struct pci_dev *pdev)
+ {
+ 	struct pci_host_bridge *host = pci_find_host_bridge(pdev->bus);
+ 	struct acpi_device *adev;
+ 	const char *uid_str;
+ 	u32 uid;
+ 
++	KUNIT_STATIC_STUB_REDIRECT(pci_host_bridge_pxm, pdev);
++
+ 	adev = to_acpi_device_node(host->dev.fwnode);
+ 	if (!adev)
+ 		return -ENODEV;
+@@ -769,11 +775,14 @@ static int pci_host_bridge_pxm(struct pci_dev *pdev)
+ 	return acpi_get_genport_proximity_domain(uid);
+ }
+ #else
+-static int pci_host_bridge_pxm(struct pci_dev *pdev)
++VISIBLE_IF_KUNIT int pci_host_bridge_pxm(struct pci_dev *pdev)
+ {
++	KUNIT_STATIC_STUB_REDIRECT(pci_host_bridge_pxm, pdev);
++
+ 	return -ENODEV;
+ }
+ #endif
++EXPORT_SYMBOL_IF_KUNIT(pci_host_bridge_pxm);
+ 
+ /*
+  * Check whether platform firmware describes, via an HMAT PCIe P2P Latency and
+@@ -810,10 +819,6 @@ static unsigned long map_types_idx(struct pci_dev *client)
+ 	return (pci_domain_nr(client->bus) << 16) | pci_dev_id(client);
+ }
+ 
+-static enum pci_p2pdma_map_type
+-__calc_map_type_and_dist(struct pci_dev *provider, struct pci_dev *client,
+-		int *dist, bool verbose, struct access_coordinate *hmat_coord);
 -
--	loc = find_p2p_locality(initiator_pxm, target_pxm);
--	if (!loc)
--		return -ENOENT;
--	if (!(loc->valid & BIT(class)) || !p2p_coord_populated(&loc->coord[class]))
--		return -ENODATA;
+ /*
+  * Calculate the P2PDMA mapping type and distance between two PCI devices.
+  *
+@@ -849,13 +854,6 @@ __calc_map_type_and_dist(struct pci_dev *provider, struct pci_dev *client,
+  * ordered HMAT path. Return PCI_P2PDMA_MAP_NOT_SUPPORTED when none of those
+  * sources permits the path.
+  */
+-VISIBLE_IF_KUNIT enum pci_p2pdma_map_type
+-calc_map_type_and_dist(struct pci_dev *provider, struct pci_dev *client,
+-		int *dist, bool verbose)
+-{
+-	return __calc_map_type_and_dist(provider, client, dist, verbose, NULL);
+-}
 -
--	*coord = loc->coord[class];
--	return 0;
-+	return hmat_get_p2p_coordinates(&p2p_localities, initiator_pxm,
-+					 target_pxm, class, coord);
+ static enum pci_p2pdma_map_type
+ __calc_map_type_and_dist(struct pci_dev *provider, struct pci_dev *client,
+ 		int *dist, bool verbose, struct access_coordinate *hmat_coord)
+@@ -1009,6 +1007,13 @@ __calc_map_type_and_dist(struct pci_dev *provider, struct pci_dev *client,
+ 	rcu_read_unlock();
+ 	return map_type;
  }
- EXPORT_SYMBOL_GPL(acpi_get_p2p_coordinates);
--
- static __init void alloc_memory_initiator(unsigned int cpu_pxm)
- {
- 	struct memory_initiator *initiator;
-@@ -394,7 +406,7 @@ static __init const char *hmat_data_type_suffix(u8 type)
- 	}
- }
- 
--static u32 hmat_normalize(u16 entry, u64 base, u8 type)
-+static u32 hmat_normalize_revision(u16 entry, u64 base, u8 type, u8 revision)
- {
- 	u32 value;
- 
-@@ -411,11 +423,11 @@ static u32 hmat_normalize(u16 entry, u64 base, u8 type)
- 	 * picosenonds to nanoseconds if revision 2.
- 	 */
- 	value = entry * base;
--	if (hmat_revision == 1) {
-+	if (revision == 1) {
- 		if (value < 10)
- 			return 0;
- 		value = DIV_ROUND_UP(value, 10);
--	} else if (hmat_revision == 2) {
-+	} else if (revision == 2) {
- 		switch (type) {
- 		case ACPI_HMAT_ACCESS_LATENCY:
- 		case ACPI_HMAT_READ_LATENCY:
-@@ -429,6 +441,11 @@ static u32 hmat_normalize(u16 entry, u64 base, u8 type)
- 	return value;
- }
- 
-+static u32 hmat_normalize(u16 entry, u64 base, u8 type)
++
++VISIBLE_IF_KUNIT enum pci_p2pdma_map_type
++calc_map_type_and_dist(struct pci_dev *provider, struct pci_dev *client,
++		int *dist, bool verbose)
 +{
-+	return hmat_normalize_revision(entry, base, type, hmat_revision);
++	return __calc_map_type_and_dist(provider, client, dist, verbose, NULL);
 +}
-+
- static void hmat_update_target_access(struct memory_target *target,
- 				      u8 type, u32 value, int access)
- {
-@@ -599,20 +616,20 @@ static void hmat_update_p2p_access(struct access_coordinate *coord,
- 	}
- }
+ EXPORT_SYMBOL_IF_KUNIT(calc_map_type_and_dist);
  
--static __init void hmat_update_p2p(int initiator, int target, u8 flags,
--				   u8 type, u32 value)
-+static __init void hmat_update_p2p(struct list_head *localities, int initiator,
-+				   int target, u8 flags, u8 type, u32 value)
- {
- 	struct memory_p2p_locality *loc;
- 	enum hmat_p2p_class class;
- 
--	loc = find_p2p_locality(initiator, target);
-+	loc = find_p2p_locality(localities, initiator, target);
- 	if (!loc) {
- 		loc = kzalloc_obj(*loc);
- 		if (!loc)
- 			return;
- 		loc->initiator = initiator;
- 		loc->target = target;
--		list_add_tail(&loc->node, &p2p_localities);
-+		list_add_tail(&loc->node, localities);
- 	}
- 
- 	for (class = 0; class < HMAT_P2P_MAX; class++) {
-@@ -625,10 +642,10 @@ static __init void hmat_update_p2p(int initiator, int target, u8 flags,
- 	}
- }
- 
--static __init int hmat_parse_p2p_latency(union acpi_subtable_headers *header,
--					 const unsigned long end)
-+VISIBLE_IF_KUNIT int __init
-+hmat_parse_p2p(struct acpi_hmat_p2p_latency *p2p, u8 revision,
-+	       struct list_head *localities)
- {
--	struct acpi_hmat_p2p_latency *p2p = (void *)header;
- 	unsigned int init, targ, total_size, ipds, tpds;
- 	u32 *inits, *targs, value;
- 	u16 *entries;
-@@ -661,20 +678,27 @@ static __init int hmat_parse_p2p_latency(union acpi_subtable_headers *header,
- 	entries = (u16 *)(targs + tpds);
- 	for (init = 0; init < ipds; init++) {
- 		for (targ = 0; targ < tpds; targ++) {
--			value = hmat_normalize(entries[init * tpds + targ],
--					       p2p->entry_base_unit, type);
-+			value = hmat_normalize_revision(entries[init * tpds + targ],
-+						p2p->entry_base_unit, type,
-+						revision);
- 			pr_debug("  Initiator-Target[%u-%u]:%u%s\n",
- 				 inits[init], targs[targ], value,
- 				 hmat_data_type_suffix(type));
- 
--			hmat_update_p2p(inits[init], targs[targ], flags,
--					type, value);
-+			hmat_update_p2p(localities, inits[init], targs[targ],
-+					flags, type, value);
- 		}
- 	}
- 
- 	return 0;
- }
- 
-+static __init int hmat_parse_p2p_latency(union acpi_subtable_headers *header,
-+					 const unsigned long end)
-+{
-+	return hmat_parse_p2p((void *)header, hmat_revision, &p2p_localities);
-+}
-+
- static __init int hmat_parse_cache(union acpi_subtable_headers *header,
- 				   const unsigned long end)
- {
-@@ -1198,11 +1222,21 @@ static struct notifier_block hmat_adist_nb __meminitdata = {
- 	.priority = 100,
- };
- 
-+VISIBLE_IF_KUNIT void __init
-+hmat_free_p2p_localities(struct list_head *localities)
-+{
-+	struct memory_p2p_locality *loc, *next;
-+
-+	list_for_each_entry_safe(loc, next, localities, node) {
-+		list_del(&loc->node);
-+		kfree(loc);
-+	}
-+}
-+
- static __init void hmat_free_structures(void)
- {
- 	struct memory_target *target, *tnext;
- 	struct memory_locality *loc, *lnext;
--	struct memory_p2p_locality *ploc, *pnext;
- 	struct memory_initiator *initiator, *inext;
- 	struct target_cache *tcache, *cnext;
- 
-@@ -1235,10 +1269,7 @@ static __init void hmat_free_structures(void)
- 		kfree(loc);
- 	}
- 
--	list_for_each_entry_safe(ploc, pnext, &p2p_localities, node) {
--		list_del(&ploc->node);
--		kfree(ploc);
--	}
-+	hmat_free_p2p_localities(&p2p_localities);
- }
- 
- static __init int hmat_init(void)
-diff --git a/drivers/acpi/numa/hmat_test.c b/drivers/acpi/numa/hmat_test.c
+ static int
+diff --git a/drivers/pci/p2pdma_test.c b/drivers/pci/p2pdma_test.c
 new file mode 100644
-index 000000000000..3da1678feb15
+index 000000000000..1430185f69b7
 --- /dev/null
-+++ b/drivers/acpi/numa/hmat_test.c
-@@ -0,0 +1,223 @@
++++ b/drivers/pci/p2pdma_test.c
+@@ -0,0 +1,210 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/*
-+ * KUnit tests for ACPI HMAT PCIe peer-to-peer matrices.
++ * KUnit tests for HMAT-described PCI peer-to-peer routing.
 + */
 +
++#include <kunit/static_stub.h>
 +#include <kunit/test.h>
 +
 +#include <linux/acpi.h>
-+#include <linux/init.h>
 +#include <linux/module.h>
++#include <linux/pci.h>
++#include <linux/pci-p2pdma.h>
 +
-+#include "hmat_test.h"
++#include "pci.h"
 +
-+struct hmat_test_ctx {
-+	struct list_head localities;
++struct hmat_route_case {
++	const char *desc;
++	bool cpu_p2pdma;
++	int client_pxm;
++	int provider_pxm;
++	int lookup_ret;
++	int lookup_calls;
++	enum pci_p2pdma_map_type expected;
 +};
 +
-+static int __init hmat_test_init(struct kunit *test)
++static const struct hmat_route_case hmat_route_cases[] = {
++	{
++		.desc = "ordered_path",
++		.client_pxm = 11,
++		.provider_pxm = 22,
++		.lookup_ret = 0,
++		.lookup_calls = 1,
++		.expected = PCI_P2PDMA_MAP_THRU_HOST_BRIDGE,
++	},
++	{
++		.desc = "missing_path",
++		.client_pxm = 11,
++		.provider_pxm = 22,
++		.lookup_ret = -ENOENT,
++		.lookup_calls = 1,
++		.expected = PCI_P2PDMA_MAP_NOT_SUPPORTED,
++	},
++	{
++		.desc = "uio_only_path",
++		.client_pxm = 11,
++		.provider_pxm = 22,
++		.lookup_ret = -ENODATA,
++		.lookup_calls = 1,
++		.expected = PCI_P2PDMA_MAP_NOT_SUPPORTED,
++	},
++	{
++		.desc = "missing_client_pxm",
++		.client_pxm = -ENODEV,
++		.provider_pxm = 22,
++		.lookup_ret = 0,
++		.lookup_calls = 0,
++		.expected = PCI_P2PDMA_MAP_NOT_SUPPORTED,
++	},
++	{
++		.desc = "missing_provider_pxm",
++		.client_pxm = 11,
++		.provider_pxm = -ENODEV,
++		.lookup_ret = 0,
++		.lookup_calls = 0,
++		.expected = PCI_P2PDMA_MAP_NOT_SUPPORTED,
++	},
++	{
++		.desc = "platform_authorized",
++		.cpu_p2pdma = true,
++		.client_pxm = 11,
++		.provider_pxm = 22,
++		.lookup_calls = 0,
++		.expected = PCI_P2PDMA_MAP_THRU_HOST_BRIDGE,
++	},
++};
++
++static void hmat_route_case_desc(const struct hmat_route_case *c, char *desc)
 +{
-+	struct hmat_test_ctx *ctx;
-+
-+	ctx = kunit_kzalloc(test, sizeof(*ctx), GFP_KERNEL);
-+	if (!ctx)
-+		return -ENOMEM;
-+
-+	INIT_LIST_HEAD(&ctx->localities);
-+	test->priv = ctx;
-+	return 0;
++	strscpy(desc, c->desc, KUNIT_PARAM_DESC_SIZE);
 +}
 +
-+static void __init hmat_test_exit(struct kunit *test)
-+{
-+	struct hmat_test_ctx *ctx = test->priv;
++KUNIT_ARRAY_PARAM(hmat_route, hmat_route_cases, hmat_route_case_desc);
 +
-+	hmat_free_p2p_localities(&ctx->localities);
++struct hmat_route_ctx {
++	const struct hmat_route_case *test_case;
++	struct pci_dev *provider;
++	struct pci_dev *client;
++	int lookup_calls;
++	int lookup_initiator;
++	int lookup_target;
++	enum hmat_p2p_class lookup_class;
++	bool unexpected_device;
++};
++
++static struct pci_dev *hmat_add_root_device(struct kunit *test, u8 busnr)
++{
++	struct pci_host_bridge *host;
++	struct pci_bus *bus;
++	struct pci_dev *pdev;
++
++	host = kunit_kzalloc(test, sizeof(*host), GFP_KERNEL);
++	KUNIT_ASSERT_NOT_NULL(test, host);
++	bus = kunit_kzalloc(test, sizeof(*bus), GFP_KERNEL);
++	KUNIT_ASSERT_NOT_NULL(test, bus);
++	pdev = kunit_kzalloc(test, sizeof(*pdev), GFP_KERNEL);
++	KUNIT_ASSERT_NOT_NULL(test, pdev);
++
++	bus->number = busnr;
++	bus->bridge = &host->dev;
++	INIT_LIST_HEAD(&bus->devices);
++	host->bus = bus;
++
++	pdev->bus = bus;
++	pdev->devfn = PCI_DEVFN(0, 0);
++	pdev->vendor = 0xffff;
++	pdev->device = 0xffff;
++	list_add_tail(&pdev->bus_list, &bus->devices);
++	return pdev;
 +}
 +
-+static struct acpi_hmat_p2p_latency * __init
-+hmat_test_alloc_table(struct kunit *test, u32 initiators, u32 targets)
++static bool cpu_supports_p2pdma_stub(void)
 +{
-+	struct acpi_hmat_p2p_latency *p2p;
-+	size_t length;
-+
-+	length = sizeof(*p2p) + sizeof(u32) * (initiators + targets) +
-+		 sizeof(u16) * initiators * targets;
-+	p2p = kunit_kzalloc(test, length, GFP_KERNEL);
-+	if (!p2p)
-+		return NULL;
-+
-+	p2p->header.type = ACPI_HMAT_TYPE_P2P_LATENCY;
-+	p2p->header.length = length;
-+	p2p->number_of_initiator_Pds = initiators;
-+	p2p->number_of_target_Pds = targets;
-+	return p2p;
++	return false;
 +}
 +
-+static u32 * __init hmat_test_initiators(struct acpi_hmat_p2p_latency *p2p)
++static bool cpu_supports_p2pdma_true_stub(void)
 +{
-+	return (u32 *)(p2p + 1);
++	return true;
 +}
 +
-+static u32 * __init hmat_test_targets(struct acpi_hmat_p2p_latency *p2p)
++static int pci_host_bridge_pxm_stub(struct pci_dev *pdev)
 +{
-+	return hmat_test_initiators(p2p) + p2p->number_of_initiator_Pds;
++	struct kunit *test = kunit_get_current_test();
++	struct hmat_route_ctx *ctx = test->priv;
++
++	if (pdev == ctx->client)
++		return ctx->test_case->client_pxm;
++	if (pdev == ctx->provider)
++		return ctx->test_case->provider_pxm;
++
++	ctx->unexpected_device = true;
++	return -ENODEV;
 +}
 +
-+static u16 * __init hmat_test_entries(struct acpi_hmat_p2p_latency *p2p)
++static int acpi_get_p2p_coordinates_stub(int initiator, int target,
++					 enum hmat_p2p_class class,
++					 struct access_coordinate *coord)
 +{
-+	return (u16 *)(hmat_test_targets(p2p) + p2p->number_of_target_Pds);
++	struct kunit *test = kunit_get_current_test();
++	struct hmat_route_ctx *ctx = test->priv;
++
++	ctx->lookup_calls++;
++	ctx->lookup_initiator = initiator;
++	ctx->lookup_target = target;
++	ctx->lookup_class = class;
++	if (!ctx->test_case->lookup_ret)
++		coord->read_bandwidth = 1;
++	return ctx->test_case->lookup_ret;
 +}
 +
-+static void __init
-+hmat_test_expect_coord(struct kunit *test, int initiator, int target,
-+		       enum hmat_p2p_class class, u32 read_bandwidth,
-+		       u32 write_bandwidth, u32 read_latency,
-+		       u32 write_latency)
++static void pci_p2pdma_hmat_route_test(struct kunit *test)
 +{
-+	struct hmat_test_ctx *ctx = test->priv;
-+	struct access_coordinate coord;
++	const struct hmat_route_case *test_case = test->param_value;
++	struct hmat_route_ctx ctx = { .test_case = test_case };
++	enum pci_p2pdma_map_type map;
++	int distance;
 +
-+	KUNIT_ASSERT_EQ(test,
-+			hmat_get_p2p_coordinates(&ctx->localities, initiator,
-+						 target, class, &coord),
-+			0);
-+	KUNIT_EXPECT_EQ(test, coord.read_bandwidth, read_bandwidth);
-+	KUNIT_EXPECT_EQ(test, coord.write_bandwidth, write_bandwidth);
-+	KUNIT_EXPECT_EQ(test, coord.read_latency, read_latency);
-+	KUNIT_EXPECT_EQ(test, coord.write_latency, write_latency);
++	ctx.provider = hmat_add_root_device(test, 0);
++	ctx.client = hmat_add_root_device(test, 1);
++	test->priv = &ctx;
++
++	if (test_case->cpu_p2pdma)
++		kunit_activate_static_stub(test, cpu_supports_p2pdma,
++					   cpu_supports_p2pdma_true_stub);
++	else
++		kunit_activate_static_stub(test, cpu_supports_p2pdma,
++					   cpu_supports_p2pdma_stub);
++	kunit_activate_static_stub(test, pci_host_bridge_pxm,
++				   pci_host_bridge_pxm_stub);
++	kunit_activate_static_stub(test, acpi_get_p2p_coordinates,
++				   acpi_get_p2p_coordinates_stub);
++
++	map = calc_map_type_and_dist(ctx.provider, ctx.client, &distance, false);
++	KUNIT_EXPECT_EQ(test, map, test_case->expected);
++	KUNIT_EXPECT_EQ(test, distance, 2);
++	KUNIT_EXPECT_EQ(test, ctx.lookup_calls, test_case->lookup_calls);
++	KUNIT_EXPECT_FALSE(test, ctx.unexpected_device);
++	if (ctx.lookup_calls) {
++		KUNIT_EXPECT_EQ(test, ctx.lookup_initiator,
++				test_case->client_pxm);
++		KUNIT_EXPECT_EQ(test, ctx.lookup_target,
++				test_case->provider_pxm);
++		KUNIT_EXPECT_EQ(test, ctx.lookup_class, HMAT_P2P_NON_UIO);
++	}
 +}
 +
-+static void __init hmat_p2p_matrix_test(struct kunit *test)
-+{
-+	struct hmat_test_ctx *ctx = test->priv;
-+	struct acpi_hmat_p2p_latency *p2p;
-+	struct access_coordinate coord;
-+	u32 *initiators, *targets;
-+	u16 *entries;
-+
-+	p2p = hmat_test_alloc_table(test, 2, 2);
-+	KUNIT_ASSERT_NOT_NULL(test, p2p);
-+	p2p->flags = ACPI_HMAT_P2P_NON_UIO | ACPI_HMAT_P2P_UIO;
-+	p2p->data_type = ACPI_HMAT_ACCESS_LATENCY;
-+	p2p->entry_base_unit = 1000;
-+
-+	initiators = hmat_test_initiators(p2p);
-+	targets = hmat_test_targets(p2p);
-+	entries = hmat_test_entries(p2p);
-+	initiators[0] = 11;
-+	initiators[1] = 22;
-+	targets[0] = 33;
-+	targets[1] = 44;
-+	entries[0] = 5;
-+	entries[1] = 10;
-+	entries[2] = 0xffff;
-+	entries[3] = 20;
-+
-+	KUNIT_ASSERT_EQ(test, hmat_parse_p2p(p2p, 2, &ctx->localities), 0);
-+	hmat_test_expect_coord(test, 11, 33, HMAT_P2P_NON_UIO, 0, 0, 5, 5);
-+	hmat_test_expect_coord(test, 11, 44, HMAT_P2P_UIO, 0, 0, 10, 10);
-+	hmat_test_expect_coord(test, 22, 44, HMAT_P2P_NON_UIO, 0, 0, 20, 20);
-+
-+	KUNIT_EXPECT_EQ(test,
-+			hmat_get_p2p_coordinates(&ctx->localities, 22, 33,
-+						 HMAT_P2P_NON_UIO, &coord),
-+			-ENODATA);
-+	KUNIT_EXPECT_EQ(test,
-+			hmat_get_p2p_coordinates(&ctx->localities, 33, 11,
-+						 HMAT_P2P_NON_UIO, &coord),
-+			-ENOENT);
-+}
-+
-+static int __init hmat_test_add_coordinate(struct kunit *test, u8 flags,
-+					   u8 type, u64 base, u16 entry)
-+{
-+	struct hmat_test_ctx *ctx = test->priv;
-+	struct acpi_hmat_p2p_latency *p2p;
-+
-+	p2p = hmat_test_alloc_table(test, 1, 1);
-+	if (!p2p)
-+		return -ENOMEM;
-+
-+	p2p->flags = flags;
-+	p2p->data_type = type;
-+	p2p->entry_base_unit = base;
-+	hmat_test_initiators(p2p)[0] = 1;
-+	hmat_test_targets(p2p)[0] = 2;
-+	hmat_test_entries(p2p)[0] = entry;
-+	return hmat_parse_p2p(p2p, 2, &ctx->localities);
-+}
-+
-+static void __init hmat_p2p_coordinate_merge_test(struct kunit *test)
-+{
-+	KUNIT_ASSERT_EQ(test,
-+			hmat_test_add_coordinate(test, ACPI_HMAT_P2P_NON_UIO,
-+				ACPI_HMAT_ACCESS_BANDWIDTH, 1, 400),
-+			0);
-+	KUNIT_ASSERT_EQ(test,
-+			hmat_test_add_coordinate(test, ACPI_HMAT_P2P_NON_UIO,
-+				ACPI_HMAT_READ_LATENCY, 1000, 7),
-+			0);
-+	KUNIT_ASSERT_EQ(test,
-+			hmat_test_add_coordinate(test, ACPI_HMAT_P2P_NON_UIO,
-+				ACPI_HMAT_WRITE_LATENCY, 1000, 9),
-+			0);
-+	KUNIT_ASSERT_EQ(test,
-+			hmat_test_add_coordinate(test, ACPI_HMAT_P2P_UIO,
-+				ACPI_HMAT_READ_BANDWIDTH, 1, 200),
-+			0);
-+	KUNIT_ASSERT_EQ(test,
-+			hmat_test_add_coordinate(test, ACPI_HMAT_P2P_UIO,
-+				ACPI_HMAT_WRITE_BANDWIDTH, 1, 300),
-+			0);
-+	KUNIT_ASSERT_EQ(test,
-+			hmat_test_add_coordinate(test, ACPI_HMAT_P2P_UIO,
-+				ACPI_HMAT_ACCESS_LATENCY, 1000, 11),
-+			0);
-+
-+	hmat_test_expect_coord(test, 1, 2, HMAT_P2P_NON_UIO,
-+			       400, 400, 7, 9);
-+	hmat_test_expect_coord(test, 1, 2, HMAT_P2P_UIO,
-+			       200, 300, 11, 11);
-+}
-+
-+static void __init hmat_p2p_invalid_length_test(struct kunit *test)
-+{
-+	struct hmat_test_ctx *ctx = test->priv;
-+	struct acpi_hmat_p2p_latency *p2p;
-+	struct access_coordinate coord;
-+
-+	p2p = hmat_test_alloc_table(test, 1, 1);
-+	KUNIT_ASSERT_NOT_NULL(test, p2p);
-+	p2p->header.length = sizeof(*p2p) - 1;
-+	KUNIT_EXPECT_EQ(test, hmat_parse_p2p(p2p, 2, &ctx->localities),
-+			-EINVAL);
-+
-+	p2p = hmat_test_alloc_table(test, 1, 1);
-+	KUNIT_ASSERT_NOT_NULL(test, p2p);
-+	p2p->header.length = sizeof(*p2p);
-+	KUNIT_EXPECT_EQ(test, hmat_parse_p2p(p2p, 2, &ctx->localities),
-+			-EINVAL);
-+	KUNIT_EXPECT_EQ(test,
-+			hmat_get_p2p_coordinates(&ctx->localities, 0, 0,
-+						 HMAT_P2P_NON_UIO, &coord),
-+			-ENOENT);
-+}
-+
-+static struct kunit_case __refdata hmat_p2p_test_cases[] = {
-+	KUNIT_CASE(hmat_p2p_matrix_test),
-+	KUNIT_CASE(hmat_p2p_coordinate_merge_test),
-+	KUNIT_CASE(hmat_p2p_invalid_length_test),
++static struct kunit_case pci_p2pdma_hmat_test_cases[] = {
++	KUNIT_CASE_PARAM(pci_p2pdma_hmat_route_test, hmat_route_gen_params),
 +	{}
 +};
 +
-+static struct kunit_suite __refdata hmat_p2p_test_suite = {
-+	.name = "acpi_hmat_p2p",
-+	.init = hmat_test_init,
-+	.exit = hmat_test_exit,
-+	.test_cases = hmat_p2p_test_cases,
++static struct kunit_suite pci_p2pdma_hmat_test_suite = {
++	.name = "pci_p2pdma_hmat",
++	.test_cases = pci_p2pdma_hmat_test_cases,
 +};
-+kunit_test_init_section_suite(hmat_p2p_test_suite);
++kunit_test_suite(pci_p2pdma_hmat_test_suite);
 +
++MODULE_IMPORT_NS("EXPORTED_FOR_KUNIT_TESTING");
 +MODULE_LICENSE("GPL");
-+MODULE_DESCRIPTION("KUnit tests for ACPI HMAT PCIe P2P matrices");
-diff --git a/drivers/acpi/numa/hmat_test.h b/drivers/acpi/numa/hmat_test.h
-new file mode 100644
-index 000000000000..f53a395c6f8e
---- /dev/null
-+++ b/drivers/acpi/numa/hmat_test.h
-@@ -0,0 +1,17 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+#ifndef __ACPI_NUMA_HMAT_TEST_H
-+#define __ACPI_NUMA_HMAT_TEST_H
-+
-+#include <linux/acpi.h>
-+#include <linux/list.h>
-+
-+#if IS_ENABLED(CONFIG_KUNIT)
-+int hmat_parse_p2p(struct acpi_hmat_p2p_latency *p2p, u8 revision,
-+		   struct list_head *localities);
-+int hmat_get_p2p_coordinates(struct list_head *localities, int initiator_pxm,
-+			     int target_pxm, enum hmat_p2p_class class,
-+			     struct access_coordinate *coord);
-+void hmat_free_p2p_localities(struct list_head *localities);
-+#endif
-+
-+#endif /* __ACPI_NUMA_HMAT_TEST_H */
++MODULE_DESCRIPTION("KUnit tests for HMAT-described PCI P2P routing");
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index f8f9a15e411a..7a44158fdbd0 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -1101,6 +1101,8 @@ enum pci_acs_p2pdma_state pci_acs_p2pdma_decision(u16 ctrl, bool has_target,
+ enum pci_p2pdma_map_type calc_map_type_and_dist(struct pci_dev *provider,
+ 						struct pci_dev *client,
+ 						int *dist, bool verbose);
++int pci_host_bridge_pxm(struct pci_dev *pdev);
++bool cpu_supports_p2pdma(void);
+ #endif
+ #ifdef CONFIG_PCI_QUIRKS
+ int pci_dev_specific_acs_enabled(struct pci_dev *dev, u16 acs_flags,
 
 -- 
 2.55.0
