@@ -1,211 +1,461 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from TY3P286CU002.outbound.protection.outlook.com (mail-japaneastazon11020138.outbound.protection.outlook.com [52.101.229.138])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 712363783C5
-	for <linux-pci@vger.kernel.org>; Wed, 12 Aug 2026 04:10:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786507837; cv=none; b=K/loSy09HTa8p0H7h3ZXGgWAtIwVxOd8uYyN7HDdf45XdzW0fbRcx7LqT6UJLom6ti2N62sb2BaHxu09rLQyFn4Dbj8VQJwZln0kKM0WzgJVnbuIwXSaUHJWtgNYZJt5uO4j4Spqt+zxMjnrF5YEswE5w3b2rpg9HpTgy1f3pak=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786507837; c=relaxed/simple;
-	bh=gLj1Ji6Xt/i+3gADU6vlqWABAXOi9w/AGkhICO8XBHM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ZKnc3uNWTvVuj/bFU/QItXdBTIGhUOlIodx+UZ9DSdUeblHnxOQ23UvWdoOmvXHHC0hoO8XEL60HN7XbYZ7hz6JfTejKxclTr9QbaN2lBLMZDSJ2nwaXb3IWbq6YqLf8GMqdyf2ED2Xqb257C1FaMn8tmFccxyWOtBIJG28FOKE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=ov/79yIK; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=DfyXYrIJ; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC4DC392C27;
+	Wed, 12 Aug 2026 04:11:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.229.138
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1786507909; cv=fail; b=U+5sjQfLH8sj3Q+ttmcIcTsz08v+gF6ZBSsk/oV3PBU2sNHt/1eDGOl6toOlLty8x+B4Skfp+dAaiwK+GXRp/0azGq5kfOmr5lBC+4eUvlo9hZyS4k3psy8rR2agPviXz4w7D7/+FvpDJ2vLEu+SsR7Y4XkFqxeDKs7jUsPTEsM=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1786507909; c=relaxed/simple;
+	bh=/CKfVIyntAvRL4byE+qNvouzl+nQsOBKBHdyfLRW5iQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=DBVxkKeAVoiuIP4kpjZ8ihsg7KJOjT3jSB5jyVGl/L8fjnMrHPHnD/l8L74+A33ipYAWvAJl3fA4qNVgSaDR+cvS0bG3xETFNNYW9mhHx13ubZ9jsHcKh+2iir9GyCOq2bdgl2cVh/K/IT0OXmKh3FvNq+hdBqWUvk0eB8+QanY=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp; spf=pass smtp.mailfrom=valinux.co.jp; dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b=HwRCnPwr; arc=fail smtp.client-ip=52.101.229.138
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=valinux.co.jp
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="ov/79yIK";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="DfyXYrIJ"
-Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 67C2g2eD2843662
-	for <linux-pci@vger.kernel.org>; Wed, 12 Aug 2026 04:10:35 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	ycqNmOINwoVyj/6s4hroIe44DSPjnnHA0sh0w16wSIg=; b=ov/79yIKXvAbl7rM
-	gYND3eTjFUs+JZgPzkNFHZ2Zh6NcHTr2VVuN4Fk/ceLVedJVotBANBVQbk+nafNH
-	FpP74DPcK+eZGYkhzyvdTLaA5tkiENpE2Q8oF2BaXL9pf5rtJygxsqijGYWxVfKc
-	swTUTIyxfm8TifjW4txS4Jx3VPu5rZEE8J/Ejt7GX6zshvbOlE2s8SJNKEm9i3Fg
-	LkRmu1EQLPwlx0HLxXtu2TV7+i6SmN1u1MGjkdXEcfLYR7WR86O2lByCWA7Cg/1G
-	Wf5jE0XDF0SoiWhxPMekbJqytfdkuWQQBuDkYBR51iOqUIK1d64bXxio37sy/LQm
-	XhWFmw==
-Received: from mail-pg1-f198.google.com (mail-pg1-f198.google.com [209.85.215.198])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4g049euavc-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Wed, 12 Aug 2026 04:10:34 +0000 (GMT)
-Received: by mail-pg1-f198.google.com with SMTP id 41be03b00d2f7-cbee5bab340so487136a12.2
-        for <linux-pci@vger.kernel.org>; Tue, 11 Aug 2026 21:10:34 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1786507834; x=1787112634; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=ycqNmOINwoVyj/6s4hroIe44DSPjnnHA0sh0w16wSIg=;
-        b=DfyXYrIJbrbA4vXxKpJ2g2p6WOkTMdSTvPLkMAM6AvcbmLfaJeefVbSKNZGH4xuU+r
-         RqjPczCIahF/zU0Fd+N62GNwpmiVTnFtHBPsilMZwGC5Btfba6o1IgfEzKju603I3Z/l
-         WTyvHKqGtxdOgqqvxt7l6vwOV+sn6YLBXpJC/RVEaG2AyJ7Y9gAtC15MovJfKxwPmJ1U
-         5Y+NTAFpTEfKWVQtnefewEagsDp80XlXGpgKthoBeRKwcgAJ3duu7ZAVQ7jPOv38chjc
-         3bzKjgypfN2BcX2HQ1Zy5jWTz5j1roUYhtiOgSjTwc6bh+2chhXWLEm4OoZ2W9w0lnjE
-         Bn+Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786507834; x=1787112634;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=ycqNmOINwoVyj/6s4hroIe44DSPjnnHA0sh0w16wSIg=;
-        b=rsBGnILhTc0FW1GFwakLrUoEJDHcHXw/pJaSgVdD4bhJn0Ytdxo9Zw1AnzT/QUr46B
-         jSXQIa2MhBmVea/bUYKw67R+EUaCQSLLe3DRjHxZJz6LinKACFcXuF4gX6Y6yjKIjiBi
-         AF5ul1gZ5VxYKOXyiv0EQolnCg+2U7RjVYrnvsLkiiQlkNBxDPqCAbMLV41R5H1JuNlC
-         3XdSC8kJofvdkkM5vIUYd6Q7khSaWxlZ8QmElwGZp+18eqxn2F/rmeFoTqacNvVo59Y3
-         +5yecxPBrXXCW8EZVKJR7IEDVfM8BrUj7rxy2obRcIrME7/1QaiUTK6S3IwbH3YAYGbB
-         vMUg==
-X-Forwarded-Encrypted: i=1; AHgh+RprJVUpBDOIHCoBN5cc/TPtxR/lhx2ovu1WFbLl4txA78wg7Ki0TVkmLetTVcGvTcEoQiuBjDcsqbo=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx+Sa8vWr4Psf1y4T/CSHQMtNeUSLTu7B2G95KSU6Tgs4BwTikc
-	JzoBWc9+sCNiM08FW9XOPcDruK32edUPvAZVGIZOjiYRLMe8e91XEkTPIWWgTK2BxLKH0utLh23
-	WZ+4kPUK02h14x/L6d8JulowXZ8rGNh61LkhwsM/JLMt7Fl5n1fio6GD8+6Q3bJ4=
-X-Gm-Gg: AR+sD12IGaUhMzVS0MqACZ/nWlunkkHxbNBuRv9mra/wfFppivXJ2TSfDNYinqDJrk/
-	XOKVILs0KXW8hQUtOb7yiOhVYIgxcA6QiAdyKnkon3d6HaacKPjKNyUpNZdAuGCqAs2VTd7J8/d
-	ZgwUI/AimGltAHL/GjaoFUcUAz3p/499u1j7eH715Zk4vokhqHbHN8nKRDZXXaTGtezTCsdnTd+
-	Jnn3KC2GD7kKkZ9sgDwSG/0O4UR96oYM/jTYecda29HG9vkHuC6qfkIhNOdZARCc0pKkvi/PQDx
-	qlayWmRPj7fk2Cn6qKsNqQG0dQkxVV6f9gHf1RiYiCBuMMCpbPQ9Fc0VPH5A3HC7cIKFWpzZ329
-	Pp4O/LD50V4vGk2L5pE54vpe73xYQa2lDFw==
-X-Received: by 2002:a05:6a20:da14:b0:3c4:3112:33 with SMTP id adf61e73a8af0-3cc3f51c7a5mr2557877637.6.1786507833535;
-        Tue, 11 Aug 2026 21:10:33 -0700 (PDT)
-X-Received: by 2002:a05:6a20:da14:b0:3c4:3112:33 with SMTP id adf61e73a8af0-3cc3f51c7a5mr2557821637.6.1786507833113;
-        Tue, 11 Aug 2026 21:10:33 -0700 (PDT)
-Received: from [10.218.18.194] ([202.46.22.19])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-31cf628e0edsm5538714eec.18.2026.08.11.21.10.27
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 11 Aug 2026 21:10:32 -0700 (PDT)
-Message-ID: <3f2cb2e9-d242-468e-8582-26caabba7832@oss.qualcomm.com>
-Date: Wed, 12 Aug 2026 09:40:25 +0530
+	dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b="HwRCnPwr"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=VJlVOxV+/4B9nSNr+9JB2lFbm8a6gocrlJWfIf9/YwGfjgjs+KVA1rZrDa9TKjtr6P6ELQeX57a99x8a/4YjM6mSg45oRzx/D/mAYGjGWBQ0ZBAjV19Vgp+JNYtt73778glnoF1edQiHtv92fPOyMLqeZB5IY5LTA3QbAndWv+wuoO0xbmjxEPShZVgm+YcYXUMCBDjMBeb2v+PY6WY3VQmpeLQyUZrq2x8/NOuOb+6GnjyHE7jmcf3NGOneVo6PdZZZlEJzu9arpHy1Izpat4V5M/7sDNfNfC5/RLJIrp+hhG/NNw5A8sELuDRCVPnU+MppvC8jEZTuUcmuaRNC1g==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=JvRIPs37auWkPn94nttlC1t0/7DQz9DIMNc1N/P8zPg=;
+ b=uWqbd0FDTYY46Lv8iWibzI09Qa6B5Ig4Pd5XXzbug+2MsbOnBqqnX6FUCxeDcvmK3wldhUeVp5eovYvldhhByfkj0aSewohGK8r4naS0LqM5psd1hosP7CneFg3gNLXogNF+6jfyJDwIAp/b6MMMg92ylk7tP/fd+FJT6AtCnMpQtIJHfhLYGMl5M0nwivabRGmVKyMusHB3aFHCYD+tUhbDVshQej7cZUeQlNZrWz3SckZvlXmfUmC7Cv9Sm+M58IgV2R0V16cHGjDsyiAfOU67BFqbiUXH+09cKPQAab0vMi2SXtCOyhivOX4m4isgU3rkrshn1wXyGOMUZ/Rpdg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=valinux.co.jp; dmarc=pass action=none
+ header.from=valinux.co.jp; dkim=pass header.d=valinux.co.jp; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=valinux.co.jp;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=JvRIPs37auWkPn94nttlC1t0/7DQz9DIMNc1N/P8zPg=;
+ b=HwRCnPwrpY8IwkYJcqJzBLzO36fwM0txXVlNZ4jYFwF/w5IsideiGrxWnWBSIJVs6o/SWG6sTl6dtSJ47NffPKSAj9vlYTpfNQjtKkM8Dwcm+qbnKtf7wDKl/L+m94qHd5VRmhmPVYyXku8++OZN5naZpRI7lU5HPxf3PJY2dhw=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=valinux.co.jp;
+Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:38f::10)
+ by TYWP286MB2649.JPNP286.PROD.OUTLOOK.COM (2603:1096:400:24c::6) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.315.12; Wed, 12 Aug
+ 2026 04:11:43 +0000
+Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ ([fe80::2305:327c:28ec:9b32]) by TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ ([fe80::2305:327c:28ec:9b32%3]) with mapi id 15.21.0292.024; Wed, 12 Aug 2026
+ 04:11:43 +0000
+Date: Wed, 12 Aug 2026 13:11:41 +0900
+From: Koichiro Den <den@valinux.co.jp>
+To: Frank Li <Frank.li@oss.nxp.com>
+Cc: Manivannan Sadhasivam <mani@kernel.org>, 
+	Jingoo Han <jingoohan1@gmail.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Rob Herring <robh@kernel.org>, 
+	Bjorn Helgaas <bhelgaas@google.com>, Kishon Vijay Abraham I <kishon@kernel.org>, 
+	Frank Li <Frank.Li@kernel.org>, Marek Vasut <marek.vasut+renesas@mailbox.org>, 
+	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v6 4/6] dmaengine: dw-edma: Add delegated channel request
+ helpers
+Message-ID: <lm7tadnxsyrypu4mypptlkx5qkytex4qxsijdr5ydud2n3anvf@yakjfjg5ng4u>
+References: <20260804033855.2115817-1-den@valinux.co.jp>
+ <20260804033855.2115817-5-den@valinux.co.jp>
+ <anISE4zj1odwT2aJ@SMW015318>
+ <eu5iqhvvnpklaudcb7tkbjp3hpzecyzqxdbf4u7fnh6bjjgcqe@6hpimw5vu62m>
+ <anOFUSDiDjD0jvei@SMW015318>
+ <ni6sfv45mypgxncitlstnqxgpqwn5ocxkns6kv3nez6hnq4x5m@setbl5dlfqdr>
+ <anpIJM5OligYsEK0@lizhi-Precision-Tower-5810>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <anpIJM5OligYsEK0@lizhi-Precision-Tower-5810>
+X-ClientProxiedBy: TY4P286CA0131.JPNP286.PROD.OUTLOOK.COM
+ (2603:1096:405:37f::9) To TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ (2603:1096:405:38f::10)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 0/9] PCI: qcom: Add PCIe support for Shikra SoC
-To: Manivannan Sadhasivam <mani@kernel.org>
-Cc: Vinod Koul <vkoul@kernel.org>, Neil Armstrong
- <neil.armstrong@linaro.org>,
-        Rob Herring <robh@kernel.org>,
-        Krzysztof Kozlowski <krzk+dt@kernel.org>,
-        Conor Dooley
- <conor+dt@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>,
-        Bartosz Golaszewski <brgl@kernel.org>,
-        Konrad Dybcio
- <konradybcio@kernel.org>, linux-arm-msm@vger.kernel.org,
-        linux-phy@lists.infradead.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-References: <20260701-shikra-upstream-v1-0-e1a721eb8943@oss.qualcomm.com>
- <e2inl7k5gsjj6oomv2k5ximuzpb3gfiz66ufet3b4hvov7zqt4@qz4pifbos7yf>
-Content-Language: en-US
-From: Sushrut Shree Trivedi <sushrut.trivedi@oss.qualcomm.com>
-In-Reply-To: <e2inl7k5gsjj6oomv2k5ximuzpb3gfiz66ufet3b4hvov7zqt4@qz4pifbos7yf>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-Spam-Info: AW1haW4tMjYwODEyMDAyOSBTYWx0ZWRfX4MIqIyXsFcsw
- 7IAe00oNytQwXchBXcbzFEZZNX/vTnS5Cdl1TncwWWM+AgHEaiS2hqJwyL+mmwriCmDjy+4h37W
- yvd4a/6QgJECpEF3hNTwPZxuOIGGlPc=
-X-Authority-Analysis: v=2.4 cv=DoFmPm/+ c=1 sm=1 tr=0 ts=6a7bf23a cx=c_pps
- a=Qgeoaf8Lrialg5Z894R3/Q==:117 a=fChuTYTh2wq5r3m49p7fHw==:17
- a=IkcTkHD0fZMA:10 a=Sv0fKeRqtYgA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=3WHJM1ZQz_JShphwDgj5:22
- a=VwQbUJbxAAAA:8 a=ee_2aqc6AAAA:8 a=EUspDBNiAAAA:8 a=clU37HkR2gB4O1HD2CAA:9
- a=QEXdDO2ut3YA:10 a=x9snwWr2DeNwDh03kgHS:22 a=VOpmJXOdbJOWo2YY3GeN:22
-X-Proofpoint-ORIG-GUID: KyicGcRayK6ybxRFZI8ApAvdWTGKTCTT
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODEyMDAyOSBTYWx0ZWRfX96zprBlaRsjl
- 5NkbvBpLVF9HUC6nWlR7E6X9Fy9KmYlfc/rpAaJK74jxwbPsSnWx2rQ19S60bzloDM5Haap5S86
- o68jXD8IglWcGaweRSgLQclMOqv5vv2gNmZfKvTf8q46woEpvt7dQZiKFP4uU6EALUP0UjVhmcm
- sHImyLTEm0qnuCkiDf5HDR+9xx46sD6pwXsWddlNGMA40OwIu8tiSKt27FZuW2E5J6fmo4/BfMq
- vtJ++N5avxBBk68PDZWq2i8+Kt9w//1ct3t02C2G+wqsYKV/InA+txGX+ZbDgFN19TFZvEbPciM
- lz/Y9ybyMDxnn/M+y3aM0gWdrjqZfBJfBywxvSO9v2ic3FtvismiyloMjnOVOUUDViOgC/cBp+v
- 8O5X9lrQNbYk6MuXmsE8CiIL/kJlIebAOBXFieoHJP1mJS9ksNmcR6WR1kZzvsD77fNd1aLC87U
- s4P7DlnWfCi72b9rtWw==
-X-Proofpoint-GUID: KyicGcRayK6ybxRFZI8ApAvdWTGKTCTT
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-08-12_01,2026-08-10_03,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- impostorscore=0 malwarescore=0 priorityscore=1501 phishscore=0 suspectscore=0
- clxscore=1015 bulkscore=0 adultscore=0 lowpriorityscore=0 spamscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2608120029
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: TY7P286MB7722:EE_|TYWP286MB2649:EE_
+X-MS-Office365-Filtering-Correlation-Id: 49b7daaf-62ea-4c2b-f6f1-08def827d11a
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|10070799003|23010399003|376014|7416014|1800799024|366016|6133799003|10067099003|56012099006|4143699003|18002099003|22082099003;
+X-Microsoft-Antispam-Message-Info:
+	YGRM3HVIwmxw08aydhtTKVgynyO2lhh+Vz+jmEY3Oi+Dr/bN2LZIRWdZ9Ke2ZEJcRjdKjFR3xdc2445aTQcwiqlct5/KlM0fVIyDMNdZ24n8aXq3Rrt8AoYHmKXH89GblCSP18m6+Bk+NEOuTHhP/DAtnJ+zaoMtFeR9oU1NVrBi8T9rbTYuK8jFCzTprJFGlpchhelpkOf+uwM2rGp752Smyem5PZKQwndKnIPd2yZ+9+bSWGTlFVrwGI1RzTmKjhzcOw8rQWy34PMydNi4O1Moy4xPxbY24UrYQJDn/jnib+4EN+Lr8EgFoG/ndLLR+CVr7h8LgzlirbpjSWAhVo+/jNfAfe5SMwrG8JkeUdA6ZEhy2gSheXgbycknNkMBsEvJKJ837sLLxVJcZGmZojwHyjQu9Yf+5vdNm5rFETsx9vWYCkLzcORFfI1dOM9HXAhf/umHGBk4R6sTHpZMfXazVjMUqPp1VYv7J4TI0slvncmbHChIGSTqwhUe8QfV20aiM5D4spIy1l699rSZzoF+3XKBeYxTV56zSpdNNgGl160RC+CKMAAOFkm4Ou8HufMGvIIO9a9pR/AArFJ1nN6Hk0PcHN2vRR9cgo2KLV/aulMt24bnF3yLGSmImB5Sl415XHNehAxP1IRGeUXfsqbeLnFuyi1llK8wYDnFvJc=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(10070799003)(23010399003)(376014)(7416014)(1800799024)(366016)(6133799003)(10067099003)(56012099006)(4143699003)(18002099003)(22082099003);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?Y4F4/EsHNYMn3F73FxTzI2BvSGtA+MA7tsfYfYqiryDwtW5g8ANaI2v2hAah?=
+ =?us-ascii?Q?Mf5dvxtyWftq5AvtEX4bA2c6JA06W1Gq2u54Qo3JlUIgwPOE8f2YMnQFBPYM?=
+ =?us-ascii?Q?36FwhWu6Nk4MgdAPU4vTrsNCezgzlZ6As4vFwuTVXU6uV9fGZDgSfqbykF7w?=
+ =?us-ascii?Q?1m147BaikuushhUv+AUaE9hv+BEC74Ck5qH6n+YFvcudwJGihsPDT3xv6/zz?=
+ =?us-ascii?Q?pPBfKTwRVWqDU6cJih43GqnPg3+rbtL3T9q5pDkAvqzwJIEjK47Zo4AHuTY9?=
+ =?us-ascii?Q?hytV6CwbDUTlzhg+GkC0QZQp8311G0MQIN5h66gs3uSP5KyIfnCBnzBs4e9P?=
+ =?us-ascii?Q?UlMqMv8lEzWqd/FLU9Eu4gFM2jFIRp9Aq+M6hkBJoCLydXcjX3JlWyrMZzBL?=
+ =?us-ascii?Q?1WB7Mi9sqSnWTTBS4vySWTY4VXHlWth/KcdGyisYzoD3DLExnD6v/7yozCre?=
+ =?us-ascii?Q?DBEDhmjvZt49tTF1aEW3C9X+JJoR7V8bJdwGXHfAMAClUBNHpsGVUmMf313h?=
+ =?us-ascii?Q?MUJRgBncEhj/yZniIudvIrP6/u1xX3iYh6e97fWCLMAc/eK5atlAB2Y0VzJ3?=
+ =?us-ascii?Q?vlzCay4Qe2yyD/fhSNImu8W9NfwW4VORZ0whJ4SeF/ORs9ZU0kkOK6Il1kU1?=
+ =?us-ascii?Q?AzlOirSy/JKaf1X50BfHQo+c9YY2yjVkbE0Ub4jXPlEkCGhF2xuDnZdGo5d1?=
+ =?us-ascii?Q?5dGR5R8gkHN4yaxSCaTQ42xe2/JbS1kZd/aV59bLYdrso8VkFkp61JBYJf0p?=
+ =?us-ascii?Q?4ivUgByxl7eMgRwah89EifBfLnmQGEO2udwm98xqe+OvrqxENaPuGTO0XECb?=
+ =?us-ascii?Q?E5s6twKZxSFo1gE5KRNASRrMd7o1h/b7AdC0CscfvxR+cel+RtJPc5iflOYi?=
+ =?us-ascii?Q?YlGartvNIqYwPPOSCKc2We9tOBqNuZtnStZ2U6ozNIjcWM0fo6xF3JY4i9KD?=
+ =?us-ascii?Q?Jan377QnWOIkz/Hf4pDOijb3nBCYKy+2XKvX2xVcnQz1nU1G+QmDlOyo+HyV?=
+ =?us-ascii?Q?dOlVOFKw9PaTFMiJd+Jhjtz1xeuTqzSFN0KH4JLvVkbSDjyaKMtgbZUX1vPZ?=
+ =?us-ascii?Q?HfOLhTM5lxHZ+um0QI+JLuqXJeWU9qEgf7rmXiThxMh0Slux2V6tzT/NeNL5?=
+ =?us-ascii?Q?Iint+8y6mOYETOdGiFWbB56ZImXfqx9XL7nymoRKnGmRvCVROTOUMxA5aYf6?=
+ =?us-ascii?Q?2bHjFLp19ah/XesdsiG7vtx7KW4K4fueuThMwdgpg50Yts/+jlOngKf0hBiG?=
+ =?us-ascii?Q?VyTygDyvRe/NaEgoVTgpZSr2x/xV/zZJ43KqCaCOKZCeSmMOaWZ3uYt1FKQc?=
+ =?us-ascii?Q?bgfQvlwRbISLXe4vC0GqaUSTi1WDSU8maIhCQMxTYluVhpcyEVlG8WQ1R53h?=
+ =?us-ascii?Q?d/riCTnTuB5i1IacqQWZn0m7Fs2E2bCyD0AzbPK2H2CYqCJaDFqlWBj1GHZu?=
+ =?us-ascii?Q?PuKcpgI3KD6R4ev6KXHcSL2M+qmDgUZ2Nl2wOQwjJZzdPEkDhagaYyFFcjvb?=
+ =?us-ascii?Q?NHY2YEVM2GtNSAZPVbdIWl4pl1pPKVkGc0NT+TSwSSnoJq4VvwpDRoqhxzjd?=
+ =?us-ascii?Q?8wB9RMiic+XF8ARrvpEsfZKcdyxoBzca0gePsuEMZ1VJHB1iK1PKJaV+WCAs?=
+ =?us-ascii?Q?C8G2EhZBwHL1rtqcoh5Ps6ZCA0DC6FphPbS5YSpqBiDYHwJn0mb7cpI0Qk+f?=
+ =?us-ascii?Q?BgqFtBlq2FQ1UZPQY3vk0eXZh0JGGHQ96YBdH/zABrsBJydLPnG9HWhQdcTx?=
+ =?us-ascii?Q?lVJ92CWyiObvv+xFHJ/luu7+K/ovXEaIyUK/w7lIO/MZpxLX9cDJ?=
+X-OriginatorOrg: valinux.co.jp
+X-MS-Exchange-CrossTenant-Network-Message-Id: 49b7daaf-62ea-4c2b-f6f1-08def827d11a
+X-MS-Exchange-CrossTenant-AuthSource: TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 Aug 2026 04:11:42.9504
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 7a57bee8-f73d-4c5f-a4f7-d72c91c8c111
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: qd23wEnelMOgiQ/RMvG5e5CYYYZSoJUvLVQ2u3W/DlgLejTZOhmW7yDjzt3dnupmNI6yZFyXrVp38AMWkL6XvQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYWP286MB2649
 
+On Mon, Aug 10, 2026 at 05:52:36PM -0400, Frank Li wrote:
+> On Thu, Aug 06, 2026 at 12:45:13PM +0900, Koichiro Den wrote:
+> > On Wed, Aug 05, 2026 at 01:47:45PM -0500, Frank Li wrote:
+> > > On Wed, Aug 05, 2026 at 11:05:21AM +0900, Koichiro Den wrote:
+> > > > On Tue, Aug 04, 2026 at 11:23:47AM -0500, Frank Li wrote:
+> > > > > On Tue, Aug 04, 2026 at 12:38:53PM +0900, Koichiro Den wrote:
+> > > > > > Endpoint functions that expose endpoint-local DesignWare eDMA channels
+> > > > > > to a remote host need to reserve exact hardware channels and hand
+> > > > > > interrupt ownership to the remote side before publishing the channels.
+> > > > > >
+> > > > > > Add DW eDMA-specific helpers that request a write/read hardware channel
+> > > > > > through DMAengine, keep the hardware-channel filter private to dw-edma,
+> > > > > > and switch the selected endpoint-local channel to remote interrupt
+> > > > > > routing after the channel has been successfully reserved. The matching
+> > > > > > release helper can quiesce the channel while it is still remote-routed,
+> > > > > > then restores the channel's default routing before releasing the
+> > > > > > DMAengine reservation. This lets callers skip quiesce when unwinding a
+> > > > > > reservation that was never exposed to host programming.
+> > > > > >
+> > > > > > Release is best-effort because its callers cannot abort teardown. Report
+> > > > > > a quiesce failure locally, but always restore the default routing and
+> > > > > > release the DMAengine reservation.
+> > > > > >
+> > > > > > Signed-off-by: Koichiro Den <den@valinux.co.jp>
+> > > > > > ---
+> > > > > > Changes in v6:
+> > > > > >   - No changes.
+> > > > > >
+> > > > > >  drivers/dma/dw-edma/dw-edma-core.c | 91 ++++++++++++++++++++++++++++++
+> > > > > >  include/linux/dma/edma.h           | 14 +++++
+> > > > > >  2 files changed, 105 insertions(+)
+> > > > > >
+> > > > > > diff --git a/drivers/dma/dw-edma/dw-edma-core.c b/drivers/dma/dw-edma/dw-edma-core.c
+> > > > > > index 1f893dc54c79..4c0d2bba755b 100644
+> > > > > > --- a/drivers/dma/dw-edma/dw-edma-core.c
+> > > > > > +++ b/drivers/dma/dw-edma/dw-edma-core.c
+> > > > > > @@ -1302,6 +1302,97 @@ int dw_edma_remove(struct dw_edma_chip *chip)
+> > > > > >  }
+> > > > > >  EXPORT_SYMBOL_GPL(dw_edma_remove);
+> > > > > >
+> > > > > > +struct dw_edma_delegated_chan_filter_args {
+> > > > > > +	struct device *dma_dev;
+> > > > > > +	bool write;
+> > > > > > +	u16 id;
+> > > > > > +};
+> > > > > > +
+> > > > > > +static bool dw_edma_delegated_chan_filter(struct dma_chan *dchan, void *param)
+> > > > > > +{
+> > > > > > +	struct dw_edma_delegated_chan_filter_args *filter = param;
+> > > > > > +	struct dw_edma_chan *chan;
+> > > > > > +
+> > > > > > +	if (!filter || dchan->device->dev != filter->dma_dev)
+> > > > > > +		return false;
+> > > > > > +
+> > > > > > +	chan = dchan2dw_edma_chan(dchan);
+> > > > > > +
+> > > > > > +	return chan->dir == (filter->write ? EDMA_DIR_WRITE : EDMA_DIR_READ) &&
+> > > > > > +	       chan->id == filter->id;
+> > > > > > +}
+> > > > > > +
+> > > > > > +static int dw_edma_delegate_chan(struct dma_chan *dchan)
+> > > > > > +{
+> > > > > > +	struct dw_edma_chan *chan = dchan2dw_edma_chan(dchan);
+> > > > > > +	int ret = 0;
+> > > > > > +
+> > > > > > +	if (!(chan->dw->chip->flags & DW_EDMA_CHIP_LOCAL))
+> > > > > > +		return -EINVAL;
+> > > > > > +
+> > > > > > +	guard(spinlock_irqsave)(&chan->vc.lock);
+> > > > > > +
+> > > > > > +	if (chan->configured || chan->status != EDMA_ST_IDLE ||
+> > > > > > +	    chan->request != EDMA_REQ_NONE)
+> > > > > > +		ret = -EBUSY;
+> > > > > > +	else
+> > > > > > +		chan->irq_mode = DW_EDMA_CH_IRQ_REMOTE;
+> > > > > > +
+> > > > > > +	return ret;
+> > > > > > +}
+> > > > > > +
+> > > > > > +struct dma_chan *dw_edma_request_delegated_chan(struct device *dma_dev,
+> > > > > > +						bool write, u16 id)
+> > > > > > +{
+> > > > > > +	struct dw_edma_delegated_chan_filter_args filter = {
+> > > > > > +		.dma_dev = dma_dev,
+> > > > > > +		.write = write,
+> > > > > > +		.id = id,
+> > > > > > +	};
+> > > > > > +	struct dma_chan *dchan;
+> > > > > > +	dma_cap_mask_t mask;
+> > > > > > +
+> > > > > > +	if (!dma_dev)
+> > > > > > +		return NULL;
+> > > > > > +
+> > > > > > +	dma_cap_zero(mask);
+> > > > > > +	dma_cap_set(DMA_SLAVE, mask);
+> > > > > > +
+> > > > > > +	dchan = dma_request_channel(mask, dw_edma_delegated_chan_filter,
+> > > > > > +				    &filter);
+> > > > > > +	if (!dchan)
+> > > > > > +		return NULL;
+> > > > >
+> > > > > I forget, why need export delegrated dma channel to dmanegine? If EP
+> > > > > driver doesn't report delegrated channel to dma engine, what's happen?
+> > > >
+> > > > This just reserves the exact channel against any dmaengine clients before
+> > > > handing its programming ownership to the host. Without it, a local client
+> > > > could request the same channel too.
+> > >
+> > > why not epf function driver call dma_request_channel() to decide which
+> > > channel pass to ownership to the host.
+> >
+> > I actually tried that model in v2. pci_epf_dma called dma_request_channel() with
+> > a filter supplied through the EPC resource.
+> >
+> >   In v2, .filter_fn was part of the pci_epc_aux_resource definition:
+> >   https://lore.kernel.org/r/20260525063129.3316894-3-den@valinux.co.jp/
+> >   ... and pci_epf_dma_claim_channel() used it to claim the channel here:
+> >   https://lore.kernel.org/r/20260525063456.3317509-3-den@valinux.co.jp/
+> >
+> > I changed that in v3 after your comment about why the dw-edma filter needed to
+> > be public. The replacement kept the filter inside dw-edma, and moved channel
+> > reservation, IRQ ownership handoff and reclaim there too. The current EPC
+> > delegation API follows that model.
+> >
+> > Or is that v2 model what you prefer here?
+> >
+> > That said, dma_get_slave_channel() might be sufficient inside dw-edma here,
+> > since it already knows the exact channel from the direction and hw channel id.
+> >
+> > P.S. For clarity, the options tried or discussed so far are:
+> >
+> >   (a) Expose dma_chan directly through the EPC resource, then let the EPF
+> >       reserve it with dma_get_slave_channel(). This was v1.
+> >       (https://lore.kernel.org/r/20260521063405.2842644-3-den@valinux.co.jp/)
+> >
+> >   (b) Expose the hardware ID, direction and a provider filter, then let the
+> >       EPF call dma_request_channel(). This was v2.
+> >       (https://lore.kernel.org/r/20260525062420.3315904-2-den@valinux.co.jp/)
+> >
+> >   (c) Pass the hardware ID and direction to pci_epc_delegate_dma_chan(), then
+> >       let the backend reserve and delegate the channel. This is the current
+> >       v6 design.
+> >       (https://lore.kernel.org/r/20260804033855.2115817-5-den@valinux.co.jp/)
+> >
+> >   (d) Request channels normally and correlate them with EPC resources through
+> >       a generic dma_slave_caps.hw_id. I proposed this in a much older series.
+> >       (https://lore.kernel.org/r/20260204145440.950609-2-den@valinux.co.jp/)
+> 
+> (d) is close to best solutin.
 
-On 7/8/2026 1:32 PM, Manivannan Sadhasivam wrote:
-> On Wed, Jul 01, 2026 at 12:32:42AM +0530, Sushrut Shree Trivedi wrote:
->> Add PCIe support for Shikra target, by adding dt-bindings for phy,
->> controller and corresponding phy & controller drivers/device-tree
->> changes.
->>
->> Shikra RC is connected to TC9563 PCIe switch on all three
->> EVK variants: CQS, CQM and IQS. The individual downstream ports
->> of TC9563 connect like below:
->>
->> DSP1: M.2 B-Key for 5G Modem
->> DSP2: M.2 M-Key for NVMe
->> DSP3: Embedded ethernet device
->>
->> Power and reset to M.2 B and M.2 M slot are controlled via
->> TC9563 GPIO's. Hence, add DT nodes to enable TC9563 switch
->> and include corresponding changes to configure power/reset
->> to TC9563 endpoints as part of power on sequence.
->>
->> Signed-off-by: Sushrut Shree Trivedi <sushrut.trivedi@oss.qualcomm.com>
->> ---
->> Sushrut Shree Trivedi (9):
->>        dt-bindings: phy: sc8280xp-qmp-pcie: Document Shikra PCIe phy
->>        dt-bindings: PCI: qcom: Document the Shikra PCIe Controller
->>        dt-bindings: PCI: Add bindings for endpoint gpios
->>        PCI: qcom: Add support for Shikra
->>        phy: qcom: qmp-pcie: Add QMP PCIe PHY support for Shikra
->>        PCI/pwrctrl: tc9563: Add API to control endpoint power and reset
-> TC9563 should be modeled as a GPIO controller to drive the PERST# and power-on
-> GPIOs. There is a patch series under review [1] that adds this support. So it
-> doesn't make sense to duplicate the effort here (which itself is hackish). So
-> please drop all the switch related patches from this series and resubmit them
-> once the above mentioned series from Alex gets merged.
->
-> But you can continue with the Shikra PCIe RC/PHY patches.
->
-> - Mani
->
-> [1] https://lore.kernel.org/all/20260605010022.968612-1-elder@riscstar.com
-ACK'd
->
->>        arm64: dts: qcom: shikra: Add PCIe PHY and controller nodes
->>        arm64: dts: qcom: shikra-evk: Add TC9563 PCIe switch node for PCIe
->>        arm64: dts: qcom: shikra-(cqm/cqs/iqs)-evk: Enable PCIe PHY node
->>
->>   .../devicetree/bindings/pci/qcom,shikra-pcie.yaml  | 211 +++++++++++++++++++++
->>   .../devicetree/bindings/pci/toshiba,tc9563.yaml    |  22 ++-
->>   .../bindings/phy/qcom,sc8280xp-qmp-pcie-phy.yaml   |   2 +
->>   arch/arm64/boot/dts/qcom/shikra-cqm-evk.dts        |   7 +
->>   arch/arm64/boot/dts/qcom/shikra-cqs-evk.dts        |   7 +
->>   arch/arm64/boot/dts/qcom/shikra-evk.dtsi           | 152 +++++++++++++++
->>   arch/arm64/boot/dts/qcom/shikra-iqs-evk.dts        |   7 +
->>   arch/arm64/boot/dts/qcom/shikra.dtsi               | 154 +++++++++++++++
->>   drivers/pci/controller/dwc/pcie-qcom.c             |   1 +
->>   drivers/pci/pwrctrl/pci-pwrctrl-tc9563.c           | 152 ++++++++++++---
->>   drivers/phy/qualcomm/phy-qcom-qmp-pcie.c           |  73 +++++++
->>   11 files changed, 764 insertions(+), 24 deletions(-)
->> ---
->> base-commit: 565fa02f75448ce1ddd18bda6b31ad985cf75411
->> change-id: 20260701-shikra-upstream-14b8668f1001
->>
->> Best regards,
->> -- 
->> Sushrut Shree Trivedi <sushrut.trivedi@oss.qualcomm.com>
->>
->>
+Hi Frank, thanks for sharing your thoughts.
+
+> 
+> There are chan_id in dma_chan, but have not implemented good enough.
+> 
+>   	/*
+>          * When the chan_id is a negative value, we are dynamically adding
+>          * the channel. Otherwise we are static enumerating.
+>          */
+>         chan->chan_id = ida_alloc(&device->chan_ida, GFP_KERNEL);
+>         if (chan->chan_id < 0) {
+>                 pr_err("%s: unable to alloc ida for chan: %d\n",
+>                        __func__, chan->chan_id);
+>                 rc = chan->chan_id;
+>                 goto err_free_dev;
+>         }
+> 
+> But there are not check for negative value eventhough there are comments
+> for it.
+
+I looked into the history. Isn't this just a stale comment left behind by
+0821009445a8 ("dmaengine: fix channel index enumeration")?
+
+> 
+> It causes logic channel and hardware channel mismatch if dma-channel mask
+> existting. If skip some channel register, it will be mismatched, which will
+> cause confuse when debug.
+> 
+> To keep back compatible, we may use reverse logic for dynamically adding.
+
+Just to confirm, by "reverse logic", do you mean keeping the automatic IDA
+allocation from 0821009445a8 as the default, while letting a driver explicitly
+set a static channel ID? (pls see my next comment below)
+
+> 
+> BIT(30) as static enumerating.
+> 
+> if (!(chan->chan_id & BIT(30)))
+> 	chan->chan_id = ida_alloc(&device->chan_ida, GFP_KERNEL);
+> 
+> 
+> Or we simple add hw_id in dma_chan. at debug fs can show hw id. but idealy
+> chan_id match hardware sequency.
+
+I agree. It would be nice if we could do without adding a new field. How about a
+small helper such as:
+
+    static inline void
+    dmaengine_set_static_chan_id(struct dma_chan *chan, unsigned int hw_id)
+    {
+            chan->chan_id = BIT(30) | hw_id;
+    }
+
+then in the dmaengine core:
+
+    if (chan->chan_id & BIT(30)) {
+            id = chan->chan_id & ~BIT(30);
+            chan->chan_id = ida_alloc_range(&device->chan_ida, id, id,
+                                            GFP_KERNEL);
+    } else {
+            chan->chan_id = ida_alloc(&device->chan_ida, GFP_KERNEL);
+    }
+
+and for dw-edma as an example, use it like this:
+
+    diff --git a/drivers/dma/dw-edma/dw-edma-core.c b/drivers/dma/dw-edma/dw-edma-core.c
+    index 1f893dc54c79..d214df55da3c 100644
+    --- a/drivers/dma/dw-edma/dw-edma-core.c
+    +++ b/drivers/dma/dw-edma/dw-edma-core.c
+    @@ -987,6 +987,7 @@ static int dw_edma_channel_setup(struct dw_edma *dw, u32 wr_alloc, u32 rd_alloc)
+                                            &dw->chip->dt_region_rd[chan->id];
+    
+                    vchan_init(&chan->vc, dma);
+    +               dmaengine_set_static_chan_id(&chan->vc.chan, i);
+    
+                    dw_edma_core_ch_config(chan);
+            }
+
+Here, 'i' is a direction-flattened ID, unlike dw_edma_chan.id, which is
+direction-local. It keeps dma_chan.chan_id unique within one dma_device.
+
+> 
+> chan_id match hardware instance will beanfit more. There are some code
+> assume chan_id is that hardware id, such as
+> 
+> drivers/dma/dw/idma32.c:        value = readl(misc + DMA_CTL_CH(dwc->chan.chan_id));
+
+Thanks for the pointer. I wasn't aware of it, TBH. The current semantics might
+be a bit fragile.
+
+Thanks again for the review, it's super helpful.
+
+Best regards,
+Koichiro
+
+> 
+> Frank
+> 
+> >
+> > Best regards,
+> > Koichiro
+> >
+> > >
+> > > Frank
+> > >
+> > > >
+> > > > Best regards,
+> > > > Koichiro
+> > > >
+> > > > >
+> > > > > Frank
+> > > > >
+> > > > > > +
+> > > > > > +	if (dw_edma_delegate_chan(dchan)) {
+> > > > > > +		dma_release_channel(dchan);
+> > > > > > +		return NULL;
+> > > > > > +	}
+> > > > > > +
+> > > > > > +	return dchan;
+> > > > > > +}
+> > > > > > +EXPORT_SYMBOL_GPL(dw_edma_request_delegated_chan);
+> > > > > > +
+> > > > > > +void dw_edma_release_delegated_chan(struct dma_chan *dchan, bool quiesce)
+> > > > > > +{
+> > > > > > +	struct dw_edma_chan *chan;
+> > > > > > +
+> > > > > > +	if (!dchan)
+> > > > > > +		return;
+> > > > > > +
+> > > > > > +	chan = dchan2dw_edma_chan(dchan);
+> > > > > > +	if (quiesce && dw_edma_core_ch_quiesce(chan))
+> > > > > > +		dev_warn(chan->dw->chip->dev,
+> > > > > > +			 "failed to quiesce delegated %s channel %u\n",
+> > > > > > +			 chan->dir == EDMA_DIR_WRITE ? "write" : "read",
+> > > > > > +			 chan->id);
+> > > > > > +
+> > > > > > +	scoped_guard(spinlock_irqsave, &chan->vc.lock)
+> > > > > > +		chan->irq_mode = dw_edma_get_default_irq_mode(chan);
+> > > > > > +
+> > > > > > +	dma_release_channel(dchan);
+> > > > > > +}
+> > > > > > +EXPORT_SYMBOL_GPL(dw_edma_release_delegated_chan);
+> > > > > > +
+> > > > > >  MODULE_LICENSE("GPL v2");
+> > > > > >  MODULE_DESCRIPTION("Synopsys DesignWare eDMA controller core driver");
+> > > > > >  MODULE_AUTHOR("Gustavo Pimentel <gustavo.pimentel@synopsys.com>");
+> > > > > > diff --git a/include/linux/dma/edma.h b/include/linux/dma/edma.h
+> > > > > > index 3c8e2ef9dee0..944469258b8b 100644
+> > > > > > --- a/include/linux/dma/edma.h
+> > > > > > +++ b/include/linux/dma/edma.h
+> > > > > > @@ -153,6 +153,9 @@ struct dw_edma_chip {
+> > > > > >  #if IS_REACHABLE(CONFIG_DW_EDMA)
+> > > > > >  int dw_edma_probe(struct dw_edma_chip *chip);
+> > > > > >  int dw_edma_remove(struct dw_edma_chip *chip);
+> > > > > > +struct dma_chan *dw_edma_request_delegated_chan(struct device *dma_dev,
+> > > > > > +						bool write, u16 id);
+> > > > > > +void dw_edma_release_delegated_chan(struct dma_chan *chan, bool quiesce);
+> > > > > >  #else
+> > > > > >  static inline int dw_edma_probe(struct dw_edma_chip *chip)
+> > > > > >  {
+> > > > > > @@ -163,6 +166,17 @@ static inline int dw_edma_remove(struct dw_edma_chip *chip)
+> > > > > >  {
+> > > > > >  	return 0;
+> > > > > >  }
+> > > > > > +
+> > > > > > +static inline struct dma_chan *
+> > > > > > +dw_edma_request_delegated_chan(struct device *dma_dev, bool write, u16 id)
+> > > > > > +{
+> > > > > > +	return NULL;
+> > > > > > +}
+> > > > > > +
+> > > > > > +static inline void dw_edma_release_delegated_chan(struct dma_chan *chan,
+> > > > > > +						  bool quiesce)
+> > > > > > +{
+> > > > > > +}
+> > > > > >  #endif /* CONFIG_DW_EDMA */
+> > > > > >
+> > > > > >  #endif /* _DW_EDMA_H */
+> > > > > > --
+> > > > > > 2.51.0
+> > > > > >
