@@ -1,70 +1,54 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 27FB5480942;
-	Wed, 12 Aug 2026 17:28:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF365353A69;
+	Wed, 12 Aug 2026 17:29:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786555693; cv=none; b=cjzzVgYhHtHcCnB4roEPNeXr9R8rekVngi6XWefbw/gOsZXWqNZA3N9fu2bzWoBO19ChYqsVf8v1EwnpMRmnN4+9XxOQTgRDwnl8LI3p89Nx+WvNrx9Maz8QG89cLfLjWf6/qsz2cDQzsHEbGNHP02OkuNFEw4zoC+hRC7FmjQw=
+	t=1786555790; cv=none; b=JG+WJMJhvxKADP61878pra4HRCcLBCgKCsaSyGEg10cmnGZo041Y3nOrM6Z809Lmo82t7W6cV2LqtW1u/kYN+z5/SihMcRaFr7aXVEzs0hktLHusrZXAFpW58r/1v2V5bu02hRc1tCRO2GAGAW9GOThXeoFTSIyg6mPzjSSzsqE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786555693; c=relaxed/simple;
-	bh=TqrWsNn1+9iDVwIvcbXJ4HHE2kBtuJoamk/kteBuO0c=;
+	s=arc-20240116; t=1786555790; c=relaxed/simple;
+	bh=npmudHOxSbyvFsasf+i6Dhw+HnYt78ipLdb2To3i/fk=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=EwRHJog4oYoxgtvvB9sZye+POJRCkX7HFgL3el8pI6iDc3DtL0TKAtNZhVBmB5NpklXNrs663Bi1dq6w4FqxlYlUjnfMAx8JvkYQ03Gv5RdOwnrCV8qMP7PH7vGAiRxt8ct6gDevNpPDJhVI9Tdu7jowbBv3KUv9M03dhXt9SRQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lRi9Bk05; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=PCifDL0ljzeAZyEULb2PXTaJud6AsuloR/WqMcpbbin8nn6HTTiyE0PjFE4d4dGsqyg1Tbx6lXmG4/og5AcIXO2SCbJhRuFqmkDCZTYu6vl7S8vMXwFZ3mZABm0T1A9XJaIsaiKm++ZhGPU85v5X+01ITZR28ipqpSuRts9I4Xs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Un6XaFM6; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lRi9Bk05"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 59E921F000E9;
-	Wed, 12 Aug 2026 17:28:11 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Un6XaFM6"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 199821F000E9;
+	Wed, 12 Aug 2026 17:29:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786555691;
-	bh=GgxkyQ/W1H2f7/LkcJkSDmIji8DnE8AvhmpXXiTk/vk=;
+	s=k20260515; t=1786555789;
+	bh=npmudHOxSbyvFsasf+i6Dhw+HnYt78ipLdb2To3i/fk=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=lRi9Bk05e7dadB2O2uNW/gj5nW3XYwad8jc0ezU3tjjytO1nTmAaxJGSiGZv5O82f
-	 2PAq+iF6APGRa3xlpEROzztf9SoXRhRWar7X1GK6w/X0TIoEs8DoLl0i61NjiFUsor
-	 fm8Odku4D39rXxOLvcDtHxEFXheCzpLRafvXlW+VVfmDx7rqwW/e8NS5uNHf666Q2i
-	 y3msNfwcPQbid03w37ns+tD4jzeDN4M9ewGhAj0+DVZ5W3k+aBdY5LyuPflk689cJE
-	 vM8ZniGrPx1EWPqVZ9N5JEgxhsTdvlBDH/yEpRC0WqMxC4AGsB+yXF6k5DLCumSOmf
-	 djPXtwo7+3zzQ==
+	b=Un6XaFM6H7d8KOCrSShLsFY8ncSG5/j9LHce4nXogVhrED8sTWMcodZApB4Kf555K
+	 NXgQP7C3Gsg9mC3sS4kcBP7yseQvDh0UOve8uk4dykCqSs5LxAAwjtKH26RXj7Aws8
+	 XHvH/AvxqgNpfE+IVFCcR/LxQWOZQ0lAhv8F6snq2QeTmoMq72jJ+KeDB9dr9BzFjR
+	 r9Qus6O0EL4C/4fDDzoiuk/SNtajlnqMRQ+oAT27yLJpKMpdh/gbLgjfZPL0jbCJRT
+	 tv79CCJoD4uXs7EvHyQMVFGJwSZ8FW7J4qphbNr/aMZvfVbYa1xX982iqkX1cPvGyW
+	 atHJkokXNmniA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 4/4] PCI: of: introduce of_pci_verify_node()
+Subject: Re: [PATCH v2 3/4] PCI: of: make a flags argument optional
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Alex Elder" <elder@riscstar.com>
-Cc: devicetree@vger.kernel.org, linux-pci@vger.kernel.org, robh@kernel.org, conor+dt@kernel.org
-In-Reply-To: <20260812172247.276554-5-elder@riscstar.com>
+Cc: robh@kernel.org, linux-pci@vger.kernel.org, conor+dt@kernel.org, devicetree@vger.kernel.org
+In-Reply-To: <20260812172247.276554-4-elder@riscstar.com>
 References: <20260812172247.276554-1-elder@riscstar.com>
- <20260812172247.276554-5-elder@riscstar.com>
+ <20260812172247.276554-4-elder@riscstar.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 12 Aug 2026 17:28:10 +0000
-Message-Id: <20260812172811.59E921F000E9@smtp.kernel.org>
+Date: Wed, 12 Aug 2026 17:29:48 +0000
+Message-Id: <20260812172949.199821F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-> Commit 407d1a51921e9 ("PCI: Create device tree node for bridge") linked
-> the PCI enumeration process together with devicetree, creating a devicetr=
-ee
-> node for discovered PCI bridges.  Its successor commit ae9813db1dc5a ("PC=
-I:
-> Add quirks to generate device tree node for Xilinx Alveo U50") shows how
-> to use a PCI final fixup quirk to also create a devicetree node for a
-> non-bridge PCI device.  These changes allowed devicetree overlays to
-> describe components downstream of a PCI device, by providing a place to
-> attach the overlay.
+> The address of a u32 object is passed to of_pci_get_addr_flags() so
+> it can be filled with the computed flags value.
 >=20
-> Note that the dynamic devicetree node is only created if the device didn't
-> already have an assigned node.
->=20
-> Later, commit aa7b4bbcb3a1d ("arm64: dts: qcom: qcs6490-rb3gen2: Add
-> TC9563 PCIe switch node") *pre-defined* devicetree nodes to represent the
-> PCI device nodes that would (also) be discovered via the PCI enumeration
-> [ ... ]
->=20
-> (There are many things that could be verified for statically-defined
-> devicetree nodes, but this is all we'll do for now.)
+> Allow a null pointer to be passed, so that the validity of the
+> resource's flags can be checked without filling in the flags value.
 >=20
 > Signed-off-by: Alex Elder <elder@riscstar.com>
 
@@ -72,5 +56,5 @@ Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260812172247.2765=
-54-1-elder@riscstar.com?part=3D4
+54-1-elder@riscstar.com?part=3D3
 
