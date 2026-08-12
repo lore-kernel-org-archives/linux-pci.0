@@ -1,30 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D07087404E;
-	Wed, 12 Aug 2026 19:48:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B910733939D;
+	Wed, 12 Aug 2026 19:48:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786564089; cv=none; b=kyiK9jiEczH/TVXYGCLYFvzK97G3FN4Tjmwd81qUQEckmD45uHweRAe90jpRg/OuacG49B7W/9UJM6wSx3WLqSuGWVwIZxdVNejHiMxjDmuahfQ32vtb2+9xX6x/wKFxJsY/rYt+EoiNRgs05TvOLFwDnEWmWQELhzpQPPPm7+8=
+	t=1786564094; cv=none; b=HvaK3GDE/XwZgK6Uj7SKeV9PhWJVFeq5EUYb6uR4MdDZPBCBccM3BRW1faf7VYn9QjylDTWZLQmfh+GeoOk4G663oS0RHZgiDyp1StItrnuyyf0wnbPgY9Heys91yU/exLg9iTCrH4A4jKtuO97UxL+8ln0uUHtEpzRy2OTlcSI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786564089; c=relaxed/simple;
-	bh=doVuSDT3SHyTs77s6X1YtZXjKFJcAa02zFCbKKo9hio=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=TVGXTDzUXYYWcPWGU71AGXkRZJEO5gJgSxMV0eZxtp5MtkENGmP36bH2146ErlDzMDbjhKgv+8V2krnC9D+gbbg2fshb11mquVx7HtELbtPZIAoL8ZAzevicTzlN+nCl8DHZHOHR9BRrDrrwyM+XFfVrNyJ1Gm1lxpe7/SxQySM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=J65Lagfi; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1786564094; c=relaxed/simple;
+	bh=hfPp5qUq3UnRpRum4998OSH9p6TQHXyV3JC2811sDhQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=QUs4aUonbXmQU2LUZDGUGiGJLbjTOVnTSW6NBKqHq6JzyA0FwQRFoJL40LxQ12SWqXNPQjtDNj1owpTEqsOyCv2xn9RoMKIS5MLEv+r5x48G7Z/yEheyM2SiDbdUoGgWLoA5s1yFFhFkM52eSUicXO/detSoWf4U6kpkhbuTAM0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=G/DwWoxS; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="J65Lagfi"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7ACA91F000E9;
-	Wed, 12 Aug 2026 19:48:07 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="G/DwWoxS"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5F2E31F000E9;
+	Wed, 12 Aug 2026 19:48:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786564088;
-	bh=8NhpWmxABwm4VuRgMk0XpvLIeJxGbhLlRcTBash3Sio=;
-	h=From:To:Cc:Subject:Date;
-	b=J65LagfioFVVP0FZDWE9FHmPLDQBOmQk0YGOtSP/yGQHY0Cuprr9StQa2X8bGrfCr
-	 nxOEv2eSvU6RexGSsSDCq0psrfXHib4qYd7xVyw0YW0D9yH98grAZrD3P6gwBpG+0a
-	 baySkf7TT1jYDd5jbSKxrFS5lbuAFZH1dbTAG/udypnWqLt/BnncXKC5lcRblwh4ki
-	 xwcTXqWCGCj9SaZM26ZWso0CqQftJtQ2xhufsdRut8JrriVm9xp6lJi3egIX+jNxR+
-	 LvxDc4cVQ5Dve/2R/yILk3NZMprHUGhho5uIM9/5xz2hNSXjj8y571vXQ4agRJi3Am
-	 sANGHKyjXm7rw==
+	s=k20260515; t=1786564093;
+	bh=SRlEjT+ZGm+In+nJ4F2h8m3BhoMao+VNurIbqQqu4xU=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=G/DwWoxSp9QKUofmGAS4UwFPVx8cKBMQk1g+Yvbz12ysOUq06eATeNntzShNjMjSz
+	 IQYhKNgmjVisd/wISEXpSw5iqPK+GWlz91+M1NAtzEJ0E87PFetszhQMYBryYGlU9R
+	 09rqvRqEdR8MlsidRu5GCp2+JMgHh8U5vy/ePwuT6ASFgrhZbkStci7Cuqs2FPbRH/
+	 veM8clAYHoFn3fGvrhhREOlwdBP8k614IFWVXuVe9v4HLO89zrE/Zyrg0bqkaSMyrR
+	 fKOj70CCPdwbOWzKl+5+jP5qp5AqrG4o9AmkhEldMix5LkeKIVZFfXyBbZZLzM+je7
+	 7z7yj3G7azO/g==
 From: Leon Romanovsky <leon@kernel.org>
 To: "Rafael J. Wysocki" <rafael@kernel.org>,
 	Len Brown <lenb@kernel.org>,
@@ -37,10 +38,12 @@ Cc: linux-acpi@vger.kernel.org,
 	linux-pci@vger.kernel.org,
 	Lukas Wunner <lukas@wunner.de>,
 	"Natu, Mahesh" <mahesh.natu@intel.com>
-Subject: [PATCH RFC 0/7] PCI/HMAT: Describe P2PDMA reachability and performance
-Date: Wed, 12 Aug 2026 22:47:37 +0300
-Message-ID: <20260812-hmat-p2p-v1-0-75ac41380585@nvidia.com>
+Subject: [PATCH RFC 1/7] ACPICA: Define PCIe P2P latency and bandwidth information
+Date: Wed, 12 Aug 2026 22:47:38 +0300
+Message-ID: <20260812-hmat-p2p-v1-1-75ac41380585@nvidia.com>
 X-Mailer: git-send-email 2.55.0
+In-Reply-To: <20260812-hmat-p2p-v1-0-75ac41380585@nvidia.com>
+References: <20260812-hmat-p2p-v1-0-75ac41380585@nvidia.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -48,80 +51,72 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-X-Change-ID: 20260715-hmat-p2p-eb4971a9d731
 X-Mailer: b4 0.15-dev-18f8f
 Content-Transfer-Encoding: 8bit
 
-Linux derives P2PDMA reachability from visible PCI topology, ACS
-configuration, and a host-bridge whitelist. It cannot describe conditional
-or slower cross-host-bridge paths; passthrough can hide the physical peer
-relationships.
+From: Leon Romanovsky <leonro@nvidia.com>
 
-This RFC series implements the proposed ACPI HMAT Type 3 extension below.
-Directional Generic Port matrices describe reachability, ordering, latency,
-and bandwidth. Linux uses ordered paths to authorize P2PDMA and their
-latency/bandwidth to rank providers. A VMM could translate these matrices
-into guest domains; that is outside this series.
+PCIe topology alone cannot tell an operating system whether traffic may
+cross host bridges, what ordering rules it needs, or how expensive the path
+is. Encoding this knowledge in chipset lists duplicates platform policy and
+cannot survive a virtualized topology.
 
-  HMAT Type 3 structure
-
-  Field               Offset       Bytes  Meaning
-  ---------------------------------------------------------------
-  Type:                    0           2  value 3
-  Length:                  4           4  entire structure
-  Flags:                   8           1  traffic classes
-  Data-type:               9           1  metric selector
-  Initiators:             12           4  Generic Port count (s)
-  Targets:                16           4  Generic Port count (t)
-  Base-unit:              24           8  ps or MB/s; non-zero
-  Initiator-PDs:          32         4*s  proximity-domain list
-  Target-PDs:         32+4*s         4*t  proximity-domain list
-  Matrix:         32+4*(s+t)       2*s*t  directional Entry[i][j]
-  Reserved: bytes 2-3, 10-11, and 20-23
-
-  Flags: encoding
-    bit 0  non-UIO
-    bit 1  UIO
-
-  Metrics: selector
-    0/1/2  access/read/write latency
-    3/4/5  access/read/write bandwidth
-
-  Direction: Initiator PD[i] -- Entry[i][j] metric --> Target PD[j]
-
-----------------------------------------------------------------------
-Based on [PATCH v3 00/17] PCI/P2PDMA: Fix ACS egress control handling
-https://lore.kernel.org/all/20260811-fix-p2p-acs-v3-0-efc488ee7c03@nvidia.com/
+Define HMAT Type 3 as a firmware contract for directional Generic Port P2P
+paths, including separate ordered and Unordered I/O applicability. This
+gives platform software a standard way to distinguish unsupported,
+conditional, and usable paths. The definition follows a proposed ACPI ECN.
 
 Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
 ---
-Leon Romanovsky (7):
-      ACPICA: Define PCIe P2P latency and bandwidth information
-      ACPI: HMAT: Make PCIe P2P paths available to consumers
-      PCI/P2PDMA: Authorize HMAT-described cross-host-bridge P2P
-      PCI/P2PDMA: Prefer providers with better HMAT performance
-      ACPI: HMAT: Add KUnit tests for PCIe P2P matrix semantics
-      PCI/P2PDMA: Add KUnit tests for HMAT policy boundaries
-      PCI/P2PDMA: Add KUnit tests for HMAT provider ranking
+ include/acpi/actbl1.h | 27 ++++++++++++++++++++++++++-
+ 1 file changed, 26 insertions(+), 1 deletion(-)
 
- drivers/acpi/numa/Kconfig     |  13 ++
- drivers/acpi/numa/Makefile    |   1 +
- drivers/acpi/numa/hmat.c      | 245 +++++++++++++++++++++-
- drivers/acpi/numa/hmat_test.c | 223 ++++++++++++++++++++
- drivers/acpi/numa/hmat_test.h |  17 ++
- drivers/pci/Kconfig           |  14 ++
- drivers/pci/Makefile          |   1 +
- drivers/pci/p2pdma.c          | 300 ++++++++++++++++++++------
- drivers/pci/p2pdma_test.c     | 477 ++++++++++++++++++++++++++++++++++++++++++
- drivers/pci/pci.h             |  23 ++
- include/acpi/actbl1.h         |  27 ++-
- include/linux/acpi.h          |  26 +++
- 12 files changed, 1298 insertions(+), 69 deletions(-)
----
-base-commit: bc5261fca94dd94ab557cc0852ce465d9c3ab8b0
-change-id: 20260715-hmat-p2p-eb4971a9d731
+diff --git a/include/acpi/actbl1.h b/include/acpi/actbl1.h
+index d824838cb7af..0fc766a8e90f 100644
+--- a/include/acpi/actbl1.h
++++ b/include/acpi/actbl1.h
+@@ -2003,7 +2003,8 @@ enum acpi_hmat_type {
+ 	ACPI_HMAT_TYPE_PROXIMITY = 0,	/* Memory proximity domain attributes */
+ 	ACPI_HMAT_TYPE_LOCALITY = 1,	/* System locality latency and bandwidth information */
+ 	ACPI_HMAT_TYPE_CACHE = 2,	/* Memory side cache information */
+-	ACPI_HMAT_TYPE_RESERVED = 3	/* 3 and greater are reserved */
++	ACPI_HMAT_TYPE_P2P_LATENCY = 3,	/* PCIe P2P latency and bandwidth information */
++	ACPI_HMAT_TYPE_RESERVED = 4	/* 4 and greater are reserved */
+ };
+ 
+ struct acpi_hmat_structure {
+@@ -2108,6 +2109,30 @@ struct acpi_hmat_cache {
+ #define ACPI_HMAT_CP_WB     (1)
+ #define ACPI_HMAT_CP_WT     (2)
+ 
++/* 3: PCIe P2P Latency and Bandwidth Information */
++
++struct acpi_hmat_p2p_latency {
++	struct acpi_hmat_structure header;
++	u8 flags;
++	u8 data_type;
++	u16 reserved1;
++	u32 number_of_initiator_Pds;
++	u32 number_of_target_Pds;
++	u32 reserved2;
++	u64 entry_base_unit;
++};
++
++/* Masks for Flags field above */
++
++#define ACPI_HMAT_P2P_NON_UIO   (1)	/* Bit 0: Entries apply to non-UIO traffic */
++#define ACPI_HMAT_P2P_UIO       (1<<1)	/* Bit 1: Entries apply to UIO traffic */
++
++/*
++ * The data_type field reuses the ACPI_HMAT_ACCESS/READ/WRITE_LATENCY and
++ * ACPI_HMAT_ACCESS/READ/WRITE_BANDWIDTH values defined for the System
++ * Locality Latency and Bandwidth Information Structure above.
++ */
++
+ /*******************************************************************************
+  *
+  * HPET - High Precision Event Timer table
 
-Best regards,
---  
-Leon Romanovsky <leonro@nvidia.com>
+-- 
+2.55.0
 
