@@ -1,63 +1,63 @@
-Received: from mail-qk1-f180.google.com (mail-qk1-f180.google.com [209.85.222.180])
+Received: from mail-qk1-f171.google.com (mail-qk1-f171.google.com [209.85.222.171])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E6E6847DD47
-	for <linux-pci@vger.kernel.org>; Wed, 12 Aug 2026 17:22:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9EEFC48035F
+	for <linux-pci@vger.kernel.org>; Wed, 12 Aug 2026 17:22:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786555378; cv=none; b=kFhioQkyxvgx7NkUQmTiM2IB13CYg7+mzYZZKrKrHpi9BtkpesiuIwe5y7DgE0cN7ZeQ4nYQDIB0W/vAkaUTg6mb3Z6NWB5FGCOKjO4MVF3G7e0oFy8r7Tdd9gFDgmiQ5qaW4nIa3KBzXRMbLAXeryiRmRDf1bI6TzZAQGLfUdg=
+	t=1786555383; cv=none; b=A4DSd/Vgs0vkNxT0YhLvEavze65fjOEgMkTZwB2NVyqGBLyKrIe7O0duXvtE5WKFoDMD1IMReMf0gPFD9SUfDekq3WDOGWGkT/Ahf4akjSmYYCL8CE5e5tF4u9TTD9OvGQqahFmfjJLC0oSI+I2VlqWfdCbbjKf/PRH6KHgiXOQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786555378; c=relaxed/simple;
-	bh=BtmQtSAcOc1sMwXsSXHd/N0LJhsNzGr+XDlMMcgHhfo=;
+	s=arc-20240116; t=1786555383; c=relaxed/simple;
+	bh=3Jdw+CyC9X0d79MV1LbaD6UPSSq5mFOk7p6L7fDLBfs=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=T71l752RNpGoefvGSRkBIDMiTQBYHnss1S0BnWB0qt3HPIztVUA4r7rBPMEixBBE/QGFvrjzYO5tq3+NsYfwJoj4+E7OssUYR63ru3NGXgC2UsxLMU4M2imKhCzaaLdgufbcxzINSE6V9Tx7NwDcMCw7wint0qmcwYx0i8hz1AI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=riscstar.com; spf=pass smtp.mailfrom=riscstar.com; dkim=pass (2048-bit key) header.d=riscstar-com.20251104.gappssmtp.com header.i=@riscstar-com.20251104.gappssmtp.com header.b=ub1ESb4b; arc=none smtp.client-ip=209.85.222.180
+	 MIME-Version; b=nh7VsWKQ9rSOFFIXXL/vYOoDDJNOGoNfKKkHvPOAwi4zMsvgmCtwOGO4v5h/nSlYOBvkrGvOb38IgtLysJSEuf1RYyn1Krvb4PItY10pq5yRKs0P/T0bncJVR22+bOUQYwBoDp+6V+K1ialUbG+4+ni7VnQxmM2IgWwR1+wv85U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=riscstar.com; spf=pass smtp.mailfrom=riscstar.com; dkim=pass (2048-bit key) header.d=riscstar-com.20251104.gappssmtp.com header.i=@riscstar-com.20251104.gappssmtp.com header.b=Gs6WmnPA; arc=none smtp.client-ip=209.85.222.171
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=riscstar.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=riscstar.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=riscstar-com.20251104.gappssmtp.com header.i=@riscstar-com.20251104.gappssmtp.com header.b="ub1ESb4b"
-Received: by mail-qk1-f180.google.com with SMTP id af79cd13be357-92e54f8c051so57318285a.3
-        for <linux-pci@vger.kernel.org>; Wed, 12 Aug 2026 10:22:56 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=riscstar-com.20251104.gappssmtp.com header.i=@riscstar-com.20251104.gappssmtp.com header.b="Gs6WmnPA"
+Received: by mail-qk1-f171.google.com with SMTP id af79cd13be357-92e65e18969so9991885a.1
+        for <linux-pci@vger.kernel.org>; Wed, 12 Aug 2026 10:22:58 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=riscstar-com.20251104.gappssmtp.com; s=20251104; t=1786555375; x=1787160175; darn=vger.kernel.org;
+        d=riscstar-com.20251104.gappssmtp.com; s=20251104; t=1786555377; x=1787160177; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=H/KJ6sckLCdEVJDbpdFqbeYqPNdthT6c5yyUBXrsMRU=;
-        b=ub1ESb4bq7Cw5S2kHeARt5oVAtAfhEkHYf5hTHxujEMAKKj05skRtsyxjj4HleHk04
-         R46hlXOjyEKIveU9dPsl7vVUHhs7snOKGkLPBOYfre2uJ43UOmZd/LcKtDECa7eJ9hj4
-         V7ABs4tltxlN4xxFYHSrf8KJC7SNz4pWxLvXGMnRLIv/g3cYV/s3pQGgJsWbYwRgoRb8
-         /K8l6wem26pXXzpWVMC6qswKJqfrwAtEZ7N8bqy4NJMx5Ee93ABv/W0wTvuZrqK5fGnl
-         LaIZdYihofxKMzrF35tVwA3TL06A3Xe7JuQyzuzHTa+s/IsLHXDHckczoAF1AVEkMYLn
-         DjBQ==
+        bh=9BzvpIUyox01epeMSGpQoUeAfJbQUXyU3IcN4aSet1k=;
+        b=Gs6WmnPALN7O69rQrj0ZkftYOVY8vOQmEcV25FZR093yfrEg1KG32bj7rymy8YLKuT
+         sTDRYfYyeSl/uqR96hZd68CK9mW/WUbejQTNxx07u4pt63glszid/2wmg4mk64IVYKhm
+         4H4JAkO4HnkL3sgf+8UD+HtAALhxbTmrZ8SEq6CfKl3NdAkosywdu2QrvysG6+A5Rniu
+         CTNe0yTkBrzHqbk1b5ZZtsmHNGJiV3duchmEXSXLBdI/2AadP7/zPiXGkP1xZ+FKN9tG
+         ND8d32IyJQoJFQvLV2E4uZvep7bz7dW7Yv/SgmhPkBJEQbFSozoLZjrKmSgweFOajlUA
+         qNrw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786555375; x=1787160175;
+        d=1e100.net; s=20251104; t=1786555377; x=1787160177;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=H/KJ6sckLCdEVJDbpdFqbeYqPNdthT6c5yyUBXrsMRU=;
-        b=nep/1Qyf3Q1rSFVpDLFieh/hygBV6+0kh+AgTXD0J/4jrDm0UWqo8h6dmL0tFCnaJl
-         HgBa7+OPTX3p27oTaVKfenKCN1YsWLWCqJWRsRuvjETVKX9JGO9n8CIQ01+CVMcsm+WS
-         Abx7Ds+bF2tj0TxtUW31LdD3e5dl7qtgqIkedyXoB7xDpgyTrD1C58C26AtBG+AMEL4J
-         XV2D0camF9ZtFOnditmldBpSs37gQ1rJNx7zMn1LmiJeMb6hlNsidgFTNtUhUG93zbiJ
-         +ZMHobqJEVJmlQaJYeY/SnmdGdgfeWR5VxGfdy17wewV+WK8p3+zeLcmkkhqfpes6vn8
-         nHAg==
-X-Forwarded-Encrypted: i=1; AHgh+RrSao7NYpOItVyjLNgatv0QQnlls/i9/yNaUONA+cB01U9+R2Gxz4a5phv+YsC2UweKZd6FWEgVtzw=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxP0gJixd2pzEc40xyfbEFnHr9oeESH0e+Ud6ieMGTjAJpEODMB
-	wIH+q7lQGZEoE4LD7qCg0PzYERReVQIUPS/RwYFWTDfJOk9Qy2YPA3g53iPOSw1wGBA=
-X-Gm-Gg: AR+sD11iKCRVz46IOXSk6VRQvwB+Ejx3flaRZPWw1ogE2ay4fKmeWF7CqAD2/GUU3KL
-	amIxp9xr+rurbZv8f6IDkuxJ5cn79c9HDWd12/j9NaqWUsgCN4q6+8TyZYPlRqx+6XbCdz9NoZa
-	WH6DAE026js5mXyNZMigW46FSsYyaTRTUJCra7YlUk/FDlwRVAi/sDg86au+MMcxq75WWGMBYMx
-	RLOED0H96k/JR4Jj1rMmF5ZZ527HyFMDEa4c5sd9cahOgln+EzUeT8A+DrHmLqhU3GOTrKyyUBi
-	Bl0NpFvM0uuwhVBDX9GXvnfQRTqNK20KQBQYfgRhWyzghNTcIap8TIAf8XG0UQwq+XbrHZeslCn
-	rkM/p/4hXeuseZrQwZ2Qj/Xd6qm99RYtjp/jelSnd40jMUT3BSoUJfHHtd64Z7f/gf5QYK9TNbZ
-	94GY0oNvBM+XNCLe+XZUHSx0EmjHuwpSa3/2wGeiDzv/MMuKCTBuxr9ztCTJmwTT8r
-X-Received: by 2002:a05:620a:45a9:b0:915:9e84:85d1 with SMTP id af79cd13be357-936b3d3ad7fmr560175485a.23.1786555375639;
-        Wed, 12 Aug 2026 10:22:55 -0700 (PDT)
+        bh=9BzvpIUyox01epeMSGpQoUeAfJbQUXyU3IcN4aSet1k=;
+        b=ZvDSQTGko3xHSRVvmCAbtYyr9fP3N5DUKO5+zB9cvfw5AUnjn7WGYlGn7/vKkIULYh
+         V4RYQDjBLklnrek6l+kxdsmKRgNqWxtbzeZEOpYiI82ZQNGsWlH9FtlH2zD42rrtuX5L
+         q4crkiC0+5U9bpaqVVzufo1+0k5gGAbpcjfeWyBLxWjDFKs6eZD+dA9tGM8CHVgqoio6
+         fDx1uTtw9bqj9KujqUMb7YxcN9jg3/Bvlw38MYYbYNjDh47LgL7EWwAB+AH8PiTe/f0s
+         LRrSh14TYlO72Uz7hsTu6YwH5lp8uWp4P6X2VD28cw8MWH5NKl4Tgp7H6bpImpnYj0la
+         ha7A==
+X-Forwarded-Encrypted: i=1; AHgh+Rr5MpbIFgHKUoOvYow3hUyLn4PO6XFQsZ1sSP7vrqASdvh6X3xwaNwfzdOkj6hrCO4yCBUyW7ca5C4=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzugJ3QRJB4r8dSeU1e0+mhfewkzwARjaYOwImf7tF3QyllXSMm
+	MHh8+tncFHVj2ybsyympM1efBEPwnIYhpQTlpWv8cXcbm3wASwPsUqDhjihtdGvcFaA=
+X-Gm-Gg: AR+sD12kQinEWNPK8MXgkXqb8q3bIT1FQN8DVosyu7BtOfsO/qK65zDRNbYbpN73iOs
+	IPVMveXePR9cNNgSzLJkSW7/WUD0HvPBpb5mzfMgwYUJ89l7Odw6wBL+JJeiFBy0v+YY/W7PZ8Q
+	uJHb+5Rud1CeOpqwtRxysCGJcJnU/NSjdkTKA1FsjVJOuR2s4Uxf958wLZIazUWmVwzetkMx5yq
+	1pFWHmQC2sdeDv0hWy468gguMXPDxGxfMEIJfsZ4IL6IhYngkIPX3XvNg0Y3rb+2dsgA1WB+BN1
+	EP7bQbNnOluCXHq2xYz4Zmqn9gOUv4Pvh0p8uRFeGLxRC5kyNNhj6wU07sUnVVR+0OMR9utPGyx
+	CKLJGj1ITQnXjmidyJCdjbOxOaqIab7gc4UiAUJCrWQdzVK4F4xjelAAjOjeLeiCUVuRwpHlNQA
+	FD6HDv8oBuL0xkgKJc1VyhhBp1xCuHj2ZQ4CHLREFqNF2u6ye0yk3l+fU4IxT7ePny
+X-Received: by 2002:a05:620a:3acc:b0:915:29cd:306c with SMTP id af79cd13be357-936bd96e80emr60472985a.9.1786555377390;
+        Wed, 12 Aug 2026 10:22:57 -0700 (PDT)
 Received: from zippy.localdomain ([73.62.185.64])
-        by smtp.gmail.com with ESMTPSA id af79cd13be357-936b5f720eesm173587685a.47.2026.08.12.10.22.54
+        by smtp.gmail.com with ESMTPSA id af79cd13be357-936b5f720eesm173587685a.47.2026.08.12.10.22.55
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 12 Aug 2026 10:22:55 -0700 (PDT)
+        Wed, 12 Aug 2026 10:22:56 -0700 (PDT)
 From: Alex Elder <elder@riscstar.com>
 To: bhelgaas@google.com,
 	robh@kernel.org
@@ -66,11 +66,10 @@ Cc: daniel@riscstar.com,
 	lorenzo.bianconi@oss.qualcomm.com,
 	linux-pci@vger.kernel.org,
 	devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Herve Codina <herve.codina@bootlin.com>
-Subject: [PATCH v2 2/4] PCI: of: don't zero flags in of_pci_get_addr_flags()
-Date: Wed, 12 Aug 2026 12:22:45 -0500
-Message-ID: <20260812172247.276554-3-elder@riscstar.com>
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v2 3/4] PCI: of: make a flags argument optional
+Date: Wed, 12 Aug 2026 12:22:46 -0500
+Message-ID: <20260812172247.276554-4-elder@riscstar.com>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260812172247.276554-1-elder@riscstar.com>
 References: <20260812172247.276554-1-elder@riscstar.com>
@@ -82,34 +81,36 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The flags variable whose address is passed to of_pci_get_addr_flags()
-is zeroed before assigning a value to it.  Skip the zeroing and just
-assign it instead.
+The address of a u32 object is passed to of_pci_get_addr_flags() so
+it can be filled with the computed flags value.
 
-Reviewed-by: Herve Codina <herve.codina@bootlin.com>
+Allow a null pointer to be passed, so that the validity of the
+resource's flags can be checked without filling in the flags value.
+
 Signed-off-by: Alex Elder <elder@riscstar.com>
 ---
- drivers/pci/of_property.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+ drivers/pci/of_property.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/pci/of_property.c b/drivers/pci/of_property.c
-index 505226b876c56..22fea1905a080 100644
+index 22fea1905a080..5e1820b8bb79b 100644
 --- a/drivers/pci/of_property.c
 +++ b/drivers/pci/of_property.c
-@@ -82,12 +82,10 @@ static int of_pci_get_addr_flags(const struct resource *res, u32 *flags)
+@@ -82,9 +82,11 @@ static int of_pci_get_addr_flags(const struct resource *res, u32 *flags)
  	else
  		return -EINVAL;
  
--	*flags = 0;
-+	*flags = FIELD_PREP(OF_PCI_ADDR_FIELD_SS, ss);
- 	if (res->flags & IORESOURCE_PREFETCH)
- 		*flags |= OF_PCI_ADDR_FIELD_PREFETCH;
+-	*flags = FIELD_PREP(OF_PCI_ADDR_FIELD_SS, ss);
+-	if (res->flags & IORESOURCE_PREFETCH)
+-		*flags |= OF_PCI_ADDR_FIELD_PREFETCH;
++	if (flags) {
++		*flags = FIELD_PREP(OF_PCI_ADDR_FIELD_SS, ss);
++		if (res->flags & IORESOURCE_PREFETCH)
++			*flags |= OF_PCI_ADDR_FIELD_PREFETCH;
++	}
  
--	*flags |= FIELD_PREP(OF_PCI_ADDR_FIELD_SS, ss);
--
  	return 0;
  }
- 
 -- 
 2.53.0
 
