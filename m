@@ -1,69 +1,74 @@
-Received: from mail11.truemail.it (mail11.truemail.it [217.194.8.81])
+Received: from mail-pg1-f176.google.com (mail-pg1-f176.google.com [209.85.215.176])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D02F36166A;
-	Wed, 12 Aug 2026 06:54:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.194.8.81
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 364EB34C134
+	for <linux-pci@vger.kernel.org>; Wed, 12 Aug 2026 07:27:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786517665; cv=none; b=ZeWFFqFJHhk+/hXsJx2bE8JjIG1cyTI0Fq4BGAaUn3riByjy0nkJu+seqo6IHa2czBnZLZ4Ac9Crxgb9NeeWR3fY4Ck1Ip1KrSiNbBays+fpYfr7UmaWzKxwWt/RCT3upM/ndzhdXRan8jnFTQoPueSb1dSQEfmgoy13y7xa0UA=
+	t=1786519628; cv=none; b=G4QXq7EFzGjZ2T4w2mSWSDWDyzwUAriiBHQWSJNAT3rMm1y4hL6n95bRNzY2vwypFYhOZMosqL4bAYFiVxTDgqcbrEVInwsszjU59l1mlAC4uAgbmkgr3ZGCu3xzl9Us+EgwqPmsMDHHG2k0wnv3rRghc4ljJHOZEycqTAcl9P0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786517665; c=relaxed/simple;
-	bh=cgGjsx1To54vHWxSHVCbCt6UiwKkcdepoNf0HAf8E78=;
+	s=arc-20240116; t=1786519628; c=relaxed/simple;
+	bh=9+H/1bC9AngwY48oSSf37D0mjWXZXMcBbkIDQidIu/k=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ndkKcOMSZ6C56F02SZxoiw+MEbVT39w3DK6xOPxFcXkISd8AvOKdX+JlBsNgmqTdQNIPTIUo3V0/sk5ZQqrM6L6oN6DrlyBr2UIjoOyXlCgV/biKpltlMz7S6OOOWJBcGgnnFV+Adbi5saMupws6D//mRcaKApRJ8G0VhEtzKf4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=dolcini.it; spf=pass smtp.mailfrom=dolcini.it; dkim=pass (2048-bit key) header.d=dolcini.it header.i=@dolcini.it header.b=0QXGYR9X; arc=none smtp.client-ip=217.194.8.81
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=dolcini.it
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=dolcini.it
+	 Content-Type:Content-Disposition:In-Reply-To; b=UI3pfhNYcgHfj3kHvV/+ruRdnb01Im3ZZeIAmuylxdPuwNB9fEPMimBopiGFc3QzwZWPixUtaMX3DkMHUMpgC1KjETdwX7tCfRadXT+cYOwuNrdGjy9c/1NF0iPoCASPmy5DqFhMskAvz01nHoS8a2HWr85CnXWdkD8GfBKIBgU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=BwvgCTXW; arc=none smtp.client-ip=209.85.215.176
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=dolcini.it header.i=@dolcini.it header.b="0QXGYR9X"
-Received: from gaggiata.pivistrello.it (93-49-2-63.ip317.fastwebnet.it [93.49.2.63])
-	by mail11.truemail.it (Postfix) with ESMTPA id DF5621F8D7;
-	Wed, 12 Aug 2026 08:54:13 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=dolcini.it;
-	s=default; t=1786517654;
-	bh=K39uuHk/UNMQZhBdj5TasfypJyUYUsGh0yflU9COlDk=;
-	h=Received:From:To:Subject;
-	b=0QXGYR9XVy2tWfcdw0C2Imm7v+w5+A75aA0Iqha1YYOZTrrv/nIPiOLGIgD8lKxgg
-	 teTdD1LVChyu+Nv3WjTM0GIy6e/MtU2YA3TyvLrOI3FT0TSEYcmDYb3qaIsmjnFXHm
-	 kj6A2ehTMP1JL58s0DQX2U1FS4kJTzrAFQ8Br3KtKX7NSdahlTGLiIBJT1pUYlVqeQ
-	 WfLX/CXkMD7FX5zvFomll+iKaom+4ZH4IpW4lVRrh4ECfEQncCwr3Pm+ePuPvc+nq3
-	 94LWq627pKscK9iPabVWAX989jSdeawsFxzmiUJYZLKIigB18A5RsecIDB73PFR2xh
-	 vjazWyZj6fZzA==
-Received: by gaggiata.pivistrello.it (Postfix, from userid 1000)
-	id 931E47FB68; Wed, 12 Aug 2026 08:54:13 +0200 (CEST)
-Date: Wed, 12 Aug 2026 08:54:13 +0200
-From: Francesco Dolcini <francesco@dolcini.it>
-To: Hongxing Zhu <hongxing.zhu@nxp.com>
-Cc: Francesco Dolcini <francesco@dolcini.it>,
-	"Hongxing Zhu (OSS)" <hongxing.zhu@oss.nxp.com>,
-	Leonardo Costa <leoreis.costa@gmail.com>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	"robh@kernel.org" <robh@kernel.org>,
-	"krzk+dt@kernel.org" <krzk+dt@kernel.org>,
-	"conor+dt@kernel.org" <conor+dt@kernel.org>,
-	Frank Li <frank.li@nxp.com>,
-	"s.hauer@pengutronix.de" <s.hauer@pengutronix.de>,
-	"kernel@pengutronix.de" <kernel@pengutronix.de>,
-	"festevam@gmail.com" <festevam@gmail.com>,
-	"leonardo.costa@toradex.com" <leonardo.costa@toradex.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"imx@lists.linux.dev" <imx@lists.linux.dev>,
-	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"regressions@lists.linux.dev" <regressions@lists.linux.dev>,
-	Sherry Sun <sherry.sun@nxp.com>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [REGRESSION] mainline/master: Apalis iMX6 no longer boots
-Message-ID: <anwYlX0uC1nFCxnp@gaggiata.pivistrello.it>
-References: <20260629143439.361560-1-leoreis.costa@gmail.com>
- <20260715234736.GA288957@bhelgaas>
- <VI0PR04MB1200862BE9B7C137EC7C18AF18CC72@VI0PR04MB12008.eurprd04.prod.outlook.com>
- <i6x6wpua7wlwmdq3hitoo53wkptgp62tvegmkabcru3d54eqg3@yk4eehwaarn2>
- <3hxiy6aaiagt5zunntpidaeqc4or4wrebf7mu7asvyyibqmvo2@xhvasdqp64rw>
- <GV2PR04MB12019BD5B14FA63CDFCC2015B8CDD2@GV2PR04MB12019.eurprd04.prod.outlook.com>
- <20260811063752.GA7332@francesco-nb>
- <GV2PR04MB12019BC21C743E1BEF1BE8F4C8CDC2@GV2PR04MB12019.eurprd04.prod.outlook.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="BwvgCTXW"
+Received: by mail-pg1-f176.google.com with SMTP id 41be03b00d2f7-c9eefcf9175so565099a12.3
+        for <linux-pci@vger.kernel.org>; Wed, 12 Aug 2026 00:27:07 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1786519626; x=1787124426; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=3H2XRYBLrEGNhf/P+5Th74cqCMRbv9XKacb8u8bUl28=;
+        b=BwvgCTXWipJfuECtyiYCDBxDvDlUrPx98tO5SQOyml9oqh7v0u9LFjahfOzNxAeQmv
+         GoXznTxZ4RFVZUJO2vi3R3nym2jXSiWNyR+Symfug3PeeObhUMrHYLnaBVH7TCN8Y85w
+         x4i9lbUNPs/6qfEkp+jFDuMGBUpgSrx5XStXh+XLGfcqcQ5EUuvxkgMANFYOOCvC8cf1
+         JFvYKSqnh2Z91mDJE4swyZFz5MGsrkah9XUjs6BqNtGNc+7jnWP5kyuprN74miZyAj1B
+         lATg5KqHNVUJZ6LduRXNkP34UFQLrMfdFreQqMLWrcGFSjK9hwt0wI1QC4+O8+Mm4p3X
+         KOLQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1786519626; x=1787124426;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=3H2XRYBLrEGNhf/P+5Th74cqCMRbv9XKacb8u8bUl28=;
+        b=cEfyeD5gR5NK4DpgNd24UXN/bAasGiuMJ6JaeX6VualHrIXlNstSJCplknKhgQzXXl
+         gUrRlaeUqonHFR0IjSp6Ceo13vzWWK/Jnb5fvJ5xd1TT1xIyLFVarvHtLe2qgdUMje/T
+         0SQWS01x7KBr0h/1i/VGj24iLvzInN0j5V5eRmcjSdz1ajk7m42I+batUg3ig1x9EizW
+         3rXapD8RS0nA8/zVEhBegLltNm1sQVLbE9jQn+H6aRwO0YsqGoRJb8CaAG+Nx/orJeIN
+         51JDEesVnWzZD1yurvgWEYDJqOnlBYBuVlAMijuuJEmHt8xhY5xqozYJQLPusJMwhPII
+         BKwg==
+X-Forwarded-Encrypted: i=1; AHgh+RqbSrvIv4a7Bwbe/jD+1NrU4P/t08PCauUU4c+0hiCJI4Oi1AfcHqRyOwp4IOaonbTTEBhGOuzVubs=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yxd+ORIipbtTBGm9fZxsEe0UvHmx9O9wMIf+J5l/30UQ6Els2kT
+	gLhwoMia/p8gC/DzuwXZ/24NwpGp2TBKb+v/dQdZdyxqvZs6DoZ9+6xG
+X-Gm-Gg: AR+sD13uw0iiMuZmP+/xFWnUYj/1aj8olCFmxqhPstdUN9kZ1UjrTLvqXzoQi3ZioYM
+	wHPG7Nv5BWGJrtHuJnBlB8HB5ROd/FPLPRGKydjHoJtQcbfT1qMCAXo/fakPZMKz7p0hRCe+W5e
+	KSEsTCw50blPsPlrLDB78ah2WjkyxwYgXqwi9iyIbuzry1oANBrzCKJCNixzPjgIyCqjKggvJDS
+	2hvELNyDeBp5N4WQ/NL9w5O27RnK+P+K/lxegD1DDTS7SpS7TQsD3t9ukHbhY2J2eGq+Dponyve
+	CHR3iL8fZCLHDG2EM/icV6NMiyjLaXTKfCtAgU8/T40xt+BzlnFZcwPvk50ZSlzLKQaRZ8/eq+Z
+	8dgpOhC3FrLUVHko1Ss6qNM0n/ho0d/EQ/bjeuGSQluHLpkvNQ54YbIs89E6qNqaLKG0fM7BGHL
+	3rAZ8NVRreEAGwibLGBU/xkJftp6JPh4mx4sJL1Ag7BJDT/XQnt971GzoaxdWmsqFO8behByZqc
+	yeMqg==
+X-Received: by 2002:a05:6a21:329a:b0:3c3:bbe6:95c7 with SMTP id adf61e73a8af0-3cc3f701ebbmr2837875637.17.1786519626456;
+        Wed, 12 Aug 2026 00:27:06 -0700 (PDT)
+Received: from kernel ([45.251.35.26])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-31cf6d79bd6sm8297129eec.28.2026.08.12.00.27.03
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 12 Aug 2026 00:27:05 -0700 (PDT)
+Date: Wed, 12 Aug 2026 12:56:59 +0530
+From: Mohamad Raizudeen <raizudeen.kerneldev@gmail.com>
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: bhelgaas@google.com, skhan@linuxfoundation.org, jkoolstra@xs4all.nl,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: Fix use-after-free race in pci_find_bus()
+Message-ID: <anwgQ4MtqfEOWQCu@kernel>
+References: <20260812024713.4958-1-raizudeen.kerneldev@gmail.com>
+ <2026081227-sandy-imaginary-fa49@gregkh>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -72,175 +77,110 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <GV2PR04MB12019BC21C743E1BEF1BE8F4C8CDC2@GV2PR04MB12019.eurprd04.prod.outlook.com>
+In-Reply-To: <2026081227-sandy-imaginary-fa49@gregkh>
 
-On Wed, Aug 12, 2026 at 06:22:57AM +0000, Hongxing Zhu wrote:
+On Wed, Aug 12, 2026 at 12:00:33PM +0900, Greg KH wrote:
+> On Wed, Aug 12, 2026 at 08:17:13AM +0530, Mohamad Raizudeen wrote:
+> > pci_find_bus() iterates over the list of PCI root buses using
+> > pci_find_next_bus(). This helper acquires pci_bus_sem, retrieves the
+> > next bus and drops the lock before returning the pointer to the caller.
+> > 
+> > pci_find_bus() then uses this pointer to check the domain and traverses
+> > the child buses via pci_do_find_bus() without holding the pci_bus_sem
+> > lock.
+> > 
+> > If a PCI bus is concurrently removed for example via hotplug between
+> > loop iterations, the from pointer passed back into pci_find_next_bus()
+> > becomes stale, leading to a user-after-free when dereferencing
+> > from->node.next. Additionally, traversing the bus tree without holding
+> > the lock is a race condition.
 > 
-> NXP Confidential
-> > -----Original Message-----
-> > From: Francesco Dolcini <francesco@dolcini.it>
-> > Sent: Tuesday, August 11, 2026 2:38 PM
-> > To: Hongxing Zhu (OSS) <hongxing.zhu@oss.nxp.com>
-> > Cc: Leonardo Costa <leoreis.costa@gmail.com>; Bjorn Helgaas
-> > <helgaas@kernel.org>; robh@kernel.org; krzk+dt@kernel.org;
-> > conor+dt@kernel.org; Frank Li <frank.li@nxp.com>; s.hauer@pengutronix.de;
-> > kernel@pengutronix.de; festevam@gmail.com; leonardo.costa@toradex.com;
-> > devicetree@vger.kernel.org; imx@lists.linux.dev; linux-arm-
-> > kernel@lists.infradead.org; linux-kernel@vger.kernel.org;
-> > regressions@lists.linux.dev; Sherry Sun <sherry.sun@nxp.com>; Manivannan
-> > Sadhasivam <mani@kernel.org>; Hongxing Zhu <hongxing.zhu@nxp.com>;
-> > linux-pci@vger.kernel.org
-> > Subject: Re: [REGRESSION] mainline/master: Apalis iMX6 no longer boots
-> >
-> > On Tue, Aug 11, 2026 at 12:47:18AM +0000, Hongxing Zhu (OSS) wrote:
-> > > > -----Original Message-----
-> > > > From: Leonardo Costa <leoreis.costa@gmail.com>
-> > > > Sent: Tuesday, August 11, 2026 2:26 AM
-> > > > To: Hongxing Zhu (OSS) <hongxing.zhu@oss.nxp.com>
-> > > > Cc: Bjorn Helgaas <helgaas@kernel.org>; robh@kernel.org;
-> > > > krzk+dt@kernel.org; conor+dt@kernel.org; Frank Li
-> > > > krzk+<frank.li@nxp.com>;
-> > > > s.hauer@pengutronix.de; kernel@pengutronix.de; festevam@gmail.com;
-> > > > leonardo.costa@toradex.com; devicetree@vger.kernel.org;
-> > > > imx@lists.linux.dev; linux-arm-kernel@lists.infradead.org; linux-
-> > > > kernel@vger.kernel.org; regressions@lists.linux.dev; Sherry Sun
-> > > > <sherry.sun@nxp.com>; Manivannan Sadhasivam <mani@kernel.org>;
-> > > > Hongxing Zhu <hongxing.zhu@nxp.com>; linux-pci@vger.kernel.org
-> > > > Subject: Re: [REGRESSION] mainline/master: Apalis iMX6 no longer
-> > > > boots
-> > > >
-> > > > On Thu, Jul 16, 2026 at 02:09:19PM -0300, Leonardo Costa wrote:
-> > > > > On Thu, Jul 16, 2026 at 02:15:42AM +0000, Hongxing Zhu (OSS) wrote:
-> > > > > > Hi Leonardo,
-> > > > > >
-> > > > > > Would you be able to test this patch on your affected boards?
-> > > > > > Your testing would help expedite the merge process and ensure
-> > > > > > the fix resolves the boot issue you're experiencing.
-> > > > > >
-> > > > > > Best Regards
-> > > > > > Richard Zhu
-> > > > >
-> > > > > Hi Richard,
-> > > > >
-> > > > > Sorry for taking long to respond, I was caught up with something.
-> > > > > I tested the patch and it solved the issue. I sent a Tested-by tag there.
-> > > > > Thanks for looking into this!
-> > > > >
-> > > > > Best Regards
-> > > > > Leonardo
-> > > >
-> > > > Hi Richard,
-> > > >
-> > > > That patch might have introduced/exposed a second regression where
-> > > > PCI devices are not linked properly during the initialization. Sorry
-> > > > for not catching this before, as I didn't have any device connected during
-> > the previous test.
-> > > Hi Leonardo:
-> > > Sorry to hear about that.
-> > > I did test commit 7678e81498e2 with one Intel NIC (82574L) connected,
-> > > and I've double-checked today based on v7.2-rc7. The PCIe link can be
-> > > set up properly on the i.MX6Q Sabresd board in my testing.
-> > >
-> > > Here are the logs:
-> > > root@imx6qpdlsolox:~# lspci
-> > > 00:00.0 PCI bridge: Synopsys, Inc. DWC_usb3 / PCIe bridge (rev 01)
-> > > 01:00.0 Ethernet controller: Intel Corporation 82574L Gigabit Network
-> > > Connection root@imx6qpdlsolox:~# uname -a Linux imx6qpdlsolox
-> > > 7.2.0-rc7 #30 SMP Tue Aug 11 00:21:26 UTC 2026 armv7l GNU/Linux
-> > > root@imx6qpdlsolox:~# dmesg | grep pci
-> > > [    0.256138] imx6q-pcie 1ffc000.pcie: host bridge /soc/pcie@1ffc000 ranges:
-> > > [    0.256307] imx6q-pcie 1ffc000.pcie:       IO 0x0001f80000..0x0001f8ffff ->
-> > 0x0000000000
-> > > [    0.256339] imx6q-pcie 1ffc000.pcie:      MEM 0x0001000000..0x0001efffff -
-> > > 0x0001000000
-> > > [    0.256434] imx6q-pcie 1ffc000.pcie: config reg[1] 0x01f00000 == cpu
-> > 0x01f00000
-> > > [    0.458388] imx6q-pcie 1ffc000.pcie: iATU: unroll F, 4 ob, 4 ib, align 64K,
-> > limit 4G
-> > > [    0.458492] imx6q-pcie 1ffc000.pcie: Link: Only Gen1 is enabled
-> > > [    0.555294] imx6q-pcie 1ffc000.pcie: PCIe Gen.1 x1 link up
-> > > [    0.555783] imx6q-pcie 1ffc000.pcie: PCI host bridge to bus 0000:00
-> > > ...
-> > >
-> > > The following endpoint devices also yielded the same results.
-> > > root@imx6qpdlsolox:~# lspci
-> > > 00:00.0 PCI bridge: Synopsys, Inc. DWC_usb3 / PCIe bridge (rev 01)
-> > > 01:00.0 Network controller: Qualcomm Atheros AR9287 Wireless Network
-> > > Adapter (PCI-Express) (rev 01) root@imx6qpdlsolox:~# uname -a Linux
-> > > imx6qpdlsolox 7.2.0-rc7 #30 SMP Tue Aug 11 00:21:26 UTC 2026 armv7l
-> > > GNU/Linux ...
-> > >
-> > > root@imx6qpdlsolox:~# lspci
-> > > 00:00.0 PCI bridge: Synopsys, Inc. DWC_usb3 / PCIe bridge (rev 01)
-> > > 01:00.0 USB controller: NEC Corporation uPD720200 USB 3.0 Host
-> > > Controller (rev 04) root@imx6qpdlsolox:~# uname -a Linux imx6qpdlsolox
-> > > 7.2.0-rc7 #30 SMP Tue Aug 11 00:21:26 UTC 2026 armv7l GNU/Linux
-> > >
-> > > Could you provide more details of your hardware setup (board,
-> > > connected devices, PERST# present or not)?
-> > > This may help us identify if there's a specific scenario that triggers
-> > > the regression you're experiencing.
-> >
-> > It's an apalis imx6, as reported already in this email thread.
-> > The DT is in Linux, you can check
-> > arch/arm/boot/dts/nxp/imx/imx6q-apalis-ixora-v1.2.dts every details about
-> > PERST# and more.
-> >
-> > This is the device connected:
-> >
-> > 00:00.0 PCI bridge: Synopsys, Inc. DWC_usb3 / PCIe bridge (rev 01)
-> > 01:00.0 SATA controller: ASMedia Technology Inc. ASM1061/ASM1062 Serial
-> > ATA Controller (rev 02)
-> >
-> > 01:00.0 SATA controller: ASMedia Technology Inc. ASM1061/ASM1062 Serial
-> > ATA Controller (rev 02) (prog-if 01 [AHCI 1.0])
-> >       Subsystem: ASMedia Technology Inc. ASM1061/ASM1062 Serial ATA
-> > Controller
-> >       Flags: bus master, fast devsel, latency 0, IRQ 308
-> >       I/O ports at 1020 [size=8]
-> >       I/O ports at 1030 [size=4]
-> >       I/O ports at 1028 [size=8]
-> >       I/O ports at 1034 [size=4]
-> >       I/O ports at 1000 [size=32]
-> >       Memory at 01100000 (32-bit, non-prefetchable) [size=512]
-> >       Expansion ROM at 01200000 [virtual] [disabled] [size=64K]
-> >       Capabilities: [50] MSI: Enable+ Count=1/1 Maskable- 64bit-
-> >       Capabilities: [78] Power Management version 3
-> >       Capabilities: [80] Express Legacy Endpoint, IntMsgNum 0
-> >       Capabilities: [100] Virtual Channel
-> >       Kernel driver in use: ahci
-> >       Kernel modules: ahci
-> >
+> Did you find this actually happens?  How did you find this at all?
 
-I just did one additional test, trying to help out Leonardo.
+I found this purely through by reading and reviewing the code, while
+analyzing the locking patterns in the PCI subsystem. I have not seen it
+crash in production, but the race condition is statically clear from
+reading the code.
+>
+> > 
+> > Fix this by iterating pci_root_buses list directly using
+> > list_for_each_entry() inside pci_find_bus() while holding the
+> > pci_bus_sem read lock for the entire duration of the search. This
+> > ensures the list and tree structures cannot change while being
+> > traversed, eliminating the use-after-free.
+> 
+> Why do two changes here, and not just make a patch series?
+I did both in one patch because they are connected. Since
+pci_find_next_bus() drops the lock early, I couldn't use it to hold the
+lock for the whole search. I had to change the loop to fix the locking.
+> 
+> > Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
+> > Signed-off-by: Mohamad Raizudeen <raizudeen.kerneldev@gmail.com>
+> > ---
+> >  drivers/pci/search.c | 20 +++++++++++---------
+> >  1 file changed, 11 insertions(+), 9 deletions(-)
+> > 
+> > diff --git a/drivers/pci/search.c b/drivers/pci/search.c
+> > index e3d3177fce54..f50e83061b76 100644
+> > --- a/drivers/pci/search.c
+> > +++ b/drivers/pci/search.c
+> > @@ -142,17 +142,19 @@ static struct pci_bus *pci_do_find_bus(struct pci_bus *bus, unsigned char busnr)
+> >   */
+> >  struct pci_bus *pci_find_bus(int domain, int busnr)
+> >  {
+> > -	struct pci_bus *bus = NULL;
+> > -	struct pci_bus *tmp_bus;
+> > +	struct pci_bus *bus;
+> > +	struct pci_bus *tmp_bus = NULL;
+> >  
+> > -	while ((bus = pci_find_next_bus(bus)) != NULL)  {
+> > -		if (pci_domain_nr(bus) != domain)
+> > -			continue;
+> > -		tmp_bus = pci_do_find_bus(bus, busnr);
+> > -		if (tmp_bus)
+> > -			return tmp_bus;
+> > +	down_read(&pci_bus_sem);
+> > +	list_for_each_entry(bus, &pci_root_buses, node) {
+> > +		if (pci_domain_nr(bus) == domain) {
+> > +			tmp_bus = pci_do_find_bus(bus, busnr);
+> > +			if (tmp_bus)
+> > +				break;
+> > +		}
+> 
+> Are you sure this logic is the same as the original?
+Yes, I used list_for_each_entry() that does the exact same thing as the
+old while loop, but it let me keep the lock saefely for the whole
+search.
 
-Unfortunately I do not have the same PCIe card available, so I tested with a
+> pci_find_next_bus() does grab the needed lock here, so why do you think
+> this is racy?
+You are right, it grabs the lock. But it drops the lock before returning
+the bus pointer. So the caller then uses that pointer without a lock and
+passes it back for the next loop. If a bus is removed in that moment,
+the next call reads freed memory.
+> 
+> And pci_bus_sem is just for root busses, not the individual busses,
+> right?
+It protects the root bus list, but it also protects the child buses.
+Since pci_do_find_bus() walks through the child buses, needed to hold
+the lock to make that safe too.
+> 
+> How was this tested?
+I compiled ir and booted it in x86_64 qemu vm. It booted fine without
+any PCI crashes. I will run the same test on v2 patch before sending it.
+> 
+> >  	}
+> > -	return NULL;
+> > +	up_read(&pci_bus_sem);
+> 
+> Why not use guard() instead?
+Honestly, I was so focused on getting the locking logic right that I
+completely missed I meant forgot to use guard(). I will make sure to use
+guard() in the v2 patch.
+> 
+> thanks,
+> 
+> greg k-h
 
-01:00.0 Network controller: Intel Corporation Wireless 7260 (rev 73)
-	Subsystem: Intel Corporation Dual Band Wireless-AC 7260 [Wilkins Peak 2]
-	Flags: fast devsel
-	Memory at 01100000 (64-bit, non-prefetchable) [disabled] [size=8K]
-	Capabilities: [c8] Power Management version 3
-	Capabilities: [d0] MSI: Enable- Count=1/1 Maskable- 64bit+
-	Capabilities: [40] Express Endpoint, IntMsgNum 0
-	Capabilities: [100] Advanced Error Reporting
-	Capabilities: [140] Device Serial Number ac-7b-a1-ff-ff-4e-a1-d8
-	Capabilities: [14c] Latency Tolerance Reporting
-	Capabilities: [154] Vendor Specific Information: ID=cafe Rev=1 Len=014 <?>
-
-no wi-fi driver is loaded (but this seems unrelevant for the issue here), but
-the card is detected with the current mainline Linux 7.2.0-rc7+. I tested the
-apalis SoM on both the eval carrier board and on ixora v1.2.
-
-Same kernel config as the one failing.
-
-So, unless I did some mistake in my manual test, the issue is related to the specific
-PCIe card or some other subtle difference I cannot see yet.
-
-For the record, the failure was detected by our CI/CD, and it is systematically
-reproduced on multiple hardware boards.
-
-Leonardo: any chance you can test with the same PCIe board that is failing?
-
-Francesco
-
+Thanks & regards,
+Mohamad Raizudeen 
