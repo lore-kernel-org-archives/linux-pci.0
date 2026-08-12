@@ -1,77 +1,74 @@
-Received: from AM0PR83CU005.outbound.protection.outlook.com (mail-westeuropeazon11010058.outbound.protection.outlook.com [52.101.69.58])
+Received: from CO1PR03CU002.outbound.protection.outlook.com (mail-westus2azon11010004.outbound.protection.outlook.com [52.101.46.4])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F4524503E1;
-	Wed, 12 Aug 2026 14:39:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.69.58
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA8BA46C858;
+	Wed, 12 Aug 2026 14:48:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.46.4
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786545602; cv=fail; b=ZlXJTZ9L51dk9KU1UXQIdt9H2L2BBYHu/ils8BXGfuHnaEao9WOaeM/7u9dmcHLNaFD5bF7MABsW0POubqmkozTXxharjxe17xu768g4KourCIemjeDKSvB/4MMsFAfWDVCz5Aq80h+Vvo6WW+rO/NbyF8cVciEXA9I+seT+YtY=
+	t=1786546109; cv=fail; b=Xy48gwOYd1RQNzCcXyhwW9PDF0HpQKlExQN7ucNI+tlMkpdMBQfLybdNMp6QJzOh0Ulrpn9krl2YbV1weGB+II+1FlI4qEV4peOPRLe6f6kx5iPW2nxVs1DRomh74iNKSjZtWB7UA115uaPls86n/O46ukszXwkduFOMeu2E0h0=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786545602; c=relaxed/simple;
-	bh=d7x1k5Z7rpNGimAJ2l/+1ak2LvtjvDYrh+I+AA1v90c=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=KBb9t3ylYvIPmTTLuKYDWzPDrHN3MqeRc7uwKwOYVk/t/ag9oOklwpo8umBCpkD3UKJ+yo83BRN/IpLtfhFffkDuvp4jhwhwPmA5dNf2u/ZXGLoA6QhJVPVoUnUnnPP2tEd61d4sBNNcoif3WNtKWfK5T2CZdfXfXc7pk3MHMBE=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com; spf=pass smtp.mailfrom=oss.nxp.com; dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b=VXfV77ze; arc=fail smtp.client-ip=52.101.69.58
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.nxp.com
+	s=arc-20240116; t=1786546109; c=relaxed/simple;
+	bh=a9YnaIYaP20ltOAZEV43CqT+DtKIzJGnvLSi1H2OrXo=;
+	h=Content-Type:Date:Message-Id:Cc:Subject:From:To:References:
+	 In-Reply-To:MIME-Version; b=W6klkOFyosjGGC1/Wc0kVWhOqz+C900velMoVutujn+QlREqsNrK53moojfJbiBH4lvdV5GQpoDAjC267biJi6PfBaOUqAfwDHjYQX9E4kLx+OilVPrX206BPKXKWTUWuDhHA0C858e//99HR0WHvuanzn2KOHxeSUcIEaKFpSk=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=hG8JQ6O3; arc=fail smtp.client-ip=52.101.46.4
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b="VXfV77ze"
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="hG8JQ6O3"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=V7pxL3Wk1x4gBJuaZYbIMzfNiODDgKJf0rshJyxzBnZjdJJOgE8S4VfTToa49C0yEjjOM/l4qim4AzPnjWeRNYhfd+ku2eysU6haVyBfJN7rqWX9liIYoiBc6FHRRv/7fmmL6u6t2CKFvb3wI6msvvU+u0aIoHiP9X+aDJ7np7vHih5as1SWOUCwNmyocYIMhrheXyP/E9HsfyglW7IXNIpweW74RKWsatudrdSmHTmhQNoDbd7xwbVM9cJYUedW58+V1D2NbI+xDmH37gfYZ2RqWrTE+UR0QE1/i8iufIf3aVjcCF0xJLX9Rb8PWIsFH3FRPILWLy7Z9bAlNYMMlg==
+ b=hWJ2dI+/yExQ6bOA9a7txJtQWa3+IO0E+UUTX5LS/oIbkNiDKoVZiuJxZTnglk8UACjOdw0xLb3u2uFzMijrNUW7TIaDw4WLjK+EPEXPohGdP/k2J03cxTHXuXEoMbo6yJQcIZTc/iujy9AmSa2csOADNRM+L7maXq0enwZXSibPdXyaFcpBdJQM9Y7cVBSE/L8mWGKSka3CfmLjIG0X25/jZDSW3V15fBiovm6TI0ZO3rYfBVco6Ged2yFxeHV5TbL+LMAgeh1xo4Gy48lNxnzATDAD2r0oVMBjzRxKuoTtZPVnPLt7BEm3L77fhdSi76TdScBjS/nqpmQai/aHEQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=Eqyt86+xtRBaTNj4AIsbaXhqD0PpwG3lTMyh5h2NaYI=;
- b=VlvHb9JySzomDX2T4c9GY32yUUHUA/E8tp4B1R2pBfUkhHa9TelsDg1J4VPy8HE78d4FbNLV1qIk96sDa6Uwnz9i1DQeiTErxXWWa1W2pc3OAPPAnHzNJky92NybFkLxKNtbdPvRAzyeyYc50duzNV2otN5oF3oralwoAYeUALfOlKQBFC4QftBZLtCtHgpHmnJJ2Wkx/lXBe4PF30qwLsUeo9bFppRBq5SjeS320OVKuxmZZBuOtDK3VcVHg/CGTqSK+2qdOWh+XZ6Atjlh2IRshbSecEAbktMgmRFweFSOStlWRCJQtDP5XuODK5LH9wK1atsTOp4AV45npl3VJQ==
+ bh=bb2XX+K8XlPrskQ3LjuUMVJxBwTNrFhavyXBFcu8lVc=;
+ b=Xz/p9eOw2uML5dU7oecWYnTFGD0kNy07JUg2NaRJwd91O/l2zsHELJ2XeI75BDTt9+2Kdnqib3t+bX2fSE2JTSMaCwTe2zKO2EtKMofrvOqN2w74dA8xG7WKHmxS+NHNvziziaB14I/+EkFSDcoKlWACyENw+CUTwzpDaPC63tKK2/XJj7VURyzr3PK3ryySuKUDFSG0dgAgMDA0V29gnA/aB9xXEyOFl0OcPsH8R3+0iUOomQ5/4zzL8kFCSZMB8V0XOtuT/0KyjxACrzc5dw818UAhTkef2tP1gIdO0Bhn8hAwUC9SSaVyxhcOBdJncjZq9ZejLUjCWV4HtS4F0g==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oss.nxp.com; dmarc=pass action=none header.from=oss.nxp.com;
- dkim=pass header.d=oss.nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=NXP1.onmicrosoft.com;
- s=selector1-NXP1-onmicrosoft-com;
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Eqyt86+xtRBaTNj4AIsbaXhqD0PpwG3lTMyh5h2NaYI=;
- b=VXfV77zefBhEWUNXj9mt6V1Sx5vaur+tQww7q+MGUTOzR65BCwsS4LkbTSDwT+QiMIdkiSl/6Fc/m2yvpIyc1ABfOPY2Sz64TPGQau5ulLeY17Tv9VW+9arC7BE4C+ssEmx3WjRTUX7BH3PDGOpFQJ7Nl1ix9bN3LrsORCYp/EynelbXshblb8s/glJuAsFf+iwmGfUedfexDtKi8F/9A9W+TIYeDvMtC/Q7V+RGEehxqe7bgBjf8v5SQfhRiDUX6Avg94fpebXxWM8ZvjttqEK6Th+/EKainpd4fbJtx2DcJ2HrDH6OVv4g00PNDQm0daJBhEiBIZloYmx890TFiA==
+ bh=bb2XX+K8XlPrskQ3LjuUMVJxBwTNrFhavyXBFcu8lVc=;
+ b=hG8JQ6O3UyldndPwT92F/99PLhEyNTycIMqoHGhygZol3Y5zgYx0qo+6MRyA2SO9uH0g8P57IKzK1ref9o/vdSKDIEJY53e5qaSrbtv1sZyq3OwdADTx9zk+7mqRC5Mr3/eRecRQ3JTywO4uD51+325BNkeyEc6GElIFcmikT4DTgDEsr6EV3AEr3TZnZReU7G3fecu3hH/+0X72osp8XZtoFhezLhqgh6TD7I5J82F9RDFTjw1Ris3AG166ALiDIWFjZTHridy5rTis+/OE9Ex8Itslf1rcQETaS0oIoyPtdRC3Y7SBJGrb+t97XhylMiLVyT29D2Om8LhNViRqJQ==
 Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=oss.nxp.com;
-Received: from GV2PR04MB11799.eurprd04.prod.outlook.com (2603:10a6:150:2cf::9)
- by DB9PR04MB9776.eurprd04.prod.outlook.com (2603:10a6:10:4f0::18) with
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from CH2PR12MB3990.namprd12.prod.outlook.com (2603:10b6:610:28::18)
+ by IA1PR12MB8406.namprd12.prod.outlook.com (2603:10b6:208:3da::11) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.292.25; Wed, 12 Aug
- 2026 14:39:52 +0000
-Received: from GV2PR04MB11799.eurprd04.prod.outlook.com
- ([fe80::2146:83a2:5329:b7c]) by GV2PR04MB11799.eurprd04.prod.outlook.com
- ([fe80::2146:83a2:5329:b7c%7]) with mapi id 15.21.0315.012; Wed, 12 Aug 2026
- 14:39:52 +0000
-Date: Wed, 12 Aug 2026 09:39:43 -0500
-From: Frank Li <Frank.li@oss.nxp.com>
-To: Koichiro Den <den@valinux.co.jp>
-Cc: Manivannan Sadhasivam <mani@kernel.org>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Kishon Vijay Abraham I <kishon@kernel.org>,
-	Frank Li <Frank.Li@kernel.org>,
-	Marek Vasut <marek.vasut+renesas@mailbox.org>,
-	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v6 4/6] dmaengine: dw-edma: Add delegated channel request
- helpers
-Message-ID: <anyFr6IW5ctVpmm3@SMW015318>
-References: <20260804033855.2115817-1-den@valinux.co.jp>
- <20260804033855.2115817-5-den@valinux.co.jp>
- <anISE4zj1odwT2aJ@SMW015318>
- <eu5iqhvvnpklaudcb7tkbjp3hpzecyzqxdbf4u7fnh6bjjgcqe@6hpimw5vu62m>
- <anOFUSDiDjD0jvei@SMW015318>
- <ni6sfv45mypgxncitlstnqxgpqwn5ocxkns6kv3nez6hnq4x5m@setbl5dlfqdr>
- <anpIJM5OligYsEK0@lizhi-Precision-Tower-5810>
- <lm7tadnxsyrypu4mypptlkx5qkytex4qxsijdr5ydud2n3anvf@yakjfjg5ng4u>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <lm7tadnxsyrypu4mypptlkx5qkytex4qxsijdr5ydud2n3anvf@yakjfjg5ng4u>
-X-ClientProxiedBy: PH0PR07CA0072.namprd07.prod.outlook.com
- (2603:10b6:510:f::17) To GV2PR04MB11799.eurprd04.prod.outlook.com
- (2603:10a6:150:2cf::9)
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.315.12; Wed, 12 Aug
+ 2026 14:48:12 +0000
+Received: from CH2PR12MB3990.namprd12.prod.outlook.com
+ ([fe80::7de1:4fe5:8ead:5989]) by CH2PR12MB3990.namprd12.prod.outlook.com
+ ([fe80::7de1:4fe5:8ead:5989%4]) with mapi id 15.21.0315.008; Wed, 12 Aug 2026
+ 14:48:11 +0000
+Content-Type: text/plain; charset=UTF-8
+Date: Wed, 12 Aug 2026 23:48:07 +0900
+Message-Id: <DKN1QEH1HWD1.1ZV0LWLNCZJTH@nvidia.com>
+Cc: "Danilo Krummrich" <dakr@kernel.org>, "Alice Ryhl"
+ <aliceryhl@google.com>, "Daniel Almeida" <daniel.almeida@collabora.com>,
+ "Miguel Ojeda" <ojeda@kernel.org>, "Boqun Feng" <boqun@kernel.org>,
+ =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, "Benno Lossin"
+ <lossin@kernel.org>, "Andreas Hindborg" <a.hindborg@kernel.org>, "Trevor
+ Gross" <tmgross@umich.edu>, "Tamir Duberstein" <tamird@kernel.org>,
+ =?utf-8?q?Onur_=C3=96zkan?= <work@onurozkan.dev>, "David Airlie"
+ <airlied@gmail.com>, "Simona Vetter" <simona@ffwll.ch>, "Bjorn Helgaas"
+ <bhelgaas@google.com>, =?utf-8?q?Krzysztof_Wilczy=C5=84ski?=
+ <kwilczynski@kernel.org>, <driver-core@lists.linux.dev>,
+ <rust-for-linux@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+ <nova-gpu@lists.linux.dev>, <dri-devel@lists.freedesktop.org>,
+ <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v2 12/16] gpu: nova-core: use projection for PFALCON and
+ PFALCON2 registers
+From: "Alexandre Courbot" <acourbot@nvidia.com>
+To: "Gary Guo" <gary@garyguo.net>
+Content-Transfer-Encoding: quoted-printable
+References: <20260805-typed_register-v2-0-c3ca142220a0@garyguo.net>
+ <20260805-typed_register-v2-12-c3ca142220a0@garyguo.net>
+In-Reply-To: <20260805-typed_register-v2-12-c3ca142220a0@garyguo.net>
+X-ClientProxiedBy: TY4P286CA0128.JPNP286.PROD.OUTLOOK.COM
+ (2603:1096:405:37f::17) To CH2PR12MB3990.namprd12.prod.outlook.com
+ (2603:10b6:610:28::18)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -79,394 +76,412 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: GV2PR04MB11799:EE_|DB9PR04MB9776:EE_
-X-MS-Office365-Filtering-Correlation-Id: 7c2af0d0-db3b-42a9-d573-08def87f91cb
+X-MS-TrafficTypeDiagnostic: CH2PR12MB3990:EE_|IA1PR12MB8406:EE_
+X-MS-Office365-Filtering-Correlation-Id: 3fd8f1a7-5bc2-4336-69d0-08def880bb1e
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|23010399003|19092799006|7416014|366016|1800799024|376014|22082099003|6133799003|10067099003|11063799006|56012099006|4143699003|18002099003;
+	BCL:0;ARA:13230040|7416014|376014|366016|23010399003|1800799024|10070799003|5023799004|4143699003|11063799006|3023799007|56012099006|10067099003|22082099003|18002099003;
 X-Microsoft-Antispam-Message-Info:
-	fwoA9gEg2IKyHCC+EG9NH71blcOiFAI1rC373CsCMzcgkOb3t1P7djHUzJcTc8DW8L5i1kJeNLJ/3oZ2Me52HmTajj5Y21DdLba6QPPAM/F/m2n+n/4ClGuDhTsbRn9HFYpaaR2FjXOJzbAkWL823K9HoF0CQxEJtwHokE4C+ahMTUUMCqENV3fvJul1mnfvB8D3gmKyUkwdBxawT87aL1kClEJLwyV13MVCGb5ag3+VJtY4TvSg6QV9ebL5S4hokf/5ehal6RrNbv3Tq+KWh4OXMQYd+ieyUrNU5Hqu+tZTgpkdBbnshjP7DIZuqdgiNIiIvFL0Q0ucAEKuneKlxrg5kxU9DRBb6SoVJoGhGvP4b4FEcoy6gxYV8IaoPQ1mtDHqiD2+ilth9SHF5BFgllieW7ZfwAVLrQTOivGI/OmGCRxm7uYKWuGTNOjQznfbACAqd0YZdLvFhOwnr3rDtcGrPESi2cJz7gBAhhbAQZNngyq/WcE7hEifrj/rLO8UBKO5VCPrvaEoetEhYkL4cOzDfFFPoD+nKUAl51yUIOx9m2OC6aTEYdcgQe9Gyc8AFOU/uzpLZpCQLWTzjYdD2yBXeuW6p7l8nWyA1dWZ8fNuatu9DWsZb+Cot+B+FK8e80EW4Kidvx7aKXKsB/iRr60yzfJFzx8DR050jZ/UIMc=
+	kTOa0aWKHj0COw/Dd/j1mtD5kNDtI1rn1PI5AU9eQNh2EaubmBz7FBwnEv3mMNmOFN/6J0z2gkAA3aSyGa+lzfskzJWbdinOYLqP01lcUvfEH5k4ckvhXLkRaLJG+ErOFmskB+ZYMZLToH5FKuSV8h9vASGMiIqRZ7Pb2k7rTbsvbEevQwTCH21o0zJeNexIEqHLsltijxY2sp5gMemFT4eEGsZgfxq/oWpYbGycLDtvnsMhsAZwcbXtyUDXsrv/nEA6BIolitlGaibTMWKiXI7e4j3gW9NMt1sqKIZD20lK9EnRVuo2oE9E88EyLd7YdVFuQzbAC6QSbadkvHIk2ncPE63gFLjoUaI0bXiAVd3uvRq28p6ZlryVKIRV+wRiFMNLSUcXmLKtaEQhYUHwSqCyen6DvIANarTLCwHdo7NMYqUogHfK4Zn10iEVXEef1z+QMN2ERfE50JfcEVCQrx52qCMyltUrJ7QE7nn7sGOX/raSMJF6YtAEZg0FzLVPQz+5f9Y4G+ENS3kWSLsXjLRq43kJhZ0wF23X8Jxx5QP1RPMXott3Q9mqIqYwhldPo3Q6doqfydDtksuD16Uv0RaT5iRN1gJSsP4RY+FkjFV1wrpuWhg4CtIjkCzMEerU9fjIfjjNU6muvoS/F0MNOFSsIV6FUrRinRd3z3GVrVM=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:GV2PR04MB11799.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(19092799006)(7416014)(366016)(1800799024)(376014)(22082099003)(6133799003)(10067099003)(11063799006)(56012099006)(4143699003)(18002099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH2PR12MB3990.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(376014)(366016)(23010399003)(1800799024)(10070799003)(5023799004)(4143699003)(11063799006)(3023799007)(56012099006)(10067099003)(22082099003)(18002099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?ImpNktCcQhDuLB2jo+UZdFu5WKZeJAa7QIJ6ys73UdIL5fRGqlvSX4z37F5b?=
- =?us-ascii?Q?rX0m61zDnr8J+/4DXahB5wj2mCrPfGpdzzCM1eBzOiPaouZsRo0M1g1pgwdL?=
- =?us-ascii?Q?rjrlsbrsaDqIv01Qmy4R6ASfvCqp0Hy8z6jeMH/lIuXCLtu2yW6qqpiow00o?=
- =?us-ascii?Q?tn090ehrlEiAiXQOTStp1A11TDAWiM9R4xbER8f+ARlZntRHS7qIwamQGJLW?=
- =?us-ascii?Q?kEffKWuSad4A8AX7/syIrcf6djfXaG/g46PXNegcuFoiZ7CkgBvXDIOT4CIF?=
- =?us-ascii?Q?daRPcJSBFkTdu1uUueHHfELQAg6eG6WC/v11jkXVfeMmHfR0nmwD3vwarNG0?=
- =?us-ascii?Q?HK8jMvnCxOANb0tjLxrGAtC0zMKo5cidw+E5w+F+dMdkSJxHkDaC4lVa5TJh?=
- =?us-ascii?Q?A/cVoWfdeseO5sdPEb7V8Bc1OU0qlt4E7QKz5ZG/FaiCOuGETuAPifjSYkq3?=
- =?us-ascii?Q?+F8HMjb0WmpSWbSKZMci9DqYSMNxMv6FvRSvNJ2Cz7o/GWHRkP1MlCg+IOf+?=
- =?us-ascii?Q?iDgqZsmRbXBAz40ZXU6laMdxXlB4P2fT2+0nHhc92fhe0ArVgMc21PLDzGSv?=
- =?us-ascii?Q?bPDGGWSxgLnIHio/QQCNKAaYJApdlBNnW7lDdP5Nv6r59UK1l89SMB0qYCMG?=
- =?us-ascii?Q?svRiHmX8Ea5MdgH29b/fMMnSE08Ls0UkJbjsurWr/WjrLXYzXWGOtFKQqNek?=
- =?us-ascii?Q?YyjEcU+dDa+Tl4M1TcZNpl54sM54q9J6HIZrOn3ZAv6ALgBu3kWgOMkwzq61?=
- =?us-ascii?Q?xYehlULxgEY5DG44HHZI582E/cg+fhftwBpXATKHZUI9q1ugLMp6wXBLSGQD?=
- =?us-ascii?Q?BcOJpNT3+eOXjEKIiklgaOCpUmrlv7MQfF05h7Rs0aYkks1q6UZbEFq7UOWY?=
- =?us-ascii?Q?Nf4G70K3Dr6DucX/4ASIkKQJuq12J6bBYpqc3r746AbkeZrI6kJo6EeJQsfI?=
- =?us-ascii?Q?ZjiDmlt82RJ2Kj7G7JNZh/XvFNnlUHnHR9rNIJ+SMtATLpzcTeCr7T5yH33s?=
- =?us-ascii?Q?iHwUOLuZbfwY50IZ9TuJYqQJo0j8wyRkBjlpgoelx8sZOL2kKV/03QR8oG8P?=
- =?us-ascii?Q?BBMyexl6As30Smog7Y2kRzegDhGQMPFi/8WHgijmK/Bv0FmB60nyXwobP3/3?=
- =?us-ascii?Q?V7tMrREh0VLyizlNMVcFUUc+TjVVaYnxrvUhwHwq5VNx39yc9E5Eugv1RL8U?=
- =?us-ascii?Q?VDQIOIpVJBjFInE7JU7JbU8kdQGorHVK8A7TfknOoJ2aC8j1gOzBSBi2I1zg?=
- =?us-ascii?Q?nstMpGm1eEvFC7D8XnzBy14N4CQIHqmbfyOhhFRpVKBhbzOlD94h8x6U6Yj8?=
- =?us-ascii?Q?RRZg3E/EHuCWmp5UbK1HJ+KKNQMLNuRZ/oDI27URTuGd0+9yFVit3CSiza8+?=
- =?us-ascii?Q?y1NlKDk64mISw+NN8z7+1Bm03Ssu4BznbZ3KL9Vag3e/Y6Nfemi+BmFtC0mf?=
- =?us-ascii?Q?/mR8Ym9eefYwrMXlwuaxBiEtItgmZ9lo0/TxvSLsEuXM0zx970i3s5/ea3Ix?=
- =?us-ascii?Q?+lnQXLQs5UxSfRrCTSD1kk1auEujiLrOT4fGqpo9lBEQXQV0gI1vSPqhwUzm?=
- =?us-ascii?Q?UZ370UzOzSln9PMWbzrFAWJ55QKVc149Z4XpCgCGh52lAjV9MJTmfmgeiWET?=
- =?us-ascii?Q?bbjudqoc07VbqaGMHwsLgO/OGQVrRs+MmpZfjfva6yVBRjP7cmCZI/Souakw?=
- =?us-ascii?Q?TktqV8BcaO10Rpx5lVP9CVFMfRwh97Yzd5bqeOiIsY4tz5qzdWiVogEHteKi?=
- =?us-ascii?Q?wjp1grKcWmdENU0BO2yoDHr6yGkX2c51plTg8wiT33BbqZsIsdLc?=
-X-OriginatorOrg: oss.nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 7c2af0d0-db3b-42a9-d573-08def87f91cb
-X-MS-Exchange-CrossTenant-AuthSource: GV2PR04MB11799.eurprd04.prod.outlook.com
+	=?utf-8?B?S0lkUmMvZWd4aG1RaXIzb1JraXFPYllSSWowa045eml6U1FiUXM3Zy9oVDc0?=
+ =?utf-8?B?aFNoNlBXNjQrOWhrcVBCaUY1UkMxNXIyNWlFRWtoZFpKYU1rclZsWVpOVll0?=
+ =?utf-8?B?SndjSVRyOFJDVXI5d2M4UnVNU0hjUEd1ZGdWblFwYUE2OXcyOEhyQ3lNR3FS?=
+ =?utf-8?B?T05pUUZRZE1VNkRGZmlERFhBa0lRS1lWNVNuemhvY011WVVGYk02NmxrSW5a?=
+ =?utf-8?B?dWttZCtUYkR4UTZoM2xMYmkwelJqRE5McmY3KzVZVXBlYmNNL0U0ajRua3g5?=
+ =?utf-8?B?S3RNY0NmK25ob2p6UzJpK2FEVlU4bXpJLzBjVXlNRkF6eHN3WFVtTnQwYkha?=
+ =?utf-8?B?WElPOTNyNjRwM0RGdGhpRWcwa2NaYUJuVG1pVkRQSXBFa3luSWxxRllZQ0gy?=
+ =?utf-8?B?REZ3TmdoV2FrNGZLR296bDd6QkVTOGk1TTh5eWhjTGxlRWdpdU5pT203NmFV?=
+ =?utf-8?B?azlrcnZhRjFGY2xId0lINThkRFFBRy9UcU54T1g4UHp1TnlNSEhoRGZmU0Zr?=
+ =?utf-8?B?aWJNY05nd254OVZPL0NoVUNCYmdjc3ROSk5BV1lLYnVtR093NWFERVpDUmto?=
+ =?utf-8?B?MDRTVUdJNzN2Qm5MMmRuWWF0TkxhV3ArTXdwQjlWaXJQME1HSFY3TU53OE1I?=
+ =?utf-8?B?RGNRWEs0aUkxQmFpTDdwVG13ajIvUVNCOVdVb3RGZ05IcWV0M3RJb1EwZXR0?=
+ =?utf-8?B?RWFScEhTTHFLMVJDL3JoOVlHcHFjUWJzeHlqc0xkMlhRaUZKamo1OXIwU2Mx?=
+ =?utf-8?B?SW5zTWp4dFRERm9SRTkvbWkwZnFYM2hObElEeSs4Vm9QWlVIV0JjR1c2K1U3?=
+ =?utf-8?B?a0x4YjFQNHJuR0IrbmRobC96UjNya1ZZVktwYzZFNlRkaUwvYVFlazRVNUpL?=
+ =?utf-8?B?Zk51UXNwbm83T0NYZHVXbkM1SFc0bFR3eFB3aVlDTU5mcUI5S2wrL21UUmJ1?=
+ =?utf-8?B?b20vWDAvb2lKZCtta25IcVdIdXJzOGVGc1FxV0hkZjR2ZjB3cHZPdWlQSEw0?=
+ =?utf-8?B?K0hDQngzaTlveFBWMW9FTmZ2R3o5NzRHdGQ2d2g2bW9ieDdzMTNqUCtQQWdS?=
+ =?utf-8?B?c3dDUkR4VlFwMmo4SytQdGRGSWNwaWxTNXpiYUhZQ1k3YjZ6M21ZRmtjSU0z?=
+ =?utf-8?B?NUt6MERrQ1Y4VDREb2ZRWlo3OG1CeU9yd1FYbFgrOW5tVmxxQ3FEWXRzSjdh?=
+ =?utf-8?B?WFdPeE9wM3V6M280NkJDOWcyT0NlaWJVdmI4Lzd5ZjBBbW5hUEdpZkNMbXAv?=
+ =?utf-8?B?M0lKZWllZ2tvb1ZnOVJsY09RVkFSZW1ZZ0sxRkFnWGJobTUvakR4VkhSRHlp?=
+ =?utf-8?B?d0dWMmZ4V2hWb0xjZWJZN3NNN01JZ3ZEclY4clNYU0w0b3hzTk04WlpuWklm?=
+ =?utf-8?B?WXpEaG9oOXBIT1hoNUtFU0NvS3Q5QTUzUzNNMG9kWUVYd05MWkNld1RYSlJK?=
+ =?utf-8?B?K3pFQnVnM2dHTzYxV0dBRGJNY3Zka3JwNjJtT0ZNTnZHNDdSODNYUStnTG1v?=
+ =?utf-8?B?LzFudjlmS0lOUEYwN09DSG5jNFVXdUJPaS94Q0tvU3RmcGtkOWg5MFQzTVlG?=
+ =?utf-8?B?ZVl5RCtuNnE5L1gvK1diUDg1M3c2MTc2SlVlcTNocGZ2bEk2L0dhcDVnbUd3?=
+ =?utf-8?B?L0M2Zmg3dkZvbHh2V2tGWDlTVkRSVldnV0JiTDhBb0QwYVRWK1UyYk1nWGtz?=
+ =?utf-8?B?RHphYTFIcmVWbkg0bTF2cmhZaW56bHUzbkJUengvKzQ2YmtZcU5jdms5eGdM?=
+ =?utf-8?B?cXRaVWNKQ3RxMmdjc1ZobXI0Wk5nUldVVnZtTG1RN3JBK1hmVzl0S0F0VmN5?=
+ =?utf-8?B?c0tROHlYOXpMb0pVUm42ODc5ZXhjY0MwRU9TVkNHMVR3bXJjQ01pcFlUb3J0?=
+ =?utf-8?B?S1o0blMzUVlpZndHVWhVQUJuaVFENkxHYjlnNnR6NXhyZUcrTmZGaS96K3JF?=
+ =?utf-8?B?QitnMnRLT3FkNE9wTlFCb2JUdmhpVTVKS3Bna1NhdzZrNU8yVkR5WGRLa2Vj?=
+ =?utf-8?B?Sk5XZHRwK3VCOWNPMnZGR290dUdVV0pxYVZBVXA1cnFvWjdtekk0Unc2Yitv?=
+ =?utf-8?B?cXNzblZRb2Y0UzBLelFRbDNYTTd0c0pxUDJHengyMC94VW15QXdEM3F0ZXIy?=
+ =?utf-8?B?bUxDblpCZ3gzZlYwc2R5VkZsSUN6bHlWQUxEZ2tCWDIrMWRSMVl2aUptMVBv?=
+ =?utf-8?B?bmxuNlhDeVZ0aEcvNlBEVFdXMDVGeFR4c1BWUi9pcE5DME5oM1crVnk5bFg0?=
+ =?utf-8?B?STRvbnR6S3gxWm9VQklBUTJ5OGd5S2JkTUp4MllrdWhQSW9NSm1TL3NrdXRK?=
+ =?utf-8?B?WU9RalNCU0VxUnhBMVQvb1NnSDNNbjM2THF6SytJWnJtZHFOOXpXL1k3eGtO?=
+ =?utf-8?Q?MrER9tzT8bwwSiZURqH4bi6z/X53QTDK+sImtuMvl8NNs?=
+X-MS-Exchange-AntiSpam-MessageData-1: FohuTWlJcyeJLQ==
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 3fd8f1a7-5bc2-4336-69d0-08def880bb1e
+X-MS-Exchange-CrossTenant-AuthSource: CH2PR12MB3990.namprd12.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 Aug 2026 14:39:52.7011
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 Aug 2026 14:48:11.5981
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 47aKokjDDShTmY6P1Kh+DKZ1C4NXJt9uGAKWJmaUTNGrk8tK9gbopd/oGZxLdCwBVdKUxtT/KRDc6kwWHze3TKolFKu4Vgy7+6DLLoX43pOJYreOTtyBn9GDQONw0bAd
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DB9PR04MB9776
+X-MS-Exchange-CrossTenant-UserPrincipalName: HUaUb7RHLSkMwanM9ENamJ18ecMBULmKtKOEYpBghr37D8krXOq10dnokGESGSUVTSP36fN+Zltz1K4CeBqAPQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA1PR12MB8406
 
-On Wed, Aug 12, 2026 at 01:11:41PM +0900, Koichiro Den wrote:
-> On Mon, Aug 10, 2026 at 05:52:36PM -0400, Frank Li wrote:
-> > On Thu, Aug 06, 2026 at 12:45:13PM +0900, Koichiro Den wrote:
-> > > On Wed, Aug 05, 2026 at 01:47:45PM -0500, Frank Li wrote:
-> > > > On Wed, Aug 05, 2026 at 11:05:21AM +0900, Koichiro Den wrote:
-> > > > > On Tue, Aug 04, 2026 at 11:23:47AM -0500, Frank Li wrote:
-> > > > > > On Tue, Aug 04, 2026 at 12:38:53PM +0900, Koichiro Den wrote:
-> > > > > > > Endpoint functions that expose endpoint-local DesignWare eDMA channels
-> > > > > > > to a remote host need to reserve exact hardware channels and hand
-> > > > > > > interrupt ownership to the remote side before publishing the channels.
-> > > > > > >
-> > > > > > > Add DW eDMA-specific helpers that request a write/read hardware channel
-> > > > > > > through DMAengine, keep the hardware-channel filter private to dw-edma,
-> > > > > > > and switch the selected endpoint-local channel to remote interrupt
-> > > > > > > routing after the channel has been successfully reserved. The matching
-> > > > > > > release helper can quiesce the channel while it is still remote-routed,
-> > > > > > > then restores the channel's default routing before releasing the
-> > > > > > > DMAengine reservation. This lets callers skip quiesce when unwinding a
-> > > > > > > reservation that was never exposed to host programming.
-> > > > > > >
-> > > > > > > Release is best-effort because its callers cannot abort teardown. Report
-> > > > > > > a quiesce failure locally, but always restore the default routing and
-> > > > > > > release the DMAengine reservation.
-> > > > > > >
-> > > > > > > Signed-off-by: Koichiro Den <den@valinux.co.jp>
-> > > > > > > ---
-> > > > > > > Changes in v6:
-> > > > > > >   - No changes.
-> > > > > > >
-> > > > > > >  drivers/dma/dw-edma/dw-edma-core.c | 91 ++++++++++++++++++++++++++++++
-> > > > > > >  include/linux/dma/edma.h           | 14 +++++
-> > > > > > >  2 files changed, 105 insertions(+)
-> > > > > > >
-> > > > > > > diff --git a/drivers/dma/dw-edma/dw-edma-core.c b/drivers/dma/dw-edma/dw-edma-core.c
-> > > > > > > index 1f893dc54c79..4c0d2bba755b 100644
-> > > > > > > --- a/drivers/dma/dw-edma/dw-edma-core.c
-> > > > > > > +++ b/drivers/dma/dw-edma/dw-edma-core.c
-> > > > > > > @@ -1302,6 +1302,97 @@ int dw_edma_remove(struct dw_edma_chip *chip)
-> > > > > > >  }
-> > > > > > >  EXPORT_SYMBOL_GPL(dw_edma_remove);
-> > > > > > >
-> > > > > > > +struct dw_edma_delegated_chan_filter_args {
-> > > > > > > +	struct device *dma_dev;
-> > > > > > > +	bool write;
-> > > > > > > +	u16 id;
-> > > > > > > +};
-> > > > > > > +
-> > > > > > > +static bool dw_edma_delegated_chan_filter(struct dma_chan *dchan, void *param)
-> > > > > > > +{
-> > > > > > > +	struct dw_edma_delegated_chan_filter_args *filter = param;
-> > > > > > > +	struct dw_edma_chan *chan;
-> > > > > > > +
-> > > > > > > +	if (!filter || dchan->device->dev != filter->dma_dev)
-> > > > > > > +		return false;
-> > > > > > > +
-> > > > > > > +	chan = dchan2dw_edma_chan(dchan);
-> > > > > > > +
-> > > > > > > +	return chan->dir == (filter->write ? EDMA_DIR_WRITE : EDMA_DIR_READ) &&
-> > > > > > > +	       chan->id == filter->id;
-> > > > > > > +}
-> > > > > > > +
-> > > > > > > +static int dw_edma_delegate_chan(struct dma_chan *dchan)
-> > > > > > > +{
-> > > > > > > +	struct dw_edma_chan *chan = dchan2dw_edma_chan(dchan);
-> > > > > > > +	int ret = 0;
-> > > > > > > +
-> > > > > > > +	if (!(chan->dw->chip->flags & DW_EDMA_CHIP_LOCAL))
-> > > > > > > +		return -EINVAL;
-> > > > > > > +
-> > > > > > > +	guard(spinlock_irqsave)(&chan->vc.lock);
-> > > > > > > +
-> > > > > > > +	if (chan->configured || chan->status != EDMA_ST_IDLE ||
-> > > > > > > +	    chan->request != EDMA_REQ_NONE)
-> > > > > > > +		ret = -EBUSY;
-> > > > > > > +	else
-> > > > > > > +		chan->irq_mode = DW_EDMA_CH_IRQ_REMOTE;
-> > > > > > > +
-> > > > > > > +	return ret;
-> > > > > > > +}
-> > > > > > > +
-> > > > > > > +struct dma_chan *dw_edma_request_delegated_chan(struct device *dma_dev,
-> > > > > > > +						bool write, u16 id)
-> > > > > > > +{
-> > > > > > > +	struct dw_edma_delegated_chan_filter_args filter = {
-> > > > > > > +		.dma_dev = dma_dev,
-> > > > > > > +		.write = write,
-> > > > > > > +		.id = id,
-> > > > > > > +	};
-> > > > > > > +	struct dma_chan *dchan;
-> > > > > > > +	dma_cap_mask_t mask;
-> > > > > > > +
-> > > > > > > +	if (!dma_dev)
-> > > > > > > +		return NULL;
-> > > > > > > +
-> > > > > > > +	dma_cap_zero(mask);
-> > > > > > > +	dma_cap_set(DMA_SLAVE, mask);
-> > > > > > > +
-> > > > > > > +	dchan = dma_request_channel(mask, dw_edma_delegated_chan_filter,
-> > > > > > > +				    &filter);
-> > > > > > > +	if (!dchan)
-> > > > > > > +		return NULL;
-> > > > > >
-> > > > > > I forget, why need export delegrated dma channel to dmanegine? If EP
-> > > > > > driver doesn't report delegrated channel to dma engine, what's happen?
-> > > > >
-> > > > > This just reserves the exact channel against any dmaengine clients before
-> > > > > handing its programming ownership to the host. Without it, a local client
-> > > > > could request the same channel too.
-> > > >
-> > > > why not epf function driver call dma_request_channel() to decide which
-> > > > channel pass to ownership to the host.
-> > >
-> > > I actually tried that model in v2. pci_epf_dma called dma_request_channel() with
-> > > a filter supplied through the EPC resource.
-> > >
-> > >   In v2, .filter_fn was part of the pci_epc_aux_resource definition:
-> > >   https://lore.kernel.org/r/20260525063129.3316894-3-den@valinux.co.jp/
-> > >   ... and pci_epf_dma_claim_channel() used it to claim the channel here:
-> > >   https://lore.kernel.org/r/20260525063456.3317509-3-den@valinux.co.jp/
-> > >
-> > > I changed that in v3 after your comment about why the dw-edma filter needed to
-> > > be public. The replacement kept the filter inside dw-edma, and moved channel
-> > > reservation, IRQ ownership handoff and reclaim there too. The current EPC
-> > > delegation API follows that model.
-> > >
-> > > Or is that v2 model what you prefer here?
-> > >
-> > > That said, dma_get_slave_channel() might be sufficient inside dw-edma here,
-> > > since it already knows the exact channel from the direction and hw channel id.
-> > >
-> > > P.S. For clarity, the options tried or discussed so far are:
-> > >
-> > >   (a) Expose dma_chan directly through the EPC resource, then let the EPF
-> > >       reserve it with dma_get_slave_channel(). This was v1.
-> > >       (https://lore.kernel.org/r/20260521063405.2842644-3-den@valinux.co.jp/)
-> > >
-> > >   (b) Expose the hardware ID, direction and a provider filter, then let the
-> > >       EPF call dma_request_channel(). This was v2.
-> > >       (https://lore.kernel.org/r/20260525062420.3315904-2-den@valinux.co.jp/)
-> > >
-> > >   (c) Pass the hardware ID and direction to pci_epc_delegate_dma_chan(), then
-> > >       let the backend reserve and delegate the channel. This is the current
-> > >       v6 design.
-> > >       (https://lore.kernel.org/r/20260804033855.2115817-5-den@valinux.co.jp/)
-> > >
-> > >   (d) Request channels normally and correlate them with EPC resources through
-> > >       a generic dma_slave_caps.hw_id. I proposed this in a much older series.
-> > >       (https://lore.kernel.org/r/20260204145440.950609-2-den@valinux.co.jp/)
-> >
-> > (d) is close to best solutin.
->
-> Hi Frank, thanks for sharing your thoughts.
->
-> >
-> > There are chan_id in dma_chan, but have not implemented good enough.
-> >
-> >   	/*
-> >          * When the chan_id is a negative value, we are dynamically adding
-> >          * the channel. Otherwise we are static enumerating.
-> >          */
-> >         chan->chan_id = ida_alloc(&device->chan_ida, GFP_KERNEL);
-> >         if (chan->chan_id < 0) {
-> >                 pr_err("%s: unable to alloc ida for chan: %d\n",
-> >                        __func__, chan->chan_id);
-> >                 rc = chan->chan_id;
-> >                 goto err_free_dev;
-> >         }
-> >
-> > But there are not check for negative value eventhough there are comments
-> > for it.
->
-> I looked into the history. Isn't this just a stale comment left behind by
-> 0821009445a8 ("dmaengine: fix channel index enumeration")?
->
-> >
-> > It causes logic channel and hardware channel mismatch if dma-channel mask
-> > existting. If skip some channel register, it will be mismatched, which will
-> > cause confuse when debug.
-> >
-> > To keep back compatible, we may use reverse logic for dynamically adding.
->
-> Just to confirm, by "reverse logic", do you mean keeping the automatic IDA
-> allocation from 0821009445a8 as the default, while letting a driver explicitly
-> set a static channel ID? (pls see my next comment below)
->
-> >
-> > BIT(30) as static enumerating.
-> >
-> > if (!(chan->chan_id & BIT(30)))
-> > 	chan->chan_id = ida_alloc(&device->chan_ida, GFP_KERNEL);
-> >
-> >
-> > Or we simple add hw_id in dma_chan. at debug fs can show hw id. but idealy
-> > chan_id match hardware sequency.
->
-> I agree. It would be nice if we could do without adding a new field. How about a
-> small helper such as:
->
->     static inline void
->     dmaengine_set_static_chan_id(struct dma_chan *chan, unsigned int hw_id)
->     {
->             chan->chan_id = BIT(30) | hw_id;
->     }
->
-> then in the dmaengine core:
->
->     if (chan->chan_id & BIT(30)) {
->             id = chan->chan_id & ~BIT(30);
->             chan->chan_id = ida_alloc_range(&device->chan_ida, id, id,
->                                             GFP_KERNEL);
->     } else {
->             chan->chan_id = ida_alloc(&device->chan_ida, GFP_KERNEL);
->     }
->
-> and for dw-edma as an example, use it like this:
->
->     diff --git a/drivers/dma/dw-edma/dw-edma-core.c b/drivers/dma/dw-edma/dw-edma-core.c
->     index 1f893dc54c79..d214df55da3c 100644
->     --- a/drivers/dma/dw-edma/dw-edma-core.c
->     +++ b/drivers/dma/dw-edma/dw-edma-core.c
->     @@ -987,6 +987,7 @@ static int dw_edma_channel_setup(struct dw_edma *dw, u32 wr_alloc, u32 rd_alloc)
->                                             &dw->chip->dt_region_rd[chan->id];
->
->                     vchan_init(&chan->vc, dma);
->     +               dmaengine_set_static_chan_id(&chan->vc.chan, i);
->
->                     dw_edma_core_ch_config(chan);
->             }
->
-> Here, 'i' is a direction-flattened ID, unlike dw_edma_chan.id, which is
-> direction-local. It keeps dma_chan.chan_id unique within one dma_device.
+On Thu Aug 6, 2026 at 1:35 AM JST, Gary Guo wrote:
+> Add fixed size region types `PFalconRegisters` and `PFalcon2Registers` an=
+d
+> update PFALCON and PFALCON registers to be fixed register on them and not
 
-The method looks good.
+nit: second `PFALCON` should be `PFALCON2`.
 
-Frank
+> relative registers on `NovaRegisters`.
+>
+> Update `Falcon` struct to store projected views when constructing and
+> access with `self.pfalcon` and `self.pfalcon2`.
+>
+> Signed-off-by: Gary Guo <gary@garyguo.net>
+> ---
+>  drivers/gpu/nova-core/falcon.rs                    | 157 +++++++++------=
+------
+>  drivers/gpu/nova-core/falcon/fsp.rs                |  63 +++++----
+>  drivers/gpu/nova-core/falcon/gsp.rs                |  51 ++++---
+>  drivers/gpu/nova-core/falcon/hal/ga102.rs          |  62 ++++----
+>  drivers/gpu/nova-core/falcon/hal/tu102.rs          |   9 +-
+>  drivers/gpu/nova-core/falcon/sec2.rs               |  37 +++--
+>  drivers/gpu/nova-core/firmware/fwsec/bootloader.rs |  18 +--
+>  drivers/gpu/nova-core/gsp/hal/tu102.rs             |   7 +-
+>  drivers/gpu/nova-core/regs.rs                      |  91 ++++++------
+>  9 files changed, 238 insertions(+), 257 deletions(-)
+>
+> diff --git a/drivers/gpu/nova-core/falcon.rs b/drivers/gpu/nova-core/falc=
+on.rs
+> index a91cbdd5d636..ed52572690ff 100644
+> --- a/drivers/gpu/nova-core/falcon.rs
+> +++ b/drivers/gpu/nova-core/falcon.rs
+> @@ -14,13 +14,12 @@
+>      },
+>      io::{
+>          poll::read_poll_timeout,
+> -        register::{
+> -            RegisterBase,
+> -            WithBase, //
+> -        },
+> +        register::Array,
+>          Io,
+> +        Mmio, //
+>      },
+>      prelude::*,
+> +    sizes::SZ_4K,
+>      time::Delta,
+>  };
+> =20
+> @@ -165,18 +164,22 @@ pub(crate) enum FalconFbifMemType with From<Bounded=
+<u32, 1>> {
+>      }
+>  }
+> =20
+> -/// Type used to represent the `PFALCON` registers address base for a gi=
+ven falcon engine.
+> -pub(crate) struct PFalconBase(());
+> +/// Type used to represent the `PFALCON` registers.
+> +#[repr(align(4))]
+> +#[derive(FromBytes, IntoBytes)]
+> +pub(crate) struct PFalconRegisters([u8; SZ_4K]);
+> =20
+> -/// Type used to represent the `PFALCON2` registers address base for a g=
+iven falcon engine.
+> -pub(crate) struct PFalcon2Base(());
+> +/// Type used to represent the `PFALCON2` registers.
+> +#[repr(align(4))]
+> +#[derive(FromBytes, IntoBytes)]
+> +pub(crate) struct PFalcon2Registers([u8; SZ_4K]);
+> =20
+>  /// Trait defining the parameters of a given Falcon engine.
+>  ///
+>  /// Each engine provides one base for `PFALCON` and `PFALCON2` registers=
+.
+> -pub(crate) trait FalconEngine:
+> -    Send + Sync + RegisterBase<PFalconBase> + RegisterBase<PFalcon2Base>=
+ + Sized
+> -{
+> +pub(crate) trait FalconEngine: Send + Sync + Sized {
+> +    fn pfalcon(io: Bar0<'_>) -> Mmio<'_, PFalconRegisters>;
+> +    fn pfalcon2(io: Bar0<'_>) -> Mmio<'_, PFalcon2Registers>;
 
->
-> >
-> > chan_id match hardware instance will beanfit more. There are some code
-> > assume chan_id is that hardware id, such as
-> >
-> > drivers/dma/dw/idma32.c:        value = readl(misc + DMA_CTL_CH(dwc->chan.chan_id));
->
-> Thanks for the pointer. I wasn't aware of it, TBH. The current semantics might
-> be a bit fragile.
->
-> Thanks again for the review, it's super helpful.
->
-> Best regards,
-> Koichiro
->
-> >
-> > Frank
-> >
-> > >
-> > > Best regards,
-> > > Koichiro
-> > >
-> > > >
-> > > > Frank
-> > > >
-> > > > >
-> > > > > Best regards,
-> > > > > Koichiro
-> > > > >
-> > > > > >
-> > > > > > Frank
-> > > > > >
-> > > > > > > +
-> > > > > > > +	if (dw_edma_delegate_chan(dchan)) {
-> > > > > > > +		dma_release_channel(dchan);
-> > > > > > > +		return NULL;
-> > > > > > > +	}
-> > > > > > > +
-> > > > > > > +	return dchan;
-> > > > > > > +}
-> > > > > > > +EXPORT_SYMBOL_GPL(dw_edma_request_delegated_chan);
-> > > > > > > +
-> > > > > > > +void dw_edma_release_delegated_chan(struct dma_chan *dchan, bool quiesce)
-> > > > > > > +{
-> > > > > > > +	struct dw_edma_chan *chan;
-> > > > > > > +
-> > > > > > > +	if (!dchan)
-> > > > > > > +		return;
-> > > > > > > +
-> > > > > > > +	chan = dchan2dw_edma_chan(dchan);
-> > > > > > > +	if (quiesce && dw_edma_core_ch_quiesce(chan))
-> > > > > > > +		dev_warn(chan->dw->chip->dev,
-> > > > > > > +			 "failed to quiesce delegated %s channel %u\n",
-> > > > > > > +			 chan->dir == EDMA_DIR_WRITE ? "write" : "read",
-> > > > > > > +			 chan->id);
-> > > > > > > +
-> > > > > > > +	scoped_guard(spinlock_irqsave, &chan->vc.lock)
-> > > > > > > +		chan->irq_mode = dw_edma_get_default_irq_mode(chan);
-> > > > > > > +
-> > > > > > > +	dma_release_channel(dchan);
-> > > > > > > +}
-> > > > > > > +EXPORT_SYMBOL_GPL(dw_edma_release_delegated_chan);
-> > > > > > > +
-> > > > > > >  MODULE_LICENSE("GPL v2");
-> > > > > > >  MODULE_DESCRIPTION("Synopsys DesignWare eDMA controller core driver");
-> > > > > > >  MODULE_AUTHOR("Gustavo Pimentel <gustavo.pimentel@synopsys.com>");
-> > > > > > > diff --git a/include/linux/dma/edma.h b/include/linux/dma/edma.h
-> > > > > > > index 3c8e2ef9dee0..944469258b8b 100644
-> > > > > > > --- a/include/linux/dma/edma.h
-> > > > > > > +++ b/include/linux/dma/edma.h
-> > > > > > > @@ -153,6 +153,9 @@ struct dw_edma_chip {
-> > > > > > >  #if IS_REACHABLE(CONFIG_DW_EDMA)
-> > > > > > >  int dw_edma_probe(struct dw_edma_chip *chip);
-> > > > > > >  int dw_edma_remove(struct dw_edma_chip *chip);
-> > > > > > > +struct dma_chan *dw_edma_request_delegated_chan(struct device *dma_dev,
-> > > > > > > +						bool write, u16 id);
-> > > > > > > +void dw_edma_release_delegated_chan(struct dma_chan *chan, bool quiesce);
-> > > > > > >  #else
-> > > > > > >  static inline int dw_edma_probe(struct dw_edma_chip *chip)
-> > > > > > >  {
-> > > > > > > @@ -163,6 +166,17 @@ static inline int dw_edma_remove(struct dw_edma_chip *chip)
-> > > > > > >  {
-> > > > > > >  	return 0;
-> > > > > > >  }
-> > > > > > > +
-> > > > > > > +static inline struct dma_chan *
-> > > > > > > +dw_edma_request_delegated_chan(struct device *dma_dev, bool write, u16 id)
-> > > > > > > +{
-> > > > > > > +	return NULL;
-> > > > > > > +}
-> > > > > > > +
-> > > > > > > +static inline void dw_edma_release_delegated_chan(struct dma_chan *chan,
-> > > > > > > +						  bool quiesce)
-> > > > > > > +{
-> > > > > > > +}
-> > > > > > >  #endif /* CONFIG_DW_EDMA */
-> > > > > > >
-> > > > > > >  #endif /* _DW_EDMA_H */
-> > > > > > > --
-> > > > > > > 2.51.0
-> > > > > > >
+Remember on v1 when we contemplated using associated consts? Turns out
+we can with this version:
+
+    // Need a better name, but you get the idea.
+    pub(crate) type PFalconRegs =3D OffsetLoc<NovaRegisters, PFalconRegiste=
+rs>;
+    pub(crate) type PFalcon2Regs =3D OffsetLoc<NovaRegisters, PFalcon2Regis=
+ters>;
+
+    pub(crate) trait FalconEngine: Send + Sync + Sized {
+        const PFALCON: PFalconRegs;
+        const PFALCON2: PFalcon2Regs;
+    }
+
+... and make `Falcon::new` call `io_project` directly, and it works! At
+the cost of importing `OffsetLoc` in `falcon.rs`, but that removes ~30
+LoCs in total, and I'm not sure `OffsetLoc` should be hidden anyway.
+
+>  }
+> =20
+>  /// Represents a portion of the firmware to be loaded into a particular =
+memory (e.g. IMEM or DMEM)
+> @@ -358,6 +361,8 @@ pub(crate) struct Falcon<'a, E: FalconEngine> {
+>      hal: KBox<dyn FalconHal<E>>,
+>      dev: &'a device::Device<device::Bound>,
+>      bar: Bar0<'a>,
+> +    pub(crate) pfalcon: Mmio<'a, PFalconRegisters>,
+> +    pfalcon2: Mmio<'a, PFalcon2Registers>,
+>  }
+> =20
+>  impl<'a, E: FalconEngine + 'static> Falcon<'a, E> {
+> @@ -371,19 +376,19 @@ pub(crate) fn new(
+>              hal: hal::falcon_hal(chipset)?,
+>              dev,
+>              bar,
+> +            pfalcon: E::pfalcon(bar),
+> +            pfalcon2: E::pfalcon2(bar),
+>          })
+>      }
+> =20
+>      /// Resets DMA-related registers.
+>      pub(crate) fn dma_reset(&self) {
+> -        self.bar.update(regs::NV_PFALCON_FBIF_CTL::of::<E>(), |v| {
+> +        self.pfalcon.update(regs::NV_PFALCON_FBIF_CTL, |v| {
+>              v.with_allow_phys_no_ctx(true)
+>          });
+> =20
+> -        self.bar.write(
+> -            WithBase::of::<E>(),
+> -            regs::NV_PFALCON_FALCON_DMACTL::zeroed(),
+> -        );
+> +        self.pfalcon
+> +            .write_reg(regs::NV_PFALCON_FALCON_DMACTL::zeroed());
+
+Remembering the debates we had over how to address relative registers
+when we ported registers to the new I/O scheme, I guess this new syntax
+which should make everyone happy! :)
+
+<...>
+> diff --git a/drivers/gpu/nova-core/falcon/gsp.rs b/drivers/gpu/nova-core/=
+falcon/gsp.rs
+> index ae32f401aeb0..cbea6d7b49d3 100644
+> --- a/drivers/gpu/nova-core/falcon/gsp.rs
+> +++ b/drivers/gpu/nova-core/falcon/gsp.rs
+> @@ -2,23 +2,24 @@
+> =20
+>  use kernel::{
+>      io::{
+> +        io_project,
+>          poll::read_poll_timeout,
+> -        register::{
+> -            RegisterBase,
+> -            WithBase, //
+> -        },
+> +        register,
+>          Io,
+> +        Mmio, //
+>      },
+>      prelude::*,
+>      time::Delta, //
+>  };
+> =20
+>  use crate::{
+> +    driver::{
+> +        Bar0,
+> +        NovaRegisters, //
+> +    },
+>      falcon::{
+>          Falcon,
+> -        FalconEngine,
+> -        PFalcon2Base,
+> -        PFalconBase, //
+> +        FalconEngine, //
+>      },
+>      regs,
+>  };
+> @@ -26,24 +27,31 @@
+>  /// Type specifying the `Gsp` falcon engine. Cannot be instantiated.
+>  pub(crate) struct Gsp(());
+> =20
+> -impl RegisterBase<PFalconBase> for Gsp {
+> -    const BASE: usize =3D 0x00110000;
+> -}
+> +register! {
+> +    base: NovaRegisters;
+> =20
+> -impl RegisterBase<PFalcon2Base> for Gsp {
+> -    const BASE: usize =3D 0x00111000;
+> +    PFALCON: super::PFalconRegisters @ 0x00110000;
+> +    PFALCON2: super::PFalcon2Registers @ 0x00111000;
+>  }
+> =20
+> -impl FalconEngine for Gsp {}
+> +impl FalconEngine for Gsp {
+> +    #[inline]
+> +    fn pfalcon<'a>(io: Bar0<'a>) -> Mmio<'a, super::PFalconRegisters> {
+> +        io_project!(io, build: PFALCON)
+> +    }
+> +
+> +    #[inline]
+> +    fn pfalcon2<'a>(io: Bar0<'a>) -> Mmio<'a, super::PFalcon2Registers> =
+{
+
+The lifetime `'a` is elided in `fsp.rs` and `sec2.rs`, so we can also do
+it here. But the point is moot if we switch to associated consts anyway.
+
+> +        io_project!(io, build: PFALCON2)
+> +    }
+> +}
+> =20
+>  impl<'a> Falcon<'a, Gsp> {
+>      /// Clears the SWGEN0 bit in the Falcon's IRQ status clear register =
+to
+>      /// allow GSP to signal CPU for processing new messages in message q=
+ueue.
+>      pub(crate) fn clear_swgen0_intr(&self) {
+> -        self.bar.write(
+> -            WithBase::of::<Gsp>(),
+> -            regs::NV_PFALCON_FALCON_IRQSCLR::zeroed().with_swgen0(true),
+> -        );
+> +        self.pfalcon
+> +            .write_reg(regs::NV_PFALCON_FALCON_IRQSCLR::zeroed().with_sw=
+gen0(true));
+>      }
+> =20
+>      /// Checks if GSP reload/resume has completed during the boot proces=
+s.
+> @@ -59,8 +67,8 @@ pub(crate) fn check_reload_completed(&self, timeout: De=
+lta) -> Result<bool> {
+> =20
+>      /// Returns whether the RISC-V branch privilege lockdown bit is set.
+>      pub(crate) fn riscv_branch_privilege_lockdown(&self) -> bool {
+> -        self.bar
+> -            .read(regs::NV_PFALCON_FALCON_HWCFG2::of::<Gsp>())
+> +        self.pfalcon
+> +            .read(regs::NV_PFALCON_FALCON_HWCFG2)
+>              .riscv_br_priv_lockdown()
+>      }
+> =20
+> @@ -71,10 +79,7 @@ pub(crate) fn priv_target_mask_released(&self) -> bool=
+ {
+>          const LOCKED_PATTERN: u32 =3D 0xbadf_4100;
+>          const LOCKED_MASK: u32 =3D 0xffff_ff00;
+> =20
+> -        let hwcfg2 =3D self
+> -            .bar
+> -            .read(regs::NV_PFALCON_FALCON_HWCFG2::of::<Gsp>())
+> -            .into_raw();
+> +        let hwcfg2 =3D self.pfalcon.read(regs::NV_PFALCON_FALCON_HWCFG2)=
+.into_raw();
+> =20
+>          hwcfg2 !=3D 0 && (hwcfg2 & LOCKED_MASK) !=3D LOCKED_PATTERN
+>      }
+> diff --git a/drivers/gpu/nova-core/falcon/hal/ga102.rs b/drivers/gpu/nova=
+-core/falcon/hal/ga102.rs
+> index 7600ee07ca2e..ebfaff3d960f 100644
+> --- a/drivers/gpu/nova-core/falcon/hal/ga102.rs
+> +++ b/drivers/gpu/nova-core/falcon/hal/ga102.rs
+> @@ -6,11 +6,9 @@
+>      device,
+>      io::{
+>          poll::read_poll_timeout,
+> -        register::{
+> -            Array,
+> -            WithBase, //
+> -        },
+> -        Io, //
+> +        register::Array,
+> +        Io,
+> +        Mmio, //
+>      },
+>      prelude::*,
+>      time::Delta, //
+> @@ -24,6 +22,7 @@
+>          FalconBromParams,
+>          FalconEngine,
+>          FalconModSelAlgo,
+> +        PFalcon2Registers,
+>          PeregrineCoreSelect, //
+>      },
+>      regs,
+> @@ -31,17 +30,16 @@
+> =20
+>  use super::FalconHal;
+> =20
+> -fn select_core_ga102<E: FalconEngine>(bar: Bar0<'_>) -> Result {
+> -    let bcr_ctrl =3D bar.read(regs::NV_PRISCV_RISCV_BCR_CTRL::of::<E>())=
+;
+> +fn select_core_ga102<E: FalconEngine>(pfalcon2: Mmio<'_, PFalcon2Registe=
+rs>) -> Result {
+
+The generic parameter `E` is now unused and can be removed.
+
+> +    let bcr_ctrl =3D pfalcon2.read(regs::NV_PRISCV_RISCV_BCR_CTRL);
+>      if bcr_ctrl.core_select() !=3D PeregrineCoreSelect::Falcon {
+> -        bar.write(
+> -            WithBase::of::<E>(),
+> +        pfalcon2.write_reg(
+>              regs::NV_PRISCV_RISCV_BCR_CTRL::zeroed().with_core_select(Pe=
+regrineCoreSelect::Falcon),
+>          );
+> =20
+>          // TIMEOUT: falcon core should take less than 10ms to report bei=
+ng enabled.
+>          read_poll_timeout(
+> -            || Ok(bar.read(regs::NV_PRISCV_RISCV_BCR_CTRL::of::<E>())),
+> +            || Ok(pfalcon2.read(regs::NV_PRISCV_RISCV_BCR_CTRL)),
+>              |r| r.valid(),
+>              Delta::ZERO,
+>              Delta::from_millis(10),
+> @@ -86,24 +84,23 @@ fn signature_reg_fuse_version_ga102(
+>      Ok(u16::BITS - reg_fuse_version.leading_zeros())
+>  }
+> =20
+> -fn program_brom_ga102<E: FalconEngine>(bar: Bar0<'_>, params: &FalconBro=
+mParams) {
+> -    bar.write(
+> -        WithBase::of::<E>().at(0),
+> +fn program_brom_ga102<E: FalconEngine>(
+
+Same here.
+
+<...>
+> @@ -359,7 +356,7 @@ pub(crate) fn usable_fb_size(self) -> u64 {
+>          25:25   aincr =3D> bool;
+>      }
+> =20
+> -    pub(crate) NV_PFALCON_FALCON_EMEMD(u32) @ PFalconBase + 0x00000ac4 {
+> +    pub(crate) NV_PFALCON_FALCON_EMEMD(u32) @ 0x00000ac4 {
+>          31:0    data =3D> u32;
+>      }
+>  }
+> @@ -385,13 +382,13 @@ pub(crate) fn with_falcon_mem(self, mem: FalconMem)=
+ -> Self {
+> =20
+>  impl NV_PFALCON_FALCON_ENGINE {
+>      /// Resets the falcon
+> -    pub(crate) fn reset_engine<E: FalconEngine>(bar: Bar0<'_>) {
+> -        bar.update(Self::of::<E>(), |r| r.with_reset(true));
+> +    pub(crate) fn reset_engine<E: FalconEngine>(pfalcon: Mmio<'_, PFalco=
+nRegisters>) {
+
+Here as well `E` can be dropped.
