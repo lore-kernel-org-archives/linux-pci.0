@@ -1,47 +1,47 @@
 Received: from PH0PR06CU001.outbound.protection.outlook.com (mail-westus3azon11011013.outbound.protection.outlook.com [40.107.208.13])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 49C6A3955F5;
-	Wed, 12 Aug 2026 04:53:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE135395AC6;
+	Wed, 12 Aug 2026 04:53:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.208.13
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786510423; cv=fail; b=VwzOKAWg8VZ5HPE4DzQfEV8rUqPtOsowH+N2susr6VCXTN58DtnYF4I5Dzt86FX+yaefqyGmJXnwawFaLXo9zmYRCK1R40C/a/heM2et4w+DBRkOCg5QarPVc/utdMonGiAOiZVLUspYc1V7gHhHbK7iWMf7AegK+yBahmyT1b0=
+	t=1786510430; cv=fail; b=DAgdNDP9ql212nX9ad4QwhaYiRl48Eq2Hjqmqw61JtL1J00o1OVVclc45OvvUAEPT251YtlBRX8u2lI7i0mpUw0PN1Awuu5Cr05kog9X/TZIoK4bNuFQdOMYbIj5lFnF7Ca09lRLM6/FTt5OJa1FfBG29BV1XFb2tGrRG1wMWMQ=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786510423; c=relaxed/simple;
-	bh=pVHMkjGZyoUmoirGtGTRVqUOvutXJyVoW5ZXaUtjGhc=;
+	s=arc-20240116; t=1786510430; c=relaxed/simple;
+	bh=jtHFF4Wx7CpwHhOlos1Zq10Jj+hCpLJzLgDFe/rpYKY=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=qODeA7uZU4oo+Af8gVxlFaO4dyVOM6SnWew9qxztDKseCFRtbSJLrGnGOsE/FYDrehwQJs9rUaxxDP0RSQGpB2jwbhiURnoFpTbghVt5ot5PHpMmqDP08zhm+WugdgBOu6POjJG6Sh+dldoHmfg78P+PUgs+NpplzOI7jgPedMI=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=sLC1eTDN; arc=fail smtp.client-ip=40.107.208.13
+	 Content-Type:MIME-Version; b=g5us6R73+bqrmE6Jzg7W7eZkKmws5U/0ydDWPQAfntQn3Q2dy0mEqRMOnbEIYtJ8ccdCOkLa1IU5JuU4+nZrMvFl5oqptK3YArZGSaT/SRQb14YhcBecxKLy8sBRJK4htdioC7bwbpxEo54Fquq/7TxzKsoWfBFyGzmP1f+f4OA=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=C0ERgX2Z; arc=fail smtp.client-ip=40.107.208.13
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="sLC1eTDN"
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="C0ERgX2Z"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=emNH/N6yBVDiH6inw8kPIIj3oOSRrxnyLrOKeetb9Muh3cK0+IppqB6ukG8XW9Q0iEAigqCCydBSZdVeRptFxDueLi9uLnrQVQ9cgr17DLMUEvmAHEfAP2HVXwhdeAB4X8o1Pd2Si458aWrIzIMDj45mL6x2oJLMop93bwE39ElEZ3m7Z6JEG7PXNqyjZlYeYnqWkCC6mkOB4YU+BPQqVxTrEJQJurZCaC4rRZ3CJXChwFpAyGp7VPXxP/+HaTLvcAsSpu58aS8s/Nw0hC3dJCXVGscTYxNswspmvb2OJ5H0iFJnKVpvXOsltX4PuHAeL50AiUarz/Zcft9wAeYVIg==
+ b=Bp/Cw1jD8TACBL7EbdIQlExcBkSB7fIsFEZd2MnGawRBXQjaCu19TB5U/wXHVredcMwT6F81q1Lw0kjRRHKvM83oajQimSRkcdveNl6hQZjyD8BO07x0xgV+wW7NuIjtCjeG0Xr24xgwGaByY64Ctam3OpdywfuadE5mPz7VxhoBCcLpmsuZR4aL4lBsHWxLA76kLdDQnLtbG8C4rfio7ZSr1+hdsU1ZEwAkd1X8gl1K7+zM421Q49G6SSGaTarwejZw54+8UVeRnE0ahmq95OI7lUFfgs2Y8L7mQZPowtx/PsShdgYQfNYKdV5XhXUzHjFxxVgT0hO+6kee3OSMqg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=G2OKKWgOX4JOh1tLSmcmkaLZA1SbNcgSSK1scK8jBGY=;
- b=tuTXsYekG/EmxHl8cL2j60LiO67jghBAGTjA3MhIDjCeWGsFNroeGURP6AMQW0743dMir3q9ue90T1kPIqbdfmYRF4egu3JGgCK5tdohdIBRM34l8vjsg06F0qNfv5vIar6oqmgpREMF3LHBSvJd/eJc2lzL8xPAbpJXGUPn1zaeQvNfeTim6yPQ1i2hL26urGuZgKspCxsWe9LDqH9Z7NmDHf7csg7l5Ru641AgRlX5+Z+prym2LcGi18qdBiveohlbgyMMYZI2QRIdMaSEgCbhe+LFFKj56Y1RDaRPV/0jYf5TrFLTtQezW3NG0m6jMRx2SRsvLxESIwrqqfLBSA==
+ bh=W25Qjhl5htoEvXWB8dZFHcrWtT+sG2NlcNZC9Sm1Inw=;
+ b=oIeNIl7n+XMVIsRuKllBmOhXehBIeEQ1S/1CTvEAb1CMoLp5ZNekIY2Exl6Z6cXSQDxAmm83HJH7JWHUoxHxSO3CpZQPDI/wUR5m2rXqoDopmEWYK/5VhEZ9bp5wIdOhDhCMbG/SbJiDNlBRcCPSF2c2Jfzn0DH5VYhQS/fRfw+/6X/Ag7Nsgzsz15txl1fTzCQIgL4OJPix6Sl2HtUadMBX52klAGzvrDZh0Fo/Y32LLbT2Ea3cYcROmNAHIPAFq2sXOxvmP+hpLZfNl7LPG7Zzsh6DE1V6gLBw3BVPyVJQEqRQ2G3M/SLUxqAfaa5cB0b9RPCzKhm9v2YT7SQPcQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
  dkim=pass header.d=nvidia.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=G2OKKWgOX4JOh1tLSmcmkaLZA1SbNcgSSK1scK8jBGY=;
- b=sLC1eTDN4nfUP8/PDLEE+l/LsUk2VPSo+5+FgL0mAr0mJLKEBOrxJZOdwSJy0dHBBaCICMrRubZD6q+Q2B9VSYHMOThjadEVKNViqLMoAF4JTWxNbHaUShHIpRc46xDju4RPQRMvc2JIK6Kj4h9YX1fCF20FR9w9z9EivMxum2pcGwdw0nZJnJasSfBzWHnovZbroQowyzn4Y1ikSALfPIZFFozUppBCD9+Xatg/AQDnAMQt7FJradGd0woN0ravjv4FqSF0gTYNbBOm+uoXFvqcz/D4Xb44MW6zcUgBy9xI30fDvYVSojIIfSZmSR2S8tccZjkIFf2qVU6Z94bulQ==
+ bh=W25Qjhl5htoEvXWB8dZFHcrWtT+sG2NlcNZC9Sm1Inw=;
+ b=C0ERgX2ZUO6FPzbKxBhHkbbaKQFUNVTG+HKrBRxF8W1iJFyu8bUyDMeHQti2OSQBKuPnsADvk3XgQCMMmcDKL6CxMfyO2r8bJMCX9xRfg9tPMhUS0IyO1b8jrBr/rq7SIn2MLnJLnFgjRXr69u3LA1qhUcQV5hg4HPY7BuRabFjkSiBN/WX1MHRPyAUGeoWwxC3TLsy9XhVJxdgtPtaxGFAsLUoJ5n10LJgpzW3sYtWddBiJqrd3BMMFkUuoi7/p25szl0sIAt2LFmOLg5nddE5LyEdB0qKNkUo5+o1AuvNyfY1G1yIyxODBZ+6yNgzmCZ2AWCRvSWvsHm7t5ZafpQ==
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=nvidia.com;
 Received: from LV3PR12MB9411.namprd12.prod.outlook.com (2603:10b6:408:215::20)
  by DS4PR12MB9748.namprd12.prod.outlook.com (2603:10b6:8:29e::14) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.315.12; Wed, 12 Aug
- 2026 04:53:31 +0000
+ 2026 04:53:32 +0000
 Received: from LV3PR12MB9411.namprd12.prod.outlook.com
  ([fe80::98b7:86de:b69:2a15]) by LV3PR12MB9411.namprd12.prod.outlook.com
  ([fe80::98b7:86de:b69:2a15%6]) with mapi id 15.21.0315.011; Wed, 12 Aug 2026
- 04:53:31 +0000
+ 04:53:32 +0000
 From: Alex Williamson <alex.williamson@nvidia.com>
 To: kvm <kvm@vger.kernel.org>,
 	Alex Williamson <alex@shazbot.org>
@@ -52,9 +52,9 @@ Cc: Alex Williamson <alex.williamson@nvidia.com>,
 	Kevin Tian <kevin.tian@intel.com>,
 	linux-kernel <linux-kernel@vger.kernel.org>,
 	linux-pci <linux-pci@vger.kernel.org>
-Subject: [RFC PATCH 4/5] PCI: Export pci_reset_supported()
-Date: Tue, 11 Aug 2026 22:53:22 -0600
-Message-ID: <20260812045325.2733631-5-alex.williamson@nvidia.com>
+Subject: [RFC PATCH 5/5] vfio/pci: Use pci_reset_supported() in place of reset_works
+Date: Tue, 11 Aug 2026 22:53:23 -0600
+Message-ID: <20260812045325.2733631-6-alex.williamson@nvidia.com>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260812045325.2733631-1-alex.williamson@nvidia.com>
 References: <20260812045325.2733631-1-alex.williamson@nvidia.com>
@@ -71,113 +71,140 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: LV3PR12MB9411:EE_|DS4PR12MB9748:EE_
-X-MS-Office365-Filtering-Correlation-Id: d2f2c361-53f0-41e1-cc82-08def82da870
+X-MS-Office365-Filtering-Correlation-Id: 7e610242-d7ce-4f32-ee93-08def82da8fe
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|23010399003|376014|1800799024|366016|10067099003|56012099006|11063799006|18002099003|22082099003;
+	BCL:0;ARA:13230040|23010399003|376014|1800799024|366016|6133799003|10067099003|56012099006|11063799006|18002099003|22082099003;
 X-Microsoft-Antispam-Message-Info:
-	Sl6C7xcgY7AagchqIQ0IigrDKByn1wH62rgcH2cXZZ+Wpt7cnKQlPiSb9ptLt0I3PqX5K/FXCQyCKIR4i/5iY7qRviP4yqJj9Y6Eg+JghtJibuA95kyWIdVgUrQ4QhDxfOVNTuWN+H9oDx5sf6mpws1ucSYZLSdkAFAfpVfn4rUPbsdnM430ApPAtmsD5DZkKux+jLd8Mb6qKuG8rhOZuKwY5egWrKS0XS4yCTwPF+QLZG2XVbzudUg+skFnWO5NmwQRbUGnWxnBguTYkfj5E6oqHKzrrZhbZmHYln2ocSEsGZHGkgxHxy3p2D3/yut+XjrW+oWq4N0qhQSBqadWLZa2CLu3D0FN8gMWvEX6VxQNf9eCQ0HUuT4AjXeU/6F2gX4i7hpjfki4/ktOTdl+YrGH9mpE+Nwuz5hqsi3XPdUGwc5uNBhrtTHKWiHilLXVeC5fQEaXs5+VykrxltHvVZKrT3W83Ta44fnY6iqzBkkBpCywuiqdRGpxJj7nUy4OltY5SdwVShycBWHCPvVSFWvVpQ1qqbTcO4PO18kIzsxhbT342GlbVyx3CnszB3B1+QHKj2/IqBD0LNxV2hha00euHeEqMPkA75Ml1xmUvIQDnaqY3s6GCKhQNVbfD4HxyvhrCrWXY8rpdKEm8Q3G7w2R2UtGmODWPOIWah4Hzgs=
+	+l5s6z3qJEBL2W9DybxJZa8L3Suzp6EdS9f+p0yhZJ0ygLwjAMD4n0dnkvwqNRbtcVAuxx49MO6d5hRR53ZxuNB+2+qE+OR2lB4DarvCRScC1xe9BBPfwG8MH9SLIoM77iiTRTg9ckXg/XIN0e6sMSor8HHLHK4+eB1E8EpttxERxkhtZyr72W0bctYyFEOcTNsli1l8v+xtB+j5p7xZXegogKwQdkAjLpCC+prlGgRNq0S2c97mdODKlubGkECEmTUYTlcF5Q3OTIU2epXgRaOM8iCJQuWS7XCukUkbCBGmrmyDmooWlEzRa8drSqq2QrqT5dH7YndENDWs8pTn6sdv4rfNrD3zaAcjuUBxQAcBi6le8UnQIZVhjAEhb0HCD52xJUPAR9d81MMVPUYEzQE9SJ5GiU5QmOd+dwR4svRimp5HWcqSKpjFVBb0taVXKMt9eLnlp4YUma70A3FrNCNO9efJ5XzMkS4y6+17brXqouePpcT/texc4kaw+pOYEtFZeeiu+osxJI9WkirWIFg93mpkZplMGzxwA5IcXfYexsrFpQ9uBJVWL9KKoLNEF/oNqZi7MkTaEi6zzpTBKBZYKDGeNR//3ON1jjeQ8ry6/rIr3BOX4kroaAKtTo8ivDiZNrbwCj5PSWmgidhbWmYq2PtsYI8pbn9k72PkOhE=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LV3PR12MB9411.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(376014)(1800799024)(366016)(10067099003)(56012099006)(11063799006)(18002099003)(22082099003);DIR:OUT;SFP:1101;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LV3PR12MB9411.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(376014)(1800799024)(366016)(6133799003)(10067099003)(56012099006)(11063799006)(18002099003)(22082099003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?CZkfSAlHZEB8xXbxlqPZSca3+QM5ljWHTZxI5oUt/vWR51P9iL8G02qqrTpP?=
- =?us-ascii?Q?bsyv7kPVEgndL8zzH5fYG/2bhD7EIcbIpatEQ9r7FvT42QuAzmbL9EGLfh1c?=
- =?us-ascii?Q?hIIdc1lSQLbWf788UGQzu9cIfl4zxyv8smf6kH9cXNtRrp4m9f1kuasjkuFh?=
- =?us-ascii?Q?eXxE7Fipm7swz+zJHPB3yXLqX8nXQyC7/uqPfhV6TyU+YHigWY3RozTmGIaM?=
- =?us-ascii?Q?tAefd4sEzZ9lypeSuv9vJiqUy92twjeZxn0n+I4W33uSdf2Rq+nQ5zZKR2/8?=
- =?us-ascii?Q?eDN1TvsniTQSD1uufB7auc2QLum/kWuGMfgKjvZExU+wM9bll9bFdHGgbUEH?=
- =?us-ascii?Q?cW3oAM5hy+OdCuHs2cT2N78rT+gSpOPYtrhl5IyPl62WUBB4OcC2+z2s8iWy?=
- =?us-ascii?Q?7jAZciajAuJm46hdtewbSX7wZ6bSHwkAS59BQY8VxSfhxxzK04PWRCVBQWBt?=
- =?us-ascii?Q?N3OrfUJDatqpuUB1RUfjhJSPAN0wa7iJONNmuyegRKDurpMRwo2eESq/HlgL?=
- =?us-ascii?Q?s1Kpp9r3Fd8/XBYcGI+SXxQsrlmo4MBFCC5Mx+QMemliSteUUcJ67dqta1m+?=
- =?us-ascii?Q?4ArFsA4Pvo2eJ81BjF4jGiDn7N6shdJiR370jXM/GS3ic9HbrfLe1fupgj6c?=
- =?us-ascii?Q?HNYt7fk9PqyYy2pCfWgmXHwmKT4MDerrnaWS3nU/lFep5nMtaCEZaLfCgwW/?=
- =?us-ascii?Q?Sm0ZW0OwStXz4nCWghw0zm+VyaxyQZerZbAY7DrW0lxsKoulGvjQEwPdVcv0?=
- =?us-ascii?Q?XOkMO/yJcppkg5wjBUGC8+EJklF6tjA0nu3aIA08s37gAueH0vmULLVHHwPi?=
- =?us-ascii?Q?FNviw8xEeLAqtFw/hMHkhp5NYEMOdgiPtdDRFcQM347rMJOjvuhGg1buzDGj?=
- =?us-ascii?Q?fBA7H8jgT2YsAJDtP1G61YySG+UAjyDQ3wQS32bpygU52rrRRzVaCJbHH4JQ?=
- =?us-ascii?Q?xUq9RwfSmd2aeusmHSwKamH8Br5JEIVzGYVGGp/o4Fkm2pB/LITRWkZPwo+A?=
- =?us-ascii?Q?8KXO6Kse8ySCV729pzUwhH/6oAdMh3qFKjDejN+xfEGMHOzHOG0S/UZZ92A/?=
- =?us-ascii?Q?xhuJ1V3PB51GUtTsN/w6SE6Jq4XbLxN3OpuDbxQj/SlJ8GrtjYIoNoWnX82m?=
- =?us-ascii?Q?9soQgizSGcUlmEhv/EJWMYF6h4ttaRcAiB09b6uBm/O+YV7i+w0QK6NdfcTS?=
- =?us-ascii?Q?zV1HbOPRdrpaB8OKcemlzr9zD4+0XvVfTEZL+QnrPtQLopX4bJWtx42JQOx5?=
- =?us-ascii?Q?WZicfEs6u8ivMGcDVz7zCLw0eeUIpIchYBqy7a0wiQLsm+qS8bVVELuIC8oE?=
- =?us-ascii?Q?4oxaxWiZXjL1JaLIy4t6QjP5VMH4XFjlFNRYhK/M02JdmVsi8mcXc7daPFhs?=
- =?us-ascii?Q?FSK+SvyK3vnPCi8YHmQ77VAPccyCu8rlE3oZUOdKYDX5uV5164bvPHJrq0jG?=
- =?us-ascii?Q?gsuEm3j8zrOMi1YhjslpMJYg/5UV6vlgyvLlFlcHK6wkxCrs/ssQFqneEz+P?=
- =?us-ascii?Q?mCuokazo56AqLTtVjKuYZtRrNS362LAhqr3zax3Br8FS/kBaHUSJNd9Hw+XH?=
- =?us-ascii?Q?dwf1heqhnozaMjtFMQtWbLBjHqUwNkASOyzJjw/1REHPiZJUWTDu5kFYk+VT?=
- =?us-ascii?Q?zd91DD+LUHQ0adkArr4f0Z+xB74CUV1TzZ3kEcq3y5pzDNH7kV8JV6FGKZ6h?=
- =?us-ascii?Q?yEOZWTidnaXi4sdyPSY/DeCyH6SWtGSAvuKZxxthHRxjxvAovCF7BIWQLKrp?=
- =?us-ascii?Q?4KQapb6AcA=3D=3D?=
+	=?us-ascii?Q?tiFuQge3xf8UjBlcK3KVVGt8w/u3q98e3kBvWGOOLmOfxBqnjDhUXGEW3gjZ?=
+ =?us-ascii?Q?t0bXO8X78lbDE94l7XLGoxezGrfQYtn9tfNgMfmpJRwm7vgfAwZAZyvlgMht?=
+ =?us-ascii?Q?bpHA7NKfodETPiTrklG+jmpS8XhvdQI156VZmr/iENmcsagTtAk9GL3Ps3ED?=
+ =?us-ascii?Q?EtvTZKOZFjl3MF7SZd7gmOjeHl7bjhYE9+wNbjwzoFecVJ81iSmgfOzydvAY?=
+ =?us-ascii?Q?evIRgIKPe5dsDS5sAfD8e+rHF8zrbHX7ADn/OX9nKyJeYlHMuSf2I2gri2uU?=
+ =?us-ascii?Q?TbUtCdIbg6nHXX94xx75gmkPs67nwpR5eIJUZH8tb8NoH3qTneecTfta9JCJ?=
+ =?us-ascii?Q?WnbBB7j7UhWg8vuUnHXhwQq1esK9QovSOqE9qels1Ve4JaLF1RpufpGSs1gn?=
+ =?us-ascii?Q?eVOBsH70VSl2Cw4ILhL+ZEHOxUZrD4oZVuZbLl6vtQ2Lc/lD2cqBNqMxvRDc?=
+ =?us-ascii?Q?Wt3EbYo1kt7iOuknXQeePR8mgdaM3DSsRYbmvaUoYlGDdD9sNJevn8pVsUp2?=
+ =?us-ascii?Q?S0x+Xljc7F3VnWiwSoZSFs2rgNjFDWA+x3qP/ckh0NxGS2GcGqVWtyqkcg3h?=
+ =?us-ascii?Q?36zAxt0wb90cHBha/R5hbe74LCiMObKeVKUOCNvPh6GlRCtZRytGg7sbABVX?=
+ =?us-ascii?Q?t/EfVrXvPMql3BF4vimSaip/j68L0BdjeHrJfxNv7TWbyBiEG+H2U/LBSGH7?=
+ =?us-ascii?Q?y5Cj9wVVMtW+OUZ1BPXVqCAhcI11+SxoNnK44pA0CepAZyG7ldp/FJdHbGJu?=
+ =?us-ascii?Q?vNLfLZavig+v8MWKq7C6f8OJlMkEyWxI23CuG0dpDE8WcxlkIPKl23NnfPv7?=
+ =?us-ascii?Q?wOg/So5/HYkMihnvg9l+c7zj72mZaz5DuD95/JdhauUjGmKfR8YyLH5ElSYd?=
+ =?us-ascii?Q?GiyJPi2yMZsBQo4obotKqRP6mPf1pz8XHjEwe366YF8vNoMgEby9UWhwQ0/G?=
+ =?us-ascii?Q?tHicNazQUJtxWv7HX5DCR5fjhXEHvHNqDSHW6U4+DdhY76jbw8GvSpnUY+HM?=
+ =?us-ascii?Q?R/buqyv0k5afg7TdKluw2XRq2GkR9S/pmEemcawzFjDLoS0Y+aD5FnTacMjx?=
+ =?us-ascii?Q?mmiAACKTodmPziTGZhPW0e8knc1cPgJLK1Wzt6Ao/T6Vo46NioPc4dzTBfvv?=
+ =?us-ascii?Q?iN7v3NYDt4VYapz6ROJGi7Kdn9ma2/hGGtF3/MUtUgFnMYAFbOYmUOeAXAKJ?=
+ =?us-ascii?Q?A8MgwrC0noHmxzXY+hE6yubu1v/Gw2entOO18iSG8Gw8ldJqAxCdlsSQAU30?=
+ =?us-ascii?Q?f0bnReDkc0UkhlpnAzSfGGRuAq4LGF4mFvrXsrhcxpcswXXN0BG1eJi3BIPH?=
+ =?us-ascii?Q?MBK0kKt9OO1ASoyAytz9UCM6yW6pXr20da6w9J6pv20ffjq0ubw2oIWkh4jJ?=
+ =?us-ascii?Q?HL1v4MgGJcjOT+rnIymcG1qpiFZDcoo3qMt3SkFgVpcLSWFvtAqvx3RKhUKA?=
+ =?us-ascii?Q?x+GLaDTUC+XS/mxItlaEot4Rn0dgcmQVMFp1V5AXxZDfiksF9DnHmVsWu9G1?=
+ =?us-ascii?Q?GnJQgdnc8Nzl586i5wposCmwo36kpMA8X/T8rU73TNFaLpcObamSGcg4MqKm?=
+ =?us-ascii?Q?qYaZ8zbP/UI+ZOxVPP100Kfuah1lgic2bWbVaHcdW/F10ekxowIwAtkARNBR?=
+ =?us-ascii?Q?tK1vFbgJpsnMfstJePryywvq0UxdT3nfrY1t4Xls8bs+crnz5QNF0EZQKJcj?=
+ =?us-ascii?Q?60t1uGzMBmegkO0AyOfa37XH2Lqy9CdsA+4fg6mm3CHnw+7RJrUxNSH6pwog?=
+ =?us-ascii?Q?GbHfAlvGXQ=3D=3D?=
 X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: d2f2c361-53f0-41e1-cc82-08def82da870
+X-MS-Exchange-CrossTenant-Network-Message-Id: 7e610242-d7ce-4f32-ee93-08def82da8fe
 X-MS-Exchange-CrossTenant-AuthSource: LV3PR12MB9411.namprd12.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 Aug 2026 04:53:31.7912
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 Aug 2026 04:53:32.7218
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: M8VH8qDDR+AgC0Ug6XYc6h3teYMfcVklj4tawncoCo2NSHyVrneDsF+9Bv9HGRD98EQkqZrJVhM/ijzGHhbuyA==
+X-MS-Exchange-CrossTenant-UserPrincipalName: bq6G06SZIbOlNZ9mEQK//Qif+BI7u99wmAM/LaTw8ezNlKC4pRwaQO70rfzvDSs6cQ3mCGqSR/mmmY9nk9ujLg==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS4PR12MB9748
 
-The success or failure of pci_reset_function() is conditional on the
-state of the device, ex. VFs enabled on an SR-IOV PF.  Therefore a
-driver can no longer infer through executing pci_reset_function()
-whether a device has supported reset methods.  The reset_methods
-array indicates whether the device has any available reset mechanisms
-and is not gated on dynamic blockers, like SR-IOV enablement.
+vfio-pci latches whether pci_reset_function() works at open device and
+makes decisions based on this latched value at runtime.  With the
+introduction of the reset_method pci-sysfs attribute, this flag can
+be made stale at runtime by administrative action.  Further, with the
+SR-IOV active VFs gating of pci_reset_function(), the flag can be made
+stale via more subtle dependencies.
 
-Export pci_reset_supported() for drivers to use for an instant
-snapshot of reset support.
+Drop the latched flag and rely on pci_reset_supported() to indicate
+whether reset methods exist for the device.  This is no guarantee that
+those reset methods work, nor has the RESET flag in struct
+vfio_device_info ever been a guarantee of VFIO_DEVICE_RESET success.
+It's only a guarantee that there are reset methods that are
+applicable to the device at the instant it's called.
 
 Assisted-by: Claude:claude-opus-4-8
 Signed-off-by: Alex Williamson <alex.williamson@nvidia.com>
 ---
- drivers/pci/pci.c   | 1 +
- drivers/pci/pci.h   | 1 -
- include/linux/pci.h | 1 +
- 3 files changed, 2 insertions(+), 1 deletion(-)
+ drivers/vfio/pci/vfio_pci_core.c | 9 ++++-----
+ include/linux/vfio_pci_core.h    | 1 -
+ 2 files changed, 4 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 06728137c407..0b4f13397da2 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -98,6 +98,7 @@ bool pci_reset_supported(struct pci_dev *dev)
+diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
+index 956a05ca12e5..8e42342d56d3 100644
+--- a/drivers/vfio/pci/vfio_pci_core.c
++++ b/drivers/vfio/pci/vfio_pci_core.c
+@@ -609,7 +609,6 @@ int vfio_pci_core_enable(struct vfio_pci_core_device *vdev)
+ 	if (ret == -EAGAIN)
+ 		goto out_disable_device;
+ 
+-	vdev->reset_works = !ret;
+ 	pci_save_state(pdev);
+ 	vdev->pci_saved_state = pci_store_saved_state(pdev);
+ 	if (!vdev->pci_saved_state)
+@@ -766,7 +765,7 @@ void vfio_pci_core_disable(struct vfio_pci_core_device *vdev)
+ 	if (pci_load_and_free_saved_state(pdev, &vdev->pci_saved_state)) {
+ 		pci_info(pdev, "%s: Couldn't reload saved state\n", __func__);
+ 
+-		if (!vdev->reset_works)
++		if (!pci_reset_supported(pdev))
+ 			goto out;
+ 
+ 		pci_save_state(pdev);
+@@ -785,7 +784,7 @@ void vfio_pci_core_disable(struct vfio_pci_core_device *vdev)
+ 	 * We can not use the "try" reset interface here, which will
+ 	 * overwrite the previously restored configuration information.
+ 	 */
+-	if (vdev->reset_works) {
++	if (pci_reset_supported(pdev)) {
+ 		bridge = pci_upstream_bridge(pdev);
+ 		if (bridge && !pci_dev_trylock(bridge))
+ 			goto out_restore_state;
+@@ -1098,7 +1097,7 @@ static int vfio_pci_ioctl_get_info(struct vfio_pci_core_device *vdev,
+ 
+ 	info.flags = VFIO_DEVICE_FLAGS_PCI;
+ 
+-	if (vdev->reset_works)
++	if (pci_reset_supported(vdev->pdev))
+ 		info.flags |= VFIO_DEVICE_FLAGS_RESET;
+ 
+ 	info.num_regions = VFIO_PCI_NUM_REGIONS + vdev->num_regions;
+@@ -1330,7 +1329,7 @@ static int vfio_pci_ioctl_reset(struct vfio_pci_core_device *vdev,
  {
- 	return dev->reset_methods[0] != 0;
- }
-+EXPORT_SYMBOL_GPL(pci_reset_supported);
+ 	int ret;
  
- #ifdef CONFIG_PCI_DOMAINS
- int pci_domains_supported = 1;
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 4469e1a77f3c..416fd6b74abe 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -230,7 +230,6 @@ enum pci_mmap_api {
- int pci_mmap_fits(struct pci_dev *pdev, int resno, struct vm_area_struct *vmai,
- 		  enum pci_mmap_api mmap_api);
+-	if (!vdev->reset_works)
++	if (!pci_reset_supported(vdev->pdev))
+ 		return -EINVAL;
  
--bool pci_reset_supported(struct pci_dev *dev);
- void pci_init_reset_methods(struct pci_dev *dev);
- int pci_bridge_secondary_bus_reset(struct pci_dev *dev);
- int pci_bus_error_reset(struct pci_dev *dev);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index ab41a49f4eb7..4de21e6ac538 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1474,6 +1474,7 @@ void pcie_print_link_status(struct pci_dev *dev);
- int pcie_reset_flr(struct pci_dev *dev, bool probe);
- int pcie_flr(struct pci_dev *dev);
- int __pci_reset_function_locked(struct pci_dev *dev);
-+bool pci_reset_supported(struct pci_dev *dev);
- int pci_reset_function(struct pci_dev *dev);
- int pci_reset_function_locked(struct pci_dev *dev);
- int pci_try_reset_function(struct pci_dev *dev);
+ 	vfio_pci_zap_and_down_write_memory_lock(vdev);
+diff --git a/include/linux/vfio_pci_core.h b/include/linux/vfio_pci_core.h
+index 9a1674c152aa..6fb599ec2919 100644
+--- a/include/linux/vfio_pci_core.h
++++ b/include/linux/vfio_pci_core.h
+@@ -121,7 +121,6 @@ struct vfio_pci_core_device {
+ 	/* Flags only modified on setup/release - bitfield ok */
+ 	bool			has_dyn_msix:1;
+ 	bool			pci_2_3:1;
+-	bool			reset_works:1;
+ 	bool			extended_caps:1;
+ 	bool			has_vga:1;
+ 	bool			nointx:1;
 -- 
 2.53.0
 
