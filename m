@@ -1,74 +1,71 @@
-Received: from CO1PR03CU002.outbound.protection.outlook.com (mail-westus2azon11010004.outbound.protection.outlook.com [52.101.46.4])
+Received: from LO3P265CU004.outbound.protection.outlook.com (mail-uksouthazon11020132.outbound.protection.outlook.com [52.101.196.132])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA8BA46C858;
-	Wed, 12 Aug 2026 14:48:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.46.4
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 676AE3559F2;
+	Wed, 12 Aug 2026 16:26:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.196.132
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786546109; cv=fail; b=Xy48gwOYd1RQNzCcXyhwW9PDF0HpQKlExQN7ucNI+tlMkpdMBQfLybdNMp6QJzOh0Ulrpn9krl2YbV1weGB+II+1FlI4qEV4peOPRLe6f6kx5iPW2nxVs1DRomh74iNKSjZtWB7UA115uaPls86n/O46ukszXwkduFOMeu2E0h0=
+	t=1786552020; cv=fail; b=DsGglvebZMTZc9cJGHqMfY8AXecMLs+HL6p3OAu07RbIVBmqrwTflsAqjwPuwZ+EOZdm2bXQ6d3K7u2gj0kqpe8i8zMyc2AWztt7LcarhDEG/NaLYeiTBxSHhdYyFJay/LCRNiL6mt49/w4PTsmbiyahSiiOR3L7gYMuGTE3Cxg=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786546109; c=relaxed/simple;
-	bh=a9YnaIYaP20ltOAZEV43CqT+DtKIzJGnvLSi1H2OrXo=;
+	s=arc-20240116; t=1786552020; c=relaxed/simple;
+	bh=vaVbSIyNl5z5vC7/9jhrrL9TwyTp/MMjtgDkYSDF9VU=;
 	h=Content-Type:Date:Message-Id:Cc:Subject:From:To:References:
-	 In-Reply-To:MIME-Version; b=W6klkOFyosjGGC1/Wc0kVWhOqz+C900velMoVutujn+QlREqsNrK53moojfJbiBH4lvdV5GQpoDAjC267biJi6PfBaOUqAfwDHjYQX9E4kLx+OilVPrX206BPKXKWTUWuDhHA0C858e//99HR0WHvuanzn2KOHxeSUcIEaKFpSk=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=hG8JQ6O3; arc=fail smtp.client-ip=52.101.46.4
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	 In-Reply-To:MIME-Version; b=oQocWp+jMnGR9tNLnapiidwzHPYYS3ldco0dnZc2Ra5mJbHEkkErOXT14N8nTv1gfSuLHB/LamqcTQgBaAYIpvZl6DXebvXVM8vQGdEqCgi5VnEysB9i6VsI72nlECuW9r9NtkAGjswm2TJi6j1zjImUwj877SOsiKM63n+5/ro=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net; spf=pass smtp.mailfrom=garyguo.net; dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b=lSxZxqy5; arc=fail smtp.client-ip=52.101.196.132
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=garyguo.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="hG8JQ6O3"
+	dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b="lSxZxqy5"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=hWJ2dI+/yExQ6bOA9a7txJtQWa3+IO0E+UUTX5LS/oIbkNiDKoVZiuJxZTnglk8UACjOdw0xLb3u2uFzMijrNUW7TIaDw4WLjK+EPEXPohGdP/k2J03cxTHXuXEoMbo6yJQcIZTc/iujy9AmSa2csOADNRM+L7maXq0enwZXSibPdXyaFcpBdJQM9Y7cVBSE/L8mWGKSka3CfmLjIG0X25/jZDSW3V15fBiovm6TI0ZO3rYfBVco6Ged2yFxeHV5TbL+LMAgeh1xo4Gy48lNxnzATDAD2r0oVMBjzRxKuoTtZPVnPLt7BEm3L77fhdSi76TdScBjS/nqpmQai/aHEQ==
+ b=L+77nV6kuw72bWa2DuDGfT6hViAwDjMT7CjKSp0UJeXwBbY3YurjXLWHffpMeJPVixPGVjBFDFhcuZmn46uORz5k1OwvlRW9lFbt1GwNZPvrGqFH1asQPNOSyIPzdv/6oC4Tpwj0VjNnFw9EqnNbh03Vhn7TMUmefuUt+YAfy/to0x2GFtJ2hchowzI42Hs74wkqQG4tWIAmm323mU51KlvovhUfrRTzedLkJbHgsUgdQhny4NY2Y182AOkRGBwf+lJYnzfO+ty2EsePIaUUSwaKq+oE77EqlkN/HUd0D51+H0o5a0wBllYXY5s/Ss0MYQ1WBEWaTIq7kRLu0sYnEw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=bb2XX+K8XlPrskQ3LjuUMVJxBwTNrFhavyXBFcu8lVc=;
- b=Xz/p9eOw2uML5dU7oecWYnTFGD0kNy07JUg2NaRJwd91O/l2zsHELJ2XeI75BDTt9+2Kdnqib3t+bX2fSE2JTSMaCwTe2zKO2EtKMofrvOqN2w74dA8xG7WKHmxS+NHNvziziaB14I/+EkFSDcoKlWACyENw+CUTwzpDaPC63tKK2/XJj7VURyzr3PK3ryySuKUDFSG0dgAgMDA0V29gnA/aB9xXEyOFl0OcPsH8R3+0iUOomQ5/4zzL8kFCSZMB8V0XOtuT/0KyjxACrzc5dw818UAhTkef2tP1gIdO0Bhn8hAwUC9SSaVyxhcOBdJncjZq9ZejLUjCWV4HtS4F0g==
+ bh=EdBHQx644AQQneJjlBoc3D/R2DSmVqTcCDe1rN9xTxs=;
+ b=Pwr6ft+hJGeudjVaFZKZJkKnI9eEn2z2bipnuSP9JT5PPpUDf1XeeuIg5/N/nv8DiRg+LH8Gp9R0JWiYQhmzAAT+XqArvt+Cw0UIe9bNIgWc5vT4q7sHV/Nxby76NQaTjYJCVk9I/JNhc1pcKoIBDqto9+3Lc6OYFJF19Wg5lW6YxZ3eUUxxNRbF7R1s5UyonCzKbwhAITkAAqzVs5xo9cIzZTpaDB58r9aJiNnsBdCWNtJNcZM4cmkOIpTh5PYCi1UJyohdh+Euq2/PqDpeJx6P98CHPPcWVpmLRS+5yd1vEZq1pyV3BJnzXVsqXO8ModV3m/o5Ps1vg8qvrAcv0g==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
+ smtp.mailfrom=garyguo.net; dmarc=pass action=none header.from=garyguo.net;
+ dkim=pass header.d=garyguo.net; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=garyguo.net;
+ s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=bb2XX+K8XlPrskQ3LjuUMVJxBwTNrFhavyXBFcu8lVc=;
- b=hG8JQ6O3UyldndPwT92F/99PLhEyNTycIMqoHGhygZol3Y5zgYx0qo+6MRyA2SO9uH0g8P57IKzK1ref9o/vdSKDIEJY53e5qaSrbtv1sZyq3OwdADTx9zk+7mqRC5Mr3/eRecRQ3JTywO4uD51+325BNkeyEc6GElIFcmikT4DTgDEsr6EV3AEr3TZnZReU7G3fecu3hH/+0X72osp8XZtoFhezLhqgh6TD7I5J82F9RDFTjw1Ris3AG166ALiDIWFjZTHridy5rTis+/OE9Ex8Itslf1rcQETaS0oIoyPtdRC3Y7SBJGrb+t97XhylMiLVyT29D2Om8LhNViRqJQ==
+ bh=EdBHQx644AQQneJjlBoc3D/R2DSmVqTcCDe1rN9xTxs=;
+ b=lSxZxqy5hUWJWo7r1ROrKPjRQmmkc7X0ym5kbbnK+J61PzqTNb/TY9scIbCBf2VjJ4RRI7u6z7GdA8T7K7RUY17SOediMzgt/n803/TQ2Ntyzh5k6ZNvgiMdiubgww+MX3G6nZsNLzdPNqcRHTPQodajvSX0zdM0jt1FP4+jimI=
 Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from CH2PR12MB3990.namprd12.prod.outlook.com (2603:10b6:610:28::18)
- by IA1PR12MB8406.namprd12.prod.outlook.com (2603:10b6:208:3da::11) with
+ header.d=none;dmarc=none action=none header.from=garyguo.net;
+Received: from LOAP265MB8560.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:4ab::19)
+ by LO2P265MB3437.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:19d::10) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.315.12; Wed, 12 Aug
- 2026 14:48:12 +0000
-Received: from CH2PR12MB3990.namprd12.prod.outlook.com
- ([fe80::7de1:4fe5:8ead:5989]) by CH2PR12MB3990.namprd12.prod.outlook.com
- ([fe80::7de1:4fe5:8ead:5989%4]) with mapi id 15.21.0315.008; Wed, 12 Aug 2026
- 14:48:11 +0000
-Content-Type: text/plain; charset=UTF-8
-Date: Wed, 12 Aug 2026 23:48:07 +0900
-Message-Id: <DKN1QEH1HWD1.1ZV0LWLNCZJTH@nvidia.com>
-Cc: "Danilo Krummrich" <dakr@kernel.org>, "Alice Ryhl"
- <aliceryhl@google.com>, "Daniel Almeida" <daniel.almeida@collabora.com>,
- "Miguel Ojeda" <ojeda@kernel.org>, "Boqun Feng" <boqun@kernel.org>,
- =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, "Benno Lossin"
- <lossin@kernel.org>, "Andreas Hindborg" <a.hindborg@kernel.org>, "Trevor
- Gross" <tmgross@umich.edu>, "Tamir Duberstein" <tamird@kernel.org>,
- =?utf-8?q?Onur_=C3=96zkan?= <work@onurozkan.dev>, "David Airlie"
- <airlied@gmail.com>, "Simona Vetter" <simona@ffwll.ch>, "Bjorn Helgaas"
- <bhelgaas@google.com>, =?utf-8?q?Krzysztof_Wilczy=C5=84ski?=
- <kwilczynski@kernel.org>, <driver-core@lists.linux.dev>,
- <rust-for-linux@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
- <nova-gpu@lists.linux.dev>, <dri-devel@lists.freedesktop.org>,
- <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v2 12/16] gpu: nova-core: use projection for PFALCON and
- PFALCON2 registers
-From: "Alexandre Courbot" <acourbot@nvidia.com>
-To: "Gary Guo" <gary@garyguo.net>
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.315.13; Wed, 12 Aug
+ 2026 16:26:53 +0000
+Received: from LOAP265MB8560.GBRP265.PROD.OUTLOOK.COM
+ ([fe80::f60b:1537:68d7:4fc1]) by LOAP265MB8560.GBRP265.PROD.OUTLOOK.COM
+ ([fe80::f60b:1537:68d7:4fc1%4]) with mapi id 15.21.0315.011; Wed, 12 Aug 2026
+ 16:26:52 +0000
 Content-Transfer-Encoding: quoted-printable
-References: <20260805-typed_register-v2-0-c3ca142220a0@garyguo.net>
- <20260805-typed_register-v2-12-c3ca142220a0@garyguo.net>
-In-Reply-To: <20260805-typed_register-v2-12-c3ca142220a0@garyguo.net>
-X-ClientProxiedBy: TY4P286CA0128.JPNP286.PROD.OUTLOOK.COM
- (2603:1096:405:37f::17) To CH2PR12MB3990.namprd12.prod.outlook.com
- (2603:10b6:610:28::18)
+Content-Type: text/plain; charset=UTF-8
+Date: Wed, 12 Aug 2026 17:26:52 +0100
+Message-Id: <DKN3U000UGRL.2MOXT25O11UE0@garyguo.net>
+Cc: <driver-core@lists.linux.dev>, <linux-pci@vger.kernel.org>,
+ <rust-for-linux@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2 1/5] rust: pci: convert IrqVectorRegistration to a
+ lifetime-managed owning type
+From: "Gary Guo" <gary@garyguo.net>
+To: "Danilo Krummrich" <dakr@kernel.org>, <bhelgaas@google.com>,
+ <kwilczynski@kernel.org>, <aliceryhl@google.com>,
+ <daniel.almeida@collabora.com>, <ojeda@kernel.org>, <boqun@kernel.org>,
+ <gary@garyguo.net>, <bjorn3_gh@protonmail.com>, <lossin@kernel.org>,
+ <a.hindborg@kernel.org>, <tmgross@umich.edu>, <tamird@kernel.org>,
+ <acourbot@nvidia.com>, <work@onurozkan.dev>, <jhubbard@nvidia.com>,
+ <ttabi@nvidia.com>, <apopple@nvidia.com>, <ecourtney@nvidia.com>,
+ <shashanks@nvidia.com>, <zhiw@nvidia.com>
+X-Mailer: aerc 0.21.0
+References: <20260811233952.3000968-1-dakr@kernel.org>
+ <20260811233952.3000968-2-dakr@kernel.org>
+In-Reply-To: <20260811233952.3000968-2-dakr@kernel.org>
+X-ClientProxiedBy: LO4P123CA0675.GBRP123.PROD.OUTLOOK.COM
+ (2603:10a6:600:351::19) To LOAP265MB8560.GBRP265.PROD.OUTLOOK.COM
+ (2603:10a6:600:4ab::19)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -76,412 +73,388 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CH2PR12MB3990:EE_|IA1PR12MB8406:EE_
-X-MS-Office365-Filtering-Correlation-Id: 3fd8f1a7-5bc2-4336-69d0-08def880bb1e
+X-MS-TrafficTypeDiagnostic: LOAP265MB8560:EE_|LO2P265MB3437:EE_
+X-MS-Office365-Filtering-Correlation-Id: 3d5f1dd9-a426-43d2-80ad-08def88e849c
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|7416014|376014|366016|23010399003|1800799024|10070799003|5023799004|4143699003|11063799006|3023799007|56012099006|10067099003|22082099003|18002099003;
+	BCL:0;ARA:13230040|10070799003|366016|7416014|376014|1800799024|23010399003|921020|6133799003|22082099003|18002099003|4143699003|56012099006|10067099003|3023799007;
 X-Microsoft-Antispam-Message-Info:
-	kTOa0aWKHj0COw/Dd/j1mtD5kNDtI1rn1PI5AU9eQNh2EaubmBz7FBwnEv3mMNmOFN/6J0z2gkAA3aSyGa+lzfskzJWbdinOYLqP01lcUvfEH5k4ckvhXLkRaLJG+ErOFmskB+ZYMZLToH5FKuSV8h9vASGMiIqRZ7Pb2k7rTbsvbEevQwTCH21o0zJeNexIEqHLsltijxY2sp5gMemFT4eEGsZgfxq/oWpYbGycLDtvnsMhsAZwcbXtyUDXsrv/nEA6BIolitlGaibTMWKiXI7e4j3gW9NMt1sqKIZD20lK9EnRVuo2oE9E88EyLd7YdVFuQzbAC6QSbadkvHIk2ncPE63gFLjoUaI0bXiAVd3uvRq28p6ZlryVKIRV+wRiFMNLSUcXmLKtaEQhYUHwSqCyen6DvIANarTLCwHdo7NMYqUogHfK4Zn10iEVXEef1z+QMN2ERfE50JfcEVCQrx52qCMyltUrJ7QE7nn7sGOX/raSMJF6YtAEZg0FzLVPQz+5f9Y4G+ENS3kWSLsXjLRq43kJhZ0wF23X8Jxx5QP1RPMXott3Q9mqIqYwhldPo3Q6doqfydDtksuD16Uv0RaT5iRN1gJSsP4RY+FkjFV1wrpuWhg4CtIjkCzMEerU9fjIfjjNU6muvoS/F0MNOFSsIV6FUrRinRd3z3GVrVM=
+	jJekVn6pOqb+nYYJeCyJHfHj9y371LJaEk5cpQFJ3kEAhFCw/pOtXqEuGWVjGx4NAbdRCeizpVyHLhT0JRpFtsvS3gMPK3xGgjmMhSlBhXXzy1mwZozkk54LFKQ8LlPbQ/m2omE50wz4wJpA54W/MR9W/0NAZztAqbOWXgvN2ATC7ZP/lYDR5RyQSq2ZlfwBmxIO54iI4Uewrc30vvaYqnX6/g0ABJaVkg9YPxfx1x6MZoAwdT/m8UPc9Gp9qT2rqivS38CkNt9Bue4gjoiFrCZHe4Ii/IRVm2tYqZU0X8WC5EY67YG/VQkAopuOMzm7SoEoIoAl9BIGd/qsgqCv95xEX+kD8/kTy4k4dQPvOprGRR6PwnFSUmqAa4IV+EgCwpEMuGNHZ+3bbgV0YB2yD7SzTc1mNLESnVpjHDfpIPmCoUkcYN38TPf9hc9/83ue2goyy42uGYXzWmdpwF6qxtOX+W00n/uAtgD1ciKdk5HwD0Z81SAj33fEKq0X2XY/wyNIPk+AHprpUfd7yWPSUyR076Xd9BZ2A7ZkYG5YC8XZueQ6WSR1mb9NOlznh6n9qq1wpyVaQQGVR6nmmkTRnA/uAJ8/G1xPDw5kQcQBgdVufWhLSNmHz4azmbMtRwMF/AOoE/HjYtDNF7YDHrYl06v5xGsaSEuslmMhtCFCrKxIy+ekzuO0lfTi/+VPEkLM4Vh154UVqhg60e64Sz5H6A==
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH2PR12MB3990.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(376014)(366016)(23010399003)(1800799024)(10070799003)(5023799004)(4143699003)(11063799006)(3023799007)(56012099006)(10067099003)(22082099003)(18002099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LOAP265MB8560.GBRP265.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(10070799003)(366016)(7416014)(376014)(1800799024)(23010399003)(921020)(6133799003)(22082099003)(18002099003)(4143699003)(56012099006)(10067099003)(3023799007);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?S0lkUmMvZWd4aG1RaXIzb1JraXFPYllSSWowa045eml6U1FiUXM3Zy9oVDc0?=
- =?utf-8?B?aFNoNlBXNjQrOWhrcVBCaUY1UkMxNXIyNWlFRWtoZFpKYU1rclZsWVpOVll0?=
- =?utf-8?B?SndjSVRyOFJDVXI5d2M4UnVNU0hjUEd1ZGdWblFwYUE2OXcyOEhyQ3lNR3FS?=
- =?utf-8?B?T05pUUZRZE1VNkRGZmlERFhBa0lRS1lWNVNuemhvY011WVVGYk02NmxrSW5a?=
- =?utf-8?B?dWttZCtUYkR4UTZoM2xMYmkwelJqRE5McmY3KzVZVXBlYmNNL0U0ajRua3g5?=
- =?utf-8?B?S3RNY0NmK25ob2p6UzJpK2FEVlU4bXpJLzBjVXlNRkF6eHN3WFVtTnQwYkha?=
- =?utf-8?B?WElPOTNyNjRwM0RGdGhpRWcwa2NaYUJuVG1pVkRQSXBFa3luSWxxRllZQ0gy?=
- =?utf-8?B?REZ3TmdoV2FrNGZLR296bDd6QkVTOGk1TTh5eWhjTGxlRWdpdU5pT203NmFV?=
- =?utf-8?B?azlrcnZhRjFGY2xId0lINThkRFFBRy9UcU54T1g4UHp1TnlNSEhoRGZmU0Zr?=
- =?utf-8?B?aWJNY05nd254OVZPL0NoVUNCYmdjc3ROSk5BV1lLYnVtR093NWFERVpDUmto?=
- =?utf-8?B?MDRTVUdJNzN2Qm5MMmRuWWF0TkxhV3ArTXdwQjlWaXJQME1HSFY3TU53OE1I?=
- =?utf-8?B?RGNRWEs0aUkxQmFpTDdwVG13ajIvUVNCOVdVb3RGZ05IcWV0M3RJb1EwZXR0?=
- =?utf-8?B?RWFScEhTTHFLMVJDL3JoOVlHcHFjUWJzeHlqc0xkMlhRaUZKamo1OXIwU2Mx?=
- =?utf-8?B?SW5zTWp4dFRERm9SRTkvbWkwZnFYM2hObElEeSs4Vm9QWlVIV0JjR1c2K1U3?=
- =?utf-8?B?a0x4YjFQNHJuR0IrbmRobC96UjNya1ZZVktwYzZFNlRkaUwvYVFlazRVNUpL?=
- =?utf-8?B?Zk51UXNwbm83T0NYZHVXbkM1SFc0bFR3eFB3aVlDTU5mcUI5S2wrL21UUmJ1?=
- =?utf-8?B?b20vWDAvb2lKZCtta25IcVdIdXJzOGVGc1FxV0hkZjR2ZjB3cHZPdWlQSEw0?=
- =?utf-8?B?K0hDQngzaTlveFBWMW9FTmZ2R3o5NzRHdGQ2d2g2bW9ieDdzMTNqUCtQQWdS?=
- =?utf-8?B?c3dDUkR4VlFwMmo4SytQdGRGSWNwaWxTNXpiYUhZQ1k3YjZ6M21ZRmtjSU0z?=
- =?utf-8?B?NUt6MERrQ1Y4VDREb2ZRWlo3OG1CeU9yd1FYbFgrOW5tVmxxQ3FEWXRzSjdh?=
- =?utf-8?B?WFdPeE9wM3V6M280NkJDOWcyT0NlaWJVdmI4Lzd5ZjBBbW5hUEdpZkNMbXAv?=
- =?utf-8?B?M0lKZWllZ2tvb1ZnOVJsY09RVkFSZW1ZZ0sxRkFnWGJobTUvakR4VkhSRHlp?=
- =?utf-8?B?d0dWMmZ4V2hWb0xjZWJZN3NNN01JZ3ZEclY4clNYU0w0b3hzTk04WlpuWklm?=
- =?utf-8?B?WXpEaG9oOXBIT1hoNUtFU0NvS3Q5QTUzUzNNMG9kWUVYd05MWkNld1RYSlJK?=
- =?utf-8?B?K3pFQnVnM2dHTzYxV0dBRGJNY3Zka3JwNjJtT0ZNTnZHNDdSODNYUStnTG1v?=
- =?utf-8?B?LzFudjlmS0lOUEYwN09DSG5jNFVXdUJPaS94Q0tvU3RmcGtkOWg5MFQzTVlG?=
- =?utf-8?B?ZVl5RCtuNnE5L1gvK1diUDg1M3c2MTc2SlVlcTNocGZ2bEk2L0dhcDVnbUd3?=
- =?utf-8?B?L0M2Zmg3dkZvbHh2V2tGWDlTVkRSVldnV0JiTDhBb0QwYVRWK1UyYk1nWGtz?=
- =?utf-8?B?RHphYTFIcmVWbkg0bTF2cmhZaW56bHUzbkJUengvKzQ2YmtZcU5jdms5eGdM?=
- =?utf-8?B?cXRaVWNKQ3RxMmdjc1ZobXI0Wk5nUldVVnZtTG1RN3JBK1hmVzl0S0F0VmN5?=
- =?utf-8?B?c0tROHlYOXpMb0pVUm42ODc5ZXhjY0MwRU9TVkNHMVR3bXJjQ01pcFlUb3J0?=
- =?utf-8?B?S1o0blMzUVlpZndHVWhVQUJuaVFENkxHYjlnNnR6NXhyZUcrTmZGaS96K3JF?=
- =?utf-8?B?QitnMnRLT3FkNE9wTlFCb2JUdmhpVTVKS3Bna1NhdzZrNU8yVkR5WGRLa2Vj?=
- =?utf-8?B?Sk5XZHRwK3VCOWNPMnZGR290dUdVV0pxYVZBVXA1cnFvWjdtekk0Unc2Yitv?=
- =?utf-8?B?cXNzblZRb2Y0UzBLelFRbDNYTTd0c0pxUDJHengyMC94VW15QXdEM3F0ZXIy?=
- =?utf-8?B?bUxDblpCZ3gzZlYwc2R5VkZsSUN6bHlWQUxEZ2tCWDIrMWRSMVl2aUptMVBv?=
- =?utf-8?B?bmxuNlhDeVZ0aEcvNlBEVFdXMDVGeFR4c1BWUi9pcE5DME5oM1crVnk5bFg0?=
- =?utf-8?B?STRvbnR6S3gxWm9VQklBUTJ5OGd5S2JkTUp4MllrdWhQSW9NSm1TL3NrdXRK?=
- =?utf-8?B?WU9RalNCU0VxUnhBMVQvb1NnSDNNbjM2THF6SytJWnJtZHFOOXpXL1k3eGtO?=
- =?utf-8?Q?MrER9tzT8bwwSiZURqH4bi6z/X53QTDK+sImtuMvl8NNs?=
-X-MS-Exchange-AntiSpam-MessageData-1: FohuTWlJcyeJLQ==
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 3fd8f1a7-5bc2-4336-69d0-08def880bb1e
-X-MS-Exchange-CrossTenant-AuthSource: CH2PR12MB3990.namprd12.prod.outlook.com
+	=?utf-8?B?Znk3ZWEvTTRlcFRVTU5zSWJabmgzT3pQTXpCT1hBSWRGZllhak1FVUsrYllI?=
+ =?utf-8?B?OGZEaXUxekFRZUhQcVBLNHVma2xpUWRKUTdLWDJac3h3SWFzZU52enNNRWZR?=
+ =?utf-8?B?MTNiU2J2d0d1T01lYTBQdzdSS3V0ZDdRcVUxU0kwZzdtVEFJMC83SDBCcWJv?=
+ =?utf-8?B?ZTdOMlM4NkErc3FCZHVTaHNOOXQrQ3Q0ZjZieWNmRzlLVzJuckVqbng2ZUY1?=
+ =?utf-8?B?anZRL2QzbnA3YzBmVm95TzlWdG1TUlVhbVBxclR5bGhRVmttaENOTTRnRFVZ?=
+ =?utf-8?B?S3kwTWdPcWh4QnIrTWpIaWhqenBsZG5lK1IwQ2xNYTYxY0IzQTJVeHh4aXJz?=
+ =?utf-8?B?RkU5Z2pJcmk2U2sxTDdKVW5Ca0M3bndRamNRdHUwUTVYSU9HbHdWS1ZEL3dv?=
+ =?utf-8?B?N0FPdnhValVhUDc5Qy95dS9SRjJMY2g4RWc3cExFa3dBVlEvdVJFZHlvU0kr?=
+ =?utf-8?B?UzFtaXFkL3pwUmt6UnVCb3h2YlNEY2QxVlp1ZnlwUDd3R01qYjVSUlE4Q1Vr?=
+ =?utf-8?B?ZlBoYjFhRW1rK044azRtZGNZTkJZWXdTZkEwd05HVHlJaFBGMEE0bzhqUldv?=
+ =?utf-8?B?N3JQNk5PaXZEckdQS2pPVkNjdHVuNTlNSERLOWxLd0hHN25PQUxjZ05WNmJD?=
+ =?utf-8?B?b1lQOE9GeU1waHdqc3oxRDJCekNXazRzUUIwMElFMnRteTdkc1FBSThLQXJP?=
+ =?utf-8?B?cFpzZUlGaDN1c1VGN29DV0xwWTlJT20wS2FySzlKSFc3dnI0YmJNUGJoZ2tP?=
+ =?utf-8?B?T0VOYzY3aVgrMHJYVHN3bWZ3WHZmMS9BVlY4SjZ6Z2x4bEVhb3lRc05NWkdD?=
+ =?utf-8?B?UUFxWFp5dTQ0OW1oUlRoOFJ6WWc2czh3NkpRWkRJdkdKaFI0Q29qNHZ2L0tM?=
+ =?utf-8?B?YTJWdzNXeWF0bDZMZlJ2WTNoRTRJdXNRMVlmS3hkeWk2NXpSa0RVVkdxUU5S?=
+ =?utf-8?B?TG4wWmU5Y0hwYWZsTy9TdWRVNWd3TEhyL0cvMWZnd24vaWgzRUY2TVY0U3Rw?=
+ =?utf-8?B?V2doNUdTVDVxZmJ6eGNpWmpvVVE0WWlCeVl0VGJZRUkzbkpDdzZzaFVESXlV?=
+ =?utf-8?B?K3h4MlQwaTBpTnRESUowS0hBS2pueFVJRE5SMzh4ODRFdWxMQXZxVURYOWFl?=
+ =?utf-8?B?Y3NueWxjWWpkZ1k5UjFsU0xDS3F6dWpzQ21iWkx4NklVQ2ltRHBMUmZKNEN1?=
+ =?utf-8?B?bzJTZ1ZsRW5sZGJsVGs3UGJMNEFuazY0RzF2OENjSHNtdmQyeUhVSlJtYTR5?=
+ =?utf-8?B?UGdXT3lNdlVETjJiTDd4MURYOFVlNFFoK3J4Q1o1MEY2ZUJWSzh4d0tLbG5L?=
+ =?utf-8?B?Z1dBemhDcGxpSVE0T1h6YVVVM3RYL2p1WjVZOHhqNzhlemZ3SytSeVBSWDRO?=
+ =?utf-8?B?MmVpNDQwQUpGUUV6RnZuWCt0eDFoWGRYdHphL3JMZ3piYVFReHhESnlrVlhQ?=
+ =?utf-8?B?NFhKcG9HMkd5VFFOaTM2YUdzQmx2N25kRWZ5Z0gxeHA2UVYrREp5ZEFGaHVW?=
+ =?utf-8?B?VVpPMDdIZGlkaks5d09ydzlJWnk3U01BbVJCcFZGa3lDRmRDMEphWlIra2pR?=
+ =?utf-8?B?UUk1T0c4VlgwZW44Rjg3NVUzRTlYdmZkRFd0OWk4RFpFS1dERG8wU3NFREo5?=
+ =?utf-8?B?Q0lwSlgrT2I2K1QxZE5SRDVnT0RSaklOc1hDRjk5dm5pRUkwaktENWNGS3Rv?=
+ =?utf-8?B?TVhZaGUvUTVMZnhlam44UU9iU3VkelZHb1o1eVRuK3ByZEhrY1hacHlIVSt6?=
+ =?utf-8?B?dW5tZzE3U3VCdytNRUVjdGQrdlVUeFZsVzlSbjBGRFJyTHdFMWJ2NW02R0JH?=
+ =?utf-8?B?cFhxUUpPbWFUSXhQeVFuT3VtL3hGWVVjUWpwYWVxYVRneEMrWUJSVmpLNUFa?=
+ =?utf-8?B?WCtHSzVENzRkOGxvZ0U2YUswYzZycUE0RkZ6WmVTRWZaWTR5eVdwMHdGRjdo?=
+ =?utf-8?B?WkVpU2Z3Yk1hKy92NDVhcU02Y1RxYjNLeGQ5T3g3ZUhPdGx0ZkYyZHc2Wmow?=
+ =?utf-8?B?d01aVGVGSUVGQUFTdFdzK1ByQTNFWDAzVlhiS3FVMlhId2xwVjdQWFg4RkM0?=
+ =?utf-8?B?U1FyV1crTklGaForQnFYcEJrVzVJeUlCNWlpRnZsMHcvTVNuVGcxemdtMGx6?=
+ =?utf-8?B?d2RkL0QwZWt5UDJlcVkrL3E5RnE5b3FqcGRuNUZCMFhZM2tsQ0dZWmJISTJV?=
+ =?utf-8?B?ZUN5UHdONElyOTBDSXUyRytvQk0vNXNObE4rYXRYR2JTSDBZSXB2R2J2ZGpT?=
+ =?utf-8?B?cVJ3SGhaMUxzV3F2NmhzMWw1SlZ3blMvOVVMaS9ZRXVoQ1JoRDgwWWRubzAv?=
+ =?utf-8?B?K1gwd2c4WTUyYmZTSUgzYVFITTNvLzNaWFJIbzZBc2xZNFJ0UGh6QT09?=
+X-OriginatorOrg: garyguo.net
+X-MS-Exchange-CrossTenant-Network-Message-Id: 3d5f1dd9-a426-43d2-80ad-08def88e849c
+X-MS-Exchange-CrossTenant-AuthSource: LOAP265MB8560.GBRP265.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 Aug 2026 14:48:11.5981
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 Aug 2026 16:26:52.8107
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-Id: bbc898ad-b10f-4e10-8552-d9377b823d45
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: HUaUb7RHLSkMwanM9ENamJ18ecMBULmKtKOEYpBghr37D8krXOq10dnokGESGSUVTSP36fN+Zltz1K4CeBqAPQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA1PR12MB8406
+X-MS-Exchange-CrossTenant-UserPrincipalName: DiZZxHRYMBOaCiPkS2CR4zpw//53zdHgQULlEgdcGw1dCt9BoludjifdupPN6UfMgk6BXkxdvMVPWMXo+ruhgg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: LO2P265MB3437
 
-On Thu Aug 6, 2026 at 1:35 AM JST, Gary Guo wrote:
-> Add fixed size region types `PFalconRegisters` and `PFalcon2Registers` an=
-d
-> update PFALCON and PFALCON registers to be fixed register on them and not
-
-nit: second `PFALCON` should be `PFALCON2`.
-
-> relative registers on `NovaRegisters`.
+On Wed Aug 12, 2026 at 12:39 AM BST, Danilo Krummrich wrote:
+> Convert IrqVectorRegistration from a devres-managed internal type to a
+> lifetime-annotated type that owns the PCI interrupt vector allocation.
+> Dropping it frees the vectors.
 >
-> Update `Falcon` struct to store projected views when constructing and
-> access with `self.pfalcon` and `self.pfalcon2`.
+> IrqVector gains a reference to the IrqVectorRegistration it was derived
+> from. Since vector() borrows the registration, the compiler prevents the
+> allocation from being dropped while any IrqVector (and hence any
+> irq::Registration built from it) is still live.
 >
-> Signed-off-by: Gary Guo <gary@garyguo.net>
+> alloc_irq_vectors() returns IrqVectorRegistration<'_> directly, giving
+> drivers explicit control over the allocation lifetime, which is needed
+> by net and block drivers that re-allocate vectors at runtime, e.g.
+> during queue reconfiguration or device recovery.
+>
+> Signed-off-by: Danilo Krummrich <dakr@kernel.org>
 > ---
->  drivers/gpu/nova-core/falcon.rs                    | 157 +++++++++------=
-------
->  drivers/gpu/nova-core/falcon/fsp.rs                |  63 +++++----
->  drivers/gpu/nova-core/falcon/gsp.rs                |  51 ++++---
->  drivers/gpu/nova-core/falcon/hal/ga102.rs          |  62 ++++----
->  drivers/gpu/nova-core/falcon/hal/tu102.rs          |   9 +-
->  drivers/gpu/nova-core/falcon/sec2.rs               |  37 +++--
->  drivers/gpu/nova-core/firmware/fwsec/bootloader.rs |  18 +--
->  drivers/gpu/nova-core/gsp/hal/tu102.rs             |   7 +-
->  drivers/gpu/nova-core/regs.rs                      |  91 ++++++------
->  9 files changed, 238 insertions(+), 257 deletions(-)
+>  rust/kernel/pci.rs     |   3 +-
+>  rust/kernel/pci/irq.rs | 127 ++++++++++++++++++++++-------------------
+>  2 files changed, 69 insertions(+), 61 deletions(-)
 >
-> diff --git a/drivers/gpu/nova-core/falcon.rs b/drivers/gpu/nova-core/falc=
-on.rs
-> index a91cbdd5d636..ed52572690ff 100644
-> --- a/drivers/gpu/nova-core/falcon.rs
-> +++ b/drivers/gpu/nova-core/falcon.rs
-> @@ -14,13 +14,12 @@
->      },
->      io::{
->          poll::read_poll_timeout,
-> -        register::{
-> -            RegisterBase,
-> -            WithBase, //
-> -        },
-> +        register::Array,
->          Io,
-> +        Mmio, //
->      },
->      prelude::*,
-> +    sizes::SZ_4K,
->      time::Delta,
+> diff --git a/rust/kernel/pci.rs b/rust/kernel/pci.rs
+> index c6417af2bb17..2757a0cc0f11 100644
+> --- a/rust/kernel/pci.rs
+> +++ b/rust/kernel/pci.rs
+> @@ -51,7 +51,8 @@
+>  pub use self::irq::{
+>      IrqType,
+>      IrqTypes,
+> -    IrqVector, //
+> +    IrqVector,
+> +    IrqVectorRegistration, //
 >  };
 > =20
-> @@ -165,18 +164,22 @@ pub(crate) enum FalconFbifMemType with From<Bounded=
-<u32, 1>> {
+>  /// An adapter for the registration of PCI drivers.
+> diff --git a/rust/kernel/pci/irq.rs b/rust/kernel/pci/irq.rs
+> index fea484dcf9cf..8e0651587829 100644
+> --- a/rust/kernel/pci/irq.rs
+> +++ b/rust/kernel/pci/irq.rs
+> @@ -7,17 +7,14 @@
+>      bindings,
+>      device,
+>      device::Bound,
+> -    devres,
+>      error::to_result,
+>      irq::{
+>          self,
+>          IrqRequest, //
+>      },
+> -    prelude::*,
+> -    str::CStr,
+> -    sync::aref::ARef, //
+> +    prelude::*, //
+>  };
+> -use core::ops::RangeInclusive;
+> +use core::num::NonZero;
+> =20
+>  /// IRQ type flags for PCI interrupt allocation.
+>  #[derive(Debug, Clone, Copy)]
+> @@ -78,6 +75,7 @@ const fn as_raw(self) -> u32 {
+>  #[derive(Clone, Copy)]
+>  pub struct IrqVector<'a> {
+>      dev: &'a Device<Bound>,
+> +    reg: &'a IrqVectorRegistration<'a>,
+
+The registration has a refence to the device so we don't need to keep both =
+reg
+and dev?
+
+>      index: u32,
+>  }
+> =20
+> @@ -86,87 +84,81 @@ impl<'a> IrqVector<'a> {
+>      ///
+>      /// # Safety
+>      ///
+> -    /// - `index` must be a valid IRQ vector index for `dev`.
+> -    /// - `dev` must point to a [`Device`] that has successfully allocat=
+ed IRQ vectors.
+> -    unsafe fn new(dev: &'a Device<Bound>, index: u32) -> Self {
+> -        Self { dev, index }
+> +    /// - `index` must be a valid IRQ vector index for `reg`.
+> +    /// - `dev` must be the device `reg` was allocated from.
+> +    #[inline]
+> +    unsafe fn new(dev: &'a Device<Bound>, reg: &'a IrqVectorRegistration=
+<'a>, index: u32) -> Self {
+> +        Self { dev, reg, index }
+>      }
+> =20
+>      /// Returns the raw vector index.
+>      fn index(&self) -> u32 {
+>          self.index
+>      }
+> +
+> +    /// Returns the [`IrqVectorRegistration`] this vector was derived fr=
+om.
+
+#[inline]
+
+> +    pub fn vectors(&self) -> &'a IrqVectorRegistration<'a> {
+> +        self.reg
+> +    }
+>  }
+> =20
+>  impl<'a> TryInto<IrqRequest<'a>> for IrqVector<'a> {
+>      type Error =3D Error;
+> =20
+>      fn try_into(self) -> Result<IrqRequest<'a>> {
+> -        // SAFETY: `self.as_raw` returns a valid pointer to a `struct pc=
+i_dev`.
+> +        // SAFETY: `self.dev.as_raw()` returns a valid pointer to a `str=
+uct pci_dev`.
+>          let irq =3D unsafe { bindings::pci_irq_vector(self.dev.as_raw(),=
+ self.index()) };
+>          if irq < 0 {
+>              return Err(crate::error::Error::from_errno(irq));
+>          }
+> -        // SAFETY: `irq` is guaranteed to be a valid IRQ number for `&se=
+lf`.
+> +        // SAFETY: `irq` is guaranteed to be a valid IRQ number for `sel=
+f.dev`.
+>          Ok(unsafe { IrqRequest::new(self.dev.as_ref(), irq as u32) })
 >      }
 >  }
 > =20
-> -/// Type used to represent the `PFALCON` registers address base for a gi=
-ven falcon engine.
-> -pub(crate) struct PFalconBase(());
-> +/// Type used to represent the `PFALCON` registers.
-> +#[repr(align(4))]
-> +#[derive(FromBytes, IntoBytes)]
-> +pub(crate) struct PFalconRegisters([u8; SZ_4K]);
-> =20
-> -/// Type used to represent the `PFALCON2` registers address base for a g=
-iven falcon engine.
-> -pub(crate) struct PFalcon2Base(());
-> +/// Type used to represent the `PFALCON2` registers.
-> +#[repr(align(4))]
-> +#[derive(FromBytes, IntoBytes)]
-> +pub(crate) struct PFalcon2Registers([u8; SZ_4K]);
-> =20
->  /// Trait defining the parameters of a given Falcon engine.
+> -/// Represents an IRQ vector allocation for a PCI device.
+> +/// An allocation of PCI interrupt vectors for a device.
 >  ///
->  /// Each engine provides one base for `PFALCON` and `PFALCON2` registers=
-.
-> -pub(crate) trait FalconEngine:
-> -    Send + Sync + RegisterBase<PFalconBase> + RegisterBase<PFalcon2Base>=
- + Sized
-> -{
-> +pub(crate) trait FalconEngine: Send + Sync + Sized {
-> +    fn pfalcon(io: Bar0<'_>) -> Mmio<'_, PFalconRegisters>;
-> +    fn pfalcon2(io: Bar0<'_>) -> Mmio<'_, PFalcon2Registers>;
+> -/// This type ensures that IRQ vectors are properly allocated and freed =
+by
+> -/// tying the allocation to the lifetime of this registration object.
+> +/// This type owns the vector allocation; dropping it frees the vectors.=
+ IRQ handlers borrow from
+> +/// this registration and must be dropped before it is.
+>  ///
+>  /// # Invariants
+>  ///
+> -/// The [`Device`] has successfully allocated IRQ vectors.
+> -struct IrqVectorRegistration {
+> -    dev: ARef<Device>,
+> +/// `dev` has an allocation of `count` interrupt vectors.
+> +pub struct IrqVectorRegistration<'a> {
+> +    dev: &'a Device<Bound>,
+> +    count: NonZero<usize>,
 
-Remember on v1 when we contemplated using associated consts? Turns out
-we can with this version:
-
-    // Need a better name, but you get the idea.
-    pub(crate) type PFalconRegs =3D OffsetLoc<NovaRegisters, PFalconRegiste=
-rs>;
-    pub(crate) type PFalcon2Regs =3D OffsetLoc<NovaRegisters, PFalcon2Regis=
-ters>;
-
-    pub(crate) trait FalconEngine: Send + Sync + Sized {
-        const PFALCON: PFalconRegs;
-        const PFALCON2: PFalcon2Regs;
-    }
-
-... and make `Falcon::new` call `io_project` directly, and it works! At
-the cost of importing `OffsetLoc` in `falcon.rs`, but that removes ~30
-LoCs in total, and I'm not sure `OffsetLoc` should be hidden anyway.
+I wonder if it should be called "len" as I view this as a collection of IRQ
+vectors.
 
 >  }
 > =20
->  /// Represents a portion of the firmware to be loaded into a particular =
-memory (e.g. IMEM or DMEM)
-> @@ -358,6 +361,8 @@ pub(crate) struct Falcon<'a, E: FalconEngine> {
->      hal: KBox<dyn FalconHal<E>>,
->      dev: &'a device::Device<device::Bound>,
->      bar: Bar0<'a>,
-> +    pub(crate) pfalcon: Mmio<'a, PFalconRegisters>,
-> +    pfalcon2: Mmio<'a, PFalcon2Registers>,
+> -impl IrqVectorRegistration {
+> -    /// Allocate and register IRQ vectors for the given PCI device.
+> +impl<'a> IrqVectorRegistration<'a> {
+> +    /// Returns the number of allocated vectors.
+>      ///
+> -    /// Allocates IRQ vectors and registers them with devres for automat=
+ic cleanup.
+> -    /// Returns a range of valid IRQ vectors.
+> -    fn register<'a>(
+> -        dev: &'a Device<Bound>,
+> -        min_vecs: u32,
+> -        max_vecs: u32,
+> -        irq_types: IrqTypes,
+> -    ) -> Result<RangeInclusive<IrqVector<'a>>> {
+> -        // SAFETY:
+> -        // - `dev.as_raw()` is guaranteed to be a valid pointer to a `st=
+ruct pci_dev`
+> -        //   by the type invariant of `Device`.
+> -        // - `pci_alloc_irq_vectors` internally validates all other para=
+meters
+> -        //   and returns error codes.
+> -        let ret =3D unsafe {
+> -            bindings::pci_alloc_irq_vectors(dev.as_raw(), min_vecs, max_=
+vecs, irq_types.as_raw())
+> -        };
+> -
+> -        to_result(ret)?;
+> -        let count =3D ret as u32;
+> -
+> -        // SAFETY:
+> -        // - `pci_alloc_irq_vectors` returns the number of allocated vec=
+tors on success.
+> -        // - Vectors are 0-based, so valid indices are [0, count-1].
+> -        // - `pci_alloc_irq_vectors` guarantees `count >=3D min_vecs > 0=
+`, so both `0` and
+> -        //   `count - 1` are valid IRQ vector indices for `dev`.
+> -        let range =3D unsafe { IrqVector::new(dev, 0)..=3DIrqVector::new=
+(dev, count - 1) };
+> +    /// This is at least the `min_vecs` that [`Device::alloc_irq_vectors=
+`] was asked for.
+> +    #[inline]
+> +    pub fn vector_count(&self) -> usize {
+> +        self.count.get()
+> +    }
+> =20
+> -        // INVARIANT: The IRQ vector allocation for `dev` above was succ=
+essful.
+> -        let irq_vecs =3D Self { dev: dev.into() };
+> -        devres::register(dev.as_ref(), irq_vecs, GFP_KERNEL)?;
+> +    /// Returns the [`IrqVector`] at `index`.
+> +    ///
+> +    /// The returned [`IrqVector`] borrows from this registration, ensur=
+ing the vector allocation
+> +    /// remains live while any handler is registered on it.
+
+nit: I think this is redundant information as it's just stating what the
+signature already conveys.
+
+> +    #[inline]
+> +    pub fn vector(&self, index: usize) -> Result<IrqVector<'_>> {
+> +        if index >=3D self.count.get() {
+> +            return Err(EINVAL);
+> +        }
+
+Given that the error is for out-of-bound access only, perhaps return `Optio=
+n`
+like `get()` function of various containers?
+
+> =20
+> -        Ok(range)
+> +        // SAFETY: `index` is within bounds of this registration's alloc=
+ation, and `self.dev` is
+> +        // the device it was allocated from.
+> +        Ok(unsafe { IrqVector::new(self.dev, self, index as u32) })
+>      }
 >  }
 > =20
->  impl<'a, E: FalconEngine + 'static> Falcon<'a, E> {
-> @@ -371,19 +376,19 @@ pub(crate) fn new(
->              hal: hal::falcon_hal(chipset)?,
->              dev,
->              bar,
-> +            pfalcon: E::pfalcon(bar),
-> +            pfalcon2: E::pfalcon2(bar),
+> -impl Drop for IrqVectorRegistration {
+> +impl Drop for IrqVectorRegistration<'_> {
+> +    #[inline]
+>      fn drop(&mut self) {
+> -        // SAFETY:
+> -        // - By the type invariant, `self.dev.as_raw()` is a valid point=
+er to a `struct pci_dev`.
+> -        // - `self.dev` has successfully allocated IRQ vectors.
+> +        // SAFETY: By the type invariant, `self.dev.as_raw()` is a valid=
+ pointer to a
+> +        // `struct pci_dev` that has successfully allocated IRQ vectors.
+>          unsafe { bindings::pci_free_irq_vectors(self.dev.as_raw()) };
+>      }
+>  }
+> @@ -214,15 +206,16 @@ pub unsafe fn request_threaded_irq<'a, T: crate::ir=
+q::ThreadedHandler + 'a>(
 >          })
 >      }
 > =20
->      /// Resets DMA-related registers.
->      pub(crate) fn dma_reset(&self) {
-> -        self.bar.update(regs::NV_PFALCON_FBIF_CTL::of::<E>(), |v| {
-> +        self.pfalcon.update(regs::NV_PFALCON_FBIF_CTL, |v| {
->              v.with_allow_phys_no_ctx(true)
->          });
-> =20
-> -        self.bar.write(
-> -            WithBase::of::<E>(),
-> -            regs::NV_PFALCON_FALCON_DMACTL::zeroed(),
-> -        );
-> +        self.pfalcon
-> +            .write_reg(regs::NV_PFALCON_FALCON_DMACTL::zeroed());
-
-Remembering the debates we had over how to address relative registers
-when we ported registers to the new I/O scheme, I guess this new syntax
-which should make everyone happy! :)
-
-<...>
-> diff --git a/drivers/gpu/nova-core/falcon/gsp.rs b/drivers/gpu/nova-core/=
-falcon/gsp.rs
-> index ae32f401aeb0..cbea6d7b49d3 100644
-> --- a/drivers/gpu/nova-core/falcon/gsp.rs
-> +++ b/drivers/gpu/nova-core/falcon/gsp.rs
-> @@ -2,23 +2,24 @@
-> =20
->  use kernel::{
->      io::{
-> +        io_project,
->          poll::read_poll_timeout,
-> -        register::{
-> -            RegisterBase,
-> -            WithBase, //
-> -        },
-> +        register,
->          Io,
-> +        Mmio, //
->      },
->      prelude::*,
->      time::Delta, //
->  };
-> =20
->  use crate::{
-> +    driver::{
-> +        Bar0,
-> +        NovaRegisters, //
-> +    },
->      falcon::{
->          Falcon,
-> -        FalconEngine,
-> -        PFalcon2Base,
-> -        PFalconBase, //
-> +        FalconEngine, //
->      },
->      regs,
->  };
-> @@ -26,24 +27,31 @@
->  /// Type specifying the `Gsp` falcon engine. Cannot be instantiated.
->  pub(crate) struct Gsp(());
-> =20
-> -impl RegisterBase<PFalconBase> for Gsp {
-> -    const BASE: usize =3D 0x00110000;
-> -}
-> +register! {
-> +    base: NovaRegisters;
-> =20
-> -impl RegisterBase<PFalcon2Base> for Gsp {
-> -    const BASE: usize =3D 0x00111000;
-> +    PFALCON: super::PFalconRegisters @ 0x00110000;
-> +    PFALCON2: super::PFalcon2Registers @ 0x00111000;
->  }
-> =20
-> -impl FalconEngine for Gsp {}
-> +impl FalconEngine for Gsp {
-> +    #[inline]
-> +    fn pfalcon<'a>(io: Bar0<'a>) -> Mmio<'a, super::PFalconRegisters> {
-> +        io_project!(io, build: PFALCON)
-> +    }
+> -    /// Allocate IRQ vectors for this PCI device with automatic cleanup.
+> +    /// Allocate IRQ vectors for this PCI device.
+>      ///
+>      /// Allocates between `min_vecs` and `max_vecs` interrupt vectors fo=
+r the device.
+>      /// The allocation will use MSI-X, MSI, or INTx interrupts based on =
+the `irq_types`
+>      /// parameter and hardware capabilities. When multiple types are spe=
+cified, the kernel
+>      /// will try them in order of preference: MSI-X first, then MSI, the=
+n INTx interrupts.
+>      ///
+> -    /// The allocated vectors are automatically freed when the device is=
+ unbound, using the
+> -    /// devres (device resource management) system.
+> +    /// The allocated vectors are freed when the returned [`IrqVectorReg=
+istration`] is dropped.
+> +    /// IRQ handlers registered via [`Self::request_irq`] or [`Self::req=
+uest_threaded_irq`]
+> +    /// borrow from the registration, so the compiler ensures they are f=
+reed first.
+>      ///
+>      /// # Arguments
+>      ///
+> @@ -232,8 +225,8 @@ pub unsafe fn request_threaded_irq<'a, T: crate::irq:=
+:ThreadedHandler + 'a>(
+>      ///
+>      /// # Returns
+>      ///
+> -    /// Returns a range of IRQ vectors that were successfully allocated,=
+ or an error if the
+> -    /// allocation fails or cannot meet the minimum requirement.
+> +    /// Returns the IRQ vector registration, or an error if `min_vecs` v=
+ectors cannot be
+> +    /// allocated.
+>      ///
+>      /// # Examples
+>      ///
+> @@ -256,7 +249,21 @@ pub fn alloc_irq_vectors(
+>          min_vecs: u32,
+>          max_vecs: u32,
+>          irq_types: IrqTypes,
+> -    ) -> Result<RangeInclusive<IrqVector<'_>>> {
+> -        IrqVectorRegistration::register(self, min_vecs, max_vecs, irq_ty=
+pes)
+> +    ) -> Result<IrqVectorRegistration<'_>> {
+> +        // SAFETY:
+> +        // - `self.as_raw()` is guaranteed to be a valid pointer to a `s=
+truct pci_dev`
+> +        //   by the type invariant of `Device`.
+> +        // - `pci_alloc_irq_vectors` internally validates all other para=
+meters
+> +        //   and returns error codes.
+> +        let ret =3D unsafe {
+> +            bindings::pci_alloc_irq_vectors(self.as_raw(), min_vecs, max=
+_vecs, irq_types.as_raw())
+> +        };
 > +
-> +    #[inline]
-> +    fn pfalcon2<'a>(io: Bar0<'a>) -> Mmio<'a, super::PFalcon2Registers> =
-{
+> +        to_result(ret)?;
+> +
+> +        let count =3D NonZero::new(ret as usize).ok_or(EINVAL)?;
 
-The lifetime `'a` is elided in `fsp.rs` and `sec2.rs`, so we can also do
-it here. But the point is moot if we switch to associated consts anyway.
+I don't think `ret` can ever be zero. `expect` or `new_unchecked()` perhaps=
+?
 
-> +        io_project!(io, build: PFALCON2)
-> +    }
-> +}
-> =20
->  impl<'a> Falcon<'a, Gsp> {
->      /// Clears the SWGEN0 bit in the Falcon's IRQ status clear register =
-to
->      /// allow GSP to signal CPU for processing new messages in message q=
-ueue.
->      pub(crate) fn clear_swgen0_intr(&self) {
-> -        self.bar.write(
-> -            WithBase::of::<Gsp>(),
-> -            regs::NV_PFALCON_FALCON_IRQSCLR::zeroed().with_swgen0(true),
-> -        );
-> +        self.pfalcon
-> +            .write_reg(regs::NV_PFALCON_FALCON_IRQSCLR::zeroed().with_sw=
-gen0(true));
->      }
-> =20
->      /// Checks if GSP reload/resume has completed during the boot proces=
-s.
-> @@ -59,8 +67,8 @@ pub(crate) fn check_reload_completed(&self, timeout: De=
-lta) -> Result<bool> {
-> =20
->      /// Returns whether the RISC-V branch privilege lockdown bit is set.
->      pub(crate) fn riscv_branch_privilege_lockdown(&self) -> bool {
-> -        self.bar
-> -            .read(regs::NV_PFALCON_FALCON_HWCFG2::of::<Gsp>())
-> +        self.pfalcon
-> +            .read(regs::NV_PFALCON_FALCON_HWCFG2)
->              .riscv_br_priv_lockdown()
->      }
-> =20
-> @@ -71,10 +79,7 @@ pub(crate) fn priv_target_mask_released(&self) -> bool=
- {
->          const LOCKED_PATTERN: u32 =3D 0xbadf_4100;
->          const LOCKED_MASK: u32 =3D 0xffff_ff00;
-> =20
-> -        let hwcfg2 =3D self
-> -            .bar
-> -            .read(regs::NV_PFALCON_FALCON_HWCFG2::of::<Gsp>())
-> -            .into_raw();
-> +        let hwcfg2 =3D self.pfalcon.read(regs::NV_PFALCON_FALCON_HWCFG2)=
-.into_raw();
-> =20
->          hwcfg2 !=3D 0 && (hwcfg2 & LOCKED_MASK) !=3D LOCKED_PATTERN
->      }
-> diff --git a/drivers/gpu/nova-core/falcon/hal/ga102.rs b/drivers/gpu/nova=
--core/falcon/hal/ga102.rs
-> index 7600ee07ca2e..ebfaff3d960f 100644
-> --- a/drivers/gpu/nova-core/falcon/hal/ga102.rs
-> +++ b/drivers/gpu/nova-core/falcon/hal/ga102.rs
-> @@ -6,11 +6,9 @@
->      device,
->      io::{
->          poll::read_poll_timeout,
-> -        register::{
-> -            Array,
-> -            WithBase, //
-> -        },
-> -        Io, //
-> +        register::Array,
-> +        Io,
-> +        Mmio, //
->      },
->      prelude::*,
->      time::Delta, //
-> @@ -24,6 +22,7 @@
->          FalconBromParams,
->          FalconEngine,
->          FalconModSelAlgo,
-> +        PFalcon2Registers,
->          PeregrineCoreSelect, //
->      },
->      regs,
-> @@ -31,17 +30,16 @@
-> =20
->  use super::FalconHal;
-> =20
-> -fn select_core_ga102<E: FalconEngine>(bar: Bar0<'_>) -> Result {
-> -    let bcr_ctrl =3D bar.read(regs::NV_PRISCV_RISCV_BCR_CTRL::of::<E>())=
-;
-> +fn select_core_ga102<E: FalconEngine>(pfalcon2: Mmio<'_, PFalcon2Registe=
-rs>) -> Result {
+Best,
+Gary
 
-The generic parameter `E` is now unused and can be removed.
-
-> +    let bcr_ctrl =3D pfalcon2.read(regs::NV_PRISCV_RISCV_BCR_CTRL);
->      if bcr_ctrl.core_select() !=3D PeregrineCoreSelect::Falcon {
-> -        bar.write(
-> -            WithBase::of::<E>(),
-> +        pfalcon2.write_reg(
->              regs::NV_PRISCV_RISCV_BCR_CTRL::zeroed().with_core_select(Pe=
-regrineCoreSelect::Falcon),
->          );
-> =20
->          // TIMEOUT: falcon core should take less than 10ms to report bei=
-ng enabled.
->          read_poll_timeout(
-> -            || Ok(bar.read(regs::NV_PRISCV_RISCV_BCR_CTRL::of::<E>())),
-> +            || Ok(pfalcon2.read(regs::NV_PRISCV_RISCV_BCR_CTRL)),
->              |r| r.valid(),
->              Delta::ZERO,
->              Delta::from_millis(10),
-> @@ -86,24 +84,23 @@ fn signature_reg_fuse_version_ga102(
->      Ok(u16::BITS - reg_fuse_version.leading_zeros())
->  }
-> =20
-> -fn program_brom_ga102<E: FalconEngine>(bar: Bar0<'_>, params: &FalconBro=
-mParams) {
-> -    bar.write(
-> -        WithBase::of::<E>().at(0),
-> +fn program_brom_ga102<E: FalconEngine>(
-
-Same here.
-
-<...>
-> @@ -359,7 +356,7 @@ pub(crate) fn usable_fb_size(self) -> u64 {
->          25:25   aincr =3D> bool;
->      }
-> =20
-> -    pub(crate) NV_PFALCON_FALCON_EMEMD(u32) @ PFalconBase + 0x00000ac4 {
-> +    pub(crate) NV_PFALCON_FALCON_EMEMD(u32) @ 0x00000ac4 {
->          31:0    data =3D> u32;
+> +
+> +        // INVARIANT: `pci_alloc_irq_vectors()` allocated `count` vector=
+s for `self`.
+> +        Ok(IrqVectorRegistration { dev: self, count })
 >      }
 >  }
-> @@ -385,13 +382,13 @@ pub(crate) fn with_falcon_mem(self, mem: FalconMem)=
- -> Self {
-> =20
->  impl NV_PFALCON_FALCON_ENGINE {
->      /// Resets the falcon
-> -    pub(crate) fn reset_engine<E: FalconEngine>(bar: Bar0<'_>) {
-> -        bar.update(Self::of::<E>(), |r| r.with_reset(true));
-> +    pub(crate) fn reset_engine<E: FalconEngine>(pfalcon: Mmio<'_, PFalco=
-nRegisters>) {
 
-Here as well `E` can be dropped.
+
