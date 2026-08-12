@@ -1,136 +1,120 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 74A66279DB6
-	for <linux-pci@vger.kernel.org>; Wed, 12 Aug 2026 02:59:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0DA742FFF8B;
+	Wed, 12 Aug 2026 03:02:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786503574; cv=none; b=VCaFL8XTQfpYtX8/djI6XyqWQErpO7Q0dyWTc6ThZakr0Rj1GObGf3Xo8BawbAUuGPkkQEbzh4i1OfZ63833AUF6zHsnRzl/+b1BqXUM90ep/DbJAqnJ+UVxV5ChPWXNUlFWq6h7MBFOR+JtoeZhCkudD+7lBcIQBVUVD43KTHE=
+	t=1786503728; cv=none; b=ChtdCYrZfGwl8/wGFZKiSWhmW9g4230g7BjVDyP7ta76KzlVI2i4ptSBNrJKsKJt2r1j+MwgcTmrzdEb/OnSu3vnJZxh+rBNe844ONCI5NyE0A30cuM0DIvi/q8Sahn3DXX4o+ntc+ggvjOkL/UvZ58+TzU+W2cHG/+/rDAjuto=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786503574; c=relaxed/simple;
-	bh=5aux61gaVrfVyaE2ljSkhIFd3PF9VtTaylfbFaZbh6k=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=N3ywO5kC817UKlFiV0kvatV8qtZzzgp1UUwdXQFK3mhal6ZZu1lZ25zD7G7UYcSUO1i4OgT8nqfnhQBjB04soQGAVYVI0JzPEj6/a1iVZqWYH1K8La7ey958NZQZ8c/mrWkSOfGNHPnBqI7+Yt1cg3SrqWjiEat5gAvtF5MI5gw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GA1sERgh; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1786503728; c=relaxed/simple;
+	bh=HTYIDB8v1TPlRTgK8FP28sAs1BeHvoH/kIy9JsSLoPI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=NPks7ZrZaqnNGOWhCXU8udaLi1HuCgCalakK3YhYtP2/nlP4ZlfLHewCIEBahaz0CqI8CGJJD2pjhFzz86hNasSBH8u3S7yGSlEvopssu10Sv3SWPigDp743HX1cTr6MD6d2eJYmGS9IujkkTxVWxyBzDZ4UD340HVTVysToAg8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=ObBjUcjx; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GA1sERgh"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1E9DF1F000E9;
-	Wed, 12 Aug 2026 02:59:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786503573;
-	bh=CvtCto/+wyFwQVk8tzOvj/zXyHWGpfd9ORGLb1bnQPg=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=GA1sERghmGNc57qLbu9ZlQH07lTQ4LbMN+/abvmUQbwrgXvCXpVKXwes9u8CKo66o
-	 Mlke2Vxbf5LPFizg1DQEdlS3NuX7acm+JYOEe2H2PUqyrTLE0LdNqYJz2QTZIfuK33
-	 M/Q3AbOlnP/cZy6q+v7YjmfTxbdT8yydypP5ma0U0XX8y4GRE8e7UnoVrP3XeYE3+N
-	 Nwkv/5BAkcJ8OQzVMMx3yEsqo9r1mCwP4u2AFXVeFK0h/e3+lO78iOBLrwxuNYQ7q6
-	 pgmzXw9JKSAfKL9NWLnpjgW7wwYYNH5U8n6wc3wgrFJyNhLicl+cfhyKTE3eyDXrZe
-	 AWxqUsgrHksow==
-From: sashiko-bot@kernel.org
+	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="ObBjUcjx"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 204911F000E9;
+	Wed, 12 Aug 2026 03:02:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linuxfoundation.org;
+	s=korg; t=1786503726;
+	bh=jV0xfKMWPxStVT+exWMzo6uyN7LrAoYMhdU24F/J7O0=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=ObBjUcjxXCdLWunxIfNqupEGhiphXtIEsShI6l/keD3860+1e+m++yeZOhdyF1nsY
+	 2YCFsoQJRqu0D9nsJbizvFJVgQ72qquUQTww089Q0EFWcDmf9peyONKz4PiuaTKfuO
+	 BSxSLGiFBZ3AM4vrnweYXKEbg9gK5cA9mR5FwUYk=
+Date: Wed, 12 Aug 2026 12:00:33 +0900
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Mohamad Raizudeen <raizudeen.kerneldev@gmail.com>
+Cc: bhelgaas@google.com, skhan@linuxfoundation.org, jkoolstra@xs4all.nl,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
 Subject: Re: [PATCH] PCI: Fix use-after-free race in pci_find_bus()
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Mohamad Raizudeen" <raizudeen.kerneldev@gmail.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260812024713.4958-1-raizudeen.kerneldev@gmail.com>
+Message-ID: <2026081227-sandy-imaginary-fa49@gregkh>
 References: <20260812024713.4958-1-raizudeen.kerneldev@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 12 Aug 2026 02:59:32 +0000
-Message-Id: <20260812025933.1E9DF1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260812024713.4958-1-raizudeen.kerneldev@gmail.com>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
+On Wed, Aug 12, 2026 at 08:17:13AM +0530, Mohamad Raizudeen wrote:
+> pci_find_bus() iterates over the list of PCI root buses using
+> pci_find_next_bus(). This helper acquires pci_bus_sem, retrieves the
+> next bus and drops the lock before returning the pointer to the caller.
+> 
+> pci_find_bus() then uses this pointer to check the domain and traverses
+> the child buses via pci_do_find_bus() without holding the pci_bus_sem
+> lock.
+> 
+> If a PCI bus is concurrently removed for example via hotplug between
+> loop iterations, the from pointer passed back into pci_find_next_bus()
+> becomes stale, leading to a user-after-free when dereferencing
+> from->node.next. Additionally, traversing the bus tree without holding
+> the lock is a race condition.
 
-Pre-existing issues:
-- [High] The fundamentally vulnerable pci_find_next_bus() iterator is left =
-unmodified, retaining a use-after-free race.
-- [High] pci_find_bus() returns a non-refcounted bus pointer after dropping=
- pci_bus_sem, exposing callers to a caller-side use-after-free.
---
+Did you find this actually happens?  How did you find this at all?
 
---- Patch [1]: [PATCH] PCI: Fix use-after-free race in pci_find_bus() ---
-commit 7750909a991524c7f4e93f423648abcd167d3923
-Author: Mohamad Raizudeen <raizudeen.kerneldev@gmail.com>
+> 
+> Fix this by iterating pci_root_buses list directly using
+> list_for_each_entry() inside pci_find_bus() while holding the
+> pci_bus_sem read lock for the entire duration of the search. This
+> ensures the list and tree structures cannot change while being
+> traversed, eliminating the use-after-free.
 
-PCI: Fix use-after-free race in pci_find_bus()
-   =20
-pci_find_bus() iterates over the list of PCI root buses using
-pci_find_next_bus(). If a PCI bus is concurrently removed via hotplug
-between loop iterations, the from pointer passed back into
-pci_find_next_bus() becomes stale. This commit fixes this by iterating
-pci_root_buses list directly while holding the pci_bus_sem read lock.
+Why do two changes here, and not just make a patch series?
 
+> Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
+> Signed-off-by: Mohamad Raizudeen <raizudeen.kerneldev@gmail.com>
+> ---
+>  drivers/pci/search.c | 20 +++++++++++---------
+>  1 file changed, 11 insertions(+), 9 deletions(-)
+> 
 > diff --git a/drivers/pci/search.c b/drivers/pci/search.c
-> index e3d3177fce549..f50e83061b769 100644
+> index e3d3177fce54..f50e83061b76 100644
 > --- a/drivers/pci/search.c
 > +++ b/drivers/pci/search.c
-> @@ -142,17 +142,19 @@ static struct pci_bus *pci_do_find_bus(struct pci_b=
-us *bus, unsigned char busnr)
+> @@ -142,17 +142,19 @@ static struct pci_bus *pci_do_find_bus(struct pci_bus *bus, unsigned char busnr)
 >   */
 >  struct pci_bus *pci_find_bus(int domain, int busnr)
 >  {
-> -	struct pci_bus *bus =3D NULL;
+> -	struct pci_bus *bus = NULL;
 > -	struct pci_bus *tmp_bus;
 > +	struct pci_bus *bus;
-> +	struct pci_bus *tmp_bus =3D NULL;
-> =20
-> -	while ((bus =3D pci_find_next_bus(bus)) !=3D NULL)  {
-
-[Severity: High]
-This is a pre-existing issue, but while you are removing the use of
-pci_find_next_bus() here, the pci_find_next_bus() function itself remains
-vulnerable to the same use-after-free race.
-
-Other lockless callers like uncore_die_to_segment() in
-arch/x86/events/intel/uncore.c still iterate over buses using
-pci_find_next_bus() without holding pci_lock_rescan_remove(). Because
-pci_find_next_bus() drops pci_bus_sem before returning, a concurrent PCI
-hot-remove can free the bus.=20
-
-When the caller passes the freed bus back into pci_find_next_bus() for the
-next iteration, from->node.next is dereferenced, causing a use-after-free.
-
-Should pci_find_next_bus() also be fixed to prevent memory corruption for
-other callers?
-
-> -		if (pci_domain_nr(bus) !=3D domain)
+> +	struct pci_bus *tmp_bus = NULL;
+>  
+> -	while ((bus = pci_find_next_bus(bus)) != NULL)  {
+> -		if (pci_domain_nr(bus) != domain)
 > -			continue;
-> -		tmp_bus =3D pci_do_find_bus(bus, busnr);
+> -		tmp_bus = pci_do_find_bus(bus, busnr);
 > -		if (tmp_bus)
 > -			return tmp_bus;
 > +	down_read(&pci_bus_sem);
 > +	list_for_each_entry(bus, &pci_root_buses, node) {
-> +		if (pci_domain_nr(bus) =3D=3D domain) {
-> +			tmp_bus =3D pci_do_find_bus(bus, busnr);
+> +		if (pci_domain_nr(bus) == domain) {
+> +			tmp_bus = pci_do_find_bus(bus, busnr);
 > +			if (tmp_bus)
 > +				break;
 > +		}
+
+Are you sure this logic is the same as the original?
+pci_find_next_bus() does grab the needed lock here, so why do you think
+this is racy?
+
+And pci_bus_sem is just for root busses, not the individual busses,
+right?
+
+How was this tested?
+
 >  	}
 > -	return NULL;
 > +	up_read(&pci_bus_sem);
-> +	return tmp_bus;
 
-[Severity: High]
-This is a pre-existing issue, but does this expose the caller to a
-use-after-free race?
+Why not use guard() instead?
 
-By dropping pci_bus_sem before returning tmp_bus, the returned bus pointer
-is un-refcounted and no longer protected by the lock. If the caller does
-not hold pci_lock_rescan_remove(), a concurrent hot-remove thread could
-immediately acquire pci_bus_sem for write, remove the bus, and free its
-memory before the caller has a chance to safely use it.
+thanks,
 
-Would it be safer to increment the reference count of the returned bus
-with pci_bus_get() before releasing pci_bus_sem?
-
->  }
->  EXPORT_SYMBOL(pci_find_bus);
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260812024713.4958=
--1-raizudeen.kerneldev@gmail.com?part=3D1
+greg k-h
