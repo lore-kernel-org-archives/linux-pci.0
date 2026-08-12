@@ -1,238 +1,113 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 571CF40801E;
-	Wed, 12 Aug 2026 21:53:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01E053C1D67;
+	Wed, 12 Aug 2026 22:07:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786571625; cv=none; b=bkgYARdG5dNs/rEP+UfoUCmf2GTo1JU7YFM2aGQYT2lXygAVASncc5nVhFpv8tGzIL6NfX/MMmGJStnwF1379pKfW8AWulmzuGEjozwf7mPpZMDAHrmOYPzWYr1gXlPC83TRFw+1rmlyhJcvmIPuvAp77+YR+PRfUeAirO07m10=
+	t=1786572442; cv=none; b=juVuGj9bRaIODSAisv1c0ieqprrHOqjEyyOBzhNFTVI0sz/5r24MjpDiqGdIFn4Caqb5/TjRmtn9AA7F0snhE/Xehk7rwDXXhA89GxXgIrgfDw7SZT1Ea0C+mdlBY41kvawsbKzsXNV0lp3A1CnhHBBWZ4D5oe04Flg/NDgfRsU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786571625; c=relaxed/simple;
-	bh=zoOEOQ43+sDxWy+UnOrNn2U9dUnrZIIC52tkbdcIiuY=;
-	h=Mime-Version:Content-Type:Date:Message-Id:Subject:Cc:To:From:
-	 References:In-Reply-To; b=mMcG0vAz0Itg0Ld07aoICQSsSbD2KTLExaFc92QeWnvu3WBUnf004y+y+TqPjwRHwSfVpMZFHWaecXBCqib/2r8f2wRgfLOxQQraQ4PeHduTgT17vJD3Q3VwGMTzgpIcANI5IF1AJG09W/AR2PQAbQSwm0lGzlZlqsqwM+uD2IA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IXsVTdQ5; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1786572442; c=relaxed/simple;
+	bh=l95Clo9hj4mcMnhqd2g2Nsw0dU9m4xoF9S/M9G0cVGM=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=ll4JH+d+s0hSRd/BtULnyMvo77blEo3Z3G51cJFG/Ua/dyzGMCnLxhT5di+u+ucYKOp9HJqSqx0VuGj7PI8+sRcJFFoSCKuDdjiLJWPXdz9HoSFzQKdouWgnslftD/LoyRlm2Dc3EbQKsNBmWeEzY4x83jfs//x480WrsGYnGUM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aRaMc12P; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IXsVTdQ5"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 987811F000E9;
-	Wed, 12 Aug 2026 21:53:35 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aRaMc12P"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 626201F000E9;
+	Wed, 12 Aug 2026 22:07:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786571623;
-	bh=6nEU+aeRluycxdNo/6s4mZZKrJ1RxjlgPtIHRp6CvKk=;
-	h=Date:Subject:Cc:To:From:References:In-Reply-To;
-	b=IXsVTdQ5zQUuKR4Iw6ZK3MQhGzcBbD5D+BmAgP90RIhowNF15Qvl/daAVQJt8uLyy
-	 rIkJAZ6sNBkDjUGtU3cI/VGEiGebXer+9cErer6IqhdmgixYvy4Hz1W7Q7pabBrv8x
-	 YQXaZcdMYk+oUEFaZT6hbmwff+KV39BTSqdgf6+R+2uOUvAmAbz9PrPAOS6WKy0Fa1
-	 O6EgPhBJzHIifIXXh8zwYLZJluIm96rhQ3IQSP1gu3YzsVqWyoQ5I/w3Dm6bN1SHUD
-	 PeamQtayFym7qz9Jcw3jlL3cOB+eq9PY/6eF6heTF+y3ojTLfgHj8GMUmuJum26dfp
-	 gSeZSwkGxdiXg==
+	s=k20260515; t=1786572440;
+	bh=ZLrKVoqQnfL9meWolsnQROS2DkboL75b56U6Y67katw=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=aRaMc12Ps5Nd0XmGoUu0PiLzPVCg5LgVTyv3CfxgtoD9LmzARFkRHBR5RRX0XPHDy
+	 fyYDZXo/zHMU0GUKhruuDUifYF+jStw/bXbuRpDTZbEAOVYqhzs70RNs6tO+f1U0H1
+	 eaNmTy7krNsYB6ztD78M0cnZqTogJu1Baas71dJQJuUYhmoUdxRPMqgRpzKzmzJ7qu
+	 kf0djZP4TiMLVJcf5Uk5HcABL8UHewR1oi9v7Yhko5n4/zOpwtAaRtaIppkMYZREf7
+	 iWbXnTUQM8lBAYsGqgnCaPR4PhmZ/eqg73SnmOUb1E99Iz5uHnpYmWELgceKnV71lN
+	 +AqXIo7FIu1kA==
+Date: Wed, 12 Aug 2026 17:07:19 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Farhan Ali <alifm@linux.ibm.com>
+Cc: linux-s390@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, alex@shazbot.org, schnelle@linux.ibm.com,
+	mjrosato@linux.ibm.com, stable@vger.kernel.org,
+	Thomas Gleixner <tglx@kernel.org>
+Subject: Re: [PATCH v23 5/5] PCI/MSI: Enable memory decoding before restoring
+ MSI-X messages
+Message-ID: <20260812220719.GA1079019@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Wed, 12 Aug 2026 23:53:34 +0200
-Message-Id: <DKNAS52KYWLD.M15VEC6U0F6R@kernel.org>
-Subject: Re: [PATCH v10 00/10] Fix missing fops.owner in Rust DRM/misc
- abstractions
-Cc: "Alvin Sun" <alvin.sun@linux.dev>, "Miguel Ojeda" <ojeda@kernel.org>,
- "Boqun Feng" <boqun@kernel.org>, "Gary Guo" <gary@garyguo.net>,
- =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, "Benno Lossin"
- <lossin@kernel.org>, "Andreas Hindborg" <a.hindborg@kernel.org>, "Alice
- Ryhl" <aliceryhl@google.com>, "Trevor Gross" <tmgross@umich.edu>, "Luis
- Chamberlain" <mcgrof@kernel.org>, "Petr Pavlu" <petr.pavlu@suse.com>,
- "Daniel Gomez" <da.gomez@kernel.org>, "Sami Tolvanen"
- <samitolvanen@google.com>, "Aaron Tomlin" <atomlin@atomlin.com>, "Greg
- Kroah-Hartman" <gregkh@linuxfoundation.org>, "Rafael J. Wysocki"
- <rafael@kernel.org>, "David Airlie" <airlied@gmail.com>, "Simona Vetter"
- <simona@ffwll.ch>, "Daniel Almeida" <daniel.almeida@collabora.com>, "Arnd
- Bergmann" <arnd@arndb.de>, "Brendan Higgins" <brendan.higgins@linux.dev>,
- "David Gow" <david@davidgow.net>, "Rae Moar" <raemoar63@gmail.com>, "Breno
- Leitao" <leitao@debian.org>, "Jens Axboe" <axboe@kernel.dk>, "Dave Ertman"
- <david.m.ertman@intel.com>, "Leon Romanovsky" <leon@kernel.org>, "Igor
- Korotin" <igor.korotin@linux.dev>, "FUJITA Tomonori"
- <fujita.tomonori@gmail.com>, "Bjorn Helgaas" <bhelgaas@google.com>,
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
- =?utf-8?q?Arve_Hj=C3=B8nnev=C3=A5g?= <arve@android.com>, "Todd Kjos"
- <tkjos@android.com>, "Christian Brauner" <brauner@kernel.org>, "Carlos
- Llamas" <cmllamas@google.com>, <rust-for-linux@vger.kernel.org>,
- <linux-modules@vger.kernel.org>, <driver-core@lists.linux.dev>,
- <dri-devel@lists.freedesktop.org>, <nova-gpu@lists.linux.dev>,
- <linux-kselftest@vger.kernel.org>, <kunit-dev@googlegroups.com>,
- <linux-block@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
- <netdev@vger.kernel.org>, <linux-pci@vger.kernel.org>
-To: "Miguel Ojeda" <miguel.ojeda.sandonis@gmail.com>, "Mark Brown"
- <broonie@kernel.org>
-From: "Danilo Krummrich" <dakr@kernel.org>
-References: <20260811-fix-fops-owner-v10-0-7e71776f9dbe@linux.dev>
- <CANiq72=bhfofrbdf1qeA380-eWeKj5yXhC0NzaU_nbB9SpxYHA@mail.gmail.com>
-In-Reply-To: <CANiq72=bhfofrbdf1qeA380-eWeKj5yXhC0NzaU_nbB9SpxYHA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260805165518.794-6-alifm@linux.ibm.com>
 
-(Cc: Mark)
+On Wed, Aug 05, 2026 at 09:55:18AM -0700, Farhan Ali wrote:
+> The current MSI-X restoration path assumes the Command register Memory bit
+> is enabled when writing MSI-X messages. But it's possible the last saved
+> and restored state of a device may not have the Memory bit enabled, even if
+> a device driver later enables Memory bit and MSI-X. Attempting to access
+> Memory space without Memory bit enabled can lead to Unsupported Request
+> (UR) from the device. Fix this by enabling Memory bit and restore it
+> afterwards.
+> 
+> Fixes: 41017f0cac92 ("[PATCH] PCI: MSI(X) save/restore for suspend/resume")
+> Cc: stable@vger.kernel.org
+> Reviewed-by: Thomas Gleixner <tglx@kernel.org>
+> Reviewed-by: Niklas Schnelle <schnelle@linux.ibm.com>
+> Signed-off-by: Farhan Ali <alifm@linux.ibm.com>
+> ---
+>  drivers/pci/msi/msi.c | 10 ++++++++++
+>  1 file changed, 10 insertions(+)
+> 
+> diff --git a/drivers/pci/msi/msi.c b/drivers/pci/msi/msi.c
+> index 209373c92e9e..79c7e84d314b 100644
+> --- a/drivers/pci/msi/msi.c
+> +++ b/drivers/pci/msi/msi.c
+> @@ -870,6 +870,7 @@ void __pci_restore_msix_state(struct pci_dev *dev)
+>  {
+>  	struct msi_desc *entry;
+>  	bool write_msg;
+> +	u16 cmd;
+>  
+>  	if (!dev->msix_enabled)
+>  		return;
+> @@ -879,6 +880,14 @@ void __pci_restore_msix_state(struct pci_dev *dev)
+>  	pci_msix_clear_and_set_ctrl(dev, 0,
+>  				PCI_MSIX_FLAGS_ENABLE | PCI_MSIX_FLAGS_MASKALL);
+>  
+> +	/*
+> +	 * The restored device state may not have Memory decoding enabled
+> +	 * in the Command register. Since the MSI-X was enabled for the
+> +	 * device, enable Memory decoding before restoring MSI-X.
 
-On Wed Aug 12, 2026 at 6:33 PM CEST, Miguel Ojeda wrote:
-> On Tue, Aug 11, 2026 at 8:41=E2=80=AFAM Alvin Sun <alvin.sun@linux.dev> w=
-rote:
->>
->> The series moves `THIS_MODULE` into the `ModuleMetadata` as a const, thr=
-eads it
->> through `#[vtable]` to set `fops.owner` in DRM/miscdevice, and updates c=
-onfigfs
->> and rnull to use `this_module::<LocalModule>()`.
->
-> Applied to `rust-next` -- thanks everyone!
+PCI_COMMAND_MEMORY must be set because the MSI-X Table and PBA are in
+Memory space (in a BAR), right?  I think a more direct way of saying
+this would be:
 
-This series has a semantic conflict with both the driver-core and the drm-r=
-ust
-tree:
+  * The restored device state may not have Memory Space enabled.
+  * Since the MSI-X Table and PBA are in Memory Space, enable it
+  * while restoring them.
 
-@Mark: When you merge driver-core-next after rust-next (which I think is th=
-e
-case) then you need to include the diff in [1] into the merge.
-
-In drm-rust-next the build fails with:
-
-	error[E0425]: cannot find type `LocalModule` in the crate root
-	   --> rust/kernel/drm/gem/shmem.rs:628:5
-	    |
-	628 |     #[vtable]
-	    |     ^^^^^^^^^ not found in the crate root
-	    |
-	    =3D note: this error originates in the attribute macro `vtable` (in Ni=
-ghtly builds, run with -Z macro-backtrace for more info)
-
-which is because the kunit test in rust/kernel/drm/gem/shmem.rs uses the
-#[vtable] macro.
-
-This should be fixed up with a patch on top of this series in rust-next.
-
-I came up with to potential solutions [2] and [3]. I think with the new bui=
-ld
-system we want [3], but I'm not entirely sure this works correctly with the
-current build system in all cases (at least it did survive my tests).
-
-Alternatively, we could just open-code a dummy module as in [2] for now.
-
-[1] driver-core-next merge fixup
-
-diff --git a/rust/kernel/serdev.rs b/rust/kernel/serdev.rs
-index a4927452016e..17ca504b7f8d 100644
---- a/rust/kernel/serdev.rs
-+++ b/rust/kernel/serdev.rs
-@@ -87,7 +87,7 @@ unsafe fn register(
-         }
-
-         // SAFETY: `sdrv` is guaranteed to be a valid `DriverType`.
--        to_result(unsafe { bindings::__serdev_device_driver_register(sdrv.=
-get(), module.0) })
-+        to_result(unsafe { bindings::__serdev_device_driver_register(sdrv.=
-get(), module.as_ptr()) })
-     }
-
-     unsafe fn unregister(sdrv: &Opaque<Self::DriverType>) {
-
-[2] Open-coded dummy module
-
-diff --git a/rust/kernel/lib.rs b/rust/kernel/lib.rs
-index c04e6c5aa7e0..274924cfcc05 100644
---- a/rust/kernel/lib.rs
-+++ b/rust/kernel/lib.rs
-@@ -157,6 +157,15 @@
- /// Prefix to appear before log messages printed from within the `kernel` =
-crate.
- const __LOG_PREFIX: &[u8] =3D b"rust_kernel\0";
-
-+/// Dummy module type for `#[vtable]` impl blocks within the kernel crate =
-(e.g. kunit tests).
-+struct LocalModule;
-+
-+impl ModuleMetadata for LocalModule {
-+    const NAME: &'static str::CStr =3D c"rust_kernel";
-+    // SAFETY: `try_module_get`/`module_put` handle null module pointers g=
-racefully.
-+    const THIS_MODULE: ThisModule =3D unsafe { ThisModule::from_ptr(core::=
-ptr::null_mut()) };
-+}
-+
- #[cfg(not(testlib))]
- #[panic_handler]
- fn panic(info: &core::panic::PanicInfo<'_>) -> ! {
-
-[3] Allow module!() for kernel crate
-
-diff --git a/rust/Makefile b/rust/Makefile
-index 48adcd9b7851..4f6bf1b4d194 100644
---- a/rust/Makefile
-+++ b/rust/Makefile
-@@ -279,6 +279,7 @@ rustdoc-pin_init: $(src)/pin-init/src/lib.rs rustdoc-pi=
-n_init_internal \
-        +$(call if_changed,rustdoc)
-
- rustdoc-kernel: private is-kernel-object :=3D y
-+rustdoc-kernel: private rustc_target_envs =3D RUST_MODFILE=3Dkernel/lib.rs
- rustdoc-kernel: private rustc_target_flags =3D --extern ffi --extern pin_i=
-nit \
-     --extern build_error --extern macros \
-     --extern bindings --extern uapi \
-@@ -351,6 +352,7 @@ rusttestlib-pin_init: $(src)/pin-init/src/lib.rs rustte=
-stlib-macros \
-     rusttestlib-pin_init_internal $(obj)/$(libpin_init_internal_name) FORC=
-E
-        +$(call if_changed,rustc_test_library)
-
-+rusttestlib-kernel: private rustc_target_envs =3D RUST_MODFILE=3Dkernel/li=
-b.rs
- rusttestlib-kernel: private rustc_target_flags =3D --extern ffi \
-     --extern build_error --extern macros --extern pin_init \
-     --extern bindings --extern uapi \
-@@ -386,6 +388,7 @@ quiet_cmd_rustdoc_test_kernel =3D RUSTDOC TK $<
-        rm -rf $(objtree)/$(obj)/test/doctests/kernel; \
-        mkdir -p $(objtree)/$(obj)/test/doctests/kernel; \
-        $(rustc_target_envs) \
-+       RUST_MODFILE=3Dkernel/lib.rs \
-        OBJTREE=3D$(abspath $(objtree)) \
-        $(RUSTDOC) --test $(filter-out --remap-path-scope=3D%,$(rust_flags)=
-) \
-                -L$(objtree)/$(obj) --extern ffi --extern pin_init \
-@@ -788,6 +791,7 @@ $(obj)/uapi.o: $(src)/uapi/lib.rs \
-     $(obj)/uapi/uapi_generated.rs FORCE
-        +$(call if_changed_rule,rustc_library)
-
-+$(obj)/kernel.o: private rustc_target_envs =3D RUST_MODFILE=3Dkernel/lib.r=
-s
- $(obj)/kernel.o: private rustc_target_flags =3D --extern ffi --extern pin_=
-init \
-     --extern build_error --extern macros --extern bindings --extern uapi \
-     --extern zerocopy --extern zerocopy_derive
-diff --git a/rust/kernel/lib.rs b/rust/kernel/lib.rs
-index c04e6c5aa7e0..7df9159788ad 100644
---- a/rust/kernel/lib.rs
-+++ b/rust/kernel/lib.rs
-@@ -154,8 +154,21 @@
- };
- pub use uapi;
-
--/// Prefix to appear before log messages printed from within the `kernel` =
-crate.
--const __LOG_PREFIX: &[u8] =3D b"rust_kernel\0";
-+struct KernelCrateModule;
-+
-+impl Module for KernelCrateModule {
-+    fn init(_module: &'static ThisModule) -> error::Result<Self> {
-+        Ok(Self)
-+    }
-+}
-+
-+macros::module! {
-+    type: KernelCrateModule,
-+    name: "rust_kernel",
-+    authors: ["Rust for Linux Contributors"],
-+    description: "The kernel crate",
-+    license: "GPL",
-+}
-
- #[cfg(not(testlib))]
- #[panic_handler]
+> +	 */
+> +	pci_read_config_word(dev, PCI_COMMAND, &cmd);
+> +	pci_write_config_word(dev, PCI_COMMAND, cmd | PCI_COMMAND_MEMORY);
+> +
+>  	write_msg = arch_restore_msi_irqs(dev);
+>  
+>  	scoped_guard (msi_descs_lock, &dev->dev) {
+> @@ -889,6 +898,7 @@ void __pci_restore_msix_state(struct pci_dev *dev)
+>  		}
+>  	}
+>  
+> +	pci_write_config_word(dev, PCI_COMMAND, cmd);
+>  	pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_MASKALL, 0);
+>  }
+>  
+> -- 
+> 2.43.0
+> 
