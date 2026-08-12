@@ -1,49 +1,57 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mout-p-101.mailbox.org (mout-p-101.mailbox.org [80.241.56.151])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E2ABE37E5E9;
-	Wed, 12 Aug 2026 19:48:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BFAB333065D;
+	Wed, 12 Aug 2026 19:52:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.151
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786564126; cv=none; b=D5jMmXnyG9tNkv885JRQAwG7vQFhKkIg5o78QYXOHBCqbuygXM1cB7EvLXIWWJaA//Z9y4K3G97JR6wSCoI033qLnJRJYU8p1lU2ox714q7yleoZ+dwRLKoIgtkpDY8JQPYXlXhKNhV9YOgHYsqpDbsnofYu4A3L28vWzoY868A=
+	t=1786564372; cv=none; b=PV/lF7wciUaH5TcpA2RKF2XAsXh70YZafVCzQIIHJc55tdDyKnWTtsiF6aguz5Nd4Rto1MFM1PSeiTcZs+bZcltsMtNmR+PdhmdE0D2Q0liUFwYaZcv7RV9jDi0CF+cQWCML2IqhQ5P25Qfo9OTTbizAkMDlTCFoxGm2cApP7V4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786564126; c=relaxed/simple;
-	bh=/y3g8yc9wrJoWKsqZg94UfUwE8UbBG0EhDb7qCBJ5Ok=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=PtfM7sb/19XKGn88KtCPSz1/Zxw+xv2a1aOjuKXP5RomKGyqYftXD3w/gIs+Nx9hbvD1d8yQcujxcGM66CaJ4HEVcNSz4sbB4v6ar6iuRqUy6tbMtD56VKBpilIfkYzlsAAd80+VOXzN/Y0uQdj69lgXtyPxIuyV7XD4Iage5Ls=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eTnIZokk; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1786564372; c=relaxed/simple;
+	bh=nR6TSx/d0itVYNJ02OsDsJtu7gv2QlTRkENcKcCmlXs=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=Kjb8kHz9gzmeoYGBx4OGW6y8d7U5NWM/E4m2xrv3inbunLV62OxD8e8qa160UK44DKlOERMHLY3Q7RtiG56nnNsqJTfmtKXp7/Nsa9E5VABuEc3yWYU7rdRCywthQcD5o8XwV/stXhM1eZ0X3DxE7DdKg8wm+wEeMeSyhOMlDOw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=sGnElibv; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=kb+UCJyW; arc=none smtp.client-ip=80.241.56.151
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eTnIZokk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BACEB1F00A3F;
-	Wed, 12 Aug 2026 19:48:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786564123;
-	bh=Swv0qTwUxqjnKm1DzZxH8mB1Uno+7IXpRoUvwmAiRHA=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=eTnIZokkV7ecQByGvzB5sJvDTGlEa8LAGZFODj2wXdVOf9cO4cJmiV6SwnEWoBcjA
-	 TdKuurZ+IPkRbudPzOHop4EH4ENzAyNa08Pbq0k63N32f5DEIYWlfRNubzAysFtRFf
-	 Eo3nj19jwltAN65W3K3WeYP+ql5MfRvMcYx1PJ43Z3fTnV9dcFgwLNF/gNweXnM54x
-	 iUvsMyBZvs/grsENwHriWT2hi0z9xjqotve0sI4PlP9wjIphwcS2jBj1hyeCtfcZP3
-	 1ZXPZ54lzen2ZLk+F5hCoNj5oUmpueXRy1cxMh05tPpFGfC/iyoA38tFvrlMg/N1zE
-	 HPrZBbtlp7XxA==
-From: Leon Romanovsky <leon@kernel.org>
-To: "Rafael J. Wysocki" <rafael@kernel.org>,
-	Len Brown <lenb@kernel.org>,
-	Saket Dumbre <saket.dumbre@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Logan Gunthorpe <logang@deltatee.com>
-Cc: linux-acpi@vger.kernel.org,
-	acpica-devel@lists.linux.dev,
-	linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	Lukas Wunner <lukas@wunner.de>,
-	"Natu, Mahesh" <mahesh.natu@intel.com>
-Subject: [PATCH RFC 7/7] PCI/P2PDMA: Add KUnit tests for HMAT provider ranking
-Date: Wed, 12 Aug 2026 22:47:44 +0300
-Message-ID: <20260812-hmat-p2p-v1-7-75ac41380585@nvidia.com>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20260812-hmat-p2p-v1-0-75ac41380585@nvidia.com>
-References: <20260812-hmat-p2p-v1-0-75ac41380585@nvidia.com>
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="sGnElibv";
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="kb+UCJyW"
+Received: from smtp2.mailbox.org (smtp2.mailbox.org [IPv6:2001:67c:2050:b231:465::2])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mout-p-101.mailbox.org (Postfix) with ESMTPS id 4hKzg42k9rz8trG;
+	Wed, 12 Aug 2026 21:52:48 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
+	t=1786564368;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=NLhi4ZLjDXG/c04c+xT2qKYjmJN2aLYRZErpNT0+BbA=;
+	b=sGnElibvb5KvuwPU8Q+rNSik2Cr2PNdqyLyRXDXy4HJgWM1ZAmIc0naVeaYbDSCT+gEzps
+	ZM0ANrIdK6sDMqqNYR/kwmqMmiCvAL2mSVM39LeD7i5t2eDb5+o/X2rlrhIgzdNe2Tmg5i
+	qCoBwfkyHbrE2l39/W+paYFvSlfcD3daKsYcOE1wTeklBnR745SKU9CV2AkS0M6W7X24Xv
+	y9V83bcvZT+j51D6+Wlg3b65RlWli1VptfXq0cJYWKzeyjMA+NMma35v14WYhtjaAV/kzm
+	H/mWVXr0iKxyhv1diPyIr7wwOlTwZ+V8d6cwzm5bNmMLPlLf2gQZviN6lE4xAA==
+Authentication-Results: outgoing_mbo_mout;
+	dkim=pass header.d=mailbox.org header.s=mail20150812 header.b=kb+UCJyW;
+	spf=pass (outgoing_mbo_mout: domain of mhi@mailbox.org designates 2001:67c:2050:b231:465::2 as permitted sender) smtp.mailfrom=mhi@mailbox.org
+From: Maurice Hieronymus <mhi@mailbox.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
+	t=1786564366;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=NLhi4ZLjDXG/c04c+xT2qKYjmJN2aLYRZErpNT0+BbA=;
+	b=kb+UCJyWl7YHA1htV8MGgZcDser2kx2iPdgBC/7scED7kLl/2GSOEsJFQFDCs3ZHseRTJE
+	GrM+rl8GcExsK1ekaU89VQ5O44R+F6vaPrvKnrg7ORgVdM55PH86z9Kwrns5t2USjUyL+W
+	8pu9bfTXjEFkNKUN5mm+1MXDDGIvQKfNP+kZxnCOsuZUJU2Fw+iWlKkXditf8NL0GgnmT3
+	wlDwMzBkIybAttBUnIkdY6TuFjQrQcOizVgdxo0CINnwdXWiqehQaxfwK9/Gb8dI/fE5cs
+	KYTCBEDn3Z2cr+jWkB/h6h4DIGHZYJtisApLo1gZNcOYBmcd2cNmOV7PyFPtuw==
+Subject: [PATCH v3 0/5] rust: samples: add an EDU PCI driver sample (MMIO +
+ IRQ + DMA)
+Date: Wed, 12 Aug 2026 21:52:34 +0200
+Message-Id: <20260812-b4-rust-pci-edu-driver-v3-0-5d0b5594e52b@mailbox.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -51,434 +59,144 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-X-Mailer: b4 0.15-dev-18f8f
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIAAAAAAAC/4XPy2rDMBAF0F8xWneC3rJNKfmP0oUeo0QktlPJM
+ Skh/17Z2bSL0uUV6My9d1IwJyykb+4k45JKmsYaxEtD/NGOB4QUaiacck01k+Ak5GuZ4eITYLh
+ CyGnBDAIVDY6HYGkk9fMlY0y3DX7/qPmYyjzlr+3OwtbXf8mFAQUUkUvDnOqU3w82nd102035Q
+ FZ04T8gTv+EeIV0DFq3MnLP5G/o8ayb8fNa58/PzmTAUuw2v29etwuGdUwJLdhOqU5IBgyCPeX
+ 9CfOI59V6W5c7WxD8NAxp7hsthTVeUO1aj4IbKYKMnQzBUOpb1bYOhUGta4vHN6OaAoiMAQAA
+X-Change-ID: 20260614-b4-rust-pci-edu-driver-3e50db2dda0f
+To: Danilo Krummrich <dakr@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ Miguel Ojeda <ojeda@kernel.org>, Boqun Feng <boqun@kernel.org>, 
+ Gary Guo <gary@garyguo.net>, 
+ =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, 
+ Benno Lossin <lossin@kernel.org>, Andreas Hindborg <a.hindborg@kernel.org>, 
+ Alice Ryhl <aliceryhl@google.com>, Trevor Gross <tmgross@umich.edu>, 
+ Daniel Almeida <daniel.almeida@collabora.com>, 
+ Tamir Duberstein <tamird@kernel.org>, 
+ Alexandre Courbot <acourbot@nvidia.com>, 
+ =?utf-8?q?Onur_=C3=96zkan?= <work@onurozkan.dev>, 
+ Lyude Paul <lyude@redhat.com>, David Airlie <airlied@gmail.com>, 
+ Simona Vetter <simona@ffwll.ch>
+Cc: linux-pci@vger.kernel.org, rust-for-linux@vger.kernel.org, 
+ linux-kernel@vger.kernel.org, nova-gpu@lists.linux.dev, 
+ dri-devel@lists.freedesktop.org, Maurice Hieronymus <mhi@mailbox.org>
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1786564358; l=5126;
+ i=mhi@mailbox.org; s=20260525; h=from:subject:message-id;
+ bh=nR6TSx/d0itVYNJ02OsDsJtu7gv2QlTRkENcKcCmlXs=;
+ b=PYqX0rSRrfB0i29HyTewywP8ANjZYStn9kQfVhTrtLFS17nH+HPMf/wrmJzpQLmc/ruoYPMeE
+ P6ATvjS6fq5D47oISwejkzOyQ/cZcpYM5AMCXWS4X3hRq7VxZhU4lkq
+X-Developer-Key: i=mhi@mailbox.org; a=ed25519;
+ pk=AHlEkGG3hpXZHntlEzF42Ip/LFyXWOgsNUvaHqAnV80=
+X-MBO-RS-META: gpyw9xri61ok159gcy791n1ipc8zwwtq
+X-MBO-RS-ID: 71779d7d472a2538fba
+X-Rspamd-Queue-Id: 4hKzg42k9rz8trG
 
-From: Leon Romanovsky <leonro@nvidia.com>
+The Rust sample drivers currently exercise PCI facilities in isolation:
+rust_driver_pci covers MMIO and rust_dma covers DMA, but there is no
+single in-tree example that combines memory-mapped I/O, interrupts and
+DMA in one driver.
 
-HMAT provider selection combines directional coordinates across every
-client. A regression in metric completeness, worst-path aggregation, or
-precedence could select a slower provider or change the distance fallback.
+This series adds one. It targets QEMU's `edu` device -- a small,
+well-documented educational PCI device that supports exactly these three
+facilities and ships with any recent QEMU (`-device edu`), so the sample
+runs without special hardware.
 
-Protect the ranking contract across complete, partial, direct, and
-platform-authorized paths, including its ordering and distance tie-break.
+The sample maps BAR0, reads the PCI configuration space, and runs a set
+of MMIO self-tests (identification, liveness, factorial), allocates an
+MSI vector and registers an IRQ handler, and performs a DMA round-trip
+-- each stage waiting on a Completion that the IRQ handler signals.
 
-Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
+As requested by Danilo in the v2 review, the sample replaces
+rust_driver_pci, which it covers a superset of; the removal is the
+first patch.
+
+Prerequisites, that had to be implemented:
+
+- pci: rework the device enabling API: replace enable_device_mem()
+  with enable_device(), which returns a DeviceEnableGuard that
+  disables the device again on drop, so the enable count stays
+  balanced across unbind/rebind. This follows the design Danilo
+  proposed in the review of the standalone patch [1], which this
+  series absorbs.
+- pci: make Vendor::from_raw() public, so a driver can match a device
+  whose vendor ID has no symbolic name in pci_ids.h (QEMU's 0x1234),
+  matching what C drivers already do.
+- completion: add complete(), so a single Completion can be reused to
+  wait for consecutive events (e.g. back-to-back DMA transfers).
+
+The series is based on rust/rust-next and additionally depends on
+Danilo's "rust: irq: make Registration compatible with lifetime-bound
+drivers" [2], currently in linux-next.
+
+Note: DeviceEnableGuard drops from a bound scope, so pci_disable_device()
+can race the pci_dev bitfield word as discussed in [1]; that race
+predates this series and is triggerable from sysfs today. The bitops
+conversion is under way separately on linux-pci [3].
+
+Tested with QEMU `-device edu`;
+
+[1] https://lore.kernel.org/rust-for-linux/DJOEYVBS17MJ.1YD3TNGQBWHNK@kernel.org
+[2] https://lore.kernel.org/r/20260719153631.559341-1-dakr@kernel.org
+[3] https://lore.kernel.org/linux-pci/20260714-pci-dev-flags-v2-1-a1d7dc441cf3@mailbox.org/
+
+Signed-off-by: Maurice Hieronymus <mhi@mailbox.org>
 ---
- drivers/pci/Kconfig       |   3 +-
- drivers/pci/p2pdma.c      |  22 +---
- drivers/pci/p2pdma_test.c | 267 ++++++++++++++++++++++++++++++++++++++++++++++
- drivers/pci/pci.h         |  21 ++++
- 4 files changed, 294 insertions(+), 19 deletions(-)
+Changes in v3:
+- Absorb the device enabling rework [1] into this series, redesigned
+  around DeviceEnableGuard as proposed by Danilo; convert nova-core.
+- Remove rust_driver_pci, replaced by this sample (Danilo).
+- Add access to PCI configuration space (Danilo).
+- Rebase on rust/rust-next on top of Danilo's irq Registration rework
+  [2]; register the handler via pci::Device::request_irq().
+- Use vertical import style.
+- Link to v2: https://lore.kernel.org/r/20260620-b4-rust-pci-edu-driver-v2-0-6fd6684f2c14@mailbox.org
 
-diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
-index 47b92b289faf..b46833ff10e1 100644
---- a/drivers/pci/Kconfig
-+++ b/drivers/pci/Kconfig
-@@ -247,7 +247,8 @@ config PCI_P2PDMA_HMAT_KUNIT_TEST
- 	default KUNIT_ALL_TESTS
- 	help
- 	  Enable KUnit coverage for authorizing cross-host-bridge P2P DMA
--	  through ordered HMAT paths.
-+	  through ordered HMAT paths and ranking providers by their
-+	  ordered-path performance.
- 
- 	  For more information on KUnit and unit tests in general, refer to
- 	  the KUnit documentation in Documentation/dev-tools/kunit/.
-diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
-index fe3e7ea0776c..ca822f60e9d3 100644
---- a/drivers/pci/p2pdma.c
-+++ b/drivers/pci/p2pdma.c
-@@ -70,22 +70,6 @@ struct pci_p2pdma_pagemap {
- 	struct p2pdma_provider *mem;
- };
- 
--/* Provider rank classes, ordered from most to least preferable. */
--enum pci_p2pdma_rank_type {
--	PCI_P2PDMA_RANK_DIRECT,
--	PCI_P2PDMA_RANK_HMAT_BANDWIDTH,
--	PCI_P2PDMA_RANK_HMAT_LATENCY,
--	PCI_P2PDMA_RANK_DISTANCE,
--};
--
--struct pci_p2pdma_rank {
--	enum pci_p2pdma_rank_type type;
--	u32 bandwidth;
--	u32 latency;
--	int distance;
--	bool latency_valid;
--};
--
- static struct pci_p2pdma_pagemap *to_p2p_pgmap(struct dev_pagemap *pgmap)
- {
- 	return container_of(pgmap, struct pci_p2pdma_pagemap, pgmap);
-@@ -1016,7 +1000,7 @@ calc_map_type_and_dist(struct pci_dev *provider, struct pci_dev *client,
- }
- EXPORT_SYMBOL_IF_KUNIT(calc_map_type_and_dist);
- 
--static int
-+VISIBLE_IF_KUNIT int
- pci_p2pdma_rank_cmp(const struct pci_p2pdma_rank *a,
- 		    const struct pci_p2pdma_rank *b)
- {
-@@ -1039,13 +1023,14 @@ pci_p2pdma_rank_cmp(const struct pci_p2pdma_rank *a,
- 
- 	return 0;
- }
-+EXPORT_SYMBOL_IF_KUNIT(pci_p2pdma_rank_cmp);
- 
- /*
-  * P2P bandwidth is limited by the slowest direction and client path, while
-  * the largest latency bounds the worst path. Only compare a metric when every
-  * host-bridge path supplies both its read and write values.
-  */
--static int
-+VISIBLE_IF_KUNIT int
- pci_p2pdma_rank_many(struct pci_dev *provider, struct device **clients,
- 		     int num_clients, bool verbose,
- 		     struct pci_p2pdma_rank *rank)
-@@ -1124,6 +1109,7 @@ pci_p2pdma_rank_many(struct pci_dev *provider, struct device **clients,
- 
- 	return 0;
- }
-+EXPORT_SYMBOL_IF_KUNIT(pci_p2pdma_rank_many);
- 
- /**
-  * pci_p2pdma_distance_many - Determine the cumulative distance between
-diff --git a/drivers/pci/p2pdma_test.c b/drivers/pci/p2pdma_test.c
-index 1430185f69b7..8475c40c0eaf 100644
---- a/drivers/pci/p2pdma_test.c
-+++ b/drivers/pci/p2pdma_test.c
-@@ -92,6 +92,15 @@ struct hmat_route_ctx {
- 	bool unexpected_device;
- };
- 
-+static void hmat_test_device_release(struct device *dev)
-+{
-+}
-+
-+static void hmat_test_put_device(void *data)
-+{
-+	put_device(data);
-+}
-+
- static struct pci_dev *hmat_add_root_device(struct kunit *test, u8 busnr)
- {
- 	struct pci_host_bridge *host;
-@@ -104,6 +113,13 @@ static struct pci_dev *hmat_add_root_device(struct kunit *test, u8 busnr)
- 	KUNIT_ASSERT_NOT_NULL(test, bus);
- 	pdev = kunit_kzalloc(test, sizeof(*pdev), GFP_KERNEL);
- 	KUNIT_ASSERT_NOT_NULL(test, pdev);
-+	device_initialize(&pdev->dev);
-+	pdev->dev.bus = &pci_bus_type;
-+	pdev->dev.release = hmat_test_device_release;
-+	KUNIT_ASSERT_EQ(test,
-+			kunit_add_action_or_reset(test, hmat_test_put_device,
-+						  &pdev->dev),
-+			0);
- 
- 	bus->number = busnr;
- 	bus->bridge = &host->dev;
-@@ -194,8 +210,259 @@ static void pci_p2pdma_hmat_route_test(struct kunit *test)
- 	}
- }
- 
-+struct hmat_rank_case {
-+	const char *desc;
-+	struct access_coordinate coord[2];
-+	enum pci_p2pdma_rank_type expected_type;
-+	u32 expected_bandwidth;
-+	u32 expected_latency;
-+	bool expected_latency_valid;
-+};
-+
-+static const struct hmat_rank_case hmat_rank_cases[] = {
-+	{
-+		.desc = "bandwidth_and_latency",
-+		.coord = {
-+			{
-+				.read_bandwidth = 100,
-+				.write_bandwidth = 90,
-+				.read_latency = 7,
-+				.write_latency = 8,
-+			},
-+			{
-+				.read_bandwidth = 75,
-+				.write_bandwidth = 80,
-+				.read_latency = 10,
-+				.write_latency = 9,
-+			},
-+		},
-+		.expected_type = PCI_P2PDMA_RANK_HMAT_BANDWIDTH,
-+		.expected_bandwidth = 75,
-+		.expected_latency = 10,
-+		.expected_latency_valid = true,
-+	},
-+	{
-+		.desc = "bandwidth_only",
-+		.coord = {
-+			{
-+				.read_bandwidth = 100,
-+				.write_bandwidth = 90,
-+			},
-+			{
-+				.read_bandwidth = 75,
-+				.write_bandwidth = 80,
-+			},
-+		},
-+		.expected_type = PCI_P2PDMA_RANK_HMAT_BANDWIDTH,
-+		.expected_bandwidth = 75,
-+	},
-+	{
-+		.desc = "latency_only",
-+		.coord = {
-+			{
-+				.read_latency = 7,
-+				.write_latency = 8,
-+			},
-+			{
-+				.read_latency = 10,
-+				.write_latency = 9,
-+			},
-+		},
-+		.expected_type = PCI_P2PDMA_RANK_HMAT_LATENCY,
-+		.expected_latency = 10,
-+		.expected_latency_valid = true,
-+	},
-+	{
-+		.desc = "incomplete_coordinates",
-+		.coord = {
-+			{
-+				.read_bandwidth = 100,
-+				.write_bandwidth = 90,
-+				.read_latency = 7,
-+				.write_latency = 8,
-+			},
-+			{
-+				.read_bandwidth = 75,
-+				.read_latency = 10,
-+			},
-+		},
-+		.expected_type = PCI_P2PDMA_RANK_DISTANCE,
-+	},
-+};
-+
-+static void hmat_rank_case_desc(const struct hmat_rank_case *c, char *desc)
-+{
-+	strscpy(desc, c->desc, KUNIT_PARAM_DESC_SIZE);
-+}
-+
-+KUNIT_ARRAY_PARAM(hmat_rank, hmat_rank_cases, hmat_rank_case_desc);
-+
-+struct hmat_rank_ctx {
-+	const struct hmat_rank_case *test_case;
-+	struct pci_dev *provider;
-+	struct pci_dev *client[2];
-+	int lookup_calls;
-+	bool unexpected_lookup;
-+};
-+
-+static int pci_host_bridge_rank_pxm_stub(struct pci_dev *pdev)
-+{
-+	struct kunit *test = kunit_get_current_test();
-+	struct hmat_rank_ctx *ctx = test->priv;
-+	unsigned int i;
-+
-+	if (pdev == ctx->provider)
-+		return 22;
-+	for (i = 0; i < ARRAY_SIZE(ctx->client); i++)
-+		if (pdev == ctx->client[i])
-+			return 11 + i;
-+
-+	ctx->unexpected_lookup = true;
-+	return -ENODEV;
-+}
-+
-+static int acpi_get_p2p_rank_coordinates_stub(int initiator, int target,
-+					      enum hmat_p2p_class class,
-+					      struct access_coordinate *coord)
-+{
-+	struct kunit *test = kunit_get_current_test();
-+	struct hmat_rank_ctx *ctx = test->priv;
-+	int index = initiator - 11;
-+
-+	ctx->lookup_calls++;
-+	if (index < 0 || index >= (int)ARRAY_SIZE(ctx->client) || target != 22 ||
-+	    class != HMAT_P2P_NON_UIO) {
-+		ctx->unexpected_lookup = true;
-+		return -ENOENT;
-+	}
-+
-+	*coord = ctx->test_case->coord[index];
-+	return 0;
-+}
-+
-+static void pci_p2pdma_hmat_rank_many_test(struct kunit *test)
-+{
-+	const struct hmat_rank_case *test_case = test->param_value;
-+	struct hmat_rank_ctx ctx = { .test_case = test_case };
-+	struct device *clients[ARRAY_SIZE(ctx.client)];
-+	struct pci_p2pdma_rank rank;
-+	unsigned int i;
-+
-+	ctx.provider = hmat_add_root_device(test, 0);
-+	for (i = 0; i < ARRAY_SIZE(ctx.client); i++) {
-+		ctx.client[i] = hmat_add_root_device(test, i + 1);
-+		clients[i] = &ctx.client[i]->dev;
-+	}
-+	test->priv = &ctx;
-+
-+	kunit_activate_static_stub(test, cpu_supports_p2pdma,
-+				   cpu_supports_p2pdma_stub);
-+	kunit_activate_static_stub(test, pci_host_bridge_pxm,
-+				   pci_host_bridge_rank_pxm_stub);
-+	kunit_activate_static_stub(test, acpi_get_p2p_coordinates,
-+				   acpi_get_p2p_rank_coordinates_stub);
-+
-+	KUNIT_ASSERT_EQ(test,
-+			pci_p2pdma_rank_many(ctx.provider, clients,
-+					       ARRAY_SIZE(clients), false, &rank),
-+			0);
-+	KUNIT_EXPECT_EQ(test, rank.type, test_case->expected_type);
-+	KUNIT_EXPECT_EQ(test, rank.distance, 4);
-+	KUNIT_EXPECT_EQ(test, ctx.lookup_calls, 2);
-+	KUNIT_EXPECT_FALSE(test, ctx.unexpected_lookup);
-+	if (rank.type == PCI_P2PDMA_RANK_HMAT_BANDWIDTH)
-+		KUNIT_EXPECT_EQ(test, rank.bandwidth,
-+				test_case->expected_bandwidth);
-+	if (rank.latency_valid)
-+		KUNIT_EXPECT_EQ(test, rank.latency,
-+				test_case->expected_latency);
-+	KUNIT_EXPECT_EQ(test, rank.latency_valid,
-+			test_case->expected_latency_valid);
-+}
-+
-+static void pci_p2pdma_hmat_rank_compare_test(struct kunit *test)
-+{
-+	struct pci_p2pdma_rank direct = {
-+		.type = PCI_P2PDMA_RANK_DIRECT,
-+		.distance = 8,
-+	};
-+	struct pci_p2pdma_rank bandwidth = {
-+		.type = PCI_P2PDMA_RANK_HMAT_BANDWIDTH,
-+		.bandwidth = 100,
-+		.latency = 20,
-+		.distance = 4,
-+		.latency_valid = true,
-+	};
-+	struct pci_p2pdma_rank other = bandwidth;
-+
-+	KUNIT_EXPECT_LT(test, pci_p2pdma_rank_cmp(&direct, &bandwidth), 0);
-+
-+	other.bandwidth = 90;
-+	KUNIT_EXPECT_LT(test, pci_p2pdma_rank_cmp(&bandwidth, &other), 0);
-+	other = bandwidth;
-+	other.latency = 30;
-+	KUNIT_EXPECT_LT(test, pci_p2pdma_rank_cmp(&bandwidth, &other), 0);
-+	other = bandwidth;
-+	other.latency_valid = false;
-+	KUNIT_EXPECT_LT(test, pci_p2pdma_rank_cmp(&bandwidth, &other), 0);
-+	other = bandwidth;
-+	other.distance = 5;
-+	KUNIT_EXPECT_LT(test, pci_p2pdma_rank_cmp(&bandwidth, &other), 0);
-+	KUNIT_EXPECT_EQ(test, pci_p2pdma_rank_cmp(&bandwidth, &bandwidth), 0);
-+
-+	bandwidth.type = PCI_P2PDMA_RANK_HMAT_LATENCY;
-+	other = bandwidth;
-+	other.type = PCI_P2PDMA_RANK_DISTANCE;
-+	KUNIT_EXPECT_LT(test, pci_p2pdma_rank_cmp(&bandwidth, &other), 0);
-+	other = bandwidth;
-+	other.latency = 30;
-+	KUNIT_EXPECT_LT(test, pci_p2pdma_rank_cmp(&bandwidth, &other), 0);
-+
-+	bandwidth.type = PCI_P2PDMA_RANK_DISTANCE;
-+	bandwidth.distance = 4;
-+	other = bandwidth;
-+	other.distance = 5;
-+	KUNIT_EXPECT_LT(test, pci_p2pdma_rank_cmp(&bandwidth, &other), 0);
-+}
-+
-+static void pci_p2pdma_direct_rank_test(struct kunit *test)
-+{
-+	struct pci_dev *provider = hmat_add_root_device(test, 0);
-+	struct device *clients[] = { &provider->dev };
-+	struct pci_p2pdma_rank rank;
-+
-+	KUNIT_ASSERT_EQ(test,
-+			pci_p2pdma_rank_many(provider, clients,
-+					       ARRAY_SIZE(clients), false, &rank),
-+			0);
-+	KUNIT_EXPECT_EQ(test, rank.type, PCI_P2PDMA_RANK_DIRECT);
-+	KUNIT_EXPECT_EQ(test, rank.distance, 0);
-+}
-+
-+static void pci_p2pdma_distance_rank_fallback_test(struct kunit *test)
-+{
-+	struct pci_dev *provider = hmat_add_root_device(test, 0);
-+	struct pci_dev *client = hmat_add_root_device(test, 1);
-+	struct device *clients[] = { &client->dev };
-+	struct pci_p2pdma_rank rank;
-+
-+	kunit_activate_static_stub(test, cpu_supports_p2pdma,
-+				   cpu_supports_p2pdma_true_stub);
-+
-+	KUNIT_ASSERT_EQ(test,
-+			pci_p2pdma_rank_many(provider, clients,
-+					       ARRAY_SIZE(clients), false, &rank),
-+			0);
-+	KUNIT_EXPECT_EQ(test, rank.type, PCI_P2PDMA_RANK_DISTANCE);
-+	KUNIT_EXPECT_EQ(test, rank.distance, 2);
-+}
-+
- static struct kunit_case pci_p2pdma_hmat_test_cases[] = {
- 	KUNIT_CASE_PARAM(pci_p2pdma_hmat_route_test, hmat_route_gen_params),
-+	KUNIT_CASE_PARAM(pci_p2pdma_hmat_rank_many_test, hmat_rank_gen_params),
-+	KUNIT_CASE(pci_p2pdma_hmat_rank_compare_test),
-+	KUNIT_CASE(pci_p2pdma_direct_rank_test),
-+	KUNIT_CASE(pci_p2pdma_distance_rank_fallback_test),
- 	{}
- };
- 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 7a44158fdbd0..9872e081ec07 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -1092,6 +1092,22 @@ enum pci_acs_p2pdma_state {
- 	PCI_ACS_P2PDMA_NOT_SUPPORTED,	/* no usable peer-to-peer route */
- };
- 
-+/* Provider rank classes, ordered from most to least preferable. */
-+enum pci_p2pdma_rank_type {
-+	PCI_P2PDMA_RANK_DIRECT,
-+	PCI_P2PDMA_RANK_HMAT_BANDWIDTH,
-+	PCI_P2PDMA_RANK_HMAT_LATENCY,
-+	PCI_P2PDMA_RANK_DISTANCE,
-+};
-+
-+struct pci_p2pdma_rank {
-+	enum pci_p2pdma_rank_type type;
-+	u32 bandwidth;
-+	u32 latency;
-+	int distance;
-+	bool latency_valid;
-+};
-+
- #if IS_ENABLED(CONFIG_KUNIT)
- bool pci_acs_flags_enabled(struct pci_dev *pdev, u16 acs_flags,
- 			   enum pci_acs_scope scope);
-@@ -1103,6 +1119,11 @@ enum pci_p2pdma_map_type calc_map_type_and_dist(struct pci_dev *provider,
- 						int *dist, bool verbose);
- int pci_host_bridge_pxm(struct pci_dev *pdev);
- bool cpu_supports_p2pdma(void);
-+int pci_p2pdma_rank_many(struct pci_dev *provider, struct device **clients,
-+			 int num_clients, bool verbose,
-+			 struct pci_p2pdma_rank *rank);
-+int pci_p2pdma_rank_cmp(const struct pci_p2pdma_rank *a,
-+			const struct pci_p2pdma_rank *b);
- #endif
- #ifdef CONFIG_PCI_QUIRKS
- int pci_dev_specific_acs_enabled(struct pci_dev *dev, u16 acs_flags,
+Changes in v2:
+- pci: Vendor::from_raw(): collected Reviewed-by from Gary Guo;
+  wrapped code identifiers in the commit message in backticks (Gary).
+- pci: enable_device(): collected Reviewed-by from Fiona Behrens;
+  made enable_device_mem() #[inline] and added a cross-reference to
+  enable_device() in its docs (Fiona).
+- completion: complete(): tightened the doc comment per Gary's review
+  (emphasise "single", drop the internal-counter detail, drop the
+  complete_all comparison).
+- samples/edu: take &EduDriverData instead of &Arc<EduDriverData> in
+  init()/test_irq()/test_dma() (Ewan Chorynski).
+- samples/edu: simplify wait_until_compute_has_finished() to forward
+  read_poll_timeout()'s error via inspect_err() instead of returning a
+  hard-coded ETIMEDOUT (Ewan Chorynski / Miguel Ojeda).
+- samples/edu: Rebased on rust/rust-next and adapt to the updated
+  pci::Bar / device::Core lifetimes and pci::Driver::Data<'bound>, and
+  obtain the BAR via into_devres().
+- Link to v1: https://lore.kernel.org/r/20260614-b4-rust-pci-edu-driver-v1-0-e3f2471b595c@mailbox.org
 
+---
+Maurice Hieronymus (5):
+      samples: rust: remove the rust_driver_pci sample
+      rust: pci: rework device enabling API
+      rust: pci: make Vendor::from_raw() public
+      rust: completion: add complete()
+      rust: samples: add EDU PCI driver sample
+
+ MAINTAINERS                     |   2 +-
+ drivers/gpu/nova-core/driver.rs |   5 +-
+ rust/kernel/pci.rs              |  31 ++-
+ rust/kernel/pci/id.rs           |   2 +-
+ rust/kernel/sync/completion.rs  |  11 ++
+ samples/rust/Kconfig            |   8 +-
+ samples/rust/Makefile           |   2 +-
+ samples/rust/rust_driver_edu.rs | 421 ++++++++++++++++++++++++++++++++++++++++
+ samples/rust/rust_driver_pci.rs | 194 ------------------
+ 9 files changed, 471 insertions(+), 205 deletions(-)
+---
+base-commit: 643a7c306b8ce32743d4f94dd700c8588be37e66
+change-id: 20260614-b4-rust-pci-edu-driver-3e50db2dda0f
+prerequisite-message-id: <20260719153631.559341-1-dakr@kernel.org>
+prerequisite-patch-id: 63224325d5ec73f06517bb35f8c366a086bbea19
+
+Best regards,
 -- 
-2.55.0
+Maurice Hieronymus <mhi@mailbox.org>
 
