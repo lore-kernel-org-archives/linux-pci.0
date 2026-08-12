@@ -1,141 +1,219 @@
-Received: from mail-pg1-f182.google.com (mail-pg1-f182.google.com [209.85.215.182])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from AM0PR02CU008.outbound.protection.outlook.com (mail-westeuropeazon11013019.outbound.protection.outlook.com [52.101.72.19])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1924D370AE5
-	for <linux-pci@vger.kernel.org>; Wed, 12 Aug 2026 02:47:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.182
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786502844; cv=none; b=jtXASOMGZ9TcsMap6J1uAypMJf19i7g5CX6DjJHLCVjIjD1XY4NMtOHHW3YN/XhG1XlNyPrsz99tlXRu5jRqw8IMxvTiW7SWcpvXtGiVyKqaUyZbIF4MCL4TmblINaVsrNxAuWD91nk4zlcjfBIkTQEAW+8VO3/M287j/4wNeoM=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786502844; c=relaxed/simple;
-	bh=ALDw7ALpx5kPUnaKuRpbZ57cF4Us+cKtY0dL1YT+XOo=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=dm0+522APFARO+DAtAKr4OCJSY8vTLMF0NdqlmhNngmaVfYh2grADNowbcaOzbQm5RxqbO9L2AckLxPeSjRDB2+LmyXxJPORti6lrPImLWYkMkpYwT8Z0ROKvUeZ0IJ4iH3BYpPrPjldixZcw78A1Et4Zbkxjy9gwEJoGlfn0zI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=K1zqhm9u; arc=none smtp.client-ip=209.85.215.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 77DB1364049;
+	Wed, 12 Aug 2026 02:49:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.72.19
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1786502954; cv=fail; b=pjnkxbWVzzcswnvZT8ANHvnoZqtWomnD0H+3Z7nZLBMQhUMYZM6rOnoLWFb51ORjvew/cjnfE5pZvp4gbYCUerR8oGoMS2bfZSRbg7LSG4lUCgpDNbnJgE4qcTiAZEiy3cUrIwNld2jG96/gcTps2cXy+0BsEzTkjtK4dHHjZoY=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1786502954; c=relaxed/simple;
+	bh=8x+PSbWbndKIigaBJqkeAOcX1qVhBu3H20NWFGTClWQ=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=HoY6W3BnZCcfvhnA/VeJ2DQvzHM4yd6Ot+sIJdn0ItUFfJc4RIaS4D6xOiTPkn/fxgkI9318jJLrd+VTYV0oo3nGYpQtvire4G2e0oMUwxYirJTU3VZEwbd66EXuV1LBZW+EhRAfuvCLkLejmYT/APIi0b9/ZnG7X4ksCwtPIkQ=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=AUdvjTu9; arc=fail smtp.client-ip=52.101.72.19
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="K1zqhm9u"
-Received: by mail-pg1-f182.google.com with SMTP id 41be03b00d2f7-caf45fc5202so312593a12.1
-        for <linux-pci@vger.kernel.org>; Tue, 11 Aug 2026 19:47:22 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1786502842; x=1787107642; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=aAuLpf/tdgMm6ZPBoW/USWZ/wPE2gVwN/uVbw8U/1z4=;
-        b=K1zqhm9u0HxVChqxW7X/q5+D39PK3smi375aNo+dyp3hg0/blUiUFQhGno5rVfIEaK
-         b2hvw3NSPcbKG7sSPOjhI/ITP7AVJMGA+NnenV6d5V4LC/IyFF58eOMLk4ZKUFJ6/rXO
-         TDh8JyhFH6YNefKJqzS+Z2GJ4BkIVJlwHBUj36bRQq8jnWmAlZMvASj37faRSUS1n6pC
-         rV4bsEipn4NQI/9xS9AnknPhGRHH6nIzGRDjQePjBjpS0VFaAH8uBtyosh/n+QTooEOP
-         z3CjvNpYO2ACD19nauQsVLOPThiPAD1qi7tIfHhRE4erLM0KYQRkm+0+TXRAT5vXuhgy
-         4PWg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786502842; x=1787107642;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=aAuLpf/tdgMm6ZPBoW/USWZ/wPE2gVwN/uVbw8U/1z4=;
-        b=mXc9aYKSIc7lCye6pTQ0RbJYvQ0VUO7F2LJasAOJGuwuQvpXVnj3yHF/iPUTJbpMKz
-         VCuz0gNCoq8Hhp31FrcgpWOICjK62pxPo8RAXe6QNMQig0QH456YSKpyWq+gLGfElAU7
-         4dvEQNwjk7fwh/t6py3r+rt5v5zm36yOu1UCUR2b519fnKjaHXeWjsAe0j/k2gbdKDIq
-         hnjetokP9ZQRueHIZP4QzpaqJQAusIcG2YhDSNf2KiraOf1CQ+fCehwEtzDdvSGzoFCX
-         QtmkZA/kipTD/qjRU/3gu0rmlcfkZV9NX6CJ4ZZpd3oRi9AW6TuuhyMVUOiI4Iug4jlA
-         ksTg==
-X-Forwarded-Encrypted: i=1; AHgh+RpSRO3pjemPTZLN6P+0jKUF2REoop/venDKhKpVIxoZhKSNmKgYVibeJduEwJfXUZqHrUCYq2uK82o=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzcfQnC4XJ6TNgFUFfRcPABXWquiTZZ3bwx+xvfsG4v6f8jJhdo
-	BhjtwVQnk5b5msB73zycwiSD6vFY1wQQLazu5sbL4rJDQLv6AGP6dPG5
-X-Gm-Gg: AR+sD11HUiE03czba+tCpMmzHomNm07cyiTfpy3ZjGLYWs+Ft7ytptPQQATLu2pEyAX
-	P4YCOJxmJGMbq8XnD2NQW8fup0EFaNN5X5U1QHFOCOikWZLoRD1QsfX5cQiejSHtoHsbLxhfTQc
-	ZEVi4/GtO+nhQu22aNJnAKYQHLyzZCWLsbpKGLaBbfmwWEbzRZW+hODwPvOf8ZO0cmn+1OYPsW1
-	c4HoRfHWML52Q11kkOjpQORAOHY4ant75+3vUXk/T7PvMYuZTUUmI0QSxTk0KtS61radbLgQ4tP
-	lpndHoX4I+7uXTSyRel/ffwPK9v6BO9c+XNU55cImRkpwKdNOnSDum6XYp2evquJd8cGd9b/UHJ
-	ibAacP34ojwDW7gyno3aTttsYp+ceT/JEvc2MUIrkvjcWYE9ERf0ZvdiiXAjVDdiY0sx6uXa0dw
-	05cXTSqalWZBPvJZ27dKmB3vLGKCnIMEVuYXGWc6mQhoKaW0JQHLayABkUceb7m+XWRId5BTT/D
-	fbwvgihjg==
-X-Received: by 2002:a05:6a21:350f:b0:3c4:2b8b:e88f with SMTP id adf61e73a8af0-3cc3f520e14mr1854571637.5.1786502842272;
-        Tue, 11 Aug 2026 19:47:22 -0700 (PDT)
-Received: from kernel ([103.219.206.122])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-31cf67912d0sm6965188eec.24.2026.08.11.19.47.18
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 11 Aug 2026 19:47:21 -0700 (PDT)
-From: Mohamad Raizudeen <raizudeen.kerneldev@gmail.com>
-To: bhelgaas@google.com,
-	gregkh@linuxfoundation.org
-Cc: skhan@linuxfoundation.org,
-	jkoolstra@xs4all.nl,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Mohamad Raizudeen <raizudeen.kerneldev@gmail.com>
-Subject: [PATCH] PCI: Fix use-after-free race in pci_find_bus()
-Date: Wed, 12 Aug 2026 08:17:13 +0530
-Message-ID: <20260812024713.4958-1-raizudeen.kerneldev@gmail.com>
-X-Mailer: git-send-email 2.53.0
+	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="AUdvjTu9"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=XDi6YuUD1ibCZ0WFHtAHoLbtyGceNmd/ghnO9X+Da4VCwonLMQaHh5pBwqX4Nn/lu6b6nWOlUMYGha7mYu1Uib/K22wPJxNLiZet0vQX/Ze5aalhWPyZd058cERD/AcA3S4JxdnL0oHo7WLxv3afYs8l6vWCjOOuhtDl8kdm2NFlVSIuNjedydU8vejFL8VA+dY3kPxfIA94EXv1F46a82DcdV66h7d5fln19RVbYqc7RnO3/gGRAKmLxGlVHTNhbbGw25iVW0rHAC74uwxC5+gBYj38K3YOjsSB659lkoLjuHNVyqGuAmzS2q4jLQhdzFi+6c+MPzl4ur1hN94RRg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=ODfdinlVxItEhRhh4thOGA2kc4+u4gtJF9GT+/cSdEI=;
+ b=RTWCUGYF7PD62URvHN7vpzb8rsiuHfS8fmwSsu//KfilZhSqbgJnY8gZ2Fln4sZ5U88J7kx+F/He8/o2F3pJReek6ixyATEfB2Jz4bvPLKLVBj/8mdKQbAVkz6FTnGosVhjBieYKk6bxKu2wZUgDWpbvRudRzz+egOw67ZLjnoJTv4XWRMLw7zN4NsYZQfozKB4J7mR0k59czeGoO3svV/sWNPxXXU1WhL9bEGU4U5aOaMsRloWQbOM5A850L76Wzn9l8WpfklZ/lzyzUO8aMexqhKrzePNJdZqa9318Qun1fZMVYvTEUVgFDyU8meIJ/uCbzWxf/DimeQqTbycgiw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
+ header.d=nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=ODfdinlVxItEhRhh4thOGA2kc4+u4gtJF9GT+/cSdEI=;
+ b=AUdvjTu9Ixtc0K4Zxy+hr9QW1BtKpaSso99cwyQiC5846Ph4iR/DwwZONUJDfMGdVMUwqHunmeg8kK8LEtEQKbULFaYwlDIGIHenTl+O0WMyVEw9EUfDgtey4H1Pm+hGQffadFapEMjASVGXGrI3YZkowgiW3XeLU8FWhqF8OsB5NoCf1gNjMV5wpL+DTjNAko8XaB/0nkJKJZ7Blb4EODtdK7A59g7EEk/1z9RMYR8h+61BAAktZX/WFgoHQCTdU6JlbjUVjQciabgdKnhQfOTsgTpWYauhAnWiRKOp53OYu7pY5hMk1rBd739/XPtstdiWNDu6lhJlfdjJN0p0LQ==
+Received: from GV2PR04MB12019.eurprd04.prod.outlook.com
+ (2603:10a6:150:30c::14) by PAXPR04MB8784.eurprd04.prod.outlook.com
+ (2603:10a6:102:20f::23) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.315.11; Wed, 12 Aug
+ 2026 02:49:08 +0000
+Received: from GV2PR04MB12019.eurprd04.prod.outlook.com
+ ([fe80::ed75:bac1:2554:5cbe]) by GV2PR04MB12019.eurprd04.prod.outlook.com
+ ([fe80::ed75:bac1:2554:5cbe%4]) with mapi id 15.21.0315.012; Wed, 12 Aug 2026
+ 02:49:08 +0000
+From: Hongxing Zhu <hongxing.zhu@nxp.com>
+To: Rudi Heitbaum <rudi@heitbaum.com>, Lucas Stach <l.stach@pengutronix.de>,
+	Frank Li <frank.li@nxp.com>, Sascha Hauer <s.hauer@pengutronix.de>
+CC: Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	=?iso-8859-2?Q?Krzysztof_Wilczy=F1ski?= <kwilczynski@kernel.org>, Manivannan
+ Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, Bjorn Helgaas
+	<bhelgaas@google.com>, Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley
+	<conor+dt@kernel.org>, Fabio Estevam <festevam@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"imx@lists.linux.dev" <imx@lists.linux.dev>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH 2/3] PCI: imx6: Use the external clock as REF_CLK when
+ needed for i.MX8MQ
+Thread-Topic: [PATCH 2/3] PCI: imx6: Use the external clock as REF_CLK when
+ needed for i.MX8MQ
+Thread-Index: AQHdInKVgAgx4tMI9UOi2+V/pxTl57aZwjFw
+Date: Wed, 12 Aug 2026 02:49:08 +0000
+Message-ID:
+ <GV2PR04MB12019D0F84B4357DF2403B2C68CDC2@GV2PR04MB12019.eurprd04.prod.outlook.com>
+References: <cover.1785669457.git.rudi@heitbaum.com>
+ <563f057f26b1147a79392509b35dcb7f18113ba9.1785669457.git.rudi@heitbaum.com>
+In-Reply-To:
+ <563f057f26b1147a79392509b35dcb7f18113ba9.1785669457.git.rudi@heitbaum.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nxp.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: GV2PR04MB12019:EE_|PAXPR04MB8784:EE_
+x-ms-office365-filtering-correlation-id: 63ad32f5-ee06-440a-9ab0-08def81c4822
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam:
+ BCL:0;ARA:13230040|23010399003|19092799006|7416014|366016|1800799024|376014|38070700021|5023799004|11063799006|10067099003|56012099006|4143699003|18002099003|22082099003;
+x-microsoft-antispam-message-info:
+ FdgKTMCYu2ziYE3VjOrNdFmcWgbxOnnY2Arwd+k5AtvTM+ekD6WeUEC46lWj1SmaZsCQkbMO9YeQsfm7ZWhEFR5iTcPJXfdnY1PlQMYqwvEFIT/Ld3x7i4mMI4jd6l25LscEBen5EfwGdmoe4KjjruG2tJM1uObCYwcsDi7OS/uzc2bowSQZMFOS9pJk4hgCA9fyiAlh95DiT4nq9RyZvdXNSqJ4dXcq3yyOyf0Hc3+f2zE46cBttO5FwlAypvg0cipMzYE57c9tL4p3z5jFuHLpg7YE4DHI2DXf1UFkWdVR+BuKHSrFANBqmWlZQsFet5Ft7+ZmIfCQLMnZ9nP03QeqBbcTUYySkansgscr1vA0dobmujzb1O9xvZOsZZrS1cJxY/NR035BhRjRmXYQJ9POFcc4XWfZdVj3kJ+BtKDIhEwmq2y8A+Aj/o7up/NgEUNurTo1JHFXVUXlLoQBRWERaoyMmD7kUjTdrERkdYkzaK1JUu8yldzbFkGXiONre7i//C7OPPOYVMFfeJ3BEIp1Jq4Ak8yl2SOcGbnauBPEBr7joXD8hDm6yGpGoBRp9ZqFvvAfTP2/navYGylb94jI26YTm1LIBCtq1FUqZFrItuJcFU2jhSZyUq1bFp05Z7dkviHi9cu+OGxrI9oFNlxyK+ABteyKbhfIqHpcfys2b43OtJ5S+9CSiL6ACvHnPJK3JCmyW13iz094n2/ybdyaYVTRDryCZxO15mMStmY=
+x-forefront-antispam-report:
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:GV2PR04MB12019.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(19092799006)(7416014)(366016)(1800799024)(376014)(38070700021)(5023799004)(11063799006)(10067099003)(56012099006)(4143699003)(18002099003)(22082099003);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?iso-8859-2?Q?dgYw5lDsDW1AjqR2WRQMk7WYFnDkoke25d7I3ebamH1MRxTyoEQYF7gy6M?=
+ =?iso-8859-2?Q?IK4OoNYhpPiDm1bxzVVuFh8L/18r22BduY6kF2o84hrSJxYgE0ii22m/Up?=
+ =?iso-8859-2?Q?dvveKCyD7EFMJWWG4NxzclMeXDPIhYWQmC78o9UV/IF8Gvi/5RK0kRA6TL?=
+ =?iso-8859-2?Q?ijT5PgVUCO6oCXKnxPisjY8FlYomudeiLfza583ahV68PJmRqUuFvvRICO?=
+ =?iso-8859-2?Q?3P19IdU4JeSHz7vDkArx7kdVzJAJWmAJCx0o54kTMKFrUFGZmfrIC3LdOk?=
+ =?iso-8859-2?Q?C7YdrePZEuzzrbJplh00z4vFWqD5A3ev+iEf9mCc/2mfpuaBHkdTrhS005?=
+ =?iso-8859-2?Q?U7264iESj/EJ0M+n0HiYqHzMl7R5jLstUcn1j0GfmXBleh+Ih39MWyBjFA?=
+ =?iso-8859-2?Q?OmgemJaknX70tTDh8gq43RYTjbVeAgfbSQWioMc52zar4lOuZ28NB8PDzq?=
+ =?iso-8859-2?Q?Cwqih0tudtVHfFgERWNuiBY5KOHyN4wKomBJsxbRMrYH+/cjVo0znB2f1i?=
+ =?iso-8859-2?Q?6D59XVDTw29SZs0KysRlqIXr0S23v47XJfFPCoZkQtXvSfqdBNG8jySBbZ?=
+ =?iso-8859-2?Q?2CUOgTpYB/VnNx55k+BZSx2R2vBnYBTX6KalPyegsHB7olFf/B3iJbHrDX?=
+ =?iso-8859-2?Q?0Wvri94o3N6PpxzZnpvtX/TvciQ6yulz5TMhZvA9DjcD+4LpvECNMYnS3O?=
+ =?iso-8859-2?Q?SoZAoxzD7VjsASN3i6NTOmb5yK1D7fCrCHzPE4LFIlgaaRnlsrNGxWKiEf?=
+ =?iso-8859-2?Q?7XmJp9N7+1WmF3mJKDSxHMjS+Nlec3vrBJQeUT24WFzFwG5LWeQijjt7NS?=
+ =?iso-8859-2?Q?oI2QeIGewNlUen/AOkffXeZkt0CE4rdSP8ODUyCeDoGGCKMaLbqAF21MlH?=
+ =?iso-8859-2?Q?uXBnPBeYpuEvJyrYzOEmfgPTn2r1KExtcNuzodJBrldJgPNwIpLtBwamdS?=
+ =?iso-8859-2?Q?Zn3F3PVONA+E5WrqLd7NK/LRk2NcvU7eic+isvQpIgkP1beBFCpfLkc9VJ?=
+ =?iso-8859-2?Q?tuc/6zgNAwmqmP9fR1iafCvbXsl0wOQ9S7TreZrAr/I0EgnGICUPrIETSv?=
+ =?iso-8859-2?Q?KhfN1p6G0LyO97upDOiGsWushY6cyWFCII6s6XPiReMWIqlsg076VUPjGz?=
+ =?iso-8859-2?Q?ZRsUcjrxfhdZ2bWXC1WGFgc4OF38Zj3hbtO0Mdq7R4xu/ElIVaaRTHB4A3?=
+ =?iso-8859-2?Q?/CQd6gs+wXaCksZqH2WoiQQNeNlHEmph92OHZAhefIL5YoY89AkVQI4Njg?=
+ =?iso-8859-2?Q?tQRuIc9+fAApM3pzruPwkN5bpNh3NG9GXxWydlLLxrh9Mck21MrpeawcCL?=
+ =?iso-8859-2?Q?vSd8mgwb8jwx3rjALqFaYNZRURgJFUWihresOyOmRXt2muMCAoA0/LyEmS?=
+ =?iso-8859-2?Q?hhCCC7+i0FE86AvzdyHSU0nM4u2WbG74YeVpAR5I/lNiVLvpkCHiAjYUqj?=
+ =?iso-8859-2?Q?Sv/++pAVdn7rsZIqf0B215VBU5XzcxCWvohNTZ+h/V/F3PAMH5eaaFVgCZ?=
+ =?iso-8859-2?Q?+ra7Ox1Jyb2t75EFzWn48mesnRthoyfiPppyB/yGC0ce2Wh/TPqsjFVutO?=
+ =?iso-8859-2?Q?JzKUhc1+aPVg2UnxJHM06ddZkDm9eyPOm6TCuZ0guEbBjiPEc0xHU/lS07?=
+ =?iso-8859-2?Q?/xqp/PFPuXhSH3h3Aa07Yib10jRKWWXN4+WfshqNCq9d42ZJ2Se3479k/B?=
+ =?iso-8859-2?Q?NLLIK/6wj71+wLCjYjra17kmaTSxwRyxwfXspjJ4uR8LCSHvRJNH1HFcUU?=
+ =?iso-8859-2?Q?pbJa4dZMdCpiegNQDnSjzgVBskavCGPZz+HRo0p0oUmUJG?=
+Content-Type: text/plain; charset="iso-8859-2"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-OriginatorOrg: nxp.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: GV2PR04MB12019.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 63ad32f5-ee06-440a-9ab0-08def81c4822
+X-MS-Exchange-CrossTenant-originalarrivaltime: 12 Aug 2026 02:49:08.5707
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: Wq/XAcf99VBVO71xMHemT4WbPN67WKg887uxnQIsoFwIPY1QhHkQO+HnFLaSwpKGivoo+Ll6FQu9CoFbudaqfg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PAXPR04MB8784
 
-pci_find_bus() iterates over the list of PCI root buses using
-pci_find_next_bus(). This helper acquires pci_bus_sem, retrieves the
-next bus and drops the lock before returning the pointer to the caller.
+> -----Original Message-----
+> From: Rudi Heitbaum <rudi@heitbaum.com>
+> Sent: Sunday, August 2, 2026 7:32 PM
+> To: Hongxing Zhu <hongxing.zhu@nxp.com>; Lucas Stach
+> <l.stach@pengutronix.de>; Frank Li <frank.li@nxp.com>; Sascha Hauer
+> <s.hauer@pengutronix.de>
+> Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>; Krzysztof Wilczy=F1ski
+> <kwilczynski@kernel.org>; Manivannan Sadhasivam <mani@kernel.org>; Rob
+> Herring <robh@kernel.org>; Bjorn Helgaas <bhelgaas@google.com>;
+> Krzysztof Kozlowski <krzk+dt@kernel.org>; Conor Dooley
+> <conor+dt@kernel.org>; Fabio Estevam <festevam@gmail.com>; linux-
+> pci@vger.kernel.org; devicetree@vger.kernel.org; imx@lists.linux.dev; lin=
+ux-
+> arm-kernel@lists.infradead.org; linux-kernel@vger.kernel.org;
+> rudi@heitbaum.com
+> Subject: [PATCH 2/3] PCI: imx6: Use the external clock as REF_CLK when
+> needed for i.MX8MQ
+>=20
+> i.MX8MQ has two PCIe REF_CLK sources: an off-chip oscillator and the
+> internal PLL. The driver unconditionally selected the oscillator, which i=
+s what
+> the
+>=20
+> 	/* TODO: This code assumes external oscillator is being used */
+>=20
+> comment refers to. Boards wiring an oscillator to the pad describe it as =
+the
+> "pcie_bus" clock, but nothing in the driver looks that clock up by name, =
+so it
+> does not select anything.
+>=20
+> Reuse the generic enable_ext_refclk flag, set when an "extref" clock is
+> supplied, to select between the two, as is already done for i.MX95 in com=
+mit
+> d8574ce57d76 ("PCI: imx6: Add external reference clock input mode
+> support").
+>=20
+> Signed-off-by: Rudi Heitbaum <rudi@heitbaum.com>
+Sorry for the late reply.
 
-pci_find_bus() then uses this pointer to check the domain and traverses
-the child buses via pci_do_find_bus() without holding the pci_bus_sem
-lock.
+The code changes look good to me.
 
-If a PCI bus is concurrently removed for example via hotplug between
-loop iterations, the from pointer passed back into pci_find_next_bus()
-becomes stale, leading to a user-after-free when dereferencing
-from->node.next. Additionally, traversing the bus tree without holding
-the lock is a race condition.
+However, I'm concerned about backward compatibility. This patch changes the
+default REF_CLK source from external oscillator to internal PLL when no
+"extref" clock is specified, which could break existing i.MX8MQ boards.
 
-Fix this by iterating pci_root_buses list directly using
-list_for_each_entry() inside pci_find_bus() while holding the
-pci_bus_sem read lock for the entire duration of the search. This
-ensures the list and tree structures cannot change while being
-traversed, eliminating the use-after-free.
+If the dt-binding maintainers approve this ABI change.
+Acked-by: Richard Zhu <hongxing.zhu@nxp.com>
 
-Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
-Signed-off-by: Mohamad Raizudeen <raizudeen.kerneldev@gmail.com>
----
- drivers/pci/search.c | 20 +++++++++++---------
- 1 file changed, 11 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/pci/search.c b/drivers/pci/search.c
-index e3d3177fce54..f50e83061b76 100644
---- a/drivers/pci/search.c
-+++ b/drivers/pci/search.c
-@@ -142,17 +142,19 @@ static struct pci_bus *pci_do_find_bus(struct pci_bus *bus, unsigned char busnr)
-  */
- struct pci_bus *pci_find_bus(int domain, int busnr)
- {
--	struct pci_bus *bus = NULL;
--	struct pci_bus *tmp_bus;
-+	struct pci_bus *bus;
-+	struct pci_bus *tmp_bus = NULL;
- 
--	while ((bus = pci_find_next_bus(bus)) != NULL)  {
--		if (pci_domain_nr(bus) != domain)
--			continue;
--		tmp_bus = pci_do_find_bus(bus, busnr);
--		if (tmp_bus)
--			return tmp_bus;
-+	down_read(&pci_bus_sem);
-+	list_for_each_entry(bus, &pci_root_buses, node) {
-+		if (pci_domain_nr(bus) == domain) {
-+			tmp_bus = pci_do_find_bus(bus, busnr);
-+			if (tmp_bus)
-+				break;
-+		}
- 	}
--	return NULL;
-+	up_read(&pci_bus_sem);
-+	return tmp_bus;
- }
- EXPORT_SYMBOL(pci_find_bus);
- 
--- 
-2.53.0
+Best Regards
+Richard Zhu
+> ---
+>  drivers/pci/controller/dwc/pci-imx6.c | 9 +++++++--
+>  1 file changed, 7 insertions(+), 2 deletions(-)
+>=20
+> diff --git a/drivers/pci/controller/dwc/pci-imx6.c
+> b/drivers/pci/controller/dwc/pci-imx6.c
+> index dcdeba1856f7..5a350b458782 100644
+> --- a/drivers/pci/controller/dwc/pci-imx6.c
+> +++ b/drivers/pci/controller/dwc/pci-imx6.c
+> @@ -445,11 +445,16 @@ static int pcie_phy_write(struct imx_pcie *imx_pcie=
+,
+> int addr, u16 data)
+>=20
+>  static int imx8mq_pcie_init_phy(struct imx_pcie *imx_pcie)  {
+> -	/* TODO: This code assumes external oscillator is being used */
+> +	bool ext =3D imx_pcie->enable_ext_refclk;
+> +
+> +	/*
+> +	 * Select the off-chip oscillator as REF_CLK when an "extref" clock is
+> +	 * supplied, otherwise fall back to the internal PLL.
+> +	 */
+>  	regmap_update_bits(imx_pcie->iomuxc_gpr,
+>  			   imx_pcie_grp_offset(imx_pcie),
+>  			   IMX8MQ_GPR_PCIE_REF_USE_PAD,
+> -			   IMX8MQ_GPR_PCIE_REF_USE_PAD);
+> +			   ext ? IMX8MQ_GPR_PCIE_REF_USE_PAD : 0);
+>  	/*
+>  	 * Per the datasheet, the PCIE_VPH is suggested to be 1.8V.  If the
+>  	 * PCIE_VPH is supplied by 3.3V, the VREG_BYPASS should be cleared
+> --
+> 2.53.0
 
