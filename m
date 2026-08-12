@@ -1,75 +1,120 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA2B6345EDD
-	for <linux-pci@vger.kernel.org>; Wed, 12 Aug 2026 19:56:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B088E2DEA7B;
+	Wed, 12 Aug 2026 19:57:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786564605; cv=none; b=o2dWu8juXhMQqqunptKcFWLiNBbCECoipcDuGDfIl44dzWbXgYEukTzZbHPh/nveFiDmrnuO8h2/NmPeJ30z7iuj897SFnZ99o6ViPTMcfUFDXXXJWl6a3Q4t9Bmn2jlwLY4enIvUwgQ2/98pjkOPdQTeH5LG7GUsdsspipKITA=
+	t=1786564665; cv=none; b=fVLGj/tLC+xaGOiqd6UTwNzOhtgFJE+AEZsfsNRcn7X8ZFeNVDKQoXQMiXs4j4FmtBbIBBTn0NXPa6pVXISwlzyGPTGsbkq1uNk12meZtfAtqUbnjrK/czAERfuffw0R7m9AoGJeCz8uXfKJqJtaGmpYEzVsP/yjc0WNiBOku7k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786564605; c=relaxed/simple;
-	bh=Lj46nO8gk4wR4wgDl7pdJxE9rj4hp6cnYU03iloW+ss=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=lewmJIzdpSXG7gSlR+9szdALlvQ8xAZ6aeH85/4UqucBLchmQ9YxwGqqp3KFvbIljRJ/lzSgLxu8uW1YuKBAEJwqlu+WQOgVQoEXE8plSBvG6+Wbxijw0AFSaqifQUmjFM6zA++L305hyNSWH18YNDUtDPwGfsqKUPiHovWMl/4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=D1La/WXy; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1786564665; c=relaxed/simple;
+	bh=teSbcK8YfazPkNdIbehrOFLgujsO4hQooFuTPtYQV4s=;
+	h=Mime-Version:Content-Type:Date:Message-Id:Subject:Cc:To:From:
+	 References:In-Reply-To; b=uqXzmOGT/BnlvauFsmyxuFVplfpNBrzJaSpFvKhNWKfE9qqw2XOcX9k4siIcmRdAOKxhdZ9fkdb9rd0rrw+Q3I7Q538hKgt2t6NHvgbj+l9NOGIFrJmPRyym40SlTBcJbfYlQxbOqf8qRl2gI/SVvyU6RTeyKebIq9mIkA7vN5g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=M/GK8mPF; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="D1La/WXy"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 529001F000E9;
-	Wed, 12 Aug 2026 19:56:44 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="M/GK8mPF"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D60061F000E9;
+	Wed, 12 Aug 2026 19:57:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786564604;
-	bh=Lj46nO8gk4wR4wgDl7pdJxE9rj4hp6cnYU03iloW+ss=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=D1La/WXySOc6Gpt+tp5Rjzh2Xya7NIWle1vQPIhc0OZyV18uos3E1Q52DJBGgCFuL
-	 hjul1w7hFR6cPOwMgcUKJeWspV/gW2579A+3+Y0jjoF9xWZNSSLLkydTEWPUpiIXkv
-	 qqZJJ6N3HHdL7wAonIXM7qyPeLc7yRN6l0POgiJc9K9wlcIYcyTI2+S8guWDtAJdWe
-	 d0rMEkE/y3GGs+hzbQaE/dcC2Ds0V/4kjUyxH5gBgkDQ8MZB+wTTsjv4YbJYSS1A1g
-	 4Mi5eXZIFQCgOb05zgHaGLEVfU2AyJo6L7Qv6psK8G3LCd4ChA/o33ufk1i6VBTMoY
-	 Uz5S17AtCImug==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 3/5] rust: pci: make Vendor::from_raw() public
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Maurice Hieronymus" <mhi@mailbox.org>
-Cc: "Alexandre Courbot" <acourbot@nvidia.com>, "Danilo Krummrich" <dakr@kernel.org>, linux-pci@vger.kernel.org, dri-devel@lists.freedesktop.org, ojeda@kernel.org
-In-Reply-To: <20260812-b4-rust-pci-edu-driver-v3-3-5d0b5594e52b@mailbox.org>
-References: <20260812-b4-rust-pci-edu-driver-v3-0-5d0b5594e52b@mailbox.org>
- <20260812-b4-rust-pci-edu-driver-v3-3-5d0b5594e52b@mailbox.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 12 Aug 2026 19:56:43 +0000
-Message-Id: <20260812195644.529001F000E9@smtp.kernel.org>
+	s=k20260515; t=1786564664;
+	bh=A+Wk3BV8+0nSVtbUop929wSiFkTbjDQfpbfypmbDngc=;
+	h=Date:Subject:Cc:To:From:References:In-Reply-To;
+	b=M/GK8mPFPE/jDMDxhvQOmPlOvr+iX6jzAywBy61SEJMc/iaVgSccLC4+VXJyXFu9k
+	 rG0GUIo8CYlFCN7GvFVrwVVICS2qfCSiga7yriYsKyKK8kkFDwJbExNtSghCvsgsOs
+	 9lmXkNASLO+jBpwC/A4k090hkyv+zQS1hIfNRZy6EQY5p6XfW7BjOTXQMJpDGdCTSc
+	 NziONSGA0EDr+j0tXRShP2M6HwQb6V3t/0zkgQZvi0ooYauL8XlcibIcWGaorgrUg/
+	 LNSagEPlCPftQFRy/5aacp6O9NbYE6o8+e3tuwP0BLdsyHFOMpHugIS2HdFoXwdOTn
+	 Jfx8KnKYUGGMQ==
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Wed, 12 Aug 2026 21:57:38 +0200
+Message-Id: <DKN8BDODRXVT.RDQQIJX5316G@kernel.org>
+Subject: Re: [PATCH v2 1/5] rust: pci: convert IrqVectorRegistration to a
+ lifetime-managed owning type
+Cc: <bhelgaas@google.com>, <kwilczynski@kernel.org>, <aliceryhl@google.com>,
+ <daniel.almeida@collabora.com>, <ojeda@kernel.org>, <boqun@kernel.org>,
+ <bjorn3_gh@protonmail.com>, <lossin@kernel.org>, <a.hindborg@kernel.org>,
+ <tmgross@umich.edu>, <tamird@kernel.org>, <acourbot@nvidia.com>,
+ <work@onurozkan.dev>, <jhubbard@nvidia.com>, <ttabi@nvidia.com>,
+ <apopple@nvidia.com>, <ecourtney@nvidia.com>, <shashanks@nvidia.com>,
+ <zhiw@nvidia.com>, <driver-core@lists.linux.dev>,
+ <linux-pci@vger.kernel.org>, <rust-for-linux@vger.kernel.org>,
+ <linux-kernel@vger.kernel.org>
+To: "Gary Guo" <gary@garyguo.net>
+From: "Danilo Krummrich" <dakr@kernel.org>
+References: <20260811233952.3000968-1-dakr@kernel.org>
+ <20260811233952.3000968-2-dakr@kernel.org>
+ <DKN3U000UGRL.2MOXT25O11UE0@garyguo.net>
+ <DKN5C359PZP3.2BPH5HLM9H0HY@kernel.org>
+ <DKN6203R3WD1.1NLN19VVBZJO9@garyguo.net>
+ <DKN6TRRJ2OY3.2U6M6TQDNSM27@kernel.org>
+ <DKN74N3E3NUK.1I4LFP3LLH5AM@garyguo.net>
+In-Reply-To: <DKN74N3E3NUK.1I4LFP3LLH5AM@garyguo.net>
 
-> `Vendor::from_raw()` is currently `pub(super)`, so a Vendor can only be
-> obtained through the named constants generated from the
-> `PCI_VENDOR_ID_*` defines in `<linux/pci_ids.h>`. A driver therefore
-> cannot match a device whose vendor ID has no symbolic name.
->=20
-> Such devices exist. QEMU's "edu" educational device and the legacy
-> qemu/Bochs stdvga both use vendor ID 0x1234, which is not registered in
-> `pci_ids.h`. Per the policy stated at the top of that header, IDs are
-> only added there when shared between multiple drivers; a single-driver
-> ID is expected to be open-coded in the driver instead. C drivers already
-> do this -- see `drivers/gpu/drm/tiny/bochs.c`, which matches with a bare
-> ".vendor =3D 0x1234".
->=20
-> The Rust abstraction has no equivalent escape hatch: there is no public
-> way to express an unregistered vendor. Make `Vendor::from_raw()` public
-> (and const, so it can be used in the const device-ID tables built by
-> `pci_device_table!`) so that drivers can construct a Vendor from a raw
-> ID, matching what C drivers can already do.
->=20
-> Reviewed-by: Gary Guo <gary@garyguo.net>
-> Reviewed-by: Onur =C3=96zkan <work@onurozkan.dev>
-> Signed-off-by: Maurice Hieronymus <mhi@mailbox.org>
+On Wed Aug 12, 2026 at 9:01 PM CEST, Gary Guo wrote:
+> On Wed Aug 12, 2026 at 7:47 PM BST, Danilo Krummrich wrote:
+>> On Wed Aug 12, 2026 at 8:11 PM CEST, Gary Guo wrote:
+>>> Well, I'd expect some drivers want to do `.vector(v).expect()` rather t=
+han just
+>>> propagating the error if `v` is a constant that is less than `min_vecs`=
+..
+>>
+>> This is nothing we want drivers to do; this API is only ever called from=
+ a
+>> fallible context anyway and propagating costs nothing, but on the other =
+hand, if
+>> the driver gets it wrong, we'd BUG() the whole kernel for no value.
+>
+> Well, if you ask for an interrupt and got one, you'd better got one! If t=
+he case
+> is actually "we'd BUG() the kernel", then it probably should because some=
+thing
+> is catastrophically wrong. I'd even consider `unwrap_unchecked` to be val=
+id
+> there and in my view `BUG()` is less damaging then UB.
 
-Sashiko has reviewed this patch and found no issues. It looks great!
+If the driver calls vector().expect() on an index that is actually out of
+bounds, because someone made a mistake, e.g. because min_vecs changed and p=
+eople
+forgot to update the code, then nothing went "catastrophically wrong" to a =
+point
+that we need to BUG() the whole kernel.
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260812-b4-rust-pc=
-i-edu-driver-v3-0-5d0b5594e52b@mailbox.org?part=3D3
+> I don't like the fact that we propagate error code because we can. Propag=
+ating
+> error comes with a cost: it's one extra control flow that developer needs=
+ to
+> consider; more code is generated because the destructors that's currently
+> available still needs to be executed; and the code will have 0% coverage =
+because
+> it'd never occur as
+>
+>     /// `dev` has an allocation of `count` interrupt vectors
+>
+> is the type invariant of `IrqVectorRegistration`.
 
+I do not disagree; those points are all valid, but I think it is a case by =
+case
+question.
+
+For drivers and in an already fallible cold path, I don't see a lot of valu=
+e in
+compromising on robustness against human mistakes for those reasons.
+
+Quite some drivers are poorly maintained and patches don't receive a lot of
+review before they are thrown in; Rust has a chance to significantly compen=
+sate
+the downsides of a monolithic kernel by increasing the robustness of this
+weakest part.
+
+If we encourage drivers to use accessors that potentially end up in BUG() f=
+or
+cases where it doesn't provide significant value, we may also diminish the
+potential for additional robustness.
