@@ -1,57 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 93AF931E85B;
-	Thu, 13 Aug 2026 06:17:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B972E31E85B;
+	Thu, 13 Aug 2026 06:28:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786601857; cv=none; b=gebhxlwvy5H5M3CkVGCUWaXrLOzFFiDIEj07gPXvXUq0hV4lU5BM4GgVMrcaOkXZz+EKjWg0bxComjseiLj3819uHDF9Nn3Z6J6Sv4OJ15tZivbc5V67EhCnFQsYmfuoIngb3IiorQVXy+o5+M1m9Fibhg5OrfwFfY394oZpBZw=
+	t=1786602507; cv=none; b=W0TuqYSHf2J2pqzRwGhYFf8D80Wev5rSu1rblgRH8EnKIv3wDGRrnq54F6SL0GwwmppAlInAo3gLhPOsge7Hpm0sDdUD45vIBbPSaCbcRqkD8FekSGMTFOQn7JGpFvyX5OTsMi7eOJFf6gO+h4LKLFn/Ugu5qZEjobTFD2nn628=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786601857; c=relaxed/simple;
-	bh=z9G4N5ySez6K/OvcDFMO2s/RhZrVwmETPeCrg/mdxC0=;
+	s=arc-20240116; t=1786602507; c=relaxed/simple;
+	bh=6Hwm7P4l8Z1WH7Ocay+xORJ2xHNmnu32QzG4+Xq8hQM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=uBO7TdCLLb8kG6aPKfI+MAjXjiP1IvIqGazpU622zt0gGQNVcStwPb60SZC2UWvAoqaXPJUcTkGpXUWveHE1XvewN3EeHtzwUrsNYc20SeVpTyFpaDSovjprNnD16c45h1hEG4GXbDmcVUDnYeVg7Rflli+r79tpIkB+tzlRBsU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UKMwQCK2; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=bHY5aknVYzaqNZgbgJNf4WGRy0xKOmCIotfLIkJqCdA9gUJhH2lkXlPPOCPKKhb0xNB6ukDKwCtgquvEHwmEtAkwt1PZ/0jCzxYj9a/u4goBVqRZh8K1CsDmMXduAKdS3y/wKR2f33ehj3txmEp1q3dFF5JoZks1g3VasNXMF/4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gmzBUgJ/; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UKMwQCK2"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 33E111F00A3A;
-	Thu, 13 Aug 2026 06:17:23 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gmzBUgJ/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E3F911F000E9;
+	Thu, 13 Aug 2026 06:28:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786601856;
-	bh=3hkGajI2L3VCIaYqx24q5REez+3Wl5xg9c6GVH/Friw=;
+	s=k20260515; t=1786602506;
+	bh=fZplp1Wn161lujFYQm2X+2cJfPSiCPrRfF7u2+BkILs=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=UKMwQCK28TSILWRtZYIiOcDLDZRvrYVvr/6WUGonpE2gXO5sNj35XDxJbbXJaZfVf
-	 TQ3isjzHk5zA44MkIUI7rf31xc96ZlPoM29T6vDCVLY5XSo3+bi4CXnmSQnLtGw5LR
-	 l9eUDYCo81v18wDWy3hLv4BuLcEO4693tIm2NyYTz1BHVm9UchV8r3znS6zj0kbwzx
-	 suKUgSmAmTepJhXFbvH2zhssyQebFtQvBZjH2GwlqUVbGWRQFnVCyiYtxadBubaTPz
-	 JnLWT7alQeMWPuhaB8sD3fhgHgzTKVcvx6WOH5IjXYGoSL/BeX/EVklUkktbmuizf0
-	 Sg1WZcz2PdcVw==
-Date: Thu, 13 Aug 2026 08:17:20 +0200
+	b=gmzBUgJ/Dgk1sfbesPOdtk3+8CwmpQGADItPiRgPd0nxXVsUrK4wewGQbDY79nm+K
+	 Fm3nvE4kGAnVYS6hOT5GER83FGoW4svj6w1wqw9uT42KfSQ0tcM5om7SN4NJV+5jVt
+	 GDgr97Mfsv7Xeb1u9sfy6P/dOJUyfjlHGsED7KpQm/1ifrvR6xmQ4AZHshlZGW0mim
+	 N1tcg4FZYOPyvgbR1w6kifmp/+gVafH2Z2LCQ9TkudsJafO8e71kxYVpj1ukVv+6b6
+	 yPg99H+wXTQOcwqJ2OiJFHKOAq1iM8qD7C6i2PwSeNk1oGsgja7JTlir/7JzFCoDXv
+	 JeLi4PaZP7RKg==
+Date: Thu, 13 Aug 2026 08:28:18 +0200
 From: Manivannan Sadhasivam <mani@kernel.org>
-To: Herve Codina <herve.codina@bootlin.com>
-Cc: Richard Cheng <icheng@nvidia.com>, Andrew Lunn <andrew@lunn.ch>, 
-	Rob Herring <robh@kernel.org>, Saravana Kannan <saravanak@kernel.org>, 
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>, 
-	Danilo Krummrich <dakr@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	David Rhodes <david.rhodes@cirrus.com>, Richard Fitzgerald <rf@opensource.cirrus.com>, 
-	Charles Keepax <ckeepax@opensource.cirrus.com>, Linus Walleij <linusw@kernel.org>, Len Brown <lenb@kernel.org>, 
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Daniel Scally <djrscally@gmail.com>, 
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>, Sakari Ailus <sakari.ailus@linux.intel.com>, 
-	Davidlohr Bueso <dave@stgolabs.net>, Jonathan Cameron <jic23@kernel.org>, 
-	Dave Jiang <dave.jiang@intel.com>, Alison Schofield <alison.schofield@intel.com>, 
-	Vishal Verma <vishal.l.verma@intel.com>, Dan Williams <djbw@kernel.org>, Ira Weiny <iweiny@kernel.org>, 
-	Li Ming <ming.li@zohomail.com>, Lizhi Hou <lizhi.hou@amd.com>, driver-core@lists.linux.dev, 
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, linux-sound@vger.kernel.org, 
-	patches@opensource.cirrus.com, linux-gpio@vger.kernel.org, linux-acpi@vger.kernel.org, 
-	linux-cxl@vger.kernel.org, Allan Nielsen <allan.nielsen@microchip.com>, 
-	Horatiu Vultur <horatiu.vultur@microchip.com>, Daniel Machon <daniel.machon@microchip.com>, 
-	Steen Hegelund <steen.hegelund@microchip.com>, Luca Ceresoli <luca.ceresoli@bootlin.com>, 
-	Thomas Petazzoni <thomas.petazzoni@bootlin.com>, stable@vger.kernel.org
-Subject: Re: [PATCH v10 08/10] PCI: of: Set fwnode device of newly created
- PCI device nodes
-Message-ID: <ir6y6vwejuqjpz3dx37xadojinvxniduzv5tycylnhidqs2ma7@5v5hy2vwv6qi>
-References: <20260717145147.823749-1-herve.codina@bootlin.com>
- <20260717145147.823749-9-herve.codina@bootlin.com>
+To: Mohamad Raizudeen <raizudeen.kerneldev@gmail.com>
+Cc: bhelgaas@google.com, alex@shazbot.org, skhan@linuxfoundation.org, 
+	jkoolstra@xs4all.nl, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] PCI: Fix 32-bit config write in Intel RP MPC ACS quirk
+Message-ID: <eph6rxwk6iyjze2vfzlqxsiisknc7baoq5f5hljpxbvixf6sah@zdi47j7zt3zy>
+References: <20260723171203.4892-1-raizudeen.kerneldev@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -61,30 +43,26 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260717145147.823749-9-herve.codina@bootlin.com>
+In-Reply-To: <20260723171203.4892-1-raizudeen.kerneldev@gmail.com>
 
-On Fri, Jul 17, 2026 at 04:51:43PM +0200, Herve Codina wrote:
-> Device-tree node can be created when CONFIG_PCI_DYNAMIC_OF_NODES. Those
-> nodes are created and filled based on PCI core information but the
-> fwnode device field is not set.
+On Thu, Jul 23, 2026 at 10:42:03PM +0530, Mohamad Raizudeen wrote:
+> The pci_quirk_enable_intel_rp_mpc_acs() reads a 32 bit DWORD from the
+> MPC register, sets bit 26 (INTEL_MPC_REG_IRBNCE), but it writes it back
+> using pci_write_config_word().
 > 
-> When later an overlay is applied, this confuses fw_devlink. Indeed,
-> without any device attached to the node, fw_devlink considers that this
-> node will never become a device. When this node is pointed as a
-> supplier, devlink looks at its ancestors in order to find a node with a
-> device that could be used as the supplier.
+> Because bit 26 resides in the upper 16 bits of the 32 bit register, a 16
+> bit write to offset 0xd8 completely drops the newly set bit. The quirk
+> logs that it is enabling IRBNCE, but the hardware never actually
+> receives the command.
 > 
-> In the PCI use case, this leads to links that wrongly use the PCI root
-> bridge device as the supplier instead of the expected PCI device.
+> Fix this by using pci_write_config_dword() to ensure the full 32 bit
+> value is written back to the hardware.
 > 
-> Setting the fwnode device to the device of the PCI device allows devlink
-> to use this device as a supplier and so, correct links are created.
-> 
-> Fixes: 407d1a51921e ("PCI: Create device tree node for bridge")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Herve Codina <herve.codina@bootlin.com>
+> Fixes: d99321b63b1f ("PCI: Enable quirks for PCIe ACS on Intel PCH root ports")
+> Signed-off-by: Mohamad Raizudeen <raizudeen.kerneldev@gmail.com>
 
-Acked-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Cc: stable@vger.kernel.org
+Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 
 - Mani
 
