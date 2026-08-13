@@ -1,365 +1,317 @@
-Received: from GVXPR05CU001.outbound.protection.outlook.com (mail-swedencentralazon11013002.outbound.protection.outlook.com [52.101.83.2])
+Received: from SN4PR0501CU005.outbound.protection.outlook.com (mail-southcentralusazon11021110.outbound.protection.outlook.com [40.93.194.110])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 401F836CDF3;
-	Thu, 13 Aug 2026 20:32:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.83.2
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29DAD3B0AE7;
+	Thu, 13 Aug 2026 21:40:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.194.110
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786653164; cv=fail; b=B9w+HuP5zUZnJexUeKtxFKpkkm8HZqCQ7bwkiw7FeH2rzQCrBSDA+Ub6z+4HgCglm2EA6pTotDoZ7z/Md3P+bYaUr0iHvg3UPlCRwiU8XY+B0ilJsdLOkt2636mj1GLUngQedaSLBTIo+Eh784uvpvHEc4H9oSdheLGFfGiLvIM=
+	t=1786657253; cv=fail; b=YjYPGm1ZEsfVt09ssLeTgCI+vVXQPvKhP/SZzIHv7Z3T4/7rgM+lo9hSDd2RzfTjDec8Y+cO7bzyG3EgIGLAlHesG6KqG8d5VyKnoosEXbhyOUZDiHwEgu1hDiukp2JgqQEWXNewloBv8azpqlMM9oXhlqc+xRezD1dUEntQ1E4=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786653164; c=relaxed/simple;
-	bh=7DE0qUEsM64GgwBTImcjup6V5F1kC/PkL+Xr1ewQhc4=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=obEOD5HfWy3pQt5zLSwUUqvsXXGmsBODiRVp8eY7iSynzCVqLedScBJGjeinKnIAbv06n1DtJSW12NYaC+okNy5jIDCkNcwq+Dztk7k/u/nf/oJ0/sRSywL9mzV7dlG+mvbySoLvjDc/wJfN1PzUF2IjoEtFkk+QICpdDv2MnsE=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com; spf=pass smtp.mailfrom=oss.nxp.com; dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b=hBzzwDtk; arc=fail smtp.client-ip=52.101.83.2
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.nxp.com
+	s=arc-20240116; t=1786657253; c=relaxed/simple;
+	bh=e/6EBbYDKz03fqinZGpcpDwiqDKlCIWM/yrpvavMCLA=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=RhOuz/Ym0iVtfnV8pVYnUgqIjlMrZneyzsZxWfXava+w8rNa/Mp+Quu7EhAG3aFfBMEwWvHRYr6TyZ0QZG6c07G8vWRTVkh/WnxCvotMq+d+RErougSTYAWlsR33soqie/cQ81gL8BBcPRK9yceR64Zs8I7IFwgrvPf5BuBSO8k=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=microsoft.com; spf=pass smtp.mailfrom=microsoft.com; dkim=pass (1024-bit key) header.d=microsoft.com header.i=@microsoft.com header.b=SgXBRW78; arc=fail smtp.client-ip=40.93.194.110
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b="hBzzwDtk"
+	dkim=pass (1024-bit key) header.d=microsoft.com header.i=@microsoft.com header.b="SgXBRW78"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=E+g8MLuoFmV4BNS8ULAc+gURkUvl0ISnpvCDsL8o9VDrXpoOA15Rqohu2U14j2jQuvWLPGGnency2fSMFKcjQfVPIAYKMeH84nngoiIlpq2j2Vs5Plom9UwwJBFAi1rFHQ5Ys8MKejXH1ZA6/AkohgnTaieE3pWLe+f1fjdErgjz+o1ctDO41/nWaZg7st/C30S/5e/7ZR1J7z8Ap/+1akbDi6e26WGvtmWIK6XZPmL+6hwn5va5XJ8tBLA54Jlhgn3go2RBalQSIgHC4Jc33tKGMgJ/lMqPySUnAqfVwO+OJYV2yvavn42RHyVgNy++d3QlmcdDUZOUoW/FP/z4tg==
+ b=t1Zzjd6C3W0saspAdahbO8tvJ9ud2LG2pxtDkN38fr+TLgk9ljRQCizfDUiwsNvGF+MJ27IM917jAhV/YoQVegPGyCVhP3i9nVQXmG7vGyDluAI2+/9y/nbvIGq6HrnBdlDSBWtSvBR84qFwAI2WeqX0UarapXL/BlGqlNEramZcK4V9VCBeJUyoiDRmdXjfmjoyS0spmqtPsOwh+q0bvRZPZU7MOmkOSL6XoeJF9PAqomcFP+0WbqDKRhvJ0kw1gLIx3XEUKAXoETykJqvsjwowK4QrKjSncwdNBaiXsHDB/askWyn4Eu3HYvXzbsif6gNZfQ3EM8mL7GEm7SqWVg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=IkbAita2qOKZ7jKjxoa2BV1QSGeDqunJ37P1KFsIWpQ=;
- b=CZzpdcOawlpcmThzOeVkkusl4bfeCopzHTGQuy/bGgZvbVKqZsSi2pG9TNA5FEto1Syyhpm3bCQQDLmVBjfFWd+TZjOUHDtWbg+IVTmDaQi0Iv9kst+8pdpb7AdZyqExZCArHEz2kkvqbLr/BgkNpKVCndxKdqtHK63rgys4tDlFzNwgouiDsshmCnOg0nip0T/McU7yG4ytd4SKZm7iOwSS+/0LvteoZNaeJE0K3NX1YzUyUeU0MguwmGPbjfh+zxUwrJR2/QInxF2ixEP7C6P/9pBn7Zaw3lSuXD6VoEZwWPBPnqK+jMM3Mlx8H58Y+hmUi8KjDm4ufyUirr58mA==
+ bh=Iso9rbTdPWot2xyIlj2eaFytS9x3AyWwJuJQY1HMk0s=;
+ b=AXGOyHd7Ys7kQKNmTG1PQprYgY4jC93oJieggGC92a6oH/7FHouIP/vKpQoThF8O4kYqTy7U98MbC1wuDRZ5GzoY5dc9B5TdRoJAi0mAMrG9tcYXHKSuyd5nUucbl/0u43hDQQAPxVQJ/6uWtkLszwPTmVmGqMybIjd1ksi1ruqRHhe0u9GswUXbB4JcfbGd7gG8HkRiauQVQ11saWfqq9SAg5sMVQlALxh085KIcoZ0nFJkz/l8Ohhqd4mUKxVC/ZaihJRWIPl1uERtSfV173tJZ16nR8VbaY80N1qzHnpkbvtl+Halw7iMfp/bvnMSLp//VA0LvfRSgaYOm1LO6g==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oss.nxp.com; dmarc=pass action=none header.from=oss.nxp.com;
- dkim=pass header.d=oss.nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=NXP1.onmicrosoft.com;
- s=selector1-NXP1-onmicrosoft-com;
+ smtp.mailfrom=microsoft.com; dmarc=pass action=none
+ header.from=microsoft.com; dkim=pass header.d=microsoft.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=IkbAita2qOKZ7jKjxoa2BV1QSGeDqunJ37P1KFsIWpQ=;
- b=hBzzwDtkkZ++G6ltPYmR+OGeC9j5TkgiYxDIpmTm3G9bC40fiZLnVAXCjzpm++yGRvjl/vYfNCNFYi3ZFNaSPZqqHSb4vqbVIfVsl8IkWHSGIAxatCjiMWvDOp4CHOlPUpNfklNcHPutKmCJbGih9S3BA57/Xe6STL3ex3lDV4lbEjMYYr4O3UD33yCgS1zWIHLjwgSzYejcq0kKKGgVF1+jPRIKpLCPqwXT3LxDa7R5i2D2iQG5H1zoc4kLw/n4rIJ+OC5rqg/nAAuLpFQ5kjNDTtsdhKwdKXdlEibNMmww2DPOE4ZLN1Q2V+XbZKy5V4yZ8ksDdJWwjjDkY7BJjg==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=oss.nxp.com;
-Received: from GV2PR04MB11799.eurprd04.prod.outlook.com (2603:10a6:150:2cf::9)
- by VI0PR04MB12303.eurprd04.prod.outlook.com (2603:10a6:800:326::19) with
+ bh=Iso9rbTdPWot2xyIlj2eaFytS9x3AyWwJuJQY1HMk0s=;
+ b=SgXBRW78PFiG0qBVSbCSX2X1gZj9DTZCXH9nuFYAB6S4KRtMmT2yjnRKTqrAWyZfapuj1I/j2k5By72fY06OJ+f+1Moy86Zfjnia99G28iA8qpcagXsOwhQj6S+Lif4BTm+9980FCx6PEUr5TgYJwG729uqEiO40xvR2/M2E3iM=
+Received: from SA1PR21MB6683.namprd21.prod.outlook.com (2603:10b6:806:4a4::6)
+ by SA1PR21MB6755.namprd21.prod.outlook.com (2603:10b6:806:4af::5) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.315.13; Thu, 13 Aug
- 2026 20:32:37 +0000
-Received: from GV2PR04MB11799.eurprd04.prod.outlook.com
- ([fe80::2146:83a2:5329:b7c]) by GV2PR04MB11799.eurprd04.prod.outlook.com
- ([fe80::2146:83a2:5329:b7c%7]) with mapi id 15.21.0315.014; Thu, 13 Aug 2026
- 20:32:37 +0000
-Date: Thu, 13 Aug 2026 15:32:27 -0500
-From: Frank Li <Frank.li@oss.nxp.com>
-To: Koichiro Den <den@valinux.co.jp>
-Cc: Manivannan Sadhasivam <mani@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Kishon Vijay Abraham I <kishon@kernel.org>,
-	Frank Li <Frank.Li@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Randy Dunlap <rdunlap@infradead.org>, Vinod Koul <vkoul@kernel.org>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Rob Herring <robh@kernel.org>, Niklas Cassel <cassel@kernel.org>,
-	Damien Le Moal <dlemoal@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
-	Marek Vasut <marek.vasut+renesas@mailbox.org>,
-	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-	linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
-Subject: Re: [PATCH v7 02/10] PCI: endpoint: Define endpoint DMA BAR metadata
- format
-Message-ID: <an4p20Akfc_4y4gq@SMW015318>
-References: <20260813063757.3131865-1-den@valinux.co.jp>
- <20260813063757.3131865-3-den@valinux.co.jp>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260813063757.3131865-3-den@valinux.co.jp>
-X-ClientProxiedBy: SA1PR02CA0003.namprd02.prod.outlook.com
- (2603:10b6:806:2cf::9) To GV2PR04MB11799.eurprd04.prod.outlook.com
- (2603:10a6:150:2cf::9)
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.315.9; Thu, 13 Aug
+ 2026 21:40:49 +0000
+Received: from SA1PR21MB6683.namprd21.prod.outlook.com
+ ([fe80::8bad:6294:8a07:fe18]) by SA1PR21MB6683.namprd21.prod.outlook.com
+ ([fe80::8bad:6294:8a07:fe18%6]) with mapi id 15.21.0315.008; Thu, 13 Aug 2026
+ 21:40:48 +0000
+From: Long Li <longli@microsoft.com>
+To: "wei.liu@kernel.org" <wei.liu@kernel.org>, Linux on Hyper-V List
+	<linux-hyperv@vger.kernel.org>, "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>
+CC: KY Srinivasan <kys@microsoft.com>, Haiyang Zhang <haiyangz@microsoft.com>,
+	Dexuan Cui <DECUI@microsoft.com>, Jonathan Corbet <corbet@lwn.net>, Shuah
+ Khan <skhan@linuxfoundation.org>, Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	=?iso-8859-2?Q?Krzysztof_Wilczy=F1ski?= <kwilczynski@kernel.org>, Manivannan
+ Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, Bjorn Helgaas
+	<bhelgaas@google.com>, "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>,
+	open list <linux-kernel@vger.kernel.org>
+Subject: RE: [EXTERNAL] [PATCH RFC 2/2] PCI: hv: Add vPCI device reset support
+Thread-Topic: [EXTERNAL] [PATCH RFC 2/2] PCI: hv: Add vPCI device reset
+ support
+Thread-Index: AQHdG8FlMURpOa52y0SiaFGkYVFQK7acoTlw
+Date: Thu, 13 Aug 2026 21:40:48 +0000
+Message-ID:
+ <SA1PR21MB6683A0687C14475889222AACCEDB2@SA1PR21MB6683.namprd21.prod.outlook.com>
+References: <20260724230844.3259741-1-wei.liu@kernel.org>
+ <20260724230844.3259741-3-wei.liu@kernel.org>
+In-Reply-To: <20260724230844.3259741-3-wei.liu@kernel.org>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+msip_labels:
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ActionId=b83fdbce-181a-403b-900d-56cb950488cb;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ContentBits=0;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Enabled=true;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Method=Standard;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Name=Internal;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SetDate=2026-08-13T21:40:32Z;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SiteId=72f988bf-86f1-41af-91ab-2d7cd011db47;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Tag=10,
+ 3, 0, 1;
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=microsoft.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: SA1PR21MB6683:EE_|SA1PR21MB6755:EE_
+x-ms-office365-filtering-correlation-id: 26cf5477-a428-4b19-07de-08def9838a30
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam:
+ BCL:0;ARA:13230040|23010399003|376014|7416014|1800799024|366016|38070700021|10067099003|7146999003|6133799003|11063799006|4143699003|7053199004|18002099003|22082099003|56012099006|3023799007;
+x-microsoft-antispam-message-info:
+ 9RkOctgXHL9MBxpqoBCNQkOx6o7zkeH0tqnG7HeLKACtyweCl0zvP+XD6xNyQuJql7+BF7PNKpPZzZIOGqL8et8P5oqHsxu6dwZMVru0lHzVH5hF4Oagm7dEn7X10X0bx4MuHz/XDQxUA5qi2vXxCRVgwPyy9kEKvhZ0PJUijHWF9qFaTkQqpUmh+dIDXunh/2d/K9CCPl38a0OtceyOmOdkBQTgkhelwNXnPniZStjdAC5RarjzPX93Q/9IDv+DAsr6foTZM8IDxrEDWn6jcjaWdWfLWMISPojC0TMig96zywqbOPdBDOwvcc8/nmkEfZO88y4B2zsCvNAjXUvf87xWl1prMCxPy5/H9cDLUGWt4xf23tByOpH0xCkYEKbJTN0/qQ53IFeoNCJschvdC6LLodc4bEyrLqsWuwEfnh5zA8iU9cWly4pwechWxpG8t5kn3RkDNJbvQ1F2HVoQJKGbFjPK0kHhzdZxDFjz+yUg18D7SMXRqaur1Ensl1D9dAX9QXIQhSz4porYKL72LQQzb1L7E8cTDbvZhwm9OyIU8b8e2XVwvqJOkq5508rDyiJX/RD+SGI616pH7StxabLLlu2+5sJ6lmmE+vuE0S9ceA9O03G829uUCaSLI0o38mXQIdbiiEAFD0+GKtGzviF6b7Eojml7G33MSxfXBf544cOf2TGz7SLngZbQpGNhxRB8zIXCL7mUqGrgxV+KlE/pw9FTZMam7qG7U4ecU9k=
+x-forefront-antispam-report:
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA1PR21MB6683.namprd21.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(376014)(7416014)(1800799024)(366016)(38070700021)(10067099003)(7146999003)(6133799003)(11063799006)(4143699003)(7053199004)(18002099003)(22082099003)(56012099006)(3023799007);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?iso-8859-2?Q?jmzHtT9rQsaKU+p0C6GHv3tPRZ7ZfVOWMPeMHiR2xQGbvHJENwEJpSSGLn?=
+ =?iso-8859-2?Q?CXp7By842MPONHh25u1McxvFqHyR3Rlt4PITCBWZpjagngYPUWNa0eZcmA?=
+ =?iso-8859-2?Q?72lhe90fVH0NG9zPKaaaO40Udv5ExZUH/vqcmAwIED9GY5oCSBGoIQkOwb?=
+ =?iso-8859-2?Q?EBHuXLWt8Y6LSIxX1O/uRaGx43nZKn0Drwjwv/jRj/9Ay7jsixQlczE4zH?=
+ =?iso-8859-2?Q?hzCSU6sw+ag6K4yRsr/PXAZPba29h7laEExOVhD2Tj4pDI8tvhIUCCv15a?=
+ =?iso-8859-2?Q?SE44rWz/IrHsnxx9QOFjNdSgGjYTdbI66HzcOAC9BJVV4N5PwBfmCbuxzK?=
+ =?iso-8859-2?Q?xMK44qNmwLlUpGRYaxIretGYIjvLyFoKmYA5H5fZ/rHBmTYk2ruifhw9nH?=
+ =?iso-8859-2?Q?4qVcHDaXX/ZSTvo4HLrtaQn4oqDWwW7jSh4keZQgmlyExSfzcjR4WK0FLO?=
+ =?iso-8859-2?Q?pcMnlDw4TTG/bm8Jb8A4k2CTPwjxgqg13TajVxwF9pQyLZOMTVXy/z6ass?=
+ =?iso-8859-2?Q?entNTwxysde71uVnXFLByCTGZq4GaDlrvZH8N74mjcbQxZJawley40tPhd?=
+ =?iso-8859-2?Q?kHo4XhcBc6Pm9wZCFSWhbnkATOca2TjEnWb+bGCehvaepNOZtSTFIhK0sj?=
+ =?iso-8859-2?Q?B+L+/ldFHt1x7WP610+crHHwXCRvshusqtdmMpNb4Pg8SCnOGkbVYUtsEf?=
+ =?iso-8859-2?Q?uAKBgnaZAu/xBhpFSEgpKzBvpXAr2qBy9bNJmAojn+7DaYpVdlM7cRFGPn?=
+ =?iso-8859-2?Q?N6B7cN2WWT3rVwsYhTioPc4wMm+J8no3SFnn2A8PXOqfAY5uVd/0EigKq6?=
+ =?iso-8859-2?Q?ylCaZ4YuYvGQEi57b6VPuMGeqxze2btY6l2mcE+0OQwDocblTf9Yv5pQFL?=
+ =?iso-8859-2?Q?MzOjo4pcR7+z+bsLoRzGe+tuzsp5Kwr24EHz3OYihP9LBaPGhTqYGBzUky?=
+ =?iso-8859-2?Q?FYO6OvJZbKrF/0fW7hh55OYXHh21kQi513V9yWzA1YWuShM3S+UABj+uCC?=
+ =?iso-8859-2?Q?uP66OWDKgH7+b9js7A8a/s9xQcvssrXKez7J4UX97oE4u00jgFnRokIzSM?=
+ =?iso-8859-2?Q?BWkHEeqNx7BALJifJQ08eki48swmgEEMsm8zNUA5VIu/KfVhQ2qSg2xIA9?=
+ =?iso-8859-2?Q?2X7+2OcNKbw/w1/u2Eqp9Y31xA7+uSEjJbjXpunDPuMZ0AaiBQhVGG8RyY?=
+ =?iso-8859-2?Q?IPeHSMzdSXVKJT2+YB5Kj2hPDE+oteYpz3FinhGZhAPh6N9SnbAywO3z2v?=
+ =?iso-8859-2?Q?iU/ilfGPDopDUAdj+whksxFtOaDFORFo45822Jj2iegIQfZIjSQ6t+qcA6?=
+ =?iso-8859-2?Q?rIVcjIohEYIVdV08xRuamdEcOjwngwPYCiNNJdcQjdaFvshP3VBslbPNmE?=
+ =?iso-8859-2?Q?PDVRBejn2dXya2ffJ0CdySP4A/9xK43NJt33OV7PI2yDrDkjny/2ZDx6C7?=
+ =?iso-8859-2?Q?LXDEKmD7Q/ETUBH/JArtI4/O7OzMfB5r/RMlQfReJY/YBnyD4dwFDCRFkS?=
+ =?iso-8859-2?Q?BtWRUxxR/n+emjtbRxA+86UuoQy9EdwGf9KVRQltfK/VyT5b+XKlK1ot9g?=
+ =?iso-8859-2?Q?EoDk631WzNqg6YyVHMgizne4uL+/26tcqTGPgc32+wWqXWdysoikJN2qRa?=
+ =?iso-8859-2?Q?F8k03sEubiAyfIOEe8RlHkngmCZJECBYeeTvcBBaxOMvflCUdQnqF/ITS5?=
+ =?iso-8859-2?Q?mC+gOAT5dmRfyVlOdfLt51Pq2ZE62Xanl0PZl8/uLqLW3lSOMVYs0s1BiW?=
+ =?iso-8859-2?Q?5F2HmibiFdv3FDs4JI5s+1HOQrSz98CNNce5XddJSMuI6D?=
+Content-Type: text/plain; charset="iso-8859-2"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: GV2PR04MB11799:EE_|VI0PR04MB12303:EE_
-X-MS-Office365-Filtering-Correlation-Id: b7bbeba2-7c3d-40f0-4e09-08def97a038b
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|376014|366016|19092799006|1800799024|23010399003|7416014|22082099003|18002099003|56012099006|6133799003|10067099003|11063799006|4143699003;
-X-Microsoft-Antispam-Message-Info:
-	t4j8MLyB2ZHNfp95gPYtRKbVbeS55oix7+OhWvK1VdAi/AFiuYKZEpEjfv8a/rp/H2BNcm5xXwbQgGCV3a5oxuOsW1Em0PEAfgExKF5fZSqCAkoitGobfu83FjdoXG/7qOUowWDHw9k3wrCrp4eiWhDaid9NEwH+mSI2CpjH+9KiIIjXMNDmbhD1rTpziZxv6dxeub+YtUPHSyEwmFMGSi9Tukr7y7kX+eHvCx1fxI3VPqfmhDCd406J9tEe9qd5vCe1Mr7nDWLRh1C69eYQGMiqYHUxlUfcxk1pCQuvtRQH38AzbSztM/lhRtv/zFrT9fiRtucHY7NtEJDVou/xaprrra6ddIqKqiPD0W3wijLb0BfDL47nfoQJll2euhezR3Qw14r+l2Xr9v8YpppQTNv+SPbvN2ff4WypljhU3fQBpGFxFPu1kRmpB924/mdorz/84KOBibaRhHfSAEHNWpEdgtoVQYi85OlaXIRkntjau3K3cdeuLaEopfj6AtXtJRQJZDy7louIiRiAjxxVOS2UzSVkEMKhw+h1oaDLt/XPrbwUkkgqwGQWMdlwyz6/gkZ4/740FzNAIJ+rh1OvFak2i4DGc3ZCAFkMlvsCtof3QxvIHSWWCtXopmuctS2w8I1IqI6kHJKRN2+gKKzR7q4SA3XyTqGRakHLWgdMWq8=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:GV2PR04MB11799.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(366016)(19092799006)(1800799024)(23010399003)(7416014)(22082099003)(18002099003)(56012099006)(6133799003)(10067099003)(11063799006)(4143699003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?5Nb0H/ltBdCigwfE4hgNNTxRyU9mhIe0NWuUgYi3mMc0TSFi/F122+3xplF0?=
- =?us-ascii?Q?2FeESZ621a1mjFbtG675RLNttBabDXzytc5PeD1Zjm68tPMjdtSHDHYT6HFr?=
- =?us-ascii?Q?PtE1RLnEWibCBPkWyO2oTd/9r5zRo2RL07uJjBivNUl7RX7hYRbUnKOlCsuJ?=
- =?us-ascii?Q?zOdgXtYVNQc6s4iMDVBO9lXBlkhOsd1Ai0+5kkjaxP1LuS6J32ndx01FMQ6E?=
- =?us-ascii?Q?jM1Z5YrzO5x73gKABaI3BIOXTvldACpcFrVKueKrHfecwctfr7dH5luaXBwB?=
- =?us-ascii?Q?JkePwJw5GNaPknUQzmT0kNRxedaL4DmK3XqeEkRNozQpmGK0bKFXyRSpudgu?=
- =?us-ascii?Q?Bj2JFca2n+ezPhvp0PjWTrN2ncSabZDCy813eDsOY8TskOEhQl30COOa/L6g?=
- =?us-ascii?Q?o25WU54gITboWoZ2t6wpTyN5VW0uDET4qoM87O28XoqBNc+JUY3fSpjrOjgh?=
- =?us-ascii?Q?uM5MxUWog2VH8Mlntw4GQaztLy9SRXDHKd61xjpu4nZEM2D6DuR+DB/bSIkb?=
- =?us-ascii?Q?tIri+MX3/z9QHy1vcZZCJLmvHd9gr4qYvssL5V8gwBeaw9yil9zb9kUQtkNH?=
- =?us-ascii?Q?0/SD/3C/8ZYfcidetsv2sxEdEqEEPsTv2syr4EzPyiSAvmf1X8E6urWiXCwd?=
- =?us-ascii?Q?UtQhgHV0JhxwAXCArL7lZYcn0UCvQDfwgPEOJSSlpnw++NXuy/yoDjG1qLnS?=
- =?us-ascii?Q?RfWqDrUd+NzEbw6B6ZrYIuwnC4cJWNDiP62GTzX8JW/5f+LlwU/0ue6aqhk0?=
- =?us-ascii?Q?YIBanhnOV6Gf7yxmYzwewfZCVxv6KpyowDDpSL65BJpX1jhJRRU6MScmS23V?=
- =?us-ascii?Q?s+b4N/Sfdvej4B6xO25uuMFc84zrYeGRumEqcfPDjv0u71dSFWBBKW2L74K1?=
- =?us-ascii?Q?5CGoobfcayMheyGVosWVyReAoujU6LVqlvY8EXqxNT/g7r+XsEZD/eFLV2s/?=
- =?us-ascii?Q?6FZJq5NhEuGrrYShgVK93bE4CjKQLgCAvD0YIqvwP+fO9MwMZjgNSSIbBaXz?=
- =?us-ascii?Q?FlqZ6t0PoQjv73Blat+fOG5/IpLOwhzg58FVFyds4JwV9P1mStIK5Z47Cutr?=
- =?us-ascii?Q?oQE8OnrXORb1omlUC/iKrTyEVOd0zO8aABpAnbqZAXfmyHWYeMDun1KOHh97?=
- =?us-ascii?Q?BpcwnBBeOyXpCLX0V3IoT6norkvwuE2dfHvFMj52LYDmWN2iUixhXs0wajjG?=
- =?us-ascii?Q?zgIV6mKnmtFpDF9ttNYm/OFpyrTo0jIlex1/KjIiSMLLqXM3cnAPMUWatNYk?=
- =?us-ascii?Q?YS2n/uExcIbXO73KzGbuEZ25l2ri1afm2I3+XiI2btCxJy4s4zuAGuG9Fc7/?=
- =?us-ascii?Q?hna9OTDS2vNqcGIWIi0ESw6ybkdAJt71lMSuB9Ui0e0DajX7LD1e0CkZY9WT?=
- =?us-ascii?Q?x8Cq8+oXRBrT8Z+NDVSMNdRj7Oi2g3i1zdbvlYGjtminUxt2NwaViOcRd2qI?=
- =?us-ascii?Q?k+6q0pcp615A8Hchc/BJCnGU3kCptwMCR4dCrkWbLERBrMVgu7VoCfOkxI+5?=
- =?us-ascii?Q?RWOpTj0DnAP/iPvR3KULxxlxuMsgpBAYbbRFyVEbWNFGPhKdcHfCIC3Leqdy?=
- =?us-ascii?Q?GQTPg10EtHlzjAqv789l/WQGPputDCqv15LxRWnWGNwCshzPmnxcD1coHxjh?=
- =?us-ascii?Q?xDqYQZ6XRGoXrAo5grOQLOnDe6dTwSx1QmNl8rhLYIMY5+luv2wT47xG/SHQ?=
- =?us-ascii?Q?xsO279Gq5bdAgyvW7EEs1j7CvZkoZBxefsqcX6XfKt2abik19zQh0xS1pyP0?=
- =?us-ascii?Q?dClWBaQo5YgP/8Rhzy4oh33DQpuf+XonrLMkLG23BOQd9RyH/tMy?=
-X-OriginatorOrg: oss.nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: b7bbeba2-7c3d-40f0-4e09-08def97a038b
-X-MS-Exchange-CrossTenant-AuthSource: GV2PR04MB11799.eurprd04.prod.outlook.com
+X-OriginatorOrg: microsoft.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Aug 2026 20:32:37.6036
+X-MS-Exchange-CrossTenant-AuthSource: SA1PR21MB6683.namprd21.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 26cf5477-a428-4b19-07de-08def9838a30
+X-MS-Exchange-CrossTenant-originalarrivaltime: 13 Aug 2026 21:40:48.7353
  (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: pUwVzljex0Pz4EfeVcw1giHESKDcMqReMf+bsB/PaTC2+c1ALkxVuyl+WKVOYNbhTxxC7TprlfbCI0C9Gk+bZPZIWw4vqKKPD9XI3E6uqEjrnB6CK6fcqvx4GXIme6DB
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: VI0PR04MB12303
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 72f988bf-86f1-41af-91ab-2d7cd011db47
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: ld8n7LvliIbyppH8gxDyFSuKm1Zc13ek9rD4YU+BhE8mn1FfPJYapjYQAcxPToiaYjQ9rR9WE+0etyptoezApQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA1PR21MB6755
 
-On Thu, Aug 13, 2026 at 03:37:49PM +0900, Koichiro Den wrote:
-> Define the BAR-resident metadata format used by endpoint functions that
-> expose an endpoint-integrated DMA controller to the host.
->
-> A VSEC-based discovery scheme would be a natural fit, and existing
-> dw-edma-pcie providers such as Synopsys EDDA and AMD (Xilinx) MDB/CPM6
-> already use VSECs for DMA discovery. However, some endpoint controllers
-> cannot provide enough writable configuration-space storage for a
-> complete, controller-defined payload. Keep the extensible metadata in a
-> BAR instead, where the endpoint function controls the layout and size.
->
-> The format describes the DMA register window, exported channel counts,
-> descriptor windows, optional auxiliary windows, endpoint-local descriptor
-> and auxiliary DMA addresses, and a ready bit that tells the host when the
-> described BAR windows are usable. Channel entries keep the auxiliary
-> window optional so layouts that need a separate data or auxiliary aperture
-> can describe it without a format bump.
->
-> Signed-off-by: Koichiro Den <den@valinux.co.jp>
+
+
+> -----Original Message-----
+> From: wei.liu@kernel.org <wei.liu@kernel.org>
+> Sent: Friday, July 24, 2026 4:09 PM
+> To: Linux on Hyper-V List <linux-hyperv@vger.kernel.org>; linux-
+> pci@vger.kernel.org
+> Cc: Wei Liu <wei.liu@kernel.org>; KY Srinivasan <kys@microsoft.com>;
+> Haiyang Zhang <haiyangz@microsoft.com>; Dexuan Cui
+> <DECUI@microsoft.com>; Long Li <longli@microsoft.com>; Jonathan Corbet
+> <corbet@lwn.net>; Shuah Khan <skhan@linuxfoundation.org>; Lorenzo
+> Pieralisi <lpieralisi@kernel.org>; Krzysztof Wilczy=F1ski
+> <kwilczynski@kernel.org>; Manivannan Sadhasivam <mani@kernel.org>; Rob
+> Herring <robh@kernel.org>; Bjorn Helgaas <bhelgaas@google.com>; open
+> list:DOCUMENTATION <linux-doc@vger.kernel.org>; open list <linux-
+> kernel@vger.kernel.org>
+> Subject: [EXTERNAL] [PATCH RFC 2/2] PCI: hv: Add vPCI device reset suppor=
+t
+>=20
+> From: Wei Liu <wei.liu@kernel.org>
+>=20
+> Hyper-V vPCI protocol version 1.5 adds a RESET_DEVICE request for project=
+ed
+> PCI functions. Negotiate the new protocol version and issue the request
+> through the vPCI VMBus channel from the PCI controller reset callback.
+>=20
+> Use the existing VMBus response path. Return -ENOTTY when the host
+> reports STATUS_NOT_SUPPORTED so PCI core may try another reset method.
+>=20
+> Signed-off-by: Wei Liu <wei.liu@kernel.org>
+
+Reviewed-by: Long Li <longli@microsoft.com>
+
+
+
+
+
 > ---
-> Changes in v7:
->   - Move HOST_REQ to a separate 32-bit word. (Frank)
->   - Increase the metadata header length to 0x20 accordingly.
->
->  MAINTAINERS                |   1 +
->  include/linux/pci-ep-dma.h | 175 +++++++++++++++++++++++++++++++++++++
->  2 files changed, 176 insertions(+)
->  create mode 100644 include/linux/pci-ep-dma.h
->
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index 15c7dc516f7c..d330178ac1f7 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -20990,6 +20990,7 @@ F:	Documentation/PCI/endpoint/*
->  F:	Documentation/misc-devices/pci-endpoint-test.rst
->  F:	drivers/misc/pci_endpoint_test.c
->  F:	drivers/pci/endpoint/
-> +F:	include/linux/pci-ep-dma.h
->  F:	tools/testing/selftests/pci_endpoint/
->
->  PCI ENHANCED ERROR HANDLING (EEH) FOR POWERPC
-> diff --git a/include/linux/pci-ep-dma.h b/include/linux/pci-ep-dma.h
-> new file mode 100644
-> index 000000000000..03b48ee7669e
-> --- /dev/null
-> +++ b/include/linux/pci-ep-dma.h
-> @@ -0,0 +1,175 @@
-> +/* SPDX-License-Identifier: GPL-2.0 */
-> +#ifndef __LINUX_PCI_EP_DMA_H
-> +#define __LINUX_PCI_EP_DMA_H
+>  Documentation/virt/hyperv/vpci.rst  |  2 +-  drivers/pci/controller/pci-
+> hyperv.c | 61 +++++++++++++++++++++++++++++
+>  2 files changed, 62 insertions(+), 1 deletion(-)
+>=20
+> diff --git a/Documentation/virt/hyperv/vpci.rst
+> b/Documentation/virt/hyperv/vpci.rst
+> index b65b2126ede3..6bfee7225c14 100644
+> --- a/Documentation/virt/hyperv/vpci.rst
+> +++ b/Documentation/virt/hyperv/vpci.rst
+> @@ -65,7 +65,7 @@ exchange messages with the vPCI VSP for the purpose
+> of setting  up and configuring the vPCI device in Linux.  Once the device=
+  is
+> fully configured in Linux as a PCI device, the VMBus  channel is used onl=
+y if
+> Linux changes the vCPU to be interrupted -in the guest, or if the vPCI de=
+vice
+> is removed from
+> +in the guest, or if the vPCI device is reset or removed from
+>  the VM while the VM is running.  The ongoing operation of the  device
+> happens directly between the Linux device driver for  the device and the
+> hardware, with VMBus and the VMBus channel diff --git
+> a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv=
+.c
+> index cfc8fa403dad..d3c0fd5e1d8e 100644
+> --- a/drivers/pci/controller/pci-hyperv.c
+> +++ b/drivers/pci/controller/pci-hyperv.c
+> @@ -68,6 +68,7 @@ enum pci_protocol_version_t {
+>  	PCI_PROTOCOL_VERSION_1_2 =3D PCI_MAKE_VERSION(1, 2),	/*
+> RS1 */
+>  	PCI_PROTOCOL_VERSION_1_3 =3D PCI_MAKE_VERSION(1, 3),	/*
+> Vibranium */
+>  	PCI_PROTOCOL_VERSION_1_4 =3D PCI_MAKE_VERSION(1, 4),	/*
+> WS2022 */
+> +	PCI_PROTOCOL_VERSION_1_5 =3D PCI_MAKE_VERSION(1, 5),	/* GE,
+> device reset */
+>  };
+>=20
+>  #define CPU_AFFINITY_ALL	-1ULL
+> @@ -77,6 +78,7 @@ enum pci_protocol_version_t {
+>   * first.
+>   */
+>  static enum pci_protocol_version_t pci_protocol_versions[] =3D {
+> +	PCI_PROTOCOL_VERSION_1_5,
+>  	PCI_PROTOCOL_VERSION_1_4,
+>  	PCI_PROTOCOL_VERSION_1_3,
+>  	PCI_PROTOCOL_VERSION_1_2,
+> @@ -90,6 +92,7 @@ static enum pci_protocol_version_t
+> pci_protocol_versions[] =3D {  #define MAX_SUPPORTED_MSI_MESSAGES 0x400
+>=20
+>  #define STATUS_REVISION_MISMATCH 0xC0000059
+> +#define STATUS_NOT_SUPPORTED     0xC00000BB
+>=20
+>  /* space for 32bit serial number as string */  #define SLOT_NAME_SIZE 11
+> @@ -136,6 +139,7 @@ enum pci_message_type {
+>  	PCI_BUS_RELATIONS2		=3D PCI_MESSAGE_BASE + 0x19,
+>  	PCI_RESOURCES_ASSIGNED3         =3D PCI_MESSAGE_BASE + 0x1A,
+>  	PCI_CREATE_INTERRUPT_MESSAGE3   =3D PCI_MESSAGE_BASE + 0x1B,
+> +	PCI_RESET_DEVICE                =3D PCI_MESSAGE_BASE + 0x1C,
+>  	PCI_MESSAGE_MAXIMUM
+>  };
+>=20
+> @@ -1397,10 +1401,66 @@ static int hv_pcifront_write_config(struct pci_bu=
+s
+> *bus, unsigned int devfn,
+>  	return PCIBIOS_SUCCESSFUL;
+>  }
+>=20
+> +static int hv_pcifront_reset(struct pci_dev *pdev, bool probe) {
+> +	struct hv_pcibus_device *hbus =3D
+> +		container_of(pdev->bus->sysdata, struct hv_pcibus_device,
+> sysdata);
+> +	struct pci_child_message reset =3D {};
+> +	struct hv_pci_compl comp_pkt;
+> +	struct pci_packet pkt =3D {
+> +		.completion_func =3D hv_pci_generic_compl,
+> +		.compl_ctxt =3D &comp_pkt,
+> +	};
+> +	enum hv_pcibus_state state;
+> +	int ret;
 > +
-> +#include <linux/bits.h>
+> +	/* Device reset was added in vPCI protocol version 1.5. */
+> +	if (hbus->protocol_version < PCI_PROTOCOL_VERSION_1_5)
+> +		return -ENOTTY;
 > +
-> +/*
-> + * BAR metadata format used by PCI endpoint functions that expose an
-> + * endpoint-integrated DMA controller to a PCI host.
-> + *
-> + * Offsets are relative to the beginning of the metadata blob. Multi-byte
-> + * fields are little-endian. The blob is normally placed at offset 0 of a
-> + * function BAR selected by the endpoint function and discovered by the host
-> + * driver using device-specific policy. Other data in the same BAR, such as a
-> + * standard MSI-X table or PBA, is outside this metadata format.
-> + *
-> + *          31                                                             0
-> + *          +---------------------------------------------------------------+
-> + * +0x000   | metadata magic                                                |
-> + *          +---------------------------------------------------------------+
-> + *          31                            16 15            8 7             0
-> + *          +-------------------------------+---------------+---------------+
-> + * +0x004   | metadata length               | reserved      | revision      |
-> + *          +-------------------------------+---------------+---------------+
-> + *          31 30         27 26          19 18          11 10          3 2 0
-> + *          +--+------------+--------------+--------------+-------------+---+
-> + * +0x008   |R | reserved   | ch entry size| RD count     | WR count    |BAR|
-> + *          +--+------------+--------------+--------------+-------------+---+
-> + * +0x00c   | register window offset[31:0]                                  |
-> + *          +---------------------------------------------------------------+
-> + * +0x010   | register window offset[63:32]                                 |
-> + *          +---------------------------------------------------------------+
-> + *          31                            16 15            8 7              0
-> + *          +-------------------------------+---------------+---------------+
-> + * +0x014   | reserved                      | layout data   | layout        |
-> + *          +-------------------------------+---------------+---------------+
-> + * +0x018   | register window size                                          |
-> + *          +---------------------------------------------------------------+
-> + *          31                                                           1 0
-> + *          +-------------------------------------------------------------+-+
-> + * +0x01c   | reserved                                                    |H|
-> + *          +-------------------------------------------------------------+-+
-> + * +0x020   | write table                                                   |
-> + *          | ( channel table entries #0 ~ #N )                             |
-> + *          +---------------------------------------------------------------+
-> + *          | read table                                                    |
-> + *          | ( channel table entries #0 ~ #N )                             |
-> + *          +---------------------------------------------------------------+
-> + *
-> + *          metadata magic: PCI_EP_DMA_METADATA_MAGIC.
-> + *          metadata length: byte size of the whole metadata blob. The value
-> + *                           must fit in PCI_EP_DMA_METADATA_HDR_LEN_FIELD and
-> + *                           in the BAR allocation that contains the metadata.
-> + *          revision: metadata format revision.
-> + *          R: ready bit. Set only by the endpoint after all fields and BAR
-> + *             windows described by this metadata have been programmed and can
-> + *             be used by the host. The host must not consume the windows
-> + *             before observing this bit.
-> + *          H: host-request bit. Set only by the host driver after it has found
-> + *             this metadata. The endpoint may use this as the trigger to
-> + *             program DMA window BAR subrange mappings, and may clear it while
-> + *             revoking R during teardown or reinitialization.
-
-EPF driver should known which DMA channel will export to host. So data
-structure should be embeded into bar0 as Niklas's suggestion.
-
-Frank
-
-> + *          ch entry size: byte stride between consecutive channel table
-> + *                         entries. Revision 1 requires at least
-> + *                         PCI_EP_DMA_METADATA_CH_ENTRY_SIZE bytes.
-> + *          RD count: number of exposed RC-to-endpoint DMA read channels and
-> + *                    read channel-table entries.
-> + *          WR count: number of exposed endpoint-to-RC DMA write channels and
-> + *                    write channel-table entries.
-> + *          BAR: BAR that contains the DMA controller register window.
-> + *          register window offset: BAR-local byte offset of the DMA controller
-> + *                                  register window in BAR.
-> + *          register window size: DMA controller register window size in bytes.
-> + *          layout: DMA controller register layout identifier.
-> + *          layout data: layout-specific data. For
-> + *                       PCI_EP_DMA_METADATA_REG_LAYOUT_DW_EDMA this is the
-> + *                       DesignWare eDMA/HDMA map format.
-> + *          write table: starts at PCI_EP_DMA_METADATA_HDR_LEN if write channel
-> + *                       count is non-zero.
-> + *          read table: starts at PCI_EP_DMA_METADATA_HDR_LEN plus the write
-> + *                      table size if read channel count is non-zero.
-> + *          reserved fields and bits: write zero and ignore on read.
-> + *
-> + *
-> + * Channel table entry:
-> + *
-> + *          31                 17 16 15 14   12 11 10     8 7              0
-> + *          +--------------------+--+--+-------+--+--------+----------------+
-> + * +0x000   | reserved           |A |rs|aux BAR|rs|desc BAR|hardware channel|
-> + *          +--------------------+--+--+-------+--+--------+----------------+
-> + * +0x004   | descriptor window BAR offset[31:0]                            |
-> + *          +---------------------------------------------------------------+
-> + * +0x008   | descriptor window BAR offset[63:32]                           |
-> + *          +---------------------------------------------------------------+
-> + * +0x00c   | descriptor window size                                        |
-> + *          +---------------------------------------------------------------+
-> + * +0x010   | descriptor DMA address[31:0]                                  |
-> + *          +---------------------------------------------------------------+
-> + * +0x014   | descriptor DMA address[63:32]                                 |
-> + *          +---------------------------------------------------------------+
-> + * +0x018   | auxiliary window BAR offset[31:0]                             |
-> + *          +---------------------------------------------------------------+
-> + * +0x01c   | auxiliary window BAR offset[63:32]                            |
-> + *          +---------------------------------------------------------------+
-> + * +0x020   | auxiliary window size                                         |
-> + *          +---------------------------------------------------------------+
-> + * +0x024   | auxiliary DMA address[31:0]                                   |
-> + *          +---------------------------------------------------------------+
-> + * +0x028   | auxiliary DMA address[63:32]                                  |
-> + *          +---------------------------------------------------------------+
-> + *
-> + *          A: auxiliary-window-valid bit. If clear, aux BAR and auxiliary
-> + *             window fields are ignored.
-> + *          aux BAR: BAR that contains the optional auxiliary window.
-> + *          desc BAR: BAR that contains the descriptor window.
-> + *          hardware channel: DMA controller's hardware channel number.
-> + *                            Revision 1 entries are currently consumed in dense
-> + *                            0-based order.
-> + *          descriptor window BAR offset: BAR-local byte offset of the
-> + *                                        descriptor window in desc BAR.
-> + *          descriptor window size: descriptor window size in bytes.
-> + *          descriptor DMA address: endpoint-local address used by the DMA
-> + *                                  controller to fetch descriptors.
-> + *          auxiliary window BAR offset: BAR-local byte offset of the auxiliary
-> + *                                       window in aux BAR.
-> + *          auxiliary window size: auxiliary window size in bytes.
-> + *          auxiliary DMA address: endpoint-local address corresponding to the
-> + *                                 auxiliary window.
-> + *          reserved fields and bits: write zero and ignore on read.
-> + */
-> +#define PCI_EP_DMA_METADATA_MAGIC		0x4d444550 /* "PEDM" */
-> +#define PCI_EP_DMA_METADATA_REV			0x1
+> +	/* Hyper-V exposes projected functions directly on the root bus. */
+> +	if (!pci_is_root_bus(pdev->bus))
+> +		return -ENOTTY;
 > +
-> +#define PCI_EP_DMA_METADATA_HDR_LEN		0x20
+> +	if (probe)
+> +		return 0;
 > +
-> +#define PCI_EP_DMA_METADATA_HDR			0x04
-> +#define  PCI_EP_DMA_METADATA_HDR_REV		GENMASK(7, 0)
-> +#define  PCI_EP_DMA_METADATA_HDR_LEN_FIELD	GENMASK(31, 16)
+> +	/* Do not take state_lock: eject holds it while removing/locking pdev.
+> */
+> +	state =3D READ_ONCE(hbus->state);
+> +	if (state !=3D hv_pcibus_probed && state !=3D hv_pcibus_installed)
+> +		return -ENODEV;
 > +
-> +#define PCI_EP_DMA_METADATA_CTRL		0x08
-> +#define  PCI_EP_DMA_METADATA_CTRL_REG_BAR	GENMASK(2, 0)
-> +#define  PCI_EP_DMA_METADATA_CTRL_WR_CH_COUNT	GENMASK(10, 3)
-> +#define  PCI_EP_DMA_METADATA_CTRL_RD_CH_COUNT	GENMASK(18, 11)
-> +#define  PCI_EP_DMA_METADATA_CTRL_CH_ENTRY_SIZE	GENMASK(26, 19)
-> +#define  PCI_EP_DMA_METADATA_CTRL_READY		BIT(31)
+> +	init_completion(&comp_pkt.host_event);
+> +	reset.message_type.type =3D PCI_RESET_DEVICE;
+> +	reset.wslot.slot =3D devfn_to_wslot(pdev->devfn);
 > +
-> +#define PCI_EP_DMA_METADATA_REG_OFF_LO		0x0c
-> +#define PCI_EP_DMA_METADATA_REG_OFF_HI		0x10
-> +#define PCI_EP_DMA_METADATA_REG_LAYOUT		0x14
-> +#define  PCI_EP_DMA_METADATA_REG_LAYOUT_ID	GENMASK(7, 0)
-> +#define  PCI_EP_DMA_METADATA_REG_LAYOUT_DATA	GENMASK(15, 8)
-> +#define PCI_EP_DMA_METADATA_REG_SIZE		0x18
-> +#define PCI_EP_DMA_METADATA_HOST_CTRL		0x1c
-> +#define  PCI_EP_DMA_METADATA_HOST_CTRL_REQ	BIT(0)
+> +	ret =3D vmbus_sendpacket(hbus->hdev->channel, &reset, sizeof(reset),
+> +			       (unsigned long)&pkt, VM_PKT_DATA_INBAND,
 > +
-> +#define PCI_EP_DMA_METADATA_REG_LAYOUT_DW_EDMA	0x1
+> VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
+> +	if (ret)
+> +		return ret;
 > +
-> +#define PCI_EP_DMA_METADATA_CH_ENTRY_SIZE	0x2c
-> +#define PCI_EP_DMA_METADATA_CH_CTRL		0x00
-> +#define  PCI_EP_DMA_METADATA_CH_CTRL_HW_CH	GENMASK(7, 0)
-> +#define  PCI_EP_DMA_METADATA_CH_CTRL_DESC_BAR	GENMASK(10, 8)
-> +#define  PCI_EP_DMA_METADATA_CH_CTRL_AUX_BAR	GENMASK(14, 12)
-> +#define  PCI_EP_DMA_METADATA_CH_CTRL_AUX_VALID	BIT(16)
-> +#define PCI_EP_DMA_METADATA_CH_DESC_OFF_LO	0x04
-> +#define PCI_EP_DMA_METADATA_CH_DESC_OFF_HI	0x08
-> +#define PCI_EP_DMA_METADATA_CH_DESC_SIZE	0x0c
-> +#define PCI_EP_DMA_METADATA_CH_DESC_ADDR_LO	0x10
-> +#define PCI_EP_DMA_METADATA_CH_DESC_ADDR_HI	0x14
-> +#define PCI_EP_DMA_METADATA_CH_AUX_OFF_LO	0x18
-> +#define PCI_EP_DMA_METADATA_CH_AUX_OFF_HI	0x1c
-> +#define PCI_EP_DMA_METADATA_CH_AUX_SIZE		0x20
-> +#define PCI_EP_DMA_METADATA_CH_AUX_ADDR_LO	0x24
-> +#define PCI_EP_DMA_METADATA_CH_AUX_ADDR_HI	0x28
+> +	ret =3D wait_for_response(hbus->hdev, &comp_pkt.host_event);
+> +	if (ret)
+> +		return ret;
 > +
-> +#endif /* __LINUX_PCI_EP_DMA_H */
+> +	if (comp_pkt.completion_status =3D=3D STATUS_NOT_SUPPORTED)
+> +		return -ENOTTY;
+> +
+> +	if (comp_pkt.completion_status) {
+> +		pci_err(pdev, "Hyper-V device reset failed: %#x\n",
+> +			comp_pkt.completion_status);
+> +		return -EIO;
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+>  /* PCIe operations */
+>  static struct pci_ops hv_pcifront_ops =3D {
+>  	.read  =3D hv_pcifront_read_config,
+>  	.write =3D hv_pcifront_write_config,
+> +	.reset =3D hv_pcifront_reset,
+>  };
+>=20
+>  /*
+> @@ -1996,6 +2056,7 @@ static void hv_compose_msi_msg(struct irq_data
+> *data, struct msi_msg *msg)
+>  		break;
+>=20
+>  	case PCI_PROTOCOL_VERSION_1_4:
+> +	case PCI_PROTOCOL_VERSION_1_5:
+>  		size =3D hv_compose_msi_req_v3(&ctxt.int_pkts.v3,
+>  					cpu,
+>  					hpdev->desc.win_slot.slot,
 > --
-> 2.51.0
->
+> 2.53.0
+
