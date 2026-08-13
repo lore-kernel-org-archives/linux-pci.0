@@ -1,136 +1,149 @@
-Received: from mail-pl1-f173.google.com (mail-pl1-f173.google.com [209.85.214.173])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 834DD443AB3
-	for <linux-pci@vger.kernel.org>; Thu, 13 Aug 2026 10:04:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.214.173
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786615461; cv=pass; b=RkXKZNjwuzydzxOqIWltbhT9NgADbov9QQHjIUecY/HetXa+uG7mMPEYLfJkq+Xj/By4gOQLnteuyJ7ADNXiLbRsjHS2NQjaZGkf8qBU5UDOHjA7TRJXW3G64xA8mpfE+b4Ib7b8vRSfBK0QyhxsLchMMtH0Ur+Ec3PNfzq32K0=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786615461; c=relaxed/simple;
-	bh=izncAFina5udvh82qhiR9A/Ymo2QgJMmGzIkcJM+wME=;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD05444AB98
+	for <linux-pci@vger.kernel.org>; Thu, 13 Aug 2026 10:14:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1786616055; cv=none; b=sKFNPhVQ8HvwuErYeHy48DudwpdWvbSMpfryFsbgVkqEv8EkPkokUKaIpqPXzyHqqKVzfS+ZkGJmo+QolTySazRR3ktX24Va1f/ZWqowFCkTNMPdVyP/j1hGhKcq9VwT8tB999QpSYwFKoR6qQaJK/6/OPCltphjDdv0uBMZd2w=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1786616055; c=relaxed/simple;
+	bh=eNOgY/8tx7BxqRcfnnxrILVFjSWVTuELAsGKZxQoM/M=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=feKwuy2TrE1o2Pjb+ywy7yMUYN450x2mEBxxFfloWdVPiroAu+6FYAd4xf4Xj5cCNoKj3QS9mA//53tfVLDJOSWxITa8ONNh44WpTkHUd/1y65MLcd0qCFdqHuGMGQRY0cDYndpEg36ee+EE1u5jubxC5WGdLfsNF3M6W1w3gtI=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=NFHTrXRV; arc=pass smtp.client-ip=209.85.214.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	 To:Cc:Content-Type; b=Ki3/6+1ja9Jbn0NmgHP/Y7iKz4V5jDMv3Rww/67k8FQ+vM6Wkp6jHwW+FTNYsskT1nVZ4bubqVSx1Mm/kwEpEFqOhu4fzURStepfTSTgByu3Td3F0UPHKLXdMnvO89MEoVwp42utAGxX15v9bkmz3FNhGwnSOYJ5kvblcd+jZQU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kLo6t8IB; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="NFHTrXRV"
-Received: by mail-pl1-f173.google.com with SMTP id d9443c01a7336-2cf49dc28ccso3654015ad.0
-        for <linux-pci@vger.kernel.org>; Thu, 13 Aug 2026 03:04:18 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1786615457; cv=none;
-        d=google.com; s=arc-20260327;
-        b=omkZB5o0UFvFyioFSD7bvv60XqMi31XFUZi/BI1BUvgu31wsL5totS1A0Tj7pgytcS
-         nS9Luq3C6wmLpc56rT00UYcfAoEYCGuHk7Q0v7TU7tlj5JlImRFONYYxkFg8JPpJHqJF
-         dGtCMGNglwKfNclk1GnW0k52PkWuDZt76rmLkDaoPzslmjfxwVDyMUdvRnezfKQW6j1Y
-         IrqwMW/elSiSuMKEOrqzgx4tN9eRWLI3a6aqDFOKA2d4F0VHAMlgtiM77uLqzK2GY73D
-         bH7jYUEvDlOsCaNOWfi+uctKkDCs40uOlL1q1zTStJ9ohhZKQiNQqZhq4gQ07x0bJEta
-         GvkA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=tMciaZ/JSlG6Z7DNQJEd4FD/fd9CJYl/s1BR40smNTE=;
-        fh=m+b9f70VdW17qUF1EvqR/wj1GLBaB4uCwh950kl/nJk=;
-        b=hVZoEwrzNIVKRjpArZdUUBy34t4hlfnQjHP6RLFUMDtbVE03LUm/uoND4HKLayl6RT
-         hNdKlCzeqMVQWlJ80+kN3tJBroz20TE/rUwzxng7cpWWjtEMc3lYq4GWVTz1J4COBpy/
-         LPWpU10SrjGcVGh+2LINNwzADKR/b5iJGvHDfczONnEo4Ky5mhHpPfACpyEQcjoRTCkZ
-         3qHIKGNVBoPECcvHYImPNe2L5lv1PxQNJ9cD22XnlY28rFPFToGAcRDz/OxNKeCzPfs5
-         +67YqvnAzL4QFYh8e7n0nn0Sj/wAag8Weqth/ni71Tnr+EQl5FKkytl8C8TUXZXwOLDb
-         1O5Q==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1786615457; x=1787220257; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=tMciaZ/JSlG6Z7DNQJEd4FD/fd9CJYl/s1BR40smNTE=;
-        b=NFHTrXRVpZQTifaiiAeRhSGvfW/dP05MC4U1EuRQWVJr10hfFTND65+3+8jb93NkKj
-         pyVgNvfrsAHjJCQSlBnv74kIuyAGwTSHOr/dBTUV0FlXohKVfuehKEUbu+Xe3QIPOuZT
-         xyYOmMs01ckolTS4zDf1GolYHoz54YaFz1+Jivey5iRPUdra7EMw9Z/AYpSZUXI96EKd
-         3/FfoMhZEcw+UBCPoCbiwXXB7S4RQ9x13SiLR20aVLYVohDLsUPCpyg8prA+dVsmLDAw
-         h9GzD11ijNfTClaEZMVLRNH9dpACZ2webaPItG2U1BR+OiDQwMwbfXeiDxCLD+bWtAte
-         hzcQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786615457; x=1787220257;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=tMciaZ/JSlG6Z7DNQJEd4FD/fd9CJYl/s1BR40smNTE=;
-        b=XA5+bhokRZGmy+siskmxdI7WKbsk9Zd/tw+QR2CxRVnZF3ss90HRppxFKyGh6xkEHM
-         ZmFwOnwNuWfEUVg98PGD0DJ3rxGP09d28yh2W9P+4bdEianvwm+/9etHyuz1waR+vMr+
-         KNp5kS1+NJj8zP3mpunmiZ55nDtymUeNImihWd9AQ2pKcuYBdUMvd3ujoX+GaHh3ku88
-         1gjFyrbm49bYPmE843vO/1+E+5WSGLPJUDzC5C4psv92JlITSFJozLpL/EsDmsKd192W
-         blug5TVfFvjucX9HttX84b9Y3kEI6krIEmNFUzApAZyKuouVQij3kPV9GBe9rMzNUfds
-         5DKA==
-X-Forwarded-Encrypted: i=1; AHgh+RrnYOl67/pc9+TU0WadVcvbppnryjKuRrEryAqk8tjSuBt+adGc+IvWyqHjx3KfHsk/oA98H9at8SY=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxdErtDid01HRAXMSUNrU2wH8zScUuWUtIJIXR5qZpr3iMBp5JS
-	moEm8NCxa0bL+VbyMUbpmVPx4B4XHai7S1oti423OZV+m0PQQ/cIarIS5cRhdhFd7TmtV8uifzb
-	f7FZjg828EGjSJBMGDIKIE5DTnR2PF8U=
-X-Gm-Gg: AR+sD10SLl49Og4a/9hFuv/0PkbhpmBuKEjg9XW0ZRUp7HH1OSTwO4CPS60ly/FFrZX
-	Eg+jU3avZUextK61eOQCMmtQbbiL1qCqm/zGEcEECYhKHGWJz3gUGnQzakAQtqw/tSpoicinMkv
-	1AFh3l7Fo7B+Vm2HRpGfB6VAz3nupUdJRREDXMDNtuGsJLlkgJSNo6R55//wUwn+vGeRUqB8TRV
-	dPgj9jk7YE8U3R5rSZeMswaLtY3alFMKTNV1mQjLHwZbhSNo5pYkFQ6mCTAvqEmKD9buLyQzqQk
-	cEaPfniSUFpdzlQqYMfOJo1kDuSo+Zn0FlBTeTwO+nWwJKvMyxhKA26NHSDWK4TvpiOJZoDp9xC
-	E74xhAhpXPCSCaVaMYK2W+0a07UhmA7i675/Cpwi/qVdngZ1ekhM/A8bNNXv1
-X-Received: by 2002:a17:903:19e6:b0:2cb:2b50:d9da with SMTP id
- d9443c01a7336-2d389b61bdemr35547795ad.3.1786615457444; Thu, 13 Aug 2026
- 03:04:17 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kLo6t8IB"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4087B1F00A3F
+	for <linux-pci@vger.kernel.org>; Thu, 13 Aug 2026 10:14:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1786616043;
+	bh=kTNrCV3t/mEVfwJWf78aFwuNT6sE+LNNyY+YdUQxlDQ=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc;
+	b=kLo6t8IBz6w/C6XDmWLBGqRq3yUY43U3bQLCxdr1uVi8u4fofA8FOObBZgl4IMFRQ
+	 NLctUIslclMRnBpt7lyenPR5RPmv/XKMCpY1/4zPjflERf+DWjwM5MPrEMcHGT1tlQ
+	 c8Bk+tLFAMbjutlHRuPqekSoMB0zU1zXA8JYPRXSkN1PtYXCgaCYXiadMtuHSNNqK0
+	 q20EHaGKhhjZXyDDUFiupUwh5TfEUxi84ZHotKQ4ls0ADPhMGq8cfUA5oOUFQ4nNQ8
+	 dmeK1v05QKYNyJcF6mfo6DLRWNMrOTx6sQoDZ+0zSXlfRPSm1rm8Ebh3kGQ8jCp6gu
+	 sCN/NV4ebJLeg==
+Received: by mail-lf1-f48.google.com with SMTP id 2adb3069b0e04-5aeb59d54b1so2229468e87.1
+        for <linux-pci@vger.kernel.org>; Thu, 13 Aug 2026 03:14:03 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AHgh+RpnjxutJbdwQXDdF/36sbNr9+5l3ICuCY6QXv1zxl90LyMAepUKzPH/DLFt7SBgnG2g8FxilVysKB4=@vger.kernel.org
+X-Gm-Message-State: AOJu0YycPy861xGWRzCA4+7SwHuT26pyFVSvinz6qoUYDNhg4Y3EJxyv
+	CbOn5m/Yo7B4V+N6TdLIoYxSEz4wOGpuh7eJHEaG1oavhW5br0UmP9KKEjILoqKyi7AKIrqroEi
+	MflQrVwwtuEl9XGw1ZHQOQo6uIZjSrEo=
+X-Received: by 2002:a05:6512:150e:10b0:5ae:b78c:da1 with SMTP id
+ 2adb3069b0e04-5b453f6fd11mr502046e87.28.1786616041559; Thu, 13 Aug 2026
+ 03:14:01 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260811-fix-fops-owner-v10-0-7e71776f9dbe@linux.dev>
- <CANiq72=bhfofrbdf1qeA380-eWeKj5yXhC0NzaU_nbB9SpxYHA@mail.gmail.com>
- <DKNAS52KYWLD.M15VEC6U0F6R@kernel.org> <DKNDF3WD27GM.5VP6RBRXZBUS@garyguo.net>
- <CANiq72=SP_nT7Z6NSH-GT51-8hJ8qLUa07Cs+SarSFTO9Z7vUw@mail.gmail.com>
-In-Reply-To: <CANiq72=SP_nT7Z6NSH-GT51-8hJ8qLUa07Cs+SarSFTO9Z7vUw@mail.gmail.com>
-From: Miguel Ojeda <miguel.ojeda.sandonis@gmail.com>
-Date: Thu, 13 Aug 2026 12:04:04 +0200
-X-Gm-Features: AUfX_mxe0Lg9da-FioFXEgvJltaWUVJqtXi0b-R5y4sq5pbip1KqobICrYsDddk
-Message-ID: <CANiq72=Whd+u0cA88++KyeOQQrsBK+NqK-586jNX7L=_Ocixrw@mail.gmail.com>
-Subject: Re: [PATCH v10 00/10] Fix missing fops.owner in Rust DRM/misc abstractions
-To: Gary Guo <gary@garyguo.net>
-Cc: Danilo Krummrich <dakr@kernel.org>, Mark Brown <broonie@kernel.org>, Alvin Sun <alvin.sun@linux.dev>, 
-	Miguel Ojeda <ojeda@kernel.org>, Boqun Feng <boqun@kernel.org>, 
-	=?UTF-8?Q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, 
-	Benno Lossin <lossin@kernel.org>, Andreas Hindborg <a.hindborg@kernel.org>, 
-	Alice Ryhl <aliceryhl@google.com>, Trevor Gross <tmgross@umich.edu>, 
-	Luis Chamberlain <mcgrof@kernel.org>, Petr Pavlu <petr.pavlu@suse.com>, 
-	Daniel Gomez <da.gomez@kernel.org>, Sami Tolvanen <samitolvanen@google.com>, 
-	Aaron Tomlin <atomlin@atomlin.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
-	"Rafael J. Wysocki" <rafael@kernel.org>, David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>, 
-	Daniel Almeida <daniel.almeida@collabora.com>, Arnd Bergmann <arnd@arndb.de>, 
-	Brendan Higgins <brendan.higgins@linux.dev>, David Gow <david@davidgow.net>, 
-	Rae Moar <raemoar63@gmail.com>, Breno Leitao <leitao@debian.org>, Jens Axboe <axboe@kernel.dk>, 
-	Dave Ertman <david.m.ertman@intel.com>, Leon Romanovsky <leon@kernel.org>, 
-	Igor Korotin <igor.korotin@linux.dev>, FUJITA Tomonori <fujita.tomonori@gmail.com>, 
-	Bjorn Helgaas <bhelgaas@google.com>, =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	=?UTF-8?B?QXJ2ZSBIasO4bm5ldsOlZw==?= <arve@android.com>, 
-	Todd Kjos <tkjos@android.com>, Christian Brauner <brauner@kernel.org>, 
-	Carlos Llamas <cmllamas@google.com>, rust-for-linux@vger.kernel.org, 
-	linux-modules@vger.kernel.org, driver-core@lists.linux.dev, 
-	dri-devel@lists.freedesktop.org, nova-gpu@lists.linux.dev, 
-	linux-kselftest@vger.kernel.org, kunit-dev@googlegroups.com, 
-	linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	netdev@vger.kernel.org, linux-pci@vger.kernel.org
+References: <20260812-hmat-p2p-v1-0-75ac41380585@nvidia.com> <20260812-hmat-p2p-v1-1-75ac41380585@nvidia.com>
+In-Reply-To: <20260812-hmat-p2p-v1-1-75ac41380585@nvidia.com>
+From: "Rafael J. Wysocki (Intel)" <rafael@kernel.org>
+Date: Thu, 13 Aug 2026 12:13:39 +0200
+X-Gmail-Original-Message-ID: <CAJZ5v0iDR1LN=6QosMvNbctHKqEmzG0Jg6eS1np5MQkfLjXzAA@mail.gmail.com>
+X-Gm-Features: AUfX_myRSOyiZCvF9QRoOS94TTWfPQ0TJEjyuMvimTc5W7PyRpU-jyLFek1aFmQ
+Message-ID: <CAJZ5v0iDR1LN=6QosMvNbctHKqEmzG0Jg6eS1np5MQkfLjXzAA@mail.gmail.com>
+Subject: Re: [PATCH RFC 1/7] ACPICA: Define PCIe P2P latency and bandwidth information
+To: Leon Romanovsky <leon@kernel.org>
+Cc: "Rafael J. Wysocki" <rafael@kernel.org>, Len Brown <lenb@kernel.org>, 
+	Saket Dumbre <saket.dumbre@intel.com>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Logan Gunthorpe <logang@deltatee.com>, linux-acpi@vger.kernel.org, 
+	acpica-devel@lists.linux.dev, linux-kernel@vger.kernel.org, 
+	linux-pci@vger.kernel.org, Lukas Wunner <lukas@wunner.de>, 
+	"Natu, Mahesh" <mahesh.natu@intel.com>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, Aug 13, 2026 at 11:32=E2=80=AFAM Miguel Ojeda
-<miguel.ojeda.sandonis@gmail.com> wrote:
+On Wed, Aug 12, 2026 at 9:48=E2=80=AFPM Leon Romanovsky <leon@kernel.org> w=
+rote:
 >
-> Ok, done -- Danilo, I took your diff and converted it into a proper
-> commit, please double-check you are OK with the Signed-off-by:
+> From: Leon Romanovsky <leonro@nvidia.com>
 >
->   ec6fcf8a175a ("rust: kernel: add `LocalModule` fallback for
-> `#[vtable]` `impl`s")
+> PCIe topology alone cannot tell an operating system whether traffic may
+> cross host bridges, what ordering rules it needs, or how expensive the pa=
+th
+> is. Encoding this knowledge in chipset lists duplicates platform policy a=
+nd
+> cannot survive a virtualized topology.
+>
+> Define HMAT Type 3 as a firmware contract for directional Generic Port P2=
+P
+> paths, including separate ordered and Unordered I/O applicability. This
+> gives platform software a standard way to distinguish unsupported,
+> conditional, and usable paths. The definition follows a proposed ACPI ECN=
+.
+>
+> Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
+> ---
+>  include/acpi/actbl1.h | 27 ++++++++++++++++++++++++++-
+>  1 file changed, 26 insertions(+), 1 deletion(-)
 
-We also need an `allow(dead_code)` until we actually use it
-unconditionally: a2595ed13816 instead.
+As per Documentation/driver-api/acpi/linuxized-acpica.rst, please
+submit a pull request with this change to the upstream ACPICA project
+on GitHub.  The Linux patch will become applicable when there is a
+corresponding commit upstream.
 
-Cheers,
-Miguel
+> diff --git a/include/acpi/actbl1.h b/include/acpi/actbl1.h
+> index d824838cb7af..0fc766a8e90f 100644
+> --- a/include/acpi/actbl1.h
+> +++ b/include/acpi/actbl1.h
+> @@ -2003,7 +2003,8 @@ enum acpi_hmat_type {
+>         ACPI_HMAT_TYPE_PROXIMITY =3D 0,   /* Memory proximity domain attr=
+ibutes */
+>         ACPI_HMAT_TYPE_LOCALITY =3D 1,    /* System locality latency and =
+bandwidth information */
+>         ACPI_HMAT_TYPE_CACHE =3D 2,       /* Memory side cache informatio=
+n */
+> -       ACPI_HMAT_TYPE_RESERVED =3D 3     /* 3 and greater are reserved *=
+/
+> +       ACPI_HMAT_TYPE_P2P_LATENCY =3D 3, /* PCIe P2P latency and bandwid=
+th information */
+> +       ACPI_HMAT_TYPE_RESERVED =3D 4     /* 4 and greater are reserved *=
+/
+>  };
+>
+>  struct acpi_hmat_structure {
+> @@ -2108,6 +2109,30 @@ struct acpi_hmat_cache {
+>  #define ACPI_HMAT_CP_WB     (1)
+>  #define ACPI_HMAT_CP_WT     (2)
+>
+> +/* 3: PCIe P2P Latency and Bandwidth Information */
+> +
+> +struct acpi_hmat_p2p_latency {
+> +       struct acpi_hmat_structure header;
+> +       u8 flags;
+> +       u8 data_type;
+> +       u16 reserved1;
+> +       u32 number_of_initiator_Pds;
+> +       u32 number_of_target_Pds;
+> +       u32 reserved2;
+> +       u64 entry_base_unit;
+> +};
+> +
+> +/* Masks for Flags field above */
+> +
+> +#define ACPI_HMAT_P2P_NON_UIO   (1)    /* Bit 0: Entries apply to non-UI=
+O traffic */
+> +#define ACPI_HMAT_P2P_UIO       (1<<1) /* Bit 1: Entries apply to UIO tr=
+affic */
+> +
+> +/*
+> + * The data_type field reuses the ACPI_HMAT_ACCESS/READ/WRITE_LATENCY an=
+d
+> + * ACPI_HMAT_ACCESS/READ/WRITE_BANDWIDTH values defined for the System
+> + * Locality Latency and Bandwidth Information Structure above.
+> + */
+> +
+>  /***********************************************************************=
+********
+>   *
+>   * HPET - High Precision Event Timer table
+>
+> --
+> 2.55.0
+>
