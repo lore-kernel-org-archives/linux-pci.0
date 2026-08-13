@@ -1,223 +1,184 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 15260381AE5;
-	Thu, 13 Aug 2026 06:51:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 367C3353EE0;
+	Thu, 13 Aug 2026 06:53:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786603907; cv=none; b=P+JRMjzehZHs8Ioi8dIuJUUZMXCa5PCrnTz6Kfbf7ZayrI3OqicAfQpYym1zc21h2LWCh7r6YYi7LLfRkyBu/FKdBnVH2DmQQrc2FBnNm/WAP0OQbBeGWKH8AwHmYm0NjaLZ5EGaoQ4mtroxTzLv6Hbv/gzYy7vF+POJfP5WZ2U=
+	t=1786604040; cv=none; b=oV4zjfCNzH6ISf6jYnlkvKPoZtrckLQ8CIx4vLkIrri8K9WEr5AQ6Jrr3LpJdnWgzGdJPgGnj91capMgJaud1SJALcpw4dU8akC9T+nF5cW5u0M40Td1oiYE7wSBMjkjLaqM+wwPznSRQkNZBwH1wnNff9hzWdE6hYs6o7Ok9zQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786603907; c=relaxed/simple;
-	bh=gzfMLkPgbJdzIpsG8VDwd7qkaFNAysB6ikulMxufisw=;
+	s=arc-20240116; t=1786604040; c=relaxed/simple;
+	bh=60H1iuFt36Dc6AaiHYMartzuZT8WNb50fSWd/18NKLM=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=PnE4YMUBPW42j3TNhqMcXNpzKIxj2NwmzFpdM1GS6mkh2uP8kxFEGDNLkoT75dUVNxQ2xE8GlNfszbQUavS+rrQwBgG7ViV9hBxjLf9IHanEE7Lvnlw5WZwMgBM0YxLkXEnTDg85Min/55MS+Iw12frtPs4MQ+20PdOuNCvwdUE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UMcHBEh5; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=gSzRzNbMEpwpOFrFMKr2dCJVkJVwKOLzlYp6aRaLhxJZ99aOPn2EydtOd4BHSSac48H+kOnqUlWcggSKZElXVYZWu+1uSjtjQ/6eQns1WRhCNghPCVThG/ig9A6Xbc1rOsm7aCC3PxvqYC/I9asqUDbL4Zwozd0KPItimz+Ksk4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Rp0GuVNC; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UMcHBEh5"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 74D771F000E9;
-	Thu, 13 Aug 2026 06:51:45 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Rp0GuVNC"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 927011F000E9;
+	Thu, 13 Aug 2026 06:53:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786603905;
-	bh=Spd8VBELnEnq1/BO8p4EY6HT8GuV5jD7Jem86/9cOBI=;
+	s=k20260515; t=1786604038;
+	bh=z+FZeTTVh7j0bVNkJ4nuxoQXwDdIkcLZWZfzTJvL/cg=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=UMcHBEh5a9io2uhct1+GDLU8OnCVD+wLAglPq8YnJyHxN768omi3zsKXqGF6zrNHI
-	 qbrZMcPwBb3Clb0gqEtcBLWoPUaW+06momaZxM8Vr0Dpf8+iY4JQxBODvnAOBekZ9T
-	 v9oP4BLXVi51Yczu4f9QLbUZe273Si02ncMBREj9iJGeg+IUkNGho68Fmgo9bXCvbH
-	 iERosdff8+eIQQitSoCIr89rCEFENXTmn8n6B1Qr+m79OZAaVdE/q7/6EwS9SrdVNQ
-	 eOi3Fptd8hAsefnaQ5IX57BR1KNl3i3b2YLVod0BKRm3C7u7/nRH3oUYto3eUBNZZx
-	 mxjuyck5o1kSQ==
+	b=Rp0GuVNCgKffXYuw6DcEBeVX3dvYQ2DLSJy53s+DrixmKD5q6taaz5+RwoAAAgZw3
+	 Z7SNrDVQSa+/F1BZ0W9RgcvLa+taOk0+1aZFmKKOS1SfhDlOh4aHl+V9uf85qPVgfh
+	 xTox+5N+9yjtUTnh49fBkQUYgpTIZ/YfoKhCf+wBnfpTtq6sml2LXpsEjOzhXWjSfa
+	 +//6rHlCzBh7Mt5Z2j2BXrCIJg1/8ub/3nA1oyzF3xM87WWGVDUzJgYPU7g0Fx0Ihv
+	 yTp5QEHNI+P4GY7dXJo7a/sr1HdKOGlwDNwR0PMskQej5cK3OYTqpEkBnSNVth6uE/
+	 RF2oGoz6wEymA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v7 01/10] dmaengine: Allow drivers to assign static
- channel IDs
+Subject: Re: [PATCH v7 09/10] PCI: endpoint: Add DMA endpoint function
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Koichiro Den" <den@valinux.co.jp>
-Cc: dmaengine@vger.kernel.org, linux-pci@vger.kernel.org, Frank.Li@kernel.org, vkoul@kernel.org
-In-Reply-To: <20260813063757.3131865-2-den@valinux.co.jp>
+Cc: dmaengine@vger.kernel.org, Frank.Li@kernel.org, vkoul@kernel.org, linux-pci@vger.kernel.org
+In-Reply-To: <20260813063757.3131865-10-den@valinux.co.jp>
 References: <20260813063757.3131865-1-den@valinux.co.jp>
- <20260813063757.3131865-2-den@valinux.co.jp>
+ <20260813063757.3131865-10-den@valinux.co.jp>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 13 Aug 2026 06:51:45 +0000
-Message-Id: <20260813065145.74D771F000E9@smtp.kernel.org>
+Date: Thu, 13 Aug 2026 06:53:58 +0000
+Message-Id: <20260813065358.927011F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 4 potential issue(=
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
 s) to consider:
-
-Pre-existing issues:
-- [High] Memory and ID leak in the error rollback path of dma_async_device_=
-register() when a subset of channels fail to register.
-- [High] Directly calling kfree() on a device struct after device_register(=
-) fails, leading to kobject resource leaks and potential use-after-free.
-- [High] dma_channel_rebalance() is called without holding dma_list_mutex w=
-hen dynamically registering or unregistering channels.
-- [Medium] device->chancnt is incremented without synchronization, leading =
-to data races during dynamic channel registration.
+- [Critical] Missing `.remove` callback in the EPF driver allows Use-After-=
+Free upon manual driver unbind.
+- [High] TOCTOU race in ConfigFS attributes allows bypassing bound state ch=
+ecks, leading to heap buffer overflows.
+- [Medium] Mixing goto-based error handling with scope-based `__free()` cle=
+anup in the same function.
 --
 
---- Patch [1]: [PATCH v7 01/10] dmaengine: Allow drivers to assign static c=
-hannel IDs ---
-commit d88a921ed93cbdf57ab5a802c1f278694ad4200a
+--- Patch [9]: [PATCH v7 09/10] PCI: endpoint: Add DMA endpoint function ---
+commit 59168807cdf2645897d81a698bfcd8a7744d66f2
 Author: Koichiro Den <den@valinux.co.jp>
+Subject: PCI: endpoint: Add DMA endpoint function
 
-dmaengine: Allow drivers to assign static channel IDs
+Add pci-epf-dma, an endpoint function that exposes selected
+endpoint-integrated DMA channels as a separate PCI DMA controller
+function.
 
-The dmaengine core assigns channel IDs in registration order. If a driver s=
-kips
-a hardware channel, chan_id can differ from the hardware numbering and a cl=
-ient
-cannot reliably correlate a requested channel with hardware resources. Let a
-driver request an exact channel ID before device registration.
-
-Link: https://lore.kernel.org/r/lm7tadnxsyrypu4mypptlkx5qkytex4qxsijdr5ydud=
-2n3anvf@yakjfjg5ng4u/
-
-> diff --git a/drivers/dma/dmaengine.c b/drivers/dma/dmaengine.c
-> index 6ffd8bd82154a..cc64a4679e6fa 100644
-> --- a/drivers/dma/dmaengine.c
-> +++ b/drivers/dma/dmaengine.c
-> @@ -1078,6 +1078,7 @@ static int __dma_async_device_channel_register(stru=
-ct dma_device *device,
->  					       struct dma_chan *chan,
->  					       const char *name)
->  {
-> +	unsigned int id;
->  	int rc;
-> =20
->  	chan->local =3D alloc_percpu(typeof(*chan->local));
-
+> diff --git a/drivers/pci/endpoint/functions/pci-epf-dma.c b/drivers/pci/e=
+ndpoint/functions/pci-epf-dma.c
+> new file mode 100644
+> index 0000000000000..7e1c3e184a06b
+> --- /dev/null
+> +++ b/drivers/pci/endpoint/functions/pci-epf-dma.c
 [ ... ]
-
-> -	/*
-> -	 * When the chan_id is a negative value, we are dynamically adding
-> -	 * the channel. Otherwise we are static enumerating.
-> -	 */
-> -	chan->chan_id =3D ida_alloc(&device->chan_ida, GFP_KERNEL);
-> +	if (chan->chan_id & DMA_CHAN_ID_STATIC) {
-> +		id =3D chan->chan_id & ~DMA_CHAN_ID_STATIC;
-> +		chan->chan_id =3D ida_alloc_range(&device->chan_ida, id, id,
-> +						GFP_KERNEL);
-> +	} else {
-> +		chan->chan_id =3D ida_alloc(&device->chan_ida, GFP_KERNEL);
-> +	}
->  	if (chan->chan_id < 0) {
->  		pr_err("%s: unable to alloc ida for chan: %d\n",
->  		       __func__, chan->chan_id);
-
-[Severity: High]
-This is a pre-existing issue, but does the error rollback path in
-dma_async_device_register() leak IDs?
-
-drivers/dma/dmaengine.c:dma_async_device_register() {
-...
-	err_out:
-		/* if we never registered a channel just release the idr */
-		if (!device->chancnt) {
-			ida_free(&dma_ida, device->dev_id);
-			return rc;
-		}
-
-		list_for_each_entry(chan, &device->channels, device_node) {
-			if (chan->local =3D=3D NULL)
-				continue;
-			mutex_lock(&dma_list_mutex);
-			chan->dev->chan =3D NULL;
-			mutex_unlock(&dma_list_mutex);
-			device_unregister(&chan->dev->device);
-			free_percpu(chan->local);
-		}
-		return rc;
-}
-
-If channel registration fails and one or more channels were already success=
-fully
-registered (device->chancnt > 0), it skips ida_free(&dma_ida, device->dev_i=
-d).
-
-Additionally, the rollback loop unregisters the previously successful chann=
-els
-but appears to miss calling ida_free(&device->chan_ida, chan->chan_id), whi=
-ch
-could permanently leak the channel IDs and their associated memory.
-
-
-[Severity: High]
-This is a pre-existing issue, but is it safe to use kfree() after
-device_register() fails?
-
-drivers/dma/dmaengine.c:__dma_async_device_channel_register() {
-...
-	rc =3D device_register(&chan->dev->device);
-	if (rc)
-		goto err_out_ida;
-...
- err_out_ida:
-	ida_free(&device->chan_ida, chan->chan_id);
- err_free_dev:
-	kfree(chan->dev);
- err_free_local:
-	free_percpu(chan->local);
-...
-}
-
-If device_register(&chan->dev->device) fails, the error handler directly ca=
-lls
-kfree(chan->dev).
-
-Once device_initialize() has been called (internally by device_register()),
-shouldn't put_device() be used to clean up the kobject state and avoid leak=
-ing
-the device name string?
-
-
-[Severity: High]
-This is a pre-existing issue, but are these list operations safe from data
-races?
-
-drivers/dma/dmaengine.c:dma_async_device_channel_register() {
-...
-	dma_channel_rebalance();
-...
-}
-
-drivers/dma/dmaengine.c:dma_async_device_channel_unregister() {
-...
-	dma_channel_rebalance();
-...
-}
-
-When dynamically registering or unregistering channels, dma_channel_rebalan=
-ce()
-is called without acquiring dma_list_mutex.
-
-Since dma_channel_rebalance() locklessly iterates over the global
-dma_device_list, could this cause list corruption if another device is
-concurrently registered or unregistered?
-
+> +static int pci_epf_dma_collect_resources(struct pci_epf_dma *epf_dma)
+> +{
+> +	const struct pci_epc_aux_resource *ep_to_rc_aux_chan[EDMA_MAX_WR_CH] =
+=3D {};
+> +	const struct pci_epc_aux_resource *rc_to_ep_aux_chan[EDMA_MAX_RD_CH] =
+=3D {};
+> +	const struct pci_epc_aux_resource *ep_to_rc_desc[EDMA_MAX_WR_CH] =3D {};
+> +	const struct pci_epc_aux_resource *rc_to_ep_desc[EDMA_MAX_RD_CH] =3D {};
+> +	const struct pci_epc_aux_resource *ctrl =3D NULL;
+> +	struct pci_epf *epf =3D epf_dma->epf;
+> +	struct pci_epc *epc =3D epf->epc;
+> +	struct device *dev =3D &epf->dev;
+> +	int count, i, ret;
+> +
+> +	count =3D pci_epc_get_aux_resources_count(epc, epf->func_no,
+> +						epf->vfunc_no);
+> +	if (count <=3D 0)
+> +		return count ?: -ENODEV;
+> +
+> +	struct pci_epc_aux_resource *res __free(kfree) =3D
+> +						kzalloc_objs(*res, count);
 
 [Severity: Medium]
-This is a pre-existing issue, but does device->chancnt need synchronization
-here?
+Does this code mix goto-based error handling and scope-based cleanup in the
+same function?
 
-drivers/dma/dmaengine.c:__dma_async_device_channel_register() {
-...
-	chan->client_count =3D 0;
-	device->chancnt++;
-...
+The res variable uses __free(kfree) for cleanup, but later failures jump to
+a goto label instead of returning directly:
+
+	for (i =3D 0; i < epf_dma->wr_chans; i++) {
+		ret =3D pci_epf_dma_claim_channel(epf_dma, ep_to_rc_aux_chan[i],
+						&epf_dma->ep_to_rc_chan[i]);
+		if (ret)
+			goto err_release_channels;
+	}
+
+[ ... ]
+> +static int pci_epf_dma_build_metadata(struct pci_epf_dma *epf_dma)
+> +{
+> +	const struct pci_epf_dma_bar_map *ctrl_map;
+> +	u16 entry_size =3D PCI_EP_DMA_METADATA_CH_ENTRY_SIZE;
+> +	u16 wr_table, rd_table, total_len;
+> +	__le32 *metadata =3D epf_dma->metadata_addr;
+> +	unsigned int i;
+> +	int ret;
+> +
+> +	if (!metadata)
+> +		return -EINVAL;
+> +
+> +	ctrl_map =3D pci_epf_dma_find_map(epf_dma, epf_dma->ctrl);
+> +	if (!ctrl_map)
+> +		return -EINVAL;
+> +	if (epf_dma->wr_chans > FIELD_MAX(PCI_EP_DMA_METADATA_CTRL_WR_CH_COUNT)=
+ ||
+> +	    epf_dma->rd_chans > FIELD_MAX(PCI_EP_DMA_METADATA_CTRL_RD_CH_COUNT)=
+ ||
+> +	    entry_size > FIELD_MAX(PCI_EP_DMA_METADATA_CTRL_CH_ENTRY_SIZE) ||
+> +	    ctrl_map->res->size > U32_MAX)
+> +		return -EOVERFLOW;
+> +
+> +	wr_table =3D epf_dma->wr_chans ? PCI_EP_DMA_METADATA_HDR_LEN : 0;
+> +	rd_table =3D epf_dma->rd_chans ?
+> +		   PCI_EP_DMA_METADATA_HDR_LEN + epf_dma->wr_chans * entry_size : 0;
+> +	total_len =3D PCI_EP_DMA_METADATA_HDR_LEN +
+> +		    (epf_dma->wr_chans + epf_dma->rd_chans) * entry_size;
+> +
+> +	memset(metadata, 0, total_len);
+
+[Severity: High]
+Can a concurrent write to the configfs attributes cause an out-of-bounds
+memset() here?
+
+During the binding process (pci_epf_dma_bind), pci_epf_dma_build_layout()
+allocates space based on the current wr_chans. However, the store
+function for the attribute checks epf_dma->epf->epc without holding a lock:
+
+static ssize_t pci_epf_dma_wr_chans_store(...)
+{
+	...
+	if (epf_dma->epf->epc)
+		return -EOPNOTSUPP;
+	...
+	epf_dma->wr_chans =3D val;
+	...
 }
 
-The increment device->chancnt++ is performed without holding dma_list_mutex=
- or
-any other lock.
+Could this allow wr_chans to increase after the space is allocated but
+before total_len is calculated for this memset?
 
-If multiple channels are dynamically registered concurrently on the same de=
-vice,
-could updates to this counter be lost?
+[ ... ]
+> +static struct pci_epf_driver pci_epf_dma_driver =3D {
+> +	.driver.name	=3D "pci_epf_dma",
+> +	.probe		=3D pci_epf_dma_probe,
+> +	.id_table	=3D pci_epf_dma_ids,
+> +	.ops		=3D &pci_epf_dma_ops,
+> +	.owner		=3D THIS_MODULE,
+> +};
+
+[Severity: Critical]
+If a user manually unbinds the driver via sysfs, does the lack of a .remove
+callback lead to a use-after-free?
+
+Because there is no .remove callback, the unbind operation appears to free
+the epf_dma structure via devres cleanup, but leaves the epf->event_ops
+pointer populated and the map_work delayed work still pending.
+
+Could an in-flight map_work execution or a subsequent EPC link event try to
+dereference the freed epf_dma memory?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260813063757.3131=
-865-1-den@valinux.co.jp?part=3D1
+865-1-den@valinux.co.jp?part=3D9
