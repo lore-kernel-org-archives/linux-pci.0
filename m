@@ -1,94 +1,84 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D82148CD5B
-	for <linux-pci@vger.kernel.org>; Thu, 13 Aug 2026 17:07:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 141C5499F15;
+	Thu, 13 Aug 2026 17:08:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786640853; cv=none; b=EvDjCJlPwyUxBs27QYrAMYyvh7559WDxOyRK6lUfsSKMVFQX4f/ThNn6jKEeD80NnlJPk9WW2leKYmreoLYjrleqcwFJZhtZErMWRaNdPnpXGXupcyShepNEWsmYbz+zgjiE5v2guL9HGhP8iUAVCQwCMVhiuDmt+myRWbxGkrY=
+	t=1786640903; cv=none; b=XQFrV/S/9rp3kSfjnZkUPuEpxM7ZUG/e8teZ0k1B7R0z9bCuJ8W54Lph1fN6M9c+5ihZBeMWngeJyjIWtZdMD5VvT5Sc2k0Shzj9yV6FK7EjinwDcYo65FF/ItIS9zvumIYobbRQ7D88Np4fEwZQ1JNC/aVNJWuTSbhVSsDJi1c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786640853; c=relaxed/simple;
-	bh=eCaZ/52uVLPYAYISBpk8C2EBeJ+AHDtyRB+9IKgs8yU=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=J8SCrzmya5jkBg5v/jekVCk+qK/XtYRWWQ87x3WpWNMrc4zymafsbQr15eez/eAHWkf1xz7nxY/xA9O+StOEW+JvjcbYnc16kYrfOlUA1i8fZf8Ln/dE0xNHD670G7lqtnV/YTBx6OKGsc3P7wPPCWdj4tkhDEIVSYUkSuXaaDU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dg9o0Yte; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1786640903; c=relaxed/simple;
+	bh=6ejOHroDsSTZfWUQykWe0DhGDiou1QMbMw11Hct4uLQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=hvwgBfT1Y4Rj1awXjGYzxwAFi2pPVf0B/mn+lARyB+0oo1Kf9DoImZwA8fbGQsh3BNLt0dkSIEUWYrFGaPJZSvLj+hg+k1SlSjRAiVFDFNjx/elW/jhi6KPYQKqxyaMhbkx+y7SBJaRtI/xZyOQlVEJ9ckgEUTPoJxDUOYxOIoI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oMexpM9H; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dg9o0Yte"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C6E4E1F000E9;
-	Thu, 13 Aug 2026 17:07:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oMexpM9H"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BFB171F000E9;
+	Thu, 13 Aug 2026 17:08:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786640852;
-	bh=xwf7FC1AzMAi4aWb5KTsfubLsfXFduPDEy0FY/rQZUs=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=dg9o0YteESn3e/C66bpnUEjQ1bXg+7Jj2709DJiY9CBXrrGcfi2EdCGH2+6rcwf3b
-	 Psx0/T1J72cxQhlB/Il+CQT694HKSqqa4J5n0b1mqc4dOrQgtZYyWoW+l1+2K6/BtA
-	 aEFhuLXhNjy4HwpUhD3V1/a/3v+XIH9CAA79omTWEgaC34nWRgnEY+dJzMhEaMxBr2
-	 XYne4mkKzJyMjUC37Y1jIsJt/tg/0w+ccGSLdcOCIghqxgACwMqxenfzcfGSEsybAF
-	 2XSExjYH9o3mTs327KmHenm/SV3BIxGD3VvWR2+4ekWzhAIqUpMS4TSO1Q7lwHWK7y
-	 xvvH02NXZuzXQ==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 5/5] rust: pci: expose the allocated interrupt type
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Danilo Krummrich" <dakr@kernel.org>
-Cc: linux-pci@vger.kernel.org, ojeda@kernel.org
-In-Reply-To: <20260813165234.620555-6-dakr@kernel.org>
-References: <20260813165234.620555-1-dakr@kernel.org>
- <20260813165234.620555-6-dakr@kernel.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 13 Aug 2026 17:07:31 +0000
-Message-Id: <20260813170731.C6E4E1F000E9@smtp.kernel.org>
+	s=k20260515; t=1786640902;
+	bh=VWzDmzaSohfXNDpzSvOTbywfXkmzWVFikcHjO6Hw6u4=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=oMexpM9HgR/F0qhmie3lMLfDUJpZIBemLcjAJuOeeXJ7qClvyHWtAJ7CACr2xcuca
+	 PI15FrVmdVqRoxp0SvaXKM5/JljD20eiiESKQyaqqyIRjYhc/EOwME1AZBJrqjLV+1
+	 q20DhdzMkeIvxgOxDTTFthCM9BV6rNF5lZyMY8RflP51tVam2ROq+LJ6M+H9BF+T8Y
+	 3T60TyZBPTn1crYl9EO4WTzem+JiL7xet9FlLKkEiKIixiKu9WaHTYQgDxEdcf+lmh
+	 p+9A1YSS9kBCyQjMvaSkyqceLZW4q1dAsGi8LBwFo5YliGzhxUFcuO3wjGtVDfjh8p
+	 o6WUseK5r910Q==
+Date: Thu, 13 Aug 2026 12:08:20 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Christian Marangi <ansuelsmth@gmail.com>
+Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Ryder Lee <ryder.lee@mediatek.com>,
+	Philipp Zabel <p.zabel@pengutronix.de>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+	Jianjun Wang <jianjun.wang@mediatek.com>, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-mediatek@lists.infradead.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH v5 2/2] PCI: mediatek-gen3: Add 2-lanes mode support for
+ Airoha AN7581
+Message-ID: <20260813170820.GA1143871@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260806165334.7328-3-ansuelsmth@gmail.com>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [Low] rust_helper_pci_irq_type() causes a build failure when CONFIG_PCI i=
-s disabled because pci_irq_type() is undefined.
---
+On Thu, Aug 06, 2026 at 06:53:32PM +0200, Christian Marangi wrote:
+> The Airoha AN7581 SoC supports configuring the first PCIe0 lane to 2-lanes
+> mode (x2 link) by bonding it with the second PCIe lane (PCIe1). This is
+> done by configuring the PCIe MUX in the SCU register.
+> 
+> To correctly configure PCIe0 in x2 link, define in DT the following
+> additional properties:
+> 
+>   - additional reg, 'sec-pcie-mac' for the secondary PCIe.
+>   - PERSTOUT reset for both main and secondary PCIE0, called 'perstout' and
+>     'sec-perstout'
+>   - 'airoha,scu' property to correctly configure the SCU register for the
+>     PCIe MUX
+>   - 'num-lanes' set to '2' to enable PCIe0 in x2 link
+> 
+> In such configuration the EQ preset are configured to the same values.
+> 
+> To permit correct configuration of the PCIe link, additional logic is added
+> to assert and deassert the PERSTOUT resets. Support of these additional
+> reset was introduced in Airoha clk driver with commit
+> 6712f48eb3a1 ("clk: en7523: add support for dedicated PCIe PERSTOUT reset")
+> and on backporting of this commit also the clk driver change will be
+> needed.
 
---- Patch [5]: [PATCH v3 5/5] rust: pci: expose the allocated interrupt typ=
-e ---
-commit 60bd93f7488eb98904a6a089158302157e26da1d
-Author: Danilo Krummrich <dakr@kernel.org>
-
-rust: pci: expose the allocated interrupt type
-
-This commit adds irq_type() on IrqVectorRegistration and IrqVector, wrapping
-the new pci_irq_type() C function. It allows a driver to query the allocated
-interrupt type (MSI-X, MSI, or INTx).
-
-Link: https://lore.kernel.org/all/20260808031120.363869-4-jhubbard@nvidia.c=
-om/
-
-> diff --git a/rust/helpers/pci.c b/rust/helpers/pci.c
-> index e44905317d759..23b06becb4489 100644
-> --- a/rust/helpers/pci.c
-> +++ b/rust/helpers/pci.c
-> @@ -24,6 +24,11 @@ __rust_helper bool rust_helper_dev_is_pci(const struct=
- device *dev)
->  	return dev_is_pci(dev);
->  }
-> =20
-> +__rust_helper unsigned int rust_helper_pci_irq_type(struct pci_dev *pdev)
-> +{
-> +	return pci_irq_type(pdev);
-> +}
-> +
-
-[Severity: Low]
-Does this code cause a build failure when CONFIG_PCI is disabled?
-
-It looks like this regression could result in an implicit declaration error,
-because there is no fallback stub for pci_irq_type() in the CONFIG_PCI=3Dn
-block of include/linux/pci.h, and this helper is unconditionally compiled h=
-ere.
-
-[ ... ]
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260813165234.6205=
-55-1-dakr@kernel.org?part=3D5
+I don't see 6712f48eb3a1 in upstream or linux-next.  Is this SHA1
+going to valid if we merge this for v7.3?
