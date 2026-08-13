@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 949E53F0A87;
-	Thu, 13 Aug 2026 05:33:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 783FC3F5BDB;
+	Thu, 13 Aug 2026 05:34:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786599213; cv=none; b=a7MD8o86/H2cCLFpgL15T15ySbGREOvC+ouPuofnUq1vI4NRTd+Hs7DbnQ0GI9x2HEXmwUWS8e3BEs3z1BthGXhWl1YpzWQOJ6dgUvHkjQqPRwWm3yOQznMQriivYmgPfb4teN2UZmNlXeUPY4VGX6QugoIHnlBfw8qlnx6eFII=
+	t=1786599257; cv=none; b=Dx2nNq+/ZwJ2EQny/7P9kx91cbiUxdzZCn6luWCZHvG4VMAHNgVaoTkKsVKG9IV4t/1BumLX2xlVVH0kR02szg4rSBcWCnRPW0J4/HhrMPdsj2CizV5cj9QLVp7Rd6QZ6EohF1Ek93sycGPzKF9HD0/YLbJdRLPomomMmkxi89c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786599213; c=relaxed/simple;
-	bh=TAmsWHq1SIR22M3YCbEDrQRZOfmQdfOnrbKasNpszp4=;
+	s=arc-20240116; t=1786599257; c=relaxed/simple;
+	bh=N9RPka2uXU7n5hQjlZpP+81d7WGcwlUaUhmWSdWYFLY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=rz8K1dpLf2/4guvEjN1JXyjqKzdmQsqMl/zkm21MgCw7YRRmhXvsbeckln3kQDhOnUrMtV9+CL9WL2KkhXlOc1L3Bzdv1vPeNlGzgDibQ1bUaGOWY1uMSv80VQW9rjlFfdhYDSVokjowAdVIkMJiFpNDoL2uy+ghF2Xq3J8ZY0g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CExkXP8m; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=oK9qjIosWyFFdY0mxxPNEg4siLkr9BITuVYHxo645+U4o3OrYChEOLDFWOVzRAcJAHXIZRyGhnVvWxuCx6jeJ9Lpg7/tHNV2CbIEoX3xmAgrmLXlgh5msL1yw3CmivetrBSvQb+g46TRncgoqKJiaXoi785IGO8D2t0v/9VXpeA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=J/VtfZE8; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CExkXP8m"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1AF5D1F000E9;
-	Thu, 13 Aug 2026 05:33:24 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="J/VtfZE8"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 629381F000E9;
+	Thu, 13 Aug 2026 05:34:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786599210;
-	bh=O+9GszJ+HuZmQHbbHRFt9rwiQlTbDbUu1kZ7vlHwnWQ=;
+	s=k20260515; t=1786599251;
+	bh=DwRMhKXscDokGJvrUL9WdZpOZUzQ0EylQXiCkptByQs=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=CExkXP8mT0pz+cf7BLkvIL2jfIwOVnJbnnPCTzTHqJRy5cX6w6aNb5oCj+mCK9lur
-	 nJMijIw8vxvWpg1iySs03BD3FH546lZrM5jAeJNg3JDCkoo2O0X1GhpjzGVFJySKLX
-	 RRIGOK0/SEw/EHplemES64fzor14vMTEItJW1oCq0nFRY8MQCnC+qb3sDL1RenDwbu
-	 RQsyDdVmUXLo5OwT4evbLla5rO/IP3WNycNJOpFXEMCib0kOz1iLwS11PfaixUAFZB
-	 zyBAzHUY9K1ubwQge/l+oHPRsSc/fxqAsssBjl3zdRn1oTs4O/DJbqVC80V0/C3gnP
-	 t37HH6pBOjc8Q==
-Date: Thu, 13 Aug 2026 07:33:21 +0200
+	b=J/VtfZE8JAG/LS2XBzt5fj/dQ36Dg8TtJ6S7BgYN/+eLK27SKRQM9UB4XyaO0Br6+
+	 vysHov912Ysr8yt2r0ovh8GN2c4gnBw5QgB+6IBzJZAGxF64+o38bFOD788XKXHaEv
+	 7TVL31NcAtf2gvlaNOZjweHNo7SijoHPAG+DaOV7d2lw36zIQJAZcbzzEzDDc0ENkj
+	 rCXEK08NcBvahaJgUbtYkaLL76dZvo4IMH45GoJZnvCUGb8U2ja3l+hwiT6VlDtUS+
+	 2fvm8VWcpFOmUef8VpAkm6PsgKDJ8sSXMmPyNZcr+MLVRtp9P3dRcESEgZr0ZTAxZc
+	 C1j8KwIeaAlZA==
+Date: Thu, 13 Aug 2026 07:34:02 +0200
 From: Manivannan Sadhasivam <mani@kernel.org>
 To: Loic Poulain <loic.poulain@oss.qualcomm.com>
 Cc: Bartosz Golaszewski <brgl@kernel.org>, 
@@ -36,11 +36,11 @@ Cc: Bartosz Golaszewski <brgl@kernel.org>,
 	Conor Dooley <conor+dt@kernel.org>, linux-pci@vger.kernel.org, linux-pm@vger.kernel.org, 
 	linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-bluetooth@vger.kernel.org, 
 	devicetree@vger.kernel.org, Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-Subject: Re: [PATCH v5 04/11] power: sequencing: pcie-m2: Report power
+Subject: Re: [PATCH v5 05/11] power: sequencing: qcom-wcn: Report power
  controllability
-Message-ID: <pugjugitz7qmwcua4biufmmltmdwe7n4p4ivpwxmxqiefhtg7u@gatoruxxcwid>
+Message-ID: <anjo55lluayxddxu443viltahzbs24fvildpfy7uxgj6rbgx7c@hxebxqczlgev>
 References: <20260720-monza-wireless-v5-0-69ec6743543c@oss.qualcomm.com>
- <20260720-monza-wireless-v5-4-69ec6743543c@oss.qualcomm.com>
+ <20260720-monza-wireless-v5-5-69ec6743543c@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -50,19 +50,17 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260720-monza-wireless-v5-4-69ec6743543c@oss.qualcomm.com>
+In-Reply-To: <20260720-monza-wireless-v5-5-69ec6743543c@oss.qualcomm.com>
 
-On Mon, Jul 20, 2026 at 10:04:06AM +0200, Loic Poulain wrote:
-> The M.2 Key E connector gates/resets its functions through the
-> W_DISABLE1# (PCIe/WiFi) and W_DISABLE2# (Bluetooth) signals.
-> When a signal is not routed to a host GPIO, the corresponding
-> enable/disable callbacks are no-ops, so the consumer cannot gate
-> or reset that function on its own.
+On Mon, Jul 20, 2026 at 10:04:07AM +0200, Loic Poulain wrote:
+> The "bluetooth" and "wlan" targets drive the BT_EN and WLAN_EN GPIOs to
+> gate the respective functions. These GPIOs are optional, on some boards
+> they are hardwired to an always-on pull-up and not routed to a host GPIO.
+> In that case the corresponding enable/disable callbacks are no-ops, so the
+> consumer cannot gate or reset that function on its own.
 > 
-> Implement the .is_controllable() callback on the "uart" and "pcie"
-> targets so that consumers can query this per instance (based on the
-> runtime presence of the W_DISABLE2#/W_DISABLE1# GPIOs) via
-> pwrseq_is_controllable().
+> Implement the .is_controllable() callback on the "bluetooth" and "wlan"
+> targets so that consumers can query this via the pwrseq API.
 > 
 > Signed-off-by: Loic Poulain <loic.poulain@oss.qualcomm.com>
 
