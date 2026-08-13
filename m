@@ -1,121 +1,75 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C68CD2F361B;
-	Thu, 13 Aug 2026 06:47:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA5132E22B5;
+	Thu, 13 Aug 2026 06:50:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786603630; cv=none; b=nr4oBpfMV9Uu8Eu6oTiT4dp5aqRu5LycdLKOF9UIPzBOLNudHZS5Pb5ILgD2eUF9SdbaN+CvsE3dBH1IE23DN5rwPtEZQl+hzTDnBV6uawzyyG+Bj62NzbfaMhtfbXEBHiJPuimKX150QSeaV8SlFIqMlxugeY1u3OJNaRRRNwI=
+	t=1786603810; cv=none; b=jwIAGFSiO55iBe/EBojmwSXb0ccz1xsavAn+yBnhQA3agG9h2SHlstdghha/hSrmtb9sQue1zDOJ9m8b/MEWumDEZoTx2mhuHQeTuqKsnzV9X+jlR9UFXVR8iftvCQIpXjqE+kWXpea2mgHbg9xq5BCD2nCq4IZqEgfv1brpAI4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786603630; c=relaxed/simple;
-	bh=MmiG0fPidy0rcdj0+VijgMAXovLK41qQkxUNAOt25bE=;
+	s=arc-20240116; t=1786603810; c=relaxed/simple;
+	bh=pT2OFUTiV5i/GOAwO93UnDGyzFqzHVnyehDYVVndaZg=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=XLyjp4xysJsfKWPRWKx6/EGj/9hYT9Dq8GZ6noLeyHhoCxODnCj6gddeGrxgEpq3NqGdkK++nz3hg43XAMkgLNzcPs04QTwdglddZ1EQugrJw5z4nqi/kajtjQodTmzcyKFM4roXvuFfNJWv+fllqilw6R4ahZ2M21M8h5mFerA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KsY7cszR; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=VUw2ZTRDsIIcdMO0iukocjR81/rgt1Cq+sfPBp0P4xX1Wsr5lysJxbaCuReeG1FyepS82a6TkToz5R2khNNDUiRl5s3R7aPZ75jKrrmouWTLWmz23bUfTvsppdP88TNaoM8NjP64BQFbUYkyA61L6ELnqMMbLCK+gBXgwHTl/XI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Jvw/2mmU; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KsY7cszR"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 27E6B1F000E9;
-	Thu, 13 Aug 2026 06:47:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Jvw/2mmU"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 28BB11F000E9;
+	Thu, 13 Aug 2026 06:50:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786603628;
-	bh=x2eG15ej2ySVo+wnETSaQcaAJMqjfufoO1e93FnN1iU=;
+	s=k20260515; t=1786603809;
+	bh=pT2OFUTiV5i/GOAwO93UnDGyzFqzHVnyehDYVVndaZg=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=KsY7cszR8PNVVJ+i8oN+qW8NGvs8phfCfX3t3O+2CzWTNjehrLv8BfECGGSYzKKJU
-	 kasF9FCPUEIB2gDQhR4d4vOhnKVgbLbgYAG/WXb9FCNlNFMrPdurJuCYtBjM+y3x3P
-	 CWh6oD8NJoS1vlL4PhBotIE7XGYFHZ/5EFgdfe/JsP7mesAZOjqa/HTQzGQ8ieAcNP
-	 TGChAdtQz8xuh9jdqTzmJQF0GNOfLebvKx7ajhIYHjyxurN/EE7upx/oGBm6aaKokl
-	 oqyUE2s5FX317SdUyDxZ4PJmI6EV6Y8SVAbmcNatrVRP1kWIiSRa7fb+fWvMU2+2M5
-	 B5Vn/KamZv1/g==
+	b=Jvw/2mmUvt3R6dg3//43rIe9Do1sNlY7J/CGNwfgFroLSJX6I2rmsUZDJG826Ov76
+	 PVTIuZo1n7BDLSP7cl2B/55HZNOLgLIARTY15HMaiwPRnabJ6n0L1ra2pSUl7lrCjh
+	 M8KKj/NRHs+p4RA4XqA0NiMv1DdFZCSQAsZO6UiRJORZWsASo4ulxEwC9z4ZhVDZRU
+	 PrmgPO74rDw1+gfMoAXQnfIaZyHloKSYvO8VZ9/kkjriFYHlVDhpuglQB8VotL3BHL
+	 Da6WuWlGdje/Dx07PLFRdGjWd6+8JOApwn9/Mo7f8UtbErG7014hg/foB6FGFORnmb
+	 PG/T3Zn2foyJQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v7 06/10] PCI: dwc: Implement endpoint DMA channel
- delegation
+Subject: Re: [PATCH v7 08/10] dmaengine: dw-edma-pcie: Discover endpoint DMA
+ metadata
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Koichiro Den" <den@valinux.co.jp>
-Cc: vkoul@kernel.org, dmaengine@vger.kernel.org, Frank.Li@kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260813063757.3131865-7-den@valinux.co.jp>
+Cc: Frank.Li@kernel.org, vkoul@kernel.org, dmaengine@vger.kernel.org, linux-pci@vger.kernel.org
+In-Reply-To: <20260813063757.3131865-9-den@valinux.co.jp>
 References: <20260813063757.3131865-1-den@valinux.co.jp>
- <20260813063757.3131865-7-den@valinux.co.jp>
+ <20260813063757.3131865-9-den@valinux.co.jp>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 13 Aug 2026 06:47:07 +0000
-Message-Id: <20260813064708.27E6B1F000E9@smtp.kernel.org>
+Date: Thu, 13 Aug 2026 06:50:08 +0000
+Message-Id: <20260813065009.28BB11F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [High] Missing validation in dw_pcie_ep_reclaim_dma_chan leading to unsaf=
-e downcast and bypass of VF restrictions
---
+> Teach dw-edma-pcie to discover a PCI endpoint DMA function from
+> BAR-resident metadata. The metadata supplies the DMA register window,
+> channel counts, descriptor windows, optional auxiliary windows, and
+> endpoint-local descriptor and auxiliary addresses. Accept DesignWare
+> eDMA unroll, HDMA compatible, and HDMA native linked-list layouts.
+>=20
+> Endpoint-provided DMA channels use raw slave addresses because the host
+> programs transfers against endpoint physical addresses, not PCI BAR
+> addresses. The host-side dw-edma-pcie instance is remote-routed by
+> default, so delegated channels report completions through IMWr/MSI.
+>=20
+> Endpoint DMA metadata currently has no static PCI ID. Let an explicit
+> driver_override bind use the generic endpoint DMA metadata parser, but
+> do not treat arbitrary dynamic IDs without driver data as endpoint DMA
+> devices.
+>=20
+> The endpoint polls HOST_REQ at a low idle rate before programming DMA
+> window submaps and setting READY. Let the host wait for several endpoint
+> poll periods before treating the READY handshake as timed out.
+>=20
+> Signed-off-by: Koichiro Den <den@valinux.co.jp>
 
---- Patch [6]: [PATCH v7 06/10] PCI: dwc: Implement endpoint DMA channel de=
-legation ---
-commit ade184c0035acad80c032f5a61a7726af2557e6c
-Author: Koichiro Den <den@valinux.co.jp>
-PCI: dwc: Implement endpoint DMA channel delegation
-
-Implement the EPC DMA channel delegation operations for DesignWare endpoint
-controllers. Verify that the DMA engine channel reserved by the endpoint
-function belongs to the integrated DesignWare eDMA instance, then hand its
-interrupt routing to the host.
-
-> diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pc=
-i/controller/dwc/pcie-designware-ep.c
-> --- a/drivers/pci/controller/dwc/pcie-designware-ep.c
-> +++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
-
-[ ... ]
-
-> +static int dw_pcie_ep_delegate_dma_chan(struct pci_epc *epc, u8 func_no,
-> +					u8 vfunc_no, struct dma_chan *chan)
-> +{
-> +	struct dw_pcie_ep *ep =3D epc_get_drvdata(epc);
-> +	struct dw_pcie *pci =3D to_dw_pcie_from_ep(ep);
-> +	struct dw_edma_chip *edma =3D &pci->edma;
-> +	int ret;
-> +
-> +	ret =3D dw_pcie_ep_check_edma_vfunc(vfunc_no);
-> +	if (ret)
-> +		return ret;
-> +
-> +	if (!edma->dw)
-> +		return -ENODEV;
-> +
-> +	if (!chan || chan->device->dev !=3D edma->dev)
-> +		return -EINVAL;
-> +
-> +	return dw_edma_delegate_chan(chan);
-> +}
-> +
-> +static void dw_pcie_ep_reclaim_dma_chan(struct pci_epc *epc, u8 func_no,
-> +					u8 vfunc_no, struct dma_chan *chan,
-> +					bool quiesce)
-> +{
-> +	dw_edma_reclaim_chan(chan, quiesce);
-
-[Severity: High]
-Should this function validate the channel owner and virtual function status=
-=20
-before passing it to dw_edma_reclaim_chan(), similar to the checks performe=
-d=20
-in dw_pcie_ep_delegate_dma_chan()?
-
-If an endpoint function driver calls this with a generic dma_chan from a
-different DMA controller (for example, during error unwinding), couldn't=20
-dw_edma_reclaim_chan() perform an unsafe downcast when it unconditionally=20
-processes the pointer?
-
-Additionally, omitting dw_pcie_ep_check_edma_vfunc() appears to allow virtu=
-al=20
-functions to manipulate channels they are restricted from accessing during=
-=20
-delegation.
-
-> +}
+Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260813063757.3131=
-865-1-den@valinux.co.jp?part=3D6
+865-1-den@valinux.co.jp?part=3D8
+
