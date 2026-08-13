@@ -1,200 +1,274 @@
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+Received: from MRWPR03CU001.outbound.protection.outlook.com (mail-francesouthazon11011034.outbound.protection.outlook.com [40.107.130.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 889A4370AE3;
-	Thu, 13 Aug 2026 16:26:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786638388; cv=none; b=PQdKOeYuPX+dVcBJkqg4yO8EbhobUA4WZjVStbmeNzRYVguA4IMb+4fHwn6W3t1a5jJLZfngyIJVp3l+y0lgpFA/SFT6ELkwplweDKF3zwzOP7+wpgCcLrQNuFXAyJ6DQcXaZ/npYlomRE2C+CBhfbF0UcTpdDGu6lWvMZFvSuY=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786638388; c=relaxed/simple;
-	bh=7mqslmYH9+fsaB85EsqmmvZuiePbQOEBmTjiayL8CuI=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=oFwWlePBW11uICOg9vWXAKV8q7WtUqZ4h5Mn7HK67YBu/SJtXd4TsF5zfOGmUBvPX1bTkUcz4oI15zZt14OeaX/7+/wsWhmB+ME6z2kFuT28Ez4+R8UB8xngaQpGx9BSvdhtdCUlho+s68ymG5cn+r7PcIo4N5onl6qH6V3cbvg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=TTYKDnuz; arc=none smtp.client-ip=148.163.158.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 791343932D8;
+	Thu, 13 Aug 2026 16:32:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.130.34
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1786638730; cv=fail; b=nYbS5jCqFcKdCwELyO2QEt3EvMJFDDGdQBZ6gA+wsQBlEfr9In2SSOn0G81n+geXKBkc8HWscaIBAkWvqKyYstdSSKh3gZwrASsXN6yMmcZkB+3plCWivQx1UhJ3KPSPw6DAq0S5ql7WCp+7pWIzkRTL5MyzIHNGSvbR3dEAHGk=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1786638730; c=relaxed/simple;
+	bh=njQU0/dr+EcSFCTxmcY6SM5XX55dhAt7z3rDKSDXv7Q=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=db0KtfX+chG/SzUfpIDKZzZ8UHywFKsUr09qCKZwFMghlFmljb++f2iXYAUFuAD01GnS7VpwmvHP0O77OM1Qx6X02nOroWIMRFhs2azwGuIWTEpJaPSFk4dPJTv8YEyyk58c77enXbHm7JvI1DUlUC1UoR8blqJnUPs+Q89EWtc=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com; spf=pass smtp.mailfrom=oss.nxp.com; dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b=rLGWVq/n; arc=fail smtp.client-ip=40.107.130.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="TTYKDnuz"
-Received: from pps.filterd (m0353725.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 67DFWgwU1629131;
-	Thu, 13 Aug 2026 16:26:19 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pp1; bh=YVmoYD
-	JzajsqMmcqhNpEac8ETHDbvmkmlQk/Rwa28PQ=; b=TTYKDnuzHJ3gZsjDbO2NeI
-	JRGFzJeOn7RaS9GoC4EN62no/Uq4hzTcMau5r7jzUrCv8k2zruOTw2XhUkqfx9KA
-	Tx+0QiyJ+7JoZ+gcfNZWA6oZzttggdMoF9km2bsNctfb1PTmUiuJ7MrKev3cvPWZ
-	GRNeX8OVacRYKcOAxWTULZZ4lU5n+jssxHqAh+FHGyzVwvUAnnPTBvx9bahdlpqs
-	qe7Yxz/+gSaDmy2drRJLDOddyxRH2xixOS9As9gKCX6eoX5CI0SU5eY+lbjeKppT
-	vMnLmKe+4FOeu4e917M2LJ8e657z4f+06ChnjmcAdzT1pvWV9IzhAAwCT8Ny6WYA
-	==
-Received: from ppma12.dal12v.mail.ibm.com (dc.9e.1632.ip4.static.sl-reverse.com [50.22.158.220])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4fyb2416rf-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 13 Aug 2026 16:26:18 +0000 (GMT)
-Received: from pps.filterd (ppma12.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma12.dal12v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 67DGQIwZ018343;
-	Thu, 13 Aug 2026 16:26:18 GMT
-Received: from smtprelay02.wdc07v.mail.ibm.com ([172.16.1.69])
-	by ppma12.dal12v.mail.ibm.com (PPS) with ESMTPS id 4fxesqbw79-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 13 Aug 2026 16:26:18 +0000 (GMT)
-Received: from smtpav01.dal12v.mail.ibm.com (smtpav01.dal12v.mail.ibm.com [10.241.53.100])
-	by smtprelay02.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 67DGQFwb8520326
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 13 Aug 2026 16:26:16 GMT
-Received: from smtpav01.dal12v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id D4E3F58057;
-	Thu, 13 Aug 2026 16:26:15 +0000 (GMT)
-Received: from smtpav01.dal12v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 4EAD858059;
-	Thu, 13 Aug 2026 16:26:15 +0000 (GMT)
-Received: from [9.61.251.149] (unknown [9.61.251.149])
-	by smtpav01.dal12v.mail.ibm.com (Postfix) with ESMTP;
-	Thu, 13 Aug 2026 16:26:15 +0000 (GMT)
-Message-ID: <ade2ea72-9491-4c03-8b67-08011c2c7328@linux.ibm.com>
-Date: Thu, 13 Aug 2026 09:26:14 -0700
+	dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b="rLGWVq/n"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=VYMzWaLhwxjNj1nV3J0Wv5OdoUsyYufiK5yZBO/eSvUl1uTmnosMsMowoC+CRmlAhV/icZDth7iFoi0pkukIcSUD0nfq3z6AKfQZrOF0aFF1HvuXXdn8SF1U15OjG9Zxb4Wua16SFiJQYHWqiwlrgvcbaB7PhUEXbJ/xRQoQL/567bdUaM6UE87O3YgxjTV36iFQ2Jyo7RSaz2pua+n2KXLHOO7U0md4zA3RRbI614AX7iKX6QUuPWBHRPGZIJPYTx8C64Do8N62U8tDuK7xW0Dn3NgRa8SG4auE+dRpHR2B+byUGBnfa+MewYfCLqmi7eK3DAKrDlg8PSnMV1RZzg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=Fu7VdXllGbIdaUiGD/5RTWzTnaLN2I0lJp5KNnFjcAw=;
+ b=MV0NTRC98QH4gAcjvEApvyLY0wHfxXn/eJtINwv7KqlZUUG6iAgy3/SH7CLq5UhR2CPVWrFE+CJrR3/ZwmjK3wDmfE/24aOLnKd/Xof8hvMW20WPv7cYiSoz4Y0KgforqcmviLnXa2q64NyhOnwrR5AeYEOJpozkZl3ihv9SYn5vjYIVqhA6G1ZYiOg5oLV7r8pEjfOo/QmkK7Jymx7M51B4NpMi+jfEWdu43cyEMZIeCPoC1lcWIKgXO8nmiHQA8Dci+baqkk5w7smkhL8XzH6N25mYT0bG2X0veq1iy2sfLrzkFms6rj4UHo/QDM+/FWDNx04thqI+EHEGeYVNZA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oss.nxp.com; dmarc=pass action=none header.from=oss.nxp.com;
+ dkim=pass header.d=oss.nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=NXP1.onmicrosoft.com;
+ s=selector1-NXP1-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=Fu7VdXllGbIdaUiGD/5RTWzTnaLN2I0lJp5KNnFjcAw=;
+ b=rLGWVq/nB+4GgIEhRzOlU6feBVjuI/3iZbgBDRWfG+tc1hLQuv/D+uhHWbK87Zf1rR+3tRPcV1nNTTN3qE37zUE1h8IJcCbgEu9o6WfVU56gaxEwO6tRn/4oGYEqh6DHrSwjzkK9mXBecPbMY5lHFA7FR6JxjZA8whkS3v6DZfmQZu5Y4cX6CfX08IfdSPAEj0IIBU+0N2v+2yB0syzAn9ns/Q+0jn6+qTng2TftiJ41tHKYwZUto2k644lsw2E8puHfqr0qhZRFuh1CS3o22viT8GLeAfwkMwbf9AFNjXHYX1O/SpfyJR/wckzPNj0klezFMDR2Nko+08cUHla3+Q==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=oss.nxp.com;
+Received: from DU4PR04MB11791.eurprd04.prod.outlook.com (2603:10a6:10:623::11)
+ by DU2PR04MB8552.eurprd04.prod.outlook.com (2603:10a6:10:2d7::5) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.315.14; Thu, 13 Aug
+ 2026 16:32:05 +0000
+Received: from DU4PR04MB11791.eurprd04.prod.outlook.com
+ ([fe80::11ca:6b74:3234:d7de]) by DU4PR04MB11791.eurprd04.prod.outlook.com
+ ([fe80::11ca:6b74:3234:d7de%5]) with mapi id 15.21.0315.014; Thu, 13 Aug 2026
+ 16:32:05 +0000
+Date: Thu, 13 Aug 2026 11:31:59 -0500
+From: Frank Li <Frank.li@oss.nxp.com>
+To: "Verma, Devendra" <devverma@amd.com>
+Cc: mani@kernel.org, vkoul@kernel.org, frank.li@kernel.org,
+	den@valinux.co.jp, dmaengine@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	michal.simek@amd.com
+Subject: Re: [PATCH v3 1/2] dmaengine: dw-edma: Enable Chan Separation via
+ VSEC
+Message-ID: <an3xf0TgbXhmYt96@SMW015318>
+References: <20260810101002.1726131-1-devverma@amd.com>
+ <20260810101002.1726131-2-devverma@amd.com>
+ <anoHDRj1hFh9ftn0@SMW015318>
+ <a2f27cda-b6ad-4c28-b8e0-f09e166ce385@amd.com>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <a2f27cda-b6ad-4c28-b8e0-f09e166ce385@amd.com>
+X-ClientProxiedBy: SA0PR11CA0140.namprd11.prod.outlook.com
+ (2603:10b6:806:131::25) To DU4PR04MB11791.eurprd04.prod.outlook.com
+ (2603:10a6:10:623::11)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v20 2/3] vfio-pci/zdev: Add a device feature for error
- information
-To: Alex Williamson <alex@shazbot.org>
-Cc: linux-s390@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, helgaas@kernel.org, schnelle@linux.ibm.com,
-        mjrosato@linux.ibm.com
-References: <20260630165553.725-1-alifm@linux.ibm.com>
- <20260630165553.725-3-alifm@linux.ibm.com>
- <20260717152650.3cfc2d10@shazbot.org>
-Content-Language: en-US
-From: Farhan Ali <alifm@linux.ibm.com>
-In-Reply-To: <20260717152650.3cfc2d10@shazbot.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-X-Authority-Analysis: v=2.4 cv=XqfK/1F9 c=1 sm=1 tr=0 ts=6a7df02a cx=c_pps
- a=bLidbwmWQ0KltjZqbj+ezA==:117 a=bLidbwmWQ0KltjZqbj+ezA==:17
- a=IkcTkHD0fZMA:10 a=Sv0fKeRqtYgA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=RnoormkPH1_aCDwRdu11:22 a=V8glGbnc2Ofi9Qvn3v5h:22 a=VnNF1IyMAAAA:8
- a=qNG8fd7tPmr0NF9BgyQA:9 a=QEXdDO2ut3YA:10
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODEzMDExNSBTYWx0ZWRfX7sXn35Fz5sfd
- 4M+z5gFbkOsPRsfQpoVnDkQv8eJdJXVPJ90LnpOxR/UDD6noLlMtiIEXnIemmH3ZbsQrdw0oXLK
- lDquQlgDSR5SmtZRMnj4dfB6vHXUak/oURVPkemPStdyPJ/BzycEcAVyC55zceFDXu3b2ljxQF+
- xEhaVgblq0usJI/nWZ9V3lVyBu/CO6CI13v9AVhueYl6o9/z6dtmAjQCOecOzEOZ5zyxOo9arDn
- WUs2sDKTIHrzAes1n2PmYM9+e6IdVX/7P9HaqXBULuEAkIbWpkCbU6D1pWwBf3bX/sZpKDmHuXM
- QphmeL3V0ZGtk84hME1xXI5GV0cwd1qkAMVR4/1PoeK8lzLn2R6fGOXZC6QkvNcFGJv13XZvLe2
- koxdaIsnkHKSA1iP/PhaW3QF2J7064J1NhWO5ahDAjOfrXGvdi/qThgTwNys9u7HDFDMXl1OVRA
- ditbumuGUd4ueml8ZZw==
-X-Proofpoint-ORIG-GUID: J6N4HrNf-QNrdiN_Z-y5ov85dotBBu6K
-X-Proofpoint-GUID: J6N4HrNf-QNrdiN_Z-y5ov85dotBBu6K
-X-Proofpoint-Spam-Info: AW1haW4tMjYwODEzMDExNSBTYWx0ZWRfX/5W4RleZKu8G
- QVOjWAjHWAqUIHbxEqhR7DrwW5w0KrDS6Cs/eSeN1zhhA2AB3PdH6v8v4+NXjTFvHbsupSoGEAD
- 7y4wlYV6NZ5OZJzI3W7eJA74JtRll/k=
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-08-13_05,2026-08-12_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- lowpriorityscore=0 spamscore=0 adultscore=0 malwarescore=0 clxscore=1015
- suspectscore=0 priorityscore=1501 impostorscore=0 phishscore=0 bulkscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2608130115
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DU4PR04MB11791:EE_|DU2PR04MB8552:EE_
+X-MS-Office365-Filtering-Correlation-Id: 04af2910-3813-4f67-cbe7-08def9586927
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|1800799024|376014|23010399003|19092799006|366016|22082099003|18002099003|56012099006|4143699003|11063799006|10067099003;
+X-Microsoft-Antispam-Message-Info:
+	87NXRHuJqivPCzddvZiKZFRM0ZgxQMF4hgneQ27fEcqm973glTBtswIvySzEBf2dhuzCZMe5GpGmdCjqg5X+/OBLdMwB5jndzIyM+Nnd458P4sGVMiMQ2x/wSx6QPYZNe/62A0sWy8b1GHhkJfGAYfszX0+sZQL1G360K9N/P46o84CneO9u55Sl71hbmz2MI0raWtZohNLhLNSNp8GzelB10LFoLwYgpIFmBF1bVIz7puDZQ21p6be2+xYls/0xgDA78m+LjUixzfrTkL6DH0DBjjUmt3/KEaRpCUDF7JEVlzlelUWheCkzDIpWz15flKjeidmrmtrglYTwr9PPdrwDSHZUfjc1OynHRvzOxF5AGeyvHLD9yj6jVj9VsxPBPSYt5z7FsIevjc7n1+rgoWyujqjXTsbzbj8qRFF7rVgwYbqn9d/z/Oz0yFfVFv0B13+uO1j5OCi1A79LhTRV5yfeykFremfkIzhOJEkbhdrUgk+btSFWuxbQnQXZjNBqsknz2Pcw7urlFr8sDtTzP59oqFEDkFjNRSRJXwqeS1jQDqE2xm7v/GO1whXqeGBGFJBYpekDnj9SAEnShojqASzQk98M7aofEcPZXj6FFRrCuAxzzwBXOz5A3Qq8/0fdh1tga1/1t7suS7dthTOaqHWhJdwXljzg1gVzkJE6PVw=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DU4PR04MB11791.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(376014)(23010399003)(19092799006)(366016)(22082099003)(18002099003)(56012099006)(4143699003)(11063799006)(10067099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?ciRsG/ioYTddvFJaah+BnH3SlFvm624rzSFRhAZMIbzESd82kYs3owctl+FO?=
+ =?us-ascii?Q?sCzIJjPknStJNG1Mq7fDNkBtxbAJ3R1XFK9CUqqt6SC0qCSUXCYQgqt6minE?=
+ =?us-ascii?Q?ALTFNkb2yRuO2Mg7jFgRpng5j9qW4Klp2BxyGYeXa6f7Lw5g3NjVuCKPmzcb?=
+ =?us-ascii?Q?s6p6vtAPvNTLd5NXRP3/zzCvLLnw5lSDHL0kXR8IZ77+tywYfH17mf/CRV/x?=
+ =?us-ascii?Q?uhzKhGxlY/VAajqeJ4Eu85Uu6ahLLP4P54mYKl5xB5+matLc+nbeeA4JwNvP?=
+ =?us-ascii?Q?jIiGR5bg+T4KJkj6ERRKLz/m8Wu5TOF+VhmA5gbcEVcaAQi1UBK+YavIkcJP?=
+ =?us-ascii?Q?oaNC0QsA8ogQVprwD2ziIacJughxUxw9y9TXTvAAku/f2YiuaxPL4c4FJ/ug?=
+ =?us-ascii?Q?mcwRjIOz5EgpxiCPL82+NgKa5+O/FZYrnXpcyDRDoBVMOTLslHpsKeXshurw?=
+ =?us-ascii?Q?T62icNGfD0hqZtwWVI/CY7J0Ho7aWbjO63B04nFGyfWuMqwV6Cmyikf/8129?=
+ =?us-ascii?Q?mRxeIZ6hoVJhP+T0NdSH+m2ZMdN2EoPX2RduaSjeLRaPLizTS6Wdk8GrzSeg?=
+ =?us-ascii?Q?8R6T2DHCocYYoQPrTU2TM9DcxnhEeMZmxrp2xuS3m+s93Gk3QY2l5c57E/pl?=
+ =?us-ascii?Q?4UIr9wJFEXxb+mkDS/nVZT2Usk0xf8Q6PPmWdcZOMz/rPeVDWwwkHkKJcdn4?=
+ =?us-ascii?Q?jV812InNYfU49cyQBYWLMYk7UocGxNkggDmd290NVSTnpn17eX3n0eGLJizb?=
+ =?us-ascii?Q?4O6KqwJ2o5Occe1TXmyhXNexd8VfzTok4uWTytB6OG29CSkCiYsJDzbf4X2y?=
+ =?us-ascii?Q?GU+DEe/GQNb+CjNdlJFuuZSYNMPRGyGeuyq21lnWATQFn2fbStw2pmCIThjh?=
+ =?us-ascii?Q?dmto1zkomXm3olZbAHqCeSdLDLqqYtKRnrljPSnje8O/F/eURV7Ll0WFCYeG?=
+ =?us-ascii?Q?iEcW9LghaK3DB2COjCwi5m4rkGMIXr93Ni8MMX9uL+jmyW0tUdsWNqfu4/x9?=
+ =?us-ascii?Q?RRNB1DgqDIZlTbvoaYaM4Z8N/88L+ZhK5HRc+2UMtgfKHn4zgxnFUXWlRXEq?=
+ =?us-ascii?Q?zoEFZxzsCUWtZd0Dhhh2ju9H1krfo7tG4DUvmIODER7+yj7iu3J5pRponH+4?=
+ =?us-ascii?Q?oXyYBZuYMFIt3p42OHJ70vguxb3ThXylRqP1N0Je9JnrQ526JQDMXmJT0BS0?=
+ =?us-ascii?Q?w7fvWdaHuEqNu2nJZLgcM9hDyy9zxjJeei0/XSqQbDCmbU8ZBxuoqut4K+j9?=
+ =?us-ascii?Q?OGAVipEKhzXX/iz45XczDt35AtapPNPX4lPI09OWAI+hrylKMs5oIp5CeEJF?=
+ =?us-ascii?Q?EzkgsmEzryecwHDH6F8UjBXgvANzk0qz+geYTDID+4956aWOORwOU2iwVllv?=
+ =?us-ascii?Q?b27mhEJOUZzfH1g91EaXx37XXSwotDMcaJt2wgFp0z8su/GpjG7K0tRtrRWp?=
+ =?us-ascii?Q?R13CXHREfxZBiOtawRdXCjwRnEWhQGSWfCs6Zx3eOwZngaExJGqzbN6Y+9Yv?=
+ =?us-ascii?Q?+hAEpJNfVtEDwVrjGslDsP0Ci4Uu9iADuarMSWYlFHgxaI2emx3llBGmWGqh?=
+ =?us-ascii?Q?S19oR6bQVA9IVodcKTNLLre7D33lzDuuIiFhqSqnfEpB76L/y6IDQzaDjPWK?=
+ =?us-ascii?Q?vvdxX7oNZ5O7WFrC6WATRkLE/haJ7w0SnAid0iYAjVW9NY8crq6TkY9iWVHP?=
+ =?us-ascii?Q?tfjx06WdQHD44G/JRAZW2xXQPVmwHxsHir6dul3JPh0qzbyRREoOiETNKN7t?=
+ =?us-ascii?Q?iEamP1+pwZsp6EaIP8d6Y99tpmynQDiOjFekP7X3PuAC5ceBmCx/?=
+X-OriginatorOrg: oss.nxp.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 04af2910-3813-4f67-cbe7-08def9586927
+X-MS-Exchange-CrossTenant-AuthSource: DU4PR04MB11791.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Aug 2026 16:32:05.2456
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: /JkQh0Nhc/pzP0P4R7sBCip3p6GHX9qsH0YYQFwnfhWm2X+3vEPnwG3n6pCT6Tc0TeDmI3zLfnJ9qnAnWFTK6bla4+uEaEycj8oT/2F7+DhevOYC1iR/mD4h0tqyjC7m
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DU2PR04MB8552
 
-
-On 7/17/2026 2:26 PM, Alex Williamson wrote:
-> On Tue, 30 Jun 2026 09:55:52 -0700
-> Farhan Ali <alifm@linux.ibm.com> wrote:
+On Thu, Aug 13, 2026 at 05:26:51PM +0530, Verma, Devendra wrote:
+> On 10-Aug-26 22:44, Frank Li wrote:
+> > On Mon, Aug 10, 2026 at 03:40:01PM +0530, Devendra K Verma wrote:
+> > > As per, 'Designware Cores PCI Express DM Controller - Reference
+> > > Manual', section 3.2.34.3, VSEC for DEVICE INFORMATION supports
+> > > the channel separation mechanisms. Basically, the HDMA IP allows
+> > > the user to configure the separation between DMA channel
+> > > registers and retrieve it via the VSEC capability mentioned
+> > > above.
+> > >
+> > > HDMA IP supports the channel register space separation from
+> > > 256B to 32KB. Default supported size is 256B.
+> > >
+> > > Signed-off-by: Devendra K Verma <devverma@amd.com>
+> > > ---
+> > > Changes in v2:
+> > >     o Replaced 'ch_sep_sz' with 'ch_space_sz' wherever
+> > >       applicable upon reviewer recommendation.
+> > >     o Dropped 1/3 patch of this series, after review,
+> > >       now the 2/3 is 1/2 of the current patch series.
+> > >
+> > > Changes in v1:
+> > >     o Modified dw_edma_get_ch_sep_sz() as per review comment.
+> > >       The function now supports ch_sep_sz up to 32KB.
+> > >     o Updated to description to reflect the supported channel
+> > >       separation sizes.
+> > > ---
+> > >   drivers/dma/dw-edma/dw-edma-pcie.c | 20 +++++++++++++++++---
+> > >   1 file changed, 17 insertions(+), 3 deletions(-)
+> > >
+> > > diff --git a/drivers/dma/dw-edma/dw-edma-pcie.c b/drivers/dma/dw-edma/dw-edma-pcie.c
+> > > index 791c46e8ae4c..5d7507a64056 100644
+> > > --- a/drivers/dma/dw-edma/dw-edma-pcie.c
+> > > +++ b/drivers/dma/dw-edma/dw-edma-pcie.c
+> > > @@ -31,8 +31,10 @@
+> > >
+> > >   #define DW_PCIE_XILINX_MDB_VSEC_DMA_ID		0x6
+> > >   #define DW_PCIE_XILINX_MDB_VSEC_ID		0x20
+> > > -#define DW_PCIE_XILINX_MDB_VSEC_DMA_BAR		GENMASK(10, 8)
+> > >   #define DW_PCIE_XILINX_MDB_VSEC_DMA_MAP		GENMASK(2, 0)
+> > > +#define DW_PCIE_XILINX_MDB_VSEC_DMA_BAR		GENMASK(10, 8)
+> >
+> > Don't mix code cleanup or reorg into this improvement patches.
+> >
 >
->> For zPCI devices, we have platform specific error information. The platform
->> firmware provides this error information to the operating system in an
->> architecture specific mechanism. To enable recovery from userspace for
->> these devices, we want to expose this error information to userspace. Add a
->> new device feature to expose this information.
->>
->> Userspace needs to be provide a buffer of fixed size. This size is provided
->> to userspace via the VFIO_DEVICE_INFO_CAP_ZPCI_BASE capability.
->>
->> Reviewed-by: Matthew Rosato <mjrosato@linux.ibm.com>
->> Reviewed-by: Niklas Schnelle <schnelle@linux.ibm.com>
->> Signed-off-by: Farhan Ali <alifm@linux.ibm.com>
->> ---
->>   arch/s390/include/asm/pci.h      |  2 ++
->>   arch/s390/pci/pci_event.c        | 19 ++++++++++++++
->>   drivers/vfio/pci/vfio_pci_core.c |  2 ++
->>   drivers/vfio/pci/vfio_pci_priv.h |  9 +++++++
->>   drivers/vfio/pci/vfio_pci_zdev.c | 45 ++++++++++++++++++++++++++++++--
->>   include/uapi/linux/vfio.h        | 23 ++++++++++++++++
->>   include/uapi/linux/vfio_zdev.h   |  2 ++
->>   7 files changed, 100 insertions(+), 2 deletions(-)
->>
->> diff --git a/arch/s390/include/asm/pci.h b/arch/s390/include/asm/pci.h
->> index 016386f7ef4a..88a125b92bdd 100644
->> --- a/arch/s390/include/asm/pci.h
->> +++ b/arch/s390/include/asm/pci.h
->> @@ -364,6 +364,8 @@ int zpci_clear_error_state(struct zpci_dev *zdev);
->>   int zpci_reset_load_store_blocked(struct zpci_dev *zdev);
->>   void zpci_start_mediated_recovery(struct zpci_dev *zdev);
->>   void zpci_stop_mediated_recovery(struct zpci_dev *zdev);
->> +int zpci_get_pending_error(struct zpci_dev *zdev,
->> +			   struct zpci_ccdf_err *ccdf);
->>   
->>   #ifdef CONFIG_NUMA
->>   
->> diff --git a/arch/s390/pci/pci_event.c b/arch/s390/pci/pci_event.c
->> index 8934b640a095..3ad16038e005 100644
->> --- a/arch/s390/pci/pci_event.c
->> +++ b/arch/s390/pci/pci_event.c
->> @@ -77,6 +77,25 @@ static int zpci_store_pci_error(struct pci_dev *pdev,
->>   	return 0;
->>   }
->>   
->> +int zpci_get_pending_error(struct zpci_dev *zdev,
->> +			   struct zpci_ccdf_err *ccdf)
->> +{
->> +	int head = 0;
-> Nit, unnecessary initialization.
+> It was recommended by you in the v1 of the same patch series that is
+> why pushed it.
 >
-> Otherwise LGTM and I can drop the initialization on commit if there's
-> no other reason for respin.  I think we just need a branch from Bjorn
-> to base this on once he's happy with the PCI series.  Thanks,
->
-> Alex
+> Ref: https://lore.kernel.org/all/amDbGHRbObX-lt5F@SMW015318/
 
-Hi Alex,
+You can fix the order by using prep patch, which just fix order, typo
+or some cleanup.
 
-Bjorn has accepted the PCI patches and merged it to his pci/slot 
-tree[1]. Would you be able to merge the vfio patches? I was able to 
-apply these patches on 7.2-rc7 and didn't have any conflicts. But let me 
-know if you need me to respin.
-
-Thanks again for all your help reviewing this series.
-
-Thanks
-
-Farhan
-
-
+But not mixed into new feature patches.
 
 >
->> +
->> +	guard(mutex)(&zdev->pending_errs_lock);
->> +
->> +	if (!zdev->pending_errs.count)
->> +		return -ENOMSG;
->> +
->> +	head = zdev->pending_errs.head % ZPCI_ERR_PENDING_MAX;
->> +	memcpy(ccdf, &zdev->pending_errs.err[head],
->> +	       sizeof(struct zpci_ccdf_err));
->> +	zdev->pending_errs.head++;
->> +	zdev->pending_errs.count--;
->> +	return 0;
->> +}
->> +EXPORT_SYMBOL_GPL(zpci_get_pending_error);
->> +
->>   void zpci_start_mediated_recovery(struct zpci_dev *zdev)
->>   {
->>   	guard(mutex)(&zdev->pending_errs_lock);
+> > > +/* AMD CPM6 (Xilinx) supported cap */
+> > > +#define DW_PCIE_XILINX_CPM6_VSEC_CH_SEP		GENMASK(18, 16)
+> > >   #define DW_PCIE_XILINX_MDB_VSEC_DMA_WR_CH	GENMASK(9, 0)
+> > >   #define DW_PCIE_XILINX_MDB_VSEC_DMA_RD_CH	GENMASK(25, 16)
+> > >
+> > > @@ -73,6 +75,7 @@ struct dw_edma_pcie_data {
+> > >   	u16				wr_ch_cnt;
+> > >   	u16				rd_ch_cnt;
+> > >   	u64				devmem_phys_off;
+> > > +	u32				ch_space_sz;
+> > >   };
+> > >
+> > >   static const struct dw_edma_pcie_data snps_edda_data = {
+> > > @@ -127,7 +130,7 @@ static const struct dw_edma_pcie_data xilinx_mdb_data = {
+> > >   };
+> > >
+> > >   static const struct dw_edma_pcie_data xilinx_cpm6_dma_data = {
+> > > -	/* MDB registers location */
+> > > +	/* CPM6 registers location */
+> >
+> > This typo fix have not mixed this patch.
+>
+> This is subtle change. Since the focus of this patch series is CPM6, the
+> namings and comments should align with the appropriate name.
+>
+> >
+> > >   	.rg.bar				= BAR_0,
+> > >   	.rg.off				= SZ_4K,	/*  4 Kbytes */
+> > >   	.rg.sz				= SZ_8K,	/*  8 Kbytes */
+> > > @@ -189,6 +192,13 @@ static int dw_edma_pcie_irq_vector(struct device *dev, unsigned int nr)
+> > >   	return pci_irq_vector(to_pci_dev(dev), nr);
+> > >   }
+> > >
+> > > +static u32 dw_edma_get_ch_space_sz(u32 val)
+> > > +{
+> > > +	if (val > 0 && val <= 7)
+> > > +		return 256 << val;
+> > > +	return 256;
+> > > +}
+> > > +
+> > >   static u64 dw_edma_pcie_address(struct device *dev, phys_addr_t cpu_addr)
+> > >   {
+> > >   	struct pci_dev *pdev = to_pci_dev(dev);
+> > > @@ -279,6 +289,10 @@ static void dw_edma_pcie_get_xilinx_dma_data(struct pci_dev *pdev,
+> > >   	pdata->mf = map;
+> > >   	pdata->rg.bar = FIELD_GET(DW_PCIE_XILINX_MDB_VSEC_DMA_BAR, val);
+> > >
+> > > +	if (pdev->device == PCI_DEVICE_ID_XILINX_B00F)
+> > > +		pdata->ch_space_sz = dw_edma_get_ch_space_sz
+> > > +					(FIELD_GET(DW_PCIE_XILINX_CPM6_VSEC_CH_SEP, val));
+> > > +
+> > >   	pci_read_config_dword(pdev, vsec + 0xc, &val);
+> > >   	pdata->wr_ch_cnt = min(pdata->wr_ch_cnt,
+> > >   			       FIELD_GET(DW_PCIE_XILINX_MDB_VSEC_DMA_WR_CH, val));
+> > > @@ -324,9 +338,9 @@ static int dw_edma_pcie_probe(struct pci_dev *pdev,
+> > >   	struct dw_edma_pcie_data *pdata = (void *)pid->driver_data;
+> > >   	struct device *dev = &pdev->dev;
+> > >   	struct dw_edma_chip *chip;
+> > > +	bool non_ll = false;
+> > >   	int err, nr_irqs;
+> > >   	int i, mask;
+> > > -	bool non_ll = false;
+> >
+> > unnecssary change here
+> >
+>
+> Yeah, this change was part of some patch series I pushed.
+> This change was breaking the inverted X-mas format that's why
+> made this change.
+
+But not related this patch. Use a small sperate patch to fix these small
+problem.
+
+Use a small patch to do clean up, for example
+
+reorder register bit defination
+fix commends about CPM6
+fix inverted X-mas format.
+
+
+Frank
+
+>
+> -Devendra
+>
+> > Frank
+> > >
+> > >   	if (!pdata)
+> > >   		return -ENODEV;
+> > > --
+> > > 2.43.0
+> > >
+>
