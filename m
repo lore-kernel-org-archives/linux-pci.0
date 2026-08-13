@@ -1,43 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20EF235C6A9;
-	Thu, 13 Aug 2026 23:26:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C821431F984
+	for <linux-pci@vger.kernel.org>; Thu, 13 Aug 2026 23:40:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786663593; cv=none; b=GTjJKwTd3pun5R6CLYoL7LS7VNr1xNA9IYcVusYnfoNsntAaij/BTHpkjRAFraimzEELZNx3J7n9jR5zINZ92zXFULCixLEnl4ZPmUuD/Fx7RFwsT+1LLu+nizHOVSl5YZn3fCg5QnZQiKCk94AOyvJH0ARo/mFvbHedJ9yAISA=
+	t=1786664402; cv=none; b=kbEqRoDcs4CU2sjM4Lpr1iiyuQ2iCRoFMtwBB+N2aB9xO1lj5ubF5+xXJyQdPeRGYccKq/lYeR9cQA09xDYNNRy2tGW3zw5enF2qkF5dEknh6nVlCmIvQHinc64TFa6+cE9IVWwgGBb8ufnUPmCukMA+sWRNcls1hqEHMYvzo70=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786663593; c=relaxed/simple;
-	bh=FOdsv0T6tna6jX2s3430Y1k5X79rCGiFdnTAwrd8TDE=;
+	s=arc-20240116; t=1786664402; c=relaxed/simple;
+	bh=/w1Kyo3li/shXsh22HKfuX/nu7VY/ieqKXc/FpM1eVM=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=S/lFUNPgqhGe7O56YHIF8Udbl6z6On/k+8tM5k9ydOFVDMvAL6uI+7vyPyC2ZgvdOUEKdYi9XiDuhv0ItDp47dI8K10aG7B3MmYn0peWrLRaTzkeiPKg4EczC3mJeeD3v/DLFb7gE9/AuOS0qMLHVlbdp/T8w9kO8QRWSIiuvbo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nTBlh7oa; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=h5cQNeBH37mUM0uYvn1QBzAlCFS+d78OqGhvfLhLIv4533vfMIkeSd8iv/aBwRQd0YxIblS54dUlX/WBuaxZ7ydALSd3p4pHEm07ae9N+83Ub6MiIdfPH+uAp64OlAWxBLGt80EWyvZf7pgWqI5ZAi70YrnMvY+UixcywkblxLQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=l7/aIcTH; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nTBlh7oa"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 89F001F000E9;
-	Thu, 13 Aug 2026 23:26:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="l7/aIcTH"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3AB341F000E9;
+	Thu, 13 Aug 2026 23:40:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786663591;
-	bh=qV5p4gtZT2z1Hkd6GtPMesYurodCH4YxhFo0bPvv/Ao=;
+	s=k20260515; t=1786664401;
+	bh=zJW2RuOTZl+DrBoL0ivPadDa5ZQlZKa0uzSNU5ceKck=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=nTBlh7oavSC9m9ntSJxHmAoEAHzG6kc61xNTSMoE7gU5y++91x9iucZiE0mVna/Q4
-	 UvktB02Y4sWKh4ley2Wy0+fAU9UHtEbgbqlrU6yy1o/le22qmWDKBEwFIYIsy7bpIF
-	 7nxYqykFksRt7BNAs+Z1l3MOxFNtVXfLMRxtdx2KFdwTU9VrCUd5PkuRsexj3JAoqa
-	 lPEUWkV6Hp3uEg+5t1Zivq3lcuam2JHospOtDD0ocT302YjPtk/jPzrDhpQienOt55
-	 6vTnUfRckyIzvragnKQ9otWwn3TPKf5Vruh9Z103DChrWUUDTCPmb66t0fJaA08J7P
-	 lxON2dXm26/6w==
+	b=l7/aIcTHlR9cJdIjGGYTBsdniW2AedXsAKu8RR91uCRv4CeEPcF5jpyloWqmVLMCC
+	 Ck37PX8pCeNMkzhTUP+QB2K42fMbvS4lZTS3e6pkqARcBi0KeiRNF8rIVb2LQt45DN
+	 Q5IVeegug5/o/hxiw0pKTpArqXgbwkU2s4zdfaISsDobuhVSCNqJ01pAcHGsursmn8
+	 HewM0jcQRbs3+qXI6cHqc2bqDS/soQPM6C+iNJ/qgx+ci2QBoZUUwMV1+bb9l5zT30
+	 ihoKvhbB2MhdMc/e0Mod11pE1fcxpB6d8Ygc8WM0w9Z8Z6unviB/kCnAqFEV4ZmkF5
+	 Cl4BuzP8qxKTA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH RESEND v10 5/8] ACPI: Centralize acpi_get_cpu_uid()
- declaration in include/linux/acpi.h
+Subject: Re: [PATCH v8 13/14] PCI: tegra194: Disable L1.2 capability of
+ Tegra234 EP
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "Chengwen Feng" <fengchengwen@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-perf-users@vger.kernel.org
-In-Reply-To: <20260401081640.26875-6-fengchengwen@huawei.com>
-References: <20260401081640.26875-6-fengchengwen@huawei.com>
+To: "Manikanta Maddireddy" <mmaddireddy@nvidia.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260324190755.1094879-14-mmaddireddy@nvidia.com>
+References: <20260324190755.1094879-14-mmaddireddy@nvidia.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 13 Aug 2026 23:26:26 +0000
-Message-Id: <20260813232631.89F001F000E9@smtp.kernel.org>
+Date: Thu, 13 Aug 2026 23:40:00 +0000
+Message-Id: <20260813234001.3AB341F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -46,65 +46,82 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [Low] Build breakage when CONFIG_ACPI is disabled due to missing acpi_get=
-_cpu_uid() stub.
+- [High] Endpoint hardware bug workaround is incorrectly conditionalized on=
+ CONFIG_PCIEASPM.
 --
 
---- Patch [5]: [PATCH RESEND v10 5/8] ACPI: Centralize acpi_get_cpu_uid() d=
-eclaration in include/linux/acpi.h ---
-commit f99931b839a856d11d22796fd0c23424af139915
-Author: Chengwen Feng <fengchengwen@huawei.com>
+--- Patch [13]: [PATCH v8 13/14] PCI: tegra194: Disable L1.2 capability of =
+Tegra234 EP ---
+commit 565b1a8d658f7e3ba31d5fa1ddf41455dcfe18ed
+Author: Vidya Sagar <vidyas@nvidia.com>
 
-ACPI: Centralize acpi_get_cpu_uid() declaration in include/linux/acpi.h
+    PCI: tegra194: Disable L1.2 capability of Tegra234 EP
+   =20
+    When Tegra234 is operating in the Endpoint mode with L1.2 enabled, PCIe
+    link goes down during L1.2 exit. This is because Tegra234 is powering up
+    UPHY PLL immediately without making sure that the REFCLK is stable.
+    This is causing UPHY PLL to not lock to the correct frequency and leadi=
+ng
+    to link going down. There is no hardware fix for this, hence do not
+    advertise the L1.2 capability in the Endpoint mode.
 
-This commit centralizes the acpi_get_cpu_uid() declaration into the global
-scope in include/linux/acpi.h and removes the architecture-specific
-declarations. This unifies the interface and eliminates duplicate prototype=
-s.
+> diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/con=
+troller/dwc/pcie-tegra194.c
+> index 47df4c6b5fe0f..b159836b7e9a0 100644
+> --- a/drivers/pci/controller/dwc/pcie-tegra194.c
+> +++ b/drivers/pci/controller/dwc/pcie-tegra194.c
 
-> diff --git a/include/linux/acpi.h b/include/linux/acpi.h
-> index fbf0c3a65f598..f7e50e9cfb224 100644
-> --- a/include/linux/acpi.h
-> +++ b/include/linux/acpi.h
 [ ... ]
-> @@ -323,6 +323,17 @@ int acpi_unmap_cpu(int cpu);
+
+> @@ -679,6 +680,22 @@ static void init_host_aspm(struct tegra_pcie_dw *pci=
+e)
+>  	if (pcie->supports_clkreq)
+>  		pci->l1ss_support =3D true;
 > =20
->  acpi_handle acpi_get_processor_handle(int cpu);
-> =20
-> +/**
-> + * acpi_get_cpu_uid() - Get ACPI Processor UID of from MADT table
-> + * @cpu: Logical CPU number (0-based)
-> + * @uid: Pointer to store ACPI Processor UID
-> + *
-> + * Return: 0 on success (ACPI Processor ID stored in *uid);
-> + *         -EINVAL if CPU number is invalid or out of range;
-> + *         -ENODEV if ACPI Processor UID for the CPU is not found.
-> + */
-> +int acpi_get_cpu_uid(unsigned int cpu, u32 *uid);
+> +	/*
+> +	 * Disable L1.2 capability advertisement for Tegra234 Endpoint mode.
+> +	 * Tegra234 has a hardware bug where during L1.2 exit, the UPHY PLL is
+> +	 * powered up immediately without waiting for REFCLK to stabilize. This
+> +	 * causes the PLL to fail to lock to the correct frequency, resulting in
+> +	 * PCIe link loss. Since there is no hardware fix available, we prevent
+> +	 * the Endpoint from advertising L1.2 support by clearing the L1.2 bits
+> +	 * in the L1 PM Substates Capabilities register. This ensures the host
+> +	 * will not attempt to enter L1.2 state with this Endpoint.
+> +	 */
+> +	if (pcie->of_data->disable_l1_2 && pcie->of_data->mode =3D=3D DW_PCIE_E=
+P_TYPE) {
+> +		val =3D dw_pcie_readl_dbi(pci, l1ss + PCI_L1SS_CAP);
+> +		val &=3D ~(PCI_L1SS_CAP_PCIPM_L1_2 | PCI_L1SS_CAP_ASPM_L1_2);
+> +		dw_pcie_writel_dbi(pci, l1ss + PCI_L1SS_CAP, val);
+> +	}
+
+[Severity: High]
+Does this conditionally compile out the endpoint hardware bug workaround if
+CONFIG_PCIEASPM is disabled?
+
+Looking at drivers/pci/controller/dwc/pcie-tegra194.c, init_host_aspm() is
+guarded by a configuration check:
+
+#if defined(CONFIG_PCIEASPM)
+static void init_host_aspm(struct tegra_pcie_dw *pcie)
+{
+    ...
+}
+#else
+static inline void init_host_aspm(struct tegra_pcie_dw *pcie) { return; }
+#endif
+
+Since ASPM configuration on the root complex (host) can be entirely
+independent of the endpoint's kernel configuration, would this allow the ho=
+st
+to still enable L1.2 based on the endpoint's hardware advertisement if the
+endpoint kernel is built without CONFIG_PCIEASPM?
+
 > +
-
-[Severity: Low]
-Does this cause a build failure when CONFIG_ACPI is disabled? The declarati=
-on
-is added here, but it appears there is no static inline stub provided in the
-!CONFIG_ACPI section of the header.
-
-Callers outside of ACPI-specific code seem to use this function
-unconditionally. For example, in arch/x86/xen/enlighten_hvm.c within
-xen_cpu_up_prepare_hvm():
-
-    if (acpi_get_cpu_uid(cpu, &cpu_uid) =3D=3D 0)
-
-Without a static inline stub returning an error code (like -ENODEV) when
-CONFIG_ACPI is not set, does compiling x86 with CONFIG_XEN_PVHVM enabled and
-CONFIG_ACPI disabled result in an implicit function declaration and undefin=
-ed
-reference linker error?
-
->  #ifdef CONFIG_ACPI_HOTPLUG_IOAPIC
->  int acpi_get_ioapic_id(acpi_handle handle, u32 gsi_base, u64 *phys_addr);
->  #endif
+>  	/* Program L0s and L1 entrance latencies */
+>  	val =3D dw_pcie_readl_dbi(pci, PCIE_PORT_AFR);
+>  	val &=3D ~PORT_AFR_L0S_ENTRANCE_LAT_MASK;
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260401081640.2687=
-5-1-fengchengwen@huawei.com?part=3D5
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260324190755.1094=
+879-1-mmaddireddy@nvidia.com?part=3D13
