@@ -1,147 +1,138 @@
-Received: from mail-pl1-f175.google.com (mail-pl1-f175.google.com [209.85.214.175])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3CFAE48AE17
-	for <linux-pci@vger.kernel.org>; Thu, 13 Aug 2026 15:31:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F08724908B5
+	for <linux-pci@vger.kernel.org>; Thu, 13 Aug 2026 15:41:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786635105; cv=none; b=TVZWevCIH5gmPWuNJeccpOFJ07NE1W5whE9ZVb+U2kJ5xE9bq1oKxXhXprVGOj8rv9mANtxg/l1FKC+oDt2MXq3tOIF/7QyYrohndneLyt4+oxkD3EdNnMDzgoyGoj+uDJfHc4mPmhahqkwI2RTOyMFj6P5ZAL/o4BTQ2rWATOQ=
+	t=1786635692; cv=none; b=FFLH72ooxqpJTNjhRkH/0ngZK3pASnftlnfF+B0E87O5B3IgBwUQKcaQztPjnN9riIqaPE+lkNZUTeJej8BfjtRpaWnXQF3GKluceKlDZXWWDCFNXG8TSQL5h/5KsLYnQrbm9FkKBz4Y7itEUY+ups8o17CcDmQcapuDHZ/xb9A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786635105; c=relaxed/simple;
-	bh=p8Cr//oDiUoJH0T79C9Z0a9JvVqIL+9+JAC/XJMhYsY=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Chi84CKExmepFu08vhS2ODs2aKopMQh/7nVSl0HwszzOVj0UZ7UBtxqTxYJc5tHi4utQqabOymdBwGLitdeG7VHn/L70Cv0QoXvfp7GA6XntpReJUtx/dSSga7U9Gj8EZVIkUSjW+K8ZjCWMxnMvKBcHdSwL96bJR4t8Q55WnrQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=XyUK8tZZ; arc=none smtp.client-ip=209.85.214.175
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1786635692; c=relaxed/simple;
+	bh=bXVnmmmxE+/FQTBq8zjSkDDnDKPqyE78Rt8HYm1hIKw=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=S9vYpquX6VYPLezRjcxlLc61Wb3oN6ntFYr0PPw/sDYBkX5ho+Rno61KN5Tg20MVUxcxLyz7RzYain9PZw+Dk3ISa9ZspeovqO23SHXc5hUyBX+pJXLaFBxz22p5MTBYELrYB6hd7dXkqcwrcq5DMeIIpBYTvsSmzT8Wlffix+o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=c6PRyY/y; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="XyUK8tZZ"
-Received: by mail-pl1-f175.google.com with SMTP id d9443c01a7336-2cee9b74ee1so433955ad.3
-        for <linux-pci@vger.kernel.org>; Thu, 13 Aug 2026 08:31:44 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1786635103; x=1787239903; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=5PO43KtK1vinlhveejSpb/w0mOz3aVvtFpKxNKIjn3Q=;
-        b=XyUK8tZZdGTHi+Ib25XijnnP/UJNhItJ8xxGkoW6cIeyMOtwXuHHD3lW3lhPzhPNwo
-         f9Ftw9SAQTW6kRtD2+p37VUox6icE8gdl98XB4AkpMkgMqVg7M7NC3PhyI2JdI20Ycdo
-         mHpwq3CsRgcg1DscgTUchLxOFKkO3BiOTzyaJ5s3INO0NcIIVYgcK/f2bW8FzAhGksIs
-         Yuta6i8Kv11y+U45cj8eZ5knUt2xF3sOSRQox5UGnOASkKxLXbC4pHqhyEtk8Ls69hW8
-         BVqKdoHbH1GtEB7/K9/rzwcysLwPsIBgXpmRap3Qm9rYDNeL4bRJ+ciwcBrEDWEYx0bU
-         Nl7A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786635103; x=1787239903;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=5PO43KtK1vinlhveejSpb/w0mOz3aVvtFpKxNKIjn3Q=;
-        b=N3BSJ5x+oscdnHfD+QoWep5jrMgYtChv2AlLSkHyTal5Dz0Z2H2uYCK5P+RxycucdT
-         tbwwLYnuyRMHy7zaymve6yom3M2n9kDBXmH95rPGesNkJaVLNCQbl749jW8wkYeeII3W
-         DA1sDUvRBCZLXwNLX7hbxsA3ZXCDQ9lChuEApM6tjUdMqORrUlfgl+//OQAWf2MfLEDX
-         He4krK9SJs9L3o1MCLLAG4jiSwsJ6pu3QlbX62M65PfLep6aJ4iEAqx0R23P9TiaSkrH
-         pU5IHciHVcMrUxXKrhjMbTxLFSbtOEOjGSHWFNZFfzKPrF06F9LrIecAtPT12HvI9aIN
-         o8tg==
-X-Forwarded-Encrypted: i=1; AHgh+Rp4B+wneyTfwMIhlnFbXvH0pdqCzpfzK1kR+xQIdBYvS+9UioLhmF5/CofH5NKrPOjSGLIZwDVl/og=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzOl60K8DkevfxYxOHqdLvuXLXDoJgbINiQcDBhsQXSlFPuhXzm
-	dm7KqlIu9M2OlXJhndRZZuBqdFAXWHubbbLkSmjudbG1qRdbEF9lbnKW
-X-Gm-Gg: AR+sD101yLWqXlJI5N0g7fpZfAv8r9s41xRimEkFYBYEr7RBCZ7eg4qu+jR2of/HtuB
-	bvgrsavdP4jL5CIUcMpg6PuBT+WCYKtiBNOnQwh+4B5T+1maobZ/6OoAkT/LqpaCPRnJkSuhVyG
-	zDD+xniLyJoJM4QIXwzmoFx/CDkdUvUaWpdPu8RV9wLpZQCNXQr82dqJEAcNGkvrOIYQUp0G8H9
-	0TexiaEs7zrZIqFqRiBMmzS1h4xGmrCh9nFC7N0WWHpHJSsxLtVrWE1DkIVTjBP/Uu66+11h44f
-	8Mp8+tD4DNxdHjJPAajO48qe6adB05RHgPdvApTlKGtXWst4UiCheMnefrN3IEsH+eyWYkz3MLc
-	ZdF2mGEDcFQ8bAz4ZbLLGHFGfLo/YGppGqDq7A9TuQ+5hs2pgUekmzadPtcu2MUJogSUU9IiXRl
-	+3yiXn/Y4Sy6T+QqWxo7pnQyWytPQ3iuVDTOoU6PjJi9VaVUEhN9oqebBm2rLyk0kAWLetNg6sj
-	V3S8Sv8
-X-Received: by 2002:a17:902:ea0b:b0:2c9:9a19:df with SMTP id d9443c01a7336-2d37ebb174cmr71789975ad.18.1786635103360;
-        Thu, 13 Aug 2026 08:31:43 -0700 (PDT)
-Received: from haichao.tail057a43.ts.net ([2001:da8:e000:1206:3b7:6da1:c188:d14f])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2d37c4e8098sm11911405ad.84.2026.08.13.08.31.40
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 13 Aug 2026 08:31:42 -0700 (PDT)
-From: Ruoyu Wang <ruoyuw560@gmail.com>
-To: xen-devel@lists.xenproject.org
-Cc: jgross@suse.com,
-	sstabellini@kernel.org,
-	oleksandr_tyshchenko@epam.com,
-	bhelgaas@google.com,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Ruoyu Wang <ruoyuw560@gmail.com>
-Subject: [PATCH] xen/pcifront: Fix PCI device reference leak in AER handling
-Date: Thu, 13 Aug 2026 23:31:38 +0800
-Message-ID: <20260813153138.3953222-1-ruoyuw560@gmail.com>
-X-Mailer: git-send-email 2.51.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="c6PRyY/y"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 619221F000E9;
+	Thu, 13 Aug 2026 15:41:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1786635671;
+	bh=1EOL0nws38zhbgy886UbgKw4MK2PdX744Ky7ag4hnjg=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=c6PRyY/yZHO+4N9+Vl+Og+29qXOrmMz8fmR9Tc//Gk4lstxM6zr0Q07e9/PwGeTWX
+	 vYc2pq+1dACmz0I1sHOWP1QdMYbCH1XBvUuNf1EyaCtzjzZhg9PHOwbXssBj1kCmLW
+	 5XRzZHcKVUeFB01IW834HlWUTMLD63l2hBwivJuUGN2GYA4Fwji07KXy0qTcNYa2dH
+	 iazZsosr0T+zJkKw9oHFZibSwkVE4NprOS0nrNYxrAP3Gi30hwUzfNeaZOb0oV1Wgf
+	 gPSTcF7UUOy6zrnRESyGPbCfYVfJACGHBaTfhnLQrpyZ83bil3dnD2vBXQTHKkHxcr
+	 zHehOuph+M8ig==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] xen/pcifront: Fix PCI device reference leak in AER
+ handling
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Ruoyu Wang" <ruoyuw560@gmail.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260813153138.3953222-1-ruoyuw560@gmail.com>
+References: <20260813153138.3953222-1-ruoyuw560@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 13 Aug 2026 15:41:10 +0000
+Message-Id: <20260813154111.619221F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-pci_get_domain_bus_and_slot() increments the reference count of the
-returned PCI device. pcifront_common_process() drops that reference only
-when the device or its driver is missing. All paths for a bound device
-either return directly after invoking an error recovery callback or fall
-through without calling pci_dev_put(). Consequently, each AER request for
-a bound device leaks a reference and can keep the device allocated after
-removal.
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
 
-Store the callback result, release the reference after callback dispatch,
-and then return the result. This keeps the device alive while its callback
-runs and balances the lookup on every successful path.
+Pre-existing issues:
+- [High] Accessing `pcidev->dev.driver` and invoking driver AER callbacks w=
+ithout holding `device_lock` risks a Use-After-Free due to concurrent drive=
+r unbinding.
+- [High] Unconditional invocation of optional AER callbacks (`mmio_enabled`=
+, `slot_reset`, `resume`) without verifying they are implemented by the dri=
+ver.
+--
 
-This issue was found by a static analysis checker and confirmed by manual
-source review.
+--- Patch [1]: [PATCH] xen/pcifront: Fix PCI device reference leak in AER h=
+andling ---
+commit 8d4be8a3c9e93de894d26cb69e9804d8f8ff8144
+Author: Ruoyu Wang <ruoyuw560@gmail.com>
 
-Fixes: 956a9202cd12 ("xen-pcifront: Xen PCI frontend driver.")
-Signed-off-by: Ruoyu Wang <ruoyuw560@gmail.com>
----
- drivers/pci/xen-pcifront.c | 15 ++++++++++-----
- 1 file changed, 10 insertions(+), 5 deletions(-)
+xen/pcifront: Fix PCI device reference leak in AER handling
 
-diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
-index cffc32d6603277..07263dfe22d538 100644
---- a/drivers/pci/xen-pcifront.c
-+++ b/drivers/pci/xen-pcifront.c
-@@ -575,6 +575,7 @@ static pci_ers_result_t pcifront_common_process(int cmd,
- 						struct pcifront_device *pdev,
- 						pci_channel_state_t state)
- {
-+	pci_ers_result_t result = PCI_ERS_RESULT_NONE;
- 	struct pci_driver *pdrv;
- 	int bus = pdev->sh_info->aer_op.bus;
- 	int devfn = pdev->sh_info->aer_op.devfn;
-@@ -597,21 +598,25 @@ static pci_ers_result_t pcifront_common_process(int cmd,
- 		pci_dbg(pcidev, "trying to call AER service\n");
- 		switch (cmd) {
- 		case XEN_PCI_OP_aer_detected:
--			return pdrv->err_handler->error_detected(pcidev, state);
-+			result = pdrv->err_handler->error_detected(pcidev, state);
-+			break;
- 		case XEN_PCI_OP_aer_mmio:
--			return pdrv->err_handler->mmio_enabled(pcidev);
-+			result = pdrv->err_handler->mmio_enabled(pcidev);
-+			break;
- 		case XEN_PCI_OP_aer_slotreset:
--			return pdrv->err_handler->slot_reset(pcidev);
-+			result = pdrv->err_handler->slot_reset(pcidev);
-+			break;
- 		case XEN_PCI_OP_aer_resume:
- 			pdrv->err_handler->resume(pcidev);
--			return PCI_ERS_RESULT_NONE;
-+			break;
- 		default:
- 			dev_err(&pdev->xdev->dev,
- 				"bad request in aer recovery operation!\n");
- 		}
- 	}
- 
--	return PCI_ERS_RESULT_NONE;
-+	pci_dev_put(pcidev);
-+	return result;
- }
- 
- 
--- 
-2.51.0
+This commit fixes a reference leak in pcifront_common_process by storing
+the AER callback result, releasing the device reference, and then returning.
+This keeps the device alive while its callback runs and balances the lookup
+on every successful path.
 
+> --- a/drivers/pci/xen-pcifront.c
+> +++ b/drivers/pci/xen-pcifront.c
+
+[ ... ]
+
+> @@ -597,21 +598,25 @@ static pci_ers_result_t pcifront_common_process(int=
+ cmd,
+>  		pci_dbg(pcidev, "trying to call AER service\n");
+>  		switch (cmd) {
+>  		case XEN_PCI_OP_aer_detected:
+> -			return pdrv->err_handler->error_detected(pcidev, state);
+> +			result =3D pdrv->err_handler->error_detected(pcidev, state);
+> +			break;
+
+[Severity: High]
+This isn't a bug introduced by this patch, but is it safe to access the
+driver pointer and invoke callbacks in this function without holding the
+device lock?
+
+The code earlier extracts the driver:
+
+pcidev =3D pci_get_domain_bus_and_slot(domain, bus, devfn);
+if (!pcidev || !pcidev->dev.driver) {
+	...
+}
+pdrv =3D to_pci_driver(pcidev->dev.driver);
+
+If a concurrent unbind occurs (for example, via sysfs), can the driver be
+unbound and freed between the check for pcidev->dev.driver and the callback
+invocation? Core PCI error recovery typically holds the device lock to prev=
+ent
+a use-after-free or NULL pointer dereference in this scenario.
+
+>  		case XEN_PCI_OP_aer_mmio:
+> -			return pdrv->err_handler->mmio_enabled(pcidev);
+> +			result =3D pdrv->err_handler->mmio_enabled(pcidev);
+> +			break;
+>  		case XEN_PCI_OP_aer_slotreset:
+> -			return pdrv->err_handler->slot_reset(pcidev);
+> +			result =3D pdrv->err_handler->slot_reset(pcidev);
+> +			break;
+
+[Severity: High]
+This is a pre-existing issue, but does this code assume all drivers
+implement the optional AER callbacks?
+
+The function checks if the error_detected callback is present before
+entering the switch statement:
+
+if (pdrv->err_handler && pdrv->err_handler->error_detected) {
+	...
+}
+
+However, many PCI drivers do not implement mmio_enabled, slot_reset, or
+resume. If the Xen backend forwards one of these events for a driver lacking
+the specific callback, could invoking it here result in an immediate NULL
+pointer dereference?
+
+>  		case XEN_PCI_OP_aer_resume:
+>  			pdrv->err_handler->resume(pcidev);
+> -			return PCI_ERS_RESULT_NONE;
+> +			break;
+
+[ ... ]
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260813153138.3953=
+222-1-ruoyuw560@gmail.com?part=3D1
