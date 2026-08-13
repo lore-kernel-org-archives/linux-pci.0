@@ -1,45 +1,54 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 007E5411FB8;
-	Thu, 13 Aug 2026 06:06:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 382B3411689;
+	Thu, 13 Aug 2026 06:11:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786601203; cv=none; b=Q7H2PQDiXbKtXMcMxbd4Ta9z/PYQsBgFaLELID3hsjLHUHksZUffzpdmxHdjS6YJ2JJUY7zRSVuBYb8GAYvUyaodHSlc4WAYnroUyInLWE87RrQcZY+C+BosPeHaN6mEKK8Kp+cBbE+XZs3tWqJlGh8bJJd+OnOABPw98AZpX/E=
+	t=1786601494; cv=none; b=oSjAH2JfoC9zzOU6F7LGIPHYO1iNGwtcqb4q7NkchYuiDSfJMagSzt4H53YMnGbRXG1IqlCi55KEK8Tq6831Hmsf7DFMQoy5J45CIft8BV+RNmgiKzpgb29hapR6TqgsYmwJoo2UftOI3H3FDujjEbSLj491L28nHomiHOerKYY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786601203; c=relaxed/simple;
-	bh=q4VOCvN9so/bl5JTL2R3NK0NEV3t15qu4E+uHTJMXmk=;
+	s=arc-20240116; t=1786601494; c=relaxed/simple;
+	bh=+S9gUgJJG5dE8tUT/F2b9epT++riJ2gSXPB6Cug0CW8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=HYCB7noDxK6PtSW1txhARE5nb/SbZnSeiJU8dkS+qfeHv5AvpL6tzN12cXN8bZB4lhc3Zi+xkVTqGHhC6Vgq0+8J77W/7E4NJ1RXlpLKNkKrABxjVKqCZO0AVsb9mYg/CXRqgXH3ImhoWq62YAzTysWJeOAYJvK8PQdF/Gf7MZQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WepnVrP8; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=o/OV/LXxyPJZnehqWyFQJJRY1g6G1cX7iURvHCebe+lIszymIoDMfasb5oyEAXl6t9J/ChE7S9weLEiGy+eQFd9fZ4/Ig4/dFOJlaxmjmI9PO136/fO/UyFObz5UNRC/ihCfIzq2JKhrSXC9WLvMF5t9+Ni0oLc70eR19ghCe50=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VyWc0Tmo; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WepnVrP8"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2E2EA1F000E9;
-	Thu, 13 Aug 2026 06:06:35 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VyWc0Tmo"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 18E7E1F000E9;
+	Thu, 13 Aug 2026 06:11:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786601201;
-	bh=2bRU4db2xtFcGOhDIJOKkQ4ShBGU9e2BMEUZzod3loM=;
+	s=k20260515; t=1786601492;
+	bh=DiMpXMq2kKaP+/B/szyplC/vH/8xNTofLUmS8swihFA=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=WepnVrP8FwDHztG5a+pL5+vdR+Cg8T4y90PcZBh/rlnZNWLRLfnDWWRxVJvS0+crZ
-	 lh7fpDVlbqh/6qvpmhacKyRBEAArsqvbDDRNZsTZ84+InSYC+LQE/2ApqTgrggsNhH
-	 YhxB5J0+AVZSQsk4LoO4+RjU9GDi4VJ7LjJUaYY3sLwr0c5vz/7/bRPur4asCQDR1r
-	 cNVYLKjWL4z4LWF+Z0JghcCDVi9WN26c7VGLvxJXgFSrnHhF5fGl1dbGiWnRcm8sU1
-	 SI1/W2qha+159VhpFETiKxPs27GXkyYyN7ajSyXNSy7VOA36iIT+UpNy1PI2kQZa1m
-	 WhxFEX5ERcXyQ==
-Date: Thu, 13 Aug 2026 08:06:31 +0200
+	b=VyWc0Tmo9Wv+fxLqcqJfoaVGgyIFTg8mA9I2WCIdrV1QhOhk/pHP7vS7rvv1ltU6I
+	 VosNxR+wFEEK9LvsGX49PU51B+sEQ4fbwP6kf8MrSBccfoIYW2noKBrq8KDv1C/0nm
+	 LAAwNqC5ItPAwGRtaOovKD88dwL0TNKWPeM5UuZP46QVB5pwvsoJHFVYKL4nKa35um
+	 TOPlt8xTz0pZ4//OsCUp50dskPk24OJ72Fy4lRbUd+Cz3GxM1hY5LxUaEyZTGrpj9A
+	 88VqnFOkXHpvQJfCCjACPAdQkYAi3sqUEkaTrZocWqwNP3lICrVOPt3YSi7/DFSzXb
+	 Vyys3XXQQL7Sw==
+Date: Thu, 13 Aug 2026 08:11:20 +0200
 From: Manivannan Sadhasivam <mani@kernel.org>
-To: Hans Zhang <18255117159@163.com>
-Cc: bhelgaas@google.com, lpieralisi@kernel.org, kwilczynski@kernel.org, 
-	jingoohan1@gmail.com, imx@lists.linux.dev, linuxppc-dev@lists.ozlabs.org, 
-	linux-amlogic@lists.infradead.org, linux-rockchip@lists.infradead.org, 
-	linux-arm-msm@vger.kernel.org, sophgo@lists.linux.dev, linux-riscv@lists.infradead.org, 
-	spacemit@lists.linux.dev, linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3 02/16] PCI: dwc: Use cached PCIe capability offset in
- core
-Message-ID: <ps2qzgcb5lixkoqz2xbofdurkgmsiojg7e5ueqfdhyissqvzf2@tuderrjgzg6b>
-References: <20260720150619.24733-1-18255117159@163.com>
- <20260720150619.24733-3-18255117159@163.com>
+To: 
+	Uwe =?utf-8?Q?Kleine-K=C3=B6nig_=28The_Capable_Hub=29?= <u.kleine-koenig@baylibre.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, 
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Scott Branden <scott.branden@broadcom.com>, 
+	Broadcom internal kernel review list <bcm-kernel-feedback-list@broadcom.com>, =?utf-8?B?TWljaGHFgiBNaXJvc8WCYXc=?= <mirq-linux@rere.qmqm.pl>, 
+	Keng-Yu Lin <keng-yu.lin@hpe.com>, "Vaibhaav Ram T.L" <vaibhaavram.tl@microchip.com>, 
+	Kumaravel Thiagarajan <kumaravel.thiagarajan@microchip.com>, Alexander Usyskin <alexander.usyskin@intel.com>, 
+	Vamsi Attunuru <vattunuru@marvell.com>, Alexander Graf <graf@amazon.com>, 
+	The AWS Nitro Enclaves Team <aws-nitro-enclaves-devel@amazon.com>, Mahesh J Salgaonkar <mahesh@linux.ibm.com>, 
+	Andrew Donnellan <andrew+kernel@donnellan.id.au>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Kishon Vijay Abraham I <kishon@kernel.org>, Frank Li <Frank.Li@kernel.org>, 
+	Jiri Slaby <jirislaby@kernel.org>, Andrea della Porta <andrea.porta@suse.com>, 
+	Bryan Tan <bryan-bt.tan@broadcom.com>, Vishnu Dasa <vishnu.dasa@broadcom.com>, 
+	Naveen Krishna Chatradhi <naveenkrishna.chatradhi@amd.com>, Akshay Gupta <Akshay.Gupta@amd.com>, Kees Cook <kees@kernel.org>, 
+	linux-kernel@vger.kernel.org, linux-gpio@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, 
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 12/12] misc: Unify code style for various *_device_id
+ arrays
+Message-ID: <oydzthptc2dbmpj3t3oubi47xsacf6ulqv42vcjzhk3sojvyxd@j52tf7obevx7>
+References: <cover.1784299069.git.u.kleine-koenig@baylibre.com>
+ <583653bc7b9ae19707bc28be69a20e66b8c3720a.1784299069.git.u.kleine-koenig@baylibre.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -49,44 +58,54 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260720150619.24733-3-18255117159@163.com>
+In-Reply-To: <583653bc7b9ae19707bc28be69a20e66b8c3720a.1784299069.git.u.kleine-koenig@baylibre.com>
 
-On Mon, Jul 20, 2026 at 11:06:05PM +0800, Hans Zhang wrote:
-> Modify the DWC core functions to use the cached pcie_cap offset instead
-> of calling dw_pcie_find_capability() each time.
-> 
-> In the DWC core, dw_pcie_find_capability() is called at several locations:
-> - dw_pcie_ep_init_non_sticky_registers()
-> - dw_pcie_wait_for_link()
-> - dw_pcie_link_set_max_speed()
-> - dw_pcie_link_get_max_link_width()
-> - dw_pcie_link_set_max_link_width()
-> 
-> The cached offset is initialized after hardware is ready:
-> - In host mode: dw_pcie_host_init() calls pp->ops->host_init() (enables
->   clocks/resets), then dw_pcie_get_pcie_cap() caches the offset.
-> - In endpoint mode: the core no longer caches automatically. Instead,
->   drivers must call dw_pcie_get_pcie_cap() after hardware is enabled
->   (e.g., after PERST# deassert).
+On Fri, Jul 17, 2026 at 04:50:58PM +0200, Uwe Kleine-König (The Capable Hub) wrote:
 
-But you didn't modify all DWC EP drivers to call dw_pcie_get_pcie_cap(). This
-can lead to pcie_cap being 0.
+[...]
 
-> dw_pcie_ep_init_non_sticky_registers()
->   is called after that point, so it can safely use pci->pcie_cap.
-> 
-> dw_pcie_ep_init_non_sticky_registers() now assumes pci->pcie_cap is
-> valid. if not, it prints a warning and skips the operation.
+> diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
+> index 3635741c3e7a..a10fce77e0b4 100644
+> --- a/drivers/misc/pci_endpoint_test.c
+> +++ b/drivers/misc/pci_endpoint_test.c
+> @@ -1416,18 +1416,18 @@ static const struct pci_device_id pci_endpoint_test_tbl[] = {
+>  	{ PCI_DEVICE(PCI_VENDOR_ID_FREESCALE, 0x81c0),
+>  	  .driver_data = (kernel_ulong_t)&default_data,
+>  	},
+> -	{ PCI_DEVICE(PCI_VENDOR_ID_FREESCALE, PCI_DEVICE_ID_IMX8),},
+> +	{ PCI_DEVICE(PCI_VENDOR_ID_FREESCALE, PCI_DEVICE_ID_IMX8) },
+>  	{ PCI_DEVICE(PCI_VENDOR_ID_FREESCALE, PCI_DEVICE_ID_LS1088A),
+>  	  .driver_data = (kernel_ulong_t)&default_data,
+>  	},
+>  	{ PCI_DEVICE_DATA(SYNOPSYS, EDDA, NULL) },
+>  	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_AM654),
+> -	  .driver_data = (kernel_ulong_t)&am654_data
+> +	  .driver_data = (kernel_ulong_t)&am654_data,
+>  	},
+> -	{ PCI_DEVICE(PCI_VENDOR_ID_RENESAS, PCI_DEVICE_ID_RENESAS_R8A774A1),},
+> -	{ PCI_DEVICE(PCI_VENDOR_ID_RENESAS, PCI_DEVICE_ID_RENESAS_R8A774B1),},
+> -	{ PCI_DEVICE(PCI_VENDOR_ID_RENESAS, PCI_DEVICE_ID_RENESAS_R8A774C0),},
+> -	{ PCI_DEVICE(PCI_VENDOR_ID_RENESAS, PCI_DEVICE_ID_RENESAS_R8A774E1),},
+> +	{ PCI_DEVICE(PCI_VENDOR_ID_RENESAS, PCI_DEVICE_ID_RENESAS_R8A774A1) },
+> +	{ PCI_DEVICE(PCI_VENDOR_ID_RENESAS, PCI_DEVICE_ID_RENESAS_R8A774B1) },
+> +	{ PCI_DEVICE(PCI_VENDOR_ID_RENESAS, PCI_DEVICE_ID_RENESAS_R8A774C0) },
+> +	{ PCI_DEVICE(PCI_VENDOR_ID_RENESAS, PCI_DEVICE_ID_RENESAS_R8A774E1) },
+>  	{ PCI_DEVICE(PCI_VENDOR_ID_RENESAS, PCI_DEVICE_ID_RENESAS_R8A779F0),
+>  	  .driver_data = (kernel_ulong_t)&default_data,
+>  	},
+> @@ -1446,8 +1446,8 @@ static const struct pci_device_id pci_endpoint_test_tbl[] = {
+>  	{ PCI_DEVICE(PCI_VENDOR_ID_ROCKCHIP, PCI_DEVICE_ID_ROCKCHIP_RK3588),
+>  	  .driver_data = (kernel_ulong_t)&rk3588_data,
+>  	},
+> -	{ PCI_DEVICE(PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_TEGRA194_EP),},
+> -	{ PCI_DEVICE(PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_TEGRA234_EP),},
+> +	{ PCI_DEVICE(PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_TEGRA194_EP) },
+> +	{ PCI_DEVICE(PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_TEGRA234_EP) },
+>  	{ }
+>  };
+>  MODULE_DEVICE_TABLE(pci, pci_endpoint_test_tbl);
 
-Where is this warning printed?
-
-These are already pointed out by Sashiko. You should go really go through all of
-them (not the pre-existing issues) and comment whether the issues are valid or
-false positive. For a series touching many controller drivers, this is necessary
-to avoid introducing regressions.
-
-I'm not going to merge this series until you fix the real issues Sashiko
-reported or mark them as false positive if not valid.
+Acked-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 
 - Mani
 
