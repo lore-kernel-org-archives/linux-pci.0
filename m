@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 47FE7499F23
-	for <linux-pci@vger.kernel.org>; Thu, 13 Aug 2026 17:05:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 77AD9499F2B
+	for <linux-pci@vger.kernel.org>; Thu, 13 Aug 2026 17:06:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786640759; cv=none; b=QeK2tpKyehRm6tQvfAx/Kuz2Kwb0+AoyWMjmiY/BqeH3rvBl8pC6kjSYhO545BLibT4NYt5IQlJCOYISlKy2y4F3mHcjhT64JvXBW+YX56HYou0HkMoseLvI8qFvYT3nz5gYbv7LwymOUnOHNoL9Rk10O2TsUVxPB2w21hkmjtU=
+	t=1786640773; cv=none; b=Mb7F99YEVIS+fK/nH7zXA1mlPhsWtf8MgMvz367Mm/6AX29qvaX/pyWaUinpojYnqkDtNevfeICG/liWLtp/nmWFpIuoQ9SElcws8N2MtCLlXi2/dm0Nwq4FRBMDUBk7/d5qwcUj+F5hEt3VGsQFXo8lk5EA/ZOpjeokKk4ilic=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786640759; c=relaxed/simple;
-	bh=xFUXD7CKt8hRX8pDXG5ILEiu+8MFS183dswng0cuML4=;
+	s=arc-20240116; t=1786640773; c=relaxed/simple;
+	bh=ipCx+Ipu9Q6xR98/mgv9WAyUuTKkf4moSDSUoP4BPs4=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=mz9tLej2U5IvM+hF7dD8NyyrWv54PibqwAFg0mJt0aan6G6qttw3beq5VAsh3nG4gahszcm4yg/QlH/WCxJeb8kiYFzdzwTRLBM0odub+Fs5DF7SsAYx2yHOfV7JNCr/ibHiB9LLFtzG8vYqirjc+jaWEACc41hfDUil+fohnGg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZWNmbzPU; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=ul+g0lbzG1YjrqtulVNunAXRrWB4HpkWeJLkCv4mXVpylRbVtqq4rUIunVGml5RjStNdSSUk02T+4aQfGeAPEnuo8NOKa73zbhsHlOCXCe0v/NHzrTofh3Aqf4EfWpyBIrGq1rF22VQuD65ckiZahRy2zAyDaq/mrAN54KzJvtU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=X/eQ9qyv; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZWNmbzPU"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 91BBB1F01560;
-	Thu, 13 Aug 2026 17:05:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="X/eQ9qyv"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A02781F01559;
+	Thu, 13 Aug 2026 17:06:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786640757;
-	bh=BUo4ATzLk8ReDTeIuKyQIfcYDHj2361ZZD+21vz7l0I=;
+	s=k20260515; t=1786640772;
+	bh=0mywV5OmxIOAQunk8x16Wx7/jRDml6jNvROOY5Xsc18=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=ZWNmbzPUmgRi4A22ifnvJ8s0uuQxl0qXLTrbNUosKMSCduAeBCa8gVAm9rcc3BY6O
-	 0Spf3cj/GZUPFSTmWdWF0w0G5FAY7Q1r29VjTYuvK6qbQosLQ9XG1F6TD9/6ZUkVOi
-	 cx5PsCKKR6qzgXoc0nGnW9FxQJWYru1YmfChx84rW218Zs1aqIA4/ClbclwWsHm5D0
-	 dPHcN3OY/w8iuScMlW7I3KnHOVseGuNbQh1NKY7sHP2vRdMBixHqHGAoIxHtpzzq5z
-	 pRiHUPDBaFMWCubRCNF75y7ziE4Y3lL6sWNwDiGNyRmeVlf9sGD1pOr+zsUgX1Da08
-	 YMiiEccjTRqDA==
+	b=X/eQ9qyvaNsbcv7/3QsoqHg5YDvSbZJJ2OAEZsPekd+kZtE5Oq9XeGjydrdNEKO/y
+	 QW97EjkpoIrsahVZeCPBLzVXZv/1U6qWROHgyAjSvFrRt0AHj64MK2eXnM20LXJDsI
+	 t1+dmi6FEe0+WvzjwkpW2o2NDEGbnopwCcd1kvYk6jymtfNMYdY+/4IjD+6LUS2i+4
+	 +2OMNtkbksoCOZnmDnqX65eWxKwLQ/eeFUQiMke7NoKK8+kokZesp11zj3Op+fGf/L
+	 R/PGXQdmcBVN8Lx3YK7Jhj9n8YwBG3ikqaDAIKpROVScHJG+/qiCYzgA9V1De9wDHu
+	 1XoBYwDigw7aA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 3/5] rust: pci: remove request_irq() and
- request_threaded_irq() from Device
+Subject: Re: [PATCH v3 1/5] rust: pci: convert IrqVectorRegistration to a
+ lifetime-managed owning type
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Danilo Krummrich" <dakr@kernel.org>
-Cc: ojeda@kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260813165234.620555-4-dakr@kernel.org>
+Cc: linux-pci@vger.kernel.org, ojeda@kernel.org
+In-Reply-To: <20260813165234.620555-2-dakr@kernel.org>
 References: <20260813165234.620555-1-dakr@kernel.org>
- <20260813165234.620555-4-dakr@kernel.org>
+ <20260813165234.620555-2-dakr@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 13 Aug 2026 17:05:57 +0000
-Message-Id: <20260813170557.91BBB1F01560@smtp.kernel.org>
+Date: Thu, 13 Aug 2026 17:06:11 +0000
+Message-Id: <20260813170611.A02781F01559@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -47,84 +47,66 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] The new `IrqVectorRegistration` lifetime design creates a self-ref=
-erential lifetime trap, making it practically impossible for drivers to saf=
-ely store their IRQ handler registrations in their driver data structures.
+- [High] The lifetime linkage between `IrqVectorRegistration`, `IrqVector`,=
+ and `irq::Registration` forces a self-referential struct design, making th=
+e API unusable for device drivers.
 --
 
---- Patch [3]: [PATCH v3 3/5] rust: pci: remove request_irq() and request_t=
-hreaded_irq() from Device ---
-commit 391f2070be9b225ebd0a122e28fa0091732c94e1
+--- Patch [1]: [PATCH v3 1/5] rust: pci: convert IrqVectorRegistration to a=
+ lifetime-managed owning type ---
+commit d29a976d8fb0d09c0565565666049353a896a317
 Author: Danilo Krummrich <dakr@kernel.org>
 
-rust: pci: remove request_irq() and request_threaded_irq() from Device
+rust: pci: convert IrqVectorRegistration to a lifetime-managed owning type
 
-Remove the thin wrappers on Device<Bound> that only forwarded to
-irq::Registration::new() and irq::ThreadedRegistration::new(). With
-IrqVector embedding a resolved IrqRequest, the conversion is infallible
-and drivers call irq::Registration::new(vector.into(), ...) directly.
+This commit converts IrqVectorRegistration to a lifetime-annotated type that
+owns the PCI interrupt vector allocation. It modifies IrqVector to hold a
+reference to the registration, preventing the allocation from being dropped
+while vectors are still in use.
 
 > diff --git a/rust/kernel/pci/irq.rs b/rust/kernel/pci/irq.rs
-> index 81b74c4c17d98..b6d1699ee3ebf 100644
+> index fea484dcf9cf2..daba86505cd2b 100644
 > --- a/rust/kernel/pci/irq.rs
 > +++ b/rust/kernel/pci/irq.rs
-> @@ -70,9 +67,8 @@ const fn as_raw(self) -> u32 {
-> =20
->  /// A resolved IRQ vector from a PCI interrupt vector allocation.
->  ///
-> -/// Created by [`IrqVectorRegistration::index`] and consumed by [`Device=
-::request_irq`] or
-> -/// [`Device::request_threaded_irq`]. Borrows the [`IrqVectorRegistratio=
-n`] it was derived from,
-> -/// so the allocation stays live until the handler is freed.
-> +/// Created by [`IrqVectorRegistration::index`]. Convert to [`IrqRequest=
-`] via [`From`] to register
-> +/// a handler with [`irq::Registration::new`](crate::irq::Registration::=
-new).
+[ ... ]
+> @@ -78,6 +75,7 @@ const fn as_raw(self) -> u32 {
+>  #[derive(Clone, Copy)]
 >  pub struct IrqVector<'a> {
->      request: IrqRequest<'a>,
->      reg: &'a IrqVectorRegistration<'a>,
+>      dev: &'a Device<Bound>,
+> +    reg: &'a IrqVectorRegistration<'a>,
+>      index: u32,
 >  }
+[ ... ]
+> +    pub fn index(&self, index: usize) -> Result<IrqVector<'_>> {
+> +        if index >=3D self.len.get() {
+> +            return Err(EINVAL);
+> +        }
+> =20
+> -        Ok(range)
+> +        // SAFETY: index is within bounds of this registration's allocat=
+ion, and self.dev is
+> +        // the device it was allocated from.
+> +        Ok(unsafe { IrqVector::new(self.dev, self, index as u32) })
+>      }
 
 [Severity: High]
-Does this new IrqVectorRegistration lifetime design create a self-referenti=
-al
-lifetime trap that makes it impossible for drivers to safely store their IRQ
-handler registrations?
+Could this introduce a regression by creating a self-referential struct
+requirement for device drivers?
 
-Because IrqVector uses a single lifetime parameter 'a for both its embedded
-IrqRequest<'a> and its borrow of the registration &'a IrqVectorRegistration=
-<'a>,
-the returned IrqRequest is forced to inherit the short lifetime of the meth=
-od
-call's borrow of the IrqVectorRegistration when converted via From:
+A typical device driver must maintain both the IrqVectorRegistration (to ke=
+ep
+vectors allocated) and the irq::Registration (to keep handlers active) with=
+in
+its long-lived state struct across the driver lifecycle.
 
-rust/kernel/pci/irq.rs:
-impl<'a> From<IrqVector<'a>> for IrqRequest<'a> {
-    #[inline]
-    fn from(vector: IrqVector<'a>) -> Self {
-        vector.request
-    }
-}
+Looking at IrqVectorRegistration::index() in rust/kernel/pci/irq.rs, it ret=
+urns
+an IrqVector tied to the local borrow of self. This lifetime dependency
+propagates to irq::Registration.
 
-This conversion propagates the strictly constrained borrow lifetime into the
-IrqRequest, permanently tying any resulting irq::Registration to the local
-scope of the IrqVectorRegistration.=20
-
-For a driver to return from its probe() function, it must store both the ve=
-ctor
-registration and the IRQ handler registration in its main device struct.
-However, this creates a self-referential struct (the IRQ registration borro=
-ws
-the sibling vector registration field), which is forbidden in safe Rust.
-
-There is no devres escape hatch because devres::register requires 'static, =
-and
-DevresLt cannot encapsulate a borrow of a local field.
-
-This affects all PCI drivers attempting to use the new API, breaking the
-primary use case of the subsystem.
+Storing both objects in the same driver struct requires a self-referential
+design, which cannot be safely modeled using the kernel's pin_init macro.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260813165234.6205=
-55-1-dakr@kernel.org?part=3D3
+55-1-dakr@kernel.org?part=3D1
