@@ -1,69 +1,75 @@
-Received: from LO3P265CU004.outbound.protection.outlook.com (mail-uksouthazon11020074.outbound.protection.outlook.com [52.101.196.74])
+Received: from TY3P286CU002.outbound.protection.outlook.com (mail-japaneastazon11020090.outbound.protection.outlook.com [52.101.229.90])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 84F344963A6;
-	Thu, 13 Aug 2026 17:02:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.196.74
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 17715499F16;
+	Thu, 13 Aug 2026 17:04:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.229.90
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786640544; cv=fail; b=jmd2KMv6bDlk2UcX7bIPRgoEjbNc/LTtjKYHMGrodsqEFEtCWu4xp+Zjp6PaPFEYiCAO6deNX7JQMltecxdeLuqPqTUrSPMCA6nWnqy1J9F/zgGbAu/eZFQm9yRS1ymiXKIzlK585LaA83gpry8XCtsjOfhtRyVz63n0ZAPkviQ=
+	t=1786640665; cv=fail; b=jpwsxamXoLAsd+0qwsA/khuhUjDXfsra4g+OaRlsT5uG5iL9+BL+cOwuEOGnbBYoUrftNGPajui+MeMDEJzIuHQlSDwyhVgT7L9g4vn/YqC9kimThEwXIPWgmsyDQjHNHqWd5LVlZOgnTdyuUZ6O+jyJ9MAeJXqs+JTX0DuWOkk=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786640544; c=relaxed/simple;
-	bh=mQEMWnfeH2iqGx45HQKjLLCP9BEAEOn4HK3mU42CYLc=;
-	h=Content-Type:Date:Message-Id:Cc:Subject:From:To:References:
-	 In-Reply-To:MIME-Version; b=EdtSK3zywJViOhsKkpWXKNNrGgH9hNoM35jsuoPcjPOT6luXJ4LGUiwkKYPyhI7Cci+CJQc++kBoSKFJNHTOlU8R3aN90raTtuVAjQLVsmYFk7RdRkgGJ1tDIckZUPszLr+PRz3Vu/BiVVZ5Yf56tmo3CIQ4q0HzHYs+N1+1/sk=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net; spf=pass smtp.mailfrom=garyguo.net; dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b=HeE8Cg9K; arc=fail smtp.client-ip=52.101.196.74
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=garyguo.net
+	s=arc-20240116; t=1786640665; c=relaxed/simple;
+	bh=rQ3r36XW8V6Uqv4o7m5HtqW0bNJWDo13YJUiMdupwhA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=JLThqcjXGiOSqL/52XXs6vE6irYj5PbYzdCs9udBmsq12tgrwg3jTqm9U5SAYegc2G9zCFAx6msMrPL4j6JhevNssOLrWAEOSR1dYL7JraYbXxplY+myFxabQ3DNAqy+6RUSdHWFwxF64grUTxcX+xk9Srm8/8iqTIoRBxsfs3s=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp; spf=pass smtp.mailfrom=valinux.co.jp; dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b=acZ6vzkc; arc=fail smtp.client-ip=52.101.229.90
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=valinux.co.jp
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b="HeE8Cg9K"
+	dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b="acZ6vzkc"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=rWmpvs630P5j6jRgvBL7Ehpo30l75kLVGw/x3F/7x6ITFOD8tB2kX05EElUcNuQ8aih8lmckCTt0b9OH/tN5epHvu4e2Dkw7zCV50Xnqi7iGwwVdSxzQsRLnp+AJoK7Z3bjoMM2JE2mJZ6Ir27czWXnQLvCoe/wKe9j6WSLL+kCeIeie4aj58cB2JyZKUaZgGE28XL/nQSzpagPCr5vMHZEtxRdfahMxCato2WNdwHQEb9AAq6GmXSIQUSTesErY8Vnl0od6zCcCiBnCC8bAyRQxn9QCmcV7hTti2VQdHRXsFyWGL16W+UnCv+2goWhYz+UylKxHJA04z913TPaioA==
+ b=Or2GQNe41OMDUYUdxrsHJqw95X3iCw4v2sJ2oONYGCULXaXZXeRY+IpAjpMsahPr/Aj29eKrUpjcdlHxlu/IpGWDDtJOMKdCSOU5Pu3Mzs+oyjHOybTNHP3z4Ld0zfI2aWAivl86X/E8kI8g2/yiKcR1ldYUgQspKgxQGbqZCvdkNG/05ERhNPO52SnbNaUP5OSyRBdQenyCQbXdd2FMCug7KpF2cuXzT2I0xSLz7qECcgMwuCUpUvwXnEobTSovH08n8kKaK7ZY4v4vafE226IpuiiijYpEqHaykHmIIOsMN7Z5RYDrCw0BtUAno8+heZUzu0AnBAD+U9h7s6w+ZQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=1yUJ1arexY0RwuZVWHT4lAyT74lw2YC+2QZmg7sadIE=;
- b=KJisSz7AV67cB5O78ANNqIaDRDQwYeZV9SWlG6eHGQi599o/rxMbVTic3xfGJj9PVKqek0mCJN6wScGKspeXxeRWlemuA3BhWdIazb1wkSLSD2tfbFhmwVegFrjYnGyHDO2OD4o/MxVCrxELAzSA+xBwPAGMxOy+Yth9m8o4lekAQ7r85waHcSAzc29XR/dWN1bmMOiZwczdAmZgC4M85XbjVgI/c0BRfpL0BTA3oWt0ckmUmw/eDKXArm+7Wwh29lf4+pCJf9uUaHsQZkyCafKCMq6ad90CJ/Z3hMS/VcCqebrdU1vUj5wjiQ/q7IfmwipPEaLeUbLcwcjwAuGPYg==
+ bh=zSppcntJLJrBxMksTmtdDSgu1OZpDZuQ/YyFZZFnVO8=;
+ b=eTIir3yLQCMsQP5vpk87ENwAM1LeFvoqZ3h3K8K6qaGvCCQ8LVkhXJThYdJQ61uG+RAdAgClBHnhyxxhx4X7OV3i+5lQKcVwtlYbhaN9QETQRhJ+bLMf2Rxf2c4kWEkWaGsHlXWE0O77ZX3r17rl/0sLaqBERrXxR0m2Kr7oY1UziGCfDL7GyjesENH1jeP9W5YrOITDwNHsETZ6uXu3DnT0WX82GiGZL0IdNC91wXaWLKcad1T2GMmsupzrZlh9Dpd8QuPgDZ6rMDnutorursc2SiYtgZVCigCL9PphVTEYy6DIC32+PIX4YxOTuQs8PmIpSRkWybYa//u1o2DJXA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=garyguo.net; dmarc=pass action=none header.from=garyguo.net;
- dkim=pass header.d=garyguo.net; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=garyguo.net;
+ smtp.mailfrom=valinux.co.jp; dmarc=pass action=none
+ header.from=valinux.co.jp; dkim=pass header.d=valinux.co.jp; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=valinux.co.jp;
  s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=1yUJ1arexY0RwuZVWHT4lAyT74lw2YC+2QZmg7sadIE=;
- b=HeE8Cg9KMXZwLoW9njUgwhx/MAM3MPiNWY9/7PmPqmigT5VlCMsmQwoDMfgF4SaEDG9YMtZACABt5pbO8ZcIG5H6WQkUxAc0K7DuxovDvHejOLMd1fMKWhyOLTswztgkiFoxH0cdAvr0JDmvFHp0nsSbjYQkM/8TynSpJ78cgDg=
+ bh=zSppcntJLJrBxMksTmtdDSgu1OZpDZuQ/YyFZZFnVO8=;
+ b=acZ6vzkc5yoFew2v02dL5wNXbuEv7QSCTNFzqJFbpaPzifAUfNE9+us0zYYNcuIg6V4SK6U95s/6ofuGFOXz4CbdkN8weDHFULs3J8wQjRHRyjLVHiUXW7YTgeBHKNBzOvuBkJ4DxPSg5b00il06vK62o5OvWKdWo/kWC75a9y4=
 Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=garyguo.net;
-Received: from LOAP265MB8560.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:4ab::19)
- by CWXP265MB1845.GBRP265.PROD.OUTLOOK.COM (2603:10a6:400:3d::10) with
+ header.d=none;dmarc=none action=none header.from=valinux.co.jp;
+Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:38f::10)
+ by TYRP286MB6006.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:2ef::12) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.315.11; Thu, 13 Aug
- 2026 17:02:19 +0000
-Received: from LOAP265MB8560.GBRP265.PROD.OUTLOOK.COM
- ([fe80::f60b:1537:68d7:4fc1]) by LOAP265MB8560.GBRP265.PROD.OUTLOOK.COM
- ([fe80::f60b:1537:68d7:4fc1%4]) with mapi id 15.21.0315.014; Thu, 13 Aug 2026
- 17:02:19 +0000
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Thu, 13 Aug 2026 18:02:19 +0100
-Message-Id: <DKNZ7ORRTRA2.2WA4NB3PRLAOR@garyguo.net>
-Cc: <driver-core@lists.linux.dev>, <linux-pci@vger.kernel.org>,
- <rust-for-linux@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v3 0/5] Rework PCI IRQ vector code
-From: "Gary Guo" <gary@garyguo.net>
-To: "Danilo Krummrich" <dakr@kernel.org>, <bhelgaas@google.com>,
- <kwilczynski@kernel.org>, <aliceryhl@google.com>,
- <daniel.almeida@collabora.com>, <ojeda@kernel.org>, <boqun@kernel.org>,
- <gary@garyguo.net>, <bjorn3_gh@protonmail.com>, <lossin@kernel.org>,
- <a.hindborg@kernel.org>, <tmgross@umich.edu>, <tamird@kernel.org>,
- <acourbot@nvidia.com>, <work@onurozkan.dev>, <jhubbard@nvidia.com>,
- <ttabi@nvidia.com>, <apopple@nvidia.com>, <ecourtney@nvidia.com>,
- <shashanks@nvidia.com>, <zhiw@nvidia.com>
-X-Mailer: aerc 0.21.0
-References: <20260813165234.620555-1-dakr@kernel.org>
-In-Reply-To: <20260813165234.620555-1-dakr@kernel.org>
-X-ClientProxiedBy: LO4P123CA0161.GBRP123.PROD.OUTLOOK.COM
- (2603:10a6:600:188::22) To LOAP265MB8560.GBRP265.PROD.OUTLOOK.COM
- (2603:10a6:600:4ab::19)
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.315.15; Thu, 13 Aug
+ 2026 17:04:19 +0000
+Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ ([fe80::2305:327c:28ec:9b32]) by TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ ([fe80::2305:327c:28ec:9b32%3]) with mapi id 15.21.0315.011; Thu, 13 Aug 2026
+ 17:04:19 +0000
+Date: Fri, 14 Aug 2026 02:04:17 +0900
+From: Koichiro Den <den@valinux.co.jp>
+To: Frank Li <Frank.li@oss.nxp.com>
+Cc: Manivannan Sadhasivam <mani@kernel.org>, 
+	Niklas Cassel <cassel@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Kishon Vijay Abraham I <kishon@kernel.org>, Frank Li <Frank.Li@kernel.org>, 
+	Bjorn Helgaas <bhelgaas@google.com>, Jonathan Corbet <corbet@lwn.net>, 
+	Shuah Khan <skhan@linuxfoundation.org>, Randy Dunlap <rdunlap@infradead.org>, 
+	Vinod Koul <vkoul@kernel.org>, Jingoo Han <jingoohan1@gmail.com>, 
+	Lorenzo Pieralisi <lpieralisi@kernel.org>, Rob Herring <robh@kernel.org>, 
+	Damien Le Moal <dlemoal@kernel.org>, Arnd Bergmann <arnd@arndb.de>, 
+	Marek Vasut <marek.vasut+renesas@mailbox.org>, Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>, 
+	linux-pci@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	dmaengine@vger.kernel.org
+Subject: Re: [PATCH v7 00/10] PCI: endpoint: Add PCI DMA endpoint function
+Message-ID: <tmkvdia53pu2p7hdfmhwcw7rurjx3yf672xoxrcu2ubaz5gmrd@ypo76y6fuz7v>
+References: <20260813063757.3131865-1-den@valinux.co.jp>
+ <an2uf5mXzGq1Q7cj@ryzen>
+ <zoed4wtc4oxiyni4o5qpj3li3cmlyy5kfutp4r5g4d63u52625@j6rvbbehjgov>
+ <ztn47y23ctbjrbkmgyyhc6d5x3i2lzz5txotpgtbjtcsvbsvf4@fzadsvt5fl4d>
+ <an3p_j-F10e9x0vM@SMW015318>
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <an3p_j-F10e9x0vM@SMW015318>
+X-ClientProxiedBy: TYWPR01CA0039.jpnprd01.prod.outlook.com
+ (2603:1096:400:17f::14) To TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ (2603:1096:405:38f::10)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -71,131 +77,174 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: LOAP265MB8560:EE_|CWXP265MB1845:EE_
-X-MS-Office365-Filtering-Correlation-Id: fc620733-5819-4564-934f-08def95ca2d1
+X-MS-TrafficTypeDiagnostic: TY7P286MB7722:EE_|TYRP286MB6006:EE_
+X-MS-Office365-Filtering-Correlation-Id: c403c254-d225-43ec-99c4-08def95cea03
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|10070799003|376014|7416014|366016|23010399003|1800799024|18002099003|22082099003|56012099006|6133799003|10067099003|921020;
+	BCL:0;ARA:13230040|366016|1800799024|376014|7416014|23010399003|10070799003|22082099003|18002099003|56012099006|3023799007|6133799003|10067099003|4143699003;
 X-Microsoft-Antispam-Message-Info:
-	YiyXRMR6aIsh3ZwuEkaChj5L6RtMjKKjkZMS0+enf/vKZTDoUqHzZq2ckD0/P4cAfmgG16PJfiYIje8RO3oXyL7+IWCZka7PYof0E+d8UacK1fM8sHgyHzE3FTQyawssQmK4/JW4kP6sCIZUq9LZE5Lcs2W5kEQ+FiDdSLZvg1n5gY2hJlCULARx98AxQrBp9AyFxokRTkU5p77C1ucBX2zYtbBet746iQnVrIZgzO0ger5DXK6vQu+LtEQm29hyvCo7b+0j1JI4PNj4NbVHscHP3uJazPkBCO8iC7kETby0e78klnYDCv5C3Ay5WoefeUNX8Osjo9bKj0RrsSJc52PkAiI49TQF1PJxxoub4bR8oqNuNPomMB+DHu14W8h0rFQjhYHPMTC1jOEZDRcDBhg4lNxuBNGfxluJLt9Aiw5HOh1v6C4cWVTqrCLKdedGC4u4c7TBHC1yBiIntAvMv1iIegmq/0j64lIhQMXJJ67QFrLEnIQrA9DwY30u78ZzAP/7qpYeYnFNX22w3X6hYJoP3faB4hxfSYczNe8qdUciEjgkdPyTpprdj07qmQCRWWy4zsR7EqNxdRCS256R03KELzwXJKd26LP7/GSwsR9Cj6BWIC4f1IHKf+W+FugUqrd55nhsPLz1bTd/5BWE3EYju3NdMfiLkrQxhylkJ+c=
+	MFNU6PCJCfYu27R1JOjBJjmKmLqy1eoTJlRymSopxWKol481+c2KuZdS2OvKrpGeM5MX6QnXqn1pmuQRZb8bDsSRIu0FR4hElraxENrpKDeS8okPfQx5sIH68ngSzxr2JalULA3OXLRvq2Izgv7pvKpJsipsMTPwdyD5zfRAzWnuCfYkI4zaepDLtn804H7f0y8E4fyMNiZhtDTl/1wCYbiYT0FDxEbC59PTEPYVNNl7aoTx8juCzEBeX5jRBUNMkuJZXIU5DDQJyek1m2bdRFVbTUKrZ8Hw2gNTy9hmK1tFd8O/iGVaGYb8WzQac9/YVwdBacEYN+VUEt8t4GFgKOFsHl3PwhWcTPqpN10FuC7HpBD/82f2oUdA6Aa+xMyX9friu8zaIT1j/Z1EaK3ym3vIMsvkFZySsgFQjh28wgPpSCTSnjLK3dehaoEd11CQWPKCE3SecQMemQHP4029ReZ4Pch3mmBOGQrDfJ1l4lysZmJdXIAa6WyAxtbA+kdO8JljQ6nSnxoCiUB6R85CzUpzZKm+idrB5oH8ezgbqINosw+S7a6Lzd4Ax/j4OKD8hMCpKVsUu1yeBvS1+Cz2uLkjfQF6++P6bzFI5Jr5CMocChwiyLlNWOdPFDX5map8cYw8BC0RQgc7giUsQPND37TPWppbMitPoL5OTvgfssc=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LOAP265MB8560.GBRP265.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(10070799003)(376014)(7416014)(366016)(23010399003)(1800799024)(18002099003)(22082099003)(56012099006)(6133799003)(10067099003)(921020);DIR:OUT;SFP:1102;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(376014)(7416014)(23010399003)(10070799003)(22082099003)(18002099003)(56012099006)(3023799007)(6133799003)(10067099003)(4143699003);DIR:OUT;SFP:1102;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?TVNXRERRMk9Vai9BUVZldHpLVzhCbGp6TGNVRk9JNFRlS0hMNzJUNFJCSGNz?=
- =?utf-8?B?cE5KWGp5YTFVYzZzVlQ4a2pFSVd2RStnMXN3NU0xNmYvVGc1blZVbk94Yldz?=
- =?utf-8?B?NWp5ejFIV1VtaGk5OWtSOE9Yc2RYQVZpNitNSTI1YkoxL0w5Vlg2eGtsTkdC?=
- =?utf-8?B?MWk5V1FTNDBpRXJmZEFUT2ZIaXA3Rkd0amNlMFNsdkVEQVFCUkt3NGs4R2RX?=
- =?utf-8?B?blJwWEw2bU5Ib1FSOUQrUGNaVnE0T3MwRlFjSStuUUJGNmxlTnJJLzk4MWdj?=
- =?utf-8?B?ZTB3N21PeG56S3JoeGJoVk41eTlDY1BQS3hkU3FNUW93SGRUcFpXM2t1ZXBF?=
- =?utf-8?B?d0FOaUZVaDIydlYxeDFub1VFL3IxWjNSdzAzVGh5TytjZ1RsaWZnZ09pVjZV?=
- =?utf-8?B?SkVTUTRTdXJwOUZxbkh6UUthWjVPOXVTcVFHdjgvbVJ5cWFmeTI3RVdRVmhR?=
- =?utf-8?B?dFhka21YamtSOHdXSStSZDRKa3ZkeHZaSkJyRlhYTm1RV2Q2MEpGaXFNMWI0?=
- =?utf-8?B?NUIxLzFjc1V2L1ovSWhxUGo5SU44bjF5T3RTaDY2NHYvTW1jWVdCMVJSTUs2?=
- =?utf-8?B?c015Z0ZmY1Bzb0FKS0dITER4Si9UKy9icjN5T0hza3cyRFhYUUh2Mnh0UXZi?=
- =?utf-8?B?K2JBd2RFTUpOQjJKa0ZrOFV2emtBRS9Wd3BhMnpFOVA5T3liK1J5SlNRcUZF?=
- =?utf-8?B?MEZVOFRaU0VxMVB5M0E0VVpVRjN5eWNWTmhEdkM1b2ZMeC92bkNZV0RJRW8x?=
- =?utf-8?B?Vm91THdFYS8vRko2WU9oU1ZiaEdPWkxZZm0zQTJYenJjSklCMWttTWk1Misz?=
- =?utf-8?B?R0FpZmtYN25UUmpCZGtHTGpvcnZXbStsWE50Qlpaa01pMGhUVXRpMXgyK2do?=
- =?utf-8?B?OEtSaUV0ZGl0dFJxRzM1N0Qya3ZaUjk5Y2FmemFRTmdtV3pEMGZRVlNQMmhk?=
- =?utf-8?B?aW1FWkZyTUxXVnFvTHIyelFqTUhjamJFemJzd0pabkhJYjU2RjJVWVIrQjd5?=
- =?utf-8?B?RGF3N1M1Mk9WYmpRMVJQbS94MGxyTGJsVHlYYkZoNFNjZ01mZm4xcXl1bUdY?=
- =?utf-8?B?Rk53SXMvUGF5T2hNbk91c3R1SFlrY2J4ZkJyTDZqaG85eHhkWG1FVGN1K1lU?=
- =?utf-8?B?TWpiRnluc2ViZXc0dXAxWng3d01ueTkyc1ZaYVo0bFhDaXZJTjErcEwwTSt4?=
- =?utf-8?B?Q2IrdTlOTXlKLzBJUEorWnY5NzdCNzFsRXZSMWk4T0pINUkvMEFtQ2JoRGFC?=
- =?utf-8?B?RDNyYkhlOUZPcWlFYmhKUVNlbnFhdmo0b3JEckNRR1JydXpCRXFOVkJ5c1Bi?=
- =?utf-8?B?clZwS001emNDMGlSOEI5Sy8vbzViTjlLU2JSSnJqb1gvd2I3eGd2QytuZitQ?=
- =?utf-8?B?cDJjL0F0QjhTTERKcmFNRnlleGxtZFFTcm1wOVpnUjVsaHBPQXRsUys4cWNx?=
- =?utf-8?B?RVYyemlmT3ViVUgvUW9iSGlLdTVmUHRtYVZtcVZ3YTVOR0xyRklTTDF0a2M5?=
- =?utf-8?B?M0NUUThvejlRNms3ZEV2YUxndjVCQTd5dGZ3WjZwYmJ5T3YybUxhRCs3bXFP?=
- =?utf-8?B?aGFwQ2dLNG1GRGRUKytMNXA5NGZ3ZnBkMzIxM2NVQllZbUFUdUh6Zm8rZkZH?=
- =?utf-8?B?L24wQkxsNVdJaTl4NXBleUUwNXJCcy9yYnhMUXJ3S2l4bXFrekdXNjNrby85?=
- =?utf-8?B?SEo2SGFOaDMwUGtVbG5DdG9wTEs1Z1BsYVUxZHl1NEQ2UGxlQzk1VE4yRHR1?=
- =?utf-8?B?b0RDYi9jZ3FjbW1tK0dMejBISzdoZzBRcFIyL0ExUTExTG1JQUp1Ny8xY2Js?=
- =?utf-8?B?cngrODAvK1RTeFd3M3ZpMlBvcFNEWm1ydGNTRXFTdUNHTElSSHJ3RXhWWDdv?=
- =?utf-8?B?cGNrY1Zsd3loUlVwbkpoU0pBVGpwaUNnVXVsbSt6RDlleS9mSy84TVluemVZ?=
- =?utf-8?B?RUtHaUNEejdnSVNRcFdlWTNXS3FRY0dxYnBTYTZoeGtWRG04M28xSEJJaHlG?=
- =?utf-8?B?cm52V0MzckcxTjZmNHU2WEcvOXZzSGRHYWJTWWNiTjBGemxDcGUwc09hTGRl?=
- =?utf-8?B?Y0d0T1hKU2p2cjg5QzZESkhhL0tqNGgwU0l6ZEZBQWJvaUVWeExPWklDcW1z?=
- =?utf-8?B?cmJoQVp4WnQ5ZFp3ZzRubHNqRU1xQWkvNnF0VG1ZakxtdlFsN0NKYkRWd3Mr?=
- =?utf-8?B?K1VlVmsvRCt3aXpxcDVOcEt1aUdTZlM4RDk1cjZacEhxWEpQa1pmbU9DaUl0?=
- =?utf-8?B?SDNpWDNXQjQyL29RdWtLdzhPNkwzM0hqanVoeURsUFE3M014dlJPQlpNbWNX?=
- =?utf-8?B?WnJSNnlPT1V5c3FkVzI5UzNQVUpOeWpoWEIxOXZKc3lFell2Sk85QT09?=
-X-OriginatorOrg: garyguo.net
-X-MS-Exchange-CrossTenant-Network-Message-Id: fc620733-5819-4564-934f-08def95ca2d1
-X-MS-Exchange-CrossTenant-AuthSource: LOAP265MB8560.GBRP265.PROD.OUTLOOK.COM
+	=?utf-8?B?MzFjTXRJVTVpSFJ0ZHM4cTYzZEhSTEwxMWZCR0tEcXZNQ1FkZ0gzSjhMeEsv?=
+ =?utf-8?B?elh6ZXVwMmloWUtmc1ZLb2dQbmt1YlFhdXAxMW1leVJ1L0xJTlY3Nzc5WGN3?=
+ =?utf-8?B?V1d3U0JRcGVvM3d5T0xrV1B5NjN1WlREbnRHSGJaS2VXT1pMZnRYWDhhWWhN?=
+ =?utf-8?B?VDIxZnpNUzU5MGV5L2V0SGRyTUFIYVAwNm90R1M4M3I4OEd5ZnVnMXJiREd3?=
+ =?utf-8?B?YTBLSXpZMjZlSXZDNmtxeXlHN1RuanNIbVNaOTl4Z2hZZ28vR1RkcXhnekF1?=
+ =?utf-8?B?VTZDRmNCZE9TT1BnZ29zeTRHM2ZiN01MYzBDOGNtbDE1Um1kUmVwWGZJVzkv?=
+ =?utf-8?B?a1RSUzMvSEUwS3ZBN011aFVwcjc4S1ZzczhNNUxKK0ptK1lMWFBMbW52cU4x?=
+ =?utf-8?B?alFsSmNHK3RDMGRtNnRrTld3bktDTnVNMFYzdENKN3Z6N2c2OWkrWm01U1Fq?=
+ =?utf-8?B?VEN1aVpSODNYKzNKY014NmJCY1pQUUM2ZTVBaFA4c1ZqUVFnQnBZUVlUa0FI?=
+ =?utf-8?B?azdER21ZekY0SHRhSGEwOFpwMERiRzZXZnlvU1dDU2FlZklac0pBZVJCV0dJ?=
+ =?utf-8?B?M1plNkp1cjZva2phalMrZFVPYzJsZjZ2OFA4UzZBa0kvYW5IUlp6cmpXV3Vo?=
+ =?utf-8?B?bkxtVEk4YTNQcnpUTnJ4ZHVIWFRWYVFNbUprY3o4YW9rczdQZlhzN2NOcXh5?=
+ =?utf-8?B?MWExbnR1SURMdkVmbzRFZi9id1FWR1dveEFHOE53MzZ6di9nQlpqZTRSeHdO?=
+ =?utf-8?B?bTVHK1dXbzdrM2xvZGRhWGhxVFdyOFAvVExqRDFocGpldmNvSXUwVjgyOVdE?=
+ =?utf-8?B?VHlEY2QvVjVsWkJDRnRWeDR3UHlVV213VThrSzkvSks4bkJnRkRHMFhvTzA5?=
+ =?utf-8?B?ZWdSSTZPVmJKWFl4cjRBcmZDbHRjY1c3T3ozbkhZQTJQM2N6UmlFRCtIemw1?=
+ =?utf-8?B?dTFBMWFJb3RDWXJPZnJkSHNNRnN0RmpKYkRhSmQyNHgzQ0txbHZKNmltZE52?=
+ =?utf-8?B?VDdraHpicm04UmJQbXFSOTdhUDJReHBXZTRwTHBVTkJFajdQU2djQms3TlBF?=
+ =?utf-8?B?SmY2T0NlemUxL2NXejk0REpYN0dLWFNOU0F6aHFwTWhDM09HSG16eUd4dTZW?=
+ =?utf-8?B?R2tTTUlPZlI3dEYvUjlBaHNUdFM2cjV5M2FqbTVWK2svR09iV2J6TjJTWnBO?=
+ =?utf-8?B?OE1OandvZFNXVm8vVkMrKzBkVFU3aDhhbnU0MUZkTWxsMmlBRXZNdUY0OG5i?=
+ =?utf-8?B?TGpTQ1ZDUWV5eWY3ZGs0eWRaM2Q3bUVPK0ErY3lCa0VLU0FGWExEenBuZkN0?=
+ =?utf-8?B?cXdabVJtYll1M2xWdFpaSEFEOVRObTgzdGN2SWt3eWVtbVdDaE1UeU9taUpT?=
+ =?utf-8?B?UkpUOTJVQWU1KzJ1cmZQdWhod2tCZEEvSHZLcTZ1c21vN0taa3Nhbm5waW5I?=
+ =?utf-8?B?WXViVko3VHAvRU9lRkRvUGJrUGFHUEZnQTRWcVBKS2FaTHR1dUdBWGhibDI4?=
+ =?utf-8?B?ZHpCbmZNcUxYN1BpYXFwVHNuYkRqSzJvTmxhdk8zRHY4RGFYNDJWdlV5dUpG?=
+ =?utf-8?B?RUZXZG0wSS9hR0Qzb1ZGRnBEVXZXN3g5Q09SMCtzemJ0UFNCSjQ1WXI4R1Vo?=
+ =?utf-8?B?ZDVlWFFic1JFR1N6UXpIUnpQeFpFbklLelRsalRGM0FhQUg4N1pjbkxCb1Av?=
+ =?utf-8?B?Z1hwNWJQZGxMNFJuOEZCMHU0RlZJMTdvcm9mU0M3UzFjcmlRYjBjN29OMnJz?=
+ =?utf-8?B?Q256SVR2Qmp1NGp4cHg2WDFCck9qeklzeEJBcGU4WDlQM1lGTWhaT012ckxC?=
+ =?utf-8?B?T0thSEhjTHdwK3FZQlZZcDc1UTNhQkptUjZQeFBrRjNIcXIvdWI1RlNzM2xt?=
+ =?utf-8?B?ZWtQVzhXT2srRkMrdkxPUUJ2OUUwcVpFOTR1enZ5MW53TEhGaHRRVlRTVjQ0?=
+ =?utf-8?B?SjBmVmlZSUU1dTZoVmJ5RE00Nm12dG9kOGszL2ptcGlBRHRsOVh4eUFMYkkv?=
+ =?utf-8?B?cGYwcVdlNjJWK01aaE1MOVZ0cUVPU2JabU1wSW1WeHplL3JNZ1VjVnFOeE1W?=
+ =?utf-8?B?WkRMWlRkRjgxci80eFkrTnpJWEJiUDVRMk80aytCVEY3ODlQa1lvR09aTFhL?=
+ =?utf-8?B?aUxnNmNFZDBGSjJaL2Jnd2tTUGs2MjdwMWJFOGZiRWFiT2htKzgrVGQrYzc5?=
+ =?utf-8?B?clNqVk5hcXRpeGNKVmF2NjU3T0JqS0d5cUdsL3c3bTU0STFlRklVYUZBTWo3?=
+ =?utf-8?B?NmZVak9VbW9pUStIYk8xR3JxVGhSS0pNZ1NVYXFsZitleHlJNnpSUm9GblZ1?=
+ =?utf-8?B?dnd0ZWkyWVpkODhVa2p1WW5VMUtuTWpOZ3BiRmEraVMrcEo4ZjFzcW9Sc2Rz?=
+ =?utf-8?Q?Qut4nkj5rRxHivk6/I3YhqDQqwVDCi2utK/UV?=
+X-OriginatorOrg: valinux.co.jp
+X-MS-Exchange-CrossTenant-Network-Message-Id: c403c254-d225-43ec-99c4-08def95cea03
+X-MS-Exchange-CrossTenant-AuthSource: TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Aug 2026 17:02:19.7819
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Aug 2026 17:04:19.2404
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: bbc898ad-b10f-4e10-8552-d9377b823d45
+X-MS-Exchange-CrossTenant-Id: 7a57bee8-f73d-4c5f-a4f7-d72c91c8c111
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: hcduBg/gITWz6BokQapKMHBjEguoXn6WVGG6gcG+cIqXdz62okKSmEr/KA2wCWLZT0iCuKelyE9A9ay+bV2i0A==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CWXP265MB1845
+X-MS-Exchange-CrossTenant-UserPrincipalName: Kpc1nUjmS2nL9vuOEZdRCr8s6B+6P3vjSGFnNdBzAMGkru7gyh5ZxD0Z+nMm7VFviuldn0i69BGDkPWp3z8HqA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYRP286MB6006
 
-On Thu Aug 13, 2026 at 5:52 PM BST, Danilo Krummrich wrote:
-> This series reworks the Rust PCI interrupt vector abstractions, motivated=
- by
-> review feedback on the nova-core interrupt support series [1].
->
-> Convert IrqVectorRegistration to a lifetime-managed owning type, replacin=
-g the
-> devres-based approach. Since index() borrows the registration, the return=
-ed
-> IrqVector inherits that lifetime, preventing the allocation from being dr=
-opped
-> while any handler is live.
->
-> IrqVector embeds a resolved IrqRequest, making the conversion infallible.=
- The
-> request_irq()/request_threaded_irq() wrappers on Device are removed since=
- their
-> &self receiver could refer to an unrelated device.
->
-> Add pci_irq_type() as a C function in include/linux/pci.h, replacing open=
--coded
-> checks across drivers [2], and wrap it for Rust.
->
-> [1] https://lore.kernel.org/all/20260808031120.363869-1-jhubbard@nvidia.c=
-om/
-> [2] https://elixir.bootlin.com/linux/v7.1/source/drivers/net/ethernet/aqu=
-antia/atlantic/aq_pci_func.c#L196
->
-> Changes in v3:
->   - Rename s/count/len/, s/vector()/index()/, s/vector_count()/len()/.
->   - Remove redundant range check in index().
->   - Add missing #[inline].
->
-> Changes in v2:
->   - Drop the IrqRequestAnchor approach and keep IrqVector as a new type o=
-ver
->     IrqRequest.
->
-> Danilo Krummrich (5):
->   rust: pci: convert IrqVectorRegistration to a lifetime-managed owning
->     type
->   rust: pci: resolve IRQ in index() and embed IrqRequest in IrqVector
->   rust: pci: remove request_irq() and request_threaded_irq() from Device
->   PCI: Add pci_irq_type() to query the allocated interrupt type
+On Thu, Aug 13, 2026 at 10:59:58AM -0500, Frank Li wrote:
+> On Thu, Aug 13, 2026 at 11:15:31PM +0900, Koichiro Den wrote:
+> > On Thu, Aug 13, 2026 at 02:50:59PM +0200, Manivannan Sadhasivam wrote:
+> > > On Thu, Aug 13, 2026 at 01:46:07PM +0200, Niklas Cassel wrote:
+> > > > Hello Koichiro,
+> > > >
+> > > > On Thu, Aug 13, 2026 at 03:37:47PM +0900, Koichiro Den wrote:
+> > > > > This is v7, the remaining patch set for PCI endpoint DMA.
+> > > > > Parts 2 and 3 were merged per Frank's suggestion.
+> > > >
+> > > > (snip)
+> > > >
+> > > > > One open question is how to support endpoint controllers with only one
+> > > > > PF. Keeping DMA in a separate EPF requires multi-function endpoint
+> > > > > support. Folding it into vNTB would work on single-function
+> > > > > controllers, but would also couple the two implementations. This series
+> > > > > keeps the separate EPF model.
+> > > >
+> > > > I see all the work you are putting in and I admire the effort.
+> > > >
+> > > > This is now v7. I think it is time that we close the open question by
+> > > > waiting for a reply from the PCI endpoint maintainers' opinion on the
+> > > > design before continuing. (I am not a PCI endpoint maintainer.)
+> > > >
+> > > > I understand that you want a common DMA abstraction, that can represent
+> > > > different (embedded) DMA controllers on the endpoint side.
+> > > >
+> > > > But if vNTB is the only consumer of this, then why not simply embed this
+> > > > DMA abstraction in some BAR exposed by the vNTB EPF?
+> > > >
+> > > > Looking at the host side driver that goes with the (v)NTB driver:
+> > > > drivers/ntb/hw/epf/ntb_hw_epf.c
+> > > >
+> > > > The BAR layouts are hard coded, and it only supports three different
+> > > > layouts. Would it not be possible to add a fourth layout that has the
+> > > > DMA abstraction somewhere in one of the BARs? ('BAR_DMA' ?)
+> > > >
+> > > >
+> > > > Right now, I wonder if it is not a bit premature optimization to create a
+> > > > DMA EPF, if vNTB will be the only (ever?) user.
+> > > >
+> > >
+> > > Yeah, I feel the same. I haven't seen an usecase to program the DMA controller
+> > > from the host outside of vNTB. This feature is supported mostly because it
+> > > exists in hardware and someone wants to tick the checkbox.
+> > >
+> > > Though, I'm not against doing it within vNTB as Niklas suggested, but
+> > > generalising it in the form of a new EPF driver just for the sake of a single
+> > > driver sounds like an overkill and maintenance burden.
+> > >
+> > > Sorry for saying this in v7. I've been meaning to say it, but somehow ended up
+> > > procrastinating too much.
+> >
+> > No bother. Since Frank has given a lot of feedback on this series, I'd also like
+> > to hear his view.
+> >
+> > I'm fine with either direction, and can revisit the earlier vNTB-embedded
+> > approach:
+> > https://lore.kernel.org/r/sn67hi7kljh7cgmgodatb3naz2astlaklqfobdbxyyzgoohxqb@4nnetbhqwba4/
+> 
+> One of the important value is test dw-edma-pcie.c, which generally depend
+> on some fpga hardware. If there are epf driver work as fpga hardware, it
+> will help cover edma remote user case. So more user can test it.
+> 
+> Of course, this implement are over complex. I suggest update dma-engine
+> chan_id to support static allocate, which also need be fixed because
+> some drivers have such dependence, anyway need be fixed. After this fix,
+> this patches will become simpler.
+> 
+> VNTB case, it'd better put such informaiton into one BARs and work on
+> single-function.
+> 
+> I suggest split two things
+> 
+> 1 - create simple epf driver to test dw-edma-pcie.c.
+> 2 - vntb support DMA.
+> 
+> of course, if shared efforts, it will be great.
 
-For the series:
+Thanks for the feedback. v7 patch 1 adds that exact static chan_id support, so
+you mean this v7 patch 2 ~ 9 can still be simplified enough to make the
+maintenance burden acceptable, right? Please correct me if I misunderstood.
 
-Reviewed-by: Gary Guo <gary@garyguo.net>
+I think a large part of the remaining complexity comes from discovery. Ideally,
+the EPF would create a VSEC like existing supported hardware, and put the DMA
+description there. But I could not find a generic way for an EPF to provide
+writable configuration space backing for such a VSEC on a DWC PCIe controller in
+EP mode. That is why this series (sadly) ended up with a BAR protocol. BAR
+subrange mapping use might look complicated, but is still needed on systems
+without a fixed DMA BAR, but the discovery part would otherwise be much simpler.
+I may be missing something I could simplify further.
 
-I think the duplicate irq alloc issue is still worth solving, but I agree t=
-hat
-it should be a separate series.
+Best regards,
+Koichiro
 
->   rust: pci: expose the allocated interrupt type
->
->  include/linux/pci.h    |  25 +++++
->  rust/helpers/pci.c     |   5 +
->  rust/kernel/pci.rs     |   3 +-
->  rust/kernel/pci/irq.rs | 220 ++++++++++++++++++-----------------------
->  4 files changed, 128 insertions(+), 125 deletions(-)
->
->
-> base-commit: dbaafe9cc56a996931eedfe043eb34418cc9cd9b
-
-
+> 
+> Frank
+> 
+> >
+> > Best regards,
+> > Koichiro
+> >
+> > >
+> > > - Mani
+> > >
+> > > --
+> > > மணிவண்ணன் சதாசிவம்
