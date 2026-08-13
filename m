@@ -1,148 +1,159 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D69731C56D
-	for <linux-pci@vger.kernel.org>; Thu, 13 Aug 2026 22:33:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 894A93CFF46
+	for <linux-pci@vger.kernel.org>; Thu, 13 Aug 2026 22:41:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786660397; cv=none; b=NqKZnwwRsrSYMPRHqeNVMnmOPJYyYPZW01FrRnqNx8eXPdejiqBCOaN6MWH31oh6DKObPAWiSTGk8MADUJNzpu+ZM+Tmyz8nxu/sI6SYCUkBy+zW3fMkLtucqenenPzPKGnqTa1hAVmYwUHVSwmgp/HirEPnC3uce9UJjYpK8gw=
+	t=1786660907; cv=none; b=fySMBwEyjk0HpR0dZCAy4rlBu6xhm6bphpM8Fl6p7P6tFIol5eBhaIp7lXa1RQGDJIC6giWMb+Z38drwApia557UWnZvTtcwUtzR8m88aUXuyJhvWSkM5lLT6/btPzsrc/+sT4tuv7FA/+raYfk3CKth+4Go/wz0Sm8eeLPF0TA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786660397; c=relaxed/simple;
-	bh=/aaB18UkuGY07d3ZsZ6HcfIQ7056lvRcvUukFB4S6ws=;
+	s=arc-20240116; t=1786660907; c=relaxed/simple;
+	bh=gBOT0wJHuVN9YdNgpXXTUaipSZNOJzI/wRh6aXL5zmk=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=g94h5Nch7bKip6MT18EiruNvi2fRAsYSuYCaENbnBbl/zUPycpcWXvd7BOwCKBlls+pZAs/A3VO/8S8075hHnlY6DECGmd3VSQIAqcJqDLtvh7FLFXV3bBW9lLQVwQoL4OovLlQuki5NGbxEFefxEEF5VjdVMIdQuYntMDnd+YM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=c2yS0nXj; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=IuUFLEwExM65xEx8JSmUqNgM0+kgVhO4zj+v1uc+PWrujMKWe9sbrdzGOGcGYmcPZY7bB7L0gsAG2XGotGmLI20gVMioOfNnsO6OHKirAY49HAeYU1J5QA6Y8EgBNYyFEMg7sdIHDcwnZIvr5pTT/p9RaoeKUwRlO3dQBUIvkGI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MB+GJ/Am; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="c2yS0nXj"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0408C1F000E9;
-	Thu, 13 Aug 2026 22:33:15 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MB+GJ/Am"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 009B01F00A3A;
+	Thu, 13 Aug 2026 22:41:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786660396;
-	bh=kpIgvftfn+qpufjMb4a+wKHUv7rIIXpk2NGyEcAnVVI=;
+	s=k20260515; t=1786660906;
+	bh=ACnNw1EQ+OXTtiNsggw4lteDDSyWTciiC9kfzSft/aA=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=c2yS0nXjc+OImdSMxNe0MEPZfwIOgkAAmrLhqtwpKlFHCKKuIhjeDIhwM8OvbsNK3
-	 UVHX2EkGRTHyFgHxxeT9ytisQyIEqhby0PZvfLsD7OfmkHwEc+u4t6ehgAZ9EJ0NS2
-	 FYZgoAP0FZIkK7/TxjFHHxA/QwjK5X3/NzA2aquxa4z7ECR6DcJFUCOsrO7UwM0mYx
-	 P3hl/ZSOH3byeGPhNbMDdiVF3mXO/0prOD9MXTdbcNPFLoq/OPwE0eqNlX00joLuWv
-	 sgEiFCgIoXB+nf96gCl7Xj1m89yaZm3gpJYgM22i0/J34DWFEaoT8/dB/xPfx66wvu
-	 elIJ9v1FhG1ug==
+	b=MB+GJ/AmvX7YivjEfeYcPVFlib5XTdaVW2aoq87TVFUOXjcrkOHUckGH/XD6oCDzF
+	 0SfwzSh3Masj6otrjcE8SI6XHavzlFF8EQi6A5na4ML6O3U5kxi9N3OD7t6CI4Wn5g
+	 TzzWUSTl4/Vl6AlgCUtkIClIWMVC+5t57e6e1zWE3iys0p+NZsCdBTvp1YvH3MwGRn
+	 qGEQIQK1LsTzWVQz7PY8x5y2sR5qWNN7WWiUioCe1hDwsItGZs+9FrdWDuhYJMS3Uj
+	 sC9liYY86FleyPVI+Lx796Xi3tNhnX8ygLdmanSGJlEU6T4xXHTPvBhCTfNHvDOPOs
+	 T+0Ig7MKkEgAg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH net-next 08/15] idpf: refactor idpf to use libie_pci
- APIs
+Subject: Re: [PATCH v8 09/14] PCI: tegra194: Allow system suspend when the
+ Endpoint link is not up
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "Tony Nguyen" <anthony.l.nguyen@intel.com>
+To: "Manikanta Maddireddy" <mmaddireddy@nvidia.com>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260317230905.847744-9-anthony.l.nguyen@intel.com>
-References: <20260317230905.847744-9-anthony.l.nguyen@intel.com>
+In-Reply-To: <20260324190755.1094879-10-mmaddireddy@nvidia.com>
+References: <20260324190755.1094879-10-mmaddireddy@nvidia.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 13 Aug 2026 22:33:15 +0000
-Message-Id: <20260813223316.0408C1F000E9@smtp.kernel.org>
+Date: Thu, 13 Aug 2026 22:41:45 +0000
+Message-Id: <20260813224146.009B01F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-
-Pre-existing issues:
-- [High] Unhandled NULL pointer returned by `libie_pci_get_mmio_addr()` whe=
-n resolving dynamic MMIO offsets from virtchnl (Control Plane). If the CP p=
-rovides invalid register offsets, the driver silently assigns NULL to criti=
-cal pointers (like interrupt control and queue tail pointers). Subsequent h=
-ardware interactions on the fast path (e.g., `writel(..., q->tail)` during =
-packet transmit/receive) will dereference the NULL pointer, triggering a ke=
-rnel oops.
+- [High] PM callbacks are asymmetric, missing a `.resume` callback, which l=
+eaves `pex_rst_irq` permanently disabled if the system suspend process is a=
+borted.
+- [High] Time-of-check to time-of-use (TOCTOU) race in `tegra_pcie_dw_suspe=
+nd()` allows the system to suspend while the Endpoint link is active.
 --
 
---- Patch [8]: [PATCH net-next 08/15] idpf: refactor idpf to use libie_pci =
-APIs ---
-commit f697d04a8f177d8259403ad799fd72beb013621d
-Author: Pavan Kumar Linga <pavan.kumar.linga@intel.com>
+--- Patch [9]: [PATCH v8 09/14] PCI: tegra194: Allow system suspend when th=
+e Endpoint link is not up ---
+commit 9f02485e505b10cc3b88208af0183e49b85c7e80
+Author: Vidya Sagar <vidyas@nvidia.com>
 
-idpf: refactor idpf to use libie_pci APIs
+PCI: tegra194: Allow system suspend when the Endpoint link is not up
 
-This commit refactors the idpf driver to use the libie_pci APIs for initial=
-ization and MMIO where possible. It introduces the libie_ctlq_ctx structure=
- and replaces custom MMIO mapping and offset calculation with standard libi=
-e equivalents.
+Host software initiates the L2 sequence. PCIe link is kept in L2 state
+during suspend. If Endpoint mode is enabled and the link is up, the
+software cannot proceed with suspend. However, when the PCIe Endpoint
+driver is probed, but the PCIe link is not up, Tegra can go into suspend
+state. So, allow system to suspend in this case.
 
-> diff --git a/drivers/net/ethernet/intel/idpf/idpf_dev.c b/drivers/net/eth=
-ernet/intel/idpf/idpf_dev.c
-> --- a/drivers/net/ethernet/intel/idpf/idpf_dev.c
-> +++ b/drivers/net/ethernet/intel/idpf/idpf_dev.c
-[ ... ]
-> @@ -110,22 +114,21 @@ static int idpf_intr_reg_init(struct idpf_vport *vp=
-ort,
->  		intr->dyn_ctl_sw_itridx_ena_m =3D
->  			PF_GLINT_DYN_CTL_SW_ITR_INDX_ENA_M;
+> diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/con=
+troller/dwc/pcie-tegra194.c
+> index f1985fca988ee..f66a93f0cf658 100644
+> --- a/drivers/pci/controller/dwc/pcie-tegra194.c
+> +++ b/drivers/pci/controller/dwc/pcie-tegra194.c
+> @@ -2270,16 +2270,28 @@ static void tegra_pcie_dw_remove(struct platform_=
+device *pdev)
+>  		gpiod_set_value(pcie->pex_refclk_sel_gpiod, 0);
+>  }
 > =20
-> -		spacing =3D IDPF_ITR_IDX_SPACING(reg_vals[vec_id].itrn_index_spacing,
-> +		spacing =3D IDPF_ITR_IDX_SPACING(reg->itrn_index_spacing,
->  					       IDPF_PF_ITR_IDX_SPACING);
->  		rx_itr =3D PF_GLINT_ITR_ADDR(VIRTCHNL2_ITR_IDX_0,
-> -					   reg_vals[vec_id].itrn_reg,
-> -					   spacing);
-> +					   reg->itrn_reg, spacing);
->  		tx_itr =3D PF_GLINT_ITR_ADDR(VIRTCHNL2_ITR_IDX_1,
-> -					   reg_vals[vec_id].itrn_reg,
-> -					   spacing);
-> -		intr->rx_itr =3D idpf_get_reg_addr(adapter, rx_itr);
-> -		intr->tx_itr =3D idpf_get_reg_addr(adapter, tx_itr);
-> +		intr->rx_itr =3D libie_pci_get_mmio_addr(mmio, rx_itr);
-> +		intr->tx_itr =3D libie_pci_get_mmio_addr(mmio, tx_itr);
+> -static int tegra_pcie_dw_suspend_late(struct device *dev)
+> +static int tegra_pcie_dw_suspend(struct device *dev)
+>  {
+>  	struct tegra_pcie_dw *pcie =3D dev_get_drvdata(dev);
+> -	u32 val;
+> =20
+>  	if (pcie->of_data->mode =3D=3D DW_PCIE_EP_TYPE) {
+> -		dev_err(dev, "Failed to Suspend as Tegra PCIe is in EP mode\n");
+> -		return -EPERM;
+> +		if (pcie->ep_state =3D=3D EP_STATE_ENABLED) {
+> +			dev_err(dev, "Tegra PCIe is in EP mode, suspend not allowed\n");
+> +			return -EPERM;
+> +		}
+> +
+> +		disable_irq(pcie->pex_rst_irq);
 
 [Severity: High]
-This is a pre-existing issue, but what happens in idpf_intr_reg_init() if t=
-he
-Control Plane provides invalid offsets via virtchnl messages?
+Is there a race condition between checking the endpoint state and disabling
+the IRQ here?
 
-The old idpf_get_reg_addr() function contained an explicit BUG() statement =
-if
-the register offset couldn't be resolved. The replacement function,
-libie_pci_get_mmio_addr(), returns NULL for invalid or unmapped offsets.
+If the host deasserts PERST# just after ep_state is checked but before
+disable_irq() executes, the tegra_pcie_ep_pex_rst_irq threaded IRQ handler
+could run concurrently.
 
-Since we don't validate the return value before assigning it to intr->rx_itr
-and intr->tx_itr, will this result in a silent unhandled NULL pointer
-dereference later when these pointers are accessed?
+This would allow the endpoint state to change to EP_STATE_ENABLED,
+bypassing the safety check and allowing the system to suspend while the
+link is active.
 
+Could the IRQ be disabled prior to checking ep_state, and re-enabled on
+the error path if suspend is not permitted?
+
+> +		return 0;
 >  	}
 > =20
+> +	return 0;
+> +}
+> +
+
 [ ... ]
-> diff --git a/drivers/net/ethernet/intel/idpf/idpf_virtchnl.c b/drivers/ne=
-t/ethernet/intel/idpf/idpf_virtchnl.c
-> --- a/drivers/net/ethernet/intel/idpf/idpf_virtchnl.c
-> +++ b/drivers/net/ethernet/intel/idpf/idpf_virtchnl.c
-[ ... ]
-> @@ -1421,7 +1425,8 @@ static int __idpf_queue_reg_init(struct idpf_vport =
-*vport,
+
+> @@ -2345,8 +2363,8 @@ static int tegra_pcie_dw_resume_early(struct device=
+ *dev)
+>  	u32 val;
 > =20
->  			for (j =3D 0; j < tx_qgrp->num_txq && k < num_regs; j++, k++)
->  				tx_qgrp->txqs[j]->tail =3D
-> -					idpf_get_reg_addr(adapter, reg_vals[k]);
-> +					libie_pci_get_mmio_addr(mmio,
-> +								reg_vals[k]);
+>  	if (pcie->of_data->mode =3D=3D DW_PCIE_EP_TYPE) {
+> -		dev_err(dev, "Suspend is not supported in EP mode");
+> -		return -ENOTSUPP;
+> +		enable_irq(pcie->pex_rst_irq);
+> +		return 0;
+>  	}
+> =20
+>  	if (!pcie->link_state)
+
+[ ... ]
+
+> @@ -2451,6 +2469,7 @@ static const struct of_device_id tegra_pcie_dw_of_m=
+atch[] =3D {
+>  };
+> =20
+>  static const struct dev_pm_ops tegra_pcie_dw_pm_ops =3D {
+> +	.suspend =3D tegra_pcie_dw_suspend,
+>  	.suspend_late =3D tegra_pcie_dw_suspend_late,
+>  	.suspend_noirq =3D tegra_pcie_dw_suspend_noirq,
+>  	.resume_noirq =3D tegra_pcie_dw_resume_noirq,
 
 [Severity: High]
-This is a pre-existing issue, but could this similarly result in an oops on
-the hot path?
+Does this introduce an asymmetry in the PM callbacks by placing disable_irq=
+()
+in .suspend but enable_irq() in .resume_early?
 
-In __idpf_queue_reg_init(), if libie_pci_get_mmio_addr() returns NULL for an
-invalid queue tail offset, it gets directly stored in the queue structure.
-Later, when fast-path packet processing routines attempt to update the tail
-pointer (e.g., via writel(..., q->tail) during transmit), they will derefer=
-ence
-NULL.
+If a system suspend is aborted due to a failure in another device's suspend
+callback, the PM core rolls back by calling .resume on successfully
+suspended devices. The .resume_early phase would be skipped entirely.
 
-Should we add a validation check for the returned address before we
-commit it to the tx_qgrp->txqs[j]->tail pointer?
-
->  		}
->  		break;
->  	case VIRTCHNL2_QUEUE_TYPE_RX:
+Because there is no .resume callback defined here to pair with .suspend,
+pex_rst_irq would remain permanently disabled after a failed suspend,
+breaking the PCIe endpoint PERST# reset functionality.
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260317230905.8477=
-44-1-anthony.l.nguyen@intel.com?part=3D8
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260324190755.1094=
+879-1-mmaddireddy@nvidia.com?part=3D9
