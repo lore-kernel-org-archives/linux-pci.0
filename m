@@ -1,199 +1,174 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from CH5PR02CU005.outbound.protection.outlook.com (mail-northcentralusazon11012008.outbound.protection.outlook.com [40.107.200.8])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 178DD19A288;
-	Thu, 13 Aug 2026 00:19:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786580347; cv=none; b=huKWB2XCDjnTHi6ZL7FFapICyakzbvk0i4EjS6mjZ1o3qhxDbNcd9EVrl0lghAONj/DrT9LLoDEQtyRNtAInwNm4Jm1pQ0BvnCPkRErzSp0X0wgT263gubrCB9TflDgdPtDzgek3Eyl8Zvzm1X2yxs9B1vyL9BSF8pBGP/RIa1U=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786580347; c=relaxed/simple;
-	bh=p9RdFBhv1eoyUw5/knwomMhrJLw+gkl8caK5fR6eOwg=;
-	h=Mime-Version:Content-Type:Date:Message-Id:Cc:To:From:Subject:
-	 References:In-Reply-To; b=ikaYzo4wukUNe/2t6Qz4cGAe2qxg7QsTMyCLqeHYPbpt4ty1n4Wu5vpJMpa5kQpizvxJB89fii9WOCcyeQ2jJMpWhRcAuVuMm0gRCiwEngTbdWqU7Um+TUkyzWskBQ0WccdiBXiQDLburT2p+Ku39cIrmXlelEmY5W75q8HaiHo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=N1brDirC; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 033EA3043DB;
+	Thu, 13 Aug 2026 00:58:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.200.8
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1786582733; cv=fail; b=t39SHcSdaR6WU4wKirjr+N/HcF8tJMQXvvmUg1CJz/cWPAXwWWR3bU6Dqa80DgL4E9MahrPoRyarlO4B2emrh8aO2vgihrtsblC5lMEJphNZBA3QfeIWoVG7C/PmLHEW+1I/r7vv5B+kLSUtuMEaJT34rx4vO/A2tpzoU1DOmVw=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1786582733; c=relaxed/simple;
+	bh=v9VvqraAgzlixEQUEjrD1nrTeivh+12lzHLNBr8zdP4=;
+	h=Content-Type:Date:Message-Id:From:To:Cc:Subject:References:
+	 In-Reply-To:MIME-Version; b=hUSzhKBcuhVZ9DuEUYE7KYdiIdpfOWYGbMolTxjeUUhAfpOVrqwqqCrNqbdxeRVsmpgPPUjRC6+4KJlLlAMrzUxYwGFZNVmTX/SOULcjqq9LkRf3xazGvdokKUnVUPRv8GzHIzsWdZOUlmf2S+1XjksL2boT55dBxGxrf6XxB34=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=UFHr6N0u; arc=fail smtp.client-ip=40.107.200.8
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="N1brDirC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C350A1F000E9;
-	Thu, 13 Aug 2026 00:18:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786580345;
-	bh=+SlSGOuNX1TZ7M6MiLLHH9rezuBa5FVnB0SFZWu5/6o=;
-	h=Date:Cc:To:From:Subject:References:In-Reply-To;
-	b=N1brDirC0ImWaLb3a2YVySmvKaz7pWOflIfKKF8P0n72nR1p0zLOePB0ZKFYKqZr4
-	 bunv6c/FSpcRYVq8g+YQeBLlRTeqKFQjA6HxDI8SdTL8H6d9awmOw/8MQzpr38SqjY
-	 Lawp0Om/x9H4M9FT7gX7SC+6LSEehgj6QAuWW6yo4T9KMvPEEi6fKYDbZNgBta3/k6
-	 GIUXRNnxXiQrJIORha31qqvLNtvvDGSHKcl+Q4C5EPelt9GeDy4C4cRExXnd9thRih
-	 7i9Djv0c32P5iPz7s5DIZLPgomlJWibBbR4zWDJXxv756SliUUeCAdSYDFhxWmrNfB
-	 +/8eT3reSQ3mg==
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="UFHr6N0u"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=s7yoe1epUzphzebd/TZ39UNW+yAlGI6q2IalF3LfMX2ZiPXZSoAF3ye+gQPJaV1bXQtiWQTcveDfhjTPVkirCqfbjjzf625Ly2vaRweASFa6vsSgJ7YBiX7G6frBxc1d23/5B08C8ULNxiTScJu3Wcm4iQAvJAh+VnNqQSQoyFsbRYDA7FsNqUAnvYmX37dYA43y0GUhLhbvwv8c/+LjyzUirzkGfMcN6r3UJnWNISazWDhTR3js2i+qe/qc9Lu1m7Wn12xKk3dyvcCyAw8kR+6W1mI6Zf7xw58qQpFzuVvCvTrpF09Oguxr5llwjaWZJjd7+GYP7K+c54GqSf8ShA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=3FtFGsUNMqjmZ22gwwPoYsL4qBZiIRkjt4zWSQR97M0=;
+ b=r07/bN6Dev0Kd5Un+n4GQRKo25evxu2Qt3A/pz2gb35MWCy3HoZEN840Kz00x3PP3454RVRSuE8p5jnX5c7vfVBnC173rSSQ9yf0y0DJq/LyujQxgmMPm8Q8+6obWuCIk1QCIoXsRM/KCIzfqtIGZCHJE6rXzNxIvWbMDzDGuyilGozi8nAfu/0YpGJyrk4n4BOebbiM/u5zqd+HU+YmGt401ewspkLw1nsNAvJsDktlxdFRpXZo9xvtsAapcJcFZPYL0ES107ENkzAXQacRgA7O4TM6PqWvCfmmbDwb0j9AHCDFbq895YUq4O6k2kbiDpPMxWfEZJ1tPYTaLT1faQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=3FtFGsUNMqjmZ22gwwPoYsL4qBZiIRkjt4zWSQR97M0=;
+ b=UFHr6N0uk8e+3kaMUxleiCuLe3sQgSRXGkib0DE+pHuPYZJPwv70FJs3Qy1iONkwmkf4R/2ENyUwUNtqE2WgcdHo9NOv588E3A+4zX9A76wXy8yZoipWok6F8cOhaFGa5aRdWvpUfZbgByFk90/ku9s2uvDbF50ibNLmFWvR91xRUUxia1uqAyYNj9dl6vfosMOs6yemA08zfFRZBHSzo2a6eewiuJXD1MMnMe0gktQVgaO0NQ0FWESFNyCOor6Xysx4jdM3etNsKSFC3R8p8QPicfKhDxNnqdPFPFDrsKFxFivTibioI0H2sIFSoaX7HqEXUrNpCOYECaT/Ke3/Xg==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from CH2PR12MB3990.namprd12.prod.outlook.com (2603:10b6:610:28::18)
+ by PH7PR12MB6467.namprd12.prod.outlook.com (2603:10b6:510:1f5::14) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.315.14; Thu, 13 Aug
+ 2026 00:58:45 +0000
+Received: from CH2PR12MB3990.namprd12.prod.outlook.com
+ ([fe80::7de1:4fe5:8ead:5989]) by CH2PR12MB3990.namprd12.prod.outlook.com
+ ([fe80::7de1:4fe5:8ead:5989%4]) with mapi id 15.21.0315.008; Thu, 13 Aug 2026
+ 00:58:45 +0000
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Thu, 13 Aug 2026 09:58:40 +0900
+Message-Id: <DKNEPVGACHOI.3QS8ZTDEPK3QQ@nvidia.com>
+From: "Alexandre Courbot" <acourbot@nvidia.com>
+To: "Gary Guo" <gary@garyguo.net>
+Cc: "Danilo Krummrich" <dakr@kernel.org>, "Alice Ryhl"
+ <aliceryhl@google.com>, "Daniel Almeida" <daniel.almeida@collabora.com>,
+ "Miguel Ojeda" <ojeda@kernel.org>, "Boqun Feng" <boqun@kernel.org>,
+ =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, "Benno Lossin"
+ <lossin@kernel.org>, "Andreas Hindborg" <a.hindborg@kernel.org>, "Trevor
+ Gross" <tmgross@umich.edu>, "Tamir Duberstein" <tamird@kernel.org>,
+ =?utf-8?q?Onur_=C3=96zkan?= <work@onurozkan.dev>, "David Airlie"
+ <airlied@gmail.com>, "Simona Vetter" <simona@ffwll.ch>, "Bjorn Helgaas"
+ <bhelgaas@google.com>, =?utf-8?q?Krzysztof_Wilczy=C5=84ski?=
+ <kwilczynski@kernel.org>, <driver-core@lists.linux.dev>,
+ <rust-for-linux@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+ <nova-gpu@lists.linux.dev>, <dri-devel@lists.freedesktop.org>,
+ <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v2 14/16] rust: io: register: remove relative registers
+References: <20260805-typed_register-v2-0-c3ca142220a0@garyguo.net>
+ <20260805-typed_register-v2-14-c3ca142220a0@garyguo.net>
+In-Reply-To: <20260805-typed_register-v2-14-c3ca142220a0@garyguo.net>
+X-ClientProxiedBy: TYWPR01CA0037.jpnprd01.prod.outlook.com
+ (2603:1096:400:17f::6) To CH2PR12MB3990.namprd12.prod.outlook.com
+ (2603:10b6:610:28::18)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Thu, 13 Aug 2026 02:18:55 +0200
-Message-Id: <DKNDVFGPA2T4.1VRWDIHTBOROT@kernel.org>
-Cc: "Miguel Ojeda" <miguel.ojeda.sandonis@gmail.com>, "Mark Brown"
- <broonie@kernel.org>, "Alvin Sun" <alvin.sun@linux.dev>, "Miguel Ojeda"
- <ojeda@kernel.org>, "Boqun Feng" <boqun@kernel.org>,
- =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, "Benno Lossin"
- <lossin@kernel.org>, "Andreas Hindborg" <a.hindborg@kernel.org>, "Alice
- Ryhl" <aliceryhl@google.com>, "Trevor Gross" <tmgross@umich.edu>, "Luis
- Chamberlain" <mcgrof@kernel.org>, "Petr Pavlu" <petr.pavlu@suse.com>,
- "Daniel Gomez" <da.gomez@kernel.org>, "Sami Tolvanen"
- <samitolvanen@google.com>, "Aaron Tomlin" <atomlin@atomlin.com>, "Greg
- Kroah-Hartman" <gregkh@linuxfoundation.org>, "Rafael J. Wysocki"
- <rafael@kernel.org>, "David Airlie" <airlied@gmail.com>, "Simona Vetter"
- <simona@ffwll.ch>, "Daniel Almeida" <daniel.almeida@collabora.com>, "Arnd
- Bergmann" <arnd@arndb.de>, "Brendan Higgins" <brendan.higgins@linux.dev>,
- "David Gow" <david@davidgow.net>, "Rae Moar" <raemoar63@gmail.com>, "Breno
- Leitao" <leitao@debian.org>, "Jens Axboe" <axboe@kernel.dk>, "Dave Ertman"
- <david.m.ertman@intel.com>, "Leon Romanovsky" <leon@kernel.org>, "Igor
- Korotin" <igor.korotin@linux.dev>, "FUJITA Tomonori"
- <fujita.tomonori@gmail.com>, "Bjorn Helgaas" <bhelgaas@google.com>,
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
- =?utf-8?q?Arve_Hj=C3=B8nnev=C3=A5g?= <arve@android.com>, "Todd Kjos"
- <tkjos@android.com>, "Christian Brauner" <brauner@kernel.org>, "Carlos
- Llamas" <cmllamas@google.com>, <rust-for-linux@vger.kernel.org>,
- <linux-modules@vger.kernel.org>, <driver-core@lists.linux.dev>,
- <dri-devel@lists.freedesktop.org>, <nova-gpu@lists.linux.dev>,
- <linux-kselftest@vger.kernel.org>, <kunit-dev@googlegroups.com>,
- <linux-block@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
- <netdev@vger.kernel.org>, <linux-pci@vger.kernel.org>
-To: "Gary Guo" <gary@garyguo.net>
-From: "Danilo Krummrich" <dakr@kernel.org>
-Subject: Re: [PATCH v10 00/10] Fix missing fops.owner in Rust DRM/misc
- abstractions
-References: <20260811-fix-fops-owner-v10-0-7e71776f9dbe@linux.dev>
- <CANiq72=bhfofrbdf1qeA380-eWeKj5yXhC0NzaU_nbB9SpxYHA@mail.gmail.com>
- <DKNAS52KYWLD.M15VEC6U0F6R@kernel.org>
- <DKNDF3WD27GM.5VP6RBRXZBUS@garyguo.net>
-In-Reply-To: <DKNDF3WD27GM.5VP6RBRXZBUS@garyguo.net>
+MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: CH2PR12MB3990:EE_|PH7PR12MB6467:EE_
+X-MS-Office365-Filtering-Correlation-Id: 589232cd-f5ed-4b65-8a31-08def8d60621
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|10070799003|366016|1800799024|7416014|23010399003|376014|10067099003|56012099006|11063799006|4143699003|18002099003|22082099003;
+X-Microsoft-Antispam-Message-Info:
+	O1xq+n6T1OgAUza7+VP4LPF9ZzLBMWql+hhEWx+pFlxCstjSvnMw3T7N4YRGkJ2Oig5lmCav6foWBP0nU6eBJZrup0Vm0mYPy/AuEryQNLG0go6Jd8PFlgsTwcSh7Yc88dL516PMiJijZUj9A2epam97te2W7neE+fVbZIhYNVH194J9ZQnSFlgnS4RRc+zs6luj17aEaHIqM9PmC2CrRvxqUEYpjDzoPAPDlXmsWCkF1KaMGSEH+iV47K5Auiu2TDvpLjA/Fto/oxExc036NcUuqCdx195nf86y5Z0MB7JK7QyuPmrIcbO/ue+QuczGkTfBrSgpUawx+rolrFIq/xVi56glh2SxkWcByRs9CPwCB3SThz61SfLgzFi5xlYoI/OH4S2OxBTt6GewXFBVvas3YtYNbTJn0qGfMNHP16OUhhEgmY4CixqwV6Fskwci+JwUSC5MHao0ImXmeau8RtpxN2dz5YRBLug6+RfdZ89QwDKnYY3vULY/pqEgY1u+yNgqYZgA3t4pdUeWGHUzyVomSoDX2xmRdNh3NKdA0nR6+/6mQMQaA3h58T5AfzaD4lWJzPMWSccwpqKpVgojMsAfVJJkJuiYjgzPx1/hn7FOFDpYYsHlO/M8eHPC0IQDA6y2XwrWa16wTBm7+Zg1yK4lclxpJYjWPAVuzF09RPs=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH2PR12MB3990.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(10070799003)(366016)(1800799024)(7416014)(23010399003)(376014)(10067099003)(56012099006)(11063799006)(4143699003)(18002099003)(22082099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?ZE1QbGhyZmF3dk5RUlZud2VBUWptSHpEM3hOTzZrUXZKNUJrQWJnY2RJanIv?=
+ =?utf-8?B?b0FSV1NNZDB2WkxMdFpwTWZFZlo1cU5mTEM3bEkvendleS8xQnIzbUJBdENx?=
+ =?utf-8?B?c28wUlgreTVRUVB0QjdzUWRWMW8xSHErNHQ2WVhNRmtZUXlCeHJsTXRxcGRF?=
+ =?utf-8?B?dHJvVEk1a1NjbXoyaEtxbmdCRzFxd2FubGpXRHpiYWFxNUpUaEx0Y0hIaUJO?=
+ =?utf-8?B?NEdxVnE4bVlQZnQxZkx6Q3lzYmZDWEJzUktTZE92U2NOc1FGMWlZVkFTWDhI?=
+ =?utf-8?B?YVA4RFNKclF5aks3b1V5anVvRkRkQy9SUW9rNW9WbUpoblViU0pjMDBHRWZM?=
+ =?utf-8?B?bjBVYUNJRXBIcGxJOWRydWZnVStwdkltQTkzTnVIUTl2SHVUZm9ndjVTOTdP?=
+ =?utf-8?B?OWJPQ09naldkVjNDQ1lBdFp6VWJURjZrVzAyM0tOSVZEVklwQmk0Yy9YekFo?=
+ =?utf-8?B?TVZaeWEzSDkyZDhmQUVtY3BTK3huVTdwT0NtRmYvTzhTc3ZxS0pDUSs3UnZD?=
+ =?utf-8?B?dlRrUndqTEZKQnJ6ODRMTUs4L0JoTWpyalBtSk8rNFlJT0x3bUk5ZVdDUjFW?=
+ =?utf-8?B?Y0liYjVuY1A0WldhbzdoeTdpZXd2eDFqTmNLZUh1aVI5VFlaWXpYVzQ2ZkpS?=
+ =?utf-8?B?c0xSZnJGMDZSMjVyb0pIT2U0cXAvL0EyV0xoZWhDbFFNK0l1WnNnOXFJK0hT?=
+ =?utf-8?B?YUNickp4d09HRTdqempsRFhtR3l0Q1R1TXR2ZWdUeXp4alVia0YyMVQ0OFl2?=
+ =?utf-8?B?V3lPQnhlMGtrdkc1UWgyZmdXaUJoM2dXelRwM01UUUE3cnJDeGxsUWtPZlR1?=
+ =?utf-8?B?M2tWVGtsZC90TlRUWFpjRUx5dit0bXhYdVV2L0NGNnEwaXI3ZTVlL2xsVC9V?=
+ =?utf-8?B?Yjl3S0k4S3Y4bmozUzhpVUlhWllvYWtZZXFXZGllMUtKcGxKZ1Rzc1hyVUU5?=
+ =?utf-8?B?UUZUVGJlb1F1ZEZvRVpBNHlNOEVFSkgvclE3NXk4RGtFRFg5eGJ4bFppcVZo?=
+ =?utf-8?B?aU9vSFhadEM4NWJFMGxMczBjV2VqZEVYV3JkRkFTQ0NSSEIrMjRiKy9DZXQ2?=
+ =?utf-8?B?Nm96NHl3MVcySklIbnNIRDF5WGQwVVJGMXBEamllZzVRSUNqOTlVMzc2UCtr?=
+ =?utf-8?B?YVhmbU1pNDIvbG5ocFBmYTlySEV3MC9yTFlBQ0lxN1p3RG1lVGYxeXFIeGJX?=
+ =?utf-8?B?aEN0K0w1bGRWZFpnUW9vQkhxK0F2bkVuNEFCUHcyczZraDlyOE13UFJJemZq?=
+ =?utf-8?B?akVjMWxRVDlaallFM0NKSSt6TS9mYjhFdEVxUVpHZncvTEJBSHRzdGg5NklP?=
+ =?utf-8?B?RGdmS1hueStseW42Mmw4RlFDNEVpeU4zbGRtLzFjZlBRbVYyRWpud3dRNnho?=
+ =?utf-8?B?Nkp6Zi93YjNHKzhjWDd6bnNCWTdDcnNMR3RNUDdnUmlrNFloTTgxd1hnYnJW?=
+ =?utf-8?B?WFlySVF5L3RwMUUwc0lKNnhwTENGc1M5L242bHVQRWhJTHBmeWt6Y3Z2dGJZ?=
+ =?utf-8?B?a3puYTBWR1FyZC9qcG5sVjlqM2w4c0ZnMHRCelVZNkF6T1QzcEV5enNyVnN2?=
+ =?utf-8?B?TUwrMVcrYytMOUFjandzSjFQWUVHQUgvOWdlWndIYkxKVnV3MFdhbHVMT2wy?=
+ =?utf-8?B?L1NWd3doQWVhS1pLQk5KRk8rRkg3U2J6eVZabXFCNVRBbjNudUlsUkRXbnNE?=
+ =?utf-8?B?bnNtOUkvZEFUY0ZiYTNaakNRdkU3WS9IUFF3MzRMNHpab1NEdkkwVDJUeEFT?=
+ =?utf-8?B?N1h2LzVmZXNXQUtvYUdhTE9BOEVqN0xnS0dTNlNRcDlkRVdhRHBnYU4xdTR4?=
+ =?utf-8?B?L2NMdUF0dFhFSnQ2Q3VuaE1KNGFwWkxTK3YxR1BXeldPeDJBNW5sTG0xZ3dO?=
+ =?utf-8?B?ZHl6M0NYV09qTjFjSnR3WWhWUDVxUXM5ZUVmVGJDeTJ3Kyt5UVRNdWJSMzFL?=
+ =?utf-8?B?REY2ZVp4SXdqQjJCQ3BxemdKaHlrMVJMUXV4T2RRMEM3UWRXQThkQzBGMVAv?=
+ =?utf-8?B?cFFOWlVoVG9GM2wwdkRRcU9QWjB2L3pYT0ZqaXpWTUJNa2g3R3ZSM2tzZUFh?=
+ =?utf-8?B?NHJ6N1RUN1l6YTdaNjZHUVJ3RjhjYXB6TjVYUG9jQWFjcDlER3hFL3ZQU0tl?=
+ =?utf-8?B?YkFYbWNzNlZpUHVqNXo0TlcrTzB0S3hoQUx5ZzBELzBZWFFuVk1iRW1uNis1?=
+ =?utf-8?B?TFBKd2U1OHk0TGlpaEtsdlBKSnBneTNEM3Zta2NxaElGUWd5UkRmN2ZzL2Fs?=
+ =?utf-8?B?aFlMWXlSSlpVUVM4VnRBQXlQZjlkQTFLNnRVeXliZ1FHQUpDVHBYYWU0dThZ?=
+ =?utf-8?B?Nld1S204QVdOaGdOMnI1TXpWbzBiR0dEWmc2N0w2MjU1UmhJMm9HTVNjdzdE?=
+ =?utf-8?Q?DornhBq/VuB9RLJ6rOrZY3yzVYcf1nLs3FSnQuMQulO9P?=
+X-MS-Exchange-AntiSpam-MessageData-1: tLNWacec4kGbLg==
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 589232cd-f5ed-4b65-8a31-08def8d60621
+X-MS-Exchange-CrossTenant-AuthSource: CH2PR12MB3990.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Aug 2026 00:58:44.8143
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: OhPYsjexDokq1qQDgCfgMTWHS3PRu2s3+1VJf++YNF1VZgF7LusX3pgcRxWcxXw0SQG58CaoEQXdM7Wl0j8GgA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH7PR12MB6467
 
-On Thu Aug 13, 2026 at 1:57 AM CEST, Gary Guo wrote:
-> On Wed Aug 12, 2026 at 10:53 PM BST, Danilo Krummrich wrote:
->> (Cc: Mark)
->>
->> On Wed Aug 12, 2026 at 6:33 PM CEST, Miguel Ojeda wrote:
->>> On Tue, Aug 11, 2026 at 8:41=E2=80=AFAM Alvin Sun <alvin.sun@linux.dev>=
- wrote:
->>>>
->>>> The series moves `THIS_MODULE` into the `ModuleMetadata` as a const, t=
-hreads it
->>>> through `#[vtable]` to set `fops.owner` in DRM/miscdevice, and updates=
- configfs
->>>> and rnull to use `this_module::<LocalModule>()`.
->>>
->>> Applied to `rust-next` -- thanks everyone!
->>
->> This series has a semantic conflict with both the driver-core and the dr=
-m-rust
->> tree:
->>
->> @Mark: When you merge driver-core-next after rust-next (which I think is=
- the
->> case) then you need to include the diff in [1] into the merge.
->>
->> In drm-rust-next the build fails with:
->>
->> 	error[E0425]: cannot find type `LocalModule` in the crate root
->> 	   --> rust/kernel/drm/gem/shmem.rs:628:5
->> 	    |
->> 	628 |     #[vtable]
->> 	    |     ^^^^^^^^^ not found in the crate root
->> 	    |
->> 	    =3D note: this error originates in the attribute macro `vtable` (in=
- Nightly builds, run with -Z macro-backtrace for more info)
->>
->> which is because the kunit test in rust/kernel/drm/gem/shmem.rs uses the
->> #[vtable] macro.
->>
->> This should be fixed up with a patch on top of this series in rust-next.
->>
->> I came up with to potential solutions [2] and [3]. I think with the new =
-build
->> system we want [3], but I'm not entirely sure this works correctly with =
-the
->> current build system in all cases (at least it did survive my tests).
->>
->> Alternatively, we could just open-code a dummy module as in [2] for now.
->>
->> [1] driver-core-next merge fixup
->>
->> diff --git a/rust/kernel/serdev.rs b/rust/kernel/serdev.rs
->> index a4927452016e..17ca504b7f8d 100644
->> --- a/rust/kernel/serdev.rs
->> +++ b/rust/kernel/serdev.rs
->> @@ -87,7 +87,7 @@ unsafe fn register(
->>          }
->>
->>          // SAFETY: `sdrv` is guaranteed to be a valid `DriverType`.
->> -        to_result(unsafe { bindings::__serdev_device_driver_register(sd=
-rv.get(), module.0) })
->> +        to_result(unsafe { bindings::__serdev_device_driver_register(sd=
-rv.get(), module.as_ptr()) })
+On Thu Aug 6, 2026 at 1:35 AM JST, Gary Guo wrote:
+> Relative registers can be better served by projection to subregion instea=
+d
+> of ad-hoc handling in register macro. Projection composes better (e.g. it
+> natively allows relative registers of relative registers without needing
+> additional support).
 >
-> `module.0` shouldn't be used in the first place, it just happens to be vi=
-sible
-> due to the unfortunate placement at crate root.
+> Remove relative register support, and update the documentation to
+> demonstrate how projection and subregions can be used to achieve this
+> instead.
 >
-> Perhaps you can update driver-core tree to use `as_ptr()`? It was already=
- there
-> and not newly introduced in the series.
+> Signed-off-by: Gary Guo <gary@garyguo.net>
+> ---
+>  rust/kernel/io/register.rs | 474 +++++----------------------------------=
+------
+>  1 file changed, 52 insertions(+), 422 deletions(-)
+>
+> diff --git a/rust/kernel/io/register.rs b/rust/kernel/io/register.rs
+> index 49a61da106c7..295b06dd53a7 100644
+> --- a/rust/kernel/io/register.rs
+> +++ b/rust/kernel/io/register.rs
+> @@ -8,7 +8,7 @@
+>  //!
+>  //! Note: most of the items in this module are public so they can be ref=
+erenced by the macro, but
+>  //! most are not to be used directly by users. Outside of the `register!=
+` macro itself, the only
+> -//! items you might want to import from this module are [`WithBase`] and=
+ [`Array`].
+> +//! items you might want to import from this module is [`Array`].
 
-Heh, I just remembered that patch 1 of this series did fix this in a couple=
- of
-places and assumed that it was introduced in the same patch without looking
-further.
-
-In that case I can throw in a patch in the driver-core tree; will send it
-tomorrow.
-
->>      }
->>
->>      unsafe fn unregister(sdrv: &Opaque<Self::DriverType>) {
->>
->> [2] Open-coded dummy module
->>
->> diff --git a/rust/kernel/lib.rs b/rust/kernel/lib.rs
->> index c04e6c5aa7e0..274924cfcc05 100644
->> --- a/rust/kernel/lib.rs
->> +++ b/rust/kernel/lib.rs
->> @@ -157,6 +157,15 @@
->>  /// Prefix to appear before log messages printed from within the `kerne=
-l` crate.
->>  const __LOG_PREFIX: &[u8] =3D b"rust_kernel\0";
->>
->> +/// Dummy module type for `#[vtable]` impl blocks within the kernel cra=
-te (e.g. kunit tests).
->> +struct LocalModule;
->> +
->> +impl ModuleMetadata for LocalModule {
->> +    const NAME: &'static str::CStr =3D c"rust_kernel";
->> +    // SAFETY: `try_module_get`/`module_put` handle null module pointer=
-s gracefully.
->> +    const THIS_MODULE: ThisModule =3D unsafe { ThisModule::from_ptr(cor=
-e::ptr::null_mut()) };
->> +}
->> +
->>  #[cfg(not(testlib))]
->>  #[panic_handler]
->>  fn panic(info: &core::panic::PanicInfo<'_>) -> ! {
->
-> IMO this is the correct way, also consistent with
->
-> https://lore.kernel.org/rust-for-linux/20260811-fix-fops-owner-v10-3-7e71=
-776f9dbe@linux.dev/
->
-> It might make sense to add this to rust-next.
-
-I feel like [3] is the superior solution (just unsure about the build syste=
-m
-implications); once we have the new build system some subsystem crates will=
- be
-actual modules, some will be always built-in. So, in general I think we wan=
-t to
-use the module!() macro.
+nit: "items" should now be singular.
