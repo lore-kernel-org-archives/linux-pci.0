@@ -1,239 +1,143 @@
-Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id A460A1A6838;
-	Thu, 13 Aug 2026 23:07:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 18011330301
+	for <linux-pci@vger.kernel.org>; Thu, 13 Aug 2026 23:07:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786662437; cv=none; b=N1Kodk2FEUnj3+F/SrDJxY6w4SoG01ena2TA1Z0aYQWpkjwCvjiNPpW8QtUQQo7EGqf96KsPVGdX74kxlNenNMb20pq68T8APgs2N/hE+LJezgrjMO6gN9nw7EnNd1QwsluEUUiLI/lU0SOR7MfYHv8tI+pYyZwXVJexJ9uWIVk=
+	t=1786662479; cv=none; b=coAvCXJ9WogqjkjnZa6Ka2ewYE/N6A3e0jhERPnllOHwacqafNeOY7963JbEO28EgIKX8IixWI0YbD624brKLzVDW0rsDbxXFPd3Rqc/04D+w2AbNoQZZwwWtSCGLaTw17LmsMtBgOJoilV0xgFHCyMyJwAcH7U8av7JgI4RG4o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786662437; c=relaxed/simple;
-	bh=gNfmfqZKHEN4g/kFYlJY0LevoSVC3c5PxNrr/6fotWU=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ZvARarBGntVedbxHXk7FdlZtVs+T4dFxwmRZ31qrEQY94PalyGEgelmirMvm/L0JTn+FaF0Y5riwiFFZjXjh+TAVynAoV2A/u8rbLjJm6SdI6zQaJII7lpnOEARJYARxjEo2K/5RCcwOxwzbzozKmcK0kP9w5hFvJWXVm06alEg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=FilbaOAU; arc=none smtp.client-ip=13.77.154.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
+	s=arc-20240116; t=1786662479; c=relaxed/simple;
+	bh=5ikdSnImwkeUcVaAbAi49+lLg7qw7n1WZ/S3WkgHDLQ=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=iXryj0KTraJ/T5lx64xaNp4lsLqQS2GOBcm9eK72afkaMbhtTUJS6oROSUV0YA6HAgMTMpACB+qXm6DtcTf30boGM4v+bRUTrFWTFzp4YDTLDIjKisKk6QAJs2yMvspe/rmbDr/73WMQosCzUCnEpMd98GFBoukwGkSIsYFfeyo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iaA3D95X; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="FilbaOAU"
-Received: from localhost (unknown [52.148.171.5])
-	by linux.microsoft.com (Postfix) with ESMTPSA id EB65C20B7168;
-	Thu, 13 Aug 2026 16:06:48 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com EB65C20B7168
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
-	s=default; t=1786662409;
-	bh=z4TnU21bv+s/VplA7mMdEL+um8LnOh7bSLXP56RKBAU=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-	b=FilbaOAUR744s88wlXKGuTpCUoMEOGvAk5NwGhJ63CUlmixhldyShj7EA+1NEPG9b
-	 GlizgZFBwlzDHFcVS0aio9yJWMyyDAawiLLa4AmC4wmI4N4kLTNFKOAhexn3VhyaPY
-	 Pa7f9okXrGFlbY4Zf+8hCxumCVUpUy/HwnU+0rH4=
-Date: Thu, 13 Aug 2026 16:07:13 -0700
-From: Jacob Pan <jacob.pan@linux.microsoft.com>
-To: Yu Zhang <zhangyu1@linux.microsoft.com>
-Cc: linux-kernel@vger.kernel.org, linux-hyperv@vger.kernel.org,
- iommu@lists.linux.dev, linux-pci@vger.kernel.org,
- linux-arch@vger.kernel.org, x86@kernel.org, wei.liu@kernel.org,
- kys@microsoft.com, haiyangz@microsoft.com, decui@microsoft.com,
- longli@microsoft.com, joro@8bytes.org, will@kernel.org,
- robin.murphy@arm.com, bhelgaas@google.com, kwilczynski@kernel.org,
- lpieralisi@kernel.org, mani@kernel.org, robh@kernel.org, arnd@arndb.de,
- jgg@ziepe.ca, mhklinux@outlook.com, tgopinath@linux.microsoft.com,
- easwar.hariharan@linux.microsoft.com, mrathor@linux.microsoft.com,
- baolu.lu@linux.intel.com, suravee.suthikulpanit@amd.com,
- vasant.hegde@amd.com, jacob.pan@linux.microsoft.com
-Subject: Re: [PATCH v3 5/5] iommu/hyperv: Add page-selective IOTLB flush
- support
-Message-ID: <20260813160713.00004f95@linux.microsoft.com>
-In-Reply-To: <20260811155022.108148-6-zhangyu1@linux.microsoft.com>
-References: <20260811155022.108148-1-zhangyu1@linux.microsoft.com>
-	<20260811155022.108148-6-zhangyu1@linux.microsoft.com>
-Organization: LSG
-X-Mailer: Claws Mail 3.21.0 (GTK+ 2.24.33; x86_64-w64-mingw32)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iaA3D95X"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 777AB1F000E9;
+	Thu, 13 Aug 2026 23:07:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1786662477;
+	bh=fRFOTpo5cuJY3ke64gD2rV9raShwSkBwD+3N2M456kQ=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=iaA3D95XbHCkBKbzKFWjEv75/gxklNKeD+bxVyaddPcI+rnM25Co8ADMcAUWbqsi1
+	 AKuBduObftT538MBxOcy5b+xQ96KpEUdSs0yFixLLSXM3H/Y57ocsIB3LSp8IU7Wxt
+	 jMsWDhvKCHeuDpM9zBGqvqx7t9UnFeFMuI4x09coGfbivy9oqqd4TIzFtWEc1uPhFs
+	 b9xkdp+3QaUgkBw01/HUQNX0nXysYkzaThUgvfotCN8rDgARchyPeBP30S4LY18tFg
+	 +ii+27qrRQttPtEv5BDhWbK0+jvpQIb284x2t7phCu8uxuuwvl2Y0oifcFGPfkBozG
+	 TS1O7W2mhG6ig==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v3 3/3] ACPI: APEI: GHES: Add NVIDIA vendor CPER record
+ handler
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Kai-Heng Feng" <kaihengf@nvidia.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260330094203.38022-4-kaihengf@nvidia.com>
+References: <20260330094203.38022-4-kaihengf@nvidia.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 13 Aug 2026 23:07:52 +0000
+Message-Id: <20260813230757.777AB1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
 
-Hi Yu,
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
+- [High] Dropping the `__packed` attribute from `struct cper_sec_nvidia` ca=
+uses Undefined Behavior and potential alignment faults when accessing 64-bi=
+t fields.
+- [High] A signed-to-unsigned conversion vulnerability in the length check =
+allows a maliciously crafted ACPI CPER record to bypass bounds validation.
+--
 
-On Tue, 11 Aug 2026 23:50:21 +0800
-Yu Zhang <zhangyu1@linux.microsoft.com> wrote:
+--- Patch [3]: [PATCH v3 3/3] ACPI: APEI: GHES: Add NVIDIA vendor CPER reco=
+rd handler ---
+commit ca65b6ef5ec8eb0410ab8adcafb43315cd0cfefa
+Author: Kai-Heng Feng <kaihengf@nvidia.com>
 
-> Add page-selective IOTLB flush using HVCALL_FLUSH_DEVICE_DOMAIN_LIST.
-> This hypercall accepts a list of (page_number, page_mask_shift)
-> entries, enabling finer-grained IOTLB invalidation compared to the
-> domain-wide HVCALL_FLUSH_DEVICE_DOMAIN used by
-> hv_iommu_flush_iotlb_all().
-> 
-> hv_iommu_calc_flush_range() computes the smallest power-of-two aligned
-> range that covers the target IOVA region, producing a single flush
-> descriptor. This may over-flush when the range is not naturally
-> aligned, matching the approach used by Intel VT-d PSI. If the
-> page-selective flush fails, the code falls back to a full domain
-> flush.
-> 
-> Signed-off-by: Easwar Hariharan <easwar.hariharan@linux.microsoft.com>
-> Signed-off-by: Yu Zhang <zhangyu1@linux.microsoft.com>
-> ---
->  drivers/iommu/hyperv/hv-iommu-guest.c | 73
-> ++++++++++++++++++++++++++- include/hyperv/hvgdk_mini.h           |
-> 1 + include/hyperv/hvhdk_mini.h           | 17 +++++++
->  3 files changed, 90 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/iommu/hyperv/hv-iommu-guest.c
-> b/drivers/iommu/hyperv/hv-iommu-guest.c index
-> 2a00353ce733..060c2efd6bf0 100644 ---
-> a/drivers/iommu/hyperv/hv-iommu-guest.c +++
-> b/drivers/iommu/hyperv/hv-iommu-guest.c @@ -9,6 +9,7 @@
->  #define pr_fmt(fmt) "Hyper-V pvIOMMU: " fmt
->  #define dev_fmt(fmt) pr_fmt(fmt)
->  
-> +#include <linux/hyperv.h>
-why need this?
+ACPI: APEI: GHES: Add NVIDIA vendor CPER record handler
 
->  #include <linux/iommu.h>
->  #include <linux/pci.h>
->  #include <linux/dma-map-ops.h>
-> @@ -408,10 +409,79 @@ static void hv_iommu_flush_iotlb_all(struct
-> iommu_domain *domain)
-> hv_flush_device_domain(to_hv_iommu_domain(domain)); }
->  
-> +/*
-> + * Calculate the minimal power-of-two aligned range that covers
-> [start, end]
-> + * (end is inclusive). Returns a single (page_number,
-> page_mask_shift)
-> + * descriptor that may over-flush when the range is not naturally
-> aligned.
-> + */
-> +static void
-> +hv_iommu_calc_flush_range(unsigned long start, unsigned long end,
-> +			  union hv_iommu_flush_va *va)
-> +{
-> +	unsigned int sz_lg2;
-> +
-> +	sz_lg2 = fls_long(start ^ end);
-> +	if (sz_lg2 < HV_HYP_PAGE_SHIFT)
-> +		sz_lg2 = HV_HYP_PAGE_SHIFT;
-> +
-> +	/*
-> +	 * A valid IOVA range shall not span bit 63. Use the maximum
-> mask
-> +	 * so the host can safely perform a full flush.
-> +	 */
-> +	if (WARN_ON_ONCE(sz_lg2 >= BITS_PER_LONG)) {
-> +		va->as_uint64 = 0;
-> +		va->page_mask_shift =
-> +			BITS_PER_LONG - HV_HYP_PAGE_SHIFT;
-> +		return;
-> +	}
-> +
-> +	va->page_number =
-> +		(start & GENMASK(BITS_PER_LONG - 1, sz_lg2)) >>
-> +		HV_HYP_PAGE_SHIFT;
-> +	va->page_mask_shift = sz_lg2 - HV_HYP_PAGE_SHIFT;
-> +}
-> +
-> +static void hv_flush_device_domain_list(struct hv_iommu_domain
-> *hv_domain,
-> +					struct iommu_iotlb_gather
-> *iotlb_gather) +{
-> +	u64 status;
-> +	unsigned long flags;
-> +	struct hv_input_flush_device_domain_list *input;
-> +
-> +	local_irq_save(flags);
-> +
-> +	input = *this_cpu_ptr(hyperv_pcpu_input_arg);
-> +	/* Clear the fixed header and the single range entry. */
-> +	memset(input, 0, struct_size(input, iova_list, 1));
-> +
-> +	input->device_domain = hv_domain->device_domain;
-> +	input->flags |= HV_FLUSH_DEVICE_DOMAIN_LIST_IOMMU_FORMAT;
-> +	hv_iommu_calc_flush_range(iotlb_gather->start,
-> iotlb_gather->end,
-> +				  &input->iova_list[0]);
-> +
-> +	status = hv_do_rep_hypercall(HVCALL_FLUSH_DEVICE_DOMAIN_LIST,
-> +				     1, 0, input, NULL);
-> +
-> +	if (WARN_ON_ONCE(!hv_result_success(status))) {
-> +		/* Page-selective flush failed, fall back to full
-> flush. */
-> +		struct hv_input_flush_device_domain *flush_all =
-> (void *)input; +
-> +		memset(flush_all, 0, sizeof(*flush_all));
-> +		flush_all->device_domain = hv_domain->device_domain;
-> +		status = hv_do_hypercall(HVCALL_FLUSH_DEVICE_DOMAIN,
-> +					 flush_all, NULL);
-> +		WARN(!hv_result_success(status),
-> +		     "HVCALL_FLUSH_DEVICE_DOMAIN fallback also
-> failed: %lld\n",
-> +		     status);
-> +	}
-> +
-> +	local_irq_restore(flags);
-> +}
-> +
->  static void hv_iommu_iotlb_sync(struct iommu_domain *domain,
->  				struct iommu_iotlb_gather
-> *iotlb_gather) {
-> -	hv_flush_device_domain(to_hv_iommu_domain(domain));
-> +	hv_flush_device_domain_list(to_hv_iommu_domain(domain),
-> iotlb_gather); 
->  	iommu_put_pages_list(&iotlb_gather->freelist);
-Maybe add a comment explaining that HVCALL_FLUSH_DEVICE_DOMAIN_LIST
-covers non-leaf/walk caches, therefore it is safe to put freelist.
+This commit adds support for decoding NVIDIA-specific CPER sections via
+the APEI GHES vendor record notifier chain. It registers a notifier_block
+to parse and print error metadata and diagnostic register dumps.
 
->  }
-> @@ -464,6 +534,7 @@ static struct iommu_domain
-> *hv_iommu_domain_alloc_paging(struct device *dev) 
->  	cfg.common.hw_max_vasz_lg2 = hv_iommu_device->max_iova_width;
->  	cfg.common.hw_max_oasz_lg2 = 52;
-> +	cfg.common.features |= BIT(PT_FEAT_FLUSH_RANGE);
->  	/*
->  	 * Hyper-V S1 domains use a 4-level root for IOVA widths up
-> to
->  	 * 48 bits. A 5-level root is used only for wider apertures
-> when diff --git a/include/hyperv/hvgdk_mini.h
-> b/include/hyperv/hvgdk_mini.h index 5bdbb44da112..eaaf87171478 100644
-> --- a/include/hyperv/hvgdk_mini.h
-> +++ b/include/hyperv/hvgdk_mini.h
-> @@ -496,6 +496,7 @@ union hv_vp_assist_msr_contents {	 /*
-> HV_REGISTER_VP_ASSIST_PAGE */ #define
-> HVCALL_GET_GPA_PAGES_ACCESS_STATES		0x00c9 #define
-> HVCALL_CONFIGURE_DEVICE_DOMAIN			0x00ce #define
-> HVCALL_FLUSH_DEVICE_DOMAIN			0x00d0 +#define
-> HVCALL_FLUSH_DEVICE_DOMAIN_LIST			0x00d1 #define
-> HVCALL_ACQUIRE_SPARSE_SPA_PAGE_HOST_ACCESS	0x00d7 #define
-> HVCALL_RELEASE_SPARSE_SPA_PAGE_HOST_ACCESS	0x00d8 #define
-> HVCALL_MODIFY_SPARSE_GPA_PAGE_HOST_VISIBILITY	0x00db diff
-> --git a/include/hyperv/hvhdk_mini.h b/include/hyperv/hvhdk_mini.h
-> index 1e3eac99886a..25671ee7056d 100644 ---
-> a/include/hyperv/hvhdk_mini.h +++ b/include/hyperv/hvhdk_mini.h
-> @@ -674,4 +674,21 @@ struct hv_input_flush_device_domain {
->  	u32 reserved;
->  } __packed;
->  
-> +union hv_iommu_flush_va {
-> +	u64 as_uint64;
+> diff --git a/drivers/acpi/apei/ghes-nvidia.c b/drivers/acpi/apei/ghes-nvi=
+dia.c
+> new file mode 100644
+> index 0000000000000..597275d81de85
+> --- /dev/null
+> +++ b/drivers/acpi/apei/ghes-nvidia.c
+> @@ -0,0 +1,149 @@
+[ ... ]
+> +struct cper_sec_nvidia {
+> +	char	signature[16];
+> +	__le16	error_type;
+> +	__le16	error_instance;
+> +	u8	severity;
+> +	u8	socket;
+> +	u8	number_regs;
+> +	u8	reserved;
+> +	__le64	instance_base;
 > +	struct {
-> +		u64 page_mask_shift : 6;
-> +		u64 reserved : 6;
-> +		u64 page_number : 52;
-> +	};
-> +} __packed;
-> +
-> +struct hv_input_flush_device_domain_list {
-> +	struct hv_input_device_domain device_domain;
-> +#define HV_FLUSH_DEVICE_DOMAIN_LIST_IOMMU_FORMAT BIT(0)
-> +	u32 flags;
-> +	u32 reserved;
-> +	union hv_iommu_flush_va iova_list[];
-> +} __packed;
-> +
->  #endif /* _HV_HVHDK_MINI_H */
+> +		__le64	addr;
+> +		__le64	val;
+> +	} regs[] __counted_by(number_regs);
+> +};
 
-Reviewed-by: Jacob Pan <jacob.pan@linux.microsoft.com>
+[Severity: High]
+Does dropping the __packed attribute from this structure introduce a risk of
+unaligned memory accesses?
+
+The ACPI GHES error payload is often located at a 4-byte aligned offset
+(such as offset 84 or 92) from the estatus base block, meaning the pointer
+returned by acpi_hest_get_payload() can be unaligned.
+
+Casting this misaligned pointer to a struct with 8-byte alignment
+requirements and accessing 64-bit members like instance_base or the regs
+array can result in undefined behavior or alignment faults on architectures
+with strict alignment requirements.
+
+[ ... ]
+> +static int nvidia_ghes_notify(struct notifier_block *nb,
+> +			      unsigned long event, void *data)
+> +{
+> +	struct acpi_hest_generic_data *gdata =3D data;
+> +	struct nvidia_ghes_private *priv;
+> +	const struct cper_sec_nvidia *nvidia_err;
+> +	guid_t sec_guid;
+> +
+> +	import_guid(&sec_guid, gdata->section_type);
+> +	if (!guid_equal(&sec_guid, &nvidia_sec_guid))
+> +		return NOTIFY_DONE;
+> +
+> +	priv =3D container_of(nb, struct nvidia_ghes_private, nb);
+> +
+> +	if (acpi_hest_get_error_length(gdata) < sizeof(*nvidia_err)) {
+
+[Severity: High]
+Could a maliciously crafted ACPI CPER record bypass this length validation?
+
+Looking at acpi_hest_get_error_length(), it returns an int. If the CPER
+record contains an error_data_length larger than INT_MAX, it will be
+returned as a negative int.
+
+When this negative value is compared against sizeof(*nvidia_err), which is
+a size_t, it will be promoted to a very large unsigned integer. This causes
+the less-than condition to evaluate to false, bypassing the early return.
+
+The bypassed length would then be passed as a size_t to
+nvidia_ghes_print_error(), where it again evaluates the
+error_data_length < min_size check as false, allowing the loop to perform
+an out-of-bounds memory read.
+
+> +		dev_err(priv->dev, "Section too small (%d < %zu)\n",
+> +			acpi_hest_get_error_length(gdata), sizeof(*nvidia_err));
+> +		return NOTIFY_OK;
+> +	}
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260330094203.3802=
+2-1-kaihengf@nvidia.com?part=3D3
