@@ -1,126 +1,92 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail11.truemail.it (mail11.truemail.it [217.194.8.81])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 714E3442B17;
-	Thu, 13 Aug 2026 08:36:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF0E5212550;
+	Thu, 13 Aug 2026 08:39:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.194.8.81
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786610203; cv=none; b=BoKvnkzreXe/6sOBF8CX95EjBxNLZhYUsqLDOhD6irxJGvhUrgySjKh6/vEkXLVp8rU/yTeWZ9UekQTz5weYJkxixqckttBdKR+A5oFUI6vIWvHrF74cf9wo49qhhR/liwpOFrgrmAe1XsYha+cxc5+fVVMngCru3krLoNyFxs4=
+	t=1786610362; cv=none; b=fNaspEs1PgBGKnn0e9V7YMObpaIBOfFTevP71sSVOt2kJZSqRL914TELizjtZpuSFFb/wMkl9tR1xh/JWpr4xF9OS9cHTcU8etRyZSPljeIF6XhP46rLWf52g5tFziwxyiFYnWYFDuFt6PGnsbvzxm+13VO4rxaFDE10bHz3Zz0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786610203; c=relaxed/simple;
-	bh=N34Piu6UotMucXpQ3lW6urue3Zuja34JbmjkdF9373g=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=aK1/TawJn5Pt4CstHK44MCm/vJmYyKlO3rqRS3gM2eg5C/RhpRXEKJlArr7C8eD1Cx5k5HMbFMKvwCz9lRAcIbfwOg+bv4MGC2iXGFWRHwxl/zlNYv2t6yGxdj3yE/+QkTKWnMIac/7kAC+M4l5Uiyzo+UYaDviHR3Py1rMkVsM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=D4DSzlIm; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1786610362; c=relaxed/simple;
+	bh=IMKd6ctsSzxAom010WdeHw8+f0VyQ9kH2Fc8LoV6Rv4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=ZNY88c8pKuuXCsft7FvHvIeE7GsKtdG/m+VddUPyfmLjiqs49GblUFpEvFnffYXSZh7dBUUEoKd/yUjt82IXSuGjmhOxU0BOvMrZg15h/dLCz+WmWZT6CvtuJE/08BTpk+zJug0UZzdoeaBMwofoYlpMfDsbplFTSYMmiYEsRs4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=dolcini.it; spf=pass smtp.mailfrom=dolcini.it; dkim=pass (2048-bit key) header.d=dolcini.it header.i=@dolcini.it header.b=Rxki+4b9; arc=none smtp.client-ip=217.194.8.81
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=dolcini.it
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=dolcini.it
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="D4DSzlIm"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C1EBE1F00A3D;
-	Thu, 13 Aug 2026 08:36:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786610202;
-	bh=vJypfqGdu2ABBZg7hvLHB5fDy3oLIw7YZWH0MBvjzoA=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=D4DSzlImFdeuSXuonjubumGPizCxmT7DG4Vyn7RGtxceSadq2THn8MNO96SjgaRgj
-	 hS0Ymut7X1Xd+qOKQEc9JgVLNnnkZokoyjc9mCEYeC3vjstT8uCOwBzxUYd7bIJs20
-	 S2EVNKvXJ6owpnCCxfVW/syIUPCCllthsYDWyCXXPVkvXLlNLJQ752An18C64Fw8uk
-	 mgmYnXWCTbcpsnme7mpLMFDpB+ugrKQI1bAaYvKEhB0uzDok1oD/Rh68V78rDzV13s
-	 IM7V+K8RAO2gWehKZZSivq8tOGQoWuLNofplwHVwXviFw4KBngZ3fn9mjBDgATIFVk
-	 2/a3p+NIXtF+w==
-From: sashiko-bot@kernel.org
+	dkim=pass (2048-bit key) header.d=dolcini.it header.i=@dolcini.it header.b="Rxki+4b9"
+Received: from francesco-nb (2-224-16-253.ip168.fastwebnet.it [2.224.16.253])
+	by mail11.truemail.it (Postfix) with ESMTPA id 75CA81FBAF;
+	Thu, 13 Aug 2026 10:39:14 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=dolcini.it;
+	s=default; t=1786610355;
+	bh=CVSjljxeTNiOuA8vcM9heS5OVd8fSR3FWCLRErPJk2w=; h=From:To:Subject;
+	b=Rxki+4b9HHk1g177TyUVGYgaFeBxm792nu9YHZaz0+HyaZmeyUOPQQOBJoJptGMXw
+	 5+sEXymW6Q0M6fMqt3OHNGJeAErFUS0cXYGlT+5Pm2pShg+oqHnTAyetmaQJyu/BDO
+	 klp01qqS7kjZi6wsmior1B0PjtL4+W0gIPeENGYrxaxKjYJm5RwvygCmSJwUZEa7JC
+	 R2cyr7yr1fBNZHygeWwHTvFtdFoZe7QQ5ej5EgBpRLOK5dA2vNZPd4eS7IyDk2HT48
+	 ziJIr7a9L+gRBEawizjv9g+T3t6PmAUfQPI5WtwtAdhP506yw+XERG0G5jJFeqNxPM
+	 Z5PLFlnfo8K5g==
+Date: Thu, 13 Aug 2026 10:39:12 +0200
+From: Francesco Dolcini <francesco@dolcini.it>
+To: hongxing.zhu@oss.nxp.com
+Cc: leoreis.costa@gmail.com, fra.schnyder@gmail.com, francesco@dolcini.it,
+	frank.li@nxp.com, l.stach@pengutronix.de, lpieralisi@kernel.org,
+	kwilczynski@kernel.org, mani@kernel.org, robh@kernel.org,
+	bhelgaas@google.com, s.hauer@pengutronix.de, kernel@pengutronix.de,
+	festevam@gmail.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, imx@lists.linux.dev,
+	linux-kernel@vger.kernel.org, Richard Zhu <hongxing.zhu@nxp.com>,
+	stable@vger.kernel.org
 Subject: Re: [PATCH v1] PCI: imx6: Move clock enable after core reset
  assertion
-Reply-To: sashiko-reviews@lists.linux.dev
-To: hongxing.zhu@oss.nxp.com
-Cc: Frank.Li@kernel.org, imx@lists.linux.dev, linux-pci@vger.kernel.org
-In-Reply-To: <20260813082900.270003-1-hongxing.zhu@oss.nxp.com>
+Message-ID: <20260813083912.GB19687@francesco-nb>
 References: <20260813082900.270003-1-hongxing.zhu@oss.nxp.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 13 Aug 2026 08:36:41 +0000
-Message-Id: <20260813083641.C1EBE1F00A3D@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260813082900.270003-1-hongxing.zhu@oss.nxp.com>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
+On Thu, Aug 13, 2026 at 04:29:00PM +0800, hongxing.zhu@oss.nxp.com wrote:
+> From: Richard Zhu <hongxing.zhu@nxp.com>
+> 
+> Commit 610fa91d9863 ("PCI: imx6: Assert PERST# before enabling regulators")
+> inadvertently moved clock enablement before core reset assertion, breaking
+> PCI device initialization on i.MX6Q Apalis platforms when
+> ASM1061/ASM1062 is connected.
+> 
+> Logs:
+> root@apalis-imx6-11486042:~# dmesg | grep pcie
+> imx6q-pcie 1ffc000.pcie: host bridge /soc/pcie@1ffc000 ranges:
+> imx6q-pcie 1ffc000.pcie:       IO 0x0001f80000..0x0001f8ffff -> 0x0000000000
+> imx6q-pcie 1ffc000.pcie:      MEM 0x0001000000..0x0001efffff -> 0x0001000000
+> imx6q-pcie 1ffc000.pcie: config reg[1] 0x01f00000 == cpu 0x01f00000
+> imx6q-pcie 1ffc000.pcie: iATU: unroll F, 4 ob, 4 ib, align 64K, limit 4G
+> imx6q-pcie 1ffc000.pcie: Link: Only Gen1 is enabled
+> imx6q-pcie 1ffc000.pcie: Link failed to come up. LTSSM: POLL_CONFIG
+> imx6q-pcie 1ffc000.pcie: probe with driver imx6q-pcie failed with error -110
+> 
+> To fix this regression, restore the original sequence where clocks are
+> enabled after asserting core reset and configuring the controller type.
+> 
+> Fixes: 610fa91d9863 ("PCI: imx6: Assert PERST# before enabling regulators")
+> Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
+> Reported-by: Leonardo Costa <leoreis.costa@gmail.com>
+> Closes: https://lore.kernel.org/all/bl7i3obu2clzsgeoct2a4mtfhv6typcjdqmgneropf3hpgwve6@n2m5uhlduw57/T/#u
+> Reported-by: Franz Schnyder <fra.schnyder@gmail.com>
+> Closes: https://lore.kernel.org/all/t65y5d54axtksbfs7r4olcefqhwm6m4dz3njgnrnf7fcotj74i@o7avoznlafbj/
+> Cc: stable@vger.kernel.org # 7.1+
 
-Pre-existing issues:
-- [High] The return value of imx_pcie_host_init() is ignored in imx_add_pci=
-e_ep(), leading to a kernel crash if hardware initialization fails.
---
+7.2+, 7.1 does not have the broken commit
 
---- Patch [1]: [PATCH v1] PCI: imx6: Move clock enable after core reset ass=
-ertion ---
-commit 6d9f9eb5750531f447a5eaee6a038ee84ba72010
-Author: Richard Zhu <hongxing.zhu@nxp.com>
+minor: it is not 100% clear if the issue is specific to the ASM1061/ASM1062
+device or on the specific power-up sequence (reset vs cold-power-on).
 
-PCI: imx6: Move clock enable after core reset assertion
+Francesco
 
-This patch reverts a sequence change by moving clock enablement after
-asserting core reset and configuring the controller type. This restores
-correct initialization on i.MX6Q Apalis platforms where PCI device
-initialization was failing.
-
-Link: https://lore.kernel.org/all/bl7i3obu2clzsgeoct2a4mtfhv6typcjdqmgnerop=
-f3hpgwve6@n2m5uhlduw57/T/#u
-Link: https://lore.kernel.org/all/t65y5d54axtksbfs7r4olcefqhwm6m4dz3njgnrnf=
-7fcotj74i@o7avoznlafbj/
-
-> diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controll=
-er/dwc/pci-imx6.c
-> index 39790e66b98dc..f7a2eb257c169 100644
-> --- a/drivers/pci/controller/dwc/pci-imx6.c
-> +++ b/drivers/pci/controller/dwc/pci-imx6.c
-
-[ ... ]
-
-> @@ -1415,6 +1409,12 @@ static int imx_pcie_host_init(struct dw_pcie_rp *p=
-p)
-> =20
->  	imx_pcie_configure_type(imx_pcie);
-> =20
-> +	ret =3D imx_pcie_clk_enable(imx_pcie);
-> +	if (ret) {
-> +		dev_err(dev, "unable to enable pcie clocks: %d\n", ret);
-> +		goto err_pwrctrl_power_off;
-> +	}
-> +
-[Severity: High]
-This is a pre-existing issue, but is it safe for imx_add_pcie_ep() to ignore
-the return value of imx_pcie_host_init()?
-
-Looking at imx_add_pcie_ep(), it calls imx_pcie_host_init() and immediately
-proceeds without checking if it succeeded:
-
-drivers/pci/controller/dwc/pci-imx6.c:imx_add_pcie_ep() {
-    ...
-	imx_pcie_host_init(pp);
-	ep =3D &pci->ep;
-	ep->ops =3D &pcie_ep_ops;
-    ...
-	ret =3D dw_pcie_ep_init(ep);
-    ...
-}
-
-If imx_pcie_host_init() fails here (for example, if imx_pcie_clk_enable()
-returns an error), it cleans up its resources and returns an error code with
-clocks disabled.
-
-Execution would then continue into dw_pcie_ep_init(), which attempts
-hardware register accesses. On i.MX hardware, accessing PCIe registers with
-disabled clocks triggers a synchronous bus error (SError), resulting in a
-kernel panic.
-
-Could imx_add_pcie_ep() be updated to check the return value of
-imx_pcie_host_init() and handle the failure gracefully?
-
->  	if (imx_pcie->phy) {
->  		ret =3D phy_init(imx_pcie->phy);
->  		if (ret) {
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260813082900.2700=
-03-1-hongxing.zhu@oss.nxp.com?part=3D1
