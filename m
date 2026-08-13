@@ -1,138 +1,156 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mail.ozlabs.org (gandalf.ozlabs.org [150.107.74.76])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F08724908B5
-	for <linux-pci@vger.kernel.org>; Thu, 13 Aug 2026 15:41:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B41B3955F9;
+	Thu, 13 Aug 2026 15:50:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=150.107.74.76
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786635692; cv=none; b=FFLH72ooxqpJTNjhRkH/0ngZK3pASnftlnfF+B0E87O5B3IgBwUQKcaQztPjnN9riIqaPE+lkNZUTeJej8BfjtRpaWnXQF3GKluceKlDZXWWDCFNXG8TSQL5h/5KsLYnQrbm9FkKBz4Y7itEUY+ups8o17CcDmQcapuDHZ/xb9A=
+	t=1786636223; cv=none; b=ABgq6j1MaGL0RZ5CxD5rv6FZMiiPyq9QKVTVVtjqbdsThQRkeEGe3ZWxv62avn5BDlQa5Q9DLgyENc119aQg/ppLT6TLf9Wjx9IDtm1qzppLpXCfwPKk20sJdkZ1C7fz8RuswcjfPH1wV/w6VH1KtXAgjW7eHfeQWlfq3YhEZQg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786635692; c=relaxed/simple;
-	bh=bXVnmmmxE+/FQTBq8zjSkDDnDKPqyE78Rt8HYm1hIKw=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=S9vYpquX6VYPLezRjcxlLc61Wb3oN6ntFYr0PPw/sDYBkX5ho+Rno61KN5Tg20MVUxcxLyz7RzYain9PZw+Dk3ISa9ZspeovqO23SHXc5hUyBX+pJXLaFBxz22p5MTBYELrYB6hd7dXkqcwrcq5DMeIIpBYTvsSmzT8Wlffix+o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=c6PRyY/y; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1786636223; c=relaxed/simple;
+	bh=r4fAFmUDrtddKraDNS8TmzAzDA8Z1bk/cbz11RoC7dA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=gXnXcftWAjt0eM64liW7H5Brh5Fsa8wMTLTVr7znw1THeNCW4kdDa4+zion0waLrW9xFZanQSuBq43GdmIdfbvDQdtj4CtlsZD1rbdXKPpU6AAPO5nqntabFWkjQoukk8M1IwNG6DRGgyDfjyR1UT3+Zkp9+BagSnGMd0erQGN8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ozlabs.org; spf=pass smtp.mailfrom=ozlabs.org; dkim=pass (2048-bit key) header.d=ozlabs.org header.i=@ozlabs.org header.b=HksqieLv; arc=none smtp.client-ip=150.107.74.76
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ozlabs.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ozlabs.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="c6PRyY/y"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 619221F000E9;
-	Thu, 13 Aug 2026 15:41:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786635671;
-	bh=1EOL0nws38zhbgy886UbgKw4MK2PdX744Ky7ag4hnjg=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=c6PRyY/yZHO+4N9+Vl+Og+29qXOrmMz8fmR9Tc//Gk4lstxM6zr0Q07e9/PwGeTWX
-	 vYc2pq+1dACmz0I1sHOWP1QdMYbCH1XBvUuNf1EyaCtzjzZhg9PHOwbXssBj1kCmLW
-	 5XRzZHcKVUeFB01IW834HlWUTMLD63l2hBwivJuUGN2GYA4Fwji07KXy0qTcNYa2dH
-	 iazZsosr0T+zJkKw9oHFZibSwkVE4NprOS0nrNYxrAP3Gi30hwUzfNeaZOb0oV1Wgf
-	 gPSTcF7UUOy6zrnRESyGPbCfYVfJACGHBaTfhnLQrpyZ83bil3dnD2vBXQTHKkHxcr
-	 zHehOuph+M8ig==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] xen/pcifront: Fix PCI device reference leak in AER
- handling
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Ruoyu Wang" <ruoyuw560@gmail.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260813153138.3953222-1-ruoyuw560@gmail.com>
-References: <20260813153138.3953222-1-ruoyuw560@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 13 Aug 2026 15:41:10 +0000
-Message-Id: <20260813154111.619221F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=ozlabs.org header.i=@ozlabs.org header.b="HksqieLv"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ozlabs.org;
+	s=201707; t=1786636209;
+	bh=XIhu+nqQzjz2LR4uuSfg1nS0R2BhHb+M3dJJmBjOuH8=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=HksqieLv+7l3go3qji728AvWDA/KOIJMhP8NA/h/2+sy+kKQunlYCHfEKDxNClQPF
+	 2D+lUyQofOGCJVyhHzI5v3ELDfMKl3kpqVhDP3ogL5IJH3aOoKdsrlF7u3JZrLzOGy
+	 ZGu9k5dFmblugyvQNVlLvLpkCIoz0pa9PBSxtiVGqQVeB3fQg85ECFqBaCv8vrKUt4
+	 +wJ3G00wsquFBfzpJJNV72lRDJWGxD8tzO0ohmJmot+a8+DWMPNEhwLskicyzMR4ja
+	 g7zeN2f8qpeqfmHY3gxZ8WkX/zrkWO/QkFI5gp6aLodJtQ+w2/En3WS01z1nuBvVCv
+	 73KeJrw3kUHmw==
+Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(Client did not present a certificate)
+	by mail.ozlabs.org (Postfix) with ESMTPSA id 4hLVDR6fLRz4wDm;
+	Fri, 14 Aug 2026 01:49:59 +1000 (AEST)
+Message-ID: <2ba56abd-797c-4051-b345-e025a5ed0421@ozlabs.org>
+Date: Thu, 13 Aug 2026 16:49:55 +0100
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v5 7/9] vfio/pci: Clean up BAR zap and revocation
+Content-Language: en-GB
+To: Alex Williamson <alex@shazbot.org>
+Cc: Leon Romanovsky <leon@kernel.org>, Jason Gunthorpe <jgg@nvidia.com>,
+ Alex Mastro <amastro@fb.com>, =?UTF-8?Q?Christian_K=C3=B6nig?=
+ <christian.koenig@amd.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Logan Gunthorpe <logang@deltatee.com>, Kevin Tian <kevin.tian@intel.com>,
+ Pranjal Shrivastava <praan@google.com>, Longfang Liu
+ <liulongfang@huawei.com>, Mahmoud Adam <mngyadam@amazon.de>,
+ David Matlack <dmatlack@google.com>, =?UTF-8?B?QmrDtnJuIFTDtnBlbA==?=
+ <bjorn@kernel.org>, Sumit Semwal <sumit.semwal@linaro.org>,
+ Ankit Agrawal <ankita@nvidia.com>, Alistair Popple <apopple@nvidia.com>,
+ Vivek Kasireddy <vivek.kasireddy@intel.com>, linux-kernel@vger.kernel.org,
+ linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org,
+ linaro-mm-sig@lists.linaro.org, kvm@vger.kernel.org,
+ linux-pci@vger.kernel.org
+References: <20260715174737.15287-1-matt@ozlabs.org>
+ <20260715174737.15287-8-matt@ozlabs.org>
+ <20260729115204.2a9a50b2@shazbot.org>
+ <6a964960-722c-44b5-837d-9d582aeb0a3c@ozlabs.org>
+ <20260804141022.71b6429d@shazbot.org>
+ <291625a2-f281-4c05-b51f-553018a34b08@ozlabs.org>
+ <20260812140657.247b9fa3@shazbot.org>
+From: Matt Evans <matt@ozlabs.org>
+In-Reply-To: <20260812140657.247b9fa3@shazbot.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
+Hola Alex,
 
-Pre-existing issues:
-- [High] Accessing `pcidev->dev.driver` and invoking driver AER callbacks w=
-ithout holding `device_lock` risks a Use-After-Free due to concurrent drive=
-r unbinding.
-- [High] Unconditional invocation of optional AER callbacks (`mmio_enabled`=
-, `slot_reset`, `resume`) without verifying they are implemented by the dri=
-ver.
---
+On 12/08/2026 21:06, Alex Williamson wrote:
+> On Tue, 11 Aug 2026 16:58:43 +0100
+> Matt Evans <matt@ozlabs.org> wrote:
+> 
+>> Hi Alex,
+>>
+>> [snip]
+>> Isn't the init-time 'event horizon' for writing the bitfield the
+>> vfio_register_group_dev() in vfio_pci_core_register_device(), after
+>> which synchronisation is needed?
+>>
+>> The hisi_acc_vfio_pci driver's .probe calls
+>> vfio_pci_core_register_device() and _after that_ sets
+>> zap_bars_on_revoke, and that's now in the "needs synchronisation to
+>> write the bitfield" phase.
+>>
+>> (Re-reading my comment in vfio_pci_core_register_device() I'd noted
+>> this, "Drivers can opt out after registration".  Has to be done after by
+>> definition as the default's set in vfio_pci_core_register_device().)
+>>
+>> The concern is just blatting neighbours in the bitfield, not the window
+>> of time before the flag's set.  The flag's an opt-out of a safe but (for
+>> this driver) unnecessary zap, so having it unset for a short time is OK.
+>>
+>> I still think this really should be a standalone bool, not a bit in the
+>> bitfield.  It has to be set after registration and having to take a lock
+>> to do that has downsides.
+> 
+> You're right on the ordering, the device is live after
+> vfio_pci_core_register_device().  However, I think that's evidence that
+> vfio-pci-core is setting the default polarity, inferred from the mmap
+> op, in the wrong place.  It should happen in init, not register_device.
+> 
+> The same mmap op pointer is available in vfio_pci_core_init_dev(), which
 
---- Patch [1]: [PATCH] xen/pcifront: Fix PCI device reference leak in AER h=
-andling ---
-commit 8d4be8a3c9e93de894d26cb69e9804d8f8ff8144
-Author: Ruoyu Wang <ruoyuw560@gmail.com>
+Ahaa, they're passed into vfio_alloc_device()!
 
-xen/pcifront: Fix PCI device reference leak in AER handling
+> is used by all vfio-pci variant drivers in their init callback.  The
+> proposed vfio_pci_core_register_device() change just needs to be lifted
+> into vfio_pci_core_init_dev().  hisi_acc is then modified to fix the
+> flag after vfio_pci_core_init_dev(), something like below.
+> 
+> I think that's better than anticipating it being dynamic when we don't
+> have a use case that requires it.  Thanks,
 
-This commit fixes a reference leak in pcifront_common_process by storing
-the AER callback result, releasing the device reference, and then returning.
-This keeps the device alive while its callback runs and balances the lookup
-on every successful path.
+Yes, that works nicely.  Done.  As ever, thanks for the suggestion.
 
-> --- a/drivers/pci/xen-pcifront.c
-> +++ b/drivers/pci/xen-pcifront.c
 
-[ ... ]
+Matt
 
-> @@ -597,21 +598,25 @@ static pci_ers_result_t pcifront_common_process(int=
- cmd,
->  		pci_dbg(pcidev, "trying to call AER service\n");
->  		switch (cmd) {
->  		case XEN_PCI_OP_aer_detected:
-> -			return pdrv->err_handler->error_detected(pcidev, state);
-> +			result =3D pdrv->err_handler->error_detected(pcidev, state);
-> +			break;
 
-[Severity: High]
-This isn't a bug introduced by this patch, but is it safe to access the
-driver pointer and invoke callbacks in this function without holding the
-device lock?
+PS: Series v6 has several improvements/review fixes ready, but I'm 
+holding off posting it.  It'd depend on resolving the awful deadlock I 
+posted about on patch [4/9].
 
-The code earlier extracts the driver:
 
-pcidev =3D pci_get_domain_bus_and_slot(domain, bus, devfn);
-if (!pcidev || !pcidev->dev.driver) {
-	...
-}
-pdrv =3D to_pci_driver(pcidev->dev.driver);
 
-If a concurrent unbind occurs (for example, via sysfs), can the driver be
-unbound and freed between the check for pcidev->dev.driver and the callback
-invocation? Core PCI error recovery typically holds the device lock to prev=
-ent
-a use-after-free or NULL pointer dereference in this scenario.
 
->  		case XEN_PCI_OP_aer_mmio:
-> -			return pdrv->err_handler->mmio_enabled(pcidev);
-> +			result =3D pdrv->err_handler->mmio_enabled(pcidev);
-> +			break;
->  		case XEN_PCI_OP_aer_slotreset:
-> -			return pdrv->err_handler->slot_reset(pcidev);
-> +			result =3D pdrv->err_handler->slot_reset(pcidev);
-> +			break;
+> 
+> Alex
+> 
+> --- a/drivers/vfio/pci/hisilicon/hisi_acc_vfio_pci.c
+> +++ b/drivers/vfio/pci/hisilicon/hisi_acc_vfio_pci.c
+> @@ -1564,6 +1564,7 @@ static int hisi_acc_vfio_pci_migrn_init_dev(struct vfio_device *core_vdev)
+>          struct hisi_acc_vf_core_device *hisi_acc_vdev = hisi_acc_get_vf_dev(core_vdev);
+>          struct pci_dev *pdev = to_pci_dev(core_vdev->dev);
+>          struct hisi_qm *pf_qm = hisi_acc_get_pf_qm(pdev);
+> +       int ret;
+>   
+>          hisi_acc_vdev->vf_id = pci_iov_vf_id(pdev) + 1;
+>          hisi_acc_vdev->pf_qm = pf_qm;
+> @@ -1575,7 +1576,9 @@ static int hisi_acc_vfio_pci_migrn_init_dev(struct vfio_device *core_vdev)
+>          core_vdev->migration_flags = VFIO_MIGRATION_STOP_COPY | VFIO_MIGRATION_PRE_COPY;
+>          core_vdev->mig_ops = &hisi_acc_vfio_pci_migrn_state_ops;
+>   
+> -       return vfio_pci_core_init_dev(core_vdev);
+> +       ret = vfio_pci_core_init_dev(core_vdev);
+> +       hisi_acc_vdev->core_device.zap_bars_on_revoke = false;
+> +       return ret;
+>   }
+>   
+>   static const struct vfio_device_ops hisi_acc_vfio_pci_migrn_ops = {
 
-[Severity: High]
-This is a pre-existing issue, but does this code assume all drivers
-implement the optional AER callbacks?
-
-The function checks if the error_detected callback is present before
-entering the switch statement:
-
-if (pdrv->err_handler && pdrv->err_handler->error_detected) {
-	...
-}
-
-However, many PCI drivers do not implement mmio_enabled, slot_reset, or
-resume. If the Xen backend forwards one of these events for a driver lacking
-the specific callback, could invoking it here result in an immediate NULL
-pointer dereference?
-
->  		case XEN_PCI_OP_aer_resume:
->  			pdrv->err_handler->resume(pcidev);
-> -			return PCI_ERS_RESULT_NONE;
-> +			break;
-
-[ ... ]
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260813153138.3953=
-222-1-ruoyuw560@gmail.com?part=3D1
