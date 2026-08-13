@@ -1,84 +1,150 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 141C5499F15;
-	Thu, 13 Aug 2026 17:08:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B7F11499F17
+	for <linux-pci@vger.kernel.org>; Thu, 13 Aug 2026 17:11:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786640903; cv=none; b=XQFrV/S/9rp3kSfjnZkUPuEpxM7ZUG/e8teZ0k1B7R0z9bCuJ8W54Lph1fN6M9c+5ihZBeMWngeJyjIWtZdMD5VvT5Sc2k0Shzj9yV6FK7EjinwDcYo65FF/ItIS9zvumIYobbRQ7D88Np4fEwZQ1JNC/aVNJWuTSbhVSsDJi1c=
+	t=1786641063; cv=none; b=geBxy7hIbODBkNhsW2Mj/Q5uz0+cix+gb52zPDY683ctAKOt+19KcWeiciA3FYt3AJ7yL9pt9CJ5BTpDm4/tYLmxSwwWPzpW+Rae9ocHHBEle1uoqcdGut3JGslO9KxbVTdu0Hji32dhoYEu3Vvi+ezzVsOxlaOzfnfIekhmORs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786640903; c=relaxed/simple;
-	bh=6ejOHroDsSTZfWUQykWe0DhGDiou1QMbMw11Hct4uLQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=hvwgBfT1Y4Rj1awXjGYzxwAFi2pPVf0B/mn+lARyB+0oo1Kf9DoImZwA8fbGQsh3BNLt0dkSIEUWYrFGaPJZSvLj+hg+k1SlSjRAiVFDFNjx/elW/jhi6KPYQKqxyaMhbkx+y7SBJaRtI/xZyOQlVEJ9ckgEUTPoJxDUOYxOIoI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oMexpM9H; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1786641063; c=relaxed/simple;
+	bh=05WNGWTdVvcdm1wxlcOhuHcc7LcSM4TKNjAkAoKDMlQ=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=sZVnGMv3+I5o1qKQ5CKA8TgzfxBwyy7SXZXC4X4XQcPxvWud9qgbZ37nUa3GRd8nGLVFMpvbcvx9sH3hcaOAe293Tgpq4SKezDK7INx/+5JNHNl1ZW3xPzD2+gN4pjP4+7oIFrbu7EvIv4iJyYzSLskAiS1W/jWKcIYeK2UOiU4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Gm8zrNGL; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oMexpM9H"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BFB171F000E9;
-	Thu, 13 Aug 2026 17:08:21 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Gm8zrNGL"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2406F1F00A3A;
+	Thu, 13 Aug 2026 17:11:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786640902;
-	bh=VWzDmzaSohfXNDpzSvOTbywfXkmzWVFikcHjO6Hw6u4=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=oMexpM9HgR/F0qhmie3lMLfDUJpZIBemLcjAJuOeeXJ7qClvyHWtAJ7CACr2xcuca
-	 PI15FrVmdVqRoxp0SvaXKM5/JljD20eiiESKQyaqqyIRjYhc/EOwME1AZBJrqjLV+1
-	 q20DhdzMkeIvxgOxDTTFthCM9BV6rNF5lZyMY8RflP51tVam2ROq+LJ6M+H9BF+T8Y
-	 3T60TyZBPTn1crYl9EO4WTzem+JiL7xet9FlLKkEiKIixiKu9WaHTYQgDxEdcf+lmh
-	 p+9A1YSS9kBCyQjMvaSkyqceLZW4q1dAsGi8LBwFo5YliGzhxUFcuO3wjGtVDfjh8p
-	 o6WUseK5r910Q==
-Date: Thu, 13 Aug 2026 12:08:20 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Christian Marangi <ansuelsmth@gmail.com>
-Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Ryder Lee <ryder.lee@mediatek.com>,
-	Philipp Zabel <p.zabel@pengutronix.de>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
-	Jianjun Wang <jianjun.wang@mediatek.com>, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-mediatek@lists.infradead.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH v5 2/2] PCI: mediatek-gen3: Add 2-lanes mode support for
- Airoha AN7581
-Message-ID: <20260813170820.GA1143871@bhelgaas>
+	s=k20260515; t=1786641062;
+	bh=iGWm+pmHiOMD/4TqjY2w5DbLsHEcJX+/xQZlNOSmgU8=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=Gm8zrNGLUPaJqQ/SaJheRGt99iwSW3O75Ycy3mZgyoteJRcub7x/KlO2PV84ollTX
+	 ++8xOzhAg6YsdZZ7zYJveh+VciDiYHyIO36rHaXwYLUcpaJycdNR8UcFwL01vdqdzw
+	 xbKjKebnAalzbxCzgNfzu1xmDI8G0dKCcxhPkunFiRUsS5RJh5SAy1sodCWZTVWfLU
+	 wOwmmMu2eMNVjmCuBNIeAcEXu0CF6rHL+u5OwE6I316Vojkwf1feq+NRouXS6010+0
+	 Nm69/42rfpnCTgVy20W1ceo6d7lyAXwpdlswhLb8//WtDlMRt6MsWDSzWIEI+Elb+X
+	 aoo9BjeUVGo1g==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v3 2/5] rust: pci: resolve IRQ in index() and embed
+ IrqRequest in IrqVector
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Danilo Krummrich" <dakr@kernel.org>
+Cc: linux-pci@vger.kernel.org, ojeda@kernel.org
+In-Reply-To: <20260813165234.620555-3-dakr@kernel.org>
+References: <20260813165234.620555-1-dakr@kernel.org>
+ <20260813165234.620555-3-dakr@kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 13 Aug 2026 17:11:01 +0000
+Message-Id: <20260813171102.2406F1F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260806165334.7328-3-ansuelsmth@gmail.com>
 
-On Thu, Aug 06, 2026 at 06:53:32PM +0200, Christian Marangi wrote:
-> The Airoha AN7581 SoC supports configuring the first PCIe0 lane to 2-lanes
-> mode (x2 link) by bonding it with the second PCIe lane (PCIe1). This is
-> done by configuring the PCIe MUX in the SCU register.
-> 
-> To correctly configure PCIe0 in x2 link, define in DT the following
-> additional properties:
-> 
->   - additional reg, 'sec-pcie-mac' for the secondary PCIe.
->   - PERSTOUT reset for both main and secondary PCIE0, called 'perstout' and
->     'sec-perstout'
->   - 'airoha,scu' property to correctly configure the SCU register for the
->     PCIe MUX
->   - 'num-lanes' set to '2' to enable PCIe0 in x2 link
-> 
-> In such configuration the EQ preset are configured to the same values.
-> 
-> To permit correct configuration of the PCIe link, additional logic is added
-> to assert and deassert the PERSTOUT resets. Support of these additional
-> reset was introduced in Airoha clk driver with commit
-> 6712f48eb3a1 ("clk: en7523: add support for dedicated PCIe PERSTOUT reset")
-> and on backporting of this commit also the clk driver change will be
-> needed.
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
 
-I don't see 6712f48eb3a1 in upstream or linux-next.  Is this SHA1
-going to valid if we merge this for v7.3?
+New issues:
+- [High] The API design forces a self-referential lifetime bound, making it=
+ impossible to safely store both the vector registration and the IRQ handle=
+r in a driver struct, naturally leading to Use-After-Free during teardown.
+
+Pre-existing issues:
+- [High] Multiple concurrent `IrqVectorRegistration` instances can be creat=
+ed, leading to a Use-After-Free of active IRQ vectors on teardown.
+--
+
+--- Patch [2]: [PATCH v3 2/5] rust: pci: resolve IRQ in index() and embed I=
+rqRequest in IrqVector ---
+commit 517346220f40fc029bc56afcf3a1427744cf6f09
+Author: Danilo Krummrich <dakr@kernel.org>
+
+rust: pci: resolve IRQ in index() and embed IrqRequest in IrqVector
+
+This commit eagerly resolves the IRQ number by moving the pci_irq_vector()
+call into IrqVectorRegistration::index(). It embeds the resolved IrqRequest
+into IrqVector, making the conversion infallible. This removes the need for
+pin_init_scope() in request_irq() and request_threaded_irq().
+
+Link: https://lore.kernel.org/all/20260808031120.363869-3-jhubbard@nvidia.c=
+om/
+
+> diff --git a/rust/kernel/pci/irq.rs b/rust/kernel/pci/irq.rs
+> index daba86505cd2b..81b74c4c17d98 100644
+> --- a/rust/kernel/pci/irq.rs
+> +++ b/rust/kernel/pci/irq.rs
+> @@ -68,32 +68,25 @@ const fn as_raw(self) -> u32 {
+[ ... ]
+>  pub struct IrqVector<'a> {
+> -    dev: &'a Device<Bound>,
+> +    request: IrqRequest<'a>,
+>      reg: &'a IrqVectorRegistration<'a>,
+> -    index: u32,
+>  }
+
+[Severity: High]
+Does this struct definition force a self-referential lifetime bound that ma=
+kes
+it impossible to safely store both the vector registration and the IRQ hand=
+ler
+in a driver struct?
+
+Because IrqVector<'a> borrows IrqVectorRegistration<'a> with the exact same
+lifetime 'a as the device, request_irq() requires the resulting
+irq::Registration to share this lifetime. A long-lived driver struct would
+have to hold both the IrqVectorRegistration and the Registration that
+borrows it.
+
+This creates a self-referential struct forbidden by Safe Rust. If a develop=
+er
+uses unsafe to bypass the restrictions to get it to compile, Rust drops
+struct fields in declaration order. If IrqVectorRegistration is declared
+before Registration, pci_free_irq_vectors() will execute before free_irq(),
+destroying MSI vectors while the IRQ handler is still registered and active
+in the system.
+
+[ ... ]
+> @@ -200,12 +183,8 @@ pub unsafe fn request_threaded_irq<'a, T: crate::irq=
+::ThreadedHandler + 'a>(
+>          name: &'static CStr,
+>          handler: impl PinInit<T, Error> + 'a,
+>      ) -> impl PinInit<irq::ThreadedRegistration<'a, T>, Error> + 'a {
+> -        pin_init::pin_init_scope(move || {
+> -            let request =3D vector.try_into()?;
+> -
+> -            // SAFETY: Caller guarantees the Registration will not be le=
+aked.
+> -            Ok(unsafe { irq::ThreadedRegistration::<T>::new(request, fla=
+gs, name, handler) })
+> -        })
+> +        // SAFETY: Caller guarantees the Registration will not be leaked.
+> +        unsafe { irq::ThreadedRegistration::<T>::new(vector.into(), flag=
+s, name, handler) }
+>      }
+> =20
+>      /// Allocate IRQ vectors for this PCI device.
+
+[Severity: High]
+This is a pre-existing issue, but can multiple concurrent
+IrqVectorRegistration instances be created, leading to a Use-After-Free of
+active IRQ vectors on teardown?
+
+Since Device::alloc_irq_vectors() takes an immutable reference (&self), a
+driver can call it multiple times. If a driver allocates MSI vectors and
+then falls back to allocating INTx vectors, the C API
+(pci_alloc_irq_vectors_affinity) successfully processes the INTx request
+without checking if MSI is already enabled. This returns a second
+IrqVectorRegistration.
+
+When this second registration goes out of scope and drops, its Drop
+implementation calls pci_free_irq_vectors(), which disables and frees the
+global MSI state. The first registration's active IRQ handlers are then
+left operating on freed hardware state and descriptors.
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260813165234.6205=
+55-1-dakr@kernel.org?part=3D2
