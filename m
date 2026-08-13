@@ -1,193 +1,239 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 49EA832E151
-	for <linux-pci@vger.kernel.org>; Thu, 13 Aug 2026 23:00:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id A460A1A6838;
+	Thu, 13 Aug 2026 23:07:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786662034; cv=none; b=jWot2aO63Y/3STNl75jhgEd2Ad0zvT5tCGTjVVQKYrpzV6TsRSDn2qCVqFSSDGgR3P16theiVVN9SRYfUX8j1UF+BnLE8Xb0962zKQNYfLbXI9y2GRiuufn2dsA9f/VJ+TtwWMXmk+rngSUy5RUOazftt/qlsHpNdYj/29tg78g=
+	t=1786662437; cv=none; b=N1Kodk2FEUnj3+F/SrDJxY6w4SoG01ena2TA1Z0aYQWpkjwCvjiNPpW8QtUQQo7EGqf96KsPVGdX74kxlNenNMb20pq68T8APgs2N/hE+LJezgrjMO6gN9nw7EnNd1QwsluEUUiLI/lU0SOR7MfYHv8tI+pYyZwXVJexJ9uWIVk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786662034; c=relaxed/simple;
-	bh=D7r82ATzlXfDK0pMdOH9W7Jzl3PMUTvqO/p+V9irtmw=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=HCSLUoL0p3OQTn1SKsBCw6Tm6Ezqn1Iggn5A9uz7bcH+c3abfZUp0U7i91FjQxtbcEZK/l+kt3WnppSDVJ6WWf3L1h/wxJzwFSYupO2/viwuO5/tWRPMBuXjBvC43pN2RDChFb/F5bSLhRb2aI/fLmDrOa2MwT5U/aoznXLCrV0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PL+OYY/j; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1786662437; c=relaxed/simple;
+	bh=gNfmfqZKHEN4g/kFYlJY0LevoSVC3c5PxNrr/6fotWU=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=ZvARarBGntVedbxHXk7FdlZtVs+T4dFxwmRZ31qrEQY94PalyGEgelmirMvm/L0JTn+FaF0Y5riwiFFZjXjh+TAVynAoV2A/u8rbLjJm6SdI6zQaJII7lpnOEARJYARxjEo2K/5RCcwOxwzbzozKmcK0kP9w5hFvJWXVm06alEg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=FilbaOAU; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PL+OYY/j"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D23E41F000E9;
-	Thu, 13 Aug 2026 23:00:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786662033;
-	bh=nLW0SaeK2ltEAWxoQlveM7PWW8YFMPHcxJADb5mTsk0=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=PL+OYY/jqx35TlSYfDeDPIMSggGglmJdoUR+uUCfc9KVJuDbIjCAISZE8rw31wrIx
-	 VeM3/cHn5Ijqk15ax4wG5ggOKRmY+TklUbUgl/w6WeuOF5Z5bJDMLGDuFshtvw7Mtq
-	 4M8TLCBhcEvB03kl4pxVC7iUicklTmHRyB3zOrHaXiU30YaTX3jp0ulM9p9LIiFdQI
-	 HXSFnyNwykNB2MTRMwBERX2scKL6J0usk+op+Lol1TSycw4oFoTP2gooYqc/2j5dfl
-	 aCSG0+13+XqdBUV6WpJSUIiAAtBo/MiIU6I7K5k/vdkfCRialcPYdVoiBHiSVkWvqC
-	 wA6R2k7PjNfNw==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v8 10/14] PCI: tegra194: Free up EP resources during
- remove()
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Manikanta Maddireddy" <mmaddireddy@nvidia.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260324190755.1094879-11-mmaddireddy@nvidia.com>
-References: <20260324190755.1094879-11-mmaddireddy@nvidia.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 13 Aug 2026 23:00:32 +0000
-Message-Id: <20260813230032.D23E41F000E9@smtp.kernel.org>
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="FilbaOAU"
+Received: from localhost (unknown [52.148.171.5])
+	by linux.microsoft.com (Postfix) with ESMTPSA id EB65C20B7168;
+	Thu, 13 Aug 2026 16:06:48 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com EB65C20B7168
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1786662409;
+	bh=z4TnU21bv+s/VplA7mMdEL+um8LnOh7bSLXP56RKBAU=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+	b=FilbaOAUR744s88wlXKGuTpCUoMEOGvAk5NwGhJ63CUlmixhldyShj7EA+1NEPG9b
+	 GlizgZFBwlzDHFcVS0aio9yJWMyyDAawiLLa4AmC4wmI4N4kLTNFKOAhexn3VhyaPY
+	 Pa7f9okXrGFlbY4Zf+8hCxumCVUpUy/HwnU+0rH4=
+Date: Thu, 13 Aug 2026 16:07:13 -0700
+From: Jacob Pan <jacob.pan@linux.microsoft.com>
+To: Yu Zhang <zhangyu1@linux.microsoft.com>
+Cc: linux-kernel@vger.kernel.org, linux-hyperv@vger.kernel.org,
+ iommu@lists.linux.dev, linux-pci@vger.kernel.org,
+ linux-arch@vger.kernel.org, x86@kernel.org, wei.liu@kernel.org,
+ kys@microsoft.com, haiyangz@microsoft.com, decui@microsoft.com,
+ longli@microsoft.com, joro@8bytes.org, will@kernel.org,
+ robin.murphy@arm.com, bhelgaas@google.com, kwilczynski@kernel.org,
+ lpieralisi@kernel.org, mani@kernel.org, robh@kernel.org, arnd@arndb.de,
+ jgg@ziepe.ca, mhklinux@outlook.com, tgopinath@linux.microsoft.com,
+ easwar.hariharan@linux.microsoft.com, mrathor@linux.microsoft.com,
+ baolu.lu@linux.intel.com, suravee.suthikulpanit@amd.com,
+ vasant.hegde@amd.com, jacob.pan@linux.microsoft.com
+Subject: Re: [PATCH v3 5/5] iommu/hyperv: Add page-selective IOTLB flush
+ support
+Message-ID: <20260813160713.00004f95@linux.microsoft.com>
+In-Reply-To: <20260811155022.108148-6-zhangyu1@linux.microsoft.com>
+References: <20260811155022.108148-1-zhangyu1@linux.microsoft.com>
+	<20260811155022.108148-6-zhangyu1@linux.microsoft.com>
+Organization: LSG
+X-Mailer: Claws Mail 3.21.0 (GTK+ 2.24.33; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-Thank you for your contribution! Sashiko AI review found 5 potential issue(=
-s) to consider:
+Hi Yu,
 
-New issues:
-- [High] Calling `dw_pcie_ep_deinit()` after the hardware is manually power=
-ed down causes a synchronous external abort when accessing eDMA registers.
+On Tue, 11 Aug 2026 23:50:21 +0800
+Yu Zhang <zhangyu1@linux.microsoft.com> wrote:
 
-Pre-existing issues:
-- [High] The shared IRQ handlers tegra_pcie_ep_hard_irq() and tegra_pcie_rp=
-_irq_handler() access memory-mapped registers without verifying if the devi=
-ce is active.
-- [High] The shared PCIe IRQ handler remains active while hardware is power=
-ed down during and after device removal, risking an SError crash.
-- [Medium] An early return in `tegra_pcie_dw_remove()` for RC mode skips vi=
-tal cleanup steps, leaking the BPMP reference and leaving a GPIO asserted.
-- [Low] The `dev_pm_ops` structure and its callbacks lack the `pm_ptr()` an=
-d `pm_sleep_ptr()` wrappers, causing dead code when PM is disabled.
---
+> Add page-selective IOTLB flush using HVCALL_FLUSH_DEVICE_DOMAIN_LIST.
+> This hypercall accepts a list of (page_number, page_mask_shift)
+> entries, enabling finer-grained IOTLB invalidation compared to the
+> domain-wide HVCALL_FLUSH_DEVICE_DOMAIN used by
+> hv_iommu_flush_iotlb_all().
+> 
+> hv_iommu_calc_flush_range() computes the smallest power-of-two aligned
+> range that covers the target IOVA region, producing a single flush
+> descriptor. This may over-flush when the range is not naturally
+> aligned, matching the approach used by Intel VT-d PSI. If the
+> page-selective flush fails, the code falls back to a full domain
+> flush.
+> 
+> Signed-off-by: Easwar Hariharan <easwar.hariharan@linux.microsoft.com>
+> Signed-off-by: Yu Zhang <zhangyu1@linux.microsoft.com>
+> ---
+>  drivers/iommu/hyperv/hv-iommu-guest.c | 73
+> ++++++++++++++++++++++++++- include/hyperv/hvgdk_mini.h           |
+> 1 + include/hyperv/hvhdk_mini.h           | 17 +++++++
+>  3 files changed, 90 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/iommu/hyperv/hv-iommu-guest.c
+> b/drivers/iommu/hyperv/hv-iommu-guest.c index
+> 2a00353ce733..060c2efd6bf0 100644 ---
+> a/drivers/iommu/hyperv/hv-iommu-guest.c +++
+> b/drivers/iommu/hyperv/hv-iommu-guest.c @@ -9,6 +9,7 @@
+>  #define pr_fmt(fmt) "Hyper-V pvIOMMU: " fmt
+>  #define dev_fmt(fmt) pr_fmt(fmt)
+>  
+> +#include <linux/hyperv.h>
+why need this?
 
---- Patch [10]: [PATCH v8 10/14] PCI: tegra194: Free up EP resources during=
- remove() ---
-commit fd329e127a60d994cdbbfaa29a5a96dddb4a9df8
-Author: Vidya Sagar <vidyas@nvidia.com>
+>  #include <linux/iommu.h>
+>  #include <linux/pci.h>
+>  #include <linux/dma-map-ops.h>
+> @@ -408,10 +409,79 @@ static void hv_iommu_flush_iotlb_all(struct
+> iommu_domain *domain)
+> hv_flush_device_domain(to_hv_iommu_domain(domain)); }
+>  
+> +/*
+> + * Calculate the minimal power-of-two aligned range that covers
+> [start, end]
+> + * (end is inclusive). Returns a single (page_number,
+> page_mask_shift)
+> + * descriptor that may over-flush when the range is not naturally
+> aligned.
+> + */
+> +static void
+> +hv_iommu_calc_flush_range(unsigned long start, unsigned long end,
+> +			  union hv_iommu_flush_va *va)
+> +{
+> +	unsigned int sz_lg2;
+> +
+> +	sz_lg2 = fls_long(start ^ end);
+> +	if (sz_lg2 < HV_HYP_PAGE_SHIFT)
+> +		sz_lg2 = HV_HYP_PAGE_SHIFT;
+> +
+> +	/*
+> +	 * A valid IOVA range shall not span bit 63. Use the maximum
+> mask
+> +	 * so the host can safely perform a full flush.
+> +	 */
+> +	if (WARN_ON_ONCE(sz_lg2 >= BITS_PER_LONG)) {
+> +		va->as_uint64 = 0;
+> +		va->page_mask_shift =
+> +			BITS_PER_LONG - HV_HYP_PAGE_SHIFT;
+> +		return;
+> +	}
+> +
+> +	va->page_number =
+> +		(start & GENMASK(BITS_PER_LONG - 1, sz_lg2)) >>
+> +		HV_HYP_PAGE_SHIFT;
+> +	va->page_mask_shift = sz_lg2 - HV_HYP_PAGE_SHIFT;
+> +}
+> +
+> +static void hv_flush_device_domain_list(struct hv_iommu_domain
+> *hv_domain,
+> +					struct iommu_iotlb_gather
+> *iotlb_gather) +{
+> +	u64 status;
+> +	unsigned long flags;
+> +	struct hv_input_flush_device_domain_list *input;
+> +
+> +	local_irq_save(flags);
+> +
+> +	input = *this_cpu_ptr(hyperv_pcpu_input_arg);
+> +	/* Clear the fixed header and the single range entry. */
+> +	memset(input, 0, struct_size(input, iova_list, 1));
+> +
+> +	input->device_domain = hv_domain->device_domain;
+> +	input->flags |= HV_FLUSH_DEVICE_DOMAIN_LIST_IOMMU_FORMAT;
+> +	hv_iommu_calc_flush_range(iotlb_gather->start,
+> iotlb_gather->end,
+> +				  &input->iova_list[0]);
+> +
+> +	status = hv_do_rep_hypercall(HVCALL_FLUSH_DEVICE_DOMAIN_LIST,
+> +				     1, 0, input, NULL);
+> +
+> +	if (WARN_ON_ONCE(!hv_result_success(status))) {
+> +		/* Page-selective flush failed, fall back to full
+> flush. */
+> +		struct hv_input_flush_device_domain *flush_all =
+> (void *)input; +
+> +		memset(flush_all, 0, sizeof(*flush_all));
+> +		flush_all->device_domain = hv_domain->device_domain;
+> +		status = hv_do_hypercall(HVCALL_FLUSH_DEVICE_DOMAIN,
+> +					 flush_all, NULL);
+> +		WARN(!hv_result_success(status),
+> +		     "HVCALL_FLUSH_DEVICE_DOMAIN fallback also
+> failed: %lld\n",
+> +		     status);
+> +	}
+> +
+> +	local_irq_restore(flags);
+> +}
+> +
+>  static void hv_iommu_iotlb_sync(struct iommu_domain *domain,
+>  				struct iommu_iotlb_gather
+> *iotlb_gather) {
+> -	hv_flush_device_domain(to_hv_iommu_domain(domain));
+> +	hv_flush_device_domain_list(to_hv_iommu_domain(domain),
+> iotlb_gather); 
+>  	iommu_put_pages_list(&iotlb_gather->freelist);
+Maybe add a comment explaining that HVCALL_FLUSH_DEVICE_DOMAIN_LIST
+covers non-leaf/walk caches, therefore it is safe to put freelist.
 
-PCI: tegra194: Free up EP resources during remove()
+>  }
+> @@ -464,6 +534,7 @@ static struct iommu_domain
+> *hv_iommu_domain_alloc_paging(struct device *dev) 
+>  	cfg.common.hw_max_vasz_lg2 = hv_iommu_device->max_iova_width;
+>  	cfg.common.hw_max_oasz_lg2 = 52;
+> +	cfg.common.features |= BIT(PT_FEAT_FLUSH_RANGE);
+>  	/*
+>  	 * Hyper-V S1 domains use a 4-level root for IOVA widths up
+> to
+>  	 * 48 bits. A 5-level root is used only for wider apertures
+> when diff --git a/include/hyperv/hvgdk_mini.h
+> b/include/hyperv/hvgdk_mini.h index 5bdbb44da112..eaaf87171478 100644
+> --- a/include/hyperv/hvgdk_mini.h
+> +++ b/include/hyperv/hvgdk_mini.h
+> @@ -496,6 +496,7 @@ union hv_vp_assist_msr_contents {	 /*
+> HV_REGISTER_VP_ASSIST_PAGE */ #define
+> HVCALL_GET_GPA_PAGES_ACCESS_STATES		0x00c9 #define
+> HVCALL_CONFIGURE_DEVICE_DOMAIN			0x00ce #define
+> HVCALL_FLUSH_DEVICE_DOMAIN			0x00d0 +#define
+> HVCALL_FLUSH_DEVICE_DOMAIN_LIST			0x00d1 #define
+> HVCALL_ACQUIRE_SPARSE_SPA_PAGE_HOST_ACCESS	0x00d7 #define
+> HVCALL_RELEASE_SPARSE_SPA_PAGE_HOST_ACCESS	0x00d8 #define
+> HVCALL_MODIFY_SPARSE_GPA_PAGE_HOST_VISIBILITY	0x00db diff
+> --git a/include/hyperv/hvhdk_mini.h b/include/hyperv/hvhdk_mini.h
+> index 1e3eac99886a..25671ee7056d 100644 ---
+> a/include/hyperv/hvhdk_mini.h +++ b/include/hyperv/hvhdk_mini.h
+> @@ -674,4 +674,21 @@ struct hv_input_flush_device_domain {
+>  	u32 reserved;
+>  } __packed;
+>  
+> +union hv_iommu_flush_va {
+> +	u64 as_uint64;
+> +	struct {
+> +		u64 page_mask_shift : 6;
+> +		u64 reserved : 6;
+> +		u64 page_number : 52;
+> +	};
+> +} __packed;
+> +
+> +struct hv_input_flush_device_domain_list {
+> +	struct hv_input_device_domain device_domain;
+> +#define HV_FLUSH_DEVICE_DOMAIN_LIST_IOMMU_FORMAT BIT(0)
+> +	u32 flags;
+> +	u32 reserved;
+> +	union hv_iommu_flush_va iova_list[];
+> +} __packed;
+> +
+>  #endif /* _HV_HVHDK_MINI_H */
 
-Free up the resources during remove() that were acquired by the DesignWare
-driver for the Endpoint mode during probe().
-
-> diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/con=
-troller/dwc/pcie-tegra194.c
-> index f66a93f0cf658..d4bbef07964fe 100644
-> --- a/drivers/pci/controller/dwc/pcie-tegra194.c
-> +++ b/drivers/pci/controller/dwc/pcie-tegra194.c
-> @@ -2251,6 +2251,7 @@ static int tegra_pcie_dw_probe(struct platform_devi=
-ce *pdev)
->  static void tegra_pcie_dw_remove(struct platform_device *pdev)
->  {
->  	struct tegra_pcie_dw *pcie =3D platform_get_drvdata(pdev);
-> +	struct dw_pcie_ep *ep =3D &pcie->pci.ep;
-> =20
->  	if (pcie->of_data->mode =3D=3D DW_PCIE_RC_TYPE) {
->  		if (!pcie->link_state)
->  			return;
-
-[Severity: Medium]
-This is a pre-existing issue, but does this early return in
-tegra_pcie_dw_remove() skip vital cleanup steps?
-
-During probe, an inactive link returns -ENOMEDIUM which is ignored, allowing
-probe to succeed with !pcie->link_state.
-
-When returning early here for RC mode without an active link, it bypasses t=
-he
-trailing cleanup sequence, which leaves tegra_bpmp_put() uncalled and the
-pex_refclk_sel_gpiod GPIO asserted.
-
-> @@ -2262,6 +2263,7 @@ static void tegra_pcie_dw_remove(struct platform_de=
-vice *pdev)
->  	} else {
->  		disable_irq(pcie->pex_rst_irq);
->  		pex_ep_event_pex_rst_assert(pcie);
-
-[Severity: High]
-This is a pre-existing issue, but does powering down the controller here le=
-ave
-the shared PCIe IRQ handler active?
-
-Since the main PCIe interrupt is registered using IRQF_SHARED, turning off =
-the
-controller's power by asserting resets and disabling clocks without explici=
-tly
-freeing or disabling the main IRQ creates a race condition.
-
-Can an active interrupt handler execute and read memory-mapped registers on
-powered-down hardware before devres frees the IRQ after remove() returns?
-
-> +		dw_pcie_ep_deinit(ep);
-
-[Severity: High]
-Does calling dw_pcie_ep_deinit() after the hardware is manually powered down
-cause a synchronous external abort when accessing eDMA registers?
-
-When pex_ep_event_pex_rst_assert() is called right before this, it complete=
-ly
-powers down the PCIe IP by gating clocks and asserting hardware resets.
-
-Then dw_pcie_ep_deinit() attempts memory-mapped writes to the eDMA registers
-of the powered-down controller via dw_pcie_edma_remove() and
-dw_edma_core_off().
-
-Could dw_pcie_ep_deinit() be called before asserting the reset?
-
->  	}
-> =20
->  	pm_runtime_disable(pcie->dev);
-
-[Severity: High]
-This is a pre-existing issue, but do the shared IRQ handlers access
-memory-mapped registers without verifying if the device is active?
-
-In drivers/pci/controller/dwc/pcie-tegra194.c:tegra_pcie_ep_hard_irq():
-
-	status_l0 =3D appl_readl(pcie, APPL_INTR_STATUS_L0);
-
-And similarly in drivers/pci/controller/dwc/pcie-tegra194.c:tegra_pcie_rp_i=
-rq_handler():
-
-	val =3D appl_readl(pcie, APPL_INTR_STATUS_L0);
-
-Since these IRQ handlers are registered with IRQF_SHARED, they can be
-triggered by external or unrelated devices while the PCIe controller is
-runtime-suspended.
-
-Would reading the APPL_INTR_STATUS_L0 register while clocks are gated cause=
- a
-fatal system crash?
-
-Should these handlers call pm_runtime_get_if_active() before reading regist=
-ers?
-
-[Severity: Low]
-This is a pre-existing issue, but does the dev_pm_ops structure lack the
-pm_ptr() and pm_sleep_ptr() wrappers?
-
-In drivers/pci/controller/dwc/pcie-tegra194.c:
-
-static const struct dev_pm_ops tegra_pcie_dw_pm_ops =3D {
-	.suspend =3D tegra_pcie_dw_suspend,
-	...
-};
-
-static struct platform_driver tegra_pcie_dw_driver =3D {
-	...
-	.driver =3D {
-		...
-		.pm =3D &tegra_pcie_dw_pm_ops,
-	},
-};
-
-Since the callbacks and dev_pm_ops structure are assigned unconditionally,
-does this cause dead code to be compiled into the kernel when CONFIG_PM or
-CONFIG_PM_SLEEP is disabled?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260324190755.1094=
-879-1-mmaddireddy@nvidia.com?part=3D10
+Reviewed-by: Jacob Pan <jacob.pan@linux.microsoft.com>
