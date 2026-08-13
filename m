@@ -1,111 +1,149 @@
-Received: from mail-qk1-f181.google.com (mail-qk1-f181.google.com [209.85.222.181])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 312A4477E2A
-	for <linux-pci@vger.kernel.org>; Thu, 13 Aug 2026 13:49:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.181
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B64AA47CA86;
+	Thu, 13 Aug 2026 13:56:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786628980; cv=none; b=uNQc7T1dOiXaqiU3nzjTf+hj2OVWmcNLPa+Zzuh1ztMmfc9Ww5cc43qLpHBggVcBt8rG/4YbyTjPfvtlEP+pxZYyTh0RcVpr/kuImM7da6oOC7DjuyzYPCnQ5vTXvxhec3uVvhYJR7Ran+u/huBuohYu932ztBLHzeZ1XpkuncA=
+	t=1786629409; cv=none; b=ONSdgDxiRgiY+hm6+HDBtGx6axExysqOWX5xs2zLP/5UoXJXc7khDwa8FXEV+PMEjA4QGy7Ie0S3QQY2Q636BHhcxyTfoUOb/KMnWqmWyCO1m9qvLNmHBHTQRIgGMTRby8Rla3TNSeKmEe4euWvHjswuImbory+Ig9Tn8eJdfCk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786628980; c=relaxed/simple;
-	bh=0/BIRfMphfS1OGwGGVzoT/+z7v+H5hzNBd1OvKLo6R0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=u2AXSCJ1LvE8ql/gcDsEdh7dlkIZv9sgpTU7sNgT88tr0I7gX0TWke2KlplNN2x9HCaTDOa3IEL8o0uy37r62df4zD4A8w52IcIRWOSeuFHaHlIMH84S/BHhFxCUa+AVq2zJTLwIWGtlCw/amcvEmkWdf6GX6SrlyqLl+fyWrFU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca; spf=pass smtp.mailfrom=ziepe.ca; dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b=MkYOV5dD; arc=none smtp.client-ip=209.85.222.181
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
+	s=arc-20240116; t=1786629409; c=relaxed/simple;
+	bh=4NTvo1YFeTFWJGrkSPZloLOnkvvJCJj29bVO4WH0AKg=;
+	h=Mime-Version:Content-Type:Date:Message-Id:Subject:Cc:To:From:
+	 References:In-Reply-To; b=uIqT80psKMDYTJLO+4gOYHvEmTaNAl5e6Pu5sqRz52KBtPLZ4nhE5N2ZZxsyK/cVDq4U5GCMnAaw1/tyPDVxkM0chpoP8jHIq2l3iWt7yJzxja22iyadDkV9mchgeELLz120xY+pGi+P1jEZCqJiLUu6Hax6d102LkbvFmMtLVI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HtchCZVN; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="MkYOV5dD"
-Received: by mail-qk1-f181.google.com with SMTP id af79cd13be357-930f618435cso36660985a.3
-        for <linux-pci@vger.kernel.org>; Thu, 13 Aug 2026 06:49:39 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ziepe.ca; s=google; t=1786628978; x=1787233778; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=7Yi6QACY6Sk+pPvGX2LOJZA5tLUZ+nGsCUcFWjEbL98=;
-        b=MkYOV5dDeYB6Ka49dQF3qGymlcQNeahvXC657wTWSh5bc13cs3WKyp6KlUju2hOTLr
-         OZDQ1Jizl3VHXYlH/f+DXmDDjNpT6zDDhxHAnOFDZ2RmaDsVsazaihXqTcl0kXwsFhJp
-         N2MQeFqpiQICZqgOvaTA8pY69vWKBnHC7gulzwU0xfrjU01gbgEZRQR/BynJJIWwQ4nx
-         P6zkNCZv6DUjD78Nv4xeIHfmeBX4SQpaBB930lcXI0UKHxjsamNGqoIWuyqUqb6FyIOX
-         85aFuVThogCAOjIvihgEEQvnO49vpgCTXHOPDzwOyIPQxslnbrMkxoMPlqvRQo+gLzk8
-         Fzwg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786628978; x=1787233778;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=7Yi6QACY6Sk+pPvGX2LOJZA5tLUZ+nGsCUcFWjEbL98=;
-        b=bwsfD/CEWIHE1pmLAiIpDzeui1D0dCa/Nm/kd7CdalZ1dIbR7uurgVrSuDRcyvqNUL
-         pGkEdKLsQLCR5ry7hL5LTQHqNJpbsIgUxLcF+x1K575M+aXDs6nOuVYMIfgB6Eu9+nFH
-         42ng2TDQlDgtzm+YiuPadbXaupo5AIQj/Vfy5U6P4k4QITAw9rjPK1sXiFkirCqYeU63
-         gRB3N16ofUgCWC3kocwdKvUxybr4w6imOTWKJBw9QUtZwovZ1qysY8U37vi6zfDp2/fV
-         rXHC0L1wSd3bAJslUFQ/FaRONickHtNuI4dU+nmn3hcjtQFipQy/5BKmyHRtHA6OmW/I
-         qFUQ==
-X-Forwarded-Encrypted: i=1; AHgh+Rq5+2U8e10MluIyL65TiE/04fy9DvlUgfo9QNDdKQf1NEYSRi9DTYsB4P/znTKOjjkU8OVQa1PcbBc=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyzMrIMNhFse10TWSeV9MjfkMh7nswyXt+nB+B8tuhj7z3qaReG
-	T0M/usKqQ50Z1i1rJVihxgF5OLPsdeyok+1DvxmFmc0zfaGqjxp+deeuk5fToCVgGrw=
-X-Gm-Gg: AR+sD13fQJBIOrM7CLX3BPSlr+yWIB/MwtpO7HLJhf9xLOchX6MzHoEskDWxJe9SsuV
-	yOqUA7p5by0o3Bos40hoGAL1nHx6Yn/uMXBIIBbhdMJ3HIjowL3hwkDNoOHbbjBmFbfZaqnE3Jy
-	z+G7kHgLVxJgJvfSQMXIA7lriKHaxM/qt5yGcJq93EKSSX/TnBUmB0SnaOsOQGTvSpqhiHGxTY9
-	geKT2ADYoK+jots8fPpYY5sAXwx4YqHq58fuaKukrrJKQTgBOiRtWcBoWhWPTl+GbIvt1fynnxn
-	6yTRU1CvTDCJTxqnMRl8RR52hPu9Axk4FeMSuLK5Q5t8WRHSN/auFbSsDfMsQeW0XQmyiAuuNvB
-	3sF4AUip78s0QJZJZ7ILpIW6zHLiq/xx0iw+FTM6j60k4Uq7xMUurIhjRS1dkmiuvvfp+ffIjgB
-	tXICMYeL+5L5xpHhQCb/QQRrRwcN+jzmH/lcU+vQ==
-X-Received: by 2002:a05:620a:1995:b0:936:bc78:791b with SMTP id af79cd13be357-936bf90b78cmr572103285a.15.1786628978075;
-        Thu, 13 Aug 2026 06:49:38 -0700 (PDT)
-Received: from ziepe.ca ([142.166.156.215])
-        by smtp.gmail.com with ESMTPSA id af79cd13be357-936c1b12344sm150528085a.29.2026.08.13.06.49.37
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 13 Aug 2026 06:49:37 -0700 (PDT)
-Received: from jgg by wakko with local (Exim 4.97)
-	(envelope-from <jgg@ziepe.ca>)
-	id 1wuVoO-00000003nYa-1b6m;
-	Thu, 13 Aug 2026 10:49:36 -0300
-Date: Thu, 13 Aug 2026 10:49:36 -0300
-From: Jason Gunthorpe <jgg@ziepe.ca>
-To: Yu Zhang <zhangyu1@linux.microsoft.com>
-Cc: linux-kernel@vger.kernel.org, linux-hyperv@vger.kernel.org,
-	iommu@lists.linux.dev, linux-pci@vger.kernel.org,
-	linux-arch@vger.kernel.org, x86@kernel.org, wei.liu@kernel.org,
-	kys@microsoft.com, haiyangz@microsoft.com, decui@microsoft.com,
-	longli@microsoft.com, joro@8bytes.org, will@kernel.org,
-	robin.murphy@arm.com, bhelgaas@google.com, kwilczynski@kernel.org,
-	lpieralisi@kernel.org, mani@kernel.org, robh@kernel.org,
-	arnd@arndb.de, mhklinux@outlook.com, jacob.pan@linux.microsoft.com,
-	tgopinath@linux.microsoft.com, easwar.hariharan@linux.microsoft.com,
-	mrathor@linux.microsoft.com, baolu.lu@linux.intel.com,
-	suravee.suthikulpanit@amd.com, vasant.hegde@amd.com
-Subject: Re: [PATCH v3 4/5] iommu/hyperv: Add para-virtualized IOMMU support
- for Hyper-V guest
-Message-ID: <20260813134936.GM662699@ziepe.ca>
-References: <20260811155022.108148-1-zhangyu1@linux.microsoft.com>
- <20260811155022.108148-5-zhangyu1@linux.microsoft.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HtchCZVN"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CAC021F000E9;
+	Thu, 13 Aug 2026 13:56:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1786629408;
+	bh=OuU7BugDOrt5R31Fei9C/BxxP6AqiQ8z1kNXhFCE+Cw=;
+	h=Date:Subject:Cc:To:From:References:In-Reply-To;
+	b=HtchCZVNvYtFYjMsimvAiujmVgMrDOEQyde7CfWgSRpCOVrZi9kiCyavedT63DJhS
+	 bZFD5h1d5PQ+z90BkfohXZHEuoqnCcvxlIwjFPcu80dYfF4lnWJRS42dIK0kym0ZhD
+	 +wHPYCNC/tBUwDJsRPtoMDPUlohqv/jZfaCWZ1RaP1HV2PgIcedpcVvhjhRhOEIg47
+	 gANrKC+Jw6SurF1A2Vabi5Y59+U0BAkTkC8TqvqeHW65XVYwi3Re5bygiwvTEVs12s
+	 k4o/wMnMJVGemsxltlwnB7bs7gePojCOiD5LXHjy93MRtHMOn6aZ02mESHiA08UyNF
+	 7GqHw5G0cUXKA==
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260811155022.108148-5-zhangyu1@linux.microsoft.com>
+Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Thu, 13 Aug 2026 15:56:41 +0200
+Message-Id: <DKNV9K3TXIU5.2F2Q4B3HHRHOZ@kernel.org>
+Subject: Re: [PATCH v7 1/1] rust: pci: add extended capability and SR-IOV
+ support
+Cc: <rust-for-linux@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+ <linux-kernel@vger.kernel.org>, <aliceryhl@google.com>,
+ <bhelgaas@google.com>, <kwilczynski@kernel.org>, <ojeda@kernel.org>,
+ <boqun@kernel.org>, <gary@garyguo.net>, <bjorn3_gh@protonmail.com>,
+ <lossin@kernel.org>, <a.hindborg@kernel.org>, <tmgross@umich.edu>,
+ <markus.probst@posteo.de>, <cjia@nvidia.com>, <smitra@nvidia.com>,
+ <ankita@nvidia.com>, <aniketa@nvidia.com>, <kwankhede@nvidia.com>,
+ <targupta@nvidia.com>, <kjaju@nvidia.com>, <alkumar@nvidia.com>,
+ <acourbot@nvidia.com>, <joelagnelf@nvidia.com>, <jhubbard@nvidia.com>,
+ <zhiwang@kernel.org>, <daniel.almeida@collabora.com>, <tamird@kernel.org>,
+ <work@onurozkan.dev>
+To: "Zhi Wang" <zhiw@nvidia.com>
+From: "Danilo Krummrich" <dakr@kernel.org>
+References: <20260804161612.776752-1-zhiw@nvidia.com>
+ <20260804161612.776752-2-zhiw@nvidia.com>
+In-Reply-To: <20260804161612.776752-2-zhiw@nvidia.com>
 
-On Tue, Aug 11, 2026 at 11:50:20PM +0800, Yu Zhang wrote:
+On Tue Aug 4, 2026 at 6:16 PM CEST, Zhi Wang wrote:
+> +/// Number of VF BAR register slots in an SR-IOV capability.
+> +// CAST: `PCI_SRIOV_NUM_BARS` is 6, which fits in `usize`.
 
-> +static void hv_iommu_release_device(struct device *dev)
-> +{
-> +	struct hv_iommu_endpoint *vdev = dev_iommu_priv_get(dev);
-> +	struct pci_dev *pdev = to_pci_dev(dev);
+I think the more relevant point is that it is a constant coming from the PC=
+Ie
+spec. (Plus, more SR-IOV BARs than addressable bytes wouldn't make a lot of
+sense anyway. :)
+
+> +const NUM_VF_BARS: usize =3D bindings::PCI_SRIOV_NUM_BARS as usize;
 > +
-> +	if (pdev->ats_enabled)
-> +		pci_disable_ats(pdev);
+> +/// PCI extended capability IDs.
+> +#[repr(u16)]
+> +#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+> +pub enum ExtCapId {
+> +    /// Single Root I/O Virtualization.
+> +    // CAST: `PCI_EXT_CAP_ID_SRIOV` is `0x10`, which fits in `u16`.
 
-Since attaching blocking does this and you set blocking as your
-release domain, this is redundant.
+Same here, I'd mention that it is a constant from the spec.
 
-The new flow looks alot better, removing the detach operation entirely
-makes sense if the HV can support attach on attach
+> +    Sriov =3D bindings::PCI_EXT_CAP_ID_SRIOV as u16,
+> +}
 
-Jason
+[...]
+
+> +impl<'a> ConfigSpace<'a, Extended> {
+> +    /// Finds and projects an extended capability into its typed registe=
+r layout.
+> +    ///
+> +    /// Returns [`None`] if the device does not implement the capability=
+.
+> +    ///
+> +    /// # Examples
+> +    ///
+> +    /// ```no_run
+> +    /// use kernel::pci;
+> +    ///
+> +    /// fn probe_sriov(
+> +    ///     pdev: &pci::Device<kernel::device::Bound>,
+> +    /// ) -> Result<(), kernel::error::Error> {
+
+Just Result; please also import kernel::device::Bound for readability.
+
+io_read!() should be imported from kernel::io::.
+
+> +/// SR-IOV register layout per PCIe spec (64 bytes starting at cap offse=
+t).
+> +#[repr(C)]
+> +#[derive(FromBytes, IntoBytes)]
+> +pub struct ExtSriovRegs {
+> +    /// Extended capability header.
+> +    pub header: u32,
+> +    /// SR-IOV capabilities.
+> +    pub cap: u32,
+> +    /// SR-IOV control.
+> +    pub ctrl: u16,
+> +    /// SR-IOV status.
+> +    pub status: u16,
+
+This is not a raw value, but a bitfield and should be represented as such (=
+might
+be true for some other fields as well).
+
+I think for this to work it needs Gary's recent I/O series though; I can me=
+rge
+both together next cycle and share with drm-rust.
+
+> +    /// Initial VFs.
+> +    pub initial_vfs: u16,
+> +    /// Total VFs.
+> +    pub total_vfs: u16,
+> +    /// Number of VFs.
+> +    pub num_vfs: u16,
+> +    /// Function dependency link.
+> +    pub func_dep_link: u8,
+> +    _reserved_0: u8,
+> +    /// First VF offset.
+> +    pub vf_offset: u16,
+> +    /// VF stride.
+> +    pub vf_stride: u16,
+> +    _reserved_1: u16,
+> +    /// VF device ID.
+> +    pub vf_device_id: u16,
+> +    /// Supported page sizes.
+> +    pub supported_page_sizes: u32,
+> +    /// System page size.
+> +    pub system_page_size: u32,
+> +    /// VF BARs (BAR0=E2=80=93BAR5).
+> +    pub vf_bar: [u32; NUM_VF_BARS],
+> +    /// VF migration state array offset.
+> +    pub migration_state: u32,
+> +}
