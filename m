@@ -1,43 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F3646335BBB
-	for <linux-pci@vger.kernel.org>; Thu, 13 Aug 2026 23:26:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20EF235C6A9;
+	Thu, 13 Aug 2026 23:26:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786663583; cv=none; b=CAgw6Fuw0gghA4MMcgvGDFKNkMmi0fiWlAOLda2r99bwjiI/o3tPTMNutYzxqgmPSf+t5+mCFBM3USZABIDlYZBKTov82LIY2vJLCPMv+940hIJvk1kQXpMtCpANsfWIixYH4IYe26WGYqsv9rM0b5FkSFSond1e/y8HTKMGTsw=
+	t=1786663593; cv=none; b=GTjJKwTd3pun5R6CLYoL7LS7VNr1xNA9IYcVusYnfoNsntAaij/BTHpkjRAFraimzEELZNx3J7n9jR5zINZ92zXFULCixLEnl4ZPmUuD/Fx7RFwsT+1LLu+nizHOVSl5YZn3fCg5QnZQiKCk94AOyvJH0ARo/mFvbHedJ9yAISA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786663583; c=relaxed/simple;
-	bh=9F0pwv1eEnHpg7mHQfeOKc24kJgmsuCcxSIPtccS0qo=;
+	s=arc-20240116; t=1786663593; c=relaxed/simple;
+	bh=FOdsv0T6tna6jX2s3430Y1k5X79rCGiFdnTAwrd8TDE=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=G6y4rIWss9HvFCe1XVUunrHhM/zF8RjZyuxjc833WCt/KobEoeNAwrveV3jqk53I4pT9TwCXiFoLlUCTqE041kGx9/n7OFPsKxs7R0H8bkAEC7xIRdNc96OApqxcjTiFb/hP1gXsqzTgSZfTv/Q7YGjXbpsC2VpjDv5eQz4ozrQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JEfHOx1y; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=S/lFUNPgqhGe7O56YHIF8Udbl6z6On/k+8tM5k9ydOFVDMvAL6uI+7vyPyC2ZgvdOUEKdYi9XiDuhv0ItDp47dI8K10aG7B3MmYn0peWrLRaTzkeiPKg4EczC3mJeeD3v/DLFb7gE9/AuOS0qMLHVlbdp/T8w9kO8QRWSIiuvbo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nTBlh7oa; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JEfHOx1y"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5FBB01F000E9;
-	Thu, 13 Aug 2026 23:26:21 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nTBlh7oa"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 89F001F000E9;
+	Thu, 13 Aug 2026 23:26:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786663581;
-	bh=ZFM8pY2B/NGoyqWNVK9tBbHEa1MINwrtYry3dXuzBnA=;
+	s=k20260515; t=1786663591;
+	bh=qV5p4gtZT2z1Hkd6GtPMesYurodCH4YxhFo0bPvv/Ao=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=JEfHOx1y2dRW84bhg/ixisv7KdPHqzkKfRnaWRkV76It7gxsq/mJVSNd6GJ8kLbxh
-	 n/SaUQNcXy/aBxde4xU8xyW9/c/2gN+g7grUn/vsVGWSDPkOG2gpQ0LRiCDu3aelOl
-	 Qg7Vx+PuzDRYoCV46nqWYN9N3mBRUn8tyOmBxrVQ/hSTcd6TJfa8nBpP5esevYvtWB
-	 msr8r/62NoyDEPydw4qn9zqwv8RpVBFqfxxB/fQtDJv+WwTjclXAiPMVtP1otsftBs
-	 Uj/mCx1GfUrQGRMsPMxM27MOCA1Wxkr3ygnQ3sJI1hEmGQ8SpuLRelntlM+lEbhBEm
-	 NTA72xjQpqSpA==
+	b=nTBlh7oavSC9m9ntSJxHmAoEAHzG6kc61xNTSMoE7gU5y++91x9iucZiE0mVna/Q4
+	 UvktB02Y4sWKh4ley2Wy0+fAU9UHtEbgbqlrU6yy1o/le22qmWDKBEwFIYIsy7bpIF
+	 7nxYqykFksRt7BNAs+Z1l3MOxFNtVXfLMRxtdx2KFdwTU9VrCUd5PkuRsexj3JAoqa
+	 lPEUWkV6Hp3uEg+5t1Zivq3lcuam2JHospOtDD0ocT302YjPtk/jPzrDhpQienOt55
+	 6vTnUfRckyIzvragnKQ9otWwn3TPKf5Vruh9Z103DChrWUUDTCPmb66t0fJaA08J7P
+	 lxON2dXm26/6w==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v8 12/14] PCI: dwc: Apply ECRC workaround to DesignWare
- 5.00a as well
+Subject: Re: [PATCH RESEND v10 5/8] ACPI: Centralize acpi_get_cpu_uid()
+ declaration in include/linux/acpi.h
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "Manikanta Maddireddy" <mmaddireddy@nvidia.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260324190755.1094879-13-mmaddireddy@nvidia.com>
-References: <20260324190755.1094879-13-mmaddireddy@nvidia.com>
+To: "Chengwen Feng" <fengchengwen@huawei.com>
+Cc: linux-pci@vger.kernel.org, linux-perf-users@vger.kernel.org
+In-Reply-To: <20260401081640.26875-6-fengchengwen@huawei.com>
+References: <20260401081640.26875-6-fengchengwen@huawei.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 13 Aug 2026 23:26:17 +0000
-Message-Id: <20260813232621.5FBB01F000E9@smtp.kernel.org>
+Date: Thu, 13 Aug 2026 23:26:26 +0000
+Message-Id: <20260813232631.89F001F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -46,68 +46,65 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [Medium] The ECRC workaround is not applied to the Tegra234 SoC due to an=
- incomplete hardware version check, and the updated code comments severely =
-mismatch the implementation.
+- [Low] Build breakage when CONFIG_ACPI is disabled due to missing acpi_get=
+_cpu_uid() stub.
 --
 
---- Patch [12]: [PATCH v8 12/14] PCI: dwc: Apply ECRC workaround to DesignW=
-are 5.00a as well ---
-commit b8f7e871ae3ebf76088785914137c4a00e66a2a1
-Author: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+--- Patch [5]: [PATCH RESEND v10 5/8] ACPI: Centralize acpi_get_cpu_uid() d=
+eclaration in include/linux/acpi.h ---
+commit f99931b839a856d11d22796fd0c23424af139915
+Author: Chengwen Feng <fengchengwen@huawei.com>
 
-PCI: dwc: Apply ECRC workaround to DesignWare 5.00a as well
+ACPI: Centralize acpi_get_cpu_uid() declaration in include/linux/acpi.h
 
-This commit extends the ECRC (TLP digest) workaround, originally implemented
-for DesignWare version 4.90a, to version 5.00a. It updates the ATU outbound
-region programming to enable the workaround for the Tegra234 SoC.
+This commit centralizes the acpi_get_cpu_uid() declaration into the global
+scope in include/linux/acpi.h and removes the architecture-specific
+declarations. This unifies the interface and eliminates duplicate prototype=
+s.
 
-> diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/c=
-ontroller/dwc/pcie-designware.c
-> index 5741c09dde7f4..d69db0ab3b14d 100644
-> --- a/drivers/pci/controller/dwc/pcie-designware.c
-> +++ b/drivers/pci/controller/dwc/pcie-designware.c
-> @@ -487,7 +487,7 @@ static inline void dw_pcie_writel_atu_ob(struct dw_pc=
-ie *pci, u32 index, u32 reg
->  static inline u32 dw_pcie_enable_ecrc(u32 val)
->  {
->  	/*
-> -	 * DesignWare core version 4.90A has a design issue where the 'TD'
-> +	 * DWC versions 0x3530302a and 0x3536322a has a design issue where the =
-'TD'
-
-[Severity: Medium]
-Does this comment accurately reflect the versions that need the workaround?
-The comment lists 0x3530302a (5.00a) and 0x3536322a (5.62a), but removes
-the mention of 4.90a.
-
-This creates a discrepancy with the implementation in
-dw_pcie_prog_outbound_atu() below, which still checks for 4.90a but does
-not check for 5.62a.
-
+> diff --git a/include/linux/acpi.h b/include/linux/acpi.h
+> index fbf0c3a65f598..f7e50e9cfb224 100644
+> --- a/include/linux/acpi.h
+> +++ b/include/linux/acpi.h
 [ ... ]
+> @@ -323,6 +323,17 @@ int acpi_unmap_cpu(int cpu);
+> =20
+>  acpi_handle acpi_get_processor_handle(int cpu);
+> =20
+> +/**
+> + * acpi_get_cpu_uid() - Get ACPI Processor UID of from MADT table
+> + * @cpu: Logical CPU number (0-based)
+> + * @uid: Pointer to store ACPI Processor UID
+> + *
+> + * Return: 0 on success (ACPI Processor ID stored in *uid);
+> + *         -EINVAL if CPU number is invalid or out of range;
+> + *         -ENODEV if ACPI Processor UID for the CPU is not found.
+> + */
+> +int acpi_get_cpu_uid(unsigned int cpu, u32 *uid);
+> +
 
-> @@ -563,7 +563,7 @@ int dw_pcie_prog_outbound_atu(struct dw_pcie *pci,
->  	if (upper_32_bits(limit_addr) > upper_32_bits(parent_bus_addr) &&
->  	    dw_pcie_ver_is_ge(pci, 460A))
->  		val |=3D PCIE_ATU_INCREASE_REGION_SIZE;
-> -	if (dw_pcie_ver_is(pci, 490A))
-> +	if (dw_pcie_ver_is(pci, 490A) || dw_pcie_ver_is(pci, 500A))
->  		val =3D dw_pcie_enable_ecrc(val);
+[Severity: Low]
+Does this cause a build failure when CONFIG_ACPI is disabled? The declarati=
+on
+is added here, but it appears there is no static inline stub provided in the
+!CONFIG_ACPI section of the header.
 
-[Severity: Medium]
-Does this version check correctly apply the workaround for the Tegra234 SoC?
+Callers outside of ACPI-specific code seem to use this function
+unconditionally. For example, in arch/x86/xen/enlighten_hvm.c within
+xen_cpu_up_prepare_hvm():
 
-The commit message states that Tegra234 uses the 5.00a IP version, but
-previous patches set TEGRA234_DWC_IP_VER to DW_PCIE_VER_562A (0x3536322a).
+    if (acpi_get_cpu_uid(cpu, &cpu_uid) =3D=3D 0)
 
-If Tegra234 is actually 5.62a, the explicit check for 500A here means the
-workaround is entirely skipped for Tegra234, defeating the purpose of the
-patch. Should this check also include dw_pcie_ver_is(pci, 562A) as suggested
-by the updated comment above?
+Without a static inline stub returning an error code (like -ENODEV) when
+CONFIG_ACPI is not set, does compiling x86 with CONFIG_XEN_PVHVM enabled and
+CONFIG_ACPI disabled result in an implicit function declaration and undefin=
+ed
+reference linker error?
 
->  	dw_pcie_writel_atu_ob(pci, atu->index, PCIE_ATU_REGION_CTRL1, val);
+>  #ifdef CONFIG_ACPI_HOTPLUG_IOAPIC
+>  int acpi_get_ioapic_id(acpi_handle handle, u32 gsi_base, u64 *phys_addr);
+>  #endif
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260324190755.1094=
-879-1-mmaddireddy@nvidia.com?part=3D12
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260401081640.2687=
+5-1-fengchengwen@huawei.com?part=3D5
