@@ -1,28 +1,28 @@
-Received: from CH4PR04CU002.outbound.protection.outlook.com (mail-northcentralusazon11013070.outbound.protection.outlook.com [40.107.201.70])
+Received: from CO1PR03CU002.outbound.protection.outlook.com (mail-westus2azon11010007.outbound.protection.outlook.com [52.101.46.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B4D6443ABA;
-	Thu, 13 Aug 2026 09:40:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.201.70
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA6E44477FE;
+	Thu, 13 Aug 2026 09:41:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.46.7
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786614061; cv=fail; b=Zy6oQhcEqUcYnRGQxeDJojMld2kOPAtq1SqjbBmjQoCsM156gxYJAEkaepI6X9bzWkYmrmwGnnUOvKDUv0T93ZWqwO15b2MvfOCk4lRVanJhkzLAk70PbnQpvk1RfBTmTrDIV3uqSU1w/VAKGOINrY2z1iumyDnD1JdqgpwSMX0=
+	t=1786614069; cv=fail; b=poLoc4FQOHPWDogcH4r987CydgmAHSSweCks5BcEfk1sxzuKRt9kNywEdZDG6303e8/BuUv7waj0UULPEnXAovE5oUn722sIZ9ZG4sSh5xIr3ZG6HBZUSUtG/Bp0KvBt2n4JkE0Cbq/DUUmUfFaKYtQnt5LwPFl+gbe2RvWkrsU=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786614061; c=relaxed/simple;
-	bh=MvehUse7PN/SsmihSLf1esV6X71ue54uGJvYuL8b1H0=;
+	s=arc-20240116; t=1786614069; c=relaxed/simple;
+	bh=maBfY+Yl1dFVumfL8hRO/iFqK4Xh+DKvVvZzlJiBBsw=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=TzLAK1tWoSKlpdNJEaNLiJbIsuMyDBci5Ass4G8KKNMebpZFm5qt9GXSL4rlqchnbqdgwaADNz1aSl3Ju6TwOV/wQ891Vq9s2168t1WNcTv+8hRsflE5pqh3hZE/QUUGweqwv6QRedtiiYn446NFk56jlKKz5AnaZWBgJL8GG90=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=USIuo6vZ; arc=fail smtp.client-ip=40.107.201.70
+	 MIME-Version:Content-Type; b=MykC66A33f7kVJ3yaVqtUyUxls38or+BYXlqZDGPGUQM3xXiEj3TtasUHTPXV4mUqVmGoQxJ7FvH+1r+RXaKtQuAb1kT5PJihfLAozAaG6k0yzBm530bzwWq1wYsxR2CSgIAI/WEa9kieEA57Wsj9YDdX9UP2Iii4nicMjDCczM=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=NDMrpAgK; arc=fail smtp.client-ip=52.101.46.7
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="USIuo6vZ"
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="NDMrpAgK"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=b+03dgiVawBv+5r9ameEmkB88bDD3D7mjJRE6ehVc0AWiI/T8IVhTuL3wwq3C/1BCSQzSknaMQq4rTNrJ2+93hlK4ESe3YQX3lVZ5tgKlhz//yypRyGbBVWJuZJp1kxyRTIcgQgo68YMG07d4Ca8vZDeD40u5jzseYGZ2jL3u6ZyzvDgtZMinZvMsm676zGAQZIyjgbscGNtJc655Ww5CKkmDh7k2nZTQLB5Dkhaneida0Fe+pCAhWXFxyH6WWu4SqvvpFo2pSkzJPgnoMfwRCWWNdgyIL+vHP22AHoes9Gog56Fi6Co5mfq7r7HYkCPbNSjDyOZ5JRfG6o+Q4qFKw==
+ b=mb7BbM+bsl4IQ4jubjycBH9rkyhoK9AmlJs/OTnZdd88aJ0T3FV84HQHqgR4elvjxMestrbe77ufpPIT1dA5Fa3goN7+t5r+KDYdxVbTwxjWkRS1TYO6CpEPjRtlMgiDwJbSuy7FeOnpLKMgbNpmst2QMyRmeD74iUUk5F8WHFOsj1ZfRJ0SR9xGTrm17IPIWvwae+O+SBgkieKP2gysOB9lBfGH09uWGY6uX/MNoMcRXELwJ0mmiJ1UkElnz+SO5h4yJOqKHjiYrGf8dEFdFLrFAlPG/cWY1qC/jFxjBz6WgMkf5uYfpqJHv9erNweaI4pfGO6RGLREpiBn/K8pRg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=9H/dFY2QssKu4ZEPc/hQety0VjCJCb1arfiS7jcFWms=;
- b=Q0u58gEuA8B6ZgFSx5MyqOfK3K/W3HTrILXRT5nPHGmZAt4dDmMvdu4CalRax1RwE76WDOsXrb7Wl4We7JrrvkcHC/C7fmgVyfI5j4I0Iagn9YrsxhYohcJ8u9QEvtR1Ld2Sp1PYvEk/JIrnYF19zjz9+ve9d7y5+pp9t6Y0t2OFSu8hjVHrJOO5tmpRmXRv3iLHtnCXyIAvN0q6TD9FhjfLiL4Xvmm97oXpSou/cyvy29PPwLMDAIOpLLK8CM6mU/rwjF9gQ2pbamVhxv9XMUG1dpp7RfW1BBtWyogfIHL2jUJc5+g9Mh/QrTIljBKET8ocELZ7zpUklGkdJDsl0A==
+ bh=LiDn2TFa00zJzDnk+S5zCiAxbNRCBs8+2pacQ4+3tHY=;
+ b=AJLUgar6Ew09Pp4Xy4O+fedJu+CAWs7FBXU6cfZm1b7FOxfZtQ+iZ/WB0kcngTxxnhM6oPW82o+JQEwKm34SL2GXogxTR/r3ZVkOq53MosEz2aNI8+7uzDK5oBlg+YZhLZMN696qrIu9BPBpFuLCWt3A3o1f5MgQRki2HsVPhSayTnI4vYUSSryWhq7gFlK7BUFq+v6JBYTwBYmBPQMQlxxA4K0xaoSUsvuGgMSpLEqNtGABsbOLd8bl3tm9u9/eMozHmWiS28OCFK/eTxiC0Q/A+0evyMvfnEl/PqhOqzG3/Ac5QUd39udgx+jEIurUHBimYKFKGVSTGJgiuXgE3Q==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  216.228.117.160) smtp.rcpttodomain=shazbot.org smtp.mailfrom=nvidia.com;
  dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
@@ -30,18 +30,18 @@ ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=9H/dFY2QssKu4ZEPc/hQety0VjCJCb1arfiS7jcFWms=;
- b=USIuo6vZ6sdUCW6vsps2Ep7jBvfGwoDhJ/+SDGQFlGWVelUv02GweKHRSxWpsQPhciQdY0Ugw+TNdfCiAfAvTlreBH/DNXMZtLFzw4avuh/w0K1Ebk6RFkmitgsXIZY1nN7Ke9GGNz/c1mt35NNkIQ1hS7HSlphdTpJfisKLs9d/Iw7JtrB6p6VCUhOaSln4Wl2LuXBF/r1KlpcMSPw61zbF7pwNVV1ptGutmjP6oscN1gTCBt9YGezyd1StTzxqY5Ld/OJu2tq0iURaUrlT12GtAQfbwoH/VhlfWTy2byFkvgXd8P8RRV8W6aAmSKRCWEEGMw91Q8SCAmUSXmiDZw==
-Received: from SJ0PR05CA0053.namprd05.prod.outlook.com (2603:10b6:a03:33f::28)
- by PH8PR12MB6988.namprd12.prod.outlook.com (2603:10b6:510:1bf::20) with
+ bh=LiDn2TFa00zJzDnk+S5zCiAxbNRCBs8+2pacQ4+3tHY=;
+ b=NDMrpAgKOZTWoOINtYvrQDfSdpzMUWl10liFdmNUgLRTwvRwYSUcynHrd02AMa/x4/bZIl3YJuKVJunmvzyeRPX1Yr9oEJvgwKpnENZj1tMP/wkVAt5U0n5PYJjnP6l/+bM9uJvalgQQT5LG6hCLEeh9Pb638tFQ/dt09vf5GJHdhkbm020fasdK6aBWwBZW1hA81FsN5tUaXlfP/TXGRsj0vwEAoNvSdcYhYPIVtWBc/4l6HKI45KJikS4/G0qYLAbFoY/Jn/Zcd6cGtf8accd1dDs1ogiLu/JOu8M7AyigzBB1q8KQ6ewfBMR0JAHln04U63+kokBGk5vdnf6/cQ==
+Received: from SJ0PR05CA0043.namprd05.prod.outlook.com (2603:10b6:a03:33f::18)
+ by SJ5PPFA5F0E981D.namprd12.prod.outlook.com (2603:10b6:a0f:fc02::99d) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.315.12; Thu, 13 Aug
- 2026 09:40:41 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.292.19; Thu, 13 Aug
+ 2026 09:41:03 +0000
 Received: from MWH0EPF000C618B.namprd02.prod.outlook.com
- (2603:10b6:a03:33f:cafe::4) by SJ0PR05CA0053.outlook.office365.com
- (2603:10b6:a03:33f::28) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.21.315.13 via Frontend Transport; Thu,
- 13 Aug 2026 09:40:41 +0000
+ (2603:10b6:a03:33f:cafe::9b) by SJ0PR05CA0043.outlook.office365.com
+ (2603:10b6:a03:33f::18) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.21.339.3 via Frontend Transport; Thu, 13
+ Aug 2026 09:41:03 +0000
 X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.117.160)
  smtp.mailfrom=nvidia.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=nvidia.com;
@@ -51,15 +51,15 @@ Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
 Received: from mail.nvidia.com (216.228.117.160) by
  MWH0EPF000C618B.mail.protection.outlook.com (10.167.249.123) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.339.3 via Frontend Transport; Thu, 13 Aug 2026 09:40:41 +0000
+ 15.21.339.3 via Frontend Transport; Thu, 13 Aug 2026 09:41:02 +0000
 Received: from rnnvmail201.nvidia.com (10.129.68.8) by mail.nvidia.com
  (10.129.200.66) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.46; Thu, 13 Aug
- 2026 02:40:22 -0700
+ 2026 02:40:41 -0700
 Received: from nvidia-4028GR-scsim.nvidia.com (10.126.230.37) by
  rnnvmail201.nvidia.com (10.129.68.8) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.20; Thu, 13 Aug 2026 02:40:13 -0700
+ 15.2.2562.20; Thu, 13 Aug 2026 02:40:31 -0700
 From: <mhonap@nvidia.com>
 To: <alex@shazbot.org>, <jgg@ziepe.ca>, <ankita@nvidia.com>,
 	<jic23@kernel.org>, <dave.jiang@intel.com>, <alejandro.lucero-palau@amd.com>,
@@ -74,9 +74,9 @@ CC: <cjia@nvidia.com>, <kjaju@nvidia.com>, <vsethi@nvidia.com>,
 	<linux-kernel@vger.kernel.org>, <kvm@vger.kernel.org>,
 	<linux-cxl@vger.kernel.org>, <linux-pci@vger.kernel.org>,
 	<linux-kselftest@vger.kernel.org>, <linux-hardening@vger.kernel.org>
-Subject: [PATCH v4 20/27] vfio/cxl: Emulate the HDM decoder commit handshake
-Date: Thu, 13 Aug 2026 15:06:24 +0530
-Message-ID: <20260813093631.2288172-21-mhonap@nvidia.com>
+Subject: [PATCH v4 22/27] vfio/cxl: Revoke the HDM mapping on reset and power transitions
+Date: Thu, 13 Aug 2026 15:06:26 +0530
+Message-ID: <20260813093631.2288172-23-mhonap@nvidia.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20260813093631.2288172-1-mhonap@nvidia.com>
 References: <20260813093631.2288172-1-mhonap@nvidia.com>
@@ -92,247 +92,134 @@ X-ClientProxiedBy: rnnvmail201.nvidia.com (10.129.68.8) To
  rnnvmail201.nvidia.com (10.129.68.8)
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: MWH0EPF000C618B:EE_|PH8PR12MB6988:EE_
-X-MS-Office365-Filtering-Correlation-Id: 60bc2338-2c3d-4ad1-ce0f-08def91ef075
+X-MS-TrafficTypeDiagnostic: MWH0EPF000C618B:EE_|SJ5PPFA5F0E981D:EE_
+X-MS-Office365-Filtering-Correlation-Id: 7adfbc0a-1652-485c-dd9e-08def91efd8c
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|36860700016|1800799024|82310400026|7416014|376014|23010399003|22082099003|18002099003|56012099006|11063799006|3023799007|10067099003|921020|6133799003;
+	BCL:0;ARA:13230040|376014|23010399003|36860700016|7416014|1800799024|82310400026|921020|10067099003|56012099006|22082099003|18002099003|11063799006;
 X-Microsoft-Antispam-Message-Info:
-	bHCyiugWEDND89qy+9XkNAH1siY9m5iuMPEMpkxYTWAOIUzKvW6C3PVSNMlAuvLMdhxXvEW1BEsqU4kKZuQmUGS7Fg5lJFqeu1gF/gJyH36JNYWQx3rlTcIV1aL4rpB/78LiUzyz6eEnSbp9kfDo7iuGxWavUxHGtQmzzIPDubjqfe69e4vUU+N3ZJ+FhsJqI44Tg+xPVW4q+DCQJjElg+U8n9lZdS+6J/w7pedF71B+GL32IuK933+N7DqN0LNt9ro41NtKoD3uEKtZAlg6t6vTETun6+xWdU42CxrybttVtjUAv2KaXmVAYdIzz+zvIal5/0swAAxzJHDiLLBrqACtZJQDo4LCe20TVqr+diowRK+HxCk8AQZC6/f7vEYaMtj3Gk04dn1S8nHsPExJ+0ljrxAuEOhMK1uh12Qbn+KJhNv7m9SK3faZRZiXM83QR9SE/mDdrcnlfA0aKQpde+my5dT3XtTiKR5Pih9QihWyniejyBK654tcDV0iHjoTOOxSfrKBdIP3IeYtvhklLbnnkCWGXNNYyXuLvoO/YwW2H9qUbtT2+FtokgXrfFGOo4xNMGN5nOGLNHG9OP0E83Y5dpRg+oqZGaVAo99v/eg01R3SQxR2lg5eh//YEMZFOxZIY+l0UC7zTTCmNwIMDof0CSf0ENwFuWjXi/QyxRRGP2wITboeyik0ZABS67GbxeN6AylHCkxrN54TX7JzAIzBpcQt1xQ7rUl8BTl+W37+KWjTH/5GIhRhLXWcEnUq
+	+vkYFp5NBDXVafaof2j0VSFmg3clBhIOJfFa/HXIrH3Hmxpsyj5t+WMY4F9rk52lWjh4Hl1O3SGmYlqTPbMt7KbRjrp+5YC5PMK8Nr//6te8jUxtBhZfmkRZ28sGuILYZn8WI/3DLTNswdiB5VX0dpILM1Di74X/yxe9PVcmXXcGg9S212AoZnClcIEBqtImwwCWh1qEfctXqxaUSMNqpUUlbaHfK2CK9ny5HuI3cwDiXPW/Xtf1Z/SpFoOlcVpHyOLz0nv4jPaZqqh0F6yIsfDQ5inoUSxpi7QTMBW/0PZBy2jwjBXqMH7RcvebxKxXLUjx5YbNClWLt8FA9PgypsKScx1keja6MZp+fL1M1noYrA+mMdO9reOL5KIPJaCgYezNwI39Vga5kciCuHkm94u8UqkW8NQ0Z2uZLF5CMsRlLpk20WMr6Y1DH6rZrpuQAW38KvABPth4i/CsBWcYksF7SxPnzzGuTftKdDFe18SLP5Ff2q2YhpYIdRx9sUKRcinUXSLY6eKohwsq0WXs6T2NNqqUdrHQjr07fCuCD1RYwb7yjI3CKyXxefxt+fIjsrtVA9i4lbiZ0B5F4ZehWZSdu3cI12pBXR+cJHM6w2g35qRRUSMx9n/gYfSE0L2XFaz7smz4MDUwPiiqktR9X5vNtJuik1fsw1OvDbQJd0dVZVEr3qxICgm57vhwUS4Aqwnuib6lpZfE44+HMxHimINp6fN6p0PA2+UX0iSslmDRLWlZf+WRYzaWEOKEPizA
 X-Forefront-Antispam-Report:
-	CIP:216.228.117.160;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge1.nvidia.com;CAT:NONE;SFS:(13230040)(36860700016)(1800799024)(82310400026)(7416014)(376014)(23010399003)(22082099003)(18002099003)(56012099006)(11063799006)(3023799007)(10067099003)(921020)(6133799003);DIR:OUT;SFP:1101;
+	CIP:216.228.117.160;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge1.nvidia.com;CAT:NONE;SFS:(13230040)(376014)(23010399003)(36860700016)(7416014)(1800799024)(82310400026)(921020)(10067099003)(56012099006)(22082099003)(18002099003)(11063799006);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	XhItESmiU5gLwPHKaVl2IoaXPfTExQMQO4I2lKijENGO3HkWGl85D3hL2zrvDGbA1ruZh6BGXJCu++JOm8E7wvQkno+UKSYyJk1w9dByQNhIqMHePoG8W1lFrmZXn35MJBLhghPEEFQVJHCoQPvYyTjp2Wr9CPslsd77SU+5q0UrWkWtIvuNJ6gD1bje3NNAo7+weeR6NnIXJbizoktDt2HlngQ0oXTDbK4MkxWiq/bHBWfy9hy68YfViNrUOs4gMrGPyusxR/oCoj1Ja7nPz4mHglAFZJyW/sRkXbWbl9rQj2uAtIfLWUkf0vxpld9odxFq4Og90Mz30YEKLFXVtqUbjJKLL4OmuwSFKmYeCT6ZJTn9ZuCX12zZEgOwqmcNTNeWgOM8VemJseUjLIjHy0qVaJ57ANcsob4NOhK1eQXM/dumvGzd86tsghqGbcKO
+	iNnzvg+PQU1hAdrv4WrOnz2LnqNvIf4i9ZEV+LgJGRfF5wGq4DKioTQiwpdAG2alDM3Tywh1LAiavR80rZ+BsknOQw+iHr0BAllODM+QHt01I5FTpBqNmOL0d3YBEbdQOibsqoqo1YuTMlRZ4woijpNgWKriLr6p1BHKXcQGy5YypmZwaWHF3IqFpeNLBmZXBGUML01QOv9kwRmJi+IXplRK/ZY61JvbfsaOyP0o9lc6ykOPY+MEvklEXOoL8jpXaSQJQf5O3vnCKeilEgVgMnZMpFOk9m/m974zJq53XuZsvThxEpJc2AmgD+pRp9SjRckvSqVc1f+lKcpis3yFcP4Fp8RaHMaNnkt48siQ0bUP7/bwoykh6oMF8wD6k67LUtsQvtrHt16tWEz9upEj76HAGl+ktwSrRBGtkatA0ecjF/+Tc7HGRniU7svpHQZv
 X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Aug 2026 09:40:41.0331
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Aug 2026 09:41:02.9925
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 60bc2338-2c3d-4ad1-ce0f-08def91ef075
+X-MS-Exchange-CrossTenant-Network-Message-Id: 7adfbc0a-1652-485c-dd9e-08def91efd8c
 X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.160];Helo=[mail.nvidia.com]
 X-MS-Exchange-CrossTenant-AuthSource:
 	MWH0EPF000C618B.namprd02.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH8PR12MB6988
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ5PPFA5F0E981D
 
 From: Manish Honap <mhonap@nvidia.com>
 
-Let the guest drive its virtual decoder now that the register window is
-trapped. Writes stay in the per-open shadow so the guest never touches
-the physical decoder; the host has already resolved the HPA.
+The HDM region is a device region, not a BAR, so vfio_pci_zap_bars()
+leaves its PTEs in place. A runtime-PM entry, a D3 transition, or a reset
+would then leave the guest with live mappings into a quiesced device.
 
-The control register carries the commit handshake, so reflect a commit
-request straight to committed and drop the error bit. A decoder that
-committed with lock set stays frozen until the device is reset, when the
-shadow is sampled afresh.
-
-Apply per-field write semantics to the rest of the block rather than
-storing every write verbatim: gate base and size on the committed state,
-so they change only across a decommit, and drop writes to the read-only
-capability register.
+Add a zap hook, called alongside the BAR zap under memory_lock, that
+unmaps the window. The fault path already refuses to re-insert PFNs while
+the device is suspended or its Memory Space is disabled.
 
 Signed-off-by: Manish Honap <mhonap@nvidia.com>
 ---
- drivers/vfio/pci/cxl/vfio_cxl_core.c | 156 ++++++++++++++++++++++++---
- 1 file changed, 142 insertions(+), 14 deletions(-)
+ drivers/vfio/pci/cxl/vfio_cxl_core.c | 29 ++++++++++++++++++++++++++++
+ drivers/vfio/pci/vfio_pci_core.c     |  8 ++++++++
+ include/linux/vfio_pci_core.h        |  2 ++
+ 3 files changed, 39 insertions(+)
 
 diff --git a/drivers/vfio/pci/cxl/vfio_cxl_core.c b/drivers/vfio/pci/cxl/vfio_cxl_core.c
-index f91f6eb8b8fb..ec938813bd91 100644
+index 0fb5ed5d86b7..f1c6bf06c408 100644
 --- a/drivers/vfio/pci/cxl/vfio_cxl_core.c
 +++ b/drivers/vfio/pci/cxl/vfio_cxl_core.c
-@@ -15,6 +15,7 @@
- #include <linux/uaccess.h>
- #include <linux/vfio_pci_core.h>
- #include <cxl/cxl.h>
-+#include <cxl/cxl_regs.h>
- #include <cxl/pci.h>
- 
- /**
-@@ -222,33 +223,159 @@ static int vfio_cxl_register_pfn_space(struct vfio_pci_core_device *vdev)
- 	return register_pfn_address_space(&cxl->dpa_pfn_space);
+@@ -530,6 +530,31 @@ static void vfio_cxl_release_device(struct vfio_pci_core_device *vdev)
+ 	vdev->cxl = NULL;
  }
  
-+/*
-+ * Only an endpoint decoder's control register carries the commit handshake.
-+ * A single non-interleaved decoder is assumed; switch topologies would widen
-+ * which offsets qualify.
-+ */
-+static bool vfio_cxl_ctrl_offset(loff_t pos)
++static void vfio_cxl_zap(struct vfio_pci_core_device *vdev)
 +{
-+	unsigned int stride = CXL_HDM_DECODER0_CTRL_OFFSET(1) -
-+			      CXL_HDM_DECODER0_CTRL_OFFSET(0);
-+	loff_t off = pos - CXL_HDM_DECODER0_CTRL_OFFSET(0);
++	struct vfio_cxl_state *cxl = vdev->cxl;
 +
-+	return pos >= CXL_HDM_DECODER0_CTRL_OFFSET(0) && off % stride == 0;
-+}
++	lockdep_assert_held_write(&vdev->memory_lock);
 +
-+static void vfio_cxl_ctrl_write(struct vfio_cxl_state *cxl, u32 idx, u32 val)
-+{
-+	u32 old = le32_to_cpu(cxl->hdm_shadow[idx]);
-+	u32 wmask = CXL_HDM_DECODER0_CTRL_IG_MASK |
-+		    CXL_HDM_DECODER0_CTRL_IW_MASK |
-+		    CXL_HDM_DECODER0_CTRL_LOCK |
-+		    CXL_HDM_DECODER0_CTRL_COMMIT |
-+		    CXL_HDM_DECODER0_CTRL_HOSTONLY;
-+
-+	/* A committed decoder that asked to lock stays put until reset. */
-+	if ((old & CXL_HDM_DECODER0_CTRL_COMMITTED) &&
-+	    (old & CXL_HDM_DECODER0_CTRL_LOCK))
++	if (!cxl)
 +		return;
 +
 +	/*
-+	 * Take only the guest-writable fields and preserve the reserved bits and
-+	 * the emulation-owned status bits (COMMITTED/COMMIT_ERROR) from the
-+	 * shadow, so the VMM never reads back guest-authored reserved state.
++	 * Revoke the mapping so a later access re-faults. Do not touch hdm_valid
++	 * here: zap also runs on a plain PCI Memory-Space disable, across which
++	 * the committed HDM decoder stays valid (CXL.mem is not gated by PCI
++	 * Memory-Space). hdm_valid tracks decoder validity and is cleared only by
++	 * the paths that can leave the decoder unrestored (a failed reset or PM
++	 * restore). A reset or D3 transition holds memory_lock for write while it
++	 * runs, so no fault races the revoke, and a runtime-suspended device is
++	 * caught by the pm_runtime_engaged check on the insert path.
 +	 */
-+	val = (old & ~wmask) | (val & wmask);
-+
-+	/*
-+	 * The host resolved the HPA before the guest ever saw the device, so a
-+	 * commit request always lands and clearing it tears the guest view down.
-+	 */
-+	if (val & CXL_HDM_DECODER0_CTRL_COMMIT)
-+		val = (val | CXL_HDM_DECODER0_CTRL_COMMITTED) &
-+		      ~CXL_HDM_DECODER0_CTRL_COMMIT_ERROR;
-+	else
-+		val &= ~CXL_HDM_DECODER0_CTRL_COMMITTED;
-+
-+	cxl->hdm_shadow[idx] = cpu_to_le32(val);
++	unmap_mapping_range(vdev->vdev.inode->i_mapping,
++			    VFIO_PCI_INDEX_TO_OFFSET(VFIO_PCI_NUM_REGIONS +
++						     cxl->hdm_region_idx),
++			    range_len(&cxl->hpa_range), true);
 +}
 +
-+/*
-+ * Base, size, and the Target List / Skip registers are all RWL: they lock on
-+ * commit, so every one of them is filtered through the committed guard.
-+ */
-+static bool vfio_cxl_base_size_offset(loff_t pos)
-+{
-+	return pos == CXL_HDM_DECODER0_BASE_LOW_OFFSET(0) ||
-+	       pos == CXL_HDM_DECODER0_BASE_HIGH_OFFSET(0) ||
-+	       pos == CXL_HDM_DECODER0_SIZE_LOW_OFFSET(0) ||
-+	       pos == CXL_HDM_DECODER0_SIZE_HIGH_OFFSET(0) ||
-+	       pos == CXL_HDM_DECODER0_SKIP_LOW(0) ||
-+	       pos == CXL_HDM_DECODER0_SKIP_HIGH(0);
-+}
-+
-+/*
-+ * Reserved dwords in the single-decoder HDM block: 0x08 and 0x0c between the
-+ * global control register and decoder 0, and 0x2c after decoder 0's registers.
-+ * Keep them read-only so the VMM never reads back guest-authored reserved state.
-+ */
-+static bool vfio_cxl_reserved_offset(loff_t pos)
-+{
-+	return pos == 0x08 || pos == 0x0c || pos == 0x2c;
-+}
-+
-+/*
-+ * BASE_LOW and SIZE_LOW expose only the 256MB-aligned upper nibble [31:28];
-+ * bits [27:0] are RsvdP. Preserve the reserved low bits so the VMM never reads
-+ * back an unaligned base or size.
-+ */
-+#define CXL_HDM_DECODER_LOW_ADDR_MASK 0xf0000000U
-+
-+static void vfio_cxl_base_size_write(struct vfio_cxl_state *cxl, u32 idx,
-+				     __le32 val)
-+{
-+	u32 ctrl = le32_to_cpu(cxl->hdm_shadow[CXL_HDM_DECODER0_CTRL_OFFSET(0) /
-+					       sizeof(u32)]);
-+	loff_t off = (loff_t)idx * sizeof(u32);
-+	u32 new = le32_to_cpu(val);
-+
-+	/* A committed decoder holds its position fields until it decommits. */
-+	if (ctrl & CXL_HDM_DECODER0_CTRL_COMMITTED)
-+		return;
-+
-+	if (off == CXL_HDM_DECODER0_BASE_LOW_OFFSET(0) ||
-+	    off == CXL_HDM_DECODER0_SIZE_LOW_OFFSET(0)) {
-+		u32 old = le32_to_cpu(cxl->hdm_shadow[idx]);
-+
-+		new = (old & ~CXL_HDM_DECODER_LOW_ADDR_MASK) |
-+		      (new & CXL_HDM_DECODER_LOW_ADDR_MASK);
-+	}
-+
-+	cxl->hdm_shadow[idx] = cpu_to_le32(new);
-+}
-+
- static ssize_t vfio_cxl_comp_rw(struct vfio_pci_core_device *vdev,
- 				char __user *buf, size_t count, loff_t *ppos,
- 				bool iswrite)
+ static int vfio_cxl_open_device(struct vfio_pci_core_device *vdev)
  {
  	struct vfio_cxl_state *cxl = vdev->cxl;
- 	loff_t pos = *ppos & VFIO_PCI_OFFSET_MASK;
-+	size_t o;
+@@ -594,6 +619,9 @@ static int vfio_cxl_open_device(struct vfio_pci_core_device *vdev)
+ 	if (ret)
+ 		goto err_free_shadows;
  
--	/*
--	 * The guest programs a GPA into this decoder and the host resolves the
--	 * HPA, so the guest never drives the physical decoder. Reads come from
--	 * the open-time snapshot; write emulation lands in a later change.
--	 */
--	if (iswrite)
-+	if (pos >= cxl->hdm_len)
- 		return -EINVAL;
- 
--	if (pos >= cxl->hdm_len)
-+	/* The decoder registers only take aligned dword accesses. */
-+	if (pos % sizeof(u32) || count % sizeof(u32))
- 		return -EINVAL;
- 
- 	count = min_t(size_t, count, cxl->hdm_len - pos);
++	/* Remember where the HDM region landed so it can be zapped by index. */
++	cxl->hdm_region_idx = vdev->num_regions - 1;
 +
-+	if (!iswrite) {
-+		/*
-+		 * The shadow mirrors the physical decoder, so BASE_LOW/HIGH
-+		 * carry the host HPA. That is visible only to the trusted VMM
-+		 * holding the fd; the VMM virtualizes the base so the guest sees
-+		 * its own GPA and never the host address.
-+		 */
-+		if (copy_to_user(buf, (u8 *)cxl->hdm_shadow + pos, count))
-+			return -EFAULT;
-+		*ppos += count;
-+		return count;
-+	}
-+
- 	/*
--	 * The shadow mirrors the physical decoder, so BASE_LOW/HIGH carry the
--	 * host HPA. That is visible only to the trusted VMM holding the fd; the
--	 * VMM virtualizes the base so the guest sees its own GPA and never the
--	 * host address.
-+	 * The guest programs a GPA into this decoder while the host resolves
-+	 * the HPA, so writes stay in the shadow. Each register follows its own
-+	 * class: control runs the commit handshake, base and size are locked
-+	 * once committed, and the capability header is fixed.
- 	 */
--	if (copy_to_user(buf, (u8 *)cxl->hdm_shadow + pos, count))
--		return -EFAULT;
-+	for (o = 0; o < count; o += sizeof(u32)) {
-+		u32 idx = (pos + o) / sizeof(u32);
-+		__le32 val;
-+
-+		if (copy_from_user(&val, buf + o, sizeof(val)))
-+			return -EFAULT;
-+
-+		if (vfio_cxl_ctrl_offset(pos + o))
-+			vfio_cxl_ctrl_write(cxl, idx, le32_to_cpu(val));
-+		else if (vfio_cxl_base_size_offset(pos + o))
-+			vfio_cxl_base_size_write(cxl, idx, val);
-+		else if (pos + o >= sizeof(u32) &&
-+			 !vfio_cxl_reserved_offset(pos + o))
-+			cxl->hdm_shadow[idx] = val;
-+	}
- 
- 	*ppos += count;
- 	return count;
-@@ -454,7 +581,8 @@ static int vfio_cxl_open_device(struct vfio_pci_core_device *vdev)
  	ret = vfio_pci_core_register_dev_region(vdev, VFIO_REGION_TYPE_CXL,
  						VFIO_REGION_SUBTYPE_CXL_COMP_REGS,
  						&vfio_cxl_comp_regops, cxl->hdm_len,
--						VFIO_REGION_INFO_FLAG_READ, cxl);
-+						VFIO_REGION_INFO_FLAG_READ |
-+						VFIO_REGION_INFO_FLAG_WRITE, cxl);
- 	if (ret)
- 		goto err_unregister_hdm;
+@@ -738,6 +766,7 @@ static const struct vfio_cxl_ops vfio_cxl_ops = {
+ 	.close_device	= vfio_cxl_close_device,
+ 	.config_read	= vfio_cxl_config_read,
+ 	.config_write	= vfio_cxl_config_write,
++	.zap		= vfio_cxl_zap,
+ 	.owner		= THIS_MODULE,
+ };
  
+diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
+index 77f8f39dd670..1a54f15d1c2c 100644
+--- a/drivers/vfio/pci/vfio_pci_core.c
++++ b/drivers/vfio/pci/vfio_pci_core.c
+@@ -1832,6 +1832,14 @@ void vfio_pci_zap_and_down_write_memory_lock(struct vfio_pci_core_device *vdev)
+ {
+ 	down_write(&vdev->memory_lock);
+ 	vfio_pci_zap_bars(vdev);
++	/*
++	 * The HDM region lives in the device-region offset range that
++	 * vfio_pci_zap_bars() does not cover, so revoke it here too. Otherwise
++	 * a runtime-PM entry, D3 transition, or reset would leave the guest
++	 * with live mappings into a quiesced device.
++	 */
++	if (vdev->cxl_ops && vdev->cxl_ops->zap)
++		vdev->cxl_ops->zap(vdev);
+ }
+ 
+ u16 vfio_pci_memory_lock_and_enable(struct vfio_pci_core_device *vdev)
+diff --git a/include/linux/vfio_pci_core.h b/include/linux/vfio_pci_core.h
+index 294e95b5e881..8b93949d4484 100644
+--- a/include/linux/vfio_pci_core.h
++++ b/include/linux/vfio_pci_core.h
+@@ -76,6 +76,8 @@ struct vfio_cxl_ops {
+ 			       int count, __le32 *val);
+ 	int     (*config_write)(struct vfio_pci_core_device *vdev, int pos,
+ 				int count, __le32 val);
++	/* Revoke the HDM mapping; paired with the BAR zap */
++	void    (*zap)(struct vfio_pci_core_device *vdev);
+ 
+ 	/* Pinned per bound CXL device so vfio-cxl cannot unload under usage */
+ 	struct module *owner;
 -- 
 2.25.1
 
