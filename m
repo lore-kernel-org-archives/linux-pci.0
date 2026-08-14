@@ -1,117 +1,143 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f177.google.com (mail-pl1-f177.google.com [209.85.214.177])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B9AD3451AB;
-	Fri, 14 Aug 2026 15:52:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0EDB13D093E
+	for <linux-pci@vger.kernel.org>; Fri, 14 Aug 2026 15:54:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786722743; cv=none; b=SWqa+3FxSidT1uHB6CDvRnrl8N5KM0TcAQxfBn4KN+p3epWoWaGJRuHmpHdybVjIwD8eluYdwUnCj5gxce9EYrxviaF5Q7qyrMHWBF8AXeGdt+zbcg/kQzZX5BHYe0ud6Xull2nIaVXwV1DD4n//yH6nCJ9Rn4JaTjxyiLsBUsI=
+	t=1786722858; cv=none; b=gQ2ihxQIF1Zx0Uv46aOZYrjbbJ8o/zIYTDGykUYM/tpXoRHNh/0npn/TiNW5LAnU93CnySFv204quWJNsY+xxvJzurHchXlnC6kcNh+H/yiB6sB3hDvv/AQD8PIY03Xg7ByeRzsPRjqlMpfZN0l6D+jOPkSaTUFxXbboc6ngcSU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786722743; c=relaxed/simple;
-	bh=8QQzG1/mwHzRsxVX5tr1cNddinL4osAuOxwEE7dGpo4=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=D8aBHpRZXgmDNLqohfZGMNnZ7J4/Y041GPt9ccIzrFuHGfAgOCsQ6VJ+C0O0hrG8hAnG0D4ZfZnKGZD3BAqt5E79yixQjwR2PQWhZGrwgITRWDoNrQsSdaHf/RXlgzucKuVi21BKIMuz/+dve63bGdJ3ysHggvQx8r/fjXhj6z8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nAv7J/1X; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1786722858; c=relaxed/simple;
+	bh=LR+F9o8z2ArdQWgZKBLhQR4M24y5KNqH0Azx9MV4D8U=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=GomXMuLPpREvMnzKEW0BgNCPgdO3Ep9TJjlKHZMH8pnGFDbZI34PdRU1e0EJBvdLRC+NykIN6W06rSSuKabpw8Y/Sg8+deE5XHkLCj+BlG2V2r4E9pUwHbiElQek0TnD3s58rW23X8rZtNiPHZfiSfdB4/updudZtlWGn5TtlH0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=YEIVV9pU; arc=none smtp.client-ip=209.85.214.177
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nAv7J/1X"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AF30F1F000E9;
-	Fri, 14 Aug 2026 15:52:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786722742;
-	bh=GewqV5pnJUBHyECBnwXM032L5KSTBrUeANB5d9NGtVc=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=nAv7J/1Xt1mKAdMuCtvlN+rNSucRtyIFuAa7zlpRsHNv92M9U2wGe9ojDKhIIPyoH
-	 UUHZ12gxpgWCWQuEF/V0QdxY3AdceYQTSpbqGbUEf6VkbFO666DWrUctdjP18/ev5o
-	 Q/5ujixQvjTbpx9u4i22Jb5ww7Ksn0Pd2qC+hgcJPeAp+aRfzgXk75uwfv4gstkvkY
-	 vbTjNbyUco0oYaBa/QG4PDjBn8t+VlTPwTpGChzkfm8frgIHeyF1i4GASD19dZ1VYm
-	 j2Lj/ebe2A3wu4Chzxq9oyB/SIJ7/NCAJbNc4f0ut8CBa73AkM0W5EPgULsFmIw2ld
-	 3eANiT9e5iIJg==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v10 4/5] arm64: tegra: Reorder reg and reg-names to
- match bindings
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Thierry Reding" <thierry.reding@kernel.org>
-Cc: linux-pci@vger.kernel.org, robh@kernel.org, devicetree@vger.kernel.org, conor+dt@kernel.org
-In-Reply-To: <20260814-tegra264-pcie-v10-4-05d08c592b05@nvidia.com>
-References: <20260814-tegra264-pcie-v10-0-05d08c592b05@nvidia.com>
- <20260814-tegra264-pcie-v10-4-05d08c592b05@nvidia.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Fri, 14 Aug 2026 15:52:21 +0000
-Message-Id: <20260814155221.AF30F1F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="YEIVV9pU"
+Received: by mail-pl1-f177.google.com with SMTP id d9443c01a7336-2ccdf36f63dso127055ad.0
+        for <linux-pci@vger.kernel.org>; Fri, 14 Aug 2026 08:54:16 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1786722856; x=1787327656; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=Pi8lKrsPGjtKjHhLvrK6PemQZweWipGEphM9Nz2AqhE=;
+        b=YEIVV9pUPKE2x6YeYaLvUUzKEPJlO0A9rjECyiCfQMPJoR8fwZtulyUE9Uo9Lnx3yd
+         f47HpH8fcQ70lGK3aizYikdheqRiCq2mOmRBlcZitRx46bXsTH+wTqYRZi5bqd8UolOL
+         ic47SUWC6EZY61rIUfa8IaOyziXSsqjIXYOg/xc3k6D1pmPYKudpSCHp6Mfl34D5LUV+
+         xP65EcPvW4m4teWZhDVXTfD96kZay9n61WdRRq4wPXo4xwNUFbVujkQcIR8TmnsB8Hw8
+         Ux4eSjacxbqXmlxzZGa944Hp8fb/U8NIHZR8rdI8szkDp9W2jHlypfF2rRGr04g6M23n
+         2nfg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1786722856; x=1787327656;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=Pi8lKrsPGjtKjHhLvrK6PemQZweWipGEphM9Nz2AqhE=;
+        b=GepcM/nr69W93bZ9s6BmjZJfvgjuMsxyBMhgYHsoGjSliWeHAsNb1236T+4pwsL0Tk
+         O9xhW96hMq6aPrU/zTXDJNwYBHwj0Z5LtDHlBz2M4RJ9xoifToT8zckFE2fBb9Qpd+Nn
+         FqOoTL9jDDlzbxSBroQEHcNn6y7pgQhb3t507glDGS3YKeRCEIpVEQOzEgRWN/lIGaBa
+         C7XPm+hrFJ0rrjn4DNBKEwb6bphErgv1XqbdHCGCb+2zHOUdwwhes+8jkCJOkrx4DSlE
+         NnADmkj7kvZTWBa/th59lEqghj6hf/Ho0giry02OXtYvqpqxt9vCR7GF6ScZnO/MfYGJ
+         bgww==
+X-Forwarded-Encrypted: i=1; AHgh+Rpt31IiPp6FqJlh+In9avmMHzZ3eERPX8kZT8TgCaUQDruOk+9u7IPg+A02WrJcmW+e6ovTaVjZGRQ=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwJ3wHcvqEal6hbJtE8scP1lLk8cltR5CsEmm+cUA0wjQEjJutc
+	uY5U9RYXsjro5ZZAkZPgWQ4WcUTaIgP5lw0+Uap/+6fgonB3ph/c7MQ5Uhze94xZWg==
+X-Gm-Gg: AR+sD12A3NSi1EqI/14YqegMvHbfMrFoLk6DaOJgdcoZSNfHSUwh5lNBhHNmr9zZvda
+	L1EkV4xeJeEL+5RPSk8n15gjLqIdEsg453tyqwCnNKDICpVG17EgiUmFLLkfIFWcQlnJNUKLh8h
+	4zIHAK9Vj4lCyPKL6FpwwIhIMEw0opFRUVPcjKKa1Xlqnu8IQL8eQgI7xuo2b/N61T7SovFA7OV
+	x5y/lc5h+0oPr7RxxBsW6pDeYMZq+JmJ63XN5PcIR/nZnBqsa7ZzvMs0k5DNZJZd5EKnXNOHkBh
+	Mg8mZq07FPbuy4x0LAJoVNzxv3bkn2tb0DZg+VlnQs1CkD6zJ79MTzr10tNzs9t/iCIT0IZaZnP
+	7eygU88RJS69dc7KaxKqBF1FTbm6kQGUYRWYX1AdOXx78Z2OvhtyhETf5yn+i6pL6AdHucXF0M+
+	NxqbciQIKJMP7RLF+geC9QZ9N2zJQwPPRYHs53/Z7nAMvZvSTatifFjEoFQilmMIWU0iM3oCOPe
+	s9/O6+hi4hf9EIkyqlQQpEif5p46Ms/s0FyCYIetfyBTEtgeWf4Q0ph3XE=
+X-Received: by 2002:a17:902:d58f:b0:2bf:3579:cdaa with SMTP id d9443c01a7336-2d3af24fe17mr9846895ad.10.1786722855608;
+        Fri, 14 Aug 2026 08:54:15 -0700 (PDT)
+Received: from google.com (210.87.127.34.bc.googleusercontent.com. [34.127.87.210])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-39339d00eafsm1779979a91.1.2026.08.14.08.54.14
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 14 Aug 2026 08:54:14 -0700 (PDT)
+Date: Fri, 14 Aug 2026 15:54:11 +0000
+From: Samiullah Khawaja <skhawaja@google.com>
+To: Alex Williamson <alex.williamson@nvidia.com>
+Cc: kvm <kvm@vger.kernel.org>, Alex Williamson <alex@shazbot.org>, 
+	Jason Gunthorpe <jgg@ziepe.ca>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Kevin Tian <kevin.tian@intel.com>, linux-kernel <linux-kernel@vger.kernel.org>, 
+	linux-pci <linux-pci@vger.kernel.org>
+Subject: Re: [RFC PATCH 1/5] PCI: Refuse function reset of an SR-IOV PF with
+ enabled VFs
+Message-ID: <an81s9PcW7OFVj8M@google.com>
+References: <20260812045325.2733631-1-alex.williamson@nvidia.com>
+ <20260812045325.2733631-2-alex.williamson@nvidia.com>
+ <an5JbIzz40svS3xe@google.com>
+ <20260814083737.66bb83fb@nvidia.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Disposition: inline
+In-Reply-To: <20260814083737.66bb83fb@nvidia.com>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [High] Incorrect register offset for PCIe Link Capabilities causes garbag=
-e ICC bandwidth calculation
---
+On Fri, Aug 14, 2026 at 08:37:37AM -0600, Alex Williamson wrote:
+>On Thu, 13 Aug 2026 23:22:33 +0000
+>Samiullah Khawaja <skhawaja@google.com> wrote:
+>
+>> >
 
---- Patch [4]: [PATCH v10 4/5] arm64: tegra: Reorder reg and reg-names to m=
-atch bindings ---
-commit 1aff20381185113aa8fbe2813f31f1849b4105ad
-Author: Thierry Reding <treding@nvidia.com>
+[snip]
 
-arm64: tegra: Reorder reg and reg-names to match bindings
+>> >+	if (pci_num_vf(dev) > 0) {
+>> >+		pci_dev_unlock(dev);
+>> >+		return -ENOTTY;
+>> >+	}
+>>
+>> I am wondering whether we should return EAGAIN from here, since this
+>> function is used by vfio_pci_core_enable() during open and it doesn't
+>> fail the open on ENOTTY. Basically whether we should allow the user to
+>> reopen the device if the reset was skipped previously? In the previous
+>> instance of open, the device was setup with vfio/iommufd and the vfio fd
+>> was abruptly closed and the reset was skipped. But the device went back
+>> to the IOMMU default domain and that is probably an Identity domain. If
+>> we allow the device to be opened and re-enable busmaster without a
+>> reset, is there a chance that device would continue to DMA based on its
+>> previous setup/context? Probably unlikely?
+>>
+>> Note this is different from the current vfio-pci behaviour where device
+>> is always reset during close.
+>>
+>> Maybe thinking with too much paranoia about it :D.
+>
+>Devices are only ever opened into a user owned domain, the IOMMU
+>context switch happens before this and regardless of the reset.  Close
+>also disables bus-master regardless of reset, so there's no risk of
 
-This commit reorders the "reg" and "reg-names" properties for the tegra264
-PCIe controller nodes so that the ECAM region is listed last. This ensures
-that the first entry matches the unit-address in the device tree nodes.
+Yes the close side makes sense, I was more concerned about the reopen.
+>ongoing DMA if the device is placed into an identity domain between
+>close and re-open.
+>
+>Actually, I think -ENOTTY is a leftover from a previous iteration where
+>this test was pushed into the individual reset methods.  -ENOTTY allows
+>continuing to the next reset method.  With the test guarding all the
+>reset methods in this version, we should probably use -EBUSY.  -EAGAIN
+>would conflate the try-lock contention error, which is actually a usage
+>race, versus the PF is not in a state to handle the request.
 
-> diff --git a/arch/arm64/boot/dts/nvidia/tegra264.dtsi b/arch/arm64/boot/d=
-ts/nvidia/tegra264.dtsi
-> index 013228a817237..ab1e83d856fd9 100644
-> --- a/arch/arm64/boot/dts/nvidia/tegra264.dtsi
-> +++ b/arch/arm64/boot/dts/nvidia/tegra264.dtsi
-> @@ -3537,11 +3537,11 @@ cmdqv4: cmdqv@b200000 {
-> =20
->  		pci@c000000 {
->  			compatible =3D "nvidia,tegra264-pcie";
-> -			reg =3D <0xd0 0xb0000000 0x0 0x10000000>,
-> -			      <0x00 0x0c000000 0x0 0x00004000>,
-> +			reg =3D <0x00 0x0c000000 0x0 0x00004000>,
->  			      <0x00 0x0c004000 0x0 0x00001000>,
-> -			      <0x00 0x0c005000 0x0 0x00001000>;
-> -			reg-names =3D "ecam", "xal", "xtl", "xtl-pri";
-> +			      <0x00 0x0c005000 0x0 0x00001000>,
-> +			      <0xd0 0xb0000000 0x0 0x10000000>;
-> +			reg-names =3D "xal", "xtl", "xtl-pri", "ecam";
+This sounds good to me.
+>
+>If the user owns the PF, as evidenced by them being able to get to
+>vfio_pci_core_enable(), and reset is blocked by the SR-IOV state of the
+>PF, I think there are arguments both that the user implicitly opted in
+>to the best-effort reset, as well as a use case that allows the PF
+>driver to fail and re-open the PF demands this behavior.
 
-[Severity: High]
-Is the offset for XTL_RC_PCIE_CFG_LINK_CAPS in the tegra264 PCIe driver
-correct? The PCIe Capability structure starts at 0x48, making the 32-bit
-Link Capabilities register offset 0x48 + 0x0c =3D 0x54.
+That is fair.
 
-However, the driver defines it as 0x56:
+Thanks for clarifying.
 
-drivers/pci/controller/pcie-tegra264.c:
-	#define XTL_RC_PCIE_CFG_LINK_CAPS		0x56
-
-When the link is down and the port supports hotplug, tegra264_pcie_icc_set()
-calculates bandwidth using this offset:
-
-drivers/pci/controller/pcie-tegra264.c:tegra264_pcie_icc_set() {
-	...
-		value =3D readw(pcie->ecam + XTL_RC_PCIE_CFG_LINK_CAPS);
-		speed =3D FIELD_GET(PCI_EXP_LNKCAP_SLS, value);
-		width =3D FIELD_GET(PCI_EXP_LNKCAP_MLW, value);
-	...
-}
-
-Does this readw() at offset 0x56 extract the upper 16 bits of the Link
-Capabilities register instead of the lower 16 bits?
-
-If so, this would cause FIELD_GET() to extract garbage data for both speed
-and width (bits 16-19 for SLS and 20-25 for MLW), which could result in a
-0 MB/s bandwidth request and starve the PCIe controller when a device is
-later hotplugged.
-
-[ ... ]
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260814-tegra264-p=
-cie-v10-0-05d08c592b05@nvidia.com?part=3D4
+Sami
