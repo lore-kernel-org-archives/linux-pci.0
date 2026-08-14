@@ -1,99 +1,79 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C632F3DF003
-	for <linux-pci@vger.kernel.org>; Fri, 14 Aug 2026 07:05:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD3D63E4508
+	for <linux-pci@vger.kernel.org>; Fri, 14 Aug 2026 07:11:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786691137; cv=none; b=nzLgaBCgWoVGuMOPKyvBGV5ClbLBV4caGYw+suz///8P79KFZ/dpQfJ7oDLWM3PsEADWWgdJTmkudMcTlwVyTADWmiS3c5Duc0BmEoaOZUAIF41VcSSIv5LCVQZ7M0uTjCTsD1Bo/mtoShhBbgtdFMr1lmWvH2mCg98Fp805/Sg=
+	t=1786691516; cv=none; b=JUFTqeZayGMlpCTdgtdTCFrkdIqN9hy8HiZnl+lOsi6uDW8AgJHEqDdq7dSmOMSTHh2wDqdh4XqfpKJIG9oW6u5dWV/gQQzJZyio2fOdKwti9t0s7QgRG/sxo+DBzVQ01Bolmg4D0iehvIOG/Y6JSbUj6t/pqMf2UFi8xgoOqk4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786691137; c=relaxed/simple;
-	bh=F+AWt7g0j78EqPTTP22LTLa0EQfGJ4opJ0kpVtsnlic=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=kUsZiMKMVK9W0+JHCujiZ5vgFyDS5ADkuBUgeWd0kteXvYeJpXywddxqoDuN1B+KJBkfnQuB+2Sor4vaRrNcxJ+xY5J8cZHi93vDLUFI/QPUQWp5+imFoLx0DWsRm6JwxwLWYpBpkcK95HgD5fRF1UVIbDg4ADQ+KNNdPDXcuTE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OhWqQdfY; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1786691516; c=relaxed/simple;
+	bh=Q/SC4SoBXoZT02VpOcKJwkUHkdwowbrZDjMpJanXonY=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=GrCqxWOuKPe++NC8isTH2bRKEmr+2/F4wsIDx53+K+bY9l8Pos/zS6QOWQjf6ZdbcD4szYtxfsSwjIv03FecP6TdDbbKdCKTOMRZ6jVmtk6VPwIgdkIOLXEExDQZf6WkdcvUdrc8orrgoouEcRyxb9CiQ2c84e4hfQKmY+DGxA4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GXL86dg+; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OhWqQdfY"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6132F1F00ADB;
-	Fri, 14 Aug 2026 07:05:30 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GXL86dg+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 151801F000E9;
+	Fri, 14 Aug 2026 07:11:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786691131;
-	bh=ocbE9l+NGyM1SzKVHqivawVOmCZnDb/7wamzZIvjdAI=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=OhWqQdfYG5a5+ZZeWqsPnuAa/JDnx7etFXM4ksAhq/D7boDUsObL5mifDRzH66YO8
-	 Eey9fqjRj+X6ktELmMr3+4iZfPF3DqLBipS+qAdoQk1CkdpSsEtFzxeaJP+L75HssG
-	 RmrbDQQTdQF8zyjPbZNja7x1M5UQPtdkfAapuRmwiVj2rPG/lXahTEx5P0NDy+7P68
-	 cWIG6IGjU0gXJmliRwh7//TvhI3Di8MRgt8lingeGUu7urmPmNnIDHz5pp9YXY9TMH
-	 9pWqz2tunwoqE6H9StjP2zyVE48j9Xxd0Wl5Xde9WPmq6W4IqK/lloArSnBXje0nK5
-	 T+YkWJ56xH10g==
-From: =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Narendra K <Narendra_K@Dell.com>,
-	linux-pci@vger.kernel.org
-Subject: [PATCH 4/4] PCI/sysfs: Pass the device name length in UTF-16 code units
-Date: Fri, 14 Aug 2026 07:05:22 +0000
-Message-ID: <20260814070522.2327975-5-kwilczynski@kernel.org>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20260814070522.2327975-1-kwilczynski@kernel.org>
+	s=k20260515; t=1786691514;
+	bh=yzZEaCYNl0WAhu9QarmFmyKkgKcKM/5WabGXAm8XYGg=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=GXL86dg+6eTDRTWDJPYhJTx5Ayf+T7Do1Wb14Btm4d7nQ5xfh4c9UDv9mf8pD0QVG
+	 qRSloi2dU1BA8OB+8LAUTXBaPuEVCDdtrY56qNRJ+tCPCnCUzAwMPc4srjW6R84zqL
+	 nIInzUTl/kgGfGVN+9y8IOdCAJB1uEXncdmCx8PtLzzZBalhuSjyUpBh3/ofnKPikS
+	 YFNka84NoHSPKXsGxSGfuySWshWMsjP7pjIUilbf7xpAVv+aq2yZj6WfhfpxcvHJtE
+	 TJZhoj+1+IjvykOncEiKZBe7f+tgRSXtjsDBgSIS7tFSaL4TusciLLZ95neJVELxK4
+	 w8hzLMRetBT0Q==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH 2/4] PCI/sysfs: Decouple acpi_index from the optional
+ device name element
+Reply-To: sashiko-reviews@lists.linux.dev
+To: =?utf-8?b?S3J6eXN6dG9mIFdpbGN6ecWEc2tp?= <kwilczynski@kernel.org>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260814070522.2327975-3-kwilczynski@kernel.org>
 References: <20260814070522.2327975-1-kwilczynski@kernel.org>
+ <20260814070522.2327975-3-kwilczynski@kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Fri, 14 Aug 2026 07:11:49 +0000
+Message-Id: <20260814071150.151801F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
 
-Currently, dsm_label_utf16s_to_utf8s() passes the ACPI buffer
-length to utf16s_to_utf8s() unchanged.  The Device Name _DSM may
-return the device name as a buffer holding a UTF-16 string, and
-the ACPI length counts bytes while the converter counts wchar_t
-elements.  The converter therefore receives a count twice the
-number of code units the buffer holds, and that count is its only
-bound on the input.
+> Currently, dsm_get_label() validates both elements of the Device Name
+> _DSM result in a single conditional.  The _DSM returns an ACPI package
+> of two elements, the instance number and the device name, where the
+> instance number is mandatory and the name is optional.  Firmware that
+> implements no name must return a NULL string for it.
+>=20
+> Reads of "acpi_index" therefore fail whenever the name element is
+> malformed.  That attribute exports only the instance number, and the
+> two elements do not depend on each other.
+>=20
+> Thus, validate each element only for the attribute that exports it.
+> So "acpi_index" now depends on the instance number alone, and "label"
+> reads fail with -EIO when the name element is neither a string nor a
+> buffer.  The package elements pointer is read only after the object
+> type has been checked.
+>=20
+> On platforms with a valid instance number and a malformed name element
+> the "acpi_index" attribute starts returning data.  Because udev derives
+> the onboard interface name from "acpi_index", an interface on such a
+> platform may be renamed once, on the first boot after this change.
+> That is the attribute assuming the value the firmware always
+> provided.
+>=20
+> Link: https://github.com/pciutils/pciutils/issues/175
+> Signed-off-by: Krzysztof Wilczy=C5=84ski <kwilczynski@kernel.org>
 
-A NUL code unit ends the conversion early, so a name that carries
-one is converted correctly and the error stays hidden.  ACPICA
-zeroes the entire result allocation, and the padding placed after
-the buffer supplies that NUL for most lengths.  Lengths that leave
-no padding, or a single byte of it, do not, and the conversion
-then runs up to its own length in bytes past the end of the
-allocation.  The bytes beyond the allocation are decoded into the
-"label" attribute, which is world readable.
+Sashiko has reviewed this patch and found no issues. It looks great!
 
-Thus, divide the buffer length by the size of wchar_t so that the
-converter receives a count of code units.  The division truncates,
-so the converter is never told to read more bytes than the buffer
-holds, including for an odd length.
-
-Reaching the out of bounds read needs firmware that returns the
-name as a buffer and omits the terminator.
-
-Fixes: 6058989bad05 ("PCI: Export ACPI _DSM provided firmware instance number and string name to sysfs")
-Cc: stable@vger.kernel.org
-Signed-off-by: Krzysztof Wilczyński <kwilczynski@kernel.org>
----
- drivers/pci/pci-label.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/pci/pci-label.c b/drivers/pci/pci-label.c
-index abb941530c56..08c461f1142d 100644
---- a/drivers/pci/pci-label.c
-+++ b/drivers/pci/pci-label.c
-@@ -144,7 +144,7 @@ static int dsm_label_utf16s_to_utf8s(union acpi_object *obj, char *buf)
- 	int len;
- 
- 	len = utf16s_to_utf8s((const wchar_t *)obj->buffer.pointer,
--			      obj->buffer.length,
-+			      obj->buffer.length / sizeof(wchar_t),
- 			      UTF16_LITTLE_ENDIAN,
- 			      buf, PAGE_SIZE - 1);
- 	buf[len++] = '\n';
--- 
-2.55.0
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260814070522.2327=
+975-1-kwilczynski@kernel.org?part=3D2
 
