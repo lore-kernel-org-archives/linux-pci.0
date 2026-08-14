@@ -1,30 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4430B3E2AC8
-	for <linux-pci@vger.kernel.org>; Fri, 14 Aug 2026 07:05:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C572D3E0724
+	for <linux-pci@vger.kernel.org>; Fri, 14 Aug 2026 07:05:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786691131; cv=none; b=OCjsEp7QMgUWRhpYOmIr0H7RmQfeiCoQirH/nse0YwvnlO3QVaZJ3k4IM6iKesEDp0KXA72JUw1SlXc5jHFD0RQ/1+Oan23/Q7dQ6UMxFqlulM15h+3ib4B6aoz/jffGKDHu2MVMPxv1plU/X5g0w6mzlsqV4YzGEGahm364+6o=
+	t=1786691132; cv=none; b=QfyqccIylPjadMyO1iMqE/QaXmj5Gi44Z9TQosk2accatPjkFK8EnyyhDLxhEivF1czn3CIC+QcZ03A614A97X2GiWdZIaFABnAI3sATObcoXSNLTobVunIV7oJHQqKi8QvcX8Cq1d0uBQSV84q0m3tm/eQmQVu0c8YqLBjMObs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786691131; c=relaxed/simple;
-	bh=37fSWFvCptx+2VIOWFlTB6FmJliZe3rnLm89zHFsUqU=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=fQZlhZBuGidM8LK0V0MCb15O8QIQnwh2izVN+qweYBfkRBMwi5XBAvokQIKypO0pJn3I2HiHxnumqRyEGiDKoDyX7sN9Gq00R39LlbD78My4YO7vO8jSA5+I6AikPFZALoF8hylwWg2jIFFbBkPHeW8x0bZwuomE3Lm1BAAhNmc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=if9+JBBm; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1786691132; c=relaxed/simple;
+	bh=02nlSrqU4pGt5kWyA71im4Cstzjad/spivQipb2XnI4=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=TIOHnesnumyEvh+8FbzUCoyEkYsu3hkA7XjPUCNOLsoEFZphRvoj0eG4zITk34QaGi836WWu4p+we8wd1WLUzao/8uGkktsmKpmFW+KJIY3EwgYvOx4NxLcmfpE5MAmu0zfAGEFgdoGkg+KwpzdqSpjM94VZVyPg/G/8SjFiG5A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DTmy65dX; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="if9+JBBm"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 42F001F000E9;
-	Fri, 14 Aug 2026 07:05:24 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DTmy65dX"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C62F41F00A3A;
+	Fri, 14 Aug 2026 07:05:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786691125;
-	bh=gBJMvCAxjK47LPVL+Fm+GL+zh8cfP+tBcYDlVGPsMtw=;
-	h=From:To:Cc:Subject:Date;
-	b=if9+JBBm90aMJiieutFHm6+0gx8QWhWDAbX14jYy32SFDSAaf0i7R/Kq3wkGdjDT+
-	 1ZLAdbmA5HIWUEQcDvTOhlsRzVxTFtBad5Wu7ZkmG8XQd/AituWc0PeTYqpUhRouI5
-	 N0A5Ve4fE8XM87YAizkIqtM2xEi5LRx+q+AgVH14ZC+bFcnXceszifC+sci/rO0A9p
-	 3aHOenCwuTq3kYHmxrlul5O8rM0nvLwwUzUYQq0p62F0kEiXJfdegLSxIOLHtLdAiL
-	 Tx21xVV3a57dwJ57DQ7LdkpDvjHVWKYDizuyVxcqGWDsQqumJj6he4/KVRfvdp4ZHi
-	 vR/zEaEz7mlxQ==
+	s=k20260515; t=1786691127;
+	bh=uoT0vcEMsySXtn4Fgf4b4dyRs3/autwjCBUGceosK0g=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=DTmy65dX5L7xzAMxTt22pitDKeCovm1dhaRmYe+tIJuJzqw1Mr5mAsKqD73PSBStW
+	 82MCngx4XvMrKG4qrlONzxwNdNa8CfZHhYxbTmECytiR3slwwiAQlAeIWaQ7ddGfWV
+	 WvowIMbMEKjZsm8EjHFtehM/hnPBsJOSqIKGc3RZ7v28xg/vnYHqztBMpWsY29n+5b
+	 VcE48M0D4jGSp+0M9kwvbRwWgK066L4mwdqYJ/KCioWPd++L3MKwMvjPB+298CnWaH
+	 5+IefncWhtngWgZtHLkytkOscfF6Ih9GTRGfJNizdyaZI+6HiFuQtpHFE1nIE05FVk
+	 O5YD0wh1JvqOw==
 From: =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>
 Cc: Bjorn Helgaas <helgaas@kernel.org>,
@@ -33,10 +34,12 @@ Cc: Bjorn Helgaas <helgaas@kernel.org>,
 	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
 	Narendra K <Narendra_K@Dell.com>,
 	linux-pci@vger.kernel.org
-Subject: [PATCH 0/4] PCI/sysfs: Fix the ACPI device name attributes
-Date: Fri, 14 Aug 2026 07:05:18 +0000
-Message-ID: <20260814070522.2327975-1-kwilczynski@kernel.org>
+Subject: [PATCH 1/4] PCI/sysfs: Stop reporting _DSM failures as -EPERM
+Date: Fri, 14 Aug 2026 07:05:19 +0000
+Message-ID: <20260814070522.2327975-2-kwilczynski@kernel.org>
 X-Mailer: git-send-email 2.55.0
+In-Reply-To: <20260814070522.2327975-1-kwilczynski@kernel.org>
+References: <20260814070522.2327975-1-kwilczynski@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -46,99 +49,63 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-Currently, the "label" and "acpi_index" attributes are created whenever
-the _DSM function 0 bitmap advertises the Device Name function, and
-dsm_get_label() returns the literal -1 on every failure path.  Firmware
-that advertises the function but returns an object that cannot be
-parsed therefore produces two attributes that exist and fail every read
-with -EPERM:
+Currently, dsm_get_label() returns the literal -1 on every failure
+path.  The sysfs read path passes that value to userspace as
+-EPERM.  Reading the "label" or "acpi_index" attribute on a platform
+where the Device Name _DSM returns a malformed result then fails
+with:
 
   $ cat /sys/bus/pci/devices/0000:00:08.3/label
   cat: /sys/bus/pci/devices/0000:00:08.3/label: Operation not permitted
 
-Nothing in that path performs a permission check.  Tools that read the
-attribute print the failure on every invocation, which is how this
-surfaced in a pciutils report:
+Nothing in that path performs a permission check, and the read
+fails the same way for a privileged reader.  The error code points
+at a cause that does not exist, and tools such as lspci report it
+on every invocation.
 
-  https://github.com/pciutils/pciutils/issues/175
+Thus, return -ENODEV when the device has no ACPI companion, and
+-EIO when the _DSM evaluation fails or returns an object that
+cannot be parsed.  Other _DSM users in the tree report such
+failures the same way.
 
-Patch 1 returns error codes that describe what failed.  Patch 2 stops a
-malformed optional device name element from also failing "acpi_index",
-which exports the mandatory instance number and does not depend on the
-name.  Patch 3 evaluates the function when deciding visibility, so that
-an attribute exists only when the element it exports has a type the read
-path accepts.  The documented ABI already describes the behaviour patch
-3 implements, and the SMBIOS attribute group in the same file already
-works that way.
+The set of reads that succeed, and the bytes they return, stay
+the same.  Only the error code of reads that already fail differs.
 
-Patch 4 corrects the length dsm_label_utf16s_to_utf8s() passes to
-utf16s_to_utf8s().  The ACPI buffer length counts bytes, while the
-converter counts wchar_t elements.  For a buffer holding no NUL code
-unit the conversion reads past the end of the object allocated by
-ACPICA.  The bytes it finds there are decoded into the world readable
-"label" attribute.
+Link: https://github.com/pciutils/pciutils/issues/175
+Fixes: 6058989bad05 ("PCI: Export ACPI _DSM provided firmware instance number and string name to sysfs")
+Signed-off-by: Krzysztof Wilczyński <kwilczynski@kernel.org>
+---
+ drivers/pci/pci-label.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-Note that patch 2 changes behaviour on platforms that have a valid
-instance number together with a malformed name element: "acpi_index"
-starts returning data there.  Because udev derives the onboard
-interface name from "acpi_index", an interface on such a platform may
-be renamed once, on the first boot after this change.  The same
-mechanism, in the other direction, is recorded in dcfa9be83866 ("ACPI /
-PCI: Fix sysfs acpi_index and label errors").
-
-No ACPI dump accompanies the report, so the object that platform returns
-is not known.  The malformed results tested below are constructed.
-
-Tested under QEMU with an SSDT that overrides _DSM on the ACPI companion
-of a PCI device.  Function 0 advertises the Device Name function, and
-function 7 returns a chosen object.  Nine cases, on the series and on
-v7.2-rc1, with CONFIG_KASAN=y:
-
-  Function 7 returns                        label       acpi_index
-  ----------------------------------------  ----------  ----------
-  Package(2){1, "TESTLABEL"}                TESTLABEL   1
-  Package(2){1, ""}                         empty       1
-  Package(2){1, Buffer{"BUF", terminated}}  BUF         1
-  Package(2){1, Buffer{NUL}}                empty       1
-  Package(2){0, 0}                          absent      0
-  Package(2){"BAD", "NAME"}                 absent      absent
-  Package(2){1, Buffer(0x40)} unterminated  32 chars    1
-  valid twice, then an integer              -EIO        -EIO
-  QEMU acpi-index=7                         empty       7
-
-On v7.2-rc1 the first four and the last behave identically, so
-compliant firmware is unaffected, including the generator QEMU uses for
-stable interface names.  Package(2){0, 0} reproduces the reported
-failure there, with both attributes returning -EPERM.
-
-For patch 4, the unterminated buffer case on v7.2-rc1 leaked two bytes
-of adjacent memory into the attribute, and under KASAN:
-
-  BUG: KASAN: slab-out-of-bounds in utf16s_to_utf8s+0x21f/0x250
-  Read of size 2 at addr ffff88800e77b088 by task cat/109
-  ...
-  allocated 136-byte region [ffff88800e77b000, ffff88800e77b088)
-  ...
-  acpi_ut_initialize_buffer+0xc7/0x190
-  acpi_evaluate_object+0x694/0x920
-  acpi_evaluate_dsm+0x16e/0x230
-  dsm_get_label.isra.0+0x6b/0x300
-
-With the series applied the same case reads correctly and KASAN stays
-silent.  The two terminated buffer cases produce no splat before or
-after.  Reaching the read needs the missing terminator, not the buffer
-form as such.
-
-Krzysztof Wilczyński (4):
-  PCI/sysfs: Stop reporting _DSM failures as -EPERM
-  PCI/sysfs: Decouple acpi_index from the optional device name element
-  PCI/sysfs: Handle a malformed _DSM result in acpi_attr_is_visible()
-  PCI/sysfs: Pass the device name length in UTF-16 code units
-
- Documentation/ABI/testing/sysfs-bus-pci | 14 ++--
- drivers/pci/pci-label.c                 | 94 ++++++++++++++++++-------
- 2 files changed, 79 insertions(+), 29 deletions(-)
-
+diff --git a/drivers/pci/pci-label.c b/drivers/pci/pci-label.c
+index 0c6446519640..255e0ecffb09 100644
+--- a/drivers/pci/pci-label.c
++++ b/drivers/pci/pci-label.c
+@@ -160,12 +160,12 @@ static int dsm_get_label(struct device *dev, char *buf,
+ 	int len = 0;
+ 
+ 	if (!handle)
+-		return -1;
++		return -ENODEV;
+ 
+ 	obj = acpi_evaluate_dsm(handle, &pci_acpi_dsm_guid, 0x2,
+ 				DSM_PCI_DEVICE_NAME, NULL);
+ 	if (!obj)
+-		return -1;
++		return -EIO;
+ 
+ 	tmp = obj->package.elements;
+ 	if (obj->type == ACPI_TYPE_PACKAGE && obj->package.count == 2 &&
+@@ -190,7 +190,7 @@ static int dsm_get_label(struct device *dev, char *buf,
+ 
+ 	ACPI_FREE(obj);
+ 
+-	return len > 0 ? len : -1;
++	return len > 0 ? len : -EIO;
+ }
+ 
+ static ssize_t label_show(struct device *dev, struct device_attribute *attr,
 -- 
 2.55.0
 
