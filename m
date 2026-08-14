@@ -1,109 +1,230 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f198.google.com (mail-pf1-f198.google.com [209.85.210.198])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 99CC535E95C;
-	Fri, 14 Aug 2026 14:32:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B148031813A
+	for <linux-pci@vger.kernel.org>; Fri, 14 Aug 2026 14:32:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.198
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786717974; cv=none; b=tU3txDsQcLwEEkOaUt9BY32HGMYv+sR8P5pwgkHF4h5LuRxXqW3xrjPVKrWhsP3APmYKJgPN011CxV25d8ZpXBnlBg4yGWVOyAaBXQiADvysF2CJH5pVuUQDUxTD6C0DS5rlVLvIWikfUak3h7ZUR43tjlMr60P1SwTBDbR6slE=
+	t=1786717984; cv=none; b=mBU8LkUndlk04heC+JXv+IKnn56rF3uQjAirFHtIih0p1Wp/bP2IpjeptTJUBXh5R27MZvp2Gw9cAXi8i4s8mu5LAKC0B6Mlil4+TySSzRBv608+o/Gb8iij4RO/9pvAkeLbBVsAotCJlxjvYoCVrciIF2bwHwPKawsO5zKV1TI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786717974; c=relaxed/simple;
-	bh=Ppe4zWINCcH5b2f6yoDphv64Qrb/dTMrYEddNH7Huf0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=HO9JVoUMAxlBDq5ZsOhBRsA4XfqpjoRY3n3anOKkq/4fu/vf3TgdwRHKjq0rWP97525sxmoHCCZJ93yUki/EX5Uv7bpex41FPZAdW8nL0NsXldA7RW9W2TNJNqohV6mLajgnViQgGWwgizksyvvXEVliShYTh0CC7lwuvW57t5g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QQMgfzLC; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1786717984; c=relaxed/simple;
+	bh=fEf+aoVOmWE9QgWXBBCMkjF2FiCJRCYZ+9VLM2p+ycU=;
+	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=XBQcJkLEc5ZZ+0j8SS925nGejCj05uplbyRVjzhirKeOt5kXko9pUcXnL7LDijNxkQLgd0o2F/c0PsspRayC2Su8h5RxQWGdu2cOa2tFJxBhlg9zvrIIgycnZB8vxSF/hYqa+YZEeT5enZGBHnboIiJeWnN3apjXeh/yW7x+6yU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--praan.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=MkBwEL5s; arc=none smtp.client-ip=209.85.210.198
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--praan.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QQMgfzLC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 358251F000E9;
-	Fri, 14 Aug 2026 14:32:35 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786717961;
-	bh=4/uPK4MDzXDsQYo1tVaREhQkVYakh1u6OLghkiUo2DE=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=QQMgfzLCKklFwTf93WC6lT7fFnkQk14voJvliD4BqjTtKs7O+VtzUY8wDdwUAVOPV
-	 kPWKayUm8ivWJiFHqlBMH5gY+90aFiQQ98RIc6bJwwxjWnqSKUGtyYIO7cXu+bgQ7Q
-	 a0eO2rDMaqPTZ2672sqwj2s8/h6jEMx5ynYoMBC2hj9aDlK1zyTQQN4T6Z1Ogsry6L
-	 WHbRkFnt8oWP+rYiIU6f6ASuvU4cV+NYj1+C307I4RQ/cfb9PFn2kGpohEfk0RF4zj
-	 Coyyg8zqlTD4WYnfrPk3zbEBhY/u6jbaY6S6rcyItBv8zvcPYhwlUjjeZkRoky0HBj
-	 BqCVfy4gCvvsA==
-Date: Fri, 14 Aug 2026 16:32:31 +0200
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Sumit Kumar <sumit.kumar@oss.qualcomm.com>
-Cc: Vinod Koul <vkoul@kernel.org>, Frank Li <Frank.Li@kernel.org>, 
-	Jonathan Corbet <corbet@lwn.net>, Shuah Khan <skhan@linuxfoundation.org>, 
-	Jeff Hugo <jeff.hugo@oss.qualcomm.com>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Kishon Vijay Abraham I <kishon@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, dmaengine@vger.kernel.org, 
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, mhi@lists.linux.dev, 
-	linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 4/5] PCI: epf-mhi: Add batched DMA read support
-Message-ID: <b6sdjiqzqibgahny4mkfpwytwz4lsjfvgi2fmcyptzd3rbbbwf@tcitu5fjj2kg>
-References: <20260803-dma_multi_sg-v2-0-c12bb05e42d6@oss.qualcomm.com>
- <20260803-dma_multi_sg-v2-4-c12bb05e42d6@oss.qualcomm.com>
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="MkBwEL5s"
+Received: by mail-pf1-f198.google.com with SMTP id d2e1a72fcca58-848860def2cso862849b3a.2
+        for <linux-pci@vger.kernel.org>; Fri, 14 Aug 2026 07:32:59 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1786717978; x=1787322778; darn=vger.kernel.org;
+        h=content-type:cc:to:from:subject:message-id:mime-version:date:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=dZBlRjehuCRyYG4VdtgBrAbEd7nP4qKEWqIDe08LiIY=;
+        b=MkBwEL5s0bjOGTQBhMlhEd2kmt0hrng4So5pMERYAVhJvB406e94Kwb+xIpwSXjjka
+         vGS2BtHsGDzx0ubrPOhI/RzDyIPIP4G3cCvCdrSpSXyUO5lIvce8h98FWSds0fjiBBIr
+         Iz5/UjvJd36LjLD76hNjIBzfwyUKghp3Iaio+u/W6O93HjZXtRJfnkCHqGJ/yuwAa2WW
+         st7QHWVzbe+O5RdVPNl7d/quYcOMyH8h3eKX5KjDErUbP5gV9tSIq0r/BUaNc5fZwkmn
+         J7Bll4IFfYqb3ueY8Rz9WERMwPAPnpky9I+is4bb/KThvWyAYH0k1XyucJPXzHyRK/Um
+         CLMA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1786717978; x=1787322778;
+        h=content-type:cc:to:from:subject:message-id:mime-version:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=dZBlRjehuCRyYG4VdtgBrAbEd7nP4qKEWqIDe08LiIY=;
+        b=IseMo72JDaeJUn1ddoEi+xudI4HUV+f5DegbOaSNb4sDAFoMbXKXVaiMbAgWkN4Hj/
+         R9/9McEUBWXa3q5i22LygZINwZ0PiTtGODAEzFeD9loFu+o2lmCOCL+jf9dm2jKzZ0sP
+         sbhdYk1G7eEVtPuq2TUUh0tKlyhdhgV+VEhgaJM1vzVYNWz9/xhYmTzbRkt9oF7F+sBN
+         0AkOjbZoAnsTavTNmUBzwiPlrAKEZ4crzZnSGMFcEE+1UyUuY9wk2D47WnCZFCpL5ZRp
+         sGYSNZUdZbOuf/6Fal/FcNOhytoPTjS85jQ0JrOR2iq6VoaK/zJGDR0JR96ucIbCMFB/
+         x8qA==
+X-Forwarded-Encrypted: i=1; AHgh+RpTvshwj8pMjcRhp0daRWOpMqipH104d55nu5p8bju+KjMN8xOXWC7/Ad5r8pRFC42McHy9JaMOolY=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx6wi0pY54h7xDuoiTwMV+Qq28UMP2uUylgckR4wWIAF3xHjfGt
+	tvSDok5HUEcSW5qcGZJ2YiGr7itW//9/fS+EJMpgyzdAY8byGGc49xf/on3nE8jV0o+UbKlyKeQ
+	bzQ==
+X-Received: from pgdf6.prod.google.com ([2002:a05:6a02:5146:b0:cbb:676d:ab19])
+ (user=praan job=prod-delivery.src-stubby-dispatcher) by 2002:a05:6a00:1818:b0:848:46a0:3d74
+ with SMTP id d2e1a72fcca58-84fde3ccf6amr6609292b3a.9.1786717977916; Fri, 14
+ Aug 2026 07:32:57 -0700 (PDT)
+Date: Fri, 14 Aug 2026 14:32:50 +0000
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260803-dma_multi_sg-v2-4-c12bb05e42d6@oss.qualcomm.com>
+Mime-Version: 1.0
+X-Mailer: git-send-email 2.55.0.691.gc56d675ccc-goog
+Message-ID: <20260814143255.861084-1-praan@google.com>
+Subject: [PATCH v6 0/5] nfs: modernize direct I/O path
+From: Pranjal Shrivastava <praan@google.com>
+To: linux-nfs@vger.kernel.org, Trond Myklebust <trondmy@kernel.org>, 
+	Anna Schumaker <anna@kernel.org>
+Cc: Chuck Lever <cel@kernel.org>, Jeff Layton <jlayton@kernel.org>, linux-kernel@vger.kernel.org, 
+	Christoph Hellwig <hch@lst.de>, Logan Gunthorpe <logang@deltatee.com>, Jason Gunthorpe <jgg@ziepe.ca>, 
+	linux-pci@vger.kernel.org, linux-rdma@vger.kernel.org, 
+	Shivaji Kant <shivajikant@google.com>, Pranjal Shrivastava <praan@google.com>
+Content-Type: text/plain; charset="UTF-8"
 
-On Mon, Aug 03, 2026 at 04:01:46PM +0530, Sumit Kumar wrote:
-> Add support for batched DMA transfers in the PCI EPF MHI driver to
-> improve performance when reading multiple buffers from the host.
-> 
-> Implement two variants of the read_batch() callback:
-> pci_epf_mhi_edma_read_batch() is a DMA-optimized implementation that uses
-> dmaengine_prep_dma_sg() to transfer multiple buffers in a single DMA
-> transaction, while pci_epf_mhi_iatu_read_batch() serves as a CPU-copy
-> fallback for platforms without DMA support by sequentially processing each
-> buffer via IATU mapping. Wire up read_batch() to the eDMA variant only
-> when the RX DMA channel advertises the DMA_SG capability, falling back to
-> the IATU variant otherwise.
-> 
-> On a successful batch, notify completion for every buffer via its
-> caller-supplied buf_info->cb, mirroring the read_sync/read_async
-> completion semantics so the MHI stack can free each buffer and raise its
-> transfer completion event. Make read_batch() a mandatory callback in
-> mhi_ep_register_controller(), alongside read_sync/write_sync/read_async/
-> write_async.
-> 
-> This enables the MHI endpoint stack to cache ring data efficiently,
-> particularly for wraparound scenarios where ring data spans two
-> non-contiguous memory regions.
-> 
-> Signed-off-by: Sumit Kumar <sumit.kumar@oss.qualcomm.com>
-> ---
->  drivers/bus/mhi/ep/main.c                    |   3 +-
->  drivers/pci/endpoint/functions/pci-epf-mhi.c | 159 +++++++++++++++++++++++++++
->  include/linux/mhi_ep.h                       |   7 ++
->  3 files changed, 168 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/bus/mhi/ep/main.c b/drivers/bus/mhi/ep/main.c
-> index 21bc2c50170ff7f0181c0d0d4eefd51db30f34c8..c45240fc481dc3260a61b546c223b6be8e105587 100644
-> --- a/drivers/bus/mhi/ep/main.c
-> +++ b/drivers/bus/mhi/ep/main.c
-> @@ -1459,7 +1459,8 @@ int mhi_ep_register_controller(struct mhi_ep_cntrl *mhi_cntrl,
->  		return -EINVAL;
->  
->  	if (!mhi_cntrl->read_sync || !mhi_cntrl->write_sync ||
-> -	    !mhi_cntrl->read_async || !mhi_cntrl->write_async)
-> +	    !mhi_cntrl->read_async || !mhi_cntrl->write_async ||
-> +	    !mhi_cntrl->read_batch)
+Modernize the NFS Direct I/O path as a preparatory step to enable PCI
+Peer-to-Peer DMA (P2PDMA) support. Following feedback on the initial
+RFC [1], the modernization and architectural changes are split into
+different series. Additionally, based on the discussion in the v2 [2]
+of this series, the migration of NFS Direct I/O to folios would be
+handled in a separate follow-up series.
 
-No, this looks like a broken client-provider contract. You don't necessarily
-need a new callback. Just rework read_sync/async callbacks to accept
-'num_buffers' argument and let the EPF deal with however it wants to transfer
-the buffers.
+Currently, NFS O_DIRECT relies on the legacy iov_iter_get_pages_alloc2()
+API which does not support the pinning requirements for P2P memory.
+The implementation moves NFS to the modern iov_iter_extract_pages() API.
 
-If the num_buffers is 1, it can use the existing path and if it is > 1, it can
-use the new dmaengine API. Or to simplify further, you can use the new API for
-all buffer lengths. Only caveat is that you need to check whether the dmaengine
-supports relevant capabilities like DMA_SG.
+Design
+======
 
-- Mani
+1. Pin-Awareness
+Standard NFS requests use get_page() and put_page() for memory
+management. However, memory extracted via iov_iter_extract_pages()
+requires explicit pinning.
 
+Introduce a PG_PINNED flag and a wb_nr_pinned count to struct nfs_page.
+This allows the request lifecycle to track ownership of physical pins
+and ensure that unpinning is performed only when the I/O is complete.
+
+2. API Migration
+Migrate the Direct I/O path to the modern iov_iter_extract_pages()
+API. This aligns NFS with the modern extraction model and serves as
+the foundation for passing ITER_ALLOW_P2PDMA in a follow-up series.
+
+Upcoming Work / Roadmap
+================================
+
+As decided in the RFC [1] & v2 [2], there will be separate series for
+P2PDMA Enablement and Migrating NFS Direct I/O to use folios.
+
+This series lays the necessary groundwork for the upcoming work.
+Following this, two additional series are planned:
+
+1. Migrating NFS Direct I/O to Folios
+A series that introduces and exports helper from iov_iter.c to allow
+the nfs_direct_extract_pages() helper introduced here to aggregate
+multiple pages into a single large folio-based request, aiming to reduce
+the RPC overhead for hugepage I/O.
+
+2. P2PDMA Enablement for NFS
+Enabling ITER_ALLOW_P2PDMA for the Direct I/O path and introducing transport-level
+negotiation (discovery of P2P-capable RDMA/NVMe devices). This will build
+upon the PG_PINNED infrastructure introduced by this series.
+
+Testing
+=======
+This series has been tested with xfstests [3] on RDMA & TCP transports
+by running the quick test suite for each transport vs. version combo:
+
+./check -g quick -s rdma3 -s rdma40 -s rdma41 -s rdma42 -s tcp3 -s tcp40 -s tcp41 -s tcp42
+
+The tests were run before & after applying the series. No regressions were observed. 
+
+The following summary was tabulated via a custom script [4] (on github)
+to depict that the tests failing in v1 [5] are now passing.
+
+python3 display.py results/*/check.log
+
++--------------+--------------+--------------+--------------+--------------+--------------+--------------+--------------+--------------+
+| testcase     | rdma-sys-3   | rdma-sys-4.0 | rdma-sys-4.1 | rdma-sys-4.2 | tcp-sys-3    | tcp-sys-4.0  | tcp-sys-4.1  | tcp-sys-4.2  |
++--------------+--------------+--------------+--------------+--------------+--------------+--------------+--------------+--------------+
+| generic/091  | pass         | pass         | pass         | pass         | pass         | pass         | pass         | pass         |
+| generic/130  | pass         | pass         | pass         | pass         | pass         | pass         | pass         | pass         |
+| generic/139  | pass         | pass         | pass         | pass         | pass         | pass         | pass         | pass         |
+| generic/143  | pass         | pass         | pass         | pass         | pass         | pass         | pass         | pass         |
+| generic/154  | pass         | pass         | pass         | pass         | pass         | pass         | pass         | pass         |
+| generic/155  | pass         | pass         | pass         | pass         | pass         | pass         | pass         | pass         |
+| generic/183  | skipped      | skipped      | skipped      | pass         | skipped      | skipped      | skipped      | pass         |
+| generic/188  | skipped      | skipped      | skipped      | pass         | skipped      | skipped      | skipped      | pass         |
+| generic/190  | skipped      | skipped      | skipped      | pass         | skipped      | skipped      | skipped      | pass         |
+| generic/196  | skipped      | skipped      | skipped      | pass         | skipped      | skipped      | skipped      | pass         |
+| generic/198  | pass         | pass         | pass         | pass         | pass         | pass         | pass         | pass         |
+| generic/203  | skipped      | skipped      | skipped      | pass         | skipped      | skipped      | skipped      | pass         |
+| generic/214  | pass         | pass         | pass         | pass         | pass         | pass         | pass         | pass         |
+| generic/240  | pass         | pass         | pass         | pass         | pass         | pass         | pass         | pass         |
+| generic/263  | pass         | pass         | pass         | pass         | pass         | pass         | pass         | pass         |
+| generic/287  | skipped      | skipped      | skipped      | pass         | skipped      | skipped      | skipped      | pass         |
+| generic/290  | skipped      | skipped      | skipped      | pass         | skipped      | skipped      | skipped      | pass         |
+| generic/292  | skipped      | skipped      | skipped      | pass         | skipped      | skipped      | skipped      | pass         |
+| generic/330  | skipped      | skipped      | skipped      | pass         | skipped      | skipped      | skipped      | pass         |
+| generic/444  | skipped      | skipped      | skipped      | skipped      | skipped      | skipped      | skipped      | skipped      |
+| generic/450  | pass         | pass         | pass         | pass         | pass         | pass         | pass         | pass         |
+| generic/451  | pass         | pass         | pass         | pass         | pass         | pass         | pass         | pass         |
+| generic/586  | pass         | pass         | pass         | pass         | pass         | pass         | pass         | pass         |
+| generic/647  | pass         | pass         | pass         | pass         | pass         | pass         | pass         | pass         |
+| generic/708  | pass         | pass         | pass         | pass         | pass         | pass         | pass         | pass         |
+| generic/729  | pass         | pass         | pass         | pass         | pass         | pass         | pass         | pass         |
+| generic/760  | pass         | pass         | pass         | pass         | pass         | pass         | pass         | pass         |
++--------------+--------------+--------------+--------------+--------------+--------------+--------------+--------------+--------------+
+
+Thanks,
+Praan
+
+[1] https://lore.kernel.org/all/20260401194501.2269200-1-praan@google.com/
+[2] https://lore.kernel.org/all/ak8-NMsNPOB3zpF-@infradead.org/
+[3] https://git.kernel.org/pub/scm/fs/xfs/xfstests-dev.git
+[4] https://github.com/pran005/tools/blob/main/display.py
+[5] https://lore.kernel.org/all/29a0511d-5216-46f2-a7e4-9c04ae9b1890@app.fastmail.com/
+
+[v6]
+ - Fixed double unpin bugs pointed out by Sashiko:
+   https://sashiko.dev/#/patchset/20260810195040.2877784-1-praan%40google.com
+ - Added R-bs from Christoph (due since v4)
+
+[v5]
+ - https://lore.kernel.org/all/20260810195040.2877784-1-praan@google.com/
+ - Fixed an iov_iter_revert oops in nfs_direct_extract_pages().
+ - Fixed a refcount underflow in nfs_direct_release_pages() during
+   swap-over-NFS by ensuring we do not call put_page() on unpinned memory.
+ - Rebased on fs-next
+
+[v4]
+ - https://lore.kernel.org/all/20260720150601.2702700-1-praan@google.com/
+ - Dropped superfluous externs in include/linux/nfs_page.h
+ - Scoped `req` locally inside the loop in nfs_release_request_list()
+ - Wrapped >80 character lines in Patch 1 to adhere to coding style.
+ - Fixed typos and capitalization convention in the commit msgs
+ - Collected Reviewed-by tags from Christoph and Shivaji
+ - Rebased on fs-next
+
+[v3]
+ - https://lore.kernel.org/all/20260715143540.3597616-1-praan@google.com/
+ - Dropped patches that added folio support for NFS Direct I/O
+ - Folded requested_bytes accounting in patch 5 due to dropped folio support
+ - Rebased on fs-next
+
+[v2] 
+ - https://lore.kernel.org/all/20260616134000.2733403-1-praan@google.com/
+ - Fix data corruption in nfs_direct_extract_pages() by correctly
+   calculating intra-page offsets using offset_in_page().
+ - Fix requested_bytes accounting in direct read/write paths to only
+   increment after successful RPC scheduling.
+ - Add missing kernel-doc descriptions for the @pinned parameter in
+   nfs_page_create_from_page() and nfs_page_create_from_folio().
+ - Rebase on fs-next/
+
+[v1] https://lore.kernel.org/all/20260603053033.3300318-1-praan@google.com/
+
+Pranjal Shrivastava (5):
+  nfs: make nfs_page pin-aware
+  nfs: track number of pinned pages in nfs_page
+  nfs: introduce nfs_release_request_list helper
+  nfs: migrate direct I/O to iov_iter_extract_pages
+  nfs: introduce nfs_direct_extract_pages helper
+
+ fs/nfs/direct.c          | 139 ++++++++++++++++++++-------------------
+ fs/nfs/pagelist.c        |  66 ++++++++++++++++---
+ fs/nfs/read.c            |   2 +-
+ fs/nfs/write.c           |   2 +-
+ include/linux/nfs_page.h |   8 ++-
+ 5 files changed, 134 insertions(+), 83 deletions(-)
+
+
+base-commit: 15db403711f3cd9b7b764716ddf5909091b604bf
 -- 
-மணிவண்ணன் சதாசிவம்
+2.55.0.691.gc56d675ccc-goog
+
