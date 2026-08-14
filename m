@@ -1,112 +1,193 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B939947CA8A
-	for <linux-pci@vger.kernel.org>; Fri, 14 Aug 2026 14:47:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 854B42E739D
+	for <linux-pci@vger.kernel.org>; Fri, 14 Aug 2026 14:48:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786718836; cv=none; b=u5NacsD5eE7LH70WBY1MqhNr6B+HS9boSLMtzGo9zaztvlWV1LPZ8TNzEM9HSvZlOFl0+EKFqrxzpL0dA5fKNd/WzgMLaMqMC6ObB8m7OUid+x2KkJ1DXRSPhJ64u50hydbsDPu3ngXOoHmw00+OcET9k3EP7nq6g/1/dVCF9CQ=
+	t=1786718886; cv=none; b=F5lxuVrsH1km4+4y2x7qYIJaJ0BfuZKJbalh+XmP2wtFPr6azUcSui6VPVRwCXJDqA1oy/TquEkIN/sMNTqwuvGQI1AeR7UDbTJ7I5Um7r3UcfRmQiXN3ZPccID4bdMjpHyuigYTDI4cNcXMiMOWKX8WvXuzytcJt0uPX/08O3c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786718836; c=relaxed/simple;
-	bh=LI9fobfgNQZJvwmy5m2sQy8KgyVrzusO3UBtmW0JscE=;
+	s=arc-20240116; t=1786718886; c=relaxed/simple;
+	bh=Dl/mjjInEbhcKf8Z1ru6BEkouVnQURpVEDBUKpFpC1A=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=frgfhXsfpYbeizL61CcEBLcyOAKhQGPMG5IjLO5eAQzp332mmi266Rci4PbV6HqHpxZRdWNtSpWYjAnECuEnZOZX2wOuHgp8hLwqvUZoQP8RzkSvvCmnt6i/DULM8uqKqbj2ih7Qhc3+81sBROCpgl4Qk7VFxfZ/VlKBAZhM8Hg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HWUuGJo4; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=Ix91Z7uhnK1sNx/6IXq3mVY9vfwJGXD1TOrh3QXjZ2hTw2uzMrnpWm7SOPwu62YNcVZSX+z2Zs8VKw+HkfbXY3eU0y7gErLJMFJVdliW2klFFLQfu0g6d+kspYf+AA8Mo/CQTHvzk0U09X8j312KdAmvkf7UT6aAbE6Mzh9cgTo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HvzhKQHh; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HWUuGJo4"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DF1A21F000E9;
-	Fri, 14 Aug 2026 14:47:13 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HvzhKQHh"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D41911F000E9;
+	Fri, 14 Aug 2026 14:48:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786718834;
-	bh=cDmTqMwYUIGOlzhKiWFdyv4Om63EQKpM332P1/mk3+8=;
+	s=k20260515; t=1786718885;
+	bh=Jg1bKQctW2ehEQ5UdxyPMSS9hbSDCIBfRbdClP/DtmY=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=HWUuGJo4xVM9mFl/aq3mjDqdO2iOeD5/rCOR7aMIIhSgB4J5yf4v7nq1l/TAIjB8v
-	 9l+MkpUZnGD4hUs4lXZA9kl70MU0j3RLL53+9W3yEwYYblx6NJjWkSli3y6COOMxl+
-	 ajW3d9VF2PnKInRBAG7plmqYjWR1+ol2Tf62fO08jJu69VEcjcuPvwVfCxnP8GRX3u
-	 1rxdgoRv3AspiIk7jRXX1+shO6PIukZrN10VOOOTSDUQfN2y5N6Il4Wn4Wrx2W6OZA
-	 ovp8jN1blQrjbyPt7jmrslvL2euoYwoXxLAqsYg3FDpjLAVTZCbM2X4LXMWBMNeZ9H
-	 Hc91ET0suJmfw==
+	b=HvzhKQHhtlH3DiLWwYKw2G6u+4nZDCZpX8e91CRIKSB/UrrKShuSUVIcv8H2256AW
+	 LlAI+ujJMPNcmmCi8+LQkyNSEmMs/GxvaB43F+W/FndVdbufmJLC7oi0LJDoNfYs2A
+	 IfhG1LdVvR5VOe27gGQk9ZQ/ie1yjIITPy70ik5eUb2rSJz2DyHzqDHMDuQxCckDAE
+	 C3lZUCESzFE0X4mdPh4OAQpVPK2obaOvMvB/mpkihEyYG+f3dffTXVyWTWOqfSeWT1
+	 0r3LNkTaZ2UAXnkvjPaKiTUc1lEuZwEaLwOSfNK/tSQJWfwP8FXPVTqcbG/qkHqLfs
+	 xem5gHCXu4ibA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v6 2/5] nfs: track number of pinned pages in nfs_page
+Subject: Re: [PATCH v6 4/5] nfs: migrate direct I/O to
+ iov_iter_extract_pages
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Pranjal Shrivastava" <praan@google.com>
-Cc: "Chuck Lever" <cel@kernel.org>, "Anna Schumaker" <anna@kernel.org>, "Jeff
- Layton" <jlayton@kernel.org>, linux-pci@vger.kernel.org
-In-Reply-To: <20260814143255.861084-3-praan@google.com>
+Cc: "Anna Schumaker" <anna@kernel.org>, "Jeff Layton" <jlayton@kernel.org>, linux-pci@vger.kernel.org, "Chuck
+ Lever" <cel@kernel.org>
+In-Reply-To: <20260814143255.861084-5-praan@google.com>
 References: <20260814143255.861084-1-praan@google.com>
- <20260814143255.861084-3-praan@google.com>
+ <20260814143255.861084-5-praan@google.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 14 Aug 2026 14:47:13 +0000
-Message-Id: <20260814144713.DF1A21F000E9@smtp.kernel.org>
+Date: Fri, 14 Aug 2026 14:48:04 +0000
+Message-Id: <20260814144804.D41911F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-- [Medium] Latent stack out-of-bounds read by passing a single local stack =
-variable to unpin_user_pages() with a dynamically loaded length.
+
+Pre-existing issues:
+- [High] If request creation or insertion fails mid-chunk, the iterator is =
+not reverted for the remaining un-scheduled bytes, leading to iterator desy=
+nc.
+- [High] If `iov_iter_extract_pages` returns 0, the scheduling loops will s=
+pin infinitely without making progress.
 --
 
---- Patch [2]: [PATCH v6 2/5] nfs: track number of pinned pages in nfs_page=
- ---
-commit 1fad80f498aa716421accabc5c2572235b589709
+--- Patch [4]: [PATCH v6 4/5] nfs: migrate direct I/O to iov_iter_extract_p=
+ages ---
+commit 5228f408a5f9a33be680decc8231db65a3427585
 Author: Pranjal Shrivastava <praan@google.com>
 
-nfs: track number of pinned pages in nfs_page
+nfs: migrate direct I/O to iov_iter_extract_pages
+   =20
+Migrate the NFS Direct I/O path away from the legacy
+iov_iter_get_pages_alloc2() API to the modern iov_iter_extract_pages API.
+The transition aligns NFS with the modern VFS extraction model and serves
+as a preparatory step for supporting requirements such as page pinning
+via GUP for DMA.
 
-This commit adds wb_nr_pinned to struct nfs_page to track the number
-of pinned pages. It updates request creation and cleanup helpers to
-ensure that only primary requests perform the final unpinning operation.
+> diff --git a/fs/nfs/direct.c b/fs/nfs/direct.c
+> index 96995736fac2a..a1479fbf4f9e1 100644
+> --- a/fs/nfs/direct.c
+> +++ b/fs/nfs/direct.c
+[ ... ]
+> @@ -348,16 +348,17 @@ static ssize_t nfs_direct_read_schedule_iovec(struc=
+t nfs_direct_req *dreq,
+>  	inode_dio_begin(inode);
+> =20
+>  	while (iov_iter_count(iter)) {
+> -		struct page **pagevec;
+> +		struct page **pagevec =3D NULL;
+>  		size_t bytes;
+>  		size_t pgbase;
+>  		unsigned npages, i;
+> +		bool pinned =3D iov_iter_extract_will_pin(iter);
+> =20
+> -		result =3D iov_iter_get_pages_alloc2(iter, &pagevec,
+> -						  rsize, &pgbase);
+> +		result =3D iov_iter_extract_pages(iter, &pagevec,
+> +						rsize, ~0U, 0, &pgbase);
+>  		if (result < 0)
+>  			break;
 
-> diff --git a/fs/nfs/pagelist.c b/fs/nfs/pagelist.c
-> index a562cfe2a126d..b9ccf2a87e3c9 100644
-> --- a/fs/nfs/pagelist.c
-> +++ b/fs/nfs/pagelist.c
+[Severity: High]
+This is a pre-existing issue, but if iov_iter_extract_pages() returns 0,
+will this loop spin indefinitely?
+
+The outer loop in nfs_direct_read_schedule_iovec() relies on
+iov_iter_count(iter) > 0 to terminate. If iov_iter_extract_pages() returns
+0 (which can happen if zero pages are pinned), the result < 0 check won't
+catch it.
+
+This leaves the iterator unadvanced and bytes =3D 0, causing the loop to
+repeat indefinitely and potentially leading to a kernel hang.
+
+Should the check be updated to if (result <=3D 0)?
+
+> -=09
+> +
+>  		bytes =3D result;
+>  		npages =3D (result + pgbase + PAGE_SIZE - 1) / PAGE_SIZE;
+>  		for (i =3D 0; i < npages; i++) {
+> @@ -371,7 +366,7 @@ static ssize_t nfs_direct_read_schedule_iovec(struct =
+nfs_direct_req *dreq,
+>  			unsigned int req_len =3D min_t(size_t, bytes, PAGE_SIZE - pgbase);
+>  			/* XXX do we need to do the eof zeroing found in async_filler? */
+>  			req =3D nfs_page_create_from_page(dreq->ctx, pagevec[i],
+> -							false, pgbase, pos,
+> +							pinned, pgbase, pos,
+>  							req_len);
+>  			if (IS_ERR(req)) {
+>  				result =3D PTR_ERR(req);
+> @@ -380,6 +375,7 @@ static ssize_t nfs_direct_read_schedule_iovec(struct =
+nfs_direct_req *dreq,
+>  			if (!nfs_pageio_add_request(&desc, req)) {
+>  				result =3D desc.pg_error;
+>  				nfs_release_request(req);
+> +				i++;
+>  				break;
+>  			}
+
+[Severity: High]
+This is a pre-existing issue, but does this early break cause the iterator
+to become desynchronized?
+
+iov_iter_extract_pages() advances the iterator by the total extracted bytes.
+If the inner loop breaks early here (e.g. because nfs_pageio_add_request()
+fails), the remaining unprocessed bytes in the chunk are skipped, but the
+iterator is never reverted for those skipped bytes.
+
+The caller calculates the revert amount based on successfully processed
+bytes, so the iterator remains incorrectly advanced. If the VFS retries the
+remaining data, it might resume from the wrong offset and silently skip
+data.
+
+Does this path need to call iov_iter_revert() for the unprocessed bytes?
 
 [ ... ]
-
-> @@ -567,8 +572,8 @@ static void nfs_clear_request(struct nfs_page *req)
+> @@ -888,13 +888,14 @@ static ssize_t nfs_direct_write_schedule_iovec(stru=
+ct nfs_direct_req *dreq,
 > =20
->  	if (folio !=3D NULL) {
->  		if (test_and_clear_bit(PG_PINNED, &req->wb_flags)) {
-> -			if (req =3D=3D req->wb_head)
-> -				unpin_user_folio(folio, 1);
-> +			if (req->wb_nr_pinned > 0)
-> +				unpin_user_folio(folio, req->wb_nr_pinned);
->  		} else {
->  			folio_put(folio);
->  		}
-> @@ -576,8 +581,8 @@ static void nfs_clear_request(struct nfs_page *req)
->  		clear_bit(PG_FOLIO, &req->wb_flags);
->  	} else if (page !=3D NULL) {
->  		if (test_and_clear_bit(PG_PINNED, &req->wb_flags)) {
-> -			if (req =3D=3D req->wb_head)
-> -				unpin_user_page(page);
-> +			if (req->wb_nr_pinned > 0)
-> +				unpin_user_pages(&page, req->wb_nr_pinned);
+>  	NFS_I(inode)->write_io +=3D iov_iter_count(iter);
+>  	while (iov_iter_count(iter)) {
+> -		struct page **pagevec;
+> +		struct page **pagevec =3D NULL;
+>  		size_t bytes;
+>  		size_t pgbase;
+>  		unsigned npages, i;
+> +		bool pinned =3D iov_iter_extract_will_pin(iter);
+> =20
+> -		result =3D iov_iter_get_pages_alloc2(iter, &pagevec,
+> -						  wsize, &pgbase);
+> +		result =3D iov_iter_extract_pages(iter, &pagevec,
+> +						wsize, ~0U, 0, &pgbase);
+>  		if (result < 0)
+>  			break;
 
-[Severity: Medium]
-Could this lead to an out-of-bounds stack read if wb_nr_pinned is ever
-greater than 1?
+[Severity: High]
+This isn't a bug introduced by this patch, but similar to the read path,
+if iov_iter_extract_pages() returns 0 here, will it result in an infinite
+loop in nfs_direct_write_schedule_iovec()?
 
-Looking at nfs_clear_request(), page is declared as a single local pointer
-on the stack:
+[ ... ]
+> @@ -938,6 +938,7 @@ static ssize_t nfs_direct_write_schedule_iovec(struct=
+ nfs_direct_req *dreq,
+>  			if (desc.pg_error < 0 && desc.pg_error !=3D -EAGAIN) {
+>  				result =3D desc.pg_error;
+>  				nfs_unlock_and_release_request(req);
+> +				i++;
+>  				break;
+>  			}
 
-static void nfs_clear_request(struct nfs_page *req)
-{
-	...
-	struct page *page =3D req->wb_page;
-
-If req->wb_nr_pinned exceeds 1, unpin_user_pages() will read adjacent stack
-memory to interpret as struct page pointers. While wb_nr_pinned is currently
-hardcoded to 1 when a request is created from a page, passing a dynamically
-loaded length alongside a pointer to a single local stack variable seems
-prone to future regressions.
+[Severity: High]
+This is a pre-existing issue, but this write path seems to have the same
+iterator advancement leak as the read path when breaking early on hard
+errors. Should it also revert the iterator for the unprocessed bytes?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260814143255.8610=
-84-1-praan@google.com?part=3D2
+84-1-praan@google.com?part=3D4
