@@ -1,327 +1,227 @@
-Received: from mx0a-00082601.pphosted.com (mx0a-00082601.pphosted.com [67.231.145.42])
+Received: from AS8PR04CU009.outbound.protection.outlook.com (mail-westeuropeazon11011045.outbound.protection.outlook.com [52.101.70.45])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 455F21C84DC
-	for <linux-pci@vger.kernel.org>; Fri, 14 Aug 2026 18:08:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=67.231.145.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9D7830594E;
+	Fri, 14 Aug 2026 19:45:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.70.45
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786730940; cv=pass; b=C4pf2KbseTAxd5A/bFB5Sfr3CAwQnsVhGyGKxa/klJuohRorpC7DzQFq6Fiy8hjjOGjad1so9YM0gcsD1ZioqCg8Rl0tUr49X3jfcYLtiNw+23Hf0eXCjQMxGhTsBXdatAaATuQF1lqYVSlB6nQC4NpHXFzZdj6WSE2tLFfU/OQ=
+	t=1786736754; cv=fail; b=AFeUAf1Ha6Y1utEmS672de0GXIsY5M/P2G5K4zfLTVDABDsK8JhaYiUdB/ZMXHrY0Myy4TrVCV9jiycDnQdnQK92tov9xsP7A3jn5kQv/TAlz8BKg6SKzhSrssCcebWm5/uCnvp6pw1PimV2Tls1EpqngCt05VVCX7bSaYEFzNg=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786730940; c=relaxed/simple;
-	bh=mrrvnHCJv/Eee+3bkg+S5wjiInjePvrAVjhSY2rehs8=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=qBeS33iGxKfblMIWROaLDucmlxUSJWfI6zhsLVWO1dyVNu5hxYK2s8DGuLW0LYrgWqvBHtVkYGulI086058VAhy8GxhK3hRrdtVRv8Jov4ZKm210/kWq8RK2YU9gHiZ4DCXUO3d7LOzeU6BIRfLwRJQ1ApWQ5JwWiBdzBmnr/jo=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=d6xYEaQm; arc=pass smtp.client-ip=67.231.145.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meta.com
+	s=arc-20240116; t=1786736754; c=relaxed/simple;
+	bh=M6VE+1c9TvwCgEtwTvvIYc4QnVU78A4tZmzqx+NeAu8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=bJvNVH/u3123GpOhR+Z4g6kR2tPkhw54ydOXXvpwY+vV7muoQFY4WrQ4XStSL02A3hhJVncyxqtzPzH9gACBAMhGEVSzZPaIqTL0JUhHp+uIDUqsoGu3mVf/vXhjmEdo6ThZwW8QBh+qK3oPDgM42NowPd8i2ik55p4/RHdu35g=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com; spf=pass smtp.mailfrom=oss.nxp.com; dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b=myKCHg3J; arc=fail smtp.client-ip=52.101.70.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="d6xYEaQm"
-Received: from pps.filterd (m0044010.ppops.net [127.0.0.1])
-	by mx0a-00082601.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 67EGj4r74041700
-	for <linux-pci@vger.kernel.org>; Fri, 14 Aug 2026 11:08:57 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=meta.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=
-	pps82601-s2048-2026-q3; bh=a/wc9xo4pjSkf0rMp8r6iOmUU+t5ZmWTQnIQx
-	+L/D38=; b=d6xYEaQmpmHsPwXDpM7XK27KiFnHnsIokOzJfYh6cGJbio2XJKBjX
-	/h3xhpzsDh8tbWTJT583gLI/yDX4cGZvVEPaKUbZyRzZCpnCgKhQCp38vM1VEiCz
-	Zy1qm06P9t9bUeLt+bXfuQqvdKaZRw7mNMaCnaHXWqb/kgDvUEykX1fHs8uYCdrd
-	SzBlzNwulpc4kZwEe497bGS790kfW9lcIHzn0mAuyBy0CRu+Yne4+W7CsuwGCJBY
-	iyG1+EoeB4iFke/eE7qg6DvHcPrrHipwl/RjJLvIjQwHpXDN5t31d/0lsGT98ou1
-	BXPD+YVxkJrKvZfX+cvxntAkQu6GfzwTw==
-Received: from mail-ot1-f70.google.com (mail-ot1-f70.google.com [209.85.210.70])
-	by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 4g1as0jbp2-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Fri, 14 Aug 2026 11:08:57 -0700 (PDT)
-Received: by mail-ot1-f70.google.com with SMTP id 46e09a7af769-7eb6a8c61deso1014563a34.3
-        for <linux-pci@vger.kernel.org>; Fri, 14 Aug 2026 11:08:57 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1786730936; cv=none;
-        d=google.com; s=arc-20260327;
-        b=MjjB93Yxk7FL1RXzeHS5p1GJ1OzLa123BKWpvWCjQI7K+IfDjpll1UJEQSZtNTqhy3
-         +obrAa2xn38dRP8Wkq23/m/OzOUuwb7dgCCh+PKm3UHYEG4pMF7IvEzrLwziIa4wY+xG
-         5DmLyEjf8ZmWZNKiKEe8iOXugZ8wJP8NTBTvmFSOe777qNSllZy/RH7E4hUWu1Y1xDvQ
-         CvWSDk+DaClg9ClxT+dP4a/fyLmHjNmASqlOi4/fMv3y31a4joGbxH/cjiJp9TuBEBQK
-         I0Rev56P77dW40RAYB7I2n4tdWDd6qIsZfDgrv6SyHKYLHARoW3zvq8oR1e8NnzhkBRg
-         Djiw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version;
-        bh=a/wc9xo4pjSkf0rMp8r6iOmUU+t5ZmWTQnIQx+L/D38=;
-        fh=O9WDn2y6j1j8SHA0Mxn9W+XuGV9y86AqTE/Ndfgbirw=;
-        b=guJUgExIZ7HSjvewdHO8Y5zzuIgAV6odDiGpyYHRLZWgFDU3z5FvPYGvC8FoaLZtUK
-         mXU1omMgSfxP2Lm1SqR3Kk296ZkjEc41ODyqLEuldnK3LscT4FiH1KhX1qQt9yiK0NG2
-         VFYTXXYan/gePjlhQXQpdno7nAfUl/kONolLgtOrCTSm9ZmzJVsLsGEpTkFvifWel4PH
-         j0LG5yptx1OnnmU7N0ppQ81S+tYBdOysEK4N3k9rydjziNScOS4/GzBiozC43h3olBJ5
-         khiTedjvp/AsXlQbIHVylHuyYDHj86CeE5qVu6x4ST84/Y0nOwXRukBSghIL6D1l2wfG
-         hClQ==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786730936; x=1787335736;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=a/wc9xo4pjSkf0rMp8r6iOmUU+t5ZmWTQnIQx+L/D38=;
-        b=kXc/wUXv70T/o/Uj4Bj+K3h06k256S0AYoHPdwfM4n60phg4HxfVrZhmsV+PgQC06C
-         xnpuPGrFY6JZAclhn2SskD27bzbjEEuGtAcKCpqzk9JLFk1fbN99fs2HfHncC1mf3jyx
-         oxhnVkrrMi1w8pGxPlnJi81RW72ZtUgr4kCa7t73dKEWnTsiuy9ZuuHSEk+kCaFbvxsS
-         46Xdu0VE5DVtxyTTzUvtY4WL79EU0Spk2GyL/k2DdYWuzFfNgBRafbXX64xbrVarhoF6
-         3Wi+1tSK/1+TRh8FnGUqpPX1iD5FMP840fIcfC+oOVkhalndTtf7B9g6dSinPuJrR5zF
-         jvNw==
-X-Forwarded-Encrypted: i=1; AHgh+RqjzTafxRbHNrAOhhKI9XTyy0tNO+x0RFdrDZbztnBXkfrPimjqSlsKwYsrE8RQOqnm13BL01YqVDA=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzdqCn3hWUruBmUUCIBwPkKNHepvVTtsXq70eeoqmVh/76Tszob
-	R2VXDBngEngQ8IpgE+aN4glIwZEk3rdztAwTNIZqTHb+bo2VU5SjZQmqrDj/UD+VtGujjXCF7hP
-	RDxUOEpzrucjV9hLaVQ2KhDzxTuJMauXmbsjDfzLTDf2T+2hnvRK33ixnHNojNptSlPcYYHhEG0
-	W8lNwTzjcAwikLRt7x8ydNVI0/iPeHKKIiWvc=
-X-Gm-Gg: AR+sD12RWFrK1o7la2TizTcznCNoTkO0jeoeNg/1vXRxMPZQNBcv3We9OSwRbjY8N9t
-	7GmtaQluHBZnbMh/OTMVCJQOp4vtxdsGKywdoSdwaX+yd4VxRyhPHiRxl+/tHP1eG4Ydn4YE1WY
-	vJnAsOSOG9nwFBuvrJLbTFht1D6dj++f3KLNMCw2GC++p2OplSooEKlGitb6C6TdjxuYVY0gDw
-X-Received: by 2002:a05:6830:2b11:b0:7e6:cfd0:42de with SMTP id 46e09a7af769-7f3de6b701emr7076896a34.15.1786730936267;
-        Fri, 14 Aug 2026 11:08:56 -0700 (PDT)
-X-Received: by 2002:a05:6830:2b11:b0:7e6:cfd0:42de with SMTP id
- 46e09a7af769-7f3de6b701emr7076829a34.15.1786730935638; Fri, 14 Aug 2026
- 11:08:55 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b="myKCHg3J"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=wTryyQPt3ZFREBqGIAvBYRgvr+4gBO3XhgogfYgu4zqZgO0uIjRMRDqXVDvaDaUayZnnIR+DtNfKG04ih+3BYd4ZgLFZBAECrt/26meiU83aAzUKnt3nGQE7TyneQ724Jq+7CmcvXbUGgXt3I+FehtQMq3aChsfDdxPFAFqei1OfMR70UTuhrX0rAnqd5SwxmFdliCMvJqZxeGEg6Pu7x8D8hFZJJHuSFhC2ho2sBJogu4E8TjzK14WZi4V3ILdwpCNHG5Od0PHoUW9qnTrVx+pN+b743z3vCt/XaDRqXs6duQ0lDdgXud3DAgEuj5U4nHOQTO+3nrz/u+wHitizRg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=GJCO/PPi/ZHNrkE0x29vkfzVdh4+zxsAwI+6NqOZqDY=;
+ b=Q35noUTbtzzQoPRersUiUHKEBlN/XyO93ubzm7VawxFxz1lUks+2xgq1BN7hzJ/IHA8oFxxYO745RzsLfiOWnxm19ZYzRCNOmQXSx9hubsHRmtq+93KsoNt1xLj8KLvtG0glheo4V56HNu3zTU9UKj9JLXu8n73oVrlfKINkWUSnpDRaVXblow0bwnVjRa/KBxRiFv0KjRoqe8PRVogYj27LvChp81xn4yJT2ws1dxbhnTSt+gCDpylJ1SmP23/o5V/KNyOliw8UjVPrtI4bU+gKPQdowh6BNFq3svB++lRgEbMT0Zv7g5Bx2HHO4XVFJM4zZNcVq/CROltLT21r0w==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oss.nxp.com; dmarc=pass action=none header.from=oss.nxp.com;
+ dkim=pass header.d=oss.nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=NXP1.onmicrosoft.com;
+ s=selector1-NXP1-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=GJCO/PPi/ZHNrkE0x29vkfzVdh4+zxsAwI+6NqOZqDY=;
+ b=myKCHg3JgpmImFbbfU+at11W1J5totNswv6ZUdmjkIh8iTqA7ybpz7Fwtc9O9lkJrRqwZEG7IgBsKLGFuKojs5WbY/E0FyE7sVDawaVz+Vl9VcV4K6Dv7lkhWj4AudRqLLbGOYpGlDIuQxzZX269xFGHHzHMGRs9gXU40tUsTZqOkGirvjXMKxS3bEt9HexA7qSDa2Rx3H5ZDiG8xaaYwxdXJjHSxEM4jxb1o3Q8h2llG28gmG2wAGFs3928WLru6AYnnFC+jh4+TGVChHcuWL7qC8RLtc4avediGWZi0jzZwHaIOa+fp1VinOuAEzpjcowFU7eg56n+tErVfcHZPQ==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=oss.nxp.com;
+Received: from GV2PR04MB11799.eurprd04.prod.outlook.com (2603:10a6:150:2cf::9)
+ by DU0PR04MB11259.eurprd04.prod.outlook.com (2603:10a6:10:5dd::14) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.315.15; Fri, 14 Aug
+ 2026 19:45:48 +0000
+Received: from GV2PR04MB11799.eurprd04.prod.outlook.com
+ ([fe80::2146:83a2:5329:b7c]) by GV2PR04MB11799.eurprd04.prod.outlook.com
+ ([fe80::2146:83a2:5329:b7c%7]) with mapi id 15.21.0315.014; Fri, 14 Aug 2026
+ 19:45:48 +0000
+Date: Fri, 14 Aug 2026 15:45:40 -0400
+From: Frank Li <Frank.li@oss.nxp.com>
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	dmaengine@vger.kernel.org, Vinod Koul <vkoul@kernel.org>,
+	Frank Li <Frank.li@nxp.com>, Kelvin Cao <kelvin.cao@microchip.com>,
+	Thomas =?iso-8859-1?Q?Wei=DFschuh?= <linux@weissschuh.net>,
+	Dave Jiang <dave.jiang@intel.com>,
+	George Ge <george.ge@microchip.com>,
+	Jaeyoung Chung <jjy600901@snu.ac.kr>,
+	Sashiko <sashiko-bot@kernel.org>
+Subject: Re: [PATCH v4 03/12] dmaengine: switchtec-dma: always clear DMA base
+ registers on chan_stop()
+Message-ID: <an9wZJiOXGa4q_Bz@lizhi-Precision-Tower-5810>
+References: <20260728171523.112244-1-logang@deltatee.com>
+ <20260728171523.112244-4-logang@deltatee.com>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260728171523.112244-4-logang@deltatee.com>
+X-ClientProxiedBy: SA9PR03CA0011.namprd03.prod.outlook.com
+ (2603:10b6:806:20::16) To GV2PR04MB11799.eurprd04.prod.outlook.com
+ (2603:10a6:150:2cf::9)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260731211601.3033906-1-zhipingz@meta.com>
-In-Reply-To: <20260731211601.3033906-1-zhipingz@meta.com>
-From: Zhiping Zhang <zhipingz@meta.com>
-Date: Fri, 14 Aug 2026 11:08:44 -0700
-X-Gm-Features: AUfX_mwlB-c_b12QUk9Eql1rFFrxjUSfBybDtwz-Rrjnzx4bowh7ua1IH4K-wTM
-Message-ID: <CAH3zFs0vQidHOWif_LmS0=65S9iiCo7yGibqLvFT5jadjj8wVA@mail.gmail.com>
-Subject: Re: [PATCH v13 0/5] vfio/dma-buf: add TPH support for peer-to-peer access
-To: Christian Konig <christian.koenig@amd.com>
-Cc: kvm@vger.kernel.org, linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org,
-        dri-devel@lists.freedesktop.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Alex Williamson <alex@shazbot.org>, Jason Gunthorpe <jgg@ziepe.ca>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Proofpoint-Spam-Info: AW1haW4tMjYwODE0MDEzOSBTYWx0ZWRfX7qutNDQSJgyJ
- vuYJiCzxi8TUj01UBNp973QsrJeeUFc5khD/PUsa0F3nYoMH6hh0fjcRVlRDxfp/x1seakx6XgH
- k3gtk7O/e+c2AhR9hRMxFo/xV9yPHqk=
-X-Authority-Analysis: v=2.4 cv=GvVyPE1C c=1 sm=1 tr=0 ts=6a7f59b9 cx=c_pps
- a=7uPEO8VhqeOX8vTJ3z8K6Q==:117 a=IkcTkHD0fZMA:10 a=Sv0fKeRqtYgA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=7x6HtfJdh03M6CCDgxCd:22 a=8elwO82fXORLTBIkMd32:22
- a=VwQbUJbxAAAA:8 a=VabnemYjAAAA:8 a=SJExgD-b2JMLU6q38FQA:9 a=QEXdDO2ut3YA:10
- a=EXS-LbY8YePsIyqnH6vw:22 a=gKebqoRLp9LExxC7YDUY:22
-X-Proofpoint-GUID: wPy6BF_0l61DCaPSukHJU_CssHJULDPg
-X-Proofpoint-ORIG-GUID: wPy6BF_0l61DCaPSukHJU_CssHJULDPg
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODE0MDEzOSBTYWx0ZWRfXxAYhblfYLp+R
- y7JlLtKPux8iveK6DfF227GJbd2iDZEWWgdqRRLxO7/OTTzoi5wYB5toF/rV3svP+pqXANN0l0q
- pRW65+SkhhlyZZvzXUNhwsnZGi2dolq+8eWl3h+HTOpWr0hg5HE5D6JCn6w2/W9n0oLJEscWZZv
- L4N+b6LUOEa5eBpBU/QM28JBleg4ilhrweHLQzpnYIL/zaZNpOhFFXwY8e1Oy9JNrFfoJ44Vo5/
- sZwyVXWK41eRnBFnaHbwfl0pSWkk2mle35Ykltsuwv3LHyX36p7eqXVKDLnJKc3TYYjG1umYfAS
- l6amKcOLYtyG7th/kQZYqCivRdXBTl1Ckz5lfmWIQOhJ189ffTq2AZAsLnfRF/Au00CD5W71rOa
- QUwy1Jcdn9yKGCg+0TzQZCXShXTbM87LYyMVKO+lHKBnxwZHEC3k6zP5JFZ1PWk9DQoWoOxfafS
- wXBCBJWKuojU/aqdhfw==
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-08-14_06,2026-08-12_01,2025-10-01_01
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: GV2PR04MB11799:EE_|DU0PR04MB11259:EE_
+X-MS-Office365-Filtering-Correlation-Id: 4600d250-42f9-4a77-861e-08defa3ca33c
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|1800799024|23010399003|19092799006|366016|376014|7416014|56012099006|10067099003|11063799006|4143699003|22082099003|18002099003;
+X-Microsoft-Antispam-Message-Info:
+	cCLwgd+xC2AvD2vHvXd1T07RvvbGSqGqhzlGRViAiOT/HATjBvKWaD/1oh8iXUrPS3v65aqOPllQINPDN32Ry2ASjGv0Pjs/E7euR2RlONhl9deivqiH6EG/MZolp2BucwwLeWQERQndUhNcpyPstGs1y6NIAqcmrq5X2u7oD78tQ+rnj7Ijkuw9iNV76CihWXZVNjVruvwKjfq8gSdpytcLM5JbQkGfU81NSnvpu4xyVkEFVLFRaS+7UIbEUq0aGa5E2ju+4aDwTqYVKs6aUuAjgCD2HkL6p7txAVDeFIBQUXY7IEjgPc7fjgRxfnMItDHQh15vAusCqo6aUiD6Qf96GJxFA21Vrn1Px6yCa9nkNOUSfadHTNYGWBmSWI7Aug5gfT5e+XNeebxKk0nsPTyzJal4BInORNC26Oktvt4BHD5eCd6TIANKMutFlYEBX1EZUG3Gg1Yh5yFmWss/Jq6EpodxU/t1Qlshhe48VluiqSVHG6IxH9um6AjNkcfmcukFbhoDasWzOVyCmJ+U7ZB+8/6rww5c6sxe501jlTuXgWOsWSsxENOw2CAgC/9aZRWCnJVO7cgh6P/AXJTV8WnJu9V1jD8i98BR1X4Xi2PxNcZ1CQGgYE7a7D2J0dxH2/XErWZBl8YREwhuD0VqpsDupMBNn+7ZO5+FPcMwvxY=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:GV2PR04MB11799.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(23010399003)(19092799006)(366016)(376014)(7416014)(56012099006)(10067099003)(11063799006)(4143699003)(22082099003)(18002099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?hicXrkYYK9qD4qOVy10WH3YN7iV9ZcmHtyGMxKBzA1e2A8ABZWbn5jRTDD6R?=
+ =?us-ascii?Q?97WByjysC+2xQKVRYt1cmJfBBpgVhMmrjBpThs0han8vpp/pNi3Y1RvDiWnx?=
+ =?us-ascii?Q?dn3BdOk7CHeSWRY4DYEx2k5BXU4JaKdeGngdvSsm4Q/PQ33jLf22GhF3mSoI?=
+ =?us-ascii?Q?ocPCY67Ezvx9obHbRtxh1OsAy2k1z6mfQ/iHFDYjV51jI9xkhlqoxAuF0Ngt?=
+ =?us-ascii?Q?3u1M7mtfd++PAln0dcHLzluXqUnlIYFGUTYnkvLV1JVArjXnLIRzClzLqR0i?=
+ =?us-ascii?Q?dwuLmiKF5Kf8Ah323rJC+fACRxdpIfPZ0unJMTtN/zbb45500ySiIuNJqI8n?=
+ =?us-ascii?Q?0u2Y8CepsdaQOuBKJsS3E1zd6qb9P80rG5RXl0A3zXF5ysc2O4k+Pn1j89Bx?=
+ =?us-ascii?Q?gYQArro/JWBZau/kl/FUmswf7OpZfujagnQx0k5001NQ3K4C5aurRstQP0w1?=
+ =?us-ascii?Q?jCPjmolN/pATlftAw2RV+FHHhvLLn5YSF66z3SIA2b1faf5fHj+1ZJkNOQ2u?=
+ =?us-ascii?Q?UWkxnYdvtsJuxzcH+rjKspTmUpQvGRAlIgThrs6nHPkrkX4X8u4egcjuLkTo?=
+ =?us-ascii?Q?qp2bdFVAr71BfiresEaeIrTIJC0ZR9/EFz5knHCDhFpych1uPquk3Ru7VxuG?=
+ =?us-ascii?Q?c1GdvzQpzy0XJfvrLvqgjLAnYgwFeyqLWeV3sHsjVLOI9cn+IyAOv37VGAEc?=
+ =?us-ascii?Q?tzvE19Ku7bBiZKY5yRqlEdYvCMDFhoxbwLLGRlrtPtA+pnRCf+eyV664HFdJ?=
+ =?us-ascii?Q?qgEk84cYxp4gM3B8Y+4tqjZsog0Mw5IiOQJYwrUrTiMvIBAgACF9KG4frjzK?=
+ =?us-ascii?Q?l/OT1XbwcuaAKv58cODO6pOPQ9qrTuL4Upt5iKJvwlD/WsceboR30Z7iKIl3?=
+ =?us-ascii?Q?cP1hgn96W3CjvUlyGClxsOR73+Wms6N0ZV41nMAE8fpYa/6V4CW3VY8nWQFv?=
+ =?us-ascii?Q?dsFueUDpJnNogLR5XBUsjwZjwTQy5RFLaxw/SvN+r0KbMZm/BS1c1/BX8jZA?=
+ =?us-ascii?Q?xwFg23llkL1mMj4y2omqBAHDR61NJ8ZAfo9uUkQH34MWdzxQNDFgIJJHB1Zu?=
+ =?us-ascii?Q?f9GwKj/q2bKdn1LUBSEG8DzkqAgJyhwBHqqD80a5yWCEjS6gVefNHQLNVZwR?=
+ =?us-ascii?Q?wpNHhY1S1Zc8FZz0IHpAMtJyVGLRM8tMJ5S9mZ/D94Z45KvPvgqbF+kflc3S?=
+ =?us-ascii?Q?YrYL0oD/76C2b2CH2/8Ks58uYe8sRdhYWFX4CcjZPZaNvbSfd1kv48MxByNS?=
+ =?us-ascii?Q?4TfDVEOzndm4vaHHm7MQ0K2ge8czMjwpvwj+ug21nmnzVl/n7ka7xWun87Ez?=
+ =?us-ascii?Q?DvtDAPNoA1DSDmRL2eOpDvfpVOMq3gHkXtEDPqUHOnI4uXmwhYgTzJxsU/f1?=
+ =?us-ascii?Q?9PgUa1AehHcMZXXH6GbeT+URwYkHnu0tBbFVMa/tkqNRQmAL4xcwJsrFehYj?=
+ =?us-ascii?Q?9laqh7ghr/nx/k97DA2KDqUWQzN3mYlu9i7Sjc1f2KYbLEd85rjOlE/QotQe?=
+ =?us-ascii?Q?TJe5Hrm+b2mbEOKeP/djwvV59QTxv9cW64IWa5HeG5jT8mz/TQR+pKwPqW1g?=
+ =?us-ascii?Q?WbuMwr/vsUcQ4AoLrad+gNg7ash8t0Xa6wvCg5BYxUtPVr5fuwhhhCzoOuWQ?=
+ =?us-ascii?Q?ksbCETMbwLJRg5VSBfAzkzumqIYs6bQIvLQ5FGcDPimSd6rkrx0ajkDIr02k?=
+ =?us-ascii?Q?95GL/q70tWitC3n+KUGWXMtmlPKOqzIczUzPDSv2JY5/WXGANo+qiXHYMSm9?=
+ =?us-ascii?Q?KI4gnQbGMyeBKC+qTHG6xS+1JnBOBRk5NRBkJ4G6ydZp7pKg7fwf?=
+X-OriginatorOrg: oss.nxp.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 4600d250-42f9-4a77-861e-08defa3ca33c
+X-MS-Exchange-CrossTenant-AuthSource: GV2PR04MB11799.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 14 Aug 2026 19:45:47.9136
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 6Wmf5XL8IcREVggyI70jXgYcLt+scAjqqrepoaCUHpb5yeVFYi/rWJQSikjuYNRBNR+9JCNGTa9P/OGUIqRIuzJh7FkkMR/+/RFRIujIv0KAetKc0oaroX+wnkr55pFg
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DU0PR04MB11259
 
- Hi Christian,
+On Tue, Jul 28, 2026 at 11:15:14AM -0600, Logan Gunthorpe wrote:
+> switchtec_dma_chan_stop() returned early if halt_channel() timed out,
+> skipping the writes that clear sq_base/cq_base on the channel, and
+> gave its caller no way to tell the halt hadn't been confirmed.
+> switchtec_dma_free_chan_resources() unconditionally frees the
+> descriptor rings right after calling this function, so if the
+> hardware failed to halt, it could keep writing into memory that had
+> already been freed.
+>
+> Attempt the register clear regardless of whether the halt was successful
+> and have switchtec_dma_chan_stop() return the halt result so callers can
+> tell when it wasn't confirmed. switchtec_dma_free_chan_resources() now
+> skips freeing the descriptor rings (leaking them instead) in case the
+> hardware continues to write into that memory.
+>
+> But all this is hardening that is pretty unlikely to be hit in the real
+> world.
+>
+> Reported-by: Sashiko <sashiko-bot@kernel.org>
+> Link: https://lore.kernel.org/dmaengine/20260721162531.BA01A1F01560@smtp.kernel.org
+> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+> ---
 
-A gentle ping on this series, especially patch 3, which adds the
-optional dma-buf get_pci_tph() callback. Could you please review this
-when you have a chance?
+This common problem when timeout happen. Before we have good method to
+handle it, I suggest leave it as it for now.
 
-https://lore.kernel.org/linux-pci/20260731211601.3033906-4-zhipingz@meta.co=
-m/
+I don't want to introduce new problem by fix an unlikely happen problem.
 
-Thanks,
-Zhiping
+Frank
 
-
-On Fri, Jul 31, 2026 at 2:22=E2=80=AFPM Zhiping Zhang <zhipingz@meta.com> w=
-rote:
+>  drivers/dma/switchtec_dma.c | 23 ++++++++++++++++-------
+>  1 file changed, 16 insertions(+), 7 deletions(-)
 >
-> This series adds TLP Processing Hints (TPH) support to the VFIO dma-buf
-> export path, allowing importing drivers (e.g. mlx5) to use the
-> exporter's steering tag when performing peer-to-peer DMA into a
-> VFIO-owned device.
+> diff --git a/drivers/dma/switchtec_dma.c b/drivers/dma/switchtec_dma.c
+> index f77da31aeb65..cbbc9ad08247 100644
+> --- a/drivers/dma/switchtec_dma.c
+> +++ b/drivers/dma/switchtec_dma.c
+> @@ -543,26 +543,33 @@ switchtec_dma_abort_desc(struct switchtec_dma_chan *swdma_chan, int force)
+>  	spin_unlock_bh(&swdma_chan->complete_lock);
+>  }
 >
-> There is no separate in-tree vendor kernel driver for the target device:
-> vfio-pci is the in-tree driver and the targeted device is managed
-> from userspace via VFIO passthrough. That is why the ST has to flow
-> through a uAPI: userspace owns the device and its ST table, so it is the
-> entity that can configure a meaningful value for a given dma-buf. The
-> kernel-visible participants are still in-tree: vfio-pci exports the
-> dma-buf and mlx5 imports it.
+> -static void switchtec_dma_chan_stop(struct switchtec_dma_chan *swdma_chan)
+> +static int switchtec_dma_chan_stop(struct switchtec_dma_chan *swdma_chan)
+>  {
+> +	struct pci_dev *pdev;
+>  	int rc;
 >
-> On the effect: the endpoint's PCIe ingress block uses the ST as
-> an in-band instruction for the incoming P2P TLP -- selecting a target
-> cache partition and, on writes, an in-flight operation on the data
-> before it lands. The dma-buf callback keeps this opaque to the
-> framework -- only the producer (userspace owner of the VFIO device)
-> and the consumer (endpoint block) need to interpret the value. The
-> dma-buf get_pci_tph callback itself is optional, but workloads that
-> depend on the endpoint's in-flight operation need it because fallback
-> does not produce the same result.
+>  	rc = halt_channel(swdma_chan);
+> -	if (rc)
+> -		return;
 >
-> The dma-buf hook is intentionally generic and discoverable rather than
-> a private side channel. The exporter owns the completing address
-> space for the dma-buf and decides whether it can provide a meaningful
-> ST/PH tuple for that completer; the dma-buf core keeps the tuple opaque,
-> and importers merely request the namespace they support and place the
-> returned value on generated TLPs. Exporters that cannot derive a
-> meaningful tuple simply return -EOPNOTSUPP.
+>  	rcu_read_lock();
+> -	if (!rcu_dereference(swdma_chan->swdma_dev->pdev)) {
+> +	pdev = rcu_dereference(swdma_chan->swdma_dev->pdev);
+> +	if (!pdev) {
+>  		rcu_read_unlock();
+> -		return;
+> +		return rc;
+>  	}
 >
-> TPH is advisory: a steering tag that is not honored on the path (for
-> example an intermediate routing element that does not forward the TPH
-> prefix) is ignored and the request completes as an ordinary,
-> non-TPH transaction (PCIe Base 6.4 sec 2.2.7.1). This series therefore
-> targets the same-Root-Port / common-switch topology, where the ST
-> reaches the completer; cross-Root-Port P2P is best-effort and is not
-> gated in the uAPI, since supplying an unused ST is harmless and there
-> is no discoverable "TPH routing" capability to test against.
+> +	if (rc)
+> +		pci_err(pdev,
+> +			"Channel %d halt timed out, clearing DMA base registers anyway\n",
+> +			swdma_chan->index);
+> +
+>  	writel(0, &swdma_chan->mmio_chan_fw->sq_base_lo);
+>  	writel(0, &swdma_chan->mmio_chan_fw->sq_base_hi);
+>  	writel(0, &swdma_chan->mmio_chan_fw->cq_base_lo);
+>  	writel(0, &swdma_chan->mmio_chan_fw->cq_base_hi);
 >
-> Patch 1 folds the reserved 0b10 "TPH Completer Supported" encoding into
-> "not supported" in get_rp_completer_type(), so only architected values
-> can reach the TPH Requester Enable field. It was previously posted
-> standalone to linux-pci; per Alex Williamson's v12 review it now travels
-> with the series, which removes the cross-tree ordering dependency and
-> lets review tooling apply the series as posted.
-> Patch 2 adds small PCI/TPH type helpers so drivers can query the enabled
-> TPH requester mode and the device's TPH Completer Supported field
-> without reaching into pci_dev internals (and so callers in
-> CONFIG_PCIE_TPH=3Dn builds get a clean fallback). pcie_tph_completer_type=
-()
-> applies the same reserved-encoding fold as get_rp_completer_type(),
-> inlined locally so the helper is self-contained.
-> Patch 3 adds the optional dma_buf_ops::get_pci_tph callback plus the
-> dma_buf_get_pci_tph() importer wrapper so importers can fetch TPH
-> metadata from an exporter under dmabuf->resv.
-> Patch 4 implements get_pci_tph in vfio-pci and adds the new uAPI
-> (VFIO_DEVICE_FEATURE_DMA_BUF_TPH) for userspace to attach the metadata.
-> Patch 5 wires up the mlx5 RDMA driver as a consumer. It also enforces the
-> dma_buf_get_pci_tph() steering-tag lifetime: the tag is only valid for th=
-e
-> mapping it was queried against, and the mkey's TPH fields cannot be
-> reprogrammed in place. mlx5 therefore records the registration-time tuple
-> and re-queries after each dma-buf mapping is established under
-> dmabuf->resv; unchanged tuples continue with the existing mkey, while
-> changed or missing tuples fail the remap rather than continue with a
-> stale hint. For vfio-pci BAR dma-bufs this is expected to be a no-op
-> because invalidation is revoke/quiesce, not movement to a new backing
-> placement, and the userspace-provided tuple is not changed by the
-> revoke/un-revoke path.
+>  	rcu_read_unlock();
+> +
+> +	return rc;
+>  }
 >
-> Build-tested with both CONFIG_PCIE_TPH=3Dy and CONFIG_PCIE_TPH=3Dn.
-> Functional validation on the target topology: PCIe analyzer captures
-> on the P2P TLPs confirm the ST emitted by mlx5 matches the value
-> configured through VFIO_DEVICE_FEATURE_DMA_BUF_TPH, and the end-to-end
-> P2P workload only produces results consistent with the endpoint's
-> ST-selected in-flight operation. For example, with userspace
-> configuring 8-bit ST=3D0xf0 and PH=3D2, an analyzer capture of a peer-to-
-> peer MWr64 shows "STP MWr64 TC=3D0 OHC=3D2 ..." followed by "OHC-B
-> ST=3DF0h PH=3D2 HV=3D1":
-> (TLP Captures)
-> 08000260 -> STP MWr64 TC=3D0 OHC=3D2 TS=3D0 Attr=3D0 L=3D8
-> F0000004 -> RID=3D4h:0h.0h EP- Tag=3DF0h
-> E0200000 -> AddrH=3D000020E0h
-> 00080006 -> AddrL=3D06000800h
-> 90F00000 -> OHC-B ST=3DF0h PH=3D2 HV=3D1 AMA=3D0 AV-
+>  static int switchtec_dma_terminate_all(struct dma_chan *chan)
+> @@ -1050,6 +1057,7 @@ static void switchtec_dma_free_chan_resources(struct dma_chan *chan)
+>  {
+>  	struct switchtec_dma_chan *swdma_chan =
+>  		container_of(chan, struct switchtec_dma_chan, dma_chan);
+> +	int rc;
 >
-> The dma-buf get_pci_tph interface has also been exercised by a second,
-> independent importer: a different vendor's NIC whose driver is not yet
-> upstream, locally taught to call dma_buf_get_pci_tph(). A PCIe analyzer
-> confirmed the ST it placed on outbound P2P TLPs matches the value
-> configured through VFIO_DEVICE_FEATURE_DMA_BUF_TPH, the same result as
-> with mlx5. Two unrelated importer drivers exercising the callback
-> end-to-end shows the interface is not tied to a single consumer. That
-> importer change is out-of-tree and not part of this series. For that
-> second importer, with userspace configuring 8-bit ST=3D0xe0 and PH=3D0,
-> an analyzer capture shows:
-> (TLP Captures)
-> 08200260 -> STP MWr64 TC=3D0 OHC=3D2 TS=3D1 Attr=3D0 L=3D8
-> 4E00004C -> RID=3D4Ch:0h.0h EP- Tag=3D4Eh
-> 00170000 -> AddrH=3D00001700h
-> 00200006 -> AddrL=3D06002000h
-> 10E00000 -> OHC-B ST=3DE0h PH=3D0 HV=3D1 AMA=3D0 AV-
+>  	spin_lock_bh(&swdma_chan->submit_lock);
+>  	swdma_chan->ring_active = false;
+> @@ -1059,9 +1067,10 @@ static void switchtec_dma_free_chan_resources(struct dma_chan *chan)
+>  	swdma_chan->comp_ring_active = false;
+>  	spin_unlock_bh(&swdma_chan->complete_lock);
 >
-> Changes since v12:
->   Patch 1 (PCI/TPH, new to the series): the reserved-encoding fold,
->   previously posted standalone to linux-pci [1], is now the first patch
->   here (Alex Williamson). Sashiko could not apply v12 because of that
->   external dependency; with the fold in-series and the mlx5 leak fix in
->   linux-next, v13 has none. The code is unchanged from the standalone
->   v3; the Fixes: tag is dropped, since no code path can reach the
->   reserved encoding today and the patch is hardening rather than a fix
->   for observed silicon.
+> -	switchtec_dma_chan_stop(swdma_chan);
+> +	rc = switchtec_dma_chan_stop(swdma_chan);
+>  	switchtec_dma_abort_desc(swdma_chan, 0);
+> -	switchtec_dma_free_desc(swdma_chan);
+> +	if (!rc)
+> +		switchtec_dma_free_desc(swdma_chan);
 >
->   Patch 2 (PCI/TPH): inline the reserved-encoding fold in
->   pcie_tph_completer_type() rather than calling the helper that earlier
->   folding revisions added; that helper was dropped in folding v3 per
->   Bjorn Helgaas and Wei Huang.
->
->   Patch 3 (dma-buf): no functional change.
->
->   Patch 4 (vfio/pci): also gate the DMA_BUF_TPH feature on
->   vdev->pci_ops->get_dmabuf_phys, matching
->   vfio_pci_core_feature_dma_buf(). Without it PROBE reported the feature
->   as supported on a device that advertises TPH Completer support but
->   cannot export a vfio dma-buf at all, so nothing could ever carry the
->   metadata (Alex Williamson, who raised this to uAPI-affecting
->   severity).
->
->   Patch 5 (mlx5): keep the !dev->st early-out in mlx5_st_alloc_index()
->   ahead of the pcie_tph_get_cpu_st() call, so splitting out
->   mlx5_st_alloc_index_by_tag() neither adds an ACPI _DSM invocation on
->   devices without ST support nor changes the errno userspace sees when
->   the _DSM lookup fails (Alex Williamson). The commit message now
->   describes this rather than presenting the split as a pure extraction.
->
-> Previous link:
-> v12: https://lore.kernel.org/linux-pci/20260715204008.3911275-1-zhipingz@=
-meta.com/
-> v11: https://lore.kernel.org/linux-pci/20260702181025.2694961-1-zhipingz@=
-meta.com/
-> v10: https://lore.kernel.org/linux-pci/20260630224328.3218796-1-zhipingz@=
-meta.com/
-> v9: https://lore.kernel.org/dri-devel/20260622184211.2229399-1-zhipingz@m=
-eta.com/
-> v8: https://lore.kernel.org/dri-devel/20260615065912.2177918-1-zhipingz@m=
-eta.com/
-> v7: https://lore.kernel.org/dri-devel/20260611161546.4075580-1-zhipingz@m=
-eta.com/
-> v6: https://lore.kernel.org/dri-devel/20260608185646.4085127-1-zhipingz@m=
-eta.com/
-> v5: https://lore.kernel.org/dri-devel/20260526144401.1485788-1-zhipingz@m=
-eta.com/
-> v4: https://lore.kernel.org/linux-pci/20260519201401.1558410-1-zhipingz@m=
-eta.com/
-> v3: https://lore.kernel.org/linux-pci/20260512184755.4137227-1-zhipingz@m=
-eta.com/
-> v2: https://lore.kernel.org/linux-pci/20260430200704.352228-1-zhipingz@me=
-ta.com/
->
-> Zhiping Zhang (5):
->   PCI/TPH: treat reserved 0b10 completer encoding as unsupported
->   PCI/TPH: Add requester/completer type helpers
->   dma-buf: add optional get_pci_tph() callback
->   vfio/pci: implement get_pci_tph and DMA_BUF_TPH feature
->   RDMA/mlx5: get tph for p2p access when registering dma-buf mr
->
->  drivers/dma-buf/dma-buf.c                     |  32 ++++
->  drivers/infiniband/hw/mlx5/main.c             |   1 +
->  drivers/infiniband/hw/mlx5/mlx5_ib.h          |  11 ++
->  drivers/infiniband/hw/mlx5/mr.c               | 151 +++++++++++++++++-
->  drivers/infiniband/hw/mlx5/odp.c              |   7 +
->  .../net/ethernet/mellanox/mlx5/core/lib/st.c  |  52 +++++-
->  drivers/pci/tph.c                             |  55 ++++++-
->  drivers/vfio/pci/vfio_pci_core.c              |   3 +
->  drivers/vfio/pci/vfio_pci_dmabuf.c            | 120 +++++++++++++-
->  drivers/vfio/pci/vfio_pci_priv.h              |  13 ++
->  include/linux/dma-buf.h                       |  25 +++
->  include/linux/mlx5/driver.h                   |  15 ++
->  include/linux/pci-tph.h                       |   8 +
->  include/uapi/linux/vfio.h                     |  43 +++++
->  14 files changed, 517 insertions(+), 19 deletions(-)
->
+>  	disable_channel(swdma_chan);
+>  }
 > --
-> 2.53.0-Meta
+> 2.47.3
 >
