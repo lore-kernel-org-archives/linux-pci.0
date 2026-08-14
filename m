@@ -1,191 +1,134 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.17])
+Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0985135E944
-	for <linux-pci@vger.kernel.org>; Fri, 14 Aug 2026 03:51:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.17
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DDDE335E944;
+	Fri, 14 Aug 2026 03:51:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=204.191.154.188
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786679487; cv=none; b=gyGye47CtKQzVYNG8nmTImWV1aAMoEmmTRa2ptfxTQK9kRzb92i0Jz+r5t1KxDQ9GtelA/FhSBzy7uC5xp3qu2tTrncH5uvyHtU618wo+rWULDqWJEu3ZA/PipX7nfdsTfHFlmA0b5BGbibd5l2HsFeOGCWs6/YMzRhBkjMdHt0=
+	t=1786679509; cv=none; b=YMbMKPPc8yzSZSkYc9k4roIrW6dZuqJZhhMas1fn596sh039lVIrYfEhgiCbMOzsKkuni51/y+2JuHx4IY49Vsl81GGadHX5K+w9L4UAEfdxCVuI/vDHPmMn/1pMUdwfBnxpkGGM7wvGwl/h3g2rqkloel9t3VD5jT+cttxmYnE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786679487; c=relaxed/simple;
-	bh=GU8bj9ZP8pHgWrNNf4tJYzbR3wziiYofDaVMGR9Z5Rk=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=dhWhcjBTjJYeGUjW97bOA2pCLqNft0OgZio0Cb0qHQTYkeyoGTfG6ZxOymJA4joNzfklGq3A9NhFIk04wY/fBZP96n4YOts5TBIjVX8HjXdBGjqYfXNoHVKTtnOt0MMVyMbPEq+V9wY15eQcaMD2QqPH/xiFcaM9gMqirkwAV6M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=VuUOorJ1; arc=none smtp.client-ip=198.175.65.17
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1786679509; c=relaxed/simple;
+	bh=Qg+Ecx7NVsm+ljabb4vLMxPnowmdo0/TRRssY72JkJs=;
+	h=Message-ID:Date:MIME-Version:To:Cc:References:From:In-Reply-To:
+	 Content-Type:Subject; b=amCvNO2+y1HC9aZsLl0HNkSgb2JWVcGVRKHrPADE4WR4QZPNDRtvc5Sl48BxMx8IQLzu54JNiBNS+pEtgGuzYamz20kJVr80M+6G4sAOlOsvCueHsY2Ens9FjsAZHsmNYaiDf4V11toX3Xs+4lFmPgh2C8cuL0BUTLd4MID5WLA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com; spf=pass smtp.mailfrom=deltatee.com; dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b=dQ8rNrOs; arc=none smtp.client-ip=204.191.154.188
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=deltatee.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="VuUOorJ1"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1786679484; x=1818215484;
-  h=date:from:to:cc:subject:message-id;
-  bh=GU8bj9ZP8pHgWrNNf4tJYzbR3wziiYofDaVMGR9Z5Rk=;
-  b=VuUOorJ1TxcQEzUUC/odfQr7jY703Lr6X12wqznIqFb4jEQMZgJq6k/F
-   hhwskn8ySietqM4A7Nof6xDAuCnwS8YM5AzdId80i7trP7sI40w5+5J51
-   S3dP0sQL9eL2QBgf4BX2S/9f5W/65Dxq7TzGTTvg1SgOBx7vgXwfC9PrV
-   RWtCuEQgA4Cx7bsilIJXg+oVhEUG2tKxwOGG/67iGGxCCSsY+e6g0qB8F
-   fj/VN8gyj5kC7+xqhQrT7CN1RpaKPJIc0QV2SbSv/5noVQ30RNeCv1hhI
-   zOEn0nObaUHxv4S5yt7LtPY3BLejwyc5+wdUdMJcJoYsX6zy4qBwkD5of
-   w==;
-X-CSE-ConnectionGUID: puJ+mqqLQGyXX3s0lRKipg==
-X-CSE-MsgGUID: 7AQlrl5mQ+uw4vJ1us7tPw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11874"; a="87280060"
-X-IronPort-AV: E=Sophos;i="6.25,222,1779174000"; 
-   d="scan'208";a="87280060"
-Received: from fmviesa010.fm.intel.com ([10.60.135.150])
-  by orvoesa109.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Aug 2026 20:51:24 -0700
-X-CSE-ConnectionGUID: u/1Vsw0+RaSihaQYoEumDg==
-X-CSE-MsgGUID: nDUPQ6UaTYOoX0EEYK9pOQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.25,222,1779174000"; 
-   d="scan'208";a="260323026"
-Received: from lkp-server01.sh.intel.com (HELO 6eda058d650d) ([10.239.97.150])
-  by fmviesa010.fm.intel.com with ESMTP; 13 Aug 2026 20:51:22 -0700
-Received: from kbuild by 6eda058d650d with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1wuiwx-00000000Xfm-3cmz;
-	Fri, 14 Aug 2026 03:51:19 +0000
-Date: Fri, 14 Aug 2026 11:50:33 +0800
-From: kernel test robot <lkp@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org
-Subject: [pci:wake] BUILD SUCCESS
- 071e245ab749c52338ec4eb7fe0a9bb2cee97492
-Message-ID: <202608141121.sphUm1x0-lkp@intel.com>
-User-Agent: s-nail v14.9.25
+	dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b="dQ8rNrOs"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
+	MIME-Version:Date:Message-ID:content-disposition;
+	bh=6GFa1C7gAI7sWCaZh4nkyxfa5WX3juo6z7eBpomHhtU=; b=dQ8rNrOsie+NPGcrV3FgZdgmVC
+	fnM148n+gAddDgoHD3FCFI33I5aSDzxPGmnsPXicEv0+tpo9yTBVzfdhdfGb0/u4G9EM7kTNFA5Ww
+	xvgaspsNf29bwXUQZ2Kp8T1QLSJLeMKE4lBEV7w97MLqWrjbxhZOiqLMt19srgSgNLbbq0lU5v09s
+	YGw4cSqHBIGZ06+hM7SToV38scDnp/XQyZHOf1md/OAZQuUO7XTYB2qt/icKcQ9Nnc8OT5sz2MDu2
+	fs4WQOsn52eT8DVnooTggdl1+7Fl6yhZh+Hw+qPTaea+NDS7s4JdRGQEO42fT73Km04l1B9bNiVpm
+	c06YU8mw==;
+Received: from [104.157.31.28] (helo=[192.168.1.251])
+	by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+	(Exim 4.98.2)
+	(envelope-from <logang@deltatee.com>)
+	id 1wuixO-00000002Yve-0ibj;
+	Thu, 13 Aug 2026 21:51:47 -0600
+Message-ID: <5e7eb09b-a47b-4cb5-8629-0ca5fa39f1f9@deltatee.com>
+Date: Thu, 13 Aug 2026 21:50:07 -0600
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+To: Leon Romanovsky <leon@kernel.org>, "Rafael J. Wysocki"
+ <rafael@kernel.org>, Len Brown <lenb@kernel.org>,
+ Saket Dumbre <saket.dumbre@intel.com>, Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-acpi@vger.kernel.org, acpica-devel@lists.linux.dev,
+ linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+ Lukas Wunner <lukas@wunner.de>, "Natu, Mahesh" <mahesh.natu@intel.com>
+References: <20260812-hmat-p2p-v1-0-75ac41380585@nvidia.com>
+ <20260812-hmat-p2p-v1-4-75ac41380585@nvidia.com>
+Content-Language: en-CA
+From: Logan Gunthorpe <logang@deltatee.com>
+In-Reply-To: <20260812-hmat-p2p-v1-4-75ac41380585@nvidia.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-SA-Exim-Connect-IP: 104.157.31.28
+X-SA-Exim-Rcpt-To: leon@kernel.org, rafael@kernel.org, lenb@kernel.org, saket.dumbre@intel.com, bhelgaas@google.com, linux-acpi@vger.kernel.org, acpica-devel@lists.linux.dev, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, lukas@wunner.de, mahesh.natu@intel.com
+X-SA-Exim-Mail-From: logang@deltatee.com
+X-Spam-Level: 
+Subject: Re: [PATCH RFC 4/7] PCI/P2PDMA: Prefer providers with better HMAT
+ performance
+X-SA-Exim-Version: 4.2.1 (built Sun, 23 Feb 2025 07:57:16 +0000)
+X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git wake
-branch HEAD: 071e245ab749c52338ec4eb7fe0a9bb2cee97492  PCI: Add support for PCIe WAKE# interrupt
 
-elapsed time: 2428m
 
-configs tested: 114
-configs skipped: 12
+On 2026-08-12 1:47 p.m., Leon Romanovsky wrote:
+> @@ -820,21 +844,29 @@ static unsigned long map_types_idx(struct pci_dev *client)
+>   * PCI_P2PDMA_MAP_THRU_HOST_BRIDGE. Otherwise, return
+>   * PCI_P2PDMA_MAP_BUS_ADDR.
+>   *
+> - * Any two devices that have a data path that goes through the host bridge
+> - * will consult a whitelist. If the host bridge is in the whitelist, return
+> - * PCI_P2PDMA_MAP_THRU_HOST_BRIDGE with the distance set to the number of
+> - * ports per above. If the device is not in the whitelist, return
+> - * PCI_P2PDMA_MAP_NOT_SUPPORTED.
+> + * Any two devices that have a data path through a host bridge require
+> + * platform support from the CPU, the host bridge whitelist, or a reachable
+> + * ordered HMAT path. Return PCI_P2PDMA_MAP_NOT_SUPPORTED when none of those
+> + * sources permits the path.
+>   */
+>  VISIBLE_IF_KUNIT enum pci_p2pdma_map_type
+>  calc_map_type_and_dist(struct pci_dev *provider, struct pci_dev *client,
+>  		int *dist, bool verbose)
+> +{
+> +	return __calc_map_type_and_dist(provider, client, dist, verbose, NULL);
+> +}
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+This patch is a bit hard to follow compared to the earlier ones in this
+series.
 
-tested configs:
-alpha                            allnoconfig    gcc-16.1.0
-alpha                           allyesconfig    gcc-16.1.0
-alpha                              defconfig    gcc-16.1.0
-arc                             allmodconfig    gcc-16.1.0
-arc                             allyesconfig    gcc-16.1.0
-arc                           randconfig-001    gcc-13.4.0
-arc                  randconfig-001-20260813    gcc-13.4.0
-arc                  randconfig-002-20260813    gcc-13.4.0
-arm                       keystone_defconfig    gcc-16.1.0
-arm                  randconfig-001-20260813    gcc-13.4.0
-arm                  randconfig-002-20260813    gcc-13.4.0
-arm                  randconfig-003-20260813    gcc-13.4.0
-arm                  randconfig-004-20260813    gcc-13.4.0
-arm64                         randconfig-001    gcc-14.3.0
-arm64                randconfig-001-20260813    gcc-14.3.0
-arm64                randconfig-001-20260813    gcc-16.1.0
-arm64                randconfig-002-20260813    gcc-14.3.0
-arm64                randconfig-002-20260813    gcc-16.1.0
-arm64                randconfig-003-20260813    gcc-14.3.0
-arm64                randconfig-003-20260813    gcc-16.1.0
-arm64                randconfig-004-20260813    gcc-14.3.0
-arm64                randconfig-004-20260813    gcc-16.1.0
-csky                            allmodconfig    gcc-16.1.0
-csky                 randconfig-001-20260813    gcc-14.3.0
-csky                 randconfig-001-20260813    gcc-16.1.0
-csky                 randconfig-002-20260813    gcc-14.3.0
-csky                 randconfig-002-20260813    gcc-16.1.0
-hexagon              randconfig-001-20260813    gcc-11.5.0
-hexagon              randconfig-002-20260813    gcc-11.5.0
-i386                            allmodconfig    gcc-14
-i386       buildonly-randconfig-001-20260813    gcc-14
-i386       buildonly-randconfig-002-20260813    gcc-14
-i386       buildonly-randconfig-003-20260813    gcc-14
-i386       buildonly-randconfig-004-20260813    gcc-14
-i386       buildonly-randconfig-005-20260813    gcc-14
-i386       buildonly-randconfig-006-20260813    gcc-14
-i386                 randconfig-001-20260813    clang-22
-i386                 randconfig-002-20260813    clang-22
-i386                 randconfig-003-20260813    clang-22
-i386                 randconfig-004-20260813    clang-22
-i386                 randconfig-005-20260813    clang-22
-i386                 randconfig-006-20260813    clang-22
-i386                 randconfig-007-20260813    clang-22
-i386                 randconfig-011-20260813    clang-22
-i386                 randconfig-012-20260813    clang-22
-i386                 randconfig-013-20260813    clang-22
-i386                 randconfig-014-20260813    clang-22
-i386                 randconfig-015-20260813    clang-22
-i386                 randconfig-016-20260813    clang-22
-i386                 randconfig-017-20260813    clang-22
-loongarch                          defconfig    clang-24
-loongarch            randconfig-001-20260813    gcc-11.5.0
-loongarch            randconfig-002-20260813    gcc-11.5.0
-nios2                           allmodconfig    gcc-11.5.0
-nios2                            allnoconfig    gcc-11.5.0
-nios2                randconfig-001-20260813    gcc-11.5.0
-nios2                randconfig-002-20260813    gcc-11.5.0
-parisc                          allmodconfig    gcc-16.1.0
-parisc                          allyesconfig    gcc-16.1.0
-parisc                             defconfig    gcc-16.1.0
-parisc                        randconfig-001    gcc-10.5.0
-parisc               randconfig-001-20260813    gcc-10.5.0
-parisc               randconfig-002-20260813    gcc-10.5.0
-powerpc                   adder875_defconfig    gcc-16.1.0
-powerpc                   amigaone_defconfig    gcc-16.1.0
-powerpc                       fsp2_defconfig    gcc-16.1.0
-powerpc              randconfig-001-20260813    gcc-10.5.0
-powerpc              randconfig-002-20260813    gcc-10.5.0
-powerpc                    taishan_defconfig    clang-21
-powerpc64            randconfig-001-20260813    gcc-10.5.0
-powerpc64            randconfig-002-20260813    gcc-10.5.0
-riscv                         randconfig-001    gcc-10.5.0
-riscv                randconfig-001-20260813    gcc-10.5.0
-riscv                randconfig-002-20260813    gcc-10.5.0
-s390                 randconfig-001-20260813    gcc-10.5.0
-s390                 randconfig-002-20260813    gcc-10.5.0
-sh                                 defconfig    gcc-16.1.0
-sh                   randconfig-001-20260813    gcc-10.5.0
-sh                   randconfig-002-20260813    gcc-10.5.0
-sparc                         randconfig-001    clang-20
-sparc                randconfig-001-20260813    clang-20
-sparc                randconfig-002-20260813    clang-20
-sparc64              randconfig-001-20260813    clang-20
-sparc64              randconfig-002-20260813    clang-20
-um                   randconfig-001-20260813    clang-20
-um                   randconfig-002-20260813    clang-20
-x86_64     buildonly-randconfig-001-20260813    gcc-14
-x86_64     buildonly-randconfig-002-20260813    gcc-14
-x86_64     buildonly-randconfig-003-20260813    gcc-14
-x86_64     buildonly-randconfig-004-20260813    gcc-14
-x86_64     buildonly-randconfig-005-20260813    gcc-14
-x86_64     buildonly-randconfig-006-20260813    gcc-14
-x86_64                                 kexec    clang-22
-x86_64               randconfig-001-20260813    gcc-13
-x86_64               randconfig-002-20260813    gcc-13
-x86_64               randconfig-003-20260813    gcc-13
-x86_64               randconfig-004-20260813    gcc-13
-x86_64               randconfig-005-20260813    gcc-13
-x86_64               randconfig-006-20260813    gcc-13
-x86_64               randconfig-011-20260813    gcc-14
-x86_64               randconfig-012-20260813    gcc-14
-x86_64               randconfig-013-20260813    gcc-14
-x86_64               randconfig-014-20260813    gcc-14
-x86_64               randconfig-015-20260813    gcc-14
-x86_64               randconfig-016-20260813    gcc-14
-x86_64               randconfig-071-20260813    gcc-14
-x86_64               randconfig-072-20260813    gcc-14
-x86_64               randconfig-073-20260813    gcc-14
-x86_64               randconfig-074-20260813    gcc-14
-x86_64               randconfig-075-20260813    gcc-14
-x86_64               randconfig-076-20260813    gcc-14
-x86_64                          rhel-9.4-bpf    gcc-14
-xtensa               randconfig-001-20260813    clang-20
-xtensa               randconfig-002-20260813    clang-20
+Why do we need to have a different variant of the function that excludes
+coord and is exported only for KUNIT? Why can't we just export the
+original function as is instead of creating the double underscore
+variant? Personally, I've been trying to avoid creating double
+underscore functions and naming functions more appropriately. But this
+one seems weird to me.
+
+Seems like some of these details would be better split into another
+patch justifying them as this change seems more like prep changes for
+the KUNIT work that follows instead of what the patch is meant to do:
+enabling the HMAT stuff.
+
+
+> @@ -941,12 +976,22 @@ calc_map_type_and_dist(struct pci_dev *provider, struct pci_dev *client,
+>  	}
+>  
+>  map_through_host_bridge:
+> -	if (!cpu_supports_p2pdma() &&
+> -	    !host_bridge_hmat_p2p(provider, client) &&
+> -	    !host_bridge_whitelist(provider, client, verbose)) {
+> -		if (verbose)
+> +	host_bridge_allowed = cpu_supports_p2pdma() ||
+> +			      host_bridge_whitelist(provider, client,
+> +						    false);
+> +	/*
+> +	 * The coordinates are only used to rank providers, which happens in
+> +	 * process context. Skip the firmware lookup on the mapping path once
+> +	 * the CPU or the whitelist has already permitted the path.
+> +	 */
+
+This feels backwards to me. If ACPI is kind enough to include
+information on P2PDMA support then I feel like we should use it
+exclusively. Not prioritize the old janky whitelists.
 
 --
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+
+In general this series looks really nice. And I'm so glad someone is
+finally adding this stuff to ACPI so that we can move away from the
+annoying white list.
+
+Thanks,
+
+Logan
