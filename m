@@ -1,222 +1,236 @@
-Received: from LO2P265CU024.outbound.protection.outlook.com (mail-uksouthazon11021117.outbound.protection.outlook.com [52.101.95.117])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f54.google.com (mail-ej1-f54.google.com [209.85.218.54])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3BDC946EC95;
-	Fri, 14 Aug 2026 13:05:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.95.117
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786712732; cv=fail; b=FeziX1y1Rzhkl9Mtb8JdqRAILj0ir9J+x+Z+qOzhPkMZeLTqmrieiOyH0lNsK35qVnFsqgZA2Js/qRTXgWudIJhlV96TZnw6j5ZgzGdOwo6dTlS0qWDJ74fF3/ZcMuq6xZxFhY7y+fGX8slih3Tbv8nwZrhD92/Nbqvbk6I6srE=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786712732; c=relaxed/simple;
-	bh=UDk6nOSkAT48IAETSZMgL9RQmAiE9LEnVdeh3qzJ/4g=;
-	h=Content-Type:Date:Message-Id:Cc:Subject:From:To:References:
-	 In-Reply-To:MIME-Version; b=NpEs/XN3d19N9dFI7pX9PZHAb+kka+2khi4g6VB44wPjYtN9OGmeIZxbbYflGH9VTByVu1t7bsYFwsCxR+Mh1gntPGo2DHgw3dEIjBz+K1imWxZ5d9dB4KtWaLTcTSG/MY6K9ckba++pNjUNSkRNYKfRKt5yr4Ocu0p4TcnZgOU=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net; spf=pass smtp.mailfrom=garyguo.net; dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b=EdLw4fem; arc=fail smtp.client-ip=52.101.95.117
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=garyguo.net
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 209594457C5
+	for <linux-pci@vger.kernel.org>; Fri, 14 Aug 2026 13:25:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.54
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1786713937; cv=none; b=FYcsUlWPmV724wxyNQZOmELMUI5f68nqOoEDlXSHrpmYNnkJBAz+gzHT6r+85NUupcowuUulHeaGuNmi5xwnINxue1wO84yCjSSD2tztLDAbQFGX1GPidn0Lt1/ZoFfoVQhQCM0S9FDZFHHuy4COxr3+HkwOGlTR/QHflTYhycg=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1786713937; c=relaxed/simple;
+	bh=wMEaVxlhuns8hkig2UsUJQAIUbQ2e1I1Zup33AB/514=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=ZAGQwxcE9sDsZvlfT19TB6c4PT2RopkDtovIfGutBQTrIC/+xJFHNL4B8EGSEP5+FtkqnN2TFbo1/TQFY3GkIXEL/rRvztqKHceRvb5KPr3LhOwGN3ITmZRlOZVqYV9dMawXVYJ9j6NvLKPFce6XIjJjM0wCbRsc8esG5mMhzaQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=Er12y8V5; arc=none smtp.client-ip=209.85.218.54
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b="EdLw4fem"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=ZhY9ZAENzJb8W49vxAahrEkr5E9CnWFVW5UdLZR7NOkwzgbns8O+7cMdkVV0nB8OzU/rhB2bk9JJzD0vYh7/CBGCPkHMVgQGRYd5V+akAuLhesg8xJbA2ZHPIV6bWm6CNIJwqCs3aX9AqnHCflGmf/WcbDiS/GJuTU2Jv8pE0GRUcoJPcgO3Fnj0cwnZo3IPVJ4xR5l5+jo2HB/tVrk88tELBewfQDww5Gzv4oDvhTq1Ut7rjRedjbhBM5KlC/i956gNsf6mIvtOVy4Fit367hJTrXK3HrSUbAJ3uDCwDM1S8McePQhx9FbTJFD5hdGn8DSUUsJFFghd/7O4tT3tHQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=heb2WB+gjBpzLcCikgq5lLw1oJ/BlfFSOYMt3NnilFc=;
- b=R+bFI+mVKnj7F6UhTU1u3cPi+qvkcTsgfi5TjJyBZbYagCv3oA86UUXccfAehCztf/MugNq+1KeMB66DOqCDLGCcURbJBYSZmAq9XdmnABuo7mO7FwLSeUDRTOGX7XUE2QNAaLimBbXHHNnUpsRsHq5Mhz2STUkft4rjCXTlrX6ovxSzcTMfbWweUOVjXNZB/SkADiec7DBkp4wWIWb9SOg5XgfXxbD3feeBJdqmmYVWV7lQgnVgPvXdSSl9bSdijsud9TJq8/BUNI56hJXLfIaTe1eURjMcsI6Xq9BU9ID48rTE1D0YwigMmO07UZq0SpW/pRqtHlXvQvF9fIEXdw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=garyguo.net; dmarc=pass action=none header.from=garyguo.net;
- dkim=pass header.d=garyguo.net; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=garyguo.net;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=heb2WB+gjBpzLcCikgq5lLw1oJ/BlfFSOYMt3NnilFc=;
- b=EdLw4fem3R2al4lMfDhRtFCc5bVuzBzD3BpPICp64ZgC3KNucggbA44ZnmdyII3OSkSR+UqgBxJ2T9RM7k6QK7MIEh1TtzvWm6/fcr2M7G68OjlHMUj4Hnf0CvHuxYzjRCKtPonciqGOZ4xWowW+dxPBimb7Hk6cF4Y9AVpPrfE=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=garyguo.net;
-Received: from LOAP265MB8560.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:4ab::19)
- by LO2P265MB3514.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:1a3::6) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.315.15; Fri, 14 Aug
- 2026 13:05:22 +0000
-Received: from LOAP265MB8560.GBRP265.PROD.OUTLOOK.COM
- ([fe80::f60b:1537:68d7:4fc1]) by LOAP265MB8560.GBRP265.PROD.OUTLOOK.COM
- ([fe80::f60b:1537:68d7:4fc1%4]) with mapi id 15.21.0315.014; Fri, 14 Aug 2026
- 13:05:22 +0000
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Fri, 14 Aug 2026 14:05:21 +0100
-Message-Id: <DKOOSSXDVVUK.SY5IAXJXUX5F@garyguo.net>
-Cc: "Danilo Krummrich" <dakr@kernel.org>, "Alice Ryhl"
- <aliceryhl@google.com>, "Daniel Almeida" <daniel.almeida@collabora.com>,
- "Miguel Ojeda" <ojeda@kernel.org>, "Boqun Feng" <boqun@kernel.org>,
- =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, "Benno Lossin"
- <lossin@kernel.org>, "Andreas Hindborg" <a.hindborg@kernel.org>, "Trevor
- Gross" <tmgross@umich.edu>, "Tamir Duberstein" <tamird@kernel.org>,
- =?utf-8?q?Onur_=C3=96zkan?= <work@onurozkan.dev>, "David Airlie"
- <airlied@gmail.com>, "Simona Vetter" <simona@ffwll.ch>, "Bjorn Helgaas"
- <bhelgaas@google.com>, =?utf-8?q?Krzysztof_Wilczy=C5=84ski?=
- <kwilczynski@kernel.org>, <driver-core@lists.linux.dev>,
- <rust-for-linux@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
- <nova-gpu@lists.linux.dev>, <dri-devel@lists.freedesktop.org>,
- <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v2 12/16] gpu: nova-core: use projection for PFALCON and
- PFALCON2 registers
-From: "Gary Guo" <gary@garyguo.net>
-To: "Alexandre Courbot" <acourbot@nvidia.com>, "Gary Guo" <gary@garyguo.net>
-X-Mailer: aerc 0.21.0
-References: <20260805-typed_register-v2-0-c3ca142220a0@garyguo.net>
- <20260805-typed_register-v2-12-c3ca142220a0@garyguo.net>
- <DKN1QEH1HWD1.1ZV0LWLNCZJTH@nvidia.com>
-In-Reply-To: <DKN1QEH1HWD1.1ZV0LWLNCZJTH@nvidia.com>
-X-ClientProxiedBy: LO4P123CA0310.GBRP123.PROD.OUTLOOK.COM
- (2603:10a6:600:197::9) To LOAP265MB8560.GBRP265.PROD.OUTLOOK.COM
- (2603:10a6:600:4ab::19)
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="Er12y8V5"
+Received: by mail-ej1-f54.google.com with SMTP id a640c23a62f3a-c1c50c1e29bso147599766b.3
+        for <linux-pci@vger.kernel.org>; Fri, 14 Aug 2026 06:25:35 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=suse.com; s=google; t=1786713934; x=1787318734; darn=vger.kernel.org;
+        h=content-type:in-reply-to:autocrypt:from:content-language:references
+         :cc:to:subject:user-agent:mime-version:date:message-id:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=wMEaVxlhuns8hkig2UsUJQAIUbQ2e1I1Zup33AB/514=;
+        b=Er12y8V5oqdgVr/2GdYlKvJqKemoSHlpkVoEx7rMl4fmbPjqspYLNvAeUq3J040r63
+         EHqRLgdCkJa2Gk+t1WIHKn+kQ8Owgu5wmHh7FF2RqYZ2dxQL2VB5Hj5KX2W2IVjWxwDG
+         FyT48J6JoANv1nbOHjumD6vZgrrcMp35JtFGrG27FsZj2YjRBANRWyLejOu4ViLPWHsP
+         aQZw9eoMCWP5UJB7qOW2BScWzHMTMOz40DeNahWoNdpSk6ws1qEZFC0oDdFNZHlk5/2d
+         oDQYB0P7YCTmz8mGIhvcMvddmGoOm7kk/oDp5ko3nIWcWkU5c9RB+6o6N74NQs+n3JR0
+         rkfQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1786713934; x=1787318734;
+        h=content-type:in-reply-to:autocrypt:from:content-language:references
+         :cc:to:subject:user-agent:mime-version:date:message-id:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=wMEaVxlhuns8hkig2UsUJQAIUbQ2e1I1Zup33AB/514=;
+        b=oiJOx5p94DuGvBvRov8WxFZZs09Xfw8Ssr4pAnQbquXdE51q7H+yS2KaE0nUihe+re
+         L0x/layuCuf+ui9ibv41+HX6pSG+jWOOA3l7RG1icLQLuTVA70V/VvTfpasI1BqNjS4+
+         y2SFibXRZOMXMrnRj/xaYACEugFwzhGP5ee10K2qATEcZfp0LL9ex7cO9hpEX6uBk3J0
+         kyc+ccYZygI1MJ7x0SCPAId1HHoUSSf4F+KJGUdIHv38xoSO6ZSAZc+EFKoI03q2t4GI
+         vaf6ZIsuwWJ2BlTyp4va0Zn0QkhJzNlHi1itbObtwLmTYo1y8JnhFe6GCOA0P4CY0RPO
+         cLjQ==
+X-Forwarded-Encrypted: i=1; AHgh+Rr6MfuyBIOe3u4pHcRk5jV2KpYJbkNYGpIxBFPy/UP7yyUNBDLrGE4/spGRTVmoTETLhWOWUWTWlt4=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yzh2MtOb2QODeMiMomldYMeu0EOK1Rr+jzYCfGm3NCUSjKZNc86
+	g+SklrJP861vLpr6aKx0zGIqSEGisL9tFNKW9IUrg12HzbeAh4hnmaEI9ExPFZ293jA=
+X-Gm-Gg: AR+sD12yHrO72TMyKuf19QQRjy+jmaWpwQSgRggd+B9OWDYfSKWsnIbP/x0icqGth5Y
+	vVwUJPLbkuDoAEWE52SIcmM/1FuY+IDmF2nXIhUwBeXXie1uA+4ByUD/9BGONNdqFriMreG29E3
+	qz6kZ/Vocgv5Z88sdSd1kLXXY5iqX8ehHmqTYy2cq6LH+0ew+jpax3BPWNhQIHBWgcdAtwU0uCr
+	lCjBCWVsioCSQYS91c33TqNmr6VBpgg1/NL6jtoqJk9kZti/bxv2JAsGylvMM4erBKW0/T0W0ds
+	B2dAhW1exY07zUztboz18nF7C3qhCllKRHnFpMAxXaWVxKxsvM7NzqjoaKX4hvJYW3aq0IahwsR
+	5t6ys8a1IT/Jjp3y9TiQYxbod2ZbqYFn+rAOoL844ToAJBx2z87EDnkMsLyCZG+973Ffj4Gw9MG
+	YlxM5uAGxQRjVSXBsyp1CZmijgkwJjMnzsmkoHHXYw0PIxdwMj/K+eTyCJt3sSoEGE5iA2uT7UH
+	19HPddiMiyAXZPpvjBYE+ovCE7PIn3qSlbawZcpqxHPSyzMcS85Fsm4o0k+eNKErGLSNwTMKDfV
+	64Noera5ZvaSKg==
+X-Received: by 2002:a17:906:fe43:b0:c1c:5c90:1bad with SMTP id a640c23a62f3a-c212a154559mr268829266b.14.1786713934359;
+        Fri, 14 Aug 2026 06:25:34 -0700 (PDT)
+Received: from ?IPV6:2a00:12d0:af5d:ad01:5d3f:14e6:9bcb:5112? (2a00-12d0-af5d-ad01-5d3f-14e6-9bcb-5112.ip.tng.de. [2a00:12d0:af5d:ad01:5d3f:14e6:9bcb:5112])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-c212339636fsm104236366b.2.2026.08.14.06.25.33
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 14 Aug 2026 06:25:34 -0700 (PDT)
+Message-ID: <4b7ee4e9-7a38-401d-9b9e-371173e8165c@suse.com>
+Date: Fri, 14 Aug 2026 15:25:33 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: LOAP265MB8560:EE_|LO2P265MB3514:EE_
-X-MS-Office365-Filtering-Correlation-Id: b28162e1-53dc-4598-6c47-08defa04b2ce
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|23010399003|376014|7416014|366016|1800799024|22082099003|18002099003|56012099006|5023799004|4143699003|10067099003|3023799007;
-X-Microsoft-Antispam-Message-Info:
-	ZtQxL9xQXhbdSmoBV/j7InO/rWadIX47hX9F6k4cjpG1yr+/jsXDRB8m7W8TgqUsYlz6DQ9UqujcKFOUM+jOanq3awuUAlnjMj8CPQy8g7+uIMlWz1K2+DdE1fWKoz2vzQcnWGUYH3O/rTnSEjn7+CtsBjpDgxP46OWWQU6Yr0QJqD4uT+FVr5I9KfjAhPtpjtvGiLrsnXSQQ7OQ9Azej+g12jQIRnB8LWhnx0PPm5ROR2vtrZZQbtZGK0rD4te/qe8t+pSUE6C4xZfF9MsbT6JcfYUSNunEQUXUQS5dSiTxu1tunSpvqytjg4uRaiw7OC8BJ2gPzKOp+zWU5bruX629rV7zh/Hy19ycI3t6SJ6IDMvfiTELR+ONfa/L6T8/LxnffZYpc2Mf9//2tyuaPipgS9bqSRq4G3v9CYjcYqR1aPMtu4lSUfwGf9Ph48f7shB5bMX1nacYI8ZGw8+ch96RX6bDt+Fvn/w5FgyqffnZry6qAj8iRhAmti6ToQWs4N7GamQSXNauq1Jk2crFE6T2PGqY0r2zfiPqqChlIpj04Q4kbqvk8hfAppUBMFp2bP55j8I0ZDw7An2VeG24UZJ0RIu1fERMiyARLTPJaAONH7LUqGiAWw7GRZl8m0sY9LX4vNqNwH8VXUY0+NcfR+YWhmcJeyb8BzyzTdjC9xc=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LOAP265MB8560.GBRP265.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(376014)(7416014)(366016)(1800799024)(22082099003)(18002099003)(56012099006)(5023799004)(4143699003)(10067099003)(3023799007);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?aDVTUlgwZ0k1dE9jQ3VweGtyTW1DVGE4VnM4RkJTMlovbUo0UkJCQ1IvTXFZ?=
- =?utf-8?B?S3M5Q2czTkllZk9ka2k2VGFDcGx5VW5NMWpGazZLL0tkcTBZYllPOThKUCt3?=
- =?utf-8?B?WDdWNkFJTWlaWTdVelBSMHZmeUl3bloyc1BCV3ZrWmpwMHg4RXNmaWRMWkY0?=
- =?utf-8?B?by9GVGxFNGhpRVc4cWtQS21LSzYvc09YVmpja1JpZUVEWnF5MFprQmlrRjB5?=
- =?utf-8?B?OEU1UzlFK3RiUUQ2aVU3N3ZBbC9hUjU2TmcwTkRLM0dCNVpwU3l2b0dEOWVY?=
- =?utf-8?B?WjlhZU9GS2pEYnR4cUV1M2tQV3V6MmphK0lHYmVSay9LSTBZaTA0RXBsYWRy?=
- =?utf-8?B?VnNuRVhIU0Z4YWYzd0FObWp6RVdrTndwaWlaVHdkYUlDS3pZS0dqbXhZZVFj?=
- =?utf-8?B?RE15SzNieXJCN0d0S0gwMzJBTlhYK0ZYZFk1MHBBQ2dXWTlJWVgrdFBSZVZH?=
- =?utf-8?B?dTUxaVQrVFY2Y3BwNnNkYUxVTDYyN2k4VWJMVXp5WUxYMVNGZmhBOXhCUm9Y?=
- =?utf-8?B?Ym1HSEpLVEVJdlJVSmlrN2c0d1RUcTdvWERMcmJEaUZQV0gzK3NwYUR5cmIy?=
- =?utf-8?B?cjc3ZnBPOStEOTVEYmFpMVRzUFhaMkJ2dXl0a0VOa0VmOUlOWWpJNHp1SS96?=
- =?utf-8?B?ZjBTY2liRFcvcXZaNTQxTk9MVU1SajZxUlFaOXI2blIwVkFWMGV0TGVTbkgv?=
- =?utf-8?B?RUd0WEhjaVhJbzB6VERIY0J1QUdSOGdvNjF6SDFRd3YzdXRTZFNpeEZNamMv?=
- =?utf-8?B?RS9WZ2VhSGE1YXdLc1JtTlhUQlkrd3ZzdWRmRlAreUI2T3k2bWpHdmUraGI2?=
- =?utf-8?B?RDl0dUk1aGFZcUJ6NC96cTdsZCtlSXZ6Z2trek1tYUljcjBQSDExWU5sSzE3?=
- =?utf-8?B?RlJESlNwYkN6ZGZUQytINXBqVHA1N0NIbTlSSlo5eXIzV0ZJb3Q4MTRJcUVN?=
- =?utf-8?B?YjZNbmxVNGJQUnFrQitFMzRmMnMyOC9VY1AwQ0IralljcDZ6MDFZZitwTGMz?=
- =?utf-8?B?a29WemF4MnE2a3BBQmdQWUhyTTMvTjdNdTlmOXM5aTRVY0hoNzlIWWRMTkNS?=
- =?utf-8?B?c1kxZzlITWpBU1RvM2FSSFFIODNOQlhSY2RoK01iRkNxMHh5UktoWnBWVkd6?=
- =?utf-8?B?WEIrR2pUY205T1N6RVdyVXFaNHVmR0NDOHc3ZXlPUjZMWXdRMk1IM3NQNDVv?=
- =?utf-8?B?VFA1QVBhYUxGV2Fvc1JWTWdDaDFobGREb3JTYXdOdTN2WHJTQzUzZDJUSFhr?=
- =?utf-8?B?d2NIOC9UMFVoNFBEV2Vpbm5OSC9EdWp2eHgwc3YyZUFDeUtxcVQvS21rdmQ3?=
- =?utf-8?B?V1NJZldVcnY5bnI1OEV1MU1iT09hMStadGxUUVBOaFk2eFFCSkRJTkFOYW5E?=
- =?utf-8?B?SWJlU2VjUWYwOXloSDBMMFBHRWQrd2ROM1RHa0R3Njh2amwrR28vRWxYL3Zs?=
- =?utf-8?B?TUQ5Z2x1VTZXM1p6UTE0N0dWNlloV2Uyb3BEcVpMWGFRQkZ5bXRmcnByTmhy?=
- =?utf-8?B?bjdSMm90U2Y0cjk5ejVYMnNia0p3NkN5ZTdkVk4rK0pHd2RXQ3hKNGRVN3Ny?=
- =?utf-8?B?ai9CN0tyby9yL1NIYzBwZmhYSDBrQ3ozZGQycjZGYllYaTQwOVBkNXI4Rjk3?=
- =?utf-8?B?ZjhHQ0RibHhSd2xwaWI5MVZmY0FMR2x0VGxsaUVnd2JlMGpSUXYxRFRsY3RY?=
- =?utf-8?B?cm5UTDM4aEdEMlBqUHY5Ly82a1c5SVIzTnc1Njc5TVo2M3hrY2JSTWpEcWJv?=
- =?utf-8?B?S0Q0ZzBLa2JOdzl2VmhZLzR0M1NGUlUzNFkxQ2tBdGlFci9zaUhZUS9lOTU1?=
- =?utf-8?B?dW5HTU14c3g1OTljNkZFTWQ3Sm1PL21odElWNVNFRnl3Rk1jRzlRdVVUWm1C?=
- =?utf-8?B?ejVLdEJJMCtjRVQ3Sk54SFV3Q2cwS0hZelFtNGg3N2tkcU0rY3k3YjdocHlm?=
- =?utf-8?B?aUlFZDcxNytDVFgwQ3ZJblFpaWRKWWlXY0sydHpYZVpiUDJsUWU4VndNSEZH?=
- =?utf-8?B?VWx5QWI0Vm1zQlFXZGxSSm5LU3FCVXU5WEoxWFFGTmYwcXpDc0lMOGhqSUc4?=
- =?utf-8?B?S2hsRGx1L3VKeVVkRTV4YitVL3U3dWQvYmlxR2V6cXRkVlJkVVlMbklzZy9G?=
- =?utf-8?B?RmxuTUNqOVVRVkh4T3hHTTlIREJKL1crRlZZVThMaTFmWTJ6eXdKek5pSnNO?=
- =?utf-8?B?ejlIaGNXVU1Ea1ZVR1Z2Uk9YYW5NNCtZQnhrZjFvd3c3R3FpMFRWT0pSRFFi?=
- =?utf-8?B?SDJJbFp1RXpzbVRMa2ljWlMrQU1WYS9NdU1tV25ocDRBZ3ZsY0ZjSGF2OE81?=
- =?utf-8?B?Q1N1YlpKbTFBbUZHRmlwWExDaEtLRGRyUC9CbE54cVNVaTIyK0w2Zz09?=
-X-OriginatorOrg: garyguo.net
-X-MS-Exchange-CrossTenant-Network-Message-Id: b28162e1-53dc-4598-6c47-08defa04b2ce
-X-MS-Exchange-CrossTenant-AuthSource: LOAP265MB8560.GBRP265.PROD.OUTLOOK.COM
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 14 Aug 2026 13:05:22.1014
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: bbc898ad-b10f-4e10-8552-d9377b823d45
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: GHX4TTEBUazSmNc0u7zKwEP0CIamLDCOaMwaTZfgRSilUS/NY4nDxmHrsrrgPnpgm7cemmm8IFkEW/i0T+ox+g==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: LO2P265MB3514
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] xen/pcifront: Fix PCI device reference leak in AER
+ handling
+To: Ruoyu Wang <ruoyuw560@gmail.com>, xen-devel@lists.xenproject.org
+Cc: sstabellini@kernel.org, oleksandr_tyshchenko@epam.com,
+ bhelgaas@google.com, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20260813153138.3953222-1-ruoyuw560@gmail.com>
+Content-Language: en-US
+From: =?UTF-8?B?SsO8cmdlbiBHcm/Dnw==?= <jgross@suse.com>
+Autocrypt: addr=jgross@suse.com; keydata=
+ xsBNBFOMcBYBCACgGjqjoGvbEouQZw/ToiBg9W98AlM2QHV+iNHsEs7kxWhKMjrioyspZKOB
+ ycWxw3ie3j9uvg9EOB3aN4xiTv4qbnGiTr3oJhkB1gsb6ToJQZ8uxGq2kaV2KL9650I1SJve
+ dYm8Of8Zd621lSmoKOwlNClALZNew72NjJLEzTalU1OdT7/i1TXkH09XSSI8mEQ/ouNcMvIJ
+ NwQpd369y9bfIhWUiVXEK7MlRgUG6MvIj6Y3Am/BBLUVbDa4+gmzDC9ezlZkTZG2t14zWPvx
+ XP3FAp2pkW0xqG7/377qptDmrk42GlSKN4z76ELnLxussxc7I2hx18NUcbP8+uty4bMxABEB
+ AAHNH0p1ZXJnZW4gR3Jvc3MgPGpncm9zc0BzdXNlLmNvbT7CwHkEEwECACMFAlOMcK8CGwMH
+ CwkIBwMCAQYVCAIJCgsEFgIDAQIeAQIXgAAKCRCw3p3WKL8TL8eZB/9G0juS/kDY9LhEXseh
+ mE9U+iA1VsLhgDqVbsOtZ/S14LRFHczNd/Lqkn7souCSoyWsBs3/wO+OjPvxf7m+Ef+sMtr0
+ G5lCWEWa9wa0IXx5HRPW/ScL+e4AVUbL7rurYMfwCzco+7TfjhMEOkC+va5gzi1KrErgNRHH
+ kg3PhlnRY0Udyqx++UYkAsN4TQuEhNN32MvN0Np3WlBJOgKcuXpIElmMM5f1BBzJSKBkW0Jc
+ Wy3h2Wy912vHKpPV/Xv7ZwVJ27v7KcuZcErtptDevAljxJtE7aJG6WiBzm+v9EswyWxwMCIO
+ RoVBYuiocc51872tRGywc03xaQydB+9R7BHPzsBNBFOMcBYBCADLMfoA44MwGOB9YT1V4KCy
+ vAfd7E0BTfaAurbG+Olacciz3yd09QOmejFZC6AnoykydyvTFLAWYcSCdISMr88COmmCbJzn
+ sHAogjexXiif6ANUUlHpjxlHCCcELmZUzomNDnEOTxZFeWMTFF9Rf2k2F0Tl4E5kmsNGgtSa
+ aMO0rNZoOEiD/7UfPP3dfh8JCQ1VtUUsQtT1sxos8Eb/HmriJhnaTZ7Hp3jtgTVkV0ybpgFg
+ w6WMaRkrBh17mV0z2ajjmabB7SJxcouSkR0hcpNl4oM74d2/VqoW4BxxxOD1FcNCObCELfIS
+ auZx+XT6s+CE7Qi/c44ibBMR7hyjdzWbABEBAAHCwF8EGAECAAkFAlOMcBYCGwwACgkQsN6d
+ 1ii/Ey9D+Af/WFr3q+bg/8v5tCknCtn92d5lyYTBNt7xgWzDZX8G6/pngzKyWfedArllp0Pn
+ fgIXtMNV+3t8Li1Tg843EXkP7+2+CQ98MB8XvvPLYAfW8nNDV85TyVgWlldNcgdv7nn1Sq8g
+ HwB2BHdIAkYce3hEoDQXt/mKlgEGsLpzJcnLKimtPXQQy9TxUaLBe9PInPd+Ohix0XOlY+Uk
+ QFEx50Ki3rSDl2Zt2tnkNYKUCvTJq7jvOlaPd6d/W0tZqpyy7KVay+K4aMobDsodB3dvEAs6
+ ScCnh03dDAFgIq5nsB11j3KPKdVoPlfucX2c7kGNH+LUMbzqV6beIENfNexkOfxHfw==
+In-Reply-To: <20260813153138.3953222-1-ruoyuw560@gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="------------QkHGccM4PCCVbRXCFyU4NGNi"
 
-On Wed Aug 12, 2026 at 3:48 PM BST, Alexandre Courbot wrote:
-> On Thu Aug 6, 2026 at 1:35 AM JST, Gary Guo wrote:
->> -/// Type used to represent the `PFALCON` registers address base for a g=
-iven falcon engine.
->> -pub(crate) struct PFalconBase(());
->> +/// Type used to represent the `PFALCON` registers.
->> +#[repr(align(4))]
->> +#[derive(FromBytes, IntoBytes)]
->> +pub(crate) struct PFalconRegisters([u8; SZ_4K]);
->> =20
->> -/// Type used to represent the `PFALCON2` registers address base for a =
-given falcon engine.
->> -pub(crate) struct PFalcon2Base(());
->> +/// Type used to represent the `PFALCON2` registers.
->> +#[repr(align(4))]
->> +#[derive(FromBytes, IntoBytes)]
->> +pub(crate) struct PFalcon2Registers([u8; SZ_4K]);
->> =20
->>  /// Trait defining the parameters of a given Falcon engine.
->>  ///
->>  /// Each engine provides one base for `PFALCON` and `PFALCON2` register=
-s.
->> -pub(crate) trait FalconEngine:
->> -    Send + Sync + RegisterBase<PFalconBase> + RegisterBase<PFalcon2Base=
-> + Sized
->> -{
->> +pub(crate) trait FalconEngine: Send + Sync + Sized {
->> +    fn pfalcon(io: Bar0<'_>) -> Mmio<'_, PFalconRegisters>;
->> +    fn pfalcon2(io: Bar0<'_>) -> Mmio<'_, PFalcon2Registers>;
->
-> Remember on v1 when we contemplated using associated consts? Turns out
-> we can with this version:
->
->     // Need a better name, but you get the idea.
->     pub(crate) type PFalconRegs =3D OffsetLoc<NovaRegisters, PFalconRegis=
-ters>;
->     pub(crate) type PFalcon2Regs =3D OffsetLoc<NovaRegisters, PFalcon2Reg=
-isters>;
->
->     pub(crate) trait FalconEngine: Send + Sync + Sized {
->         const PFALCON: PFalconRegs;
->         const PFALCON2: PFalcon2Regs;
->     }
->
-> ... and make `Falcon::new` call `io_project` directly, and it works! At
-> the cost of importing `OffsetLoc` in `falcon.rs`, but that removes ~30
-> LoCs in total, and I'm not sure `OffsetLoc` should be hidden anyway.
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--------------QkHGccM4PCCVbRXCFyU4NGNi
+Content-Type: multipart/mixed; boundary="------------IAEm0KX69fq5JmryQhnoqDqx";
+ protected-headers="v1"
+From: =?UTF-8?B?SsO8cmdlbiBHcm/Dnw==?= <jgross@suse.com>
+To: Ruoyu Wang <ruoyuw560@gmail.com>, xen-devel@lists.xenproject.org
+Cc: sstabellini@kernel.org, oleksandr_tyshchenko@epam.com,
+ bhelgaas@google.com, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Message-ID: <4b7ee4e9-7a38-401d-9b9e-371173e8165c@suse.com>
+Subject: Re: [PATCH] xen/pcifront: Fix PCI device reference leak in AER
+ handling
+References: <20260813153138.3953222-1-ruoyuw560@gmail.com>
+In-Reply-To: <20260813153138.3953222-1-ruoyuw560@gmail.com>
 
-Originally I want the type of consts created by `register!()` to be conside=
-red
-as implementation detail and thus ideally not to be named by the user. To u=
-ser I
-want them to treat it as just `impl IoLoc<>`.
+--------------IAEm0KX69fq5JmryQhnoqDqx
+Content-Type: multipart/mixed; boundary="------------e6EjXp9l0KI8S0BNgoOoL0MO"
 
-However, thinking about this again, I think we might be able to have a sing=
-le
-type for all registers after all the cleanups, so it'd make sense to make t=
-his
-public API. However, I do want a better name than `OffsetLoc` if we're goin=
-g to
-make this use case supported, though.
+--------------e6EjXp9l0KI8S0BNgoOoL0MO
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: base64
 
-Best,
-Gary
+T24gMTMuMDguMjYgMTc6MzEsIFJ1b3l1IFdhbmcgd3JvdGU6DQo+IHBjaV9nZXRfZG9tYWlu
+X2J1c19hbmRfc2xvdCgpIGluY3JlbWVudHMgdGhlIHJlZmVyZW5jZSBjb3VudCBvZiB0aGUN
+Cj4gcmV0dXJuZWQgUENJIGRldmljZS4gcGNpZnJvbnRfY29tbW9uX3Byb2Nlc3MoKSBkcm9w
+cyB0aGF0IHJlZmVyZW5jZSBvbmx5DQo+IHdoZW4gdGhlIGRldmljZSBvciBpdHMgZHJpdmVy
+IGlzIG1pc3NpbmcuIEFsbCBwYXRocyBmb3IgYSBib3VuZCBkZXZpY2UNCj4gZWl0aGVyIHJl
+dHVybiBkaXJlY3RseSBhZnRlciBpbnZva2luZyBhbiBlcnJvciByZWNvdmVyeSBjYWxsYmFj
+ayBvciBmYWxsDQo+IHRocm91Z2ggd2l0aG91dCBjYWxsaW5nIHBjaV9kZXZfcHV0KCkuIENv
+bnNlcXVlbnRseSwgZWFjaCBBRVIgcmVxdWVzdCBmb3INCj4gYSBib3VuZCBkZXZpY2UgbGVh
+a3MgYSByZWZlcmVuY2UgYW5kIGNhbiBrZWVwIHRoZSBkZXZpY2UgYWxsb2NhdGVkIGFmdGVy
+DQo+IHJlbW92YWwuDQo+IA0KPiBTdG9yZSB0aGUgY2FsbGJhY2sgcmVzdWx0LCByZWxlYXNl
+IHRoZSByZWZlcmVuY2UgYWZ0ZXIgY2FsbGJhY2sgZGlzcGF0Y2gsDQo+IGFuZCB0aGVuIHJl
+dHVybiB0aGUgcmVzdWx0LiBUaGlzIGtlZXBzIHRoZSBkZXZpY2UgYWxpdmUgd2hpbGUgaXRz
+IGNhbGxiYWNrDQo+IHJ1bnMgYW5kIGJhbGFuY2VzIHRoZSBsb29rdXAgb24gZXZlcnkgc3Vj
+Y2Vzc2Z1bCBwYXRoLg0KPiANCj4gVGhpcyBpc3N1ZSB3YXMgZm91bmQgYnkgYSBzdGF0aWMg
+YW5hbHlzaXMgY2hlY2tlciBhbmQgY29uZmlybWVkIGJ5IG1hbnVhbA0KPiBzb3VyY2UgcmV2
+aWV3Lg0KPiANCj4gRml4ZXM6IDk1NmE5MjAyY2QxMiAoInhlbi1wY2lmcm9udDogWGVuIFBD
+SSBmcm9udGVuZCBkcml2ZXIuIikNCj4gU2lnbmVkLW9mZi1ieTogUnVveXUgV2FuZyA8cnVv
+eXV3NTYwQGdtYWlsLmNvbT4NCg0KUmV2aWV3ZWQtYnk6IEp1ZXJnZW4gR3Jvc3MgPGpncm9z
+c0BzdXNlLmNvbT4NCg0KDQpKdWVyZ2VuDQo=
+--------------e6EjXp9l0KI8S0BNgoOoL0MO
+Content-Type: application/pgp-keys; name="OpenPGP_0xB0DE9DD628BF132F.asc"
+Content-Disposition: attachment; filename="OpenPGP_0xB0DE9DD628BF132F.asc"
+Content-Description: OpenPGP public key
+Content-Transfer-Encoding: quoted-printable
 
->
->>  }
->> =20
->>  /// Represents a portion of the firmware to be loaded into a particular=
- memory (e.g. IMEM or DMEM)
->> @@ -358,6 +361,8 @@ pub(crate) struct Falcon<'a, E: FalconEngine> {
->>      hal: KBox<dyn FalconHal<E>>,
->>      dev: &'a device::Device<device::Bound>,
->>      bar: Bar0<'a>,
->> +    pub(crate) pfalcon: Mmio<'a, PFalconRegisters>,
->> +    pfalcon2: Mmio<'a, PFalcon2Registers>,
->>  }
->> =20
+-----BEGIN PGP PUBLIC KEY BLOCK-----
 
+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
+kt+z4drzFUyEjLM1vVvIMjkUoJs=3D
+=3DeeAB
+-----END PGP PUBLIC KEY BLOCK-----
+
+--------------e6EjXp9l0KI8S0BNgoOoL0MO--
+
+--------------IAEm0KX69fq5JmryQhnoqDqx--
+
+--------------QkHGccM4PCCVbRXCFyU4NGNi
+Content-Type: application/pgp-signature; name="OpenPGP_signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="OpenPGP_signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+wsB5BAABCAAjFiEEhRJncuj2BJSl0Jf3sN6d1ii/Ey8FAmp/F00FAwAAAAAACgkQsN6d1ii/Ey9I
+yQgAju8yaOfqsyi6C4ahXULTuTk5AvglXAwL3z2+BD8jSyFkX5+zN4N4izExwQt85obHCcFRbKzL
+jWuvSaIC5NR4v1YJDydGZeDdiR2wP4C0XTHEafps/quX58OkLOqVCnz61J7KPpaZAKWicUmtdTUX
+3QDbVRjsiz4qpUe31kxlN8nNi33KZ7WM1BNHcg4wDVjTnIErTjQ3Nw8+X3/ErTexNcBxPO3Ed8JP
+ErYudznnqO8oCXz5jRhA5YK/r6OsKu7kj8z7Vh/SqumIVzxGN5EoNVe4D2PPa5wsW7WBYSZJrbe/
+YtGFT5Q4mYvLHSby4wBM2CGl1aSDTNkcdhiGZ2j5Ag==
+=sLha
+-----END PGP SIGNATURE-----
+
+--------------QkHGccM4PCCVbRXCFyU4NGNi--
