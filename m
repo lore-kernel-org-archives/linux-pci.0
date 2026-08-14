@@ -1,121 +1,123 @@
-Received: from mail-pg1-f182.google.com (mail-pg1-f182.google.com [209.85.215.182])
+Received: from mail-qk1-f170.google.com (mail-qk1-f170.google.com [209.85.222.170])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28B83486B95
-	for <linux-pci@vger.kernel.org>; Fri, 14 Aug 2026 16:47:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.182
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1A46D486BB0
+	for <linux-pci@vger.kernel.org>; Fri, 14 Aug 2026 16:55:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786726056; cv=none; b=rg+RcsblMeUCxRiXGamYS5FqS5EAI4X9R8vhGyvf4cr2XOrwRNzxfkE91Hk0f1zQaL6vn07NxEITK1OUSL5nB7xnHPjyQs2oFFTUaGxk9vA9lg8kiKGhflqlnq+NPkk7hxTBtraSjQXGAy9ArPHLA+5OL77gpE7un8pO9Lwipgg=
+	t=1786726511; cv=none; b=PTx0jfDZ4kIoZr3bQH36NRCfOZwrMF4MPGX0cKt3xG38AiY8bKuMNtrHIeHYcloB/pavJjfHaZBpkoNAmej9bpOVkQ3R6A8+kC7RJTnp+ksXIO2OXPe9datbgz9ei/Drv/3dalxuY0IkntlZ2/V59F/zqZ3vbjS+8AC3yZH3o+g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786726056; c=relaxed/simple;
-	bh=TzR1L/lyZ+ga6FrG0qQTDtTkygcFG0DxNgqBGPPmtEY=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=TUoss94CWIPVUUtmb54gt6Epf6u32+k6X4O/KmR8OW9VMYuCBGcd4LiH+Fj0CXjMa6htOmJCISTpffivGov+MpCnjsM2ZRCgF58qaSwCrkU9FW2JWuQf5GLCFgmW6KK+X86nBoaRfaxJbEgMBNS7wBm1kp/UUzGy1hcli5xi8hY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=qubQVm9j; arc=none smtp.client-ip=209.85.215.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1786726511; c=relaxed/simple;
+	bh=i2QQU7JdAC+aaX/P9rI47R8LByKLDiPOAciQZkCTTRs=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=cGka8PkQuOgFyIUOL9qvyi9SNtUJ0S/fsGuPsPBfcE7X9NQetRnlnAt7LQ5unU4EDXA3U5RQ4CBNbAqpqf4qPFBuktxbZF245YFWo16i8zvbLyhIrINVfzRSorco2KdvRkjacUBTzdpeh+fyFkYJKD3vcUW8AaLeQwuV2uqqRdU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=riscstar.com; spf=pass smtp.mailfrom=riscstar.com; dkim=pass (2048-bit key) header.d=riscstar-com.20251104.gappssmtp.com header.i=@riscstar-com.20251104.gappssmtp.com header.b=wc+ltNmu; arc=none smtp.client-ip=209.85.222.170
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=riscstar.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=riscstar.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="qubQVm9j"
-Received: by mail-pg1-f182.google.com with SMTP id 41be03b00d2f7-c9e607d81fcso766458a12.2
-        for <linux-pci@vger.kernel.org>; Fri, 14 Aug 2026 09:47:34 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=riscstar-com.20251104.gappssmtp.com header.i=@riscstar-com.20251104.gappssmtp.com header.b="wc+ltNmu"
+Received: by mail-qk1-f170.google.com with SMTP id af79cd13be357-936c02e58dfso83510285a.3
+        for <linux-pci@vger.kernel.org>; Fri, 14 Aug 2026 09:55:08 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1786726054; x=1787330854; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=lx+HAe9Z4pJ0/UaGAjwikJz7f3N7XmaHmU4Zb04KXQg=;
-        b=qubQVm9jpa81i5OIv3Y8Ziu3mACzF42TujgBk3whtEU8LLK7PcQ/EBKDHiUWoUpLZG
-         WenOxaBwB9KmzRDjcD1MCBaAQeQO2LMn07tt2+G1YggqT6P+J9kz3w7LCc4RvWqyG7Kk
-         AvednhEJsU3E5I9/4zvPVnveuwMRcATrVF541FRCAqyaXajzPff8s2O2YX0rrKTAunPy
-         nIGpRIrRDWKTjAiZ8Sm87cFyvXuOCzyrT92902ZJIk2+4vBoCrxMdBTYeMysUqn4VqBV
-         JNSSzmaSvPhhb5aqfQmpgDlPV5L0U5Km8IMv02n8NU9BCkscHdxsnxOmSihAkBr9LJRD
-         7qpw==
+        d=riscstar-com.20251104.gappssmtp.com; s=20251104; t=1786726507; x=1787331307; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=ClQeFE8grv4Zo5HkAwOcQ2W3r0In4+kVu5lGLxtEbvg=;
+        b=wc+ltNmuSp0ZzaqstqnlydqTIKCrfrFh7AFAiz2I/+NiHfwZSP5OlfN7mWhuIBpyF/
+         bf45MkYeaU0Y8s4CYU/nwqq8BP1mwmKaVgwLnv68F5nYCvWL1eJljz0/IXfNQAi7FJ7/
+         2LhVwhZdhbAmaMz2MUSuUd2ZEcq40qKp9mKIBWIyBQbFCNPBqTY2mRkdatFQWvj0MdJE
+         qwIN0YwDy0T+E4tKCBkRPaPFYLohK8DVdizq+vfBn/HnwHWdBZAWJUZH9fMNyL0D/RVd
+         IHoE5j2WZWOim9vCkgEWfn6QQ/gByzR5YXHrhpa37aWV85BtcSX95K2UPK2yAtuZUJtI
+         wxwg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786726054; x=1787330854;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=1e100.net; s=20251104; t=1786726507; x=1787331307;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=lx+HAe9Z4pJ0/UaGAjwikJz7f3N7XmaHmU4Zb04KXQg=;
-        b=RIPKn2gVdR33n0Tjlpyxs4tFDwJl3M9htOvgCIhPO8VnFQTzuQkGQWZadwBAmHJ/2e
-         XXl2ckuPMgnDPNCy85mYRajZPzyjvinrHOvnlydW3jYB1LEjqbzUHkm2+7mUIwD7Hctk
-         KlwPxYr8yXKUYfYx/aNlBPR76lFBpyMHBiJKo1FAsxUE5Q6WeF22QwdE3osc3GYEQEKr
-         X/k4XpP6yTZhdecTAzO9D2lH4Y7iKtU8mmk55HF/w8wK2wH3AuZA1/gqag2B02q4X7Qv
-         vgZztruCmOPnKUgdIe5fgI617wYj0zscdv1BWiEtD8xJEvhcvnBKW1vjhCHSZCrE6doR
-         be0g==
-X-Forwarded-Encrypted: i=1; AHgh+Ro7oM+LxXXzHNfTQNik4KTShnMnVVNws5i+ZxKYXN0kCc4lYu9XmWISRsasKyuzST8kgxpZXTqbPF8=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxVnsoeoHwVk1y9M7We8Z6OxPh7fChIq+KzziRmxif48wUWd3yj
-	GePEYruhdHwdZwAtO/J1+NNx5Gw09obQW7Gg6fPo802i1NR3PmFiQkjK
-X-Gm-Gg: AR+sD11OngY4XhSVqULjqqZK1uv38ZE7Qydc7hWF55XmVYhUAxRrOe22KhdNfc3c7O0
-	GurmeKC9vDj+ZqNJeNPQLP/cNu/0SFzmIQAoqc+wT3CWEQ+5A7FByQfBqGQeBM999eJ+QT5zVvN
-	jCCfi59qviXZrn977j29De4hi03X+eumWl9oFlaOrGJyR+xiA0jRVc+z3X28vQm7lz0ztzosTpj
-	kdxHcjYmL/xI6Oj7m8PvUCT90kQQAtqPgCHMnNQWACmQZvhjoW2MESaStTQVkNBKXXXmovSF7h1
-	XnYt+t8Zkbyc9t5xIxY3JRvoqKwUp3/+T9TP3pfUncCDt9RrrgwZlcd5HePmbiG5DbPu9FoCbSd
-	bPvktlg6ai6cGgtij1nd0OHOt4dqxbebDJUrniio9Uzm2szjeqd+4yg0+psvxjDGi7MfSl9MleZ
-	/+4fnT0wYvrtas8/zMCXGJVLkVy/ftBLBYVWnJOijnccxr39OZCJhDqlPFumDwuU0nj8mwvzMuz
-	0sOXAaw
-X-Received: by 2002:a05:6a21:e8c:b0:3c3:954d:279a with SMTP id adf61e73a8af0-3cc71d8eafdmr8355809637.33.1786726054287;
-        Fri, 14 Aug 2026 09:47:34 -0700 (PDT)
-Received: from kernel ([103.219.206.84])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-320ea8fe3cdsm6196544eec.28.2026.08.14.09.47.30
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 14 Aug 2026 09:47:33 -0700 (PDT)
-From: Mohamad Raizudeen <raizudeen.kerneldev@gmail.com>
-To: bhelgaas@google.com
-Cc: skhan@linuxfoundation.org,
-	jkoolstra@xs4all.nl,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	gregkh@linuxfoundation.org,
-	yinghai@kernel.org,
-	Mohamad Raizudeen <raizudeen.kerneldev@gmail.com>
-Subject: [PATCH] PCI: probe: Fix 64-bit limit truncation in prefetchable window
-Date: Fri, 14 Aug 2026 22:16:52 +0530
-Message-ID: <20260814164652.43501-1-raizudeen.kerneldev@gmail.com>
-X-Mailer: git-send-email 2.53.0
+        bh=ClQeFE8grv4Zo5HkAwOcQ2W3r0In4+kVu5lGLxtEbvg=;
+        b=HRn7WIg7NGR+px1mpzhTdG0c+/rygcvLrKISAw38yJ755WYIfUrKMGhxZfThEtdebr
+         TSTaQIQNZy7FZYYUvPTVAR3ALS145sxDYGE1YLkpPLuYFbgYucXf+RZ0YSLHEB8srWro
+         7uleOnlxn7CASmGMWhvGDk/0Kq8DVvAd+ASQ/LB7kOXBBNM1vMdhFTY4w2li02W7uaKM
+         euXdcTAmMrxYd9ReruOX8nXkg1RzGOFojiIA37Tf0Wl3qAdD/BFbqMbUnq7Yh8aGujRi
+         SCLCpRLxjpp0iZPTKDwBDje21bIpfzcIfY5raYspeXle94Z1djGCvoPnbL9HzqtxKPnM
+         3o3w==
+X-Forwarded-Encrypted: i=1; AHgh+RpSxCTRZl2mZTIrQll6BxCiqwK3EyK28s4fO5o7WoIIiYCCxwWFTi9w/Yus9DEdqR13IdxDB/l0Frc=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzrBDjV9TTz3Z5WvHoYDJDP2Ee6zV4C+OBE/iCP1Ps1AqIP8Jgr
+	ohI1iwylRRs7nwQ64NRPflbAriD6+Wo8OWHutaj7bbxGCKp+eAIUKkSkMSDEtzN6x14=
+X-Gm-Gg: AR+sD11egAZLnV5XVk0UODYxdtjD+ICS9II7nhrITQZf29K+pNftRuNCUATnI8RCawn
+	+hW0EeNyHBiVZxleQVmyQnEojU7sH9jgQJ2c6DjQJuKKbq1NUmBWRHIVPLhtN+/n0ESnAcDXOiu
+	sO6ukB8IEM6ZRmdwtdUr8aM4dCrAxHLawQtoRAVXNcscGLpexrL8Pz/0F7F8IpMuWNHw306cYT4
+	kti90Gzv7QauCZtzqA3/GsvGeOfHjh1skrQ+nguAP97IQrvg9SoPjR9fq8yaiST4PEAogyRNAL9
+	TDwLX56jwB/Dmjag6XU1r/L+J49ySpZDZPreSoxN+3BnRD0JEzeeH0Pf05M+Ss5RCC/p2oMpRu6
+	midwufm+gHXTjNcJ0Kh9lgliBVIAbb1eS2XzbxL+L3kZyIf/NG+pVTSz4Zbzmq5Wv3qC5ArEwM1
+	LflshdjSHpq83EDWhbtX0x8TzAwEI7rxvKfmVDN+TtIyPGa4zVlT+2BhJHPl14
+X-Received: by 2002:a05:620a:408c:b0:933:ada:c3b2 with SMTP id af79cd13be357-936d2382749mr772663685a.34.1786726506665;
+        Fri, 14 Aug 2026 09:55:06 -0700 (PDT)
+Received: from [172.22.22.28] ([73.62.185.64])
+        by smtp.gmail.com with ESMTPSA id af79cd13be357-936ce0b3b13sm314967485a.19.2026.08.14.09.55.05
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 14 Aug 2026 09:55:06 -0700 (PDT)
+Message-ID: <d61b2a72-aa24-4119-bf5f-8a2456f6c9b5@riscstar.com>
+Date: Fri, 14 Aug 2026 11:55:04 -0500
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 2/2] misc: tc9564: introduce base PCI driver
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org, arnd@arndb.de,
+ bhelgaas@google.com, daniel@riscstar.com, mohdayaa@qti.qualcomm.com,
+ lbiancon@qti.qualcomm.com, devicetree@vger.kernel.org,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20260813222943.1655453-1-elder@riscstar.com>
+ <20260813222943.1655453-3-elder@riscstar.com>
+ <2026081455-eternity-douche-900b@gregkh>
+Content-Language: en-US
+From: Alex Elder <elder@riscstar.com>
+In-Reply-To: <2026081455-eternity-douche-900b@gregkh>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-In pci_read_bridge_mmio_pref(), the code checks if the 64 bit base
-address is truncated on 32 bit pci_bus_addr_t. However, it misses this
-same check for the limit address.
+On 8/13/26 8:11 PM, Greg KH wrote:
+> On Thu, Aug 13, 2026 at 05:29:42PM -0500, Alex Elder wrote:
+>> +#define DRIVER_NAME "tc9564-pci"
+> 
+> What about just using KBUILD_MODNAME?
 
-If firmware sets a window that starts below 4GB but ends above 4GB, the
-base check passes. But the 64 bit limit is silently cut down to 32 bits
-and wraps around to zero. This makes the base larger than the limit,
-causing the kernel to silently disable the memory window instead of
-printing an error.
+Yes, I'll use that.  The underscore versus dash doesn't
+matter...
+> 
+>> +static int
+>> +tc9564_function_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+> 
+> But wow, this is a tiny driver, feels odd to have it in misc/ but ok, if
+> you think it should be here...
 
-Fix this by checking if the limit was truncated, just like the base.
-Also, update the error message to print both the base and limit
-addresses to make debugging easier.
+I put it in misc/ because lan966xc_pci.c, which also uses
+a pci-ep-bus, is located there.  That driver also calls
+of_platform_default_populate(), though it also loads a
+DT overlay which isn't needed here.
 
-Fixes: 7fc986d8a9727 ("PCI: Support 64-bit bridge windows if we have 64-bit dma_addr_t")
-Signed-off-by: Mohamad Raizudeen <raizudeen.kerneldev@gmail.com>
----
- drivers/pci/probe.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+It is indeed tiny, and your comment makes me think it
+could easily become a generic driver (along the lines
+of "simple-mfd-i2c.c").  That way other similar future
+SoCs could just add their compatible string.
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index dd0abbc63e18..0cf2d1d35146 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -479,9 +479,10 @@ static void pci_read_bridge_mmio_pref(struct pci_dev *dev, struct resource *res,
- 	base = (pci_bus_addr_t) base64;
- 	limit = (pci_bus_addr_t) limit64;
- 
--	if (base != base64) {
--		pci_err(dev, "can't handle bridge window above 4GB (bus address %#010llx)\n",
--			(unsigned long long) base64);
-+	if (base != base64 || limit != limit64) {
-+		pci_err(dev, "can't handle bridge window above 4GB (bus address %#010llx-%#010llx)\n",
-+			(unsigned long long) base64,
-+			(unsigned long long) limit64);
- 		return;
- 	}
- 
--- 
-2.53.0
+So two questions (for anyone):
+- Would that be preferred--rename this to target a generic
+   situation?  For example, "static-pci-ep-bus.c"?
+- Where should such a driver be located?  For example,
+   drivers/misc/, drivers/pci/controller/, or something else?
+
+					-Alex
+
+> thanks,
+> 
+> greg k-h
 
