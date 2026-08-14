@@ -1,40 +1,50 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3CBCF36920F;
-	Fri, 14 Aug 2026 09:36:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 7FC8B36920F;
+	Fri, 14 Aug 2026 09:37:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786700166; cv=none; b=ddQWdDkhQyBPQkx6T5l1sJXtS+R8AYBggpVKYYp+qYi6NcQF5WewLi2uToEc35akkso4lQ+mzRYIl4DnhdsxjrYMFr139Of9LIyfBHsqnAiKu5uYI+bLqo7wr9J55fH87IWd+Wq6uV5Gmr/5OQZb05oCclRRgOivqRyKlEMTCZg=
+	t=1786700272; cv=none; b=C5jod5ptGDwQ3bUIzpjEZzmeCP1ZWCl2Ti8EHJD+83DCM/P+Xte8Lt34Wcn6K37ZnvC+gVDCcEwYip/vNr3lszxq1fEjV15d/F5Y67qxYRj8nOE402ZvnLBnNam4yA0M52GvrSVck17QbTUEdQ8vpV5qqyPDL+Kmyxb8eqLDKSg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786700166; c=relaxed/simple;
-	bh=TKTn0qtOC1fyI5Mpr75ZQC6EJkhsMr/3n0lgQds3KgA=;
+	s=arc-20240116; t=1786700272; c=relaxed/simple;
+	bh=t7+7Umd0u3vXNbOTNBXduVQSErIY3/fVSWRtPFdzg3E=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Q9ReLglphcagK4Vev/lkEVrAZiBD2/uN6ecS3Nrh6TU2X3GX6BFfbwAQdLCpY59nc3NPtIfra34QTIXQ09U9IgsRkfVh9xXVhsJ7mc5EYtT2YArZ22PNbq7tqG7lvorEnYA1UzY2KagU7OxrmbPgAmNhM//sqwS0bbuvbvGQmL8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bYuau5GF; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=Z7LGaRm0erJxWL02ju0OPYYQgj+DW/wQxAkfSpCxgC0FlqZDZrJYx7WyuCqGuqNi+EpJwpk67fAaTeILI+bwCgw6H8w9WRzu2Nb02I8bVbVJJBZjOR/RYnsvU+6WnHsYeZasj+KoRsXG6CUsOW3xGvTM/Xr/ZTPTxBCNiwYSqyM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=KWuUIhE3; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bYuau5GF"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6E2F81F000E9;
-	Fri, 14 Aug 2026 09:36:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786700164;
-	bh=1PssRw9lVKNSmLGwhISTOVhoXzFCeGJUeto8VC36qiw=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=bYuau5GFTHFcYmm3UNj9IhKSTXoUbv4zVr0KjQ+JDm9pa7NbbAGR7YptTPNJzwoeZ
-	 3lJVpIE5UjalEjbXXsG0enoWhwLgQU/BvrFXtVUlA8cXikbJ4Zfg1OPFGiqtNwqTl1
-	 pF68GVxNayYmr6/XANn5EWvyn91YuBFtvoY1/3xpsWNZ80OJWKtpyGu6H5N+ldfKsQ
-	 1P+5QZ6CHVpVsZ/lCO7XKhuWM1e/OVVx9yaSDDABZ3YqKPbd9Gx2vAuFs/ktZS0th4
-	 wShaV1mVzflD+ngQQdjZFX9XJpTju+u6Ut9e2hy/FBHySkjLeyIah1f819UzA4mm1U
-	 HMw1Xs04FdnGA==
-Date: Fri, 14 Aug 2026 18:36:03 +0900
-From: Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>
-To: sashiko-reviews@lists.linux.dev
-Cc: linux-pci@vger.kernel.org
-Subject: Re: [PATCH 1/4] PCI/sysfs: Stop reporting _DSM failures as -EPERM
-Message-ID: <20260814093533.GB3463973@rocinante>
-References: <20260814070522.2327975-1-kwilczynski@kernel.org>
- <20260814070522.2327975-2-kwilczynski@kernel.org>
- <20260814071901.78AA11F000E9@smtp.kernel.org>
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="KWuUIhE3"
+Received: from localhost (unknown [167.220.233.38])
+	by linux.microsoft.com (Postfix) with ESMTPSA id CEB0E20B7168;
+	Fri, 14 Aug 2026 02:37:24 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com CEB0E20B7168
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1786700245;
+	bh=mrPCGSCOgcbImYUmKSq1aUBNJApcEPF4LurAYoGhmf8=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=KWuUIhE3DnstjtweJwewzpdkTUXMkgfRQJ84/am0XAvdc1bRgttwo3dQumixnhhVp
+	 iJTevsRrtVBzs8CF3ZyVxBXdrc+FI3SrfDADGUoXaJ+7PmtfEbslpeSaJZqvSucFcE
+	 AkEZHctKNkynpFkJWvYSTzMGrvv8RntZD56M65vo=
+Date: Fri, 14 Aug 2026 17:37:48 +0800
+From: Yu Zhang <zhangyu1@linux.microsoft.com>
+To: Jason Gunthorpe <jgg@ziepe.ca>, 
+	Jacob Pan <jacob.pan@linux.microsoft.com>
+Cc: linux-kernel@vger.kernel.org, linux-hyperv@vger.kernel.org, 
+	iommu@lists.linux.dev, linux-pci@vger.kernel.org, linux-arch@vger.kernel.org, 
+	x86@kernel.org, wei.liu@kernel.org, kys@microsoft.com, haiyangz@microsoft.com, 
+	decui@microsoft.com, longli@microsoft.com, joro@8bytes.org, will@kernel.org, 
+	robin.murphy@arm.com, bhelgaas@google.com, kwilczynski@kernel.org, 
+	lpieralisi@kernel.org, mani@kernel.org, robh@kernel.org, arnd@arndb.de, 
+	mhklinux@outlook.com, tgopinath@linux.microsoft.com, 
+	easwar.hariharan@linux.microsoft.com, mrathor@linux.microsoft.com, baolu.lu@linux.intel.com, 
+	suravee.suthikulpanit@amd.com, vasant.hegde@amd.com
+Subject: Re: [PATCH v3 4/5] iommu/hyperv: Add para-virtualized IOMMU support
+ for Hyper-V guest
+Message-ID: <p7ts4y6lxt7k6ldzaa26v7rckmmp7o5js2gn2r3eantgzut2cc@xxsvso76nefj>
+References: <20260811155022.108148-1-zhangyu1@linux.microsoft.com>
+ <20260811155022.108148-5-zhangyu1@linux.microsoft.com>
+ <20260813152913.00003d8a@linux.microsoft.com>
+ <20260813224627.GA933791@ziepe.ca>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -43,26 +53,56 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260814071901.78AA11F000E9@smtp.kernel.org>
+In-Reply-To: <20260813224627.GA933791@ziepe.ca>
 
-Hello,
-
-> [Severity: High]
-> This isn't a bug introduced by this patch, but does this code cause a buffer
-> over-read?
+On Thu, Aug 13, 2026 at 07:46:27PM -0300, Jason Gunthorpe wrote:
+> On Thu, Aug 13, 2026 at 03:29:13PM -0700, Jacob Pan wrote:
 > 
-> It appears utf16s_to_utf8s() expects the maximum number of 16-bit characters
-> as its second argument, but it is being passed obj->buffer.length in bytes.
+> > > +static int hv_iommu_blocking_attach_dev(struct iommu_domain *domain,
+> > > +					struct device *dev,
+> > > +					struct iommu_domain *old)
+> > > +{
+> > > +	struct hv_iommu_endpoint *vdev = dev_iommu_priv_get(dev);
+> > > +	struct hv_iommu_domain *hv_domain =
+> > > to_hv_iommu_domain(domain);
+> > > +	struct pci_dev *pdev = to_pci_dev(dev);
+> > > +	int ret;
+> > > +
+> > > +	if (pdev->ats_enabled)
+> > > +		pci_disable_ats(pdev);
+> > > +
+> > > +	if (vdev->hv_domain == hv_domain)
+> > > +		return 0;
+> > It may not be needed since the core code will check this. If you keep
+> > this as extra precaution, should this be moved up before ats? since ats
+> > must be disabled already if blocking domain is attached.
+
+@Jacob In v2 (https://lore.kernel.org/all/20260706095510.00007ce1@linux.microsoft.com/), 
+this check was in the common attach helper. It was redundant because the normal
+group domain path already skips same-domain attaches.
+                                                                                                                                                        
+In this version, I removed it from the common helper and kept it only in the 
+blocking attach callback. iommu_deinit_device() directly attaches the
+device to release_domain without going through the group-level check.
+IIUC, for a device which is alreading parked in the blocking domain, the
+releasing might invoke another blocking-domain attach.
+                                                                                                                                                        
+Sorry, I should have explained this change and its rationale in the changelog.
+
 > 
-> If a PCI device with a firmware-provided ACPI _DSM returns a
-> non-NUL-terminated buffer of UTF-16 characters, could this read past the end
-> of the allocation when a user reads the world-readable sysfs label attribute?
+> Why check it at all? Is there an issue with attaching the same thing
+> twice? Will it blip the DMA or something?
+
+Actually, I do not think there should be any issue with attaching twice.
+Hyper-V *should* be able to accept such attachment. But I do not want to
+make such assumption just for a redundant hypercall.
+
+Does this reasoning make sense, or would you prefer that I remove the
+check?
+
+B.R.
+Yu
+
 > 
-> Should the length be divided by sizeof(wchar_t) to prevent reading out of
-> bounds?
-
-The last patch of this series aims to address this issue.
-
-Thank you!
-
-	Krzysztof
+> Jason
+> 
