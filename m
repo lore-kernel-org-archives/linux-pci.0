@@ -1,128 +1,128 @@
-Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id F164A470433;
-	Fri, 14 Aug 2026 12:49:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6480846DFFC;
+	Fri, 14 Aug 2026 12:49:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786711761; cv=none; b=uxllksmJscDBEmtDih0SsWunnjhjV1+LfBIrBhb/apSM+PIjmub2NqIr7OtR0Rrw2+yd3MsSHfOAwhM39CG0ImRa/e+cPRY/hhdwGyOg1jn8zPhgGrJJVZ7ZiX99e50ArxNorrDbTGfCLJYJTpFXv1KOlZe9N434LP1R4WNI0Ig=
+	t=1786711795; cv=none; b=hU72iEsCE8wqqF0hQI4YEBCfHMMLC6DA2sTaAecanYJHDFBvMlKeX7QKxDG72DmkY3rlbhdBvrRr4Xt8c2tRFMLvenn8M5SkGSWiwJLYwqwiSUEnzcOQp82GqmlCGNPI7PiEm7uNOts/UeuVO+IxBvwA/0d4xVt+M/Ngr8QxgrE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786711761; c=relaxed/simple;
-	bh=fPiEbO5kU2O5bPbZIpxLV2Wsexd1odbAaPn3JJ+ob8c=;
+	s=arc-20240116; t=1786711795; c=relaxed/simple;
+	bh=N6Wm7zvO1O97Kiw/b6HRbmjzTds561mSYObozWbWlp4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=aL1DkxuOlZdOHVnJh/WWnjPahnwwDyYvXxHV/bcOsGO4UzB+sYrP6tlpopzaWWsXJcdbF+i1oFR0fyXux3slbG6v/tMxA7828GRNPnaEvUYL4UDEEzqhOaGmt7MEqBnGvJgYFbfYCMI6ZPMET1XIVyJgAQEaheC47wefZYgnrYU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=fcAp3o7+; arc=none smtp.client-ip=13.77.154.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=QdtxOcSDzDzXR9ITkjL+s0zwxAQmLpLAE98iIODtqPV9FsLa9jQgjvM6x/VxXT/5k0HJ+4j8ngzNxj6GV5uKL+DKNPQk5XBTpRVB0GSzic3TKGkMJCiYMvuH0c3LSC9UHzeFcTqjgeBbSYUPM/sGuQlZZ0ni7/XaEzRSQ6Br3zQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YWTGi5Q7; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="fcAp3o7+"
-Received: from localhost (unknown [167.220.233.38])
-	by linux.microsoft.com (Postfix) with ESMTPSA id 0088320B7168;
-	Fri, 14 Aug 2026 05:48:48 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 0088320B7168
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
-	s=default; t=1786711729;
-	bh=dJRW35gKakc9hml2+rRPkM7itMC10paLwoSLq8jsAKE=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=fcAp3o7+a7fMcM0WX+oqCIBlsTVP5aaKEoFdZf2kCGKPX6QEoPbB1R82qJAVPbJY4
-	 0mBSalspmJwONMEL6n/MJ0nGK6u+Mk2BIM5bh/S1tGnn48PJcyLGTH/IVV0U/lJI7b
-	 t8PbnYe7mZLEsWrMHgARqImX4RV0E32VVx5n2kOM=
-Date: Fri, 14 Aug 2026 20:49:12 +0800
-From: Yu Zhang <zhangyu1@linux.microsoft.com>
-To: Easwar Hariharan <easwar.hariharan@linux.microsoft.com>
-Cc: linux-kernel@vger.kernel.org, linux-hyperv@vger.kernel.org, 
-	iommu@lists.linux.dev, linux-pci@vger.kernel.org, linux-arch@vger.kernel.org, 
-	x86@kernel.org, wei.liu@kernel.org, kys@microsoft.com, haiyangz@microsoft.com, 
-	decui@microsoft.com, longli@microsoft.com, joro@8bytes.org, will@kernel.org, 
-	robin.murphy@arm.com, bhelgaas@google.com, kwilczynski@kernel.org, 
-	lpieralisi@kernel.org, mani@kernel.org, robh@kernel.org, arnd@arndb.de, jgg@ziepe.ca, 
-	mhklinux@outlook.com, jacob.pan@linux.microsoft.com, tgopinath@linux.microsoft.com, 
-	mrathor@linux.microsoft.com, baolu.lu@linux.intel.com, suravee.suthikulpanit@amd.com, 
-	vasant.hegde@amd.com
-Subject: Re: [PATCH v3 4/5] iommu/hyperv: Add para-virtualized IOMMU support
- for Hyper-V guest
-Message-ID: <x6tm2k4b4fagvnpqwvwwwc5u76md7xrnann5okduauieuimj52@svvj6petg2n2>
-References: <20260811155022.108148-1-zhangyu1@linux.microsoft.com>
- <20260811155022.108148-5-zhangyu1@linux.microsoft.com>
- <8b539b15-7373-474d-9afd-1135f0245a75@linux.microsoft.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YWTGi5Q7"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D80B61F000E9;
+	Fri, 14 Aug 2026 12:49:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1786711787;
+	bh=/N/HX1GSPPOcqxWY/4dtIRIphxWYu1pio+UkOSgheTs=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=YWTGi5Q7f/pZmJbmyIgbKJXzr77Dl+/MMrgnXHtQhpdZC8lW4AM2lJ29i/13HYRdd
+	 ZQKimYvkaspsstjrhlp1dq/ocDqT+e9aYeFGesZYVmKzima9JfENh95wImTEFhAOOF
+	 InlnEDgETc0DXUW/G9AqEj8peU3XxtQ8u3hD8h31hatop8+Hh8AjZU393+lWriyc/Z
+	 EVITiCpW6A/dgpEBJrpHeJdXAzSOokK69IItB/oZQJMvMjkSmvkKYCrS9oZWm39vIJ
+	 V0pIfa1+uydAKd2dHEyqaNtmy1/312M8sPv1nFW1nNhSKMxOOlcZBEOhOyutdrHw5Y
+	 mPs6QRNcCyzvA==
+Date: Fri, 14 Aug 2026 14:49:31 +0200
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: Dmitry Torokhov <dmitry.torokhov@gmail.com>, 
+	manivannan.sadhasivam@oss.qualcomm.com, Rob Herring <robh@kernel.org>, 
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jiri Slaby <jirislaby@kernel.org>, 
+	Nathan Chancellor <nathan@kernel.org>, Nicolas Schier <nicolas.schier@linux.dev>, 
+	Hans de Goede <hansg@kernel.org>, Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>, 
+	Mark Pearson <mpearson-lenovo@squebb.ca>, "Derek J. Clark" <derekjohn.clark@gmail.com>, 
+	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
+	Marcel Holtmann <marcel@holtmann.org>, Luiz Augusto von Dentz <luiz.dentz@gmail.com>, 
+	Bartosz Golaszewski <brgl@bgdev.pl>, Daniel Scally <djrscally@gmail.com>, 
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>, Sakari Ailus <sakari.ailus@linux.intel.com>, 
+	"Rafael J. Wysocki" <rafael@kernel.org>, Danilo Krummrich <dakr@kernel.org>, 
+	Bartosz Golaszewski <brgl@kernel.org>, linux-serial@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-kbuild@vger.kernel.org, platform-driver-x86@vger.kernel.org, linux-pci@vger.kernel.org, 
+	devicetree@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-bluetooth@vger.kernel.org, 
+	linux-pm@vger.kernel.org, Stephan Gerhold <stephan.gerhold@linaro.org>, 
+	Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>, linux-acpi@vger.kernel.org, 
+	Sui Jingfeng <sui.jingfeng@linux.dev>
+Subject: Re: [PATCH v3 03/14] software node: Implement device_get_match_data
+ fwnode callback
+Message-ID: <ks2nm67zp5i2grzomu7mjb7uhkuwtd7w5stoqp5kri2clpxpsp@ayn42h7meh5l>
+References: <20260110-pci-m2-e-v3-0-4faee7d0d5ae@oss.qualcomm.com>
+ <20260110-pci-m2-e-v3-3-4faee7d0d5ae@oss.qualcomm.com>
+ <aWSpFk9z0zpyKjr6@smile.fi.intel.com>
+ <6l3rs5pv6xnrbygpvqrdxqoqtybjyefsltk5bl4336q56rfoza@ejo3sxuufghe>
+ <aWSwgRiEkT9unYw9@smile.fi.intel.com>
+ <6peb6afhpm4l7opxbdt3b5sx32longevwds5c3dlqji2hr5dlh@kxuvj55jkqgi>
+ <ljqd5ovcsg7t62tdzd77w5mv5buawm3x7xyapy7n7l7azcaorh@tytj46t2lxyb>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <8b539b15-7373-474d-9afd-1135f0245a75@linux.microsoft.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <ljqd5ovcsg7t62tdzd77w5mv5buawm3x7xyapy7n7l7azcaorh@tytj46t2lxyb>
 
-On Thu, Aug 13, 2026 at 11:02:07AM -0700, Easwar Hariharan wrote:
-> On 8/11/2026 08:50, Yu Zhang wrote:
-> > Add a para-virtualized IOMMU driver for Linux guests running on Hyper-V.
-> > This driver implements stage-1 IO translation within the guest OS.
-> > It integrates with the Linux IOMMU core, utilizing Hyper-V hypercalls
-> > for:
-> >  - Capability discovery
-> >  - Domain allocation, configuration, and deallocation
-> >  - Device attachment and detachment
-> >  - IOTLB invalidation
+On Mon, Jan 12, 2026 at 10:01:23PM +0530, Manivannan Sadhasivam wrote:
+> On Mon, Jan 12, 2026 at 02:32:21PM +0530, Manivannan Sadhasivam wrote:
+> > On Mon, Jan 12, 2026 at 10:27:45AM +0200, Andy Shevchenko wrote:
+> > > On Mon, Jan 12, 2026 at 01:49:54PM +0530, Manivannan Sadhasivam wrote:
+> > > > + Dmitry Torokhov (who was against this patch previously)
+> > > > 
+> > > > On Mon, Jan 12, 2026 at 09:56:06AM +0200, Andy Shevchenko wrote:
+> > > > > On Sat, Jan 10, 2026 at 12:26:21PM +0530, Manivannan Sadhasivam via B4 Relay wrote:
+> > > > > 
+> > > > > > Because the software node backend of the fwnode API framework lacks an
+> > > > > > implementation for the .device_get_match_data function callback.
+> > > > > 
+> > > > > Maybe this is done on purpose. Have you thought about this aspect?
+> > > > 
+> > > > IMO, software nodes were introduced to add sub-properties to the existing
+> > > > firmware nodes, but it has usecase/potential to go beyond that. More below.
+> > > 
+> > > Potential doesn't mean the necessity.
+> > > 
+> > > > > > This makes it difficult to use(and/or test) a few drivers that originates
+> > > > > > from DT world on the non-DT platform.
+> > > > > 
+> > > > > How difficult? DSA implementation went to the way of taking DT overlay
+> > > > > approach. Why that one can't be applied here?
+> > > > 
+> > > > Sometimes you do not have any DT node at all.
+> > > 
+> > > Yes, that is exactly the case I have referred to. The PCI core (in Linux)
+> > > is able to create DT subtree on non-OF based platforms.
+> > > 
 > > 
-> > The driver constructs x86-compatible stage-1 IO page tables in the
-> > guest memory using consolidated IO page table helpers. This allows
-> > the guest to manage stage-1 translations independently of vendor-
-> > specific drivers (like Intel VT-d or AMD IOMMU).
+> > Maybe I should look into creating dynamic DT node for the device and insert it
+> > to the uart node. Theoretically it should work.
 > > 
-> > Hyper-V consumes this stage-1 IO page table when a device domain is
-> > created and configured, and nests it with the host's stage-2 IO page
-> > tables, therefore eliminating the VM exits for guest IOMMU mapping
-> > operations. For unmapping operations, VM exits to perform the IOTLB
-> > flush are still unavoidable.
-> > 
-> > Guest hibernation and resume are not supported by this initial
-> > implementation. The guest-owned stage-1 page tables reside in guest
-> > memory and are preserved in the hibernation image. However, the image
-> > does not by itself preserve the Hyper-V device-domain objects or their
-> > device attachments, and the current pvIOMMU interface does not define
-> > whether or how Hyper-V restores that state.
-> > 
-> > To identify a device in its hypercall interface, the driver looks up the
-> > logical device ID prefix registered for the device's PCI domain (see the
-> > logical device ID registry in hv_common.c) and combines it with the PCI
-> > function number of the endpoint device.
-> > 
-> > Co-developed-by: Wei Liu <wei.liu@kernel.org>
-> > Signed-off-by: Wei Liu <wei.liu@kernel.org>
-> > Co-developed-by: Easwar Hariharan <easwar.hariharan@linux.microsoft.com>
-> > Signed-off-by: Easwar Hariharan <easwar.hariharan@linux.microsoft.com>
-> > Signed-off-by: Yu Zhang <zhangyu1@linux.microsoft.com>
-> > ---
-> >  arch/x86/hyperv/hv_init.c             |   4 +
-> >  arch/x86/include/asm/mshyperv.h       |   4 +
-> >  drivers/iommu/Kconfig                 |   1 +
-> >  drivers/iommu/hyperv/Kconfig          |  16 +
-> >  drivers/iommu/hyperv/Makefile         |   1 +
-> >  drivers/iommu/hyperv/hv-iommu-guest.c | 632 ++++++++++++++++++++++++++
-> >  drivers/iommu/hyperv/iommu.h          |  50 ++
-> >  7 files changed, 708 insertions(+)
-> >  create mode 100644 drivers/iommu/hyperv/Kconfig
-> >  create mode 100644 drivers/iommu/hyperv/hv-iommu-guest.c
-> >  create mode 100644 drivers/iommu/hyperv/iommu.h
-> > 
-> Seems like this is missing a change to MAINTAINERS. I'd suggest making a new section
-> and adding both the IOMMU and Hyper-V lists. As it stands, the IOMMU list will get no
-> notification of changes to this driver.
+> 
+> It worked flawlessly. So I sent v4 incorporating this design:
+> https://lore.kernel.org/linux-pci/20260112-pci-m2-e-v4-0-eff84d2c6d26@oss.qualcomm.com/
 > 
 
-Thanks for your remind, Easwar. 
+Andy, I had to revive this old thread of a merged series as Krzk is not in
+favour of adding DT overlay or dynamic OF nodes for these BT devices [1]. His
+objections are due to the fact that we are just adding BT nodes of a
+discoverable device (M.2 PCIe device) without any resources. So the node just
+contains the compatible to match with the serdev driver and nothing else.
 
-We do intend to maintain the Linux guest pvIOMMU driver. I am just not
-sure whether it needs a separate section in the MAINTAINERS file, since
-drivers/iommu/hyperv/ is already covered by both the Hyper-V and generic
-IOMMU entries, and get_maintainer.pl returns both mailing lists and sets
-of maintainers. Therefore I don't see a notification gap that requires a
-separate entry.
-                                                                                                                                                        
-Do the Hyper-V and IOMMU maintainers have a preference here?
+And he suggested to use swnodes or other similar mechanisms to plug with the
+serdev driver as that's the only thing we want here, not a true hardware
+description.
 
-B.R.
-Yu
-> Thanks,
-> Easwar (he/him)
-> 
+Since you strongly objected the swnode approach in this series, I wanted to hear
+your opinion before I rework the code.
+
+- Mani
+
+[1] https://lore.kernel.org/linux-pci/768142f0-2638-41f3-a34f-dc80bb99eb7f@kernel.org
+
+-- 
+மணிவண்ணன் சதாசிவம்
