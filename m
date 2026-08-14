@@ -1,108 +1,139 @@
-Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 7FC8B36920F;
-	Fri, 14 Aug 2026 09:37:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D25B832ABCA
+	for <linux-pci@vger.kernel.org>; Fri, 14 Aug 2026 09:45:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786700272; cv=none; b=C5jod5ptGDwQ3bUIzpjEZzmeCP1ZWCl2Ti8EHJD+83DCM/P+Xte8Lt34Wcn6K37ZnvC+gVDCcEwYip/vNr3lszxq1fEjV15d/F5Y67qxYRj8nOE402ZvnLBnNam4yA0M52GvrSVck17QbTUEdQ8vpV5qqyPDL+Kmyxb8eqLDKSg=
+	t=1786700739; cv=none; b=WbYWJNugNcHPXPp5cNBT++HLrIbUeI3FviRIOVqU2gINEbNYOmfczpmMyo0BAVgYYTmBQH/ATLTWfDzRZKfqXfZi2O/hNDL9uR4pbHCBGoZ4MKV0vMsTbtCSyO6VI+NuEKT6DdbuqMyd6iLa9dxaArZtuklJhp59+M+KoQLbW1c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786700272; c=relaxed/simple;
-	bh=t7+7Umd0u3vXNbOTNBXduVQSErIY3/fVSWRtPFdzg3E=;
+	s=arc-20240116; t=1786700739; c=relaxed/simple;
+	bh=f8m99qTBG/waNjO0jnq7QlQNr4zzVDkki5wcyHC7C/A=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Z7LGaRm0erJxWL02ju0OPYYQgj+DW/wQxAkfSpCxgC0FlqZDZrJYx7WyuCqGuqNi+EpJwpk67fAaTeILI+bwCgw6H8w9WRzu2Nb02I8bVbVJJBZjOR/RYnsvU+6WnHsYeZasj+KoRsXG6CUsOW3xGvTM/Xr/ZTPTxBCNiwYSqyM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=KWuUIhE3; arc=none smtp.client-ip=13.77.154.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=pw8RbeThUKV2b/0FTOADfHr+ghqyEXVjQLHKEyIKcYBC/G9UM62ju/Z6/YAGokqxH6rP1OxMl1vCzuDxa5Y3WswqwOG+tpRZWcR3Bs4R7S1UBYhr2kycU88OAjiLmvbRqs8neKu8JRaNeB+v0XLAL20F/57iFIfoXhNkWjRBqk8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NLPGQ8zJ; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="KWuUIhE3"
-Received: from localhost (unknown [167.220.233.38])
-	by linux.microsoft.com (Postfix) with ESMTPSA id CEB0E20B7168;
-	Fri, 14 Aug 2026 02:37:24 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com CEB0E20B7168
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
-	s=default; t=1786700245;
-	bh=mrPCGSCOgcbImYUmKSq1aUBNJApcEPF4LurAYoGhmf8=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=KWuUIhE3DnstjtweJwewzpdkTUXMkgfRQJ84/am0XAvdc1bRgttwo3dQumixnhhVp
-	 iJTevsRrtVBzs8CF3ZyVxBXdrc+FI3SrfDADGUoXaJ+7PmtfEbslpeSaJZqvSucFcE
-	 AkEZHctKNkynpFkJWvYSTzMGrvv8RntZD56M65vo=
-Date: Fri, 14 Aug 2026 17:37:48 +0800
-From: Yu Zhang <zhangyu1@linux.microsoft.com>
-To: Jason Gunthorpe <jgg@ziepe.ca>, 
-	Jacob Pan <jacob.pan@linux.microsoft.com>
-Cc: linux-kernel@vger.kernel.org, linux-hyperv@vger.kernel.org, 
-	iommu@lists.linux.dev, linux-pci@vger.kernel.org, linux-arch@vger.kernel.org, 
-	x86@kernel.org, wei.liu@kernel.org, kys@microsoft.com, haiyangz@microsoft.com, 
-	decui@microsoft.com, longli@microsoft.com, joro@8bytes.org, will@kernel.org, 
-	robin.murphy@arm.com, bhelgaas@google.com, kwilczynski@kernel.org, 
-	lpieralisi@kernel.org, mani@kernel.org, robh@kernel.org, arnd@arndb.de, 
-	mhklinux@outlook.com, tgopinath@linux.microsoft.com, 
-	easwar.hariharan@linux.microsoft.com, mrathor@linux.microsoft.com, baolu.lu@linux.intel.com, 
-	suravee.suthikulpanit@amd.com, vasant.hegde@amd.com
-Subject: Re: [PATCH v3 4/5] iommu/hyperv: Add para-virtualized IOMMU support
- for Hyper-V guest
-Message-ID: <p7ts4y6lxt7k6ldzaa26v7rckmmp7o5js2gn2r3eantgzut2cc@xxsvso76nefj>
-References: <20260811155022.108148-1-zhangyu1@linux.microsoft.com>
- <20260811155022.108148-5-zhangyu1@linux.microsoft.com>
- <20260813152913.00003d8a@linux.microsoft.com>
- <20260813224627.GA933791@ziepe.ca>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NLPGQ8zJ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6361D1F00A3A;
+	Fri, 14 Aug 2026 09:45:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1786700733;
+	bh=ce/QtfeRN5ugeB0AcqdngzeKRFp/ZKi4G3yp0PUYFEo=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=NLPGQ8zJkLXl1YTpmm7SzfeUVepnZn46BwvhJGAJgFIllsnLhQxjF315TFizIa9T6
+	 LNZqQZD9IFWF+RRKuESOObfUyDR/XU3kdyyXU2xk4pQoqSRxHIz87y+ZVQOKQsepuo
+	 LbsrP9JcMxMp97UD/i0LIHs2Fm6EQPLlfSeXG/xoC6JKksEm8UC+uAEe65hUKZJBhq
+	 5GHIGI/tnISyj3loNPZGxfZyrUzdtE5wMhFJHviY4NiFeENYGnN67liHQo82THxtxD
+	 zB8VP9R/sRC373aCHeaNItVfvkwyhZIydtaTtuGFrH0boZgR7u8IdcZAytCzP7zfhC
+	 /gGrPvvffxNZg==
+Date: Fri, 14 Aug 2026 18:45:31 +0900
+From: Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, 
+	Manivannan Sadhasivam <mani@kernel.org>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>, Narendra K <Narendra_K@dell.com>, 
+	Martin =?utf-8?B?TWFyZcWh?= <mj@ucw.cz>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 0/4] PCI/sysfs: Fix the ACPI device name attributes
+Message-ID: <20260814094122.GC3463973@rocinante>
+References: <20260814070522.2327975-1-kwilczynski@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20260813224627.GA933791@ziepe.ca>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260814070522.2327975-1-kwilczynski@kernel.org>
 
-On Thu, Aug 13, 2026 at 07:46:27PM -0300, Jason Gunthorpe wrote:
-> On Thu, Aug 13, 2026 at 03:29:13PM -0700, Jacob Pan wrote:
+Hello,
+
+Adding Martin Mareš for visibility.
+
+> Currently, the "label" and "acpi_index" attributes are created whenever
+> the _DSM function 0 bitmap advertises the Device Name function, and
+> dsm_get_label() returns the literal -1 on every failure path.  Firmware
+> that advertises the function but returns an object that cannot be
+> parsed therefore produces two attributes that exist and fail every read
+> with -EPERM:
 > 
-> > > +static int hv_iommu_blocking_attach_dev(struct iommu_domain *domain,
-> > > +					struct device *dev,
-> > > +					struct iommu_domain *old)
-> > > +{
-> > > +	struct hv_iommu_endpoint *vdev = dev_iommu_priv_get(dev);
-> > > +	struct hv_iommu_domain *hv_domain =
-> > > to_hv_iommu_domain(domain);
-> > > +	struct pci_dev *pdev = to_pci_dev(dev);
-> > > +	int ret;
-> > > +
-> > > +	if (pdev->ats_enabled)
-> > > +		pci_disable_ats(pdev);
-> > > +
-> > > +	if (vdev->hv_domain == hv_domain)
-> > > +		return 0;
-> > It may not be needed since the core code will check this. If you keep
-> > this as extra precaution, should this be moved up before ats? since ats
-> > must be disabled already if blocking domain is attached.
-
-@Jacob In v2 (https://lore.kernel.org/all/20260706095510.00007ce1@linux.microsoft.com/), 
-this check was in the common attach helper. It was redundant because the normal
-group domain path already skips same-domain attaches.
-                                                                                                                                                        
-In this version, I removed it from the common helper and kept it only in the 
-blocking attach callback. iommu_deinit_device() directly attaches the
-device to release_domain without going through the group-level check.
-IIUC, for a device which is alreading parked in the blocking domain, the
-releasing might invoke another blocking-domain attach.
-                                                                                                                                                        
-Sorry, I should have explained this change and its rationale in the changelog.
-
+>   $ cat /sys/bus/pci/devices/0000:00:08.3/label
+>   cat: /sys/bus/pci/devices/0000:00:08.3/label: Operation not permitted
 > 
-> Why check it at all? Is there an issue with attaching the same thing
-> twice? Will it blip the DMA or something?
-
-Actually, I do not think there should be any issue with attaching twice.
-Hyper-V *should* be able to accept such attachment. But I do not want to
-make such assumption just for a redundant hypercall.
-
-Does this reasoning make sense, or would you prefer that I remove the
-check?
-
-B.R.
-Yu
-
+> Nothing in that path performs a permission check.  Tools that read the
+> attribute print the failure on every invocation, which is how this
+> surfaced in a pciutils report:
 > 
-> Jason
+>   https://github.com/pciutils/pciutils/issues/175
 > 
+> Patch 1 returns error codes that describe what failed.  Patch 2 stops a
+> malformed optional device name element from also failing "acpi_index",
+> which exports the mandatory instance number and does not depend on the
+> name.  Patch 3 evaluates the function when deciding visibility, so that
+> an attribute exists only when the element it exports has a type the read
+> path accepts.  The documented ABI already describes the behaviour patch
+> 3 implements, and the SMBIOS attribute group in the same file already
+> works that way.
+> 
+> Patch 4 corrects the length dsm_label_utf16s_to_utf8s() passes to
+> utf16s_to_utf8s().  The ACPI buffer length counts bytes, while the
+> converter counts wchar_t elements.  For a buffer holding no NUL code
+> unit the conversion reads past the end of the object allocated by
+> ACPICA.  The bytes it finds there are decoded into the world readable
+> "label" attribute.
+> 
+> Note that patch 2 changes behaviour on platforms that have a valid
+> instance number together with a malformed name element: "acpi_index"
+> starts returning data there.  Because udev derives the onboard
+> interface name from "acpi_index", an interface on such a platform may
+> be renamed once, on the first boot after this change.  The same
+> mechanism, in the other direction, is recorded in dcfa9be83866 ("ACPI /
+> PCI: Fix sysfs acpi_index and label errors").
+> 
+> No ACPI dump accompanies the report, so the object that platform returns
+> is not known.  The malformed results tested below are constructed.
+> 
+> Tested under QEMU with an SSDT that overrides _DSM on the ACPI companion
+> of a PCI device.  Function 0 advertises the Device Name function, and
+> function 7 returns a chosen object.  Nine cases, on the series and on
+> v7.2-rc1, with CONFIG_KASAN=y:
+> 
+>   Function 7 returns                        label       acpi_index
+>   ----------------------------------------  ----------  ----------
+>   Package(2){1, "TESTLABEL"}                TESTLABEL   1
+>   Package(2){1, ""}                         empty       1
+>   Package(2){1, Buffer{"BUF", terminated}}  BUF         1
+>   Package(2){1, Buffer{NUL}}                empty       1
+>   Package(2){0, 0}                          absent      0
+>   Package(2){"BAD", "NAME"}                 absent      absent
+>   Package(2){1, Buffer(0x40)} unterminated  32 chars    1
+>   valid twice, then an integer              -EIO        -EIO
+>   QEMU acpi-index=7                         empty       7
+> 
+> On v7.2-rc1 the first four and the last behave identically, so
+> compliant firmware is unaffected, including the generator QEMU uses for
+> stable interface names.  Package(2){0, 0} reproduces the reported
+> failure there, with both attributes returning -EPERM.
+> 
+> For patch 4, the unterminated buffer case on v7.2-rc1 leaked two bytes
+> of adjacent memory into the attribute, and under KASAN:
+> 
+>   BUG: KASAN: slab-out-of-bounds in utf16s_to_utf8s+0x21f/0x250
+>   Read of size 2 at addr ffff88800e77b088 by task cat/109
+>   ...
+>   allocated 136-byte region [ffff88800e77b000, ffff88800e77b088)
+>   ...
+>   acpi_ut_initialize_buffer+0xc7/0x190
+>   acpi_evaluate_object+0x694/0x920
+>   acpi_evaluate_dsm+0x16e/0x230
+>   dsm_get_label.isra.0+0x6b/0x300
+> 
+> With the series applied the same case reads correctly and KASAN stays
+> silent.  The two terminated buffer cases produce no splat before or
+> after.  Reaching the read needs the missing terminator, not the buffer
+> form as such.
+
+Thank you!
+
+	Krzysztof
