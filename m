@@ -1,83 +1,112 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5DF313EFD30
-	for <linux-pci@vger.kernel.org>; Fri, 14 Aug 2026 07:14:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1A9F3408623
+	for <linux-pci@vger.kernel.org>; Fri, 14 Aug 2026 07:19:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786691694; cv=none; b=dd0lV13RUo72tn74i1hUM6+7VEpT+CX6hXaPRWkXSXtH6wuzl0XSxL+NQd4rvhhGnXCxcGTik2pUZVUGtPsiiMFjW27GfTBmFB8jBWsnWYPmM75AwFnqDdThf0JefyTTfHHVQwt6pYU+bIOh9gRjXsu2m1QrR6zdZBrjGYzVkMM=
+	t=1786691943; cv=none; b=eYEWUTknnm40bt3eAQfPhdD+fRvshMlo8RkdosiLFcCHS615Ea8iCPW2LRhXLWIxHJ7gcdJgy7Jul5VdZwcVczNTY1CgRAieDIMR4R5QZSg0Mpx61jPUypXzqLHFKg1Y+eQcvl5M+uTV+fim00yusTblD++rw5YJXK+/UqfmDk4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786691694; c=relaxed/simple;
-	bh=A8ymbXJxu6QrxbooTzbkqWcSR87r+om9rR/AXCp8QiM=;
+	s=arc-20240116; t=1786691943; c=relaxed/simple;
+	bh=pjoLyTFPJZ27L4+GiGEUhnm7L3vvS3eK7U+H877tGxw=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=s7dg/9GIhow51RoHc53m7y9FHQTREefdFDggy8g8J70LRjeKvDN6dJD0KpmiSRIg85XeX9i6NEd4BuL9sSLavfmJA9V11WVxA0zRqv+/kb4TsU5c0/+yIWdDM6KcFesuXnyRXANKKFEjaQNjC+8/bGrGMxjucKmogwuugMiJ9m4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kQ0FAXgl; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=jzbS3/IOpiBt9uicppAP3m0vnxbFsJY3OQWqQdHHEsf3TFd7qQ77W8TyWeQaGly2+IMEKWoUa85blOmP5uvfVrmcnRQQ2VFfdVdNHuyIql59g+QuYcFJAT4hah5D/zAxrfwOQ8fgmWPhEiqNwBJ97+IM6bSvDe19pVBZV9SwVH4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=l0Q65gSd; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kQ0FAXgl"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E602B1F000E9;
-	Fri, 14 Aug 2026 07:14:49 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="l0Q65gSd"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 78AA11F000E9;
+	Fri, 14 Aug 2026 07:19:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786691690;
-	bh=8u3IpaxSsnPpplgmItjzsxdmPZHyrh5kkXCzIGd1US4=;
+	s=k20260515; t=1786691941;
+	bh=CKzyg6I1jNqGHxzrv5F19s2FBtWNiEGMcdNQ4pakJ8k=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=kQ0FAXgllhUYMw2AIVs6CDrA6xur75BqtW8nBY302G7EDnRsZSOT8x22YD5hjv9ZD
-	 mKg9OqHBhPl41PuM/Vc2TvEK7OkrhF7ElkLK/HqLlOte+gdfh9l6QJyTBT7tAxdJ8U
-	 cEcBCDgCqtDt0nFqYkeOolu9J9eMHmIWqsS4jcIkbdqMtPIRsmdXzNccvtXNZBaarF
-	 HgSyUQFVaLsdnKG7DBHP+Cu7PYyojGC+O9GYaWs0bA1JGZ2iO8NTwp3IItCetkpUE0
-	 yIx4wo3R1tie79XzGUD8/4d9n4pKqWJ5EMG5NpXT14CYpMN18SsCt3ZWDfdxbqsA4o
-	 pDftgEk4merVw==
+	b=l0Q65gSdVasqObZKtms6hPf6N9Hmveyc4kLAPfZst/ixhICM30+itHmDQ2c6YFAyY
+	 paMzTVuHXbtOj+EDSTurpRr1VLO6ijQ3rXnK8eWjP76ljTgVhCulGdgIk6MZG1vgm3
+	 Whvi9shoGcNKq1qgrpf0VSWca1i9cF+OlGbwSK3lOmLlNkI45FbgV3lOCGlwExXOCX
+	 gJYaDF8EPXaGLZv8J+h3cVw+6WjrWyOntUpBmhsaejl7TXWACwJ+i0M2WMMC1bMW1C
+	 Pk68FhnVHWfSSKs3Q5obhMC8JbbGKBJhIKJkcQR1Sryuay7hrDHfrhihznUlkUSVcF
+	 Ik0b4stM+v8uQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 4/4] PCI/sysfs: Pass the device name length in UTF-16
- code units
+Subject: Re: [PATCH 1/4] PCI/sysfs: Stop reporting _DSM failures as -EPERM
 Reply-To: sashiko-reviews@lists.linux.dev
 To: =?utf-8?b?S3J6eXN6dG9mIFdpbGN6ecWEc2tp?= <kwilczynski@kernel.org>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260814070522.2327975-5-kwilczynski@kernel.org>
+In-Reply-To: <20260814070522.2327975-2-kwilczynski@kernel.org>
 References: <20260814070522.2327975-1-kwilczynski@kernel.org>
- <20260814070522.2327975-5-kwilczynski@kernel.org>
+ <20260814070522.2327975-2-kwilczynski@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 14 Aug 2026 07:14:45 +0000
-Message-Id: <20260814071449.E602B1F000E9@smtp.kernel.org>
+Date: Fri, 14 Aug 2026 07:19:01 +0000
+Message-Id: <20260814071901.78AA11F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-> Currently, dsm_label_utf16s_to_utf8s() passes the ACPI buffer
-> length to utf16s_to_utf8s() unchanged.  The Device Name _DSM may
-> return the device name as a buffer holding a UTF-16 string, and
-> the ACPI length counts bytes while the converter counts wchar_t
-> elements.  The converter therefore receives a count twice the
-> number of code units the buffer holds, and that count is its only
-> bound on the input.
->=20
-> A NUL code unit ends the conversion early, so a name that carries
-> one is converted correctly and the error stays hidden.  ACPICA
-> zeroes the entire result allocation, and the padding placed after
-> the buffer supplies that NUL for most lengths.  Lengths that leave
-> no padding, or a single byte of it, do not, and the conversion
-> then runs up to its own length in bytes past the end of the
-> allocation.  The bytes beyond the allocation are decoded into the
-> "label" attribute, which is world readable.
->=20
-> Thus, divide the buffer length by the size of wchar_t so that the
-> converter receives a count of code units.  The division truncates,
-> so the converter is never told to read more bytes than the buffer
-> holds, including for an odd length.
->=20
-> Reaching the out of bounds read needs firmware that returns the
-> name as a buffer and omits the terminator.
->=20
-> Fixes: 6058989bad05 ("PCI: Export ACPI _DSM provided firmware instance nu=
-mber and string name to sysfs")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Krzysztof Wilczy=C5=84ski <kwilczynski@kernel.org>
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
 
-Sashiko has reviewed this patch and found no issues. It looks great!
+Pre-existing issues:
+- [High] Buffer over-read in dsm_label_utf16s_to_utf8s() due to passing len=
+gth in bytes instead of 16-bit characters.
+--
+
+--- Patch [1]: [PATCH 1/4] PCI/sysfs: Stop reporting _DSM failures as -EPER=
+M ---
+commit cd414532673d45c83fe3ca965ef9476bab4c3514
+Author: Krzysztof Wilczy=C5=84ski <kwilczynski@kernel.org>
+
+    PCI/sysfs: Stop reporting _DSM failures as -EPERM
+
+This patch updates dsm_get_label() to return appropriate error codes (-ENOD=
+EV
+and -EIO) instead of the literal -1. This resolves incorrect -EPERM errors =
+in
+sysfs reads when ACPI companions are missing or _DSM evaluations fail.
+
+Link: https://github.com/pciutils/pciutils/issues/175
+
+> diff --git a/drivers/pci/pci-label.c b/drivers/pci/pci-label.c
+> index 0c64465196404..255e0ecffb096 100644
+> --- a/drivers/pci/pci-label.c
+> +++ b/drivers/pci/pci-label.c
+> @@ -160,12 +160,12 @@ static int dsm_get_label(struct device *dev, char *=
+buf,
+>  	int len =3D 0;
+> =20
+>  	if (!handle)
+> -		return -1;
+> +		return -ENODEV;
+
+[ ... ]
+
+While reviewing this patch, I noticed a pre-existing issue in the same file:
+
+drivers/pci/pci-label.c:dsm_label_utf16s_to_utf8s() {
+    ...
+	len =3D utf16s_to_utf8s((const wchar_t *)obj->buffer.pointer,
+			      obj->buffer.length,
+			      UTF16_LITTLE_ENDIAN,
+			      buf, PAGE_SIZE - 1);
+    ...
+}
+
+[Severity: High]
+This isn't a bug introduced by this patch, but does this code cause a buffer
+over-read?
+
+It appears utf16s_to_utf8s() expects the maximum number of 16-bit characters
+as its second argument, but it is being passed obj->buffer.length in bytes.
+
+If a PCI device with a firmware-provided ACPI _DSM returns a
+non-NUL-terminated buffer of UTF-16 characters, could this read past the end
+of the allocation when a user reads the world-readable sysfs label attribut=
+e?
+
+Should the length be divided by sizeof(wchar_t) to prevent reading out of
+bounds?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260814070522.2327=
-975-1-kwilczynski@kernel.org?part=3D4
-
+975-1-kwilczynski@kernel.org?part=3D1
