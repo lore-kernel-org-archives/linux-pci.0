@@ -1,43 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1A9F3408623
-	for <linux-pci@vger.kernel.org>; Fri, 14 Aug 2026 07:19:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9601233D6D5
+	for <linux-pci@vger.kernel.org>; Fri, 14 Aug 2026 07:19:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786691943; cv=none; b=eYEWUTknnm40bt3eAQfPhdD+fRvshMlo8RkdosiLFcCHS615Ea8iCPW2LRhXLWIxHJ7gcdJgy7Jul5VdZwcVczNTY1CgRAieDIMR4R5QZSg0Mpx61jPUypXzqLHFKg1Y+eQcvl5M+uTV+fim00yusTblD++rw5YJXK+/UqfmDk4=
+	t=1786691992; cv=none; b=aC7vcfqefghYfoXxjxW38qE7ZMlIn80tsHzUlAORXAtoSNXLoYYuUuVmU3AIDA0GNpiywBMi/xjctkJQ0hmmaVPUgvY9KH8nlzGdO0UGOPQAHR26k68hm3QTGxMyZtvsziyEa8jOPBVLjFEVEIgLt8yya3BtnFOC73d1MZt7JE0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786691943; c=relaxed/simple;
-	bh=pjoLyTFPJZ27L4+GiGEUhnm7L3vvS3eK7U+H877tGxw=;
+	s=arc-20240116; t=1786691992; c=relaxed/simple;
+	bh=xv5CJtsoZ73+GLarI6RkspqINrMoRAJ5ePmde0H8n4Q=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=jzbS3/IOpiBt9uicppAP3m0vnxbFsJY3OQWqQdHHEsf3TFd7qQ77W8TyWeQaGly2+IMEKWoUa85blOmP5uvfVrmcnRQQ2VFfdVdNHuyIql59g+QuYcFJAT4hah5D/zAxrfwOQ8fgmWPhEiqNwBJ97+IM6bSvDe19pVBZV9SwVH4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=l0Q65gSd; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=S+svZhAHeOc65r+TMtWDdXX7C4srC7onfrjh1M090CiuZPj+FoG/+PT5+/tAtT24vIqDWah9GQSczoPt9kFScO/R+HEG6xDUjiGR6srreMqXbPXC0/ac9YSbZjaFDwpatAGbulTslg81Tieazy2a+g1/xWZMMmYgQ8t1VaEGtp4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kyKxlUSe; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="l0Q65gSd"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 78AA11F000E9;
-	Fri, 14 Aug 2026 07:19:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kyKxlUSe"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 085BD1F00A3A;
+	Fri, 14 Aug 2026 07:19:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786691941;
-	bh=CKzyg6I1jNqGHxzrv5F19s2FBtWNiEGMcdNQ4pakJ8k=;
+	s=k20260515; t=1786691991;
+	bh=+httrL2YXqMriFQRMPDxWxd0E1eWtrixYoxHnMt9pwE=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=l0Q65gSdVasqObZKtms6hPf6N9Hmveyc4kLAPfZst/ixhICM30+itHmDQ2c6YFAyY
-	 paMzTVuHXbtOj+EDSTurpRr1VLO6ijQ3rXnK8eWjP76ljTgVhCulGdgIk6MZG1vgm3
-	 Whvi9shoGcNKq1qgrpf0VSWca1i9cF+OlGbwSK3lOmLlNkI45FbgV3lOCGlwExXOCX
-	 gJYaDF8EPXaGLZv8J+h3cVw+6WjrWyOntUpBmhsaejl7TXWACwJ+i0M2WMMC1bMW1C
-	 Pk68FhnVHWfSSKs3Q5obhMC8JbbGKBJhIKJkcQR1Sryuay7hrDHfrhihznUlkUSVcF
-	 Ik0b4stM+v8uQ==
+	b=kyKxlUSe2LWllKWk0J7WhEGcnak0cNWqhuZYoSBNCI4zQe1o74QP2yhfPp0gPQG39
+	 sPrqF+5V/Hl8iJTKW+r+UF230+IJR/xE4rvHBS7w18ZcMT173WxDrxe8Y6sTlolTSI
+	 n5s4yiksOAOMWfn0OdORfou+A50n4ajsTI/ZHX9J7iyJVXsw7S+29m+i++1iR+xfH6
+	 VDFl9LmuE5U4wZrJ0PzwTGbnY4kBIB0Wk1hvgn76kN84txWUV78v9PTDIf0guhZk+L
+	 IGobf6hmiz5TQBfCh7qi+IqqNl0jLQC2rXWw9CoRpaP1iZZPXOSsp+v63zk2BwOzod
+	 K+8UwMJmZJ8xw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 1/4] PCI/sysfs: Stop reporting _DSM failures as -EPERM
+Subject: Re: [PATCH 3/4] PCI/sysfs: Handle a malformed _DSM result in
+ acpi_attr_is_visible()
 Reply-To: sashiko-reviews@lists.linux.dev
 To: =?utf-8?b?S3J6eXN6dG9mIFdpbGN6ecWEc2tp?= <kwilczynski@kernel.org>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260814070522.2327975-2-kwilczynski@kernel.org>
+In-Reply-To: <20260814070522.2327975-4-kwilczynski@kernel.org>
 References: <20260814070522.2327975-1-kwilczynski@kernel.org>
- <20260814070522.2327975-2-kwilczynski@kernel.org>
+ <20260814070522.2327975-4-kwilczynski@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 14 Aug 2026 07:19:01 +0000
-Message-Id: <20260814071901.78AA11F000E9@smtp.kernel.org>
+Date: Fri, 14 Aug 2026 07:19:46 +0000
+Message-Id: <20260814071951.085BD1F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -48,65 +49,61 @@ Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
 
 Pre-existing issues:
-- [High] Buffer over-read in dsm_label_utf16s_to_utf8s() due to passing len=
-gth in bytes instead of 16-bit characters.
+- [High] The function `dsm_label_utf16s_to_utf8s` passes the byte length of=
+ an ACPI buffer as the `inlen` parameter to `utf16s_to_utf8s`, which expect=
+s the length in `wchar_t` elements, leading to an out-of-bounds read.
 --
 
---- Patch [1]: [PATCH 1/4] PCI/sysfs: Stop reporting _DSM failures as -EPER=
-M ---
-commit cd414532673d45c83fe3ca965ef9476bab4c3514
+--- Patch [3]: [PATCH 3/4] PCI/sysfs: Handle a malformed _DSM result in acp=
+i_attr_is_visible() ---
+commit 1e24bdb9829d783f4fae2c39ec3d3567d6ea73df
 Author: Krzysztof Wilczy=C5=84ski <kwilczynski@kernel.org>
 
-    PCI/sysfs: Stop reporting _DSM failures as -EPERM
+PCI/sysfs: Handle a malformed _DSM result in acpi_attr_is_visible()
 
-This patch updates dsm_get_label() to return appropriate error codes (-ENOD=
-EV
-and -EIO) instead of the literal -1. This resolves incorrect -EPERM errors =
-in
-sysfs reads when ACPI companions are missing or _DSM evaluations fail.
+This commit updates acpi_attr_is_visible() to evaluate the Device Name
+_DSM when deciding attribute visibility. This ensures each attribute is
+only created when the exported element has a type that the read path
+accepts, preventing failing reads for malformed objects.
 
-Link: https://github.com/pciutils/pciutils/issues/175
+Closes: https://github.com/pciutils/pciutils/issues/175
 
 > diff --git a/drivers/pci/pci-label.c b/drivers/pci/pci-label.c
-> index 0c64465196404..255e0ecffb096 100644
+> index 5b08f50653a37..abb941530c560 100644
 > --- a/drivers/pci/pci-label.c
 > +++ b/drivers/pci/pci-label.c
-> @@ -160,12 +160,12 @@ static int dsm_get_label(struct device *dev, char *=
-buf,
->  	int len =3D 0;
-> =20
->  	if (!handle)
-> -		return -1;
-> +		return -ENODEV;
 
 [ ... ]
 
-While reviewing this patch, I noticed a pre-existing issue in the same file:
+[Severity: High]
+This isn't a bug introduced by this patch, but while reviewing how the _DSM
+buffer is handled in this file, I noticed a pre-existing issue in
+dsm_label_utf16s_to_utf8s():
 
 drivers/pci/pci-label.c:dsm_label_utf16s_to_utf8s() {
-    ...
+	int len;
+
 	len =3D utf16s_to_utf8s((const wchar_t *)obj->buffer.pointer,
 			      obj->buffer.length,
 			      UTF16_LITTLE_ENDIAN,
 			      buf, PAGE_SIZE - 1);
-    ...
+	buf[len++] =3D '\n';
+
+	return len;
 }
 
-[Severity: High]
-This isn't a bug introduced by this patch, but does this code cause a buffer
-over-read?
+Does this code pass a byte length instead of a character count?
 
-It appears utf16s_to_utf8s() expects the maximum number of 16-bit characters
-as its second argument, but it is being passed obj->buffer.length in bytes.
+Because utf16s_to_utf8s() expects the inlen parameter to represent the numb=
+er
+of 16-bit characters, passing obj->buffer.length (which is the size in byte=
+s)
+might instruct the function to process up to twice as many characters as are
+actually allocated for the buffer.
 
-If a PCI device with a firmware-provided ACPI _DSM returns a
-non-NUL-terminated buffer of UTF-16 characters, could this read past the end
-of the allocation when a user reads the world-readable sysfs label attribut=
-e?
-
-Should the length be divided by sizeof(wchar_t) to prevent reading out of
-bounds?
+Could this result in an out-of-bounds heap memory read when an unprivileged
+user reads the world-readable /sys/bus/pci/devices/.../label sysfs file?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260814070522.2327=
-975-1-kwilczynski@kernel.org?part=3D1
+975-1-kwilczynski@kernel.org?part=3D3
