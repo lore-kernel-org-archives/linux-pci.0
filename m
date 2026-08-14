@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A6B713E44E7
-	for <linux-pci@vger.kernel.org>; Fri, 14 Aug 2026 07:05:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0783335C6B7
+	for <linux-pci@vger.kernel.org>; Fri, 14 Aug 2026 07:05:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786691133; cv=none; b=l9WxYh0HidVub29dxx+SLvK0esGH6TLcUniLUYxsVfpuNQ7OKkHxQbGTzUNJyzL1WG9e1VSKjztDaqJiT3Kjg7tN+7hbg1ypQGlMkxsDjAgfv/ko5tz8eMuKEuqhl+ZQVsuM5XtvsCPj0oW5cvJKC93CyP7mQxvgNQhWtD4eXXI=
+	t=1786691134; cv=none; b=XGdZNsxnm8VKuY26jvfcQqrE0P6Kc92WzyBIMcrrqPhgtdYmv428pIIK7Olg95UmIjCZddkKcFEqYvcpyuhcltxua0/QzYJAiaa/jqYIJx+ldlGxuw9SvZs2mkbli/vGBLQZmQUiEyLojTwDTWIPK5Sux4GpsOjnVnsx8TKwFak=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786691133; c=relaxed/simple;
-	bh=oZyRiXqqeMDYmTmjczcdTg9sK/rT2YaFn9SKHHQuOsM=;
+	s=arc-20240116; t=1786691134; c=relaxed/simple;
+	bh=BjVLKYF/0FlM0IddyhA9BJmBDaAw+iHH/C0wib89uuc=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=V/sdEgkBE/qUHccTUgxabAwWRnnVn2/oNvIltJ1Yq5tgrkd/V/FXMBTlCpeObbl5gj550VaOGwaDOiKhYWI7/+np6R/oWGlIjeLzooov7z4BmvXIrEr74gHIUvLcx+54K4xOUkXUelZDkFF+IGF8jaXeaBF1u9apZAr26t08fBM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CKrHaLSr; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=YVZ1O8CeKTGkXoqM40J0VuZUUMgsfVvu0gf58uHWVKZRbBuskYm5nYIjrgASq68n2uolwe9SMExggNMRQb5pqMnxMfd56OGWgtGzLlCpqLVK0JMgaNYaXvPb8SArI64OJMd9POPEgUWLk+YMrx+ZxiyaLldqmLPswhegWmAnCZ0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OmLq7RMP; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CKrHaLSr"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 533971F00A3D;
-	Fri, 14 Aug 2026 07:05:27 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OmLq7RMP"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D3A6D1F00ACA;
+	Fri, 14 Aug 2026 07:05:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786691128;
-	bh=ywGTcbUJtl71t1g+VJG3/C0HlRVXyefGgiLRI0/MVD8=;
+	s=k20260515; t=1786691130;
+	bh=5iKY6w/LKomNQKvpWIUjBpybARG4NTreTfnOktnFLeI=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=CKrHaLSrZ0MD5q/frnDsbs0u1hv+l+gNQnGMW+uEkLa2ObbCge32jdpsFWVBSSdp3
-	 mRSNKXUpYCG5/UglIj7YyiWZmmF+BE1Nj/ujDlultDu+VokA3bm34+Xx86beTyjgk+
-	 V/vUtUTHrCoSAoRu3c1BaZ6z3mMibBSKr828Opyat15xiyG1qF3FHOajQgJPz+nyrd
-	 X5FDtHosWK7wqeVGBdWtNjgWUeo7UfXHdLRE8z6qVErHV69kqiq5lzidCSEyb3fWyb
-	 /x4ZlzMv6FUDi8Zdgqipqlgw63yn/m7rrI2SO8UsemivNO+5s4gAoNFgNaLnedWymD
-	 zxdIxiZFy2SYw==
+	b=OmLq7RMPuQ/e81wOXwM5JxNvN7sj6ydp7l8wQ8VRNtUOpxyRiNYjGQES7WajnXdcS
+	 e9yllzOJaDlhevi+W3R/xBDL4BphKHexhoDJRtVeRfz5Una+cwo636ZWyNpfIGWCss
+	 uOgV7kAeiE7WVONNreQydWw9WlHADYUfDFor7JvlMw0IRLK7ypfZLsG9VtBkqBov53
+	 N0CzNGa5zkbgkQHe5IQpJM+XrPwE2fQcowK8YIzAq1Ll5GPPdAEKU2ZFsnzTXRpYRp
+	 RUrPHm1/XzkV5lqGxZDo9V17invqcci7kq+a4gy1jvt/YIdWeQKpWiOXszc2U8/8qR
+	 ZyNM+pOjjo27w==
 From: =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>
 Cc: Bjorn Helgaas <helgaas@kernel.org>,
@@ -34,9 +34,9 @@ Cc: Bjorn Helgaas <helgaas@kernel.org>,
 	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
 	Narendra K <Narendra_K@Dell.com>,
 	linux-pci@vger.kernel.org
-Subject: [PATCH 2/4] PCI/sysfs: Decouple acpi_index from the optional device name element
-Date: Fri, 14 Aug 2026 07:05:20 +0000
-Message-ID: <20260814070522.2327975-3-kwilczynski@kernel.org>
+Subject: [PATCH 3/4] PCI/sysfs: Handle a malformed _DSM result in acpi_attr_is_visible()
+Date: Fri, 14 Aug 2026 07:05:21 +0000
+Message-ID: <20260814070522.2327975-4-kwilczynski@kernel.org>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260814070522.2327975-1-kwilczynski@kernel.org>
 References: <20260814070522.2327975-1-kwilczynski@kernel.org>
@@ -49,112 +49,111 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-Currently, dsm_get_label() validates both elements of the Device Name
-_DSM result in a single conditional.  The _DSM returns an ACPI package
-of two elements, the instance number and the device name, where the
-instance number is mandatory and the name is optional.  Firmware that
-implements no name must return a NULL string for it.
+Currently, the "label" and "acpi_index" attributes are created
+whenever the _DSM function 0 bitmap advertises the Device Name
+function, without evaluating that function.  The documented ABI
+states that each attribute is created only if the firmware has
+given a name or an instance number to the PCI device.
 
-Reads of "acpi_index" therefore fail whenever the name element is
-malformed.  That attribute exports only the instance number, and the
-two elements do not depend on each other.
+The bitmap says nothing about the object the function returns.
+Firmware that advertises the function but returns an object that
+cannot be parsed therefore produces attributes that exist and fail
+every read, as in the report below.
 
-Thus, validate each element only for the attribute that exports it.
-So "acpi_index" now depends on the instance number alone, and "label"
-reads fail with -EIO when the name element is neither a string nor a
-buffer.  The package elements pointer is read only after the object
-type has been checked.
+Thus, evaluate the Device Name _DSM when deciding attribute visibility
+and create each attribute only when the element it exports has a type
+the read path accepts, mirroring the checks performed at read time.
+The SMBIOS attribute group already follows this pattern by performing
+the DMI lookup in its is_visible() callback.  The read side checks
+remain in place since the two evaluations happen at different times.
 
-On platforms with a valid instance number and a malformed name element
-the "acpi_index" attribute starts returning data.  Because udev derives
-the onboard interface name from "acpi_index", an interface on such a
-platform may be renamed once, on the first boot after this change.
-That is the attribute assuming the value the firmware always
-provided.
+This restores the behaviour from before commit 2fc59fe2ecdc ("PCI /
+pci-label: treat PCI label with index 0 as valid label"), which
+switched visibility from evaluating the function to checking only
+the function 0 bitmap.  The check is now made for each attribute,
+not once for both.
 
-Link: https://github.com/pciutils/pciutils/issues/175
+Fixes: 2fc59fe2ecdc ("PCI / pci-label: treat PCI label with index 0 as valid label")
+Closes: https://github.com/pciutils/pciutils/issues/175
 Signed-off-by: Krzysztof Wilczyński <kwilczynski@kernel.org>
 ---
- drivers/pci/pci-label.c | 55 +++++++++++++++++++++++++----------------
- 1 file changed, 34 insertions(+), 21 deletions(-)
+ Documentation/ABI/testing/sysfs-bus-pci | 14 ++++++++---
+ drivers/pci/pci-label.c                 | 33 ++++++++++++++++++++++++-
+ 2 files changed, 42 insertions(+), 5 deletions(-)
 
+diff --git a/Documentation/ABI/testing/sysfs-bus-pci b/Documentation/ABI/testing/sysfs-bus-pci
+index b767db2c52cb..e857b14c8faf 100644
+--- a/Documentation/ABI/testing/sysfs-bus-pci
++++ b/Documentation/ABI/testing/sysfs-bus-pci
+@@ -244,10 +244,16 @@ Contact:	Narendra K <narendra_k@dell.com>, linux-bugs@dell.com
+ Description:
+ 		Reading this attribute will provide the firmware
+ 		given name (SMBIOS type 41 string or ACPI _DSM string) of
+-		the PCI device.	The attribute will be created only
+-		if the firmware	has given a name to the PCI device.
+-		ACPI _DSM string name will be given priority if the
+-		system firmware provides SMBIOS type 41 string also.
++		the PCI device. The attribute will be created only if the
++		firmware naming mechanism is implemented for the device:
++		a SMBIOS type 41 record with a non-empty reference
++		designation, or a Device Name _DSM that returns the name
++		as a string or a buffer. The value read is empty when the
++		firmware implements the _DSM but gives the device no name,
++		which per PCI Firmware r3.3, sec 4.6.7 the firmware reports
++		as a NULL string. ACPI _DSM string name will be given
++		priority if the system firmware provides SMBIOS type 41
++		string also.
+ Users:
+ 		Userspace applications interested in knowing the
+ 		firmware assigned name of the PCI device.
 diff --git a/drivers/pci/pci-label.c b/drivers/pci/pci-label.c
-index 255e0ecffb09..5b08f50653a3 100644
+index 5b08f50653a3..abb941530c56 100644
 --- a/drivers/pci/pci-label.c
 +++ b/drivers/pci/pci-label.c
-@@ -157,7 +157,7 @@ static int dsm_get_label(struct device *dev, char *buf,
+@@ -230,11 +230,42 @@ static umode_t acpi_attr_is_visible(struct kobject *kobj, struct attribute *a,
+ 				    int n)
  {
- 	acpi_handle handle = ACPI_HANDLE(dev);
- 	union acpi_object *obj, *tmp;
--	int len = 0;
-+	int len;
+ 	struct device *dev = kobj_to_dev(kobj);
++	union acpi_object *obj, *tmp;
++	umode_t mode = 0;
  
- 	if (!handle)
- 		return -ENODEV;
-@@ -167,30 +167,43 @@ static int dsm_get_label(struct device *dev, char *buf,
- 	if (!obj)
- 		return -EIO;
+ 	if (!device_has_acpi_name(dev))
+ 		return 0;
  
--	tmp = obj->package.elements;
--	if (obj->type == ACPI_TYPE_PACKAGE && obj->package.count == 2 &&
--	    tmp[0].type == ACPI_TYPE_INTEGER &&
--	    (tmp[1].type == ACPI_TYPE_STRING ||
--	     tmp[1].type == ACPI_TYPE_BUFFER)) {
--		/*
--		 * The second string element is optional even when
--		 * this _DSM is implemented; when not implemented,
--		 * this entry must return a null string.
--		 */
--		if (attr == ACPI_ATTR_INDEX_SHOW) {
--			len = sysfs_emit(buf, "%llu\n", tmp->integer.value);
--		} else if (attr == ACPI_ATTR_LABEL_SHOW) {
--			if (tmp[1].type == ACPI_TYPE_STRING)
--				len = sysfs_emit(buf, "%s\n",
--						 tmp[1].string.pointer);
--			else if (tmp[1].type == ACPI_TYPE_BUFFER)
--				len = dsm_label_utf16s_to_utf8s(tmp + 1, buf);
--		}
-+	if (obj->type != ACPI_TYPE_PACKAGE || obj->package.count != 2) {
-+		len = -EIO;
-+		goto out;
- 	}
- 
-+	tmp = obj->package.elements;
-+	if (tmp[0].type != ACPI_TYPE_INTEGER) {
-+		len = -EIO;
-+		goto out;
-+	}
-+
-+	if (attr == ACPI_ATTR_INDEX_SHOW) {
-+		len = sysfs_emit(buf, "%llu\n", tmp[0].integer.value);
-+		goto out;
-+	}
-+
+-	return a->mode;
 +	/*
-+	 * Per PCI Firmware r3.3, sec 4.6.7, the device name is optional
-+	 * even when this _DSM is implemented. When not implemented, this
-+	 * entry must return a NULL string.
++	 * The bitmap from _DSM function 0 only advertises function 7,
++	 * and whether the returned object can be parsed is a separate
++	 * question. Evaluate it and expose each attribute only if the
++	 * element it exports has one of the types the read path
++	 * accepts, mirroring the checks in dsm_get_label().
 +	 */
-+	switch (tmp[1].type) {
-+	case ACPI_TYPE_STRING:
-+		len = sysfs_emit(buf, "%s\n", tmp[1].string.pointer);
-+		break;
-+	case ACPI_TYPE_BUFFER:
-+		len = dsm_label_utf16s_to_utf8s(&tmp[1], buf);
-+		break;
-+	default:
-+		len = -EIO;
-+		break;
-+	}
++	obj = acpi_evaluate_dsm(ACPI_HANDLE(dev), &pci_acpi_dsm_guid, 0x2,
++				DSM_PCI_DEVICE_NAME, NULL);
++	if (!obj)
++		return 0;
++
++	if (obj->type != ACPI_TYPE_PACKAGE || obj->package.count != 2)
++		goto out;
++
++	tmp = obj->package.elements;
++	if (tmp[0].type != ACPI_TYPE_INTEGER)
++		goto out;
++
++	if (a == &dev_attr_acpi_index.attr)
++		mode = a->mode;
++	else if (a == &dev_attr_label.attr &&
++		 (tmp[1].type == ACPI_TYPE_STRING ||
++		  tmp[1].type == ACPI_TYPE_BUFFER))
++		mode = a->mode;
 +
 +out:
- 	ACPI_FREE(obj);
- 
--	return len > 0 ? len : -EIO;
-+	return len;
++	ACPI_FREE(obj);
++
++	return mode;
  }
  
- static ssize_t label_show(struct device *dev, struct device_attribute *attr,
+ const struct attribute_group pci_dev_acpi_attr_group = {
 -- 
 2.55.0
 
