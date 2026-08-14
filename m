@@ -1,105 +1,248 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D5D74483A3
-	for <linux-pci@vger.kernel.org>; Fri, 14 Aug 2026 10:22:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 4CD4E46AF1A;
+	Fri, 14 Aug 2026 12:07:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786702948; cv=none; b=qnFcDQqzezOsT3Xwvq23nOSshndppGqf82gfngOUHXoEqBpkB0ete4Ac5uw1QOEzIrngKCJPU8uJY8P8DGluHYV4Mrg6R8CNIVwmQjwVuhcAj3uCX5ZAjMdmiyprnzJILbeR7DDBsaV/UQV9/dR5aUv12VoSIdOsRm2WxSRE7mg=
+	t=1786709257; cv=none; b=XPO8ApdEh3oT5NXavKeR+ii346YL4agEobSPzCtJ9HeDEOuiWA+Aa3wztMHsINFoFmkIyMom4dNUZPo6x30qc09g5aBZeZy7fzWqOa8UamLXqFqP7/foUVX3DoWHv3vIsyVvSzAIdKL8mLdmRbojtvnUPITH29YXFt7ytrQMJ9o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786702948; c=relaxed/simple;
-	bh=6zcqGzOmVvXfMut1/MsXaZAjl1RoRIAsk2o4Qo9C10U=;
+	s=arc-20240116; t=1786709257; c=relaxed/simple;
+	bh=B0yG6yh7f0/AQOL6k/GXCi8xwl/S8YVnFP4bkYgGJ90=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=RqL6fUJnIj8RoCAwsZXiybcC0cA8OFWhuOADqYdBNsFVgvMUTtwF6sAm1eRvFNyk+oxZet9BwdUHC5DdyL4GKfdlcUyoUKMtSH1cinMR1dfiw5aLTJfZafjwzemzQV5+LaaGYZUf/DMIjz5PK5wvql83FzOjwxpMKr6Roy3sEK0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dKEfGkYH; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=sqJ0SE49PNiyeAtx7eV9TjMLUcEILKPUF3j9WiFwInDEhoVMnJPcgUrrA3N/XaVd+rAd1FhpHrUkb7a0W8HJdTR6beKPfyJuSttHC2sagFInFV9Ml0i6LI6OF5nLfLIF59wbc0MaPLiRZpsLdZGqJ30LUWzJfJBH2Q5EIDngURo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=TqBc8bEI; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dKEfGkYH"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F41661F000E9;
-	Fri, 14 Aug 2026 10:22:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786702941;
-	bh=7DiXxKu6Aa4oo4cVPqlBccyG50dgWTMBXPPNfDbcRqI=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=dKEfGkYHH2OAwuorIiAGpIHiOlrvXZetRzHz+Kdgmmp1t/f/rEsU4WQt2g2cet8cf
-	 N2+6RVKoeB+TPbjlQds1gfU3OLph2bwHcnf5M8UcQEde/2L3tHVIsXHe5Ng0WpSWfC
-	 /DLkzuuWu73tbThZ8JNRw741U9xpQ7l5f84VynKcxWKClDTY71Vel0KBFCWdF/qkS5
-	 vezg7f7ZpUzoP+9kAF2e9EedgW4jN0tH5WScMzQOaHKf8zDIAKsrKUrqbpWyNqWAG2
-	 MEgysCY3Oeqfun96GuTtSD7109Ly+6r0uyYeZOeEOJZRNXoeJPXSEwdcZw2x6mMHX5
-	 sXZqTBcWMuMGg==
-Date: Fri, 14 Aug 2026 19:22:19 +0900
-From: Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, 
-	Manivannan Sadhasivam <mani@kernel.org>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>, Narendra K <Narendra_K@dell.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 4/4] PCI/sysfs: Pass the device name length in UTF-16
- code units
-Message-ID: <20260814101153.GA93086@rocinante>
-References: <20260814070522.2327975-1-kwilczynski@kernel.org>
- <20260814070522.2327975-5-kwilczynski@kernel.org>
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="TqBc8bEI"
+Received: from localhost (unknown [167.220.233.38])
+	by linux.microsoft.com (Postfix) with ESMTPSA id 6AF6A20B7168;
+	Fri, 14 Aug 2026 05:07:08 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 6AF6A20B7168
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1786709228;
+	bh=1tXkiNi9emUJSms0+jEWDbzQtflkc93S/WX9UGPJMf8=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=TqBc8bEIxgtVCYk3yuvuiT1IQcMPS3BxbvwqYSAPIZPdIJdUzBf27ZxG/SLb6Uy+U
+	 928Psg4bQ3g46lHu7DoM5yh8DKOnfahfoSZvsXeucAjYpL67zFsBNsBHlJ7voDgVzW
+	 7ibFSVXo9A4bXvjnQIR6USd5Baf7eE19TxY7FFEE=
+Date: Fri, 14 Aug 2026 20:07:32 +0800
+From: Yu Zhang <zhangyu1@linux.microsoft.com>
+To: Jacob Pan <jacob.pan@linux.microsoft.com>
+Cc: linux-kernel@vger.kernel.org, linux-hyperv@vger.kernel.org, 
+	iommu@lists.linux.dev, linux-pci@vger.kernel.org, linux-arch@vger.kernel.org, 
+	x86@kernel.org, wei.liu@kernel.org, kys@microsoft.com, haiyangz@microsoft.com, 
+	decui@microsoft.com, longli@microsoft.com, joro@8bytes.org, will@kernel.org, 
+	robin.murphy@arm.com, bhelgaas@google.com, kwilczynski@kernel.org, 
+	lpieralisi@kernel.org, mani@kernel.org, robh@kernel.org, arnd@arndb.de, jgg@ziepe.ca, 
+	mhklinux@outlook.com, tgopinath@linux.microsoft.com, 
+	easwar.hariharan@linux.microsoft.com, mrathor@linux.microsoft.com, baolu.lu@linux.intel.com, 
+	suravee.suthikulpanit@amd.com, vasant.hegde@amd.com
+Subject: Re: [PATCH v3 5/5] iommu/hyperv: Add page-selective IOTLB flush
+ support
+Message-ID: <ocsfhdlxqoavboz3hv62377g4sfjxu462lusc6fjyc5nrbzb3c@otc5irbfrzin>
+References: <20260811155022.108148-1-zhangyu1@linux.microsoft.com>
+ <20260811155022.108148-6-zhangyu1@linux.microsoft.com>
+ <20260813160713.00004f95@linux.microsoft.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20260814070522.2327975-5-kwilczynski@kernel.org>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260813160713.00004f95@linux.microsoft.com>
 
-Hello Rafael,
-
-> Currently, dsm_label_utf16s_to_utf8s() passes the ACPI buffer
-> length to utf16s_to_utf8s() unchanged.  The Device Name _DSM may
-> return the device name as a buffer holding a UTF-16 string, and
-> the ACPI length counts bytes while the converter counts wchar_t
-> elements.  The converter therefore receives a count twice the
-> number of code units the buffer holds, and that count is its only
-> bound on the input.
+On Thu, Aug 13, 2026 at 04:07:13PM -0700, Jacob Pan wrote:
+> Hi Yu,
 > 
-> A NUL code unit ends the conversion early, so a name that carries
-> one is converted correctly and the error stays hidden.  ACPICA
-> zeroes the entire result allocation, and the padding placed after
-> the buffer supplies that NUL for most lengths.  Lengths that leave
-> no padding, or a single byte of it, do not, and the conversion
-> then runs up to its own length in bytes past the end of the
-> allocation.  The bytes beyond the allocation are decoded into the
-> "label" attribute, which is world readable.
+> On Tue, 11 Aug 2026 23:50:21 +0800
+> Yu Zhang <zhangyu1@linux.microsoft.com> wrote:
 > 
-> Thus, divide the buffer length by the size of wchar_t so that the
-> converter receives a count of code units.  The division truncates,
-> so the converter is never told to read more bytes than the buffer
-> holds, including for an odd length.
+> > Add page-selective IOTLB flush using HVCALL_FLUSH_DEVICE_DOMAIN_LIST.
+> > This hypercall accepts a list of (page_number, page_mask_shift)
+> > entries, enabling finer-grained IOTLB invalidation compared to the
+> > domain-wide HVCALL_FLUSH_DEVICE_DOMAIN used by
+> > hv_iommu_flush_iotlb_all().
+> > 
+> > hv_iommu_calc_flush_range() computes the smallest power-of-two aligned
+> > range that covers the target IOVA region, producing a single flush
+> > descriptor. This may over-flush when the range is not naturally
+> > aligned, matching the approach used by Intel VT-d PSI. If the
+> > page-selective flush fails, the code falls back to a full domain
+> > flush.
+> > 
+> > Signed-off-by: Easwar Hariharan <easwar.hariharan@linux.microsoft.com>
+> > Signed-off-by: Yu Zhang <zhangyu1@linux.microsoft.com>
+> > ---
+> >  drivers/iommu/hyperv/hv-iommu-guest.c | 73
+> > ++++++++++++++++++++++++++- include/hyperv/hvgdk_mini.h           |
+> > 1 + include/hyperv/hvhdk_mini.h           | 17 +++++++
+> >  3 files changed, 90 insertions(+), 1 deletion(-)
+> > 
+> > diff --git a/drivers/iommu/hyperv/hv-iommu-guest.c
+> > b/drivers/iommu/hyperv/hv-iommu-guest.c index
+> > 2a00353ce733..060c2efd6bf0 100644 ---
+> > a/drivers/iommu/hyperv/hv-iommu-guest.c +++
+> > b/drivers/iommu/hyperv/hv-iommu-guest.c @@ -9,6 +9,7 @@
+> >  #define pr_fmt(fmt) "Hyper-V pvIOMMU: " fmt
+> >  #define dev_fmt(fmt) pr_fmt(fmt)
+> >  
+> > +#include <linux/hyperv.h>
+> why need this?
 > 
-> Reaching the out of bounds read needs firmware that returns the
-> name as a buffer and omits the terminator.
 
-[...]
->  	len = utf16s_to_utf8s((const wchar_t *)obj->buffer.pointer,
-> -			      obj->buffer.length,
-> +			      obj->buffer.length / sizeof(wchar_t),
->  			      UTF16_LITTLE_ENDIAN,
->  			      buf, PAGE_SIZE - 1);
+It's not needed. Thanks!
 
+> >  #include <linux/iommu.h>
+> >  #include <linux/pci.h>
+> >  #include <linux/dma-map-ops.h>
+> > @@ -408,10 +409,79 @@ static void hv_iommu_flush_iotlb_all(struct
+> > iommu_domain *domain)
+> > hv_flush_device_domain(to_hv_iommu_domain(domain)); }
+> >  
+> > +/*
+> > + * Calculate the minimal power-of-two aligned range that covers
+> > [start, end]
+> > + * (end is inclusive). Returns a single (page_number,
+> > page_mask_shift)
+> > + * descriptor that may over-flush when the range is not naturally
+> > aligned.
+> > + */
+> > +static void
+> > +hv_iommu_calc_flush_range(unsigned long start, unsigned long end,
+> > +			  union hv_iommu_flush_va *va)
+> > +{
+> > +	unsigned int sz_lg2;
+> > +
+> > +	sz_lg2 = fls_long(start ^ end);
+> > +	if (sz_lg2 < HV_HYP_PAGE_SHIFT)
+> > +		sz_lg2 = HV_HYP_PAGE_SHIFT;
+> > +
+> > +	/*
+> > +	 * A valid IOVA range shall not span bit 63. Use the maximum
+> > mask
+> > +	 * so the host can safely perform a full flush.
+> > +	 */
+> > +	if (WARN_ON_ONCE(sz_lg2 >= BITS_PER_LONG)) {
+> > +		va->as_uint64 = 0;
+> > +		va->page_mask_shift =
+> > +			BITS_PER_LONG - HV_HYP_PAGE_SHIFT;
+> > +		return;
+> > +	}
+> > +
+> > +	va->page_number =
+> > +		(start & GENMASK(BITS_PER_LONG - 1, sz_lg2)) >>
+> > +		HV_HYP_PAGE_SHIFT;
+> > +	va->page_mask_shift = sz_lg2 - HV_HYP_PAGE_SHIFT;
+> > +}
+> > +
+> > +static void hv_flush_device_domain_list(struct hv_iommu_domain
+> > *hv_domain,
+> > +					struct iommu_iotlb_gather
+> > *iotlb_gather) +{
+> > +	u64 status;
+> > +	unsigned long flags;
+> > +	struct hv_input_flush_device_domain_list *input;
+> > +
+> > +	local_irq_save(flags);
+> > +
+> > +	input = *this_cpu_ptr(hyperv_pcpu_input_arg);
+> > +	/* Clear the fixed header and the single range entry. */
+> > +	memset(input, 0, struct_size(input, iova_list, 1));
+> > +
+> > +	input->device_domain = hv_domain->device_domain;
+> > +	input->flags |= HV_FLUSH_DEVICE_DOMAIN_LIST_IOMMU_FORMAT;
+> > +	hv_iommu_calc_flush_range(iotlb_gather->start,
+> > iotlb_gather->end,
+> > +				  &input->iova_list[0]);
+> > +
+> > +	status = hv_do_rep_hypercall(HVCALL_FLUSH_DEVICE_DOMAIN_LIST,
+> > +				     1, 0, input, NULL);
+> > +
+> > +	if (WARN_ON_ONCE(!hv_result_success(status))) {
+> > +		/* Page-selective flush failed, fall back to full
+> > flush. */
+> > +		struct hv_input_flush_device_domain *flush_all =
+> > (void *)input; +
+> > +		memset(flush_all, 0, sizeof(*flush_all));
+> > +		flush_all->device_domain = hv_domain->device_domain;
+> > +		status = hv_do_hypercall(HVCALL_FLUSH_DEVICE_DOMAIN,
+> > +					 flush_all, NULL);
+> > +		WARN(!hv_result_success(status),
+> > +		     "HVCALL_FLUSH_DEVICE_DOMAIN fallback also
+> > failed: %lld\n",
+> > +		     status);
+> > +	}
+> > +
+> > +	local_irq_restore(flags);
+> > +}
+> > +
+> >  static void hv_iommu_iotlb_sync(struct iommu_domain *domain,
+> >  				struct iommu_iotlb_gather
+> > *iotlb_gather) {
+> > -	hv_flush_device_domain(to_hv_iommu_domain(domain));
+> > +	hv_flush_device_domain_list(to_hv_iommu_domain(domain),
+> > iotlb_gather); 
+> >  	iommu_put_pages_list(&iotlb_gather->freelist);
+> Maybe add a comment explaining that HVCALL_FLUSH_DEVICE_DOMAIN_LIST
+> covers non-leaf/walk caches, therefore it is safe to put freelist.
+> 
 
-While looking at this from PCI perspective, I also noticed something with
-ACPI code base that we could also fix.
+Yes, the hypercall also invalidates the non-leaf page-walk caches,                                                                               ┃
+Will document that.
 
-File drivers/acpi/device_sysfs.c, where the description_show() is adding
-/sys/bus/acpi/devices/.../description sysfs attribute to each device where
-this is supported/available using data from the ACPI _STR method, has the
-following:
-
-  result = utf16s_to_utf8s(
-          (wchar_t *)str_obj->buffer.pointer,
-          str_obj->buffer.length,
-          UTF16_LITTLE_ENDIAN, buf,
-          PAGE_SIZE - 1);
-
-I believe, the above code has potentially the same issue as the one PCI
-has, and which we are fixing here.  I can send a small patch to fix the
-this, too, if you want.
-
-Thank you!
-
-        Krzysztof
+B.R.
+Yu
+> >  }
+> > @@ -464,6 +534,7 @@ static struct iommu_domain
+> > *hv_iommu_domain_alloc_paging(struct device *dev) 
+> >  	cfg.common.hw_max_vasz_lg2 = hv_iommu_device->max_iova_width;
+> >  	cfg.common.hw_max_oasz_lg2 = 52;
+> > +	cfg.common.features |= BIT(PT_FEAT_FLUSH_RANGE);
+> >  	/*
+> >  	 * Hyper-V S1 domains use a 4-level root for IOVA widths up
+> > to
+> >  	 * 48 bits. A 5-level root is used only for wider apertures
+> > when diff --git a/include/hyperv/hvgdk_mini.h
+> > b/include/hyperv/hvgdk_mini.h index 5bdbb44da112..eaaf87171478 100644
+> > --- a/include/hyperv/hvgdk_mini.h
+> > +++ b/include/hyperv/hvgdk_mini.h
+> > @@ -496,6 +496,7 @@ union hv_vp_assist_msr_contents {	 /*
+> > HV_REGISTER_VP_ASSIST_PAGE */ #define
+> > HVCALL_GET_GPA_PAGES_ACCESS_STATES		0x00c9 #define
+> > HVCALL_CONFIGURE_DEVICE_DOMAIN			0x00ce #define
+> > HVCALL_FLUSH_DEVICE_DOMAIN			0x00d0 +#define
+> > HVCALL_FLUSH_DEVICE_DOMAIN_LIST			0x00d1 #define
+> > HVCALL_ACQUIRE_SPARSE_SPA_PAGE_HOST_ACCESS	0x00d7 #define
+> > HVCALL_RELEASE_SPARSE_SPA_PAGE_HOST_ACCESS	0x00d8 #define
+> > HVCALL_MODIFY_SPARSE_GPA_PAGE_HOST_VISIBILITY	0x00db diff
+> > --git a/include/hyperv/hvhdk_mini.h b/include/hyperv/hvhdk_mini.h
+> > index 1e3eac99886a..25671ee7056d 100644 ---
+> > a/include/hyperv/hvhdk_mini.h +++ b/include/hyperv/hvhdk_mini.h
+> > @@ -674,4 +674,21 @@ struct hv_input_flush_device_domain {
+> >  	u32 reserved;
+> >  } __packed;
+> >  
+> > +union hv_iommu_flush_va {
+> > +	u64 as_uint64;
+> > +	struct {
+> > +		u64 page_mask_shift : 6;
+> > +		u64 reserved : 6;
+> > +		u64 page_number : 52;
+> > +	};
+> > +} __packed;
+> > +
+> > +struct hv_input_flush_device_domain_list {
+> > +	struct hv_input_device_domain device_domain;
+> > +#define HV_FLUSH_DEVICE_DOMAIN_LIST_IOMMU_FORMAT BIT(0)
+> > +	u32 flags;
+> > +	u32 reserved;
+> > +	union hv_iommu_flush_va iova_list[];
+> > +} __packed;
+> > +
+> >  #endif /* _HV_HVHDK_MINI_H */
+> 
+> Reviewed-by: Jacob Pan <jacob.pan@linux.microsoft.com>
+> 
