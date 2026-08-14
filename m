@@ -1,19 +1,19 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC0C13C10B9;
-	Fri, 14 Aug 2026 14:13:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 03F2E3B8BC4;
+	Fri, 14 Aug 2026 14:13:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786716831; cv=none; b=uzuIy7D8KlFh+nd+lIWe0GEzPfh/6rCSkjIukLtFtcXyJSg0AFZ3d7OkPbtYnLVGFCJGJAhYlyuYuicNlMn2yCADhfvXstC0aHJyfmcRRvcVA+BxvjLbAkzJXEkyAJhkwJU55rI1UzrY93jfTwSgBLl+sMDKZrtGY47bTppeKk4=
+	t=1786716835; cv=none; b=dBzurAMqpXX8oUWqLqsm3lpdPOddKOTr0OipRs5GEE11zZ1Qsl9MSbMAXNutMGMALpve3te1mLKbzZaGrMvuVyFwgqaWR/kT2JTxytoL46lZxswWSaAiNcNmU57YVkqy5EKKbsXrylCKZCb0vOpP7xugTMzpBU1yP54auXjjV/E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786716831; c=relaxed/simple;
-	bh=1HhfSk74GV8E6A+13x4wnKQ+2C4VmOsAH+RmVRxx5Uo=;
+	s=arc-20240116; t=1786716835; c=relaxed/simple;
+	bh=tTK0WkjM0azrpUPFckScHarj7Z3ghWaETGNv5srMzRk=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=fSsbjy8XEj4sxyVc0fg36mP8osGI/WYvperohKurQR9TpthoWCvQ5XAKENRvqXk7AmR5hObqLy332mZqg3UE5yQ/Ly4C3FS6U52zYGeO7/XmnQTbUAaR+9w6siXrbUQ4CXNKL9i859sIn5Voj2rgkGvH64wgGi+A/SjdsQO6+qw=
+	 MIME-Version; b=QeEOfeskIl1/529iJYDsFFumVSz96B2hVj/NEeHvMIdU+eoKhm53GCQnPfje46uOwiv19+xspB41D/SCZOrdzuO1Y0d5lhSA9wR2cBeuAsWzycVPyumnTpv40szRcTVCbrV1WZV3MhM2hK9TAi2pkrrQ+vKTKb8OFtzZZUVCGEo=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 945F61F00AC4;
-	Fri, 14 Aug 2026 14:13:37 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 14C1E1F00A3D;
+	Fri, 14 Aug 2026 14:13:27 +0000 (UTC)
 From: Claudiu Beznea <claudiu.beznea+renesas@tuxon.dev>
 To: lpieralisi@kernel.org,
 	kwilczynski@kernel.org,
@@ -25,10 +25,11 @@ Cc: claudiu.beznea@tuxon.dev,
 	linux-pci@vger.kernel.org,
 	linux-renesas-soc@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
-Subject: [PATCH v3 5/7] PCI: rzg3s-host: Move suspend/resume code into dedicated functions
-Date: Fri, 14 Aug 2026 17:13:10 +0300
-Message-ID: <20260814141312.2947972-6-claudiu.beznea+renesas@tuxon.dev>
+	Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>,
+	stable@vger.kernel.org
+Subject: [PATCH v3 2/7] PCI: rzg3s-host: Fix runtime PM handling in the NOIRQ suspend/resume phase
+Date: Fri, 14 Aug 2026 17:13:07 +0300
+Message-ID: <20260814141312.2947972-3-claudiu.beznea+renesas@tuxon.dev>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20260814141312.2947972-1-claudiu.beznea+renesas@tuxon.dev>
 References: <20260814141312.2947972-1-claudiu.beznea+renesas@tuxon.dev>
@@ -42,48 +43,71 @@ Content-Transfer-Encoding: 8bit
 
 From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
 
-In preparation for implementing hotplug using
-pci_host_bridge::reset_root_port(), move the suspend/resume code into
-rzg3s_pcie_host_stop() and rzg3s_pcie_host_start(). These functions
-will later be reused by the hotplug implementation through
-pci_host_bridge::reset_root_port().
+The runtime PM documentation states the following:
+- During system suspend, pm_runtime_get_noresume() is called for every
+  device right before executing the subsystem-level .prepare() callback
+  (in device_prepare()). In addition, the PM core disables runtime PM for
+  every device right before executing the subsystem-level .suspend_late()
+  callback (in device_suspend_late()).
+- During system resume, pm_runtime_enable() is called for every device
+  right after executing the subsystem-level .resume_early() callback (in
+  device_resume_early()), and pm_runtime_put() is called right after
+  executing the subsystem-level .complete() callback (in
+  device_complete()).
 
+The driver's .suspend_noirq() callback is invoked after .suspend_late(),
+while .resume_noirq() is invoked before .resume_early().
+
+If:
+- the device is not part of the wake-up path, and
+- its runtime PM status is not RPM_SUSPENDED,
+the generic power domain .suspend_noirq()/.resume_noirq() callbacks
+(genpd_suspend_noirq()/genpd_resume_noirq()) invoke the driver's
+.suspend_noirq()/.resume_noirq() callbacks and call
+genpd_stop_dev()/genpd_start_dev() before and after them, respectively.
+
+Calling genpd_stop_dev()/genpd_start_dev() allows devices whose power is
+controlled by generic power domains to be powered off and on during
+system suspend and resume, even though their runtime PM usage count does
+not reach zero.
+
+Since the runtime PM usage count is incremented in device_prepare() and
+decremented in device_complete(), runtime PM operations performed from
+the driver's .suspend_noirq()/.resume_noirq() callbacks are no-ops. The
+actual power transitions are handled by the generic power domain
+.suspend_noirq()/.resume_noirq() callbacks.
+
+Moreover, attempting to runtime resume a device while runtime PM is
+disabled may return -EACCES. This may cause system resume to fail when
+resuming after a failed Root Port reset, as described in a subsequent
+patch adding hot-plug support.
+
+Remove the runtime PM calls from the driver's
+.suspend_noirq()/.resume_noirq() callbacks and rely on the generic power
+domain callbacks to power the device off and on.
+
+Fixes: 7ef502fb35b2 ("PCI: Add Renesas RZ/G3S host controller driver")
+Cc: stable@vger.kernel.org
 Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
 ---
 
 Changes in v3:
 - none, this patch is new
 
- drivers/pci/controller/pcie-rzg3s-host.c | 237 ++++++++++++-----------
- 1 file changed, 124 insertions(+), 113 deletions(-)
+ drivers/pci/controller/pcie-rzg3s-host.c | 50 ++++++++++++++++++------
+ 1 file changed, 38 insertions(+), 12 deletions(-)
 
 diff --git a/drivers/pci/controller/pcie-rzg3s-host.c b/drivers/pci/controller/pcie-rzg3s-host.c
-index 579386d1aaa3..834b03d56713 100644
+index 830cd7c76699..bbc5bcec03f1 100644
 --- a/drivers/pci/controller/pcie-rzg3s-host.c
 +++ b/drivers/pci/controller/pcie-rzg3s-host.c
-@@ -1742,6 +1742,128 @@ rzg3s_pcie_host_setup(struct rzg3s_pcie_host *host,
- 	return ret;
- }
+@@ -1961,19 +1961,32 @@ static int rzg3s_pcie_suspend_noirq(struct device *dev)
+ 	if (ret)
+ 		goto config_reinit;
  
-+static int rzg3s_pcie_host_stop(struct rzg3s_pcie_host *host)
-+{
-+	const struct rzg3s_pcie_soc_data *data = host->data;
-+	struct rzg3s_pcie_port *port = &host->port;
-+	struct rzg3s_sysc *sysc = host->sysc;
-+	int ret;
-+
-+	clk_disable_unprepare(port->refclk);
-+
-+	/* SoC-specific de-initialization */
-+	ret = data->config_deinit(host);
-+	if (ret)
-+		goto refclk_restore;
-+
-+	ret = reset_control_bulk_assert(data->num_power_resets,
-+					host->power_resets);
-+	if (ret)
-+		goto config_reinit;
-+
+-	ret = pm_runtime_put_sync(dev);
+-	if (ret)
+-		goto power_resets_restore;
 +	/*
 +	 * Since:
 +	 * - the runtime PM usage count was incremented by
@@ -102,50 +126,27 @@ index 579386d1aaa3..834b03d56713 100644
 +	 * Let the power domain's genpd_suspend_noirq() callback disable the
 +	 * clocks, as it already does.
 +	 */
-+
-+	ret = rzg3s_sysc_config_func(sysc, RZG3S_SYSC_FUNC_ID_RST_RSM_B, 0);
-+	if (ret)
+ 
+ 	ret = rzg3s_sysc_config_func(sysc, RZG3S_SYSC_FUNC_ID_RST_RSM_B, 0);
+ 	if (ret)
+-		goto rpm_resume;
 +		goto power_resets_restore;
-+
-+	return 0;
-+
-+	/* Restore the previous state if any error happens */
-+power_resets_restore:
-+	reset_control_bulk_deassert(data->num_power_resets,
-+				    host->power_resets);
-+config_reinit:
-+	if (data->config_pre_init)
-+		data->config_pre_init(host);
-+	data->config_post_init(host);
-+refclk_restore:
-+	clk_prepare_enable(port->refclk);
-+	return ret;
-+}
-+
-+static int rzg3s_pcie_host_start(struct rzg3s_pcie_host *host)
-+{
-+	const struct rzg3s_pcie_soc_data *data = host->data;
-+	struct rzg3s_sysc *sysc = host->sysc;
-+	int ret;
-+
-+	ret = rzg3s_sysc_config_func(sysc, RZG3S_SYSC_FUNC_ID_MODE, 1);
-+	if (ret)
-+		return ret;
-+
-+	ret = rzg3s_sysc_config_func(sysc, RZG3S_SYSC_FUNC_ID_RST_RSM_B, 1);
-+	if (ret)
-+		return ret;
-+
-+	if (host->num_lanes) {
-+		ret = rzg3s_sysc_config_func(host->sysc,
-+					     RZG3S_SYSC_FUNC_ID_LINK_MASTER,
-+					     host->num_lanes == 2  ?
-+					     RZG3S_SYSC_LINK_MODE_DUAL_X2 :
-+					     RZG3S_SYSC_LINK_MODE_SINGLE_X4);
-+		if (ret)
-+			goto assert_rst_rsm_b;
-+	}
-+
+ 
+ 	return 0;
+ 
+ 	/* Restore the previous state if any error happens */
+-rpm_resume:
+-	pm_runtime_resume_and_get(dev);
+ power_resets_restore:
+ 	reset_control_bulk_deassert(data->num_power_resets,
+ 				    host->power_resets);
+@@ -2011,13 +2024,28 @@ static int rzg3s_pcie_resume_noirq(struct device *dev)
+ 			goto assert_rst_rsm_b;
+ 	}
+ 
+-	ret = pm_runtime_resume_and_get(dev);
+-	if (ret)
+-		goto assert_rst_rsm_b;
 +	/*
 +	 * Since:
 +	 * - the runtime PM usage count was incremented by
@@ -164,161 +165,23 @@ index 579386d1aaa3..834b03d56713 100644
 +	 * Let the power domain's genpd_resume_noirq() callback enable the
 +	 * clocks, as it already does.
 +	 */
-+
-+	ret = rzg3s_pcie_power_resets_deassert(host);
-+	if (ret)
+ 
+ 	ret = rzg3s_pcie_power_resets_deassert(host);
+ 	if (ret)
+-		goto rpm_put;
 +		goto assert_rst_rsm_b;
-+
-+	ret = rzg3s_pcie_host_setup(host, rzg3s_pcie_msi_hw_setup,
-+				    rzg3s_pcie_msi_hw_teardown);
-+	if (ret)
-+		goto assert_power_resets;
-+
-+	return 0;
-+
-+	/*
-+	 * If any error happens there is no way to recover the IP. Put it in the
-+	 * lowest possible power state.
-+	 */
-+assert_power_resets:
-+	reset_control_bulk_assert(data->num_power_resets, host->power_resets);
-+assert_rst_rsm_b:
-+	rzg3s_sysc_config_func(sysc, RZG3S_SYSC_FUNC_ID_RST_RSM_B, 0);
-+	return ret;
-+}
-+
- static int rzg3s_pcie_get_controller_id(struct rzg3s_pcie_host *host)
- {
- 	struct device_node *np = host->dev->of_node;
-@@ -1939,126 +2061,15 @@ static int rzg3s_pcie_probe(struct platform_device *pdev)
- static int rzg3s_pcie_suspend_noirq(struct device *dev)
- {
- 	struct rzg3s_pcie_host *host = dev_get_drvdata(dev);
--	const struct rzg3s_pcie_soc_data *data = host->data;
--	struct rzg3s_pcie_port *port = &host->port;
--	struct rzg3s_sysc *sysc = host->sysc;
--	int ret;
--
--	clk_disable_unprepare(port->refclk);
--
--	/* SoC-specific de-initialization */
--	ret = data->config_deinit(host);
--	if (ret)
--		goto refclk_restore;
--
--	ret = reset_control_bulk_assert(data->num_power_resets,
--					host->power_resets);
--	if (ret)
--		goto config_reinit;
--
--	/*
--	 * Since:
--	 * - the runtime PM usage count was incremented by
--	 *   pm_runtime_get_noresume() in the system suspend/resume code before
--	 *   executing the subsystem-level .prepare() callback
--	 *   (in device_prepare()),
--	 * - runtime PM has been disabled by the system suspend/resume code
--	 *   before executing the subsystem-level .suspend_late() callback
--	 *   (in device_suspend_late()), and
--	 * - the PCIe driver's runtime PM state remains RPM_ACTIVE (it was
--	 *   runtime resumed in probe()),
--	 *
--	 * any runtime PM operation becomes a no-op and may lead to unexpected
--	 * failures.
--	 *
--	 * Let the power domain's genpd_suspend_noirq() callback disable the
--	 * clocks, as it already does.
--	 */
--
--	ret = rzg3s_sysc_config_func(sysc, RZG3S_SYSC_FUNC_ID_RST_RSM_B, 0);
--	if (ret)
--		goto power_resets_restore;
--
--	return 0;
  
--	/* Restore the previous state if any error happens */
--power_resets_restore:
--	reset_control_bulk_deassert(data->num_power_resets,
--				    host->power_resets);
--config_reinit:
--	if (data->config_pre_init)
--		data->config_pre_init(host);
--	data->config_post_init(host);
--refclk_restore:
--	clk_prepare_enable(port->refclk);
--	return ret;
-+	return rzg3s_pcie_host_stop(host);
- }
- 
- static int rzg3s_pcie_resume_noirq(struct device *dev)
- {
- 	struct rzg3s_pcie_host *host = dev_get_drvdata(dev);
--	const struct rzg3s_pcie_soc_data *data = host->data;
--	struct rzg3s_sysc *sysc = host->sysc;
--	int ret;
- 
--	ret = rzg3s_sysc_config_func(sysc, RZG3S_SYSC_FUNC_ID_MODE, 1);
--	if (ret)
--		return ret;
--
--	ret = rzg3s_sysc_config_func(sysc, RZG3S_SYSC_FUNC_ID_RST_RSM_B, 1);
--	if (ret)
--		return ret;
--
--	if (host->num_lanes) {
--		ret = rzg3s_sysc_config_func(host->sysc,
--					     RZG3S_SYSC_FUNC_ID_LINK_MASTER,
--					     host->num_lanes == 2  ?
--					     RZG3S_SYSC_LINK_MODE_DUAL_X2 :
--					     RZG3S_SYSC_LINK_MODE_SINGLE_X4);
--		if (ret)
--			goto assert_rst_rsm_b;
--	}
--
--	/*
--	 * Since:
--	 * - the runtime PM usage count was incremented by
--	 *   pm_runtime_get_noresume() in the system suspend/resume code before
--	 *   executing the subsystem-level .prepare() callback
--	 *   (in device_prepare()),
--	 * - runtime PM has been disabled by the system suspend/resume code
--	 *   before executing the subsystem-level .suspend_late() callback
--	 *   (in device_suspend_late()),
--	 * - on resume pm_runtime_enable() is called after executing the
--	 *   subsystem-level .resume_early() (in device_resume_early())
--	 *
--	 * any runtime PM operation becomes a no-op and may lead to unexpected
--	 * failures.
--	 *
--	 * Let the power domain's genpd_resume_noirq() callback enable the
--	 * clocks, as it already does.
--	 */
--
--	ret = rzg3s_pcie_power_resets_deassert(host);
--	if (ret)
--		goto assert_rst_rsm_b;
--
--	ret = rzg3s_pcie_host_setup(host, rzg3s_pcie_msi_hw_setup,
--				    rzg3s_pcie_msi_hw_teardown);
--	if (ret)
--		goto assert_power_resets;
--
--	return 0;
--
--	/*
--	 * If any error happens there is no way to recover the IP. Put it in the
--	 * lowest possible power state.
--	 */
--assert_power_resets:
--	reset_control_bulk_assert(data->num_power_resets,
--				  host->power_resets);
--assert_rst_rsm_b:
--	rzg3s_sysc_config_func(sysc, RZG3S_SYSC_FUNC_ID_RST_RSM_B, 0);
--	return ret;
-+	return rzg3s_pcie_host_start(host);
- }
- 
- static const struct dev_pm_ops rzg3s_pcie_pm_ops = {
+ 	ret = rzg3s_pcie_host_setup(host, rzg3s_pcie_msi_hw_setup,
+ 				    rzg3s_pcie_msi_hw_teardown);
+@@ -2033,8 +2061,6 @@ static int rzg3s_pcie_resume_noirq(struct device *dev)
+ assert_power_resets:
+ 	reset_control_bulk_assert(data->num_power_resets,
+ 				  host->power_resets);
+-rpm_put:
+-	pm_runtime_put_sync(dev);
+ assert_rst_rsm_b:
+ 	rzg3s_sysc_config_func(sysc, RZG3S_SYSC_FUNC_ID_RST_RSM_B, 0);
+ 	return ret;
 -- 
 2.43.0
 
