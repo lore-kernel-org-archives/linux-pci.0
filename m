@@ -1,74 +1,77 @@
-Received: from MW6PR02CU001.outbound.protection.outlook.com (mail-westus2azon11012056.outbound.protection.outlook.com [52.101.48.56])
+Received: from BL0PR03CU003.outbound.protection.outlook.com (mail-eastusazon11012054.outbound.protection.outlook.com [52.101.53.54])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7CDC0377A8E;
-	Fri, 14 Aug 2026 20:17:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.48.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9DB753AE712;
+	Fri, 14 Aug 2026 20:17:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.53.54
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786738630; cv=fail; b=df+LS1atsNJpByvKpIkKCby1mHT0SugHqKtRfFEMGrcTI6xIJubbAPBUDzTfeIjahske/YslMQa7Rt4mNGq7s6lO5I0lQMChVLPiJ8r+kZR8YPfBTPIZJ1GfmFkYQHVpay81F0ZPz8ss1sfeP4dAJ1z6SBPh3yBGvdmjiObHy+A=
+	t=1786738646; cv=fail; b=q+x6wvi8DPieUQJY32bTBNu7XqO1BSnEJ6Ph/LhmFA7a7SKQ0bGaywuTR9ptvV/hvSBCzGlVclP8tRVY/K0drpjdfgKH3HKaieVHo9J+NstRK0HWo0EiIDE9Wkn7SfPhC1ceNXMyuLJaunDaibcgrRnknPvbxB1tsp8I4Kn/BPE=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786738630; c=relaxed/simple;
-	bh=tlsupdXxxLlp1ZZK0sxbObDu2EoQCFDoJBRJn3oKay4=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=MVTa6QLYTfb78+XQoukwCprd9bXIEqzavvLoKE1hziJJF0Rv9t0jBj3poO54AlmZZztXfflzPVOrTKVrcBh+NnuKJxv+BXtXHgX7UWwvEiDkROujp/6FiFYDhL1/IuDGVzIA4NQXU8XTefQd4cixbLHR+YcBq7AFNmrOZ9Gy0gg=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=PlZM0yDM; arc=fail smtp.client-ip=52.101.48.56
+	s=arc-20240116; t=1786738646; c=relaxed/simple;
+	bh=65xxzBe0kCkyixIZh98+/JzieepFs8qa8YN3I4V6IbY=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=l/4jVwZtdvfzn736VDBNSqcasDto4wgXWB3ZvCgmhT3JKacPZak/nUg9gJ5pUT80j6ueG3vTV34fTQ3uEXJzBff6IsvDgc1zaDocCv0Ug5R2ge4t1prUN0Ouh2KBYqN73FSs5aEl5IIY09gMEna4CdlaiY1ljN0h8pW94gxUj28=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=AZ1Uggug; arc=fail smtp.client-ip=52.101.53.54
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="PlZM0yDM"
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="AZ1Uggug"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=YEeAod+vcBIqdX7Lwj+nYsdzO81vl7kgGmzIkmGK9pXeEw56DhY0et9aBRtpAGVi33Abrqg8zP4wedEA5Z6h/dzUs8182xUlUtWn3qhV1oLsHdRpa0SGJbblkEB3yKzaaElieU/xgKXnGwmwBYbpKJrLPQDFH9JUQv9zVGqEiwb5tFdrqs6zzA0WJV2WEFgBLFiHkNN1xrojlaCTLYJS1m7Hl7aMbW8Mechle/wCyYlv8/to/tG0nvpDYkDnywgdBYsq8bfMeH7k/cJmrH7HfcZhcupF6Jj8dD3WvKZlHyduTzDD1PhUEWKKadG/vZVHtDmuV5ZEsszUE/3I6g/Dpg==
+ b=kGsXMY3fyalfLSity6+b/OOIVAOqvq2smWWJmOYqs3Fk4DzRXJmubn9BE9zE6gYJ5dr+DvoFfutt5Bo13f1fDZdZbcWH8+i9HgZgltY4f/T+WqWFnbSlZ2lBd+AWcysc64C1RImaoJR3mnjfAZI8rSy3lDEPV41JUVCFCmONdrP0MVOTuTXnbg4XNiyEBTWeHsulLlrBrY9lc7FQuE73pJ8cBMxZ0I+/n+PfbHAC7kS3fiTJsBeGbfquYpReSsKpSgjjxhdcypZV8ULgfdfADGC0lLHVpCxVDPfNoDfFRADNfgeJ4zns4TqUOXgKjQUU9gLlQAt77IlzYzSdtDwQ5g==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=U+6d7NdACKlYCCJBAe2eR9//Eq1Ml5l2qM3poug0m9E=;
- b=Jt0iNIOi4XdL8rrvUtDoUH1qtiMmobKc0jDxMvP70z2D+zhOXYDrBX4ApPaQrRduaB+g2zA72xtZA6H98VxJveAi54QYSOvnukXanx7FFym+wqMH0352b6soSW1gJhsb18nmdBD7m9VUDr/x8FTRshPyCBErmyxrv3kpTG+4jNbVd+yKA7hMJXPGGvhZW1fpsoH5XnpHGCe9Lb2YLQxQ3MzzZCE9IkquMtDz6LWdwpre/37Z6oaPqOxDlHhPrY91s8SL773vnDKOEdu5hDy0wjg2R7YaYJDo+6uuppNYxk57p7BNlAE9vzwDiEyTqKq7BYBDAejGK/7my5IFRtWYgQ==
+ bh=k15YpeD1tSEMSJ+OcHGdxP1pHSzNO51XX3lboFFOX44=;
+ b=WttVRNLjEqpfmeDYpH5DjfVo6zerM3LHxVmz8qBpMydMHng1m18aUcYSwt5FSOs29lFOLZJhZlFKuFIRGPdj2IrqHseMSpjlXwCL7OF3LN2fmSk2WYKxDn394zUzw/qIc3zgdzoeTKej+roP30D9HWUo8wUtEar3xwQHCDkd9AWmqdWTA3mU+YNMlk8HRgOhz+/DUUkXNR26SEV1iSzg1tdwfEaa/s7z8hlIoFf7QWc55vDPMKQ+exD3kvKDBRRGraQ/qw2eQweRqjsdqVndAnyJYx9tn+7XSDJIU02IgC84EaScWELw+3nKG3GHjKx/h3EBG0JiDEmAG4gfOoAKOQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 216.228.117.161) smtp.rcpttodomain=google.com smtp.mailfrom=nvidia.com;
+ 216.228.117.160) smtp.rcpttodomain=google.com smtp.mailfrom=nvidia.com;
  dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
  dkim=none (message not signed); arc=none (0)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=U+6d7NdACKlYCCJBAe2eR9//Eq1Ml5l2qM3poug0m9E=;
- b=PlZM0yDMJPvySzHoOATxE/Cowa79eyIAaBbilnFiyzPoEF3GWgj/McX5Kvgmj+iahnQsG8cwVKS1Ip0SZomJ2q8cj7vaRVCgZ4GVC/fMfDh5NFSZhkgr7hvjcyQGUrSOQdZSB1DgDcAlZYJgBdIGJDj6h9dYFGey/UaOkVK+Wb/sfcLlpRrfAIcj/+4rGKXU0n4dRpbM2V0UeoOtk5CLoxX5rkvUJ4qsgHtkVDwdL7fTaqFL97bKY6NYVjVSDkFBCKAxS+EGOGEHAqC9zjtcuRki8vYYa98rPhKd9Gd6l99JOOYzSS2BTpwY6p16rLxwnbo+8Hm3wvUbQjbL4Q1Bgw==
-Received: from SA0PR11CA0042.namprd11.prod.outlook.com (2603:10b6:806:d0::17)
- by SAWPR12MB999291.namprd12.prod.outlook.com (2603:10b6:806:55f::10) with
+ bh=k15YpeD1tSEMSJ+OcHGdxP1pHSzNO51XX3lboFFOX44=;
+ b=AZ1UggughC+sKvAddEUpcLJ+c88era7cqXf8oRHKds2Vo7hkdjD7o4veIhG0uipIf9XUimTVTzKGbo/deHhXado+s43YGgUhamvQMIyxNBxOwcLmWL9cDCb1tVZ8HzPq62kNd6uetFPebPO4XuNXIv2HjpxSaEyWkK4RZV4Yx8vQSIAEsN2BHalxv+WWYmVmNe5ITe5vjbWjkKVzxrwiw9Id3DegssXcDmm4fJBq6TDWhn3ymKQDX2JEUQyHKvsywusGX+Wz4dMGql0iXhK6v+pdTVW5G45jNw6lpQFzhg4LmlCOlFneeXsqi0GZJAC6WkrqMBpmo8yXUMXv8pZ62Q==
+Received: from SA1P222CA0171.NAMP222.PROD.OUTLOOK.COM (2603:10b6:806:3c3::8)
+ by DS0PR12MB9422.namprd12.prod.outlook.com (2603:10b6:8:1bb::16) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.315.15; Fri, 14 Aug
- 2026 20:17:04 +0000
-Received: from SA2PEPF00001506.namprd04.prod.outlook.com
- (2603:10b6:806:d0:cafe::69) by SA0PR11CA0042.outlook.office365.com
- (2603:10b6:806:d0::17) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.21.315.15 via Frontend Transport; Fri,
- 14 Aug 2026 20:17:04 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.117.161)
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.315.16; Fri, 14 Aug
+ 2026 20:17:15 +0000
+Received: from SN1PEPF0002BA51.namprd03.prod.outlook.com
+ (2603:10b6:806:3c3:cafe::ac) by SA1P222CA0171.outlook.office365.com
+ (2603:10b6:806:3c3::8) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.21.315.16 via Frontend Transport; Fri,
+ 14 Aug 2026 20:17:15 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.117.160)
  smtp.mailfrom=nvidia.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=nvidia.com;
 Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
- 216.228.117.161 as permitted sender) receiver=protection.outlook.com;
- client-ip=216.228.117.161; helo=mail.nvidia.com; pr=C
-Received: from mail.nvidia.com (216.228.117.161) by
- SA2PEPF00001506.mail.protection.outlook.com (10.167.242.38) with Microsoft
+ 216.228.117.160 as permitted sender) receiver=protection.outlook.com;
+ client-ip=216.228.117.160; helo=mail.nvidia.com; pr=C
+Received: from mail.nvidia.com (216.228.117.160) by
+ SN1PEPF0002BA51.mail.protection.outlook.com (10.167.242.74) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.339.3 via Frontend Transport; Fri, 14 Aug 2026 20:17:04 +0000
+ 15.21.339.3 via Frontend Transport; Fri, 14 Aug 2026 20:17:15 +0000
 Received: from rnnvmail201.nvidia.com (10.129.68.8) by mail.nvidia.com
- (10.129.200.67) with Microsoft SMTP Server (version=TLS1_2,
+ (10.129.200.66) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.46; Fri, 14 Aug
- 2026 13:16:40 -0700
+ 2026 13:16:50 -0700
 Received: from vidyas-server.nvidia.com (10.126.231.37) by
  rnnvmail201.nvidia.com (10.129.68.8) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.20; Fri, 14 Aug 2026 13:16:37 -0700
+ 15.2.2562.20; Fri, 14 Aug 2026 13:16:46 -0700
 From: Vidya Sagar <vidyas@nvidia.com>
 To: <bhelgaas@google.com>
 CC: <vsethi@nvidia.com>, <sdonthineni@nvidia.com>, <kthota@nvidia.com>,
 	<mmaddireddy@nvidia.com>, <kumarahul@nvidia.com>, <sagar.tv@gmail.com>,
 	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>, Vidya Sagar
 	<vidyas@nvidia.com>
-Subject: [PATCH V3 0/5] PCI: Re-evaluate DEV3 14-Bit Tag Requester Enable on link mode changes
-Date: Sat, 15 Aug 2026 01:46:16 +0530
-Message-ID: <20260814201621.2281245-1-vidyas@nvidia.com>
+Subject: [PATCH V3 1/5] PCI: Add DEV3 14-Bit Tag Requester register definitions
+Date: Sat, 15 Aug 2026 01:46:17 +0530
+Message-ID: <20260814201621.2281245-2-vidyas@nvidia.com>
 X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20260814201621.2281245-1-vidyas@nvidia.com>
+References: <20260814201621.2281245-1-vidyas@nvidia.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -82,131 +85,68 @@ X-ClientProxiedBy: rnnvmail202.nvidia.com (10.129.68.7) To
  rnnvmail201.nvidia.com (10.129.68.8)
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: SA2PEPF00001506:EE_|SAWPR12MB999291:EE_
-X-MS-Office365-Filtering-Correlation-Id: 67114266-cee8-42e6-448d-08defa4101c0
+X-MS-TrafficTypeDiagnostic: SN1PEPF0002BA51:EE_|DS0PR12MB9422:EE_
+X-MS-Office365-Filtering-Correlation-Id: 094f94af-6766-4479-bfd0-08defa410890
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|36860700016|376014|23010399003|82310400026|6133799003|56012099006|10067099003|5023799004|11063799006|18002099003;
+	BCL:0;ARA:13230040|36860700016|376014|23010399003|82310400026|1800799024|6133799003|56012099006|10067099003|5023799004|11063799006|18002099003|22082099003;
 X-Microsoft-Antispam-Message-Info:
-	2OyR4Kf5evhaE1Z76xWYYrN4ap/V+gF4FZv2OqJymoMvF32aDHg859L+qsci1G0BJnUxy5Fkksy4qVneVihJRpNwE4rXxAc4MK5AP1/fvomXEaLJN4+Iv7OmG7XHHr4mEbSGm342mx5JWXfwQ0rBaaRN9IAwDVKZ0k8A9bzxKNF7rFyoMMU/IMimXT9g43nuCX0pbcFhBWFipyfZ8GrVfvSwmrcwSfa6xoaXkb8dutFTUFvrHlUJ2cNWEtnS9RMZXqEIfd6TpJVjIcS3smP29e+tw61JIch90O0z/D8OFch3YkDB9FNUb7WKTGm0g2yO2/Gd89J+onThXVpWfzIRJqtp/ycrpEyVKUAMuFWoztwyCH4oOVW1qfAA0kEKuNGFCnhSih0KB0GdAcF/vEBv7oScSVxOSKwXU7clC4+Z0ZXg5j670yBdE86glYI2wIjz0leKUHx+grZFVgBMRwksnwPoOBmMh8FaFpPdrshfqZPkjT401fYLEG0GOVJAhoB/7dpV4y+TPkt/uLCQw+ckJejpil4LVEqWkB+pAKJWezDh/udrrWS9GEgaKooeXe4vCw0+KKj1xKUMVNUU91uK7rrzJm1xRbEs8UNetJ25nPm9jzv/groYh/ZnUHngwPxApLVSYI9PCF1OW6zG3s65S1eJBS+boy0naefqRpq40cVgrtSAVbHdSIxOgj90iBRbkWdjve51sI79fZF9cqDM+w==
+	yp64mshYgUbGmixbonoAC0jlnGNS7vPI5lxdmtpNjfdZc+xIKISnMAF9NeeM3Hs2qEfoliVWkbt3L+Chuwo6ijAhPQY/Jo3UrsKEkdJILLOHDijjz01HfvycOFLSKHAVp8nQ28d2T/Afk1squUhqSZqJwo9T5WPm9LVhzYji5gKaH0xTZeAxhVAT0tieKuIWwUibbDZGmVNWSMHM38+X2zXATy0EfbD3Pbgk2Wb4rR9QAzgaTvBA2xjvQPPFOB/iOkY/JgWiYsgpiuopfQHgUQRyeeSSh1yTJd+Hvh3momTiQ47SWOXlZ+9vTiD93WnmsNoMyQfkYw6xTlSFaXhEzEwenqYdV7SUtUsPvvJJr2WIC1f6YtuojmEsO0N5gfXctug/Dt0u2SIbtVFA0D/G+KeZ6d4bpqqY7uRU93cg5C4wVEhPG8eSNBHnKBtygbYG/tQS2HUhloHYPkN++nsZV3YsSU6qhdajgSijX3/ckF6bHCyA/xEHz0k5IU8iGUVbavD7RqjfuqvKdUTAsn4zw2ZkY3QZwPj6lMvJ6eBRAA/MKzcumLLH0DJiLPqC0aLasp69AnBpimCPKVcIU8AUcVXVQ834ERjJC0oBG2iYNAug4XnEl3dFCUKKKbXhRcsX8Km4kFsA2M9zPSQw1OtI3YpyV9nhmaFiTggzSAYifDOSVQR/X3YDY3luq1qxXGNxXE71VcmkJJACO3ziFsMs/A==
 X-Forefront-Antispam-Report:
-	CIP:216.228.117.161;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge2.nvidia.com;CAT:NONE;SFS:(13230040)(1800799024)(36860700016)(376014)(23010399003)(82310400026)(6133799003)(56012099006)(10067099003)(5023799004)(11063799006)(18002099003);DIR:OUT;SFP:1101;
+	CIP:216.228.117.160;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge1.nvidia.com;CAT:NONE;SFS:(13230040)(36860700016)(376014)(23010399003)(82310400026)(1800799024)(6133799003)(56012099006)(10067099003)(5023799004)(11063799006)(18002099003)(22082099003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	wKkUlwqHywovRcQfKIzG5q2cvyKklr+kQo/gIXcEJOD/98OqziLMk/TY1hTwFhcJGggVSl9+zIG7th0i8o7/Xx1FMeKUrCmuKa3tB4sT5jHvO/9WgFETzs8+8vQ+fmNUdQq1QvRemhCaPDSBxVO0I9aG74ua4y+rXBkxHsOlLgVcmytrLHjODv2+kyvkbVqwjhec1BWtLk5YE499EjMBvlAnXA3dtBDDhcurAbJQ6XKljp1nAfk0r0vSUy18W3sioLdb1sC35QkDn5oZgiRuSQTkPKh6TZSgKhYMRtnPXU/8nhvbpKqMdmOkz3jBD8pibsX38AwwiD6bd7RdZLa1bEjjph6/cuzReQQzE3MF2l4dVa7Z7qGpqGo8ax7+HxypFoM04bxW1qbjXlNFNul14QqNxGl0Mma8vFPKuB8rsR8vkxflHA4/OBbkuq9W90Tx
+	O1I74BCP7QlfRsq1Fs7Tlq7RUTm5IeBEb6K8/BghTTrAStOcU4hXBqo/auqQu4McYCMvde2caVE4TM7bXPQ4VyE2XwWSAqcdvRqnSEOJfk7RI9whE92Qg2vhic/VxtlEVVLi+Otp7SYjaIHvFjKG3huqHVM8iGX5e7hj3pmyVLSNdtYU4zHnirnc/BMjjgEazqriNMiJPZ5u9S4Ar2fVf0P6HSDXXL6k0oV7fqQrgUMJWa6YKGfN6NlPSBePycVM5FuMcaN/0VE9oDKxBFAD4aHeq3rJ9hwHfWgHGQ5eCMF6eDgUNeJ2DVKA2VMyb3TO2+meqhfx3gptOx2HV9yGeYZupdxQ7XKBzBYTMBjAOrrdqXamMb0zpZ9QgORZMb1uHBhHpBwRNdSLnDi1FzPD7IZpDJ3KX70XwK7kS7hoGC2o8wdEeZlzVDoERjiIQBZj
 X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 14 Aug 2026 20:17:04.0667
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 14 Aug 2026 20:17:15.5252
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 67114266-cee8-42e6-448d-08defa4101c0
+X-MS-Exchange-CrossTenant-Network-Message-Id: 094f94af-6766-4479-bfd0-08defa410890
 X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.161];Helo=[mail.nvidia.com]
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.160];Helo=[mail.nvidia.com]
 X-MS-Exchange-CrossTenant-AuthSource:
-	SA2PEPF00001506.namprd04.prod.outlook.com
+	SN1PEPF0002BA51.namprd03.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SAWPR12MB999291
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS0PR12MB9422
 
-DEV3_CTL.14-Bit Tag Requester Enable is only meaningful while the link
-operates in Flit Mode.  In Non-Flit Mode the upper tag bits are not
-transmitted on the wire, so a requester that still has it set emits
-requests whose completions it can no longer match: the completer does
-answer, but the completion comes back with the upper tag bits zero.  The
-requester therefore logs an Unexpected Completion for it and, once the
-timer expires, a Completion Timeout as well.  The completer side needs no
-handling, since a completer only reflects the Tag field of the request it
-answers and the spec accordingly defines no completer enable.
+The Device 3 Extended Capability advertises 14-Bit Tag Requester support
+in bit 2 of the Device 3 Capabilities register and carries the matching
+enable in bit 2 of the Device 3 Control register.  Only the register
+offsets and DEV3_STA.Segment Captured are defined today.
 
-This happens today on the very first config read a Port issues after the
-link below it comes back in a different mode, and there are two ways to
-get there: a reset of any flavour, and a hot swap that replaces a card
-whose link ran in Flit Mode with one that trains in Non-Flit Mode.  Two
-things are missing in the core:
+Add both 14-Bit Tag Requester bit definitions.  There is deliberately no
+completer counterpart: a completer reflects the Tag field of the request
+it answers, so the spec defines a 14-Bit Tag Completer Supported bit but
+no completer enable, and software has nothing to program there.
 
-  - DEV3_CTL is not part of the state the core saves and restores, so its
-    contents are lost across a reset even for the devices that do get
-    saved and restored, and
+No functional change.
 
-  - nothing re-evaluates the 14-Bit Tag Requester Enable when the link
-    mode changes.  This matters most for the Port: it is the requester for
-    the config read the core issues to the device below as soon as the
-    link is back, but it is not itself saved and restored on these paths,
-    so it keeps its stale enable.
-
-The series:
-
-  1/5 adds the DEV3_CAP.14-Bit Tag Requester Supported and
-      DEV3_CTL.14-Bit Tag Requester Enable definitions, both bit 2 of
-      their respective register.
-
-  2/5 moves __pcie_update_link_speed() out of line, which 4/5 needs.  Pure
-      refactor.
-
-  3/5 saves DEV3_CTL and, on restore, drops 14-Bit Tag Requester Enable
-      from the value written to hardware when the live LNKSTA2.Flit_Mode
-      and DEV3_STA.Segment Captured say Flit Mode is gone.  This covers the
-      devices reached via pci_dev_restore().  No other DEV3_CTL bit is
-      modified.
-
-  4/5 adds pci_bridge_refresh_14bit_tag(), which fixes the bridge itself
-      and then walks its subordinate bus, and calls it from
-      pci_bridge_wait_for_secondary_bus() (before the first downstream
-      config read after SBR, DPC release, AER bus reset, slot reset or a
-      bridge D3cold->D0 resume) and from __pcie_update_link_speed() (which
-      covers retrain, bwctrl and hotplug paths that never reach
-      pci_bridge_wait_for_secondary_bus()).
-
-  5/5 calls it from pciehp_check_link_status() as well.  A surprise hot
-      swap resets nothing and the new card has no saved state, so the only
-      thing standing between the Port and a failed enumeration is a fixup
-      before pci_bus_check_dev() probes the card.
-
-3/5 and 4/5 are independent of each other; each is useful on its own.
-
-One deliberate asymmetry: the helper only ever clears the enable, it never
-sets it.  That matches how the core treats 10-Bit Tags, which it also never
-enables on its own, and it means a Port that has been through a Non-Flit
-link does not get 14-Bit Tags back when a Flit Mode card is plugged in
-later.  Restoring that automatically needs a policy for checking every
-completer below the Port, which seems better left to a separate series.
-The saved DEV3_CTL value is deliberately left untouched in 3/5 so that the
-originally programmed value remains available if we do want it back.
-
-Tested on an arm64 platform with a Root Port whose link comes back in
-Non-Flit Mode after a reset.  Resetting the subordinate bus from sysfs
-(reset_subordinate, i.e. pci_reset_bridge() -> pci_try_reset_slot())
-previously left the Root Port with 14-Bit Tag Requester Enable set, and
-the first config read to the device below failed with a Completion Timeout
-plus an Unexpected Completion.  With this series the Root Port is fixed up
-first,
-
-  pcieport 0002:80:00.0: cleared 14-Bit Tag Requester Enable: flit mode no longer active (DEV3_STA=0x00000008)
-
-and the reset completes.  Note that DEV3_STA.Segment Captured was still
-set at that point while LNKSTA2.Flit_Mode had already dropped, which is
-why both are consulted.
-
+Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+---
 V3:
-* Add patch-5 to handle hot-swap scenario
+* No change
 
 V2:
-* Split the V1 monolithic patch into 4 patches
+* New patch as a result of splitting the V1 monolithic patch
 
-Vidya Sagar (5):
-  PCI: Add DEV3 14-Bit Tag Requester register definitions
-  PCI: Move __pcie_update_link_speed() out of line
-  PCI: Save and restore the Device 3 Control register
-  PCI: Clear stale 14-Bit Tag Requester Enable when a link leaves Flit
-    Mode
-  PCI: pciehp: Clear stale 14-Bit Tag Requester Enable on hot add
+ include/uapi/linux/pci_regs.h | 2 ++
+ 1 file changed, 2 insertions(+)
 
- drivers/pci/hotplug/pciehp_hpc.c |   8 ++
- drivers/pci/pci.c                | 211 +++++++++++++++++++++++++++++++
- drivers/pci/pci.h                |  17 +--
- drivers/pci/probe.c              |  36 ++++++
- include/uapi/linux/pci_regs.h    |   2 +
- 5 files changed, 262 insertions(+), 12 deletions(-)
-
+diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+index facaa324bd86..b2ba5c2642f0 100644
+--- a/include/uapi/linux/pci_regs.h
++++ b/include/uapi/linux/pci_regs.h
+@@ -1254,7 +1254,9 @@
+ 
+ /* Device 3 Extended Capability */
+ #define PCI_DEV3_CAP		0x04	/* Device 3 Capabilities Register */
++#define  PCI_DEV3_CAP_14BIT_TAG_REQ	0x00000004 /* 14-Bit Tag Requester Supported */
+ #define PCI_DEV3_CTL		0x08	/* Device 3 Control Register */
++#define  PCI_DEV3_CTL_14BIT_TAG_REQ_EN	0x00000004 /* 14-Bit Tag Requester Enable */
+ #define PCI_DEV3_STA		0x0c	/* Device 3 Status Register */
+ #define  PCI_DEV3_STA_SEGMENT	0x8	/* Segment Captured (end-to-end flit-mode detected) */
+ 
 -- 
 2.43.0
 
