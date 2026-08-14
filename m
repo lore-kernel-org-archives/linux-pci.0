@@ -1,273 +1,306 @@
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+Received: from CY7PR03CU001.outbound.protection.outlook.com (mail-westcentralusazolkn19010021.outbound.protection.outlook.com [52.103.7.21])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B73B47CA78;
-	Fri, 14 Aug 2026 15:16:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786720621; cv=none; b=m/MxwdRiLJcgyMp/9WslELn5gA8t4BJoNc3X19+mxg+ezqijA7y3CZYNQzX/jkd3qX36E71z3tiyGy+qaaQ4uZr2NaDxxINBtA3dLhnLtN8yMJZ68HdoUQ1otdSRNJSOMuJv2F1ypSauD4pNKVgq8PRXGLHp1ziRDH0S9bdzLgw=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786720621; c=relaxed/simple;
-	bh=easrGihs+Y1fGw1uj9Ua6hDWJpMlYPztpSTk/FJCtdc=;
-	h=Message-ID:Subject:From:To:Cc:In-Reply-To:References:Content-Type:
-	 Date:MIME-Version; b=RawCRwgHchRsfuA3er416Nd8XavQKL4+xwSY83hMUnd57AHvkVxkTuU2bmcVeKrdeV6ieqOMaawaQGZ26BX/lxEL+L5evXsILkMlpLYJACNBHeItBMmyFz52xzd45wTaOuL6/otr0chst3fj2yNUDSd9EqdzvRYVhxjz3II5GKQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=e2nJmgSF; arc=none smtp.client-ip=148.163.156.1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F8693B8BC4;
+	Fri, 14 Aug 2026 15:31:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.103.7.21
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1786721475; cv=fail; b=ge1cCYUlaCQDB6XrO8LfQaB+OaVEuCQa2+37p3ehpbbTW0B8YaLwTyBWLenEf9xyQT6WfjfnkyfX++Ql1w5HjPcS4JcgvfOUy5DV8H06d7LrNmK8bU0ywH34aPJ9bjadcoYdqEuShcfOJcrNdPkVmhCC2Z6U++JMP6VjxAkv/lg=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1786721475; c=relaxed/simple;
+	bh=lmNyfzi04SdZTAEDxNezp8coiHSzp5jkPuaF9Zg/7Sg=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=JUMlGYi0+XI7J1sWTmiyBmjPTkVKtOrM9HqA7WoeRUBKcHCIFFVcBkcwySMTXXbskW3gnHb7/ckQpPUZ+WUKEr6od5oUNzZdrRwBkEFsalT0OmlXUH7ncBLTt/rFDcMvq897XDzAVav10QQuahgLsNGIJ16o72HFruPV1VF6LN4=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.com; spf=pass smtp.mailfrom=outlook.com; dkim=pass (2048-bit key) header.d=outlook.com header.i=@outlook.com header.b=BS9KSDrm; arc=fail smtp.client-ip=52.103.7.21
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=outlook.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="e2nJmgSF"
-Received: from pps.filterd (m0356517.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 67EE5bZN1342777;
-	Fri, 14 Aug 2026 15:16:55 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pp1; bh=CwKafk
-	N+JBq6IyvF+UNMQZU0ZMIzS+yH3ejFO8GdRWU=; b=e2nJmgSFRHOD9mhPZjGhKk
-	bwggTHE1S2WgjdI2ODaCQ220N6N6j9SYX+Lver/s1WPYYsHKoL/mLp6p1290k3ey
-	ZGRXZhIGJ9OwcsWiyTfR4Jczgfv9uCpBueZa6zAlOgup4qsTXNbIBitx24W1P4fX
-	c3SIR+RgTsM3GUS5w8b6nxj+jDNAb//KoZmJFNEQGEBxcF3r6plnsCBwzE0QhDYx
-	wuD4Bf/5a2vIvBj0mWZ2aTpKpG3WVo+BQgYAsFZfSAcXj8LrdsVypaEhL/j85TZG
-	E5gVzSnnEhwvQp0eKkWSTrF22clKhsv9kkN0cFnByH1ajQQ9MFPlmgoEPFDsQyTg
-	==
-Received: from ppma11.dal12v.mail.ibm.com (db.9e.1632.ip4.static.sl-reverse.com [50.22.158.219])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4fwvma5g0k-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 14 Aug 2026 15:16:55 +0000 (GMT)
-Received: from pps.filterd (ppma11.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma11.dal12v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 67EFBMPV002403;
-	Fri, 14 Aug 2026 15:16:54 GMT
-Received: from smtprelay07.dal12v.mail.ibm.com ([172.16.1.9])
-	by ppma11.dal12v.mail.ibm.com (PPS) with ESMTPS id 4g1rpvah9u-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 14 Aug 2026 15:16:54 +0000 (GMT)
-Received: from smtpav02.wdc07v.mail.ibm.com (smtpav02.wdc07v.mail.ibm.com [10.39.53.229])
-	by smtprelay07.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 67EFGrf61049154
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 14 Aug 2026 15:16:53 GMT
-Received: from smtpav02.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 1DEBA5805C;
-	Fri, 14 Aug 2026 15:16:53 +0000 (GMT)
-Received: from smtpav02.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 5184758059;
-	Fri, 14 Aug 2026 15:16:51 +0000 (GMT)
-Received: from [9.111.8.241] (unknown [9.111.8.241])
-	by smtpav02.wdc07v.mail.ibm.com (Postfix) with ESMTP;
-	Fri, 14 Aug 2026 15:16:51 +0000 (GMT)
-Message-ID: <0a7c5ae8a68b7603071aae49f75a65ae6d44bbe1.camel@linux.ibm.com>
-Subject: Re: [PATCH v23 2/5] PCI: Allow per function PCI slots to fix slot
- reset on s390
-From: Niklas Schnelle <schnelle@linux.ibm.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Farhan Ali <alifm@linux.ibm.com>, linux-s390@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        alex@shazbot.org, mjrosato@linux.ibm.com, stable@vger.kernel.org
-In-Reply-To: <20260814132607.GA1353174@bhelgaas>
-References: <20260814132607.GA1353174@bhelgaas>
-Autocrypt: addr=schnelle@linux.ibm.com; prefer-encrypt=mutual;
- keydata=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
-Content-Type: text/plain; charset="UTF-8"
+	dkim=pass (2048-bit key) header.d=outlook.com header.i=@outlook.com header.b="BS9KSDrm"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=lZKnGamf8+TZsn8Jkskmn8ZQ1SAIIPscsC8aE1HLSEA/oYgdLMp6yr6+EpNKaRVStrIGITqoTCYRnuYUE9HKdPkGWThOfRsWA+w/9wvznDL7RMTcEkRxi63AZ/HQsVWnrNZea19y18QmWmGI7yThYTOFwF/FwnXNxbdyWlkPhtvKlqs+3J0q8VdJVDSPWt4RfZKudziq8RvHmOagMsHTo+7nosttPxFkPbl0JtXe4byjr+epupWuhzHXZme7DMUvhDTovKHVm3aC9iDZxv6hbk2uGC+dJPK79jhW1lSgflrWY7RMnYXPa01KI5Yc8zpIJ9CPOySYlwQkNHDzuJFCPg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=66QUJzNibG+qlPnGlGXrHJpnz2ODz327JLN7qPUXShI=;
+ b=OmdfyJO1AjVOzJX2r5WrqLg2L4chcnnufnobLVg3UdNaKY+Wdkeg/pB6asAQ8/Kau7IBsuwisK7NVhZPa9GMvnuOkvW4xQGjSfHN4gEsKPV0zwWprIegavRuwIS2hW5s4q6b54XY436VwA+Ka80KRCyGqhq696FFZ7+0LDSzRbLmPffpCWjA8rmOgigrAGAPh8XezE6z6p+0ifhDX/uIcEWEG049n9NMRZd4b0sSoy019dGwGIK81MOnTgkZsIp7bh1iD4nzcxLfcHWJ7EDgzNbP+3ACXznYR4kEClRB7ZUhLEEPGmTlg/ZGGhlj2Xd1JeRvVYirg8FIoz3MqwJZiQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
+ dkim=none; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=outlook.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=66QUJzNibG+qlPnGlGXrHJpnz2ODz327JLN7qPUXShI=;
+ b=BS9KSDrm92e0N4GqIaCF7G4uVWmLJuW96MwCI5ThWpz8KLQfgw/DTVqkH3bXdVoiQfwt1Aft17SGQ5newDZQ/q9o04+zcjerq8hrHxCbnGSxrdkCAiQdsiu6yEv9YIb3vPcS/whisP/Cwxuq523pvvD1oFzvd4/34EEQoftiCKKXXlF0Rof3Vtyo1TiG9OUi8HwvETc/lIrmQsM+WMNo3GadFgOXSjiHpbywE9f5j2PJ+ATepUtpP7cvVUK7r2qY9UKZs2C+d5R3WsSh2CRivBWeroTMegKpiIfyDz42+2HKJ56KKaKsbmcyjX0AMLOVNYoFqAprxJDZrZ5UGCLYYg==
+Received: from BN7PR02MB4148.namprd02.prod.outlook.com (2603:10b6:406:f6::17)
+ by BL0PR02MB6466.namprd02.prod.outlook.com (2603:10b6:208:1cb::18) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.315.12; Fri, 14 Aug
+ 2026 15:31:09 +0000
+Received: from BN7PR02MB4148.namprd02.prod.outlook.com
+ ([fe80::6007:d1a1:bcf9:58ef]) by BN7PR02MB4148.namprd02.prod.outlook.com
+ ([fe80::6007:d1a1:bcf9:58ef%3]) with mapi id 15.21.0315.014; Fri, 14 Aug 2026
+ 15:31:09 +0000
+From: Michael Kelley <mhklinux@outlook.com>
+To: Yu Zhang <zhangyu1@linux.microsoft.com>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>, "linux-hyperv@vger.kernel.org"
+	<linux-hyperv@vger.kernel.org>, "iommu@lists.linux.dev"
+	<iommu@lists.linux.dev>, "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>, "linux-arch@vger.kernel.org"
+	<linux-arch@vger.kernel.org>, "x86@kernel.org" <x86@kernel.org>
+CC: "wei.liu@kernel.org" <wei.liu@kernel.org>, "kys@microsoft.com"
+	<kys@microsoft.com>, "haiyangz@microsoft.com" <haiyangz@microsoft.com>,
+	"decui@microsoft.com" <decui@microsoft.com>, "longli@microsoft.com"
+	<longli@microsoft.com>, "joro@8bytes.org" <joro@8bytes.org>,
+	"will@kernel.org" <will@kernel.org>, "robin.murphy@arm.com"
+	<robin.murphy@arm.com>, "bhelgaas@google.com" <bhelgaas@google.com>,
+	"kwilczynski@kernel.org" <kwilczynski@kernel.org>, "lpieralisi@kernel.org"
+	<lpieralisi@kernel.org>, "mani@kernel.org" <mani@kernel.org>,
+	"robh@kernel.org" <robh@kernel.org>, "arnd@arndb.de" <arnd@arndb.de>,
+	"jgg@ziepe.ca" <jgg@ziepe.ca>, Michael Kelley <mhklinux@outlook.com>,
+	"jacob.pan@linux.microsoft.com" <jacob.pan@linux.microsoft.com>,
+	"tgopinath@linux.microsoft.com" <tgopinath@linux.microsoft.com>,
+	"easwar.hariharan@linux.microsoft.com"
+	<easwar.hariharan@linux.microsoft.com>, "mrathor@linux.microsoft.com"
+	<mrathor@linux.microsoft.com>, "baolu.lu@linux.intel.com"
+	<baolu.lu@linux.intel.com>, "suravee.suthikulpanit@amd.com"
+	<suravee.suthikulpanit@amd.com>, "vasant.hegde@amd.com"
+	<vasant.hegde@amd.com>
+Subject: RE: [PATCH v3 1/5] hyperv: Introduce new hypercall interfaces used by
+ Hyper-V guest IOMMU
+Thread-Topic: [PATCH v3 1/5] hyperv: Introduce new hypercall interfaces used
+ by Hyper-V guest IOMMU
+Thread-Index: AQHdKakoR55TFjdAFkG85tpLWFDXxradsIPQ
+Date: Fri, 14 Aug 2026 15:31:08 +0000
+Message-ID:
+ <BN7PR02MB414806B8395DA93F5F7D7867D4DA2@BN7PR02MB4148.namprd02.prod.outlook.com>
+References: <20260811155022.108148-1-zhangyu1@linux.microsoft.com>
+ <20260811155022.108148-2-zhangyu1@linux.microsoft.com>
+In-Reply-To: <20260811155022.108148-2-zhangyu1@linux.microsoft.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: BN7PR02MB4148:EE_|BL0PR02MB6466:EE_
+x-ms-office365-filtering-correlation-id: e599201f-68e9-49f0-091f-08defa191070
+x-microsoft-antispam:
+ BCL:0;ARA:14566002|41001999006|24021099003|55001999006|25010399006|12121999013|4140399003|51005399006|13091999003|8062599012|31061999003|15080799012|37011999003|8060799015|19110799012|440099028|3412199025|102099032|40105399003|2607281247196008|1710799026;
+x-microsoft-antispam-message-info:
+ =?us-ascii?Q?J9+3HkTs+GpgKpT8fFYDnHxKxcYJJAYLxvVVGbY0BKT5RLmuPSnEBLrA/9Mu?=
+ =?us-ascii?Q?hpBZsixH7fRBeRXwmriz/xFVRz8ctsaL/nhCaISHxdIXBxzAkfmQe93ggpvH?=
+ =?us-ascii?Q?cyXTFya+57VBGJ86ajPy3YXQkpUwNy4si07fPtFfA2gJfbPNPe/xOZbtYAd8?=
+ =?us-ascii?Q?N6Cnf5NQO+Rx4rL/r+ciE+4qdZ0y1UJStkzQz4spBFDaCkPc4KXwRrZMmG8c?=
+ =?us-ascii?Q?9hL/bIaiJ/CcpNAr2Q0To3plZiF1ggNRncP923hZMx3FJA81Hf+GIoS4Qqsv?=
+ =?us-ascii?Q?iTq3z2wUQkUVxFIq6da5dJCu8/eEQ27BV7XP2aPHc/imqO7tcHm8iNmOuP+h?=
+ =?us-ascii?Q?cwhQ/c1XjYrt0ZlZ4pPD9/ANjlpE5nUt+bOdNu91MU8SM8BDFfgDh0H1zM3N?=
+ =?us-ascii?Q?4mBmnNQBvMPNoHEpi5oeGD3T1pOqonAvYzs5aA8o8lzfKzFyMRBSl9NSidZk?=
+ =?us-ascii?Q?aAujmuN4t7LkX5XJuxEymQIjlWLglb+VxtNn++23G3JBLeLEgWsO95YHOIeJ?=
+ =?us-ascii?Q?W0WjQr88XqsdAz3XG5FRj02/t8YYf97OdONr9qM/3VHJDM4RNaIsfUicLqhV?=
+ =?us-ascii?Q?6ezezK+wTGS3a0QwLsiT8gVOiaGDsHIwWvb2Q4n27nKV54VNEzNqjWCOaXDu?=
+ =?us-ascii?Q?p8VJ5Gritk7Gdxlmm2h8MwE6RF7Jm09oweyDUEK2QxcLsnfzon+xnUUwsP7t?=
+ =?us-ascii?Q?hjc8R8wSRAEyD9CZioLj/1T7M+ttP+5G5DKWgrWWsMhZzfjwR3TyJjoulNV6?=
+ =?us-ascii?Q?5Xtc7ZStYB5omjGMVMaMk+n7FwjQGLyxkHMbrSnanYqX7yIVjEPIPPoryc75?=
+ =?us-ascii?Q?MMYqHGWBjLVuzw6ORJx3XouFTyyTOKcfmmxcEkU4MuKCZzdbWlO68qLhuptm?=
+ =?us-ascii?Q?ts3NUAqZnaVW0E4m0qqhJ1e5n8m147B1XrzK2d3XrbuG4qp2d19eYYmYR1S/?=
+ =?us-ascii?Q?9rTgfxYKwiRG4izkVrKDbLr2TUFs20h6qfAbGWskIqBX6fgQncu7dHniy6tt?=
+ =?us-ascii?Q?ekUdHZJapz7YCuH/hxhmtpGoDz/HDt9z+mC2xjIhnxgdrDIArhSVeFGXuYme?=
+ =?us-ascii?Q?FRuMQTyu5Gwr3EsHfGuOaZ1J/yxiCciGzkMSUCecSNP7IvoKZeSMq06QsPr8?=
+ =?us-ascii?Q?gEXea69UMaCl?=
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?us-ascii?Q?LPGZwVREGF/o6VEpTJRqPKel6HO3Tvd6SIZh5bDG4Tlf8GVsqlh85A3Iz9IZ?=
+ =?us-ascii?Q?tbQU6kXzejM4U1iw5iONbgS/PaRIw19wlapPfpaRJyVDzCaQqZfw3LkplsPJ?=
+ =?us-ascii?Q?3ZKDl0svcrAU4OYRX143+XODoqQFj/t94nypNWNxiiAxzWLGoTBFBCE5BKlO?=
+ =?us-ascii?Q?LyW0A0DEjfIP7xT6gt6v4WjumilR9yLbR1DdSXMI5zTysa2B+/hRhZqhI8O8?=
+ =?us-ascii?Q?fyd//QA7sSJtfujG8JBIpggxm2n5rs6AH1pNbCARUO9a11JmbsMdRdWfabkS?=
+ =?us-ascii?Q?BheQneYqz8DsyfWMFQ8x8uREM2qr+Hm998UjgShH5jRWYUx7gJHnjr0POn+P?=
+ =?us-ascii?Q?Emr+mWFi4fOJkK9+UtqnervttS0apdiWYoox6EuN1vt/hFHluU1zJWdXwRlr?=
+ =?us-ascii?Q?5+xR4ccHD96ECCn7cMnrI+qywQN5sbU4rxAPHTCzslKkGMCzFyGUO59AwyXX?=
+ =?us-ascii?Q?biVJsKiCxKqsZshKLBFqgdX/94JFFOIccRy7UoGmhMvJPlvAnEwZbvcRbwIY?=
+ =?us-ascii?Q?8NYwY0HxCKcjxh/C4nDmV4uJOLV2UHoIDo/xyrpukh9cTf7RE656+NV1a/L4?=
+ =?us-ascii?Q?/qsXbC6dPg6mafOUhYenCODcDnHeNWw2FzpdF16UWWJwM5Ngckjo2x7845eA?=
+ =?us-ascii?Q?OSp/iS++FDJgkhMosSurig1QsWMhhgQHaZ8+gE79EyZyLn2GfpaZQa2j31dF?=
+ =?us-ascii?Q?GkXV4U3IvT7o28A1/dJnvnTC7tUwZE+SH5aUt7uCav2o23oEV7AYs6FfU1F6?=
+ =?us-ascii?Q?a1VA9SeUgrfl/y5pJbOsGHf0n0Ajt3zxyCgHO8O9+yeHgjHklyH4mmVesw1I?=
+ =?us-ascii?Q?kCTogWTVTQX68fFqqpm4ov230GtygJkkrOy2mqQuOIRNsAKK4OoHnsf2lVnd?=
+ =?us-ascii?Q?xbyUy4ybQVRZ90aDrKNXSykkNU0PEJkJbc0o0ChMguw1Df+ngmR86I1XAwuy?=
+ =?us-ascii?Q?CILWXqBLNmUaYykCW+6zN2MJT8cJSV7P5IO2nNP8AvFtd11+CtqlMHDqMeo0?=
+ =?us-ascii?Q?YieTCLIT6xWGURIgPEmwQpMNNIMEAkVaVo7i/VU9dft+8wT9bMoKgxnLaIqc?=
+ =?us-ascii?Q?KxCxSfhGXk+R9xrfhaGJclhQkuC1QciTvZmoTFqho8DGLs6wyTP+HTwSeW1q?=
+ =?us-ascii?Q?f6pKGcGvnhqQDFRK3+57c5KH06cl9XQzH/VQw0+gV/706oKcPq8Q5R0tuvW9?=
+ =?us-ascii?Q?qHMSNxxArIKQvfQr53manMH+4m0kcutkHwPJT2T3ZO3J/ZjeRFnqzC6zcKhX?=
+ =?us-ascii?Q?Y+KhD2FQWhVE2X0K+WvNRLAOJiC95Wr0UDbH2/R2k74ChE83044ydc02FTdS?=
+ =?us-ascii?Q?ilerq7ZySng/KZuMIkjS+yHPFQd5mxlHGDQBOIaefhoH9mLAtg9FAx2mWZY+?=
+ =?us-ascii?Q?bRZIerE=3D?=
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 14 Aug 2026 17:15:50 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Evolution 3.60.2 (3.60.2-1.fc44) 
-X-TM-AS-GCONF: 00
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODE0MDExNCBTYWx0ZWRfX8ItEkIhe3M1b
- kj2LItY5IAMyrGevLqEzIeKd7SFY3vfA+FG6GyvuaK813Miwp7HZU48p0k+7lR3VL8ZA8Tod0yA
- 3660LTcsXr1zoRCTq9Ioahxs8CdAqMzcLzUprwCO6BpmT+0FEBZDFWWJceKR3PTRHKrqz94T5pd
- 9yJRAWVN95b26zjgJT9K9omkc5MXBgml6SlrIJlQpDNX0/ND3WULNPYXRwKtoH+P5yaxw0WWryb
- ggeTGzG5V3zXz2YbSE6lqVGY16Pndboklr/pzy6sdKMLHX9CCFGUAXEQEjtQ/bJeQsH7zLUX22k
- rX2bcjF4ip7ScvaZhYfzI4pfelHFLO1vlvF3mZVFt6vGoE4yWBfCyB/cTQ/QAD3oLdlb779ovM0
- GHP8FJKQdVKto7EmWRRv7f1XbXyLmpYMGyMeVU1v5EBbabRsikJNELIBXtnG/1xY+J2a94Hct30
- +TQ1kam920fPgtwBgRQ==
-X-Proofpoint-ORIG-GUID: EFkFjz7ZLdiSRvcWa_jk3ETJe3viHZJw
-X-Proofpoint-Spam-Info: AW1haW4tMjYwODE0MDExNCBTYWx0ZWRfX658GXAsl8AqO
- jFIVw6/8BlWPQfyzxpFtCZRzG7iRTUV3gB/KbjjvDYFPKxTqUN27XOZoPIyzo0x1i2my0ck6nGj
- qiZSpcQmJSUlcQx0hJ3RNhgtq+qvAX4=
-X-Authority-Analysis: v=2.4 cv=IfK3n2qa c=1 sm=1 tr=0 ts=6a7f3167 cx=c_pps
- a=aDMHemPKRhS1OARIsFnwRA==:117 a=aDMHemPKRhS1OARIsFnwRA==:17
- a=IkcTkHD0fZMA:10 a=Sv0fKeRqtYgA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=RnoormkPH1_aCDwRdu11:22 a=U7nrCbtTmkRpXpFmAIza:22 a=M91HzHb04BXWXBx8-ZcA:9
- a=QEXdDO2ut3YA:10 a=O8hF6Hzn-FEA:10
-X-Proofpoint-GUID: EFkFjz7ZLdiSRvcWa_jk3ETJe3viHZJw
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-08-14_05,2026-08-12_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- phishscore=0 priorityscore=1501 impostorscore=0 bulkscore=0 clxscore=1015
- lowpriorityscore=0 adultscore=0 malwarescore=0 spamscore=0 suspectscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2608140114
+X-OriginatorOrg: outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: BN7PR02MB4148.namprd02.prod.outlook.com
+X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg: 00000000-0000-0000-0000-000000000000
+X-MS-Exchange-CrossTenant-Network-Message-Id: e599201f-68e9-49f0-091f-08defa191070
+X-MS-Exchange-CrossTenant-originalarrivaltime: 14 Aug 2026 15:31:08.9597
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
+X-MS-Exchange-CrossTenant-rms-persistedconsumerorg: 00000000-0000-0000-0000-000000000000
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BL0PR02MB6466
 
-On Fri, 2026-08-14 at 08:26 -0500, Bjorn Helgaas wrote:
-> On Fri, Aug 14, 2026 at 10:46:28AM +0200, Niklas Schnelle wrote:
-> > On Thu, 2026-08-13 at 18:25 -0500, Bjorn Helgaas wrote:
-> > > On Wed, Aug 05, 2026 at 09:55:15AM -0700, Farhan Ali wrote:
-> > > > On s390 systems, which use a machine level hypervisor, PCI devices =
-are
-> > > > always accessed through a form of PCI pass-through which fundamenta=
-lly
-> > > > operates on a per PCI function granularity. This is also reflected =
-in the
-> > > > s390 PCI hotplug driver which creates hotplug slots for individual =
-PCI
-> > > > functions. Its reset_slot() function, which is a wrapper for
-> > > > zpci_hot_reset_device(), thus also resets individual functions.
-> > >=20
-> > > Sorry to come back to this yet again.  I understand the issue with
-> > > the wrong pci_slot being assigned for these s390 functions.
-> > >=20
-> > > What I don't understand is why we would use slot_reset() in the first
-> > > place.  I would expect FLR instead.
-> > >=20
-> > > The hotplug slot_reset() path is used by pci_reset_bus_function().
-> > > But given the order in pci_reset_fn_methods[], we would typically try
-> > > pcie_reset_flr() first, and we would only get to
-> > > pci_reset_bus_function() if FLR and the other resets are not
-> > > available.
-> > >=20
-> > > Since these are actually multi-function devices, I'm surprised that
-> > > they wouldn't advertise FLR support.
-> >=20
-> > Good question. The problem isn't that FLR isn't advertised or
-> > unsupported. Rather we end up needing to use the slot reset when the
-> > platform has put the PCI function in the architected error state which
-> > blocks both MMIO and DMA similar to DPC and which we can only get out
-> > of with the platform specific CLP Set PCI Function Disable/Enable
-> > hypercalls. FLR still works if you have a function that wasn't put in
-> > the error state but for most real world errors as well as some service
-> > scenarios we do end up in the error state where a FLR won't work.
+From: Yu Zhang <zhangyu1@linux.microsoft.com> Sent: Tuesday, August 11, 202=
+6 8:50 AM
 >=20
-> I assume these are standard PCIe devices, but this architected error
-> state doesn't sound like something from the PCIe spec.
+> From: Wei Liu <wei.liu@kernel.org>
 >=20
-> DPC works by disabling the link, but of course that blocks traffic to
-> all the functions of an MFD, so maybe this is some s390-specific thing
-> outside the endpoint, e.g., something in a Downstream Port that can
-> selectively block traffic to/from a specific function?
-
-Yes the error state is an s390 concept. It's implemented by firmware
-which controls the PCIe root controllers which are hidden from Linux.
-This firmware also controls the s390 HW IOMMU, though Linux controls
-the translation tables. And it even controls the PCIe switches between
-the root port and the endpoint. So firmware can disable MMIO, block DMA
-and interrupts on a per function basis without dropping the link. If
-the link is dropped it will of course affect the entire multi-function
-device or even an entire I/O cage but then firmware will do the PCIe
-level resets, link recovery etc. Then it will generate error events for
-all affected functions and require a CLP based reset for each
-individually. So even in that case we still work through it on a per
-PCI function basis.
-
+> Hyper-V guest IOMMU is a para-virtualized IOMMU based on hypercalls.
+> Introduce the hypercalls used by the child partition to interact with
+> this facility.
 >=20
-> To get to pci_reset_bus_function() where we can use the slot reset, I
-> think all the previous methods, including pcie_reset_flr(), must have
-> failed with -ENOTTY.  But I don't see a place that would do that.
-> Maybe you remove the other methods from dev->reset_methods[]?
-
-In our normal error recovery flow we use zpci_hot_reset_device()
-directly. But with Farhan's series QEMU now needs to drive the reset
-through vfio-pci. This happens on behalf of a guest which itself does
-the CLP Set PCI Function Disable.
-
+> These hypercalls fall into below categories:
+> - Detection and capability: HVCALL_GET_IOMMU_CAPABILITIES is used to
+>   detect the existence and capabilities of the guest IOMMU.
 >=20
-> In addition to whatever the CLP Set PCI Function Disable/Enable
-> hypercall does to unblock traffic to/from the endpoint, I suppose it
-> does an FLR internally?=C2=A0
-
-Yes that's at least one of the options, it can also do PERST#, swap
-links to alternate paths retrain links etc.
-
->  It must use some standard PCIe mechanism
-> because the endpoint doesn't know anything about s390 or the
-> hypervisor.
-
-Yes, though our machines only support a limited set of devices and
-firmware also knows what kind of device is plugged where, so while the
-devices don't know about s390 the firmware may do device specific
-recovery steps.
-
+> - Device management: HVCALL_GET_LOGICAL_DEVICE_PROPERTY is used to
+>   check whether an endpoint device is managed by the guest IOMMU.
 >=20
-> I wonder if we should make some kind of direct platform-specific reset
-> method, or maybe a pcibios_*()-style hook in the pcie_reset_flr() path
-> instead of this somewhat convoluted pci_slot stuff.  But
-> s390_pci_hpc.c is pretty simple and maybe it's used for things other
-> than reset.
+> - Domain management: A set of hypercalls is provided to handle the
+>   creation, configuration, and deletion of guest domains, as well as
+>   the attachment/detachment of endpoint devices to/from those domains.
 >=20
-> Bjorn
+> - IOTLB flushing: HVCALL_FLUSH_DEVICE_DOMAIN is used to ask Hyper-V
+>   for a domain-selective IOTLB flush (which in its handler may flush
+>   the device TLB as well).
+>=20
 
-s390_pci_hpc.c is also used for "sharing" PCI functions between
-different Linux instances. Basically a hotplug slot with the power
-attribute reading 0 represents a PCI function which is in a pool of
-standby PCI functions which are seen by multiple Linux instances at
-once. Once one instance write 1 to power the PCI function is configured
-(aka attached) to that Linux instance and becomes exclusively owned and
-the hotplug slot becomes invisible/is hot unplugged for all other Linux
-instances that could previously see it. On the other hand when one
-Linux instance write 0 to a hotplug slot the PCI function is returned
-to the pool and other Linux instances get a hotplug slot hot plugged.
+[snip]
 
-Note that even without this patch resetting through s390_pci_hpc.c
-worked on a per-function basis since the linking from the hotplug slot
-to struct pci_slot was ok which is also why this stayed hidden for so
-long.
+> +
+> +struct hv_input_device_domain {
+> +	u64 partition_id;
+> +	union hv_input_vtl owner_vtl;
+> +	u8 padding[7];
+> +	union hv_device_domain_id domain_id;
+> +} __packed;
+> +
+> +union hv_create_device_domain_flags {
+> +	u32 as_uint32;
+> +	struct {
+> +		u32 forward_progress_required: 1;
+> +		u32 inherit_owning_vtl: 1;
+> +		u32 reserved: 30;
+> +	} __packed;
+> +};
+> +
+> +struct hv_input_create_device_domain {
+> +	struct hv_input_device_domain device_domain;
+> +	union hv_create_device_domain_flags create_device_domain_flags;
+> +	u32 padding;
+> +} __packed;
+> +static_assert(sizeof(struct hv_input_create_device_domain) =3D=3D 32);
 
-Thanks,
-Niklas
+The static_assert() here is unusual. For all the other hypercall
+inputs/outputs where we rely on the structure definition to
+be correct and the __packed to prevent the compiler from
+adding/changing anything. If there's a reason for this one to be
+different, a comment would help. If there's not really a reason,
+I'd suggest dropping the static_assert() as superfluous.
+
+Michael
+
+> +
+> +struct hv_input_delete_device_domain {
+> +	struct hv_input_device_domain device_domain;
+> +} __packed;
+> +
+> +struct hv_input_attach_device_domain {
+> +	struct hv_input_device_domain device_domain;
+> +	union hv_device_id device_id;
+> +} __packed;
+> +
+> +struct hv_input_detach_device_domain {
+> +	u64 partition_id;
+> +	union hv_device_id device_id;
+> +} __packed;
+> +
+> +struct hv_device_domain_settings {
+> +	struct {
+> +		/*
+> +		 * Enable translations. If not enabled, all transaction bypass
+> +		 * S1 translations.
+> +		 */
+> +		u64 translation_enabled: 1;
+> +		u64 blocked: 1;
+> +		/*
+> +		 * First stage address translation paging mode:
+> +		 * 0: 4-level paging (default)
+> +		 * 1: 5-level paging
+> +		 */
+> +		u64 first_stage_paging_mode: 1;
+> +		u64 reserved: 61;
+> +	} flags;
+> +
+> +	/* Address of translation table */
+> +	u64 page_table_root;
+> +} __packed;
+> +
+> +struct hv_input_configure_device_domain {
+> +	struct hv_input_device_domain device_domain;
+> +	struct hv_device_domain_settings settings;
+> +} __packed;
+> +
+> +struct hv_input_get_iommu_capabilities {
+> +	u64 partition_id;
+> +	u64 reserved;
+> +} __packed;
+> +
+> +struct hv_output_get_iommu_capabilities {
+> +	u32 size;
+> +	u16 reserved;
+> +	u8  max_iova_width;
+> +	u8  max_pasid_width;
+> +
+> +#define HV_IOMMU_CAP_PRESENT    BIT_ULL(0)
+> +#define HV_IOMMU_CAP_S2         BIT_ULL(1)
+> +#define HV_IOMMU_CAP_S1         BIT_ULL(2)
+> +#define HV_IOMMU_CAP_S1_5LVL    BIT_ULL(3)
+> +#define HV_IOMMU_CAP_PASID      BIT_ULL(4)
+> +#define HV_IOMMU_CAP_ATS        BIT_ULL(5)
+> +#define HV_IOMMU_CAP_PRI        BIT_ULL(6)
+> +
+> +	u64 iommu_cap;
+> +	u64 pgsize_bitmap;
+> +} __packed;
+> +
+> +enum hv_logical_device_property_code {
+> +	HV_LOGICAL_DEVICE_PROPERTY_PVIOMMU =3D 10,
+> +};
+> +
+> +struct hv_input_get_logical_device_property {
+> +	u64 partition_id;
+> +	u64 logical_device_id;
+> +	/* Takes values from enum hv_logical_device_property_code. */
+> +	u32 code;
+> +	u32 reserved;
+> +} __packed;
+> +
+> +struct hv_output_get_logical_device_property {
+> +#define HV_DEVICE_IOMMU_ENABLED	BIT_ULL(0)
+> +	u64 device_iommu;
+> +	u64 reserved;
+> +} __packed;
+> +
+> +struct hv_input_flush_device_domain {
+> +	struct hv_input_device_domain device_domain;
+> +	u32 flags;
+> +	u32 reserved;
+> +} __packed;
+> +
+>  #endif /* _HV_HVHDK_MINI_H */
+> --
+> 2.52.0
+>=20
+
