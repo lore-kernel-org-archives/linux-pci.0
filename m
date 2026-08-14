@@ -1,51 +1,47 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6EE47353A80;
-	Fri, 14 Aug 2026 05:27:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 89D1D2F7F17;
+	Fri, 14 Aug 2026 05:35:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786685242; cv=none; b=ewgVcI1p1Ii3pm+s7bFAt+cSzcD1Pz1D/B4eQTjYySZEfrU4ZHZM9h5kp54xL8EkLSj6ZraVtxvRytt9pjVwbkmZI6PaqjryuTz8bWn6PKtcMuVQPzdDWEEAe73jAnOgNLPg6EDPTc3k1vkEj9UmdLt06AqIwH6TLDXw/bBCrRE=
+	t=1786685732; cv=none; b=taa+dfoCgmfAtt+sT5uu8pvmVKRXGPn8WytmblGbJZrlkHDOGqUwe1Nb2NJd0FIdF6A7tMb6ottl+SCzQJaC/DTG8wy43arPFxhASWS865JNULgns2uK+8iGq1XkpSZDN4wE/RrSfN8ErUjVwRxIjfvuFjVX7x7QEimNbwihrZ0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786685242; c=relaxed/simple;
-	bh=NK1m/1D6M3jTBQ5nmDeHBnnlRlutP5/R8we9pihbVw8=;
+	s=arc-20240116; t=1786685732; c=relaxed/simple;
+	bh=OKbUP45NoXw/W0P+Vo5xlxKS9komwQK5FQyObtrICBw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=azanEUdI7kUM1C5iJrOvniIVdOCOsxGtSNitfABnQro4UXWCl0MXuqBZY++OtflyrGPTn9rHngbWSBRjPO11kw/2MIymm6v/SDp1dx90ndLK2rApyMkbWqCHWK6Suy+SAE3rM1oBzSxwCTaE4O0T8j/zSjzzdvp3//iyo6ympnw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jLrlbxeJ; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=RdQjQBl2PVXo3eLUCU+g5kit30YNDf+pdG68/iGtfM5MmCti2oH1XrtCUBkvEhPNZpPDhr+8iguy4Rd9s+V/79/iE35yYNYc1c9aXkJO417xt1cU1OFuKqhVJW64q5ydUT0OJYnQtwVV35YlszFuytTw/KEIdUx4eh11FnUGamg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=O/H8GXsN; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jLrlbxeJ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DA7741F000E9;
-	Fri, 14 Aug 2026 05:27:14 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="O/H8GXsN"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D5CF11F000E9;
+	Fri, 14 Aug 2026 05:35:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786685241;
-	bh=Jf4qaFJl5b1RUI0wYv6hr0/sFhbHSCSEjQXks3a/Nmw=;
+	s=k20260515; t=1786685731;
+	bh=aIY5wWiG20hEjlRbGuGiBNM4zph08GMYiX48c1EdmFs=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=jLrlbxeJb5NiD3FSgZ3yWUtjrXZZwHWaqk0QFZpLzuZhsURouAxHs+iURFcjt/smV
-	 c7H1xveeY3DORgBZqoKgjOM/SQXJ22ojaZo3pMrPqxMKVtrBbl2MWP/rsGOKkmLO4T
-	 VDR35FAFQeyyfYcks5ByGVTBxOLRsoV+ZmbNO7jDRYn/MurRTpncH1U+fLfrWP7kgo
-	 YIV7vDh6QSJqq7/7LwjKWUaiHYJnwA8+ywImESocLGIt9p6fJtyE6P+FaR1qnulM2+
-	 tVvx5/NGB0N5AN9wHJ8IqyKOtLVH2LhDzhgOTuwM2KG+TrLxZCGccgjvwafMvmcZ94
-	 gtfFLXvyecOPg==
-Date: Fri, 14 Aug 2026 07:27:10 +0200
+	b=O/H8GXsN/WDHmYZFne7EWX6Lu+WpbtqTMauuc3f/GaN60C7jXoBI906ktPpovJIgb
+	 26VslhcgFuZG8PScaefvHUAfC2mkMLRRXAVpK1mUHoJef5iweNE8IPdElE79H7+cBw
+	 8yRAhXnjx0fUkx207Pgfw1dfMaEuRmvoSPJH12YtAbJ/w4T5F6hLUwgDaQozynDkFl
+	 utYlDOYwpDy1jHlGjiEs5zQ2j4qY7zETAqNwCMsnShTOIHKLnLji0S6BF1G/UJDDWC
+	 D21O+RY9/Hy65Sa65S9GtnPMs0uvd5DaNQcFtHPr6/6RK6bI3m0oJTAZXTy5lKEpy5
+	 ghNJDxKScTTrA==
+Date: Fri, 14 Aug 2026 07:35:20 +0200
 From: Manivannan Sadhasivam <mani@kernel.org>
-To: Frank Li <Frank.li@oss.nxp.com>
-Cc: Koichiro Den <den@valinux.co.jp>, Niklas Cassel <cassel@kernel.org>, 
+To: Vinod Koul <vkoul@kernel.org>
+Cc: Sumit Kumar <sumit.kumar@oss.qualcomm.com>, 
+	Frank Li <Frank.Li@kernel.org>, Jonathan Corbet <corbet@lwn.net>, 
+	Shuah Khan <skhan@linuxfoundation.org>, Jeff Hugo <jeff.hugo@oss.qualcomm.com>, 
 	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Kishon Vijay Abraham I <kishon@kernel.org>, 
-	Frank Li <Frank.Li@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Jonathan Corbet <corbet@lwn.net>, Shuah Khan <skhan@linuxfoundation.org>, 
-	Randy Dunlap <rdunlap@infradead.org>, Vinod Koul <vkoul@kernel.org>, Jingoo Han <jingoohan1@gmail.com>, 
-	Lorenzo Pieralisi <lpieralisi@kernel.org>, Rob Herring <robh@kernel.org>, 
-	Damien Le Moal <dlemoal@kernel.org>, Arnd Bergmann <arnd@arndb.de>, 
-	Marek Vasut <marek.vasut+renesas@mailbox.org>, Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>, 
-	linux-pci@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	dmaengine@vger.kernel.org
-Subject: Re: [PATCH v7 00/10] PCI: endpoint: Add PCI DMA endpoint function
-Message-ID: <7kzvkrbc6w7yojufwekzjubndgg4ao2o65gnla6mjwhwn5ji2d@vhrj4kg6uia2>
-References: <20260813063757.3131865-1-den@valinux.co.jp>
- <an2uf5mXzGq1Q7cj@ryzen>
- <zoed4wtc4oxiyni4o5qpj3li3cmlyy5kfutp4r5g4d63u52625@j6rvbbehjgov>
- <ztn47y23ctbjrbkmgyyhc6d5x3i2lzz5txotpgtbjtcsvbsvf4@fzadsvt5fl4d>
- <an3p_j-F10e9x0vM@SMW015318>
+	Bjorn Helgaas <bhelgaas@google.com>, dmaengine@vger.kernel.org, linux-doc@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, mhi@lists.linux.dev, linux-arm-msm@vger.kernel.org, 
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 1/5] dmaengine: Add DMA_SG support for multi-buffer
+ scatter-gather transfers
+Message-ID: <qcebhdmxwru7ogbvwcafm2s723f3rd2imymcprxbnbazfydnpf@snnqe7cjm7c6>
+References: <20260803-dma_multi_sg-v2-0-c12bb05e42d6@oss.qualcomm.com>
+ <20260803-dma_multi_sg-v2-1-c12bb05e42d6@oss.qualcomm.com>
+ <antnT5DtrICNPvKO@vaman>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -55,79 +51,154 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <an3p_j-F10e9x0vM@SMW015318>
+In-Reply-To: <antnT5DtrICNPvKO@vaman>
 
-On Thu, Aug 13, 2026 at 10:59:58AM -0500, Frank Li wrote:
-> On Thu, Aug 13, 2026 at 11:15:31PM +0900, Koichiro Den wrote:
-> > On Thu, Aug 13, 2026 at 02:50:59PM +0200, Manivannan Sadhasivam wrote:
-> > > On Thu, Aug 13, 2026 at 01:46:07PM +0200, Niklas Cassel wrote:
-> > > > Hello Koichiro,
-> > > >
-> > > > On Thu, Aug 13, 2026 at 03:37:47PM +0900, Koichiro Den wrote:
-> > > > > This is v7, the remaining patch set for PCI endpoint DMA.
-> > > > > Parts 2 and 3 were merged per Frank's suggestion.
-> > > >
-> > > > (snip)
-> > > >
-> > > > > One open question is how to support endpoint controllers with only one
-> > > > > PF. Keeping DMA in a separate EPF requires multi-function endpoint
-> > > > > support. Folding it into vNTB would work on single-function
-> > > > > controllers, but would also couple the two implementations. This series
-> > > > > keeps the separate EPF model.
-> > > >
-> > > > I see all the work you are putting in and I admire the effort.
-> > > >
-> > > > This is now v7. I think it is time that we close the open question by
-> > > > waiting for a reply from the PCI endpoint maintainers' opinion on the
-> > > > design before continuing. (I am not a PCI endpoint maintainer.)
-> > > >
-> > > > I understand that you want a common DMA abstraction, that can represent
-> > > > different (embedded) DMA controllers on the endpoint side.
-> > > >
-> > > > But if vNTB is the only consumer of this, then why not simply embed this
-> > > > DMA abstraction in some BAR exposed by the vNTB EPF?
-> > > >
-> > > > Looking at the host side driver that goes with the (v)NTB driver:
-> > > > drivers/ntb/hw/epf/ntb_hw_epf.c
-> > > >
-> > > > The BAR layouts are hard coded, and it only supports three different
-> > > > layouts. Would it not be possible to add a fourth layout that has the
-> > > > DMA abstraction somewhere in one of the BARs? ('BAR_DMA' ?)
-> > > >
-> > > >
-> > > > Right now, I wonder if it is not a bit premature optimization to create a
-> > > > DMA EPF, if vNTB will be the only (ever?) user.
-> > > >
-> > >
-> > > Yeah, I feel the same. I haven't seen an usecase to program the DMA controller
-> > > from the host outside of vNTB. This feature is supported mostly because it
-> > > exists in hardware and someone wants to tick the checkbox.
-> > >
-> > > Though, I'm not against doing it within vNTB as Niklas suggested, but
-> > > generalising it in the form of a new EPF driver just for the sake of a single
-> > > driver sounds like an overkill and maintenance burden.
-> > >
-> > > Sorry for saying this in v7. I've been meaning to say it, but somehow ended up
-> > > procrastinating too much.
-> >
-> > No bother. Since Frank has given a lot of feedback on this series, I'd also like
-> > to hear his view.
-> >
-> > I'm fine with either direction, and can revisit the earlier vNTB-embedded
-> > approach:
-> > https://lore.kernel.org/r/sn67hi7kljh7cgmgodatb3naz2astlaklqfobdbxyyzgoohxqb@4nnetbhqwba4/
+On Tue, Aug 11, 2026 at 11:47:51PM +0530, Vinod Koul wrote:
+> On 03-08-26, 16:01, Sumit Kumar wrote:
+> > A client that needs to copy several independent, non-contiguous memory
+> > regions in one operation currently has to submit one DMA_MEMCPY
+> > transaction per region, each with its own completion interrupt, even
+> > when every region is known up front and the copies could be described
+> > as a single hardware transaction.
+> > 
+> > Partially reintroduce the DMA_SG transaction type and device_prep_dma_sg()
+> > API that was removed in commit c678fa66341c ("dmaengine: remove DMA_SG as
+> > it is dead code in kernel"). Only the core API is restored here.
+> > 
+> > The API accepts separate source and destination scatter-gather lists,
+> > where entry i of the source list is transferred to entry i of the
+> > destination list. This allows multiple independent (src[i] -> dst[i])
+> > transfers to be batched into a single DMA transaction instead of N
+> > separate submissions, reducing submission and interrupt overhead.
+> > 
+> > DMA_SG is a memcpy-class operation: both endpoints are memory buffers,
+> > and neither DMA address is a FIFO-style peripheral register. The source
+> > and destination scatter-gather lists must contain the same number of
+> > entries; providers reject requests where the entry counts differ.
+> > 
+> > Restore the DMA_SG entry in
+> > Documentation/driver-api/dmaengine/provider.rst and add
+> > CHECK_CAP(dma_sg, DMA_SG) to dma_async_device_register() to validate
+> > that drivers setting the capability provide the corresponding function
+> > pointer.
+> > 
+> > Signed-off-by: Sumit Kumar <sumit.kumar@oss.qualcomm.com>
+> > ---
+> >  Documentation/driver-api/dmaengine/provider.rst | 21 +++++++++++++++
+> >  drivers/dma/dmaengine.c                         |  1 +
+> >  include/linux/dmaengine.h                       | 35 +++++++++++++++++++++++++
+> >  3 files changed, 57 insertions(+)
+> > 
+> > diff --git a/Documentation/driver-api/dmaengine/provider.rst b/Documentation/driver-api/dmaengine/provider.rst
+> > index f4ed98f701c918ff81bc674845880f8d01efbf1d..638e4b83e9a2f90c056111dbdd7572a4ed0f536d 100644
+> > --- a/Documentation/driver-api/dmaengine/provider.rst
+> > +++ b/Documentation/driver-api/dmaengine/provider.rst
+> > @@ -210,6 +210,27 @@ Currently, the types available are:
+> >    - Used by the client drivers to register a callback that will be
+> >      called on a regular basis through the DMA controller interrupt
+> >  
+> > +- DMA_SG
+> > +
+> > +  - The device supports memory to memory scatter-gather transfers
+> > +    using paired source and destination scatter-gather lists, where
+> > +    entry ``i`` of the source list is transferred to entry ``i`` of
+> > +    the destination list in a single DMA transaction.
+> > +
+> > +  - The source and destination scatter-gather lists must contain the
+> > +    same number of entries; providers reject (return NULL for) requests
+> > +    where the entry counts differ. Providers that walk the two lists in
+> > +    lockstep pair them entry-by-entry as passed in, so clients that
+> > +    DMA-map the lists must ensure the mapped segmentation stays aligned
+> > +    between the two lists (for example by not relying on the DMA layer
+> > +    to merge entries of one list but not the other).
+> > +
+> > +  - Unlike DMA_MEMCPY, neither the source nor destination is a
+> > +    FIFO-style peripheral register; both are memory buffers. Multiple
+> > +    independent (src[i] -> dst[i]) copies are submitted as a single
+> > +    DMA transaction, reducing submission and interrupt overhead
+> > +    compared to N separate DMA_MEMCPY operations.
+> > +
+> >  - DMA_PRIVATE
+> >  
+> >    - The devices only supports slave transfers, and as such isn't
+> > diff --git a/drivers/dma/dmaengine.c b/drivers/dma/dmaengine.c
+> > index 6ffd8bd82154af2af2807d1c8b7ae7475eab56d3..9e790b9f165063d696438ace6370df98dffb8a32 100644
+> > --- a/drivers/dma/dmaengine.c
+> > +++ b/drivers/dma/dmaengine.c
+> > @@ -1211,6 +1211,7 @@ int dma_async_device_register(struct dma_device *device)
+> >  	CHECK_CAP(dma_pq_val,      DMA_PQ_VAL);
+> >  	CHECK_CAP(dma_memset,      DMA_MEMSET);
+> >  	CHECK_CAP(dma_interrupt,   DMA_INTERRUPT);
+> > +	CHECK_CAP(dma_sg,          DMA_SG);
+> >  	CHECK_CAP(dma_cyclic,      DMA_CYCLIC);
+> >  	CHECK_CAP(interleaved_dma, DMA_INTERLEAVE);
+> >  
+> > diff --git a/include/linux/dmaengine.h b/include/linux/dmaengine.h
+> > index fe33a20abc6146d539670e0e6fe6c9d27d96aa2a..61aa72149f5d5cf1828b89d13d0b35f1a12bb000 100644
+> > --- a/include/linux/dmaengine.h
+> > +++ b/include/linux/dmaengine.h
+> > @@ -65,6 +65,7 @@ enum dma_transaction_type {
+> >  	DMA_COMPLETION_NO_ORDER,
+> >  	DMA_REPEAT,
+> >  	DMA_LOAD_EOT,
+> > +	DMA_SG,
+> >  /* last transaction type for creation of the capabilities mask */
+> >  	DMA_TX_TYPE_END,
+> >  };
+> > @@ -848,6 +849,7 @@ struct dma_filter {
+> >   *	The function takes a buffer of size buf_len. The callback function will
+> >   *	be called after period_len bytes have been transferred.
+> >   * @device_prep_interleaved_dma: Transfer expression in a generic way.
+> > + * @device_prep_dma_sg: prepares a memory to memory scatter-gather operation
+> >   * @device_caps: May be used to override the generic DMA slave capabilities
+> >   *	with per-channel specific ones
+> >   * @device_config: Pushes a new configuration to a channel, return 0 or an error
+> > @@ -954,6 +956,11 @@ struct dma_device {
+> >  	struct dma_async_tx_descriptor *(*device_prep_interleaved_dma)(
+> >  		struct dma_chan *chan, struct dma_interleaved_template *xt,
+> >  		unsigned long flags);
+> > +	struct dma_async_tx_descriptor *(*device_prep_dma_sg)
+> > +		(struct dma_chan *chan,
+> > +		 struct scatterlist *dst_sg, unsigned int dst_nents,
+> > +		 struct scatterlist *src_sg, unsigned int src_nents,
+> > +		 unsigned long flags);
+> >  
+> >  	void (*device_caps)(struct dma_chan *chan, struct dma_slave_caps *caps);
+> >  	int (*device_config)(struct dma_chan *chan, struct dma_slave_config *config);
+> > @@ -1194,6 +1201,34 @@ static inline struct dma_async_tx_descriptor *dmaengine_prep_interleaved_dma(
+> >  	return chan->device->device_prep_interleaved_dma(chan, xt, flags);
+> >  }
+> >  
+> > +/**
+> > + * dmaengine_prep_dma_sg() - Prepare a memory-to-memory scatter-gather DMA descriptor.
+> > + * @chan: The channel to be used for this descriptor
+> > + * @dst_sg: Destination scatter list
+> > + * @dst_nents: Number of entries in destination scatter list
+> > + * @src_sg: Source scatter list
+> > + * @src_nents: Number of entries in source scatter list
+> > + * @flags: DMA engine flags
+> > + *
+> > + * Prepares a DMA transaction that copies data from multiple source memory
+> > + * regions to multiple destination memory regions in a single DMA transaction.
+> > + * Entry i of the source list is paired with entry i of the destination list,
+> > + * so both lists must contain the same number of entries; the call returns
+> > + * NULL otherwise.
+> > + */
+> > +static inline struct dma_async_tx_descriptor *dmaengine_prep_dma_sg
+> > +		(struct dma_chan *chan,
+> > +		 struct scatterlist *dst_sg, unsigned int dst_nents,
+> > +		 struct scatterlist *src_sg, unsigned int src_nents,
+> > +		 unsigned long flags)
+> > +{
+> > +	if (!chan || !chan->device || !chan->device->device_prep_dma_sg)
+> > +		return NULL;
 > 
-> One of the important value is test dw-edma-pcie.c, which generally depend
-> on some fpga hardware. If there are epf driver work as fpga hardware, it
-> will help cover edma remote user case. So more user can test it.
+> Can we check if  dst_nents is same as src_nents... or should we drop
+> src/dst and just say nents to imply both...
 > 
 
-Testing is one thing, but using is what matters. Are there any products or
-use case based on remote eDMA? Or even dw-edma-pcie.c?
-
-Most of the time, dw-edma-pcie.c driver feels like a dead code to me which no
-one actively uses or tests. So unless a real justification is put forward, I
-don't want to add a whole new EPF driver for it.
+Makes sense! If both 'nents' are needed to be the same, the API can just accept
+one 'nents' and imply both.
 
 - Mani
 
