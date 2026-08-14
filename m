@@ -1,155 +1,153 @@
-Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
+Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20A45349CDD
-	for <linux-pci@vger.kernel.org>; Fri, 14 Aug 2026 15:04:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8B993C0610
+	for <linux-pci@vger.kernel.org>; Fri, 14 Aug 2026 15:14:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786719897; cv=none; b=ZnsD20igJ47XFRngVGeMxyqXYUx6o/Uxhp/xlhjhbPd4D+HPYMVdVUZPOvMCdQLpbTNNcga+4Z7Wu+x6KeRn025F/5xJEHqiFPuok6tGr+aXg5I1XOmCQwn/e6PF1k78dX5QjJbvylNDUGwgzhkB/NhoOcbfE1S60UbTrIM2Tnc=
+	t=1786720478; cv=none; b=l0oCF1rpp2bK3EYe1TfBtdPoIzdCwihpb6YzS5rzfZv/Htlj7UUSWCo7jTyhd5FTUhruGQqCyFqRir3jmBCSVLUazgPI2m41wmNICxUzJXGTdU/x6CIrqYNP3Qk1fZ4tDZljVnR1NcTJo6yz2gAKmptjiPHgnsb/p/1so8WSXd8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786719897; c=relaxed/simple;
-	bh=NvVAbYBU185WneoSgMcFUr9kFVrv1d7BGQxpqdAy0OU=;
+	s=arc-20240116; t=1786720478; c=relaxed/simple;
+	bh=WlbaNPhFsBQ9/3bd6k7lwTUlnM0GvGZBMc68fG5mxWE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=CYnCxQ/uoQbS/HKWVbrQUpXQLdV+gaf9JqiOG7KhwSp/ZPT1I+O2hiTbDXvHAi4ypCIbMNfOvvnLvR1y56lt0m9E8rDnp5e3THpFaPnx0mzWKgcej6KAQbqWr2VDcXIrNgjEYWwmk/uJnboCWmC4xyqL3c9LzuQ2uEuj5HysczQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=QAWl+w/u; arc=none smtp.client-ip=209.85.214.180
+	 Content-Type:Content-Disposition:In-Reply-To; b=AyAK/oY37SScF+zAmu7yVJWHmmGkiQ7KdlgkncJT+1TUbPgNVeIcNJ3J4oqkYPnczCy9ABRg0vTTLZheL4quREvfM2N9vz2haK3+bRIHVozNGMMvLhy21IPvlG9ZJp+CUx3Db0b70E+mJwc9ep2Gs8s48pn27W+m6V7ABOa7z08=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=gdoYC04Q; arc=none smtp.client-ip=209.85.214.176
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="QAWl+w/u"
-Received: by mail-pl1-f180.google.com with SMTP id d9443c01a7336-2d3b445a84fso90835ad.1
-        for <linux-pci@vger.kernel.org>; Fri, 14 Aug 2026 08:04:55 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="gdoYC04Q"
+Received: by mail-pl1-f176.google.com with SMTP id d9443c01a7336-2ccdf36f63dso122015ad.0
+        for <linux-pci@vger.kernel.org>; Fri, 14 Aug 2026 08:14:36 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1786719895; x=1787324695; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=kayzQZfqtmmp1eC2tR/rKF1wFKlx2J92sDaRBHhidao=;
-        b=QAWl+w/uv9l9aHuvzBMC/UwzY2jNXULbwa5HCGZeBvW/H40C0Q+wq23WMls8dtQzlR
-         Hh6DAsVIDvElWfwL+m5xg+pqqm7jxyTAkGsKRp4jdj0mYOzDPTCIioxyQHGPCuMB8tEP
-         Tjo42YDPmDTnc+W14HnW1VF6CcFfnRiOZovTahDiqysGGLpw4TwCsN9a1dlIcyUX9dUv
-         DQaWyaagoI2zquTHJsQwaH+wMV8UN9/iyuEVhwrE1FmRa/yrR2ARi0ixq7oLnMySc6Ng
-         5ykFLIFE6T1WJhaEFIIJZhtcGrT+BZZl0vz9GuPJ1RgDeu7CfUlEsu0LjhM+3wA5jMbn
-         eRLQ==
+        d=google.com; s=20251104; t=1786720476; x=1787325276; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :content-type:mime-version:references:message-id:subject:cc:to:from
+         :date:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=HA+4QEjYv9wt2a3mtOtWyQyKnId+drDyoujVL1+/2N4=;
+        b=gdoYC04QVpKJqGepyeSRK1aRU6eV0DDyLTE1isnaE9R5h2+piy1c8l6MeNTijSWTZz
+         WwS9TNV7trYVErwc9s+GyNvgSTz/2hRZY/J9BsJ4ltM90C58usWQ/33C5ys0zVZYHSWj
+         Cd5bwpybzMBKtitufUDXmLVBTgwE3nhTKFY7RY5v3Zm9WXtLytGEz2Xbup8wrgRWG3+2
+         TYE3k/1undDN40rzui7oclt8YQGucnzTVhHlJTbEAcLm8ngbxG/uzwwxR0vR7jNn8ed/
+         P9EDDV9dGTTQPGM+xi2qd9Z/RoOegRHv/1TAhEyzIrdg3Wb00ZiIEyIHzrHiH68eqkD0
+         itHQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786719895; x=1787324695;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=kayzQZfqtmmp1eC2tR/rKF1wFKlx2J92sDaRBHhidao=;
-        b=Tm5sAiB1DfgJhgPa1h+L2AgDYZE3AfdNUkpfvvZ+YmeB98tvTTxbeU9Nyg2dF5/yk3
-         PaEi/L9YnBYznYUPUTIfgWmyogUpINrsRE25KfYmD7S4RsQNIXurpTwe3B1Wg8SdtYRV
-         /p+93VS2V62VZMAEpI7UhyXVTqE4OWFLe7G8RutcJve4wTM8gOgKFZYb00vNC1s2Y+QI
-         N0vn4PSNkt1ycGvfzGPGmO8J0n1ZxOkRjNPyk15jBZe60emjYY8093+rdwQmvu95aphc
-         +x+7FWSVo6QP0P6LqT2/8/IoyXG1Fv3a/L3Gh1skGa4LlSL7/2nwvmDOliSUwiO4/qrK
-         TOGw==
-X-Forwarded-Encrypted: i=1; AHgh+Rr0E0JCDfB8IxMiZDHvWIwoK3pQqTyVEl6xkD3H9YYMcocpwT+9ZWg3dvq5Sf4rQp46K1pdRaNZJ2k=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyJ+wtuVwdcQ9UHCx86GjCxMm+E5Y2qyGMIXyV5uFKAgPNXzSOU
-	+OtJTkqy/lz1oly2ccRx8kSucED5wLhlj/jJjwYVHGmzKtD2vhyX47WF9l9IALBhVg==
-X-Gm-Gg: AR+sD11dsq6gIMV6attOAtKhFLKAHr/1s9FaZUQdnnX9WgmQywV+m8VepkvHSR0YAIq
-	f17JwMPpq/NMRdOMgsBV7S5ep7hAn8CVdLJ6mqe11Nq7dWkwADoDAmqOuu9yx87TFu/IjqJNNHM
-	gLBCAEoMIKYsIVPJ9gfON2fVPJCiJTzng8sWlEw0Hg+8lz6wktqxt0sYGT8kshxOn+DRxUmqTbm
-	21R0KQw24mEfMb2u/+vBEIg3+Eme/YiKYEQTfyHtwRIpkJtS1lztC5+5OlmVWZ2JSLJ/LfmZ98f
-	rUOxZteyRpW1SRhdqLo68PttlN7atvM08mzfjTz3UtAjqwHmReq6Ejw2QaPvjm5aKRAuQHb1Pvz
-	z3qQBCen3c0mcXFnyJk/48JefHo0jbaf61f0AL4sPW02Ol14DFRyL5BpZVHpYIfMHun2WK4rfLn
-	OkVl/fD0hSmYw6bwihSiaWO/pPXCXFxLG/xFnke4hS8wm4/PPB2VSMEhLX9Mw38kCui8VTV/nQu
-	xtEANBnQhedDvPnuzr3ko8=
-X-Received: by 2002:a17:902:ea03:b0:2c9:bd54:cf with SMTP id d9443c01a7336-2d3aef5eff0mr9451345ad.4.1786719893479;
-        Fri, 14 Aug 2026 08:04:53 -0700 (PDT)
+        d=1e100.net; s=20251104; t=1786720476; x=1787325276;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :content-type:mime-version:references:message-id:subject:cc:to:from
+         :date:x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=HA+4QEjYv9wt2a3mtOtWyQyKnId+drDyoujVL1+/2N4=;
+        b=V4Pr3nSVjp70t22aYfg8KatjIBYcbnB+U+mPg/tMV1qTLwfKmSczY6CYvK2PHXrJo7
+         b3DE6Y4gv2SZLyrUQVAo2ukln6CXUECieg75rkyu56ZtJshTA4ALq9huGKb94KPEJ+8Q
+         j5l7B7eKKQdRUqlrgFRBjj3iOokcvlSQz9e4HXyprwSU8Y1Yc/S2FIBv+mP4WRUqLzh7
+         74xQtbs4pLoNJhy8OIUmWcXU6D7wZw+YX+g1t7IIGpwxwJbabkaDr5CUUQ0x3QwLBU4E
+         MkyqeL0ELI5gg0+IV1j11LOPdcFDIVGMKT03JgtkmTRVBoJ8qwUwKRxDmsWnv3akbgfb
+         Vdtg==
+X-Forwarded-Encrypted: i=1; AHgh+RoO9Zc9BYKwl8KB7LCWSX9vUT0LvkwhtcNooPphpcqUSJzMozV6eMZ0PQg6OxHn8oGVX1TfukuPYkI=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwIxGeSUdT/BF4SDK933Jx4l/VQBtv5ZYYV3UPeLQjCR65cuXjL
+	tmXzFsY0Q6J/Z8SGNROZhNpno+4/V6b9RxzrrHzQCDARfvEEoRVzXz+ylg05EIr2Qx0YaX8vx5m
+	Xl6tEPQ==
+X-Gm-Gg: AR+sD135FDdMZvClpWpZSAhXxOZSE5UEvLxc9+hHTB7aJeow3jcZhIG4JjHGLXMbrEj
+	AO+BwXeqFXMo2mPj5ETXlBNicWVnrMmtiyzepm7T1R1lfUJmXhbxKYVI23JNn/8xwAYmOSBFXD8
+	nxJZlbBOOsbd6jHIp6rmQZIHgRXjMQPNn4/PbKLh6Ta+IzthelPeSklXmAdVTXAa4gJofO+a6TQ
+	/Snrey5EMD5TC+lJfy/indDb5tPXzQs3Fs2HSho3WmG6kB9rOOZ6K3cSOwolJhWjv0u8FGZna+D
+	c+d76qe9YuXvf0lemHPPU+jZUCboukMB72+hIphyZ2kHefGG80UBHEechisD0hMCM2NJU5ywFVA
+	Cg1mhFzwaV+QPsmMqDPhVUzUhDJIJ1qEYyHoXRq6b3YSo5VqkDxBsbzaOcrV6DIqFO4zW86/M2v
+	34uOuEtKJmyoj3iHXCR5bGpdcMkA6k+ZSvgdWd/TTY4dSOuIdYYgaZgAxEhGprI9q1KDRjOjIs6
+	ez0TT6ZUJhTlKmFNyaAC5g=
+X-Received: by 2002:a17:903:3246:b0:2ca:bf8e:360b with SMTP id d9443c01a7336-2d3b49010f5mr6967125ad.9.1786720475688;
+        Fri, 14 Aug 2026 08:14:35 -0700 (PDT)
 Received: from google.com (21.168.124.34.bc.googleusercontent.com. [34.124.168.21])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2d3ae800480sm11350755ad.33.2026.08.14.08.04.51
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-394ea9961e8sm3005040a91.5.2026.08.14.08.14.33
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 14 Aug 2026 08:04:52 -0700 (PDT)
-Date: Fri, 14 Aug 2026 15:04:47 +0000
+        Fri, 14 Aug 2026 08:14:34 -0700 (PDT)
+Date: Fri, 14 Aug 2026 15:14:29 +0000
 From: Pranjal Shrivastava <praan@google.com>
 To: sashiko-reviews@lists.linux.dev
-Cc: Anna Schumaker <anna@kernel.org>, Chuck Lever <cel@kernel.org>,
-	linux-pci@vger.kernel.org, Jeff Layton <jlayton@kernel.org>
-Subject: Re: [PATCH v6 1/5] nfs: make nfs_page pin-aware
-Message-ID: <an8uj2qmwuHeSCL1@google.com>
+Cc: Chuck Lever <cel@kernel.org>, Anna Schumaker <anna@kernel.org>,
+	Jeff Layton <jlayton@kernel.org>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v6 2/5] nfs: track number of pinned pages in nfs_page
+Message-ID: <an8w1Zp7YkvkY7S-@google.com>
 References: <20260814143255.861084-1-praan@google.com>
- <20260814143255.861084-2-praan@google.com>
- <20260814144658.129DB1F000E9@smtp.kernel.org>
+ <20260814143255.861084-3-praan@google.com>
+ <20260814144713.DF1A21F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <20260814144658.129DB1F000E9@smtp.kernel.org>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260814144713.DF1A21F000E9@smtp.kernel.org>
 
-On Fri, Aug 14, 2026 at 02:46:57PM +0000, sashiko-bot@kernel.org wrote:
-> Thank you for your contribution! Sashiko AI review found 2 potential issue(s) to consider:
-> - [Medium] Subrequests incorrectly drop GUP pins multiple times because `req == req->wb_head` evaluates to true for all requests during teardown, causing pin count underflow and Use-After-Free.
-> - [Medium] Hardcoded unpin count of 1 in `unpin_user_folio()` leaks GUP pins for large folios spanning multiple pages.
+On Fri, Aug 14, 2026 at 02:47:13PM +0000, sashiko-bot@kernel.org wrote:
+> Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
+> - [Medium] Latent stack out-of-bounds read by passing a single local stack variable to unpin_user_pages() with a dynamically loaded length.
 > --
 > 
-> --- Patch [1]: [PATCH v6 1/5] nfs: make nfs_page pin-aware ---
-> commit 21b0f62730c29dca3085e0b77d441b62786919e8
+> --- Patch [2]: [PATCH v6 2/5] nfs: track number of pinned pages in nfs_page ---
+> commit 1fad80f498aa716421accabc5c2572235b589709
 > Author: Pranjal Shrivastava <praan@google.com>
 > 
-> nfs: make nfs_page pin-aware
+> nfs: track number of pinned pages in nfs_page
 > 
-> Modernizing the NFS Direct I/O path to use iov_iter_extract_pages()
-> introduces page pinning (GUP) instead of standard page referencing.
-> To handle this correctly, nfs_page must track whether it holds a
-> pin or a standard reference.
+> This commit adds wb_nr_pinned to struct nfs_page to track the number
+> of pinned pages. It updates request creation and cleanup helpers to
+> ensure that only primary requests perform the final unpinning operation.
 > 
 > > diff --git a/fs/nfs/pagelist.c b/fs/nfs/pagelist.c
-> > index 7dd478ffc2fab..a562cfe2a126d 100644
+> > index a562cfe2a126d..b9ccf2a87e3c9 100644
 > > --- a/fs/nfs/pagelist.c
 > > +++ b/fs/nfs/pagelist.c
+> 
 > [ ... ]
-> > @@ -552,11 +566,21 @@ static void nfs_clear_request(struct nfs_page *req)
-> >  	struct nfs_open_context *ctx;
+> 
+> > @@ -567,8 +572,8 @@ static void nfs_clear_request(struct nfs_page *req)
 > >  
 > >  	if (folio != NULL) {
-> > -		folio_put(folio);
-> > +		if (test_and_clear_bit(PG_PINNED, &req->wb_flags)) {
-> > +			if (req == req->wb_head)
-> > +				unpin_user_folio(folio, 1);
-> 
-> [Severity: Medium]
-> Will this leak GUP pins for large folios spanning multiple pages?
-> 
-> If a caller uses nfs_page_create_from_folio() with pinned=true for a folio
-> spanning multiple pages, hardcoding 1 releases only one pin and leaks the rest.
-> 
-> Also, does this check for the head request evaluate to true for all
-> subrequests?
-> 
-> During teardown, nfs_page_group_destroy() breaks the page group linkage by
-> setting tmp->wb_head = tmp before freeing the request:
-> 
-> nfs_page_group_destroy()
->     tmp->wb_head = tmp;
->     nfs_free_request(tmp);
-> 
-> Because of this, when nfs_clear_request() is called, req == req->wb_head will
-> evaluate to true for all subrequests, causing each subrequest to unconditionally
-> invoke unpin_user_folio() and potentially resulting in a pin count underflow
-> and Use-After-Free.
-> 
-> > +		} else {
-> > +			folio_put(folio);
-> > +		}
-> >  		req->wb_folio = NULL;
+> >  		if (test_and_clear_bit(PG_PINNED, &req->wb_flags)) {
+> > -			if (req == req->wb_head)
+> > -				unpin_user_folio(folio, 1);
+> > +			if (req->wb_nr_pinned > 0)
+> > +				unpin_user_folio(folio, req->wb_nr_pinned);
+> >  		} else {
+> >  			folio_put(folio);
+> >  		}
+> > @@ -576,8 +581,8 @@ static void nfs_clear_request(struct nfs_page *req)
 > >  		clear_bit(PG_FOLIO, &req->wb_flags);
 > >  	} else if (page != NULL) {
-> > -		put_page(page);
-> > +		if (test_and_clear_bit(PG_PINNED, &req->wb_flags)) {
-> > +			if (req == req->wb_head)
-> > +				unpin_user_page(page);
+> >  		if (test_and_clear_bit(PG_PINNED, &req->wb_flags)) {
+> > -			if (req == req->wb_head)
+> > -				unpin_user_page(page);
+> > +			if (req->wb_nr_pinned > 0)
+> > +				unpin_user_pages(&page, req->wb_nr_pinned);
 > 
 > [Severity: Medium]
-> Similar to the issue above, because nfs_page_group_destroy() severs the
-> linkage and sets tmp->wb_head = tmp, will this unconditionally call
-> unpin_user_page() for all subrequests and cause a pin count underflow?
+> Could this lead to an out-of-bounds stack read if wb_nr_pinned is ever
+> greater than 1?
+> 
+> Looking at nfs_clear_request(), page is declared as a single local pointer
+> on the stack:
+> 
+> static void nfs_clear_request(struct nfs_page *req)
+> {
+> 	...
+> 	struct page *page = req->wb_page;
+> 
+> If req->wb_nr_pinned exceeds 1, unpin_user_pages() will read adjacent stack
+> memory to interpret as struct page pointers. While wb_nr_pinned is currently
+> hardcoded to 1 when a request is created from a page, passing a dynamically
+> loaded length alongside a pointer to a single local stack variable seems
+> prone to future regressions.
 > 
 
-These are fixed by patch 2 with the introduction of wb_nr_pinned.
+In this (non-folio) path wb_nr_pinned would always ever be 1. Although,
+I think we could use unpin_user_page (singular) here.
 
 Thanks,
 Praan
+
+> -- 
+> Sashiko AI review · https://sashiko.dev/#/patchset/20260814143255.861084-1-praan@google.com?part=2
