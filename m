@@ -1,116 +1,91 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7780E38F950;
-	Sat, 15 Aug 2026 20:46:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 278BF42050
+	for <linux-pci@vger.kernel.org>; Sun, 16 Aug 2026 00:00:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786826766; cv=none; b=VCo1jhOokpopAY4Lw7T9DpbV4ivKZkUVp52PZo6mmPwFNpXdtBkZhYYseiyKdVg1yWY7+khmYSPdyfymV6JgW/DV/tFiZq+AH7PMZVqtjl/JL4lbHs2O5stWIihWvCO0sXUOimue9EJHiJirbqRSY8qAJHq1qGSFBkt7DnBtGm0=
+	t=1786838415; cv=none; b=iPn5HjqcyHmssAVknxa57BXxvGOfWDogSfY9PRfrFE4uimGk9W7yZtPaaZZiler7KjySOf/qlNNlLtFGIiKSPvqswkmUeOf0AdyQwwDZkPsKSQgTx4LEB8RBwWKkd4LLqA46iIq9FPwafAFP+rqc1abG4grZFhXheAlGNa2dAI0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786826766; c=relaxed/simple;
-	bh=NWK4VDaRCEAOKRk7hmiqQxPbGCXhpAPXG0UfVqZWZes=;
-	h=Date:Content-Type:MIME-Version:From:Cc:To:In-Reply-To:References:
-	 Message-Id:Subject; b=jAkW9MtmHHySXo9Vvj18s7VEgEfEmccwX5tJG8RKzPQ01kM54lJgL5ov16oS4E2KpeNLJARjBOPSNrmnceMLbQNepxbLhiV0qo4BqfftjJh2qFNjKl0VmGd+UwkzKoOgzLgd4Y3UAh5EDOEKXmTQ6dR9WVomHWrRN1F8Gzds1no=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=beecBMTx; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1786838415; c=relaxed/simple;
+	bh=hpyEYQlphuMGSWtld6HTsvXWcseCl0VZcdBjodTV5rM=;
+	h=Date:From:To:Cc:Subject:Message-ID; b=dB4rcDNiKmIPwpTBzaNVZ0CfeRZaSlXHMKB2Z/CkY5nX1Q/0DeVHvqSKSUlrXFTJxe8oeQdbShywAOjBazQPN+KdMKV9tI8d+nPnclfiVHTCCQctl8vKGga1fvigbx7/0kTfEoHHQxrFaJ+nN10QYOls4Tri5C91pr/PxnBOMQc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=AJHJj6IO; arc=none smtp.client-ip=198.175.65.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="beecBMTx"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E751F1F000E9;
-	Sat, 15 Aug 2026 20:46:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786826762;
-	bh=orrg1L1lkpXTAkedrMDweL5IkRJ68G6ofmpPlxyVlpc=;
-	h=Date:From:Cc:To:In-Reply-To:References:Subject;
-	b=beecBMTxCMdVmysa+siS46bLQcsmVYidk2POtwt5y7FN57lA+702Pa9NWl3DamX+h
-	 f+sWq7v01V6Xs3e8omVdxSceaKrfcpK8+zXW27QWvRGWBPtwFQpw/nkj43L+hW+wR+
-	 XZfvw+ZP9PJA9XMEBv7mrRVqm+poj6IpH96EE7OjymvCGNWaeA/817zchNOH5MB/X6
-	 0OTa7Hf5iQAaAui3PnU3kJSpYJCG5KWmzjFyEvIJDwug+UboQKzsuZekixOlEPTmO4
-	 MYFBXGVBTgWftkD2waz3Xsns0XRT/G3hBvQmAuj+sJ1mkCHmWTFj6RhWAHvcZfJIIS
-	 PqRH5cr+FP3Sw==
-Date: Sat, 15 Aug 2026 15:46:01 -0500
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="AJHJj6IO"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1786838414; x=1818374414;
+  h=date:from:to:cc:subject:message-id;
+  bh=hpyEYQlphuMGSWtld6HTsvXWcseCl0VZcdBjodTV5rM=;
+  b=AJHJj6IOEqZunmGS8U/ARPdIlYw8ll1frIR/X6fH6phWYUtdFlyaRzP0
+   MfO9ISy4DCWs8W5NThsFXMzh1b3X6gPGwArtlA3zvcXqgoocL39ZW8HKX
+   AaKYWZ7ZqljP/Vglck2bW5DlZeQufXdziTcOHZyKbsih1XOfKYIMh44FJ
+   /s6nNywOS0XjADQqDnnsuYZY8K0tyxWoR983YmM2/uQulKpulRuCmYXLJ
+   DmwOkQZiqqPVUpfj929nM4fujEgDvQ/Idg4VEvja12AuKHKPilwXP33/O
+   NzEG5FBXaxIuKZrf8jZlmuhK1fAkG9XdrLYvFN33oIGKfTPXDzwbhoKOy
+   w==;
+X-CSE-ConnectionGUID: a8ZCj3MLTuyTPJKi36dIpg==
+X-CSE-MsgGUID: 1cC8IbhKR6eLVEsUu8eLeQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11876"; a="87576550"
+X-IronPort-AV: E=Sophos;i="6.25,226,1779174000"; 
+   d="scan'208";a="87576550"
+Received: from fmviesa007.fm.intel.com ([10.60.135.147])
+  by orvoesa108.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Aug 2026 17:00:14 -0700
+X-CSE-ConnectionGUID: IM04gtD9RWSCTEUhNpfrOQ==
+X-CSE-MsgGUID: 7ajSkqDpTCKHcxXQ/Nox1w==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.25,226,1779174000"; 
+   d="scan'208";a="261283511"
+Received: from lkp-server01.sh.intel.com (HELO 6eda058d650d) ([10.239.97.150])
+  by fmviesa007.fm.intel.com with ESMTP; 15 Aug 2026 17:00:13 -0700
+Received: from kbuild by 6eda058d650d with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1wvOIM-00000000cXK-1l9n;
+	Sun, 16 Aug 2026 00:00:10 +0000
+Date: Sun, 16 Aug 2026 07:59:18 +0800
+From: kernel test robot <lkp@intel.com>
+To: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Cc: linux-pci@vger.kernel.org
+Subject: [pci:controller/tegra264] BUILD SUCCESS
+ d56131f7a401841c09b6611402a8d2e795da3a6b
+Message-ID: <202608160705.gHSrmATZ-lkp@intel.com>
+User-Agent: s-nail v14.9.25
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-From: "Rob Herring (Arm)" <robh@kernel.org>
-Cc: bhelgaas@google.com, conor+dt@kernel.org, linux-pci@vger.kernel.org, 
- mohdayaa@qti.qualcomm.com, devicetree@vger.kernel.org, 
- linux-kernel@vger.kernel.org, gregkh@linuxfoundation.org, 
- daniel@riscstar.com, krzk+dt@kernel.org, arnd@arndb.de, 
- lbiancon@qti.qualcomm.com
-To: Alex Elder <elder@riscstar.com>
-In-Reply-To: <20260813222943.1655453-2-elder@riscstar.com>
-References: <20260813222943.1655453-1-elder@riscstar.com>
- <20260813222943.1655453-2-elder@riscstar.com>
-Message-Id: <178682676059.2183315.4478974489132403040.robh@kernel.org>
-Subject: Re: [PATCH 1/2] dt-bindings: misc: introduce pci1179,0220.yaml
 
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/tegra264
+branch HEAD: d56131f7a401841c09b6611402a8d2e795da3a6b  PCI: tegra: Add Tegra264 support
 
-On Thu, 13 Aug 2026 17:29:41 -0500, Alex Elder wrote:
-> Define the binding for the Toshiba TC9564 PCI endpoint function device.
-> The third downstream PCIe switch port within this chip has an embedded
-> PCIe controller, and that implements two of these PCIe functions.
-> 
-> Signed-off-by: Daniel Thompson <daniel@riscstar.com>
-> Signed-off-by: Alex Elder <elder@riscstar.com>
-> ---
->  .../bindings/misc/pci1179,0220.yaml           | 150 ++++++++++++++++++
->  MAINTAINERS                                   |   6 +
->  2 files changed, 156 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/misc/pci1179,0220.yaml
-> 
+elapsed time: 770m
 
-My bot found errors running 'make dt_binding_check' on your patch:
+configs tested: 14
+configs skipped: 0
 
-yamllint warnings/errors:
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
-dtschema/dtc warnings/errors:
-Documentation/devicetree/bindings/misc/pci1179,0220.example.dtb: pci@0,0 (pci1179,0220): pci-ep-bus@0:compatible: ['simple-bus'] does not contain items matching the given schema
-	from schema $id: http://devicetree.org/schemas/pci/pci-bus-common.yaml
-Documentation/devicetree/bindings/misc/pci1179,0220.example.dtb: pci@0,0 (pci1179,0220): pci-ep-bus@0: 'reg' is a required property
-	from schema $id: http://devicetree.org/schemas/pci/pci-bus-common.yaml
-Documentation/devicetree/bindings/misc/pci1179,0220.example.dtb: pci@0,0 (pci1179,0220): pci-ep-bus@4:compatible: ['simple-bus'] does not contain items matching the given schema
-	from schema $id: http://devicetree.org/schemas/pci/pci-bus-common.yaml
-Documentation/devicetree/bindings/misc/pci1179,0220.example.dtb: pci@0,0 (pci1179,0220): pci-ep-bus@4: 'reg' is a required property
-	from schema $id: http://devicetree.org/schemas/pci/pci-bus-common.yaml
-Documentation/devicetree/bindings/misc/pci1179,0220.example.dtb: pci@0,0 (pci1179,0220): ranges: 'oneOf' conditional failed, one must be fixed:
-	[[0, 0, 0, 2197815296, 0, 0, 0, 16384], [2, 0, 0, 2197815296, 0, 0, 0, 524288], [4, 0, 0, 2197815296, 0, 0, 0, 2097152]] is not of type 'boolean'
-	0 is not one of [16777216, 33554432, 50331648, 1107296256, 1124073472, 2164260864, 2181038080, 2197815296, 3254779904, 3271557120]
-	2 is not one of [16777216, 33554432, 50331648, 1107296256, 1124073472, 2164260864, 2181038080, 2197815296, 3254779904, 3271557120]
-	4 is not one of [16777216, 33554432, 50331648, 1107296256, 1124073472, 2164260864, 2181038080, 2197815296, 3254779904, 3271557120]
-	from schema $id: http://devicetree.org/schemas/pci/pci-bus-common.yaml
-Documentation/devicetree/bindings/misc/pci1179,0220.example.dtb: pci@0,0 (pci1179,0220): 'device_type' is a required property
-	from schema $id: http://devicetree.org/schemas/pci/pci-bus-common.yaml
-Documentation/devicetree/bindings/misc/pci1179,0220.example.dtb: pci@0,1 (pci1179,0220): pci-ep-bus@4:compatible: ['simple-bus'] does not contain items matching the given schema
-	from schema $id: http://devicetree.org/schemas/pci/pci-bus-common.yaml
-Documentation/devicetree/bindings/misc/pci1179,0220.example.dtb: pci@0,1 (pci1179,0220): pci-ep-bus@4: 'reg' is a required property
-	from schema $id: http://devicetree.org/schemas/pci/pci-bus-common.yaml
-Documentation/devicetree/bindings/misc/pci1179,0220.example.dtb: pci@0,1 (pci1179,0220): ranges: 'oneOf' conditional failed, one must be fixed:
-	[[0, 0, 0, 2197815552, 0, 0, 0, 16384], [2, 0, 0, 2197815552, 0, 0, 0, 524288], [4, 0, 0, 2197815552, 0, 0, 0, 2097152]] is not of type 'boolean'
-	0 is not one of [16777216, 33554432, 50331648, 1107296256, 1124073472, 2164260864, 2181038080, 2197815296, 3254779904, 3271557120]
-	2 is not one of [16777216, 33554432, 50331648, 1107296256, 1124073472, 2164260864, 2181038080, 2197815296, 3254779904, 3271557120]
-	4 is not one of [16777216, 33554432, 50331648, 1107296256, 1124073472, 2164260864, 2181038080, 2197815296, 3254779904, 3271557120]
-	from schema $id: http://devicetree.org/schemas/pci/pci-bus-common.yaml
-Documentation/devicetree/bindings/misc/pci1179,0220.example.dtb: pci@0,1 (pci1179,0220): 'device_type' is a required property
-	from schema $id: http://devicetree.org/schemas/pci/pci-bus-common.yaml
+tested configs:
+alpha         allnoconfig    gcc-16.1.0
+alpha        allyesconfig    gcc-16.1.0
+alpha           defconfig    gcc-16.1.0
+arc          allmodconfig    gcc-16.1.0
+arc          allyesconfig    gcc-16.1.0
+csky         allmodconfig    gcc-16.1.0
+i386         allmodconfig    gcc-14
+nios2        allmodconfig    gcc-11.5.0
+nios2         allnoconfig    gcc-11.5.0
+parisc       allmodconfig    gcc-16.1.0
+parisc       allyesconfig    gcc-16.1.0
+parisc          defconfig    gcc-16.1.0
+sh              defconfig    gcc-16.1.0
+sh      rsk7264_defconfig    gcc-16.1.0
 
-doc reference errors (make refcheckdocs):
-
-See https://patchwork.kernel.org/project/devicetree/patch/20260813222943.1655453-2-elder@riscstar.com
-
-The base for the series is generally the latest rc1. A different dependency
-should be noted in *this* patch.
-
-If you already ran 'make dt_binding_check' and didn't see the above
-error(s), then make sure 'yamllint' is installed and dt-schema is up to
-date:
-
-pip3 install dtschema --upgrade
-
-Please check and re-submit after running the above command yourself. Note
-that DT_SCHEMA_FILES can be set to your schema file to speed up checking
-your schema. However, it must be unset to test all examples with your schema.
-
+--
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
