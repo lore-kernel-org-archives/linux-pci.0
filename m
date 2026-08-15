@@ -1,16 +1,16 @@
 Received: from mailout3.hostsharing.net (mailout3.hostsharing.net [144.76.133.104])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D8F623B6347;
-	Sat, 15 Aug 2026 06:53:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7700C3BF676;
+	Sat, 15 Aug 2026 07:14:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=144.76.133.104
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786776846; cv=none; b=Vj/vo8IhXLi5q+WH0JGyiwdznlQy+Fzs7o1/jIqmX3wTQ5vYCT4wduCgEI+xi8u02yoQWB4LHacarj9S+9U2AUg8UqLBr9JLvsucvyBFlr5uWx4rwI/azWXMXWt16eiy8SaLdzecc/9gcspCaZxZwLuIfxeHrzDM7oqzcJpblJA=
+	t=1786778102; cv=none; b=g7CIBvTATHIMw7q/9DwIeU8JvboVxikgUZv/EudZ1cSkdOmMDXM8/cv+dLj3ILGhPS9dS5DntAW7Q3lhrHNN7xZ3fJrh1S15LATWYCKKDuBbStvA2r11fmpSpPCLCMFMNyglNlUsgd3d0510tUJ7sv6Ck7yL1IkVtYAyT5gtsdI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786776846; c=relaxed/simple;
-	bh=6ekjXufBxgEusOcELDG3gUtE/u23WJYsVq81nN7zk0Q=;
+	s=arc-20240116; t=1786778102; c=relaxed/simple;
+	bh=Q0TeHpUc2Ky1yR2+EqYbfXx3pCStBfXUjvDONym/hi0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=pK2sMU1fHyhBlWVm7EX2KgHpD5gC8oNp1pW9vsCiePQh0yVvwuJv4gEGFpzkYLeabjAsw07Vq5fk8Y7awqfc2kSblQSOFdo/Ie+cbRAEUx2BJuv45ITsF3FD56pJxeGtC+wvwHdVFrJSTeX9Zp6TPV4KJj8lR7kytEJr3jvBCiU=
+	 Content-Type:Content-Disposition:In-Reply-To; b=LR1s9XfhZ72ZZ8rvYV7byoVCuxgFb+26Z9imV/jq7fAI6/lKKKftI7gLDJgHJt6Ja/e3uaSXUxd/bXFo6UNZU6d+fm6qy9v3Ba6VdyGKYM0nPMaUVnPDuL4VuHVk1sXbZiMGpgGI/FMX/h2YXTsBK8TLxKIr0l++HamuqmLwY+8=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=144.76.133.104
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
@@ -19,22 +19,21 @@ Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df
 	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
 	 client-signature ECDSA (secp384r1) client-digest SHA384)
 	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
-	by mailout3.hostsharing.net (Postfix) with ESMTPS id 8C720C2D;
-	Sat, 15 Aug 2026 08:53:39 +0200 (CEST)
+	by mailout3.hostsharing.net (Postfix) with ESMTPS id CE945C2D;
+	Sat, 15 Aug 2026 09:14:57 +0200 (CEST)
 Received: by h08.hostsharing.net (Postfix, from userid 100393)
-	id 4494160A8DBC; Sat, 15 Aug 2026 08:53:39 +0200 (CEST)
-Date: Sat, 15 Aug 2026 08:53:39 +0200
+	id 99A866031472; Sat, 15 Aug 2026 09:14:57 +0200 (CEST)
+Date: Sat, 15 Aug 2026 09:14:57 +0200
 From: Lukas Wunner <lukas@wunner.de>
 To: Vidya Sagar <vidyas@nvidia.com>
 Cc: bhelgaas@google.com, vsethi@nvidia.com, sdonthineni@nvidia.com,
 	kthota@nvidia.com, mmaddireddy@nvidia.com, kumarahul@nvidia.com,
 	sagar.tv@gmail.com, linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH V3 3/5] PCI: Save and restore the Device 3 Control
- register
-Message-ID: <aoAM8x1JPzCDTaBf@wunner.de>
+Subject: Re: [PATCH V3 0/5] PCI: Re-evaluate DEV3 14-Bit Tag Requester Enable
+ on link mode changes
+Message-ID: <aoAR8Zxo4CIQXm8w@wunner.de>
 References: <20260814201621.2281245-1-vidyas@nvidia.com>
- <20260814201621.2281245-4-vidyas@nvidia.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -43,78 +42,39 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260814201621.2281245-4-vidyas@nvidia.com>
+In-Reply-To: <20260814201621.2281245-1-vidyas@nvidia.com>
 
-On Sat, Aug 15, 2026 at 01:46:19AM +0530, Vidya Sagar wrote:
-> +static void pci_restore_dev3_state(struct pci_dev *dev)
-[...]
-> +	/*
-> +	 * DEV3_CTL.14-Bit Tag Requester Enable is only meaningful in flit
-> +	 * mode.  On devices that advertise 14-Bit Tag Requester support,
-> +	 * sanitize the saved value before writing it back, so that callers
-> +	 * that issue further TLPs through this device after restore see a
-> +	 * coherent enable state.  Every other bit of DEV3_CTL (DMWr
-> +	 * Requester Enable, DMWr Egress Blocking, L0p Enable, Target Link
-> +	 * Width and any future addition) is written back unchanged.
-> +	 *
-> +	 * Only the value written to hardware is adjusted.  The save buffer
-> +	 * keeps what was saved, so the decision is taken afresh on every
-> +	 * restore and the originally programmed value is not lost.
-> +	 */
+On Sat, Aug 15, 2026 at 01:46:16AM +0530, Vidya Sagar wrote:
+> DEV3_CTL.14-Bit Tag Requester Enable is only meaningful while the link
+> operates in Flit Mode.  In Non-Flit Mode the upper tag bits are not
+> transmitted on the wire, so a requester that still has it set emits
+> requests whose completions it can no longer match: the completer does
+> answer, but the completion comes back with the upper tag bits zero.
 
-This is quite verbose, can you condense it a bit?  E.g. it's not
-necessary to say that every other bit is written back unchanged.
-That's the default.  Just say e.g.:
+Please include a pointer to the spec section.  Looking through
+PCIe r7.0 sec 2.2.6.2.1, I don't quite see anything that says
+"14-Bit Tag Requester Enable is only meaningful [...] in Flit Mode".
 
-       /* Clear 14-Bit Tag Requester Enable if link is no longer in Flit Mode */
+It does say:
+"A Function that supports Flit Mode must support 14-Bit Tag Completer
+capability"
 
-> +	pci_read_config_dword(dev, pos + PCI_DEV3_CAP, &dev3_cap);
-> +	if (dev3_cap & PCI_DEV3_CAP_14BIT_TAG_REQ) {
+But that's different from what you're claiming.
 
-PCIe r7.0 sec 7.7.10.3 says the bit is "VF RsvdP", so you need
-to check !dev->is_virtfn here.
+It also says:
+"In Non-Flit Mode, Tag[8] and Tag[9], are not contiguous with other Tag
+field bits in the TLP Header. These bits were Reserved prior to 10-Bit
+Tags being architected. Requesters in Non-Flit Mode that do not support
+10-Bit Tag Requester capability must set Tag[9:8] to 00b."
 
-> +		/*
-> +		 * Check both LNKSTA2.Flit_Mode (link-level) and
-> +		 * DEV3_STA.Segment Captured (end-to-end); both must be
-> +		 * active for 14-bit tags.  Refresh bus->flit_mode and
-> +		 * dev->fm_enabled in lock-step.
-> +		 */
+Also not quite what you're claiming.
 
-Why do we have to check both?
+So where is this coming from?
 
-We usually spell out the register names fully or leave them out.
-Using "LNKSTA2.Flit_Mode" and "DEV3_STA.Segment Captured" instead looks
-odd to me.
-
-> +		pci_read_config_dword(dev, pos + PCI_DEV3_STA, &dev3_sta);
-> +		dev->fm_enabled = !!(dev3_sta & PCI_DEV3_STA_SEGMENT);
-> +
-> +		pcie_capability_read_word(dev, PCI_EXP_LNKSTA2, &lnksta2);
-> +		flit_now = !!(lnksta2 & PCI_EXP_LNKSTA2_FLIT);
-> +		if (dev->bus)
-> +			dev->bus->flit_mode = flit_now;
-
-When can dev->bus be NULL?
-
-> +
-> +		if ((!dev->fm_enabled || !flit_now) &&
-> +		    (val & PCI_DEV3_CTL_14BIT_TAG_REQ_EN)) {
-> +			val &= ~PCI_DEV3_CTL_14BIT_TAG_REQ_EN;
-> +			pci_info(dev, "clearing 14-Bit Tag Requester Enable: flit mode no longer active (LNKSTA2=%#06x, DEV3_STA=%#010x)\n",
-> +				 lnksta2, dev3_sta);
-
-pci_dbg() please.
-
-> +	/*
-> +	 * Save buffer for DEV3_CTL only.  Every field in DEV3_STA is
-> +	 * read-only status reported by hardware, so there is nothing there
-> +	 * to restore.
-> +	 */
-
-The code comment seems unnecessary because that policy applies
-to every other Extended Capability as well.  We only save
-mutable registers, that's the default.
+I think if the link reverts to Non-Flit Mode and 14-Bit Tags were
+only meaningful in Flit Mode, then the hardware should automatically
+stop using 14-Bit Tags.  Relying on software to clean up a protocol
+inconsistency before issuing further requests seems dangerous and silly.
 
 Thanks,
 
