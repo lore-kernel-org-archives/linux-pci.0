@@ -1,29 +1,29 @@
 Received: from mailout2.hostsharing.net (mailout2.hostsharing.net [83.223.78.233])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F1A83C5522;
-	Sun, 16 Aug 2026 11:19:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B25C41A5BAE;
+	Sun, 16 Aug 2026 11:22:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.223.78.233
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786879200; cv=none; b=RE4kxa9Sv2cIwa8u4XERyN7RU0ANw1qOgVHFnos8CTapPBB48YolrIftc54yjOteZ89NHK3c3Kev3iJ8hfiBwlOdEatCpm4UBspldxtA2XXRZ9PIzBKJwz3ZqgJb3vlZbAu1NRDuSXOv8OV30O1jmL61Hfbtw+QqORE3QBa5Ztc=
+	t=1786879349; cv=none; b=sTF0iEGR6owptm+YKemaNy8qxA+JJf7NxwynJYgQuTFD3dy3zghug+eWiAjqaWaV5EfILk9kaJxhi9HsR3o77EGobM1PUKqltZFqk3ht3J+o+ioQ3FjMnf3Xm7ee/SdbfTWFP7h1gYbcJhJ4bd65m+Jn1l6a+gcRwTaFwZAaL80=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786879200; c=relaxed/simple;
-	bh=baYv8sRnl7njnWGpWePZZ7Lh1EnESdPhmUmNkKAjG/Y=;
+	s=arc-20240116; t=1786879349; c=relaxed/simple;
+	bh=hVnbQ5XHxPe4aDCcEfAvoH33BjEq21Yw39tfdyVHGXk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=c3RaeO0JOawIs4Mbvw7Hxvl4QzOlvdAR2tTu+GFNuhQ2pOLJVkbAOKRXuz7ePkULdXidWUczwpX7lBE7N6MSqr9gh4PALU2ADcB5OxbX8eS5HZYxXLSQkkKYiPD/DyuiZECZC3bUq0SuDgZ0ZmbXFVyS55/DAmrB4+6yx0QlmrI=
+	 Content-Type:Content-Disposition:In-Reply-To; b=auKSKUXyP5I9A3XDx0jBJjn7bmP2IY0JkcWfzuj2cm9blWIxPxxbWP0agSTENRn6fjRZVDTdT7sVBdDbBD0u60XIDrY+e/bQHc7a0IkiBo6LEEXEwjSZ+9a0F8gwza9sPK92O0vesH9c1s6UyV4ebVmfklZW2BK0RuTKk89/ZYY=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=83.223.78.233
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
-Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
+Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
 	 client-signature ECDSA (secp384r1) client-digest SHA384)
 	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
-	by mailout2.hostsharing.net (Postfix) with ESMTPS id AE3341062A;
-	Sun, 16 Aug 2026 13:19:48 +0200 (CEST)
+	by mailout2.hostsharing.net (Postfix) with ESMTPS id C9D361062A;
+	Sun, 16 Aug 2026 13:22:25 +0200 (CEST)
 Received: by h08.hostsharing.net (Postfix, from userid 100393)
-	id 791D1629CE25; Sun, 16 Aug 2026 13:19:48 +0200 (CEST)
-Date: Sun, 16 Aug 2026 13:19:48 +0200
+	id AB0C1629CE25; Sun, 16 Aug 2026 13:22:25 +0200 (CEST)
+Date: Sun, 16 Aug 2026 13:22:25 +0200
 From: Lukas Wunner <lukas@wunner.de>
 To: peng.guo@montage-tech.com
 Cc: linux-cxl@vger.kernel.org, linux-pci@vger.kernel.org,
@@ -32,10 +32,10 @@ Cc: linux-cxl@vger.kernel.org, linux-pci@vger.kernel.org,
 	alison.schofield@intel.com, vishal.l.verma@intel.com,
 	ira.weiny@intel.com, djbw@kernel.org, johnny.li@montage-tech.com,
 	jingzhong.yang@montage-tech.com, engguopeng@buaa.edu.cn
-Subject: Re: [PATCH 1/2] PCI: Add MMIO Capabilities Register Block definitions
-Message-ID: <aoGc1Ie-S5-Ytsp_@wunner.de>
+Subject: Re: [PATCH 2/2] cxl/core: Skip non-CXL capabilities in MCAP
+Message-ID: <aoGdcWjzmvQAhFEK@wunner.de>
 References: <20260816084957.3316727-1-peng.guo@montage-tech.com>
- <20260816084957.3316727-2-peng.guo@montage-tech.com>
+ <20260816084957.3316727-3-peng.guo@montage-tech.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -44,19 +44,21 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260816084957.3316727-2-peng.guo@montage-tech.com>
+In-Reply-To: <20260816084957.3316727-3-peng.guo@montage-tech.com>
 
-On Sun, Aug 16, 2026 at 04:49:56PM +0800, peng.guo@montage-tech.com wrote:
-> The PCIe Management Message Passthrough via MMIO Mailbox ECN defines
-> the MMIO Capabilities Register Block (MCAP). MCAP contains an array
-> header followed by capability headers that describe the ID, version,
-> location, size, and vendor of each MMIO capability.
+On Sun, Aug 16, 2026 at 04:49:57PM +0800, peng.guo@montage-tech.com wrote:
+> +++ b/drivers/cxl/core/regs.c
+> @@ -134,7 +134,13 @@ void cxl_probe_device_regs(struct device *dev, void __iomem *base,
+>  	for (cap = 1; cap <= cap_count; cap++) {
+>  		struct cxl_reg_map *rmap;
+>  		u32 offset, length;
+> -		u16 cap_id;
+> +		u16 cap_id, vendor_id;
+> +
 
-That ECN went into PCIe r6.2.  For ECNs that are already part of the
-PCIe Base Spec, it's better to cite the section in the latest spec
-revision, i.e. PCIe r7.0 sec 6.35, rather than the ECN that originally
-introduced the feature.  Reviewers (like me) generally have the latest
-spec revision at hand, but not every ECN.
+Nit: Move the u16 line above the u32 line to maintain inverse Christmas
+tree convention.
 
-Otherwise this is
-Reviewed-by: Lukas Wunner <lukas@wunner.de>
+Thanks,
+
+Lukas
