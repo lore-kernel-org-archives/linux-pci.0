@@ -1,29 +1,28 @@
 Received: from shmail.montage-tech.com (shmail.montage-tech.com [180.167.85.125])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C82463D47C8;
-	Sun, 16 Aug 2026 09:05:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D8CB3D9523;
+	Sun, 16 Aug 2026 09:05:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=180.167.85.125
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786871143; cv=none; b=ENmWbiZmRgzfvCf3WqXauPDzgAMaYeq+S5A8khI0PLx3o6le+5lDtnbBJvd5p8PppT7UHvoENhPZNqoMSNJ7UnzyOSvfKF+hAyLjWNIu2dAmfZUiFJqvc1HL12yAblPCK1aYBPjdRAlw26EZ5a1ZD01NAm6hOycbbcWbTNFsc2o=
+	t=1786871148; cv=none; b=ct5El7m9r9Hjoz4rHyrEZZWNutf0CDi+dCz5JjCvI7up6RXzqo3nbKcBOL2N6PDBeoVBxIsKJnRIZpDWIirNYdgYCJTpmHz2QuwgOHl+0RrJal3DUUhD0qtUln2AWUps0zE14yJ11C1DDvZ6WR5hl6XGRmQ7atWQVhwkku+Qmig=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786871143; c=relaxed/simple;
-	bh=bJP+pQuxqE1FGKsyQoo6OAz0aRtNw0eqKVKt2TD1vfg=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ZofZ5KIXGxJpcHqsFzdjnUv4pqCOuIMnKgSWgHFmDgc6hRLQh99Cshi/WIWRayqHgNEcb2gqHbiPOEZF3pNsd5dfIH94J+ue9CznoKG4yh/KNLLeFUynxwRkdIgTeF46cdymC6+ZIlEz4Deq1c5VLswrmLdKoCep/hD6M75m8VU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=montage-tech.com; spf=pass smtp.mailfrom=montage-tech.com; dkim=pass (1024-bit key) header.d=montage-tech.com header.i=@montage-tech.com header.b=McfssGQx; arc=none smtp.client-ip=180.167.85.125
+	s=arc-20240116; t=1786871148; c=relaxed/simple;
+	bh=k+8uJQH0GxW/DuaSrhw1hLf2i8g58SvUY0iXunXI0v8=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=T6IIt3od1PVt1BYSlqeOpYSXwdp7vd0PYkWoaHb0l6WUpH/TvvLucd8GOCbGXL/BFqe1FRaaOTWawV5RbtONxEiFexmiYeEznao+6xrFeG4mw3xz571+QLss7c3auWWyv5N0t5oEYAjevwN8HPmFZL8exnFwTZaHWXoMjAn3XkI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=montage-tech.com; spf=pass smtp.mailfrom=montage-tech.com; dkim=pass (1024-bit key) header.d=montage-tech.com header.i=@montage-tech.com header.b=EkaQ9vK0; arc=none smtp.client-ip=180.167.85.125
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=montage-tech.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=montage-tech.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=montage-tech.com header.i=@montage-tech.com header.b="McfssGQx"
+	dkim=pass (1024-bit key) header.d=montage-tech.com header.i=@montage-tech.com header.b="EkaQ9vK0"
 Received: from exchmail.montage-tech.com ([10.8.192.33])
-	by shmail.montage-tech.com  with ESMTPS id 67G8o6R4003761-67G8o6R6003761
+	by shmail.montage-tech.com  with ESMTPS id 67G8ntER003751-67G8ntET003751
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Sun, 16 Aug 2026 16:50:06 +0800
+	Sun, 16 Aug 2026 16:49:55 +0800
 Received: from mongtage-NF5468M6.montage-tech.com (10.8.98.235) by
  shexch1.montage-tech.com (10.8.192.33) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1748.10; Sun, 16 Aug 2026 16:50:04 +0800
+ 15.2.1748.10; Sun, 16 Aug 2026 16:49:52 +0800
 From: <peng.guo@montage-tech.com>
 To: <linux-cxl@vger.kernel.org>
 CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
@@ -32,12 +31,10 @@ CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
 	<vishal.l.verma@intel.com>, <ira.weiny@intel.com>, <djbw@kernel.org>,
 	<johnny.li@montage-tech.com>, <jingzhong.yang@montage-tech.com>,
 	<engguopeng@buaa.edu.cn>, pguo <peng.guo@montage-tech.com>
-Subject: [PATCH 2/2] cxl/core: Skip non-CXL capabilities in MCAP
-Date: Sun, 16 Aug 2026 16:49:57 +0800
-Message-ID: <20260816084957.3316727-3-peng.guo@montage-tech.com>
+Subject: [PATCH 0/2] PCI/CXL: Distinguish CXL capabilities in MCAP 
+Date: Sun, 16 Aug 2026 16:49:55 +0800
+Message-ID: <20260816084957.3316727-1-peng.guo@montage-tech.com>
 X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20260816084957.3316727-1-peng.guo@montage-tech.com>
-References: <20260816084957.3316727-1-peng.guo@montage-tech.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -52,59 +49,39 @@ X-FEAS-BEC-Info: WlpIGw0aAQkEARIJHAEHBlJSCRoLAAEeDUhZUEhYSFhIWUhZXkguLT4lWFw8JVp
 X-FEAS-Client-IP: 10.8.192.33
 X-FE-Policy-ID: 6:5:2:montage-tech.com
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; d=montage-tech.com; s=shmail; c=relaxed/relaxed;
- h=from:to:cc:subject:date:message-id:references:mime-version:content-type;
- bh=rqI8n+j2yGpjHQ5vYFIt+unULWoVJP29rcJ8CiacrrM=;
- b=McfssGQx+ulkSt7gNyI1qcwFH4l+YVxp+Z8PF5ZAuiDvFdVtHQ8wFsUFkRLgpFLzgvk8yiKEcAfc
-	ZwXcKy4v3MvlqHDzRR6KExvmP0RPqEsN+uEjVIaNZjeHvroy1ekNXUyG2rX+yNOvYehBWeqRYa6c
-	w+MPqUWSF3j5JHI2b5Q=
+ h=from:to:cc:subject:date:message-id:mime-version:content-type;
+ bh=nWAv3kWqdjyahQIBn7Jkq9fFj2epfNXS2U5WATNzCi4=;
+ b=EkaQ9vK0cQkUPKzmLgl2TQdp9qn+kcHI7WQgDgWspkdt4i3+8nKlgEJycNWWtJ6Sd383HRYa0ovI
+	kyDM32rTW1xMPa3rqeGMuuePcl/ZpCi4BShTs9b2Co25MUE0eKvx8TMBwRsMdkSZn0uk04ADiEPn
+	dQPP51v/S5lkgu9Se/4=
 
 From: pguo <peng.guo@montage-tech.com>
 
-When MMPT is enabled, a CXL device may expose both CXL-defined capabilities
-and PCIe Management Message Passthrough (MMPT) capabilities in the same
-MMIO Capabilities Register Block (MCAP).
+When MMPT is enabled, a device may expose PCI-SIG-defined MMPT
+capabilities alongside CXL-defined capabilities in the same MMIO
+Capabilities Register Block (MCAP).
 
-The CXL capability parser currently identifies entries using only the
-capability ID. Since capability IDs are scoped by Vendor ID, a
-PCI-SIG-defined capability may have the same ID as a CXL-defined
-capability. This causes non-CXL entries, including MMPT and MMIO Mailbox,
-to be interpreted as CXL register blocks.
+MCAP capability IDs are scoped by Vendor ID, but the CXL capability
+parser currently matches entries using only their capability IDs. This
+can cause MMPT entries to be interpreted as CXL register blocks.
 
-The MMPT register block may be interpreted as a CXL mailbox. This
-causes mailbox initialization to fail with:
+Add the generic PCI MCAP register definitions, then update the CXL
+parser to process only capabilities carrying the CXL Vendor ID.
 
-    cxl_pci 0000:3b:00.0: Mailbox is too small (64b)
+Patch 1 adds the PCI MCAP array and capability header definitions.
+Patch 2 filters non-CXL capabilities before interpreting their IDs.
 
-Check the MCAP Vendor ID before interpreting an entry as a CXL-defined
-capability. This prevents PCI-SIG-defined MMPT capabilities from being
-mistaken for CXL mailbox capabilities.
+The fix has been tested on a CXL device with MMPT enabled and prevents
+both the Mailbox and Status capability misidentification.
 
-Fixes: 8adaf747c9f0 ("cxl/mem: Find device capabilities")
-Suggested-by: Johnny <johnny.li@montage-tech.com>
-Signed-off-by: pguo <peng.guo@montage-tech.com>
----
- drivers/cxl/core/regs.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+pguo (2):
+  PCI: Add MMIO Capabilities Register Block definitions
+  cxl/core: Skip non-CXL capabilities in MCAP
 
-diff --git a/drivers/cxl/core/regs.c b/drivers/cxl/core/regs.c
-index 93710cf4f0a6..79edb7bac8eb 100644
---- a/drivers/cxl/core/regs.c
-+++ b/drivers/cxl/core/regs.c
-@@ -134,7 +134,13 @@ void cxl_probe_device_regs(struct device *dev, void __iomem *base,
- 	for (cap = 1; cap <= cap_count; cap++) {
- 		struct cxl_reg_map *rmap;
- 		u32 offset, length;
--		u16 cap_id;
-+		u16 cap_id, vendor_id;
-+
-+		vendor_id = FIELD_GET(PCI_MCAP_HDR_VENDOR_ID,
-+				      readl(base + PCI_MCAP_HDR_BASE(cap) +
-+					    PCI_MCAP_HDR_REG_4));
-+		if (vendor_id != PCI_VENDOR_ID_CXL)
-+			continue;
- 
- 		cap_id = FIELD_GET(CXLDEV_CAP_HDR_CAP_ID_MASK,
- 				   readl(base + cap * 0x10));
+ drivers/cxl/core/regs.c       |  8 +++++++-
+ include/uapi/linux/pci_regs.h | 21 +++++++++++++++++++++
+ 2 files changed, 28 insertions(+), 1 deletion(-)
+
 -- 
 2.43.0
 
