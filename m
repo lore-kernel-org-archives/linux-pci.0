@@ -1,222 +1,127 @@
-Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 762A7175A5;
-	Mon, 17 Aug 2026 02:33:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786934026; cv=none; b=k17/sOFEgchIP1kqpMHtI7BachxWZ99puM8Xpu8QXUXIFUt1xVE68gfFvs9l4vpun88fYQqrnbcr932if1mz6r8NDg8e5fVFFODKCmJmxaELp7/9WYrkuY2CEcmj3X6LsThVjDL7dcsOf4P4SZ6WiVpkb1adYFTMxtjdKyN6UGE=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786934026; c=relaxed/simple;
-	bh=7U2BRfTH5wB1Jg2r2jNUdOL8s4lgTdlLMqQYINFEskQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=AogwAiEpUoGmkdu9C9joqULwn61UW8qbYGPijbYKDhg1PTcbc6Y/Lp1pvI+rCOVxL+ftW3/1WHsI6HaCzMwHQhDWpOVGIWnII9KXQ3Wg9vPRgbqLW2ZGk7u7XxsF0A5gXs2MKWpSgcmY5w9M2/gZ5bdXYf+WvJ0zD9ZBaZJamoY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=VB/fDjHp; arc=none smtp.client-ip=13.77.154.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
+Received: from PH7PR06CU001.outbound.protection.outlook.com (mail-westus3azon11010008.outbound.protection.outlook.com [52.101.201.8])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7CD7925B09E;
+	Mon, 17 Aug 2026 02:39:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.201.8
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1786934389; cv=fail; b=A+tRbS1s2fydpcdQ+KJrshj8RKzAGuZIJYpTD6xJynFMdcxG2dSypUxSwq5zIuzdgdy4cyRRvhteHrTHXOQo51HaDrz/LCAeA/E/+yHUrsKgw2Q1UO413HFWjtNu086zLEvKLPsEdYgYyafSKYPMYCHlQbLVF/WZg0xyFNIFqTc=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1786934389; c=relaxed/simple;
+	bh=iAnvnyXbZ6dtRs4WeN9UsIIvWTE8Z8QOuYVdnU+/4x0=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=EsShtWcVFJvA+05gBWmixi+OUKcNW2ojf7sWquXjrpBzJ0U1mf1x7Ila/XuRrjijSEtndTco6AMDftD9C/Iou5lpUqnf3XZqOLtZQnZXrxJGA8c2Jk5p5xVMogDyYoWs8AlFOEF83joLa1PTY9XF0NhE2Z4H0z9rdOpRopH349U=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=cKFodvCw; arc=fail smtp.client-ip=52.101.201.8
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="VB/fDjHp"
-Received: from localhost (unknown [167.220.233.38])
-	by linux.microsoft.com (Postfix) with ESMTPSA id 4B2FE20B7168;
-	Sun, 16 Aug 2026 19:33:11 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 4B2FE20B7168
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
-	s=default; t=1786933991;
-	bh=Rft+yHVAVUN7/39qSq86ni8RStTmlR07evvRWnD8Zm0=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=VB/fDjHpwDVgc5pusPL+30b0/mp6tGHWmG2JRq57kNawS/S6vtvoWR0MxxuE6TJ/t
-	 nmcu8mmlfwdv25jDavM35Zgpfeo1JmPENRr/sk8W0NyZb+3rWky7HTRwmCUMbNT5WI
-	 ce6XY+JhQzO87ucfoFJPYXdq//jDZWLBlWODH8m0=
-Date: Mon, 17 Aug 2026 10:33:36 +0800
-From: Yu Zhang <zhangyu1@linux.microsoft.com>
-To: Michael Kelley <mhklinux@outlook.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, 
-	"linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>, "iommu@lists.linux.dev" <iommu@lists.linux.dev>, 
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>, 
-	"x86@kernel.org" <x86@kernel.org>, "wei.liu@kernel.org" <wei.liu@kernel.org>, 
-	"kys@microsoft.com" <kys@microsoft.com>, "haiyangz@microsoft.com" <haiyangz@microsoft.com>, 
-	"decui@microsoft.com" <decui@microsoft.com>, "longli@microsoft.com" <longli@microsoft.com>, 
-	"joro@8bytes.org" <joro@8bytes.org>, "will@kernel.org" <will@kernel.org>, 
-	"robin.murphy@arm.com" <robin.murphy@arm.com>, "bhelgaas@google.com" <bhelgaas@google.com>, 
-	"kwilczynski@kernel.org" <kwilczynski@kernel.org>, "lpieralisi@kernel.org" <lpieralisi@kernel.org>, 
-	"mani@kernel.org" <mani@kernel.org>, "robh@kernel.org" <robh@kernel.org>, 
-	"arnd@arndb.de" <arnd@arndb.de>, "jgg@ziepe.ca" <jgg@ziepe.ca>, 
-	"jacob.pan@linux.microsoft.com" <jacob.pan@linux.microsoft.com>, "tgopinath@linux.microsoft.com" <tgopinath@linux.microsoft.com>, 
-	"easwar.hariharan@linux.microsoft.com" <easwar.hariharan@linux.microsoft.com>, "mrathor@linux.microsoft.com" <mrathor@linux.microsoft.com>, 
-	"baolu.lu@linux.intel.com" <baolu.lu@linux.intel.com>, "suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>, 
-	"vasant.hegde@amd.com" <vasant.hegde@amd.com>
-Subject: Re: [PATCH v3 1/5] hyperv: Introduce new hypercall interfaces used
- by Hyper-V guest IOMMU
-Message-ID: <rpzpjbalau22m7f2s2ljxm6byzspuewqcu4awfih6qavkkazq6@mpraxcbidlar>
-References: <20260811155022.108148-1-zhangyu1@linux.microsoft.com>
- <20260811155022.108148-2-zhangyu1@linux.microsoft.com>
- <BN7PR02MB414806B8395DA93F5F7D7867D4DA2@BN7PR02MB4148.namprd02.prod.outlook.com>
+	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="cKFodvCw"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=qvJXnWfqFvrE0hcL3D3CMGViIOOhW8OipIvMIRsT7Ihy018Dbp6lWKRosnE8dM+6BTr0VVOjkDM4ymm1oXsT6kLIZv2j66hOdlWgdOwMdMC3n/5w2+vkX9PoVuPP1LEeNqWxjcejux3kxHFrAldsPKXjQfaL7c08rbS8ESA9FhaVmYDt8oamso14gqMposylh8N4chQv95z3iTyJx1zJIgINPIZnIhM4Il6wfZW16IqcSqMuSYIUQ9yx3g62WYt7kY9M4BKpuajEWFbe6CTl1Nml6WTYB90U+YsIZfk1gHv8QhgqOFznzu1z0wG5RRs9A2yYvRmsfwUcaCSCT/VtHA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=CM18VG+3ChI6l/UaEgGON9VSnNgd+UkIPtn8IC9hJNs=;
+ b=kKwjQVSAAFfz90LnF0PTADRbocWklFfDgDn+IkYu+6jbklLeIVmMnQ/VEFuJ1CnCzNZ01ANLMCr7lx97YJWgQmYjtIrjepm9ZO0JEjiUozcBf6zsbi38qr3THji8XiiYD7C68p1+V9b5/FoL/HAVOQHVxyRVBFF+lNd8acNQyJ1kLGwoVqzVVhNuzb5JDqnYwsj+tBUq+jWGrgl8U/Z3TNqAxZKtESx5sllNZ2Qglh1U75V3JHkI1xiwIjlFC1D7VQ+YdUDOgW++uhwEZv/ZSLF90tOkarsfcUragq2qecytb6XlEnlz3m6GWNhuvGysw7HldKaltEaEyPGE0niLVg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 165.204.84.17) smtp.rcpttodomain=google.com smtp.mailfrom=amd.com; dmarc=pass
+ (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
+ dkim=none (message not signed); arc=none (0)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=CM18VG+3ChI6l/UaEgGON9VSnNgd+UkIPtn8IC9hJNs=;
+ b=cKFodvCwA2CPKDOxQJ2O1sx1uXEE1auUZEnXdqVG/i7kTQnj8akTcGVF2U8kXA5veGOK/s4JDrL7XSKEJn27+nMFHnJfsc9q6rcTNKhcaJ4oPRBk9F7fpnt2xxGBM9zlrIN2riKcbSsBb0h+EIU8DOWJkLKwEcN5+yO1YuAJ6CI=
+Received: from SJ0PR13CA0189.namprd13.prod.outlook.com (2603:10b6:a03:2c3::14)
+ by DS7PR12MB9044.namprd12.prod.outlook.com (2603:10b6:8:e3::22) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.315.17; Mon, 17 Aug
+ 2026 02:39:41 +0000
+Received: from MWH0EPF000C6192.namprd02.prod.outlook.com
+ (2603:10b6:a03:2c3:cafe::2f) by SJ0PR13CA0189.outlook.office365.com
+ (2603:10b6:a03:2c3::14) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.21.339.8 via Frontend Transport; Mon, 17
+ Aug 2026 02:39:39 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
+ smtp.mailfrom=amd.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=amd.com;
+Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
+ 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
+ client-ip=165.204.84.17; helo=satlexmb08.amd.com; pr=C
+Received: from satlexmb08.amd.com (165.204.84.17) by
+ MWH0EPF000C6192.mail.protection.outlook.com (10.167.249.102) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.21.339.3 via Frontend Transport; Mon, 17 Aug 2026 02:39:39 +0000
+Received: from satlexmb10.amd.com (10.181.42.219) by satlexmb08.amd.com
+ (10.181.42.217) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.45; Sun, 16 Aug
+ 2026 21:39:39 -0500
+Received: from satlexmb08.amd.com (10.181.42.217) by satlexmb10.amd.com
+ (10.181.42.219) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.45; Sun, 16 Aug
+ 2026 21:39:38 -0500
+Received: from xhdlc250058.xilinx.com (10.180.168.240) by satlexmb08.amd.com
+ (10.181.42.217) with Microsoft SMTP Server id 15.2.2562.45 via Frontend
+ Transport; Sun, 16 Aug 2026 21:39:34 -0500
+From: Sai Krishna Musham <sai.krishna.musham@amd.com>
+To: <bhelgaas@google.com>, <lpieralisi@kernel.org>, <kw@linux.com>,
+	<mani@kernel.org>, <robh@kernel.org>, <krzk+dt@kernel.org>,
+	<conor+dt@kernel.org>, <cassel@kernel.org>
+CC: <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <michal.simek@amd.com>,
+	<bharat.kumar.gogada@amd.com>, <thippeswamy.havalige@amd.com>,
+	<sai.krishna.musham@amd.com>, <pranav.sanwal@amd.com>
+Subject: [PATCH v5 0/2] pci: AMD: Add Versal2 CPM6 PCIe host controller support
+Date: Mon, 17 Aug 2026 08:09:30 +0530
+Message-ID: <20260817023932.1743100-1-sai.krishna.musham@amd.com>
+X-Mailer: git-send-email 2.44.4
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <BN7PR02MB414806B8395DA93F5F7D7867D4DA2@BN7PR02MB4148.namprd02.prod.outlook.com>
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: MWH0EPF000C6192:EE_|DS7PR12MB9044:EE_
+X-MS-Office365-Filtering-Correlation-Id: edd6ef9b-b3fe-4883-f669-08defc08c90d
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|1800799024|82310400026|376014|23010399003|7416014|36860700016|18002099003|56012099006|11063799006|10067099003;
+X-Microsoft-Antispam-Message-Info:
+	mcLg1GhyQiE+QepLm3UJF/TeZajI+X5rq5YazGIYfYhMrqGVHyhEC5Pr00ep3zRahraxm6VPvU5GcEGvhPQGhu4rjQNT4oGmhh1IGOwjbIb3/I1Q2G+f/2wFkO+qBDfs6XPjkftqoQ/ej6EfbYcJeFhadIQNRkfm0YoOHW+aaFZXqUb4eQTXRIFywiWRLOGO4/I/Mr0VQdLyvTJp9/bbvKzUF0XLiT0LW2Sdi31hC/gKKuEH08nNaYMB97nXPdlXOLDSBSmt0m89WEcjlwmbt4ZFGBNR0dwTTXajp67d9loGpkgzR6j6ByjPP4n+1jjJfm2fhOMQ2pUm227Qll6dSjJGfqHnHPm7yYXjYy0B2BZYHIc9BKDyMCP0+kPmFzbqgrSbitdwZ62VGOcQWcgPVfCPDsylLviHD5qgB51iTcmoRvgb5g5fIH+AI0bbG+32/PDTgoQEVAkOPWAtTh+8eBHByrt2tPFa54CowAIoRSwG3kPMMbWyLAAvDFtjD6S/HW5sjpgBXfw1vkbQ5kF2Ro/0rrPSU0EwHh1ySoCQBw3SO4BWJmiNmsy80IXkafQCClO2LZbRjouC2H9/7Yal82qNHlMjISdHkyy4Eb4lmE5vEFRhQblPDU7l6+NyWUBCGNZ5q2WrAYlAEl2zgGkersgTtcu1fyc9zsgCj/XmblOE7sh+oxDLA4jSlI3F6ZuV6dsdcjmK8b8iXvbo+Rb51Q==
+X-Forefront-Antispam-Report:
+	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:satlexmb08.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(1800799024)(82310400026)(376014)(23010399003)(7416014)(36860700016)(18002099003)(56012099006)(11063799006)(10067099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	fGRqE6csSlYqBs/Ed3xh4TkzwJ06MW6smc+5SkvaL+YVH+U28U9dTOju5QM5rd5UHxqm5JC0cW3j+RuvPZWZfTl0K+slpnGNauGJ1YOIR4A5ptMEsJdWypDYAE8xmIpNfP8xWHwUsFJgv+/SKMKevNGfHUs9G3BMvJo4AIvpBqpL4C4iy4zRmzYuCtwLuy2jMnaSetygY0L/f9Cx46HkXrI2rjYI4cJYvPh9dcyFY5S6AL1X6HzuJKwE98vHXX76J1pHucm9RppqvHdPW6CEBLZ1/v3RafSEyVn0OgnjsQ2E/QeBF/8YCCc8pgaGszBnxomAVSK9OJ5uUoK6ZvndMfzBPMU+CFub75y7YDOllRG8kOfythKWXqU9dPQjVx/kIzL7kPtR3Kl4RfLRsCbUYpQBICj8anFpMlWP0gy6QB0uHuO2p8MH7Lr4qw0WDdtR
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Aug 2026 02:39:39.5454
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: edd6ef9b-b3fe-4883-f669-08defc08c90d
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[satlexmb08.amd.com]
+X-MS-Exchange-CrossTenant-AuthSource:
+	MWH0EPF000C6192.namprd02.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS7PR12MB9044
 
-On Fri, Aug 14, 2026 at 03:31:08PM +0000, Michael Kelley wrote:
-> From: Yu Zhang <zhangyu1@linux.microsoft.com> Sent: Tuesday, August 11, 2026 8:50 AM
-> > 
-> > From: Wei Liu <wei.liu@kernel.org>
-> > 
-> > Hyper-V guest IOMMU is a para-virtualized IOMMU based on hypercalls.
-> > Introduce the hypercalls used by the child partition to interact with
-> > this facility.
-> > 
-> > These hypercalls fall into below categories:
-> > - Detection and capability: HVCALL_GET_IOMMU_CAPABILITIES is used to
-> >   detect the existence and capabilities of the guest IOMMU.
-> > 
-> > - Device management: HVCALL_GET_LOGICAL_DEVICE_PROPERTY is used to
-> >   check whether an endpoint device is managed by the guest IOMMU.
-> > 
-> > - Domain management: A set of hypercalls is provided to handle the
-> >   creation, configuration, and deletion of guest domains, as well as
-> >   the attachment/detachment of endpoint devices to/from those domains.
-> > 
-> > - IOTLB flushing: HVCALL_FLUSH_DEVICE_DOMAIN is used to ask Hyper-V
-> >   for a domain-selective IOTLB flush (which in its handler may flush
-> >   the device TLB as well).
-> > 
-> 
-> [snip]
-> 
-> > +
-> > +struct hv_input_device_domain {
-> > +	u64 partition_id;
-> > +	union hv_input_vtl owner_vtl;
-> > +	u8 padding[7];
-> > +	union hv_device_domain_id domain_id;
-> > +} __packed;
-> > +
-> > +union hv_create_device_domain_flags {
-> > +	u32 as_uint32;
-> > +	struct {
-> > +		u32 forward_progress_required: 1;
-> > +		u32 inherit_owning_vtl: 1;
-> > +		u32 reserved: 30;
-> > +	} __packed;
-> > +};
-> > +
-> > +struct hv_input_create_device_domain {
-> > +	struct hv_input_device_domain device_domain;
-> > +	union hv_create_device_domain_flags create_device_domain_flags;
-> > +	u32 padding;
-> > +} __packed;
-> > +static_assert(sizeof(struct hv_input_create_device_domain) == 32);
-> 
-> The static_assert() here is unusual. For all the other hypercall
-> inputs/outputs where we rely on the structure definition to
-> be correct and the __packed to prevent the compiler from
-> adding/changing anything. If there's a reason for this one to be
-> different, a comment would help. If there's not really a reason,
-> I'd suggest dropping the static_assert() as superfluous.
-> 
+Add support for the AMD Versal2 CPM6 PCIe host controller to the
+AMD MDB PCIe driver.
 
-Thank you, Michael.
-Indeed, there's no reason to treat this data structure differently.
-Will drop the static_assert() and keep the explicit padding.
+Sai Krishna Musham (2):
+  dt-bindings: PCI: amd-mdb: Add CPM6 support
+  PCI: amd-mdb: Add CPM6 host controller support
 
-B.R.
-Yu
+ .../bindings/pci/amd,versal2-mdb-host.yaml    |  41 +-
+ .../devicetree/bindings/pci/snps,dw-pcie.yaml |   2 +
+ drivers/pci/controller/dwc/pcie-amd-mdb.c     | 480 +++++++++++++++---
+ 3 files changed, 456 insertions(+), 67 deletions(-)
 
-> Michael
-> 
-> > +
-> > +struct hv_input_delete_device_domain {
-> > +	struct hv_input_device_domain device_domain;
-> > +} __packed;
-> > +
-> > +struct hv_input_attach_device_domain {
-> > +	struct hv_input_device_domain device_domain;
-> > +	union hv_device_id device_id;
-> > +} __packed;
-> > +
-> > +struct hv_input_detach_device_domain {
-> > +	u64 partition_id;
-> > +	union hv_device_id device_id;
-> > +} __packed;
-> > +
-> > +struct hv_device_domain_settings {
-> > +	struct {
-> > +		/*
-> > +		 * Enable translations. If not enabled, all transaction bypass
-> > +		 * S1 translations.
-> > +		 */
-> > +		u64 translation_enabled: 1;
-> > +		u64 blocked: 1;
-> > +		/*
-> > +		 * First stage address translation paging mode:
-> > +		 * 0: 4-level paging (default)
-> > +		 * 1: 5-level paging
-> > +		 */
-> > +		u64 first_stage_paging_mode: 1;
-> > +		u64 reserved: 61;
-> > +	} flags;
-> > +
-> > +	/* Address of translation table */
-> > +	u64 page_table_root;
-> > +} __packed;
-> > +
-> > +struct hv_input_configure_device_domain {
-> > +	struct hv_input_device_domain device_domain;
-> > +	struct hv_device_domain_settings settings;
-> > +} __packed;
-> > +
-> > +struct hv_input_get_iommu_capabilities {
-> > +	u64 partition_id;
-> > +	u64 reserved;
-> > +} __packed;
-> > +
-> > +struct hv_output_get_iommu_capabilities {
-> > +	u32 size;
-> > +	u16 reserved;
-> > +	u8  max_iova_width;
-> > +	u8  max_pasid_width;
-> > +
-> > +#define HV_IOMMU_CAP_PRESENT    BIT_ULL(0)
-> > +#define HV_IOMMU_CAP_S2         BIT_ULL(1)
-> > +#define HV_IOMMU_CAP_S1         BIT_ULL(2)
-> > +#define HV_IOMMU_CAP_S1_5LVL    BIT_ULL(3)
-> > +#define HV_IOMMU_CAP_PASID      BIT_ULL(4)
-> > +#define HV_IOMMU_CAP_ATS        BIT_ULL(5)
-> > +#define HV_IOMMU_CAP_PRI        BIT_ULL(6)
-> > +
-> > +	u64 iommu_cap;
-> > +	u64 pgsize_bitmap;
-> > +} __packed;
-> > +
-> > +enum hv_logical_device_property_code {
-> > +	HV_LOGICAL_DEVICE_PROPERTY_PVIOMMU = 10,
-> > +};
-> > +
-> > +struct hv_input_get_logical_device_property {
-> > +	u64 partition_id;
-> > +	u64 logical_device_id;
-> > +	/* Takes values from enum hv_logical_device_property_code. */
-> > +	u32 code;
-> > +	u32 reserved;
-> > +} __packed;
-> > +
-> > +struct hv_output_get_logical_device_property {
-> > +#define HV_DEVICE_IOMMU_ENABLED	BIT_ULL(0)
-> > +	u64 device_iommu;
-> > +	u64 reserved;
-> > +} __packed;
-> > +
-> > +struct hv_input_flush_device_domain {
-> > +	struct hv_input_device_domain device_domain;
-> > +	u32 flags;
-> > +	u32 reserved;
-> > +} __packed;
-> > +
-> >  #endif /* _HV_HVHDK_MINI_H */
-> > --
-> > 2.52.0
-> > 
-> 
+
+base-commit: dc59e4fea9d83f03bad6bddf3fa2e52491777482
+-- 
+2.44.4
+
