@@ -1,186 +1,200 @@
-Received: from mx0a-00082601.pphosted.com (mx0b-00082601.pphosted.com [67.231.153.30])
+Received: from CH5PR02CU005.outbound.protection.outlook.com (mail-northcentralusazon11012003.outbound.protection.outlook.com [40.107.200.3])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 763AF37FF68
-	for <linux-pci@vger.kernel.org>; Mon, 17 Aug 2026 19:51:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.153.30
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786996287; cv=none; b=RIZZHXRLHGlKVuEbrDtmwu8a58HoO/yhsQHzj9ud8xxXQRL62/bIa53klFKQNzPZJcVqUcROj28tTQLmAzj17B8mLC7IfJVvyACH5NaxerJLCA3fIMqCUZN95Vyau2sveiAtInIJ5tuk6kx3e3xRoyJlSg3lIAX5JHIX0Mk2QUc=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786996287; c=relaxed/simple;
-	bh=ZVQgv/wkgJu04lezL+VEvjojP8GirnSWQEe+M+MyHHs=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=YNLffJ4RVq8qj3fwBC+s3RQXIyqICNS1+u5dNWVh2O0h1godHbM+UFLm0Ck7V9SwEA2TFv/XP50xP5CNuz4ZTffaMT0gnc9ZJ6ehaduMAI62+CrpuBEFchPKrOEtrZ+rPMo3rY5NwCGCYtzOBtsVhLcaCy2ixVe2iYYYDdgIPCg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=HUks8nd1; arc=none smtp.client-ip=67.231.153.30
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meta.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E31D3F12D3;
+	Mon, 17 Aug 2026 19:57:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.200.3
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1786996642; cv=fail; b=onVpsyc8AUgEcDBbqX77MpXwg/tmyJvYAy+lINWDjz+AGpx/Sc88kknliereFKl2qyLG9FOlwkqphL2rmKTxUjSbfx5/vPYM7ih38a8SJfbOyC3crGmRrlYYR2N8QKO7L/luoMUGSJBheCV2+35IvCYhL39+ucM/dFGB4hyqrmI=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1786996642; c=relaxed/simple;
+	bh=CZnZEs1kZjDWXpECYgzTfLDcfdk2Q24qucQsSZ6QV6c=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=ekWPZHIFNJmtnhQiFjLMloUBV4sdQY/FG8ZAxa8GxP/FzmBKuVTvzgquWIqYFb+/2ADCWynIZBkrPu/Vlr6pfdiulpLuIelGii1vNOoxb44PNI2BbYkYU+bKgrFJ+O3yxlCyILQHs1ZjLqCLYDjUnfDoFyrXlr4l87tcaTZ6VaY=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=pQaK7Q8S; arc=fail smtp.client-ip=40.107.200.3
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="HUks8nd1"
-Received: from pps.filterd (m0001303.ppops.net [127.0.0.1])
-	by m0001303.ppops.net (8.18.1.11/8.18.1.11) with ESMTP id 67HJXrvE656787
-	for <linux-pci@vger.kernel.org>; Mon, 17 Aug 2026 12:51:24 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=meta.com; h=cc
-	:content-transfer-encoding:content-type:date:from:message-id
-	:mime-version:subject:to; s=pps82601-s2048-2026-q3; bh=AGjXtVlXK
-	s9Or5zuAC/XGWs7QH2feKKkgQNHjc8EfG8=; b=HUks8nd1GAv9wQmj2J/g6s3ZQ
-	FjgWlwgJ/hMosjg1A6Og9hx9oLKTA3KCl8Bpq+bIRdUM27KIBf/HTVySQDNyI+ay
-	DtU+K7dHdbXdcPOOXtmgGMNdmAPs011J5TwBG4tuCG4NyqsyErCna1JJSefC53lU
-	A6ZS0p66lgpvq/1pImnXFVsmYQejP7vOcWQsts26RDI91W3zAhy/2cZwFoqzXXaE
-	aeJqGzSHXWrhX0tPMVvmdi0EtO3PMLKYjJirF22vKFuskSjaYa+XgTQTNOYZq9tr
-	rZYsce831IzviVrq7FJ3PAayFk6vby4Z9wjJvDwjDvkYYF/GA8ifisJTCNHGg==
-Received: from maileast.thefacebook.com ([163.114.135.16])
-	by m0001303.ppops.net (PPS) with ESMTPS id 4g2ks83gdk-3
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Mon, 17 Aug 2026 12:51:24 -0700 (PDT)
-Received: from twshared51612.31.frc3.facebook.com (2620:10d:c0a8:1c::11) by
- mail.thefacebook.com (2620:10d:c0a9:6f::237c) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.2.2562.45; Mon, 17 Aug 2026 19:51:22 +0000
-Received: by devbig197.nha3.facebook.com (Postfix, from userid 544533)
-	id AC76A2857750D; Mon, 17 Aug 2026 12:51:10 -0700 (PDT)
-From: Keith Busch <kbusch@meta.com>
-To: <alex@shazbot.org>, <bhelgaas@google.com>, <linux-pci@vger.kernel.org>
-CC: <mattev@meta.com>, <matt@ozlabs.org>, <nekto0n@meta.com>,
-        Keith Busch
-	<kbusch@kernel.org>
-Subject: [PATCH] vfio/pci: Restore standard PCI config space in .slot_reset()
-Date: Mon, 17 Aug 2026 12:51:10 -0700
-Message-ID: <20260817195110.2077698-1-kbusch@meta.com>
-X-Mailer: git-send-email 2.53.0
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="pQaK7Q8S"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=qq64ub4yuYYMqZvNffOazhOpzHmssm5zGkF8IZN+TWRt3PrSa0qNmw+LTz1ebptV1OE2W/qjopRDSGJPo81v3qyqOSsScYvnv5cWhY3IhhoCty8uuSKr3zhy7lCz2lKsfMno4DEVU4oJRzw+pYxE7XeQI6fhOwRInNcITCbw1CpN7XLLXJmnIO29Vww+CxD+rZQPbmxAZVXdYzozTnjOdbX+JWN/HtYCyz98zlplpDdmoCJdHyB0iqFJntGBTATGp56jdJPpNg1nUHB5Bx0hIXES5uHamm3PDKT40OTPyru3rHLtINecbg6b6iMuR3yPIi0YQPf6E7+OAiNf+z9DnQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=ylFLniSFyLJpZ/ERpG35d8FvVUdCR+ls7h8u7CsvL5A=;
+ b=gsx7cVPk8+zdLDeBwxWOrADzvjEBVtZ0nvAYiNG2/hfmRxCoZn73hmp/6w1qsvatEkxEV6tg/H63tqMrCchnpFBM9R4YIsKBUQF4qyeDXY2QQjauac0/pTBtEmJSj92ZgcflV841+nfEhzlM8AUYJj/42w4iCpxOtjgB6L89idnUl4hgVKiwVWa6QVcIvKhU83UT4sjXjP+z0T3yZ23psGcxcFfuu1NOoz6L9PWSMjf2yV6sv2gjvpjGeeVKm2sgzHIJJj3g4ZSw+b/KVkU99ie8kTiCp2joxVSkZ2veKyCvemCgqibtth/GictZlCZkUZPdjNFxoDnvi4wcI08tDA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 216.228.117.161) smtp.rcpttodomain=google.com smtp.mailfrom=nvidia.com;
+ dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
+ dkim=none (message not signed); arc=none (0)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=ylFLniSFyLJpZ/ERpG35d8FvVUdCR+ls7h8u7CsvL5A=;
+ b=pQaK7Q8SOKQev2g9KSE6IqEmnvQCANblVQ0Om8EWi2PdTYtF24tOKFNWidOA6Qy8HfcvnFDfyGXssRnfPYv3YPZ1qZBOQYxGm7lPokWfHrzW981+E0d4dF56zlqPKtIyf85+hHRQndYg2PgVONFAyc8u80hNE2wu0cIobj1GA9kjSbvLi8YuyzUlESIEZhv/eTAO7GCcGxxEAbVtxo1eJFb/sEY7yM2YOFxSvQhYSHcVA3xYE8MgX00SEwOLMaFWxZfRgu9r4ZvsmTULeGXpjh3XeiKbRrTkpXxmUl9eIVGNj+Qy0ZcyL6bl5lLfsqajhJ7VrI1kOt7HmFDQQyuPow==
+Received: from PH8PR07CA0019.namprd07.prod.outlook.com (2603:10b6:510:2cd::18)
+ by PH8PR12MB6771.namprd12.prod.outlook.com (2603:10b6:510:1c6::6) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.315.12; Mon, 17 Aug
+ 2026 19:57:10 +0000
+Received: from SA2PEPF00003F65.namprd04.prod.outlook.com
+ (2603:10b6:510:2cd:cafe::28) by PH8PR07CA0019.outlook.office365.com
+ (2603:10b6:510:2cd::18) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.21.315.17 via Frontend Transport; Mon,
+ 17 Aug 2026 19:57:09 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.117.161)
+ smtp.mailfrom=nvidia.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=nvidia.com;
+Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
+ 216.228.117.161 as permitted sender) receiver=protection.outlook.com;
+ client-ip=216.228.117.161; helo=mail.nvidia.com; pr=C
+Received: from mail.nvidia.com (216.228.117.161) by
+ SA2PEPF00003F65.mail.protection.outlook.com (10.167.248.40) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.21.339.3 via Frontend Transport; Mon, 17 Aug 2026 19:57:09 +0000
+Received: from rnnvmail201.nvidia.com (10.129.68.8) by mail.nvidia.com
+ (10.129.200.67) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.46; Mon, 17 Aug
+ 2026 12:56:46 -0700
+Received: from vidyas-server.nvidia.com (10.126.230.37) by
+ rnnvmail201.nvidia.com (10.129.68.8) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.20; Mon, 17 Aug 2026 12:56:42 -0700
+From: Vidya Sagar <vidyas@nvidia.com>
+To: <bhelgaas@google.com>, <tglx@kernel.org>, <wangruikang@iscas.ac.cn>,
+	<Frank.Li@nxp.com>, <lihaoxiang@isrc.iscas.ac.cn>, <18255117159@163.com>,
+	<shawn.lin@rock-chips.com>, <xiangzao@linux.alibaba.com>
+CC: <vsethi@nvidia.com>, <sdonthineni@nvidia.com>, <kthota@nvidia.com>,
+	<mmaddireddy@nvidia.com>, <kumarahul@nvidia.com>, <sagar.tv@gmail.com>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>, Vidya Sagar
+	<vidyas@nvidia.com>
+Subject: [PATCH V1] PCI/MSI: Don't touch the MSI-X table while the Link is contained
+Date: Tue, 18 Aug 2026 01:26:26 +0530
+Message-ID: <20260817195626.3091331-1-vidyas@nvidia.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-FB-Internal: Safe
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODE3MDE1MSBTYWx0ZWRfX3/7OXfHzyGZn
- DCbcrlm831zXRkdRSaYC+rD+2U7Z/LBwOeGqfQOWa6AgjtYb3m1kcYo7I9rWSXv2X2Ur7vsx079
- WFACVn9ybiJWsiQvkwu3k48HFzzw5ZFFYHwOG/sYrxH6RnvcZVuRM8h7vHv18hwdD0cwX8421w0
- McUHV5JfetSnTF/XuLS2Y3a1xsFRj+M01DHaUuTu97SbG3Nve8mxqYt6qjKp9ny55GjCBuct1Qe
- KSio7ooMPD+QlwvOW8IMWvP/Ewr7T+VqIG8NJ1W9FleB5K2afZrGTPCnpfqQulOJYvDzWgdsLrE
- s9dhngHo9zrqYflAf4h5vK79rETWgWfmYlz9FL0UYin1B107qqMjtgeTcg2qnXIq53j5bV35Vtu
- Yqh0R2Jk4so+0VZXURrYMJ2PlmMntj94eRb4/5yvE9mdN7Ht8XUwhTgc/s/qB9T/oEaA7iDE8Pv
- bYeooKJ7xaNXhjdv7GQ==
-X-Proofpoint-Spam-Info: AW1haW4tMjYwODE3MDE1MSBTYWx0ZWRfX/Jbc6zwO4okx
- XC6aA3Y1evs9xrl4EvpARsz4HWBgRwXIZS70Q2U2OD/Cb7dJcrh3p7OH1wk5A7HI0JaQjrsMSsk
- /E8ysd09+FahA11tjU5DCqYNpW5wEpU=
-X-Proofpoint-ORIG-GUID: PpLEPERArf84WWlECi0HHxH5zGBMX2-N
-X-Proofpoint-GUID: PpLEPERArf84WWlECi0HHxH5zGBMX2-N
-X-Authority-Analysis: v=2.4 cv=WIpPmHsR c=1 sm=1 tr=0 ts=6a83663c cx=c_pps
- a=MfjaFnPeirRr97d5FC5oHw==:117 a=MfjaFnPeirRr97d5FC5oHw==:17
- a=IkcTkHD0fZMA:10 a=Sv0fKeRqtYgA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=7x6HtfJdh03M6CCDgxCd:22 a=_78whYxrdx1mplLwxq1U:22 a=VwQbUJbxAAAA:8
- a=VnNF1IyMAAAA:8 a=sm42_5VQJLERfNZvqZYA:9 a=0bXxn9q0MV6snEgNplNhOjQmxlI=:19
- a=QEXdDO2ut3YA:10
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-08-17_03,2026-08-12_01,2025-10-01_01
+X-NVConfidentiality: public
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: rnnvmail202.nvidia.com (10.129.68.7) To
+ rnnvmail201.nvidia.com (10.129.68.8)
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: SA2PEPF00003F65:EE_|PH8PR12MB6771:EE_
+X-MS-Office365-Filtering-Correlation-Id: 976a3658-2f9a-4e44-d97c-08defc99b900
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|23010399003|7416014|36860700016|1800799024|82310400026|376014|56012099006|10067099003|11063799006|18002099003;
+X-Microsoft-Antispam-Message-Info:
+	QJn4UN9aMuDL47EgLOf6JPsIbI8Pjxli3SwgWdkCA1nEwFmDF1gR8QvCy0AHyb0+1mNG65/G7rPJReNjI+FplTj7oOiT6Q+w3dnRwRWdB9ep5m9pa8F3S4FZauRguFeCsnfKHk8/1qZhrN9fb/IdWiw5t5bN3+jwmcHJ0Ork5rWNbrksYHU1DsSl8ZqY7hXFn2eTGE+4+ccshQcGTqVIvzyzUtmRFrQUp3e1ERoGgLdqpLsHI7q80SdK85P69GobrGUJzB4rLotS1d2QWxn0RtfjVHonW/F4mFVXlB/plUiMZGSczVSYhIwXdSJPhp8AZZQQOgmtt2LVUBqMBwFvO+EgVFJqpZrfLdZfaZo0rEDrkGAcgL52UjqaMfK5ABmj0cQ2tbeFafvur9b0tn6lx5qCH8L/WxWSq68OHS7egmyFM64AtBLMWg7cNlVEOUzQJm7fkER3BjgdEXKryax0x65jIqjVSgAmmmocMx15MS0YOZgn4uo3GIfJKkQp4XmJpH6szTRSTZdolaggYX9/nuMGB0tEwyicEU+FOSgoO4T7M3FMyRha91wLIH+tiBVSVNfazkvt3r6fkcxTi/+0OvI40RbUJMDRyOE1I4XT7H6H/m3uUxkHuZhtUydrbslesdJOPrL98MmHER5GfT9EoU5M5GuM/BvVuuw956XJ53xxABoV/9fxPbPXvU/rdlea903L5dGeawxJz7xwhKKgGQ==
+X-Forefront-Antispam-Report:
+	CIP:216.228.117.161;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge2.nvidia.com;CAT:NONE;SFS:(13230040)(23010399003)(7416014)(36860700016)(1800799024)(82310400026)(376014)(56012099006)(10067099003)(11063799006)(18002099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	4O/wXIH4O4l26/2wBmUVZRNuHxeW+66ElDagLfapqGMHqpoipzvCeHajnaICy/nUQeUT5fvhdUX3XXMRbdGEHtZx0xllZ5wKzpQMQxm83ktWcrIRmJj91fe9Ow0JH9mxb3tX4f3W0wDQ34m0xRjkHtKlf8UG8ylLr6UMw0pKSUtG1QmyAZ5blE3zNSWw4H34tHd5P/ju+oh7xXD9Z92pd7YIckOpu8S96r6olLR0YjRaMP0tj4UOFg+6Is55uzsy/u5kOCMwBo0kfpzSWx2QCFTooX/fd9Rpc6Fpe7Eqno1o+grfOV8qMdcHVPY3/oi8sKSrHYoA83r2fJNzv/EyBpAHpVK/wet3ToV10ltrbqbm/zHF6YleRsxtLwmlnz/bA/yul1oHDP/gGnqA+XJUnWBK1BPlfsJUx8tt4pNJhJ8twnspzcrBOJKSvUKpC8zT
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Aug 2026 19:57:09.5773
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 976a3658-2f9a-4e44-d97c-08defc99b900
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.161];Helo=[mail.nvidia.com]
+X-MS-Exchange-CrossTenant-AuthSource:
+	SA2PEPF00003F65.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH8PR12MB6771
 
-From: Keith Busch <kbusch@kernel.org>
+The MSI-X table lives in device MMIO space behind a BAR, so it is only
+reachable while the Link is up. While a Downstream Port has the Link
+contained by DPC it completes accesses to the table with Unsupported
+Request, and the read returns all ones.
 
-Hi Alex, Bjorn, Linux-PCI, and VFIO,
+If the upstream Root Port implements the RP Extensions for DPC, it
+additionally reports that UR completion as an RP PIO error and answers
+with a DPC of its own, which contains every other device below it. So a
+containment event on a single Downstream Port can escalate into one at
+the Root Port and take down unrelated devices.
 
-I'd like to initiate, or maybe restart, a discussion regarding the
-current state of PCIe AER and DPC (Downstream Port Containment) recovery
-for devices bound to vfio-pci, potentially expanding to devices not
-bound to anything at all.
+pci_free_irq_vectors() is called from driver error_detected() and
+prepare-for-reset callbacks, i.e. while the Link is contained, and it
+masks every descriptor. Each mask is an MMIO write followed by a
+non-posted flush read, so this is reached on every contained device whose
+driver tears down its interrupts before the reset.
 
-Currently, when a link reset or Secondary Bus Reset occurs due to an
-AER/DPC event, the kernel PCI error recovery service executes reset
-routines across affected downstream devices. Since vfio-pci does not
-implement the .slot_reset() callback in its pci_error_handlers struct,
-the standard PCI config space (BARs, Command register, MSI-X setup,
-DevCtl, etc.) for downstream devices is left entirely uninitialized
-after the link is brought back up.
+Skip the MMIO when the device is not in pci_channel_io_normal, in
+addition to the existing surprise removal check. The msix_ctrl cache is
+still updated, so __pci_restore_msix_state() replays the intended mask
+state once the Link is back up.
 
-Historically the PCI core introduced early pci_save_state()
-checkpointing prior to driver probe (e.g. commit 30d52f6385d8, "PCI:
-Save device state in pci_pm_init() before driver probe") precisely to
-ensure that the kernel maintains a valid baseline config space
-snapshot=E2=80=94even for driverless or stub-bound devices. However, that
-infrastructure was never fully connected to the error recovery callbacks
-for generic pass-through drivers.
-
-For bare-metal userspace drivers, like custom user-level drivers, this
-creates an operational deadlock:
-
-1. The kernel PCI error handling triggers a bus/link reset, but leaves
-   standard PCI config space wiped back to power-on defaults.
-2. The eventfd (VFIO_PCI_ERR_IRQ_INDEX) alerts userspace that an error oc=
-curred,
-   but gives no indication of when link recovery/reset completes.
-3. Userspace attempting to re-initialize or access the device races again=
-st
-   the kernel's reset sequence or operates on zeroed/uninitialized config=
- registers.
-4. While QEMU originally included stubs intended to coordinate AER recove=
-ry with
-   guest OS drivers, that guest-host coordination infrastructure has rema=
-ined
-   unimplemented for over a decade.
-
-In scenarios where userspace simply needs the underlying hardware
-restored to its known-good baseline state post-reset, having vfio-pci
-implement .slot_reset() and leverage the existing PCI core snapshot via
-pci_restore_state() bridges this gap cleanly.
-
-We recently saw related discussions around VFIO error recovery on s390x
-(https://lore.kernel.org/linux-pci/20260603182415.2324-1-alifm@linux.ibm.=
-com/#t),
-where platform-specific mechanisms had to be wired up to communicate PCI
-errors to userspace. However, for standard PCIe setups relying on
-generic kernel error recovery (pcie_do_recovery), vfio-pci still lacks
-the fundamental .slot_reset() handling needed to restore standard PCI
-config space after recoverying from a fatal error.
+Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
 ---
-A few questions I'd like to put to the list:
-1. Since the PCI core already takes responsibility for holding the early=20
-   config space checkpoint, is calling pci_restore_state() during
-   .slot_reset() the appropriate place for vfio-pci to apply it, or
-   should this be explicitly driven/triggered via a VFIO ioctl?
-2. Does returning PCI_ERS_RESULT_RECOVERED here create subtle state
-   issues if userspace directly modified config space registers that
-   were not captured in pdev->saved_config_space?
-3. Should we pair this with an explicit "link restored / reset complete"
-   eventfd notification so userspace knows exactly when it is safe to
-   resume access?
+ drivers/pci/msi/msi.c |  2 +-
+ drivers/pci/msi/msi.h | 20 ++++++++++++++++++++
+ 2 files changed, 21 insertions(+), 1 deletion(-)
 
-Appreciate any feedback or historical context on how VFIO and PCI error
-recovery should interact here.
-
- drivers/vfio/pci/vfio_pci_core.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
-
-diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci=
-_core.c
-index 3f11a9624b9c0..5b42430337e29 100644
---- a/drivers/vfio/pci/vfio_pci_core.c
-+++ b/drivers/vfio/pci/vfio_pci_core.c
-@@ -2347,6 +2347,13 @@ pci_ers_result_t vfio_pci_core_aer_err_detected(st=
-ruct pci_dev *pdev,
+diff --git a/drivers/pci/msi/msi.c b/drivers/pci/msi/msi.c
+index 209373c92e9e..5612cf2ff280 100644
+--- a/drivers/pci/msi/msi.c
++++ b/drivers/pci/msi/msi.c
+@@ -249,7 +249,7 @@ void __pci_write_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
+ {
+ 	struct pci_dev *dev = msi_desc_to_pci_dev(entry);
+ 
+-	if (dev->current_state != PCI_D0 || pci_dev_is_disconnected(dev)) {
++	if (dev->current_state != PCI_D0 || pci_msix_mmio_unsafe(dev)) {
+ 		/* Don't touch the hardware now */
+ 	} else if (entry->pci.msi_attrib.is_msix) {
+ 		pci_write_msg_msix(entry, msg);
+diff --git a/drivers/pci/msi/msi.h b/drivers/pci/msi/msi.h
+index 0b420b319f50..e372e9c87508 100644
+--- a/drivers/pci/msi/msi.h
++++ b/drivers/pci/msi/msi.h
+@@ -26,6 +26,19 @@ static inline void __iomem *pci_msix_desc_addr(struct msi_desc *desc)
+ 	return desc->pci.mask_base + desc->msi_index * PCI_MSIX_ENTRY_SIZE;
  }
- EXPORT_SYMBOL_GPL(vfio_pci_core_aer_err_detected);
-=20
-+pci_ers_result_t vfio_pci_core_aer_slot_reset(struct pci_dev *pdev,
-+					      pci_channel_state_t state)
+ 
++/*
++ * The MSI-X Table lives in device MMIO space, so it is only reachable while
++ * the Link is usable. While a Downstream Port has the Link contained by DPC
++ * it completes these accesses with Unsupported Request, which the Root Port
++ * in turn reports as an RP PIO error and answers with a DPC of its own,
++ * taking down every other device below it.
++ */
++static inline bool pci_msix_mmio_unsafe(struct pci_dev *pdev)
 +{
-+	pci_restore_state(pdev);
-+	return PCI_ERS_RESULT_RECOVERED;
++	return pdev->error_state != pci_channel_io_normal ||
++	       pci_dev_is_disconnected(pdev);
 +}
 +
- int vfio_pci_core_sriov_configure(struct vfio_pci_core_device *vdev,
- 				  int nr_virtfn)
+ /*
+  * This internal function does not flush PCI writes to the device.  All
+  * users must ensure that they read from the device before either assuming
+@@ -36,6 +49,9 @@ static inline void pci_msix_write_vector_ctrl(struct msi_desc *desc, u32 ctrl)
  {
-@@ -2419,6 +2426,7 @@ EXPORT_SYMBOL_GPL(vfio_pci_core_sriov_configure);
-=20
- const struct pci_error_handlers vfio_pci_core_err_handlers =3D {
- 	.error_detected =3D vfio_pci_core_aer_err_detected,
-+	.slot_reset =3D vfio_pci_core_aer_slot_reset,
- };
- EXPORT_SYMBOL_GPL(vfio_pci_core_err_handlers);
-=20
---=20
-2.53.0-Meta
+ 	void __iomem *desc_addr = pci_msix_desc_addr(desc);
+ 
++	if (pci_msix_mmio_unsafe(msi_desc_to_pci_dev(desc)))
++		return;
++
+ 	if (desc->pci.msi_attrib.can_mask)
+ 		writel(ctrl, desc_addr + PCI_MSIX_ENTRY_VECTOR_CTRL);
+ }
+@@ -43,6 +59,10 @@ static inline void pci_msix_write_vector_ctrl(struct msi_desc *desc, u32 ctrl)
+ static inline void pci_msix_mask(struct msi_desc *desc)
+ {
+ 	desc->pci.msix_ctrl |= PCI_MSIX_ENTRY_CTRL_MASKBIT;
++
++	if (pci_msix_mmio_unsafe(msi_desc_to_pci_dev(desc)))
++		return;
++
+ 	pci_msix_write_vector_ctrl(desc, desc->pci.msix_ctrl);
+ 	/* Flush write to device */
+ 	readl(desc->pci.mask_base);
+-- 
+2.43.0
 
