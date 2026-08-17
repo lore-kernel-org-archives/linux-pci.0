@@ -1,173 +1,120 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.19])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B290A41F341;
-	Mon, 17 Aug 2026 13:01:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.19
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87B14426D03;
+	Mon, 17 Aug 2026 13:26:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786971700; cv=none; b=GvyHVhBBj+Q0NbEjd2bkj7raJfT9UWYXW7LKuzioUU/RYK9uvgiTCMnzW4OxhkaA6XgzCgRoKZ9rJVydrpafXBX0vLtzifrJwH5kr4MuQhyYoOO7eU3mcN5igpHM7EbkRgWZpV3W4fZgDIDNvNfnIrh+6ai+FFIUBvIjXy4TTQE=
+	t=1786973198; cv=none; b=jTwYg/W3CIVNFWrwh+mCD5BAedb7gz0OO5Q2LNWqsLWJln6mMZr/pAFS6YFG0OPh/WcNNiNBBDk/TNDEkkPUoYBNAOol5FouNPoO1Skok/ANQfMEV5d1mdNZKIJx/HIqEybNh4gV4oSyWDENM5nc5OEzulicE09fuiV5sNtgA0U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786971700; c=relaxed/simple;
-	bh=zoVTlgD3cD2htjt1jPfKTgtfncDVduw8Z413cvKsh88=;
+	s=arc-20240116; t=1786973198; c=relaxed/simple;
+	bh=fBMyNpNHwmcAJxxbYNFl5cMlaifHFY+zDcFEk3Lvf7U=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=A4eiyaQWc2bbZgQB3Y9RBnCaPVIzoPPm1N7eqNR9TKF0kVlUzTB0iu/H/hiwqe3Shf9qD2y/H1vvn7gGv+GMAhEHKtjIBNVxxtorccJ/UGkFxv7BIPAQQjIy9jEM4VVdPR1zJMNRLd+Z230dD73Tgz9x5nyNmbfhf+kN0JJ/0rU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=miIRVYkp; arc=none smtp.client-ip=198.175.65.19
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=r9XoNGkBUUaKSUKjxgev01DlsxKcUxXIt8jyDk3t07qLIqU0g5KGKqGhXb5EVoBwFwrIA8E2Gq0MvyVYX4clvpsU6qp/iwTlTou2I9VWsWEbUvKzTHYhj43VAEClOLhnRE/7H8dDKEuBpKmQl+SJEEPYY6TTdq51ef64G43Sd0Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SYMubkHw; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="miIRVYkp"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1786971697; x=1818507697;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=zoVTlgD3cD2htjt1jPfKTgtfncDVduw8Z413cvKsh88=;
-  b=miIRVYkpDIf4QrOQRKccQZmoZkosi77RBP5do+QYa2+fe2Bmn87MfBUl
-   U52RQwBrEYnV3iUmffGY11yadH36vHwh0u3+IMztkAAbln+nk5ZJ0dGFH
-   VmF7MuJdoNTkfgy14JoXCPShx/Irf7074sFqRxuUgfa6VTy74zhH3BOor
-   yAc6KUhgdMT0zslJUaqr9UJjQ7NllXVPDTi6w6c6mqualA8bLJZK4wv3w
-   3MV6UMdGspNUJUuKkfvMwJsD3I7jRaJRgjw8fnpYc97CQoUUTWAs4xlqQ
-   girJhKbUHLM+JyyUCaqBP8g65BrZbpsQOYxFuiZBl2W55bMUap7zBg3AD
-   A==;
-X-CSE-ConnectionGUID: RzVl9RYdRTGx2d5TjCE3vA==
-X-CSE-MsgGUID: FetLo2L/TjiFei7aMstdhQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11877"; a="87363062"
-X-IronPort-AV: E=Sophos;i="6.25,228,1779174000"; 
-   d="scan'208";a="87363062"
-Received: from fmviesa009.fm.intel.com ([10.60.135.149])
-  by orvoesa111.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Aug 2026 06:01:35 -0700
-X-CSE-ConnectionGUID: azCg8Rr7T/S8kwEPBqJd8w==
-X-CSE-MsgGUID: yVvpOZZwRqG5LMVSYbkNLw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.25,228,1779174000"; 
-   d="scan'208";a="258705916"
-Received: from black.igk.intel.com ([10.91.253.5])
-  by fmviesa009.fm.intel.com with ESMTP; 17 Aug 2026 06:01:27 -0700
-Received: by black.igk.intel.com (Postfix, from userid 1003)
-	id 4048899; Mon, 17 Aug 2026 15:01:26 +0200 (CEST)
-Date: Mon, 17 Aug 2026 15:01:26 +0200
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SYMubkHw"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CDB0C1F000E9;
+	Mon, 17 Aug 2026 13:26:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1786973197;
+	bh=fBMyNpNHwmcAJxxbYNFl5cMlaifHFY+zDcFEk3Lvf7U=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=SYMubkHwKG+UZVAKQMcOhpsGVdwtveItAV4u/nlqT/SfguDWICr2wv1tHV0yDWJvg
+	 FVv0uhobGOneDZtj5bIfQ6NNkd2s7LRGQMy4eHgcRzRuEcqdq05kmiAvL73Iw7gB9s
+	 ZHUfBfh763e+GBH5Z/M/+wziXto0s/kJU7cvBPfNKdCBXyAqJRkSJFd9WepsOiqZ2r
+	 nTBVcC9mU4BKEMd5mmzDOZ7G14tAJeLoSPHt64rbTbAjZ6UEHcNNOm9u99Yl7TKbMq
+	 2HlPlv7E+PCcodB17XNTqC7D+GIBCLZc1rlz+Grzv9fN/UI4vLEgTGA2ci+2ABHEAS
+	 8EQ5QX8ZQoI5Q==
+Date: Mon, 17 Aug 2026 15:26:34 +0200
+From: Thierry Reding <thierry.reding@kernel.org>
 To: Manivannan Sadhasivam <mani@kernel.org>
-Cc: Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	manivannan.sadhasivam@oss.qualcomm.com,
-	Rob Herring <robh@kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Jiri Slaby <jirislaby@kernel.org>,
-	Nathan Chancellor <nathan@kernel.org>,
-	Nicolas Schier <nicolas.schier@linux.dev>,
-	Hans de Goede <hansg@kernel.org>,
-	Ilpo =?iso-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>,
-	Mark Pearson <mpearson-lenovo@squebb.ca>,
-	"Derek J. Clark" <derekjohn.clark@gmail.com>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
-	Bartosz Golaszewski <brgl@bgdev.pl>,
-	Daniel Scally <djrscally@gmail.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Sakari Ailus <sakari.ailus@linux.intel.com>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Danilo Krummrich <dakr@kernel.org>,
-	Bartosz Golaszewski <brgl@kernel.org>, linux-serial@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-kbuild@vger.kernel.org,
-	platform-driver-x86@vger.kernel.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-	linux-bluetooth@vger.kernel.org, linux-pm@vger.kernel.org,
-	Stephan Gerhold <stephan.gerhold@linaro.org>,
-	Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>,
-	linux-acpi@vger.kernel.org, Sui Jingfeng <sui.jingfeng@linux.dev>
-Subject: Re: [PATCH v3 03/14] software node: Implement device_get_match_data
- fwnode callback
-Message-ID: <aoMGJqwcEAHWmZX9@black.igk.intel.com>
-References: <20260110-pci-m2-e-v3-0-4faee7d0d5ae@oss.qualcomm.com>
- <20260110-pci-m2-e-v3-3-4faee7d0d5ae@oss.qualcomm.com>
- <aWSpFk9z0zpyKjr6@smile.fi.intel.com>
- <6l3rs5pv6xnrbygpvqrdxqoqtybjyefsltk5bl4336q56rfoza@ejo3sxuufghe>
- <aWSwgRiEkT9unYw9@smile.fi.intel.com>
- <6peb6afhpm4l7opxbdt3b5sx32longevwds5c3dlqji2hr5dlh@kxuvj55jkqgi>
- <ljqd5ovcsg7t62tdzd77w5mv5buawm3x7xyapy7n7l7azcaorh@tytj46t2lxyb>
- <ks2nm67zp5i2grzomu7mjb7uhkuwtd7w5stoqp5kri2clpxpsp@ayn42h7meh5l>
- <aoKrmZzmYsyvRJ-5@ashevche-desk.local>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, 
+	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+	Conor Dooley <conor+dt@kernel.org>, Thierry Reding <thierry.reding@gmail.com>, 
+	Jonathan Hunter <jonathanh@nvidia.com>, Karthikeyan Mitran <m.karthikeyan@mobiveil.co.in>, 
+	Hou Zhiqiang <Zhiqiang.Hou@nxp.com>, Thomas Petazzoni <thomas.petazzoni@bootlin.com>, 
+	Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>, Michal Simek <michal.simek@amd.com>, 
+	Kevin Xie <kevin.xie@starfivetech.com>, Aksh Garg <a-garg7@ti.com>, linux-pci@vger.kernel.org, 
+	devicetree@vger.kernel.org, linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-arm-kernel@lists.infradead.org, Thierry Reding <treding@nvidia.com>, 
+	Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Subject: Re: [PATCH v10 3/5] PCI: tegra: Add Tegra264 support
+Message-ID: <aoML05AL1RD-B5sh@orome>
+References: <20260814-tegra264-pcie-v10-0-05d08c592b05@nvidia.com>
+ <20260814-tegra264-pcie-v10-3-05d08c592b05@nvidia.com>
+ <ajpntb2f62mpevhofuv2mdpgsktzp6gwcvu2euka7qu2n3f7at@fp3q5fowyvgg>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="nynx6c75mt7damvo"
 Content-Disposition: inline
-In-Reply-To: <aoKrmZzmYsyvRJ-5@ashevche-desk.local>
-Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
-
-On Mon, Aug 17, 2026 at 09:35:05AM +0300, Andy Shevchenko wrote:
-> On Fri, Aug 14, 2026 at 02:49:31PM +0200, Manivannan Sadhasivam wrote:
-> > On Mon, Jan 12, 2026 at 10:01:23PM +0530, Manivannan Sadhasivam wrote:
-> > > On Mon, Jan 12, 2026 at 02:32:21PM +0530, Manivannan Sadhasivam wrote:
-> > > > On Mon, Jan 12, 2026 at 10:27:45AM +0200, Andy Shevchenko wrote:
-> > > > > On Mon, Jan 12, 2026 at 01:49:54PM +0530, Manivannan Sadhasivam wrote:
-> > > > > > + Dmitry Torokhov (who was against this patch previously)
-> > > > > > 
-> > > > > > On Mon, Jan 12, 2026 at 09:56:06AM +0200, Andy Shevchenko wrote:
-> > > > > > > On Sat, Jan 10, 2026 at 12:26:21PM +0530, Manivannan Sadhasivam via B4 Relay wrote:
-> > > > > > > 
-> > > > > > > > Because the software node backend of the fwnode API framework lacks an
-> > > > > > > > implementation for the .device_get_match_data function callback.
-> > > > > > > 
-> > > > > > > Maybe this is done on purpose. Have you thought about this aspect?
-> > > > > > 
-> > > > > > IMO, software nodes were introduced to add sub-properties to the existing
-> > > > > > firmware nodes, but it has usecase/potential to go beyond that. More below.
-> > > > > 
-> > > > > Potential doesn't mean the necessity.
-> > > > > 
-> > > > > > > > This makes it difficult to use(and/or test) a few drivers that originates
-> > > > > > > > from DT world on the non-DT platform.
-> > > > > > > 
-> > > > > > > How difficult? DSA implementation went to the way of taking DT overlay
-> > > > > > > approach. Why that one can't be applied here?
-> > > > > > 
-> > > > > > Sometimes you do not have any DT node at all.
-> > > > > 
-> > > > > Yes, that is exactly the case I have referred to. The PCI core (in Linux)
-> > > > > is able to create DT subtree on non-OF based platforms.
-> > > > 
-> > > > Maybe I should look into creating dynamic DT node for the device and insert it
-> > > > to the uart node. Theoretically it should work.
-> > > 
-> > > It worked flawlessly. So I sent v4 incorporating this design:
-> > > https://lore.kernel.org/linux-pci/20260112-pci-m2-e-v4-0-eff84d2c6d26@oss.qualcomm.com/
-> > 
-> > Andy, I had to revive this old thread of a merged series as Krzk is not in
-> > favour of adding DT overlay or dynamic OF nodes for these BT devices [1]. His
-> > objections are due to the fact that we are just adding BT nodes of a
-> > discoverable device (M.2 PCIe device) without any resources. So the node just
-> > contains the compatible to match with the serdev driver and nothing else.
-> > 
-> > And he suggested to use swnodes or other similar mechanisms to plug with the
-> > serdev driver as that's the only thing we want here, not a true hardware
-> > description.
-> 
-> SW nodes are not for describing HW from scratch. They are for fixing missing
-> pieces. If you can justify your case as a missing piece for the *existing*
-> device (which is enumerated using standard mechanisms), you can add a property
-> that fills the gap.
-> 
-> Unfortunately I see that there are `PROPERTY_ENTRY_STRING("compatible", ...)`
-> cases in the kernel (only 9 drivers so far), and I can't say if they describing
-> missing pieces or a SW-made descriptions of the hardware. For the latter the
-> DT/ACPI/other means but swnodes should be used.
-
-I have read all replies by @krzk and the question here, why don't you use
-auxiliary bus? It seems the best suit for the case.
-
-> > Since you strongly objected the swnode approach in this series, I wanted to hear
-> > your opinion before I rework the code.
-> 
-> > [1] https://lore.kernel.org/linux-pci/768142f0-2638-41f3-a34f-dc80bb99eb7f@kernel.org
-
--- 
-With Best Regards,
-Andy Shevchenko
+In-Reply-To: <ajpntb2f62mpevhofuv2mdpgsktzp6gwcvu2euka7qu2n3f7at@fp3q5fowyvgg>
 
 
+--nynx6c75mt7damvo
+Content-Type: text/plain; protected-headers=v1; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+Subject: Re: [PATCH v10 3/5] PCI: tegra: Add Tegra264 support
+MIME-Version: 1.0
+
+On Sat, Aug 15, 2026 at 08:52:26AM +0200, Manivannan Sadhasivam wrote:
+> On Fri, Aug 14, 2026 at 05:38:57PM +0200, Thierry Reding wrote:
+> > From: Thierry Reding <treding@nvidia.com>
+> >=20
+> > Add a driver for the PCIe controller found on NVIDIA Tegra264 SoCs. The
+> > driver is very small, with its main purpose being to set up the address
+> > translation registers and then creating a standard PCI host using ECAM.
+> >=20
+> > Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+> > Signed-off-by: Thierry Reding <treding@nvidia.com>
+>=20
+> This s-o-b chain is cobbled.
+>=20
+> 1. If Thierry is the Author, and if Manikanda co-developed the patch, the=
+n there
+> should be a Co-developed-by tag for Manikanda.
+>=20
+> 2. If Manikanda is the author of this patch and if Thierry is just sendin=
+g it
+> along, then the authorship belongs to Manikanda.
+>=20
+> I've applied this patch based on (1):
+> https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git/commit/?h=3Dc=
+ontroller/tegra264&id=3Dd56131f7a401841c09b6611402a8d2e795da3a6b
+>=20
+> If that is not correct, please let me know, I'll ammend it.
+
+That looks fine to me. Yes, I should've added the Co-developed-by tag
+=66rom the start.
+
+Thanks!
+Thierry
+
+--nynx6c75mt7damvo
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAmqDDAoACgkQ3SOs138+
+s6HYNQ/+MRVadAWWZZEyFF3tB78b26u4o5CGugQ9OntgZaF1GiPQJGTDsK9bfaj7
+A89d3NQN7jW7yfIp0S2l+3meGtQZ15IlBNpyldEsrrOduvOoNKePIJD8WAjT8nBr
+7mJ/MjSmDfsEYrnNzey51AsdtfFtY/I4pYV4Y5F5+/BzOw7FXPUaa3Tp5zyaCpg+
+iODaUeUZFCLHHiB36chlJImWteMbX0ZWXCVkyC7IpWhaneTTf7E7fuhSxBwxksXK
+m7iz6tGrtWO+3I2B6X3RFIN/hDU9uDoEuE+ioolPTPOTE4wZAfGw+vDbR8TpBp7z
+WMPvGUjfZy65Zokyk7QAPkwX5Lx6rs1KwITVK9sRdvNpIK1T6eGvZkY3CQx7Sma+
+ji5l+YzHlimaPf4GdbiSsDiTzoi2rRU3bUYs5e0VSjYy3OXjTFbKwEZZTitWFOEJ
+j1Xo+cJd/yHKOH7/jajGT1oRVAh/4iopWNnfVs/oOqKlqkRJCsvr+CvXuoKeGzv+
+0qSLpLo7GNXZfu1nOQmsO7U7G7g7Op662UBwvSSd4uuVsfZTlzS02Vffcg6Tyy1M
+FplFJYeq99XM25g02rpRzg0a/c4HoAVSS73jtYJT5ff4+qSgsTZcsTFRW9k4xe1z
+vMhAcDy/avLS/bEv1fU7lwhNQRKhzY81jAFO9WGFoNU137Bxyy0=
+=lgnR
+-----END PGP SIGNATURE-----
+
+--nynx6c75mt7damvo--
