@@ -1,173 +1,141 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E76F3AFB07
-	for <linux-pci@vger.kernel.org>; Mon, 17 Aug 2026 20:04:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D26DE470458
+	for <linux-pci@vger.kernel.org>; Mon, 17 Aug 2026 20:12:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786997046; cv=none; b=V2lrbFPYr3ZwXe7NW4K6zde6yVPnpZMs5/IqQ7/rEU8fXAF+ASE5r++QUBU7s+p9vOJCeLkj+5hTJgB9fftXErVkZUfAn8FLrBa/vNHgr5cQqRVqLLZ4RudsbDrRcXkA4eWUFPjpd2+wmewZ/wpkiKEEmSuFGle3RPxTMQyiScA=
+	t=1786997525; cv=none; b=eeJTYzuhqbmIW2VNYSxOQ238LMZIB4gUfVQNzCQlpimWcBhYOYo2OryKUs1YdGWNwcEs1CnBW2glVQ7a6ZXNsxVcPjGeyMjallmhGO2zcm/QJZQkFeo6x3uWcEmjCjVykXlxiMaieEL0XpRBEYIEIQyfqyoE02N0UdH7UtRCUhU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786997046; c=relaxed/simple;
-	bh=znLnXba9G2Bw5zKL5sQH+N8emqO1lbs6S29u8ElQPlk=;
+	s=arc-20240116; t=1786997525; c=relaxed/simple;
+	bh=oOj5Dl4AHOnjR2t4aklUFzjoVVM+DjvlkDpPc+6RDIw=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=qF6LBM1QSn0H9vTL5b3aAv3oCcdm9xQ3RRo8TGnUihXa5OLZqmpIg/eChZNhxZjyMMM61MJeA+DvqMZUyt4dcV45oxrs2O00vMqXpjre4JoQoqclJRrE7gl4CDLjh6L0Jq5Ucgu7YunM7u7i6pqUu+0nNXNJH5BS36X5nylXpyg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bc84D2zl; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=lsElfzA5vdk6+NH6RPl+ob2X6Qdy61D29Rdpudi3mX54insL1d+qMjvQRz1VwTZSVvoq8Ru3Br/LAJEgwnKLhWRP+e+WWzxCMJCZFEqju5O9q61NLdQOt9Mf5mAO09o4Z14RwTwoa9TAluHEEZrb6Wop2Di9nrmbh+OtKK7vNK8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=X0u0jdyZ; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bc84D2zl"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BB3121F000E9;
-	Mon, 17 Aug 2026 20:04:04 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="X0u0jdyZ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 34B9E1F00A3A;
+	Mon, 17 Aug 2026 20:12:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786997044;
-	bh=61MzQAlqcIX5494Wyjeb/tJPU0fw3DSul/fdvf7Qhb8=;
+	s=k20260515; t=1786997523;
+	bh=iDAa8RFhn14bdLpr1zlBDQ1O+IkyNFbCRYx1oSck308=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=bc84D2zl9jB/emlYdfjFT79hH7ytGAO+vvL2MXuz3km4D3jqyUq36XVjweDoOEj1F
-	 ogrGV5ZQQmk+o/n9bzO3FoMnZcOsGjI9jcCcTfFZgSbmbjSuj7y1ZziQ6NB2wbnXi7
-	 M0LjTCmg73pVG41bKjpkHkmM8zqf0gW5vdGEX9Z9Dxkub2jt5N72ouGazp7I+ANRZA
-	 GNdVn3sPs+H4aIulLNB8rb9GCPXI3CP/pwX4pDfA2Xp4SUqzKnOyAlRgXEcLvM1N2/
-	 0Tj1NvQUCyFjSUubiWo5IPJRi4GcyEurhTX5zjhDY+KByHVAqYoeotw+Esgj6yVRWz
-	 BCoYZd277xZnA==
+	b=X0u0jdyZfKG5O+xb22HzNz9oc2dqkpNTxEdEzulDV66sbvIzHhjjICnCtuujD8xvX
+	 ThcymCuj5EJYNbwqBUdJR/ghZNOtO4v9dXkHqZb3a76A3t84kUmI90cAW3BJNBkJ+t
+	 f1JcGMm32IDh06tjoaXt9w83hv2rbsANjkOJqb1j/taOZkvnDV6V+VtzqHswZBvPZk
+	 9J0mfcM2gSdrs44+lMcTmbAkuR8Alzm9mAMqUNrjQLSSBRAp070BzI6gQRqaDIzr9v
+	 mHG/IUodisDHzZdDXQcwh/evGehU4v95igfahtZyibiD/vib7MBMNJNdp6LJkK1RNv
+	 1t238XEOTuO4Q==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] vfio/pci: Restore standard PCI config space in
- .slot_reset()
+Subject: Re: [PATCH V1] PCI/MSI: Don't touch the MSI-X table while the Link
+ is contained
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "Keith Busch" <kbusch@meta.com>
+To: "Vidya Sagar" <vidyas@nvidia.com>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260817195110.2077698-1-kbusch@meta.com>
-References: <20260817195110.2077698-1-kbusch@meta.com>
+In-Reply-To: <20260817195626.3091331-1-vidyas@nvidia.com>
+References: <20260817195626.3091331-1-vidyas@nvidia.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 17 Aug 2026 20:04:04 +0000
-Message-Id: <20260817200404.BB3121F000E9@smtp.kernel.org>
+Date: Mon, 17 Aug 2026 20:12:02 +0000
+Message-Id: <20260817201203.34B9E1F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 5 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [Critical] The `vfio_pci_core_aer_slot_reset` callback has an incorrect f=
-unction signature that violates `struct pci_error_handlers`, causing CFI pa=
-nics.
-- [High] The newly added `.slot_reset` callback is unreachable dead code fo=
-r isolated VFIO devices because `error_detected` never returns `PCI_ERS_RES=
-ULT_NEED_RESET`.
-- [High] `pci_restore_state()` clobbers userspace runtime PCI configuration=
- with an outdated kernel probe-time snapshot, breaking VFIO virtualization =
-state.
-- [High] `pci_restore_state()` modifies hardware state locklessly, bypassin=
-g VFIO synchronization primitives and causing severe race conditions with c=
-oncurrent MMIO accesses.
-- [Medium] Prematurely returning `PCI_ERS_RESULT_RECOVERED` from `.slot_res=
-et` races with userspace recovery logic due to the lack of a reset completi=
-on notification.
+
+Pre-existing issues:
+- [High] Unprotected `readl()` operations in `pci_msix_write_tph_tag()`, `_=
+_pci_read_msi_msg()`, and `msix_prepare_msi_desc()` circumvent the MSI-X MM=
+IO containment fix.
 --
 
---- Patch [1]: [PATCH] vfio/pci: Restore standard PCI config space in .slot=
-_reset() ---
-commit e72e9372390b9003aeabcf98521c52beaad6c1a4
-Author: Keith Busch <kbusch@kernel.org>
+--- Patch [1]: [PATCH V1] PCI/MSI: Don't touch the MSI-X table while the Li=
+nk is contained ---
+commit aba17efd26855fb96d48aa82a9f367120d469a3f
+Author: Vidya Sagar <vidyas@nvidia.com>
 
-vfio/pci: Restore standard PCI config space in .slot_reset()
+PCI/MSI: Don't touch the MSI-X table while the Link is contained
 
-Currently, when a link reset or Secondary Bus Reset occurs due to an
-AER/DPC event, the kernel PCI error recovery service executes reset
-routines across affected downstream devices. Since vfio-pci does not
-implement the .slot_reset() callback in its pci_error_handlers struct,
-the standard PCI config space (BARs, Command register, MSI-X setup,
-DevCtl, etc.) for downstream devices is left entirely uninitialized
-after the link is brought back up.
+The MSI-X table lives in device MMIO space behind a BAR, so it is only
+reachable while the Link is up. While a Downstream Port has the Link
+contained by DPC it completes accesses to the table with Unsupported
+Request, and the read returns all ones.
 
-> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci=
-_core.c
-> index ea7bcd44bdfa9..9abf725446158 100644
-> --- a/drivers/vfio/pci/vfio_pci_core.c
-> +++ b/drivers/vfio/pci/vfio_pci_core.c
-
-[ ... ]
-
-> @@ -2351,6 +2351,13 @@ pci_ers_result_t vfio_pci_core_aer_err_detected(st=
-ruct pci_dev *pdev,
->  }
->  EXPORT_SYMBOL_GPL(vfio_pci_core_aer_err_detected);
+> diff --git a/drivers/pci/msi/msi.c b/drivers/pci/msi/msi.c
+> index 209373c92e9e1..5612cf2ff2800 100644
+> --- a/drivers/pci/msi/msi.c
+> +++ b/drivers/pci/msi/msi.c
+> @@ -249,7 +249,7 @@ void __pci_write_msi_msg(struct msi_desc *entry, stru=
+ct msi_msg *msg)
+>  {
+>  	struct pci_dev *dev =3D msi_desc_to_pci_dev(entry);
 > =20
-> +pci_ers_result_t vfio_pci_core_aer_slot_reset(struct pci_dev *pdev,
-> +					      pci_channel_state_t state)
-
-[Severity: Critical]
-Does the extra pci_channel_state_t argument violate the slot_reset
-callback signature in struct pci_error_handlers?
-
-The slot_reset callback expects a function pointer with exactly one
-argument: pci_ers_result_t (*slot_reset)(struct pci_dev *dev).
-
-Will this extra argument cause a control flow integrity panic or compiler
-type-mismatch error when the PCI AER core invokes this via
-err_handler->slot_reset(dev)?
-
-[Severity: High]
-Is this callback reachable under normal single-device circumstances?
-
-In pcie_do_recovery(), the report_slot_reset broadcast is gated behind
-checking if the combined error status is PCI_ERS_RESULT_NEED_RESET.
-
-However, vfio_pci_core_aer_err_detected() unconditionally returns
-PCI_ERS_RESULT_CAN_RECOVER. The PCI recovery state machine promotes
-CAN_RECOVER to RECOVERED during the mmio_enabled phase, so the
-condition to call slot_reset evaluates to false unless another driver
-on the same PCIe bridge votes for NEED_RESET.
-
+> -	if (dev->current_state !=3D PCI_D0 || pci_dev_is_disconnected(dev)) {
+> +	if (dev->current_state !=3D PCI_D0 || pci_msix_mmio_unsafe(dev)) {
+>  		/* Don't touch the hardware now */
+>  	} else if (entry->pci.msi_attrib.is_msix) {
+>  		pci_write_msg_msix(entry, msg);
+> [ ... ]
+> diff --git a/drivers/pci/msi/msi.h b/drivers/pci/msi/msi.h
+> index 0b420b319f50f..e372e9c875087 100644
+> --- a/drivers/pci/msi/msi.h
+> +++ b/drivers/pci/msi/msi.h
+> [ ... ]
+> +/*
+> + * The MSI-X Table lives in device MMIO space, so it is only reachable w=
+hile
+> + * the Link is usable. While a Downstream Port has the Link contained by=
+ DPC
+> + * it completes these accesses with Unsupported Request, which the Root =
+Port
+> + * in turn reports as an RP PIO error and answers with a DPC of its own,
+> + * taking down every other device below it.
+> + */
+> +static inline bool pci_msix_mmio_unsafe(struct pci_dev *pdev)
 > +{
-> +	pci_restore_state(pdev);
-
-[Severity: High]
-Can pci_restore_state() clobber userspace runtime configurations with
-an outdated probe-time snapshot?
-
-For a VFIO device, pdev->saved_config_space contains the host kernel's
-baseline state captured during vfio_pci_core_enable(). Subsequent
-userspace modifications (like enabling bus master or setting up MSI)
-are recorded in VFIO's virtual cache (vdev->vconfig) but do not update
-pdev->saved_config_space.
-
-Will reverting the hardware to this stale baseline silently destroy
-guest configurations while VFIO still thinks they are intact?
-
-[Severity: High]
-Does modifying the hardware state here locklessly bypass VFIO
-synchronization primitives?
-
-The PCI AER core invokes the slot_reset callback holding only the
-baseline device lock. VFIO relies on vdev->memory_lock (using
-down_write(&vdev->memory_lock)) to serialize state-mutating operations
-against concurrent userspace operations like vfio_pci_rw or MMIO page
-faults.
-
-Could calling pci_restore_state() without this lock rewrite BARs and
-the PCI Command register concurrently with active userspace MMIO accesses,
-potentially causing host crashes or machine check exceptions?
-
-> +	return PCI_ERS_RESULT_RECOVERED;
-
-[Severity: Medium]
-Does returning PCI_ERS_RESULT_RECOVERED here create a race condition
-with userspace recovery logic?
-
-VFIO notifies userspace via the VFIO_PCI_ERR_IRQ_INDEX eventfd when
-an error is initially detected. By unconditionally returning
-PCI_ERS_RESULT_RECOVERED, the host kernel completes its physical PCI
-recovery and brings the link fully up before userspace has a chance
-to react or rebuild its state.
-
-Since there is no explicit completion notification to coordinate with
-the kernel's state machine, will userspace operate blindly and potentially
-attempt to access the device concurrently during the kernel's reset
-sequence?
-
+> +	return pdev->error_state !=3D pci_channel_io_normal ||
+> +	       pci_dev_is_disconnected(pdev);
 > +}
-> +
->  int vfio_pci_core_sriov_configure(struct vfio_pci_core_device *vdev,
+
+[Severity: High]
+This is a pre-existing issue, but could this regression still occur through
+other unprotected MSI-X MMIO accesses?
+
+While this patch successfully shields the vector control write inside
+pci_msix_write_vector_ctrl() using this new check, there appear to be
+unprotected readl() operations that still bypass it.
+
+For example, in drivers/pci/msi/msi.c:pci_msix_write_tph_tag():
+
+    FIELD_MODIFY(PCI_MSIX_ENTRY_CTRL_ST, &msi_desc->pci.msix_ctrl, tag);
+    pci_msix_write_vector_ctrl(msi_desc, msi_desc->pci.msix_ctrl);
+    /* Flush the write */
+    readl(pci_msix_desc_addr(msi_desc));
+
+The flush readl() is unconditional. It bypasses the safety check and
+would complete with an Unsupported Request if the link is contained.
+
+Similarly, in drivers/pci/msi/msi.c:__pci_read_msi_msg():
+
+    msg->address_lo =3D readl(base + PCI_MSIX_ENTRY_LOWER_ADDR);
+    msg->address_hi =3D readl(base + PCI_MSIX_ENTRY_UPPER_ADDR);
+    msg->data =3D readl(base + PCI_MSIX_ENTRY_DATA);
+
+And in drivers/pci/msi/msi.c:msix_prepare_msi_desc():
+
+    if (dev->dev_flags & PCI_DEV_FLAGS_MSIX_TOUCH_ENTRY_DATA_FIRST)
+        writel(0, addr + PCI_MSIX_ENTRY_DATA);
+    desc->pci.msix_ctrl =3D readl(addr + PCI_MSIX_ENTRY_VECTOR_CTRL);
+
+If an IRQ affinity rebalancing event triggers a TPH tag update while
+the link is contained, or if the link becomes contained concurrently
+during MSI-X initialization, won't these unprotected accesses still
+escalate to a Root Port PIO error and trigger a DPC?
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260817195110.2077=
-698-1-kbusch@meta.com?part=3D1
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260817195626.3091=
+331-1-vidyas@nvidia.com?part=3D1
