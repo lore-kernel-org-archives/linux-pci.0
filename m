@@ -1,163 +1,186 @@
-Received: from MRWPR03CU001.outbound.protection.outlook.com (mail-francesouthazon11011029.outbound.protection.outlook.com [40.107.130.29])
+Received: from mx0a-00082601.pphosted.com (mx0b-00082601.pphosted.com [67.231.153.30])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1625837DE99;
-	Mon, 17 Aug 2026 18:43:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.130.29
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786992196; cv=fail; b=p+l5Ky39gwOKv2QNubkLbDa7cVwHvNvlxtRUU50A26dcoLd+JF44vaAeQcvCO0GUt/xBujQrt4o1z3z06XpXwVojTLS4qn+m1oB+sD2L5Wk/hI92oMo9fHUEZg2higzQRfENjxfBHkFH0h2HwWKeLLyaKg0mmhZBAMpNkL94zMQ=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786992196; c=relaxed/simple;
-	bh=VQ2U3MrisDg0LzZJsBHyY3JWKz0GKgcU1TJnhR3qjvM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=S6JXQ/XB1XYZQvnY02uBL9TvyH/qI1+qIBOa8mQpRoN+QWg+5/BLS0/7W4UlHC1UjSXt8DeSx7s4TQAZSR3/p9tmDyeKRzzlTtOV8wMWyy4zm82KUyG6lpoYEQqW7BKvdNP+YFaHyoU566RGtpbY+vTHF4fq/yXU9pcefu/TKAE=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com; spf=pass smtp.mailfrom=oss.nxp.com; dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b=SRYDRWKC; arc=fail smtp.client-ip=40.107.130.29
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.nxp.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 763AF37FF68
+	for <linux-pci@vger.kernel.org>; Mon, 17 Aug 2026 19:51:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.153.30
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1786996287; cv=none; b=RIZZHXRLHGlKVuEbrDtmwu8a58HoO/yhsQHzj9ud8xxXQRL62/bIa53klFKQNzPZJcVqUcROj28tTQLmAzj17B8mLC7IfJVvyACH5NaxerJLCA3fIMqCUZN95Vyau2sveiAtInIJ5tuk6kx3e3xRoyJlSg3lIAX5JHIX0Mk2QUc=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1786996287; c=relaxed/simple;
+	bh=ZVQgv/wkgJu04lezL+VEvjojP8GirnSWQEe+M+MyHHs=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=YNLffJ4RVq8qj3fwBC+s3RQXIyqICNS1+u5dNWVh2O0h1godHbM+UFLm0Ck7V9SwEA2TFv/XP50xP5CNuz4ZTffaMT0gnc9ZJ6ehaduMAI62+CrpuBEFchPKrOEtrZ+rPMo3rY5NwCGCYtzOBtsVhLcaCy2ixVe2iYYYDdgIPCg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=HUks8nd1; arc=none smtp.client-ip=67.231.153.30
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meta.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b="SRYDRWKC"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=m/pOIkGx4MHOYC4mXQLFrmO2iQVpscZ2nd5loEtKbQ4MnFbQe0gJHXrSQSlbkR5rxV/gBQpJ8WI7Uj+mSpXpz/mIJpUSeVhH1QdqG3z0EkqUjQBZRfw67lubSXIwufJbjPTGH4j3cwBaQ6gg5kJqC/Guo121188TobM4QvlDGdqcsJqArE+LEvxpZou30jJU4oIpTN72da8aBwl55U+rJShVaUolUzudZE4fsGA2BMqwxYOeYxMRYfXRe+QYKFQLHqdeHwCkfXEKm5wGgGzk3s4illoe7kGf/UjtyGsp2TETuJl4qVen/J2g4qg6doP51zz0bGYBlm4UTyk9/4rFGg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=VQ2U3MrisDg0LzZJsBHyY3JWKz0GKgcU1TJnhR3qjvM=;
- b=Mcs9cI6BhFCIG3PGN1v146dRYneQ/se4vm6EQhl/GgF8/11m9R0qoHLYXP1Kx3Fi+8kjdugI9olVpxe8BDNXxkfiBlvqELyZOiEib8iw/ckkzj+bUiblpFfS9AX170aycMOToBBwDg13UI/Y3BgmjcguwNQp2MOoWIicH8dc6OqWldAyNFNxIDvyj+z9sLZFvEdQUtqiFuooBXimsNYEJd2Kr05TWr3Ay92wZk2GYbl97wF4HC7bewHpzahaL/epJrNbKlCJ2gJow1eIntaKFG+6hW75RkDhH2VWx8GatwuxcHEaJ1Wpv9XgQNzwaRyiwRKS8w7UlVA7bKyXkabpYg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oss.nxp.com; dmarc=pass action=none header.from=oss.nxp.com;
- dkim=pass header.d=oss.nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=NXP1.onmicrosoft.com;
- s=selector1-NXP1-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=VQ2U3MrisDg0LzZJsBHyY3JWKz0GKgcU1TJnhR3qjvM=;
- b=SRYDRWKCNG7il1dv9qUe8IdAseO8LjfPfQM4CCwFS5vQbPLuBMZUq+lVSHp9rNbQKEHwwMADyUYNtcIwq8giwj1H1HR2A/fe+htbG3XYsRSSB+SkUb83rrhXXcuTw6pq2n691tIJHOlfbMxsH1EqL2M0gFUsAZ8OgR+pt7RSQR2eKnzdToN3sfvOLZQ86eAFUKuW1lm3PG5rbRNUnTEQDeHbfFDIZxJGoLo6A501pjrKQ5MnMDbnACKxRpbqnh7F165o1WVWXgWcPg6Ahw3q858f267Y46r8UA4Ht42uwr2KnprGEII4+yx23PSIf87Unm41KM2AVkebhVCRYI4FFQ==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=oss.nxp.com;
-Received: from GV2PR04MB11799.eurprd04.prod.outlook.com (2603:10a6:150:2cf::9)
- by PAXPR04MB8559.eurprd04.prod.outlook.com (2603:10a6:102:216::19) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.315.17; Mon, 17 Aug
- 2026 18:43:12 +0000
-Received: from GV2PR04MB11799.eurprd04.prod.outlook.com
- ([fe80::2146:83a2:5329:b7c]) by GV2PR04MB11799.eurprd04.prod.outlook.com
- ([fe80::2146:83a2:5329:b7c%7]) with mapi id 15.21.0315.016; Mon, 17 Aug 2026
- 18:43:12 +0000
-Date: Mon, 17 Aug 2026 13:43:02 -0500
-From: Frank Li <Frank.li@oss.nxp.com>
-To: Michal Pecio <michal.pecio@gmail.com>
-Cc: frank.li@nxp.com, corbet@lwn.net, dmaengine@vger.kernel.org,
-	hch@infradead.org, imx@lists.linux.dev, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	lizhijian@fujitsu.com, mst@redhat.com, rdunlap@infradead.org
-Subject: Re: [PATCH v2 1/1] docs: dma: correct dma_set_mask() sample code
-Message-ID: <aoNWNkAhUZi6_pgH@SMW015318>
-References: <20240401174159.642998-1-Frank.Li@nxp.com>
- <20260816071044.331a2c51.michal.pecio@gmail.com>
- <aoMty9Dvt2bnWm74@SMW015318>
- <20260817191731.104171a3.michal.pecio@gmail.com>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260817191731.104171a3.michal.pecio@gmail.com>
-X-ClientProxiedBy: SA9PR03CA0003.namprd03.prod.outlook.com
- (2603:10b6:806:20::8) To GV2PR04MB11799.eurprd04.prod.outlook.com
- (2603:10a6:150:2cf::9)
+	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="HUks8nd1"
+Received: from pps.filterd (m0001303.ppops.net [127.0.0.1])
+	by m0001303.ppops.net (8.18.1.11/8.18.1.11) with ESMTP id 67HJXrvE656787
+	for <linux-pci@vger.kernel.org>; Mon, 17 Aug 2026 12:51:24 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=meta.com; h=cc
+	:content-transfer-encoding:content-type:date:from:message-id
+	:mime-version:subject:to; s=pps82601-s2048-2026-q3; bh=AGjXtVlXK
+	s9Or5zuAC/XGWs7QH2feKKkgQNHjc8EfG8=; b=HUks8nd1GAv9wQmj2J/g6s3ZQ
+	FjgWlwgJ/hMosjg1A6Og9hx9oLKTA3KCl8Bpq+bIRdUM27KIBf/HTVySQDNyI+ay
+	DtU+K7dHdbXdcPOOXtmgGMNdmAPs011J5TwBG4tuCG4NyqsyErCna1JJSefC53lU
+	A6ZS0p66lgpvq/1pImnXFVsmYQejP7vOcWQsts26RDI91W3zAhy/2cZwFoqzXXaE
+	aeJqGzSHXWrhX0tPMVvmdi0EtO3PMLKYjJirF22vKFuskSjaYa+XgTQTNOYZq9tr
+	rZYsce831IzviVrq7FJ3PAayFk6vby4Z9wjJvDwjDvkYYF/GA8ifisJTCNHGg==
+Received: from maileast.thefacebook.com ([163.114.135.16])
+	by m0001303.ppops.net (PPS) with ESMTPS id 4g2ks83gdk-3
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Mon, 17 Aug 2026 12:51:24 -0700 (PDT)
+Received: from twshared51612.31.frc3.facebook.com (2620:10d:c0a8:1c::11) by
+ mail.thefacebook.com (2620:10d:c0a9:6f::237c) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.2.2562.45; Mon, 17 Aug 2026 19:51:22 +0000
+Received: by devbig197.nha3.facebook.com (Postfix, from userid 544533)
+	id AC76A2857750D; Mon, 17 Aug 2026 12:51:10 -0700 (PDT)
+From: Keith Busch <kbusch@meta.com>
+To: <alex@shazbot.org>, <bhelgaas@google.com>, <linux-pci@vger.kernel.org>
+CC: <mattev@meta.com>, <matt@ozlabs.org>, <nekto0n@meta.com>,
+        Keith Busch
+	<kbusch@kernel.org>
+Subject: [PATCH] vfio/pci: Restore standard PCI config space in .slot_reset()
+Date: Mon, 17 Aug 2026 12:51:10 -0700
+Message-ID: <20260817195110.2077698-1-kbusch@meta.com>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: GV2PR04MB11799:EE_|PAXPR04MB8559:EE_
-X-MS-Office365-Filtering-Correlation-Id: 9a4143c1-02a2-420c-8b66-08defc8f63b6
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|23010399003|376014|7416014|19092799006|1800799024|366016|18002099003|22082099003|56012099006|6133799003|4143699003|11063799006|10067099003;
-X-Microsoft-Antispam-Message-Info:
-	nPE4nhnMH9khzJ1XRcIzxhzcVxs67IPgazVsR/EYM0eDxJQ6VOrZAfe8EdWaC4Nn9VXJU15TS61xPBSp3D508i09SHG+Mp/KtVgt+9ECrcmg0dfD79A5JMj0WaV6ryMqiUvAXlTqleH2RAf/DBpABUZINEyc4TG5UN1JQX/bfCd1MpigrR+2K00KVW2HX9qfc5DJ0VocPlGn92IlnDQw4+nH+20QYdweWI14Xr7M7C86CEuH4w9L6yeLeCSM7H1ILdZo/WgHNsSOBvvb7ssXl1zLn/6NGVWhv+svZwyNU1CPWDwo+in+2gB70X04em/33SCvUelKQL8NUb5ju+rfP6Y1hpp6l8iWeeEowMHZgCR4BE2tvemUY9NqJJrXcXXFW6ZpUu280n28nSsvMV21s8mHRopmSlBZwK6DAknj7YPe49DC4tcqh9KIJLxH7r1xVrVoUKn6EMDtDGQ8sGZQ1T0bGWPazfWFokf568Z0oyddOWE/h/+shdUwz0WG9tozvDXHzgBF+M59X3jV17pGJdFgYZCqIrJ3QkGhOcjGfKyzlTWZoT8A9gyONVpN1Mpm+9YULVTpjg7ySAD+J9RoZnN17ytjPtjIlLYoqp9ajWTjkn/iSmiLR2A6Pn/AHvvi
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:GV2PR04MB11799.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(376014)(7416014)(19092799006)(1800799024)(366016)(18002099003)(22082099003)(56012099006)(6133799003)(4143699003)(11063799006)(10067099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?206vU/xD1Jq6804UHoGg7MEV0JcWEBQ2hMgHWUneOmJG7D2Pa6Frreu1ZOSM?=
- =?us-ascii?Q?JNokDA9/leYYZzaFyBkInT7gfWSPBXBvtrnVxv1fqsAbAo9tNSU+mtjwplJG?=
- =?us-ascii?Q?lZ9tJOy9F3vjvyXMOMDMmgyNWh4BEWzIIWXzgJc9EOKL2BFVVtFqoOYwLwYz?=
- =?us-ascii?Q?z0AVF40kViaI4ClqneeF97VOz+Wg+ovZP5xgrc45ECU7LNfISorGiplOGi4o?=
- =?us-ascii?Q?OluSIx3RauuOReQ85f0cslGA/EsOMYRPBFUxqwd0kAK1DpKL4Aa66JnRMfSv?=
- =?us-ascii?Q?HN5slQda7Gp1UKZp2FOnhfp0c7eLTsCGdYO0cgC+eujTy4Ity6TKSMj0paFu?=
- =?us-ascii?Q?DvUxqouyUxpCqjyxjXpHR1OfsoTTem/RjH1+FLSnvmwEey8Clin4YXPTlwsj?=
- =?us-ascii?Q?aZWXtM8s/wyO8Au2WvHxEQn/MnAM+ImAcJWLKe7Fqy5hDjPKXODs7UpHKGTM?=
- =?us-ascii?Q?VUROvWK23um64HMX5fyV4RKoZ9GAaXrE/WXH80Q5Jh/HyUkEZZIIrXop0MFR?=
- =?us-ascii?Q?+OXhDJ7PxnnAKm9ORvbZn+jtJHTdrnuJBiDNSwYxRChLnpRmrWm5VkjLY96F?=
- =?us-ascii?Q?G5Z1Yxhn8m4ZxZ5B6RC09RjFTQ1B8OfK/w0oPkyBi3G0XnbyXqEtELjLcZuc?=
- =?us-ascii?Q?agPfv5olI2MsjA5xn5xVGor/ssFqNH5zErtxIOt0Yu+UE/CDWH/cfrcJ+BeZ?=
- =?us-ascii?Q?8FhW0smE3I8lElwhEu9INfa/UnEVDcm/m+BgGkJR2612SD2cNJgIE6i5IWyE?=
- =?us-ascii?Q?KoSCbKgu/wOM6u1766yEdCP74PVJ3iMsWwg9bxxYsXPfs26SfiDuj5QjX1/J?=
- =?us-ascii?Q?PmvT/gXolS8u/EM+rpqvl0OxMVRJ2W/WyXQ9/4MI4dQenlZUvdZmtDZoSNJi?=
- =?us-ascii?Q?0SB3W7hOPE2mTuj9KvdLKbGcv1rFo+sdibWGIGO1SJ5p8Mq6l4j0VgFYJrh1?=
- =?us-ascii?Q?Y7wgNenco6nQUt74Yesvav6xQksNaQMAGG1V/omJX/lGT4TQ3ae6fGnwASxc?=
- =?us-ascii?Q?JYFCE8zTrHX73IPTvc1Q7BiqFsr63ao2XBM60wpZEox5Xh7oiyWKGoEl7jv5?=
- =?us-ascii?Q?oLl0wVTLbFWFmIi1I0I3ekxWlkMt7AzyXOA7Ix1mo8Ch33wLlSaoWCLRKtSZ?=
- =?us-ascii?Q?Jb0m3y0RlVCiXXx9LpsmgVnX5753pb2wvghoefcWoTfsWGlW3xg4UIQPXwns?=
- =?us-ascii?Q?ZPftV1dOAlTP+lG1QJ07EZJJdV3E5A+dARH4ivIzvFaQI3LKrfSEFqjflvZW?=
- =?us-ascii?Q?hPQP2twRtRqiJyGj5/VTRHm6bKWQCzg+pOuuuX9tJuah51h6mx3HROGxvr4D?=
- =?us-ascii?Q?mudKqxaYVE4lALYDKbee+MQHsEVCbO0NWk+rVYRC2eqkGO05itaP70FI/DHY?=
- =?us-ascii?Q?fgsLks27HvPW/TRCbdokdZ+Tq9RuhjF8j60JEDx5zbXrloAI6+3h9qtJUnjU?=
- =?us-ascii?Q?wPvcRDxf51x100c4hCU+kZ2h11jlXLYVHiyz4XWd76Gv4q6YpSfAT40wBdY/?=
- =?us-ascii?Q?H8qSmkJ115RDph/bia4XpsHON5G4xTp5Ppv+qVPQGtoTqsMW2i8S/XK83o6G?=
- =?us-ascii?Q?0aM9peE8DJ6Waoaxced0UUpqYykvR2CLKUEDQ4WmHsT7d5D+M7xyOpBvbdOU?=
- =?us-ascii?Q?urXI8ptkqSua2vtQP0COvt30cq1m279PF4ed9hp8Swi52iJ1059bayP5crqG?=
- =?us-ascii?Q?5w+sd5Vrc2zRtcHCtl6LH39/un8Rg1k1YydZF9V8naOWYUakXXZTWplMapVd?=
- =?us-ascii?Q?bN+D34WQCfs3aIe26TSCYPBP6RNXE2fLVqzL9kES4X0IpivtaeaH?=
-X-OriginatorOrg: oss.nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 9a4143c1-02a2-420c-8b66-08defc8f63b6
-X-MS-Exchange-CrossTenant-AuthSource: GV2PR04MB11799.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Aug 2026 18:43:11.9201
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: CZt0gS0lHMrx237hY5CI8qvHohqH+c2KpKJD4B7D87YH1JAV4Fc126T12nefz8sMyqvoXrkc9578td8FwXMt6WwXx5luInAzTcuHTFbBend0+rXkRGxJEAWxEr6LjE38
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PAXPR04MB8559
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-FB-Internal: Safe
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODE3MDE1MSBTYWx0ZWRfX3/7OXfHzyGZn
+ DCbcrlm831zXRkdRSaYC+rD+2U7Z/LBwOeGqfQOWa6AgjtYb3m1kcYo7I9rWSXv2X2Ur7vsx079
+ WFACVn9ybiJWsiQvkwu3k48HFzzw5ZFFYHwOG/sYrxH6RnvcZVuRM8h7vHv18hwdD0cwX8421w0
+ McUHV5JfetSnTF/XuLS2Y3a1xsFRj+M01DHaUuTu97SbG3Nve8mxqYt6qjKp9ny55GjCBuct1Qe
+ KSio7ooMPD+QlwvOW8IMWvP/Ewr7T+VqIG8NJ1W9FleB5K2afZrGTPCnpfqQulOJYvDzWgdsLrE
+ s9dhngHo9zrqYflAf4h5vK79rETWgWfmYlz9FL0UYin1B107qqMjtgeTcg2qnXIq53j5bV35Vtu
+ Yqh0R2Jk4so+0VZXURrYMJ2PlmMntj94eRb4/5yvE9mdN7Ht8XUwhTgc/s/qB9T/oEaA7iDE8Pv
+ bYeooKJ7xaNXhjdv7GQ==
+X-Proofpoint-Spam-Info: AW1haW4tMjYwODE3MDE1MSBTYWx0ZWRfX/Jbc6zwO4okx
+ XC6aA3Y1evs9xrl4EvpARsz4HWBgRwXIZS70Q2U2OD/Cb7dJcrh3p7OH1wk5A7HI0JaQjrsMSsk
+ /E8ysd09+FahA11tjU5DCqYNpW5wEpU=
+X-Proofpoint-ORIG-GUID: PpLEPERArf84WWlECi0HHxH5zGBMX2-N
+X-Proofpoint-GUID: PpLEPERArf84WWlECi0HHxH5zGBMX2-N
+X-Authority-Analysis: v=2.4 cv=WIpPmHsR c=1 sm=1 tr=0 ts=6a83663c cx=c_pps
+ a=MfjaFnPeirRr97d5FC5oHw==:117 a=MfjaFnPeirRr97d5FC5oHw==:17
+ a=IkcTkHD0fZMA:10 a=Sv0fKeRqtYgA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=7x6HtfJdh03M6CCDgxCd:22 a=_78whYxrdx1mplLwxq1U:22 a=VwQbUJbxAAAA:8
+ a=VnNF1IyMAAAA:8 a=sm42_5VQJLERfNZvqZYA:9 a=0bXxn9q0MV6snEgNplNhOjQmxlI=:19
+ a=QEXdDO2ut3YA:10
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-08-17_03,2026-08-12_01,2025-10-01_01
 
-On Mon, Aug 17, 2026 at 07:17:31PM +0200, Michal Pecio wrote:
-> [You don't often get email from michal.pecio@gmail.com. Learn why this is important at https://aka.ms/LearnAboutSenderIdentification ]
->
-> On Mon, 17 Aug 2026 10:50:35 -0500, Frank Li wrote:
-> > On Sun, Aug 16, 2026 at 07:10:44AM +0200, Michal Pecio wrote:
-> > > No realistic chance of the dev->dma_mask check (below) giving -EIO?
-> >
-> > dma_mask is pointer, which already initilized by bus driver before
-> > call to probe.
-> >
-> > For example
-> >
-> > https://elixir.bootlin.com/linux/v7.1.8/source/drivers/base/platform.c#L634
-> >
-> > If you find one, which bus driver have not init it, please high light
-> > it.
-> >
-> > > > dma_supported() will call dma_direct_supported or iommux's
-> > > > dma_supported call back function.
-> > >
-> > > Aapparently, it may also use some 'dma_map_ops' and there is a bunch
-> > > of those spread over drivers/ and arch/. But I gather they are
-> > > expected to behave similarly as the functions named above?
-> >
-> > I grep it and checked at that time, all return 1 when >= 32. Now more
-> > powerfull check tools avaible, you can double check it.
->
-> Thank you. Sounds like it should work then, though I think that
-> checking return status won't harm, just to cover unusual cases like
-> regression in some obscure arch or people with buggy out of tree
-> patches (which they "forget" to mention they are using).
+From: Keith Busch <kbusch@kernel.org>
 
-Now, prefer don't check when >= 32 to keep code clean.
+Hi Alex, Bjorn, Linux-PCI, and VFIO,
 
-Frank
+I'd like to initiate, or maybe restart, a discussion regarding the
+current state of PCIe AER and DPC (Downstream Port Containment) recovery
+for devices bound to vfio-pci, potentially expanding to devices not
+bound to anything at all.
 
->
-> Regards,
-> Michal
+Currently, when a link reset or Secondary Bus Reset occurs due to an
+AER/DPC event, the kernel PCI error recovery service executes reset
+routines across affected downstream devices. Since vfio-pci does not
+implement the .slot_reset() callback in its pci_error_handlers struct,
+the standard PCI config space (BARs, Command register, MSI-X setup,
+DevCtl, etc.) for downstream devices is left entirely uninitialized
+after the link is brought back up.
+
+Historically the PCI core introduced early pci_save_state()
+checkpointing prior to driver probe (e.g. commit 30d52f6385d8, "PCI:
+Save device state in pci_pm_init() before driver probe") precisely to
+ensure that the kernel maintains a valid baseline config space
+snapshot=E2=80=94even for driverless or stub-bound devices. However, that
+infrastructure was never fully connected to the error recovery callbacks
+for generic pass-through drivers.
+
+For bare-metal userspace drivers, like custom user-level drivers, this
+creates an operational deadlock:
+
+1. The kernel PCI error handling triggers a bus/link reset, but leaves
+   standard PCI config space wiped back to power-on defaults.
+2. The eventfd (VFIO_PCI_ERR_IRQ_INDEX) alerts userspace that an error oc=
+curred,
+   but gives no indication of when link recovery/reset completes.
+3. Userspace attempting to re-initialize or access the device races again=
+st
+   the kernel's reset sequence or operates on zeroed/uninitialized config=
+ registers.
+4. While QEMU originally included stubs intended to coordinate AER recove=
+ry with
+   guest OS drivers, that guest-host coordination infrastructure has rema=
+ined
+   unimplemented for over a decade.
+
+In scenarios where userspace simply needs the underlying hardware
+restored to its known-good baseline state post-reset, having vfio-pci
+implement .slot_reset() and leverage the existing PCI core snapshot via
+pci_restore_state() bridges this gap cleanly.
+
+We recently saw related discussions around VFIO error recovery on s390x
+(https://lore.kernel.org/linux-pci/20260603182415.2324-1-alifm@linux.ibm.=
+com/#t),
+where platform-specific mechanisms had to be wired up to communicate PCI
+errors to userspace. However, for standard PCIe setups relying on
+generic kernel error recovery (pcie_do_recovery), vfio-pci still lacks
+the fundamental .slot_reset() handling needed to restore standard PCI
+config space after recoverying from a fatal error.
+---
+A few questions I'd like to put to the list:
+1. Since the PCI core already takes responsibility for holding the early=20
+   config space checkpoint, is calling pci_restore_state() during
+   .slot_reset() the appropriate place for vfio-pci to apply it, or
+   should this be explicitly driven/triggered via a VFIO ioctl?
+2. Does returning PCI_ERS_RESULT_RECOVERED here create subtle state
+   issues if userspace directly modified config space registers that
+   were not captured in pdev->saved_config_space?
+3. Should we pair this with an explicit "link restored / reset complete"
+   eventfd notification so userspace knows exactly when it is safe to
+   resume access?
+
+Appreciate any feedback or historical context on how VFIO and PCI error
+recovery should interact here.
+
+ drivers/vfio/pci/vfio_pci_core.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci=
+_core.c
+index 3f11a9624b9c0..5b42430337e29 100644
+--- a/drivers/vfio/pci/vfio_pci_core.c
++++ b/drivers/vfio/pci/vfio_pci_core.c
+@@ -2347,6 +2347,13 @@ pci_ers_result_t vfio_pci_core_aer_err_detected(st=
+ruct pci_dev *pdev,
+ }
+ EXPORT_SYMBOL_GPL(vfio_pci_core_aer_err_detected);
+=20
++pci_ers_result_t vfio_pci_core_aer_slot_reset(struct pci_dev *pdev,
++					      pci_channel_state_t state)
++{
++	pci_restore_state(pdev);
++	return PCI_ERS_RESULT_RECOVERED;
++}
++
+ int vfio_pci_core_sriov_configure(struct vfio_pci_core_device *vdev,
+ 				  int nr_virtfn)
+ {
+@@ -2419,6 +2426,7 @@ EXPORT_SYMBOL_GPL(vfio_pci_core_sriov_configure);
+=20
+ const struct pci_error_handlers vfio_pci_core_err_handlers =3D {
+ 	.error_detected =3D vfio_pci_core_aer_err_detected,
++	.slot_reset =3D vfio_pci_core_aer_slot_reset,
+ };
+ EXPORT_SYMBOL_GPL(vfio_pci_core_err_handlers);
+=20
+--=20
+2.53.0-Meta
+
