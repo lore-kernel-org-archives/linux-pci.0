@@ -1,29 +1,28 @@
-Received: from zg8tmtyylji0my4xnjeumjiw.icoremail.net (zg8tmtyylji0my4xnjeumjiw.icoremail.net [162.243.161.220])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 680BC3BBA05;
-	Mon, 17 Aug 2026 07:59:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=162.243.161.220
+Received: from azure-sdnproxy.icoremail.net (azure-sdnproxy.icoremail.net [40.65.178.148])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 2AC753B893C;
+	Mon, 17 Aug 2026 07:59:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=40.65.178.148
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786953554; cv=none; b=PJrUzN6GmXVYwY2R3dJ+QNvEz9ull3gJ4K5TGZIs8AC3+hvkwbOqN/VqdHmjm/znVTSeCMQn8R/Jboe6BlgWAm2+uXQMVoe4KtjAxjaI9k5/MpvVqpGI3kTWQ84ZWvD8HJVM/aPcReCqrh427K4bUasL2dZgYRok5OyEwx+pST8=
+	t=1786953555; cv=none; b=X1qoOtDwx21Usyc8I9MUlGneoestN0Kfiut3apAc9aqBzbfpPDYOALdhqwziD1g2yBCHKnP/PKiPm2shulnWrM6GQl5XVvAcfwK6S148CfuAwivczvFmJ5b1pbc29GiQNa5TmOzven946Ugylu8xJ1xi6bLywFd3ZdFw48rzKqw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786953554; c=relaxed/simple;
-	bh=/jiHJvQNV58UYr/lcQfPX2Spvn78kO9MVNKZkRyocy4=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=HDJqugYlX2lHjgLJ3BhswSB2NmobyTcK0S+3U/VmvIKjFHrnqSORjrNW6pr0Zhqzm+VjeWDqJLqJa/bmbH0Zi45LJRZJGTR0UxStowAnuZx7uqz3d6RDSampbdjaP60MY+w0QC8Ff4CJee+8SnQeA5B5ZwHw3OJVky8x8qOXa1M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=buaa.edu.cn; spf=pass smtp.mailfrom=buaa.edu.cn; dkim=fail (0-bit key) header.d=buaa.edu.cn header.i=@buaa.edu.cn header.b=fFbacJ38 reason="key not found in DNS"; arc=none smtp.client-ip=162.243.161.220
+	s=arc-20240116; t=1786953555; c=relaxed/simple;
+	bh=RucAdu/L/lKt5DB9LfrJVlFxjNoiBx4Z0ABwjk9rTzw=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=pBLBvoHzv51vxMYKZkwe6+Gcb8LTfh1hHvg9z8+GWbOrGplLC0owbj2A1u24iH7Vln7dTAN/aWs0d7UbpgmBKh94mP+D2QraInimK4IQGlAbj6Vhs0Z1LclLKJ5hcgKA+wJ42KfUYsSj6fNAyWnrB5ixTMlo9Uvszw3SyeapNXk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=buaa.edu.cn; spf=pass smtp.mailfrom=buaa.edu.cn; dkim=fail (0-bit key) header.d=buaa.edu.cn header.i=@buaa.edu.cn header.b=RKopZbs/ reason="key not found in DNS"; arc=none smtp.client-ip=40.65.178.148
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=buaa.edu.cn
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=buaa.edu.cn
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=buaa.edu.cn header.i=@buaa.edu.cn header.b="fFbacJ38"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=buaa.edu.cn header.i=@buaa.edu.cn header.b="RKopZbs/"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
 	d=buaa.edu.cn; s=buaa; h=Received:From:To:Cc:Subject:Date:
-	Message-Id:In-Reply-To:References:MIME-Version:
-	Content-Transfer-Encoding; bh=TtY9J2QK7D1O/4l9zOnU+V2eKgM70/78jl
-	660bLlyTo=; b=fFbacJ38mSO9s85cCIjDxK6OnmyoVmNtI0kSbrL0gw9+CJQ5cY
-	Vigtp0CklbbI7PyAebVzYX6wO/2C8Bih+YftGS3EgsVib/Rk2Jjx2bXmDzz3w6MZ
-	eIrAwTYjeZLNgi33L1o8rB/WBy1HDf3H7RtHf9pB8+ldAabYISS0LJP5g=
+	Message-Id:MIME-Version:Content-Transfer-Encoding; bh=El6V5A/3KG
+	8e+CPQWGJn02nuxkSqI95scSt0bo3Gj1U=; b=RKopZbs/0T8Zw/xpan9rqJ2O6d
+	5Tz45nIxnsbrQvOhWjVKgl6FxeV9Cc4KJCvcJ0aWdyGIOEf+8+XJj78qreQft8Iw
+	DMZ+f7gmoYkxzBNCS4VCotL0Jwy/QSCEkGRh3e7QNfZVqctxfXQQWnSd+nSvCLLM
+	ogm3U7ee7NQ2QmYgs=
 Received: from localhost.localdomain (unknown [61.177.32.126])
-	by coremail-app2 (Coremail) with SMTP id Nyz+CgCn+yBCv4JqQK+EAA--.36036S3;
-	Mon, 17 Aug 2026 15:59:03 +0800 (CST)
+	by coremail-app2 (Coremail) with SMTP id Nyz+CgCn+yBCv4JqQK+EAA--.36036S2;
+	Mon, 17 Aug 2026 15:58:59 +0800 (CST)
 From: penn <engguopeng@buaa.edu.cn>
 To: linux-cxl@vger.kernel.org
 Cc: linux-pci@vger.kernel.org,
@@ -40,12 +39,10 @@ Cc: linux-pci@vger.kernel.org,
 	peng.guo@montage-tech.com,
 	jingzhong.yang@montage-tech.com,
 	Penn <engguopeng@buaa.edu.cn>
-Subject: [PATCH v2 1/2] PCI: Add MMIO Capabilities Register Block definitions
-Date: Mon, 17 Aug 2026 15:58:53 +0800
-Message-Id: <20260817075854.17207-2-engguopeng@buaa.edu.cn>
+Subject: [PATCH v2 0/2] PCI/CXL: Distinguish CXL capabilities in MCAP 
+Date: Mon, 17 Aug 2026 15:58:52 +0800
+Message-Id: <20260817075854.17207-1-engguopeng@buaa.edu.cn>
 X-Mailer: git-send-email 2.39.2 (Apple Git-143)
-In-Reply-To: <20260817075854.17207-1-engguopeng@buaa.edu.cn>
-References: <20260817075854.17207-1-engguopeng@buaa.edu.cn>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -53,10 +50,10 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:Nyz+CgCn+yBCv4JqQK+EAA--.36036S3
-X-Coremail-Antispam: 1UD129KBjvJXoWxJrWrJF1DGr1fWFWxAry8AFb_yoW8tryrpr
-	s8CasIgF4UtFW7Gwn7Ka4UGr17XFyrtrW3Z3yagrZ8JFnxK348Cw1kWF4YqF92vrs7AFy5
-	Zw4q9348Wa9rZw7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+X-CM-TRANSID:Nyz+CgCn+yBCv4JqQK+EAA--.36036S2
+X-Coremail-Antispam: 1UD129KBjvJXoW7Cr15tFy7JFyfuw4rtw4kCrg_yoW8Wr1xpF
+	n5Gr4Sqa4rJF43CrZayF48tF1fZFZ5ArW7JFy7G3s5tF4j93WUGrWjyFyrtFyjkr97WF15
+	XFWjqry8W3Z8A3DanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
 	9KBjDU0xBIdaVrnRJUUU9a1xkIjI8I6I8E6xAIw20EY4v20xvaj40_Wr0E3s1l1IIY67AE
 	w4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxSw2x7M28EF7xvwVC0I7IYx2
 	IY67AKxVW7JVWDJwA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxVWxJVW8Jr1l84ACjcxK6I8E
@@ -74,58 +71,42 @@ X-CM-SenderInfo: d2isijirrujqpexdthxhgxhubq/
 
 From: Penn <engguopeng@buaa.edu.cn>
 
-PCIe r7.0 sec 6.35 defines the MMIO Capabilities Register Block
-(MCAP). It consists of an array header followed by capability headers
-that identify the version, location, size, and vendor of each MMIO
-capability.
+When MMPT is enabled, a device may expose PCI-SIG-defined MMPT
+capabilities alongside CXL-defined capabilities in the same MMIO
+Capabilities Register Block (MCAP).
 
-Define the MCAP array-header and capability-header registers and their
-fields. These definitions allow subsystem drivers to use the Vendor ID
-along with the Capability ID when capabilities from multiple vendors
-share the same MCAP.
+MCAP capability IDs are scoped by Vendor ID, but the CXL capability
+parser currently matches entries using only their capability IDs. This
+can cause MMPT entries to be interpreted as CXL register blocks.
 
-Signed-off-by: Penn <engguopeng@buaa.edu.cn>
----
+Add the generic PCI MCAP register definitions, then update the CXL
+parser to reject capabilities carrying a non-zero Vendor ID other than
+PCI_VENDOR_ID_CXL, while preserving compatibility with legacy CXL
+capability headers.
+
+Patch 1 adds the PCI MCAP array and capability header definitions.
+Patch 2 filters non-CXL capabilities before interpreting their IDs
+while continuing to accept legacy capability headers whose Vendor ID
+field reads as zero.
+
+The fix has been tested on CXL 1.1 and CXL 3.0 devices. On the
+MMPT-enabled device, it prevents both Mailbox and Status capabilities
+from being misidentified.
+
 Changes in v2:
 - Update the MCAP specification citation to PCIe r7.0 sec 6.35.
-- Document that capability header indices are one-based.
+- Accept a zero Vendor ID for compatibility with legacy CXL devices.
+- Move the u16 declaration above the u32 declaration.
+- Document testing on CXL 1.1 and CXL 3.0 devices.
 
+Penn (2):
+  PCI: Add MMIO Capabilities Register Block definitions
+  cxl/core: Skip non-CXL capabilities in MCAP
+
+ drivers/cxl/core/regs.c       | 12 +++++++++++-
  include/uapi/linux/pci_regs.h | 22 ++++++++++++++++++++++
- 1 file changed, 22 insertions(+)
+ 2 files changed, 33 insertions(+), 1 deletion(-)
 
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-index 14f634ab9350..4dd22cde9e71 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -1338,6 +1338,28 @@
- #define  PCI_IDE_SEL_ADDR_3(x)		(28 + (x) * PCI_IDE_SEL_ADDR_BLOCK_SIZE)
- #define PCI_IDE_SEL_BLOCK_SIZE(nr_assoc)  (20 + PCI_IDE_SEL_ADDR_BLOCK_SIZE * (nr_assoc))
- 
-+/* PCIe r7.0, sec 6.35: MMIO Capabilities Register Block (MCAP) */
-+#define PCI_MCAP_ARRAY_1		0x00
-+#define  PCI_MCAP_ARRAY_ID		__GENMASK(15, 0)
-+#define  PCI_MCAP_ARRAY_VERSION		__GENMASK(23, 16)
-+#define  PCI_MCAP_ARRAY_TYPE		__GENMASK(27, 24)
-+#define  PCI_MCAP_ARRAY_TYPE_CLASS_CODE	0x0
-+#define PCI_MCAP_ARRAY_2		0x04
-+#define  PCI_MCAP_ARRAY_COUNT		__GENMASK(15, 0)
-+
-+/* Capability header indices are one-based. */
-+#define PCI_MCAP_HDR_SIZEOF		0x10
-+#define PCI_MCAP_HDR_BASE(n)		((n) * PCI_MCAP_HDR_SIZEOF)
-+#define PCI_MCAP_HDR_REG_1		0x00
-+#define  PCI_MCAP_CAP_ID		__GENMASK(15, 0)
-+#define  PCI_MCAP_CAP_VERSION		__GENMASK(23, 16)
-+#define PCI_MCAP_HDR_REG_2		0x04
-+#define  PCI_MCAP_HDR_OFFSET		__GENMASK(31, 0)
-+#define PCI_MCAP_HDR_REG_3		0x08
-+#define  PCI_MCAP_HDR_LENGTH		__GENMASK(31, 0)
-+#define PCI_MCAP_HDR_REG_4		0x0c
-+#define  PCI_MCAP_HDR_VENDOR_ID		__GENMASK(15, 0)
-+
- /*
-  * Compute Express Link (CXL r4.0, sec 8.1)
-  *
 -- 
 2.43.0
 
