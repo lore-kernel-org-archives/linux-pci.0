@@ -1,40 +1,40 @@
-Received: from canpmsgout05.his.huawei.com (canpmsgout05.his.huawei.com [113.46.200.220])
+Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 81F9C14EC73;
-	Mon, 17 Aug 2026 06:22:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.220
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA33814EC73
+	for <linux-pci@vger.kernel.org>; Mon, 17 Aug 2026 06:28:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786947738; cv=none; b=svX3CTGFmTmnqTJWNyacQEAmi1UZ5Yc1KsTJkoDCtf9U2YsLx+E0YqjkdZLIZR+mT+GeabPSbwr8k7hNCmgukE9Qo/C//PHehBSwzBajqBXnyxqBbC7N+shmKBEx4QdRyKqvEmQAyzduOdNcd6Gqn7Ng52f0VTOqKJKay7krLQ0=
+	t=1786948085; cv=none; b=HbnN493xWAUmp9W/sRRPwls/t4EEnjYPhnT0UuslhlKlMgbmhNqWvcrQswo+2+vrJAAW/qY5YtgjjnxFOv/zwk50fVFxehVG5m40sh47ka/Z44F5OnECrNp6qVe/lJpkVlGOhGFnQLvX4RSnBtapnuuqaV/nOcQuN90ase0iX5Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786947738; c=relaxed/simple;
-	bh=6Lgr8xRQ+6xzzv/cjQ69v/jvlkaLitBPKhUtSNzrrLw=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=SjrSTVG0U4Ot6PgMaIbbt8AWICgKPlWBU3Utvx+zp4HWtT9KieWr8M+XyB/ZJOS3/GVBCnJWOQPIQGYuuYpYQHW/tVocjZ3HZ8mBpfcerTLo8sgVqKJc7xxOs6K74AljbVLoFbBbdFAc4rkOsiP/qB0wlq1NMuSSIMbJeVNOEVU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=YKM2IvxS; arc=none smtp.client-ip=113.46.200.220
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="YKM2IvxS"
-dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=From;
-	bh=MuMGa3SyppeZShnnXxnfgoHm66+/yzbcXJodp0rzoHo=;
-	b=YKM2IvxSR30I4BKWa/mBX9BuMN0bnzmco/vDlmFi7NVFrp4shJLlt166kJnplMx+4Hf4IyKQH
-	I48V+DC98C8JHyNk+CNQNJlOvPP0wM5hxOehPrz7iG4UcD09W0edrQTob7FZ8nS9udAaeWrzmBc
-	rqiSVBAAX8Yg1E/803TfERo=
-Received: from mail.maildlp.com (unknown [172.19.162.140])
-	by canpmsgout05.his.huawei.com (SkyGuard) with ESMTPS id 4hNjCS5j2mz12LDl;
-	Mon, 17 Aug 2026 14:11:48 +0800 (CST)
-Received: from kwepemr500012.china.huawei.com (unknown [7.202.195.23])
-	by mail.maildlp.com (Postfix) with ESMTPS id 223E22025F;
-	Mon, 17 Aug 2026 14:22:11 +0800 (CST)
-Received: from [100.103.108.70] (100.103.108.70) by
- kwepemr500012.china.huawei.com (7.202.195.23) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.45; Mon, 17 Aug 2026 14:22:10 +0800
-Message-ID: <14cd77b6-5541-4134-af52-62fb1d3664a0@huawei.com>
-Date: Mon, 17 Aug 2026 14:22:09 +0800
+	s=arc-20240116; t=1786948085; c=relaxed/simple;
+	bh=GxFMKMG5BaYGnBHPQ9NdLv7x7Jk4ldX/2/G5hesuDis=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=heW9rWFlwgQXVDvV09hqYspjMHdTGVZbRB2KxK9zp1m6r3KALyu8J5Cb1nPKll+aD28LIF11FrWNWeZL4et4EDew3Yxife+whucLA1jaZI5AP/6NkFp+aT/6Edwklt2xFdrgdmMGhUDv7RcmrbbkWJ2RgXfX/07XIFRN4EoiC7A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
+X-UUID: c90c91349a0411f19a56ed5b684f684d-20260817
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.19,REQID:1a2aa87e-72ad-4133-9cfe-7d3ff8a7043a,IP:0,U
+	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
+	release,TS:0
+X-CID-META: VersionHash:7db8b62,CLOUDID:a128bd6564e3e9ad7260057e1b0ecea2,BulkI
+	D:nil,BulkQuantity:0,SF:80|81|82|83|102|865|898,TC:nil,Content:0|15|52,EDM
+	:-3,IP:nil,URL:99|1,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OS
+	A:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 2,SSN|SDN
+X-CID-BAS: 2,SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_ULS
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: c90c91349a0411f19a56ed5b684f684d-20260817
+X-User: xiaopei01@kylinos.cn
+Received: from [10.42.12.251] [(10.44.16.150)] by mailgw.kylinos.cn
+	(envelope-from <xiaopei01@kylinos.cn>)
+	(Generic MTA with TLSv1.3 TLS_AES_128_GCM_SHA256 128/128)
+	with ESMTP id 271802368; Mon, 17 Aug 2026 14:27:56 +0800
+Message-ID: <cefafece-f449-4527-bf2e-6e3d7ea05ee9@kylinos.cn>
+Date: Mon, 17 Aug 2026 14:27:54 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -42,63 +42,129 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PING] PCI: Fix procfs PCI config access issues
-To: <bhelgaas@google.com>, <kwilczynski@kernel.org>
-CC: <rientjes@google.com>, <gregkh@suse.de>, <iweiny@kernel.org>,
-	<djbw@kernel.org>, <Jonathan.Cameron@huawei.com>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<liuyongqiang13@huawei.com>
-References: <20260730032438.1643450-1-duziming2@huawei.com>
-From: duziming <duziming2@huawei.com>
-In-Reply-To: <20260730032438.1643450-1-duziming2@huawei.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Subject: Re: [PATCH v3] PCI: switchtec: Fix use-after-free in
+ switchtec_pci_remove due to race condition
+To: sashiko-reviews@lists.linux.dev
+Cc: linux-pci@vger.kernel.org, Logan Gunthorpe <logang@deltatee.com>,
+ kurt.schwemmer@microsemi.com, bhelgaas@google.com
+References: <4cebfe41ee3985bc4f38beb42d44147a34637971.1786944920.git.xiaopei01@kylinos.cn>
+ <20260817055336.8C4C91F000E9@smtp.kernel.org>
+From: Pei Xiao <xiaopei01@kylinos.cn>
+In-Reply-To: <20260817055336.8C4C91F000E9@smtp.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: kwepems200002.china.huawei.com (7.221.188.68) To
- kwepemr500012.china.huawei.com (7.202.195.23)
 
 
-在 2026/7/30 11:24, Ziming Du 写道:
-> Hi,
->
-> As suggested by Bjorn and Krzysztof, this series aligns the procfs PCI
-> configuration access implementation with its sysfs counterpart and fixes
-> issues found while reviewing the two paths.
->
-> The first four patches fix the offset truncation, inode size update race,
-> missing driver-exclusive resource warning, and unnecessary runtime PM
-> operations at the end of sysfs configuration space. The final two
-> patches align the procfs read and write implementations with their sysfs
-> counterparts.
->
-> Changes from v1:
->    - Merge the read and write offset fixes and move them before the
->      refactoring to avoid an intermediate signed/unsigned regression.
->    - Serialize i_size_write() with the inode lock.
->    - Add the driver-exclusive resource warning to procfs writes.
->    - Avoid unnecessary runtime PM get/put when sysfs config access starts at EOF.
->
-> Link: https://lore.kernel.org/all/20260303193253.GA3817951@bhelgaas/
-> Link: https://lore.kernel.org/linux-pci/20260414024544.2975605-1-duziming2@huawei.com/
-> Link: https://sashiko.dev/#/patchset/20260414024544.2975605-1-duziming2%40huawei.com
->
->
-> Ziming Du (6):
->    PCI: Prevent overflow in proc_bus_pci_{read,write}()
->    PCI/proc: Serialize config inode size updates
->    PCI/proc: Warn on writes to driver-exclusive config regions
->    PCI/sysfs: Avoid runtime PM at config-space EOF
->    PCI: Align proc_bus_pci_write() with pci_write_config()
->    PCI: Align proc_bus_pci_read() with pci_read_config()
->
->   drivers/pci/pci-sysfs.c |   4 +-
->   drivers/pci/proc.c      | 124 +++++++++++++++++++++-------------------
->   2 files changed, 68 insertions(+), 60 deletions(-)
 
-Hi,
-
-Gentle ping on this patch.
-
-Thanks
-
-Ziming
+在 2026/8/17 13:53, sashiko-bot@kernel.org 写道:
+> Thank you for your contribution! Sashiko AI review found 2 potential issue(s) to consider:
+> 
+> Pre-existing issues:
+> - [High] Use-After-Free window in the `switchtec_pci_probe()` error path due to premature freeing of `stdev` while `event_irq` is active.
+> - [High] Use-After-Free via TOCTOU race in `switchtec_dev_write` due to incorrect teardown ordering in `stdev_kill()`.
+> --
+> 
+> --- Patch [1]: [PATCH v3] PCI: switchtec: Fix use-after-free in switchtec_pci_remove due to race condition ---
+> commit a18ebaceba03ea5f94a521c5ced89b052f121ea9
+> Author: Pei Xiao <xiaopei01@kylinos.cn>
+> Subject: PCI: switchtec: Fix use-after-free in switchtec_pci_remove due to race condition
+> 
+> This patch attempts to fix a use-after-free bug during device removal by
+> quiescing interrupt sources before canceling pending work items. It adds
+> logic to stdev_kill() to explicitly free IRQs and cancel work structures.
+> It also stores the IRQ numbers explicitly in the switchtec_dev structure.
+> 
+> Link: https://lore.kernel.org/lkml/5ce42824-488e-4040-8531-0acc8b01b13a@deltatee.com/#t
+> 
+>> diff --git a/drivers/pci/switch/switchtec.c b/drivers/pci/switch/switchtec.c
+>> index 41fc4b5127081..91d44acfe1193 100644
+>> --- a/drivers/pci/switch/switchtec.c
+>> +++ b/drivers/pci/switch/switchtec.c
+> 
+> [ ... ]
+> 
+>> @@ -1318,6 +1318,13 @@ static void stdev_kill(struct switchtec_dev *stdev)
+>>  
+>>  	pci_clear_master(stdev->pdev);
+>>  
+>> +	if (stdev->event_irq)
+>> +		devm_free_irq(&stdev->pdev->dev, stdev->event_irq, stdev);
+>> +	if (stdev->dma_mrpc_irq)
+>> +		devm_free_irq(&stdev->pdev->dev, stdev->dma_mrpc_irq, stdev);
+>> +
+>> +	cancel_work_sync(&stdev->mrpc_work);
+>> +	cancel_work_sync(&stdev->link_event_work);
+>>  	cancel_delayed_work_sync(&stdev->mrpc_timeout);
+> [Severity: High]
+> This is a pre-existing issue, but does canceling this delayed work before
+> setting the alive flag allow it to be re-armed?
+> 
+> If userspace performs a concurrent write during device removal, it can call
+> switchtec_dev_write(), which does:
+> 
+> drivers/pci/switch/switchtec.c:switchtec_dev_write() {
+>     ...
+>     rc = lock_mutex_and_test_alive(stdev);
+>     if (rc)
+>         return rc;
+>     ...
+>     rc = mrpc_queue_cmd(stuser);
+>     ...
+> }
+> 
+> Because cancel_delayed_work_sync() executes outside of mrpc_mutex and before
+> stdev->alive is set to false, mrpc_queue_cmd() could successfully re-arm
+> stdev->mrpc_timeout after it was just canceled.
+> 
+> When stdev is subsequently freed, could this newly armed delayed work execute
+> on freed memory?
+I have send this patch for this bug:
+https://lore.kernel.org/lkml/e640c79072065c1a347ed25f7ce0fe1ba565f4fe.1786017236.git.xiaopei01@kylinos.cn/
+> 
+>>  
+>>  	/* Mark the hardware as unavailable and complete all completions */
+> 
+> [ ... ]
+> 
+>> @@ -1513,6 +1522,7 @@ static int switchtec_init_isr(struct switchtec_dev *stdev)
+>>  
+>>  	if (rc)
+>>  		return rc;
+>> +	stdev->event_irq = event_irq;
+> [Severity: High]
+> This is a pre-existing issue, but is there a use-after-free window in the
+> probe error path?
+> 
+> When switchtec_init_isr() requests event_irq, it uses devm_request_irq()
+> bound to the PCI device:
+> 
+> drivers/pci/switch/switchtec.c:switchtec_init_isr() {
+>     ...
+>     rc = devm_request_irq(&stdev->pdev->dev, event_irq,
+>                           switchtec_event_isr, 0, KBUILD_MODNAME, stdev);
+>     ...
+> }
+> 
+> If a subsequent initialization step fails during switchtec_pci_probe(),
+> the err_put path will free the stdev structure:
+> 
+> drivers/pci/switch/switchtec.c:switchtec_pci_probe() {
+>     ...
+> err_put:
+>     ida_free(&switchtec_minor_ida, MINOR(stdev->dev.devt));
+>     put_device(&stdev->dev);
+>     return rc;
+> }
+> 
+> Since put_device() immediately frees stdev without explicitly freeing the IRQ,
+> and devres cleanup doesn't run until the probe function returns, could an
+> interrupt fire during this window and cause switchtec_event_isr() to
+> dereference the already freed stdev?
+> 
+>>  
+>>  	if (!stdev->dma_mrpc)
+>>  		return rc;
+> 
+> [ ... ]
+> 
 
