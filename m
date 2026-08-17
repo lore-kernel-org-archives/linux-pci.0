@@ -1,77 +1,99 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mailout3.hostsharing.net (mailout3.hostsharing.net [144.76.133.104])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 46AFE3C456F
-	for <linux-pci@vger.kernel.org>; Mon, 17 Aug 2026 09:06:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 412523D7D83;
+	Mon, 17 Aug 2026 09:23:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=144.76.133.104
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786957608; cv=none; b=L1mAkgldmRJwiYpMzAtb0B08yphUKqiKzLpIdDfdqUSxpwVUIZ9M3PK14B+HOEGdL2XE9WhxJnJUpticq7vJbAh7rEweFwOOw4meH6aKtADE0tGpOR6vu83GIGdpxG7w94XpN4+nlPKMslF/Br8fIglLfHnJ6S448bEVUCcYV1g=
+	t=1786958601; cv=none; b=tV5fjgRxM+wuSST3mVTCFg1tHGl9VuFcnyNZKzm6d5YJeFNRzR5eNpXfJDI8wrXURt5PUzA3gBdkIeXECILxB1WefBHyFiQyfAgUA6KMkcdw+cDGFGy31PIzjhJ8MpPomQD95yq5O7Dhm7CoH+haIXXY9M8peHFsPbiVvuTu5NU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786957608; c=relaxed/simple;
-	bh=XjMsQkfB6N+25FTMob30+mv/Tb2p/vhC0h5bd/QUyoM=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=aNafKYMIjT6MerXsM+ZrNLCWXyJAdVQrmNh8Cb20UxOz68yVGksI0c+q/Q4845AXThM6LI5OeIipR9VHHSfXz8/oSkhY+d6wcjEAWmfUD8jmfd+ttXrwMdKbIisplj0pKQoagRyh2ExmUTLV6SrLqOnryueK3qNJCpGjuusiYps=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UJ2abRz6; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UJ2abRz6"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D45151F00A3D;
-	Mon, 17 Aug 2026 09:06:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786957607;
-	bh=XjMsQkfB6N+25FTMob30+mv/Tb2p/vhC0h5bd/QUyoM=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=UJ2abRz6fDoZKS8XOxCksopKyyE3AuwiBT3yU456d/e1ya8kH5ZweTF5rNn0aJUa7
-	 zWoXkv1OwV4HdOne0V92lmx/wIvAy+G47XoLasXRlwQnQdRxgwdj8pxl78gBeW0e/g
-	 8L3/DBrEeO+S73WkdgNgZWEZXZvtOgX8efSqWBnEbEOmDW51fWU/BVN0AG8xGk0X/B
-	 tvK5MVJNeAVzXOadLvV38CH8NJvdBslfruJqACAqPn/qpOsbThcCtPV3dyd7ah41FY
-	 lkCgAtQ5+AZny+7JQpnBBvKV6ExQze2vYxKdY7L3Us7FCzH/RJWm0+elJbPj5xlOFq
-	 goaEg44F8c6Iw==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2] x86/early-quirks: Scan all functions in
- early_pci_scan_bus()
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Thorsten Blum" <thorsten.blum@linux.dev>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260817090011.26011-3-thorsten.blum@linux.dev>
-References: <20260817090011.26011-3-thorsten.blum@linux.dev>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 17 Aug 2026 09:06:46 +0000
-Message-Id: <20260817090646.D45151F00A3D@smtp.kernel.org>
+	s=arc-20240116; t=1786958601; c=relaxed/simple;
+	bh=1NpYXnarHj/hKHfKfRtEJYHyf6D9P1eJ1QuW1xd7318=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=eKDyDRRD9y/aN6jpv2OW0asxk1J6SdPTr3hlPvbtxQ20OR0+HXGpNyduQ7YASPAqvgTIJ2V889+GpJRARaub7MAyfsjLaDb9CZ86c+c8gyBjQrSZLvXqRU4/msvT+WcpmQ4qe9v59FKkR+iDP/4e2wibqcBomBMkvWVurha+80s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=144.76.133.104
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
+Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
+	 client-signature ECDSA (secp384r1) client-digest SHA384)
+	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
+	by mailout3.hostsharing.net (Postfix) with ESMTPS id 2E2FCC16;
+	Mon, 17 Aug 2026 11:23:16 +0200 (CEST)
+Received: by h08.hostsharing.net (Postfix, from userid 100393)
+	id D4AF16029DF6; Mon, 17 Aug 2026 11:23:15 +0200 (CEST)
+Date: Mon, 17 Aug 2026 11:23:15 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Lowne Onema <lowneonema@gmail.com>
+Cc: bhelgaas@google.com, rafael.j.wysocki@intel.com,
+	alexander.deucher@amd.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: quirks: Prevent D3 for Acer Swift SF515-51T Root
+ Port to fix audio
+Message-ID: <aoLTA0umxhDPGw_4@wunner.de>
+References: <CA+1pjEmQgcfhjj56yjuXWVshBM+soFC7RZHaGwaaF=ZFCr1Lyg@mail.gmail.com>
+ <am8DEH0wfphdAX0n@wunner.de>
+ <CA+1pjEnxg9nVy79QNGTb0Ea3s+q=Z-we5XH_fDvJbOLpXH8HDA@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CA+1pjEnxg9nVy79QNGTb0Ea3s+q=Z-we5XH_fDvJbOLpXH8HDA@mail.gmail.com>
 
-> early_pci_scan_bus() stops scanning a PCI slot when check_dev_quirk()
-> returns nonzero, which avoids probing functions 1-7 on single-function
-> devices, but also stops scanning when a function is absent on a
-> multifunction device.
->=20
-> This can skip early quirks on multifunction devices with holes in their
-> function numbering.
->=20
-> On iMac13,1 and iMac13,2, the BCM4331 AirPort card is behind root port
-> 00:1c.3, also documented by the model list in commit abb2bafd295f
-> ("x86/quirks: Add early quirk to reset Apple AirPort card").
->=20
-> Public lspci output for 2012 iMacs [1][2] shows that 00:1c.0, 00:1c.2,
-> 00:1c.3 and 00:1c.4 are present, but 00:1c.1 is missing. The old code
-> stops at 00:1c.1 and never reaches 00:1c.3, so the AirPort reset quirk
-> is silently skipped on these machines.
->=20
-> Check function 0 first, and if it indicates a multifunction device, scan
-> functions 1-7 independently so that absent functions do not cause later
-> ones to be skipped.
->=20
-> Fixes: 15650a2f644a ("x86/PCI: fixup early quirk probing")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Thorsten Blum <thorsten.blum@linux.dev>
+On Tue, Aug 04, 2026 at 09:40:03PM +0200, Lowne Onema wrote:
+>  3. Amending the power resource structures in drivers/acpi/: I looked
+>    at this a bit more and noticed RP09 and the SATA port
+>    (SAT0.PRT1) each have their own separate power resource in the
+>    ACPI tables, but both end up controlling the same physical GPIO
+>    pin. I'm not sure if that's something the kernel already knows
+>    how to handle safely, or if trying to sync RP09's power to audio
+>    activity could accidentally interfere with the SATA port through
+>    that shared pin. Still learning this part of the kernel, so
+>    wanted to ask before attempting it -- is that a real concern, or
+>    is it fine, and a better approach?
 
-Sashiko has reviewed this patch and found no issues. It looks great!
+If two devices reference the same PowerResource in the ACPI tables,
+then the kernel is aware of the dependency.  E.g., when the
+PowerResource is turned on, the kernel runtime resumes all "dependents"
+of that PowerResource.
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260817090011.2601=
-1-3-thorsten.blum@linux.dev?part=3D1
+However if these are separate PowerResources whose _ON method happens
+to toggle the same GPIO, that's opaque to the kernel.  I think it is
+then the job of the _ON and _OFF methods to track whether another
+device still needs the GPIO to be kept on.
 
+But perhaps the ACPI tables are just completely broken and the right
+thing to do is modify the PowerResource assignment such that all
+3 devices depend on the same PowerResource?
+
+> +++ b/drivers/pci/quirks.c
+> +static void quirk_acer_sf515_rp09_no_d3(struct pci_dev *pdev)
+> +{
+> +     if (dmi_check_system(acer_sf515_rp_d3_dmi_table))
+> +             pdev->dev_flags |= PCI_DEV_FLAGS_NO_D3;
+> +}
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x9db0,
+> quirk_acer_sf515_rp09_no_d3);
+
+On x86 SoCs introduced in the last about 10 years, keeping a Root Port
+in D0 prevents the SoC from entering lower power states.  So the
+workaround of keeping RP09 in D0 may reduce battery life.
+
+Usually Root Ports can only be put into D3hot, not D3cold.  If there's
+a PowerResource for the Root Port, that's usually for powering off
+a device *below* that Root Port.  E.g. if RP09 is an internal,
+unoccupied M.2 slot, then the PowerResource allows cutting power
+to an NVMe drive or WiFi card in that M.2 slot.
+
+If RP09 isn't exposed physically at all, then it's unclear why the OEM
+chose to enable it in the first place, let alone describe a PowerResource
+for it in the ACPI tables.
+
+Thanks,
+
+Lukas
