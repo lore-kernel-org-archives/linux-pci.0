@@ -1,107 +1,107 @@
-Received: from mail-m49198.qiye.163.com (mail-m49198.qiye.163.com [45.254.49.198])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC46113790B;
-	Mon, 17 Aug 2026 14:19:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.254.49.198
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7CF6843CE47
+	for <linux-pci@vger.kernel.org>; Mon, 17 Aug 2026 14:28:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786976383; cv=none; b=KqZeQNRZ7BDcf3X9hevNaXFcf7LP8yQGjx8rVR8u4cIgRuQBCGN1a91NOTVjGWXfrr0bptMWPcle50FAWYK+CFAOc3NyJii4nULjdSMab4RJx77HMXao7fX6fAp6ndv2bnyD11FJ9Qav37lvvKGajeFCbC2/OhGFc6w5s4ebh3M=
+	t=1786976923; cv=none; b=fPCvRfTL0F0c5yy7ZGtV5ne3OhV8VGahR8u+4k9f4qFmQ9NEDRLhcK6g7puzMQsDBzMN2esPNSZ7UcaF/uuJYxIL9eKcB79L3Gq99D1sVF9d2DslcEBFhTOBFuNq7mUKLxRoFWbnTjRxDr3HhWnFe9hpfRxF7KVj4h3nC96/ld8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786976383; c=relaxed/simple;
-	bh=wFjMkwNzD0MkcwjMsosJyUd/Nv0TSFeDQvV2pfyy/2M=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=cvibYQSLOQaJFLE40zT80NKz/mzCilnyWRGrJD2e+eZyfPpp+w706KQor8F2fO7b1oV81d9i6Qec8uahBo6AKTvUh+QRH0a2KfaxPDhRWmT1nYfrYiT4T5W082tAkJ5FCXjnDPyR0IFWX+57RkDHmY4KnKXhzQ/nL3Ckw2wGtDU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=seu.edu.cn; spf=pass smtp.mailfrom=seu.edu.cn; dkim=pass (1024-bit key) header.d=seu.edu.cn header.i=@seu.edu.cn header.b=JFxNiL8a; arc=none smtp.client-ip=45.254.49.198
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=seu.edu.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=seu.edu.cn
+	s=arc-20240116; t=1786976923; c=relaxed/simple;
+	bh=HgqRXlEpm43K2omV055N1TdupZsv5Q5v1QoCwmpMy3I=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=a6dsZVHcmAdauessQiQjsuKYXidr4jcgdQRQiIJsCMy9rN740nlAK4PqhI1M30fc0Dwn1zuuxIhd8RwwVSKbFO0rxtxdSo5SHOaHvZmf+7G6oTZNWvQYL9+TICjU0kmUwxtCpbcpcI1ul1/RUfNwtyILGgd9z89Y+E2vdJvrj6s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SXgskeX9; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=seu.edu.cn header.i=@seu.edu.cn header.b="JFxNiL8a"
-Received: from PC-202605011814.localdomain (unknown [58.241.16.34])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 4a46bcac2;
-	Mon, 17 Aug 2026 22:19:26 +0800 (GMT+08:00)
-From: Runyu Xiao <runyu.xiao@seu.edu.cn>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Alex Williamson <alex@shazbot.org>,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org,
-	Runyu Xiao <runyu.xiao@seu.edu.cn>,
-	Jianhao Xu <jianhao.xu@seu.edu.cn>
-Subject: [PATCH] PCI: lock upstream bridge in pci_try_reset_function()
-Date: Mon, 17 Aug 2026 22:19:18 +0800
-Message-Id: <20260817141918.1339057-1-runyu.xiao@seu.edu.cn>
-X-Mailer: git-send-email 2.34.1
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SXgskeX9"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 407021F00A3D;
+	Mon, 17 Aug 2026 14:28:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1786976922;
+	bh=RcWe2DCb+77NllFzXV9i3N//6YKpE+A2+CP620a1CE0=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=SXgskeX9TPhcJiC1uLZxYnL+m55jfk/lrYhgU1x5tLTYFURz/P64Zmv3J/j+q3OVL
+	 pZIquR+PXCj4f/LjcU536ENxbWcKPf3GSZouqVnD697nCWW5i0o4WP0mlqSxX/JTTb
+	 3QonwKjLCmf9TZ6ya8wpbDJPQCj8YXCZywGibGwVRyt4FbuBWVXhz53fa+CWeke/aC
+	 f0NjeT4aGCWztzva4svu53AsM8SU0jT+561lycl5V0AY1Sz9zvRdAx4Hk7snpsRGcF
+	 5pThtdCpvwczB/fmIeXsSfXCDdQhmb3eDhdb7pMgcddmyIINmpYyXdm5TgDy/niVF+
+	 nYKa/h1pSa1sQ==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] PCI: lock upstream bridge in pci_try_reset_function()
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Runyu Xiao" <runyu.xiao@seu.edu.cn>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260817141918.1339057-1-runyu.xiao@seu.edu.cn>
+References: <20260817141918.1339057-1-runyu.xiao@seu.edu.cn>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Mon, 17 Aug 2026 14:28:41 +0000
+Message-Id: <20260817142842.407021F00A3D@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-HM-Tid: 0aa01017702103a1kunm977dbc31e5a12
-X-HM-MType: 10
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFITzdXWRgWCB1ZQUpXWS1ZQUlXWQ8JGhUIEh9ZQVlDTh9IVhgfTksfGEhMSRoaQlYeHw
-	5VEwETFhoSFyQUDg9ZV1kYEgtZQVlOQ1VJT0pVSk1VSE9ZV1kWGg8SFR0UWUFZT0tIVUpLSEpPSE
-	xVSktLVUpCS0tZBg++
-DKIM-Signature: a=rsa-sha256;
-	b=JFxNiL8aObPsS/hvbodcMpc+WfLLuxDLtTvSBv7JY6c50gIfPeOf/MU4jFJJClZH/NKHxZ9kRhOvh1vR+MCQ7ZDFlwDq4G4v5IXfCSw4P6/xJJaitrVYAHidlONDRvTySFb//wAfogvxSxPZoLi0W0AFaV/8x7y5/L2UjzdZaG0=; c=relaxed/relaxed; s=default; d=seu.edu.cn; v=1;
-	bh=KsWNXm34QWy2edEe3VEVsLIefGNOea2JY0sch1o1NMo=;
-	h=date:mime-version:subject:message-id:from;
 
-pci_try_reset_function() may fall back to a secondary-bus reset below
-an upstream bridge. Unlike pci_reset_function(), it only trylocks the
-target device, so bridge configuration access is left unlocked across
-that reset path.
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [High] Eagerly trylocking the shared upstream bridge introduces spurious =
+-EAGAIN failures for concurrent resets of sibling devices (e.g., Virtual Fu=
+nctions).
+--
 
-Mirror pci_reset_function() and trylock the upstream bridge before the
-device. This keeps bridge config access serialized on the secondary-bus
-reset fallback and avoids the unlocked secondary bus reset warning.
+--- Patch [1]: [PATCH] PCI: lock upstream bridge in pci_try_reset_function(=
+) ---
+commit 26cda84dc0be3f7ffec20ace1e3feba4ee2b0184
+Author: Runyu Xiao <runyu.xiao@seu.edu.cn>
 
-Fixes: 61cf16d8bd38 ("PCI: Add pci_try_reset_function(), pci_try_reset_slot(), pci_try_reset_bus()")
-Cc: stable@vger.kernel.org
-Signed-off-by: Runyu Xiao <runyu.xiao@seu.edu.cn>
----
- drivers/pci/pci.c | 15 ++++++++++++++-
- 1 file changed, 14 insertions(+), 1 deletion(-)
+PCI: lock upstream bridge in pci_try_reset_function()
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index e128696d5b76..6da8ac8a2459 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -5342,20 +5342,33 @@ EXPORT_SYMBOL_GPL(pci_reset_function_locked);
-  */
- int pci_try_reset_function(struct pci_dev *dev)
- {
-+	struct pci_dev *bridge;
- 	int rc;
- 
- 	if (!pci_reset_supported(dev))
- 		return -ENOTTY;
- 
--	if (!pci_dev_trylock(dev))
-+	bridge = pci_upstream_bridge(dev);
-+	if (bridge && !pci_dev_trylock(bridge))
- 		return -EAGAIN;
- 
-+	if (!pci_dev_trylock(dev))
-+		goto out_unlock_bridge;
-+
- 	pci_dev_save_and_disable(dev);
- 	rc = __pci_reset_function_locked(dev);
- 	pci_dev_restore(dev);
- 	pci_dev_unlock(dev);
- 
-+	if (bridge)
-+		pci_dev_unlock(bridge);
-+
- 	return rc;
-+
-+out_unlock_bridge:
-+	if (bridge)
-+		pci_dev_unlock(bridge);
-+	return -EAGAIN;
- }
- EXPORT_SYMBOL_GPL(pci_try_reset_function);
- 
--- 
-2.34.1
+This commit updates pci_try_reset_function() to trylock the upstream bridge
+before locking the target device. This ensures bridge configuration access
+is serialized during a secondary-bus reset fallback.
+
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 77b17b13ee615..c18aed839a866 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -5282,20 +5282,33 @@ EXPORT_SYMBOL_GPL(pci_reset_function_locked);
+>   */
+>  int pci_try_reset_function(struct pci_dev *dev)
+>  {
+> +	struct pci_dev *bridge;
+>  	int rc;
+> =20
+>  	if (!pci_reset_supported(dev))
+>  		return -ENOTTY;
+> =20
+> -	if (!pci_dev_trylock(dev))
+> +	bridge =3D pci_upstream_bridge(dev);
+> +	if (bridge && !pci_dev_trylock(bridge))
+>  		return -EAGAIN;
+
+[Severity: High]
+Does eagerly trylocking the shared upstream bridge introduce spurious -EAGA=
+IN
+failures for concurrent resets of sibling devices?
+
+When concurrent threads open sibling Virtual Functions (which share the same
+physical function and thus the same upstream bridge) via
+vfio_pci_core_enable(), both threads invoke pci_try_reset_function().=20
+
+The first thread successfully acquires pci_dev_trylock(bridge). The second
+thread fails the trylock and immediately returns -EAGAIN.=20
+
+VFIO treats -EAGAIN as a fatal error during initialization, which can cause=
+ VM
+startups or userspace applications opening multiple passed-through VFs
+concurrently to fail spuriously.
+
+Before this patch, VF resets (typically using Function Level Reset) executed
+in parallel since they only locked the target device, not the shared bridge.
+
+[ ... ]
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260817141918.1339=
+057-1-runyu.xiao@seu.edu.cn?part=3D1
