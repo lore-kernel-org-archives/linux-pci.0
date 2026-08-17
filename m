@@ -1,99 +1,111 @@
-Received: from mailout3.hostsharing.net (mailout3.hostsharing.net [144.76.133.104])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f170.google.com (mail-pg1-f170.google.com [209.85.215.170])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 412523D7D83;
-	Mon, 17 Aug 2026 09:23:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=144.76.133.104
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F11243DB31B
+	for <linux-pci@vger.kernel.org>; Mon, 17 Aug 2026 09:24:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786958601; cv=none; b=tV5fjgRxM+wuSST3mVTCFg1tHGl9VuFcnyNZKzm6d5YJeFNRzR5eNpXfJDI8wrXURt5PUzA3gBdkIeXECILxB1WefBHyFiQyfAgUA6KMkcdw+cDGFGy31PIzjhJ8MpPomQD95yq5O7Dhm7CoH+haIXXY9M8peHFsPbiVvuTu5NU=
+	t=1786958700; cv=none; b=EgFq5/8h01Dw2e2tGJ+NHoZ2TITnkSWK6G4vsqV3NqRu6CoHTZNZnsrRyy+9ojJ64IyL7quyfCILVKdiKUiLgx2xXAxZOsObNyOLLqXrwDQBw1wj4snAr3V0VYBtix3LrcG8/JbcELN4lEAqJ/QhA6v3SC4tlyMxKHMiCfHbwl8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786958601; c=relaxed/simple;
-	bh=1NpYXnarHj/hKHfKfRtEJYHyf6D9P1eJ1QuW1xd7318=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=eKDyDRRD9y/aN6jpv2OW0asxk1J6SdPTr3hlPvbtxQ20OR0+HXGpNyduQ7YASPAqvgTIJ2V889+GpJRARaub7MAyfsjLaDb9CZ86c+c8gyBjQrSZLvXqRU4/msvT+WcpmQ4qe9v59FKkR+iDP/4e2wibqcBomBMkvWVurha+80s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=144.76.133.104
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
-Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
-	 client-signature ECDSA (secp384r1) client-digest SHA384)
-	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
-	by mailout3.hostsharing.net (Postfix) with ESMTPS id 2E2FCC16;
-	Mon, 17 Aug 2026 11:23:16 +0200 (CEST)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-	id D4AF16029DF6; Mon, 17 Aug 2026 11:23:15 +0200 (CEST)
-Date: Mon, 17 Aug 2026 11:23:15 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Lowne Onema <lowneonema@gmail.com>
-Cc: bhelgaas@google.com, rafael.j.wysocki@intel.com,
-	alexander.deucher@amd.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: quirks: Prevent D3 for Acer Swift SF515-51T Root
- Port to fix audio
-Message-ID: <aoLTA0umxhDPGw_4@wunner.de>
-References: <CA+1pjEmQgcfhjj56yjuXWVshBM+soFC7RZHaGwaaF=ZFCr1Lyg@mail.gmail.com>
- <am8DEH0wfphdAX0n@wunner.de>
- <CA+1pjEnxg9nVy79QNGTb0Ea3s+q=Z-we5XH_fDvJbOLpXH8HDA@mail.gmail.com>
+	s=arc-20240116; t=1786958700; c=relaxed/simple;
+	bh=vhxRWR/Pb70EdKPz+0km0N4lX8vkU+xU0leGRr1oomU=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=OYQqKtEYaPBLrNOYAQmEiFHAdgBMQ9NFamTerVviTbTRt+DdA6H1fhC/H2wbT2kAcVtpuXRu1a05kGoYqyd4siBMwxPA0nH1+W3vnaeawypXG1lA5IARdTEQxLts15st5/++8aT7Io9x4OO+bZqmenaQL0/A0heKDZgvySaga5A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Z5VQgeVQ; arc=none smtp.client-ip=209.85.215.170
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Z5VQgeVQ"
+Received: by mail-pg1-f170.google.com with SMTP id 41be03b00d2f7-c998fd549a8so2321344a12.2
+        for <linux-pci@vger.kernel.org>; Mon, 17 Aug 2026 02:24:58 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1786958698; x=1787563498; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=/nzGeNShMj6yapcm+ZpWnrhl/q/0I72+8BKRHk/PxZo=;
+        b=Z5VQgeVQE3qHoRgehXdp/PhPVYGAhhiU1xoNPCs9wDOeI2SmwPnORJBKhJbBdTxrVh
+         /CnGAsRLNw/q+2AAPJm2/ZmPmuCXTCaXbLtzQKzpj2nj1cevJu9Th3DEJLKLUM+qpxUh
+         oaAm/j6p+U0hzT7KZKgEtH7a9usIefgWBs5FakWg67BJU0RqjMd62ZuuBuDcAf6DePIL
+         GLDpRpIviCE9H7KP70tnqloaphRNaSu9kb42+SzmFgIisbF0L1Ppdt8uXZnOo9PRb214
+         X4bqEfRpyfOv/6M+iRSOd94oD5W+/wS9Ci7SVerq5uEx8kMvF2jMg8cXLpsgZB3AxYA1
+         8ZEQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1786958698; x=1787563498;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=/nzGeNShMj6yapcm+ZpWnrhl/q/0I72+8BKRHk/PxZo=;
+        b=caVsrmDogWImt/XH3QMHXwh8sExO5LW8U9NiCpnf8Kjn0UK8Lwg8APdQAKINJ7nhme
+         Z24jZfbLOz5lld87vfcqXuf9xMb5k5JZ0v8d0rIb18maVzJ6h94gALOcgXNMKZrbuAgO
+         aRN4gsq4plkLoCS2euBqKU9UYYb5Fh3nX+X4GhuvpRdhEt2nv0fjbkwMMjo7GjylULVZ
+         CJJ1V3adANHXVsNlailTfKBiLajcRkAn2VuDHVxInnqgkxAkWdeJfKMNpaNhKF9aBHbT
+         2y+4iLleZme4hIPUU26g+MSxX3XCfAeHLSMzRX6QhFRXZG1bIqV60Id/Tz9Aac/SOA5l
+         mzIQ==
+X-Forwarded-Encrypted: i=1; AHgh+RpmjWUXVIIdruQTIrYfmknkdwK243PGfg+bVJMIFTYvkkHP80hbRJThJqgXYhrSCjLOnOdMsYMT2a8=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz16oFCLrPGwyBvYqhaui2DsgkzyAiR5dZ1irR/Vkp176w2xIap
+	Jc+imXUqANZ0jIq+bFjPTBWKI9A3p4/QCqUVY9sTJ+WvdTG64mTD5ndC
+X-Gm-Gg: AR+sD10fWmwBRy7iAuYUg58qkAvZf6pQstXmhy2Q4jR+1SiYOo1pqgTZAMRgq+6zKD1
+	8Q4PrPILtxtgQIbywAZNPMiFAIPSkvL/+Bh00P7ooTY0sJuwpGMWQj/P+cZffdBgZ8xYN2Y25yk
+	VKapTEgyPJ+5M+rXHKf2ckMXZF6DJbEK9OyS4yqxYRBnJ0SH2IKhcqM+PZb3MMjbWhsqkkVweG+
+	tU45ZSSfjtqnfGISmpNrVkljKDpbCIhISV8f00sczjKpK/D/L87VoPIZpfboyC1M/rX69DN7BnY
+	snvQMY4rIhActswR6/0mmcFwZr1nsVi3NXtxxtgPRGEi9di1i+aGR1sKESg7zJ9CGfuBYwAr9oT
+	/feRRnf46LIPR8pSwtfR4WtSwg5WrkqWLk+p1MzkdOF6+MrYM79KofWrVQBaPrPGwrAVHUvefgx
+	/+l33XHq49nH+sdtO2uEYVNxnzsoqCOvnJ8BrOE8CLPkdHqJ0N+lmaqfjpbUcMpAb3Nt5LY2UGh
+	SNaVWA=
+X-Received: by 2002:a05:6a21:3204:b0:3c3:9a7f:7309 with SMTP id adf61e73a8af0-3cc71f19334mr25436483637.26.1786958697843;
+        Mon, 17 Aug 2026 02:24:57 -0700 (PDT)
+Received: from kernel ([45.251.35.123])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-326794c0c94sm9181038eec.9.2026.08.17.02.24.54
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 17 Aug 2026 02:24:57 -0700 (PDT)
+From: Mohamad Raizudeen <raizudeen.kerneldev@gmail.com>
+To: bhelgaas@google.com
+Cc: alex@shazbot.org,
+	skhan@linuxfoundation.org,
+	jkoolstra@xs4all.nl,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Mohamad Raizudeen <raizudeen.kerneldev@gmail.com>
+Subject: [PATCH] PCI: quirks: Fix out-of-bounds MMIO read in nvme_disable_and_flr()
+Date: Mon, 17 Aug 2026 14:54:47 +0530
+Message-ID: <20260817092448.4395-1-raizudeen.kerneldev@gmail.com>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CA+1pjEnxg9nVy79QNGTb0Ea3s+q=Z-we5XH_fDvJbOLpXH8HDA@mail.gmail.com>
+Content-Transfer-Encoding: 8bit
 
-On Tue, Aug 04, 2026 at 09:40:03PM +0200, Lowne Onema wrote:
->  3. Amending the power resource structures in drivers/acpi/: I looked
->    at this a bit more and noticed RP09 and the SATA port
->    (SAT0.PRT1) each have their own separate power resource in the
->    ACPI tables, but both end up controlling the same physical GPIO
->    pin. I'm not sure if that's something the kernel already knows
->    how to handle safely, or if trying to sync RP09's power to audio
->    activity could accidentally interfere with the SATA port through
->    that shared pin. Still learning this part of the kernel, so
->    wanted to ask before attempting it -- is that a real concern, or
->    is it fine, and a better approach?
+In nvme_disable_and_flr(), the PCI bar is mapped using
+NVME_REG_CC + sizeof(cfg) which is (0x14 + 4 = 0x18 bytes)
 
-If two devices reference the same PowerResource in the ACPI tables,
-then the kernel is aware of the dependency.  E.g., when the
-PowerResource is turned on, the kernel runtime resumes all "dependents"
-of that PowerResource.
+However, the function later reads the controller status from
+NVME_REG_CSTS - offset 0x1C, which is outside the mapped 0x18 byte
+boundary and it can cause a page fault or kernel panic on architectures
+that enforce strict MMIO boundaries.
 
-However if these are separate PowerResources whose _ON method happens
-to toggle the same GPIO, that's opaque to the kernel.  I think it is
-then the job of the _ON and _OFF methods to track whether another
-device still needs the GPIO to be kept on.
+Fix this by increasing the mapping size to include NVME_REG_CSTS.
 
-But perhaps the ACPI tables are just completely broken and the right
-thing to do is modify the PowerResource assignment such that all
-3 devices depend on the same PowerResource?
+Fixes: ffb0863426eb9 ("PCI: Disable Samsung SM961/PM961 NVMe before FLR")
+Signed-off-by: Mohamad Raizudeen <raizudeen.kerneldev@gmail.com>
+---
+ drivers/pci/quirks.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> +++ b/drivers/pci/quirks.c
-> +static void quirk_acer_sf515_rp09_no_d3(struct pci_dev *pdev)
-> +{
-> +     if (dmi_check_system(acer_sf515_rp_d3_dmi_table))
-> +             pdev->dev_flags |= PCI_DEV_FLAGS_NO_D3;
-> +}
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x9db0,
-> quirk_acer_sf515_rp09_no_d3);
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index b09f27f7846f..ed03892cc960 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -4090,7 +4090,7 @@ static int nvme_disable_and_flr(struct pci_dev *dev, bool probe)
+ 	if (probe)
+ 		return 0;
+ 
+-	bar = pci_iomap(dev, 0, NVME_REG_CC + sizeof(cfg));
++	bar = pci_iomap(dev, 0, NVME_REG_CSTS + sizeof(cfg));
+ 	if (!bar)
+ 		return -ENOTTY;
+ 
+-- 
+2.53.0
 
-On x86 SoCs introduced in the last about 10 years, keeping a Root Port
-in D0 prevents the SoC from entering lower power states.  So the
-workaround of keeping RP09 in D0 may reduce battery life.
-
-Usually Root Ports can only be put into D3hot, not D3cold.  If there's
-a PowerResource for the Root Port, that's usually for powering off
-a device *below* that Root Port.  E.g. if RP09 is an internal,
-unoccupied M.2 slot, then the PowerResource allows cutting power
-to an NVMe drive or WiFi card in that M.2 slot.
-
-If RP09 isn't exposed physically at all, then it's unclear why the OEM
-chose to enable it in the first place, let alone describe a PowerResource
-for it in the ACPI tables.
-
-Thanks,
-
-Lukas
