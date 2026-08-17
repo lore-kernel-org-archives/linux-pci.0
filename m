@@ -1,109 +1,107 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mail-m49198.qiye.163.com (mail-m49198.qiye.163.com [45.254.49.198])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6ADB1429CEE;
-	Mon, 17 Aug 2026 13:27:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC46113790B;
+	Mon, 17 Aug 2026 14:19:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.254.49.198
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786973278; cv=none; b=M3FodeJIlouMAxhtgOjrG01ETM+Y5GYluMCjhXBS6Kqg0qF+97PZp76Tmi5bX1RDOxi6L90dr+CzCv3hB4Rd9Rf9bwx+ehvzGrxSqfarXaRN1fB3eIsG9tyVi902vVpLJ1YXpQzofiMBixb3b2nNQ8mYahty1lVXaCZKX6k08Lw=
+	t=1786976383; cv=none; b=KqZeQNRZ7BDcf3X9hevNaXFcf7LP8yQGjx8rVR8u4cIgRuQBCGN1a91NOTVjGWXfrr0bptMWPcle50FAWYK+CFAOc3NyJii4nULjdSMab4RJx77HMXao7fX6fAp6ndv2bnyD11FJ9Qav37lvvKGajeFCbC2/OhGFc6w5s4ebh3M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786973278; c=relaxed/simple;
-	bh=KUdwiuHEFhVhO1itwdFrGoQBICFLjmpZRLXi65Mix+Y=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ZmbkBHSkf5/AT/0roJ4ZeuK3qoHZYKaQttMKGweLqc6RG7W5ZOBvZypKQHDxaRpgTgAGtrL71ZldnEdZ77iMQTnsYuPAB1n9KXVgA2NrPuQDI+jTruqkArGMWRsr0CnavGa4IbYfK24129FDj40S3rcYy/WZ2fLoKE8OqaQpddE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bc5HyQYM; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1786976383; c=relaxed/simple;
+	bh=wFjMkwNzD0MkcwjMsosJyUd/Nv0TSFeDQvV2pfyy/2M=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=cvibYQSLOQaJFLE40zT80NKz/mzCilnyWRGrJD2e+eZyfPpp+w706KQor8F2fO7b1oV81d9i6Qec8uahBo6AKTvUh+QRH0a2KfaxPDhRWmT1nYfrYiT4T5W082tAkJ5FCXjnDPyR0IFWX+57RkDHmY4KnKXhzQ/nL3Ckw2wGtDU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=seu.edu.cn; spf=pass smtp.mailfrom=seu.edu.cn; dkim=pass (1024-bit key) header.d=seu.edu.cn header.i=@seu.edu.cn header.b=JFxNiL8a; arc=none smtp.client-ip=45.254.49.198
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=seu.edu.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=seu.edu.cn
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bc5HyQYM"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AA8351F000E9;
-	Mon, 17 Aug 2026 13:27:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786973277;
-	bh=KUdwiuHEFhVhO1itwdFrGoQBICFLjmpZRLXi65Mix+Y=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=bc5HyQYM1Yl/eP6xwJH4ZarKDSSbpcsoeD1ioi6wDfndS/hS1Y9Zk+yG5UxwQ7np1
-	 Zurmh0Uv5ewUTABnmQfBUt/J12Nvb3TiNWBEMpnht3T2IMsivhk6iFBl0LdQpD7AK4
-	 PvCSblTa9E8CKeZbODLUvw6SsbsSUklbZUe2wPKbJnxEi9q2q3dIi/v7hwG4RdsGEF
-	 WJigU2caH1PkHisw6MfOGlinm5qZK9uEn5TTthzJcLwMjyQl/QMzfWsAPNu0SK34wr
-	 kc2MK9xKx6rui4tK0p8jfX8Z+07eRXq2ySrauSloWjItE5oe4PjhcG0sBJs9y5WsPl
-	 Ogqtz5AlvOzBQ==
-Date: Mon, 17 Aug 2026 15:27:54 +0200
-From: Thierry Reding <thierry.reding@kernel.org>
-To: Manivannan Sadhasivam <mani@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, 
-	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
-	Conor Dooley <conor+dt@kernel.org>, Thierry Reding <thierry.reding@gmail.com>, 
-	Jonathan Hunter <jonathanh@nvidia.com>, Karthikeyan Mitran <m.karthikeyan@mobiveil.co.in>, 
-	Hou Zhiqiang <Zhiqiang.Hou@nxp.com>, Thomas Petazzoni <thomas.petazzoni@bootlin.com>, 
-	Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>, Michal Simek <michal.simek@amd.com>, 
-	Kevin Xie <kevin.xie@starfivetech.com>, Aksh Garg <a-garg7@ti.com>, linux-pci@vger.kernel.org, 
-	devicetree@vger.kernel.org, linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-arm-kernel@lists.infradead.org, Thierry Reding <treding@nvidia.com>
-Subject: Re: [PATCH v10 2/5] dt-bindings: pci: tegra264: Switch to PCIe root
- port bindings
-Message-ID: <aoMMInqEdS4MGUfU@orome>
-References: <20260814-tegra264-pcie-v10-0-05d08c592b05@nvidia.com>
- <20260814-tegra264-pcie-v10-2-05d08c592b05@nvidia.com>
- <f2wdbxqudd7kice4fcee4skgwektcftgqvccihi6l47ztwlssg@ufehmcwfwjh7>
+	dkim=pass (1024-bit key) header.d=seu.edu.cn header.i=@seu.edu.cn header.b="JFxNiL8a"
+Received: from PC-202605011814.localdomain (unknown [58.241.16.34])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 4a46bcac2;
+	Mon, 17 Aug 2026 22:19:26 +0800 (GMT+08:00)
+From: Runyu Xiao <runyu.xiao@seu.edu.cn>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Alex Williamson <alex@shazbot.org>,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org,
+	Runyu Xiao <runyu.xiao@seu.edu.cn>,
+	Jianhao Xu <jianhao.xu@seu.edu.cn>
+Subject: [PATCH] PCI: lock upstream bridge in pci_try_reset_function()
+Date: Mon, 17 Aug 2026 22:19:18 +0800
+Message-Id: <20260817141918.1339057-1-runyu.xiao@seu.edu.cn>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="kwhhjrimcwx56o2n"
-Content-Disposition: inline
-In-Reply-To: <f2wdbxqudd7kice4fcee4skgwektcftgqvccihi6l47ztwlssg@ufehmcwfwjh7>
+Content-Transfer-Encoding: 8bit
+X-HM-Tid: 0aa01017702103a1kunm977dbc31e5a12
+X-HM-MType: 10
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFITzdXWRgWCB1ZQUpXWS1ZQUlXWQ8JGhUIEh9ZQVlDTh9IVhgfTksfGEhMSRoaQlYeHw
+	5VEwETFhoSFyQUDg9ZV1kYEgtZQVlOQ1VJT0pVSk1VSE9ZV1kWGg8SFR0UWUFZT0tIVUpLSEpPSE
+	xVSktLVUpCS0tZBg++
+DKIM-Signature: a=rsa-sha256;
+	b=JFxNiL8aObPsS/hvbodcMpc+WfLLuxDLtTvSBv7JY6c50gIfPeOf/MU4jFJJClZH/NKHxZ9kRhOvh1vR+MCQ7ZDFlwDq4G4v5IXfCSw4P6/xJJaitrVYAHidlONDRvTySFb//wAfogvxSxPZoLi0W0AFaV/8x7y5/L2UjzdZaG0=; c=relaxed/relaxed; s=default; d=seu.edu.cn; v=1;
+	bh=KsWNXm34QWy2edEe3VEVsLIefGNOea2JY0sch1o1NMo=;
+	h=date:mime-version:subject:message-id:from;
 
+pci_try_reset_function() may fall back to a secondary-bus reset below
+an upstream bridge. Unlike pci_reset_function(), it only trylocks the
+target device, so bridge configuration access is left unlocked across
+that reset path.
 
---kwhhjrimcwx56o2n
-Content-Type: text/plain; protected-headers=v1; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-Subject: Re: [PATCH v10 2/5] dt-bindings: pci: tegra264: Switch to PCIe root
- port bindings
-MIME-Version: 1.0
+Mirror pci_reset_function() and trylock the upstream bridge before the
+device. This keeps bridge config access serialized on the secondary-bus
+reset fallback and avoids the unlocked secondary bus reset warning.
 
-On Sat, Aug 15, 2026 at 08:28:31AM +0200, Manivannan Sadhasivam wrote:
-> On Fri, Aug 14, 2026 at 05:38:56PM +0200, Thierry Reding wrote:
-> > From: Thierry Reding <treding@nvidia.com>
-> >=20
-> > Switch to using the PCIe root port bindings in preparation for using the
-> > standard WAKE# handling.
-> >=20
-> > Signed-off-by: Thierry Reding <treding@nvidia.com>
->=20
-> For some reason, you just keep missing Rob's R-b tag for this patch:
-> https://lore.kernel.org/all/178594272722.905042.3804777775947567354.robh@=
-kernel.org
->=20
-> I'll add it while applying, but please ensure that tags are not missed in=
- the
-> future.
+Fixes: 61cf16d8bd38 ("PCI: Add pci_try_reset_function(), pci_try_reset_slot(), pci_try_reset_bus()")
+Cc: stable@vger.kernel.org
+Signed-off-by: Runyu Xiao <runyu.xiao@seu.edu.cn>
+---
+ drivers/pci/pci.c | 15 ++++++++++++++-
+ 1 file changed, 14 insertions(+), 1 deletion(-)
 
-Understood, I'll pay more attention to this.
-
-Thierry
-
---kwhhjrimcwx56o2n
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCgAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAmqDDFoACgkQ3SOs138+
-s6HZvxAAuhRhI5oheC9XaqEXYpnP1hc7i+bmTmMgHx3tBcBUww6zCs+JMeL2cY7F
-kJ7m82I/7kFU30Ttyk+HouyfcPyZ1uj6aiP7PHwSty+N+KJRhgMy4/+kUKc3MxZk
-CWO10DCTO6kFdWGmrBI82o6TJ/VPVGkAN46PvKsi5FZE+TDTa5IGfRtRZmMVKTXO
-8qCjR1KK92sc1Tibu95ByDCA3uzLoGtkoj32AqOMfVNRcCTpf/GDWy0/ZCTfPryg
-jzGFCiRIRV3//FAsbQFh2xRrLydUUT1gpDGXOSsKmu/+fyvXTSoP/Q7hJ3nMYEje
-v4GFbgclY3+BR33QPzAIon5Fp/gepYO4w5bha4F+acvKO+ImwMfVLH21lOs1d9Iv
-YSo8c4kNUsnVhgL4XdgIpRhAZGMgPxog7GmGatqf71QLqq6n6DPlNLK7OEt+1uI5
-LbSflXOFlRS4xGTi1SpUnqhS3DwIAhTpubTEqslZkejtktLKRr66z3A9D7TdhOoh
-ZDcePOLZUqEoOHg//GJGfvzVJtYcgTq+v4aruVtFDHD61UMTNNqc5Iy9XsfWtyVQ
-2AAfHOIO/g+zKC16JtXgye1GyOP8BWqe3VA3f48GnDYGYP0rEloqTjIoBDgY3T+U
-14EN7Fw3wPZN4JDKysXD9rq8owQJrj3S3ZfIIAeUbAV28uIRQr8=
-=Cjmd
------END PGP SIGNATURE-----
-
---kwhhjrimcwx56o2n--
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index e128696d5b76..6da8ac8a2459 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -5342,20 +5342,33 @@ EXPORT_SYMBOL_GPL(pci_reset_function_locked);
+  */
+ int pci_try_reset_function(struct pci_dev *dev)
+ {
++	struct pci_dev *bridge;
+ 	int rc;
+ 
+ 	if (!pci_reset_supported(dev))
+ 		return -ENOTTY;
+ 
+-	if (!pci_dev_trylock(dev))
++	bridge = pci_upstream_bridge(dev);
++	if (bridge && !pci_dev_trylock(bridge))
+ 		return -EAGAIN;
+ 
++	if (!pci_dev_trylock(dev))
++		goto out_unlock_bridge;
++
+ 	pci_dev_save_and_disable(dev);
+ 	rc = __pci_reset_function_locked(dev);
+ 	pci_dev_restore(dev);
+ 	pci_dev_unlock(dev);
+ 
++	if (bridge)
++		pci_dev_unlock(bridge);
++
+ 	return rc;
++
++out_unlock_bridge:
++	if (bridge)
++		pci_dev_unlock(bridge);
++	return -EAGAIN;
+ }
+ EXPORT_SYMBOL_GPL(pci_try_reset_function);
+ 
+-- 
+2.34.1
