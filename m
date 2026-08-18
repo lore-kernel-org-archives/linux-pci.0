@@ -1,192 +1,163 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from BN8PR05CU002.outbound.protection.outlook.com (mail-eastus2azon11011010.outbound.protection.outlook.com [52.101.57.10])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F377939B969;
-	Tue, 18 Aug 2026 11:13:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787051600; cv=none; b=XLuqcKzkTH0l3jKVb1fBEtaq21HF824pNlgjUCrMJZkKT4c+SniAkPIe5qvEJtJmdIttn6Y0ZB2TZHE92slgCrBeX8VhkOG4J/G3619XONe3PTD1tXRk0j8H7e1fdDQxMkOzLYee541LMdrS5h3tQpkZKyzv1iIYnqSWOHAgn+Q=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787051600; c=relaxed/simple;
-	bh=gUn4byAmS2EuYYChdIynLkqxwQqZ6D7Ox5zwblzUUeA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=HaMqI9FJmrb5UKhwwXSLWDDz5cRQ3AtHvOJIgTDGD2nNBgJ74azW5IWvSQbLvaxQtLPWvFogXUvYg8S8pdWY1ZEaJk2kR8Ty+yqN6OtTORvkm+836uV8dYqE9Ji/BQJjb59ZGMrCRpTDVPuuIcekVoyibUzrmvTcsDKjKL1nnRQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EWa7Azdq; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 875ED46D2DD
+	for <linux-pci@vger.kernel.org>; Tue, 18 Aug 2026 12:43:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.57.10
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1787057000; cv=fail; b=Py5rBLJ1Yl9chxjgK1IXqU6xIUleUJLjuN1n2dCegJ2MAKw6jSoOywtH3ZTqz0vHS6I9scjkOBTye0vSVk+KTWvf2OPWEN03mKbOW+GaRXQpoWJa3CXLw/euRbQobnTcwB5KfmE48/1pEbE49SyHS6FwhmnB21d7bc+YkoMbkyc=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1787057000; c=relaxed/simple;
+	bh=ghgn+pyIzDmelBsIKSWz2AP+6zaDmnGxixTX47vkNpA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=hgPNSiAz1T1TJSrWU4eN9NHsxz5eYU1OLmT2zDoxauYDoO11oxPrs3hsWAxf122xCsh9/6rlJOBhGdFIVWFwVzWkmQaoVoNDcPSA7cbX7EJAmqvTk17q+p4CmRnKyjLtokl0t+ta/abyg57uPFVXS4TAkHXtXoleKNTjhbZgaFg=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=n093/TTb; arc=fail smtp.client-ip=52.101.57.10
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EWa7Azdq"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id ACDA91F000E9;
-	Tue, 18 Aug 2026 11:13:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787051598;
-	bh=ZV8xZlaRYypc1He8B0YhELCdCPtH9qIJS9d0JlWHnAQ=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=EWa7AzdqXrvVjqCJ7/AZuAd4k8Q5V6nqskZhq6JkU8s8l9g0hSH9d7ELwUbsFkbif
-	 8jDBd2P7EMQLnKV5RAdg35z+K4e/asH5I966hZeaOEk3+tvp9K0R8ZJDGADLkkvzyh
-	 hjkkVTQ9nDYX7DvQkEvLALNjL4ZzwtYrGbEADZPh+qhc9X3G9mLJgHCNr/2czgy9jX
-	 PPagM8aJ58wlASqKS3M8Il4kIgcaUaVCyTO/bQ2FNLTeD2yvtEOLvJN3I33h2sr78O
-	 ggbDAlRK4xKEjYCz82DJ9wOMZrewIo1ViZRTJ1PaInGYfAvGtVSVp2Fvcnwy783t35
-	 SP8+SCvThXeVA==
-Date: Tue, 18 Aug 2026 13:13:10 +0200
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>, 
-	franzelverbier <info@humanlearning.ch>
-Cc: Bartosz Golaszewski <brgl@kernel.org>, 
-	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof Wilczynski <kwilczynski@kernel.org>, 
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, regressions@lists.linux.dev, 
-	linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-pm@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Subject: Re: [REGRESSION] PCIe/qcom: on-board WCN7850 link stuck in Polling
- on X1E80100 (Surface Pro 11)
-Message-ID: <qgol7nv7vrhdwt6sofbxip3dat3kag4xgoamgp6li25rkbn4oa@ie5dhaswmxbt>
-References: <20260731122233.18345-1-info@humanlearning.ch>
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="n093/TTb"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=AXQw+Y6udXaa9xEP1xyEhNLsX5bsBkvFpse3wXg4HLbA8X/crM3EwutdNjkJyqtPEAF9Axur31ArIPU9Q6YGV1zW7qv5Uy/GnV5S6FztUou5uFGjh4F2CF7O/zjNkkj6Dmv5YCfJXCUHWM54e9iZD9DjT5+4cNh4Lu0Spos/WWMNf1MVjHbS735lNc1S3T2blsproiAj6eD1uiOmFA9YJ6ejCjPNNhMdwL2Z00wzwnFaih+AEpYiAHRYCf8EwbAIIhqG8Dr6i4qucVB6aVVvKdXIJ64delQQkRSqYJbwP1DbTdrEq0qMhLLEZoGjgL0ab/82PhlCL9DU8e0lrtd+tg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=wa5nDGdZdriKZQxcT/7HNI/5mw861fJ4QcGagcpVdRU=;
+ b=qnzlBCQmRB1PXYWurHazMn4WFLOv6L1FI1fuWcivrqRrjCWyiTICawoyDTyCHAkLk2G4ZALS48KGFzLc9Shl69hsodyxu+5zJ2Tk1muCAS8yrlLDiEs7LOfi8ZbPfeV+9WKDD96j9iYhYBL0xc3Y/Cp3R5iD+GGDAafm/Ek76PGej7mNmJHXnj0rheTO15pB0fZedOfSCP7jCpY729xO/oqSP9dLdzoa8wkSPkLRWNj3JQgBXWG0AFMd/li6TY9tDEZ3ZTzpvoqjk5ndm++DIARX2/wgjNPlBM6+xG5DMhO8l/kfJ2EYtJBfi0AVSZA2ILg6NvKISplrzfb8d1dpKQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=wa5nDGdZdriKZQxcT/7HNI/5mw861fJ4QcGagcpVdRU=;
+ b=n093/TTb0cNwL6JpGrEVkCHLpicLCVvAYzvuwgQ52uduJBcVcrQWsxPNE+e22bbIxxi4yeF6D95V8Kz4RtOtk/KddoRzkBFIz52ygSAPOeij74HAvI74K33yT//olAM/LA+HbHQGGGnsu+hZ2n7UPGlZ29sinWWCkhogiBBDqd/Su3QVuFM6zE1RWM4Mj9f3ViI11L2CW/1dNCodWtHJgvQUQxvC+8niSXICEq9ohHgJCLrU9MOujcHmHz5dp3IGEKV5Zn0qAW0zbMQZIYimXUIB7cHqU4Zfs4I8a071vYKRVWY33lWTTh5rtkGUYNlOBPF1bRyRrtY0bgByN1wCjQ==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from LV8PR12MB9620.namprd12.prod.outlook.com (2603:10b6:408:2a1::19)
+ by SA3PR12MB7973.namprd12.prod.outlook.com (2603:10b6:806:305::22) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.315.17; Tue, 18 Aug
+ 2026 12:43:11 +0000
+Received: from LV8PR12MB9620.namprd12.prod.outlook.com
+ ([fe80::299d:f5e0:3550:1528]) by LV8PR12MB9620.namprd12.prod.outlook.com
+ ([fe80::299d:f5e0:3550:1528%4]) with mapi id 15.21.0339.007; Tue, 18 Aug 2026
+ 12:43:11 +0000
+Date: Tue, 18 Aug 2026 09:43:09 -0300
+From: Jason Gunthorpe <jgg@nvidia.com>
+To: Thomas =?utf-8?Q?Hellstr=C3=B6m?= <thomas.hellstrom@linux.intel.com>
+Cc: bhelgaas@google.com, iommu@lists.linux.dev, linux-pci@vger.kernel.org,
+	leonro@nvidia.com, hch@lst.de
+Subject: Re: PCI_P2PDMA_MAP_BUS_ADDR and PCIe ATS?
+Message-ID: <20260818124309.GA5432@nvidia.com>
+References: <bc44b89c7996c8417a2126ada2cbe7c7bfe7568f.camel@linux.intel.com>
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <bc44b89c7996c8417a2126ada2cbe7c7bfe7568f.camel@linux.intel.com>
+X-ClientProxiedBy: YT4PR01CA0099.CANPRD01.PROD.OUTLOOK.COM
+ (2603:10b6:b01:d7::20) To LV8PR12MB9620.namprd12.prod.outlook.com
+ (2603:10b6:408:2a1::19)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260731122233.18345-1-info@humanlearning.ch>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: LV8PR12MB9620:EE_|SA3PR12MB7973:EE_
+X-MS-Office365-Filtering-Correlation-Id: f7300921-3f57-43f7-27ed-08defd264328
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|376014|23010399003|1800799024|366016|18002099003|22082099003|56012099006|6133799003|5023799004|11063799006|10067099003;
+X-Microsoft-Antispam-Message-Info:
+	ZPsgc3574Xlv1KBr2rZNu20kBpAi/t4jeHzUxcW7pc6S9p47nU4ISHLokLwGDm0aECFqRFc3/NNJllZiHGiZBUOdCsMGntT1JPNp5dfGLaD8hSdQOkXb0CT/gVjn5WzMJEEheUVMKmXgARIzbD1Wprhf07r2OMRT7I21uxwGLETrnmVUXLOVjmN9VsiIv5rPll4SxD6LmBtecuZqGpqyyY+ujYuoixiW+VlW5uSesgtWT0VuPs6vKnEVCIk/rl2Jz5aMtmnbhBwc4rg6jtopYNbhAbL1kHS0CBwuuJgdLmTtScwzUgM1RbqD+DymrI/mR/aBMCIh9v5SOML1GA+VoxLht0axQD1jLACW+DdBzOkHxnJX+/Rn4K/LU5rf0KkTHdXuQGcyVT2xpLD4KTHSeW9pnadREeJ8GdKxP/Hwt5BWhkowI/BrIS1k2NwJtmJvw7gEy4gCmeFKM7/Mb580l7i/7Zyrof8Pag7jz5Zx/Q3wEt8IuOW6HcyWkX38Rd5nica/403Y2uXjsr2wRwoOBuNZgPtt8S7VbapCWy85laV2MSnXXoIo/+AXQRWzGncTXVuj/pJvJzPeRvDRqosc5/oIGHNkZVoXUdy3+ugHo2jMh3CuWP/MR5R6FoX7EUartgkijtvFVzJUCb8JL6lDjN3R4URSfGgu9308lqsV/PM=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LV8PR12MB9620.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(23010399003)(1800799024)(366016)(18002099003)(22082099003)(56012099006)(6133799003)(5023799004)(11063799006)(10067099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?bEQxN0swbFArejlGSGFHNWxwcU5lZ1Axb2Y5cEtBREpJWnNyb1E0R2QyUmxK?=
+ =?utf-8?B?MCtPb1FRMXdiRjFvaE1ldHE5dC83YUh6NHlyblplUnhVclZ4emJtcFJFaVZG?=
+ =?utf-8?B?S05CcE9pck50M0VzWEp1RjBwTmdRNFhCQ2o3ZXRmdFo3TXU5N2wvSGZsaWIr?=
+ =?utf-8?B?dFpmMUt5eXB4ekRyK3V1dk93VWgzTGducGRmY2Z5aUZaaDByWHJpSWF1Zkc4?=
+ =?utf-8?B?NC9hWUtDT0F1UlpyeWFIQ3ZJdmp6TWVLQ0xvdWNBNllGM3NiZ0pJTjd0Rllz?=
+ =?utf-8?B?Zzc1Z2NOMjk5MWpFL0JGYk5GR2I1WERseDJYYTduTE1aU2ZxSkREN3IrQ3VY?=
+ =?utf-8?B?K2R0a2RwVUQ1TndEZUNIaEN4bE00UE1rZHQ2Um15MVpubFc1bU9Ea1ZmRG5h?=
+ =?utf-8?B?bTJtdkpiaFI1NnNUY1E1VHdmeGFkcUV1M0cxdEkyOEVSSlVCWXdiSnljVVBx?=
+ =?utf-8?B?R2NJTEhXTmowQzM3VVJmQkFpRUdscndTUC83Q3ZOak9oTzdLY2dWLzFVbk0z?=
+ =?utf-8?B?MUNia29pV3U0VWk4aU1kTWk0OFU4eFdhczA0L0pEM3RrdWZRWHhMZTY3dVpi?=
+ =?utf-8?B?UmRFL1pQRTJRMFYrMXp5MEg5UUV5RlhsbmRyUjV4RzZwRWxtbllRTUJOTzZU?=
+ =?utf-8?B?L2RiWHh2M0lBZ3Y3aUx4WnFqNXg0bTMvSERmUmJOZitTMGxLamtHYk1xYXh6?=
+ =?utf-8?B?eFdRN2hkTEpiRXZTYVNHTWdpaTVUWUJsZUMrSm5kSjhuUGI5dHZBM2I0Ym5o?=
+ =?utf-8?B?NTJKN0ZINTk5NEFIRnNUM2tEY2g3Ty9LY2lWTFhIaGR5YXpweXkwdmp3OXpw?=
+ =?utf-8?B?M3ZjYkl5SzE0Y2FEbExuTmdCM3F6ekRaQXZiMlVodzlzTTRLbzJrUTBtS1VQ?=
+ =?utf-8?B?MTZqclNTdE5ZSzN1M01NWCtPMEo3SVpMZlBUU0trOU90aEFjcWpFNWlxVE9Y?=
+ =?utf-8?B?ekllTEVmVnpCTXplSS9QcHFONTJFNEl0Rm94azd3SldkWmJwY0lqSFRiVDJv?=
+ =?utf-8?B?MldmMEpqOVFKcGgvaUJibk41Qm04T1RVOUlqNTZlV2YwUVpvN1BJUjFRYnJP?=
+ =?utf-8?B?NEZtMWhESkZQZ0tLdjhzbnhoTGxybGZSSzZXdVR1ZmcxUzBBTGZUY3pOOUFJ?=
+ =?utf-8?B?RlRLdHNoRnROOFI3Wk5GSWlRSGxIVnhkaExYREVaczhpeWtTdDBSZnFQZnFu?=
+ =?utf-8?B?eVdqV3hkaWJ2TVhialZWOUNHMWJYN1NhQ3hpejJmdjEybkZBV3ZNUUQ4UTJC?=
+ =?utf-8?B?MnlWMUFDbmRuc0k0Tk1VOEFqTzZ1Z2NsUERDeUpkK2JVWWtlbGdPelQvSTJL?=
+ =?utf-8?B?YXFnOXY4VTVPVmxvZFRSUDFEemlkSVdVOTArbkdENzRxaFNRRDIzNTd3eEtL?=
+ =?utf-8?B?MVZGb0w1ckZVbjMrakRtMVpUY3MvYlFLOVNsVXExcmxOdEZYMVZ3b0QwZnAr?=
+ =?utf-8?B?Yjk2WlYwMHBOWEZoOUI4WEJPV0hMaXdwajRqK2lZODBkRDVnTU9lV0VnN1hO?=
+ =?utf-8?B?U2VyR0lqU2ZWTytaMloyRUdjL0JySi9VMW93N05BZEd3ZWFlZHNNS2Jzcmc4?=
+ =?utf-8?B?bEJpWDg3cGJ2clVWWHVCMkFXTlVTZ3FKNk1Rck00WHlrM3hMQ2VmdzA1cjRs?=
+ =?utf-8?B?aTlqazQwcGVrTlRkYTZwWmYrSXZWSVdYOVFSMVVoN3FWSGoxTkp0cThYM21i?=
+ =?utf-8?B?bklHYmt5bE9yZW9NR1JMdDNXc2dOd0VQQlRCSUloamhhLzRsZ1lnakszTzBn?=
+ =?utf-8?B?OHFYbXZrTFRENXhRM2JrdzhZejh4aVJBOWVEaGlQTC9jK21FMVkwT3NaMGxW?=
+ =?utf-8?B?dFRjRFhQTTVzaVkweWlUdjJFdUZ5aGRqanhkT2o0a2JiVzAwaVF6bHZRQU9r?=
+ =?utf-8?B?bndjK1ZFZEtoblF0SUFkQTJ5NzR5UzZWV2E5VDZoNk1uRmNPVzVqN2ptWnFL?=
+ =?utf-8?B?MDFHcmh4OEhHOEMzTkV6MVNRTWlrSmxmSVpPanpuZzlzcHRXVEFEeWxmQnJ6?=
+ =?utf-8?B?NVM5bDI4Yy9Fay9hQWxKMThoYzJSeHZDbFdxSUNSQVdjaWZVSHUrbnAxdmY2?=
+ =?utf-8?B?V2xvQkhoUGpJNVIxRmVRb3ZzMWs5emZjNVN6SzhFL3AyKzNOOEN5bGJlNlFs?=
+ =?utf-8?B?MzRSeDg4N3kwZzVBWm9nSkdleU9SR2IvTHdaV1o1ZzRyaXFRT2piUTlOaXJw?=
+ =?utf-8?B?U1ZWcDhnQklldUNJY0NBSWFReEhaT1MrUkJ0TGZXYzhKOFJIZFdFKzFPNzJH?=
+ =?utf-8?B?bjNWdzIwbkFvUW8vN0dneEIwdjNWV05qeTJLYVNPZEF3QmluRE5CWW1ldmlG?=
+ =?utf-8?Q?4mcpDnyBx4IJyvuN4o?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: f7300921-3f57-43f7-27ed-08defd264328
+X-MS-Exchange-CrossTenant-AuthSource: LV8PR12MB9620.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 18 Aug 2026 12:43:11.3113
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: wxw7Da6fvo7b+VvpzIIeUFSiB80t6j48ETYOEPe4+EPW/f2KRbdPITv+pYql8Fq1
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA3PR12MB7973
 
-+ Krishna
+On Tue, Aug 18, 2026 at 11:33:07AM +0200, Thomas Hellström wrote:
+> Hi!
+> 
+> I was looking at the way pci_p2pdma_distance() returns
+> PCI_P2PDMA_MAP_BUS_ADDR if devices sit beneath a local switch with ACS
+> disabled or not present.
+> 
+> The client then programs the bus address directly to perform p2p dma,
+> as handed out by the dma layer.
+> 
+> However if the device (p2pdma client) has IOMMU turned on and ATS
+> enabled, the device may or may not send a translation request to the
+> IOMMU. Wouldn't that fail returnint an IOMMU fault if the device is
+> programmed with the bus address rather than the IOVA?
 
-- Mani
+There are many goofy configurations you can setup on PCIe, something
+like this would be one of them :)
 
-On Fri, Jul 31, 2026 at 02:22:25PM +0200, franzelverbier wrote:
-> Hi,
-> 
-> On a Microsoft Surface Pro 11 (Snapdragon X Elite, X1E80100, board
-> x1e80100-microsoft-denali-oled), the on-board WCN7850 Wi-Fi PCIe link
-> no longer trains on linux-next. It works on 6.17.
-> 
->   Good: v6.17
->   Bad:  next-20260721, next-20260723
-> 
-> #regzbot introduced: v6.17..next-20260721
-> #regzbot title: PCIe/qcom: WCN7850 link stuck in Polling on X1E80100
-> 
-> The device sits behind PCIe controller 1c08000.pci (pcie4,
-> qcom,pcie-x1e80100, gen3x2) and has no PERST# GPIO -- it is
-> power-sequenced via wcn7850-pmu / pwrseq.
-> 
-> Symptom
-> =======
-> 
->   qcom-pcie 1c08000.pci: Device found, but not active
->   qcom-pcie 1c08000.pci: PCI host bridge to bus 0004:00
-> 
-> dw_pcie_wait_for_link() finds the LTSSM in POLL_ACTIVE/POLL_COMPLIANCE
-> and returns -EIO. The endpoint 0004:01:00.0 is never enumerated, ath12k
-> never probes, and there is no wlan interface. On 6.17 the same
-> controller trains at ~0.6 s and ath12k probes normally.
-> 
-> Ruled out: the chip is powered, and power control is bound
-> ==========================================================
-> 
-> - Bluetooth on the same WCN7850 (UART) comes up fine, so the PMU and
->   regulators are on.
-> 
-> - pwrseq_qcom_wcn is loaded, and pci-pwrctrl-pwrseq is bound to the
->   platform device 1c08000.pci:pcie@0:wifi@0 (compatible pci17cb,1107 is
->   present in pwrseq_pwrctrl_of_match[]). The vddaon-supply
->   validate_device() check passes.
-> 
-> Ruled out: not a device-tree regression
-> =======================================
-> 
-> The wifi@0, &pcie4 and &pcie4_phy nodes are equivalent between the 6.17
-> and 7.2 device trees -- same supplies, same compatibles. The only
-> difference in wifi@0 is "disable-rfkill;" (6.17), which is
-> post-enumeration ath12k behaviour and cannot affect link training.
-> 
-> What changed
-> ============
-> 
-> qcom_pcie_host_init() was reworked around the pci-pwrctrl framework,
-> and qcom_pcie_start_link() now calls qcom_pcie_common_set_equalization()
-> -- absent in 6.17 -- before enabling the LTSSM.
-> 
-> Finding 1: Gen3 equalization prevents link training
-> ===================================================
-> 
-> Forcing the port to Gen1 makes the link train and ath12k probe:
-> 
->   &pcie4 { max-link-speed = <1>; status = "okay"; };
-> 
->   qcom-pcie 1c08000.pci: PCIe Gen.1 x2 link up
->   ath12k_wifi7_pci 0004:01:00.0: Wi-Fi 7 Hardware name: wcn7850 hw2.0
-> 
-> qcom_pcie_common_set_equalization() only programs GEN3_EQ_* for speeds
-> >= 8GT, so max-link-speed=<1> skips it entirely, reproducing the 6.17
-> behaviour of no EQ programming.
-> 
-> Note this is not a wrong preset value. The presets come from DT via
-> of_pci_get_equalization_presets() and are applied by the DWC host core.
-> In hamoa.dtsi:
-> 
->   pcie4  (pci@1c08000, gen3x2, on-board WCN7850)
->     eq-presets-8gts = /bits/ 16 <0x5555 0x5555>;
-> 
->   pcie6a (pci@1bf8000, NVMe, gen4x4)
->     eq-presets-8gts = /bits/ 16 <0x5555 0x5555 0x5555 0x5555>;
-> 
-> Both use the same per-lane preset 0x5555. The NVMe port trains at Gen4
-> fine; only the WCN7850 port fails. So the WCN7850 endpoint specifically
-> cannot complete Gen3 equalization with these presets on this
-> controller, while an NVMe SSD on the same SoC can.
-> 
-> The board DTS (x1-microsoft-denali.dtsi, also in mainline) leaves
-> &pcie4 as status = "okay" with no per-port override, so it inherits the
-> SoC preset.
-> 
-> Finding 2: an LTSSM re-kick does not recover the link
-> =====================================================
-> 
-> Even at Gen1, the link does not train on the first attempt at boot
-> (~4 s); in one instance it only came up much later via a pciehp slot
-> event. An experimental retry in qcom_pcie_start_link() toggling
-> PARF_LTSSM.LTSSM_EN (clear/set) for up to 30 s never recovered the
-> link.
-> 
-> That suggests the endpoint needs a full power/reset re-sequence
-> (pwrseq) to leave the failed state, not just an LTSSM restart -- i.e.
-> the pwrseq power-on may be racing link bring-up at boot for PERST-less
-> on-board devices.
-> 
-> When the link does come up late (fragmented CMA, tight PCI windows),
-> secondary symptoms appear that are absent on a clean boot-time
-> bring-up:
-> 
->   ath12k ... qmi dma allocation failed
->   BAR 0 ... failed to assign
->   rfkill ... Hard blocked: yes
-> 
-> Questions
-> =========
-> 
-> 1. Are the qcom_pcie_common_set_equalization() Gen3 EQ presets expected
->    to be safe for a gen3x2 PHY driving an on-board WCN7850? They
->    prevent link training here, and skipping them (Gen1) works.
-> 
-> 2. Is pci-pwrctrl/pwrseq power-on racing link training at boot for
->    on-board devices with no PERST# GPIO, such that the endpoint is not
->    ready on the first LTSSM attempt and cannot be recovered by an LTSSM
->    re-kick?
-> 
-> I have not bisected to a single commit yet -- the range above is v6.17
-> to next-20260721. I am happy to bisect, test patches, or dump any
-> register on this hardware; rebuilding is a short loop here.
-> 
-> Environment
-> ===========
-> 
-> linux-next next-20260723, CONFIG_PCIE_QCOM=y, CONFIG_CMA_SIZE_MBYTES=128,
-> ath12k, board x1e80100-microsoft-denali-oled, Arch Linux ARM (aarch64).
-> 
-> Thanks,
-> franzelverbier
+Linux only (barely) works with a few mainstream ones.
+ 
+> So if ATS is enabled, shouldn't the device always be handed the IOVA to
+> avoid this? 
 
--- 
-மணிவண்ணன் சதாசிவம்
+No, Linux has no idea if the device will use ATS or not for a certain
+request. ATS is not an all or nothing feature in PCI.
+
+If you want this kind of configuration then set the ACS flags to
+achieve it, or disable ATS in the device.
+
+IMHO such a PCIe fabric is misconfigured. I can't see a reason why
+anyone would want to have ACS flags allowing fast path and then Linux
+setup to never supply an IOVA that can use it.
+
+Jason
