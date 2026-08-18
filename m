@@ -1,76 +1,83 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mailout3.hostsharing.net (mailout3.hostsharing.net [144.76.133.104])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 071E3332EC8;
-	Tue, 18 Aug 2026 15:50:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA941392C56
+	for <linux-pci@vger.kernel.org>; Tue, 18 Aug 2026 16:03:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=144.76.133.104
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787068242; cv=none; b=sMchmcAgqRQV4GlJ2F17kBfXmy7s/uGvNM7nqD6OxlsYfdnQCkI8pZhmwhFWs/9pbcsdCF95ikFSN/Qd6XMTtEEEfKzaPQoZ6ov2W5HnxRopz9RtYxT87ZTxTPqGi+/tdlbgKFsnAdSQP8tOWR3LWAxeS5clILA0rGF+hWtMTro=
+	t=1787068984; cv=none; b=sWVfEIyYrkY22aaUVh5BkKAMZwCfVKn4Ojo9/Zf6dEEb9iYJrtMuU8uWy7wZKuuGhuXUI7SNLEhEkCC6mOI4j0Id4kTsFmUv2MYc0DzWq3jXpJoIqcFWtf5ZusDFBiwz4cOo36qCDGJFCIZyOCQqqJbfF0uQHBQ5FTgtiPPFJ34=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787068242; c=relaxed/simple;
-	bh=5VeukePej8RwsJpOpSfhS8lzksj1LUcEyQuqFP8SLkk=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=DH9zFrDwvBoKEkbDXT6Nx8xh3rHZpaEp39fIN5cD2Ob/h0h2DFzyDfTAtwaqt+8Uv7cVUYXCTOJjlnCtZMlzeExQTkFWRQ4DEPkY5xm8bVLTeKvrP7+kn5OUNnhuwXSvqh9hVNt3k5g1t/pbu1lqR1/wGS+Ox0NAxsnrrJ4ScP0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZF9JNaQL; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZF9JNaQL"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B30261F000E9;
-	Tue, 18 Aug 2026 15:50:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787068240;
-	bh=5VeukePej8RwsJpOpSfhS8lzksj1LUcEyQuqFP8SLkk=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=ZF9JNaQLJXzg85k3WFwAC6Uctfso14eTt1XOOxhqBvCYtfA6XWPs7JkuSCz29foPq
-	 wQJxSeUEagS9d89P/lyHPbdxsexDNGpP4o7BaxeBR7pspkT1/0DwQ702H9LmfOIPbl
-	 ENygOJ6kK+exeu53IUs03V4Jw2eVQ3XIRtO6P6styJ3tVNWVj+8b9b+3LOH/0BIGLD
-	 yDrLbrjkJja0y1msvykxuvSXyaxy36gd4LFlTVWez8wBp/WYaXvDfZG93NDcSv+aZ/
-	 WMTEO2YXynqL13t/16w2P7/NKAoRGgfhN1f9JeAIdsjsoN4hwEBHJ3SsqdxEfdN7rv
-	 kJk/W4fzFArTg==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v10 2/2] PCI: xilinx-cpm: Add support for PCIe RP PERST#
- signal
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Sai Krishna Musham" <sai.krishna.musham@amd.com>
-Cc: conor+dt@kernel.org, robh@kernel.org, devicetree@vger.kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260818153755.3801111-3-sai.krishna.musham@amd.com>
-References: <20260818153755.3801111-1-sai.krishna.musham@amd.com>
- <20260818153755.3801111-3-sai.krishna.musham@amd.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 18 Aug 2026 15:50:40 +0000
-Message-Id: <20260818155040.B30261F000E9@smtp.kernel.org>
+	s=arc-20240116; t=1787068984; c=relaxed/simple;
+	bh=u1krH2MgW/rmUMJz5nl//UAxP1FT9KVWwO9LVr/JSCc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=IOQwsclKKlvKFrviDxxwztMPfYqTyVoUcvVToCjm0mJGJLdHJRg6LEo7dwcyjVMCAQfEYOGsX1E6mHnEQsRBQ0BD8wFsvnmldQtw7gZ3DZGppbIuA6/7kHUXC8FqrUohBc1YNlrZXdXk5crR9XBaC7hHcTErGvun5PnBljxUrqw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=144.76.133.104
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
+Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
+	 client-signature ECDSA (secp384r1) client-digest SHA384)
+	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
+	by mailout3.hostsharing.net (Postfix) with ESMTPS id 10C7ACAB;
+	Tue, 18 Aug 2026 18:02:52 +0200 (CEST)
+Received: by h08.hostsharing.net (Postfix, from userid 100393)
+	id D2D05606F46C; Tue, 18 Aug 2026 18:02:51 +0200 (CEST)
+Date: Tue, 18 Aug 2026 18:02:51 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: sashiko-reviews@lists.linux.dev
+Cc: Keith Busch <kbusch@meta.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] vfio/pci: Restore standard PCI config space in
+ .slot_reset()
+Message-ID: <aoSCK2Sy0HeyX_la@wunner.de>
+References: <20260817195110.2077698-1-kbusch@meta.com>
+ <20260817200404.BB3121F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260817200404.BB3121F000E9@smtp.kernel.org>
 
-> Add support for the PCIe Root Port PERST# signal using the GPIO
-> framework, along with the PCIe IP reset. This reset is managed
-> by the driver and occurs after the Initial Power Up sequence
-> (PCIe CEM r6.0, 2.2.1) is handled in hardware before the driver's
-> probe function is called.
->=20
-> This is useful in warm reset scenarios where the power rails stay stable
-> and only PERST# is toggled. Applying both the IP reset and PERST# resets
-> the Root Port controller and Endpoint synchronously, improving
-> reliability and avoiding lane errors.
->=20
-> Both the reset GPIO and the reset controller are optional to keep
-> backward compatibility with existing DTBs. Also add a PCIE_T_PERST_US
-> (100 us) macro in pci.h for the PERST# active time (PCIe CEM r6.0,
-> sec 2.11.2, "T_PERST").
->=20
-> As part of this, update the interrupt controller node parsing to use
-> of_get_child_by_name() instead of of_get_next_child(), since the PCIe
-> host bridge node now has multiple children. This ensures the correct
-> node is selected during initialization.
->=20
-> Signed-off-by: Sai Krishna Musham <sai.krishna.musham@amd.com>
+On Mon, Aug 17, 2026 at 08:04:04PM +0000, sashiko-bot@kernel.org wrote:
+> [Severity: High]
+> Is this callback reachable under normal single-device circumstances?
+> 
+> In pcie_do_recovery(), the report_slot_reset broadcast is gated behind
+> checking if the combined error status is PCI_ERS_RESULT_NEED_RESET.
+> 
+> However, vfio_pci_core_aer_err_detected() unconditionally returns
+> PCI_ERS_RESULT_CAN_RECOVER. The PCI recovery state machine promotes
+> CAN_RECOVER to RECOVERED during the mmio_enabled phase, so the
+> condition to call slot_reset evaluates to false unless another driver
+> on the same PCIe bridge votes for NEED_RESET.
 
-Sashiko has reviewed this patch and found no issues. It looks great!
+I have a patch on my development branch so that ->reset_slot() is
+also invoked if (state == pci_channel_io_frozen), i.e. on Fatal Errors.
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260818153755.3801=
-111-1-sai.krishna.musham@amd.com?part=3D2
+I have another patch pending to allow error recovery for unbound devices.
 
+Both patches are available for testing on this branch and I hope to
+submit them in the upcoming cycle:
+
+https://github.com/l1k/linux/commits/aer_unbound/
+
+> [Severity: High]
+> Can pci_restore_state() clobber userspace runtime configurations with
+> an outdated probe-time snapshot?
+> 
+> For a VFIO device, pdev->saved_config_space contains the host kernel's
+> baseline state captured during vfio_pci_core_enable(). Subsequent
+> userspace modifications (like enabling bus master or setting up MSI)
+> are recorded in VFIO's virtual cache (vdev->vconfig) but do not update
+> pdev->saved_config_space.
+
+I guess the right thing to do is to write vdev->vconfig to config space
+after pci_restore_state()?
+
+Thanks,
+
+Lukas
