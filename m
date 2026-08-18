@@ -1,158 +1,132 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.21])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D7CB175A74
-	for <linux-pci@vger.kernel.org>; Tue, 18 Aug 2026 22:33:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3022941C6A;
+	Tue, 18 Aug 2026 22:37:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.21
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787092403; cv=none; b=NPNRMWDhedoQJVpkZLmV8JEqs+1zrnmLBSqq3hHpfJ++Ef5I5J2GTbviMud+2IUVZyaY5/GJZObyowJZsMpp9QlgnNphhGxw53YapNkpNYw6c2bm0RbPWwVMPo9PjKLatmd2Rv0ZCcHGklq+0LxlVlh42wsLhrj3966BlJiNEy0=
+	t=1787092661; cv=none; b=dgwxje4E437Z9qFHk0CuEhb8UOFC/Nijs3ZbIPzR5atLHtD0K5tLv+hfw7KyySvuh+jOcbKJl5Q2bd6YzMYCJApwitkHiOCSyDYJ8LAGluskh0+nw+faQMWwJ/8TXI2dGdVne1CyFAC7bYDtHf2F+lxFqaKWKVoSFlCw2Mb+cCk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787092403; c=relaxed/simple;
-	bh=Y6VUoe4sQOsaIVfIb3SSWkD8obRTW2FBtjyeuzeq9eM=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=Fvr0LSTFPF4T4hU2N0mvAnFKzMcIEv+970noa418qmkkna+VxT2KxEaG2aMyRPE7niNpF9YMhSphcdXToBBwTgr+jGKY3u4Vji64SYOth5IzbOtZRbg5cjLItF1LS6NSku1VUoPstw/lfTMQy8AgJ7fkDsVUZpgoqOoh/RYoUl8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GDKv/9ep; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1787092661; c=relaxed/simple;
+	bh=v3uIBq4ta5/dQkmr2NGifq11i2HrnYaNHDNEEtLSFYY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=SjfIBXKOQdYina3z2fPE7hoKQirWFJnrx4K4HbSSy5eFMIchEuYokyHB5pbSjP91uEep7Tys6CEtyWKoICi9ZiN10F7GbHxIBdNVyMKmIhJGYuEZ/yrZnzl2PS+qB/XnQboYb5fAUpZYVDK5clWEbuLfeBW+iAvsusvYwUwRQpU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=OjOsrmum; arc=none smtp.client-ip=198.175.65.21
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GDKv/9ep"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 86F6A1F000E9;
-	Tue, 18 Aug 2026 22:33:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787092401;
-	bh=VzIoIlZm6E4Py29G+xr1f5KcVWWzvZl6UCHZeZxLjCw=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=GDKv/9epMcQOnQr52iagRqKynBMi0oAe8yVGSpPK0pK5VDvwy2wAnz1+TJ+wM3USF
-	 23JCrHcc6MGakkTC6ZG7+kTFeRyeIHjywRR/arR8K41O5cmuOAMSyDnjWq8jdi+qwO
-	 JNI8a2wPBXzkhkMXB8ziutbCfDCqpx0d1VmeGbvKiUDLF9vwMf9dLIYZvhdT9SrnoI
-	 lMbeLRIiWac59fwhuQjR72AG04y1NLWN9lLmu7DWkJZ/L4EbrAMg8qQcmMmDaQCyts
-	 bHbQELngutqF6dhbhRYS1Drg9Ze6poXcNBQ4K3HrjTr8jyIxxazSCYEcVyyUsoykXm
-	 etG89O6ffadgg==
-Date: Tue, 18 Aug 2026 17:33:20 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: linux-pci@vger.kernel.org, Yury Murashka <yurypm@arista.com>,
-	Matthew W Carlis <mattc@purestorage.com>,
-	Zhenzhong Duan <zhenzhong.duan@intel.com>,
-	Qingshun Wang <qingshun.wang@linux.intel.com>,
-	Yicong Yang <yang.yicong@picoheart.com>, dio.sun@enflame-tech.com,
-	Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
-	Oliver OHalloran <oohall@gmail.com>, linuxppc-dev@lists.ozlabs.org,
-	Terry Bowman <terry.bowman@amd.com>,
-	Sathyanarayanan Kuppuswamy <sathyanarayanan.kuppuswamy@linux.intel.com>,
-	Arjun Govindjee <agovindjee@purestorage.com>,
-	Ashish Karkare <ashishk@purestorage.com>,
-	Jasjeet Rangi <jrangi@purestorage.com>,
-	Meeta Saggi <msaggi@purestorage.com>, rhan@purestorage.com,
-	sconnor@purestorage.com, an.luo@enflame-tech.com,
-	fernando.hu@enflame-tech.com, bill.wu@enflame-tech.com,
-	xin.wang@enflame-tech.com
-Subject: Re: [PATCH] PCI/AER: Fix ratelimit and log level of Advisory
- Non-Fatal Errors
-Message-ID: <20260818223320.GA754605@bhelgaas>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="OjOsrmum"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1787092658; x=1818628658;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=v3uIBq4ta5/dQkmr2NGifq11i2HrnYaNHDNEEtLSFYY=;
+  b=OjOsrmumizL9qzTg3ulOQsk3+jv0YtqdFzYu2w4UtITtTkG6cJpA/GPI
+   U8oiFT56uhZr25fhBauVGaoH6yYii6XRGheohcCw0rrtl+DPC6ZBwvb+x
+   gmGA6aKuq8iIcPJjPoxIcaC65WO8aoKDYA2VsamHtqsNzHrTYr0G9sbMS
+   6j3S+IyTgELVYbMJbLtPjV7btVZwbeTGj3R7277SO//Itej6c3Whvvvyp
+   wIs5cWrH4EctRs2oqVevLCbAQ0Hb1pxEUN4ZN3fcQxxxnRDGdHtJlkr1p
+   Xs3guMsdA6/sG9qIdWTYidjvFTGGWAwnh7Dl+3ZC+rMgWzEhLjw00t1Qh
+   Q==;
+X-CSE-ConnectionGUID: oJv6L4G2SfOcqXMe/7M7nQ==
+X-CSE-MsgGUID: CwnmGSHeT4O5INm5Mw5dgw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11879"; a="87452136"
+X-IronPort-AV: E=Sophos;i="6.25,230,1779174000"; 
+   d="scan'208";a="87452136"
+Received: from fmviesa001.fm.intel.com ([10.60.135.141])
+  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Aug 2026 15:37:38 -0700
+X-CSE-ConnectionGUID: npeUlikmRvqALNmhGyGZxA==
+X-CSE-MsgGUID: P2K9tFEyTSyJ071QLqMekA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.25,230,1779174000"; 
+   d="scan'208";a="290177746"
+Received: from sghuge-mobl2.amr.corp.intel.com (HELO [10.125.111.209]) ([10.125.111.209])
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Aug 2026 15:37:35 -0700
+Message-ID: <2ba00f98-c950-45b4-aed7-202fa8811863@intel.com>
+Date: Tue, 18 Aug 2026 15:37:34 -0700
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <120da0565eac0157ffd913423c7cfa66e985ff59.1786800931.git.lukas@wunner.de>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 1/2] PCI: Add MMIO Capabilities Register Block
+ definitions
+To: penn <engguopeng@buaa.edu.cn>, linux-cxl@vger.kernel.org
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ bhelgaas@google.com, dave@stgolabs.net, jic23@kernel.org,
+ alison.schofield@intel.com, vishal.l.verma@intel.com, ira.weiny@intel.com,
+ djbw@kernel.org, johnny.li@montage-tech.com, peng.guo@montage-tech.com,
+ jingzhong.yang@montage-tech.com
+References: <20260817075854.17207-1-engguopeng@buaa.edu.cn>
+ <20260817075854.17207-2-engguopeng@buaa.edu.cn>
+From: Dave Jiang <dave.jiang@intel.com>
+Content-Language: en-US
+In-Reply-To: <20260817075854.17207-2-engguopeng@buaa.edu.cn>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Sat, Aug 15, 2026 at 03:47:10PM +0200, Lukas Wunner wrote:
-> When Advisory Non-Fatal Errors are reported, the Uncorrectable Error bits
-> should be reported using the same ratelimit counter and log level as the
-> accompanying Correctable Error.
+
+
+On 8/17/26 12:58 AM, penn wrote:
+> From: Penn <engguopeng@buaa.edu.cn>
 > 
-> This is done correctly when they are handled natively in aer_print_error()
-> but it is not done correctly when they are handled in Firmware First mode
-> in pci_print_aer().
+> PCIe r7.0 sec 6.35 defines the MMIO Capabilities Register Block
+> (MCAP). It consists of an array header followed by capability headers
+> that identify the version, location, size, and vendor of each MMIO
+> capability.
 > 
-> Fix it.
+> Define the MCAP array-header and capability-header registers and their
+> fields. These definitions allow subsystem drivers to use the Vendor ID
+> along with the Capability ID when capabilities from multiple vendors
+> share the same MCAP.
 > 
-> Fixes: 21963e6e4e04 ("PCI/AER: Support Advisory Non-Fatal Errors")
-> Signed-off-by: Lukas Wunner <lukas@wunner.de>
+> Signed-off-by: Penn <engguopeng@buaa.edu.cn>
+
+Reviewed-by: Dave Jiang <dave.jiang@intel.com>
+
+
 > ---
-> The offending commit is the top-most one on pci/aer (queued for v7.3-rc1).
-> This fix could either be folded into or applied on top of it.
-
-Folded in, thanks!
-
->  drivers/pci/pcie/aer.c | 27 +++++++++++++++++++++------
->  1 file changed, 21 insertions(+), 6 deletions(-)
+> Changes in v2:
+> - Update the MCAP specification citation to PCIe r7.0 sec 6.35.
+> - Document that capability header indices are one-based.
 > 
-> diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-> index 2a380bb..dd2aa5d 100644
-> --- a/drivers/pci/pcie/aer.c
-> +++ b/drivers/pci/pcie/aer.c
-> @@ -1028,13 +1028,15 @@ int cper_severity_to_aer(int cper_severity)
->  EXPORT_SYMBOL_GPL(cper_severity_to_aer);
->  #endif
+>  include/uapi/linux/pci_regs.h | 22 ++++++++++++++++++++++
+>  1 file changed, 22 insertions(+)
+> 
+> diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+> index 14f634ab9350..4dd22cde9e71 100644
+> --- a/include/uapi/linux/pci_regs.h
+> +++ b/include/uapi/linux/pci_regs.h
+> @@ -1338,6 +1338,28 @@
+>  #define  PCI_IDE_SEL_ADDR_3(x)		(28 + (x) * PCI_IDE_SEL_ADDR_BLOCK_SIZE)
+>  #define PCI_IDE_SEL_BLOCK_SIZE(nr_assoc)  (20 + PCI_IDE_SEL_ADDR_BLOCK_SIZE * (nr_assoc))
 >  
-> -void pci_print_aer(struct pci_dev *dev, int aer_severity,
-> -		   struct aer_capability_regs *aer)
-> +static void __pci_print_aer(struct pci_dev *dev, int aer_severity,
-> +			    struct aer_capability_regs *aer,
-> +			    bool ratelimit_print, const char *level)
->  {
->  	const char *bus_type, *sev;
->  	int tlp_header_valid = 0;
->  	u32 status, mask;
->  	struct aer_err_info info = {
-> +		.level = level,
->  		.severity = aer_severity,
->  		.first_error = PCI_ERR_CAP_FEP(aer->cap_control),
->  	};
-> @@ -1043,12 +1045,10 @@ void pci_print_aer(struct pci_dev *dev, int aer_severity,
->  		status = aer->cor_status;
->  		mask = aer->cor_mask;
->  		sev = "cor";
-> -		info.level = KERN_WARNING;
->  	} else {
->  		status = aer->uncor_status;
->  		mask = aer->uncor_mask;
->  		sev = "uncor";
-> -		info.level = KERN_ERR;
->  		tlp_header_valid = tlp_header_logged(status & ~mask,
->  						     aer->cap_control);
->  	}
-> @@ -1067,7 +1067,7 @@ void pci_print_aer(struct pci_dev *dev, int aer_severity,
->  	 * For Advisory Non-Fatal Errors, record statistics and tracing
->  	 * even if ratelimited
->  	 */
-> -	if (!aer_ratelimit(dev, info.severity))
-> +	if (!ratelimit_print)
->  		goto anfe;
->  
->  	aer_printk(info.level, dev,
-> @@ -1094,10 +1094,25 @@ void pci_print_aer(struct pci_dev *dev, int aer_severity,
->  		if (anfe_status) {
->  			aer->uncor_status = anfe_status;
->  			aer->uncor_mask = 0;
-> -			pci_print_aer(dev, AER_NONFATAL, aer);
-> +			__pci_print_aer(dev, AER_NONFATAL, aer,
-> +					ratelimit_print, level);
->  		}
->  	}
->  }
+> +/* PCIe r7.0, sec 6.35: MMIO Capabilities Register Block (MCAP) */
+> +#define PCI_MCAP_ARRAY_1		0x00
+> +#define  PCI_MCAP_ARRAY_ID		__GENMASK(15, 0)
+> +#define  PCI_MCAP_ARRAY_VERSION		__GENMASK(23, 16)
+> +#define  PCI_MCAP_ARRAY_TYPE		__GENMASK(27, 24)
+> +#define  PCI_MCAP_ARRAY_TYPE_CLASS_CODE	0x0
+> +#define PCI_MCAP_ARRAY_2		0x04
+> +#define  PCI_MCAP_ARRAY_COUNT		__GENMASK(15, 0)
 > +
-> +void pci_print_aer(struct pci_dev *dev, int aer_severity,
-> +		   struct aer_capability_regs *aer)
-> +{
-> +	/*
-> +	 * Precalculate ratelimit counter and log level so that Advisory
-> +	 * Non-Fatal Errors are treated like the accompanying Correctable Error
-> +	 */
-> +	bool ratelimit_print = aer_ratelimit(dev, aer_severity);
-> +	const char *level = aer_severity == AER_CORRECTABLE ? KERN_WARNING
-> +							    : KERN_ERR;
+> +/* Capability header indices are one-based. */
+> +#define PCI_MCAP_HDR_SIZEOF		0x10
+> +#define PCI_MCAP_HDR_BASE(n)		((n) * PCI_MCAP_HDR_SIZEOF)
+> +#define PCI_MCAP_HDR_REG_1		0x00
+> +#define  PCI_MCAP_CAP_ID		__GENMASK(15, 0)
+> +#define  PCI_MCAP_CAP_VERSION		__GENMASK(23, 16)
+> +#define PCI_MCAP_HDR_REG_2		0x04
+> +#define  PCI_MCAP_HDR_OFFSET		__GENMASK(31, 0)
+> +#define PCI_MCAP_HDR_REG_3		0x08
+> +#define  PCI_MCAP_HDR_LENGTH		__GENMASK(31, 0)
+> +#define PCI_MCAP_HDR_REG_4		0x0c
+> +#define  PCI_MCAP_HDR_VENDOR_ID		__GENMASK(15, 0)
 > +
-> +	__pci_print_aer(dev, aer_severity, aer, ratelimit_print, level);
-> +}
->  EXPORT_SYMBOL_GPL(pci_print_aer);
->  
->  /**
-> 
-> base-commit: 21963e6e4e0425b12d3128eea5a5104a3bc909c4
-> -- 
-> 2.53.0
-> 
+>  /*
+>   * Compute Express Link (CXL r4.0, sec 8.1)
+>   *
+
