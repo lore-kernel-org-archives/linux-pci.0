@@ -1,210 +1,262 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from BL0PR03CU003.outbound.protection.outlook.com (mail-eastusazon11012019.outbound.protection.outlook.com [52.101.53.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1FD3937F32F;
-	Tue, 18 Aug 2026 08:35:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787042140; cv=none; b=o97hctBijbQwM0DcGr5SN8pVX6OZyU8YiZXD1ouNfK5+aA7hvU3m6rDpuSgu8jZ5hOWp3VR0xwEmYHXp2TvwmVGPZPyMp8tDRO7VpgfZm+xjwocVf/jIMI78cuGSr/Pn+gH6yidb7cahbd0j0NvF8vr1pmxQgUDzimeW4VAqahE=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787042140; c=relaxed/simple;
-	bh=wCOoDTsOjVsg+29ZjA7I9UhZxUbzBdI4AcVTwMMKQqg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=qUzrP5l/c2HyJSUxT6aLlwO/b57/t+f/i1PZNeVUh4EKNUodxR2FN6S/a8yaA8jEleq8aPNDRZHMEWvVsQM6Msy3bNpu+bOu1WDrpe51mGySDeFEAxIgp6guWq7ZbQultQo5AI9xjOjqqKWx9Q/f50IlzuNjpOa0deCfOjNz9FM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Yp97zbuZ; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A138D386423;
+	Tue, 18 Aug 2026 08:47:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.53.19
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1787042831; cv=fail; b=P/NSCjjk//rwaOJrYd0T9voKIvUWEL/tz9IZnNTDVQgCAjsKJHUm66YrEad694EhnVTXHRQuAcOJyQvg/5cXZbi7t5k9b1h4/8kLk76zYq4XhARbypjcAy/GoibjgHR+Qu4iW+D4x0boNOnYdrf1q7BA8tPyj9os/dY+fygE1Ng=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1787042831; c=relaxed/simple;
+	bh=4V0DKdCEPF24eQQGdrYBgCxqtDTmecYcg0+IQsR0nzc=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=gdlnMXVufmBMpNgLN+2uoocIxI4UuZNWCqxZadJQJskYdSTNJkCz6SmwRssktZv8cYX7d/4HDnGxURl6Lf2/wx4vBIQSnw8m5cDnS7B5bLlroMC9KNrK4XsND8cBOCi3msaaHiJnTz14NB2jJ3eZVQPG2zP5KiBCUnKRmY1fSOs=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=RG5o7MBl; arc=fail smtp.client-ip=52.101.53.19
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Yp97zbuZ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DBA841F000E9;
-	Tue, 18 Aug 2026 08:35:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787042138;
-	bh=Nvv67+nY9bOme+CUnDrcPTxP3FOFSO5YtozCzjeuylQ=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=Yp97zbuZZS70iACQAUh0Z2Jq7Fp4hcK/X3RGNBYE3wAh/E6fLPBIVtul2/ay1P1Kl
-	 i2LsvRGLMHAzTevl+0fhsOaSlnszB/faxDY9qNObaDrH3GRHQFUea822sCV1u61pJa
-	 V0EHpr47am8Lp00j1mE38bmwPXnyuxPLXpdMyyhuBIanRaR1mKrSwdfj/VeBtgl8xn
-	 lDAHhDufvrl7vNDxdO+vYaOt6srXFGQwMdTJr5bJJb+TeNhRT0/oGZLBlU+pepbH5C
-	 t2ufeqMp2zojC+Bj/Zy8SM1GTi+35F+d9EAraVUjDZtv1myVv7dj78RGxw3OxlLLS0
-	 l4hsDb4t6s+rA==
-Date: Tue, 18 Aug 2026 11:35:32 +0300
-From: Leon Romanovsky <leon@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Logan Gunthorpe <logang@deltatee.com>,
-	Chaitanya Kulkarni <kch@nvidia.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Jens Axboe <axboe@kernel.dk>, Alex Williamson <alex@shazbot.org>,
-	Ankit Agrawal <ankita@nvidia.com>, Jason Gunthorpe <jgg@ziepe.ca>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	"Joerg Roedel (AMD)" <joro@8bytes.org>,
-	Will Deacon <will@kernel.org>, Robin Murphy <robin.murphy@arm.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-doc@vger.kernel.org, iommu@lists.linux.dev,
-	Matt Evans <matt@ozlabs.org>
-Subject: Re: [PATCH v3 00/17] PCI/P2PDMA: Fix ACS egress control handling
-Message-ID: <20260818083532.GE66924@unreal>
-References: <20260811-fix-p2p-acs-v3-0-efc488ee7c03@nvidia.com>
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="RG5o7MBl"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=wInWZLQTh6pwfTh/QLxJtcdClcrXE6fRZlBMibzYUKojYxhiBf+BsnhXBlbNV+Yf0K/37ZZQXF0XzZs1kA6G1v3D0LA1O248tSPFbLru0skJp77d/cLVw6phc6lvpFBN11YxiYVx/laP1dc3JdLwdWwSWZhpDYJWg2ATZHmjNF4J7mqfrBQvDhOMY37UeR/NHxEUF5Sz24+aFVGEk3oQeXixx+mtRsiuvKwa255/FDFgDAKoDaNXeIu8/I8WME+288GrDIPbEtcJUoOMjpVGvoxw97+7N4XUeZc9QMUL4LaGhYK/9Rqk8nKIOSQbEQKyf/IAV9zweEwMtbXqBPDTpg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=7Cu+1Ee6L4M6o4THV/0kBnaroKTHCA0tpVOJeMEZl94=;
+ b=nPe3+L8870TuiokdqCu4sPT5yKWxgjwY5/Z+h7OWfJ+gS2Xl3fnqOP3sHjalEH0uWY2NjrmiPODdIZMn4SYmCEQS5eIJiHCbVHS1bIXj+KO5YjsGr/nqlOPE74w34GpNtkW8lHh2sS12lPetIKSEiDEMhVOx2EPj2XVREXI1IUwnYiPS+mPIppeJ5dW6sUsW0uG/6ne2qawBC9PI9D7WaS9HJLkf08bTuT25WKeaoU/NPNkVQdVzxGVc8DnXBEtj78ROuiRmFm8+ajk+v2ut10j5dXexRD61Kz+s4bVLK4QqG+N74xrHtmUWXkAiTacNFiwL9hMmo4XYvkmM12aLIw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 216.228.117.160) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=nvidia.com;
+ dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
+ dkim=none (message not signed); arc=none (0)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=7Cu+1Ee6L4M6o4THV/0kBnaroKTHCA0tpVOJeMEZl94=;
+ b=RG5o7MBlDMZ28SiOx8hLfZaSBBN1D2MXh1p6qhLRJovTsz7lJsYUptVhgQ4jYL1sMopzEdBRJkglw6sKhUicNYUJmK41uIi3i3hjjpCBcAMF/9X2GiOpY0DwqSYw3NVMJQVp77YDlqR1rwt9XcWz+8HSdJqMisRse8R2ynFSzfWEKQ8wm22iyScVJi5o4xoZ9lPKprHWmN75rvHrXdnDUrAoSSQ2fgvTQFWjbr7FiHkyOoz84XoLNuP2gs5mgn9dfonNKt35QzM5VWslcjza4FsozJJtKcDt0vBAX0jMGYisb8PMcnOVVXM10jMJzzly0vBJA+Bi4gYXl5Tm9pyiQw==
+Received: from BN0PR07CA0028.namprd07.prod.outlook.com (2603:10b6:408:141::27)
+ by DM6PR12MB4282.namprd12.prod.outlook.com (2603:10b6:5:223::10) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.339.8; Tue, 18 Aug
+ 2026 08:47:02 +0000
+Received: from BN3PEPF0000B373.namprd21.prod.outlook.com
+ (2603:10b6:408:141:cafe::18) by BN0PR07CA0028.outlook.office365.com
+ (2603:10b6:408:141::27) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.21.315.17 via Frontend Transport; Tue,
+ 18 Aug 2026 08:47:01 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.117.160)
+ smtp.mailfrom=nvidia.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=nvidia.com;
+Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
+ 216.228.117.160 as permitted sender) receiver=protection.outlook.com;
+ client-ip=216.228.117.160; helo=mail.nvidia.com; pr=C
+Received: from mail.nvidia.com (216.228.117.160) by
+ BN3PEPF0000B373.mail.protection.outlook.com (10.167.243.170) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.21.360.0 via Frontend Transport; Tue, 18 Aug 2026 08:47:01 +0000
+Received: from rnnvmail205.nvidia.com (10.129.68.10) by mail.nvidia.com
+ (10.129.200.66) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.46; Tue, 18 Aug
+ 2026 01:46:42 -0700
+Received: from rnnvmail203.nvidia.com (10.129.68.9) by rnnvmail205.nvidia.com
+ (10.129.68.10) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Tue, 18 Aug
+ 2026 01:46:41 -0700
+Received: from inno-dell.home (10.127.8.11) by mail.nvidia.com (10.129.68.9)
+ with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.46 via Frontend
+ Transport; Tue, 18 Aug 2026 01:46:35 -0700
+From: Zhi Wang <zhiw@nvidia.com>
+To: <rust-for-linux@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>
+CC: <dakr@kernel.org>, <aliceryhl@google.com>, <bhelgaas@google.com>,
+	<kwilczynski@kernel.org>, <ojeda@kernel.org>, <boqun@kernel.org>,
+	<gary@garyguo.net>, <bjorn3_gh@protonmail.com>, <lossin@kernel.org>,
+	<a.hindborg@kernel.org>, <tmgross@umich.edu>, <markus.probst@posteo.de>,
+	<cjia@nvidia.com>, <smitra@nvidia.com>, <ankita@nvidia.com>,
+	<aniketa@nvidia.com>, <kwankhede@nvidia.com>, <targupta@nvidia.com>,
+	<kjaju@nvidia.com>, <alkumar@nvidia.com>, <acourbot@nvidia.com>,
+	<joelagnelf@nvidia.com>, <jhubbard@nvidia.com>, <zhiwang@kernel.org>, "Zhi
+ Wang" <zhiw@nvidia.com>, <daniel.almeida@collabora.com>, <tamird@kernel.org>,
+	<work@onurozkan.dev>
+Subject: [PATCH v8 0/1] Rust PCI capability infrastructure and SR-IOV support
+Date: Tue, 18 Aug 2026 11:46:32 +0300
+Message-ID: <20260818084633.1673214-1-zhiw@nvidia.com>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260811-fix-p2p-acs-v3-0-efc488ee7c03@nvidia.com>
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-NV-OnPremToCloud: ExternallySecured
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: BN3PEPF0000B373:EE_|DM6PR12MB4282:EE_
+X-MS-Office365-Filtering-Correlation-Id: afe106e7-6080-4ed1-b946-08defd05459e
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|36860700016|1800799024|376014|82310400026|7416014|23010399003|10067099003|56012099006|6133799003|11063799006|5023799004|18002099003|13003099007;
+X-Microsoft-Antispam-Message-Info:
+	0pokM4db0aqZa6Ssv0AAe0S6hUJVkNF42z3vcpvn7QMrGylXi9XqGjTrdYMU20Pc2zJsP7vL0kV7oKz92nh7hv1ihByQDzhVt74pR1WU2/x9QxZg01NusWzjAoJVaH2g+woVH/XC9WjT2IILD56PRz/nRDtbXOWRQ1TqGJ144V2meCtAek+riXQmalM3+thxmaythysEXXs3PYlSgqyxghAEluDNXgYoDR8HZIt3CbjYYUQlttq3tVwBpfD8Ezhm1NR+aiVfHNCcxcos71L4q6GGsfYZPWUa5CrwKP6hKMqx3+Uv1Wn31QQNTC0JoHTlgFXpPpKJf+sXpj35Tn4qWqhKjYof2nH6jO4DPVeDaJydfC0rl4SJsOGfabv95iHWwe3wH26vY3D8/1ei4lDPhTRihc03LK78mplvDkW9kv3pHpnrCKxVahaSNA9Zy8GlVWJoW7Gn+sZONV6BCNYH5pz92Ep7W1+2figwd9xTX3ywP5ZNngs8Mnr5gBNlaSm7L8KaxkLZTCh8bIYbhKdzwNR6haTaRlWfqZLfmcV1Lp3f19NPzTSFlCorTFWLy0khxgzItKl5jLlz8UTlKT9qUejTdqmaetWtQWXtzTk1W5U1gFujqn58eTbL7ovd3puwzsS3NjS/mLUbEyaRKcKve9xCj3iNQJiWfH8wC7Y7zm8sYVLq7D1WQWgEh7QVyCg9vww86TAW3qvGFZ6PsVa2GA==
+X-Forefront-Antispam-Report:
+	CIP:216.228.117.160;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge1.nvidia.com;CAT:NONE;SFS:(13230040)(36860700016)(1800799024)(376014)(82310400026)(7416014)(23010399003)(10067099003)(56012099006)(6133799003)(11063799006)(5023799004)(18002099003)(13003099007);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	J2Bl6m9i8+JRIgjQAZ+ZpZQNBGf48Q0Rp3p0DD5jPQfqqm7FTWkjdu3JnY5tmg1iOyWiYwYVmKhtg1hWCHNnTEKmkWAJG3bEQsuEOslsddhoxfDfUcltejQkhWfCRSMaewxVKsHt/30rt+tjmOLCDdHnhWNUAxLV5bG5+84gyDl4px+cPAK81QSzfcmHbrnnE71/XAg+PkNi5cSEKDYDbTDOpkPAS4QJKumLGsxe3OE64Ybk5aG+xusfx2W3DLQoT4K6RiCmAeFS0Jlk7jX1QO7416lJjxfE7pDDrrQlmx8DPz9Ct2N7KdxN7eYoSuEyeQpeUlArKK4sBoXEo9JVPYpY4cJqWaRKA99Q/Gi9A/LUyDxtDxMsxxrl1slraV/jBjbUAEo90DXIDDDms4ph1RM30z14sc7OSZ/LHrbCGMjn11yLXTBuB25KvjBliz96
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 18 Aug 2026 08:47:01.5979
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: afe106e7-6080-4ed1-b946-08defd05459e
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.160];Helo=[mail.nvidia.com]
+X-MS-Exchange-CrossTenant-AuthSource:
+	BN3PEPF0000B373.namprd21.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR12MB4282
 
-On Tue, Aug 11, 2026 at 12:30:42PM +0300, Leon Romanovsky wrote:
-> PCI P2PDMA treats any enabled ACS P2P Egress Control bit as an upstream
-> redirect. PCIe r7.0, sec 6.12.3, table 6-11 says the Egress Control
-> Vector bit for the target port decides instead: a clear bit routes a peer
-> request directly, regardless of P2P Request Redirect. Firmware can
-> therefore enable Egress Control with a permissive vector while Linux
-> incorrectly rejects a valid direct P2P path.
-> 
-> Table 6-11, where E is ACS P2P Egress Control Enable, R is ACS P2P
-> Request Redirect Enable and V the Egress Control Vector bit for the
-> target port:
-> 
->   E  R  V  Required Handling for Peer-to-Peer Requests
->   -  -  -  ------------------------------------------
->   0  0  x  Route directly to peer-to-peer target
->   0  1  x  Redirect Upstream
->   1  0  1  Handle as an ACS Violation
->   1  0  0  Route directly to peer-to-peer target
->   1  1  1  Redirect Upstream
->   1  1  0  Route directly to peer-to-peer target
-> 
-> P2P Completion Redirect lies outside this table and also forces
-> host-bridge routing.
-> 
-> The same interaction affects target-independent ACS isolation checks.
-> Request Redirect does not guarantee that peer requests are forwarded
-> upstream while Egress Control is enabled because a clear vector bit
-> overrides it. Such checks cannot identify every potential target, so
-> treat Request Redirect as ineffective while Egress Control is enabled,
-> which merges the affected devices into one IOMMU group.
-> 
-> ACS Direct Translated P2P routes a Request carrying a Translated address
-> to the peer regardless of Request Redirect and Egress Control, so it
-> voids the same guarantee unless Translation Blocking rejects the Request
-> first.
-> 
-> That last rule holds only for a caller that needs Request Redirect to
-> isolate peers. pci_enable_pasid() asks for it so that a Request carrying
-> a PASID reaches the translation agent (sec 2.2.10.4), and a Translated
-> Request already carries an address the agent produced for that PASID
-> (sec 10.1.3). pci_acs_enabled() and pci_acs_path_enabled() therefore
-> take a scope, and Direct Translated P2P applies only to
-> PCI_ACS_SCOPE_ALL.
-> 
-> A pre-existing gap comes first. The routing analysis covers only Requests
-> carrying an Untranslated address; ACS Direct Translated P2P overrides
-> those controls, so that scope is now written down rather than implied.
-> 
-> It is nearly impossible to test all possible combinations due to limited
-> hardware availability, so I added KUnit coverage for ACS routing
-> decisions, isolation checks, Egress Control Vector lookups, and
-> provider-to-client path traversal over a fabricated PCIe fabric.
-> 
-> Disclaimer:
-> All patches were prepared with AI assistance, with a significant
-> difference between the code changes and the KUnit tests. The code
-> changes were thoroughly reviewed and rewritten.
-> 
-> In contrast, the KUnit patches were produced entirely by AI with
-> minimal human interaction, and multiple AI tools (Claude, Codex,
-> and Gemini) with frontier models were used to verify that the tests
-> comply with the PCI specification.
-> 
-> Thanks
-> 
-> Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
-> ---
-> Changes in v3:
-> - Fixed pci_p2pdma_add_resource() error unwinding
-> - Made pdev->p2pdma teardown wait unconditionally for RCU readers
-> - Restricted pci_p2pmem_find_many() to pool-backed providers
-> - Documented the pdev->p2pdma lifetime and RCU rules
-> - Fixed calc_map_type_and_dist() handling of the verbose argument
-> - Required the ACS port and target to share a bus before indexing the
->   Egress Control Vector
-> - Gave pci_acs_enabled() and pci_acs_path_enabled() a scope, so the ACS
->   Direct Translated P2P rule no longer stops pci_enable_pasid() from
->   enabling PASID
-> - Dropped "Report ACS ports when the paths share no upstream bridge":
->   the mapping type cannot change without a shared upstream bridge, so
->   the pci=disable_acs_redir= hint was not actionable there and the ACS
->   walk only cost config space reads
-> - Folded the Request Redirect rule into pci_acs_rr_ineffective(), so
->   pci_acs_flags_enabled() and the Intel SPT PCH quirk share one copy
-> - Renamed pci_acs_egress_ctrl_set() to pci_acs_egress_ctrl_is_set(), it
->   reads the bit rather than setting it
-> - Reworded the blocked-path warning: ACS may also leave the direct route
->   indeterminate rather than blocked
-> - Added KUnit coverage for the shared-bus guard, a device with no ACS
->   capability and an unreadable ACS Control register
-> - Added the missing Fixes: tags, a second one on the
->   pci_p2pdma_add_resource() unwinding fix (the dangling devres action
->   dates to f58ef9d1d135) and one on the Egress Control isolation change
-> - Link to v2: https://patch.msgid.link/20260806-fix-p2p-acs-v2-0-0cec14812965@nvidia.com
-> 
-> Changes in v2:
-> - Added Logan's ROB tags
-> - Added commas in Documentation patch
-> - Link to v1: https://patch.msgid.link/20260802-fix-p2p-acs-v1-0-a7c5eb64fff6@nvidia.com
-> 
-> ---
-> Leon Romanovsky (17):
->       PCI/P2PDMA: Do not tear down the allocate attribute on registration failure
->       PCI/P2PDMA: Wait for RCU readers before freeing state
->       PCI/P2PDMA: Restrict the p2pmem search to pool backed providers
->       PCI/P2PDMA: Safely terminate ACS redirect lists
->       PCI/P2PDMA: Document the pdev->p2pdma lifetime and RCU rules
->       PCI/P2PDMA: Gate the host bridge whitelist warning on verbose
->       PCI/P2PDMA: Document the Address Type assumption
->       PCI: Account for Direct Translated P2P in ACS isolation checks
->       PCI: Add ACS egress control vector accessor
->       PCI: Account for ACS egress control in isolation checks
->       PCI/P2PDMA: Derive peer-to-peer routing from ACS control bits
->       PCI/P2PDMA: Honor ACS egress control vectors
->       PCI/P2PDMA: Document ACS egress control handling
->       PCI/P2PDMA: Extract pure ACS routing decision helpers
->       PCI/P2PDMA: Add KUnit tests for ACS routing decisions
->       PCI/P2PDMA: Add KUnit coverage for the ACS P2P routing walk
->       PCI: Add KUnit coverage for ACS isolation checks
-> 
->  Documentation/admin-guide/kernel-parameters.txt |   9 +-
->  Documentation/driver-api/pci/p2pdma.rst         |  15 +
->  drivers/iommu/iommu.c                           |   8 +-
->  drivers/pci/Kconfig                             |  15 +
->  drivers/pci/Makefile                            |   1 +
->  drivers/pci/ats.c                               |  11 +-
->  drivers/pci/p2pdma.c                            | 218 +++++--
->  drivers/pci/pci.c                               | 115 +++-
->  drivers/pci/pci.h                               |  63 +-
->  drivers/pci/pci_acs_test.c                      | 801 ++++++++++++++++++++++++
->  drivers/pci/quirks.c                            |  62 +-
->  include/linux/pci.h                             |  30 +-
->  12 files changed, 1259 insertions(+), 89 deletions(-)
+This is a follow-up to v7 [15].
 
-Bjorn,
+This patch has been used in the Boot GSP with vGPU enabled series [6].
 
-Is there anything you need from me to merge this series after the
-merge window closes?
+The patch defines an ExtCapability trait that associates an extended
+capability ID with its register layout. The generic
+ConfigSpace::find_ext_capability() finder locates the capability, bounds
+it at the next capability or the end of extended configuration space,
+and projects the ConfigSpace view to the requested layout. It returns
+None when the capability is absent and propagates errors encountered
+while constructing the view. This lets the existing I/O projection and
+access macros operate on capability registers.
 
-If so, I would prefer to spend these two weeks fixing or reworking the
-code.
+ExtSriovRegs provides the SR-IOV register layout.
+ExtSriovCapability::vf_bars() validates the six raw VF BAR slots and
+returns an iterator over logical BARs. The iterator handles the different
+slot widths of 32-bit and 64-bit BARs internally and yields decoded
+ExtSriovVfBar values containing the address and width.
 
-Thanks,
+Changes since v7:
+- Changed ExtCapId to a transparent newtype so unknown and future
+  capability IDs can be represented. (Gary)
+- Made the extended capability header private. (Gary)
+- Decoded VF BARs only once instead of decoding them again from
+  Iterator::next(). (Gary)
+- Documented when projection to the requested register layout can fail.
+  (Gary)
+- Reworded the CAST comments for PCIe specification constants. (Danilo)
+- Simplified the doctest imports and use of Result, EINVAL, and io_read!.
+  (Gary, Danilo)
+- Rebased onto the latest drm-rust-next. (Zhi)
+
+The conversion of status and the applicable related registers to typed
+register fields is not included in this revision. It depends on Gary's
+new I/O register projection work [16] and will be addressed in v9 after
+Danilo's integration branch is available.
+
+Changes since v6:
+- Changed ConfigSpace::find_ext_capability() to return
+  Result<Option<...>>, using None rather than ENODEV when the capability
+  is absent. (Gary)
+- Made calculate_ext_cap_size() propagate errors instead of treating a
+  failed read as the end of capability. (Alex)
+- Replaced indexed VF BAR access with an iterator so callers cannot select
+  the high DWORD of a 64-bit BAR. (Gary, Alex)
+- Validated all six VF BAR slots before iteration, made normal iterator
+  exhaustion return None, and logged invalid BAR encodings before returning
+  EINVAL. (Gary)
+- Decoded VF BAR low DWORDs through a typed bitfield while retaining u32 in
+  ExtSriovRegs for entries that may be 64-bit BAR high DWORDs. (Alex)
+- Made ExtSriovVfBar fields public and documented, removed their trivial
+  getters, used the ExtSriovCapability alias for its impl block, and
+  applied the suggested local cleanups. (Alex)
+- Updated the doctest for the optional finder result and VF BAR iterator.
+  (Zhi)
+- Added #[inline] to the ExtCapId::as_raw() abstraction method. (Sashiko)
+- Rebased onto the latest drm-rust-next. (Zhi)
+
+Changes since v5:
+- Removed the unused ConfigSpace<Region<0>> offset() and size() inherent
+  methods; ConfigSpace already provides size through the Io trait.
+  (Sashiko, Zhi)
+- Removed the doctest write to the SR-IOV NumVFs register, avoiding an
+  example that bypasses PCI core SR-IOV state management. (Sashiko)
+- Corrected Function Dependency Link to an 8-bit field followed by its
+  reserved byte, matching the PCIe SR-IOV register layout. (Sashiko)
+
+Changes since v4:
+- Replaced the separate is_vf_bar_64bit() and read_vf_bar64() helpers
+  with read_vf_bar(), returning a decoded ExtSriovVfBar. (Zhi)
+- Moved memory BAR attribute stripping into the PCI abstraction and used
+  named PCI attribute definitions rather than an open-coded mask. (Zhi)
+- Exposed the next logical BAR slot so callers can walk mixed 32-bit and
+  64-bit VF BAR layouts without duplicating slot arithmetic. (Zhi)
+- Updated the doctest and PCI exports for the decoded BAR API. (Zhi)
+
+Changes since v3:
+- Replaced the custom ExtCapability<T> I/O wrapper with the existing
+  ConfigSpace view infrastructure. (Alex)
+- Reused ExtCapability as a trait carrying the capability ID, and made
+  ConfigSpace::find_ext_capability() generic over register layouts.
+  (Alex)
+- Removed public cast_sized() and unused find_next_ext_capability().
+  (Alex)
+- Kept capability construction in the generic finder and documented
+  calculate_ext_cap_size(). (Alex)
+- Used PCI_SRIOV_NUM_BARS rather than a literal VF BAR count.
+  (Alex, Zhi)
+- Added is_vf_bar_64bit() and made read_vf_bar64() reject BARs that
+  are not 64-bit memory BARs. (Alex, Zhi)
+- Kept indexed VF BAR helpers because the Nova user accesses fixed BAR
+  slots rather than iterating over them. (Alex)
+- Adapted the implementation and doctest to the current ConfigSpace I/O
+  APIs. (Zhi)
+
+Changes since RFC v2:
+- Hardened calculate_ext_cap_size() against corrupt capability lists.
+  (Zhi)
+- Added // INVARIANT: comments at all ExtCapability construction sites
+  (make_ext_capability and cast_sized). (Zhi)
+- Added #[inline] to small forwarding methods (find, read_vf_bar64).
+  (Zhi)
+
+Changes since RFC:
+- Rebased on io_projection branch, using Gary's Io/IoCapable traits.
+  (Gary)
+- ExtCapability implements Io and delegates IoCapable to ConfigSpace
+  instead of duplicating config read/write logic. (Gary)
+- Dropped the fallible I/O patch (now upstream in this tree). (Zhi)
+- Added Rust helper for PCI_EXT_CAP_NEXT() macro. (Zhi)
+- Replaced raw `as` casts with From conversions where possible. (Zhi)
+- Renamed SriovRegs/SriovCapability to ExtSriovRegs/ExtSriovCapability.
+  (Zhi)
+
+[1] https://lore.kernel.org/rust-for-linux/20260409185254.3869808-1-zhiw@nvidia.com/
+[2] https://lore.kernel.org/rust-for-linux/DHRTUAF52GNI.1J98TSAG1LS6Q@nvidia.com/
+[3] https://lore.kernel.org/rust-for-linux/DI2SL4G5INLY.2W1IFTR081ID3@nvidia.com/
+[4] https://lore.kernel.org/rust-for-linux/20260225180449.1813833-1-zhiw@nvidia.com/
+[5] https://lore.kernel.org/rust-for-linux/20260323153807.1360705-1-gary@kernel.org/
+[6] https://lore.kernel.org/rust-for-linux/20260313165336.935771-1-zhiw@nvidia.com/
+[7] https://lore.kernel.org/rust-for-linux/20260714165827.2937960-1-zhiw@nvidia.com/
+[8] https://lore.kernel.org/rust-for-linux/20260730180349.771719-1-zhiw@nvidia.com/
+[9] https://sashiko.dev/#/patchset/20260730180349.771719-2-zhiw@nvidia.com?part=1
+[10] https://lore.kernel.org/rust-for-linux/20260730182954.783568-1-zhiw@nvidia.com/
+[11] https://lore.kernel.org/rust-for-linux/DKC4MR1ZBQMP.3L7X2C96OJLFU@garyguo.net/
+[12] https://lore.kernel.org/rust-for-linux/DKCOUE9DRG5R.2VAVA78UTVKST@nvidia.com/
+[13] https://lore.kernel.org/rust-for-linux/DKCRGMZJXO6X.1SWGREC78DH0W@garyguo.net/
+[14] https://lore.kernel.org/linux-pci/20260730183913.B00061F000E9@smtp.kernel.org/
+[15] https://lore.kernel.org/rust-for-linux/20260804161612.776752-1-zhiw@nvidia.com/
+[16] https://lore.kernel.org/rust-for-linux/20260805-typed_register-v2-0-c3ca142220a0@garyguo.net/
+
+Zhi Wang (1):
+  rust: pci: add extended capability and SR-IOV support
+
+ rust/helpers/pci.c     |   5 +
+ rust/kernel/pci.rs     |   8 +
+ rust/kernel/pci/cap.rs | 329 +++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 342 insertions(+)
+ create mode 100644 rust/kernel/pci/cap.rs
 
 
-> ---
-> base-commit: 43598807f71ac1c9164f26004acf2496d4038daf
-> change-id: 20260713-fix-p2p-acs-725f8dd7b0e8
-> 
-> Best regards,
-> --  
-> Leon Romanovsky <leonro@nvidia.com>
-> 
-> 
+base-commit: 4c9ba407018e8deb06dbc643112bac8f40404f95
+-- 
+2.53.0
