@@ -1,37 +1,55 @@
-Received: from mailout3.hostsharing.net (mailout3.hostsharing.net [144.76.133.104])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA941392C56
-	for <linux-pci@vger.kernel.org>; Tue, 18 Aug 2026 16:03:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=144.76.133.104
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 4955F330B32;
+	Tue, 18 Aug 2026 16:51:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787068984; cv=none; b=sWVfEIyYrkY22aaUVh5BkKAMZwCfVKn4Ojo9/Zf6dEEb9iYJrtMuU8uWy7wZKuuGhuXUI7SNLEhEkCC6mOI4j0Id4kTsFmUv2MYc0DzWq3jXpJoIqcFWtf5ZusDFBiwz4cOo36qCDGJFCIZyOCQqqJbfF0uQHBQ5FTgtiPPFJ34=
+	t=1787071903; cv=none; b=dO14Oba8JzvNGOVnd3y4/y05SvduP+Wwu1cdE84MP9Zy3yW2ebzLlaIoRzXZc5fub+xEuhrZMjPSbceb/HXArVj0l2Lliys6V7RyGlNwmb6oaY8VY8ZJomFa4+XLOrEtPQkxbLw2IiRO7nGFonfJ2oTJ6DFG2gcv6lTL0tSLUA0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787068984; c=relaxed/simple;
-	bh=u1krH2MgW/rmUMJz5nl//UAxP1FT9KVWwO9LVr/JSCc=;
+	s=arc-20240116; t=1787071903; c=relaxed/simple;
+	bh=lFjGbXuhkA8MceO+XNW6SAQeNJyoiER3NXQWxghfdKk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=IOQwsclKKlvKFrviDxxwztMPfYqTyVoUcvVToCjm0mJGJLdHJRg6LEo7dwcyjVMCAQfEYOGsX1E6mHnEQsRBQ0BD8wFsvnmldQtw7gZ3DZGppbIuA6/7kHUXC8FqrUohBc1YNlrZXdXk5crR9XBaC7hHcTErGvun5PnBljxUrqw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=144.76.133.104
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
-Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
-	 client-signature ECDSA (secp384r1) client-digest SHA384)
-	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
-	by mailout3.hostsharing.net (Postfix) with ESMTPS id 10C7ACAB;
-	Tue, 18 Aug 2026 18:02:52 +0200 (CEST)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-	id D2D05606F46C; Tue, 18 Aug 2026 18:02:51 +0200 (CEST)
-Date: Tue, 18 Aug 2026 18:02:51 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: sashiko-reviews@lists.linux.dev
-Cc: Keith Busch <kbusch@meta.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] vfio/pci: Restore standard PCI config space in
- .slot_reset()
-Message-ID: <aoSCK2Sy0HeyX_la@wunner.de>
-References: <20260817195110.2077698-1-kbusch@meta.com>
- <20260817200404.BB3121F000E9@smtp.kernel.org>
+	 Content-Type:Content-Disposition:In-Reply-To; b=Cmve6UcceOwxJJ6JEr6eTkFxOCurGHBenBXGJMQa6i0sS18P0zUu1myZu+12/idvCKTk/W6zD4H2oFvGvVDhZRoItieNK+eMiUpDTTpHhca8tsQ6PLI+VzK3cQxGPW/Yn5sQGFNjCSG7i4qazzGDSE+MI8wSdE7rE5DaWy4qz7o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=hDNKQvBP; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="hDNKQvBP"
+Received: from localhost (unknown [167.220.233.38])
+	by linux.microsoft.com (Postfix) with ESMTPSA id EE32120B7168;
+	Tue, 18 Aug 2026 09:51:12 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com EE32120B7168
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1787071873;
+	bh=2mZgx5gWgDVlkDtD9tOh15r2h1aKGr5ZdoPzlQnaaGk=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=hDNKQvBPny8fKA+Jg9JeUq/O6PTuDCIHjiYutdxQWgXqlRNOsv27jkZwShquF9wfR
+	 ZVy8Iwbvz4AoqC+QST4cseVKi/v0m1pnCQDVh7iS6drIG7en2QgLGBBJj9Cv86Gd0n
+	 48Tmn4ata8KVMi+vbvYvvg00K+G/+hIR96uDm2Q0=
+Date: Wed, 19 Aug 2026 00:51:39 +0800
+From: Yu Zhang <zhangyu1@linux.microsoft.com>
+To: Jason Gunthorpe <jgg@ziepe.ca>
+Cc: Jacob Pan <jacob.pan@linux.microsoft.com>, 
+	linux-kernel@vger.kernel.org, linux-hyperv@vger.kernel.org, iommu@lists.linux.dev, 
+	linux-pci@vger.kernel.org, linux-arch@vger.kernel.org, x86@kernel.org, wei.liu@kernel.org, 
+	kys@microsoft.com, haiyangz@microsoft.com, decui@microsoft.com, 
+	longli@microsoft.com, joro@8bytes.org, will@kernel.org, robin.murphy@arm.com, 
+	bhelgaas@google.com, kwilczynski@kernel.org, lpieralisi@kernel.org, mani@kernel.org, 
+	robh@kernel.org, arnd@arndb.de, mhklinux@outlook.com, 
+	tgopinath@linux.microsoft.com, easwar.hariharan@linux.microsoft.com, 
+	mrathor@linux.microsoft.com, baolu.lu@linux.intel.com, suravee.suthikulpanit@amd.com, 
+	vasant.hegde@amd.com
+Subject: Re: [PATCH v3 4/5] iommu/hyperv: Add para-virtualized IOMMU support
+ for Hyper-V guest
+Message-ID: <4cchi7bka5sopnvxyeycmv23scesfgtkg5lnlrq2yqsmwah5qd@5e3qqvsil2t3>
+References: <20260811155022.108148-1-zhangyu1@linux.microsoft.com>
+ <20260811155022.108148-5-zhangyu1@linux.microsoft.com>
+ <20260813152913.00003d8a@linux.microsoft.com>
+ <20260813224627.GA933791@ziepe.ca>
+ <p7ts4y6lxt7k6ldzaa26v7rckmmp7o5js2gn2r3eantgzut2cc@xxsvso76nefj>
+ <20260817122216.GD933791@ziepe.ca>
+ <gk7lcfk73uzntmnmf7eb5clp2h7q7oqb7lykj2qlrrkilotfvx@mf6wima2kibk>
+ <aiioa6ospojivued3djhwadyfpit5temyvrgm3xxzhzt6aqbiv@hqz6q5bqnl6w>
+ <20260817173552.GA1418894@ziepe.ca>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -40,44 +58,30 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260817200404.BB3121F000E9@smtp.kernel.org>
+In-Reply-To: <20260817173552.GA1418894@ziepe.ca>
 
-On Mon, Aug 17, 2026 at 08:04:04PM +0000, sashiko-bot@kernel.org wrote:
-> [Severity: High]
-> Is this callback reachable under normal single-device circumstances?
+On Mon, Aug 17, 2026 at 02:35:52PM -0300, Jason Gunthorpe wrote:
+> On Tue, Aug 18, 2026 at 01:22:03AM +0800, Yu Zhang wrote:
 > 
-> In pcie_do_recovery(), the report_slot_reset broadcast is gated behind
-> checking if the combined error status is PCI_ERS_RESULT_NEED_RESET.
+> > So we could
+> > - either keep the duplicate check in hv_iommu_blocking_attach_dev();
+> > - or add code in our common helper, hv_iommu_attach_dev(), to treat
+> >   HV_STATUS_DEVICE_ALREADY_IN_DOMAIN also as successful explicitly. 
+> > 
+> > And since normal paging-domain attaches do not have this duplicate
+> > case, I'd prefer the first choice, to keep current check in
+> > hv_iommu_blocking_attach_dev().
 > 
-> However, vfio_pci_core_aer_err_detected() unconditionally returns
-> PCI_ERS_RESULT_CAN_RECOVER. The PCI recovery state machine promotes
-> CAN_RECOVER to RECOVERED during the mmio_enabled phase, so the
-> condition to call slot_reset evaluates to false unless another driver
-> on the same PCIe bridge votes for NEED_RESET.
-
-I have a patch on my development branch so that ->reset_slot() is
-also invoked if (state == pci_channel_io_frozen), i.e. on Fatal Errors.
-
-I have another patch pending to allow error recovery for unbound devices.
-
-Both patches are available for testing on this branch and I hope to
-submit them in the upcoming cycle:
-
-https://github.com/l1k/linux/commits/aer_unbound/
-
-> [Severity: High]
-> Can pci_restore_state() clobber userspace runtime configurations with
-> an outdated probe-time snapshot?
+> I think everything can technically be re-attached and must not fail,
+> you have to handle that possibility everywhere.
 > 
-> For a VFIO device, pdev->saved_config_space contains the host kernel's
-> baseline state captured during vfio_pci_core_enable(). Subsequent
-> userspace modifications (like enabling bus master or setting up MSI)
-> are recorded in VFIO's virtual cache (vdev->vconfig) but do not update
-> pdev->saved_config_space.
+> So accepting that code as success seems like it might be needed anyhow?
+> 
 
-I guess the right thing to do is to write vdev->vconfig to config space
-after pci_restore_state()?
+Thank you, Jason! Then we'll introduce HV_STATUS_DEVICE_ALREADY_IN_DOMAIN,
+and treat it as successful in hv_iommu_attach_dev().
 
-Thanks,
-
-Lukas
+B.R.
+Yu
+> Jason
+> 
