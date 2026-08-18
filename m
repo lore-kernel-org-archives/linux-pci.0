@@ -1,284 +1,238 @@
-Received: from CY7PR03CU001.outbound.protection.outlook.com (mail-westcentralusazolkn19010040.outbound.protection.outlook.com [52.103.7.40])
+Received: from OS0P286CU011.outbound.protection.outlook.com (mail-japanwestazon11020102.outbound.protection.outlook.com [52.101.228.102])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A7D783AAF5A;
-	Tue, 18 Aug 2026 05:10:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.103.7.40
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D24AF3CE0BB;
+	Tue, 18 Aug 2026 05:55:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.228.102
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787029859; cv=fail; b=lYkQsxlkfniz0zNxXw38CXver8/HCERl1qrr5nhsmX7xSJFbnwlDS+m19WZ4K08IO0/DYaEGzEitLKxkv7b1nl1IrQpHlsCDPKfcT/MAhR+1ZJRfOLDikj2VSbh/gu9oDKh4IO1XTaQKaCUUITdnW8sqIeDYbW/6oUjmXxXGQYg=
+	t=1787032555; cv=fail; b=SS77UD26a15bpPDKz58Af5KvXHgDyVag3Zg4aYLZInn0GOYwy5mBn9i/mQp5dnaXyIVLJ0uZbl74/d3F3QJYrqYmQ2RTs+is1thbpgGprMCYRV5sIp6GQbhIqV/SWOxTsA6Z5lz9T92Kzs9gRQWqSUB3oR6pc6p69LGWnm+9kXA=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787029859; c=relaxed/simple;
-	bh=une7FYVVCwa+USM5BOl08SldhbvnfW8LzECGddhkV94=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=Gr+nchWveWf+w3g3Dm5jLvHg3o7XwtOPRyBPzKckimAO6NOa9X7bq8H/oEsWhoNIPBULCt5cLACtKR/F3UolfZoC5iTz8ySeUKSsba3DoYGIYwwXErAAt4mO5jjgiXSXG6TjRin8fDvKGaqxK70UDUelN4lCgYI1PiYVV58oRqo=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.com; spf=pass smtp.mailfrom=outlook.com; dkim=pass (2048-bit key) header.d=outlook.com header.i=@outlook.com header.b=IKnc4k1n; arc=fail smtp.client-ip=52.103.7.40
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=outlook.com
+	s=arc-20240116; t=1787032555; c=relaxed/simple;
+	bh=Vbcw+4YHt1D5as2ntrkHQ1x069GDa2qv8gOj07P7wiI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=eZFpDgABerwGJy0nST/nQKwqmBE96xbdD4fx+XPN9DqHPeWOywFUTHCOLi1LIXTVU93n3dWIyPjlyhwDnR6KqQfd86sx6ZitNeZRlBZjz7V3ZxJbayBecTmbWahmBTDON0xnKNVQvhHpt8pGYWVDqQQKlU+Zv9FOv7IB9Hdf5zg=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp; spf=pass smtp.mailfrom=valinux.co.jp; dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b=RI2QfjCS; arc=fail smtp.client-ip=52.101.228.102
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=valinux.co.jp
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=outlook.com header.i=@outlook.com header.b="IKnc4k1n"
+	dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b="RI2QfjCS"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=slcW0xj5+O61HQoKkIHL3Ibu15tdTIsnePOwOO3sROL2jboZCUIHIFjb8Blid+g0QtFzU+QUhLQPGJKi3fnjgmlrYgvHvCn9OjZ5YXmm0XkWCXMUJs7KTwVH2OMsjww2hoR1KcGuYzNdx3lLEOhI8mOV+c9rmLGCn0ySnK2O38QaDEi/sY0VCk8M5qiO2rxSkFKLYGPny7sPqb4kXr7ipb6uFWzvTYI2WAtYhZdjmSrbGrH79FC3QRLdWC6w6kaSrmeNzUpx5WBFM5tPxrmvF8L8DIhMKCdG2vIFBbqURP/fd6+t3YLa11IyCA0LZnjMggmhRQdN2P6jDiC1ruZWqg==
+ b=gNJ5gh8xB2Uo1K55G5lLLpKvLe8gjiWe7L1k8f2dIRpKul9KVTVnAlax5uhu1PJmAQREG1xua7T8GfGBYhinn8/X+tkT+kdDhUJw1a04aWK4Lupi0Q8Sgs4h7src/YkTGHzfIuCNt6oCzTjr3dztqzE2fwEtm7kpnQBVbd12MQ8O2dLkuQI+xWJRPPrcLnGOCK3xjahzLQKaBvwhPSJZd+zFX5/qmBpEi1cUvPxCIuJiT6R+hDZgOzm1gw9g3Yomv9kxlkLrNjsURceQ5XTieFD2eMp5D0W4RQ+dTCqz+yxWYKGXtDWaYy3Ntl0824cDYIUmNr+CY7iekAbueX8nHQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=BbHsUc+iXRc31/taS7TZ1Tgv8Riv/7EZg9hxCQ66ZOs=;
- b=Z6VqGKEGGP/WWbANhefLkj3TR6up/9s+gD1ko4BtQtYu2qqaRUXoaN/0ZW6ucaYYLN0W6l4yN/1PENUO3QEsFNsD0FrKpHH4dOB/U9k7n2ge7ByH+Czn/gYe8moVxZP8wbMHVHKjFdaiqRZVwAzLDp65yGQTzEn4Wm7Sr52HYbMViERRGKMbTx7Z2YIoZmvewSNpz7odP3TDykZwoSW6jTKNubaEg/804r6scCJbYTP4zHINPabf384EcvRjNzqnYbHOYVaQnC+VEWNACwsQJT8IkdcAy3gU1Vz/5aFZPLKp7frybZVciiFEwsR40Cm/7VGOcLGEdQaiG7ddE4moyg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
- dkim=none; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=outlook.com;
+ bh=GzaJGgKYu1m5ZI5VXIz4Ub8SLkvZAR7l5JVV40hY/MQ=;
+ b=Z8lR3DlAUnX8wOZxmWXLhDb+IQ63nhwrUDP5XlfQ7kmvjvi9n2CXVBTxD3mPMtZZsWv29X1HGxgZh7UedHCnbl1A+pEFFTfZYgZnvxPmsKhuaT+q/jn0k0gCKqTmApOacCzFy1KZlrNlmpXJjAwHbCLF27VfbFKD20e0OEFUfb7cu0el0eHUqNfNc0i8sYdqyQ0JEkdh3tl0yKVbBz6zYW6oXUm16MOa31+XmArjHmhyxKUEJCuLJsQMQii5JiZgaAmH2PVNxqJ17uuUb7juqXfwRjv7XTmGzQ1fARl2ydaHcKg7ZViN0w2KtGWwRVp31kYyU3kGW/uzOrEQ+4Y6Ew==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=valinux.co.jp; dmarc=pass action=none
+ header.from=valinux.co.jp; dkim=pass header.d=valinux.co.jp; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=valinux.co.jp;
  s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=BbHsUc+iXRc31/taS7TZ1Tgv8Riv/7EZg9hxCQ66ZOs=;
- b=IKnc4k1ndxzGNkJ5B8WiKj/k3ltcMr0mjl3QgfJmALoca8OvzRQwPVjcMCoVYRlcCex3nKqKLml6GpE+zvwNuDSv4CeP8Uuzk3ldogjJCrSxZKBvoNkmtVKp/OY6VjfzaR4OLW0trcSijuET02xXerGW6ZN4qVgHoQ7Az2m2/CiRwoQwlLCZwB7/jRtXB9Gouwm4N9QsuCk89NPOkFeFCLPkmXFf/Wbc0v4L8BdwB/iRbuZ+dgKWgkxY7H/xvnaLN17TbruGhpzLylWojlo4cVQsNeXlz1hKyeYX1MW9+/qczww9oH3zlt33saUCQ3wpBr2NvR83OhYYkS4egO5tug==
-Received: from SN6PR02MB4157.namprd02.prod.outlook.com (2603:10b6:805:33::23)
- by DS2PR02MB11185.namprd02.prod.outlook.com (2603:10b6:8:333::12) with
+ bh=GzaJGgKYu1m5ZI5VXIz4Ub8SLkvZAR7l5JVV40hY/MQ=;
+ b=RI2QfjCSHIYCQZ3UELoW1wft3H4L7puLumocML3AONyVsqjO3HJBfC4qfFHycpQOQxTHDlxH1GHq4YCVRYewHyXf6q2LbxTGDRW3eFZ5sIIVh418a2bVCvQxSefBbdr/Av1sHv8R3Q/xwimwa0uo12KSaMuYO3jisJ6KfCJa878=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=valinux.co.jp;
+Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:38f::10)
+ by TY1P286MB3406.JPNP286.PROD.OUTLOOK.COM (2603:1096:400:2ec::10) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.339.8; Tue, 18 Aug
- 2026 05:10:53 +0000
-Received: from SN6PR02MB4157.namprd02.prod.outlook.com
- ([fe80::900:1ccf:2b1e:52b6]) by SN6PR02MB4157.namprd02.prod.outlook.com
- ([fe80::900:1ccf:2b1e:52b6%3]) with mapi id 15.21.0315.016; Tue, 18 Aug 2026
- 05:10:53 +0000
-From: Michael Kelley <mhklinux@outlook.com>
-To: Naman Jain <namjain@linux.microsoft.com>, Thomas Gleixner
-	<tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>, Borislav Petkov
-	<bp@alien8.de>, Dave Hansen <dave.hansen@linux.intel.com>, "x86@kernel.org"
-	<x86@kernel.org>, "Joerg Roedel (AMD)" <joro@8bytes.org>, Will Deacon
-	<will@kernel.org>, "K. Y. Srinivasan" <kys@microsoft.com>, Haiyang Zhang
-	<haiyangz@microsoft.com>, Wei Liu <wei.liu@kernel.org>, Dexuan Cui
-	<decui@microsoft.com>, Long Li <longli@microsoft.com>, Lorenzo Pieralisi
-	<lpieralisi@kernel.org>, =?iso-8859-2?Q?Krzysztof_Wilczy=F1ski?=
-	<kwilczynski@kernel.org>, Manivannan Sadhasivam <mani@kernel.org>, Bjorn
- Helgaas <bhelgaas@google.com>
-CC: "H. Peter Anvin" <hpa@zytor.com>, Suravee Suthikulpanit
-	<suravee.suthikulpanit@amd.com>, Vasant Hegde <vasant.hegde@amd.com>, Robin
- Murphy <robin.murphy@arm.com>, Rob Herring <robh@kernel.org>, Shradha Gupta
-	<shradhagupta@linux.microsoft.com>, Aditya Garg
-	<gargaditya@linux.microsoft.com>, "iommu@lists.linux.dev"
-	<iommu@lists.linux.dev>, "linux-hyperv@vger.kernel.org"
-	<linux-hyperv@vger.kernel.org>, "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>, "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH v2 3/3] x86/irq, iommu/amd, PCI: Drop redundant
- irq_retrigger inits
-Thread-Topic: [PATCH v2 3/3] x86/irq, iommu/amd, PCI: Drop redundant
- irq_retrigger inits
-Thread-Index: AQG4lIWg1CA0E9n3RBnld28Zsf/qhgI+SZDwttputzA=
-Date: Tue, 18 Aug 2026 05:10:52 +0000
-Message-ID:
- <SN6PR02MB415737853F902BA2FFD72719D4A62@SN6PR02MB4157.namprd02.prod.outlook.com>
-References: <20260810090716.2325295-1-namjain@linux.microsoft.com>
- <20260810090716.2325295-4-namjain@linux.microsoft.com>
-In-Reply-To: <20260810090716.2325295-4-namjain@linux.microsoft.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: SN6PR02MB4157:EE_|DS2PR02MB11185:EE_
-x-ms-office365-filtering-correlation-id: fdf26026-f161-4de7-3ca9-08defce713a4
-x-microsoft-antispam:
- BCL:0;ARA:14566002|24021099003|55001999006|16051099003|37011999003|41001999006|2604032031799003|51005399006|13091999003|31061999003|19110799012|8060799015|8062599012|15080799012|25010399006|40105399003|2607281247196008|102099032|3412199025|440099028;
-x-microsoft-antispam-message-info:
- =?iso-8859-2?Q?g/2+UtVinOSgLfpXIVO7DdLd0ty6QcxoU0CvA0cNXFpVHknA09A0BD88WG?=
- =?iso-8859-2?Q?kSVHTtGJQ+jT4S/bCwPld2INHj1mhuNkb9FSgbSe6GDHXL6iX7SiTX1eKl?=
- =?iso-8859-2?Q?1SJVrt12tZKgNgS+1ZuL4VQSx6dWwdBdpnK4R7+YGJjCrEMQDmYoG9j1MZ?=
- =?iso-8859-2?Q?kqjwi3O7mFEy52wYUujDapVBmc1hMm3k6c2/SvNmySe5BLjKSNsQRJWtV/?=
- =?iso-8859-2?Q?0fn3TxAbx+k3bF2woHMFzX1H7XUvlMc4jx4dfq6IjEERd9ChPlPBXlDFGh?=
- =?iso-8859-2?Q?EGR3ucScE9WgKhmXv311up50GrgAtJtj/nynEFqHkYAtzTGMeS650KnYzw?=
- =?iso-8859-2?Q?QOfBqNbUq9xa4LDJQlwOMcyHH2NmxPOTord6LzFNsZkXJrTWOeQI5skYP4?=
- =?iso-8859-2?Q?SnzPda/vid1wK0wxTHhMMS16SuI32dw7WtvS3Sq9f9q3Nhl5s+MD1WIxrJ?=
- =?iso-8859-2?Q?zFJuMWBMXOOGalxgMnIVo2waLliLebA3PkZsFFrB0npkm0Ukrwvu+7w1tf?=
- =?iso-8859-2?Q?iAJXpCE0SCNPYMX8Fgsc9oz1wTehlOMcazk4djS5XDSTDVFEoxwbx8L2mN?=
- =?iso-8859-2?Q?hE8Q37JIbMZQKJx3L4plh8K5Wp3UWb3Xq5eTIrL+SiRrplCjt6BTVEoCGl?=
- =?iso-8859-2?Q?yHoHnCi4XfmFWFbnrOfrani7JUIqY6z4v9OZy2pT7RmuTCSDA5eec20qYH?=
- =?iso-8859-2?Q?2yyBXa7ebuY9ChPc2wxNztOYR8Lws058JZdsdupn8t+okbrtVoXpHwjZqd?=
- =?iso-8859-2?Q?hCnuPJFfmh7BTy5sa3ImS0LQNLcQLYIC/BpcX2qMVUHHQGX66eEkfe6ODy?=
- =?iso-8859-2?Q?DDmwTP3f3Z/dAMKYfknQh0eSrlKix1c3JZI8jjMCd1W+0IUsq7D82H20CI?=
- =?iso-8859-2?Q?wWOmOfIyp/+Mcw4LjtvXhpxgmTpeX1dG3ZyQAVptd0n4dTsPg2bynchia/?=
- =?iso-8859-2?Q?6GHa4MSkG9T5GU14O1WbdSoB4T2WO1LGvrnH5JEd6MQiJR/aCrLHBduSjN?=
- =?iso-8859-2?Q?KuQSO8LtpI2ACPu+OXrUCO0YKSBorCbRZEVuOVUv1gUyFbRR2RyPyW/71T?=
- =?iso-8859-2?Q?CVLJIeIgzwvSFbZREgNHxil8na4szN7xIjAPBBtThwnM/XyzQLybLPOAnB?=
- =?iso-8859-2?Q?68v8qQXJbPh9l+6gmj/fFNg247LnZtZ2cEk6Rx0EC3JZB7IC21fKVWY7rO?=
- =?iso-8859-2?Q?39ImeKqbEA575A=3D=3D?=
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?iso-8859-2?Q?ldlDEbG37sCo0Q/7qNCBUCUjScsGSxk6t/WgFsYyeGcitpvunJK+uxb1Zg?=
- =?iso-8859-2?Q?mLljZT1pGf+u/Z5LMHyMOlrJrAWHPjd6RgIzKCk3GVdl6XbblDcPqbA+nZ?=
- =?iso-8859-2?Q?DvG1v0koEC6ePuDa1Ydqe3sRFrGABX7xDqvn0fKCsWRyxJBCTKdjgGdkVv?=
- =?iso-8859-2?Q?8VIJLUHI117D8FYcOv+leh3i/IF02Mhe/YBWoB0QhQbccNULhVxmkpAyhy?=
- =?iso-8859-2?Q?w2IJnBjtGY84uOC1CRqIAoDd4lb49bxHEyM7sf4EyO41CrE59boUtXOOSA?=
- =?iso-8859-2?Q?cJvfDmhbaFfH09iOFwkNA21aEvVegToaKLteC0uK5Z/1WpVlAfiy5XapKy?=
- =?iso-8859-2?Q?UJ5jRxzcSMjmFcg48UrYlqSzYzBVGz8ALObjK5ZkglUV2CrEHiJbgZpbZF?=
- =?iso-8859-2?Q?jChVdD5LhM6Rwv7S6+zhxf0Yhs2MhKpvWNesJRRyy6CVAJec1XMdUa7cM3?=
- =?iso-8859-2?Q?t+dicgRzK4QJ+X7AAQTRikzbE1o3GW7BFWFQFI0RGnngsRkMlgQcuIPQ2F?=
- =?iso-8859-2?Q?jDBlvWwKDbp1XwOuQXv/XCWMJx3dm1gTRIs2lEOqKOvn9EOCpvux/vRH3F?=
- =?iso-8859-2?Q?G3JPsRoC+m1NyiiG5o/KQjMgRy5Lfs5J7F9ac3PrsslJ5qoHfElByW11Mz?=
- =?iso-8859-2?Q?1zS9o7CsqQoY5ROWWTjsfTg9RX39DtrlaSBIfBrk1tc1TCcYYmbwjAyweB?=
- =?iso-8859-2?Q?Ebdcb6usHHo7mAJVI2G59ZzNqjWU5Rev9yKCtd4UByrBYjtazopmZt1/3Q?=
- =?iso-8859-2?Q?aq3/EZNhcpRLQ/lcA9m/wsmwylcb+3jbnqDP1Mo6UBlJByx0BFuvibfpZt?=
- =?iso-8859-2?Q?obMUzmd2stjQHrULW6au3R+89jQQaqOxno8Bqp3DzF1VUlMxhKIOqBsunq?=
- =?iso-8859-2?Q?JjGNNOcSPEdJ8IZfBBq1g1D2iWHisttcCAhpRCbMWA4NYKSBo6U8kWXHbe?=
- =?iso-8859-2?Q?D/fABY234b/7+hjk9zcR4QWs6HEqn6D5zKAvJuIxAhdv3mVKr5BkAbCd/y?=
- =?iso-8859-2?Q?kGa9XzO6y9rAC8kPzxVQExgjCF2i+W1sP8hgUo9jiiYQDPr9T1cZzRt7Gl?=
- =?iso-8859-2?Q?qgGjwQ4Z/7C56B2EOBzMY4BvRnoC8eRKiHcllmY/gGu0SLiPqKiqdLGydB?=
- =?iso-8859-2?Q?0l//iMmdE/SIU7EvQAhNrSAsXeFP9zBQ7cFxFx5puHMQt8m+hZY/sAY1Es?=
- =?iso-8859-2?Q?RuObVHUwn/Lmpyl12f4Mlqf7lUSgEjZt/ahZ/zBCL+YY8+45X9WDabtQlX?=
- =?iso-8859-2?Q?BJtST/GgEASfFUYQgh1bKr6+UhWOHlKH51B2Lhz/ll8phUqNS9FlMz8RpY?=
- =?iso-8859-2?Q?lfvTv9seFnrV3VMdNqh1fw6aFDt0jcp7LzU+/+bVuyT+t4SCTzGnymxxii?=
- =?iso-8859-2?Q?TClbLZyrTf35S9GwsdfKGzOWt/5klyy9TayDkXoT2W0axXLMsK4KE=3D?=
-Content-Type: text/plain; charset="iso-8859-2"
-Content-Transfer-Encoding: quoted-printable
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.315.17; Tue, 18 Aug
+ 2026 05:55:49 +0000
+Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ ([fe80::2305:327c:28ec:9b32]) by TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ ([fe80::2305:327c:28ec:9b32%3]) with mapi id 15.21.0315.016; Tue, 18 Aug 2026
+ 05:55:49 +0000
+Date: Tue, 18 Aug 2026 14:55:47 +0900
+From: Koichiro Den <den@valinux.co.jp>
+To: Marek Vasut <marek.vasut+renesas@mailbox.org>
+Cc: linux-pci@vger.kernel.org, 
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Geert Uytterhoeven <geert+renesas@glider.be>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	Magnus Damm <magnus.damm@gmail.com>, Manivannan Sadhasivam <mani@kernel.org>, 
+	Rob Herring <robh@kernel.org>, Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>, 
+	linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org
+Subject: Re: [PATCH] PCI: dwc: rcar-gen4: Fix potential unclocked access in
+ rcar_gen4_pcie_ep_deinit()
+Message-ID: <h43onk4priskfkvdrheml4ttx2b7udavnulxvftj45midvcs3c@lec5rx7mrgys>
+References: <20260813091925.71363-1-marek.vasut+renesas@mailbox.org>
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260813091925.71363-1-marek.vasut+renesas@mailbox.org>
+X-ClientProxiedBy: TYCP286CA0275.JPNP286.PROD.OUTLOOK.COM
+ (2603:1096:400:3c9::17) To TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ (2603:1096:405:38f::10)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-OriginatorOrg: outlook.com
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: TY7P286MB7722:EE_|TY1P286MB3406:EE_
+X-MS-Office365-Filtering-Correlation-Id: 7e40bc7b-0168-42b3-8d0d-08defced5a75
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|23010399003|376014|7416014|1800799024|366016|10070799003|6133799003|10067099003|5023799004|56012099006|22082099003|18002099003;
+X-Microsoft-Antispam-Message-Info:
+	7zbvKlClAR97Pk7KL0cakmT3DqpLk6ORu1V3dfBqfhS8yvR6cEcleJJo37SirM1kNMLcb9NHTkgFMxACU5VolKlET8cOZJUfGtVGswzmqI1Td1ogM7y6NFgSTttQYddddyWy+Czc6QhUM5fyXmIw4jl8/RlI+GoNOivtZmWfYZUsU43XCVOt2vjPkULHqIDPPpAXLWvCOfCL8M1Vii3Fo1JrmhelJJWT+Gy13B3fwyxS+Cenhwe0W8eWC7/WB7iyOqpbDMa8nYxXqmtuDTFPXnuxOqas1mDgRHKMm/o0olOsa+uOBkCQj96gZ20JCKTh8gulPc/6tOcPyaETz8sYWLqEvNx0Sia3LJzvhWM3yn+yA/qfnIg4I4dGz0Y9n0ojUs5DDU09fX6K7xlFysCBsxGEBUryD/ZHeBwYrybd1tqxE2P4f7zHlJS0Gvll3pWUmihVjHict38qWLIxvFYeOlbiNYTuThb43JgTnDEDXdmYp+4FsUXa7OeLqqfS0tCdxM3HD57czsjnpf+INnqoFIUUFNHRpbpOOY7B15NPRTo7GWUbx4b0o7HkWqFFsOjg2ov7usi4U9EjkSgjzwtcBeBd3l3BZBC4ydqI6L5uKz6G+WoZ+k1q3Ga7KizHwlvbHP5393y8WVTzhTPTLf81GHPLZxUjoX9u940VziOHovI=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(376014)(7416014)(1800799024)(366016)(10070799003)(6133799003)(10067099003)(5023799004)(56012099006)(22082099003)(18002099003);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?S3NmWTlhcWUzdGUxeTVObmVsN2wxeUFhWll5MkFTZzl1VWhsaU96TXl3b24r?=
+ =?utf-8?B?Smw3OHJBSEU1YStyeTNGV3NYMTc3UzA3L2sxNEhMRmdXUHZkQjhEVGZXdExz?=
+ =?utf-8?B?RnFUUUR2ejAzYWhsS212V1haK3NweGtZQVlqY1d3N1RETWlyZjR3K01VcWps?=
+ =?utf-8?B?NVlMSmtjRFpOR1FXN0pURThnUEJraFJrWk9lSTk1T1hIZzZ3cGdVV3dDUk1a?=
+ =?utf-8?B?ei9QTzNWbVB4S0VYMFZuNGp3Tmdsa0NCb3Vra2VoZE9UeTJXbDAyV3U0Rzh4?=
+ =?utf-8?B?Z3lFdTg1ejFscWVlTnBFWlNVY3o1aFBCMWRUTituR21xYUZHK1M2UE92bnln?=
+ =?utf-8?B?UlpmbzZqcjliMDgyczBQUTRVSWdrbTN3V08wVm9xWnFFcW1jKzliNGdoeTli?=
+ =?utf-8?B?MW9QQnpnR0JPNGNEYk5QVVNmTTR2N0NXL21wRFBscG1vZDQxMVZTbEU5dzV0?=
+ =?utf-8?B?MWRLd2dFa3hIdVhUT3UzdHVialNPZFYwYkw3M0RrTEI4V2NpM2JIS0syMnB3?=
+ =?utf-8?B?M3VtUnNNTTg4TkU0aHUwODlEMXpVWHlMdkVCVThlcUl0UDZobDMyN2cvZHZO?=
+ =?utf-8?B?WS92UnZQNEN4ZC9GQUQzdjFjY3RlUzJybHFiYzBFWi9TeldiV3B0cGVhM2cy?=
+ =?utf-8?B?WmZkcnVFeWhsQm4rbytoREppOExKaE9vMzJhQ1I3U0hTVDRyVFpQRmJzaUV2?=
+ =?utf-8?B?S1lHcFB3YktuYlUyZWE3WXlRQUNyTUhNOEJpRDhodTYzMmtZQmdMdnRFWkZC?=
+ =?utf-8?B?UlNDcVpteVRWUDJGVUlPeTQxbkVweEtaeSs2Q3dRNUl4a3NxdmREWFp0VzZI?=
+ =?utf-8?B?K0tWTXhHQUlBV1B3V201UU1hcHlWcnEyNmE5emk0eGkrcFRHRmNkaEJHbXdC?=
+ =?utf-8?B?aDBhZFlydmdZeVprclRETTBKNFo0UXVWbzhtT0pRMmNFYkhLV3QyY1JmaXRi?=
+ =?utf-8?B?RjlsVm5mWXN1dGxqTnRhRjRUYStkNUEvV0crdnB6L0tBZEpaOUN0V2pIWDhs?=
+ =?utf-8?B?Vi9UcFpnc0NqcTB3S0plQnJxckVQdHF2aENNd3hNRTdxSER4azJPKytvZFQw?=
+ =?utf-8?B?elRJaGlSVy92STQ5QVNJaFNHMnd4WlpFdU51T291VENSNW9iVzhHK0ZBUzJ1?=
+ =?utf-8?B?NDJrdTVGa0NWazJkOGhUYUM0SnJtVkQ2VENUWWNGaFVNMmN2OURvN1Z1b2Ri?=
+ =?utf-8?B?UEZzREUxRk1vWDBYbmlvZU9udWE1Z3NSTWdRQnVCM2NwQTVDZVYxU1pGYzhi?=
+ =?utf-8?B?UzFRUjA4V3IvVW0rb2dJVG1udUZJVWlVZ3M5TnhxNis3UnVMcDRCUjN3ZzZS?=
+ =?utf-8?B?Q0VMcFpjeW52ZjhsMnRsSkNzM1NCQngwcGNuc0hXdkN1ckh0dTB1ZXpMelM3?=
+ =?utf-8?B?d3JnUkluWUR4d0lybld1V0FQQWxZTHRodklKQjJXMWt6OHJDeXZ3RTlQTmpa?=
+ =?utf-8?B?WlBReDhQckVOZzFHd3BiYndscTVVK2F1N0Rvb2lreUVjcVdLaVNUZFBZWGpW?=
+ =?utf-8?B?N211QVc5YjY4Q0hHano5WGRZMG5rVEczWFRSUHNOY1NjaFZEM0tIbWRtSE1O?=
+ =?utf-8?B?b00wWlpVb3FaOTdNcHpsSi91Z2N6aENsUHZJcFRJTlh4blZCbUg0RS9xblo5?=
+ =?utf-8?B?ZS9IRTNpZkI2VTRuemlXUlk1M3pOMzJ6ZEE2M0F0ZldScThZTDdrWW5aR2JJ?=
+ =?utf-8?B?QXFtQTAxWllDRFNLQkNwK0xjRU50YjVyUWhXeWdlOW9MdTZFK3B0ZjZ3UWNO?=
+ =?utf-8?B?OWlUSjdFaHNiNDhFVSsxa01LWE13NEVHMDBhYlJ0RXBlR1AxeDdMdWJ2VDlK?=
+ =?utf-8?B?S05HUVA3UEcxcnZlWWtNVWtaMnJ4a0d6eUt5aGZ6M00xM0JuUWVGVDlBbjJD?=
+ =?utf-8?B?MTRUYkMzV3JFUVdVdGVwNFozQXR6MHlUZkVPMVlDMTZ0OW4zK01mSDdmdlkz?=
+ =?utf-8?B?aGhmQjBFWHNNSkhzem45dkhsdHhmNm9KVXFwUEhha3U0cU9ETDVucmcxS3JE?=
+ =?utf-8?B?MlVLSXZsSHUwTmIyNFhobVNJaFlaVGpmU3lzNTdqUEpiSGNydzREVFlHSlF4?=
+ =?utf-8?B?eGw2dnVDTXpkSk1TZlpGZjE4U2JQRjZTM014V1FKZEFDNkpoYWtMNnM3QmRD?=
+ =?utf-8?B?bmlLNEY3dkQ5TGRWaCt1ZXlmZ2NLVFBIR3JZYW9aQkZxNGQwa3l3b3VIZklV?=
+ =?utf-8?B?alh1eENrUVhWb0xOQmFnSEF2YXk3QzhsOHAzQ0Q4MHY4dWV2a3c5NU9MRDlN?=
+ =?utf-8?B?MEhnNTVTQ3I1Z0dVNGVYOEp2ZGE4aFJJRVFFZHBzOHpuc01MZVcwR0NCUGZN?=
+ =?utf-8?B?a3h5Y2dIZldGREE0Q1JwN2UwQkhseXRNY1lxaWlEaWNZZDJRVStzUHpSeC92?=
+ =?utf-8?Q?se2tPjoFo+WIj4BFWsDhaXEByqDQwGH6bbmmc?=
+X-OriginatorOrg: valinux.co.jp
+X-MS-Exchange-CrossTenant-Network-Message-Id: 7e40bc7b-0168-42b3-8d0d-08defced5a75
+X-MS-Exchange-CrossTenant-AuthSource: TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: SN6PR02MB4157.namprd02.prod.outlook.com
-X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg: 00000000-0000-0000-0000-000000000000
-X-MS-Exchange-CrossTenant-Network-Message-Id: fdf26026-f161-4de7-3ca9-08defce713a4
-X-MS-Exchange-CrossTenant-originalarrivaltime: 18 Aug 2026 05:10:52.9905
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 18 Aug 2026 05:55:48.9471
  (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
-X-MS-Exchange-CrossTenant-rms-persistedconsumerorg: 00000000-0000-0000-0000-000000000000
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS2PR02MB11185
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 7a57bee8-f73d-4c5f-a4f7-d72c91c8c111
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: pqfUh4IM0+/OExgICvtNi+MGpkzE0Lrk4kJ65NElq0SIMHqCg0nWFsw5voB1LeaoyNcXCKSV55NOLc5rqk+gjw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: TY1P286MB3406
 
-From: Naman Jain <namjain@linux.microsoft.com> Sent: Monday, August 10, 202=
-6 2:07 AM
->=20
-> With fixup_irqs() now using irq_chip_retrigger_hierarchy() and the generi=
-c
-> resend path (try_retrigger()) already falling back to it, installing
-> irq_chip_retrigger_hierarchy() as the irq_retrigger() callback on the
-> outermost domain chips is no longer required. The hierarchy walk reaches
-> the x86 vector domain's apic_retrigger_irq() for all of these stacked
-> domain chips.
->=20
-> Remove the now redundant irq_retrigger() initializations from the outermo=
-st
-> domain interrupt chips.
-> msi_set_affinity() is the only site that invoked the outermost chip's
-> irq_retrigger() directly. Convert it to irq_chip_retrigger_hierarchy() so
-> the x86_init_dev_msi_info() initialization can be dropped as well.
->=20
-> No functional change intended.
->=20
-> Suggested-by: Thomas Gleixner <tglx@kernel.org>
-> Reviewed-by: Shradha Gupta <shradhagupta@linux.microsoft.com>
-> Signed-off-by: Naman Jain <namjain@linux.microsoft.com>
+On Thu, Aug 13, 2026 at 11:18:22AM +0200, Marek Vasut wrote:
+> Initialize PCIEDMAINTSTSEN in rcar_gen4_pcie_ep_pre_init() to 0,
+> and in case rcar_gen4_pcie_common_init() fails and the result
+> propagates to dw_pcie_ep_init(), the invoke common deinit instead
+> of endpoint deinit, because we are certain the PCIEDMAINTSTSEN
+> register is already 0 and the common deinit does not do any register
+> accesses.
+> 
+> Signed-off-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
 > ---
->  arch/x86/kernel/apic/io_apic.c      | 2 --
->  arch/x86/kernel/apic/msi.c          | 4 +---
->  arch/x86/kernel/hpet.c              | 1 -
->  drivers/iommu/amd/init.c            | 1 -
->  drivers/pci/controller/pci-hyperv.c | 1 -
->  5 files changed, 1 insertion(+), 8 deletions(-)
->=20
-> diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_api=
-c.c
-> index 7d7175d012288..18f49a251f23b 100644
-> --- a/arch/x86/kernel/apic/io_apic.c
-> +++ b/arch/x86/kernel/apic/io_apic.c
-> @@ -1857,7 +1857,6 @@ static struct irq_chip ioapic_chip __read_mostly =
-=3D {
->  	.irq_ack		=3D irq_chip_ack_parent,
->  	.irq_eoi		=3D ioapic_ack_level,
->  	.irq_set_affinity	=3D ioapic_set_affinity,
-> -	.irq_retrigger		=3D irq_chip_retrigger_hierarchy,
->  	.irq_get_irqchip_state	=3D ioapic_irq_get_chip_state,
->  	.flags			=3D IRQCHIP_SKIP_SET_WAKE | IRQCHIP_MOVE_DEFERRED |
->  				  IRQCHIP_AFFINITY_PRE_STARTUP,
-> @@ -1871,7 +1870,6 @@ static struct irq_chip ioapic_ir_chip __read_mostly=
- =3D {
->  	.irq_ack		=3D irq_chip_ack_parent,
->  	.irq_eoi		=3D ioapic_ir_ack_level,
->  	.irq_set_affinity	=3D ioapic_set_affinity,
-> -	.irq_retrigger		=3D irq_chip_retrigger_hierarchy,
->  	.irq_get_irqchip_state	=3D ioapic_irq_get_chip_state,
->  	.flags			=3D IRQCHIP_SKIP_SET_WAKE |
->  				  IRQCHIP_AFFINITY_PRE_STARTUP,
-> diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
-> index 66bc5d3e79db3..aad2f15eb2176 100644
-> --- a/arch/x86/kernel/apic/msi.c
-> +++ b/arch/x86/kernel/apic/msi.c
-> @@ -137,7 +137,7 @@ msi_set_affinity(struct irq_data *irqd, const struct =
-cpumask *mask, bool force)
->  	 * IRR.
->  	 */
->  	if (lapic_vector_set_in_irr(cfg->vector))
-> -		irq_data_get_irq_chip(irqd)->irq_retrigger(irqd);
-> +		irq_chip_retrigger_hierarchy(irqd);
+> Cc: "Krzysztof Wilczyński" <kwilczynski@kernel.org>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+> Cc: Koichiro Den <den@valinux.co.jp>
+> Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>
+> Cc: Magnus Damm <magnus.damm@gmail.com>
+> Cc: Manivannan Sadhasivam <mani@kernel.org>
+> Cc: Rob Herring <robh@kernel.org>
+> Cc: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+> Cc: linux-kernel@vger.kernel.org
+> Cc: linux-pci@vger.kernel.org
+> Cc: linux-renesas-soc@vger.kernel.org
+> ---
+>  drivers/pci/controller/dwc/pcie-rcar-gen4.c | 4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/controller/dwc/pcie-rcar-gen4.c b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
+> index fbe465a29068f..b47281b30db96 100644
+> --- a/drivers/pci/controller/dwc/pcie-rcar-gen4.c
+> +++ b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
+> @@ -487,6 +487,8 @@ static int rcar_gen4_pcie_ep_pre_init(struct dw_pcie_ep *ep)
+>  	struct rcar_gen4_pcie *rcar = to_rcar_gen4_pcie(dw);
+>  	int ret;
+>  
+> +	writel(0, rcar->base + PCIEDMAINTSTSEN);
+> +
 
-Again, this will miss the outermost chip's retrigger function if it
-is set to something custom.
+Hi Marek,
 
-Michael
+Thanks for adding me to Cc here. I tested this patch on S4 Spider and saw no
+regression. I have two questions though.
 
->=20
->  	return ret;
->  }
-> @@ -246,7 +246,6 @@ static bool x86_init_dev_msi_info(struct device *dev,=
- struct irq_domain *domain,
->  	info->ops->msi_prepare		=3D x86_msi_prepare;
->=20
->  	info->chip->irq_ack		=3D irq_chip_ack_parent;
-> -	info->chip->irq_retrigger	=3D irq_chip_retrigger_hierarchy;
->  	info->chip->flags		|=3D IRQCHIP_SKIP_SET_WAKE |
->  					   IRQCHIP_AFFINITY_PRE_STARTUP;
->=20
-> @@ -313,7 +312,6 @@ static struct irq_chip dmar_msi_controller =3D {
->  	.irq_mask		=3D dmar_msi_mask,
->  	.irq_ack		=3D irq_chip_ack_parent,
->  	.irq_set_affinity	=3D msi_domain_set_affinity,
-> -	.irq_retrigger		=3D irq_chip_retrigger_hierarchy,
->  	.irq_compose_msi_msg	=3D dmar_msi_compose_msg,
->  	.irq_write_msi_msg	=3D dmar_msi_write_msg,
->  	.flags			=3D IRQCHIP_SKIP_SET_WAKE |  IRQCHIP_MOVE_DEFERRED |
-> diff --git a/arch/x86/kernel/hpet.c b/arch/x86/kernel/hpet.c
-> index 8dc7b710e1250..2bb7a6f466af3 100644
-> --- a/arch/x86/kernel/hpet.c
-> +++ b/arch/x86/kernel/hpet.c
-> @@ -509,7 +509,6 @@ static struct irq_chip hpet_msi_controller __ro_after=
-_init =3D {
->  	.irq_mask =3D hpet_msi_mask,
->  	.irq_ack =3D irq_chip_ack_parent,
->  	.irq_set_affinity =3D msi_domain_set_affinity,
-> -	.irq_retrigger =3D irq_chip_retrigger_hierarchy,
->  	.irq_write_msi_msg =3D hpet_msi_write_msg,
->  	.flags =3D IRQCHIP_SKIP_SET_WAKE | IRQCHIP_AFFINITY_PRE_STARTUP,
->  };
-> diff --git a/drivers/iommu/amd/init.c b/drivers/iommu/amd/init.c
-> index ea3377e61aa5c..0c362e86a09d9 100644
-> --- a/drivers/iommu/amd/init.c
-> +++ b/drivers/iommu/amd/init.c
-> @@ -2468,7 +2468,6 @@ static struct irq_chip intcapxt_controller =3D {
->  	.irq_unmask		=3D intcapxt_unmask_irq,
->  	.irq_mask		=3D intcapxt_mask_irq,
->  	.irq_ack		=3D irq_chip_ack_parent,
-> -	.irq_retrigger		=3D irq_chip_retrigger_hierarchy,
->  	.irq_set_affinity       =3D intcapxt_set_affinity,
->  	.irq_set_wake		=3D intcapxt_set_wake,
->  	.flags			=3D IRQCHIP_MASK_ON_SUSPEND | IRQCHIP_MOVE_DEFERRED,
-> diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller=
-/pci-hyperv.c
-> index 89816a2bd7cd3..cfc8fa403dad6 100644
-> --- a/drivers/pci/controller/pci-hyperv.c
-> +++ b/drivers/pci/controller/pci-hyperv.c
-> @@ -2119,7 +2119,6 @@ static bool hv_pcie_init_dev_msi_info(struct device=
- *dev,
-> struct irq_domain *dom
->  	info->ops->msi_prepare =3D hv_msi_prepare;
->=20
->  	chip->irq_set_affinity =3D irq_chip_set_affinity_parent;
-> -	chip->irq_retrigger =3D irq_chip_retrigger_hierarchy;
->=20
->  	if (IS_ENABLED(CONFIG_X86))
->  		chip->flags |=3D IRQCHIP_MOVE_DEFERRED;
-> --
-> 2.43.0
->=20
+1. The new writel(0, PCIEDMAINTSTSEN) runs before clk_bulk_prepare_enable().
+   Is MSTP024 expected to be already released at this point? I added the quick
+   check like below on Spider, and confirmed that the clock was already enabled.
 
+   --- a/drivers/pci/controller/dwc/pcie-rcar-gen4.c
+   +++ b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
+   @@ -9,6 +9,7 @@
+     */
+    
+    #include <linux/delay.h>
+   +#include <linux/clk-provider.h>
+    #include <linux/firmware.h>
+    #include <linux/interrupt.h>
+    #include <linux/io.h>
+   @@ -487,6 +488,10 @@ static int rcar_gen4_pcie_ep_pre_init(struct dw_pcie_ep *ep)
+           struct rcar_gen4_pcie *rcar = to_rcar_gen4_pcie(dw);
+           int ret;
+    
+   +       if (__clk_is_enabled(dw->core_clks[DW_PCIE_CORE_CLK].clk))
+   +               dev_info(dw->dev,
+   +                        "PCIEC module clock was already enabled\n");
+   +
+           writel(0, rcar->base + PCIEDMAINTSTSEN);
+    
+           ret = rcar_gen4_pcie_common_init(rcar);
+
+   If that is not guaranteed, wouldn't this write rely on firmware or some
+   earlier user leaving the module clock enabled?
+
+>  	ret = rcar_gen4_pcie_common_init(rcar);
+>  	if (ret)
+>  		return ret;
+> @@ -571,7 +573,7 @@ static int rcar_gen4_add_dw_pcie_ep(struct rcar_gen4_pcie *rcar)
+>  
+>  	ret = dw_pcie_ep_init(ep);
+>  	if (ret) {
+> -		rcar_gen4_pcie_ep_deinit(rcar);
+> +		rcar_gen4_pcie_common_deinit(rcar);
+
+2. It seems to me dw_pcie_ep_init() can fail:
+   - before pre_init() has run,
+   - from inside common_init(), or
+   - after pre_init() has succeeded and written PCIEDMAINTSTSEN_INIT (e.g.
+     pci_epc_mem_init() fails)
+
+   The caller cannot tell which case returned the error. In the first case,
+   common_init() has not run, while in the last case PCIEDMAINTSTSEN is not 0.
+   So this seems to me different from what the commit message says. Is
+   common_deinit() intended to be safe in all three cases?
+
+I may be missing some detail here. Could you clarify this for me?
+
+Best regards,
+Koichiro
+
+>  		return ret;
+>  	}
+>  
+> -- 
+> 2.53.0
+> 
