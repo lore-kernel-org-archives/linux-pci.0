@@ -1,1143 +1,162 @@
-Received: from mail-pg1-f198.google.com (mail-pg1-f198.google.com [209.85.215.198])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from CH1PR05CU001.outbound.protection.outlook.com (mail-northcentralusazon11010059.outbound.protection.outlook.com [52.101.193.59])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F3023F0A86
-	for <linux-pci@vger.kernel.org>; Tue, 18 Aug 2026 18:57:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.198
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787079472; cv=none; b=fT4SLiQvZkRXL5UFR5mdgmPUgDrWltXBWmZhAhNoCXQ/8bRJFM26iRYGPkAIdCuRtg9iTGY6AlBj20em0ZFZ3bjCkuDhmrgv0+mdGvmwJ00h3ZTJPqifJRlFM76P7kjB2JtSXo4JOuMeVeCv0f5JxrszvCV+RBb9IORT2yr9Ddo=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787079472; c=relaxed/simple;
-	bh=FBvz3DMe1SYorsdm0txbZONMzssuvhVD51eKcHY0y9A=;
-	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=axbK6YHmn1TJn/d40dttvS+eYZKAZ/rP5kI1REe7HulUuT4w2y0MvPRMeGX1e9WpUK8WEXQIQc/vKipnNBBNzp8mH5CV2U8Rkydx9Au/PuwcUZ7/pQmGt6agppijIRNYEMw54XngANbcF6jAaIpa/XGxpycaB3wWxMqRlaqqFFA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--rathodpriyank.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=By0C+as5; arc=none smtp.client-ip=209.85.215.198
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--rathodpriyank.bounces.google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BCB40377AA5
+	for <linux-pci@vger.kernel.org>; Tue, 18 Aug 2026 19:03:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.193.59
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1787079833; cv=fail; b=oBv9DcsKQr97NiHU9e3Bh4DyxVmuzNZRXrpiZalDVzI4VS0WMf1iSjlgHwNrTBvifEznKz6CTccthnR/98e05fOEZqvcrdxc74SZyib4mSrP36mwh+eGVRknM+xwIg86IGKewDNCGuod4U6q2Q8gMtvv0fm5TagEJ8SIx5oUuDU=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1787079833; c=relaxed/simple;
+	bh=hWgKRfGV6U9vfCzzPjPk0ABiodKdBU8BboZFnRMqHao=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=KqAhwz1e4KQzx3QVufwIbxWc9n7pnFWywdNScuOYaVS50mKX5m8T/CF+lxB5d26TB+ac5S8DfO36tPA7yzf1ti1XWSBNufKbkLCZPXf80WBGYt9PEs6JaVzP/32XNlh60RV1Kv/Af2fhRWAIdd3fz8enIy5rssj5u0yUY/KhK90=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=j9q5geaR; arc=fail smtp.client-ip=52.101.193.59
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="By0C+as5"
-Received: by mail-pg1-f198.google.com with SMTP id 41be03b00d2f7-cab3e9cd922so68210a12.0
-        for <linux-pci@vger.kernel.org>; Tue, 18 Aug 2026 11:57:49 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1787079469; x=1787684269; darn=vger.kernel.org;
-        h=content-type:cc:to:from:subject:message-id:mime-version:date:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=kcOBjZWRSKI4YZixqvB1F24ONl66ORi7/qHcmwzFTBw=;
-        b=By0C+as52VDUfRigcGYznB7wrohDxGBpo3B0RBI9so3zozOVP5jTGZ6JGNBaM4cZC4
-         U/7E0Wult/0FhvrBa7L+rvWzrp8GwJ1fmiu0GbKIlDp1oHAveCLHlrzDQL9W91fKOGiy
-         CxNxnPw8uRh4ArdAdddOFioEfd6/LtOSVZgWlJm91M+VMAdnRNiZqmuxq9BOOYsk2C78
-         nEqzb8DnT1V2MGWQ2EBXB0pkGBktqUw0jjFTJsXe9utI9U9GHOZRA4Vy0HkgMwOg9Lhr
-         c0y5pzByTzAGn6pG8sC5vTeyqYD63Vo6RBqwT2qBLxJuoHS0uk5rAPoRogPGhmz67CPT
-         oQXg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787079469; x=1787684269;
-        h=content-type:cc:to:from:subject:message-id:mime-version:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=kcOBjZWRSKI4YZixqvB1F24ONl66ORi7/qHcmwzFTBw=;
-        b=YbNYtb4djHxhmhbNCdW8wMdFuGNrfpplb0+Xfq9s/KHeNAEzL62tJ3B8r370c5EovV
-         zkDc+0XnhxFiFVQ7EL73S3qomOUSawNssb7ABpumepCBHJZ/0AAhToyT//wahtKfshNm
-         Z6jiWVUmkf26FMe7HNHV0HLYesm0PtW+I51ri1yZ4MYSRRUgAVJi3iz3M2f6JFwTw2pt
-         3xeU+L/QJ+xypMKDVoRKBTVlvGJwloyFKCkPEJzx4R9ruBE2j36WZiVU8EfjGDy4RqQ/
-         oQTqHUUpzQgOAQ9O8NGRypudDSUhi+NUmh5dNOgHEw1WCJctFInBreHd9DvMg1zckma/
-         gVVg==
-X-Forwarded-Encrypted: i=1; AHgh+RoJe/6EShxGCmg8cPAaYpaRucb1wRKjUOv0ANIBcYvfyR8lVScLjpCaD2VrdB8gF60nYqnLSmLSpkw=@vger.kernel.org
-X-Gm-Message-State: AOJu0Ywp0OqLYzd1XFT8LsjFs7+wwZPE0c8TKonip3JKlw9fIYZ6b+RF
-	9LYBSTet5R52vcdSXyt5ZW0flFVVMArQUEnd3RbJBX7uNcmE+PpsD4ZHa5TQJrxMEcWrP4v/SSv
-	bmHh7qLyNT3pN/F1mbNmm3QUjN1rS/LnJcg==
-X-Received: from pgct23.prod.google.com ([2002:a05:6a02:5297:b0:c82:7761:9936])
- (user=rathodpriyank job=prod-delivery.src-stubby-dispatcher) by
- 2002:a05:6a20:939f:b0:3cb:8280:71f8 with SMTP id adf61e73a8af0-3cc71c93b1bmr45418568637.18.1787079468988;
- Tue, 18 Aug 2026 11:57:48 -0700 (PDT)
-Date: Tue, 18 Aug 2026 18:57:48 +0000
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="j9q5geaR"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=DXHtcVh6EFa15C7JnXnbEt2g9ORHYyBRqP91ci8etSaNPuoZ68BW4m5l9FIZFEOvgdM4Tcgu0MR06yyYeXJzap3HMf9y8MTJKgHjz3vmQeibTZ5aWWEOUVu07lgqEFU3GbIGU1e+Mosd+S8P2ARHwksa8m+BRslcPL6sseQk5bAF2n8owQ3VejuEHyr1VD1byhfrhvsAqKBMjXsN3Orw7ZWlhr4T33sZf0dE7RwPkw3NbR1ELC45k7S1xvPRfM/7Ex0DDizFDxqU8640VxM9c/oDBkur5ttY+A6/zkQmBOHOKZY46us24XHpuVEuJWRvjWeWNFiSNWeeXtR129szSg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=XJIBYniXpUCzyrUFd3bAOne8na5ALMbNtzQsfokP5bM=;
+ b=QjVYv74C9kmL8bq1vvKBQMA/c+6hKDCAFp2jhgpHY44guDhaHVqqbI0g8/aNhr16H3Z/MiXZoSqyfU/L2qaz49mUagSJYD9e/VZOggwDzyW0I6N8DVKStH8/5Iv6Fss0u1fIsdOwVtHWI70xcMyaAArJvVWJy1sKm5MswZBKjfYlsQhxwd7SWO/LasrAkOD99ErwAHbHRi3c/U08YIoHx9cKo/xmzIN0Z8C5S1bBQX2LAp9gauYJfUZpBoZgW6LZk9Fb4rq0zQ1xCY9nZRtuR3Xigtp7W2XKctyHjkaZr+0AIRmppBHIwh/QwI11T+JPpNwJ8dKNGhvLTBH2cACKvw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=XJIBYniXpUCzyrUFd3bAOne8na5ALMbNtzQsfokP5bM=;
+ b=j9q5geaRRB6teGWzurlZP4IX1cGmOOR5b06b+oDWvnbA0+vSPz/0R0uHJyyS1wRhJKqrs4B7kFxufz4MRDKbxSgUKthCAxyj1mWWJuCcUPNgrBTjc/TUYFHIz/epKNHlH79IojSt35uHof1KRRrf0IEfK3B8masU9PjuF5yH07pTDv6KaalhkJshAr6iFcv2PZ+1CtumSXUY9lqjK1e5Asvu7is74DCqme/zj3q4NfgBLYdy/rM8DqNCt+FJWR7YJQHMAJ/GTDVRwOsPZl9NXw1M43lULv3EV9N/o0qBhAUGCtruDLcNWDVSK8zuZGPJ2BQOAzFXKyaUdPw3xmwgrA==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from LV8PR12MB9620.namprd12.prod.outlook.com (2603:10b6:408:2a1::19)
+ by CY1PR12MB9649.namprd12.prod.outlook.com (2603:10b6:930:106::15) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.339.8; Tue, 18 Aug
+ 2026 19:03:43 +0000
+Received: from LV8PR12MB9620.namprd12.prod.outlook.com
+ ([fe80::299d:f5e0:3550:1528]) by LV8PR12MB9620.namprd12.prod.outlook.com
+ ([fe80::299d:f5e0:3550:1528%4]) with mapi id 15.21.0339.007; Tue, 18 Aug 2026
+ 19:03:43 +0000
+Date: Tue, 18 Aug 2026 16:03:42 -0300
+From: Jason Gunthorpe <jgg@nvidia.com>
+To: Thomas =?utf-8?Q?Hellstr=C3=B6m?= <thomas.hellstrom@linux.intel.com>
+Cc: bhelgaas@google.com, iommu@lists.linux.dev, linux-pci@vger.kernel.org,
+	leonro@nvidia.com, hch@lst.de
+Subject: Re: PCI_P2PDMA_MAP_BUS_ADDR and PCIe ATS?
+Message-ID: <20260818190342.GA61595@nvidia.com>
+References: <bc44b89c7996c8417a2126ada2cbe7c7bfe7568f.camel@linux.intel.com>
+ <20260818124309.GA5432@nvidia.com>
+ <00455fb0f42ffe5335c4256618b66cded7c36a37.camel@linux.intel.com>
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <00455fb0f42ffe5335c4256618b66cded7c36a37.camel@linux.intel.com>
+X-ClientProxiedBy: YT3PR01CA0133.CANPRD01.PROD.OUTLOOK.COM
+ (2603:10b6:b01:83::10) To LV8PR12MB9620.namprd12.prod.outlook.com
+ (2603:10b6:408:2a1::19)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-X-Change-Id: 20260818-pcie-lmt-3044d586aaec
-X-Mailer: git-send-email 2.55.0.766.g2966f0265a-goog
-Message-ID: <20260818-pcie-lmt-v1-1-13716f446594@google.com>
-Subject: [PATCH] PCI/pcie: Add PCIe Lane Margining at Receiver (LMR) support
-From: Priyank Rathod <rathodpriyank@google.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Shuah Khan <shuah@kernel.org>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, 
-	linux-kselftest@vger.kernel.org, Priyank Rathod <rathodpriyank@google.com>
-Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: LV8PR12MB9620:EE_|CY1PR12MB9649:EE_
+X-MS-Office365-Filtering-Correlation-Id: 843c2eea-e0c5-43d9-9366-08defd5b6c79
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|1800799024|23010399003|376014|366016|18002099003|22082099003|56012099006|4143699003|11063799006|10067099003;
+X-Microsoft-Antispam-Message-Info:
+	CUlKYjeNj1jElNL0Y+orICxGYjpMypYb9Hl3dX8v7pDf9st2pWkTAuIAAjfluIqj7rlR1MRM1WQrtoZWMrxfYOM1DXNV9+X4D1/jLsiUFcHaLkp6iolOUwl5c3GqZS/GpodgpkMhkCI0iq7cap1UWdtm+lgbnm2+pym6YhWtPlV3mA/DVQcGgNgxqVX6vNXyi0XuLYwHyqZJO/BoY35WMdTNC38Zka2TkgUKCIGhuBW2iTRkT0n9qf32rG89xGg/jw/07yOIrfeA6+gpDaAhhNzK7n1U084OtDxMtoKlPSYm/x+9FKBq59EH3T9odhXiy4MHgk4mvI5S3xatxNINCdowY1Onxm+0UWizhOWvnWtbtwmSMd4VQoXo40Emg8BqBeKirLMnyEVcKZui+T+ljQ8cpc0kfmLNxiUWva2LqXwOU8YZqEUmw2xCTc9Wniv0feqjWrkIg5Rwf4tv84b0GTG7xJ/DocA1qD/zc23TTUe8cbpzAKd8moGu4/61pkX80DyjqaLgz7DQXvouEjCN0VzG2VAYlvj5aBIWkYkmBoII0Wn4Dkol64otUf3nBXVw6AZhXsX3gFu1bleGW4AFUuzZ+/JB8jzdrGw29hLSKA3jHpNsjAEh/zgLl8zWlaUNR8ArgmGIhTY5H16/RrRBnxhQb8pNfrZIjOohGu7CGNQ=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LV8PR12MB9620.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(23010399003)(376014)(366016)(18002099003)(22082099003)(56012099006)(4143699003)(11063799006)(10067099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?d3VZcVkyeWxUY2l3REREK0VIUFNaK0pDMWtyOTVOZFliajZUUm1OTXc1VjYx?=
+ =?utf-8?B?OFBqQ29PWFRDVk5oZlFPTXFVczlsMHVzUFkwdGpUeXpuV083ekRkSE9vcU51?=
+ =?utf-8?B?K2t0M2c0M2grb2RCeWt3bGhnVEM4Y21RVVFvWTNtTUFOY0g3WHdBaHJJTzNK?=
+ =?utf-8?B?MGo1ekxJZWtreVo5NW90NlpDV3Y4a3c3Tkt6Y0pVclo1akVSei9tQ1RqY2F0?=
+ =?utf-8?B?Sit6Ny8xK2oyMENWbjF6bTV1c215VnVkbzNOUlJETzVCejBTNWI0bU0ya0p4?=
+ =?utf-8?B?TjQ3Ym5PSTdudEE4VjNBN2hDOEUwRTkremF6T3ZtWUFWaGhHRys1MWRQMTRk?=
+ =?utf-8?B?MHZKdkV5c2Y3OUM0em9lQ0lRMjJBMitveWtWQ1RLU3c0WkZiYzBVNlBjdUJB?=
+ =?utf-8?B?eExyVzF0aEpLQWExNm9RY0NLSk5nbmNIbjZ5RzROcnpGekZHRnBNZ3IyZVVq?=
+ =?utf-8?B?b1NZUHJ0WEdMUFpDNGwxV0VBSDJzUzVvRU1zQUIzbDFHMmswZWk2b0xiZ0Mx?=
+ =?utf-8?B?aFdLaTRyVkZiaFFkNy9QUCt1RW1rUEdhbjNzZ0pqRm94aHF4YzcvQVBQT0tr?=
+ =?utf-8?B?TTB1Sm5JTWlHTjBMYjhJVmUwVVBFai9rMDdNbzJwU1VnYlB5NU5CUGdvVzQ1?=
+ =?utf-8?B?cmwvck9zdzgvekNuVWhMUWZxaUo4QVF6L0o4V1hsbG4vQjVDbWVjMXBjQzBj?=
+ =?utf-8?B?eXJNclI2RXFvelNpdDdoTjRpNnZMVkZvSTRrSENMZlljaUhpb2toc1Iza3Yy?=
+ =?utf-8?B?Q3BWcU1ncnVscFUzWGllelJ6NzV6bVFiVDJzWmZ1eEcrNmNXS0Q5a0laZnJm?=
+ =?utf-8?B?S1hWVDhPRHNFaFZGbVlVUzZnWE14ZXJzTWh5WHdiK2M4N3lRem1OVnlBRS9q?=
+ =?utf-8?B?WDRYejdKRVgrK1p6bTlGYlREWmx6YzMrNlhUSzZ0ekVuaU5TTVZ5bEhoT3FV?=
+ =?utf-8?B?UjI1c2JaN2wvT3FhV01SbnFUclViY0ViVmpYb09PZ3BxWllBdkNFZy83M3ZY?=
+ =?utf-8?B?dE5UMGdJY0hEdXFKMldPMXhaUkhxSzBkSUtJZVlUMWJnTGNpZmRzTTVJMjM3?=
+ =?utf-8?B?Vm8xZWVCQnRPQVV4M1J6RXFGdHZGcGttMk5hT0tFR1prMHpsQnhucytCb1h2?=
+ =?utf-8?B?NFp5THhva0lXVWdQNVRoSmJMN0c2ZDltWXEza0tzSGQraWtFTXQ5V1I0by9X?=
+ =?utf-8?B?d2lHSU4wTEliU2lJMHZlb203L2cyNW5oK1Vnd0xHVVhpOTZJN2xQaXBFRmhF?=
+ =?utf-8?B?WEd4WDNHcmViZFhLN25yM29HZlJobkxXWTR5Y1YzaVlaMlgvSW52WHRSV3Zp?=
+ =?utf-8?B?clJXeDNKSmo4M2lUN2hBOGxZSDdlMDRKM2JZVFVYeFFRQ2g1c1drbkUrUmQ1?=
+ =?utf-8?B?cXpYc1l0cGFvRjlmNW5US0NNczVyWHlpTE5JRUEzVDhLdmVwT3FQRFhYQlgw?=
+ =?utf-8?B?MG9Vc3QvbkJNTWJwamc3OU9uNnNiNEVQdzdYbFpHaWhwQWFpMTZTMEQ0TllQ?=
+ =?utf-8?B?aXNTVVJDa0NYdkxvcFo0VUs0TDR3K24rSUgxdHJvOEtXTjlUQ2JzWkJtYkt1?=
+ =?utf-8?B?am5DQ2VBL3A5aGFSMVgreEp5bjcvUnIyRDZuOFRUVEVXZnZiajhneGJFTGU2?=
+ =?utf-8?B?ZDFwRGhZa2FkME9hSkxWdUFkSm9xa0xQaFIzaUVYdHQrWmt4LzBRWVBMMCs0?=
+ =?utf-8?B?aTREN1BFeHFHZGhrcGFQNC9EZVkveEYrbHVkN3c0U2xCTy9LMFMwVEkvWVhU?=
+ =?utf-8?B?ZDVlU1BCVW5XbWVVZVZieFIwWXdxV0JsRmY0bFk2aVdLTkZvTVFFZWx1NVpM?=
+ =?utf-8?B?TWVhb0VtVHc0cGNLcEVpQkN3ZmJWQVNzREhCTUt5RnhWbW5Ya3EvalZiNjVs?=
+ =?utf-8?B?REtHc3dxbG9mSWhTcUhBWFgrcy84WGw5TVV5U0YwS3hFcmtSNFNUblg3Z0J3?=
+ =?utf-8?B?NXIxTkhRZjBjV0dtQjhFeXp5TnFjMFg0bU5aWVhPcVl6eWFuNFNBT1JTMVFm?=
+ =?utf-8?B?NXJUWFZaTTBrUk9oTXh1WjFJZS9RY0hLVXEycFFWSVdSZlB5bi85V29NNTRC?=
+ =?utf-8?B?SjNwWk9DM2wxTXBQZ0owREJxL2taUm43Y29XeVZYZmdmWWY1MlVjNFJKOGJa?=
+ =?utf-8?B?UTdvNVBoY2RSdUJ3WGFhMU9GNnp0NDdLeENnamFpZmFQNFVUWm5rWVNIOXdI?=
+ =?utf-8?B?ZFMrOUZrVmtyVXl4VnllaU8xR05zemo5UGh6VFY2OEc0QVZlQkZzKzEyeE5S?=
+ =?utf-8?B?Z1hYRkE3Nmt3clJlZDIxM3oxS0FXR1c1bCtwa0kxRDRhNlRMWnhoS0FMelJG?=
+ =?utf-8?Q?FuOLaams4qxKCe2MJE?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 843c2eea-e0c5-43d9-9366-08defd5b6c79
+X-MS-Exchange-CrossTenant-AuthSource: LV8PR12MB9620.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 18 Aug 2026 19:03:43.8048
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: yui4jCuxm7ZWpmO4ZtRpp5WF+WtHQraRQoemkao73hcFhhUor8fL5Xyw5Ky+BZq2
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY1PR12MB9649
 
-Per PCIe Base Specification r6.0, sec 8.4.4 ("Lane Margining at
-Receiver"), PCIe devices operating at 16.0 GT/s (Gen 4) or higher data
-rates support the Lane Margining at Receiver Extended Capability
-(ID 0x27), and it is mandatory for receivers operating at 64.0 GT/s
-(Gen 6) or higher data rates. Lane Margining allows software to
-evaluate high-speed link margins by measuring timing and voltage steps
-for each individual physical lane and receiver.
+On Tue, Aug 18, 2026 at 05:20:51PM +0200, Thomas Hellström wrote:
 
-Add driver and debugfs support for PCIe Lane Margining at Receiver:
+> From my understanding, ATS translated requests would use the fast-path
+> as soon as a translation is established in the device, without the BUS
+> address being explicitly programmed. ACS redirect would block that. 
 
-  - Add Lane Margining at Receiver Extended Capability register
-    definitions (PCI_EXT_CAP_ID_LMR, PCI_LMR_PORT_CAP, PCI_LMR_PORT_STS,
-    PCI_LMR_LANE_CTRL, PCI_LMR_LANE_STS) to <uapi/linux/pci_regs.h>.
-  - Add Kconfig option CONFIG_PCIE_LMR (under drivers/pci/pcie/Kconfig)
-    dependent on DEBUG_FS.
-  - Implement drivers/pci/pcie/margin.c to probe the capability on Gen4+
-    links and expose per-device debugfs entries under:
-      /sys/kernel/debug/pci/pcie_lmr_<pci_dev_name>/
-    providing control over margining enablement, receiver selection, and
-    execution of timing/voltage margin step commands. Distinguish
-    between missing mandatory LMR capability on Gen6+ vs optional on
-    Gen4/Gen5.
-  - Hook pci_lmr_init() into pci_init_capabilities() during device probe
-    in drivers/pci/probe.c and pci_lmr_exit() into drivers/pci/remove.c.
-  - Add kselftest script under tools/testing/selftests/pcie_lmt/pcie_lmt.sh
-    to test debugfs capability reads, enablement, and stepping.
+Oh it's super complex. There are seperate ACS bits for translated and
+untranslated requests. You need a PCI expert to design your fabric and
+devices to get a working system unfortunately.
 
-Signed-off-by: Priyank Rathod <rathodpriyank@google.com>
----
-Per PCIe Base Specification r6.0, section 8.4.4 ("Lane Margining at Receiver"),
-PCIe devices operating at 16.0 GT/s (Gen 4) or higher data rates support the
-Lane Margining at Receiver Extended Capability (ID 0x27), and it is mandatory
-for receivers operating at 64.0 GT/s (Gen 6) or higher data rates.
+If you use ATS and don't set the ACS to route all translations to host
+then your IOVA space is no longer uniform, you have different results
+depending on which fabric route you take. That's a pretty unreasonable
+fabric design, and can't work securely with virtualization.
 
-Lane Margining allows system software to evaluate high-speed link signal
-integrity and margins by measuring timing and voltage steps for each physical
-lane and receiver independently.
+> So wouldn't it be better to be safe than sorry and return a host bridge
+> map and make something usable and potentially fast out of something
+> currently unusable?
 
-This series introduces kernel driver support, debugfs controls, and a
-kselftest automation script for PCIe Lane Margining at Receiver (LMR/LMT).
+What we have today works for lots of devices and if you change it like
+this then you'll break existing users.
 
-==============================================================================
-1. How to Enable & Configure
-==============================================================================
-Enable the Kconfig option under PCI support:
-  CONFIG_PCIE_LMR=y (or =m)
-  (Depends on CONFIG_PCI and CONFIG_DEBUG_FS)
+Probably what you want to do is add a flag that the device is going to
+use ATS for the P2P DMA. Then we can force setup an IOVA and check the
+fabric path for translated request routing to make sure it will work.
 
-Upon boot or device hotplug on Gen4+ links (>= 16.0 GT/s), the driver probes
-Extended Capability ID 0x27 and exposes per-device debugfs interfaces:
-  /sys/kernel/debug/pci/pcie_lmr_<domain>:<bus>:<dev>.<func>/
+And yes, there is an existing issue with DMABUF not being able to
+negotiate these little pathing details with the importer when the
+exporter forms the scatterlist..
 
-==============================================================================
-2. How to Use the Debugfs Interface (Manual Margining)
-==============================================================================
-Inspect device-wide margining capabilities and port status:
-  # Inspect root device LMR capabilities & status
-  cat /sys/kernel/debug/pci/pcie_lmr_0000:01:00.0/capabilities
-  cat /sys/kernel/debug/pci/pcie_lmr_0000:01:00.0/port_status
-
-Enable active Lane Margining on the device:
-  # Enable Lane Margining state machine
-  echo 1 > /sys/kernel/debug/pci/pcie_lmr_0000:01:00.0/enable
-
-Inspect and step individual lanes (e.g. lane0):
-  # Select target receiver (0 = local receiver, 1..6 = retimers/link partners)
-  echo 0 > /sys/kernel/debug/pci/pcie_lmr_0000:01:00.0/lane0/receiver
-
-  # Check available timing and voltage steps for this receiver
-  cat /sys/kernel/debug/pci/pcie_lmr_0000:01:00.0/lane0/caps
-  cat /sys/kernel/debug/pci/pcie_lmr_0000:01:00.0/lane0/num_timing_steps
-  cat /sys/kernel/debug/pci/pcie_lmr_0000:01:00.0/lane0/num_voltage_steps
-
-  # Step timing margin or voltage margin offset
-  echo 2 > /sys/kernel/debug/pci/pcie_lmr_0000:01:00.0/lane0/margin_timing
-  echo 1 > /sys/kernel/debug/pci/pcie_lmr_0000:01:00.0/lane0/margin_voltage
-
-  # Reset margin offset back to nominal (0)
-  echo 0 > /sys/kernel/debug/pci/pcie_lmr_0000:01:00.0/lane0/margin_timing
-  echo 0 > /sys/kernel/debug/pci/pcie_lmr_0000:01:00.0/lane0/margin_voltage
-
-Disable Lane Margining when finished:
-  echo 0 > /sys/kernel/debug/pci/pcie_lmr_0000:01:00.0/enable
-
-==============================================================================
-3. How to Run Automated Kselftests Using the Test Script
-==============================================================================
-An automated kselftest script is included to test capability reads, receiver
-selection, and margining commands across all enumerated LMR devices:
-
-  # Run directly as root
-  sudo ./tools/testing/selftests/pcie_lmt/pcie_lmt.sh
-
-Or run via the kselftest Makefile harness:
-  make -C tools/testing/selftests TARGETS=pcie_lmt run_tests
-
-Sample script output on an LMR-capable device:
-  pcie_lmt: testing PCIe LMR debugfs entries
-  pcie_lmt: probing device pcie_lmr_0000:01:00.0
-    pcie_lmr_0000:01:00.0: capabilities read OK
-    pcie_lmr_0000:01:00.0: port_status read OK
-    pcie_lmr_0000:01:00.0: margining enabled OK
-    pcie_lmr_0000:01:00.0: testing lane0
-    pcie_lmr_0000:01:00.0: testing lane1
-    pcie_lmr_0000:01:00.0: margining disabled OK
-  pcie_lmt [PASS]
----
- drivers/pci/pci.h                            |   8 +
- drivers/pci/pcie/Kconfig                     |  12 +
- drivers/pci/pcie/Makefile                    |   1 +
- drivers/pci/pcie/margin.c                    | 673 +++++++++++++++++++++++++++
- drivers/pci/probe.c                          |   1 +
- drivers/pci/remove.c                         |   1 +
- include/linux/pci.h                          |   6 +
- include/uapi/linux/pci_regs.h                |  19 +
- tools/testing/selftests/Makefile             |   1 +
- tools/testing/selftests/pcie_lmt/Makefile    |   3 +
- tools/testing/selftests/pcie_lmt/pcie_lmt.sh | 105 +++++
- 11 files changed, 830 insertions(+)
-
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 4469e1a77f3c..c3449c6a5b79 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -1023,6 +1023,14 @@ static inline void pci_no_tph(void) { }
- static inline void pci_tph_init(struct pci_dev *dev) { }
- #endif
- 
-+#ifdef CONFIG_PCIE_LMR
-+void pci_lmr_init(struct pci_dev *dev);
-+void pci_lmr_exit(struct pci_dev *dev);
-+#else
-+static inline void pci_lmr_init(struct pci_dev *dev) { }
-+static inline void pci_lmr_exit(struct pci_dev *dev) { }
-+#endif
-+
- #ifdef CONFIG_PCIE_PTM
- void pci_ptm_init(struct pci_dev *dev);
- void pci_save_ptm_state(struct pci_dev *dev);
-diff --git a/drivers/pci/pcie/Kconfig b/drivers/pci/pcie/Kconfig
-index 207c2deae35f..3b021ca2fe84 100644
---- a/drivers/pci/pcie/Kconfig
-+++ b/drivers/pci/pcie/Kconfig
-@@ -137,6 +137,18 @@ config PCIE_PTM
- 	  This is only useful if you have devices that support PTM, but it
- 	  is safe to enable even if you don't.
- 
-+config PCIE_LMR
-+	bool "PCI Express Lane Margining at Receiver Support"
-+	depends on DEBUG_FS
-+	help
-+	  This enables the PCI Express Lane Margining at Receiver support.
-+	  Lane Margining allows software to determine the voltage and
-+	  timing margin of each lane on a PCIe link (16.0 GT/s and above).
-+	  The margining data is exposed via debugfs.
-+
-+	  This is only useful if you have devices that support lane
-+	  margining, but it is safe to enable even if you don't.
-+
- config PCIE_EDR
- 	bool "PCI Express Error Disconnect Recover support"
- 	depends on PCIE_DPC && ACPI
-diff --git a/drivers/pci/pcie/Makefile b/drivers/pci/pcie/Makefile
-index b0b43a18c304..aac45ae0402e 100644
---- a/drivers/pci/pcie/Makefile
-+++ b/drivers/pci/pcie/Makefile
-@@ -13,4 +13,5 @@ obj-$(CONFIG_PCIEAER_INJECT)	+= aer_inject.o
- obj-$(CONFIG_PCIE_PME)		+= pme.o
- obj-$(CONFIG_PCIE_DPC)		+= dpc.o
- obj-$(CONFIG_PCIE_PTM)		+= ptm.o
-+obj-$(CONFIG_PCIE_LMR)		+= margin.o
- obj-$(CONFIG_PCIE_EDR)		+= edr.o
-diff --git a/drivers/pci/pcie/margin.c b/drivers/pci/pcie/margin.c
-new file mode 100644
-index 000000000000..a1ccd473a407
---- /dev/null
-+++ b/drivers/pci/pcie/margin.c
-@@ -0,0 +1,673 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * PCI Express Lane Margining at Receiver
-+ *
-+ * Copyright (C) 2026 Google LLC
-+ * Author: Priyank Rathod <rathodpriyank@google.com>
-+ *
-+ * Lane Margining at Receiver (PCIe r6.0, sec 8.4.4) allows the software
-+ * to determine the voltage and timing margins of each lane on the PCIe
-+ * link. The extended capability (ID 0x27) is available for receivers
-+ * operating at 16.0 GT/s (Gen4) or higher data rates, and is mandatory
-+ * for receivers operating at 64.0 GT/s (Gen6) or higher data rates.
-+ *
-+ * This implementation exposes per-device debugfs entries to read the margining
-+ * capabilities and issues margining commands through custom file_ops.
-+ */
-+
-+#include <linux/pci.h>
-+#include <linux/slab.h>
-+#include <linux/mutex.h>
-+#include <linux/delay.h>
-+#include <linux/jiffies.h>
-+#include <linux/seq_file.h>
-+#include <linux/bitfield.h>
-+#include <linux/debugfs.h>
-+
-+#include "../pci.h"
-+
-+/* Margin type encodings per the PCIe spec */
-+#define LMR_TYPE_DEMARGIN               0x0
-+#define LMR_TYPE_REPORT_CAPS            0x1
-+#define LMR_TYPE_REPORT_VOLTAGE_STEPS   0x2
-+#define LMR_TYPE_REPORT_TIMING_STEPS    0x3
-+#define LMR_TYPE_TIMING                 0x4
-+#define LMR_TYPE_VOLTAGE                0x5
-+#define LMR_TYPE_NO_CMD                 0x7
-+
-+/* LMR command timing parameters */
-+#define LMR_CMD_TIMEOUT_MS              100
-+#define LMR_CMD_SLEEP_MIN_US            100
-+#define LMR_CMD_SLEEP_MAX_US            200
-+#define LMR_ENABLE_TIMEOUT_MS           100
-+#define LMR_ENABLE_SLEEP_MIN_US         1000
-+#define LMR_ENABLE_SLEEP_MAX_US         2000
-+
-+/* LMR limits */
-+#define LMR_MAX_LANES                   32
-+#define LMR_MAX_RX_NUM                  6
-+#define LMR_MAX_TIMING_STEP             63
-+#define LMR_MAX_VOLTAGE_STEP            127
-+
-+/* LMR PCIe generation numbers */
-+#define LMR_GEN6                        6
-+#define LMR_GEN5                        5
-+#define LMR_GEN4                        4
-+
-+/* LMR lane register stride */
-+#define LMR_LANE_REG_STRIDE             4
-+
-+/* LMR receivers and directions */
-+#define LMR_RX_LOCAL                    0
-+#define LMR_STEP_DIR_INCREASE           1
-+#define LMR_STEP_DIR_DECREASE           0
-+
-+/* LMR step & direction encoding masks */
-+#define LMR_STEPS_MASK                  0x7F
-+#define LMR_TIMING_STEP_MASK            0x3F
-+#define LMR_TIMING_DIR_SHIFT            6
-+#define LMR_VOLTAGE_STEP_MASK           0x7F
-+#define LMR_VOLTAGE_DIR_SHIFT           7
-+
-+/* LMR capabilities report bit fields */
-+#define LMR_CAP_MARGIN_HV               BIT(0)
-+#define LMR_CAP_MARGIN_EV_IV            BIT(1)
-+#define LMR_CAP_IND_LEFT_RIGHT_TIMING   BIT(2)
-+#define LMR_CAP_IND_UP_DOWN_VOLTAGE     BIT(3)
-+#define LMR_CAP_ERROR_SAMPLER           BIT(4)
-+#define LMR_CAP_SAMPLE_MULTIPLE_RX      BIT(5)
-+
-+struct pci_margin_lane {
-+	struct pci_margin_dev *mdev;
-+	int lane;
-+	u8 rx;
-+	int timing_val;
-+	int voltage_val;
-+};
-+
-+struct pci_margin_dev {
-+	struct pci_dev *dev;
-+	u16 cap;
-+	struct dentry *debugfs;
-+	struct mutex lock;
-+	int num_lanes;
-+	struct pci_margin_lane *lanes;
-+	bool enabled;
-+};
-+
-+static int pci_lmr_run_cmd(struct pci_dev *dev, int lane, u8 rx, u8 type,
-+			   u8 usage, u8 payload, u16 *status_val)
-+{
-+	u16 lmr = dev->lmr_cap;
-+	u16 ctrl_offset = lmr + PCI_LMR_LANE_CTRL + LMR_LANE_REG_STRIDE * lane;
-+	u16 sts_offset = lmr + PCI_LMR_LANE_STS + LMR_LANE_REG_STRIDE * lane;
-+	u16 ctrl, sts;
-+	unsigned long timeout;
-+
-+	ctrl = FIELD_PREP(PCI_LMR_LANE_CTRL_RX_NUM, rx) |
-+	       FIELD_PREP(PCI_LMR_LANE_CTRL_MTYPE, type) |
-+	       FIELD_PREP(PCI_LMR_LANE_CTRL_USAGE, usage) |
-+	       FIELD_PREP(PCI_LMR_LANE_CTRL_PAYLOAD, payload);
-+
-+	pci_write_config_word(dev, ctrl_offset, ctrl);
-+
-+	timeout = jiffies + msecs_to_jiffies(LMR_CMD_TIMEOUT_MS);
-+	while (1) {
-+		pci_read_config_word(dev, sts_offset, &sts);
-+		if (sts == 0xFFFF)
-+			return -ENODEV;
-+
-+		if (FIELD_GET(PCI_LMR_LANE_STS_MTYPE, sts) == type) {
-+			if (status_val)
-+				*status_val = sts;
-+			return 0;
-+		}
-+
-+		if (time_after(jiffies, timeout))
-+			break;
-+
-+		usleep_range(LMR_CMD_SLEEP_MIN_US, LMR_CMD_SLEEP_MAX_US);
-+	}
-+
-+	return -ETIMEDOUT;
-+}
-+
-+static int pci_lmr_run_cmd_locked(struct pci_margin_dev *mdev, int lane, u8 rx,
-+				  u8 type, u8 usage, u8 payload, u16 *status_val)
-+{
-+	int ret;
-+
-+	if (!mdev->enabled)
-+		return -EACCES;
-+
-+	mutex_lock(&mdev->lock);
-+	ret = pci_lmr_run_cmd(mdev->dev, lane, rx, type, usage, payload, status_val);
-+	mutex_unlock(&mdev->lock);
-+
-+	return ret;
-+}
-+
-+#if IS_ENABLED(CONFIG_DEBUG_FS)
-+
-+static int margin_caps_show(struct seq_file *s, void *v)
-+{
-+	struct pci_margin_dev *mdev = s->private;
-+	struct pci_dev *dev = mdev->dev;
-+	u16 cap;
-+
-+	pci_read_config_word(dev, mdev->cap + PCI_LMR_PORT_CAP, &cap);
-+	seq_printf(s, "Port Capabilities: %#06x\n", cap);
-+	seq_printf(s, "  Margining Ready: %s\n",
-+		   (cap & PCI_LMR_PORT_CAP_MARGIN_READY) ? "yes" : "no");
-+	seq_printf(s, "  SW Ready Required: %s\n",
-+		   (cap & PCI_LMR_PORT_CAP_SW_READY) ? "yes" : "no");
-+	return 0;
-+}
-+DEFINE_SHOW_ATTRIBUTE(margin_caps);
-+
-+static int margin_port_status_show(struct seq_file *s, void *v)
-+{
-+	struct pci_margin_dev *mdev = s->private;
-+	struct pci_dev *dev = mdev->dev;
-+	u16 sts;
-+
-+	pci_read_config_word(dev, mdev->cap + PCI_LMR_PORT_STS, &sts);
-+	seq_printf(s, "Port Status: %#06x\n", sts);
-+	seq_printf(s, "  Margining Ready: %s\n",
-+		   (sts & PCI_LMR_PORT_STS_MARGIN_READY) ? "yes" : "no");
-+	seq_printf(s, "  SW Ready: %s\n", (sts & PCI_LMR_PORT_STS_SW_READY) ? "yes" : "no");
-+	return 0;
-+}
-+DEFINE_SHOW_ATTRIBUTE(margin_port_status);
-+
-+static int margin_enable_show(struct seq_file *s, void *v)
-+{
-+	struct pci_margin_dev *mdev = s->private;
-+
-+	seq_printf(s, "%d\n", mdev->enabled);
-+	return 0;
-+}
-+
-+static ssize_t margin_enable_write(struct file *file, const char __user *user_buf,
-+			       size_t count, loff_t *ppos)
-+{
-+	struct pci_margin_dev *mdev = ((struct seq_file *)file->private_data)->private;
-+	struct pci_dev *dev = mdev->dev;
-+	unsigned long timeout;
-+	bool enable;
-+	int ret, i;
-+	u16 sts, cap;
-+
-+	ret = kstrtobool_from_user(user_buf, count, &enable);
-+	if (ret)
-+		return ret;
-+
-+	mutex_lock(&mdev->lock);
-+
-+	if (mdev->enabled == enable)
-+		goto out;
-+
-+	if (enable) {
-+		pci_read_config_word(dev, mdev->cap + PCI_LMR_PORT_CAP, &cap);
-+
-+		pci_read_config_word(dev, mdev->cap + PCI_LMR_PORT_STS, &sts);
-+		sts |= PCI_LMR_PORT_STS_SW_READY;
-+		pci_write_config_word(dev, mdev->cap + PCI_LMR_PORT_STS, sts);
-+
-+		timeout = jiffies + msecs_to_jiffies(LMR_ENABLE_TIMEOUT_MS);
-+		while (1) {
-+			pci_read_config_word(dev, mdev->cap + PCI_LMR_PORT_STS, &sts);
-+			if (sts == 0xFFFF) {
-+				ret = -ENODEV;
-+				goto out;
-+			}
-+			if (sts & PCI_LMR_PORT_STS_MARGIN_READY)
-+				break;
-+			if (time_after(jiffies, timeout)) {
-+				ret = -ETIMEDOUT;
-+				sts &= ~PCI_LMR_PORT_STS_SW_READY;
-+				pci_write_config_word(dev, mdev->cap + PCI_LMR_PORT_STS, sts);
-+				goto out;
-+			}
-+			usleep_range(LMR_ENABLE_SLEEP_MIN_US, LMR_ENABLE_SLEEP_MAX_US);
-+		}
-+		mdev->enabled = true;
-+	} else {
-+		pci_read_config_word(dev, mdev->cap + PCI_LMR_PORT_STS, &sts);
-+		sts &= ~PCI_LMR_PORT_STS_SW_READY;
-+		pci_write_config_word(dev, mdev->cap + PCI_LMR_PORT_STS, sts);
-+
-+		for (i = 0; i < mdev->num_lanes; i++) {
-+			mdev->lanes[i].timing_val = 0;
-+			mdev->lanes[i].voltage_val = 0;
-+		}
-+		mdev->enabled = false;
-+	}
-+
-+out:
-+	mutex_unlock(&mdev->lock);
-+	return ret ? ret : count;
-+}
-+
-+static int margin_enable_open(struct inode *inode, struct file *file)
-+{
-+	return single_open(file, margin_enable_show, inode->i_private);
-+}
-+
-+static const struct file_operations margin_enable_fops = {
-+	.open = margin_enable_open,
-+	.read = seq_read,
-+	.write = margin_enable_write,
-+	.llseek = seq_lseek,
-+	.release = single_release,
-+};
-+
-+static int margin_lane_receiver_show(struct seq_file *s, void *v)
-+{
-+	struct pci_margin_lane *plane = s->private;
-+
-+	seq_printf(s, "%d\n", plane->rx);
-+	return 0;
-+}
-+
-+static ssize_t margin_lane_receiver_write(struct file *file, const char __user *user_buf,
-+				      size_t count, loff_t *ppos)
-+{
-+	struct pci_margin_lane *plane = ((struct seq_file *)file->private_data)->private;
-+	u8 rx;
-+	int ret;
-+
-+	ret = kstrtou8_from_user(user_buf, count, 0, &rx);
-+	if (ret)
-+		return ret;
-+
-+	if (rx > LMR_MAX_RX_NUM)
-+		return -EINVAL;
-+
-+	plane->rx = rx;
-+	return count;
-+}
-+
-+static int margin_lane_receiver_open(struct inode *inode, struct file *file)
-+{
-+	return single_open(file, margin_lane_receiver_show, inode->i_private);
-+}
-+
-+static const struct file_operations margin_lane_receiver_fops = {
-+	.open = margin_lane_receiver_open,
-+	.read = seq_read,
-+	.write = margin_lane_receiver_write,
-+	.llseek = seq_lseek,
-+	.release = single_release,
-+};
-+
-+static int margin_lane_caps_show(struct seq_file *s, void *v)
-+{
-+	struct pci_margin_lane *plane = s->private;
-+	struct pci_margin_dev *mdev = plane->mdev;
-+	u16 sts;
-+	int ret;
-+	u8 val;
-+
-+	ret = pci_lmr_run_cmd_locked(mdev, plane->lane, plane->rx,
-+				     LMR_TYPE_REPORT_CAPS, 0, 0, &sts);
-+	if (ret)
-+		return ret;
-+
-+	val = FIELD_GET(PCI_LMR_LANE_STS_PAYLOAD, sts);
-+	seq_printf(s, "Lane %d Rx %d Capabilities: %#02x\n", plane->lane, plane->rx, val);
-+	seq_printf(s, "  Margining H/V: %s\n", (val & LMR_CAP_MARGIN_HV) ? "both" : "either");
-+	seq_printf(s, "  Margining eV/iV: %s\n",
-+		   (val & LMR_CAP_MARGIN_EV_IV) ? "both (close & open)" : "one (close only)");
-+	seq_printf(s, "  Left/Right: %s\n", (val & LMR_CAP_IND_LEFT_RIGHT_TIMING) ? "both" : "one");
-+	seq_printf(s, "  Up/Down: %s\n", (val & LMR_CAP_IND_UP_DOWN_VOLTAGE) ? "both" : "one");
-+	seq_printf(s, "  Error Sampler: %s\n",
-+		   (val & LMR_CAP_ERROR_SAMPLER) ? "yes" : "no (main sampler)");
-+	seq_printf(s, "  Sample Multiple Receivers: %s\n",
-+		   (val & LMR_CAP_SAMPLE_MULTIPLE_RX) ? "yes" : "no");
-+
-+	return 0;
-+}
-+DEFINE_SHOW_ATTRIBUTE(margin_lane_caps);
-+
-+static int margin_lane_timing_steps_show(struct seq_file *s, void *v)
-+{
-+	struct pci_margin_lane *plane = s->private;
-+	struct pci_margin_dev *mdev = plane->mdev;
-+	u16 sts;
-+	int ret;
-+	u8 val;
-+
-+	ret = pci_lmr_run_cmd_locked(mdev, plane->lane, plane->rx,
-+				     LMR_TYPE_REPORT_TIMING_STEPS, 0, 0, &sts);
-+	if (ret)
-+		return ret;
-+
-+	val = FIELD_GET(PCI_LMR_LANE_STS_PAYLOAD, sts) & LMR_STEPS_MASK;
-+	seq_printf(s, "%d\n", val);
-+	return 0;
-+}
-+DEFINE_SHOW_ATTRIBUTE(margin_lane_timing_steps);
-+
-+static int margin_lane_voltage_steps_show(struct seq_file *s, void *v)
-+{
-+	struct pci_margin_lane *plane = s->private;
-+	struct pci_margin_dev *mdev = plane->mdev;
-+	u16 sts;
-+	int ret;
-+	u8 val;
-+
-+	ret = pci_lmr_run_cmd_locked(mdev, plane->lane, plane->rx,
-+				     LMR_TYPE_REPORT_VOLTAGE_STEPS, 0, 0, &sts);
-+	if (ret)
-+		return ret;
-+
-+	val = FIELD_GET(PCI_LMR_LANE_STS_PAYLOAD, sts) & LMR_STEPS_MASK;
-+
-+	seq_printf(s, "%d\n", val);
-+	return 0;
-+}
-+DEFINE_SHOW_ATTRIBUTE(margin_lane_voltage_steps);
-+
-+static ssize_t margin_lane_timing_write(struct file *file, const char __user *user_buf,
-+				    size_t count, loff_t *ppos)
-+{
-+	struct pci_margin_lane *plane = ((struct seq_file *)file->private_data)->private;
-+	struct pci_margin_dev *mdev = plane->mdev;
-+	int val, ret;
-+	u8 step, dir;
-+	u16 sts;
-+	u8 caps;
-+
-+	ret = kstrtoint_from_user(user_buf, count, 0, &val);
-+	if (ret)
-+		return ret;
-+
-+	if (!mdev->enabled)
-+		return -EACCES;
-+
-+	mutex_lock(&mdev->lock);
-+
-+	if (val == 0) {
-+		ret = pci_lmr_run_cmd(mdev->dev, plane->lane, plane->rx,
-+				      LMR_TYPE_DEMARGIN, 0, 0, &sts);
-+		if (ret)
-+			goto out;
-+		plane->timing_val = 0;
-+		plane->voltage_val = 0;
-+		goto out;
-+	}
-+
-+	ret = pci_lmr_run_cmd(mdev->dev, plane->lane, plane->rx, LMR_TYPE_REPORT_CAPS, 0, 0, &sts);
-+	if (ret)
-+		goto out;
-+	caps = FIELD_GET(PCI_LMR_LANE_STS_PAYLOAD, sts);
-+
-+	if (val < 0) {
-+		step = -val;
-+		dir = LMR_STEP_DIR_DECREASE;
-+	} else {
-+		step = val;
-+		dir = LMR_STEP_DIR_INCREASE;
-+		if (!(caps & LMR_CAP_IND_LEFT_RIGHT_TIMING)) {
-+			ret = -EINVAL;
-+			goto out;
-+		}
-+	}
-+
-+	if (step > LMR_MAX_TIMING_STEP) {
-+		ret = -EINVAL;
-+		goto out;
-+	}
-+
-+	ret = pci_lmr_run_cmd(mdev->dev, plane->lane, plane->rx,
-+			      LMR_TYPE_TIMING, 0,
-+			      (step & LMR_TIMING_STEP_MASK) | (dir << LMR_TIMING_DIR_SHIFT), &sts);
-+	if (ret)
-+		goto out;
-+
-+	plane->timing_val = val;
-+
-+out:
-+	mutex_unlock(&mdev->lock);
-+	return ret ? ret : count;
-+}
-+
-+static int margin_lane_timing_show(struct seq_file *s, void *v)
-+{
-+	struct pci_margin_lane *plane = s->private;
-+
-+	seq_printf(s, "%d\n", plane->timing_val);
-+	return 0;
-+}
-+
-+static int margin_lane_timing_open(struct inode *inode, struct file *file)
-+{
-+	return single_open(file, margin_lane_timing_show, inode->i_private);
-+}
-+
-+static const struct file_operations margin_lane_timing_fops = {
-+	.open = margin_lane_timing_open,
-+	.read = seq_read,
-+	.write = margin_lane_timing_write,
-+	.llseek = seq_lseek,
-+	.release = single_release,
-+};
-+
-+static ssize_t margin_lane_voltage_write(struct file *file, const char __user *user_buf,
-+				     size_t count, loff_t *ppos)
-+{
-+	struct pci_margin_lane *plane = ((struct seq_file *)file->private_data)->private;
-+	struct pci_margin_dev *mdev = plane->mdev;
-+	int val, ret;
-+	u8 step, dir;
-+	u16 sts;
-+	u8 caps;
-+
-+	ret = kstrtoint_from_user(user_buf, count, 0, &val);
-+	if (ret)
-+		return ret;
-+
-+	if (!mdev->enabled)
-+		return -EACCES;
-+
-+	mutex_lock(&mdev->lock);
-+
-+	if (val == 0) {
-+		ret = pci_lmr_run_cmd(mdev->dev, plane->lane, plane->rx,
-+				      LMR_TYPE_DEMARGIN, 0, 0, &sts);
-+		if (ret)
-+			goto out;
-+		plane->timing_val = 0;
-+		plane->voltage_val = 0;
-+		goto out;
-+	}
-+
-+	ret = pci_lmr_run_cmd(mdev->dev, plane->lane, plane->rx, LMR_TYPE_REPORT_CAPS, 0, 0, &sts);
-+	if (ret)
-+		goto out;
-+	caps = FIELD_GET(PCI_LMR_LANE_STS_PAYLOAD, sts);
-+
-+	if (val < 0) {
-+		step = -val;
-+		dir = 0;
-+	} else {
-+		step = val;
-+		dir = 1;
-+		if (!(caps & LMR_CAP_IND_UP_DOWN_VOLTAGE)) {
-+			ret = -EINVAL;
-+			goto out;
-+		}
-+	}
-+
-+	if (step > LMR_MAX_VOLTAGE_STEP) {
-+		ret = -EINVAL;
-+		goto out;
-+	}
-+
-+	ret = pci_lmr_run_cmd(mdev->dev, plane->lane, plane->rx,
-+			      LMR_TYPE_VOLTAGE, 0,
-+			      (step & LMR_VOLTAGE_STEP_MASK) |
-+			      (dir << LMR_VOLTAGE_DIR_SHIFT), &sts);
-+	if (ret)
-+		goto out;
-+
-+	plane->voltage_val = val;
-+
-+out:
-+	mutex_unlock(&mdev->lock);
-+	return ret ? ret : count;
-+}
-+
-+static int margin_lane_voltage_show(struct seq_file *s, void *v)
-+{
-+	struct pci_margin_lane *plane = s->private;
-+
-+	seq_printf(s, "%d\n", plane->voltage_val);
-+	return 0;
-+}
-+
-+static int margin_lane_voltage_open(struct inode *inode, struct file *file)
-+{
-+	return single_open(file, margin_lane_voltage_show, inode->i_private);
-+}
-+
-+static const struct file_operations margin_lane_voltage_fops = {
-+	.open = margin_lane_voltage_open,
-+	.read = seq_read,
-+	.write = margin_lane_voltage_write,
-+	.llseek = seq_lseek,
-+	.release = single_release,
-+};
-+
-+static void pci_margin_debugfs_init(struct pci_margin_dev *mdev)
-+{
-+	struct pci_dev *dev = mdev->dev;
-+	char dirname[64];
-+	int i;
-+
-+	snprintf(dirname, sizeof(dirname), "pcie_lmr_%s", dev_name(&dev->dev));
-+	mdev->debugfs = debugfs_create_dir(dirname, NULL);
-+	if (!mdev->debugfs)
-+		return;
-+
-+	debugfs_create_file("capabilities", 0444, mdev->debugfs, mdev, &margin_caps_fops);
-+	debugfs_create_file("port_status", 0444, mdev->debugfs, mdev, &margin_port_status_fops);
-+	debugfs_create_file("enable", 0644, mdev->debugfs, mdev, &margin_enable_fops);
-+
-+	for (i = 0; i < mdev->num_lanes; i++) {
-+		struct pci_margin_lane *plane = &mdev->lanes[i];
-+		struct dentry *lane_dir;
-+		char lane_name[16];
-+
-+		snprintf(lane_name, sizeof(lane_name), "lane%d", i);
-+		lane_dir = debugfs_create_dir(lane_name, mdev->debugfs);
-+		if (!lane_dir)
-+			continue;
-+
-+		debugfs_create_file("receiver", 0644, lane_dir, plane, &margin_lane_receiver_fops);
-+		debugfs_create_file("caps", 0444, lane_dir, plane, &margin_lane_caps_fops);
-+		debugfs_create_file("num_timing_steps", 0444, lane_dir, plane,
-+				    &margin_lane_timing_steps_fops);
-+		debugfs_create_file("num_voltage_steps", 0444, lane_dir, plane,
-+				    &margin_lane_voltage_steps_fops);
-+		debugfs_create_file("margin_timing", 0644, lane_dir, plane,
-+				    &margin_lane_timing_fops);
-+		debugfs_create_file("margin_voltage", 0644, lane_dir, plane,
-+				    &margin_lane_voltage_fops);
-+	}
-+}
-+
-+static void pci_margin_debugfs_remove(struct pci_margin_dev *mdev)
-+{
-+	debugfs_remove_recursive(mdev->debugfs);
-+}
-+
-+#else
-+static inline void pci_margin_debugfs_init(struct pci_margin_dev *mdev) { }
-+static inline void pci_margin_debugfs_remove(struct pci_margin_dev *mdev) { }
-+#endif
-+
-+void pci_lmr_init(struct pci_dev *dev)
-+{
-+	struct pci_margin_dev *mdev;
-+	enum pci_bus_speed speed;
-+	u16 lmr;
-+	u16 lnkcap;
-+	int i;
-+
-+	if (!pci_is_pcie(dev))
-+		return;
-+
-+	speed = pcie_get_speed_cap(dev);
-+
-+	lmr = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_LMR);
-+	if (!lmr) {
-+		if (speed >= PCIE_SPEED_64_0GT)
-+			pci_warn(dev,
-+				 "Missing Lane Margining at Receiver Capability (mandatory for Gen6+)\n");
-+		else if (speed >= PCIE_SPEED_16_0GT)
-+			pci_dbg(dev,
-+				"Optional Lane Margining at Receiver Capability not found\n");
-+		return;
-+	}
-+
-+	if (speed < PCIE_SPEED_16_0GT && speed != PCI_SPEED_UNKNOWN)
-+		return;
-+
-+	dev->lmr_cap = lmr;
-+
-+	mdev = kzalloc_obj(*mdev, GFP_KERNEL);
-+	if (!mdev)
-+		return;
-+
-+	mdev->dev = dev;
-+	mdev->cap = lmr;
-+	mutex_init(&mdev->lock);
-+
-+	pcie_capability_read_word(dev, PCI_EXP_LNKCAP, &lnkcap);
-+	mdev->num_lanes = FIELD_GET(PCI_EXP_LNKCAP_MLW, lnkcap);
-+
-+	if (mdev->num_lanes == 0 || mdev->num_lanes > LMR_MAX_LANES) {
-+		pci_warn(dev, "Invalid link width %d for LMR\n", mdev->num_lanes);
-+		goto err_free_mdev;
-+	}
-+
-+	mdev->lanes = kcalloc(mdev->num_lanes, sizeof(*mdev->lanes), GFP_KERNEL);
-+	if (!mdev->lanes)
-+		goto err_free_mdev;
-+
-+	for (i = 0; i < mdev->num_lanes; i++) {
-+		mdev->lanes[i].mdev = mdev;
-+		mdev->lanes[i].lane = i;
-+		mdev->lanes[i].rx = LMR_RX_LOCAL;
-+	}
-+
-+	pci_margin_debugfs_init(mdev);
-+
-+	dev->lmr = mdev;
-+
-+	pci_info(dev, "Lane Margining at Receiver (Gen%u) Capability detected\n",
-+		 speed >= PCIE_SPEED_64_0GT ? LMR_GEN6 :
-+		 speed >= PCIE_SPEED_32_0GT ? LMR_GEN5 :
-+		 LMR_GEN4);
-+	return;
-+
-+err_free_mdev:
-+	mutex_destroy(&mdev->lock);
-+	kfree(mdev);
-+}
-+
-+void pci_lmr_exit(struct pci_dev *dev)
-+{
-+	struct pci_margin_dev *mdev = dev->lmr;
-+
-+	if (!mdev)
-+		return;
-+
-+	pci_margin_debugfs_remove(mdev);
-+	mutex_destroy(&mdev->lock);
-+	kfree(mdev->lanes);
-+	kfree(mdev);
-+	dev->lmr = NULL;
-+}
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index dd0abbc63e18..352b95568ebf 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2666,6 +2666,7 @@ static void pci_init_capabilities(struct pci_dev *dev)
- 	pci_pasid_init(dev);		/* Process Address Space ID */
- 	pci_acs_init(dev);		/* Access Control Services */
- 	pci_ptm_init(dev);		/* Precision Time Measurement */
-+	pci_lmr_init(dev);		/* Lane Margining at Receiver */
- 	pci_aer_init(dev);		/* Advanced Error Reporting */
- 	pci_dpc_init(dev);		/* Downstream Port Containment */
- 	pci_rcec_init(dev);		/* Root Complex Event Collector */
-diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-index d8bffa21498a..6fba29040e44 100644
---- a/drivers/pci/remove.c
-+++ b/drivers/pci/remove.c
-@@ -36,6 +36,7 @@ static void pci_destroy_dev(struct pci_dev *dev)
- 
- 	pci_doe_sysfs_teardown(dev);
- 	pci_npem_remove(dev);
-+	pci_lmr_exit(dev);
- 
- 	/*
- 	 * While device is in D0 drop the device from TSM link operations
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 64b308b6e61c..ef1275f4c5b6 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -349,6 +349,8 @@ struct rcec_ea;
-  *			number resources to allow for hierarchy expansion.
-  * @is_pciehp:		PCIe Hot-Plug Capable bridge.
-  */
-+struct pci_margin_dev;
-+
- struct pci_dev {
- 	struct list_head bus_list;	/* Node in per-bus list */
- 	struct pci_bus	*bus;		/* Bus this device is on */
-@@ -528,6 +530,10 @@ struct pci_dev {
- 	atomic_t	ptm_enable_cnt;
- 	u8		ptm_granularity;
- #endif
-+#ifdef CONFIG_PCIE_LMR
-+	u16			lmr_cap;	/* Lane Margining Capability */
-+	struct pci_margin_dev	*lmr;
-+#endif
- #ifdef CONFIG_PCI_MSI
- 	void __iomem	*msix_base;
- 	raw_spinlock_t	msi_lock;
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-index facaa324bd86..a13c09f8d6df 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -757,6 +757,7 @@
- #define PCI_EXT_CAP_ID_VF_REBAR 0x24	/* VF Resizable BAR */
- #define PCI_EXT_CAP_ID_DLF	0x25	/* Data Link Feature */
- #define PCI_EXT_CAP_ID_PL_16GT	0x26	/* Physical Layer 16.0 GT/s */
-+#define PCI_EXT_CAP_ID_LMR	0x27	/* Lane Margining at Receiver */
- #define PCI_EXT_CAP_ID_NPEM	0x29	/* Native PCIe Enclosure Management */
- #define PCI_EXT_CAP_ID_PL_32GT  0x2A    /* Physical Layer 32.0 GT/s */
- #define PCI_EXT_CAP_ID_DOE	0x2E	/* Data Object Exchange */
-@@ -1181,6 +1182,24 @@
- #define  PCI_PL_16GT_LE_CTRL_USP_TX_PRESET_MASK		0x000000F0
- #define  PCI_PL_16GT_LE_CTRL_USP_TX_PRESET_SHIFT	4
- 
-+/* Lane Margining at Receiver */
-+#define PCI_LMR_PORT_CAP		0x04	/* Margining Port Capabilities */
-+#define  PCI_LMR_PORT_CAP_MARGIN_READY	0x0001	/* Margining Ready */
-+#define  PCI_LMR_PORT_CAP_SW_READY	0x0002	/* Margining SW Ready */
-+#define PCI_LMR_PORT_STS		0x06	/* Margining Port Status */
-+#define  PCI_LMR_PORT_STS_MARGIN_READY	0x0001	/* Margining Ready */
-+#define  PCI_LMR_PORT_STS_SW_READY	0x0002	/* Margining SW Ready */
-+#define PCI_LMR_LANE_CTRL		0x08	/* Margining Lane Control */
-+#define  PCI_LMR_LANE_CTRL_RX_NUM	0x0007	/* Receiver Number */
-+#define  PCI_LMR_LANE_CTRL_MTYPE	0x0038	/* Margining Type */
-+#define  PCI_LMR_LANE_CTRL_USAGE	0x0040	/* Margining Usage Model */
-+#define  PCI_LMR_LANE_CTRL_PAYLOAD	0xFF00	/* Margining Payload */
-+#define PCI_LMR_LANE_STS		0x0A	/* Margining Lane Status */
-+#define  PCI_LMR_LANE_STS_RX_NUM	0x0007	/* Receiver Number */
-+#define  PCI_LMR_LANE_STS_MTYPE		0x0038	/* Margining Type */
-+#define  PCI_LMR_LANE_STS_USAGE		0x0040	/* Margining Usage Model */
-+#define  PCI_LMR_LANE_STS_PAYLOAD	0xFF00	/* Margining Payload */
-+
- /* Physical Layer 32.0 GT/s */
- #define PCI_PL_32GT_LE_CTRL	0x20	/* Lane Equalization Control Register */
- 
-diff --git a/tools/testing/selftests/Makefile b/tools/testing/selftests/Makefile
-index 8a4b6ddc68df..6990d999388a 100644
---- a/tools/testing/selftests/Makefile
-+++ b/tools/testing/selftests/Makefile
-@@ -91,6 +91,7 @@ TARGETS += net/tcp_ao
- TARGETS += nolibc
- TARGETS += pci_endpoint
- TARGETS += pcie_bwctrl
-+TARGETS += pcie_lmt
- TARGETS += perf_events
- TARGETS += pidfd
- TARGETS += pid_namespace
-diff --git a/tools/testing/selftests/pcie_lmt/Makefile b/tools/testing/selftests/pcie_lmt/Makefile
-new file mode 100644
-index 000000000000..36ac85937d78
---- /dev/null
-+++ b/tools/testing/selftests/pcie_lmt/Makefile
-@@ -0,0 +1,3 @@
-+# SPDX-License-Identifier: GPL-2.0
-+TEST_PROGS = pcie_lmt.sh
-+include ../lib.mk
-diff --git a/tools/testing/selftests/pcie_lmt/pcie_lmt.sh b/tools/testing/selftests/pcie_lmt/pcie_lmt.sh
-new file mode 100755
-index 000000000000..d57a6e8f3a23
---- /dev/null
-+++ b/tools/testing/selftests/pcie_lmt/pcie_lmt.sh
-@@ -0,0 +1,105 @@
-+#!/bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+#
-+# Copyright (C) 2026 Google LLC
-+# Author: Priyank Rathod <rathodpriyank@google.com>
-+#
-+# Kselftest for PCIe Lane Margining at Receiver (LMR / LMT)
-+# Tests the debugfs interface exposed by drivers/pci/pcie/margin.c
-+# (/sys/kernel/debug/pci/pcie_lmr_<pci_dev_name>/)
-+
-+set -e
-+
-+TESTNAME="pcie_lmt"
-+
-+# Kselftest framework requirement - SKIP code is 4.
-+ksft_skip=4
-+retval=0
-+skipmsg="skip all tests:"
-+
-+if [ $UID != 0 ]; then
-+	echo "$skipmsg must be run as root" >&2
-+	exit $ksft_skip
-+fi
-+
-+DEBUGFS=$(mount -t debugfs | head -1 | awk '{ print $3 }')
-+if [ -z "$DEBUGFS" ]; then
-+	if [ -d "/sys/kernel/debug" ]; then
-+		DEBUGFS="/sys/kernel/debug"
-+	else
-+		echo "$skipmsg debugfs is not mounted" >&2
-+		exit $ksft_skip
-+	fi
-+fi
-+
-+if [ ! -d "$DEBUGFS/pci" ]; then
-+	echo "$skipmsg debugfs pci directory ($DEBUGFS/pci) not found" >&2
-+	exit $ksft_skip
-+fi
-+
-+LMR_DEVS=$(ls -d $DEBUGFS/pci/pcie_lmr_* 2>/dev/null || true)
-+if [ -z "$LMR_DEVS" ]; then
-+	echo "$skipmsg no PCIe LMR devices found in $DEBUGFS/pci/" >&2
-+	exit $ksft_skip
-+fi
-+
-+cleanup_dev()
-+{
-+	local dev="$1"
-+	echo 0 > "$dev/enable" 2>/dev/null || true
-+}
-+
-+echo "$TESTNAME: testing PCIe LMR debugfs entries"
-+
-+for dev in $LMR_DEVS; do
-+	dev_name=$(basename "$dev")
-+	echo "$TESTNAME: probing device $dev_name"
-+
-+	if [ ! -r "$dev/capabilities" ] || [ ! -r "$dev/port_status" ] ||
-+	   [ ! -r "$dev/enable" ] || [ ! -w "$dev/enable" ]; then
-+		echo "$TESTNAME: $dev_name missing mandatory root attributes"
-+		retval=1
-+		continue
-+	fi
-+
-+	caps=$(cat "$dev/capabilities")
-+	status=$(cat "$dev/port_status")
-+	echo "  $dev_name: capabilities read OK"
-+	echo "  $dev_name: port_status read OK"
-+
-+	trap 'cleanup_dev "$dev"' EXIT
-+
-+	if ! echo 1 > "$dev/enable" 2>/dev/null; then
-+		echo "  $dev_name: margining not ready by hardware (skipping active lanes)"
-+		continue
-+	fi
-+
-+	echo "  $dev_name: margining enabled OK"
-+
-+	for lane_dir in $(ls -d "$dev"/lane* 2>/dev/null || true); do
-+		lane=$(basename "$lane_dir")
-+		echo "  $dev_name: testing $lane"
-+
-+		# Test setting receiver (Rx 0 is always local receiver)
-+		echo 0 > "$lane_dir/receiver"
-+		cat "$lane_dir/caps" > /dev/null
-+		cat "$lane_dir/num_timing_steps" > /dev/null
-+		cat "$lane_dir/num_voltage_steps" > /dev/null
-+
-+		# Test resetting timing and voltage margin
-+		echo 0 > "$lane_dir/margin_timing"
-+		echo 0 > "$lane_dir/margin_voltage"
-+	done
-+
-+	echo 0 > "$dev/enable"
-+	trap - EXIT
-+	echo "  $dev_name: margining disabled OK"
-+done
-+
-+if [ $retval -eq 0 ]; then
-+	echo "$TESTNAME [PASS]"
-+else
-+	echo "$TESTNAME [FAIL]"
-+fi
-+
-+exit $retval
-
----
-base-commit: 0f23d56f17fdfc7db69d51f64c8b91bbab947aa9
-change-id: 20260818-pcie-lmt-3044d586aaec
-
-Best regards,
--- 
-Priyank Rathod <rathodpriyank@google.com>
+Jason
