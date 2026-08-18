@@ -1,145 +1,101 @@
-Received: from mail-yw1-f178.google.com (mail-yw1-f178.google.com [209.85.128.178])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A89CC38947F
-	for <linux-pci@vger.kernel.org>; Tue, 18 Aug 2026 07:05:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B038C26AE5;
+	Tue, 18 Aug 2026 07:06:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787036733; cv=none; b=m42uuziJN4K6a7Bx3ZDbbFcnKEv/FsON4gP3hZEXulCYkIFrmm9W9C7sK1wXVXvcLftO+F5UWBatNSGsEiS764rwpQd9gTbc5jWek7SAxAZzypv288qWegxH8ediNMVFdOGaybriPv6ccgC4dAoIX0nNKuHGjM0936HizH5g538=
+	t=1787036779; cv=none; b=UxqNQSUldye9dAEAvoRIb971Ha7JSTywoPTF9mY4WuoPGVrKbBL/5i0Zy+IUEA7arWlDd4lUo6S8A0GFTCP6bBfJnEMHCeKwIJeD7beviX/bG86h3+MSgXTkkjj4pFuTra63sLju8+gBQaSo+GrNXG21e4y5Msb2/IH/yGfr+pM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787036733; c=relaxed/simple;
-	bh=b4NZfzsXInAfqDzBfnXs78PKv4Oy3tSAAU8GhHt2f3o=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=W4wccdYE5RO1xB0QX97WAdCTe4WjQEUlGeTK2+2i3heUDl4mH2tFnKI/eKXSViUTZYiHotVWeQeUcgpWq/YLIK8meI2GIhX77ECdTohB7F3chc3Ocz57L7mAMhYW3r6mj4HDlyD8xrBgRZLrPphRBIA61DujbJjyFI5KksamyD0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.128.178
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-yw1-f178.google.com with SMTP id 00721157ae682-8201447e8cdso75188537b3.3
-        for <linux-pci@vger.kernel.org>; Tue, 18 Aug 2026 00:05:28 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787036726; x=1787641526;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=ELu0AhEyCl7g57UsYbLgfglrPLTlAwPkVEKgX34T5NE=;
-        b=lrCvWRKJBspD6W62FqB0HvuX6ubMjVxNKRUeS0zLPF6HZrT6tfVkWTO7+dTqn3YV6e
-         Zpt9SSRKZrG7Fg8yD1daEzSOvhdhTLKzOeMyekV0FOQXnys74U6DW5AASWrx7FDU10ru
-         w0XyWkWX/Vp0sqvwTLfzjmzC0nqDa5VevD8fpGqwGM3Zn0+naTIazNTuBRZnW8I5lsZW
-         Sipa1KZCGX6pSXD5UR6OqjpeaNWjddGICgC3zpRduzhEhT/TV2aEP+c3kOhj7UI5RxIb
-         eOuRDsMKpj+mShPjJJwU0xQZCkZJhaDRQQcdK4dQjQMMOxbFReTMl4PfyHNA10Syw9u+
-         LQGA==
-X-Forwarded-Encrypted: i=1; AHgh+Rr3HNzPQrnX+4vTj6AAbkPw29YSjY5UakLfV79qQgxhTizvtW02+3xKkKQrRkf5lxg+NNAKJ8Y5ufc=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxlIfKOF9p9Tt0QLxSyAdmZ5Qdi0pB+vSiOuemoIGDVK/W/hgDh
-	kf4vL93re0jWPKPX/BMmRV7SaWwTjI3JX8rGA3o/+a/n359ZJGqlbLCMxQWK7rI0
-X-Gm-Gg: AR+sD11LiNq7n7JCeURW5jYEFgJb2opqqfI66iVXukJZiqkqr+N0dX8orfymCT6nBCU
-	cr9zuvhT7DAbEbrlVfO3Y6S/BDTH9CJqghVHXoBmh+XKb/kcCnRN4j1t9jw7g2aN3Kcn88eVCHD
-	gZJ9d2PcTRlHVuEbdUvYe7Q8B0Kw5nFpMzUdUZk38P+i3oQj4SJtHY9AphusJ8Ff7rUXK5h6rD8
-	/j4r89qYplxMxneyKqJ9YruXvbi/keL7COOQYEvpFKiWzBgHGKQF4F0m/QAubGqKZe4Q64yQiUe
-	59TxbMdS2be14GdNRfQ1VfdKEgI9vlrYpFl/gxp7bnEtarzbrDet3t9BAeowO34rmHwyPoZbagU
-	ZTBamMouv03/MUpGUHTpdUYnFeGhtvQSTwYmXmApg+9v6YAaIRRxUEKeaQplx+q7WKLPH7hgY+4
-	EE9dZtqyPV6RpmDveSJa5pbr0XFtNv4bjVmOVVAsTnGPQRc/n3D/wpHHssBh7CJIrmkRwEPXcHt
-	FQhYjH6C2jsdSld3zBzmXog8oznLbhQ09Yz8fFw
-X-Received: by 2002:a05:690c:998f:b0:821:1288:f820 with SMTP id 00721157ae682-8370dfb3afbmr114646997b3.4.1787036725899;
-        Tue, 18 Aug 2026 00:05:25 -0700 (PDT)
-Received: from mail-yw1-f173.google.com (mail-yw1-f173.google.com. [209.85.128.173])
-        by smtp.gmail.com with ESMTPSA id 00721157ae682-84068c24d45sm16809077b3.16.2026.08.18.00.05.25
-        for <linux-pci@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 18 Aug 2026 00:05:25 -0700 (PDT)
-Received: by mail-yw1-f173.google.com with SMTP id 00721157ae682-8201447e8cdso75188397b3.3
-        for <linux-pci@vger.kernel.org>; Tue, 18 Aug 2026 00:05:25 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AHgh+Ro/QNJ84DnTtWYwXrOdUTyXWa5yZyQPNnvxAd9tl4cC19RnyZKkf+lk0ie0FaaEsU4D3xPSIt1NG50=@vger.kernel.org
-X-Received: by 2002:a05:6102:1496:b0:738:9c30:2b7c with SMTP id
- ada2fe7eead31-76f2c541b8bmr7363952137.6.1787036286929; Mon, 17 Aug 2026
- 23:58:06 -0700 (PDT)
+	s=arc-20240116; t=1787036779; c=relaxed/simple;
+	bh=mChuPyeF05gRlH1VjUVw3Kz7lzWKz0rH51iJPC08Wgs=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=vBswBXA3EYco1fcgLr5Lw+Idb4k5ZCXrr7TcfmJ9kMG4TAmYtJxfH6nrBPPgt2uoI612nO/a0HD+pBMtFxtCyIdw5rh12HT1vA6DvevZ9m6AHauX5z5hiFvfqaZc62DMV76FochzImuHimi5hqdhSXt2cXBTiKHVBOcnpH8SCcU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fnmDUoqz; arc=none smtp.client-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fnmDUoqz"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 751C61F000E9;
+	Tue, 18 Aug 2026 07:06:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1787036778;
+	bh=NGXeti55rfsL+QIxNH+23V/SFO6fjV5CYs9tpc0kf6w=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=fnmDUoqzkz6gpC9rE+MpRmsVk4t4fqISEBKKGm0FAVNtaTxh7CSfS6eX10wQVFC2M
+	 afGm7/6KhniQcLBzXVmICJtEKf/Ie9fiN+4u0TeFtq9FmAQmQQBuC5xEydaFk92DNi
+	 0tMxnMJwlttlLoYT8hBhFX3ArF9aK0m1Dhj/F9tWgU/AiV1KzcnACYoseTQjvOQWKQ
+	 wbfd0aK9sNJ22POKHl6f3qi0swzBrTlpFPdOSQdYXHQZTpycUhWs6Hi8Jrc9azl0El
+	 7JEVYeqgjEyvtCdHjc+GtO3J9IswyLHsyXZvaeMOXSXxFQbxGzQbDs7rP0bzi8SuNQ
+	 Hm1SbNdFIlU+w==
+Date: Tue, 18 Aug 2026 09:06:11 +0200
+From: Niklas Cassel <cassel@kernel.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Hans Zhang <18255117159@163.com>, bhelgaas@google.com,
+	Manivannan Sadhasivam <mani@kernel.org>, lpieralisi@kernel.org,
+	kwilczynski@kernel.org, heiko@sntech.de, yue.wang@amlogic.com,
+	pali@kernel.org, neil.armstrong@linaro.org, robh@kernel.org,
+	jingoohan1@gmail.com, khilman@baylibre.com, jbrunet@baylibre.com,
+	martin.blumenstingl@googlemail.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-amlogic@lists.infradead.org,
+	linux-rockchip@lists.infradead.org
+Subject: Re: [PATCH v7 0/2] PCI: Configure Root Port MPS during host probing
+Message-ID: <aoQEY5PDU5iqnD9S@ryzen>
+References: <dae17d36-c7d2-467b-a621-3c55e08a67a8@163.com>
+ <20260622171448.GA678675@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260813091925.71363-1-marek.vasut+renesas@mailbox.org> <h43onk4priskfkvdrheml4ttx2b7udavnulxvftj45midvcs3c@lec5rx7mrgys>
-In-Reply-To: <h43onk4priskfkvdrheml4ttx2b7udavnulxvftj45midvcs3c@lec5rx7mrgys>
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Date: Tue, 18 Aug 2026 08:57:55 +0200
-X-Gmail-Original-Message-ID: <CAMuHMdUAph2fbR94k8RDaAeVH=OTKWAWe1dJne9D-YbQQrYHsA@mail.gmail.com>
-X-Gm-Features: AcwNN1V_vBBvui0ICUc760n-rTYHtfhaEcvZ01hKtas0lQM66m-P4QIf_6RReAo
-Message-ID: <CAMuHMdUAph2fbR94k8RDaAeVH=OTKWAWe1dJne9D-YbQQrYHsA@mail.gmail.com>
-Subject: Re: [PATCH] PCI: dwc: rcar-gen4: Fix potential unclocked access in rcar_gen4_pcie_ep_deinit()
-To: Koichiro Den <den@valinux.co.jp>
-Cc: Marek Vasut <marek.vasut+renesas@mailbox.org>, linux-pci@vger.kernel.org, 
-	=?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Geert Uytterhoeven <geert+renesas@glider.be>, 
-	Lorenzo Pieralisi <lpieralisi@kernel.org>, Magnus Damm <magnus.damm@gmail.com>, 
-	Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
-	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>, linux-kernel@vger.kernel.org, 
-	linux-renesas-soc@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260622171448.GA678675@bhelgaas>
 
-Hi Den-san,
+On Mon, Jun 22, 2026 at 12:14:48PM -0500, Bjorn Helgaas wrote:
+> On Fri, Jun 19, 2026 at 11:29:39PM +0800, Hans Zhang wrote:
+> > On 5/6/26 22:00, Manivannan Sadhasivam wrote:
+> > > On Fri, Nov 28, 2025 at 01:09:06AM +0800, Hans Zhang wrote:
+> > > > Current PCIe initialization exhibits a key optimization gap: Root Ports
+> > > > may operate with non-optimal Maximum Payload Size (MPS) settings. While
+> > > > downstream device configuration is handled during bus enumeration, Root
+> > > > Port MPS values inherited from firmware or hardware defaults often fail
+> > > > to utilize the full capabilities supported by controller hardware. This
+> > > > results in suboptimal data transfer efficiency throughout the PCIe
+> > > > hierarchy.
+> > > > 
+> > > > This patch series addresses this by:
+> > > > 
+> > > > 1. Core PCI enhancement (Patch 1):
+> > > > - Proactively configures Root Port MPS during host controller probing
+> > > > - Sets initial MPS to hardware maximum (128 << dev->pcie_mpss)
+> > > > - Conditional on PCIe bus tuning being enabled (PCIE_BUS_TUNE_OFF unset)
+> > > >    and not in PCIE_BUS_PEER2PEER mode (which requires default 128 bytes)
+> > > > - Maintains backward compatibility via PCIE_BUS_TUNE_OFF check
+> > > > - Preserves standard MPS negotiation during downstream enumeration
+> > > > 
+> > > > 2. Driver cleanup (Patch 2):
+> > > > - Removes redundant MPS configuration from Meson PCIe controller driver
+> > > > - Functionality is now centralized in PCI core
+> > > > - Simplifies driver maintenance long-term
+> > > > 
+> > > 
+> > > For the series,
+> > > 
+> > > Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
+> > > 
+> > > Bjorn: Could you please take a look? This series has been floating for a
+> > > while...
+> > 
+> > Hello Bjorn,
+> > 
+> > Any chance for this series to be applied?
+> 
+> It's too late for v7.2; we're already more than halfway through the
+> merge window.  We can look again for v7.3 after v7.2-rc1.
 
-On Tue, 18 Aug 2026 at 07:55, Koichiro Den <den@valinux.co.jp> wrote:
-> On Thu, Aug 13, 2026 at 11:18:22AM +0200, Marek Vasut wrote:
-> > Initialize PCIEDMAINTSTSEN in rcar_gen4_pcie_ep_pre_init() to 0,
-> > and in case rcar_gen4_pcie_common_init() fails and the result
-> > propagates to dw_pcie_ep_init(), the invoke common deinit instead
-> > of endpoint deinit, because we are certain the PCIEDMAINTSTSEN
-> > register is already 0 and the common deinit does not do any register
-> > accesses.
-> >
-> > Signed-off-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
+ping
 
-> > --- a/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-> > +++ b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-> > @@ -487,6 +487,8 @@ static int rcar_gen4_pcie_ep_pre_init(struct dw_pcie_ep *ep)
-> >       struct rcar_gen4_pcie *rcar = to_rcar_gen4_pcie(dw);
-> >       int ret;
-> >
-> > +     writel(0, rcar->base + PCIEDMAINTSTSEN);
-> > +
->
-> 1. The new writel(0, PCIEDMAINTSTSEN) runs before clk_bulk_prepare_enable().
->    Is MSTP024 expected to be already released at this point? I added the quick
->    check like below on Spider, and confirmed that the clock was already enabled.
->
->    --- a/drivers/pci/controller/dwc/pcie-rcar-gen4.c
->    +++ b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
->    @@ -9,6 +9,7 @@
->      */
->
->     #include <linux/delay.h>
->    +#include <linux/clk-provider.h>
->     #include <linux/firmware.h>
->     #include <linux/interrupt.h>
->     #include <linux/io.h>
->    @@ -487,6 +488,10 @@ static int rcar_gen4_pcie_ep_pre_init(struct dw_pcie_ep *ep)
->            struct rcar_gen4_pcie *rcar = to_rcar_gen4_pcie(dw);
->            int ret;
->
->    +       if (__clk_is_enabled(dw->core_clks[DW_PCIE_CORE_CLK].clk))
->    +               dev_info(dw->dev,
->    +                        "PCIEC module clock was already enabled\n");
->    +
->            writel(0, rcar->base + PCIEDMAINTSTSEN);
->
->            ret = rcar_gen4_pcie_common_init(rcar);
->
->    If that is not guaranteed, wouldn't this write rely on firmware or some
->    earlier user leaving the module clock enabled?
 
-The module clock is enabled through Runtime PM:
-
-    rcar_gen4_pcie_probe
-    -> rcar_gen4_pcie_prepare
-            -> pm_runtime_resume_and_get
-
-Gr{oetje,eeting}s,
-
-                        Geert
-
--- 
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+Kind regards,
+Niklas
