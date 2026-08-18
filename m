@@ -1,109 +1,87 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 39184438026
-	for <linux-pci@vger.kernel.org>; Tue, 18 Aug 2026 08:55:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 99C0F3C0A18
+	for <linux-pci@vger.kernel.org>; Tue, 18 Aug 2026 09:33:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787043341; cv=none; b=FydN3AA7MrJe57l03pYB04rQFd9Qh7Ddht0SLFvKncpv/2YQue/0ot0p9ZCXUn91zKi/3m0+wBeaFMbl0N8bJUXzjjtp2YslvIJypZ16S6agQTd9CTQuyJ2KF5pa5oLB8pClpDRU5/DMxwRCyUwbA/JMgiigBmy607phLfoyyBo=
+	t=1787045632; cv=none; b=Q/XdDpTzeNbw7813papmCvX9B/h72ebg0q6tQdFr15vxuDOPleMDaPGIT9X4uqeIrVImjnwGUrfGAOMfvfqFkWlWXHkBvS09YQUJZPFoBYMOewzrcORqN27hIQ4ZKgqSCTFja30JfoXI0rRdrrsU80mm+YeEWXRc7VrkJBl0W3A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787043341; c=relaxed/simple;
-	bh=3cA87ROwuHAvUqFC+lorDaD20AvisBqSwzUjFEna9FI=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=e4luebV/19intH/2dBqAHHkBvW4eGbmzbUNpLiP8Vl2FBzTl8xJEemUhZ1EKJWHhBEOMmGqX5NELXFL5kV1wZvAM9v7XNs8T15YEvIwGcUgzZjUNiOWkMwMLoc20NNGroVTQ98/1HwddM2ao+jS2fwjZnPVOG5VDrzgk4jBgrWY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GQrPs7jG; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1787045632; c=relaxed/simple;
+	bh=/HUi9ugRqmi++rns32DJEn59gPGcJyWLaxkL0OFdCaI=;
+	h=Message-ID:Subject:From:To:Cc:Date:Content-Type:MIME-Version; b=aUtZqoMn9jaqmyWZSLSRMlIoJ+Anv+8ouOTgpuK3sN/+3QWHUmSt3tvajMW9lLHCMti0tMhwXHrq8Zbo5E+flzoilFfbW8qP/QXJXMCSsau43twkZhKEqNTWMkMwB6a7l2SfUhVBr6uEcOvWRta6TIZp4uc6xBpyLgX/uWL9bNk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=l/ukW4ZR; arc=none smtp.client-ip=192.198.163.7
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GQrPs7jG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 910201F000E9;
-	Tue, 18 Aug 2026 08:55:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787043339;
-	bh=qYtJXYGhdHjgZBKE901K5mrjs6fZzYObhnPRFxPQO+E=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=GQrPs7jGKarVxYfw7QrPGqOGNhLcaCbvDo8yHaZl8J2FfrReipam8OgNfCI4erDZN
-	 SMBcc92HILCyDwBNl3uF5RtNOHoTdmIAN2Z+Yvp2D3VtLiwjHqM1drrzFsnDjpJQ+w
-	 IbPrvaiPT7VZbnK+41zphUIiPu7mDppT8798Uw/8Gun8yYMbrYRc8e3YBXsL7/iXNp
-	 hrY7OcU8thAda4wiPuQicuHPJYHew26Ig3tUGMyIidWh9mVIWtF4q2GHMVd94K8XgH
-	 lh2sAJZpsUfJHLk05V4dHKveHyN+mR66oYTWdTk9aFUihR5CI9PuxokpvV5OKgy1sR
-	 8mq5xuSH72HMA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v8 1/1] rust: pci: add extended capability and SR-IOV
- support
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Zhi Wang" <zhiw@nvidia.com>
-Cc: linux-pci@vger.kernel.org, ojeda@kernel.org
-In-Reply-To: <20260818084633.1673214-2-zhiw@nvidia.com>
-References: <20260818084633.1673214-1-zhiw@nvidia.com>
- <20260818084633.1673214-2-zhiw@nvidia.com>
-Content-Type: text/plain; charset=utf-8
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="l/ukW4ZR"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1787045630; x=1818581630;
+  h=message-id:subject:from:to:cc:date:
+   content-transfer-encoding:mime-version;
+  bh=/HUi9ugRqmi++rns32DJEn59gPGcJyWLaxkL0OFdCaI=;
+  b=l/ukW4ZRL2xpCgt/bWBQBbezbZ0NKf/IGt3EHgJAUZJFoM9DE5Q6UUbr
+   hGAC3VwNj+xuwuFpVYCnF49D1wbF2bJreKpaUQ4ia+H6okaisiLgcko33
+   usTFpYFtr8Di9WbbDV/3lz7L8vyIAMG95TOwGTjnaiNMegR5zoLbkND46
+   S4Vo4/2gKrN8ts2zoDt3Uph77ykuSyq8L2bIkuWKv0UmBtxHwi0/zRd59
+   e7V6Gwf710DEu+Byxvhh7BSA7vjIxP2L49dCOO5OyJl+dyXSfb4jew7+M
+   P9VSs0cid+9MwFhHU+e9GIqE5mJ7wIX9hFDnh04YKAcuabn9yIy7r2SGD
+   A==;
+X-CSE-ConnectionGUID: +SRhphwKROC+8aC/EPXm7w==
+X-CSE-MsgGUID: +5JIZC3rT+evza04Iu9Kqg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11878"; a="113074081"
+X-IronPort-AV: E=Sophos;i="6.25,230,1779174000"; 
+   d="scan'208";a="113074081"
+Received: from orviesa008.jf.intel.com ([10.64.159.148])
+  by fmvoesa101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Aug 2026 02:33:50 -0700
+X-CSE-ConnectionGUID: FmqcsBUcRt+Fba1BgfdNQw==
+X-CSE-MsgGUID: /6ziGOHSSBK9fku2jFK/Jg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.25,230,1779174000"; 
+   d="scan'208";a="264730763"
+Received: from pgcooper-mobl3.ger.corp.intel.com (HELO [10.245.244.14]) ([10.245.244.14])
+  by orviesa008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Aug 2026 02:33:48 -0700
+Message-ID: <bc44b89c7996c8417a2126ada2cbe7c7bfe7568f.camel@linux.intel.com>
+Subject: PCI_P2PDMA_MAP_BUS_ADDR and PCIe ATS?
+From: Thomas =?ISO-8859-1?Q?Hellstr=F6m?= <thomas.hellstrom@linux.intel.com>
+To: bhelgaas@google.com, bhelgaas@google.com
+Cc: iommu@lists.linux.dev, linux-pci@vger.kernel.org, leonro@nvidia.com, 
+	jgg@nvidia.com, hch@lst.de
+Date: Tue, 18 Aug 2026 11:33:07 +0200
+Organization: Intel Sweden AB, Registration Number: 556189-6027
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 18 Aug 2026 08:55:38 +0000
-Message-Id: <20260818085539.910201F000E9@smtp.kernel.org>
+User-Agent: Evolution 3.58.3 (3.58.3-1.fc43) 
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [Low] The `ExtSriovVfBars` struct is constructed without an `// INVARIANT=
-:` comment explaining why its invariants are satisfied.
---
+Hi!
 
---- Patch [1]: [PATCH v8 1/1] rust: pci: add extended capability and SR-IOV=
- support ---
-commit e0446bc8a9435cb9072472f040f7215e21d10ce1
-Author: Zhi Wang <zhiw@nvidia.com>
+I was looking at the way pci_p2pdma_distance() returns
+PCI_P2PDMA_MAP_BUS_ADDR if devices sit beneath a local switch with ACS
+disabled or not present.
 
-rust: pci: add extended capability and SR-IOV support
+The client then programs the bus address directly to perform p2p dma,
+as handed out by the dma layer.
 
-This commit adds Rust PCI abstractions for locating and accessing PCIe
-extended capabilities. It provides specific support for the SR-IOV
-extended capability and a decoded VF BAR iterator.
+However if the device (p2pdma client) has IOMMU turned on and ATS
+enabled, the device may or may not send a translation request to the
+IOMMU. Wouldn't that fail returnint an IOMMU fault if the device is
+programmed with the bus address rather than the IOVA?
 
-Link: https://lore.kernel.org/rust-for-linux/20260804161612.776752-1-zhiw@n=
-vidia.com/
+So if ATS is enabled, shouldn't the device always be handed the IOVA to
+avoid this? Granted, untranslated transactions will then take the
+round-trip to the host bridge, but pre-translated transactions will
+still benefit from the direct routing through the switch, although that
+is not directly visible to the kernel p2pdma layer?
 
-> diff --git a/rust/kernel/pci/cap.rs b/rust/kernel/pci/cap.rs
-> new file mode 100644
-> index 0000000000000..ddb3fd73e1955
-> --- /dev/null
-> +++ b/rust/kernel/pci/cap.rs
+Does pci_p2pdma_distance() need to be client ATS-enabled aware?
 
-[ ... ]
-
-> +struct ExtSriovVfBars {
-> +    bars: [ExtSriovVfBar; NUM_VF_BARS],
-> +    bar_count: usize,
-> +    next_bar: usize,
-> +}
-> +
-> +impl ExtSriovVfBars {
-> +    fn new(slots: [u32; NUM_VF_BARS]) -> Result<Self> {
-
-[ ... ]
-
-> +            bars[bar_count] =3D ExtSriovVfBar { address, is_64bit };
-> +            bar_count +=3D 1;
-> +        }
-> +
-> +        Ok(Self {
-> +            bars,
-> +            bar_count,
-> +            next_bar: 0,
-> +        })
-
-[Severity: Low]
-This isn't a bug, but the Rust subsystem guidelines require an // INVARIANT:
-comment when constructing a struct that has documented invariants.
-ExtSriovVfBars documents its invariants above, but is constructed here
-without explaining how they are satisfied. Could an // INVARIANT: comment
-be added here?
-
-> +    }
-> +}
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260818084633.1673=
-214-2-zhiw@nvidia.com?part=3D1
+Any input appreciated,
+Thanks,
+Thomas
