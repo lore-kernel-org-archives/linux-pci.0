@@ -1,53 +1,54 @@
-Received: from CWXP265CU008.outbound.protection.outlook.com (mail-ukwestazon11020102.outbound.protection.outlook.com [52.101.195.102])
+Received: from LO3P265CU004.outbound.protection.outlook.com (mail-uksouthazon11020099.outbound.protection.outlook.com [52.101.196.99])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A36A745D5E8;
-	Wed, 19 Aug 2026 11:10:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.195.102
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0FF514582F6;
+	Wed, 19 Aug 2026 11:10:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.196.99
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787137846; cv=fail; b=t+i5jhykhfII1t9lbGDlEFoD0K9zVdJk4oZzM7UTM0EBzNZW0AlFBQbanOo81U8D4GefA/ozTZjcqykgpfrYZLoqrXVq7QFRh0iO1Q+OEIhMQ067y1gbU8G7Gc8e6AwVmU9FfrYBe6ieSIErRCEF+NZgkK6HljeMTUPa7kpod6Y=
+	t=1787137848; cv=fail; b=GXGYTKMVIpcw9OUDWIVP58eWSOnMnM0lc0UOucV7f12ecQ6ai3xvstIi+kszOYr++ARX7rRIrwJt+/rP6A6YRGb3CGifR7iSOfc4fT3wi5D6L5jx/99iywwi/wK8f6c8/B1Rvj4VRa02ynuUemTERPjIHLwB9k7tqujW8IhuW6M=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787137846; c=relaxed/simple;
-	bh=mVBAgfzt49nYUC9KtvB97HmFPe/wUfHuf4347t39LVI=;
+	s=arc-20240116; t=1787137848; c=relaxed/simple;
+	bh=D0QIW3gLEGUq1PEvmPOkulzpq9vZOkliiKGcHUHy1vU=;
 	h=From:Date:Subject:Content-Type:Message-Id:References:In-Reply-To:
-	 To:Cc:MIME-Version; b=DFOkzzsXI5sgBqyfUBV0uAvsZaoYDEtTJRPL85bfESKKyN4Hq+I356lMduuBPd5FCvSnQ9+Ja4PnotmLi/XS4nPpZJaBmUmz1qFKTHO0k+LwsIRe+SuYVxca0OXmpU9phm4CiiKXMoAjfFI6rODH1nj2ndyQvINp4hYPh3ZulMk=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net; spf=pass smtp.mailfrom=garyguo.net; dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b=mOS0s9zg; arc=fail smtp.client-ip=52.101.195.102
+	 To:Cc:MIME-Version; b=YrjFlRbznMSTzpeFSdOvw0LJk+VvV3mZpLWNQgFmSoRUWF77dT9ZK9KW1A8E6Nt/GI1YMPj9Ln/qbKAJD0txbC7nRps19DNfs5iUisOwkkvhpaJX2Y8mtAC5Ftamh1ONnNB7dD/GRTMSRCT6JStCyLRg2yd0guZtHmkqLzKep+U=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net; spf=pass smtp.mailfrom=garyguo.net; dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b=w9Xr3+W+; arc=fail smtp.client-ip=52.101.196.99
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=garyguo.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b="mOS0s9zg"
+	dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b="w9Xr3+W+"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=ezdNpazFIycmiEREHutKaEWYbVjlfIOV2Qw4uV6HkjRvgMibVImvkeIhoL0Z5yCioF3tmvnfp65yLrAxv024KKCJ7akN/V39f2wtHft3K5F90AVrNQ5yVOwkMVhqCH2Thw2fBTFKyVJAfu8wczTVBETBhQThQOmmrmqUVi/SDTQlb1EcfXnY5wOqmSFFzbFbmXmKtRtbGmw7K6X/7POgxKrgcFEKYeoaQYg+ajPEQZOlBkyAd5eZDOYQvbeCqn2CcmRztJ0U2d77KSAPdUZTNFEvWrt3fJYv94cPJVmkq1PTuEAWe8LB/7k/BA8EGjcU/uxK/zDPH7Ez3w85P+Nmmw==
+ b=kejM6kDwOA+oSBXrE4PfgMHMdn67ZHwR7Gn1777zuukKpPeNxh6c+SErftq5TY9RaRVG5W5yJAT+pL9hZowDv1zQvvYCs/u89mw6d9rpfrE9g2VwSlE1fIRKE60HWStfz2JqLOwv6gLCo5tD8KZRXY39FMNKWBU464kzGde+QOvpHlvcbT20gdlbWgc3NdYhDvOU/Nq6fRV8yKj3JBVn7NkbuGMO1sBZ9+IGzu/lSaO0c+/JHMA4eoIN38mzOrVAs4pz7fYlEe0Ku6OX783vulXrzgChiynkqnBh45SSk5LVgEadRqqk+0q7jvgVfC4VXrn3v1/DMbaHrhKeK1PZEA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=pedHMMSfiAL+Q+nqp507G/ko3vcUafCgveq9BKAgleg=;
- b=W0AP1RJX2hLV5R4zw4AGZn4twVVwpWF+88PML0K2n96PgaKQNHBcC9f+5ZpC9qxw+CZ/EaFbxKWYOKgz/DP0Gu36ttWUug6Xrk7PvgSKSrF0tCArPLFQ3Uwjlklxm2d/C3oQwktEjUfRSJKJEJYbUM9uCwyZBh1CQEPdXcJTyDaFOYTH+883POhN7ZnJJgCS2YlYH9ctx7KqWA39ywK0Nmk/HlA6CM9XHaa5EDuDMB0E9iJrpxkLSnGY4JwZGvyictmz6c0oordHXZlWC0mbUfZSOsPtJJ6K20dPF4HFLkP1wWgWPZpauHCLrQm12XEXlKwrpom1/TmmmqcXQatAzg==
+ bh=EWBvJAcWXsTgFfXCWTRUaKpplLBkVQaS1dnrCqa/yfE=;
+ b=sXYOLtFCVddMunL5gsOFp7oolNM5uiQhwm7dk78A4JfqT5LggSTAMXAvIrxfHdhkOralajp0+Iq3m75SOPVj0K3B312Gp2NrTYKjpsAAV4xFXZPUFaUzekdcCT3GKtWvF66ZMIG2fujirhjsDoKmynV7cVCfK/lsktNX7xqINohFO9hsIz9NoZU8VTT3fPZttja+iJWBxiPc8dx7Zt1mrJ4nKtyOGQkQ7HJddY5qpOZEaZtplUCINnBAY+FIAdRJ8Nj4j6oi3zX2TOinjdh0xiafOT5feeznuDj2sk40SVaPD611TkPP2Gm6ED0h9fwf2neCuYB4JEhSG0nWd3KuUQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=garyguo.net; dmarc=pass action=none header.from=garyguo.net;
  dkim=pass header.d=garyguo.net; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=garyguo.net;
  s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=pedHMMSfiAL+Q+nqp507G/ko3vcUafCgveq9BKAgleg=;
- b=mOS0s9zgPEKeyDgb+yicPQeftx+PDgeitbLpnwDqAQvGiSlk6zQ+lOii6L3RYjtPSmbeMHRMgOE9TBPtDVMDprIbSobcS4jzLHX1lFlERCtTtHvBro8Zolm2vCuPJSGcqoNk+v3WnbUyF0waMTdCjIe09yypEoPm9EjH83PwLzk=
+ bh=EWBvJAcWXsTgFfXCWTRUaKpplLBkVQaS1dnrCqa/yfE=;
+ b=w9Xr3+W+AqQwK8hMO0zPfDZUOfNEo783pC5aC2y+dTaJ9RbVybyEE6HsHBSK158ZWGtA7J3ZQZhlDcyI0Qee9sfB/UXPs9mFjdg/FrFWUOldBBbiaJme+kps7iObUcnWk9Qam6S43jWEURldeJdOj565VE8m45niqjWBHnHqL/Q=
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=garyguo.net;
 Received: from LOAP265MB8560.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:4ab::19)
- by LO0P265MB5167.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:283::12) with
+ by CWLP265MB5113.GBRP265.PROD.OUTLOOK.COM (2603:10a6:400:15d::12) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.339.8; Wed, 19 Aug
- 2026 11:10:17 +0000
+ 2026 11:10:23 +0000
 Received: from LOAP265MB8560.GBRP265.PROD.OUTLOOK.COM
  ([fe80::f60b:1537:68d7:4fc1]) by LOAP265MB8560.GBRP265.PROD.OUTLOOK.COM
  ([fe80::f60b:1537:68d7:4fc1%4]) with mapi id 15.21.0339.007; Wed, 19 Aug 2026
- 11:10:17 +0000
+ 11:10:23 +0000
 From: Gary Guo <gary@garyguo.net>
-Date: Wed, 19 Aug 2026 12:09:12 +0100
-Subject: [PATCH v3 04/16] rust: io: perform conversions using `AsRepr`
+Date: Wed, 19 Aug 2026 12:09:20 +0100
+Subject: [PATCH v3 12/16] gpu: nova-core: use projection for PFALCON and
+ PFALCON2 registers
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260819-typed_register-v3-4-3699a75fadf1@garyguo.net>
+Message-Id: <20260819-typed_register-v3-12-3699a75fadf1@garyguo.net>
 References: <20260819-typed_register-v3-0-3699a75fadf1@garyguo.net>
 In-Reply-To: <20260819-typed_register-v3-0-3699a75fadf1@garyguo.net>
 To: Danilo Krummrich <dakr@kernel.org>, Alice Ryhl <aliceryhl@google.com>, 
@@ -66,11 +67,11 @@ Cc: driver-core@lists.linux.dev, rust-for-linux@vger.kernel.org,
  dri-devel@lists.freedesktop.org, linux-pci@vger.kernel.org, 
  Gary Guo <gary@garyguo.net>
 X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1787137814; l=18533;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1787137814; l=44579;
  i=gary@garyguo.net; s=20221204; h=from:subject:message-id;
- bh=mVBAgfzt49nYUC9KtvB97HmFPe/wUfHuf4347t39LVI=;
- b=FbpHfRxaPe6LALKq/vfg5gH65KpjhrqK7paO5jdo0QnE/b6ubQf2gvTNdRGvgKhr5ubOUktv+
- cEz9qcLiiWmDaMMjoGcAXhmRlfM5J1kI8u33OsFNjyZ7R6dBEuqemg9
+ bh=D0QIW3gLEGUq1PEvmPOkulzpq9vZOkliiKGcHUHy1vU=;
+ b=QT12oPLuA3Yzws/aAunhjNwrRjt2WU/eIq5CUq0a9pTcO+oHgcMJ2alFMFbu/twtiamdEblFw
+ j1/UC44PYESDZhKWQY9dYd5q8S+XY97oCHpAo+ePSbZJ08/KcKHNZMK
 X-Developer-Key: i=gary@garyguo.net; a=ed25519;
  pk=vB3uIX95SM4eVrIqo1DWNWKDKD2xzB+yLLLr0yOPYMo=
 X-ClientProxiedBy: LO4P123CA0096.GBRP123.PROD.OUTLOOK.COM
@@ -83,576 +84,1272 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: LOAP265MB8560:EE_|LO0P265MB5167:EE_
-X-MS-Office365-Filtering-Correlation-Id: 5f43b373-375c-47f4-cf4c-08defde2735e
+X-MS-TrafficTypeDiagnostic: LOAP265MB8560:EE_|CWLP265MB5113:EE_
+X-MS-Office365-Filtering-Correlation-Id: 494e9595-6c3b-4152-6316-08defde276a9
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|10070799003|1800799024|23010399003|376014|7416014|366016|22082099003|18002099003|921020|10067099003|5023799004|56012099006|6133799003;
+	BCL:0;ARA:13230040|1800799024|376014|10070799003|366016|7416014|23010399003|921020|6133799003|3023799007|56012099006|10067099003|18002099003|22082099003;
 X-Microsoft-Antispam-Message-Info:
-	DOX7tVBo5L/hTI04qJ3F5zcD/1lbiMFEaWuAlmrt6Dlg94UEdfkpw4U34BukX7W5R3Zfv1m5LDVLpAhjlLowZTOEJaACE772DGLANbGIZG8mhC6exSXb+Ii4p0awAL38qWvz2r/z9rfvy7ZJLPv9ZGOOgg8HosKhZwo+gTbVzKx0oOW0rxApW1TuMClblfYb+EVjYSQEAbUdpcFyJAbkx1CLooig9uDQgtfSCyHZSAk2AoqUofnjMSepyPQdW0iAXCSgUQBuR5fx5oslVV5/UyZB0Cjjzzi272cFj+ajCl83qbOylbbAdkayFNRHZxD0qkmxcxzTopK2R6VXixAE9OvO2+i6ri51qd7KRxUz1cKIUayJyt1AF3IYzuqCI1gbXaVVO83jnDxB2fpvumdf7RAaY5jbMPBjnHZtpr9Wqg4dEnzqiPCj4pUHGw+GJ1PdIfB+oeclCFmhDbeJbC9iqchGhMxyv5JWjP/K5Nae/lXE82TtIFZjb32OKm9Iikz4n0+0duMQMdZXqZJHjuC4SrpgEwMZqmNRV3TRB9MohlqnHEkT2Wsr627FhEqNjpcrC1jVVdNQ4YzeeznLcT5gy91/dI2gS8IKtTK7j8rb1RqWOetRrQXCUR8Si8GTwunp6UR2rO5AJ0NMOyb4cW+xkWiuWGMYLeX9g0RmE7Qx/CLl7u4WLUInTqH7PYqAmyZ8Ov6FFM/stq1XK4Ry5eeMLA==
+	8l8tW0kSKP5hhevUSrYqwj4OMuD/t6+nZKNrNiPadUemurSp33G1y+vp+7pM8BZZZtSMc1FZR2GiBO+J7r/yBZYsHPzrGwWnhsWVLNqxlxOJC/vK2EZNwFYAS7rBU4+Vtda6Z7TtjMiA7h/eEgsQLhehrbguPHdheHwVtk36Lz+WyjQogwN7k8dHZWtzYLyxWlukY9UMFUGBLX0NPQ82XzK9wlvqaqXpMlGuR3Br5CBuw89T5sQoigPmhMzTv4R/N2AoVOfSe+bW9uMfcmLE4/doq3CawKHkhApBNWSQ9jNtnBYoQXsXxLv7GhtYK+CJbdhKknXd0QNLW2fCjLETS6zlg6/jcfdc4s5qsWjNDqX3sLCiPkt5muk2RRODguq4xGL7P3HFvxYstzLXmN65jChL8lRL/CkiQuWqCASnjkHl7ZPbSjTvxzQSh/e0XtmQ0Y6ePcTs0QXX3KJ9X1ESaoxCtumat5C0DI0U2rCLGnU6ZTwHpIabQVrbtx51K3uM6rcNqP4Lm5pBQdO20f9XTFmq0ksmAhJGoF2cuaPiAKaITPR3ZCJrDxxGDyDdciIFi6yhuOXHeUt9fl/iJS6d0DcQxEg1vAeImz/+PLlpGiVczm1flveU4JUJV7Skq33gIRuVlGr1wbh3QWsU+RXWTZvMDu3awV8a1c8J3MTQPlF6sOZby0MC0HwebALXli0kuWuqsdpXSSY8tSX8xrBGig==
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LOAP265MB8560.GBRP265.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(10070799003)(1800799024)(23010399003)(376014)(7416014)(366016)(22082099003)(18002099003)(921020)(10067099003)(5023799004)(56012099006)(6133799003);DIR:OUT;SFP:1102;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LOAP265MB8560.GBRP265.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(376014)(10070799003)(366016)(7416014)(23010399003)(921020)(6133799003)(3023799007)(56012099006)(10067099003)(18002099003)(22082099003);DIR:OUT;SFP:1102;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?T0Nnby9oQmhrMHJSQXJCelpnSmRQdk9RMStCUC9FQ3ZBejZUSmt2bXFpNUxz?=
- =?utf-8?B?WmZVT2k1Q0RCM08xbEExd210NGdNdW5wUWV6ZXZLRHBsWUJJT0VhY2tsZTdK?=
- =?utf-8?B?bk0wZ3kvbUVqejZrakt1TVprbXZ1aGU2RWJqTTdKbkxRcmRTRy9yR0FCeE11?=
- =?utf-8?B?alppbkN3c1lIR2dVdUM4UDBwUWU2ZDlLdklPZlRXV3dEVlhSM05KOWx1Y21p?=
- =?utf-8?B?NnJDakh5NmJianU4K0Q2VlZzdnJNMk9WK1J5WFhRVVFydy8vcWovbXBKVzVW?=
- =?utf-8?B?RmpjREpsRDdwUjE1WldCYUVadEoxSGJXVnRlbS9hbUhwcDJRaUlOenc0TTZU?=
- =?utf-8?B?QkNVT3dmT2dFTnljRTBDNVphNUFINUZvZVNFTTlNSU5NRjQvWloyYU5TT3M4?=
- =?utf-8?B?Qmh1bVJqbE0xZ0xPS3FlTUFDZkEwK245UDJIWWRHalF6Vk1jYXlLVXNvWVNK?=
- =?utf-8?B?QWhZdVEyd3NHZlVDaTdxQjlvYU5hQ1ZBdWI4cUFNRExic0pJQ2xyTW1rRmFw?=
- =?utf-8?B?WGJDaWR2RGczbWxsSjhhY3BCa0c4RjM5TDgyMGZTRUZXb1Y0ZUcyWmhHM2Fh?=
- =?utf-8?B?TnQ2NERxMHdZU2tRbFFmbVRKZFczQlVHWUlDYjE5K2JNeHBsTC95MnJVaHd4?=
- =?utf-8?B?a0wxblpvNHVSa2JiWW54dGNwTjM2YTB5UWxJRzlJS3BuU0JwazR6TzdJaHFs?=
- =?utf-8?B?NjBhT001bmJ1a013UHNtcUVsTlBMdytMczdRODAxMXVia0I0ZytQYW95K04w?=
- =?utf-8?B?Qm1jYmxmaEU5aHhnd1JNU2lqQ1B6VS9VM2RTWDA2SDlSbUxYd2JFdDdONVZQ?=
- =?utf-8?B?MW9ielhrOFlEL1pudDRNQWxPNlB4MzRLZThvY3ZaQncrTU1VVlJjTmxDVVJF?=
- =?utf-8?B?eFJKb3J2WE0raTJyOFp4NUFGUGl1aUJIUkFJSm5FeDVncHBQR3JmR1ZCUTA0?=
- =?utf-8?B?U0RBdlU3Y2hydWdsQ0tRMUMrUTZwYjArNFNsRGxab0lyQzNJek5yUVZrTUhN?=
- =?utf-8?B?bnZmcEhqUGRqR3hqVEpaTEpneU95b3dMeGxFclVlRmZUT1MvSW90VjRqT0Jk?=
- =?utf-8?B?aW9FTWtMR2NYNmNma2N6eXk1NzJCSVdac3ZjekQwbHNvV2NndXVxb2FXODFQ?=
- =?utf-8?B?VHhTMnhIRFZSVm5Tem9tSzdpLzM1RDVUei9hUnpCMXE5N015UklxcFJNSjZi?=
- =?utf-8?B?dm9yR0hJenFMaHV0L3E4QUtMUGQwOStmUlRUNW94MmZBQ1c2QjRKZW9Cblcr?=
- =?utf-8?B?TlYva0ptd014bnlNdm9pZFpUWC95eTJlRXBKYzVFZjZVb3ltWlBSZEpSd1By?=
- =?utf-8?B?aDlTRjNja0VNVnBaYTdOSW5sb3dnVVhMN1R4OVpYVUFJdEM5K1U2STk1WmlS?=
- =?utf-8?B?NzlXbSt5cVp2U0JCRVdseDI1dTJkQ0liNkwyUXFYb3ArL1VOdFI5OUI3MU5r?=
- =?utf-8?B?ZjB1OFdQRWFTYWRCZlJ5UWJxNFNNZEEvYWF3R1NvMXY5UGgrRGdobytHZnRa?=
- =?utf-8?B?RHVJdFVMK1lXcHVydmpVSG5vVWo3cEE2RzNIUlpIYTdnOE9kU2tLcDhTbng3?=
- =?utf-8?B?WkU5KytCalU0R1V1TlljODY2Sm95VDFIT3VNbUhzdVpIV3NnZXQ1SS83R0Rp?=
- =?utf-8?B?ZWplcGxyVUh4WGs1SWEyOEh0ME9rd1RIdTgzMm9QTGxoN2N0UGhiZ1BFTk1X?=
- =?utf-8?B?WVU0QjVjbkZzaUxrZ2VJb0VJM0hxY3d5MlIwOVFLQmRZbEUrVFhLWlBIM3Nx?=
- =?utf-8?B?M1dvaGRaVWVQVE1XNFl1ZTM5Rzh5b1Rwb0pjVzlBdjFkUE0vQUpHeDRXaHF5?=
- =?utf-8?B?YmJaa0JBakZaUVl2OTFOOVZkZVFaR0VaRDBBQkNsb0ZpcVorSGVmR3N6ekkw?=
- =?utf-8?B?aXZtSmVDZ3NUelVJdHhnMFpTcTVBdFJhajd4NWlzMVhlcExXdkNoSWlQNnRm?=
- =?utf-8?B?cFdiT3RWZWwwbjI5TVhVT0lETXVaTDZnTnljdnVLTFYxbEtzZWlDSWJiY29i?=
- =?utf-8?B?azl1WDhzRGVyeDIvMFB1R0cvYllEUVFkeGI3L3l3ek1JazdXdDE2MndIQ1Nu?=
- =?utf-8?B?MHBlRW1jZHFRbkxMVFRSb0hCdDhXSUhWcmoraTJKNDNQTnM2Q2RRNlBENktI?=
- =?utf-8?B?dlN3YXVMbUpRdzNZa0tNdUtVM1RSdWlwK3dWUkgwRm9WazVoTWNzWDQ3MlFV?=
- =?utf-8?B?b0k2SDJUenhzUy9ub09SOTVteWF2b0JCajgvclUwdmR1c0w1L3pKQ1VaSXpL?=
- =?utf-8?B?cjFTVlFsTnRrT0NxUStmaExDd3lvZmxQMzJ4bUN6M2ZPM21ZdUh3cldkdVpC?=
- =?utf-8?B?eHNMcndCenNxdzUyMFNyM2Qwbi9GY3cxSzhTSElXdVVOMmFadjU3dz09?=
+	=?utf-8?B?dUJaR1duT3Zlc1l2V0kxNDhkckRSUnlMWjEwWkwvbUhqZDE3OUh1aTVteHRo?=
+ =?utf-8?B?aUdWOFRVamtuRVJpVVN2NGNUL01GWXFRYTNjOWNWRkhndTlEL1NrRENOMTZs?=
+ =?utf-8?B?Q1BhcEVzRFdhK2RrRUZlRnJWQkk5RXV2MWJRWk5GM2xYU3kvUnIrNm1xZXUv?=
+ =?utf-8?B?WUoxVC9ycFNiZTZkZUptQXFHUGlocjV4L1FYUkVvOUdhaFpCTk9ZdnBXYWhM?=
+ =?utf-8?B?TFFXWmp1S1BQZG9zMTNaczFEMG40NGpRRzEwVnNoQ1pXTXZ2Wm05TTg3WCsw?=
+ =?utf-8?B?L29EeWpXak1ieGZwbkJlek5PZGZMVFR4U3dCTFVabEhWdFRlTGZ1QkZKTUM1?=
+ =?utf-8?B?cGhVeTBpYm85NENTbS96dVI5a1NlNWE4VkNPb2Y3U0pjZGV4N1JhVzlVOHFO?=
+ =?utf-8?B?TW1jU1JCYUJLa0ZMSHFRUWJ3N1NldGlNWkF2bkJYN0kvZUNWTUwyamFMOFJy?=
+ =?utf-8?B?MHJvbDVmWWVROW0zbmRKSHgrWjRDcGJvWEZ6UUQycUt4UW55K0VMZ2IvSjVQ?=
+ =?utf-8?B?bGdhRUJ6clBsTks2a0lJQ00zMDR4TVdnY256VTY5WXJrbWU1SlNnMi9zdDlC?=
+ =?utf-8?B?Y243WFNFSlVmNys5NjlHdGtNcXdiYmxpWnhyd3RpWVdYYXphektNNWt4NHJ5?=
+ =?utf-8?B?a29IU2d4MFhHTmtxT29DdXBtZndpSWtPbjZoeVJ6c3k3aTd4RHpXMWdkUWNn?=
+ =?utf-8?B?N0JPdGhOQlNQRlJlOE5qT3JOUWZYK0FiRmtBdVR3a2hDai9mY2J1UmoyQXVM?=
+ =?utf-8?B?ajN3eitZcTJyY3B6cFphM1hRVnNZcWxiS2J1WitpRzdUK3MwZU92b3YyamE0?=
+ =?utf-8?B?K0h2eUZSMWF6Z3dhSVVyZW9xenlPUEszYTVOT1FZbkJsc3M3MEhEclVQUTNi?=
+ =?utf-8?B?Z3pFbXhBd3lFYWpoenhpeWZwUXMweTB6M2NMUWxGM2hJbUdnUEhXR3NCWVpV?=
+ =?utf-8?B?N1d0cFUxMDJMQXFVSmdlY2o4L2FpalpBelk5cDNSYkFYUDhnWVNleUZ2SzFw?=
+ =?utf-8?B?NW5HK2VpbzV0N2JiUEwyZUNFRElZMWRqOFZ3bDNqK1JUQk43NS9Jak9xMXVi?=
+ =?utf-8?B?dFFscmJ4NUVsZTVPTHdjbnkyOGdqcFlxOEdXSE1VUUN4Tjk2bHRhS014bkds?=
+ =?utf-8?B?Q0ovdklqdlUvd0wrSVB5ZmFmRnZhSHdwZ0RmRmduNEZtT21qb1prdHc0SlNC?=
+ =?utf-8?B?YmpNV1QxTEhKeGtiZDdYUGNEZUV5dGQ3V1BlRnpKRGlLTjdNcitVRDVhZ2F2?=
+ =?utf-8?B?amJqblNvbitHSUI2aHdBRkFlbURCRlNTU3lDb0ZtSWpzMmkwOStCZzc1Mks0?=
+ =?utf-8?B?NXRzelJjOTV6b1p3K3J3Wk8vaDA5NnZHbE91Ujg5eG5pSFhubmhLRStPdGhs?=
+ =?utf-8?B?OWFJZkRtMVlHZnhEVmc5ZnU5MHhrZFE2WWlPQVYrdkgwMmdwamxYSEpoNWEx?=
+ =?utf-8?B?RGFmeTA3K3A3MTZiRDBFdGllK1hDc1psUzNXVUZIdFBPRmNpM0h6aGtjVUpa?=
+ =?utf-8?B?QkkyclN5ajltcG4waVZ2cGFsWEFVVnNGYXRjVmwxVThCTHJFR0xzR09vbGxO?=
+ =?utf-8?B?bmFCQWI1VnljbkVOK0N1dVczMkYrSkZxc0oyeWxVZ2wzVmltaG9xM0VaNmNp?=
+ =?utf-8?B?cVlVKzlFTDNVcjJUSWlGdVExTTQ5Z0tiWEtmY2Y4anZjNHE4M1NFbkI3bi8x?=
+ =?utf-8?B?VzBHNVhQZmxhNWJjeW1TVDRZKzZXb2JmemVpVVk5aE9WZ1pBdUVpTDdwVlBU?=
+ =?utf-8?B?dVRzZXhQYkc5anl4azdZeXFFSWtxZlhPYTJKcVpnREx5OTNPZHlkQzByNHg0?=
+ =?utf-8?B?cnpNTGhsTEZPZUdVNkxMVENoT2JkbW5NNXFJMGRzOGRlcG8rVFhFelI3emJ6?=
+ =?utf-8?B?VVVhQytKR09lenExUjMwSkJ1djhpRU5KMzdDN3dLY2VpUzFaZ3dRaW1PbWtT?=
+ =?utf-8?B?TU9YeGRuM1FUWFM1aTFTK2ZTUVppUVZRNS9TVGhBTi81cDQ0MnhJWUc5d1RK?=
+ =?utf-8?B?VG42ZmthQkdaOFlGRmJIbHlYNzE1UGhYVnA0b2VtMHZxYzZHL1gzV053Yit2?=
+ =?utf-8?B?UDVKOWVGRkRCelgyMFdtWEVlRmhQR1E4djVYVFdGbW9TRzFCMDJHbjI0NmZu?=
+ =?utf-8?B?bkFMN1o2SnpGL3pCR2RFcGxaR3BYeUlqYWFCTUdCVFpvYk1vMUJ1MEp2aG5l?=
+ =?utf-8?B?TUtVUnd6bGJ2aDBFc0p0NmJBakxYNG1ZS2d2SzcyZ1p6ODVLRmk0UGVXajJZ?=
+ =?utf-8?B?MXFRemh5dS9YSVZZVS9QdXpyRU9mSEpMRmEwR3l4NEczcW9paGN3dU5VUGRj?=
+ =?utf-8?B?V0JNUWtySlNqMlVHajZTazJFSmtOckZSdWUwb3drb2hDQnBaLzQ4Zz09?=
 X-OriginatorOrg: garyguo.net
-X-MS-Exchange-CrossTenant-Network-Message-Id: 5f43b373-375c-47f4-cf4c-08defde2735e
+X-MS-Exchange-CrossTenant-Network-Message-Id: 494e9595-6c3b-4152-6316-08defde276a9
 X-MS-Exchange-CrossTenant-AuthSource: LOAP265MB8560.GBRP265.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 Aug 2026 11:10:17.4311
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 Aug 2026 11:10:22.9821
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: bbc898ad-b10f-4e10-8552-d9377b823d45
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: LarXTmWVsCNKEW2zXsukKtOL55EX+ouBBzGN4L3PmSybaUsbd7k73EJDYtsCFMQMQe93Fc/7qLVfIgG+ZYm69A==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: LO0P265MB5167
+X-MS-Exchange-CrossTenant-UserPrincipalName: 6G+zbuD2RMZu1HVNrNdkpStZSGXcEYATurnqvWq1ZJX8COW/W2AtzKEw4SCzUom0zwvfPr/KpmHPIrAojVZJnw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CWLP265MB5113
 
-For types that are layout-compatible with an I/O capable type, we would
-want the ability to use them directly for I/O operations. E.g.
+Add fixed size region types `PFalconRegisters` and `PFalcon2Registers` and
+update PFALCON and PFALCON2 registers to be fixed register on them and not
+relative registers on `NovaRegisters`.
 
-    bitfield! {
-        pub struct Foo(u32) {
-            ...
-        }
-    }
-
-    #[repr(C)]
-    struct Bar {
-        foo: Foo,
-    }
-
-    let mmio: Mmio<'_, Bar> = ...;
-    io_read!(mmio, .foo)
-
-Currently this feature is available from `register!()` macro but not
-otherwise available with `io_read!`, `io_write!`. Support this by
-performing conversions to I/O primitives via the `AsRepr`/`AsReprMut`
-trait.
-
-This makes the `IoLoc::IoType` and `Register::Storage` redundant; thus
-remove them; also convert register methods to use the `read_val` and
-`write_val` instead.
+Update `Falcon` struct to store projected views when constructing and
+access with `self.pfalcon` and `self.pfalcon2`.
 
 Signed-off-by: Gary Guo <gary@garyguo.net>
 ---
- rust/kernel/bitfield.rs    |  10 ++++
- rust/kernel/io.rs          | 135 +++++++++++++++++++++++++--------------------
- rust/kernel/io/register.rs |  15 -----
- rust/macros/io/register.rs |   2 -
- 4 files changed, 86 insertions(+), 76 deletions(-)
+ drivers/gpu/nova-core/falcon.rs                    | 157 +++++++++------------
+ drivers/gpu/nova-core/falcon/fsp.rs                |  63 +++++----
+ drivers/gpu/nova-core/falcon/gsp.rs                |  51 ++++---
+ drivers/gpu/nova-core/falcon/hal/ga102.rs          |  62 ++++----
+ drivers/gpu/nova-core/falcon/hal/tu102.rs          |   9 +-
+ drivers/gpu/nova-core/falcon/sec2.rs               |  37 +++--
+ drivers/gpu/nova-core/firmware/fwsec/bootloader.rs |  18 +--
+ drivers/gpu/nova-core/gsp/hal/tu102.rs             |   7 +-
+ drivers/gpu/nova-core/regs.rs                      |  92 ++++++------
+ 9 files changed, 238 insertions(+), 258 deletions(-)
 
-diff --git a/rust/kernel/bitfield.rs b/rust/kernel/bitfield.rs
-index a0d089423f21..619c5e2189d1 100644
---- a/rust/kernel/bitfield.rs
-+++ b/rust/kernel/bitfield.rs
-@@ -308,6 +308,7 @@ macro_rules! bitfield {
-         $(#[$attr])*
-         #[repr(transparent)]
-         #[derive(Clone, Copy, PartialEq, Eq)]
-+        #[derive($crate::prelude::FromBytes, $crate::prelude::IntoBytes)]
-         $vis struct $name {
-             inner: $storage,
-         }
-@@ -346,6 +347,15 @@ fn from(val: $storage) -> $name {
-                 Self::from_raw(val)
-             }
-         }
-+
-+        // SAFETY: `$name` is transparent over `$storage`.
-+        unsafe impl $crate::mem::AsRepr for $name {
-+            // Normalize `$storage` to the canonical repr type in case it is signed.
-+            type Repr = <$storage as $crate::mem::AsRepr>::Repr;
-+        }
-+
-+        // SAFETY: `$name` is transparent over `$storage`.
-+        unsafe impl $crate::mem::AsReprMut for $name {}
-     };
+diff --git a/drivers/gpu/nova-core/falcon.rs b/drivers/gpu/nova-core/falcon.rs
+index 65cb12d26e2b..119d305e2ea3 100644
+--- a/drivers/gpu/nova-core/falcon.rs
++++ b/drivers/gpu/nova-core/falcon.rs
+@@ -14,13 +14,12 @@
+     io::{
+         io_project,
+         poll::read_poll_timeout,
+-        register::{
+-            RegisterBase,
+-            WithBase, //
+-        },
++        register::Array,
+         Io,
++        Mmio, //
+     },
+     prelude::*,
++    sizes::SZ_4K,
+     time::Delta,
+ };
  
-     // Definitions requiring knowledge of individual fields: private and public field accessors,
-diff --git a/rust/kernel/io.rs b/rust/kernel/io.rs
-index 5ce9fd129068..6c087d30a166 100644
---- a/rust/kernel/io.rs
-+++ b/rust/kernel/io.rs
-@@ -11,6 +11,10 @@
+@@ -165,18 +164,22 @@ pub(crate) enum FalconFbifMemType with From<Bounded<u32, 1>> {
+     }
+ }
+ 
+-/// Type used to represent the `PFALCON` registers address base for a given falcon engine.
+-pub(crate) struct PFalconBase(());
++/// Type used to represent the `PFALCON` registers.
++#[repr(align(4))]
++#[derive(FromBytes, IntoBytes)]
++pub(crate) struct PFalconRegisters([u8; SZ_4K]);
+ 
+-/// Type used to represent the `PFALCON2` registers address base for a given falcon engine.
+-pub(crate) struct PFalcon2Base(());
++/// Type used to represent the `PFALCON2` registers.
++#[repr(align(4))]
++#[derive(FromBytes, IntoBytes)]
++pub(crate) struct PFalcon2Registers([u8; SZ_4K]);
+ 
+ /// Trait defining the parameters of a given Falcon engine.
+ ///
+ /// Each engine provides one base for `PFALCON` and `PFALCON2` registers.
+-pub(crate) trait FalconEngine:
+-    Send + Sync + RegisterBase<PFalconBase> + RegisterBase<PFalcon2Base> + Sized
+-{
++pub(crate) trait FalconEngine: Send + Sync + Sized {
++    fn pfalcon(io: Bar0<'_>) -> Mmio<'_, PFalconRegisters>;
++    fn pfalcon2(io: Bar0<'_>) -> Mmio<'_, PFalcon2Registers>;
+ }
+ 
+ /// Represents a portion of the firmware to be loaded into a particular memory (e.g. IMEM or DMEM)
+@@ -358,6 +361,8 @@ pub(crate) struct Falcon<'a, E: FalconEngine> {
+     hal: KBox<dyn FalconHal<E>>,
+     dev: &'a device::Device<device::Bound>,
+     bar: Bar0<'a>,
++    pub(crate) pfalcon: Mmio<'a, PFalconRegisters>,
++    pfalcon2: Mmio<'a, PFalcon2Registers>,
+ }
+ 
+ impl<'a, E: FalconEngine + 'static> Falcon<'a, E> {
+@@ -371,19 +376,19 @@ pub(crate) fn new(
+             hal: hal::falcon_hal(chipset)?,
+             dev,
+             bar,
++            pfalcon: E::pfalcon(bar),
++            pfalcon2: E::pfalcon2(bar),
+         })
+     }
+ 
+     /// Resets DMA-related registers.
+     pub(crate) fn dma_reset(&self) {
+-        self.bar.update(regs::NV_PFALCON_FBIF_CTL::of::<E>(), |v| {
++        self.pfalcon.update(regs::NV_PFALCON_FBIF_CTL, |v| {
+             v.with_allow_phys_no_ctx(true)
+         });
+ 
+-        self.bar.write(
+-            WithBase::of::<E>(),
+-            regs::NV_PFALCON_FALCON_DMACTL::zeroed(),
+-        );
++        self.pfalcon
++            .write_reg(regs::NV_PFALCON_FALCON_DMACTL::zeroed());
+     }
+ 
+     /// Reset the controller, select the falcon core, and wait for memory scrubbing to complete.
+@@ -392,10 +397,9 @@ pub(crate) fn reset(&self) -> Result {
+         self.hal.select_core(self)?;
+         self.hal.reset_wait_mem_scrubbing(self)?;
+ 
+-        self.bar.write(
+-            WithBase::of::<E>(),
+-            regs::NV_PFALCON_FALCON_RM::from(self.bar.read(regs::NV_PMC_BOOT_0).into_raw()),
+-        );
++        self.pfalcon.write_reg(regs::NV_PFALCON_FALCON_RM::from(
++            self.bar.read(regs::NV_PMC_BOOT_0).into_raw(),
++        ));
+ 
+         Ok(())
+     }
+@@ -413,8 +417,8 @@ fn pio_wr_imem_slice(&self, load_offsets: FalconPioImemLoadTarget<'_>) -> Result
+             return Err(EINVAL);
+         }
+ 
+-        self.bar.write(
+-            WithBase::of::<E>().at(Self::PIO_PORT),
++        self.pfalcon.write(
++            Array::at(Self::PIO_PORT),
+             regs::NV_PFALCON_FALCON_IMEMC::zeroed()
+                 .with_secure(load_offsets.secure)
+                 .with_aincw(true)
+@@ -424,14 +428,14 @@ fn pio_wr_imem_slice(&self, load_offsets: FalconPioImemLoadTarget<'_>) -> Result
+         for (n, block) in load_offsets.data.chunks(MEM_BLOCK_ALIGNMENT).enumerate() {
+             let n = u16::try_from(n)?;
+             let tag: u16 = load_offsets.start_tag.checked_add(n).ok_or(ERANGE)?;
+-            self.bar.write(
+-                WithBase::of::<E>().at(Self::PIO_PORT),
++            self.pfalcon.write(
++                Array::at(Self::PIO_PORT),
+                 regs::NV_PFALCON_FALCON_IMEMT::zeroed().with_tag(tag),
+             );
+             for word in block.chunks_exact(4) {
+                 let w = [word[0], word[1], word[2], word[3]];
+-                self.bar.write(
+-                    WithBase::of::<E>().at(Self::PIO_PORT),
++                self.pfalcon.write(
++                    Array::at(Self::PIO_PORT),
+                     regs::NV_PFALCON_FALCON_IMEMD::zeroed().with_data(u32::from_le_bytes(w)),
+                 );
+             }
+@@ -450,8 +454,8 @@ fn pio_wr_dmem_slice(&self, load_offsets: FalconPioDmemLoadTarget<'_>) -> Result
+             return Err(EINVAL);
+         }
+ 
+-        self.bar.write(
+-            WithBase::of::<E>().at(Self::PIO_PORT),
++        self.pfalcon.write(
++            Array::at(Self::PIO_PORT),
+             regs::NV_PFALCON_FALCON_DMEMC::zeroed()
+                 .with_aincw(true)
+                 .with_offs(load_offsets.dst_start),
+@@ -459,8 +463,8 @@ fn pio_wr_dmem_slice(&self, load_offsets: FalconPioDmemLoadTarget<'_>) -> Result
+ 
+         for word in load_offsets.data.chunks_exact(4) {
+             let w = [word[0], word[1], word[2], word[3]];
+-            self.bar.write(
+-                WithBase::of::<E>().at(Self::PIO_PORT),
++            self.pfalcon.write(
++                Array::at(Self::PIO_PORT),
+                 regs::NV_PFALCON_FALCON_DMEMD::zeroed().with_data(u32::from_le_bytes(w)),
+             );
+         }
+@@ -473,14 +477,12 @@ pub(crate) fn pio_load<F: FalconFirmware<Target = E> + FalconPioLoadable>(
+         &self,
+         fw: &F,
+     ) -> Result {
+-        self.bar.update(regs::NV_PFALCON_FBIF_CTL::of::<E>(), |v| {
++        self.pfalcon.update(regs::NV_PFALCON_FBIF_CTL, |v| {
+             v.with_allow_phys_no_ctx(true)
+         });
+ 
+-        self.bar.write(
+-            WithBase::of::<E>(),
+-            regs::NV_PFALCON_FALCON_DMACTL::zeroed(),
+-        );
++        self.pfalcon
++            .write_reg(regs::NV_PFALCON_FALCON_DMACTL::zeroed());
+ 
+         if let Some(imem_ns) = fw.imem_ns_load_params() {
+             self.pio_wr_imem_slice(imem_ns)?;
+@@ -492,10 +494,8 @@ pub(crate) fn pio_load<F: FalconFirmware<Target = E> + FalconPioLoadable>(
+ 
+         self.hal.program_brom(self, &fw.brom_params());
+ 
+-        self.bar.write(
+-            WithBase::of::<E>(),
+-            regs::NV_PFALCON_FALCON_BOOTVEC::zeroed().with_value(fw.boot_addr()),
+-        );
++        self.pfalcon
++            .write_reg(regs::NV_PFALCON_FALCON_BOOTVEC::zeroed().with_value(fw.boot_addr()));
+ 
+         Ok(())
+     }
+@@ -547,16 +547,13 @@ fn dma_wr(
+ 
+         // Set up the base source DMA address.
+ 
+-        self.bar.write(
+-            WithBase::of::<E>(),
+-            regs::NV_PFALCON_FALCON_DMATRFBASE::zeroed().with_base(
++        self.pfalcon
++            .write_reg(regs::NV_PFALCON_FALCON_DMATRFBASE::zeroed().with_base(
+                 // CAST: `as u32` is used on purpose since we do want to strip the upper bits,
+                 // which will be written to `NV_PFALCON_FALCON_DMATRFBASE1`.
+                 (dma_address >> 8) as u32,
+-            ),
+-        );
+-        self.bar.write(
+-            WithBase::of::<E>(),
++            ));
++        self.pfalcon.write_reg(
+             regs::NV_PFALCON_FALCON_DMATRFBASE1::zeroed().try_with_base(dma_address >> 40)?,
+         );
+ 
+@@ -566,23 +563,21 @@ fn dma_wr(
+ 
+         for pos in (0..num_transfers).map(|i| i * DMA_LEN) {
+             // Perform a transfer of size `DMA_LEN`.
+-            self.bar.write(
+-                WithBase::of::<E>(),
++            self.pfalcon.write_reg(
+                 regs::NV_PFALCON_FALCON_DMATRFMOFFS::zeroed()
+                     .try_with_offs(load_offsets.dst_start + pos)?,
+             );
+-            self.bar.write(
+-                WithBase::of::<E>(),
++            self.pfalcon.write_reg(
+                 regs::NV_PFALCON_FALCON_DMATRFFBOFFS::zeroed().with_offs(src_start + pos),
+             );
+ 
+-            self.bar.write(WithBase::of::<E>(), cmd);
++            self.pfalcon.write_reg(cmd);
+ 
+             // Wait for the transfer to complete.
+             // TIMEOUT: arbitrarily large value, no DMA transfer to the falcon's small memories
+             // should ever take that long.
+             read_poll_timeout(
+-                || Ok(self.bar.read(regs::NV_PFALCON_FALCON_DMATRFCMD::of::<E>())),
++                || Ok(self.pfalcon.read(regs::NV_PFALCON_FALCON_DMATRFCMD)),
+                 |r| r.idle(),
+                 Delta::ZERO,
+                 Delta::from_secs(2),
+@@ -614,8 +609,8 @@ fn dma_load<F: FalconFirmware<Target = E> + FalconDmaLoadable>(&self, fw: &F) ->
+         };
+ 
+         self.dma_reset();
+-        self.bar
+-            .update(regs::NV_PFALCON_FBIF_TRANSCFG::of::<E>().at(0), |v| {
++        self.pfalcon
++            .update(regs::NV_PFALCON_FBIF_TRANSCFG::at(0), |v| {
+                 v.with_target(FalconFbifTarget::CoherentSysmem)
+                     .with_mem_type(FalconFbifMemType::Physical)
+             });
+@@ -626,10 +621,8 @@ fn dma_load<F: FalconFirmware<Target = E> + FalconDmaLoadable>(&self, fw: &F) ->
+         self.hal.program_brom(self, &fw.brom_params());
+ 
+         // Set `BootVec` to start of non-secure code.
+-        self.bar.write(
+-            WithBase::of::<E>(),
+-            regs::NV_PFALCON_FALCON_BOOTVEC::zeroed().with_value(fw.boot_addr()),
+-        );
++        self.pfalcon
++            .write_reg(regs::NV_PFALCON_FALCON_BOOTVEC::zeroed().with_value(fw.boot_addr()));
+ 
+         Ok(())
+     }
+@@ -638,7 +631,7 @@ fn dma_load<F: FalconFirmware<Target = E> + FalconDmaLoadable>(&self, fw: &F) ->
+     pub(crate) fn wait_till_halted(&self) -> Result<()> {
+         // TIMEOUT: arbitrarily large value, firmwares should complete in less than 2 seconds.
+         read_poll_timeout(
+-            || Ok(self.bar.read(regs::NV_PFALCON_FALCON_CPUCTL::of::<E>())),
++            || Ok(self.pfalcon.read(regs::NV_PFALCON_FALCON_CPUCTL)),
+             |r| r.halted(),
+             Delta::ZERO,
+             Delta::from_secs(2),
+@@ -649,19 +642,13 @@ pub(crate) fn wait_till_halted(&self) -> Result<()> {
+ 
+     /// Start the falcon CPU.
+     pub(crate) fn start(&self) -> Result<()> {
+-        match self
+-            .bar
+-            .read(regs::NV_PFALCON_FALCON_CPUCTL::of::<E>())
+-            .alias_en()
+-        {
+-            true => self.bar.write(
+-                WithBase::of::<E>(),
+-                regs::NV_PFALCON_FALCON_CPUCTL_ALIAS::zeroed().with_startcpu(true),
+-            ),
+-            false => self.bar.write(
+-                WithBase::of::<E>(),
+-                regs::NV_PFALCON_FALCON_CPUCTL::zeroed().with_startcpu(true),
+-            ),
++        match self.pfalcon.read(regs::NV_PFALCON_FALCON_CPUCTL).alias_en() {
++            true => self
++                .pfalcon
++                .write_reg(regs::NV_PFALCON_FALCON_CPUCTL_ALIAS::zeroed().with_startcpu(true)),
++            false => self
++                .pfalcon
++                .write_reg(regs::NV_PFALCON_FALCON_CPUCTL::zeroed().with_startcpu(true)),
+         }
+ 
+         Ok(())
+@@ -670,32 +657,24 @@ pub(crate) fn start(&self) -> Result<()> {
+     /// Writes values to the mailbox registers if provided.
+     pub(crate) fn write_mailboxes(&self, mbox0: Option<u32>, mbox1: Option<u32>) {
+         if let Some(mbox0) = mbox0 {
+-            self.bar.write(
+-                WithBase::of::<E>(),
+-                regs::NV_PFALCON_FALCON_MAILBOX0::zeroed().with_value(mbox0),
+-            );
++            self.pfalcon
++                .write_reg(regs::NV_PFALCON_FALCON_MAILBOX0::zeroed().with_value(mbox0));
+         }
+ 
+         if let Some(mbox1) = mbox1 {
+-            self.bar.write(
+-                WithBase::of::<E>(),
+-                regs::NV_PFALCON_FALCON_MAILBOX1::zeroed().with_value(mbox1),
+-            );
++            self.pfalcon
++                .write_reg(regs::NV_PFALCON_FALCON_MAILBOX1::zeroed().with_value(mbox1));
+         }
+     }
+ 
+     /// Reads the value from `mbox0` register.
+     pub(crate) fn read_mailbox0(&self) -> u32 {
+-        self.bar
+-            .read(regs::NV_PFALCON_FALCON_MAILBOX0::of::<E>())
+-            .value()
++        self.pfalcon.read(regs::NV_PFALCON_FALCON_MAILBOX0).value()
+     }
+ 
+     /// Reads the value from `mbox1` register.
+     pub(crate) fn read_mailbox1(&self) -> u32 {
+-        self.bar
+-            .read(regs::NV_PFALCON_FALCON_MAILBOX1::of::<E>())
+-            .value()
++        self.pfalcon.read(regs::NV_PFALCON_FALCON_MAILBOX1).value()
+     }
+ 
+     /// Reads values from both mailbox registers.
+@@ -760,9 +739,7 @@ pub(crate) fn load<F: FalconFirmware<Target = E> + FalconDmaLoadable>(&self, fw:
+ 
+     /// Write the application version to the OS register.
+     pub(crate) fn write_os_version(&self, app_version: u32) {
+-        self.bar.write(
+-            WithBase::of::<E>(),
+-            regs::NV_PFALCON_FALCON_OS::zeroed().with_value(app_version),
+-        );
++        self.pfalcon
++            .write_reg(regs::NV_PFALCON_FALCON_OS::zeroed().with_value(app_version));
+     }
+ }
+diff --git a/drivers/gpu/nova-core/falcon/fsp.rs b/drivers/gpu/nova-core/falcon/fsp.rs
+index 0437180b8829..85f9c8c5d60e 100644
+--- a/drivers/gpu/nova-core/falcon/fsp.rs
++++ b/drivers/gpu/nova-core/falcon/fsp.rs
+@@ -8,13 +8,12 @@
+ 
+ use kernel::{
+     io::{
++        io_project,
+         poll::read_poll_timeout,
+-        register::{
+-            Array,
+-            RegisterBase,
+-            WithBase, //
+-        },
+-        Io, //
++        register,
++        register::Array,
++        Io,
++        Mmio, //
+     },
+     prelude::*,
+     sizes::SZ_1K,
+@@ -22,11 +21,13 @@
+ };
  
  use crate::{
-     bindings,
-+    mem::{
-+        AsRepr,
-+        AsReprMut, //
++    driver::{
++        Bar0,
++        NovaRegisters, //
++    },
+     falcon::{
+         Falcon,
+-        FalconEngine,
+-        PFalcon2Base,
+-        PFalconBase, //
++        FalconEngine, //
+     },
+     num,
+     regs, //
+@@ -41,15 +42,24 @@
+ /// Type specifying the `Fsp` falcon engine. Cannot be instantiated.
+ pub(crate) struct Fsp(());
+ 
+-impl RegisterBase<PFalconBase> for Fsp {
+-    const BASE: usize = 0x8f2000;
+-}
++register! {
++    base: NovaRegisters;
+ 
+-impl RegisterBase<PFalcon2Base> for Fsp {
+-    const BASE: usize = 0x8f3000;
++    PFALCON: super::PFalconRegisters @ 0x8f2000;
++    PFALCON2: super::PFalcon2Registers @ 0x8f3000;
+ }
+ 
+-impl FalconEngine for Fsp {}
++impl FalconEngine for Fsp {
++    #[inline]
++    fn pfalcon(io: Bar0<'_>) -> Mmio<'_, super::PFalconRegisters> {
++        io_project!(io, build: PFALCON)
++    }
++
++    #[inline]
++    fn pfalcon2(io: Bar0<'_>) -> Mmio<'_, super::PFalcon2Registers> {
++        io_project!(io, build: PFALCON2)
++    }
++}
+ 
+ impl<'a> Falcon<'a, Fsp> {
+     /// Writes `data` to FSP external memory at offset `0`.
+@@ -62,19 +72,15 @@ fn write_emem(&mut self, data: &[u8]) -> Result {
+         }
+ 
+         // Begin a write burst at offset `0`, auto-incrementing on each write.
+-        self.bar.write(
+-            WithBase::of::<Fsp>(),
+-            regs::NV_PFALCON_FALCON_EMEMC::zeroed().with_aincw(true),
+-        );
++        self.pfalcon
++            .write_reg(regs::NV_PFALCON_FALCON_EMEMC::zeroed().with_aincw(true));
+ 
+         for chunk in data.chunks_exact(4) {
+             let value = u32::from_le_bytes([chunk[0], chunk[1], chunk[2], chunk[3]]);
+ 
+             // Write the next 32-bit `value`; hardware advances the offset.
+-            self.bar.write(
+-                WithBase::of::<Fsp>(),
+-                regs::NV_PFALCON_FALCON_EMEMD::zeroed().with_data(value),
+-            );
++            self.pfalcon
++                .write_reg(regs::NV_PFALCON_FALCON_EMEMD::zeroed().with_data(value));
+         }
+ 
+         Ok(())
+@@ -90,17 +96,12 @@ fn read_emem(&mut self, data: &mut [u8]) -> Result {
+         }
+ 
+         // Begin a read burst at offset `0`, auto-incrementing on each read.
+-        self.bar.write(
+-            WithBase::of::<Fsp>(),
+-            regs::NV_PFALCON_FALCON_EMEMC::zeroed().with_aincr(true),
+-        );
++        self.pfalcon
++            .write_reg(regs::NV_PFALCON_FALCON_EMEMC::zeroed().with_aincr(true));
+ 
+         for chunk in data.chunks_exact_mut(4) {
+             // Read the next 32-bit word; hardware advances the offset.
+-            let value = self
+-                .bar
+-                .read(regs::NV_PFALCON_FALCON_EMEMD::of::<Fsp>())
+-                .data();
++            let value = self.pfalcon.read(regs::NV_PFALCON_FALCON_EMEMD).data();
+             chunk.copy_from_slice(&value.to_le_bytes());
+         }
+ 
+diff --git a/drivers/gpu/nova-core/falcon/gsp.rs b/drivers/gpu/nova-core/falcon/gsp.rs
+index ae32f401aeb0..4c96ae325fda 100644
+--- a/drivers/gpu/nova-core/falcon/gsp.rs
++++ b/drivers/gpu/nova-core/falcon/gsp.rs
+@@ -2,23 +2,24 @@
+ 
+ use kernel::{
+     io::{
++        io_project,
+         poll::read_poll_timeout,
+-        register::{
+-            RegisterBase,
+-            WithBase, //
+-        },
++        register,
+         Io,
++        Mmio, //
+     },
+     prelude::*,
+     time::Delta, //
+ };
+ 
+ use crate::{
++    driver::{
++        Bar0,
++        NovaRegisters, //
++    },
+     falcon::{
+         Falcon,
+-        FalconEngine,
+-        PFalcon2Base,
+-        PFalconBase, //
++        FalconEngine, //
+     },
+     regs,
+ };
+@@ -26,24 +27,31 @@
+ /// Type specifying the `Gsp` falcon engine. Cannot be instantiated.
+ pub(crate) struct Gsp(());
+ 
+-impl RegisterBase<PFalconBase> for Gsp {
+-    const BASE: usize = 0x00110000;
+-}
++register! {
++    base: NovaRegisters;
+ 
+-impl RegisterBase<PFalcon2Base> for Gsp {
+-    const BASE: usize = 0x00111000;
++    PFALCON: super::PFalconRegisters @ 0x00110000;
++    PFALCON2: super::PFalcon2Registers @ 0x00111000;
+ }
+ 
+-impl FalconEngine for Gsp {}
++impl FalconEngine for Gsp {
++    #[inline]
++    fn pfalcon(io: Bar0<'_>) -> Mmio<'_, super::PFalconRegisters> {
++        io_project!(io, build: PFALCON)
++    }
++
++    #[inline]
++    fn pfalcon2(io: Bar0<'_>) -> Mmio<'_, super::PFalcon2Registers> {
++        io_project!(io, build: PFALCON2)
++    }
++}
+ 
+ impl<'a> Falcon<'a, Gsp> {
+     /// Clears the SWGEN0 bit in the Falcon's IRQ status clear register to
+     /// allow GSP to signal CPU for processing new messages in message queue.
+     pub(crate) fn clear_swgen0_intr(&self) {
+-        self.bar.write(
+-            WithBase::of::<Gsp>(),
+-            regs::NV_PFALCON_FALCON_IRQSCLR::zeroed().with_swgen0(true),
+-        );
++        self.pfalcon
++            .write_reg(regs::NV_PFALCON_FALCON_IRQSCLR::zeroed().with_swgen0(true));
+     }
+ 
+     /// Checks if GSP reload/resume has completed during the boot process.
+@@ -59,8 +67,8 @@ pub(crate) fn check_reload_completed(&self, timeout: Delta) -> Result<bool> {
+ 
+     /// Returns whether the RISC-V branch privilege lockdown bit is set.
+     pub(crate) fn riscv_branch_privilege_lockdown(&self) -> bool {
+-        self.bar
+-            .read(regs::NV_PFALCON_FALCON_HWCFG2::of::<Gsp>())
++        self.pfalcon
++            .read(regs::NV_PFALCON_FALCON_HWCFG2)
+             .riscv_br_priv_lockdown()
+     }
+ 
+@@ -71,10 +79,7 @@ pub(crate) fn priv_target_mask_released(&self) -> bool {
+         const LOCKED_PATTERN: u32 = 0xbadf_4100;
+         const LOCKED_MASK: u32 = 0xffff_ff00;
+ 
+-        let hwcfg2 = self
+-            .bar
+-            .read(regs::NV_PFALCON_FALCON_HWCFG2::of::<Gsp>())
+-            .into_raw();
++        let hwcfg2 = self.pfalcon.read(regs::NV_PFALCON_FALCON_HWCFG2).into_raw();
+ 
+         hwcfg2 != 0 && (hwcfg2 & LOCKED_MASK) != LOCKED_PATTERN
+     }
+diff --git a/drivers/gpu/nova-core/falcon/hal/ga102.rs b/drivers/gpu/nova-core/falcon/hal/ga102.rs
+index 7600ee07ca2e..7880c145f8f7 100644
+--- a/drivers/gpu/nova-core/falcon/hal/ga102.rs
++++ b/drivers/gpu/nova-core/falcon/hal/ga102.rs
+@@ -6,11 +6,9 @@
+     device,
+     io::{
+         poll::read_poll_timeout,
+-        register::{
+-            Array,
+-            WithBase, //
+-        },
+-        Io, //
++        register::Array,
++        Io,
++        Mmio, //
+     },
+     prelude::*,
+     time::Delta, //
+@@ -24,6 +22,7 @@
+         FalconBromParams,
+         FalconEngine,
+         FalconModSelAlgo,
++        PFalcon2Registers,
+         PeregrineCoreSelect, //
+     },
+     regs,
+@@ -31,17 +30,16 @@
+ 
+ use super::FalconHal;
+ 
+-fn select_core_ga102<E: FalconEngine>(bar: Bar0<'_>) -> Result {
+-    let bcr_ctrl = bar.read(regs::NV_PRISCV_RISCV_BCR_CTRL::of::<E>());
++fn select_core_ga102(pfalcon2: Mmio<'_, PFalcon2Registers>) -> Result {
++    let bcr_ctrl = pfalcon2.read(regs::NV_PRISCV_RISCV_BCR_CTRL);
+     if bcr_ctrl.core_select() != PeregrineCoreSelect::Falcon {
+-        bar.write(
+-            WithBase::of::<E>(),
++        pfalcon2.write_reg(
+             regs::NV_PRISCV_RISCV_BCR_CTRL::zeroed().with_core_select(PeregrineCoreSelect::Falcon),
+         );
+ 
+         // TIMEOUT: falcon core should take less than 10ms to report being enabled.
+         read_poll_timeout(
+-            || Ok(bar.read(regs::NV_PRISCV_RISCV_BCR_CTRL::of::<E>())),
++            || Ok(pfalcon2.read(regs::NV_PRISCV_RISCV_BCR_CTRL)),
+             |r| r.valid(),
+             Delta::ZERO,
+             Delta::from_millis(10),
+@@ -86,24 +84,23 @@ fn signature_reg_fuse_version_ga102(
+     Ok(u16::BITS - reg_fuse_version.leading_zeros())
+ }
+ 
+-fn program_brom_ga102<E: FalconEngine>(bar: Bar0<'_>, params: &FalconBromParams) {
+-    bar.write(
+-        WithBase::of::<E>().at(0),
++fn program_brom_ga102(
++    pfalcon2: Mmio<'_, PFalcon2Registers>,
++    params: &FalconBromParams,
++) {
++    pfalcon2.write(
++        Array::at(0),
+         regs::NV_PFALCON2_FALCON_BROM_PARAADDR::zeroed().with_value(params.pkc_data_offset),
+     );
+-    bar.write(
+-        WithBase::of::<E>(),
++    pfalcon2.write_reg(
+         regs::NV_PFALCON2_FALCON_BROM_ENGIDMASK::zeroed()
+             .with_value(u32::from(params.engine_id_mask)),
+     );
+-    bar.write(
+-        WithBase::of::<E>(),
++    pfalcon2.write_reg(
+         regs::NV_PFALCON2_FALCON_BROM_CURR_UCODE_ID::zeroed().with_ucode_id(params.ucode_id),
+     );
+-    bar.write(
+-        WithBase::of::<E>(),
+-        regs::NV_PFALCON2_FALCON_MOD_SEL::zeroed().with_algo(FalconModSelAlgo::Rsa3k),
+-    );
++    pfalcon2
++        .write_reg(regs::NV_PFALCON2_FALCON_MOD_SEL::zeroed().with_algo(FalconModSelAlgo::Rsa3k));
+ }
+ 
+ pub(super) struct Ga102<E: FalconEngine>(PhantomData<E>);
+@@ -116,7 +113,7 @@ pub(super) fn new() -> Self {
+ 
+ impl<E: FalconEngine> FalconHal<E> for Ga102<E> {
+     fn select_core(&self, falcon: &Falcon<'_, E>) -> Result {
+-        select_core_ga102::<E>(falcon.bar)
++        select_core_ga102(falcon.pfalcon2)
+     }
+ 
+     fn signature_reg_fuse_version(
+@@ -129,27 +126,24 @@ fn signature_reg_fuse_version(
+     }
+ 
+     fn program_brom(&self, falcon: &Falcon<'_, E>, params: &FalconBromParams) {
+-        program_brom_ga102::<E>(falcon.bar, params);
++        program_brom_ga102(falcon.pfalcon2, params);
+     }
+ 
+     fn is_riscv_active(&self, falcon: &Falcon<'_, E>) -> bool {
+         falcon
+-            .bar
+-            .read(regs::NV_PRISCV_RISCV_CPUCTL::of::<E>())
++            .pfalcon2
++            .read(regs::NV_PRISCV_RISCV_CPUCTL)
+             .active_stat()
+     }
+ 
+     fn is_riscv_halted(&self, falcon: &Falcon<'_, E>) -> Result<bool> {
+-        Ok(falcon
+-            .bar
+-            .read(regs::NV_PRISCV_RISCV_CPUCTL::of::<E>())
+-            .halted())
++        Ok(falcon.pfalcon2.read(regs::NV_PRISCV_RISCV_CPUCTL).halted())
+     }
+ 
+     fn reset_wait_mem_scrubbing(&self, falcon: &Falcon<'_, E>) -> Result {
+         // TIMEOUT: memory scrubbing should complete in less than 20ms.
+         read_poll_timeout(
+-            || Ok(falcon.bar.read(regs::NV_PFALCON_FALCON_HWCFG2::of::<E>())),
++            || Ok(falcon.pfalcon.read(regs::NV_PFALCON_FALCON_HWCFG2)),
+             |r| r.mem_scrubbing_done(),
+             Delta::ZERO,
+             Delta::from_millis(20),
+@@ -158,20 +152,18 @@ fn reset_wait_mem_scrubbing(&self, falcon: &Falcon<'_, E>) -> Result {
+     }
+ 
+     fn reset_eng(&self, falcon: &Falcon<'_, E>) -> Result {
+-        let bar = falcon.bar;
+-
+-        let _ = bar.read(regs::NV_PFALCON_FALCON_HWCFG2::of::<E>());
++        let _ = falcon.pfalcon.read(regs::NV_PFALCON_FALCON_HWCFG2);
+ 
+         // According to OpenRM's `kflcnPreResetWait_GA102` documentation, HW sometimes does not set
+         // RESET_READY so a non-failing timeout is used.
+         let _ = read_poll_timeout(
+-            || Ok(bar.read(regs::NV_PFALCON_FALCON_HWCFG2::of::<E>())),
++            || Ok(falcon.pfalcon.read(regs::NV_PFALCON_FALCON_HWCFG2)),
+             |r| r.reset_ready(),
+             Delta::ZERO,
+             Delta::from_micros(150),
+         );
+ 
+-        regs::NV_PFALCON_FALCON_ENGINE::reset_engine::<E>(bar);
++        regs::NV_PFALCON_FALCON_ENGINE::reset_engine(falcon.pfalcon);
+         self.reset_wait_mem_scrubbing(falcon)?;
+ 
+         Ok(())
+diff --git a/drivers/gpu/nova-core/falcon/hal/tu102.rs b/drivers/gpu/nova-core/falcon/hal/tu102.rs
+index 5291598fedf7..7fc6e83c2566 100644
+--- a/drivers/gpu/nova-core/falcon/hal/tu102.rs
++++ b/drivers/gpu/nova-core/falcon/hal/tu102.rs
+@@ -5,7 +5,6 @@
+ use kernel::{
+     io::{
+         poll::read_poll_timeout,
+-        register::WithBase,
+         Io, //
+     },
+     prelude::*,
+@@ -50,8 +49,8 @@ fn program_brom(&self, _falcon: &Falcon<'_, E>, _params: &FalconBromParams) {}
+ 
+     fn is_riscv_active(&self, falcon: &Falcon<'_, E>) -> bool {
+         falcon
+-            .bar
+-            .read(regs::NV_PRISCV_RISCV_CORE_SWITCH_RISCV_STATUS::of::<E>())
++            .pfalcon2
++            .read(regs::NV_PRISCV_RISCV_CORE_SWITCH_RISCV_STATUS)
+             .active_stat()
+     }
+ 
+@@ -62,7 +61,7 @@ fn is_riscv_halted(&self, _falcon: &Falcon<'_, E>) -> Result<bool> {
+     fn reset_wait_mem_scrubbing(&self, falcon: &Falcon<'_, E>) -> Result {
+         // TIMEOUT: memory scrubbing should complete in less than 10ms.
+         read_poll_timeout(
+-            || Ok(falcon.bar.read(regs::NV_PFALCON_FALCON_DMACTL::of::<E>())),
++            || Ok(falcon.pfalcon.read(regs::NV_PFALCON_FALCON_DMACTL)),
+             |r| r.mem_scrubbing_done(),
+             Delta::ZERO,
+             Delta::from_millis(10),
+@@ -71,7 +70,7 @@ fn reset_wait_mem_scrubbing(&self, falcon: &Falcon<'_, E>) -> Result {
+     }
+ 
+     fn reset_eng(&self, falcon: &Falcon<'_, E>) -> Result {
+-        regs::NV_PFALCON_FALCON_ENGINE::reset_engine::<E>(falcon.bar);
++        regs::NV_PFALCON_FALCON_ENGINE::reset_engine(falcon.pfalcon);
+         self.reset_wait_mem_scrubbing(falcon)?;
+ 
+         Ok(())
+diff --git a/drivers/gpu/nova-core/falcon/sec2.rs b/drivers/gpu/nova-core/falcon/sec2.rs
+index 91ec7d49c1f5..6648a397d38a 100644
+--- a/drivers/gpu/nova-core/falcon/sec2.rs
++++ b/drivers/gpu/nova-core/falcon/sec2.rs
+@@ -1,22 +1,37 @@
+ // SPDX-License-Identifier: GPL-2.0
+ 
+-use kernel::io::register::RegisterBase;
++use kernel::io::{
++    io_project,
++    register,
++    Mmio, //
++};
+ 
+-use crate::falcon::{
+-    FalconEngine,
+-    PFalcon2Base,
+-    PFalconBase, //
++use crate::{
++    driver::{
++        Bar0,
++        NovaRegisters, //
++    },
++    falcon::FalconEngine, //
+ };
+ 
+ /// Type specifying the `Sec2` falcon engine. Cannot be instantiated.
+ pub(crate) struct Sec2(());
+ 
+-impl RegisterBase<PFalconBase> for Sec2 {
+-    const BASE: usize = 0x00840000;
+-}
++register! {
++    base: NovaRegisters;
+ 
+-impl RegisterBase<PFalcon2Base> for Sec2 {
+-    const BASE: usize = 0x00841000;
++    PFALCON: super::PFalconRegisters @ 0x00840000;
++    PFALCON2: super::PFalcon2Registers @ 0x00841000;
+ }
+ 
+-impl FalconEngine for Sec2 {}
++impl FalconEngine for Sec2 {
++    #[inline]
++    fn pfalcon(io: Bar0<'_>) -> Mmio<'_, super::PFalconRegisters> {
++        io_project!(io, build: PFALCON)
++    }
++
++    #[inline]
++    fn pfalcon2(io: Bar0<'_>) -> Mmio<'_, super::PFalcon2Registers> {
++        io_project!(io, build: PFALCON2)
++    }
++}
+diff --git a/drivers/gpu/nova-core/firmware/fwsec/bootloader.rs b/drivers/gpu/nova-core/firmware/fwsec/bootloader.rs
+index ec4d92317a93..02a36fd59902 100644
+--- a/drivers/gpu/nova-core/firmware/fwsec/bootloader.rs
++++ b/drivers/gpu/nova-core/firmware/fwsec/bootloader.rs
+@@ -12,7 +12,10 @@
+         Device, //
+     },
+     dma::Coherent,
+-    io::{register::WithBase, Io},
++    io::{
++        register::Array,
++        Io, //
 +    },
      prelude::*,
      ptr::{
-         Alignment,
-@@ -353,15 +357,12 @@ fn copy_write<T: IntoBytes>(view: Self::View<'_, T>, value: T) {
- ///
- /// - The valid `Base` to operate on. For most registers, this should be [`Region`].
- /// - The offset to access (returned by [`IoLoc::offset`]),
--/// - The width of the access (determined by [`IoLoc::IoType`]),
--/// - The type `T` in which the raw data is returned or provided.
-+/// - The type `T` in which the data is returned or provided.
- ///
--/// `T` and `IoLoc::IoType` may differ: for instance, a typed register has `T` = the register type
--/// with its bitfields, and `IoType` = its backing primitive (e.g. `u32`).
-+/// `T` is not necessarily the type for underlying I/O operation. Methods that take `IoLoc` have `T:
-+/// AsRepr` bound and the `<T as AsRepr>::Repr` type would be used to perform I/O and converted to
-+/// `T` instead.
- pub trait IoLoc<Base: ?Sized, T> {
--    /// Size ([`u8`], [`u16`], etc) of the I/O performed on the returned [`offset`](IoLoc::offset).
--    type IoType: Into<T> + From<T>;
--
-     /// Consumes `self` and returns the offset of this location.
-     fn offset(self) -> usize;
- }
-@@ -372,8 +373,6 @@ macro_rules! impl_usize_ioloc {
-     ($($ty:ty),*) => {
-         $(
-             impl<const SIZE: usize> IoLoc<Region<SIZE>, $ty> for usize {
--                type IoType = $ty;
--
-                 #[inline(always)]
-                 fn offset(self) -> usize {
-                     self
-@@ -498,10 +497,19 @@ fn try_cast<U>(self) -> Result<<Self::Backend as IoBackend>::View<'a, U>>
-     #[inline]
-     fn read_val(self) -> Self::Target
-     where
--        Self::Backend: IoCapable<Self::Target>,
--        Self::Target: Sized,
-+        Self::Target: AsReprMut,
-+        Self::Backend: IoCapable<<Self::Target as AsRepr>::Repr>,
-     {
--        Self::Backend::io_read(self.as_view())
-+        let view = self.as_view();
-+        // SAFETY: `AsRepr` guarantees layout compatibility.
-+        let repr_view = unsafe {
-+            Self::Backend::project_view(
-+                view,
-+                Self::Backend::as_ptr(view).cast::<<Self::Target as AsRepr>::Repr>(),
-+            )
-+        };
-+
-+        Self::Target::from_repr(Self::Backend::io_read(repr_view))
-     }
+         Alignable,
+@@ -23,7 +26,6 @@
+ };
  
-     /// Write a value to I/O.
-@@ -520,10 +528,19 @@ fn read_val(self) -> Self::Target
-     #[inline]
-     fn write_val(self, value: Self::Target)
-     where
--        Self::Backend: IoCapable<Self::Target>,
--        Self::Target: Sized,
-+        Self::Target: AsRepr,
-+        Self::Backend: IoCapable<<Self::Target as AsRepr>::Repr>,
-     {
--        Self::Backend::io_write(self.as_view(), value)
-+        let view = self.as_view();
-+        // SAFETY: `AsRepr` guarantees layout compatibility.
-+        let repr_view = unsafe {
-+            Self::Backend::project_view(
-+                view,
-+                Self::Backend::as_ptr(view).cast::<<Self::Target as AsRepr>::Repr>(),
-+            )
-+        };
-+
-+        Self::Backend::io_write(repr_view, Self::Target::into_repr(value))
-     }
- 
-     /// Copy-read from I/O memory.
-@@ -645,7 +662,7 @@ fn copy_to_slice(self, data: &mut [u8])
-     #[inline(always)]
-     fn try_read8(self, offset: usize) -> Result<u8>
-     where
--        usize: IoLoc<Self::Target, u8, IoType = u8>,
-+        usize: IoLoc<Self::Target, u8>,
-         Self::Backend: IoCapable<u8>,
-     {
-         self.try_read(offset)
-@@ -655,7 +672,7 @@ fn try_read8(self, offset: usize) -> Result<u8>
-     #[inline(always)]
-     fn try_read16(self, offset: usize) -> Result<u16>
-     where
--        usize: IoLoc<Self::Target, u16, IoType = u16>,
-+        usize: IoLoc<Self::Target, u16>,
-         Self::Backend: IoCapable<u16>,
-     {
-         self.try_read(offset)
-@@ -665,7 +682,7 @@ fn try_read16(self, offset: usize) -> Result<u16>
-     #[inline(always)]
-     fn try_read32(self, offset: usize) -> Result<u32>
-     where
--        usize: IoLoc<Self::Target, u32, IoType = u32>,
-+        usize: IoLoc<Self::Target, u32>,
-         Self::Backend: IoCapable<u32>,
-     {
-         self.try_read(offset)
-@@ -675,7 +692,7 @@ fn try_read32(self, offset: usize) -> Result<u32>
-     #[inline(always)]
-     fn try_read64(self, offset: usize) -> Result<u64>
-     where
--        usize: IoLoc<Self::Target, u64, IoType = u64>,
-+        usize: IoLoc<Self::Target, u64>,
-         Self::Backend: IoCapable<u64>,
-     {
-         self.try_read(offset)
-@@ -685,7 +702,7 @@ fn try_read64(self, offset: usize) -> Result<u64>
-     #[inline(always)]
-     fn try_write8(self, value: u8, offset: usize) -> Result
-     where
--        usize: IoLoc<Self::Target, u8, IoType = u8>,
-+        usize: IoLoc<Self::Target, u8>,
-         Self::Backend: IoCapable<u8>,
-     {
-         self.try_write(offset, value)
-@@ -695,7 +712,7 @@ fn try_write8(self, value: u8, offset: usize) -> Result
-     #[inline(always)]
-     fn try_write16(self, value: u16, offset: usize) -> Result
-     where
--        usize: IoLoc<Self::Target, u16, IoType = u16>,
-+        usize: IoLoc<Self::Target, u16>,
-         Self::Backend: IoCapable<u16>,
-     {
-         self.try_write(offset, value)
-@@ -705,7 +722,7 @@ fn try_write16(self, value: u16, offset: usize) -> Result
-     #[inline(always)]
-     fn try_write32(self, value: u32, offset: usize) -> Result
-     where
--        usize: IoLoc<Self::Target, u32, IoType = u32>,
-+        usize: IoLoc<Self::Target, u32>,
-         Self::Backend: IoCapable<u32>,
-     {
-         self.try_write(offset, value)
-@@ -715,7 +732,7 @@ fn try_write32(self, value: u32, offset: usize) -> Result
-     #[inline(always)]
-     fn try_write64(self, value: u64, offset: usize) -> Result
-     where
--        usize: IoLoc<Self::Target, u64, IoType = u64>,
-+        usize: IoLoc<Self::Target, u64>,
-         Self::Backend: IoCapable<u64>,
-     {
-         self.try_write(offset, value)
-@@ -727,7 +744,7 @@ fn try_write64(self, value: u64, offset: usize) -> Result
-     #[inline(always)]
-     fn read8(self, offset: usize) -> u8
-     where
--        usize: IoLoc<Self::Target, u8, IoType = u8>,
-+        usize: IoLoc<Self::Target, u8>,
-         Self::Backend: IoCapable<u8>,
-     {
-         self.read(offset)
-@@ -739,7 +756,7 @@ fn read8(self, offset: usize) -> u8
-     #[inline(always)]
-     fn read16(self, offset: usize) -> u16
-     where
--        usize: IoLoc<Self::Target, u16, IoType = u16>,
-+        usize: IoLoc<Self::Target, u16>,
-         Self::Backend: IoCapable<u16>,
-     {
-         self.read(offset)
-@@ -751,7 +768,7 @@ fn read16(self, offset: usize) -> u16
-     #[inline(always)]
-     fn read32(self, offset: usize) -> u32
-     where
--        usize: IoLoc<Self::Target, u32, IoType = u32>,
-+        usize: IoLoc<Self::Target, u32>,
-         Self::Backend: IoCapable<u32>,
-     {
-         self.read(offset)
-@@ -763,7 +780,7 @@ fn read32(self, offset: usize) -> u32
-     #[inline(always)]
-     fn read64(self, offset: usize) -> u64
-     where
--        usize: IoLoc<Self::Target, u64, IoType = u64>,
-+        usize: IoLoc<Self::Target, u64>,
-         Self::Backend: IoCapable<u64>,
-     {
-         self.read(offset)
-@@ -775,7 +792,7 @@ fn read64(self, offset: usize) -> u64
-     #[inline(always)]
-     fn write8(self, value: u8, offset: usize)
-     where
--        usize: IoLoc<Self::Target, u8, IoType = u8>,
-+        usize: IoLoc<Self::Target, u8>,
-         Self::Backend: IoCapable<u8>,
-     {
-         self.write(offset, value)
-@@ -787,7 +804,7 @@ fn write8(self, value: u8, offset: usize)
-     #[inline(always)]
-     fn write16(self, value: u16, offset: usize)
-     where
--        usize: IoLoc<Self::Target, u16, IoType = u16>,
-+        usize: IoLoc<Self::Target, u16>,
-         Self::Backend: IoCapable<u16>,
-     {
-         self.write(offset, value)
-@@ -799,7 +816,7 @@ fn write16(self, value: u16, offset: usize)
-     #[inline(always)]
-     fn write32(self, value: u32, offset: usize)
-     where
--        usize: IoLoc<Self::Target, u32, IoType = u32>,
-+        usize: IoLoc<Self::Target, u32>,
-         Self::Backend: IoCapable<u32>,
-     {
-         self.write(offset, value)
-@@ -811,7 +828,7 @@ fn write32(self, value: u32, offset: usize)
-     #[inline(always)]
-     fn write64(self, value: u64, offset: usize)
-     where
--        usize: IoLoc<Self::Target, u64, IoType = u64>,
-+        usize: IoLoc<Self::Target, u64>,
-         Self::Backend: IoCapable<u64>,
-     {
-         self.write(offset, value)
-@@ -843,11 +860,12 @@ fn write64(self, value: u64, offset: usize)
-     #[inline(always)]
-     fn try_read<T, L>(self, location: L) -> Result<T>
-     where
-+        T: AsReprMut,
-         L: IoLoc<Self::Target, T>,
--        Self::Backend: IoCapable<L::IoType>,
-+        Self::Backend: IoCapable<<T as AsRepr>::Repr>,
-     {
--        let view = io_view::<Self, L::IoType>(self, location.offset())?;
--        Ok(Self::Backend::io_read(view).into())
-+        let view = io_view::<Self, T>(self, location.offset())?;
-+        Ok(view.read_val())
-     }
- 
-     /// Generic fallible write with runtime bounds check.
-@@ -876,12 +894,12 @@ fn try_read<T, L>(self, location: L) -> Result<T>
-     #[inline(always)]
-     fn try_write<T, L>(self, location: L, value: T) -> Result
-     where
-+        T: AsRepr,
-         L: IoLoc<Self::Target, T>,
--        Self::Backend: IoCapable<L::IoType>,
-+        Self::Backend: IoCapable<<T as AsRepr>::Repr>,
-     {
--        let view = io_view::<Self, L::IoType>(self, location.offset())?;
--        let io_value = value.into();
--        Self::Backend::io_write(view, io_value);
-+        let view = io_view::<Self, T>(self, location.offset())?;
-+        view.write_val(value);
-         Ok(())
-     }
- 
-@@ -920,9 +938,10 @@ fn try_write<T, L>(self, location: L, value: T) -> Result
-     #[inline(always)]
-     fn try_write_reg<T, L, V>(self, value: V) -> Result
-     where
-+        T: AsRepr,
-         L: IoLoc<Self::Target, T>,
-         V: LocatedRegister<Self::Target, Location = L, Value = T>,
--        Self::Backend: IoCapable<L::IoType>,
-+        Self::Backend: IoCapable<<T as AsRepr>::Repr>,
-     {
-         let (location, value) = value.into_io_op();
- 
-@@ -954,16 +973,13 @@ fn try_write_reg<T, L, V>(self, value: V) -> Result
-     #[inline(always)]
-     fn try_update<T, L, F>(self, location: L, f: F) -> Result
-     where
-+        T: AsReprMut,
-         L: IoLoc<Self::Target, T>,
--        Self::Backend: IoCapable<L::IoType>,
-+        Self::Backend: IoCapable<<T as AsRepr>::Repr>,
-         F: FnOnce(T) -> T,
-     {
--        let view = io_view::<Self, L::IoType>(self, location.offset())?;
--
--        let value: T = Self::Backend::io_read(view).into();
--        let io_value = f(value).into();
--        Self::Backend::io_write(view, io_value);
--
-+        let view = io_view::<Self, T>(self, location.offset())?;
-+        view.write_val(f(view.read_val()));
-         Ok(())
-     }
- 
-@@ -991,11 +1007,12 @@ fn try_update<T, L, F>(self, location: L, f: F) -> Result
-     #[inline(always)]
-     fn read<T, L>(self, location: L) -> T
-     where
-+        T: AsReprMut,
-         L: IoLoc<Self::Target, T>,
--        Self::Backend: IoCapable<L::IoType>,
-+        Self::Backend: IoCapable<<T as AsRepr>::Repr>,
-     {
--        let view = io_view_assert::<Self, L::IoType>(self, location.offset());
--        Self::Backend::io_read(view).into()
-+        let view = io_view_assert::<Self, T>(self, location.offset());
-+        view.read_val()
-     }
- 
-     /// Generic infallible write with compile-time bounds check.
-@@ -1022,12 +1039,12 @@ fn read<T, L>(self, location: L) -> T
-     #[inline(always)]
-     fn write<T, L>(self, location: L, value: T)
-     where
-+        T: AsRepr,
-         L: IoLoc<Self::Target, T>,
--        Self::Backend: IoCapable<L::IoType>,
-+        Self::Backend: IoCapable<<T as AsRepr>::Repr>,
-     {
--        let view = io_view_assert::<Self, L::IoType>(self, location.offset());
--        let io_value = value.into();
--        Self::Backend::io_write(view, io_value);
-+        let view = io_view_assert::<Self, T>(self, location.offset());
-+        view.write_val(value)
-     }
- 
-     /// Generic infallible write of a fully-located register value.
-@@ -1064,9 +1081,10 @@ fn write<T, L>(self, location: L, value: T)
-     #[inline(always)]
-     fn write_reg<T, L, V>(self, value: V)
-     where
-+        T: AsRepr,
-         L: IoLoc<Self::Target, T>,
-         V: LocatedRegister<Self::Target, Location = L, Value = T>,
--        Self::Backend: IoCapable<L::IoType>,
-+        Self::Backend: IoCapable<<T as AsRepr>::Repr>,
-     {
-         let (location, value) = value.into_io_op();
- 
-@@ -1098,14 +1116,13 @@ fn write_reg<T, L, V>(self, value: V)
-     #[inline(always)]
-     fn update<T, L, F>(self, location: L, f: F)
-     where
-+        T: AsReprMut,
-         L: IoLoc<Self::Target, T>,
--        Self::Backend: IoCapable<L::IoType>,
-+        Self::Backend: IoCapable<<T as AsRepr>::Repr>,
-         F: FnOnce(T) -> T,
-     {
--        let view = io_view_assert::<Self, L::IoType>(self, location.offset());
--        let value: T = Self::Backend::io_read(view).into();
--        let io_value = f(value).into();
--        Self::Backend::io_write(view, io_value);
-+        let view = io_view_assert::<Self, T>(self, location.offset());
-+        view.write_val(f(view.read_val()));
-     }
- }
- 
-diff --git a/rust/kernel/io/register.rs b/rust/kernel/io/register.rs
-index 6a19552ffb95..45d2e73a92e7 100644
---- a/rust/kernel/io/register.rs
-+++ b/rust/kernel/io/register.rs
-@@ -117,9 +117,6 @@
- 
- /// Trait implemented by all registers.
- pub trait Register: Sized {
--    /// Backing primitive type of the register.
--    type Storage: Into<Self> + From<Self>;
--
-     /// Start offset of the register.
+ use crate::{
+-    driver::Bar0,
+     falcon::{
+         self,
+         gsp::Gsp,
+@@ -235,12 +237,7 @@ pub(crate) fn new(
      ///
-     /// The interpretation of this offset depends on the type of the register.
-@@ -135,8 +132,6 @@ impl<const SIZE: usize, T> IoLoc<Region<SIZE>, T> for ()
- where
-     T: FixedRegister,
- {
--    type IoType = T::Storage;
--
-     #[inline(always)]
-     fn offset(self) -> usize {
-         T::OFFSET
-@@ -149,8 +144,6 @@ impl<const SIZE: usize, T> IoLoc<Region<SIZE>, T> for T
- where
-     T: FixedRegister,
- {
--    type IoType = T::Storage;
--
-     #[inline(always)]
-     fn offset(self) -> usize {
-         T::OFFSET
-@@ -174,8 +167,6 @@ impl<const SIZE: usize, T> IoLoc<Region<SIZE>, T> for FixedRegisterLoc<T>
- where
-     T: FixedRegister,
- {
--    type IoType = T::Storage;
--
-     #[inline(always)]
-     fn offset(self) -> usize {
-         T::OFFSET
-@@ -246,8 +237,6 @@ impl<const SIZE: usize, T, B> IoLoc<Region<SIZE>, T> for RelativeRegisterLoc<T,
-     T: RelativeRegister,
-     B: RegisterBase<T::BaseFamily> + ?Sized,
- {
--    type IoType = T::Storage;
--
-     #[inline(always)]
-     fn offset(self) -> usize {
-         RelativeRegisterLoc::offset(self)
-@@ -289,8 +278,6 @@ impl<const SIZE: usize, T> IoLoc<Region<SIZE>, T> for RegisterArrayLoc<T>
- where
-     T: RegisterArray,
- {
--    type IoType = T::Storage;
--
-     #[inline(always)]
-     fn offset(self) -> usize {
-         T::OFFSET + self.0 * T::STRIDE
-@@ -377,8 +364,6 @@ impl<const SIZE: usize, T, B> IoLoc<Region<SIZE>, T> for RelativeRegisterArrayLo
-     T: RelativeRegisterArray,
-     B: RegisterBase<T::BaseFamily> + ?Sized,
- {
--    type IoType = T::Storage;
--
-     #[inline(always)]
-     fn offset(self) -> usize {
-         self.0.offset() + self.1 * T::STRIDE
-diff --git a/rust/macros/io/register.rs b/rust/macros/io/register.rs
-index 61d076ab570a..8af12caa964b 100644
---- a/rust/macros/io/register.rs
-+++ b/rust/macros/io/register.rs
-@@ -200,8 +200,6 @@ pub(crate) fn register(def: RegDef) -> Result<TokenStream> {
-             );
+     /// The bootloader will load the FWSEC firmware and then execute it. This function returns
+     /// after FWSEC has reached completion.
+-    pub(crate) fn run(
+-        &self,
+-        dev: &Device<device::Bound>,
+-        falcon: &Falcon<'_, Gsp>,
+-        bar: Bar0<'_>,
+-    ) -> Result<()> {
++    pub(crate) fn run(&self, dev: &Device<device::Bound>, falcon: &Falcon<'_, Gsp>) -> Result<()> {
+         // Reset falcon, load the firmware, and run it.
+         falcon
+             .reset()
+@@ -250,9 +247,8 @@ pub(crate) fn run(
+             .inspect_err(|e| dev_err!(dev, "Failed to load FWSEC firmware: {:?}\n", e))?;
  
-             impl ::kernel::io::register::Register for #name {
--                type Storage = #storage;
--
-                 const OFFSET: usize = #offset;
-             }
-         ));
+         // Configure DMA index for the bootloader to fetch the FWSEC firmware from system memory.
+-        bar.update(
+-            regs::NV_PFALCON_FBIF_TRANSCFG::of::<Gsp>()
+-                .try_at(usize::from_safe_cast(self.dmem_desc.ctx_dma))
++        falcon.pfalcon.update(
++            regs::NV_PFALCON_FBIF_TRANSCFG::try_at(usize::from_safe_cast(self.dmem_desc.ctx_dma))
+                 .ok_or(EINVAL)?,
+             |v| {
+                 v.with_target(FalconFbifTarget::CoherentSysmem)
+diff --git a/drivers/gpu/nova-core/gsp/hal/tu102.rs b/drivers/gpu/nova-core/gsp/hal/tu102.rs
+index a5c0ca355493..d2ef35080689 100644
+--- a/drivers/gpu/nova-core/gsp/hal/tu102.rs
++++ b/drivers/gpu/nova-core/gsp/hal/tu102.rs
+@@ -62,12 +62,11 @@ impl FwsecUnloadFirmware {
+     fn run(
+         &self,
+         dev: &device::Device<device::Bound>,
+-        bar: Bar0<'_>,
+         gsp_falcon: &Falcon<'_, GspEngine>,
+     ) -> Result {
+         match self {
+             Self::WithoutBl(fw) => fw.run(dev, gsp_falcon),
+-            Self::WithBl(fw) => fw.run(dev, gsp_falcon, bar),
++            Self::WithBl(fw) => fw.run(dev, gsp_falcon),
+         }
+     }
+ }
+@@ -88,7 +87,7 @@ fn run(&self, ctx: &mut GspBootContext<'_, '_>) -> Result {
+         // Log errors but keep going if it fails.
+         let fwsec_sb_res = self
+             .fwsec_sb
+-            .run(dev, bar, ctx.gsp_falcon)
++            .run(dev, ctx.gsp_falcon)
+             .inspect_err(|e| dev_err!(dev, "FWSEC-SB failed to run: {:?}\n", e));
+ 
+         // Remove WPR2 region if set.
+@@ -168,7 +167,7 @@ fn run_fwsec_frts(
+         if self.needs_fwsec_bootloader {
+             let fwsec_frts_bl = FwsecFirmwareWithBl::new(fwsec_frts, dev, chipset)?;
+             // Load and run the bootloader, which will load FWSEC-FRTS and run it.
+-            fwsec_frts_bl.run(dev, falcon, bar)?;
++            fwsec_frts_bl.run(dev, falcon)?;
+         } else {
+             // Load and run FWSEC-FRTS directly.
+             fwsec_frts.run(dev, falcon)?;
+diff --git a/drivers/gpu/nova-core/regs.rs b/drivers/gpu/nova-core/regs.rs
+index 1af073f3861f..90ac8dac5349 100644
+--- a/drivers/gpu/nova-core/regs.rs
++++ b/drivers/gpu/nova-core/regs.rs
+@@ -4,8 +4,8 @@
+ use kernel::{
+     io::{
+         register,
+-        register::WithBase,
+-        Io, //
++        Io,
++        Mmio, //
+     },
+     prelude::*,
+     sizes::SizeConstants,
+@@ -13,22 +13,18 @@
+ };
+ 
+ use crate::{
+-    driver::{
+-        Bar0,
+-        NovaRegisters, //
+-    },
++    driver::NovaRegisters,
+     falcon::{
+         DmaTrfCmdSize,
+         FalconCoreRev,
+         FalconCoreRevSubversion,
+-        FalconEngine,
+         FalconFbifMemType,
+         FalconFbifTarget,
+         FalconMem,
+         FalconModSelAlgo,
+         FalconSecurityModel,
+-        PFalcon2Base,
+-        PFalconBase,
++        PFalcon2Registers,
++        PFalconRegisters,
+         PeregrineCoreSelect, //
+     },
+     gpu::{
+@@ -202,32 +198,32 @@ pub(crate) fn usable_fb_size(self) -> u64 {
+ // PFALCON
+ 
+ register! {
+-    base: NovaRegisters;
++    base: PFalconRegisters;
+ 
+-    pub(crate) NV_PFALCON_FALCON_IRQSCLR(u32) @ PFalconBase + 0x00000004 {
++    pub(crate) NV_PFALCON_FALCON_IRQSCLR(u32) @ 0x00000004 {
+         6:6     swgen0 => bool;
+         4:4     halt => bool;
+     }
+ 
+-    pub(crate) NV_PFALCON_FALCON_MAILBOX0(u32) @ PFalconBase + 0x00000040 {
++    pub(crate) NV_PFALCON_FALCON_MAILBOX0(u32) @ 0x00000040 {
+         31:0    value => u32;
+     }
+ 
+-    pub(crate) NV_PFALCON_FALCON_MAILBOX1(u32) @ PFalconBase + 0x00000044 {
++    pub(crate) NV_PFALCON_FALCON_MAILBOX1(u32) @ 0x00000044 {
+         31:0    value => u32;
+     }
+ 
+     /// Used to store version information about the firmware running
+     /// on the Falcon processor.
+-    pub(crate) NV_PFALCON_FALCON_OS(u32) @ PFalconBase + 0x00000080 {
++    pub(crate) NV_PFALCON_FALCON_OS(u32) @ 0x00000080 {
+         31:0    value => u32;
+     }
+ 
+-    pub(crate) NV_PFALCON_FALCON_RM(u32) @ PFalconBase + 0x00000084 {
++    pub(crate) NV_PFALCON_FALCON_RM(u32) @ 0x00000084 {
+         31:0    value => u32;
+     }
+ 
+-    pub(crate) NV_PFALCON_FALCON_HWCFG2(u32) @ PFalconBase + 0x000000f4 {
++    pub(crate) NV_PFALCON_FALCON_HWCFG2(u32) @ 0x000000f4 {
+         /// Signal indicating that reset is completed (GA102+).
+         31:31   reset_ready => bool;
+         /// RISC-V branch privilege lockdown bit.
+@@ -237,17 +233,17 @@ pub(crate) fn usable_fb_size(self) -> u64 {
+         10:10   riscv => bool;
+     }
+ 
+-    pub(crate) NV_PFALCON_FALCON_CPUCTL(u32) @ PFalconBase + 0x00000100 {
++    pub(crate) NV_PFALCON_FALCON_CPUCTL(u32) @ 0x00000100 {
+         6:6     alias_en => bool;
+         4:4     halted => bool;
+         1:1     startcpu => bool;
+     }
+ 
+-    pub(crate) NV_PFALCON_FALCON_BOOTVEC(u32) @ PFalconBase + 0x00000104 {
++    pub(crate) NV_PFALCON_FALCON_BOOTVEC(u32) @ 0x00000104 {
+         31:0    value => u32;
+     }
+ 
+-    pub(crate) NV_PFALCON_FALCON_DMACTL(u32) @ PFalconBase + 0x0000010c {
++    pub(crate) NV_PFALCON_FALCON_DMACTL(u32) @ 0x0000010c {
+         7:7     secure_stat => bool;
+         6:3     dmaq_num;
+         2:2     imem_scrubbing => bool;
+@@ -255,15 +251,15 @@ pub(crate) fn usable_fb_size(self) -> u64 {
+         0:0     require_ctx => bool;
+     }
+ 
+-    pub(crate) NV_PFALCON_FALCON_DMATRFBASE(u32) @ PFalconBase + 0x00000110 {
++    pub(crate) NV_PFALCON_FALCON_DMATRFBASE(u32) @ 0x00000110 {
+         31:0    base => u32;
+     }
+ 
+-    pub(crate) NV_PFALCON_FALCON_DMATRFMOFFS(u32) @ PFalconBase + 0x00000114 {
++    pub(crate) NV_PFALCON_FALCON_DMATRFMOFFS(u32) @ 0x00000114 {
+         23:0    offs;
+     }
+ 
+-    pub(crate) NV_PFALCON_FALCON_DMATRFCMD(u32) @ PFalconBase + 0x00000118 {
++    pub(crate) NV_PFALCON_FALCON_DMATRFCMD(u32) @ 0x00000118 {
+         16:16   set_dmtag;
+         14:12   ctxdma;
+         10:8    size ?=> DmaTrfCmdSize;
+@@ -274,15 +270,15 @@ pub(crate) fn usable_fb_size(self) -> u64 {
+         0:0     full => bool;
+     }
+ 
+-    pub(crate) NV_PFALCON_FALCON_DMATRFFBOFFS(u32) @ PFalconBase + 0x0000011c {
++    pub(crate) NV_PFALCON_FALCON_DMATRFFBOFFS(u32) @ 0x0000011c {
+         31:0    offs => u32;
+     }
+ 
+-    pub(crate) NV_PFALCON_FALCON_DMATRFBASE1(u32) @ PFalconBase + 0x00000128 {
++    pub(crate) NV_PFALCON_FALCON_DMATRFBASE1(u32) @ 0x00000128 {
+         8:0     base;
+     }
+ 
+-    pub(crate) NV_PFALCON_FALCON_HWCFG1(u32) @ PFalconBase + 0x0000012c {
++    pub(crate) NV_PFALCON_FALCON_HWCFG1(u32) @ 0x0000012c {
+         /// Core revision subversion.
+         7:6     core_rev_subversion => FalconCoreRevSubversion;
+         /// Security model.
+@@ -291,12 +287,12 @@ pub(crate) fn usable_fb_size(self) -> u64 {
+         3:0     core_rev ?=> FalconCoreRev;
+     }
+ 
+-    pub(crate) NV_PFALCON_FALCON_CPUCTL_ALIAS(u32) @ PFalconBase + 0x00000130 {
++    pub(crate) NV_PFALCON_FALCON_CPUCTL_ALIAS(u32) @ 0x00000130 {
+         1:1     startcpu => bool;
+     }
+ 
+     /// IMEM access control register. Up to 4 ports are available for IMEM access.
+-    pub(crate) NV_PFALCON_FALCON_IMEMC(u32)[4, stride = 16] @ PFalconBase + 0x00000180 {
++    pub(crate) NV_PFALCON_FALCON_IMEMC(u32)[4, stride = 16] @ 0x00000180 {
+         /// Access secure IMEM.
+         28:28     secure => bool;
+         /// Auto-increment on write.
+@@ -307,17 +303,17 @@ pub(crate) fn usable_fb_size(self) -> u64 {
+ 
+     /// IMEM data register. Reading/writing this register accesses IMEM at the address
+     /// specified by the corresponding IMEMC register.
+-    pub(crate) NV_PFALCON_FALCON_IMEMD(u32)[4, stride = 16] @ PFalconBase + 0x00000184 {
++    pub(crate) NV_PFALCON_FALCON_IMEMD(u32)[4, stride = 16] @ 0x00000184 {
+         31:0      data;
+     }
+ 
+     /// IMEM tag register. Used to set the tag for the current IMEM block.
+-    pub(crate) NV_PFALCON_FALCON_IMEMT(u32)[4, stride = 16] @ PFalconBase + 0x00000188 {
++    pub(crate) NV_PFALCON_FALCON_IMEMT(u32)[4, stride = 16] @ 0x00000188 {
+         15:0      tag;
+     }
+ 
+     /// DMEM access control register. Up to 8 ports are available for DMEM access.
+-    pub(crate) NV_PFALCON_FALCON_DMEMC(u32)[8, stride = 8] @ PFalconBase + 0x000001c0 {
++    pub(crate) NV_PFALCON_FALCON_DMEMC(u32)[8, stride = 8] @ 0x000001c0 {
+         /// Auto-increment on write.
+         24:24     aincw => bool;
+         /// DMEM block and word offset.
+@@ -326,29 +322,29 @@ pub(crate) fn usable_fb_size(self) -> u64 {
+ 
+     /// DMEM data register. Reading/writing this register accesses DMEM at the address
+     /// specified by the corresponding DMEMC register.
+-    pub(crate) NV_PFALCON_FALCON_DMEMD(u32)[8, stride = 8] @ PFalconBase + 0x000001c4 {
++    pub(crate) NV_PFALCON_FALCON_DMEMD(u32)[8, stride = 8] @ 0x000001c4 {
+         31:0      data;
+     }
+ 
+     /// Actually known as `NV_PSEC_FALCON_ENGINE` and `NV_PGSP_FALCON_ENGINE` depending on the
+     /// falcon instance.
+-    pub(crate) NV_PFALCON_FALCON_ENGINE(u32) @ PFalconBase + 0x000003c0 {
++    pub(crate) NV_PFALCON_FALCON_ENGINE(u32) @ 0x000003c0 {
+         0:0     reset => bool;
+     }
+ 
+-    pub(crate) NV_PFALCON_FBIF_TRANSCFG(u32)[8] @ PFalconBase + 0x00000600 {
++    pub(crate) NV_PFALCON_FBIF_TRANSCFG(u32)[8] @ 0x00000600 {
+         2:2     mem_type => FalconFbifMemType;
+         1:0     target ?=> FalconFbifTarget;
+     }
+ 
+-    pub(crate) NV_PFALCON_FBIF_CTL(u32) @ PFalconBase + 0x00000624 {
++    pub(crate) NV_PFALCON_FBIF_CTL(u32) @ 0x00000624 {
+         7:7     allow_phys_no_ctx => bool;
+     }
+ 
+     // Falcon EMEM PIO registers (used by FSP on Hopper/Blackwell).
+     // These provide the falcon external memory communication interface.
+ 
+-    pub(crate) NV_PFALCON_FALCON_EMEMC(u32) @ PFalconBase + 0x00000ac0 {
++    pub(crate) NV_PFALCON_FALCON_EMEMC(u32) @ 0x00000ac0 {
+         /// EMEM byte offset (4-byte aligned) within the block.
+         7:2     offs;
+         /// EMEM block to access.
+@@ -359,7 +355,7 @@ pub(crate) fn usable_fb_size(self) -> u64 {
+         25:25   aincr => bool;
+     }
+ 
+-    pub(crate) NV_PFALCON_FALCON_EMEMD(u32) @ PFalconBase + 0x00000ac4 {
++    pub(crate) NV_PFALCON_FALCON_EMEMD(u32) @ 0x00000ac4 {
+         31:0    data => u32;
+     }
+ }
+@@ -385,13 +381,13 @@ pub(crate) fn with_falcon_mem(self, mem: FalconMem) -> Self {
+ 
+ impl NV_PFALCON_FALCON_ENGINE {
+     /// Resets the falcon
+-    pub(crate) fn reset_engine<E: FalconEngine>(bar: Bar0<'_>) {
+-        bar.update(Self::of::<E>(), |r| r.with_reset(true));
++    pub(crate) fn reset_engine(pfalcon: Mmio<'_, PFalconRegisters>) {
++        pfalcon.update(NV_PFALCON_FALCON_ENGINE, |r| r.with_reset(true));
+ 
+         // TIMEOUT: falcon engine should not take more than 10us to reset.
+         time::delay::fsleep(time::Delta::from_micros(10));
+ 
+-        bar.update(Self::of::<E>(), |r| r.with_reset(false));
++        pfalcon.update(NV_PFALCON_FALCON_ENGINE, |r| r.with_reset(false));
+     }
+ }
+ 
+@@ -405,23 +401,23 @@ pub(crate) fn mem_scrubbing_done(self) -> bool {
+ /* PFALCON2 */
+ 
+ register! {
+-    base: NovaRegisters;
++    base: PFalcon2Registers;
+ 
+-    pub(crate) NV_PFALCON2_FALCON_MOD_SEL(u32) @ PFalcon2Base + 0x00000180 {
++    pub(crate) NV_PFALCON2_FALCON_MOD_SEL(u32) @ 0x00000180 {
+         7:0     algo ?=> FalconModSelAlgo;
+     }
+ 
+-    pub(crate) NV_PFALCON2_FALCON_BROM_CURR_UCODE_ID(u32) @ PFalcon2Base + 0x00000198 {
++    pub(crate) NV_PFALCON2_FALCON_BROM_CURR_UCODE_ID(u32) @ 0x00000198 {
+         7:0    ucode_id => u8;
+     }
+ 
+-    pub(crate) NV_PFALCON2_FALCON_BROM_ENGIDMASK(u32) @ PFalcon2Base + 0x0000019c {
++    pub(crate) NV_PFALCON2_FALCON_BROM_ENGIDMASK(u32) @ 0x0000019c {
+         31:0    value => u32;
+     }
+ 
+     /// OpenRM defines this as a register array, but doesn't specify its size and only uses its
+     /// first element. Be conservative until we know the actual size or need to use more registers.
+-    pub(crate) NV_PFALCON2_FALCON_BROM_PARAADDR(u32)[1] @ PFalcon2Base + 0x00000210 {
++    pub(crate) NV_PFALCON2_FALCON_BROM_PARAADDR(u32)[1] @ 0x00000210 {
+         31:0    value => u32;
+     }
+ }
+@@ -429,23 +425,23 @@ pub(crate) fn mem_scrubbing_done(self) -> bool {
+ // PRISCV
+ 
+ register! {
+-    base: NovaRegisters;
++    base: PFalcon2Registers;
+ 
+     /// RISC-V status register for debug (Turing and GA100 only).
+     /// Reflects current RISC-V core status.
+-    pub(crate) NV_PRISCV_RISCV_CORE_SWITCH_RISCV_STATUS(u32) @ PFalcon2Base + 0x00000240 {
++    pub(crate) NV_PRISCV_RISCV_CORE_SWITCH_RISCV_STATUS(u32) @ 0x00000240 {
+         /// RISC-V core active/inactive status.
+         0:0     active_stat => bool;
+     }
+ 
+     /// GA102 and later.
+-    pub(crate) NV_PRISCV_RISCV_CPUCTL(u32) @ PFalcon2Base + 0x00000388 {
++    pub(crate) NV_PRISCV_RISCV_CPUCTL(u32) @ 0x00000388 {
+         7:7     active_stat => bool;
+         4:4     halted => bool;
+     }
+ 
+     /// GA102 and later.
+-    pub(crate) NV_PRISCV_RISCV_BCR_CTRL(u32) @ PFalcon2Base + 0x00000668 {
++    pub(crate) NV_PRISCV_RISCV_BCR_CTRL(u32) @ 0x00000668 {
+         8:8     br_fetch => bool;
+         4:4     core_select => PeregrineCoreSelect;
+         0:0     valid => bool;
 
 -- 
 2.54.0
