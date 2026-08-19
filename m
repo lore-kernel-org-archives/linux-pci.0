@@ -1,159 +1,270 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C96794078F8;
-	Wed, 19 Aug 2026 19:14:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 37896345CA8
+	for <linux-pci@vger.kernel.org>; Wed, 19 Aug 2026 23:25:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787166867; cv=none; b=c2X2CkfbZEp6rNn0qlXMSi/Cy5r5ZdB3KZYCG++BDvCNsa+oOqsD8+fT+PfJWTIvzpIhQjUYaG0qG4tWGMXwxChk6rxICa9R8tdpufKr/Dxj6GDUQVCWRdfVpXBzLz0IMW/8KWBawk8V6pGkPkwpUAxTt1x8EEk2PUm2fa5Y07A=
+	t=1787181927; cv=none; b=JqIUdggWyfZbpRYylAQq5msCiEyUKUBibL5PPK67wmt8q1/Ue68CJv/TBTDsXXKd6MpgomiKnKruvvrzs+o1qBqaVTCG/V2kBz9edgtohmK6Q9trW1Z8t5jseKMbsxcKBzWWTyA1aic0XFOY4e49UWGZO6STQluOoOfRA08w/Ig=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787166867; c=relaxed/simple;
-	bh=1MbQ22t+b2xuNb9q0+iLkSsnZ3HbfixrT4sCHmeuV/g=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=KCih/mMBTEh9BAIAHmPnycQH0ks48zExYHL9xp3TmQtiICjTpXy2b8GMRWNyKT0XKje6SCkDxRJcLt8ZgHAi0JJsEiPCKlUzEQovH8yhdBxRcC7UOXhDvdTaDMurfsNFYQyAbQsni0R9dwEvp+5eA1jKHC0VIVrqlF0vq7PihVk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MlWaNnX2; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1787181927; c=relaxed/simple;
+	bh=9WOa5EInHpFZ2HzCa30TeExE9B1gcBksJ4Pux5TlGBw=;
+	h=Date:From:To:Cc:Subject:Message-ID; b=ugfIg1dWjNFuTz81awyY2+cibvGxmmg0cxazpHLG4UTwW8qbBHGrP7cXX0C3R4EFTjtihLdNb8y2nzp7W04Rnh+I/P1eM7R8Or/jEAqSrbTY4xmXuMbYDfXSw9JzQJB0vBwfQJe0BpH6Ni8mrUdnM6XVqA+Ph7Bzu5qTdnRqOdA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=JwWbQjZQ; arc=none smtp.client-ip=198.175.65.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MlWaNnX2"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9B4931F00A3A;
-	Wed, 19 Aug 2026 19:14:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787166863;
-	bh=m+CLP2BQgat6/UsQVDtqyLYCW3m+XKIezPsilsPcyh4=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=MlWaNnX25GV4njA+OBGoWw2ITR9Ndmwk3ebdPGIfmrZQHYO+qEdFnl3WFWE2h1+2S
-	 AG5Fo5C7MaqIBWBNcSfOEZfvMDIGyBX+OOyjM8+0YSzmD7qpcbypPkAlRGh0c/lliH
-	 kq/cUb8kM+sPppGOXGIQjuCXHkCQhBq1mm2Z2FXO3RZ7FarCoLYeuyEAt+Fgt+aSax
-	 4Yuu2Ctxi2Z2Hei1eA0IfvB/tpB6CfYLym69rMA4OkEIJn7mSYfjoPkIcHATi4iAtb
-	 11M5wiH+dVnfXG1TBo3doP9IVXUuoG3rFQqXOzpJXB34kMk9zDDhdPa11ROBzx/l/s
-	 PmPPvpU9dZxVA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH RESEND v23 1/3] rust: leds: add basic led classdev
- abstractions
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Markus Probst" <markus.probst@posteo.de>
-Cc: linux-leds@vger.kernel.org, linux-pci@vger.kernel.org, lee@kernel.org, ojeda@kernel.org
-In-Reply-To: <20260819-rust_leds-v23-1-2716a4ef89a4@posteo.de>
-References: <20260819-rust_leds-v23-0-2716a4ef89a4@posteo.de>
- <20260819-rust_leds-v23-1-2716a4ef89a4@posteo.de>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 19 Aug 2026 19:14:23 +0000
-Message-Id: <20260819191423.9B4931F00A3A@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="JwWbQjZQ"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1787181926; x=1818717926;
+  h=date:from:to:cc:subject:message-id;
+  bh=9WOa5EInHpFZ2HzCa30TeExE9B1gcBksJ4Pux5TlGBw=;
+  b=JwWbQjZQdKsBSNMzuj1Oo50xS8c+6+DM2L3l6STeFK2r+NLNIg7IAoc7
+   Wy18bQvDHaskaZEXmuI+C8Ra7rc2ymR63Jfu5IpXHEpNwnoJm+Zt+1NXX
+   wPaL/IZ1Ygdzik+6WtHpFYu4bCZTB6BuDDfKHLQn1eGOEjEVvKuNhHlzw
+   /XnaKQybHnJ/Z2NTa9FJjOvDE84G2hvzvCmwdDSQvw6UQu0oZaE+/rgDc
+   RI4b74e0iUb15Gz2cZ2xqnLyqeQQMqQTybGvOfs09zV/Ij55i6NX6jbwg
+   CXvg4NGCfxswi+98/2pNR14IIRWlMFgxdsm3UrHRug6sZogV/9h/Na5R7
+   Q==;
+X-CSE-ConnectionGUID: NN12o55/R26yVeoX2QKaJg==
+X-CSE-MsgGUID: dlNFNSYQQw6fmlkg/fayKg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11880"; a="87917574"
+X-IronPort-AV: E=Sophos;i="6.25,232,1779174000"; 
+   d="scan'208";a="87917574"
+Received: from fmviesa003.fm.intel.com ([10.60.135.143])
+  by orvoesa108.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Aug 2026 16:25:25 -0700
+X-CSE-ConnectionGUID: N6Ksmc7aRRuhtCynM7PLsA==
+X-CSE-MsgGUID: /OcRDUfhQI63lrNxV4XtlA==
+X-ExtLoop1: 1
+Received: from lkp-server01.sh.intel.com (HELO 6eda058d650d) ([10.239.97.150])
+  by fmviesa003.fm.intel.com with ESMTP; 19 Aug 2026 16:25:23 -0700
+Received: from kbuild by 6eda058d650d with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1wwpeq-00000000gtT-3dIj;
+	Wed, 19 Aug 2026 23:25:20 +0000
+Date: Thu, 20 Aug 2026 07:24:45 +0800
+From: kernel test robot <lkp@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org
+Subject: [pci:aer] BUILD SUCCESS
+ eddba19b8b5f76d57424ee328a68fd495c5db857
+Message-ID: <202608200733.V5McaZ68-lkp@intel.com>
+User-Agent: s-nail v14.9.25
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 4 potential issue(=
-s) to consider:
-- [High] The `blink_set_callback` creates aliased mutable references if `de=
-lay_on` and `delay_off` point to the same memory location.
-- [High] The lifetime bound `'bound: 'init` on `DeviceBuilder::build` is in=
-verted, allowing the Device to outlive its borrowed C strings.
-- [Medium] The commit message description is not capitalized after the subs=
-ystem prefix.
-- [Low] Small functions in abstractions must be annotated with `#[inline]`.
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git aer
+branch HEAD: eddba19b8b5f76d57424ee328a68fd495c5db857  PCI/AER: Support Advisory Non-Fatal Errors
+
+elapsed time: 1463m
+
+configs tested: 195
+configs skipped: 0
+
+The following configs have been built successfully.
+More configs may be tested in the coming days.
+
+tested configs:
+alpha                            allnoconfig    gcc-16.1.0
+alpha                           allyesconfig    gcc-16.1.0
+alpha                              defconfig    gcc-16.1.0
+arc                             allmodconfig    gcc-16.1.0
+arc                             allyesconfig    gcc-16.1.0
+arc                  randconfig-001-20260819    gcc-11.5.0
+arc                  randconfig-001-20260820    clang-24
+arc                  randconfig-002-20260819    gcc-11.5.0
+arc                  randconfig-002-20260820    clang-24
+arm                  randconfig-001-20260819    gcc-11.5.0
+arm                  randconfig-001-20260820    clang-24
+arm                  randconfig-002-20260819    gcc-11.5.0
+arm                  randconfig-002-20260820    clang-24
+arm                  randconfig-003-20260819    gcc-11.5.0
+arm                  randconfig-003-20260820    clang-24
+arm                  randconfig-004-20260819    gcc-11.5.0
+arm                  randconfig-004-20260820    clang-24
+arm64                randconfig-001-20260819    gcc-9.5.0
+arm64                randconfig-001-20260820    clang-24
+arm64                randconfig-002-20260819    gcc-9.5.0
+arm64                randconfig-002-20260820    clang-24
+arm64                randconfig-003-20260819    gcc-9.5.0
+arm64                randconfig-003-20260820    clang-24
+arm64                randconfig-004-20260819    gcc-9.5.0
+arm64                randconfig-004-20260820    clang-24
+csky                            allmodconfig    gcc-16.1.0
+csky                 randconfig-001-20260819    gcc-9.5.0
+csky                 randconfig-001-20260820    clang-24
+csky                 randconfig-002-20260819    gcc-9.5.0
+csky                 randconfig-002-20260820    clang-24
+hexagon                       randconfig-001    gcc-11.5.0
+hexagon              randconfig-001-20260819    gcc-11.5.0
+hexagon              randconfig-001-20260820    gcc-14.3.0
+hexagon              randconfig-002-20260819    gcc-11.5.0
+hexagon              randconfig-002-20260820    gcc-14.3.0
+i386                            allmodconfig    gcc-14
+i386                buildonly-randconfig-001    gcc-14
+i386       buildonly-randconfig-001-20260819    gcc-14
+i386       buildonly-randconfig-001-20260820    gcc-14
+i386       buildonly-randconfig-002-20260819    gcc-14
+i386       buildonly-randconfig-002-20260820    gcc-14
+i386       buildonly-randconfig-003-20260819    gcc-14
+i386       buildonly-randconfig-003-20260820    gcc-14
+i386       buildonly-randconfig-004-20260819    gcc-14
+i386       buildonly-randconfig-004-20260820    gcc-14
+i386       buildonly-randconfig-005-20260819    gcc-14
+i386       buildonly-randconfig-005-20260820    gcc-14
+i386       buildonly-randconfig-006-20260819    gcc-14
+i386       buildonly-randconfig-006-20260820    gcc-14
+i386                          randconfig-001    gcc-14
+i386                 randconfig-001-20260819    gcc-14
+i386                 randconfig-001-20260820    clang-22
+i386                 randconfig-002-20260819    gcc-14
+i386                 randconfig-002-20260820    clang-22
+i386                 randconfig-003-20260819    gcc-14
+i386                 randconfig-003-20260820    clang-22
+i386                 randconfig-004-20260819    gcc-14
+i386                 randconfig-004-20260820    clang-22
+i386                 randconfig-005-20260819    gcc-14
+i386                 randconfig-005-20260820    clang-22
+i386                 randconfig-006-20260819    gcc-14
+i386                 randconfig-006-20260820    clang-22
+i386                 randconfig-007-20260819    gcc-14
+i386                 randconfig-007-20260820    clang-22
+i386                          randconfig-011    gcc-14
+i386                 randconfig-011-20260819    gcc-14
+i386                 randconfig-011-20260820    gcc-14
+i386                 randconfig-012-20260819    gcc-14
+i386                 randconfig-012-20260820    gcc-14
+i386                 randconfig-013-20260819    gcc-14
+i386                 randconfig-013-20260820    gcc-14
+i386                 randconfig-014-20260819    gcc-14
+i386                 randconfig-014-20260820    gcc-14
+i386                 randconfig-015-20260819    gcc-14
+i386                 randconfig-015-20260820    gcc-14
+i386                 randconfig-016-20260819    gcc-14
+i386                 randconfig-016-20260820    gcc-14
+i386                 randconfig-017-20260819    gcc-14
+i386                 randconfig-017-20260820    gcc-14
+loongarch                          defconfig    clang-24
+loongarch            randconfig-001-20260819    gcc-11.5.0
+loongarch            randconfig-001-20260820    gcc-14.3.0
+loongarch            randconfig-002-20260819    gcc-11.5.0
+loongarch            randconfig-002-20260820    gcc-14.3.0
+m68k                         atari_defconfig    gcc-16.1.0
+mips                    cu1000-neo_defconfig    gcc-16.1.0
+nios2                           allmodconfig    gcc-11.5.0
+nios2                            allnoconfig    gcc-11.5.0
+nios2                randconfig-001-20260819    gcc-11.5.0
+nios2                randconfig-001-20260820    gcc-14.3.0
+nios2                randconfig-002-20260819    gcc-11.5.0
+nios2                randconfig-002-20260820    gcc-14.3.0
+openrisc        de0_nano_multicore_defconfig    gcc-16.1.0
+parisc                          allmodconfig    gcc-16.1.0
+parisc                          allyesconfig    gcc-16.1.0
+parisc                             defconfig    gcc-16.1.0
+parisc                        randconfig-001    clang-24
+parisc               randconfig-001-20260819    clang-24
+parisc               randconfig-001-20260820    gcc-8.5.0
+parisc               randconfig-002-20260819    clang-24
+parisc               randconfig-002-20260820    gcc-8.5.0
+powerpc                        ps3_defconfig    gcc-16.1.0
+powerpc              randconfig-001-20260819    clang-24
+powerpc              randconfig-001-20260820    gcc-8.5.0
+powerpc              randconfig-002-20260819    clang-24
+powerpc              randconfig-002-20260820    gcc-8.5.0
+powerpc                   sam440ep_defconfig    gcc-16.1.0
+powerpc                    sequoia_defconfig    clang-24
+powerpc64            randconfig-001-20260819    clang-24
+powerpc64            randconfig-001-20260820    gcc-8.5.0
+powerpc64            randconfig-002-20260819    clang-24
+powerpc64            randconfig-002-20260820    gcc-8.5.0
+riscv                         randconfig-001    clang-24
+riscv                randconfig-001-20260819    clang-24
+riscv                randconfig-001-20260820    clang-24
+riscv                randconfig-002-20260819    clang-24
+riscv                randconfig-002-20260820    clang-24
+s390                 randconfig-001-20260819    clang-24
+s390                 randconfig-001-20260820    clang-24
+s390                 randconfig-002-20260819    clang-24
+s390                 randconfig-002-20260820    clang-24
+sh                                 defconfig    gcc-16.1.0
+sh                   randconfig-001-20260819    clang-24
+sh                   randconfig-001-20260820    clang-24
+sh                   randconfig-002-20260819    clang-24
+sh                   randconfig-002-20260820    clang-24
+sparc                randconfig-001-20260819    gcc-10.5.0
+sparc                randconfig-001-20260820    gcc-13.4.0
+sparc                randconfig-002-20260819    gcc-10.5.0
+sparc                randconfig-002-20260820    gcc-13.4.0
+sparc                      sparc32_defconfig    gcc-16.1.0
+sparc64              randconfig-001-20260819    gcc-10.5.0
+sparc64              randconfig-001-20260820    gcc-13.4.0
+sparc64              randconfig-002-20260819    gcc-10.5.0
+sparc64              randconfig-002-20260820    gcc-13.4.0
+um                   randconfig-001-20260819    gcc-10.5.0
+um                   randconfig-001-20260820    gcc-13.4.0
+um                   randconfig-002-20260819    gcc-10.5.0
+um                   randconfig-002-20260820    gcc-13.4.0
+x86_64              buildonly-randconfig-001    gcc-14
+x86_64     buildonly-randconfig-001-20260819    gcc-14
+x86_64     buildonly-randconfig-001-20260820    gcc-14
+x86_64     buildonly-randconfig-002-20260819    gcc-14
+x86_64     buildonly-randconfig-002-20260820    gcc-14
+x86_64     buildonly-randconfig-003-20260819    gcc-14
+x86_64     buildonly-randconfig-003-20260820    gcc-14
+x86_64     buildonly-randconfig-004-20260819    gcc-14
+x86_64     buildonly-randconfig-004-20260820    gcc-14
+x86_64     buildonly-randconfig-005-20260819    gcc-14
+x86_64     buildonly-randconfig-005-20260820    gcc-14
+x86_64     buildonly-randconfig-006-20260819    gcc-14
+x86_64     buildonly-randconfig-006-20260820    gcc-14
+x86_64                                 kexec    clang-22
+x86_64               randconfig-001-20260819    gcc-14
+x86_64               randconfig-001-20260820    clang-22
+x86_64               randconfig-002-20260819    gcc-14
+x86_64               randconfig-002-20260820    clang-22
+x86_64               randconfig-003-20260819    gcc-14
+x86_64               randconfig-003-20260820    clang-22
+x86_64               randconfig-004-20260819    gcc-14
+x86_64               randconfig-004-20260820    clang-22
+x86_64               randconfig-005-20260819    gcc-14
+x86_64               randconfig-005-20260820    clang-22
+x86_64               randconfig-006-20260819    gcc-14
+x86_64               randconfig-006-20260820    clang-22
+x86_64                        randconfig-011    clang-22
+x86_64               randconfig-011-20260819    clang-22
+x86_64               randconfig-011-20260820    clang-22
+x86_64               randconfig-012-20260819    clang-22
+x86_64               randconfig-012-20260820    clang-22
+x86_64               randconfig-013-20260819    clang-22
+x86_64               randconfig-013-20260820    clang-22
+x86_64               randconfig-014-20260819    clang-22
+x86_64               randconfig-014-20260820    clang-22
+x86_64               randconfig-015-20260819    clang-22
+x86_64               randconfig-015-20260820    clang-22
+x86_64               randconfig-016-20260819    clang-22
+x86_64               randconfig-016-20260820    clang-22
+x86_64               randconfig-071-20260819    clang-22
+x86_64               randconfig-071-20260820    clang-22
+x86_64               randconfig-072-20260819    clang-22
+x86_64               randconfig-072-20260820    clang-22
+x86_64               randconfig-073-20260819    clang-22
+x86_64               randconfig-073-20260820    clang-22
+x86_64               randconfig-074-20260819    clang-22
+x86_64               randconfig-074-20260820    clang-22
+x86_64               randconfig-075-20260819    clang-22
+x86_64               randconfig-075-20260820    clang-22
+x86_64               randconfig-076-20260819    clang-22
+x86_64               randconfig-076-20260820    clang-22
+x86_64                          rhel-9.4-bpf    gcc-14
+xtensa               randconfig-001-20260819    gcc-10.5.0
+xtensa               randconfig-001-20260820    gcc-13.4.0
+xtensa               randconfig-002-20260819    gcc-10.5.0
+xtensa               randconfig-002-20260820    gcc-13.4.0
+
 --
-
---- Patch [1]: [PATCH RESEND v23 1/3] rust: leds: add basic led classdev ab=
-stractions ---
-commit 0bee73d85d7c6052f28b0588d95b4632e4bdc662
-Author: Markus Probst <markus.probst@posteo.de>
-
-rust: leds: add basic led classdev abstractions
-
-Implement the core abstractions needed for led class devices, including
-the Device builder and LedOps trait.
-
-> rust: leds: add basic led classdev abstractions
-
-[Severity: Medium]
-This isn't a bug, but the subsystem guidelines request capitalizing the=20
-description after the subsystem prefix. Should this be "rust: leds: Add=20
-basic led classdev abstractions" instead?
-
-> diff --git a/rust/kernel/led.rs b/rust/kernel/led.rs
-> index 596975e103b8b.....
-> --- /dev/null
-> +++ b/rust/kernel/led.rs
-
-[ ... ]
-
-> +impl TryFrom<u32> for Color {
-> +    type Error =3D Error;
-> +
-> +    fn try_from(value: u32) -> core::result::Result<Self, Self::Error> {
-
-[Severity: Low]
-This isn't a bug, but the Rust subsystem guidelines specify that small=20
-functions in abstractions should be annotated with #[inline]. Could we add=
-=20
-that attribute to this try_from() implementation?
-
-> diff --git a/rust/kernel/led/normal.rs b/rust/kernel/led/normal.rs
-> index 816db7c576894.....
-> --- /dev/null
-> +++ b/rust/kernel/led/normal.rs
-
-[ ... ]
-
-> +impl<'init, S: DeviceBuilderState> DeviceBuilder<'init, S> {
-> +    /// Registers a new [`Device`].
-> +    pub fn build<'bound: 'init, T: LedOps + 'bound>(
-> +        self,
-> +        parent: &'bound T::Bus,
-> +        ops: impl PinInit<T, Error> + 'init,
-> +    ) -> impl PinInit<Device<'bound, T>, Error> + 'init {
-
-[Severity: High]
-Is the lifetime bound 'bound: 'init inverted here?
-
-DeviceBuilder captures string references with the 'init lifetime. If the=20
-returned Device has a 'bound lifetime that outlives 'init, a caller could=20
-create a Device that escapes the scope of the borrowed strings.
-
-Since the underlying C led_classdev stores raw pointers to these strings,=20
-could this lead to a use-after-free when accessed via sysfs if the strings
-are dropped?
-
-[ ... ]
-
-> +    unsafe extern "C" fn blink_set_callback(
-> +        led_cdev: *mut bindings::led_classdev,
-> +        delay_on: *mut usize,
-> +        delay_off: *mut usize,
-> +    ) -> i32 {
-
-[ ... ]
-
-> +            classdev.ops.blink_set(
-> +                parent,
-> +                classdev,
-> +                // SAFETY: The function's contract guarantees that `dela=
-y_on` points to a `usize`
-> +                // and is exclusive for the period of this function.
-> +                unsafe { &mut *delay_on },
-> +                // SAFETY: The function's contract guarantees that `dela=
-y_off` points to a `usize`
-> +                // and is exclusive for the period of this function.
-> +                unsafe { &mut *delay_off },
-> +            )?;
-
-[Severity: High]
-Does this create aliased mutable references if the C subsystem passes the=20
-same pointer for delay_on and delay_off?
-
-The C LED subsystem explicitly permits and frequently passes the exact same=
-=20
-pointer for both arguments. For example, led_blink_set_oneshot() in=20
-ledtrig-netdev.c passes identical pointers.
-
-If both pointers are identical, converting them concurrently into two=20
-&mut usize references triggers undefined behavior in Rust. Could we handle=
-=20
-this aliasing safely?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260819-rust_leds-=
-v23-0-2716a4ef89a4@posteo.de?part=3D1
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
