@@ -1,54 +1,53 @@
-Received: from LO3P265CU004.outbound.protection.outlook.com (mail-uksouthazon11020099.outbound.protection.outlook.com [52.101.196.99])
+Received: from CWXP265CU010.outbound.protection.outlook.com (mail-ukwestazon11022139.outbound.protection.outlook.com [52.101.101.139])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0FF514582F6;
-	Wed, 19 Aug 2026 11:10:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.196.99
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE65445D5E2;
+	Wed, 19 Aug 2026 11:10:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.101.139
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787137848; cv=fail; b=GXGYTKMVIpcw9OUDWIVP58eWSOnMnM0lc0UOucV7f12ecQ6ai3xvstIi+kszOYr++ARX7rRIrwJt+/rP6A6YRGb3CGifR7iSOfc4fT3wi5D6L5jx/99iywwi/wK8f6c8/B1Rvj4VRa02ynuUemTERPjIHLwB9k7tqujW8IhuW6M=
+	t=1787137849; cv=fail; b=SLewNp/jXyDIz6kXRy24lK5HnxTydcfSvu+QzwyxRoUaxBUlOfXV3vpuIjn1sPD9iu1eTWTdXhizMdmmtHswi0U6X65yHDfS4YVmn9lW0bWXyWw2vHgn3x9d2NMHhKesLQlPskZpsUSzLUwfmwqLwyT7kRE0OWiQd4ZTGEnXCDE=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787137848; c=relaxed/simple;
-	bh=D0QIW3gLEGUq1PEvmPOkulzpq9vZOkliiKGcHUHy1vU=;
+	s=arc-20240116; t=1787137849; c=relaxed/simple;
+	bh=QK1le1HxUqoKzvsVPNYCGxqAhC5hdY3awRRalC47ao0=;
 	h=From:Date:Subject:Content-Type:Message-Id:References:In-Reply-To:
-	 To:Cc:MIME-Version; b=YrjFlRbznMSTzpeFSdOvw0LJk+VvV3mZpLWNQgFmSoRUWF77dT9ZK9KW1A8E6Nt/GI1YMPj9Ln/qbKAJD0txbC7nRps19DNfs5iUisOwkkvhpaJX2Y8mtAC5Ftamh1ONnNB7dD/GRTMSRCT6JStCyLRg2yd0guZtHmkqLzKep+U=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net; spf=pass smtp.mailfrom=garyguo.net; dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b=w9Xr3+W+; arc=fail smtp.client-ip=52.101.196.99
+	 To:Cc:MIME-Version; b=KLX51MpQhavSXEFqKoGxvYJ+nFNYVbXfYteICOpouM3EqOokr4BaINS9yBkHFe0iYX9GBc84ohz3xAiqa/n5LTtNWffJ2EJ8XkLhzfz2LuLuorFiCPoGPaZCTa5n5G5PUpeXBNJHH2Iw+WHK6PwpiQyY38VFNYj/AVO5diCotsQ=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net; spf=pass smtp.mailfrom=garyguo.net; dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b=jZKmDysG; arc=fail smtp.client-ip=52.101.101.139
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=garyguo.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b="w9Xr3+W+"
+	dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b="jZKmDysG"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=kejM6kDwOA+oSBXrE4PfgMHMdn67ZHwR7Gn1777zuukKpPeNxh6c+SErftq5TY9RaRVG5W5yJAT+pL9hZowDv1zQvvYCs/u89mw6d9rpfrE9g2VwSlE1fIRKE60HWStfz2JqLOwv6gLCo5tD8KZRXY39FMNKWBU464kzGde+QOvpHlvcbT20gdlbWgc3NdYhDvOU/Nq6fRV8yKj3JBVn7NkbuGMO1sBZ9+IGzu/lSaO0c+/JHMA4eoIN38mzOrVAs4pz7fYlEe0Ku6OX783vulXrzgChiynkqnBh45SSk5LVgEadRqqk+0q7jvgVfC4VXrn3v1/DMbaHrhKeK1PZEA==
+ b=yLc7kSVnTP2grDC0xzucO+lTVa1zTdqY8CSpWXlkMRCnguhKtEQbeZR/eCPiPaPmM+XReM/XA7lzKcjBb2wauiqKDxKWJD0Co06vLy5GALG8XW7PxgpARCJeETma1TkClq2zwzHeVIrxkW1dYnyQF2az5/l4kfcLw8ycFviuMOIPOMxHwrcqBSp7E+n9X1SELsv/xZJu74yG8o6RiggksUhP4VwQH7xMCDjvzHSABl2Scy3eO7CicM7Sr6lJzebYeKyhCjqyodtY7MmXhwy96HjfxVB7Uh2sjZZZ2E7hZTBAewRuBT7hU21/XmECv7m5ryDClD8sIybz4+mZFC/aeg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=EWBvJAcWXsTgFfXCWTRUaKpplLBkVQaS1dnrCqa/yfE=;
- b=sXYOLtFCVddMunL5gsOFp7oolNM5uiQhwm7dk78A4JfqT5LggSTAMXAvIrxfHdhkOralajp0+Iq3m75SOPVj0K3B312Gp2NrTYKjpsAAV4xFXZPUFaUzekdcCT3GKtWvF66ZMIG2fujirhjsDoKmynV7cVCfK/lsktNX7xqINohFO9hsIz9NoZU8VTT3fPZttja+iJWBxiPc8dx7Zt1mrJ4nKtyOGQkQ7HJddY5qpOZEaZtplUCINnBAY+FIAdRJ8Nj4j6oi3zX2TOinjdh0xiafOT5feeznuDj2sk40SVaPD611TkPP2Gm6ED0h9fwf2neCuYB4JEhSG0nWd3KuUQ==
+ bh=wUCf+rqxAxDjIcVyRzQlNpOG4zfjfpD6Ogu4pqNvK8g=;
+ b=q+ACbnQu4e3bD84lQ/w3oHi4aEIgkc4O0UAlSDuOfwoonDd6WU16Asxg//V1yb/nCOeYG4iW2jreYjWA4e1ylBRft6b9LPW/DtFKZp8wlj5cs5H3FKZb9FM760NqMri5oRatTbKqZAfqyCAKKiQK0RWzkK7CGtSyXD2BnE7Mr6lwFrS9dz78T8JOrdnyvuzC/2sDnUCLfdjKckw2LOuYXq+JeIgAHZk0KvMXTiuqBSqfHM7ZMdr0ejB/tpeCeCeZqAVwWdsk86SNTG3yE1mRlsawqKHah1PFUwA9I6RopHDcazzg2d9/uFrPsZdQbyUjy5w8sI+eTVksV3JoHGfAtg==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=garyguo.net; dmarc=pass action=none header.from=garyguo.net;
  dkim=pass header.d=garyguo.net; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=garyguo.net;
  s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=EWBvJAcWXsTgFfXCWTRUaKpplLBkVQaS1dnrCqa/yfE=;
- b=w9Xr3+W+AqQwK8hMO0zPfDZUOfNEo783pC5aC2y+dTaJ9RbVybyEE6HsHBSK158ZWGtA7J3ZQZhlDcyI0Qee9sfB/UXPs9mFjdg/FrFWUOldBBbiaJme+kps7iObUcnWk9Qam6S43jWEURldeJdOj565VE8m45niqjWBHnHqL/Q=
+ bh=wUCf+rqxAxDjIcVyRzQlNpOG4zfjfpD6Ogu4pqNvK8g=;
+ b=jZKmDysGlVKrIVCzkcZB3JLImqjMgAg4QHSy5LvSL6hsPvyp6ynjSBOiEFgIRNxQpfTgztkf38MuPmziHYEEnG3NPzkN7vr+oHhm1M5431rZmyDJiBVIJz/KUEz3iTpQjqQiMbpbD3DBnspu/bglOJQ7lu9DQ/wuL5odfQ2lp88=
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=garyguo.net;
 Received: from LOAP265MB8560.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:4ab::19)
  by CWLP265MB5113.GBRP265.PROD.OUTLOOK.COM (2603:10a6:400:15d::12) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.339.8; Wed, 19 Aug
- 2026 11:10:23 +0000
+ 2026 11:10:24 +0000
 Received: from LOAP265MB8560.GBRP265.PROD.OUTLOOK.COM
  ([fe80::f60b:1537:68d7:4fc1]) by LOAP265MB8560.GBRP265.PROD.OUTLOOK.COM
  ([fe80::f60b:1537:68d7:4fc1%4]) with mapi id 15.21.0339.007; Wed, 19 Aug 2026
- 11:10:23 +0000
+ 11:10:24 +0000
 From: Gary Guo <gary@garyguo.net>
-Date: Wed, 19 Aug 2026 12:09:20 +0100
-Subject: [PATCH v3 12/16] gpu: nova-core: use projection for PFALCON and
- PFALCON2 registers
+Date: Wed, 19 Aug 2026 12:09:22 +0100
+Subject: [PATCH v3 14/16] rust: io: register: remove relative registers
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260819-typed_register-v3-12-3699a75fadf1@garyguo.net>
+Message-Id: <20260819-typed_register-v3-14-3699a75fadf1@garyguo.net>
 References: <20260819-typed_register-v3-0-3699a75fadf1@garyguo.net>
 In-Reply-To: <20260819-typed_register-v3-0-3699a75fadf1@garyguo.net>
 To: Danilo Krummrich <dakr@kernel.org>, Alice Ryhl <aliceryhl@google.com>, 
@@ -67,11 +66,11 @@ Cc: driver-core@lists.linux.dev, rust-for-linux@vger.kernel.org,
  dri-devel@lists.freedesktop.org, linux-pci@vger.kernel.org, 
  Gary Guo <gary@garyguo.net>
 X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1787137814; l=44579;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1787137814; l=21901;
  i=gary@garyguo.net; s=20221204; h=from:subject:message-id;
- bh=D0QIW3gLEGUq1PEvmPOkulzpq9vZOkliiKGcHUHy1vU=;
- b=QT12oPLuA3Yzws/aAunhjNwrRjt2WU/eIq5CUq0a9pTcO+oHgcMJ2alFMFbu/twtiamdEblFw
- j1/UC44PYESDZhKWQY9dYd5q8S+XY97oCHpAo+ePSbZJ08/KcKHNZMK
+ bh=QK1le1HxUqoKzvsVPNYCGxqAhC5hdY3awRRalC47ao0=;
+ b=g6ZPyqRlXvoDdNlqEf642fIU6sfs0xOuFxOCLyJh3O3lUZMV8otXleyp9uDcP8txeGffRaMUl
+ GPLtPXE2V/qC1E2kUMLaMHzICXVR+wE9JS0Y/Tq77EPToJF40lLMUwB
 X-Developer-Key: i=gary@garyguo.net; a=ed25519;
  pk=vB3uIX95SM4eVrIqo1DWNWKDKD2xzB+yLLLr0yOPYMo=
 X-ClientProxiedBy: LO4P123CA0096.GBRP123.PROD.OUTLOOK.COM
@@ -85,1271 +84,663 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: LOAP265MB8560:EE_|CWLP265MB5113:EE_
-X-MS-Office365-Filtering-Correlation-Id: 494e9595-6c3b-4152-6316-08defde276a9
+X-MS-Office365-Filtering-Correlation-Id: 17ae7c6f-076a-4057-1024-08defde27789
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|376014|10070799003|366016|7416014|23010399003|921020|6133799003|3023799007|56012099006|10067099003|18002099003|22082099003;
+	BCL:0;ARA:13230040|1800799024|376014|10070799003|366016|7416014|23010399003|921020|3023799007|56012099006|10067099003|5023799004|18002099003|22082099003;
 X-Microsoft-Antispam-Message-Info:
-	8l8tW0kSKP5hhevUSrYqwj4OMuD/t6+nZKNrNiPadUemurSp33G1y+vp+7pM8BZZZtSMc1FZR2GiBO+J7r/yBZYsHPzrGwWnhsWVLNqxlxOJC/vK2EZNwFYAS7rBU4+Vtda6Z7TtjMiA7h/eEgsQLhehrbguPHdheHwVtk36Lz+WyjQogwN7k8dHZWtzYLyxWlukY9UMFUGBLX0NPQ82XzK9wlvqaqXpMlGuR3Br5CBuw89T5sQoigPmhMzTv4R/N2AoVOfSe+bW9uMfcmLE4/doq3CawKHkhApBNWSQ9jNtnBYoQXsXxLv7GhtYK+CJbdhKknXd0QNLW2fCjLETS6zlg6/jcfdc4s5qsWjNDqX3sLCiPkt5muk2RRODguq4xGL7P3HFvxYstzLXmN65jChL8lRL/CkiQuWqCASnjkHl7ZPbSjTvxzQSh/e0XtmQ0Y6ePcTs0QXX3KJ9X1ESaoxCtumat5C0DI0U2rCLGnU6ZTwHpIabQVrbtx51K3uM6rcNqP4Lm5pBQdO20f9XTFmq0ksmAhJGoF2cuaPiAKaITPR3ZCJrDxxGDyDdciIFi6yhuOXHeUt9fl/iJS6d0DcQxEg1vAeImz/+PLlpGiVczm1flveU4JUJV7Skq33gIRuVlGr1wbh3QWsU+RXWTZvMDu3awV8a1c8J3MTQPlF6sOZby0MC0HwebALXli0kuWuqsdpXSSY8tSX8xrBGig==
+	C2k08hOt7nEEYSZRoONKW2/Z76ZWAlmHBBXNiNJ4LRg8nYB9qc/acYk5VhV/tyePodm7Ze9uZyN8KcfqFBQ8Qk9929qaIYOVS4XWOSd55dt8RL5Fze8KEL3dJ6R9lloQGq/ueKhNlXIKUPyI3m1oDX+g0riwVh+bg9GFcG2QyqrV2bHzMK7WQpsG92xwjaoV1/28W0dZzWCb7Uk61FKwlTft/Mw7qYaMJYuFnT0MXR9ZSg4QalQD0VMPScQCQDb5jMGNjxTjd7mkmNICOHImGA/x+xUcjd0W+iwZWrqvWtLSnnxdj6vzVVQVXgZ7nTCKGDOyx9ynR4VQCbXLAv1IJ0uwrsAGf80mR1052A/P3kMCaPAnGQOgk3pvzMPFptMpRli8zRFGXijD3T1lFotAWdE4qBjr7yB6CCfVBtKtBM1UhgI6tajdvF1Mwa2c4fCqxezfEBYtMnbITo6tWioSnATkstuEJ8qfKrd+4novo2XZOyVqpkYRgoHArUYlNJ11whInsbvVn6PgzY5milAtQsx56ziK4FkY/FxUhv8sjSL4Tu3XgOe3EarEPmHpO28JCdkDF9qdiXH389VyjbVJEL8YgPFm4HuAV7jtymP/wlK4+ibimJ2Sg3hjOnFPK3YJP49eZ/ckN33LhsPbwJEuHtOYJbF72lXiSZKOl8Tgma1w73V3RsNL4q2kCgD9GHZR/JfoYnBMWhm2PZZBTJOdJA==
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LOAP265MB8560.GBRP265.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(376014)(10070799003)(366016)(7416014)(23010399003)(921020)(6133799003)(3023799007)(56012099006)(10067099003)(18002099003)(22082099003);DIR:OUT;SFP:1102;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LOAP265MB8560.GBRP265.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(376014)(10070799003)(366016)(7416014)(23010399003)(921020)(3023799007)(56012099006)(10067099003)(5023799004)(18002099003)(22082099003);DIR:OUT;SFP:1102;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?dUJaR1duT3Zlc1l2V0kxNDhkckRSUnlMWjEwWkwvbUhqZDE3OUh1aTVteHRo?=
- =?utf-8?B?aUdWOFRVamtuRVJpVVN2NGNUL01GWXFRYTNjOWNWRkhndTlEL1NrRENOMTZs?=
- =?utf-8?B?Q1BhcEVzRFdhK2RrRUZlRnJWQkk5RXV2MWJRWk5GM2xYU3kvUnIrNm1xZXUv?=
- =?utf-8?B?WUoxVC9ycFNiZTZkZUptQXFHUGlocjV4L1FYUkVvOUdhaFpCTk9ZdnBXYWhM?=
- =?utf-8?B?TFFXWmp1S1BQZG9zMTNaczFEMG40NGpRRzEwVnNoQ1pXTXZ2Wm05TTg3WCsw?=
- =?utf-8?B?L29EeWpXak1ieGZwbkJlek5PZGZMVFR4U3dCTFVabEhWdFRlTGZ1QkZKTUM1?=
- =?utf-8?B?cGhVeTBpYm85NENTbS96dVI5a1NlNWE4VkNPb2Y3U0pjZGV4N1JhVzlVOHFO?=
- =?utf-8?B?TW1jU1JCYUJLa0ZMSHFRUWJ3N1NldGlNWkF2bkJYN0kvZUNWTUwyamFMOFJy?=
- =?utf-8?B?MHJvbDVmWWVROW0zbmRKSHgrWjRDcGJvWEZ6UUQycUt4UW55K0VMZ2IvSjVQ?=
- =?utf-8?B?bGdhRUJ6clBsTks2a0lJQ00zMDR4TVdnY256VTY5WXJrbWU1SlNnMi9zdDlC?=
- =?utf-8?B?Y243WFNFSlVmNys5NjlHdGtNcXdiYmxpWnhyd3RpWVdYYXphektNNWt4NHJ5?=
- =?utf-8?B?a29IU2d4MFhHTmtxT29DdXBtZndpSWtPbjZoeVJ6c3k3aTd4RHpXMWdkUWNn?=
- =?utf-8?B?N0JPdGhOQlNQRlJlOE5qT3JOUWZYK0FiRmtBdVR3a2hDai9mY2J1UmoyQXVM?=
- =?utf-8?B?ajN3eitZcTJyY3B6cFphM1hRVnNZcWxiS2J1WitpRzdUK3MwZU92b3YyamE0?=
- =?utf-8?B?K0h2eUZSMWF6Z3dhSVVyZW9xenlPUEszYTVOT1FZbkJsc3M3MEhEclVQUTNi?=
- =?utf-8?B?Z3pFbXhBd3lFYWpoenhpeWZwUXMweTB6M2NMUWxGM2hJbUdnUEhXR3NCWVpV?=
- =?utf-8?B?N1d0cFUxMDJMQXFVSmdlY2o4L2FpalpBelk5cDNSYkFYUDhnWVNleUZ2SzFw?=
- =?utf-8?B?NW5HK2VpbzV0N2JiUEwyZUNFRElZMWRqOFZ3bDNqK1JUQk43NS9Jak9xMXVi?=
- =?utf-8?B?dFFscmJ4NUVsZTVPTHdjbnkyOGdqcFlxOEdXSE1VUUN4Tjk2bHRhS014bkds?=
- =?utf-8?B?Q0ovdklqdlUvd0wrSVB5ZmFmRnZhSHdwZ0RmRmduNEZtT21qb1prdHc0SlNC?=
- =?utf-8?B?YmpNV1QxTEhKeGtiZDdYUGNEZUV5dGQ3V1BlRnpKRGlLTjdNcitVRDVhZ2F2?=
- =?utf-8?B?amJqblNvbitHSUI2aHdBRkFlbURCRlNTU3lDb0ZtSWpzMmkwOStCZzc1Mks0?=
- =?utf-8?B?NXRzelJjOTV6b1p3K3J3Wk8vaDA5NnZHbE91Ujg5eG5pSFhubmhLRStPdGhs?=
- =?utf-8?B?OWFJZkRtMVlHZnhEVmc5ZnU5MHhrZFE2WWlPQVYrdkgwMmdwamxYSEpoNWEx?=
- =?utf-8?B?RGFmeTA3K3A3MTZiRDBFdGllK1hDc1psUzNXVUZIdFBPRmNpM0h6aGtjVUpa?=
- =?utf-8?B?QkkyclN5ajltcG4waVZ2cGFsWEFVVnNGYXRjVmwxVThCTHJFR0xzR09vbGxO?=
- =?utf-8?B?bmFCQWI1VnljbkVOK0N1dVczMkYrSkZxc0oyeWxVZ2wzVmltaG9xM0VaNmNp?=
- =?utf-8?B?cVlVKzlFTDNVcjJUSWlGdVExTTQ5Z0tiWEtmY2Y4anZjNHE4M1NFbkI3bi8x?=
- =?utf-8?B?VzBHNVhQZmxhNWJjeW1TVDRZKzZXb2JmemVpVVk5aE9WZ1pBdUVpTDdwVlBU?=
- =?utf-8?B?dVRzZXhQYkc5anl4azdZeXFFSWtxZlhPYTJKcVpnREx5OTNPZHlkQzByNHg0?=
- =?utf-8?B?cnpNTGhsTEZPZUdVNkxMVENoT2JkbW5NNXFJMGRzOGRlcG8rVFhFelI3emJ6?=
- =?utf-8?B?VVVhQytKR09lenExUjMwSkJ1djhpRU5KMzdDN3dLY2VpUzFaZ3dRaW1PbWtT?=
- =?utf-8?B?TU9YeGRuM1FUWFM1aTFTK2ZTUVppUVZRNS9TVGhBTi81cDQ0MnhJWUc5d1RK?=
- =?utf-8?B?VG42ZmthQkdaOFlGRmJIbHlYNzE1UGhYVnA0b2VtMHZxYzZHL1gzV053Yit2?=
- =?utf-8?B?UDVKOWVGRkRCelgyMFdtWEVlRmhQR1E4djVYVFdGbW9TRzFCMDJHbjI0NmZu?=
- =?utf-8?B?bkFMN1o2SnpGL3pCR2RFcGxaR3BYeUlqYWFCTUdCVFpvYk1vMUJ1MEp2aG5l?=
- =?utf-8?B?TUtVUnd6bGJ2aDBFc0p0NmJBakxYNG1ZS2d2SzcyZ1p6ODVLRmk0UGVXajJZ?=
- =?utf-8?B?MXFRemh5dS9YSVZZVS9QdXpyRU9mSEpMRmEwR3l4NEczcW9paGN3dU5VUGRj?=
- =?utf-8?B?V0JNUWtySlNqMlVHajZTazJFSmtOckZSdWUwb3drb2hDQnBaLzQ4Zz09?=
+	=?utf-8?B?MEI5WXBpUGFmQ2tMbW1vT1RNSXNyams5VEo4V20zY0RHb1hRU3FEK3dMdU1G?=
+ =?utf-8?B?ZjIya1JteTZTUGRGOU5TbWNvWk40YzFmbFB5WnhUdlljUm10YWYvTk5rWTgv?=
+ =?utf-8?B?bTFJMWdDelNBTS8wZTNXR29PbzdyTzNjbWUzSENWa3FQS2piRlpYeGhTcTMx?=
+ =?utf-8?B?KzdPNmpPdmlKVEZEOG5paUl0Y0JkZk1ZdkZaRWRZUHVmUnNGMEt6N01zQUo0?=
+ =?utf-8?B?dktrNFJmaU9JUmxnMGJkR3JCL05JVDRweE5iRk8vVERNWVFINStoWVVJNWNG?=
+ =?utf-8?B?Y2Y3NEl4c2tnMVpmdWVlVll2OUdSekVtVUxuaG1pK285QnRFVFh3SmVuS0Fu?=
+ =?utf-8?B?a0pld1I1UGFBb3djMGNnYXZONDg2VGJYUUNFRUhNSzRpMHJ4aDEvNkFKc1Zt?=
+ =?utf-8?B?YlI2bWtjTW42alRpNS9OZ1dFY1J6b08wdnhySXZqMUhrOFhkNTJaVUFUaWJl?=
+ =?utf-8?B?eTFBVzYrN0pHQk9KcmY5MDBJVGdXenc2UTVhcVB5WjBkYnJrRVBWNDJZaU00?=
+ =?utf-8?B?SVJ2aEpkYStSM1VKVWwwNGhNMENwUFlUcUdjYmxmRkRnK20rNVI3N0JMOGxv?=
+ =?utf-8?B?ZHNrSWgrNEl1SFJEVzJqQVNJd1ByWHZLcjNjTFRZN0hxV2J2RkN2WXFrZ1BX?=
+ =?utf-8?B?Y3BoYi81UEJXdTUyR1l6Z1J1ZHMzVy8rUFdBSEd6ejFXVHRMQUdtV2VmVFhp?=
+ =?utf-8?B?SnMxY2pqUWk2bldPNGp1M0tSNE5UMmlXSi94MHV4Q2xwUEZPSkpJSC9uekxY?=
+ =?utf-8?B?cjJ6NlVqdEh1QXorOTRBQkpiSHJlNnNWT0R0NmkxOGQwM2loM1RSSXJYMzAz?=
+ =?utf-8?B?Rkk4OW9VVlVpOWY1ZG9FUkEyZk1SK3FYMXFCV3BOZk0zd3lDcjZ0TEhhaDJI?=
+ =?utf-8?B?UUdXMEJ2QVIwNVFobUdIQmlZWmttVHBsT29qaGEzcll2TkEveDdYeGZ5Uy9M?=
+ =?utf-8?B?V1UwVXFBb21jcVJNUE5GcmFHOXhvMC9NQy9IdXcwbm11ZTFjR2hzQ2M3M3d4?=
+ =?utf-8?B?TlJHcFUrMjFxTm1ZQjFOSEhaZ0tXTUlteWg4NEhSMFVhTmRpeE5lVXZtdUVu?=
+ =?utf-8?B?RXVHOXYwTWN2NWxrYjdDV1V6cHpDYk5tTmRSckI5OUVGdWpFMzYyZU1JRnAr?=
+ =?utf-8?B?RG1lZWRLbHVBZlV4cm5DMUxoSlNxOHlHTTBzSUNrejM5QXNlQ2o4QXh6RXhq?=
+ =?utf-8?B?WmU4Y21oNlAxb01JRnlwSVhWOG14T0UzaERaUGZIMWxZRmlMQzdsVFZ0dzF4?=
+ =?utf-8?B?VFQ3Yjl5K3VUR2cyU0M0a216TDJyWVlMZUVueEFqTVZUU0dHbEo4Kzd2Z3Rm?=
+ =?utf-8?B?V1duN1FLNHU2Q2JmeUxxd2hyT21GMnVWK0RlZTBKaVc4SnF3TFRGU1BJZ1I4?=
+ =?utf-8?B?eGphTXRnZVV2amxBWlcxamZyWDZwN1RGK3MvVkgwcUtzSFJnczNFTWxybyt6?=
+ =?utf-8?B?elZPSmZsTWIxMWJ0QWlmTGZwb1AzNnhnMTR2Zklzcm9HUzN0QzdGQlVvOHhq?=
+ =?utf-8?B?LzFtbU9sa3RiZTBNNUpVMkt5Qm11THpuZFluVVdMTTNVMUpFeUY4S2k3SDFj?=
+ =?utf-8?B?ZVpBSnF3cUpETnZHSkpzbTJVMzVURnR2VmNlMkFUSlVKY2UyM1NzVkhkMEto?=
+ =?utf-8?B?WmI4R0pZQ042YTUzWmV1OVNaMnZIY0Y3U1JaWmhWdWJ4c2N2REVaK011bzRK?=
+ =?utf-8?B?ZXBwVXZZdW1JdWpETzZ5TEFaV3RPeVY1bVc4MmZMY3dkME9JSmVrNlcvZFBM?=
+ =?utf-8?B?ajVUL1c0bGk1NjhVZEhXMkdOK1lHSVJOM2oxOUpRaEVRWmFrNVJ6cmlDMXhZ?=
+ =?utf-8?B?aHlOOGZxa3IzeG1ZR3EyQk1uM0NEeEFXVEtlb1ZtVjY5dytqeWVnemNqZ0I5?=
+ =?utf-8?B?NWJBclJJTGxtdkZYQmRWWFNHMHFlaENwQjJZM1V3ejh5SWkzTVNsazJIZHBj?=
+ =?utf-8?B?TVVxR21tcUxZY3JKWUtSWVh3dUpuRHlBZ01NMGo0aE1HcFVOTEl5ZDVCb3Qz?=
+ =?utf-8?B?VG1zS1dwbmNudlZ1c2x4UDRHNzFIY0pVSkh3VEpoTTVLUTA5TDVXSUx5Y3Jk?=
+ =?utf-8?B?NXhqQkt0YThrTTgyR3FlOHcydGVHN0NDTDJsU1lmK2daeVVrbW45RlBidi9B?=
+ =?utf-8?B?OUNCSmpkamNsWTdKQVptUTNIYTJGVi9KaVMvTGN6d1lvMmZCQmp4UTU4MHls?=
+ =?utf-8?B?ZE5qZHhoZTBwNXVxUzduR0pWdEIvMjQ4RmIzRUp0UURQeHltQXpoM0FVYUJo?=
+ =?utf-8?B?YU9CRko5aDJ0UkdYUDIzWlpScWF2aXh0b1RBempEK3F1ZmFEZzJERlY2Q0dt?=
+ =?utf-8?B?YkM4eHJzTWIyL3BTMTFUcUtrYkYxZDY3QUtnV3B6WU1ZREV1OE81QT09?=
 X-OriginatorOrg: garyguo.net
-X-MS-Exchange-CrossTenant-Network-Message-Id: 494e9595-6c3b-4152-6316-08defde276a9
+X-MS-Exchange-CrossTenant-Network-Message-Id: 17ae7c6f-076a-4057-1024-08defde27789
 X-MS-Exchange-CrossTenant-AuthSource: LOAP265MB8560.GBRP265.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 Aug 2026 11:10:22.9821
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 Aug 2026 11:10:24.4299
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: bbc898ad-b10f-4e10-8552-d9377b823d45
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 6G+zbuD2RMZu1HVNrNdkpStZSGXcEYATurnqvWq1ZJX8COW/W2AtzKEw4SCzUom0zwvfPr/KpmHPIrAojVZJnw==
+X-MS-Exchange-CrossTenant-UserPrincipalName: 01QyJbumDIFk7wicpn1ODJvocG2vQE6dRsTi8hZ4cGg/xy+dmb7Ggh0DPZGzGaYxSvv3gZnuaQY1ZC8X7u7jYw==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: CWLP265MB5113
 
-Add fixed size region types `PFalconRegisters` and `PFalcon2Registers` and
-update PFALCON and PFALCON2 registers to be fixed register on them and not
-relative registers on `NovaRegisters`.
+Relative registers can be better served by projection to subregion instead
+of ad-hoc handling in register macro. Projection composes better (e.g. it
+natively allows relative registers of relative registers without needing
+additional support).
 
-Update `Falcon` struct to store projected views when constructing and
-access with `self.pfalcon` and `self.pfalcon2`.
+Remove relative register support, and update the documentation to
+demonstrate how projection and subregions can be used to achieve this
+instead.
 
 Signed-off-by: Gary Guo <gary@garyguo.net>
 ---
- drivers/gpu/nova-core/falcon.rs                    | 157 +++++++++------------
- drivers/gpu/nova-core/falcon/fsp.rs                |  63 +++++----
- drivers/gpu/nova-core/falcon/gsp.rs                |  51 ++++---
- drivers/gpu/nova-core/falcon/hal/ga102.rs          |  62 ++++----
- drivers/gpu/nova-core/falcon/hal/tu102.rs          |   9 +-
- drivers/gpu/nova-core/falcon/sec2.rs               |  37 +++--
- drivers/gpu/nova-core/firmware/fwsec/bootloader.rs |  18 +--
- drivers/gpu/nova-core/gsp/hal/tu102.rs             |   7 +-
- drivers/gpu/nova-core/regs.rs                      |  92 ++++++------
- 9 files changed, 238 insertions(+), 258 deletions(-)
+ rust/kernel/io/register.rs | 388 ++++++---------------------------------------
+ rust/macros/io/register.rs |  52 ++----
+ 2 files changed, 61 insertions(+), 379 deletions(-)
 
-diff --git a/drivers/gpu/nova-core/falcon.rs b/drivers/gpu/nova-core/falcon.rs
-index 65cb12d26e2b..119d305e2ea3 100644
---- a/drivers/gpu/nova-core/falcon.rs
-+++ b/drivers/gpu/nova-core/falcon.rs
-@@ -14,13 +14,12 @@
-     io::{
-         io_project,
-         poll::read_poll_timeout,
--        register::{
--            RegisterBase,
--            WithBase, //
--        },
-+        register::Array,
-         Io,
-+        Mmio, //
-     },
-     prelude::*,
-+    sizes::SZ_4K,
-     time::Delta,
- };
- 
-@@ -165,18 +164,22 @@ pub(crate) enum FalconFbifMemType with From<Bounded<u32, 1>> {
+diff --git a/rust/kernel/io/register.rs b/rust/kernel/io/register.rs
+index 63c054162e54..4d4afd3ae94a 100644
+--- a/rust/kernel/io/register.rs
++++ b/rust/kernel/io/register.rs
+@@ -8,7 +8,7 @@
+ //!
+ //! Note: most of the items in this module are public so they can be referenced by the macro, but
+ //! most are not to be used directly by users. Outside of the `register!` macro itself, the only
+-//! items you might want to import from this module are [`WithBase`] and [`Array`].
++//! item you might want to import from this module is [`Array`].
+ //!
+ //! # Simple example
+ //!
+@@ -199,76 +199,6 @@ fn offset(self) -> usize {
      }
  }
  
--/// Type used to represent the `PFALCON` registers address base for a given falcon engine.
--pub(crate) struct PFalconBase(());
-+/// Type used to represent the `PFALCON` registers.
-+#[repr(align(4))]
-+#[derive(FromBytes, IntoBytes)]
-+pub(crate) struct PFalconRegisters([u8; SZ_4K]);
- 
--/// Type used to represent the `PFALCON2` registers address base for a given falcon engine.
--pub(crate) struct PFalcon2Base(());
-+/// Type used to represent the `PFALCON2` registers.
-+#[repr(align(4))]
-+#[derive(FromBytes, IntoBytes)]
-+pub(crate) struct PFalcon2Registers([u8; SZ_4K]);
- 
- /// Trait defining the parameters of a given Falcon engine.
- ///
- /// Each engine provides one base for `PFALCON` and `PFALCON2` registers.
--pub(crate) trait FalconEngine:
--    Send + Sync + RegisterBase<PFalconBase> + RegisterBase<PFalcon2Base> + Sized
+-/// Trait providing a base address to be added to the offset of a relative register to obtain
+-/// its actual offset.
+-///
+-/// The `T` generic argument is used to distinguish which base to use, in case a type provides
+-/// several bases. It is given to the `register!` macro to restrict the use of the register to
+-/// implementors of this particular variant.
+-pub trait RegisterBase<T> {
+-    /// Base address to which register offsets are added.
+-    const BASE: usize;
+-}
+-
+-/// Trait implemented by all registers that are relative to a base.
+-pub trait WithBase {
+-    /// Family of bases applicable to this register.
+-    type BaseFamily;
+-
+-    /// Returns the absolute location of this type when using `B` as its base.
+-    #[inline(always)]
+-    fn of<B: RegisterBase<Self::BaseFamily>>() -> RelativeRegisterLoc<Self, B>
+-    where
+-        Self: Register,
+-    {
+-        RelativeRegisterLoc::new()
+-    }
+-}
+-
+-/// Trait implemented by relative registers.
+-pub trait RelativeRegister: Register + WithBase {}
+-
+-/// Location of a relative register.
+-///
+-/// This can either be an immediately accessible regular [`RelativeRegister`], or a
+-/// [`RelativeRegisterArray`] that needs one additional resolution through
+-/// [`RelativeRegisterLoc::at`].
+-pub struct RelativeRegisterLoc<T: WithBase, B: ?Sized>(PhantomData<T>, PhantomData<B>);
+-
+-impl<T, B> RelativeRegisterLoc<T, B>
+-where
+-    T: Register + WithBase,
+-    B: RegisterBase<T::BaseFamily> + ?Sized,
 -{
-+pub(crate) trait FalconEngine: Send + Sync + Sized {
-+    fn pfalcon(io: Bar0<'_>) -> Mmio<'_, PFalconRegisters>;
-+    fn pfalcon2(io: Bar0<'_>) -> Mmio<'_, PFalcon2Registers>;
+-    /// Returns the location of a relative register or register array.
+-    #[inline(always)]
+-    // We do not implement `Default` so we can be const.
+-    #[expect(clippy::new_without_default)]
+-    pub const fn new() -> Self {
+-        Self(PhantomData, PhantomData)
+-    }
+-
+-    // Returns the absolute offset of the relative register using base `B`.
+-    //
+-    // This is implemented as a private const method so it can be reused by the [`IoLoc`]
+-    // implementations of both [`RelativeRegisterLoc`] and [`RelativeRegisterArrayLoc`].
+-    #[inline]
+-    const fn offset(self) -> usize {
+-        B::BASE + T::OFFSET
+-    }
+-}
+-
+-impl<SuperBase: ?Sized, T, B> IoLoc<SuperBase, T> for RelativeRegisterLoc<T, B>
+-where
+-    T: RelativeRegister<Base = SuperBase>,
+-    B: RegisterBase<T::BaseFamily> + ?Sized,
+-{
+-    #[inline(always)]
+-    fn offset(self) -> usize {
+-        RelativeRegisterLoc::offset(self)
+-    }
+-}
+-
+ /// Trait implemented by arrays of registers.
+ pub trait RegisterArray: Register {
+     /// Number of elements in the registers array.
+@@ -331,71 +261,6 @@ fn try_at(idx: usize) -> Option<RegisterArrayLoc<Self>>
+     }
  }
  
- /// Represents a portion of the firmware to be loaded into a particular memory (e.g. IMEM or DMEM)
-@@ -358,6 +361,8 @@ pub(crate) struct Falcon<'a, E: FalconEngine> {
-     hal: KBox<dyn FalconHal<E>>,
-     dev: &'a device::Device<device::Bound>,
-     bar: Bar0<'a>,
-+    pub(crate) pfalcon: Mmio<'a, PFalconRegisters>,
-+    pfalcon2: Mmio<'a, PFalcon2Registers>,
+-/// Trait implemented by arrays of relative registers.
+-pub trait RelativeRegisterArray: RegisterArray + WithBase {}
+-
+-/// Location of a relative array register.
+-pub struct RelativeRegisterArrayLoc<
+-    T: RelativeRegisterArray,
+-    B: RegisterBase<T::BaseFamily> + ?Sized,
+->(RelativeRegisterLoc<T, B>, usize);
+-
+-impl<T, B> RelativeRegisterArrayLoc<T, B>
+-where
+-    T: RelativeRegisterArray,
+-    B: RegisterBase<T::BaseFamily> + ?Sized,
+-{
+-    /// Returns the location of register `T` from the base `B` at index `idx`, with build-time
+-    /// validation.
+-    #[inline(always)]
+-    pub fn new(idx: usize) -> Self {
+-        build_assert!(idx < T::SIZE);
+-
+-        Self(RelativeRegisterLoc::new(), idx)
+-    }
+-
+-    /// Attempts to return the location of register `T` from the base `B` at index `idx`, with
+-    /// runtime validation.
+-    #[inline(always)]
+-    pub fn try_new(idx: usize) -> Option<Self> {
+-        if idx < T::SIZE {
+-            Some(Self(RelativeRegisterLoc::new(), idx))
+-        } else {
+-            None
+-        }
+-    }
+-}
+-
+-/// Methods exclusive to [`RelativeRegisterLoc`]s created with a [`RelativeRegisterArray`].
+-impl<T, B> RelativeRegisterLoc<T, B>
+-where
+-    T: RelativeRegisterArray,
+-    B: RegisterBase<T::BaseFamily> + ?Sized,
+-{
+-    /// Returns the location of the register at position `idx`, with build-time validation.
+-    #[inline(always)]
+-    pub fn at(self, idx: usize) -> RelativeRegisterArrayLoc<T, B> {
+-        RelativeRegisterArrayLoc::new(idx)
+-    }
+-
+-    /// Returns the location of the register at position `idx`, with runtime validation.
+-    #[inline(always)]
+-    pub fn try_at(self, idx: usize) -> Option<RelativeRegisterArrayLoc<T, B>> {
+-        RelativeRegisterArrayLoc::try_new(idx)
+-    }
+-}
+-
+-impl<SuperBase: ?Sized, T, B> IoLoc<SuperBase, T> for RelativeRegisterArrayLoc<T, B>
+-where
+-    T: RelativeRegisterArray<Base = SuperBase>,
+-    B: RegisterBase<T::BaseFamily> + ?Sized,
+-{
+-    #[inline(always)]
+-    fn offset(self) -> usize {
+-        self.0.offset() + self.1 * T::STRIDE
+-    }
+-}
+-
+ /// Trait implemented by items that contain both a register value and the absolute I/O location at
+ /// which to write it.
+ ///
+@@ -452,8 +317,7 @@ pub const fn element_alias_offset<Base: ?Sized, Alias: RegisterArray<Base = Base
+ /// This documentation focuses on how to declare registers. See the [module-level
+ /// documentation](mod@kernel::io::register) for examples of how to access them.
+ ///
+-/// There are 4 possible kinds of registers: fixed offset registers, relative registers, arrays of
+-/// registers, and relative arrays of registers.
++/// Registers can either be fixed offset registers or arrays of registers.
+ ///
+ /// ## Fixed offset registers
+ ///
+@@ -551,122 +415,6 @@ pub const fn element_alias_offset<Base: ?Sized, Alias: RegisterArray<Base = Base
+ /// }
+ /// ```
+ ///
+-/// ## Relative registers
+-///
+-/// Relative registers can be instantiated several times at a relative offset of a group of bases.
+-/// For instance, imagine the following I/O space:
+-///
+-/// ```text
+-///           +-----------------------------+
+-///           |             ...             |
+-///           |                             |
+-///  0x100--->+------------CPU0-------------+
+-///           |                             |
+-///  0x110--->+-----------------------------+
+-///           |           CPU_CTL           |
+-///           +-----------------------------+
+-///           |             ...             |
+-///           |                             |
+-///           |                             |
+-///  0x200--->+------------CPU1-------------+
+-///           |                             |
+-///  0x210--->+-----------------------------+
+-///           |           CPU_CTL           |
+-///           +-----------------------------+
+-///           |             ...             |
+-///           +-----------------------------+
+-/// ```
+-///
+-/// `CPU0` and `CPU1` both have a `CPU_CTL` register that starts at offset `0x10` of their I/O
+-/// space segment. Since both instances of `CPU_CTL` share the same layout, we don't want to define
+-/// them twice and would prefer a way to select which one to use from a single definition.
+-///
+-/// This can be done using the `Base + Offset` syntax when specifying the register's address:
+-///
+-/// ```ignore
+-/// register! {
+-///     ...
+-///     pub RELATIVE_REG(u32) @ Base + 0x80 {
+-///         ...
+-///     }
+-/// }
+-/// ```
+-///
+-/// This creates a register with an offset of `0x80` from a given base.
+-///
+-/// `Base` is an arbitrary type (typically a ZST) to be used as a generic parameter of the
+-/// [`RegisterBase`] trait to provide the base as a constant, i.e. each type providing a base for
+-/// this register needs to implement `RegisterBase<Base>`.
+-///
+-/// The location of relative registers can be built using the [`WithBase::of`] method to specify
+-/// its base. All relative registers implement [`WithBase`].
+-///
+-/// Here is the above layout translated into code:
+-///
+-/// ```no_run
+-/// use kernel::{
+-///     io::{
+-///         register,
+-///         register::{
+-///             RegisterBase,
+-///             WithBase,
+-///         },
+-///         Io,
+-///         Region,
+-///     },
+-/// };
+-/// # use kernel::io::Mmio;
+-///
+-/// // Type used to identify the base.
+-/// pub struct CpuCtlBase;
+-///
+-/// // ZST describing `CPU0`.
+-/// struct Cpu0;
+-/// impl RegisterBase<CpuCtlBase> for Cpu0 {
+-///     const BASE: usize = 0x100;
+-/// }
+-///
+-/// // ZST describing `CPU1`.
+-/// struct Cpu1;
+-/// impl RegisterBase<CpuCtlBase> for Cpu1 {
+-///     const BASE: usize = 0x200;
+-/// }
+-///
+-/// // This makes `CPU_CTL` accessible from all implementors of `RegisterBase<CpuCtlBase>`.
+-/// register! {
+-///     base: Region<0x1000>;
+-///
+-///     /// CPU core control.
+-///     pub CPU_CTL(u32) @ CpuCtlBase + 0x10 {
+-///         0:0 start;
+-///     }
+-/// }
+-///
+-/// # fn test(io: Mmio<'_, Region<0x1000>>) {
+-/// // Read the status of `Cpu0`.
+-/// let cpu0_started = io.read(CPU_CTL::of::<Cpu0>());
+-///
+-/// // Stop `Cpu0`.
+-/// io.write(WithBase::of::<Cpu0>(), CPU_CTL::zeroed());
+-/// # }
+-///
+-/// // Aliases can also be defined for relative register.
+-/// register! {
+-///     base: Region<0x1000>;
+-///
+-///     /// Alias to CPU core control.
+-///     pub CPU_CTL_ALIAS(u32) => CpuCtlBase + CPU_CTL {
+-///         /// Start the aliased CPU core.
+-///         1:1 alias_start;
+-///     }
+-/// }
+-///
+-/// # fn test2(io: Mmio<'_, Region<0x1000>>) {
+-/// // Start the aliased `CPU0`, leaving its other fields untouched.
+-/// io.update(CPU_CTL_ALIAS::of::<Cpu0>(), |r| r.with_alias_start(true));
+-/// # }
+-/// ```
+-///
+ /// ## Arrays of registers
+ ///
+ /// Some I/O areas contain consecutive registers that share the same field layout. These areas can
+@@ -763,115 +511,83 @@ pub const fn element_alias_offset<Base: ?Sized, Alias: RegisterArray<Base = Base
+ /// # }
+ /// ```
+ ///
+-/// ## Relative arrays of registers
++/// ## Relative registers
+ ///
+-/// Combining the two features described in the sections above, arrays of registers accessible from
+-/// a base can also be defined:
++/// There are cases where a register region is subdivided into small subregions, and you may wish to
++/// have your register definition be relative to these subregions. This may be needed, for example,
++/// if these subregions are instantiated several times, or you just want it for encapsulation
++/// purpose.
+ ///
+-/// ```ignore
+-/// register! {
+-///     ...
+-///     pub RELATIVE_REGISTER_ARRAY(u8)[10, stride = 4] @ Base + 0x100 {
+-///         ...
+-///     }
+-/// }
++/// For instance, imagine the following I/O space:
++///
++/// ```text
++///           +-----------------------------+
++///           |             ...             |
++///           |                             |
++///  0x100--->+------------CPU0-------------+
++///           |                             |
++///  0x110--->+-----------------------------+
++///           |           CPU_CTL           |
++///           +-----------------------------+
++///           |             ...             |
++///           |                             |
++///           |                             |
++///  0x200--->+------------CPU1-------------+
++///           |                             |
++///  0x210--->+-----------------------------+
++///           |           CPU_CTL           |
++///           +-----------------------------+
++///           |             ...             |
++///           +-----------------------------+
+ /// ```
+ ///
+-/// Like relative registers, they implement the [`WithBase`] trait. However the return value of
+-/// [`WithBase::of`] cannot be used directly as a location and must be further specified using the
+-/// [`at`](RelativeRegisterLoc::at) method.
++/// `CPU0` and `CPU1` both have a `CPU_CTL` register that starts at offset `0x10` of their I/O
++/// space segment. Since both instances of `CPU_CTL` share the same layout, we don't want to define
++/// them twice and would prefer a way to select which one to use from a single definition.
++///
++/// This can be done define a new type for the subregion, and then define registers that use the new
++/// type as the base:
+ ///
+ /// ```no_run
+ /// use kernel::{
+ ///     io::{
++///         io_project,
+ ///         register,
+-///         register::{
+-///             RegisterBase,
+-///             WithBase,
+-///         },
+ ///         Io,
+ ///         Region,
+ ///     },
+ /// };
+ /// # use kernel::io::Mmio;
+-/// # fn get_scratch_idx() -> usize {
+-/// #   0x15
+-/// # }
+-///
+-/// // Type used as parameter of `RegisterBase` to specify the base.
+-/// pub struct CpuCtlBase;
+ ///
+-/// // ZST describing `CPU0`.
+-/// struct Cpu0;
+-/// impl RegisterBase<CpuCtlBase> for Cpu0 {
+-///     const BASE: usize = 0x100;
+-/// }
++/// // Subregion type. Make sure it has adequate size and alignment.
++/// #[repr(align(4))]
++/// #[derive(FromBytes, IntoBytes)]
++/// pub struct CpuCtl([u8; 0x100]);
+ ///
+-/// // ZST describing `CPU1`.
+-/// struct Cpu1;
+-/// impl RegisterBase<CpuCtlBase> for Cpu1 {
+-///     const BASE: usize = 0x200;
+-/// }
+-///
+-/// // 64 per-cpu scratch registers, arranged as a contiguous array.
+ /// register! {
+ ///     base: Region<0x1000>;
+ ///
+-///     /// Per-CPU scratch registers.
+-///     pub CPU_SCRATCH(u32)[64] @ CpuCtlBase + 0x00000080 {
+-///         31:0 value;
+-///     }
++///     // Subregions can just be defined like normal registers.
++///     CPU0: CpuCtl @ 0x100;
++///     CPU1: CpuCtl @ 0x200;
+ /// }
+ ///
+-/// # fn test(io: Mmio<'_, Region<0x1000>>) -> Result<(), Error> {
+-/// // Read scratch register 0 of CPU0.
+-/// let scratch = io.read(CPU_SCRATCH::of::<Cpu0>().at(0));
+-///
+-/// // Write the retrieved value into scratch register 15 of CPU1.
+-/// io.write(WithBase::of::<Cpu1>().at(15), scratch);
+-///
+-/// // This won't build.
+-/// // let cpu0_scratch_128 = io.read(CPU_SCRATCH::of::<Cpu0>().at(128)).value();
+-///
+-/// // Runtime-obtained array index.
+-/// let scratch_idx = get_scratch_idx();
+-/// // Access on a runtime index returns an error if it is out-of-bounds.
+-/// let cpu0_scratch = io.read(
+-///     CPU_SCRATCH::of::<Cpu0>().try_at(scratch_idx).ok_or(EINVAL)?
+-/// ).value();
+-/// # Ok(())
+-/// # }
+-///
+-/// // Alias to `SCRATCH[8]` used to convey the firmware exit code.
++/// // Then you can define new registers on the subregion.
+ /// register! {
+-///     base: Region<0x1000>;
++///     base: CpuCtl;
+ ///
+-///     /// Per-CPU firmware exit status code.
+-///     pub CPU_FIRMWARE_STATUS(u32) => CpuCtlBase + CPU_SCRATCH[8] {
+-///         7:0 status;
++///     /// CPU core control.
++///     pub CPU_CTL(u32) @ 0x10 {
++///         0:0 start;
+ ///     }
+ /// }
+ ///
+-/// // Non-contiguous relative register arrays can be defined by adding a stride parameter.
+-/// // Here, each of the 16 registers of the array is separated by 8 bytes, meaning that the
+-/// // registers of the two declarations below are interleaved.
+-/// register! {
+-///     base: Region<0x1000>;
+-///
+-///     /// Scratch registers bank 0.
+-///     pub CPU_SCRATCH_INTERLEAVED_0(u32)[16, stride = 8] @ CpuCtlBase + 0x00000d00 {
+-///         31:0 value;
+-///     }
+-///
+-///     /// Scratch registers bank 1.
+-///     pub CPU_SCRATCH_INTERLEAVED_1(u32)[16, stride = 8] @ CpuCtlBase + 0x00000d04 {
+-///         31:0 value;
+-///     }
+-/// }
++/// # fn test(io: Mmio<'_, Region<0x1000>>) {
++/// // Read the status of `Cpu0`.
++/// let cpu0_started = io_project!(io, build: CPU0).read(CPU_CTL);
+ ///
+-/// # fn test2(io: Mmio<'_, Region<0x1000>>) -> Result<(), Error> {
+-/// let cpu0_status = io.read(CPU_FIRMWARE_STATUS::of::<Cpu0>()).status();
+-/// # Ok(())
++/// // Stop `Cpu0`.
++/// io_project!(io, build: CPU0).write_reg(CPU_CTL::zeroed());
+ /// # }
+ /// ```
+ #[macro_export]
+diff --git a/rust/macros/io/register.rs b/rust/macros/io/register.rs
+index 0b4e0d1903dd..757ea8094f61 100644
+--- a/rust/macros/io/register.rs
++++ b/rust/macros/io/register.rs
+@@ -53,7 +53,6 @@ struct Reg {
+     name: Ident,
+     ty: Type,
+     array: Option<RegArrayDef>,
+-    relative_base: Option<Path>,
+     offset: RegOffset,
+     bitfield: Option<(Type, Group)>,
  }
- 
- impl<'a, E: FalconEngine + 'static> Falcon<'a, E> {
-@@ -371,19 +376,19 @@ pub(crate) fn new(
-             hal: hal::falcon_hal(chipset)?,
-             dev,
-             bar,
-+            pfalcon: E::pfalcon(bar),
-+            pfalcon2: E::pfalcon2(bar),
-         })
-     }
- 
-     /// Resets DMA-related registers.
-     pub(crate) fn dma_reset(&self) {
--        self.bar.update(regs::NV_PFALCON_FBIF_CTL::of::<E>(), |v| {
-+        self.pfalcon.update(regs::NV_PFALCON_FBIF_CTL, |v| {
-             v.with_allow_phys_no_ctx(true)
-         });
- 
--        self.bar.write(
--            WithBase::of::<E>(),
--            regs::NV_PFALCON_FALCON_DMACTL::zeroed(),
--        );
-+        self.pfalcon
-+            .write_reg(regs::NV_PFALCON_FALCON_DMACTL::zeroed());
-     }
- 
-     /// Reset the controller, select the falcon core, and wait for memory scrubbing to complete.
-@@ -392,10 +397,9 @@ pub(crate) fn reset(&self) -> Result {
-         self.hal.select_core(self)?;
-         self.hal.reset_wait_mem_scrubbing(self)?;
- 
--        self.bar.write(
--            WithBase::of::<E>(),
--            regs::NV_PFALCON_FALCON_RM::from(self.bar.read(regs::NV_PMC_BOOT_0).into_raw()),
--        );
-+        self.pfalcon.write_reg(regs::NV_PFALCON_FALCON_RM::from(
-+            self.bar.read(regs::NV_PMC_BOOT_0).into_raw(),
-+        ));
- 
-         Ok(())
-     }
-@@ -413,8 +417,8 @@ fn pio_wr_imem_slice(&self, load_offsets: FalconPioImemLoadTarget<'_>) -> Result
-             return Err(EINVAL);
-         }
- 
--        self.bar.write(
--            WithBase::of::<E>().at(Self::PIO_PORT),
-+        self.pfalcon.write(
-+            Array::at(Self::PIO_PORT),
-             regs::NV_PFALCON_FALCON_IMEMC::zeroed()
-                 .with_secure(load_offsets.secure)
-                 .with_aincw(true)
-@@ -424,14 +428,14 @@ fn pio_wr_imem_slice(&self, load_offsets: FalconPioImemLoadTarget<'_>) -> Result
-         for (n, block) in load_offsets.data.chunks(MEM_BLOCK_ALIGNMENT).enumerate() {
-             let n = u16::try_from(n)?;
-             let tag: u16 = load_offsets.start_tag.checked_add(n).ok_or(ERANGE)?;
--            self.bar.write(
--                WithBase::of::<E>().at(Self::PIO_PORT),
-+            self.pfalcon.write(
-+                Array::at(Self::PIO_PORT),
-                 regs::NV_PFALCON_FALCON_IMEMT::zeroed().with_tag(tag),
-             );
-             for word in block.chunks_exact(4) {
-                 let w = [word[0], word[1], word[2], word[3]];
--                self.bar.write(
--                    WithBase::of::<E>().at(Self::PIO_PORT),
-+                self.pfalcon.write(
-+                    Array::at(Self::PIO_PORT),
-                     regs::NV_PFALCON_FALCON_IMEMD::zeroed().with_data(u32::from_le_bytes(w)),
-                 );
-             }
-@@ -450,8 +454,8 @@ fn pio_wr_dmem_slice(&self, load_offsets: FalconPioDmemLoadTarget<'_>) -> Result
-             return Err(EINVAL);
-         }
- 
--        self.bar.write(
--            WithBase::of::<E>().at(Self::PIO_PORT),
-+        self.pfalcon.write(
-+            Array::at(Self::PIO_PORT),
-             regs::NV_PFALCON_FALCON_DMEMC::zeroed()
-                 .with_aincw(true)
-                 .with_offs(load_offsets.dst_start),
-@@ -459,8 +463,8 @@ fn pio_wr_dmem_slice(&self, load_offsets: FalconPioDmemLoadTarget<'_>) -> Result
- 
-         for word in load_offsets.data.chunks_exact(4) {
-             let w = [word[0], word[1], word[2], word[3]];
--            self.bar.write(
--                WithBase::of::<E>().at(Self::PIO_PORT),
-+            self.pfalcon.write(
-+                Array::at(Self::PIO_PORT),
-                 regs::NV_PFALCON_FALCON_DMEMD::zeroed().with_data(u32::from_le_bytes(w)),
-             );
-         }
-@@ -473,14 +477,12 @@ pub(crate) fn pio_load<F: FalconFirmware<Target = E> + FalconPioLoadable>(
-         &self,
-         fw: &F,
-     ) -> Result {
--        self.bar.update(regs::NV_PFALCON_FBIF_CTL::of::<E>(), |v| {
-+        self.pfalcon.update(regs::NV_PFALCON_FBIF_CTL, |v| {
-             v.with_allow_phys_no_ctx(true)
-         });
- 
--        self.bar.write(
--            WithBase::of::<E>(),
--            regs::NV_PFALCON_FALCON_DMACTL::zeroed(),
--        );
-+        self.pfalcon
-+            .write_reg(regs::NV_PFALCON_FALCON_DMACTL::zeroed());
- 
-         if let Some(imem_ns) = fw.imem_ns_load_params() {
-             self.pio_wr_imem_slice(imem_ns)?;
-@@ -492,10 +494,8 @@ pub(crate) fn pio_load<F: FalconFirmware<Target = E> + FalconPioLoadable>(
- 
-         self.hal.program_brom(self, &fw.brom_params());
- 
--        self.bar.write(
--            WithBase::of::<E>(),
--            regs::NV_PFALCON_FALCON_BOOTVEC::zeroed().with_value(fw.boot_addr()),
--        );
-+        self.pfalcon
-+            .write_reg(regs::NV_PFALCON_FALCON_BOOTVEC::zeroed().with_value(fw.boot_addr()));
- 
-         Ok(())
-     }
-@@ -547,16 +547,13 @@ fn dma_wr(
- 
-         // Set up the base source DMA address.
- 
--        self.bar.write(
--            WithBase::of::<E>(),
--            regs::NV_PFALCON_FALCON_DMATRFBASE::zeroed().with_base(
-+        self.pfalcon
-+            .write_reg(regs::NV_PFALCON_FALCON_DMATRFBASE::zeroed().with_base(
-                 // CAST: `as u32` is used on purpose since we do want to strip the upper bits,
-                 // which will be written to `NV_PFALCON_FALCON_DMATRFBASE1`.
-                 (dma_address >> 8) as u32,
--            ),
--        );
--        self.bar.write(
--            WithBase::of::<E>(),
-+            ));
-+        self.pfalcon.write_reg(
-             regs::NV_PFALCON_FALCON_DMATRFBASE1::zeroed().try_with_base(dma_address >> 40)?,
-         );
- 
-@@ -566,23 +563,21 @@ fn dma_wr(
- 
-         for pos in (0..num_transfers).map(|i| i * DMA_LEN) {
-             // Perform a transfer of size `DMA_LEN`.
--            self.bar.write(
--                WithBase::of::<E>(),
-+            self.pfalcon.write_reg(
-                 regs::NV_PFALCON_FALCON_DMATRFMOFFS::zeroed()
-                     .try_with_offs(load_offsets.dst_start + pos)?,
-             );
--            self.bar.write(
--                WithBase::of::<E>(),
-+            self.pfalcon.write_reg(
-                 regs::NV_PFALCON_FALCON_DMATRFFBOFFS::zeroed().with_offs(src_start + pos),
-             );
- 
--            self.bar.write(WithBase::of::<E>(), cmd);
-+            self.pfalcon.write_reg(cmd);
- 
-             // Wait for the transfer to complete.
-             // TIMEOUT: arbitrarily large value, no DMA transfer to the falcon's small memories
-             // should ever take that long.
-             read_poll_timeout(
--                || Ok(self.bar.read(regs::NV_PFALCON_FALCON_DMATRFCMD::of::<E>())),
-+                || Ok(self.pfalcon.read(regs::NV_PFALCON_FALCON_DMATRFCMD)),
-                 |r| r.idle(),
-                 Delta::ZERO,
-                 Delta::from_secs(2),
-@@ -614,8 +609,8 @@ fn dma_load<F: FalconFirmware<Target = E> + FalconDmaLoadable>(&self, fw: &F) ->
+@@ -98,26 +97,15 @@ fn parse(input: syn::parse::ParseStream<'_>) -> Result<Self> {
          };
  
-         self.dma_reset();
--        self.bar
--            .update(regs::NV_PFALCON_FBIF_TRANSCFG::of::<E>().at(0), |v| {
-+        self.pfalcon
-+            .update(regs::NV_PFALCON_FBIF_TRANSCFG::at(0), |v| {
-                 v.with_target(FalconFbifTarget::CoherentSysmem)
-                     .with_mem_type(FalconFbifMemType::Physical)
-             });
-@@ -626,10 +621,8 @@ fn dma_load<F: FalconFirmware<Target = E> + FalconDmaLoadable>(&self, fw: &F) ->
-         self.hal.program_brom(self, &fw.brom_params());
+         let lh = input.lookahead1();
+-        let mut relative_base = None;
+         let offset = if lh.peek(Token![@]) {
+             let _: Token![@] = input.parse()?;
  
-         // Set `BootVec` to start of non-secure code.
--        self.bar.write(
--            WithBase::of::<E>(),
--            regs::NV_PFALCON_FALCON_BOOTVEC::zeroed().with_value(fw.boot_addr()),
--        );
-+        self.pfalcon
-+            .write_reg(regs::NV_PFALCON_FALCON_BOOTVEC::zeroed().with_value(fw.boot_addr()));
- 
-         Ok(())
-     }
-@@ -638,7 +631,7 @@ fn dma_load<F: FalconFirmware<Target = E> + FalconDmaLoadable>(&self, fw: &F) ->
-     pub(crate) fn wait_till_halted(&self) -> Result<()> {
-         // TIMEOUT: arbitrarily large value, firmwares should complete in less than 2 seconds.
-         read_poll_timeout(
--            || Ok(self.bar.read(regs::NV_PFALCON_FALCON_CPUCTL::of::<E>())),
-+            || Ok(self.pfalcon.read(regs::NV_PFALCON_FALCON_CPUCTL)),
-             |r| r.halted(),
-             Delta::ZERO,
-             Delta::from_secs(2),
-@@ -649,19 +642,13 @@ pub(crate) fn wait_till_halted(&self) -> Result<()> {
- 
-     /// Start the falcon CPU.
-     pub(crate) fn start(&self) -> Result<()> {
--        match self
--            .bar
--            .read(regs::NV_PFALCON_FALCON_CPUCTL::of::<E>())
--            .alias_en()
--        {
--            true => self.bar.write(
--                WithBase::of::<E>(),
--                regs::NV_PFALCON_FALCON_CPUCTL_ALIAS::zeroed().with_startcpu(true),
--            ),
--            false => self.bar.write(
--                WithBase::of::<E>(),
--                regs::NV_PFALCON_FALCON_CPUCTL::zeroed().with_startcpu(true),
--            ),
-+        match self.pfalcon.read(regs::NV_PFALCON_FALCON_CPUCTL).alias_en() {
-+            true => self
-+                .pfalcon
-+                .write_reg(regs::NV_PFALCON_FALCON_CPUCTL_ALIAS::zeroed().with_startcpu(true)),
-+            false => self
-+                .pfalcon
-+                .write_reg(regs::NV_PFALCON_FALCON_CPUCTL::zeroed().with_startcpu(true)),
-         }
- 
-         Ok(())
-@@ -670,32 +657,24 @@ pub(crate) fn start(&self) -> Result<()> {
-     /// Writes values to the mailbox registers if provided.
-     pub(crate) fn write_mailboxes(&self, mbox0: Option<u32>, mbox1: Option<u32>) {
-         if let Some(mbox0) = mbox0 {
--            self.bar.write(
--                WithBase::of::<E>(),
--                regs::NV_PFALCON_FALCON_MAILBOX0::zeroed().with_value(mbox0),
--            );
-+            self.pfalcon
-+                .write_reg(regs::NV_PFALCON_FALCON_MAILBOX0::zeroed().with_value(mbox0));
-         }
- 
-         if let Some(mbox1) = mbox1 {
--            self.bar.write(
--                WithBase::of::<E>(),
--                regs::NV_PFALCON_FALCON_MAILBOX1::zeroed().with_value(mbox1),
--            );
-+            self.pfalcon
-+                .write_reg(regs::NV_PFALCON_FALCON_MAILBOX1::zeroed().with_value(mbox1));
-         }
-     }
- 
-     /// Reads the value from `mbox0` register.
-     pub(crate) fn read_mailbox0(&self) -> u32 {
--        self.bar
--            .read(regs::NV_PFALCON_FALCON_MAILBOX0::of::<E>())
--            .value()
-+        self.pfalcon.read(regs::NV_PFALCON_FALCON_MAILBOX0).value()
-     }
- 
-     /// Reads the value from `mbox1` register.
-     pub(crate) fn read_mailbox1(&self) -> u32 {
--        self.bar
--            .read(regs::NV_PFALCON_FALCON_MAILBOX1::of::<E>())
--            .value()
-+        self.pfalcon.read(regs::NV_PFALCON_FALCON_MAILBOX1).value()
-     }
- 
-     /// Reads values from both mailbox registers.
-@@ -760,9 +739,7 @@ pub(crate) fn load<F: FalconFirmware<Target = E> + FalconDmaLoadable>(&self, fw:
- 
-     /// Write the application version to the OS register.
-     pub(crate) fn write_os_version(&self, app_version: u32) {
--        self.bar.write(
--            WithBase::of::<E>(),
--            regs::NV_PFALCON_FALCON_OS::zeroed().with_value(app_version),
--        );
-+        self.pfalcon
-+            .write_reg(regs::NV_PFALCON_FALCON_OS::zeroed().with_value(app_version));
-     }
- }
-diff --git a/drivers/gpu/nova-core/falcon/fsp.rs b/drivers/gpu/nova-core/falcon/fsp.rs
-index 0437180b8829..85f9c8c5d60e 100644
---- a/drivers/gpu/nova-core/falcon/fsp.rs
-+++ b/drivers/gpu/nova-core/falcon/fsp.rs
-@@ -8,13 +8,12 @@
- 
- use kernel::{
-     io::{
-+        io_project,
-         poll::read_poll_timeout,
--        register::{
--            Array,
--            RegisterBase,
--            WithBase, //
--        },
--        Io, //
-+        register,
-+        register::Array,
-+        Io,
-+        Mmio, //
-     },
-     prelude::*,
-     sizes::SZ_1K,
-@@ -22,11 +21,13 @@
- };
- 
- use crate::{
-+    driver::{
-+        Bar0,
-+        NovaRegisters, //
-+    },
-     falcon::{
-         Falcon,
--        FalconEngine,
--        PFalcon2Base,
--        PFalconBase, //
-+        FalconEngine, //
-     },
-     num,
-     regs, //
-@@ -41,15 +42,24 @@
- /// Type specifying the `Fsp` falcon engine. Cannot be instantiated.
- pub(crate) struct Fsp(());
- 
--impl RegisterBase<PFalconBase> for Fsp {
--    const BASE: usize = 0x8f2000;
--}
-+register! {
-+    base: NovaRegisters;
- 
--impl RegisterBase<PFalcon2Base> for Fsp {
--    const BASE: usize = 0x8f3000;
-+    PFALCON: super::PFalconRegisters @ 0x8f2000;
-+    PFALCON2: super::PFalcon2Registers @ 0x8f3000;
- }
- 
--impl FalconEngine for Fsp {}
-+impl FalconEngine for Fsp {
-+    #[inline]
-+    fn pfalcon(io: Bar0<'_>) -> Mmio<'_, super::PFalconRegisters> {
-+        io_project!(io, build: PFALCON)
-+    }
-+
-+    #[inline]
-+    fn pfalcon2(io: Bar0<'_>) -> Mmio<'_, super::PFalcon2Registers> {
-+        io_project!(io, build: PFALCON2)
-+    }
-+}
- 
- impl<'a> Falcon<'a, Fsp> {
-     /// Writes `data` to FSP external memory at offset `0`.
-@@ -62,19 +72,15 @@ fn write_emem(&mut self, data: &[u8]) -> Result {
-         }
- 
-         // Begin a write burst at offset `0`, auto-incrementing on each write.
--        self.bar.write(
--            WithBase::of::<Fsp>(),
--            regs::NV_PFALCON_FALCON_EMEMC::zeroed().with_aincw(true),
--        );
-+        self.pfalcon
-+            .write_reg(regs::NV_PFALCON_FALCON_EMEMC::zeroed().with_aincw(true));
- 
-         for chunk in data.chunks_exact(4) {
-             let value = u32::from_le_bytes([chunk[0], chunk[1], chunk[2], chunk[3]]);
- 
-             // Write the next 32-bit `value`; hardware advances the offset.
--            self.bar.write(
--                WithBase::of::<Fsp>(),
--                regs::NV_PFALCON_FALCON_EMEMD::zeroed().with_data(value),
--            );
-+            self.pfalcon
-+                .write_reg(regs::NV_PFALCON_FALCON_EMEMD::zeroed().with_data(value));
-         }
- 
-         Ok(())
-@@ -90,17 +96,12 @@ fn read_emem(&mut self, data: &mut [u8]) -> Result {
-         }
- 
-         // Begin a read burst at offset `0`, auto-incrementing on each read.
--        self.bar.write(
--            WithBase::of::<Fsp>(),
--            regs::NV_PFALCON_FALCON_EMEMC::zeroed().with_aincr(true),
--        );
-+        self.pfalcon
-+            .write_reg(regs::NV_PFALCON_FALCON_EMEMC::zeroed().with_aincr(true));
- 
-         for chunk in data.chunks_exact_mut(4) {
-             // Read the next 32-bit word; hardware advances the offset.
--            let value = self
--                .bar
--                .read(regs::NV_PFALCON_FALCON_EMEMD::of::<Fsp>())
--                .data();
-+            let value = self.pfalcon.read(regs::NV_PFALCON_FALCON_EMEMD).data();
-             chunk.copy_from_slice(&value.to_le_bytes());
-         }
- 
-diff --git a/drivers/gpu/nova-core/falcon/gsp.rs b/drivers/gpu/nova-core/falcon/gsp.rs
-index ae32f401aeb0..4c96ae325fda 100644
---- a/drivers/gpu/nova-core/falcon/gsp.rs
-+++ b/drivers/gpu/nova-core/falcon/gsp.rs
-@@ -2,23 +2,24 @@
- 
- use kernel::{
-     io::{
-+        io_project,
-         poll::read_poll_timeout,
--        register::{
--            RegisterBase,
--            WithBase, //
--        },
-+        register,
-         Io,
-+        Mmio, //
-     },
-     prelude::*,
-     time::Delta, //
- };
- 
- use crate::{
-+    driver::{
-+        Bar0,
-+        NovaRegisters, //
-+    },
-     falcon::{
-         Falcon,
--        FalconEngine,
--        PFalcon2Base,
--        PFalconBase, //
-+        FalconEngine, //
-     },
-     regs,
- };
-@@ -26,24 +27,31 @@
- /// Type specifying the `Gsp` falcon engine. Cannot be instantiated.
- pub(crate) struct Gsp(());
- 
--impl RegisterBase<PFalconBase> for Gsp {
--    const BASE: usize = 0x00110000;
--}
-+register! {
-+    base: NovaRegisters;
- 
--impl RegisterBase<PFalcon2Base> for Gsp {
--    const BASE: usize = 0x00111000;
-+    PFALCON: super::PFalconRegisters @ 0x00110000;
-+    PFALCON2: super::PFalcon2Registers @ 0x00111000;
- }
- 
--impl FalconEngine for Gsp {}
-+impl FalconEngine for Gsp {
-+    #[inline]
-+    fn pfalcon(io: Bar0<'_>) -> Mmio<'_, super::PFalconRegisters> {
-+        io_project!(io, build: PFALCON)
-+    }
-+
-+    #[inline]
-+    fn pfalcon2(io: Bar0<'_>) -> Mmio<'_, super::PFalcon2Registers> {
-+        io_project!(io, build: PFALCON2)
-+    }
-+}
- 
- impl<'a> Falcon<'a, Gsp> {
-     /// Clears the SWGEN0 bit in the Falcon's IRQ status clear register to
-     /// allow GSP to signal CPU for processing new messages in message queue.
-     pub(crate) fn clear_swgen0_intr(&self) {
--        self.bar.write(
--            WithBase::of::<Gsp>(),
--            regs::NV_PFALCON_FALCON_IRQSCLR::zeroed().with_swgen0(true),
--        );
-+        self.pfalcon
-+            .write_reg(regs::NV_PFALCON_FALCON_IRQSCLR::zeroed().with_swgen0(true));
-     }
- 
-     /// Checks if GSP reload/resume has completed during the boot process.
-@@ -59,8 +67,8 @@ pub(crate) fn check_reload_completed(&self, timeout: Delta) -> Result<bool> {
- 
-     /// Returns whether the RISC-V branch privilege lockdown bit is set.
-     pub(crate) fn riscv_branch_privilege_lockdown(&self) -> bool {
--        self.bar
--            .read(regs::NV_PFALCON_FALCON_HWCFG2::of::<Gsp>())
-+        self.pfalcon
-+            .read(regs::NV_PFALCON_FALCON_HWCFG2)
-             .riscv_br_priv_lockdown()
-     }
- 
-@@ -71,10 +79,7 @@ pub(crate) fn priv_target_mask_released(&self) -> bool {
-         const LOCKED_PATTERN: u32 = 0xbadf_4100;
-         const LOCKED_MASK: u32 = 0xffff_ff00;
- 
--        let hwcfg2 = self
--            .bar
--            .read(regs::NV_PFALCON_FALCON_HWCFG2::of::<Gsp>())
--            .into_raw();
-+        let hwcfg2 = self.pfalcon.read(regs::NV_PFALCON_FALCON_HWCFG2).into_raw();
- 
-         hwcfg2 != 0 && (hwcfg2 & LOCKED_MASK) != LOCKED_PATTERN
-     }
-diff --git a/drivers/gpu/nova-core/falcon/hal/ga102.rs b/drivers/gpu/nova-core/falcon/hal/ga102.rs
-index 7600ee07ca2e..7880c145f8f7 100644
---- a/drivers/gpu/nova-core/falcon/hal/ga102.rs
-+++ b/drivers/gpu/nova-core/falcon/hal/ga102.rs
-@@ -6,11 +6,9 @@
-     device,
-     io::{
-         poll::read_poll_timeout,
--        register::{
--            Array,
--            WithBase, //
--        },
--        Io, //
-+        register::Array,
-+        Io,
-+        Mmio, //
-     },
-     prelude::*,
-     time::Delta, //
-@@ -24,6 +22,7 @@
-         FalconBromParams,
-         FalconEngine,
-         FalconModSelAlgo,
-+        PFalcon2Registers,
-         PeregrineCoreSelect, //
-     },
-     regs,
-@@ -31,17 +30,16 @@
- 
- use super::FalconHal;
- 
--fn select_core_ga102<E: FalconEngine>(bar: Bar0<'_>) -> Result {
--    let bcr_ctrl = bar.read(regs::NV_PRISCV_RISCV_BCR_CTRL::of::<E>());
-+fn select_core_ga102(pfalcon2: Mmio<'_, PFalcon2Registers>) -> Result {
-+    let bcr_ctrl = pfalcon2.read(regs::NV_PRISCV_RISCV_BCR_CTRL);
-     if bcr_ctrl.core_select() != PeregrineCoreSelect::Falcon {
--        bar.write(
--            WithBase::of::<E>(),
-+        pfalcon2.write_reg(
-             regs::NV_PRISCV_RISCV_BCR_CTRL::zeroed().with_core_select(PeregrineCoreSelect::Falcon),
-         );
- 
-         // TIMEOUT: falcon core should take less than 10ms to report being enabled.
-         read_poll_timeout(
--            || Ok(bar.read(regs::NV_PRISCV_RISCV_BCR_CTRL::of::<E>())),
-+            || Ok(pfalcon2.read(regs::NV_PRISCV_RISCV_BCR_CTRL)),
-             |r| r.valid(),
-             Delta::ZERO,
-             Delta::from_millis(10),
-@@ -86,24 +84,23 @@ fn signature_reg_fuse_version_ga102(
-     Ok(u16::BITS - reg_fuse_version.leading_zeros())
- }
- 
--fn program_brom_ga102<E: FalconEngine>(bar: Bar0<'_>, params: &FalconBromParams) {
--    bar.write(
--        WithBase::of::<E>().at(0),
-+fn program_brom_ga102(
-+    pfalcon2: Mmio<'_, PFalcon2Registers>,
-+    params: &FalconBromParams,
-+) {
-+    pfalcon2.write(
-+        Array::at(0),
-         regs::NV_PFALCON2_FALCON_BROM_PARAADDR::zeroed().with_value(params.pkc_data_offset),
-     );
--    bar.write(
--        WithBase::of::<E>(),
-+    pfalcon2.write_reg(
-         regs::NV_PFALCON2_FALCON_BROM_ENGIDMASK::zeroed()
-             .with_value(u32::from(params.engine_id_mask)),
-     );
--    bar.write(
--        WithBase::of::<E>(),
-+    pfalcon2.write_reg(
-         regs::NV_PFALCON2_FALCON_BROM_CURR_UCODE_ID::zeroed().with_ucode_id(params.ucode_id),
-     );
--    bar.write(
--        WithBase::of::<E>(),
--        regs::NV_PFALCON2_FALCON_MOD_SEL::zeroed().with_algo(FalconModSelAlgo::Rsa3k),
--    );
-+    pfalcon2
-+        .write_reg(regs::NV_PFALCON2_FALCON_MOD_SEL::zeroed().with_algo(FalconModSelAlgo::Rsa3k));
- }
- 
- pub(super) struct Ga102<E: FalconEngine>(PhantomData<E>);
-@@ -116,7 +113,7 @@ pub(super) fn new() -> Self {
- 
- impl<E: FalconEngine> FalconHal<E> for Ga102<E> {
-     fn select_core(&self, falcon: &Falcon<'_, E>) -> Result {
--        select_core_ga102::<E>(falcon.bar)
-+        select_core_ga102(falcon.pfalcon2)
-     }
- 
-     fn signature_reg_fuse_version(
-@@ -129,27 +126,24 @@ fn signature_reg_fuse_version(
-     }
- 
-     fn program_brom(&self, falcon: &Falcon<'_, E>, params: &FalconBromParams) {
--        program_brom_ga102::<E>(falcon.bar, params);
-+        program_brom_ga102(falcon.pfalcon2, params);
-     }
- 
-     fn is_riscv_active(&self, falcon: &Falcon<'_, E>) -> bool {
-         falcon
--            .bar
--            .read(regs::NV_PRISCV_RISCV_CPUCTL::of::<E>())
-+            .pfalcon2
-+            .read(regs::NV_PRISCV_RISCV_CPUCTL)
-             .active_stat()
-     }
- 
-     fn is_riscv_halted(&self, falcon: &Falcon<'_, E>) -> Result<bool> {
--        Ok(falcon
--            .bar
--            .read(regs::NV_PRISCV_RISCV_CPUCTL::of::<E>())
--            .halted())
-+        Ok(falcon.pfalcon2.read(regs::NV_PRISCV_RISCV_CPUCTL).halted())
-     }
- 
-     fn reset_wait_mem_scrubbing(&self, falcon: &Falcon<'_, E>) -> Result {
-         // TIMEOUT: memory scrubbing should complete in less than 20ms.
-         read_poll_timeout(
--            || Ok(falcon.bar.read(regs::NV_PFALCON_FALCON_HWCFG2::of::<E>())),
-+            || Ok(falcon.pfalcon.read(regs::NV_PFALCON_FALCON_HWCFG2)),
-             |r| r.mem_scrubbing_done(),
-             Delta::ZERO,
-             Delta::from_millis(20),
-@@ -158,20 +152,18 @@ fn reset_wait_mem_scrubbing(&self, falcon: &Falcon<'_, E>) -> Result {
-     }
- 
-     fn reset_eng(&self, falcon: &Falcon<'_, E>) -> Result {
--        let bar = falcon.bar;
+-            if input.peek(Ident) {
+-                relative_base = Some(input.parse()?);
+-                let _: Token![+] = input.parse()?;
+-            }
 -
--        let _ = bar.read(regs::NV_PFALCON_FALCON_HWCFG2::of::<E>());
-+        let _ = falcon.pfalcon.read(regs::NV_PFALCON_FALCON_HWCFG2);
+             RegOffset::Fixed {
+                 offset: input.parse()?,
+             }
+         } else if lh.peek(Token![=>]) {
+             let _: Token![=>] = input.parse()?;
+-            let mut alias: Path = input.parse()?;
+-            if input.peek(Token![+]) {
+-                let _: Token![+] = input.parse()?;
+-                relative_base = Some(alias);
+-                alias = input.parse()?;
+-            }
++            let alias: Path = input.parse()?;
  
-         // According to OpenRM's `kflcnPreResetWait_GA102` documentation, HW sometimes does not set
-         // RESET_READY so a non-failing timeout is used.
-         let _ = read_poll_timeout(
--            || Ok(bar.read(regs::NV_PFALCON_FALCON_HWCFG2::of::<E>())),
-+            || Ok(falcon.pfalcon.read(regs::NV_PFALCON_FALCON_HWCFG2)),
-             |r| r.reset_ready(),
-             Delta::ZERO,
-             Delta::from_micros(150),
-         );
- 
--        regs::NV_PFALCON_FALCON_ENGINE::reset_engine::<E>(bar);
-+        regs::NV_PFALCON_FALCON_ENGINE::reset_engine(falcon.pfalcon);
-         self.reset_wait_mem_scrubbing(falcon)?;
- 
-         Ok(())
-diff --git a/drivers/gpu/nova-core/falcon/hal/tu102.rs b/drivers/gpu/nova-core/falcon/hal/tu102.rs
-index 5291598fedf7..7fc6e83c2566 100644
---- a/drivers/gpu/nova-core/falcon/hal/tu102.rs
-+++ b/drivers/gpu/nova-core/falcon/hal/tu102.rs
-@@ -5,7 +5,6 @@
- use kernel::{
-     io::{
-         poll::read_poll_timeout,
--        register::WithBase,
-         Io, //
-     },
-     prelude::*,
-@@ -50,8 +49,8 @@ fn program_brom(&self, _falcon: &Falcon<'_, E>, _params: &FalconBromParams) {}
- 
-     fn is_riscv_active(&self, falcon: &Falcon<'_, E>) -> bool {
-         falcon
--            .bar
--            .read(regs::NV_PRISCV_RISCV_CORE_SWITCH_RISCV_STATUS::of::<E>())
-+            .pfalcon2
-+            .read(regs::NV_PRISCV_RISCV_CORE_SWITCH_RISCV_STATUS)
-             .active_stat()
-     }
- 
-@@ -62,7 +61,7 @@ fn is_riscv_halted(&self, _falcon: &Falcon<'_, E>) -> Result<bool> {
-     fn reset_wait_mem_scrubbing(&self, falcon: &Falcon<'_, E>) -> Result {
-         // TIMEOUT: memory scrubbing should complete in less than 10ms.
-         read_poll_timeout(
--            || Ok(falcon.bar.read(regs::NV_PFALCON_FALCON_DMACTL::of::<E>())),
-+            || Ok(falcon.pfalcon.read(regs::NV_PFALCON_FALCON_DMACTL)),
-             |r| r.mem_scrubbing_done(),
-             Delta::ZERO,
-             Delta::from_millis(10),
-@@ -71,7 +70,7 @@ fn reset_wait_mem_scrubbing(&self, falcon: &Falcon<'_, E>) -> Result {
-     }
- 
-     fn reset_eng(&self, falcon: &Falcon<'_, E>) -> Result {
--        regs::NV_PFALCON_FALCON_ENGINE::reset_engine::<E>(falcon.bar);
-+        regs::NV_PFALCON_FALCON_ENGINE::reset_engine(falcon.pfalcon);
-         self.reset_wait_mem_scrubbing(falcon)?;
- 
-         Ok(())
-diff --git a/drivers/gpu/nova-core/falcon/sec2.rs b/drivers/gpu/nova-core/falcon/sec2.rs
-index 91ec7d49c1f5..6648a397d38a 100644
---- a/drivers/gpu/nova-core/falcon/sec2.rs
-+++ b/drivers/gpu/nova-core/falcon/sec2.rs
-@@ -1,22 +1,37 @@
- // SPDX-License-Identifier: GPL-2.0
- 
--use kernel::io::register::RegisterBase;
-+use kernel::io::{
-+    io_project,
-+    register,
-+    Mmio, //
-+};
- 
--use crate::falcon::{
--    FalconEngine,
--    PFalcon2Base,
--    PFalconBase, //
-+use crate::{
-+    driver::{
-+        Bar0,
-+        NovaRegisters, //
-+    },
-+    falcon::FalconEngine, //
- };
- 
- /// Type specifying the `Sec2` falcon engine. Cannot be instantiated.
- pub(crate) struct Sec2(());
- 
--impl RegisterBase<PFalconBase> for Sec2 {
--    const BASE: usize = 0x00840000;
--}
-+register! {
-+    base: NovaRegisters;
- 
--impl RegisterBase<PFalcon2Base> for Sec2 {
--    const BASE: usize = 0x00841000;
-+    PFALCON: super::PFalconRegisters @ 0x00840000;
-+    PFALCON2: super::PFalcon2Registers @ 0x00841000;
- }
- 
--impl FalconEngine for Sec2 {}
-+impl FalconEngine for Sec2 {
-+    #[inline]
-+    fn pfalcon(io: Bar0<'_>) -> Mmio<'_, super::PFalconRegisters> {
-+        io_project!(io, build: PFALCON)
-+    }
-+
-+    #[inline]
-+    fn pfalcon2(io: Bar0<'_>) -> Mmio<'_, super::PFalcon2Registers> {
-+        io_project!(io, build: PFALCON2)
-+    }
-+}
-diff --git a/drivers/gpu/nova-core/firmware/fwsec/bootloader.rs b/drivers/gpu/nova-core/firmware/fwsec/bootloader.rs
-index ec4d92317a93..02a36fd59902 100644
---- a/drivers/gpu/nova-core/firmware/fwsec/bootloader.rs
-+++ b/drivers/gpu/nova-core/firmware/fwsec/bootloader.rs
-@@ -12,7 +12,10 @@
-         Device, //
-     },
-     dma::Coherent,
--    io::{register::WithBase, Io},
-+    io::{
-+        register::Array,
-+        Io, //
-+    },
-     prelude::*,
-     ptr::{
-         Alignable,
-@@ -23,7 +26,6 @@
- };
- 
- use crate::{
--    driver::Bar0,
-     falcon::{
-         self,
-         gsp::Gsp,
-@@ -235,12 +237,7 @@ pub(crate) fn new(
-     ///
-     /// The bootloader will load the FWSEC firmware and then execute it. This function returns
-     /// after FWSEC has reached completion.
--    pub(crate) fn run(
--        &self,
--        dev: &Device<device::Bound>,
--        falcon: &Falcon<'_, Gsp>,
--        bar: Bar0<'_>,
--    ) -> Result<()> {
-+    pub(crate) fn run(&self, dev: &Device<device::Bound>, falcon: &Falcon<'_, Gsp>) -> Result<()> {
-         // Reset falcon, load the firmware, and run it.
-         falcon
-             .reset()
-@@ -250,9 +247,8 @@ pub(crate) fn run(
-             .inspect_err(|e| dev_err!(dev, "Failed to load FWSEC firmware: {:?}\n", e))?;
- 
-         // Configure DMA index for the bootloader to fetch the FWSEC firmware from system memory.
--        bar.update(
--            regs::NV_PFALCON_FBIF_TRANSCFG::of::<Gsp>()
--                .try_at(usize::from_safe_cast(self.dmem_desc.ctx_dma))
-+        falcon.pfalcon.update(
-+            regs::NV_PFALCON_FBIF_TRANSCFG::try_at(usize::from_safe_cast(self.dmem_desc.ctx_dma))
-                 .ok_or(EINVAL)?,
-             |v| {
-                 v.with_target(FalconFbifTarget::CoherentSysmem)
-diff --git a/drivers/gpu/nova-core/gsp/hal/tu102.rs b/drivers/gpu/nova-core/gsp/hal/tu102.rs
-index a5c0ca355493..d2ef35080689 100644
---- a/drivers/gpu/nova-core/gsp/hal/tu102.rs
-+++ b/drivers/gpu/nova-core/gsp/hal/tu102.rs
-@@ -62,12 +62,11 @@ impl FwsecUnloadFirmware {
-     fn run(
-         &self,
-         dev: &device::Device<device::Bound>,
--        bar: Bar0<'_>,
-         gsp_falcon: &Falcon<'_, GspEngine>,
-     ) -> Result {
-         match self {
-             Self::WithoutBl(fw) => fw.run(dev, gsp_falcon),
--            Self::WithBl(fw) => fw.run(dev, gsp_falcon, bar),
-+            Self::WithBl(fw) => fw.run(dev, gsp_falcon),
+             if input.peek(token::Bracket) {
+                 let content;
+@@ -152,7 +140,6 @@ fn parse(input: syn::parse::ParseStream<'_>) -> Result<Self> {
+             name,
+             ty,
+             array,
+-            relative_base,
+             offset,
+             bitfield,
+         })
+@@ -196,7 +183,6 @@ pub(crate) fn register(def: RegDef) -> Result<TokenStream> {
+             name,
+             ty,
+             array,
+-            relative_base,
+             offset,
+             bitfield,
+         } = reg;
+@@ -236,7 +222,7 @@ impl ::kernel::io::register::Register for #name {
          }
+ 
+         match array {
+-            None if bitfield.is_none() && relative_base.is_none() => outputs.extend(quote!(
++            None if bitfield.is_none() => outputs.extend(quote!(
+                 #(#attrs)* #vis const #name: ::kernel::io::register::OffsetLoc<#base, #ty> =
+                     ::kernel::io::register::OffsetLoc::new(#offset);
+             )),
+@@ -246,21 +232,12 @@ impl ::kernel::io::register::Register for #name {
+                 "defining without bitfield is not yet supported for this type of register",
+             ))?,
+ 
+-            None => match relative_base {
+-                None => outputs.extend(quote_spanned!(span =>
+-                    impl ::kernel::io::register::FixedRegister for #name {}
+-
+-                    #(#attrs)* #vis const #name: ::kernel::io::register::FixedRegisterLoc<#name> =
+-                        ::kernel::io::register::FixedRegisterLoc::<#name>::new();
+-                )),
+-                Some(relative_base) => outputs.extend(quote_spanned!(span =>
+-                    impl ::kernel::io::register::WithBase for #name {
+-                        type BaseFamily = #relative_base;
+-                    }
++            None => outputs.extend(quote_spanned!(span =>
++                impl ::kernel::io::register::FixedRegister for #name {}
+ 
+-                    impl ::kernel::io::register::RelativeRegister for #name {}
+-                )),
+-            },
++                #(#attrs)* #vis const #name: ::kernel::io::register::FixedRegisterLoc<#name> =
++                    ::kernel::io::register::FixedRegisterLoc::<#name>::new();
++            )),
+ 
+             Some(def) => {
+                 let size = &def.size;
+@@ -276,24 +253,13 @@ impl ::kernel::io::register::RelativeRegister for #name {}
+                 };
+ 
+                 outputs.extend(quote_spanned!(span =>
++                    impl ::kernel::io::register::Array for #name {}
++
+                     impl ::kernel::io::register::RegisterArray for #name {
+                         const SIZE: usize = #size;
+                         const STRIDE: usize = #stride;
+                     }
+                 ));
+-
+-                match relative_base {
+-                    None => outputs.extend(quote_spanned!(span =>
+-                        impl ::kernel::io::register::Array for #name {}
+-                    )),
+-                    Some(relative_base) => outputs.extend(quote_spanned!(span =>
+-                        impl ::kernel::io::register::WithBase for #name {
+-                            type BaseFamily = #relative_base;
+-                        }
+-
+-                        impl ::kernel::io::register::RelativeRegisterArray for #name {}
+-                    )),
+-                }
+             }
+         };
      }
- }
-@@ -88,7 +87,7 @@ fn run(&self, ctx: &mut GspBootContext<'_, '_>) -> Result {
-         // Log errors but keep going if it fails.
-         let fwsec_sb_res = self
-             .fwsec_sb
--            .run(dev, bar, ctx.gsp_falcon)
-+            .run(dev, ctx.gsp_falcon)
-             .inspect_err(|e| dev_err!(dev, "FWSEC-SB failed to run: {:?}\n", e));
- 
-         // Remove WPR2 region if set.
-@@ -168,7 +167,7 @@ fn run_fwsec_frts(
-         if self.needs_fwsec_bootloader {
-             let fwsec_frts_bl = FwsecFirmwareWithBl::new(fwsec_frts, dev, chipset)?;
-             // Load and run the bootloader, which will load FWSEC-FRTS and run it.
--            fwsec_frts_bl.run(dev, falcon, bar)?;
-+            fwsec_frts_bl.run(dev, falcon)?;
-         } else {
-             // Load and run FWSEC-FRTS directly.
-             fwsec_frts.run(dev, falcon)?;
-diff --git a/drivers/gpu/nova-core/regs.rs b/drivers/gpu/nova-core/regs.rs
-index 1af073f3861f..90ac8dac5349 100644
---- a/drivers/gpu/nova-core/regs.rs
-+++ b/drivers/gpu/nova-core/regs.rs
-@@ -4,8 +4,8 @@
- use kernel::{
-     io::{
-         register,
--        register::WithBase,
--        Io, //
-+        Io,
-+        Mmio, //
-     },
-     prelude::*,
-     sizes::SizeConstants,
-@@ -13,22 +13,18 @@
- };
- 
- use crate::{
--    driver::{
--        Bar0,
--        NovaRegisters, //
--    },
-+    driver::NovaRegisters,
-     falcon::{
-         DmaTrfCmdSize,
-         FalconCoreRev,
-         FalconCoreRevSubversion,
--        FalconEngine,
-         FalconFbifMemType,
-         FalconFbifTarget,
-         FalconMem,
-         FalconModSelAlgo,
-         FalconSecurityModel,
--        PFalcon2Base,
--        PFalconBase,
-+        PFalcon2Registers,
-+        PFalconRegisters,
-         PeregrineCoreSelect, //
-     },
-     gpu::{
-@@ -202,32 +198,32 @@ pub(crate) fn usable_fb_size(self) -> u64 {
- // PFALCON
- 
- register! {
--    base: NovaRegisters;
-+    base: PFalconRegisters;
- 
--    pub(crate) NV_PFALCON_FALCON_IRQSCLR(u32) @ PFalconBase + 0x00000004 {
-+    pub(crate) NV_PFALCON_FALCON_IRQSCLR(u32) @ 0x00000004 {
-         6:6     swgen0 => bool;
-         4:4     halt => bool;
-     }
- 
--    pub(crate) NV_PFALCON_FALCON_MAILBOX0(u32) @ PFalconBase + 0x00000040 {
-+    pub(crate) NV_PFALCON_FALCON_MAILBOX0(u32) @ 0x00000040 {
-         31:0    value => u32;
-     }
- 
--    pub(crate) NV_PFALCON_FALCON_MAILBOX1(u32) @ PFalconBase + 0x00000044 {
-+    pub(crate) NV_PFALCON_FALCON_MAILBOX1(u32) @ 0x00000044 {
-         31:0    value => u32;
-     }
- 
-     /// Used to store version information about the firmware running
-     /// on the Falcon processor.
--    pub(crate) NV_PFALCON_FALCON_OS(u32) @ PFalconBase + 0x00000080 {
-+    pub(crate) NV_PFALCON_FALCON_OS(u32) @ 0x00000080 {
-         31:0    value => u32;
-     }
- 
--    pub(crate) NV_PFALCON_FALCON_RM(u32) @ PFalconBase + 0x00000084 {
-+    pub(crate) NV_PFALCON_FALCON_RM(u32) @ 0x00000084 {
-         31:0    value => u32;
-     }
- 
--    pub(crate) NV_PFALCON_FALCON_HWCFG2(u32) @ PFalconBase + 0x000000f4 {
-+    pub(crate) NV_PFALCON_FALCON_HWCFG2(u32) @ 0x000000f4 {
-         /// Signal indicating that reset is completed (GA102+).
-         31:31   reset_ready => bool;
-         /// RISC-V branch privilege lockdown bit.
-@@ -237,17 +233,17 @@ pub(crate) fn usable_fb_size(self) -> u64 {
-         10:10   riscv => bool;
-     }
- 
--    pub(crate) NV_PFALCON_FALCON_CPUCTL(u32) @ PFalconBase + 0x00000100 {
-+    pub(crate) NV_PFALCON_FALCON_CPUCTL(u32) @ 0x00000100 {
-         6:6     alias_en => bool;
-         4:4     halted => bool;
-         1:1     startcpu => bool;
-     }
- 
--    pub(crate) NV_PFALCON_FALCON_BOOTVEC(u32) @ PFalconBase + 0x00000104 {
-+    pub(crate) NV_PFALCON_FALCON_BOOTVEC(u32) @ 0x00000104 {
-         31:0    value => u32;
-     }
- 
--    pub(crate) NV_PFALCON_FALCON_DMACTL(u32) @ PFalconBase + 0x0000010c {
-+    pub(crate) NV_PFALCON_FALCON_DMACTL(u32) @ 0x0000010c {
-         7:7     secure_stat => bool;
-         6:3     dmaq_num;
-         2:2     imem_scrubbing => bool;
-@@ -255,15 +251,15 @@ pub(crate) fn usable_fb_size(self) -> u64 {
-         0:0     require_ctx => bool;
-     }
- 
--    pub(crate) NV_PFALCON_FALCON_DMATRFBASE(u32) @ PFalconBase + 0x00000110 {
-+    pub(crate) NV_PFALCON_FALCON_DMATRFBASE(u32) @ 0x00000110 {
-         31:0    base => u32;
-     }
- 
--    pub(crate) NV_PFALCON_FALCON_DMATRFMOFFS(u32) @ PFalconBase + 0x00000114 {
-+    pub(crate) NV_PFALCON_FALCON_DMATRFMOFFS(u32) @ 0x00000114 {
-         23:0    offs;
-     }
- 
--    pub(crate) NV_PFALCON_FALCON_DMATRFCMD(u32) @ PFalconBase + 0x00000118 {
-+    pub(crate) NV_PFALCON_FALCON_DMATRFCMD(u32) @ 0x00000118 {
-         16:16   set_dmtag;
-         14:12   ctxdma;
-         10:8    size ?=> DmaTrfCmdSize;
-@@ -274,15 +270,15 @@ pub(crate) fn usable_fb_size(self) -> u64 {
-         0:0     full => bool;
-     }
- 
--    pub(crate) NV_PFALCON_FALCON_DMATRFFBOFFS(u32) @ PFalconBase + 0x0000011c {
-+    pub(crate) NV_PFALCON_FALCON_DMATRFFBOFFS(u32) @ 0x0000011c {
-         31:0    offs => u32;
-     }
- 
--    pub(crate) NV_PFALCON_FALCON_DMATRFBASE1(u32) @ PFalconBase + 0x00000128 {
-+    pub(crate) NV_PFALCON_FALCON_DMATRFBASE1(u32) @ 0x00000128 {
-         8:0     base;
-     }
- 
--    pub(crate) NV_PFALCON_FALCON_HWCFG1(u32) @ PFalconBase + 0x0000012c {
-+    pub(crate) NV_PFALCON_FALCON_HWCFG1(u32) @ 0x0000012c {
-         /// Core revision subversion.
-         7:6     core_rev_subversion => FalconCoreRevSubversion;
-         /// Security model.
-@@ -291,12 +287,12 @@ pub(crate) fn usable_fb_size(self) -> u64 {
-         3:0     core_rev ?=> FalconCoreRev;
-     }
- 
--    pub(crate) NV_PFALCON_FALCON_CPUCTL_ALIAS(u32) @ PFalconBase + 0x00000130 {
-+    pub(crate) NV_PFALCON_FALCON_CPUCTL_ALIAS(u32) @ 0x00000130 {
-         1:1     startcpu => bool;
-     }
- 
-     /// IMEM access control register. Up to 4 ports are available for IMEM access.
--    pub(crate) NV_PFALCON_FALCON_IMEMC(u32)[4, stride = 16] @ PFalconBase + 0x00000180 {
-+    pub(crate) NV_PFALCON_FALCON_IMEMC(u32)[4, stride = 16] @ 0x00000180 {
-         /// Access secure IMEM.
-         28:28     secure => bool;
-         /// Auto-increment on write.
-@@ -307,17 +303,17 @@ pub(crate) fn usable_fb_size(self) -> u64 {
- 
-     /// IMEM data register. Reading/writing this register accesses IMEM at the address
-     /// specified by the corresponding IMEMC register.
--    pub(crate) NV_PFALCON_FALCON_IMEMD(u32)[4, stride = 16] @ PFalconBase + 0x00000184 {
-+    pub(crate) NV_PFALCON_FALCON_IMEMD(u32)[4, stride = 16] @ 0x00000184 {
-         31:0      data;
-     }
- 
-     /// IMEM tag register. Used to set the tag for the current IMEM block.
--    pub(crate) NV_PFALCON_FALCON_IMEMT(u32)[4, stride = 16] @ PFalconBase + 0x00000188 {
-+    pub(crate) NV_PFALCON_FALCON_IMEMT(u32)[4, stride = 16] @ 0x00000188 {
-         15:0      tag;
-     }
- 
-     /// DMEM access control register. Up to 8 ports are available for DMEM access.
--    pub(crate) NV_PFALCON_FALCON_DMEMC(u32)[8, stride = 8] @ PFalconBase + 0x000001c0 {
-+    pub(crate) NV_PFALCON_FALCON_DMEMC(u32)[8, stride = 8] @ 0x000001c0 {
-         /// Auto-increment on write.
-         24:24     aincw => bool;
-         /// DMEM block and word offset.
-@@ -326,29 +322,29 @@ pub(crate) fn usable_fb_size(self) -> u64 {
- 
-     /// DMEM data register. Reading/writing this register accesses DMEM at the address
-     /// specified by the corresponding DMEMC register.
--    pub(crate) NV_PFALCON_FALCON_DMEMD(u32)[8, stride = 8] @ PFalconBase + 0x000001c4 {
-+    pub(crate) NV_PFALCON_FALCON_DMEMD(u32)[8, stride = 8] @ 0x000001c4 {
-         31:0      data;
-     }
- 
-     /// Actually known as `NV_PSEC_FALCON_ENGINE` and `NV_PGSP_FALCON_ENGINE` depending on the
-     /// falcon instance.
--    pub(crate) NV_PFALCON_FALCON_ENGINE(u32) @ PFalconBase + 0x000003c0 {
-+    pub(crate) NV_PFALCON_FALCON_ENGINE(u32) @ 0x000003c0 {
-         0:0     reset => bool;
-     }
- 
--    pub(crate) NV_PFALCON_FBIF_TRANSCFG(u32)[8] @ PFalconBase + 0x00000600 {
-+    pub(crate) NV_PFALCON_FBIF_TRANSCFG(u32)[8] @ 0x00000600 {
-         2:2     mem_type => FalconFbifMemType;
-         1:0     target ?=> FalconFbifTarget;
-     }
- 
--    pub(crate) NV_PFALCON_FBIF_CTL(u32) @ PFalconBase + 0x00000624 {
-+    pub(crate) NV_PFALCON_FBIF_CTL(u32) @ 0x00000624 {
-         7:7     allow_phys_no_ctx => bool;
-     }
- 
-     // Falcon EMEM PIO registers (used by FSP on Hopper/Blackwell).
-     // These provide the falcon external memory communication interface.
- 
--    pub(crate) NV_PFALCON_FALCON_EMEMC(u32) @ PFalconBase + 0x00000ac0 {
-+    pub(crate) NV_PFALCON_FALCON_EMEMC(u32) @ 0x00000ac0 {
-         /// EMEM byte offset (4-byte aligned) within the block.
-         7:2     offs;
-         /// EMEM block to access.
-@@ -359,7 +355,7 @@ pub(crate) fn usable_fb_size(self) -> u64 {
-         25:25   aincr => bool;
-     }
- 
--    pub(crate) NV_PFALCON_FALCON_EMEMD(u32) @ PFalconBase + 0x00000ac4 {
-+    pub(crate) NV_PFALCON_FALCON_EMEMD(u32) @ 0x00000ac4 {
-         31:0    data => u32;
-     }
- }
-@@ -385,13 +381,13 @@ pub(crate) fn with_falcon_mem(self, mem: FalconMem) -> Self {
- 
- impl NV_PFALCON_FALCON_ENGINE {
-     /// Resets the falcon
--    pub(crate) fn reset_engine<E: FalconEngine>(bar: Bar0<'_>) {
--        bar.update(Self::of::<E>(), |r| r.with_reset(true));
-+    pub(crate) fn reset_engine(pfalcon: Mmio<'_, PFalconRegisters>) {
-+        pfalcon.update(NV_PFALCON_FALCON_ENGINE, |r| r.with_reset(true));
- 
-         // TIMEOUT: falcon engine should not take more than 10us to reset.
-         time::delay::fsleep(time::Delta::from_micros(10));
- 
--        bar.update(Self::of::<E>(), |r| r.with_reset(false));
-+        pfalcon.update(NV_PFALCON_FALCON_ENGINE, |r| r.with_reset(false));
-     }
- }
- 
-@@ -405,23 +401,23 @@ pub(crate) fn mem_scrubbing_done(self) -> bool {
- /* PFALCON2 */
- 
- register! {
--    base: NovaRegisters;
-+    base: PFalcon2Registers;
- 
--    pub(crate) NV_PFALCON2_FALCON_MOD_SEL(u32) @ PFalcon2Base + 0x00000180 {
-+    pub(crate) NV_PFALCON2_FALCON_MOD_SEL(u32) @ 0x00000180 {
-         7:0     algo ?=> FalconModSelAlgo;
-     }
- 
--    pub(crate) NV_PFALCON2_FALCON_BROM_CURR_UCODE_ID(u32) @ PFalcon2Base + 0x00000198 {
-+    pub(crate) NV_PFALCON2_FALCON_BROM_CURR_UCODE_ID(u32) @ 0x00000198 {
-         7:0    ucode_id => u8;
-     }
- 
--    pub(crate) NV_PFALCON2_FALCON_BROM_ENGIDMASK(u32) @ PFalcon2Base + 0x0000019c {
-+    pub(crate) NV_PFALCON2_FALCON_BROM_ENGIDMASK(u32) @ 0x0000019c {
-         31:0    value => u32;
-     }
- 
-     /// OpenRM defines this as a register array, but doesn't specify its size and only uses its
-     /// first element. Be conservative until we know the actual size or need to use more registers.
--    pub(crate) NV_PFALCON2_FALCON_BROM_PARAADDR(u32)[1] @ PFalcon2Base + 0x00000210 {
-+    pub(crate) NV_PFALCON2_FALCON_BROM_PARAADDR(u32)[1] @ 0x00000210 {
-         31:0    value => u32;
-     }
- }
-@@ -429,23 +425,23 @@ pub(crate) fn mem_scrubbing_done(self) -> bool {
- // PRISCV
- 
- register! {
--    base: NovaRegisters;
-+    base: PFalcon2Registers;
- 
-     /// RISC-V status register for debug (Turing and GA100 only).
-     /// Reflects current RISC-V core status.
--    pub(crate) NV_PRISCV_RISCV_CORE_SWITCH_RISCV_STATUS(u32) @ PFalcon2Base + 0x00000240 {
-+    pub(crate) NV_PRISCV_RISCV_CORE_SWITCH_RISCV_STATUS(u32) @ 0x00000240 {
-         /// RISC-V core active/inactive status.
-         0:0     active_stat => bool;
-     }
- 
-     /// GA102 and later.
--    pub(crate) NV_PRISCV_RISCV_CPUCTL(u32) @ PFalcon2Base + 0x00000388 {
-+    pub(crate) NV_PRISCV_RISCV_CPUCTL(u32) @ 0x00000388 {
-         7:7     active_stat => bool;
-         4:4     halted => bool;
-     }
- 
-     /// GA102 and later.
--    pub(crate) NV_PRISCV_RISCV_BCR_CTRL(u32) @ PFalcon2Base + 0x00000668 {
-+    pub(crate) NV_PRISCV_RISCV_BCR_CTRL(u32) @ 0x00000668 {
-         8:8     br_fetch => bool;
-         4:4     core_select => PeregrineCoreSelect;
-         0:0     valid => bool;
 
 -- 
 2.54.0
