@@ -1,57 +1,54 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 78D764519A7
-	for <linux-pci@vger.kernel.org>; Wed, 19 Aug 2026 11:18:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B8693C09EB
+	for <linux-pci@vger.kernel.org>; Wed, 19 Aug 2026 11:19:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787138303; cv=none; b=PV0Wr5udya8w1zFcdtUKWd+KAPcgGtLOw+ErcCjul99g7vKHFCgDL3ViG1hK37DlRRzawZRRqiI3Uxo4q3Of65cdzuG/QbE4UtVhRq0e/r06C9o6lp3znVq3Nfnj9uNYfWJNj13MWrAt5P9DU86/hCAT/hgTVwx3cvDqgZIvyr8=
+	t=1787138344; cv=none; b=r5v7GVSn8l8j21v0H+zNNHIMM6AF2c1j+ZxxLrEklSHQq9yA9m2pvwFlHEgqPxFQ+4SG91E4Pe7dUw622pDlIJHA0dnbe3s+k3bAeAM2Za3W4HNQG6kzryCKSeuGnNUjkAudcMN7sfWTaY0MIYYU6cEJEWW9JxfEWndevyTpFVQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787138303; c=relaxed/simple;
-	bh=FYzAx3q1HTOKJoYBfb7xnuKvqbSKOS59WcJe5qPWUrs=;
+	s=arc-20240116; t=1787138344; c=relaxed/simple;
+	bh=6k+B6lOWgybsWDuGg6eOb/EcSA1us+EwslmJp1Bb6Jo=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=qQuNjSwaY3GPm7wn2P2KohoJlFoYihVucQFOyDn4pC2WOmturwf/T4FFqkDYLOjylNEkjJkZFdSa4nzSQI2sQUpq9mASnwRcCafBXjiRy7GjRipifgjeXprgC5umrYQpNYsK/dgt5ZeN6t+sD6SCimCKeAh5W7zLYJ6UhXN1VeQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fbIvVgYs; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=YcYZ3bWN+Db0iT0uAuTfirAHCnWUiCc/DA3CCIMm2SdoKEoNViaAMHuwlKQ84TXv2YajHaoBCneoILOb4brSs3amMqw3/3KWFkzBNv+9ongrJSROirO5pof1q3GQNnxZoovgKh7pTxRyN7Au3+1quNUNSBBYUvCImv59npsrypw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TvW4R33H; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fbIvVgYs"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2123A1F000E9;
-	Wed, 19 Aug 2026 11:18:22 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TvW4R33H"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E01111F00A3A;
+	Wed, 19 Aug 2026 11:19:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787138302;
-	bh=FYzAx3q1HTOKJoYBfb7xnuKvqbSKOS59WcJe5qPWUrs=;
+	s=k20260515; t=1787138343;
+	bh=6k+B6lOWgybsWDuGg6eOb/EcSA1us+EwslmJp1Bb6Jo=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=fbIvVgYsaaAXFkJVkNck0HMMApPMsObNrrB/ATfTguqlyHsF9/LCeR1puSJxu5PhK
-	 R8c2d0Ef4L/Bw0de4Xshi/e5oBRUsI7sHEwKv9CMWmBwA8WTsvSiKUBsoWwhPb3gj5
-	 m6FQzsmYJw2IaqQ7F3pI5ETzE8HxmCXyJ1YRkSfH4Q9n95NXhxNHQwCIEFsls2T1l3
-	 u45zmpjTjTHvu1SvUyEMgQaXlWFIU7AbguyKb1lDlL8yq6e1+tlAbZKprvPPM2+xii
-	 68RYmmC6cj+HvANg3jrLOBp1bZ/HRLW0E+kobkSJsLopzr5/5CIeOLk8m5sDbxck61
-	 aAVcXRVzNFOYA==
+	b=TvW4R33HsCyJVx4I7xr6MbIiSdTUg9WTGnEx2oyABrhSlp+IOUEGz2MD8jh6wcdi7
+	 iWvE4lu4ambWx5jrc5nuKKd4kSiVpvls5FRRpChFs8DupP18XjPO3SwI9pNDaOS3XZ
+	 KSOm4TIe7bXYwOjy8Qe2xhHmLhHlmTQDtHfaQULvYu713GYUgir9Es15DLhmCjUFHs
+	 vUgdpC+CI0BKtpb5NPmNh8usV2dRjKMJOdMg9Kr29AYoqFsZTSLgbujyYcFyw594c1
+	 sLynKJghJa50ZDrAk78YEEGeUCftVutvkxDXFtfOCS1uUYvBNTXn4rEoljH7jZhgHO
+	 A6VqFB4Q1UvMA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 10/16] rust: io: register: make register have a typed
- base
+Subject: Re: [PATCH v3 07/16] gpu: nova-core: specify base type for
+ registers
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Gary Guo" <gary@garyguo.net>
-Cc: linux-pci@vger.kernel.org, ojeda@kernel.org, dri-devel@lists.freedesktop.org, "Danilo
- Krummrich" <dakr@kernel.org>, "Alexandre Courbot" <acourbot@nvidia.com>
-In-Reply-To: <20260819-typed_register-v3-10-3699a75fadf1@garyguo.net>
+Cc: linux-pci@vger.kernel.org, "Alexandre Courbot" <acourbot@nvidia.com>, "Danilo
+ Krummrich" <dakr@kernel.org>, ojeda@kernel.org, dri-devel@lists.freedesktop.org
+In-Reply-To: <20260819-typed_register-v3-7-3699a75fadf1@garyguo.net>
 References: <20260819-typed_register-v3-0-3699a75fadf1@garyguo.net>
- <20260819-typed_register-v3-10-3699a75fadf1@garyguo.net>
+ <20260819-typed_register-v3-7-3699a75fadf1@garyguo.net>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 19 Aug 2026 11:18:21 +0000
-Message-Id: <20260819111822.2123A1F000E9@smtp.kernel.org>
+Date: Wed, 19 Aug 2026 11:19:02 +0000
+Message-Id: <20260819111902.E01111F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-> Previously `register!` defined registers can be used on any untyped I/O
-> regions. With all users specifying their desired register type now,
-> propagate the specified type and restrict I/O access only when type
-> matches.
->=20
-> Also, add an `io_project!` example which is enabled by this change.
+> All registers use the same base type, which is `<Bar0 as IO>::Target`. Th=
+us
+> add the base parameter to `register!` invocation.
 >=20
 > Signed-off-by: Gary Guo <gary@garyguo.net>
 
@@ -59,5 +56,5 @@ Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260819-typed_regi=
-ster-v3-0-3699a75fadf1@garyguo.net?part=3D10
+ster-v3-0-3699a75fadf1@garyguo.net?part=3D7
 
