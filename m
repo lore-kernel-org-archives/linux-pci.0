@@ -1,54 +1,53 @@
-Received: from CWXP265CU010.outbound.protection.outlook.com (mail-ukwestazon11022139.outbound.protection.outlook.com [52.101.101.139])
+Received: from CWXP265CU008.outbound.protection.outlook.com (mail-ukwestazon11020102.outbound.protection.outlook.com [52.101.195.102])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A679145DF4E;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A36A745D5E8;
 	Wed, 19 Aug 2026 11:10:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.101.139
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.195.102
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787137845; cv=fail; b=hje+ALQ2P0EZCn8d+mpyy+yJod71xOtKAth24iHV02PRYEoIgG8NwcgBArIVR03pSd2x4nEQJCc0s6ZTE2LPm+4yDDY0LCVCGxVEw55s/DZhQeodkUtMVYbpeMvsgxXHCt2HP2uijS1SInlPXtGDfnRXBYoAfJC0xmjg1+avKco=
+	t=1787137846; cv=fail; b=t+i5jhykhfII1t9lbGDlEFoD0K9zVdJk4oZzM7UTM0EBzNZW0AlFBQbanOo81U8D4GefA/ozTZjcqykgpfrYZLoqrXVq7QFRh0iO1Q+OEIhMQ067y1gbU8G7Gc8e6AwVmU9FfrYBe6ieSIErRCEF+NZgkK6HljeMTUPa7kpod6Y=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787137845; c=relaxed/simple;
-	bh=UcdRmVpzRIL5d6EXe2nVU7lPrMffwe962tEbCQsnEq8=;
+	s=arc-20240116; t=1787137846; c=relaxed/simple;
+	bh=mVBAgfzt49nYUC9KtvB97HmFPe/wUfHuf4347t39LVI=;
 	h=From:Date:Subject:Content-Type:Message-Id:References:In-Reply-To:
-	 To:Cc:MIME-Version; b=WAQHMXPSq4Vw+MLH5R11Iq9yf4jPDBGUX9nSZ86lA4kWsINvi0npEfKy40BFHUZrthmEzBfqNJO7aZymDFqkGAqDm+8DdzWB5Vh/eghtUw7+WUE6p74T+bKY1UFu7osk1c361a9ZHuuBWXPWZJxCGLNv2TTWLnJWtEiS5s3twrY=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net; spf=pass smtp.mailfrom=garyguo.net; dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b=Ha9JBVjA; arc=fail smtp.client-ip=52.101.101.139
+	 To:Cc:MIME-Version; b=DFOkzzsXI5sgBqyfUBV0uAvsZaoYDEtTJRPL85bfESKKyN4Hq+I356lMduuBPd5FCvSnQ9+Ja4PnotmLi/XS4nPpZJaBmUmz1qFKTHO0k+LwsIRe+SuYVxca0OXmpU9phm4CiiKXMoAjfFI6rODH1nj2ndyQvINp4hYPh3ZulMk=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net; spf=pass smtp.mailfrom=garyguo.net; dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b=mOS0s9zg; arc=fail smtp.client-ip=52.101.195.102
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=garyguo.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b="Ha9JBVjA"
+	dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b="mOS0s9zg"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=jALZFgFobHgWgmHM33DuosQEs0P/RISZuniyYGKSPmU6dFFh3n3CjD/rlxh2+HM6sn/tEXWKWBN1gpdgp2qUGIUm65+bChoF8o4ALnZoUhgTegKOzQNcwbWphsMI8IQ11z9G3rqwD5btRHWKuVm6z83G+acAdvbIJSFaYpTvShWqRk3VVY1x6KozltbjdNbzigh4aKTprCjlhnVAwTaPS4fzTkkELtCOpsGq4RmZ162ixdOL6BEaZ6TeLTAelnXpu57Ctzw+D3cdiFemObCOlamBAO35aRO6+/WbOgAvKKyxnKwIe0FDtZnFjV8Ld5fGTO9LAkPp7Aro9/wrIauTyw==
+ b=ezdNpazFIycmiEREHutKaEWYbVjlfIOV2Qw4uV6HkjRvgMibVImvkeIhoL0Z5yCioF3tmvnfp65yLrAxv024KKCJ7akN/V39f2wtHft3K5F90AVrNQ5yVOwkMVhqCH2Thw2fBTFKyVJAfu8wczTVBETBhQThQOmmrmqUVi/SDTQlb1EcfXnY5wOqmSFFzbFbmXmKtRtbGmw7K6X/7POgxKrgcFEKYeoaQYg+ajPEQZOlBkyAd5eZDOYQvbeCqn2CcmRztJ0U2d77KSAPdUZTNFEvWrt3fJYv94cPJVmkq1PTuEAWe8LB/7k/BA8EGjcU/uxK/zDPH7Ez3w85P+Nmmw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=v0B9J7EtjFFOfqpNapB2NAxL9XvD5dlbr2Cpc+w+7pc=;
- b=IzZtI40MBD7I1LsT/1jzzQfXfw4dQJhN/7xONzvQEzuveE1KqnEc5aSn33c4qGKP0KRxSpfj87fPvgFmEBYFNH8WYjBiRtL7X2DjlpN4bFkZ5ig8T9Oex2yGw9uoKl8tAWtzPzBDeGjPHLpKhJQV4iBcmqeYHqIHSAd/cMO19I0mDZ7UdXuwK0FHhahzsrj5QyGecVaQ2Mp39IkwSA6uX2fSkiVeS/9Fh4sucFbmtueVFpo7vMANTlZBdJyTjGRJPDcHhSDHhVqjl81Hb24V1LTaW8977Y7xh7Q6stS/jbxYAc8pIr35QLA/6Ut7yFuBZobzaqHHB2PRkarsb9fcQA==
+ bh=pedHMMSfiAL+Q+nqp507G/ko3vcUafCgveq9BKAgleg=;
+ b=W0AP1RJX2hLV5R4zw4AGZn4twVVwpWF+88PML0K2n96PgaKQNHBcC9f+5ZpC9qxw+CZ/EaFbxKWYOKgz/DP0Gu36ttWUug6Xrk7PvgSKSrF0tCArPLFQ3Uwjlklxm2d/C3oQwktEjUfRSJKJEJYbUM9uCwyZBh1CQEPdXcJTyDaFOYTH+883POhN7ZnJJgCS2YlYH9ctx7KqWA39ywK0Nmk/HlA6CM9XHaa5EDuDMB0E9iJrpxkLSnGY4JwZGvyictmz6c0oordHXZlWC0mbUfZSOsPtJJ6K20dPF4HFLkP1wWgWPZpauHCLrQm12XEXlKwrpom1/TmmmqcXQatAzg==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=garyguo.net; dmarc=pass action=none header.from=garyguo.net;
  dkim=pass header.d=garyguo.net; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=garyguo.net;
  s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=v0B9J7EtjFFOfqpNapB2NAxL9XvD5dlbr2Cpc+w+7pc=;
- b=Ha9JBVjAn2WNErgFAOlunk/CaUtzEwlNbhES8ijrxytpX3mXNOuL8sGBm+y34hSiTMPJt1H6L92cfdaymyXlru0BZNEPQevke2X1W/BMDypyeti26rvCdVAxq2JQ/hxroS6JFvN6H65O5S/yPZvtuyQ1PUjkZ4rTimlgBXTL5G8=
+ bh=pedHMMSfiAL+Q+nqp507G/ko3vcUafCgveq9BKAgleg=;
+ b=mOS0s9zgPEKeyDgb+yicPQeftx+PDgeitbLpnwDqAQvGiSlk6zQ+lOii6L3RYjtPSmbeMHRMgOE9TBPtDVMDprIbSobcS4jzLHX1lFlERCtTtHvBro8Zolm2vCuPJSGcqoNk+v3WnbUyF0waMTdCjIe09yypEoPm9EjH83PwLzk=
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=garyguo.net;
 Received: from LOAP265MB8560.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:4ab::19)
- by CWLP265MB5113.GBRP265.PROD.OUTLOOK.COM (2603:10a6:400:15d::12) with
+ by LO0P265MB5167.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:283::12) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.339.8; Wed, 19 Aug
- 2026 11:10:23 +0000
+ 2026 11:10:17 +0000
 Received: from LOAP265MB8560.GBRP265.PROD.OUTLOOK.COM
  ([fe80::f60b:1537:68d7:4fc1]) by LOAP265MB8560.GBRP265.PROD.OUTLOOK.COM
  ([fe80::f60b:1537:68d7:4fc1%4]) with mapi id 15.21.0339.007; Wed, 19 Aug 2026
- 11:10:23 +0000
+ 11:10:17 +0000
 From: Gary Guo <gary@garyguo.net>
-Date: Wed, 19 Aug 2026 12:09:21 +0100
-Subject: [PATCH v3 13/16] gpu: nova-core: convert hshub0 from relative
- register to projection
+Date: Wed, 19 Aug 2026 12:09:12 +0100
+Subject: [PATCH v3 04/16] rust: io: perform conversions using `AsRepr`
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260819-typed_register-v3-13-3699a75fadf1@garyguo.net>
+Message-Id: <20260819-typed_register-v3-4-3699a75fadf1@garyguo.net>
 References: <20260819-typed_register-v3-0-3699a75fadf1@garyguo.net>
 In-Reply-To: <20260819-typed_register-v3-0-3699a75fadf1@garyguo.net>
 To: Danilo Krummrich <dakr@kernel.org>, Alice Ryhl <aliceryhl@google.com>, 
@@ -67,11 +66,11 @@ Cc: driver-core@lists.linux.dev, rust-for-linux@vger.kernel.org,
  dri-devel@lists.freedesktop.org, linux-pci@vger.kernel.org, 
  Gary Guo <gary@garyguo.net>
 X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1787137814; l=6702;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1787137814; l=18533;
  i=gary@garyguo.net; s=20221204; h=from:subject:message-id;
- bh=UcdRmVpzRIL5d6EXe2nVU7lPrMffwe962tEbCQsnEq8=;
- b=dEHU3s9Bt6dbAAcjdnsSRiJ5FhuX3fnSoI4gjo0CkeMrfeY575uC6sAMCFXwhAsAlnr4eFJ+b
- nhmPxD3opaCCho/D0u6kZQr+RhiaEdoSVTGHjkcVW+oLdmjMCuuPiBA
+ bh=mVBAgfzt49nYUC9KtvB97HmFPe/wUfHuf4347t39LVI=;
+ b=FbpHfRxaPe6LALKq/vfg5gH65KpjhrqK7paO5jdo0QnE/b6ubQf2gvTNdRGvgKhr5ubOUktv+
+ cEz9qcLiiWmDaMMjoGcAXhmRlfM5J1kI8u33OsFNjyZ7R6dBEuqemg9
 X-Developer-Key: i=gary@garyguo.net; a=ed25519;
  pk=vB3uIX95SM4eVrIqo1DWNWKDKD2xzB+yLLLr0yOPYMo=
 X-ClientProxiedBy: LO4P123CA0096.GBRP123.PROD.OUTLOOK.COM
@@ -84,251 +83,576 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: LOAP265MB8560:EE_|CWLP265MB5113:EE_
-X-MS-Office365-Filtering-Correlation-Id: c894bf8a-4e06-4420-1d5d-08defde27716
+X-MS-TrafficTypeDiagnostic: LOAP265MB8560:EE_|LO0P265MB5167:EE_
+X-MS-Office365-Filtering-Correlation-Id: 5f43b373-375c-47f4-cf4c-08defde2735e
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|376014|10070799003|366016|7416014|23010399003|921020|6133799003|56012099006|10067099003|18002099003|22082099003;
+	BCL:0;ARA:13230040|10070799003|1800799024|23010399003|376014|7416014|366016|22082099003|18002099003|921020|10067099003|5023799004|56012099006|6133799003;
 X-Microsoft-Antispam-Message-Info:
-	zbZMLvH2x/Qpe2XcHcVoNiduVTlci05kpOg7cnTMMg6sDlK6ooMdiwlz8hQzC0WRMNhlqucXE4SMjI2w0ePy4K86kwLfMzQK46RNPv3ipSE/2qgOQ2Ezxvc08mjMp2plC3pd0EyGTNtGTnbMwKmsD8Gm41Ij9wkExKo8U0DGVzoUacWysKzzBzJJNSRO1mbBPDpi+TIbs1YTJSQNkaWZkir9ez6N45Of87CiW6XTgFaKrA5QaQcOGC83UYg7uoou1ITf/O0EGSV1+Dst482cXKq1cBD51zUQ1ocut+HbP4VW2wad7Wh6WYwY3XiOhvXQnLgp8TJPimD9a/t2baoelj2Yec7kCU3fpDMDrFs8mQYW0fd6E4Sy/x4Cp1V85SLOQ87PZ4Z5nMCvkql1hVoIejZSZaerB5e1qPbJ7RciTwKm6VLqn9C+y5Eqgagevq11WiydYd/ZA4LlJPQVbhITtio5WPiLmWSx/Yeiu069O4f6F/zG39omltxuidEHh73exy9E4dEGk45LhcGcsvCcwGGgIyPsRRgLAKgctLf3eW5s42v5uD7ZX1so0YCIcGmYrWs1UwQ5784xOhyIvJ/WCDpoK61YsM1D5t0JwjcI8wRomitdMaLSirbldE0QDIflpIMLGAJxqGnD+szlQ4HCU5/a0DcrQrgiyi6ArK4ZPbE74KVXGsm7PG+LUOyO66AJet+1F+8VZPAIryjkBd8wVA==
+	DOX7tVBo5L/hTI04qJ3F5zcD/1lbiMFEaWuAlmrt6Dlg94UEdfkpw4U34BukX7W5R3Zfv1m5LDVLpAhjlLowZTOEJaACE772DGLANbGIZG8mhC6exSXb+Ii4p0awAL38qWvz2r/z9rfvy7ZJLPv9ZGOOgg8HosKhZwo+gTbVzKx0oOW0rxApW1TuMClblfYb+EVjYSQEAbUdpcFyJAbkx1CLooig9uDQgtfSCyHZSAk2AoqUofnjMSepyPQdW0iAXCSgUQBuR5fx5oslVV5/UyZB0Cjjzzi272cFj+ajCl83qbOylbbAdkayFNRHZxD0qkmxcxzTopK2R6VXixAE9OvO2+i6ri51qd7KRxUz1cKIUayJyt1AF3IYzuqCI1gbXaVVO83jnDxB2fpvumdf7RAaY5jbMPBjnHZtpr9Wqg4dEnzqiPCj4pUHGw+GJ1PdIfB+oeclCFmhDbeJbC9iqchGhMxyv5JWjP/K5Nae/lXE82TtIFZjb32OKm9Iikz4n0+0duMQMdZXqZJHjuC4SrpgEwMZqmNRV3TRB9MohlqnHEkT2Wsr627FhEqNjpcrC1jVVdNQ4YzeeznLcT5gy91/dI2gS8IKtTK7j8rb1RqWOetRrQXCUR8Si8GTwunp6UR2rO5AJ0NMOyb4cW+xkWiuWGMYLeX9g0RmE7Qx/CLl7u4WLUInTqH7PYqAmyZ8Ov6FFM/stq1XK4Ry5eeMLA==
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LOAP265MB8560.GBRP265.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(376014)(10070799003)(366016)(7416014)(23010399003)(921020)(6133799003)(56012099006)(10067099003)(18002099003)(22082099003);DIR:OUT;SFP:1102;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LOAP265MB8560.GBRP265.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(10070799003)(1800799024)(23010399003)(376014)(7416014)(366016)(22082099003)(18002099003)(921020)(10067099003)(5023799004)(56012099006)(6133799003);DIR:OUT;SFP:1102;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?STh4LzlsWUNzdndOdFlJZm1NMUJaMHJ1bnErcDlHMHVSTWNIdXd5VmF2cmE0?=
- =?utf-8?B?T2xaMDdYVWw2Y2xUNFBGM0ltRlhRSkRrMDNkQ0Vzbys3UVY2TWEvM0kxSExq?=
- =?utf-8?B?VGxoUndvWC93T1V2VUZBWVBmL280ZC84WExseUNQbGtIblRucEZ1VW16cGc5?=
- =?utf-8?B?WVU1QnppaFJ3cm16R1JLbVZsNFdNbUJINEJ0OGtCTmdXdEo1ZXZFbUIwWi9R?=
- =?utf-8?B?QXFWL1hUV0syZHlXUFJycU1RejNQa0RDWDAxUGFWeU5SSGJIcmlQSmo4QnZp?=
- =?utf-8?B?MU1WdlpCNDlsTXdaSUZaYWpicmwxajd4TlVkTHR1LzJZNjdXWUlZWGxDcDNU?=
- =?utf-8?B?WUxMeTRtNVkzaWc0clFMRklWZmk1cGZQNTBweUViT1ZmbzVCRkhIazJ0cDVo?=
- =?utf-8?B?QWZkUHpKM2gwd3NaSTkrZ3Zyb1VpMCtKKy8xYmphV0RObUlRanlMdnJhbUVk?=
- =?utf-8?B?S09BcjBvOVMwZlpiRk90ZldnT1YvNTI4ZW5Cczh6dXJxcGt0QVdtQ3R5ZmtP?=
- =?utf-8?B?ZHA0VVc1eit5TzVwU0RWUkFQb0dCRitJcjk4c1lHT012OW1OaGo0ZEVFMHBx?=
- =?utf-8?B?OVpaK2xza3Z2aXlIMEs3Ri9GalFKTzg5NVRiUy9JTUFHZkticm1BbmxNWjNR?=
- =?utf-8?B?em8xTGNZUk9YYldBQlI0RGFxYWNwMjNJZjFUbDU0SnAxYWNiWk9KeGtmdVNP?=
- =?utf-8?B?M1hDeEpSL2l4cWRzb3dMNWtOYVcyWm14WU9xbC9oWGcwNlhXVCs1aXV2QTBK?=
- =?utf-8?B?S1h5Q3k2V3dDNU9oMkFCV1k2b25Hd0RYUXVOdE5hSlU1alpEYnFPSlVBUVk1?=
- =?utf-8?B?bWU4UnllL0V5d2cva2RJaElCanZUR2hjVlZjM3hBK1d5WTE3L1lldVVzckhJ?=
- =?utf-8?B?SjhVdGx4R3NoenkwZENRSU5kNXp5R2ZoY0hEVWEvNGNCemFJdmxzU0J3cWFx?=
- =?utf-8?B?dGdYMmsrQnNYQXJVOW9nZXVVcjB4RDY4QVdqUFN1ZU91cHl0THZrejBRNlh0?=
- =?utf-8?B?NHluMWJMQXJadnA3MC9QN2pnYzVINEhiZnZ3QkdOWUxKdnQ2NFVmbWNhU0E3?=
- =?utf-8?B?S2FVS1FUTXZpNUpqZU1VaGEvVnRkQnNHL2tMaVQ2ZHZJQXdMeU5EdmdxaUdj?=
- =?utf-8?B?UitPUWt1cjkxbDVPSGRnMmZuQkJnOXFZSDROMXU2OW43ajlRU0FROUZpNTVw?=
- =?utf-8?B?bWNNbDAvWHhKOCt6WVlUbnRLVXd6WllIOXpWTVpwQjBaYUJ5SVlabUhhRXZX?=
- =?utf-8?B?ZlZ1VDFEdXZsbms0Ky91a0NZSGFXS2JiZjZucUpoR1dFcVNmRFRDZXNlYXlu?=
- =?utf-8?B?bHladDRhRlhOTWZSNHdiaWhqQ044c0NtU3lIclQrL280cnYyT3ZVek5odmti?=
- =?utf-8?B?bTZKKzVSdGJZNENrTUMxbXdKcEluQmExNUVua0NNRmdrOXNGakRMUS9mZmVo?=
- =?utf-8?B?RTdUUG0xZDBIZnRSNkV5UW9ZbU05SHRidmhTVDZQckxCMHMwNlBzZXZkck1m?=
- =?utf-8?B?TnFWYk9kanVoVXFSVDJWaUoveWZMcVA0Rk9wVFEvcnJJbktqanh2bTBHaFhz?=
- =?utf-8?B?aEtZR25YbkdPb1V1MHNHOXpRV3hoaTdjK0Z3ay9nckFVQ1FsWitMS09uVDQz?=
- =?utf-8?B?RTVLTjNnVGNNVTVnR2FJcTVqQWkySFlEbnM0ZndncW50TURCQ1JrWndEaExi?=
- =?utf-8?B?R0p1TlRJRnBsaVZUTUdMZ3Q2d1pRdFJWc0M4RTBpWStCbEVBcjZzeitYWWFa?=
- =?utf-8?B?ZnkzT3VZRDNTTnhjamVoZ01sOXBvdUFpQlRSWVNyRktSVElmUGY4bzcreTcx?=
- =?utf-8?B?SENRZFlSWEwyaFFINy9RbTl4Y0IvbXhLbC9wNWtGUmhpK1F1TGxRZGR5Q0F2?=
- =?utf-8?B?dU0zdXpER2Q2dTB5NlBhYTloY2NGWTE2VnBtRHh0NzRkbHF2Sit4Z2ZmUHl6?=
- =?utf-8?B?Y1BVRlMrcE5QWEw3VnZLcmRzbXRzOU5zSkkzWWxFV0o0UGYrcFlab2VKMEFO?=
- =?utf-8?B?RkNQeGpvekNROGxrdHgyRW90WElvMnNwNFFBMnBCMFZob2UxRVBQOVIwRUZZ?=
- =?utf-8?B?S2dRcnpTSVNUbmw2T1hhYk9WMzhVb1ZsQStxVU44RldkS3IvYmpRWDNpakJO?=
- =?utf-8?B?ZUR2U2Y5aDdONUdmUG9GYzJOK0pzeERoT3BNQXRBSkJTTC96czZ2eG41dmU5?=
- =?utf-8?B?MWtkM0JFSXNhYWppK05jTHNzOUc3a21qK0RFVlZNRTdYNkRiN1Q0NGNaejlL?=
- =?utf-8?B?a2R2ZEMydzlWOXZCcXN2cThKanI4d2Z0VFhtQmNwK3pMd3dRdHBoMzFHMko2?=
- =?utf-8?B?RVZOYllRT1hYSzkrNFVUQ29QTG1iMmpWMEgzNEE1R1RkbmhQT29Tdz09?=
+	=?utf-8?B?T0Nnby9oQmhrMHJSQXJCelpnSmRQdk9RMStCUC9FQ3ZBejZUSmt2bXFpNUxz?=
+ =?utf-8?B?WmZVT2k1Q0RCM08xbEExd210NGdNdW5wUWV6ZXZLRHBsWUJJT0VhY2tsZTdK?=
+ =?utf-8?B?bk0wZ3kvbUVqejZrakt1TVprbXZ1aGU2RWJqTTdKbkxRcmRTRy9yR0FCeE11?=
+ =?utf-8?B?alppbkN3c1lIR2dVdUM4UDBwUWU2ZDlLdklPZlRXV3dEVlhSM05KOWx1Y21p?=
+ =?utf-8?B?NnJDakh5NmJianU4K0Q2VlZzdnJNMk9WK1J5WFhRVVFydy8vcWovbXBKVzVW?=
+ =?utf-8?B?RmpjREpsRDdwUjE1WldCYUVadEoxSGJXVnRlbS9hbUhwcDJRaUlOenc0TTZU?=
+ =?utf-8?B?QkNVT3dmT2dFTnljRTBDNVphNUFINUZvZVNFTTlNSU5NRjQvWloyYU5TT3M4?=
+ =?utf-8?B?Qmh1bVJqbE0xZ0xPS3FlTUFDZkEwK245UDJIWWRHalF6Vk1jYXlLVXNvWVNK?=
+ =?utf-8?B?QWhZdVEyd3NHZlVDaTdxQjlvYU5hQ1ZBdWI4cUFNRExic0pJQ2xyTW1rRmFw?=
+ =?utf-8?B?WGJDaWR2RGczbWxsSjhhY3BCa0c4RjM5TDgyMGZTRUZXb1Y0ZUcyWmhHM2Fh?=
+ =?utf-8?B?TnQ2NERxMHdZU2tRbFFmbVRKZFczQlVHWUlDYjE5K2JNeHBsTC95MnJVaHd4?=
+ =?utf-8?B?a0wxblpvNHVSa2JiWW54dGNwTjM2YTB5UWxJRzlJS3BuU0JwazR6TzdJaHFs?=
+ =?utf-8?B?NjBhT001bmJ1a013UHNtcUVsTlBMdytMczdRODAxMXVia0I0ZytQYW95K04w?=
+ =?utf-8?B?Qm1jYmxmaEU5aHhnd1JNU2lqQ1B6VS9VM2RTWDA2SDlSbUxYd2JFdDdONVZQ?=
+ =?utf-8?B?MW9ielhrOFlEL1pudDRNQWxPNlB4MzRLZThvY3ZaQncrTU1VVlJjTmxDVVJF?=
+ =?utf-8?B?eFJKb3J2WE0raTJyOFp4NUFGUGl1aUJIUkFJSm5FeDVncHBQR3JmR1ZCUTA0?=
+ =?utf-8?B?U0RBdlU3Y2hydWdsQ0tRMUMrUTZwYjArNFNsRGxab0lyQzNJek5yUVZrTUhN?=
+ =?utf-8?B?bnZmcEhqUGRqR3hqVEpaTEpneU95b3dMeGxFclVlRmZUT1MvSW90VjRqT0Jk?=
+ =?utf-8?B?aW9FTWtMR2NYNmNma2N6eXk1NzJCSVdac3ZjekQwbHNvV2NndXVxb2FXODFQ?=
+ =?utf-8?B?VHhTMnhIRFZSVm5Tem9tSzdpLzM1RDVUei9hUnpCMXE5N015UklxcFJNSjZi?=
+ =?utf-8?B?dm9yR0hJenFMaHV0L3E4QUtMUGQwOStmUlRUNW94MmZBQ1c2QjRKZW9Cblcr?=
+ =?utf-8?B?TlYva0ptd014bnlNdm9pZFpUWC95eTJlRXBKYzVFZjZVb3ltWlBSZEpSd1By?=
+ =?utf-8?B?aDlTRjNja0VNVnBaYTdOSW5sb3dnVVhMN1R4OVpYVUFJdEM5K1U2STk1WmlS?=
+ =?utf-8?B?NzlXbSt5cVp2U0JCRVdseDI1dTJkQ0liNkwyUXFYb3ArL1VOdFI5OUI3MU5r?=
+ =?utf-8?B?ZjB1OFdQRWFTYWRCZlJ5UWJxNFNNZEEvYWF3R1NvMXY5UGgrRGdobytHZnRa?=
+ =?utf-8?B?RHVJdFVMK1lXcHVydmpVSG5vVWo3cEE2RzNIUlpIYTdnOE9kU2tLcDhTbng3?=
+ =?utf-8?B?WkU5KytCalU0R1V1TlljODY2Sm95VDFIT3VNbUhzdVpIV3NnZXQ1SS83R0Rp?=
+ =?utf-8?B?ZWplcGxyVUh4WGs1SWEyOEh0ME9rd1RIdTgzMm9QTGxoN2N0UGhiZ1BFTk1X?=
+ =?utf-8?B?WVU0QjVjbkZzaUxrZ2VJb0VJM0hxY3d5MlIwOVFLQmRZbEUrVFhLWlBIM3Nx?=
+ =?utf-8?B?M1dvaGRaVWVQVE1XNFl1ZTM5Rzh5b1Rwb0pjVzlBdjFkUE0vQUpHeDRXaHF5?=
+ =?utf-8?B?YmJaa0JBakZaUVl2OTFOOVZkZVFaR0VaRDBBQkNsb0ZpcVorSGVmR3N6ekkw?=
+ =?utf-8?B?aXZtSmVDZ3NUelVJdHhnMFpTcTVBdFJhajd4NWlzMVhlcExXdkNoSWlQNnRm?=
+ =?utf-8?B?cFdiT3RWZWwwbjI5TVhVT0lETXVaTDZnTnljdnVLTFYxbEtzZWlDSWJiY29i?=
+ =?utf-8?B?azl1WDhzRGVyeDIvMFB1R0cvYllEUVFkeGI3L3l3ek1JazdXdDE2MndIQ1Nu?=
+ =?utf-8?B?MHBlRW1jZHFRbkxMVFRSb0hCdDhXSUhWcmoraTJKNDNQTnM2Q2RRNlBENktI?=
+ =?utf-8?B?dlN3YXVMbUpRdzNZa0tNdUtVM1RSdWlwK3dWUkgwRm9WazVoTWNzWDQ3MlFV?=
+ =?utf-8?B?b0k2SDJUenhzUy9ub09SOTVteWF2b0JCajgvclUwdmR1c0w1L3pKQ1VaSXpL?=
+ =?utf-8?B?cjFTVlFsTnRrT0NxUStmaExDd3lvZmxQMzJ4bUN6M2ZPM21ZdUh3cldkdVpC?=
+ =?utf-8?B?eHNMcndCenNxdzUyMFNyM2Qwbi9GY3cxSzhTSElXdVVOMmFadjU3dz09?=
 X-OriginatorOrg: garyguo.net
-X-MS-Exchange-CrossTenant-Network-Message-Id: c894bf8a-4e06-4420-1d5d-08defde27716
+X-MS-Exchange-CrossTenant-Network-Message-Id: 5f43b373-375c-47f4-cf4c-08defde2735e
 X-MS-Exchange-CrossTenant-AuthSource: LOAP265MB8560.GBRP265.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 Aug 2026 11:10:23.6915
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 Aug 2026 11:10:17.4311
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: bbc898ad-b10f-4e10-8552-d9377b823d45
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: Y6kUVRAgYnAEDAdGZx5dkSCF/L0CQ4zd2rPMNMx/4rU2zxgyTD4Ql83sjLriW8C+7F+k/v9Kttbc+GapPweHVA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CWLP265MB5113
+X-MS-Exchange-CrossTenant-UserPrincipalName: LarXTmWVsCNKEW2zXsukKtOL55EX+ouBBzGN4L3PmSybaUsbd7k73EJDYtsCFMQMQe93Fc/7qLVfIgG+ZYm69A==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: LO0P265MB5167
 
-Similar to the PFALCON and PFALCON2 conversion, the hshub0 relative access
-can also be achieved cleanly with projection and a new base.
+For types that are layout-compatible with an I/O capable type, we would
+want the ability to use them directly for I/O operations. E.g.
+
+    bitfield! {
+        pub struct Foo(u32) {
+            ...
+        }
+    }
+
+    #[repr(C)]
+    struct Bar {
+        foo: Foo,
+    }
+
+    let mmio: Mmio<'_, Bar> = ...;
+    io_read!(mmio, .foo)
+
+Currently this feature is available from `register!()` macro but not
+otherwise available with `io_read!`, `io_write!`. Support this by
+performing conversions to I/O primitives via the `AsRepr`/`AsReprMut`
+trait.
+
+This makes the `IoLoc::IoType` and `Register::Storage` redundant; thus
+remove them; also convert register methods to use the `read_val` and
+`write_val` instead.
 
 Signed-off-by: Gary Guo <gary@garyguo.net>
 ---
- drivers/gpu/nova-core/fb/hal/gb100.rs | 59 +++++++++++++++++------------------
- drivers/gpu/nova-core/fb/regs.rs      | 19 ++++++-----
- 2 files changed, 40 insertions(+), 38 deletions(-)
+ rust/kernel/bitfield.rs    |  10 ++++
+ rust/kernel/io.rs          | 135 +++++++++++++++++++++++++--------------------
+ rust/kernel/io/register.rs |  15 -----
+ rust/macros/io/register.rs |   2 -
+ 4 files changed, 86 insertions(+), 76 deletions(-)
 
-diff --git a/drivers/gpu/nova-core/fb/hal/gb100.rs b/drivers/gpu/nova-core/fb/hal/gb100.rs
-index d9e4d62ae632..9fa094939600 100644
---- a/drivers/gpu/nova-core/fb/hal/gb100.rs
-+++ b/drivers/gpu/nova-core/fb/hal/gb100.rs
-@@ -5,11 +5,10 @@
+diff --git a/rust/kernel/bitfield.rs b/rust/kernel/bitfield.rs
+index a0d089423f21..619c5e2189d1 100644
+--- a/rust/kernel/bitfield.rs
++++ b/rust/kernel/bitfield.rs
+@@ -308,6 +308,7 @@ macro_rules! bitfield {
+         $(#[$attr])*
+         #[repr(transparent)]
+         #[derive(Clone, Copy, PartialEq, Eq)]
++        #[derive($crate::prelude::FromBytes, $crate::prelude::IntoBytes)]
+         $vis struct $name {
+             inner: $storage,
+         }
+@@ -346,6 +347,15 @@ fn from(val: $storage) -> $name {
+                 Self::from_raw(val)
+             }
+         }
++
++        // SAFETY: `$name` is transparent over `$storage`.
++        unsafe impl $crate::mem::AsRepr for $name {
++            // Normalize `$storage` to the canonical repr type in case it is signed.
++            type Repr = <$storage as $crate::mem::AsRepr>::Repr;
++        }
++
++        // SAFETY: `$name` is transparent over `$storage`.
++        unsafe impl $crate::mem::AsReprMut for $name {}
+     };
  
- use kernel::{
-     io::{
--        register::{
--            RegisterBase,
--            WithBase, //
--        },
--        Io, //
-+        io_project,
-+        register,
-+        Io,
-+        Mmio, //
-     },
-     num::Bounded,
-     prelude::*,
-@@ -21,7 +20,10 @@
- };
+     // Definitions requiring knowledge of individual fields: private and public field accessors,
+diff --git a/rust/kernel/io.rs b/rust/kernel/io.rs
+index 5ce9fd129068..6c087d30a166 100644
+--- a/rust/kernel/io.rs
++++ b/rust/kernel/io.rs
+@@ -11,6 +11,10 @@
  
  use crate::{
--    driver::Bar0,
-+    driver::{
-+        Bar0,
-+        NovaRegisters, //
+     bindings,
++    mem::{
++        AsRepr,
++        AsReprMut, //
 +    },
-     fb::{
-         hal::FbHal,
-         regs, //
-@@ -31,17 +33,26 @@
- 
- struct Gb100;
- 
--impl RegisterBase<regs::Hshub0Base> for Gb100 {
--    const BASE: usize = 0x0087_0000;
-+register! {
-+    base: NovaRegisters;
-+
-+    HSHUB0: regs::Hshub0Registers @ 0x0087_0000;
-+}
-+
-+#[inline]
-+fn hshub0(bar: Bar0<'_>) -> Mmio<'_, regs::Hshub0Registers> {
-+    io_project!(bar, build: HSHUB0)
- }
- 
--fn read_sysmem_flush_page_gb100(bar: Bar0<'_>) -> u64 {
-+fn read_sysmem_flush_page_gb100(hshub0: Mmio<'_, regs::Hshub0Registers>) -> u64 {
-     let lo = u64::from(
--        bar.read(regs::NV_PFB_HSHUB_PCIE_FLUSH_SYSMEM_ADDR_LO::of::<Gb100>())
-+        hshub0
-+            .read(regs::NV_PFB_HSHUB_PCIE_FLUSH_SYSMEM_ADDR_LO)
-             .adr(),
-     );
-     let hi = u64::from(
--        bar.read(regs::NV_PFB_HSHUB_PCIE_FLUSH_SYSMEM_ADDR_HI::of::<Gb100>())
-+        hshub0
-+            .read(regs::NV_PFB_HSHUB_PCIE_FLUSH_SYSMEM_ADDR_HI)
-             .adr(),
-     );
- 
-@@ -52,7 +63,7 @@ fn read_sysmem_flush_page_gb100(bar: Bar0<'_>) -> u64 {
+     prelude::*,
+     ptr::{
+         Alignment,
+@@ -353,15 +357,12 @@ fn copy_write<T: IntoBytes>(view: Self::View<'_, T>, value: T) {
  ///
- /// Both the primary and EG (egress) register pairs must be programmed to the same address,
- /// as required by hardware.
--fn write_sysmem_flush_page_gb100(bar: Bar0<'_>, addr: Bounded<u64, 52>) {
-+fn write_sysmem_flush_page_gb100(hshub0: Mmio<'_, regs::Hshub0Registers>, addr: Bounded<u64, 52>) {
-     // CAST: lower 32 bits. Hardware ignores bits 7:0.
-     let addr_lo = *addr as u32;
-     let addr_hi = addr.shr::<32, 20>().cast::<u32>();
-@@ -60,24 +71,12 @@ fn write_sysmem_flush_page_gb100(bar: Bar0<'_>, addr: Bounded<u64, 52>) {
-     // Write HI first. The hardware will trigger the flush on the LO write.
- 
-     // Primary HSHUB pair.
--    bar.write(
--        regs::NV_PFB_HSHUB_PCIE_FLUSH_SYSMEM_ADDR_HI::of::<Gb100>(),
--        regs::NV_PFB_HSHUB_PCIE_FLUSH_SYSMEM_ADDR_HI::zeroed().with_adr(addr_hi),
--    );
--    bar.write(
--        regs::NV_PFB_HSHUB_PCIE_FLUSH_SYSMEM_ADDR_LO::of::<Gb100>(),
--        regs::NV_PFB_HSHUB_PCIE_FLUSH_SYSMEM_ADDR_LO::zeroed().with_adr(addr_lo),
--    );
-+    hshub0.write_reg(regs::NV_PFB_HSHUB_PCIE_FLUSH_SYSMEM_ADDR_HI::zeroed().with_adr(addr_hi));
-+    hshub0.write_reg(regs::NV_PFB_HSHUB_PCIE_FLUSH_SYSMEM_ADDR_LO::zeroed().with_adr(addr_lo));
- 
-     // EG (egress) pair -- must match the primary pair.
--    bar.write(
--        regs::NV_PFB_HSHUB_EG_PCIE_FLUSH_SYSMEM_ADDR_HI::of::<Gb100>(),
--        regs::NV_PFB_HSHUB_EG_PCIE_FLUSH_SYSMEM_ADDR_HI::zeroed().with_adr(addr_hi),
--    );
--    bar.write(
--        regs::NV_PFB_HSHUB_EG_PCIE_FLUSH_SYSMEM_ADDR_LO::of::<Gb100>(),
--        regs::NV_PFB_HSHUB_EG_PCIE_FLUSH_SYSMEM_ADDR_LO::zeroed().with_adr(addr_lo),
--    );
-+    hshub0.write_reg(regs::NV_PFB_HSHUB_EG_PCIE_FLUSH_SYSMEM_ADDR_HI::zeroed().with_adr(addr_hi));
-+    hshub0.write_reg(regs::NV_PFB_HSHUB_EG_PCIE_FLUSH_SYSMEM_ADDR_LO::zeroed().with_adr(addr_lo));
+ /// - The valid `Base` to operate on. For most registers, this should be [`Region`].
+ /// - The offset to access (returned by [`IoLoc::offset`]),
+-/// - The width of the access (determined by [`IoLoc::IoType`]),
+-/// - The type `T` in which the raw data is returned or provided.
++/// - The type `T` in which the data is returned or provided.
+ ///
+-/// `T` and `IoLoc::IoType` may differ: for instance, a typed register has `T` = the register type
+-/// with its bitfields, and `IoType` = its backing primitive (e.g. `u32`).
++/// `T` is not necessarily the type for underlying I/O operation. Methods that take `IoLoc` have `T:
++/// AsRepr` bound and the `<T as AsRepr>::Repr` type would be used to perform I/O and converted to
++/// `T` instead.
+ pub trait IoLoc<Base: ?Sized, T> {
+-    /// Size ([`u8`], [`u16`], etc) of the I/O performed on the returned [`offset`](IoLoc::offset).
+-    type IoType: Into<T> + From<T>;
+-
+     /// Consumes `self` and returns the offset of this location.
+     fn offset(self) -> usize;
  }
- 
- // This PMU reservation size is r570-specific.
-@@ -88,13 +87,13 @@ pub(super) const fn pmu_reserved_size_gb100() -> u32 {
- 
- impl FbHal for Gb100 {
-     fn read_sysmem_flush_page(&self, bar: Bar0<'_>) -> u64 {
--        read_sysmem_flush_page_gb100(bar)
-+        read_sysmem_flush_page_gb100(hshub0(bar))
+@@ -372,8 +373,6 @@ macro_rules! impl_usize_ioloc {
+     ($($ty:ty),*) => {
+         $(
+             impl<const SIZE: usize> IoLoc<Region<SIZE>, $ty> for usize {
+-                type IoType = $ty;
+-
+                 #[inline(always)]
+                 fn offset(self) -> usize {
+                     self
+@@ -498,10 +497,19 @@ fn try_cast<U>(self) -> Result<<Self::Backend as IoBackend>::View<'a, U>>
+     #[inline]
+     fn read_val(self) -> Self::Target
+     where
+-        Self::Backend: IoCapable<Self::Target>,
+-        Self::Target: Sized,
++        Self::Target: AsReprMut,
++        Self::Backend: IoCapable<<Self::Target as AsRepr>::Repr>,
+     {
+-        Self::Backend::io_read(self.as_view())
++        let view = self.as_view();
++        // SAFETY: `AsRepr` guarantees layout compatibility.
++        let repr_view = unsafe {
++            Self::Backend::project_view(
++                view,
++                Self::Backend::as_ptr(view).cast::<<Self::Target as AsRepr>::Repr>(),
++            )
++        };
++
++        Self::Target::from_repr(Self::Backend::io_read(repr_view))
      }
  
-     fn write_sysmem_flush_page(&self, bar: Bar0<'_>, addr: u64) -> Result {
-         let addr = Bounded::<u64, 52>::try_new(addr).ok_or(EINVAL)?;
+     /// Write a value to I/O.
+@@ -520,10 +528,19 @@ fn read_val(self) -> Self::Target
+     #[inline]
+     fn write_val(self, value: Self::Target)
+     where
+-        Self::Backend: IoCapable<Self::Target>,
+-        Self::Target: Sized,
++        Self::Target: AsRepr,
++        Self::Backend: IoCapable<<Self::Target as AsRepr>::Repr>,
+     {
+-        Self::Backend::io_write(self.as_view(), value)
++        let view = self.as_view();
++        // SAFETY: `AsRepr` guarantees layout compatibility.
++        let repr_view = unsafe {
++            Self::Backend::project_view(
++                view,
++                Self::Backend::as_ptr(view).cast::<<Self::Target as AsRepr>::Repr>(),
++            )
++        };
++
++        Self::Backend::io_write(repr_view, Self::Target::into_repr(value))
+     }
  
--        write_sysmem_flush_page_gb100(bar, addr);
-+        write_sysmem_flush_page_gb100(hshub0(bar), addr);
+     /// Copy-read from I/O memory.
+@@ -645,7 +662,7 @@ fn copy_to_slice(self, data: &mut [u8])
+     #[inline(always)]
+     fn try_read8(self, offset: usize) -> Result<u8>
+     where
+-        usize: IoLoc<Self::Target, u8, IoType = u8>,
++        usize: IoLoc<Self::Target, u8>,
+         Self::Backend: IoCapable<u8>,
+     {
+         self.try_read(offset)
+@@ -655,7 +672,7 @@ fn try_read8(self, offset: usize) -> Result<u8>
+     #[inline(always)]
+     fn try_read16(self, offset: usize) -> Result<u16>
+     where
+-        usize: IoLoc<Self::Target, u16, IoType = u16>,
++        usize: IoLoc<Self::Target, u16>,
+         Self::Backend: IoCapable<u16>,
+     {
+         self.try_read(offset)
+@@ -665,7 +682,7 @@ fn try_read16(self, offset: usize) -> Result<u16>
+     #[inline(always)]
+     fn try_read32(self, offset: usize) -> Result<u32>
+     where
+-        usize: IoLoc<Self::Target, u32, IoType = u32>,
++        usize: IoLoc<Self::Target, u32>,
+         Self::Backend: IoCapable<u32>,
+     {
+         self.try_read(offset)
+@@ -675,7 +692,7 @@ fn try_read32(self, offset: usize) -> Result<u32>
+     #[inline(always)]
+     fn try_read64(self, offset: usize) -> Result<u64>
+     where
+-        usize: IoLoc<Self::Target, u64, IoType = u64>,
++        usize: IoLoc<Self::Target, u64>,
+         Self::Backend: IoCapable<u64>,
+     {
+         self.try_read(offset)
+@@ -685,7 +702,7 @@ fn try_read64(self, offset: usize) -> Result<u64>
+     #[inline(always)]
+     fn try_write8(self, value: u8, offset: usize) -> Result
+     where
+-        usize: IoLoc<Self::Target, u8, IoType = u8>,
++        usize: IoLoc<Self::Target, u8>,
+         Self::Backend: IoCapable<u8>,
+     {
+         self.try_write(offset, value)
+@@ -695,7 +712,7 @@ fn try_write8(self, value: u8, offset: usize) -> Result
+     #[inline(always)]
+     fn try_write16(self, value: u16, offset: usize) -> Result
+     where
+-        usize: IoLoc<Self::Target, u16, IoType = u16>,
++        usize: IoLoc<Self::Target, u16>,
+         Self::Backend: IoCapable<u16>,
+     {
+         self.try_write(offset, value)
+@@ -705,7 +722,7 @@ fn try_write16(self, value: u16, offset: usize) -> Result
+     #[inline(always)]
+     fn try_write32(self, value: u32, offset: usize) -> Result
+     where
+-        usize: IoLoc<Self::Target, u32, IoType = u32>,
++        usize: IoLoc<Self::Target, u32>,
+         Self::Backend: IoCapable<u32>,
+     {
+         self.try_write(offset, value)
+@@ -715,7 +732,7 @@ fn try_write32(self, value: u32, offset: usize) -> Result
+     #[inline(always)]
+     fn try_write64(self, value: u64, offset: usize) -> Result
+     where
+-        usize: IoLoc<Self::Target, u64, IoType = u64>,
++        usize: IoLoc<Self::Target, u64>,
+         Self::Backend: IoCapable<u64>,
+     {
+         self.try_write(offset, value)
+@@ -727,7 +744,7 @@ fn try_write64(self, value: u64, offset: usize) -> Result
+     #[inline(always)]
+     fn read8(self, offset: usize) -> u8
+     where
+-        usize: IoLoc<Self::Target, u8, IoType = u8>,
++        usize: IoLoc<Self::Target, u8>,
+         Self::Backend: IoCapable<u8>,
+     {
+         self.read(offset)
+@@ -739,7 +756,7 @@ fn read8(self, offset: usize) -> u8
+     #[inline(always)]
+     fn read16(self, offset: usize) -> u16
+     where
+-        usize: IoLoc<Self::Target, u16, IoType = u16>,
++        usize: IoLoc<Self::Target, u16>,
+         Self::Backend: IoCapable<u16>,
+     {
+         self.read(offset)
+@@ -751,7 +768,7 @@ fn read16(self, offset: usize) -> u16
+     #[inline(always)]
+     fn read32(self, offset: usize) -> u32
+     where
+-        usize: IoLoc<Self::Target, u32, IoType = u32>,
++        usize: IoLoc<Self::Target, u32>,
+         Self::Backend: IoCapable<u32>,
+     {
+         self.read(offset)
+@@ -763,7 +780,7 @@ fn read32(self, offset: usize) -> u32
+     #[inline(always)]
+     fn read64(self, offset: usize) -> u64
+     where
+-        usize: IoLoc<Self::Target, u64, IoType = u64>,
++        usize: IoLoc<Self::Target, u64>,
+         Self::Backend: IoCapable<u64>,
+     {
+         self.read(offset)
+@@ -775,7 +792,7 @@ fn read64(self, offset: usize) -> u64
+     #[inline(always)]
+     fn write8(self, value: u8, offset: usize)
+     where
+-        usize: IoLoc<Self::Target, u8, IoType = u8>,
++        usize: IoLoc<Self::Target, u8>,
+         Self::Backend: IoCapable<u8>,
+     {
+         self.write(offset, value)
+@@ -787,7 +804,7 @@ fn write8(self, value: u8, offset: usize)
+     #[inline(always)]
+     fn write16(self, value: u16, offset: usize)
+     where
+-        usize: IoLoc<Self::Target, u16, IoType = u16>,
++        usize: IoLoc<Self::Target, u16>,
+         Self::Backend: IoCapable<u16>,
+     {
+         self.write(offset, value)
+@@ -799,7 +816,7 @@ fn write16(self, value: u16, offset: usize)
+     #[inline(always)]
+     fn write32(self, value: u32, offset: usize)
+     where
+-        usize: IoLoc<Self::Target, u32, IoType = u32>,
++        usize: IoLoc<Self::Target, u32>,
+         Self::Backend: IoCapable<u32>,
+     {
+         self.write(offset, value)
+@@ -811,7 +828,7 @@ fn write32(self, value: u32, offset: usize)
+     #[inline(always)]
+     fn write64(self, value: u64, offset: usize)
+     where
+-        usize: IoLoc<Self::Target, u64, IoType = u64>,
++        usize: IoLoc<Self::Target, u64>,
+         Self::Backend: IoCapable<u64>,
+     {
+         self.write(offset, value)
+@@ -843,11 +860,12 @@ fn write64(self, value: u64, offset: usize)
+     #[inline(always)]
+     fn try_read<T, L>(self, location: L) -> Result<T>
+     where
++        T: AsReprMut,
+         L: IoLoc<Self::Target, T>,
+-        Self::Backend: IoCapable<L::IoType>,
++        Self::Backend: IoCapable<<T as AsRepr>::Repr>,
+     {
+-        let view = io_view::<Self, L::IoType>(self, location.offset())?;
+-        Ok(Self::Backend::io_read(view).into())
++        let view = io_view::<Self, T>(self, location.offset())?;
++        Ok(view.read_val())
+     }
  
+     /// Generic fallible write with runtime bounds check.
+@@ -876,12 +894,12 @@ fn try_read<T, L>(self, location: L) -> Result<T>
+     #[inline(always)]
+     fn try_write<T, L>(self, location: L, value: T) -> Result
+     where
++        T: AsRepr,
+         L: IoLoc<Self::Target, T>,
+-        Self::Backend: IoCapable<L::IoType>,
++        Self::Backend: IoCapable<<T as AsRepr>::Repr>,
+     {
+-        let view = io_view::<Self, L::IoType>(self, location.offset())?;
+-        let io_value = value.into();
+-        Self::Backend::io_write(view, io_value);
++        let view = io_view::<Self, T>(self, location.offset())?;
++        view.write_val(value);
          Ok(())
      }
-diff --git a/drivers/gpu/nova-core/fb/regs.rs b/drivers/gpu/nova-core/fb/regs.rs
-index c27582e376e2..584488a3e012 100644
---- a/drivers/gpu/nova-core/fb/regs.rs
-+++ b/drivers/gpu/nova-core/fb/regs.rs
-@@ -2,7 +2,8 @@
  
- use kernel::{
-     io::register,
--    sizes::SizeConstants, //
-+    prelude::*,
-+    sizes::{SizeConstants, SZ_4K}, //
- };
+@@ -920,9 +938,10 @@ fn try_write<T, L>(self, location: L, value: T) -> Result
+     #[inline(always)]
+     fn try_write_reg<T, L, V>(self, value: V) -> Result
+     where
++        T: AsRepr,
+         L: IoLoc<Self::Target, T>,
+         V: LocatedRegister<Self::Target, Location = L, Value = T>,
+-        Self::Backend: IoCapable<L::IoType>,
++        Self::Backend: IoCapable<<T as AsRepr>::Repr>,
+     {
+         let (location, value) = value.into_io_op();
  
- use crate::driver::NovaRegisters;
-@@ -65,31 +66,33 @@ pub(super) fn vga_workspace_addr(self) -> Option<u64> {
+@@ -954,16 +973,13 @@ fn try_write_reg<T, L, V>(self, value: V) -> Result
+     #[inline(always)]
+     fn try_update<T, L, F>(self, location: L, f: F) -> Result
+     where
++        T: AsReprMut,
+         L: IoLoc<Self::Target, T>,
+-        Self::Backend: IoCapable<L::IoType>,
++        Self::Backend: IoCapable<<T as AsRepr>::Repr>,
+         F: FnOnce(T) -> T,
+     {
+-        let view = io_view::<Self, L::IoType>(self, location.offset())?;
+-
+-        let value: T = Self::Backend::io_read(view).into();
+-        let io_value = f(value).into();
+-        Self::Backend::io_write(view, io_value);
+-
++        let view = io_view::<Self, T>(self, location.offset())?;
++        view.write_val(f(view.read_val()));
+         Ok(())
+     }
+ 
+@@ -991,11 +1007,12 @@ fn try_update<T, L, F>(self, location: L, f: F) -> Result
+     #[inline(always)]
+     fn read<T, L>(self, location: L) -> T
+     where
++        T: AsReprMut,
+         L: IoLoc<Self::Target, T>,
+-        Self::Backend: IoCapable<L::IoType>,
++        Self::Backend: IoCapable<<T as AsRepr>::Repr>,
+     {
+-        let view = io_view_assert::<Self, L::IoType>(self, location.offset());
+-        Self::Backend::io_read(view).into()
++        let view = io_view_assert::<Self, T>(self, location.offset());
++        view.read_val()
+     }
+ 
+     /// Generic infallible write with compile-time bounds check.
+@@ -1022,12 +1039,12 @@ fn read<T, L>(self, location: L) -> T
+     #[inline(always)]
+     fn write<T, L>(self, location: L, value: T)
+     where
++        T: AsRepr,
+         L: IoLoc<Self::Target, T>,
+-        Self::Backend: IoCapable<L::IoType>,
++        Self::Backend: IoCapable<<T as AsRepr>::Repr>,
+     {
+-        let view = io_view_assert::<Self, L::IoType>(self, location.offset());
+-        let io_value = value.into();
+-        Self::Backend::io_write(view, io_value);
++        let view = io_view_assert::<Self, T>(self, location.offset());
++        view.write_val(value)
+     }
+ 
+     /// Generic infallible write of a fully-located register value.
+@@ -1064,9 +1081,10 @@ fn write<T, L>(self, location: L, value: T)
+     #[inline(always)]
+     fn write_reg<T, L, V>(self, value: V)
+     where
++        T: AsRepr,
+         L: IoLoc<Self::Target, T>,
+         V: LocatedRegister<Self::Target, Location = L, Value = T>,
+-        Self::Backend: IoCapable<L::IoType>,
++        Self::Backend: IoCapable<<T as AsRepr>::Repr>,
+     {
+         let (location, value) = value.into_io_op();
+ 
+@@ -1098,14 +1116,13 @@ fn write_reg<T, L, V>(self, value: V)
+     #[inline(always)]
+     fn update<T, L, F>(self, location: L, f: F)
+     where
++        T: AsReprMut,
+         L: IoLoc<Self::Target, T>,
+-        Self::Backend: IoCapable<L::IoType>,
++        Self::Backend: IoCapable<<T as AsRepr>::Repr>,
+         F: FnOnce(T) -> T,
+     {
+-        let view = io_view_assert::<Self, L::IoType>(self, location.offset());
+-        let value: T = Self::Backend::io_read(view).into();
+-        let io_value = f(value).into();
+-        Self::Backend::io_write(view, io_value);
++        let view = io_view_assert::<Self, T>(self, location.offset());
++        view.write_val(f(view.read_val()));
      }
  }
  
--/// Base of the GB10x HSHUB0 register window (`NV_HSHUB0_PRIV_BASE` in Open RM).
-+/// The GB10x HSHUB0 register window (Base defined as `NV_HSHUB0_PRIV_BASE` in Open RM).
- ///
- /// The base is provided by the GB10x framebuffer HAL.
--pub(super) struct Hshub0Base(());
-+#[repr(align(4))]
-+#[derive(FromBytes, IntoBytes)]
-+pub(super) struct Hshub0Registers([u8; SZ_4K]);
+diff --git a/rust/kernel/io/register.rs b/rust/kernel/io/register.rs
+index 6a19552ffb95..45d2e73a92e7 100644
+--- a/rust/kernel/io/register.rs
++++ b/rust/kernel/io/register.rs
+@@ -117,9 +117,6 @@
  
- register! {
--    base: NovaRegisters;
-+    base: Hshub0Registers;
+ /// Trait implemented by all registers.
+ pub trait Register: Sized {
+-    /// Backing primitive type of the register.
+-    type Storage: Into<Self> + From<Self>;
+-
+     /// Start offset of the register.
+     ///
+     /// The interpretation of this offset depends on the type of the register.
+@@ -135,8 +132,6 @@ impl<const SIZE: usize, T> IoLoc<Region<SIZE>, T> for ()
+ where
+     T: FixedRegister,
+ {
+-    type IoType = T::Storage;
+-
+     #[inline(always)]
+     fn offset(self) -> usize {
+         T::OFFSET
+@@ -149,8 +144,6 @@ impl<const SIZE: usize, T> IoLoc<Region<SIZE>, T> for T
+ where
+     T: FixedRegister,
+ {
+-    type IoType = T::Storage;
+-
+     #[inline(always)]
+     fn offset(self) -> usize {
+         T::OFFSET
+@@ -174,8 +167,6 @@ impl<const SIZE: usize, T> IoLoc<Region<SIZE>, T> for FixedRegisterLoc<T>
+ where
+     T: FixedRegister,
+ {
+-    type IoType = T::Storage;
+-
+     #[inline(always)]
+     fn offset(self) -> usize {
+         T::OFFSET
+@@ -246,8 +237,6 @@ impl<const SIZE: usize, T, B> IoLoc<Region<SIZE>, T> for RelativeRegisterLoc<T,
+     T: RelativeRegister,
+     B: RegisterBase<T::BaseFamily> + ?Sized,
+ {
+-    type IoType = T::Storage;
+-
+     #[inline(always)]
+     fn offset(self) -> usize {
+         RelativeRegisterLoc::offset(self)
+@@ -289,8 +278,6 @@ impl<const SIZE: usize, T> IoLoc<Region<SIZE>, T> for RegisterArrayLoc<T>
+ where
+     T: RegisterArray,
+ {
+-    type IoType = T::Storage;
+-
+     #[inline(always)]
+     fn offset(self) -> usize {
+         T::OFFSET + self.0 * T::STRIDE
+@@ -377,8 +364,6 @@ impl<const SIZE: usize, T, B> IoLoc<Region<SIZE>, T> for RelativeRegisterArrayLo
+     T: RelativeRegisterArray,
+     B: RegisterBase<T::BaseFamily> + ?Sized,
+ {
+-    type IoType = T::Storage;
+-
+     #[inline(always)]
+     fn offset(self) -> usize {
+         self.0.offset() + self.1 * T::STRIDE
+diff --git a/rust/macros/io/register.rs b/rust/macros/io/register.rs
+index 61d076ab570a..8af12caa964b 100644
+--- a/rust/macros/io/register.rs
++++ b/rust/macros/io/register.rs
+@@ -200,8 +200,6 @@ pub(crate) fn register(def: RegDef) -> Result<TokenStream> {
+             );
  
-     // GB10x sysmem flush registers, relative to the HSHUB0 base. GB10x routes sysmembar
-     // through a primary and an EG (egress) pair that must both be programmed to the same
-     // address. Hardware ignores bits 7:0 of each LO register. The boot path uses a fixed
-     // HSHUB0 base, so the multiple runtime-discovered HSHUB bases are not needed here.
--    pub(super) NV_PFB_HSHUB_PCIE_FLUSH_SYSMEM_ADDR_LO(u32) @ Hshub0Base + 0x00000e50 {
-+    pub(super) NV_PFB_HSHUB_PCIE_FLUSH_SYSMEM_ADDR_LO(u32) @ 0x00000e50 {
-         31:0    adr => u32;
-     }
- 
--    pub(super) NV_PFB_HSHUB_PCIE_FLUSH_SYSMEM_ADDR_HI(u32) @ Hshub0Base + 0x00000e54 {
-+    pub(super) NV_PFB_HSHUB_PCIE_FLUSH_SYSMEM_ADDR_HI(u32) @ 0x00000e54 {
-         19:0    adr;
-     }
- 
--    pub(super) NV_PFB_HSHUB_EG_PCIE_FLUSH_SYSMEM_ADDR_LO(u32) @ Hshub0Base + 0x000006c0 {
-+    pub(super) NV_PFB_HSHUB_EG_PCIE_FLUSH_SYSMEM_ADDR_LO(u32) @ 0x000006c0 {
-         31:0    adr => u32;
-     }
- 
--    pub(super) NV_PFB_HSHUB_EG_PCIE_FLUSH_SYSMEM_ADDR_HI(u32) @ Hshub0Base + 0x000006c4 {
-+    pub(super) NV_PFB_HSHUB_EG_PCIE_FLUSH_SYSMEM_ADDR_HI(u32) @ 0x000006c4 {
-         19:0    adr;
-     }
- }
+             impl ::kernel::io::register::Register for #name {
+-                type Storage = #storage;
+-
+                 const OFFSET: usize = #offset;
+             }
+         ));
 
 -- 
 2.54.0
