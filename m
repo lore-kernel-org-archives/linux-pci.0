@@ -1,93 +1,131 @@
-Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id D1EB753E0B;
-	Wed, 19 Aug 2026 00:13:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
+Received: from azure-sdnproxy.icoremail.net (azure-sdnproxy.icoremail.net [207.46.229.174])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 9E64D17BEBF;
+	Wed, 19 Aug 2026 01:29:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=207.46.229.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787098413; cv=none; b=WMCzaFD43dT/yg2d8lkd5pjv8LfjrzOBUnEni7nXhTSuEpaSOHurTVzMYw7u9fl7pSEzmWw4egoxvWwQSL1uHE6BJuYXCl+N/8kEAnyWiiK6vCkhq/AHj3qyJWgZXeKqYRfSPnAQDO71hRHzejYKeL8rcSWVtrddKi2OZLq2AIY=
+	t=1787102949; cv=none; b=ammO4Dw0hVwLlAPKkYVqHZLLJTjnn5fQ/7aI1FndZL7qN/tD95KKXBQf6FhWa3dtGfNZoUQ2RTFIEIQRLMMIfvG3agN0T9A3Qjj/hep3SvwF8LAFMMW+7xXhrYOkeCQfLZ+O3ksz2q/2UFEMAdkGlsAhFzlW18nkghIZ90+f77k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787098413; c=relaxed/simple;
-	bh=8iDklElsJ6xw7hjQXnB+OE3JR6ZvoL3btmETnJlm8pw=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=aTE4KzaE1UlJrZDlUZd5GLW2UYxg4pc2cyVFBA539A/vixTfWQte7EhEGYNcoeMkNkHctgJ+HAZVhZk+Nr1gKMS/U7ZAzxkN9kq9yvIiM8yBTCNqj2tVvdgxELco6+Gdk77atAbtwa2b66nhyabmwoCz7DSWVqyzDFag4p/xBDI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=YCf9rXVN; arc=none smtp.client-ip=13.77.154.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
+	s=arc-20240116; t=1787102949; c=relaxed/simple;
+	bh=FN1IjfPxnj8wCE/bFzHRmr2dr9I4mzao3aIU1IrQ8Q4=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References:Content-Type:
+	 MIME-Version:Message-ID; b=owzM1QEjOF9SnccQkgluuQ+d/3KN50+chkAZKSn0WLN5JavsZADuDp7P1bULTZsx3VG4aTKylILpqEeRloH0W4Y5RekZ7CAwQDsKQCt/QgCoSeFrkosEKr3+00VAeCy32Pa62NOlvA6Ouh7fLaZcUacDybCFaYhv9a3pMzqAggU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=buaa.edu.cn; spf=pass smtp.mailfrom=buaa.edu.cn; dkim=fail (0-bit key) header.d=buaa.edu.cn header.i=@buaa.edu.cn header.b=W7wuD2DI reason="key not found in DNS"; arc=none smtp.client-ip=207.46.229.174
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=buaa.edu.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=buaa.edu.cn
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="YCf9rXVN"
-Received: from [100.75.32.23] (unknown [40.78.13.173])
-	by linux.microsoft.com (Postfix) with ESMTPSA id E691620B7168;
-	Tue, 18 Aug 2026 17:13:01 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com E691620B7168
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
-	s=default; t=1787098383;
-	bh=kGK8AZVrxJbzYPYu4KuWQYugyNrpdc8p1cPWMIJfr8c=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=YCf9rXVNMsq36q1Oigz0BXR+CmAxOJ1vDRt/9HKRwlx5d8JHh3q9QuU7Ctogadbgw
-	 3MwYurMfz15mGKdp7IYtfCGhp10aYHHTKPIXXrpSdwFmr8UE/dE5WpuN+jTcYH/ih0
-	 r1aj0M3PvDlfrTgRHakhp0vtoJ7cEMukui+J+ORI=
-Message-ID: <912a5911-5b38-a14f-132f-a2d1d7c8f154@linux.microsoft.com>
-Date: Tue, 18 Aug 2026 17:13:29 -0700
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=buaa.edu.cn header.i=@buaa.edu.cn header.b="W7wuD2DI"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=buaa.edu.cn; s=buaa; h=Received:Date:From:To:Cc:Subject:
+	In-Reply-To:References:Content-Transfer-Encoding:Content-Type:
+	MIME-Version:Message-ID; bh=HdjOb/MSPMkWBUNrHoEo2xw/qXBxtaijq1At
+	cbqdv8k=; b=W7wuD2DIAtoWHGlaGpuBwlt19GX0ObqCCl/PkW/2JrOl4hm6BkhW
+	imE37rkkOyvu4tudS+vdi73EBCuraConfXM5uKOIlSWa7qtPfwh1tLQdaGQjyYqa
+	bkXADXBw2AnHXtYYJo0ZKLmw84CV7z1afUA3If5Gd497VG5ti7BIN1w=
+Received: from engguopeng$buaa.edu.cn ( [180.167.85.126] ) by
+ ajax-webmail-coremail-app1 (Coremail) ; Wed, 19 Aug 2026 09:28:43 +0800
+ (GMT+08:00)
+Date: Wed, 19 Aug 2026 09:28:43 +0800 (GMT+08:00)
+X-CM-HeaderCharset: UTF-8
+From: engguopeng@buaa.edu.cn
+To: "Dave Jiang" <dave.jiang@intel.com>
+Cc: linux-cxl@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, bhelgaas@google.com, dave@stgolabs.net,
+	jic23@kernel.org, alison.schofield@intel.com,
+	vishal.l.verma@intel.com, ira.weiny@intel.com, djbw@kernel.org,
+	johnny.li@montage-tech.com, peng.guo@montage-tech.com,
+	jingzhong.yang@montage-tech.com
+Subject: Re: Re: [PATCH v2 2/2] cxl/core: Skip non-CXL capabilities in MCAP
+X-Priority: 3
+X-Mailer: Coremail Webmail Server Version 2023.4-cmXT5 build
+ 20240305(0ac2fdd1) Copyright (c) 2002-2026 www.mailtech.cn
+ mispb-63b7ebb9-fa87-40c1-9aec-818ec5a006d9-buaa.edu.cn
+In-Reply-To: <c01709c9-4c3b-4ced-9635-72947807c301@intel.com>
+References: <20260817075854.17207-1-engguopeng@buaa.edu.cn>
+ <20260817075854.17207-3-engguopeng@buaa.edu.cn>
+ <c01709c9-4c3b-4ced-9635-72947807c301@intel.com>
+Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=UTF-8
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.13.1
-Subject: Re: [PATCH v5 7/9] x86/hyperv: Implement Hyper-V virtual IOMMU
-Content-Language: en-US
-To: Jason Gunthorpe <jgg@nvidia.com>
-Cc: hpa@zytor.com, robin.murphy@arm.com, robh@kernel.org, wei.liu@kernel.org,
- mhklinux@outlook.com, muislam@microsoft.com, namjain@linux.microsoft.com,
- magnuskulke@linux.microsoft.com, anbelski@linux.microsoft.com,
- linux-kernel@vger.kernel.org, linux-hyperv@vger.kernel.org,
- iommu@lists.linux.dev, linux-pci@vger.kernel.org,
- linux-arch@vger.kernel.org, kys@microsoft.com, haiyangz@microsoft.com,
- decui@microsoft.com, longli@microsoft.com, tglx@kernel.org,
- mingo@redhat.com, bp@alien8.de, dave.hansen@linux.intel.com, x86@kernel.org,
- joro@8bytes.org, will@kernel.org, lpieralisi@kernel.org,
- kwilczynski@kernel.org, bhelgaas@google.com, arnd@arndb.de,
- jacob.pan@linux.microsoft.com
-References: <20260731223427.2554388-1-mrathor@linux.microsoft.com>
- <20260731223427.2554388-8-mrathor@linux.microsoft.com>
- <20260805124838.GP27883@nvidia.com>
- <269d79fa-08ab-55ff-77c7-fb11fa2005d9@linux.microsoft.com>
- <20260818234840.GA134244@nvidia.com>
-From: Mukesh R <mrathor@linux.microsoft.com>
-In-Reply-To: <20260818234840.GA134244@nvidia.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Message-ID: <56e8d5aa.4be5.1a017a28956.Coremail.engguopeng@buaa.edu.cn>
+X-Coremail-Locale: en_US
+X-CM-TRANSID:OCz+CgCnRlPLBoVq7tKTAA--.10498W
+X-CM-SenderInfo: d2isijirrujqpexdthxhgxhubq/1tbiAgMEAGqETdkf6wABsK
+X-Coremail-Antispam: 1Ur529EdanIXcx71UUUUU7IcSsGvfJ3iIAIbVAYjsxI4VWxJw
+	CS07vEb4IE77IF4wCS07vE1I0E4x80FVAKz4kxMIAIbVAFxVCaYxvI4VCIwcAKzIAtYxBI
+	daVFxhVjvjDU=
 
-On 8/18/26 16:48, Jason Gunthorpe wrote:
-> On Tue, Aug 18, 2026 at 04:39:32PM -0700, Mukesh R wrote:
-> 
->> Thanks for the review. I know there is another set of patches for pvIOMMU
->> ongoing (both came from the same source) and you are probably repeating
->> things, and I appreciate your patience. I'll also try to look for your
->> comments in that patch series going forward.
-> 
-> Those patches look pretty good so you should try to copy their stuff
-> :)
-> 
-> They ended up never calling detach, I hope you can do that too. Just
-
-Unfortunately, my case is a bit different due to the "direct attach"
-feature for guest VMs. When a device moves from say a paging domain to be
-directly attached to a VM, today, it must first be detached. But since
-that just moves to identity, I am discussing with hyp team if detach
-is really required, and if we can get rid of it via just attaching to
-identity/blocked first before doing the direct attach. Hopefully, it
-can be done even if changes are needed in the hypervisor.
-
-Thanks again,
--Mukesh
-
-> always have a blocking or identity domain and just use it everywhere.
-> 
-> Since you can't predict what translation detach gives it should not
-> be set on a device. release could be the only exception and only if
-> you reall have to.
-> 
-> Jason
-
+Cj4gT24gOC8xNy8yNiAxMjo1OCBBTSwgcGVubiB3cm90ZToKPiA+IEZyb206IFBlbm4gPGVuZ2d1
+b3BlbmdAYnVhYS5lZHUuY24+Cj4gPiAKPiA+IFdoZW4gTU1QVCBpcyBlbmFibGVkLCBhIENYTCBk
+ZXZpY2UgbWF5IGV4cG9zZSBDWEwtZGVmaW5lZCBjYXBhYmlsaXRpZXMKPiA+IGFuZCBQQ0llIE1h
+bmFnZW1lbnQgTWVzc2FnZSBQYXNzdGhyb3VnaCAoTU1QVCkgY2FwYWJpbGl0aWVzIGluIHRoZSBz
+YW1lCj4gPiBNTUlPIENhcGFiaWxpdGllcyBSZWdpc3RlciBCbG9jayAoTUNBUCkuCj4gPiAKPiA+
+IFRoZSBDWEwgY2FwYWJpbGl0eSBwYXJzZXIgY3VycmVudGx5IGlkZW50aWZpZXMgZW50cmllcyB1
+c2luZyBvbmx5IHRoZQo+ID4gY2FwYWJpbGl0eSBJRC4gU2luY2UgY2FwYWJpbGl0eSBJRHMgYXJl
+IHNjb3BlZCBieSBWZW5kb3IgSUQsIGEKPiA+IFBDSS1TSUctZGVmaW5lZCBjYXBhYmlsaXR5IG1h
+eSBoYXZlIHRoZSBzYW1lIElEIGFzIGEgQ1hMLWRlZmluZWQKPiA+IGNhcGFiaWxpdHkuIFRoaXMg
+Y2F1c2VzIG5vbi1DWEwgZW50cmllcywgaW5jbHVkaW5nIE1NUFQgYW5kIE1NSU8gTWFpbGJveCwK
+PiA+IHRvIGJlIGludGVycHJldGVkIGFzIENYTCByZWdpc3RlciBibG9ja3MuCj4gPiAKPiA+IFRo
+ZSBNTVBUIHJlZ2lzdGVyIGJsb2NrIG1heSBiZSBpbnRlcnByZXRlZCBhcyBhIENYTCBtYWlsYm94
+LiBUaGlzCj4gPiBjYXVzZXMgbWFpbGJveCBpbml0aWFsaXphdGlvbiB0byBmYWlsIHdpdGg6Cj4g
+PiAKPiA+ICAgICBjeGxfcGNpIDAwMDA6M2I6MDAuMDogTWFpbGJveCBpcyB0b28gc21hbGwgKDY0
+YikKPiA+IAo+ID4gQ2hlY2sgdGhlIE1DQVAgVmVuZG9yIElEIGJlZm9yZSBpbnRlcnByZXRpbmcg
+YW4gZW50cnkgYXMgYSBDWEwtZGVmaW5lZAo+ID4gY2FwYWJpbGl0eS4gU2tpcCBjYXBhYmlsaXRp
+ZXMgd2l0aCBhIG5vbi16ZXJvIFZlbmRvciBJRCBvdGhlciB0aGFuCj4gPiBQQ0lfVkVORE9SX0lE
+X0NYTC4KPiA+IAo+ID4gSW4gbGVnYWN5IENYTCBjYXBhYmlsaXR5IGhlYWRlcnMsIHRoZSBmaWVs
+ZCBub3cgdXNlZCBmb3IgdGhlIE1DQVAKPiA+IFZlbmRvciBJRCB3YXMgcmVzZXJ2ZWQgYW5kIHJl
+YWRzIGFzIHplcm8uIENvbnRpbnVlIHRvIGFjY2VwdCB6ZXJvIHRvCj4gPiBwcmVzZXJ2ZSBjb21w
+YXRpYmlsaXR5IHdpdGggdGhvc2UgZGV2aWNlcy4KPiA+IAo+ID4gVGhlIGZpeCBoYXMgYmVlbiB0
+ZXN0ZWQgb24gQ1hMIDEuMSBhbmQgQ1hMIDMuMCBkZXZpY2VzLiBPbiB0aGUKPiA+IE1NUFQtZW5h
+YmxlZCBkZXZpY2UsIGl0IHByZXZlbnRzIGJvdGggTWFpbGJveCBhbmQgU3RhdHVzIGNhcGFiaWxp
+dGllcwo+ID4gZnJvbSBiZWluZyBtaXNpZGVudGlmaWVkLgo+ID4gCj4gPiBGaXhlczogOGFkYWY3
+NDdjOWYwICgiY3hsL21lbTogRmluZCBkZXZpY2UgY2FwYWJpbGl0aWVzIikKPiA+IFN1Z2dlc3Rl
+ZC1ieTogSm9obm55IDxqb2hubnkubGlAbW9udGFnZS10ZWNoLmNvbT4KPiA+IFNpZ25lZC1vZmYt
+Ynk6IFBlbm4gPGVuZ2d1b3BlbmdAYnVhYS5lZHUuY24+Cj4gCj4gQWZ0ZXIgYWRkcmVzc2luZyBM
+dWthcydzIGNvbW1lbnQsCj4gUmV2aWV3ZWQtYnk6IERhdmUgSmlhbmcgPGRhdmUuamlhbmdAaW50
+ZWwuY29tPgo+IAo+IEdpdmVuIHRoYXQgeW91IGFyZSB1dGlsaXppbmcgdGhlIG5ldyBQQ0llIE1N
+SU8gTUJPWCBmZWF0dXJlLCBoYXZlIHlvdSBjb25zaWRlcmVkIG1pZ3JhdGUgdGhlIENYTCBNQk9Y
+IGJsb2NrIHBhcnNpbmcgY29kZSB0byBhIFBDSSBsaWIgYW5kIHNoYXJlZCBiZXR3ZWVuIFBDSSBh
+bmQgQ1hMPyBJIGRpZCBhdHRlbXB0ZWQgc29tZXRoaW5nIFsxXSBsaWtlIHRoYXQgYSB3aGlsZSBi
+YWNrIGJ1dCBuZXZlciB1cHN0cmVhbWVkIHRoZSBjb2RlIGR1ZSB0byBubyBoYXJkd2FyZSB0byB0
+ZXN0IG9uLgo+ICAKPiBbMV06IGh0dHBzOi8vZ2l0Lmtlcm5lbC5vcmcvcHViL3NjbS9saW51eC9r
+ZXJuZWwvZ2l0L2RqaWFuZy9saW51eC5naXQvbG9nLz9oPXBjaS1tYm94Cj4gCj4gREoKClRoYW5r
+cyBmb3IgdGhlIHJldmlldy4gTHVrYXMncyBjb21tZW50IGhhcyBhbHJlYWR5IGJlZW4gYWRkcmVz
+c2VkIGluIHYyLApidXQgSSBtaXNzZWQgaGlzIFJldmlld2VkLWJ5IHRhZy4gV2hlbiBhcHBseWlu
+ZywgcGxlYXNlIGFsc28gaW5jbHVkZToKClJldmlld2VkLWJ5OiBMdWthcyBXdW5uZXIgPGx1a2Fz
+QHd1bm5lci5kZT4KCkkgd2lsbCBhZGQgaXQgaWYgYW5vdGhlciByZXZpc2lvbiBpcyBuZWVkZWQu
+CgpJbiBhZGRpdGlvbiwgSSB3aWxsIGxvb2sgaW50byBtb3ZpbmcgdGhlIENYTCBtYWlsYm94IGJs
+b2NrIHBhcnNpbmcgY29kZSB0byBhIGNvbW1vbgpQQ0kgbGlicmFyeSBzbyB0aGF0IGl0IGNhbiBi
+ZSBzaGFyZWQgd2l0aCB0aGUgUENJZSBNTUlPIG1haWxib3ggc3VwcG9ydC4KClNpbmNlIHRoYXQg
+d291bGQgYmUgYSBicm9hZGVyIHJlZmFjdG9yaW5nLCBJIHdvdWxkIHByZWZlciB0byBrZWVwIHRo
+aXMKcGF0Y2ggZm9jdXNlZCBvbiBmaXhpbmcgdGhlIFZlbmRvciBJRCB2YWxpZGF0aW9uIGlzc3Vl
+IGFuZCBoYW5kbGUgdGhlCmNvbW1vbiBwYXJzaW5nIGNvZGUgaW4gYSBzZXBhcmF0ZSBmb2xsb3ct
+dXAgcGF0Y2ggb3Igc2VyaWVzLiBJIHdpbGwgYWxzbwp0ZXN0IHRoZSBmb2xsb3ctdXAgY2hhbmdl
+cyBvbiByZWFsIENYTCBoYXJkd2FyZSB3aXRoIE1NUFQgc3VwcG9ydC4KCj4gPiAtLS0KPiA+IENo
+YW5nZXMgaW4gdjI6Cj4gPiAtIEFjY2VwdCBhIHplcm8gVmVuZG9yIElEIGZvciBjb21wYXRpYmls
+aXR5IHdpdGggbGVnYWN5IENYTCBjYXBhYmlsaXR5Cj4gPiAgIGhlYWRlcnMuCj4gPiAtIE1vdmUg
+dGhlIHUxNiBkZWNsYXJhdGlvbiBhYm92ZSB0aGUgdTMyIGRlY2xhcmF0aW9uIHRvIGZvbGxvdyB0
+aGUKPiA+ICAgcmV2ZXJzZSBDaHJpc3RtYXMgdHJlZSBjb252ZW50aW9uLgo+ID4gLSBEb2N1bWVu
+dCB0ZXN0aW5nIG9uIENYTCAxLjEgYW5kIENYTCAzLjAgZGV2aWNlcy4KPiA+IAo+ID4gIGRyaXZl
+cnMvY3hsL2NvcmUvcmVncy5jIHwgMTIgKysrKysrKysrKystCj4gPiAgMSBmaWxlIGNoYW5nZWQs
+IDExIGluc2VydGlvbnMoKyksIDEgZGVsZXRpb24oLSkKPiA+IAo+ID4gZGlmZiAtLWdpdCBhL2Ry
+aXZlcnMvY3hsL2NvcmUvcmVncy5jIGIvZHJpdmVycy9jeGwvY29yZS9yZWdzLmMKPiA+IGluZGV4
+IDkzNzEwY2Y0ZjBhNi4uYzdjMTQwODlmMmM2IDEwMDY0NAo+ID4gLS0tIGEvZHJpdmVycy9jeGwv
+Y29yZS9yZWdzLmMKPiA+ICsrKyBiL2RyaXZlcnMvY3hsL2NvcmUvcmVncy5jCj4gPiBAQCAtMTMz
+LDggKzEzMywxOCBAQCB2b2lkIGN4bF9wcm9iZV9kZXZpY2VfcmVncyhzdHJ1Y3QgZGV2aWNlICpk
+ZXYsIHZvaWQgX19pb21lbSAqYmFzZSwKPiA+ICAKPiA+ICAJZm9yIChjYXAgPSAxOyBjYXAgPD0g
+Y2FwX2NvdW50OyBjYXArKykgewo+ID4gIAkJc3RydWN0IGN4bF9yZWdfbWFwICpybWFwOwo+ID4g
+KwkJdTE2IGNhcF9pZCwgdmVuZG9yX2lkOwo+ID4gIAkJdTMyIG9mZnNldCwgbGVuZ3RoOwo+ID4g
+LQkJdTE2IGNhcF9pZDsKPiA+ICsKPiA+ICsJCXZlbmRvcl9pZCA9IEZJRUxEX0dFVChQQ0lfTUNB
+UF9IRFJfVkVORE9SX0lELAo+ID4gKwkJCQkgICAgICByZWFkbChiYXNlICsgUENJX01DQVBfSERS
+X0JBU0UoY2FwKSArCj4gPiArCQkJCQkgICAgUENJX01DQVBfSERSX1JFR180KSk7Cj4gPiArCQkv
+Kgo+ID4gKwkJICogVGhlIFZlbmRvciBJRCBmaWVsZCBpcyByZXNlcnZlZCBhbmQgcmVhZHMgYXMg
+emVybyBpbiBsZWdhY3kKPiA+ICsJCSAqIENYTCBjYXBhYmlsaXR5IGhlYWRlcnMuIFNlZSBDWEwg
+cjMuMiwgVGFibGUgOC00NC4KPiA+ICsJCSAqLwo+ID4gKwkJaWYgKHZlbmRvcl9pZCAmJiB2ZW5k
+b3JfaWQgIT0gUENJX1ZFTkRPUl9JRF9DWEwpCj4gPiArCQkJY29udGludWU7Cj4gPiAgCj4gPiAg
+CQljYXBfaWQgPSBGSUVMRF9HRVQoQ1hMREVWX0NBUF9IRFJfQ0FQX0lEX01BU0ssCj4gPiAgCQkJ
+CSAgIHJlYWRsKGJhc2UgKyBjYXAgKiAweDEwKSk7Cg==
