@@ -1,109 +1,139 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B674C339375
-	for <linux-pci@vger.kernel.org>; Thu, 20 Aug 2026 04:10:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 8BA582E92BA;
+	Thu, 20 Aug 2026 04:47:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787199017; cv=none; b=fNdCDl/Qb/qyGT6++Zo/IIxoI5tdiU0uWxviYaqkC8TS/DVCatU4vuvMUq86AWYwN9oFnHk6KJp0BCZikShMuKJibWmyEpzMml1SNNHgMCo0gBZ0oGk6AQ1AUAShNCS+HGSXTGOTNKB4bhAw73/r+Xnog4CvY4Ed6DzhUF6e3yU=
+	t=1787201269; cv=none; b=MpcoAyOLR8OiM6K2Wv4qVQmJrJWzB297dOSTKtj4Aj5XWSPLDQjQ+MB52qwP0bHICzZnp11GsS/PoeFVTn9Qvd7+xvrMgYfu/WOWBmB46UjtAUdDqFpQAqRiptmtv7xb+4wplwNncfp/VXdialWKsJUtiX6sk41UGULreYRXoXk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787199017; c=relaxed/simple;
-	bh=KgRtSJB9AnNnETMQA3nwqQ2SUEp8NOJccvkccV6A+/Q=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=EAbCTXGSGvrk3yxdH95KNc8zi9N4a6EpWY7r3/hpa5oXQPpqarPs3Z/XUdtgKpvn6nj/aa6qlirmzIjCzqYpSCjuVQka227ZxngUbEPafwal8FRkW8MOP0XKTio6mD+85jrP4lwN1jSWtde7CvZQsYnx2DDsHIIVw7EjSX1ponM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=G4qPuhic; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1787201269; c=relaxed/simple;
+	bh=vl0zaEmKib6Lbz3VHNSh2Uy7gdNEzyfoZ5bpxkE+TSc=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=d1iILp6uMhbwtZRYYoAopa2Bj044kG9EHNtmLJ2OQ7ay8OABqPEbJVKjcW0lgciWsI84Azvo5WY7XtNn2KoY/+HtchQjNJHpfteFCJYUTzfv7OSATexbRBnGqUZwqP19TrvbhxEzDGCNDoj7JpteAjn0OoZPwJuJjuX5wjBB6EY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=TMWiRyfn; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="G4qPuhic"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 90DEE1F000E9;
-	Thu, 20 Aug 2026 04:10:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787199015;
-	bh=rQpvpmabBiEIz3CIauapWkMgJQTN4vUK6ABp8Gi42pc=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=G4qPuhicmkAG0nLOvPVBbfes/j1LCoGBkLOOoQaV5D6d5GC90y2eM6esQsfyoeFvq
-	 aAuKkSdXCyuZcss3anEuFJZlZYI4lZ4/FEAE4st9nbyFLa0RkJDQ0sNOnjCJCsTI8x
-	 iOIi4nnD3QeXWNscCDHLJ840BPXKlFtTnVyAe03prfKcnuesGmz9egrpbiWgIsoxoa
-	 Hc85d/F70HSr53cACMxE0szOCp+cGUDXl2SS6ceQbjUqSlNlGBl0hPYUEuFu/Y6YYb
-	 2CYofJq6OxoEbyDvYb0ag86KN51pIm8t4olIu4YjdXolsizv80Pwc7V7xGRBkVpAlo
-	 WqXX8py/qwtvA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 2/2] PCI: dwc: rcar-gen4: Use .post_deinit to handle
- dw_pcie_ep_init() failures
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Marek Vasut" <marek.vasut+renesas@mailbox.org>
-Cc: wsa+renesas@sang-engineering.com, linux-pci@vger.kernel.org
-In-Reply-To: <20260820035944.163472-2-marek.vasut+renesas@mailbox.org>
-References: <20260820035944.163472-1-marek.vasut+renesas@mailbox.org>
- <20260820035944.163472-2-marek.vasut+renesas@mailbox.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 20 Aug 2026 04:10:15 +0000
-Message-Id: <20260820041015.90DEE1F000E9@smtp.kernel.org>
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="TMWiRyfn"
+Received: from [10.95.65.118] (unknown [4.194.122.162])
+	by linux.microsoft.com (Postfix) with ESMTPSA id 0117920B710C;
+	Wed, 19 Aug 2026 21:47:11 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 0117920B710C
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1787201239;
+	bh=v2/+CNUjToYHkwV06DuRLGXLncXWjf3PDjIzpLbwhZc=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=TMWiRyfnoh+/P+YB/o+lnKy1BbpV0VDW3WbhMemPgLG8PakKysok3jJAmmozCevqz
+	 ZnSgN7jTfHYkxPCJHw4k18lfCde/0v6ZkHYX7ed3igoPK3gkij0Zf1nXaQXIkserpd
+	 DyWFsaBCZvP5wdTxoF+nsitmMRBteD3ibSTezRt0=
+Message-ID: <fc7c4d74-d861-4268-8044-fa83748572f4@linux.microsoft.com>
+Date: Thu, 20 Aug 2026 10:17:37 +0530
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 2/3] x86/irq: Use irq_chip_retrigger_hierarchy() in
+ fixup_irqs()
+To: Michael Kelley <mhklinux@outlook.com>, Thomas Gleixner <tglx@kernel.org>,
+ Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
+ Dave Hansen <dave.hansen@linux.intel.com>, "x86@kernel.org"
+ <x86@kernel.org>, "Joerg Roedel (AMD)" <joro@8bytes.org>,
+ Will Deacon <will@kernel.org>, "K. Y. Srinivasan" <kys@microsoft.com>,
+ Haiyang Zhang <haiyangz@microsoft.com>, Wei Liu <wei.liu@kernel.org>,
+ Dexuan Cui <decui@microsoft.com>, Long Li <longli@microsoft.com>,
+ Lorenzo Pieralisi <lpieralisi@kernel.org>,
+ =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+ Manivannan Sadhasivam <mani@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
+Cc: "H. Peter Anvin" <hpa@zytor.com>,
+ Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
+ Vasant Hegde <vasant.hegde@amd.com>, Robin Murphy <robin.murphy@arm.com>,
+ Rob Herring <robh@kernel.org>,
+ Shradha Gupta <shradhagupta@linux.microsoft.com>,
+ Aditya Garg <gargaditya@linux.microsoft.com>,
+ "iommu@lists.linux.dev" <iommu@lists.linux.dev>,
+ "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+References: <20260810090716.2325295-1-namjain@linux.microsoft.com>
+ <20260810090716.2325295-3-namjain@linux.microsoft.com>
+ <SN6PR02MB41570E8FC664CAC4A05CAFA9D4A62@SN6PR02MB4157.namprd02.prod.outlook.com>
+ <72ccf7d4-0fda-4f55-a47c-27486ef3e159@linux.microsoft.com>
+ <SN6PR02MB41574989AE7DB1332F06C66DD4A52@SN6PR02MB4157.namprd02.prod.outlook.com>
+Content-Language: en-US
+From: Naman Jain <namjain@linux.microsoft.com>
+In-Reply-To: <SN6PR02MB41574989AE7DB1332F06C66DD4A52@SN6PR02MB4157.namprd02.prod.outlook.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
 
-Pre-existing issues:
-- [High] Missing early return in dw_pcie_ep_init_registers() error path cau=
-ses EPC to be incorrectly notified as ready.
---
 
---- Patch [2]: [PATCH v2 2/2] PCI: dwc: rcar-gen4: Use .post_deinit to hand=
-le dw_pcie_ep_init() failures ---
-commit 6071cb241e93cb3a6592fddfd5caeb02f9e49fac
-Author: Marek Vasut <marek.vasut+renesas@mailbox.org>
+On 8/19/2026 9:29 PM, Michael Kelley wrote:
+> From: Naman Jain <namjain@linux.microsoft.com> Sent: Tuesday, August 18, 2026 12:31 AM
+>>
+>> On 8/18/2026 10:40 AM, Michael Kelley wrote:
+>>> From: Naman Jain <namjain@linux.microsoft.com> Sent: Monday, August 10, 2026 2:07 AM
+> 
+> [snip]
+> 
+>>>
+>>> Sashiko pointed out that irq_chip_retrigger_hierarchy() doesn't check
+>>> the outermost domain -- it immediately goes the parent. In v1 of this patch
+>>> series, you categorized this as a false positive. But I don't understand
+>>> your explanation. Even if there aren't currently any outermost domains
+>>> with a custom retrigger function, there could be at some point in the
+>>> future. So it seems wrong to skip it. But maybe I'm missing something.
+>>> Could you elaborate on your reasoning?
+>>>
+>>> Michael
+>>>
+>>
+>> irq_chip_retrigger_hierarchy() deliberately skips the chip passed to it
+>> and begins with its parent, i.e. apic_retrigger_irq(). The new code was
+>> doing the same. However, if someone adds a custom .irq_retrigger, hoping
+>> that it would get executed, it would not.
+>>
+>> Sashiko's example was valid in principle, but it is not relevant to
+>> these device interrupts because desc->irq_data is the outer
+>> MSI/IOAPIC/Hyper-V chip. The LAPIC data is its parent, not the starting
+>> data. I found no device IRQ in this path whose descriptor starts
+>> directly at lapic_controller.
+>>
+>> I am all in for adding this as a fallback -
+>> +    if (chip->irq_retrigger)
+>> +        ret = chip->irq_retrigger(data);
+>> +    else
+>> +        ret = irq_chip_retrigger_hierarchy(data);
+>>
+>> This should solve this problem while still covering the chips which can
+>> forget to add a retrigger function.
+>>
+>> Please let me know if this looks good to you.
+> 
+> In principle, I think what you have is correct.  But there's a
+> problem in that irq_chip_retrigger_hierarchy() isn't defined
+> unless CONFIG_IRQ_DOMAIN_HIERARCHY=y.  try_retrigger()
+> is what you want, but it's static. You could add the #ifdef's here
+> like in try_retrigger(), but the same problem will occur in Patch 3
+> with msi_set_affinity(). Really need a non-static version of
+> try_retrigger(). Or maybe just doing the #ifdef's here and in
+> msi_set_affinity() is the simplest approach. I don't have a
+> strong opinion either way.  Sorry this is getting so messy ....
+> 
+> Michael
 
-PCI: dwc: rcar-gen4: Use .post_deinit to handle dw_pcie_ep_init() failures
+Hi Michael,
+Config dependencies make sure that CONFIG_IRQ_DOMAIN_HIERARCHY is 
+defined wherever irq_chip_retrigger_hierarchy() is getting called.
 
-Implement the .post_deinit() callback in R-Car Gen4 to cleanly stop clocks
-and assert resets if endpoint initialization fails. This prevents duplicate
-cleanup attempts by removing explicit deinit calls from the error paths.
+x86 SMP or x86-64 guarantees X86_LOCAL_APIC → IRQ_DOMAIN_HIERARCHY, 
+PCI_MSI guarantees it via GENERIC_MSI_IRQ. So the #ifdef may not be 
+required.
 
-> diff --git a/drivers/pci/controller/dwc/pcie-rcar-gen4.c b/drivers/pci/co=
-ntroller/dwc/pcie-rcar-gen4.c
-> --- a/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-> +++ b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-[ ... ]
-> @@ -570,16 +576,13 @@ static int rcar_gen4_add_dw_pcie_ep(struct rcar_gen=
-4_pcie *rcar)
->  	ep->ops =3D &pcie_ep_ops;
-> =20
->  	ret =3D dw_pcie_ep_init(ep);
-> -	if (ret) {
-> -		rcar_gen4_pcie_ep_deinit(rcar);
-> +	if (ret)
->  		return ret;
-> -	}
-> =20
->  	ret =3D dw_pcie_ep_init_registers(ep);
->  	if (ret) {
->  		dev_err(dev, "Failed to initialize DWC endpoint registers\n");
->  		dw_pcie_ep_deinit(ep);
-> -		rcar_gen4_pcie_ep_deinit(rcar);
->  	}
+Hi Thomas,
+Can you please comment if you are OK with me adding this fallback 
+mechanism in next version.
 
-[Severity: High]
-This is a pre-existing issue, but does this error path fall through and
-incorrectly notify the EPC framework?
-
-If dw_pcie_ep_init_registers() fails in rcar_gen4_add_dw_pcie_ep(), the
-code de-initializes the endpoint via dw_pcie_ep_deinit(), but seems to miss
-a return statement. It will unconditionally fall through and call
-pci_epc_init_notify(ep->epc).
-
-Could this cause bound Endpoint Function (EPF) drivers to receive an
-initialization complete notification on a disabled controller, potentially
-leading to an asynchronous external abort (SError) or kernel panic when they
-attempt memory mapping and register accesses?
-
-> =20
->  	pci_epc_init_notify(ep->epc);
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260820035944.1634=
-72-1-marek.vasut+renesas@mailbox.org?part=3D2
+Regards,
+Naman
