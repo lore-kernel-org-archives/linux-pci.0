@@ -1,77 +1,147 @@
-Received: from zg8tmtyylji0my4xnjeumjiw.icoremail.net (zg8tmtyylji0my4xnjeumjiw.icoremail.net [162.243.161.220])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 5829F2FD1AA;
-	Thu, 20 Aug 2026 02:36:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=162.243.161.220
+Received: from mout-p-101.mailbox.org (mout-p-101.mailbox.org [80.241.56.151])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A76A037E5FA;
+	Thu, 20 Aug 2026 03:55:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.151
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787193412; cv=none; b=ACPMyfPHsAkhJFUOFm6NnMQRkgka5P8Mx8rJTxNvuWymHhsGik15SZpph5p5gGsGpeV5itWmtDvaGUj3yoH/fRtBdoO/LDztm614/Xj/sOb5rl7o61y5zAiOdo7Q6heIZbFJGwjPzr7M8r8pTRTh2J5rL4/RDWhUx//mn3C2SKk=
+	t=1787198155; cv=none; b=UMhQMrkMizEUCdFkToImoEaCiJhXuSSpgjvdAHIOm4g4EXNIBw5ETPmrm0ZLGv3sp3dJUv+ZGMCt3wETyE6TeDEZHHoq9fUoMBNZqpwRx1JSxnrSWqBFbJ0ysy5FWEoeCj3Jc9akpfwjI8BODpKK361oB5iNE8yunrrZgaEpD5Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787193412; c=relaxed/simple;
-	bh=/N6IPX6nX4Bfm6REEFV8JHeJDp+25v3d9KgBAZ14Q2o=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:Content-Type:
-	 MIME-Version:Message-ID; b=EpkSFA7Y1hvg8SqdIinFX4SdgAevooij70Y0MwlIto2CElzLdIuvvqf7uPyf/05D8hmqWY+m2CYfjkXENY4NuTwmcXocHcoeWAwC+hJjE+LBOOu8+X+7x4Jk6a+Qw3JyI6L0vNruZhmAPDQ/FwnTtNiVIlzOJ5+FzE5YKiEaTOU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=buaa.edu.cn; spf=pass smtp.mailfrom=buaa.edu.cn; dkim=fail (0-bit key) header.d=buaa.edu.cn header.i=@buaa.edu.cn header.b=yRqEMnC1 reason="key not found in DNS"; arc=none smtp.client-ip=162.243.161.220
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=buaa.edu.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=buaa.edu.cn
+	s=arc-20240116; t=1787198155; c=relaxed/simple;
+	bh=aPLUg/C004Pk7qdi2uluPwJVJCw4mgOvRK2ZFIsbvus=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=rjUw16CrCHRuCPFIlP6hoOJaiNsDQ6ZDDXGTl6G6wCZmDUu2s95rxqBszIo9xN90QN0U8Wjgp0S7n2W8pLsM6sy/4koybhJvOqWk5jYl44B+dk8bKYmolixxYYi1XG+mdyU7AcUstF1/5xK1fC7KZFsxmU8RbZF5t5dnhalfTLs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=leYbuI68; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=FhbDcsVm; arc=none smtp.client-ip=80.241.56.151
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=buaa.edu.cn header.i=@buaa.edu.cn header.b="yRqEMnC1"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=buaa.edu.cn; s=buaa; h=Received:Date:From:To:Cc:Subject:
-	In-Reply-To:References:Content-Transfer-Encoding:Content-Type:
-	MIME-Version:Message-ID; bh=mMt5Vvl0GgRHM+z+JCBC6qQlSsKC1u1SqfUb
-	sN18njM=; b=yRqEMnC1ieJBSWiYb+68ApIuy893qLRx1mEi8pEilrwnEicrOwBB
-	PkObZAeIzLhcU45sxDXAGHBXBPAb3ztYtGH9+SAeJ03RvqeYTqe2mX7zzXTDCG27
-	bYmr6nsuEVBuqf40ac/CAzuCBxjcA3mNgyYQ7yolF8DQs0qlBZVUBis=
-Received: from engguopeng$buaa.edu.cn ( [180.167.85.126] ) by
- ajax-webmail-coremail-app1 (Coremail) ; Thu, 20 Aug 2026 10:36:31 +0800
- (GMT+08:00)
-Date: Thu, 20 Aug 2026 10:36:31 +0800 (GMT+08:00)
-X-CM-HeaderCharset: UTF-8
-From: engguopeng@buaa.edu.cn
-To: "Dave Jiang" <dave.jiang@intel.com>
-Cc: linux-cxl@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, bhelgaas@google.com, dave@stgolabs.net,
-	jic23@kernel.org, alison.schofield@intel.com,
-	vishal.l.verma@intel.com, ira.weiny@intel.com, djbw@kernel.org,
-	johnny.li@montage-tech.com, peng.guo@montage-tech.com,
-	jingzhong.yang@montage-tech.com
-Subject: Re: [PATCH v2 2/2] cxl/core: Skip non-CXL capabilities in MCAP
-X-Priority: 3
-X-Mailer: Coremail Webmail Server Version 2023.4-cmXT5 build
- 20240305(0ac2fdd1) Copyright (c) 2002-2026 www.mailtech.cn
- mispb-63b7ebb9-fa87-40c1-9aec-818ec5a006d9-buaa.edu.cn
-In-Reply-To: <7a8f49cf-2254-47c5-a4d2-c4f9387358db@intel.com>
-References: <20260817075854.17207-1-engguopeng@buaa.edu.cn>
- <20260817075854.17207-3-engguopeng@buaa.edu.cn>
- <c01709c9-4c3b-4ced-9635-72947807c301@intel.com>
- <56e8d5aa.4be5.1a017a28956.Coremail.engguopeng@buaa.edu.cn>
- <7a8f49cf-2254-47c5-a4d2-c4f9387358db@intel.com>
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; charset=UTF-8
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="leYbuI68";
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="FhbDcsVm"
+Received: from smtp2.mailbox.org (smtp2.mailbox.org [IPv6:2001:67c:2050:b231:465::2])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mout-p-101.mailbox.org (Postfix) with ESMTPS id 4hQV363hvKz8t0P;
+	Thu, 20 Aug 2026 05:55:46 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
+	t=1787198146;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=fxzeHPzlyVI1KqYMNzNsdVUY8/H+zuUibyC7cz++VlE=;
+	b=leYbuI68cGlV04cOZnMzafv3N+NwItQ1nmzVHDA9uiPOBXZIb9nG7pp1YcwVOSz7Tk+ayl
+	iWDZAzIhOK6pW9FfDRw6JAHnUbT4JL4wpx8tkZ+CysZ34yN3lFryU/fsmS+5bDg4aSbDt7
+	8rSo5GWtlzTwGeW7V4/UGk7L6DTSbWxPkDtXjIePCbU19qrofs5Bn/qRYhx923iEhLgA8C
+	dNgnDCgo6Obf7SYY+usnmnArvbgOw/gJ3txP3XEJ+oRHoDe20GxYeMr9l/ZEaw7LQENMP8
+	rrNEZ/L++SG80mX4VTmKnafFLCUS3aY6dVLS77vsAATYbWgQW3p5XjcwLQVLng==
+Authentication-Results: outgoing_mbo_mout;
+	dkim=pass header.d=mailbox.org header.s=mail20150812 header.b=FhbDcsVm;
+	spf=pass (outgoing_mbo_mout: domain of marek.vasut@mailbox.org designates 2001:67c:2050:b231:465::2 as permitted sender) smtp.mailfrom=marek.vasut@mailbox.org
+Message-ID: <0a899cb7-bfaf-46b9-bd35-cfacc3861d6b@mailbox.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
+	t=1787198145;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=fxzeHPzlyVI1KqYMNzNsdVUY8/H+zuUibyC7cz++VlE=;
+	b=FhbDcsVm/mzzmWM5dvgoAti7mld9XYxK4GX/P9Qgw8r1fe8leu8UTds6Twcna9iG8NJ2Qm
+	LLW2/8qn533CTbj7jGYLnrboSsuufmQlDA+piQkDXBwLs1D7bHtt4AghPJ4EZX2IUvkPS+
+	zYok/EPHeiJbylDGBOn6RgMuLZX4aSCasPHE/b50M+Ee2WGs3JIBOYymp09Co3DHzyVWmT
+	/SjOF+2wzvvBVmvluT2Vr9iVB75PsG54qpGnMbtm8rxb2nsEQLIjv0O4oFJYy8maDScD8h
+	FhJ8amfFAOc6T25TRTF1LmPMHXQRJpEeYIHiczv2E4Du4SciGoeohP0GQUO0dA==
+Date: Thu, 20 Aug 2026 05:52:47 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Message-ID: <3cf66cad.515e.1a01d06f9bd.Coremail.engguopeng@buaa.edu.cn>
-X-Coremail-Locale: en_US
-X-CM-TRANSID:OCz+CgCnRlMvaIZqD62YAA--.11142W
-X-CM-SenderInfo: d2isijirrujqpexdthxhgxhubq/1tbiAQIFAGdDD6SRMAABsp
-X-Coremail-Antispam: 1Ur529EdanIXcx71UUUUU7IcSsGvfJ3iIAIbVAYjsxI4VWxJw
-	CS07vEb4IE77IF4wCS07vE1I0E4x80FVAKz4kxMIAIbVAFxVCaYxvI4VCIwcAKzIAtYxBI
-	daVFxhVjvjDU=
+Subject: Re: [PATCH] PCI: dwc: rcar-gen4: Fix potential unclocked access in
+ rcar_gen4_pcie_ep_deinit()
+To: Koichiro Den <den@valinux.co.jp>
+Cc: Geert Uytterhoeven <geert@linux-m68k.org>,
+ Marek Vasut <marek.vasut+renesas@mailbox.org>, linux-pci@vger.kernel.org,
+ =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ Geert Uytterhoeven <geert+renesas@glider.be>,
+ Lorenzo Pieralisi <lpieralisi@kernel.org>,
+ Magnus Damm <magnus.damm@gmail.com>, Manivannan Sadhasivam
+ <mani@kernel.org>, Rob Herring <robh@kernel.org>,
+ Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+ linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org
+References: <20260813091925.71363-1-marek.vasut+renesas@mailbox.org>
+ <h43onk4priskfkvdrheml4ttx2b7udavnulxvftj45midvcs3c@lec5rx7mrgys>
+ <CAMuHMdUAph2fbR94k8RDaAeVH=OTKWAWe1dJne9D-YbQQrYHsA@mail.gmail.com>
+ <zi6an774rs4zsvz4rgvskvchlcz3ontuih7ztime673pw55axf@updaznhtexix>
+ <0e5dae39-3ded-4b24-b3aa-7707983ec243@mailbox.org>
+ <gnv6rbodtisekx7hvlwdmdzj5r3hdutbeexqde4gw3jodadwoj@rnukrhteykir>
+Content-Language: en-US
+From: Marek Vasut <marek.vasut@mailbox.org>
+In-Reply-To: <gnv6rbodtisekx7hvlwdmdzj5r3hdutbeexqde4gw3jodadwoj@rnukrhteykir>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-MBO-RS-ID: c50c246b64f0bbb590c
+X-MBO-RS-META: kfi7jzo7pnzi84fj8445qjebphg7kbwg
+X-Rspamd-Queue-Id: 4hQV363hvKz8t0P
 
-CgpPbiBXZWQsIEF1ZyAxOSwgMjAyNiBhdCAxMTowOSBQTSBEYXZlIEppYW5nIDxkYXZlLmppYW5n
-QGludGVsLmNvbT4gd3JvdGU6Cj4gU291bmRzIHJlYXNvbmFibGUuIERvIHlvdSBoYXZlIE1NUFQg
-c3VwcG9ydCBzdWJtaXR0ZWQgdG8gdXBzdHJlYW0gZm9yIHRoZSBQQ0kgc3Vic3lzdGVtIHlldD8g
-SSdtIGN1cmlvdXMgYmVjYXVzZSB0aGVyZSBhcmUgY2VydGFpbmx5IHNlY3VyaXR5IGNvbmNlcm5z
-IG9mIGFuIG9wYXF1ZSBwaXBlIGZyb20gZGV2aWNlIHRoYXQgdGhlIGtlcm5lbCBoYXMgbm8gdmlz
-aWJpbGl0eSB0by4gVGhlcmUgd2lsbCBjZXJ0YWlubHkgYmUgc2VjdXJpdHkgcHVzaGJhY2sgb24g
-dGhlIGVuYWJsaW5nIGZyb20gdGhlIGtlcm5lbCBjb21tdW5pdHkgd2l0aG91dCBzb21lIHByb3Rv
-Y29sIGluIHBsYWNlIHRvIGVuc3VyZSB0aGUgZGF0YSBiZWluZyB0dW5uZWxlZCB3aWxsIG5vdCBy
-ZXN1bHQgaW4gbWFsaWNpb3VzIGFjdGlvbnMuCj4gCj4gREogCgpObywgTU1QVCBzdXBwb3J0IGhh
-cyBub3QgYmVlbiBzdWJtaXR0ZWQgdXBzdHJlYW0geWV0LCBhbmQgSSBoYXZlIG5vdApsb29rZWQg
-aW50byB0aGUgc2VjdXJpdHkgaW1wbGljYXRpb25zIGluIGRldGFpbC4gVGhhbmsgeW91IGZvciBw
-b2ludGluZwp0aGlzIG91dC4KCkkgd2lsbCB0cnkgdG8gaW52ZXN0aWdhdGUgTU1QVCBzdXBwb3J0
-LCBpbmNsdWRpbmcgdGhlIHNlY3VyaXR5IGNvbmNlcm5zCnlvdSBtZW50aW9uZWQsIGJlZm9yZSBj
-b25zaWRlcmluZyBhbiB1cHN0cmVhbSBzdWJtaXNzaW9uLgoKVGhhbmtz
+On 8/19/26 10:48 AM, Koichiro Den wrote:
+
+Hello Den-san,
+
+>> Finally, if dw_pcie_ep_init() call in rcar_gen4_add_dw_pcie_ep() fails, then
+>> with the aforementioned deinit implementation, I think it will be possible
+>> to simply do the following to cover (**).
+>>
+>> ret = dw_pcie_ep_init(ep);
+>> if (ret)
+>>    return ret;
+>>
+>> (I am also attaching the entire example as a diff, compile tested only thus
+>> far)
+>>
+>> What do you think ?
+> 
+> Hi Marek,
+> 
+> Thanks for sharing your thoughts.
+> 
+> I think the callback idea is much cleaner. I wonder if .post_deinit might
+> describe its role more clearly.
+
+I think it does, and I will include that in V2.
+
+> P.S. I took a quick look through the related call paths, and it made me wonder
+> if we could take this a little further. Perhaps dw_pcie_ep_deinit() could call
+> the same hook at the end (I use .post_deinit as a tentative name below):
+> 
+>    dw_pcie_ep_init()
+>      -> .pre_init()
+>      -> generic intialization
+>      error:
+>        -> generic unwind
+>        -> .post_deinit()
+> 
+>    dw_pcie_ep_deinit()
+>      -> generic teardown
+>      -> .post_deinit()
+> 
+> Then would let the generic init/deinit pair own both hooks, and the
+> pcie-rcar-gen4 driver would no longer need to call rcar_gen4_pcie_ep_deinit()
+> separately. After dropping those explicit calls, the function could naturally be
+> renamed rcar_gen4_pcie_ep_post_deinit() and be used only as the hook.
+
+That is really good.
+
+> This might be too much for this small fix. Even without this wider change,
+> however, I think rcar_gen4_pcie_ep_pre_deinit() should do the same operations as
+> rcar_gen4_pcie_ep_deinit(), rather than only calling common_deinit(). For
+> example, if pci_epc_mem_init() fails after .pre_init() succeeds, PCIEDMAINTSTSEN
+> is already 0xffff, and common_deinit() does not clear it.
+
+I will send a proper V2 shortly to cater for this. Thank you !
+
+-- 
+Best regards,
+Marek Vasut
