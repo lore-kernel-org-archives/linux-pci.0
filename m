@@ -1,131 +1,81 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5BA1E374735
-	for <linux-pci@vger.kernel.org>; Fri, 21 Aug 2026 18:20:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B82E63F39DD;
+	Fri, 21 Aug 2026 19:10:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787336422; cv=none; b=U176CYZbNetJUPyrVR2xvXdtjk+LXQMrChAbAmyRpVaA8VOhdZO0Gr4mEuT+IpX8gPGnjlAF7uVwztSDbVVMmrKFASPMSZPqxJdgNEvkE2FbOqvbKTz1K07iH7dJeP6rgyf5HtP0OwnhBZKxUVOsbKLSzychezpR9eSzWUgmzAI=
+	t=1787339419; cv=none; b=MhcPRWOnhq1itOYc4tmCOuIBV4jhNpNO404FE+EIrldW3ISip8JWN/M05+t2vs0c3gQWDPiQ3klKOoaECU3LdUrlSJzFPai5Fh76Y3ySS0Z6XvsraE5KX07A21wRYyXY0GbAPR/RWBqLRHbtY+R26+CNMz/q5+W2fxLFAEHRyg4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787336422; c=relaxed/simple;
-	bh=Hbn0PQOoTktUTftiLrEuevg3vqVU7O3+nFMdnQxawOk=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=FU6wnJZN1Y87mkG0U0glKyNKqN8w1XKkb6tsqK2MSgSmCtWrlzR3C2/lzUs6lwDHF70fqNsMFecRG990eBMWUSj/e9h8tkSxsCgSNirpscFqjofRPEzvTp5bnspxTVvvC1QW44TVWjH1QDEXIqvEeDDZSdue2deXILjFzEoUjQ8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kpzVcT0F; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1787339419; c=relaxed/simple;
+	bh=x96j4PE1amliU9uJgpxEg/tkPcJpsv8Uj1KL5vzRhck=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=PniFUZvDQzAKj1PjkYLKRbZl/UJvraGKOs+cUYKySmQ5wWBvLhsqUYLQLNYpyCyPchXEaRq0I8uiLxt+Oi8N41EtlRyKo5dngIVTKlnSbbjpBt4hefy+Nq7IQQQASPYcc2RE+uoL6D8IGVu2+EJn3IlINlrnu1cj58e+JRJ1xhI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=O3z0gFia; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kpzVcT0F"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 245721F000E9;
-	Fri, 21 Aug 2026 18:20:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="O3z0gFia"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CB3F41F0155E;
+	Fri, 21 Aug 2026 19:10:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787336419;
-	bh=XhglmsicncowxpGyf4AJUOasDLP/gJFPVMneATqNVJI=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=kpzVcT0FiUjGLBRmi6DnxioILgD6bpZfAjk/tJRiJuZAOJpLFgqkk2Qmlry757IkL
-	 ngNiuXrSlpK03B9dyVzUUkm/lFAQzN3wYWVxhkj2OvS7VLhrweub4a7zzBmuEa8pvW
-	 LdB2qiEMERYoqe9OeEILznAFkZzgQwDAldg3qG4el12/PwIL3WwotX3iZQi66ev1Jf
-	 LVMLOeTszuBvDE+NrKFyP5NlSc5YD8u1NKlzoy+E8HwLXCd/bmQoe029HW+2+uEWc4
-	 FU0fDBiwFrBQhhYA/eOlg2db+Sykcu0qP8wsO3smomPSuuVJGB2Z8ND2SMnu0nRyL2
-	 YxYRsCv5SiUsQ==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] pci: Add broken-GPE quirk for Lenovo Legion 16APH8 and
- 16AHP9 Nvidia GPUs
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Lyude Paul" <lyude@redhat.com>
-Cc: dri-devel@lists.freedesktop.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260821181203.82722-1-lyude@redhat.com>
-References: <20260821181203.82722-1-lyude@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Fri, 21 Aug 2026 18:20:18 +0000
-Message-Id: <20260821182019.245721F000E9@smtp.kernel.org>
+	s=k20260515; t=1787339414;
+	bh=1pPt6f3/fmRUDLXlP30zeK9EEfdFOpkz8XR46MaK/FE=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=O3z0gFiaVlzn82OJtB3W1DRxuOl3UxLHQzDfWI/CSbPtPpnineSGsyYmHuijgT53W
+	 U610WCMsfizg0Dq/qK65PSlzLLn1tCjI1G7IQrJxtpb3WsagdNbq9qSXIkDZP40lf5
+	 uucBF/Uuz3IPKaCrrxOwd18peeLHQQ4+YoPAGvQQRJD63BR9m7sJqINcs2VzWUtVAf
+	 2wIH8r2xnp5zaKEgQzzQKyTr49vK6gvtIe5ymc3ikchGxj5LSyNQpsaiFQcMuw2rcJ
+	 +NSc3qPZg2l8XxEivJ8JLrMcK4+F0hcuJI7TMHItQjzLSHhUdZs6Oy9g1qjGeyRiGU
+	 9pnDyCeRXe+GQ==
+Date: Fri, 21 Aug 2026 14:10:11 -0500
+From: Rob Herring <robh@kernel.org>
+To: Alex Elder <elder@riscstar.com>
+Cc: bhelgaas@google.com, conor+dt@kernel.org, linux-pci@vger.kernel.org,
+	mohdayaa@qti.qualcomm.com, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org, gregkh@linuxfoundation.org,
+	daniel@riscstar.com, krzk+dt@kernel.org, arnd@arndb.de,
+	lbiancon@qti.qualcomm.com
+Subject: Re: [PATCH 1/2] dt-bindings: misc: introduce pci1179,0220.yaml
+Message-ID: <20260821191011.GA4061718-robh@kernel.org>
+References: <20260813222943.1655453-1-elder@riscstar.com>
+ <20260813222943.1655453-2-elder@riscstar.com>
+ <178682676059.2183315.4478974489132403040.robh@kernel.org>
+ <e98e8996-1ae8-47be-8854-55a004530c85@riscstar.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <e98e8996-1ae8-47be-8854-55a004530c85@riscstar.com>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [High] Missing NULL validation for the ACPI companion of the parent devic=
-e leads to a potential NULL pointer dereference in `acpi_remove_pm_notifier=
-()`.
---
+On Thu, Aug 20, 2026 at 12:18:45PM -0500, Alex Elder wrote:
+> On 8/15/26 3:46 PM, Rob Herring (Arm) wrote:
+> > 
+> > On Thu, 13 Aug 2026 17:29:41 -0500, Alex Elder wrote:
+> > > Define the binding for the Toshiba TC9564 PCI endpoint function device.
+> > > The third downstream PCIe switch port within this chip has an embedded
+> > > PCIe controller, and that implements two of these PCIe functions.
+> > > 
+> > > Signed-off-by: Daniel Thompson <daniel@riscstar.com>
+> > > Signed-off-by: Alex Elder <elder@riscstar.com>
+> > > ---
+> > >   .../bindings/misc/pci1179,0220.yaml           | 150 ++++++++++++++++++
+> > >   MAINTAINERS                                   |   6 +
+> > >   2 files changed, 156 insertions(+)
+> > >   create mode 100644 Documentation/devicetree/bindings/misc/pci1179,0220.yaml
+> > > 
+> > 
+> > My bot found errors running 'make dt_binding_check' on your patch:
+> 
+> I don't see these errors, so I'm probably running an old version
+> of something?  I'll try to sort it out.  Sorry about that.
 
---- Patch [1]: [PATCH] pci: Add broken-GPE quirk for Lenovo Legion 16APH8 a=
-nd 16AHP9 Nvidia GPUs ---
-commit c5f31e20fc4140461290146739333c87be79e5ce
-Author: Lyude Paul <lyude@redhat.com>
+Are you setting DT_SCHEMA_FILES? If so, read the rest of the msg that 
+was cut. :)
 
-pci: Add broken-GPE quirk for Lenovo Legion 16APH8 and 16AHP9 Nvidia GPUs
+You can also now do 'make misc/pci1179,0220.yaml' which checks your 
+example against all schemas rather than against only your schema.
 
-This commit adds a PCI quirk for specific Lenovo Legion laptops. It disables
-spurious GPE wakeup events on the parent PCIe port of the Nvidia GPU after
-it enters D3Cold.
-
-Fixes: https://github.com/NVIDIA/open-gpu-kernel-modules/issues/905
-
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index b09f27f7846fc..4d1f1565b61d3 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-[ ... ]
-> @@ -6165,6 +6165,82 @@ DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_NVIDIA=
-, 0x13b1,
->  			      PCI_CLASS_DISPLAY_VGA, 8,
->  			      quirk_reset_lenovo_thinkpad_p50_nvgpu);
-> =20
-> +#ifdef CONFIG_ACPI
-> +#ifdef CONFIG_DMI
-[ ... ]
-> +static void quirk_nvidia_dgpu_broken_gpe(struct pci_dev *pdev)
-> +{
-> +	struct acpi_device *parent_adev;
-> +	struct device *parent_dev;
-> +	int ret;
-[ ... ]
-> +	parent_dev =3D pci_physfn(pdev)->dev.parent;
-> +	if (!parent_dev) {
-> +		pci_err(pdev,
-> +			"Can't find PCIe parent? Your Nvidia GPU will have broken runtime PM\=
-n");
-> +		return;
-> +	}
-> +	parent_adev =3D ACPI_COMPANION(parent_dev);
-> +
-> +	/* The spurious GPEs will be sent from the ACPI device for the PCIe por=
-t this GPU is
-> +	 * connected to, so remove our PM notifier to turn them into a no-op.
-> +	 */
-> +	ret =3D acpi_remove_pm_notifier(ACPI_COMPANION(parent_dev));
-
-[Severity: High]
-Can this cause a NULL pointer dereference if the parent PCIe bridge lacks an
-ACPI companion?
-
-ACPI_COMPANION() can return NULL if the system is booted with acpi=3Doff or=
- if
-the node simply lacks an ACPI companion.
-
-If that happens, this passes NULL to acpi_remove_pm_notifier(), which
-dereferences its argument directly:
-
-drivers/acpi/device_pm.c:acpi_remove_pm_notifier() {
-    ...
-    if (!adev->wakeup.flags.notifier_present)
-    ...
-}
-
-Should parent_adev be checked for NULL before calling
-acpi_remove_pm_notifier()?=20
-
-Also, it looks like parent_adev is assigned but then
-ACPI_COMPANION(parent_dev) is called again instead of using the local
-variable.
-
-> +	if (ACPI_FAILURE(ret))
-> +		pci_err(pdev, "Removing PM notifier failed: %d\n", ret);
-> +}
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260821181203.8272=
-2-1-lyude@redhat.com?part=3D1
+Rob
