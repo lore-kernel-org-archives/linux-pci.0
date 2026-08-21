@@ -1,103 +1,101 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f46.google.com (mail-ed1-f46.google.com [209.85.208.46])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 47E562DCC1F;
-	Fri, 21 Aug 2026 13:45:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787319927; cv=none; b=aUqybH+u5j753+CWGnKxEQtyjcptik/Vfnfs+RDG7d8+ubgEeY40ZgCMkZA97+2Z9ANXhhWPiajkg7cUnRQxMkeDj58IGUp0SqpGs1NcdZlxNgKCZYnrJ6y4n2Tlb0SFj/UK9YQoIfxYkpRAk6Y0uPHGtXILJAmjnK95gu8XXR0=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787319927; c=relaxed/simple;
-	bh=XZt/wP93io+V1ihPKRMgm+f+8k+9gOd8QkHUKe+b9/A=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=CbHi5LbPx44yHNTCBu/0Z5e6JuBr4Tc8cNAoJWXj07VPQoG6JJroWYfPKuRQYxoNstEssw7nam6xNzqyreppqiSSDA3AcNRFrw3BMM8b+pxwpWhy40IWEP0okNZNySC0F8nIwobxSB75546b94QwTc7GOmZc/LLEcbfy76ONic0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=l08xwkhI; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E52B3495051
+	for <linux-pci@vger.kernel.org>; Fri, 21 Aug 2026 13:46:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.46
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1787319992; cv=pass; b=Ua5br+e8wzbr56QAerHjE6DrLhWVCq7yyWE79Za2ykTSas4qFF5ft0hqIvnEU+1hgWx3bJh+wt7Vx8nTvGQ9kc2Hnw1J3O4ve9x035R3jv/7tmyGETLGY66ISYb3Bx9JwTcm6hyDeBhyxrQHqEQt6dp40iPXaENL+VZQ51uzaio=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1787319992; c=relaxed/simple;
+	bh=IwrbM0dGxD6XKRAhQH2GAW1ispZsMa7niXHCi9W5sws=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=L3G8p6K+HHn7giw3CKD/MwXzjFYUN3q71hrSffNXwlsAcbV9xiOHg9jYv16w3aqJx+OeRs45W7XpheJBf5PYXl0PTTyhVxbh/D+WE/G72+LB2SlBGfq+Oc53RHmGC3H/2CyOeC1zMpPL+IWGasz9UjN7OB56i+cZsPLYuPt6lIk=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=UdE9X00g; arc=pass smtp.client-ip=209.85.208.46
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="l08xwkhI"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id ADB931F000E9;
-	Fri, 21 Aug 2026 13:45:25 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787319925;
-	bh=m8n7kkzdMdTjnqjj5Mbc+6f9BdiDyWSS2yXusFzV2AI=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=l08xwkhIIw+0/4tR+qH+gDqgBbwSJznJkGdg/4h/1+w6TufeuB7Wzgvqg1APKyf9B
-	 Qb44CcOn3xCAPflUuqcyezHBDlGnjoLOyuUZ4DY8Kp95/7AVl8nhhxNPmAJZcbUKrV
-	 9bZ6WMtNUBNgAjPoXVCmOqlLrpMRrF05/eZXhT/FzY0Xarp+D9LzQmflGZdY3+k84J
-	 1GqXj7Se8oBO0tVJoB/JTa1ptttPQJgffrHNMD7qtjeFRqYBAisFNLpVu4duHZQvm3
-	 U4OCrLl5gu8zKeCCCu30aLHVCHuLUo+MSLRg/hq4YAALBQ9ADsGsgave7TkGRHQLhf
-	 cEOULILBfpnRg==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 4/5] iommu/hyperv: Add para-virtualized IOMMU support
- for Hyper-V guest
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Yu Zhang" <zhangyu1@linux.microsoft.com>
-Cc: linux-pci@vger.kernel.org, linux-hyperv@vger.kernel.org
-In-Reply-To: <20260821132654.211730-5-zhangyu1@linux.microsoft.com>
-References: <20260821132654.211730-1-zhangyu1@linux.microsoft.com>
- <20260821132654.211730-5-zhangyu1@linux.microsoft.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Fri, 21 Aug 2026 13:45:25 +0000
-Message-Id: <20260821134525.ADB931F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="UdE9X00g"
+Received: by mail-ed1-f46.google.com with SMTP id 4fb4d7f45d1cf-698b78c05b0so8726a12.1
+        for <linux-pci@vger.kernel.org>; Fri, 21 Aug 2026 06:46:29 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1787319987; cv=none;
+        d=google.com; s=arc-20260327;
+        b=a8NWSvtHYw6dfGWBqwzGW2p4Jj1aXowsfEorZhZoSQ1JAF+xZf7GEZJkNg/VHo4rkx
+         ZYAP66aQS1IwSP6L97148bBQoJuFSTUfrNCjEwn6f+2jL05P5LmR/yH4HgImeUR1tbO5
+         T0E4+IODfC/jkIWE9p/9UhNsTpjMeTxynAO/Wm/C6ZTPFH8Omrt6oznFBM6GJE0ilTlt
+         HzDS6kcuGtdtLxO3sIREicVe6cLypmUhADfNtXR0AGxATzVIwtRAqM17ShPJPX/ahAAs
+         ECvQWhZACNVaStSNew6LbByMH8EbsJd0FBJjqRVreVoQJ14uvMr8WXsZoEmky3sWMpRl
+         CIyg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:dkim-signature;
+        bh=IwrbM0dGxD6XKRAhQH2GAW1ispZsMa7niXHCi9W5sws=;
+        fh=2E8G5L5HRIhYv0SLHRh0bmuG4bK/RxhrEd6+zC1U6gY=;
+        b=Y827Ch51b5v7efvFD0eWFrs6irjze5zjygsGD9x3K9c0FaHQ7+lPCkrYhAHoKjeYTe
+         R4qHRRACA429EZb1RllWZ4g9BwlCfedNtYtfulOUh2haiLageR84OOu4w0JXTiVGO2UM
+         TEN+jZozldRHhijK+8JNa08oimRW7PEP3ShdAoQ+GYBchvuWOdv/fswmOiQRimuJ4czi
+         /Qm7C30rHzmbDxEaShEiH/f9tcfW62xiHJ2MdvJ1uCRCKET/GRAmuIg/vjXE1IFvkULH
+         9WgPee+xOJpveQfVmvy0jweQdVm8Uz4p8l9kadcE7Eot7TqjZC8Ef55wYXEg2RdKyzcq
+         gJzA==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1787319987; x=1787924787; darn=vger.kernel.org;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=IwrbM0dGxD6XKRAhQH2GAW1ispZsMa7niXHCi9W5sws=;
+        b=UdE9X00g0b2f6FVedU3Agj5gyyJSe0RTZm27MCerGjy8kF5kVMQfnmiQGT1fxvHu17
+         m9Fq5v8wXftZDXnVEFPH1MbxpBC8Dnnny4BEwEOVaV8MinmtXDF4iH7zvaiUuNdProK0
+         OANXfO+ztUxNEGpAoYXPgiVWo5P+MRMCYtlnsAQzlG3Zq94j5u6Y2LncIJoNOtkU5Sjo
+         jHZg4smw0FWfkexhoWf5Gm/qqx4P1rKo/JjI4VJFbTi/xGIPE66gebap78d4CnsT/rm5
+         w10qaQnN6PSUV7NSo9NVEYVNRNeeEB2LqRQXUYM3wOHChk1+yI92k7YHPR+Htonos/GA
+         cF1Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1787319987; x=1787924787;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=IwrbM0dGxD6XKRAhQH2GAW1ispZsMa7niXHCi9W5sws=;
+        b=BwFK575Ac9xuZlUcpzFiis41gpgITqDUNxeYOtz8EhNUweQ2wYTiowWBaLaqxtpcR9
+         ifVjVjbLNkA63kzCT2h61QjCGXkz1Liyt9emZDYcgZQWLX+7efHJoAmPiutrobchOCYp
+         U6cXpYxzM4HN4hE85giBDozg6qycY+y26+Cz57lUsqpgfxEjRVNjaluJwmZUAyWlKc3k
+         yhyXSMiG6mvZhFygteTUMzwAKenpPPdMnx3UK1jgUvZDHV6XJSiDxQYoD8WAL6bOs5oe
+         IrFm8Fk9BlMY1j17Yv2AwM034QXZRQoSKBfx1eYjecTvPV6/pbzjBuv5FJ9R91e/7qYI
+         r32g==
+X-Gm-Message-State: AFuF++mFIdg7e/ilxrFF2B6w9ok+FJYT4DyzUqeakOwBbmc3udgCOZkz
+	djTMJIGhu0y+I3Nklg78k7XrUhJu0zYMmPA2MOvjBSd/aOyUCNiuuokTSYW3stpvuAPSFAcRcGU
+	gh1ESO3up52Zt7Q5DF49s98aBJ8verVaxAp5RdklEtnNqTzC5kwBR9Euq
+X-Gm-Gg: AR+sD12MAO2OfuBSlPJsbmyE15+GcAKp14HS4mo2ygs8wk7xe3GqDcGLo4sHkNrppP7
+	lK5JBAR8uIAEkaDUP2PDd+31L3CXOlF10BySAumU8QPQ6aSbkv+J310zj+SACT+IzKKSoXqQAgz
+	1Q+P1xVZPrce6MkDUeVEQxT9/dzEa9UhlHoVgKmH+eu874PUEhAjNPMm9N1NCmA5ZpN86oeFSwb
+	zNk9xwrF6+k1tw212mLkoiswV+8GzTe4fbm6PeAxZNQHW3Rrmcr6clvLvinBiLVCltbpGBY9PZj
+	nTbxKR1ZHCQ8OmUa9i8RI/kVo2H5aGMSBlq+ytxm8JlcOGEvbvq8HpvjT7KCAD/+BYXatYdin8V
+	Dk9gAfpKSAZIu4ED6ocHHIaBKn4qgUTfepCjcUGEFuag=
+X-Received: by 2002:aa7:d34f:0:b0:6a4:abe:52db with SMTP id
+ 4fb4d7f45d1cf-6a42f60959cmr58394a12.12.1787319986991; Fri, 21 Aug 2026
+ 06:46:26 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+References: <20260821103214.2049218-1-aniketmaurya@google.com> <20260821104537.0A1F41F00A3A@smtp.kernel.org>
+In-Reply-To: <20260821104537.0A1F41F00A3A@smtp.kernel.org>
+From: "Aniket ." <aniketmaurya@google.com>
+Date: Fri, 21 Aug 2026 19:16:14 +0530
+X-Gm-Features: AcwNN1X4XAjG5YKpC7qstfzTEz9oZ7e6m-p8_oUMosCM4lbHn5_lekwf5qxL0yM
+Message-ID: <CAMmmMt2iymRYnd6iVjSOBGqMu+i=AqJ9g-se44XfNfP1sVB5+A@mail.gmail.com>
+Subject: Re: [PATCH] PCI/ASPM: Clear L1SS capability when L1 latency is unacceptable
+To: sashiko-reviews@lists.linux.dev
+Cc: linux-pci@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [High] Page tables are freed before deleting the device domain from the h=
-ypervisor, leading to a Use-After-Free risk.
---
+> Because the capability was stripped earlier in pcie_aspm_check_latency(),
+> this condition evaluates to false. Will this bypass the hardware cleanup
+> routine, leaving stale BIOS configurations active and causing L1 to be
+> disabled while L1SS remains enabled in hardware?
 
---- Patch [4]: [PATCH v4 4/5] iommu/hyperv: Add para-virtualized IOMMU supp=
-ort for Hyper-V guest ---
-commit 7152dacb77d4624afa4df5d0624b6de801e9959e
-Author: Yu Zhang <zhangyu1@linux.microsoft.com>
-
-iommu/hyperv: Add para-virtualized IOMMU support for Hyper-V guest
-
-This commit adds a para-virtualized IOMMU driver for Linux guests on
-Hyper-V. It implements stage-1 IO translation in the guest OS and integrates
-with the Linux IOMMU core utilizing Hyper-V hypercalls.
-
-> diff --git a/drivers/iommu/hyperv/hv-iommu-guest.c b/drivers/iommu/hyperv=
-/hv-iommu-guest.c
-> new file mode 100644
-> --- /dev/null
-> +++ b/drivers/iommu/hyperv/hv-iommu-guest.c
-[ ... ]
-> +static void hv_iommu_paging_domain_free(struct iommu_domain *domain)
-> +{
-> +	struct hv_iommu_domain *hv_domain =3D to_hv_iommu_domain(domain);
-> +
-> +	/* Free all remaining mappings */
-> +	pt_iommu_deinit(&hv_domain->pt_iommu);
-> +
-> +	hv_delete_device_domain(hv_domain);
-
-[Severity: High]
-Could this cause a use-after-free of guest memory?
-
-The guest kernel frees the page tables by calling pt_iommu_deinit() first,=
-=20
-returning the physical pages to the allocator while the hypervisor still=20
-holds a reference to the page table root for this device domain.=20
-
-If the hypervisor accesses the page tables during the subsequent=20
-HVCALL_DELETE_DEVICE_DOMAIN hypercall (for cleanup, nested cache flushes,=20
-or shadow unmapping), it might read or write to reallocated memory.
-
-Should hv_delete_device_domain() be called before pt_iommu_deinit(),=20
-similar to how teardown is ordered in the hv_iommu_domain_alloc_paging()=20
-error path?
-
-> +
-> +	kfree(hv_domain);
-> +}
-[ ... ]
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260821132654.2117=
-30-1-zhangyu1@linux.microsoft.com?part=3D4
+Yeah this might lead to inconsistent states between the L1SS hardware
+register and the software variable. Fixing this in v2.
