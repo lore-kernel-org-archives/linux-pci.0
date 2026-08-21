@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 566603FE352;
-	Fri, 21 Aug 2026 19:41:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5CA843A5E65;
+	Fri, 21 Aug 2026 19:41:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787341293; cv=none; b=UGPbZtkxZTa39qtkcgFlMwU55+j58cx1xh5UkBsSzOpmxSj/rFellQy8Hz6lAkZvRmFzyiU04yVDhMI2Hj00z6VnJoPbI4NjpNHIuSZVX659CyaRQ1M0Q5Yz76Gg+tkDgwUP2S/MHY4oZ+x62ohwOfzcGdKC2jPCB5x/yesytBU=
+	t=1787341298; cv=none; b=u1nBxxR0Rvr6OwCDOqRoUJTwOkWZK/SENt2he7jCeNconJCngo65kzFzV8gTnZ9sM0ShhMXzqCDYw8W4vvZXBxlAuICfxrwISzAhp0GcZDI8wXA0NJoKrRSSlpAmvFQNkgxedtNdd2DFsQm9q6G0xvo6bsfyuwK6u5NkCKNHQxo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787341293; c=relaxed/simple;
-	bh=W7Dcml9dj0bvaCeKUsEYd4dI5Lrou3Y+oBBPgw8InqA=;
+	s=arc-20240116; t=1787341298; c=relaxed/simple;
+	bh=yWgALl/+z6M81dHDtdqaEeWbrbdwsDnt0sdb6KyckRM=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=XjOpCwSqkPH9cMxBCDEgwRbj/ZuhiHYlhcq6DOWlhC+hmX9POQ8WmJ1Q5ZnkTnmp/hfgPsNQ91vtfLowHEIJqD6Idu+LiLzHprKci/SJ8emlMHc2GOkvkQF353/+L0GjxQ4L/idgDbp85okVRv1sXzi4DvlQqdw5aBMLXCo3u7g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lch0BQMY; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=D40AOG5+8/QBM6K3v3cNbp5jTI1y9WNmf44/5KiuhI475Rg2VNMovObq95elPUrrEzEsj15W3qru5+gOyUpW0Q3vmDC7UcP0huGe7U/9p5SiibD1oNvbfqBtTs0/wKrErsHSrAPZvK1S5kFBFrDpcAIWRTu8eMd+VjSn9GGdaDo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Y07bCQQF; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lch0BQMY"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F1ED01F00A3A;
-	Fri, 21 Aug 2026 19:41:30 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Y07bCQQF"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 11D4F1F000E9;
+	Fri, 21 Aug 2026 19:41:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787341292;
-	bh=6mP/Avgd5Tl1taSSLkPX27T1qbI/rJ9gHsfGNDpMRyA=;
+	s=k20260515; t=1787341297;
+	bh=G9P6okZFaRWxkSocLb8NE6FiGRXf2Et5DYwty/Enemo=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=lch0BQMYnWBGI7Cbe3pS8xzu4b7PBmAUFOsXPTTFUbbUmRnMxMNcFPm+9+X48GQfJ
-	 FirxDi1SaTIHNXWf8u24EHunbX1dPMrl+eRJwWyU3GSFXXNJ6fQglYH7H/PMs0EmGx
-	 JVAjvuPDy8ct2YTN9jpVaz+4014cu+OgC4PjQltCaO3NLJA0/XnFT7WWhk7Q3UVlk8
-	 c+jvkGLDQK7NxJyY8LztLTOmi12ezk6sc9r5oOqtImXL4sNB1MVPePgPoObX6B/+/v
-	 Ase+v6W+qUNXGMFCqBf6JKQoQhKAcZ2E8kW4YqE3M0zBAMo0qpxI/iSh3dU667dfAY
-	 EnqGpqYNkNkXQ==
+	b=Y07bCQQFEZguqWxXNuoy0kQI375WfXNaqjHxKGx0SQXg8DSFaelwhYNWmEwYkYk32
+	 Da+AFebeNrvAyUuIOUgnfX0Z0Y16ZTteTcpEnv86ptfktR4AdnsO63LOL115svwUo/
+	 jXCGz7sFqc2mGk5CIGoMpeFdXAnBLBq1LfhzB0RyvxlcKy8/6lGaO5oddY/aFvru4+
+	 mErxyfkL+rQOQQI8rE6wWX0E0tl7PxHtK40pFkPD41BeDbT0dH1FcbE6nHOBXAHsSt
+	 K0jUQAihfiaAr51gWFHNbVwAcgCGiP598o1n2CJ59FdQhd2Gcp7Dnsl0nfSX/J6mh8
+	 riUB3FKrCwkrg==
 From: Leon Romanovsky <leon@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
 	Logan Gunthorpe <logang@deltatee.com>,
@@ -46,9 +46,9 @@ Cc: linux-pci@vger.kernel.org,
 	linux-doc@vger.kernel.org,
 	iommu@lists.linux.dev,
 	Tushar Dave <tdave@nvidia.com>
-Subject: [PATCH v4 06/18] PCI/P2PDMA: Gate the host bridge whitelist warning on verbose
-Date: Fri, 21 Aug 2026 22:38:37 +0300
-Message-ID: <20260821-fix-p2p-acs-v4-0-v4-6-94426b96de73@nvidia.com>
+Subject: [PATCH v4 07/18] PCI/P2PDMA: Document the Address Type assumption
+Date: Fri, 21 Aug 2026 22:38:38 +0300
+Message-ID: <20260821-fix-p2p-acs-v4-0-v4-7-94426b96de73@nvidia.com>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260821-fix-p2p-acs-v4-0-v4-0-94426b96de73@nvidia.com>
 References: <20260821-fix-p2p-acs-v4-0-v4-0-94426b96de73@nvidia.com>
@@ -64,73 +64,40 @@ Content-Transfer-Encoding: 8bit
 
 From: Leon Romanovsky <leonro@nvidia.com>
 
-calc_map_type_and_dist() prints every other diagnostic under its verbose
-argument, but reaches the "Host bridge not in P2PDMA whitelist" warning
-through host_bridge_whitelist(), which it hands acs_redirects instead.
-A caller that asked for a silent answer still gets the warning whenever
-any port on the path has an ACS redirect bit set, the CPU is not
-whitelisted by cpu_supports_p2pdma(), and the host bridge is not in
-pci_p2pdma_whitelist[].
+P2PDMA selects a mapping from the ACS controls that govern Requests
+carrying an Untranslated address. PCIe r7.0, sec 6.12.3 routes a
+Translated Request directly to the peer when ACS Direct Translated P2P is
+enabled, regardless of P2P Request Redirect and P2P Egress Control.
+Translation Blocking takes precedence and prevents that direct route.
 
-pci_p2pmem_find_many() is such a caller. It sweeps every device with
-published p2pmem and asks for the distance to each client with
-verbose=false, and pci_p2pdma_distance_many() recomputes rather than
-consulting the map_types cache, so the warning repeats on every sweep.
-
-The argument was never meant to say "ACS redirects were found". When
-commit cf201bfe8cdc ("PCI/P2PDMA: Warn if host bridge not in whitelist")
-added it, acs_redirects was a bool pointer that the quiet entry point
-passed as NULL:
-
-	if (verbose)
-		map = calc_map_type_and_dist_warn(provider, pci_client,
-						  &distance);
-	else
-		map = calc_map_type_and_dist(provider, pci_client,
-					     &distance, NULL, NULL);
-
-so the argument was true on exactly the path that commit describes.
-Folding the two entry points into one verbose flag turned the pointer
-into a value and left the call site alone, silently narrowing the
-warning to paths that carry an ACS redirect.
-
-Pass verbose. This also restores the warning for a verbose caller that
-takes the host bridge route with no ACS redirect on the path, which
-until now was told it could not use peer-to-peer DMA without being told
-which vendor and device would have to be added to the whitelist.
+Document this assumption because an ATS capable client can otherwise
+reach the peer directly whichever mapping P2PDMA selects.
 
 Tested-by: Tushar Dave <tdave@nvidia.com>
-Fixes: d1b8dc09dd71 ("PCI/P2PDMA: Simplify distance calculation")
+Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
 Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
 ---
- drivers/pci/p2pdma.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+ Documentation/driver-api/pci/p2pdma.rst | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
-index 49bc8cf06240..a364008bbf50 100644
---- a/drivers/pci/p2pdma.c
-+++ b/drivers/pci/p2pdma.c
-@@ -750,7 +750,6 @@ calc_map_type_and_dist(struct pci_dev *provider, struct pci_dev *client,
- {
- 	enum pci_p2pdma_map_type map_type = PCI_P2PDMA_MAP_THRU_HOST_BRIDGE;
- 	struct pci_dev *a = provider, *b = client, *bb;
--	bool acs_redirects = false;
- 	struct pci_p2pdma *p2pdma;
- 	struct seq_buf acs_list;
- 	int acs_cnt = 0;
-@@ -821,11 +820,10 @@ calc_map_type_and_dist(struct pci_dev *provider, struct pci_dev *client,
- 		pci_warn(client, "to disable ACS redirect for this path, add the kernel parameter: pci=disable_acs_redir=%s\n",
- 			 seq_buf_str(&acs_list));
- 	}
--	acs_redirects = true;
+diff --git a/Documentation/driver-api/pci/p2pdma.rst b/Documentation/driver-api/pci/p2pdma.rst
+index d3f406cca694..a7fd426c3685 100644
+--- a/Documentation/driver-api/pci/p2pdma.rst
++++ b/Documentation/driver-api/pci/p2pdma.rst
+@@ -15,6 +15,13 @@ then based on the ACS settings the transaction can route entirely within
+ the PCIe hierarchy and never reach the root port. The kernel will evaluate
+ the PCIe topology and always permit P2P in these well-defined cases.
  
- map_through_host_bridge:
- 	if (!cpu_supports_p2pdma() &&
--	    !host_bridge_whitelist(provider, client, acs_redirects)) {
-+	    !host_bridge_whitelist(provider, client, verbose)) {
- 		if (verbose)
- 			pci_warn(client, "cannot be used for peer-to-peer DMA as the client and provider (%s) do not share an upstream bridge or whitelisted host bridge\n",
- 				 pci_name(provider));
++This evaluation covers the ACS controls that govern Requests carrying an
++Untranslated address. Unless ACS Translation Blocking is enabled, a Port
++with ACS Direct Translated P2P enabled routes a Request carrying a Translated
++address directly to the peer regardless of those controls. An ATS capable
++client may therefore reach the peer on the direct path whichever mapping the
++kernel selects.
++
+ However, if the P2P transaction reaches the host bridge then it might have to
+ hairpin back out the same root port, be routed inside the CPU SOC to another
+ PCIe root port, or routed internally to the SOC.
 
 -- 
 2.55.0
