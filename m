@@ -1,127 +1,133 @@
-Received: from mail-pl1-f200.google.com (mail-pl1-f200.google.com [209.85.214.200])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 24D5649505D
-	for <linux-pci@vger.kernel.org>; Fri, 21 Aug 2026 13:46:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.200
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DDC4D494803
+	for <linux-pci@vger.kernel.org>; Fri, 21 Aug 2026 14:01:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787320017; cv=none; b=TOWeVPlPBl7PJKCdOMqiQN+MgOs3AkzKjOaiLYrwtaun+mfawaEwlKp8sv/x+1Q//cnZUfOhy+sFkSGMNyoardc6L5ZwsNMDKcvZppzA1/NUQQOm/PfABbgPkp/ixxkc/h3mZvgE4N2icVME3+JqdRXIqrzKydblpbiNAaG57Qs=
+	t=1787320902; cv=none; b=BRSN/1UXEyLRByzqh1CpKlX88QEWuqBbW13Bbv1JNGFCXZTkvG4ypuTv6BI4lk4cOtUy/OYc6RPPsecbs8kP7fbIzB863UhADMuqqUjJ6aWwWMFyonHo4FPVdC89wY/UxLohHifaDHgmg8GAuSkH+Uw67TfbFoQ/Veld7NTNuZM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787320017; c=relaxed/simple;
-	bh=4GRZrykve3DYCt54SQMhbFYoS+0wHD0ES1uEWUPPGeY=;
-	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=GejLp5L1JKpFSns9qm3Lnh/D0QL3sfenMSQ3cCV+16y5vS3yvJFf6QaRvDApFVEzr8SsnVhzORUXdw24pVrVQWz4lNEV+FXsf8U8x8wt4hE7+5EDzUZkBNXlWMASTcNfYNfM36TFgQYNLSJ2sam2vScMDnS5rbXhc17ZGQcy4kQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--aniketmaurya.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=W4VDARST; arc=none smtp.client-ip=209.85.214.200
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--aniketmaurya.bounces.google.com
+	s=arc-20240116; t=1787320902; c=relaxed/simple;
+	bh=N4ASD2Lc/rYatWUeyg/Sgs8rrjV4zhHJW5d8RCTUfDQ=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=Np4s8nQh9iOXdKhy9cchjsAlvJTtjwbMezM/cmW8v/uasTLaQPaHlZmLfVR62D3A55F01Nif71ZwfLMBKbrSq0d2n6OHqa6ulL77E/uGDLAM7YcPULXiWLm57DDxP1NCZ8BkmyvMvH9HHtGTBH+eR7UQRU/vymzE4c7T6asEbuU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WAz3FViv; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="W4VDARST"
-Received: by mail-pl1-f200.google.com with SMTP id d9443c01a7336-2cc86a9ef97so20045985ad.3
-        for <linux-pci@vger.kernel.org>; Fri, 21 Aug 2026 06:46:53 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1787320012; x=1787924812; darn=vger.kernel.org;
-        h=content-type:cc:to:from:subject:message-id:mime-version:date:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=3j6lgpgnueDnnXaUVeKFBE+wmpz2Lu0oRIsQW+ixGBM=;
-        b=W4VDARSTbgpiCzIHcnzGtsXoT5+LWDxvzXo+HB+Cdlr9AOdf306QllTULF5tb+LDua
-         xltYVYLdtLMg7gko0Cum5iarKdw/4AJUY+j1fgle0I362BreTXWbCGN+q8feqWPnqspD
-         HM61VjKFWZIsVi87X5l+v3tkga/ZG/DuNrAGYow+yscdbZIJrlZzNrZpLibCpI8GVoTD
-         8HQgktw9/LxTlDFh/VGVI0/mTqnM3PN0CkmJyBaA7Zi+DQxHs+QwokUCMLb1KDNdGEOv
-         kSWHYpfV7JxJZgRNVRW1t4pSj6+eEnhYkc4UbmuWdBtiQmkU05TdJ0szKDdzbXlOlvyw
-         wccA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787320012; x=1787924812;
-        h=content-type:cc:to:from:subject:message-id:mime-version:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=3j6lgpgnueDnnXaUVeKFBE+wmpz2Lu0oRIsQW+ixGBM=;
-        b=Vk0IeB0ytAmlVAT2th9OeEeQ87ueNSH2cndy/Cmk2xxyFcgkATTeWuNIE333tkeEVD
-         p0dki9blSIoMK5uHMxIrPsnP1SZlvWOFofIVSYMQ/pjWAbgp7QsFvZrvGEtGrWZdalEy
-         0ui8qOXYT7ZIq7sm2fdM4cFcMxgwnN4N4423gkwHeaN4wdB+Vo2pLjmwcb/P3S3WwO4u
-         qFDfUx7kqf/Zk8NFEYYbbdGsRgaqUxWJVTvQAcRQbjiq4Diwmjbl6M7507SMFdZB6l0z
-         prlPQfvTzwv+a5Cjco1t73cA0UIi5jImgHDQHmu4WFk/hM9FOPP8hD5j74dHxLEIzrwy
-         TyKw==
-X-Gm-Message-State: AFuF++n+2Cubj0aa7BwR1+n7dpKaR3XmbCJ+VoXdgdY2ydk/7JeYwRHS
-	7LPztQDBsIKJcKtHalirICLTQR4qabOJgYNB8S852pMKA0GipxELNmwsEd3PRcvwLbeZqaSrl+W
-	s+kYQMXtEtSGHLlMSyWcfFcmtIXiImA==
-X-Received: from plbbh3.prod.google.com ([2002:a17:902:a983:b0:2d3:a560:c1f7])
- (user=aniketmaurya job=prod-delivery.src-stubby-dispatcher) by
- 2002:a17:903:2c0c:b0:2cf:8131:75f4 with SMTP id d9443c01a7336-2d64b036898mr132058755ad.11.1787320012023;
- Fri, 21 Aug 2026 06:46:52 -0700 (PDT)
-Date: Fri, 21 Aug 2026 13:45:21 +0000
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WAz3FViv"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 652491F000E9;
+	Fri, 21 Aug 2026 14:01:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1787320900;
+	bh=7kqNCoSKCt+xJC54hsFU42G/QdDP2LSkhJf+BFvSV/A=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=WAz3FVivgQbUgJzEItsvxHCWrNdnVdd+kN7kRcTOEZNzZRKQYIiDIyojEAasy4Uo9
+	 jj5Ace+oFNKAWJZvfM/6jy7kdKAo62xTj7A85rQZ1qHd+RN/XSnLzyPQ03bIdWDeqL
+	 yFaq5oQfK2xVfJKrrD4zpzOLWZc/wZKr82+teh3m93NFh6FVjjesopIdZbBD9H7wol
+	 yhPhM+xez0tvZ/mu9rFaLOY14bKqsmBPBvfsYHdg5RY2N23OFlZyDt91/4OqQ3FWtx
+	 TJgfxtPMcS9UZ9s3VqCKiBw6BzszjMRtPHjHeB+Q9gdxQGYhXGR9NwOHJbT/eiOibz
+	 pLtf21Dmfw/fQ==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v2] PCI/ASPM: Clear L1SS capability when L1 latency is
+ unacceptable
+Reply-To: sashiko-reviews@lists.linux.dev
+To: Aniket <aniketmaurya@google.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260821134521.2211943-1-aniketmaurya@google.com>
+References: <20260821134521.2211943-1-aniketmaurya@google.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Fri, 21 Aug 2026 14:01:40 +0000
+Message-Id: <20260821140140.652491F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-X-Mailer: git-send-email 2.55.0.766.g2966f0265a-goog
-Message-ID: <20260821134521.2211943-1-aniketmaurya@google.com>
-Subject: [PATCH v2] PCI/ASPM: Clear L1SS capability when L1 latency is unacceptable
-From: Aniket <aniketmaurya@google.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	Lukas Wunner <lukas@wunner.de>, 
-	"=?UTF-8?q?Ilpo=20J=C3=A4rvinen?=" <ilpo.jarvinen@linux.intel.com>, 
-	Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, 
-	Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>, Manu Gautam <manugautam@google.com>, 
-	Ajay Agarwal <ajayagarwal@google.com>, Aniket <aniketmaurya@google.com>
-Content-Type: text/plain; charset="UTF-8"
 
-pcie_aspm_cap_init() initializes link->aspm_capable from
-link->aspm_support, which includes PCIE_LINK_STATE_L1SS (L1.1, L1.2,
-etc.) if supported by both ends of the link.
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
 
-pcie_aspm_check_latency() then evaluates whether the exit latency of
-the link exceeds the acceptable L1 latency advertised by downstream
-endpoints. If the latency is unacceptable, it clears
-PCIE_LINK_STATE_L1 from link->aspm_capable. However, it does not clear
-PCIE_LINK_STATE_L1SS.
+Pre-existing issues:
+- [High] This problem wasn't introduced by this patch, but the ASPM sysfs s=
+how and store functions (`clkpm_show`, `clkpm_store`, `aspm_attr_show_commo=
+n`, `aspm_attr_store_common`) fetch the `link_state` pointer locklessly and=
+ do not check for NULL before dereferencing it. If function 0 of a multi-fu=
+nction PCIe device is removed via hotplug or sysfs, `pcie_aspm_exit_link_st=
+ate()` frees the parent bridge's `link_state`. Subsequent reads or writes t=
+o the ASPM sysfs attributes of remaining functions (e.g., function 1) will =
+dereference a NULL pointer. If a sysfs write races with the removal of func=
+tion 0, it results in a Use-After-Free.
+--
 
-L1 PM Substates are substates of L1 and require L1 to be supported
-and enabled. If L1 is not capable due to unacceptable exit latency,
-L1 PM Substates cannot be supported either. Leaving
-PCIE_LINK_STATE_L1SS set in link->aspm_capable causes
-aspm_ctrl_attrs_are_visible() to expose L1SS sysfs control files (e.g.,
-l1_1_aspm, l1_2_aspm) even though the link cannot use L1/L1SS.
+--- Patch [1]: [PATCH v2] PCI/ASPM: Clear L1SS capability when L1 latency i=
+s unacceptable ---
+commit 484f6a2751436d7940ad4ac7d04ecc20b6162859
+Author: Aniket <aniketmaurya@google.com>
 
-Clear PCIE_LINK_STATE_L1SS along with PCIE_LINK_STATE_L1 from
-link->aspm_capable when L1 exit latency is unacceptable.
+PCI/ASPM: Clear L1SS capability when L1 latency is unacceptable
 
-In addition, update pcie_config_aspm_link() to check link->aspm_support
-instead of link->aspm_capable before invoking pcie_config_aspm_l1ss().
-This ensures that pcie_config_aspm_l1ss() is called to properly clear L1
-PM Substates in the hardware configuration registers if the BIOS left
-them enabled, even when link->aspm_capable no longer contains
-PCIE_LINK_STATE_L1SS.
+This commit updates pcie_aspm_check_latency() to clear PCIE_LINK_STATE_L1SS
+from link->aspm_capable when L1 exit latency is unacceptable. This prevents
+exposing L1SS sysfs control files when the link cannot use L1. Additionally,
+it updates pcie_config_aspm_link() to check link->aspm_support to ensure L1
+PM Substates are properly cleared in hardware if they were left enabled.
 
-Signed-off-by: Aniket <aniketmaurya@google.com>
----
- drivers/pci/pcie/aspm.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+> index 172783e7f519a..b2660892972a9 100644
+> --- a/drivers/pci/pcie/aspm.c
+> +++ b/drivers/pci/pcie/aspm.c
 
-diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-index 172783e7f519..b2660892972a 100644
---- a/drivers/pci/pcie/aspm.c
-+++ b/drivers/pci/pcie/aspm.c
-@@ -666,7 +666,8 @@ static void pcie_aspm_check_latency(struct pci_dev *endpoint)
- 		latency = max_t(u32, latency_up_l1, latency_dw_l1);
- 		if ((link->aspm_capable & PCIE_LINK_STATE_L1) &&
- 		    (latency + l1_switch_latency > acceptable_l1))
--			link->aspm_capable &= ~PCIE_LINK_STATE_L1;
-+			link->aspm_capable &= ~(PCIE_LINK_STATE_L1 |
-+						PCIE_LINK_STATE_L1SS);
- 		l1_switch_latency += NSEC_PER_USEC;
- 
- 		link = link->parent;
-@@ -1041,7 +1042,7 @@ static void pcie_config_aspm_link(struct pcie_link_state *link, u32 state)
- 		pcie_config_aspm_dev(child, 0);
- 	pcie_config_aspm_dev(parent, 0);
- 
--	if (link->aspm_capable & PCIE_LINK_STATE_L1SS)
-+	if (link->aspm_support & PCIE_LINK_STATE_L1SS)
- 		pcie_config_aspm_l1ss(link, state);
- 
- 	pcie_config_aspm_dev(parent, upstream);
--- 
-2.55.0.766.g2966f0265a-goog
+[ ... ]
 
+[Severity: High]
+This isn't a bug introduced by this patch, but the ASPM sysfs show and store
+functions fetch the link_state pointer locklessly and do not check for NULL
+before dereferencing it.
+
+drivers/pci/pcie/aspm.c:aspm_attr_show_common() {
+    ...
+	struct pci_dev *pdev =3D to_pci_dev(dev);
+	struct pcie_link_state *link =3D pcie_aspm_get_link(pdev);
+
+	return sysfs_emit(buf, "%d\n", (link->aspm_enabled & state) ? 1 : 0);
+}
+
+Does this code risk a NULL pointer dereference?
+
+If function 0 of a multi-function PCIe device is removed via hotplug or sys=
+fs,
+pcie_aspm_exit_link_state() frees the parent bridge's link_state.
+
+If an unprivileged user then reads an ASPM sysfs file on a remaining functi=
+on
+(like function 1), pcie_aspm_get_link() will return NULL, causing an
+unconditional dereference here.
+
+[Severity: High]
+Additionally, could a concurrent sysfs write result in a use-after-free?
+
+drivers/pci/pcie/aspm.c:clkpm_store() {
+    ...
+	struct pci_dev *pdev =3D to_pci_dev(dev);
+	struct pcie_link_state *link =3D pcie_aspm_get_link(pdev);
+	bool state_enable;
+
+	if (kstrtobool(buf, &state_enable) < 0)
+		return -EINVAL;
+
+	down_read(&pci_bus_sem);
+	mutex_lock(&aspm_lock);
+
+	link->clkpm_disable =3D !state_enable;
+    ...
+}
+
+If a sysfs write races with the removal of function 0, the link pointer is
+fetched locklessly before taking aspm_lock.
+
+If the removal completes and frees the link before the lock is acquired, the
+write operation will dereference freed memory.
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260821134521.2211=
+943-1-aniketmaurya@google.com?part=3D1
