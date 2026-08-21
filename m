@@ -1,322 +1,148 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.19])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f198.google.com (mail-pl1-f198.google.com [209.85.214.198])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F87E3A3E78;
-	Fri, 21 Aug 2026 22:12:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.19
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 342D71A6829
+	for <linux-pci@vger.kernel.org>; Fri, 21 Aug 2026 22:16:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.198
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787350379; cv=none; b=cCRfhHn//lgYMVGvr6Y4QJCLV+E85FT/9QT7UbX13x9m2kWirciHHMj5K3cI7FFP03IdCP8SGKoAxxA0jvUVJ2fg7mcMQ8/eMpg+YcWNbHRvY1xwmElsug3L2CsZQ/wquF6/Wx42KP8rngC2FHUxxRns5T6UMyLYYvEXVjUYX2A=
+	t=1787350593; cv=none; b=roXFxlGRlpgXrAeL8Q0qBcRhrJ4qF6pDg+DvjVREIKYOFZvll/vdGPBjWlZZ3bEMuvxfh/m/M+2lKguBY0x/mX+/T6ObjNNsFTv9g+fnTh3c9VrRXQtoPD8JdqSOcFzSki8IjcRyGoFqosCYxJPu/61NrxGeCwckrcan1JESX+M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787350379; c=relaxed/simple;
-	bh=E8Unyr7mOvnL6CPMia9HS18lXZLDTbEOagir59D1l6Q=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=FP6tuvu8XYTsHDv2Fiu3e3aJPM9t8Vn0LGvwxUumbOgVLtTrt9n4DrOS08BVjlO1NB4MtmEY2XPz29r52fAXDVXombfHSbMpx3x7VoiwnQiR7Vmddj8es6nFEzBsXWla04N3InlgY/7Cpqc0FaoE6j1jepMvX7CQtPuuuGxBSFg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=KIwVgMyw; arc=none smtp.client-ip=198.175.65.19
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1787350593; c=relaxed/simple;
+	bh=9cK+9qTql37QYIz37WDsRcw/7LQHtdTltaYK46f9BPY=;
+	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=h9YAbNo0AdT53xUoVgJiFoiXoHfaPpLemCGRCviAAuyNPipxNEckIFwKT6KNieTHUeMZqtyCni9EESFbLnZ45brR+/cp2EanP5HT1Pxqmk8PpWnQy67THhKXiuKhdYjN/rZN8rkFvHia5H0wv2fO9HPiRBLzwuJxGTANw4YPzz0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--dmatlack.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=W7OBsQNU; arc=none smtp.client-ip=209.85.214.198
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--dmatlack.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="KIwVgMyw"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1787350378; x=1818886378;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=E8Unyr7mOvnL6CPMia9HS18lXZLDTbEOagir59D1l6Q=;
-  b=KIwVgMywKrwdrsz6cCTLD1ouLTu+BVNUvHt7oARuWy2Rhhna2xeaaKcf
-   X8Ko7COJeQakc3GnESTu9gT3VoONbBMRlj65gXbtGFkDNP6i4BnHoQ47W
-   mLNGY+Nknhy7rh1EfPxtJXhQnWYbk4rgJuXaZ5uUbY/LgmUjzGqSGjwwr
-   4WLoHfvhAdYKmCwtqnl0xr63IvVa8SZGapnBbT1rATAcU2pjLayQ1/6yu
-   Oe73r9y09D2ntTxaSWkQyvR0Ui6RS4TBg0uApHYl6ql0CvYdfA8ZJCzF1
-   XwWYhMlvg0aaeN09ja7mkdLBwQu7wLrI7ygQ6ESbAY5CGbqejzXnkRgKY
-   w==;
-X-CSE-ConnectionGUID: XcSPLdYvQTCGLB0w30JdzA==
-X-CSE-MsgGUID: ooDYWAaSQZy4x8iLCkBDoQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11882"; a="87825262"
-X-IronPort-AV: E=Sophos;i="6.25,235,1779174000"; 
-   d="scan'208";a="87825262"
-Received: from fmviesa010.fm.intel.com ([10.60.135.150])
-  by orvoesa111.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Aug 2026 15:12:57 -0700
-X-CSE-ConnectionGUID: 6SfwUM5ZTte6z7SXHO59Xw==
-X-CSE-MsgGUID: j/QihXdoRYySS7GXw2hlFA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.25,235,1779174000"; 
-   d="scan'208";a="262737901"
-Received: from rchatre-mobl4.amr.corp.intel.com (HELO [10.125.108.117]) ([10.125.108.117])
-  by fmviesa010-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Aug 2026 15:12:54 -0700
-Message-ID: <8d26e993-1c04-4609-be0d-f26449c490cf@intel.com>
-Date: Fri, 21 Aug 2026 15:12:53 -0700
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="W7OBsQNU"
+Received: by mail-pl1-f198.google.com with SMTP id d9443c01a7336-2d63bad3d09so19229665ad.3
+        for <linux-pci@vger.kernel.org>; Fri, 21 Aug 2026 15:16:32 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1787350591; x=1787955391; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:from:subject
+         :message-id:mime-version:date:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=nGzjUGYctwJSzkPPOCCVrXKRANqiQHkPBAJGCUzWsl0=;
+        b=W7OBsQNUbxIvV78WgdGbo+iV3yFsojiG1m9gx5+fWwXkSWSozCA1LGP+WNHoDxmX3g
+         wniytQEciIoYL6/BUc3mumDVXe41wI4n9yVI8qwJedXFxxvmdped9gq9ab1ViDr0NeOC
+         xVEVoLfLVVeHy5y+WxyJ8drhVzzQQqXOZGi47/CxwOadwrri9aXTOTShn1lwEexdz9mx
+         J1cTrzqpFvCv+ZCd3MVvLb3iDx95JoJhtycMHM9fKDSmg0TkPJcBQSPfJOvdKMn2v9wd
+         jhnGOIOPlAk+fKS/N4rOoLVpn08awV4IyZvDHm+Q+wRUgUbZl/yrSMdc155D0Q6aMUex
+         +4Uw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1787350591; x=1787955391;
+        h=content-transfer-encoding:content-type:cc:to:from:subject
+         :message-id:mime-version:date:x-gm-message-state:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=nGzjUGYctwJSzkPPOCCVrXKRANqiQHkPBAJGCUzWsl0=;
+        b=TlncjbZgP/h2TlQh93t4B8a+D4EkRJUfHiKbZa+oemY1C6o7JZk/5cf3c0aQg/O59B
+         GV5o20OdgF/LZrGCx73HgAftTpUJ4BDsqbIH/JSIUkYEe1VtTqJnzAXcZYu/BIdjQooQ
+         p8qI8ueymmDS7XHMAL0FjhyA+qZObiC575PanswKjEv6OU1zCNr78P1czEWC6DFTlkRa
+         S1WdXll0xJZQ6xniutS7R25eDHeKTMOLt/4XOtNnp7kcQXWACpaEteJwuupmDRlKWKzz
+         7+4G0jhWQxQ8lrBrbXVi49j5kfzSSxDzgJZQ6bNfs3/p+O/5FEw9ULHt6IoMWh4KdLhl
+         A4GA==
+X-Forwarded-Encrypted: i=1; AHgh+Rol1wxM3deNtp6V1QENHCKWtM5gTCYjyurRxeqj1B6SJzqQBiP027lss4Eodwr5LMg10aYaSKDwFh4=@vger.kernel.org
+X-Gm-Message-State: AFuF++n/AY5duntTSqdNbYibNQGcopv28Xk4mRAr7ktcD4eg7xsgvpy7
+	kEGuOb6WQcFci6+zQXF5c1GxFziz3mUKdAU82JumiTpOwiv8BzbonO52kTL6zvwP7byMTUEbvUo
+	6o2qd7p5ZZ9ctWw==
+X-Received: from plbms11.prod.google.com ([2002:a17:903:acb:b0:2cc:e88e:423c])
+ (user=dmatlack job=prod-delivery.src-stubby-dispatcher) by
+ 2002:a17:902:ef47:b0:2d6:7409:7145 with SMTP id d9443c01a7336-2d674097a77mr9729445ad.1.1787350591303;
+ Fri, 21 Aug 2026 15:16:31 -0700 (PDT)
+Date: Fri, 21 Aug 2026 22:15:59 +0000
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v10 04/12] cxl: Cache decoder settings on PCI devices
-To: Srirangan Madhavan <smadhavan@nvidia.com>,
- Alison Schofield <alison.schofield@intel.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Davidlohr Bueso <dave@stgolabs.net>,
- Jonathan Cameron <jic23@kernel.org>, Vishal Verma
- <vishal.l.verma@intel.com>, linux-cxl@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Alex Williamson <alex.williamson@redhat.com>, vsethi@nvidia.com,
- alwilliamson@nvidia.com,
- Sai Yashwanth Reddy Kancherla <skancherla@nvidia.com>,
- Vishal Aslot <vaslot@nvidia.com>, Manish Honap <mhonap@nvidia.com>,
- Jiandi An <jan@nvidia.com>, Richard Cheng <icheng@nvidia.com>,
- linux-tegra@vger.kernel.org
-References: <20260804192958.1823952-1-smadhavan@nvidia.com>
- <20260804192958.1823952-5-smadhavan@nvidia.com>
-From: Dave Jiang <dave.jiang@intel.com>
-Content-Language: en-US
-In-Reply-To: <20260804192958.1823952-5-smadhavan@nvidia.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Mime-Version: 1.0
+X-Mailer: git-send-email 2.55.0.766.g2966f0265a-goog
+Message-ID: <20260821221610.3570722-1-dmatlack@google.com>
+Subject: [pciutils PATCH v2] lspci: Determine bridge window address size from bridge_flags
+From: David Matlack <dmatlack@google.com>
+To: Martin Mares <mj@ucw.cz>
+Cc: "=?UTF-8?q?Pali=20Roh=C3=A1r?=" <pali@kernel.org>, David Matlack <dmatlack@google.com>, linux-pci@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
+Use bridge_flags to determine address size bits (16- vs 32-bit for I/O,
+32- vs 64-bit for prefetchable memory) when displaying bridge ranges
+populated via PCI_FILL_BRIDGE_BASES.
 
+Commit ccf68033a452 ("lspci: Use PCI_FILL_BRIDGE_BASES to detect if
+range behind bridge is disabled or unsupported") introduced code in
+show_htype1() that reads PCI_IO_RANGE_TYPE_MASK and
+PCI_MEMORY_RANGE_TYPE_MASK from bridge_base_addr[]. However,
+bridge_base_addr[] holds base addresses without flags, as documented in
+lib/pci.h and implemented across backends like sysfs.c and
+win32-cfgmgr32.c.
 
-On 8/4/26 12:29 PM, Srirangan Madhavan wrote:
-> Add CXL core plumbing to refresh a PCI device HDM decoder cache when
-> decoders are enumerated, committed, or reset. PCI reset paths can use
-> this snapshot to restore HDM programming without walking CXL topology
-> during reset recovery.
-> 
-> The cache is populated by PCI-side discovery in a follow-on patch. Until
-> then, the CXL core update path is a no-op when no PCI HDM cache is
-> present.
-> 
-> Signed-off-by: Srirangan Madhavan <smadhavan@nvidia.com>
-> ---
->  drivers/cxl/core/hdm.c | 114 ++++++++++++++++++++++++++++++++++++++++-
->  include/cxl/cxl.h      |  12 +++++
->  include/linux/pci.h    |   6 +++
->  3 files changed, 131 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/cxl/core/hdm.c b/drivers/cxl/core/hdm.c
-> index 6e132b4f092b..ec988e7b7c0c 100644
-> --- a/drivers/cxl/core/hdm.c
-> +++ b/drivers/cxl/core/hdm.c
-> @@ -84,6 +84,110 @@ static void parse_hdm_decoder_caps(struct cxl_hdm *cxlhdm)
->  		cxlhdm->iw_cap_mask |= BIT(16);
->  }
->  
-> +static int cxl_pci_hdm_info_match(struct pci_dev *pdev, int decoder_count,
-> +				      bool *present)
+Because bridge_base_addr[] does not contain configuration register flag
+bits, masking the lower bits evaluates to zero. As a result, 32-bit I/O
+windows are mislabeled as "[16-bit]" and 64-bit prefetchable memory
+windows are mislabeled as "[32-bit]" when using PCI_FILL_BRIDGE_BASES.
 
-Maybe this should just return a bool based on match.
+Fixes: ccf68033a452 ("lspci: Use PCI_FILL_BRIDGE_BASES to detect if range b=
+ehind bridge is disabled or unsupported")
+Signed-off-by: David Matlack <dmatlack@google.com>
+---
+v2:
+ - Fix lspci.c to use bridge_flags[], per lib/pci.h, rather than
+   changing the behavior of just the sysfs backend (Pali Roh=C3=A1r)
 
-bool cxl_pci_hdm_decoder_count_match()?
+v1: https://lore.kernel.org/linux-pci/20260626213047.189951-1-bhelgaas@goog=
+le.com/
 
-> +{
-> +	struct cxl_hdm_info *info;
-> +	int rc = 0;
-> +
-> +	*present = false;
-> +	down_read(&cxl_rwsem.dpa);
-> +	info = pdev->hdm;
-> +	if (info) {
-> +		*present = true;
-> +		if (info->decoder_count != decoder_count) {
-> +			pci_warn(pdev,
-> +				 "CXL HDM cache decoder count mismatch: cached=%d hdm=%d\n",
-> +				 info->decoder_count, decoder_count);
-> +			rc = -ENXIO;
-> +		}
-> +	}
-> +	up_read(&cxl_rwsem.dpa);
-> +
-> +	return rc;
-> +}
-> +
-> +static int cxl_pci_setup_hdm_info(struct cxl_hdm *cxlhdm)
+ lspci.c | 12 +++++-------
+ 1 file changed, 5 insertions(+), 7 deletions(-)
 
-I'm not sure if this function name makes sense. Nothing is being setup here. I think the above function should just be __cxl_pci_hdm_decoder_count_match() and this function can just be cxl_pci_hdm_decoder_count_match(). Or just collpase the two into a single function.
+diff --git a/lspci.c b/lspci.c
+index 2a14303e74f6..52fd9247aefb 100644
+--- a/lspci.c
++++ b/lspci.c
+@@ -571,10 +571,9 @@ show_htype1(struct device *d)
+=20
+   if ((p->known_fields & PCI_FILL_BRIDGE_BASES) && !io_disabled)
+     {
+-      io_base =3D p->bridge_base_addr[0] & PCI_IO_RANGE_MASK;
++      io_base =3D p->bridge_base_addr[0];
+       io_limit =3D io_base + p->bridge_size[0] - 1;
+-      io_type =3D p->bridge_base_addr[0] & PCI_IO_RANGE_TYPE_MASK;
+-      io_bits =3D (io_type =3D=3D PCI_IO_RANGE_TYPE_32) ? 32 : 16;
++      io_bits =3D (p->bridge_flags[0] & PCI_IORESOURCE_IO_16BIT_ADDR) ? 16=
+ : 32;
+       show_range("\tI/O behind bridge", io_base, io_limit, io_bits, io_dis=
+abled);
+     }
+   else if (io_type !=3D (io_limit & PCI_IO_RANGE_TYPE_MASK) ||
+@@ -600,7 +599,7 @@ show_htype1(struct device *d)
+=20
+   if ((p->known_fields & PCI_FILL_BRIDGE_BASES) && !mem_disabled)
+     {
+-      mem_base =3D p->bridge_base_addr[1] & PCI_MEMORY_RANGE_MASK;
++      mem_base =3D p->bridge_base_addr[1];
+       mem_limit =3D mem_base + p->bridge_size[1] - 1;
+       show_range("\tMemory behind bridge", mem_base, mem_limit, 32, mem_di=
+sabled);
+     }
+@@ -616,10 +615,9 @@ show_htype1(struct device *d)
+=20
+   if ((p->known_fields & PCI_FILL_BRIDGE_BASES) && !pref_disabled)
+     {
+-      u64 pref_base_64 =3D p->bridge_base_addr[2] & PCI_MEMORY_RANGE_MASK;
++      u64 pref_base_64 =3D p->bridge_base_addr[2];
+       u64 pref_limit_64 =3D pref_base_64 + p->bridge_size[2] - 1;
+-      pref_type =3D p->bridge_base_addr[2] & PCI_MEMORY_RANGE_TYPE_MASK;
+-      pref_bits =3D (pref_type =3D=3D PCI_PREF_RANGE_TYPE_64) ? 64 : 32;
++      pref_bits =3D (p->bridge_flags[2] & PCI_IORESOURCE_MEM_64) ? 64 : 32=
+;
+       show_range("\tPrefetchable memory behind bridge", pref_base_64, pref=
+_limit_64, pref_bits, pref_disabled);
+     }
+   else if (pref_type !=3D (pref_limit & PCI_PREF_RANGE_TYPE_MASK) ||
 
-> +{
-> +	struct pci_dev *pdev __free(pci_dev_put) =
-> +		cxl_port_get_uport_pci_dev(cxlhdm->port);
-> +	bool present;
-> +
-> +	if (!pdev)
-> +		return 0;
-> +
-> +	return cxl_pci_hdm_info_match(pdev, cxlhdm->decoder_count, &present);
-> +}
-> +
-> +static u64 cxl_switch_target_list(struct cxl_switch_decoder *cxlsd)
-
-cxl_switch_get_target_list()
-
-> +{
-> +	struct cxl_decoder *cxld = &cxlsd->cxld;
-> +	u64 targets = 0;
-> +	int ways = min(cxld->interleave_ways, cxlsd->nr_targets);
-> +
-> +	/* target_map[] holds the raw list before target[] is resolved. */
-> +	for (int i = 0; i < ways && i < 8; i++) {
-> +		u8 port_id;
-> +
-> +		if (cxlsd->target[i])
-> +			port_id = cxlsd->target[i]->port_id;
-> +		else
-> +			port_id = cxld->target_map[i];
-> +
-> +		targets |= (u64)port_id << (i * 8);
-> +	}
-> +
-> +	return targets;
-> +}
-> +
-> +static void cxl_decoder_snapshot(struct cxl_decoder *cxld,
-> +				 struct cxl_decoder_settings *settings)
-> +{
-
-Probably a good idea to add
-lockdep_assert_held_write(&cxl_rwsem.dpa);
-
-> +	*settings = (struct cxl_decoder_settings) {
-> +		.id = cxld->id,
-> +		.hpa_range = cxld->hpa_range,
-> +		.interleave_ways = cxld->interleave_ways,
-> +		.interleave_granularity = cxld->interleave_granularity,
-> +		.target_type = cxld->target_type,
-> +		.flags = cxld->flags,
-> +	};
-> +
-> +	if (is_endpoint_decoder(&cxld->dev)) {
-> +		struct cxl_endpoint_decoder *cxled =
-> +			to_cxl_endpoint_decoder(&cxld->dev);
-> +
-> +		settings->target_or_skip = cxled->skip;
-> +	} else if (is_switch_decoder(&cxld->dev)) {
-> +		struct cxl_switch_decoder *cxlsd =
-> +			to_cxl_switch_decoder(&cxld->dev);
-> +
-> +		settings->target_or_skip = cxl_switch_target_list(cxlsd);
-> +	}
-> +}
-> +
-> +static void cxl_hdm_info_set_decoder(struct cxl_hdm *cxlhdm,
-> +				     struct cxl_decoder *cxld)
-
-cxl_hdm_cache(or save)_decoder_info()?
-
-> +{
-> +	struct pci_dev *pdev __free(pci_dev_put) =
-> +		cxl_port_get_uport_pci_dev(cxlhdm->port);
-> +	struct cxl_hdm_info *info;
-> +
-> +	if (!pdev)
-> +		return;
-> +
-> +	guard(rwsem_write)(&cxl_rwsem.dpa);
-> +	info = pdev->hdm;
-> +	if (!info || cxld->id >= info->decoder_count)
-> +		return;
-> +
-> +	if (cxld->flags & CXL_DECODER_F_ENABLE)
-> +		cxl_decoder_snapshot(cxld, &info->settings[cxld->id]);
-> +	else
-> +		info->settings[cxld->id] = (struct cxl_decoder_settings) {
-> +			.id = cxld->id,
-> +		};
-
-Use {} for if/else since the else part is multi-lines. Although given that you have to set the id either way, maybe have a helper function cxl_decoder_settings_init() that does it so you don't need the else branch.
-
-DJ
-
-> +}
-> +
->  static bool should_emulate_decoders(struct cxl_endpoint_dvsec_info *info)
->  {
->  	struct cxl_hdm *cxlhdm;
-> @@ -767,6 +871,7 @@ static int cxl_decoder_commit(struct cxl_decoder *cxld)
->  	}
->  	port->commit_end++;
->  	cxld->flags |= CXL_DECODER_F_ENABLE;
-> +	cxl_hdm_info_set_decoder(cxlhdm, cxld);
->  
->  	return 0;
->  }
-> @@ -839,6 +944,7 @@ static void cxl_decoder_reset(struct cxl_decoder *cxld)
->  	writel(0, hdm + CXL_HDM_DECODER0_BASE_LOW_OFFSET(id));
->  
->  	cxld->flags &= ~CXL_DECODER_F_ENABLE;
-> +	cxl_hdm_info_set_decoder(cxlhdm, cxld);
->  
->  	/* Userspace is now responsible for reconfiguring this decoder */
->  	if (is_endpoint_decoder(&cxld->dev)) {
-> @@ -1058,11 +1164,16 @@ static int devm_cxl_enumerate_decoders(struct cxl_hdm *cxlhdm,
->  	struct cxl_port *port = cxlhdm->port;
->  	int i;
->  	u64 dpa_base = 0;
-> +	int rc;
->  
->  	cxl_settle_decoders(cxlhdm);
->  
-> +	rc = cxl_pci_setup_hdm_info(cxlhdm);
-> +	if (rc)
-> +		return rc;
-> +
->  	for (i = 0; i < cxlhdm->decoder_count; i++) {
-> -		int rc, target_count = cxlhdm->target_count;
-> +		int target_count = cxlhdm->target_count;
->  		struct cxl_decoder *cxld;
->  
->  		if (is_cxl_endpoint(port)) {
-> @@ -1097,6 +1208,7 @@ static int devm_cxl_enumerate_decoders(struct cxl_hdm *cxlhdm,
->  			put_device(&cxld->dev);
->  			return rc;
->  		}
-> +		cxl_hdm_info_set_decoder(cxlhdm, cxld);
->  		rc = add_hdm_decoder(port, cxld);
->  		if (rc) {
->  			dev_warn(&port->dev,
-> diff --git a/include/cxl/cxl.h b/include/cxl/cxl.h
-> index 85e895d9b31c..703285966946 100644
-> --- a/include/cxl/cxl.h
-> +++ b/include/cxl/cxl.h
-> @@ -133,6 +133,18 @@ struct cxl_regs {
->  	);
->  };
->  
-> +#define CXL_HDM_DECODER_MAX_COUNT 32
-> +
-> +/**
-> + * struct cxl_hdm_info - PCI device HDM decoder programming cache
-> + * @decoder_count: number of decoder settings entries
-> + * @settings: cached per-decoder programming state
-> + */
-> +struct cxl_hdm_info {
-> +	int decoder_count;
-> +	struct cxl_decoder_settings settings[CXL_HDM_DECODER_MAX_COUNT];
-> +};
-> +
->  struct cxl_reg_map {
->  	bool valid;
->  	int id;
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 64b308b6e61c..a8e5cec96bae 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -335,6 +335,9 @@ struct pcie_link_state;
->  struct pci_sriov;
->  struct pci_p2pdma;
->  struct rcec_ea;
-> +#ifdef CONFIG_CXL_HDM
-> +struct cxl_hdm_info;
-> +#endif
->  
->  /* struct pci_dev - describes a PCI device
->   *
-> @@ -562,6 +565,9 @@ struct pci_dev {
->  #ifdef CONFIG_PCI_DOE
->  	struct xarray	doe_mbs;	/* Data Object Exchange mailboxes */
->  #endif
-> +#ifdef CONFIG_CXL_HDM
-> +	struct cxl_hdm_info *hdm;	/* CXL HDM decoder reset state */
-> +#endif
->  #ifdef CONFIG_PCI_NPEM
->  	struct npem	*npem;		/* Native PCIe Enclosure Management */
->  #endif
+base-commit: b41ce14da749fb44ca7940ba9797027bfa62c23e
+--=20
+2.55.0.766.g2966f0265a-goog
 
