@@ -1,38 +1,38 @@
 Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E78DA39A4AA;
-	Fri, 21 Aug 2026 23:08:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A765C1F94F;
+	Fri, 21 Aug 2026 23:10:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=204.191.154.188
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787353724; cv=none; b=ZA38b+akFqSynmEyzQsvC6cOLpnzzKSzjM+JcvMNuQG0ifZI1HxeFcFnWHEeepzBjkOvEgQ82WmNm5RW8s7XaL6G2axt5KA98I7Tpki2hvu1NoCOzScfCeSZ4NHzDFqKKMCOGCQScVvYn4fqWJdv2K3N9vyNYLqHbsRTp/g6E90=
+	t=1787353834; cv=none; b=F5XXbade+f4YZZ9bAlPhGqoJeCVA6oBY36LruyS3sU60+vjI2j9oeF2uSWxEhPAnsN5bznYlG5dwlY2s88OUoTUHQgsZfaxgvZZKbNvNSzP8DKMTj2W2Eg/W6CpOmjtMTeYFSO3IIiq99fcJb6KAXLUchA2eRmhPYR85D6+twlU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787353724; c=relaxed/simple;
-	bh=W1EihAFKCMrMO8clCMq/OCfA6XR2zjlEvpw5pDjweVw=;
+	s=arc-20240116; t=1787353834; c=relaxed/simple;
+	bh=JHxY+9D2jYaCNnyUDsrdzd2I0UOcGayagb+veHZMrLA=;
 	h=Message-ID:Date:MIME-Version:To:Cc:References:From:In-Reply-To:
-	 Content-Type:Subject; b=aYKU2uzBqlMZ/lZ2pcbHOU+v6W02FK3n31sFd2iIlYozzJ+j5yi8a/10BWYZ+vg/6eZ6TgylTGHHiGZmlktaYM37+TU9sR+7sG9X4CAi9KYN9jX7Vr+pb0G303W0NUrfCU1426fIE7bcN2Dsmh6kM6bqCaoR6r8HyG28IXYQQec=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com; spf=pass smtp.mailfrom=deltatee.com; dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b=HNLahndZ; arc=none smtp.client-ip=204.191.154.188
+	 Content-Type:Subject; b=cbZEmxgf+99ddK3enWJ0+b0p2ZrkXX1mMO0xFjGI4i6eXicwPXyWdv7mLSuqh+3dxSToIt752EDqSg0sgHcUAv8vTRzzyVNtR1TWGWIzyvfi67jqE9/pzgA3Ojom34rxoovL9a2NyQYaeicl60fHwum85NhLRjbeYONXJef8pM8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com; spf=pass smtp.mailfrom=deltatee.com; dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b=iXP3brMK; arc=none smtp.client-ip=204.191.154.188
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=deltatee.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b="HNLahndZ"
+	dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b="iXP3brMK"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
 	MIME-Version:Date:Message-ID:content-disposition;
-	bh=fkfMaoeV36jnbnNkOff/Nn2sVnubQwHY5bjslIAzUlM=; b=HNLahndZDsC6m/ontpRX49oXxx
-	E45i6V1tIhktwdOacGtGyfvlh59IY74piVaieBCf+UO1UsB3w3LSgIstj8YUhlPvkxgv95HvBKetr
-	Tl/lowRkSWqr+cekthZgT8CYmVyiBSKFQ5GsBSd6VvyAAuKJ2axyAhUAh8jtLQQTcfbt3TYkqCRu2
-	cyU9C6IklpJbk0TQn5WEVh3N4x2EmZt8NCo2USL4p39pgfX0h5CmzVEMOsvlcdKwz64Qez2jtnuW5
-	p9U4WydoXj2j849TP7I9NexLgEl0FgoC0vYncdyRXauwcoTMmHpjCg+LD+VOZr1dGRn/y+5J2B5+/
-	I0m1fk2w==;
+	bh=dFghjUN81u9O22HJDcUJRE8I5XrUxUr7git8+py+xtY=; b=iXP3brMKILNZihvxe/pHZ35Bq8
+	UBMOwZxKdCT2iQfaAUISySvONVQHloCEmsGoM/UM4cjB33JyRFVC/gI/2rNZgfFFhHmbuK984BmUg
+	8y/SCfBSLQcwgbJxm7YrADgYEXEcoNcAtdV9x1WLSPnSmsHsrkwo8dbURCjGLzkr3RwAfVgLN/k+k
+	QOiiMDTf+u3SU2cvBEAmmBmHtTm52zZWZjSBMuUL3lpUrHjKs3JtHfhM7g86uYabRJippBqy/bszw
+	rCjXQwUI4nsmlptCrv6LWJWGoendQmNyzHKZnMse84Fz4E31q+hQQQvaCPSnLixVIfFHSp4MmUSx0
+	LB8/7GDA==;
 Received: from guinness.priv.deltatee.com ([172.16.1.162])
 	by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
 	(Exim 4.98.2)
 	(envelope-from <logang@deltatee.com>)
-	id 1wxYLf-00000003EQt-3smV;
-	Fri, 21 Aug 2026 17:08:32 -0600
-Message-ID: <f1237857-1318-48e4-adcc-b2ff1924433b@deltatee.com>
-Date: Fri, 21 Aug 2026 17:08:19 -0600
+	id 1wxYNZ-00000003ET1-1IJl;
+	Fri, 21 Aug 2026 17:10:30 -0600
+Message-ID: <de397acb-c5c0-491e-9361-e39c4b385584@deltatee.com>
+Date: Fri, 21 Aug 2026 17:10:24 -0600
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -50,20 +50,20 @@ To: Leon Romanovsky <leon@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
  Robin Murphy <robin.murphy@arm.com>
 Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
  linux-doc@vger.kernel.org, iommu@lists.linux.dev,
- Tushar Dave <tdave@nvidia.com>
+ Tushar Dave <tdave@nvidia.com>, Matt Evans <matt@ozlabs.org>
 References: <20260821-fix-p2p-acs-v4-0-v4-0-94426b96de73@nvidia.com>
- <20260821-fix-p2p-acs-v4-0-v4-1-94426b96de73@nvidia.com>
+ <20260821-fix-p2p-acs-v4-0-v4-2-94426b96de73@nvidia.com>
 Content-Language: en-CA
 From: Logan Gunthorpe <logang@deltatee.com>
-In-Reply-To: <20260821-fix-p2p-acs-v4-0-v4-1-94426b96de73@nvidia.com>
+In-Reply-To: <20260821-fix-p2p-acs-v4-0-v4-2-94426b96de73@nvidia.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 X-SA-Exim-Connect-IP: 172.16.1.162
-X-SA-Exim-Rcpt-To: leon@kernel.org, bhelgaas@google.com, kch@nvidia.com, gregkh@linuxfoundation.org, axboe@kernel.dk, alex@shazbot.org, ankita@nvidia.com, jgg@ziepe.ca, corbet@lwn.net, skhan@linuxfoundation.org, joro@8bytes.org, will@kernel.org, robin.murphy@arm.com, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, iommu@lists.linux.dev, tdave@nvidia.com
+X-SA-Exim-Rcpt-To: leon@kernel.org, bhelgaas@google.com, kch@nvidia.com, gregkh@linuxfoundation.org, axboe@kernel.dk, alex@shazbot.org, ankita@nvidia.com, jgg@ziepe.ca, corbet@lwn.net, skhan@linuxfoundation.org, joro@8bytes.org, will@kernel.org, robin.murphy@arm.com, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, iommu@lists.linux.dev, tdave@nvidia.com, matt@ozlabs.org
 X-SA-Exim-Mail-From: logang@deltatee.com
 X-Spam-Level: 
-Subject: Re: [PATCH v4 01/18] PCI/P2PDMA: Do not tear down the allocate
- attribute on registration failure
+Subject: Re: [PATCH v4 02/18] PCI/P2PDMA: Wait for RCU readers before freeing
+ state
 X-SA-Exim-Version: 4.2.1 (built Sun, 23 Feb 2025 07:57:16 +0000)
 X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 
@@ -72,42 +72,23 @@ X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 On 2026-08-21 13:38, Leon Romanovsky wrote:
 > From: Leon Romanovsky <leonro@nvidia.com>
 > 
-> pci_p2pdma_add_resource() installs pci_p2pdma_unmap_mappings() as a devres
-> action with the devres allocated p2p_pgmap as its data, and only then adds
-> the range to the pool:
+> pci_p2pmem_find_many() scans all PCI devices without locking or
+> protection against driver unbind, including devices with poolless
+> P2PDMA state. pci_has_p2pmem() may observe pdev->p2pdma just before
+> driver unbind clears it, while pci_p2pdma_release() skips the grace
+> period when no pool is present. This allows devres to free the object
+> while it is still in use.
 > 
-> 	error = devm_add_action_or_reset(&pdev->dev, pci_p2pdma_unmap_mappings,
-> 					 p2p_pgmap);
-> 	if (error)
-> 		goto pages_free;
-> 
-> 	p2pdma = rcu_dereference_protected(pdev->p2pdma, 1);
-> 	error = gen_pool_add_owner(p2pdma->pool, ...);
-> 	if (error)
-> 		goto pages_free;
-> 
-> The action removes the allocate attribute for the whole device, which
-> tears down existing userspace mappings of every BAR already registered on
-> it. Both failures here get that wrong, in opposite ways.
-> 
-> devm_add_action_or_reset() runs the action when it cannot allocate its
-> devres node, so an -ENOMEM while registering a second BAR unmaps the
-> first one. Use devm_add_action() and let the error path unwind only what
-> this call created.
-> 
-> gen_pool_add_owner() allocates a chunk and can also fail with -ENOMEM.
-> There the action is registered, and the error path frees p2p_pgmap with
-> devm_kfree() while leaving the action pointing at it. On unbind devres
-> runs the action and pci_p2pdma_unmap_mappings() dereferences
-> p2p_pgmap->mem->owner->kobj, which is freed memory. Give that failure its
-> own label and drop the action with devm_remove_action(), which removes it
-> without running it.
+> Clear the pointer with RCU_INIT_POINTER() and always wait for pre-existing
+> RCU readers before returning. The same grace period continues to protect
+> gen_pool users for pool-backed providers.
 > 
 > Tested-by: Tushar Dave <tdave@nvidia.com>
-> Fixes: 7e9c7ef83d78 ("PCI/P2PDMA: Allow userspace VMA allocations through sysfs")
-> Fixes: f58ef9d1d135 ("PCI/P2PDMA: Separate the mmap() support from the core logic")
+> Cc: Alex Williamson <alex@shazbot.org>
+> Cc: Matt Evans <matt@ozlabs.org>
+> Fixes: 372d6d1b8ae3 ("PCI/P2PDMA: Refactor to separate core P2P functionality from memory allocation")
 > Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
 
-Makes sense to me:
+Sounds fine:
 
 Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
