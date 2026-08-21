@@ -1,147 +1,90 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF1FF3BFE40;
-	Fri, 21 Aug 2026 16:40:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC91B42E43E;
+	Fri, 21 Aug 2026 16:42:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787330442; cv=none; b=haK98SvY8ZDAIUZOvkRrpfzt2F8mGwnJ5KB163gzjHznHJDOxYRtv735NLK5rMkDnbgc3v4j1lv2waMDMwMT76qYPMGoExRM+Z8sdxpylDP7BO3cxqcMI16Se0dQ/Y13RttCXBGSUIjAAdY5+A6s+jZsiw7EA6tm2L3d0eAe/3Y=
+	t=1787330562; cv=none; b=kHT9HDboqRwZlz+l4QSb6Wk+Q8vfTCOSmX/vc3wrQVpsqQBd0GoYeIkSeli5yvg9IE45E1HDHEM7ZoBrvLzKebahbW96kByAofmSGOWJBDs14lboSNzx8PyveVBxcz1UZyKGMEjRPjUAk9iGuRL5E/XITRNpEdQKsSUM+5l4akQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787330442; c=relaxed/simple;
-	bh=LjY9K5ove29/BH+rESB2pQyikZT4aQPayjl8uzpozrI=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=FSVmxQ6VmYAjOTcygtbeG5gbS1k65mR8DOOqMf6JjtT493O0Fv4aXELTTjxxdDS0pJjWzGv/udQ/zhHbR+DkHdJ64EnVp34med5BOAQc2LEyy7jZVFQAueLpKNO0LIxfwxc+2VE+vw0YLrjPs+XVDFcng+gz+pgoIn0E4QB05vo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=O2ETuFHj; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1787330562; c=relaxed/simple;
+	bh=dEYjYTHnZ3nvTVMVhjxUBAlkXruEKvkyFiw4KoYV1K4=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=NQ0I/6GY+jxyolVSDQEFQHzzLnUR3xzJYPSkXjEEwarGqxkWgn/XM8ui8uR60N9mfH7q03GOynpayW8a41lMkL8OTS475nMHtmjue190navSBJatc3xyax2ZJkH+lUAxAa1BuYh3mKOh74aO6gadCiFuz/u/Sx+cBoXxD36I0Zk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KLVwgJ6D; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="O2ETuFHj"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 8A2E6C19425;
-	Fri, 21 Aug 2026 16:40:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1787330441;
-	bh=LjY9K5ove29/BH+rESB2pQyikZT4aQPayjl8uzpozrI=;
-	h=From:Date:Subject:To:Cc:Reply-To:From;
-	b=O2ETuFHjRleckP/KS19rF4SuugcLb1zYsw+unphUzEl4GbAsG0g+ySEf1j6xX539K
-	 Fmztgbj1+LpeIjYj/BmebgW2iG4K53V3/XTbgyKnetMl+HRjvBT2xa2ihpmpSk30Ty
-	 28tOB9wdSBwhTlCmGg/8XBuJJZXI6vnVON9Asb0bKrqXowpZTxxq2kvUKBkRd3oPg4
-	 ycplllXk6TIRl4vJry9bpDFmf4dnVyaTWEG9TxZ8FF2L5lWndCJCajBBM3oUKJ796m
-	 XeKNSYBls99Ll/V4OTEWXAayPUR9gazhfs7zHNb4tOgyPUfk05ETPhbHQ821wPLRqV
-	 2FioBmvqXL53A==
-Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 780F7C5DF94;
-	Fri, 21 Aug 2026 16:40:41 +0000 (UTC)
-From: FAN YE via B4 Relay <devnull+fy15309206903.gmail.com@kernel.org>
-Date: Fri, 21 Aug 2026 16:40:41 +0000
-Subject: [PATCH] PCI/VGA: Fix lost wakeup when waiting for a VGA resource
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KLVwgJ6D"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 667F51F01558;
+	Fri, 21 Aug 2026 16:42:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1787330560;
+	bh=+KMV7bp0Qmyuzak5vOlwAPPaxnv4/oTolCg/yrscfHs=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=KLVwgJ6DceWmekouwTxRerRxnH29oYkGjPsdSymjYlRcoeFdVjLjofbvM6cnxw5U8
+	 UkMQmMGkHP7qCaBS2zamCsP7IQ6JgCcxsuMYWlKu6hGRnMA7DL63uk0QlzQVlnUh5W
+	 QSaQSTMG6Ecc0slI3ISB3RZgaEowgdXtjhv7dW7RV506ooXMh79aqw0atrl5FculXR
+	 ne53kEpuCKwbk0IslVvr38wNfHS+qrRZzG6zMdO9IKacsHym60ZskbQWRYTQjVpfCl
+	 rbLrZqd1XfBfS8hb8jdBq0BLMkenhMwITOl4G2GzokMdXUjmchQztbafsK5k2whIjx
+	 z5JlekrELBUNA==
+Date: Fri, 21 Aug 2026 11:42:39 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Deepanshu Kartikey <kartikey406@gmail.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	syzbot+7134530b25073b4ef373@syzkaller.appspotmail.com
+Subject: Re: [PATCH] PCI: sysfs: Reject unaligned resource I/O port accesses
+Message-ID: <20260821164239.GA975848@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20260821-pci-vga-lost-wakeup-v1-1-39dc6a2333c6@gmail.com>
-X-B4-Tracking: v=1; b=H4sIAIh/iGoC/yXMSQ6DMAxA0asgr7GUhFG9CmIRUhcMFUQxQyXE3
- Rva5Vv8f4JQYBJ4JCcE2ll4mSN0moAb7NwT8jMajDKlqo1G7xj33uJ7kRUPO9HmMesqVRZ1bnL
- SEEsf6MWf37Vp/5atG8mt9wqu6wuBcIaPdwAAAA==
-X-Change-ID: 20260821-pci-vga-lost-wakeup-3b70658424e1
-To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org
-X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1787330440; l=3519;
- i=fy15309206903@gmail.com; s=tbnet3; h=from:subject:message-id;
- bh=Rrv8GAN0TkTavxf0KIGyHuf9553vMGCJ0Prul4fquuY=;
- b=1v3iU7KRL+w1UPjVQY3sriskWxxUrivf66xlFxS/4VJKeVonSAOMEM6cfTk1prWoeU90MW/qg
- 8DXrI67x7cCALTVOmYRZpLfStHf90Vi8Ql6yt+yPQnzRj5EgeN26XS5
-X-Developer-Key: i=fy15309206903@gmail.com; a=ed25519;
- pk=6QsQIrI/kruYWIJyCH9ntPMXsHCqF5JtK/DCMtOCzdc=
-X-Endpoint-Received: by B4 Relay for fy15309206903@gmail.com/tbnet3 with
- auth_id=929
-X-Original-From: FAN YE <fy15309206903@gmail.com>
-Reply-To: fy15309206903@gmail.com
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CADhLXY4KGiDs3CGYs22aGF0H2LZEzD6Vkjf-yAjr+xTkpZQrmg@mail.gmail.com>
 
-From: FAN YE <fy15309206903@gmail.com>
+On Fri, Aug 21, 2026 at 07:16:32AM +0530, Deepanshu Kartikey wrote:
+> On Sun, Aug 9, 2026 at 10:29 AM Deepanshu Kartikey
+> <kartikey406@gmail.com> wrote:
+> >
+> > pci_resource_io() validates that off+count stays within the BAR's
+> > range but never checks that the resulting port is aligned to the
+> > access size. A pwrite64()/pread64() on a resourceN file with an odd
+> > offset and count=2 or count=4 reaches outw()/outl() with a misaligned
+> > address. On arm64 this becomes a store/load to a Device-memory
+> > mapping (PCI_IOBASE + port), which architecturally requires natural
+> > alignment, causing an alignment fault and kernel oops.
+> >
+> > Reject misaligned accesses before they reach the low-level accessor.
+> >
+> > Reported-by: syzbot+7134530b25073b4ef373@syzkaller.appspotmail.com
+> > Closes: https://syzkaller.appspot.com/bug?extid=7134530b25073b4ef373
+> > Signed-off-by: Deepanshu Kartikey <kartikey406@gmail.com>
+> > ---
+> >  drivers/pci/pci-sysfs.c | 3 +++
+> >  1 file changed, 3 insertions(+)
+> >
+> > diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> > index 5ec0b245a69b..72f0404a34e9 100644
+> > --- a/drivers/pci/pci-sysfs.c
+> > +++ b/drivers/pci/pci-sysfs.c
+> > @@ -1175,6 +1175,9 @@ static ssize_t pci_resource_io(struct file *filp, struct kobject *kobj,
+> >         if (port + count - 1 > pci_resource_end(pdev, bar))
+> >                 return -EINVAL;
+> >
+> > +       if (!IS_ALIGNED(port, count))
+> > +               return -EINVAL;
+> > +
+> >         switch (count) {
+> >         case 1:
+> >                 if (write)
+> > --
+> > 2.43.0
+> >
+> 
+> Gentle Reminder. Please let me know the status of this patch
 
-A task waiting in vga_get() can sleep forever even though the conflicting
-device has already released the resource.  Once __vga_tryget() reports a
-conflict, vga_get() drops vga_lock and only then puts itself on
-vga_wait_queue, while __vga_put() wakes that queue while holding vga_lock.
-A wakeup landing in between finds the queue empty and is discarded, and as
-the conflict is already gone no further wakeup is coming.  Callers passing
-interruptible=0, such as the "lock" command of /dev/vga_arbiter, are then
-unkillable and keep their lock counts forever.
-
-Queue up before dropping vga_lock, the way prepare_to_wait() publishes a
-waiter before the condition is re-tested.  The releasing side needs
-vga_lock to reach the wakeup, so it can no longer pass an unqueued waiter.
-
-Fixes: deb2d2ecd43d ("PCI/GPU: implement VGA arbitration on Linux")
-Cc: stable@vger.kernel.org
-Assisted-by: Claude:claude-opus-5
-Signed-off-by: FAN YE <fy15309206903@gmail.com>
----
-Reproduced under QEMU on 818bebeb63dd with two VGA devices, the second one
-behind a bridge that does not forward VGA so that it owns no legacy resources.
-Two /dev/vga_arbiter clients each locking one device wedged the second client
-in vga_get(), D state and unkillable, after 8538 rounds, while the conflicting
-device already read back locks=none(0:0).  40000 rounds with this patch, none.
----
- drivers/pci/vgaarb.c | 29 +++++++++++++++++------------
- 1 file changed, 17 insertions(+), 12 deletions(-)
-
-diff --git a/drivers/pci/vgaarb.c b/drivers/pci/vgaarb.c
-index 3de05aee78599..51c7d171c9558 100644
---- a/drivers/pci/vgaarb.c
-+++ b/drivers/pci/vgaarb.c
-@@ -459,6 +459,23 @@ int vga_get(struct pci_dev *pdev, unsigned int rsrc, int interruptible)
- 			break;
- 		}
- 		conflict = __vga_tryget(vgadev, rsrc);
-+		/*
-+		 * We have a conflict; we wait until somebody kicks the
-+		 * work queue. Currently we have one work queue that we
-+		 * kick each time some resources are released, but it would
-+		 * be fairly easy to have a per-device one so that we only
-+		 * need to attach to the conflicting device.
-+		 *
-+		 * Queue up before dropping vga_lock: __vga_put() wakes the
-+		 * queue while holding it, so a wakeup cannot slip past.
-+		 */
-+		if (!IS_ERR_OR_NULL(conflict)) {
-+			init_waitqueue_entry(&wait, current);
-+			add_wait_queue(&vga_wait_queue, &wait);
-+			set_current_state(interruptible ?
-+					  TASK_INTERRUPTIBLE :
-+					  TASK_UNINTERRUPTIBLE);
-+		}
- 		spin_unlock_irqrestore(&vga_lock, flags);
- 		if (IS_ERR(conflict)) {
- 			rc = PTR_ERR(conflict);
-@@ -467,18 +484,6 @@ int vga_get(struct pci_dev *pdev, unsigned int rsrc, int interruptible)
- 		if (conflict == NULL)
- 			break;
- 
--		/*
--		 * We have a conflict; we wait until somebody kicks the
--		 * work queue. Currently we have one work queue that we
--		 * kick each time some resources are released, but it would
--		 * be fairly easy to have a per-device one so that we only
--		 * need to attach to the conflicting device.
--		 */
--		init_waitqueue_entry(&wait, current);
--		add_wait_queue(&vga_wait_queue, &wait);
--		set_current_state(interruptible ?
--				  TASK_INTERRUPTIBLE :
--				  TASK_UNINTERRUPTIBLE);
- 		if (interruptible && signal_pending(current)) {
- 			__set_current_state(TASK_RUNNING);
- 			remove_wait_queue(&vga_wait_queue, &wait);
-
----
-base-commit: 818bebeb63dd6bf5f4e07e145f6cdbace520a34c
-change-id: 20260821-pci-vga-lost-wakeup-3b70658424e1
-
-Best regards,
---  
-FAN YE <fy15309206903@gmail.com>
-
-
+We're in the middle of the merge window, so won't be adding new
+material until after v7.3-rc1 (probably Aug 31).
