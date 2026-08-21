@@ -1,132 +1,142 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.13])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 77AB5352F95;
-	Fri, 21 Aug 2026 02:09:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.13
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C0A773D73
+	for <linux-pci@vger.kernel.org>; Fri, 21 Aug 2026 02:10:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787278181; cv=none; b=kWDi8Z2Ux7qckOF5y+C3Y49JAjo1mUIobdri2uUxNPeJF9QKcVCHt5X/mhzrfRPCXoBRnowosnd7+VNIJ7XmxRc+qyLeoOE7MqPLS34Xkw4RqLmOKBrz8em6bG3ICvfkeD5tU3zphUuBLN6UId84vOfXvdM5V/COdscAUE8Du4c=
+	t=1787278208; cv=none; b=k7puTebYf8CkdeaPrOjsO0JFq0Wh280RouTXVu0/LH1htP7bgQ7vXBiXx2nqTRQ2HZVFjnycfe0i8/cV0/9aoBv0frvgDRTmI6SVev83MSyCrxokdt6qEvx/cfKDI9GNXH7wC7Bf1ZX1+rfc61iqf8jl0zU96nAB4wodppebj1Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787278181; c=relaxed/simple;
-	bh=C42Fxi+EP5/Clmm6Nl6D+S2Nk//X8c54I9cXhIguMws=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Uf1b2i/MOoSEGtEMHVHV5RVFTfU+FVpMBoIZrk1GJInF/TGLLD6hom6DDFvkUyEnLTao5ygi3DZygKjgyDmSYiHcNOBSXXDdR3enXHHhwzl5WaD2U2nYCZQJ5IjQVm2qhP09GTSTNsFmLFJh4OpXzfY4JhkSkKiVO3yqdPOf5hU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=X/B4xfRm; arc=none smtp.client-ip=198.175.65.13
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1787278208; c=relaxed/simple;
+	bh=Ruzk+cw8ZP8uop2GDhgzJFXe6CMwZfljoX8rZQdTTRg=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=ACxLSc/xGwRDfeqlmm1HzoBYVVzAQY4Fcmwi1ZYP0TrezXywTWv/n96oLkF2cZRlNADDeWd0SHGc0GhQuAn2WLlf+PBRQVs1AEO7LlzUqeCHbR3FSnSwBoBApbfjZs5s7D//JFcAJHVvGVjtbz5aoyvhuUIeLeCll6BRIj1xxJs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TSjpp2ie; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="X/B4xfRm"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1787278179; x=1818814179;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=C42Fxi+EP5/Clmm6Nl6D+S2Nk//X8c54I9cXhIguMws=;
-  b=X/B4xfRm7lxMvLK95jgkVYhiXv6SbRGf9ab4nN+NrCGRaNbRfIv6/jhp
-   +ZScSWwt1cDoc6NJ9zJxxriLLq60PJtIptG79rgvCEvYteIZb+VvUFIs8
-   YRhk89lokkqOzhGwi963Xp2DbnjHsH/MFyJuceblBL5MtOTmTN48ofegD
-   axKmiMJVM060sdWt7lP88iYyJOWlOKZn711p4MfJu85dawX6CITan4Asm
-   13WHMkvb3ys8DXM1UGLuP9HFRFYH0jOvtCVMqXEsdR9PWfe5mMytNKgtv
-   1aZX/AWKzyU1yjdH4k+n/6LLXWjHzFEuU9BZWQ1FrKGepx8AHmcxxLB63
-   A==;
-X-CSE-ConnectionGUID: wsoo4T5hTgKk1pHxSGmgMA==
-X-CSE-MsgGUID: pDr09e5rQA2H8oovmRXwVg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11881"; a="98980531"
-X-IronPort-AV: E=Sophos;i="6.25,234,1779174000"; 
-   d="scan'208";a="98980531"
-Received: from fmviesa006.fm.intel.com ([10.60.135.146])
-  by orvoesa105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Aug 2026 19:09:38 -0700
-X-CSE-ConnectionGUID: dQ4BsQUqRV61VIDY00Qx/Q==
-X-CSE-MsgGUID: mt/rhD2nT8Sa4/NEaF0ekQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.25,234,1779174000"; 
-   d="scan'208";a="261931313"
-Received: from blu2-desk.sh.intel.com (HELO [10.239.156.26]) ([10.239.156.26])
-  by fmviesa006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Aug 2026 19:09:35 -0700
-Message-ID: <599aea14-4690-4f4a-9cb7-6308f7b1a9df@linux.intel.com>
-Date: Fri, 21 Aug 2026 10:09:33 +0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TSjpp2ie"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3AC3F1F000E9;
+	Fri, 21 Aug 2026 02:10:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1787278206;
+	bh=qdpaaLgt8W2/BQ4HUETUhLUnGpJbxvJp7Jj1U6z7WKE=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=TSjpp2iehor8ADIa68Gf3P2DpWvTPg8AOKziyOdMDC4XjCfziVoNJjG7FJ802Fvl/
+	 Jyv4oR/fsthJAvNqfCE6qW9q1qxo4Vi6bVQHWz3TqEpUqdfa9HGcJr1R3qlGzpSV5x
+	 1jb3ePSANKYE6ogpl0m2pP/ENCccUyYfSLk1f/qE+6g8SzlsCYdMkTu7FnxNpTwAnB
+	 O6o1B4s180sQltvzt5ucoaLpfNpAIAMcXXL549azO1P1K9wm048n111y/zFcFxp0kx
+	 kEkrsmjOZP9ll++4xFC1BrTkIEM0e/WF1ckPC5oehQRs8BluPUz+Ary3mVgAb4uIgf
+	 nJUwIGrq+dvQA==
+From: sashiko-bot@kernel.org
+Subject: Re: PCI: Prevent device lock leak during bus reset
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Zhang Hongtao" <zhanghongtao35@huawei.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260821021626.1874602-1-zhanghongtao35@huawei.com>
+References: <20260821021626.1874602-1-zhanghongtao35@huawei.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Fri, 21 Aug 2026 02:10:05 +0000
+Message-Id: <20260821021006.3AC3F1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4] PCI: Ensure ATS disabled via quirk before notifying
- IOMMU drivers
-To: David Matlack <dmatlack@google.com>, linux-kernel@vger.kernel.org,
- linux-pci@vger.kernel.org
-Cc: Alexander Lobakin <aleksander.lobakin@intel.com>,
- Alex Deucher <alexander.deucher@amd.com>,
- Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
- Bartosz Pawlowski <bartosz.pawlowski@intel.com>,
- Bjorn Helgaas <bhelgaas@google.com>,
- =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>,
- David Woodhouse <dwmw2@infradead.org>, Guchun Chen <guchun.chen@amd.com>,
- Joerg Roedel <jroedel@suse.de>, Raghavendra Rao Ananta <rananta@google.com>,
- Pranjal Shrivastava <praan@google.com>
-References: <20260817202823.2172548-1-dmatlack@google.com>
-Content-Language: en-US
-From: Baolu Lu <baolu.lu@linux.intel.com>
-In-Reply-To: <20260817202823.2172548-1-dmatlack@google.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
 
-On 8/18/26 04:28, David Matlack wrote:
-> Ensure that PCI devices always have ATS disable via quirk before IOMMU
-> drivers are notified about the device. Fix this by converting the
-> existing quirks from final to header fixups and changing the quirk logic
-> to set a new no_ats bit in struct pci_dev that prevents pci_dev.ats_cap
-> from ever getting set.
-> 
-> Use header fixups instead of early fixups since not enough of struct
-> pci_dev is set up in during early fixups: quirk_amd_harvest_no_ats()
-> needs subsystem_device and subsystem_vendor to be set.
-> 
-> This change ensures that pci_ats_supported() always takes quirks into
-> account during iommu_ops.probe_device(), when IOMMU drivers are notified
-> about devices, and that pci_ats_supported() returns the same value when
-> the device is released in iommu_ops.release_device().
-> 
-> The Intel IOMMU driver uses pci_ats_supported() in probe/release to
-> determine whether to add/remove a device from a tracking rbtree. This
-> strict reliance on pci_ats_supported() remaining constant between probe
-> and release was introduced by commit 89436f4f5412 ("iommu/vt-d: Fix
-> WARN_ON in iommu probe path"). Because FINAL quirks evaluate too late
-> (in pci_bus_add_device()), pci_ats_supported() evaluated to true during
-> IOMMU probe but false during release. This mismatch bypassed the rbtree
-> removal upon device release, leading to a later use-after-free.
-> 
-> Note that this fix only matters for PCI devices created after IOMMU bus
-> notifiers are set up (e.g. hot-plugged devices and VFs).
-> 
-> Fixes: a18615b1cfc0 ("PCI: Disable ATS for specific Intel IPU E2000 devices")
-> Fixes: 9b44b0b09dec ("PCI: Mark AMD Stoney GPU ATS as broken")
-> Fixes: 3f1271b54edc ("PCI: Mark all AMD Navi10 and Navi14 GPU ATS as broken")
-> Closes:https://lore.kernel.org/linux-iommu/aYUQ_HkDJU9kjsUl@google.com/
-> Reviewed-by: Pranjal Shrivastava<praan@google.com>
-> Tested-by: Pranjal Shrivastava<praan@google.com>
-> Signed-off-by: David Matlack<dmatlack@google.com>
-> ---
-> v4:
->   - Rebase onto tip of Linus' tree
->   - Add Pranjal's Reviewed-by and Tested-by tags
-> 
-> v3:https://lore.kernel.org/linux-pci/20260403222750.1215002-1- 
-> dmatlack@google.com/
-> v2:https://lore.kernel.org/linux-pci/20260327211649.3816010-1- 
-> dmatlack@google.com/
-> v1:https://lore.kernel.org/linux-pci/20260223184017.688212-1- 
-> dmatlack@google.com/
-> 
-> Cc: Raghavendra Rao Ananta<rananta@google.com>
-> Cc: David Woodhouse<dwmw2@infradead.org>
-> Cc: Lu Baolu<baolu.lu@linux.intel.com>
-> Cc: Andy Shevchenko<andriy.shevchenko@linux.intel.com>
-> 
->   drivers/pci/ats.c    |  2 +-
->   drivers/pci/quirks.c | 50 ++++++++++++++++++++++----------------------
->   include/linux/pci.h  |  1 +
->   3 files changed, 27 insertions(+), 26 deletions(-)
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
 
-Reviewed-by: Lu Baolu <baolu.lu@linux.intel.com>
+Pre-existing issues:
+- [High] This problem wasn't introduced by this patch, but the patch fixes =
+pci_bus_reset while leaving identical lock leak and Use-After-Free races un=
+mitigated in pci_try_reset_bus, pci_slot_reset, and pci_try_reset_slot.
+--
+
+--- Patch [1]: PCI: Prevent device lock leak during bus reset ---
+commit 0d6c89d5cec5eebb33879246fbc7b446f026613a
+Author: Zhang Hongtao <zhanghongtao35@huawei.com>
+
+PCI: Prevent device lock leak during bus reset
+
+This patch fixes a device lock leak in pci_bus_reset() caused by
+concurrent device removal. It takes a topology snapshot under pci_bus_sem
+to guarantee that all locked devices are unlocked during a secondary bus re=
+set.
+
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 77b17b13ee615..25a1e44263c32 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+
+[ ... ]
+
+> @@ -5585,21 +5667,31 @@ static int pci_try_reset_slot(struct pci_slot *sl=
+ot)
+> =20
+>  static int pci_bus_reset(struct pci_bus *bus, bool probe)
+>  {
+> +	struct pci_bus_lock_context context;
+>  	int ret;
+> =20
+> +	down_read(&pci_bus_sem);
+> +
+>  	if (!bus->self || !pci_bus_resettable(bus))
+> -		return -ENOTTY;
+> +		ret =3D -ENOTTY;
+> +	else if (probe)
+> +		ret =3D 0;
+> +	else
+> +		ret =3D pci_bus_lock_snapshot_init(bus, &context);
+> =20
+> -	if (probe)
+> -		return 0;
+> +	up_read(&pci_bus_sem);
+> +
+> +	if (ret || probe)
+> +		return ret;
+> =20
+> -	pci_bus_lock(bus);
+> +	pci_bus_lock_snapshot(&context);
+> =20
+>  	might_sleep();
+> =20
+>  	ret =3D pci_bridge_secondary_bus_reset(bus->self);
+> =20
+> -	pci_bus_unlock(bus);
+> +	pci_bus_unlock_snapshot(&context);
+> +	pci_bus_lock_snapshot_release(&context);
+> =20
+>  	return ret;
+>  }
+
+[Severity: High]
+This is a pre-existing issue, but regarding the RFC question in the commit
+message about extending this fix:
+
+The identical lock leaks and use-after-free races remain in the slot and
+try-reset paths, as they rely on __pci_bus_lock(), __pci_bus_unlock(), and
+__pci_bus_trylock().
+
+For example, __pci_bus_trylock() iterates over bus->devices without=20
+holding pci_bus_sem:
+
+drivers/pci/pci.c:__pci_bus_trylock() {
+    ...
+    list_for_each_entry(dev, &bus->devices, bus_list) {
+        if (slot && (!dev->slot || dev->slot !=3D slot))
+            continue;
+...
+}
+
+If a concurrent device removal executes list_del(&dev->bus_list) during
+pci_try_reset_bus(), pci_slot_reset(), or pci_try_reset_slot(), the unlock
+loop fails to find the device. This leaves the device permanently locked,
+causing the same system hangs in driver bind/unbind paths.
+
+Since these paths are reachable via PCIe AER recovery or hotplug events,
+would it be safer to extend this snapshot mechanism to the slot and
+try-reset paths to fully close this race condition?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260821021626.1874=
+602-1-zhanghongtao35@huawei.com?part=3D1
