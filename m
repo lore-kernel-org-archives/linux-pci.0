@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 781F840DB4B;
-	Fri, 21 Aug 2026 19:42:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B99CF413D8F;
+	Fri, 21 Aug 2026 19:42:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787341329; cv=none; b=FYIWNkq1v2M5UNPHp7z30lA6r7KYiAwYfYBbfR2QJZz5bm6wrP8TNM3zb+7DMuj8bAcvg0+aotzcq9T/at3/lhFzP884yJEK6UwXrDgThLPDSlgFF5DqcXqg8itIcQfJqBMbSQjTyjmV1zlXy7ak2286RW5W3o1NhGKruX22kmM=
+	t=1787341335; cv=none; b=U2wkkd8e1ePNKxqLaPXAHU6N8fYEaAt2pmWnqSAjkyHmN4b9Y1fAWtiY4ZbZruk+VhsfReVNwDQa937CG7FXuXCGEc4fHLuG8XtI8zymO5vQdXN2W/crIXdx+0L1BpbyBgVFpF8juH4xoykou2vRMlv2fiLakB6P632w1v0Wez8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787341329; c=relaxed/simple;
-	bh=LMvhgH6LUmo4fxHlYX8ajmD8cHYJoCj4jo+mMIAOpRQ=;
+	s=arc-20240116; t=1787341335; c=relaxed/simple;
+	bh=v2lT8gnZmcN0RMwNsrBCqLIYYwVw42o56xMYXEiRSuU=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=RA6O3i4m0mp8T3SaCOvKeuDQq35rSfcQg5INOmweFieblRMCU+MN6ZitWHlj46FsFLmtRBUIGQTRawcnTeac/pO9cDobkmSBcTq6Q5SCD9LUzDwCJVCijG+4NQeL52fcjptT4+6S+M2SD746MlFEq2bSoXAJF8XqAIwoufJVXfw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kUef1Zqp; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=c/Q059vxwMp2fQw8O2EnT0HO6wHJE1u2pMDBEe/KaSeDiURsmafx07FhKnDKFBwMFylIR333EfJQPUTdk4+h88OwDJti9D2XBBmlckuPjvggFu86xYknuFBiBMJkVxmdTIQZpVB2QAoIzYHU7JMil1RHW+BndGG9tcS1/0IGF1s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ofhuvKUf; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kUef1Zqp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 07FA71F000E9;
-	Fri, 21 Aug 2026 19:42:06 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ofhuvKUf"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 57FF41F000E9;
+	Fri, 21 Aug 2026 19:42:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787341328;
-	bh=KNsaL2xN6oXqbf61jQYxhGakuH1AEsrVQlg6bAS+D7w=;
+	s=k20260515; t=1787341333;
+	bh=3TPsUfDOOa44a6VaX6hgCc67m6LJmfj2zzjdx5orqEk=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=kUef1ZqppWfnTA28oBx306aZjZKBLX74aDQkEQDqmZj2uitdO6fBfC3SyuYqDXXoh
-	 ALIRCSk7GK5U3VTYa3lQxIzFk83XNQeNTgLtwdtjZN2GGCJdo4nCzfmWKee+lqRwNZ
-	 cOaParbp/xUylI0NS7aHeR7SFIMkpZSMHGJTL9VsDNsnDMHe/E5b6W6Z2x6z6SCfyV
-	 GaiIIjzbDUzpwST2+9H+CD2jVpCLQ+fhmbNrWo7mah4SCOCxClSTWlT+JTeVd9G49s
-	 Ipov2inq/qUK6YHqGT7O09cJ/QFF1OUYV7iiqgjaFcB43OO8G41XxLjRtrDCxPweLL
-	 yljIIDRu479Bg==
+	b=ofhuvKUfhdiJgaM6mUkYMpkxzwCAbF77JPxajjEyfIVRXsTMr1weuK6Y2oJSeJ3Se
+	 jWWlwLNAWmWLbBFMCbp4dkakenyZcXr/ExFpjng55X6VrSGxEIzbyTkW4SWZ56jzMh
+	 xl55EfTObM00vEuHa79D0gbvzgqBP6MZSRLOSAONa6XbdvY+UzvtCFVBYu951O/sXa
+	 FPn8cgwzhncDkTGswhr/yoJuQRMe5M/VS/WeTJLBDNMaylHUkTns4mfNpil0baF2rb
+	 TeGHx0bBXXQMEW5vhKZVtrIqa/a1Sm2ze+zcUtc8jg7dAYdMZiSAagYVwpr+lRXwmQ
+	 8gPdV92KNISoQ==
 From: Leon Romanovsky <leon@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
 	Logan Gunthorpe <logang@deltatee.com>,
@@ -46,9 +46,9 @@ Cc: linux-pci@vger.kernel.org,
 	linux-doc@vger.kernel.org,
 	iommu@lists.linux.dev,
 	Tushar Dave <tdave@nvidia.com>
-Subject: [PATCH v4 13/18] PCI/P2PDMA: Document ACS egress control handling
-Date: Fri, 21 Aug 2026 22:38:44 +0300
-Message-ID: <20260821-fix-p2p-acs-v4-0-v4-13-94426b96de73@nvidia.com>
+Subject: [PATCH v4 14/18] PCI/P2PDMA: Extract pure ACS routing decision helpers
+Date: Fri, 21 Aug 2026 22:38:45 +0300
+Message-ID: <20260821-fix-p2p-acs-v4-0-v4-14-94426b96de73@nvidia.com>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260821-fix-p2p-acs-v4-0-v4-0-94426b96de73@nvidia.com>
 References: <20260821-fix-p2p-acs-v4-0-v4-0-94426b96de73@nvidia.com>
@@ -64,73 +64,219 @@ Content-Transfer-Encoding: 8bit
 
 From: Leon Romanovsky <leonro@nvidia.com>
 
-ACS controls are directional and affect only a peer-versus-upstream routing
-decision, but the P2PDMA documentation describes them as path-wide. This
-can make valid asymmetric or nested configurations appear unsupported.
+The ACS routing decision and Egress Control Vector size calculation are
+mixed with config-space I/O, which makes their branch-heavy behavior
+difficult to exercise independently.
 
-Document the fixed transaction roles and the two ports at the path
-divergence. Request Redirect and Egress Control apply on the client-side
-port, while Completion Redirect applies on the provider-side port. Controls
-below the divergence cannot change traffic whose only route is upstream.
-
-Distinguish redirects, which establish a host route, from ACS Violations
-and unreadable routing state, which must be rejected.
+Extract pci_acs_p2pdma_decision() with explicit Request or Completion type,
+target availability, and vector state inputs. Extract
+pci_acs_egress_port_valid() for the encoded vector-size boundary. Keep
+config access in their callers and expose only the pure helpers under
+CONFIG_KUNIT.
 
 Tested-by: Tushar Dave <tdave@nvidia.com>
 Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
 ---
- Documentation/admin-guide/kernel-parameters.txt |  9 +++++----
- Documentation/driver-api/pci/p2pdma.rst         | 17 +++++++++++++++++
- 2 files changed, 22 insertions(+), 4 deletions(-)
+ drivers/pci/p2pdma.c | 70 ++++++++++++++++++++++++++++------------------------
+ drivers/pci/pci.c    | 26 ++++++++++++++++---
+ drivers/pci/pci.h    | 23 +++++++++++++++++
+ 3 files changed, 83 insertions(+), 36 deletions(-)
 
-diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
-index b5493a7f8f22..5c3ed4fd439c 100644
---- a/Documentation/admin-guide/kernel-parameters.txt
-+++ b/Documentation/admin-guide/kernel-parameters.txt
-@@ -5226,10 +5226,11 @@ Kernel parameters
- 		disable_acs_redir=<pci_dev>[; ...]
- 				Specify one or more PCI devices (in the format
- 				specified above) separated by semicolons.
--				Each device specified will have the PCI ACS
--				redirect capabilities forced off which will
--				allow P2P traffic between devices through
--				bridges without forcing it upstream. Note:
-+				Each device specified will have the PCI ACS P2P
-+				Request Redirect, Completion Redirect, and Egress
-+				Control features forced off. This may allow P2P
-+				traffic through bridges that would otherwise be
-+				redirected upstream or blocked. Note:
- 				this removes isolation between devices and
- 				may put more devices in an IOMMU group.
- 		config_acs=
-diff --git a/Documentation/driver-api/pci/p2pdma.rst b/Documentation/driver-api/pci/p2pdma.rst
-index a7fd426c3685..4e21942eab65 100644
---- a/Documentation/driver-api/pci/p2pdma.rst
-+++ b/Documentation/driver-api/pci/p2pdma.rst
-@@ -15,6 +15,23 @@ then based on the ACS settings the transaction can route entirely within
- the PCIe hierarchy and never reach the root port. The kernel will evaluate
- the PCIe topology and always permit P2P in these well-defined cases.
+diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
+index bcbbdbd8ee47..632f2d8c51e0 100644
+--- a/drivers/pci/p2pdma.c
++++ b/drivers/pci/p2pdma.c
+@@ -538,22 +538,45 @@ static struct pci_dev *find_parent_pci_dev(struct device *dev)
+ 	return NULL;
+ }
  
-+ACS P2P Egress Control does not, by itself, force a transaction upstream. A
-+clear Egress Control Vector bit for the peer port permits direct routing; a
-+set bit redirects the request upstream when P2P Request Redirect is enabled.
-+When Request Redirect is disabled, a set vector bit causes an ACS Violation
-+instead.
+-enum pci_acs_p2pdma_state {
+-	PCI_ACS_P2PDMA_DIRECT,
+-	PCI_ACS_P2PDMA_REDIRECT,
+-	PCI_ACS_P2PDMA_NOT_SUPPORTED,
+-};
++/*
++ * PCIe r7.0, sec 6.12.3, table 6-11: decide how a peer-to-peer TLP at an
++ * ACS-capable ingress port routes, given its ACS Control register @ctrl and
++ * whether it is a Request or Completion (@tlp).
++ *
++ * Egress Control applies only to Requests where the target is known (the path
++ * divergence). There, a set vector bit redirects the Request only when Request
++ * Redirect is set; with Request Redirect clear it is an ACS Violation. A clear
++ * vector bit permits the Request to route directly. @has_target and @egress
++ * describe that target and its Egress Control Vector bit. Completion routing
++ * depends only on Completion Redirect.
++ */
++VISIBLE_IF_KUNIT enum pci_acs_p2pdma_state
++pci_acs_p2pdma_decision(u16 ctrl, enum pci_acs_p2pdma_tlp tlp,
++			bool has_target, int egress)
++{
++	if (tlp == PCI_ACS_P2PDMA_TLP_COMPLETION)
++		return ctrl & PCI_ACS_CR ? PCI_ACS_P2PDMA_REDIRECT :
++					   PCI_ACS_P2PDMA_DIRECT;
+ 
+-enum pci_acs_p2pdma_tlp {
+-	PCI_ACS_P2PDMA_TLP_REQUEST,
+-	PCI_ACS_P2PDMA_TLP_COMPLETION,
+-};
++	if (!has_target || !(ctrl & PCI_ACS_EC))
++		return ctrl & PCI_ACS_RR ?
++			PCI_ACS_P2PDMA_REDIRECT : PCI_ACS_P2PDMA_DIRECT;
 +
-+The client remains the PCIe requester when it reads or writes provider memory.
-+Where the paths diverge, the kernel therefore evaluates P2P Request Redirect
-+and Egress Control on the client-side port, and P2P Completion Redirect on the
-+provider-side port for completions from a read. Below the divergence, the route
-+toward the other branch is already upstream, so those P2P redirect controls do
-+not affect it. Redirect controls for the reverse transaction directions do not
-+affect the mapping. P2P DMA is routed through the host bridge when either
-+applicable port redirects. If an applicable port blocks the direct path or its
-+routing cannot be determined, P2P DMA is rejected because neither condition
-+establishes an upstream route.
++	if (egress < 0)
++		return PCI_ACS_P2PDMA_NOT_SUPPORTED;
++	if (egress)
++		return ctrl & PCI_ACS_RR ? PCI_ACS_P2PDMA_REDIRECT :
++					   PCI_ACS_P2PDMA_NOT_SUPPORTED;
 +
- This evaluation covers the ACS controls that govern Requests carrying an
- Untranslated address. Unless ACS Translation Blocking is enabled, a Port
- with ACS Direct Translated P2P enabled routes a Request carrying a Translated
++	return PCI_ACS_P2PDMA_DIRECT;
++}
++EXPORT_SYMBOL_IF_KUNIT(pci_acs_p2pdma_decision);
+ 
+ static enum pci_acs_p2pdma_state
+ pci_acs_p2pdma_state(struct pci_dev *pdev, struct pci_dev *target,
+ 		     enum pci_acs_p2pdma_tlp tlp)
+ {
+-	int pos, ret;
++	int pos, egress = 0;
+ 	u16 ctrl;
+ 
+ 	pos = pdev->acs_cap;
+@@ -563,29 +586,12 @@ pci_acs_p2pdma_state(struct pci_dev *pdev, struct pci_dev *target,
+ 	if (pci_read_config_word(pdev, pos + PCI_ACS_CTRL, &ctrl))
+ 		return PCI_ACS_P2PDMA_NOT_SUPPORTED;
+ 
+-	if (tlp == PCI_ACS_P2PDMA_TLP_COMPLETION)
+-		return ctrl & PCI_ACS_CR ? PCI_ACS_P2PDMA_REDIRECT :
+-					   PCI_ACS_P2PDMA_DIRECT;
+-
+-	/* EC applies only to Requests where the target is known. */
+-	if (!target || !(ctrl & PCI_ACS_EC))
+-		return ctrl & PCI_ACS_RR ?
+-			PCI_ACS_P2PDMA_REDIRECT : PCI_ACS_P2PDMA_DIRECT;
++	/* Egress Control applies only to Requests with a known target. */
++	if (tlp == PCI_ACS_P2PDMA_TLP_REQUEST && target &&
++	    (ctrl & PCI_ACS_EC))
++		egress = pci_acs_egress_ctrl_is_set(pdev, target);
+ 
+-	/*
+-	 * PCIe r7.0, sec 6.12.3, table 6-11: a set Egress Control Vector
+-	 * bit redirects the request only when Request Redirect is set.  With
+-	 * Request Redirect clear, the request is handled as an ACS Violation.
+-	 * A clear vector bit permits the Request to route directly.
+-	 */
+-	ret = pci_acs_egress_ctrl_is_set(pdev, target);
+-	if (ret < 0)
+-		return PCI_ACS_P2PDMA_NOT_SUPPORTED;
+-	if (ret)
+-		return ctrl & PCI_ACS_RR ? PCI_ACS_P2PDMA_REDIRECT :
+-						PCI_ACS_P2PDMA_NOT_SUPPORTED;
+-
+-	return PCI_ACS_P2PDMA_DIRECT;
++	return pci_acs_p2pdma_decision(ctrl, tlp, !!target, egress);
+ }
+ 
+ static void seq_buf_print_bus_devfn(struct seq_buf *buf, struct pci_dev *pdev)
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index a633f473590f..d900fdb6f37d 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3562,6 +3562,26 @@ static bool pci_acs_egress_vector_port(const struct pci_dev *dev)
+ 	       type == PCI_EXP_TYPE_DOWNSTREAM;
+ }
+ 
++/**
++ * pci_acs_egress_port_valid - Is a target port within the Egress Control Vector
++ * @acs_caps: the ingress port's ACS Capability register
++ * @target_port: the target Downstream Port number
++ *
++ * The Egress Control Vector Size occupies bits 15:8 of the ACS Capability
++ * register (PCIe r7.0, sec 7.7.12).  A size of 0 encodes 256 bits, so
++ * every port number is addressable.
++ *
++ * Return: %true if @target_port has a bit in the Egress Control Vector.
++ */
++VISIBLE_IF_KUNIT
++bool pci_acs_egress_port_valid(u16 acs_caps, u8 target_port)
++{
++	unsigned int vector_size = acs_caps >> 8;
++
++	return !vector_size || target_port < vector_size;
++}
++EXPORT_SYMBOL_IF_KUNIT(pci_acs_egress_port_valid);
++
+ /**
+  * pci_acs_egress_ctrl_is_set - Read an ACS Egress Control Vector bit
+  * @pdev: ingress Root or Switch Downstream Port
+@@ -3572,7 +3592,6 @@ static bool pci_acs_egress_vector_port(const struct pci_dev *dev)
+  */
+ int pci_acs_egress_ctrl_is_set(struct pci_dev *pdev, struct pci_dev *target)
+ {
+-	unsigned int vector_size;
+ 	u32 lnkcap, vector;
+ 	u8 target_port;
+ 	int ret;
+@@ -3597,10 +3616,8 @@ int pci_acs_egress_ctrl_is_set(struct pci_dev *pdev, struct pci_dev *target)
+ 		return pcibios_err_to_errno(ret);
+ 
+ 	target_port = FIELD_GET(PCI_EXP_LNKCAP_PN, lnkcap);
+-	vector_size = pdev->acs_capabilities >> 8;
+ 
+-	/* An Egress Control Vector Size of 0 encodes 256 bits. */
+-	if (vector_size && target_port >= vector_size)
++	if (!pci_acs_egress_port_valid(pdev->acs_capabilities, target_port))
+ 		return -ERANGE;
+ 
+ 	ret = pci_read_config_dword(pdev,
+@@ -3612,6 +3629,7 @@ int pci_acs_egress_ctrl_is_set(struct pci_dev *pdev, struct pci_dev *target)
+ 
+ 	return !!(vector & BIT(target_port % 32));
+ }
++EXPORT_SYMBOL_IF_KUNIT(pci_acs_egress_ctrl_is_set);
+ 
+ static bool pci_acs_flags_enabled(struct pci_dev *pdev, u16 acs_flags,
+ 				  enum pci_acs_scope scope)
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 32394e349766..4593fb43f96c 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -2,6 +2,7 @@
+ #ifndef DRIVERS_PCI_H
+ #define DRIVERS_PCI_H
+ 
++#include <kunit/visibility.h>
+ #include <linux/align.h>
+ #include <linux/bitfield.h>
+ #include <linux/pci.h>
+@@ -1079,6 +1080,28 @@ static inline bool pci_acs_rr_ineffective(u32 ctrl, u16 acs_flags,
+ }
+ 
+ int pci_acs_egress_ctrl_is_set(struct pci_dev *pdev, struct pci_dev *target);
++
++/*
++ * Peer-to-peer routing decision for an ACS-capable ingress port, per
++ * PCIe r7.0, sec 6.12.3, table 6-11.
++ */
++enum pci_acs_p2pdma_state {
++	PCI_ACS_P2PDMA_DIRECT,		/* peer-to-peer permitted directly */
++	PCI_ACS_P2PDMA_REDIRECT,	/* redirected upstream to host bridge */
++	PCI_ACS_P2PDMA_NOT_SUPPORTED,	/* no usable peer-to-peer route */
++};
++
++enum pci_acs_p2pdma_tlp {
++	PCI_ACS_P2PDMA_TLP_REQUEST,
++	PCI_ACS_P2PDMA_TLP_COMPLETION,
++};
++
++#if IS_ENABLED(CONFIG_KUNIT)
++bool pci_acs_egress_port_valid(u16 acs_caps, u8 target_port);
++enum pci_acs_p2pdma_state
++pci_acs_p2pdma_decision(u16 ctrl, enum pci_acs_p2pdma_tlp tlp,
++			bool has_target, int egress);
++#endif
+ #ifdef CONFIG_PCI_QUIRKS
+ int pci_dev_specific_acs_enabled(struct pci_dev *dev, u16 acs_flags,
+ 				 enum pci_acs_scope scope);
 
 -- 
 2.55.0
