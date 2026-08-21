@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA0EB40DB4B;
-	Fri, 21 Aug 2026 19:41:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE44640DB3C;
+	Fri, 21 Aug 2026 19:41:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787341309; cv=none; b=h0/lMWvdfmMwXR/SbJMFaY4AKOA73gmlU3eJBvlLT4qZGpflne4U/3jp8SpMf7swseMDvFrEnPMVYmNOFtghmxR5dI6MzEnVzRH/U1CXWDKkvBgGqezqhTifdHiHkvubqIE6pGbQNBZpaW//SHszx7D4z1Ue/DXwiEhi/mJdt1A=
+	t=1787341314; cv=none; b=rdhRQixaalRMyA2rtgmjJ2qCyw9S/OzYd3e1ONgpEtVOZTbD7AByg8FrDeF5i2jA8j6/tCkBhPuUWQ4kH5Q9EUD4MT3ek7K92YyMpQ5Oc40EUUSDWuh/GMWlAndmGGcDR9/VlMSEAErfNGeyT7HiIykiG6MnOTZATO8VWfYYFwQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787341309; c=relaxed/simple;
-	bh=Y5V56ajxmRifR4NicXb0rKhGluu16o6pU4cMkSQhlcs=;
+	s=arc-20240116; t=1787341314; c=relaxed/simple;
+	bh=HTlCS36Jw5LBbsu+pbhYKbNTATGEkiRF5U2KzrGPR90=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=rOOItC5dHQMRU0QtECViXGzXmRjcg6+T9RZG1s61JdofObwzr9zPPBi/Tjq6h+ZW63JUGGT0zTvJwgWCy4NKi+AF38bMgJEbuE61H07qJ6HqR+nMfyKNw42FamfS3F6/p5VMQp1W6Xod6Pfdf0Vj141wG93YuOS8+SGJU6kfW74=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=G15SIM3D; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=QjX/p2dKo174o4EgatwHWvpsSCWpn00u+ITpbN0BSP7OBuJaXZC6lW3hEJDrcrtkb7oOOEcM1O/xR8HOmtXuR3DhxU0diUKwA7IkyHv6tuOA7YlHqQp9KkmGl7C4+FP0AhEGtbp7mioHSDwCH1LNSG715BEs6bXb1Q2s3XBoiqo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=T2CqL3C3; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="G15SIM3D"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2236E1F000E9;
-	Fri, 21 Aug 2026 19:41:45 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="T2CqL3C3"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5956E1F000E9;
+	Fri, 21 Aug 2026 19:41:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787341307;
-	bh=ReUKprhm5GJXxLLftQMXJc1jgg0gVzxELtWjMYrWXOg=;
+	s=k20260515; t=1787341312;
+	bh=pM/8CIQiHWzcaqML80GUQPNx0F5GBdopWHz7HkSMkgQ=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=G15SIM3D+kP5FmDt0NMFMF+oLZEYxnI4NjGgJzrMKxAXf4xu8NCsIZFWqWo2QLt2G
-	 rMjsp7oMIFwbMz21tUrRdrPqcIKlQg8uAHaKdEPWaHJ5YMfi+hJkVBny1nFM74p9lZ
-	 jVGidtKoakV4XXA5EHbxsz5PnkYWj8Wmdl/6ZOAH76ob85M9TcBKX+/w1VMTFpeI1n
-	 J1bHG4j7N6ZobG4/9orbWUMo0f3/mgB8nfrTVef8fR3TU5oL2boL90afMuRrZhPPCG
-	 KsPeOIAiOeO+sxQkh5yHu+rV0vU6eAjeAvnByBNrKociagd5Gm0QVWSQnZB7IHyCzx
-	 9LN2idDxXhBgQ==
+	b=T2CqL3C3NCNfU3uEzY2aen1Bo8MFe3jDzUcd5MxJvPju0i7PIqbb8YT38L9N/Hego
+	 NfIhTK3duCYBFu1wD8pI2SvjaqS14KZI8Hvj1fE2RC+qaF/mWDaCcqRrolYcldJktA
+	 pDWbhCgm4uxVJZJaS3tCD6oBMZRvlh9riwGTLe5TRfmQTMOYzEXyvvee0jJO3G9rfl
+	 CH/WTb+CoRbxRor/SZ4zYmsvtJy0K008Ovn+3qwUS4bCN3YNhYaTTmu8yp/Wv8u+rA
+	 Bh1BjdWwUNuZHaIwfVEXLEEBzGZJAW1dK4QtlDYU0EACOJgj9Sl53o1pZh6BZTCAr3
+	 +LQqafG9+IAuw==
 From: Leon Romanovsky <leon@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
 	Logan Gunthorpe <logang@deltatee.com>,
@@ -46,9 +46,9 @@ Cc: linux-pci@vger.kernel.org,
 	linux-doc@vger.kernel.org,
 	iommu@lists.linux.dev,
 	Tushar Dave <tdave@nvidia.com>
-Subject: [PATCH v4 09/18] PCI: Add ACS egress control vector accessor
-Date: Fri, 21 Aug 2026 22:38:40 +0300
-Message-ID: <20260821-fix-p2p-acs-v4-0-v4-9-94426b96de73@nvidia.com>
+Subject: [PATCH v4 10/18] PCI: Account for ACS egress control in isolation checks
+Date: Fri, 21 Aug 2026 22:38:41 +0300
+Message-ID: <20260821-fix-p2p-acs-v4-0-v4-10-94426b96de73@nvidia.com>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260821-fix-p2p-acs-v4-0-v4-0-94426b96de73@nvidia.com>
 References: <20260821-fix-p2p-acs-v4-0-v4-0-94426b96de73@nvidia.com>
@@ -64,121 +64,98 @@ Content-Transfer-Encoding: 8bit
 
 From: Leon Romanovsky <leonro@nvidia.com>
 
-Whether ACS P2P Egress Control routes, redirects, or blocks a peer-to-peer
-request depends on the Egress Control Vector bit for the target port, not
-on the enable bit alone (PCIe r7.0, sec 6.12.3).
-
-Provide a helper to read that bit for a peer Root or Switch Downstream
-Port. Report an unreadable or uncovered vector as an error rather than as
-a clear bit, so callers do not mistake it for permission to route
+pci_acs_enabled() treats P2P Request Redirect as effective whenever its
+control bit is set. PCIe r7.0, sec 6.12.3, table 6-11 lets an enabled
+Egress Control Vector override it: a clear vector bit routes the request
 directly.
 
-Each bit corresponds to a Port Number within one Switch or Root Complex
-(sec 7.7.12.4), so both ports have to number their ports in the same
-place. Downstream Ports of one Switch share its internal bus, and Root
-Ports of one Root Complex share a root bus, so require a shared bus and
-reject anything else. A target numbered elsewhere has no bit in this
-vector and would select an unrelated one.
+IOMMU grouping uses this check to prove peer requests cannot bypass the
+IOMMU, but cannot know every applicable vector bit, so Request Redirect
+gives no such guarantee while Egress Control is enabled.
+
+Report Request Redirect as ineffective there, merging the devices into
+one IOMMU group, and report no isolation when the register cannot be
+read. Apply the same rule to the Intel SPT PCH quirk.
+
+Unlike Direct Translated P2P this holds for an Untranslated Request too,
+so it applies in both scopes. pci_enable_pasid() therefore fails on a
+path where a port has Egress Control enabled, because Request Redirect
+no longer shows that a Request carrying a PASID reaches the translation
+agent.
 
 Tested-by: Tushar Dave <tdave@nvidia.com>
+Fixes: ad805758c0eb ("PCI: add ACS validation utility")
 Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
 Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
 ---
- drivers/pci/pci.c | 68 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
- drivers/pci/pci.h |  1 +
- 2 files changed, 69 insertions(+)
+ drivers/pci/pci.c    |  3 ++-
+ drivers/pci/pci.h    | 13 +++++++++++--
+ drivers/pci/quirks.c |  7 +++++--
+ 3 files changed, 18 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 492bb26a99de..8d165c9534ff 100644
+index 8d165c9534ff..a633f473590f 100644
 --- a/drivers/pci/pci.c
 +++ b/drivers/pci/pci.c
-@@ -3545,6 +3545,74 @@ void pci_configure_ari(struct pci_dev *dev)
- 	}
- }
+@@ -3623,7 +3623,8 @@ static bool pci_acs_flags_enabled(struct pci_dev *pdev, u16 acs_flags,
+ 	if (!pos)
+ 		return false;
  
-+/*
-+ * PCIe r7.0, sec 7.7.12: only for Root Ports and Switch Downstream Ports does
-+ * each Egress Control Vector bit correspond to a Port Number.  Elsewhere the
-+ * vector is indexed by Function or Function Group Number, so a Link
-+ * Capabilities Port Number must not be used to select a bit.
-+ *
-+ * pcie_downstream_port() is too permissive here because it also accepts a
-+ * PCI/PCI-X to PCIe Bridge.
-+ */
-+static bool pci_acs_egress_vector_port(const struct pci_dev *dev)
-+{
-+	int type = pci_pcie_type(dev);
-+
-+	return type == PCI_EXP_TYPE_ROOT_PORT ||
-+	       type == PCI_EXP_TYPE_DOWNSTREAM;
-+}
-+
-+/**
-+ * pci_acs_egress_ctrl_is_set - Read an ACS Egress Control Vector bit
-+ * @pdev: ingress Root or Switch Downstream Port
-+ * @target: target Root or Switch Downstream Port
-+ *
-+ * Return: 1 if @pdev's Egress Control Vector bit for @target is set, 0 if
-+ * it is clear, or a negative errno if the bit cannot be determined.
-+ */
-+int pci_acs_egress_ctrl_is_set(struct pci_dev *pdev, struct pci_dev *target)
-+{
-+	unsigned int vector_size;
-+	u32 lnkcap, vector;
-+	u8 target_port;
-+	int ret;
-+
-+	if (!(pdev->acs_capabilities & PCI_ACS_EC) ||
-+	    !pci_acs_egress_vector_port(pdev) ||
-+	    !pci_acs_egress_vector_port(target))
-+		return -EOPNOTSUPP;
-+
-+	/*
-+	 * Each vector bit corresponds to a Port Number within one Switch or
-+	 * Root Complex (PCIe r7.0, sec 7.7.12.4). Downstream Ports of one
-+	 * Switch share its internal bus and Root Ports of one Root Complex
-+	 * share a root bus, so anything else numbers its ports elsewhere and
-+	 * would index an unrelated bit here.
-+	 */
-+	if (pdev->bus != target->bus)
-+		return -EOPNOTSUPP;
-+
-+	ret = pcie_capability_read_dword(target, PCI_EXP_LNKCAP, &lnkcap);
-+	if (ret)
-+		return pcibios_err_to_errno(ret);
-+
-+	target_port = FIELD_GET(PCI_EXP_LNKCAP_PN, lnkcap);
-+	vector_size = pdev->acs_capabilities >> 8;
-+
-+	/* An Egress Control Vector Size of 0 encodes 256 bits. */
-+	if (vector_size && target_port >= vector_size)
-+		return -ERANGE;
-+
-+	ret = pci_read_config_dword(pdev,
-+				    pdev->acs_cap + PCI_ACS_EGRESS_CTL_V +
-+				    (target_port / 32) * sizeof(vector),
-+				    &vector);
-+	if (ret)
-+		return pcibios_err_to_errno(ret);
-+
-+	return !!(vector & BIT(target_port % 32));
-+}
-+
- static bool pci_acs_flags_enabled(struct pci_dev *pdev, u16 acs_flags,
- 				  enum pci_acs_scope scope)
- {
+-	pci_read_config_word(pdev, pos + PCI_ACS_CTRL, &ctrl);
++	if (pci_read_config_word(pdev, pos + PCI_ACS_CTRL, &ctrl))
++		return false;
+ 
+ 	if (pci_acs_rr_ineffective(ctrl, acs_flags, scope))
+ 		return false;
 diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 6230adb39166..d3ea9b2bb7fc 100644
+index d3ea9b2bb7fc..32394e349766 100644
 --- a/drivers/pci/pci.h
 +++ b/drivers/pci/pci.h
-@@ -1069,6 +1069,7 @@ static inline bool pci_acs_rr_ineffective(u32 ctrl, u16 acs_flags,
- 	       (ctrl & PCI_ACS_DT) && !(ctrl & PCI_ACS_TB);
+@@ -1056,6 +1056,12 @@ void pci_enable_acs(struct pci_dev *dev);
+  * says nothing about an Untranslated Request, so a caller asking only about
+  * those is unaffected.
+  *
++ * Egress Control can override Request Redirect for any peer Request,
++ * Untranslated ones included, so it applies in either scope.  This
++ * target-independent test cannot prove that every applicable Egress Control
++ * Vector bit is set, so Request Redirect does not guarantee that the Request
++ * leaves the direct path while Egress Control is enabled.
++ *
+  * @ctrl is the ACS Control register, @acs_flags the controls the caller asked
+  * for, and @scope the Requests its answer has to cover.
+  */
+@@ -1065,8 +1071,11 @@ static inline bool pci_acs_rr_ineffective(u32 ctrl, u16 acs_flags,
+ 	if (!(acs_flags & PCI_ACS_RR))
+ 		return false;
+ 
+-	return scope == PCI_ACS_SCOPE_ALL &&
+-	       (ctrl & PCI_ACS_DT) && !(ctrl & PCI_ACS_TB);
++	if (scope == PCI_ACS_SCOPE_ALL &&
++	    (ctrl & PCI_ACS_DT) && !(ctrl & PCI_ACS_TB))
++		return true;
++
++	return ctrl & PCI_ACS_EC;
  }
  
-+int pci_acs_egress_ctrl_is_set(struct pci_dev *pdev, struct pci_dev *target);
- #ifdef CONFIG_PCI_QUIRKS
- int pci_dev_specific_acs_enabled(struct pci_dev *dev, u16 acs_flags,
- 				 enum pci_acs_scope scope);
+ int pci_acs_egress_ctrl_is_set(struct pci_dev *pdev, struct pci_dev *target);
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 8b50cd0e5114..cee6be63cadd 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -4998,8 +4998,11 @@ static int pci_quirk_intel_spt_pch_acs(struct pci_dev *dev, u16 acs_flags,
+ 		return -ENOTTY;
+ 
+ 	/* see pci_acs_flags_enabled() */
+-	pci_read_config_dword(dev, pos + PCI_ACS_CAP, &cap);
+-	pci_read_config_dword(dev, pos + INTEL_SPT_ACS_CTRL, &ctrl);
++	if (pci_read_config_dword(dev, pos + PCI_ACS_CAP, &cap))
++		return 0;
++
++	if (pci_read_config_dword(dev, pos + INTEL_SPT_ACS_CTRL, &ctrl))
++		return 0;
+ 
+ 	if (pci_acs_rr_ineffective(ctrl, acs_flags, scope))
+ 		return 0;
 
 -- 
 2.55.0
