@@ -1,50 +1,53 @@
-Received: from mout-p-202.mailbox.org (mout-p-202.mailbox.org [80.241.56.172])
+Received: from mout-p-102.mailbox.org (mout-p-102.mailbox.org [80.241.56.152])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 852B848EBC5;
-	Fri, 21 Aug 2026 12:28:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 71B791F099C;
+	Fri, 21 Aug 2026 12:28:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.152
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787315306; cv=none; b=Avf2TFKGREkGxBIJsIlBuXYcEddiaSGkiKLW6i6tDrxd65zuwAiXQ6jdetiikAR7YL8/y4c3mgMmwEUOgzYWDzTvN5agNb6bgdDKF5kWaawScM08YVmsYZlKmkoyVwjQfCpLLZOBBuCcJyiyPGTWnBmMjA3OkusHYqX2AYLMe0Y=
+	t=1787315311; cv=none; b=f/V1P+2Kk6Jeq/BL0m9KLS+3dMgvpu8lMv12w0J1ks6Yo1+U79kACHMcOcsEQcDyvlcH5cDfNYECEdityAfRaSo85CCVauPVsu7Q2cG5Fz5p8M0X9nz3NXn9PQT3gHlceUuZbIm4RJw2nqivlGP6t4dJzfgK2tZYSBpJzmpykUk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787315306; c=relaxed/simple;
-	bh=fAluj3i5BGhCmNcz3pT7FH7h/WXIP9aqB0SGJICfyFQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=nhFQl8oPnvgR9FdjdMXNmbnvLuMdETPcB6FJsyU+PC8UvqDIn4SnZaQYisTsqWLSvd1o6CtaVweUEjWltQgnhDiM+EGP9IKnRqfi1cpYVD0EcHw5YKUGnQHXlmlm1kyo4JLTT48freb6pgCvpnM/LP8S2q+fPH16vBTL4C9SYfw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=OqvkcGED; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=MhmEoh+h; arc=none smtp.client-ip=80.241.56.172
+	s=arc-20240116; t=1787315311; c=relaxed/simple;
+	bh=FQpYfhwGaodFq9h530kJvDJeAPdWPaCx2PqR6L8SvzE=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=fZtPt4IeADLxz5NQtnZvE8Tl3b7e3ELW4D8x9jcinNbs2D79dDX4dZlH5WnXffsuKpySwCQAu7lcawFZBubKl/l2JncPazKZPjtmi/hZZpBStQuH1Xni04WKM+zGarG25UqTLa0vLCcESYpl6Vd+Ecfd0WnNGXkadIyPl8pqS7c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=SwWq07Jz; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=jCSV0ZBg; arc=none smtp.client-ip=80.241.56.152
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="OqvkcGED";
-	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="MhmEoh+h"
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="SwWq07Jz";
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="jCSV0ZBg"
 Received: from smtp202.mailbox.org (smtp202.mailbox.org [10.196.197.202])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mout-p-202.mailbox.org (Postfix) with ESMTPS id 4hRKN16d71zMlGH;
-	Fri, 21 Aug 2026 14:28:17 +0200 (CEST)
+	by mout-p-102.mailbox.org (Postfix) with ESMTPS id 4hRKN539NJzKw29;
+	Fri, 21 Aug 2026 14:28:21 +0200 (CEST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-	t=1787315297;
+	t=1787315301;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=JOCKz6vPO82OZFPBoK6YiK1bVmbFlFNnDROZ9Nn17+w=;
-	b=OqvkcGEDDXmzKUKcv0tSAEMtkPT4Tf6AvDSwsWllF4VM18TpOF/MFvH78SAMYuLdHiOT71
-	gKI0tU9L5iGMgwwgE/kdaZb0yHN2PIshBwwvfFti89VsnInhQqbxZPVnzijjrkCpWm7H/f
-	YwKHs95yTNbB9Eu7obAgTcwAbvE5fMtPiodI+AIh7jrfP5p22kD5eCA9TwxG9X1OULRN4a
-	gJmioe3GypltVVIEGm5VT76eye4O8nw3Jieb0SiTNRU6roHot0SvI6cVceo/b1lE9hGi3t
-	sIE60CJMYJ45eKvdlW5yszyjEsazrf3ytRBWSn6hAaaBuK5sviBKnApW4EhUkQ==
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=wF82VvkMBcPp6Kh3cyr0M7lo5IrVHWJoZoyzVE7bfYc=;
+	b=SwWq07Jzj5FSguELC8fth5c5yPDvGoOB6EaY06e4hPtQvwvPRmGJRmZxpnTP1mZODmpS6A
+	A2kNlATwaUUBrTJwI0uQM2XcVcvAk8RJ7D+4tGLGWo0rb6AOQJbcQsse7jK7BaLWbk/YXu
+	r1n3Ig7vEHcZVQ9QxFOc9Mj/G4L6qgwxzM7DKUDM3usuPBWLaYs5WLdn5lqhsuVyXegWS0
+	slW5sgdhdLbrBU+GMKPUuIHpm+Fh8FjXjbQDRgm3W0aEqXiB3/RfcJz8te2XmP9iIVSZ7R
+	jbkVyLubHSblKuMCVLkDg237MFojrj14TWsfUQCPa0IcEiRLnrwe6ppW5rU0ww==
 From: Marek Vasut <marek.vasut+renesas@mailbox.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-	t=1787315296;
+	t=1787315300;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=JOCKz6vPO82OZFPBoK6YiK1bVmbFlFNnDROZ9Nn17+w=;
-	b=MhmEoh+hez+sVbRLx0m9a90FNKtnK6ZgPVpD+d/BdPzaZmPjm9zv493IXFTx9MNHqUAhGH
-	Wx4XUZdf+umeyn052Fe8SucE3jB2zkq8Secegj+hgZopcW7ciHp5TsT1b4Z81FBthnyFMg
-	3WvXKyTW2Gmdyp26hxzZKsZdWRzNPwLXPoLcaDDF27fDIAcJJQ5Rf7zf4PKBbAbh02sP+t
-	d5GkK3Uh6Emd7ij8ZUgWV2ofMdDsI9USE7Fm2atg+mj1c71HXC2Hv5yYFqWlxLMkWL9s9m
-	xmjKjYfKUc0cWaH0d3vYdu39gGljFm1kJxMSHdSPduPnFyq54cpxV4fqtT1jDA==
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=wF82VvkMBcPp6Kh3cyr0M7lo5IrVHWJoZoyzVE7bfYc=;
+	b=jCSV0ZBgHtp2oaTOHpuU+SOVLOpweWSNxNa8W7ZMC/dj9Is+aNOK2iGvyRKOmxhKaTh5Ue
+	ytAakgY1NAA2KpFHQDHmLNhUokowEHctpRAlxa0/eY+ToFizw6XJWxJV/rXSOUs0rBR571
+	lpuyb+KkKeCKYzYw9O+d55AQwNdcG76B17LdFcLkLSlXQUqHRO9NQqv7Z+fFW5BqBfkxee
+	fbkA6FhghTbFsNEZTkhtRUh3T5Uh57FBDA2Sv9t3YuPj+YRUaLr/ijByoN1dsgcaYddWNR
+	I9rMagKxMFVNebvZ81BChuEh1fMSrZzsXtxAHyO9kd/q2MvdI/MsxCI7DlhWHw==
 To: linux-pci@vger.kernel.org
 Cc: Marek Vasut <marek.vasut+renesas@mailbox.org>,
 	Koichiro Den <den@valinux.co.jp>,
@@ -58,9 +61,11 @@ Cc: Marek Vasut <marek.vasut+renesas@mailbox.org>,
 	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
 	linux-kernel@vger.kernel.org,
 	linux-renesas-soc@vger.kernel.org
-Subject: [PATCH v3 1/2] PCI: dwc: Add .post_deinit counterpart to endpoint .pre_init callback
-Date: Fri, 21 Aug 2026 14:27:49 +0200
-Message-ID: <20260821122808.238248-1-marek.vasut+renesas@mailbox.org>
+Subject: [PATCH v3 2/2] PCI: dwc: rcar-gen4: Use .post_deinit to handle dw_pcie_ep_init() failures
+Date: Fri, 21 Aug 2026 14:27:50 +0200
+Message-ID: <20260821122808.238248-2-marek.vasut+renesas@mailbox.org>
+In-Reply-To: <20260821122808.238248-1-marek.vasut+renesas@mailbox.org>
+References: <20260821122808.238248-1-marek.vasut+renesas@mailbox.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -69,16 +74,29 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-MBO-RS-ID: 469c63b69f73deb1a0f
-X-MBO-RS-META: jxmusy9cjrt87yw9oruog5zs1bboyesj
+X-MBO-RS-META: i37hwesgx5x1e6gd8se59j8obmxtiytj
+X-MBO-RS-ID: ec2a1b888ffddc70dac
 
-If .pre_init() succeeds but subsequent initialization fails, it is
-mandatory to correctly undo the hardware configuration which the
-.pre_init() callback did. Intrododuce .post_deinit() callback to do
-exactly that, undo what the .pre_init() callback did. Usually, that
-means stop the clock, assert reset, and possibly program some registers
-to quiescense the hardware. Invoke the .post_deinit() callback in
-dw_pcie_ep_deinit() to retain functional symmetry.
+Implement .post_deinit() callback in R-Car Gen4 struct dw_pcie_ep_ops {}
+which asserts reset and stops the clock. This undoes start of clock and
+deassert of reset performed in .pre_init() in case dw_pcie_ep_init() fails
+after successful call of .pre_init() callback.
+
+The use of .post_deinit() callback correctly handles the clock and reset
+stop, unlike the call of rcar_gen4_pcie_ep_deinit() in dw_pcie_ep_init()
+which could not discern at which point the dw_pcie_ep_init() failed and
+might have attempted to stop clock and assert reset twice, remove it.
+
+Since dw_pcie_ep_deinit() also invokes the .post_deinit() callback, drop
+calls to rcar_gen4_pcie_ep_deinit() in both rcar_gen4_add_dw_pcie_ep()
+dw_pcie_ep_init_registers() fail path and rcar_gen4_remove_dw_pcie_ep()
+to avoid duplicate stop of clock and assert of reset, and drop no longer
+used rcar_gen4_pcie_ep_deinit() entirely.
+
+Initialize PCIEDMAINTSTSEN early in rcar_gen4_pcie_ep_pre_init() to 0,
+to make sure that edma_int bits will never be left set in case of
+failure of dw_pcie_ep_init(), and will only be set in case
+dw_pcie_ep_init() succeeds.
 
 Reviewed-by: Koichiro Den <den@valinux.co.jp>
 Tested-by: Koichiro Den <den@valinux.co.jp>
@@ -97,59 +115,74 @@ Cc: linux-kernel@vger.kernel.org
 Cc: linux-pci@vger.kernel.org
 Cc: linux-renesas-soc@vger.kernel.org
 ---
-V2: New patch
+V2: This is reworked version of
+    PCI: dwc: rcar-gen4: Fix potential unclocked access in rcar_gen4_pcie_ep_deinit()
 V3: - Update commit message slightly
     - Add RB/TB from Den-san
 ---
- drivers/pci/controller/dwc/pcie-designware-ep.c | 8 +++++++-
- drivers/pci/controller/dwc/pcie-designware.h    | 1 +
- 2 files changed, 8 insertions(+), 1 deletion(-)
+ drivers/pci/controller/dwc/pcie-rcar-gen4.c | 14 ++++++++------
+ 1 file changed, 8 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
-index de8ee3db43601..1a3491b5003ec 100644
---- a/drivers/pci/controller/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
-@@ -1194,6 +1194,9 @@ void dw_pcie_ep_deinit(struct dw_pcie_ep *ep)
- 			      epc->mem->window.page_size);
+diff --git a/drivers/pci/controller/dwc/pcie-rcar-gen4.c b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
+index fbe465a29068f..157e33c4089b9 100644
+--- a/drivers/pci/controller/dwc/pcie-rcar-gen4.c
++++ b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
+@@ -487,6 +487,8 @@ static int rcar_gen4_pcie_ep_pre_init(struct dw_pcie_ep *ep)
+ 	struct rcar_gen4_pcie *rcar = to_rcar_gen4_pcie(dw);
+ 	int ret;
  
- 	pci_epc_mem_exit(epc);
++	writel(0, rcar->base + PCIEDMAINTSTSEN);
 +
-+	if (ep->ops->post_deinit)
-+		ep->ops->post_deinit(ep);
+ 	ret = rcar_gen4_pcie_common_init(rcar);
+ 	if (ret)
+ 		return ret;
+@@ -496,8 +498,11 @@ static int rcar_gen4_pcie_ep_pre_init(struct dw_pcie_ep *ep)
+ 	return 0;
  }
- EXPORT_SYMBOL_GPL(dw_pcie_ep_deinit);
  
-@@ -1553,7 +1556,7 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
- 			       ep->page_size);
- 	if (ret < 0) {
- 		dev_err(dev, "Failed to initialize address space\n");
--		return ret;
-+		goto err_deinit;
+-static void rcar_gen4_pcie_ep_deinit(struct rcar_gen4_pcie *rcar)
++static void rcar_gen4_pcie_ep_post_deinit(struct dw_pcie_ep *ep)
+ {
++	struct dw_pcie *dw = to_dw_pcie_from_ep(ep);
++	struct rcar_gen4_pcie *rcar = to_rcar_gen4_pcie(dw);
++
+ 	writel(0, rcar->base + PCIEDMAINTSTSEN);
+ 	rcar_gen4_pcie_common_deinit(rcar);
+ }
+@@ -552,6 +557,7 @@ static unsigned int rcar_gen4_pcie_ep_get_dbi2_offset(struct dw_pcie_ep *ep,
+ 
+ static const struct dw_pcie_ep_ops pcie_ep_ops = {
+ 	.pre_init = rcar_gen4_pcie_ep_pre_init,
++	.post_deinit = rcar_gen4_pcie_ep_post_deinit,
+ 	.raise_irq = rcar_gen4_pcie_ep_raise_irq,
+ 	.get_features = rcar_gen4_pcie_ep_get_features,
+ 	.get_dbi_offset = rcar_gen4_pcie_ep_get_dbi_offset,
+@@ -570,16 +576,13 @@ static int rcar_gen4_add_dw_pcie_ep(struct rcar_gen4_pcie *rcar)
+ 	ep->ops = &pcie_ep_ops;
+ 
+ 	ret = dw_pcie_ep_init(ep);
+-	if (ret) {
+-		rcar_gen4_pcie_ep_deinit(rcar);
++	if (ret)
+ 		return ret;
+-	}
+ 
+ 	ret = dw_pcie_ep_init_registers(ep);
+ 	if (ret) {
+ 		dev_err(dev, "Failed to initialize DWC endpoint registers\n");
+ 		dw_pcie_ep_deinit(ep);
+-		rcar_gen4_pcie_ep_deinit(rcar);
  	}
  
- 	ep->msi_mem = pci_epc_mem_alloc_addr(epc, &ep->msi_mem_phys,
-@@ -1568,6 +1571,9 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
- 
- err_exit_epc_mem:
- 	pci_epc_mem_exit(epc);
-+err_deinit:
-+	if (ep->ops->post_deinit)
-+		ep->ops->post_deinit(ep);
- 
- 	return ret;
+ 	pci_epc_init_notify(ep->epc);
+@@ -590,7 +593,6 @@ static int rcar_gen4_add_dw_pcie_ep(struct rcar_gen4_pcie *rcar)
+ static void rcar_gen4_remove_dw_pcie_ep(struct rcar_gen4_pcie *rcar)
+ {
+ 	dw_pcie_ep_deinit(&rcar->dw.ep);
+-	rcar_gen4_pcie_ep_deinit(rcar);
  }
-diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-index 0735ae9409240..a53ac27cd2447 100644
---- a/drivers/pci/controller/dwc/pcie-designware.h
-+++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -475,6 +475,7 @@ struct dw_pcie_rp {
  
- struct dw_pcie_ep_ops {
- 	int	(*pre_init)(struct dw_pcie_ep *ep);
-+	void	(*post_deinit)(struct dw_pcie_ep *ep);
- 	int	(*init)(struct dw_pcie_ep *ep);
- 	int	(*raise_irq)(struct dw_pcie_ep *ep, u8 func_no,
- 			     unsigned int type, u16 interrupt_num);
+ /* Common */
 -- 
 2.53.0
 
