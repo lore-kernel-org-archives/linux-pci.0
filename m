@@ -1,227 +1,64 @@
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D013372EDB;
-	Fri, 21 Aug 2026 12:34:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A0F5739DBC5
+	for <linux-pci@vger.kernel.org>; Fri, 21 Aug 2026 12:37:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787315667; cv=none; b=LWi7rjpfmJAT+p+8qJ/AyRv4ixUsTy3yD6AOH3zQppbdi9ALHUp5YKdnyVjD1hHYVxMA+aq5M+GIb3WKUhh4OrCl9EviNEraZA1c7gQ8PrbhdGbXngxRkfVm+qg9uJb1xlZ3l0+B/rvVCq0lNJukzwgmFuXDdS4hewKBMVSuhsM=
+	t=1787315844; cv=none; b=KEe4UPiuXVx9rYOSHgj6uUduHZkET/5Bfu9gkMSMIawPsjdnuDUIR5T9uNcw95AR7SR99ZKQuBNT076fS8rI3Fp63QwB1Ay8bUUvQLG2yRnJmnpg58PPBNwg1fSOMELCHMABViqFhbywNk3fRkxkCV69plxOnge78jQ44GgvMM0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787315667; c=relaxed/simple;
-	bh=ndt1JgXT84UEfLikolayIAzSz7pRviDiGtDbWc2vK5Y=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=EVCbz23k346+YXGONf5Wi1jqG1O0q2JPmVXwtLBSlEMb78z3+PWHvxCtUkKiIwUy234SRzYp/Y6cmoLrQj5Q/VZFsy3SnRaSEewxSltWQ6pWul0slMoqHLJC9cG48l3wO8gZLQlRBYyCrzVRbx4AILiuqbW97F2jvpOoVzGFkBY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=kOx+uxLE; arc=none smtp.client-ip=148.163.158.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	s=arc-20240116; t=1787315844; c=relaxed/simple;
+	bh=cdcVkuFNkh3zNqVY+1U+IYYAi7St9pWVplNAIz2A+GI=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=obht3s6qUuvwjWtXVAHoN9pQYiNGxPO17+s6ncqORt0/tC6biTil0FWcPnpgOmrZ97Vrps1ZLnhxc73zTRHdplDjeCHXSG7jIikj2dj7K1OB+tCI0OnICuwsK0Uq+Jz/CEWjWUiGfUrVi5nlwHsR2tIHWtcFgHJ1mkNUJxEp4/M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cEQcGUqC; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="kOx+uxLE"
-Received: from pps.filterd (m0360072.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 67LC1oXY1466727;
-	Fri, 21 Aug 2026 12:34:11 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:date:from:message-id:mime-version
-	:subject:to; s=pp1; bh=mXPpO1YGeM9k4SuCjfksGzRUcbRF1jin4g0NcVPtF
-	bw=; b=kOx+uxLEaWJdMRw1X4iw3qWUyXGIghxJjn6N3S3wgaONK/mVAQUATvFfn
-	T/CnK/Stf1KnC2YTbvZI0dK9fzSjN1ZjCbK+on7i+YJ36kXrELA9pN5hjxE9WQBi
-	HTRVJomE5m+4ydqAuwbJhIvkdf+R8qCQRbND28mRWRL8BC3m9bwMp+PGQycFQ7He
-	ftfC0FVi7dEKUXepBzsZS/WVAQTjRIGiUdRmQuTRT98bP9RQt3H4RMWfziHl/NdC
-	EmRes8b5xMwv1CWOAjUshoG3TaF262BzkuOp/k7CbDnnZgJMqJ2hvt9hoQ2/sW2Q
-	NX+dtx3JPjkAt11PLrzl795iRgIGw==
-Received: from ppma23.wdc07v.mail.ibm.com (5d.69.3da9.ip4.static.sl-reverse.com [169.61.105.93])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4g4yu4h6qn-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 21 Aug 2026 12:34:10 +0000 (GMT)
-Received: from pps.filterd (ppma23.wdc07v.mail.ibm.com [127.0.0.1])
-	by ppma23.wdc07v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 67LCQNmX032578;
-	Fri, 21 Aug 2026 12:34:09 GMT
-Received: from smtprelay02.dal12v.mail.ibm.com ([172.16.1.4])
-	by ppma23.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4g33xhmkyv-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 21 Aug 2026 12:34:09 +0000 (GMT)
-Received: from smtpav05.dal12v.mail.ibm.com (smtpav05.dal12v.mail.ibm.com [10.241.53.104])
-	by smtprelay02.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 67LCY8Wh30671556
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 21 Aug 2026 12:34:08 GMT
-Received: from smtpav05.dal12v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 2798558067;
-	Fri, 21 Aug 2026 12:34:08 +0000 (GMT)
-Received: from smtpav05.dal12v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 762465805D;
-	Fri, 21 Aug 2026 12:34:04 +0000 (GMT)
-Received: from li-75d4d1cc-257f-11b2-a85c-f97fadd0f3fb.ibm.com.com (unknown [9.61.86.15])
-	by smtpav05.dal12v.mail.ibm.com (Postfix) with ESMTP;
-	Fri, 21 Aug 2026 12:34:04 +0000 (GMT)
-From: Avinash Roy <avinash@linux.ibm.com>
-To: maddy@linux.ibm.com, mpe@ellerman.id.au, bhelgaas@google.com
-Cc: npiggin@gmail.com, chleroy@kernel.org, sbhat@linux.ibm.com,
-        linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Avinash Roy <avinash.roy1@linux.ibm.com>
-Subject: [PATCH v2] PCI: quirks: Add warm reset quirk for IBM Spyre accelerator
-Date: Fri, 21 Aug 2026 18:04:01 +0530
-Message-ID: <20260821123401.1375297-1-avinash@linux.ibm.com>
-X-Mailer: git-send-email 2.55.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cEQcGUqC"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 01FF81F01558;
+	Fri, 21 Aug 2026 12:37:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1787315839;
+	bh=cdcVkuFNkh3zNqVY+1U+IYYAi7St9pWVplNAIz2A+GI=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=cEQcGUqCe86xo92ZJxj3tGjhkbBY+/lWZjAw5CvO+yiw5eM0L5EWB/oy09Xas7jzs
+	 9X7Drt3O5ox0DvQAAo9uj/bL2Zw+ASdZ8BC6BVa+rz4FXGUro4gF5x8xKcbWykgsUo
+	 BYFKGENUu2Yy2ecNOCkWrkA8/xRrVtoHreMyVTdaWwyVnUqpuOIo4AUo285WqcYUZC
+	 FSXQDDXKIp+FaGbhpr72bgaRw/2bQywjCH571N3UgBrYZluXB6PJNheafGoKB3VEkI
+	 FMGnOkg7u7gz6D6ntrA7gC5iRSmuZFvh2dUBoU3ZEPkz/VHr4jRoR+2ezkR9shTj5v
+	 Pt2AnkAdAyNFg==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v3 1/2] PCI: dwc: Add .post_deinit counterpart to
+ endpoint .pre_init callback
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Marek Vasut" <marek.vasut+renesas@mailbox.org>
+Cc: wsa+renesas@sang-engineering.com, linux-pci@vger.kernel.org
+In-Reply-To: <20260821122808.238248-1-marek.vasut+renesas@mailbox.org>
+References: <20260821122808.238248-1-marek.vasut+renesas@mailbox.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Fri, 21 Aug 2026 12:37:18 +0000
+Message-Id: <20260821123719.01FF81F01558@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-Reinject: loops=2 maxloops=12
-X-Authority-Analysis: v=2.4 cv=CpuPtH4D c=1 sm=1 tr=0 ts=6a8845c2 cx=c_pps
- a=3Bg1Hr4SwmMryq2xdFQyZA==:117 a=3Bg1Hr4SwmMryq2xdFQyZA==:17
- a=Sv0fKeRqtYgA:10 a=VkNPw1HP01LnGYTKEx00:22 a=RnoormkPH1_aCDwRdu11:22
- a=RzCfie-kr_QcCd8fBx8p:22 a=VwQbUJbxAAAA:8 a=VnNF1IyMAAAA:8
- a=TViotR2JPqG71lRTnZ4A:9
-X-Proofpoint-ORIG-GUID: 8-Igf-cscOQ7Mqv9a2oQBrizT_PvQo9c
-X-Proofpoint-GUID: NkqGL5Wu2kcVnl4tNioL_NjS1rGpr6PU
-X-Proofpoint-Spam-Info: AW1haW4tMjYwODIxMDA5NiBTYWx0ZWRfXyTUcspArcxBB
- NYnK1H4Rd4vwMuX9RndzyFS6xF0D9AtL+3KHQGu+yW+O0uhxkB/LbHtgNG0xfLuL7pXKs7Xsx3Z
- 0Wjfik6ciglgqFi4pfu+hl39YiT6Rd4=
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODIxMDA5NiBTYWx0ZWRfXzSRn/e7ezT56
- c/r8GNnPMDdIl5sFjRJUFv2KQOTtq2x4OxHr8W8iwdRoH5G51eKLFRTwo8fQJwCbfI/JD+5Bqr7
- wmBnrDSJTR5QmDRBqwNJdBpsdqIS7Tmbn3SO09dbzG5Zr4Xj7vQvziHfhGaBojcfsR0VV3tRIV7
- 2R9DG1iIQZ1lr6t41AlD+BG8OBQwniuB6P/WVlMzGkrjlveTDIHxVzlhN3Ng5nUeW8FdwvUbSAd
- StPyPN4oqf8yCgMiqvSxljA3LZBHgWxOfPl7ixhLPmcOSOCA11OYsJ92N4Z46b75IiskdaTeCzx
- HIZl6vWuPiSvHjUu9XNznERFNCjkN7gl2c/p/kJMgkqkrohj/+1PHQZ2o8ZzPqVJ3FxRHqnx0Wd
- SKSIa7ygxu6fKOFDmCjY3ZFplupd3cm8vsR5UfYfvfmqT59gcl4xj1Z7xyq+VbtE65xq433rCHo
- G1K42VbuokocJzhrGeg==
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-08-21_04,2026-08-21_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- impostorscore=0 adultscore=0 bulkscore=0 malwarescore=0 phishscore=0
- lowpriorityscore=0 spamscore=0 clxscore=1015 priorityscore=1501
- suspectscore=0 classifier=typeunknown authscore=0 authtc= authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2606150000
- definitions=main-2608210096
 
-From: Shivaprasad G Bhat <sbhat@linux.ibm.com>
+> If .pre_init() succeeds but subsequent initialization fails, it is
+> mandatory to correctly undo the hardware configuration which the
+> .pre_init() callback did. Intrododuce .post_deinit() callback to do
+> exactly that, undo what the .pre_init() callback did. Usually, that
+> means stop the clock, assert reset, and possibly program some registers
+> to quiescense the hardware. Invoke the .post_deinit() callback in
+> dw_pcie_ep_deinit() to retain functional symmetry.
+>=20
+> Reviewed-by: Koichiro Den <den@valinux.co.jp>
+> Tested-by: Koichiro Den <den@valinux.co.jp>
+> Signed-off-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
 
-The IBM Spyre accelerator (PCI ID 1014:06a7) requires a dedicated warm
-reset method for reliable EEH recovery on pSeries/ppc64 platforms.
+Sashiko has reviewed this patch and found no issues. It looks great!
 
-FLR alone is insufficient because it does not re-initialize firmware
-state machine for the current version of the card. The existing API
-pci_set_pcie_reset_state() is used to drive the platform-level
-PERST# using the EEH interfaces by adding a device specific quirk.
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260821122808.2382=
+48-1-marek.vasut+renesas@mailbox.org?part=3D1
 
-The reset function is placed in arch/powerpc/platforms/pseries/pci.c
-where the EEH infrastructure is already present, declared in
-pseries.h, and registered in the generic pci_dev_reset_methods[] table
-in drivers/pci/quirks.c under a CONFIG_PPC_PSERIES guard.
-
-This reset method is only registered when CONFIG_PPC_PSERIES is enabled,
-so it is not available on other platforms.
-
-Reset sequence:
-  - Assert PERST# via pcie_warm_reset, hold 250 ms
-  - Deassert PERST# via pcie_deassert_reset
-  - Wait 250 ms for PCIe link retrain 	
-
-Signed-off-by: Avinash Roy <avinash.roy1@linux.ibm.com>
-Signed-off-by: Shivaprasad G Bhat <sbhat@linux.ibm.com>
-
----
-Changelog
-v1: https://lore.kernel.org/linux-pci/20260805125100.1-1-avinash.roy1@linux.ibm.com/
-
-   Reworded the commit message to highlight the warm reset requirement being
-   a need of the current card and not a platform deficiency.
-
-diff --git a/arch/powerpc/platforms/pseries/pci.c b/arch/powerpc/platforms/pseries/pci.c
-index 84e4ffe957a8..7aa58d57208f 100644
---- a/arch/powerpc/platforms/pseries/pci.c
-+++ b/arch/powerpc/platforms/pseries/pci.c
-@@ -11,6 +11,7 @@
- #include <linux/kernel.h>
- #include <linux/pci.h>
- #include <linux/string.h>
-+#include <linux/delay.h>
- 
- #include <asm/eeh.h>
- #include <asm/pci-bridge.h>
-@@ -236,6 +237,41 @@ static void fixup_winbond_82c105(struct pci_dev* dev)
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_WINBOND, PCI_DEVICE_ID_WINBOND_82C105,
- 			 fixup_winbond_82c105);
- 
-+/*
-+ * Reset Spyre adapter using pci_set_pcie_reset_state()
-+ * This is specifically for PPC platforms where EEH (Enhanced Error Handling)
-+ * requires this reset method for proper device recovery.
-+ */
-+int reset_spyre(struct pci_dev *dev, bool probe)
-+{
-+	int ret;
-+
-+	if (probe)
-+		return 0;
-+
-+	/* Assert warm reset */
-+	ret = pci_set_pcie_reset_state(dev, pcie_warm_reset);
-+	if (ret) {
-+		pci_err(dev, "Failed to assert reset: %d\n", ret);
-+		return ret;
-+	}
-+
-+	/* Wait for reset to take effect */
-+	msleep(250);
-+
-+	/* Deassert reset */
-+	ret = pci_set_pcie_reset_state(dev, pcie_deassert_reset);
-+	if (ret) {
-+		pci_err(dev, "Failed to deassert reset: %d\n", ret);
-+		return ret;
-+	}
-+
-+	/* Wait for device to recover */
-+	msleep(250);
-+
-+	return 0;
-+}
-+
- static enum pci_bus_speed prop_to_pci_speed(u32 prop)
- {
- 	switch (prop) {
-diff --git a/arch/powerpc/platforms/pseries/pseries.h b/arch/powerpc/platforms/pseries/pseries.h
-index 3968a6970fa8..79c194aeb3c6 100644
---- a/arch/powerpc/platforms/pseries/pseries.h
-+++ b/arch/powerpc/platforms/pseries/pseries.h
-@@ -92,6 +92,10 @@ extern struct pci_controller_ops pseries_pci_controller_ops;
- int pseries_msi_allocate_domains(struct pci_controller *phb);
- void pseries_msi_free_domains(struct pci_controller *phb);
- 
-+/* PCI device reset method for Spyre adapter */
-+struct pci_dev;
-+int reset_spyre(struct pci_dev *dev, bool probe);
-+
- extern int CMO_PrPSP;
- extern int CMO_SecPSP;
- extern unsigned long CMO_PageSize;
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index b09f27f7846f..1b8ab5d9764b 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -4237,6 +4237,11 @@ static int reset_hinic_vf_dev(struct pci_dev *pdev, bool probe)
- 	return 0;
- }
- 
-+#ifdef CONFIG_PPC_PSERIES
-+/* Defined in arch/powerpc/platforms/pseries/pci.c */
-+int reset_spyre(struct pci_dev *dev, bool probe);
-+#endif
-+
- static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
- 	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82599_SFP_VF,
- 		 reset_intel_82599_sfp_virtfn },
-@@ -4252,6 +4257,10 @@ static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
- 		reset_chelsio_generic_dev },
- 	{ PCI_VENDOR_ID_HUAWEI, PCI_DEVICE_ID_HINIC_VF,
- 		reset_hinic_vf_dev },
-+#ifdef CONFIG_PPC_PSERIES
-+	{ PCI_VENDOR_ID_IBM, 0x06a7,
-+		reset_spyre},
-+#endif
- 	{ 0 }
- };
