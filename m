@@ -1,141 +1,253 @@
-Received: from mail-yx1-f53.google.com (mail-yx1-f53.google.com [74.125.224.53])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from canpmsgout06.his.huawei.com (canpmsgout06.his.huawei.com [113.46.200.221])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 028F434E745
-	for <linux-pci@vger.kernel.org>; Fri, 21 Aug 2026 01:46:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.224.53
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787276807; cv=pass; b=ptKXe15+oTGkiM7yiLdJ2muc4bbY/yEo1tjZrqIyB7LXrPBDlqUEK0XECRVD/j8EqilOWQTOstOntMkhZWltQju2X26IFY8i4IFkiKghTK8CPF/dUjGlaEuC6fgwUHaYd5wOxLowqMJOL9YPt2j+8mQdbXHAapfwp64BTocDxGM=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787276807; c=relaxed/simple;
-	bh=4lkqgof84TLP8w7Gwh1Y286GyA+IchGWkTwUHyVRmKA=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=S/1TtIuvCUWh22+KhAJW9Nhkgi26xyGMaocsxk0mwxMs6Vu10/ZFmwaONBjhejXBtGRFwk6zBWGryM8K8YjoaDzN4duxaA0Ws8qc6QF/H7aQ6jYVZcElTh6BujH8U2BK49kNkWwIsWNxQEm5dMZxyB275WKK5bPkatiIUVvNQBM=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=stx5Y7jm; arc=pass smtp.client-ip=74.125.224.53
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AAAF43515F9;
+	Fri, 21 Aug 2026 01:57:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.221
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1787277429; cv=none; b=exvHUKTcwOxv7ojW02cOp/kRJwUiBrXyf8HgST0XAoaPnfrqoPLrwwcvHO4HxQNw/vFSUw9tMmdsm/h4WiK7dnihNeh64Zk2o0i10C6YquAXVuk/VwFvQWwpfoADcxoyO5OjA0Q54GKqlHUas6aWgAl7P7B1XBU+OVP3sg8YJCk=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1787277429; c=relaxed/simple;
+	bh=vaa+eL8epVpGAe23TT9gsuLQJ4AOHGlwMdIZdNZwx4U=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=cvB4QJbxmf4bLPkaS7J7PsUkq/vHpuHychEQ37atGo3OTBTLlN08JMlechrysMqBCysth/o6FzQq/aMLMyaXBLcp5didQLJ6vRh06XSB/ghXv8SwAED0YDsyjunntFtjDzNgVnGQzLiN4rBExPTxvCyOjIs0NCqJ/J4DGCfYV1Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=XGVzuIzY; arc=none smtp.client-ip=113.46.200.221
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="stx5Y7jm"
-Received: by mail-yx1-f53.google.com with SMTP id 956f58d0204a3-66c8e41f703so573555d50.1
-        for <linux-pci@vger.kernel.org>; Thu, 20 Aug 2026 18:46:45 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1787276805; cv=none;
-        d=google.com; s=arc-20260327;
-        b=H4/daN2KFs1r+3egicwHeWV8CiItWqs0/FDa+M8Gy2VwadZswZP15u06MP43zjqJQ1
-         UnoxtE30S6BXmeypbjbJMQy19hq/9aoFAvyW+Ul9zN8lBdVj6Nr4e8u++4VloLxc1J0r
-         b33dgjG3H0zBi2Ib02WnC6VSwUjf64asHHAs7yLairvW8x94A81R21BWqC7peVJZFlIR
-         rejgn6ZiGataRR8tZbbguNyKNdQ/rOF2n45vB0Wv7tP/iaA2JneP2mD3lPfhe0DRwu/c
-         p7Zgq71ECukVymus8VeF7iOCMbNT0zL2du6GdI6lIApEpC8ZwDhpNGbgSFdIdDgefZmF
-         1kgw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=aSbzDExTNSXb8I3gIkoDLqSPLLMW8//EIXDUhQfZOl4=;
-        fh=t2VbnN5mMU6ttz+1yBftFMhv5EAC3nrslI0Zr0YJi0o=;
-        b=m9G+SUvsMmRLjDcMqXUnsJ6Ef4BFj3oIfjFPdejxA1xN2eLqxWdGDHJRBZinJxQZ0X
-         2ksuJ78Ku1SNANQii/Mm+bIp7cZtIbUKzX4QOF7ng3jT+BoRDhr57Kpb27+pvXbOMxBn
-         LPs66zhfdwReiFD3cl4xaymVamihMDT0iShX+/u/CfsiEj36Wtue4qh4RwzYsdmugMtf
-         uSvbiq6R5sgThrzMagNTLSsgrfIPrkHrOi21vj/kn22LNggiCAReAqV8DESF9kYfnQZG
-         I7V8XUOUlqWXSv/9HC47VLjzmVSCFK6+TSYdF4YSPXqn34HyG0aKO14eU5nP1DlsoaDO
-         beXQ==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1787276805; x=1787881605; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=aSbzDExTNSXb8I3gIkoDLqSPLLMW8//EIXDUhQfZOl4=;
-        b=stx5Y7jmUS+6yFvRlE7yTq14MsaI6v81mgGQqlpUCRPAa528v6krd1ZWV1bC5BKZv6
-         +LbqTBDQvZ8bwnlqnNDEDnPVHg6ruVoG8rZCSw4Op1Ysekm/0j5FDiUTQJMyl3JjT+Fs
-         7QOkZjRiUoMYVHq15Kbfa5qzIKp43KuPu7B3AL++O1NppMMA3ByecXTZpz9iT3vvypF8
-         cArDSM6UygSTCoIJvxstL0c1yW119l4C5gtDrZPWusS+Ithk6BpvgP997bcr47/yLWqw
-         vxAernn8clGOpqOifWH7kr29EZM7xD1kx+BTVnZNjug2Z3XVaQLtUQRLaTPm1QHB9Swp
-         Qksw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787276805; x=1787881605;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=aSbzDExTNSXb8I3gIkoDLqSPLLMW8//EIXDUhQfZOl4=;
-        b=suw9KZ2jN0KTbfi6m1wjRAVofJDMj+krtjBTUzyLODxlAd0wUT1GzDGo1Z98dllCdX
-         fOL47ILmEoME4CdO1qqrDO/5yHJR+q3qdQVboYfJn7UoQXggIcegI82GtFnX8QJLOF8k
-         vpPmWxLiwACPy9puAJDlbqExp9bQCZU0syMCZEhqFXUcSyAm23clEekucNDNR4tQ57Sg
-         Gwh7M4fwiXKuvusG9VyUAViktYkn2mzJA+eWUSIBUjC4lwT3D7cfuPyopDJzgnscDwIn
-         +KfmIpGKshc9SJptEv+yPp1YD/zf/cMi50OIDPnk28vLQ06mMsJTU+MxeUnrFIOc7ZZ2
-         w4Jw==
-X-Gm-Message-State: AFuF++lXwLVn4R/QIAvgYgGMI4kRsPWuXHGeQCfEdcVhp6p2s2LJckoK
-	hbtaT9GbhXQ5iVucbTsLg7u6R0ZQxPOAXcQP+aYuZbodBZdH3HUDspoWJ2AEEeryC9Ppwtv2ZC1
-	Z/6A/A9T+5uzrTgYZ3bUKcjqCBQk0j38=
-X-Gm-Gg: AR+sD11RwIXlPrDEv6WgrySIpbQ7lcmAvQLtQflprHZCiJeAubad6rETSmOAci6ileT
-	aRscXgr0zYwM5GiZlag11cryzR8F/WgbZuA7o0tHJZ4vZ1HXfP6ac2jyHwuhzBNU3DZvxVH3R5c
-	wTBZVcGjq1e5eTTDpqblTZJYnkjylkcX0AZnp+biZHDmL4BLiPA25RJbsLomy2wLDEBCvUh3hy/
-	cNYU76PGapZc5qqlht3ktG+gUJxQ3ZZocWdFY/EwHbcfbkU+Y5NeTUj9jnRb6+u8SukHiULPJaz
-	fhgX0daVv5AotlMBxeFfs5knB0SZibueDTpsOa1aCUmvgkh6CFwX18XemcN5B05Zd5zFhXSJMEK
-	aKcql4XgAqPKlz24Legh87Ppd4fUjdd/Azbc=
-X-Received: by 2002:a53:b841:0:b0:668:8b09:bd13 with SMTP id
- 956f58d0204a3-66ce4a1b110mr948661d50.18.1787276804863; Thu, 20 Aug 2026
- 18:46:44 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="XGVzuIzY"
+dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=25au69T4jnDTn0u7B83R03fZNdgn3q5Gh9iYvp2As/M=;
+	b=XGVzuIzYWW155aVdun57hZwiZEsLOGb6SL0ZDIa5YHWkIXHxvSkXQS0n0yY0NKJ9IEYPOFMo1
+	iJvBzsDnpC2eEgj8tWC7FIlcREslKi+ph2oHJ3cM1ppS3+XvUdKSmcoAb+teUsu5rUv0zMwgUuy
+	v0jNA6PRnUY5/DR0GZnFfsM=
+Received: from mail.maildlp.com (unknown [172.19.163.0])
+	by canpmsgout06.his.huawei.com (SkyGuard) with ESMTPS id 4hR37J726czRhWV;
+	Fri, 21 Aug 2026 09:46:20 +0800 (CST)
+Received: from dggpemr500010.china.huawei.com (unknown [7.185.36.210])
+	by mail.maildlp.com (Postfix) with ESMTPS id 79E4E40561;
+	Fri, 21 Aug 2026 09:57:01 +0800 (CST)
+Received: from huawei.com (10.50.85.180) by dggpemr500010.china.huawei.com
+ (7.185.36.210) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.45; Fri, 21 Aug
+ 2026 09:57:00 +0800
+From: Zhang Hongtao <zhanghongtao35@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>
+CC: Alex Williamson <alex.williamson@nvidia.com>,
+	=?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>, Dan
+ Williams <djbw@kernel.org>, Keith Busch <kbusch@kernel.org>,
+	<linux-kernel@vger.kernel.org>, <liuyongqiang13@huawei.com>,
+	<zhangqiuhao@huawei.com>
+Subject: PCI: Prevent device lock leak during bus reset
+Date: Fri, 21 Aug 2026 10:16:26 +0800
+Message-ID: <20260821021626.1874602-1-zhanghongtao35@huawei.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260809045946.15638-1-kartikey406@gmail.com>
-In-Reply-To: <20260809045946.15638-1-kartikey406@gmail.com>
-From: Deepanshu Kartikey <kartikey406@gmail.com>
-Date: Fri, 21 Aug 2026 07:16:32 +0530
-X-Gm-Features: AcwNN1UfFssZZAW8LQxuunODF_Lm6-tOCTRu87MFImXNEFysj-L-ixg6k1s4xWM
-Message-ID: <CADhLXY4KGiDs3CGYs22aGF0H2LZEzD6Vkjf-yAjr+xTkpZQrmg@mail.gmail.com>
-Subject: Re: [PATCH] PCI: sysfs: Reject unaligned resource I/O port accesses
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	syzbot+7134530b25073b4ef373@syzkaller.appspotmail.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: kwepems100001.china.huawei.com (7.221.188.238) To
+ dggpemr500010.china.huawei.com (7.185.36.210)
 
-On Sun, Aug 9, 2026 at 10:29=E2=80=AFAM Deepanshu Kartikey
-<kartikey406@gmail.com> wrote:
->
-> pci_resource_io() validates that off+count stays within the BAR's
-> range but never checks that the resulting port is aligned to the
-> access size. A pwrite64()/pread64() on a resourceN file with an odd
-> offset and count=3D2 or count=3D4 reaches outw()/outl() with a misaligned
-> address. On arm64 this becomes a store/load to a Device-memory
-> mapping (PCI_IOBASE + port), which architecturally requires natural
-> alignment, causing an alignment fault and kernel oops.
->
-> Reject misaligned accesses before they reach the low-level accessor.
->
-> Reported-by: syzbot+7134530b25073b4ef373@syzkaller.appspotmail.com
-> Closes: https://syzkaller.appspot.com/bug?extid=3D7134530b25073b4ef373
-> Signed-off-by: Deepanshu Kartikey <kartikey406@gmail.com>
-> ---
->  drivers/pci/pci-sysfs.c | 3 +++
->  1 file changed, 3 insertions(+)
->
-> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-> index 5ec0b245a69b..72f0404a34e9 100644
-> --- a/drivers/pci/pci-sysfs.c
-> +++ b/drivers/pci/pci-sysfs.c
-> @@ -1175,6 +1175,9 @@ static ssize_t pci_resource_io(struct file *filp, s=
-truct kobject *kobj,
->         if (port + count - 1 > pci_resource_end(pdev, bar))
->                 return -EINVAL;
->
-> +       if (!IS_ALIGNED(port, count))
-> +               return -EINVAL;
-> +
->         switch (count) {
->         case 1:
->                 if (write)
-> --
-> 2.43.0
->
+pci_bus_lock() and pci_bus_unlock() independently walk the devices below
+a bus.  The topology may change between the walks because pci_bus_sem is
+not held across the reset.
 
-Gentle Reminder. Please let me know the status of this patch
+This causes a device lock leak when AER recovery, device removal, and
+driver bind and unbind operations run concurrently.  The relevant order
+is:
 
-Thanks
+  bind/unbind                 remove                 AER recovery
+  --------------------------------------------------------------------
+  bus_find_device_by_name()
+                              device_del()
+                                                     pci_bus_lock()
+                              list_del(&dev->bus_list)
+                                                     bus reset
+                                                     pci_bus_unlock()
+  device_lock()
 
-Deepanshu
+pci_bus_lock() locks the device before the Secondary Bus Reset.  After
+pci_destroy_dev() removes the device from bus->devices, pci_bus_unlock()
+no longer finds the device and therefore does not unlock it.  The bind
+and unbind paths retain references obtained by bus_find_device_by_name(),
+so they can subsequently reach device_lock() and wait indefinitely for
+the leaked lock.
+
+The race was reproduced consistently on QEMU Q35 with an e1000e endpoint
+and a mainline-based kernel:
+
+  7.2.0-rc4-00366-gf9cf390f34eb
+
+Artificial delays after bus_find_device_by_name(), pci_bus_lock(), and
+device_del() widened the race windows.  Concurrent bind, unbind, and
+remove operations were started, followed by an injected Data Link
+Protocol AER error using CONFIG_PCIEAER_INJECT.  The hung task detector
+reported both device_driver_attach() and device_release_driver_internal()
+waiting on the device mutex, likely owned by irq/24-aerdrv.
+
+Take a topology snapshot under pci_bus_sem and hold a reference to every
+device in it.  Drop pci_bus_sem before acquiring device locks, then use
+the snapshot for both locking and unlocking.  This guarantees that every
+device lock acquired by pci_bus_reset() is released even if a device is
+removed from bus->devices during the reset.
+
+The fix was tested on commit d326f83e819c ("Merge tag 'net-7.2-rc5' of
+git://git.kernel.org/pub/scm/linux/kernel/git/netdev/net") with the same
+forced ordering.  The device was removed from bus->devices between the
+reset lock and unlock markers, after which device_driver_attach()
+completed and no hung task occurred.
+
+This is intentionally a limited fix.  It makes lock and unlock symmetric,
+but does not protect the topology for the entire reset.  In particular, a
+device added after the snapshot may be reset without its device lock held.
+Similar independent walks also exist in the slot and try-reset paths.  This
+RFC seeks feedback on whether the snapshot should be extended to those
+paths or reset should use a stronger topology exclusion mechanism.
+
+Fixes: 090a3c5322e9 ("PCI: Add pci_reset_slot() and pci_reset_bus()")
+Signed-off-by: Zhang Hongtao <zhanghongtao35@huawei.com>
+---
+ drivers/pci/pci.c | 102 +++++++++++++++++++++++++++++++++++++++++++---
+ 1 file changed, 97 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 77b17b13ee61..25a1e44263c3 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -5409,6 +5409,88 @@ static int pci_bus_trylock(struct pci_bus *bus)
+ 	return __pci_bus_trylock(bus, NULL);
+ }
+ 
++struct pci_bus_lock_context {
++	struct pci_dev **devs;
++	size_t nr_devs;
++};
++
++static size_t pci_bus_lock_count(struct pci_bus *bus)
++{
++	struct pci_dev *dev;
++	size_t count = 1;
++
++	lockdep_assert_held(&pci_bus_sem);
++
++	list_for_each_entry(dev, &bus->devices, bus_list) {
++		if (dev->subordinate)
++			count += pci_bus_lock_count(dev->subordinate);
++		else
++			count++;
++	}
++
++	return count;
++}
++
++static void pci_bus_lock_fill(struct pci_bus *bus,
++			      struct pci_bus_lock_context *context,
++			      size_t *index)
++{
++	struct pci_dev *dev;
++
++	lockdep_assert_held(&pci_bus_sem);
++
++	context->devs[(*index)++] = pci_dev_get(bus->self);
++	list_for_each_entry(dev, &bus->devices, bus_list) {
++		if (dev->subordinate)
++			pci_bus_lock_fill(dev->subordinate, context, index);
++		else
++			context->devs[(*index)++] = pci_dev_get(dev);
++	}
++}
++
++static int pci_bus_lock_snapshot_init(struct pci_bus *bus,
++				      struct pci_bus_lock_context *context)
++{
++	size_t index = 0;
++
++	lockdep_assert_held(&pci_bus_sem);
++
++	context->nr_devs = pci_bus_lock_count(bus);
++	context->devs = kvmalloc_array(context->nr_devs,
++				       sizeof(*context->devs), GFP_KERNEL);
++	if (!context->devs)
++		return -ENOMEM;
++
++	pci_bus_lock_fill(bus, context, &index);
++
++	return 0;
++}
++
++static void pci_bus_lock_snapshot(struct pci_bus_lock_context *context)
++{
++	size_t i;
++
++	for (i = 0; i < context->nr_devs; i++)
++		pci_dev_lock(context->devs[i]);
++}
++
++static void pci_bus_unlock_snapshot(struct pci_bus_lock_context *context)
++{
++	size_t i;
++
++	for (i = context->nr_devs; i > 0; i--)
++		pci_dev_unlock(context->devs[i - 1]);
++}
++
++static void pci_bus_lock_snapshot_release(struct pci_bus_lock_context *context)
++{
++	size_t i;
++
++	for (i = 0; i < context->nr_devs; i++)
++		pci_dev_put(context->devs[i]);
++	kvfree(context->devs);
++}
++
+ /* Do any devices on or below this slot prevent a bus reset? */
+ static bool pci_slot_resettable(struct pci_slot *slot)
+ {
+@@ -5585,21 +5667,31 @@ static int pci_try_reset_slot(struct pci_slot *slot)
+ 
+ static int pci_bus_reset(struct pci_bus *bus, bool probe)
+ {
++	struct pci_bus_lock_context context;
+ 	int ret;
+ 
++	down_read(&pci_bus_sem);
++
+ 	if (!bus->self || !pci_bus_resettable(bus))
+-		return -ENOTTY;
++		ret = -ENOTTY;
++	else if (probe)
++		ret = 0;
++	else
++		ret = pci_bus_lock_snapshot_init(bus, &context);
+ 
+-	if (probe)
+-		return 0;
++	up_read(&pci_bus_sem);
++
++	if (ret || probe)
++		return ret;
+ 
+-	pci_bus_lock(bus);
++	pci_bus_lock_snapshot(&context);
+ 
+ 	might_sleep();
+ 
+ 	ret = pci_bridge_secondary_bus_reset(bus->self);
+ 
+-	pci_bus_unlock(bus);
++	pci_bus_unlock_snapshot(&context);
++	pci_bus_lock_snapshot_release(&context);
+ 
+ 	return ret;
+ }
+
+base-commit: c21bb4193868a8de71fc4693fa741e195fdf5d86
+-- 
+2.34.1
+
