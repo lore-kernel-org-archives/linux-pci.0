@@ -1,133 +1,245 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DDC4D494803
-	for <linux-pci@vger.kernel.org>; Fri, 21 Aug 2026 14:01:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA3D04C77A7
+	for <linux-pci@vger.kernel.org>; Fri, 21 Aug 2026 14:24:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787320902; cv=none; b=BRSN/1UXEyLRByzqh1CpKlX88QEWuqBbW13Bbv1JNGFCXZTkvG4ypuTv6BI4lk4cOtUy/OYc6RPPsecbs8kP7fbIzB863UhADMuqqUjJ6aWwWMFyonHo4FPVdC89wY/UxLohHifaDHgmg8GAuSkH+Uw67TfbFoQ/Veld7NTNuZM=
+	t=1787322298; cv=none; b=GcUPSgHGCQW8hkUgdKEHlqPixGgISmyDIuR9LXoPdwCfg2xptqPjSKutjm6OjFRe71r8Ni1GBLUuWQxSLhYB5a+ndsh73GzaeP8dXFe59icAlavotZ4UeywxmLW/ZWVVEWrfeZ7OUetyO3is7BPztG+BxMFXu+ieEZjry5e7LZ8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787320902; c=relaxed/simple;
-	bh=N4ASD2Lc/rYatWUeyg/Sgs8rrjV4zhHJW5d8RCTUfDQ=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Np4s8nQh9iOXdKhy9cchjsAlvJTtjwbMezM/cmW8v/uasTLaQPaHlZmLfVR62D3A55F01Nif71ZwfLMBKbrSq0d2n6OHqa6ulL77E/uGDLAM7YcPULXiWLm57DDxP1NCZ8BkmyvMvH9HHtGTBH+eR7UQRU/vymzE4c7T6asEbuU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WAz3FViv; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1787322298; c=relaxed/simple;
+	bh=5KSy/nGOQKzhmI/IrtRBuzrF//84fjijlLJDY8x3GMI=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=KI8nhTbCQ678CInH8TBPMeHhJ6qKhqtL+uf5jHFf5V/gEd++T9T5Y8H9Db4NkLnQM7pTv9lxvsGoHcsv1YUNzOPU9m3592T7bcxb7Z68wY4Yin94ABauZoLiBuXDosX8k6MRbwhiXdnqU0e1jgZ0+xs4q/zPfR5LDfPdiKJQWHc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=JVHIK6jC; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WAz3FViv"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 652491F000E9;
-	Fri, 21 Aug 2026 14:01:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787320900;
-	bh=7kqNCoSKCt+xJC54hsFU42G/QdDP2LSkhJf+BFvSV/A=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=WAz3FVivgQbUgJzEItsvxHCWrNdnVdd+kN7kRcTOEZNzZRKQYIiDIyojEAasy4Uo9
-	 jj5Ace+oFNKAWJZvfM/6jy7kdKAo62xTj7A85rQZ1qHd+RN/XSnLzyPQ03bIdWDeqL
-	 yFaq5oQfK2xVfJKrrD4zpzOLWZc/wZKr82+teh3m93NFh6FVjjesopIdZbBD9H7wol
-	 yhPhM+xez0tvZ/mu9rFaLOY14bKqsmBPBvfsYHdg5RY2N23OFlZyDt91/4OqQ3FWtx
-	 TJgfxtPMcS9UZ9s3VqCKiBw6BzszjMRtPHjHeB+Q9gdxQGYhXGR9NwOHJbT/eiOibz
-	 pLtf21Dmfw/fQ==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2] PCI/ASPM: Clear L1SS capability when L1 latency is
- unacceptable
-Reply-To: sashiko-reviews@lists.linux.dev
-To: Aniket <aniketmaurya@google.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260821134521.2211943-1-aniketmaurya@google.com>
-References: <20260821134521.2211943-1-aniketmaurya@google.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Fri, 21 Aug 2026 14:01:40 +0000
-Message-Id: <20260821140140.652491F000E9@smtp.kernel.org>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="JVHIK6jC"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1787322292;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=kzLAPBXMlMhYI6ySzz6pnLfsKpX/Ftkzneo9qfA/5sU=;
+	b=JVHIK6jCx1qzEGteeDvwJRhq6G/CvnN3zHPLspguZlORw+goZvDUjwn2sms965oqzP0MX2
+	GO8IcT7UoH4IgIOj1qmS3TNf5WaRKwPXFo/psmC/D5HWU+z77V52O9eElNx4y2czKgyAdx
+	VZJjx5g3old1aLwXR+9jq21efc4kvMc=
+Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-465-9a5yc_PuOaGe1CNe4NBKQw-1; Fri,
+ 21 Aug 2026 10:24:47 -0400
+X-MC-Unique: 9a5yc_PuOaGe1CNe4NBKQw-1
+X-Mimecast-MFC-AGG-ID: 9a5yc_PuOaGe1CNe4NBKQw_1787322284
+Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 487B018011EC;
+	Fri, 21 Aug 2026 14:24:44 +0000 (UTC)
+Received: from djeffery-thinkpadp1gen3.redhat.corp (headnet05.pony-001.prod.iad2.dc.redhat.com [10.2.32.117])
+	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 174BF1800346;
+	Fri, 21 Aug 2026 14:24:40 +0000 (UTC)
+From: David Jeffery <djeffery@redhat.com>
+To: driver-core@lists.linux.dev,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Danilo Krummrich <dakr@kernel.org>
+Cc: linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	Tarun Sahu <tarunsahu@google.com>,
+	Stuart Hayes <stuart.w.hayes@gmail.com>,
+	Laurence Oberman <loberman@redhat.com>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	kexec@lists.infradead.org,
+	David Jeffery <djeffery@redhat.com>
+Subject: [PATCH v20 0/9] shut down devices asynchronously
+Date: Fri, 21 Aug 2026 10:24:05 -0400
+Message-ID: <20260821142414.150892-1-djeffery@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
+These patches are rebased against the driver-core tree's driver-core-next
+branch and should also apply against recent linux-next. Changes for v18 are
+contained in patch 3.
 
-Pre-existing issues:
-- [High] This problem wasn't introduced by this patch, but the ASPM sysfs s=
-how and store functions (`clkpm_show`, `clkpm_store`, `aspm_attr_show_commo=
-n`, `aspm_attr_store_common`) fetch the `link_state` pointer locklessly and=
- do not check for NULL before dereferencing it. If function 0 of a multi-fu=
-nction PCIe device is removed via hotplug or sysfs, `pcie_aspm_exit_link_st=
-ate()` frees the parent bridge's `link_state`. Subsequent reads or writes t=
-o the ASPM sysfs attributes of remaining functions (e.g., function 1) will =
-dereference a NULL pointer. If a sysfs write races with the removal of func=
-tion 0, it results in a Use-After-Free.
---
+This patchset allows the kernel to shutdown devices asynchronously and
+unrelated async devices to be shut down in parallel to each other.
 
---- Patch [1]: [PATCH v2] PCI/ASPM: Clear L1SS capability when L1 latency i=
-s unacceptable ---
-commit 484f6a2751436d7940ad4ac7d04ecc20b6162859
-Author: Aniket <aniketmaurya@google.com>
+Only devices which explicitly enable it are shut down asynchronously. The
+default is for a device to be shut down from the synchronous shutdown loop.
 
-PCI/ASPM: Clear L1SS capability when L1 latency is unacceptable
+This can dramatically reduce system shutdown/reboot time on systems that
+have multiple devices that take many seconds to shut down (like certain
+NVMe drives). On one system tested, the shutdown time went from 11 minutes
+without this patch to 55 seconds with the patch. And on another system from
+80 seconds to 11.
 
-This commit updates pcie_aspm_check_latency() to clear PCIE_LINK_STATE_L1SS
-from link->aspm_capable when L1 exit latency is unacceptable. This prevents
-exposing L1SS sysfs control files when the link cannot use L1. Additionally,
-it updates pcie_config_aspm_link() to check link->aspm_support to ensure L1
-PM Substates are properly cleared in hardware if they were left enabled.
+And thank you to everyone who has spent some of their valuable time
+providing reviews, suggestions, criticisms, or tests on the various
+iterations of this patchset.
 
-> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-> index 172783e7f519a..b2660892972a9 100644
-> --- a/drivers/pci/pcie/aspm.c
-> +++ b/drivers/pci/pcie/aspm.c
+Changes from V19:
+- Convert initial creation of shutdown_one_device to a code move with no
+  changes or side effects
+- Add a warning to device_move should some device ever mix need_parent_lock
+  with device_move in the future
+- Link a PCI virtual function as consumer of its associated physical
+  function to ensure proper shutdown order
 
-[ ... ]
+Changes from V18:
+- Fix deadlock and race condition on concurrent device_add
+- Use local variable to device_shutdown for caching async_shutdown
+- Added dev->p check to avoid NULL pointer deference and tell if the
+  device is not registered so no need to be shutdown. This is to handle
+  the cases when devices consumers list might have devices that are not
+  yet registered.
 
-[Severity: High]
-This isn't a bug introduced by this patch, but the ASPM sysfs show and store
-functions fetch the link_state pointer locklessly and do not check for NULL
-before dereferencing it.
+Changes from V17:
 
-drivers/pci/pcie/aspm.c:aspm_attr_show_common() {
-    ...
-	struct pci_dev *pdev =3D to_pci_dev(dev);
-	struct pcie_link_state *link =3D pcie_aspm_get_link(pdev);
+Fix mangled text in kernel parameter description
+Re-protect the list removal with the spinlock
+  * Hold a device reference to ensure the device cannot be freed before
+    attempting list removal
 
-	return sysfs_emit(buf, "%d\n", (link->aspm_enabled & state) ? 1 : 0);
-}
+Changes from V16:
 
-Does this code risk a NULL pointer dereference?
+Drop spinlock before async subsystem call which uses GFP_KERNEL
+Handle that async shutdown can widen races between device shutdown and deletion
+  * __shutdown_one_device will immediately return if a device is dead
+  * Set shutdown device completion to complete when marking a device dead to
+      prevent waiting on a dead device
+  * Only late-access a parent pointer if device is in a non-dead state to
+      ensure the pointer is still valid
 
-If function 0 of a multi-function PCIe device is removed via hotplug or sys=
-fs,
-pcie_aspm_exit_link_state() frees the parent bridge's link_state.
+Changes from V15:
 
-If an unprivileged user then reads an ASPM sysfs file on a remaining functi=
-on
-(like function 1), pcie_aspm_get_link() will return NULL, causing an
-unconditional dereference here.
+The async_shutdown bit field is converted to a device flags bit
+Convert all patches to use the flag bit accessor macros to set or check if
+  async shutdown should be used
+Added documentation on the kernel parameter to control use of async shutdown
 
-[Severity: High]
-Additionally, could a concurrent sysfs write result in a use-after-free?
+Changes from V14:
 
-drivers/pci/pcie/aspm.c:clkpm_store() {
-    ...
-	struct pci_dev *pdev =3D to_pci_dev(dev);
-	struct pcie_link_state *link =3D pcie_aspm_get_link(pdev);
-	bool state_enable;
+Remove unneeded use of '!!' with boolean type
 
-	if (kstrtobool(buf, &state_enable) < 0)
-		return -EINVAL;
+Changes from V13:
 
-	down_read(&pci_bus_sem);
-	mutex_lock(&aspm_lock);
+Remove duplicate flagging of async shutdown on scsi hosts/targets/devices
 
-	link->clkpm_disable =3D !state_enable;
-    ...
-}
+Changes from V12:
 
-If a sysfs write races with the removal of function 0, the link pointer is
-fetched locklessly before taking aspm_lock.
+Only acquire a parent reference if acquiring the parent's lock
+device_enable_async_shutdown should return void
+Minor comment and description cleanups
 
-If the removal completes and frees the link before the lock is acquired, the
-write operation will dereference freed memory.
+Changes from V11:
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260821134521.2211=
-943-1-aniketmaurya@google.com?part=3D1
+  * Swap the order of the first two patches
+  * Rework conditional parent locking so that lock and unlock no longer use
+    separate conditional checks
+  * Remove an used variable
+  * Comment and description text cleanups
+
+Changes from V10:
+
+Reworked to more closely match the design used for async suspend
+  * No longer uses async subsystem cookies for synchronization
+  * Minimized changes to struct device
+  * Enable async shutdown for pci and scsi devices which support async suspend
+
+Changes from V9:
+
+Address resource and timing issues when spawning a unique async thread
+for every device during shutdown:
+  * Make the asynchronous threads able to shut down multiple devices,
+    instead of spawning a unique thread for every device.
+  * Modify core kernel async code with a custom wake function so it
+    doesn't wake up a thread waiting to synchronize on a cookie until
+    the cookie has reached the desired value, instead of waking up
+    every waiting thread to check the cookie every time an async thread
+    ends.
+
+Changes from V8:
+
+Deal with shutdown hangs resulting when a parent/supplier device is
+  later in the devices_kset list than its children/consumers:
+  * Ignore sync_state_only devlinks for shutdown dependencies
+  * Ignore shutdown_after for devices that don't want async shutdown
+  * Add a sanity check to revert to sync shutdown for any device that
+    would otherwise wait for a child/consumer shutdown that hasn't
+    already been scheduled
+
+Changes from V7:
+
+Do not expose driver async_shutdown_enable in sysfs.
+Wrapped a long line.
+
+Changes from V6:
+
+Removed a sysfs attribute that allowed the async device shutdown to be
+"on" (with driver opt-out), "safe" (driver opt-in), or "off"... what was
+previously "safe" is now the only behavior, so drivers now only need to
+have the option to enable or disable async shutdown.
+
+Changes from V5:
+
+Separated into multiple patches to make review easier.
+Reworked some code to make it more readable
+Made devices wait for consumers to shut down, not just children
+  (suggested by David Jeffery)
+
+Changes from V4:
+
+Change code to use cookies for synchronization rather than async domains
+Allow async shutdown to be disabled via sysfs, and allow driver opt-in or
+  opt-out of async shutdown (when not disabled), with ability to control
+  driver opt-in/opt-out via sysfs
+  
+Changes from V3:
+
+Bug fix (used "parent" not "dev->parent" in device_shutdown)
+ 
+Changes from V2:
+ 
+Removed recursive functions to schedule children to be shutdown before
+  parents, since existing device_shutdown loop will already do this
+ 
+Changes from V1:
+
+Rewritten using kernel async code (suggested by Lukas Wunner)
+
+David Jeffery (7):
+  driver core: warn should device_move try to move a need_parent_lock
+    device
+  driver core: separate function to shutdown one device
+  driver core: do not always lock parent in shutdown
+  driver core: async device shutdown infrastructure
+  PCI: Link a virtual function to its physical function
+  PCI: Enable async shutdown support
+  scsi: Enable async shutdown support
+
+Tarun Sahu (2):
+  driver core: rely on put_device to free dev->p
+  driver core: prevent device_add() during system shutdown
+
+ .../admin-guide/kernel-parameters.txt         |  10 +
+ drivers/base/base.h                           |   2 +
+ drivers/base/core.c                           | 273 +++++++++++++++---
+ drivers/pci/iov.c                             |  11 +-
+ drivers/pci/probe.c                           |   2 +
+ drivers/scsi/hosts.c                          |   2 +
+ drivers/scsi/scsi_sysfs.c                     |   3 +
+ include/linux/device.h                        |   2 +
+ 8 files changed, 265 insertions(+), 40 deletions(-)
+
+-- 
+2.53.0
+
