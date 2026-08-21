@@ -1,253 +1,241 @@
-Received: from canpmsgout06.his.huawei.com (canpmsgout06.his.huawei.com [113.46.200.221])
+Received: from mout-p-201.mailbox.org (mout-p-201.mailbox.org [80.241.56.171])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AAAF43515F9;
-	Fri, 21 Aug 2026 01:57:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.221
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B7E5332E696;
+	Fri, 21 Aug 2026 02:06:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787277429; cv=none; b=exvHUKTcwOxv7ojW02cOp/kRJwUiBrXyf8HgST0XAoaPnfrqoPLrwwcvHO4HxQNw/vFSUw9tMmdsm/h4WiK7dnihNeh64Zk2o0i10C6YquAXVuk/VwFvQWwpfoADcxoyO5OjA0Q54GKqlHUas6aWgAl7P7B1XBU+OVP3sg8YJCk=
+	t=1787278008; cv=none; b=p8UVE/cKa/KfP5KWD3P1goboURDPk+853kft2Auzp3UrDVTvLibeCdShIlLr8ixVygBk5chqfQziFNd7fjWirffvg2xKqSwkCnVQqYT5jp36hekNchH9+EWSJ5mBP62+iI6MwZbjz4ripXTw4QzSJfnkLn74IPIFJ0RfZKl6G1U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787277429; c=relaxed/simple;
-	bh=vaa+eL8epVpGAe23TT9gsuLQJ4AOHGlwMdIZdNZwx4U=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=cvB4QJbxmf4bLPkaS7J7PsUkq/vHpuHychEQ37atGo3OTBTLlN08JMlechrysMqBCysth/o6FzQq/aMLMyaXBLcp5didQLJ6vRh06XSB/ghXv8SwAED0YDsyjunntFtjDzNgVnGQzLiN4rBExPTxvCyOjIs0NCqJ/J4DGCfYV1Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=XGVzuIzY; arc=none smtp.client-ip=113.46.200.221
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+	s=arc-20240116; t=1787278008; c=relaxed/simple;
+	bh=5IkXvg2mBCLPxuYvvJQh2wbLppn2C00GgAkHb7wnP9A=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=IwzeFNAPNk3IoIh346h66zlk4/bQb8L2QJIc4nLeSP4yMiaKMTPOr0XjacrGBWkuMHKoAyAQ8938NCWUdPrPhQeM/x8evvnABNCaM5ORa9b7muRCPfZZh/WbxgZXNim4JaaRVgcZ5tfzTTawDC1i2AEgi0LY+AUBCUQg59vNCU0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=kIp4YdPy; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=O2hePe7M; arc=none smtp.client-ip=80.241.56.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="XGVzuIzY"
-dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=From;
-	bh=25au69T4jnDTn0u7B83R03fZNdgn3q5Gh9iYvp2As/M=;
-	b=XGVzuIzYWW155aVdun57hZwiZEsLOGb6SL0ZDIa5YHWkIXHxvSkXQS0n0yY0NKJ9IEYPOFMo1
-	iJvBzsDnpC2eEgj8tWC7FIlcREslKi+ph2oHJ3cM1ppS3+XvUdKSmcoAb+teUsu5rUv0zMwgUuy
-	v0jNA6PRnUY5/DR0GZnFfsM=
-Received: from mail.maildlp.com (unknown [172.19.163.0])
-	by canpmsgout06.his.huawei.com (SkyGuard) with ESMTPS id 4hR37J726czRhWV;
-	Fri, 21 Aug 2026 09:46:20 +0800 (CST)
-Received: from dggpemr500010.china.huawei.com (unknown [7.185.36.210])
-	by mail.maildlp.com (Postfix) with ESMTPS id 79E4E40561;
-	Fri, 21 Aug 2026 09:57:01 +0800 (CST)
-Received: from huawei.com (10.50.85.180) by dggpemr500010.china.huawei.com
- (7.185.36.210) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.45; Fri, 21 Aug
- 2026 09:57:00 +0800
-From: Zhang Hongtao <zhanghongtao35@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>
-CC: Alex Williamson <alex.williamson@nvidia.com>,
-	=?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>, Dan
- Williams <djbw@kernel.org>, Keith Busch <kbusch@kernel.org>,
-	<linux-kernel@vger.kernel.org>, <liuyongqiang13@huawei.com>,
-	<zhangqiuhao@huawei.com>
-Subject: PCI: Prevent device lock leak during bus reset
-Date: Fri, 21 Aug 2026 10:16:26 +0800
-Message-ID: <20260821021626.1874602-1-zhanghongtao35@huawei.com>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="kIp4YdPy";
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="O2hePe7M"
+Received: from smtp2.mailbox.org (smtp2.mailbox.org [IPv6:2001:67c:2050:b231:465::2])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mout-p-201.mailbox.org (Postfix) with ESMTPS id 4hR3Zp6sPszMlDm;
+	Fri, 21 Aug 2026 04:06:42 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
+	t=1787278003;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=61xxDssEoMTgU4EO+itVPFOaaikfmZAy4Onv2p4eAu8=;
+	b=kIp4YdPy7mVImmb18MXH78kuuBiyZhG5wQF+wQKt2H0pM8pEzPfbtBYHVbfcXqw68uMlS/
+	ElD3GPBb/+7cACU5OLipG4bD6XbRmTWngG9h15ISnqGIAKCVdsJP7gqZEg7RhK2jPi58XZ
+	WjvvXxgjgIFjd1tYUfui0ARGZN54nWwOv1AtCNI+HgMS5w4oCzvdHUAUxYkjI0a2FwMDa6
+	GhcLWnwJ/j6csgheY9ddtFpWXBOgVrqoeds3/Spvw6vzsrcgwtrLF1eBKXCBc/+/rSpETe
+	CB3VvtXcYAiLNTxcn5X7eX3VrsnyVchZu1bkvAxcZhYDiPF/rdOQnmmOXLSKRg==
+Authentication-Results: outgoing_mbo_mout;
+	dkim=pass header.d=mailbox.org header.s=mail20150812 header.b=O2hePe7M;
+	spf=pass (outgoing_mbo_mout: domain of marek.vasut+renesas@mailbox.org designates 2001:67c:2050:b231:465::2 as permitted sender) smtp.mailfrom=marek.vasut+renesas@mailbox.org
+From: Marek Vasut <marek.vasut+renesas@mailbox.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
+	t=1787278001;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=61xxDssEoMTgU4EO+itVPFOaaikfmZAy4Onv2p4eAu8=;
+	b=O2hePe7MhF2P4QX4E3xQ8+cpibDhzL0lbdYjO3yblTIrGN7fMfHMgX7hMhGOgKBjPbrfJB
+	xZrheJ/p4UQ9nPQK2G6tkWPRXRS7RoPLUihhgEyxUGocdMpS/LJ/adA4ImOPbKX6iuJ+it
+	oFCI27UNJfChbSS3etZ8ceG7KCd6HSHea/2ZB4sXxBcaYjvuFG4bPGzHUaES4GXwpCg1Gk
+	HdpxwxU0OGWK54QMRApGUY4yBmELG/NW3M33YBzUsEe1zU/rKKM9Nf0phO7x3dI+RzVvvY
+	WSK1WPlXZSMisz55UMAsqBmAeHUSCxV7ZoTETlww526rGpQJuh2D5vnD4QZ1Og==
+To: linux-pci@vger.kernel.org
+Cc: Marek Vasut <marek.vasut+renesas@mailbox.org>,
+	stable@vger.kernel.org,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Geert Uytterhoeven <geert+renesas@glider.be>,
+	Koichiro Den <den@valinux.co.jp>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+	linux-kernel@vger.kernel.org,
+	linux-renesas-soc@vger.kernel.org
+Subject: [PATCH v3] PCI: rcar-gen4: Limit Max_Read_Request_Size and Max_Payload_Size to 256 Bytes
+Date: Fri, 21 Aug 2026 04:05:51 +0200
+Message-ID: <20260821020636.111719-1-marek.vasut+renesas@mailbox.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: kwepems100001.china.huawei.com (7.221.188.238) To
- dggpemr500010.china.huawei.com (7.185.36.210)
+X-MBO-RS-META: wqjhkzf9uff7kay4k5kqk7p7bpxfc8nt
+X-MBO-RS-ID: 544535875d00c52fa02
+X-Rspamd-Queue-Id: 4hR3Zp6sPszMlDm
 
-pci_bus_lock() and pci_bus_unlock() independently walk the devices below
-a bus.  The topology may change between the walks because pci_bus_sem is
-not held across the reset.
+R-Car Gen4 PCIe controller has a hardware limitation of 256 Bytes
+Max_Payload_Size (MPS). PCIe specification indicates that the MPS
+must not exceed minimum MPS of any element along the packet path.
+Force limit Max_Payload_Size to at most 256 Bytes for each device
+connected to this PCIe controller.
 
-This causes a device lock leak when AER recovery, device removal, and
-driver bind and unbind operations run concurrently.  The relevant order
-is:
+R-Car Gen4 Reference Manual, chapter 104.4.8 Usage notes for
+MRRS (Max Read Request Size) states:
+  Please set "Max Read Request Size" to 128 bytes or 256 bytes.
+  If "Max Read Request Size" is set to anything other than the
+  above, the transferred data will not match the expected value.
+This limitation also seems the apply to devices issuing MRd TLP.
+This limitation can be triggered by using non-HMB NVMe SSD with
+Max_Read_Request_Size 512 Bytes, for example Crucial P5 Plus.
+Any write into the SSD (MRd TLP issued by the SSD) longer than
+256 Bytes wraps around at 256 Byte boundary, and the same data
+are written into the SSD starting at offset 0 and at 256 Bytes.
+Force limit Max_Read_Request_Size to at most 256 Bytes for each
+device connected to this PCIe controller to avoid this behavior.
 
-  bind/unbind                 remove                 AER recovery
-  --------------------------------------------------------------------
-  bus_find_device_by_name()
-                              device_del()
-                                                     pci_bus_lock()
-                              list_del(&dev->bus_list)
-                                                     bus reset
-                                                     pci_bus_unlock()
-  device_lock()
+An non-HMB (Host Memory Buffer) NVMe SSD can be identified using
+the following command. Affected SSD reports 'hmpre' field as 0:
+"
+$ nvme id-ctrl /dev/nvme0 | grep hmpre
+hmpre     : 0
+"
 
-pci_bus_lock() locks the device before the Secondary Bus Reset.  After
-pci_destroy_dev() removes the device from bus->devices, pci_bus_unlock()
-no longer finds the device and therefore does not unlock it.  The bind
-and unbind paths retain references obtained by bus_find_device_by_name(),
-so they can subsequently reach device_lock() and wait indefinitely for
-the leaked lock.
+The symptom is a read from the SSD which wraps around at 256 Byte
+boundary. The test for this symptom can be implemented by writing
+512 Byte of random data into the SSD and reading the data back. If
+the read back data repeat after 256 Bytes, the device is affected.
+"
+$ dd if=/dev/urandom of=/tmp/data.bin bs=256 count=2 ; \
+  dd if=/tmp/data.bin of=/dev/nvme0n1 bs=256 count=2 ; \
+  dd if=/dev/nvme0n1 bs=256 count=2 of=/tmp/readback.bin
+"
 
-The race was reproduced consistently on QEMU Q35 with an e1000e endpoint
-and a mainline-based kernel:
+Expected data:
+"
+$ hexdump -vC /tmp/data.bin
+00000000  97 81 b7 3b 0e 38 2b 4d  a7 d3 e0 47 ff c2 4b ca
+00000010  c1 85 98 f0 4a ac 03 a0  3b ab f3 19 44 dd 06 8b
+...
+00000100  7a ce 3c b2 e1 d5 d9 11  88 63 10 59 76 3c dc 32 <-- random
+00000110  72 32 2a 7d a3 e1 aa 13  7c da 58 a1 7b 21 11 50 <-- data
+"
 
-  7.2.0-rc4-00366-gf9cf390f34eb
+Faulty readback, collected without this change in place:
+"
+$ hexdump -vC /tmp/readback.bin
+00000000  97 81 b7 3b 0e 38 2b 4d  a7 d3 e0 47 ff c2 4b ca <---.
+00000010  c1 85 98 f0 4a ac 03 a0  3b ab f3 19 44 dd 06 8b <-. |
+...                                                          | |
+00000100  97 81 b7 3b 0e 38 2b 4d  a7 d3 e0 47 ff c2 4b ca <-:-+- repeated
+00000110  c1 85 98 f0 4a ac 03 a0  3b ab f3 19 44 dd 06 8b <-+--- data
+     ^^^
+      |
+      '--- Repeat starts at offset 0x100 = 256 Bytes
+"
 
-Artificial delays after bus_find_device_by_name(), pci_bus_lock(), and
-device_del() widened the race windows.  Concurrent bind, unbind, and
-remove operations were started, followed by an injected Data Link
-Protocol AER error using CONFIG_PCIEAER_INJECT.  The hung task detector
-reported both device_driver_attach() and device_release_driver_internal()
-waiting on the device mutex, likely owned by irq/24-aerdrv.
-
-Take a topology snapshot under pci_bus_sem and hold a reference to every
-device in it.  Drop pci_bus_sem before acquiring device locks, then use
-the snapshot for both locking and unlocking.  This guarantees that every
-device lock acquired by pci_bus_reset() is released even if a device is
-removed from bus->devices during the reset.
-
-The fix was tested on commit d326f83e819c ("Merge tag 'net-7.2-rc5' of
-git://git.kernel.org/pub/scm/linux/kernel/git/netdev/net") with the same
-forced ordering.  The device was removed from bus->devices between the
-reset lock and unlock markers, after which device_driver_attach()
-completed and no hung task occurred.
-
-This is intentionally a limited fix.  It makes lock and unlock symmetric,
-but does not protect the topology for the entire reset.  In particular, a
-device added after the snapshot may be reset without its device lock held.
-Similar independent walks also exist in the slot and try-reset paths.  This
-RFC seeks feedback on whether the snapshot should be extended to those
-paths or reset should use a stronger topology exclusion mechanism.
-
-Fixes: 090a3c5322e9 ("PCI: Add pci_reset_slot() and pci_reset_bus()")
-Signed-off-by: Zhang Hongtao <zhanghongtao35@huawei.com>
+Fixes: 0d0c551011df ("PCI: rcar-gen4: Add R-Car Gen4 PCIe controller support for host mode")
+Cc: stable@vger.kernel.org
+Signed-off-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
 ---
- drivers/pci/pci.c | 102 +++++++++++++++++++++++++++++++++++++++++++---
- 1 file changed, 97 insertions(+), 5 deletions(-)
+Cc: "Krzysztof Wilczyński" <kwilczynski@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+Cc: Koichiro Den <den@valinux.co.jp>
+Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>
+Cc: Magnus Damm <magnus.damm@gmail.com>
+Cc: Manivannan Sadhasivam <mani@kernel.org>
+Cc: Rob Herring <robh@kernel.org>
+Cc: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Cc: linux-kernel@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+Cc: linux-renesas-soc@vger.kernel.org
+---
+V2: - Dispose of the reprogramming of MPS/MRRS altogether
+    - Dispose of the entire fixup quirk
+    - Replace both with bridge enable_device hook
+    - Limit MPS/MRRS along the entire packet path to follow
+      MRRS limitation requirement
+V3: - Set no_inc_mrrs to prevent periperhal drivers from increasing MRRS
+      over the limit set by this PCIe controller driver
+    - Warn on MPS > 256 Bytes
+    - Recheck updated documentation and update code comments to match
+---
+ drivers/pci/controller/dwc/pcie-rcar-gen4.c | 51 +++++++++++++++++++++
+ 1 file changed, 51 insertions(+)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 77b17b13ee61..25a1e44263c3 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -5409,6 +5409,88 @@ static int pci_bus_trylock(struct pci_bus *bus)
- 	return __pci_bus_trylock(bus, NULL);
+diff --git a/drivers/pci/controller/dwc/pcie-rcar-gen4.c b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
+index fbe465a29068f..e38cde2257bb4 100644
+--- a/drivers/pci/controller/dwc/pcie-rcar-gen4.c
++++ b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
+@@ -411,6 +411,54 @@ static int rcar_gen4_pcie_host_msi_init(struct dw_pcie_rp *pp)
+ 	return ret;
  }
  
-+struct pci_bus_lock_context {
-+	struct pci_dev **devs;
-+	size_t nr_devs;
-+};
-+
-+static size_t pci_bus_lock_count(struct pci_bus *bus)
++static int rcar_gen4_pcie_enable_device(struct pci_host_bridge *bridge,
++					struct pci_dev *dev)
 +{
-+	struct pci_dev *dev;
-+	size_t count = 1;
++	/*
++	 * R-Car Gen4 PCIe controller has a hardware limitation of 256 Bytes
++	 * Max_Payload_Size (MPS). PCIe specification indicates that the MPS
++	 * must not exceed minimum MPS of any element along the packet path.
++	 * The controller reports Max_Payload_Size_Supported (MPSS) 256 Bytes
++	 * for header type 0 and 128 Bytes for header type 1. The PCIe core
++	 * will not allow MPS to be set higher than MPSS, warn here in case
++	 * something went very wrong in the core.
++	 *
++	 * For details, refer to chapter "104.1.1 Features" in either of:
++	 * R-Car S4 R19UH0161EJ0140 Rev.1.40 Jul. 31, 2026 or
++	 * R-Car V4H R19UH0186EJ0140 Rev.1.40 Aug. 7, 2026 or
++	 * R-Car V4M R19UH0217EJ0110 Rev.1.10 Jun. 30, 2026.
++	 */
++	WARN_ON(pcie_get_mps(dev) > 256);
 +
-+	lockdep_assert_held(&pci_bus_sem);
-+
-+	list_for_each_entry(dev, &bus->devices, bus_list) {
-+		if (dev->subordinate)
-+			count += pci_bus_lock_count(dev->subordinate);
-+		else
-+			count++;
++	/*
++	 * R-Car Gen4 Reference Manual, chapter 104.4.8 Usage notes for
++	 * MRRS (Max Read Request Size) states:
++	 *   Please set "Max Read Request Size" to 128 bytes or 256 bytes.
++	 *   If "Max Read Request Size" is set to anything other than the
++	 *   above, the transferred data will not match the expected value.
++	 * This limitation also seems the apply to devices issuing MRd TLP.
++	 * This limitation can be triggered by using non-HMB NVMe SSD with
++	 * Max_Read_Request_Size 512 Bytes, for example Crucial P5 Plus.
++	 * Any write into the SSD (MRd TLP issued by the SSD) longer than
++	 * 256 Bytes wraps around at 256 Byte boundary, and the same data
++	 * are written into the SSD starting at offset 0 and at 256 Bytes.
++	 * Force limit Max_Read_Request_Size to at most 256 Bytes for each
++	 * device connected to this PCIe controller to avoid this behavior.
++	 *
++	 * For details, refer to aforementioned chapter in either of:
++	 * R-Car S4 R19UH0161EJ0140 Rev.1.40 Jul. 31, 2026 or
++	 * R-Car V4H R19UH0186EJ0140 Rev.1.40 Aug. 7, 2026 or
++	 * R-Car V4M R19UH0217EJ0110 Rev.1.10 Jun. 30, 2026.
++	 */
++	bridge->no_inc_mrrs = 1;
++	if (pcie_get_readrq(dev) > 256) {
++		pci_info(dev, "Limiting MRRS to 256 bytes\n");
++		pcie_set_readrq(dev, 256);
 +	}
-+
-+	return count;
-+}
-+
-+static void pci_bus_lock_fill(struct pci_bus *bus,
-+			      struct pci_bus_lock_context *context,
-+			      size_t *index)
-+{
-+	struct pci_dev *dev;
-+
-+	lockdep_assert_held(&pci_bus_sem);
-+
-+	context->devs[(*index)++] = pci_dev_get(bus->self);
-+	list_for_each_entry(dev, &bus->devices, bus_list) {
-+		if (dev->subordinate)
-+			pci_bus_lock_fill(dev->subordinate, context, index);
-+		else
-+			context->devs[(*index)++] = pci_dev_get(dev);
-+	}
-+}
-+
-+static int pci_bus_lock_snapshot_init(struct pci_bus *bus,
-+				      struct pci_bus_lock_context *context)
-+{
-+	size_t index = 0;
-+
-+	lockdep_assert_held(&pci_bus_sem);
-+
-+	context->nr_devs = pci_bus_lock_count(bus);
-+	context->devs = kvmalloc_array(context->nr_devs,
-+				       sizeof(*context->devs), GFP_KERNEL);
-+	if (!context->devs)
-+		return -ENOMEM;
-+
-+	pci_bus_lock_fill(bus, context, &index);
 +
 +	return 0;
 +}
 +
-+static void pci_bus_lock_snapshot(struct pci_bus_lock_context *context)
-+{
-+	size_t i;
-+
-+	for (i = 0; i < context->nr_devs; i++)
-+		pci_dev_lock(context->devs[i]);
-+}
-+
-+static void pci_bus_unlock_snapshot(struct pci_bus_lock_context *context)
-+{
-+	size_t i;
-+
-+	for (i = context->nr_devs; i > 0; i--)
-+		pci_dev_unlock(context->devs[i - 1]);
-+}
-+
-+static void pci_bus_lock_snapshot_release(struct pci_bus_lock_context *context)
-+{
-+	size_t i;
-+
-+	for (i = 0; i < context->nr_devs; i++)
-+		pci_dev_put(context->devs[i]);
-+	kvfree(context->devs);
-+}
-+
- /* Do any devices on or below this slot prevent a bus reset? */
- static bool pci_slot_resettable(struct pci_slot *slot)
+ /* Host mode */
+ static int rcar_gen4_pcie_host_init(struct dw_pcie_rp *pp)
  {
-@@ -5585,21 +5667,31 @@ static int pci_try_reset_slot(struct pci_slot *slot)
- 
- static int pci_bus_reset(struct pci_bus *bus, bool probe)
- {
-+	struct pci_bus_lock_context context;
+@@ -418,6 +466,9 @@ static int rcar_gen4_pcie_host_init(struct dw_pcie_rp *pp)
+ 	struct rcar_gen4_pcie *rcar = to_rcar_gen4_pcie(dw);
  	int ret;
  
-+	down_read(&pci_bus_sem);
++	if (pp->bridge)
++		pp->bridge->enable_device = rcar_gen4_pcie_enable_device;
 +
- 	if (!bus->self || !pci_bus_resettable(bus))
--		return -ENOTTY;
-+		ret = -ENOTTY;
-+	else if (probe)
-+		ret = 0;
-+	else
-+		ret = pci_bus_lock_snapshot_init(bus, &context);
+ 	gpiod_set_value_cansleep(dw->pe_rst, 1);
  
--	if (probe)
--		return 0;
-+	up_read(&pci_bus_sem);
-+
-+	if (ret || probe)
-+		return ret;
- 
--	pci_bus_lock(bus);
-+	pci_bus_lock_snapshot(&context);
- 
- 	might_sleep();
- 
- 	ret = pci_bridge_secondary_bus_reset(bus->self);
- 
--	pci_bus_unlock(bus);
-+	pci_bus_unlock_snapshot(&context);
-+	pci_bus_lock_snapshot_release(&context);
- 
- 	return ret;
- }
-
-base-commit: c21bb4193868a8de71fc4693fa741e195fdf5d86
+ 	ret = rcar_gen4_pcie_common_init(rcar);
 -- 
-2.34.1
+2.53.0
 
