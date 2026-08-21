@@ -1,47 +1,47 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A0D5E3B19B5
-	for <linux-pci@vger.kernel.org>; Fri, 21 Aug 2026 14:24:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D2DF3249EB
+	for <linux-pci@vger.kernel.org>; Fri, 21 Aug 2026 14:24:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787322300; cv=none; b=hvA6jCjOy/nyWiBC1gb0zKqL8b+zC6qKprIfP456kLO7LCOx3uptyGfONX1M8k1VhuGIkRwkMZnqu/mjDsvCpNGfqFi2SNvF6rXBE7rW9rb7h/uSFIObiNgT+kwa4aBL26UU3aiPhxuD4k4oJD2WmIXmaApZaspfrtYveeSdG6w=
+	t=1787322303; cv=none; b=udZOXfiiYB2wDhn6xMs3qJhD5b5zvZWdyXTpiQQnCwWvzJkgMGvWpIpJcNn1dgQpfSQioRMKWRzjTNhsAhw4rsnyj5TaOBVjJh63JPwIhCXqZFo0tZT82zCRumh/zCbTE7GKhHzv5iQ2hwPs+AHsP9I6lMgPh34VdFGyH1llzeg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787322300; c=relaxed/simple;
-	bh=CvVkhhBXZG0ZDrJsnmBXLSGYgGyIZi2GM0825+aHLdA=;
+	s=arc-20240116; t=1787322303; c=relaxed/simple;
+	bh=3lQMPdYbR1RntwK+bxjJtg5kiwvAYZO4Z6X9Nwg+SoI=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ulGzODQXGtZF8oWMsqb/32cEPCS4MA2c6xRFzK1ydZOskTIwtZ7doTaMHiTZNuKBSlnnRlM+X1ZrPsP22qFzZ3hAI6vLr+ddpYb8iyLl8pZxxOBwyG27o2LG7aSslW3OPm+kO8MmEsLX9qaKDzzzkR+SRHRaXI/T6HuFRQT/8r0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=VhZHX8Fe; arc=none smtp.client-ip=170.10.129.124
+	 MIME-Version; b=ZxjD+SbZ2XKWMTvcAcd3jVM9NKC2+r/MRWf3dVhGg8joU9rmr9rNzj//M46ZoRlPr7FyirvBsE6oj/6Stsyc5hirsjimF710e0bT9+ZTHnXKVbhuZ9VAW0rf4vulr2vDTaFHSlMgDFZMfS8Odi4m/A4mKvOeiaq97HJm6Xh6i0E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=WSU3iXSI; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="VhZHX8Fe"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="WSU3iXSI"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1787322293;
+	s=mimecast20190719; t=1787322297;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=S4w5b49VFjE4E0AFoA0Qcj7jylDcxSilk3hvFC5nqKA=;
-	b=VhZHX8FeGWRfgvDjnup3nVY+F2scufQzxUNM+TUr3IfHvCWPQxFB/fhR83/GNttJ3MAYfS
-	Vq+kWTnxLldXi/kZdmsAhCtbGO4hvKp76pCqsYY5Jx+qwSvCErnuwgwvd0p5jktSFC+kWH
-	dtDcxKg4GPEwzPrzDknHPMZHD9g9Zkg=
-Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+	bh=IU0vv4gN2o5y5prXUpJQRh2FejWBebUitlBF1Qr8ENg=;
+	b=WSU3iXSIjUQEpXN6b8o7fycY4KAPfWpdh4UMbvAsOmxt77aTPN++yk25WYT1VtSWT1uM54
+	Az9HOfxYc6DJV2Lf+tZR5tbwQlVDRwSLZ2VMoXTvyT7ILKlnUp0mxscIOD7zjDLkz60Ygg
+	mWw243JYDwK6Pr8XS0bt0lpDUPEfm9E=
+Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-235-0DWkU8VlPs6IoD1cwnQOkQ-1; Fri,
- 21 Aug 2026 10:24:49 -0400
-X-MC-Unique: 0DWkU8VlPs6IoD1cwnQOkQ-1
-X-Mimecast-MFC-AGG-ID: 0DWkU8VlPs6IoD1cwnQOkQ_1787322288
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-255-E0vuZrlmMeSZFl2-63xpJw-1; Fri,
+ 21 Aug 2026 10:24:55 -0400
+X-MC-Unique: E0vuZrlmMeSZFl2-63xpJw-1
+X-Mimecast-MFC-AGG-ID: E0vuZrlmMeSZFl2-63xpJw_1787322293
 Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 4B37F1801BEC;
-	Fri, 21 Aug 2026 14:24:47 +0000 (UTC)
+	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 22CFF1954208;
+	Fri, 21 Aug 2026 14:24:53 +0000 (UTC)
 Received: from djeffery-thinkpadp1gen3.redhat.corp (headnet05.pony-001.prod.iad2.dc.redhat.com [10.2.32.117])
-	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id A50C11800346;
-	Fri, 21 Aug 2026 14:24:44 +0000 (UTC)
+	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 9C2E6180034F;
+	Fri, 21 Aug 2026 14:24:50 +0000 (UTC)
 From: David Jeffery <djeffery@redhat.com>
 To: driver-core@lists.linux.dev,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
@@ -56,9 +56,9 @@ Cc: linux-kernel@vger.kernel.org,
 	Bjorn Helgaas <helgaas@kernel.org>,
 	kexec@lists.infradead.org,
 	David Jeffery <djeffery@redhat.com>
-Subject: [PATCH 1/9] driver core: rely on put_device to free dev->p
-Date: Fri, 21 Aug 2026 10:24:06 -0400
-Message-ID: <20260821142414.150892-2-djeffery@redhat.com>
+Subject: [PATCH 3/9] driver core: warn should device_move try to move a need_parent_lock device
+Date: Fri, 21 Aug 2026 10:24:08 -0400
+Message-ID: <20260821142414.150892-4-djeffery@redhat.com>
 In-Reply-To: <20260821142414.150892-1-djeffery@redhat.com>
 References: <20260821142414.150892-1-djeffery@redhat.com>
 Precedence: bulk
@@ -70,51 +70,40 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
 
-From: Tarun Sahu <tarunsahu@google.com>
+Currently, no device has need_parent_lock set and is moved by
+device_move. need_parent_lock is only set by the usb bus and very
+few device types ever use device_move.
 
-device_add allocate private_data for device and assigns to
-dev->p. If device_add fails in later steps of the function,
-it cleans up this dev->p which is not necessary because In
-the next call, put_device free it anyway (if reference to
-the device is 0 which will be unless someone concurrently
-get the reference to this device).
+Add a warning to device_move to catch should it ever be used on a
+device with need_parent_lock set. The combination would break
+the immutable relationship needed between parent and child for
+need_parent_lock when locking and unlocking both.
 
-This avoids unnecessary races introduced in system. After device
-is added in device_kset->list by device_add and later steps in the
-device_add function failures occur, it will free dev->p manually,
-while in between there might be a user of device_kset->list will
-take reference to the device just added by device_add. and might
-try to access dev->p. So relying on put_device to free dev->p
-prevents such problem.
-
-Signed-off-by: Tarun Sahu <tarunsahu@google.com>
 Signed-off-by: David Jeffery <djeffery@redhat.com>
 Tested-by: Laurence Oberman <loberman@redhat.com>
 ---
- drivers/base/core.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/base/core.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
 diff --git a/drivers/base/core.c b/drivers/base/core.c
-index 4c0c373998a1..83263e3fa5d4 100644
+index bd9c2921e326..75f5931165a8 100644
 --- a/drivers/base/core.c
 +++ b/drivers/base/core.c
-@@ -2618,6 +2618,7 @@ static void device_release(struct kobject *kobj)
- 	struct device *dev = kobj_to_dev(kobj);
- 	struct device_private *p = dev->p;
+@@ -4712,6 +4712,14 @@ int device_move(struct device *dev, struct device *new_parent,
+ 	if (!dev)
+ 		return -EINVAL;
  
-+	dev->p = NULL;
- 	/*
- 	 * Some platform devices are driven without driver attached
- 	 * and managed resources may have been acquired.  Make sure
-@@ -3828,8 +3829,6 @@ int device_add(struct device *dev)
- parent_error:
- 	put_device(parent);
- name_error:
--	kfree(dev->p);
--	dev->p = NULL;
- 	goto done;
- }
- EXPORT_SYMBOL_GPL(device_add);
++	/*
++	 * device_move() should not be used on devices with need_parent_lock
++	 * set. Concurrent reparenting will violate the immutable
++	 * relationship needed while locking and unlocking both parent and
++	 * child.
++	 */
++	WARN_ON(dev->bus && dev->bus->need_parent_lock);
++
+ 	device_pm_lock();
+ 	new_parent = get_device(new_parent);
+ 	new_parent_kobj = get_device_parent(dev, new_parent);
 -- 
 2.55.0
 
