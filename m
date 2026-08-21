@@ -1,136 +1,147 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B266A37F00C;
-	Fri, 21 Aug 2026 15:55:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF1FF3BFE40;
+	Fri, 21 Aug 2026 16:40:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787327726; cv=none; b=UivtsAk/ilXsmKZFY1Mc4UcbxkSGl+W7383HdEC4T58RFBsfDPCEmeRJIfimvNcNVEvtOqNU0ontpJ1RmVCl5YThhOsDxQUV0sT2EvaOWG/iMm8OopK0r1A4ROh8H83F+QFAsNlzJjZ0fq4QUveSC0182439eGEEqREHBY1gdIc=
+	t=1787330442; cv=none; b=haK98SvY8ZDAIUZOvkRrpfzt2F8mGwnJ5KB163gzjHznHJDOxYRtv735NLK5rMkDnbgc3v4j1lv2waMDMwMT76qYPMGoExRM+Z8sdxpylDP7BO3cxqcMI16Se0dQ/Y13RttCXBGSUIjAAdY5+A6s+jZsiw7EA6tm2L3d0eAe/3Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787327726; c=relaxed/simple;
-	bh=IWD0anpHPIrSXgefg98fwbVAdd7ldj/veFEIyS3xUlo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=FJeNBJ2zFP9l5812FzLKmqZsBLy6R7OuJikBX6UDQOyk8rIC2CNNXWYaEfcnd3iZ5ObrvzM8in1BUWmNunqHAi/9yAcqu5WcO3PSmlJX86loEXjyAuMCGzVmLTDu7IrT+jBvIxPuPRSQocuzOV8HsKvKje+IcFJe9DKeBWk760w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NxNw3ZjZ; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1787330442; c=relaxed/simple;
+	bh=LjY9K5ove29/BH+rESB2pQyikZT4aQPayjl8uzpozrI=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=FSVmxQ6VmYAjOTcygtbeG5gbS1k65mR8DOOqMf6JjtT493O0Fv4aXELTTjxxdDS0pJjWzGv/udQ/zhHbR+DkHdJ64EnVp34med5BOAQc2LEyy7jZVFQAueLpKNO0LIxfwxc+2VE+vw0YLrjPs+XVDFcng+gz+pgoIn0E4QB05vo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=O2ETuFHj; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NxNw3ZjZ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BD6F11F000E9;
-	Fri, 21 Aug 2026 15:55:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787327725;
-	bh=+9b6rcYTQfmuI25hk8HLbuGADKmBW8CvR7tONpt3bF0=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=NxNw3ZjZPfbOuTEcjj0JZiH6OzfbuBDq5dhc383ylCUBaOQ7NSmGtSReLGoIgG3Cx
-	 8JitLJnr6QH0HTmXLmWWYGGxS9+pKydqM6eGUkkeFgGrnD0FG+tXrMnlQ7ksbh4aUI
-	 dq1lu5g0HSwhDzM3VqMAj16I29ZjnkWY+LlLNv/VKqb4N+5n7H4ZLJtSNR3MJ0FfbQ
-	 tjO88wMUm/9kF+yOTKjs2yr4hcG0+yw+AwT6YxnhOeA4EHeUpLfZTSPpkI+v2HWbeU
-	 r1+KoEjrSanpqYg/yXsBiPi+bxgb/rOLNhLXqtbhH8m5FYVKjaAIDKFhWGBRzFsGZY
-	 zf7E7YK/dfpJA==
-Date: Fri, 21 Aug 2026 17:55:17 +0200
-From: Niklas Cassel <cassel@kernel.org>
-To: Koichiro Den <den@valinux.co.jp>, Vinod Koul <vkoul@kernel.org>
-Cc: Manivannan Sadhasivam <mani@kernel.org>,
-	Frank Li <Frank.li@oss.nxp.com>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Kishon Vijay Abraham I <kishon@kernel.org>,
-	Frank Li <Frank.Li@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Randy Dunlap <rdunlap@infradead.org>, Vinod Koul <vkoul@kernel.org>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Rob Herring <robh@kernel.org>, Damien Le Moal <dlemoal@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Marek Vasut <marek.vasut+renesas@mailbox.org>,
-	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-	linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
-Subject: Re: [PATCH v7 00/10] PCI: endpoint: Add PCI DMA endpoint function
-Message-ID: <aoh05fY66kKxvxqD@ryzen>
-References: <20260813063757.3131865-1-den@valinux.co.jp>
- <an2uf5mXzGq1Q7cj@ryzen>
- <zoed4wtc4oxiyni4o5qpj3li3cmlyy5kfutp4r5g4d63u52625@j6rvbbehjgov>
- <ztn47y23ctbjrbkmgyyhc6d5x3i2lzz5txotpgtbjtcsvbsvf4@fzadsvt5fl4d>
- <an3p_j-F10e9x0vM@SMW015318>
- <7kzvkrbc6w7yojufwekzjubndgg4ao2o65gnla6mjwhwn5ji2d@vhrj4kg6uia2>
- <fg7cma2ccvdgjgcref7qa4q7ocvvume5dteekedikszebkq7rd@uhrjfp3nmmwh>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="O2ETuFHj"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 8A2E6C19425;
+	Fri, 21 Aug 2026 16:40:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1787330441;
+	bh=LjY9K5ove29/BH+rESB2pQyikZT4aQPayjl8uzpozrI=;
+	h=From:Date:Subject:To:Cc:Reply-To:From;
+	b=O2ETuFHjRleckP/KS19rF4SuugcLb1zYsw+unphUzEl4GbAsG0g+ySEf1j6xX539K
+	 Fmztgbj1+LpeIjYj/BmebgW2iG4K53V3/XTbgyKnetMl+HRjvBT2xa2ihpmpSk30Ty
+	 28tOB9wdSBwhTlCmGg/8XBuJJZXI6vnVON9Asb0bKrqXowpZTxxq2kvUKBkRd3oPg4
+	 ycplllXk6TIRl4vJry9bpDFmf4dnVyaTWEG9TxZ8FF2L5lWndCJCajBBM3oUKJ796m
+	 XeKNSYBls99Ll/V4OTEWXAayPUR9gazhfs7zHNb4tOgyPUfk05ETPhbHQ821wPLRqV
+	 2FioBmvqXL53A==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 780F7C5DF94;
+	Fri, 21 Aug 2026 16:40:41 +0000 (UTC)
+From: FAN YE via B4 Relay <devnull+fy15309206903.gmail.com@kernel.org>
+Date: Fri, 21 Aug 2026 16:40:41 +0000
+Subject: [PATCH] PCI/VGA: Fix lost wakeup when waiting for a VGA resource
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <fg7cma2ccvdgjgcref7qa4q7ocvvume5dteekedikszebkq7rd@uhrjfp3nmmwh>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20260821-pci-vga-lost-wakeup-v1-1-39dc6a2333c6@gmail.com>
+X-B4-Tracking: v=1; b=H4sIAIh/iGoC/yXMSQ6DMAxA0asgr7GUhFG9CmIRUhcMFUQxQyXE3
+ Rva5Vv8f4JQYBJ4JCcE2ll4mSN0moAb7NwT8jMajDKlqo1G7xj33uJ7kRUPO9HmMesqVRZ1bnL
+ SEEsf6MWf37Vp/5atG8mt9wqu6wuBcIaPdwAAAA==
+X-Change-ID: 20260821-pci-vga-lost-wakeup-3b70658424e1
+To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-kernel@vger.kernel.org
+X-Mailer: b4 0.15.2
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1787330440; l=3519;
+ i=fy15309206903@gmail.com; s=tbnet3; h=from:subject:message-id;
+ bh=Rrv8GAN0TkTavxf0KIGyHuf9553vMGCJ0Prul4fquuY=;
+ b=1v3iU7KRL+w1UPjVQY3sriskWxxUrivf66xlFxS/4VJKeVonSAOMEM6cfTk1prWoeU90MW/qg
+ 8DXrI67x7cCALTVOmYRZpLfStHf90Vi8Ql6yt+yPQnzRj5EgeN26XS5
+X-Developer-Key: i=fy15309206903@gmail.com; a=ed25519;
+ pk=6QsQIrI/kruYWIJyCH9ntPMXsHCqF5JtK/DCMtOCzdc=
+X-Endpoint-Received: by B4 Relay for fy15309206903@gmail.com/tbnet3 with
+ auth_id=929
+X-Original-From: FAN YE <fy15309206903@gmail.com>
+Reply-To: fy15309206903@gmail.com
 
-On Fri, Aug 14, 2026 at 02:57:12PM +0900, Koichiro Den wrote:
-> On Fri, Aug 14, 2026 at 07:27:10AM +0200, Manivannan Sadhasivam wrote:
-> > 
-> > Testing is one thing, but using is what matters. Are there any products or
-> > use case based on remote eDMA? Or even dw-edma-pcie.c?
-> 
-> My end goal for this work is this series:
-> 
-> https://lore.kernel.org/r/20260810165136.2292436-1-den@valinux.co.jp/
-> 
-> It now depends on the PCI DMA EPF. The host side controls the endpoint eDMA
-> through dw-edma-pcie for one direction. This is for an industrial use case, not
-> just testing.
-> 
-> The resulting ntb_netdev/ntb_transport improvement is substantial:
-> 
->   (unit: Gbps) (UL=EP->RC, DL=RC->EP)
-> 
->           UL UDP  DL UDP   UL TCP  DL TCP
->   ------- ------  -------  ------  ------
->   Before  ~0.6     ~0.6     ~0.6     ~0.6
->   After   ~19.5    ~17.3    ~12.3    ~10.8
-> 
->   (On R-Car S4, PCIe Gen4 x2, controller IP v5.20a, eDMA)
-> 
+From: FAN YE <fy15309206903@gmail.com>
 
-You have an industrial use case, and your performance numbers show that
-remote eDMA can bring great performance gains for your use case.
+A task waiting in vga_get() can sleep forever even though the conflicting
+device has already released the resource.  Once __vga_tryget() reports a
+conflict, vga_get() drops vga_lock and only then puts itself on
+vga_wait_queue, while __vga_put() wakes that queue while holding vga_lock.
+A wakeup landing in between finds the queue empty and is discarded, and as
+the conflict is already gone no further wakeup is coming.  Callers passing
+interruptible=0, such as the "lock" command of /dev/vga_arbiter, are then
+unkillable and keep their lock counts forever.
 
-I don't think anyone is arguing about that.
+Queue up before dropping vga_lock, the way prepare_to_wait() publishes a
+waiter before the condition is re-tested.  The releasing side needs
+vga_lock to reach the wakeup, so it can no longer pass an unqueued waiter.
 
-At least to me, the question is if you need a new PCI EPF driver to implement
-the code for this use case. I think the answer is: No, it is not strictly
-needed. You can extend vNTB EPF to support your use case.
-(As that was your original approach.)
+Fixes: deb2d2ecd43d ("PCI/GPU: implement VGA arbitration on Linux")
+Cc: stable@vger.kernel.org
+Assisted-by: Claude:claude-opus-5
+Signed-off-by: FAN YE <fy15309206903@gmail.com>
+---
+Reproduced under QEMU on 818bebeb63dd with two VGA devices, the second one
+behind a bridge that does not forward VGA so that it owns no legacy resources.
+Two /dev/vga_arbiter clients each locking one device wedged the second client
+in vga_get(), D state and unkillable, after 8538 rounds, while the conflicting
+device already read back locks=none(0:0).  40000 rounds with this patch, none.
+---
+ drivers/pci/vgaarb.c | 29 +++++++++++++++++------------
+ 1 file changed, 17 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/pci/vgaarb.c b/drivers/pci/vgaarb.c
+index 3de05aee78599..51c7d171c9558 100644
+--- a/drivers/pci/vgaarb.c
++++ b/drivers/pci/vgaarb.c
+@@ -459,6 +459,23 @@ int vga_get(struct pci_dev *pdev, unsigned int rsrc, int interruptible)
+ 			break;
+ 		}
+ 		conflict = __vga_tryget(vgadev, rsrc);
++		/*
++		 * We have a conflict; we wait until somebody kicks the
++		 * work queue. Currently we have one work queue that we
++		 * kick each time some resources are released, but it would
++		 * be fairly easy to have a per-device one so that we only
++		 * need to attach to the conflicting device.
++		 *
++		 * Queue up before dropping vga_lock: __vga_put() wakes the
++		 * queue while holding it, so a wakeup cannot slip past.
++		 */
++		if (!IS_ERR_OR_NULL(conflict)) {
++			init_waitqueue_entry(&wait, current);
++			add_wait_queue(&vga_wait_queue, &wait);
++			set_current_state(interruptible ?
++					  TASK_INTERRUPTIBLE :
++					  TASK_UNINTERRUPTIBLE);
++		}
+ 		spin_unlock_irqrestore(&vga_lock, flags);
+ 		if (IS_ERR(conflict)) {
+ 			rc = PTR_ERR(conflict);
+@@ -467,18 +484,6 @@ int vga_get(struct pci_dev *pdev, unsigned int rsrc, int interruptible)
+ 		if (conflict == NULL)
+ 			break;
+ 
+-		/*
+-		 * We have a conflict; we wait until somebody kicks the
+-		 * work queue. Currently we have one work queue that we
+-		 * kick each time some resources are released, but it would
+-		 * be fairly easy to have a per-device one so that we only
+-		 * need to attach to the conflicting device.
+-		 */
+-		init_waitqueue_entry(&wait, current);
+-		add_wait_queue(&vga_wait_queue, &wait);
+-		set_current_state(interruptible ?
+-				  TASK_INTERRUPTIBLE :
+-				  TASK_UNINTERRUPTIBLE);
+ 		if (interruptible && signal_pending(current)) {
+ 			__set_current_state(TASK_RUNNING);
+ 			remove_wait_queue(&vga_wait_queue, &wait);
+
+---
+base-commit: 818bebeb63dd6bf5f4e07e145f6cdbace520a34c
+change-id: 20260821-pci-vga-lost-wakeup-3b70658424e1
+
+Best regards,
+--  
+FAN YE <fy15309206903@gmail.com>
 
 
-
-The question how you should test remote eDMA is a different question IMO.
-I'm not an expert, but from a testing perspective, does it really matter if
-it is the host or the endpoint itself that programs the eDMA hardware?
-
-I understand that you gain performance by having the host program the eDMA
-directly. But.. from a eDMA hardware verification standpoint, does it really
-matter which side that writes the eDMA registers?
-You should be able to test both dma directions, regardless of which side
-programs the eDMA hardware, no?
-
-I guess what you mentioned earlier, that the existing pci-epf-test tests
-are not pushing sufficient concurrent data to trigger certain driver bugs
-when multiple eDMA channels are used.
-
-I guess you could have a test suite that does whatever you did to uncover
-these bugs... vNTB + iperf? But I guess it could also be interesting to add
-tests that push more data concurrently, such that multiple eDMA channels are
-used. To me, that is basically what dmatest was designed for...
-
-Yes, we know that dmatest is currently not a great fit for DWC eDMA, because
-dmatest uses different dmaengine APIs.
-
-I think Vinod is best qualified to answer this question, but I guess the answer
-is either:
-A) Extend dmatest so that it can use the dmaengine APIs to fit DWC eDMA.
-or
-B) Write a copy of dmatest that is tailored to hardware that uses the dmaengine
-   APIs in a similar way as DWC eDMA requires.
-
-
-Kind regards,
-Niklas
