@@ -1,111 +1,127 @@
-Received: from mail-ed1-f48.google.com (mail-ed1-f48.google.com [209.85.208.48])
+Received: from mail-pl1-f200.google.com (mail-pl1-f200.google.com [209.85.214.200])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A19D149504C
-	for <linux-pci@vger.kernel.org>; Fri, 21 Aug 2026 13:46:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.48
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 24D5649505D
+	for <linux-pci@vger.kernel.org>; Fri, 21 Aug 2026 13:46:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.200
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787320006; cv=none; b=BHC2e2cPl1Szfmka4DwKutbRngivv6cCI3WsGJVvi1xFlSp/zw7T2Z8X9T87xh1nupib3XBOUsOHK//2nDM1Wg2H7KJgXwBz+px/5QHDV/9VGF/f5qXCZirQjkYIcmv9j15lFxGDrtfJgMb6/m/bX3jgMh30tBUDd07UJixTxLM=
+	t=1787320017; cv=none; b=TOWeVPlPBl7PJKCdOMqiQN+MgOs3AkzKjOaiLYrwtaun+mfawaEwlKp8sv/x+1Q//cnZUfOhy+sFkSGMNyoardc6L5ZwsNMDKcvZppzA1/NUQQOm/PfABbgPkp/ixxkc/h3mZvgE4N2icVME3+JqdRXIqrzKydblpbiNAaG57Qs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787320006; c=relaxed/simple;
-	bh=UwB+F0FHcNSBGG6swZnEH5GGuemVym5TTzxuQgEmrAw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=cZDjrPh8yWfBzi+g/UJTjTTZ6PA05/kA0QIxeOQStFNxUvbGjpczuNeetlT9yLlThhCtw16gyOqpifdY7tiYmxwYO9xnzvKeIu78ucPQPrqZV/7FF/dE/jJdWiR0AdrL+Ta9pJT2/4nfWVj86KOPT5KErr300w0WJWOxZrYiuN0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=CX1s8gVb; arc=none smtp.client-ip=209.85.208.48
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	s=arc-20240116; t=1787320017; c=relaxed/simple;
+	bh=4GRZrykve3DYCt54SQMhbFYoS+0wHD0ES1uEWUPPGeY=;
+	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=GejLp5L1JKpFSns9qm3Lnh/D0QL3sfenMSQ3cCV+16y5vS3yvJFf6QaRvDApFVEzr8SsnVhzORUXdw24pVrVQWz4lNEV+FXsf8U8x8wt4hE7+5EDzUZkBNXlWMASTcNfYNfM36TFgQYNLSJ2sam2vScMDnS5rbXhc17ZGQcy4kQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--aniketmaurya.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=W4VDARST; arc=none smtp.client-ip=209.85.214.200
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--aniketmaurya.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="CX1s8gVb"
-Received: by mail-ed1-f48.google.com with SMTP id 4fb4d7f45d1cf-6a378f90555so1895488a12.3
-        for <linux-pci@vger.kernel.org>; Fri, 21 Aug 2026 06:46:43 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="W4VDARST"
+Received: by mail-pl1-f200.google.com with SMTP id d9443c01a7336-2cc86a9ef97so20045985ad.3
+        for <linux-pci@vger.kernel.org>; Fri, 21 Aug 2026 06:46:53 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1787320001; x=1787924801; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=eFr5Fl7tzSWyavCPXm9cL7Za53Ty5o305M5CicClyUw=;
-        b=CX1s8gVbwGBoAZ5MITyN3iU/MniHe6hzxW6PkBgVAWBb7KzfhscKrHkOo7Zj6eZGu1
-         y6gNFNyyIguKjtvxNtwrh/FQHRwlk2gqcjzk9jFH17QgntgGJlWVK91AxwK/TWtJ/Ljz
-         9Hh7kz9KnOb/hA6VSsTeIuUNxSxiPKGp2HwdPMYl1cm9ThuRY8uSGEee9nShl2Y6Vg+9
-         1MSUKWITvoMZMX6OZ1cNEcDAmPRdBaxCyK55ClJNaPQPJgdop8FrujOHHGnxNlVl4x2R
-         B+Kwd1DrE8NOHnrv8rfViIRAjzpfMMKS75SGtJYONNjUDwvrGJ7rGuRmchkoBg+8r3F1
-         c4JQ==
+        d=google.com; s=20251104; t=1787320012; x=1787924812; darn=vger.kernel.org;
+        h=content-type:cc:to:from:subject:message-id:mime-version:date:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=3j6lgpgnueDnnXaUVeKFBE+wmpz2Lu0oRIsQW+ixGBM=;
+        b=W4VDARSTbgpiCzIHcnzGtsXoT5+LWDxvzXo+HB+Cdlr9AOdf306QllTULF5tb+LDua
+         xltYVYLdtLMg7gko0Cum5iarKdw/4AJUY+j1fgle0I362BreTXWbCGN+q8feqWPnqspD
+         HM61VjKFWZIsVi87X5l+v3tkga/ZG/DuNrAGYow+yscdbZIJrlZzNrZpLibCpI8GVoTD
+         8HQgktw9/LxTlDFh/VGVI0/mTqnM3PN0CkmJyBaA7Zi+DQxHs+QwokUCMLb1KDNdGEOv
+         kSWHYpfV7JxJZgRNVRW1t4pSj6+eEnhYkc4UbmuWdBtiQmkU05TdJ0szKDdzbXlOlvyw
+         wccA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787320001; x=1787924801;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
+        d=1e100.net; s=20251104; t=1787320012; x=1787924812;
+        h=content-type:cc:to:from:subject:message-id:mime-version:date
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=eFr5Fl7tzSWyavCPXm9cL7Za53Ty5o305M5CicClyUw=;
-        b=gxxEEBvszTWTJUA8FOBIionKKdbqw53FE8tVarSQXZgGZ1xknQvLJaYV7INQCFmj9m
-         gc+cZ7+ovZdoFqtkC8QgNV5m1yugJhLB0GFThgNS9HsD6cth3ZpsHmMl7+GFkkG8Y+eQ
-         YQ659EF/AeM5FPM1NP7xnxd3E4jZkyY5TYzYMy2+ki9XQl4vXSunr7nwWD3wJzC7WimR
-         6yzrSaa/3o7FFVstmL9FUG+S3B21gUqBU8QQPL6kxaZ7MTcvRjrnRlpce+9NlZDv31D/
-         Iw349cHVwFvpJPlbxf6/YwIIwGifTaLyGJXyIhlXazD8JN5MvXCgwT8ZFXTR2Je93tlY
-         GJ5g==
-X-Forwarded-Encrypted: i=1; AHgh+Rqq8c1+DW+GINmxwFHcdrXSv8hsDiGe8VTVd3frTreiu4Af3BwqDActGDXpTAQ0fWBFv2YJkomLuzE=@vger.kernel.org
-X-Gm-Message-State: AFuF++m1BJXIQuM/tHZQdn9/RAf6malf2VXDUu7vD2MuGSY2DGjx02r/
-	3ulOve7cIZ+Swb14c+2M5q3GohocI4CU3HInrSTVHlYK5J1jy/FHontperiebZLQNg8=
-X-Gm-Gg: AR+sD13hM3+rH1mYmNZVDggaOIaHlAVfu5QnvRqHv0wr/S6OVYJat0w0UK3wgKDTLzx
-	E6x3qk0DupiUJ/Hsn275Hdvt8RxyTc6sVpq4DvpYqFv6EnKEmZ/1DegPRAXRoUrxKZHJOOUJWjM
-	Jnov212fv8THv81avriiQQl1C4PdVXt2cBcPrNlQ0dDs3MA3gisKgDlA/M4UzI/8QhHMge2V7VL
-	JVQj1jXNExSUN/R7Mh8upXrUqJSkFiC6XWbMRhQI5aZk3B/a8XwhdofGHlMk+QZXdP/QeB7y13b
-	Cng6ZYy1VyP3I9S3n00wTy38TIrCeQiTDKiEUxz5xqOWkgGYrWfm79W8u9b+MVlKExd19TOy82t
-	Q+315klQHWaFrhAIZuQmOdGE5EQu3hyyi5noJL1EdC0jn0qbNnen211bQt3MnSlO2IkAdWDgqYM
-	y/GSVdqBrlcAiA3qTf7QJVX9DvzSaGcb8zCZ+zVLfVzxnnrOUoGFiZbieXhLHsYA==
-X-Received: by 2002:a17:907:ea8f:b0:c20:ff26:336e with SMTP id a640c23a62f3a-c246a605cb7mr617167766b.14.1787320001208;
-        Fri, 21 Aug 2026 06:46:41 -0700 (PDT)
-Received: from pathway.suse.cz ([176.114.240.130])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-c24589e224dsm490000166b.2.2026.08.21.06.46.40
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 21 Aug 2026 06:46:40 -0700 (PDT)
-Date: Fri, 21 Aug 2026 15:46:38 +0200
-From: Petr Mladek <pmladek@suse.com>
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-	Ilpo =?iso-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	Rasmus Villemoes <linux@rasmusvillemoes.dk>,
-	Sergey Senozhatsky <senozhatsky@chromium.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH v1 2/2] PCI: Include human-readable sizes in resource
- assignment messages
-Message-ID: <aohWvp0bSeK-Xk9r@pathway.suse.cz>
-References: <20260808172308.282591-1-bhelgaas@google.com>
- <20260808172308.282591-3-bhelgaas@google.com>
- <andr0LDPlgD5kEzT@ashevche-desk.local>
+        bh=3j6lgpgnueDnnXaUVeKFBE+wmpz2Lu0oRIsQW+ixGBM=;
+        b=Vk0IeB0ytAmlVAT2th9OeEeQ87ueNSH2cndy/Cmk2xxyFcgkATTeWuNIE333tkeEVD
+         p0dki9blSIoMK5uHMxIrPsnP1SZlvWOFofIVSYMQ/pjWAbgp7QsFvZrvGEtGrWZdalEy
+         0ui8qOXYT7ZIq7sm2fdM4cFcMxgwnN4N4423gkwHeaN4wdB+Vo2pLjmwcb/P3S3WwO4u
+         qFDfUx7kqf/Zk8NFEYYbbdGsRgaqUxWJVTvQAcRQbjiq4Diwmjbl6M7507SMFdZB6l0z
+         prlPQfvTzwv+a5Cjco1t73cA0UIi5jImgHDQHmu4WFk/hM9FOPP8hD5j74dHxLEIzrwy
+         TyKw==
+X-Gm-Message-State: AFuF++n+2Cubj0aa7BwR1+n7dpKaR3XmbCJ+VoXdgdY2ydk/7JeYwRHS
+	7LPztQDBsIKJcKtHalirICLTQR4qabOJgYNB8S852pMKA0GipxELNmwsEd3PRcvwLbeZqaSrl+W
+	s+kYQMXtEtSGHLlMSyWcfFcmtIXiImA==
+X-Received: from plbbh3.prod.google.com ([2002:a17:902:a983:b0:2d3:a560:c1f7])
+ (user=aniketmaurya job=prod-delivery.src-stubby-dispatcher) by
+ 2002:a17:903:2c0c:b0:2cf:8131:75f4 with SMTP id d9443c01a7336-2d64b036898mr132058755ad.11.1787320012023;
+ Fri, 21 Aug 2026 06:46:52 -0700 (PDT)
+Date: Fri, 21 Aug 2026 13:45:21 +0000
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <andr0LDPlgD5kEzT@ashevche-desk.local>
+Mime-Version: 1.0
+X-Mailer: git-send-email 2.55.0.766.g2966f0265a-goog
+Message-ID: <20260821134521.2211943-1-aniketmaurya@google.com>
+Subject: [PATCH v2] PCI/ASPM: Clear L1SS capability when L1 latency is unacceptable
+From: Aniket <aniketmaurya@google.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	Lukas Wunner <lukas@wunner.de>, 
+	"=?UTF-8?q?Ilpo=20J=C3=A4rvinen?=" <ilpo.jarvinen@linux.intel.com>, 
+	Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, 
+	Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>, Manu Gautam <manugautam@google.com>, 
+	Ajay Agarwal <ajayagarwal@google.com>, Aniket <aniketmaurya@google.com>
+Content-Type: text/plain; charset="UTF-8"
 
-On Sat 2026-08-08 20:48:00, Andy Shevchenko wrote:
-> On Sat, Aug 08, 2026 at 12:23:08PM -0500, Bjorn Helgaas wrote:
-> > Include human-readable sizes, e.g., "16.0 MiB", in addition to the hex
-> > "0x1000000" size, in resource-related messages.  Also consistently include
-> > the "0x" prefix.
-> 
-> Instead of repeating many times the %#llx (%s) and accompanying
-> string_get_size() calls can we rather introduce a (sub-)extension
-> to %p[R] (perhaps against 'R' to print only size) and use it?
+pcie_aspm_cap_init() initializes link->aspm_capable from
+link->aspm_support, which includes PCIE_LINK_STATE_L1SS (L1.1, L1.2,
+etc.) if supported by both ends of the link.
 
-I am not sure if I understand it correctly. It looks to me that
-this patch uses string_get_size() for printing some "arbitrary" size
-values. Some are not part of struct resources, so using %pRR
-might be confusing.
+pcie_aspm_check_latency() then evaluates whether the exit latency of
+the link exceeds the acceptable L1 latency advertised by downstream
+endpoints. If the latency is unacceptable, it clears
+PCIE_LINK_STATE_L1 from link->aspm_capable. However, it does not clear
+PCIE_LINK_STATE_L1SS.
 
-Unfortunately, implementing a generic printf modifier for printing
-human readable size is complicated. It should keep the type-size
-checks. Also it should allow to distinguish binary vs decimal
-size calculation, for example 1kB vs 1kHz for 1024B vs 1000Hz.
-See https://lore.kernel.org/all/ZbFd5TZ_pi7q3hso@casper.infradead.org/
+L1 PM Substates are substates of L1 and require L1 to be supported
+and enabled. If L1 is not capable due to unacceptable exit latency,
+L1 PM Substates cannot be supported either. Leaving
+PCIE_LINK_STATE_L1SS set in link->aspm_capable causes
+aspm_ctrl_attrs_are_visible() to expose L1SS sysfs control files (e.g.,
+l1_1_aspm, l1_2_aspm) even though the link cannot use L1/L1SS.
 
-Best Regards,
-Petr
+Clear PCIE_LINK_STATE_L1SS along with PCIE_LINK_STATE_L1 from
+link->aspm_capable when L1 exit latency is unacceptable.
+
+In addition, update pcie_config_aspm_link() to check link->aspm_support
+instead of link->aspm_capable before invoking pcie_config_aspm_l1ss().
+This ensures that pcie_config_aspm_l1ss() is called to properly clear L1
+PM Substates in the hardware configuration registers if the BIOS left
+them enabled, even when link->aspm_capable no longer contains
+PCIE_LINK_STATE_L1SS.
+
+Signed-off-by: Aniket <aniketmaurya@google.com>
+---
+ drivers/pci/pcie/aspm.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+index 172783e7f519..b2660892972a 100644
+--- a/drivers/pci/pcie/aspm.c
++++ b/drivers/pci/pcie/aspm.c
+@@ -666,7 +666,8 @@ static void pcie_aspm_check_latency(struct pci_dev *endpoint)
+ 		latency = max_t(u32, latency_up_l1, latency_dw_l1);
+ 		if ((link->aspm_capable & PCIE_LINK_STATE_L1) &&
+ 		    (latency + l1_switch_latency > acceptable_l1))
+-			link->aspm_capable &= ~PCIE_LINK_STATE_L1;
++			link->aspm_capable &= ~(PCIE_LINK_STATE_L1 |
++						PCIE_LINK_STATE_L1SS);
+ 		l1_switch_latency += NSEC_PER_USEC;
+ 
+ 		link = link->parent;
+@@ -1041,7 +1042,7 @@ static void pcie_config_aspm_link(struct pcie_link_state *link, u32 state)
+ 		pcie_config_aspm_dev(child, 0);
+ 	pcie_config_aspm_dev(parent, 0);
+ 
+-	if (link->aspm_capable & PCIE_LINK_STATE_L1SS)
++	if (link->aspm_support & PCIE_LINK_STATE_L1SS)
+ 		pcie_config_aspm_l1ss(link, state);
+ 
+ 	pcie_config_aspm_dev(parent, upstream);
+-- 
+2.55.0.766.g2966f0265a-goog
+
