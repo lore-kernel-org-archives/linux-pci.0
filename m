@@ -1,132 +1,113 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0172E4334BC;
-	Fri, 21 Aug 2026 23:06:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E78DA39A4AA;
+	Fri, 21 Aug 2026 23:08:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=204.191.154.188
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787353582; cv=none; b=Zujjejprw/G6IgfmMIzYOUdgvz0ZmolNDdXBBJszAApEUx2P8yFpgtQqs47dbdtnEZ1gDaQ/vqwkTKJ91Eu9DGyPpxjmLoghnrXkLOL1ZDyYG0oE17UFPk6kV1FTfDvfOJNhuPyYhgTdp+0Fk+K3zLk8jc4oEbBJtAry8xjYm8Y=
+	t=1787353724; cv=none; b=ZA38b+akFqSynmEyzQsvC6cOLpnzzKSzjM+JcvMNuQG0ifZI1HxeFcFnWHEeepzBjkOvEgQ82WmNm5RW8s7XaL6G2axt5KA98I7Tpki2hvu1NoCOzScfCeSZ4NHzDFqKKMCOGCQScVvYn4fqWJdv2K3N9vyNYLqHbsRTp/g6E90=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787353582; c=relaxed/simple;
-	bh=qG3n9vKkNSRL8eeNqJq13NMXAZZjoKvhqnHjgh2JWbI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=dbeojzfBmL5PEgyWt7lthUgE2aa/2qrEx7iv8UnY5xGWXoJBUSZQPSgNqrhJ0xR/EI/6gFs1B/0kbdXC0zGfZPwkoNQRc8K4LdkiWlgo6HnoB1cBYwTMU7wBL9FwDTUUQilz6IcVzAHGVCF8P+DXPj75vowIlR9hTfaV9V29fuI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FxMjWPQf; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1787353724; c=relaxed/simple;
+	bh=W1EihAFKCMrMO8clCMq/OCfA6XR2zjlEvpw5pDjweVw=;
+	h=Message-ID:Date:MIME-Version:To:Cc:References:From:In-Reply-To:
+	 Content-Type:Subject; b=aYKU2uzBqlMZ/lZ2pcbHOU+v6W02FK3n31sFd2iIlYozzJ+j5yi8a/10BWYZ+vg/6eZ6TgylTGHHiGZmlktaYM37+TU9sR+7sG9X4CAi9KYN9jX7Vr+pb0G303W0NUrfCU1426fIE7bcN2Dsmh6kM6bqCaoR6r8HyG28IXYQQec=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com; spf=pass smtp.mailfrom=deltatee.com; dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b=HNLahndZ; arc=none smtp.client-ip=204.191.154.188
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=deltatee.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FxMjWPQf"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 387881F000E9;
-	Fri, 21 Aug 2026 23:06:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787353580;
-	bh=Os5bRR0gm6+JdhtuPgirxhf4CoPDXI815ZjhWldT69U=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=FxMjWPQftpxtxledm14EiDSRFPIQ4PUpuzdMrEtHr5HGqzt7tr6eMiggkZdaXV5xh
-	 75lbawTKQXW4hKnWhl0o6IjQKwRAiMaI3ytAU3Z/zM+7DKEhXXxPshk2U0BSUJmPdz
-	 ncBYIsFcg4k51OGwlV3kJP0LfCh4j4FbOHcBNhRqnjqhXq59GT66WLuP5Yhw6GB3Ee
-	 GHBBpiTx73mZy++QoftzqwUTkUDFbeWnJqZosHi2ZVQopqmS37JQ5xfOCjmEdlwbMs
-	 tnTaOk0+JEMZsfuNf3G9zqUsAeYWHVJWOjT2NiD6+W1h0lQdpdsemOwVa68eEXLgpK
-	 k+OdpOR/5MXvQ==
-Received: by pali.im (Postfix)
-	id 1EA1E89E; Sat, 22 Aug 2026 01:06:20 +0200 (CEST)
-Date: Sat, 22 Aug 2026 01:06:20 +0200
-From: Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>
-To: David Matlack <dmatlack@google.com>
-Cc: Martin Mares <mj@ucw.cz>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [pciutils PATCH v2] lspci: Determine bridge window address size
- from bridge_flags
-Message-ID: <20260821230620.fcpmn7radmwnfnh2@pali>
-References: <20260821221610.3570722-1-dmatlack@google.com>
+	dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b="HNLahndZ"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
+	MIME-Version:Date:Message-ID:content-disposition;
+	bh=fkfMaoeV36jnbnNkOff/Nn2sVnubQwHY5bjslIAzUlM=; b=HNLahndZDsC6m/ontpRX49oXxx
+	E45i6V1tIhktwdOacGtGyfvlh59IY74piVaieBCf+UO1UsB3w3LSgIstj8YUhlPvkxgv95HvBKetr
+	Tl/lowRkSWqr+cekthZgT8CYmVyiBSKFQ5GsBSd6VvyAAuKJ2axyAhUAh8jtLQQTcfbt3TYkqCRu2
+	cyU9C6IklpJbk0TQn5WEVh3N4x2EmZt8NCo2USL4p39pgfX0h5CmzVEMOsvlcdKwz64Qez2jtnuW5
+	p9U4WydoXj2j849TP7I9NexLgEl0FgoC0vYncdyRXauwcoTMmHpjCg+LD+VOZr1dGRn/y+5J2B5+/
+	I0m1fk2w==;
+Received: from guinness.priv.deltatee.com ([172.16.1.162])
+	by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+	(Exim 4.98.2)
+	(envelope-from <logang@deltatee.com>)
+	id 1wxYLf-00000003EQt-3smV;
+	Fri, 21 Aug 2026 17:08:32 -0600
+Message-ID: <f1237857-1318-48e4-adcc-b2ff1924433b@deltatee.com>
+Date: Fri, 21 Aug 2026 17:08:19 -0600
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260821221610.3570722-1-dmatlack@google.com>
-User-Agent: NeoMutt/20180716
+User-Agent: Mozilla Thunderbird
+To: Leon Romanovsky <leon@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ Chaitanya Kulkarni <kch@nvidia.com>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jens Axboe
+ <axboe@kernel.dk>, Alex Williamson <alex@shazbot.org>,
+ Ankit Agrawal <ankita@nvidia.com>, Jason Gunthorpe <jgg@ziepe.ca>,
+ Jonathan Corbet <corbet@lwn.net>, Shuah Khan <skhan@linuxfoundation.org>,
+ "Joerg Roedel (AMD)" <joro@8bytes.org>, Will Deacon <will@kernel.org>,
+ Robin Murphy <robin.murphy@arm.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-doc@vger.kernel.org, iommu@lists.linux.dev,
+ Tushar Dave <tdave@nvidia.com>
+References: <20260821-fix-p2p-acs-v4-0-v4-0-94426b96de73@nvidia.com>
+ <20260821-fix-p2p-acs-v4-0-v4-1-94426b96de73@nvidia.com>
+Content-Language: en-CA
+From: Logan Gunthorpe <logang@deltatee.com>
+In-Reply-To: <20260821-fix-p2p-acs-v4-0-v4-1-94426b96de73@nvidia.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-SA-Exim-Connect-IP: 172.16.1.162
+X-SA-Exim-Rcpt-To: leon@kernel.org, bhelgaas@google.com, kch@nvidia.com, gregkh@linuxfoundation.org, axboe@kernel.dk, alex@shazbot.org, ankita@nvidia.com, jgg@ziepe.ca, corbet@lwn.net, skhan@linuxfoundation.org, joro@8bytes.org, will@kernel.org, robin.murphy@arm.com, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, iommu@lists.linux.dev, tdave@nvidia.com
+X-SA-Exim-Mail-From: logang@deltatee.com
+X-Spam-Level: 
+Subject: Re: [PATCH v4 01/18] PCI/P2PDMA: Do not tear down the allocate
+ attribute on registration failure
+X-SA-Exim-Version: 4.2.1 (built Sun, 23 Feb 2025 07:57:16 +0000)
+X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 
-Hello! Thank you for taking this issue. I briefly checked the change and
-I think that this is the right way how to address that issue.
 
-Anyway, it would be nice to provide some example of config space of PCI
-Bridge (lspci -x) which is affected by this issue and have it in
-pciutils/tests/ directory.
 
-On Friday 21 August 2026 22:15:59 David Matlack wrote:
-> Use bridge_flags to determine address size bits (16- vs 32-bit for I/O,
-> 32- vs 64-bit for prefetchable memory) when displaying bridge ranges
-> populated via PCI_FILL_BRIDGE_BASES.
+On 2026-08-21 13:38, Leon Romanovsky wrote:
+> From: Leon Romanovsky <leonro@nvidia.com>
 > 
-> Commit ccf68033a452 ("lspci: Use PCI_FILL_BRIDGE_BASES to detect if
-> range behind bridge is disabled or unsupported") introduced code in
-> show_htype1() that reads PCI_IO_RANGE_TYPE_MASK and
-> PCI_MEMORY_RANGE_TYPE_MASK from bridge_base_addr[]. However,
-> bridge_base_addr[] holds base addresses without flags, as documented in
-> lib/pci.h and implemented across backends like sysfs.c and
-> win32-cfgmgr32.c.
+> pci_p2pdma_add_resource() installs pci_p2pdma_unmap_mappings() as a devres
+> action with the devres allocated p2p_pgmap as its data, and only then adds
+> the range to the pool:
 > 
-> Because bridge_base_addr[] does not contain configuration register flag
-> bits, masking the lower bits evaluates to zero. As a result, 32-bit I/O
-> windows are mislabeled as "[16-bit]" and 64-bit prefetchable memory
-> windows are mislabeled as "[32-bit]" when using PCI_FILL_BRIDGE_BASES.
+> 	error = devm_add_action_or_reset(&pdev->dev, pci_p2pdma_unmap_mappings,
+> 					 p2p_pgmap);
+> 	if (error)
+> 		goto pages_free;
 > 
-> Fixes: ccf68033a452 ("lspci: Use PCI_FILL_BRIDGE_BASES to detect if range behind bridge is disabled or unsupported")
-> Signed-off-by: David Matlack <dmatlack@google.com>
-> ---
-> v2:
->  - Fix lspci.c to use bridge_flags[], per lib/pci.h, rather than
->    changing the behavior of just the sysfs backend (Pali Rohár)
+> 	p2pdma = rcu_dereference_protected(pdev->p2pdma, 1);
+> 	error = gen_pool_add_owner(p2pdma->pool, ...);
+> 	if (error)
+> 		goto pages_free;
 > 
-> v1: https://lore.kernel.org/linux-pci/20260626213047.189951-1-bhelgaas@google.com/
+> The action removes the allocate attribute for the whole device, which
+> tears down existing userspace mappings of every BAR already registered on
+> it. Both failures here get that wrong, in opposite ways.
 > 
->  lspci.c | 12 +++++-------
->  1 file changed, 5 insertions(+), 7 deletions(-)
+> devm_add_action_or_reset() runs the action when it cannot allocate its
+> devres node, so an -ENOMEM while registering a second BAR unmaps the
+> first one. Use devm_add_action() and let the error path unwind only what
+> this call created.
 > 
-> diff --git a/lspci.c b/lspci.c
-> index 2a14303e74f6..52fd9247aefb 100644
-> --- a/lspci.c
-> +++ b/lspci.c
-> @@ -571,10 +571,9 @@ show_htype1(struct device *d)
->  
->    if ((p->known_fields & PCI_FILL_BRIDGE_BASES) && !io_disabled)
->      {
-> -      io_base = p->bridge_base_addr[0] & PCI_IO_RANGE_MASK;
-> +      io_base = p->bridge_base_addr[0];
->        io_limit = io_base + p->bridge_size[0] - 1;
-> -      io_type = p->bridge_base_addr[0] & PCI_IO_RANGE_TYPE_MASK;
-> -      io_bits = (io_type == PCI_IO_RANGE_TYPE_32) ? 32 : 16;
-> +      io_bits = (p->bridge_flags[0] & PCI_IORESOURCE_IO_16BIT_ADDR) ? 16 : 32;
->        show_range("\tI/O behind bridge", io_base, io_limit, io_bits, io_disabled);
->      }
->    else if (io_type != (io_limit & PCI_IO_RANGE_TYPE_MASK) ||
-> @@ -600,7 +599,7 @@ show_htype1(struct device *d)
->  
->    if ((p->known_fields & PCI_FILL_BRIDGE_BASES) && !mem_disabled)
->      {
-> -      mem_base = p->bridge_base_addr[1] & PCI_MEMORY_RANGE_MASK;
-> +      mem_base = p->bridge_base_addr[1];
->        mem_limit = mem_base + p->bridge_size[1] - 1;
->        show_range("\tMemory behind bridge", mem_base, mem_limit, 32, mem_disabled);
->      }
-> @@ -616,10 +615,9 @@ show_htype1(struct device *d)
->  
->    if ((p->known_fields & PCI_FILL_BRIDGE_BASES) && !pref_disabled)
->      {
-> -      u64 pref_base_64 = p->bridge_base_addr[2] & PCI_MEMORY_RANGE_MASK;
-> +      u64 pref_base_64 = p->bridge_base_addr[2];
->        u64 pref_limit_64 = pref_base_64 + p->bridge_size[2] - 1;
-> -      pref_type = p->bridge_base_addr[2] & PCI_MEMORY_RANGE_TYPE_MASK;
-> -      pref_bits = (pref_type == PCI_PREF_RANGE_TYPE_64) ? 64 : 32;
-> +      pref_bits = (p->bridge_flags[2] & PCI_IORESOURCE_MEM_64) ? 64 : 32;
->        show_range("\tPrefetchable memory behind bridge", pref_base_64, pref_limit_64, pref_bits, pref_disabled);
->      }
->    else if (pref_type != (pref_limit & PCI_PREF_RANGE_TYPE_MASK) ||
+> gen_pool_add_owner() allocates a chunk and can also fail with -ENOMEM.
+> There the action is registered, and the error path frees p2p_pgmap with
+> devm_kfree() while leaving the action pointing at it. On unbind devres
+> runs the action and pci_p2pdma_unmap_mappings() dereferences
+> p2p_pgmap->mem->owner->kobj, which is freed memory. Give that failure its
+> own label and drop the action with devm_remove_action(), which removes it
+> without running it.
 > 
-> base-commit: b41ce14da749fb44ca7940ba9797027bfa62c23e
-> -- 
-> 2.55.0.766.g2966f0265a-goog
-> 
+> Tested-by: Tushar Dave <tdave@nvidia.com>
+> Fixes: 7e9c7ef83d78 ("PCI/P2PDMA: Allow userspace VMA allocations through sysfs")
+> Fixes: f58ef9d1d135 ("PCI/P2PDMA: Separate the mmap() support from the core logic")
+> Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
+
+Makes sense to me:
+
+Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
