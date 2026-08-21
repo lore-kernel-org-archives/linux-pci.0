@@ -1,42 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C0A773D73
-	for <linux-pci@vger.kernel.org>; Fri, 21 Aug 2026 02:10:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0251C1C6FF5
+	for <linux-pci@vger.kernel.org>; Fri, 21 Aug 2026 02:19:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787278208; cv=none; b=k7puTebYf8CkdeaPrOjsO0JFq0Wh280RouTXVu0/LH1htP7bgQ7vXBiXx2nqTRQ2HZVFjnycfe0i8/cV0/9aoBv0frvgDRTmI6SVev83MSyCrxokdt6qEvx/cfKDI9GNXH7wC7Bf1ZX1+rfc61iqf8jl0zU96nAB4wodppebj1Y=
+	t=1787278794; cv=none; b=QOQOjpuy+4MHeOgtD/bwf0HJGtCGlcLRtZEf0XcrvblLIWYguZLAGZAEgHLzG93ormdIlbGF3A6BgRzdF1vQV1ik2N7hb2rSgYCd2THz1reV7v3EJ3G0Rw+92wZlafHCY5PNS7yww9ozvYPSB9hWnW+/sWYCfD9dAlkgV22Kt6w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787278208; c=relaxed/simple;
-	bh=Ruzk+cw8ZP8uop2GDhgzJFXe6CMwZfljoX8rZQdTTRg=;
+	s=arc-20240116; t=1787278794; c=relaxed/simple;
+	bh=6gJ1dypqQHWxMNAXxacahbS0Y91Dc8qlMzcBhtUN30w=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=ACxLSc/xGwRDfeqlmm1HzoBYVVzAQY4Fcmwi1ZYP0TrezXywTWv/n96oLkF2cZRlNADDeWd0SHGc0GhQuAn2WLlf+PBRQVs1AEO7LlzUqeCHbR3FSnSwBoBApbfjZs5s7D//JFcAJHVvGVjtbz5aoyvhuUIeLeCll6BRIj1xxJs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TSjpp2ie; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=hcZjIZJyaM2Bbd5adWIAdX8MLaRDl+GY37oz9BzopEtCWIQo46T56yZ7Lla8DHwhv9emI1D34AKsXN32o6sXdOSzKdxwXTgXeIkeubBFN7VdZu+1VXDU8x3RUHnSr8lA19cS1D6scCKz6WCL4RoreT9lCposm2+Rd6XGUqB6tsw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GDi3T75x; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TSjpp2ie"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3AC3F1F000E9;
-	Fri, 21 Aug 2026 02:10:06 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GDi3T75x"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 697B91F000E9;
+	Fri, 21 Aug 2026 02:19:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787278206;
-	bh=qdpaaLgt8W2/BQ4HUETUhLUnGpJbxvJp7Jj1U6z7WKE=;
+	s=k20260515; t=1787278792;
+	bh=5qFlc5dw9R9LJVlPGWdamrX8UFaRWPcNHdDLssc+FpA=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=TSjpp2iehor8ADIa68Gf3P2DpWvTPg8AOKziyOdMDC4XjCfziVoNJjG7FJ802Fvl/
-	 Jyv4oR/fsthJAvNqfCE6qW9q1qxo4Vi6bVQHWz3TqEpUqdfa9HGcJr1R3qlGzpSV5x
-	 1jb3ePSANKYE6ogpl0m2pP/ENCccUyYfSLk1f/qE+6g8SzlsCYdMkTu7FnxNpTwAnB
-	 O6o1B4s180sQltvzt5ucoaLpfNpAIAMcXXL549azO1P1K9wm048n111y/zFcFxp0kx
-	 kEkrsmjOZP9ll++4xFC1BrTkIEM0e/WF1ckPC5oehQRs8BluPUz+Ary3mVgAb4uIgf
-	 nJUwIGrq+dvQA==
+	b=GDi3T75xH6rX/7yJiCWsmKlz9B+32R1CK7obrXlcvn0EA+dHXsyi7YYpSdaOAl5DG
+	 TModZlGrO7cS0dZM1jQ9Rf1IA+el8tKzk1eXijGC3DgaRMt3gN4OvcYRDXv+pjK0W7
+	 cotVcftzFjkXQeiKjhAZEtcullw5DF40ZHxrPlgSDol8mw3c2yDNfrDS61zS1cQ5dh
+	 u3Nzrs+PuzXs3X54m5ZHerFjDJLcxluOKr2Z+dPNVYHd2xknrqE9jwFbB7W5cmIBty
+	 3t3sDOpyTqD5rrKc7t0IIV2hH5NpwGn988I0giQWx/xpOg+qPPC5HrxMuaVV2DrgKG
+	 qYvPkyk/OwrSA==
 From: sashiko-bot@kernel.org
-Subject: Re: PCI: Prevent device lock leak during bus reset
+Subject: Re: [PATCH v3] PCI: rcar-gen4: Limit Max_Read_Request_Size and
+ Max_Payload_Size to 256 Bytes
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "Zhang Hongtao" <zhanghongtao35@huawei.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260821021626.1874602-1-zhanghongtao35@huawei.com>
-References: <20260821021626.1874602-1-zhanghongtao35@huawei.com>
+To: "Marek Vasut" <marek.vasut+renesas@mailbox.org>
+Cc: wsa+renesas@sang-engineering.com, linux-pci@vger.kernel.org
+In-Reply-To: <20260821020636.111719-1-marek.vasut+renesas@mailbox.org>
+References: <20260821020636.111719-1-marek.vasut+renesas@mailbox.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 21 Aug 2026 02:10:05 +0000
-Message-Id: <20260821021006.3AC3F1F000E9@smtp.kernel.org>
+Date: Fri, 21 Aug 2026 02:19:51 +0000
+Message-Id: <20260821021952.697B91F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -45,98 +46,75 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-
-Pre-existing issues:
-- [High] This problem wasn't introduced by this patch, but the patch fixes =
-pci_bus_reset while leaving identical lock leak and Use-After-Free races un=
-mitigated in pci_try_reset_bus, pci_slot_reset, and pci_try_reset_slot.
+- [Medium] System denial of service via kernel panic. Untrusted hardware in=
+put maps directly into a `WARN_ON` assertion.
 --
 
---- Patch [1]: PCI: Prevent device lock leak during bus reset ---
-commit 0d6c89d5cec5eebb33879246fbc7b446f026613a
-Author: Zhang Hongtao <zhanghongtao35@huawei.com>
+--- Patch [1]: [PATCH v3] PCI: rcar-gen4: Limit Max_Read_Request_Size and M=
+ax_Payload_Size to 256 Bytes ---
+commit 79fc893274978b76ee056f33053d2211fce68461
+Author: Marek Vasut <marek.vasut+renesas@mailbox.org>
 
-PCI: Prevent device lock leak during bus reset
+PCI: rcar-gen4: Limit Max_Read_Request_Size and Max_Payload_Size to 256 Byt=
+es
 
-This patch fixes a device lock leak in pci_bus_reset() caused by
-concurrent device removal. It takes a topology snapshot under pci_bus_sem
-to guarantee that all locked devices are unlocked during a secondary bus re=
-set.
+This commit forces the Max_Payload_Size and Max_Read_Request_Size to at most
+256 bytes for devices connected to the R-Car Gen4 PCIe controller. This wor=
+ks
+around a hardware limitation where longer reads wrap around at the 256-byte
+boundary.
 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 77b17b13ee615..25a1e44263c32 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
+Fixes: 0d0c551011df ("PCI: rcar-gen4: Add R-Car Gen4 PCIe controller suppor=
+t for host mode")
 
+> diff --git a/drivers/pci/controller/dwc/pcie-rcar-gen4.c b/drivers/pci/co=
+ntroller/dwc/pcie-rcar-gen4.c
+> --- a/drivers/pci/controller/dwc/pcie-rcar-gen4.c
+> +++ b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
 [ ... ]
-
-> @@ -5585,21 +5667,31 @@ static int pci_try_reset_slot(struct pci_slot *sl=
-ot)
-> =20
->  static int pci_bus_reset(struct pci_bus *bus, bool probe)
->  {
-> +	struct pci_bus_lock_context context;
->  	int ret;
-> =20
-> +	down_read(&pci_bus_sem);
-> +
->  	if (!bus->self || !pci_bus_resettable(bus))
-> -		return -ENOTTY;
-> +		ret =3D -ENOTTY;
-> +	else if (probe)
-> +		ret =3D 0;
-> +	else
-> +		ret =3D pci_bus_lock_snapshot_init(bus, &context);
-> =20
-> -	if (probe)
-> -		return 0;
-> +	up_read(&pci_bus_sem);
-> +
-> +	if (ret || probe)
-> +		return ret;
-> =20
-> -	pci_bus_lock(bus);
-> +	pci_bus_lock_snapshot(&context);
-> =20
->  	might_sleep();
-> =20
->  	ret =3D pci_bridge_secondary_bus_reset(bus->self);
-> =20
-> -	pci_bus_unlock(bus);
-> +	pci_bus_unlock_snapshot(&context);
-> +	pci_bus_lock_snapshot_release(&context);
-> =20
+> @@ -411,6 +411,54 @@ static int rcar_gen4_pcie_host_msi_init(struct dw_pc=
+ie_rp *pp)
 >  	return ret;
 >  }
+> =20
+> +static int rcar_gen4_pcie_enable_device(struct pci_host_bridge *bridge,
+> +					struct pci_dev *dev)
+> +{
+> +	/*
+> +	 * R-Car Gen4 PCIe controller has a hardware limitation of 256 Bytes
+> +	 * Max_Payload_Size (MPS). PCIe specification indicates that the MPS
+> +	 * must not exceed minimum MPS of any element along the packet path.
+> +	 * The controller reports Max_Payload_Size_Supported (MPSS) 256 Bytes
+> +	 * for header type 0 and 128 Bytes for header type 1. The PCIe core
+> +	 * will not allow MPS to be set higher than MPSS, warn here in case
+> +	 * something went very wrong in the core.
+> +	 *
+> +	 * For details, refer to chapter "104.1.1 Features" in either of:
+> +	 * R-Car S4 R19UH0161EJ0140 Rev.1.40 Jul. 31, 2026 or
+> +	 * R-Car V4H R19UH0186EJ0140 Rev.1.40 Aug. 7, 2026 or
+> +	 * R-Car V4M R19UH0217EJ0110 Rev.1.10 Jun. 30, 2026.
+> +	 */
+> +	WARN_ON(pcie_get_mps(dev) > 256);
 
-[Severity: High]
-This is a pre-existing issue, but regarding the RFC question in the commit
-message about extending this fix:
+[Severity: Medium]
+Is it safe to use WARN_ON() with values read directly from the device's
+configuration space?
 
-The identical lock leaks and use-after-free races remain in the slot and
-try-reset paths, as they rely on __pci_bus_lock(), __pci_bus_unlock(), and
-__pci_bus_trylock().
+A malfunctioning or malicious PCIe endpoint could spoof its configuration
+space and return a value for PCI_EXP_DEVCTL where the payload field is
+greater than 256 bytes. When rcar_gen4_pcie_enable_device() calls
+pcie_get_mps(dev), it issues a configuration space read directly to the
+endpoint device.
 
-For example, __pci_bus_trylock() iterates over bus->devices without=20
-holding pci_bus_sem:
+If a system has panic_on_warn enabled, feeding this untrusted hardware input
+into WARN_ON() could allow a connected PCIe device to intentionally trigger=
+ a
+kernel panic, resulting in a system-wide denial of service.
 
-drivers/pci/pci.c:__pci_bus_trylock() {
-    ...
-    list_for_each_entry(dev, &bus->devices, bus_list) {
-        if (slot && (!dev->slot || dev->slot !=3D slot))
-            continue;
-...
-}
-
-If a concurrent device removal executes list_del(&dev->bus_list) during
-pci_try_reset_bus(), pci_slot_reset(), or pci_try_reset_slot(), the unlock
-loop fails to find the device. This leaves the device permanently locked,
-causing the same system hangs in driver bind/unbind paths.
-
-Since these paths are reachable via PCIe AER recovery or hotplug events,
-would it be safer to extend this snapshot mechanism to the slot and
-try-reset paths to fully close this race condition?
+Would it be safer to handle this unexpected condition by using pci_warn()
+and dynamically adjusting the payload size, rather than risking a system
+panic?
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260821021626.1874=
-602-1-zhanghongtao35@huawei.com?part=3D1
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260821020636.1117=
+19-1-marek.vasut+renesas@mailbox.org?part=3D1
