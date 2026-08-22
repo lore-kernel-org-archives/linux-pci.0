@@ -1,124 +1,201 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A6CA7349CD8
-	for <linux-pci@vger.kernel.org>; Sat, 22 Aug 2026 05:49:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8DCF3386576;
+	Sat, 22 Aug 2026 08:23:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787377771; cv=none; b=JwMzzx3dLQOcS+LxI8eo93tcBn3Iz0xJ+w5fvFTUlwMW0NqolJf2+r2eIM8/CpRq1xBj0dHQ44ju0eDX0ZYNKZbVy8UqlbPd6aeSxfXzcKJ+Z1FU2jcFnAU8stVyVKMVXvJicsPW3uX1qODHQomqgTjD75zZYzNw7OYdyEc2sDo=
+	t=1787387026; cv=none; b=mhQRUZMqc0ViFMC14OWmJAXUXC8lqH9ez93BXnmC9pdBTG6BBn7LKootv5UjtsveZJcyniC2p7sQVVAz8ouZP8st1Tkr3GMaNKd8to6itarjU/EO666Sg0KLZseb3cHCnBNRmgqw674Ghw42N6gKj3Vl0qaOlb/9k3Hr0MKAB2U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787377771; c=relaxed/simple;
-	bh=yptXp9HvHREZR0KM1IeMAv6vJZL2ojK/GdkqAcsrJRM=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=muEFFBNMXq242o1KrfT+9FnDzK7we206Eqg0VK75jzrBFKhIFrg+XmFmVVtS3eSuMjJJ2t3z9Xukh/ctAFayEpVPZHQFtOggTSGxPzSaWjsDexm3Dr+gMzYs0OBWeyaVl25ot1bsAZDy1QNuGEWGmrquUt9DnGs8UG3MpavYpZU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=INHTjW1x; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1787387026; c=relaxed/simple;
+	bh=mKX771uc3lutMQpZFJQnhdt7GyWKMRqSH02u/uA/bLk=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=QgbwXoQNVzoTliKS+JPZE1r6rytneytzW4h4IMdeG1YwpX5BRpbNIR7o7y8WzFzLeIoRR0xygT6E/LURrYETnnfdqpYMya0j4YyaVRoGP22iCVTVGPnTTO2uk8+B5TOn0W79kDY4iEZOOf6BSnNXYKrYEgVdQwkqwKtu/ig7SkE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=bzSa0KwD; arc=none smtp.client-ip=198.175.65.14
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="INHTjW1x"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0D00F1F000E9;
-	Sat, 22 Aug 2026 05:49:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787377770;
-	bh=IGTcKmker5amZzpPffbpptg1kQQW+hqmfIZryuAA6sw=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=INHTjW1x7bUN9oaVF0S2j0/BJeKfTTka2E76MFarwu5alPmAdRAoX8aNp1RTAOKTX
-	 9GVHCw4lK6NmwC1RV/sga5Z5Q159Wcz4ayEkWINLRFkKZ5geuNVxZGDtVVRyRC5RQx
-	 5rRkY9XaTFLaoQSSCKuP4esgyLaU23Itm+MP1djPUMYyOSK3XCghg2A8RjJ9XPrnt5
-	 zSOy4FfR5eu4GF96fN8xwhhzo88ViyeG0ole6junIc8YB5+kJYlTNJf5463haSUmMT
-	 BcU2X5gUEATxV39BG2080NT6HNjffzAOT5zjObt2SI1qiK8Pt0k4Ae75GyG+qktbAZ
-	 EdJzlbohZiNZw==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 1/2] PCI: dwc: Force L2 link entry on shutdown/reboot
- without D3cold check
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Krishna Chaitanya Chundru" <krishna.chundru@oss.qualcomm.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260822-shutdown-v2-1-520a68f1b4a5@oss.qualcomm.com>
-References: <20260822-shutdown-v2-0-520a68f1b4a5@oss.qualcomm.com>
- <20260822-shutdown-v2-1-520a68f1b4a5@oss.qualcomm.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Sat, 22 Aug 2026 05:49:29 +0000
-Message-Id: <20260822054930.0D00F1F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="bzSa0KwD"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1787387022; x=1818923022;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=mKX771uc3lutMQpZFJQnhdt7GyWKMRqSH02u/uA/bLk=;
+  b=bzSa0KwDi1DBgMaq4thWtU5swOsHWuXZbFAC+TaVl3PKByxIcl/6UoZZ
+   Ik7jl1HUZdcYJwqEl1+PSjgDIncqjyyy+lf5V8PWcDLJOdEHeUGUbhuUz
+   Foi9Ex5sLZTII0bjnNTpOhGbxGndQNX8pskuWIKLcfUFNbZtjWu5xWQoO
+   FcjRLeMaBJGImmh3w5czrFE9aTorUnyVbM8x6qOHCVln2D1QtIvJ8zbPC
+   69bOhTi0UtsIT3dAfIeCcd7rWrRBpvZqYxCQD9P3+snx8LNusY4RdFZ6j
+   2qAsdhmY5xkvMdVNSaxRcpOOH6DN8O1SBSWR/LzpgH9WzibxYnaAzXLs8
+   g==;
+X-CSE-ConnectionGUID: p6fEkXQ1RrW54SOZ3w9TqA==
+X-CSE-MsgGUID: T8aGbqAJTBCsquNHPr1dvQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11882"; a="91796496"
+X-IronPort-AV: E=Sophos;i="6.25,236,1779174000"; 
+   d="scan'208";a="91796496"
+Received: from orviesa010.jf.intel.com ([10.64.159.150])
+  by orvoesa106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Aug 2026 01:23:37 -0700
+X-CSE-ConnectionGUID: /YgIAr4mQsGKCSsoRiV6zA==
+X-CSE-MsgGUID: VVsAZtviQCa29IMg3EZXjQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.25,236,1779174000"; 
+   d="scan'208";a="265242919"
+Received: from junjie-desk-dev.bj.intel.com ([10.238.152.71])
+  by orviesa010-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Aug 2026 01:23:30 -0700
+From: Junjie Cao <junjie.cao@intel.com>
+To: Terry Bowman <terry.bowman@amd.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Dan Williams <djbw@kernel.org>,
+	Dave Jiang <dave.jiang@intel.com>,
+	Ira Weiny <iweiny@kernel.org>,
+	Jonathan Cameron <jic23@kernel.org>,
+	Len Brown <lenb@kernel.org>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Robert Richter <rrichter@amd.com>,
+	linux-acpi@vger.kernel.org,
+	linux-cxl@vger.kernel.org,
+	linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org,
+	Alejandro Lucero <alucerop@amd.com>,
+	Alison Schofield <alison.schofield@intel.com>,
+	Ankit Agrawal <ankita@nvidia.com>,
+	Ard Biesheuvel <ardb@kernel.org>,
+	Ben Cheatham <Benjamin.Cheatham@amd.com>,
+	Borislav Petkov <bp@alien8.de>,
+	Breno Leitao <leitao@debian.org>,
+	Davidlohr Bueso <dave@stgolabs.net>,
+	"Fabio M. De Francesco" <fabio.m.de.francesco@linux.intel.com>,
+	Gregory Price <gourry@gourry.net>,
+	Hanjun Guo <guohanjun@huawei.com>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Kees Cook <kees@kernel.org>,
+	Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>,
+	Li Ming <ming.li@zohomail.com>,
+	Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
+	Mauro Carvalho Chehab <mchehab@kernel.org>,
+	"Oliver O'Halloran" <oohall@gmail.com>,
+	Richard Cheng <icheng@nvidia.com>,
+	Shiju Jose <shiju.jose@huawei.com>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Shuai Xue <xueshuai@linux.alibaba.com>,
+	Smita Koralahalli <Smita.KoralahalliChannabasappa@amd.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Vishal Verma <vishal.l.verma@intel.com>
+Subject: Re: [RFC] cxl: Device protocol AER injection
+Date: Sat, 22 Aug 2026 16:23:25 +0800
+Message-ID: <20260822082325.301100-1-junjie.cao@intel.com>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20260717225700.3543801-1-terry.bowman@amd.com>
+References: <20260717225700.3543801-1-terry.bowman@amd.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [High] The patch breaks Wake-on-LAN and PME from S4/S5 (hibernation/power=
-off) by unconditionally powering off PCIe endpoints and disabling auxiliary=
- power.
---
+Hi Terry,
 
---- Patch [1]: [PATCH v2 1/2] PCI: dwc: Force L2 link entry on shutdown/reb=
-oot without D3cold check ---
-commit abaf02ec8187ffca064828adacb9cade46a5b293
-Author: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+On Fri, 17 Jul 2026 17:57:00 -0500, Terry Bowman wrote:
+> This patch is intended to provide a method of testing the recently
+> submitted cxl series "cxl: Enable CXL PCIe Port Protocol Error
+> handling and logging"
 
-PCI: dwc: Force L2 link entry on shutdown/reboot without D3cold check
+Ran this on 7.2-rc3 with v18, under QEMU with a switch topology so all
+four port classes are present.  v19 wasn't out yet when I ran it; the
+findings below are in the RFC's own code and don't move with the delta.
+It works -- one CE per class with a different RAS status bit each time,
+attribution correct in all four:
 
-This commit modifies dw_pcie_suspend_noirq() to force the PCIe link into L2
-during system shutdown or reboot. It bypasses the pci_host_common_d3cold_po=
-ssible()
-check to prevent the link from staying up when endpoints fail to suspend.
+  RP  ras=0x1  port=port1 dport=0000:0c:00.0  'Cache Data ECC Error'
+  USP ras=0x2  port=port2 dport=              'Memory Data ECC Error'
+  DSP ras=0x4  port=port2 dport=0000:0e:00.0  'CRC Threshold Hit'
+  EP  ras=0x8  memdev=mem1 port=endpoint4     'Retry Threshold'
 
-> --- a/drivers/pci/controller/dwc/pcie-designware-host.c
-> +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-[ ... ]
-> @@ -1222,16 +1223,29 @@ static int dw_pcie_pme_turn_off(struct dw_pcie *p=
-ci)
-> =20
->  int dw_pcie_suspend_noirq(struct dw_pcie *pci)
->  {
-> -	bool pme_capable =3D false;
-> +	bool shutdown =3D system_state =3D=3D SYSTEM_HALT ||
-> +			system_state =3D=3D SYSTEM_POWER_OFF ||
-> +			system_state =3D=3D SYSTEM_RESTART;
-> +	bool d3cold, pme_capable =3D false;
->  	int ret =3D 0;
->  	u32 val;
-> =20
->  	if (!dw_pcie_link_up(pci))
->  		goto stop_link;
-> =20
-> -	if (!pci_host_common_d3cold_possible(pci->pp.bridge, &pme_capable))
-> +	/*
-> +	 * During reboot/halt/poweroff the link is going away regardless, so
-> +	 * force L2 entry without checking whether endpoints have transitioned
-> +	 * to D3hot -- there's no point walking the bus to find out.
-> +	 */
-> +	if (shutdown)
-> +		goto d3cold;
+A UCE panics via cxl_pci_error_detected() as the series intends, and six
+malformed inputs are rejected.  Only VH here, so I can't say anything
+about whether the RCH branch is right.
 
-[Severity: High]
-When shutdown is true, the code jumps straight to the d3cold label, entirely
-bypassing the pci_host_common_d3cold_possible() check. Because pme_capable
-is initialized to false, doesn't this mean it will unconditionally remain
-false during shutdown or poweroff?
+Tested-by: Junjie Cao <junjie.cao@intel.com>
 
-If pme_capable remains false, later in dw_pcie_suspend_noirq() under the
-stop_link label, we set:
+> +	depends on PCIEAER_INJECT
 
-	pci->pp.skip_pwrctrl_off =3D pme_capable;
-	dw_pcie_stop_link(pci);
+Beyond Jonathan's question about asking at all -- a bool depending on a
+tristate means kconfig will give you PCIEAER_INJECT=m with CXL_BUS=y
+and this =y.  olddefconfig produces that from a defconfig and it
+doesn't link:
 
-Will this cause the host driver to explicitly cut auxiliary power to the
-endpoints, breaking Wake-on-LAN and PME generation from S4 (hibernation)
-or S5 (poweroff) for devices that were correctly configured for wakeup?
+  ld: ras.c: undefined reference to `aer_inject'
 
-> +
-> +	d3cold =3D pci_host_common_d3cold_possible(pci->pp.bridge, &pme_capable=
-);
-> +	if (!d3cold)
->  		return 0;
-> =20
-> +d3cold:
->  	if (pci->pp.ops->pme_turn_off) {
->  		pci->pp.ops->pme_turn_off(&pci->pp);
->  	} else {
+Deriving it from the combination rather than asking would take the
+broken config with the question.
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260822-shutdown-v=
-2-0-520a68f1b4a5@oss.qualcomm.com?part=3D1
+> +	cxl_aer_einj.aer_registers[aer_offset] = aer_status;
+
+Only reference to aer_registers[] in the tree.  aer_inject() builds
+its own AER config space and the RCH path skips
+cxl_rch_get_aer_info(), so nothing reads it.  Is it still needed, or
+can it go with the core/ras_einj.c move?
+
+> +	cxl_aer_einj.dev = NULL;
+
+Clears the pointer but not the reference.  Every non-RCH arm takes a
+pci_dev_get() below; to_einj_ras_base() on a match and
+cxl_ras_exit() drop it.  Both need .dev to still point there.  So an
+arm not consumed before the next write is orphaned.
+
+Thirty back-to-back injections gave 26 trace events, with aer_inject
+run 30 times and the kfifo-add-failed, port-not-found, port-unbound,
+dport-not-found and RAS-not-mapped counts all zero (kfifo is 128 deep,
+so no overflow).  Four arms were never disarmed.  I can't tell whether
+the AER core folded them into one pass or the next write replaced .dev
+first, and either way the reference goes.  I couldn't make it fire on
+demand -- unbinding cxl_port fails the arm-time lookup instead -- so
+it's a race, but it's the one a test loop hits.
+
+Behind it the handshake has no single owner: the mutex is writer-only,
+while to_einj_ras_base() mutates the same fields and drops a reference
+without it.  Both consumers are live: the CE runs consume arms from
+the kfifo work, and the UCE backtrace has cxl_pci_error_detected()
+doing it from the AER IRQ thread.  A disarm helper
+owning the reference would cover this and the asymmetry Jonathan
+raised about putting a reference it didn't get.
+
+> +	cxl_aer_einj.is_rch = (nargs == 5 && strcmp(topology, "RCH") == 0);
+
+RCH on a VH device is accepted:
+
+  # echo "0000:0c:00.0 CE 0 0x80 RCH" > .../aer_einj_inject   -> 0
+
+aer_inject() fires and AER logs it, but no CXL trace event appears --
+the RCH branch can't match a VH dport.  Reproduces every time.  So a
+typo gets you a real AER error with the CXL path silently skipped,
+which reads as "the handler didn't fire".  is_cxl_restricted(pdev),
+already used further down the file, would make it -EINVAL.
+
+> Also worth discussing is the commandline takes multiple parameters for
+> a single sysfs file
+
+One file also suits the state handling above better.  Several files
+spread one request over several writes with no commit point.
+
+> How do we incorporate this with the existing CXL EINJ functionality
+
+core/ras_einj.c sounds right, and the Kconfig above is another reason
+for both in one place.  Worth a line in the ABI doc that ACPI EINJ is
+a real injection but Root Port only while this covers every class with
+software registers -- that's what decides which one a test wants.
+
+Last thing, off this patch: with the registers a kernel-side array this
+can't exercise the MMIO readback, the offsets against a real capability
+block, or the header log.  QEMU has RAS on root and switch ports but
+injects only on endpoints, so it can't cover the classes today either.
+I'm looking at adding port-level injection there as a second path
+through the real reads.
+
+Many thanks,
+Junjie
