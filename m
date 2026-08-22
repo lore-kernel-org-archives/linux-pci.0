@@ -1,108 +1,161 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 322793A9635
-	for <linux-pci@vger.kernel.org>; Sat, 22 Aug 2026 15:17:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28B5E3F1659
+	for <linux-pci@vger.kernel.org>; Sat, 22 Aug 2026 15:20:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787411831; cv=none; b=V/vKDKgOovib9bz8qrdt5pqryxtjzj2+YjzF6s3I8+4ozh0ZIxnjhfovpucu8BCd3kMVF8B57mrFqYuNVsIzpxN2gvXSdjwtVDBvzXgyDKgXv59ra0zGgDtW2rGg0Cicv+xtZxM0wWMZUrc233WdRjRmrsPkUDQ7WRqniPhZrtw=
+	t=1787412042; cv=none; b=K/iND0Xa/Revh/bKiXhmMN5sfh6WUUzpF12TOJdD2xQSlEGi78rd98rV9s1AxD73pvpGRouIYllnZJzct0oSiceJPRQGz65jQbXJwo71Et1hsCVJTzUVeIel/q6Qudj5OlfOf65sH6cWL5zZDUKzxvW/QoR0P4+dpBu/9qJThPM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787411831; c=relaxed/simple;
-	bh=ZHQiNvBwvAaRV42WkvQkeHz13P/E1L+Dagu/3Lraxuo=;
+	s=arc-20240116; t=1787412042; c=relaxed/simple;
+	bh=pG++gZNn/OwPyvE8s8k3vXlGveW0qCRKYPp+EFfNj40=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=cB8BVU6Qa49hirPSThGgYFGqz5uuAQHkJH9/tMly3TZ+9swvLpfHDQpSxpj4U6fTPHdHRdQ8Ys2DoYynKIs4r8PTTHwVhyciJ9Ww/uEy21b8aJzQN5I+GJJFLSoEo5c7t4etpMXcIy8/tHgZc+IJB6iM2pzcY9cV66S4H3EmSe8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=e3NnfcAm; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=t3kYAxf9cZ3nTVBOmWAVIfnrDCMh/Y0lqPjFlzVhpUiNhCk520LIYvd9E8GSMcMPRWACfHugC3iqV90z2CBIFvFIeP8Oou1Q/TozF9p4+NJGAHVF0oYSDo8+haZw8mfcRpL++44X6I08hL6hQucHM10K4FNnBsjxj91+/4VpDe8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=L96J/EV7; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="e3NnfcAm"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A2F0C1F000E9;
-	Sat, 22 Aug 2026 15:17:09 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="L96J/EV7"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BB56A1F000E9;
+	Sat, 22 Aug 2026 15:20:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787411829;
-	bh=XDYQWC6gXxDNn2E5E+8SKFutmXBcUATxrdkkeQiHkCg=;
+	s=k20260515; t=1787412040;
+	bh=ACP1bx197RgVbQMDf6IuVihPtjnAg7iqxSyMb8FfGeM=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=e3NnfcAmx/qLO56gvWbzT9boflREBPvEBN6+5nJHIw7gZIOI41GrLXNVznrLoJS0z
-	 0GdLavADSxf+1wKC6prHxli+n/AD/GoLYmyG/I/aK9zJCMt4IyQXm/bpis/mj9Lcox
-	 mdNw7KdnoLTE5VojuXNm3jjrx5E4+oqYvyd9y9aLeGQo7ShUuozzNSet8gMyjO7HqL
-	 cZ1cKxd1GB7oVDnMAIU7U83dUtBiCvnMVe/tMo1FubTlTiCYyHChdIzr63zkSqZjwp
-	 VCsmq7mV54XMhzD2Z1ocI4vmIVygGGFcyD2VfhuDVT5fS1riXexEhsExedoCzsPFkl
-	 ffSgdDAeul91Q==
+	b=L96J/EV7rCRLk2g7m54Gwh/dJ6QMEL24EgwSBhQQ6LYEiDDwjo6cjhZywfkky654t
+	 Am1iJJoXzVXH3SraqVcB+2wIGC1z6DrX70vyy2ENMHjGi0L8djpNBiY5beXpH1DyDB
+	 E4kY8dT5JKzkpUVYJSUXe0pxRSKIa+3BP7dLFWQHBRXfw3BAzuZkZCGj5gC7ysBXsT
+	 D4bu15qmHt8tijySoj4mlm85iAXpEVtidwLw/ZRN5daUv57lFamznHXZ83Np9WpIU/
+	 MH2H7vi9asjgjh1DTa0IrDVOXbh2UyM3mA6mCdRLovxIY3dCN3PuUM9lXzTFgDze2B
+	 ayBp+JxVu6KXg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 2/3] PCI: dra7xx: Fix device link leak when
- devm_phy_get() fails
+Subject: Re: [PATCH 1/3] PCI: dra7xx: Fix clock enable leak on probe failure
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Felix Gu" <ustc.gu@gmail.com>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260822-dra7xx-v1-2-23e204d5548b@gmail.com>
+In-Reply-To: <20260822-dra7xx-v1-1-23e204d5548b@gmail.com>
 References: <20260822-dra7xx-v1-0-23e204d5548b@gmail.com>
- <20260822-dra7xx-v1-2-23e204d5548b@gmail.com>
+ <20260822-dra7xx-v1-1-23e204d5548b@gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Sat, 22 Aug 2026 15:17:09 +0000
-Message-Id: <20260822151709.A2F0C1F000E9@smtp.kernel.org>
+Date: Sat, 22 Aug 2026 15:20:40 +0000
+Message-Id: <20260822152040.BB56A1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
 
 Pre-existing issues:
-- [High] Missing cleanup for IRQ domain and chained handler on probe failur=
-e paths leads to an irq_domain memory leak and a severe Use-After-Free if t=
-he interrupt fires after the probe fails.
+- [High] Missing cleanup of custom INTx IRQ domain and chained handlers on =
+probe failure paths.
+- [High] Missing `.remove` callback in a loadable module driver leaves hard=
+ware active and leaks resources, leading to Use-After-Free.
 --
 
---- Patch [2]: [PATCH 2/3] PCI: dra7xx: Fix device link leak when devm_phy_=
-get() fails ---
-commit d4c6de816ffa3fbf9a40c694558f1e94ac337fd8
+--- Patch [1]: [PATCH 1/3] PCI: dra7xx: Fix clock enable leak on probe fail=
+ure ---
+commit 949827a7f8e6ad6326095148f4f52df1a75fedb1
 Author: Felix Gu <ustc.gu@gmail.com>
 
-PCI: dra7xx: Fix device link leak when devm_phy_get() fails
-   =20
-When devm_phy_get() fails, the code returned immediately and left the
-already created device links behind.
+PCI: dra7xx: Fix clock enable leak on probe failure
 
-Jump to the existing err_link cleanup instead so those links are
-deleted on failure.
+dra7xx_pcie_probe() enables the optional clock but never disables it
+when probing fails afterwards.
+
+Switch to devm_clk_get_optional_enabled(), which disables the clock
+automatically on failure.
+
+Fixes: 5af9405397bf ("PCI: dra7xx: Get an optional clock")
+Signed-off-by: Felix Gu <ustc.gu@gmail.com>
 
 > diff --git a/drivers/pci/controller/dwc/pci-dra7xx.c b/drivers/pci/contro=
 ller/dwc/pci-dra7xx.c
-> index d43253f7dea65..bf32b14436f97 100644
+> index 6ae5b27e27b32..d43253f7dea65 100644
 > --- a/drivers/pci/controller/dwc/pci-dra7xx.c
 > +++ b/drivers/pci/controller/dwc/pci-dra7xx.c
-> @@ -740,8 +740,10 @@ static int dra7xx_pcie_probe(struct platform_device =
-*pdev)
->  	for (i =3D 0; i < phy_count; i++) {
->  		snprintf(name, sizeof(name), "pcie-phy%d", i);
->  		phy[i] =3D devm_phy_get(dev, name);
-> -		if (IS_ERR(phy[i]))
-> -			return PTR_ERR(phy[i]);
-> +		if (IS_ERR(phy[i])) {
-> +			ret =3D PTR_ERR(phy[i]);
-> +			goto err_link;
-> +		}
+> @@ -732,15 +732,11 @@ static int dra7xx_pcie_probe(struct platform_device=
+ *pdev)
+>  	if (!link)
+>  		return -ENOMEM;
 > =20
->  		link[i] =3D device_link_add(dev, &phy[i]->dev, DL_FLAG_STATELESS);
->  		if (!link[i]) {
+> -	dra7xx->clk =3D devm_clk_get_optional(dev, NULL);
+> +	dra7xx->clk =3D devm_clk_get_optional_enabled(dev, NULL);
+>  	if (IS_ERR(dra7xx->clk))
+>  		return dev_err_probe(dev, PTR_ERR(dra7xx->clk),
+>  				     "clock request failed");
+> =20
+> -	ret =3D clk_prepare_enable(dra7xx->clk);
+> -	if (ret)
+> -		return ret;
+> -
+
+[ ... ]
+
+>  	switch (mode) {
+>  	case DW_PCIE_RC_TYPE:
+>  		if (!IS_ENABLED(CONFIG_PCI_DRA7XX_HOST)) {
+>  			ret =3D -ENODEV;
+>  			goto err_gpio;
+>  		}
+> =20
+>  		dra7xx_pcie_writel(dra7xx, PCIECTRL_TI_CONF_DEVICE_TYPE,
+>  				   DEVICE_TYPE_RC);
+> =20
+>  		ret =3D dra7xx_pcie_unaligned_memaccess(dev);
+>  		if (ret)
+>  			dev_err(dev, "WA for Errata i870 not applied\n");
+> =20
+>  		ret =3D dra7xx_add_pcie_port(dra7xx, pdev);
+>  		if (ret < 0)
+>  			goto err_gpio;
 
 [Severity: High]
-This is a pre-existing issue, but does the error path in dra7xx_pcie_probe()
-and dra7xx_add_pcie_port() leak the IRQ domain and leave a chained handler
-registered?
+This isn't a bug introduced by this patch, but doesn't this error path
+permanently leak the custom IRQ domain?
 
-If dra7xx_add_pcie_port() fails after dra7xx_pcie_init_irq_domain()
-(e.g., during devm_platform_ioremap_resource_byname() or dw_pcie_host_init(=
-)),
-or if dra7xx_pcie_probe() jumps to err_gpio or err_deinit later on, the
-function returns without calling irq_domain_remove(dra7xx->irq_domain) or
-irq_set_chained_handler_and_data(pp->irq, NULL, NULL).
+If dra7xx_add_pcie_port() fails during its internal dw_pcie_host_init() cal=
+l,
+it returns an error without cleaning up the IRQ domain and chained handler =
+it
+just created via dra7xx_pcie_init_irq_domain().
 
-Because the chained handler retains a pointer to pp (which is freed by
-devres upon probe failure), could this lead to a Use-After-Free if the
-interrupt fires later?
+Since the probe error path goes straight to err_gpio:, we skip err_deinit:
+and the domain is never removed. Because the pci and dra7xx structures are
+devm-allocated, they are automatically freed on probe failure.
+
+If the shared IRQ fires afterwards, won't the dangling chained handler
+dereference the freed pointer and cause a panic?
+
+[ ... ]
+
+>  static struct platform_driver dra7xx_pcie_driver =3D {
+>  	.probe =3D dra7xx_pcie_probe,
+>  	.driver =3D {
+>  		.name	=3D "dra7-pcie",
+>  		.of_match_table =3D of_dra7xx_pcie_match,
+>  		.suppress_bind_attrs =3D true,
+>  		.pm	=3D &dra7xx_pcie_pm_ops,
+>  	},
+>  	.shutdown =3D dra7xx_pcie_shutdown,
+>  };
+>  module_platform_driver(dra7xx_pcie_driver);
+
+[Severity: High]
+This is a pre-existing issue, but does this driver need a .remove callback?
+
+This driver can be built as a loadable module, but lacks a .remove callback.
+When the module is unloaded, the driver core will unbind the device and
+devres will release memory and unmap IO.
+
+However, since there is no explicit teardown, pm_runtime_disable() is
+skipped, the PHY is never disabled, dw_pcie_host_deinit() is not called,
+and the custom IRQ domain and chained handlers are left active.
+
+Does this guarantee a use-after-free when the chained interrupt handler
+later accesses the devres-freed memory?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260822-dra7xx-v1-=
-0-23e204d5548b@gmail.com?part=3D2
+0-23e204d5548b@gmail.com?part=3D1
