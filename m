@@ -1,45 +1,46 @@
-Received: from CO1PR03CU002.outbound.protection.outlook.com (mail-westus2azon11010052.outbound.protection.outlook.com [52.101.46.52])
+Received: from PH0PR06CU001.outbound.protection.outlook.com (mail-westus3azon11011032.outbound.protection.outlook.com [40.107.208.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0E9D19E839;
-	Sun, 23 Aug 2026 04:07:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.46.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AD38019E839;
+	Sun, 23 Aug 2026 04:07:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.208.32
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787458055; cv=fail; b=nATYuzVpGt7CU60pHKh5GNpBdnhL3Ye010WDaqoaDF0MA6hSyA5XPqqOsP4Pr8qAnhy6ZoJMakeE4/tQmUmUxEcf3EdrDh6EOyptX5tCcngHC6KmFumyfVf1zuVbVwPrbROyqWp4eJcbFvNohQ2e/sIXBGwTkG71IJ+7uG4oK/Q=
+	t=1787458061; cv=fail; b=T4e2x1xT0kC/fAAQstPrOlTIXKp2Fjdr64kCm/j20AzTQKehJuVqDtK4UttXkOjFBUwwRMxvW/PC1bQC3potY7L+wy8HMHiI9zLb2cTd5H4q0bLbPrWDGwYQc8d2osotiwCAReaai6R1p19IaLo+XRhipiW4M7vkksd8vnwLd8w=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787458055; c=relaxed/simple;
-	bh=RV+99wYDyRHhUYZtiQVzH+CiHs5FO4qL8+CB3sXXxus=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=TICGrvczK9yMsrNI+BBuJSnKpK0KLZVTq5mx/1FBXFCIkYIulJSB6mzzkkz1ghxSpY1hCjBwHWozDbLTxB9V+2cNuz/OfDDt8jTOwzzTgOxLeLkdcoRJMLJe7lHhuYkFpgHeQEhDY4zv1mJlO/N5+AFUNbbLQSMyLZGouAY+cqk=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=c01J+n3h; arc=fail smtp.client-ip=52.101.46.52
+	s=arc-20240116; t=1787458061; c=relaxed/simple;
+	bh=jH7GowXKfZSEwK2DgU+68vRQE3snJNqBagL+UU9T8iI=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=GSJTV2sYnvhxUfNjcyzDMCfkT+fw9EHoTgKJXIKnJToPscg2TtLsKnhT4SQOkmqD5eKSLo9eYmdYv32qp31BYO9Xi4QRSmWFqpomLCXmcuINzJvtHGsonQLxpTGvftycYJCMO0eLcpe0FbjF8Wv2zCh6TB1v+IYYbVDXLU6aHIs=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=Ud02kNxH; arc=fail smtp.client-ip=40.107.208.32
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="c01J+n3h"
+	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="Ud02kNxH"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=PYhfLIWXKNAaCbULd/G3x14gSSRF44pb15OS8HMevoRbZkcKRDcSVVBnfeqA6mXqvj3VxtYpXgrzje1PKx35hK09CEcttNNYtIp3v1JASauVpd+QnNrkzm0hwGx8b2bUj/tWI53XEfDWN2559rH5/jYL5Z9tbg+Uk9PAy5BnEs7Vg3g/MsZ5yog95QK6ZrHdKemeyuAiW03Y6Fkw/HkkVv8DpO6Et5kCzjT76zIiyRV1iLXE4n1lPVtXtsSzB6/BRHG2BWNdcaEAWDq5pD+Pu5hxJ0+1QNiAbdAw+lKWPSYXiGkta0AC2ZWcLKKz7JTrN8k+Mh9YK097XDVlwUIJjw==
+ b=gv+WLRldMVSMEqopyVwDYyuibn01mCTxSOt1TrkhMyGFx9KNfMnfyJ5UrqkYZ2igEbFuN8pbFeTuybzbUo+XJT/vlXA16Q7vtyEgeq3UjEnnBId8JzMeF8wZxVZZOwEbHg8GFtScJPttaDl2NG4WPnfJTaAjgwQ0THbf2/ch5t/Lt2WqwIjOsIxn9SiqI34AYN4N3JOpQRm9Z2XIuSrXgpSu95SR7W4d237qojnS0Ygk0hLBHQplxYMMT68hkAIcKNyzT9/T6J5qc0VU28zEw+c+UC6THZOOtHk3zPJjHAfBxzrVvWGEtWHIy3OxxYwWqhnDFsMqPUVGE1Vb8n1EEg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=HvY42ozFxm5C/TPahpGZe1A9Vaw60s3gbnyZK4yg4Lg=;
- b=NqN7acsLlR/So2FfIDfECav5QH9125EfGIC+Ck+FGzUsYy+qqgpWXaNBSxaArnB+fR99ayKMbiWlXber9AiZEGSAMaA5FufDCj2uLG0Xxe7iGHPAd2x1L5Lsp6/RsDTEwU6yRGxP1re5/m6h9UNDML+7ufvoAxCWaZJuarNKn2TkBXMmhhRhz+o4kDB7fMCflyZrHoi3hW55Fgk0L3qB0WpTkn3pdzk9vfKKXTWy833mVxk+w5wBSM17Vkc1TM7sw9U4s6zLToGf/sRbg4xachLF2f5++eEuMYFSKz7HpACUkAbaJEDidsVXZ7KaoeXZUu8XcEFbpGgJifgKhsl9IA==
+ bh=st0TM1Qwg5Tf741oy69W92lJGyUo/r311+3M+uEQ0/o=;
+ b=Bre3guK/cXuO2OsrEYNx382+WK1tn1oqd9Ii1o3aWBuIxo+54uTBQSEhkBJAWrsCn/WcMAYuygsI40RE7cLLHO3Wyhlm9Tgik7Fw1FQHuVJvhFYanrn+m2z1ejJYjUaDQAtEXR+0nyRgEJxnDle1zMpI598/OYhRM51EzLOv98a8nuVDA7cZvb4MV2CML5BxYK1m+ceH9lZ/1jNZ+4EXFv7/j+Tquz1Vzq323Xp4lKrK2Bygp8L5r6SVrRODGIkU5g4aZEzMNQ+Ugu4LmdDk8wla8aGGkIKdbZhleMa+2RdKldm2MyXT8PeY6hzhMa7rG2zKu+YJY+H+AA/JDMXLjw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  165.204.84.17) smtp.rcpttodomain=google.com smtp.mailfrom=amd.com; dmarc=pass
  (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
  dkim=none (message not signed); arc=none (0)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=HvY42ozFxm5C/TPahpGZe1A9Vaw60s3gbnyZK4yg4Lg=;
- b=c01J+n3hHAfaTbL/vv964ySmnKiB6tuDaJOIHgTZm3cXjOB1fWR0DBCZWdTcUifoGUr/uRgh4s9kYdw3+n6DEm8E6e2cRvfDFwg2hVa2E0wIUscO2UBByrWoqkKjBhRRYilXcchm8WZ+ELuuCEPnJR7koSJOk7rJyGaCkuQwJJM=
-Received: from SA1PR04CA0016.namprd04.prod.outlook.com (2603:10b6:806:2ce::21)
- by SJ2PR12MB8691.namprd12.prod.outlook.com (2603:10b6:a03:541::10) with
+ bh=st0TM1Qwg5Tf741oy69W92lJGyUo/r311+3M+uEQ0/o=;
+ b=Ud02kNxH9udEB4vT7FEsgiBqrU9gTTh797LVGFm/jtPrd0vVDDwzKNWBMOpvJ5oH1A+QsP6CN8saGUMAIeaKQhg07OHSmZHpKtiFqEtiSkZGtYtWq/HIZ5Se6GN4qtREP71UtKLjct4QXUz//jXTEUI0mzenJ4oORe4YdNEDUtQ=
+Received: from PH7PR03CA0017.namprd03.prod.outlook.com (2603:10b6:510:339::32)
+ by SN7PR12MB8170.namprd12.prod.outlook.com (2603:10b6:806:32c::15) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.339.11; Sun, 23 Aug
- 2026 04:07:28 +0000
-Received: from SA2PEPF00001504.namprd04.prod.outlook.com
- (2603:10b6:806:2ce:cafe::59) by SA1PR04CA0016.outlook.office365.com
- (2603:10b6:806:2ce::21) with Microsoft SMTP Server (version=TLS1_3,
+ 2026 04:07:33 +0000
+Received: from SA2PEPF0000150A.namprd04.prod.outlook.com
+ (2603:10b6:510:339:cafe::90) by PH7PR03CA0017.outlook.office365.com
+ (2603:10b6:510:339::32) with Microsoft SMTP Server (version=TLS1_3,
  cipher=TLS_AES_256_GCM_SHA384) id 15.21.339.11 via Frontend Transport; Sun,
- 23 Aug 2026 04:07:28 +0000
+ 23 Aug 2026 04:07:32 +0000
 X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
  smtp.mailfrom=amd.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=amd.com;
@@ -47,20 +48,20 @@ Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
  165.204.84.17 as permitted sender) receiver=protection.outlook.com;
  client-ip=165.204.84.17; helo=satlexmb08.amd.com; pr=C
 Received: from satlexmb08.amd.com (165.204.84.17) by
- SA2PEPF00001504.mail.protection.outlook.com (10.167.242.36) with Microsoft
+ SA2PEPF0000150A.mail.protection.outlook.com (10.167.242.42) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.360.3 via Frontend Transport; Sun, 23 Aug 2026 04:07:27 +0000
-Received: from Satlexmb09.amd.com (10.181.42.218) by satlexmb08.amd.com
+ 15.21.360.3 via Frontend Transport; Sun, 23 Aug 2026 04:07:32 +0000
+Received: from satlexmb10.amd.com (10.181.42.219) by satlexmb08.amd.com
  (10.181.42.217) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.45; Sat, 22 Aug
- 2026 23:07:27 -0500
-Received: from satlexmb08.amd.com (10.181.42.217) by satlexmb09.amd.com
- (10.181.42.218) with Microsoft SMTP Server (version=TLS1_2,
+ 2026 23:07:32 -0500
+Received: from satlexmb08.amd.com (10.181.42.217) by satlexmb10.amd.com
+ (10.181.42.219) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.45; Sat, 22 Aug
- 2026 23:07:26 -0500
+ 2026 23:07:31 -0500
 Received: from xhdlc250058.xilinx.com (10.180.168.240) by satlexmb08.amd.com
  (10.181.42.217) with Microsoft SMTP Server id 15.2.2562.45 via Frontend
- Transport; Sat, 22 Aug 2026 23:07:22 -0500
+ Transport; Sat, 22 Aug 2026 23:07:27 -0500
 From: Sai Krishna Musham <sai.krishna.musham@amd.com>
 To: <bhelgaas@google.com>, <lpieralisi@kernel.org>, <kw@linux.com>,
 	<mani@kernel.org>, <robh@kernel.org>, <krzk+dt@kernel.org>,
@@ -69,10 +70,12 @@ CC: <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
 	<linux-kernel@vger.kernel.org>, <michal.simek@amd.com>,
 	<bharat.kumar.gogada@amd.com>, <thippeswamy.havalige@amd.com>,
 	<sai.krishna.musham@amd.com>, <pranav.sanwal@amd.com>
-Subject: [PATCH v7 0/2] pci: AMD: Add Versal2 CPM6 PCIe host controller support
-Date: Sun, 23 Aug 2026 09:37:13 +0530
-Message-ID: <20260823040715.204096-1-sai.krishna.musham@amd.com>
+Subject: [PATCH v7 1/2] dt-bindings: PCI: amd-mdb: Add CPM6 support
+Date: Sun, 23 Aug 2026 09:37:14 +0530
+Message-ID: <20260823040715.204096-2-sai.krishna.musham@amd.com>
 X-Mailer: git-send-email 2.44.4
+In-Reply-To: <20260823040715.204096-1-sai.krishna.musham@amd.com>
+References: <20260823040715.204096-1-sai.krishna.musham@amd.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -83,45 +86,163 @@ Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: SA2PEPF00001504:EE_|SJ2PR12MB8691:EE_
-X-MS-Office365-Filtering-Correlation-Id: ce96278b-936e-4db8-0089-08df00cc0b9b
+X-MS-TrafficTypeDiagnostic: SA2PEPF0000150A:EE_|SN7PR12MB8170:EE_
+X-MS-Office365-Filtering-Correlation-Id: f04a359f-9181-4607-1dbe-08df00cc0e59
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|376014|7416014|23010399003|1800799024|36860700016|82310400026|10067099003|11063799006|56012099006|18002099003;
+	BCL:0;ARA:13230040|82310400026|23010399003|7416014|376014|36860700016|1800799024|6133799003|13003099007|22082099003|18002099003|3023799007|56012099006|11063799006|10067099003;
 X-Microsoft-Antispam-Message-Info:
-	cEjFWeHCz2Wj0AhCdnCZQr3qQrR1MxFe7j2V/6ZMMMlOQtzHACW51wV9Ekpit7Pv5stcAQuUelQM0tjwzpcCd4lpBVdNFDlnZaxTvdUUFlTkMsZpFHmIzVOIoQD3Uc884hvRbWKzmklJBOEMpoUvTyAmumdo/7lgSuwZFzLdw22oOHW5qC3aXfaiidrWxAuWViPd7qcHdS6lTnCrg2q7TUml+PAaMYty3jAzTg0KTbrc9dko+XpZ5mKfBGj6b58aQJYi6HljN5Qw1STItlkmeTp0WTS+b88FGYyzdIpv8T/f/ZRLpLrzRm8LuBVp3vOZX9K4g79uYxq/YpR7xIHuSd2ZXUEyqDrXOuNQKkqrKzAQImkihLkNbBCSVDy7QedBgmyAKg2vLhsyj/YCspcuAWps3PaYoLAza9xYUpEU6ChpSAmbptab/h0xE3dCphezNK8Hs/mwKjuKbZlLi5hHQuTyr3POkiPIn8C/m4xRZFZManrhwS0hjkBdkaHDMlic23wzambl0fCoH7AEdg7gjtmCjI0vsaCuNFdOAiPYFoHlfX76tgE8OCjx3jrl2kgmvnn0Z4liwttVAes1aexFrnSwZsCyk1JfL8e13qLQrbRRMDROGforr5DWlvA6Ph+Q2e9BH8B+l9xGSnXvtdkAHql9PNgwcVO4lYkc0lfJvZvJK/SxHnqjklQqr5CrrAHCQUxolH+Ko1sp4nkAiL6T/Q==
+	cjQevwijIxPDlCJILa6bxyLbbZEZ6+n5aoFG7w9bfzwnQP/qPkL8h55Sh0Fx90xxzFYWJgZ4EEqgkV7POohdXR0UqmxNdU1SWtePv1u00FhYVKOpJJRZRvAxNs2w7JeKxsUXQj5QKDmq+RwjwoBCQCvMsLSoZapiTo5s7C4z1FBy57YMOD3NjHzGmIZXr0sEiPkoIcZP7xCqPfKpUd5y0tsPUCy8efq7Ye45zs84d0omZ9s1YiCug32+lj94cJmsGim8driUYIVlSBiKuAQUXrHGGPmQ6sbiyqZQVnuOUVdHzVgifnwQQys6z4cynVF8v0apvOleVXoww/V/7IGXsICTzwbgFQz/Pkbgkk8q08berYerUZQS3rvGnT5E57LDnIesAdRFtTQRp9/7e0Tfwc8zCzYPJs7+GmvfevsejXcEHbefuUhxLTXhL3F2v46F1Dkv7QKsVi01S9vg3CceebwDnhHn0ntAe0eSW/8TkTD+8LMeUQ/Om+evIxeqeGMhAysRosf6nB5VVD2TNFRYoFEfdS7qQK68mBNFxllLUAGz2Z2/1wRPTUkd4PXZzch4bRKLHXQeARDrLq8vqvnYIdNceX0upJtqGIPcR7fthHYi4xqQGsDDUZA65TvSgH8jPz+f50JhffbF5IgvBbUqqyZMa10wp+dRaGg01yxDMvfzFzJXRzem3gJx88ajqdCyrPMKgfZOO5aRkJ8UWfkheA==
 X-Forefront-Antispam-Report:
-	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:satlexmb08.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(376014)(7416014)(23010399003)(1800799024)(36860700016)(82310400026)(10067099003)(11063799006)(56012099006)(18002099003);DIR:OUT;SFP:1101;
+	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:satlexmb08.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(82310400026)(23010399003)(7416014)(376014)(36860700016)(1800799024)(6133799003)(13003099007)(22082099003)(18002099003)(3023799007)(56012099006)(11063799006)(10067099003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	mdXzWNmRrKoFbYm6BoF2NLvuBc6Hp6G5hlvCy0WWUwL7q8hpW99CqQZyqJVbdMyAIypeF7dkk9cTBjBY69eBobnWZEwBTzfa5I7PQ62G8IkNhflViJd1cmQH7MREKabqepRBGunt2/iveK7wIhmToJhh0ZN+BwF20dD8ObJOgSwEV0OQQkqyPoTTdM1JSsYbsaFaB/i30o0q4HLO7YWouzgqv28+6TfO0N4QKmPKuaKmH9XpzpiYs17eiccU9xpUmtdNCgV37S2PhyKrqg/2tJAhL6mN0HJjDfEFzZcDb2S9rcW5TEYz9hDh6EbE1VPx4GtqXDbXt2e2ZqiEE81HDMGuP9b5sp2h2L0tnkjwq7SFQ7/1z8irUhfvq+IBtzfvtZS7A0N6HswnW3ogZXdfxblMFQQgwrOijVNXLVfGP4jLLnvLaNbqDlqTu+2IraHt
+	ec+v3THWTubUvBKp+FW5nEca6EVUYq2slpuxLthiagDjC55B5LVSFg7/Yp5Wisq8DKm9WH31SIu2ZlhmCB2mvaJTLpGQLfUKuvNVI9SQm3paT5+jkH3y2ReFFaUfVtAU1rcfneR5XGrUgl/IXpO97nsKlTOEOawBi7BYkV5Bn+AT+fJGVd/wr7zkuAWKMk/UFsWxJpZfQH2MXqz7cSxsTtSOuHO32cOchKgswCFPDj/30Jx8M3AuVxPwR9UaYT0J3ZE3xPmidLeiyZfEnN7364YD6XoOFBhPmOO/23c6PbhZFchsbPlM2GhZY+kPNQQWjfJiqZ95Gi3fE5foybi3IJ/OLcRXuLzm/zHOc5xjA+KZj6cZVETN+smV3OulaBlGeRBA4KF45erGDK5TC+UE4XMUZCiPFcgM7Efq38Z4cqH2OXApNop4HIzGul0l01kE
 X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 Aug 2026 04:07:27.7333
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 Aug 2026 04:07:32.3312
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: ce96278b-936e-4db8-0089-08df00cc0b9b
+X-MS-Exchange-CrossTenant-Network-Message-Id: f04a359f-9181-4607-1dbe-08df00cc0e59
 X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[satlexmb08.amd.com]
 X-MS-Exchange-CrossTenant-AuthSource:
-	SA2PEPF00001504.namprd04.prod.outlook.com
+	SA2PEPF0000150A.namprd04.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ2PR12MB8691
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN7PR12MB8170
 
-Add support for the AMD Versal2 CPM6 PCIe host controller to the
-AMD MDB PCIe driver.
+The AMD CPM6 PCIe controller is based on the Synopsys DesignWare PCIe
+IP and integrates two PCIe host controller instances. Add the
+"amd,versal2-cpm6-host" and "amd,versal2-cpm6-host1" compatible strings
+to describe the HOST0 and HOST1 controller instances.
 
-Sai Krishna Musham (2):
-  dt-bindings: PCI: amd-mdb: Add CPM6 support
-  PCI: amd-mdb: Add CPM6 host controller support
+Add "intr" to the vendor-specific reg-names in snps,dw-pcie.yaml for
+the per-controller interrupt register region used by CPM6.
 
- .../bindings/pci/amd,versal2-mdb-host.yaml    |  41 +-
- .../devicetree/bindings/pci/snps,dw-pcie.yaml |   2 +
- drivers/pci/controller/dwc/pcie-amd-mdb.c     | 419 +++++++++++++++---
- 3 files changed, 389 insertions(+), 73 deletions(-)
+Update amd,versal2-mdb-host.yaml with separate register definitions:
+- MDB5: 4 regions (slcr, config, dbi, atu)
+- CPM6: 5 regions (slcr, config, dbi, atu, intr)
 
+Signed-off-by: Sai Krishna Musham <sai.krishna.musham@amd.com>
+---
+Changes in v6, v7:
+- None
 
-base-commit: dc59e4fea9d83f03bad6bddf3fa2e52491777482
+Changes in v5:
+- Explain host vs host1 in the commit message.
+- Drop redundant minItems for MDB5 (4 is already min).
+- Drop redundant maxItems for CPM6 (5 is already max).
+
+Changes in v4:
+- None
+
+Changes in v3:
+- Update subject to match history.
+- Move allOf to the end, after required block.
+- Drop the CPM6 example.
+
+Changes in v2:
+- Update the CPM6 device tree binding and example.
+
+v1 https://lore.kernel.org/all/20260402180006.486229-2-sai.krishna.musham@amd.com/
+v2 https://lore.kernel.org/all/20260728202044.1785986-2-sai.krishna.musham@amd.com/
+v3 https://lore.kernel.org/all/20260803144412.713639-2-sai.krishna.musham@amd.com/
+v4 https://lore.kernel.org/all/20260808105256.3705889-2-sai.krishna.musham@amd.com/
+v5 https://lore.kernel.org/all/20260817023932.1743100-2-sai.krishna.musham@amd.com/
+v6 https://lore.kernel.org/all/20260819172057.3636214-2-sai.krishna.musham@amd.com/
+---
+ .../bindings/pci/amd,versal2-mdb-host.yaml    | 41 ++++++++++++++++---
+ .../devicetree/bindings/pci/snps,dw-pcie.yaml |  2 +
+ 2 files changed, 38 insertions(+), 5 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/pci/amd,versal2-mdb-host.yaml b/Documentation/devicetree/bindings/pci/amd,versal2-mdb-host.yaml
+index 406c15e1dee1..cd207b346313 100644
+--- a/Documentation/devicetree/bindings/pci/amd,versal2-mdb-host.yaml
++++ b/Documentation/devicetree/bindings/pci/amd,versal2-mdb-host.yaml
+@@ -9,27 +9,30 @@ title: AMD Versal2 MDB(Multimedia DMA Bridge) Host Controller
+ maintainers:
+   - Thippeswamy Havalige <thippeswamy.havalige@amd.com>
+ 
+-allOf:
+-  - $ref: /schemas/pci/pci-host-bridge.yaml#
+-  - $ref: /schemas/pci/snps,dw-pcie.yaml#
+-
+ properties:
+   compatible:
+-    const: amd,versal2-mdb-host
++    enum:
++      - amd,versal2-mdb-host
++      - amd,versal2-cpm6-host
++      - amd,versal2-cpm6-host1
+ 
+   reg:
++    minItems: 4
+     items:
+       - description: MDB System Level Control and Status Register (SLCR) Base
+       - description: configuration region
+       - description: data bus interface
+       - description: address translation unit register
++      - description: CPM6 PCIe error and event interrupt registers
+ 
+   reg-names:
++    minItems: 4
+     items:
+       - const: slcr
+       - const: config
+       - const: dbi
+       - const: atu
++      - const: intr
+ 
+   ranges:
+     maxItems: 2
+@@ -92,6 +95,34 @@ required:
+   - "#interrupt-cells"
+   - interrupt-controller
+ 
++allOf:
++  - $ref: /schemas/pci/pci-host-bridge.yaml#
++  - $ref: /schemas/pci/snps,dw-pcie.yaml#
++  - if:
++      properties:
++        compatible:
++          contains:
++            const: amd,versal2-mdb-host
++    then:
++      properties:
++        reg:
++          maxItems: 4
++        reg-names:
++          maxItems: 4
++  - if:
++      properties:
++        compatible:
++          contains:
++            enum:
++              - amd,versal2-cpm6-host
++              - amd,versal2-cpm6-host1
++    then:
++      properties:
++        reg:
++          minItems: 5
++        reg-names:
++          minItems: 5
++
+ unevaluatedProperties: false
+ 
+ examples:
+diff --git a/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml b/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
+index b3216141881c..21f86609ddb6 100644
+--- a/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
++++ b/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
+@@ -117,6 +117,8 @@ properties:
+               enum: [ ecam ]
+             - description: AMD MDB PCIe SLCR region
+               const: slcr
++            - description: AMD CPM6 PCIe error and event interrupt registers
++              const: intr
+     allOf:
+       - contains:
+           enum: [ dbi, ctrl ]
 -- 
 2.44.4
 
