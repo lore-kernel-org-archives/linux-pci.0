@@ -1,44 +1,45 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F1EC29B76C
-	for <linux-pci@vger.kernel.org>; Sun, 23 Aug 2026 18:44:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 06C8931F99E
+	for <linux-pci@vger.kernel.org>; Sun, 23 Aug 2026 18:44:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787510670; cv=none; b=sKogXQqz2XhbLodvdjNBxqMzPMbVefv62Yk/8jfHRAIEX34m5dUfQ4AP9g4FcFHNTQupoj6qQgITGSqFHhnbZjkbEG73Kiklv3fVziL3bVjDAcNTMRGAO1ESRRGijGwFcUjIQ1hyoKCha8eKq/O3nOLIk9A2xaFtBXKIVevzovE=
+	t=1787510686; cv=none; b=d4aL4pSexGhNyvNL+dLQrOx+op5QM/UPxqPm28kvM809xBPnz42TuNswxsiI7izN4sT+gFtY3Q+9fjL21K3HxGKN96b5lEKuRVf+teP5g14+naJIb1q6hbW/kxSzHSXODjNusWcNjSGEzOLSyXCJKNftr2B4z4i9BNx488VVGak=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787510670; c=relaxed/simple;
-	bh=NNrQ07oCQpNd15hUlA6WkdDbM8uTB24FX5U2UB7RXas=;
+	s=arc-20240116; t=1787510686; c=relaxed/simple;
+	bh=uoSpBInz96NOD1ZGUj+XqyHV7iHFSTaAsszzgYt6ZGU=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=qdA5vYsbUKuJuA6SIqCQjVj6OtcbZcP6C85u375CZlxpLnc3iRC35T0LTg6FbVjnvBHOPuHb91kg9PyXC1Umko1GW+q48yWaYnCshP0RmFMaDRBFbfkADTAueo+R5L14foB0l0hVwwfOCJTdxQaA8VckV/IoSqzokwh/IfejCgk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YCjZ51Kd; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=fv6gGPJst6qawpjNhwyK5KStHe/3AseYbccwn8YdKvdLCCEXBdPKkgY+VdXEjR+cea6c9aUixxgdUbRKv0GytcEvY32sFk3oqUSijGhDx8g5R+CE3dmV9eKCXbrQUMrHqfcImbP1OD5FG8yRidY2cEudHhEgb9b1aGdLZbj5vk0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bUCdKT8c; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YCjZ51Kd"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C762D1F000E9;
-	Sun, 23 Aug 2026 18:44:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bUCdKT8c"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 74E881F000E9;
+	Sun, 23 Aug 2026 18:44:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787510668;
-	bh=fg8KqwcWkCsr5vR5NAUjUSZd/NRBNDv5P70EgTtc/nA=;
+	s=k20260515; t=1787510684;
+	bh=uoSpBInz96NOD1ZGUj+XqyHV7iHFSTaAsszzgYt6ZGU=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=YCjZ51KdcTCMFDlUCxhczM3o5ch1Co54j16OY/X4BJ+a6SWrlFePGu5J2LaHCpwkp
-	 v+cfpRF5iIqdA7clnDR9Vq6aN/41ZwZxT6xQQze7fYGFR10ZMjeRYlR6+lxQWV8gv7
-	 vQ6ptYHnQ2CnSEuli7iIYfR3wXZCzFafLZeGlcM/mWb41C3T2r0bRAn01wCDlmCUV0
-	 bF0NLgWwDT48CP2UlAkXZM7gzpKh3y4vSwqRL4RRzCQOvS/R0XNhDzxHJhE8itXojQ
-	 c4P3Pq+cF4bdoQTbyqFNF+gHsQ8d/EH5rnLgFtsRyKHFdab5fGOJg5MBCW+0JI5XKg
-	 065CSqvxF8whg==
+	b=bUCdKT8cMKbOJY8Twr9gUpG+Ne43Oe8ktQFh90bIVp2jN5qyRbUXAvPM3nwpm1pB6
+	 o/zcOLczX3lLWv4mhjA0o4UOLr1JRKug4+yDJPfQryIsCO0i3neOdLD+ewuHZkkNTL
+	 6xsaMv3xr0ymwBDyXXEM7uwi3C69HcWI9GhmiJlbu+FZtJMGXownOkSWKZDaxa4wLb
+	 FccgWEF8bJqge+XSQelsMB4M3CPY2W0EhdIh4+/KYbA+ni0Gung6u2SLut+weGq6Lu
+	 tgMaAIvqzqh6XQdJ2aOjWPd23hJpiGpld3uMY4PNW7ZDB+ZrPePvPCQDNbZ3/pi0QM
+	 nL1jHw2KWLFkA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH RFC 1/3] misc: add edu_srpoc surprise removal POC driver
+Subject: Re: [PATCH RFC 3/3] pciehp_hpc: workaround to not wait in
+ pciehp_isr on surprise removal
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Abhin Parekadan Jose" <abhinjoses@gmail.com>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260823183458.982699-2-abhinjoses@gmail.com>
+In-Reply-To: <20260823183458.982699-4-abhinjoses@gmail.com>
 References: <cover.1752094439.git.mst@redhat.com>
  <20260823183458.982699-1-abhinjoses@gmail.com>
- <20260823183458.982699-2-abhinjoses@gmail.com>
+ <20260823183458.982699-4-abhinjoses@gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Sun, 23 Aug 2026 18:44:28 +0000
-Message-Id: <20260823184428.C762D1F000E9@smtp.kernel.org>
+Date: Sun, 23 Aug 2026 18:44:44 +0000
+Message-Id: <20260823184444.74E881F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -47,150 +48,67 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 3 potential issue(=
 s) to consider:
-- [High] The shared IRQ handler does not correctly handle the `0xffffffff` =
-register read value on surprise removal, leading to spurious `IRQ_HANDLED` =
-returns and false completions.
-- [Medium] Missing explicit `cancel_work_sync()` for `disconnect_work` in `=
-remove()` leads to a Use-After-Free of the `edu` structure due to a TOCTOU =
-race.
-- [Low] The driver references a non-existent `disconnect_work` member in `s=
-truct pci_dev` and calls non-existent PCI functions, causing immediate buil=
-d failures.
+- [High] Concurrent calls to `pci_hp_spurious_link_change()` corrupt state =
+flags, breaking hot-plug recovery logic.
+- [High] Lockless read of `pending_events` races with `atomic_xchg`, bypass=
+ing spurious link checks and causing premature disconnections.
+- [Medium] Incorrect truthiness evaluation of `pciehp_card_present()` break=
+s the disconnect workaround during severe surprise removals.
 --
 
---- Patch [1]: [PATCH RFC 1/3] misc: add edu_srpoc surprise removal POC dri=
-ver ---
-commit 1e01da4d29945cd7e9e2a5dc7d46075c3af6e84b
-Author: Abhin Parekadan Jose <abhin@poc.local>
+--- Patch [3]: [PATCH RFC 3/3] pciehp_hpc: workaround to not wait in pciehp=
+_isr on surprise removal ---
+Note: The format of this review has been altered to provide a free-form
+summary of the findings due to automated recitation restrictions. The origi=
+nal
+patch diff is not quoted inline.
 
-misc: add edu_srpoc surprise removal POC driver
+commit df7f3f7b5143de6a32373ccd864f5ca514636a79
+Author: Abhin Parekadan Jose <abhinjoses@gmail.com>
+pciehp_hpc: workaround to not wait in pciehp_isr on surprise removal
 
-This patch adds a test driver for the QEMU edu device to reproduce a surpri=
-se
-removal hang. It registers a PCI driver, requests regions, and sets up
-interrupts and a work queue.
-
-> diff --git a/drivers/misc/edu_srpoc.c b/drivers/misc/edu_srpoc.c
-> new file mode 100644
-> index 0000000000000..ce2c254e3362f
-> --- /dev/null
-> +++ b/drivers/misc/edu_srpoc.c
-[ ... ]
-> +static irqreturn_t edu_irq_handler(int irq, void *data)
-> +{
-> +	struct edu_dev *edu =3D data;
-> +	u32 status;
-> +
-> +	status =3D ioread32(edu->regs + EDU_REG_IRQ_STATUS);
-> +	if (!status)
-> +		return IRQ_NONE;
-> +
-> +	iowrite32(status, edu->regs + EDU_REG_IRQ_LOWER);
-> +
-> +	if (status & (EDU_FACT_IRQ | EDU_DELAY_IRQ))
-> +	{
+This patch adds a workqueue to handle PCIe hotplug device disconnects witho=
+ut
+waiting in the interrupt service routine. It checks the presence detect sta=
+te
+bit to differentiate between safe and surprise removals, scheduling the
+disconnect work if the card is no longer present.
 
 [Severity: High]
-When the PCI device is surprise-removed, MMIO reads (like ioread32())
-typically return all-ones (0xffffffff).=20
+Could the concurrent evaluation of pci_hp_spurious_link_change() in the new
+disconnect workqueue corrupt state flags? The function
+pci_hp_spurious_link_change() is stateful and clears the PCI_LINK_CHANGED b=
+it
+using test_and_clear_bit(). If the asynchronous workqueue destructively
+consumes this flag before the primary hot-plug IRQ thread evaluates it, won=
+'t
+the core handler erroneously tear down the device tree instead of safely
+ignoring a transient link flap?
 
-Since this is a shared interrupt handler, 0xffffffff will pass the !status
-check and the status & (EDU_FACT_IRQ | EDU_DELAY_IRQ) check.=20
-
-Will this cause the handler to spuriously complete the wait and return
-IRQ_HANDLED, stealing interrupts from other devices sharing the line?
-
-> +		pr_info("complete(&edu->irq_done)\n");
-> +		complete(&edu->irq_done);
-> +	}
-> +
-> +	return IRQ_HANDLED;
-> +}
-> +
-> +static void edu_disconnect(struct work_struct *work)
-> +{
-> +	struct pci_dev *pdev =3D container_of(work, struct pci_dev,
-> +					    disconnect_work);
-
-[Severity: Low]
-Is disconnect_work a valid member of struct pci_dev?=20
-
-It appears this member does not exist in the PCI subsystem, which would cau=
-se
-the module to fail to compile.
-
-> +	struct edu_dev *edu =3D pci_get_drvdata(pdev);
-> +
-> +	dev_info(&pdev->dev, "edu_disconnect()\n");
-> +	if (!pci_test_and_clear_disconnect_enable(pdev))
-> +		return;
-> +
-> +	if (!edu)
-> +		return;
-> +
-> +	dev_info(&pdev->dev, "disconnect_work fired =E2=80=94 unblocking remove=
-()\n");
-> +	complete(&edu->irq_done);
+[Severity: High]
+Does the lockless read of pending_events in pciehp_disconnect_work() race
+with the IRQ thread? The workqueue reads ctrl->pending_events locklessly.
+However, the threaded IRQ handler pciehp_ist() unconditionally clears these
+events using atomic_xchg(&ctrl->pending_events, 0). If the workqueue execut=
+es
+just after pciehp_ist() clears the events, it will observe a value of 0.
+Wouldn't this cause the workqueue to completely bypass the spurious link do=
+wn
+safety checks and prematurely disconnect all devices on the bus?
 
 [Severity: Medium]
-If the work function executes concurrently with edu_remove(), could it read
-the edu pointer, pass the if (!edu) check, and get preempted before calling
-complete()?=20
-
-Since edu_remove() does not synchronously cancel the work (e.g. using=20
-cancel_work_sync()), and edu is allocated with devm_kzalloc(), edu could be=
-=20
-freed by devres when remove() returns.
-
-Could this lead to a use-after-free on edu->irq_done here?
-
-> +}
-> +
-> +static int edu_probe(struct pci_dev *pdev, const struct pci_device_id *i=
-d)
-> +{
-[ ... ]
-> +	INIT_WORK(&pdev->disconnect_work, edu_disconnect);
-> +	pci_set_disconnect_work(pdev);
-
-[Severity: Low]
-Does pci_set_disconnect_work() exist in the kernel?=20
-
-Calling this undefined function will cause build errors.
-
-> +
-> +	dev_info(&pdev->dev, "edu_srpoc probed\n");
-> +	return 0;
-[ ... ]
-> +static void edu_remove(struct pci_dev *pdev)
-> +{
-> +	struct edu_dev *edu =3D pci_get_drvdata(pdev);
-> +
-> +	dev_info(&pdev->dev, "remove(): starting factorial =E2=80=94 blocking f=
-or IRQ\n");
-> +
-> +	iowrite32(EDU_STATUS_IRQFACT, edu->regs + EDU_REG_STATUS);
-> +
-> +	iowrite32(600000, edu->regs + EDU_REG_DELAYED_IRQ);
-> +
-> +	wait_for_completion(&edu->irq_done);
-> +
-> +	dev_info(&pdev->dev, "remove(): unblocked, cleaning up\n");
-> +
-> +	pci_clear_disconnect_work(pdev);
-
-[Severity: Low]
-Does pci_clear_disconnect_work() exist in the kernel?=20
-
-Calling this undefined function will cause build errors.
-
-> +	free_irq(pci_irq_vector(pdev, 0), edu);
-> +	pci_free_irq_vectors(pdev);
-> +	pci_iounmap(pdev, edu->regs);
-> +	pci_release_regions(pdev);
-> +	pci_disable_device(pdev);
-> +}
+Will the truthiness checks for pciehp_card_present() fail during an actual
+hardware surprise removal? When a device is abruptly removed, configuration
+space reads typically return 0xffff, causing pciehp_card_present() to return
+-ENODEV. Because -ENODEV is a truthy value in C, the condition (!present) in
+the interrupt handler will evaluate to false, meaning the disconnect work is
+never scheduled. Furthermore, the check inside the workqueue evaluates
+pciehp_card_present(ctrl) !=3D 0, which is true for -ENODEV, causing an ear=
+ly
+return. Does this logic inadvertently disable the workaround precisely when=
+ a
+surprise removal happens?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260823183458.9826=
-99-1-abhinjoses@gmail.com?part=3D1
+99-1-abhinjoses@gmail.com?part=3D3
