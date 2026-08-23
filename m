@@ -1,160 +1,174 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 038A83E44F0
-	for <linux-pci@vger.kernel.org>; Sat, 22 Aug 2026 15:20:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A09DD381E92
+	for <linux-pci@vger.kernel.org>; Sun, 23 Aug 2026 01:11:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787412058; cv=none; b=avHAM5SPkgVF9EOJad8Bwz7Aaf00NWGxX4rLSw6VdSRt+8QofyXsDo5EmW8WvRZi1YE6x7ChB9x3gGk3t7+U2Z0tmgeaGeS9jFOyBOC8s1DRDkjJJ81X+j/CXYKTu2p+uEIYLc8zoRfRdvtPcxqraAckq4YCFNGl9xbPOWYOU2M=
+	t=1787447514; cv=none; b=MB8ZLbOtjPNRbfiQP4YvSTQnfo6PRmSJgBFINly+tOdgGkXLWdKeygf16eBenHT9Jbp6ZA5AVAnjB6gjtG1+6UBZT4jU41wgS3G6jblg4Fwdi+RUo5/j94SdKZ8+5sLnXK750xSU7dxk9zjDHxw1pNL3nH+7QariORyFwZn/CFA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787412058; c=relaxed/simple;
-	bh=l86J01pIRURfw5t7/EkGhdj+FNWK+CgqdhCGvKiWq9Q=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=P1aKhB/oBCLOSAaEZFgW1iPASoyxBlzIH1uZ2+rvsxIOWkSmrXC8Mit9M7XD9MoJrheC3LR9RjIghRTCJZK7PSurYRCgGovlQIpBAMDqILkB9b7pmFXhnU52hb0iewEuzuEpTiOQk3UbZAERz07sIq+ZsN9r+ngrjldEEcAwtN8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=co5n6Avk; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1787447514; c=relaxed/simple;
+	bh=iUuqAf0i9Av2yS+RuRVgLyRKLXwR5X29p2We1+dWVNY=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=JwPODfRX/a3vPPxHaoQsL/SsUYWwh5/5j86qOudAQo4M72/a3tY5mGrRmILHeIlkMDaAY/d+sEh/4/t+7BZx7GzSS9j8dUftIuOOKxs1LWeuSUoiOjBTvrpxVhcRYKSVOj9uXJfyPYq+KBm+0jPCozc0YFj6GvBXIAhywlN/MKE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=UvZYQL0Q; arc=none smtp.client-ip=209.85.214.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="co5n6Avk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 69B181F00A3A;
-	Sat, 22 Aug 2026 15:20:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787412056;
-	bh=OTZFagiEqHY2fyo59Bse6R+y1K1rQJaFXFHBsfJr1I4=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=co5n6AvkDZz/jQHhhkGaZ2/Gp14QpI9ETxrCovGBrZ2Oko2dwB2YD5AREfDmAU+tw
-	 r+2xHdQB5GJ1HpJoIoDj4q770uHwiaHAzFtuSvphFqjwEzb08t2p8zWoklNdjNSqej
-	 ebMGCtMrCm4B9BROcVmMQQVPT5aaIuvUN+QBrW4+XUmsp/5A5h75N1+HP2ckcs6NlB
-	 YIK4RBrApRMHkm+kEkpYcG9B0lsDFfhZhAZoCZwNows4bBqzMUEYQ+Ya4QpLTTwLIX
-	 wLUp62bMLwgcskIxNncyMigM5JaG/95JFy6+gl+dLF6yM5SHcscyTsZaD/Kfi/01s0
-	 ISBbaKwZnZUFg==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 3/3] PCI: dra7xx: Fix device links leak when
- dra7xx_pcie_enable_phy() fails
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Felix Gu" <ustc.gu@gmail.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260822-dra7xx-v1-3-23e204d5548b@gmail.com>
-References: <20260822-dra7xx-v1-0-23e204d5548b@gmail.com>
- <20260822-dra7xx-v1-3-23e204d5548b@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Sat, 22 Aug 2026 15:20:56 +0000
-Message-Id: <20260822152056.69B181F00A3A@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UvZYQL0Q"
+Received: by mail-pl1-f182.google.com with SMTP id d9443c01a7336-2d5cad1a6baso21512445ad.3
+        for <linux-pci@vger.kernel.org>; Sat, 22 Aug 2026 18:11:45 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1787447504; x=1788052304; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=gJTfLnp0J7T2ypG1rf2UnD2iP61DjaHR8pWm0DBXUoM=;
+        b=UvZYQL0QKzKYzyywaV+rPCwN7va7jg3xhJ1Vj78JAstYe7X9TZMwZL7K7PVWeUktlr
+         Mn0u9X0PGe7CWMh53TFlO5mrpqTXv7XP+2fiWPCmtDYRMRlwee8jUaFC+uwU9qpaLUNv
+         zpMLBpoaZfxTyAhIk+mOvXBXMD76NGTrWdsW+kgY8ZyD6Yp5dXg3jPT374rUP9uVsSYE
+         NGaW0teU8qpw1qChaevaU4vFydzh9VZ0h9J2umBYsCOoATmkb/dHFpzOFsO0r7w8D41h
+         IR5UXRIWuEDrSmNSSiW6C0iOw/VtCzPsIj6N+Fw75oyTy/GDDaBYSI11rLvciXDvcAGn
+         D1dA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1787447504; x=1788052304;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=gJTfLnp0J7T2ypG1rf2UnD2iP61DjaHR8pWm0DBXUoM=;
+        b=VAkGKANz3QQsMfqxzI2qnRY+mBXRnU1d8h2y1dJbt/lpu+h3Ib/B5BIMLC3zCVsymV
+         FMBnXsKmxXI8/nVkG7kVCqH3kJe/yE4b1W/s47wRrV9fHN8HpGDe8iuedktmmbVN23/o
+         CyrYur/FG2J/mh5vXDJPNIQnGuaJyuey1TMjtwncpFMvfjknGirIz061lNtxMhDN98gA
+         295oNcuizEbwIzbkx/kN1W7sZIFfZNO6eHrt52vwZl+mNKetKhoYiQO8fUEfAYDWco2V
+         cVw3IdgjMP97L8Segq8/z/8Tdg8l0LoaBOQo8vZh57lGD/bvfGbG0tB8zpQ7iCe5qTe2
+         wdgg==
+X-Forwarded-Encrypted: i=1; AHgh+Ro5wVTN74aBz7JtjVa8ben/6kKRmpBkG/QEr1g5TkbL1alIlMiB3PYcS4NPmIOvkNWPAvR6ZNiZYRw=@vger.kernel.org
+X-Gm-Message-State: AFuF++lftoxyEi+3tcOe7QOqAVEds0J6x4yPOFFskMop9HYlaO6JL5SQ
+	c+ZmW52qK/lT82/rFB/M7RT/vXvGPgcau1Xph4xqdE29KryjwJoisFGN
+X-Gm-Gg: AR+sD12NBdbnA9nUXtF0i+6vzjv8GLX/1fcw6Evs7vnOeP7LuhyrwpzbwHSaUNC/8MK
+	oFpbjmeMGfyeT/Kh1rezkDZA1SXJT6JqEj+7BnQ/tjUsXco7AJYpsMO/zV/Z1ExOm9+zz7YDiHT
+	QcmuG/vUDF4QC1yDT2XxE00EfLjSAmQ2vABv9RY63PQoZFpXkty4P5SejIYMdQ6qGs29gm5GM/J
+	+H7S27sHXKDuedLEs89+M6XubKtiTMUToL1+EmypOQD/HSABXgV9cK3QaGk3IaOFN7wYAgsAQnr
+	5wHXnQpUsXFfQqUok23lbKShQqDEZdXG6I8yUS4FT43GfwD210bbr3p1F5GF9rZ8HFT8zygbiZU
+	YgDPFMs496VUybKmB0uQAN7MdNmyl8fNcPwKhQ6ppeC0B493chsVBeB5oXhaCnUAr48YOJ8IRrI
+	WrZN1kyZxq7OX6zPVcUur02I3ABnHd0YbT5D7CPkA/AVV62hFU4huzP1cL8jpoRIAOZ2TU9kIIh
+	2mZ+yWQTAQellh1dyjud/ngtpeLYA2C3ophD5xl2cSDkNORWc2V
+X-Received: by 2002:a17:90b:558b:b0:37f:fdc8:71b4 with SMTP id 98e67ed59e1d1-395c33371a9mr31055560a91.2.1787447504358;
+        Sat, 22 Aug 2026 18:11:44 -0700 (PDT)
+Received: from hanzj-mi.. (ec2-99-79-140-187.ca-central-1.compute.amazonaws.com. [99.79.140.187])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-395e49b406bsm4272706a91.8.2026.08.22.18.11.32
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 22 Aug 2026 18:11:44 -0700 (PDT)
+From: hanzhijian <hanzhijian1991@gmail.com>
+To: Richard Zhu <hongxing.zhu@nxp.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Rob Herring <robh@kernel.org>,
+	Frank Li <Frank.Li@nxp.com>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	kernel@pengutronix.de,
+	Fabio Estevam <festevam@gmail.com>,
+	linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	imx@lists.linux.dev,
+	linux-kernel@vger.kernel.org,
+	hanzhijian <hanzhijian1991@gmail.com>,
+	sashiko-bot@kernel.org
+Subject: [PATCH] PCI: imx6: fix power domain leak on probe failure
+Date: Sun, 23 Aug 2026 09:11:25 +0800
+Message-ID: <20260823011125.2876504-1-hanzhijian1991@gmail.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
-s) to consider:
+imx_pcie_attach_pd() attaches the "pcie" and "pcie_phy" power domains
+and creates device links to them, but nothing detaches them when
+imx_pcie_probe() subsequently fails or defers.  This leaks the power
+domains and device links on every probe failure or deferral.
 
-Pre-existing issues:
-- [High] Missing `.remove` callback in platform driver leads to memory and =
-state leaks on module unload.
-- [High] Chained IRQ handler and IRQ domain are not cleaned up on probe fai=
-lure, causing memory leaks and a Use-After-Free.
-- [Medium] Improper asynchronous runtime PM cleanup in probe error paths le=
-aks the active power state.
---
+Save the device links and add imx_pcie_detach_pd() to release them,
+calling it from the probe error paths.
 
---- Patch [3]: [PATCH 3/3] PCI: dra7xx: Fix device links leak when dra7xx_p=
-cie_enable_phy() fails ---
-commit 10c75b44424d11b46ba7f7d99b796469558a6366
-Author: Felix Gu <ustc.gu@gmail.com>
+Reported-by: sashiko-bot@kernel.org
+Link: https://lore.kernel.org/all/20260822013640.182C01F000E9@smtp.kernel.org/
+Signed-off-by: hanzhijian <hanzhijian1991@gmail.com>
+---
+ drivers/pci/controller/dwc/pci-imx6.c | 23 ++++++++++++++++++++++-
+ 1 file changed, 22 insertions(+), 1 deletion(-)
 
-PCI: dra7xx: Fix device links leak when dra7xx_pcie_enable_phy() fails
+diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
+index 39790e66b..4df548679 100644
+--- a/drivers/pci/controller/dwc/pci-imx6.c
++++ b/drivers/pci/controller/dwc/pci-imx6.c
+@@ -182,6 +182,9 @@ struct imx_pcie {
+ 	struct device		*pd_pcie;
+ 	/* power domain for pcie phy */
+ 	struct device		*pd_pcie_phy;
++	/* device links for the power domains */
++	struct device_link	*pd_link;
++	struct device_link	*pd_phy_link;
+ 	struct phy		*phy;
+ 	const struct imx_pcie_drvdata *drvdata;
+ 
+@@ -662,6 +665,7 @@ static int imx_pcie_attach_pd(struct device *dev)
+ 		dev_err(dev, "Failed to add device_link to pcie pd\n");
+ 		return -EINVAL;
+ 	}
++	imx_pcie->pd_link = link;
+ 
+ 	imx_pcie->pd_pcie_phy = dev_pm_domain_attach_by_name(dev, "pcie_phy");
+ 	if (IS_ERR(imx_pcie->pd_pcie_phy))
+@@ -675,10 +679,24 @@ static int imx_pcie_attach_pd(struct device *dev)
+ 		dev_err(dev, "Failed to add device_link to pcie_phy pd\n");
+ 		return -EINVAL;
+ 	}
++	imx_pcie->pd_phy_link = link;
+ 
+ 	return 0;
+ }
+ 
++static void imx_pcie_detach_pd(struct imx_pcie *imx_pcie)
++{
++	if (imx_pcie->pd_link)
++		device_link_del(imx_pcie->pd_link);
++	if (imx_pcie->pd_pcie)
++		dev_pm_domain_detach(imx_pcie->pd_pcie, true);
++
++	if (imx_pcie->pd_phy_link)
++		device_link_del(imx_pcie->pd_phy_link);
++	if (imx_pcie->pd_pcie_phy)
++		dev_pm_domain_detach(imx_pcie->pd_pcie_phy, true);
++}
++
+ static int imx6q_pcie_enable_ref_clk(struct imx_pcie *imx_pcie, bool enable)
+ {
+ 	if (enable)
+@@ -1956,8 +1974,10 @@ static int imx_pcie_probe(struct platform_device *pdev)
+ 		return ret;
+ 
+ 	ret = pci_pwrctrl_create_devices(dev);
+-	if (ret)
++	if (ret) {
++		imx_pcie_detach_pd(imx_pcie);
+ 		return dev_err_probe(dev, ret, "failed to create pwrctrl devices\n");
++	}
+ 
+ 	pci->use_parent_dt_ranges = true;
+ 	if (imx_pcie->drvdata->mode == DW_PCIE_EP_TYPE) {
+@@ -1999,6 +2019,7 @@ static int imx_pcie_probe(struct platform_device *pdev)
+ 	return 0;
+ 
+ err_pwrctrl_destroy:
++	imx_pcie_detach_pd(imx_pcie);
+ 	if (ret != -EPROBE_DEFER)
+ 		pci_pwrctrl_destroy_devices(dev);
+ 	return ret;
+-- 
+2.43.0
 
-When dra7xx_pcie_enable_phy() fails, the code returned immediately and left
-the already created device links behind. This commit fixes the issue by
-jumping to the err_link cleanup path instead.
-
-> diff --git a/drivers/pci/controller/dwc/pci-dra7xx.c b/drivers/pci/contro=
-ller/dwc/pci-dra7xx.c
-> index bf32b14436f97..5bd9d1df80ad3 100644
-> --- a/drivers/pci/controller/dwc/pci-dra7xx.c
-> +++ b/drivers/pci/controller/dwc/pci-dra7xx.c
-> @@ -766,7 +766,7 @@ static int dra7xx_pcie_probe(struct platform_device *=
-pdev)
->  	ret =3D dra7xx_pcie_enable_phy(dra7xx);
->  	if (ret) {
->  		dev_err(dev, "failed to enable phy\n");
-> -		return ret;
-> +		goto err_link;
->  	}
-> =20
->  	platform_set_drvdata(pdev, dra7xx);
-
-[Severity: High]
-This is a pre-existing issue, but does the lack of a remove callback in the
-platform driver lead to memory and state leaks on module unload?
-
-The platform driver definition lacks a remove callback to pair with manual
-state allocations in probe:
-
-drivers/pci/controller/dwc/pci-dra7xx.c:
-static struct platform_driver dra7xx_pcie_driver =3D {
-	.probe =3D dra7xx_pcie_probe,
-	...
-
-If the module is unloaded, could all manual allocations and device states
-(such as stateless device links, phy power state, and dwc core state) be
-leaked since devres ignores manual resource acquisitions?
-
-
-[Severity: Medium]
-This isn't a bug introduced by this patch, but is the asynchronous runtime =
-pm
-cleanup in probe error paths handled correctly?
-
-If probe fails after successfully calling pm_runtime_get_sync(), the error
-path calls pm_runtime_put() followed immediately by pm_runtime_disable():
-
-drivers/pci/controller/dwc/pci-dra7xx.c:dra7xx_pcie_probe() {
-    ...
-err_get_sync:
-	pm_runtime_put(dev);
-	pm_runtime_disable(dev);
-    ...
-}
-
-pm_runtime_put() schedules an asynchronous suspend request, but the immedia=
-te
-call to pm_runtime_disable() cancels any pending asynchronous requests. Will
-this leave the device and its power domains trapped in the resumed state?
-Should pm_runtime_put_sync() be used here instead?
-
-
-[Severity: High]
-This is a pre-existing issue, but are the chained irq handler and irq domain
-properly cleaned up on probe failure?
-
-dra7xx_pcie_init_irq_domain() installs the chained handler with pp as data:
-
-drivers/pci/controller/dwc/pci-dra7xx.c:dra7xx_pcie_init_irq_domain() {
-    ...
-	irq_set_chained_handler_and_data(pp->irq, dra7xx_pcie_msi_irq_handler,
-					 pp);
-    ...
-}
-
-If dw_pcie_host_init() subsequently fails:
-
-drivers/pci/controller/dwc/pci-dra7xx.c:dra7xx_add_pcie_port() {
-    ...
-	ret =3D dw_pcie_host_init(pp);
-	if (ret) {
-		dev_err(dev, "failed to initialize host\n");
-		return ret;
-	}
-    ...
-}
-
-The probe error path jumps to err_gpio, bypassing any cleanup for the
-chained handler or irq domain. Devres will then free the pci structure
-containing pp. If a hardware interrupt fires after this probe failure, could
-this result in a use-after-free when the interrupt executes
-dra7xx_pcie_msi_irq_handler with the freed pp pointer?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260822-dra7xx-v1-=
-0-23e204d5548b@gmail.com?part=3D3
