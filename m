@@ -1,181 +1,178 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mail-24421.protonmail.ch (mail-24421.protonmail.ch [109.224.244.21])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C94711A23A6;
-	Sun, 23 Aug 2026 01:24:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AD313377AB6;
+	Sun, 23 Aug 2026 02:14:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=109.224.244.21
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787448271; cv=none; b=L6nRj6OYcnXbaaQl6jQ3NfzxQklBHgKyQtItlLiIVt9KjvpVS9t0SBfVqEb9tDcBzZNps0B/ZkmOLZyUYEMdnpO2T/2/hwJ5e4NX4qz9Z75uZiDljGtZvailrtFoKkIGMwRM/FG37T1Zma09PAPAXSED5Q5nxVf8hXFLcfOAZrA=
+	t=1787451283; cv=none; b=dGooxWpkjFC3PR1ScwEamyNvDxPms26Vxb3A8ERubA7VYD6Kf4xYR/WMlc2kQvh+ftvNRdTy/pNCV+kxNPlIFkojcoafXn5IMW03BO51ZwgTu6h+cdrO1LKO59K7e/U6IH1x/7XqJAoSkOrXN8u/rpozv0D0v4yNq8LSAYWMwA0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787448271; c=relaxed/simple;
-	bh=U6Z+vW/iw5RP9fz1uqyXryM+kUyvKCJG7RFw47bVFGw=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=bz+Pb34U/gEqMHUqqM3q63Zbom6v76E50MTPxenxxDOfkvaGxO+4dXJrJZOe8gnuurF+ueDVYabm5y63AnriPVlWo533/Qr4HnSqTD6O1Dgj5kE7x4bmEB/igBgCoaj1/2DZBVCPuoYYfWNn2a4VcFa8mOoSsJexO23BP7KLrSs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Mmd5Gvbz; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1787451283; c=relaxed/simple;
+	bh=DRkxTvZbI1EJfie9pxFcCEipG+No0t5u6lL906w7lu8=;
+	h=Date:To:From:Cc:Subject:Message-ID:MIME-Version:Content-Type; b=siW3v6mSD5KkgFRDpk9VGAmKc+s6aM9PI2Bmr8rDICjPBuXcO+qL43xZatOZcjYsVS4HUohjmSnMS3t/n5qZnAhpuJfaE4cYXN3r8VlOJujLg/C9R/c+jbvMlyHlrK3Z/CEwIAB8FZSkHxfvxa595D5/w6UVm5sH7DPdHm8jjUQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=httpd.dev; spf=pass smtp.mailfrom=httpd.dev; dkim=pass (2048-bit key) header.d=httpd.dev header.i=@httpd.dev header.b=DvDdywB4; arc=none smtp.client-ip=109.224.244.21
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=httpd.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=httpd.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Mmd5Gvbz"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2B8541F000E9;
-	Sun, 23 Aug 2026 01:24:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787448269;
-	bh=7x5/lGutLmwc6PS3x6Ag1vy751/Tuavykc+MKOSCE9g=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Mmd5GvbzCNzf+ZovqdhVHM9Hbp8XLAiokNfdKEbDbk244kCZMwVPc3D4bbK04emza
-	 mqPjoFP4HDKvASyReRw5my1zSnP0SA+7Xn8nxusBLvIFDjmpNbUurp1EcTtXTj3nfP
-	 5cGJVSfN7d0IGeXOSQacXf4N+QhSyqpMtqPF5wxrROGHo+1FexerKiSEkfEosV/jJ/
-	 oue6mxrKRPvHo7PJlP9q8vRw4B13VB2EzerSEB9CyNWnXagM2tSGL3dCXsq9MRmxjF
-	 9N+zc+deJwHjZu3aZusJPEP28mYB+PBAvRquv2q9orr3vU2nDB70yLeBExq/9OzVKB
-	 VkvH49QLqzVBQ==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] PCI: imx6: fix power domain leak on probe failure
-Reply-To: sashiko-reviews@lists.linux.dev
-To: hanzhijian <hanzhijian1991@gmail.com>
-Cc: linux-pci@vger.kernel.org, imx@lists.linux.dev, Frank.Li@kernel.org
-In-Reply-To: <20260823011125.2876504-1-hanzhijian1991@gmail.com>
-References: <20260823011125.2876504-1-hanzhijian1991@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Sun, 23 Aug 2026 01:24:28 +0000
-Message-Id: <20260823012429.2B8541F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=httpd.dev header.i=@httpd.dev header.b="DvDdywB4"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=httpd.dev;
+	s=protonmail2; t=1787451271; x=1787710471;
+	bh=4J6bCxPshWp7f3qp56C2WcD7YMKy40HDmmnsQrLHimM=;
+	h=Date:To:From:Cc:Subject:Message-ID:Feedback-ID:From:To:Cc:Date:
+	 Subject:Reply-To:Feedback-ID:Message-ID:BIMI-Selector;
+	b=DvDdywB4rI3wC3O16hurybpVl9ACdYtsRKa6vbDts9EngNAE7yR8SfsuCgQycby+7
+	 UObVznkDmM+gf4zhbvilw5lRAh1KVnUHzwF02iH6MACFV7kTriL6G/bFHerS4/X4oC
+	 eRJyBc0ZaL7vAwrNprs2gXnYKr//jp6WkVHlxkQaCVLClGNAZ2HsFanCNcTFweo3ZB
+	 OY8LlpTrzlKAXwjKblVBRg0gqABoqA3T9kdVCpWp32bac0FE/rujrSJE/k0r0S6cwf
+	 JEQ4VLIo1R5qcBMSkKMoHKgQxOTPvOnNb2Vjq4QADzGlgxnmCOWuWN2Q0ZtOl2u1Kp
+	 la+guzjMT6fkA==
+Date: Sun, 23 Aug 2026 02:14:25 +0000
+To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+From: Angel J <iamanaws@httpd.dev>
+Cc: "regressions@lists.linux.dev" <regressions@lists.linux.dev>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-rpi-kernel@lists.infradead.org" <linux-rpi-kernel@lists.infradead.org>, "helgaas@kernel.org" <helgaas@kernel.org>, "robh@kernel.org" <robh@kernel.org>, "andrea.porta@suse.com" <andrea.porta@suse.com>, "florian.fainelli@broadcom.com" <florian.fainelli@broadcom.com>
+Subject: [REGRESSION] PCI: Dynamic OF node creation hangs on invalid bridge configuration
+Message-ID: <GXe6anuewkS4bLNwca3cYOmUxN9csc0TxLYGSBc1qNRmfrmvFlcmD62wEM23TxfzfuXAv4P3yvUv7pyraleARrL1Na-aN8w-t9uc1Igu8DA=@httpd.dev>
+Feedback-ID: 163474212:user:proton
+X-Pm-Message-ID: 31142567ec075a3e2598ab04adff317de0e77832
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: multipart/signed; protocol="application/pgp-signature"; micalg=pgp-sha512; boundary="------0ef466dcdb1e40e51586a73753b73daa3d57415976dd54a41ab1ba279b082e9e"; charset=utf-8
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
-s) to consider:
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--------0ef466dcdb1e40e51586a73753b73daa3d57415976dd54a41ab1ba279b082e9e
+Content-Type: multipart/mixed;boundary=---------------------5816d7253a565b3528da584c08321c23
 
-New issues:
-- [High] LIFO order violations during error cleanup cause premature power d=
-omain detachment.
+-----------------------5816d7253a565b3528da584c08321c23
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain;charset=utf-8
 
-Pre-existing issues:
-- [High] Resource leak of power domain and device link on partial attach fa=
-ilure.
-- [High] Probe error path bypasses cleanup logic, leaking power domains and=
- pwrctrl devices.
---
+Hello,
 
---- Patch [1]: [PATCH] PCI: imx6: fix power domain leak on probe failure ---
-commit 887e76ee860dcc87d2150e367092c569b216fc14
-Author: hanzhijian <hanzhijian1991@gmail.com>
+This regression was introduced in v6.17-rc1 and remains in the dynamic
+PCI OF node code. Linux 6.18 fails very early during boot on my Dell XPS
+8940 when CONFIG_PCI_DYNAMIC_OF_NODES=3Dy. The display goes black before
+any useful console or pstore output appears, and the machine remains
+hung.
 
-PCI: imx6: fix power domain leak on probe failure
+Disabling CONFIG_PCI_DYNAMIC_OF_NODES makes the same kernel boot normally.
+Linux v6.19-rc5 also boots because the RP1 driver stopped selecting that
+option, not because the dynamic PCI OF node code changed.
 
-This commit fixes a power domain leak in the i.MX6 PCIe driver by
-introducing imx_pcie_detach_pd() and calling it in probe error paths.
-It also saves the device links to properly release them during cleanup.
+Hardware:
 
-Link: https://lore.kernel.org/all/20260822013640.182C01F000E9@smtp.kernel.o=
-rg/
+  System: Dell XPS 8940, board 0K3CM7, BIOS 2.27.1 (2025-04-03)
+  CPU: Intel Core i7-11700 (Rocket Lake)
+  Triggering device: 0000:00:00.0, Intel 8086:4c43
+  Firmware boot: UEFI, ACPI-based x86_64
 
-> diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controll=
-er/dwc/pci-imx6.c
-> index 39790e66b98dc..4df548679464c 100644
-> --- a/drivers/pci/controller/dwc/pci-imx6.c
-> +++ b/drivers/pci/controller/dwc/pci-imx6.c
+Test results:
 
-[ ... ]
+  Linux 6.12.103: good
+  Linux v6.17-rc1: bad
+  Linux 6.18.44, CONFIG_PCI_DYNAMIC_OF_NODES=3Dy: bad
+  Linux 6.18.44, CONFIG_PCI_DYNAMIC_OF_NODES=3Dn: good
+  Linux 6.18.44, CONFIG_PCI_DYNAMIC_OF_NODES=3Dy, skip invalid bridge: goo=
+d
+  Linux v6.19-rc4: bad
+  Linux v6.19-rc5: good
+  Linux 4621c338d33f: bad
+  Linux e55feea3a03a: good
 
-> @@ -662,6 +665,7 @@ static int imx_pcie_attach_pd(struct device *dev)
->  		dev_err(dev, "Failed to add device_link to pcie pd\n");
->  		return -EINVAL;
->  	}
-> +	imx_pcie->pd_link =3D link;
-> =20
->  	imx_pcie->pd_pcie_phy =3D dev_pm_domain_attach_by_name(dev, "pcie_phy");
->  	if (IS_ERR(imx_pcie->pd_pcie_phy))
->  		return PTR_ERR(imx_pcie->pd_pcie_phy);
+The first-parent boundary between the last two tests is:
 
-[Severity: High]
-This is a pre-existing issue, but if dev_pm_domain_attach_by_name() fails
-here, does it leak the previously attached "pcie" power domain and its
-device link?
+  e55feea3a03a ("Merge tag 'soc-fixes-6.19' ...")
 
-Because the function returns directly without cleaning up the earlier
-attach, these resources might be permanently leaked on every probe deferral.
+That merge contains ce26f588c831 ("misc: rp1: drop overlay support"), whic=
+h
+removes:
 
-Furthermore, the function leaves an ERR_PTR in imx_pcie->pd_pcie_phy,
-which would cause a crash if a cleanup path ever attempted to use
-imx_pcie_detach_pd() to handle this partial failure.
+  select PCI_DYNAMIC_OF_NODES
 
-> @@ -675,10 +679,24 @@ static int imx_pcie_attach_pd(struct device *dev)
->  		dev_err(dev, "Failed to add device_link to pcie_phy pd\n");
->  		return -EINVAL;
->  	}
-> +	imx_pcie->pd_phy_link =3D link;
-> =20
->  	return 0;
->  }
-> =20
-> +static void imx_pcie_detach_pd(struct imx_pcie *imx_pcie)
-> +{
-> +	if (imx_pcie->pd_link)
-> +		device_link_del(imx_pcie->pd_link);
-> +	if (imx_pcie->pd_pcie)
-> +		dev_pm_domain_detach(imx_pcie->pd_pcie, true);
-> +
-> +	if (imx_pcie->pd_phy_link)
-> +		device_link_del(imx_pcie->pd_phy_link);
-> +	if (imx_pcie->pd_pcie_phy)
-> +		dev_pm_domain_detach(imx_pcie->pd_pcie_phy, true);
-> +}
+from MISC_RP1. The generated configurations differed only by:
 
-[Severity: High]
-Does imx_pcie_detach_pd() detach the power domains in the wrong order?
+  -CONFIG_PCI_DYNAMIC_OF_NODES=3Dy
+  +# CONFIG_PCI_DYNAMIC_OF_NODES is not set
 
-The power domains are attached in FIFO order ("pcie", then "pcie_phy") in
-imx_pcie_attach_pd(). However, they are also detached in FIFO order here.
+CONFIG_MISC_RP1=3Dm in both. The known-bad 4621c338d33f and Linux 6.18.44
+both boot after disabling PCI_DYNAMIC_OF_NODES (and MISC_RP1, whose Kconfi=
+g
+select otherwise forces it on).
 
-Should the "pcie_phy" domain and link be detached before the "pcie" domain
-to properly follow reverse initialization (LIFO) order?
+There is no RP1 device in this machine, and its driver does not probe.
+MISC_RP1 affects this x86 system only because its Kconfig select enables
+PCI_DYNAMIC_OF_NODES globally.
 
-[ ... ]
+I narrowed the hang to dynamic OF node creation for 0000:00:00.0
+(8086:4c43), the Intel Rocket Lake-S integrated memory controller. On
+this machine it reports PCI class 0604 and header type 1, but it is bound
+to icl_uncore and is not a usable forwarding bridge:
 
-> @@ -1999,6 +2019,7 @@ static int imx_pcie_probe(struct platform_device *p=
-dev)
->  	return 0;
-> =20
->  err_pwrctrl_destroy:
+  Bus: primary=3Dff, secondary=3Dff, subordinate=3Dff
+  I/O and memory bridge windows: invalid/all ones
+  kernel: bridge configuration invalid ([bus ff-ff]), reconfiguring
 
-[Severity: High]
-This is a pre-existing issue, but does the probe error path for PM runtime
-enablement bypass this cleanup logic?
+A minimal dynamic node for this device boots. Adding only
+device_type=3D"pci" makes it hang. Full PCI dynamic OF node generation als=
+o
+boots when only 0000:00:00.0 is skipped.
 
-Looking at imx_pcie_probe() earlier in the function:
+I also tested a generic guard in of_pci_make_dev_node(). It reads
+PCI_PRIMARY_BUS and skips node creation if the primary bus does not match
+pdev->bus->number, the secondary bus is not greater than the primary bus,
+or the secondary bus is greater than the subordinate bus. Linux 6.18.44
+boots with CONFIG_PCI_DYNAMIC_OF_NODES=3Dy and logs:
 
-drivers/pci/controller/dwc/pci-imx6.c:imx_pcie_probe() {
-    ...
-	if (imx_pcie->drvdata->flags & IMX_PCIE_FLAG_PM_RUNTIME) {
-		pm_runtime_no_callbacks(dev);
-		ret =3D devm_pm_runtime_set_active_enabled(dev);
-		if (ret < 0)
-			return ret;
-	}
-    ...
-}
+  pci 0000:00:00.0: skipping dynamic OF node for invalid bridge
 
-If devm_pm_runtime_set_active_enabled() fails, it returns directly. Because
-it completely bypasses the err_pwrctrl_destroy label, doesn't it permanently
-leak the power domains and pwrctrl devices initialized earlier in the probe?
+The regression was introduced by 49d63971f963 in v6.17-rc1. Commit
+ce26f588c831 made v6.19-rc5 boot by removing MISC_RP1's select of
+PCI_DYNAMIC_OF_NODES. That avoids the failing path in the tested
+configuration but does not change of_pci_make_dev_node().
 
-> +	imx_pcie_detach_pd(imx_pcie);
->  	if (ret !=3D -EPROBE_DEFER)
->  		pci_pwrctrl_destroy_devices(dev);
->  	return ret;
+I do not have a log from the failed boots. No output appeared with
+earlyprintk=3Defi,keep, keep_bootcon, ignore_loglevel, loglevel=3D8,
+initcall_debug, and EFI pstore enabled. Blacklisting both GPU drivers and
+disabling the Intel IOMMU did not make the bad kernel boot.
 
-[Severity: High]
-Does detaching the power domains before destroying the pwrctrl devices
-violate LIFO cleanup order?
+Should of_pci_make_dev_node() reject devices with invalid bridge bus
+configuration, or should 8086:4c43 use a device-specific quirk? I can
+prepare and test a patch for either approach. For Linux 6.18 stable,
+would that fix be preferable to backporting ce26f588c831 and its
+dependencies?
 
-If a failure occurs after pci_pwrctrl_create_devices() succeeds, this calls
-imx_pcie_detach_pd() to cut power before pci_pwrctrl_destroy_devices() has
-a chance to unregister the devices.=20
+#regzbot introduced: 49d63971f963
+#regzbot title: PCI_DYNAMIC_OF_NODES early boot hang on ACPI x86
 
-Could this cause the driver remove() callbacks to attempt to access
-unpowered PCI registers and trigger a hardware hang or kernel panic?
+Thanks,
+Angel J
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260823011125.2876=
-504-1-hanzhijian1991@gmail.com?part=3D1
+
+
+
+
+
+-----------------------5816d7253a565b3528da584c08321c23--
+
+--------0ef466dcdb1e40e51586a73753b73daa3d57415976dd54a41ab1ba279b082e9e
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: ProtonMail
+
+wrsEARYKAG0FgmqKV28JEBoBbwppzUxnRRQAAAAAABwAIHNhbHRAbm90YXRp
+b25zLm9wZW5wZ3Bqcy5vcmdLuaAoGKL92QTzbI2Uy7jw4k6tIc99AdBp6S6r
+YQoA3BYhBEAFf9htFyVnqZzmVhoBbwppzUxnAADIqQD/fnLk8GJzel74P3PZ
+NqUm7u5JPB8p1goB/ebqiGCVVakA/jt6U8pQNghHs/SsdfY/fVJqNl9WXIEV
+5zaRuPsjk5cK
+=Lb99
+-----END PGP SIGNATURE-----
+
+
+--------0ef466dcdb1e40e51586a73753b73daa3d57415976dd54a41ab1ba279b082e9e--
+
