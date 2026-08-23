@@ -1,215 +1,224 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f182.google.com (mail-pg1-f182.google.com [209.85.215.182])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF09018A93F;
-	Sun, 23 Aug 2026 04:21:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A0DC2DBF75
+	for <linux-pci@vger.kernel.org>; Sun, 23 Aug 2026 07:11:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787458876; cv=none; b=hHQAKd9qWw+fsaOuGeN2M4fNkd6DqF01TItpMTMNR4EOMOanPPeVR+QCb0m0V11nHddEU1lK/ivnpB6qDkNkoe6k6SaExid0PsaqsogUyYbOInI2fgdQUT5JJhFTuD8WSw3r0aVjQFuSItjauplFNqMoYSKV+YpruOVklOS6+ww=
+	t=1787469110; cv=none; b=tKA0QfEioWA1O4av6jIGUaRQ8VWtr9ESyUJ7+Y6LhaTv61CVs/GGHgzLbu0iDkLGVFOJaROoRDCH2Gn/i72v+mI0zSuciM5c9o++a5Dqi1ZD8/k/FYVizKFhHM+3BD93dsYFNMA9RUyMTdg6OhYsLJDfXc+rNjXTqeda0BvZliw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787458876; c=relaxed/simple;
-	bh=6Uj3LV3Gilf572ZZK65PCvmv760bN2FTyCt96zenQGU=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=h1N07W5mG4iwrqSR5d5uqDyETepEqEJbewwRkTw5m0UOwblM/25KD+/BB/whbR20nxYDNsW28NtGtxnBllf6PGNFADe4lVvlc14Am5C3hLMWLrsCTxDOO1mMo6fXoL4pjqxmbtkedgKKDIYI+K/ewtwyZp1NOCMmDwDIumBYJds=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Xp1cGxhg; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1787469110; c=relaxed/simple;
+	bh=5E1s7lUtKaiuCp8Wtr0jt8WzTyQeUUM0dkL2I3Jsxhk=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=PF+e4ky+mfioO4nRlPwK/YtkliwrOODS1HMfQeParonsPpT6vBeb3JVj0/v/Ev+wXn6pg0hU3Hzu/hxCFh28ATvXWKA758DE8/tfdaeffy60pVxdG3t2DciCYlvaI7Wb+MfCziOYbDh9m7zkVKRnsAIAZX8hWC/5QtDx+BPRhUw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=OC4C0PJY; arc=none smtp.client-ip=209.85.215.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Xp1cGxhg"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 13BC81F000E9;
-	Sun, 23 Aug 2026 04:21:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787458874;
-	bh=mucUJrqBP9mxXEIz0YU5NBH0jb0zo/XjQQK82TYJGes=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Xp1cGxhgPGudAPW4OvyQ5zPtPtxSCoZNqd3f+u20VRIhz2aPxQgFdd8JRWTo4+ISo
-	 brUxZh31AoMAbC3aJNfOtqMDHeUyh1M+gJj0+IcQqByQeaoP9v0PmuaSSaU0kK/gz+
-	 AqZlTvG+/ifKk9nGxYmBFlCJBuxETKqsqowViHSKWjPxkemDGv/7/F2ah952Kj/mxZ
-	 MGcvReFZnqfX5KzyNDqykcDi5SBqS1AwUdiNndQEbxpgAr4klqlTTgXl6A8Nnhknrk
-	 M1U5j5JIymfostNN3eelaNuYtATvsB0mbMVvpk0pQf/ydXG7gDK6UamM7hO80/e19u
-	 LYHqWEMrZ9h2A==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v7 2/2] PCI: amd-mdb: Add CPM6 host controller support
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Sai Krishna Musham" <sai.krishna.musham@amd.com>
-Cc: linux-pci@vger.kernel.org, conor+dt@kernel.org, devicetree@vger.kernel.org, robh@kernel.org
-In-Reply-To: <20260823040715.204096-3-sai.krishna.musham@amd.com>
-References: <20260823040715.204096-1-sai.krishna.musham@amd.com>
- <20260823040715.204096-3-sai.krishna.musham@amd.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Sun, 23 Aug 2026 04:21:13 +0000
-Message-Id: <20260823042114.13BC81F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="OC4C0PJY"
+Received: by mail-pg1-f182.google.com with SMTP id 41be03b00d2f7-cb5b8572b70so3007344a12.2
+        for <linux-pci@vger.kernel.org>; Sun, 23 Aug 2026 00:11:49 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1787469109; x=1788073909; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=PpvEmSfetcKu58vemKhIVNLIz2Kr8KQYzNtwaCQIwdM=;
+        b=OC4C0PJYbQ7N9N0poC89tQSKGu44jFW2bLTSEIwMsp68sJ2UOt21xZHQtEZPHBGaLW
+         YWKwetXdyOPoQuR8JrQxKgI97JdeEFdUnpGqSwN/YyhdLmwcPhiUus0yIxM62tznygQd
+         DBCeY6PrKVOXNfVdUuySfwZqoSyUwWTud4XDCtdDS6mEkCWQmOcL5IEV7CKZyStiwwky
+         at7M5R1sTp0JN5aqmmY7noJn4GvSICB3nigM2Kcj/rgDN3ZqATjespBFwsqiw3xnr4L7
+         /kHELfv4iINey474ufPQLjkgCMzr3PvWIawtjexzh2wXIJgIAHxq7r71TxoOMWuzAXBv
+         zYrA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1787469109; x=1788073909;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=PpvEmSfetcKu58vemKhIVNLIz2Kr8KQYzNtwaCQIwdM=;
+        b=G5sbclt7mVoAuU6FXEyV9+Z8M6N/APr/zNV5xOHPTRI77pN7zpYKBkgYM5VwKTCcdn
+         aR7h7DNitOgBBlC1RuoLimurxGrJEGN2XU8X+IGd3i3IkY+KeB27bm7gNCWoy06IHH7M
+         9k15gyNnn6K3WU4zcCN/XuKhN64PGrKrc6eG1UXFpEA/HITa9LOpG8A+xiUNozY5udLV
+         Xj7bQBK8v6BNE2SeJG2ApvICOjj82+WDTiIYveMvFXORWKkFVBzfNh/T1qBnJt/QvVcN
+         cTjvRC0VkjVHlt8kXRADBW0oG/7wYEjhPgrcgSow7XWBut2FwTrfDqJHqCob5Ihos3y8
+         c+lQ==
+X-Forwarded-Encrypted: i=1; AHgh+RrpHxgrYfFkMjp+lZaV2tyGdw3GmZO22kZmUlldgckMGBnkGsKdkHe9PSLKo/AysO0zOBsuBVj1UBo=@vger.kernel.org
+X-Gm-Message-State: AFuF++mhKPIwcaKO7EtxZzAWIuy8kZvD8JbbItLr+a7p8JAASC6q6cUj
+	0OQEC1awfmA3OPICyfuFDIVHG7DY6C/3r4JDw3KPUkKOG6oQyfV6pkIy
+X-Gm-Gg: AR+sD129VlEJs7Mm6W8+epFKo+uOPyy6vHKN7zbZ0R96J+K9eXkrWx5JSEbAcW7oddD
+	u/Y2z3xyCQ91b1vtnOz/eWFfC9RYkOYCceNGljksDFbW7QT70Novo8sga9VjvfbWmA99D4rHNtq
+	KoVtlCPub59wPF2MFHn9yeEBuPsPs2pZ1lwOeL5iz6PynyLfNpmtHOO+NynieHumFGHLPjoPU+c
+	A0ssOv2h6KvpapFVD4tYIt7sf2ht9IYz75HQk6rV/rgvdyfqTbYRMi4F/j/w4ReWx4HtYo7M81+
+	ZjWt46r+ZLZ84LUTfXHFAv3n4FESd/0NtdDcNJVVup/lribsD3zwTrx2vuEl0esJ4KGY0Waa1ab
+	4xYJIayhZi1sqy16fz7KfLbMrfuKUvAAMuULb9Lrv0F+ewAk2zPpAiy5AimPvTN0KEnjnCq1oNg
+	X6x2nWrHkafrADXQxtyGueqle+kA+ukimGs2sJk2bY4hnvhynusL5N5IwrsKmoUNPYTbHhqqZdQ
+	NnTRv1/qW5J2DLaY/E9S2r47qU6ZtVNrKsAt0Ae8pDKWchFUfo4
+X-Received: by 2002:a05:6a00:a8c:b0:84e:d5e6:a085 with SMTP id d2e1a72fcca58-851f969b7a9mr28112156b3a.0.1787469108569;
+        Sun, 23 Aug 2026 00:11:48 -0700 (PDT)
+Received: from hanzj-mi.. (ec2-99-79-140-187.ca-central-1.compute.amazonaws.com. [99.79.140.187])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-8520f149e77sm1034990b3a.42.2026.08.23.00.11.36
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 23 Aug 2026 00:11:48 -0700 (PDT)
+From: hanzhijian <hanzhijian1991@gmail.com>
+To: Richard Zhu <hongxing.zhu@nxp.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Rob Herring <robh@kernel.org>,
+	Frank Li <Frank.Li@nxp.com>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	kernel@pengutronix.de,
+	Fabio Estevam <festevam@gmail.com>,
+	linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	imx@lists.linux.dev,
+	linux-kernel@vger.kernel.org,
+	hanzhijian <hanzhijian1991@gmail.com>,
+	sashiko-bot@kernel.org
+Subject: [PATCH v2] PCI: imx6: fix resource leaks in probe error paths
+Date: Sun, 23 Aug 2026 15:11:28 +0800
+Message-ID: <20260823071129.2980059-1-hanzhijian1991@gmail.com>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20260823011125.2876504-1-hanzhijian1991@gmail.com>
+References: <20260823011125.2876504-1-hanzhijian1991@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 4 potential issue(=
-s) to consider:
+imx_pcie_probe() leaks both pwrctrl devices and power domains on
+failure:
 
-New issues:
-- [High] Blindly clearing the shared `PS_MISC` severity register in a share=
-d interrupt handler creates a race condition that can permanently drop the =
-peer controller's interrupts.
-- [High] The interrupt handler checks the raw status (`ev_raw`) instead of =
-the masked status (`val`) for pending interrupts, breaking spurious IRQ det=
-ection and inappropriately clearing masked bits.
-- [High] The driver fails to mask unhandled interrupt sources and leaves th=
-e sticky aggregator uncleared on boot, leading to an unrecoverable interrup=
-t storm on CPM6.
+- imx_pcie_attach_pd() attaches the "pcie" and "pcie_phy" power domains
+  and creates device links to them, but the device links are only kept
+  in a local variable and nothing detaches the domains on probe failure
+  or deferral, so all of them leak.
 
-Pre-existing issues:
-- [High] On MDB5, INT B, C, and D interrupts are enabled in hardware but no=
-t mapped to the Linux IRQ domain, causing them to be silently dropped.
---
+- A failure of devm_pm_runtime_set_active_enabled() returns directly
+  without destroying the pwrctrl devices.
 
---- Patch [2]: [PATCH v7 2/2] PCI: amd-mdb: Add CPM6 host controller suppor=
-t ---
-commit 23a947213bc9887ee94f4ea8b025fb7bc8ad21bd
-Author: Sai Krishna Musham <sai.krishna.musham@amd.com>
+- A partial failure inside imx_pcie_attach_pd() leaks the power domains
+  and device links that were already attached.
 
-PCI: amd-mdb: Add CPM6 host controller support
+Save the device links, add imx_pcie_detach_pd() to release the power
+domains and device links in reverse order of acquisition, call it from
+the probe error paths, and make imx_pcie_attach_pd() release everything
+it has attached so far on failure.
 
-This patch adds support for AMD Versal2 CPM6 host controllers. It adapts
-the driver to handle the differing interrupt register layout of CPM6 and
-manages the shared event interrupt line.
+Reported-by: sashiko-bot@kernel.org
+Link: https://lore.kernel.org/all/20260822013640.182C01F000E9@smtp.kernel.org/
+Signed-off-by: hanzhijian <hanzhijian1991@gmail.com>
+---
+ drivers/pci/controller/dwc/pci-imx6.c | 42 ++++++++++++++++++++++++---
+ 1 file changed, 38 insertions(+), 4 deletions(-)
 
-Link: https://lore.kernel.org/all/20260819172057.3636214-3-sai.krishna.mush=
-am@amd.com/
+diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
+index 39790e66b..a2bae4a2c 100644
+--- a/drivers/pci/controller/dwc/pci-imx6.c
++++ b/drivers/pci/controller/dwc/pci-imx6.c
+@@ -182,6 +182,9 @@ struct imx_pcie {
+ 	struct device		*pd_pcie;
+ 	/* power domain for pcie phy */
+ 	struct device		*pd_pcie_phy;
++	/* device links for the power domains */
++	struct device_link	*pd_link;
++	struct device_link	*pd_phy_link;
+ 	struct phy		*phy;
+ 	const struct imx_pcie_drvdata *drvdata;
+ 
+@@ -639,6 +642,26 @@ static int imx6q_pcie_abort_handler(unsigned long addr,
+ }
+ #endif
+ 
++static void imx_pcie_detach_pd(struct imx_pcie *imx_pcie)
++{
++	if (imx_pcie->pd_phy_link) {
++		device_link_del(imx_pcie->pd_phy_link);
++		imx_pcie->pd_phy_link = NULL;
++	}
++	if (!IS_ERR_OR_NULL(imx_pcie->pd_pcie_phy)) {
++		dev_pm_domain_detach(imx_pcie->pd_pcie_phy, true);
++		imx_pcie->pd_pcie_phy = NULL;
++	}
++	if (imx_pcie->pd_link) {
++		device_link_del(imx_pcie->pd_link);
++		imx_pcie->pd_link = NULL;
++	}
++	if (!IS_ERR_OR_NULL(imx_pcie->pd_pcie)) {
++		dev_pm_domain_detach(imx_pcie->pd_pcie, true);
++		imx_pcie->pd_pcie = NULL;
++	}
++}
++
+ static int imx_pcie_attach_pd(struct device *dev)
+ {
+ 	struct imx_pcie *imx_pcie = dev_get_drvdata(dev);
+@@ -660,12 +683,18 @@ static int imx_pcie_attach_pd(struct device *dev)
+ 			DL_FLAG_RPM_ACTIVE);
+ 	if (!link) {
+ 		dev_err(dev, "Failed to add device_link to pcie pd\n");
++		imx_pcie_detach_pd(imx_pcie);
+ 		return -EINVAL;
+ 	}
++	imx_pcie->pd_link = link;
+ 
+ 	imx_pcie->pd_pcie_phy = dev_pm_domain_attach_by_name(dev, "pcie_phy");
+-	if (IS_ERR(imx_pcie->pd_pcie_phy))
+-		return PTR_ERR(imx_pcie->pd_pcie_phy);
++	if (IS_ERR(imx_pcie->pd_pcie_phy)) {
++		int ret = PTR_ERR(imx_pcie->pd_pcie_phy);
++
++		imx_pcie_detach_pd(imx_pcie);
++		return ret;
++	}
+ 
+ 	link = device_link_add(dev, imx_pcie->pd_pcie_phy,
+ 			DL_FLAG_STATELESS |
+@@ -673,8 +702,10 @@ static int imx_pcie_attach_pd(struct device *dev)
+ 			DL_FLAG_RPM_ACTIVE);
+ 	if (!link) {
+ 		dev_err(dev, "Failed to add device_link to pcie_phy pd\n");
++		imx_pcie_detach_pd(imx_pcie);
+ 		return -EINVAL;
+ 	}
++	imx_pcie->pd_phy_link = link;
+ 
+ 	return 0;
+ }
+@@ -1956,8 +1987,10 @@ static int imx_pcie_probe(struct platform_device *pdev)
+ 		return ret;
+ 
+ 	ret = pci_pwrctrl_create_devices(dev);
+-	if (ret)
++	if (ret) {
++		imx_pcie_detach_pd(imx_pcie);
+ 		return dev_err_probe(dev, ret, "failed to create pwrctrl devices\n");
++	}
+ 
+ 	pci->use_parent_dt_ranges = true;
+ 	if (imx_pcie->drvdata->mode == DW_PCIE_EP_TYPE) {
+@@ -1975,7 +2008,7 @@ static int imx_pcie_probe(struct platform_device *pdev)
+ 			pm_runtime_no_callbacks(dev);
+ 			ret = devm_pm_runtime_set_active_enabled(dev);
+ 			if (ret < 0)
+-				return ret;
++				goto err_pwrctrl_destroy;
+ 		}
+ 
+ 		if (imx_check_flag(imx_pcie, IMX_PCIE_FLAG_SKIP_L23_READY))
+@@ -1999,6 +2032,7 @@ static int imx_pcie_probe(struct platform_device *pdev)
+ 	return 0;
+ 
+ err_pwrctrl_destroy:
++	imx_pcie_detach_pd(imx_pcie);
+ 	if (ret != -EPROBE_DEFER)
+ 		pci_pwrctrl_destroy_devices(dev);
+ 	return ret;
+-- 
+2.43.0
 
-> diff --git a/drivers/pci/controller/dwc/pcie-amd-mdb.c b/drivers/pci/cont=
-roller/dwc/pcie-amd-mdb.c
-> --- a/drivers/pci/controller/dwc/pcie-amd-mdb.c
-> +++ b/drivers/pci/controller/dwc/pcie-amd-mdb.c
-
-[ ... ]
-
-> +static void amd_mdb_pcie_clear_aggregators(struct amd_mdb_pcie *pcie)
-> +{
-> +	if (pcie->variant->version =3D=3D MDB5)
-> +		return;
-> +
-> +	/* Clear this host's serviced MISC_EVENT contribution from MERGED. */
-> +	writel_relaxed(amd_mdb_pcie_merged_host_mask(pcie),
-> +		       pcie->slcr + AMD_CPM6_MERGED_STATUS);
-> +
-> +	/*
-> +	 * Clear MERGED in the PS_MISC severity register so the misc GIC line
-> +	 * de-asserts.
-> +	 */
-> +	writel_relaxed(AMD_CPM6_PS_IR_MERGED,
-> +		       pcie->slcr + AMD_CPM6_PS_MISC_IR_STATUS);
-> +}
-
-[Severity: High]
-Does clearing this shared register unconditionally create a race condition
-that drops interrupts for the peer controller?
-
-If Host 1's interrupt arrives and sets its MERGED_STATUS bit just before
-Host 0's interrupt handler executes this W1C write to the shared=20
-AMD_CPM6_PS_MISC_IR_STATUS register, the aggregator is cleared while Host 1=
-'s
-event is still pending. Because the aggregator does not re-assert for
-already-latched MERGED bits or loses the edge, does this mean the GIC line
-drops and Host 1's interrupt is permanently lost?
-
-[ ... ]
-
->  static irqreturn_t amd_mdb_pcie_event(int irq, void *args)
->  {
->  	struct amd_mdb_pcie *pcie =3D args;
->  	unsigned long val;
-> +	u32 ev_raw;
->  	int i;
-> =20
-> -	val =3D readl_relaxed(pcie->slcr + AMD_MDB_TLP_IR_STATUS_MISC);
-> -	val &=3D ~readl_relaxed(pcie->slcr + AMD_MDB_TLP_IR_MASK_MISC);
-> +	ev_raw =3D readl_relaxed(pcie->intr_base + pcie->variant->misc_status_r=
-eg);
-> +	val =3D ev_raw;
-> +	val &=3D ~readl_relaxed(pcie->intr_base + pcie->variant->misc_mask_reg);
-
-[ ... ]
-
-> +	val &=3D pcie->variant->misc_mask_all;
-> +
-> +	/*
-> +	 * The misc GIC line is shared with the peer host controller. If this
-> +	 * host has nothing pending, report the interrupt as not ours so the
-> +	 * shared line's spurious detection keeps working and the peer's sticky
-> +	 * aggregator state is left untouched.
-> +	 */
-> +	if (!ev_raw)
-> +		return IRQ_NONE;
-
-[Severity: High]
-Should this check use the masked status (val) rather than the raw status
-(ev_raw) to determine if the interrupt was spurious?
-
-If this controller has a masked status bit active (such as an AER error left
-to native AER), ev_raw will be non-zero even when the peer controller asser=
-ted
-the shared GIC line. The check if (!ev_raw) will pass, proceeding to falsely
-return IRQ_HANDLED while unconditionally clearing the masked status bit and
-the shared aggregator. Could this break AER error reporting?
-
-[ ... ]
-
-> -static void amd_mdb_pcie_free_irq_domains(struct amd_mdb_pcie *pcie)
-> +static void amd_mdb_pcie_disable_interrupts(struct amd_mdb_pcie *pcie)
->  {
-> +	u32 misc_mask_all =3D pcie->variant->misc_mask_all;
-> +	u32 val;
-> +
-> +	/* Mask all leaf TLP interrupts. */
-> +	writel_relaxed(misc_mask_all,
-> +		       pcie->intr_base + pcie->variant->misc_disable_reg);
-
-[Severity: High]
-Does this sequence leave unhandled interrupt sources unmasked and the sticky
-aggregator uncleared?
-
-For CPM6, misc_mask_all only includes the INTx bit, which leaves other
-interrupt sources like PCIe errors unmasked. It also fails to clear the
-sticky MERGED_STATUS aggregator.=20
-
-When amd_mdb_pcie_init_port() is called later and enables the shared
-aggregator via AMD_CPM6_MERGED_ENABLE, any pending unhandled leaf interrupts
-or stale aggregator state will immediately assert the GIC line. If the
-handler then returns IRQ_NONE or clears the leaf without resolving the
-underlying error, will this cause an unrecoverable interrupt storm on boot?
-
-[ ... ]
-
->  static int amd_mdb_setup_irq(struct amd_mdb_pcie *pcie,
->  			     struct platform_device *pdev)
->  {
->  	struct dw_pcie *pci =3D &pcie->pci;
->  	struct dw_pcie_rp *pp =3D &pci->pp;
->  	struct device *dev =3D &pdev->dev;
-> +	unsigned long event_flags =3D IRQF_NO_THREAD;
->  	int i, irq, err;
-
-[ ... ]
-
->  	pcie->intx_irq =3D irq_create_mapping(pcie->mdb_domain,
-> -					    AMD_MDB_PCIE_INTR_INTX);
-> +				    pcie->variant->intx_hwirq);
-
-[Severity: High]
-This isn't a bug introduced by this patch, but are the INT B, C, and D
-interrupts missing from the IRQ domain mapping on MDB5?
-
-In amd_mdb_setup_irq(), only the intx_hwirq (which corresponds to INT A,
-bit 16 on MDB5) is mapped into the mdb_domain. However, the hardware is
-configured to unmask all four INTx sources (bits 16, 18, 20, 22) in
-amd_mdb_intx_irq_unmask().=20
-
-When INT B, C, or D fire, amd_mdb_pcie_event() will call
-generic_handle_domain_irq() for an unmapped hwirq, which returns -EINVAL.
-Does this mean legacy PCI devices using INT B, C, or D behind the MDB5
-controller will have their interrupts silently dropped?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260823040715.2040=
-96-1-sai.krishna.musham@amd.com?part=3D2
