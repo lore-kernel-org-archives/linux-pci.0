@@ -1,178 +1,127 @@
-Received: from mail-24421.protonmail.ch (mail-24421.protonmail.ch [109.224.244.21])
+Received: from CO1PR03CU002.outbound.protection.outlook.com (mail-westus2azon11010052.outbound.protection.outlook.com [52.101.46.52])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AD313377AB6;
-	Sun, 23 Aug 2026 02:14:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=109.224.244.21
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787451283; cv=none; b=dGooxWpkjFC3PR1ScwEamyNvDxPms26Vxb3A8ERubA7VYD6Kf4xYR/WMlc2kQvh+ftvNRdTy/pNCV+kxNPlIFkojcoafXn5IMW03BO51ZwgTu6h+cdrO1LKO59K7e/U6IH1x/7XqJAoSkOrXN8u/rpozv0D0v4yNq8LSAYWMwA0=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787451283; c=relaxed/simple;
-	bh=DRkxTvZbI1EJfie9pxFcCEipG+No0t5u6lL906w7lu8=;
-	h=Date:To:From:Cc:Subject:Message-ID:MIME-Version:Content-Type; b=siW3v6mSD5KkgFRDpk9VGAmKc+s6aM9PI2Bmr8rDICjPBuXcO+qL43xZatOZcjYsVS4HUohjmSnMS3t/n5qZnAhpuJfaE4cYXN3r8VlOJujLg/C9R/c+jbvMlyHlrK3Z/CEwIAB8FZSkHxfvxa595D5/w6UVm5sH7DPdHm8jjUQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=httpd.dev; spf=pass smtp.mailfrom=httpd.dev; dkim=pass (2048-bit key) header.d=httpd.dev header.i=@httpd.dev header.b=DvDdywB4; arc=none smtp.client-ip=109.224.244.21
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=httpd.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=httpd.dev
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0E9D19E839;
+	Sun, 23 Aug 2026 04:07:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.46.52
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1787458055; cv=fail; b=nATYuzVpGt7CU60pHKh5GNpBdnhL3Ye010WDaqoaDF0MA6hSyA5XPqqOsP4Pr8qAnhy6ZoJMakeE4/tQmUmUxEcf3EdrDh6EOyptX5tCcngHC6KmFumyfVf1zuVbVwPrbROyqWp4eJcbFvNohQ2e/sIXBGwTkG71IJ+7uG4oK/Q=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1787458055; c=relaxed/simple;
+	bh=RV+99wYDyRHhUYZtiQVzH+CiHs5FO4qL8+CB3sXXxus=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=TICGrvczK9yMsrNI+BBuJSnKpK0KLZVTq5mx/1FBXFCIkYIulJSB6mzzkkz1ghxSpY1hCjBwHWozDbLTxB9V+2cNuz/OfDDt8jTOwzzTgOxLeLkdcoRJMLJe7lHhuYkFpgHeQEhDY4zv1mJlO/N5+AFUNbbLQSMyLZGouAY+cqk=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=c01J+n3h; arc=fail smtp.client-ip=52.101.46.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=httpd.dev header.i=@httpd.dev header.b="DvDdywB4"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=httpd.dev;
-	s=protonmail2; t=1787451271; x=1787710471;
-	bh=4J6bCxPshWp7f3qp56C2WcD7YMKy40HDmmnsQrLHimM=;
-	h=Date:To:From:Cc:Subject:Message-ID:Feedback-ID:From:To:Cc:Date:
-	 Subject:Reply-To:Feedback-ID:Message-ID:BIMI-Selector;
-	b=DvDdywB4rI3wC3O16hurybpVl9ACdYtsRKa6vbDts9EngNAE7yR8SfsuCgQycby+7
-	 UObVznkDmM+gf4zhbvilw5lRAh1KVnUHzwF02iH6MACFV7kTriL6G/bFHerS4/X4oC
-	 eRJyBc0ZaL7vAwrNprs2gXnYKr//jp6WkVHlxkQaCVLClGNAZ2HsFanCNcTFweo3ZB
-	 OY8LlpTrzlKAXwjKblVBRg0gqABoqA3T9kdVCpWp32bac0FE/rujrSJE/k0r0S6cwf
-	 JEQ4VLIo1R5qcBMSkKMoHKgQxOTPvOnNb2Vjq4QADzGlgxnmCOWuWN2Q0ZtOl2u1Kp
-	 la+guzjMT6fkA==
-Date: Sun, 23 Aug 2026 02:14:25 +0000
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-From: Angel J <iamanaws@httpd.dev>
-Cc: "regressions@lists.linux.dev" <regressions@lists.linux.dev>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-rpi-kernel@lists.infradead.org" <linux-rpi-kernel@lists.infradead.org>, "helgaas@kernel.org" <helgaas@kernel.org>, "robh@kernel.org" <robh@kernel.org>, "andrea.porta@suse.com" <andrea.porta@suse.com>, "florian.fainelli@broadcom.com" <florian.fainelli@broadcom.com>
-Subject: [REGRESSION] PCI: Dynamic OF node creation hangs on invalid bridge configuration
-Message-ID: <GXe6anuewkS4bLNwca3cYOmUxN9csc0TxLYGSBc1qNRmfrmvFlcmD62wEM23TxfzfuXAv4P3yvUv7pyraleARrL1Na-aN8w-t9uc1Igu8DA=@httpd.dev>
-Feedback-ID: 163474212:user:proton
-X-Pm-Message-ID: 31142567ec075a3e2598ab04adff317de0e77832
+	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="c01J+n3h"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=PYhfLIWXKNAaCbULd/G3x14gSSRF44pb15OS8HMevoRbZkcKRDcSVVBnfeqA6mXqvj3VxtYpXgrzje1PKx35hK09CEcttNNYtIp3v1JASauVpd+QnNrkzm0hwGx8b2bUj/tWI53XEfDWN2559rH5/jYL5Z9tbg+Uk9PAy5BnEs7Vg3g/MsZ5yog95QK6ZrHdKemeyuAiW03Y6Fkw/HkkVv8DpO6Et5kCzjT76zIiyRV1iLXE4n1lPVtXtsSzB6/BRHG2BWNdcaEAWDq5pD+Pu5hxJ0+1QNiAbdAw+lKWPSYXiGkta0AC2ZWcLKKz7JTrN8k+Mh9YK097XDVlwUIJjw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=HvY42ozFxm5C/TPahpGZe1A9Vaw60s3gbnyZK4yg4Lg=;
+ b=NqN7acsLlR/So2FfIDfECav5QH9125EfGIC+Ck+FGzUsYy+qqgpWXaNBSxaArnB+fR99ayKMbiWlXber9AiZEGSAMaA5FufDCj2uLG0Xxe7iGHPAd2x1L5Lsp6/RsDTEwU6yRGxP1re5/m6h9UNDML+7ufvoAxCWaZJuarNKn2TkBXMmhhRhz+o4kDB7fMCflyZrHoi3hW55Fgk0L3qB0WpTkn3pdzk9vfKKXTWy833mVxk+w5wBSM17Vkc1TM7sw9U4s6zLToGf/sRbg4xachLF2f5++eEuMYFSKz7HpACUkAbaJEDidsVXZ7KaoeXZUu8XcEFbpGgJifgKhsl9IA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 165.204.84.17) smtp.rcpttodomain=google.com smtp.mailfrom=amd.com; dmarc=pass
+ (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
+ dkim=none (message not signed); arc=none (0)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=HvY42ozFxm5C/TPahpGZe1A9Vaw60s3gbnyZK4yg4Lg=;
+ b=c01J+n3hHAfaTbL/vv964ySmnKiB6tuDaJOIHgTZm3cXjOB1fWR0DBCZWdTcUifoGUr/uRgh4s9kYdw3+n6DEm8E6e2cRvfDFwg2hVa2E0wIUscO2UBByrWoqkKjBhRRYilXcchm8WZ+ELuuCEPnJR7koSJOk7rJyGaCkuQwJJM=
+Received: from SA1PR04CA0016.namprd04.prod.outlook.com (2603:10b6:806:2ce::21)
+ by SJ2PR12MB8691.namprd12.prod.outlook.com (2603:10b6:a03:541::10) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.339.11; Sun, 23 Aug
+ 2026 04:07:28 +0000
+Received: from SA2PEPF00001504.namprd04.prod.outlook.com
+ (2603:10b6:806:2ce:cafe::59) by SA1PR04CA0016.outlook.office365.com
+ (2603:10b6:806:2ce::21) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.21.339.11 via Frontend Transport; Sun,
+ 23 Aug 2026 04:07:28 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
+ smtp.mailfrom=amd.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=amd.com;
+Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
+ 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
+ client-ip=165.204.84.17; helo=satlexmb08.amd.com; pr=C
+Received: from satlexmb08.amd.com (165.204.84.17) by
+ SA2PEPF00001504.mail.protection.outlook.com (10.167.242.36) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.21.360.3 via Frontend Transport; Sun, 23 Aug 2026 04:07:27 +0000
+Received: from Satlexmb09.amd.com (10.181.42.218) by satlexmb08.amd.com
+ (10.181.42.217) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.45; Sat, 22 Aug
+ 2026 23:07:27 -0500
+Received: from satlexmb08.amd.com (10.181.42.217) by satlexmb09.amd.com
+ (10.181.42.218) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.45; Sat, 22 Aug
+ 2026 23:07:26 -0500
+Received: from xhdlc250058.xilinx.com (10.180.168.240) by satlexmb08.amd.com
+ (10.181.42.217) with Microsoft SMTP Server id 15.2.2562.45 via Frontend
+ Transport; Sat, 22 Aug 2026 23:07:22 -0500
+From: Sai Krishna Musham <sai.krishna.musham@amd.com>
+To: <bhelgaas@google.com>, <lpieralisi@kernel.org>, <kw@linux.com>,
+	<mani@kernel.org>, <robh@kernel.org>, <krzk+dt@kernel.org>,
+	<conor+dt@kernel.org>, <cassel@kernel.org>
+CC: <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <michal.simek@amd.com>,
+	<bharat.kumar.gogada@amd.com>, <thippeswamy.havalige@amd.com>,
+	<sai.krishna.musham@amd.com>, <pranav.sanwal@amd.com>
+Subject: [PATCH v7 0/2] pci: AMD: Add Versal2 CPM6 PCIe host controller support
+Date: Sun, 23 Aug 2026 09:37:13 +0530
+Message-ID: <20260823040715.204096-1-sai.krishna.musham@amd.com>
+X-Mailer: git-send-email 2.44.4
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pgp-signature"; micalg=pgp-sha512; boundary="------0ef466dcdb1e40e51586a73753b73daa3d57415976dd54a41ab1ba279b082e9e"; charset=utf-8
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: SA2PEPF00001504:EE_|SJ2PR12MB8691:EE_
+X-MS-Office365-Filtering-Correlation-Id: ce96278b-936e-4db8-0089-08df00cc0b9b
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|376014|7416014|23010399003|1800799024|36860700016|82310400026|10067099003|11063799006|56012099006|18002099003;
+X-Microsoft-Antispam-Message-Info:
+	cEjFWeHCz2Wj0AhCdnCZQr3qQrR1MxFe7j2V/6ZMMMlOQtzHACW51wV9Ekpit7Pv5stcAQuUelQM0tjwzpcCd4lpBVdNFDlnZaxTvdUUFlTkMsZpFHmIzVOIoQD3Uc884hvRbWKzmklJBOEMpoUvTyAmumdo/7lgSuwZFzLdw22oOHW5qC3aXfaiidrWxAuWViPd7qcHdS6lTnCrg2q7TUml+PAaMYty3jAzTg0KTbrc9dko+XpZ5mKfBGj6b58aQJYi6HljN5Qw1STItlkmeTp0WTS+b88FGYyzdIpv8T/f/ZRLpLrzRm8LuBVp3vOZX9K4g79uYxq/YpR7xIHuSd2ZXUEyqDrXOuNQKkqrKzAQImkihLkNbBCSVDy7QedBgmyAKg2vLhsyj/YCspcuAWps3PaYoLAza9xYUpEU6ChpSAmbptab/h0xE3dCphezNK8Hs/mwKjuKbZlLi5hHQuTyr3POkiPIn8C/m4xRZFZManrhwS0hjkBdkaHDMlic23wzambl0fCoH7AEdg7gjtmCjI0vsaCuNFdOAiPYFoHlfX76tgE8OCjx3jrl2kgmvnn0Z4liwttVAes1aexFrnSwZsCyk1JfL8e13qLQrbRRMDROGforr5DWlvA6Ph+Q2e9BH8B+l9xGSnXvtdkAHql9PNgwcVO4lYkc0lfJvZvJK/SxHnqjklQqr5CrrAHCQUxolH+Ko1sp4nkAiL6T/Q==
+X-Forefront-Antispam-Report:
+	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:satlexmb08.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(376014)(7416014)(23010399003)(1800799024)(36860700016)(82310400026)(10067099003)(11063799006)(56012099006)(18002099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	mdXzWNmRrKoFbYm6BoF2NLvuBc6Hp6G5hlvCy0WWUwL7q8hpW99CqQZyqJVbdMyAIypeF7dkk9cTBjBY69eBobnWZEwBTzfa5I7PQ62G8IkNhflViJd1cmQH7MREKabqepRBGunt2/iveK7wIhmToJhh0ZN+BwF20dD8ObJOgSwEV0OQQkqyPoTTdM1JSsYbsaFaB/i30o0q4HLO7YWouzgqv28+6TfO0N4QKmPKuaKmH9XpzpiYs17eiccU9xpUmtdNCgV37S2PhyKrqg/2tJAhL6mN0HJjDfEFzZcDb2S9rcW5TEYz9hDh6EbE1VPx4GtqXDbXt2e2ZqiEE81HDMGuP9b5sp2h2L0tnkjwq7SFQ7/1z8irUhfvq+IBtzfvtZS7A0N6HswnW3ogZXdfxblMFQQgwrOijVNXLVfGP4jLLnvLaNbqDlqTu+2IraHt
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 Aug 2026 04:07:27.7333
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: ce96278b-936e-4db8-0089-08df00cc0b9b
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[satlexmb08.amd.com]
+X-MS-Exchange-CrossTenant-AuthSource:
+	SA2PEPF00001504.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ2PR12MB8691
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---------0ef466dcdb1e40e51586a73753b73daa3d57415976dd54a41ab1ba279b082e9e
-Content-Type: multipart/mixed;boundary=---------------------5816d7253a565b3528da584c08321c23
+Add support for the AMD Versal2 CPM6 PCIe host controller to the
+AMD MDB PCIe driver.
 
------------------------5816d7253a565b3528da584c08321c23
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain;charset=utf-8
+Sai Krishna Musham (2):
+  dt-bindings: PCI: amd-mdb: Add CPM6 support
+  PCI: amd-mdb: Add CPM6 host controller support
 
-Hello,
-
-This regression was introduced in v6.17-rc1 and remains in the dynamic
-PCI OF node code. Linux 6.18 fails very early during boot on my Dell XPS
-8940 when CONFIG_PCI_DYNAMIC_OF_NODES=3Dy. The display goes black before
-any useful console or pstore output appears, and the machine remains
-hung.
-
-Disabling CONFIG_PCI_DYNAMIC_OF_NODES makes the same kernel boot normally.
-Linux v6.19-rc5 also boots because the RP1 driver stopped selecting that
-option, not because the dynamic PCI OF node code changed.
-
-Hardware:
-
-  System: Dell XPS 8940, board 0K3CM7, BIOS 2.27.1 (2025-04-03)
-  CPU: Intel Core i7-11700 (Rocket Lake)
-  Triggering device: 0000:00:00.0, Intel 8086:4c43
-  Firmware boot: UEFI, ACPI-based x86_64
-
-Test results:
-
-  Linux 6.12.103: good
-  Linux v6.17-rc1: bad
-  Linux 6.18.44, CONFIG_PCI_DYNAMIC_OF_NODES=3Dy: bad
-  Linux 6.18.44, CONFIG_PCI_DYNAMIC_OF_NODES=3Dn: good
-  Linux 6.18.44, CONFIG_PCI_DYNAMIC_OF_NODES=3Dy, skip invalid bridge: goo=
-d
-  Linux v6.19-rc4: bad
-  Linux v6.19-rc5: good
-  Linux 4621c338d33f: bad
-  Linux e55feea3a03a: good
-
-The first-parent boundary between the last two tests is:
-
-  e55feea3a03a ("Merge tag 'soc-fixes-6.19' ...")
-
-That merge contains ce26f588c831 ("misc: rp1: drop overlay support"), whic=
-h
-removes:
-
-  select PCI_DYNAMIC_OF_NODES
-
-from MISC_RP1. The generated configurations differed only by:
-
-  -CONFIG_PCI_DYNAMIC_OF_NODES=3Dy
-  +# CONFIG_PCI_DYNAMIC_OF_NODES is not set
-
-CONFIG_MISC_RP1=3Dm in both. The known-bad 4621c338d33f and Linux 6.18.44
-both boot after disabling PCI_DYNAMIC_OF_NODES (and MISC_RP1, whose Kconfi=
-g
-select otherwise forces it on).
-
-There is no RP1 device in this machine, and its driver does not probe.
-MISC_RP1 affects this x86 system only because its Kconfig select enables
-PCI_DYNAMIC_OF_NODES globally.
-
-I narrowed the hang to dynamic OF node creation for 0000:00:00.0
-(8086:4c43), the Intel Rocket Lake-S integrated memory controller. On
-this machine it reports PCI class 0604 and header type 1, but it is bound
-to icl_uncore and is not a usable forwarding bridge:
-
-  Bus: primary=3Dff, secondary=3Dff, subordinate=3Dff
-  I/O and memory bridge windows: invalid/all ones
-  kernel: bridge configuration invalid ([bus ff-ff]), reconfiguring
-
-A minimal dynamic node for this device boots. Adding only
-device_type=3D"pci" makes it hang. Full PCI dynamic OF node generation als=
-o
-boots when only 0000:00:00.0 is skipped.
-
-I also tested a generic guard in of_pci_make_dev_node(). It reads
-PCI_PRIMARY_BUS and skips node creation if the primary bus does not match
-pdev->bus->number, the secondary bus is not greater than the primary bus,
-or the secondary bus is greater than the subordinate bus. Linux 6.18.44
-boots with CONFIG_PCI_DYNAMIC_OF_NODES=3Dy and logs:
-
-  pci 0000:00:00.0: skipping dynamic OF node for invalid bridge
-
-The regression was introduced by 49d63971f963 in v6.17-rc1. Commit
-ce26f588c831 made v6.19-rc5 boot by removing MISC_RP1's select of
-PCI_DYNAMIC_OF_NODES. That avoids the failing path in the tested
-configuration but does not change of_pci_make_dev_node().
-
-I do not have a log from the failed boots. No output appeared with
-earlyprintk=3Defi,keep, keep_bootcon, ignore_loglevel, loglevel=3D8,
-initcall_debug, and EFI pstore enabled. Blacklisting both GPU drivers and
-disabling the Intel IOMMU did not make the bad kernel boot.
-
-Should of_pci_make_dev_node() reject devices with invalid bridge bus
-configuration, or should 8086:4c43 use a device-specific quirk? I can
-prepare and test a patch for either approach. For Linux 6.18 stable,
-would that fix be preferable to backporting ce26f588c831 and its
-dependencies?
-
-#regzbot introduced: 49d63971f963
-#regzbot title: PCI_DYNAMIC_OF_NODES early boot hang on ACPI x86
-
-Thanks,
-Angel J
+ .../bindings/pci/amd,versal2-mdb-host.yaml    |  41 +-
+ .../devicetree/bindings/pci/snps,dw-pcie.yaml |   2 +
+ drivers/pci/controller/dwc/pcie-amd-mdb.c     | 419 +++++++++++++++---
+ 3 files changed, 389 insertions(+), 73 deletions(-)
 
 
-
-
-
-
------------------------5816d7253a565b3528da584c08321c23--
-
---------0ef466dcdb1e40e51586a73753b73daa3d57415976dd54a41ab1ba279b082e9e
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: ProtonMail
-
-wrsEARYKAG0FgmqKV28JEBoBbwppzUxnRRQAAAAAABwAIHNhbHRAbm90YXRp
-b25zLm9wZW5wZ3Bqcy5vcmdLuaAoGKL92QTzbI2Uy7jw4k6tIc99AdBp6S6r
-YQoA3BYhBEAFf9htFyVnqZzmVhoBbwppzUxnAADIqQD/fnLk8GJzel74P3PZ
-NqUm7u5JPB8p1goB/ebqiGCVVakA/jt6U8pQNghHs/SsdfY/fVJqNl9WXIEV
-5zaRuPsjk5cK
-=Lb99
------END PGP SIGNATURE-----
-
-
---------0ef466dcdb1e40e51586a73753b73daa3d57415976dd54a41ab1ba279b082e9e--
+base-commit: dc59e4fea9d83f03bad6bddf3fa2e52491777482
+-- 
+2.44.4
 
