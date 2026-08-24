@@ -1,101 +1,102 @@
-Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id A9C6E3B2FFB;
-	Mon, 24 Aug 2026 05:41:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 03D533C1086
+	for <linux-pci@vger.kernel.org>; Mon, 24 Aug 2026 05:45:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787550116; cv=none; b=rTs9SlqvFcCPZQUCdMMJ5D46V7h+IWVwbygOmadDiJkHSOeIroPm3xfuQU2UpOQenEDo45BxkkQbDHgEdjOEXgfrehGw+WknW08GxaThsqexSBUauNTBpF7vF2J17eWdUX/hpu/yRm+z8qMEQA4vzHgo541PYfIAC5UgqEaSsuk=
+	t=1787550333; cv=none; b=bNmaU5LUZqweF0f2WQ8w6MVEyMycx+WEvClFcnAzEC2JHpywdjm5z058fVof2t9e7vnvwTmO3rxWttOan9LJyENsw5/0ecJlSD1pZHi3jyOtCNzqaPaRu86axutd52FwMooyM9mq69C2y7a+QmjIofg+WhR0SxDch8WDAgoRqN8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787550116; c=relaxed/simple;
-	bh=RCZj70h0+gYIXU+6RyJFQ+PlAyNXP9sJti6tHncp4sA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ilcHjctYbdGUEC/T7uRr/i8GVgX/+HTK/5xiaXVu55vJDMKM+D0A+OIIy6pu7aDiqR5944aOt2MKF2h3H31sr/K9VGNFlww7CEJT6YM70KDU985rw343L6F2UbM4/nSGh3CZJSzqo1JMOMi0YkUgrI2FbovpJ/IvX26Ud2DHo3E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=kuvk0Vi+; arc=none smtp.client-ip=13.77.154.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
+	s=arc-20240116; t=1787550333; c=relaxed/simple;
+	bh=YBTCXzWLgT+I4NyDWitqA3/WeKbCPnsmPLINN1weT5M=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=SLdIe5quXqe6d3UhgACIgcR6Mc4emZUpx1AKdjDiXahppMK4M/jd+L2IVvJ9Nd/2SXzhqxO4aguBLuMpU9qOZeNzEiXX6Gq07zVkYi79geuCUwvJ+fZIa29xVehlXb5N7eiWS2V4D1XStqXxigOEBZgAx5bgiMUK696iaC3cR4I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=a5E2xKqj; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="kuvk0Vi+"
-Received: from [192.168.1.70] (unknown [4.194.122.170])
-	by linux.microsoft.com (Postfix) with ESMTPSA id 8F90D20B7166;
-	Sun, 23 Aug 2026 22:41:15 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 8F90D20B7166
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
-	s=default; t=1787550084;
-	bh=je3FEBmIEIOvsJhScsyZLYxCRxTa76SkmSSg/ZomV6U=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=kuvk0Vi+pymQ/UuXARFFGORUloQgEw0Du0vCrFKDWsAIcctqmsAWLgTSTBZ/A+u4r
-	 tShGcij72kbJtmcqWmzORHSaFl2uKAU3pEHjPj6h7jnoVU/Sj0C+jwaPFtvkg9LKF1
-	 hkYON3p1O9jhoEecOlIokHJ91buXtWTAFCwYfCSA=
-Message-ID: <f763801e-04b1-4c38-9625-78da5797d85d@linux.microsoft.com>
-Date: Mon, 24 Aug 2026 11:11:42 +0530
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="a5E2xKqj"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 69F461F000E9;
+	Mon, 24 Aug 2026 05:45:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1787550331;
+	bh=JtYslLi04aINK7R0JhPBprR0zndEK7ND7cGvbWIE038=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=a5E2xKqjBB5gzKkvpl9j9ndXmfEC2vSu9Mi0jPCTCxaWIYwX/eFWZ5C1km0nAK4bI
+	 Fcq+8o4T3fzUVFyMNbjOACgVpbjrL/g8aH1gHCxcRvSm9eU6uJ8e0OiWROv1qtEb8J
+	 9f0W26Sw5/C5jwG9fy2tuMcpjGbIZf2peU0d6ydvddBVj7OyvJCgwyeM4IlU6Eqok/
+	 rmpAyYUWSorUpHmSlfyR2CdtMCy8lQF1S5pmQY2ypFgsLGyWzt/lgwzFuUUj0svhlr
+	 rCT78I07iMZGeEaktbfdyQ7pbPjjt/ouTUaOFfztPnZpcVROcBkUdiLXxajegk0/VK
+	 O+7iAPUmlcDzg==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v3 2/2] PCI: qcom: Implement shutdown() callback
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Krishna Chaitanya Chundru" <krishna.chundru@oss.qualcomm.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260824-shutdown-v3-2-81c14bb7a1af@oss.qualcomm.com>
+References: <20260824-shutdown-v3-0-81c14bb7a1af@oss.qualcomm.com>
+ <20260824-shutdown-v3-2-81c14bb7a1af@oss.qualcomm.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Mon, 24 Aug 2026 05:45:30 +0000
+Message-Id: <20260824054531.69F461F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 3/3] x86/irq, iommu/amd, PCI: Drop redundant irq_retrigger
- inits
-To: Wei Liu <wei.liu@kernel.org>
-Cc: "K. Y. Srinivasan" <kys@microsoft.com>,
- Haiyang Zhang <haiyangz@microsoft.com>, Dexuan Cui <decui@microsoft.com>,
- Long Li <longli@microsoft.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>,
- =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
- Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Thomas Gleixner <tglx@kernel.org>,
- Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
- Dave Hansen <dave.hansen@linux.intel.com>, "H. Peter Anvin" <hpa@zytor.com>,
- "Joerg Roedel (AMD)" <joro@8bytes.org>,
- Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
- Vasant Hegde <vasant.hegde@amd.com>, Will Deacon <will@kernel.org>,
- Robin Murphy <robin.murphy@arm.com>, x86@kernel.org,
- Jake Oshins <jakeo@microsoft.com>, linux-hyperv@vger.kernel.org,
- linux-pci@vger.kernel.org, iommu@lists.linux.dev,
- linux-kernel@vger.kernel.org
-References: <20260728135117.2888175-1-namjain@linux.microsoft.com>
- <20260728135117.2888175-4-namjain@linux.microsoft.com>
- <20260824001747.GE3566091@liuwe-devbox-debian-v2.local>
-Content-Language: en-US
-From: Naman Jain <namjain@linux.microsoft.com>
-In-Reply-To: <20260824001747.GE3566091@liuwe-devbox-debian-v2.local>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
 
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [High] Reusing a `_noirq` suspend callback in the shutdown path without d=
+isabling interrupts creates a race condition that can cause a fatal synchro=
+nous external abort.
+--
 
+--- Patch [2]: [PATCH v3 2/2] PCI: qcom: Implement shutdown() callback ---
+commit fddc2f7864ce1c4c291d73453690c4721638afe0
+Author: Manivannan Sadhasivam <mani@kernel.org>
 
-On 8/24/2026 5:47 AM, Wei Liu wrote:
-> On Tue, Jul 28, 2026 at 01:51:17PM +0000, Naman Jain wrote:
-> [...]
->> diff --git a/drivers/iommu/amd/init.c b/drivers/iommu/amd/init.c
->> index ea3377e61aa5c..0c362e86a09d9 100644
->> --- a/drivers/iommu/amd/init.c
->> +++ b/drivers/iommu/amd/init.c
->> @@ -2468,7 +2468,6 @@ static struct irq_chip intcapxt_controller = {
->>   	.irq_unmask		= intcapxt_unmask_irq,
->>   	.irq_mask		= intcapxt_mask_irq,
->>   	.irq_ack		= irq_chip_ack_parent,
->> -	.irq_retrigger		= irq_chip_retrigger_hierarchy,
->>   	.irq_set_affinity       = intcapxt_set_affinity,
->>   	.irq_set_wake		= intcapxt_set_wake,
->>   	.flags			= IRQCHIP_MASK_ON_SUSPEND | IRQCHIP_MOVE_DEFERRED,
->> diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
->> index 89816a2bd7cd3..cfc8fa403dad6 100644
->> --- a/drivers/pci/controller/pci-hyperv.c
->> +++ b/drivers/pci/controller/pci-hyperv.c
->> @@ -2119,7 +2119,6 @@ static bool hv_pcie_init_dev_msi_info(struct device *dev, struct irq_domain *dom
->>   	info->ops->msi_prepare = hv_msi_prepare;
->>   
->>   	chip->irq_set_affinity = irq_chip_set_affinity_parent;
->> -	chip->irq_retrigger = irq_chip_retrigger_hierarchy;
-> 
-> Acked-by: Wei Liu <wei.liu@kernel.org>.
-> 
-> I suppose you do this because the first patch is supposed to be
-> backported.
-> 
-> Wei
+PCI: qcom: Implement shutdown() callback
 
-Yes, exactly.
+This commit introduces a shutdown callback for the Qualcomm PCIe
+controller. It reuses dw_pcie_suspend_noirq() to cleanly bring down
+the PCIe link before system power and clocks are cut during shutdown
+or reboot.
 
-Regards,
-Naman
+> diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/control=
+ler/dwc/pcie-qcom.c
+> index d8eb52857f69c..a4284c64de276 100644
+> --- a/drivers/pci/controller/dwc/pcie-qcom.c
+> +++ b/drivers/pci/controller/dwc/pcie-qcom.c
+[ ... ]
+> @@ -2156,6 +2156,17 @@ static int qcom_pcie_probe(struct platform_device =
+*pdev)
+>  	return ret;
+>  }
+> =20
+> +static void qcom_pcie_shutdown(struct platform_device *pdev)
+> +{
+> +	struct qcom_pcie *pcie =3D platform_get_drvdata(pdev);
+> +
+> +	if (pcie)
+> +		dw_pcie_suspend_noirq(pcie->pci);
+
+[Severity: High]
+Does reusing dw_pcie_suspend_noirq() here without disabling device interrup=
+ts
+create a race condition that can cause a fatal synchronous external abort?
+
+The device_shutdown() phase runs with interrupts enabled. The suspend_noirq
+hardware teardown sequence eventually disables the PCIe clocks and PHY.=20
+
+If a PCIe MSI or spurious interrupt fires after the clocks are disabled but
+before the system finishes rebooting, the chained IRQ handler might attempt
+to read powered-off hardware registers, resulting in a fatal bus fault.
+
+> +
+> +	pm_runtime_put_sync(&pdev->dev);
+> +	pm_runtime_disable(&pdev->dev);
+> +}
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260824-shutdown-v=
+3-0-81c14bb7a1af@oss.qualcomm.com?part=3D2
