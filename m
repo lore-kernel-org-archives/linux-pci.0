@@ -1,207 +1,160 @@
-Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0AE7D361DA8;
-	Mon, 24 Aug 2026 20:30:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=204.191.154.188
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E655238E5DF;
+	Mon, 24 Aug 2026 20:34:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787603403; cv=none; b=uL+3QutDTgZ2EQEEraGxDhD5fmpMXIN+K01HEir4XVKek16tZhb4XkaN6Ltrvs18lLQZUOCO0qNPhb4UxwD1juONnqLjr+Se/3vHqgAQGfSzkJBwvCEB2JSC5Y9zvFUsAUZ5WpC+pvd9XrgpOBhh76NlURLIg0xrr2a/o/HRYoc=
+	t=1787603689; cv=none; b=trfNv61Cn7LkihB4nY13R6bULg3tfJ9XrBOo5MxXgkbBskhti+mb9T2bwpDKVOwKo9F+AweJLmXwM0qiCpizH4YzLD5UnabnAs1wxaZz3WBakyJ9/mZh6ltvxU20eofVFkzOonzNEOWEV8KBHFsrP0IjXZcr4jLSQARepg/JLWM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787603403; c=relaxed/simple;
-	bh=nfy1kAgZM25iOXAp95QNMPx7GbJYyCFTsLS93VWg9B4=;
-	h=Message-ID:Date:MIME-Version:To:Cc:References:From:In-Reply-To:
-	 Content-Type:Subject; b=V9AQXqE5y9OM6IyfmukPoiBgY2UWqAs9Wp2AVR5+39bU81NjihF6URmO2g+8YbNHEPSon4VW3fP6wNjOznd7j/YrNlKnZ9XE7cHeH/USzDs4NsTeuvzni7ZicqT5nOJsnCsUVqK0H+HcYHqiVPpBwvt1n4MFCc0IIPXTiICDoZQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com; spf=pass smtp.mailfrom=deltatee.com; dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b=n9WT5Hfe; arc=none smtp.client-ip=204.191.154.188
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=deltatee.com
+	s=arc-20240116; t=1787603689; c=relaxed/simple;
+	bh=2qpyqu1GL5Wv1ZkXbGyoVYIvonEEiAtOz7K4QuM/aZQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=qEhSw8pEVDiKNOZuQkirR5FJ6/Cq1s5HRStGAiwwfphGPcdFVYDzwRg6qXa15XgeJeYgp41i+NZ3XPVQm8DyX65BOswFWFRyx5uyoA3+VUfQ3gBvxe7K4rBBDU2vi/jhw7wRQodz4xJ4tC8ryJVeS2i6VuUGaTFGvpahkbkPx2Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Iw8RbeS5; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b="n9WT5Hfe"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
-	MIME-Version:Date:Message-ID:content-disposition;
-	bh=ttrN7yudHYdE+P6Y7Hk+L4cL67VsRPH1HuuP89qulVk=; b=n9WT5HfeDEh5VKNVwJ+kveNnkY
-	3aZPomnCEOJ/kPb6Ox8sFtVvHmZTs7RLBxihuIB7SoVvEmsLnj+8TCVMiUllBkSRNa7zzwimaazMQ
-	QEViQHHDoq22NajHMNV8FuJcAY5p7oe+axyQ0v2AWjD3aSLZBdwZb95NhPa6PkwlUxQmCiaYwhxqx
-	M3grSKey4/ZHqmqwd0d981oZmYybDkB6bc+O+F9P9R3lckZSwo7rkFQTnldQJwfUrdDfaEdV3iJ2Z
-	mXpRQyKIXb7bIu/7thaiSoQAtDMw5+t8CPQRUfDoVScKunXqieE8VPq5f43/X3NUiSbDgAp8y37VD
-	QOeH3JPg==;
-Received: from guinness.priv.deltatee.com ([172.16.1.162])
-	by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-	(Exim 4.98.2)
-	(envelope-from <logang@deltatee.com>)
-	id 1wybIl-00000005ZN8-0MU4;
-	Mon, 24 Aug 2026 14:29:51 -0600
-Message-ID: <d559d41c-5cba-4a95-bc8b-b1f78a49a18c@deltatee.com>
-Date: Mon, 24 Aug 2026 14:29:34 -0600
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Iw8RbeS5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2A0E61F000E9;
+	Mon, 24 Aug 2026 20:34:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1787603687;
+	bh=reFGiXbqNVBijumaM9u2bxvJzXLdb4l/MS4kCo2POds=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=Iw8RbeS5M+G2GmxlSPT7T4YOElV+S6dT1y+vTfwahK9tZuKCZA4HnQpHhr5EODaB+
+	 48ltkMl69ds4rfGpl0P2A4S2hHT79CgbXjerkCFjbEih02VZhLTtD/6O90RSbLjlGR
+	 niQuN3vbfuEw8E9gA3dV0vtN8jqyInBXmG446XNKa2EUoIPiXfi6+rUdnFuMclrCp9
+	 2JU5KOTKVUuhCYmHFvXZFzcE+dASfFuDKzPxPj+9r1lEe/c8e66E9LDzXGatKzkYnS
+	 Hu3gKkL6wHVvYMkbmzv53q5/k0MifmDoP8kLueMkd6xPXBFiI4pSnSgLpcy//moixB
+	 8uCk4XVYXSj2w==
+Received: by pali.im (Postfix)
+	id 23F704C0; Mon, 24 Aug 2026 22:34:47 +0200 (CEST)
+Date: Mon, 24 Aug 2026 22:34:47 +0200
+From: Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>
+To: David Matlack <dmatlack@google.com>
+Cc: Martin Mares <mj@ucw.cz>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [pciutils PATCH v2] lspci: Determine bridge window address size
+ from bridge_flags
+Message-ID: <20260824203447.hycxzhoqso5k7wvg@pali>
+References: <20260821221610.3570722-1-dmatlack@google.com>
+ <20260821230620.fcpmn7radmwnfnh2@pali>
+ <CALzav=dOumVYvjShjHHd1fydKMO1OX2w-ps4HEH5kBU7_3AVzg@mail.gmail.com>
+ <20260824173635.tqbivfr6l7pvi3qh@pali>
+ <CALzav=c5WY4MQ4PzOTkuYA-eDv_cVWF74L4dd46smiZjPzsPLQ@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-To: Leon Romanovsky <leon@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
- Chaitanya Kulkarni <kch@nvidia.com>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jens Axboe
- <axboe@kernel.dk>, Alex Williamson <alex@shazbot.org>,
- Ankit Agrawal <ankita@nvidia.com>, Jason Gunthorpe <jgg@ziepe.ca>,
- Jonathan Corbet <corbet@lwn.net>, Shuah Khan <skhan@linuxfoundation.org>,
- "Joerg Roedel (AMD)" <joro@8bytes.org>, Will Deacon <will@kernel.org>,
- Robin Murphy <robin.murphy@arm.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-doc@vger.kernel.org, iommu@lists.linux.dev,
- Tushar Dave <tdave@nvidia.com>, Matt Evans <matt@ozlabs.org>
-References: <20260821-fix-p2p-acs-v4-0-v4-0-94426b96de73@nvidia.com>
- <20260821-fix-p2p-acs-v4-0-v4-5-94426b96de73@nvidia.com>
-Content-Language: en-CA
-From: Logan Gunthorpe <logang@deltatee.com>
-In-Reply-To: <20260821-fix-p2p-acs-v4-0-v4-5-94426b96de73@nvidia.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-SA-Exim-Connect-IP: 172.16.1.162
-X-SA-Exim-Rcpt-To: leon@kernel.org, bhelgaas@google.com, kch@nvidia.com, gregkh@linuxfoundation.org, axboe@kernel.dk, alex@shazbot.org, ankita@nvidia.com, jgg@ziepe.ca, corbet@lwn.net, skhan@linuxfoundation.org, joro@8bytes.org, will@kernel.org, robin.murphy@arm.com, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, iommu@lists.linux.dev, tdave@nvidia.com, matt@ozlabs.org
-X-SA-Exim-Mail-From: logang@deltatee.com
-X-Spam-Level: 
-Subject: I
-X-SA-Exim-Version: 4.2.1 (built Sun, 23 Feb 2025 07:57:16 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CALzav=c5WY4MQ4PzOTkuYA-eDv_cVWF74L4dd46smiZjPzsPLQ@mail.gmail.com>
+User-Agent: NeoMutt/20180716
 
-
-
-On 2026-08-21 13:38, Leon Romanovsky wrote:
-> From: Leon Romanovsky <leonro@nvidia.com>
+On Monday 24 August 2026 13:22:32 David Matlack wrote:
+> On Mon, Aug 24, 2026 at 10:36 AM Pali Rohár <pali@kernel.org> wrote:
+> >
+> > On Monday 24 August 2026 09:24:33 David Matlack wrote:
+> > > On Fri, Aug 21, 2026 at 4:06 PM Pali Rohár <pali@kernel.org> wrote:
+> > > >
+> > > > Hello! Thank you for taking this issue. I briefly checked the change and
+> > > > I think that this is the right way how to address that issue.
+> > > >
+> > > > Anyway, it would be nice to provide some example of config space of PCI
+> > > > Bridge (lspci -x) which is affected by this issue and have it in
+> > > > pciutils/tests/ directory.
+> > >
+> > > Ack, I will incorporate that into a v3.
+> >
+> > Feel free to send it separately. No need to have it in this one change.
 > 
-> pdev->p2pdma has two lifetime models. Provider-based entry points are
-> quiesced by their driver before remove completes. pci_p2pmem_find_many()
-> and the p2pmem sysfs attributes can race with unbind and therefore rely
-> on the teardown grace period.
+> Sure, I can send a 2 patch series in v3 if that's what you mean?
 > 
-> Document publication, teardown, and how the grace period protects both
-> the struct pci_p2pdma object and its optional gen_pool.
-> 
-> Tested-by: Tushar Dave <tdave@nvidia.com>
-> Cc: Alex Williamson <alex@shazbot.org>
-> Cc: Matt Evans <matt@ozlabs.org>
-> Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
-> ---
->  drivers/pci/p2pdma.c | 54 +++++++++++++++++++++++++++++++++++++++++++++++++++-
->  1 file changed, 53 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
-> index a77ef9deb3c6..49bc8cf06240 100644
-> --- a/drivers/pci/p2pdma.c
-> +++ b/drivers/pci/p2pdma.c
-> @@ -21,6 +21,39 @@
->  #include <linux/seq_buf.h>
->  #include <linux/xarray.h>
->  
-> +/*
-> + * Lifetime and RCU usage
-> + *
-> + * Within one driver bind, pdev->p2pdma is published exactly once, by
+> By the way, since lspci parsing of the pciutils/tests/ directory would
+> use the dump backend, which does not use PCI_FILL_BRIDGE_BASES, it
+> will not exercise the bug fixed by this commit. Is it still worth
+> adding the test case? I am happy to send it, but I'm curious how it
+> will be used.
 
-Is published the right verb here? Seems like we use published for
-different purposes in p2pdma and calling pcim_p2pdma_init() publishing
-reads strangely.
+I see. Those flags cannot be read from the PCI config space and they
+need to be provided by OS when it is doing enumeration / setup of PCI.
+So lspci -x dump outputs will not provide them.
 
-> + * pcim_p2pdma_init(), and cleared exactly once, by the pci_p2pdma_release()
-> + * devres action that the same function installs. It is never re-pointed at a
-
-"It is never re-pointed at" is some strange wording. I had to read it a
-few times to understand what it is saying.
-
-> + * second struct pci_p2pdma, so a reader that observes a non-NULL pointer
-> + * always observes the same, fully initialised object. That object is devres
-> + * memory allocated before the action is installed, so devres frees it only
-> + * after pci_p2pdma_release() has returned.
-
-I don't quite follow the point of this paragraph. It's like it's
-building to some kind of gotcha, but all it seems to be saying is is the
-life cycle of pdev->p2pdma is the same as the lifecycle of pdev.
-
-> + * Most exported entry points reach pdev->p2pdma through a struct pci_dev or a
-> + * struct p2pdma_provider owned by the provider driver, and
-> + * pcim_p2pdma_provider() requires callers to drop those references before the
-> + * driver's remove() completes. Those cannot run concurrently with
-> + * pci_p2pdma_release(), and their rcu_dereference() calls are simply how an
-> + * __rcu pointer is read.
-> + *
-> + * pci_p2pmem_find_many() and the p2pmem sysfs attributes are the exceptions.
-> + * The first walks every PCI device, so it can reach a provider whose driver is
-> + * unbinding: pci_get_device() pins the struct pci_dev, not the driver. The
-> + * second is reachable from userspace until sysfs_remove_group() runs at the end
-> + * of the release. pci_has_p2pmem() must dereference the object to determine
-> + * whether it owns a gen_pool, so even a poolless object must remain alive until
-
-Maybe a hyphen with pool-less or maybe better to use plain language: "so
-even a device without a pool must remain alive..."
-
-> + * that RCU reader exits. The sysfs group is created with the pool.
-> + *
-> + * The grace period in pci_p2pdma_release() first protects the struct
-> + * pci_p2pdma itself from being freed while pci_has_p2pmem() is using it. For a
-> + * pool-backed provider it also fences the gen_pool: gen_pool_alloc_owner()
-> + * walks pool->chunks under RCU and gen_pool_destroy() frees those chunks
-> + * without waiting for a grace period of its own, so pci_alloc_p2pmem() and
-> + * p2pmem_alloc_mmap() hold rcu_read_lock() across the allocation.
-> + */
->  struct pci_p2pdma {
->  	struct gen_pool *pool;
->  	bool p2pmem_published;
-> @@ -235,9 +268,19 @@ static void pci_p2pdma_release(void *data)
->  	if (!p2pdma)
->  		return;
->  
-> -	/* Flush and disable pci_alloc_p2p_mem() */
-> +	/*
-> +	 * Stop new RCU readers and wait for readers that observed p2pdma before
-> +	 * allowing devres to free it. This is required even without a pool,
-> +	 * because pci_has_p2pmem() dereferences every non-NULL p2pdma it finds.
-> +	 * For a pool-backed provider this also fences gen_pool_destroy().
-> +	 */
->  	RCU_INIT_POINTER(pdev->p2pdma, NULL);
->  	synchronize_rcu();
-> +
-> +	/*
-> +	 * The grace period also ensures no RCU reader can still be accessing
-> +	 * map_types here.
-> +	 */
->  	xa_destroy(&p2pdma->map_types);
->  
->  	if (!p2pdma->pool)
-> @@ -255,6 +298,9 @@ static void pci_p2pdma_release(void *data)
->   * for a PCI device. It allocates and sets up the necessary data
->   * structures to support P2PDMA operations, including mapping type
->   * tracking.
-> + *
-> + * The state is published once per driver bind and torn down by a devres
-
-I still find the use of "published" here a bit odd and I'm not sure what
-"state" it is referring to.
-
-> + * action on unbind. Repeated calls for the same device are a no-op.
->   */
->  int pcim_p2pdma_init(struct pci_dev *pdev)
->  {
-> @@ -786,6 +832,12 @@ calc_map_type_and_dist(struct pci_dev *provider, struct pci_dev *client,
->  		map_type = PCI_P2PDMA_MAP_NOT_SUPPORTED;
->  	}
->  done:
-> +	/*
-> +	 * pci_p2pmem_find_many() reaches this with a provider whose driver may
-> +	 * be unbinding, so the store runs under RCU: pci_p2pdma_release()
-> +	 * clears the pointer and waits for readers before destroying
-> +	 * map_types. See "Lifetime and RCU usage" above.
-> +	 */
-
-I don't know, but this seems like we're just describing basic RCU usage
-here. I'm not sure I personally find much value in the comment.
-
->  	rcu_read_lock();
->  	p2pdma = rcu_dereference(provider->p2pdma);
->  	if (p2pdma)
-> 
-
-Thanks,
-
-Logan
+> >
+> > > > On Friday 21 August 2026 22:15:59 David Matlack wrote:
+> > > > > Use bridge_flags to determine address size bits (16- vs 32-bit for I/O,
+> > > > > 32- vs 64-bit for prefetchable memory) when displaying bridge ranges
+> > > > > populated via PCI_FILL_BRIDGE_BASES.
+> > > > >
+> > > > > Commit ccf68033a452 ("lspci: Use PCI_FILL_BRIDGE_BASES to detect if
+> > > > > range behind bridge is disabled or unsupported") introduced code in
+> > > > > show_htype1() that reads PCI_IO_RANGE_TYPE_MASK and
+> > > > > PCI_MEMORY_RANGE_TYPE_MASK from bridge_base_addr[]. However,
+> > > > > bridge_base_addr[] holds base addresses without flags, as documented in
+> > > > > lib/pci.h and implemented across backends like sysfs.c and
+> > > > > win32-cfgmgr32.c.
+> > > > >
+> > > > > Because bridge_base_addr[] does not contain configuration register flag
+> > > > > bits, masking the lower bits evaluates to zero. As a result, 32-bit I/O
+> > > > > windows are mislabeled as "[16-bit]" and 64-bit prefetchable memory
+> > > > > windows are mislabeled as "[32-bit]" when using PCI_FILL_BRIDGE_BASES.
+> > > > >
+> > > > > Fixes: ccf68033a452 ("lspci: Use PCI_FILL_BRIDGE_BASES to detect if range behind bridge is disabled or unsupported")
+> > > > > Signed-off-by: David Matlack <dmatlack@google.com>
+> > > > > ---
+> > > > > v2:
+> > > > >  - Fix lspci.c to use bridge_flags[], per lib/pci.h, rather than
+> > > > >    changing the behavior of just the sysfs backend (Pali Rohár)
+> > > > >
+> > > > > v1: https://lore.kernel.org/linux-pci/20260626213047.189951-1-bhelgaas@google.com/
+> > > > >
+> > > > >  lspci.c | 12 +++++-------
+> > > > >  1 file changed, 5 insertions(+), 7 deletions(-)
+> > > > >
+> > > > > diff --git a/lspci.c b/lspci.c
+> > > > > index 2a14303e74f6..52fd9247aefb 100644
+> > > > > --- a/lspci.c
+> > > > > +++ b/lspci.c
+> > > > > @@ -571,10 +571,9 @@ show_htype1(struct device *d)
+> > > > >
+> > > > >    if ((p->known_fields & PCI_FILL_BRIDGE_BASES) && !io_disabled)
+> > > > >      {
+> > > > > -      io_base = p->bridge_base_addr[0] & PCI_IO_RANGE_MASK;
+> > > > > +      io_base = p->bridge_base_addr[0];
+> > > > >        io_limit = io_base + p->bridge_size[0] - 1;
+> > > > > -      io_type = p->bridge_base_addr[0] & PCI_IO_RANGE_TYPE_MASK;
+> > > > > -      io_bits = (io_type == PCI_IO_RANGE_TYPE_32) ? 32 : 16;
+> > > > > +      io_bits = (p->bridge_flags[0] & PCI_IORESOURCE_IO_16BIT_ADDR) ? 16 : 32;
+> > > > >        show_range("\tI/O behind bridge", io_base, io_limit, io_bits, io_disabled);
+> > > > >      }
+> > > > >    else if (io_type != (io_limit & PCI_IO_RANGE_TYPE_MASK) ||
+> > > > > @@ -600,7 +599,7 @@ show_htype1(struct device *d)
+> > > > >
+> > > > >    if ((p->known_fields & PCI_FILL_BRIDGE_BASES) && !mem_disabled)
+> > > > >      {
+> > > > > -      mem_base = p->bridge_base_addr[1] & PCI_MEMORY_RANGE_MASK;
+> > > > > +      mem_base = p->bridge_base_addr[1];
+> > > > >        mem_limit = mem_base + p->bridge_size[1] - 1;
+> > > > >        show_range("\tMemory behind bridge", mem_base, mem_limit, 32, mem_disabled);
+> > > > >      }
+> > > > > @@ -616,10 +615,9 @@ show_htype1(struct device *d)
+> > > > >
+> > > > >    if ((p->known_fields & PCI_FILL_BRIDGE_BASES) && !pref_disabled)
+> > > > >      {
+> > > > > -      u64 pref_base_64 = p->bridge_base_addr[2] & PCI_MEMORY_RANGE_MASK;
+> > > > > +      u64 pref_base_64 = p->bridge_base_addr[2];
+> > > > >        u64 pref_limit_64 = pref_base_64 + p->bridge_size[2] - 1;
+> > > > > -      pref_type = p->bridge_base_addr[2] & PCI_MEMORY_RANGE_TYPE_MASK;
+> > > > > -      pref_bits = (pref_type == PCI_PREF_RANGE_TYPE_64) ? 64 : 32;
+> > > > > +      pref_bits = (p->bridge_flags[2] & PCI_IORESOURCE_MEM_64) ? 64 : 32;
+> > > > >        show_range("\tPrefetchable memory behind bridge", pref_base_64, pref_limit_64, pref_bits, pref_disabled);
+> > > > >      }
+> > > > >    else if (pref_type != (pref_limit & PCI_PREF_RANGE_TYPE_MASK) ||
+> > > > >
+> > > > > base-commit: b41ce14da749fb44ca7940ba9797027bfa62c23e
+> > > > > --
+> > > > > 2.55.0.766.g2966f0265a-goog
+> > > > >
+> > > >
