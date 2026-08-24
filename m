@@ -1,120 +1,150 @@
-Received: from mail-pl1-f200.google.com (mail-pl1-f200.google.com [209.85.214.200])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5418141A4FE
-	for <linux-pci@vger.kernel.org>; Mon, 24 Aug 2026 12:24:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.200
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6981E40DB29;
+	Mon, 24 Aug 2026 12:26:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787574250; cv=none; b=srfq1dbtuDeV/FpMZFnc6KANDDYh1worT8XVVVCVWK3aiabcbwnAI5mHNkhYONb9sbORh1vNK+VqMvzTMmzKtOIHXbtcUrgdeBggftjCKyL7+wWkmLFgk/8WsaGeG6xFOy42rOwvhSJShB90Yn3R/l8HKBS4iPYx/28l+54+rwc=
+	t=1787574375; cv=none; b=t6sLYmHu4nzQC2xLXANzZMM1ZBsKrBiKdtOzSPxfE83sna1WwI6SUfo7cs/+BQiP5HzuGKhRBYIK9ChBkY36H9jv00nmOICQwqvMBxfTjy16L8HLxaf4UasGLCIkZREjRMTGJeNZgATBZbCT+3cousKUIw74hP2DpyNt3+dwQTk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787574250; c=relaxed/simple;
-	bh=jNseeDVtVzJoGR3jltiSHFPzw1Eo1RyIpEWV4IRj9hk=;
-	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=VHdZTufjJ5hS+1tut7xM41WG8GTZm4RPOhQQ+TK1le8atbRnliNCZiFMfsIqg39YvRF3ajU1hxLjDlTyhQnpvFyMrrUsUFOlS8pjg96CmW3ojWI46xJQ/+hK8MwL6h4xTo+LBo5s5r0rnk+LGhL52PUSlDx4yxmbKFt7ASBH5X0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--praan.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=Jk6hlVIY; arc=none smtp.client-ip=209.85.214.200
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--praan.bounces.google.com
+	s=arc-20240116; t=1787574375; c=relaxed/simple;
+	bh=XprHHe3lQdZ/bHHkrfW5U843BNmtX6D0fOYV/cPGdkQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=UDxfDluJo72vt3/Ah1pOS94Sy6vol7MntYGOfrfLq9WGSPKpE0Zf58aTXliSd+oByGc/9NdUxIPmOxIKmhPfOvJJQHf4h7l+xuWHvRe9i4XkzHv0S0D2BRblIIxLTIEQHUjuLhRwnHM0ejVbwoc2N6QDqLkzfI/cpq9eclev2JY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PwNPX2NR; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="Jk6hlVIY"
-Received: by mail-pl1-f200.google.com with SMTP id d9443c01a7336-2cc86a9ef97so15805665ad.3
-        for <linux-pci@vger.kernel.org>; Mon, 24 Aug 2026 05:24:07 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1787574247; x=1788179047; darn=vger.kernel.org;
-        h=content-type:cc:to:from:subject:message-id:references:mime-version
-         :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=1mNxTLZ/5W01v+NT9cSmg670gp92Y4dFCPueiXmeaNc=;
-        b=Jk6hlVIYAHyF+tRXameBWAs/ULwp2w++k4IrcowFe0O6Eq0R5mzfh6GfOMITdwAibf
-         A0T2jtLkuMzUQhKzNg+dCaEn4hKFcgyS2BfQHELquhl/IBoPvsqxIItIFAYquXSh4dqC
-         8Jn872fK5kzRS9K8rr5YJO+bjzmoI2F0kISSD25fJeP09shEpm0xFjXFKSj7I+gF44VX
-         Sd6QpUxTZwz7AK+FJ9zC7o/ACae/g+osaPicB7zOS0uU10W9JIjI32Pviqntxv49LtoC
-         i3tsAPl4CQL2KRFyu2MNSo3nLHKfjhzCZXemLXFJgSdHxarLt3QtRumkK61vLKEreNUA
-         maWQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787574247; x=1788179047;
-        h=content-type:cc:to:from:subject:message-id:references:mime-version
-         :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=1mNxTLZ/5W01v+NT9cSmg670gp92Y4dFCPueiXmeaNc=;
-        b=mDLpDS+/zfgai8gfVmJ1kBoBUFvzSTNwYJES6NoRMo/AZWmvU8cmTqHyq+v4ma5peT
-         VqX5xMkd4exnjk0Ja0kIVRQhCVcmVxmr9woQ7vP0tQVZG/8muflI6WUiyPIqaUWELB2D
-         Zj9dweWrAo8qAwjO2jWtS6JOSU+bQMggC43uk6VpJo+JpQ2w1/LKjEm2wIvJzdDuPzG8
-         DJLiPblF1OqlBlVzvic0sUToe+OC3Yi2p4rwWD0diDhec/oM5W+z8RafvR2YLiWm8Qz+
-         yesk5wdHAWvb1zwKKab3vqAJQY4+lUIeBAdJl9ZYRWj22GFb2oGSREZRG0nYHWNBPHCp
-         cUdg==
-X-Forwarded-Encrypted: i=1; AHgh+RqTwaOrlRdub+ID+Gfar9BTpY/LICcHqbTYCs9DfcUjKrkCs+jaBsCa/lAQAQuc8312RAE5oUeX1tU=@vger.kernel.org
-X-Gm-Message-State: AFuF++lnUWsDIYMtjFAEZylbrCkBlGLu+U95siHxRHs86cH5cMdV74vO
-	ZPPfnYRk5crcJriH0pBeuy7O3SeSqeqbLtx6oc/7Rh606jzMRkkjbgO93YZsDp0Hl4S6ImV4e3L
-	UDg==
-X-Received: from pgbgc27.prod.google.com ([2002:a05:6a02:4b9b:b0:cc1:5076:bfcd])
- (user=praan job=prod-delivery.src-stubby-dispatcher) by 2002:a05:6a20:a10a:b0:3c3:8d86:9856
- with SMTP id adf61e73a8af0-3cd3013d226mr39966076637.14.1787574246476; Mon, 24
- Aug 2026 05:24:06 -0700 (PDT)
-Date: Mon, 24 Aug 2026 12:23:47 +0000
-In-Reply-To: <20260824122347.1588592-1-praan@google.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PwNPX2NR"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 874ED1F000E9;
+	Mon, 24 Aug 2026 12:26:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1787574374;
+	bh=upukaXZkr84gwak4ggRO0ndAK9t7zaBT3owzkfM3Fdk=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=PwNPX2NRFVN0Bz+S6KhhJDxiLSSZueaI23ct1PXVX8KFblpux4F/bG76u6TxrwCtv
+	 UBlSiGxKVvBTRYKxoEml8G+yJNr5LUcxCVHAJkkApNdp1pLMOe/M1VjBTgCXwU7U6V
+	 5IgTBRfAEyOLQqvyJJiMl62FQy0LIfHZ1uydX9Y4AhNiRmTr2057vOspY1cC7nY6+Q
+	 qZ3KAqtRYMVxL80qEDUwO6SUdJGBXEpXuEZNK6b9Z8cRlU4tajvzt2DKIM8cr4Vboc
+	 q/Ct4jN9XMSxR0SxukEoUtbJdV8txAyM9aXphiu3NaGi6TMPM5g8mGMXa0XMTMt2gj
+	 F9NjqiDJeK5BA==
+Date: Mon, 24 Aug 2026 14:26:11 +0200
+From: Uwe =?utf-8?Q?Kleine-K=C3=B6nig?= <ukleinek@kernel.org>
+To: Andreas Hindborg <a.hindborg@kernel.org>
+Cc: Danilo Krummrich <dakr@kernel.org>, Lorenzo Stoakes <ljs@kernel.org>, 
+	Vlastimil Babka <vbabka@kernel.org>, "Liam R. Howlett" <liam@infradead.org>, 
+	Uladzislau Rezki <urezki@gmail.com>, Miguel Ojeda <ojeda@kernel.org>, Boqun Feng <boqun@kernel.org>, 
+	Gary Guo <gary@garyguo.net>, =?utf-8?B?QmrDtnJu?= Roy Baron <bjorn3_gh@protonmail.com>, 
+	Benno Lossin <lossin@kernel.org>, Alice Ryhl <aliceryhl@google.com>, 
+	Trevor Gross <tmgross@umich.edu>, Daniel Almeida <daniel.almeida@collabora.com>, 
+	Tamir Duberstein <tamird@kernel.org>, Alexandre Courbot <acourbot@nvidia.com>, 
+	Onur =?utf-8?B?w5Z6a2Fu?= <work@onurozkan.dev>, Lyude Paul <lyude@redhat.com>, 
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Arve =?utf-8?B?SGrDuG5uZXbDpWc=?= <arve@android.com>, 
+	Todd Kjos <tkjos@android.com>, Christian Brauner <brauner@kernel.org>, 
+	Carlos Llamas <cmllamas@google.com>, "Rafael J. Wysocki" <rafael@kernel.org>, 
+	Dave Ertman <david.m.ertman@intel.com>, Leon Romanovsky <leon@kernel.org>, 
+	Paul Moore <paul@paul-moore.com>, Serge Hallyn <sergeh@kernel.org>, 
+	David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>, 
+	Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>, Igor Korotin <igor.korotin@linux.dev>, 
+	Viresh Kumar <vireshk@kernel.org>, Nishanth Menon <nm@ti.com>, Stephen Boyd <sboyd@kernel.org>, 
+	Bjorn Helgaas <bhelgaas@google.com>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Pavel Tikhomirov <ptikhomirov@virtuozzo.com>, Michal Wilczynski <m.wilczynski@samsung.com>, 
+	Ira Weiny <iweiny@kernel.org>, Philipp Stanner <phasta@kernel.org>, 
+	rust-for-linux@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, 
+	driver-core@lists.linux.dev, linux-block@vger.kernel.org, 
+	linux-security-module@vger.kernel.org, dri-devel@lists.freedesktop.org, linux-fsdevel@vger.kernel.org, 
+	linux-pm@vger.kernel.org, linux-pci@vger.kernel.org, linux-pwm@vger.kernel.org, 
+	linux-usb@vger.kernel.org, Oliver Mangold <oliver.mangold@pm.me>, 
+	Viresh Kumar <viresh.kumar@linaro.org>
+Subject: Re: [PATCH v20 5/8] rust: rename `AlwaysRefCounted` to `RefCounted`.
+Message-ID: <aow36NjRc5Ig0hG8@monoceros>
+References: <20260824-unique-ref-v20-0-490735672187@kernel.org>
+ <20260824-unique-ref-v20-5-490735672187@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-References: <20260824122347.1588592-1-praan@google.com>
-X-Mailer: git-send-email 2.55.0.766.g2966f0265a-goog
-Message-ID: <20260824122347.1588592-6-praan@google.com>
-Subject: [PATCH v3 5/5] PCI/ATS: Mandate checking pci_ats_supported() before pci_prepare_ats()
-From: Pranjal Shrivastava <praan@google.com>
-To: iommu@lists.linux.dev, linux-pci@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Cc: Joerg Roedel <joro@8bytes.org>, Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>, 
-	Vasant Hegde <vasant.hegde@amd.com>, Ankit Soni <ankit.soni@amd.com>, 
-	Jason Gunthorpe <jgg@nvidia.com>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Samiullah Khawaja <skhawaja@google.com>, Pranjal Shrivastava <praan@google.com>, 
-	Baolu Lu <baolu.lu@linux.intel.com>, Nicolin Chen <nicolinc@nvidia.com>
-Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="nwuv4cl3v42iarkt"
+Content-Disposition: inline
+In-Reply-To: <20260824-unique-ref-v20-5-490735672187@kernel.org>
 
-Currently, pci_prepare_ats() internally calls pci_ats_supported() and
-returns -EINVAL if the device does not support ATS. While this provides
-a silent safety check, it conflates support detection with configuration.
 
-Update pci_prepare_ats() to wrap the internal pci_ats_supported check in
-a WARN_ON(). This mandates all callers to call pci_prepare_ats() only if
-the function supports ATS.
+--nwuv4cl3v42iarkt
+Content-Type: text/plain; protected-headers=v1; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+Subject: Re: [PATCH v20 5/8] rust: rename `AlwaysRefCounted` to `RefCounted`.
+MIME-Version: 1.0
 
-Update the function documentation to mention that callers must verify
-ATS support (via pci_ats_supported()) before calling pci_prepare_ats().
+Hello,
 
-Reviewed-by: Vasant Hegde <vasant.hegde@amd.com>
-Suggested-by: Baolu Lu <baolu.lu@linux.intel.com>
-Reviewed-by: Nicolin Chen <nicolinc@nvidia.com>
-Signed-off-by: Pranjal Shrivastava <praan@google.com>
----
- drivers/pci/ats.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+On Mon, Aug 24, 2026 at 01:17:57PM +0200, Andreas Hindborg wrote:
+> diff --git a/rust/kernel/pwm.rs b/rust/kernel/pwm.rs
+> index 6c9d667009ef7..2d1cd74dd98e1 100644
+> --- a/rust/kernel/pwm.rs
+> +++ b/rust/kernel/pwm.rs
+> @@ -13,7 +13,11 @@
+>      devres,
+>      error::{self, to_result},
+>      prelude::*,
+> -    sync::aref::{ARef, AlwaysRefCounted},
+> +    sync::aref::{
+> +        ARef,
+> +        AlwaysRefCounted,
+> +        RefCounted, //
+> +    },
+>      types::Opaque, //
+>  };
+>  use core::{
+> @@ -629,7 +633,7 @@ pub fn new<'a>(
+>  }
+> =20
+>  // SAFETY: Implements refcounting for `Chip` using the embedded `struct =
+device`.
+> -unsafe impl<T: PwmOps> AlwaysRefCounted for Chip<T> {
+> +unsafe impl<T: PwmOps> RefCounted for Chip<T> {
+>      #[inline]
+>      fn inc_ref(&self) {
+>          // SAFETY: `self.0.get()` points to a valid `pwm_chip` because `=
+self` exists.
+> @@ -647,6 +651,10 @@ unsafe fn dec_ref(obj: NonNull<Chip<T>>) {
+>      }
+>  }
+> =20
+> +// SAFETY: We do not implement `Ownable`, thus it is okay to obtain an `=
+ARef<Chip<T>>` from a
+> +// `&Chip<T>`.
+> +unsafe impl<T: PwmOps> AlwaysRefCounted for Chip<T> {}
+> +
+>  // SAFETY: `Chip` is a wrapper around `*mut bindings::pwm_chip`. The und=
+erlying C
+>  // structure's state is managed and synchronized by the kernel's device =
+model
+>  // and PWM core locking mechanisms. Therefore, it is safe to move the `C=
+hip`
 
-diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
-index 96efa00d9743..f18c06b73eb2 100644
---- a/drivers/pci/ats.c
-+++ b/drivers/pci/ats.c
-@@ -53,7 +53,9 @@ EXPORT_SYMBOL_GPL(pci_ats_supported);
-  * @ps: the IOMMU page shift
-  *
-  * This must be done by the IOMMU driver on the PF before any VFs are created to
-- * ensure that the VF can have ATS enabled.
-+ * ensure that the VF can have ATS enabled. Callers must verify that ATS is
-+ * supported by the device (e.g. via pci_ats_supported()) before calling this
-+ * function.
-  *
-  * Returns 0 on success, or negative on failure.
-  */
-@@ -61,7 +63,7 @@ int pci_prepare_ats(struct pci_dev *dev, int ps)
- {
- 	u16 ctrl;
- 
--	if (!pci_ats_supported(dev))
-+	if (WARN_ON(!pci_ats_supported(dev)))
- 		return -EINVAL;
- 
- 	if (WARN_ON(dev->ats_enabled))
--- 
-2.55.0.766.g2966f0265a-goog
+I don't understand that, but if this is considered ok by the Rust folks,
+I'm fine with merging it via their tree.
 
+Acked-by: Uwe Kleine-K=F6nig <ukleinek@kernel.org> # for pwm.rs
+
+Best regards
+Uwe
+
+--nwuv4cl3v42iarkt
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAABCgAdFiEEP4GsaTp6HlmJrf7Tj4D7WH0S/k4FAmqMOGEACgkQj4D7WH0S
+/k7Eqwf+MmntLyABjsJ6u3n0tfvFXtT43FkhKWBYTvfrSkkGSwvZSD/ZY5rm4TJa
+bXNvGj/meY+tjoiL+lqEl91gKDUE91djmvVcfXDoceliQzIKh2cKRqYubSng7etR
+4cjqGN+2sGoPMqw/DE4AHSt6FjN7PW9atWXCHSqgj1X59q+Il9zzPvJoUf5LoJGl
+M03B0IF/eZP8vEHvwBR+bKlVqdJnU8LD7vn7fYKS9w8EcXVmRNet0ARjs8XnIUhd
+mRyFbmkqewycYxQaQdFwYsqkvc+ZdQfjXofOkRIorYXk2OXiZy3oqy94wwwiGntm
+xaLKESdeyy1mp9Q0CzYXHqcQr8nU5Q==
+=h9TM
+-----END PGP SIGNATURE-----
+
+--nwuv4cl3v42iarkt--
