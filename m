@@ -1,43 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 03D533C1086
-	for <linux-pci@vger.kernel.org>; Mon, 24 Aug 2026 05:45:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 45E5E352007
+	for <linux-pci@vger.kernel.org>; Mon, 24 Aug 2026 05:52:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787550333; cv=none; b=bNmaU5LUZqweF0f2WQ8w6MVEyMycx+WEvClFcnAzEC2JHpywdjm5z058fVof2t9e7vnvwTmO3rxWttOan9LJyENsw5/0ecJlSD1pZHi3jyOtCNzqaPaRu86axutd52FwMooyM9mq69C2y7a+QmjIofg+WhR0SxDch8WDAgoRqN8=
+	t=1787550771; cv=none; b=MpixWH6yvPLFT9vNycI1iMz3cPGPbgsf/0wuUysqJ9qz3DkNmN0xYAJduKruUK7GPleJ3L4bchTGKTkMQ+E3jdpNRLQdBLFYOClYLIewsNUj5jVEmZq0MPyn6mqWghLIzJ90DRpJYa3dd/f4GCn29+MqqsoYreeMhH0ByeY88VA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787550333; c=relaxed/simple;
-	bh=YBTCXzWLgT+I4NyDWitqA3/WeKbCPnsmPLINN1weT5M=;
+	s=arc-20240116; t=1787550771; c=relaxed/simple;
+	bh=0oCy/G+S5FSCi8i34LEk8E8UnPAoECdfhL8ZngudmYQ=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=SLdIe5quXqe6d3UhgACIgcR6Mc4emZUpx1AKdjDiXahppMK4M/jd+L2IVvJ9Nd/2SXzhqxO4aguBLuMpU9qOZeNzEiXX6Gq07zVkYi79geuCUwvJ+fZIa29xVehlXb5N7eiWS2V4D1XStqXxigOEBZgAx5bgiMUK696iaC3cR4I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=a5E2xKqj; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=WFoq6LYcaVYI4ppw5IYjdVa/iJoJ7rBcIOmcnPlHaIK1YKOrCMaULRqRKbP/NHAueP8zYhqGM7MsjNKESt1ix3O3fT9T8rUJMAurUcaQSqJoagWwDerSjI9gkt2t/FO3WNQRJDJhuR8W8PG5k5Rjpft3+Iyh/TXWFo2LIRYMXtI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PIU6fna8; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="a5E2xKqj"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 69F461F000E9;
-	Mon, 24 Aug 2026 05:45:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PIU6fna8"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AE6E01F000E9;
+	Mon, 24 Aug 2026 05:52:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787550331;
-	bh=JtYslLi04aINK7R0JhPBprR0zndEK7ND7cGvbWIE038=;
+	s=k20260515; t=1787550769;
+	bh=vIsK++JfVkVCBJpmvYe1nviZgsfLgrExptqFwAqTk5g=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=a5E2xKqjBB5gzKkvpl9j9ndXmfEC2vSu9Mi0jPCTCxaWIYwX/eFWZ5C1km0nAK4bI
-	 Fcq+8o4T3fzUVFyMNbjOACgVpbjrL/g8aH1gHCxcRvSm9eU6uJ8e0OiWROv1qtEb8J
-	 9f0W26Sw5/C5jwG9fy2tuMcpjGbIZf2peU0d6ydvddBVj7OyvJCgwyeM4IlU6Eqok/
-	 rmpAyYUWSorUpHmSlfyR2CdtMCy8lQF1S5pmQY2ypFgsLGyWzt/lgwzFuUUj0svhlr
-	 rCT78I07iMZGeEaktbfdyQ7pbPjjt/ouTUaOFfztPnZpcVROcBkUdiLXxajegk0/VK
-	 O+7iAPUmlcDzg==
+	b=PIU6fna8fVapWyXqnXRVeBIO/7fF6CSvWKhGTAvEIj81gK47+CVT/2FhLatDaLYOm
+	 5foPPG1VJCOagdA6MQDs7tli5jfi56UZUS4Ypjz5fmyK4SpNqGiAhoebtdVIF9dtII
+	 NxKRfygsNY8SOEa7XZrLsEdopjFUzyVBEgGQo7T/7Tt4Lj02fhSfwezmlZWEA3Aht7
+	 RANqmEdujeCRGwtzVrey03C4nNS1qFj5dBqVki5L5Ng7pId2QcMbOKNSKdq5/NdY5B
+	 OocnrtSlYwLvND0Fqo5SEVuZxtO6358c17pSAuWt52E+E8lKFsh3zrZNFwGc0pgu2c
+	 56cUosC0pCD1w==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 2/2] PCI: qcom: Implement shutdown() callback
+Subject: Re: [PATCH v3 1/2] PCI: dwc: Force L2 link entry on shutdown/reboot
+ without D3cold check
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Krishna Chaitanya Chundru" <krishna.chundru@oss.qualcomm.com>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260824-shutdown-v3-2-81c14bb7a1af@oss.qualcomm.com>
+In-Reply-To: <20260824-shutdown-v3-1-81c14bb7a1af@oss.qualcomm.com>
 References: <20260824-shutdown-v3-0-81c14bb7a1af@oss.qualcomm.com>
- <20260824-shutdown-v3-2-81c14bb7a1af@oss.qualcomm.com>
+ <20260824-shutdown-v3-1-81c14bb7a1af@oss.qualcomm.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 24 Aug 2026 05:45:30 +0000
-Message-Id: <20260824054531.69F461F000E9@smtp.kernel.org>
+Date: Mon, 24 Aug 2026 05:52:49 +0000
+Message-Id: <20260824055249.AE6E01F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -46,57 +47,85 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] Reusing a `_noirq` suspend callback in the shutdown path without d=
-isabling interrupts creates a race condition that can cause a fatal synchro=
-nous external abort.
+- [High] Forcing PME_Turn_Off and cutting VAUX during shutdown unconditiona=
+lly violates the PCIe Base Specification and breaks S5 Wake-on-LAN.
 --
 
---- Patch [2]: [PATCH v3 2/2] PCI: qcom: Implement shutdown() callback ---
-commit fddc2f7864ce1c4c291d73453690c4721638afe0
-Author: Manivannan Sadhasivam <mani@kernel.org>
+--- Patch [1]: [PATCH v3 1/2] PCI: dwc: Force L2 link entry on shutdown/reb=
+oot without D3cold check ---
+commit a2c00716f7d3b58c02f9dc631c72c6f185e30be1
+Author: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
 
-PCI: qcom: Implement shutdown() callback
+PCI: dwc: Force L2 link entry on shutdown/reboot without D3cold check
 
-This commit introduces a shutdown callback for the Qualcomm PCIe
-controller. It reuses dw_pcie_suspend_noirq() to cleanly bring down
-the PCIe link before system power and clocks are cut during shutdown
-or reboot.
+This commit modifies dw_pcie_suspend_noirq() to bypass the D3cold
+capability check during shutdown or reboot. It unconditionally forces
+the link into L2 state to avoid delays or failures when endpoints are
+still in D0.
 
-> diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/control=
-ler/dwc/pcie-qcom.c
-> index d8eb52857f69c..a4284c64de276 100644
-> --- a/drivers/pci/controller/dwc/pcie-qcom.c
-> +++ b/drivers/pci/controller/dwc/pcie-qcom.c
+> diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/=
+pci/controller/dwc/pcie-designware-host.c
+> index 06722259d2e37..98cd9dd2c7d79 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware-host.c
+> +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
 [ ... ]
-> @@ -2156,6 +2156,17 @@ static int qcom_pcie_probe(struct platform_device =
-*pdev)
->  	return ret;
->  }
+> @@ -1222,16 +1223,29 @@ static int dw_pcie_pme_turn_off(struct dw_pcie *p=
+ci)
 > =20
-> +static void qcom_pcie_shutdown(struct platform_device *pdev)
-> +{
-> +	struct qcom_pcie *pcie =3D platform_get_drvdata(pdev);
-> +
-> +	if (pcie)
-> +		dw_pcie_suspend_noirq(pcie->pci);
+>  int dw_pcie_suspend_noirq(struct dw_pcie *pci)
+>  {
+> -	bool pme_capable =3D false;
+> +	bool shutdown =3D system_state =3D=3D SYSTEM_HALT ||
+> +			system_state =3D=3D SYSTEM_POWER_OFF ||
+> +			system_state =3D=3D SYSTEM_RESTART;
+> +	bool d3cold, pme_capable =3D false;
+>  	int ret =3D 0;
+>  	u32 val;
+> =20
+>  	if (!dw_pcie_link_up(pci))
+>  		goto stop_link;
+> =20
+> -	if (!pci_host_common_d3cold_possible(pci->pp.bridge, &pme_capable))
+> +	/*
+> +	 * During reboot/halt/poweroff the link is going away regardless, so
+> +	 * force L2 entry without checking whether endpoints have transitioned
+> +	 * to D3hot -- there's no point walking the bus to find out.
+> +	 */
+> +	if (shutdown)
+> +		goto d3cold;
 
 [Severity: High]
-Does reusing dw_pcie_suspend_noirq() here without disabling device interrup=
-ts
-create a race condition that can cause a fatal synchronous external abort?
+Does skipping the D3hot verification and jumping straight to d3cold cause
+the controller to broadcast a PME_Turn_Off message to endpoints that might
+still be in D0?
 
-The device_shutdown() phase runs with interrupts enabled. The suspend_noirq
-hardware teardown sequence eventually disables the PCIe clocks and PHY.=20
+Section 5.3.3.2.1 of the PCIe Base Specification mandates that all downstre=
+am
+devices must be in D3hot or D3cold before software sends this message.
 
-If a PCIe MSI or spurious interrupt fires after the clocks are disabled but
-before the system finishes rebooting, the chained IRQ handler might attempt
-to read powered-off hardware registers, resulting in a fatal bus fault.
+Also, since jumping to d3cold skips the call to
+pci_host_common_d3cold_possible(), pme_capable remains false. Will this
+cause the driver to incorrectly set skip_pwrctrl_off to false later in the
+function:
+
+stop_link:
+        ...
+        pci->pp.skip_pwrctrl_off =3D pme_capable;
+
+and unconditionally cut Vaux power to the bus, breaking S5 wake-on-LAN for
+devices that were prepared for S5 wakeup?
 
 > +
-> +	pm_runtime_put_sync(&pdev->dev);
-> +	pm_runtime_disable(&pdev->dev);
-> +}
+> +	d3cold =3D pci_host_common_d3cold_possible(pci->pp.bridge, &pme_capable=
+);
+> +	if (!d3cold)
+>  		return 0;
+> =20
+> +d3cold:
+>  	if (pci->pp.ops->pme_turn_off) {
+>  		pci->pp.ops->pme_turn_off(&pci->pp);
+>  	} else {
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260824-shutdown-v=
-3-0-81c14bb7a1af@oss.qualcomm.com?part=3D2
+3-0-81c14bb7a1af@oss.qualcomm.com?part=3D1
