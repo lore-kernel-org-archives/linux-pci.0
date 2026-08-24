@@ -1,102 +1,136 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D2762DF134;
-	Sun, 23 Aug 2026 23:57:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2020140E5F;
+	Mon, 24 Aug 2026 00:14:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787529425; cv=none; b=J1uO7nR7g53E3OQiHp9enkEyPG6SAdnA8n5mjuSbbA9CUVjFRif82gbqu/X/IQETftZYhGHyNqYbEZaCZZUklEQSTJ2qjgxp00eg7quoNNh7E7SkQZU0eCpzQ8XQtxyOGeoRHKktjdegdSJiUbAAs1ennZS2SyF4v8n9Ux1xFfU=
+	t=1787530449; cv=none; b=rt0LXiodLK2O4mYPxoqZDHNoMrA3/jhaGv1qPJc0/FCobNzKqMwl2IYuQr/rCqzCOr17g/6gafS8v7tmXstQ8gt+q8EUFupJuqMTXH71AmcNThUbEe4PxyQLnPeIhVFIvDPpmziSrmlkYMs3HcT5VP9CXPQzpRFk+90BXYtTpDM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787529425; c=relaxed/simple;
-	bh=/vh9aRIyNRbedagQxMg+fPJvHafgqO2F6w0WizsCJvI=;
+	s=arc-20240116; t=1787530449; c=relaxed/simple;
+	bh=vxsH7t+mPViD9HKKDMX23yzinzd+DOPG1IlutqilAk0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=eVv586JS5ZJbdjUohbSByYJ0jWveVdW+t2I/LBZYd01YrAnl7v4tRgwb10Ve7djGelnnfkrte+crlmmpPOdgiKhUgUUvWRfefnFgjynu/K1JcCbBRfpF7AmZ+SSlD7QYuP/jFGR3RGMFvNQy2/3tWS1bWYa5uWYKiHeewxZdCBs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dj1qSClo; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=B0tkVWIM0/55gDcwBxPSJOzNWZUiqCL/bNYQuIOlMUJne75RmYTKHQmHIzjPz42AwwKMwleFPA2bV8yylhgKag6SBHt58aMgp3ytfgJWEwK04P+zrYn3As7VCHj75hH9D1YjGnYDYRU6Gr9mVDsNvN4CcnWBvuk8fEMB7CAo3J4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FXv8K0iT; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dj1qSClo"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E77951F000E9;
-	Sun, 23 Aug 2026 23:57:03 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FXv8K0iT"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 691531F000E9;
+	Mon, 24 Aug 2026 00:14:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787529424;
-	bh=O5SbCNfnMjv5k8msoooVD6oD2TypF+9sEXy8sPhvT/8=;
+	s=k20260515; t=1787530447;
+	bh=Rj9/mR/ZBUVYGOpdaibRJ74gieb4xPfeGCWP3MKyAy4=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=dj1qSClo5YJmULq7MzR34ONqyxy1qARhbJGsekZcl/Z94GELAFrHCOC5bqzupyUFj
-	 K2qYTql5H9Xpt6f8BVtNQYT3XAK2zKr5giovsIUGEZXX7P9COwceyK7HaU6M73i4s7
-	 3XI55v5W0gvvMuMrlJkz0DMJQQX82IlAllPMkZ6gGMbZ0LMGqBDlKG0mvOV1gDh4Cr
-	 ZhK4zdJm9RoCXYyvTOQi5Iw9QjTR2/BfF7LSK7W8X/eO8aT2a89fPx9afC+IvhCHOk
-	 iADdNG6z7TjDvxIOAK0L0KVnuWnEL73/+WI6Wt7VaonYqP8ndaJEHC//9njxRN40gW
-	 iw3T7WQPyeakg==
-Date: Sun, 23 Aug 2026 16:57:02 -0700
+	b=FXv8K0iTVgzemjA8Do+dPLLnJeyxZ+jIRo7dyAYaHPf+gzH7xoD7AQtu4wjeGh2qh
+	 IgFvUfeYdpjA/SZoJZ8bqVs69SHIxEDaZI9CmK58r2SYmYmruT3f7D5RvWfAE4X7EK
+	 mecxD947RjiEEu5MKgNYQ3XYi0oIF9+odcervWRvDWZeQ9AICbCkhFFWZ6FhuhBlRf
+	 Q6UhLE6X57zMJbEJlVzYHmzACkOMnZzhytKybvjd6KZAChfs4ldapR66L8hQ3gpKXO
+	 d7tZQ3rUDjBLcYBxnpqN7Eyi7wbkppOJ/7U6WYzE/6lEe3ebFZWiGVM/zoiGrNFf91
+	 bi0x+67Qc7Z7Q==
+Date: Sun, 23 Aug 2026 17:14:06 -0700
 From: Wei Liu <wei.liu@kernel.org>
-To: Long Li <longli@microsoft.com>
-Cc: "wei.liu@kernel.org" <wei.liu@kernel.org>,
-	Linux on Hyper-V List <linux-hyperv@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	KY Srinivasan <kys@microsoft.com>,
-	Haiyang Zhang <haiyangz@microsoft.com>,
-	Dexuan Cui <DECUI@microsoft.com>, Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	"open list:DOCUMENTATION" <linux-doc@vger.kernel.org>,
-	open list <linux-kernel@vger.kernel.org>
-Subject: Re: [EXTERNAL] [PATCH RFC 2/2] PCI: hv: Add vPCI device reset support
-Message-ID: <20260823235702.GA3566091@liuwe-devbox-debian-v2.local>
-References: <20260724230844.3259741-1-wei.liu@kernel.org>
- <20260724230844.3259741-3-wei.liu@kernel.org>
- <SA1PR21MB6683A0687C14475889222AACCEDB2@SA1PR21MB6683.namprd21.prod.outlook.com>
+To: Naman Jain <namjain@linux.microsoft.com>
+Cc: sashiko-reviews@lists.linux.dev, linux-pci@vger.kernel.org,
+	linux-hyperv@vger.kernel.org, Wei Liu <wei.liu@kernel.org>
+Subject: Re: [PATCH 1/3] PCI: hv: Set irq_retrigger callback for the Hyper-V
+ PCI MSI irqchip
+Message-ID: <20260824001406.GC3566091@liuwe-devbox-debian-v2.local>
+References: <20260728135117.2888175-1-namjain@linux.microsoft.com>
+ <20260728135117.2888175-2-namjain@linux.microsoft.com>
+ <20260728140427.714311F000E9@smtp.kernel.org>
+ <a9d44162-3c90-44c8-aae7-4813678234a9@linux.microsoft.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <SA1PR21MB6683A0687C14475889222AACCEDB2@SA1PR21MB6683.namprd21.prod.outlook.com>
+In-Reply-To: <a9d44162-3c90-44c8-aae7-4813678234a9@linux.microsoft.com>
 
-On Thu, Aug 13, 2026 at 09:40:48PM +0000, Long Li wrote:
+On Thu, Jul 30, 2026 at 04:56:27PM +0530, Naman Jain wrote:
 > 
 > 
-> > -----Original Message-----
-> > From: wei.liu@kernel.org <wei.liu@kernel.org>
-> > Sent: Friday, July 24, 2026 4:09 PM
-> > To: Linux on Hyper-V List <linux-hyperv@vger.kernel.org>; linux-
-> > pci@vger.kernel.org
-> > Cc: Wei Liu <wei.liu@kernel.org>; KY Srinivasan <kys@microsoft.com>;
-> > Haiyang Zhang <haiyangz@microsoft.com>; Dexuan Cui
-> > <DECUI@microsoft.com>; Long Li <longli@microsoft.com>; Jonathan Corbet
-> > <corbet@lwn.net>; Shuah Khan <skhan@linuxfoundation.org>; Lorenzo
-> > Pieralisi <lpieralisi@kernel.org>; Krzysztof Wilczyński
-> > <kwilczynski@kernel.org>; Manivannan Sadhasivam <mani@kernel.org>; Rob
-> > Herring <robh@kernel.org>; Bjorn Helgaas <bhelgaas@google.com>; open
-> > list:DOCUMENTATION <linux-doc@vger.kernel.org>; open list <linux-
-> > kernel@vger.kernel.org>
-> > Subject: [EXTERNAL] [PATCH RFC 2/2] PCI: hv: Add vPCI device reset support
+> On 7/28/2026 7:34 PM, sashiko-bot@kernel.org wrote:
+> > Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
 > > 
-> > From: Wei Liu <wei.liu@kernel.org>
+> > Pre-existing issues:
+> > - [High] The fix for dropped pending interrupts during CPU hot-unplug was missed in the sister Hyper-V root partition MSI domain.
+> > --
 > > 
-> > Hyper-V vPCI protocol version 1.5 adds a RESET_DEVICE request for projected
-> > PCI functions. Negotiate the new protocol version and issue the request
-> > through the vPCI VMBus channel from the PCI controller reset callback.
+> > --- Patch [1]: [PATCH 1/3] PCI: hv: Set irq_retrigger callback for the Hyper-V PCI MSI irqchip ---
+> > commit b8b1c843c457dd145f0d360b44f4b1bf34bd8cf5
+> > Author: Naman Jain <namjain@linux.microsoft.com>
 > > 
-> > Use the existing VMBus response path. Return -ENOTTY when the host
-> > reports STATUS_NOT_SUPPORTED so PCI core may try another reset method.
+> > PCI: hv: Set irq_retrigger callback for the Hyper-V PCI MSI irqchip
 > > 
-> > Signed-off-by: Wei Liu <wei.liu@kernel.org>
+> > The Hyper-V vPCI MSI irqchip never installs an irq_retrigger() callback.
+> > On CPU hot-unplug fixup_irqs() migrates the interrupts which are affine to
+> > the outgoing CPU to a new target. As the Hyper-V PCI/MSI chip does not
+> > provide that callback, the pending interrupt is silently dropped, which
+> > can result in lost interrupts, stalls and "No irq handler for vector"
+> > messages.
+> > 
+> > Fixes: 4daace0d8ce85 ("PCI: hv: Add paravirtual PCI front-end for Microsoft Hyper-V VMs")
+> > Cc: stable@vger.kernel.org
+> > Suggested-by: Long Li <longli@microsoft.com>
+> > Suggested-by: Thomas Gleixner <tglx@kernel.org>
+> > Signed-off-by: Naman Jain <namjain@linux.microsoft.com>
+> > 
+> > > diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
+> > > index cfc8fa403dad6..89816a2bd7cd3 100644
+> > > --- a/drivers/pci/controller/pci-hyperv.c
+> > > +++ b/drivers/pci/controller/pci-hyperv.c
+> > > @@ -2119,6 +2119,7 @@ static bool hv_pcie_init_dev_msi_info(struct device *dev, struct irq_domain *dom
+> > >   	info->ops->msi_prepare = hv_msi_prepare;
+> > >   	chip->irq_set_affinity = irq_chip_set_affinity_parent;
+> > > +	chip->irq_retrigger = irq_chip_retrigger_hierarchy;
+> > 
+> > [Severity: High]
+> > This isn't a bug introduced by this patch, but does the sister Hyper-V root
+> > partition MSI domain in arch/x86/hyperv/irqdomain.c also need this fix?
+> > 
+> > Looking at hv_init_dev_msi_info(), it appears to be missing the exact same
+> > callback initialization for the root partition's top-level irq_chip:
+> > 
+> > arch/x86/hyperv/irqdomain.c:hv_init_dev_msi_info() {
+> > 	...
+> > 	if (!msi_lib_init_dev_msi_info(dev, domain, real_parent, info))
+> > 		return false;
+> > 
+> > 	chip->flags |= IRQCHIP_SKIP_SET_WAKE | IRQCHIP_MOVE_DEFERRED;
+> > 
+> > 	info->ops->msi_prepare = pci_msi_prepare;
+> > 
+> > 	return true;
+> > }
+> > 
+> > If a CPU is hot-unplugged while a device MSI interrupt is pending in its
+> > local APIC IRR, could fixup_irqs() fail to resend the pending interrupt
+> > to the new target CPU because this callback is NULL?
+> > 
+> > This could potentially lead to the same lost interrupts and I/O stalls
+> > described in this commit message, just in the root partition MSI domain
+> > instead of the guest paravirtual MSI domain.
+> > 
+> > >   	if (IS_ENABLED(CONFIG_X86))
+> > >   		chip->flags |= IRQCHIP_MOVE_DEFERRED;
+> > > 
+> > 
 > 
-> Reviewed-by: Long Li <longli@microsoft.com>
+> I am not planning to include this in this series, since this issue is not
+> seen in root partition yet and I am not sure if it is applicable here.
+> Second patch would anyways fix it going forward, but I am OK adding the
+> change for this, if we need.
 
-Thanks for the review!
+What's the downside of fixing the root partition irq domain?
 
-I still need to find some copious free time to test the new hook
-suggested in patch one.
+We never really attempted to unplug any CPU from the root partition, so
+it is unsurprising that it has not been reported.
 
-I don't think changes in patch 1 will result in major changes in this
-patch, so I intend to retain this tag when I post next time.
-
-Thanks,
 Wei
+
+> 
+> Regards,
+> Naman
+> 
