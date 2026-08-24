@@ -1,164 +1,145 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f178.google.com (mail-pl1-f178.google.com [209.85.214.178])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C28F82B2D7
-	for <linux-pci@vger.kernel.org>; Mon, 24 Aug 2026 09:09:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 456043F58E0
+	for <linux-pci@vger.kernel.org>; Mon, 24 Aug 2026 10:07:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787562543; cv=none; b=N9TlO7nDoFej+XyKfY0mMeuY1xI5LRm8DxZzRL8+nKg2Ks7dGfL64kh7/YmE7M5Iy1g1wzwsUxznX1cwdbcIjI4BszWXslu2w/K+ENh+mdM5Bzrx0GLncI+FJ+3cfL21/8GhqkJrIJJKtjYcHDp4OnpS4bD1yykUqZpu0WreCmI=
+	t=1787566056; cv=none; b=BD4MwM5eUArkTcl6RHsgqp4MCBHmELKCp4e7kvt3YgGLKo4WaDZYVouI83LbhcRPUXaunTbtSMUd+j2NrDZcBe0RR2b8doE8tDC8AmIvu8gVJUK/FwpAo4EyIJU+06CxgRFyerbiutoCFnUSXk0RK65LUb5ETnSE6yR5/k4ks4Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787562543; c=relaxed/simple;
-	bh=YH/gRl0g3VBBElQPn6iyLF8ozs3ITFKRTr96+BPH6wM=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=OgSlGvFyBwGLutXotER3hnlq5W1FYOBlnOUbwuTdhdbLE6iG9lBQ9/rf8TvxPulnJelp5sTfpBKvrfYlPEmp0avZB/iZQct+u9Cj0+4AGSw7ljprc18x+GaIYKN0TqTmJ5G7LAasihZs++RDolMEjqk36eecUxTivaf9MPuhrTc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LLOOXAeY; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1787566056; c=relaxed/simple;
+	bh=tiMiPtTKlfHRwgEibcz8vFhTykbZbs0vaWu8IsiI8W0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Ui8/TKlOqpt40CseDxc/8dlMAIVUwMaiaS7gkJ8LcnzjP5OcS/yQJgWW8PudZ/RInU1CFfbcwnIEHecYTemra0DC2W+gfMPTHGUle1g7El0mIZ7PI40AB20JccCC0Kex58u6+Wqsx5nC16lx5Ji3imtCpUu8TaYE9ZzYK/cIaso=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=nLOuEEZO; arc=none smtp.client-ip=209.85.214.178
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LLOOXAeY"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 752F91F000E9;
-	Mon, 24 Aug 2026 09:09:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787562541;
-	bh=wtAoDzGJuHZ/uSYFQA45rh8hI1qp0bc37md0w9tkpVM=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=LLOOXAeYwvOppBhRw7buQxVwsgXIS9bJHDJoj2I2cedLMGAnp0t+IqwlSUMkP8lax
-	 9xgDjpzW1xCUM8xiUlGzqIgIzGA+vzM7sXlfjEogVJYh/eJlvLfU1y04nP1M5H/wPd
-	 ifl1od/a4S1KSC0Fzp/oN2FvtEYf33PqCB4G7PuvFHI99VZBZHxHJwG0hFh7Hw3uKD
-	 EpCVnTrnXfEe7mOHqrRLIjU72DGJvI3FPPdx0gbJq3ZgzscO1HUnoGviPNsEuUqCI+
-	 TtgFTH+Ai4rS++/S32JdndiJ24/v9Z9j7anQOjrHaGKjYay8MztLa/WyFLAiG9WwG1
-	 sdtfzba575rAA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2] iommu/amd: Force identity mode for selected GPUs
- only
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Vasant Hegde" <vasant.hegde@amd.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260824085821.5422-1-vasant.hegde@amd.com>
-References: <20260824085821.5422-1-vasant.hegde@amd.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 24 Aug 2026 09:09:01 +0000
-Message-Id: <20260824090901.752F91F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="nLOuEEZO"
+Received: by mail-pl1-f178.google.com with SMTP id d9443c01a7336-2ccdf36f63dso137925ad.0
+        for <linux-pci@vger.kernel.org>; Mon, 24 Aug 2026 03:07:34 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1787566054; x=1788170854; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=1zbz0UezBRokFCxPAADPzNNnQ2q3uFS8kgDI9OKirCA=;
+        b=nLOuEEZOI6xN3Fq3Nz6lpm2VhXw8uWs0WUQ7XYhsV/uJBv5gr5uxsM4NZnSlXh1lDN
+         W8XjUSkxPh9GoW1D0g3gcqhQOX//xGr+HFuk0aKxHMhZ0wZ3eWX9Ut0JJ566+CDMYm7R
+         UxbQyEEZ4eF7SzwDQPcYbFsLqcKdXQPM981glW/SS/g8/tnitwKseB3jFO6+arV6Xz7w
+         AMzebyTJ51A27MNOwpCiPQiLvNJK3wtephpmpEQKO2dQdHPAfYqAzrbmM6ZbYw4V9N2M
+         IQuJOqtRZ/I0JpBLIeAs3cfFZ9p5aBtW2EH9bfGpwQSN31vlESUYgDogtCKr++FmVB6Y
+         mmSw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1787566054; x=1788170854;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=1zbz0UezBRokFCxPAADPzNNnQ2q3uFS8kgDI9OKirCA=;
+        b=Z+Glo/ryQkvco6Q0GZvMCX+HrUezHzha5SM4hXVjfsdvMgxFCWkUlzY08JcZMg63xN
+         4MwuEgihiIjsIHo7zlczfsEJ0I3XejGm030fYySoLD8z4eJ7AM3q28uozQsxvZ6O7vbK
+         aYgI3ep915R+/rOFIcDPwkm0gf4Jk5M66WmNTZC6Uqx4HCbtYqZNH0GwDK7Imay3zpt9
+         ntRVVBb8Fu2onKbpdBSFPsHJU2yXSPtHwEIj7BmQfEFZ9+ntqkvIU4gmSKOU/NXebgtL
+         3HAIw1xVO3OkqRsQb3AQpKvsNrnU+c9AZu44jl3QCpIGMy4KrFYZvM1kcSzWNMzGptHE
+         ylow==
+X-Forwarded-Encrypted: i=1; AHgh+RomHsdBVl77dsd8ueUglKJSUE9A54Dn/7gAjFV+CcG6oR/vi5voTNAmauDf8K1ndhNI+pVv0ydg7ZM=@vger.kernel.org
+X-Gm-Message-State: AFuF++lZx2UCOXDeuLPmgauJje47p+t+XXUG0UTgfWdomyH+L9cShH3D
+	26dYTRo2urDH1qCTeySfuYNvY2FptO25zAR2a7M979p8EqJ3GKJuqLJlpRc/huNI0w==
+X-Gm-Gg: AR+sD12DX4LtcRdnVSxGI7QqCkMtOYoiIUfDGj97WRoBgGJjIE4QHOWKPrSUxBtBOza
+	jAIuww2AiPIjHqS/I0svJZhAxa/EvXnd1WNcPco+xsY1qrLNIf31r47TPsRf6zizz401HG1VrV+
+	KJQUOJQxw4qnpZWzF+pcE/tAYrZM/BbxeQ/2hIS5YSRNlNuhP4tMWPRUMmQ8+5ETG884aRT0Ehw
+	C1UqEYq7o2kt93HgrRYQjgU5Rtf43Gl0uZyxCGN8Rv821EM3BBPO7N54wwy2zld3BTVlnkKbD6Z
+	6MB2AQC+dmtjgSPbvj8B98KR5OgJaEf1OJgNBFtDuYX4Jz7wW8SVndzrvDaNapSJ2AAopyysnXp
+	geAXRlFq+QZp6eOMGCnQaC4GRqGPEsVRBGEu9antx2gy4dI5/g4YnVdQdrju9Fu9QSGx4aY/3xz
+	ouJvSz4NZLqNXPQ+GJTBwFTx48ka1CGmLyWMYReveRavSkj2WlE5jw7ZvmWM31EyqpDQc4rvLFQ
+	vnGSaJtP2WxrtMsJ0VJ319mwg==
+X-Received: by 2002:a17:902:ced1:b0:2bf:1000:d3ac with SMTP id d9443c01a7336-2d673bdc43fmr8073435ad.11.1787566053791;
+        Mon, 24 Aug 2026 03:07:33 -0700 (PDT)
+Received: from google.com (164.210.142.34.bc.googleusercontent.com. [34.142.210.164])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-8520f03b065sm1758681b3a.32.2026.08.24.03.07.31
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 24 Aug 2026 03:07:33 -0700 (PDT)
+Date: Mon, 24 Aug 2026 10:07:27 +0000
+From: Pranjal Shrivastava <praan@google.com>
+To: Vasant Hegde <vasant.hegde@amd.com>
+Cc: iommu@lists.linux.dev, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Joerg Roedel <joro@8bytes.org>,
+	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
+	Ankit Soni <ankit.soni@amd.com>, Jason Gunthorpe <jgg@nvidia.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Samiullah Khawaja <skhawaja@google.com>
+Subject: Re: [PATCH v2 1/5] iommu/amd: Refactor device probe and capability
+ initialization
+Message-ID: <aowX3yLlstXoCfKa@google.com>
+References: <20260814015647.3370124-1-praan@google.com>
+ <20260814015647.3370124-2-praan@google.com>
+ <ecb70415-05c9-40bd-8ddb-173267a7a30d@amd.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ecb70415-05c9-40bd-8ddb-173267a7a30d@amd.com>
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
-s) to consider:
-- [Critical] Missing NULL pointer check for `pci_upstream_bridge()` causes =
-a kernel panic during boot on systems where the GPU is on the root bus.
-- [High] The heuristic used to distinguish discrete GPUs (dGPUs) from APU G=
-PUs is flawed and will incorrectly force identity mapping on many dGPUs.
-- [High] Discrete GPUs break on SNP-enabled systems due to the removal of t=
-he SNP check combined with flawed GPU identification.
---
+On Sat, Aug 22, 2026 at 06:34:42PM +0530, Vasant Hegde wrote:
+> Pranjal,
+> 
+> 
+> On 8/14/2026 7:26 AM, Pranjal Shrivastava wrote:
+> > Restructure the device probe path to improve readability and prepare for
+> > cleaner error handling. Refactor check_device() into iommu_lookup_device
+> > to explicitly validate and return the amd_iommu ptr & devid. Refactor
+> > iommu_init_device() to return the allocated dev_data. Consolidate all
+> > PCI cap inits (MSI domains, PASID, ATS) into a new helper:
+> > iommu_init_device_caps().
+> > 
+> > Suggested-by: Vasant Hegde <vasant.hegde@amd.com>
+> > Signed-off-by: Pranjal Shrivastava <praan@google.com>
+> > ---
+> >  drivers/iommu/amd/iommu.c | 114 +++++++++++++++++++-------------------
+> >  1 file changed, 56 insertions(+), 58 deletions(-)
+> > 
+> > diff --git a/drivers/iommu/amd/iommu.c b/drivers/iommu/amd/iommu.c
+> > index 4c31294fabc5..9b8ad131ba79 100644
+> > --- a/drivers/iommu/amd/iommu.c
+> > +++ b/drivers/iommu/amd/iommu.c
+> > @@ -675,7 +675,8 @@ static void pdev_disable_caps(struct pci_dev *pdev)
+> 
+> 
+> .../...
+> 
+> > -	amd_iommu_set_pci_msi_domain(dev, iommu);
+> > +	iommu_init_device_caps(dev_data, dev, iommu);
+> >  	iommu_dev = &iommu->iommu;
+> >  
+> > -	/*
+> > -	 * If IOMMU and device supports PASID then it will contain max
+> > -	 * supported PASIDs, else it will be zero.
+> > -	 */
+> > -	dev_data = dev_iommu_priv_get(dev);
+> > -	if (amd_iommu_pasid_supported() && dev_is_pci(dev) &&
+> > -	    pdev_pasid_supported(dev_data)) {
+> > -		dev_data->max_pasids = min_t(u32, iommu->iommu.max_pasids,
+> > -					     pci_max_pasids(to_pci_dev(dev)));
+> > -	}
+> > -
+> 
+> Can you add something like below comment so that we know why we are not calling
+> iommu_ignore_device in error path.
 
---- Patch [1]: [PATCH v2] iommu/amd: Force identity mode for selected GPUs =
-only ---
-commit 8994b69ea108b9e83363d3bf65d86e8798e45ba5
-Author: Vasant Hegde <vasant.hegde@amd.com>
+Ack, I'll add a comment about this.
 
-iommu/amd: Force identity mode for selected GPUs only
+> 
+> +        * When DMA translation is unavailable return error so the iommu core
+> +        * won't attempt domain attach for this device. But interrupt-remap
+> +        * is still supported. Hence do not ignore the device.
+> 
+> -Vasant
+> 
 
-This commit updates AMD IOMMU domain allocation to force identity mapping
-only for specific APU GPUs, rather than all PASID-capable devices. It
-introduces quirks_force_identity_mapping() to apply this targeted enforceme=
-nt
-and drops the previous SNP check.
-
-Link: https://lore.kernel.org/all/20200824105415.21000-1-joro@8bytes.org/
-Link: https://lore.kernel.org/linux-iommu/20260723061548.10187-1-vasant.heg=
-de@amd.com/
-
-> diff --git a/drivers/iommu/amd/iommu.c b/drivers/iommu/amd/iommu.c
-> index 4dc306a4b5c62..eef585918e607 100644
-> --- a/drivers/iommu/amd/iommu.c
-> +++ b/drivers/iommu/amd/iommu.c
-> @@ -3165,6 +3165,26 @@ static bool amd_iommu_is_attach_deferred(struct de=
-vice *dev)
->  	return dev_data->defer_attach;
->  }
-> =20
-> +static bool quirks_force_identity_mapping(struct pci_dev *pdev)
-> +{
-> +	int class =3D pdev->class >> 8;
-> +
-> +	/* AMD GPU vendor ID */
-> +	if (pdev->vendor !=3D PCI_VENDOR_ID_ATI)
-> +		return false;
-> +
-> +	/* GPU class */
-> +	if (class !=3D PCI_CLASS_DISPLAY_VGA &&
-> +	    class !=3D PCI_CLASS_DISPLAY_OTHER)
-> +		return false;
-> +
-> +	if (pci_upstream_bridge(pdev)->vendor =3D=3D PCI_VENDOR_ID_ATI)
-
-[Severity: Critical]
-Is it possible for pci_upstream_bridge() to return NULL here?
-
-If the GPU is located on the PCIe root bus (such as in an integrated SoC=20
-design, or when passed through to a VM via VFIO), pci_upstream_bridge(pdev)
-would return NULL. This would lead to a kernel panic when dereferencing=20
-->vendor during boot.
-
-> +		return false;
-> +
-> +	/* It is the GPU in an APU, force identity domain */
-> +	return true;
-> +}
-
-[Severity: High]
-Does this heuristic accurately distinguish APUs from standard discrete GPUs?
-
-Standard discrete GPUs are typically plugged directly into motherboard PCIe=
-=20
-slots, which means their upstream bridge is the motherboard's root port=20
-(e.g., an Intel or AMD root port, not an ATI switch). Since the root port=20
-vendor is not ATI, this check would fall through and erroneously return tru=
-e,=20
-forcing standard discrete GPUs into the identity domain.
-
-[ ... ]
-
-> -	/*
-> -	 * Do not identity map IOMMUv2 capable devices when:
-> -	 *  - memory encryption is active, because some of those devices
-> -	 *    (AMD GPUs) don't have the encryption bit in their DMA-mask
-> -	 *    and require remapping.
-> -	 *  - SNP is enabled, because it prohibits DTE[Mode]=3D0.
-> -	 */
-> -	if (pdev_pasid_supported(dev_data) &&
-> -	    !cc_platform_has(CC_ATTR_MEM_ENCRYPT) &&
-> -	    !amd_iommu_snp_en) {
-> +	/* Apply device specific quirks */
-> +	if (quirks_force_identity_mapping(to_pci_dev(dev))) {
-> +		/*
-> +		 * When memory encryption is active, some of these devices
-> +		 * don't have the encryption bit in their DMA-mask and
-> +		 * require remapping.
-> +		 */
-> +		if (cc_platform_has(CC_ATTR_MEM_ENCRYPT))
-> +			return 0;
-> +
-> +		return IOMMU_DOMAIN_IDENTITY;
->  	}
-
-[Severity: High]
-Since the amd_iommu_snp_en check was dropped, how does this affect discrete=
-=20
-GPUs on SNP-enabled systems?
-
-If standard discrete GPUs are incorrectly identified as APUs by=20
-quirks_force_identity_mapping(), they will be unconditionally forced into=20
-IOMMU_DOMAIN_IDENTITY here when SME is disabled.=20
-
-On systems with SNP enabled, amd_iommu_identity_attach() will reject the=20
-identity domain if Mode0 isn't supported, returning -EINVAL. Could this lea=
-ve=20
-the discrete GPU without a valid domain and break DMA entirely?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260824085821.5422=
--1-vasant.hegde@amd.com?part=3D1
+Thanks,
+Praan
