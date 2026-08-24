@@ -1,131 +1,152 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 45E5E352007
-	for <linux-pci@vger.kernel.org>; Mon, 24 Aug 2026 05:52:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id B9EDF33939A;
+	Mon, 24 Aug 2026 06:28:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787550771; cv=none; b=MpixWH6yvPLFT9vNycI1iMz3cPGPbgsf/0wuUysqJ9qz3DkNmN0xYAJduKruUK7GPleJ3L4bchTGKTkMQ+E3jdpNRLQdBLFYOClYLIewsNUj5jVEmZq0MPyn6mqWghLIzJ90DRpJYa3dd/f4GCn29+MqqsoYreeMhH0ByeY88VA=
+	t=1787552884; cv=none; b=qnKh8KJDvDANiww0SoZ50NACWFsehf9+OHGmjVGJGlyiQymuO+3ZoyyLzWPS5ncwV+/Iks2ddHHAswcM9pXPbFSqaorAIJ4yCxEUzg3TUSTTitlhfJvFz/s5ees9IY3vFwAtBjbTam0/85C8nd5gcrkk+JYw4VYqyOXmhpXeheg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787550771; c=relaxed/simple;
-	bh=0oCy/G+S5FSCi8i34LEk8E8UnPAoECdfhL8ZngudmYQ=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=WFoq6LYcaVYI4ppw5IYjdVa/iJoJ7rBcIOmcnPlHaIK1YKOrCMaULRqRKbP/NHAueP8zYhqGM7MsjNKESt1ix3O3fT9T8rUJMAurUcaQSqJoagWwDerSjI9gkt2t/FO3WNQRJDJhuR8W8PG5k5Rjpft3+Iyh/TXWFo2LIRYMXtI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PIU6fna8; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1787552884; c=relaxed/simple;
+	bh=LkRtI3pmvjIoVMEzbKSKIuqvH8xMDB+uK0wyKOQxHVQ=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=X7irFO17FP8DV0mKVIi0YIkon80pvh1zx16FzYNz2dbgB1oEKlDmrmXjfkn7fpEWKWYKJDYlFDGcvnlwEiXGOrp8OW2WBkQq3HoSt/peJmiCDT33DEleJo6zLOzLWeA+Q1xre9CUYf0AjN3Qd/UrJEKzVYaby0oK4nOswDzwISU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=HwvBEUZE; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PIU6fna8"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AE6E01F000E9;
-	Mon, 24 Aug 2026 05:52:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787550769;
-	bh=vIsK++JfVkVCBJpmvYe1nviZgsfLgrExptqFwAqTk5g=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=PIU6fna8fVapWyXqnXRVeBIO/7fF6CSvWKhGTAvEIj81gK47+CVT/2FhLatDaLYOm
-	 5foPPG1VJCOagdA6MQDs7tli5jfi56UZUS4Ypjz5fmyK4SpNqGiAhoebtdVIF9dtII
-	 NxKRfygsNY8SOEa7XZrLsEdopjFUzyVBEgGQo7T/7Tt4Lj02fhSfwezmlZWEA3Aht7
-	 RANqmEdujeCRGwtzVrey03C4nNS1qFj5dBqVki5L5Ng7pId2QcMbOKNSKdq5/NdY5B
-	 OocnrtSlYwLvND0Fqo5SEVuZxtO6358c17pSAuWt52E+E8lKFsh3zrZNFwGc0pgu2c
-	 56cUosC0pCD1w==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 1/2] PCI: dwc: Force L2 link entry on shutdown/reboot
- without D3cold check
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Krishna Chaitanya Chundru" <krishna.chundru@oss.qualcomm.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260824-shutdown-v3-1-81c14bb7a1af@oss.qualcomm.com>
-References: <20260824-shutdown-v3-0-81c14bb7a1af@oss.qualcomm.com>
- <20260824-shutdown-v3-1-81c14bb7a1af@oss.qualcomm.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 24 Aug 2026 05:52:49 +0000
-Message-Id: <20260824055249.AE6E01F000E9@smtp.kernel.org>
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="HwvBEUZE"
+Received: from [192.168.1.70] (unknown [4.194.122.144])
+	by linux.microsoft.com (Postfix) with ESMTPSA id 835B120B7166;
+	Sun, 23 Aug 2026 23:27:29 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 835B120B7166
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1787552851;
+	bh=O4pr4hYlgjdfgeWFfFKRFT/vKwaQD3nS7Ku4eOeDQ5w=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=HwvBEUZEywrg293E6Up5D+IQNqqle+GOIVLaAS0DJQa8fHA29EFvVURYCtrzITnXb
+	 /AyslYGxR00vU4x030h1eMC6XWq/EQ7cEzsDnj/e8M9lUC1KkboMVhJqiUIaDY5eMu
+	 hdG5uJzOnzvOJIpZ9JtBXQGJsGkhfEphiC14EASY=
+Message-ID: <c165f17f-b214-4a96-a446-6dd4e6cb2161@linux.microsoft.com>
+Date: Mon, 24 Aug 2026 11:57:56 +0530
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 1/3] PCI: hv: Set irq_retrigger callback for the Hyper-V
+ PCI MSI irqchip
+To: Wei Liu <wei.liu@kernel.org>
+Cc: sashiko-reviews@lists.linux.dev, linux-pci@vger.kernel.org,
+ linux-hyperv@vger.kernel.org
+References: <20260728135117.2888175-1-namjain@linux.microsoft.com>
+ <20260728135117.2888175-2-namjain@linux.microsoft.com>
+ <20260728140427.714311F000E9@smtp.kernel.org>
+ <a9d44162-3c90-44c8-aae7-4813678234a9@linux.microsoft.com>
+ <20260824001406.GC3566091@liuwe-devbox-debian-v2.local>
+Content-Language: en-US
+From: Naman Jain <namjain@linux.microsoft.com>
+In-Reply-To: <20260824001406.GC3566091@liuwe-devbox-debian-v2.local>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [High] Forcing PME_Turn_Off and cutting VAUX during shutdown unconditiona=
-lly violates the PCIe Base Specification and breaks S5 Wake-on-LAN.
---
 
---- Patch [1]: [PATCH v3 1/2] PCI: dwc: Force L2 link entry on shutdown/reb=
-oot without D3cold check ---
-commit a2c00716f7d3b58c02f9dc631c72c6f185e30be1
-Author: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
 
-PCI: dwc: Force L2 link entry on shutdown/reboot without D3cold check
+On 8/24/2026 5:44 AM, Wei Liu wrote:
+> On Thu, Jul 30, 2026 at 04:56:27PM +0530, Naman Jain wrote:
+>>
+>>
+>> On 7/28/2026 7:34 PM, sashiko-bot@kernel.org wrote:
+>>> Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
+>>>
+>>> Pre-existing issues:
+>>> - [High] The fix for dropped pending interrupts during CPU hot-unplug was missed in the sister Hyper-V root partition MSI domain.
+>>> --
+>>>
+>>> --- Patch [1]: [PATCH 1/3] PCI: hv: Set irq_retrigger callback for the Hyper-V PCI MSI irqchip ---
+>>> commit b8b1c843c457dd145f0d360b44f4b1bf34bd8cf5
+>>> Author: Naman Jain <namjain@linux.microsoft.com>
+>>>
+>>> PCI: hv: Set irq_retrigger callback for the Hyper-V PCI MSI irqchip
+>>>
+>>> The Hyper-V vPCI MSI irqchip never installs an irq_retrigger() callback.
+>>> On CPU hot-unplug fixup_irqs() migrates the interrupts which are affine to
+>>> the outgoing CPU to a new target. As the Hyper-V PCI/MSI chip does not
+>>> provide that callback, the pending interrupt is silently dropped, which
+>>> can result in lost interrupts, stalls and "No irq handler for vector"
+>>> messages.
+>>>
+>>> Fixes: 4daace0d8ce85 ("PCI: hv: Add paravirtual PCI front-end for Microsoft Hyper-V VMs")
+>>> Cc: stable@vger.kernel.org
+>>> Suggested-by: Long Li <longli@microsoft.com>
+>>> Suggested-by: Thomas Gleixner <tglx@kernel.org>
+>>> Signed-off-by: Naman Jain <namjain@linux.microsoft.com>
+>>>
+>>>> diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
+>>>> index cfc8fa403dad6..89816a2bd7cd3 100644
+>>>> --- a/drivers/pci/controller/pci-hyperv.c
+>>>> +++ b/drivers/pci/controller/pci-hyperv.c
+>>>> @@ -2119,6 +2119,7 @@ static bool hv_pcie_init_dev_msi_info(struct device *dev, struct irq_domain *dom
+>>>>    	info->ops->msi_prepare = hv_msi_prepare;
+>>>>    	chip->irq_set_affinity = irq_chip_set_affinity_parent;
+>>>> +	chip->irq_retrigger = irq_chip_retrigger_hierarchy;
+>>>
+>>> [Severity: High]
+>>> This isn't a bug introduced by this patch, but does the sister Hyper-V root
+>>> partition MSI domain in arch/x86/hyperv/irqdomain.c also need this fix?
+>>>
+>>> Looking at hv_init_dev_msi_info(), it appears to be missing the exact same
+>>> callback initialization for the root partition's top-level irq_chip:
+>>>
+>>> arch/x86/hyperv/irqdomain.c:hv_init_dev_msi_info() {
+>>> 	...
+>>> 	if (!msi_lib_init_dev_msi_info(dev, domain, real_parent, info))
+>>> 		return false;
+>>>
+>>> 	chip->flags |= IRQCHIP_SKIP_SET_WAKE | IRQCHIP_MOVE_DEFERRED;
+>>>
+>>> 	info->ops->msi_prepare = pci_msi_prepare;
+>>>
+>>> 	return true;
+>>> }
+>>>
+>>> If a CPU is hot-unplugged while a device MSI interrupt is pending in its
+>>> local APIC IRR, could fixup_irqs() fail to resend the pending interrupt
+>>> to the new target CPU because this callback is NULL?
+>>>
+>>> This could potentially lead to the same lost interrupts and I/O stalls
+>>> described in this commit message, just in the root partition MSI domain
+>>> instead of the guest paravirtual MSI domain.
+>>>
+>>>>    	if (IS_ENABLED(CONFIG_X86))
+>>>>    		chip->flags |= IRQCHIP_MOVE_DEFERRED;
+>>>>
+>>>
+>>
+>> I am not planning to include this in this series, since this issue is not
+>> seen in root partition yet and I am not sure if it is applicable here.
+>> Second patch would anyways fix it going forward, but I am OK adding the
+>> change for this, if we need.
+> 
+> What's the downside of fixing the root partition irq domain?
 
-This commit modifies dw_pcie_suspend_noirq() to bypass the D3cold
-capability check during shutdown or reboot. It unconditionally forces
-the link into L2 state to avoid delays or failures when endpoints are
-still in D0.
+No downside as such. It would be a latent bug, exposed only if we 
+exercise hotplug in root partition, which seems like we don't. After 
+patch 2 of this series, that would go away anyways. If you tell me, I 
+can add a change similar to patch 1, which is backportable, but then I 
+would need to remove it similarly in patch 3.
 
-> diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/=
-pci/controller/dwc/pcie-designware-host.c
-> index 06722259d2e37..98cd9dd2c7d79 100644
-> --- a/drivers/pci/controller/dwc/pcie-designware-host.c
-> +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-[ ... ]
-> @@ -1222,16 +1223,29 @@ static int dw_pcie_pme_turn_off(struct dw_pcie *p=
-ci)
-> =20
->  int dw_pcie_suspend_noirq(struct dw_pcie *pci)
->  {
-> -	bool pme_capable =3D false;
-> +	bool shutdown =3D system_state =3D=3D SYSTEM_HALT ||
-> +			system_state =3D=3D SYSTEM_POWER_OFF ||
-> +			system_state =3D=3D SYSTEM_RESTART;
-> +	bool d3cold, pme_capable =3D false;
->  	int ret =3D 0;
->  	u32 val;
-> =20
->  	if (!dw_pcie_link_up(pci))
->  		goto stop_link;
-> =20
-> -	if (!pci_host_common_d3cold_possible(pci->pp.bridge, &pme_capable))
-> +	/*
-> +	 * During reboot/halt/poweroff the link is going away regardless, so
-> +	 * force L2 entry without checking whether endpoints have transitioned
-> +	 * to D3hot -- there's no point walking the bus to find out.
-> +	 */
-> +	if (shutdown)
-> +		goto d3cold;
+Regards,
+Naman
 
-[Severity: High]
-Does skipping the D3hot verification and jumping straight to d3cold cause
-the controller to broadcast a PME_Turn_Off message to endpoints that might
-still be in D0?
+> 
+> We never really attempted to unplug any CPU from the root partition, so
+> it is unsurprising that it has not been reported.
+> 
+> Wei
+> 
+>>
+>> Regards,
+>> Naman
+>>
 
-Section 5.3.3.2.1 of the PCIe Base Specification mandates that all downstre=
-am
-devices must be in D3hot or D3cold before software sends this message.
-
-Also, since jumping to d3cold skips the call to
-pci_host_common_d3cold_possible(), pme_capable remains false. Will this
-cause the driver to incorrectly set skip_pwrctrl_off to false later in the
-function:
-
-stop_link:
-        ...
-        pci->pp.skip_pwrctrl_off =3D pme_capable;
-
-and unconditionally cut Vaux power to the bus, breaking S5 wake-on-LAN for
-devices that were prepared for S5 wakeup?
-
-> +
-> +	d3cold =3D pci_host_common_d3cold_possible(pci->pp.bridge, &pme_capable=
-);
-> +	if (!d3cold)
->  		return 0;
-> =20
-> +d3cold:
->  	if (pci->pp.ops->pme_turn_off) {
->  		pci->pp.ops->pme_turn_off(&pci->pp);
->  	} else {
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260824-shutdown-v=
-3-0-81c14bb7a1af@oss.qualcomm.com?part=3D1
