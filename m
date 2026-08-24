@@ -1,110 +1,100 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.20])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.9])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D45F43A6F0B;
-	Mon, 24 Aug 2026 08:18:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.20
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F1BA5376468;
+	Mon, 24 Aug 2026 08:31:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.9
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787559526; cv=none; b=cqUP8pYqGrEAaQfs5k0jMXemhfoqRWtvAMQv4X3Dyt7d/zFsPyvOltio/gOyR/kXcofPhpYfVHI2Eq8m+rEt8nhQtBRYIjWfiGtGiLaSVXewzuTjbZw363IernWXgqa6c+gP5h3GwAT4zt8+/t3A1JJV6DFvIHMKZNyDXhaV2No=
+	t=1787560305; cv=none; b=r9ls4ydCCgXnNowv80B3dX51bpQBHXJktW4qlkMrc9i/2HgqOVbYw7W7pppYwMhMekTECY6zCZQlCSmE8N/XOFSD9Et0zIAd1UnEEmq98BSK4iDKqFOaHuIQOE1wc7LhSKpbIU++dfpCzNXCpSjyaqDEysnrTInBZ5Ql2ryU3Vc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787559526; c=relaxed/simple;
-	bh=dYBx1billie+1dEcHx+Hfu2gKYUIO7TxH7zQLmkOVRg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=DKLQHy2+DmzXGKQ2PcadjkW7OeTD+rrkply8VW92Mom7/2g0nNTDgE6QY7N0/0u2RWMb+IuFqAjKQujVeXcS6G8SfZO91VLFUVEQdhwGJbATpnMYH3yW9NhTcAcYkpWm84u3kCBH3W1smKvcceX7kP3bGxKWt5vhQC+2+TbX6Tc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=lm8mvqJ2; arc=none smtp.client-ip=198.175.65.20
+	s=arc-20240116; t=1787560305; c=relaxed/simple;
+	bh=DWKiYU4i24WUZH4CXWdxvN78k5dwvNbtFfCATLJNa4U=;
+	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
+	 MIME-Version:Content-Type; b=hxyrlaKFRCH9rAUk9hJ1FIpkKUI7erluAFnNAG7pt6RtMbeVIH6eN3N21e3F4llF+CrDyd1PYMV9gpt74qt2ZkixiEzElSuuC3Cj8TiavfeuOTzOHqMxkGRI/IJyoY5ZmwQxVaRzwI5QJhppexnU6CTbHXROh4hg/6OduWN/o+c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=a4ygZDsw; arc=none smtp.client-ip=198.175.65.9
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="lm8mvqJ2"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="a4ygZDsw"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1787559525; x=1819095525;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=dYBx1billie+1dEcHx+Hfu2gKYUIO7TxH7zQLmkOVRg=;
-  b=lm8mvqJ2t1z3J/bP/rszcGcyd/I+Tfp2cXv3keLA1H9XRx+V3mjilfRa
-   3Ub2kwvFqUEvdsVNyoYXUapcZmi5N4DihpY5abxGeHDT30rXCs76zYQik
-   dTuwBJXte03cOm0CAPgz5wwBRLD7NgEQATQq9pse28BiSDAyogWp3EqSC
-   lWkdK8qJVYsFjhCJIvO9RtAZiHEMfgAEd/UNfN1zJ/OqW/0R2uRDq+VYD
-   ASvP/eewu92b8hOIVPFziBDuLYVld5XkN3X7q6z1c2DcZoFn/pDAC9C9e
-   j5UMy8wXTq+PQ3ruBhj4qvqah9tWZgsrY6MumtN9VcBkBlT+7/JSuU2Ae
-   g==;
-X-CSE-ConnectionGUID: krVlUNWBQV6Ap+EEJgipQQ==
-X-CSE-MsgGUID: CBxH6eSrS+uHDsg1NY1dTw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11884"; a="87769529"
+  t=1787560304; x=1819096304;
+  h=from:date:to:cc:subject:in-reply-to:message-id:
+   references:mime-version;
+  bh=DWKiYU4i24WUZH4CXWdxvN78k5dwvNbtFfCATLJNa4U=;
+  b=a4ygZDsw3x0Kaag1cM246LqqOOt2ytOYpSG54Vg2mhSnIoqTLJcVQYOD
+   X8EOJLrCTJhFoQVB6YD2I6QAt3g8OPtuZFQayTe4ssQJ/iB1ZJCZZhruz
+   wimGVJgUvvTjmJrLl40V1ue/Y4sbYP4G3ouNF0YS4lu9xQD6cPYx42jjO
+   YwlTe+7zja5Mwnl8W41MDRz9CfDGSx3Sp7v18eZh0AcMpPPk1YxcTq4o2
+   kVELtC7psj1WLM/SXSXZW3udU5I9X/b4IPktNpC+E2EB0r9ODXlK43HPv
+   RRYEF+kUwQiOMNPfv8wCsa8no0mA/zZQ5xKHYpN3bOCZHUUX+bDfS9W4i
+   Q==;
+X-CSE-ConnectionGUID: ihAOmNLiRBObrDxOrhU+RA==
+X-CSE-MsgGUID: yx8jOyIySmeYfwrkrfAOiQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11884"; a="110790607"
 X-IronPort-AV: E=Sophos;i="6.25,240,1779174000"; 
-   d="scan'208";a="87769529"
-Received: from fmviesa008.fm.intel.com ([10.60.135.148])
-  by orvoesa112.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Aug 2026 01:18:44 -0700
-X-CSE-ConnectionGUID: MV/ZGA7tRu6HKEe4n/rDBA==
-X-CSE-MsgGUID: kYQ8/NSmTQOeyffvp+PFsw==
+   d="scan'208";a="110790607"
+Received: from fmviesa001.fm.intel.com ([10.60.135.141])
+  by orvoesa101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Aug 2026 01:31:43 -0700
+X-CSE-ConnectionGUID: uCn8Vy/dTO6+JLE/90JS3g==
+X-CSE-MsgGUID: slspkhB6SMKEbKUpS5Jerw==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.25,240,1779174000"; 
-   d="scan'208";a="264318645"
-Received: from conormcd-mobl2.ger.corp.intel.com (HELO localhost) ([10.245.244.130])
-  by fmviesa008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Aug 2026 01:18:42 -0700
-Date: Mon, 24 Aug 2026 11:18:39 +0300
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Petr Mladek <pmladek@suse.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-	Ilpo =?iso-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	Rasmus Villemoes <linux@rasmusvillemoes.dk>,
-	Sergey Senozhatsky <senozhatsky@chromium.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH v1 2/2] PCI: Include human-readable sizes in resource
- assignment messages
-Message-ID: <aov-X5UILIDfSkK6@ashevche-desk.local>
-References: <20260808172308.282591-1-bhelgaas@google.com>
- <20260808172308.282591-3-bhelgaas@google.com>
- <andr0LDPlgD5kEzT@ashevche-desk.local>
- <aohWvp0bSeK-Xk9r@pathway.suse.cz>
+   d="scan'208";a="291791478"
+Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.244.154])
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Aug 2026 01:31:39 -0700
+From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Date: Mon, 24 Aug 2026 11:31:35 +0300 (EEST)
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+cc: Bjorn Helgaas <helgaas@kernel.org>, 
+    Andrew Morton <akpm@linux-foundation.org>, Petr Mladek <pmladek@suse.com>, 
+    Steven Rostedt <rostedt@goodmis.org>, 
+    Rasmus Villemoes <linux@rasmusvillemoes.dk>, 
+    Sergey Senozhatsky <senozhatsky@chromium.org>, linux-pci@vger.kernel.org, 
+    LKML <linux-kernel@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH v1 1/2] vsprintf: Add %pR human-readable size
+In-Reply-To: <ang5fyuOzQkCSmlC@ashevche-desk.local>
+Message-ID: <0ba9c036-2202-88b7-3d8c-fae84f22d8b7@linux.intel.com>
+References: <andqwn7I-YCDqmXI@ashevche-desk.local> <20260808234530.GA402575@bhelgaas> <ang5fyuOzQkCSmlC@ashevche-desk.local>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <aohWvp0bSeK-Xk9r@pathway.suse.cz>
-Organization: Intel Finland Oy - BIC 0357606-4 - c/o Alberga Business Park, 6
- krs, Bertel Jungin Aukio 5, 02600 Espoo
+Content-Type: text/plain; charset=US-ASCII
 
-On Fri, Aug 21, 2026 at 03:46:38PM +0200, Petr Mladek wrote:
-> On Sat 2026-08-08 20:48:00, Andy Shevchenko wrote:
-> > On Sat, Aug 08, 2026 at 12:23:08PM -0500, Bjorn Helgaas wrote:
-> > > Include human-readable sizes, e.g., "16.0 MiB", in addition to the hex
-> > > "0x1000000" size, in resource-related messages.  Also consistently include
-> > > the "0x" prefix.
-> > 
-> > Instead of repeating many times the %#llx (%s) and accompanying
-> > string_get_size() calls can we rather introduce a (sub-)extension
-> > to %p[R] (perhaps against 'R' to print only size) and use it?
+On Sun, 9 Aug 2026, Andy Shevchenko wrote:
+
+> On Sat, Aug 08, 2026 at 06:45:30PM -0500, Bjorn Helgaas wrote:
+> > On Sat, Aug 08, 2026 at 08:43:30PM +0300, Andy Shevchenko wrote:
+> > > On Sat, Aug 08, 2026 at 12:23:07PM -0500, Bjorn Helgaas wrote:
 > 
-> I am not sure if I understand it correctly. It looks to me that
-> this patch uses string_get_size() for printing some "arbitrary" size
-> values. Some are not part of struct resources, so using %pRR
-> might be confusing.
+> ...
+> 
+> > > > +	if (res->flags & IORESOURCE_MEM) {
+> > > 
+> > > Besides we have resource_type() macro, why only this? I would expect
+> > > IO as well as 64-bit MEM version.
+> > 
+> > We could use resource_type() here, but would have to check other bits
+> > directly (IORESOURCE_PREFETCH, IORESOURCE_MEM_64, etc) since they're
+> > not included.
+> 
+> Sure.
+> 
+> > I considered including IO and certainly could do that.  IO resources
+> > are smaller and it's not as interesting, but maybe we should.
+> > 
+> > 64-bit MEM resources are already included because they have both
+> > IORESOURCE_MEM and IORESOURCE_MEM_64 set.
+> 
+> Is it guaranteed to have MEM when MEM_64 is set?
 
-AFAICS (but I might have missed something) they all can be containered into
-the local variables of type 'struct resource' and then be used with that
-extension directly. So, I don't see that it will be confusing.
-
-> Unfortunately, implementing a generic printf modifier for printing
-> human readable size is complicated. It should keep the type-size
-> checks. Also it should allow to distinguish binary vs decimal
-> size calculation, for example 1kB vs 1kHz for 1024B vs 1000Hz.
-> See https://lore.kernel.org/all/ZbFd5TZ_pi7q3hso@casper.infradead.org/
-
-I have an idea about this, but I think it's too premature for that type
-of extension. So far, this series (AFAIU) is only about known type and
-hence known units to print with the format also kinda fixed.
+While I suspect nothing really guarantees that (by checking if invariant 
+holds), I'd expect many things to do weird things if a resouce only has 
+MEM_64 but not MEM.
 
 -- 
-With Best Regards,
-Andy Shevchenko
-
+ i.
 
