@@ -1,183 +1,144 @@
-Received: from mail-yx1-f54.google.com (mail-yx1-f54.google.com [74.125.224.54])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6920D46D085
-	for <linux-pci@vger.kernel.org>; Mon, 24 Aug 2026 16:57:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.224.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB0AD340A6F;
+	Mon, 24 Aug 2026 16:59:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787590648; cv=none; b=W824L0Lpt0uuxEdyCO377183qiL8PhS6bcl31DDdx7GE4vucm7ONtYL/6nj1scucMQ1pZxz8l0UhD6iAxw3lPDEVGoqWjlJvNrWDpY28c9AZaegnN5vmgBlOmTcH4wZNHh9dDfAa4adYgLpQ45SiyuzjSBi+36+xPZfD68zjtJQ=
+	t=1787590750; cv=none; b=Vkwhm/nxuIGvzNUuTa3lvNzq++OkYsP0ddwjDzMKUq9P54o9xEbiC1IFJe0b0rjZRzevgwZm6Jjw2jqmvQjunjft7eRPwY+pwzA7/jfA/Ti8NmYH0QkkUz09hdnTciI3gsdOUv7vwuXEUCCf6Sa0QHFsmVNmPMQithuzCYxQZ4c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787590648; c=relaxed/simple;
-	bh=go4n6ZuQRhYmWKvNHMZ8SaBHasMSdrMAkVmjL3Xy3Q0=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=BnHciPpFX1K1j95xZb5x5/HiREaACsrU2eXLjwgstOBFXEnVjlPXs9gYgWKP/e+NvgqoJFf6Me7KKHkIPEOvVxuocweaXAur1SENZ8zqsL/ocF3ma9YB21ClOqF8N4i2ToMPGltNkYyzfR+O00dTOkJ1ypG0TriGn9ZEl9zGOAI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.tenstorrent.com; spf=pass smtp.mailfrom=tenstorrent.com; dkim=pass (2048-bit key) header.d=tenstorrent.com header.i=@tenstorrent.com header.b=IZYpIrpP; arc=none smtp.client-ip=74.125.224.54
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.tenstorrent.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=tenstorrent.com
+	s=arc-20240116; t=1787590750; c=relaxed/simple;
+	bh=xbQa7dZ9Yyh1PjOBCsUdSB4J3sIWqKu8xF2eMCloQo8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=IWJWfrW43B+jdAW4ifa+D5tnZEtqlVSk7UDkBqAAV1mpQWqDcTNU2WawU3kII9EEIKyg90zjQxTVHdnWOMI4FUCxgCtLNc1wkSKx7mHY8KuT/q4BFLaScWhHZ+EVIzm2vMwjZdW7xGOZ//uTAC//r0TRPAVx6SaE2QxyIeNV2Ro=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LnyTdvHz; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=tenstorrent.com header.i=@tenstorrent.com header.b="IZYpIrpP"
-Received: by mail-yx1-f54.google.com with SMTP id 956f58d0204a3-66ce4a63e17so4459288d50.3
-        for <linux-pci@vger.kernel.org>; Mon, 24 Aug 2026 09:57:26 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=tenstorrent.com; s=google; t=1787590645; x=1788195445; darn=vger.kernel.org;
-        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
-         :content-type:mime-version:subject:date:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=yxmgsXZEQFkN2JV6d5wK/Y1ilbmlZEBc59h1qR2MPM8=;
-        b=IZYpIrpPQABD/TF9aE7F2X+elvOUf2Qz1oS5n6wBEo3F2fLQA+sRzNYCZ07tIitHv/
-         hvIekK+RCDzsXiN2xqgjiWQM6w6+U+XJY91Rf4MiBXIz0Bt/esessruaPDUEJnhDhhA5
-         TPIChC9gbVyltU1Sue72rzsb5SwdwYhlZsoLgaBzeSLzGQzQAx6vpEgO8NGuxRAVLGSD
-         5p5qsGwDW/tL7LSMUeZ7Lf/bCjGJUZFmkVTJ9Gt2kum9mz2ZRoVw2tf0q0qFs73MwWh5
-         vJJtFAb/9j/PRC0/oWCwumy5jgf1S1F2k1Ld9Lt98zlg628kSej+vkyQ8TXrC9i2T0Qj
-         joJA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787590645; x=1788195445;
-        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
-         :content-type:mime-version:subject:date:from:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=yxmgsXZEQFkN2JV6d5wK/Y1ilbmlZEBc59h1qR2MPM8=;
-        b=qvM5ZfUaj1l+jMckrqq3oyGaTOnoX4KJfYTpu7IQlOAEOhMjaPjxBxcaAZujutD+yI
-         1YB88pes5+X7exl+cmQ99ZRTa3fcnEtavNZh3LosFfPZ/j/9K3h3fdVmG9YlwRalbeMl
-         R5350Uyj8HKhtpdMc5Y6jaRNbThtlOTmSwcRYyyO5Ou+SZtHuBZ+sfSqzwdPxSI348/U
-         qJLpNeJ5CMDLOp9XzNCv6ZUX4Q9Fifk2g4vuDCk/4GhaaSXxPLapGJ7SAVghqdgiXmAI
-         izxBa/xRq4Ie+9IB9TSeKZieT/QcMgZMcr1IbdAwZbfV1sVmKCIlBZAJMdFgYLgJ4Cg1
-         rdzQ==
-X-Gm-Message-State: AFuF++mYWhWmtENNkbE5LjAkv9Aq1K5G4ddv3AyYXR+SxynE4+tLqPm2
-	LvcaNJQiMppg2K+NjHq45wochmNjBgoP/zHilPXMRDBlaz4QxgLcfP55BcSKDKw6Zak=
-X-Gm-Gg: AR+sD12457ySLFmDVjBGZ/KdgGDs1HNYfix7YOtnSF+HNhfimSYiByF9Wbc73NlXn3z
-	oEdyB2wvJLtVqCTMr+NfqFyt+Qo3kibzZxO2kU/3Xm0q+5peNx47A32vgA4k2Vo/FPcTzPOiRyH
-	2V5ZlaU+rDA/Z3Jmbx3YyzzD2B3JRs83p1HTgdWKCwME0A3+jyF0P1EfAUrE8dNVB2Ed+6mXKfF
-	gaVTF+si7RISKrqFq47jy7RRsli6tEKaljHCDz2Sog8RyAcJmyVA0asW6AmFGR4Rbkl2hd6PcmS
-	t+lZtypm9zGwwDqpYL91w80BpmntfJNLYveYrlRen1BWhjKUA8iZXGeE+w/dx3/tBVAbtr/5xoA
-	qUhHFmjd/d0PL/wAadsZT/RJ9Qnmd2TQbua06ZpdaoYINfpxjukuomwJ6d969by9WZul3HIISVE
-	3AmPkmgRj1NzTJpv13Z/0GZ6uhiFtgqKRJsLSf3E9KbWxueyCHgME+k5B+NWMjZw2QKkcLssGe5
-	PpxbSRDJzotDtYJ8sUDbeXsIqk48TYDHVTj65E=
-X-Received: by 2002:a53:df83:0:b0:66d:11b0:ac59 with SMTP id 956f58d0204a3-66d11b0aef7mr641221d50.12.1787590643998;
-        Mon, 24 Aug 2026 09:57:23 -0700 (PDT)
-Received: from [10.200.24.109] ([12.55.13.134])
-        by smtp.gmail.com with ESMTPSA id 956f58d0204a3-66cf4665056sm4137612d50.8.2026.08.24.09.57.23
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 24 Aug 2026 09:57:23 -0700 (PDT)
-From: Anirudh Srinivasan <asrinivasan@oss.tenstorrent.com>
-Date: Mon, 24 Aug 2026 11:57:07 -0500
-Subject: [PATCH 2/2] PCI: quirks: Drop unassignable 32 GiB BAR 4 on
- Tenstorrent Blackhole
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LnyTdvHz"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 375881F000E9;
+	Mon, 24 Aug 2026 16:59:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1787590749;
+	bh=5/BH79+CqA6IIdAR2F8+dBdDhwPn29fwNmv8Nwu8Y+I=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=LnyTdvHz2YraQUh4NvxfioN15s/U8HaegOZT09dZkHuomh1kk5ULHX1nwyhosuOG+
+	 bE59RMkdfnFOzqj3/s93kQ7bv4wA4WulnSZBeV4jqvU6SV6zEZBKUbZpqAjhiF2bdx
+	 AVJ4FJRALUpQQDeQBriuhCAb7UPCwwWnPj3jZdxtfhx6TMHZ80eEy6LpvU+b8ZY1c0
+	 szlVY0UYzNWjyxzd07tBSAhyVEblhTUg7Mc0//rOXJtz1HZA653vnxtWg0WlLQlikc
+	 ByMA44TJvzj4F/8kQp4DUibVs5//d50bgGDPN8nCyoBQBAf0eQ7GVib2meMCp4n5C6
+	 HsJ21sCD9X6iw==
+Date: Mon, 24 Aug 2026 09:59:08 -0700
+From: Wei Liu <wei.liu@kernel.org>
+To: Naman Jain <namjain@linux.microsoft.com>
+Cc: Wei Liu <wei.liu@kernel.org>, sashiko-reviews@lists.linux.dev,
+	linux-pci@vger.kernel.org, linux-hyperv@vger.kernel.org
+Subject: Re: [PATCH 1/3] PCI: hv: Set irq_retrigger callback for the Hyper-V
+ PCI MSI irqchip
+Message-ID: <20260824165908.GC3665124@liuwe-devbox-debian-v2.local>
+References: <20260728135117.2888175-1-namjain@linux.microsoft.com>
+ <20260728135117.2888175-2-namjain@linux.microsoft.com>
+ <20260728140427.714311F000E9@smtp.kernel.org>
+ <a9d44162-3c90-44c8-aae7-4813678234a9@linux.microsoft.com>
+ <20260824001406.GC3566091@liuwe-devbox-debian-v2.local>
+ <c165f17f-b214-4a96-a446-6dd4e6cb2161@linux.microsoft.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20260824-blackhole_quirk-v1-2-fc004672cdbd@oss.tenstorrent.com>
-References: <20260824-blackhole_quirk-v1-0-fc004672cdbd@oss.tenstorrent.com>
-In-Reply-To: <20260824-blackhole_quirk-v1-0-fc004672cdbd@oss.tenstorrent.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
- joelsmith@tenstorrent.com, 
- Anirudh Srinivasan <asrinivasan@oss.tenstorrent.com>
-X-Mailer: b4 0.15.1
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <c165f17f-b214-4a96-a446-6dd4e6cb2161@linux.microsoft.com>
 
-Tenstorrent Blackhole cards expose a 32 GiB BAR 4 that is unused by most
-software talking to the card. This BAR cannot be assigned on hosts whose
-PCI aperture is smaller than 32 GiB (e.g some ARM/RISC-V systems). This
-failure also results in BAR 0 (256 MiB) and 2 (2 MiB) being unassigned
-because bridge windows are sized as the sum of all enabled child BARs.
-This makes the card completely unusable on such systems.
+On Mon, Aug 24, 2026 at 11:57:56AM +0530, Naman Jain wrote:
+> 
+> 
+> On 8/24/2026 5:44 AM, Wei Liu wrote:
+> > On Thu, Jul 30, 2026 at 04:56:27PM +0530, Naman Jain wrote:
+> > > 
+> > > 
+> > > On 7/28/2026 7:34 PM, sashiko-bot@kernel.org wrote:
+> > > > Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
+> > > > 
+> > > > Pre-existing issues:
+> > > > - [High] The fix for dropped pending interrupts during CPU hot-unplug was missed in the sister Hyper-V root partition MSI domain.
+> > > > --
+> > > > 
+> > > > --- Patch [1]: [PATCH 1/3] PCI: hv: Set irq_retrigger callback for the Hyper-V PCI MSI irqchip ---
+> > > > commit b8b1c843c457dd145f0d360b44f4b1bf34bd8cf5
+> > > > Author: Naman Jain <namjain@linux.microsoft.com>
+> > > > 
+> > > > PCI: hv: Set irq_retrigger callback for the Hyper-V PCI MSI irqchip
+> > > > 
+> > > > The Hyper-V vPCI MSI irqchip never installs an irq_retrigger() callback.
+> > > > On CPU hot-unplug fixup_irqs() migrates the interrupts which are affine to
+> > > > the outgoing CPU to a new target. As the Hyper-V PCI/MSI chip does not
+> > > > provide that callback, the pending interrupt is silently dropped, which
+> > > > can result in lost interrupts, stalls and "No irq handler for vector"
+> > > > messages.
+> > > > 
+> > > > Fixes: 4daace0d8ce85 ("PCI: hv: Add paravirtual PCI front-end for Microsoft Hyper-V VMs")
+> > > > Cc: stable@vger.kernel.org
+> > > > Suggested-by: Long Li <longli@microsoft.com>
+> > > > Suggested-by: Thomas Gleixner <tglx@kernel.org>
+> > > > Signed-off-by: Naman Jain <namjain@linux.microsoft.com>
+> > > > 
+> > > > > diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
+> > > > > index cfc8fa403dad6..89816a2bd7cd3 100644
+> > > > > --- a/drivers/pci/controller/pci-hyperv.c
+> > > > > +++ b/drivers/pci/controller/pci-hyperv.c
+> > > > > @@ -2119,6 +2119,7 @@ static bool hv_pcie_init_dev_msi_info(struct device *dev, struct irq_domain *dom
+> > > > >    	info->ops->msi_prepare = hv_msi_prepare;
+> > > > >    	chip->irq_set_affinity = irq_chip_set_affinity_parent;
+> > > > > +	chip->irq_retrigger = irq_chip_retrigger_hierarchy;
+> > > > 
+> > > > [Severity: High]
+> > > > This isn't a bug introduced by this patch, but does the sister Hyper-V root
+> > > > partition MSI domain in arch/x86/hyperv/irqdomain.c also need this fix?
+> > > > 
+> > > > Looking at hv_init_dev_msi_info(), it appears to be missing the exact same
+> > > > callback initialization for the root partition's top-level irq_chip:
+> > > > 
+> > > > arch/x86/hyperv/irqdomain.c:hv_init_dev_msi_info() {
+> > > > 	...
+> > > > 	if (!msi_lib_init_dev_msi_info(dev, domain, real_parent, info))
+> > > > 		return false;
+> > > > 
+> > > > 	chip->flags |= IRQCHIP_SKIP_SET_WAKE | IRQCHIP_MOVE_DEFERRED;
+> > > > 
+> > > > 	info->ops->msi_prepare = pci_msi_prepare;
+> > > > 
+> > > > 	return true;
+> > > > }
+> > > > 
+> > > > If a CPU is hot-unplugged while a device MSI interrupt is pending in its
+> > > > local APIC IRR, could fixup_irqs() fail to resend the pending interrupt
+> > > > to the new target CPU because this callback is NULL?
+> > > > 
+> > > > This could potentially lead to the same lost interrupts and I/O stalls
+> > > > described in this commit message, just in the root partition MSI domain
+> > > > instead of the guest paravirtual MSI domain.
+> > > > 
+> > > > >    	if (IS_ENABLED(CONFIG_X86))
+> > > > >    		chip->flags |= IRQCHIP_MOVE_DEFERRED;
+> > > > > 
+> > > > 
+> > > 
+> > > I am not planning to include this in this series, since this issue is not
+> > > seen in root partition yet and I am not sure if it is applicable here.
+> > > Second patch would anyways fix it going forward, but I am OK adding the
+> > > change for this, if we need.
+> > 
+> > What's the downside of fixing the root partition irq domain?
+> 
+> No downside as such. It would be a latent bug, exposed only if we exercise
+> hotplug in root partition, which seems like we don't. After patch 2 of this
+> series, that would go away anyways. If you tell me, I can add a change
+> similar to patch 1, which is backportable, but then I would need to remove
+> it similarly in patch 3.
 
-    spacemit-k1-pcie 80000000.pcie: PCI host bridge to bus 0000:00
-    pci_bus 0000:00: root bus resource [bus 00-ff]
-    pci_bus 0000:00: root bus resource [io  0x100000-0x1fffff] (bus address [0x10000-0x10ffff])
-    pci_bus 0000:00: root bus resource [mem 0x1100110000-0x117fffffff] (bus address [0x00110000-0x7fffffff])
-    pci_bus 0000:00: root bus resource [mem 0x1800000000-0x18ffffffff pref]
+Yes, please fix that for the root partition, too. Being consistent
+across different use cases is going to save us some headache in the
+future.
 
-    <snip>
-
-    pci 0000:01:00.0: [1e52:b140] type 00 class 0x120000 PCIe Endpoint
-    pci 0000:01:00.0: BAR 0 [mem 0x00000000-0x1fffffff 64bit pref]
-    pci 0000:01:00.0: BAR 2 [mem 0x1120000000-0x11200fffff 64bit pref]
-    pci 0000:01:00.0: BAR 4 [mem 0xfffffff800000000-0xffffffffffffffff 64bit pref]
-
-    <snip>
-
-    pci 0000:00:00.0: bridge window [mem size 0x820100000 64bit pref]: can't assign; no space
-    pci 0000:00:00.0: bridge window [mem size 0x820100000 64bit pref]: failed to assign
-    pci 0000:00:00.0: BAR 0 [mem 0x1108000000-0x110fffffff]: assigned
-    pci 0000:00:00.0: BAR 1 [mem 0x1110000000-0x1117ffffff]: assigned
-    pci 0000:00:00.0: BAR 0 [mem 0x1108000000-0x110fffffff]: releasing
-    pci 0000:00:00.0: BAR 1 [mem 0x1110000000-0x1117ffffff]: releasing
-    pci 0000:00:00.0: bridge window [mem size 0x820100000 64bit pref]: can't assign; no space
-    pci 0000:00:00.0: bridge window [mem size 0x820100000 64bit pref]: failed to assign
-    pci 0000:00:00.0: BAR 0 [mem 0x1108000000-0x110fffffff]: assigned
-    pci 0000:00:00.0: BAR 1 [mem 0x1110000000-0x1117ffffff]: assigned
-    pci 0000:01:00.0: BAR 4 [mem size 0x800000000 64bit pref]: can't assign; no space
-    pci 0000:01:00.0: BAR 4 [mem size 0x800000000 64bit pref]: failed to assign
-    pci 0000:01:00.0: BAR 0 [mem size 0x20000000 64bit pref]: can't assign; no space
-    pci 0000:01:00.0: BAR 0 [mem size 0x20000000 64bit pref]: failed to assign
-    pci 0000:01:00.0: BAR 2 [mem size 0x00100000 64bit pref]: can't assign; no space
-    pci 0000:01:00.0: BAR 2 [mem size 0x00100000 64bit pref]: failed to assign
-    pci 0000:01:00.0: BAR 4 [mem size 0x800000000 64bit pref]: can't assign; no space
-    pci 0000:01:00.0: BAR 4 [mem size 0x800000000 64bit pref]: failed to assign
-    pci 0000:01:00.0: BAR 0 [mem size 0x20000000 64bit pref]: can't assign; no space
-    pci 0000:01:00.0: BAR 0 [mem size 0x20000000 64bit pref]: failed to assign
-    pci 0000:01:00.0: BAR 2 [mem size 0x00100000 64bit pref]: can't assign; no space
-    pci 0000:01:00.0: BAR 2 [mem size 0x00100000 64bit pref]: failed to assign
-
-Add a header fixup that walks the root-bus apertures and drops BAR 4
-when it is larger than every root-bus aperture. Resource assignment
-skips resources with zero flags (pdev_resource_assignable()), so the
-bridge window then sizes to BARs 0/2 and succeeds. This was tested on a
-Spacemit-K3 RISC-V board that has only 4GiB of BAR space. tt-smi and
-tt-bh-linux are able to run on the card.
-
-Signed-off-by: Anirudh Srinivasan <asrinivasan@oss.tenstorrent.com>
----
- drivers/pci/quirks.c | 32 ++++++++++++++++++++++++++++++++
- 1 file changed, 32 insertions(+)
-
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index b09f27f7846fc..df54e379c116b 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -6415,3 +6415,35 @@ static void pci_mask_replay_timer_timeout(struct pci_dev *pdev)
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_GLI, 0x9750, pci_mask_replay_timer_timeout);
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_GLI, 0x9755, pci_mask_replay_timer_timeout);
- #endif
-+
-+/*
-+ * Drop unused 32 GiB BAR 4 on Tenstorrent Blackhole cards so the card is
-+ * usable on systems with smaller host bridge apertures.
-+ */
-+static void quirk_tenstorrent_blackhole_bar4(struct pci_dev *pdev)
-+{
-+	struct resource *res = &pdev->resource[4];
-+	struct pci_bus *bus = pdev->bus;
-+	struct resource *win;
-+
-+	if (!(res->flags & IORESOURCE_MEM))
-+		return;
-+
-+	/* Find the root bus; its resource list holds the host apertures */
-+	while (bus->parent)
-+		bus = bus->parent;
-+
-+	pci_bus_for_each_resource(bus, win) {
-+		if (!win || !(win->flags & IORESOURCE_MEM))
-+			continue;
-+		if (resource_size(res) <= resource_size(win))
-+			return;
-+	}
-+
-+	pci_info(pdev, "BAR 4 %pR larger than every host bridge aperture, dropping it\n",
-+		 res);
-+	res->start = 0;
-+	res->end = 0;
-+	res->flags = 0;
-+}
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_TENSTORRENT, 0xb140, quirk_tenstorrent_blackhole_bar4);
-
--- 
-2.43.0
-
+Wei
