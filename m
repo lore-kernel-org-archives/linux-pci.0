@@ -1,107 +1,84 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7033F395AD3
-	for <linux-pci@vger.kernel.org>; Mon, 24 Aug 2026 22:51:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E6E536C0AC
+	for <linux-pci@vger.kernel.org>; Mon, 24 Aug 2026 22:51:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787611877; cv=none; b=cONLmlH3skwQMcpYcB4e4b9jVHuYPJmaHlMuvuPgbPMAazcC1QmQDQ1yG1zd+zsD3gd+uP0O9DN4PVlzwfZOY/XefFniz232LeRKjHe0lp8D4oyszgkrtY3jvoQE43Txnm09p7SOWBhAHtAxohopnXfCzqmz6fqyRRGi0mqgkNM=
+	t=1787611918; cv=none; b=gD1IQRC4OHgsYhsiR1lkW1t7PEk4gJmCf3l5Ob0NmIFLT9eSPFoSEN8TBSR+BWuybqZHwJrjQzmEH4X3znFMnUZN8S1bAZUi+dloVg4szrCSjOioaKwCf5UB6GEsgC8jIihPpn9LJv2BKfceQNNxROnvp4OVeeNi4w4sDb8SN5U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787611877; c=relaxed/simple;
-	bh=o1Gr2e00zG6+BOs6CckhzmiTdEjqTtdWuz+/H47TM/Q=;
+	s=arc-20240116; t=1787611918; c=relaxed/simple;
+	bh=Gkoz+R9foAskNE8FLPf1HkOdKHlYMKjFa9tLhUTUVdM=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=k/Yw+ZvpkULzs/VSb++qXQdKbFCXphVqavHIJDhWpXgTXxQWrX1KDZlN+QjEFCgQmu3gIgdlkrOkfvZqKl9X5age5ZZsTjt7TVkwZc6cSyEPjNhxEWuKpoQ8YBoxIoccMomj0sE8Ov4dabaxhYTCb3GH2DJY346sdYcFG6M40nQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LoFIM9ft; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=rXfm6iQcyp+90oFuqAwRec7QhuMkLzVAmTPrWY6ZI41bdcD5wwVMIbT9H91FN1XmDigFc1RsoGcYJsaIO+YsOMo9iVwpwtqVvHPc0hopPsV1vz+its3elhp1y0y4khdaS9dzIwl3bDnHpet6+b6rIbgMBj+v8Ar0RtCyHouXVoY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=T7U72FN6; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LoFIM9ft"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A743B1F000E9;
-	Mon, 24 Aug 2026 22:51:15 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="T7U72FN6"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5BCB11F000E9;
+	Mon, 24 Aug 2026 22:51:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787611875;
-	bh=87Y5ghH4ldt7gsksBDe7NVVM5pjgv1r3VrWwQ4jCRrg=;
+	s=k20260515; t=1787611916;
+	bh=XTBGEqbfIxtxKVJh0O4XD7cTA+aMgWnJMWneQBLuF4g=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=LoFIM9ftgo6o6/L/Zc37dCh8rnAbqPTbk4bukggUyvPAiJJuUjqO6u2ereg8t7A/a
-	 SUP+GP7zUHqyuJaOmj1T6S1U3rrXap9TdJAUurqWooirKs7J6bB88GB0e9LzcYOQuH
-	 hvHRu6ZTXrH1Wz4gpnF8mzip4NHLkOcrcRWUDzdnXpC1AxilHaaQmhCrV863Vu8BMF
-	 eG9RlnQQp0NTp6SwivAF+98pqnR/muTN+oTrW9aPTLYqvdJ8+Xg5vGEMHUXVRabL0C
-	 uhUaDpReniIVIvH6noDusRtYLb4WCG1OSd5LB+4wN8uey1BAE8Pt2tssYxc8tbMiV2
-	 DivGJJDc2Vhyw==
+	b=T7U72FN65ZOG3N4G2MsU1w8CrjcQKZcnAbDF0/FyI4zTOyeuyL1Q75UZLNUymGY9B
+	 GZHwnz79wdqVVFP9jl4jb0Bwdtyte9FAtnu4BbcH2kO21cLaIqE4vK0QOPCmJjrZgm
+	 +5taqPctDDcCbqK+ef4DgeFxtD9IUD6sXJfq2KMBHr2a2HLHBrnnX0TbCCxjHyeyp4
+	 Ytqi4rEGTMnybpZJp4lNxsiUEoSkN/krDKENBpk8GID4O0tXyjKMFFZWBDUIzDJkg3
+	 xRuWcmmxo1X41azBTVEMFUE5kKxgU+mKSRJYkpd57SOuKnpvAR5FvgNVqAaC/BQ8uM
+	 n6juYRt5FS7FQ==
 From: sashiko-bot@kernel.org
 Subject: Re: [PATCH v6] PCI/pcie: Add PCIe Lane Margining at Receiver (LMR)
  support
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Priyank Rathod" <rathodpriyank@google.com>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260824-pcie-lmt-v6-1-86ada768b0c8@google.com>
-References: <20260824-pcie-lmt-v6-1-86ada768b0c8@google.com>
+In-Reply-To: <20260824-pcie-lmt-v6-1-bab4ce233fa5@google.com>
+References: <20260824-pcie-lmt-v6-1-bab4ce233fa5@google.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 24 Aug 2026 22:51:15 +0000
-Message-Id: <20260824225115.A743B1F000E9@smtp.kernel.org>
+Date: Mon, 24 Aug 2026 22:51:55 +0000
+Message-Id: <20260824225156.5BCB11F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 8 potential issue(=
+Thank you for your contribution! Sashiko AI review found 9 potential issue(=
 s) to consider:
-- [High] Device ASPM state is permanently disabled after a PCI reset becaus=
-e `pci_restore_state()` clobbers the correctly restored LMR ASPM configurat=
-ion.
-- [High] Concurrent execution of sysfs device reset and device removal lead=
-s to a Use-After-Free of `dev->lmr` and its mutex.
-- [High] Incorrect teardown ordering in `pci_lmr_exit()` allows concurrent =
-debugfs writes to permanently leak an RPM reference and leave upstream ASPM=
- disabled.
-- [Medium] LMR software state is not suspended during hibernation, leading =
-to a mismatch between software tracking and hardware state upon thaw/restor=
-e.
-- [Medium] The driver violates PCIe specification requirements by failing t=
-o automatically issue a Demargin command before reversing margin directions.
-- [Medium] The error cleanup path in `margin_enable_write()` clobbers the o=
-riginal negative error code, causing the function to silently return succes=
-s.
-- [Medium] Secondary Bus Resets (SBR) bypass device-specific reset handlers=
-, permanently desynchronizing LMR software state and leaking the runtime PM=
- reference.
-- [Medium] The driver writes 1 to reserved direction bits when configuring =
-devices that only support symmetric margining.
+- [High] Temporary ASPM disablement leaks into the permanently saved PCI co=
+nfig state during resets or system suspend.
+- [High] Inverted logic in pci_lmr_check_sample_multiple_rx() allows invali=
+d concurrent margining.
+- [High] Teardown race in pci_lmr_exit() causes resource leaks due to concu=
+rrent debugfs accesses.
+- [High] Direct modification of ASPM hardware registers bypasses the PCI AS=
+PM subsystem and its locking.
+- [High] ASPM L1 is restored in the wrong order, enabling the Downstream co=
+mponent before the Upstream component.
+- [Medium] Missing runtime PM reference before reading config space in debu=
+gfs show callbacks.
+- [Medium] Mixing goto-based error handling with guard() cleanup in margin_=
+enable_write().
+- [Medium] Error return code is clobbered in the cleanup path of margin_ena=
+ble_write().
+- [Medium] Lane array size and debugfs entries incorrectly initialized usin=
+g Negotiated Link Width instead of Maximum Link Width.
 --
 
 --- Patch [1]: [PATCH v6] PCI/pcie: Add PCIe Lane Margining at Receiver (LM=
 R) support ---
-commit 23e30598998c8cd47f12107ec01b8ff50f90586b
+commit 2b24000364052ba88665b523eec643f2f9d276e4
 Author: Priyank Rathod <rathodpriyank@google.com>
 Subject: PCI/pcie: Add PCIe Lane Margining at Receiver (LMR) support
 
-This patch introduces support for PCIe Lane Margining at Receiver (LMR). It
-adds debugfs controls to allow manual execution of timing and voltage margin
-steps on capable receivers, along with basic state management.
+This commit adds support for PCIe Lane Margining at Receiver (LMR), which
+allows software to evaluate high-speed link margins by measuring timing
+and voltage steps for each physical lane. It exposes capabilities and
+margining controls via debugfs.
 
 Link: https://lore.kernel.org/r/20260820-pcie-lmt-v5-1-943b3b0e18bf@google.=
 com
-
-> --- a/drivers/pci/pci-driver.c
-> +++ b/drivers/pci/pci-driver.c
-> @@ -821,6 +821,7 @@ static int pci_pm_suspend(struct device *dev)
->  	 * since Coffee Lake, to enter a lower-power PM state.
->  	 */
->  	pci_suspend_ptm(pci_dev);
-> +	pci_suspend_lmr(pci_dev);
-> =20
->  	if (pci_has_legacy_pm_support(pci_dev))
->  		return pci_legacy_suspend(dev, PMSG_SUSPEND);
-
-[Severity: Medium]
-Does this miss hibernation (S4) support?=20
-
-The LMR suspend is hooked into pci_pm_suspend() for S3 sleep, but=20
-pci_pm_freeze() and pci_pm_poweroff() don't appear to call pci_suspend_lmr(=
-).=20
-If the system hibernates, the device loses power and the margining state=20
-resets, but upon resume, mdev->enabled would still be true, leaving ASPM=20
-tracking desynchronized and a leaked runtime PM reference.
 
 > --- a/drivers/pci/pci.c
 > +++ b/drivers/pci/pci.c
@@ -115,41 +92,131 @@ v)
 > +			pci_reset_lmr(dev);
 >  			return 0;
 > +		}
-> =20
->  		pci_dbg(dev, "%s failed with %d\n", method->name, rc);
 
 [Severity: High]
-Will the ASPM restoration in pci_reset_lmr() be immediately clobbered here?=
-=20
+Is it possible that the temporary ASPM disablement leaks into the
+permanently saved PCI configuration state here?
 
-The pci_reset_function() sequence calls pci_save_state() before this, and=20
-pci_restore_state() afterwards. If pci_reset_lmr() restores the ASPM hardwa=
-re=20
-state to its original configuration, won't pci_restore_state() subsequently=
-=20
-blindly overwrite it with the saved config space (where ASPM was disabled b=
-y=20
-LMR), leaving ASPM permanently disabled?
+The PCI core calls pci_save_state() prior to this function, capturing the
+state while LMR (and its temporary ASPM disablement) might be active. When
+the reset finishes, pci_restore_state() might overwrite the hardware config
+with this saved state, clobbering the correct restoration performed by
+pci_reset_lmr().
 
-[Severity: Medium]
-By hooking LMR reset cleanup exclusively here in __pci_reset_function_locke=
-d(),=20
-do we miss Secondary Bus Resets (SBR)?=20
-
-If a root user triggers a bus reset via the parent bridge, the downstream=20
-devices are reset using a different path. The hardware LMR state would be=20
-wiped, but pci_reset_lmr() is never invoked, leaving mdev->enabled as true=
-=20
-and failing to drop the runtime PM reference.
-
-> --- a/drivers/pci/pcie/margin.c
+> --- /dev/null
 > +++ b/drivers/pci/pcie/margin.c
 [ ... ]
-> @@ -557,6 +557,13 @@ static ssize_t margin_enable_write(struct file *file=
-, const char __user *user_buf,
->  	mdev->enabled =3D true;
->  	return count;
-> =20
+> +static void pci_lmr_disable_aspm(struct pci_margin_dev *mdev)
+> +{
+> +	struct pci_dev *dev =3D mdev->dev;
+> +	struct pci_dev *parent =3D pci_upstream_bridge(dev);
+> +	u16 ctl;
+> +
+> +	if (mdev->aspm_saved)
+> +		return;
+> +
+> +	if (!pcie_capability_read_word(dev, PCI_EXP_LNKCTL, &ctl)) {
+> +		mdev->saved_aspm =3D ctl & PCI_EXP_LNKCTL_ASPMC;
+> +		pcie_capability_clear_word(dev, PCI_EXP_LNKCTL, PCI_EXP_LNKCTL_ASPMC);
+
+[Severity: High]
+Does modifying the ASPM hardware registers directly bypass the PCI ASPM
+subsystem and its locking?
+
+This clears the PCI_EXP_LNKCTL_ASPMC bits without holding the ASPM lock or
+using the official PCI core APIs like pci_disable_link_state(). If the
+ASPM core concurrently re-evaluates the link, or if userspace changes ASPM
+policies, these direct modifications could race with or be clobbered by
+the core's changes.
+
+[ ... ]
+> +static void pci_lmr_restore_aspm(struct pci_margin_dev *mdev)
+> +{
+> +	struct pci_dev *dev =3D mdev->dev;
+> +	struct pci_dev *parent =3D pci_upstream_bridge(dev);
+> +
+> +	if (!mdev->aspm_saved)
+> +		return;
+> +
+> +	pcie_capability_clear_and_set_word(dev, PCI_EXP_LNKCTL,
+> +					   PCI_EXP_LNKCTL_ASPMC,
+> +					   mdev->saved_aspm);
+> +	if (parent && pci_is_pcie(parent))
+> +		pcie_capability_clear_and_set_word(parent, PCI_EXP_LNKCTL,
+> +						   PCI_EXP_LNKCTL_ASPMC,
+> +						   mdev->saved_parent_aspm);
+
+[Severity: High]
+Does this restore the Downstream component before the Upstream component?
+
+PCIe r6.0 sec 7.5.3.7 mandates that when enabling ASPM L1, software must
+enable the Upstream component prior to enabling the Downstream component.
+This sequence appears to execute the L1 enablement backward.
+
+[Severity: High]
+Could blindly restoring these cached ASPM bits erase legitimate ASPM policy
+changes that might have occurred while margining was active?
+
+[ ... ]
+> +static int margin_caps_show(struct seq_file *s, void *v)
+> +{
+> +	struct pci_margin_dev *mdev =3D s->private;
+> +	struct pci_dev *dev =3D mdev->dev;
+> +	u16 cap;
+> +	int ret;
+> +
+> +	ret =3D pci_read_config_word(dev, mdev->cap + PCI_LMR_PORT_CAP, &cap);
+
+[Severity: Medium]
+Could this return bogus configuration data (like 0xFFFF) to user space
+if the device is in a lower power state (e.g., D3hot)?
+
+There does not appear to be a pm_runtime_resume_and_get() call here to
+ensure the device is in D0 before reading the config space.
+
+[ ... ]
+> +static int margin_port_status_show(struct seq_file *s, void *v)
+> +{
+> +	struct pci_margin_dev *mdev =3D s->private;
+> +	struct pci_dev *dev =3D mdev->dev;
+> +	u16 sts;
+> +	int ret;
+> +
+> +	ret =3D pci_read_config_word(dev, mdev->cap + PCI_LMR_PORT_STS, &sts);
+
+[Severity: Medium]
+Similar to the capabilities check, should this function wake the device
+before attempting to read the port status?
+
+[ ... ]
+> +static ssize_t margin_enable_write(struct file *file, const char __user =
+*user_buf,
+> +				   size_t count, loff_t *ppos)
+> +{
+> +	struct seq_file *s =3D file->private_data;
+> +	struct pci_margin_dev *mdev =3D s->private;
+> +	struct pci_dev *dev =3D mdev->dev;
+> +	unsigned long timeout;
+> +	u16 sts, cap, lnksta;
+> +	bool enable;
+> +	int ret, i;
+> +
+> +	ret =3D kstrtobool_from_user(user_buf, count, &enable);
+> +	if (ret)
+> +		return ret;
+> +
+> +	guard(mutex)(&mdev->lock);
+
+[Severity: Medium]
+Does this function mix goto-based error handling with guard() cleanup?
+
+The function uses guard(mutex)(&mdev->lock) at the start but relies on
+goto labels (like goto err_sw_ready) for error handling below. The kernel
+cleanup subsystem guidelines specify that goto labels and scope-based
+cleanup should not be mixed in the same function to avoid confusing
+ownership semantics.
+
+[ ... ]
 > +err_sw_ready:
 > +	if (cap & PCI_LMR_PORT_CAP_USES_SW_READY) {
 > +		ret =3D pci_read_config_word(dev, mdev->cap + PCI_LMR_PORT_STS, &sts);
@@ -159,74 +226,81 @@ and failing to drop the runtime PM reference.
 > +		}
 > +	}
 > +err_aspm:
+> +	pci_lmr_restore_aspm(mdev);
+> +err_rpm:
+> +	pm_runtime_put_sync(&dev->dev);
+> +	return ret;
 
 [Severity: Medium]
-Does this error cleanup path accidentally clobber the original negative err=
-or=20
-code?=20
+Is the error return code clobbered in this cleanup path?
 
-If an error like -ETIMEDOUT occurs above, the jump to err_sw_ready issues a=
-=20
-pci_read_config_word(). If that read succeeds, ret is overwritten with=20
-PCIBIOS_SUCCESSFUL (0). The function will then silently return 0 instead of=
-=20
-propagating the actual failure to userspace.
+If a failure occurs (like -ETIMEDOUT), the code jumps to err_sw_ready. If
+pci_read_config_word() succeeds here, ret is overwritten with 0
+(PCIBIOS_SUCCESSFUL), masking the original error and returning success to
+user space.
 
 [ ... ]
-> @@ -732,6 +732,10 @@ static ssize_t margin_lane_step_write(struct file *f=
-ile, const char __user *user_buf,
->  	if (!mdev->enabled)
->  		return -EBUSY;
-> =20
-> +	if (val =3D=3D 0) {
-> +		ret =3D pci_lmr_demargin_lane(plane);
-> +		return ret ? ret : count;
-> +	}
+> +static bool pci_lmr_check_sample_multiple_rx(struct pci_margin_dev *mdev,
+> +					     struct pci_margin_lane *plane)
+> +{
+> +	struct pci_margin_rx_info *info =3D &plane->rx_info[plane->rx];
+> +	int i;
 > +
-> +	ret =3D pci_lmr_cache_rx_info(plane, plane->rx);
+> +	if (info->caps & LMR_CAP_SAMPLE_MULTIPLE_RX)
+> +		return true;
+> +
+> +	for (i =3D 0; i < mdev->num_lanes; i++) {
+> +		struct pci_margin_lane *other =3D &mdev->lanes[i];
+> +
+> +		if (i =3D=3D plane->lane)
+> +			continue;
+> +		if (other->rx =3D=3D plane->rx &&
+> +		    (other->timing_val !=3D 0 || other->voltage_val !=3D 0))
+> +			return false;
+> +	}
+> +	return true;
+> +}
 
-[Severity: Medium]
-Are we missing an automatic demargin when changing margin directions?=20
+[Severity: High]
+Does this logic allow invalid concurrent margining while blocking valid
+concurrent margining?
 
-The code issues a demargin command if the requested value is exactly 0, but=
-=20
-if a user sequentially writes a positive offset and then a negative offset =
-(or=20
-vice versa), the driver issues the new step command immediately. Per the PC=
-Ie=20
-Base Specification, software must issue a Demargin (or Clear Margin) comman=
-d=20
-before changing margin directions to avoid undefined behavior or NAKs.
+Per PCIe r6.0 sec 8.4.4, if 'Sample Multiple Receivers' is 0, software may
+only margin a single receiver at a time across the link, but may do so on
+any or all lanes.
 
-[ ... ]
-> @@ -754,6 +758,11 @@ static ssize_t margin_lane_step_write(struct file *f=
-ile, const char __user *user_buf,
->  		if (val < 0) {
->  			if (!(caps & LMR_CAP_IND_LEFT_RIGHT_TIMING))
->  				return -EINVAL;
->  			step =3D -val;
->  			dir =3D LMR_STEP_DIR_DECREASE;
->  		} else {
->  			step =3D val;
->  			dir =3D LMR_STEP_DIR_INCREASE;
->  		}
-
-[Severity: Medium]
-Does this write 1 to a reserved direction bit on symmetric-only receivers?=
-=20
-
-For positive margins, the code unconditionally assigns=20
-dir =3D LMR_STEP_DIR_INCREASE (1). If the receiver doesn't support independ=
-ent=20
-left/right or up/down margining, the PCIe Base Specification designates the=
-=20
-direction bits as Reserved, so they should be written as 0.
+The check "if (other->rx =3D=3D plane->rx)" appears inverted. It wrongly
+blocks evaluating the same receiver on multiple lanes, but allows different
+receivers to be margined simultaneously because they skip the return block.
 
 [ ... ]
-> @@ -983,6 +983,16 @@ void pci_lmr_exit(struct pci_dev *dev)
->  {
->  	struct pci_margin_dev *mdev =3D dev->lmr;
-> =20
+> +void pci_lmr_init(struct pci_dev *dev)
+> +{
+> +	struct pci_margin_dev *mdev;
+> +	enum pci_bus_speed speed;
+> +	u16 lmr, lnksta;
+> +	int num_lanes, i;
+> +
+> +	if (WARN_ON_ONCE(!dev) || !pci_is_pcie(dev))
+> +		return;
+[ ... ]
+> +	pcie_capability_read_word(dev, PCI_EXP_LNKSTA, &lnksta);
+> +	num_lanes =3D FIELD_GET(PCI_EXP_LNKSTA_NLW, lnksta);
+
+[Severity: Medium]
+Should the lane array size and debugfs entries be initialized using the
+Maximum Link Width (PCI_EXP_LNKCAP_MLW) instead of the Negotiated Link
+Width (PCI_EXP_LNKSTA_NLW)?
+
+If the link trains to a reduced width at boot (e.g., x4 instead of x16) due
+to power saving or retrain, the driver will lack the structures to margin
+the upper lanes if it later retrains to its full width.
+
+[ ... ]
+> +void pci_lmr_exit(struct pci_dev *dev)
+> +{
+> +	struct pci_margin_dev *mdev =3D dev->lmr;
+> +
 > +	if (!dev || !mdev)
 > +		return;
 > +
@@ -236,47 +310,18 @@ direction bits as Reserved, so they should be written as 0.
 > +	mutex_destroy(&mdev->lock);
 > +	kfree(mdev);
 > +	dev->lmr =3D NULL;
->  }
+> +}
 
 [Severity: High]
-Does this teardown ordering allow concurrent debugfs writes to leak a runti=
-me=20
-PM reference?=20
+Does pci_suspend_lmr() drop the lock before the debugfs files are removed?
 
-By calling pci_suspend_lmr() before pci_margin_debugfs_remove(), a concurre=
-nt=20
-write to the enable file could be blocked on mdev->lock. Once=20
-pci_suspend_lmr() sets enabled =3D false and releases the lock, the write t=
-hread=20
-wakes up, sees enabled is false, enables LMR again, acquires a runtime PM=20
-reference, and disables ASPM. Then pci_margin_debugfs_remove() completes an=
-d=20
-the structure is freed, abandoning the newly created hardware and RPM state.
-
-[ ... ]
-> @@ -1029,6 +1039,11 @@ void pci_reset_lmr(struct pci_dev *dev)
->  {
->  	struct pci_margin_dev *mdev =3D dev->lmr;
-> =20
-> +	if (!dev || !mdev)
-> +		return;
-> +
-> +	guard(mutex)(&mdev->lock);
-> +	pci_lmr_reset_software_state_locked(mdev);
->  }
-
-[Severity: High]
-Can a concurrent device removal and sysfs reset trigger a use-after-free he=
-re?=20
-
-In pci_lmr_exit(), mdev is freed and dev->lmr is set to NULL without holdin=
-g=20
-the device_lock. If a concurrent sysfs reset triggers pci_reset_function()=
-=20
-(which acquires device_lock) and calls pci_reset_lmr(), it might read the=20
-dev->lmr pointer just before pci_lmr_exit() nullifies it. It would then=20
-attempt to lock the mutex of the already freed mdev structure.
+pci_suspend_lmr() drops the lock after disabling LMR. Before
+pci_margin_debugfs_remove() finishes, a concurrent write to the 'enable'
+debugfs file could acquire the lock and re-enable margining. When teardown
+completes, the hardware state and PM references initialized by the racing
+write might be left dangling. Debugfs files usually need to be removed
+before tearing down the associated hardware state.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260824-pcie-lmt-v=
-6-1-86ada768b0c8@google.com?part=3D1
+6-1-bab4ce233fa5@google.com?part=3D1
