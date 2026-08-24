@@ -1,78 +1,142 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D4662F1FDE
-	for <linux-pci@vger.kernel.org>; Mon, 24 Aug 2026 17:04:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7560D37F727;
+	Mon, 24 Aug 2026 17:36:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787591045; cv=none; b=Z2+BdT59i3ynpD1iPEhI9o7v8dWGzp7QNMyVxp+yb66Yh3DtysMrkCsvugYaYvP5lQOVZPzv8cqTuzxTEI1/w1lE1881lUoqZ3BEsjwo0xCuBPNFTKD3G2T0xDrcEZaGGjFT9jse4Z0MzOgdOhnJ+g4OwAxavACNmQVhUY7xE0k=
+	t=1787592998; cv=none; b=RaU2RUYxNTpt3t4RSMv8R67LrTnlDvDlVF0y5ohsryZt4gj/uZW6z7xu18LQ5rnE/e+jzTRwsq/nyEfj0GsI9HPDg5MPAv+4KKXIX5Sy1MMOOxSugUAsXWQuWSHlI+YKTOC0LdHZl6NEPXboGTMHFnxKn6Tuq7ddhltjgUVI5dU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787591045; c=relaxed/simple;
-	bh=/V79yRBFl33Ows8uO6p6Sgn2BwSAZpa4GTd2RLO1AyE=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=gni12HXG0xcRsh0Z4Lkq3uhw8mwnGWKIt+ctJNfTHYqSK0T7N/oq4p7rxVKz4HCpG6dSWIJeNNNaF6fMxTgGEp9Ze0H664HxzrCv/Lc0ZKLYBd41Hri2jCX1UfuJr1rdONA9R+Ipqhb+ZOc8F0MaczXf9batASabYotS5N9b75o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mwX7YmlN; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1787592998; c=relaxed/simple;
+	bh=oWe+9ZPhZBvUuq7xX09vD/v8dczCDDkA6waCdGqK0lI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=o7QwCHz+YEIhhISmVoCO9Dg/E0HL9O7Z04O72wnBqjXrhYgJY/b4TRaS0fLsYHX+zszFtlBLTPi5gCKH47AnJZ0ojOEx6fLZU5Fqtd7LnE95A+ZWmMg9OnXbAvsEsjIJZw1wiWTjBAP/gNZ+ujNiHEBcGcTNA7mjzFwmttsa/vc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JH6+58Bq; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mwX7YmlN"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 221E71F000E9;
-	Mon, 24 Aug 2026 17:04:04 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JH6+58Bq"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 787491F000E9;
+	Mon, 24 Aug 2026 17:36:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787591044;
-	bh=mTISctD+1BC+oiF3XW2nMDFY4qNwlb9QQcVYs1fvFe4=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=mwX7YmlNWypuSkT5z5kA5sTmeDHrlfqS0xy2q+m160mBIzbsF6CrsEKbnJfnTmJe7
-	 e5hVciPY/jihqpgSbZ2DFExcOxTzZipe54XnEx5pHMEAgKmZqeHvXRpx/ths5PV9dC
-	 XxjvDNTZTDqL9MZjZC7NfSZT5LcdmFq5iNKCZySaqoveAmNRp8ZRUjT3kFLURexYNw
-	 D281Sj7dwRX4ygxgIZevWuh5Qu6uxNmsru9zBaQtXTuPOzRwZ/qyaAl1S7LvSp5001
-	 5yBDLGNF567IwKtoRj+q3/O3rM3dMeJ8CVVCXOc3+jEauEIGOEbU8zd403G7tV+R1a
-	 Mj4aPzqsuX4dQ==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 2/2] PCI: quirks: Drop unassignable 32 GiB BAR 4 on
- Tenstorrent Blackhole
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Anirudh Srinivasan" <asrinivasan@oss.tenstorrent.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260824-blackhole_quirk-v1-2-fc004672cdbd@oss.tenstorrent.com>
-References: <20260824-blackhole_quirk-v1-0-fc004672cdbd@oss.tenstorrent.com>
- <20260824-blackhole_quirk-v1-2-fc004672cdbd@oss.tenstorrent.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 24 Aug 2026 17:04:03 +0000
-Message-Id: <20260824170404.221E71F000E9@smtp.kernel.org>
+	s=k20260515; t=1787592995;
+	bh=qpoz6+H2LxPnQBJNzR1MV4eilr4/xTVoHOvddOGp7bw=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=JH6+58Bqlc0G7WEfpAKr0oiK5yTSuXFsNCzeWK+6oF6MjAAzX7+abLTQYSKTN2vP9
+	 BAM6Jkf7OK7Tsxz3ckqqTaG6INmdwg1ebsnUpAKmwt1Df3Q6a40q/RKgo4o2Titl35
+	 oTBvVJFp4tSIFwGZxwh2mFfT3u/E7uzD+jdIZv/3IkuSf+m3ilxD1nLTGMWx4alInA
+	 Tsp0M4BTArjLjZBZL5ChTgnzaoVvXZlTJjxZa8ggw5qvFiqncgruipv7Dfqj+0Twnp
+	 UONnvct09stB7SKSV7vx+3nnoYeA/CdbCiG8znAOXbmIfpkU5vbhrBic4zcae8Zho9
+	 WM3Z09AzjfuCA==
+Received: by pali.im (Postfix)
+	id 9C5A54C0; Mon, 24 Aug 2026 19:36:35 +0200 (CEST)
+Date: Mon, 24 Aug 2026 19:36:35 +0200
+From: Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>
+To: David Matlack <dmatlack@google.com>
+Cc: Martin Mares <mj@ucw.cz>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [pciutils PATCH v2] lspci: Determine bridge window address size
+ from bridge_flags
+Message-ID: <20260824173635.tqbivfr6l7pvi3qh@pali>
+References: <20260821221610.3570722-1-dmatlack@google.com>
+ <20260821230620.fcpmn7radmwnfnh2@pali>
+ <CALzav=dOumVYvjShjHHd1fydKMO1OX2w-ps4HEH5kBU7_3AVzg@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CALzav=dOumVYvjShjHHd1fydKMO1OX2w-ps4HEH5kBU7_3AVzg@mail.gmail.com>
+User-Agent: NeoMutt/20180716
 
-> Tenstorrent Blackhole cards expose a 32 GiB BAR 4 that is unused by most
-> software talking to the card. This BAR cannot be assigned on hosts whose
-> PCI aperture is smaller than 32 GiB (e.g some ARM/RISC-V systems). This
-> failure also results in BAR 0 (256 MiB) and 2 (2 MiB) being unassigned
-> because bridge windows are sized as the sum of all enabled child BARs.
-> This makes the card completely unusable on such systems.
->=20
->     spacemit-k1-pcie 80000000.pcie: PCI host bridge to bus 0000:00
->     pci_bus 0000:00: root bus resource [bus 00-ff]
->     pci_bus 0000:00: root bus resource [io  0x100000-0x1fffff] (bus addre=
-ss [0x10000-0x10ffff])
->     pci_bus 0000:00: root bus resource [mem 0x1100110000-0x117fffffff] (b=
-us address [0x00110000-0x7fffffff])
->     pci_bus 0000:00: root bus resource [mem 0x1800000000-0x18ffffffff pre=
-f]
->=20
->     <snip>
->=20
-> [ ... ]
-> bridge window then sizes to BARs 0/2 and succeeds. This was tested on a
-> Spacemit-K3 RISC-V board that has only 4GiB of BAR space. tt-smi and
-> tt-bh-linux are able to run on the card.
->=20
-> Signed-off-by: Anirudh Srinivasan <asrinivasan@oss.tenstorrent.com>
+On Monday 24 August 2026 09:24:33 David Matlack wrote:
+> On Fri, Aug 21, 2026 at 4:06 PM Pali Rohár <pali@kernel.org> wrote:
+> >
+> > Hello! Thank you for taking this issue. I briefly checked the change and
+> > I think that this is the right way how to address that issue.
+> >
+> > Anyway, it would be nice to provide some example of config space of PCI
+> > Bridge (lspci -x) which is affected by this issue and have it in
+> > pciutils/tests/ directory.
+> 
+> Ack, I will incorporate that into a v3.
 
-Sashiko has reviewed this patch and found no issues. It looks great!
+Feel free to send it separately. No need to have it in this one change.
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260824-blackhole_=
-quirk-v1-0-fc004672cdbd@oss.tenstorrent.com?part=3D2
-
+> > On Friday 21 August 2026 22:15:59 David Matlack wrote:
+> > > Use bridge_flags to determine address size bits (16- vs 32-bit for I/O,
+> > > 32- vs 64-bit for prefetchable memory) when displaying bridge ranges
+> > > populated via PCI_FILL_BRIDGE_BASES.
+> > >
+> > > Commit ccf68033a452 ("lspci: Use PCI_FILL_BRIDGE_BASES to detect if
+> > > range behind bridge is disabled or unsupported") introduced code in
+> > > show_htype1() that reads PCI_IO_RANGE_TYPE_MASK and
+> > > PCI_MEMORY_RANGE_TYPE_MASK from bridge_base_addr[]. However,
+> > > bridge_base_addr[] holds base addresses without flags, as documented in
+> > > lib/pci.h and implemented across backends like sysfs.c and
+> > > win32-cfgmgr32.c.
+> > >
+> > > Because bridge_base_addr[] does not contain configuration register flag
+> > > bits, masking the lower bits evaluates to zero. As a result, 32-bit I/O
+> > > windows are mislabeled as "[16-bit]" and 64-bit prefetchable memory
+> > > windows are mislabeled as "[32-bit]" when using PCI_FILL_BRIDGE_BASES.
+> > >
+> > > Fixes: ccf68033a452 ("lspci: Use PCI_FILL_BRIDGE_BASES to detect if range behind bridge is disabled or unsupported")
+> > > Signed-off-by: David Matlack <dmatlack@google.com>
+> > > ---
+> > > v2:
+> > >  - Fix lspci.c to use bridge_flags[], per lib/pci.h, rather than
+> > >    changing the behavior of just the sysfs backend (Pali Rohár)
+> > >
+> > > v1: https://lore.kernel.org/linux-pci/20260626213047.189951-1-bhelgaas@google.com/
+> > >
+> > >  lspci.c | 12 +++++-------
+> > >  1 file changed, 5 insertions(+), 7 deletions(-)
+> > >
+> > > diff --git a/lspci.c b/lspci.c
+> > > index 2a14303e74f6..52fd9247aefb 100644
+> > > --- a/lspci.c
+> > > +++ b/lspci.c
+> > > @@ -571,10 +571,9 @@ show_htype1(struct device *d)
+> > >
+> > >    if ((p->known_fields & PCI_FILL_BRIDGE_BASES) && !io_disabled)
+> > >      {
+> > > -      io_base = p->bridge_base_addr[0] & PCI_IO_RANGE_MASK;
+> > > +      io_base = p->bridge_base_addr[0];
+> > >        io_limit = io_base + p->bridge_size[0] - 1;
+> > > -      io_type = p->bridge_base_addr[0] & PCI_IO_RANGE_TYPE_MASK;
+> > > -      io_bits = (io_type == PCI_IO_RANGE_TYPE_32) ? 32 : 16;
+> > > +      io_bits = (p->bridge_flags[0] & PCI_IORESOURCE_IO_16BIT_ADDR) ? 16 : 32;
+> > >        show_range("\tI/O behind bridge", io_base, io_limit, io_bits, io_disabled);
+> > >      }
+> > >    else if (io_type != (io_limit & PCI_IO_RANGE_TYPE_MASK) ||
+> > > @@ -600,7 +599,7 @@ show_htype1(struct device *d)
+> > >
+> > >    if ((p->known_fields & PCI_FILL_BRIDGE_BASES) && !mem_disabled)
+> > >      {
+> > > -      mem_base = p->bridge_base_addr[1] & PCI_MEMORY_RANGE_MASK;
+> > > +      mem_base = p->bridge_base_addr[1];
+> > >        mem_limit = mem_base + p->bridge_size[1] - 1;
+> > >        show_range("\tMemory behind bridge", mem_base, mem_limit, 32, mem_disabled);
+> > >      }
+> > > @@ -616,10 +615,9 @@ show_htype1(struct device *d)
+> > >
+> > >    if ((p->known_fields & PCI_FILL_BRIDGE_BASES) && !pref_disabled)
+> > >      {
+> > > -      u64 pref_base_64 = p->bridge_base_addr[2] & PCI_MEMORY_RANGE_MASK;
+> > > +      u64 pref_base_64 = p->bridge_base_addr[2];
+> > >        u64 pref_limit_64 = pref_base_64 + p->bridge_size[2] - 1;
+> > > -      pref_type = p->bridge_base_addr[2] & PCI_MEMORY_RANGE_TYPE_MASK;
+> > > -      pref_bits = (pref_type == PCI_PREF_RANGE_TYPE_64) ? 64 : 32;
+> > > +      pref_bits = (p->bridge_flags[2] & PCI_IORESOURCE_MEM_64) ? 64 : 32;
+> > >        show_range("\tPrefetchable memory behind bridge", pref_base_64, pref_limit_64, pref_bits, pref_disabled);
+> > >      }
+> > >    else if (pref_type != (pref_limit & PCI_PREF_RANGE_TYPE_MASK) ||
+> > >
+> > > base-commit: b41ce14da749fb44ca7940ba9797027bfa62c23e
+> > > --
+> > > 2.55.0.766.g2966f0265a-goog
+> > >
+> >
