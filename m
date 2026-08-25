@@ -1,237 +1,278 @@
-Received: from PH8PR06CU001.outbound.protection.outlook.com (mail-westus3azon11022100.outbound.protection.outlook.com [40.107.209.100])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1800C331ED6;
-	Tue, 25 Aug 2026 20:33:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.209.100
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787690036; cv=fail; b=FxI0465OTbQOQXbYO+4flYRNOoYNnPSc1KOvXSLM9q6nXNIfnpz88uC5B6bNFMdoMf+dJWMkcRaVuqOWafzT0wqVxzajl6VrkkCORnhG9VGDnsCu9ePW1xf25apfzbEdQYc8LOV7waop7goufP2cMln2lS7r/FvOzhXERc0gFyw=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787690036; c=relaxed/simple;
-	bh=Avuxle7P3YVUl6R08sEiWWf7yQP35noNMZNW52GLEDk=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=AIuSJnJP7IeWiS2Fx21vL6M9hYsINyyMvRJ+NnZAMEnX7mtsl2KKG+25EfZAnP7VDkKCS5mo66nTmIHpcp2mR63SE+Pesk+eZD18BpLHGcwgNIT51XDwE5of385B5rZx1UceBGRQfqLKNN/id82bmbGIq/q7p4q1a0UsM31nTVQ=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=microsoft.com; spf=pass smtp.mailfrom=microsoft.com; dkim=pass (1024-bit key) header.d=microsoft.com header.i=@microsoft.com header.b=CxJ92mbe; arc=fail smtp.client-ip=40.107.209.100
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=microsoft.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=microsoft.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1489F3DAACF;
+	Tue, 25 Aug 2026 21:13:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.14
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1787692394; cv=none; b=foGInqFFin97173r57YJhhpqYFCCVASoEg9tbwd33UX/KILp7WM0P9NpXgijbhThvV8xet44lq9vFAmYLgIBZ+eytpGzrTUCo1+s+BUHZh1hZ7iSCOKi5bLctiEH6y+5T+odJWtTqV8r7dSJU9L10Ko8SzUU44sdG4PR5IREFoE=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1787692394; c=relaxed/simple;
+	bh=RUqv5+/gNyhj1F3HpadSYlyWATNCVZ9G+Xxxzxerkn8=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=qs5rBnCxmtH5Bqer//Jv1EUQdNoxbvnox+Dd7+OST7PzbrRZjKBcQc5mXzLqnPim75hwxOhU6590Nsm6nJ0wY/YHIj8+QRPvZi9uXjojr/HBX3nVRUNLC+gKNznbU+oEfxwKn5E+tvLHmWf1XmtTiJQ9jyA1xzNOKNLzGuCRy/4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Yvquz5ZL; arc=none smtp.client-ip=192.198.163.14
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=microsoft.com header.i=@microsoft.com header.b="CxJ92mbe"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=un5ZUWUXr/7+2pZvSYHOY2j4NddyIMz9gkrww6HZWlB4gGCucFyo/XqLvvXP14hTPOhjsxR0LdsDWCC9YJJCSYRd86Sz8SVbx4ICQ8eDSf96EDNfr8FjOC5h2V/HQmnCrg8saVwIPRsW9ZN3R/aDzw4Kow4j7NyATXMDOF97SeHAxhIPmswRtpWzHTer1QN0iqJmbdBuYOQ8AghKlhmK+lOOiRLaBCZ340AlGkqn2ZCoEhF0rwRwTpm5oKn8CDV02I0sRm98nHQw6vhNYEnAc0kRTI8VVepqwpQm1Ch9DbgzKEMB1IM4/6v++Q8jIhVPauyb9g37dsMtYHY3pfwF6A==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=rygH9ojXll4qntAAER+lLG28UnnjXtIoCD0G5iF2k4w=;
- b=Sm774QbjHcUvu2sYy1xKSlJmGne6vNehrMx6r4WaXjHBEdPk9EH2xcVnKKO4TD+2Ba/ZvXfJG+nvEkbiEyJWgV9PsbVqljSE5T0sPCAn5lvJ9ibhMJTz74OlSHLt1p4KHL8Vcq74sNwOemmS2O8A6OMcVLn2kniaSdtby17JaOZge1zL0lnulxABW0Gn+wjjSixDl2h+hucsuN8vYQossAVtIJpK27xgbjq9E6NtTKnzIvtXus15ezUGkoPkq33w4ALQeuci21bzd6lN9V+H8fyI/RaNkwXHP8hjbMnV9Mr8WiMqL1Z9MHungarJa0xIX4Wr3asXbWom1nJHZKpK9g==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=microsoft.com; dmarc=pass action=none
- header.from=microsoft.com; dkim=pass header.d=microsoft.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=rygH9ojXll4qntAAER+lLG28UnnjXtIoCD0G5iF2k4w=;
- b=CxJ92mbemkoYupUjNpZhtZ/YnEW8uFUHNMtuvXWV2zc3AFgw5m4b4yraCU1p9wa6G3JzggkHtDo7jiTy94H/LjJg+hlrY3fyv8GBkPubtba9p4YmJpKxHugJ9fBob4sP2QAOczwZHGHIoBovf9UGOZs7Mm6orSU8gRVVw3eJgpA=
-Received: from SA1PR21MB6683.namprd21.prod.outlook.com (2603:10b6:806:4a4::6)
- by SA1PR21MB6369.namprd21.prod.outlook.com (2603:10b6:806:4a9::7) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.360.0; Tue, 25 Aug
- 2026 20:33:51 +0000
-Received: from SA1PR21MB6683.namprd21.prod.outlook.com
- ([fe80::8bad:6294:8a07:fe18]) by SA1PR21MB6683.namprd21.prod.outlook.com
- ([fe80::8bad:6294:8a07:fe18%6]) with mapi id 15.21.0315.008; Tue, 25 Aug 2026
- 20:33:51 +0000
-From: Long Li <longli@microsoft.com>
-To: "wei.liu@kernel.org" <wei.liu@kernel.org>, Linux on Hyper-V List
-	<linux-hyperv@vger.kernel.org>
-CC: "mukeshrathor@linux.microsoft.com" <mukeshrathor@linux.microsoft.com>,
-	"anirudh@anirudhrb.com" <anirudh@anirudhrb.com>,
-	"schakrabarti@linux.microsoft.com" <schakrabarti@linux.microsoft.com>, KY
- Srinivasan <kys@microsoft.com>, Haiyang Zhang <haiyangz@microsoft.com>,
-	Dexuan Cui <DECUI@microsoft.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	=?iso-8859-2?Q?Krzysztof_Wilczy=F1ski?= <kwilczynski@kernel.org>, Manivannan
- Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, Bjorn Helgaas
-	<bhelgaas@google.com>, "open list:PCI NATIVE HOST BRIDGE AND ENDPOINT
- DRIVERS" <linux-pci@vger.kernel.org>, open list
-	<linux-kernel@vger.kernel.org>
-Subject: RE: [EXTERNAL] [PATCH 3/3] PCI: hv: fix interrupt affinity change on
- the nested root partition
-Thread-Topic: [EXTERNAL] [PATCH 3/3] PCI: hv: fix interrupt affinity change on
- the nested root partition
-Thread-Index: AQHdMc5SlCkx6KRPEU6B9Whv5nLie7avOIZw
-Date: Tue, 25 Aug 2026 20:33:51 +0000
-Message-ID:
- <SA1PR21MB6683883CE3658A5EF7CB2402CEAF2@SA1PR21MB6683.namprd21.prod.outlook.com>
-References: <20260822003623.2925128-1-wei.liu@kernel.org>
- <20260822003623.2925128-4-wei.liu@kernel.org>
-In-Reply-To: <20260822003623.2925128-4-wei.liu@kernel.org>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-msip_labels:
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ActionId=2e7771a0-a067-4027-9cf1-6511888fae7d;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ContentBits=0;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Enabled=true;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Method=Standard;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Name=Internal;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SetDate=2026-08-25T20:12:35Z;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SiteId=72f988bf-86f1-41af-91ab-2d7cd011db47;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Tag=10,
- 3, 0, 1;
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=microsoft.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: SA1PR21MB6683:EE_|SA1PR21MB6369:EE_
-x-ms-office365-filtering-correlation-id: 0bdc8ae7-1bb6-4978-f83b-08df02e82cd3
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam:
- BCL:0;ARA:13230040|376014|7416014|366016|23010399003|1800799024|38070700021|10067099003|7146999003|22082099003|56012099006|11063799006|5023799004|18002099003|4143699003;
-x-microsoft-antispam-message-info:
- DAvtrBaJCgwZFzdnLYqm12BnO6Atj6/bMhdydIMs8bf3v7+8fCE9MgGET1Jica1iu37L+K/sy7nMCpGP/C29k58Z1C9ksF2oh3g3foch716UjB9tDgzW8ZZ0gn8/GpS+cOqRh9vFmVOM8sEeXnUPrrMX03T1KbBeNfjwBo3i8PCN95QHB9jwO5VNZQMaGbFQxTCgwBgZTSqWb70ZOZrx2n0N7mR9ODwD0oL9mXihTn9g9a08roMdHnJsN07E+lsR18gqGS19gpt+pE+escn/FT5dEI2SbutjMrN5A28dSVW1J9OkLVh9wubIF/rer2pYOvJBljA56zOfa5HSJFTJrLWwQoSJ8+YLw73JZW6gGzlIQZ4kmEcl7f2vDzX3Mzsz6kfCeASd9h9gPYmtc/t8emj2sXdBJ2lKq2J+7YR/ap/HdjDgbAmdCeJSzzBRqJ+zdkrD2MkgWN8U8GUS8Dzsuqziz3wL5HmcYwJE5FdyzitrXk3BAEnm6vL66gZ400zIYj/liPhQ6aL5quKPoZj+nD09aM53swu5rw3Mpc8r1nGt3pFiH1Q3r2//5vPxZzidRsMZL4Cj57IFwC2YU1aMSoh/oT5UjeBslCn5aUD/sRsXR1FrZD549/Y1OnYgBYSXwcIfOpnSIZlTP+JfyvzzrD87kxFN58u8uwT//ISMYdu/6l0wDUZFLdR3dA7/PTXANptx4kK2IMmcRwYRaUp90b6va5i/LRhJkS+sr8blaoA=
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA1PR21MB6683.namprd21.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(7416014)(366016)(23010399003)(1800799024)(38070700021)(10067099003)(7146999003)(22082099003)(56012099006)(11063799006)(5023799004)(18002099003)(4143699003);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?iso-8859-2?Q?b3ud6aP84FILJMDFV1QsJX4z5GhQ7PdCJxzOWS6JaMlyS9kSp+r2urG4m/?=
- =?iso-8859-2?Q?dfeNc4jqhmtIffDxthEFnGa74P26kmYCFa4vK8PRTRQluIODoGnzZNxv92?=
- =?iso-8859-2?Q?OVBNN+2s3mqRNmR5rvBiqK4/QLy+6yNWoBHql9YJ8ouhUMBc5dDqKVEXTt?=
- =?iso-8859-2?Q?b4WibNPFZ1HtorTBgWSMlS1QZOFmgK67w0/hbHJiHzVSZHOb2m84gKcKkK?=
- =?iso-8859-2?Q?A46EdcMOKP7UOLbJPVXJvHf36Q6f64bZubhf+I2Ha6Qzv9N2Gmb0ThpGdu?=
- =?iso-8859-2?Q?RDMQRj+hzco9IE4Jh8GSW+9taHcnehtKwGYImqAM3PKqlArtFNvsFqBmP4?=
- =?iso-8859-2?Q?8L95flWVkyCPisDG0AJXcEqXHusWfD2f1dIzbRym4l8aYTJcchrvEKa3Rp?=
- =?iso-8859-2?Q?jQiE1gLCAvYLP6VOM0O+I0tpzaSz4r1OTD2pyqXnLJxZpYFLF0IUuWDv6K?=
- =?iso-8859-2?Q?dR9mbvnXATlOfJWYARnrgSqgpZC4nAV1yuvN2FhjlSU9aVXfEo0jc95Jp5?=
- =?iso-8859-2?Q?MNZympVozlzqDS4SihrZUn5Q1dbn8N/O4mw07iXPqsbDDTdnGSAkSmCnnS?=
- =?iso-8859-2?Q?qS4bocV4l9mqKEkppEvvrOVhzi7Yxq/nn7BhVZ2qGHqbdGL9lytsyML5Q3?=
- =?iso-8859-2?Q?rDVhtG6mEahzCAfbW/K4mlqpkefhVNB/w+4UTmdvgqoGqMv9CeCU+NfKh5?=
- =?iso-8859-2?Q?Fvr1+oioUXKZSRpmb/3Tg1baBeayC2OLHxe7CHp23MLtjKZctJuvwwxzS+?=
- =?iso-8859-2?Q?JgIHrFFHUOXhNZq+lik3UeHNkuX5SUcQw1sn5EB9Fi7dpXxiGftRsyqMgM?=
- =?iso-8859-2?Q?kyFKmRXTlEH3WLigm3QEKeJserBnvGfcdzzb58zCm6QpTBHY6osBIe2Ia+?=
- =?iso-8859-2?Q?1qFsYGKEt3siwGDdVkIm0rxpJa7qUnoB9c6rBKhF4fXTXDCJRRBtL45LWp?=
- =?iso-8859-2?Q?dpWgmr9nMYw2Kk35wa2FMR9iWKPXeX/0dY+7Ld3p2fzbOsWbXBX6S3UyX4?=
- =?iso-8859-2?Q?mTY09vx+DUJL+x9OSfARvxHcCg0WtFmauU2neCi+h0RNm30iVOicBdsPWL?=
- =?iso-8859-2?Q?odOP/H2nf3R/6AOyvvc2LS+o0PBT45acRFJyoAMv4wlTFJ374WAUOfaLIy?=
- =?iso-8859-2?Q?6kzLwS78ZJO7fLRdSBcpw467MF8LEA7z2cdz2kioulUi5Vvg2mw+pCs9g+?=
- =?iso-8859-2?Q?NZaCte3B9e1HNcPZZDDF8S+BpgJCkceHfOVxyTiG5gxT5xHZ9Fzo6/C9Rj?=
- =?iso-8859-2?Q?ViNIlM3NMQZzniPJzvVHHKhP2PDVnVX/XNZPwYVuS6fB13CV+mpYdan8RV?=
- =?iso-8859-2?Q?NwDLTqHiqPoBUgx6YDWTbqIgz9FZDZdAt5LKRVtiQ6ZeuBuIkKyWWGhGI1?=
- =?iso-8859-2?Q?HSlvZvz0Nqg5vXgfCrrme8VKLTvHdh/ICbVLELNZN/X8/K318b/LbrhVgC?=
- =?iso-8859-2?Q?MS0yzqRqLD3rl6+Rn+nC+R2APnWwAlmGtSdAK4kdPcnPoMwk3AhZu7dV1S?=
- =?iso-8859-2?Q?Xs5vsJkkQMyQ3NEgLR6h7S6UnkoCqUw3odMMX+klwsa4EJyP5h0yLE9Q9G?=
- =?iso-8859-2?Q?f2qSWd03CXWmVt5NaKPRBXz0tjEX/43jjF3OdU0LfRHZBL5Vxtbi9D/jfn?=
- =?iso-8859-2?Q?Ejn2lN3e6U70F32EeZ8jDE1lhsCKXR/yzf7XFQ0tra/Y8g7C/PRKO+y3As?=
- =?iso-8859-2?Q?yOfNHnIcHCt6U5tXo75ufOATYBY3Gwu0V6qGxTP9nO054QwvvYmvx2bY6J?=
- =?iso-8859-2?Q?4qh3D4FjD4JIs3JbribEPn0x4UNAZLHHgpoeVa2MiGms7Z?=
-Content-Type: text/plain; charset="iso-8859-2"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Yvquz5ZL"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1787692391; x=1819228391;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=RUqv5+/gNyhj1F3HpadSYlyWATNCVZ9G+Xxxzxerkn8=;
+  b=Yvquz5ZLBtbkB5S7LYU7gqKcyBGMEQ2tDmVhNEIclNU9YR+sUd6JayfR
+   /M/sUTfqJyQvOf1WB+TAxQQ1QBu+G6FDIJeZqCvgHKGu/HX7LewnS1+sF
+   VOEgMxTs9+y0zFzexvk0qwSb6NyW4UFkaOhh/BXLpHh6m2HRRjo81Ru1o
+   s8B2TManJmqEgyV5aDZ94YTkihVNI5tEiHPfOuLJxregJIOmeFhk6pblm
+   WRcF/BjfBoWyDcU5nXPbzkHwcyGDNBYZcYbEd4NoXXQSQeIGabtZwgRc/
+   vjask6pMmOwACWLaKi0cUfdTvyeMy8U9ygBJ1YHqO8YUjtK+diVsF16L4
+   A==;
+X-CSE-ConnectionGUID: //k/9p4eQ6SwbL07o4/frA==
+X-CSE-MsgGUID: 3vY0gzO4SiCV6dVhcGJfxA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11886"; a="88187125"
+X-IronPort-AV: E=Sophos;i="6.25,243,1779174000"; 
+   d="scan'208";a="88187125"
+Received: from orviesa007.jf.intel.com ([10.64.159.147])
+  by fmvoesa108.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Aug 2026 14:13:10 -0700
+X-CSE-ConnectionGUID: +QMMoHsCQlmWeVQ8tAplag==
+X-CSE-MsgGUID: 71+Ulur7T1mAMrsL6WompQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.25,243,1779174000"; 
+   d="scan'208";a="267422966"
+Received: from rchatre-mobl4.amr.corp.intel.com (HELO [10.125.109.2]) ([10.125.109.2])
+  by orviesa007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Aug 2026 14:13:09 -0700
+Message-ID: <8eedb254-c942-4ee8-ab96-eb7c1ae577ad@intel.com>
+Date: Tue, 25 Aug 2026 14:13:07 -0700
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-OriginatorOrg: microsoft.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: SA1PR21MB6683.namprd21.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 0bdc8ae7-1bb6-4978-f83b-08df02e82cd3
-X-MS-Exchange-CrossTenant-originalarrivaltime: 25 Aug 2026 20:33:51.7341
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 72f988bf-86f1-41af-91ab-2d7cd011db47
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: 4tLhNO8/OJ0Hm71jSNeEhjfbBD8S7FVHyVKzxkoE45U/d8rpJY5Gqr7w9diwVOun65THDi0jjII0Sb79j4Bg0Q==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA1PR21MB6369
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v10 00/12] PCI/CXL: Add CXL reset support for Type 2
+ devices
+To: Srirangan Madhavan <smadhavan@nvidia.com>,
+ Alison Schofield <alison.schofield@intel.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, Davidlohr Bueso <dave@stgolabs.net>,
+ Ira Weiny <ira.weiny@intel.com>, Jonathan Cameron <jic23@kernel.org>,
+ Vishal Verma <vishal.l.verma@intel.com>, linux-cxl@vger.kernel.org,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Alex Williamson <alex.williamson@redhat.com>, vsethi@nvidia.com,
+ alwilliamson@nvidia.com,
+ Sai Yashwanth Reddy Kancherla <skancherla@nvidia.com>,
+ Vishal Aslot <vaslot@nvidia.com>, Manish Honap <mhonap@nvidia.com>,
+ Jiandi An <jan@nvidia.com>, Richard Cheng <icheng@nvidia.com>,
+ linux-tegra@vger.kernel.org
+References: <20260804192958.1823952-1-smadhavan@nvidia.com>
+From: Dave Jiang <dave.jiang@intel.com>
+Content-Language: en-US
+In-Reply-To: <20260804192958.1823952-1-smadhavan@nvidia.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
->=20
-> From: Wei Liu <wei.liu@kernel.org>
->=20
-> hv_compose_msi_msg() sends PCI_CREATE_INTERRUPT carrying
-> int_desc.vector, and the vPCI backend programs the device with the
-> address/data it returns for it.
->=20
-> An affinity change only ran irq_chip_set_affinity_parent(), which re-allo=
-cates
-> the x86 vector and nothing else, and hv_arch_irq_unmask() then issued
-> MAP_DEVICE_INTERRUPT for the new (VP, vector).  Nothing re-composed the
-> interrupt, so the device kept signalling the vector it was created with a=
-nd the
-> new mapping was never used. This led to loss of interrupts.
->=20
-> Do the re-target where the vector is known and the interrupt is quiescent=
-.  If
-> the vector changed, re-compose the VMBus interrupt for it, write the
-> resulting message to the device, and only then map the new (vp, vector); =
-the
-> old mapping is destroyed as the new message is composed.
->=20
-> Signed-off-by: Wei Liu <wei.liu@kernel.org>
-> ---
->  drivers/pci/controller/pci-hyperv.c | 41 +++++++++++++++++++++++++++--
->  1 file changed, 39 insertions(+), 2 deletions(-)
->=20
-> diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller=
-/pci-
-> hyperv.c
-> index 5a36382742bf..5acb8e41567e 100644
-> --- a/drivers/pci/controller/pci-hyperv.c
-> +++ b/drivers/pci/controller/pci-hyperv.c
-> @@ -294,6 +294,7 @@ struct tran_int_desc {  struct hv_msi_int_entry {
->  	struct tran_int_desc		int_desc;
->  	struct hv_interrupt_entry	hv_entry;
-> +	unsigned int			mapped_vector;
->  };
->=20
->  /* chip_data is passed around as a struct tran_int_desc *, so it must be=
- first.
-> */ @@ -742,6 +743,8 @@ static void hv_irq_retarget_interrupt(struct
-> irq_data *data)
->  			"%s() failed: %#llx", __func__, res);  }
->=20
-> +static void hv_compose_msi_msg(struct irq_data *data, struct msi_msg
-> +*msg);
-> +
->  static void hv_arch_irq_unmask(struct irq_data *data)  {
->  	if (hv_root_partition()) {
-> @@ -752,9 +755,17 @@ static void hv_arch_irq_unmask(struct irq_data
-> *data)
->  		 * RETARGET_INTERRUPT.
->  		 *
->  		 * Keep the returned entry so the mapping can be removed
-> again
-> -		 * when the interrupt is torn down.
-> +		 * when the interrupt is re-targeted or torn down.
-> +		 *
-> +		 * This is also the re-target point.  The core calls us from
-> +		 * __irq_move_irq() with the interrupt masked once the new
-> +		 * vector has been assigned, so if the vector changed the
-> vmbus
-> +		 * interrupt is re-composed for it first --
-> PCI_CREATE_INTERRUPT
-> +		 * carries the vector, so the device would otherwise keep
-> +		 * signalling the one it was created with.
->  		 */
->  		struct hv_msi_int_entry *ie =3D data->chip_data;
-> +		unsigned int vec =3D hv_msi_get_int_vector(data);
->=20
->  		/*
->  		 * A NULL chip_data means hv_compose_msi_msg() failed
-> and the @@ -763,8 +774,29 @@ static void hv_arch_irq_unmask(struct
-> irq_data *data)
->  		if (!ie)
->  			return;
->=20
-> -		if (hv_map_msi_interrupt(data, &ie->hv_entry))
-> +		/* Already mapped for this vector, nothing changed. */
-> +		if (ie->mapped_vector =3D=3D vec && ie->hv_entry.source)
-> +			return;
-> +
-> +		if (ie->mapped_vector && ie->mapped_vector !=3D vec) {
-> +			struct msi_msg msg;
-> +
-> +			hv_compose_msi_msg(data, &msg);
-> +
-> +			ie =3D data->chip_data;
-> +			if (!ie)
-> +				return;
-> +
-> +			if (data->chip->irq_write_msi_msg)
-> +				data->chip->irq_write_msi_msg(data, &msg);
 
-I don't see the function irq_write_msi_msg defined in hv_msi_irq_chip, mayb=
-e not looking at the right place. Is this function ever getting called?
 
+On 8/4/26 12:29 PM, Srirangan Madhavan wrote:
+> Hi folks!
+> 
+> This series adds CXL Reset support for CXL Type 2 devices through the
+> existing PCI reset_method ABI. The reset sequence follows the CXL 4.0
+> specification [1], including CXL.cache disable, optional cache
+> writeback, CXL Reset initiation, ResetComplete polling, and ResetError
+> reporting.
+> 
+> The userspace ABI is the existing PCI reset interface:
+> 
+>     /sys/bus/pci/devices/.../reset_method
+>     /sys/bus/pci/devices/.../reset
+> 
+> Userspace can select "cxl_reset" in reset_method and then trigger reset
+> through the existing reset attribute.
+
+Srirangan,
+Do we need to consider concurrent mailbox commands while reset is ongoing? Although rather than blocking them, maybe we just need to harden the mailbox path in CXL core so that when ~0s are read we return error and give up? and maybe a reset_prepare() to quiesce things. Just some random thoughts.
+
+DJ
+
+> 
+> Following Dan's v6 feedback, this replaces the proposed memdev sysfs ABI
+> with the existing PCI reset_method interface.
+> 
+> v10 changes from v9 [2]:
+> - Address review comments deferred from v9.
+> - Split HDM decoder helper refactoring into smaller reviewable patches.
+> - Rename the built-in CXL helper file to resource.c and keep reset-specific
+>   logic separate from the decoder programming refactor.
+> - Add a helper to resolve a CXL port's upstream PCI device.
+> - Fix tools/testing/cxl Kbuild coverage for resource.o.
+> - Keep early HDM decoder parsing shared with normal CXL HDM enumeration.
+> - Gate CXL Reset execution on cached HDM state and current CXL.cache/CXL.mem
+>   enablement.
+> - Reject CXL Reset on multifunction devices to avoid reset scope ambiguity.
+> - Order CXL cache disable/writeback before PCI reset quiesce and IOMMU reset
+>   preparation.
+> - Restore cached HDM state without replaying transient commit/error/lock
+>   control bits.
+> - Update ABI documentation to match the implemented reset ordering and CPU
+>   cache invalidation behavior.
+> 
+> v9 changes from v8 [3]:
+> - Rebase the series onto v7.2-rc2 so it applies cleanly on a Linus rc
+>   tag.
+> - Include the cxl_bus HDM restore add-on as patch 11/11 so b4 orders it
+>   after the main CXL reset series.
+> - Address only patch application issues in v9 to gather feedback on the
+>   current direction. Other review comments, including Dave's code
+>   structure/readability feedback, are deferred to v10.
+> 
+> v8 changes from v7 [4]:
+> - Drop the PCI helper export patch.
+> - Drop the multi-function sibling coordination patch. cxl_reset is only
+>   exposed as a function-scoped reset method when the CXL reset scope is
+>   limited to the target function.
+> - Keep the reset-scope discovery needed to reject non-function-scoped
+>   CXL resets.
+> - Cache HDM location as BAR-relative metadata instead of keeping an
+>   enum-time MMIO mapping.
+> - Restore HDM through a temporary mapping based on the current BAR
+>   assignment after PCI config state is restored.
+> - Cache raw HDM decoder register state so uncommitted decoders can be
+>   restored as uncommitted, while committed decoders are recommitted
+>   through the normal HDM commit flow.
+> - Share HDM decoder decode and validation between normal CXL core
+>   enumeration and early PCI HDM caching.
+> - Put cxl_reset ahead of FLR in reset_method priority because FLR does
+>   not reset CXL.cache or CXL.mem protocol state.
+> 
+> Motivation:
+> -----------
+> - Type 2 devices need a CXL-specific reset mechanism beyond existing PCI
+>   reset methods.
+> 
+> - FLR does not reset CXL.cache or CXL.mem protocol state. CXL Reset is
+>   the architectural reset mechanism for those protocols.
+> 
+> - The PCI reset_method ABI lets userspace select this narrower CXL reset
+>   before falling back to broader bus reset methods.
+> 
+> Change Description:
+> -------------------
+> 
+> Patch 1: cxl: Move HDM decoder programming helpers
+> - Move low-level HDM decoder programming helpers into resource.c.
+> - Keep the movement mechanical so later patches can change the interface
+>   separately.
+> 
+> Patch 2: cxl: Pass decoder settings to HDM commit helpers
+> - Introduce a decoder settings snapshot for HDM commit programming.
+> - Route decoder commit through helpers that can be reused by reset restore.
+> 
+> Patch 3: cxl: Share HDM decoder decode logic
+> - Add a small helper to resolve a CXL port's upstream PCI device.
+> - Share HDM decoder decode and validation between normal CXL core
+>   enumeration and early PCI HDM cache setup.
+> 
+> Patch 4: cxl: Cache decoder settings on PCI devices
+> - Cache CXL core HDM decoder settings in pci_dev->hdm.
+> - Refresh the cache as decoders are enumerated, committed, or reset.
+> 
+> Patch 5: cxl: Cache endpoint decoder settings during PCI enumeration
+> - Snapshot endpoint HDM state during PCI enumeration.
+> - Cache the HDM register locator as BAR-relative metadata.
+> - Cache raw decoder register state in addition to committed decoder
+>   settings.
+> 
+> Patch 6: cxl: Add CXL Device Reset helper
+> - Add the internal DVSEC reset sequence.
+> - Disable CXL.cache, perform cache writeback where supported, initiate
+>   CXL Reset, and wait for completion.
+> 
+> Patch 7: cxl: Validate HDM ranges before CXL reset
+> - Collect enabled cached HDM ranges.
+> - Reject reset if affected ranges are busy.
+> - Invalidate CPU caches when runtime cache-invalidation support is
+>   available, otherwise continue after warning.
+> 
+> Patch 8: PCI/CXL: Reject CXL Reset on multifunction devices
+> - Reject CXL Reset for multifunction devices to avoid reset scope ambiguity.
+> 
+> Patch 9: cxl: Restore CXL HDM state after PCI reset
+> - Restore cached global and per-decoder HDM state after reset.
+> - Re-map HDM registers from the current BAR assignment during restore.
+> - Replay raw decoder state for uncommitted decoders and recommit
+>   decoders that were committed before reset.
+> 
+> Patch 10: PCI/CXL: Expose CXL Reset as a PCI reset method
+> - Add "cxl_reset" to the PCI reset-method table for Type 2 reset-capable
+>   CXL devices.
+> - Prioritize cxl_reset ahead of FLR.
+> 
+> Patch 11: Documentation/ABI: Document CXL Reset PCI reset method
+> - Document the new reset_method value and reset behavior.
+> 
+> Patch 12: PCI/CXL: Restore HDM state after CXL bus reset
+> - Restore cached CXL HDM decoder state after cxl_bus reset.
+> 
+> The CPU cache invalidation step depends on
+> cpu_cache_invalidate_memregion() support for the affected address ranges.
+> If no runtime provider is available, the kernel emits a warning and
+> continues after the affected HDM ranges have been reserved.
+> 
+> Example:
+> 
+>     echo cxl_reset > /sys/bus/pci/devices/0000:bb:dd.f/reset_method
+>     echo 1 > /sys/bus/pci/devices/0000:bb:dd.f/reset
+> 
+> Testing:
+> - Ran 100 iterations of cxl_reset through the PCI reset sysfs ABI on a
+>   CXL Type 2 device. All iterations completed successfully and
+>   ResetComplete was observed.
+> - Exercised cxl_bus reset separately with the HDM restore add-on patch.
+> - Built drivers/cxl/core/resource.o and drivers/pci/pci.o during v10
+>   preparation.
+> 
+> References:
+> [1] https://computeexpresslink.org/wp-content/uploads/2026/02/CXL-Specification_rev4p0_ver1p0_2026February26_clean_evalcopy_v2.pdf
+> [2] https://lore.kernel.org/linux-cxl/20260709010304.680422-1-smadhavan@nvidia.com/
+> [3] https://lore.kernel.org/linux-cxl/20260703220508.546528-1-smadhavan@nvidia.com/
+> [4] https://lore.kernel.org/linux-cxl/20260623032453.3404772-1-smadhavan@nvidia.com/
+> 
+> Srirangan Madhavan (12):
+>   cxl: Move HDM decoder programming helpers
+>   cxl: Pass decoder settings to HDM commit helpers
+>   cxl: Share HDM decoder decode logic
+>   cxl: Cache decoder settings on PCI devices
+>   cxl: Cache endpoint decoder settings during PCI enumeration
+>   cxl: Add CXL Device Reset helper
+>   cxl: Validate HDM ranges before CXL reset
+>   PCI/CXL: Reject CXL Reset on multifunction devices
+>   cxl: Restore CXL HDM state after PCI reset
+>   PCI/CXL: Expose CXL Reset as a PCI reset method
+>   Documentation/ABI: Document CXL Reset PCI reset method
+>   PCI/CXL: Restore HDM state after CXL bus reset
+> 
+>  Documentation/ABI/testing/sysfs-bus-pci |   16 +
+>  drivers/cxl/Kconfig                     |    4 +
+>  drivers/cxl/core/Makefile               |    2 +-
+>  drivers/cxl/core/core.h                 |    7 +
+>  drivers/cxl/core/hdm.c                  |  351 +++---
+>  drivers/cxl/core/port.c                 |   19 +
+>  drivers/cxl/core/regs.c                 |    4 +
+>  drivers/cxl/core/resource.c             | 1341 +++++++++++++++++++++++
+>  drivers/cxl/cxl.h                       |   41 -
+>  drivers/pci/bus.c                       |    2 +
+>  drivers/pci/pci.c                       |    8 +
+>  drivers/pci/probe.c                     |    2 +
+>  include/cxl/cxl.h                       |  116 +-
+>  include/linux/pci.h                     |    8 +-
+>  include/uapi/linux/pci_regs.h           |   14 +
+>  tools/testing/cxl/Kbuild                |    2 +-
+>  16 files changed, 1727 insertions(+), 210 deletions(-)
+>  create mode 100644 drivers/cxl/core/resource.c
+> 
+> 
+> base-commit: 8cdeaa50eae8dad34885515f62559ee83e7e8dda
 
