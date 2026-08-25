@@ -1,121 +1,132 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B514D2ED843
-	for <linux-pci@vger.kernel.org>; Tue, 25 Aug 2026 05:28:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 64250296BB8;
+	Tue, 25 Aug 2026 05:30:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787635712; cv=none; b=sl/cW1fssM9WP1cDVHgsZQHOzhTbdq/9E7hgJaDkGbtsyYSuebPSwA5HFO8qhgzZCNbJEGKQJ+N7uk0Y0FITZpHOhAEUbxuhdJrvli6aUoJdl8rh4cYFgpFE3I/Hg8/UrqBMs0kn97i2/PvOKWGYL/VOSVmyh+1Uz+jxRI10pNA=
+	t=1787635817; cv=none; b=LPYpf045nsjWYpkEcVuOqkrL3fmXRyREf4lS79lHwg2K1NgmhOV71KdBvvx4mXv3VEOkQOQQml/cjUdPfLVHhkNex+vRDPQsOjM+8nCaFB/EWL2ZL4V+2QMHbcNi/GhMRxb+SP/XGv2q+zSXfNHL1sb+ZJU+h8/tSEYPgdkj7bQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787635712; c=relaxed/simple;
-	bh=H8hMe2CPrruFyorlFImmzEBXKC/buJAlMS5MZkRkNcg=;
+	s=arc-20240116; t=1787635817; c=relaxed/simple;
+	bh=XoN0q/eYiYGUIZn5OX+/IJVKEYWSL6/VB3NwApWJMGI=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=kVpH9afRo2MC+1ODcGhNxbZu203TCN0EnDZZqodrw5KiIazFEFmcuIUjKoxCdOl4NN4V8rvYvvm1uv+CpN2PQ+YU96itCkrHk0vx3EUVQRqxG23KzyQgvneWffCfyQ50m3c7FgNkTj8v4UysEDym4CJMWCdwxAJ0rcdXI7HywHE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ceHIZ/F+; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=bpn2QG+hv+4EfV5UrgTEvYcyDAuoqWHp+f7pNtifUi7Ocs83GU2A8Slm38Z7qiEkrLo5ztCiDzaHSJxV1P0iAjqcTCNn7XJH9oMej5nC1CmdQ/Odb98W1Z32nViS48rzTKt5jAGF3ch3kGIDhSX1heqyBulXr49GJsuOZq9D6UQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KLQbAnJa; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ceHIZ/F+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 957911F000E9;
-	Tue, 25 Aug 2026 05:28:29 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KLQbAnJa"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B26731F000E9;
+	Tue, 25 Aug 2026 05:30:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787635709;
-	bh=tETn1Xo8m8EWRoFQnNB8ZMHhFsRdPuYE2c1Zn7LFRzw=;
+	s=k20260515; t=1787635815;
+	bh=ucjKBFGl3teOd/f7urVYUh3YM8HAZa9ALMVF3BiA4Fw=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=ceHIZ/F+lzd1nZV8J1KltvVLuLf/Ap2B9gmHYyjsPRyDVyzFIYBJ7XoJxeoXwSp+P
-	 E4b74amDb4MpOuLcKA3SmCne9xWRcAPJ3DZefT0cRNHPpdrgRa6Ck/V/yWGYXimPL8
-	 cNgbUQJKOnUebATvl13O59X5jB9f1XK9XwMgIL1P96HtjIjLilRT/fHFCvO76qxl21
-	 YHtRfWymvemckrowpKlOHE0tsPqxkWl2GH6jh46hZ+1HqkvajsM1RvvwtYBh31xC/I
-	 fO+mE9vfomFuNQlNPWcbOZBVlkRlKnNeN+wUVQaMu2EynKRuuY8p8wx7i2VgZQOVfD
-	 Kuko7slascJdQ==
+	b=KLQbAnJaS747qAZjn5mq1NuASsa8UkJa6Fe2RSYRJ5IS6+MmKwfBqvyy7lN9Xk/aF
+	 d2lf+lo0hJObLmqvsROzBF3yhaBnLQtAfF7BZcRbnfNa6Va3NXwIRAiWZLxJ3/m8hM
+	 x2sh7VvbLb2FQq+88kuJ53L8qVvobvmQ4EUagILvTjeHq9GAv2M1IYcDiWXCmvQ8CN
+	 Hw/S/F5AV1y8NdGOS1cpSWN2WdIx1UGUDzFeHjmpBpktkZbXwnyTNCDFlw4y2/COWw
+	 sHKbuyinLZS763/cW1RjhL1c4hmgUFXzgEyLO+2+IaO4LO7rxLcLawSucTqQG8gIF7
+	 AVBccL1s44CnQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [BUG] PCI: spacemit-k1: port C probe hard-hangs a CPU with one
- endpoint on Milk-V Jupiter
+Subject: Re: [PATCH] PCI: hv: Warn when wait_for_response() waits
+ indefinitely
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "Bruno Banelli" <bbanelli@gmail.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260825052249.66921-1-bbanelli@gmail.com>
-References: <20260825052249.66921-1-bbanelli@gmail.com>
+To: "Sahil Chandna" <sahilchandna@linux.microsoft.com>
+Cc: linux-pci@vger.kernel.org, linux-hyperv@vger.kernel.org
+In-Reply-To: <20260825051850.2438816-1-sahilchandna@linux.microsoft.com>
+References: <20260825051850.2438816-1-sahilchandna@linux.microsoft.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 25 Aug 2026 05:28:29 +0000
-Message-Id: <20260825052829.957911F000E9@smtp.kernel.org>
+Date: Tue, 25 Aug 2026 05:30:15 +0000
+Message-Id: <20260825053015.B26731F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
 
-New issues:
-- [High] The patch consists entirely of temporary debugging instrumentation=
- and is explicitly marked as 'not for merging'.
-
 Pre-existing issues:
-- [High] DBI register accesses before full Root Complex configuration cause=
- dropped writes and a hard CPU hang with certain endpoints.
+- [Critical] Use-After-Free on Error Path for VMbus Completion Packets
 --
 
---- Patch [1]: [BUG] PCI: spacemit-k1: port C probe hard-hangs a CPU with o=
-ne endpoint on Milk-V Jupiter ---
-commit f0ecce23df303a660d238225801529617e3ee9df
-Author: Bruno Banelli <bbanelli@gmail.com>
+--- Patch [1]: [PATCH] PCI: hv: Warn when wait_for_response() waits indefin=
+itely ---
+commit 7a3f315fe3798f61aaba375b4ed84ec32d84ef0f
+Author: Sahil Chandna <sahilchandna@linux.microsoft.com>
+PCI: hv: Warn when wait_for_response() waits indefinitely
 
-PCI: spacemit-k1: port C probe hard-hangs a CPU with one endpoint on Milk-V=
- Jupiter
+This commit adds a periodic warning to wait_for_response() if the guest wai=
+ts
+too long for a rescind message or packet completion. This makes indefinite =
+hangs
+visible in the guest's kernel log so they can be correlated with host-side =
+state.
 
-This patch adds debug instrumentation to k1_pcie_init() in the spacemit-k1
-PCIe driver to localize a hard CPU hang during probe on the Milk-V Jupiter
-board. The commit message details extensive testing and indicates the hang
-occurs on the first DBI write. The diff itself consists of temporary
-dev_info calls to trace the execution flow.
+Link: https://lore.kernel.org/linux-hyperv/20260612174010.2598695-1-hamzama=
+hfooz@linux.microsoft.com/
 
-> diff --git a/drivers/pci/controller/dwc/pcie-spacemit-k1.c b/drivers/pci/=
-controller/dwc/pcie-spacemit-k1.c
-> index 0564c46e2f484..e35307d693360 100644
-> --- a/drivers/pci/controller/dwc/pcie-spacemit-k1.c
-> +++ b/drivers/pci/controller/dwc/pcie-spacemit-k1.c
-> @@ -127,17 +127,21 @@ static int k1_pcie_init(struct dw_pcie_rp *pp)
+> diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller=
+/pci-hyperv.c
+> index cfc8fa403dad6..c4fba00391649 100644
+> --- a/drivers/pci/controller/pci-hyperv.c
+> +++ b/drivers/pci/controller/pci-hyperv.c
+[ ... ]
+>  static int wait_for_response(struct hv_device *hdev,
+>  			     struct completion *comp)
 >  {
->  	struct dw_pcie *pci =3D to_dw_pcie_from_pp(pp);
->  	struct k1_pcie *k1 =3D to_k1_pcie(pci);
-> +	struct device *dev =3D pci->dev;
->  	u32 reset_ctrl;
->  	u32 val;
->  	int ret;
+> +	unsigned long delay =3D secs_to_jiffies(PCI_RESPONSE_HANG_TIMEOUT_SEC);
+> +	u64 timeout =3D get_jiffies_64() + delay;
+> +
+>  	while (true) {
+>  		if (hdev->channel->rescind) {
+>  			dev_warn_once(&hdev->device, "The device is gone.\n");
+>  			return -ENODEV;
+
+[Severity: Critical]
+This is a pre-existing issue, but does this early return on rescind lead to=
+ a
+use-after-free for the completion packets?
+
+When wait_for_response() detects hdev->channel->rescind and returns -ENODEV,
+callers like hv_read_config_block() will immediately return and unwind their
+stack:
+
+drivers/pci/controller/pci-hyperv.c:hv_read_config_block() {
+    ...
+    ret =3D wait_for_response(hbus->hdev, &comp_pkt.comp_pkt.host_event);
+    if (ret)
+        return ret;
+    ...
+}
+
+This pops the stack frame containing the completion context without
+deregistering the request. If a late completion packet arrives, wouldn't
+hv_pci_onchannelcallback() retrieve the dangling pointer and execute the
+invalid completion function?
+
+drivers/pci/controller/pci-hyperv.c:hv_pci_onchannelcallback() {
+    ...
+            comp_packet =3D (struct pci_packet *)req_addr;
+            response =3D (struct pci_response *)buffer;
+            ...
+            comp_packet->completion_func(comp_packet->compl_ctxt,
+                                         response,
+                                         bytes_recvd);
+    ...
+}
+
+Could this result in memory corruption or a control-flow hijack if the
+hypervisor sends a completion packet after the rescind offer, but before
+the channel is completely closed?
+
+>  		}
 > =20
-> +	dev_info(dev, "K1DBG 1 toggle_soft_reset\n");
-
-[Severity: High]
-Since this patch consists entirely of temporary debugging instrumentation a=
-nd
-the commit message explicitly mentions it is "not for merging", should this
-patch be dropped from the merge queue?
-
->  	k1_pcie_toggle_soft_reset(k1);
-> =20
-> +	dev_info(dev, "K1DBG 2 enable_resources\n");
->  	ret =3D k1_pcie_enable_resources(k1);
->  	if (ret)
->  		return ret;
-> =20
->  	/* Set the PCI vendor and device ID */
-> +	dev_info(dev, "K1DBG 3 first DBI write (vendor/device ID)\n");
->  	dw_pcie_dbi_ro_wr_en(pci);
->  	dw_pcie_writew_dbi(pci, PCI_VENDOR_ID, PCI_VENDOR_ID_SPACEMIT);
->  	dw_pcie_writew_dbi(pci, PCI_DEVICE_ID, PCI_DEVICE_ID_SPACEMIT_K1);
->  	dw_pcie_dbi_ro_wr_dis(pci);
-
-[Severity: High]
-This is a pre-existing issue, but does performing early DBI writes (such as
-the Vendor/Device ID here) before asserting PERST#, configuring Root Complex
-mode, and completing PHY initialization cause the CPU to hard-hang waiting
-for an unanswered completion on certain endpoints?
-
-Is it possible to defer these DBI register accesses until after the full Ro=
-ot
-Complex configuration is completed to prevent the CPU from wedging?
+>  		if (wait_for_completion_timeout(comp, HZ / 10))
+>  			break;
+[ ... ]
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260825052249.6692=
-1-1-bbanelli@gmail.com?part=3D1
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260825051850.2438=
+816-1-sahilchandna@linux.microsoft.com?part=3D1
