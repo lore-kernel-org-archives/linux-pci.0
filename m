@@ -1,68 +1,148 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC8481ACED5
-	for <linux-pci@vger.kernel.org>; Tue, 25 Aug 2026 06:31:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 98B191A6815;
+	Tue, 25 Aug 2026 06:46:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787639473; cv=none; b=r/yhwQCPdfzLaQ/y6zdO4sDFTMRvCCk3hXAdzgXuQMfLE8LkrFcToLGd69DLrMG3rcZIHmE4IFf3g5VmIYetzAzKFhn7QlET7KHgypjAAxBXKM6+rf0pkuUsB5vdIi5/GZPPLaehcBDLQ4UEkQaS6GqCnoqoqFPG6Xt/fDHf4/w=
+	t=1787640373; cv=none; b=j0YvSVPOf1OfUD6Q9GB9rINsFlxFzNRWZGRsbvnKwUvDMggb+yjSTBVLq5cJu7MEviyQ4qLOscivoYxxj0W07KvEfUE8nF++WwL8INiSz4+00k0NwLlBvmRzXRq3AHlqLIdIWOiCtDpP0sM3EpDoLYsCuvKvqUmO7+7o2ZWqGdc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787639473; c=relaxed/simple;
-	bh=KjZrP57ZU+DM3j+jGBhwPMmD35cCb2vxUh+Ws1UXizM=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Ln2uH7HNIEQ7kl3BxLjQBKA4PqhMMaV9y3baga/cJWFZCLgUJRrL1UcF8X3MrBqbcimKS7Zcgc+5eKvrbLMaHC2x7zHO1FxXJB2yAgiPmI3D9GKITuimiPSMcEAwUHG7bBoApnmGtdONcw56tdZKIHkI8YKgxkejLeJZDAPCpVY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=R2BG0jY4; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1787640373; c=relaxed/simple;
+	bh=MmanWyBmvXXC+7/GLF90NEnt101T2V8vWVKwcCk3/Xc=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=SvLEwJE1ljRmOQJtvYHJwQauG7AkSg68x7TemP87ptf8PjQijjHXnjPQA1TpShITPqctR4+GxEvZUjZFUJv+vtv6JY2MFQs3E4uULiz4S8jFUhM+M4JUFkRpMzL8g6csdmbhtQ9EomX9ytbMSQhcH2Ypi9FNjvqSyMAbgh/Q3L4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=TqL5EcAx; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="R2BG0jY4"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 453D41F000E9;
-	Tue, 25 Aug 2026 06:31:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787639472;
-	bh=KjZrP57ZU+DM3j+jGBhwPMmD35cCb2vxUh+Ws1UXizM=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=R2BG0jY4RddYc7BWKHoxL4TazT3xOo6mB3i9rS98jXFltWr1ZP8QRuk1hasKxvvDh
-	 W/8zvEbcA5tLp6KREgyZx+mTkRoSXWDBhq3cjhm2WI0K8MzOPkj4xqslq5qHyKUsQF
-	 1hBZlETjR5YulW/HAaEYgjBaGHmbOfXQSblJWweN7iLgxFqeqAraFP4+zhUPqVuxTX
-	 ZXFEln3n1h4rvCp0WiB+OppdkinKGKABdPVfeIWKeSLJnZhF9v9n95O689F/6BVFXQ
-	 G1MbGDN9KnxxVpk+vVGVFxGTEprf6eXQY1jLpgZJOrBqzD56bkD8LrrKVBDR2SSKWz
-	 PgrhMP9k5OYLA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 2/2] dma-buf: Document how exporters and importers agree
- on mapping lifetime
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Leon Romanovsky" <leon@kernel.org>
-Cc: media-ci@linuxtv.org, dri-devel@lists.freedesktop.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260825-document-dma-buf-v1-2-5ecfb3e1371c@nvidia.com>
-References: <20260825-document-dma-buf-v1-0-5ecfb3e1371c@nvidia.com>
- <20260825-document-dma-buf-v1-2-5ecfb3e1371c@nvidia.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 25 Aug 2026 06:31:11 +0000
-Message-Id: <20260825063112.453D41F000E9@smtp.kernel.org>
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="TqL5EcAx"
+Received: from [192.168.1.70] (unknown [4.194.122.170])
+	by linux.microsoft.com (Postfix) with ESMTPSA id C6BE220B7166;
+	Mon, 24 Aug 2026 23:45:36 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com C6BE220B7166
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1787640340;
+	bh=1ehzdipAwu75bqw3gNvF9tk5p00nus7Vijrkp4c0uBU=;
+	h=Date:Subject:To:References:From:In-Reply-To:From;
+	b=TqL5EcAx2hFsXa08LpKjiu8vac0fItcOd7Itk7IJyQhCDfWR7dNLmi+Tr0QmaCenl
+	 oWK4/NTpJNRyzUTC1HGjMtm5Mu4SBIQ5JKRB4qXWYNtDDWdhaZzpWjwH5Hcyq2Jfqc
+	 nZSBs9ducBCnD6oCrGdCMPFgdmcu1Xgdor8kbzB0=
+Message-ID: <736091cf-8d00-415e-a890-e2dfa6739325@linux.microsoft.com>
+Date: Tue, 25 Aug 2026 12:16:06 +0530
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] PCI: hv: Warn when wait_for_response() waits indefinitely
+To: Sahil Chandna <sahilchandna@linux.microsoft.com>, kys@microsoft.com,
+ haiyangz@microsoft.com, wei.liu@kernel.org, decui@microsoft.com,
+ longli@microsoft.com, lpieralisi@kernel.org, kwilczynski@kernel.org,
+ mani@kernel.org, robh@kernel.org, bhelgaas@google.com,
+ linux-hyperv@vger.kernel.org, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+References: <20260825051850.2438816-1-sahilchandna@linux.microsoft.com>
+Content-Language: en-US
+From: Naman Jain <namjain@linux.microsoft.com>
+In-Reply-To: <20260825051850.2438816-1-sahilchandna@linux.microsoft.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-> From: Leon Romanovsky <leonro@nvidia.com>
->=20
-> Pinned, revoked and movable mappings are selected by which optional
-> callbacks each side implements and by whether dma_buf_pin() succeeds,
-> not by any flag or enum. Nothing in Documentation/ says so, and the
-> rules are spread over the kdoc of dma_buf_ops.pin,
-> dma_buf_attach_ops.invalidate_mappings and dma_buf_invalidate_mappings(),
-> so a driver author has to know the symbol names before finding them.
->=20
-> Name, per flow, the callbacks both sides have to implement to end up in
-> it, describe dma_buf_pin() as the runtime negotiation, and record that
-> the pin is what tells a revoke from a move.
->=20
-> Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
 
-Sashiko has reviewed this patch and found no issues. It looks great!
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260825-document-d=
-ma-buf-v1-0-5ecfb3e1371c@nvidia.com?part=3D2
+On 8/25/2026 10:47 AM, Sahil Chandna wrote:
+> A guest can wait indefinitely in wait_for_response() for the host to
+> send either a rescind message or a packet completion. If the
+> host does not send either, the guest can remain blocked with no
+> diagnostic indicating a reason.
+> This was observed during a guest kernel upgrade in which the
+> host-side application handling the PCI channel faulted, causing the
+> guest to never receive the completion request.
+> Add a periodic warning in wait_for_response() when the wait exceeds
+> a timeout so that such a hang is visible in the guest's kernel log
+> and can be correlated with host-side state.
+> 
+> Suggested-by: Hamza Mahfooz <hamzamahfooz@linux.microsoft.com>
+> Signed-off-by: Sahil Chandna <sahilchandna@linux.microsoft.com>
+> ---
+> This was sent earlier upstream [1]
+> [1] https://lore.kernel.org/linux-hyperv/20260612174010.2598695-1-hamzamahfooz@linux.microsoft.com/
+> ---
+>   drivers/pci/controller/pci-hyperv.c | 14 +++++++++++++-
+>   1 file changed, 13 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
+> index cfc8fa403dad..c4fba0039164 100644
+> --- a/drivers/pci/controller/pci-hyperv.c
+> +++ b/drivers/pci/controller/pci-hyperv.c
+> @@ -1040,11 +1040,18 @@ static void put_pcichild(struct hv_pci_dev *hpdev)
+> 
+>   /*
+>    * There is no good way to get notified from vmbus_onoffer_rescind(),
+> - * so let's use polling here, since this is not a hot path.
+> + * so let's use polling here, since this is not a hot path. If
+> + * wait_for_response() has been polling for PCI_RESPONSE_HANG_TIMEOUT_SEC
+> + * without either a rescind or completion, add a periodic warning.
+>    */
+> +#define PCI_RESPONSE_HANG_TIMEOUT_SEC 300
+> +
+>   static int wait_for_response(struct hv_device *hdev,
+>   			     struct completion *comp)
+>   {
+> +	unsigned long delay = secs_to_jiffies(PCI_RESPONSE_HANG_TIMEOUT_SEC);
+> +	u64 timeout = get_jiffies_64() + delay;
+> +
+>   	while (true) {
+>   		if (hdev->channel->rescind) {
+>   			dev_warn_once(&hdev->device, "The device is gone.\n");
+> @@ -1053,6 +1060,11 @@ static int wait_for_response(struct hv_device *hdev,
+> 
+>   		if (wait_for_completion_timeout(comp, HZ / 10))
+>   			break;
+> +
+> +		if (time_after64(get_jiffies_64(), timeout)) {
+> +			dev_warn(&hdev->device, "PCI stuck waiting for response.\n");
+> +			timeout = get_jiffies_64() + delay;
+> +		}
+>   	}
 
+There can be some enhancements in above patch to address these problems:
+1. Logging forever every 5 minutes in case of no completion or rescind.
+2. If we now print warning once, not knowing if completion ever arrived.
+3. On solving pt. 1 and 2 by adding a print for completion, one should 
+avoid adding a print by default for regular timely completions.
+
+Basically something like this:
+
+#define PCI_RESPONSE_WARN_TIMEOUT_SEC 300
+
+static int wait_for_response(struct hv_device *hdev,
+                  struct completion *comp)
+{
+     unsigned long warn_at =
+         jiffies + secs_to_jiffies(PCI_RESPONSE_WARN_TIMEOUT_SEC);
+     bool warned = false;
+
+     while (true) {
+         if (hdev->channel->rescind) {
+             dev_warn_once(&hdev->device, "The device is gone.\n");
+             return -ENODEV;
+         }
+
+         if (wait_for_completion_timeout(comp, HZ / 10)) {
+             if (warned || time_after_eq(jiffies, warn_at))
+                 dev_warn(&hdev->device,
+                      "PCI response received after prolonged wait.\n");
+             return 0;
+         }
+
+         if (!warned && time_after_eq(jiffies, warn_at)) {
+             dev_warn(&hdev->device,
+                  "PCI still waiting for response.\n");
+             warned = true;
+         }
+     }
+}
+
+Regards,
+Naman
