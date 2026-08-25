@@ -1,155 +1,110 @@
-Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 48EC53101A0;
-	Tue, 25 Aug 2026 04:42:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C1E5B332604
+	for <linux-pci@vger.kernel.org>; Tue, 25 Aug 2026 04:45:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787632927; cv=none; b=SLqONQ7/nC/SBtqk+hRVmj3oD+iRBL8sVmdCQLmHr+0fevcEi+mwRkfCn0jFULXSsGA1K9m0Lcceh6InuN+xwb3nVUi5skMjChnARTqkFCNBGwmstVHUHairfpxDHxZF9IhgxhKSf/h16VxUw3cE4x3mbV/hQSM4u2Aj0v0iemE=
+	t=1787633130; cv=none; b=gHKKW9pzoQFbAstWtT2dpEqOLaoFgG1P3agN5gnZZrhZkUIyKplE4gknnPd0doI2jI1xUEmzs87uZm9FHxTxzaa8O6yfJn0BWnUkq9bjSiApCLfwR95HsQyy3jQ4DPXrC23Om2MLO89EmpqdYtwlF9gBpNvGK1xGSBfh7mXKNL4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787632927; c=relaxed/simple;
-	bh=XE2Ab0GG9kmt8pSqRAwcSHToJNuqWMlTyG0wNh2OK0k=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=LBJOaejqDuqU4qW8Z1UeZe/Cg7h0Nv2HJgyLNBlFFi8gdKGbFtu3PF1zr24E84KR75gdu6kFqSWmkRRu0J5wKF9w2JYCE9UXdNVyw/7X0zf8MXweiGsq401/9+BUXvLYA4c1jspcV4gItX6TvzXVDMnxnW9cbcSAs9x7IHvFr/o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=Q1WplNng; arc=none smtp.client-ip=13.77.154.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
+	s=arc-20240116; t=1787633130; c=relaxed/simple;
+	bh=5UcaM+CymM6kJX62zVpfLKZo26au4+wISDHhwale1KM=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=iZEQEiYZO8sSf0x3bpKGtqT2HLd6Qu+1ezj4gIQOgW8ZONDm6UmnGONxeKdf3QOdHsmho9lnvF2lCxGBQufwM9LfJrfjLHIm0D/eFt91S5vr5iaozKZMlpfgw3IiwfopcLMqgiaS18+TTEAjoWg2TJPrz7kg1NwXDLphzGvznNQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NUI15piT; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="Q1WplNng"
-Received: from [192.168.1.70] (unknown [4.194.122.170])
-	by linux.microsoft.com (Postfix) with ESMTPSA id 87D7B20B7166;
-	Mon, 24 Aug 2026 21:41:32 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 87D7B20B7166
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
-	s=default; t=1787632894;
-	bh=2UJlLi20XMSxA7zww1xtzN2KILuXIuj1I5rEPmJqvNE=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=Q1WplNng40iw7ncVS17Q5u1PqVWhUxNiymQEfSN2ArTnRFvLIzqzVvrww0xrEqg1H
-	 605U3ofKhG4QG2QZbp5FvZSFQ10JfKF3DhAhyBM/lCbHojurIl9xiwjqRPVpg779RO
-	 KCffdDFS9wVMw8jEDoxV6SdBi7lbwZjj4JUZgeh4=
-Message-ID: <fb4dfd8a-599d-4c4d-be76-4caef290da23@linux.microsoft.com>
-Date: Tue, 25 Aug 2026 10:12:01 +0530
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NUI15piT"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 25E581F000E9;
+	Tue, 25 Aug 2026 04:45:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1787633129;
+	bh=CehflG/27Z1IeTxlvuu5/qXfsRHITV0K/8aRTaaZKDc=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=NUI15piT/EaPiZQ6IX6hkPbXgqA0wxj7+8SJzR7wV/MfNTluuKBUo1hJy/vJwgrDV
+	 jGZQKqZ4lCVc7Ux4cq8bN0OI0mkrJXKascLG2fSQfadCYGuyT1jjxM70GL848mHCgd
+	 KQYWIElrmXDez7UYcySGWzX5OWxk87B+BfA+jThxyGzT7/kweKAkchFjieVsaxYpAN
+	 //S0ImNwqPUI8lEjt3SoOe979G6Bw2siVl/JNAZrj9befMzvwxAJy4sbrHtzGVKWSR
+	 DAoh16a9z0nFuEhO3xRc9W9WV30h8F0pP3PLFisTj7WyjlnNeOQ6EM5Gm2nV+1OvJZ
+	 GX4i9ll6+Nn1Q==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] PCI: vmd: Flush initiator posted writes before demuxing
+ interrupts on Meteor Lake
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Rickey Bartlett" <subtexel@gmail.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260825043220.9047-1-subtexel@gmail.com>
+References: <20260825043220.9047-1-subtexel@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Tue, 25 Aug 2026 04:45:28 +0000
+Message-Id: <20260825044529.25E581F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/3] PCI: hv: Set irq_retrigger callback for the Hyper-V
- PCI MSI irqchip
-To: Wei Liu <wei.liu@kernel.org>
-Cc: sashiko-reviews@lists.linux.dev, linux-pci@vger.kernel.org,
- linux-hyperv@vger.kernel.org
-References: <20260728135117.2888175-1-namjain@linux.microsoft.com>
- <20260728135117.2888175-2-namjain@linux.microsoft.com>
- <20260728140427.714311F000E9@smtp.kernel.org>
- <a9d44162-3c90-44c8-aae7-4813678234a9@linux.microsoft.com>
- <20260824001406.GC3566091@liuwe-devbox-debian-v2.local>
- <c165f17f-b214-4a96-a446-6dd4e6cb2161@linux.microsoft.com>
- <20260824165908.GC3665124@liuwe-devbox-debian-v2.local>
-Content-Language: en-US
-From: Naman Jain <namjain@linux.microsoft.com>
-In-Reply-To: <20260824165908.GC3665124@liuwe-devbox-debian-v2.local>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
 
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
 
+Pre-existing issues:
+- [High] SRCU structures are destroyed before the IRQ handlers are freed du=
+ring device teardown, creating a use-after-free window if an interrupt fire=
+s.
+--
 
-On 8/24/2026 10:29 PM, Wei Liu wrote:
-> On Mon, Aug 24, 2026 at 11:57:56AM +0530, Naman Jain wrote:
->>
->>
->> On 8/24/2026 5:44 AM, Wei Liu wrote:
->>> On Thu, Jul 30, 2026 at 04:56:27PM +0530, Naman Jain wrote:
->>>>
->>>>
->>>> On 7/28/2026 7:34 PM, sashiko-bot@kernel.org wrote:
->>>>> Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
->>>>>
->>>>> Pre-existing issues:
->>>>> - [High] The fix for dropped pending interrupts during CPU hot-unplug was missed in the sister Hyper-V root partition MSI domain.
->>>>> --
->>>>>
->>>>> --- Patch [1]: [PATCH 1/3] PCI: hv: Set irq_retrigger callback for the Hyper-V PCI MSI irqchip ---
->>>>> commit b8b1c843c457dd145f0d360b44f4b1bf34bd8cf5
->>>>> Author: Naman Jain <namjain@linux.microsoft.com>
->>>>>
->>>>> PCI: hv: Set irq_retrigger callback for the Hyper-V PCI MSI irqchip
->>>>>
->>>>> The Hyper-V vPCI MSI irqchip never installs an irq_retrigger() callback.
->>>>> On CPU hot-unplug fixup_irqs() migrates the interrupts which are affine to
->>>>> the outgoing CPU to a new target. As the Hyper-V PCI/MSI chip does not
->>>>> provide that callback, the pending interrupt is silently dropped, which
->>>>> can result in lost interrupts, stalls and "No irq handler for vector"
->>>>> messages.
->>>>>
->>>>> Fixes: 4daace0d8ce85 ("PCI: hv: Add paravirtual PCI front-end for Microsoft Hyper-V VMs")
->>>>> Cc: stable@vger.kernel.org
->>>>> Suggested-by: Long Li <longli@microsoft.com>
->>>>> Suggested-by: Thomas Gleixner <tglx@kernel.org>
->>>>> Signed-off-by: Naman Jain <namjain@linux.microsoft.com>
->>>>>
->>>>>> diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
->>>>>> index cfc8fa403dad6..89816a2bd7cd3 100644
->>>>>> --- a/drivers/pci/controller/pci-hyperv.c
->>>>>> +++ b/drivers/pci/controller/pci-hyperv.c
->>>>>> @@ -2119,6 +2119,7 @@ static bool hv_pcie_init_dev_msi_info(struct device *dev, struct irq_domain *dom
->>>>>>     	info->ops->msi_prepare = hv_msi_prepare;
->>>>>>     	chip->irq_set_affinity = irq_chip_set_affinity_parent;
->>>>>> +	chip->irq_retrigger = irq_chip_retrigger_hierarchy;
->>>>>
->>>>> [Severity: High]
->>>>> This isn't a bug introduced by this patch, but does the sister Hyper-V root
->>>>> partition MSI domain in arch/x86/hyperv/irqdomain.c also need this fix?
->>>>>
->>>>> Looking at hv_init_dev_msi_info(), it appears to be missing the exact same
->>>>> callback initialization for the root partition's top-level irq_chip:
->>>>>
->>>>> arch/x86/hyperv/irqdomain.c:hv_init_dev_msi_info() {
->>>>> 	...
->>>>> 	if (!msi_lib_init_dev_msi_info(dev, domain, real_parent, info))
->>>>> 		return false;
->>>>>
->>>>> 	chip->flags |= IRQCHIP_SKIP_SET_WAKE | IRQCHIP_MOVE_DEFERRED;
->>>>>
->>>>> 	info->ops->msi_prepare = pci_msi_prepare;
->>>>>
->>>>> 	return true;
->>>>> }
->>>>>
->>>>> If a CPU is hot-unplugged while a device MSI interrupt is pending in its
->>>>> local APIC IRR, could fixup_irqs() fail to resend the pending interrupt
->>>>> to the new target CPU because this callback is NULL?
->>>>>
->>>>> This could potentially lead to the same lost interrupts and I/O stalls
->>>>> described in this commit message, just in the root partition MSI domain
->>>>> instead of the guest paravirtual MSI domain.
->>>>>
->>>>>>     	if (IS_ENABLED(CONFIG_X86))
->>>>>>     		chip->flags |= IRQCHIP_MOVE_DEFERRED;
->>>>>>
->>>>>
->>>>
->>>> I am not planning to include this in this series, since this issue is not
->>>> seen in root partition yet and I am not sure if it is applicable here.
->>>> Second patch would anyways fix it going forward, but I am OK adding the
->>>> change for this, if we need.
->>>
->>> What's the downside of fixing the root partition irq domain?
->>
->> No downside as such. It would be a latent bug, exposed only if we exercise
->> hotplug in root partition, which seems like we don't. After patch 2 of this
->> series, that would go away anyways. If you tell me, I can add a change
->> similar to patch 1, which is backportable, but then I would need to remove
->> it similarly in patch 3.
-> 
-> Yes, please fix that for the root partition, too. Being consistent
-> across different use cases is going to save us some headache in the
-> future.
-> 
-> Wei
+--- Patch [1]: [PATCH] PCI: vmd: Flush initiator posted writes before demux=
+ing interrupts on Meteor Lake ---
+commit ee34aa5044fcd3846f8909a9ac941afcd7c5a7d8
+Author: Rickey Bartlett <subtexel@gmail.com>
 
-Acked.
+PCI: vmd: Flush initiator posted writes before demuxing interrupts on Meteo=
+r Lake
 
-Regards,
-Naman
+This commit mitigates erratum MTL016 on Meteor Lake VMD devices by issuing
+a dummy config read to the child device before handling interrupts. This
+read ensures earlier posted writes (like NVMe completions) land in memory
+before the demuxed handler executes. This prevents the storage stack from
+stalling due to missed completions.
 
+Link: https://lore.kernel.org/all/20240909082657.19660-1-kai.heng.feng@cano=
+nical.com/
+Link: https://lkml.iu.edu/hypermail/linux/kernel/2409.1/08047.html
+
+> diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
+> index 241023ecf6774..e45ef8cb16e47 100644
+> --- a/drivers/pci/controller/vmd.c
+> +++ b/drivers/pci/controller/vmd.c
+
+[ ... ]
+
+> @@ -756,8 +791,20 @@ static irqreturn_t vmd_irq(int irq, void *data)
+>  	int idx;
+> =20
+>  	idx =3D srcu_read_lock(&irqs->srcu);
+
+[Severity: High]
+This is a pre-existing issue, but can this lead to a use-after-free
+during device teardown?
+
+The VMD driver allocates IRQs using the managed devm_request_irq(), which
+means the IRQ handlers are unregistered by devres after the driver's remove
+callback (vmd_remove) returns.
+
+However, vmd_remove() explicitly calls vmd_cleanup_srcu(), which destroys
+the per-CPU SRCU structures immediately. If an interrupt fires during the
+window between vmd_cleanup_srcu() completing and the devres cleanup,
+wouldn't vmd_irq() execute and call srcu_read_lock() on the freed
+SRCU structure?
+
+> -	list_for_each_entry_rcu(vmdirq, &irqs->irq_list, node)
+> +	list_for_each_entry_rcu(vmdirq, &irqs->irq_list, node) {
+> +		/*
+> +		 * MTL016: the MSI may have outrun the initiating device's
+> +		 * posted writes (e.g. its NVMe completion entry).  A read
+
+[ ... ]
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260825043220.9047=
+-1-subtexel@gmail.com?part=3D1
