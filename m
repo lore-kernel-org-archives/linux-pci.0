@@ -1,110 +1,110 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C1E5B332604
-	for <linux-pci@vger.kernel.org>; Tue, 25 Aug 2026 04:45:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 9E2201F3D56;
+	Tue, 25 Aug 2026 05:19:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787633130; cv=none; b=gHKKW9pzoQFbAstWtT2dpEqOLaoFgG1P3agN5gnZZrhZkUIyKplE4gknnPd0doI2jI1xUEmzs87uZm9FHxTxzaa8O6yfJn0BWnUkq9bjSiApCLfwR95HsQyy3jQ4DPXrC23Om2MLO89EmpqdYtwlF9gBpNvGK1xGSBfh7mXKNL4=
+	t=1787635143; cv=none; b=A25gYvUtU8hgUjMqN/7qsuhC88XZYyJSQW6oJaST8wKFItuGFLtZdsohc+Ih/nV3fhE09bd3iDnwbcf8KLigVkrbSXdftaJ+Pi6Oe8qfczDFZvsxw7kUfqBW7diTVrFOdkavGi2VozDICmIxWrivLtBNRbaFlYJQEFwmjWdqDt8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787633130; c=relaxed/simple;
-	bh=5UcaM+CymM6kJX62zVpfLKZo26au4+wISDHhwale1KM=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=iZEQEiYZO8sSf0x3bpKGtqT2HLd6Qu+1ezj4gIQOgW8ZONDm6UmnGONxeKdf3QOdHsmho9lnvF2lCxGBQufwM9LfJrfjLHIm0D/eFt91S5vr5iaozKZMlpfgw3IiwfopcLMqgiaS18+TTEAjoWg2TJPrz7kg1NwXDLphzGvznNQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NUI15piT; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1787635143; c=relaxed/simple;
+	bh=8DgmtUn3Fzm43q42Nhr/eVs7RwM+IyYFXBcQi5BHGRQ=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version; b=fhsAiuDrr7oQiqbvDGGWL3dFP99tumDS+J9rBk0hoKoGMX0pzilzaBDgTgNFITPqA1ScAJI2SnGzIZBhhiHW4aiCpkK5B2Tep0w0kBNVbKnWxK32UzeSz5KQ7jvv9rkS8Gc5ieKVTzV8P7so6faCHbTMFPPzquRrhFFRzhVW9bY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=hp/57e7r; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NUI15piT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 25E581F000E9;
-	Tue, 25 Aug 2026 04:45:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787633129;
-	bh=CehflG/27Z1IeTxlvuu5/qXfsRHITV0K/8aRTaaZKDc=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=NUI15piT/EaPiZQ6IX6hkPbXgqA0wxj7+8SJzR7wV/MfNTluuKBUo1hJy/vJwgrDV
-	 jGZQKqZ4lCVc7Ux4cq8bN0OI0mkrJXKascLG2fSQfadCYGuyT1jjxM70GL848mHCgd
-	 KQYWIElrmXDez7UYcySGWzX5OWxk87B+BfA+jThxyGzT7/kweKAkchFjieVsaxYpAN
-	 //S0ImNwqPUI8lEjt3SoOe979G6Bw2siVl/JNAZrj9befMzvwxAJy4sbrHtzGVKWSR
-	 DAoh16a9z0nFuEhO3xRc9W9WV30h8F0pP3PLFisTj7WyjlnNeOQ6EM5Gm2nV+1OvJZ
-	 GX4i9ll6+Nn1Q==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] PCI: vmd: Flush initiator posted writes before demuxing
- interrupts on Meteor Lake
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Rickey Bartlett" <subtexel@gmail.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260825043220.9047-1-subtexel@gmail.com>
-References: <20260825043220.9047-1-subtexel@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 25 Aug 2026 04:45:28 +0000
-Message-Id: <20260825044529.25E581F000E9@smtp.kernel.org>
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="hp/57e7r"
+Received: from sahil.mshome.net (unknown [4.213.232.22])
+	by linux.microsoft.com (Postfix) with ESMTPSA id C429E20B7166;
+	Mon, 24 Aug 2026 22:18:26 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com C429E20B7166
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1787635110;
+	bh=9BxmoeNKcrVz0BFb+VjuMoWpZF9NlmX83HbgkVBiwLo=;
+	h=From:To:Subject:Date:From;
+	b=hp/57e7raKygHgltk2moRgCuREsWghbZtRTUF/8W6GZv63FdgfP3apiV1P8By1NVd
+	 6OklWSrVc0XiBrwqV3ory43WUdxTsBwgNDZUA4+/tc/xdHIXKwymXUoOFXzyGVAzub
+	 D9DnjfdbOegiUhlSI9X3byQSQlnC/5PExSHReiBs=
+From: Sahil Chandna <sahilchandna@linux.microsoft.com>
+To: kys@microsoft.com,
+	haiyangz@microsoft.com,
+	wei.liu@kernel.org,
+	decui@microsoft.com,
+	longli@microsoft.com,
+	lpieralisi@kernel.org,
+	kwilczynski@kernel.org,
+	mani@kernel.org,
+	robh@kernel.org,
+	bhelgaas@google.com,
+	linux-hyperv@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] PCI: hv: Warn when wait_for_response() waits indefinitely
+Date: Mon, 24 Aug 2026 22:17:00 -0700
+Message-ID: <20260825051850.2438816-1-sahilchandna@linux.microsoft.com>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
+A guest can wait indefinitely in wait_for_response() for the host to
+send either a rescind message or a packet completion. If the
+host does not send either, the guest can remain blocked with no
+diagnostic indicating a reason.
+This was observed during a guest kernel upgrade in which the
+host-side application handling the PCI channel faulted, causing the
+guest to never receive the completion request.
+Add a periodic warning in wait_for_response() when the wait exceeds
+a timeout so that such a hang is visible in the guest's kernel log
+and can be correlated with host-side state.
 
-Pre-existing issues:
-- [High] SRCU structures are destroyed before the IRQ handlers are freed du=
-ring device teardown, creating a use-after-free window if an interrupt fire=
-s.
+Suggested-by: Hamza Mahfooz <hamzamahfooz@linux.microsoft.com>
+Signed-off-by: Sahil Chandna <sahilchandna@linux.microsoft.com>
+---
+This was sent earlier upstream [1]
+[1] https://lore.kernel.org/linux-hyperv/20260612174010.2598695-1-hamzamahfooz@linux.microsoft.com/
+---
+ drivers/pci/controller/pci-hyperv.c | 14 +++++++++++++-
+ 1 file changed, 13 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
+index cfc8fa403dad..c4fba0039164 100644
+--- a/drivers/pci/controller/pci-hyperv.c
++++ b/drivers/pci/controller/pci-hyperv.c
+@@ -1040,11 +1040,18 @@ static void put_pcichild(struct hv_pci_dev *hpdev)
+
+ /*
+  * There is no good way to get notified from vmbus_onoffer_rescind(),
+- * so let's use polling here, since this is not a hot path.
++ * so let's use polling here, since this is not a hot path. If
++ * wait_for_response() has been polling for PCI_RESPONSE_HANG_TIMEOUT_SEC
++ * without either a rescind or completion, add a periodic warning.
+  */
++#define PCI_RESPONSE_HANG_TIMEOUT_SEC 300
++
+ static int wait_for_response(struct hv_device *hdev,
+ 			     struct completion *comp)
+ {
++	unsigned long delay = secs_to_jiffies(PCI_RESPONSE_HANG_TIMEOUT_SEC);
++	u64 timeout = get_jiffies_64() + delay;
++
+ 	while (true) {
+ 		if (hdev->channel->rescind) {
+ 			dev_warn_once(&hdev->device, "The device is gone.\n");
+@@ -1053,6 +1060,11 @@ static int wait_for_response(struct hv_device *hdev,
+
+ 		if (wait_for_completion_timeout(comp, HZ / 10))
+ 			break;
++
++		if (time_after64(get_jiffies_64(), timeout)) {
++			dev_warn(&hdev->device, "PCI stuck waiting for response.\n");
++			timeout = get_jiffies_64() + delay;
++		}
+ 	}
+
+ 	return 0;
 --
-
---- Patch [1]: [PATCH] PCI: vmd: Flush initiator posted writes before demux=
-ing interrupts on Meteor Lake ---
-commit ee34aa5044fcd3846f8909a9ac941afcd7c5a7d8
-Author: Rickey Bartlett <subtexel@gmail.com>
-
-PCI: vmd: Flush initiator posted writes before demuxing interrupts on Meteo=
-r Lake
-
-This commit mitigates erratum MTL016 on Meteor Lake VMD devices by issuing
-a dummy config read to the child device before handling interrupts. This
-read ensures earlier posted writes (like NVMe completions) land in memory
-before the demuxed handler executes. This prevents the storage stack from
-stalling due to missed completions.
-
-Link: https://lore.kernel.org/all/20240909082657.19660-1-kai.heng.feng@cano=
-nical.com/
-Link: https://lkml.iu.edu/hypermail/linux/kernel/2409.1/08047.html
-
-> diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
-> index 241023ecf6774..e45ef8cb16e47 100644
-> --- a/drivers/pci/controller/vmd.c
-> +++ b/drivers/pci/controller/vmd.c
-
-[ ... ]
-
-> @@ -756,8 +791,20 @@ static irqreturn_t vmd_irq(int irq, void *data)
->  	int idx;
-> =20
->  	idx =3D srcu_read_lock(&irqs->srcu);
-
-[Severity: High]
-This is a pre-existing issue, but can this lead to a use-after-free
-during device teardown?
-
-The VMD driver allocates IRQs using the managed devm_request_irq(), which
-means the IRQ handlers are unregistered by devres after the driver's remove
-callback (vmd_remove) returns.
-
-However, vmd_remove() explicitly calls vmd_cleanup_srcu(), which destroys
-the per-CPU SRCU structures immediately. If an interrupt fires during the
-window between vmd_cleanup_srcu() completing and the devres cleanup,
-wouldn't vmd_irq() execute and call srcu_read_lock() on the freed
-SRCU structure?
-
-> -	list_for_each_entry_rcu(vmdirq, &irqs->irq_list, node)
-> +	list_for_each_entry_rcu(vmdirq, &irqs->irq_list, node) {
-> +		/*
-> +		 * MTL016: the MSI may have outrun the initiating device's
-> +		 * posted writes (e.g. its NVMe completion entry).  A read
-
-[ ... ]
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260825043220.9047=
--1-subtexel@gmail.com?part=3D1
+2.53.0
