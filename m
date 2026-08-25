@@ -1,81 +1,78 @@
-Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
+Received: from mail-pl1-f175.google.com (mail-pl1-f175.google.com [209.85.214.175])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F364384CD3
-	for <linux-pci@vger.kernel.org>; Tue, 25 Aug 2026 10:34:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.181
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD285393DEB
+	for <linux-pci@vger.kernel.org>; Tue, 25 Aug 2026 10:37:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787654077; cv=none; b=nuJlSFshLHfPrRs1h1NcaKVQ/EwYoWx03iR287LyMIpP5sZM8i7f6xdYKyvnhym6oMIu5EPGt9uEAkJ+7Hl248++u9iokzmsBcawNUE20J09jcjvAKTJyAsiicNHG/OBXDooOykBgM4/QiRA2HqSPRpBMG1NdLG4NfyuAr+adu0=
+	t=1787654238; cv=none; b=I4hY4hLY+yzbdG366PQFYYfg/NBPhM/CcE2igpffp0KQNuYP+WNvLgP0P3lfVbyeEDY5rnzpt9mLVHYFcEVbTd4qx0bZ+ytf5RFkIspr+sHlnJeIMK/QTzXscYbKb/f8Y/YFBNFLf3JTWxD498lXL2zI8AWUehlVSHwqjGjFuuI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787654077; c=relaxed/simple;
-	bh=O+P3xJqQ2iemp3Ulde4Fu2+lem2DE6IjQORZXOXh08Y=;
+	s=arc-20240116; t=1787654238; c=relaxed/simple;
+	bh=6Zmbfl5t350g/ikDeKV9bfW8BGWB5eR0UjWTzntGkJ8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=kGKONWEzLspN2ooK5McOzP7fwJdx/Hw8yqZ+RofYgAYonFNIF5VIEIM+Y078sODFVKBIAjgZr+BWiJYJPdgc+P9jeNTYnTIFlXU9e1hoj6WtAmS4W4PjXrerNhyCjzIJW5lm8jFG4LJafJZ9yzKKp2fsXrR7FG2NrDE8xpXyI8c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=fZhKwnwG; arc=none smtp.client-ip=209.85.214.181
+	 Content-Type:Content-Disposition:In-Reply-To; b=gO2kvvddvnmGI8SMnU4forLvAp+bVyfsBrRDsEjuDNeh1G/Laq0OlotdY4ypc5LZxyzoCvAKU7D7kWPf3iq+dgMhmkuRRADAOq9zqTOXnV5NHnzlcKRUCTn0DkYmydPxvWrwvbq1+sQE9ktTJczfiQucxtoDCvJcYpHirLodqh0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=gyZeLyFt; arc=none smtp.client-ip=209.85.214.175
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="fZhKwnwG"
-Received: by mail-pl1-f181.google.com with SMTP id d9443c01a7336-2d3b440b97aso78685ad.1
-        for <linux-pci@vger.kernel.org>; Tue, 25 Aug 2026 03:34:35 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="gyZeLyFt"
+Received: by mail-pl1-f175.google.com with SMTP id d9443c01a7336-2cede6375caso102105ad.0
+        for <linux-pci@vger.kernel.org>; Tue, 25 Aug 2026 03:37:16 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1787654075; x=1788258875; darn=vger.kernel.org;
+        d=google.com; s=20251104; t=1787654236; x=1788259036; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:content-type:mime-version
          :references:message-id:subject:cc:to:from:date:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=3I7M6+VDRcRqN+go+MtLjnMG5u02OBvW+7qZt2cSYZg=;
-        b=fZhKwnwGEQ6nnh4puXGL0Jle0DTLv/JYHsZVl2x7U16Bce0kxzIy5dq6HQreiHyutR
-         3YmlFTH41q+Ui6SzgKBECm+XeZytk6JxnxLB9/esjaCgctxG88qkpobkF0I0K35vX+VK
-         HFvp/K6IgHyIDeyCLJmGhqLzmDEogx6XZUDRAq21m+nBr8evlR3Gn7I85hNvVXgU29Ar
-         YWV3DF0jXANib/lcwr8HJR9Je4+FnOemjlFpB5aGWdMMNxyPELu2bCDED6+3y6bEMUF8
-         jMXSkeh5t9KFBhZrAD4fGeJSGmvH7mlaRjaUZhFxVbQRYXvgHn5JXB9qJekKXZGQ18G/
-         E5mA==
+        bh=W7fh18dW+kUBCYJPdPDVxmB9qh9dvTUt5azKdgYfYsE=;
+        b=gyZeLyFtzVj9XDnQGpa6F8uT5O+jrfDXiWBxe8o3RPPx1/IU6EAJfI6j+QuTd1bzQN
+         EBL/q0zSqVHvumQgPBp3gLQlf9EXKGZCFnEvEYuE4GY2KZyQHbQH11n3rln6mnnpaEC+
+         i0ImLzNbFn2dLiMWGA9fJcgD1mjhfCRgv/qAD7USp9ShmSN6OMLm6T7UzsO6osi/8dRE
+         MJ4ovUHazVZa0DFrmy3sk+RBac9FMCPi3Q84bcgpi3KoiYn/B2nJr2g8gWt6m5MwLrwQ
+         cIi8KkJH7ipeXPcpFx66EOWxtjmQaIt+geD6wTd6B6sVN5ZROdyME/XIgppxBvhEj1Rj
+         Uv0Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787654075; x=1788258875;
+        d=1e100.net; s=20251104; t=1787654236; x=1788259036;
         h=in-reply-to:content-disposition:content-type:mime-version
          :references:message-id:subject:cc:to:from:date:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=3I7M6+VDRcRqN+go+MtLjnMG5u02OBvW+7qZt2cSYZg=;
-        b=dg7yAeoBNx4j8oV+5oRfakw8GsztS16mg0RenVh38CMq5VCGqQNdofaTmf0qW/URaU
-         7nEMErAP9tHznSOpPQzjzCrTnbXH73I021+8Zjd6WCMCvlKtrhyXh8nBsVTa4QcC73Rb
-         GZQmN6i9deF8sBgMkit2Dpr60dqDat+89wZes/OHBSRXhq0CwqNXZp9WC6z+X/qcv8oh
-         2HwEZztoY3+H+6sU3RjfqHppx4Mw1yxR8Zt1hJCzaM1bC8ExMswXB069T2J7bLbrlTRS
-         i7Apme0tsW8TfnYxadluT6W6f0xiZa0YCW1r5LpKbOXjmNNbNnc4qQRDYBvgNLXlHr61
-         0xlw==
-X-Forwarded-Encrypted: i=1; AHgh+RrH/k5rzO6gPG0wpLSkapdpaDSinf97OJq0Ifv2EwgLHIYV5zuheinVsQdfn9mXcqP6HBTh/KHn4hQ=@vger.kernel.org
-X-Gm-Message-State: AFuF++kdQ++8cQlwCpqlSFv0ZdKK4JCYCEMnyFI+4JvNz8PrvWublkAz
-	G/0iWVs9i49OWpxepTF0d+S2A5gTWwDmdTQq6/zDdiyNZb/Qzc+BmtHo4ZHjnAG00g==
-X-Gm-Gg: AR+sD103Rc02aC4d1zUP+vP9CtAJ8LNOyjzhSiZgOY9cAxuNp1rDNir53QZTD7NU3Rp
-	uEh5aGId9zdXOAALZ0YOJUFE4zC+5SHax2jhuBLV5lsZrv/5N+OLUhOyBlDAHpcFBiAA3PAfaI2
-	0g276FWUeXiYWgTvGIVBjj/QEnLWdZeyLFbCXKy6IzDnsA3DSaS88f94kH8PhGh8vSlMuiDgGCf
-	Poc3pPbcpp0Ci44mWXDq36/sfcntQyA3DAySRxM3orLpN4wHOxokVChZp9uJk1m3xVCE1F9mzpo
-	JdriSUWw4CjpQlbTC3xLYwLu5SF8NbEBpwwdktJJvzMzG1ZoWg2TdtgNLElkAbnllPxc7pTd0dO
-	yLvDaM5ihSF3Ek0emhfLFCkRHVhOILYXTuWYQ70Tn8fZvRmKi4waU3IFtYqenTUZaot3sZS81wh
-	48LID6QyGc91ey5s3j4ONrVZ7WV5DYV+/GICqmZYbsNYfaypMHMll+idZrpvcWxfeWMKnCEo7/n
-	l/6t/7H/Kmi1tldjBG92/uYTQ==
-X-Received: by 2002:a17:902:ef4c:b0:2d5:db38:8010 with SMTP id d9443c01a7336-2d6f2f25ba2mr2769375ad.15.1787654074163;
-        Tue, 25 Aug 2026 03:34:34 -0700 (PDT)
+        bh=W7fh18dW+kUBCYJPdPDVxmB9qh9dvTUt5azKdgYfYsE=;
+        b=PwK9FWuYtr7C5PDkQdoEQjSBXYQgrZ+NXlGIIA8TbLXSJFObwbRClruqA3LWRBuqVV
+         B4HYfQIfw/8TgUPdqjI622XElBSVwQDk+yXa+9Eq105LQs/0Yj8sLPQiBi6bfwPCtK8m
+         hsJm5Py9SZXfKoxJWIeVGH14kGj16Z7P2SeN0hlaRtf5MKF12UFVJYOceu/Vr/BISRr8
+         /D5Je4zddtSQjiSaYPk7mIBUhKczKz+/Y1OFK/0Qe1J8CiQhIi8TqNa1m/DRZVEATQHq
+         WssmSxXdY1W+G67RDjTZG0qJIV0sjVKvllZTYbDbpf3bTqfhE6+SWFdyDwpxEa1C680i
+         sMhQ==
+X-Forwarded-Encrypted: i=1; AHgh+RqvfviuW9l13TVYRx5vkmCHdvBIxwD3TMUqJOWcjPFBkjraI4uRFWRfbGhM7763UKm+FNOxQdLNA6w=@vger.kernel.org
+X-Gm-Message-State: AFuF++lKFKhmbJg1ufhREGdFtznPZwG6VGvVgdngK//onSH0SbuvLTIr
+	yc6wkSVEk1Ef1Mfpa1qLwzulFKGz73Z48fmkADnmCEZmV8aeZ1pfYgza2ZyyENobrQ==
+X-Gm-Gg: AR+sD13eDeyrGAGaLTnUHY4hzrXHG90fLwjr1bH8dGb6bzVJMQ5rOoQIqmVSSM3Sumi
+	Fo87jgyG0mxPCgyMw22l11pCIhWgOgkI3E+GK8jc1EN61cXKPiYQLwJOpNG90Dn7Gp0o53mpvSS
+	wGasHuzanXR87wPJ8LejpoMXJOuyMI7dORPKtTRt4sVA7sDrkL1yk/R7f+eYI/kIx6ZYl+B0y4O
+	6elAx6jJGAaXu9SLa/ypcSJcKy4CzaMLytYGZ4yoB7X0HirZ9f1DVo8Q8dXorWC8AI6xogKXdmy
+	Mzhlg8MVoxYOHTqQaWGZ0InwOxNcInY9+dleepe1Snh/zNNKXnaLOY7kUdsev5eYqsIco50JxFw
+	I7gRoTsVYQ8XXWDXjJv7sEOwlSAaX2Euk+ngIEhZQDA/gbaerkK/gGh4kkw/6w1FkgGDlqsVPBj
+	4xDrl2+eIX32axq+isX9/5b19YLbvpj2CN4OAUhzxSw/Rztxu6QomlawEcnSeCHNcTNaTaoY0sW
+	v6pT8iqaf4+y3JsvmCwyzI/nKVjte8HwiRwkA==
+X-Received: by 2002:a17:903:acf:b0:2cf:4353:f117 with SMTP id d9443c01a7336-2d6e036d4cbmr5203815ad.0.1787654235552;
+        Tue, 25 Aug 2026 03:37:15 -0700 (PDT)
 Received: from google.com (164.210.142.34.bc.googleusercontent.com. [34.142.210.164])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-39645d31e74sm3331799a91.11.2026.08.25.03.34.31
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2d676895799sm26786905ad.38.2026.08.25.03.37.12
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 25 Aug 2026 03:34:33 -0700 (PDT)
-Date: Tue, 25 Aug 2026 10:34:22 +0000
+        Tue, 25 Aug 2026 03:37:15 -0700 (PDT)
+Date: Tue, 25 Aug 2026 10:37:09 +0000
 From: Pranjal Shrivastava <praan@google.com>
-To: Jason Gunthorpe <jgg@nvidia.com>
+To: Vasant Hegde <vasant.hegde@amd.com>
 Cc: iommu@lists.linux.dev, linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org, Joerg Roedel <joro@8bytes.org>,
 	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
-	Vasant Hegde <vasant.hegde@amd.com>,
-	Ankit Soni <ankit.soni@amd.com>,
+	Ankit Soni <ankit.soni@amd.com>, Jason Gunthorpe <jgg@nvidia.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Samiullah Khawaja <skhawaja@google.com>, sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 3/5] iommu/amd: Split probe error paths to preserve
- IRQ remapping
-Message-ID: <ao1vrkp3b8n3U4xT@google.com>
+	Samiullah Khawaja <skhawaja@google.com>
+Subject: Re: [PATCH v3 0/5] iommu/amd: Refactors for ATS robustness
+Message-ID: <ao1wVQzyCW22iNlQ@google.com>
 References: <20260824122347.1588592-1-praan@google.com>
- <20260824122347.1588592-4-praan@google.com>
- <178759520117.3131778.6953869487486713121.b4-review@b4>
+ <8e53fdee-2c3a-47c6-9478-19fbabef18eb@amd.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -84,27 +81,26 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <178759520117.3131778.6953869487486713121.b4-review@b4>
+In-Reply-To: <8e53fdee-2c3a-47c6-9478-19fbabef18eb@amd.com>
 
-On Mon, Aug 24, 2026 at 03:13:21PM -0300, Jason Gunthorpe wrote:
-> > [ ... 15 lines skipped ... ]
-> > @@ -2540,8 +2540,7 @@ static struct iommu_device *amd_iommu_probe_device(struct device *dev)
-> >  		ret = PTR_ERR(dev_data);
-> >  		dev_err(dev, "Failed to initialize - trying to proceed anyway\n");
-> >  		iommu_dev = ERR_PTR(ret);
+On Tue, Aug 25, 2026 at 12:36:18PM +0530, Vasant Hegde wrote:
+> Pranjal,
 > 
-> I would drop this line and fix the return to have the ERR_PTR
 > 
-> > +err_deinit:
-> > +	iommu_disable_device(iommu, dev);
-> >  out_err:
-> >  	return iommu_dev;
+> On 8/24/2026 5:53 PM, Pranjal Shrivastava wrote:
+> > This series forms the second half of the subsystem-wide ATS robustness
+> > updates. The first part (focusing on the core subsystem, Intel, and ARM
+> > SMMUv3) has already been merged upstream [1]. This half addresses the
+> > AMD IOMMU driver and standardizes the PCI ATS API.
+> > 
+> > In v2, the series has been significantly restructured based on feedback
+> > on v1. 
 > 
-> Otherwise this landmine is going to hurt someday since there is only
-> one flow that would have an err ptr in iommu_dev.
+> Overall this looks good to me. We did run our CI w/ v2 and no regression found.
 > 
 
-Ack. I'd refactor this.
+Ack. v3 Just addressed a few comments. I'll send out a v4 based on the
+feedback on this one soon.
 
 Thanks,
 Praan
