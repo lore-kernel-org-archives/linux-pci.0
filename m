@@ -1,176 +1,234 @@
-Received: from mout.web.de (mout.web.de [217.72.192.78])
+Received: from SN4PR2101CU001.outbound.protection.outlook.com (mail-southcentralusazon11012065.outbound.protection.outlook.com [40.93.195.65])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D41A484227;
-	Tue, 25 Aug 2026 13:46:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.72.192.78
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787665612; cv=none; b=rRAahVo/jpnA6Nrkm9ebNIoJJMH17JHxHB2PDJgHF+d6Z8nfGYKPJpS+LuVKLBHjnZeT0YuV1SQj1Q+eVrTpujUM2ka/PD9Djqm/g5/bJ2I2mZ8krsbd1mf3TLDYKV5qJozoVAKD5o6OIuCAlcx+teGHLjvaK6Pj2cyP9Ikxuuw=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787665612; c=relaxed/simple;
-	bh=i1s5kI1v30AEbJiF6ya5DQVhaJFLpKlvr86fshWQ3kw=;
-	h=Message-ID:Date:MIME-Version:To:Cc:References:Subject:From:
-	 In-Reply-To:Content-Type; b=mjBwirqpdTW8AEG5g2wTz72RntUbDt08raIeha8GV3GKQyLITOIpsKA/QCs2PAQDbBXm5WE9yzkF4bt8IuIjdT2vHKIM3qZHZLhI9XY4Olnm76XMyIexvRv+jNy++m44hwTE9J6ANQXeoTyHVl06FW+etIn8bMXudDdwexWbatM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de; spf=pass smtp.mailfrom=web.de; dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b=I29sFMK9; arc=none smtp.client-ip=217.72.192.78
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=web.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F02248167F;
+	Tue, 25 Aug 2026 14:10:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.195.65
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1787667054; cv=fail; b=kRUN4KRZ5Uw1g6fJLWC6G3SrtSsPkHhnJ4ILkfkBx+Cb2lMe/5QEPfgODcXJkznDKrsZ6gy6p1Jvrpuj+qwt2dwFYsaXRZNzyOVdyeZu9wFrPEuFb5LWUxZE0fNcLmqLbFHe/ldHZsuzPH8tV5vh36mo6oAB0bpjPRS+WL1VRJ0=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1787667054; c=relaxed/simple;
+	bh=gsU4R8AfaAI2UYFRabTcVBvrO4I0708RcO/MawOVkC8=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=NgMHXdZ468Lg3skybh0RCufuKalPyPbBmcVr/Jx5Fn2Yc+6ZnSOIvYFmGwqfziaf53nQM8WYqY6njQ+1MQSAN33MwxllCu1Mhppwe4hJBv9VPnZyBl/t90mnQvOKVCTPilR7SKE/SUlZZyaVpp7zYrkqdrLbSXe8IQWBa65XJhg=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=CWmTbzRP; arc=fail smtp.client-ip=40.93.195.65
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b="I29sFMK9"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=web.de;
-	s=s29768273; t=1787665572; x=1788270372; i=markus.elfring@web.de;
-	bh=i1s5kI1v30AEbJiF6ya5DQVhaJFLpKlvr86fshWQ3kw=;
-	h=X-UI-Sender-Class:Message-ID:Date:MIME-Version:To:Cc:References:
-	 Subject:From:In-Reply-To:Content-Type:Content-Transfer-Encoding:
-	 cc:content-transfer-encoding:content-type:date:from:message-id:
-	 mime-version:reply-to:subject:to;
-	b=I29sFMK9Od55/lzQYOOz9a0tMqZnq4IZNZ5fE841gSSngDO1Fr1eZxVXqCXQKgqY
-	 yXhlLpDZCPGrBa1i3VZ2TG8ZY3ZWmfgWjdiN/zEnOhv+UYkX0tlKL5VFu9a/sFnJm
-	 q13yrEJB5i7rgxy+r7hBsbfjdgz5yJyV5vHkGQM4JqEspflqmVynjqX2azniVXDqF
-	 dAbjAEJ4lQXHMOxTniw/U56vig0oC6BVE0eKcFjzevFITW4GcXE9CGzz7YzwnSkbq
-	 RyZGOWc4fWgAgEO0zU8CxuoP1eqy24/9LsXBlp/9kP6CxOtX67NP3YScgaAWOaBvl
-	 ZmUNONPIFKoeS66riA==
-X-UI-Sender-Class: 814a7b36-bfc1-4dae-8640-3722d8ec6cd6
-Received: from client.hidden.invalid by smtp.web.de (mrweb106
- [213.165.67.124]) with ESMTPSA (Nemesis) id 1MovnY-1wZyuo1Ld0-00lfnG; Tue, 25
- Aug 2026 15:46:12 +0200
-Message-ID: <c1b5027c-5044-414e-8a4a-d2ce135a143c@web.de>
-Date: Tue, 25 Aug 2026 15:46:09 +0200
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="CWmTbzRP"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=uIhpv8Vt4r+m4IAWFCXS6qFQ6kjAkVdUSwAAw1p0PI0iyIp779/49ErGFYX9PO3Xe/QkwFMLreqIJu8O9uK2SLcAcpkU1WmTnAjHE0NanF1qOEch+KnqWlnaLey2I8pcsz95UmBhOiuPukkLCTDh6WM8Dxd1+XX9Xvf4d2DhRUtW6QJ1AhRuNMsqqMT+zqEQ9swe8v7D3P9z6EY6PcYHoAha4K/PY6SGIszzt7DVst7g9K0kKCkQqFROUCcXC3zvHdDZhwT24+Bc7OnnwfT2lebpwmaVhy+xWLx1WHTx1GrqqgLA35GAOhMohN2Hsgio3nEJZQebRkRzObK58QW98g==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=4cGT2D7MJNcHylfDQizHBK12CWrEgOrYaLKHHrLiTcU=;
+ b=pgiK9sHWsUANMogoupPwjxh0ZJKW4n5DWiRc6UhmM2PhEcK3hetSa3heBY5LlEMYxSZSOJxqI+owkCHCgEyrCeEjuzrXd2bJRt8JvjpbUzxUZ0PhZXv34BPVqlJHVH97VzK4CnzHG1m561MTAGcw1BZSb4fbsKnH3no7NvtecYX8hfZz7Jb5hRmGUP3R3oZxKNGEtX5BGNBAEgIrsvEYSPyqeFuH+pVmSJ/M4qJClyt9lHjlGT4wFQVa70aGhZPb0tnkZPQPPyTo05M2Leihej/3jI64CuAuBZhNVPWVrRvdwEbHUnl8eeKzlC/FdKN1YbSR3iwrDaKQ96R69N1k4Q==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 216.228.117.160) smtp.rcpttodomain=google.com smtp.mailfrom=nvidia.com;
+ dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
+ dkim=none (message not signed); arc=none (0)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=4cGT2D7MJNcHylfDQizHBK12CWrEgOrYaLKHHrLiTcU=;
+ b=CWmTbzRPYp4DYfc+oFffbLKkNPybXRa9IfR0bvR/TAmjvI5Y3qRnFGFqBPVqpGjk0lz8FZCecAyNubcAfSHi8zqtkcMJ9+Iw4HucPC28nw6l3Coa+jN9RFi90pH4vGZpZxn12i7o3xhAB//909QJP6+YxWXt57bGYP97SXfzRdYup2I3CyMySWP59N9eH5oRaCniQgcIliyrLOECTmzXOPDGxQWQ0KXC3Uwz1acDafnSC+1cxBKZKClDW03vkG2Tvyrj6T8kgWJBOh019eX6tGxgnbOBJ9BZqwB9PXHKPnERXGojsuL3Hhd+d2ForY+KXL/H1RU0I3Ka7YUa1IyHkw==
+Received: from SJ0PR13CA0020.namprd13.prod.outlook.com (2603:10b6:a03:2c0::25)
+ by SJ0PR12MB6966.namprd12.prod.outlook.com (2603:10b6:a03:449::14) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.315.17; Tue, 25 Aug
+ 2026 14:10:48 +0000
+Received: from MWH0EPF000C6184.namprd02.prod.outlook.com
+ (2603:10b6:a03:2c0:cafe::7b) by SJ0PR13CA0020.outlook.office365.com
+ (2603:10b6:a03:2c0::25) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.21.360.7 via Frontend Transport; Tue, 25
+ Aug 2026 14:10:48 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.117.160)
+ smtp.mailfrom=nvidia.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=nvidia.com;
+Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
+ 216.228.117.160 as permitted sender) receiver=protection.outlook.com;
+ client-ip=216.228.117.160; helo=mail.nvidia.com; pr=C
+Received: from mail.nvidia.com (216.228.117.160) by
+ MWH0EPF000C6184.mail.protection.outlook.com (10.167.249.116) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.21.360.3 via Frontend Transport; Tue, 25 Aug 2026 14:10:48 +0000
+Received: from rnnvmail201.nvidia.com (10.129.68.8) by mail.nvidia.com
+ (10.129.200.66) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.46; Tue, 25 Aug
+ 2026 07:10:20 -0700
+Received: from vidyas-server.nvidia.com (10.126.231.37) by
+ rnnvmail201.nvidia.com (10.129.68.8) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.46; Tue, 25 Aug 2026 07:10:14 -0700
+From: Vidya Sagar <vidyas@nvidia.com>
+To: <bhelgaas@google.com>, <tglx@kernel.org>, <wangruikang@iscas.ac.cn>,
+	<Frank.Li@nxp.com>, <lihaoxiang@isrc.iscas.ac.cn>, <18255117159@163.com>,
+	<shawn.lin@rock-chips.com>, <xiangzao@linux.alibaba.com>
+CC: <vsethi@nvidia.com>, <sdonthineni@nvidia.com>, <kthota@nvidia.com>,
+	<mmaddireddy@nvidia.com>, <kumarahul@nvidia.com>, <sagar.tv@gmail.com>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>, Vidya Sagar
+	<vidyas@nvidia.com>
+Subject: [PATCH V2] PCI/MSI: Don't touch the MSI-X table while the Link is contained
+Date: Tue, 25 Aug 2026 19:39:52 +0530
+Message-ID: <20260825140952.4066140-1-vidyas@nvidia.com>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20260817195626.3091331-1-vidyas@nvidia.com>
+References: <20260817195626.3091331-1-vidyas@nvidia.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-To: hanzhijian1991@gmail.com, imx@lists.linux.dev, linux-pci@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org, kernel@pengutronix.de,
- Bjorn Helgaas <bhelgaas@google.com>, Frank Li <Frank.Li@nxp.com>,
- =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
- Lorenzo Pieralisi <lpieralisi@kernel.org>,
- Lucas Stach <l.stach@pengutronix.de>, Manivannan Sadhasivam
- <mani@kernel.org>, Richard Zhu <hongxing.zhu@nxp.com>,
- Sascha Hauer <s.hauer@pengutronix.de>
-Cc: sashiko-bot@kernel.org, LKML <linux-kernel@vger.kernel.org>,
- Fabio Estevam <festevam@gmail.com>, Rob Herring <robh@kernel.org>
-References: <20260825060340.3767635-1-hanzhijian1991@gmail.com>
-Subject: Re: [PATCH v2] PCI: imx6: fix endpoint init error handling
-Content-Language: en-GB, de-DE
-From: Markus Elfring <Markus.Elfring@web.de>
-In-Reply-To: <20260825060340.3767635-1-hanzhijian1991@gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-X-Provags-ID: V03:K1:L5SxaG9PEAO7bLQ1XieZcnAYvOVM9KJxXcOjWSeOrBdnK75Y848
- UOD9zsQF5MVhU6Rosgu68wS6RWg6geqXMgnAATeJKpsLt6pD6uhoZOXZKfTiGVvEKI9VPjC
- MIOLrzzSN0soYHCv/GU4fdI/55wVCWvlN9xC24v07YkfZzoYQDyNPXjijVVoSONLBd+9jh9
- siUl/QHi62lBSKlDFm0vA==
-X-Spam-Flag: NO
-UI-OutboundReport: notjunk:1;M01:P0:v3UkBPJZv8Q=;G0zuGlOJc54gElBSS3/zSNbRvLC
- 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
- =
+X-NVConfidentiality: public
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: rnnvmail203.nvidia.com (10.129.68.9) To
+ rnnvmail201.nvidia.com (10.129.68.8)
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: MWH0EPF000C6184:EE_|SJ0PR12MB6966:EE_
+X-MS-Office365-Filtering-Correlation-Id: 1f56aa46-46fd-4a57-84b7-08df02b2a9dc
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|1800799024|376014|23010399003|7416014|36860700016|82310400026|18002099003|22082099003|56012099006|6133799003|10067099003|11063799006;
+X-Microsoft-Antispam-Message-Info:
+	TEOTkny3sB/E2ELAwiRR1N7EK3QDdR6o19Bp4OeXNt7UsDdJGDGijXnHceWsxJQ2u3aKrH0aeodwWmlg7TcPjh3MSyfY4GEVjp9rU+UDs9Kb86nL8tK20DXp5c3xOoPQk0n1FOjVVbKZvpXp3ZRZb04Vo0FUEnVVpNOsuqTeCZwxaM2nB1K4bLp3AJjzXhK1J2zw69AKD1f/Kx7Ft+UnWbq9z386zpGK2TIEvOmqLvYegsxyO9tVxZndgEg644HEmPUZ5pnX3JC/AAbPknNoxoscwDlXIObUCEtSuzqj+2T64WDfU50hDdXlsCE04aat3EmlhBaxDmUt1GVoyqTKO6C1NL0OZwN2FLp34es6eZeMQwCDfWRbTAx31/PY/o50PoEXjggkHNXckl1VeffHP/fzs2SMwmA60KkCJbcM9wbd8cJzfwKPs94RGmrbWHPv6KS6jxuOjoBxre6n8GWQJx2FBY0CZFI+UzwnXPsBVneQkJ8FLWT1oPnL/IsnuSTjtL3pw3LyCJw+a8IRLiRnqLrB3dw+xJacS50kf5pkYQGB5XCGpqORk6rKh5H/LPlQTuwgvTLhQBuv5Q1P9zzaehRpzELwyzCv7i7vjh6NvqQInMCeO1ppyqH5NwTN4pnqsaCL7qOUBVsFi/UTQDJ2lnBY+mDnAV8AVUpU/+z4iLCcnAhH9vLTdQRBq9eWaE2O4UOQkjSwAqJBF8eReXu7jQ==
+X-Forefront-Antispam-Report:
+	CIP:216.228.117.160;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge1.nvidia.com;CAT:NONE;SFS:(13230040)(1800799024)(376014)(23010399003)(7416014)(36860700016)(82310400026)(18002099003)(22082099003)(56012099006)(6133799003)(10067099003)(11063799006);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	TCnZ3ptR3fuwapGRbSxsPzZZPpAz2NV/mqaMc8QawWjCjcmWbQXNzhFzYoBgPA7sAXRCZvb9VzBFGBxGLRV1TLPuPWDNajwPBksSBlLH5iqc9nJBhTJo2xyUKBtFEBnUIsQNugS1bwQIO5U2etGmTSzCB55DZK1T1n0ogkPs6jqvjmoTJiX/yIJszMZpb2EBpPHB2vywEvlsw539t2b8fqdEJ/3SpaiM6IOKv73VtZBo1CE3QDk3HIxHY/fvc2xlBvV3+rRVlV2sOnZ0cMA19hMni+wkM5Mxj8QglScOLCBTM/JdXskM3r4u9aaE53YD7gD7j2QDJYYCxhInzVWnNbeUs7hIDv/dNgv9JKbcpj+4ZhE2OSQD0Tu0Dx1QsDZlSBnP0E+xooMAIT6utFkyqNl8KVSTRZugWeuFo9kigrsMMPnXi9SArn0YaiDBZyra
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 25 Aug 2026 14:10:48.5670
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 1f56aa46-46fd-4a57-84b7-08df02b2a9dc
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.160];Helo=[mail.nvidia.com]
+X-MS-Exchange-CrossTenant-AuthSource:
+	MWH0EPF000C6184.namprd02.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ0PR12MB6966
 
-=E2=80=A6
-> Check the return value of imx_pcie_host_init() and =E2=80=A6
+The MSI-X Table lives in device MMIO space behind a BAR, so it is only
+reachable while the Link is up. While a Downstream Port has the Link
+contained by DPC it completes accesses to the Table with Unsupported
+Request, and reads return all ones.
 
-How do you think about to add any tags (like =E2=80=9CFixes=E2=80=9D and =
-=E2=80=9CCc=E2=80=9D) accordingly?
+If the upstream Root Port implements the RP Extensions for DPC, it
+additionally reports that UR completion as an RP PIO error and answers
+with a DPC of its own, which contains every other device below it. So a
+containment event on a single Downstream Port can escalate into one at
+the Root Port and take down unrelated devices.
 
-See also:
-* https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/=
-Documentation/process/submitting-patches.rst?h=3Dv7.2#n145
-* https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/=
-Documentation/process/stable-kernel-rules.rst?h=3Dv7.2#n34
+pci_free_irq_vectors() is called from driver error_detected() and
+prepare-for-reset callbacks, i.e. while the Link is contained, and it
+masks every descriptor. Each mask is an MMIO write followed by a
+non-posted flush read, so this is reached on every contained device whose
+driver tears down its interrupts before the reset.
 
+Skip the hardware access when the device is not in pci_channel_io_normal,
+in addition to the existing surprise removal check. The msix_ctrl cache
+is still updated, so __pci_restore_msix_state() replays the intended mask
+state once the Link is back up. report_slot_reset() returns the device to
+pci_channel_io_normal before invoking the driver callback, so re-enabling
+and restoring MSI-X during recovery is unaffected.
 
-Regards,
-Markus
+pci_msix_write_tph_tag() flushes its Vector Control update with an
+unconditional read, which would otherwise be issued for a write that was
+skipped, so return -EIO there instead. pcie_tph_set_st_entry() responds
+by disabling TPH, which is preferable to reporting a Steering Tag update
+that never reached the device.
+
+Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+---
+Changes in v2:
+- Return -EIO from pci_msix_write_tph_tag() so its unconditional flush
+  read is not issued for a skipped write (reported by Sashiko AI review).
+- Rename pci_msix_mmio_unsafe() to pci_msi_dev_inaccessible(), since in
+  __pci_write_msi_msg() it also gates the Configuration Space MSI path.
+- Note in the log why MSI-X restore during recovery is unaffected.
+
+ drivers/pci/msi/msi.c | 10 +++++++++-
+ drivers/pci/msi/msi.h | 21 +++++++++++++++++++++
+ 2 files changed, 30 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/msi/msi.c b/drivers/pci/msi/msi.c
+index 209373c92e9e..579f471ab86a 100644
+--- a/drivers/pci/msi/msi.c
++++ b/drivers/pci/msi/msi.c
+@@ -249,7 +249,7 @@ void __pci_write_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
+ {
+ 	struct pci_dev *dev = msi_desc_to_pci_dev(entry);
+ 
+-	if (dev->current_state != PCI_D0 || pci_dev_is_disconnected(dev)) {
++	if (dev->current_state != PCI_D0 || pci_msi_dev_inaccessible(dev)) {
+ 		/* Don't touch the hardware now */
+ 	} else if (entry->pci.msi_attrib.is_msix) {
+ 		pci_write_msg_msix(entry, msg);
+@@ -944,6 +944,14 @@ int pci_msix_write_tph_tag(struct pci_dev *pdev, unsigned int index, u16 tag)
+ 	if (!pdev->msix_enabled)
+ 		return -ENXIO;
+ 
++	/*
++	 * The tag update below is a write to the MSI-X Table followed by a
++	 * flush read, neither of which can be completed while the Link is
++	 * contained. Let the caller disable TPH instead.
++	 */
++	if (pci_msi_dev_inaccessible(pdev))
++		return -EIO;
++
+ 	virq = msi_get_virq(&pdev->dev, index);
+ 	if (!virq)
+ 		return -ENXIO;
+diff --git a/drivers/pci/msi/msi.h b/drivers/pci/msi/msi.h
+index 0b420b319f50..c3194d8425c8 100644
+--- a/drivers/pci/msi/msi.h
++++ b/drivers/pci/msi/msi.h
+@@ -26,6 +26,20 @@ static inline void __iomem *pci_msix_desc_addr(struct msi_desc *desc)
+ 	return desc->pci.mask_base + desc->msi_index * PCI_MSIX_ENTRY_SIZE;
+ }
+ 
++/*
++ * The MSI-X Table lives in device MMIO space and the MSI Capability in
++ * Configuration Space, so both are only reachable while the Link is usable.
++ * While a Downstream Port has the Link contained by DPC it completes these
++ * accesses with Unsupported Request. If the upstream Root Port implements the
++ * RP Extensions for DPC, it reports that completion as an RP PIO error and
++ * answers with a DPC of its own, taking down every other device below it.
++ */
++static inline bool pci_msi_dev_inaccessible(struct pci_dev *pdev)
++{
++	return pdev->error_state != pci_channel_io_normal ||
++	       pci_dev_is_disconnected(pdev);
++}
++
+ /*
+  * This internal function does not flush PCI writes to the device.  All
+  * users must ensure that they read from the device before either assuming
+@@ -36,6 +50,9 @@ static inline void pci_msix_write_vector_ctrl(struct msi_desc *desc, u32 ctrl)
+ {
+ 	void __iomem *desc_addr = pci_msix_desc_addr(desc);
+ 
++	if (pci_msi_dev_inaccessible(msi_desc_to_pci_dev(desc)))
++		return;
++
+ 	if (desc->pci.msi_attrib.can_mask)
+ 		writel(ctrl, desc_addr + PCI_MSIX_ENTRY_VECTOR_CTRL);
+ }
+@@ -43,6 +60,10 @@ static inline void pci_msix_write_vector_ctrl(struct msi_desc *desc, u32 ctrl)
+ static inline void pci_msix_mask(struct msi_desc *desc)
+ {
+ 	desc->pci.msix_ctrl |= PCI_MSIX_ENTRY_CTRL_MASKBIT;
++
++	if (pci_msi_dev_inaccessible(msi_desc_to_pci_dev(desc)))
++		return;
++
+ 	pci_msix_write_vector_ctrl(desc, desc->pci.msix_ctrl);
+ 	/* Flush write to device */
+ 	readl(desc->pci.mask_base);
+-- 
+2.43.0
+
