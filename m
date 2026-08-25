@@ -1,121 +1,155 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 37C823BA232
-	for <linux-pci@vger.kernel.org>; Tue, 25 Aug 2026 11:52:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 5E3A83FF8B0;
+	Tue, 25 Aug 2026 12:00:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787658768; cv=none; b=IsRRYd/A62UsFk9oMV+NNUDud2MnVJS2O6mJND1o6Oo9TGokBKKN8xwoVxfpJXCutVUIklKHTELarPM46nPHLtIEopME5v8/rpFkNRZQvEJIWuAbK3DZCBETQbLzIVIJVZ/FqpkK+BtiMNBj5TbLbjd4lC0A0bPO826C/gk9ZQw=
+	t=1787659228; cv=none; b=rc4qjCTKgqQxgSgHCqCU7xPqHMxhHidLO3Z5x+F3SAFmioUq+IhEX9tbLakzIZ0lETmHhsT3VlZJ+rTly91+SgJEUftwHy+7P0txYG3mRO5AnU+MOOhS7fWvKV1HvO/kfBExjlzVSfzphONIZhgwGZHcHrpQDmuFtEbl99HGNIU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787658768; c=relaxed/simple;
-	bh=vMxVW38LIPG7KjUFGI3MFP0aDXezY0BKFoXRTyEbJPk=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=RlUj+79SNWkqLYtVD2NiuKnl+xvH55guN2pBFDpDczauR0KYdk2IEACe1q2UyTtZomm42/7U+Xo3c3I/DLuGfI/MWGNBeUwAc7SE1NahYk7aHRxDh12wN6OJYWJtm+Bnt8dFrINURFwtZONmYBba+ovmgJkEPOK4AyuAh+jkI0Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NkkK5wtX; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1787659228; c=relaxed/simple;
+	bh=ArVB6ymMmi0NqLxio4pP6attFEOcGQXJyF4HbLmBd38=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=NojZPm7S57WGoNBF7wT/sWvbl4OfA4HKOLXnEr5HRJgy9qpoAPYPksqiuazlk3oXrx8UXWgb137b6b0Z5Bcei7oIZuv3OS/tLUvE+n0RH/2wa/u2BQ4AtXdJrqNX63otkjDLEAYk1ZVvOmgHOORCZCAW7kCoe7diS7pVn7m6ZPk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=FvjzLZCV; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NkkK5wtX"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8C8691F000E9;
-	Tue, 25 Aug 2026 11:52:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787658766;
-	bh=F6h1GVl7t/vhtqG8RZT0fgnKIkLWcGXEBB9sECIQHFk=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=NkkK5wtXqHVV07SFrmFlZwPx14kw9EPZXhjeR+SbBFmfcfCIIX6k4YzUEdhFl7Wee
-	 U1oO7kICpI+R0I+0M+0k2lwa8Bwi9pLM6ffvDcAoRnd6wQARESppQOa69e3CldXSTy
-	 aTMMgGRUVtENISMZxAuOJqM7wCIm7EJOr4wURLC6QMkkG7FNjZfNzF8hutddqvVW5z
-	 IntPCPRdby1DvqqiymMEnecOGsSzCmDqTuLJW0zr93Lv9LBB5Th1HGV8wF95EVJT4o
-	 87YHWpIQWkUd42FRzNuRuyFKFF3HEL5ZoQk+UtNqWV1B0/kL7lTc3ksiZPWwNG6zUl
-	 gyPOjcjrE4I5w==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] PCI/pwrctrl: tc9563: Use gpiod_set_value_cansleep() for
- RESX
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Abel Vesa" <abel.vesa@oss.qualcomm.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260825-pci-pwrctl-tc9563-use-cansleep-for-resx-v1-1-0dbe7cfd8200@oss.qualcomm.com>
-References: <20260825-pci-pwrctl-tc9563-use-cansleep-for-resx-v1-1-0dbe7cfd8200@oss.qualcomm.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 25 Aug 2026 11:52:46 +0000
-Message-Id: <20260825115246.8C8691F000E9@smtp.kernel.org>
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="FvjzLZCV"
+Received: from [10.26.7.43] (unknown [4.213.232.18])
+	by linux.microsoft.com (Postfix) with ESMTPSA id 53FD220B7166;
+	Tue, 25 Aug 2026 04:59:50 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 53FD220B7166
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1787659193;
+	bh=27g3FCQWu96YeT20zCax2L5SC4e7eynj6z7B7GIEwcw=;
+	h=Date:Subject:To:References:From:In-Reply-To:From;
+	b=FvjzLZCVS6xAJPt1TWD5paRZWefKIVnfqguk+GOVM8lLI85Xl6cnZUImdR1Tirzs0
+	 WWyj4e1LNe8lFsEDFd5siNGE37fPNk6sLYDsZGeYA5s5gNg7Mz9bwaqYTmrxbdrmK5
+	 DnruJJ+t0kp5yeniJb6OcneMv1EyBfVkMizDm1uw=
+Message-ID: <f1214baf-b1d1-411e-b5ba-1ee2cfb37b1d@linux.microsoft.com>
+Date: Tue, 25 Aug 2026 17:30:19 +0530
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] PCI: hv: Warn when wait_for_response() waits indefinitely
+To: Naman Jain <namjain@linux.microsoft.com>, kys@microsoft.com,
+ haiyangz@microsoft.com, wei.liu@kernel.org, decui@microsoft.com,
+ longli@microsoft.com, lpieralisi@kernel.org, kwilczynski@kernel.org,
+ mani@kernel.org, robh@kernel.org, bhelgaas@google.com,
+ linux-hyperv@vger.kernel.org, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+References: <20260825051850.2438816-1-sahilchandna@linux.microsoft.com>
+ <736091cf-8d00-415e-a890-e2dfa6739325@linux.microsoft.com>
+Content-Language: en-US
+From: Sahil Chandna <sahilchandna@linux.microsoft.com>
+In-Reply-To: <736091cf-8d00-415e-a890-e2dfa6739325@linux.microsoft.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
+On 25-08-2026 12:16, Naman Jain wrote:
+> 
+> 
+> On 8/25/2026 10:47 AM, Sahil Chandna wrote:
+>> A guest can wait indefinitely in wait_for_response() for the host to
+>> send either a rescind message or a packet completion. If the
+>> host does not send either, the guest can remain blocked with no
+>> diagnostic indicating a reason.
+>> This was observed during a guest kernel upgrade in which the
+>> host-side application handling the PCI channel faulted, causing the
+>> guest to never receive the completion request.
+>> Add a periodic warning in wait_for_response() when the wait exceeds
+>> a timeout so that such a hang is visible in the guest's kernel log
+>> and can be correlated with host-side state.
+>>
+>> Suggested-by: Hamza Mahfooz <hamzamahfooz@linux.microsoft.com>
+>> Signed-off-by: Sahil Chandna <sahilchandna@linux.microsoft.com>
+>> ---
+>> This was sent earlier upstream [1]
+>> [1] https://lore.kernel.org/linux-hyperv/20260612174010.2598695-1-hamzamahfooz@linux.microsoft.com/
+>> ---
+>>   drivers/pci/controller/pci-hyperv.c | 14 +++++++++++++-
+>>   1 file changed, 13 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
+>> index cfc8fa403dad..c4fba0039164 100644
+>> --- a/drivers/pci/controller/pci-hyperv.c
+>> +++ b/drivers/pci/controller/pci-hyperv.c
+>> @@ -1040,11 +1040,18 @@ static void put_pcichild(struct hv_pci_dev *hpdev)
+>>
+>>   /*
+>>    * There is no good way to get notified from vmbus_onoffer_rescind(),
+>> - * so let's use polling here, since this is not a hot path.
+>> + * so let's use polling here, since this is not a hot path. If
+>> + * wait_for_response() has been polling for PCI_RESPONSE_HANG_TIMEOUT_SEC
+>> + * without either a rescind or completion, add a periodic warning.
+>>    */
+>> +#define PCI_RESPONSE_HANG_TIMEOUT_SEC 300
+>> +
+>>   static int wait_for_response(struct hv_device *hdev,
+>>   			     struct completion *comp)
+>>   {
+>> +	unsigned long delay = secs_to_jiffies(PCI_RESPONSE_HANG_TIMEOUT_SEC);
+>> +	u64 timeout = get_jiffies_64() + delay;
+>> +
+>>   	while (true) {
+>>   		if (hdev->channel->rescind) {
+>>   			dev_warn_once(&hdev->device, "The device is gone.\n");
+>> @@ -1053,6 +1060,11 @@ static int wait_for_response(struct hv_device *hdev,
+>>
+>>   		if (wait_for_completion_timeout(comp, HZ / 10))
+>>   			break;
+>> +
+>> +		if (time_after64(get_jiffies_64(), timeout)) {
+>> +			dev_warn(&hdev->device, "PCI stuck waiting for response.\n");
+>> +			timeout = get_jiffies_64() + delay;
+>> +		}
+>>   	}
+> 
+> There can be some enhancements in above patch to address these problems:
+> 1. Logging forever every 5 minutes in case of no completion or rescind.
+> 2. If we now print warning once, not knowing if completion ever arrived.
+> 3. On solving pt. 1 and 2 by adding a print for completion, one should 
+> avoid adding a print by default for regular timely completions.
+> 
+Ack.
+> Basically something like this:
+> 
+> #define PCI_RESPONSE_WARN_TIMEOUT_SEC 300
+> 
+> static int wait_for_response(struct hv_device *hdev,
+>                   struct completion *comp)
+> {
+>      unsigned long warn_at =
+>          jiffies + secs_to_jiffies(PCI_RESPONSE_WARN_TIMEOUT_SEC);
+>      bool warned = false;
+> 
+>      while (true) {
+>          if (hdev->channel->rescind) {
+>              dev_warn_once(&hdev->device, "The device is gone.\n");
+>              return -ENODEV;
+>          }
+> 
+>          if (wait_for_completion_timeout(comp, HZ / 10)) {
+>              if (warned || time_after_eq(jiffies, warn_at))
+>                  dev_warn(&hdev->device,
+>                       "PCI response received after prolonged wait.\n");
+>              return 0;
+>          }
+> 
+>          if (!warned && time_after_eq(jiffies, warn_at)) {
+>              dev_warn(&hdev->device,
+>                   "PCI still waiting for response.\n");
+>              warned = true;
+>          }
+>      }
+> }
+> 
+Thanks for review, I align on repeated warning every 5 minutes for
+stalled guest would add to dmesg noise.I will wait for other review
+comments as well and share v2 addressing this.
+> Regards,
+> Naman
 
-Pre-existing issues:
-- [High] I2C/SPI transfers during the noirq phase of system suspend/resume =
-will timeout and fail if the host controller relies on interrupts.
---
-
---- Patch [1]: [PATCH] PCI/pwrctrl: tc9563: Use gpiod_set_value_cansleep() =
-for RESX ---
-commit cc5d1431bebcee3e75ac6e1b5150b5971fe40f41
-Author: Abel Vesa <abel.vesa@oss.qualcomm.com>
-
-PCI/pwrctrl: tc9563: Use gpiod_set_value_cansleep() for RESX
-   =20
-This patch changes gpiod_set_value() to gpiod_set_value_cansleep() for the
-RESX GPIO in the TC9563 power-on and power-off callbacks. This prevents
-warnings when the GPIO is provided by a sleeping controller, such as an I2C
-or SPI I/O expander.
-
-> diff --git a/drivers/pci/pwrctrl/pci-pwrctrl-tc9563.c b/drivers/pci/pwrct=
-rl/pci-pwrctrl-tc9563.c
-> index fd53a7db9875d..1b7718d07d15d 100644
-> --- a/drivers/pci/pwrctrl/pci-pwrctrl-tc9563.c
-> +++ b/drivers/pci/pwrctrl/pci-pwrctrl-tc9563.c
-> @@ -481,7 +481,7 @@ static int tc9563_pwrctrl_power_off(struct pci_pwrctr=
-l *pwrctrl)
->  	struct tc9563_pwrctrl *tc9563 =3D container_of(pwrctrl,
->  					    struct tc9563_pwrctrl, pwrctrl);
-> =20
-> -	gpiod_set_value(tc9563->reset_gpio, 1);
-> +	gpiod_set_value_cansleep(tc9563->reset_gpio, 1);
-> =20
->  	regulator_bulk_disable(ARRAY_SIZE(tc9563->supplies), tc9563->supplies);
-> =20
-> @@ -501,7 +501,7 @@ static int tc9563_pwrctrl_power_on(struct pci_pwrctrl=
- *pwrctrl)
->  	if (ret < 0)
->  		return dev_err_probe(dev, ret, "cannot enable regulators\n");
-> =20
-> -	gpiod_set_value(tc9563->reset_gpio, 0);
-> +	gpiod_set_value_cansleep(tc9563->reset_gpio, 0);
-
-[Severity: High]
-This isn't a bug introduced by this patch, but it makes a pre-existing issue
-more apparent by acknowledging the GPIO's I2C/SPI dependency.
-
-Will I2C/SPI transfers during the noirq phase of system suspend/resume time=
-out
-and fail if the host controller relies on interrupts?
-
-During system suspend/resume, the PCIe host controller executes
-qcom_pcie_suspend_noirq() or qcom_pcie_resume_noirq(), which eventually call
-pci_pwrctrl_power_off_devices() or pci_pwrctrl_power_on_devices(). These
-invoke tc9563_pwrctrl_power_off() and tc9563_pwrctrl_power_on().
-
-During the noirq phase, device interrupts are disabled system-wide via
-suspend_device_irqs(). Because local CPU interrupts remain enabled,
-i2c_in_atomic_xfer_mode() evaluates to false, causing the I2C core to use t=
-he
-standard interrupt-driven master_xfer() rather than master_xfer_atomic().
-
-Since the I2C controller's device interrupt is disabled, won't the transfer
-time out and fail, potentially causing a system freeze or suspend/resume
-failure?
-
-This would affect both the sleeping GPIO expander and the I2C bulk writes
-performed later in tc9563_pwrctrl_power_on() when calling
-tc9563_pwrctrl_disable_port().
-
-[ ... ]
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260825-pci-pwrctl=
--tc9563-use-cansleep-for-resx-v1-1-0dbe7cfd8200@oss.qualcomm.com?part=3D1
