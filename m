@@ -1,126 +1,217 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D37BB30D3EF;
-	Tue, 25 Aug 2026 02:40:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0DD93242DF;
+	Tue, 25 Aug 2026 02:40:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787625639; cv=none; b=ZCmBru4misxh0nD6S2QYIuuSPy9cE2db/NNrULX0Rlz77hNkOOEidvPJsRZOUQgXBmoUfpZsWraeN7WrkYMFhPS+RXDzpCdWCLkeZUz5/vi2weuoYozExRiGzJ6DmwQvWGs0cNXNTXmI1EyaoF85xkBudYaFhQjpTG+AHgFDi60=
+	t=1787625651; cv=none; b=GstW3wLwU5VVWb83AbFz7aOdtQq4IDgmTsC0LF64pA0rgedM08PyVUNQzwr1eL53KQGv1xdI5pXBtZgAdfdg5DdND9WE/rfMf8QWH1/6VIYzx6FkCXssQkZeWygDv9xFhkfC2xNWLh4Fq0ZlfdNdUi0yU6/6Lx8z5p4eAG587N4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787625639; c=relaxed/simple;
-	bh=RY/4bTYe9OzzWcngml23yUbpe8Xun97v36+qXODd61M=;
+	s=arc-20240116; t=1787625651; c=relaxed/simple;
+	bh=5f0oTvyZFUPft5eTbI8IA7YcpmAce3CYSKTcP8+UYbg=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=J5BwYedkXeiF95psnl05sWtMvLyet8l6TSJUtjfovDPDshc/+KPxLaOw4b1xWroWOApvscRmfRk5UM5wyd1q2Qe8ZZaO7bP7MBs/T1NzPJAasfpa1CQypuZ5KL8Igk4vMh+QmnPAC4jIXBS5RTFY+seWaxbgnDeUexb8zdwfljU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EHWbe5tu; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=KW8eKJuAD5SCtcySWZbhXwBpi7tKshvm+RdPZeRbxg80smW5DarbnH47jkyQy1H11qG1R/piSWuFc2bv/Qko0Cu0pe7Yzz5U2+I9QmkRejebR4Gri7KbvFS912KPEVwj/L9bOd7WZNaO5p5xUuMQ8lJQjI+cyzi7tUKMp5cCCOA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BL3s1Lun; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EHWbe5tu"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7BDF71F000E9;
-	Tue, 25 Aug 2026 02:40:37 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BL3s1Lun"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3DDA31F000E9;
+	Tue, 25 Aug 2026 02:40:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787625637;
-	bh=ja5KfhSjq2qwMYJJD+qKPR8e8G7q465SrjA10hV7Fss=;
+	s=k20260515; t=1787625643;
+	bh=JI7+3v5yFpessGaI4GFugRzasPohKxsEWG/fNg+7n90=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=EHWbe5tulsJ3xXBBF3+rqNn1lR1AB+QoSH89j8EKDx/Lv11ZM0JrspNMZ1NEiqi0e
-	 muTIgeqO6Xb5pgF7Hy8u2PPWV5ZpGhkUWB0+eOcGAIQj1EJF8qTiRwGPx/HrLguvVT
-	 W6MUW/1tkU3z1aW+n2gZBCN2a69Hx3LAT18XIMxLvNMN0k4pwZ/Y4yX6HTABaQjnEq
-	 KPYQI040xqH9PR5rHJNEt+f5Tbt3lyPLzvhjCuQbDy8hPEzwvNDiO/q7rtDrFT9iew
-	 Be2CdX5Mhb5ygMPe788wQED1DS37K5g8ZHQvHpMsXuuAtbbRI0RIw3da/D9jvVTR81
-	 FGomZ29oWLVsQ==
+	b=BL3s1Lun2iwDJuAqhtEUim6NuQC5Up/hzPSFlioLTioQMjyvLVYixFGqcjbH61swF
+	 cW6F6DmFejr7dNKepSlSp6pMvrfIIZB3n1NwKYWHDUI5YRaFalOhdCJxF2kc+7rwP8
+	 0i0jE1WEdlaJedL6FtOOe5dxKe1yrxWtmhA6t183SgLj+PuYQxhL1AcJ3zKBEUh9os
+	 vII/1GiwmqegXW52lu3KbXqN30uRIJUJOV2tl1lTGcNi3PBPyV4lxE1mSnhkWgEFyG
+	 rOh/K3Qs7VGZ4klY8/ZUkAT0vKtY6FExr0nzzf69Br4ecxZU8yFDxWPNRugDLpdFBJ
+	 ZSAVmmMRm2K7Q==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 06/13] drivers/base/memory: Add cxl_offline_memory()
- to offline a physical range
+Subject: Re: [PATCH v2 10/13] PCI/CXL: Clear ACS SV across an SBR of a CXL
+ DPort
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Fabio M. De Francesco" <fabio.m.de.francesco@linux.intel.com>
 Cc: linux-pci@vger.kernel.org, linux-cxl@vger.kernel.org
-In-Reply-To: <20260825022628.3651434-7-fabio.m.de.francesco@linux.intel.com>
+In-Reply-To: <20260825022628.3651434-11-fabio.m.de.francesco@linux.intel.com>
 References: <20260825022628.3651434-1-fabio.m.de.francesco@linux.intel.com>
- <20260825022628.3651434-7-fabio.m.de.francesco@linux.intel.com>
+ <20260825022628.3651434-11-fabio.m.de.francesco@linux.intel.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 25 Aug 2026 02:40:37 +0000
-Message-Id: <20260825024037.7BDF71F000E9@smtp.kernel.org>
+Date: Tue, 25 Aug 2026 02:40:42 +0000
+Message-Id: <20260825024043.3DDA31F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+Thank you for your contribution! Sashiko AI review found 5 potential issue(=
 s) to consider:
-- [High] cxl_offline_memory() leaves memory blocks partially offlined and p=
-ermanently stranded if device_offline() fails midway, lacking a state-track=
-ing and rollback mechanism.
+- [High] Unsynchronized access to the global `cxl_sbr_region_ops` struct po=
+inter can result in a NULL pointer dereference or a Use-After-Free crash if=
+ the CXL core module unloads concurrently.
+- [High] Missing link training wait for nested bridges during subordinate c=
+onfiguration space restoration.
+- [High] Restoring the standard configuration space of subordinate devices =
+re-enables Bus Master and Memory Space before their PCIe capabilities are r=
+estored, risking Malformed TLP fatal errors.
+- [High] The completion function attempts to access the configuration space=
+ and memory regions of downstream devices even if the secondary bus reset f=
+ails.
+- [Medium] The polling loop in `cxl_port_pm_init_is_complete()` can miss a =
+successful completion if scheduling delays cause `msleep()` to overshoot th=
+e timeout.
 --
 
---- Patch [6]: [PATCH v2 06/13] drivers/base/memory: Add cxl_offline_memory=
-() to offline a physical range ---
-commit 00648cd16fe5b1311f9ee6c83c16afccf56f6b3d
+--- Patch [10]: [PATCH v2 10/13] PCI/CXL: Clear ACS SV across an SBR of a C=
+XL DPort ---
+commit fae09a9aaf20d6e342f823e3752512b2c39cdd95
 Author: Fabio M. De Francesco <fabio.m.de.francesco@linux.intel.com>
 
-drivers/base/memory: Add cxl_offline_memory() to offline a physical range
+PCI/CXL: Clear ACS SV across an SBR of a CXL DPort
 
-A CXL region whose capacity is online as System RAM must be taken
-offline before a Secondary Bus Reset of the CXL Downstream Port it is
-reached through.
+A Secondary Bus Reset (SBR) of a CXL Downstream Port clears the
+Downstream Component's (DPort) captured Bus Number. This patch
+clears ACS Source Validation and Bus Master Enable across the reset
+so that Port Power Management Initialization completes at link-up.
 
-> diff --git a/drivers/base/memory.c b/drivers/base/memory.c
-> index bcfe2d9f4adbd..ce89b251d34ac 100644
-> --- a/drivers/base/memory.c
-> +++ b/drivers/base/memory.c
-
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 417b6b44473e5..f3781d1e8f6e1 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
 [ ... ]
-
-> @@ -1018,6 +1018,42 @@ int walk_memory_blocks(unsigned long start, unsign=
-ed long size,
->  	return ret;
->  }
-> =20
-> +static int cxl_offline_memory_block(struct memory_block *mem, void *arg)
-> +{
-> +	int rc =3D device_offline(&mem->dev);
-> +
-> +	/* device_offline() returns a positive value when already offline. */
-> +	if (rc > 0)
-> +		return 0;
-> +
-> +	return rc;
-> +}
-> +
-> +/**
-> + * cxl_offline_memory - offline the memory blocks spanning a physical ra=
-nge
-
-[ ... ]
-
-> +int cxl_offline_memory(u64 start, u64 size)
+> +static int cxl_sbr_prepare(struct pci_dev *bridge, u16 dvsec,
+> +			   struct cxl_sbr_ctx *ctx)
 > +{
 > +	int rc;
 > +
-> +	lock_device_hotplug();
-> +	rc =3D walk_memory_blocks(start, size, NULL, cxl_offline_memory_block);
+> +	/* Abort before touching hardware if the regions cannot be disabled. */
+> +	if (cxl_sbr_region_ops) {
+> +		rc =3D cxl_sbr_region_ops->disable_regions(bridge);
+> +		if (rc)
+> +			return rc;
+> +	}
 
 [Severity: High]
-If device_offline() fails midway through a range (for example, due to
-unmovable or pinned pages), will this leave the system in an inconsistent
-state with partially offlined memory ranges and silent capacity loss?
+Could accessing cxl_sbr_region_ops here result in a use-after-free or NULL
+pointer dereference?
 
-When walk_memory_blocks() aborts on an error from cxl_offline_memory_block(=
-),
-there doesn't appear to be a rollback mechanism for blocks that were already
-successfully offlined.
+If a secondary bus reset is initiated via sysfs concurrently with the
+cxl_core module unloading, the pointer might be cleared or freed before
+disable_regions() is called. There does not appear to be any lock or RCU
+protection here.
 
-Additionally, since cxl_offline_memory_block() treats an already-offline
-block as a success but doesn't record that state, how could a caller
-safely roll back without accidentally onlining a block that was originally
-offline before cxl_offline_memory() was called? Core memory hotplug APIs
-typically allocate an array to track original states to handle these failur=
-es.
+[ ... ]
+> +static bool cxl_port_pm_init_is_complete(struct pci_dev *bridge, u16 dvs=
+ec)
+> +{
+> +	unsigned long start =3D jiffies;
+> +	unsigned long timeout =3D start + msecs_to_jiffies(100);
+> +	u16 status;
+> +
+> +	do {
+> +		pci_read_config_word(bridge,
+> +				     dvsec + PCI_DVSEC_CXL_PORT_EXT_STATUS,
+> +				     &status);
+> +		if (!PCI_POSSIBLE_ERROR(status) &&
+> +		    (status & PCI_DVSEC_CXL_PORT_EXT_STATUS_PM_INIT_COMP)) {
+> +			pci_dbg(bridge, "%s: PM Init Complete set after %u ms, ext status %#0=
+6x\n",
+> +				__func__, jiffies_to_msecs(jiffies - start), status);
+> +			return true;
+> +		}
+> +		msleep(10);
+> +	} while (time_before(jiffies, timeout));
+> +
+> +	pci_warn(bridge, "%s: PM Init Complete not set after %u ms, ext status =
+%#06x\n",
 
-> +	unlock_device_hotplug();
+[Severity: Medium]
+Will this loop miss successful completions if scheduling delays cause
+msleep() to overshoot the timeout?
+
+If the sleep significantly exceeds 10ms and crosses the 100ms timeout
+boundary, the loop terminates and returns false without a final status
+read. This might lead to spurious warnings and premature restoration of
+ACS Source Validation, causing the Port to reject bus 0 traffic.
+
+[ ... ]
+> +static int cxl_sbr_restore_config_space(struct pci_dev *dev, void *userd=
+ata)
+> +{
+> +	pci_restore_config_space(dev);
+> +	pci_dbg(dev, "%s: config space restored\n", __func__);
+> +
+> +	return 0;
+> +}
+
+[Severity: High]
+Does this unconditionally re-enable Bus Master and Memory Space before
+PCIe capabilities are restored?
+
+When pci_restore_config_space() writes the first 64 bytes, it restores
+PCI_COMMAND while the Max Payload Size (MPS) remains at its hardware
+reset default of 128 bytes. This might trigger Malformed TLP fatal errors
+if the device interacts with a host configured for a larger MPS during
+this window.
+
+[ ... ]
+> +static void cxl_sbr_restore_subordinate(struct pci_dev *bridge)
+> +{
+> +	if (!bridge->subordinate)
+> +		return;
+> +
+> +	/* Parents before children: a child answers once its parent forwards. */
+> +	pci_walk_bus(bridge->subordinate, cxl_sbr_restore_config_space, NULL);
+> +}
+
+[Severity: High]
+Does pci_walk_bus() safely handle nested PCI-to-PCI bridges on the
+subordinate bus?
+
+It seems to restore the nested bridge's standard configuration and then
+immediately traverse to the grandchildren without waiting for the nested
+bridge's secondary link to retrain. This means configuration writes might
+be sent to deeper endpoints while their link is still down.
+
+[ ... ]
+>  int pci_bridge_secondary_bus_reset(struct pci_dev *dev)
+>  {
+> +	struct cxl_sbr_ctx ctx =3D {};
+> +	u16 dvsec =3D 0;
+> +	int rc;
+> +
+>  	if (!dev->block_cfg_access)
+>  		pci_warn_once(dev, "unlocked secondary bus reset via: %pS\n",
+>  			      __builtin_return_address(0));
+> +
+> +	if (is_cxl_dport(dev))
+> +		dvsec =3D cxl_port_dvsec(dev);
+> +	if (dvsec) {
+> +		rc =3D cxl_sbr_prepare(dev, dvsec, &ctx);
+> +		if (rc)
+> +			return rc;
+> +	}
+> +
+>  	pcibios_reset_secondary_bus(dev);
+> =20
+> -	return pci_bridge_wait_for_secondary_bus(dev, "bus reset");
+> +	rc =3D pci_bridge_wait_for_secondary_bus(dev, "bus reset");
+> +
+> +	if (dvsec)
+> +		cxl_sbr_complete(dev, dvsec, &ctx);
 > +
 > +	return rc;
-> +}
+>  }
+
+[Severity: High]
+Is it safe to call cxl_sbr_complete() when
+pci_bridge_wait_for_secondary_bus() times out or returns a non-zero error?
+
+Accessing the configuration space and memory regions of downstream devices
+while the secondary link is physically down might generate uncorrectable
+PCIe AER errors like Unsupported Requests or Completion Timeouts.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260825022628.3651=
-434-1-fabio.m.de.francesco@linux.intel.com?part=3D6
+434-1-fabio.m.de.francesco@linux.intel.com?part=3D10
