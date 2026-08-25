@@ -1,265 +1,244 @@
-Received: from SN4PR2101CU001.outbound.protection.outlook.com (mail-southcentralusazon11022142.outbound.protection.outlook.com [40.93.195.142])
+Received: from BN8PR05CU002.outbound.protection.outlook.com (mail-eastus2azon11011016.outbound.protection.outlook.com [52.101.57.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6530233372A;
-	Tue, 25 Aug 2026 17:00:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.195.142
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8563B48988A;
+	Tue, 25 Aug 2026 17:28:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.57.16
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787677255; cv=fail; b=XwVQJcXN/Q9QQBED6AWIJaNjNn43zc7LewpujLMzW633TnAyBiJrq3od3uwh/87OR8O7R95ylh8yG9ZJIUf+RjI09uDrMYY6wEHL588mZZAlRX5Uc15QyXCrtcnTczkiuHMdGIumldjE3QIQWg+Nt7Ph36fKfdgU/FXoPL1zqwQ=
+	t=1787678906; cv=fail; b=H7a50M2Rj7jeuseop8WMptBAfRN/XO9APxbTe2zBzfrg0LceLB4eIQ6FlUi7ennRE3MdsH1nyRid/6KOsI+vKHpi+6xLQ9AVIHAKwQErUU5C1YKcZ6cbNMGuYausRuXlhRrQ6a1z2LRVN4/q8OZY/cswez3mDLhNkJSZVQHbKus=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787677255; c=relaxed/simple;
-	bh=cs88nxAaJAB7YSwyYjtYGSqw87nTA8kwgZka/sIt5jw=;
-	h=From:To:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=L6Q+XN3jgpaFYXDEa5oE933K7vHQR6T9gqVloMfxAAdUh3vgCyiedddvdqToG2WTU41IH7r0XqyMk4AQhbnIt/P9o4coFDCIZ9FfQ8rMJ6LBs7UNvV1vdDL6kH0l3NdOxTyjNMkKUHkSkDDV228DGHmivkwDT9gdKI8XMm9v66k=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=microsoft.com; spf=pass smtp.mailfrom=microsoft.com; dkim=pass (1024-bit key) header.d=microsoft.com header.i=@microsoft.com header.b=aFQXuBvr; arc=fail smtp.client-ip=40.93.195.142
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=microsoft.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=microsoft.com
+	s=arc-20240116; t=1787678906; c=relaxed/simple;
+	bh=iiUsyBxVQDPp3ZohtZl1rh9TtMCpMTfgb91YDJkTCQk=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=XOirQvzpG2QOOU/9OXKP6J/0Iml8MTpiGMg/aXrEeU+iZ1pL3vSVQqKKbhZXKTDE/wyCrJfNK5KzRu8+jTOt0U+JPLUQ1avutZvgVi3OsYrEEAYesfZVvMcJ5cj6PhmnkMXibiHmolBpmwLVVZMNoMAuSpGB0hSW7oCQqCfQdcw=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=nKvqS23u; arc=fail smtp.client-ip=52.101.57.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=microsoft.com header.i=@microsoft.com header.b="aFQXuBvr"
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="nKvqS23u"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=OpRoOtrgcLUd9wNm0qeewkWUQiyNYYyJ3C2rXnxOk6mLxod2II9zK9Aqzo83e//DZL8MempeCL5l9ebNT79i7a/c7wDIMLYviCkunztBWX009T0A2lA/CxqR3GJW8cQ9stCuyBKdOtZ/NAYVj2C0F/AycbxBKpku6rG8sSnWdvzsiCC0xCftg7WPWn2TbPUXgJCck5mU/lEb819iqvA8eyKbx2Ky3UISPdWN5NZwhaAwnq2a/LXfO+oCvsiibjw2XSPqDS1qjQu+IQGTLHDwyokkvABVZ5IJhTiZXsHUt+esyBWCM9qHtpFZRaM7UqzJ21NkwL1CW0nMNDGK1onslQ==
+ b=Mr3rI9FgCU07VhgpsXLosJWnHLVYehXfKxRbuTwkJlQhb0y/3PDJYUQc5kVv2qcrpnGpd1sTIwp8/qk6afGp+InkoUH9dqarkLl297Hwim0ploM74FWfuGoGrmJjEs2jWKRnBGrgh25V8Fiuv4yu5iXZBfi7GEjlG/u1wnENPSnRsPH7TLwLffgh/b8couUX+37ylmDuaZS0aFk/uIgmwUrJx4hPn3QgW2E5vhl5TfpJ9T/klZCTxvsy6NzF0jU0ANnzumyrEcsD5jRtwQ9Uup1SJ9l54ciLNS2E6MmOw2WoJ0XUN2sXExYRdH74KrJxVnqIXfiGmftKkmhxX/6vfQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=w7rHC87b+xeQ4pjXtJdVn1sgLuASAcc2PjEJU35WasI=;
- b=QCZpcb8SWITlqCmKupP7hGDRNOqMOKDorKzoehJWAN0mEi1JRFN1UwFIG6TN7686hO4TyjmPtzFzCQPASH71z17dop0MNZFcg9wYI11MS3z3vnsX6uZbOOy+C3HM/wpiR+MvPnUXtsBt2C9u98VW96wXQasipWu9Axn3MzLEHbi8qKK42WN0MWH6diJj3CDxecODpDJdYc4GIA6TP3PlwgeQoJOZ5tg66aOC80Jb1c5F7iyLM3POL9A7Lm19YkM1nTNY9f8jg/TUbsUGnrrs2jCQl8lq4q6LMwKPCIHEGd0V9LyJ+l0dzqNYfRnTW83ijqA/o8v05qIKnDe9BgkMMg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=microsoft.com; dmarc=pass action=none
- header.from=microsoft.com; dkim=pass header.d=microsoft.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ bh=DQ2m/I4VM8ObU+OTZUu0Hl8jdSkGxA0B5SMMRYUmMEA=;
+ b=V9uVyrkNNjm1dy/Hb/lDhUGwEx0Sj/XY5MPNGiG5c0OW8s6iD/hr3+1QrbbqQr7lYyttz0ggfzz+WwPiyXSAM4TyhKPPK49iDiHemnj0CE5jDjx4WyunVYN38SG9WYPcvOuNiuJfMeS5hf6/pPI8lLqaHCUMP1IYp6vH3+O0/lN7xmr91wHgPgFgsvLfb7v5cVd4M8QZxV/1kPj9l1pZQfT6O/kMfI964KcoHgsWV+xNrPCeG3ZefJVVf/2LUCZ1s/qirjhexlJ5yS2H5Vna6HMjsElXfAIQKfPbylxjshVzOUleFdtthJbunyO7hXqkib85kn96MKu1wM5+OTsF4w==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 216.228.117.161) smtp.rcpttodomain=google.com smtp.mailfrom=nvidia.com;
+ dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
+ dkim=none (message not signed); arc=none (0)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=w7rHC87b+xeQ4pjXtJdVn1sgLuASAcc2PjEJU35WasI=;
- b=aFQXuBvrCWyvTkSIxAOOKa9B9nVKFk57vkr+T4DJ9qefKmYh3/4V9gbeNNIbBGDWrSpLNrDTdOww0WITRfRr3G6itL0fonsrxiURtwQnYwkNzfVL/8/VvlPYZQj9XvezreWSGL9G4esK0ZZ4VKgMQeHeYzqqvnqVI+dF5pRRk4M=
-Received: from SA1PR21MB6683.namprd21.prod.outlook.com (2603:10b6:806:4a4::6)
- by DS2PR21MB5519.namprd21.prod.outlook.com (2603:10b6:8:2b8::18) with
+ bh=DQ2m/I4VM8ObU+OTZUu0Hl8jdSkGxA0B5SMMRYUmMEA=;
+ b=nKvqS23uR0zOwWlijpR9+3fshCGULyO1tJnwfkKWuV/nl41z9YK/6Rj6Q+qvj3jUamJBLibBQ1x30sWsIlrLBBykfOipap2UOEVpU2PXHo6EJNOkh0Tk21D1TM6UpiajJvdX27LIogYZOUNVAkxRONfzTu5VH7Xjkx43QSZfTgZ31aFMAei2TIF8KqAwJcCEpG0obpZ395CBvfQ4ukDOMhKaHIPUgiV9wcc48mZ9cuLKeylI01+suQzMbwJfmv/SQJwAx5x5Whao7r46G/UcX5uq2qO7/G2pgwwmGE7Gf95wR1KjDtKSeXpXcA4wgS5EgAOLylQiBaVtx0qjNVSP3A==
+Received: from DS1PR02CA0003.namprd02.prod.outlook.com (2603:10b6:8:452::10)
+ by DS0PR12MB7927.namprd12.prod.outlook.com (2603:10b6:8:147::11) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.382.4; Tue, 25 Aug
- 2026 17:00:48 +0000
-Received: from SA1PR21MB6683.namprd21.prod.outlook.com
- ([fe80::8bad:6294:8a07:fe18]) by SA1PR21MB6683.namprd21.prod.outlook.com
- ([fe80::8bad:6294:8a07:fe18%6]) with mapi id 15.21.0315.008; Tue, 25 Aug 2026
- 17:00:47 +0000
-From: Long Li <longli@microsoft.com>
-To: Naman Jain <namjain@linux.microsoft.com>, Sahil Chandna
-	<sahilchandna@linux.microsoft.com>, KY Srinivasan <kys@microsoft.com>,
-	Haiyang Zhang <haiyangz@microsoft.com>, "wei.liu@kernel.org"
-	<wei.liu@kernel.org>, Dexuan Cui <DECUI@microsoft.com>,
-	"lpieralisi@kernel.org" <lpieralisi@kernel.org>, "kwilczynski@kernel.org"
-	<kwilczynski@kernel.org>, "mani@kernel.org" <mani@kernel.org>,
-	"robh@kernel.org" <robh@kernel.org>, "bhelgaas@google.com"
-	<bhelgaas@google.com>, "linux-hyperv@vger.kernel.org"
-	<linux-hyperv@vger.kernel.org>, "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>, "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH] PCI: hv: Warn when wait_for_response() waits indefinitely
-Thread-Topic: [PATCH] PCI: hv: Warn when wait_for_response() waits
- indefinitely
-Thread-Index: AQHdNFFABWOOm2fKm0qHnE869hT7XrauUiwAgACrifA=
-Date: Tue, 25 Aug 2026 17:00:47 +0000
-Message-ID:
- <SA1PR21MB66836C32FD0FABD94B45D7F6CEAF2@SA1PR21MB6683.namprd21.prod.outlook.com>
-References: <20260825051850.2438816-1-sahilchandna@linux.microsoft.com>
- <736091cf-8d00-415e-a890-e2dfa6739325@linux.microsoft.com>
-In-Reply-To: <736091cf-8d00-415e-a890-e2dfa6739325@linux.microsoft.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-msip_labels:
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ActionId=dc4abd39-7366-4940-aec4-2297ecdf07fb;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ContentBits=0;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Enabled=true;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Method=Standard;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Name=Internal;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SetDate=2026-08-25T17:00:03Z;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SiteId=72f988bf-86f1-41af-91ab-2d7cd011db47;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Tag=10,
- 3, 0, 1;
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=microsoft.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: SA1PR21MB6683:EE_|DS2PR21MB5519:EE_
-x-ms-office365-filtering-correlation-id: 738cf221-0748-48fb-12f1-08df02ca68cd
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam:
- BCL:0;ARA:13230040|23010399003|1800799024|376014|366016|10067099003|7146999003|56012099006|11063799006|4143699003|22082099003|18002099003|4133799003|38070700021|921020;
-x-microsoft-antispam-message-info:
- AiGpvKNqHoTXNjZ7t6IM8FsksjwqLYUFTViwtKZ9OyS/w9OSzu5XKg41K7Hcxi+wO3hXPGrnx9xyGgFCS7fXdsNc2U4W+S//16oYvEnCFRPsBdYtX8B+pi+7ImKFReDtqAFToD5IefxLSFDNyikCfW40lTC3WIEwL4KttgygnwEzzpZjbN1NSzhimKFBJ5uZNaTAXziBuYT/uVRkDr+o92aetdBohlB0yTp9tC5qVVzCyCnE73bQXpUZVhfkR2JFYmMqCIdbV/dvyoYt0gv2lP8/xuUsFg9pTfvZLYiu+y72lVn5YXVEQRqde4jOL+RceNhSeZKlvkfifKG213uk30e+ELOlBkz74HWu1Fndtt7BxH3LtpjjpO8dqVx3rtEVGJ6yG6Wb7Q8tgNFBDV6IuA0m3Y7fyAab5+S8kiudhbzQ43/rizwgKJE2GagfH30yY7ck4H1sMgM4lodmsu0H1QymMV5pamsbfDn0UO2Te7KnX1anbTYNPKem8mFPAUeQtjxaliGcgN3k1RFgGUaRcZVG9WwsUkFLublEzd+C/YxtAJxKLUXiUQgef/xvp/Qa/QlA2+AwDS4yjKgmCr/PUHczoXDdXnov/y8Q6cVyB9WV3YqTNawPSUWEuyfjw7BC4RdjKEMOG0hLhSdykl0GTzMlkg/YsZCy6ULTNi7wptjifds5K/GJKaq4cGSYRdda20oVgQXw+LpLAMKeq4FXwMlVWu7HcZRzeZrxQC6/zsv9d0UyOamWFEmQhmxgHWMi
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA1PR21MB6683.namprd21.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(1800799024)(376014)(366016)(10067099003)(7146999003)(56012099006)(11063799006)(4143699003)(22082099003)(18002099003)(4133799003)(38070700021)(921020);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?us-ascii?Q?lJbRsAEjMq8oF1krOvDYu+ubDNz2aY/p7lvFMvz3E7zEkXPPqLKr6TdayKuD?=
- =?us-ascii?Q?GaYHAHnJAyVBhsh35AQOes8lLAqNCRFjDaAmiDdA2gRFUl0tGIFoJ+s0XhM7?=
- =?us-ascii?Q?NNnOl8OhSnVZhJMO/aObhpB+OwjUPIvQJxu03ZYNJ7itEN+63Lh6rSkeczes?=
- =?us-ascii?Q?On5E3I1LVwCE0pMDs0ls5DGLC+9hqTFrDDnRmYMCq8bLX/btXsy/egXXGFSG?=
- =?us-ascii?Q?Um5dsjUyVrhbFV+TScDOxs0B/sTatvm3ds7XcGxW2qnlWKDycNxzrYiTVBvm?=
- =?us-ascii?Q?39YznSnI3kNDnv9GMBq7SPyYK4XHEjPqjNLeH5pCWCiG1Y10wnKtSGVz9uLM?=
- =?us-ascii?Q?E2MM/2P92z1gmwqAtxqQCim+H21yX81SyDAtLAk2zeugJmSPpJxWb1CuvTat?=
- =?us-ascii?Q?k7RxaNsduDOOsjExa/R702PPsFQmkw5e2NwG8KyK+ILLxVYGCK+vLDbUzKYR?=
- =?us-ascii?Q?V7lKWPjIxL9FQqb7Y64RniS8VfI3DwS2HwoJ+nqBEnutYIAfjemI3gXY0hjR?=
- =?us-ascii?Q?uaUNNvkllcf9wmcopxokrLh8EtkwlQ0DKlQe3XEyl5xODeK8QW+Mi2MjFuCK?=
- =?us-ascii?Q?sNLOko/mzViXp07d8k9DEfePc1ytWBo6+ptmSlvTliuUcSBojJfmobiquRV4?=
- =?us-ascii?Q?3wtiiGPapfZLiekJtcs6lb0YkEoUVYfjg1jkQyvilzbrNMZ4mJ+ieu/1qz63?=
- =?us-ascii?Q?ODF+sl3LugDhXDJBSSqrrKfZc2HwLrvdfNTVO00MuT66zcqFph2UmaI2QNIH?=
- =?us-ascii?Q?2s+AkXBV4SjB4zE6Q7Aa2rRTzVnnZiOjQRwefSxZJ9kcETjYCaP+h1z5iwKK?=
- =?us-ascii?Q?kAdsvbG1ZaM8W2ZBy1DTlL+7o7xOBL2csC6X7wasziaTTLFKJDqIgg9Jix2p?=
- =?us-ascii?Q?+KWxt8b5Emf9Im0F8PTRrgY5iyEHgIq72qSSZnTHeYUfJe9vNzBPC9C5oUsl?=
- =?us-ascii?Q?Aats6ZlovGI0RyRqw8LeRRhDNwJOGZtbTv5d9wpXso+TcyfA9x+mK8Z5iUxq?=
- =?us-ascii?Q?8D1z6ilP9YF15mFx6A/we/AyvVet6qI5haVEB/jRBAm2Pa93iDibRN6Vt6AY?=
- =?us-ascii?Q?ZkxPUO3+ExJex1SXbK++uD1zF7y2Cpz56poUHRABTDlmqPM4PXQKtCSnZQWi?=
- =?us-ascii?Q?7G0XKrOz3qtmZDRnZjvtoN2JnuT9k1yY0jvnZi6q0Hu9biEH7bVI3wB06ADs?=
- =?us-ascii?Q?ckssuf9EmHtKQsljFSZRlTIqXsd2ODNezJJewIcKNmOodCThbBfNiaoV0fJf?=
- =?us-ascii?Q?lDnWyqja/oxcY8/GrbaptIh7urNH8kIQlFln99vJM/FdyZ/E1kWhyhrYXzRd?=
- =?us-ascii?Q?WK1PX/DgBMfxDh+u5wf8aOZ7UTRQDfrp5lLRJywS7uHbcckjIafmqTAQT9U+?=
- =?us-ascii?Q?8DlGt1GvLJjHY9JWRY4JvZNkWRlFG+LwWpY3iRsjgxLEsAVXU6F1lo3TqZUm?=
- =?us-ascii?Q?ix5W8KhN9FXlVvXPnwOW81Ym2aZasG91x+ErMavcLe2lhcIvbsQVPJ1u6AmH?=
- =?us-ascii?Q?r4tMig2CqQ2ggwe3BwdUqCzKx63Au2H+kfPQNN0DeTZJkSdTTZYyEgvlreLv?=
- =?us-ascii?Q?z7/VzQtGL4r2rDhegdMLvbuQRcZztpv5FF6ivyM4qzAJx6T+2m/OFmOO4QqF?=
- =?us-ascii?Q?wBYb4whxtx4DZU9+gFTEX/5FwErIgTDP+ip4qoMZDh7Jb644KW21Z9OaJBqu?=
- =?us-ascii?Q?X9TlX8pR3cOudAgCkg8BDhmb14lLBzN6oC7NsA8nrl1BKHsI?=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.339.12; Tue, 25 Aug
+ 2026 17:28:06 +0000
+Received: from DM2PEPF00003FC6.namprd04.prod.outlook.com
+ (2603:10b6:8:452:cafe::a5) by DS1PR02CA0003.outlook.office365.com
+ (2603:10b6:8:452::10) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.21.360.7 via Frontend Transport; Tue, 25
+ Aug 2026 17:28:06 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.117.161)
+ smtp.mailfrom=nvidia.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=nvidia.com;
+Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
+ 216.228.117.161 as permitted sender) receiver=protection.outlook.com;
+ client-ip=216.228.117.161; helo=mail.nvidia.com; pr=C
+Received: from mail.nvidia.com (216.228.117.161) by
+ DM2PEPF00003FC6.mail.protection.outlook.com (10.167.23.25) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.21.360.3 via Frontend Transport; Tue, 25 Aug 2026 17:28:05 +0000
+Received: from rnnvmail201.nvidia.com (10.129.68.8) by mail.nvidia.com
+ (10.129.200.67) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.46; Tue, 25 Aug
+ 2026 10:27:41 -0700
+Received: from vidyas-server.nvidia.com (10.126.231.37) by
+ rnnvmail201.nvidia.com (10.129.68.8) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.46; Tue, 25 Aug 2026 10:27:35 -0700
+From: Vidya Sagar <vidyas@nvidia.com>
+To: <bhelgaas@google.com>, <tglx@kernel.org>, <wangruikang@iscas.ac.cn>,
+	<Frank.Li@nxp.com>, <lihaoxiang@isrc.iscas.ac.cn>, <18255117159@163.com>,
+	<shawn.lin@rock-chips.com>, <xiangzao@linux.alibaba.com>
+CC: <vsethi@nvidia.com>, <sdonthineni@nvidia.com>, <kthota@nvidia.com>,
+	<mmaddireddy@nvidia.com>, <kumarahul@nvidia.com>, <sagar.tv@gmail.com>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>, Vidya Sagar
+	<vidyas@nvidia.com>
+Subject: [PATCH V3] PCI/MSI: Don't touch the MSI-X table while the Link is contained
+Date: Tue, 25 Aug 2026 22:57:19 +0530
+Message-ID: <20260825172719.4153402-1-vidyas@nvidia.com>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20260825140952.4066140-1-vidyas@nvidia.com>
+References: <20260825140952.4066140-1-vidyas@nvidia.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-OriginatorOrg: microsoft.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: SA1PR21MB6683.namprd21.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 738cf221-0748-48fb-12f1-08df02ca68cd
-X-MS-Exchange-CrossTenant-originalarrivaltime: 25 Aug 2026 17:00:47.4419
+X-NVConfidentiality: public
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: rnnvmail201.nvidia.com (10.129.68.8) To
+ rnnvmail201.nvidia.com (10.129.68.8)
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DM2PEPF00003FC6:EE_|DS0PR12MB7927:EE_
+X-MS-Office365-Filtering-Correlation-Id: cfef920e-396a-4d47-be30-08df02ce3980
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|23010399003|1800799024|82310400026|36860700016|376014|7416014|56012099006|10067099003|6133799003|22082099003|11063799006|18002099003;
+X-Microsoft-Antispam-Message-Info:
+	vvnn/MYw1ipTSequpPGK/oepZhNFw6lHQTBXGheWKSB3tnX7N21+UFB3Nert9hFvc5RYXbhPeEq+zO6yMFiFbwoqRGtjHo6hKDFUQV3I+cag1OGQKPxkjL4/lIi/rIj9CKvKAe6kG0pIUXi/jm6Z7vPf68YYbi/W3ur39wgtchYaHJnfxcKVAJrQMQTKe0LWC2ty4GDlTpOnYZpFlDC3gDaN3REJdFYUtWDnCjnTF4BcMy3PcDvI1CyTtfljbxD9a49HzTMdIUQXdAucI3Y5a2cL3p/ilwhbfnHJk8JGmEOJ0MitZ+8Fg2yzeplhg8uAimlXvjbPuBFjVKk2dA5wnmSmAH1YHaXehDRu4w//4ecQiHf4gl+86srMFalPE8L9ugmB7Balu8pE85vyJwzvnPoZmKpockhSNtS3K1+4oinGeKI7VCEbjXbGkqwUyQr5NJHKz9WM4FLSoAgT+4/lEjl6B4TYwjGB0KHpE/LYbT/zkBsyzwUGMZqyY7YIl6SI9goRNT6RwQMeccAqKicKGoZ9FpP8Lp3VFapEvzXQLu4ttU022cxFUBqMCDk7ykesDNkkPzB94MMTvspPXHHBTuA31TRbCzqS/3oaBqk+8NB0370CuGyLFVQ+D8vi6v50QU5aGiWlb6ILCPLw+Ttz3QSM18pnqYw/Ivfz3cRDURQZhzgYR6ic+rsDLXsF6m1oZnPcA2B3SHhFy6AoJgZaVA==
+X-Forefront-Antispam-Report:
+	CIP:216.228.117.161;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge2.nvidia.com;CAT:NONE;SFS:(13230040)(23010399003)(1800799024)(82310400026)(36860700016)(376014)(7416014)(56012099006)(10067099003)(6133799003)(22082099003)(11063799006)(18002099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	v2kdUUiSrKT8CdtkJXpVpSToEXa5FmhbrPi4TVGxdgtfaCQF3a6qyKmc69WTMy1q/ZNBSpIFW3B6Fg7nToxRUUizvVyL9YP1I9x8PAPNYbtv785Ws73WC11lACRkTmMq2F+740iv2+1e0QiGOhU7SURlaY5ApPS2I7dISqkX/i34xZRSv/sUWY78Dz3OUD0B8RZWdNM/yJQ8YZICUAtn0Xz19XlcGKZ+bEOpsmzh0HgVTMxNiD7rmKnblZsXdGHzf0m+sKNfa60LqLwrCk2xeD39c9/IOwjCTQ0A9h4cNNmxZ5pPfMQRIr6uKw/RXCjRebnBpxo/URAFUbZvoPJCdKQTkiSYXF298Lw8O5Qi5x1mVUL75E5hmCnOukcKjG+Woj34lPBIErwF3Hzu/n057SUGg9PX3TmhbOSQxQYs9cn7/8wAgOetenO6+McDGrgd
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 25 Aug 2026 17:28:05.9786
  (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 72f988bf-86f1-41af-91ab-2d7cd011db47
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: q+jIRD0sum5B593pn1m1HKrQFEni2DddNpcRd8bnETY2As1YgPp8fBgCpq0iod9eM4Un+TY+XsFE46yLkv7+PQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS2PR21MB5519
+X-MS-Exchange-CrossTenant-Network-Message-Id: cfef920e-396a-4d47-be30-08df02ce3980
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.161];Helo=[mail.nvidia.com]
+X-MS-Exchange-CrossTenant-AuthSource:
+	DM2PEPF00003FC6.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS0PR12MB7927
 
->=20
->=20
-> On 8/25/2026 10:47 AM, Sahil Chandna wrote:
-> > A guest can wait indefinitely in wait_for_response() for the host to
-> > send either a rescind message or a packet completion. If the host does
-> > not send either, the guest can remain blocked with no diagnostic
-> > indicating a reason.
-> > This was observed during a guest kernel upgrade in which the host-side
-> > application handling the PCI channel faulted, causing the guest to
-> > never receive the completion request.
-> > Add a periodic warning in wait_for_response() when the wait exceeds a
-> > timeout so that such a hang is visible in the guest's kernel log and
-> > can be correlated with host-side state.
-> >
-> > Suggested-by: Hamza Mahfooz <hamzamahfooz@linux.microsoft.com>
-> > Signed-off-by: Sahil Chandna <sahilchandna@linux.microsoft.com>
-> > ---
-> > This was sent earlier upstream [1]
-> > [1]
-> > https://nam06.safelinks.protection.outlook.com/?url=3Dhttps%3A%2F%2Flor=
-e
-> > .kernel.org%2Flinux-hyperv%2F20260612174010.2598695-1-
-> hamzamahfooz%40l
-> >
-> inux.microsoft.com%2F&data=3D05%7C02%7Clongli%40microsoft.com%7C22b60
-> f06
-> >
-> 81624fda801f08df02748dce%7C72f988bf86f141af91ab2d7cd011db47%7C1%7
-> C0%7C
-> >
-> 639232371774209409%7CUnknown%7CTWFpbGZsb3d8eyJFbXB0eU1hcGkiOn
-> RydWUsIlY
-> >
-> iOiIwLjAuMDAwMCIsIlAiOiJXaW4zMiIsIkFOIjoiTWFpbCIsIldUIjoyfQ%3D%3D%7
-> C0%
-> >
-> 7C%7C%7C&sdata=3D1uUKHOonR9CtiJfdofsRbWLbuKYHlWgBXdwByQWdk2A%3
-> D&reserved
-> > =3D0
-> > ---
-> >   drivers/pci/controller/pci-hyperv.c | 14 +++++++++++++-
-> >   1 file changed, 13 insertions(+), 1 deletion(-)
-> >
-> > diff --git a/drivers/pci/controller/pci-hyperv.c
-> > b/drivers/pci/controller/pci-hyperv.c
-> > index cfc8fa403dad..c4fba0039164 100644
-> > --- a/drivers/pci/controller/pci-hyperv.c
-> > +++ b/drivers/pci/controller/pci-hyperv.c
-> > @@ -1040,11 +1040,18 @@ static void put_pcichild(struct hv_pci_dev
-> > *hpdev)
-> >
-> >   /*
-> >    * There is no good way to get notified from
-> > vmbus_onoffer_rescind(),
-> > - * so let's use polling here, since this is not a hot path.
-> > + * so let's use polling here, since this is not a hot path. If
-> > + * wait_for_response() has been polling for
-> > + PCI_RESPONSE_HANG_TIMEOUT_SEC
-> > + * without either a rescind or completion, add a periodic warning.
-> >    */
-> > +#define PCI_RESPONSE_HANG_TIMEOUT_SEC 300
-> > +
-> >   static int wait_for_response(struct hv_device *hdev,
-> >   			     struct completion *comp)
-> >   {
-> > +	unsigned long delay =3D
-> secs_to_jiffies(PCI_RESPONSE_HANG_TIMEOUT_SEC);
-> > +	u64 timeout =3D get_jiffies_64() + delay;
-> > +
-> >   	while (true) {
-> >   		if (hdev->channel->rescind) {
-> >   			dev_warn_once(&hdev->device, "The device is
-> gone.\n"); @@ -1053,6
-> > +1060,11 @@ static int wait_for_response(struct hv_device *hdev,
-> >
-> >   		if (wait_for_completion_timeout(comp, HZ / 10))
-> >   			break;
-> > +
-> > +		if (time_after64(get_jiffies_64(), timeout)) {
-> > +			dev_warn(&hdev->device, "PCI stuck waiting for
-> response.\n");
-> > +			timeout =3D get_jiffies_64() + delay;
-> > +		}
-> >   	}
->=20
-> There can be some enhancements in above patch to address these problems:
-> 1. Logging forever every 5 minutes in case of no completion or rescind.
-> 2. If we now print warning once, not knowing if completion ever arrived.
-> 3. On solving pt. 1 and 2 by adding a print for completion, one should av=
-oid
-> adding a print by default for regular timely completions.
->=20
-> Basically something like this:
->=20
-> #define PCI_RESPONSE_WARN_TIMEOUT_SEC 300
->=20
-> static int wait_for_response(struct hv_device *hdev,
->                   struct completion *comp) {
->      unsigned long warn_at =3D
->          jiffies + secs_to_jiffies(PCI_RESPONSE_WARN_TIMEOUT_SEC);
->      bool warned =3D false;
->=20
->      while (true) {
->          if (hdev->channel->rescind) {
->              dev_warn_once(&hdev->device, "The device is gone.\n");
->              return -ENODEV;
->          }
->=20
->          if (wait_for_completion_timeout(comp, HZ / 10)) {
->              if (warned || time_after_eq(jiffies, warn_at))
->                  dev_warn(&hdev->device,
->                       "PCI response received after prolonged wait.\n");
->              return 0;
->          }
->=20
->          if (!warned && time_after_eq(jiffies, warn_at)) {
->              dev_warn(&hdev->device,
->                   "PCI still waiting for response.\n");
->              warned =3D true;
->          }
->      }
-> }
->=20
-> Regards,
-> Naman
+The MSI-X Table lives in device MMIO space behind a BAR, so it is only
+reachable while the Link is up. While a Downstream Port has the Link
+contained by DPC it completes accesses to the Table with Unsupported
+Request, and reads return all ones.
 
-This looks better.
+If the upstream Root Port implements the RP Extensions for DPC, it
+additionally reports that UR completion as an RP PIO error and answers
+with a DPC of its own, which contains every other device below it. So a
+containment event on a single Downstream Port can escalate into one at
+the Root Port and take down unrelated devices.
 
-Thanks,
-Long
+pci_free_irq_vectors() is called from driver error_detected() and
+prepare-for-reset callbacks, i.e. while the Link is contained, and it
+masks every descriptor. Each mask is an MMIO write followed by a
+non-posted flush read, so this is reached on every contained device whose
+driver tears down its interrupts before the reset.
+
+Skip the hardware access when the device is not in pci_channel_io_normal,
+in addition to the existing surprise removal check. The msix_ctrl cache
+is still updated, so __pci_restore_msix_state() replays the intended mask
+state once the Link is back up. report_slot_reset() returns the device to
+pci_channel_io_normal before invoking the driver callback, so re-enabling
+and restoring MSI-X during recovery is unaffected.
+
+error_state is set once containment has already occurred, so these checks
+cover the case where the kernel knows the Link is down. They are not
+mutual exclusion against a containment event that begins concurrently.
+
+pci_msix_write_tph_tag() flushes its Vector Control update with an
+unconditional read, which would otherwise be issued for a write that was
+skipped, so return -EIO there instead. pcie_tph_set_st_entry() responds
+by disabling TPH, which is preferable to reporting a Steering Tag update
+that never reached the device.
+
+Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+---
+Changes in v3:
+- Move the pci_msi_dev_inaccessible() check in pci_msix_write_tph_tag()
+  under irq_desc::lock, next to the accesses it guards, instead of before
+  msi_descs_lock which can sleep (reported by Sashiko AI review).
+
+Changes in v2:
+- Return -EIO from pci_msix_write_tph_tag() so its unconditional flush
+  read is not issued for a skipped write (reported by Sashiko AI review).
+- Rename pci_msix_mmio_unsafe() to pci_msi_dev_inaccessible(), since in
+  __pci_write_msi_msg() it also gates the Configuration Space MSI path.
+- Note in the log why MSI-X restore during recovery is unaffected.
+
+ drivers/pci/msi/msi.c | 11 ++++++++++-
+ drivers/pci/msi/msi.h | 21 +++++++++++++++++++++
+ 2 files changed, 31 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/msi/msi.c b/drivers/pci/msi/msi.c
+index 80a9db417dc8..975948502f8e 100644
+--- a/drivers/pci/msi/msi.c
++++ b/drivers/pci/msi/msi.c
+@@ -249,7 +249,7 @@ void __pci_write_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
+ {
+ 	struct pci_dev *dev = msi_desc_to_pci_dev(entry);
+ 
+-	if (dev->current_state != PCI_D0 || pci_dev_is_disconnected(dev)) {
++	if (dev->current_state != PCI_D0 || pci_msi_dev_inaccessible(dev)) {
+ 		/* Don't touch the hardware now */
+ 	} else if (entry->pci.msi_attrib.is_msix) {
+ 		pci_write_msg_msix(entry, msg);
+@@ -976,6 +976,15 @@ int pci_msix_write_tph_tag(struct pci_dev *pdev, unsigned int index, u16 tag)
+ 	if (!msi_desc || msi_desc->pci.msi_attrib.is_virtual)
+ 		return -ENXIO;
+ 
++	/*
++	 * The tag update below is a write to the MSI-X Table followed by a
++	 * flush read, neither of which can be completed while the Link is
++	 * contained. Check as late as possible, i.e. under irq_desc::lock, as
++	 * containment can begin at any point. Let the caller disable TPH.
++	 */
++	if (pci_msi_dev_inaccessible(pdev))
++		return -EIO;
++
+ 	FIELD_MODIFY(PCI_MSIX_ENTRY_CTRL_ST, &msi_desc->pci.msix_ctrl, tag);
+ 	pci_msix_write_vector_ctrl(msi_desc, msi_desc->pci.msix_ctrl);
+ 	/* Flush the write */
+diff --git a/drivers/pci/msi/msi.h b/drivers/pci/msi/msi.h
+index 0b420b319f50..c3194d8425c8 100644
+--- a/drivers/pci/msi/msi.h
++++ b/drivers/pci/msi/msi.h
+@@ -26,6 +26,20 @@ static inline void __iomem *pci_msix_desc_addr(struct msi_desc *desc)
+ 	return desc->pci.mask_base + desc->msi_index * PCI_MSIX_ENTRY_SIZE;
+ }
+ 
++/*
++ * The MSI-X Table lives in device MMIO space and the MSI Capability in
++ * Configuration Space, so both are only reachable while the Link is usable.
++ * While a Downstream Port has the Link contained by DPC it completes these
++ * accesses with Unsupported Request. If the upstream Root Port implements the
++ * RP Extensions for DPC, it reports that completion as an RP PIO error and
++ * answers with a DPC of its own, taking down every other device below it.
++ */
++static inline bool pci_msi_dev_inaccessible(struct pci_dev *pdev)
++{
++	return pdev->error_state != pci_channel_io_normal ||
++	       pci_dev_is_disconnected(pdev);
++}
++
+ /*
+  * This internal function does not flush PCI writes to the device.  All
+  * users must ensure that they read from the device before either assuming
+@@ -36,6 +50,9 @@ static inline void pci_msix_write_vector_ctrl(struct msi_desc *desc, u32 ctrl)
+ {
+ 	void __iomem *desc_addr = pci_msix_desc_addr(desc);
+ 
++	if (pci_msi_dev_inaccessible(msi_desc_to_pci_dev(desc)))
++		return;
++
+ 	if (desc->pci.msi_attrib.can_mask)
+ 		writel(ctrl, desc_addr + PCI_MSIX_ENTRY_VECTOR_CTRL);
+ }
+@@ -43,6 +60,10 @@ static inline void pci_msix_write_vector_ctrl(struct msi_desc *desc, u32 ctrl)
+ static inline void pci_msix_mask(struct msi_desc *desc)
+ {
+ 	desc->pci.msix_ctrl |= PCI_MSIX_ENTRY_CTRL_MASKBIT;
++
++	if (pci_msi_dev_inaccessible(msi_desc_to_pci_dev(desc)))
++		return;
++
+ 	pci_msix_write_vector_ctrl(desc, desc->pci.msix_ctrl);
+ 	/* Flush write to device */
+ 	readl(desc->pci.mask_base);
+-- 
+2.43.0
+
