@@ -1,134 +1,95 @@
-Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 43F723EDE42;
-	Tue, 25 Aug 2026 12:03:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
+Received: from mail-wr1-f72.google.com (mail-wr1-f72.google.com [209.85.221.72])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E39B443E08C
+	for <linux-pci@vger.kernel.org>; Tue, 25 Aug 2026 12:33:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787659422; cv=none; b=uBrXlEMq9xU9DVAaJWGqo2MP/dK2Ohh+sfFMELMvqWyUoDEI6/cXeJC4kdK7q6NcAYz6XY1N+bMm/A1nvUDmR9j48SMMTKu59ySRhZPTgqWliomNFgtG5keAJJrwfalxxToIughvIGL4rmSQDu3YhOp+FoXZ7Myhi02d9F9dTy4=
+	t=1787661182; cv=none; b=pMcdCZUWwIjcJBtzi7+8NJXtjLMNA391ExRHQBXLO/SbjIqr8dESI0xjD3lFDS+k+n7TsBVjHkYYDsZ+IewpAgdf3oXGwyDhN935DI3Wg8tGaA+6pi+9xiB/8uGpCcWgh5jnHtFBBI6C7+YkKD5LolF817+pvGJTTgZ1AtJkODM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787659422; c=relaxed/simple;
-	bh=fPqr/EV01DZeLMNybyhvsd2HLJZZ+JYAapEFSNJGiug=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=rC0U3RCwgt7y8tnU9WVDSEpuX51gBAwOKs5SptrYwVswQAmjmvXADM0RZLUFriXY+mAVlvKrMWSmaa5hp/f/6op6iXPIZR/Ky9TVsQRJg3w/I5NbuUPMrOA0o1m2KsZKCopbR+SdcJ2KPJQOEcz78Twn7bRE/vTlCjiuhUyQz0w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=WdJGNF11; arc=none smtp.client-ip=13.77.154.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
+	s=arc-20240116; t=1787661182; c=relaxed/simple;
+	bh=vJt6tZj/OG/c4NLOEbG5p6WQuIEd4cW7vphgWLCDr5Y=;
+	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
+	 To:Cc:Content-Type; b=VyJD/3rUFiT4jQdsY0IF4TimwPXHAFl/2QQkGKUfcppFGzkzjTqILylB2L3VtHYgvA++3tY0OWPrZQRTXo+G7GQDA38q01YpuS/XHRpM5FJj225emL6J0nqpOVxr1pT4M+cI0hi1xkRBAYlTzrGOl84m6Ndkr6rS6wIBTLLZ42U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--aliceryhl.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=Ga2DVdIz; arc=none smtp.client-ip=209.85.221.72
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--aliceryhl.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="WdJGNF11"
-Received: from [10.26.7.43] (unknown [4.213.232.22])
-	by linux.microsoft.com (Postfix) with ESMTPSA id 19C9120B7166;
-	Tue, 25 Aug 2026 05:03:07 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 19C9120B7166
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
-	s=default; t=1787659388;
-	bh=CidMC3bbQbtopc3+urwjKEIrX3V1aqV006bC2KWJ3bM=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=WdJGNF110VxZ92ya5lB2J6QLj4F9E72Rzk1CKaeEqusjsplNXbChHKXRQP0tZR/eH
-	 mFA1mYK9PcdfipahINhCpr67bHUNSjho2gLhcGsxYlLyKWp/mxp4ninsyIbD7UsWdk
-	 m7KQjjRbutwQPxvkica89HZhpGGOxFCOWsQjk5EE=
-Message-ID: <31a67165-65c5-4a74-9637-0edc4ce7f210@linux.microsoft.com>
-Date: Tue, 25 Aug 2026 17:33:37 +0530
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="Ga2DVdIz"
+Received: by mail-wr1-f72.google.com with SMTP id ffacd0b85a97d-481558a96e2so2471413f8f.3
+        for <linux-pci@vger.kernel.org>; Tue, 25 Aug 2026 05:33:00 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1787661179; x=1788265979; darn=vger.kernel.org;
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=Xlb7XfoBk1nmP2689qZHRSaAXYmnb0joWXGBYKuH+kY=;
+        b=Ga2DVdIzNbg6Sl2yYppeV3iiAB4LCCmYsfzpJcYbjO0sYu9bKhIzN/9zT4v4PNP1f7
+         VOj4xyV1FO1nHEoqpOgnah1o6vrLcn6dCMuvmc2EkT1dDaDl+uqqcCuRanPvg9CQbZ/e
+         VJJZ9OkyS7aCIuP7+YMrX/bW6mJZUuiXIh+ytZsWBD84LURpPr78QypmdnLKzofPi2hJ
+         W16DwkWQ1Af5BjwO+TcRX3XVnF2uYd99aXx/HpQTxVV5HRvdgnVA9XXdAQmHSio4Yri0
+         pWL8zVtIqEaiRLxj0JaZDPlyWbhbfjZgtNcraV1S2XMdE+99doKIpF4w26XpSzI22eAb
+         G7wg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1787661179; x=1788265979;
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=Xlb7XfoBk1nmP2689qZHRSaAXYmnb0joWXGBYKuH+kY=;
+        b=id5xErn/31S/qbgOIfsZEw/PqkfCINtWVxvjh9qlPKvsCR4twxOMLs+20RtNTKrRGL
+         Jp1v5nl38cdVKD7Vgrgz+K9ls9MXMZaEGjt1NOiZh8ZCYTNFyppceBSUPPMkjVTVtRRM
+         thCzlC7zxq3HJ9PaCRw/RIu61iSMu7x3CyCHsWX32NHTNDXI7SQm+qxBNsqoNSAWJjgv
+         wPP0hqH6e8ZA/jocjVSS/l7IN+qW+nujzerRvWzsgi15hCi7yGIgmS8y/mrXJED70BS6
+         F1oArTNY3QhNge/hN4X843qUIeqHcNvTbm4daXydnUMT12yBGnqAx28DFnwVlm+AcSNU
+         V7ag==
+X-Forwarded-Encrypted: i=1; AHgh+RqoE9en9CVBeNCPxd4ONi24eidQ3gUM4srSjCKuywtLsTTvuqpyiA25Oh02ShpGw2YKV7GljlegNic=@vger.kernel.org
+X-Gm-Message-State: AFuF++nEPjCOaymyP5yb1PgCeLnBd5bXoOnq6uK6HbzZ7777JCQVQ2P5
+	+M9nPAUj36inUXecXvmuLUCwS4aUIJTdSZYtWFRlzoz8AiWsGS2oU6M0f4GuoH4CIsXpzTreKTD
+	/BIZzsvuNH/dR4/0+tg==
+X-Received: from wroy3.prod.google.com ([2002:adf:f143:0:b0:47f:51bf:11c1])
+ (user=aliceryhl job=prod-delivery.src-stubby-dispatcher) by
+ 2002:a5d:5846:0:b0:481:5dea:3f0d with SMTP id ffacd0b85a97d-482c0b8eaabmr42274248f8f.11.1787661178297;
+ Tue, 25 Aug 2026 05:32:58 -0700 (PDT)
+Date: Tue, 25 Aug 2026 12:32:57 +0000
+In-Reply-To: <20260812-b4-rust-pci-edu-driver-v3-3-5d0b5594e52b@mailbox.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] PCI: hv: Warn when wait_for_response() waits indefinitely
-To: sashiko-reviews@lists.linux.dev
-Cc: linux-pci@vger.kernel.org, linux-hyperv@vger.kernel.org
-References: <20260825051850.2438816-1-sahilchandna@linux.microsoft.com>
- <20260825053015.B26731F000E9@smtp.kernel.org>
-Content-Language: en-US
-From: Sahil Chandna <sahilchandna@linux.microsoft.com>
-In-Reply-To: <20260825053015.B26731F000E9@smtp.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Mime-Version: 1.0
+References: <20260812-b4-rust-pci-edu-driver-v3-0-5d0b5594e52b@mailbox.org> <20260812-b4-rust-pci-edu-driver-v3-3-5d0b5594e52b@mailbox.org>
+Message-ID: <ao2Lef62ZvkP9eWI@google.com>
+Subject: Re: [PATCH v3 3/5] rust: pci: make Vendor::from_raw() public
+From: Alice Ryhl <aliceryhl@google.com>
+To: Maurice Hieronymus <mhi@mailbox.org>
+Cc: Danilo Krummrich <dakr@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+	"Krzysztof =?utf-8?Q?Wilczy=C5=84ski?=" <kwilczynski@kernel.org>, Miguel Ojeda <ojeda@kernel.org>, Boqun Feng <boqun@kernel.org>, 
+	Gary Guo <gary@garyguo.net>, 
+	"=?utf-8?B?QmrDtnJu?= Roy Baron" <bjorn3_gh@protonmail.com>, Benno Lossin <lossin@kernel.org>, 
+	Andreas Hindborg <a.hindborg@kernel.org>, Trevor Gross <tmgross@umich.edu>, 
+	Daniel Almeida <daniel.almeida@collabora.com>, Tamir Duberstein <tamird@kernel.org>, 
+	Alexandre Courbot <acourbot@nvidia.com>, "Onur =?utf-8?B?w5Z6a2Fu?=" <work@onurozkan.dev>, Lyude Paul <lyude@redhat.com>, 
+	David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>, linux-pci@vger.kernel.org, 
+	rust-for-linux@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	nova-gpu@lists.linux.dev, dri-devel@lists.freedesktop.org
+Content-Type: text/plain; charset="utf-8"
 
-On 25-08-2026 11:00, sashiko-bot@kernel.org wrote:
-> Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
+On Wed, Aug 12, 2026 at 09:52:37PM +0200, Maurice Hieronymus wrote:
+> `Vendor::from_raw()` is currently `pub(super)`, so a Vendor can only be
+> obtained through the named constants generated from the
+> `PCI_VENDOR_ID_*` defines in `<linux/pci_ids.h>`. A driver therefore
+> cannot match a device whose vendor ID has no symbolic name.
 > 
-> Pre-existing issues:
-> - [Critical] Use-After-Free on Error Path for VMbus Completion Packets
-> --
-> 
-> --- Patch [1]: [PATCH] PCI: hv: Warn when wait_for_response() waits indefinitely ---
-> commit 7a3f315fe3798f61aaba375b4ed84ec32d84ef0f
-> Author: Sahil Chandna <sahilchandna@linux.microsoft.com>
-> PCI: hv: Warn when wait_for_response() waits indefinitely
-> 
-> This commit adds a periodic warning to wait_for_response() if the guest waits
-> too long for a rescind message or packet completion. This makes indefinite hangs
-> visible in the guest's kernel log so they can be correlated with host-side state.
-> 
-> Link: https://lore.kernel.org/linux-hyperv/20260612174010.2598695-1-hamzamahfooz@linux.microsoft.com/
-> 
->> diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
->> index cfc8fa403dad6..c4fba00391649 100644
->> --- a/drivers/pci/controller/pci-hyperv.c
->> +++ b/drivers/pci/controller/pci-hyperv.c
-> [ ... ]
->>  static int wait_for_response(struct hv_device *hdev,
->>  			     struct completion *comp)
->>  {
->> +	unsigned long delay = secs_to_jiffies(PCI_RESPONSE_HANG_TIMEOUT_SEC);
->> +	u64 timeout = get_jiffies_64() + delay;
->> +
->>  	while (true) {
->>  		if (hdev->channel->rescind) {
->>  			dev_warn_once(&hdev->device, "The device is gone.\n");
->>  			return -ENODEV;
-> 
-> [Severity: Critical]
-> This is a pre-existing issue, but does this early return on rescind lead to a
-> use-after-free for the completion packets?
-> 
-> When wait_for_response() detects hdev->channel->rescind and returns -ENODEV,
-> callers like hv_read_config_block() will immediately return and unwind their
-> stack:
-> 
-> drivers/pci/controller/pci-hyperv.c:hv_read_config_block() {
->     ...
->     ret = wait_for_response(hbus->hdev, &comp_pkt.comp_pkt.host_event);
->     if (ret)
->         return ret;
->     ...
-> }
-> 
-> This pops the stack frame containing the completion context without
-> deregistering the request. If a late completion packet arrives, wouldn't
-> hv_pci_onchannelcallback() retrieve the dangling pointer and execute the
-> invalid completion function?
-> 
-> drivers/pci/controller/pci-hyperv.c:hv_pci_onchannelcallback() {
->     ...
->             comp_packet = (struct pci_packet *)req_addr;
->             response = (struct pci_response *)buffer;
->             ...
->             comp_packet->completion_func(comp_packet->compl_ctxt,
->                                          response,
->                                          bytes_recvd);
->     ...
-> }
-> 
-> Could this result in memory corruption or a control-flow hijack if the
-> hypervisor sends a completion packet after the rescind offer, but before
-> the channel is completely closed?
-> 
->>  		}
->>  
->>  		if (wait_for_completion_timeout(comp, HZ / 10))
->>  			break;
-> [ ... ]
-> 
-This warning was flagged earlier as well [1], I will address this in a
-separate patch.
+> Such devices exist. QEMU's "edu" educational device and the legacy
+> qemu/Bochs stdvga both use vendor ID 0x1234, which is not registered in
+> `pci_ids.h`. Per the policy stated at the top of that header, IDs are
+> only added there when shared between multiple drivers; a single-driver
+> ID is expected to be open-coded in the driver instead. C drivers already
+> do this -- see `drivers/gpu/drm/tiny/bochs.c`, which matches with a bare
+> ".vendor = 0x1234".
 
-Regards,
-Sahil
-[1]
-https://lore.kernel.org/linux-hyperv/20260612175219.220581F000E9@smtp.kernel.org/
+IMO we should just add Qemu to the list. No reason to hard-code it per
+driver for this case.
 
-
-
-
+Alice
