@@ -1,252 +1,130 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1BFA1EB5CE;
-	Tue, 25 Aug 2026 02:51:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5EC552DB7A3;
+	Tue, 25 Aug 2026 02:51:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787626270; cv=none; b=NE9YY8GLLUbktB+LaOTWGnFALOxy8H1S9gB67GmMV2U+5RCV2yYRHkxw0Z6Er/S4Otqr0t3VA9B19L4Rnc3urqz9qZHJckM72Q6V3CrkCr20ZD+LfbOXVdelkHY2BB6R42I+iDP5nlR2Hi/sZs8dTPjTWkwqxFxvTaoH7KT3eQg=
+	t=1787626285; cv=none; b=OE0s1aVTPSkkycp2YZW7JVOAckQuCW08RuHP0d1qlZbFbzDp0w4iVVisqktWVzGTRX9wK+lwYK8EY/UqUvug4xscqWakRX/rd3RzqrZSdDovstpfGHZEYDjUAIfJ+p3m1qJBD4Nsp0/pWvd3fN7cliwcuYeecWP3L30QHAXSPh8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787626270; c=relaxed/simple;
-	bh=oqakvi7IAjPUjmEiyWxgH1eP6+iMjOSFAkwA2F+EYc0=;
+	s=arc-20240116; t=1787626285; c=relaxed/simple;
+	bh=mAULVnWVaCETSpy+AdDcf+kXvN8PMQVy103wXuNw9yA=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=XMxLcyz9ry6afT2XEFU0JFOHqM7sfDKgpoAUgq4L4qgEQ1JUgZNk3RqNDs3mAR1cALA0gzWBLItMbfOMaIA+ppIqwlq+Yhw8kMncWmzH8TZTJ0RiX45T/OOvZfkR0DfElqgvO48SOT0Ee2DhFjMRqatsO8Jw8WW+mKf5DCOYHO8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hTPqNxe9; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=BGvRFGOV5NZSpui2bxW2UACf+r9CvMt4sqswq595TUu6y+/6EM67LrYU64HR1jQRuNauZClmC0317pB1BJcZSc/7rGzJSvEKB+pr6PrVmvd81EPy53PtKurIjNvOUMM3SrHyD5Bz22sKPsJ+hfRhVPz09VKzKTglppZJ+GZoPZA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MPW0LsNc; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hTPqNxe9"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0C99A1F000E9;
-	Tue, 25 Aug 2026 02:51:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MPW0LsNc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CB7231F000E9;
+	Tue, 25 Aug 2026 02:51:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787626268;
-	bh=Aw/SjSMQor+bR2/xqM8c0+sAyJ/f8DY7sxl1N3tqqGg=;
+	s=k20260515; t=1787626284;
+	bh=r/nu8XVXdrWQX7nE+mXCkXgATXBfLQzQCufRhV6E1Pk=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=hTPqNxe9lSWqFqn12DP6ayjns44vgQymnAx1ziIex4/vKMZWr2f8JWLcPZxviU/pn
-	 s7XHlPBcPrWQILrvRb3JrQwlIBsCnp8fJOyI4licNQ4EnxsMQ3FlYaC8FtI6Drc6Ic
-	 W2gfWprOUenSjbPbT6x5+/TGjxGS3qhqtMQkKIhO8C0EmuhMPkKjOy0i7XndTE1MYv
-	 T0Ole0dsEEmGtzvCfoHRLVLnovLZThCSFhK31F96j1CSBr9pzVCGrbskf6qHK7Xu/D
-	 5LCdeM4EMCz6qSc00Q/hoJVCo68GmthmE4ErZ5jMHY01YPMqhifMegeHVTyHbDdq8t
-	 u6SGFoaHSFK+Q==
+	b=MPW0LsNcpaOhEU58z9NEFhufpnIBBiTngA6zF78txnKLvHjJ9Z/gOiHrWvWc5by6/
+	 N9YFKYyvFeWeFMtsXH6fgENXi6U6Q9knIYMrYUYK95nSnQgXnOM1D4IKhifelh0842
+	 49DJOX9WxaGeGAioefd8kmPNuMUhvL+lRcQW0iNGGmOcy0oY+fqTq8PH5l8MMWQXp0
+	 8SD1LpdqGNnah51FpKwsQGix7sgbZ6kdIie9WBK8UAatakRbdA+O4ryCVzDkTyyCBD
+	 XGU2tbXm/ftCMkkTWAtjW6QIT8+YV5l6wnlHydnf+MFNA2Acz3i8EJHZVodi/9I2rd
+	 OJEoB0Q4oiDTg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 11/13] PCI/DPC: Unbind regions for DPC recovery
+Subject: Re: [PATCH v2 12/13] PCI/CXL: Add a sysfs entry to unmask SBR
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Fabio M. De Francesco" <fabio.m.de.francesco@linux.intel.com>
 Cc: linux-cxl@vger.kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260825022628.3651434-12-fabio.m.de.francesco@linux.intel.com>
+In-Reply-To: <20260825022628.3651434-13-fabio.m.de.francesco@linux.intel.com>
 References: <20260825022628.3651434-1-fabio.m.de.francesco@linux.intel.com>
- <20260825022628.3651434-12-fabio.m.de.francesco@linux.intel.com>
+ <20260825022628.3651434-13-fabio.m.de.francesco@linux.intel.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 25 Aug 2026 02:51:07 +0000
-Message-Id: <20260825025108.0C99A1F000E9@smtp.kernel.org>
+Date: Tue, 25 Aug 2026 02:51:23 +0000
+Message-Id: <20260825025123.CB7231F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 6 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [Critical] DPC Trigger Status is cleared before relying on DPC containmen=
-t, allowing uncontained fatal MMIO reads.
-- [Critical] Bypassing driver unbind in `cxl_error_detected` exposes the sy=
-stem to MCE from concurrent MMIO accesses during SBR.
-- [High] Ignoring `cxl_sbr_collect_regions()` return value leaves CXL regio=
-ns silently bound or permanently detached.
-- [High] Unguarded secondary bus reset and config space data race due to mi=
-ssing PCI config access lock.
-- [High] Unbinding the CXL region driver without offlining its memory cause=
-s `dax_kmem` to leak physical memory reservations, preventing reprobe.
-- [High] Regions are unconditionally re-enabled even if HDM decoder state r=
-estoration fails.
+- [High] Concurrent writes to the `cxl_unmask_sbr` bitfield via the sysfs s=
+tore function can corrupt adjacent bitfields in `struct pci_dev` due to non=
+-atomic read-modify-write operations.
 --
 
---- Patch [11]: [PATCH v2 11/13] PCI/DPC: Unbind regions for DPC recovery -=
+--- Patch [12]: [PATCH v2 12/13] PCI/CXL: Add a sysfs entry to unmask SBR -=
 --
-commit e04d0da5a53882402af54024d29f830953f6e9bc
+commit d915ae90bb0b4f81c466e6e9be4cc5b40f737fbb
 Author: Fabio M. De Francesco <fabio.m.de.francesco@linux.intel.com>
 
-PCI/DPC: Unbind regions for DPC recovery
+PCI/CXL: Add a sysfs entry to unmask SBR
 
-This commit splits pci_bridge_secondary_bus_reset() to allow unbinding
-CXL regions routed through a port during DPC recovery without offlining
-their memory. It keeps the memdev driver bound during containment so the
-endpoint and decoders can be restored once the link comes back up.
+A Secondary Bus Reset of a CXL Downstream Port only reaches the component
+below it when the Port's Unmask SBR bit is set. This commit adds a
+cxl_unmask_sbr sysfs attribute to allow the kernel to trigger an SBR of
+CXL DPorts.
 
-> diff --git a/drivers/cxl/core/dport_sbr.c b/drivers/cxl/core/dport_sbr.c
-> index 2b6f840e22a7d..823b63012f45b 100644
-> --- a/drivers/cxl/core/dport_sbr.c
-> +++ b/drivers/cxl/core/dport_sbr.c
+> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> --- a/drivers/pci/pci-sysfs.c
+> +++ b/drivers/pci/pci-sysfs.c
 [ ... ]
-> @@ -284,6 +308,36 @@ static int cxl_sbr_disable_regions(struct pci_dev *d=
-port_pci)
->  	return rc;
+> @@ -573,6 +573,33 @@ static ssize_t reset_subordinate_store(struct device=
+ *dev,
 >  }
+>  static DEVICE_ATTR_WO(reset_subordinate);
 > =20
-> +/*
-> + * Unbind the regions routed through the Downstream Port being reset, le=
-aving
-> + * their memory online. Used on the DPC recovery path, where dpc_reset_l=
-ink()
-> + * clears DPC Trigger Status and enters the reset without waiting for th=
-e link,
-> + * so the device may still be unreachable and the page migration that an=
- offline
-> + * performs would have no device to read from.
-> + *
-> + * Unbinding cannot fail, so unlike cxl_sbr_disable_regions() this never=
- aborts
-> + * the reset. The memory stays online across the reset with no region de=
-coding
-> + * it; cxl_sbr_enable_regions() reprograms the decoders on the way out.
-> + */
-> +static void cxl_sbr_unbind_regions(struct pci_dev *dport_pci)
+> +static ssize_t cxl_unmask_sbr_show(struct device *dev,
+> +				   struct device_attribute *attr, char *buf)
 > +{
-> +	struct cxl_region *cxlr;
-> +	struct xarray regions;
-> +	unsigned long index;
+> +	struct pci_dev *pdev =3D to_pci_dev(dev);
 > +
-> +	if (cxl_sbr_save_hdm_state(dport_pci))
-> +		pci_warn(dport_pci, "HDM state not saved, decode will not be restored\=
-n");
-
-[Severity: High]
-What happens during recovery if cxl_sbr_save_hdm_state() fails here?
-
-If the state fails to save (e.g., due to a memory allocation failure), we l=
-og
-a warning but proceed. Later, during recovery in cxl_sbr_enable_regions(),
-it appears the code will unconditionally call cxl_region_enable() on all
-regions even if no HDM state was restored. Does this risk OS memory mappings
-pointing to unprogrammed hardware, which could lead to Machine Check Except=
-ions
-on access?
-
-> +
-> +	xa_init(&regions);
-> +
-> +	cxl_sbr_collect_regions(dport_pci, &regions);
-
-[Severity: High]
-Does ignoring the return value of cxl_sbr_collect_regions() mean we might
-operate on an incomplete list of regions?
-
-If collection encounters an error (such as an allocation failure in xa_inse=
-rt),
-it aborts early and returns a partial list. Uncollected regions would then
-be left bound during the reset, meaning any memory accesses to them might
-generate uncontained errors. Similarly, when re-enabling, any regions that
-failed to collect wouldn't get re-enabled.
-
-> +
-> +	xa_for_each(&regions, index, cxlr)
-> +		cxl_region_unbind(cxlr);
-
-[Severity: High]
-Could unbinding the region driver here without offlining its memory cause
-dax_kmem to leak physical memory reservations?
-
-If cxl_region_unbind() tears down the DAX devices while the memory is still
-online, remove_memory() will fail. The driver intentionally leaks the
-request_mem_region() allocation when this happens. Would this prevent
-us from successfully reprobing the region after recovery completes?
-
-> +
-> +	cxl_sbr_put_regions(&regions);
+> +	return sysfs_emit(buf, "%u\n", pdev->cxl_unmask_sbr);
 > +}
-[ ... ]
-> diff --git a/drivers/cxl/core/ras.c b/drivers/cxl/core/ras.c
-> index 99fb00949c2fa..568a906f3b50f 100644
-> --- a/drivers/cxl/core/ras.c
-> +++ b/drivers/cxl/core/ras.c
-> @@ -323,6 +323,16 @@ pci_ers_result_t cxl_error_detected(struct pci_dev *=
-pdev,
->  		}
->  		return PCI_ERS_RESULT_CAN_RECOVER;
->  	case pci_channel_io_frozen:
-> +		/*
-> +		 * A Port on the path in DPC means dpc_reset_link() is about to
-> +		 * reset the link, and that path takes the CXL regions out of
-> +		 * service and restores the HDM decode itself. Keep the memdev
-> +		 * driver bound so the endpoint and its decoders are still there
-> +		 * to restore.
-> +		 */
-> +		if (pci_dpc_containment_active(pdev))
-> +			return PCI_ERS_RESULT_NEED_RESET;
-
-[Severity: Critical]
-Is it safe to bypass device_release_driver() here?
-
-By returning PCI_ERS_RESULT_NEED_RESET without unbinding the memdev driver,
-the device remains fully exposed to userspace. During the Secondary Bus Res=
-et,
-the device is unresponsive. If a user issues an ioctl (like CXL_MEM_SEND_CO=
-MMAND)
-or reads sysfs attributes during this window, the driver will perform MMIO =
-reads
-to the mailbox registers.
-
-Could these non-posted reads hit uncontained Unsupported Requests while the
-link is in reset and crash the system?
-
 > +
->  		dev_warn(&pdev->dev,
->  			 "%s: frozen state error detected, disable CXL.mem\n",
->  			 dev_name(dev));
-[ ... ]
-> diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
-> index 2b779bd1d861b..ad74086bf82c7 100644
-> --- a/drivers/pci/pcie/dpc.c
-> +++ b/drivers/pci/pcie/dpc.c
-[ ... ]
-> @@ -174,7 +213,12 @@ pci_ers_result_t dpc_reset_link(struct pci_dev *pdev)
->  	pci_write_config_word(pdev, cap + PCI_EXP_DPC_STATUS,
->  			      PCI_EXP_DPC_STATUS_TRIGGER);
-
-[Severity: Critical]
-Could clearing the DPC Trigger Status here lead to fatal MMIO reads?
-
-Right after this clears PCI_EXP_DPC_STATUS_TRIGGER (which pulls the port
-out of DPC containment), __pci_bridge_secondary_bus_reset() is called.
-This eventually invokes cxl_sbr_save_hdm_state(), which performs non-posted
-MMIO reads to downstream endpoints:
-
-drivers/cxl/core/dport_sbr.c:cxl_sbr_save_hdm_state() {
-    ...
-    scoped_guard(rwsem_read, &cxl_rwsem.region)
-        rc =3D cxl_port_save_hdm_state(port, hdm_state);
-}
-
-Since the link is still down but DPC containment has just been lifted,
-would the Root Port treat these reads as uncontained Completer Aborts
-or Unsupported Requests and trigger a system crash?
-
-> =20
-> -	if (pci_bridge_wait_for_secondary_bus(pdev, "DPC")) {
-> +	if (is_cxl_dport(pdev) && cxl_port_dvsec(pdev))
-> +		rc =3D __pci_bridge_secondary_bus_reset(pdev, CXL_SBR_UNBIND);
+> +static ssize_t cxl_unmask_sbr_store(struct device *dev,
+> +				    struct device_attribute *attr,
+> +				    const char *buf, size_t count)
+> +{
+> +	struct pci_dev *pdev =3D to_pci_dev(dev);
+> +	unsigned long val;
+> +
+> +	if (!capable(CAP_SYS_ADMIN))
+> +		return -EPERM;
+> +
+> +	if (kstrtoul(buf, 0, &val) < 0)
+> +		return -EINVAL;
+> +
+> +	pdev->cxl_unmask_sbr =3D !!val;
 
 [Severity: High]
-Are we missing a lock for the PCI config space here?
+Does writing to this bitfield without synchronization risk corrupting adjac=
+ent
+state flags in struct pci_dev?
 
-Calling __pci_bridge_secondary_bus_reset() without holding
-pci_cfg_access_lock(pdev) triggers a lock assertion warning:
+Modifying a C bitfield is a non-atomic read-modify-write operation on the
+containing 32-bit word.
 
-drivers/pci/pci.c:__pci_bridge_secondary_bus_reset() {
-    if (!dev->block_cfg_access)
-        pci_warn_once(dev, "unlocked secondary bus reset via: %pS\n", ...);
-}
+If a user writes to this sysfs file while the kernel concurrently modifies
+other flags sharing this word (like is_busmaster, msi_enabled, or
+state_saved), could this silently overwrite those updates?
 
-Could running this unlocked allow concurrent operations (like sysfs resets
-or hotplug) to corrupt the PCI config space during a DPC event?
-
-> +	else
-> +		rc =3D pci_bridge_wait_for_secondary_bus(pdev, "DPC");
 > +
-> +	if (rc) {
->  		clear_bit(PCI_DPC_RECOVERED, &pdev->priv_flags);
->  		ret =3D PCI_ERS_RESULT_DISCONNECT;
->  	} else {
+> +	return count;
+> +}
+> +static DEVICE_ATTR_RW(cxl_unmask_sbr);
+
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+[ ... ]
+> @@ -485,6 +485,7 @@ struct pci_dev {
+>  	unsigned int	shpc_managed:1;		/* SHPC owned by shpchp */
+>  	unsigned int	is_thunderbolt:1;	/* Thunderbolt controller */
+>  	unsigned int	is_cxl:1;               /* Compute Express Link (CXL) */
+> +	unsigned int	cxl_unmask_sbr:1;	/* SBR unmask allowed by user */
+>  	/*
+>  	 * Devices marked being untrusted are the ones that can potentially
+>  	 * execute DMA attacks and similar. They are typically connected
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260825022628.3651=
-434-1-fabio.m.de.francesco@linux.intel.com?part=3D11
+434-1-fabio.m.de.francesco@linux.intel.com?part=3D12
