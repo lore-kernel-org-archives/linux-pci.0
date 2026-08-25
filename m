@@ -1,79 +1,65 @@
-Received: from OSPPR02CU001.outbound.protection.outlook.com (mail-norwayeastazon11013071.outbound.protection.outlook.com [40.107.159.71])
+Received: from SJ2PR03CU001.outbound.protection.outlook.com (mail-westusazon11012026.outbound.protection.outlook.com [52.101.43.26])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DEA3638B7B0;
-	Tue, 25 Aug 2026 14:31:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.159.71
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 88113450410
+	for <linux-pci@vger.kernel.org>; Tue, 25 Aug 2026 14:56:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.43.26
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787668272; cv=fail; b=i6t5L+rQqTeK53kF68HufNDYCsPgS1BjAbDixc+g/ehpjx/Ox6dH2ZmshxFJOjgltXxIDKZvWCbz81AGxfWRPtwgjmTmDt0zq4enqM1q+hhUhtwGKEFf0bwWBM//QQwg8H5NeIVnnJHd7xilNJyg5tGlRWcDpxe4Xtzv2zjmuMk=
+	t=1787669812; cv=fail; b=sNkH5EKlerVqug2gOWL6hpdP9GIcwN1S6AulzyvUA5x9e2Df8Z0AUAvRpBcntrVQwwPgkRMBK1ZH7YvWdm8+GcJiS4KjPk1SQG38Czet9R3205AaZgTvhWRvxzMABgNiEQVSGjeOw4Jparsu8Y1sSyUol9Xbr6uZWE7asl9TWSI=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787668272; c=relaxed/simple;
-	bh=wAvvsitCGNaokcpQ+TIXGBWjhgAFKo/f5qIe+u84g0Q=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=vAhLU1dEfOFd/EfIXPu0K1T35MhkFv0TysB71H+hOfVHCc/Jv7onwFCJv0g+eDC0Gt4bMOlKc2NSCcqcFfvRnRlDyF/8Bla2cRELY/hWuGWSXooPUXwO3Zw/gxitd12n48kiibgZ6BWW3I3VGu1ABWLFtR8+EVJnP2ILcamzn2w=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com; spf=pass smtp.mailfrom=oss.nxp.com; dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b=g8oHSd3S; arc=fail smtp.client-ip=40.107.159.71
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.nxp.com
+	s=arc-20240116; t=1787669812; c=relaxed/simple;
+	bh=YTKrVz5GQ1ONAhQPi2bx/QrcxyMvoSFm/IDGq6stTn0=;
+	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=hQULrOf+40sk878PugZ5WAXWNcOSAwlBAkGwMv2+Q3I4eH+0EnH4UGZ2sowpKw12USJTTc3Q7Zt9NhcDdzPtAGYUD9ed7cbGge/6GBlv6j6saQOOE4QNFdbAEgRigSidaDnnA0hJEq8qBy2wMtcKZty9M+KSaneIYUnebEfX72c=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=MUajiTS0; arc=fail smtp.client-ip=52.101.43.26
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b="g8oHSd3S"
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="MUajiTS0"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=ggMCHtpoY1ae63A/nuBFc8n+aTLdXMNPrTbGB+U65wrW5HzWA7NnQNlgBUJEbN/y8luXfSWMxDSvmBIdbYJZUkyopNyhIFobkHzj1hbkwIiTdrWS857bQmFszbr3AsaqB1qV9XiXrrcMH8OYWcBCU8p3ANTVSmXakOr4ZRwLRLigkKrxAS1kTq7gJ3VjtM/q7otVnTGfMVR3C7DmC39bpQi/AvMx4sfOCPoASPwcb8kNDyTC+agUkMCE3Nc+Q1RuZrxGtoWUCU7ednyEPvnvpKmMC4g9QABXl/ppuVMejgFp446Y+5WhzlycVVVLd++gpIlTaTp1HhNQiqdZZpZddg==
+ b=BcdI2DPoiRTGka/Mmje7tmy3WwUslb3r50517vRwwszuEhammHPXAHt0N1NzczJ6scBaZLYfdOsnEG9ubWLvJm4p43UqSC9kwdiKk8Cmz4TRErhOXBnMrxwIGHIWm29w1TjJ88euhV4+Gy1kmfIYSiBc/lW1dGBaJu278iBHynty3SgqTuPwuQPZIoo9L4bdJPxeAjHgWOAa6mdl2wuwuShIFnjc0OY6F/vRaOQCB4WDxBRVIGu6LomjlEVuTPyCPuK3fy3bku+jfbqNrF4+hxHnDENngzBgK8eNxTE0VJ3JljuE3cFpolhnkN37lG46A5l6cxE0bWhU1cWRLJp4EA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=i7LgnhK8BpaN3fEEgwu9woQXFC7835cC0WDAj4KiMhk=;
- b=fc4qi71wWG8XcZ3pnvFvsgmRsNujnw0DH8uQfkv2+ckgNC//hYjCE4cWpaRY1hnjaYnmfc/E4CJ+OpMNT7d/tSoKDbSVnZ7oD0Tu2X8YMKVi9VpEh1qoByOMu6DPYCEc+GONQDYBsI5a/0IVrSaTNGuuejZmPdcZpWjsIAP/wVnBHKRzHsg5BS8QZDfr7qFkioctveDyJdklUklpX2dZBnukoISSlTvzgaT/sMdHomQxW1ufUMhx/BcEJ3l8/rOjhM2yY70mtGQoG51l1HiINleD66nQxdqSOfP85+eIs07lrRYDe/0xBUdvPEsHx5aXNm6ILdzIgsS/NW5mSwXuIg==
+ bh=lFE7t1LyUiioOtMC2emIDHC7+pjJwWcZxJmcbv34/XA=;
+ b=xxHtCJGarC0sDAQIDJOnNmoAjoQULtxMRbsTTdIVOmCEclUQg90EYok0x75uDZxLdjhiAKPwxb7icpgSXu0VVr/O8W4BkXfLliFn3Bgkm1oVOpD0TyfuBz1183H5SaxB84jy4Qr4IYQAIYzrncK/PMXXo43chH6KL95sAdHeEuPx5ab4EgI2W87kA6F4dRthnZ1h6M979qVhN/o4L82OMJFy/qSaMfMkpMF5Yz5GsCXRjfVu4ExVNXo9r9zLsgwHgE6oVIBHtiGRcJzD01528r5EjMttc/xUJVFeG8wTunZXR/Ugkf2+enS0yrhbMWIfLZwqho2KyE0xUnL0ji9s5Q==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oss.nxp.com; dmarc=pass action=none header.from=oss.nxp.com;
- dkim=pass header.d=oss.nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=NXP1.onmicrosoft.com;
- s=selector1-NXP1-onmicrosoft-com;
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=i7LgnhK8BpaN3fEEgwu9woQXFC7835cC0WDAj4KiMhk=;
- b=g8oHSd3S89Phmx2IqHPO7St0UeBKcnrPwh2yRK88yEU+4mbUs2ug2j50RpkSCa8AoGriVFRu4iN6nPqgGVebeAH2Dw2hZsE+ouEYS5FxUtx4mqbC6G5mPwjzmyRBdcoJl1hXu6F1SrLFJugm1P614SxlpIN080r9rueM+B14dpUluVu/cZs0w2zLNDJ2rqkSCg1nKgV9NXuOuYZaU4PL+gNPeYslwCgFcJiSUd9cyk07y35n4vMIbwksrHzR6d9ANrFr7LBGlH9zt2mPZOd6J29h9B6LkMgBkzwpS9q2TGLOhdQQDB7Fp+aVF3OQislcD2PUGDYzmGARU0fFkmdJvg==
+ bh=lFE7t1LyUiioOtMC2emIDHC7+pjJwWcZxJmcbv34/XA=;
+ b=MUajiTS0VGJv+P8s+S12wLIDHMOWwmWOUa7mEVA/n7P2RIXTvnl+X32if0S9/RDv/4U6cIHuwv6etapvJbUUIDZLG/aOvCh9av7VIh/MmyWUNPLk4Y0UnPpsF0MkU/YIJ1WYkJAMHYH8ABcuesnypvRcXwDmrKGu1fcksebpobccZ1fB1kzk/Hr9gQeGOzhnAOY53bhQX5SjpgD5oc0d5xEreQZo7eKvt9xWEyJaI/saWgTX2s0pijBJ/OIbIuKH1lguEOL3uVlEnQ3ELfbSDDW/FYDiJt0XdYxr8pzk/yv8Dd6XLT54z9q0flWxRaprA7Z4XLgTnX8aL37ETqvbYA==
 Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=oss.nxp.com;
-Received: from GV2PR04MB11799.eurprd04.prod.outlook.com (2603:10a6:150:2cf::9)
- by VI1PR04MB9740.eurprd04.prod.outlook.com (2603:10a6:800:1d3::10) with
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from IA0PR12MB8351.namprd12.prod.outlook.com (2603:10b6:208:40e::5)
+ by IA1PR12MB8334.namprd12.prod.outlook.com (2603:10b6:208:3ff::11) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.339.12; Tue, 25 Aug
- 2026 14:31:06 +0000
-Received: from GV2PR04MB11799.eurprd04.prod.outlook.com
- ([fe80::2146:83a2:5329:b7c]) by GV2PR04MB11799.eurprd04.prod.outlook.com
- ([fe80::2146:83a2:5329:b7c%7]) with mapi id 15.21.0339.012; Tue, 25 Aug 2026
- 14:31:06 +0000
-Date: Tue, 25 Aug 2026 09:30:54 -0500
-From: Frank Li <Frank.li@oss.nxp.com>
-To: Koichiro Den <den@valinux.co.jp>
-Cc: Manivannan Sadhasivam <mani@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Kishon Vijay Abraham I <kishon@kernel.org>,
-	Frank Li <Frank.Li@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Randy Dunlap <rdunlap@infradead.org>, Vinod Koul <vkoul@kernel.org>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Rob Herring <robh@kernel.org>, Niklas Cassel <cassel@kernel.org>,
-	Damien Le Moal <dlemoal@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
-	Marek Vasut <marek.vasut+renesas@mailbox.org>,
-	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-	linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
-Subject: Re: [PATCH v7 06/10] PCI: dwc: Implement endpoint DMA channel
- delegation
-Message-ID: <ao2nHoCwfTEEiFSr@SMW015318>
-References: <20260813063757.3131865-1-den@valinux.co.jp>
- <20260813063757.3131865-7-den@valinux.co.jp>
- <an4WZkoIxCZ456Pb@SMW015318>
- <oiozls3u4bubqzfk4hqjgauzmuka2ixs4b44rvmrmosdqyxa2v@crlid6rfy6v6>
- <w223tumnzi3zircm4tnv4b7cug2g23z52xris7fcrhxyr6knvr@cw6meanwd5e3>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <w223tumnzi3zircm4tnv4b7cug2g23z52xris7fcrhxyr6knvr@cw6meanwd5e3>
-X-ClientProxiedBy: PH7PR02CA0007.namprd02.prod.outlook.com
- (2603:10b6:510:33d::13) To GV2PR04MB11799.eurprd04.prod.outlook.com
- (2603:10a6:150:2cf::9)
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.360.7; Tue, 25 Aug
+ 2026 14:56:35 +0000
+Received: from IA0PR12MB8351.namprd12.prod.outlook.com
+ ([fe80::d0fa:3021:dd0f:59e0]) by IA0PR12MB8351.namprd12.prod.outlook.com
+ ([fe80::d0fa:3021:dd0f:59e0%4]) with mapi id 15.21.0360.005; Tue, 25 Aug 2026
+ 14:56:35 +0000
+Message-ID: <a605214e-2304-4d1a-95f9-2dbbcb61aa60@nvidia.com>
+Date: Tue, 25 Aug 2026 20:26:30 +0530
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH V2] PCI/MSI: Don't touch the MSI-X table while the Link is
+ contained
+To: sashiko-reviews@lists.linux.dev
+Cc: linux-pci@vger.kernel.org
+References: <20260817195626.3091331-1-vidyas@nvidia.com>
+ <20260825140952.4066140-1-vidyas@nvidia.com>
+ <20260825142540.652471F000E9@smtp.kernel.org>
+Content-Language: en-US
+From: Vidya Sagar <vidyas@nvidia.com>
+In-Reply-To: <20260825142540.652471F000E9@smtp.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: PN4PR01CA0114.INDPRD01.PROD.OUTLOOK.COM
+ (2603:1096:c01:266::14) To IA0PR12MB8351.namprd12.prod.outlook.com
+ (2603:10b6:208:40e::5)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -81,219 +67,247 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: GV2PR04MB11799:EE_|VI1PR04MB9740:EE_
-X-MS-Office365-Filtering-Correlation-Id: f011dec3-5798-44e0-0ff9-08df02b57f44
+X-MS-TrafficTypeDiagnostic: IA0PR12MB8351:EE_|IA1PR12MB8334:EE_
+X-MS-Office365-Filtering-Correlation-Id: 72fb8ab5-ef01-4bad-8d5b-08df02b90edc
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|23010399003|7416014|19092799006|376014|366016|1800799024|10067099003|11063799006|4143699003|56012099006|6133799003|18002099003|22082099003;
+	BCL:0;ARA:13230040|376014|1800799024|366016|23010399003|6133799003|3023799007|10067099003|56012099006|5023799004|11063799006|4143699003|18002099003|22082099003;
 X-Microsoft-Antispam-Message-Info:
-	a/I21o5n1/mSy/NIkfWQFXCFJSCKXIQQIgIRfIvlUUxY7RxwmtsBwIFmwrfkc0leFY1OHQbDioTo1Y8mOlrMyXHpkiCCYiSOotf3zBf7zkkeFEPeNc/pnjxfuAxUiSgRPYvzYw9CAuJS1fs4wudKaFYZ1dXCjruy8jph+/WP4vzoR4YB3ebR2RMjFys2qHSXvAm74dgdtGwUFcsfrIEf1+99t8m/tpehccXSA7cHA5JenzWwmVw9Mvc6dIEKI11wLP1UexmviTZFtonTxMPy2gx2hwS9wrp9PhC4RWHzByW00WQIfecER5NN7NoPf6+cbvP6MZOmfTFvow0xFIy8sdyJ7qHk8/cChk0tGyrxy9t5YyxEiCQjs3/Wm8esAqjbY1NlmwzntJGAEnyJ8PInpNb5ypD2Ay/zrsL5n6HfB8zEpw1ln6HEwuZyI9feWiOH79Bv2CgYrsTeDMv2qT9yMrNMwiToCX3kEKlwTB4uCX0AfIC9eTE0VXH+OMJq2ciyxIjJSZOWWe0sZegJW6cIsstK9aKdtPOLDebpl/0chqfBYvoiP888R5Us560t2xiDwfrhouFTth7nAiapegkFyRArEnilXy2JvH6K7QgBkfj2mAXu+8PKrci1iXedVJCjXZfJgxjCkyHU00fqcP0fI+htjHhzgDCmWprS3Nfj+wo=
+	337z5wh/gXBXQlL8qhAcOjA1WCFOoIQD+Mi+KS1Tx/4ncx0iuKVy7B2hyghGOFo4G1Ujmw8JQ8DWP7/rskNDhPsPYzKFVv4oERODe36NKGAlmsfAVX3PqodZauQM4+1S9zYgHmtlzscN3XwIBH1gqc4WO6WhCPPWsC8PFh2/9Ih5vpAvDvrVFz5WMDHzSBozoRIkLJNfMNimZrPRoYW6lhifMuFoXhFO0l5VygUJdyDNQ5MwC0zRtnwj2GmVzqNQR2OLNN3R/hC7HKvTByfAIy6JajyeWPCq2U7p8PLQW2pHS16/x+ZSWb8/hE0+ku6VvLsxHjP4T3UDDX0lsaAcZFcGAw8XnE6f/h+l7KtQvCs8kgyXHNhOaWEaWNOaW9nZeW0IHpjQy9huzQT6Q4CUZCl9lehJAiBNIMfvN+IwC+gVyx0/bsEmbX0d/P0+jp98WU10UBjcrkwB652h19a437nPn/4wv3RAUSSC+Se2SWIZKrRRsWpf921KbBxZDgwGeRNr1SX16s0eZXMsmChvQFDwQLMUH+Z/WkqIZkHs/uQN0DAZTIUF0hcngBiyq9Ltess1tdA0qaA+WJiKrV4tbxJZOl6ykNaohq5PVy2iVFgtmMsI3OIC0IFVmRffOmfTttwCPsGwe2VsMVkC+bXN5v81YQ+irItWFxZFekYumWI=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:GV2PR04MB11799.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(7416014)(19092799006)(376014)(366016)(1800799024)(10067099003)(11063799006)(4143699003)(56012099006)(6133799003)(18002099003)(22082099003);DIR:OUT;SFP:1101;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:IA0PR12MB8351.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(1800799024)(366016)(23010399003)(6133799003)(3023799007)(10067099003)(56012099006)(5023799004)(11063799006)(4143699003)(18002099003)(22082099003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?/vO5J1FOsY7ftCV9Hif8eexiBPczHgLgumHJ/sVOR7tvtJgpV5fvgnnhk5+6?=
- =?us-ascii?Q?CQ2ovveHQVKKOJw/BhN3OWLs3SgKyI0HmdVMBnGcZ/7ZK31zn1VVfOd+jNvP?=
- =?us-ascii?Q?oF+i2imhh0ek5BG1RRVAqufquGplYt6OT2DqoR2EsO9cuw6sTTehjA8u5vHr?=
- =?us-ascii?Q?4iWbymgDoQQDnNIbw2frXskqO3RZoS4kpiqjgYi7IA3fIKoyEDUecOP1Vu2U?=
- =?us-ascii?Q?wPrtPQIbKXEFX+x5kzFiJHl/0s5MqOWNX9C9NNdpK4EiI5IKRD7Hf0sjpbzQ?=
- =?us-ascii?Q?WU/BiI9b0UYmElyH/OZWkzjyB7kNT+eJkdkKAAsDk1mJ2IrFnLVkBBzZOL1H?=
- =?us-ascii?Q?mG3GenjvNr+A4MH+4wj41mcI6wmetFxACaCa7cv43+5l1Lf/S889s9DjzCjE?=
- =?us-ascii?Q?iQfCz/NGN7j0fSP7BzH/Pr9M+P7Z0Rg5Sffz6EiYYV2vN4xEueEwzbun+a7P?=
- =?us-ascii?Q?TYLh76MK1QvvvGN/GxrXVzVrmvbmil+/INyMvYf1SBQdGxdikjRjyobrG/Lu?=
- =?us-ascii?Q?K1+4Z/VG59MRl63CgAeg5bIJSFm79sPgdLwvwsebFospuu2Vu835G/Jvgglr?=
- =?us-ascii?Q?uAcg6Q8KEgHQdNOwcOPb/rybYJFZ9xjydQDTR/cs9KWXK2JXOxzaVsnM9AIB?=
- =?us-ascii?Q?FU6CpUD5rvYev7E/GwQtr3F1G9DbApTpiXzUYWQHZmBVIIWLiwCy8wdslCVl?=
- =?us-ascii?Q?QRyBoygXeQb8bxY7C3uKTxG1R0KFqVGYOrcd5C5AccN3DvEstG5/JaVnvtAH?=
- =?us-ascii?Q?oMXI3dSB4az8eo74/cNTZ+7DRqshFS4Ou0ZyERFcPlw52sDqQ8S0p0Gnz68e?=
- =?us-ascii?Q?nxQ5mh4m3muwuemoxgLez52E/xeGVu0DJyDsijw4phfws+5HZU9n3eMXVHED?=
- =?us-ascii?Q?RtI6N4HQGO2smeIfC6qeOE/NWOcmXpxPihydKibtZyneoVL5QFkVf8RDwe4O?=
- =?us-ascii?Q?0sqZpy6QX7+2NGO4+TtFjh5aTFtu/2b3G14OKGwxQ2sbt1oa4i01k0JXNMwi?=
- =?us-ascii?Q?eUn1JxYUvY5Eg9Iheyq3OJDf7Qz7v5O/XfKfY0PqKC+xOZ2uv/T7JDnRNz4p?=
- =?us-ascii?Q?pGo84Auh9+AmodyBtOjKgiP9o9cDanAqr/mRGKy57GkqbSiu1ITwnR++PyTm?=
- =?us-ascii?Q?PxlSyPp0DMDzBMEYMeDvHEdg6aR3isAw6LIoVmF8HGrKKpSq0Iomx82AuezI?=
- =?us-ascii?Q?OtpBHZKi45cLeXDz26tYR3in3f8ndUl7IjFcgS8tgW9dPCrw2WDXdWbhe/4q?=
- =?us-ascii?Q?yYqBtvIgoNUDpDm5TGmrPut+WApa31bMqGNXv/dhzqk5mQg2DeOeA3kce4mQ?=
- =?us-ascii?Q?SlDtjnw5lacfDU7wlMXCy8/wtCZn2GNLQU+A9W4I5gNjNci0CjDfE3DOH1Gx?=
- =?us-ascii?Q?dlFUk1hjT4DJDAr/1guQjg526nbdkriszaZiwv1u/VDTJcp03y+BACTnS/fL?=
- =?us-ascii?Q?/NjTC9k+q4E7IqUC5J5uophCpUgu/hzdJ4ZIR05zfBbZqItCQyFWnHukqrWX?=
- =?us-ascii?Q?o18js1euCHuU4783qYeDgb+WfNejlQwVV5EfCdo14zJ8Mg1+0EEuedW/QvX9?=
- =?us-ascii?Q?lX7XH//nCKmHpjLoaS0EDxUyGIw9cIWVMAKEjJb6KjoknTEGG6p0FjKt9FbO?=
- =?us-ascii?Q?5W9lSfRwiSthT0hDlOE1SKHcMCbXitOAneOqEI6ldf0YwQFxfy40Lal7UIm8?=
- =?us-ascii?Q?HlmRtbrvORm6QEDFnXTtbwEAJM2xx4yb3wH3F0uo4F8o+p1mrIAN6lk52RxR?=
- =?us-ascii?Q?SUN6xKObU8VqZp7FtiqMs6C/4S/W8he2M72G3TvLo8CjjlU+UdDA?=
-X-OriginatorOrg: oss.nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: f011dec3-5798-44e0-0ff9-08df02b57f44
-X-MS-Exchange-CrossTenant-AuthSource: GV2PR04MB11799.eurprd04.prod.outlook.com
+	=?utf-8?B?WUFCWk9ielJSVkhid2VtUHpYRTl5enFFN3hOcVlVbXE5QURpQjh4VksxZlA1?=
+ =?utf-8?B?Q1gybkNxc0JUTUthSFdSeDVLR25KM3pCd3pTZ1FVZ25oSHFEd05LYzNueFpm?=
+ =?utf-8?B?cVEwODBDd1Z0R29CR2o5N0FWck9KMHFjYy9ISkFKMVFoUkpRZitGTkpiWlhM?=
+ =?utf-8?B?SFV2cGQzMDZTVG50QlQwUkQxMWJMaHBYaitvYmdEWUI3eHNHbmlDWTZFZTdl?=
+ =?utf-8?B?S2R0dGQyL2JMaUVjeDJvYjBYQmFncmhvbnBvQWlNa2FkMStmdUJ6NDMrbHln?=
+ =?utf-8?B?K1RDdk5XbFU0M1VLVzJuOHFFWURCNFhubVM0MDBXcWRpSGVHTC85V1A5TmpS?=
+ =?utf-8?B?TXFuKzJibUxHY2ZKWVc4V0FGOE9PZFlNY0dodUI3b25LN05hRDYveDg4UDNX?=
+ =?utf-8?B?MjBLcTRuczlOVndkckNaQWk1eDRGN1g5TG9SM3J1bWpiMkdyUHpZeDJvd3pU?=
+ =?utf-8?B?a2hQaHlBTTZ6YTNKNHk3VWdpaDlZSmt3eUFDbFhJeElhanUySEtQdE1NVUcz?=
+ =?utf-8?B?VENvOFV3bnBmTFdiUDFaQ2VWS3ZXci9qQkVDVVdJU2RIenVyZkF2bnp2OEJ6?=
+ =?utf-8?B?NVY5YkpUZmo2S2VXd0ZTKzZGZzkyTFRCWmlGMm9iZEVreTJvMzFiYUxrajBy?=
+ =?utf-8?B?TTlsc0xDNDFmaW5reVhxSWEwODB3NDYvSVNWaUpZUzRjenlrQVFGTnphMjdx?=
+ =?utf-8?B?akpsa21DRFI3VUMvVWx2Q2NuRi81SVFyNUI3bEdLOXB2QmZVaEV6QmxQKzkr?=
+ =?utf-8?B?SW9BV29yRHVkaTFCT2t6Y090RlpjSzZ3anBldGZ6cWMrY1VTZlhoeGFoZVRT?=
+ =?utf-8?B?Ly9ZYjQ5ZkJoQ0p2aXZlYTRwTmg4cG90a1d4MG9rRHl3dlRHL1JNR0x4cW9L?=
+ =?utf-8?B?Q3hPT0I1S1RDTGI5bnQ5bWdGTG9kRjNFaGFnQWNybDBlRmFWVWNqZFBKNXRX?=
+ =?utf-8?B?RHpMczI5ZmVBbGI4Q1gremR4NHZlK0J2UlJWaDVNWkVraldRMWJyZVIya2Uz?=
+ =?utf-8?B?b0lUa1JSMDRPUGdVY2NvM0MyNG9nbmRHSXlDVVJ5VlFyRkkzVWhuNjJTeC84?=
+ =?utf-8?B?L3I5dkhUS3p2YUZtM0duRUlyY3FBbDRoazdVdWN2ajFZeFN0M3VsNGFqRSto?=
+ =?utf-8?B?bXFpZld5WUs0VkNWVkRaQitqdmJoY2VUb2I5bzEzNm1jTDJpNk9aSDlRNkVr?=
+ =?utf-8?B?cG42bmNFYlNYUTVOM2R2Nm1rdlBFMHVGLzhJbU5rYjdhVUJOeWRaZjZjallZ?=
+ =?utf-8?B?eGVXZ2kyNi9CTGJ0Vm1nY1NiSlA3UE5iV3RmbmlLLzFRdTVrSG1NZmxselhn?=
+ =?utf-8?B?dllVK1d6VmlZZ1hPVys0QVRCNHVjNkozTVhROWppdWZpK3NaMTJCaWJPa2R2?=
+ =?utf-8?B?QU01NnQzQ1JaeHNXenRTdHpVSTRUV2VseDRKY0tsS2I5WTlCaDhnUzI5L0dh?=
+ =?utf-8?B?VUdTZUpMdkwxR2krVmc3Yzg2Q1hnd09YeTFlNVhHMDROUGtlbW8vbTVmeEFq?=
+ =?utf-8?B?Y1p3VStEWm1KNTVGQm85Ti8yVGlrWTFaTUVoT1BHK2lxdXpkZ3Q5UzltcGVz?=
+ =?utf-8?B?OGRCUGh4bjhKQVZtM3FUeW9uZGZSUUZDKy9xQVA2ZkJnWSs0Q0RTOWQ3R3dz?=
+ =?utf-8?B?bllIZndHNWhudmhta0xoSzNNeDV3LzRER0VFdzRKYWI5UU9OdXFXN0ZqbG1V?=
+ =?utf-8?B?Qm9pWlZuNTJ3K3dWcGlLZWNid2NHcFNYazVkMDhTRWpQWWtyanI1cUJoUGl4?=
+ =?utf-8?B?V2haQlVVSlBXSGhNdkZIR3ZrMHY1S3VrQkR0NWRWRlh0dVlncGxFS3JPRmdw?=
+ =?utf-8?B?bm5RZkRVeitnSnU2RVhhQVdTOEVBaFYyb1M3Zlo4Y1htaUM0SkY4cWJzL2xh?=
+ =?utf-8?B?SDlmWDI5bUtVdlh2M2tCeW9CWHdIWGVOWUlQUzhCM0h3Q1gyTHJoYTU3dTha?=
+ =?utf-8?B?elcwT20rRzlvRG5nNjRjS3VYOWRXSmRWNVQwcWovN1I1MkFlZWtOWnMwaDhM?=
+ =?utf-8?B?a3JBeEsrSElQYlZtSVdTMDY3WFp3Q3ZBWDlwMW1ycDBqRkRESHd4SGZPVnFD?=
+ =?utf-8?B?OG1aMzBEZjNndzQrbzE1UyttdGZ6L1NhZGRrZHZPZ1dWdjhwenIyZHhFY2VR?=
+ =?utf-8?B?U2lhZTJ4YzR1MlBETGV2RGJ0WGtmRHRnL1lWY2VNcU9kUFpXVEJVZDhtUFlz?=
+ =?utf-8?B?T2pEdHhEMXk4Y0xZMDhlN2dZWjZwT1d3SEVCTy9OeCt3OHVOaUFtWWhHYk1l?=
+ =?utf-8?B?dldTWnJqN2VPcm9BS3RCVHdLRmxEU3JYSXN2N0JWMEtCMS9Md2prYmhnbTNv?=
+ =?utf-8?B?bElUUkl1c0d4Vkc3eHNZR3RLZVd2WjFpQ3I2YTY5RVZqTEtHaHNudz09?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 72fb8ab5-ef01-4bad-8d5b-08df02b90edc
+X-MS-Exchange-CrossTenant-AuthSource: IA0PR12MB8351.namprd12.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 25 Aug 2026 14:31:06.0728
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 25 Aug 2026 14:56:35.2782
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: JnOoELTDrllr74JW3nWZAWp1Z1ym4GBRs6YiYB/7pSod0cGeCFjLeWRjoYcJfO8KXhFkmyUWoH9s/Z4vAEKVRROYfDgohGZFdEVHNvchETSmckYmwRzpZxvtj6ZMFFBx
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: VI1PR04MB9740
+X-MS-Exchange-CrossTenant-UserPrincipalName: GHxtsqWvLuzut10xu2TTkqBMa5J6FewAwgD3YkLLXKKcX/mHSD5rekBx60fkF/J3wyOr0iJDEtJuyHqRbMw2Ig==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA1PR12MB8334
 
-On Tue, Aug 25, 2026 at 05:16:50PM +0900, Koichiro Den wrote:
-> On Tue, Aug 25, 2026 at 11:36:54AM +0900, Koichiro Den wrote:
-> > On Thu, Aug 13, 2026 at 02:09:26PM -0500, Frank Li wrote:
-> > > On Thu, Aug 13, 2026 at 03:37:53PM +0900, Koichiro Den wrote:
-> > > > Implement the EPC DMA channel delegation operations for DesignWare
-> > > > endpoint controllers. Verify that the DMA engine channel reserved by the
-> > > > endpoint function belongs to the integrated DesignWare eDMA instance,
-> > > > then hand its interrupt routing to the host.
-> > > >
-> > > > The DWC eDMA/HDMA engine generates DMA requests with a programmable
-> > > > requester function number. For delegated channels, the host-side
-> > > > dw-edma-pcie instance bound to the exposed DMA function programs its own
-> > > > PCI_FUNC() into the per-channel requester field; the endpoint-side chip
-> > > > func_no does
-> > > > not participate in that handoff.
-> > > >
-> > > > Reject VF requests because the RC-programmable DWC eDMA/HDMA register
-> > > > window is assigned to a PF BAR only.
-> > > >
-> > > > Reclaim returns interrupt routing to endpoint ownership. Propagate the
-> > > > EPC quiesce request so bind failure paths can reclaim unexposed channels
-> > > > without quiescing the DMA engine.
-> > > >
-> > > > Signed-off-by: Koichiro Den <den@valinux.co.jp>
-> > > > ---
-> > > > Changes in v7:
-> > > >   - Delegate the DMA engine channel already reserved by the endpoint
-> > > >     function, matching the API and helper changes in patches 4 and 5.
-> > > >
-> > > >  .../pci/controller/dwc/pcie-designware-ep.c   | 42 +++++++++++++++++++
-> > > >  1 file changed, 42 insertions(+)
-> > > >
-> > > > diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
-> > > > index 0b915824963a..a74d3896e436 100644
-> > > > --- a/drivers/pci/controller/dwc/pcie-designware-ep.c
-> > > > +++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
-> > > > @@ -858,6 +858,18 @@ dw_pcie_ep_find_bar_rsvd_region(struct dw_pcie_ep *ep,
-> > > >  	return NULL;
-> > > >  }
-> > > >
-> > > > +static int dw_pcie_ep_check_edma_vfunc(u8 vfunc_no)
-> > > > +{
-> > > > +	/*
-> > > > +	 * The DWC endpoint databook says it is not possible to assign the
-> > > > +	 * DMA/HDMA registers to any Virtual Function.
-> > > > +	 */
-> > > > +	if (vfunc_no)
-> > > > +		return -EOPNOTSUPP;
-> > > > +
-> > > > +	return 0;
-> > > > +}
-> > > > +
-> > > >  static int
-> > > >  dw_pcie_ep_get_aux_resources_count(struct pci_epc *epc, u8 func_no,
-> > > >  				   u8 vfunc_no)
-> > > > @@ -933,6 +945,34 @@ dw_pcie_ep_get_aux_resources(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
-> > > >  	return 0;
-> > > >  }
-> > > >
-> > > > +static int dw_pcie_ep_delegate_dma_chan(struct pci_epc *epc, u8 func_no,
-> > > > +					u8 vfunc_no, struct dma_chan *chan)
-> > > > +{
-> > > > +	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
-> > > > +	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-> > > > +	struct dw_edma_chip *edma = &pci->edma;
-> > > > +	int ret;
-> > > > +
-> > > > +	ret = dw_pcie_ep_check_edma_vfunc(vfunc_no);
-> > > > +	if (ret)
-> > > > +		return ret;
-> > > > +
-> > > > +	if (!edma->dw)
-> > > > +		return -ENODEV;
-> > > > +
-> > > > +	if (!chan || chan->device->dev != edma->dev)
-> > > > +		return -EINVAL;
-> > > > +
-> > > > +	return dw_edma_delegate_chan(chan);
-> > > > +}
-> > > > +
-> > > > +static void dw_pcie_ep_reclaim_dma_chan(struct pci_epc *epc, u8 func_no,
-> > > > +					u8 vfunc_no, struct dma_chan *chan,
-> > > > +					bool quiesce)
-> > > > +{
-> > > > +	dw_edma_reclaim_chan(chan, quiesce);
-> > > > +}
-> > > > +
-> > >
-> > > After use fixed chan_ids, needn't these functins. EPF driver already
-> > > find expected dma channel and config it remote only by standard API.
-> >
-> > (I've been somewhat holding this thread, sorry. I'm still unsure whether the
-> > separate PCI DMA EPF idea will survive, or whether making it much smaller and
-> > initially limiting it to a test endpoint for dw-edma-pcie would make it
-> > acceptable. AFAICT, Mani has not answered that point yet. Still, I think I
-> > should reply here in case the idea survives in some form and v8 becomes much
-> > simpler.)
-> >
-> > I agree fixed chan_id removes the private channel lookup. In v7, the EPF already
-> > reserves the channels to delegate through dma_request_channel(), so Patch 4 may
-> > look like a leftover. Its remaining benefit is to hide dw-edma-specific
-> > interrupt-routing semantics from the generic EPF.
->
-> Let me correct myself.
->
-> On second thought, that "benefit" is really superficial. If we ever want a
-> generic abstraction for that purpose, it should belong in dmaengine, not PCI
-> EPC.
->
-> Now that the EPF reserves channels through standard dma_request_channel(), it
-> owns them until dma_release_channel(). Going thought PCI EPC just to change
-> their interrupt routing (in the dw-edma case) is odd.
+On 25-08-2026 19:55, sashiko-bot@kernel.org wrote:
+> External email: Use caution opening links or attachments
+> 
+> 
+> Thank you for your contribution! Sashiko AI review found 2 potential issue(s) to consider:
+> - [High] The early `pci_msi_dev_inaccessible()` check in `pci_msix_write_tph_tag()` leaves a large race window across lock acquisitions, leading to an unconditional flush read on an inaccessible device.
+The window is real and the placement was poor, so I will move the check.
+Thanks.
 
-Change irq routing should be dma_slave_config(), not go though EPC, which
-is DMA behavior.  Or add some argument when looking channel, like DT's
-xlate.
+msi_descs_lock is a mutex, so the caller can sleep between the check and
+the flush read, which makes the window far wider than it needs to be.
+Moving the check under irq_desc::lock, immediately before the tag update,
+reduces it to a few instructions with interrupts disabled:
 
-Frank
+	if (!msi_desc || msi_desc->pci.msi_attrib.is_virtual)
+		return -ENXIO;
 
->
-> >
-> > The EPF could instead do something like this in pci_epf_dma_claim_channel()
-> > after extending dw-edma to accept the setting:
-> >
-> >   config.peripheral_config = ... DW_EDMA_CH_IRQ_REMOTE ...;
-> >   dmaengine_slave_config(chan, &config);
-> >
-> > That would make the EPF depend on dw-edma-specific interrupt routing. However,
-> > if the goal is to make the PCI DMA EPF as small as possible and accept that it
-> > initially only serves the dw-edma-pcie path, I think that is fine. I think
-> > that's your point, but if not, please correct me.
->
-> So even in the vNTB-embedded design, your suggestion to use prepheral_config
-> fits well. I've now implemented and tested it there, and it works. I'm preparing
-> v2 on that basis and hope to send it soon.
->
-> Best regards,
-> Koichiro
->
-> >
-> > Thanks for reviewing.
-> > Koichiro
-> >
-> > >
-> > > Frank
-> > >
-> > > >  static const struct pci_epc_ops epc_ops = {
-> > > >  	.write_header		= dw_pcie_ep_write_header,
-> > > >  	.set_bar		= dw_pcie_ep_set_bar,
-> > > > @@ -950,6 +990,8 @@ static const struct pci_epc_ops epc_ops = {
-> > > >  	.get_features		= dw_pcie_ep_get_features,
-> > > >  	.get_aux_resources_count	= dw_pcie_ep_get_aux_resources_count,
-> > > >  	.get_aux_resources	= dw_pcie_ep_get_aux_resources,
-> > > > +	.delegate_dma_chan	= dw_pcie_ep_delegate_dma_chan,
-> > > > +	.reclaim_dma_chan	= dw_pcie_ep_reclaim_dma_chan,
-> > > >  };
-> > > >
-> > > >  /**
-> > > > --
-> > > > 2.51.0
-> > > >
-> >
++	/*
++	 * The tag update below is a write to the MSI-X Table followed by a
++	 * flush read, neither of which can be completed while the Link is
++	 * contained. Check as late as possible, i.e. under irq_desc::lock, as
++	 * containment can begin at any point. Let the caller disable TPH.
++	 */
++	if (pci_msi_dev_inaccessible(pdev))
++		return -EIO;
++
+	FIELD_MODIFY(PCI_MSIX_ENTRY_CTRL_ST, &msi_desc->pci.msix_ctrl, tag);
+
+To be clear about what this does and does not achieve: it narrows the
+window, it does not close it. error_state is updated by
+pci_dev_set_io_state() with a bare cmpxchg from the DPC handler, which
+holds none of these locks, so containment can still begin between the
+check and the access even when they are adjacent. This check is a filter
+for the case where the kernel already knows the Link is down, not a
+mutual exclusion primitive, and no placement can make it one. Closing the
+race would require serialising every MSI-X access against containment.
+
+> - [High] Silently skipping writes in `pci_msix_write_vector_ctrl()` exposes callers like `pci_write_msg_msix()` to partial MMIO updates and unconditional flush reads.
+No. pci_write_msg_msix() has exactly one caller in the tree, and it is
+already gated on the same predicate, so the function is not entered at
+all when the device is inaccessible:
+
+	if (dev->current_state != PCI_D0 || pci_msi_dev_inaccessible(dev)) {
+		/* Don't touch the hardware now */
+	} else if (entry->pci.msi_attrib.is_msix) {
+		pci_write_msg_msix(entry, msg);
+
+The inner check in pci_msix_write_vector_ctrl() is not redundant, because
+that helper is also reached from pci_msix_unmask(),
+__pci_restore_msix_state() and pci_msix_write_tph_tag(). But along the
+pci_write_msg_msix() path it can only fire if error_state changes between
+the outer and the inner check, which is the same unavoidable race as
+above rather than anything this patch introduces.
+
+Even then there is nothing to be partially updated. A partial update
+would mean some writes reach the device and others do not, leaving the
+Table inconsistent. Containment discards accesses uniformly: while the
+Link is up every write lands, and once contained none of them do. The
+transition only goes one way during an event, so there is no half-written
+entry. On recovery __pci_restore_msix_state() rewrites address low,
+address high, data and Vector Control from the cached descriptor, so the
+entry is reconstructed in full:
+
+	write_msg = arch_restore_msi_irqs(dev);
+
+	scoped_guard (msi_descs_lock, &dev->dev) {
+		msi_for_each_desc(entry, &dev->dev, MSI_DESC_ALL) {
+			if (write_msg)
+				__pci_write_msi_msg(entry, &entry->msg);
+			pci_msix_write_vector_ctrl(entry, entry->pci.msix_ctrl);
+		}
+	}
+
+arch_restore_msi_irqs() returns true in the weak default and on s390, and
+on x86 it is xen_initdom_restore_msi(), which only returns false under Xen
+dom0 where Xen owns the restore. So on the platforms where native DPC
+applies, write_msg is true and the message is rewritten along with the
+control word.
+
+I will send v3 with the TPH check moved.
+
+Thanks,
+Vidya Sagar
+> --
+> 
+> --- Patch [1]: [PATCH V2] PCI/MSI: Don't touch the MSI-X table while the Link is contained ---
+> commit 170aedad1f36f8c51175a3888ba22b67ee4a98ef
+> Author: Vidya Sagar <vidyas@nvidia.com>
+> 
+> PCI/MSI: Don't touch the MSI-X table while the Link is contained
+> 
+> The MSI-X Table lives in device MMIO space behind a BAR, so it is only
+> reachable while the Link is up. This patch skips hardware accesses to
+> the MSI-X table when the device is not in pci_channel_io_normal to prevent
+> DPC escalations caused by Unsupported Requests. It also modifies
+> pci_msix_write_tph_tag() to return -EIO to let the caller disable TPH.
+> 
+>> diff --git a/drivers/pci/msi/msi.c b/drivers/pci/msi/msi.c
+>> index 80a9db417dc87..0ebe153937ccc 100644
+>> --- a/drivers/pci/msi/msi.c
+>> +++ b/drivers/pci/msi/msi.c
+> [ ... ]
+>> @@ -954,6 +954,14 @@ int pci_msix_write_tph_tag(struct pci_dev *pdev, unsigned int index, u16 tag)
+>>       if (!pdev->msix_enabled)
+>>               return -ENXIO;
+>>
+>> +     /*
+>> +      * The tag update below is a write to the MSI-X Table followed by a
+>> +      * flush read, neither of which can be completed while the Link is
+>> +      * contained. Let the caller disable TPH instead.
+>> +      */
+>> +     if (pci_msi_dev_inaccessible(pdev))
+>> +             return -EIO;
+>> +
+> 
+> [Severity: High]
+> Since this check happens before acquiring msi_descs_lock and irq_desc->lock
+> in pci_msix_write_tph_tag(), does it leave a race window where the device
+> could become inaccessible after the check?
+> 
+> If a DPC event occurs while waiting for the locks, it looks like the
+> subsequent unconditional flush read:
+> 
+> drivers/pci/msi/msi.c:pci_msix_write_tph_tag() {
+>     ...
+>         /* Flush the write */
+>         readl(pci_msix_desc_addr(msi_desc));
+>     ...
+> }
+> 
+> would still execute on an inaccessible device, potentially triggering the
+> exact DPC escalation this patch aims to prevent.
+> 
+>>       virq = msi_get_virq(&pdev->dev, index);
+>>       if (!virq)
+>>               return -ENXIO;
+>> diff --git a/drivers/pci/msi/msi.h b/drivers/pci/msi/msi.h
+>> index 0b420b319f50f..c3194d8425c88 100644
+>> --- a/drivers/pci/msi/msi.h
+>> +++ b/drivers/pci/msi/msi.h
+> [ ... ]
+>> @@ -36,6 +50,9 @@ static inline void pci_msix_write_vector_ctrl(struct msi_desc *desc, u32 ctrl)
+>>  {
+>>       void __iomem *desc_addr = pci_msix_desc_addr(desc);
+>>
+>> +     if (pci_msi_dev_inaccessible(msi_desc_to_pci_dev(desc)))
+>> +             return;
+>> +
+> 
+> [Severity: High]
+> If this silently skips the vector control write, does it expose callers like
+> pci_write_msg_msix() to partial MMIO updates and unconditional flush reads?
+> 
+> Looking at pci_write_msg_msix(), if the mask write is silently skipped,
+> would the subsequent address and data writes, as well as the flush read,
+> still execute unconditionally:
+> 
+> drivers/pci/msi/msi.c:pci_write_msg_msix() {
+>     ...
+>         writel(msg->address_lo, base + PCI_MSIX_ENTRY_LOWER_ADDR);
+>         writel(msg->address_hi, base + PCI_MSIX_ENTRY_UPPER_ADDR);
+>         writel(msg->data, base + PCI_MSIX_ENTRY_DATA);
+> 
+>         if (unmasked)
+>                 pci_msix_write_vector_ctrl(desc, ctrl);
+> 
+>         /* Ensure that the writes are visible in the device */
+>         readl(base + PCI_MSIX_ENTRY_DATA);
+>     ...
+> }
+> 
+> Could this trigger an Unsupported Request and the DPC escalation if the link
+> is contained?
+> 
+>>       if (desc->pci.msi_attrib.can_mask)
+>>               writel(ctrl, desc_addr + PCI_MSIX_ENTRY_VECTOR_CTRL);
+>>  }
+> 
+> --
+> Sashiko AI review · https://sashiko.dev/#/patchset/20260825140952.4066140-1-vidyas@nvidia.com?part=1
+
