@@ -1,48 +1,48 @@
 Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.9])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2DC9631A556;
-	Tue, 25 Aug 2026 02:26:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8DED53191CE;
+	Tue, 25 Aug 2026 02:27:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.9
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787624817; cv=none; b=sxuEMkeVzY6a+63WrXiedAaKsNJfj0ASUEq5Hpqr6voKQnzQ/up4aEYiWI7dxIA2rziq8iG5Pm4sEo6wperlnSs+sGANpHYNEQw1cZYYTB10PYDmP0aMHFxlKUEccSyFfJhj6cl/fdZNNWS5+2rjuxLJWYRv5hzhE/Gl/b95CJc=
+	t=1787624825; cv=none; b=bRGfg4YJ6BWNEY+R+u1x79EQFVACIyABDkYd8G+3YeQAPphmpitYMKoDGdFlzcAPogwa/QVJWgZBRzhUt4zaEnwBtrJdUf6lOdfYF2eKo4wQPsKvVJKlx2pelb2qMxM7M703vacfpgIn6lJ9j8ApY5oT+KEV3lCJAfrQNB4o8Ts=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787624817; c=relaxed/simple;
-	bh=luXAFR5A0hd2IqVdgYztssDIQ6BwQc+LTt+HmX9tnxo=;
+	s=arc-20240116; t=1787624825; c=relaxed/simple;
+	bh=xeqgpOGSccYdKjps30e3iCkBlKdPX8jK81YqHCCS7uM=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=syUE6yDK+tDGU8bi1XH9lWSvsJKh3dY97MC0qAnie7Zl3KGUv5U1zBt/d9JTC9H2RGzo6dK7yVTIJK1sx+Bkcu3pM7C6xbqSqFcPNsKJrpMX5GLFT/bUuDT+nuRC61fFuCcl2bqtaHyiHbd5wQhn3W9CP2QaPo4axCvJyjMxK8Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=g3AA8koT; arc=none smtp.client-ip=192.198.163.9
+	 MIME-Version; b=SxUhoXNjv3pgNC8D4kX03WkfOPI4/nJB5BEX620lXrzL5QuYATnE5gEIrwdNe/UjalOXUTDuN2HKtPVvhtM65Psfmw1xrbQGdBIGwIKO79fxNOrhiWDTn0giSkmLQjIgLoEVsX3cNNmtIT9L+6bN7uZ7XxT1AmkPXkEkwS10W/c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=CvPbScQZ; arc=none smtp.client-ip=192.198.163.9
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="g3AA8koT"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="CvPbScQZ"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1787624816; x=1819160816;
+  t=1787624823; x=1819160823;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=luXAFR5A0hd2IqVdgYztssDIQ6BwQc+LTt+HmX9tnxo=;
-  b=g3AA8koTzLZ37hVEXRvfmM7LkEWNGhSFdfsWOdeOzq5GPpDripEG5RKO
-   gFmRBYKco5vhH2Bauu0JapsIz9XWckD9cGIrT9X3QaZEs5j9MLTAukstq
-   6BaUoL1f7sVEsxomzhvPQRdCofLo677qUk1ezOkOjPatN56utOaOm9/pI
-   MPicvtg3CUwemysKBK3YvroJdb20VaDvavIjS3Quj53ySs89JymBAyfkP
-   MS6u+RQV+97kCzYWy6hCuS0MMVwpLGfxo3LCgqEl5UPW5Bi2qGc7MSRwE
-   AofLrXpopHPoUKeSKdlL4EuPV1ESRPTA3HoUMUFnw1B/M4i2VKuTULmaZ
-   w==;
-X-CSE-ConnectionGUID: RKjhkrFRTe6BVU5jrhpo+w==
-X-CSE-MsgGUID: 8oG2NCYQSY+rEu7kdkmj/w==
-X-IronPort-AV: E=McAfee;i="6800,10657,11885"; a="98760974"
+  bh=xeqgpOGSccYdKjps30e3iCkBlKdPX8jK81YqHCCS7uM=;
+  b=CvPbScQZAjxFxTGdo8tqzwPUGh6O+jrhSdOaPCfPIKhLovnuCUT2ig4Q
+   6wYDBMVqNXtG7Zi7g8fdOKYOJC6BvF2EvyiG2PQoB7xm1v3W3P72IpBta
+   8IoGjtNHLN6t5TQjWmTk+8xT9vPJhBlSS7ySxyQokXbv/1n/c6Y5FcaDb
+   WrU5BqSbTm3g5yayIOwb1/IIkx1ewxQ8Ibr3x/u5w9f79g6e8UqSIMiky
+   bT9mEkRrZan1s1gUcrj4vNl4VtRHbIMAjXSk59irV670hSagnZ//xzF0p
+   +JGfoEYNzuTbPwuG1VGxylXvpeZI/Tda7/0HeUKUtyFKuyiSDWadx262j
+   Q==;
+X-CSE-ConnectionGUID: 5IPGY8UPTV+VRfD5Cr0KgA==
+X-CSE-MsgGUID: G8d5ztl6QfO64Os2n/uQbA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11885"; a="98761001"
 X-IronPort-AV: E=Sophos;i="6.25,241,1779174000"; 
-   d="scan'208";a="98760974"
+   d="scan'208";a="98761001"
 Received: from orviesa006.jf.intel.com ([10.64.159.146])
-  by fmvoesa103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Aug 2026 19:26:55 -0700
-X-CSE-ConnectionGUID: MB+GDsTWTrS4G9U7JS2ynw==
-X-CSE-MsgGUID: OFbwcOqSRaGkEg9HTVIQ7g==
+  by fmvoesa103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Aug 2026 19:27:02 -0700
+X-CSE-ConnectionGUID: KdGJNJfHR96baGgvXtQVSw==
+X-CSE-MsgGUID: 11OofZUFRiO+d4zK+Qn7bg==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.25,241,1779174000"; 
-   d="scan'208";a="265390053"
+   d="scan'208";a="265390063"
 Received: from fdefranc-mobl3.igk.intel.com ([172.28.182.157])
-  by orviesa006-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Aug 2026 19:26:48 -0700
+  by orviesa006-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Aug 2026 19:26:56 -0700
 From: "Fabio M. De Francesco" <fabio.m.de.francesco@linux.intel.com>
 To: linux-cxl@vger.kernel.org
 Cc: David Hildenbrand <david@kernel.org>,
@@ -73,9 +73,9 @@ Cc: David Hildenbrand <david@kernel.org>,
 	linux-pci@vger.kernel.org,
 	linuxppc-dev@lists.ozlabs.org,
 	"Fabio M. De Francesco" <fabio.m.de.francesco@linux.intel.com>
-Subject: [PATCH v2 02/13] cxl/hdm: Add function to restore one HDM decoder
-Date: Tue, 25 Aug 2026 04:26:17 +0200
-Message-ID: <20260825022628.3651434-3-fabio.m.de.francesco@linux.intel.com>
+Subject: [PATCH v2 03/13] cxl/hdm: Add function to restore CXL.mem decode
+Date: Tue, 25 Aug 2026 04:26:18 +0200
+Message-ID: <20260825022628.3651434-4-fabio.m.de.francesco@linux.intel.com>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260825022628.3651434-1-fabio.m.de.francesco@linux.intel.com>
 References: <20260825022628.3651434-1-fabio.m.de.francesco@linux.intel.com>
@@ -87,107 +87,101 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Add cxl_decoder_recommit() to restore one HDM decoder that the driver
-holds as committed but hardware no longer reports Committed, rewriting the
-cached settings and committing it again.
+A reset of a CXL Downstream Port clears HDM Decoder Enable in the CXL HDM
+Decoder Global Control register of every endpoint below it, and Mem_Enable
+in their DVSEC CXL Control register. Per CXL r4.0 sec 8.2.4.20.2
+Table 8-118 a device decodes CXL.mem through the DVSEC range registers
+while HDM Decoder Enable is clear, so a decoder committed in that state
+does not establish the route, and per sec 8.1.3.2 Table 8-6 a component
+with Mem_Enable clear may silently drop all CXL.mem transactions.
 
-Restoring the decoders below a reset Port means reprogramming each one
-along the path to every affected endpoint. cxl_decoder_recommit() does that
-for a single decoder, so it will be reused later for the full path.
+Add cxl_endpoint_enable_hdm_decode() to put an endpoint back in HDM decode
+before its decoders are committed again. It takes the Global Control value
+to enable decode in, since that register also holds Poison On Decode Error
+Enable, which the driver does not model and which a read taken after the
+reset returns at its default.
+
+Leave alone an endpoint that decodes through the DVSEC ranges rather than
+the HDM decoders, either because it has no HDM decoder registers or
+because its decoders are emulated from those ranges. Setting HDM Decoder
+Enable on such a device moves it off the ranges it is decoding through and
+onto decoders that are locked against reprogramming, so it would decode
+nothing.
 
 Signed-off-by: Fabio M. De Francesco <fabio.m.de.francesco@linux.intel.com>
 ---
  drivers/cxl/core/core.h |  1 +
- drivers/cxl/core/hdm.c  | 71 +++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 72 insertions(+)
+ drivers/cxl/core/hdm.c  | 52 +++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 53 insertions(+)
 
 diff --git a/drivers/cxl/core/core.h b/drivers/cxl/core/core.h
-index 4dc324f019ab..6d536fe7b446 100644
+index 6d536fe7b446..918d48f4422e 100644
 --- a/drivers/cxl/core/core.h
 +++ b/drivers/cxl/core/core.h
-@@ -215,6 +215,7 @@ int cxl_hdm_decode_init(struct cxl_dev_state *cxlds, struct cxl_hdm *cxlhdm,
- 			struct cxl_endpoint_dvsec_info *info);
+@@ -216,6 +216,7 @@ int cxl_hdm_decode_init(struct cxl_dev_state *cxlds, struct cxl_hdm *cxlhdm,
  void cxl_enable_hdm(struct cxl_hdm *cxlhdm, u32 global_ctrl);
  int cxl_set_mem_enable(struct cxl_dev_state *cxlds, u16 val);
-+int cxl_decoder_recommit(struct cxl_decoder *cxld, u32 ctrl);
+ int cxl_decoder_recommit(struct cxl_decoder *cxld, u32 ctrl);
++int cxl_endpoint_enable_hdm_decode(struct cxl_memdev *cxlmd, u32 global_ctrl);
  int cxl_port_get_possible_dports(struct cxl_port *port);
  
  #ifdef CONFIG_CXL_FEATURES
 diff --git a/drivers/cxl/core/hdm.c b/drivers/cxl/core/hdm.c
-index 0c80b76a5f9b..d55d764895f8 100644
+index d55d764895f8..7c898c60f60f 100644
 --- a/drivers/cxl/core/hdm.c
 +++ b/drivers/cxl/core/hdm.c
-@@ -849,6 +849,77 @@ static int cxl_decoder_commit(struct cxl_decoder *cxld)
+@@ -920,6 +920,58 @@ int cxl_decoder_recommit(struct cxl_decoder *cxld, u32 ctrl)
  	return 0;
  }
  
-+/**
-+ * cxl_decoder_recommit - reprogram @cxld's HDM decoder registers and commit
-+ * @cxld: decoder to reprogram from its cached settings
-+ * @ctrl: CXL HDM Decoder n Control value to restore under the cached settings
-+ *
-+ * A reset of an upstream link clears the HDM decoder registers of every
-+ * component below it, dropping Committed while the driver still holds the
-+ * settings that were in effect. Restore those settings and commit.
-+ *
-+ * setup_hw_decoder() rewrites only Interleave Granularity, Interleave Ways and
-+ * Target Range Type, so the rest of the control register would come from a read
-+ * of the reset defaults. Per CXL r4.0 sec 8.2.4.20.7 Table 8-123 that register
-+ * also holds BI, UIO, Upstream Interleave Granularity, Upstream Interleave Ways
-+ * and Lock On Commit, none of which the driver models, and sec 8.2.4.20.12 makes
-+ * device operation undefined if a device that requires BI is committed without
-+ * it. Write @ctrl first so those fields are in place, with Commit masked off
-+ * until setup_hw_decoder() has written the range.
-+ *
-+ * A decoder that hardware still reports Committed kept its programming across
-+ * the reset and needs no work. A decoder with no ->commit is driven through the
-+ * DVSEC ranges or is a passthrough decoder, and has no registers to program.
-+ *
-+ * Section 8.2.4.20.13 requires the traffic targeting @cxld to be quiesced while
-+ * it is reprogrammed, which the caller owns. @cxld decodes nothing until the
-+ * commit completes.
-+ *
-+ * Return: 0 on success or if @cxld needs no reprogramming, negative errno if the
-+ * commit times out or if the hardware reports a commit error.
-+ */
-+int cxl_decoder_recommit(struct cxl_decoder *cxld, u32 ctrl)
++static int __cxl_endpoint_decoder_is_emulated(struct device *dev, void *data)
 +{
-+	struct cxl_port *port = to_cxl_port(cxld->dev.parent);
-+	struct cxl_hdm *cxlhdm = dev_get_drvdata(&port->dev);
-+	void __iomem *hdm = cxlhdm->regs.hdm_decoder;
-+	u32 hw_ctrl;
++	if (!is_endpoint_decoder(dev))
++		return 0;
++
++	return !to_cxl_decoder(dev)->commit;
++}
++
++/* Only the DVSEC setup path leaves ->commit NULL. */
++static bool cxl_endpoint_decoders_are_emulated(struct cxl_port *endpoint)
++{
++	return device_for_each_child(&endpoint->dev, NULL,
++				     __cxl_endpoint_decoder_is_emulated);
++}
++
++/*
++ * Restore CXL.mem decode on @cxlmd before any of its decoders is committed. A
++ * reset clears the endpoint's HDM Decoder Global Control and the DVSEC CXL
++ * Control, and per CXL r4.0 sec 8.2.4.20.2 Table 8-118 a device decodes CXL.mem
++ * with the DVSEC range registers while HDM Decoder Enable is clear. Committing
++ * a decoder in that state does not establish the route. An endpoint with no HDM
++ * decoder registers is driven through the DVSEC ranges and has nothing to
++ * enable. So is an endpoint whose decoders are emulated from those ranges, and
++ * setting HDM Decoder Enable there would switch it to decoders locked against
++ * reprogramming.
++ *
++ * @global_ctrl is the Global Control value to enable decode in. That register
++ * also holds Poison On Decode Error Enable, which the driver does not model, so
++ * the caller supplies the value it saved rather than one read back after the
++ * reset.
++ */
++int cxl_endpoint_enable_hdm_decode(struct cxl_memdev *cxlmd, u32 global_ctrl)
++{
++	struct cxl_port *endpoint = cxlmd->endpoint;
++	struct cxl_hdm *cxlhdm = dev_get_drvdata(&endpoint->dev);
 +	int rc;
 +
-+	if ((cxld->flags & CXL_DECODER_F_ENABLE) == 0)
++	if (!cxlhdm || !cxlhdm->regs.hdm_decoder)
 +		return 0;
 +
-+	if (!cxld->commit)
++	if (cxl_endpoint_decoders_are_emulated(endpoint))
 +		return 0;
 +
-+	hw_ctrl = readl(hdm + CXL_HDM_DECODER0_CTRL_OFFSET(cxld->id));
-+	if (FIELD_GET(CXL_HDM_DECODER0_CTRL_COMMITTED, hw_ctrl)) {
-+		dev_dbg(&cxld->dev, "%s: still committed, no reprogram needed\n",
-+			__func__);
-+		return 0;
-+	}
++	cxl_enable_hdm(cxlhdm, global_ctrl);
 +
-+	writel(ctrl & ~(CXL_HDM_DECODER0_CTRL_COMMIT |
-+			CXL_HDM_DECODER0_CTRL_COMMITTED |
-+			CXL_HDM_DECODER0_CTRL_COMMIT_ERROR),
-+	       hdm + CXL_HDM_DECODER0_CTRL_OFFSET(cxld->id));
-+
-+	scoped_guard(rwsem_read, &cxl_rwsem.dpa)
-+		setup_hw_decoder(cxld, hdm);
-+
-+	rc = cxld_await_commit(hdm, cxld->id);
-+	if (rc) {
-+		dev_warn(&cxld->dev, "%s: failed to commit decoder: %d\n",
-+			 __func__, rc);
++	rc = cxl_set_mem_enable(cxlmd->cxlds, PCI_DVSEC_CXL_MEM_ENABLE);
++	if (rc < 0)
 +		return rc;
-+	}
-+
-+	dev_dbg(&cxld->dev, "%s: reprogrammed HPA %#llx-%#llx\n",
-+		__func__, cxld->hpa_range.start, cxld->hpa_range.end);
 +
 +	return 0;
 +}
