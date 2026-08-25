@@ -1,290 +1,142 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C8A40306B08;
-	Tue, 25 Aug 2026 02:58:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 399F52F7F0A;
+	Tue, 25 Aug 2026 02:59:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787626703; cv=none; b=EerrwXv0xp71hiUMyQwRfgPCDArxlTGG0WpitXGK77TnRf/fk6o+RAPCt0Yz42DbOSuY445YKxBwd3sRbqhqupHTNeftYtDL8hxt7+paQi43yFyuUK2RD+nfv6ei47wzzRjap20Zq3wmBbKIeVMlDQlQnOuW3pV9G72WefVU4mg=
+	t=1787626743; cv=none; b=uwLgwg1jQ1p0zqOG/QtnjU6UrA0TVZMTPgWaCRMvwzX4DwYNP45B+PAhv3H6KswKp3Eeb+d87dj2dj0vQt4usw1GLYnHWoTicWtgmVx2T7eAyfbRdUdbgPqyeEF8Fak/I24IOdRuZG51JUPG5bZbpWnXJnUKfLo4I2JmYsf8c88=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787626703; c=relaxed/simple;
-	bh=f/F6uANxyfdP5SwYsvNVcUcuuKdvcjOHmTUDDjy3eLs=;
+	s=arc-20240116; t=1787626743; c=relaxed/simple;
+	bh=KeVWRFdJyoAW/TD2WZA46QRaM7M8KCArLaUKSBP8atY=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=L4uGW1CKO+Eb/0oQh8msBr5Tl8TOpbHQPZT0ubVmeNtDZ3AwxJzlXEHK5uS5Vjjo2AMaf7s4s77PnUh0hebtr5VAGs3ABvWq02hTGv4DR77kPbiLFfiTq8pRhw1FtiddLxGbumEzIYF1QgLLLj17CHPpYQpR70EbdawgBKo8l48=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lxCdRKta; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=HgOjBtMjmRQlKwYlvikYObu6OUF5g+3bJ08neOamWXQnfmY5GumrKqZTeqra/VRYXn7C9ah1MOhdt7sppE+5j3807DgUzTNhs/CsS9ojdiqxgvpDgmiRhjv9X3ZV3FqAwVzWGLFxDhasmamaeu/OgPUoBD5yXhlqda63/CWJNqg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=h+vBuozc; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lxCdRKta"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 06D911F000E9;
-	Tue, 25 Aug 2026 02:58:20 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="h+vBuozc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A93F11F000E9;
+	Tue, 25 Aug 2026 02:59:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787626701;
-	bh=BaFssKMupJ4dzjR2/rmeHFKw6Wn+RHQGdpWK+KYlQxA=;
+	s=k20260515; t=1787626741;
+	bh=DdCSIO2895WEDUIt9ovDiCnlP80XCh4X7ua6U5AMtcc=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=lxCdRKtaq0iK1O57tRqqq7Mk9TwABF8lY1lNeth70Bcbu1GQNgyt8Tbs1dhpJOFFx
-	 Rhl6OxCn0fnv/nsYjCgd4z4wAJ4lVxnrEZ/6sY1ybUUbQ0phh4xlY2MsX1dj0atMkA
-	 iAHt8+FUCnshKMOdRTS/Cx6Y2DJtyapLfMRl5F1GbaNR74UEJuvpZ2xM9MRvbbJLHy
-	 TgZcITzGOpR6igRM8PYBAzOVJQVBCLxk7teBI8Lyz8XQq5jaqrMvD/GJGclXtmRX1m
-	 2w9foeoqMBpiwXe7uBvT60JmOCKKIOBh9In1RbGlqMqC1YTLNXkvMV9V7vCJzbHc4T
-	 ITH3u2WpoTcjg==
+	b=h+vBuozcPPjI5ypTICnCnqqjf93hmdMMAE1nqmhcJrwcBWw6/wUhmtCHq8qTSVSCw
+	 eIYgt7FMdK6p5pd11TOBFUBhQL5fcmBVYlRRNC7u+pgy1r793/FPRMiQbz5lAVHDOS
+	 tckLz8gfFA39qad3mNsfnB+ROHTxqYm3ffa/WQiQRzwxtupZOLMgxqQO2qGzHfqOVW
+	 lSrXBYeE6gBIiHI5tIHtpOt5kRKd/yOEe7JcFQvqhyc6cd8XX8XJeyKwM1t9EbEBMR
+	 ytFK2/3FfhSTJr5I59MbHugb1Jmlw96krd1W5twwY/gYM1reszDML/TH+oYovQj9rH
+	 G7TIBqQFAB0pA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 04/13] cxl/hdm: Reprogram the HDM Decoders below a
- CXL Port
+Subject: Re: [PATCH v2 13/13] PCI/CXL: Refuse an SBR of a CXL DPort unless
+ authorized
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Fabio M. De Francesco" <fabio.m.de.francesco@linux.intel.com>
-Cc: linux-cxl@vger.kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260825022628.3651434-5-fabio.m.de.francesco@linux.intel.com>
+Cc: linux-pci@vger.kernel.org, linux-cxl@vger.kernel.org
+In-Reply-To: <20260825022628.3651434-14-fabio.m.de.francesco@linux.intel.com>
 References: <20260825022628.3651434-1-fabio.m.de.francesco@linux.intel.com>
- <20260825022628.3651434-5-fabio.m.de.francesco@linux.intel.com>
+ <20260825022628.3651434-14-fabio.m.de.francesco@linux.intel.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 25 Aug 2026 02:58:20 +0000
-Message-Id: <20260825025821.06D911F000E9@smtp.kernel.org>
+Date: Tue, 25 Aug 2026 02:59:01 +0000
+Message-Id: <20260825025901.A93F11F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 5 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] Valid ports intentionally lacking HDM decoder state (e.g., DVSEC e=
-ndpoints or passthrough switches) incorrectly trigger an error that aborts =
-topology restoration.
-- [High] The HDM Decoder Global Control register is saved for all ports but=
- is only written back for endpoints, leaving switch HDM decoding globally d=
-isabled.
-- [High] Lockless iteration over `port->endpoints` using `xa_for_each()` le=
-ads to a Use-After-Free of `struct cxl_ep` when endpoints are concurrently =
-removed.
-- [High] Lockless access to `iter->dev` driver data leads to Use-After-Free=
- of `struct cxl_hdm` if the port driver is concurrently unbound.
-- [Medium] Recommitting decoders on shared switches during a per-endpoint p=
-ath walk prematurely commits sibling decoders, violating the bottom-up prog=
-ramming requirement.
+- [High] cxl_sbr_unbind_regions() and cxl_sbr_enable_regions() ignore the r=
+eturn value of cxl_sbr_collect_regions().
 --
 
---- Patch [4]: [PATCH v2 04/13] cxl/hdm: Reprogram the HDM Decoders below a=
- CXL Port ---
-commit 8ab001ee7d558b0995b7f0cff3266fb8cd0949bb
+--- Patch [13]: [PATCH v2 13/13] PCI/CXL: Refuse an SBR of a CXL DPort unle=
+ss authorized ---
+commit 8a167a59c2870bad236e079ff1641933532c8a30
 Author: Fabio M. De Francesco <fabio.m.de.francesco@linux.intel.com>
 
-cxl/hdm: Reprogram the HDM Decoders below a CXL Port
+PCI/CXL: Refuse an SBR of a CXL DPort unless authorized
 
-A reset of a CXL Port clears the HDM Decoders of every component below it,
-so the decode has to be put back for every endpoint the Port routes to.
-This patch adds cxl_port_recommit_decoders() and cxl_port_save_hdm_state()
-to save and restore HDM decoder states across a reset.
+This commit prevents the Secondary Bus Reset (SBR) bit from being
+silently unmasked if it is left at the firmware default. It adds
+cxl_sbr_allowed() to verify whether a CXL Downstream Port has its
+Unmask SBR bit set, requiring explicit authorization otherwise.
 
-> diff --git a/drivers/cxl/core/hdm.c b/drivers/cxl/core/hdm.c
-> index 7c898c60f60f6..9839d2592d206 100644
-> --- a/drivers/cxl/core/hdm.c
-> +++ b/drivers/cxl/core/hdm.c
+> diff --git a/drivers/cxl/core/dport_sbr.c b/drivers/cxl/core/dport_sbr.c
+> new file mode 100644
+> index 0000000000000..823b63012f45b
+> --- /dev/null
+> +++ b/drivers/cxl/core/dport_sbr.c
+
 [ ... ]
-> @@ -935,6 +935,42 @@ static bool cxl_endpoint_decoders_are_emulated(struc=
-t cxl_port *endpoint)
->  				     __cxl_endpoint_decoder_is_emulated);
->  }
-> =20
-> +struct cxl_recommit_ctx {
-> +	const struct cxl_hdm_state *state;
-> +	int *first_rc;
-> +};
-> +
-> +static int __cxl_port_recommit_decoder(struct device *dev, void *data)
+
+> +static void cxl_sbr_unbind_regions(struct pci_dev *dport_pci)
 > +{
-> +	struct cxl_recommit_ctx *ctx =3D data;
-> +	struct cxl_decoder *cxld;
-> +	int rc;
-> +
-> +	if (!(is_switch_decoder(dev) || is_endpoint_decoder(dev)))
-> +		return 0;
-> +
-> +	cxld =3D to_cxl_decoder(dev);
-> +
-> +	if (cxld->id >=3D ctx->state->nr_ctrl) {
-> +		dev_warn(&cxld->dev, "%s: no saved control register\n",
-> +			 __func__);
-> +		if (!*ctx->first_rc)
-> +			*ctx->first_rc =3D -ENODATA;
-> +		return 0;
-> +	}
-> +
-> +	/*
-> +	 * Reprogram every decoder the walk reaches. Stopping at the first
-> +	 * failure would leave the rest of the path decoding nothing, so record
-> +	 * the first error and continue.
-> +	 */
-> +	rc =3D cxl_decoder_recommit(cxld, ctx->state->ctrl[cxld->id]);
-
-[Severity: Medium]
-Since this function is called for every child decoder of a switch port,
-could it unconditionally recommit sibling decoders before their downstream
-path is reprogrammed?
-
-If multiple endpoints route through a shared switch, reprogramming the
-switch during the first endpoint's traversal might commit decoders for
-other endpoints whose downstream paths haven't been restored yet,
-violating bottom-up programming requirements.
-
-> +	if (rc && !*ctx->first_rc)
-> +		*ctx->first_rc =3D rc;
-> +
-> +	return 0;
-> +}
-[ ... ]
-> +int cxl_port_recommit_decoders(struct cxl_port *port, struct xarray *hdm=
-_state)
-> +{
-> +	struct cxl_ep *port_ep;
-> +	unsigned long index;
-> +	int first_rc =3D 0;
-> +
-> +	lockdep_assert_held(&cxl_rwsem.region);
-> +
-> +	xa_for_each(&port->endpoints, index, port_ep) {
-
-[Severity: High]
-Does this lockless iteration risk a use-after-free of port_ep?
-
-If a concurrent unbind of a cxl_mem driver invokes cxl_detach_ep(), the
-endpoint is removed from the xarray and the struct cxl_ep is freed without
-an RCU grace period. Since xa_for_each() doesn't hold the RCU read lock
-across the loop body, port_ep could be freed before dereferencing
-port_ep->ep.
-
-> +		struct cxl_memdev *cxlmd =3D to_cxl_memdev(port_ep->ep);
-> +		struct cxl_hdm_state *state;
-> +		struct cxl_port *iter;
-> +		int rc;
-> +
-> +		if (IS_ERR_OR_NULL(cxlmd->endpoint))
-> +			continue;
-> +
-> +		state =3D xa_load(hdm_state, (unsigned long)cxlmd->endpoint);
-> +		if (!state) {
-> +			dev_warn(&cxlmd->dev, "%s: no saved HDM state\n",
-> +				 __func__);
-> +			if (!first_rc)
-> +				first_rc =3D -ENODATA;
-> +			continue;
-
-[Severity: High]
-If a valid port intentionally lacks HDM decoder state (e.g., a DVSEC endpoi=
-nt
-or passthrough switch), will this skip processing its upstream path?
-
-This skip appears to completely abort topology restoration for the upstream
-path when legitimately missing HDM state is encountered.
-
-> +		}
-> +
-> +		rc =3D cxl_endpoint_enable_hdm_decode(cxlmd, state->global_ctrl);
-> +		if (rc) {
-> +			dev_warn(&cxlmd->dev,
-> +				 "%s: failed to enable HDM decode: %d\n",
-> +				 __func__, rc);
-> +			if (!first_rc)
-> +				first_rc =3D rc;
-> +			continue;
-> +		}
-> +
-> +		/*
-> +		 * Walk from the endpoint up to @port so a decoder is committed
-> +		 * only after the decoder it routes to. @port is the last parent
-> +		 * visited by the walk, and it is excluded.
-> +		 */
-> +		for (iter =3D cxlmd->endpoint; iter && iter !=3D port;
-> +		     iter =3D parent_port_of(iter)) {
-
-[Severity: High]
-Does this loop miss restoring the HDM Decoder Global Control register for
-switch ports?
-
-While cxl_endpoint_enable_hdm_decode() writes state->global_ctrl for endpoi=
-nts,
-this upstream walk only restores Decoder N Control registers for switch por=
-ts
-via __cxl_port_recommit_decoder(). The Global Control register for switches
-is saved but never seems to be written back, leaving switch HDM decoding
-globally disabled.
-
-> +			struct cxl_recommit_ctx ctx =3D {
-> +				.state =3D xa_load(hdm_state, (unsigned long)iter),
-> +				.first_rc =3D &first_rc,
-> +			};
-> +
-> +			if (!ctx.state) {
-> +				dev_warn(&iter->dev, "%s: no saved HDM state\n",
-> +					 __func__);
-> +				if (!first_rc)
-> +					first_rc =3D -ENODATA;
-> +				continue;
-
-[Severity: High]
-Similar to the endpoint check above, could this erroneously throw -ENODATA
-and skip reprogramming if a valid passthrough switch legitimately lacks
-HDM state?
-
-> +			}
-> +
-> +			device_for_each_child(&iter->dev, &ctx,
-> +					      __cxl_port_recommit_decoder);
-
-[Severity: Medium]
-As mentioned earlier, does this loop inherently break bottom-up ordering
-rules on shared switches by recommitting all of the switch's decoders during
-the first endpoint's traversal?
-
-> +		}
-> +	}
-> +
-> +	return first_rc;
-> +}
-[ ... ]
-> +int cxl_port_save_hdm_state(struct cxl_port *port, struct xarray *hdm_st=
-ate)
-> +{
-> +	struct cxl_ep *port_ep;
+> +	struct cxl_region *cxlr;
+> +	struct xarray regions;
 > +	unsigned long index;
 > +
-> +	lockdep_assert_held(&cxl_rwsem.region);
+> +	if (cxl_sbr_save_hdm_state(dport_pci))
+> +		pci_warn(dport_pci, "HDM state not saved, decode will not be restored\=
+n");
 > +
-> +	xa_for_each(&port->endpoints, index, port_ep) {
+> +	xa_init(&regions);
+> +
+> +	cxl_sbr_collect_regions(dport_pci, &regions);
 
 [Severity: High]
-Does this have the same use-after-free risk for port_ep as the loop in
-cxl_port_recommit_decoders()?
+Does this code silently ignore memory allocation failures during region
+collection?
 
-> +		struct cxl_memdev *cxlmd =3D to_cxl_memdev(port_ep->ep);
-> +		struct cxl_port *iter;
+If xa_insert() in cxl_sbr_collect_regions() returns -ENOMEM under memory
+pressure, the error appears to be ignored, resulting in a partial unbind
+before a bus reset.
+
+Could this leave uncollected regions bound while the link is reset, leading
+to Machine Check Exceptions if the memory is accessed while still online?
+
 > +
-> +		if (IS_ERR_OR_NULL(cxlmd->endpoint))
-> +			continue;
+> +	xa_for_each(&regions, index, cxlr)
+> +		cxl_region_unbind(cxlr);
 > +
-> +		for (iter =3D cxlmd->endpoint; iter && iter !=3D port;
-> +		     iter =3D parent_port_of(iter)) {
-> +			struct cxl_hdm *cxlhdm =3D dev_get_drvdata(&iter->dev);
+> +	cxl_sbr_put_regions(&regions);
+> +}
+
+[ ... ]
+
+> +static void cxl_sbr_enable_regions(struct pci_dev *dport_pci)
+> +{
+> +	struct xarray *hdm_state;
+> +	struct cxl_region *cxlr;
+> +	struct xarray regions;
+> +	unsigned long index;
+> +
+> +	xa_init(&regions);
+> +
+> +	cxl_sbr_collect_regions(dport_pci, &regions);
 
 [Severity: High]
-Could this result in a use-after-free of cxlhdm if the port driver is
-concurrently unbound?
+Is the return value of cxl_sbr_collect_regions() intentionally ignored here
+as well?
 
-Accessing driver data via dev_get_drvdata() while holding only
-cxl_rwsem.region doesn't block driver unbind. A concurrent unbind
-could release the devres allocations, freeing struct cxl_hdm before its
-members are accessed below.
+If region collection fails, it seems the uncollected regions would skip the
+enable step and permanently leak their disabled state.
 
-> +			struct cxl_hdm_state *state;
-> +			void __iomem *hdm;
-> +			int rc;
 > +
-> +			if (xa_load(hdm_state, (unsigned long)iter))
-> +				continue;
+> +	hdm_state =3D xa_load(&cxl_sbr_hdm_state, (unsigned long)dport_pci);
+> +	if (hdm_state)
+> +		cxl_sbr_recommit_decoders(dport_pci, hdm_state);
+> +	else
+> +		pci_warn(dport_pci, "no saved HDM state, decode not restored\n");
 > +
-> +			if (!cxlhdm || !cxlhdm->regs.hdm_decoder)
-> +				continue;
+> +	xa_for_each(&regions, index, cxlr)
+> +		cxl_region_enable(cxlr);
 > +
+> +	cxl_sbr_put_regions(&regions);
+> +	cxl_sbr_drop_hdm_state(dport_pci);
+> +}
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260825022628.3651=
-434-1-fabio.m.de.francesco@linux.intel.com?part=3D4
+434-1-fabio.m.de.francesco@linux.intel.com?part=3D13
