@@ -1,150 +1,121 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f53.google.com (mail-ej1-f53.google.com [209.85.218.53])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A635A285041;
-	Tue, 25 Aug 2026 09:04:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62E963F0A92
+	for <linux-pci@vger.kernel.org>; Tue, 25 Aug 2026 09:50:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787648671; cv=none; b=aHVpgIQBNo3/E2B4hSpSnYkH6WOSsb2HszCK5PIgWAgZD2zwIE2tg/z7Y55lzBDGSMIee2ilyCF2ABcnhbKl3dx5nL/jaqn+Yi1v4vk8eFateYdUe6BkcC1r9KQryICY7GRbqya1wPbDd5/ysQguxS3GDCF+nWSgdnZwjEmWF3M=
+	t=1787651454; cv=none; b=VN6YQ79hFwBYnpr2zF+3V3lJgTsgYfbFM9Bx+YorUPP+5E9P9isKidAQoHGw33U/JEApToNTnqKlaDN4t4UpLvm/NAfR99HpGMak5qz2eGOq4LprMbvwdr68qLrTq/gEqwDF4HoEr51ozbY1afJp3hhbMP3yWjYlUmSxBU2zTQQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787648671; c=relaxed/simple;
-	bh=YlmY9D/BSjhSWBXTk+TFZ1EvwD3Q0tYwrbR5yzND5T4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=AXZFXVyXAeIzwivk1EZbfJsdlz0BL9ESAlX5ZypvrtSY5qFo98Q4IzJBHb/i6mLYZNguNyXGb6mrl+tvaFUjh9SoCh9YnAzRMEN9yY4T8J19dC9JsHTFSTcNFqNqtFGIdWrr9TkQzcAjUkpr62ZaIPAcnV4JBxelZy7eIEm21ZY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cqsmI9xk; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1787651454; c=relaxed/simple;
+	bh=PZ9qIitPQZRsBamqRGgzCN53LuQxOmZYmBNDP2aMrSY=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=OLaN2EluDO/9HcFq7GvuWPt4wzXlHFdRVR7R/gZnPo0dTIWw2iV8zH/di0SbotZjylOfnN5tb1/E60PiJkUlAJUOUxgLh+sW/BDGGxVqcCvZHZq7H0sBPue+JhaQCFTUQ3Tob1c+Mfs0Z2tYhQWiIHYkctm4IO+u+iwLbo+3NQY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=gf/TXKzb; arc=none smtp.client-ip=209.85.218.53
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cqsmI9xk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EB0C81F000E9;
-	Tue, 25 Aug 2026 09:04:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787648670;
-	bh=uQICfGB8NxqflMD2W2T6ZXRRqp7Et7QYL8aeSOMCllQ=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=cqsmI9xk66m9DV6O4wbx4yyrvrxR/JZaYeg28c6Zr2/ArHDjIajex5NXoEpLWcuOa
-	 EcnUIEGlCPU5AckKWWCs4WfuKllivF8j7EvvEUBAldqWRmW08I/dEFT4jnFHvCCOlV
-	 mK5Mtz9CFybiJeeKLRDfcPFsfMssjWBHWuTQ09UzrH8ctweYYY++bPdm97OeiDDHPH
-	 Yas9QaKu771j7jmnIS0JyURIPNMPvulo/YZmxNvgzd37m80gSD4eWM3rKDBuDguZUS
-	 auUmSIUr+VI8Pze0X33iF17dDo//2aMSH4ooIp+l5w5vBO15tdl2Rt8AdEK3SDhB04
-	 livwcm3W15gqQ==
-Message-ID: <218dd957-691f-4769-9270-b709d92d9aa3@kernel.org>
-Date: Tue, 25 Aug 2026 11:04:21 +0200
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="gf/TXKzb"
+Received: by mail-ej1-f53.google.com with SMTP id a640c23a62f3a-c197e7e4e94so796157366b.2
+        for <linux-pci@vger.kernel.org>; Tue, 25 Aug 2026 02:50:53 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1787651452; x=1788256252; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=7fbSGif2msTasGqCebxF57uBolO1YU7FnzxNIrdyH2k=;
+        b=gf/TXKzbKCnZFwo+9OjRWAWXjalfBzTxufSTbcIWmvqz749vGLRCWly2ukrPvjLx9C
+         vOrM6FyZyGh9g66IfXTvsyFIybKWw96uwO+kcdvJ1jMeS83DA1s8dJMYPjeHb+CfrP25
+         8ZkssoI9LrZ9F+u8AtcsoW55dOJiue4Zrd6qd1dzXLYoLjDm63eed4T9N/8JNpgwXhsD
+         Z2IRGB9gpQo7g/QYsPujPCv0BlPUPdl5dXxMzhJHxw2AtOQdwoD77/GnlkxISjBTlW6S
+         t1zVa+Uu2bGT4hp1U2eNhYmnnGoa3VxhyribJOeZkiutgEwOjzi+B1AHDz5Ir2p7K4vG
+         iQUA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1787651452; x=1788256252;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=7fbSGif2msTasGqCebxF57uBolO1YU7FnzxNIrdyH2k=;
+        b=i6LUERvKeGytuwjlnvNrYQJpoXlRAV2vkalDXe21orwwlf6/ezTkBW310aD/sluoKx
+         ipJYCICYwiWhrYFXa3sEK0BDJ8WpILF7vZyeNTTloqsSD3Yh93JuzAmBqmuWAfUHrs2o
+         S/NZsXClRDlYo3M1J1d2XdkvCNqcdhmAwQewlqxppIrF6tXOXAEgtagoVWjUYa0A+u25
+         qIE2/YqhBVk7JfSZPMdsA4bw4D27Xc4nFsUXSWp74BkGMKuOUXLIqZV2eEVyXvOmFe+Q
+         Cm7NE02eZdu3Tki9gws736yZM6xJc4Hx9JWZOsuQ5j4IXFn1KORC2XPLIVKxhPyA7l3N
+         mItw==
+X-Forwarded-Encrypted: i=1; AHgh+RoDRl/xeE8CeIctH3U8VaRwgXdWFOoqt0M8CdEoRL/n5+FfCci/N+VUyAIHy4tfnD/w73Fogbn1JoQ=@vger.kernel.org
+X-Gm-Message-State: AFuF++ndGCIrNm93FLqoFx7EBn9XgXjU1iHkpu0L4gQvBaPeLxu6tKOW
+	gO2LxChCHOBuZ9i+A2cmGSeKU5LHMtoe0co+eQ6TMscLD0hD3CRNeciZ
+X-Gm-Gg: AR+sD12UTgWH301HAoRQMUf2ZS/OkDtHiblz6DdmcKo5FqRaZG8O+iWYx920tXqSdJ2
+	3CIyJg4XKQEV00iZ2LH5H3qHNfhaKTj4CoOOq2OsNArrBR3CYf/K2Owug9/NaoYjBFMJN25bcxo
+	p2QMmB5Skkx7l3wxl9sDUM80EcIozbF0U7eiD2aK9QfdTKI/7l/qcO0ru//iwvpUXSCT78NPXy0
+	eZ1oMyPsx+Lyj362BkewzELu+8vSBW9NA4RKjgo2ujbEqom+35Q/RSNcSq+wIl4Y2kIN2pwqWjg
+	SRUOpEMRptYvDwIvdFHenlIUYBuXEYrsRtQAg3HDkmS5HlazGKVN2QGtSKPBfymkkDVXKcLp+jw
+	FGjuscw2ZpIRp6m/OlGg9RZu1aUBNu0a3lTBYY+6dgSjz2vk3aWMAvZ15VmW6g/K3e3TW+tE6Ci
+	vMYxjCWaBrKozT/HtfUWxMUG1u7PItlVQoMIXzZg3RVhh7bYL2L2mzJseAXREVQlS/Ah2Mdoh8h
+	3+IqY3d7lUPFc7YbRb5gN8=
+X-Received: by 2002:a17:907:94d0:b0:c24:8a09:8195 with SMTP id a640c23a62f3a-c249238cd91mr2499249066b.3.1787651451279;
+        Tue, 25 Aug 2026 02:50:51 -0700 (PDT)
+Received: from localhost.localdomain ([2a00:23c4:a702:d301:81d:57c0:e4cb:959c])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-c249629929dsm1749320666b.23.2026.08.25.02.50.50
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 25 Aug 2026 02:50:50 -0700 (PDT)
+From: Biju <biju.das.au@gmail.com>
+X-Google-Original-From: Biju <biju.das.jz@bp.renesas.com>
+To: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Geert Uytterhoeven <geert+renesas@glider.be>,
+	Magnus Damm <magnus.damm@gmail.com>
+Cc: Biju Das <biju.das.jz@bp.renesas.com>,
+	Rob Herring <robh@kernel.org>,
+	linux-pci@vger.kernel.org,
+	linux-renesas-soc@vger.kernel.org,
+	devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Prabhakar Mahadev Lad <prabhakar.mahadev-lad.rj@bp.renesas.com>,
+	Biju Das <biju.das.au@gmail.com>
+Subject: [PATCH 0/4] Add RZ/G3L PCIe support
+Date: Tue, 25 Aug 2026 10:50:39 +0100
+Message-ID: <20260825095047.9971-1-biju.das.jz@bp.renesas.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/4] dt-bindings: phy: qcom: add Nord QMP PCIe PHY binding
-To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>,
- Vinod Koul <vkoul@kernel.org>, Neil Armstrong <neil.armstrong@linaro.org>,
- Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>,
- Conor Dooley <conor+dt@kernel.org>, Lorenzo Pieralisi
- <lpieralisi@kernel.org>, =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?=
- <kwilczynski@kernel.org>, Manivannan Sadhasivam <mani@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Bjorn Andersson <andersson@kernel.org>,
- Maxime Chevallier <maxime.chevallier@bootlin.com>,
- Philipp Zabel <p.zabel@pengutronix.de>
-Cc: linux-arm-msm@vger.kernel.org, linux-phy@lists.infradead.org,
- devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-pci@vger.kernel.org
-References: <20260825-nord-v1-0-7c02f2b8765a@oss.qualcomm.com>
- <20260825-nord-v1-1-7c02f2b8765a@oss.qualcomm.com>
-From: Krzysztof Kozlowski <krzk@kernel.org>
-Content-Language: en-US
-Autocrypt: addr=krzk@kernel.org; keydata=
- xsFNBFVDQq4BEAC6KeLOfFsAvFMBsrCrJ2bCalhPv5+KQF2PS2+iwZI8BpRZoV+Bd5kWvN79
- cFgcqTTuNHjAvxtUG8pQgGTHAObYs6xeYJtjUH0ZX6ndJ33FJYf5V3yXqqjcZ30FgHzJCFUu
- JMp7PSyMPzpUXfU12yfcRYVEMQrmplNZssmYhiTeVicuOOypWugZKVLGNm0IweVCaZ/DJDIH
- gNbpvVwjcKYrx85m9cBVEBUGaQP6AT7qlVCkrf50v8bofSIyVa2xmubbAwwFA1oxoOusjPIE
- J3iadrwpFvsZjF5uHAKS+7wHLoW9hVzOnLbX6ajk5Hf8Pb1m+VH/E8bPBNNYKkfTtypTDUCj
- NYcd27tjnXfG+SDs/EXNUAIRefCyvaRG7oRYF3Ec+2RgQDRnmmjCjoQNbFrJvJkFHlPeHaeS
- BosGY+XWKydnmsfY7SSnjAzLUGAFhLd/XDVpb1Een2XucPpKvt9ORF+48gy12FA5GduRLhQU
- vK4tU7ojoem/G23PcowM1CwPurC8sAVsQb9KmwTGh7rVz3ks3w/zfGBy3+WmLg++C2Wct6nM
- Pd8/6CBVjEWqD06/RjI2AnjIq5fSEH/BIfXXfC68nMp9BZoy3So4ZsbOlBmtAPvMYX6U8VwD
- TNeBxJu5Ex0Izf1NV9CzC3nNaFUYOY8KfN01X5SExAoVTr09ewARAQABzSVLcnp5c3p0b2Yg
- S296bG93c2tpIDxrcnprQGtlcm5lbC5vcmc+wsGPBBMBCgA5AhsDBgsJCAcDAgYVCAIJCgsE
- FgIDAQIeAQIXgBYhBJvQfg4MUfjVlne3VBuTQ307QWKbBQJp2mE8AAoJEBuTQ307QWKbeaIP
- /ihHTkTW4KsN/DQ945JJbyu5tI0J80Wue7QyyLPglyKfhgb5cLLNPpOC8cCIJsc7+W3i2P38
- s2c1cOH6CYGE7E9ur3Vfme8NW2S2I/Z8VC7bZnzyS23wT17LrsdS/qCpx4o8U+pt/xdXDKph
- EGRYrIEmMpUWvyYzyYKGIe25FtaayIIKpq8eZYyFcp2f/sG5IkOW5uZzHPMPdcm87jU7fyuQ
- rAU2vx9r+ulUfQ/q9Z2roC/ode3l7t2pN7BCBCsUDp6JCrUyZrtT1e7EbA0ZRP3aOBNk2P2E
- DQOgJGjGdO5Yx2Y9LFtltu6JbsBJHi1syGRX3AtQYOMc4Y1WGoeZJmMlvKj2ZqqXNkcWi2DS
- IQEWB0uW6CqFsBBIMGDa+6OzdaVO/uAVXWDWml02Men3CILdI1MbVjoh8ECqYUY7OQ+JJvNN
- vnliuq5WM3Ghd3jg/LZZrxXjdIginRHFQCjIJYLKpLZWm1/iDFedcfzqRNYmTtqscdCNHW41
- oT3Z7BmO9xwdjuwBS6nmS6JJwkbf5Ot2QR4pB/DRU7ZwjT1qHe+9r9gF32wXVQatHNGK/VVu
- sfwOnkdxCWkp/qb2gdQRmZh+SedStWshigH6sNfuHBloF/q+hjMRc8b2m326OZdrbSHwY1Sz
- vti8Hn7n8NjdHO9LKB7BIdjkA9DA5WsqOuVCzsFNBFVDXDQBEADNkrQYSREUL4D3Gws46JEo
- Z9HEQOKtkrwjrzlw/tCmqVzERRPvz2Xg8n7+HRCrgqnodIYoUh5WsU84N03KlLueMNsWLJBv
- BaubYN4JuJIdRr4dS4oyF1/fQAQPHh8Thpiz0SAZFx6iWKB7Qrz3OrGCjTPcW6eiOMheesVS
- 5hxietSmlin+SilmIAPZHx7n242u6kdHOh+/SyLImKn/dh9RzatVpUKbv34eP1wAGldWsRxb
- f3WP9pFNObSzI/Bo3kA89Xx2rO2roC+Gq4LeHvo7ptzcLcrqaHUAcZ3CgFG88CnA6z6lBZn0
- WyewEcPOPdcUB2Q7D/NiUY+HDiV99rAYPJztjeTrBSTnHeSBPb+qn5ZZGQwIdUW9YegxWKvX
- XHTwB5eMzo/RB6vffwqcnHDoe0q7VgzRRZJwpi6aMIXLfeWZ5Wrwaw2zldFuO4Dt91pFzBSO
- IpeMtfgb/Pfe/a1WJ/GgaIRIBE+NUqckM+3zJHGmVPqJP/h2Iwv6nw8U+7Yyl6gUBLHFTg2h
- YnLFJI4Xjg+AX1hHFVKmvl3VBHIsBv0oDcsQWXqY+NaFahT0lRPjYtrTa1v3tem/JoFzZ4B0
- p27K+qQCF2R96hVvuEyjzBmdq2esyE6zIqftdo4MOJho8uctOiWbwNNq2U9pPWmu4vXVFBYI
- GmpyNPYzRm0QPwARAQABwsF2BBgBCgAgAhsMFiEEm9B+DgxR+NWWd7dUG5NDfTtBYpsFAmna
- YUkACgkQG5NDfTtBYptX+BAApg32CkxwNucNEi8WfWA8oKkW0y8YDuY6ORMo9FWNGiT/OTy0
- vyJrLocrpn86zwfjVp+eCrssPYh8eqJfnWqmYv6ACQtHPYzPZQ3mSo8H97Z01oUxITzCxpXm
- ZkLgPIqtDPcC2E3dPM/fVxcyowM8XsaMA9wcsaUYrta8toOq2b9tKcjleKMfMrm0gQ9u7wUc
- QbLkwj6TCLOwucb07GXzLTNF9PZmaDUpKAZjMjmrW+le+SFvQbhamx0rxLWPR0NWntXpbCn+
- +ACch03p/JyTBVktxFsFyCt7pTPE1kEaeuXBTe/a2D9iQvRxRW19LvuO2e59/u1wYUiH/orz
- wbIC2S4dBsPAPihL3ztOU1yE86GPyQtSE0kU+/7snnLt4QGi6PChf3t5gnNjAzjUUovO8rgI
- c+5yN5heq5loYHgK6OQ9OlHzsPHO9e9MOQcKlFycs1pyijFGzDwdNUm/SchK8iWT2QApTx4A
- K9bCVaboTA2T77QYkRcRJYSsO1alGX0ome/hMLD1daXlkrNUp1HWa3K4iytLRXjCSIorWiGs
- n+q3krnpXu3TFkA8qtOFZMdnIiFuiq1yLT8hptsV5xh1TA2nsVvSYiaCr3q4s4BKjS/KrLDb
- qoxzw8ISjdUp4pA85vb6YLCmb39NgidD+7PmAr65lBNveIFynTgsja1rRQ4=
-In-Reply-To: <20260825-nord-v1-1-7c02f2b8765a@oss.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 25/08/2026 05:40, Krishna Chaitanya Chundru wrote:
-> Document the PCIe PHY found on the Qualcomm Nord platform.
-> 
-> Nord has a Gen5-capable QMP PCIe PHY that can operate in multiple
-> lane configurations using four PHY segments (A/B/C/D). The active
-> topology is selected by firmware through a TCSR configuration
-> register and may be configured as x16, x8+x8, x8+x4+x4, or
-> x8+x4+x2+x2.
-> 
-> The binding describes the register regions, clocks, resets, power
-> domains, regulators, PHY provider interface, clock provider interface,
-> and the qcom,link-mode property used by the driver to discover the
-> active lane configuration programmed by firmware.
-> 
-> Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-> ---
->  .../bindings/phy/qcom,nord-qmp-pcie-phy.yaml       | 276 +++++++++++++++++++++
->  1 file changed, 276 insertions(+)
-> 
-> diff --git a/Documentation/devicetree/bindings/phy/qcom,nord-qmp-pcie-phy.yaml b/Documentation/devicetree/bindings/phy/qcom,nord-qmp-pcie-phy.yaml
-> new file mode 100644
-> index 000000000000..3575e99dadfd
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/phy/qcom,nord-qmp-pcie-phy.yaml
-> @@ -0,0 +1,276 @@
-> +# SPDX-License-Identifier: (GPL-2.0 OR BSD-2-Clause)
-> +%YAML 1.2
-> +---
-> +$id: http://devicetree.org/schemas/phy/qcom,nord-qmp-pcie-phy.yaml#
+From: Biju Das <biju.das.jz@bp.renesas.com>
 
-Filename should match compatible.
+Hi All,
 
-...
+The RZ/G3L PCIe controller is similar to RZ/G3S but has
+some key differences:
+     - Has 3 clocks compared to 2 on other SoCs.
+     - Has a different set of reset signals
+Add support for RZ/G3L PCIe.
 
-> +            #clock-cells = <1>;
-> +            clock-output-names = "pcie_a_pipe_clk",
-> +                                 "pcie_b_pipe_clk",
-> +                                 "pcie_c_pipe_clk",
-> +                                 "pcie_d_pipe_clk";
-> +
-> +            #phy-cells = <1>;
-> +            status = "disabled";
+Patch 3 apply on top of [1] and [2]
+[1] https://lore.kernel.org/all/20260811200013.185956-1-prabhakar.mahadev-lad.rj@bp.renesas.com/
+[2] https://lore.kernel.org/linux-renesas-soc/20260814141312.2947972-1-claudiu.beznea+renesas@tuxon.dev/
 
-So your code was never tested. Drop. Please read carefully writing
-bindings/schema, DTS101 or internal guideline.
+Biju Das (4):
+  dt-bindings: PCI: renesas,r9a08g045s33-pcie: Document RZ/G3L SoC
+  clk: renesas: r9a08g046: Add PCIe clocks and reset
+  PCI: rzg3s-host: Add support for RZ/G3L SoC
+  arm64: dts: renesas: r9a08g046: Add PCIe support
 
+ .../bindings/pci/renesas,r9a08g045-pcie.yaml  | 33 +++++++++++++-
+ arch/arm64/boot/dts/renesas/r9a08g046.dtsi    | 45 ++++++++++++++++++-
+ .../boot/dts/renesas/r9a08g046l48-smarc.dts   | 16 +++++++
+ .../boot/dts/renesas/rzg3l-smarc-som.dtsi     | 11 +++++
+ drivers/clk/renesas/r9a08g046-cpg.c           |  9 ++++
+ drivers/pci/controller/pcie-rzg3s-host.c      | 25 ++++++++++-
+ 6 files changed, 135 insertions(+), 4 deletions(-)
 
-Best regards,
-Krzysztof
+-- 
+2.43.0
+
