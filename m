@@ -1,195 +1,158 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from PH8PR06CU001.outbound.protection.outlook.com (mail-westus3azon11012031.outbound.protection.outlook.com [40.107.209.31])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E9118304BDF
-	for <linux-pci@vger.kernel.org>; Tue, 25 Aug 2026 11:41:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787658110; cv=none; b=sQQtBsZ+TDBE4oMtuwba6JL4003AM9TU6tI66cbp0gSA+SgZsl6xEFl/+4AMVv4/OPOMo4Z06QG5TQzE7GVUST8n71Z3o/IrenWN2UAS50S2886rL8vHB5IqF5WfEZHLiSkqeps/kyiUdY0liU3mOe/UYXXkyuejDtLtWdBMJgQ=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787658110; c=relaxed/simple;
-	bh=wosuwikMoz3gDvLoC+hERTwDj0vuY/3L2+sga5V0z4w=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=deMpzUj7TkljtP0epCJFNaW9qPvkimfS5kQ32397rnqMLZtWybRFDwt99nRwJj8Rjd2r25dOgX7iN/0gKTJYLvWUQl2HRFykbzruV7NrXu7JPrPddT/qqCZxyh4CX8c0L+UEq8d37fpsvqxL59hn2u1NvZ/36rIm+AMo9CYuIAs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=Am4l/S0H; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=BWynQ+Ju; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D27B83EC831;
+	Tue, 25 Aug 2026 11:49:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.209.31
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1787658564; cv=fail; b=grCDko0NCSWG+wUfQVx6aeJj4nYCayepGQ/XJZJQVsvHKaojrhvdbrbXOmiOtvXJ9FivfXZ9PLSIERVzd9WzkNE1iI1D/tQDTLfyL0aw/7FuZUVfngY4V13jAEoeJWk2UwhXUWXcx9tPVwM67QKpLNj9lt2PGbtEDMqpxn1w+Iw=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1787658564; c=relaxed/simple;
+	bh=sQ95Kb/Z3H+uYQqddxb/HH3O0v+4YwbhDWMB+4W2hig=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=r39zK/IXG21TGalGibRas+G8VjywjWMg0GPsV+UU2PCZF7VuFStIVvjlRksnsgsj+xDTcawNur0c6axkAer05uSUYolnP7Plo0nB+G48OGZZ555wkGxSvZkrOiIVnrtE5Vg2JLjiskDpi6VHPA+zEJwVUpW4cVp5Eb2cmYdtZTo=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=M0uO9xJ2; arc=fail smtp.client-ip=40.107.209.31
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="Am4l/S0H";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="BWynQ+Ju"
-Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 67PAuuig2320722
-	for <linux-pci@vger.kernel.org>; Tue, 25 Aug 2026 11:41:48 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:message-id
-	:mime-version:subject:to; s=qcppdkim1; bh=yQKcjQhqJbPmjn8LPqLdh6
-	zUEBmJh7PLXDIlBz6jV9Y=; b=Am4l/S0HS7bmVodFScqKwhK4JDEBMkPq0QJ89/
-	mgiBRQ4evtSoZ2aD1xhFP5dR+ZBPjxMrA1lCXpDizYiOtQ6X5LpL66RSOBc9Blv7
-	nTuif9VcwZX2D4xY8OMKwBAx0p2mh2f0Ime23Nzpz96zoUgMSVZcKL1uda/MSHJj
-	wm5Nxh+PxuxUCSOzFLKpNoA5Jakh+1/4LKQSKwZKRgIQ2toXPnx6xusX86lQt6Z8
-	RtScNkvG9oSJ0MEcUGW1xUoAabJD13qt8EOmWhDgcJ+UNSsgmBOHYAl3ske7oiZH
-	UDXag21S0sWc0cMuTGCchXlWlj5UUa4cAqJej31H8ysylbng==
-Received: from mail-qk1-f197.google.com (mail-qk1-f197.google.com [209.85.222.197])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4g92jqsy0e-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Tue, 25 Aug 2026 11:41:48 +0000 (GMT)
-Received: by mail-qk1-f197.google.com with SMTP id af79cd13be357-9372b9db132so448886685a.2
-        for <linux-pci@vger.kernel.org>; Tue, 25 Aug 2026 04:41:48 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1787658107; x=1788262907; darn=vger.kernel.org;
-        h=cc:to:message-id:content-transfer-encoding:content-type
-         :mime-version:subject:date:from:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=yQKcjQhqJbPmjn8LPqLdh6zUEBmJh7PLXDIlBz6jV9Y=;
-        b=BWynQ+JuhKaRXyOLEfZmYvfLqiPPkS1SdJvpoPKEoO5fyORE0Nd3dY5MsfXF0yPyb3
-         Kb5YuQzvZn8u+efBuahFqZicvXQUDMPuAcAH1E93KFGgLfWqeAqAnRQjqQeRdrguHAnT
-         200mib/F+GDog0wnV0thzJGu9jYxVaNBeFYSQvUoOqTm72SXSJWsq2Yr3kzNzbnAH+lS
-         orgFfW+VmzNR6Q0X19cBeivy1x95pmpFPHTb7YJobsjSrZZJJgy5mFcjF2hWOj/2wGEG
-         6DOtRvwZybFogVh/efLxiV4rNZhgAc/dElHwsv4nOPqARWyntZnANTCxCdzxXcUk1Z8o
-         NeMg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787658107; x=1788262907;
-        h=cc:to:message-id:content-transfer-encoding:content-type
-         :mime-version:subject:date:from:x-gm-gg:x-gm-message-state:from:to
-         :cc:subject:date:message-id:reply-to:content-type;
-        bh=yQKcjQhqJbPmjn8LPqLdh6zUEBmJh7PLXDIlBz6jV9Y=;
-        b=g7Oaf4ZLqCVNdX/CuJNOOEYuD5hTNp+Y3mBvsiUPI5GOXWpEh1PZbqmW8QV+KCW7C6
-         vv5FI8NbVdKyDk+EsDBfyjZOSkp+7zpvgqjlFmW1/FtR3UPgjsP3wPAjkGEZrkc0WbEg
-         a7h5VZ5v5dD/JT0NI0DbBnda9SCq4fwkjcJf5aLqBKD0u/jc5xbalAmqR5APAViSUIKE
-         fAgF2/irANJVHC8mY7P+L+P9k6vOPUiuRKUQcKjKHjKJnURUVt4biOSADuAyo+HhGvcO
-         OGyNd3avB9dm4xX2Qs/mod4RjZ9rLxKj8IxOEVBetLlnYGlaVp9HfxLTwI7fSQaz4lwY
-         p5DQ==
-X-Gm-Message-State: AFuF++kWRywWer4LQVbZzWa2su6NRsoyhagdB4av6aP/Fn8J7VCq8xPC
-	8dGKiIQkm7Rbpt1sS7ypQZavfck1sxrU1gAR+pO/N7qbxMzH6IOQR2ZPEplOsoPWhcb9Y5mSa04
-	X5V/jAtRB9BvIwrnOb4bbE4KfFuWUPbGksBMKG19h6/7BzqPiz375M9c/gQgzKU0=
-X-Gm-Gg: AR+sD11oIdL/td8P1PM69R4UX0C4G5xs2QSi8iD+uL+Zb9JH4wrJEXAIN0ktivR8mWx
-	A5a2GsWUxgCifanEX1upfduHXWLi/sJpj1yCq/h2vEXcGUeZJopPOX1f48D8x3QlsltWqD7TqwA
-	hWhx4RH6gwEUIJx76s3OBjYZhi0aZ4pAp76RDWQwxMt1CXUj5HrKQp1sZh7PZKnEsoUkCf1nz8B
-	z9c0RyCYU7ED2Esh8Bx+hZPsrGz4wPLJzFMnaK04NNFcwJQWiC4r2/fyPf2tlMphSpwYbOIxKL7
-	9HdOY0m6ULvGzt1pqCHW3+Mr58DI63YOMHUMoPVgeZ7x6yHFM9Oczb/FJqtMrsQM9toS54UgIKu
-	BiDcLAg==
-X-Received: by 2002:a05:622a:4d08:b0:51c:805:1be3 with SMTP id d75a77b69052e-52e2f1453aamr61072071cf.31.1787658107112;
-        Tue, 25 Aug 2026 04:41:47 -0700 (PDT)
-X-Received: by 2002:a05:622a:4d08:b0:51c:805:1be3 with SMTP id d75a77b69052e-52e2f1453aamr61071491cf.31.1787658106527;
-        Tue, 25 Aug 2026 04:41:46 -0700 (PDT)
-Received: from [127.0.1.1] ([86.121.170.13])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-c24966f809bsm1918957066b.41.2026.08.25.04.41.44
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 25 Aug 2026 04:41:45 -0700 (PDT)
-From: Abel Vesa <abel.vesa@oss.qualcomm.com>
-Date: Tue, 25 Aug 2026 14:41:31 +0300
-Subject: [PATCH] PCI/pwrctrl: tc9563: Use gpiod_set_value_cansleep() for
- RESX
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="M0uO9xJ2"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=ImVnN8OVSkFIaZYeDAWKtAA2Xjk2PiGBQUhAcCfrjr4tldQqzxb66zUdR6/Bo86avyVkjWyJnWEhu4IMLux9yumFoeKqx1NQOhoiZgR4+DZfmqVTYEShkeiuOJs1BQ46nQAvRTCpIdOUhuNr9L64WDkrl+dUGxOO5quKirwVL4es1qIRIMXm5dzZySUkw1f+oKdr7DMItJ3a962ch4fzeLhr+bs0QJCihAlIv36rVb+PC24ox0D6u+PZ0EPLPelRcBRtiaY1pLyzr0eDwkLDc4FAYWuLoVqgKmC/oc2ee4GDvOW5cjFmrXXxN6zpw4H8R9LtIrjKesd2586BDd3QSQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=Ncek8gzDfjTSQdqvwfRjsSEDgQMdRP2gXvFrK6AAcv8=;
+ b=dmD0+7dKUQRHUK1OafZ4OenU2DIzguz0/8MkK68Cob8InqPAtG6UfULK4N4Qn0SrVQDktsfW7Bef8EpfHyWRfqAnYsR0odQ5gj7TVgGcRMPi9lWXJwr5YnD88E99oCQOvMKT4bIVqvYaoi+8O3/3yVddX9WvcQgU6pLkquR9UVpqo5jwqH6uEzI1tUjDAf4VQQ6KwEku866uFpD5FfhmIMMso6vkSonfzKpnJdEhDVV8Jxl6jrPuHOm8twNAlp7h77sFtfFQEFXo8UvEGOb/Ou+r7YjrjesDBp17FsA4f62mrc9QPrwWOP0872nJy2A2oh5LsulxT9CGQcxaw06n4Q==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=Ncek8gzDfjTSQdqvwfRjsSEDgQMdRP2gXvFrK6AAcv8=;
+ b=M0uO9xJ2VJh0PtKWBg9jZAUtwiaqiBBxvvCkaMcjiuYHYEDa7KsC1Kx/UGjzUYMIXNkrih87TBcii0mCiT/fVFC+aqvndLdFMHanZM2HMkLxrjfmZLAhhfX0INj+zOkfZ+D3PiygtvIcqKCZN8c3Zpvtia04iBEn3Clow2I9jOh1Dsq964wOwwrL1XQT5ZhDAor9DFu0eqGZekjeYvCRK8ZI6zEI4rzwl20h2yz8nmGK4WCWtjUpLepT2q4Oh+oGT/5eCNgWKSivtlH3QosWHTIPS+YxG31HEeoUK6k2mX8fEq+GMLpN08DY0LmdK1y9I55KmcZ722aEXQzgm8xv0g==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from LV8PR12MB9620.namprd12.prod.outlook.com (2603:10b6:408:2a1::19)
+ by IA1PR12MB7687.namprd12.prod.outlook.com (2603:10b6:208:421::11) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.339.12; Tue, 25 Aug
+ 2026 11:49:17 +0000
+Received: from LV8PR12MB9620.namprd12.prod.outlook.com
+ ([fe80::299d:f5e0:3550:1528]) by LV8PR12MB9620.namprd12.prod.outlook.com
+ ([fe80::299d:f5e0:3550:1528%4]) with mapi id 15.21.0339.012; Tue, 25 Aug 2026
+ 11:49:17 +0000
+Date: Tue, 25 Aug 2026 08:49:16 -0300
+From: Jason Gunthorpe <jgg@nvidia.com>
+To: Pranjal Shrivastava <praan@google.com>
+Cc: iommu@lists.linux.dev, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Joerg Roedel <joro@8bytes.org>,
+	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
+	Vasant Hegde <vasant.hegde@amd.com>,
+	Ankit Soni <ankit.soni@amd.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Samiullah Khawaja <skhawaja@google.com>, sashiko-bot@kernel.org
+Subject: Re: [PATCH v3 2/5] iommu/amd: Fix DTE clearing and rename
+ iommu_ignore_device()
+Message-ID: <20260825114916.GT244917@nvidia.com>
+References: <20260824122347.1588592-1-praan@google.com>
+ <20260824122347.1588592-3-praan@google.com>
+ <178759520117.3131778.15279605903087565179.b4-review@b4>
+ <ao1vJxkZsJpr1qXG@google.com>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ao1vJxkZsJpr1qXG@google.com>
+X-ClientProxiedBy: YT4PR01CA0185.CANPRD01.PROD.OUTLOOK.COM
+ (2603:10b6:b01:110::29) To LV8PR12MB9620.namprd12.prod.outlook.com
+ (2603:10b6:408:2a1::19)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20260825-pci-pwrctl-tc9563-use-cansleep-for-resx-v1-1-0dbe7cfd8200@oss.qualcomm.com>
-X-B4-Tracking: v=1; b=H4sIAGp/jWoC/yXNSw7CMAwA0atUXmOpDSR8roJYFOOAUZVGdgqVq
- t6dAMu3mVnAWIUNTs0Cyi8xGVNFt2mAHn26M8qtGlzrQntwHjMJ5rdSGbDQ0YctTsZIfbKBOWM
- cFZVtxhi4i8H73T4S1FpWjjL/TufL3zZdn0zlm4d1/QC1tfeaiwAAAA==
-X-Change-ID: 20260825-pci-pwrctl-tc9563-use-cansleep-for-resx-f6e1f65547fc
-To: Bartosz Golaszewski <brgl@kernel.org>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>,
-        Bjorn Andersson <andersson@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Abel Vesa <abel.vesa@oss.qualcomm.com>
-X-Mailer: b4 0.16-dev-0e65f
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1833;
- i=abel.vesa@oss.qualcomm.com; h=from:subject:message-id;
- bh=wosuwikMoz3gDvLoC+hERTwDj0vuY/3L2+sga5V0z4w=;
- b=owEBbQKS/ZANAwAKARtfRMkAlRVWAcsmYgBqjX93aTtbHW+c5FVSm6Qi/5RABaggkVD9OOoUw
- BGQLXYUdLCJAjMEAAEKAB0WIQRO8+4RTnqPKsqn0bgbX0TJAJUVVgUCao1/dwAKCRAbX0TJAJUV
- VtDfEACIYJ9ZJxpvL+O/tDgWUYRCxg9cVsV/0tXOcQffN0BVrYm4kY8MzTY1o/8r73cdAd/sNil
- HMWvSxziWOObklwqhh7aAJjmEFB4uIrcGTxG1Fv4xJIOcSyRCwQipgnNnmN3nOJd4jb+rB9FgvB
- 6OeOafvfYwwWSKFtu6xBwTL/9RRKo1ujiV073YgkxLpI25ceOExTI5I4Bm5rACYQM134O2peTUi
- yamS7YclM/DS2w0Lo59jWh4VLD0OrOBixHvXwnX6+dKU8Syud4JIL2jLk0eYCT2Rba7GbEnUkjm
- ub+00p9afEZHxhJqC3qrwgn/U6YQ9O+X67qKb4n0BgkgVzCejzqaX0pcSLoEeQRpIJyP8LFfXgf
- w94xUs8k65kc+gg9lwL8F7qYAFr3Sfu0nDqDfwdyx0tqC/uutW4ukFZ1CIUSfssPdX22hRzhdMb
- pKdYzwoje5yIB4FwyiWdARAwZlM9amyk+aPdmIFErKnR/bC37V7BHzqOCZ2CHP6Pt2kC6Ff8QXK
- ba1zglehI7x8hXUUfzA5je9Ub0puWiZJBmFtBc1gGWv53knGLiXvflLqcDE5poDRKtfrMAfNidY
- pzJz/mEPtlS+Dmv/W1HeKunDFkVp1n2yN/ZROfkvMuDlzmEp69hkD9VRLAPrAJXchXhuXv8ZYVm
- do5SuruaTE/K7uw==
-X-Developer-Key: i=abel.vesa@oss.qualcomm.com; a=openpgp;
- fpr=6AFF162D57F4223A8770EF5AF7BF214136F41FAE
-X-Proofpoint-GUID: ulVT4g2Hh9wNgeWUhh7_rQAXRp-hBW3a
-X-Proofpoint-ORIG-GUID: ulVT4g2Hh9wNgeWUhh7_rQAXRp-hBW3a
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODI1MDA5OSBTYWx0ZWRfX4CuT8oSE+ixl
- HwIAk/ghHOVnU9D6KGfrV6tHyEXeePrQDURsU7+eU80pdlwp52HGRROC7mBUlsVnAsgfR8D25FK
- eU7J0H6KUrcORaj3/K3MZc+ANysXO1ZynR8eH2m0p33xlpHHaaQE3HY7nItQStKm8NIjD59ze4J
- PTdssPd0+jhjBDJDu50OzCQIEeoVpRetxWOGQZRtZilP3ojnvuKy1dVhpfMzYrxNrrFF8LUSl0M
- a3dSNy5wIgdDRUHefx3OnVGEMQM/4Rs3A9ek3cE0sLqNj7kbbrctKm8RVb7CdKqNlfBmTwmIg2G
- duaDXwZh1pdeQMSuBPIabOCk5blzdEP4E1siMmuYENLt1bLdylg+tttd04MTq/vnVtBRyHvcbtE
- 0WfB4GhKNouMQyGwrjY8xHGLx3ZuQru3kJahuxBC79uZOJ7cSGfBHM14X9r1ThK4bW8HZBvqU2f
- l30zFok1I+d8Op9KGBw==
-X-Authority-Analysis: v=2.4 cv=JJULdcKb c=1 sm=1 tr=0 ts=6a8d7f7c cx=c_pps
- a=50t2pK5VMbmlHzFWWp8p/g==:117 a=clBUptZa5v5FR042Ey+sjA==:17
- a=IkcTkHD0fZMA:10 a=Sv0fKeRqtYgA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=Um2Pa8k9VHT-vaBCBUpS:22
- a=EUspDBNiAAAA:8 a=zkraGWfKDus0AwAJxKMA:9 a=QEXdDO2ut3YA:10
- a=IoWCM6iH3mJn3m4BftBB:22
-X-Proofpoint-Spam-Info: AW1haW4tMjYwODI1MDA5OSBTYWx0ZWRfX+EKuWbtTLUx+
- lSR1wN5gkzW/M+p45PltT7uEgcTLCOkuKprMDpvm+rHgLWsVbFf0nVIaMmdSZYcLPtOdmClXHEa
- 05ryJ3JabSDSnfxcDMkW9J07w4iJX3k=
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-08-25_03,2026-08-24_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- bulkscore=0 phishscore=0 lowpriorityscore=0 clxscore=1015 spamscore=0
- suspectscore=0 impostorscore=0 malwarescore=0 priorityscore=1501 adultscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2608250099
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: LV8PR12MB9620:EE_|IA1PR12MB7687:EE_
+X-MS-Office365-Filtering-Correlation-Id: 39d33123-1c15-4eca-62ea-08df029ee48d
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|1800799024|376014|7416014|366016|23010399003|11063799006|10067099003|4143699003|56012099006|22082099003|18002099003;
+X-Microsoft-Antispam-Message-Info:
+	yjDbMfv6mpoP4Bw2iDca1KYrQt+jD9LLOE5r3sIB5NI3+hRIhi0uefw4WQMtG8bknM2Qr9iZ3PBXFp3/JBL1xff+8P0HirwyRNgU+p2dAmUXt1tYyKadTuOl+5QZD4OMAW4L1T3acVXfqEYmiKV8VubE+MMiH5kvtbUtgol1oTFTTqiTMcUxgltPt24a0tTxRQ3Nl9fBE1im4neJFayZCR5YA5C0ywUakL6zGOnsI+tt4/uuaGaBwu9PiE0Vx6ahSdPgPhrtcKWtHucnrSu05ETj3T1xlGhsV0BNpsBm3XkgQ8rpfgfmZl0P7rTGcfDfipk4PcU1lL1zj6aNEFfYo8Shr5ljff5QyXmYGU7+15yApO6NsDJbhFKbpQbrSIqWiQkj1kU6euscpoAQ4vrF96lAJe0t0V/WpHp7kcwiJ86/osMHxAi3kRts+DnYO48M+i96Rf2dPQVXwZb87ITeJqDciq+mfc03nqh1VRlRzjJgSZXH81W492fkQXbvWIz/LcmMjLyG4NS+V6sXeruStRnihT4yfvUYFZJoc25BCdXdE5W1fRWxu4Jv46gq6mkSHQXQFbEZ7VdVp+SeyWQpk9PyFi/EfaunUsVDiWYOMinAd9/AnQ+xFngN3MvdhfP3eSB/N5AD3w7g9QJTcPYQEX4TZhdkZLVp2fGngVYyuBU=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LV8PR12MB9620.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(376014)(7416014)(366016)(23010399003)(11063799006)(10067099003)(4143699003)(56012099006)(22082099003)(18002099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?NM4xF1vySLonoYHhxR/qAFN4qb6ub+EBD+YBFFdqUOVTHe+oPRFKme1jGogc?=
+ =?us-ascii?Q?UqgRlEYoZ2Lwvvq27hw17XsvWrLmlcLvmW/Seq0AJFpu48pef8XnRG3pgkwQ?=
+ =?us-ascii?Q?AEmu0Lkf8rH9TBNEdwd9NKuiwGDNahea3sxf6yaxmUAdpnAUOzrqed2Rq6eB?=
+ =?us-ascii?Q?j3/BzueIdHf7BkKF3sqMPoteUeaTivsz7JtR5sR0NHwCIiQITdp4PmqMQISw?=
+ =?us-ascii?Q?vFw1f8jD1rAWDSCwsgYxUOoDdZUTwc+ohtoeavW8atr/yea+wMpn8PPIFEze?=
+ =?us-ascii?Q?FxXYZSRasxnJ9SHIVz9O/FarN/v+JOh/UE97GU0RyX/wr5Ap/msEEkrbngYo?=
+ =?us-ascii?Q?tSPw0tnNGgH5Wh6SkblMyAvIQ/2EDT2ALjKUJ7iB4ScGzBxI92R9GBc38reZ?=
+ =?us-ascii?Q?5dC2tUdkdvIxIPbs7q4buZXHYGZODvGHwwgx9y+0avBI5pHUSxxrSrXjXVKN?=
+ =?us-ascii?Q?JuJnKIBQ0LhkGGMxoDwtw/xtkTd1l82okS2YcbBA5ZnIs0n5cdu4q5rbB5Xz?=
+ =?us-ascii?Q?Vk8HO3JEF88m8SZa/c1fGWzwJw2Zn9nKAtRj0D81UIqaQN8XHcRZCL7qCWCA?=
+ =?us-ascii?Q?mvGASce77oJOLC2SMH87OTfTfFp9ICoZAkCDsQCrtdtkf92VZ98GI3X5d9Sh?=
+ =?us-ascii?Q?nE2WoUqSEKbL9x4pchACO6XWo/C7/D1zwnONV5WuAbUjjO0xyW5WnMOaHPFE?=
+ =?us-ascii?Q?KLHGJPvBFuxmgQM8IUuF/4T0rEP8qzrcLilXpn2lQUqatfffnfrpDo2nKR5m?=
+ =?us-ascii?Q?XcYurn0sghN4x3pI4CDTYB/PHircdZifRGRWpcNi0/LdiPaRRYTrpO2eOIpO?=
+ =?us-ascii?Q?PqzxvxgJBpxBmyf5nRifNzl8pFUVjShWzIT9ldP/bKFwtdtPUDNdwQDJYlr3?=
+ =?us-ascii?Q?DVcf+tiosiGkRFI17DOGz3nUSNgUnchLudCY3AxDP/XYr9ch6e28bIH/M5z/?=
+ =?us-ascii?Q?YBRYh0fVb4pg+bjXinwASH3PbumoIyX1N5dZmaguzdngcU+MGG+NXUFLL1Jx?=
+ =?us-ascii?Q?bFTX/9ZloKW4MxBNkA4WJ+QdMn2MQxFl0Km1uHZAj+E/H/f9RZ64ju+88NJz?=
+ =?us-ascii?Q?eTzfLZnqsfXFdJuq9AaBVjvqyDr4h8J+fcf0WMZCzXPWQUYuCBGW+zqgcRkp?=
+ =?us-ascii?Q?iTqBUhzP5CBWs3iVwcpZrKDPR7KJU8MEWGNaxdGt2qml52Yvp6XFdJNt9u5O?=
+ =?us-ascii?Q?0mgtmBFPMxNuUufIXYh6NkiTWCJfq9qP2vl/IcfaUqF33MPjv3ncLzMcU3ab?=
+ =?us-ascii?Q?c8UNvWCfwY21p00dtkisw4kdrSX0Mhp2ReG4+jSOFbU8X5sbiLjZFRkk9Y76?=
+ =?us-ascii?Q?D6olbmXs9JONqjqqV2WIOivNanftitucXcS4pbRbwyQa8ojEViGuXLMEZR2Z?=
+ =?us-ascii?Q?kb5bO+/ycsCQM89uS0SBEOLbs8jxORD4sKYHzBSdTd0NjdRi99GIs576q7Lz?=
+ =?us-ascii?Q?C9N6oGDoAEufM9zGmUXMOUle/xEBVkE8jPd6lOTyf+KMzTQdWdJdCN0Ugk6l?=
+ =?us-ascii?Q?zzXiveyzxY3FNKs2DiQysBwFSip8kXGMxjKYqpgLgV18kRlm9fl4Gdglxsgn?=
+ =?us-ascii?Q?VH8RvQwgAVKiWKmhfkEV5k1SI8lDAwtWQSXYcmJIh8/VluLlLFTHY098Wg+I?=
+ =?us-ascii?Q?7xLupe6kFARLSUey3YpinSZC0fymzMA/zcfA9c692yGuZZBEbWkpb9htkD35?=
+ =?us-ascii?Q?BNx1ZpgiOkr9eSFstqTKFIe3psLpKPmLIS4cvPL3yKJenLuy?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 39d33123-1c15-4eca-62ea-08df029ee48d
+X-MS-Exchange-CrossTenant-AuthSource: LV8PR12MB9620.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 25 Aug 2026 11:49:17.3901
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: n+OkmGqNf/DJMiMdhRU38kE8CSI7Ph/o1In/dikzMTaiSgBnJxpPl2pCHY55kR4R
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA1PR12MB7687
 
-The RESX GPIO may be provided by a sleeping GPIO controller, such as an
-I2C or SPI I/O expander. Calling gpiod_set_value() for such a GPIO
-triggers the following warning:
+On Tue, Aug 25, 2026 at 10:32:07AM +0000, Pranjal Shrivastava wrote:
+> On Mon, Aug 24, 2026 at 03:13:21PM -0300, Jason Gunthorpe wrote:
+> > > [ ... 52 lines skipped ... ]
+> > > +/*
+> > > + * Invalidate a DTE by clearing the Valid bit first.
+> > > + * Note: Lockless; Not to be used on a fully probed
+> > > + * device with live dev_data.
+> > > + */
+> > > +static void amd_iommu_disable_dte(struct dev_table_entry *ptr)
+> > > +{
+> > > +	struct dev_table_entry new = {};
+> > > +
+> > > +	write_dte_lower128(ptr, &new);
+> > > +	write_dte_upper128(ptr, &new);
+> > > +}
+> > 
+> > No need just call update_dte256() with a 0'd new. This is how all the
+> > update flows work, and it flushes the DTE which this looks like it has
+> > been missing all long.
+> 
+> I originally considered using update_dte256(), but iommu_disable_device
+> is called from the early probe error path (err_deinit).
 
-  WARNING: ... drivers/gpio/gpiolib.c:4030 at gpiod_set_value()
+There is no reason to do that, the DTE isn't written by
+amd_iommu_probe_device(), so there is no reason to clear it on an
+error path.
 
-The TC9563 power-on and power-off callbacks already sleep while enabling
-or disabling regulators and while waiting for oscillator stabilization.
-Use gpiod_set_value_cansleep() for RESX so it can be driven without
-triggering the warning.
+It is wrong to write to the DTE table without flushing the
+HW cache.
 
-Fixes: 4c9c7be47310 ("PCI: pwrctrl: Add power control driver for TC9563")
-Signed-off-by: Abel Vesa <abel.vesa@oss.qualcomm.com>
----
- drivers/pci/pwrctrl/pci-pwrctrl-tc9563.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/pwrctrl/pci-pwrctrl-tc9563.c b/drivers/pci/pwrctrl/pci-pwrctrl-tc9563.c
-index fd53a7db9875..1b7718d07d15 100644
---- a/drivers/pci/pwrctrl/pci-pwrctrl-tc9563.c
-+++ b/drivers/pci/pwrctrl/pci-pwrctrl-tc9563.c
-@@ -481,7 +481,7 @@ static int tc9563_pwrctrl_power_off(struct pci_pwrctrl *pwrctrl)
- 	struct tc9563_pwrctrl *tc9563 = container_of(pwrctrl,
- 					    struct tc9563_pwrctrl, pwrctrl);
- 
--	gpiod_set_value(tc9563->reset_gpio, 1);
-+	gpiod_set_value_cansleep(tc9563->reset_gpio, 1);
- 
- 	regulator_bulk_disable(ARRAY_SIZE(tc9563->supplies), tc9563->supplies);
- 
-@@ -501,7 +501,7 @@ static int tc9563_pwrctrl_power_on(struct pci_pwrctrl *pwrctrl)
- 	if (ret < 0)
- 		return dev_err_probe(dev, ret, "cannot enable regulators\n");
- 
--	gpiod_set_value(tc9563->reset_gpio, 0);
-+	gpiod_set_value_cansleep(tc9563->reset_gpio, 0);
- 
- 	fsleep(TC9563_OSC_STAB_DELAY_US);
- 
-
----
-base-commit: 4b18edbd8e70f7e6860d56370f13244896d0f95c
-change-id: 20260825-pci-pwrctl-tc9563-use-cansleep-for-resx-f6e1f65547fc
-
-Best regards,
---  
-Abel Vesa <abel.vesa@oss.qualcomm.com>
-
+Jason
