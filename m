@@ -1,57 +1,56 @@
-Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
+Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9488C3B71DF
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D49883B810D
 	for <linux-pci@vger.kernel.org>; Wed, 26 Aug 2026 08:15:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.34
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.24
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787732114; cv=none; b=ds/h9oM2wErpFTcByE5jxOAIxFLpHpWbjV6FzOz8qqCr3BXZEhOs5RSP+DU2FIuiQa4ineN0xh09IjbeOTSZlYXAAmf98TjWzkfWWrBpSAk3CDuDq1i0fuEKbnGSeG0YCyNIJDx+Hom+09NBWFsQvWVTEsJKee+vGSOYlbk4w7g=
+	t=1787732115; cv=none; b=CNZ8N1b5ieF6Y1u8TMFYfT60VJpKiIwO1YsE44AyHOQePloZEow2qw+YNPpUEuFJcJodRJ392MikugCd3+1stdZR7xh3FlZOagt0SCExKgdKDvonrgW9DNX/jU8LNcDvszQ5fN0h9xtI0hpSdzNUvvLmyItspF894/kqIz1J6Fs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787732114; c=relaxed/simple;
-	bh=XUS0WCwQCANhq74bTtR7ipXUkpVzRae0nvhbzCe7t84=;
+	s=arc-20240116; t=1787732115; c=relaxed/simple;
+	bh=g1Q45ddDeNhUZkbiAsNNfdSxPR65I2ME3iqMkhKNZng=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:MIME-Version:
-	 Content-Type:References; b=kZRGX1j8uMFzGyb8kJ0TcNLPX/4J+RWDsNDOarvR4RRbgTInOIq0UsnE/0p2mhkkkg/MwjWYjxIBZFQYUH6NG9WkVdXd5PC59DIenwswqGkbbN/1/Ko20JbJNDI3BaDnrPE1f7UYeapILWU1no3hPoI7SAqs09waP0R1oKjqJCI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=Hz3/zw8c; arc=none smtp.client-ip=203.254.224.34
+	 Content-Type:References; b=YmNfnKD5n3+D+r0jhBhsiq1ODLfaMgMVsfUXwCAdCchYZ8KlndJGvV883jTzxiUnSqhsTBDR1lL7kd/qQwa0L3TKG5X35kL+xAAW7Afz+wjTQ2wh3h58zcmXHbZqDgRfPX2QcUUy67Ry5J/Du7Nb54CVWn93b9l4I37FYE3daXU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=GMa5v5a9; arc=none smtp.client-ip=203.254.224.24
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="Hz3/zw8c"
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="GMa5v5a9"
 Received: from epcas5p2.samsung.com (unknown [182.195.41.40])
-	by mailout4.samsung.com (KnoxPortal) with ESMTP id 20260826081504epoutp04b9d01fb7279147811ce73240823e287b~PTOCWVvLp2885928859epoutp04G
+	by mailout1.samsung.com (KnoxPortal) with ESMTP id 20260826081504epoutp01617133af7eaff3f19a88c5b8f5e3cb3f~PTOCWu5JC0680206802epoutp01N
 	for <linux-pci@vger.kernel.org>; Wed, 26 Aug 2026 08:15:04 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20260826081504epoutp04b9d01fb7279147811ce73240823e287b~PTOCWVvLp2885928859epoutp04G
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20260826081504epoutp01617133af7eaff3f19a88c5b8f5e3cb3f~PTOCWu5JC0680206802epoutp01N
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
 	s=mail20170921; t=1787732104;
-	bh=Ya82nNtSEL/OD8UZxS1mJIc7NJaKSwiOS6KRNMG/Tx8=;
+	bh=Wv6UPx85/ZnMqlppmnqTJxVYrPvDVQZx5wcynwVXSFg=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=Hz3/zw8cZuOvOimkBwGAFpwyK8s8S7X2xt/WWi25nPDggHQ5UqFw1RPl067+mlA2Z
-	 c1AxRJdDrtDbpX0uKsHbcGZnaZl1RKFyql8qx1SSlvDiZsbtU4u6uKFcDawY49Dwia
-	 egadkCyhMRdtpNBOOQhMoRbiQcFlB1YwUGd7uUws=
-Received: from epsnrtp01.localdomain (unknown [182.195.42.153]) by
-	epcas5p4.samsung.com (KnoxPortal) with ESMTPS id
-	20260826081503epcas5p4d79d497c8bdb356206468d2ebccc6058~PTOBxss2M1503715037epcas5p4d;
-	Wed, 26 Aug 2026 08:15:03 +0000 (GMT)
+	b=GMa5v5a96VxgQNSyNx9QudnI2B2UPhO9lNSxTPJDZKNpTu1s/BTeWt6/28NH8rJ1I
+	 WwsyMkA4HVCe1ioVFh3CElKQzJ/Ork44ZuooqETlBhkgFkdO4oKz4vPfuwTMpJwPUN
+	 6IbJEnZ6vo8hF9HXgxl//VALxvMiUQbRxmY4ACEQ=
+Received: from epsnrtp02.localdomain (unknown [182.195.42.154]) by
+	epcas5p1.samsung.com (KnoxPortal) with ESMTPS id
+	20260826081504epcas5p1fb575937bd5b558ff0f74dd00f26e578~PTOB9ENH82310023100epcas5p1J;
+	Wed, 26 Aug 2026 08:15:04 +0000 (GMT)
 Received: from epcpadp1new (unknown [182.195.40.141]) by
-	epsnrtp01.localdomain (Postfix) with ESMTP id 4hVHWW6Qvqz6B9mS; Wed, 26 Aug
-	2026 08:15:03 +0000 (GMT)
+	epsnrtp02.localdomain (Postfix) with ESMTP id 4hVHWX0nPhz2SSKh; Wed, 26 Aug
+	2026 08:15:04 +0000 (GMT)
 Received: from epsmtip2.samsung.com (unknown [182.195.34.31]) by
-	epcas5p2.samsung.com (KnoxPortal) with ESMTPA id
-	20260826052037epcas5p2a0eaaa537d20851123181472026a6b1b~PQ1ujSGG61272312723epcas5p2K;
-	Wed, 26 Aug 2026 05:20:37 +0000 (GMT)
+	epcas5p3.samsung.com (KnoxPortal) with ESMTPA id
+	20260826052051epcas5p38346ca5980b1e3dd93046eae6376c06e~PQ17Jilrw0827908279epcas5p3Q;
+	Wed, 26 Aug 2026 05:20:51 +0000 (GMT)
 Received: from unvme-SYS-221H-TN24R.samsungds.net (unknown [107.99.40.127])
 	by epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
-	20260826052036epsmtip2f89ed8b8ce5097a66b83af6656172418~PQ1s7PUbS1126611266epsmtip2s;
-	Wed, 26 Aug 2026 05:20:36 +0000 (GMT)
+	20260826052049epsmtip25273e22ffa98551a919dfc4f3271247e~PQ15RqPej1150511505epsmtip2e;
+	Wed, 26 Aug 2026 05:20:49 +0000 (GMT)
 From: Shrihari E S <shrihari.s@samsung.com>
 To: jic23@kernel.org, junjie.cao@intel.com, linux-cxl@vger.kernel.org,
 	linux-pci@vger.kernel.org, qemu-devel@nongnu.org
 Cc: shrihari.s@samsung.com, arun.george@samsung.com, cpgs@samsung.com,
 	dave@stgolabs.net, dongjoo.seo1@samsung.com, gost.dev@samsung.com,
 	s.neeraj@samsung.com, vikash.k5@samsung.com
-Subject: [RFC V2 05/10] hw/cxl: Wire UIO capability into HDM decoder and
- DVSEC registers
-Date: Wed, 26 Aug 2026 11:04:05 +0530
-Message-Id: <1646464088.101787732103895.JavaMail.epsvc@epcpadp1new>
+Subject: [RFC V2 08/10] hw/pci: Add PCIe Device3 capability support
+Date: Wed, 26 Aug 2026 11:04:08 +0530
+Message-Id: <2044366277.121787732104098.JavaMail.epsvc@epcpadp1new>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260826053410.1322176-1-shrihari.s@samsung.com>
 Precedence: bulk
@@ -61,254 +60,404 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CMS-MailID: 20260826052037epcas5p2a0eaaa537d20851123181472026a6b1b
+X-CMS-MailID: 20260826052051epcas5p38346ca5980b1e3dd93046eae6376c06e
 X-Msg-Generator: CA
 Content-Type: text/plain; charset="utf-8"
 CMS-TYPE: 105P
 X-CPGSPASS: Y
 X-Hop-Count: 3
-X-CMS-RootMailID: 20260826052037epcas5p2a0eaaa537d20851123181472026a6b1b
+X-CMS-RootMailID: 20260826052051epcas5p38346ca5980b1e3dd93046eae6376c06e
 References: <20260826053410.1322176-1-shrihari.s@samsung.com>
-	<CGME20260826052037epcas5p2a0eaaa537d20851123181472026a6b1b@epcas5p2.samsung.com>
+	<CGME20260826052051epcas5p38346ca5980b1e3dd93046eae6376c06e@epcas5p3.samsung.com>
 
-Plumb the 'uio_capable' flag to CXL HDM decoder capability and
-control register interfaces. The UIO bit in the capability register
-is now set for CXL Type3 devices and ports when UIO support is
-enabled in them.
-
-Per CXL 4.0 specification Section 8.2.4.20.7, the decoder control
-UIO bit is validated against the advertised capability during
-HDM decoder commit operations.
-
-Also for DSP, enabled write mask to "UIO to HDM" bit in CXL DVSEC
-Port Control Extension register.
+This commit adds Device3 support to the PCIe devices, with which
+an endpoint can be exposed as a UIO requester or completer, based
+on its configuration.
 
 Signed-off-by: Shrihari E S <shrihari.s@samsung.com>
 Signed-off-by: Dongjoo Seo <dongjoo.seo1@samsung.com>
 ---
- hw/cxl/cxl-component-utils.c              | 23 +++++++++++++++++------
- hw/mem/cxl_type3.c                        | 10 +++++++++-
- hw/pci-bridge/cxl_downstream.c            |  2 +-
- hw/pci-bridge/cxl_root_port.c             |  3 ++-
- hw/pci-bridge/cxl_upstream.c              |  3 ++-
- hw/pci-bridge/pci_expander_bridge.c       |  3 ++-
- include/hw/cxl/cxl_component.h            |  2 +-
- include/hw/cxl/cxl_device.h               |  2 ++
- include/hw/pci-bridge/cxl_upstream_port.h |  1 +
- 9 files changed, 37 insertions(+), 12 deletions(-)
+ hw/mem/cxl_type3.c         |   1 +
+ hw/pci/meson.build         |   2 +-
+ hw/pci/pci.c               |   2 +
+ hw/pci/pcie.c              |  30 +++++++
+ hw/pci/pcie_dev3.c         | 165 +++++++++++++++++++++++++++++++++++++
+ include/hw/pci/pcie.h      |   6 ++
+ include/hw/pci/pcie_dev3.h |  29 +++++++
+ include/hw/pci/pcie_regs.h |  30 +++++++
+ 8 files changed, 264 insertions(+), 1 deletion(-)
+ create mode 100644 hw/pci/pcie_dev3.c
+ create mode 100644 include/hw/pci/pcie_dev3.h
 
-diff --git a/hw/cxl/cxl-component-utils.c b/hw/cxl/cxl-component-utils.c
-index 31bbedb502..0c92c41266 100644
---- a/hw/cxl/cxl-component-utils.c
-+++ b/hw/cxl/cxl-component-utils.c
-@@ -305,7 +305,7 @@ static void ras_init_common(uint32_t *reg_state, uint32_t *write_msk)
- }
- 
- static void hdm_init_common(uint32_t *reg_state, uint32_t *write_msk,
--                            enum reg_type type, bool bi)
-+                            enum reg_type type, bool bi, bool uio)
- {
-     int decoder_count = CXL_HDM_DECODER_COUNT;
-     int hdm_inc = R_CXL_HDM_DECODER1_BASE_LO - R_CXL_HDM_DECODER0_BASE_LO;
-@@ -325,9 +325,13 @@ static void hdm_init_common(uint32_t *reg_state, uint32_t *write_msk,
-         ARRAY_FIELD_DP32(reg_state, CXL_HDM_DECODER_CAPABILITY, 3_6_12_WAY, 0);
-         ARRAY_FIELD_DP32(reg_state, CXL_HDM_DECODER_CAPABILITY, 16_WAY, 0);
-     }
--    ARRAY_FIELD_DP32(reg_state, CXL_HDM_DECODER_CAPABILITY, UIO, 0);
-+    ARRAY_FIELD_DP32(reg_state, CXL_HDM_DECODER_CAPABILITY, UIO,
-+                     (type == CXL2_TYPE3_DEVICE || type == CXL2_UPSTREAM_PORT
-+                     || type == CXL2_ROOT_PORT) && uio);
-     ARRAY_FIELD_DP32(reg_state, CXL_HDM_DECODER_CAPABILITY,
--                     UIO_DECODER_COUNT, 0);
-+                     UIO_DECODER_COUNT,
-+                     (type == CXL2_TYPE3_DEVICE || type == CXL2_UPSTREAM_PORT
-+                     || type == CXL2_ROOT_PORT) && uio ? decoder_count : 0);
-     ARRAY_FIELD_DP32(reg_state, CXL_HDM_DECODER_CAPABILITY, MEMDATA_NXM_CAP, 0);
-     ARRAY_FIELD_DP32(reg_state, CXL_HDM_DECODER_CAPABILITY,
-                      SUPPORTED_COHERENCY_MODEL,
-@@ -342,6 +346,12 @@ static void hdm_init_common(uint32_t *reg_state, uint32_t *write_msk,
-         write_msk[R_CXL_HDM_DECODER0_SIZE_LO + i * hdm_inc] = 0xf0000000;
-         write_msk[R_CXL_HDM_DECODER0_SIZE_HI + i * hdm_inc] = 0xffffffff;
-         write_msk[R_CXL_HDM_DECODER0_CTRL + i * hdm_inc] = 0x13ff;
-+        if (uio) {
-+            write_msk[R_CXL_HDM_DECODER0_CTRL + i * hdm_inc] |=
-+                R_CXL_HDM_DECODER0_CTRL_UIO_MASK |
-+                R_CXL_HDM_DECODER0_CTRL_UIG_MASK |
-+                R_CXL_HDM_DECODER0_CTRL_UIW_MASK;
-+        }
-         if (type == CXL2_DEVICE ||
-             type == CXL2_TYPE3_DEVICE ||
-             type == CXL2_LOGICAL_DEVICE) {
-@@ -391,7 +401,7 @@ static void bi_decoder_init_common(uint32_t *reg_state, uint32_t *write_msk,
- void cxl_component_register_init_common(uint32_t *reg_state,
-                                         uint32_t *write_msk,
-                                         enum reg_type type,
--                                        bool bi)
-+                                        bool bi, bool uio)
- {
-     int caps = 0;
- 
-@@ -431,7 +441,7 @@ void cxl_component_register_init_common(uint32_t *reg_state,
-     case CXL2_LOGICAL_DEVICE:
-         /* + HDM */
-         init_cap_reg(HDM, 5, 1);
--        hdm_init_common(reg_state, write_msk, type, bi);
-+        hdm_init_common(reg_state, write_msk, type, bi, uio);
-         /* fallthrough */
-     case CXL2_DOWNSTREAM_PORT:
-     case CXL2_DEVICE:
-@@ -523,7 +533,8 @@ void cxl_component_create_dvsec(CXLComponentState *cxl,
-     case NON_CXL_FUNCTION_MAP_DVSEC:
-         break; /* Not yet implemented */
-     case EXTENSIONS_PORT_DVSEC:
--        wmask[offset + offsetof(CXLDVSECPortExt, control)] = 0x0F;
-+        wmask[offset + offsetof(CXLDVSECPortExt, control)] =
-+            cxl_dev_type == CXL2_DOWNSTREAM_PORT ? 0x1F : 0x0F;
-         wmask[offset + offsetof(CXLDVSECPortExt, control) + 1] = 0x40;
-         wmask[offset + offsetof(CXLDVSECPortExt, alt_bus_base)] = 0xFF;
-         wmask[offset + offsetof(CXLDVSECPortExt, alt_bus_limit)] = 0xFF;
 diff --git a/hw/mem/cxl_type3.c b/hw/mem/cxl_type3.c
-index b7ad437cbc..24bf4f8309 100644
+index 24bf4f8309..0adf2e8b3e 100644
 --- a/hw/mem/cxl_type3.c
 +++ b/hw/mem/cxl_type3.c
-@@ -590,6 +590,11 @@ static void hdm_decoder_commit(CXLType3Dev *ct3d, int which)
-     /* TODO: Sanity checks that the decoder is possible */
-     ctrl = FIELD_DP32(ctrl, CXL_HDM_DECODER0_CTRL, ERR, 0);
-     ctrl = FIELD_DP32(ctrl, CXL_HDM_DECODER0_CTRL, COMMITTED, 1);
-+    if (ct3d->uio_comp_capable) {
-+        ct3d->uio_enabled = FIELD_EX32(ctrl, CXL_HDM_DECODER0_CTRL, UIO);
-+    } else {
-+        ctrl = FIELD_DP32(ctrl, CXL_HDM_DECODER0_CTRL, UIO, 0);
-+    }
- 
-     /* Get interleave details for chmu */
-     ig = FIELD_EX32(ctrl, CXL_HDM_DECODER0_CTRL, IG);
-@@ -657,6 +662,7 @@ static void hdm_decoder_uncommit(CXLType3Dev *ct3d, int which)
-     ctrl = FIELD_DP32(ctrl, CXL_HDM_DECODER0_CTRL, COMMITTED, 0);
- 
-     stl_le_p(cache_mem + R_CXL_HDM_DECODER0_CTRL + which * hdm_inc, ctrl);
-+    ct3d->uio_enabled = false;
+@@ -17,6 +17,7 @@
+ #include "hw/mem/memory-device.h"
+ #include "hw/mem/pc-dimm.h"
+ #include "hw/pci/pci.h"
++#include "hw/pci/pcie_dev3.h"
+ #include "hw/core/qdev-properties.h"
+ #include "hw/core/qdev-properties-system.h"
+ #include "qapi/error.h"
+diff --git a/hw/pci/meson.build b/hw/pci/meson.build
+index d55882a0c9..0a7f3b162a 100644
+--- a/hw/pci/meson.build
++++ b/hw/pci/meson.build
+@@ -14,7 +14,7 @@ pci_ss.add(files(
+ # The functions in these modules can be used by devices too.  Since we
+ # allow plugging PCIe devices into PCI buses, include them even if
+ # CONFIG_PCI_EXPRESS=n.
+-pci_ss.add(files('pcie.c', 'pcie_aer.c', 'pcie_svc.c'))
++pci_ss.add(files('pcie.c', 'pcie_aer.c', 'pcie_svc.c', 'pcie_dev3.c'))
+ pci_ss.add(files('pcie_doe.c'))
+ system_ss.add(when: 'CONFIG_PCI_EXPRESS', if_true: files('pcie_port.c', 'pcie_host.c'))
+ system_ss.add_all(when: 'CONFIG_PCI', if_true: pci_ss)
+diff --git a/hw/pci/pci.c b/hw/pci/pci.c
+index 0469250f42..600f41fc95 100644
+--- a/hw/pci/pci.c
++++ b/hw/pci/pci.c
+@@ -570,6 +570,7 @@ static void pci_do_device_reset(PCIDevice *dev)
+     msix_reset(dev);
+     pcie_sriov_pf_reset(dev);
+     pcie_svc_cap_reset(dev);
++    pcie_dev3_cap_reset(dev);
  }
  
- static int ct3d_qmp_uncor_err_to_cxl(CxlUncorErrorType qmp_err)
-@@ -1512,7 +1518,8 @@ void ct3d_reset(DeviceState *dev)
-     pcie_cap_fill_link_ep_usp(PCI_DEVICE(dev), ct3d->width, ct3d->speed,
-                               ct3d->flitmode);
-     cxl_component_register_init_common(reg_state, write_msk,
--                                       CXL2_TYPE3_DEVICE, ct3d->hdmdb);
-+                                       CXL2_TYPE3_DEVICE, ct3d->hdmdb,
-+                                       ct3d->uio_comp_capable);
-     cxl_device_register_init_t3(ct3d, CXL_T3_MSIX_MBOX);
+ /*
+@@ -1818,6 +1819,7 @@ void pci_default_write_config(PCIDevice *d, uint32_t addr, uint32_t val_in, int
+     pcie_sriov_config_write(d, addr, val_in, l);
+     pcie_cap_flit_write_config(d, addr, val_in, l);
+     pcie_svc_cap_write_config(d, addr, val_in, l);
++    pcie_dev3_cap_write_config(d, addr, val_in, l);
+ }
  
-     /*
-@@ -1552,6 +1559,7 @@ static const Property ct3_props[] = {
-                                 width, PCIE_LINK_WIDTH_16),
-     DEFINE_PROP_BOOL("x-256b-flit", CXLType3Dev, flitmode, false),
-     DEFINE_PROP_BOOL("hdm-db", CXLType3Dev, hdmdb, false),
-+    DEFINE_PROP_BOOL("x-uio", CXLType3Dev, uio_comp_capable, false),
-     DEFINE_PROP_UINT16("chmu-port", CXLType3Dev, cxl_dstate.chmu[0].port, 0),
+ /***********************************************************/
+diff --git a/hw/pci/pcie.c b/hw/pci/pcie.c
+index cc1cc500ab..6b8cc0f948 100644
+--- a/hw/pci/pcie.c
++++ b/hw/pci/pcie.c
+@@ -190,6 +190,32 @@ void pcie_cap_fill_link_ep_usp(PCIDevice *dev, PCIExpLinkWidth width,
+     pcie_cap_fill_lnk(dev, exp_cap, width, speed, flitmode);
+ }
+ 
++bool pcie_link_flit_active(PCIDevice *dev)
++{
++    uint8_t *exp_cap;
++    uint16_t lnksta2;
++    uint16_t lnkctl;
++    uint16_t flags;
++
++    if (!pci_is_express(dev) || !dev->exp.exp_cap) {
++        return false;
++    }
++
++    exp_cap = dev->config + dev->exp.exp_cap;
++    flags = pci_get_word(exp_cap + PCI_EXP_FLAGS);
++    if (!(flags & PCI_EXP_FLAGS_FLIT)) {
++        return false;
++    }
++    lnkctl = pci_get_word(exp_cap + PCI_EXP_LNKCTL);
++    lnksta2 = pci_get_word(exp_cap + PCI_EXP_LNKSTA2);
++
++    if (lnkctl & PCI_EXP_LNKCTL_FLIT_DIS) {
++        return false;
++    }
++
++    return lnksta2 & PCI_EXP_LNKSTA2_FLIT;
++}
++
+ void pcie_cap_flit_write_config(PCIDevice *dev, uint32_t addr, uint32_t val,
+                                 int len)
+ {
+@@ -223,6 +249,10 @@ void pcie_cap_flit_write_config(PCIDevice *dev, uint32_t addr, uint32_t val,
+     }
+ 
+     pci_set_word(exp_cap + PCI_EXP_LNKSTA2, lnksta2);
++    if (dev->exp.dev3_cap) {
++        pcie_dev3_cap_flit_update(dev);
++    }
++
+  }
+ 
+ static void pcie_cap_fill_slot_lnk(PCIDevice *dev)
+diff --git a/hw/pci/pcie_dev3.c b/hw/pci/pcie_dev3.c
+new file mode 100644
+index 0000000000..d6794bd3fe
+--- /dev/null
++++ b/hw/pci/pcie_dev3.c
+@@ -0,0 +1,165 @@
++/*
++ * SPDX-License-Identifier: GPL-2.0-or-later
++ *
++ * PCIe Device3 Extended Capability
++ *
++ * Copyright (c) 2026 Samsung Electronics Co., Ltd.
++ */
++
++#include "qemu/osdep.h"
++#include "hw/pci/pci_device.h"
++#include "hw/pci/pcie.h"
++#include "hw/pci/pcie_port.h"
++#include "hw/pci/pcie_dev3.h"
++
++static uint32_t pcie_dev3_cap_offset(PCIDevice *dev)
++{
++    return dev->exp.dev3_cap;
++}
++
++int pcie_dev3_cap_init(PCIDevice *dev, uint32_t offset,
++                       bool uio_req, bool uio_comp, Error **errp)
++{
++    uint32_t devcap3 = 0;
++    uint32_t wmask = 0;
++
++    if (!pci_is_express(dev)) {
++        error_setg(errp, "Device 3 ECAP requires PCIe");
++        return -EINVAL;
++    }
++
++    pcie_add_capability(dev, PCI_EXT_CAP_ID_DEV3, 1, offset, PCI_DEV3_SIZEOF);
++    pci_set_long(dev->config + offset + PCI_DEV3_CAP_HEAD,
++                 (PCI_DEV3_CAP_ID | PCI_DEV3_CAP_VER |
++                  PCI_DEV3_NEXT_CAP_OFF));
++    dev->exp.dev3_cap = offset;
++    dev->exp.dev3.uio_req = uio_req;
++    dev->exp.dev3.uio_comp = uio_comp;
++
++    /*
++     * In this implementation, 14-bit tag support is only advertised
++     * when UIO is enabled. A real device may support 14-bit tags
++     * independently of UIO.
++     */
++    if (uio_comp) {
++        devcap3 |= PCI_DEV3_CAP_TAG_COMP | PCI_DEV3_CAP_UIO_COMP;
++    }
++    if (uio_req) {
++        devcap3 |= PCI_DEV3_CAP_TAG_REQ | PCI_DEV3_CAP_UIO_REQ;
++        wmask |= PCI_DEV3_CTL_TAG_REQ_EN |
++                 PCI_DEV3_CTL_UIO_REQ_EN |
++                 PCI_DEV3_CTL_UIO_256B_DIS;
++        /*
++         * A UIO requester must be able to issue DMA transactions.
++         * Enable PCI_COMMAND_MASTER in the PCI command register so the
++         * device's bus master bit is set when the requester capability
++         * is advertised.
++         */
++        pci_set_word(dev->config + PCI_COMMAND,
++                     pci_get_word(dev->config + PCI_COMMAND) |
++                     PCI_COMMAND_MASTER);
++    }
++
++    pci_set_long(dev->config + offset + PCI_DEV3_CAP_OFFSET, devcap3);
++    pci_set_long(dev->wmask + offset + PCI_DEV3_CTL_OFFSET, wmask);
++
++    return 0;
++}
++
++void pcie_dev3_cap_reset(PCIDevice *dev)
++{
++    uint32_t off = pcie_dev3_cap_offset(dev);
++
++    if (!off) {
++        return;
++    }
++
++    pci_set_long(dev->config + off + PCI_DEV3_CTL_OFFSET, 0);
++    pci_set_long(dev->config + off + PCI_DEV3_STA_OFFSET, 0);
++    pcie_dev3_apply_gating(dev);
++}
++
++void pcie_dev3_apply_gating(PCIDevice *dev)
++{
++    uint32_t off = pcie_dev3_cap_offset(dev);
++    uint32_t devctl3;
++    uint32_t devsta3;
++    bool flit;
++
++    if (!off) {
++        return;
++    }
++
++    flit = pcie_link_flit_active(dev);
++    devctl3 = pci_get_long(dev->config + off + PCI_DEV3_CTL_OFFSET);
++    devsta3 = pci_get_long(dev->config + off + PCI_DEV3_STA_OFFSET);
++    if (!dev->exp.dev3.uio_req || !flit) {
++        devctl3 &= ~(PCI_DEV3_CTL_TAG_REQ_EN |
++                     PCI_DEV3_CTL_UIO_REQ_EN |
++                     PCI_DEV3_CTL_UIO_256B_DIS);
++        pci_set_long(dev->config + off + PCI_DEV3_CTL_OFFSET, devctl3);
++    }
++
++    if (flit) {
++        devsta3 |= PCI_DEV3_STA_SEGMENT_CAP;
++    } else {
++        devsta3 &= ~PCI_DEV3_STA_SEGMENT_CAP;
++    }
++    pci_set_long(dev->config + off + PCI_DEV3_STA_OFFSET, devsta3);
++}
++
++void pcie_dev3_cap_write_config(PCIDevice *dev,
++                                uint32_t addr, uint32_t val, int len)
++{
++    uint32_t off = pcie_dev3_cap_offset(dev);
++
++    if (!off) {
++        return;
++    }
++
++    if (ranges_overlap(addr, len, off + PCI_DEV3_CTL_OFFSET, 4)) {
++        pcie_dev3_apply_gating(dev);
++    }
++}
++
++void pcie_dev3_cap_flit_update(PCIDevice *dev)
++{
++    uint32_t off = pcie_dev3_cap_offset(dev);
++    if (!off) {
++        return;
++    }
++
++    uint32_t devsta3 = pci_get_long(dev->config + off + PCI_DEV3_STA_OFFSET);
++    if (pcie_link_flit_active(dev)) {
++        devsta3 |= PCI_DEV3_STA_SEGMENT_CAP;
++    } else {
++        devsta3 &= ~PCI_DEV3_STA_SEGMENT_CAP;
++    }
++    pci_set_long(dev->config + off + PCI_DEV3_STA_OFFSET, devsta3);
++}
++
++bool pcie_dev3_uio_enabled(PCIDevice *dev)
++{
++    uint32_t off = pcie_dev3_cap_offset(dev);
++    uint32_t devctl3;
++
++    if (!off || !dev->exp.dev3.uio_req || !pcie_link_flit_active(dev)) {
++        return false;
++    }
++
++    devctl3 = pci_get_long(dev->config + off + PCI_DEV3_CTL_OFFSET);
++    return devctl3 & PCI_DEV3_CTL_UIO_REQ_EN;
++}
++
++bool pcie_dev3_tag_req_enabled(PCIDevice *dev)
++{
++    uint32_t off = pcie_dev3_cap_offset(dev);
++    uint32_t devctl3;
++
++    if (!off || !dev->exp.dev3.uio_req || !pcie_link_flit_active(dev)) {
++        return false;
++    }
++
++    devctl3 = pci_get_long(dev->config + off + PCI_DEV3_CTL_OFFSET);
++    return devctl3 & PCI_DEV3_CTL_TAG_REQ_EN;
++}
+diff --git a/include/hw/pci/pcie.h b/include/hw/pci/pcie.h
+index 2feeb022f0..e997f3a456 100644
+--- a/include/hw/pci/pcie.h
++++ b/include/hw/pci/pcie.h
+@@ -26,6 +26,7 @@
+ #include "hw/pci/pcie_aer.h"
+ #include "hw/pci/pcie_sriov.h"
+ #include "hw/pci/pcie_svc.h"
++#include "hw/pci/pcie_dev3.h"
+ #include "hw/core/hotplug.h"
+ 
+ typedef struct PCIEPort PCIEPort;
+@@ -87,6 +88,10 @@ struct PCIExpressDevice {
+     /* Streamlined Virtual Channel (SVC) introduced from PCIe 6.1 */
+     uint32_t svc_cap;
+     PCIESvcCap svc;
++
++    /* PCIe Device 3 Capability */
++    uint32_t dev3_cap;
++    struct PCIEDev3Cap dev3;
  };
  
-diff --git a/hw/pci-bridge/cxl_downstream.c b/hw/pci-bridge/cxl_downstream.c
-index 1c8c3b4636..8f034991d8 100644
---- a/hw/pci-bridge/cxl_downstream.c
-+++ b/hw/pci-bridge/cxl_downstream.c
-@@ -42,7 +42,7 @@ static void latch_registers(CXLDownstreamPort *dsp)
-     uint32_t *write_msk = dsp->cxl_cstate.crb.cache_mem_regs_write_mask;
+ #define COMPAT_PROP_PCP "power_controller_present"
+@@ -150,6 +155,7 @@ void pcie_cap_fill_link_ep_usp(PCIDevice *dev, PCIExpLinkWidth width,
+                                PCIExpLinkSpeed speed, bool flitmode);
+ void pcie_cap_flit_write_config(PCIDevice *dev,
+                                 uint32_t addr, uint32_t val, int len);
++bool pcie_link_flit_active(PCIDevice *dev);
  
-     cxl_component_register_init_common(reg_state, write_msk,
--                                       CXL2_DOWNSTREAM_PORT, true);
-+                                       CXL2_DOWNSTREAM_PORT, true, false);
- }
+ void pcie_cap_slot_pre_plug_cb(HotplugHandler *hotplug_dev, DeviceState *dev,
+                                Error **errp);
+diff --git a/include/hw/pci/pcie_dev3.h b/include/hw/pci/pcie_dev3.h
+new file mode 100644
+index 0000000000..0a49835ab4
+--- /dev/null
++++ b/include/hw/pci/pcie_dev3.h
+@@ -0,0 +1,29 @@
++/*
++ * SPDX-License-Identifier: GPL-2.0-or-later
++ *
++ * PCIe Device3 Extended Capability
++ *
++ * Copyright (c) 2026 Samsung Electronics Co., Ltd.
++ */
++
++#ifndef HW_PCIE_DEV3_H
++#define HW_PCIE_DEV3_H
++
++#include "hw/pci/pci.h"
++
++typedef struct PCIEDev3Cap {
++    bool uio_req;
++    bool uio_comp;
++} PCIEDev3Cap;
++
++int pcie_dev3_cap_init(PCIDevice *dev, uint32_t offset,
++                       bool uio_req, bool uio_comp, Error **errp);
++void pcie_dev3_cap_reset(PCIDevice *dev);
++void pcie_dev3_cap_write_config(PCIDevice *dev,
++                                uint32_t addr, uint32_t val, int len);
++void pcie_dev3_cap_flit_update(PCIDevice *dev);
++bool pcie_dev3_uio_enabled(PCIDevice *dev);
++bool pcie_dev3_tag_req_enabled(PCIDevice *dev);
++void pcie_dev3_apply_gating(PCIDevice *dev);
++
++#endif /* HW_PCIE_DEV3_H */
+diff --git a/include/hw/pci/pcie_regs.h b/include/hw/pci/pcie_regs.h
+index 566754646c..326195a199 100644
+--- a/include/hw/pci/pcie_regs.h
++++ b/include/hw/pci/pcie_regs.h
+@@ -237,4 +237,34 @@ typedef enum PCIExpLinkWidth {
+ #define PCI_SVC_RES_STATUS(n)           (PCI_SVC_RES_STATUS_BASE + ((n) * 0x0c))
+ #define PCI_SVC_VC_NEGO                 BIT(1)
  
- /* TODO: Look at sharing this code across all CXL port types */
-diff --git a/hw/pci-bridge/cxl_root_port.c b/hw/pci-bridge/cxl_root_port.c
-index e82685d1ab..4be2b400f9 100644
---- a/hw/pci-bridge/cxl_root_port.c
-+++ b/hw/pci-bridge/cxl_root_port.c
-@@ -53,6 +53,7 @@ typedef struct CXLRootPort {
-     CPMUState cpmu;
-     MemoryRegion cpmu_registers;
-     PCIResReserve res_reserve;
-+    bool uio_capable;
- } CXLRootPort;
- 
- #define TYPE_CXL_ROOT_PORT "cxl-rp"
-@@ -107,7 +108,7 @@ static void latch_registers(CXLRootPort *crp)
-     uint32_t *write_msk = crp->cxl_cstate.crb.cache_mem_regs_write_mask;
- 
-     cxl_component_register_init_common(reg_state, write_msk, CXL2_ROOT_PORT,
--                                       true);
-+                                       true, crp->uio_capable);
- }
- 
- static void build_dvsecs(PCIDevice *d, CXLComponentState *cxl)
-diff --git a/hw/pci-bridge/cxl_upstream.c b/hw/pci-bridge/cxl_upstream.c
-index 999ee0b56b..e8f2e57819 100644
---- a/hw/pci-bridge/cxl_upstream.c
-+++ b/hw/pci-bridge/cxl_upstream.c
-@@ -136,7 +136,8 @@ static void latch_registers(CXLUpstreamPort *usp)
-     uint32_t *write_msk = usp->cxl_cstate.crb.cache_mem_regs_write_mask;
- 
-     cxl_component_register_init_common(reg_state, write_msk,
--                                       CXL2_UPSTREAM_PORT, usp->flitmode);
-+                                       CXL2_UPSTREAM_PORT, usp->flitmode,
-+                                       usp->uio_capable);
-     ARRAY_FIELD_DP32(reg_state, CXL_HDM_DECODER_CAPABILITY, TARGET_COUNT, 8);
- }
- 
-diff --git a/hw/pci-bridge/pci_expander_bridge.c b/hw/pci-bridge/pci_expander_bridge.c
-index 25dfee6a9b..18b61eca20 100644
---- a/hw/pci-bridge/pci_expander_bridge.c
-+++ b/hw/pci-bridge/pci_expander_bridge.c
-@@ -301,7 +301,8 @@ static void pxb_cxl_dev_reset(DeviceState *dev)
-     uint32_t *write_msk = cxl_cstate->crb.cache_mem_regs_write_mask;
-     int dsp_count = 0;
- 
--    cxl_component_register_init_common(reg_state, write_msk, CXL2_RC, false);
-+    cxl_component_register_init_common(reg_state, write_msk, CXL2_RC, false,
-+                                       false);
-     /*
-      * The CXL specification allows for host bridges with no HDM decoders
-      * if they only have a single root port.
-diff --git a/include/hw/cxl/cxl_component.h b/include/hw/cxl/cxl_component.h
-index d734f88d2c..662fdb0833 100644
---- a/include/hw/cxl/cxl_component.h
-+++ b/include/hw/cxl/cxl_component.h
-@@ -315,7 +315,7 @@ void cxl_component_register_block_init(Object *obj,
-                                        const char *type);
- void cxl_component_register_init_common(uint32_t *reg_state,
-                                         uint32_t *write_msk,
--                                        enum reg_type type, bool bi);
-+                                        enum reg_type type, bool bi, bool uio);
- 
- void cxl_component_create_dvsec(CXLComponentState *cxl_cstate,
-                                 enum reg_type cxl_dev_type, uint16_t length,
-diff --git a/include/hw/cxl/cxl_device.h b/include/hw/cxl/cxl_device.h
-index 3b5dcb5aec..3d92d3f46c 100644
---- a/include/hw/cxl/cxl_device.h
-+++ b/include/hw/cxl/cxl_device.h
-@@ -883,6 +883,8 @@ struct CXLType3Dev {
-     PCIExpLinkSpeed speed;
-     PCIExpLinkWidth width;
-     bool flitmode;
-+    bool uio_comp_capable;
-+    bool uio_enabled;
- 
-     /* DOE */
-     DOECap doe_cdat;
-diff --git a/include/hw/pci-bridge/cxl_upstream_port.h b/include/hw/pci-bridge/cxl_upstream_port.h
-index d4186234c8..d23541e23a 100644
---- a/include/hw/pci-bridge/cxl_upstream_port.h
-+++ b/include/hw/pci-bridge/cxl_upstream_port.h
-@@ -22,6 +22,7 @@ typedef struct CXLUpstreamPort {
-     PCIExpLinkSpeed speed;
-     PCIExpLinkWidth width;
-     bool flitmode;
-+    bool uio_capable;
- 
-     DOECap doe_cdat;
-     uint64_t sn;
++/* PCIe Device 3 capability structure. PCIe 6.4 Specification Section 7.7.9 */
++#define PCI_EXT_CAP_ID_DEV3 0x2f
++
++#define PCI_DEV3_CAP_HEAD              0x00
++#define PCI_DEV3_CAP_OFFSET            0x04
++#define PCI_DEV3_CTL_OFFSET            0x08
++#define PCI_DEV3_STA_OFFSET            0x0c
++#define PCI_DEV3_SIZEOF                0x10
++
++/* Section 7.7.9.1 Device 3 Extended Capability Header. */
++#define PCI_DEV3_CAP_ID                (0x2f << 0)
++#define PCI_DEV3_CAP_VER               (0x1 << 16)
++#define PCI_DEV3_NEXT_CAP_OFF          (0x0 << 20)
++
++/* Section 7.7.9.3 Device 3 capability register */
++#define PCI_DMWR_REQ_SUPPORTED         BIT(0)
++#define PCI_DEV3_CAP_TAG_COMP          BIT(1)
++#define PCI_DEV3_CAP_TAG_REQ           BIT(2)
++#define PCI_L0P_SUPPORTED              BIT(3)
++#define PCI_DEV3_CAP_UIO_COMP          BIT(10)
++#define PCI_DEV3_CAP_UIO_REQ           BIT(11)
++
++/* Section 7.7.9.3 Device Control 3 Register */
++#define PCI_DEV3_CTL_TAG_REQ_EN        BIT(2)
++#define PCI_DEV3_CTL_UIO_REQ_EN        BIT(7)
++#define PCI_DEV3_CTL_UIO_256B_DIS      BIT(8)
++
++/* Section 7.7.9.4 Device Status 3 Register */
++#define PCI_DEV3_STA_SEGMENT_CAP       BIT(3)
++
+ #endif /* QEMU_PCIE_REGS_H */
 -- 
 2.34.1
 
