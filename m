@@ -1,100 +1,103 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5FF3E3BB699
-	for <linux-pci@vger.kernel.org>; Wed, 26 Aug 2026 09:26:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 073E53BE14D;
+	Wed, 26 Aug 2026 09:29:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787736402; cv=none; b=tYfbfNPb9inTfJ7fcWPkNye2Wl07KNc8u5d3utJ4K1weDtjn3VZRFS8veUX+KiWKM1oQPCoRozJDhwNT+6UUDG0hUU4rnVZ1patdn4QrH576siicnwdV8pad++rLAgHdFtRXV2WuJAAeLs7z2UP3+h0Oxf/xh7sk/R93PRv6als=
+	t=1787736574; cv=none; b=OoF7QMGtk4VpdApYl8e0S4QfZexxcOgxycKVL1qoIv/ECKz2Aqyi4kAe+7Mig9K9eBUPYuIMU8zE8tjGHgrzIXOlqshPACqcFWKRr5pbT3GRgGcncT7/cs2txanmCy8NvMM0p+6sHijpn/VAR9wSUtpTv6t04DQpBvRHko2fCNo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787736402; c=relaxed/simple;
-	bh=56f2jV3d6AApNXIgyoA3unc1DV8w7A9xshc4NrGjp/w=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=QvUuJxUAerfj1CKH53drH65h9pBpWyZZHdY7bsWhJSgWFnf4j0NoXCpSwAehZqZb/nSMLl9bb46ImYZaWzvmlkh4HwK3dhHK0SseCwt0XPEuj8B8SOl0jYp3KaFSQPt+G1a12S2GUuhWlUFDKxARB0zyaw0vkg3CXIsAMPRJO+Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=orQOEuwP; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1787736574; c=relaxed/simple;
+	bh=vE0DFncUbEa7WUezDlJbcmjpQbbiEpMqeMkCvD7YDbU=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
+	 MIME-Version:Content-Type; b=XdYzgQmyKcGKmTl9mfPSgAq4opPLv6a+T/ALUBX8538mFeyhckPLL+E+och0kv9TUnkPQ9sW4h8897Ex6tdN9+pu4//DvxwSo3tN4FQgL6SJU3ov0oce54QxRsdCyTiyGSFD4OGXJBXJIxY58oHQYObo+WzDN+w+TblrRNolAKA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GMLbpbtV; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="orQOEuwP"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CBF281F01561;
-	Wed, 26 Aug 2026 09:26:40 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GMLbpbtV"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3B9931F01561;
+	Wed, 26 Aug 2026 09:29:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787736401;
-	bh=+qZ8jUoJAG4g+eML+hMT4glVxVmXUUhCCZbkEmx993o=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=orQOEuwPPTidsyl3KdawVrguNzZGelS4QZPm7wZX5qM2TewS3S8qUaJCfd+6xPIfs
-	 m3NSthEOBeZ+5Rlh1r7C8P2bbtB0+FC+sVnNv3cxb6abqFSmGHbg1XetoZF9EjwagG
-	 pWGdnE/lEYhx9cm1EHfMpkuAEyXQpBY6hQCi6T1Q/GRBwEjnyd97JB69x824xShPE1
-	 wDX1nnvEZ7JtOI9Us7bA0pTp/IhkEqOSAxnJwqDx/b4uHkTFKGq54G83QY0CZ29LNx
-	 bTUJJNEmfQS8wgexYuIrUNoe+3FRQ3BHZQ437x45iAugrzILFWY8ERiMorvlxD5B2F
-	 JOUUJbnp/nyDg==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] pci: designware: Set DMA_BYPASS bit in outbound IATU
- CTRL2 register
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Sumit Kumar" <sumit.kumar@oss.qualcomm.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260826-dma_bypass-v1-1-3a53dc748ce2@oss.qualcomm.com>
-References: <20260826-dma_bypass-v1-1-3a53dc748ce2@oss.qualcomm.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 26 Aug 2026 09:26:40 +0000
-Message-Id: <20260826092640.CBF281F01561@smtp.kernel.org>
+	s=k20260515; t=1787736572;
+	bh=vE0DFncUbEa7WUezDlJbcmjpQbbiEpMqeMkCvD7YDbU=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date;
+	b=GMLbpbtV6XRD4w6KN91RH1oCiVx72uKzWQqLkbfx2kIDN9D9Eag0gzkEbhDAl0gWt
+	 P1YCkvBlGTSdwRH3cp7KuiATo/uaSTYejkU3Vxpztm9iu3uFxILV1ojmRaKWYlikRY
+	 Ggw4d12WTNh1bcjG7gDKhj2+I6mDhrKTue5CuHtVBbtjdSc5JxIGzd18mhpGbu9Yql
+	 CcB/55rMLKstOxN38hkC+/m6VAXbVIPr7Ta8HzW2B+7BxGx5BXD678vW+tpQrbQfJh
+	 g9tTDJTf0faFwf4/6U0eVGbrjKFJOeooMnCeoyi93Y+sF616btPc7GrV1O9Sww9y70
+	 JGj0Mli2sglfQ==
+From: Andreas Hindborg <a.hindborg@kernel.org>
+To: Miguel Ojeda <miguel.ojeda.sandonis@gmail.com>
+Cc: Danilo Krummrich <dakr@kernel.org>, Lorenzo Stoakes <ljs@kernel.org>,
+ Vlastimil Babka <vbabka@kernel.org>, "Liam R. Howlett"
+ <liam@infradead.org>, Uladzislau Rezki <urezki@gmail.com>, Miguel Ojeda
+ <ojeda@kernel.org>, Boqun Feng <boqun@kernel.org>, Gary Guo
+ <gary@garyguo.net>, =?utf-8?Q?Bj=C3=B6rn?= Roy Baron
+ <bjorn3_gh@protonmail.com>, Benno
+ Lossin <lossin@kernel.org>, Alice Ryhl <aliceryhl@google.com>, Trevor
+ Gross <tmgross@umich.edu>, Daniel Almeida <daniel.almeida@collabora.com>,
+ Tamir Duberstein <tamird@kernel.org>, Alexandre Courbot
+ <acourbot@nvidia.com>, Onur =?utf-8?Q?=C3=96zkan?= <work@onurozkan.dev>,
+ Lyude Paul
+ <lyude@redhat.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Arve
+ =?utf-8?B?SGrDuG5uZXbDpWc=?= <arve@android.com>, Todd Kjos
+ <tkjos@android.com>, Christian
+ Brauner <brauner@kernel.org>, Carlos Llamas <cmllamas@google.com>, "Rafael
+ J. Wysocki" <rafael@kernel.org>, Dave Ertman <david.m.ertman@intel.com>,
+ Leon Romanovsky <leon@kernel.org>, Paul Moore <paul@paul-moore.com>, Serge
+ Hallyn <sergeh@kernel.org>, David Airlie <airlied@gmail.com>, Simona
+ Vetter <simona@ffwll.ch>, Alexander Viro <viro@zeniv.linux.org.uk>, Jan
+ Kara <jack@suse.cz>, Igor Korotin <igor.korotin@linux.dev>, Viresh Kumar
+ <vireshk@kernel.org>, Nishanth Menon <nm@ti.com>, Stephen Boyd
+ <sboyd@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, Krzysztof
+ =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Pavel Tikhomirov
+ <ptikhomirov@virtuozzo.com>, Michal Wilczynski <m.wilczynski@samsung.com>,
+ Ira Weiny <iweiny@kernel.org>, Philipp Stanner <phasta@kernel.org>,
+ rust-for-linux@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-mm@kvack.org, driver-core@lists.linux.dev,
+ linux-block@vger.kernel.org, linux-security-module@vger.kernel.org,
+ dri-devel@lists.freedesktop.org, linux-fsdevel@vger.kernel.org,
+ linux-pm@vger.kernel.org, linux-pci@vger.kernel.org,
+ linux-pwm@vger.kernel.org, linux-usb@vger.kernel.org, Oliver Mangold
+ <oliver.mangold@pm.me>
+Subject: Re: [PATCH v20 6/8] rust: Add missing SAFETY documentation for
+ `ARef` example
+In-Reply-To: <CANiq72mPLrKQMzb37ow2969m5r3Z2Kh_4LHERUun6ALw3ea6tg@mail.gmail.com>
+References: <20260824-unique-ref-v20-0-490735672187@kernel.org>
+ <20260824-unique-ref-v20-6-490735672187@kernel.org>
+ <CANiq72mPLrKQMzb37ow2969m5r3Z2Kh_4LHERUun6ALw3ea6tg@mail.gmail.com>
+Date: Wed, 26 Aug 2026 11:29:08 +0200
+Message-ID: <87y0dt1b8b.fsf@t14s.mail-host-address-is-not-set>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [High] Unconditionally setting PCIE_ATU_DMA_BYPASS on all outbound iATU w=
-indows breaks built-in eDMA for platforms relying on iATU translation.
---
+Miguel Ojeda <miguel.ojeda.sandonis@gmail.com> writes:
 
-commit 0264996407d5cc39725b0bb26bca8b42a6f11d18
-Author: Sumit Kumar <sumit.kumar@oss.qualcomm.com>
+> On Mon, Aug 24, 2026 at 1:19=E2=80=AFPM Andreas Hindborg <a.hindborg@kern=
+el.org> wrote:
+>>
+>> From: Oliver Mangold <oliver.mangold@pm.me>
+>>
+>> SAFETY comment in rustdoc example was just 'TODO'. Fixed.
+>>
+>> Signed-off-by: Oliver Mangold <oliver.mangold@pm.me>
+>> Reviewed-by: Daniel Almeida <daniel.almeida@collabora.com>
+>> Co-developed-by: Andreas Hindborg <a.hindborg@kernel.org>
+>> Signed-off-by: Andreas Hindborg <a.hindborg@kernel.org>
+>
+> Please see/link https://github.com/Rust-for-Linux/linux/issues/351.
 
-pci: designware: Set DMA_BYPASS bit in outbound IATU CTRL2 register
+Do you want a link to this issue with a regular `Link:` tag?
 
-This commit unconditionally sets the DMA_BYPASS bit in PCIE_ATU_REGION_CTRL2
-when programming outbound iATU regions for controllers >=3D 4.60A. This aims
-to prevent unintentional address translation when DMA destination addresses
-fall within an outbound iATU aperture.
 
-> diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/c=
-ontroller/dwc/pcie-designware.c
-> index 593388f29bdd4..9297d0e607e3a 100644
-> --- a/drivers/pci/controller/dwc/pcie-designware.c
-> +++ b/drivers/pci/controller/dwc/pcie-designware.c
-> @@ -577,6 +577,8 @@ int dw_pcie_prog_outbound_atu(struct dw_pcie *pci,
->  		/* The data-less messages only for now */
->  		val |=3D PCIE_ATU_INHIBIT_PAYLOAD | atu->code;
->  	}
-> +	if (dw_pcie_ver_is_ge(pci, 460A))
-> +		val |=3D PCIE_ATU_DMA_BYPASS;
->  	dw_pcie_writel_atu_ob(pci, atu->index, PCIE_ATU_REGION_CTRL2, val);
+Best regards,
+Andreas Hindborg
 
-[Severity: High]
-Does unconditionally setting PCIE_ATU_DMA_BYPASS on all outbound iATU
-windows break built-in eDMA for platforms that rely on iATU translation?
 
-When a standard PCI endpoint function driver allocates an outbound memory
-window using pci_epc_mem_map(), it gets a local CPU physical address which
-is then programmed into the DMA engine.
 
-Because this patch unconditionally bypasses the iATU for DMA, these
-platforms will send the raw CPU physical address over the PCIe link instead
-of the intended PCIe bus address. Could this regression lead to host memory
-corruption, IOMMU faults, or silent data corruption on platforms where the
-eDMA expects the iATU to handle the CPU-to-PCI address translation?
-
-To support bypassing safely, would this need to be conditionally enabled via
-a platform quirk, or require implementing the .pci_address callback in
-dw_pcie_edma_ops to translate the CPU address in software before programming
-the eDMA channel?
-
-> =20
->  	/*
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260826-dma_bypass=
--v1-1-3a53dc748ce2@oss.qualcomm.com?part=3D1
