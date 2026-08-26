@@ -1,199 +1,137 @@
-Received: from fhigh-a3-smtp.messagingengine.com (fhigh-a3-smtp.messagingengine.com [103.168.172.154])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 775CE175A8A;
-	Wed, 26 Aug 2026 21:12:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.154
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 36DE43B14B3;
+	Wed, 26 Aug 2026 21:26:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787778723; cv=none; b=Utm6RTtAaBY4JT+wgGgPQUSVShUHD/w8REXcOvhGMCn63fJlX8bnCq6J40PwenqRl10nJG4sgc0QLaLqVEe6OHuYOZrSFdFRXY0Q4g7aWwN9MQQtCoNlbcr/+g7dhqK0gnu46DCpfHx4EyLS9JPPd0jZtiqlkz++ltuUnjwD8oQ=
+	t=1787779582; cv=none; b=MCjsvnRpwY8HFggJeIETp/3G0r6KDDKG4KstwxYZnCYg3Omc13xjgKddGkmARgO7rx9Y67sAk5TWPlQmWwnhkA9IVF2MGRIjUWdOASSybuB9aZ4/c9pLEJDhepm7vOO00cCmUXBZsfSeid6wW0lKWHm0DHPczlBZIp8/9SKfE3A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787778723; c=relaxed/simple;
-	bh=uDpCg2NUdgNPB8vVggZUtXIvlUFPLoHhHi6zPWg7eks=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ZCmwwACdEhYn01pM09cQE3JamCzi2/xOeijVz3lVqR55hg75peoOdPrAePWrNEoiKwTqO+V6jNZ2rYRW7N8oGEJbPCUzTiFzE8n4CMMrk9WKnvVWxDQ3UGCrTMAr1PpcMN96eY9ZXUJ9io0uPWPH+/RJ4+M1d6sczCqUWrXFVqA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=Wle+fMPp; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=jtpsDMzZ; arc=none smtp.client-ip=103.168.172.154
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
+	s=arc-20240116; t=1787779582; c=relaxed/simple;
+	bh=Wf55OcPCqAwgIzXnUp7ihqBOV0EeqfmAG2a/fevTuTI=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=gsXpon6aqgVEqMcCmDcFgyNX4UmOgf7lCLy3W5bba9P9JxjWNKj4OFEJQx65d4fVdQNEfMoWRxZIjETDWof3NJ0SymkkSl393hZYDcBp6zWpU2+M/RX2R043Cnmt4+mLSxYnisDGpmN8Om8I4g5dg6xjA1DrvhnBF9kwwgQfZE4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZeofQSrv; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="Wle+fMPp";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="jtpsDMzZ"
-Received: from phl-compute-02.internal (phl-compute-02.internal [10.202.2.42])
-	by mailfhigh.phl.internal (Postfix) with ESMTP id 6F33814000D7;
-	Wed, 26 Aug 2026 17:11:59 -0400 (EDT)
-Received: from phl-frontend-03 ([10.202.2.162])
-  by phl-compute-02.internal (MEProxy); Wed, 26 Aug 2026 17:11:59 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
-	cc:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm2; t=1787778719;
-	 x=1787865119; bh=XBtTfHY+WDdkLyh0K0L+xi9uGC1gMRbwPFuNWOJMBXw=; b=
-	Wle+fMPpazMDVaQ9O6e0HHe9V925gAr59VZq3viP6AxzJ8JGNtiZeEkSJ7WYNWvM
-	H9mpchL11d7/J8jWZ9qK92UR78WVrEQ0TT9xKBXagxJQAAlQCooWx+dlEgnuWbIw
-	xiTEcSTpgxR2gj9v6b7z5QQaIdRnVPN/cuUqfraw0gj4o9nxcZz1JJhj7Lky0gW5
-	fgs7nfGzK+Nwyit82tjBb8I1MlOXTu48k3J4dqZbluPTlvbwav9JcCgW0xYAu4tv
-	d70mrJeTiqtkrrc0U38zv3ZpARP+foK//e2scmbwmkoXo1goPjfWHZgm05W8JWMS
-	jMpmgMp5yBnSKESYl/r3SQ==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=1787778719; x=
-	1787865119; bh=XBtTfHY+WDdkLyh0K0L+xi9uGC1gMRbwPFuNWOJMBXw=; b=j
-	tpsDMzZ1MNXp4PaxoO0GHqoB703Tqzs78CU1MQROde3JpIwwVHwJ0dgKQ3tSwXZm
-	D3JKr+GZIwdOzVOJ7GA0ihCJcgPnrR8zMNsdtJIGLOYfaW7Fb1wdGMgGW3fa3kSA
-	/JrXxiim5OxWtGr/KfpgQvrhsquTzbuATqk2hRRV2QZJvV+E3JVDmDPLFim7HJi5
-	yubb/q9ZYlJL9ImdWT6/l5oEEgUDJ63QjB09Dyznw1F2iDUNa2/bYEEcVGiIhrWE
-	zTlWng8wm0p4YYouSrPFCq+S5gBm2b6202dwKgL8SLMqysDr8jkpX3ksqUdlQtDy
-	QzI6NBfRsKFTph3xDuhKQ==
-X-ME-Sender: <xms:nlaPapR909DTYcpbfmu_jfu88i5IvPinrTNzswCnOz3MfMT_LjdaEg>
-    <xme:nlaPagYr71aYDkoF96nVdYCiwVmpFhbUg4QMcz6i52mV6quSodqByMDkh3kTqYjFv
-    -IWItd9AoLR_0R0R0DRisv_JklFDDEIIYp24xD8-uq8kdUc0FK8i2A>
-X-ME-Received: <xmr:nlaPamNHPZGQ0v-gixsoGMbKPk6hI5sV9V4abqGugTOsOzXFgPRHb4EIYCwcTA>
-X-ME-Proxy-Cause: dmFkZTEXGJSF0uJGejRe3ioHj/n4Wpef56fXiylaceh+6G7pUZPBVN+LeXmG2tRpI5AMO6
-    0TXJ/tcBYEQg7FjgK1JdTPhiduFRunWkZ9aTN0LMeVrJcLkLARNGqlOTbstprIfK3BOcBH
-    dKwhXjWL26ish5Qap4mvjQO7JVwB7dpLo0iU0B+/GT+LOyGimcRDg4jH/53EZFGOPZkz7t
-    i0EUtLTMy6Sr09by1VooXpOjqqvYf0ahP5HdwEcn8uuvHKJCUa2Lug03KOrNfkEvaBsz/z
-    Gghz1To5woz7Keoiy4nJK0fPY44FpJvSBI/9zfJ2mTmEzBgF2XWZoFJOkAKv0mGZYMRYtf
-    Qru0r/bPxGzepRCJGo4CUvXPxpt9Sdf3YWRO3V9agIYbH/Kj1s3/tmyo7l5wrFUPG8rTuw
-    2mP96umyaMt5h6L8UcDTDDMWp7NZo6li7Hx8zaIWyulK3vbmOFQKaquQgQokqPN4mXcs7h
-    PF2j+/aKNQK1anw0ZvMDb2rkfbomw16zYBT8wvVo4XAytixQLtUeYmoaCmPJFUK8ArLkkE
-    Gs/CtxdSlXDmFMQAyk0BzINzaRmZ59F+dTB2+f94EY7TISdLTLDovmoWHeK8EmUA5wL8GI
-    1/5bVYxtbPxeZJWg2lAzPnga+Wwx7ZE58CZGeRvY7tuagJ96N4EqKhvMHkdw
-X-ME-Proxy: <xmx:nlaPapMjpmCjPUqgsRSylJRG-tB6AUCgD1mGJqeuqllWT5cPrsshrg>
-    <xmx:nlaPaqPvHrrH6Rb0ZxPUTwn2HLeg8appwl54_k9EWevCS1B4nxhm8A>
-    <xmx:nlaPalb7SzKDLrm9JmH11Qie1FbqVg4m6Qu63aer23eG1IUPG-UHqQ>
-    <xmx:nlaPaoiSTwBHAZXPyoUE9gkwjC4Nq3vADfmlN3ue4M48wdY0CvIEag>
-    <xmx:n1aParMtagkqRIMVTzEg7gGMNZ49iaLrQ1TmJTDCUgSI-9KIR0svszrg>
-Feedback-ID: i03f14258:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Wed,
- 26 Aug 2026 17:11:56 -0400 (EDT)
-Date: Wed, 26 Aug 2026 15:11:54 -0600
-From: Alex Williamson <alex@shazbot.org>
-To: <mhonap@nvidia.com>
-Cc: <jgg@ziepe.ca>, <ankita@nvidia.com>, <jic23@kernel.org>,
- <dave.jiang@intel.com>, <alejandro.lucero-palau@amd.com>,
- <smadhavan@nvidia.com>, <corbet@lwn.net>, <skhan@linuxfoundation.org>,
- <dave@stgolabs.net>, <alison.schofield@intel.com>,
- <vishal.l.verma@intel.com>, <iweiny@kernel.org>, <ming.li@zohomail.com>,
- <yishaih@nvidia.com>, <skolothumtho@nvidia.com>, <kevin.tian@intel.com>,
- <bhelgaas@google.com>, <dmatlack@google.com>, <kees@kernel.org>,
- <gustavoars@kernel.org>, <cjia@nvidia.com>, <kjaju@nvidia.com>,
- <vsethi@nvidia.com>, <zhiw@nvidia.com>, <linux-doc@vger.kernel.org>,
- <linux-kernel@vger.kernel.org>, <kvm@vger.kernel.org>,
- <linux-cxl@vger.kernel.org>, <linux-pci@vger.kernel.org>,
- <linux-kselftest@vger.kernel.org>, <linux-hardening@vger.kernel.org>,
- alex@shazbot.org
-Subject: Re: [PATCH v4 06/27] vfio/pci: Add CXL ops registration interface
-Message-ID: <20260826151154.19486297@shazbot.org>
-In-Reply-To: <20260813093631.2288172-7-mhonap@nvidia.com>
-References: <20260813093631.2288172-1-mhonap@nvidia.com>
-	<20260813093631.2288172-7-mhonap@nvidia.com>
-X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZeofQSrv"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8A5171F000E9;
+	Wed, 26 Aug 2026 21:26:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1787779580;
+	bh=gm39wQMjKpmBedmXq2MOstLdN4egcQOOG6PSnXiEiE8=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=ZeofQSrvbVjAFqCoJTwO91Bnds+XmhUjlfGvKAhiVVWTR9RxGvXOewcW6zQLwexBH
+	 paQr+e1eMA9uf7Dn1G8aOqqp5LtbPjcOagO7y81eV84mXr3A5PhtcpsaB4sur6c2jP
+	 AUPRraLAW5hEPlbhRnyNWcRuxLqfpFRdKh6z5FJqHjsFyCoop+OYG3V17kqqoYNyju
+	 f9bN9QKGUF1JGNT5ngXeWq+7gyBT6eQ3eRIf1qn0PhjcUuHyW0L238/GICG7HEtK/l
+	 KC8vVcjr73FjfZVb7KH4FonxacjYJ22UD4qA3RbRAVm+qlcn5xWalB2AQUtRWUFnWt
+	 AKcAW0GTgT9IA==
+Date: Wed, 26 Aug 2026 16:26:19 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Raag Jadav <raag.jadav@intel.com>
+Cc: dave@stgolabs.net, jic23@kernel.org, dave.jiang@intel.com,
+	alison.schofield@intel.com, vishal.l.verma@intel.com,
+	djbw@kernel.org, iweiny@kernel.org, ming.li@zohomail.com,
+	bhelgaas@google.com, rodrigo.vivi@intel.com,
+	linux-cxl@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, intel-xe@lists.freedesktop.org,
+	lukas@wunner.de, riana.tauro@intel.com, michal.wajdeczko@intel.com,
+	matthew.d.roper@intel.com
+Subject: Re: [PATCH v2 2/2] drm/xe/ras: Enable SGUnit PCIe error reporting
+Message-ID: <20260826212619.GA1566339@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260825054312.1319951-3-raag.jadav@intel.com>
 
-On Thu, 13 Aug 2026 15:06:10 +0530
-<mhonap@nvidia.com> wrote:
+On Tue, Aug 25, 2026 at 11:12:51AM +0530, Raag Jadav wrote:
+> SGUnit as a PCI endpoint is not AER capable and requires explicit
+> programming of error reporting bits in DevCtl register of it's config
+> space for upstream error propagation. Hack it.
 
-> From: Manish Honap <mhonap@nvidia.com>
+s/it's/its/
+
+> While at it, add native AER sanity check for upstream port before
+> programming SGUnit register.
 > 
-> vfio-pci-core must stay free of any CXL header dependency, so CXL
-> Type-2 handling lives in a separate vfio-cxl module that plugs in a set
-> of callbacks. Add the registration interface: vfio-cxl registers a
-> single struct vfio_cxl_ops at module_init, and vfio-pci-core stores it
-> under a mutex.
+> This is as per pci_enable_pcie_error_reporting() logic implemented
+> in PCIe AER driver.
 > 
-> The owner field lets a later patch pin vfio-cxl for the lifetime of each
-> bound CXL device. No caller yet; the detection path is added next.
-> 
-> Signed-off-by: Manish Honap <mhonap@nvidia.com>
+> Signed-off-by: Raag Jadav <raag.jadav@intel.com>
+> Reviewed-by: Lukas Wunner <lukas@wunner.de>
 > ---
->  drivers/vfio/pci/vfio_pci_core.c | 27 +++++++++++++++++++++++++++
->  include/linux/vfio_pci_core.h    | 10 ++++++++++
->  2 files changed, 37 insertions(+)
+>  drivers/gpu/drm/xe/xe_ras.c | 14 ++++++++++++++
+>  1 file changed, 14 insertions(+)
 > 
-> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
-> index 3f11a9624b9c..88e68d43af9a 100644
-> --- a/drivers/vfio/pci/vfio_pci_core.c
-> +++ b/drivers/vfio/pci/vfio_pci_core.c
-> @@ -2670,6 +2670,33 @@ static void vfio_pci_dev_set_try_reset(struct vfio_device_set *dev_set)
->  	}
+> diff --git a/drivers/gpu/drm/xe/xe_ras.c b/drivers/gpu/drm/xe/xe_ras.c
+> index de4cb9ef7355..c4b5c0b5eb0d 100644
+> --- a/drivers/gpu/drm/xe/xe_ras.c
+> +++ b/drivers/gpu/drm/xe/xe_ras.c
+> @@ -3,6 +3,8 @@
+>   * Copyright © 2026 Intel Corporation
+>   */
+>  
+> +#include <linux/aer.h>
+> +
+>  #include "xe_debugfs.h"
+>  #include "xe_device.h"
+>  #include "xe_drm_ras.h"
+> @@ -234,6 +236,9 @@ static struct pci_dev *find_usp_dev(struct pci_dev *pdev)
+>  	return pci_upstream_bridge(vsp);
 >  }
 >  
-> +static const struct vfio_cxl_ops *vfio_pci_cxl_ops;
-> +static DEFINE_MUTEX(vfio_pci_cxl_ops_lock);
-> +
-> +int vfio_pci_core_register_cxl_ops(const struct vfio_cxl_ops *ops)
-> +{
-> +	int ret = 0;
-> +
-> +	mutex_lock(&vfio_pci_cxl_ops_lock);
-> +	if (vfio_pci_cxl_ops)
-> +		ret = -EBUSY;
-> +	else
-> +		vfio_pci_cxl_ops = ops;
-> +	mutex_unlock(&vfio_pci_cxl_ops_lock);
-> +
-> +	return ret;
-> +}
-> +EXPORT_SYMBOL_GPL(vfio_pci_core_register_cxl_ops);
-> +
-> +void vfio_pci_core_unregister_cxl_ops(const struct vfio_cxl_ops *ops)
-> +{
-> +	mutex_lock(&vfio_pci_cxl_ops_lock);
-> +	if (vfio_pci_cxl_ops == ops)
-> +		vfio_pci_cxl_ops = NULL;
-> +	mutex_unlock(&vfio_pci_cxl_ops_lock);
-> +}
-> +EXPORT_SYMBOL_GPL(vfio_pci_core_unregister_cxl_ops);
-> +
+> +#define PCI_EXP_AER_FLAGS	(PCI_EXP_DEVCTL_CERE | PCI_EXP_DEVCTL_NFERE | \
+> +				 PCI_EXP_DEVCTL_FERE | PCI_EXP_DEVCTL_URRE)
 
-Use guards to simplify these, especially the registration path where we
-can then just return -EBUSY.
+Ugh :)  Duplicate of what's in drivers/pci/pci.h.
 
-I see the get function stores a per-vdev cxl_ops pointer with module
-reference held for the life of the device, so the serialization on the
-mutex is only per-device at probe time, but it might still be
-worthwhile to preempt that with a rwsem here where both these paths are
-writers and the get is a reader.
-
->  static void vfio_pci_core_cleanup(void)
+>  static void ras_usp_aer_init(struct xe_device *xe)
 >  {
->  	vfio_pci_uninit_perm_bits();
-> diff --git a/include/linux/vfio_pci_core.h b/include/linux/vfio_pci_core.h
-> index 9a1674c152aa..14753972e714 100644
-> --- a/include/linux/vfio_pci_core.h
-> +++ b/include/linux/vfio_pci_core.h
-> @@ -66,6 +66,16 @@ struct vfio_pci_device_ops {
->  			       size_t nr_ranges);
->  };
+>  	struct pci_dev *pdev = to_pci_dev(xe->drm.dev);
+> @@ -251,6 +256,14 @@ static void ras_usp_aer_init(struct xe_device *xe)
+>  		return;
+>  	}
 >  
-> +struct vfio_cxl_ops {
-> +	int	(*init_device)(struct vfio_pci_core_device *vdev);
-> +	void	(*release_device)(struct vfio_pci_core_device *vdev);
-> +	/* Pinned per bound CXL device so vfio-cxl cannot unload under usage */
-> +	struct module *owner;
-> +};
-
-To mirror vfio_device_ops, should these drop _device and just become
-.init and .release?  I think that better reflects their actual usage
-while the eventual .open_device and .close_device already reflect the
-mapping into vfio_device_ops sequencing.  Thanks,
-
-Alex
-
+> +	if (!pcie_aer_is_native(usp)) {
+> +		dev_warn(&usp->dev, "No native AER support\n");
+> +		return;
+> +	}
 > +
-> +int vfio_pci_core_register_cxl_ops(const struct vfio_cxl_ops *ops);
-> +void vfio_pci_core_unregister_cxl_ops(const struct vfio_cxl_ops *ops);
-> +
->  #if IS_ENABLED(CONFIG_VFIO_PCI_DMABUF)
->  int vfio_pci_core_fill_phys_vec(struct phys_vec *phys_vec,
->  				struct vfio_region_dma_range *dma_ranges,
+> +	pcie_capability_set_word(pdev, PCI_EXP_DEVCTL, PCI_EXP_AER_FLAGS);
 
+The PCI core calls pci_aer_init() for every device, which only calls
+pci_enable_pcie_error_reporting() to set PCI_EXP_AER_FLAGS when the
+device itself has an AER Capability.
+
+Setting PCI_EXP_AER_FLAGS enables the device to send ERR_* messages
+upstream.  *Maybe* enabling those has something to do with whether the
+Root Port (the ultimate consumer of those ERR_* messages) supports
+AER, but I don't think it is related to whether the device *itself*
+has an AER Capability.
+
+It seems to me like the PCI core should do
+pci_enable_pcie_error_reporting() independent of whether the device
+has an AER Capability.
+
+> +	pci_save_state(pdev);
+> +
+>  	/*
+>  	 * Clear any stale Uncorrectable Internal Error Status event in Uncorrectable Error
+>  	 * Status Register.
+> @@ -279,6 +292,7 @@ static void ras_usp_aer_init(struct xe_device *xe)
+>  	pci_save_state(usp);
+>  	dev_dbg(&usp->dev, "Uncorrectable Internal Errors downgraded and unmasked\n");
+>  }
+> +MODULE_IMPORT_NS("AER");
+>  
+>  static void ras_send_error_event(struct xe_device *xe, u8 severity, u8 component)
+>  {
+> -- 
+> 2.43.0
+> 
