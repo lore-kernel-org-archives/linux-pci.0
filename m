@@ -1,71 +1,75 @@
-Received: from BN8PR05CU002.outbound.protection.outlook.com (mail-eastus2azon11011004.outbound.protection.outlook.com [52.101.57.4])
+Received: from SA9PR02CU001.outbound.protection.outlook.com (mail-southcentralusazon11013064.outbound.protection.outlook.com [40.93.196.64])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C64B934F49F;
-	Wed, 26 Aug 2026 13:06:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.57.4
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57A453F7AA8;
+	Wed, 26 Aug 2026 13:30:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.196.64
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787749586; cv=fail; b=QNZ/TCVRGhOJoVWYlccxSP8BYLIM53brFF0nnEdItOAhDWDXnB5WhpK+0qlvVTlaE1C5sF47wSYqGCDCCsjxaQcn2fz6VEJeg7lf/125OjKBTkzBsp8pnFCdBGrvc9BGO/Sc/ML3x/ScVvvUc9eYyzvhD08gDzXnSttiFmQz+4s=
+	t=1787751013; cv=fail; b=PBBfqVDunY25XTT25wZOSSrB5OwUCsVtO2Lc7xW08JuJkg/RIH5dAwnk8Co5yJSexPSTz1LhUSWlXJbIydgI6EAyFQNN+8tDgeGmoNaetaLcCQlepf+D0WyIYn7fLPN7V8Co3rOxIIXPJ+kxNEWZtakWb6Xivyu9gEJ8sE21nEA=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787749586; c=relaxed/simple;
-	bh=pdOlgsYXf9p9myNjCB7ChTzl0tsJzeilyXwhaKGZxrM=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=DYXHsRcM0wc3d2bqaF6Y3/Pq+3UnqUsGRLeyQfbfM/ecoy259d4ILM6A/4kRQthSDj1Gq5ckWeWdGL6sZv7+wOjSci4FobYFm9dmmFmB3Ko8xrnVataiWY75gQSfwEU9P1NmPwKMKAW4sRKx7XJvWXEfJgCxfqEzxJPls0Eleow=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=Sbn+FDJf; arc=fail smtp.client-ip=52.101.57.4
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
+	s=arc-20240116; t=1787751013; c=relaxed/simple;
+	bh=fz+KKPk825LYDy9WJl7YSkwgXIOovRgwVKWHfOgWsbs=;
+	h=Content-Type:Date:Message-Id:Cc:Subject:From:To:References:
+	 In-Reply-To:MIME-Version; b=kmpPcxQfPPVUBkD9zbsAVs/0x313NaB57pUXv8LhMnJHUHkolE/V6qny20hDQQgFejicmBdX6naKOv1BOXG1x5Q5dWnjNbUuBvfDlZdkYj88WSw5v+RRaAQCwlbbgzu5EJK+BZ+lw/btXgdm3SIYd+UoHHELxDVB8iyMD1YjA/g=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=MaldfReF; arc=fail smtp.client-ip=40.93.196.64
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="Sbn+FDJf"
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="MaldfReF"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=x42XgTfZCxbCDM8VxtQjgHloC9Ti51+gxbSStoeCdJyISoeCXN4OgE9enNoABasut+4Z9QrE7/8/WSQomtS1H7AImQsw1HTf3Y40SSiP6q5IeKuteJTcW5mhZGKRbuTogl6BOvschc79W8hzIBlmigWtJ7/3VfU8kl4c4Uje94cxN2PAkzddQ+hHWJyiPGCOg2O6zKqL/C6TrRXb4B2pYX+QDEnd4prVsfLMF2Stw06aP4oIgt4l1PZfKPR90hx4QVMdg5zxh5I/ncnwNpyonb7SCVbNSnUlUWUcJoS8m2nq/HiLONbwRFnXjxmjsleeRIQZumyBhbytQU/mmZ+pZw==
+ b=XUb/43Yl7ReuCz51O5pTVOiE+ZAbZJyRG9YyQd9GtyQ77u3dlkWribUisFHcUtDyc0Xw2MkZTHjWhtebsCTId9Z5J2ZSBORfdcIHWv3pKJtxeLavGSHW1XZJfwJgw+SwpkY2/etmTvZGzpJFTh4vfaIodhSI0cS2QNljUreWNt8GTCdGaIqbz5Hnnw9tMvBRXu1OsM1bELzXdJOPvvWpAcycVCDBdbr9XsVhPN84RczlxCc7kkVK8epvgObSLJtE4xHbY0iwaFSgM7bip3DWbPRDpFY+HSj5c2/DCHIu7/zj2Gv5AVAqUSN3VG+jV//yR58cS7LpbYYjSY2PR7+WBg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=3CiDIPAscQJXANJ1mByZXeXQHma/xopfZkzD0pbLT2c=;
- b=zIykh1kfVDtvdgJi7ouI/okpU+DxxShikKnTrLIH6OgbNpL5bpibHuC4zgPObWLDp0Kfsbw8tEb5nddLXxUhBantts1gkI9Rs9o1HWJUnOZ3YnX6JhzLvurTYnjQ8UZisVdU6XUtOSqhZwtOz+skDFFbfbzKnNppPzIRQxxSa/XA8lGsEmRUVCAmgE1D7GBpzwAJIrpjydURfepyHPHl/TaPsbPKnAshtPxkqsRkgsfPfhHuaolD5wPJisKedV5RwYgQFLvrPL4v6aolGHW4wKtYJSj3PzbUo08vtp1RdMJp+PnDmIm4vmwSm+HC8crpq9Juq94aCNJEn0u13pG7Cg==
+ bh=Z3MfCcZ06Tn4gwJcH1Zmnl24LZFdTsB0TajklI6PReY=;
+ b=nFS6cljpXeLD0wlTDBz5hYocMb1UlkDFfWcKShJQbEHQLyc2LjTEWjuWKof74S4sWLnQjmhKEASnYLACyvEgtrglK18IuinmcGE3o4qC65fo8gtBL6zXiQhzg0+j6qlK7vuW1OS8+96V/mxmXlVCQ+u2X0lfhsqxqBFY90sElqFKqWw411YuUrq2sYSp9H1+0y1L3lHnh96TvlOZURVTqRhhVMIB7eViQxXQtHOszTA1koHUGlsTtarfiqxHO6BfdG5avg6kbv8EBGqWxQXByxjIq06fCLNuNVJSrguN54m2NIDWlpBO7B+c2Ip2RrE+CoW0EY6xW3YxPtB6t8dvpQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
- header.d=amd.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=3CiDIPAscQJXANJ1mByZXeXQHma/xopfZkzD0pbLT2c=;
- b=Sbn+FDJf/8mAW4arg+tLfeUxcR25cFYSjfrqddxcwmK9UoWqdYRww/u4/XTvHdRm4Mp3AnJW40pfGL5atUrhrDalTZEc/nITbqVNUZRvwagbmd0BG+yo4xTTcB3Ba7nPDgpfuwLUK9D5D8gbTSoGUImxHdJ+3gbZyWM7DfHAV2U=
+ bh=Z3MfCcZ06Tn4gwJcH1Zmnl24LZFdTsB0TajklI6PReY=;
+ b=MaldfReFMbEdgDjixR+IZ8e3Na8lnbCp8NLbe7B8XL1OaotszhVi9zKNnpCSx4FelcLe5nJF4wibEoB3rhc/D6Ex8DOCrVxtIjY6SFE3MkDgx7lOf+2Fcf4l2QJExNUb3jeJ9YJ1oKZEbLLb+jGCZ5vBcsWQo001Ej5Iqklr5nX6Pux0npbs1ueVMJtHr63RID862MUUMntetqZNNa/OZ2Ib8aqQQmrYHR+C1Cug3NjYD3PHzKizO2NwfCRxQHOdz9DDq8/dRzqR56xfinTO3vUkm10yiT1Dh93AOQ7gOl/2tghBsxZveAsb/1d+KQ+Q8Ocr3DpBvaOS0Cu4CQyv8Q==
 Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=amd.com;
-Received: from PH7PR12MB5685.namprd12.prod.outlook.com (2603:10b6:510:13c::22)
- by SA5PPFCB4F033D6.namprd12.prod.outlook.com (2603:10b6:80f:fc04::8e2) with
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from MW4PR12MB6873.namprd12.prod.outlook.com (2603:10b6:303:20c::17)
+ by PH7PR12MB6468.namprd12.prod.outlook.com (2603:10b6:510:1f4::15) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.360.10; Wed, 26 Aug
- 2026 13:06:10 +0000
-Received: from PH7PR12MB5685.namprd12.prod.outlook.com
- ([fe80::ce69:cfae:774d:a65c]) by PH7PR12MB5685.namprd12.prod.outlook.com
- ([fe80::ce69:cfae:774d:a65c%3]) with mapi id 15.21.0339.007; Wed, 26 Aug 2026
- 13:06:09 +0000
-Message-ID: <39dc2f46-08c8-4eff-aa22-a7c67b5c7040@amd.com>
-Date: Wed, 26 Aug 2026 15:06:04 +0200
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 2/2] dma-buf: Document how exporters and importers agree
- on mapping lifetime
-To: Leon Romanovsky <leon@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Logan Gunthorpe
- <logang@deltatee.com>, Jonathan Corbet <corbet@lwn.net>,
- Shuah Khan <skhan@linuxfoundation.org>,
- Sumit Semwal <sumit.semwal@linaro.org>, linux-pci@vger.kernel.org,
- linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org,
- linaro-mm-sig@lists.linaro.org
-References: <20260825-document-dma-buf-v1-0-5ecfb3e1371c@nvidia.com>
- <20260825-document-dma-buf-v1-2-5ecfb3e1371c@nvidia.com>
- <2776f9b0-c299-45ff-bf82-89b95e73fd60@amd.com>
- <20260826124341.GD42790@unreal>
-Content-Language: en-US
-From: =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>
-In-Reply-To: <20260826124341.GD42790@unreal>
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.360.7; Wed, 26 Aug
+ 2026 13:30:05 +0000
+Received: from MW4PR12MB6873.namprd12.prod.outlook.com
+ ([fe80::a338:bd2c:3a38:ece1]) by MW4PR12MB6873.namprd12.prod.outlook.com
+ ([fe80::a338:bd2c:3a38:ece1%5]) with mapi id 15.21.0315.014; Wed, 26 Aug 2026
+ 13:30:05 +0000
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: FR4P281CA0174.DEUP281.PROD.OUTLOOK.COM
- (2603:10a6:d10:b7::20) To PH7PR12MB5685.namprd12.prod.outlook.com
- (2603:10b6:510:13c::22)
+Date: Wed, 26 Aug 2026 22:30:02 +0900
+Message-Id: <DKYWU8JOCKM6.3K5820I4MLPKR@nvidia.com>
+Cc: "Danilo Krummrich" <dakr@kernel.org>, "Alice Ryhl"
+ <aliceryhl@google.com>, "Daniel Almeida" <daniel.almeida@collabora.com>,
+ "Miguel Ojeda" <ojeda@kernel.org>, "Boqun Feng" <boqun@kernel.org>,
+ =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, "Benno Lossin"
+ <lossin@kernel.org>, "Andreas Hindborg" <a.hindborg@kernel.org>, "Trevor
+ Gross" <tmgross@umich.edu>, "Tamir Duberstein" <tamird@kernel.org>,
+ =?utf-8?q?Onur_=C3=96zkan?= <work@onurozkan.dev>, "David Airlie"
+ <airlied@gmail.com>, "Simona Vetter" <simona@ffwll.ch>, "Bjorn Helgaas"
+ <bhelgaas@google.com>, =?utf-8?q?Krzysztof_Wilczy=C5=84ski?=
+ <kwilczynski@kernel.org>, <driver-core@lists.linux.dev>,
+ <rust-for-linux@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+ <nova-gpu@lists.linux.dev>, <dri-devel@lists.freedesktop.org>,
+ <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v3 03/16] rust: mem: add `AsRepr` and `AsReprMut`
+From: "Alexandre Courbot" <acourbot@nvidia.com>
+To: "Gary Guo" <gary@garyguo.net>
+Content-Transfer-Encoding: quoted-printable
+References: <20260819-typed_register-v3-0-3699a75fadf1@garyguo.net>
+ <20260819-typed_register-v3-3-3699a75fadf1@garyguo.net>
+ <DKYU6RA4PD45.J2EMZIOB0BBF@nvidia.com>
+ <DKYUQ9CWIXKJ.3FSWLPWHXIBK@garyguo.net>
+In-Reply-To: <DKYUQ9CWIXKJ.3FSWLPWHXIBK@garyguo.net>
+X-ClientProxiedBy: TY4PR01CA0054.jpnprd01.prod.outlook.com
+ (2603:1096:405:372::8) To MW4PR12MB6873.namprd12.prod.outlook.com
+ (2603:10b6:303:20c::17)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -73,279 +77,218 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: PH7PR12MB5685:EE_|SA5PPFCB4F033D6:EE_
-X-MS-Office365-Filtering-Correlation-Id: 742b891e-36db-4179-7864-08df0372cbfe
+X-MS-TrafficTypeDiagnostic: MW4PR12MB6873:EE_|PH7PR12MB6468:EE_
+X-MS-Office365-Filtering-Correlation-Id: 4f578214-e052-4cb4-a0de-08df037623b2
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|376014|7416014|1800799024|23010399003|366016|6133799003|56012099006|10067099003|11063799006|5023799004|4143699003|22082099003|18002099003;
+	BCL:0;ARA:13230040|10070799003|23010399003|376014|7416014|1800799024|366016|6133799003|10067099003|4143699003|11063799006|56012099006|5023799004|22082099003|18002099003;
 X-Microsoft-Antispam-Message-Info:
-	HUgRAM+M0ewS3c4G7epsW90lphbcJKlSltWWsuvHu3rfg9qUTAe/KYhJH0KlrsceepNlFRVe37wPw+Gzdj+RK+5aIqlQSN0G8lGkycGr3qQuLd4jEAFwMYmOdHE661wRlxcUkZ2fn4bwCmupCw7CmHicYHc1t67Ru3WLQgaIlf0xJTlBZWtquBKNRMAc/mTPx9R6U+f3jNH4PyqyYhwR4TAMSkORBu0a/TiSCU7ZmYtTsWr2d1uR4uLJ/xNq8PF4b0TUzOU3UeuWvGVSAR2D1teVQ7wDDiws4c9PcXKJyh7fHm16ZU6rPzaGIRUbTa9yjV0Qg7w3lxLCU7kVnxYJpIqkk6yuRzvW/L3foZAn9jEY9A/UW4YaK2g3wjzHqGqWvcwktjMQwyTZiSw+SbOK0X5Z+Ls39qmAyGUBuVTa6tC49tc+S7QBXK1TadpKfLwGgJvr4rcaM8VBerJZ8TjLgVO0AOMUxg9OWPid14LNLzze5AKER5af4bByNzXfjvzgZMHSGwD9jc0n0MBbF2ajELGS8XpXCI3fQXGWCGMpUwltLg0jvTQvg4b2JoHKbE5HqsErK8SCtdqLejn64EJneCoZtbp2k/7iJ7MH23aXxLRdETwJXiHr0ZrtTSks9xnIuizWSC0TX+KmU0tIR2mPvoEzC3emomQSpZv2RMHm0l8=
+	+cLw1MGFa96By3RoSOE5AaXZEro0oOUjTY45aw1j3mopRl/IusOIyLCu+LjeVmi/B06BYL5esEjnH3vSZI7sWwojgItyEPktNUz0gzQ3UMUGBx2YwpvruMcWJJv6kjWirYB3e0oBxnikCv3kixIx8hvryeAT/WxcCGGQVfarwrpNan2doQiN8+p00bTewvbL1pNIHN5H92Jlco9E0QtivqkGSaCbiJp7sH5xRbP3TwoTwD5/chGgugRwsyNa1egg4PyUNglVBmnUWVEZzJFKLlY0E2PxS2BO1JVHKv9m5EIY78AARapgH/sc1CJnmo5uZkcfLWnAKDKkFAEH5PFc4uYl5OCM9JZiq4LNJnc8aQa025GVFoRrpbLJ7xATkwn4YLFKpACO6UkjKAOGqrKvMlF+3so1zpMBg0uedWd66K3loAlOCoprE7AildrU1/KAB/GTSnw/2q/KY7ysyq82J8n+JpUhP+LJ8GbV34PVb1VAMfR2rhzhYZjCXBSCs8I7Zlw5Xz9qhF9cj7A2NDpewUAP0cM7nf9DUox14ho0c+CGHWBQwe9qYoapaewNHRMNiTFiWkPI1yLqASQzzr5z4jVGuP5t88b40f7FLs24dYj0VE4R6cCLuu4intwcOOemmMFAfam2QfvBe/KkrkAgw5YjbfVsY9Xe27u/c+r9ans=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH7PR12MB5685.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(7416014)(1800799024)(23010399003)(366016)(6133799003)(56012099006)(10067099003)(11063799006)(5023799004)(4143699003)(22082099003)(18002099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MW4PR12MB6873.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(10070799003)(23010399003)(376014)(7416014)(1800799024)(366016)(6133799003)(10067099003)(4143699003)(11063799006)(56012099006)(5023799004)(22082099003)(18002099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?amlLZTlnSVJveGlUQUhyQ09tV3o1ZjQzL0duR2Z5NkF1V1dlNjlpZndYTWJT?=
- =?utf-8?B?R1hKS3lRQWtwQWtuVkh5VWwwck1KbEtSbDBNSkZWTFprRFNPNzErRmU5ZWRW?=
- =?utf-8?B?WXhSY0xQSDdWZEpQNHh3enBWVTg0dlExMDZJVW0vaEFLUE9qc0RjRCtydmRP?=
- =?utf-8?B?QnJ6dDlndGVMenVucXVFcTdiZmxwZ2kxN2d1bERzSmc4T29NOEFxd01hc1R5?=
- =?utf-8?B?ci8yYnYvN0VKcENla3B6KzN3ZkRUNUQ2QkI0ck95YXluQWszTnZtR2gyZWg3?=
- =?utf-8?B?N3ZGMncxQW4wWVNHSktkR3JCQk1IRWdUaE83cTlZZHFVQmpKMU1ZazRCL0lF?=
- =?utf-8?B?SXNMaXdOM1pEUDlvcHBjV2drRU9lZkJDcEhmRnpyL1UxUDJzU3pSclQ3ZTNN?=
- =?utf-8?B?SnFrU25hK0lvb0VRV2JtWk9qN29aWEViZWRRbDkwcnBoNmV2U3ZOYWpob3VX?=
- =?utf-8?B?ZjhERzViOFJCSC9yMSswZzl6RHBvaWtmSXZNMVViLzNMZHY0ZWN6eGJRMTVp?=
- =?utf-8?B?K2h4S0diaklVRG50Z3hsRDJSYW8xRENsNktPYlMvWkpwYlNoSklFN0ZSQVdk?=
- =?utf-8?B?UVM3cmhOVS9MbFJwWjRGa0lIM1BLN2toRFU5MnJ3UUtTZVM2bjBJbk45Z2hK?=
- =?utf-8?B?WGV6NW1SeGN6TitqZmcreUhKZ2ZpWDZaMTg2Um55OWZLKzlpUkJHdng1SVdW?=
- =?utf-8?B?RGY2dkFuOC83RWk0NitsV3AxOHJyZWxlUzNzT1orb09wQW0yNElHTTJ5eUJD?=
- =?utf-8?B?dmRWWjB6eDh0WS9zaFZDRVVSVHQrZ2Z3a1U1UitFNktnRVJiMWFhUkk3UlB1?=
- =?utf-8?B?RjJRZjFsMjQ3U2xwRzlPR3A4bWNkZUltaWEvcUtzejRhVHVNRGJIaDBJekE0?=
- =?utf-8?B?eDQzVmhLdHZOdUt1RTVma3BPYlZGL2hBUHFCU0lqK0VILzB0ZC9yQVJ3emw5?=
- =?utf-8?B?VmsvajRaakp4R3Nrd0t3UnVVeEVHbEpXMjlVMkpFaXRueGdwWm9lSStOUzgx?=
- =?utf-8?B?cUF2QjM1TUlTclcrRmdPdTZudytLb3p6RVlaWk44eEZtS2Z0VmVMd2J2L0JN?=
- =?utf-8?B?N3Y3OG9EZ0NWRVJTc01Da1UyTlFJOTVwYW5GSENpMnIrYm5QMk1vWUx5WlRt?=
- =?utf-8?B?c201TDYxWUVRVmUzb0tyK0NVQXdGZXU3MWVYSmVpYU9xbHlFcXBjdUVlREJM?=
- =?utf-8?B?alFDcEZUcTVJMWRoMWhJbHZXVDdaQzVlTlJvZE9QYmdIWDZXamRNd0dSMXFU?=
- =?utf-8?B?eCtBUnpYVFllSERaVVZqb1YyR2ZOaVlCY3g2WmEvSmljZkZNU0lQN04xNGx4?=
- =?utf-8?B?bUJpbDUrNW9MWTJuaExwNG9Fd2d2R0FQaHUwSUUydVl5UEl5OTBlTmlrUThk?=
- =?utf-8?B?Z2h3dGtLdWhCbXFZa0trNWNXdyszWUx0MlpRblNSM2ZDUjNoSkJRdGQ2eW5x?=
- =?utf-8?B?MnJwVjE2UlBVbzVVZjk5VFVmd05iWGxPdlNoN1pncU1OeVRxaEhJamJkS2tP?=
- =?utf-8?B?K3BwZkdlVDBqRXBQb3Zxb2d3bHdnT0tXdnBMTEhmZzlJb200ak45alh6Rlcr?=
- =?utf-8?B?Vkk5c0hqbitPNTFQRjVUVHZ5cGI0YlBzcEdUUUFuV1ZpNUg1Mkt6akFPcGFB?=
- =?utf-8?B?akcyYXRtOGQ1cWYrbVF2cE5CaVRpY01QZjB4a3E4RGw3MDQwQm90bnZld3dQ?=
- =?utf-8?B?akFhaFFjeFNUa3IzNm1JOHArQVlJcm1sUll1L3l6aW1HVG9hNFdQbndlK0Zz?=
- =?utf-8?B?N2NJbW5EQmwvZ01aQytGNnlxcW5sRWVFUGFrRndQVTNBeXBwUG1DQnFvZGFF?=
- =?utf-8?B?TkxnUVkxeWczSFA4MFlVZ1draUIwQ0k0UEsxVzZyc3diZkFGZmpPOXM4Tjh2?=
- =?utf-8?B?Zi9raXRYaTFuZVp4ZlJqUXlCRUZmMlM3V3pHVzhBY3RJNE1Oazkxa3JQSThD?=
- =?utf-8?B?NW9xS3RwQlJyZitiVzBMbmtCWnpLbEE0VlNiakRmOG9RSVhZM2NMWXVsQWF4?=
- =?utf-8?B?bkRnM0s3T2RsTTE4WWxPUnhVYzFKeTRKSEU5U3A3ZDlvMXoybzdtWkpkbWF4?=
- =?utf-8?B?ajk0czNTeWpQRk5sWXRITnNuTFRZOHRqbWN4Y3VLOUxjNUt3LzdnNStoWktT?=
- =?utf-8?B?VVZEckJpM3U3NTFoWDl6eHpLU0RmV2p0ei8wV2lRc1pmUlFhQ0R2MHRTeExr?=
- =?utf-8?B?WDNJTkhXRVVQZ0RjSmprN3IwSEg2aWxnK2FtaHI2ZVdGRXNjUTF2RXhiS0RR?=
- =?utf-8?B?a3poOTdWVEFRV0h2ZldlUnNJRVoxZkRmZFFnYzAyc0R6YTZab3NEazdRV2hP?=
- =?utf-8?Q?TEFYOsZNLQAemAczGD?=
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 742b891e-36db-4179-7864-08df0372cbfe
-X-MS-Exchange-CrossTenant-AuthSource: PH7PR12MB5685.namprd12.prod.outlook.com
+	=?utf-8?B?NkJBSHhGeFJGVHRGeE9iMnZldjFpSkI1T29ISEFHK1U2ai9vMlhhcVNvZXhp?=
+ =?utf-8?B?WTd0S2lrSDZIWFptT2tSY1prL0xtVEd5b1lpUitQLy9zd0ZXdWsxdExtbXMr?=
+ =?utf-8?B?WUhVUUZ0Tk5hQ1ZwdUVqWHhoeEM1NEdRS1Z1VDJZRzNBOENWWU80cW1zc2k2?=
+ =?utf-8?B?N3E4TlZ3ekdHRzlsSm0rd1J6LzNIbG91U1FNOFZGVmRBbFRzaTlKcnlRNFNr?=
+ =?utf-8?B?bDNZZ2pXaGo4bDFWWXJlTmNPNGNmdDVYSnppS2VCMWd4d0R3eCtQNTd5QU9Q?=
+ =?utf-8?B?NlowL1hLcytGck9xQ0VNYzgzRzZ0b3UxalBiK0lTdng0NENKaHYvSHhsSGh0?=
+ =?utf-8?B?TUkzMjhGSHVxZUpCRDRQMGt0TFpwUWtRK0lnSlhzRit3KzByYkNKTmhmSVk2?=
+ =?utf-8?B?Vk5kQ29idXVGemhCczRXKzYwVnhVUFozMGtRRUlnTldwbWJGMVRKd0duTVo4?=
+ =?utf-8?B?SmZLbW5xME9GV3JmTDJRYUhnWVBIVmg5bERYUEZTVDlUZ2VpdFBVWU5YdEcw?=
+ =?utf-8?B?SGhXMnFIOVZDaEVuNDJUSG1VZnE5T1hWNWFlMG1TTFFyU3o3TVF2dGFqRDFQ?=
+ =?utf-8?B?c0hhaVJIYXY2MjJzdDFHNTB5ZitBdUc2NXc3ejNrQXFISTZNWHVYM0Z5TjYr?=
+ =?utf-8?B?T0RTbXREeGswOVE4RjMzMzhzanpDYWcxT01ZU25kYVk4cFVIYWNqWWlmSTVI?=
+ =?utf-8?B?cllJSEhWaXZid04ySFlwczY1eUlOR3phVk5yMG0xSzlnRUdWMWd1R0RraHps?=
+ =?utf-8?B?bnp5bWpXT214REhwcnIrd0xFRThzUWNuNXR0YWZWZlowL0pSUXIxb2hoMlNO?=
+ =?utf-8?B?azFaR1NienBQN1l5MG9jQmpJc0NJSW1OcVVXTGdZekY0djh4Mmx6MTFuZDk4?=
+ =?utf-8?B?VWhodEg5eTlDR1RiSStncW8vazA5UXhmR2Vwc3p3ZG4zOFl1RWwrSDFPYVpI?=
+ =?utf-8?B?dGg1RDdETWVWU251NEVLZVNpdHMxNHVpbUg3dGtaRGo0VSs0b1hLS3YrTmQ5?=
+ =?utf-8?B?UWQrVCsyeElOaEY0TkpTSkx2RkNxc3pEbU05cXkrbGRNRW1IOUhMNWRVVEd3?=
+ =?utf-8?B?cGNuamJqb3RXTWdKbXNJY3FVMzczd3pkTFhTeU9DYy9rUGZPTkNzVkQweXg1?=
+ =?utf-8?B?T1F6RXBHSFFNQVNUcUx3eHRIREdHWXAvbHA0L1dtRGVkS2RHQ1A3YjYxK2xB?=
+ =?utf-8?B?WGYxWW1NRzZyRmUybXNaMHdic1dCSFlHY2pXSGYvU3NwUHpqVlJqT1U2eERW?=
+ =?utf-8?B?VnEzQklaK3RiaWlic1BJSUpRUHh0K1Z4eEtCcnQ1TUZEVVlGNW1pa0ZuTVJz?=
+ =?utf-8?B?encrb0V6YjV1UWx1Y1JFS0c2c050QlBRdzRlZTM1VHBQcUt1UW00ZUltMWlS?=
+ =?utf-8?B?SktHUTkrUW81QkVMNUhOejUyUVRFV1pmZW5pTTBlWlVzTWxCdnJMNno2RGN4?=
+ =?utf-8?B?ejUzTjNjZ0F2eHFjTW1UankzOWZwSlByeWpIOFZrRXBCS3RLTm4xMVZCaTRR?=
+ =?utf-8?B?SnpVaEtpVGlsZldYK0lGdDV2bURUOVhqb3R3c2dOU0dscUZZd2M2TmRabkFr?=
+ =?utf-8?B?SkoyZDQybmE1MVVoNzVKWTZyME1UWGtldVNEU0E2Zkh4Qlh3SVdyKzA1MWVa?=
+ =?utf-8?B?Rk9IdWpqclZ2Ny9lenBVNG5jeWVjYWlqakpzNDFEaE5tTjJnT29TMEtYMkhG?=
+ =?utf-8?B?K0tCRkFZV2JNMFQrR0RqUXdUMWpuRGNuTm5DMTBmejBIa3p0N1BsdWNaS2Zw?=
+ =?utf-8?B?VmlrZVZtS3RoNmR1U29XTmdEcUF6QUVaVlNMMTVpcmU5Y3FUZlluUmRTTVJ0?=
+ =?utf-8?B?U3c5ZXgySTdQalBhbENrUkNJdG00QkxkdEtkUnhSdklyZys3dyswUEdGTGQ4?=
+ =?utf-8?B?YmVoNEMzTVFNVUtSTGhTUE5udWNaYVMzZ2k1NzcvL1d3L3lFT0pkZG9KeC9R?=
+ =?utf-8?B?UWloTUVJYWZON3czQlJIbERXMHZyRzM0dk1BRU91ZVh4c3VwRTMxaUFxR2hP?=
+ =?utf-8?B?Z0VBUlZOSTlKRWduTlQ3YkpVWXd0UFVVUWM3by9jbjBxUTdoV0FveFltSktT?=
+ =?utf-8?B?Y3pRNTZuMUhvMHg0SkhqblEycEQxT01oQjJaRHlqSmkvUkNUcEJ4TzhSY0Ro?=
+ =?utf-8?B?cG5ONThzYThrMnhLSTFibE9ZdDlkeVhvTXpmU0s4aXNrZFYzTHJsWXFLa1NO?=
+ =?utf-8?B?N1BXTlFtMUNxZWlEbHhIOFFiN3ZDcUxkenN2WkNxdzFaWHYxZ2xnZDdHMzRQ?=
+ =?utf-8?B?MEdHTUFseit6TUhBL3k4ZWxvemV1Rk5rN1dHandYZ1dMeU43YW1EdDg2elpv?=
+ =?utf-8?B?NTNUMnZwRTAzQSt6RWdwcmNneGNwR0VhbDJkRlJLd0FYYU9rNHhWd0VDQjlS?=
+ =?utf-8?Q?L/XtljO+aO4QWMvSdCLpkzU6KiizblFlJ/dUV8ofApbM0?=
+X-MS-Exchange-AntiSpam-MessageData-1: EdCvjT78uS+oxQ==
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 4f578214-e052-4cb4-a0de-08df037623b2
+X-MS-Exchange-CrossTenant-AuthSource: MW4PR12MB6873.namprd12.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 26 Aug 2026 13:06:09.4867
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 26 Aug 2026 13:30:05.1294
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 3ZSbZBFroCz9KPVWnVWm3EQNOiKDl2+J8JFGL8YPTg99xbvUhMjR7uMcT6k9b11t
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA5PPFCB4F033D6
+X-MS-Exchange-CrossTenant-UserPrincipalName: KYR6mkzJl+J7bcvopnLsL167yatIW8vXtn1mOSeFN5ixc87u99X6IToCUetuGobIDte5ihTfX/Xcmum+M5dsuQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH7PR12MB6468
 
-On 8/26/26 14:43, Leon Romanovsky wrote:
-> On Wed, Aug 26, 2026 at 01:41:51PM +0200, Christian König wrote:
->> On 8/25/26 08:28, Leon Romanovsky wrote:
->>> From: Leon Romanovsky <leonro@nvidia.com>
+On Wed Aug 26, 2026 at 8:50 PM JST, Gary Guo wrote:
+> On Wed Aug 26, 2026 at 12:25 PM BST, Alexandre Courbot wrote:
+>> On Wed Aug 19, 2026 at 8:09 PM JST, Gary Guo wrote:
+>>> Some API like atomics and I/O operate on primitives only; therefore oth=
+er
+>>> types would need to converted to these primitive first. Add two traits
+>>> `AsRepr` and `AsReprMut` to indicate that the type can be turned into a
+>>> primitive for these operations.
 >>>
->>> Pinned, revoked and movable mappings are selected by which optional
->>> callbacks each side implements and by whether dma_buf_pin() succeeds,
->>> not by any flag or enum. Nothing in Documentation/ says so, and the
->>> rules are spread over the kdoc of dma_buf_ops.pin,
->>> dma_buf_attach_ops.invalidate_mappings and dma_buf_invalidate_mappings(),
->>> so a driver author has to know the symbol names before finding them.
+>>> Conceptually, `T: AsRepr` means that `&T` can be viewed as `&T::Repr` a=
+nd
+>>> thus it has only a round-trip transmutability requirement. `T: AsReprMu=
+t`
+>>> means that `&mut T` can be viewed as `&mut T::Repr` and thus it needs t=
+o
+>>> support bi-directional transmutability.
 >>>
->>> Name, per flow, the callbacks both sides have to implement to end up in
->>> it, describe dma_buf_pin() as the runtime negotiation, and record that
->>> the pin is what tells a revoke from a move.
+>>> To avoid duplicating implementation, all repr types are normalized to
+>>> unsigned integers.
 >>>
->>> Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
+>>> Signed-off-by: Gary Guo <gary@garyguo.net>
 >>> ---
->>>  Documentation/driver-api/dma-buf.rst |  6 +++
->>>  drivers/dma-buf/dma-buf.c            | 85 +++++++++++++++++++++++++++++++++++-
->>>  2 files changed, 90 insertions(+), 1 deletion(-)
+>>>  rust/kernel/mem.rs | 148 +++++++++++++++++++++++++++++++++++++++++++++=
+++++++++
+>>>  1 file changed, 148 insertions(+)
 >>>
->>> diff --git a/Documentation/driver-api/dma-buf.rst b/Documentation/driver-api/dma-buf.rst
->>> index 2f36c21d9948..39c201f38aa6 100644
->>> --- a/Documentation/driver-api/dma-buf.rst
->>> +++ b/Documentation/driver-api/dma-buf.rst
->>> @@ -113,6 +113,12 @@ Basic Operation and Device DMA Access
->>>  .. kernel-doc:: drivers/dma-buf/dma-buf.c
->>>     :doc: dma buf device access
->>>  
->>> +Mapping Lifetime Negotiation
->>> +~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+>>> diff --git a/rust/kernel/mem.rs b/rust/kernel/mem.rs
+>>> index a0901cbe1b2d..5bce381d8895 100644
+>>> --- a/rust/kernel/mem.rs
+>>> +++ b/rust/kernel/mem.rs
+>>> @@ -35,3 +35,151 @@ pub const fn transmute<Src: IntoBytes, Dst: FromByt=
+es>(val: Src) -> Dst {
+>>>      // SAFETY: transmute is safe with `IntoBytes` and `FromBytes` boun=
+ds.
+>>>      unsafe { transmute_unchecked(val) }
+>>>  }
 >>> +
->>> +.. kernel-doc:: drivers/dma-buf/dma-buf.c
->>> +   :doc: mapping lifetime negotiation
+>>> +/// Type that is layout-compatible with a primitive representation.
+>>> +///
+>>> +/// # Round-trip transmutability
+>>> +///
+>>> +/// `T` is round-trip transmutable to `U` if and only if both of these=
+ properties hold:
+>>> +///
+>>> +/// - Any valid bit pattern for `T` is also a valid bit pattern for `U=
+`.
+>>> +/// - Transmuting a value of type `T` to `U` and then to `T` again
+>>> +///   yields a value that is in all aspects equivalent to the original=
+ value.
+>>> +///
+>>> +/// # Safety
+>>> +///
+>>> +/// - [`Self`] must have the same size and alignment as [`Self::Repr`]=
+.
+>>> +/// - [`Self`] must be [round-trip transmutable] to  [`Self::Repr`].
+>>> +///
+>>> +/// [round-trip transmutable]: AsRepr#round-trip-transmutability
+>>> +pub unsafe trait AsRepr: Sized {
+>>
+>> I'm a bit confused by the naming of this trait - the commit message
+>> mentions that it means that "`&T` can be viewed as `&T::Repr`", but such
+>> a method doesn't exist. Instead we have an `AsRepr` trait with an
+>> `into_repr` method that makes a copy.
+>>
+>> Can we either rename this to `IntoRepr` (and `AsReprMut` into `FromRepr`
+>> I guess?), or maybe better, have `fn as_repr(this: &Self) ->
+>> &Self::Repr` (on top of which `into_repr` could be implemented if
+>> useful) so the names of the trait and provided method align, while also
+>> making the commit message match the actual API? I haven't tried but
+>> since all the representations we are working with are primitives that
+>> implement `Copy`, I intuitively think it should work just as well.
+>>
+>> Same would apply to `AsReprMut`.
+>>
+>> Since this is becoming core infrastructure, I guess `as_repr` will also
+>> become valuable when we want to do in-place access (with e.g. atomics)
+>> or use it with larger types that we don't want to copy.
+>
+> Good point. I'll add a `Repr: Copy` bound and switch impl of `as_repr`.
+>
+> `AsRepr` is meant as "have a primitive representation", which I imagine t=
+o be
+> most likely just integers. I didn't say "integers" specifically because w=
+e
+> cannot lose provenance on pointers so pointers are not integer represente=
+d.
+>
+> So I do think we might also want to make `Copy` a supertrait of `AsRepr`?
+> `AtomicType` current requires it.
+
+Yes, unless we have a use for move-only register values or something of
+the sort, I guess requiring `Copy` would be pretty harmless here.
+
+<...>
+>>> +#[cfg(target_pointer_width =3D "32")]
+>>> +const _: () =3D {
+>>> +    // SAFETY: usize has the same size and alignment with u32, and is =
+round-trip transmutable to it.
+>>> +    unsafe impl AsRepr for usize {
+>>> +        type Repr =3D u32;
+>>> +    }
 >>> +
->>>  CPU Access to DMA Buffer Objects
->>>  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
->>>  
->>> diff --git a/drivers/dma-buf/dma-buf.c b/drivers/dma-buf/dma-buf.c
->>> index d504c636dc29..30afec7365bc 100644
->>> --- a/drivers/dma-buf/dma-buf.c
->>> +++ b/drivers/dma-buf/dma-buf.c
->>> @@ -684,7 +684,90 @@ static struct file *dma_buf_getfile(size_t size, int flags)
->>>   *    reference acquired with dma_buf_get() by calling dma_buf_put().
->>>   *
->>>   * For the detailed semantics exporters are expected to implement see
->>> - * &dma_buf_ops.
->>> + * &dma_buf_ops. Whether the exporter may still move or destroy the backing
->>> + * storage after step 3 depends on what exporter and importer implement, see
->>> + * the mapping lifetime negotiation section below.
->>> + */
+>>> +    // SAFETY: isize has the same size and alignment with u32, and is =
+round-trip transmutable to it.
+>>> +    unsafe impl AsRepr for isize {
+>>> +        type Repr =3D u32;
+>>> +    }
 >>> +
->>> +/**
->>> + * DOC: mapping lifetime negotiation
->>> + *
->>> + * No flag or enum says whether the exporter may move or take away the backing
->>> + * storage while an importer holds a mapping. Each side implements a set of
->>> + * optional callbacks, and dma_buf_pin() settles the result at runtime. Three
->>> + * flows come out of it:
->>> + *
->>> + * - Pinned: the storage never moves and is never taken away.
+>>> +    // SAFETY: usize is transmutable from u32.
+>>> +    unsafe impl AsReprMut for usize {}
+>>> +    // SAFETY: isize is transmutable from u32.
+>>> +    unsafe impl AsReprMut for isize {}
+>>> +};
+>>> +
+>>> +#[cfg(target_pointer_width =3D "64")]
+>>> +const _: () =3D {
+>>> +    // SAFETY: usize has the same size and alignment with u64, and is =
+round-trip transmutable to it.
+>>> +    unsafe impl AsRepr for usize {
+>>> +        type Repr =3D u64;
+>>> +    }
+>>> +
+>>> +    // SAFETY: isize has the same size and alignment with u64, and is =
+round-trip transmutable to it.
+>>> +    unsafe impl AsRepr for isize {
+>>> +        type Repr =3D u64;
+>>> +    }
+>>> +
+>>> +    // SAFETY: usize is transmutable from u64.
+>>> +    unsafe impl AsReprMut for usize {}
+>>> +    // SAFETY: isize is transmutable from u64.
+>>> +    unsafe impl AsReprMut for isize {}
+>>> +};
 >>
->> That's not quite correct. The backing store can still disappear if the exporter is physically hot removed.
+>> By making these available, aren't we running into the same
+>> non-portability issue [1] that we discussed on the `casts` module?
 >>
->> In that case the exporter will still try to invalidate the mapping even if it is pinned. A NULL invalidate_mapping callback is of course still never called and so still optional.
-> 
-> But what does this mean for an importer that has no idea the exporter no
-> longer exists? Will it crash? I think the revoke flow actually fixes this hot-remove case.
+>> [1] https://lore.kernel.org/all/DK9A6KGK5JQD.3U23MBEMSAXBK@garyguo.net/
+>
+> I added it because `Atomic` would require it. However, it does make it po=
+ssible
+> to create non-portable if `usize` is used on a `I/O` type that does not
+> implement `IoCapable<u64>` on 64-bit platforms.
+>
+> I guess an option is to have `usize` stay as `usize` and we add a forward=
+ing
+> `usize` impl in atomic module instead.
 
-No, that used to work even before we had the invalidation callback.
-
-What happens on a hot remove is that the exporter goes away but the driver stack keeps PCIe BARs or system memory resources allocated until all importers have destroyed their mappings.
-
-See the invalidation callback is only optional, importers can implement it to speed thing up on teardown but they don't have to. A NULL invalidation callback is perfectly valid.
-
->>
->>> + * - Revoked: the storage never moves, but the exporter may take it away.
->>> + * - Movable: the exporter may relocate the storage at any time.
->>> + *
->>
->>> + * Every exporter implements &dma_buf_ops.map_dma_buf,
->>> + * &dma_buf_ops.unmap_dma_buf and &dma_buf_ops.release. dma_buf_export()
->>> + * rejects an exporter missing any of them.
->>
->> I think that this is superfluous, the check in dma_buf_export() should make sure that all exporters follow that.
-> 
-> Sure, will change.
-> 
->>
->>> + *
->>> + * An importer reaches its flow like this:
->>> + *
->>> + * 1. Attach with dma_buf_dynamic_attach(). Leaving
->>> + *    &dma_buf_attach_ops.invalidate_mappings NULL rules out everything but the
->>> + *    pinned flow, because the importer can then never be told anything.
->>
->> I would rather write "Leaving out the optional dma_buf_attach_ops.invalidate_mappings callback pins the buffer while the attachment is present".
->>
->>> + * 2. Call dma_buf_pin() under the reservation lock.
->>> + * 3. On failure run the movable flow, or give up.
->>> + * 4. On success the storage stays put. Whether the exporter may still take it
->>> + *    away, which makes this the revoked flow instead of the pinned one, is the
->>> + *    exporter's choice and is not reported back.
->>
->> That sentence sounds not really readable.
-> 
-> I will try to rephrase in next version.
-> 
->>
->>> + *
->>> + * dma_buf_attach() is the shorthand for an importer which only ever wants the
->>> + * pinned flow. It passes no &dma_buf_attach_ops, and DMA-buf then pins around
->>> + * every dma_buf_map_attachment() and waits for the DMA_RESV_USAGE_KERNEL
->>> + * fences on the importer's behalf. Peer to peer needs
->>> + * dma_buf_dynamic_attach(), because &dma_buf_attach_ops.allow_peer2peer lives
->>> + * in the attach ops.
->>
->> That's also superfluous.
-> 
-> Will change.
-> 
->>
->>> + *
->>> + * Pinned flow:
->>> + *
->>> + * - Exporter: implement &dma_buf_ops.pin and &dma_buf_ops.unpin to hold the
->>> + *   storage still on request. An exporter whose storage never moves implements
->>> + *   neither, and dma_buf_pin() then succeeds on its own. An exporter which
->>> + *   refuses to be pinned implements &dma_buf_ops.pin and fails it.
->>> + * - Importer: nothing more. The mapping stays valid until it unmaps.
->>> + *
->>> + * Revoked flow:
->>> + *
->>> + * - Exporter: answer dma_buf_pin() as above. Call
->>> + *   dma_buf_invalidate_mappings() when the storage goes away and fail
->>> + *   &dma_buf_ops.map_dma_buf while it is gone. The two waits which complete a
->>> + *   revocation are described in dma_buf_invalidate_mappings().
->>> + * - Importer: &dma_buf_attach_ops.invalidate_mappings has to unmap within
->>> + *   bounded time and drop the pin.
->>> + *
->>> + * Movable flow:
->>> + *
->>> + * - Exporter: call dma_buf_invalidate_mappings() before each move, then wait
->>> + *   for the &dma_buf.resv fences. &dma_buf_ops.pin and &dma_buf_ops.unpin play
->>> + *   no part here.
->>> + * - Importer: hold no pin. &dma_buf_attach_ops.invalidate_mappings drops the
->>> + *   cached mapping and has to lead to dma_buf_unmap_attachment() within
->>> + *   bounded time. It need not stop the hardware, because access runs until the
->>> + *   importer's &dma_buf.resv fences retire. Map again before the next DMA.
->>
->> That is also not really correct. Those flows are not separated like this.
-> 
-> How will you split them?
-
-Well you don't. Exporters and importers can have a much wider variety of use cases.
-
-When the importer doesn't give an invalidation callback the framework will call pin/unpin when the attachment is mapped/unmapped. That is just a service of the framework to make importers simpler.
-
-But it is perfectly possible that an importer which implements the invalidation callback calls pin/unpin manually later on. This for example happens on display scanout when an invalidation would cause garbage on the screen when the buffer is moved.
-
-But even after an importer called pin it is possible that the invalidation callback is called in case of a hot remove. Using our example of display scanout once more it is probably better to stop displaying anything then keeping the resources allocated until userspace realizes that the export is not there any more.
-
-The revoke flow is then basically just a special case of hot remove. The only difference is that userspace invokes it instead of an user pulling a cable.
->>
->>> + *
->>> + * The pin tells a revoke from a move.
->>> + * &dma_buf_attach_ops.invalidate_mappings carries no reason, and both flows
->>> + * ask for the same unmap. An importer holding a pin can only be seeing a
->>> + * revoke, because the exporter promised not to move. An importer without a pin
->>> + * treats every call as a move and maps again.
->>> + *
->>> + * A revoke need not be forever. An exporter revoking around a temporary loss
->>> + * of access takes mappings again afterwards. Giving up for good is the
->>> + * importer's own choice, so an exporter must not wait for one to come back.
->>> + *
->>
->>> + * &dma_buf_ops.attach is the only place where an exporter can turn an importer
->>> + * away. An exporter which revokes rejects the importers for which
->>> + * dma_buf_attach_revocable() returns false. An exporter of memory without
->>> + * struct page rejects the importers which left
->>> + * &dma_buf_attach_ops.allow_peer2peer clear.
->>
->> That is also not correct. A mapping can be rejected later on as well.
-> 
-> In API level yes, but I'm not sure that failure in map_dma_buf is equal
-> logically to failure in attach. So, I won't call it "rejected later".
-
-No, exactly that is wrong.
-
-See failure on attachment means that the two device can't talk with each other at all. But that is relatively rare, the dma_buf_attach_revocable() case is the only use case which comes to my mind.
-
-The more common case is that while mapping the attachment we find that the buffer location is not accessible (any more) by the attachment because of hot plug or simply resource contention.
-
-IIRC -EBUSY is even documented as perfectly valid reason to fail a mapping.
-
-Regards,
-Christian.
-
-> 
->>
->> Regards,
->> Christian.
->>
->>> + *
->>> + * Userspace sees none of this. The two drivers negotiate the flow between
->>> + * themselves, and the DMA-buf file descriptor shows no trace of the result.
->>>   */
->>>  
->>>  /**
->>>
->>
-
+That sounds like a good way to work around the problem - it's basically
+how we address it with casts if I understand your intent correctly.
