@@ -1,123 +1,107 @@
-Received: from mail-oa1-f46.google.com (mail-oa1-f46.google.com [209.85.160.46])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from relay.yourmailgateway.de (relay.yourmailgateway.de [188.68.63.102])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 70F66441606
-	for <linux-pci@vger.kernel.org>; Wed, 26 Aug 2026 14:09:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.160.46
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787753402; cv=pass; b=aB03Nm0XzRcv+78LsEQEJVGw9Oxx3uUSxOTizwnKnh9ThPCAswtdIIU5hkCaZ66kkZn3tmXGbGAP7xmGDPZTzbChMA1WhNPrWpOcYTHlIyb9GQC3nHdA+cp4wW3l06krjgftL8tcN4APj9S2GdKNg9aMhZKB35PnPl4lC0OZvRw=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787753402; c=relaxed/simple;
-	bh=vNabcFVQbSYbIKL2cVYsp6TxHVTpkQci7HKCA5Lwa8c=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=h7zAj4Ai3iDSRIxw8gZ45ybgP7KOUYTkvMEPDedj3FirN58I+8FF+GAbVArHvUDwdG5+tjBezY+pFPqo1+kFwlIV2xPU6QV5MvsAQZhXmeGdQW6q2EQtWaR0GO5E1EdoHfMaB5JFiM0z/FW39O48vLqL376oRfkI39qAH1Z76UI=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=asZZWodO; arc=pass smtp.client-ip=209.85.160.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40218442391;
+	Wed, 26 Aug 2026 14:12:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=188.68.63.102
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1787753532; cv=none; b=OVVGgTYCU4Zs/xZyGh7zbOlJndb0hHC5A+kzkuPEfsEPnYTEqcvGxupJEsgb2jbtcUAStNwzm5LqUvNy0dftSSXBC4oCylTjAoCJIMCEPf6pQKDNSmFYQeNeTl4QxTfk+OPseoij3aezTTnZiePrKeWthJSlrYJytOkHZBzoUcA=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1787753532; c=relaxed/simple;
+	bh=LR3sXZyv9BZpKnMkFqGg2COPCZoeIEfg8/rVtySW0wE=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=DnPWbF0/B9wtzfbcNY2d0MPNOHeF8lfvHeaJK3+wFc8bYDblcQsnGJYs3nzbP74b2kSH1V3mOJT7g1lhY1YIKiaHi2rkgMANn8j/VD56CzdyZPh3TXh/hM7MHSEQYqroWdx0qz0payrk/97vWpyjDHb8IavhXmvhOpsu0sFjGKo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=leemhuis.info; spf=pass smtp.mailfrom=leemhuis.info; dkim=pass (2048-bit key) header.d=leemhuis.info header.i=@leemhuis.info header.b=lUN82dPn; arc=none smtp.client-ip=188.68.63.102
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=leemhuis.info
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=leemhuis.info
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="asZZWodO"
-Received: by mail-oa1-f46.google.com with SMTP id 586e51a60fabf-462da61509eso37405fac.1
-        for <linux-pci@vger.kernel.org>; Wed, 26 Aug 2026 07:09:58 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1787753397; cv=none;
-        d=google.com; s=arc-20260327;
-        b=scSqiwau1O+F6GUUFQws+ycVTeq4D9Gk0hro9yOaMwalepHa+j/7djt4v6xCiG/9Ba
-         Be5UF2JmVrszU7Drvw0THeuop2IhCanQ1mFMrjMRrcUAOXnDc/vTBAadlubiSzpyh6qU
-         o1JwvJTegn5U3ZyIiLpt+fZj8PcAXLzS6ErHNmD0hzQoziK/i0eW5vQzUU6J3rpujpIq
-         MgAUdrf6g0T78jYfnXA6TEziOWxV8ocCskiNGyEHizceeud4htgkr9HHXjGk+pQ9ZeNK
-         Q6AS8oKB9tg6ZIizuRP1r/+80TJJpdARoiRyKVHnrhC3vY//RHUMtHAbNtIKsGeAYXKl
-         8FdA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=vNabcFVQbSYbIKL2cVYsp6TxHVTpkQci7HKCA5Lwa8c=;
-        fh=QhyfgJm702kjgB5WNJyx8Nv0UVazsiOID0qfVkqBRNI=;
-        b=HpJU/p3EI76uNiSyWYT27tpAzQFd+vFCW+aC58IsxHoxWrVnQoPYPhx7R8LcAgfHD0
-         OM8hGytvwso6nI3jfeYfVlegrevMPRgTH30UpsaCAXwKeG673HNCotPasP7CzFTTMdk6
-         BXXYq7th/CYrlCKaROrzAYsP6VZsc6OwjE6xeLSILydvTbhZXOUMKyMRBlwonRVQ8ZOm
-         yDC7DYjP1tx1yOZIHdT7ytq8J77gIRkFUOFGKKwDKgjaWfcylJ8P3HQr8tLxxZWkD50K
-         ViQZBYJvBjXaoPYQivmnCiHaUpTb1wRV2hajs9gQglNlatHvqmTeTkrpF5E7dQkuEEXH
-         2CJg==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1787753397; x=1788358197; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=vNabcFVQbSYbIKL2cVYsp6TxHVTpkQci7HKCA5Lwa8c=;
-        b=asZZWodOE5fYVzvlMZNhtDMVa3aCEXFQuoEWxejOeoU8A3TN/pIWBeMW7afixWwHPx
-         FBIRtVg2knR3Hbvu5rZ8xIo0+4xX8BmIJMgVsnTqSTqexxWw026r2QcBWJM2npXyi8LS
-         TWQDji6dAAWjxBjc6YGhGfVdHQpmMir8D6h4FibmKPuJUodjstRAvcriVym71NbCYFrR
-         hQ2XiVH/Mh0LkVMVTiXkk2+9Gcki91gMEdAwfW2ScMUsx7pMqMDjdPga0Z7QJxLWrj8Q
-         TikfsQ99sg86424aZ+8u46dm0S+ugzkO/Z7JK953VGsP8xARA9ruLUCgMh+2HqFWwjbq
-         iW9w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787753397; x=1788358197;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=vNabcFVQbSYbIKL2cVYsp6TxHVTpkQci7HKCA5Lwa8c=;
-        b=QBVQPBcFAAzcRRcX0c1AGRvwdS5mhPqntz9pq30tiiGV0R8heyil/OF71rhHsWdNjj
-         LuddgORLWqONXu2IVLKVwhEdNvxgroNa/JQsONpuRizFu44OB9AQK7l3at5/ghITXtQ6
-         peEBk+JN1r1eQQ2Tx54lR3dV+hCVzSkkmYWVZSb1Vd2dlOM91gLX/8O14BQ2VgnnLn32
-         eOA5jrGk4g34ZDbdKXc4ucyqNKmCsQ4Ah9jXEovukAZR1guq2+nZ8I4B+T3fgdWKs6HQ
-         p6QQCliHV6rBFzbGtBnQOJONe4N6fJt79jhJVffmnHtEB+h+HPoeJ98TO+3P3d0ww3qN
-         OOCw==
-X-Forwarded-Encrypted: i=1; AHgh+RpUFNH7dEuwNJo/A1bQkDmNmQputlLqZ91iKyPEI2skdfEeCepr61XKLVD+6XErXOoAwCpKbggYX4M=@vger.kernel.org
-X-Gm-Message-State: AFuF++n0VB1Nwxl3yx6XziwpDKXS0rYuONXXaNl/fAqq+Nry4nxjMoZR
-	Tuu2NMyYd5ok/z7cBZq+sWpfIFOuPAGgtpF5YzcQSFBPTGNpcMpnMJo9XL//gQlBq8jw+sDZWwt
-	toxrlSywS7uktR2/1nfTt/WtaZuvIBM8=
-X-Gm-Gg: AR+sD11UAc8/vSx1yOVjzFdRQvOotIQqo2Ul66pPBucSfg1PgSgJlVu3Nsy81ghkqbk
-	nVWPUPhvAehMbahQap7cy9SSBVTvQcXYsTldCL7urilK2sZs7BCsyeNJo5ffVat+4g0mqh7VwRg
-	3CT/lu4GMZGyEAYIWEtgPVyBACvtkSxYfRujSMH8CdsXMIElQfLR/XaQzieMWOCLC4wmIUAO+rf
-	CPRLrJh8bOOhHlBGpbZBbXSa3uNuMWrNZjtOC/USxjbspQQeIFspK19r3Je0a/z3Wt4bnMzn0S8
-	Q2tqkj7PTibrSGaDcB3vE1D3A923yWvIlZN1vVhdQiFcI9skiStTbKpshHtOF80avlbn8McI4Mb
-	nzUlTKXVMoWjo/825fxyRs3TCnJ8+pg3onMzoevvajvj0ClARbk6auQ87/iqO
-X-Received: by 2002:a05:6820:4206:b0:6b1:95fb:7d3 with SMTP id
- 006d021491bc7-6b1a01f7ff9mr2702848eaf.0.1787753396788; Wed, 26 Aug 2026
- 07:09:56 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=leemhuis.info header.i=@leemhuis.info header.b="lUN82dPn"
+Received: from mors-relay-2502.netcup.net (localhost [127.0.0.1])
+	by mors-relay-2502.netcup.net (Postfix) with ESMTPS id 4hVRRG4WWdz6Crs;
+	Wed, 26 Aug 2026 16:11:54 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=leemhuis.info;
+	s=key2; t=1787753514;
+	bh=LR3sXZyv9BZpKnMkFqGg2COPCZoeIEfg8/rVtySW0wE=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=lUN82dPnB7XbbKExuk2IfwWOlfjroBdGo5tWmDybP9VKEpFd3dTDU+4qtsnyQR9V1
+	 YRnKi0DZqM4KHr3BoFYpUnZNpECmbzEKg4Z7l6Fg/wEF4TFPSi+izmzbb3LYkS0Kvn
+	 M+yjLrEshbs9oaD3qb7xxpOSBUTM00nYqnJOgjTyoHSGpRK91xLLBOaru9bIJyljPP
+	 /muBx+gvJRUkk7sH6b7XD2T3gmQkZi5AQXLuRsQJ0wX6ajn034AnrC2r3w5bAB5YI9
+	 fopo1FDc0WTrPoFKKl1eIbh9JGVz562H8C3LP+iq27X0i3bYn/At9SqjEldPPDf2cv
+	 iRXoGX17wFVhg==
+Received: from policy02-mors.netcup.net (unknown [46.38.225.35])
+	by mors-relay-2502.netcup.net (Postfix) with ESMTPS id 4hVRRG3mq0z4yTM;
+	Wed, 26 Aug 2026 16:11:54 +0200 (CEST)
+Received: from mxe9fb.netcup.net (unknown [10.243.12.53])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by policy02-mors.netcup.net (Postfix) with ESMTPS id 4hVRRD6yhQz8sch;
+	Wed, 26 Aug 2026 16:11:52 +0200 (CEST)
+Received: from [IPV6:2a02:8108:8984:1d00:a0cf:1912:4be:477f] (unknown [IPv6:2a02:8108:8984:1d00:a0cf:1912:4be:477f])
+	by mxe9fb.netcup.net (Postfix) with ESMTPSA id B2ADA5F992;
+	Wed, 26 Aug 2026 16:11:47 +0200 (CEST)
+Authentication-Results: mxe9fb;
+        spf=pass (sender IP is 2a02:8108:8984:1d00:a0cf:1912:4be:477f) smtp.mailfrom=regressions@leemhuis.info smtp.helo=[IPV6:2a02:8108:8984:1d00:a0cf:1912:4be:477f]
+Received-SPF: pass (mxe9fb: connection is authenticated)
+Message-ID: <04454db7-0779-4a7f-bab2-72fea3480dcf@leemhuis.info>
+Date: Wed, 26 Aug 2026 16:11:46 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260818084633.1673214-1-zhiw@nvidia.com> <20260818084633.1673214-2-zhiw@nvidia.com>
- <DKYU6ELNN060.154BHE2QG442C@nvidia.com> <DKYUBX3TU66J.1P5UZ908CCKBX@kernel.org>
- <CANiq72m3pGr+sywbZ=woVnpbHW616VN2sG+RKYZWbWHAehRvvA@mail.gmail.com> <DKYWYZPPYZNU.32R4UV9WLNZ60@kernel.org>
-In-Reply-To: <DKYWYZPPYZNU.32R4UV9WLNZ60@kernel.org>
-From: Miguel Ojeda <miguel.ojeda.sandonis@gmail.com>
-Date: Wed, 26 Aug 2026 16:09:41 +0200
-X-Gm-Features: AcwNN1UJDnIsDK3s-Xz74AoPxa-_z4dXNrN8ZtRzT0xk3LN05nkWqoC5E2b1vr8
-Message-ID: <CANiq72k+-fNWZCwGuQ=FTchxgm-X-f6WR=tG=Ercn19ic1edQg@mail.gmail.com>
-Subject: Re: [PATCH v8 1/1] rust: pci: add extended capability and SR-IOV support
-To: Danilo Krummrich <dakr@kernel.org>
-Cc: Alexandre Courbot <acourbot@nvidia.com>, Zhi Wang <zhiw@nvidia.com>, rust-for-linux@vger.kernel.org, 
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, aliceryhl@google.com, 
-	bhelgaas@google.com, kwilczynski@kernel.org, ojeda@kernel.org, 
-	boqun@kernel.org, gary@garyguo.net, bjorn3_gh@protonmail.com, 
-	lossin@kernel.org, a.hindborg@kernel.org, tmgross@umich.edu, 
-	markus.probst@posteo.de, cjia@nvidia.com, smitra@nvidia.com, 
-	ankita@nvidia.com, aniketa@nvidia.com, kwankhede@nvidia.com, 
-	targupta@nvidia.com, kjaju@nvidia.com, alkumar@nvidia.com, 
-	joelagnelf@nvidia.com, jhubbard@nvidia.com, zhiwang@kernel.org, 
-	daniel.almeida@collabora.com, tamird@kernel.org, work@onurozkan.dev
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [REGRESSION] mainline/master: PCI link creation fails on Apalis
+ iMX6
+To: Francesco Dolcini <francesco@dolcini.it>,
+ Leonardo Costa <leoreis.costa@gmail.com>
+Cc: hongxing.zhu@nxp.com, l.stach@pengutronix.de, lpieralisi@kernel.org,
+ kwilczynski@kernel.org, mani@kernel.org, robh@kernel.org,
+ bhelgaas@google.com, Frank.Li@nxp.com, s.hauer@pengutronix.de,
+ kernel@pengutronix.de, festevam@gmail.com, regressions@lists.linux.dev,
+ linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ imx@lists.linux.dev, linux-kernel@vger.kernel.org, leonardo.costa@toradex.com
+References: <bl7i3obu2clzsgeoct2a4mtfhv6typcjdqmgneropf3hpgwve6@n2m5uhlduw57>
+ <20260810211209.GB4821@francesco-nb>
+From: Thorsten Leemhuis <regressions@leemhuis.info>
+Content-Language: de-DE, en-US
+In-Reply-To: <20260810211209.GB4821@francesco-nb>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-PPP-Message-ID: <178775350852.4133069.1765088279857940281@mxe9fb.netcup.net>
+X-Rspamd-Server: rspamd-worker-8404
+X-Rspamd-Queue-Id: B2ADA5F992
+X-NC-CID: G3r5K1/Ois168fF789GTTufWvzg9G612mk5/qbx22u4FQm275A0=
 
-On Wed, Aug 26, 2026 at 3:36=E2=80=AFPM Danilo Krummrich <dakr@kernel.org> =
-wrote:
->
-> Sure, that works as well. But in that case I think I'd rather have the re=
-gular
-> as-cast intermediately (unless your idea is to go for the full three cycl=
-e dance
-> of "introduce new API, convert users, remove old API").
+On 8/10/26 23:12, Francesco Dolcini wrote:
+> On Mon, Aug 10, 2026 at 02:54:45PM -0300, Leonardo Costa wrote:
+>> We are seeing a regression on Apalis iMX6 where connected PCI device
+>> links fail to come up at initialization, as shown below. The issue is
+>> not on the devices' physical connection, as they worked properly on v7.1
+>> and are working on other stable kernel versions.
+> 
+> just to make this more clear.
+> 
+> 610fa91d9863 ("PCI: imx6: Assert PERST# before enabling regulators")
+> introduced a regression that prevented the boot. because of that we were
+> not able to run any of our test in our CI/CD
+> 
+> commit 7678e81498e2 ("PCI: imx6: Fix i.MX6Q/DL boot hang caused by improper PHY power sequencing")
+> fixes the boot issue, but now PCIe is not longer working
+Just wondering: what the status of this regression? I feel a bit lost here.
 
-I meant adding the new interface now instead of replacing; and then
-later migrating. 2 cycles should be enough, since we don't really have
-users.
+It looks like people were really keen on getting this resolved for 7.2
+-- even multiple revert were considered, but not performed in the end
+(not judging here, just mentioning it). Three days after the quoted mail
+(and thus even before 7.2 was out) Richard Zhu posted a fix afaics:
 
-Cheers,
-Miguel
+https://lore.kernel.org/all/20260813095003.356062-1-hongxing.zhu@oss.nxp.com/
+
+But that still sits on the list and did not even receive a tested-by. Is
+it not that urgent anymore for some reason I cannot see? Are developers
+waiting for test-results from affected people? Or did this fall through
+the cracks?
+
+Ciao, Thorsten
