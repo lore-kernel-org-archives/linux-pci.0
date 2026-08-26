@@ -1,109 +1,88 @@
-Received: from smtpout-02.galae.net (smtpout-02.galae.net [185.246.84.56])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f46.google.com (mail-pj1-f46.google.com [209.85.216.46])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D18553E4C99;
-	Wed, 26 Aug 2026 10:53:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.246.84.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D8AE23EBF04
+	for <linux-pci@vger.kernel.org>; Wed, 26 Aug 2026 10:54:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.46
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787741596; cv=none; b=KUFF0zpxhj6kiVIxuCowyexEsigRJgkrYOmi6Qq/Z2aFgoTNj3SHCtMbyzIGcyQjdB5NPOfNysctmmUApUO9gNGQBOl68iSS68aMbX3+zccCyOqvFRQe0Yq2eO66gQ7TOd1LhJePJZliB9a01ZIqOI8t7Jga/Y9WKXdxvyUU8X8=
+	t=1787741687; cv=none; b=o7fntbc1xVeccAQBpirscnV4n+fjp/qVNsyd0YbaGO7Vr3YrvVZrocdgkEUCnBMeqLATIA2hHlxQWnKgEvYXBBjNGV31/IEa9U+ejEKR2c+t1GsxuvifkXLgw0U3++dWY1D9W0NY2bYX3oZB5zet/5GLAcmq/rApQK5wc1xUO/8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787741596; c=relaxed/simple;
-	bh=/UacBLoGcMB9zLAU9jMbtSM3o5RdK2Bxf4dOMT0ihgc=;
-	h=Mime-Version:Content-Type:Date:Message-Id:Subject:To:From:
-	 References:In-Reply-To; b=tg7444SCPZF0iT0yxdcoDaAdNBoTroz7RACEKpSbpanzRYJHAz48ZXsCctX16s2wLafdN5z+V9kbF/ANA4fkuYXVPAjfQRbgYzhHV3eZ7NfwYB0hsHSKeSDrgJQQs0je91BVHQFwYGOyd031itAmjeoAS988k1UjOc1Sug4hR7g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=YwzOoaUv; arc=none smtp.client-ip=185.246.84.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
+	s=arc-20240116; t=1787741687; c=relaxed/simple;
+	bh=6ZXie07MBTJkUKqYfbzT8aDK/0oVVvkU26n/QkQgaU0=;
+	h=Message-ID:Date:From:To:Cc:Subject:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=ZXHFGbOpAcVlE6Wi29mHeWpdnoDC5lDTcR3BYZ3Wxy/SkuazAH4zYb9YWv9rGM1nwL+BrJ9EIbb051MBZJ1UMSwyObWqH5pqB56rspPa4KHaDa55ybLSWKMqx3InTehonRTB4PcXmHa9dBVPX+0gT/Nr8tjLOulzv7gGvWUires=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=SKRQxx0z; arc=none smtp.client-ip=209.85.216.46
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="YwzOoaUv"
-Received: from smtpout-01.galae.net (smtpout-01.galae.net [212.83.139.233])
-	by smtpout-02.galae.net (Postfix) with ESMTPS id 64CC71A1841;
-	Wed, 26 Aug 2026 10:52:57 +0000 (UTC)
-Received: from mail.galae.net (mail.galae.net [212.83.136.155])
-	by smtpout-01.galae.net (Postfix) with ESMTPS id 28841604ED;
-	Wed, 26 Aug 2026 10:52:57 +0000 (UTC)
-Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id 23C1A11C7AC46;
-	Wed, 26 Aug 2026 12:52:22 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=dkim;
-	t=1787741569; h=from:subject:date:message-id:to:mime-version:content-type:
-	 content-transfer-encoding:in-reply-to:references;
-	bh=Ey9RYH2RFNaz6azoD+KUbSwAq0kYLs0uc4QHAcA42gw=;
-	b=YwzOoaUvCBxvOqya44IQRmcChvhXL8vgHGxbcCmbhbmECnpLcwRQMcP313YXEjBjIbGjtb
-	I3Wid39NLAGygcDi2YmXtYo3AnvhAC8qiwoT3eV4cBJRzRjsj5XRyCYrw6G4qiA7F8Zjly
-	vEXRD7XVgML/YjQ2Uyrc+ngfVs8rycv3oyvd6Hm0WMNZvz7S4w0rvpxlqOaEK5j0BYuwCJ
-	L8Oeso8gBo83WUUPKcbxUYj/zwWIS4h0vUpJl6+JVbBurpBXA6XJKvKWQUQD1lfPaBrb6L
-	0YOhDZdzMEyQk7IuWvSDDzCZv3a6OjEkFdKfO+U7ZZbKTgyueYwGfJ0tIk2zlA==
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="SKRQxx0z"
+Received: by mail-pj1-f46.google.com with SMTP id 98e67ed59e1d1-381b831d535so1534764a91.0
+        for <linux-pci@vger.kernel.org>; Wed, 26 Aug 2026 03:54:42 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1787741678; x=1788346478; darn=vger.kernel.org;
+        h=mime-version:content-transfer-encoding:content-type:references
+         :in-reply-to:subject:cc:to:from:date:message-id:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=SMeWzMclu6g3FaO5eC6wBv7YUPBxIhGnzvx7T2Py/p4=;
+        b=SKRQxx0zNVe3BxYbjcFkf1fQiDKK51ih9fFVkZsy6K94gm654fairi5l3nIDcWLJON
+         1eb1N2nCcamYCw6MMmu20TTZ6bn3ofwywIDeqxUvR5ETzGYvMcGQtLvkWVj8eXiawDqH
+         MDwKuh38PCtZri2rjCpFzuJwbQPCsRP6Un91PUyCBYnuWGSVGCsPCIpgtLJ5byvTkTD5
+         WaCr46OXg8cV/3aePcoztDcCTZk/VGrZwiS2IOtYSM7ER4IirI/qCpdA1Vdq/WUQyGVh
+         jb/pglQxxFJry4sJZElEcFKa6pNmgfSL32j6n+cbHk3ERcPneaFcnRpOBTPsY2ZUG7Gl
+         547g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1787741678; x=1788346478;
+        h=mime-version:content-transfer-encoding:content-type:references
+         :in-reply-to:subject:cc:to:from:date:message-id:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=SMeWzMclu6g3FaO5eC6wBv7YUPBxIhGnzvx7T2Py/p4=;
+        b=ekAmoD9G9vpZNQ0B79ZArPGJZCq0V4+H2dSNMpSZl1oUU1vKYcIFbu1Su0+VoQeTEr
+         FqHQaJTvaizVwN2L7pEvf5PXgEVjUGsb1zdFGiXHZxaTYJCtmaGK6FC01zvHAL1oKhIb
+         4FoJWMU2T3mnm4vsJEN70EUNJhmagLxXirJHfUfVrEPptE+Ukf4RkBOAqKX+wFLJNVmF
+         KeY69MjpDaN3Xe4Ttfys0EsQGnMQ8K0ojgh5pfcDryyTkjXPLHwuC0nJR6nLqZFF03LK
+         4yGesBJEn6eqI7ymmV9HVEFyw1ya3MFY9v7IrEBqJuiPcRIGAZm/UCFylwus4b/YGuUE
+         SOyA==
+X-Gm-Message-State: AFuF++n899l7Qx4MfBPL/CgSqJ5ruehHGH/og7J5clZ6UwNMAdiB5Ona
+	u75T/Ywc+19OUIxaZI2FLS4KsP1XqTYTwX106HLwDFoz2SVqrnbd7gCXuhYHnQ==
+X-Gm-Gg: AR+sD10OhphIg61hZCUIuO06Y8NKMEW8A9YC44EPoSwtqpHYyfQ/8Q/ZJxIqnabbJM1
+	eRcEVuNkLxP1NfLIP01zIhmGONQTsvjrSgqyLhIrpa2eEJpnQv/JIRNgysHCcKcALtBKUSI1vFb
+	mwCNWcW1sy73siixbDBl2saVfmm5V+AuavzJ18c/rCjG045qAR0/jOtb+o2jr/CSvWB7Q5unmMx
+	x3TMNKYacKQYGJUO6+8uOEBkTyNFvXp0YoaMl+8ro1UvSHeM6nuxbpYK7aosTGlfVCQqmw/aGc/
+	00NIzl/peN29OgpaAYmK50YLLwIg0Lo56krwlcaAIHy9Ps9i7F4m3d6D58r8kYiM6Jhg5Bjpluz
+	uTpF1J3A2DnNNEBI1++s0V50mTmaKMsaFmY8D60qlcP5oxG/9GetzygLiRSSDGbtfaIRqyz1Iuh
+	Bpbg9fPxRljoSwHp0ddgKvNQeR5imxINp4RIeIXfhFIBfhPOa+nZB0puGjszv+bqPRqDySvWozC
+	R8jv5/snziG/jda41VthaEXXb6t1w8awHKdAMyL7vzF8mWqs3FRTUogZDwh1Ae/
+X-Received: by 2002:a17:90b:5444:b0:381:e74f:8a6a with SMTP id 98e67ed59e1d1-3966d8e30d6mr12804439a91.16.1787741678355;
+        Wed, 26 Aug 2026 03:54:38 -0700 (PDT)
+Received: from [127.0.1.1] (ec2-99-79-140-187.ca-central-1.compute.amazonaws.com. [99.79.140.187])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-396825f2d32sm1452557a91.10.2026.08.26.03.54.35
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 26 Aug 2026 03:54:38 -0700 (PDT)
+Message-ID: <6a8ec5ee.142d5f82.db17a.09c5@mx.google.com>
+Date: Wed, 26 Aug 2026 03:54:38 -0700 (PDT)
+From: Zhijian Han <hanzhijian1991@gmail.com>
+To: Markus Elfring <Markus.Elfring@web.de>
+Cc: linux-pci@vger.kernel.org
+Subject: Re: [PATCH v3] PCI: imx6: fix endpoint init error handling
+In-Reply-To: <d1754de4-a950-4973-b19c-53c1955d2ff1@web.de>
+References: <20260825141526.3911472-1-hanzhijian1991@gmail.com>
+ <d1754de4-a950-4973-b19c-53c1955d2ff1@web.de>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Wed, 26 Aug 2026 12:52:21 +0200
-Message-Id: <DKYTHI4WWQ6V.2CAMI1VACSS7N@bootlin.com>
-Subject: Re: [PATCH] dt-bindings: Drop redundant white-space around values
- in <>
-To: "Krzysztof Kozlowski" <krzysztof.kozlowski@oss.qualcomm.com>, "Suzuki K
- Poulose" <suzuki.poulose@arm.com>, "Mike Leach" <mike.leach@arm.com>,
- "James Clark" <james.clark@linaro.org>, "Leo Yan" <leo.yan@arm.com>, "Rob
- Herring" <robh@kernel.org>, "Krzysztof Kozlowski" <krzk+dt@kernel.org>,
- "Conor Dooley" <conor+dt@kernel.org>, "Andrzej Hajda"
- <andrzej.hajda@intel.com>, "Neil Armstrong" <neil.armstrong@linaro.org>,
- "Robert Foss" <rfoss@kernel.org>, "Laurent Pinchart"
- <Laurent.pinchart@ideasonboard.com>, "Jonas Karlman" <jonas@kwiboo.se>,
- "Jernej Skrabec" <jernej.skrabec@gmail.com>, "Luca Ceresoli"
- <luca.ceresoli@bootlin.com>, "David Airlie" <airlied@gmail.com>, "Simona
- Vetter" <simona@ffwll.ch>, "Maarten Lankhorst"
- <maarten.lankhorst@linux.intel.com>, "Maxime Ripard" <mripard@kernel.org>,
- "Thomas Zimmermann" <tzimmermann@suse.de>, "Michal Simek"
- <michal.simek@amd.com>, "Andi Shyti" <andi.shyti@kernel.org>, "Jonathan
- Cameron" <jic23@kernel.org>, "David Lechner" <dlechner@baylibre.com>,
- =?utf-8?q?Nuno_S=C3=A1?= <nuno.sa@analog.com>, "Andy Shevchenko"
- <andy@kernel.org>, "Dmitry Torokhov" <dmitry.torokhov@gmail.com>, "Mirela
- Rabulea" <mirela.rabulea@nxp.com>, "Mauro Carvalho Chehab"
- <mchehab@kernel.org>, "Frank Li" <Frank.Li@nxp.com>, "Sascha Hauer"
- <s.hauer@pengutronix.de>, "Pengutronix Kernel Team"
- <kernel@pengutronix.de>, "Fabio Estevam" <festevam@gmail.com>, "Lee Jones"
- <lee@kernel.org>, "Xiaowei Song" <songxiaowei@hisilicon.com>, "Binghui
- Wang" <wangbinghui@hisilicon.com>, "Bjorn Helgaas" <bhelgaas@google.com>,
- "Lorenzo Pieralisi" <lpieralisi@kernel.org>,
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, "Manivannan
- Sadhasivam" <mani@kernel.org>, "Dvorkin Dmitry" <dvorkin@tibbo.com>, "Wells
- Lu" <wellslutw@gmail.com>, "Linus Walleij" <linusw@kernel.org>, "Chin-Ting
- Kuo" <chin-ting_kuo@aspeedtech.com>, =?utf-8?q?C=C3=A9dric_Le_Goater?=
- <clg@kaod.org>, "Mark Brown" <broonie@kernel.org>, "Joel Stanley"
- <joel@jms.id.au>, "Andrew Jeffery" <andrew@codeconstruct.com.au>, "Ryan
- Chen" <ryan_chen@aspeedtech.com>, "Billy Tsai" <billy_tsai@aspeedtech.com>,
- "Rafael J. Wysocki" <rafael@kernel.org>, "Daniel Lezcano"
- <daniel.lezcano@kernel.org>, "Zhang Rui" <rui.zhang@intel.com>, "Lukasz
- Luba" <lukasz.luba@arm.com>, "Boris Brezillon" <bbrezillon@kernel.org>,
- <info@mocean-labs.com>, "Olof Johansson" <olof@lixom.net>, "Shree
- Ramamoorthy" <s-ramamoorthy@ti.com>, <coresight@lists.linaro.org>,
- <linux-arm-kernel@lists.infradead.org>, <devicetree@vger.kernel.org>,
- <linux-kernel@vger.kernel.org>, <dri-devel@lists.freedesktop.org>,
- <linux-i2c@vger.kernel.org>, <linux-iio@vger.kernel.org>,
- <linux-input@vger.kernel.org>, <imx@lists.linux.dev>,
- <linux-media@vger.kernel.org>, <mfd@lists.linux.dev>,
- <linux-pci@vger.kernel.org>, <linux-gpio@vger.kernel.org>,
- <linux-aspeed@lists.ozlabs.org>, <openbmc@lists.ozlabs.org>,
- <linux-spi@vger.kernel.org>, <linux-pm@vger.kernel.org>
-From: "Luca Ceresoli" <luca.ceresoli@bootlin.com>
-X-Mailer: aerc 0.22.0
-References: <20260826102044.142986-2-krzysztof.kozlowski@oss.qualcomm.com>
-In-Reply-To: <20260826102044.142986-2-krzysztof.kozlowski@oss.qualcomm.com>
-X-Last-TLS-Session-Version: TLSv1.3
+MIME-Version: 1.0
 
-On Wed Aug 26, 2026 at 12:20 PM CEST, Krzysztof Kozlowski wrote:
-> Correct a few white-space issues around <>, which will be flagged by
-> dt-check-style.  No functional changes.
->
-> Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
+On Wed, Aug 26, 2026 at 12:18:26PM +0200, Markus Elfring wrote:
+> I would find it nicer when involved reviewers (including me) would
+> also be specified in a message recipient list directly.
 
-Reviewed-by: Luca Ceresoli <luca.ceresoli@bootlin.com>
+Sure, I'll add you (and any other reviewers) to the recipient list of
+future versions.  Thanks for the review.
 
---
-Luca Ceresoli, Bootlin
-Embedded Linux and Kernel engineering
-https://bootlin.com
+Regards,
+Zhijian
