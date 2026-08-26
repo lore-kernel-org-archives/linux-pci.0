@@ -1,164 +1,260 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EFA073B7751
-	for <linux-pci@vger.kernel.org>; Wed, 26 Aug 2026 08:09:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F05BF3B774B
+	for <linux-pci@vger.kernel.org>; Wed, 26 Aug 2026 08:15:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787731770; cv=none; b=phPwtw8z5uay/UFWY/c1aSmw81ihaw94PFOKhsofOl6e+SmbrnYLNkFIT/fM0EqUT/mu8QO7I323MRLzDo3099WP+Svy4xZpzHtdedORifD0YyVURUTqD3oKadKe5r10JJE1pkdA1pafwh7JBFM3U7nmnbo4nj50CIhaoo3Pa+c=
+	t=1787732113; cv=none; b=ORSaht46Oqw4tKW+7A8rVw01KgzXM5kglcn/XsoJj6oCQ+fxI+mdIVOzwhM6qHXAkjzoy9hbntKw7QMXWU2tNxndKt9P/enrO0hpqUEbVdX7E6fMc7HtbgYn6/c5wnOWkVz8K+JkFGsbrMFMu5+WXm5E1Ty+H3HZbDaLz56VnbQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787731770; c=relaxed/simple;
-	bh=rEbNkFigjp0FGDCJsty0si0XKQ+e9anzsk0sFIsDhoU=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=KOu5iIdDNT3gKLIeTxUWeaBsm996+4M4laFgzrRiccHgeEmDcjH+MwH/v78fQl3YNUt1Q7nAnLdAICK0l/a7pmZDTkl+urIJh3xNxj3hk7bqpm/5Kxvphto5TfK2U6zbawutLvbWdC1MDYoajSEi4qjMOJUkqvmOL0g0wYooSLo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=YuQ1hN9N; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=EesU6/Ck; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1787732113; c=relaxed/simple;
+	bh=m3omBKWzF2oD84ITWayW1wxfgX+Bg3OC5wIY00ejIXE=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version:Content-Type:
+	 References; b=RsK6xS4YqHtY2b0cUcqRqwzbQTUJNlrNrehzuTh4PoWUphGL6QSCNq+GeKF27mbLnku108e2npr4EUYpmzhkvDEV5i4TO2NELypnBSRdPSb0xjZR4txiu0mKZk2/WBfyfAPlsQOdDLvzuRD4HjroTDOE6ycuvjDuD3KoSvRoCCk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=K6hIduwc; arc=none smtp.client-ip=203.254.224.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="YuQ1hN9N";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="EesU6/Ck"
-Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 67Q6Rc9J105940
-	for <linux-pci@vger.kernel.org>; Wed, 26 Aug 2026 08:09:27 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	OJXQT0c6OYFN2aHcq1lc8qaGVj0md3a70HDIO/2Fy+0=; b=YuQ1hN9NkB+j/f2K
-	jM4IdS4G+UxnMIRU84VU68/00IK/Or+kzo4uaBrPFYs+NqjhdZ3MONsOrl1mXxAV
-	Dwj/k1yXeXte7091lspDKCgublXsw+jOBMltcaZFLiUxA+xJ9cghEBkD6925xiAw
-	N01RVw4hEZlasO1juIDloEqq5SAL1aC0P2DqultRwCzLNHDq0UH+IKYpsxjfgT2L
-	BHGYYkD58l2QL0GpcEDWFPz0giEt7t4wAXs23Ej/tn6kfPB2Y7Ngp+Volbb1PHl4
-	bI0WpaxoBUjUO4+HrOIgYSZKTC9LERCexEGDfXVwjKm4JelbNEFSrSYxdjkaFRzM
-	HmuAjg==
-Received: from mail-qt1-f198.google.com (mail-qt1-f198.google.com [209.85.160.198])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4g9r0k137p-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Wed, 26 Aug 2026 08:09:27 +0000 (GMT)
-Received: by mail-qt1-f198.google.com with SMTP id d75a77b69052e-51c0408254aso22077291cf.0
-        for <linux-pci@vger.kernel.org>; Wed, 26 Aug 2026 01:09:27 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1787731766; x=1788336566; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:mime-version:references
-         :in-reply-to:message-id:date:subject:cc:to:from:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=OJXQT0c6OYFN2aHcq1lc8qaGVj0md3a70HDIO/2Fy+0=;
-        b=EesU6/CkhAShe5PRTIpIMtJ2EBGbKbyHgadTLRkeuz92p10et/KS2G4evShrQJ2ku3
-         N5ZbmM4jlP03LgKr6fQs2HGhqg06lvPdERZI0MQGVb3XxFpVpKPxg5S/WkG5AkSvRl9v
-         Pzq7BldSswNrmgs5QfVZoBCrR+HbdrbF6ApUvfr6UxyE83sW7QKd7DVNQwldCF5AwdL0
-         gFVdNbram0CmziAySg0BJ49YCDIWtWKRDZSiFwP46vPZoG32d+Smu0zDMR5NBQtCjsct
-         l2mYWM4saXam+j9LkjaTQIF8crimRdG26FrGnc39y5bxS257rJThH9yEIuuFFvz26QDg
-         hMFw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787731766; x=1788336566;
-        h=content-transfer-encoding:content-type:mime-version:references
-         :in-reply-to:message-id:date:subject:cc:to:from:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=OJXQT0c6OYFN2aHcq1lc8qaGVj0md3a70HDIO/2Fy+0=;
-        b=Z3d6h+4w50fyK1M4M+ShzYunKfnR9EHTr3wjL7wXVO/xlbqyAOBpAbEZLu/jwfpAih
-         Z23l2rGQCog9+cJ4kV0TDeJWTGdAeexveO8e9wyC8seD1pfqoapNWP8Z+qkgARvlvUj+
-         txjxnQAbab2+jg4FyjkdW+JHg0ABkRVqtLJd8olYNceIU/RabaNwXH35MJOqJHoCIKK6
-         AHw4f7pajZbrh9/Ep1eKrwWjPfPgZxY3ZDAgAR44SuWMVzYry+wMm33+UeU1GS85wA3r
-         0kbg7ke9/g2FQJt85eBgr/C4FFwY+xNW2JxLz8hDFo1ec3oMI9rqQo8UunjJu7tGPWO3
-         78Gg==
-X-Forwarded-Encrypted: i=1; AHgh+RpG/WUUU+/k5MOhBOXRAcL/p9CK/GOmhVQRbP5i0ZrgeEyV0yOycUFIIQ48b5q6eqV1mW1oKR2CkeI=@vger.kernel.org
-X-Gm-Message-State: AFuF++mlMb7HeCyhAOY1HJuLKUsl96WQMICdXvjDMmGEkWX/jJD6WBoB
-	TY87SuaJDsdj9Fo3xEvHnEy1Y1A1DZxbh5PCurDIEokmDqDdU7ppwbdKSv6NNB/zGKI6uxqfkQY
-	ZwGC2jposX9SXG6ZmmVYhwQKbjysGoTe57syCcpqzqWpZzaNyxf+kadp8KLIyv3A=
-X-Gm-Gg: AR+sD11/HP+KWFgVGQcwzWjZz+5aMqM3b1SAQtiarUX9b/FlhMTDG6/3eU7NlLQNQ5K
-	gVz7gfzUBfWKN2LM9pGMHxK3Cnvtyg4dxEVJJzu6CMXyk1ycej85Co8UoeL13X1U9ZdUivOAtCi
-	VmW5+k+V5dT0xRpvHZwvc+YVWUKwq39dKETDagByr8CsmREhGczr7K8vg8dD7toY8qutJpiSpzO
-	IrQn/ElyMw1JlzN04HTSsA3yS8P98vDHt2p7mEL4dwgfQNOXgFL2rme8G7kchJPWOHT6E4f37Fw
-	YyFOx2R4QLu+AvZbIysdUb9sDWxe9hetc7pOL1aMoRv3mZtAkjhCqEgfuislShFxDlh9Sc6K5rT
-	fwcMCTSNUoFJb8EgvNWED76BjUzF1
-X-Received: by 2002:a05:622a:cc:b0:516:82e2:7788 with SMTP id d75a77b69052e-52e2ec1e3c5mr116721411cf.1.1787731766302;
-        Wed, 26 Aug 2026 01:09:26 -0700 (PDT)
-X-Received: by 2002:a05:622a:cc:b0:516:82e2:7788 with SMTP id d75a77b69052e-52e2ec1e3c5mr116721221cf.1.1787731765865;
-        Wed, 26 Aug 2026 01:09:25 -0700 (PDT)
-Received: from brgl-qcom.home ([2a01:cb1d:dc:7e00:dfd4:a0a3:2df2:7724])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-499dc96bff9sm18773245e9.5.2026.08.26.01.09.23
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 26 Aug 2026 01:09:24 -0700 (PDT)
-From: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
-To: Bartosz Golaszewski <brgl@kernel.org>, Jonathan Corbet <corbet@lwn.net>,
-        Shuah Khan <skhan@linuxfoundation.org>,
-        Marcel Holtmann <marcel@holtmann.org>,
-        Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
-        Alessio Belle <alessio.belle@imgtec.com>,
-        Luigi Santivetti <luigi.santivetti@imgtec.com>,
-        Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
-        Maxime Ripard <mripard@kernel.org>,
-        Thomas Zimmermann <tzimmermann@suse.de>,
-        David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>,
-        Jeff Johnson <jjohnson@kernel.org>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>, Chen-Yu Tsai <wens@kernel.org>,
-        Loic Poulain <loic.poulain@oss.qualcomm.com>,
-        Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
-Cc: linux-pm@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-        linux-bluetooth@vger.kernel.org, imagination@lists.freedesktop.org,
-        dri-devel@lists.freedesktop.org, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org, linux-pci@vger.kernel.org,
-        Jeff Johnson <jeff.johnson@oss.qualcomm.com>
-Subject: Re: [PATCH v3] power: sequencing: rename pwrseq_power_on/off() to pwrseq_enable/disable()
-Date: Wed, 26 Aug 2026 10:09:22 +0200
-Message-ID: <178773176015.26343.5524450275043262993.b4-ty@oss.qualcomm.com>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20260731-pwrseq-vote-rename-v3-1-44e60b8be053@oss.qualcomm.com>
-References: <20260731-pwrseq-vote-rename-v3-1-44e60b8be053@oss.qualcomm.com>
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="K6hIduwc"
+Received: from epcas5p2.samsung.com (unknown [182.195.41.40])
+	by mailout4.samsung.com (KnoxPortal) with ESMTP id 20260826081503epoutp0433f7ed9df252354b238ded44351aefad~PTOA519WG2773327733epoutp04p
+	for <linux-pci@vger.kernel.org>; Wed, 26 Aug 2026 08:15:03 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20260826081503epoutp0433f7ed9df252354b238ded44351aefad~PTOA519WG2773327733epoutp04p
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1787732103;
+	bh=aW6c58pCNidJWu8KY2QyEPP+YaKqlKylzka7cZx3wmg=;
+	h=From:To:Cc:Subject:Date:References:From;
+	b=K6hIduwcW69fWsOaGY+j7BeWlPekc5LWLAziaK/zvyuN+t0j6HpGYWQTy9ERrZ0v/
+	 6BULYj65kJG5Vhbm33+V/+EMkse5UH+zFiIQRDhFzEdda21+uq10XM+9C8pn1o4sZa
+	 XXbrurTPVclwvkBvVcDrK8TUKSToqk559KhpIfjw=
+Received: from epsnrtp03.localdomain (unknown [182.195.42.155]) by
+	epcas5p3.samsung.com (KnoxPortal) with ESMTPS id
+	20260826081502epcas5p36a97eea8494ec4a8a758afa16b249959~PTOAc3R6C1852318523epcas5p34;
+	Wed, 26 Aug 2026 08:15:02 +0000 (GMT)
+Received: from epcpadp1new (unknown [182.195.40.141]) by
+	epsnrtp03.localdomain (Postfix) with ESMTP id 4hVHWV3Wd1z3hhTH; Wed, 26 Aug
+	2026 08:15:02 +0000 (GMT)
+Received: from epsmtip2.samsung.com (unknown [182.195.34.31]) by
+	epcas5p3.samsung.com (KnoxPortal) with ESMTPA id
+	20260826051958epcas5p3db6cf2ef9115168c5d8dcec7bdb9b8c3~PQ1KBzMN72432924329epcas5p3i;
+	Wed, 26 Aug 2026 05:19:58 +0000 (GMT)
+Received: from unvme-SYS-221H-TN24R.samsungds.net (unknown [107.99.40.127])
+	by epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
+	20260826051956epsmtip29fccddd996c4950feb6b8c93ffb4ecdd~PQ1IXjoMS1127211272epsmtip2M;
+	Wed, 26 Aug 2026 05:19:56 +0000 (GMT)
+From: Shrihari E S <shrihari.s@samsung.com>
+To: jic23@kernel.org, junjie.cao@intel.com, linux-cxl@vger.kernel.org,
+	linux-pci@vger.kernel.org, qemu-devel@nongnu.org
+Cc: shrihari.s@samsung.com, arun.george@samsung.com, cpgs@samsung.com,
+	dave@stgolabs.net, dongjoo.seo1@samsung.com, gost.dev@samsung.com,
+	s.neeraj@samsung.com, vikash.k5@samsung.com
+Subject: [RFC V2 0/9] hw/pci: hw/cxl: Add UIO support in CXL and PCIe stack.
+Date: Wed, 26 Aug 2026 11:04:00 +0530
+Message-Id: <1212772528.01787732102473.JavaMail.epsvc@epcpadp1new>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-X-Authority-Analysis: v=2.4 cv=fPEJG5ae c=1 sm=1 tr=0 ts=6a8e9f37 cx=c_pps
- a=mPf7EqFMSY9/WdsSgAYMbA==:117 a=xqWC_Br6kY4A:10 a=IkcTkHD0fZMA:10
- a=Sv0fKeRqtYgA:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=u7WPNUs3qKkmUXheDGA7:22 a=yOCtJkima9RkubShWh1s:22 a=VwQbUJbxAAAA:8
- a=EUspDBNiAAAA:8 a=_EivlD1RsPJwtJxW0JgA:9 a=QEXdDO2ut3YA:10 a=ZXulRonScM0A:10
- a=dawVfQjAaf238kedN5IG:22
-X-Proofpoint-Spam-Info: AW1haW4tMjYwODI2MDA2NiBTYWx0ZWRfX3msAeAYD+LrJ
- L2+aBNnC1O31e/SXsX/b3xvsMhRqiGHeypk42T5EIPRwz98tDUp4d7U29mthInDOphsG0O+BHGu
- idFsVFiyvplfaMjmjtNktmokthdXV7Y=
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODI2MDA2NiBTYWx0ZWRfX8wrTe7Rz1agG
- eAYWtW+ysu4shhwfOryEc0DO2/miTBzK3Q0rSLDd5QMzJsnWto1xrF4xEpuOyJbEmkpMcE1yW8q
- Ar4zZGgKEDaoQlh1LTduhUV8K+g1Vybz78ki71fRbxV9xAHvlOQgH4+nlTdHWFyzl6aXh+laz66
- hm3EOyblNTSm/OAx5Q29AEQRjsMfjixsrHd8IKjn1ne3GBxNEzt2ZBkUD7EHhjGcN6Q0H7WGplh
- PgVHtblliWrJtccVlv7WPaZnN+QXEGEXp+75MDdBTKJ6lPyPUTvGmzJgbcF2MELCylpNbJHfc0v
- IoCjFRCDB9gYYICcBNjXcDz33lzU4IvhuO7y9tAS46Syc78kJjEcGyDpxZr/W0QXm4OsUUN9Ww+
- NZKMiJkY01lFmoZQGOui40ux0o5+7ppMytQA6/VeF8EbocCaDZrNEhv71Gao/B87izppOoLw6RI
- VBroCgRIOJFE+i1rYCQ==
-X-Proofpoint-ORIG-GUID: SxLUfz6HLksGx2yHvodAjVysMH-1ytao
-X-Proofpoint-GUID: SxLUfz6HLksGx2yHvodAjVysMH-1ytao
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-08-26_02,2026-08-24_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- priorityscore=1501 spamscore=0 suspectscore=0 impostorscore=0 malwarescore=0
- clxscore=1015 adultscore=0 phishscore=0 bulkscore=0 lowpriorityscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2608260066
+X-CMS-MailID: 20260826051958epcas5p3db6cf2ef9115168c5d8dcec7bdb9b8c3
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+CMS-TYPE: 105P
+X-CPGSPASS: Y
+X-Hop-Count: 3
+X-CMS-RootMailID: 20260826051958epcas5p3db6cf2ef9115168c5d8dcec7bdb9b8c3
+References: <CGME20260826051958epcas5p3db6cf2ef9115168c5d8dcec7bdb9b8c3@epcas5p3.samsung.com>
+
+This is the RFC V2 version of "UIO feature enablement in Qemu", By addressing
+the comments received from the maintainers in the last series [1],
+this series adds datapath enablement in both PCIe and CXL stack.
+
+Features added in RFC V2,
+
+    - Device 3 capability in PCIe stack and hooked it to the CXL type 3 device.
+    - DVSEC registers related to UIO in CXL stack.
+    - Modified UIO as a generic capability, while last series binds it to UIO.
+    - extended SVC capability to CXL type 3 device.
+
+New Properties added,
+
+    - x-256b-flit: Apart from the small refactoring added in RFC V1 [1],
+                   remains unchanged.
+
+    - x-svc : Added currently in all the CXL/PCIe ports and in CXL type 3
+              device to enable SVC capability in them.
+
+    - x-uio : Added in CXL type 3 device so that it can act as a UIO completer.
+              This property enables Device3 capability and is dependent on
+              "x-svc" and "x-256b-flit".
+
+This patch series introduces enumeration, configuration and data plane
+support for the PCIe Unordered I/O (UIO) feature across standard PCIe
+and CXL QEMU stack. UIO, is introduced from PCIe 6.1, a transaction layer
+enhancement that relaxes strict transaction ordering rules and  shifts the
+ordering control from the fabric to the requester device.
+
+This implementation establishes the essential architectural foundation
+required for the OS to discover, negotiate, and configure UIO
+capabilities.
+
+UIO in CXL follows CXL.io protocol, where a CXL device can send read/write
+request to peer .mem device's HDM decoder at fabric level.
+
+      __________________________________________
+     |                                          |
+     |              CXL Host Bridge             |
+     |              (Root Port/RC)              |
+     |__________________________________________|
+                         |
+      ___________________|______________________
+     |                                          |
+     |               CXL Switch                 |
+     |__________________________________________|
+        |                  |                 |
+     ___|____           ___|_____         ___|____
+    |        |         |         |       |        |
+    | Dev A  |         | Dev B   |       | Dev C  |
+    | (Req)  |         |(Target) |       |(Target)|
+    |________|         |_________|       |________|
 
 
-On Fri, 31 Jul 2026 15:42:18 +0200, Bartosz Golaszewski wrote:
-> The way power sequencing works means that a call to pwrseq_power_on()
-> does not necessarily result in the pwrseq target being powered-on at
-> that time: it may have already been powered on before. Similarly: a call
-> to pwrseq_power_off() does not have to result in an actual powering off
-> of resources: there may still be other users that requested a power-on
-> before.
-> 
-> [...]
+For example, consider the topology shown above, in that if the requester device
+(Dev A) wants to read data from the target device (Dev C), then Dev A can
+prepare UIO command with the targeted HPA of Dev C and can send directly to the
+Dev C's HDM decoder at switch level. Here the host gets bypassed in the data path.
+For this to happen, both the devices and the intermediate fabrics should support
+UIO and its dependencies.
 
-Applied, thanks!
+The implementation relies on three key dependencies:
+    - 256B Flit Mode 
+    - Streamlined Virtual Channel (SVC) Extended Capability (from PCIe 6.1)
+    - PCIe Device 3 capability
 
-[1/1] power: sequencing: rename pwrseq_power_on/off() to pwrseq_enable/disable()
-      https://git.kernel.org/brgl/c/d51fc9d4cd6eb18ac82913d83ecf7bd8c85f71ee
+Patch Layout:
 
-Best regards,
+Patch 01-02: Refactor 'flitmode' property from PCIESlot to PCIEPort so
+             that all derived ports (PCIe and CXL) can use it. This is
+             a pure structural refactor with no functional change.
+
+Patch 03-04: Add new properties to PCIe and CXL ports:
+             - x-256b-flit: Enable 256B flit mode
+             - x-svc: Enable Streamlined Virtual Channel capability
+
+Patch 05: Wire UIO capability into CXL HDM decoder capability and
+             control registers per CXL 3.2 8.2.4.20.7. The UIO bit in
+             the capability register is set for CXL Type 3 devices and
+             ports when UIO support is enabled.
+
+Patch 06: Implement the PCIe SVC Extended Capability (PCIe 6.4
+          7.9.29). This is the largest patch, adding:
+               - hw/pci/pcie_svc.c: SVC capability management
+               - include/hw/pci/pcie_svc.h: SVC data structures
+               - Updated pcie_cap_fill_lnk() for flitmode signaling
+               - Lifecycle hooks (reset and config_write) for SVC state
+
+Patch 07: Wire SVC initialization into the realize() functions of
+          PCIe/CXL Root, Upstream, Downstream ports, and
+          The 'uio_capable' flag is set in CXL Ports when both SVC and
+          flitmode are enabled.
+
+Patch 08: Implement the PCIe Device 3 Extended Capability (PCIe 6.4
+          7.7.9). This adds:
+              - hw/pci/pcie_dev3.c: Dev3 capability management
+              - include/hw/pci/pcie_dev3.h: Dev3 data structures
+              - pcie_link_flit_active() helper for flit mode queries
+              - Gating logic that ties Dev3 control bits to flit mode
+
+Patch 09: Wire SVC and Dev3 capabilities into the CXL Type 3 device
+             realize() function, enabling it to act as a UIO completer.
+
+Patch 10: Adds CXL UIO documentation
+
+This series is written on top of:
+
+Base commit: 3c99db7705c1a885c795b7c14f751c7a3ba29ed8
+Repository: https://gitlab.com/jic23/qemu
+Branch: cxl-2026-01-09-draft
+
+Testing:
+This series has been validated through the following:
+
+1. Enumeration testing with Linux kernel
+   - Verified SVC capability discovery via lspci -vvv
+   - Verified Dev3 capability advertisement in config space
+   - Verified HDM decoder UIO bits are set correctly
+   - Verified capabilities' write_config() path.
+
+2. Dataplane testing:
+   - Added UIO requester capability to an existing PCIe device
+     and verified DMA data flow using Linux Kernel test driver.
+
+3. Backward compatibility:
+   - Verified existing CXL Type 3 configurations (without x-svc/x-uio)
+     continue to work unchanged
+   - Confirmed no regression in standard PCIe enumeration
+
+(The Linux kernel patches will be upstreamed later)
+
+Future work:
+1. Emulation of CXL type 2 device; To add a CXL test device with UIO requester
+capability and verify the CXL-CXL P2P DMA datapath (mimicking CXL type2 to CXL
+type3 P2P DMA via UIO)
+
+2. Emulation of PCIe UIO test device; To add a PCIe UIO requester test device
+and verify the PCIe-CXL P2P DMA path (mimicking PCIe GPU to CXL P2P DMA).
+the CXL type2 to CXL type 3 UIO communication.
+
+Thanks!
+
+References
+[1] https://lore.kernel.org/qemu-devel/20260609105836.3702787-1-shrihari.s@samsung.com/
+
+Shrihari E S and Dongjoo Seo (9):
+  hw/pci: Refactor flitmode from PCIESlot to PCIEPort.
+  hw/pci: Move 'x-256b-flit' property from cxl_root_port to pcie_root_port.
+  hw/pci: Add SVC capability and UIO properties to PCIe ports
+  hw/cxl: Add Streamlined Virtual Channel (SVC) property to CXL ports
+  hw/cxl: Wire UIO capability into HDM decoder and DVSEC registers
+  hw/pci: Add PCIe Streamlined Virtual Channel (SVC) capability.
+  hw/pci: hw/cxl: Wire SVC initialization into port realize functions.
+  hw/pci: Adding Device3 capabilities support
+  hw/cxl: Wire SVC and Dev3 capability to CXL Type 3 device
+  cxl: Add documentation for CXL UIO support.
+
+ hw/cxl/cxl-component-utils.c              |  23 ++-
+ hw/mem/cxl_type3.c                        |  26 ++-
+ hw/pci-bridge/cxl_downstream.c            |  16 +-
+ hw/pci-bridge/cxl_root_port.c             |  19 ++-
+ hw/pci-bridge/cxl_upstream.c              |  14 +-
+ hw/pci-bridge/gen_pcie_root_port.c        |   3 +
+ hw/pci-bridge/pci_expander_bridge.c       |   3 +-
+ hw/pci-bridge/pcie_root_port.c            |   6 +
+ hw/pci-bridge/xio3130_downstream.c        |   5 +
+ hw/pci-bridge/xio3130_upstream.c          |  10 ++
+ hw/pci/meson.build                        |   2 +-
+ hw/pci/pci.c                              |   6 +
+ hw/pci/pcie.c                             |  83 +++++++++-
+ hw/pci/pcie_dev3.c                        | 163 ++++++++++++++++++
+ hw/pci/pcie_svc.c                         | 192 ++++++++++++++++++++++
+ include/hw/cxl/cxl_component.h            |   2 +-
+ include/hw/cxl/cxl_device.h               |   3 +
+ include/hw/pci-bridge/cxl_upstream_port.h |   1 +
+ include/hw/pci/pcie.h                     |  13 ++
+ include/hw/pci/pcie_dev3.h                |  26 +++
+ include/hw/pci/pcie_port.h                |   6 +-
+ include/hw/pci/pcie_regs.h                |  85 ++++++++++
+ include/hw/pci/pcie_svc.h                 |  26 +++
+ 23 files changed, 705 insertions(+), 28 deletions(-)
+ create mode 100644 hw/pci/pcie_dev3.c
+ create mode 100644 hw/pci/pcie_svc.c
+ create mode 100644 include/hw/pci/pcie_dev3.h
+ create mode 100644 include/hw/pci/pcie_svc.h
+
 -- 
-Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
+2.34.1
+
+
