@@ -1,272 +1,450 @@
-Received: from mail-yw1-f169.google.com (mail-yw1-f169.google.com [209.85.128.169])
+Received: from mail-yx1-f51.google.com (mail-yx1-f51.google.com [74.125.224.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 70BA33A5E84
-	for <linux-pci@vger.kernel.org>; Wed, 26 Aug 2026 20:16:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.128.169
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787775405; cv=pass; b=HS4aYCrCf2i6Kg2HQCQ36oU/oG8D/O0hoFwBnnNWy+VHr8JFJ+69ACSL+f3pSfC72NIBW0bFNKTXah5BLlxhg/dKSPG5+JFQEXDNBtaUfF7127WGQqZ/pvXFCnThpRHaGR6rYvWrCbUz8G3/smWyE9YmesGbdKeAteEH3rVpDU0=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787775405; c=relaxed/simple;
-	bh=0/7xCDKrWR+mPFvHdaazqCFu2sK+/utgz3T0Bn+mARE=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=NitTifWljzeh5tWu/7PgZJJfdd9TXH/DgE8uXcBwUQGVEArs3ph8foYSw9tu4N3TeIYBzZjUf9S1qzS5XTQ9O4XLVoDmFB3gOkgGv6+rGQgphxpigntCseacVIL99V2l1rdfpLPHU3lFkNJDg6MOF21I6Sqh5B6sgIYS46P2GLE=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.tenstorrent.com; spf=pass smtp.mailfrom=tenstorrent.com; dkim=pass (2048-bit key) header.d=tenstorrent.com header.i=@tenstorrent.com header.b=bjpOvYnG; arc=pass smtp.client-ip=209.85.128.169
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.tenstorrent.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=tenstorrent.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2AB8B48382E
+	for <linux-pci@vger.kernel.org>; Wed, 26 Aug 2026 20:22:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.224.51
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1787775744; cv=none; b=NPpIY7Kai2bvhRBuBMwKqU0jOuC/dJ+3Bzy/Hmk+sX+QSAHOMpvGsGa6/MExxTxa1s0BwwTe1uYwO3D3R95Pn2hGWQdSIseyAe50R+w0cmj9/HIAH7/5hMNs9+ZIr9ggs8pmiXVTsccgoyz1VM/ggioQBhilZRVykR4gvxRuZcY=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1787775744; c=relaxed/simple;
+	bh=/mYnOm9okVJC2BL0hOkgDtE8gUTwj0fQEdVHf0yekQo=;
+	h=Message-ID:Date:MIME-Version:To:Cc:From:Subject:Content-Type; b=B5w/lRijZEhWJE4YHN1NFTHAhW7beBzw5N30dydrCAjA1Tu+2nvcAL3TdydnTB2mjN0k+udlnmz7NV5AYGt/p1NbP6Z+aZ2VD5OpM8MisNiMhTkWXNYi9CC4Kp05yWpzCfSwRwTIZKSF6ilywjJylTDcVMbF9KovpxvwVITq5P0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=jqluv.com; spf=none smtp.mailfrom=jqluv.com; dkim=pass (2048-bit key) header.d=jqluv-com.20251104.gappssmtp.com header.i=@jqluv-com.20251104.gappssmtp.com header.b=Q9IDD0N5; arc=none smtp.client-ip=74.125.224.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=jqluv.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=jqluv.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=tenstorrent.com header.i=@tenstorrent.com header.b="bjpOvYnG"
-Received: by mail-yw1-f169.google.com with SMTP id 00721157ae682-854f9c32c76so6209397b3.0
-        for <linux-pci@vger.kernel.org>; Wed, 26 Aug 2026 13:16:42 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1787775401; cv=none;
-        d=google.com; s=arc-20260327;
-        b=Ve2W9TZTlgYDC/51pft3ove34c3GsCgbBhonDVY09TXCF5NbZdExm4fFQhKuvyM2d7
-         onsrMqWR0IpssG/QNUk/3jhgZ6aBqQRvby0gALKE5vWHaDgd4iYuj922fBBCE6P/wHmb
-         2IKcigCEdb3PbyY0WIXpu+vcRZEXm+S4vrtAs9otcds8pelzTMVp/X5BYMTc/HBtetAS
-         iqD+HMFKeKxpnf2B1hDC0NBqRVaRo8zt4vfcrX484EMBjyenoZFdGm+b5dHp8knjUeGe
-         EKcunGdNGlZa8YRxjqDSCKdN29DkeN2F6xs99s3rVjvOd9kxomye+2NmayIfDEI+ZPc/
-         ocgw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=MoQXIfNzH6ytuVZiisRyn/tXm97WlOfMHt4zXWCzNSw=;
-        fh=GWqflLME8bOtYmugkCswD3QMNB5+GyHxzaRmmpmgctE=;
-        b=YGeUEiZHdDtvarUmsWxMjsW6yxiVXlyzJ35EWj+8b3+U3HVyhs52xm2M+T+D/0ePfr
-         i48R3lYIh/LbDaVfQtWglunZaafIDOPonh3CGUKzIkoLMSWloYHlPeZ0zs/9ADvR2dUY
-         BIjSI4Wg9W40xPeYj+vVs+di4dI8bPffWCGBOzTD6fclhM9LaAmzt4G8MWPuOX95xZTf
-         6ITvOoZRGqegIV9NDn689mfWT0xErG3Qfxss2mY4jhtsABjcK2ADgA9zuJEEStqF+Inc
-         E6b19tVfqY+UXECt+8OciM7P/0BsdDSiKBnuos/7Y2Tqn/ytp5b7FznxYgCnAAauPlXj
-         +mqQ==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=jqluv-com.20251104.gappssmtp.com header.i=@jqluv-com.20251104.gappssmtp.com header.b="Q9IDD0N5"
+Received: by mail-yx1-f51.google.com with SMTP id 956f58d0204a3-66ce5312ca6so2391484d50.0
+        for <linux-pci@vger.kernel.org>; Wed, 26 Aug 2026 13:22:21 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=tenstorrent.com; s=google; t=1787775401; x=1788380201; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=MoQXIfNzH6ytuVZiisRyn/tXm97WlOfMHt4zXWCzNSw=;
-        b=bjpOvYnGiIA/ACRntMqOC+TeIQTPntbxIWQjQ62isp7QLoG/RcBX1kj1hMRKPH9zw9
-         u0ffGgTDOTILgL8WhykI2gX8eOrQwqlJlPS4nMXzW0WEVXNAkD5qxlzwDVHmDXyOSTQr
-         ynkAo/8c05SlKvKJwuJMTS3Xusu2l99mTNtFmABJfK28wu3ctW0pIZ+rlSI21AeQk9su
-         J/bhzNcz0DUFsSIiUR9ZEr3UReVFOAzqQv550u0TJM3GnN+z3a+7t9CSZxwW4ZmOfftk
-         Nn4CJTwRWkpYIuTf6PBktzZDIv/dat1DcTN9T1W8IzPhYOAvqxm/Nml+g4jHJdpPD9NA
-         cCNA==
+        d=jqluv-com.20251104.gappssmtp.com; s=20251104; t=1787775741; x=1788380541; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:subject:from:cc:to
+         :content-language:user-agent:mime-version:date:message-id:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=V8WTwpev7yC80C8GWV7MXU6aHOjLqfN0T/sKWekmcdY=;
+        b=Q9IDD0N59j8V03nUM7HwXVvt/O4Ma3J3rZ+QB9DfS4JoEVcdIS3HPeIiMtNWNhRbhR
+         Cufnm6t0MG54TEuFiWeheyLsjEj/14Loc4JakBkud7u/xTcDpASWGFxTCp7Ci7pe7yAw
+         DiU5sCH/dS2RvygvjGrY0+I0orx05Oo2l5Gr47DmLIdOAL/+40lbLFuNCi1OItqoph1Z
+         M2+jMElL6BBy9k9BK5qgNk3NmprdYZFvtqSH5YNE8gBo0GybT/h0i30mGKNTDIV0qiWk
+         11nxv6QnzLOfXbP+BibLSk4UJ9pskC6YALMwOPqt1fqIq7xHJPoYfsFvLk+LsZ510dkO
+         tH2g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787775401; x=1788380201;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
+        d=1e100.net; s=20251104; t=1787775741; x=1788380541;
+        h=content-transfer-encoding:content-type:subject:from:cc:to
+         :content-language:user-agent:mime-version:date:message-id:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=MoQXIfNzH6ytuVZiisRyn/tXm97WlOfMHt4zXWCzNSw=;
-        b=Yyr1+i2CjDfM3QqxSCBqR/giX9ShbxGWTMCp3dFDXwywh/NgUSGgqtmTcXtzRvK+A8
-         UQKhK29F527ejEKGrhEIjjDUuIPH/DH2z8YAs6/HFHHZlOj5HrqUFtCPLdHsxenPiOIc
-         QywFC9MuS/OM7uaKk4ubGebj1XxRvQCKhHR4Z9ElXNiQjciD9mxXC40NibrB8Y+xFE+U
-         9pCaMF0zo+qXYBqbe0G03+KCKj58+XZtdWl9M8GvTR5JBDHr3Hu2l7Pd8GJ2hcaoRXeO
-         dtPfy4QLkrUJ390Oq24dmQJmuf+QjWk9aXSk7716xR2AOZ2Q8/Apmrtfpe2X2xCyXjzY
-         NQLA==
-X-Forwarded-Encrypted: i=1; AHgh+RrfPNI96Es7XrViGBJnJ2mRREYsrfIGaJk1GaMjKy/vCYfkJBzdRBo9IAQ7UMhyCXcM4oFL+L/MQP0=@vger.kernel.org
-X-Gm-Message-State: AFuF++m5miWhzziEEe04MkgydjjRzbBLHy8ImifoxZ1mnaCBye4ZxJGv
-	Pe/4kNAdDMD01+yTdkq6zCLjb/KGDII1WYrm5eY2dL9fCPLdB9ootEa2+f0GmafeGvCgFLCGgJN
-	BC/CRFw4OahZd/sFCbhFjG731QMtGzUhof3CYPEyMcg==
-X-Gm-Gg: AR+sD11e+X5/G3rsEQI67IOi2yt+a68Az9tdks7GB+JR9LjQ64BanqLGD5nU8s1OcMt
-	qhfViWJ6qYmHBUPRWkzg759dCgYiGoQkO7vVKpI4XkxPhlJQbvvivTMSJOGT/2cm0yWA20h8i4Y
-	gTkOd/tQ0u8atgUzZLU50F1P8BJYbNKFlOX9OwddF3K4duoJ5w1oKHy+swHmN+MDf6cjWXK9bEh
-	YE3eKa2YfIuoQbWSftAe3cprJVKgUvWzf74f5WqJFne5+8Otsj/WbBf1TlzIpZd7y7sK1w0i79P
-	Ofb1VTDVxMBSmsF7dVrF7g1SttFAhIaot3OHAx87mPpIrFvkXH1ampkic67vqHhXjsscoy2m3j1
-	s0qf18ipKVg==
-X-Received: by 2002:a05:690c:e15c:20b0:825:468e:e0eb with SMTP id
- 00721157ae682-85aa1a0750cmr6587537b3.15.1787775401386; Wed, 26 Aug 2026
- 13:16:41 -0700 (PDT)
+        bh=V8WTwpev7yC80C8GWV7MXU6aHOjLqfN0T/sKWekmcdY=;
+        b=oTcZMsOQLvB0OMxAeh6fbcVcGsBNmApBuWkQpXYOg0c0IThK4O5LeUajQmPjbJAnmV
+         rS8axwB7sSmb84/iWiMqCWVr7gKh3k73boz0vrqPPy3FdXaDjUVO8xBCLmg5TJJstbtV
+         ToCWdxkURCrmie8kMQq4kjk+EXgFomfoJS+TkVwgYOf+rOJKhB99aYsfc7Id9Rxasr1J
+         sbUvMLup4+9xG9w2kPKCd20sKJkfDQzquVxuIeATht4p0zDrU8G1QVrWAMEMKJmlx6ID
+         dPrANeB3wHkJR3Nbu2Q8Ngx7XIlsmNEMpoQ7TwToDN3D4fs8DWViByVq6hyWtBqHz5nx
+         KNQQ==
+X-Gm-Message-State: AFuF++kXrDij3DRJcN92mz+fqOo01WBUFlqsR6wWHvlTAAPIuIbVFpSD
+	9AgmzIAOsi2bX9jsIbUmVZhp5uGe008EDHFhhaHI9SlAARJ2Q/B9hISZWC/Ycq++W/8uvUlISX/
+	Ek5VQJ8tGlw==
+X-Gm-Gg: AR+sD12QR/wMRsi6HD8yNQc5J5E9tOerk9dMCM8F7BJ/rsiEGOdSp/Rfxmuy/2B3EkL
+	T1Jk55bL2p2CXEHuDLZKey7m7o12NE2ALe3LW+/Kkh1OQ/GOUGbZ37doFzojyH23bvLV8It4wnq
+	3AFo+zV6huR8FRx2FYw8KVAmI+ekm2GO33frQYCnjqNAMsiFdl0VotB7FqcKq29chGf+ezJeCsi
+	w4Q7s9LsXKgOfEjbN70CtmWcjvNYN2Cnl0sO6tWgsa0tj/HuEegijZuA4EwbyryS5/VAtPyHMuO
+	gM+TCbp+Exgh8uXoQZHQn/X60iCZZgfxLOmQRg+a9fIQ45bNkWVGy3jdh/4Jskb16k2n3i5fqrA
+	NIySvzwjgv4RlzuMP6geiDufcYllojoD3Z5RbagmWAc9V1nZvB8wHvxkRb8sVJEkks/sgaUoAqp
+	m2EQUfpcreOu+ReYlTOGvvPYdY85gX7QLjJLBuE/LtrRfd7MdbWTt3jZDkAuYCwJb9qMfIKOBbV
+	7qt0Hr6nNQ6QR704SZ9oO/LOZ0tokw/HvajnWTG6WGu/B2Cnrh/dvTrjg==
+X-Received: by 2002:a05:690e:134f:b0:66d:930:7203 with SMTP id 956f58d0204a3-66d8051724bmr1462997d50.38.1787775740884;
+        Wed, 26 Aug 2026 13:22:20 -0700 (PDT)
+Received: from ?IPV6:2600:1700:1782:ba0:b856:d202:2fb0:b20c? ([2600:1700:1782:ba0:b856:d202:2fb0:b20c])
+        by smtp.gmail.com with ESMTPSA id 956f58d0204a3-66d245d9230sm2025752d50.9.2026.08.26.13.22.19
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 26 Aug 2026 13:22:20 -0700 (PDT)
+Message-ID: <a2292dfb-2ee5-4988-ac67-c75dd3e97a4c@jqluv.com>
+Date: Wed, 26 Aug 2026 13:22:18 -0700
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260824-blackhole_quirk-v1-2-fc004672cdbd@oss.tenstorrent.com> <20260826195503.GA1554946@bhelgaas>
-In-Reply-To: <20260826195503.GA1554946@bhelgaas>
-From: Anirudh Srinivasan <asrinivasan@oss.tenstorrent.com>
-Date: Wed, 26 Aug 2026 15:16:29 -0500
-X-Gm-Features: AcwNN1XrWloBzUUZjl91EBwKqKAy0KdvrxrtaK_vn9u1fg3SBOWQBODKTb62OCs
-Message-ID: <CAEev2e9HzMt27wWchsQGKuLELVW5hqL4-XK4DuP6XSwS6zmouQ@mail.gmail.com>
-Subject: Re: [PATCH 2/2] PCI: quirks: Drop unassignable 32 GiB BAR 4 on
- Tenstorrent Blackhole
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, joelsmith@tenstorrent.com, 
-	=?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Content-Language: en-US
+To: linux-pci@vger.kernel.org
+Cc: bhelgaas@google.com, alexander.deucher@amd.com,
+ ilpo.jarvinen@linux.intel.com, christian.koenig@amd.com,
+ amd-gfx@lists.freedesktop.org, mario.limonciello@amd.com, nra3088@gmail.com,
+ gloveless@jqluv.com
+From: Geramy Loveless <gloveless@jqluv.com>
+Subject: How to correctly reserve prefetchable bridge windows for large,
+ resizable BARs behind PCIe switches (8x GPU, PEX890xx) - seeking guidance on
+ upstreamable approach.
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Hello Bjorn,
+Hi all,
 
-On Wed, Aug 26, 2026 at 2:55=E2=80=AFPM Bjorn Helgaas <helgaas@kernel.org> =
-wrote:
->
-> [+cc Ilpo]
->
-> On Mon, Aug 24, 2026 at 11:57:07AM -0500, Anirudh Srinivasan wrote:
-> > Tenstorrent Blackhole cards expose a 32 GiB BAR 4 that is unused by mos=
-t
-> > software talking to the card. This BAR cannot be assigned on hosts whos=
-e
-> > PCI aperture is smaller than 32 GiB (e.g some ARM/RISC-V systems). This
-> > failure also results in BAR 0 (256 MiB) and 2 (2 MiB) being unassigned
-> > because bridge windows are sized as the sum of all enabled child BARs.
-> > This makes the card completely unusable on such systems.
-> >
-> >     spacemit-k1-pcie 80000000.pcie: PCI host bridge to bus 0000:00
-> >     pci_bus 0000:00: root bus resource [bus 00-ff]
-> >     pci_bus 0000:00: root bus resource [io  0x100000-0x1fffff] (bus add=
-ress [0x10000-0x10ffff])
-> >     pci_bus 0000:00: root bus resource [mem 0x1100110000-0x117fffffff] =
-(bus address [0x00110000-0x7fffffff])
-> >     pci_bus 0000:00: root bus resource [mem 0x1800000000-0x18ffffffff p=
-ref]
-> >
-> >     <snip>
-> >
-> >     pci 0000:01:00.0: [1e52:b140] type 00 class 0x120000 PCIe Endpoint
-> >     pci 0000:01:00.0: BAR 0 [mem 0x00000000-0x1fffffff 64bit pref]
-> >     pci 0000:01:00.0: BAR 2 [mem 0x1120000000-0x11200fffff 64bit pref]
-> >     pci 0000:01:00.0: BAR 4 [mem 0xfffffff800000000-0xffffffffffffffff =
-64bit pref]
-> >
-> >     <snip>
-> >
-> >     pci 0000:00:00.0: bridge window [mem size 0x820100000 64bit pref]: =
-can't assign; no space
-> >     pci 0000:00:00.0: bridge window [mem size 0x820100000 64bit pref]: =
-failed to assign
-> >     pci 0000:00:00.0: BAR 0 [mem 0x1108000000-0x110fffffff]: assigned
-> >     pci 0000:00:00.0: BAR 1 [mem 0x1110000000-0x1117ffffff]: assigned
-> >     pci 0000:00:00.0: BAR 0 [mem 0x1108000000-0x110fffffff]: releasing
-> >     pci 0000:00:00.0: BAR 1 [mem 0x1110000000-0x1117ffffff]: releasing
-> >     pci 0000:00:00.0: bridge window [mem size 0x820100000 64bit pref]: =
-can't assign; no space
-> >     pci 0000:00:00.0: bridge window [mem size 0x820100000 64bit pref]: =
-failed to assign
-> >     pci 0000:00:00.0: BAR 0 [mem 0x1108000000-0x110fffffff]: assigned
-> >     pci 0000:00:00.0: BAR 1 [mem 0x1110000000-0x1117ffffff]: assigned
-> >     pci 0000:01:00.0: BAR 4 [mem size 0x800000000 64bit pref]: can't as=
-sign; no space
-> >     pci 0000:01:00.0: BAR 4 [mem size 0x800000000 64bit pref]: failed t=
-o assign
-> >     pci 0000:01:00.0: BAR 0 [mem size 0x20000000 64bit pref]: can't ass=
-ign; no space
-> >     pci 0000:01:00.0: BAR 0 [mem size 0x20000000 64bit pref]: failed to=
- assign
-> >     pci 0000:01:00.0: BAR 2 [mem size 0x00100000 64bit pref]: can't ass=
-ign; no space
-> >     pci 0000:01:00.0: BAR 2 [mem size 0x00100000 64bit pref]: failed to=
- assign
-> >     pci 0000:01:00.0: BAR 4 [mem size 0x800000000 64bit pref]: can't as=
-sign; no space
-> >     pci 0000:01:00.0: BAR 4 [mem size 0x800000000 64bit pref]: failed t=
-o assign
-> >     pci 0000:01:00.0: BAR 0 [mem size 0x20000000 64bit pref]: can't ass=
-ign; no space
-> >     pci 0000:01:00.0: BAR 0 [mem size 0x20000000 64bit pref]: failed to=
- assign
-> >     pci 0000:01:00.0: BAR 2 [mem size 0x00100000 64bit pref]: can't ass=
-ign; no space
-> >     pci 0000:01:00.0: BAR 2 [mem size 0x00100000 64bit pref]: failed to=
- assign
-> >
-> > Add a header fixup that walks the root-bus apertures and drops BAR 4
-> > when it is larger than every root-bus aperture. Resource assignment
-> > skips resources with zero flags (pdev_resource_assignable()), so the
-> > bridge window then sizes to BARs 0/2 and succeeds. This was tested on a
-> > Spacemit-K3 RISC-V board that has only 4GiB of BAR space. tt-smi and
-> > tt-bh-linux are able to run on the card.
-> >
-> > Signed-off-by: Anirudh Srinivasan <asrinivasan@oss.tenstorrent.com>
-> > ---
-> >  drivers/pci/quirks.c | 32 ++++++++++++++++++++++++++++++++
-> >  1 file changed, 32 insertions(+)
-> >
-> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> > index b09f27f7846fc..df54e379c116b 100644
-> > --- a/drivers/pci/quirks.c
-> > +++ b/drivers/pci/quirks.c
-> > @@ -6415,3 +6415,35 @@ static void pci_mask_replay_timer_timeout(struct=
- pci_dev *pdev)
-> >  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_GLI, 0x9750, pci_mask_replay_tim=
-er_timeout);
-> >  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_GLI, 0x9755, pci_mask_replay_tim=
-er_timeout);
-> >  #endif
-> > +
-> > +/*
-> > + * Drop unused 32 GiB BAR 4 on Tenstorrent Blackhole cards so the card=
- is
-> > + * usable on systems with smaller host bridge apertures.
-> > + */
-> > +static void quirk_tenstorrent_blackhole_bar4(struct pci_dev *pdev)
-> > +{
-> > +     struct resource *res =3D &pdev->resource[4];
-> > +     struct pci_bus *bus =3D pdev->bus;
-> > +     struct resource *win;
-> > +
-> > +     if (!(res->flags & IORESOURCE_MEM))
-> > +             return;
-> > +
-> > +     /* Find the root bus; its resource list holds the host apertures =
-*/
-> > +     while (bus->parent)
-> > +             bus =3D bus->parent;
-> > +
-> > +     pci_bus_for_each_resource(bus, win) {
-> > +             if (!win || !(win->flags & IORESOURCE_MEM))
-> > +                     continue;
-> > +             if (resource_size(res) <=3D resource_size(win))
-> > +                     return;
-> > +     }
-> > +
-> > +     pci_info(pdev, "BAR 4 %pR larger than every host bridge aperture,=
- dropping it\n",
-> > +              res);
-> > +     res->start =3D 0;
-> > +     res->end =3D 0;
-> > +     res->flags =3D 0;
->
-> This seems problematic because the hardware BAR still exists even if
-> we zero out res->flags.
->
-> This is a problem because pci_enable_device() will successfully enable
-> a device and turn on PCI_COMMAND_MEMORY even though the hardware BAR
-> may contain junk.  And if a driver ioremaps this BAR, it is
-> ioremapping physical address 0, which doesn't end well.
->
-> I know this from bitter experience :)
->
-> If you have some device-specific way to actually disable the BAR in
-> the hardware, that could work.
+We have an 8-GPU host where each GPU wants a 32 GiB resizable BAR, but 
+the GPUs sit behind a multi-level Broadcom PEX890xx PCIe switch fabric 
+whose prefetchable bridge windows are sized by firmware for the default 
+256 MiB BAR. The kernel/driver never grows those windows, so every BAR 
+stays a 256 MiB and the cards run in small-BAR mode.
 
-lspci for this device doesn't show this BAR region. Are you saying
-that BAR4 still exists (but points to 0) ? Our driver doesn't seem to
-have any issues with this, but some other driver may not play well
-with this.
+We have an out-of-tree patch that makes it work (full patch inline below 
+as PATCH 1), but we're not confident it's the right shape for upstream, 
+and we've hit a nasty interaction with the GPU firmware (PSP) that 
+suggests we're doing it at the wrong layer. We'd really appreciate 
+guidance on the correct approach before we try to submit anything.
 
-$ lspci -d 1e52: -vvv
-0000:01:00.0 Processing accelerators: Tenstorrent Inc Blackhole
-        Subsystem: Tenstorrent Inc p150a
-        Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
-ParErr- Stepping- SERR- FastB2B- DisINTx+
-        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=3Dfast >TAbort-
-<TAbort- <MAbort- >SERR- <PERR- INTx-
-        Latency: 0
-        Interrupt: pin A routed to IRQ 27
-        Region 0: Memory at 1800000000 (64-bit, prefetchable) [size=3D512M]
-        Region 2: Memory at 1820000000 (64-bit, prefetchable) [size=3D1M]
-        Capabilities: <access denied>
-        Kernel driver in use: tenstorrent
+Background / history
+--------------------
+We first developed this reservation logic for Thunderbolt 5 / 
+USB4-attached GPUs, where the tunneled PCIe hierarchy has the identical 
+problem: firmware sizes the bridge windows for the boot-time BAR, and 
+there's no room for the driver to grow a resizable BAR afterward. We 
+found the exact same problem applies to GPUs behind on-board PCIe 
+switches, so we adapted the same idea here.
 
->
-> > +}
-> > +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_TENSTORRENT, 0xb140, quirk_tens=
-torrent_blackhole_bar4);
-> >
-> > --
-> > 2.43.0
-> >
+Software versions (both inline patches are "git apply --check" clean on
+these exact bases)
+----------------------------------------------------------------------
+- Kernel base:   torvalds 45c13f3f9 (Makefile VERSION 7.2.0;
+                  "Merge tag 'hwlock-v7.3' ...")
+- amdgpu:        amd-staging-drm-next @ 75a5e1b6b
+                  ("drm/amdkfd: guard against NULL restore_mqd in CRIU queue
+                   restore")
+- PATCH 1 (inline below): our out-of-tree PCI window reservation.
+- PATCH 2 (inline below): Mario Limonciello, commit 63b2896378d,
+                  "drm/amdgpu: restrict BAR0 fallback read to SR-IOV VFs 
+only",
+                  Fixes: ea8ac194077d.
+
+Note on the two amdgpu issues our PCI patch exposes: pre-sizing the fb 
+BAR resource causes the *hardware* BAR to be large by the time amdgpu 
+binds, which triggers two separate problems on the R9700 - (1) the early 
+BAR0-aperture read added in ea8ac194077d returns ~0 for the IP-discovery 
+table (PATCH 2 restricts that read to SR-IOV VFs and is what gets us pas
+discovery today), and (2) the PSP teardown described below. Both 
+disappear if the child BAR is left at its boot size and the driver 
+performs the resize - which is the core of our question.
+
+Hardware
+--------
+- Chassis/board:  ASUSTeK K14PG-D24 Series, BIOS 2001 (2024-08-02)
+- CPU:            2x AMD EPYC 9354 (Genoa, 32C/socket, 2 NUMA nodes)
+- Root complex:   AMD Genoa/Bergamo Root Complex [1022:14a4]
+- PCIe switches:  Broadcom/LSI PEX890xx PCIe Gen5 Switch [1000:c030] 
+(rev b0),
+                   cascaded (upstream port -> multiple downstream ports ->
+                   further PEX890xx stages -> one GPU per leaf)
+- GPUs:           8x AMD Navi 48 [Radeon AI PRO R9700] [1002:7551] rev c0,
+                   subsystem ASRock [.. :5413], 32 GiB VRAM each 
+(gfx1201/RDNA4)
+- GPU BDFs:       07:00.0 0a:00.0 68:00.0 6d:00.0 87:00.0 8a:00.0 
+e8:00.0 ed:00.0
+- Boot cmdline:   iommu.passthrough=0 pci=realloc (+ disable_acs_redir 
+on the
+                   eight switch downstream ports)
+
+Topology (abridged; one leg shown, all eight are symmetric):
+
+   [EPYC RC] -> PEX890xx up -> PEX890xx dn(62:00.0) -> PEX890xx(63:00.0) 
+-> GPU(68:00.0)
+
+Every prefetchable window in that chain is firmware-sized at 258 MiB
+(256 MiB fb BAR + 2 MiB doorbell BAR), e.g.:
+
+   62:00.0  Prefetchable memory behind bridge: ...  [size=258M]
+   63:00.0  Prefetchable memory behind bridge: ...  [size=258M]
+
+To resize a single GPU BAR to 32 GiB, every bridge window from the leaf 
+up to the root must be enlarged, and windows feeding two GPUs need >= 64 
+GiB in my specific use case but this needs to be generally acceptable 
+for all use cases of course.
+
+What we observe without any patch
+---------------------------------
+amdgpu_device_resize_fb_bar() runs and calls pci_resize_resource(pdev, 
+0, <32G>), which returns -ENOSPC ("Not enough PCI address space for a 
+large BAR") because the parent switch windows have no room, and nothing 
+grows them. All eight BARs stay at 256 MiB.
+
+(This is with current mainline/amd-staging; the recent removal of the 
+driver-side re-assignment in db92e3fef53e2 does not change this outcome 
+on our topology - we tested a revert and still got 256 MiB, because 
+re-assigning unassigned resources does not grow already-assigned switch 
+windows.)
+
+Our current out-of-tree patch (PATCH 1, inline below)
+-----------------------------------------------------
+At pci_assign_unassigned_root_bus_resources() time we (a) bump each 
+display device's fb BAR resource to its max ReBAR size, (b) release the 
+prefetchable BARs/windows so the assignment pass re-sizes the whole 
+prefetchable hierarchy large enough to hold the enlarged BARs, plus a 
+small setup-res.c tweak so multiple max-size BARs can share one window 
+with correct alignment. With this, all eight windows get sized for 32 
+GiB and the resize succeeds.
+
+The problem with our approach
+-------------------------------------------------------
+Bumping the fb BAR *resource* to max causes the assignment pass to 
+program the hardware ReBAR to 32 GiB at enumeration time (before amdgpu 
+binds). On these R9700s that early hardware BAR resize tears down the 
+firmware-loaded PSP "sign of life" (sOS), and amdgpu's later PSP 
+bring-up then fails to reload it:
+
+     amdgpu ...: PSP load kdb failed!
+     amdgpu ...: psp reg (0x16080) wait timed out ... read: 30000 exp: 
+80000000
+     amdgpu ...: hw_init of IP block <psp> failed -22
+
+If instead the hardware BAR is left at its BIOS size and amdgpu performs 
+the resize itself (which is what happens when firmware pre-enabled a 
+large BAR), the PSP stays alive and the GPU comes up fine. So what we 
+actually want is to reserve/size the prefetchable *windows* for 32 GiB 
+while leaving the child BAR at its boot size, and let the driver do the 
+hardware resize into the pre-sized window. Our current patch conflates 
+the two.
+
+Questions
+---------
+1. Is there an existing/preferred mechanism for reserving prefetchable 
+bridge-window space for large resizable BARs across a switch hierarchy 
+that we should be using (something analogous to the hotplug 
+hpmemprefsize reservation, but for fixed switch fabrics)? We'd rather 
+use it than carry this.
+
+2. If a new mechanism is needed, where should it live? Our instinct is 
+that the window sizing wants to happen in pci_bus_size_bridges()/the 
+realloc (add_size) path so the child BAR resource is never grown - i.e. 
+reserve the window, not the BAR. Is that the right direction, and is 
+there a sanctioned way to request "N bytes of extra prefetchable window 
+on this bridge" during the sizing pass?
+
+3. Given the PSP interaction, is the expectation that the *driver* 
+always owns the hardware BAR resize (so core should only ever arrange 
+windows, never program the device ReBAR)? If so, is the resource-size 
+bump we do simply the wrong tool?
+
+4. We're happy to write this properly and carry the testing - we have 
+the 8x R9700 / PEX890xx box and can iterate quickly. We can also share 
+the full lspci -tvvv, dmesg, and the Thunderbolt/USB4 variant of the 
+patch if useful.
+
+Thanks a lot for any pointers,
+Geramy Loveless
+
+The two patches follow inline below.
+
+==============================================================================
+PATCH 1/2 - PCI: reserve prefetchable bridge windows for resizable BARs
+             (our out-of-tree patch; git apply --check clean on 45c13f3f9)
+==============================================================================
+From: Geramy Loveless <gloveless@jqluv.com>
+Date: Wed, 26 Aug 2026 00:00:00 +0000
+Subject: [PATCH] PCI: reserve prefetchable bridge windows for 
+multi-child resizable BARs
+
+Out-of-tree patch we carry to make 8x resizable-BAR GPUs behind a 
+cascaded PCIe switch fabric usable. Firmware sizes every prefetchable 
+bridge window for the boot-time (256 MiB) BAR, so a driver's later 
+resize to 32 GiB fails with -ENOSPC because no window in the chain has room.
+
+Before sizing the bridge windows, bump each display device's fb BAR 
+resource to its max ReBAR size and release the prefetchable BARs/windows 
+so the assignment pass re-sizes the prefetchable hierarchy large enough. 
+A small pci_align_resource() tweak lets several max-size BARs share one 
+window.
+
+NOTE (seeking review): bumping the BAR *resource* also programs the 
+hardware ReBAR at enumeration time, which on AMD R9700 tears down 
+firmware PSP state and breaks GPU init. The correct shape is likely to 
+size the *window* only and leave the child BAR at boot size for the 
+driver to resize.
+
+Signed-off-by: Geramy Loveless <gloveless@jqluv.com>
+---
+  drivers/pci/rebar.c     |  1 +
+  drivers/pci/setup-bus.c | 62 
++++++++++++++++++++++++++++++++++++++++++++++++++
+  drivers/pci/setup-res.c |  7 ++++++
+  include/linux/pci.h     |  1 +
+  4 files changed, 71 insertions(+)
+
+diff --git a/drivers/pci/rebar.c b/drivers/pci/rebar.c
+index 5bbdc9470..3b621fa3c 100644
+--- a/drivers/pci/rebar.c
++++ b/drivers/pci/rebar.c
+@@ -190,6 +190,7 @@ int pci_rebar_get_current_size(struct pci_dev *pdev, 
+int bar)
+  	pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
+  	return FIELD_GET(PCI_REBAR_CTRL_BAR_SIZE, ctrl);
+  }
++EXPORT_SYMBOL_GPL(pci_rebar_get_current_size);
+
+  /**
+   * pci_rebar_set_size - set a new size for a Resizable BAR
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index e8c94aa1d..1bb018e3a 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -2179,6 +2179,59 @@ static void pci_prepare_next_assign_round(struct 
+list_head *fail_head,
+   * Second and later try will clear small leaf bridge res.
+   * Will stop till to the max depth if can not find good one.
+   */
++static int pci_reserve_rebar_cb(struct pci_dev *dev, void *data)
++{
++	struct resource *r;
++	unsigned int i;
++	int max, cur;
++
++	if ((dev->class >> 16) != PCI_BASE_CLASS_DISPLAY)
++		return 0;
++	max = pci_rebar_get_max_size(dev, 0);
++	if (max < 0)
++		return 0;
++	cur = pci_rebar_get_current_size(dev, 0);
++	if (cur < 0 || cur >= max)
++		return 0;
++	pci_resize_resource_set_size(dev, 0, max);
++
++	/*
++	 * Release every prefetchable BAR so the 64-bit prefetchable window
++	 * enclosing them empties and can be re-sized for the enlarged BAR0.
++	 * The hardware BAR is left untouched for the driver to resize.
++	 */
++	pci_dev_for_each_resource(dev, r, i) {
++		if (i >= PCI_BRIDGE_RESOURCES)
++			break;
++		if (r->parent && (r->flags & IORESOURCE_MEM_64) &&
++		    (r->flags & IORESOURCE_PREFETCH))
++			pci_release_resource(dev, i);
++	}
++	return 0;
++}
++
++/*
++ * Release the prefetchable bridge windows emptied by 
+pci_reserve_rebar_cb() so
++ * the assignment pass re-sizes them to fit the reserved BARs. Recurse 
+first so
++ * windows are released bottom-up; the !child test skips windows that 
+still hold
++ * other devices' resources.
++ */
++static void pci_release_rebar_windows(struct pci_bus *bus)
++{
++	struct pci_dev *dev;
++	struct resource *w;
++
++	list_for_each_entry(dev, &bus->devices, bus_list)
++		if (dev->subordinate)
++			pci_release_rebar_windows(dev->subordinate);
++
++	if (!bus->self)
++		return;
++	w = &bus->self->resource[PCI_BRIDGE_PREF_MEM_WINDOW];
++	if (w->parent && (w->flags & IORESOURCE_MEM_64) && !w->child)
++		pci_release_resource(bus->self, PCI_BRIDGE_PREF_MEM_WINDOW);
++}
++
+  void pci_assign_unassigned_root_bus_resources(struct pci_bus *bus)
+  {
+  	LIST_HEAD(realloc_head);
+@@ -2190,6 +2243,15 @@ void 
+pci_assign_unassigned_root_bus_resources(struct pci_bus *bus)
+  	int pci_try_num = 1;
+  	enum enable_type enable_local;
+
++	/*
++	 * Reserve window space for resizable device BARs at their maximum
++	 * size before sizing the bridge windows, so the windows fit the BARs
++	 * a driver will later grow. Only the resource size is set here; the
++	 * hardware BAR is left untouched for the driver to resize.
++	 */
++	pci_walk_bus(bus, pci_reserve_rebar_cb, NULL);
++	pci_release_rebar_windows(bus);
++
+  	/* Don't realloc if asked to do so */
+  	enable_local = pci_realloc_detect(bus, pci_realloc_enable);
+  	if (pci_realloc_enabled(enable_local)) {
+diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
+index 376f09630..db12092e1 100644
+--- a/drivers/pci/setup-res.c
++++ b/drivers/pci/setup-res.c
+@@ -280,6 +280,13 @@ resource_size_t pci_align_resource(struct pci_dev *dev,
+  		return res->start;
+
+  	remainder = size - ALIGN_DOWN(size, align);
++	/*
++	 * A window holding several align-sized resources has one tail per
++	 * resource, but only the lowest can tuck below the first aligned
++	 * boundary; the rest sit above it. Relocate a single tail's worth.
++	 */
++	if (ALIGN_DOWN(size, align) > align)
++		remainder /= ALIGN_DOWN(size, align) / align;
+  	/* Don't mess with size that doesn't align with window size 
+granularity */
+  	if (!IS_ALIGNED(remainder, pci_min_window_alignment(dev->bus, 
+res->flags)))
+  		return res->start;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index d31a8d107..e15d78a31 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1500,6 +1500,7 @@ resource_size_t pci_rebar_size_to_bytes(int size);
+  u64 pci_rebar_get_possible_sizes(struct pci_dev *pdev, int bar);
+  bool pci_rebar_size_supported(struct pci_dev *pdev, int bar, int size);
+  int pci_rebar_get_max_size(struct pci_dev *pdev, int bar);
++int pci_rebar_get_current_size(struct pci_dev *pdev, int bar);
+  int __must_check pci_resize_resource(struct pci_dev *dev, int i, int size,
+  				     int exclude_bars);
+
+
+==============================================================================
+PATCH 2/2 - drm/amdgpu: restrict BAR0 fallback read to SR-IOV VFs only
+             (Mario Limonciello, commit 63b2896378d; verified applies to 
+75a5e1b6b)
+==============================================================================
+
+ From 63b2896378d284e2043b44b81a0c044aef0e95fe Mon Sep 17 00:00:00 2001
+From: Mario Limonciello <mario.limonciello@amd.com>
+Date: Wed, 26 Aug 2026 12:02:53 -0500
+Subject: [PATCH] drm/amdgpu: restrict BAR0 fallback read to SR-IOV VFs only
+
+The BAR0 fallback read path in amdgpu_device_read_fb_via_bar0() was
+introduced as a workaround for SR-IOV virtual functions where the VRAM
+aperture (adev->mman.aper_base_kaddr) is not available during early init.
+
+However, the function currently allows any device (VF, PF, or bare metal)
+to use this fallback path, which is unnecessary overhead for non-VF
+configurations.
+
+Since amdgpu_virt_init() runs during early initialization and sets
+adev->virt.caps before any runtime framebuffer access occurs, we can
+safely check amdgpu_sriov_vf() to restrict this workaround to only
+SR-IOV VFs where it's actually needed.
+
+Fixes: ea8ac194077d ("drm/amdgpu: reduce early full GPU access during 
+SR-IOV init")
+Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
+---
+  drivers/gpu/drm/amd/amdgpu/amdgpu_device.c | 4 ++++
+  1 file changed, 4 insertions(+)
+
+--- a/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
++++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
+@@ -774,6 +774,10 @@
+  	u64 end;
+
+  	if (!buf || !size)
++		return -EINVAL;
++
++	/* BAR0 workaround only needed for SR-IOV VFs */
++	if (!amdgpu_sriov_vf(adev))
+  		return -EINVAL;
+
+  	flags = pci_resource_flags(adev->pdev, 0);
+-- 
+2.43.0
+
