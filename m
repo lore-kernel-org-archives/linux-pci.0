@@ -1,73 +1,71 @@
-Received: from CO1PR03CU002.outbound.protection.outlook.com (mail-westus2azon11010032.outbound.protection.outlook.com [52.101.46.32])
+Received: from SJ2PR03CU001.outbound.protection.outlook.com (mail-westusazon11012007.outbound.protection.outlook.com [52.101.43.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E649B3BD22F;
-	Wed, 26 Aug 2026 11:25:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.46.32
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 05A2A343D7F;
+	Wed, 26 Aug 2026 11:28:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.43.7
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787743528; cv=fail; b=XYPS5bI3273OYtVLUT2D1+n01W9KuYzQDESWM1Zt0redM+Hw8wQc2ITJ7bf8f9zl8wmjhSU88pcrPXTFgeDIFjfsly9mqvIc53S+7KvVJIDO+R5ireBNUz8+5L89An0ix8dnP9pXHSRVKmzRr1LvjuUmcJh6DM9wjPENGgJkGPg=
+	t=1787743714; cv=fail; b=mkCC9I+eYdfUyyT15tio+g2hf6WCjChWA9i7OJRTIH03c/taBZ+nGJ2hTj+h/nTOQjz2pKj6+xjxHH3uK6ZjKwj+pZ7qrDebMikWVCrozuEzy8lmztciIGD2aV2OO0pdOSTnbmMLMmeBv2wLbBLu/fYEB1jI8Wo+H7R/C9eYtsk=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787743528; c=relaxed/simple;
-	bh=yqIribufW0swoz9uVemsCp0QMJYiwavsW1vw54VBBoo=;
-	h=Content-Type:Date:Message-Id:Cc:Subject:From:To:References:
-	 In-Reply-To:MIME-Version; b=Bn7/CkFSDlteNoBH3O11p5PC+p1bfGaCIdrQ1DyB2z3MwaSmHvflQFUx/3edoFALjxSlNNWhCtxtpjV/trJD7Xp1Zl6bMrkl16rw5G1DBYay7Ub7NMVefLbqk790a7+mf8zj9jv5fAHjGvFfNSs1zrcOTxIrQL4sQK0Z0DN/Zn0=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=LI7VqZIk; arc=fail smtp.client-ip=52.101.46.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	s=arc-20240116; t=1787743714; c=relaxed/simple;
+	bh=ED85NIl1Jm8L3y4XvkitpZ4z50egid014x6jN0YQUkM=;
+	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=Df7SIhGiYOPDvUB3wxkq+/wkHCNuwMumCttm2UadW5DpPO1s009QF502hOzHnEQI0CHC/7vXEeHkMp51gCgaQE9BlAhy9xYPpzzDzEvbGBQ3d7KLnQ36PrT9wYTN9abMXaLsh75tlK+VMHKssRl9xpppG3jJZBUNpr+Vif3DDdg=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=q6/Eqn0A; arc=fail smtp.client-ip=52.101.43.7
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="LI7VqZIk"
+	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="q6/Eqn0A"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=yxJ8iWHnNNdx1gmIEk4ak+a8pJDBV1JrCqERp3DR1J7zadcd+nrfmMp6JndRmjzrmXDs0q5Aaam+6J58J2Smb/4xotkjeF6Cyx/LbtOcl+dT9XdN0mlC0+pfOlW34uXe87jcI5oyjHhEQnJqyI8cp1OHnRYZOmHWZEP2IUw75qASzCIdLtomj9jnaraCzjoec2KvJUGp8Pc74f9aYup9eitMcMc4H1Yyj6PB2dLKGVJq+fVDbywMUNI8jSWwFvEDbqC4SExoj7DXfUkOawWi53ZTnJZVqMRsadf3PBPkUQFgHmS2LqDdf1LIG986f7hAPom1t06j3FGdf+IyGriFrw==
+ b=p417zAjzBWDOjPdRfqL+hCnhDpB/j9a/kbtRsjLS7lBs4Y1s/sF27Kp4OBH2oFy32BJz9twECRfmo4TihJfYGo6hrIuBGt+JRla8Xfa6g384tFb4RN1ufrd6VL+ymsRIxzP//kxf89/B0dbgzQ18qv+VBA1olX2BZyq6cNNxqMT2VMrsHlxKDToEQh4R6t46Ct3bInXPK3NROZ3R4HwuTBYWa7wdUG93/C+bnR89stPKhqTRtKFPDGMuxMBt/pzWfIq80M4LRmDvSg4a0/Hs3eKOw90gDCnprylT1Ekfm4DfJUV1WDtFFVIq2AUAB4lHJ1+cULPlPl/TobLeHoygSw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=KtAQIEDwpiYnbZbjtMg7LEwpuR5NuIyoDy/VP79P924=;
- b=ux8nYaDP21gy/7pyDQx8Ww+GO25VbWL2ooL+zDTDVQOnjJIowiz/tNeUKzefi919VS+P+YDtcGu2CBlN+ImLFS5gOyuBlQRzAVOzJbI4lsZhNAbUlZzdfjfuMhJYkTXea9z6SS9RNxeO2UoEFwhjlvYJJMM2/h9iv/ImIBo0z1lld8g8Pe6U7tMYg2y6g7HaEqE/kxVZg/XLPzCWamwkw6/tKWuUJcWP4y1mAvGslN0c3QGeXrh556LAPURhI6e9H0Sov9XYDE50nUGMSqHXxOUo9cdDJojuo1TAiS4E/5X8GG1PYFtiOGbA5GhWBeaW4Zthq96fbxieutnJX4oAWw==
+ bh=Ko/296osBhFa2IPnpcLzb/A+Mz3f5a1PxBYVMBcQ9+o=;
+ b=uR9h9alaxF5ORzP2AuZ8zXAazYfSb4rBBOT3HkT57Zbce3361VVtxtsSFCqDXIva5U0OQi7VM024HvWF+mGV9+5i+T7OqU5bGvJrSE7LVvFhEnOLPgLW8nuy5rF5vLaAnPH02JQasnGAunE79CHfFCatUHgDQCTCj1v0WaqJCxLg0w5PtgeHrrWNBMjmDDIrvhgdh4DybH5OgoHhwwJZBnF9XoOq0mZr09l8yj2h5gksyexBnMlcyTPvXMyvHsXT+/U/LV49wtDtWyBzWo9QMzI0Dy/jxZIqaixGCPlFGCY4XdZyFHkxt8zyDTO6ZzToLas84DjpaPgaqBfxIViwKA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
+ smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
+ header.d=amd.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=KtAQIEDwpiYnbZbjtMg7LEwpuR5NuIyoDy/VP79P924=;
- b=LI7VqZIk0/DiH0i3uP5yKugYeWDlrqvmS2KoipkNgWbyJxwZnJqOxG6T5Gh466Dmwhn6Mdq9cXt1exl/8Km0wrZEiGUvIRBPK9sdD/rq//yrFa+IqXW592H9lh204d9ImhTc500yjD61YZC9bDy7FsqV5MKW6gvVmrsPlj7qG7wZL43T7gkP1XHnAyq2jxSBNlgmxa8RAgvuoIFPYLEREa+R33XaUrAmBegq2lN8vsEZ0wyYmFInkUxd784ztxOTPZEXrWGwMr4DEG0qa4ZgImaRkqxwt6xk6JXKPQUZQM17V/tVMlrtQ+L/LCU0UAHg45BRxjXyWwcbZTTCekpqWg==
+ bh=Ko/296osBhFa2IPnpcLzb/A+Mz3f5a1PxBYVMBcQ9+o=;
+ b=q6/Eqn0AU6P2KDRAfJgN9GRlgTE2564B1ChoyslevP8f8wg14JbbfnqkG2zxxX45UNj3Rsz88vttkhxeZETdInmp9HT90UfjEpj4dd430b/sHkJB61aoA86P2nybSsFMwbqPyZvEq7w2MhSUCTnz/38DdeOyFy6TTWqxqgQMEWw=
 Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from MW4PR12MB6873.namprd12.prod.outlook.com (2603:10b6:303:20c::17)
- by PH8PR12MB6937.namprd12.prod.outlook.com (2603:10b6:510:1bc::15) with
+ header.d=none;dmarc=none action=none header.from=amd.com;
+Received: from BL4PR12MB9505.namprd12.prod.outlook.com (2603:10b6:208:591::16)
+ by SN7PR12MB7370.namprd12.prod.outlook.com (2603:10b6:806:299::11) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.339.8; Wed, 26 Aug
- 2026 11:25:23 +0000
-Received: from MW4PR12MB6873.namprd12.prod.outlook.com
- ([fe80::a338:bd2c:3a38:ece1]) by MW4PR12MB6873.namprd12.prod.outlook.com
- ([fe80::a338:bd2c:3a38:ece1%5]) with mapi id 15.21.0315.014; Wed, 26 Aug 2026
- 11:25:23 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.339.12; Wed, 26 Aug
+ 2026 11:28:28 +0000
+Received: from BL4PR12MB9505.namprd12.prod.outlook.com
+ ([fe80::73aa:eb8c:a86b:5a83]) by BL4PR12MB9505.namprd12.prod.outlook.com
+ ([fe80::73aa:eb8c:a86b:5a83%5]) with mapi id 15.21.0360.008; Wed, 26 Aug 2026
+ 11:28:28 +0000
+Message-ID: <50ffc453-f918-47f8-9556-9813308690a9@amd.com>
+Date: Wed, 26 Aug 2026 16:58:15 +0530
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 2/5] iommu/amd: Fix DTE clearing and rename
+ iommu_ignore_device()
+To: Pranjal Shrivastava <praan@google.com>, Jason Gunthorpe <jgg@nvidia.com>
+Cc: iommu@lists.linux.dev, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Joerg Roedel <joro@8bytes.org>,
+ Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
+ Ankit Soni <ankit.soni@amd.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Samiullah Khawaja <skhawaja@google.com>, sashiko-bot@kernel.org
+References: <20260824122347.1588592-1-praan@google.com>
+ <20260824122347.1588592-3-praan@google.com>
+ <178759520117.3131778.15279605903087565179.b4-review@b4>
+ <ao1vJxkZsJpr1qXG@google.com> <20260825114916.GT244917@nvidia.com>
+ <ao3RF0w_AXo5EXxv@google.com> <20260825175315.GD3325090@nvidia.com>
+ <ao3oHn8HiXIx5Wrl@google.com>
+Content-Language: en-US
+From: Vasant Hegde <vasant.hegde@amd.com>
+In-Reply-To: <ao3oHn8HiXIx5Wrl@google.com>
 Content-Type: text/plain; charset=UTF-8
-Date: Wed, 26 Aug 2026 20:25:20 +0900
-Message-Id: <DKYU6RA4PD45.J2EMZIOB0BBF@nvidia.com>
-Cc: "Danilo Krummrich" <dakr@kernel.org>, "Alice Ryhl"
- <aliceryhl@google.com>, "Daniel Almeida" <daniel.almeida@collabora.com>,
- "Miguel Ojeda" <ojeda@kernel.org>, "Boqun Feng" <boqun@kernel.org>,
- =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, "Benno Lossin"
- <lossin@kernel.org>, "Andreas Hindborg" <a.hindborg@kernel.org>, "Trevor
- Gross" <tmgross@umich.edu>, "Tamir Duberstein" <tamird@kernel.org>,
- =?utf-8?q?Onur_=C3=96zkan?= <work@onurozkan.dev>, "David Airlie"
- <airlied@gmail.com>, "Simona Vetter" <simona@ffwll.ch>, "Bjorn Helgaas"
- <bhelgaas@google.com>, =?utf-8?q?Krzysztof_Wilczy=C5=84ski?=
- <kwilczynski@kernel.org>, <driver-core@lists.linux.dev>,
- <rust-for-linux@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
- <nova-gpu@lists.linux.dev>, <dri-devel@lists.freedesktop.org>,
- <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v3 03/16] rust: mem: add `AsRepr` and `AsReprMut`
-From: "Alexandre Courbot" <acourbot@nvidia.com>
-To: "Gary Guo" <gary@garyguo.net>
-Content-Transfer-Encoding: quoted-printable
-References: <20260819-typed_register-v3-0-3699a75fadf1@garyguo.net>
- <20260819-typed_register-v3-3-3699a75fadf1@garyguo.net>
-In-Reply-To: <20260819-typed_register-v3-3-3699a75fadf1@garyguo.net>
-X-ClientProxiedBy: TYCP286CA0374.JPNP286.PROD.OUTLOOK.COM
- (2603:1096:405:79::9) To MW4PR12MB6873.namprd12.prod.outlook.com
- (2603:10b6:303:20c::17)
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: PN4P287CA0061.INDP287.PROD.OUTLOOK.COM
+ (2603:1096:c01:267::10) To BL4PR12MB9505.namprd12.prod.outlook.com
+ (2603:10b6:208:591::16)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -75,222 +73,107 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: MW4PR12MB6873:EE_|PH8PR12MB6937:EE_
-X-MS-Office365-Filtering-Correlation-Id: cd5fa837-edc5-472c-bf02-08df0364b7f7
+X-MS-TrafficTypeDiagnostic: BL4PR12MB9505:EE_|SN7PR12MB7370:EE_
+X-MS-Office365-Filtering-Correlation-Id: a830e9a2-b7b4-47c9-5484-08df03652681
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|7416014|376014|23010399003|1800799024|366016|10070799003|6133799003|10067099003|11063799006|4143699003|56012099006|22082099003|18002099003;
+	BCL:0;ARA:13230040|376014|1800799024|366016|23010399003|11063799006|10067099003|4143699003|6133799003|56012099006|18002099003|22082099003;
 X-Microsoft-Antispam-Message-Info:
-	cVprPAfgkgisYug3GQtWC02ZefycEVGK3pXP79/iLoMsHIhwCzp9B1e1ntHvkZebeWdH2X9Cp9Ibqr+dQ0m4pyWD3Eoyzlw47URoOlS+xTar35PlMUNw5wpfz2o1mRL3XdKp6/pcr8FsqKS4gIeuwdhEGEUQKuhv+oTAtx52kOzPsLNc166XuO2EzqhB/RsjTQow/cuWeiAgi8cO8avKwc8y/7HmrkcnA9MU5xVSDpFb0DoqcWHS1Sld8VWE0RfjthyQvknFwWoca/ziMh6Hr5sFRvIEmipbAW52M6fF8MEmk5r39K6exp4svSLfCTZaBulyur0yUxOkqAae6SqtY6s1MFYaS+ekMbNXCn4/OZ6NWZwA4xJmOAlo0SmtdRz6zU8dg5IlEaD7asZUvHLkfNRlVw0L20AhfAvTvZXbKPPJoy/vfYhd6EIcKbw3CsmJGWge0EsQhOUuIG6YAJzgudtacG9MJRsbV602Fwyyy9gF+GfLy1rd4kJbfzifFZs2LCVexLoS7i4gJnaPYJIUWIKyaLCSDs1oBZymSxYGBxBBzdOmtaqYiA9FFJk4wzHuPrfoGDCk0FxMaQo5x9jycOHpxjIqRCvhhc68od+9nCYCfrJOMGqP4FdT2HvOhEa1oqoyJw9gU0yncEUpBhYuQ1eAvqn8YQvRV3WKzAbjk/4=
+	UsqXEcMm9bPmgHcWW3ofCYF4e58Kaptj/FuV/w0lx16dOWVp4Cn21C9t3uFCrMmzNZbwDV8i2biimJUjbuIp/v9X29//8IE5ZRsqyP+IvBRB50kaIbc8nz0m9d4Qu9S8aIVB7ADgaiAdZ7FOLYg4Am4Eagn+aSLWBT88/RfTywZ1JP6sLdVCYIEDzGJ+ucI5cIf3szR8hF7ijHVvcdIeHmvaziKSkHxzMhp8yLXDvVsoeFBE3mHxQfBCxOQ7Ii1+wMK1+d0ouEWZLi/75s9DS1QkRP75ViS1jEGYEY7D2AFJDSlO8ChFk7oawoLDAV2F+J7BWYsznBjrsfJOylfywgxKVn7bPvnZgcOWu6tcfCoYnpORUCfK3wvcM4dVC7oVU/ACXtPJw8JQbL2b9ZgEXbLQcPaCegLSDCiEg7Gjl1+vSotFRdKTkCl6YiFBPvqvWIglnvngAxSqr50c/5jBSLKDlIYJ/ixm3YyIvbCKaRNaXt8t0PMtd6p+k9AarI76g038mAeqnZCzM2xGjj0JaHDB/PFa/mNipJl5zWImu7g4AUHUmxNhRzX/RP0edxDuodLsX89Aaut59a4wk1XOJnwq/5KBam+mzsmFps2dXCNs/WJZjUCX/6dUHgPWnu5Ozqe3keWrF7XpggvsqfPoYmWBk7lQ98SEd/VfiQBqSdE=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MW4PR12MB6873.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(376014)(23010399003)(1800799024)(366016)(10070799003)(6133799003)(10067099003)(11063799006)(4143699003)(56012099006)(22082099003)(18002099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BL4PR12MB9505.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(1800799024)(366016)(23010399003)(11063799006)(10067099003)(4143699003)(6133799003)(56012099006)(18002099003)(22082099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?ZmNVNjVCa01BaDRKSkpvZ3Z5MVltc2JVdDd3ZlJtS3hac2NvQnhvc2NteXNB?=
- =?utf-8?B?NitrcTJmZnFkQnFoVWdjbkdoTnJ0RTRpT0tKNHhIVDZVMmFCUzlDYmF3SGpH?=
- =?utf-8?B?SURQbVYvYVZPUmJJZy84R1lMY0NyMmJCRXNDV3VqTVBtM252RUUwVDAxT1Rx?=
- =?utf-8?B?QS80ZmhCeUpOTklVcG15V3lPMmUxK2svR2dSN2VtMWlJVmd0Mk5wbkZCVG9Q?=
- =?utf-8?B?RlBZM3Z4NGVCM3ljL3M0TTV6N3FXbDdEVEdKandYSTZLb0FseTRYL0UvQjhh?=
- =?utf-8?B?QThCeFprL2lFUlUwTzNtaFJENU02dHAyQS9SUjBKWEdHNTdRZ0dOc3RNMVBC?=
- =?utf-8?B?QUZ4TnNseGN4TnBNcGtXcEkrd0NCZjhXaStXQ0xXYTZhSnFZK2UvdUFVdTNt?=
- =?utf-8?B?dFFleTZZRkI2VSs3Z2FJdVpaYW5vQXVDM01sM05rRHdsN2xnM0lubXBTZzNM?=
- =?utf-8?B?VlFaeGNlb1c3Q1pBMTRSYVpKUDVBSlNXZXhSUmMzNUQzVXN2MUJhM1NpTUsx?=
- =?utf-8?B?VmhKMk14ZXB3S1h1LzBHMU1zOG9VNkRPRmNLeWdSL1JwRWl3bDluaUNPTmRP?=
- =?utf-8?B?d2d5K2hOV21kTWJxeitVU1ZqWnpNdWVnZXpMWHRZa1M0WEpWYmh6VFF5RFhi?=
- =?utf-8?B?K2F5cWFadnM3KzI5cFZEVUNnQ0Q1anM5OTQxbUExcGo5K3J5QkZYbURZT0wx?=
- =?utf-8?B?SkFsZ3RLdW5iNk8vUU83S25iT2FTRU1yTHppREZIZGxGTE5hdmZmYmNGWXJz?=
- =?utf-8?B?S2RBWUt1ODBqVnBrRi94VnlpSUEyaTdqUmNVOFZJdUIxM0s5dlpGbXEza1VZ?=
- =?utf-8?B?RFFKWGVtclVrQWMrZHltT1FYU0YyT0xXQndxYUljb0NjVjR4QmM4aHJuTkhr?=
- =?utf-8?B?cENkSnd0b3BwZW5XY0tLMkwrQm0xMWhsT1ZZV3dsSEM5N2dlMSt6UGQ4NmZl?=
- =?utf-8?B?ZnFlVkN6L3FwL0JyN0J2czZ3M0xzMzZtL3U4M05VNWFFMW5uK0NXWlFpRm0v?=
- =?utf-8?B?emovM1BySWkzcHdjc3I3RlRwZVl0NmZuV0dkTXRQeXE4cDQzZi9ZREFISTRn?=
- =?utf-8?B?aHFDb3Y2K2lNRkNZS3AvU2RjdlY4VHhrVkhaMkpoak9xeG1sRGNrbmowMitX?=
- =?utf-8?B?RisxNUFuZUFYeG1oZDh6T0NKZWo0eXFTUld3ejdtc0YrZUJZK3ZIYVl6Q0JV?=
- =?utf-8?B?NnF3UmROMHdFS1NzQ2FudDNTZzJ3bkdENTNiSHBML3lEZEdONFprWGdUQ0dq?=
- =?utf-8?B?RytOc3RWOWZZRGJKYWY5ck1EQ0RjaW1WRFVtSDRNTnRuOGZ6Mm9wMkV1NUc1?=
- =?utf-8?B?dW5hS3VwZG9ldGV2c0s1RVNMblN2V3h3NUcrajVJSDJZRzg2N0xDVVM5WmFL?=
- =?utf-8?B?L3JjWXFpWnN6NnltQmVVODZ1WVNsT09HdUlLTkE4ZFd0em0wUVJweTZnTzJj?=
- =?utf-8?B?dTJvL29EdURNMjNsSTU4NUEwRlRmZWFxL015SWtiMWVxeVljaTI0eUpSQXRR?=
- =?utf-8?B?blo3R0cvQkR3TFpETG5sd1QzUHh1dW43ODU1UzJUWU9DaXNlek10dFJ3bzRl?=
- =?utf-8?B?SmFhVkdGTkk0cHFWa0s0bU1TQ2hmd0M5ZlBza2hSYmRRZzV0SkFaREFaSXYv?=
- =?utf-8?B?cm5LVjFST3pXclpZczBwY0dGM3JoWkxXb0tGRXc5ZUZVK1hTTVc2R2JZQVJ0?=
- =?utf-8?B?ZVhFam5pM0syZ3ZBTEpETm5BUXM3elBnampVTHBrVHRZczkrSUh5aWpFY0hm?=
- =?utf-8?B?OUlSVGs3MFVXQ3lqMkR3RlZQTHN0QzdKYnRNZkVjUlliQUVoaXpuT0RNOU5p?=
- =?utf-8?B?Z2xQaWp1U0E3TkxNWUxjRDVnRUNERE93OE14bzFMd3N1SGFnbllPdjBIdTdq?=
- =?utf-8?B?THp1b3ZkOURQT0Z0V21zME84QWUrMGt6R0thTnJrMzZ6bmJxMWFRTjgycEtX?=
- =?utf-8?B?ZExBdlBRWEVOOGZkYW9VVUdVeCtnOHgzTHBvT0dhVXJra2tET1ppcGtuS2NX?=
- =?utf-8?B?d1FDaHRWZUVOTjhnb0NmZGliSlBOM2ZsYXgrOG9PYzQ1MDhoMldCNzFFY01v?=
- =?utf-8?B?S2pxVHp2K2JwWlJEM0dzM0VTTkxja3Y5SVd2ZW1ZQkw1NkEwSXQyYUlTcVds?=
- =?utf-8?B?UWd5c0t1OGZVV3B6MDNNNEpKK002ZW8wS2lTa2pySkNKRnl3cytkaTk2UFMz?=
- =?utf-8?B?SkdZTEcvYWtJbS9KMDQ0ditHVS9yem1GQmlNY2xud1BlMmJ0eFJOVGRMVnlk?=
- =?utf-8?B?MXRyUFVsb0xSY1B5VnBveXl1T0dRM0ZCZVFDN1NRb0RURERyWG9OQ3gvaExZ?=
- =?utf-8?B?cC91TmpvUUh4UEo2VDRUazBxTW9lNnlIRDN5VElTY1J4Nk5xMFU0Q0xxY0xl?=
- =?utf-8?Q?iZmbkuB21T/YJQzVD/T9u7jD1AOEBYbfzTyy5fKcle1kL?=
-X-MS-Exchange-AntiSpam-MessageData-1: 4GnMEVQP0P10Jg==
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: cd5fa837-edc5-472c-bf02-08df0364b7f7
-X-MS-Exchange-CrossTenant-AuthSource: MW4PR12MB6873.namprd12.prod.outlook.com
+	=?utf-8?B?QXIydEFDWGUwVU1VNkVlSDMvQXJ0MTZWc3prc1pUZFQ4d2h6a2VnaFpQN3lP?=
+ =?utf-8?B?aWVwL1prL05MNVMwa3QrRUM1OGRGUVA2NDVVVVVkYlJTRlNmWUxnSGRiMVQz?=
+ =?utf-8?B?alE5SlBzRkQvMUgyaEZtRXEzVUx6TlgxczQrbHZzZ2IvZFc5eldtek5aNEli?=
+ =?utf-8?B?ZjV4RVg3VThLYmdNZ1VGMkxOdDF2K2xWc0N4bGpVNVNVU3JQb29WQWoxaTdx?=
+ =?utf-8?B?MjNscytlMUl0Q0N0MWN2a09kRWFPQVBwMjc1bGFBVDVkQXJ2bm0vdzhnOVp2?=
+ =?utf-8?B?MzRlN1NxaWNLV0hONDc0RHV4dHQwc0tsLzZnakQ4TjE3eC9kOEViNVJ3N3VE?=
+ =?utf-8?B?OEJkOEpxcjgrbUJGdEw2NHdLQXNsRFZMTlpwNjh5YVFhLzRaT2VReklEMmF2?=
+ =?utf-8?B?QmhzZ0lOQjNQR3lYYXNvTlN5OWRwd2NwZlFwOEdUZUpZRnM1VG8xMUhmOHBs?=
+ =?utf-8?B?OUdCbmJEVnlieU1ldjRYVDE1cmYxS291M0NJVS9zU204YXJWajZabW54QXRv?=
+ =?utf-8?B?eEhmRGZzL1prcVVGWmZVdUEyaS9VK2hSK1VIaUxlRGhOZlJwbDJiZkhBUk5a?=
+ =?utf-8?B?ZGpmQ0lJc2Y4NnhNUGRlb1dpSStCZmwrVDdLZEEzOWpSWnp4K01mOUIyV3pP?=
+ =?utf-8?B?QjFkNjFaQXNSUFIxRGJQVlZOVlJoTWZzYUI0aURFbXNDRFpSSUJVb1lSMEN6?=
+ =?utf-8?B?UHJ3d0xQbTFDOVFlcjFROXNESXVBR0JzM2IrRVdOK2dGcGNkamVIakJ0eUxp?=
+ =?utf-8?B?dFhRU0dTMXgzTkU3Z2tQSVZDQlBmRWxKRVl0djc4VUw2VlptcXpudENqbFFn?=
+ =?utf-8?B?d3dUalZFYUZhMDY0TTRlMmF2ZkU5MlRGcVQ2QjhVTFhNLzdOdlB2ZHJETWRO?=
+ =?utf-8?B?cmxTYkJCK1RKaEVaT1ZuSytlUlB1NlM5a2ZTRTh6SGlORlgwRmdIdFMrSmFh?=
+ =?utf-8?B?UGtWR0ErYm5UaTJSZmhDa3FobkdTOW9QSnE3b3RacXIycWhuMUYveDRTckVW?=
+ =?utf-8?B?VUJ3cWhsTk9UcGZId2x1U2svdnJKaG1IMzJaSURaYm9mZkI4eXB2eXdldTdn?=
+ =?utf-8?B?OGVucWxSeUpaR0xOcGMyazdidlB3STFsakxLSmNhbE9HOU1PdXByUHhpZ1pO?=
+ =?utf-8?B?ZWNTd1JDZ0JHaWROQ1FBZnJtdmh1SkJxMCtvVVJwS0RSdTI5S2xOTUs2Zlgr?=
+ =?utf-8?B?K3ZNR1RZaFRJMjYxRUphMk44VndVV3ROclgwMkZCZFpkbFZuY2lKVE5OeXJh?=
+ =?utf-8?B?YjNtUnNwNjNyaEFxbGptRm15NzlxOEprOG1EeEdlRnlvMHhhTzdldmJHYkRS?=
+ =?utf-8?B?SEpXYk5STlFyTUlMRWxicHBJb3VqckF0M1VZYnBUQ0hoM2ZJT2lWdVA0RzNU?=
+ =?utf-8?B?UTJtUzk4TWdFTFlKNXl3d3IvckRzMFJHRWo0UHVsMVk1cHFGSzcrT0JoMDFH?=
+ =?utf-8?B?elB6aTNtY050SVpJQ090dGlESFhiZzNiMCtwQkx5N3N6R3NscU03NFR1ZWxs?=
+ =?utf-8?B?Yit0dlNsczJuL0hSVGpmUk1nUDhpTGRYR1BEbkxXT2pybk1TOWthaEZ4TW5M?=
+ =?utf-8?B?b0xKTGZJMGxkVWpPS3NFclNIbkpzMXAyMlZwRkxkNzcybjJYL1MveC9ZaVRZ?=
+ =?utf-8?B?UWdwa0ozLysrWXlNbFpoYlk0UFVKckJ2Uko4UFhrb2hLVHpodFc5NXQ1S2tD?=
+ =?utf-8?B?WnN0VndkTng0bjRhMWNWNEU4T0FSMHQwOXdxT0hrNEpYNnNtVEhKRFIvUjV0?=
+ =?utf-8?B?K2R3dC91aktZWndJTWV0eG8vVmlNU3FDR3hlVWJFQXh1dXpjNDBmNzQ4YWQ1?=
+ =?utf-8?B?Q0ZvWWpnbE5hR1I2U1YrT2pWTVpmTFNyU29JQVVucXhQRm5oV0R5S0NvRmF1?=
+ =?utf-8?B?R09VdkM5blV2K2h5MmpieWhyRzNMWUtkSUJESHI3UjZZTkdZYlJqSTVKOWZt?=
+ =?utf-8?B?OEUrT0VPUEZuaUFmWFI4S25xcGJGdDZNcmNvQXhDODNJdDVLMHNQUVM5M0JR?=
+ =?utf-8?B?YS90RTE4VElKN1kxcks3TjRKeEl1Njdsa1M2ZjI0SXlyWFNoSDZJbll3VlY0?=
+ =?utf-8?B?TFdnWE9SWnBtYitBeGxFdzRRbEJIZ25HMTNkbkY4QUFFTTJieUdEYlUranBp?=
+ =?utf-8?B?RnpqQ3RMM3pYMDJScG1GZW5FeFR4ZTEyM3pIcEphSzNkcUZOSkl2Rm5RTm5T?=
+ =?utf-8?B?MnNGdVlTTlVMOFUxbUY3YlkxcDR0K3czR3VpNUY1bTRKQ05kOW4xYnRJZkNI?=
+ =?utf-8?B?Z3ovYkdLMGJKMnhxYjNldFFtd3ZVaXpLQ1VYbHhyL3lqeFR3MDl6S01kNTNy?=
+ =?utf-8?B?blJSQnQ0b01XcjY4SlhhelRtYzl2OElQbjBXcGRMZFI4S00rTTBvUT09?=
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: a830e9a2-b7b4-47c9-5484-08df03652681
+X-MS-Exchange-CrossTenant-AuthSource: BL4PR12MB9505.namprd12.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 26 Aug 2026 11:25:23.0132
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 26 Aug 2026 11:28:28.5904
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 7yD7vM7jLDytmgFC6SY3rtBCiJk3ZwJ5aAZ9YXSib47pafd9FV3FIExm2yLeFV5iPyZCc3iqPTi4LqMlvSKp9w==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH8PR12MB6937
+X-MS-Exchange-CrossTenant-UserPrincipalName: C5QEtbA2B0xPa/5/Cnow5sLRgw9he3E2QoolzwOcabMbludv6U+JO3w41gKDh/27ZYrNDdHIjrHpybJmrLUSlw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN7PR12MB7370
 
-On Wed Aug 19, 2026 at 8:09 PM JST, Gary Guo wrote:
-> Some API like atomics and I/O operate on primitives only; therefore other
-> types would need to converted to these primitive first. Add two traits
-> `AsRepr` and `AsReprMut` to indicate that the type can be turned into a
-> primitive for these operations.
->
-> Conceptually, `T: AsRepr` means that `&T` can be viewed as `&T::Repr` and
-> thus it has only a round-trip transmutability requirement. `T: AsReprMut`
-> means that `&mut T` can be viewed as `&mut T::Repr` and thus it needs to
-> support bi-directional transmutability.
->
-> To avoid duplicating implementation, all repr types are normalized to
-> unsigned integers.
->
-> Signed-off-by: Gary Guo <gary@garyguo.net>
-> ---
->  rust/kernel/mem.rs | 148 +++++++++++++++++++++++++++++++++++++++++++++++=
-++++++
->  1 file changed, 148 insertions(+)
->
-> diff --git a/rust/kernel/mem.rs b/rust/kernel/mem.rs
-> index a0901cbe1b2d..5bce381d8895 100644
-> --- a/rust/kernel/mem.rs
-> +++ b/rust/kernel/mem.rs
-> @@ -35,3 +35,151 @@ pub const fn transmute<Src: IntoBytes, Dst: FromBytes=
->(val: Src) -> Dst {
->      // SAFETY: transmute is safe with `IntoBytes` and `FromBytes` bounds=
-.
->      unsafe { transmute_unchecked(val) }
->  }
-> +
-> +/// Type that is layout-compatible with a primitive representation.
-> +///
-> +/// # Round-trip transmutability
-> +///
-> +/// `T` is round-trip transmutable to `U` if and only if both of these p=
-roperties hold:
-> +///
-> +/// - Any valid bit pattern for `T` is also a valid bit pattern for `U`.
-> +/// - Transmuting a value of type `T` to `U` and then to `T` again
-> +///   yields a value that is in all aspects equivalent to the original v=
-alue.
-> +///
-> +/// # Safety
-> +///
-> +/// - [`Self`] must have the same size and alignment as [`Self::Repr`].
-> +/// - [`Self`] must be [round-trip transmutable] to  [`Self::Repr`].
-> +///
-> +/// [round-trip transmutable]: AsRepr#round-trip-transmutability
-> +pub unsafe trait AsRepr: Sized {
+Pranjal,
 
-I'm a bit confused by the naming of this trait - the commit message
-mentions that it means that "`&T` can be viewed as `&T::Repr`", but such
-a method doesn't exist. Instead we have an `AsRepr` trait with an
-`into_repr` method that makes a copy.
 
-Can we either rename this to `IntoRepr` (and `AsReprMut` into `FromRepr`
-I guess?), or maybe better, have `fn as_repr(this: &Self) ->
-&Self::Repr` (on top of which `into_repr` could be implemented if
-useful) so the names of the trait and provided method align, while also
-making the commit message match the actual API? I haven't tried but
-since all the representations we are working with are primitives that
-implement `Copy`, I intuitively think it should work just as well.
+On 8/26/2026 12:38 AM, Pranjal Shrivastava wrote:
+> On Tue, Aug 25, 2026 at 02:53:15PM -0300, Jason Gunthorpe wrote:
+>> On Tue, Aug 25, 2026 at 05:29:59PM +0000, Pranjal Shrivastava wrote:
+>>
+>>> I agree, but I wonder why the existing code used memset here 
+>>> (in ignore_device):
+>>>
+>>> memset(&dev_table[devid], 0, sizeof(struct dev_table_entry));
+>>>
+>>> I was thinking it might've been done for probe failures in a kdump
+>>> kernel (normal kexec would've called shutdown for clearing all DTEs).
+>>> (I see this was added long time back and existed when PCI segments were
+>>> added [1]).
+>>
+>> For kdump you'd want to keep the original translation running in this
+>> case.
 
-Same would apply to `AsReprMut`.
+If probe is failed then we can't do much. Why keep original translation running?
 
-Since this is becoming core infrastructure, I guess `as_repr` will also
-become valuable when we want to do in-place access (with e.g. atomics)
-or use it with larger types that we don't want to copy.
+>>  
+>>> Are you suggesting to remove the DTE clearing from this path entirely?
+>>
+>> Yes
+>>
+> 
+> Even I'm not sure why we had this memset here, I'll just dig into
+> the history once if there's anything. Otherwise, I'll simply drop this.
+> 
+> Vasant, please let us know if there was a different context to it?
 
-> +    /// Primitive representation of this type.
-> +    type Repr;
-> +
-> +    /// Convert from [`AsRepr::Repr`] to `Self`.
-> +    ///
-> +    /// # Safety
-> +    ///
-> +    /// `repr` must be a valid bit patern of `Self`. If `repr` is previo=
-usly obtained using
+Looking into git history, it looks like, during boot init_device_table_dma()
+sets dte.v bit for all devices. So probe fails then clear everything in DTE.
 
-nit: s/patern/pattern.
+memset was added long back (commit 26018874e3584) and we never hit any issues.
+Hence I guess no one bother to change this.
 
-> +    /// [`AsRepr::into_repr`], then it will always be safe.
-> +    #[inline(always)]
-> +    unsafe fn from_repr_unchecked(repr: Self::Repr) -> Self {
-> +        // SAFETY: Per safety requirement of the trait.
 
-"... of the trait and method" maybe?
-
-> +        unsafe { transmute_unchecked(repr) }
-> +    }
-> +
-> +    /// Convert from `Self` to [`AsRepr::Repr`].
-> +    #[inline(always)]
-> +    fn into_repr(this: Self) -> Self::Repr {
-> +        // SAFETY: Per safety requirement of the trait.
-> +        unsafe { transmute_unchecked(this) }
-> +    }
-> +}
-> +
-> +/// Type that is bi-directionally transmutable with a primitive represen=
-tation.
-> +///
-> +/// # Safety
-> +///
-> +/// - [`Self`] must be [transmutable] from [`Self::Repr`].
-
-nit: missing backticks on [transmutable].
-
-<...>
-> +#[cfg(target_pointer_width =3D "32")]
-> +const _: () =3D {
-> +    // SAFETY: usize has the same size and alignment with u32, and is ro=
-und-trip transmutable to it.
-> +    unsafe impl AsRepr for usize {
-> +        type Repr =3D u32;
-> +    }
-> +
-> +    // SAFETY: isize has the same size and alignment with u32, and is ro=
-und-trip transmutable to it.
-> +    unsafe impl AsRepr for isize {
-> +        type Repr =3D u32;
-> +    }
-> +
-> +    // SAFETY: usize is transmutable from u32.
-> +    unsafe impl AsReprMut for usize {}
-> +    // SAFETY: isize is transmutable from u32.
-> +    unsafe impl AsReprMut for isize {}
-> +};
-> +
-> +#[cfg(target_pointer_width =3D "64")]
-> +const _: () =3D {
-> +    // SAFETY: usize has the same size and alignment with u64, and is ro=
-und-trip transmutable to it.
-> +    unsafe impl AsRepr for usize {
-> +        type Repr =3D u64;
-> +    }
-> +
-> +    // SAFETY: isize has the same size and alignment with u64, and is ro=
-und-trip transmutable to it.
-> +    unsafe impl AsRepr for isize {
-> +        type Repr =3D u64;
-> +    }
-> +
-> +    // SAFETY: usize is transmutable from u64.
-> +    unsafe impl AsReprMut for usize {}
-> +    // SAFETY: isize is transmutable from u64.
-> +    unsafe impl AsReprMut for isize {}
-> +};
-
-By making these available, aren't we running into the same
-non-portability issue [1] that we discussed on the `casts` module?
-
-[1] https://lore.kernel.org/all/DK9A6KGK5JQD.3U23MBEMSAXBK@garyguo.net/
+-Vasant
