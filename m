@@ -1,77 +1,100 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B51843BD643
-	for <linux-pci@vger.kernel.org>; Wed, 26 Aug 2026 09:23:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5FF3E3BB699
+	for <linux-pci@vger.kernel.org>; Wed, 26 Aug 2026 09:26:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787736186; cv=none; b=YpwmKbwUDfi++mx1XghGZ35SNMBZ2Krcm4IeBaf7CkKOyUsp8MglKgD23Htaj0GlvI2v79MgVMAYxeX6BLUHaEvNX7xp9WJ8CdxWH+HhVuRfkivVQnz9CeLU/BMHAaQSs4VxgtvBhsysh+2bJBaiGMJkvkVsMLYEZk0l1Z6cys4=
+	t=1787736402; cv=none; b=tYfbfNPb9inTfJ7fcWPkNye2Wl07KNc8u5d3utJ4K1weDtjn3VZRFS8veUX+KiWKM1oQPCoRozJDhwNT+6UUDG0hUU4rnVZ1patdn4QrH576siicnwdV8pad++rLAgHdFtRXV2WuJAAeLs7z2UP3+h0Oxf/xh7sk/R93PRv6als=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787736186; c=relaxed/simple;
-	bh=1qlCb/31LfaLgG84KqEgEX69PM/OvewAvuZ2k3BPXyc=;
-	h=From:In-Reply-To:MIME-Version:References:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=aFRAOftLF6OKgHAV+VWkyYJ5jPcBfxnTULQB/C59BSzLIdPFuK738/RBsLALUSYkQazVM3SU9HZ4U4aos4yG54W9G6vBWF5+xYtXGuaT13NTeRTozN7XJ4W1hXOuBM2d4DEDhW9qqORcEjvgDnmQIhNcBAmhDeXPSYXVKGHFnfE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NfAxgdbz; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1787736402; c=relaxed/simple;
+	bh=56f2jV3d6AApNXIgyoA3unc1DV8w7A9xshc4NrGjp/w=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=QvUuJxUAerfj1CKH53drH65h9pBpWyZZHdY7bsWhJSgWFnf4j0NoXCpSwAehZqZb/nSMLl9bb46ImYZaWzvmlkh4HwK3dhHK0SseCwt0XPEuj8B8SOl0jYp3KaFSQPt+G1a12S2GUuhWlUFDKxARB0zyaw0vkg3CXIsAMPRJO+Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=orQOEuwP; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NfAxgdbz"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5EDE61F01566
-	for <linux-pci@vger.kernel.org>; Wed, 26 Aug 2026 09:23:05 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="orQOEuwP"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CBF281F01561;
+	Wed, 26 Aug 2026 09:26:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787736185;
-	bh=y9yKGX1wK+d9EUShx30VfQc5I+KwOkgRLestKA60HKQ=;
-	h=From:In-Reply-To:References:Date:Subject:To:Cc;
-	b=NfAxgdbza9OwZEWP56BStDNJbF84ra5AAwS+264y7q1xCWIfshgrbuAP1gnbNwUBd
-	 zNaw6mnxa5uhMnVeLtgO08eRoASoR7Rrj9U3B+yPORrer4T/zPPniiCEr1mijcRGO8
-	 PbxmaLBxocW9PSYyOqk5jEW+PiFBLMO9azAlKnqrhRrGyQ+3C+HSuqNS2Q32KIOTVC
-	 dTKVKw/Aj8G11zbumEQ9+BxCkSa85LVvpwWCWznkBTjlO4rqH4/5QHKalnIlxOPQzE
-	 T6iCpQ6YcSnoX7beuhNB1X0c+J3Raha1qgUWHM97ooe/QteVZOrY7RLOFtJx2z6aSc
-	 ULafG07OfmZQg==
-Received: by mail-lf1-f45.google.com with SMTP id 2adb3069b0e04-5b29599b81cso672723e87.1
-        for <linux-pci@vger.kernel.org>; Wed, 26 Aug 2026 02:23:05 -0700 (PDT)
-X-Gm-Message-State: AFuF++lZ9Grrs5oAlotF31n1O+ke1D09nz+wvFOIQ744HYkZyTPk3nQD
-	Gb1WQyj8tOyrrKJogkHsVtMClInLgnkZv4De+/gwpinWX1CIF95hvlcjaZdn6qpAnJbfT0mT9Oi
-	jfDjnPQ28dERixAOvPztrtWmbpUM+YIQ/5EscmzmGIA==
-X-Received: by 2002:a05:6512:6890:10b0:5b3:420:884d with SMTP id
- 2adb3069b0e04-5b4a905a01fmr1021956e87.18.1787736184069; Wed, 26 Aug 2026
- 02:23:04 -0700 (PDT)
-Received: from 969154062570 named unknown by gmailapi.google.com with
- HTTPREST; Wed, 26 Aug 2026 04:23:01 -0500
-Received: from 969154062570 named unknown by gmailapi.google.com with
- HTTPREST; Wed, 26 Aug 2026 04:23:01 -0500
-From: Bartosz Golaszewski <brgl@kernel.org>
-In-Reply-To: <20260825-pci-pwrctl-tc9563-use-cansleep-for-resx-v1-1-0dbe7cfd8200@oss.qualcomm.com>
+	s=k20260515; t=1787736401;
+	bh=+qZ8jUoJAG4g+eML+hMT4glVxVmXUUhCCZbkEmx993o=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=orQOEuwPPTidsyl3KdawVrguNzZGelS4QZPm7wZX5qM2TewS3S8qUaJCfd+6xPIfs
+	 m3NSthEOBeZ+5Rlh1r7C8P2bbtB0+FC+sVnNv3cxb6abqFSmGHbg1XetoZF9EjwagG
+	 pWGdnE/lEYhx9cm1EHfMpkuAEyXQpBY6hQCi6T1Q/GRBwEjnyd97JB69x824xShPE1
+	 wDX1nnvEZ7JtOI9Us7bA0pTp/IhkEqOSAxnJwqDx/b4uHkTFKGq54G83QY0CZ29LNx
+	 bTUJJNEmfQS8wgexYuIrUNoe+3FRQ3BHZQ437x45iAugrzILFWY8ERiMorvlxD5B2F
+	 JOUUJbnp/nyDg==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] pci: designware: Set DMA_BYPASS bit in outbound IATU
+ CTRL2 register
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Sumit Kumar" <sumit.kumar@oss.qualcomm.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260826-dma_bypass-v1-1-3a53dc748ce2@oss.qualcomm.com>
+References: <20260826-dma_bypass-v1-1-3a53dc748ce2@oss.qualcomm.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 26 Aug 2026 09:26:40 +0000
+Message-Id: <20260826092640.CBF281F01561@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-References: <20260825-pci-pwrctl-tc9563-use-cansleep-for-resx-v1-1-0dbe7cfd8200@oss.qualcomm.com>
-Date: Wed, 26 Aug 2026 04:23:01 -0500
-X-Gmail-Original-Message-ID: <CAMRc=Mcr8Cz5OQ9RgZcZSV-bVM9cvGt=g52Pd3zK0NQnhc30fQ@mail.gmail.com>
-X-Gm-Features: AcwNN1V8AlLM0yO_2-R9MDTZdZxUgdCJ_hXFurALxazCZ7642ar_0s4ChUjf0NU
-Message-ID: <CAMRc=Mcr8Cz5OQ9RgZcZSV-bVM9cvGt=g52Pd3zK0NQnhc30fQ@mail.gmail.com>
-Subject: Re: [PATCH] PCI/pwrctrl: tc9563: Use gpiod_set_value_cansleep() for RESX
-To: Abel Vesa <abel.vesa@oss.qualcomm.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	Bartosz Golaszewski <brgl@kernel.org>, Manivannan Sadhasivam <mani@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>, Bjorn Andersson <andersson@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
 
-On Tue, 25 Aug 2026 13:41:31 +0200, Abel Vesa <abel.vesa@oss.qualcomm.com> said:
-> The RESX GPIO may be provided by a sleeping GPIO controller, such as an
-> I2C or SPI I/O expander. Calling gpiod_set_value() for such a GPIO
-> triggers the following warning:
->
->   WARNING: ... drivers/gpio/gpiolib.c:4030 at gpiod_set_value()
->
-> The TC9563 power-on and power-off callbacks already sleep while enabling
-> or disabling regulators and while waiting for oscillator stabilization.
-> Use gpiod_set_value_cansleep() for RESX so it can be driven without
-> triggering the warning.
->
-> Fixes: 4c9c7be47310 ("PCI: pwrctrl: Add power control driver for TC9563")
-> Signed-off-by: Abel Vesa <abel.vesa@oss.qualcomm.com>
-> ---
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [High] Unconditionally setting PCIE_ATU_DMA_BYPASS on all outbound iATU w=
+indows breaks built-in eDMA for platforms relying on iATU translation.
+--
 
-Reviewed-by: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
+commit 0264996407d5cc39725b0bb26bca8b42a6f11d18
+Author: Sumit Kumar <sumit.kumar@oss.qualcomm.com>
+
+pci: designware: Set DMA_BYPASS bit in outbound IATU CTRL2 register
+
+This commit unconditionally sets the DMA_BYPASS bit in PCIE_ATU_REGION_CTRL2
+when programming outbound iATU regions for controllers >=3D 4.60A. This aims
+to prevent unintentional address translation when DMA destination addresses
+fall within an outbound iATU aperture.
+
+> diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/c=
+ontroller/dwc/pcie-designware.c
+> index 593388f29bdd4..9297d0e607e3a 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware.c
+> +++ b/drivers/pci/controller/dwc/pcie-designware.c
+> @@ -577,6 +577,8 @@ int dw_pcie_prog_outbound_atu(struct dw_pcie *pci,
+>  		/* The data-less messages only for now */
+>  		val |=3D PCIE_ATU_INHIBIT_PAYLOAD | atu->code;
+>  	}
+> +	if (dw_pcie_ver_is_ge(pci, 460A))
+> +		val |=3D PCIE_ATU_DMA_BYPASS;
+>  	dw_pcie_writel_atu_ob(pci, atu->index, PCIE_ATU_REGION_CTRL2, val);
+
+[Severity: High]
+Does unconditionally setting PCIE_ATU_DMA_BYPASS on all outbound iATU
+windows break built-in eDMA for platforms that rely on iATU translation?
+
+When a standard PCI endpoint function driver allocates an outbound memory
+window using pci_epc_mem_map(), it gets a local CPU physical address which
+is then programmed into the DMA engine.
+
+Because this patch unconditionally bypasses the iATU for DMA, these
+platforms will send the raw CPU physical address over the PCIe link instead
+of the intended PCIe bus address. Could this regression lead to host memory
+corruption, IOMMU faults, or silent data corruption on platforms where the
+eDMA expects the iATU to handle the CPU-to-PCI address translation?
+
+To support bypassing safely, would this need to be conditionally enabled via
+a platform quirk, or require implementing the .pci_address callback in
+dw_pcie_edma_ops to translate the CPU address in software before programming
+the eDMA channel?
+
+> =20
+>  	/*
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260826-dma_bypass=
+-v1-1-3a53dc748ce2@oss.qualcomm.com?part=3D1
