@@ -1,37 +1,38 @@
-Received: from foss.arm.com (foss.arm.com [217.140.110.172])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id D627C296BD2;
-	Wed, 26 Aug 2026 14:51:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.140.110.172
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9D4035E93B;
+	Wed, 26 Aug 2026 16:04:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787755909; cv=none; b=X4WnCLnUtFWSH0EsCwE+sLLUWW8SEJuhxEcKuhCXsUd31doreyZr3ye6ticZKkm54BVPHEr2omuqYdV/mRRtCIrSgCfhDw85ukEjW+Dcj2RVlwYtuWnUAnb2KNn87AsNJMuTGQeqAVDltj+NAUkQmHfT7DCNf36u7MFnKP6yah4=
+	t=1787760285; cv=none; b=A3VUexClCjhFQFLj1J0JklPNPhcSqESqnkRGwFK0NA98h0zoFSOL4QMTNWTkFjYquIqzT3Ty1/EUjTIqAY8lHYcuEVnGqB4kLZMHZ81tXAmdGxeHQUdka8hdn67wc6eDUbGGvi0LmJmyKKkUcA8uwJmFfAaN+GfB6ChFZUX2CVQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787755909; c=relaxed/simple;
-	bh=tOodu0VszRohRtMpFFB6dYKNtMAf7OMx0ItWyxqnr/k=;
+	s=arc-20240116; t=1787760285; c=relaxed/simple;
+	bh=J3HAsU1KwO4mqDetIrd6P/XZ/1/GwfDOnfmgJD5u77Y=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Y240Sqs+FDLC+nWvMGMXJAVRt3rgXH1Yi95w8zFuhTNxobROkUFkB39eJxpyBBMpZDRHaNinuf+LE3czbRGnQWts+Up5L7JkSpuVxnYfDKHTM19932/9BlnHPb3JC8s31JTlx6Uk4EDc8pOb8HWMOHEECdUQ/vMi9idzf7c8pDc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arm.com; spf=pass smtp.mailfrom=arm.com; dkim=pass (1024-bit key) header.d=arm.com header.i=@arm.com header.b=YXQ1DnZP; arc=none smtp.client-ip=217.140.110.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=arm.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=qmtjKeYUu25SkhnSg0O3h9qfVjfOqKy8ywci0tHldXekayiWCIBmR2hgaFDd/XgepWw/STl7J20xy6qY/TAGwVZ97ncnMgDDqolXWhtr1FO/yqOwQLZkJaqWWc0XxXB9DYlbyXeomvUUx1zXfF8way7J1sc/gSKbtVbxOIqIw1g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oXIEkoWy; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=arm.com header.i=@arm.com header.b="YXQ1DnZP"
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-	by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 15C231756;
-	Wed, 26 Aug 2026 07:51:43 -0700 (PDT)
-Received: from localhost (unknown [10.2.196.114])
-	by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 73BBD3F7D8;
-	Wed, 26 Aug 2026 07:51:46 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=arm.com; s=foss;
-	t=1787755906; bh=tOodu0VszRohRtMpFFB6dYKNtMAf7OMx0ItWyxqnr/k=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=YXQ1DnZPOLhXEtKbwELsDp94I7KPv6NJqCCc+P/ZvoSWmJ8KCcKahNh7+sQWL3CXe
-	 Epva2iw+zUipeNYduk/uateqT+WdNJ2g8p5ZxLII6bzY6QQhqe7ssRQ+Ghq+nqNteW
-	 f98Yr+78VjADUvqwt45aWv7UK+TBbIxawOLDtO68=
-Date: Wed, 26 Aug 2026 15:51:44 +0100
-From: Leo Yan <leo.yan@arm.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oXIEkoWy"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 187B41F000E9;
+	Wed, 26 Aug 2026 16:04:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1787760282;
+	bh=Y8nG5Q59DmZU2W8YTNmb9FicIVaa2DhnYG0xPHeq4QM=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=oXIEkoWyhVF9O0ycvD4nLcJ11qe08oUKMmfsiwjwiio2a2VH9xvNqubdjmcmWTP9Y
+	 Bht9x/Wh39srsO4PB1OUiOIMYnQJNw1rxz0UhlitqScVm4QP2xUmeqyFmxvbmD6H6M
+	 kt9kyXF+EC9RJcq8TMqglLQPNm6bdQ06SQqHx1Z9z3r8g8FxbaFGdkeBT5grkeoVpo
+	 Wjh0jIhz6u6ZhOyO3gaXtFcf/O1sDe316jbE8/QJ2LREUwww1zshVu3Tz7Y4W0Xi4Z
+	 4Ij1967veWkgHclJ/mMqCWTw7xLAV0C+J/wS/qReNpbtyGnhlW1ipRQRU3rbwe9iB3
+	 imPHWJcoQmQfw==
+Date: Wed, 26 Aug 2026 17:04:28 +0100
+From: Conor Dooley <conor@kernel.org>
 To: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
 Cc: Suzuki K Poulose <suzuki.poulose@arm.com>,
 	Mike Leach <mike.leach@arm.com>,
-	James Clark <james.clark@linaro.org>, Rob Herring <robh@kernel.org>,
+	James Clark <james.clark@linaro.org>, Leo Yan <leo.yan@arm.com>,
+	Rob Herring <robh@kernel.org>,
 	Krzysztof Kozlowski <krzk+dt@kernel.org>,
 	Conor Dooley <conor+dt@kernel.org>,
 	Andrzej Hajda <andrzej.hajda@intel.com>,
@@ -88,7 +89,7 @@ Cc: Suzuki K Poulose <suzuki.poulose@arm.com>,
 	linux-pm@vger.kernel.org
 Subject: Re: [PATCH] dt-bindings: Drop redundant white-space around values in
  <>
-Message-ID: <20260826145144.GH8904@e132581.arm.com>
+Message-ID: <20260826-frequent-parchment-b8baeeafd583@spud>
 References: <20260826102044.142986-2-krzysztof.kozlowski@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -96,26 +97,40 @@ List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="P8HG2tUakdLhQuVM"
 Content-Disposition: inline
 In-Reply-To: <20260826102044.142986-2-krzysztof.kozlowski@oss.qualcomm.com>
 
+--P8HG2tUakdLhQuVM
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
 On Wed, Aug 26, 2026 at 12:20:45PM +0200, Krzysztof Kozlowski wrote:
+> Correct a few white-space issues around <>, which will be flagged by
+> dt-check-style.  No functional changes.
 
-[...]
+Tool seems pretty useful!
 
-> --- a/Documentation/devicetree/bindings/arm/arm,coresight-cti.yaml
-> +++ b/Documentation/devicetree/bindings/arm/arm,coresight-cti.yaml
-> @@ -308,7 +308,7 @@ examples:
->              arm,trig-in-sigs = <0 1>;
->              arm,trig-in-types = <PE_DBGTRIGGER
->                                   PE_PMUIRQ>;
-> -            arm,trig-out-sigs = <0 1 2 >;
-> +            arm,trig-out-sigs = <0 1 2>;
->              arm,trig-out-types = <PE_EDBGREQ
->                                    PE_DBGRESTART
->                                    PE_CTIIRQ>;
+Acked-by: Conor Dooley <conor.dooley@microchip.com>
 
-For this CoreSight change:
+>=20
+> Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
+>=20
+> ---
+>=20
+> Rob, Can you take it directly?
 
-Reviewed-by: Leo Yan <leo.yan@arm.com>
+--P8HG2tUakdLhQuVM
+Content-Type: application/pgp-signature; name=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+
+iHUEABYKAB0WIQRh246EGq/8RLhDjO14tDGHoIJi0gUCao8OjAAKCRB4tDGHoIJi
+0tqoAP9QAMmXPklodIMJgwkYAyiHY6wJXbsca2yegWqjDpaZ8gEAzCaVWA0HkeeD
++jnyIqHP/qOtLch52tvPYIHhTjCRRQ8=
+=3be7
+-----END PGP SIGNATURE-----
+
+--P8HG2tUakdLhQuVM--
