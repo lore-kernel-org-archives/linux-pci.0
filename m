@@ -1,258 +1,571 @@
-Received: from fhigh-b8-smtp.messagingengine.com (fhigh-b8-smtp.messagingengine.com [202.12.124.159])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1EF933911AB;
-	Thu, 27 Aug 2026 23:03:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.159
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D7AF368D5F
+	for <linux-pci@vger.kernel.org>; Thu, 27 Aug 2026 23:34:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787871799; cv=none; b=KOvWIwG7uNMnC/pImfxOlI89IR0HerbGP93CdHgjnal5cDBXxQkRzNWdcZedfuXgAA9tR2EgABfjxoVTl97T6teKRsxXJICIF21SxdKJ2/XPlJhKQDlCo2ufprBN1lErB0fRY6DIj/c2KZ1oevYvEBp7w6ETrdqWP0zGy1jqDx8=
+	t=1787873671; cv=none; b=lcL3Oi25IYu98R1X8SIogudQNocsE8je/pxwW4ox6YacTOieudrFAegTXHM/JH3PFOhIyeZw2oiARDRtspXl9c+sWlLisD81uCNcTFrK2NVEle6ZRiMOzlWDhFrYl6KF/7GEqC7WES/nGuyR2suwIuenvTj7iHUoutnPLlBQDSw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787871799; c=relaxed/simple;
-	bh=Q3ROe6UZQ2XHI7OM4E4jdPL0s2UiFcYNcRbqBx32qwQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Ek0OKlCqm0DR1YhcPDO74zA0s3Lj+vnDkxde0/Pw2X58uZZdBiV/FvEegdfnMCkK7ylFU+08KyLmEcLHtF1v4bTyWhRISAaCYyc4x8qkW+Aw41DSa+4q0wpWOiZd+zyVoogAr4pu+SQC/l+MUVXB7cIX792AI4YwtYWhV7ltAvQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=o8DH1P3i; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=aP46dvbF; arc=none smtp.client-ip=202.12.124.159
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
+	s=arc-20240116; t=1787873671; c=relaxed/simple;
+	bh=lC1UNnEsINoD0MWiFUoZnGV8QhKLQsvXokt+pLuQhIM=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=m8Z+hUqo1O/RLs6CSI6tGZo/pB7bTuDgA+sbpGOL7jCWetNncV3s2Q7b/T8KrmEtN0BiLOw1fGGiXJjCe9a5u/yaxczFHr2jPs9DT6+esShi+8beh1vmBdDfwtUQMCV9gBA9UFRtRadVEqnAN//lRC+7SmDUqRTTSmxuycF7aCw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=W+e5Ej4c; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="o8DH1P3i";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="aP46dvbF"
-Received: from phl-compute-02.internal (phl-compute-02.internal [10.202.2.42])
-	by mailfhigh.stl.internal (Postfix) with ESMTP id 5E8497A0016;
-	Thu, 27 Aug 2026 19:03:15 -0400 (EDT)
-Received: from phl-frontend-03 ([10.202.2.162])
-  by phl-compute-02.internal (MEProxy); Thu, 27 Aug 2026 19:03:16 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
-	cc:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm2; t=1787871795;
-	 x=1787958195; bh=oFv5ctN3MoNjwwb47maBRelE0P7dtMhVcUhr1brD2uo=; b=
-	o8DH1P3i++BByFDBl3Ng63n3XOyI1JTo6ZdVar1jXPRoZUTBh90CkxwilIzTFToP
-	zwG0APEdSJabMVhP6k/l+ncVn7uDLMvKpZS/LiF/6hUvO1QFfWAWQIcvAazWyg0c
-	chYAQE/8PKkZvXPtT+du8Sc8UVbut4d/GYdrmiRJBO8tN+P62Mkw9DTwao8yjZti
-	ZCwn7P+vzZWyhFOmj7sLXVbd/HHYV9mlJuMftTQXAu3O/O1xh0j+abta9rQQ6nZV
-	IgnOlPw9PT87mk1T/LtYH9LrRWkNH8MrYrJMV15gZJr9OSBzS8IGidNgoWz9zds7
-	ZNm3F7KJgde0VWDTmpmsSw==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=1787871795; x=
-	1787958195; bh=oFv5ctN3MoNjwwb47maBRelE0P7dtMhVcUhr1brD2uo=; b=a
-	P46dvbFK7CgcCz2EDHL95f1o+wd+QTkThCKhF/tLtsidyz5ZY46zKOTlznAVhisu
-	tzSlV/sqy0fR+zP0/LKbnbkaqimhATs2xLCVjwkn18oQ6g8PJ5W1M6BjyRHXQSqs
-	rbL/fGLRZ+WUi1ov8KiXwojGhyfBvxgOT8R1HbcrADyaAjrW5Oj5v0cxBSe1qW7G
-	DjjzV/APRc1/4KAPgBnQWHME5NiuASOeRzxCZyCqegjCAmfOxlzA07lPAsqCc/8A
-	pumXB0wqm6Xmi972k7t+zAe0XCbsYLGYGBKKcxgdo7vtVDRMEhOnAe5LeWu1jysj
-	Oz6e0o5jwhFuX9lSd1uxQ==
-X-ME-Sender: <xms:MsKQas7jM0ezxp1hoNt-852SsXjp9pVopvzaqR8TY_98zqyK4k7Kkw>
-    <xme:MsKQarjNSuOZZh06bslSIepWZnFXV_cekNxC4gUOlvJCeFpvUOt989eQhoyR_0Rvc
-    6FNLMFAwyMfFyYM2TQQHcG4SLO8o-BOsq-LRr8Fu37dChqgA6TRzQ>
-X-ME-Received: <xmr:MsKQai15hQAsvhgLrmr24jIju9gsYPAZUHhbDhs9QDGNAJdeel6rlOgA0g2RIA>
-X-ME-Proxy-Cause: dmFkZTFGArgfXlP67i3IyLAY/5rqTjvp9/T/Lgmv8ki1utIdaqcZTAAaTB3ID04bAipGG6
-    8QQrsYzPqQMeNFrKXCHs2bL+UkSzosnZAP0EXF9MAAJyZ5sDXi602OtzN1PY08NAK9R/Gj
-    fUIhEYvyjutUilRlMIQv+5ndHX7RPLpVjT2PWpm+6/+f5bN+UdRm1fMbiOwUMft5hmCFvN
-    j3OpENvDBWG8plJUyzagPfh77vC6urBYbaII4w0zPEnXGvUUgPp8VDD6yLMnT/qHR1dN5n
-    aHkJct1yVGS1Sz8xKW0kOa+ss95OxOcyqD0+dup50XYvczrmZ8n77h5PnUhcCft8DLLwAc
-    xnNrunsXWdgWoZ3SGig0lUBfJQnd43r/sY2ecWxj4KQhb52BZbV4heOa7Z2PiF9vmqk3JG
-    0YAR6FyByN+j2UO/XND4/e+Gx4kSApP7+aGrP/GVd5vlnBt3oGXaHcaRk6VcZMOXk9FJs0
-    3Dm9r4dtczGXciWGxR5ZFeYTMHdfd6146CBr0e8tlWi+2G4NTXDyFlN1GNzdxKhWjGJE9P
-    TYAQogm3K+USmeYvT00oL8xwy50pfAaXvKYqiEKCHMjY6bDXPBQ1A7YSmbSHKaH2rwPrVp
-    4Hy+GH4SVNSgfCT0cxPiMxuE1kYTlXIBevsgdjETipM44W/VsMnJLztvPifg
-X-ME-Proxy: <xmx:MsKQapXSVrFp2PbaoJ3-hTE4ZnqxScLUYR0Bzcj3uTRXnh_vO5IXhg>
-    <xmx:MsKQan0_beR7S1gwshkXasQfcdPnx28G5u-x6T6Pz2lOO0xLbRYHHA>
-    <xmx:MsKQaijXWTo3xxKYUEX6k-F0hCfIFp0vqX_nC34XVZsSTx-EWgj__g>
-    <xmx:MsKQavLWTKNRrB9zEdoR-wOqswviXaz-qO7O2UoA8BGHfa3jgkiUeg>
-    <xmx:M8KQatVgAkg9BCsTUMCEPWN6HP7_qOMzjBW1rNaw3l6UDOzJf-TEH3Xz>
-Feedback-ID: i03f14258:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Thu,
- 27 Aug 2026 19:03:12 -0400 (EDT)
-Date: Thu, 27 Aug 2026 17:03:10 -0600
-From: Alex Williamson <alex@shazbot.org>
-To: <mhonap@nvidia.com>
-Cc: <jgg@ziepe.ca>, <ankita@nvidia.com>, <jic23@kernel.org>,
- <dave.jiang@intel.com>, <alejandro.lucero-palau@amd.com>,
- <smadhavan@nvidia.com>, <corbet@lwn.net>, <skhan@linuxfoundation.org>,
- <dave@stgolabs.net>, <alison.schofield@intel.com>,
- <vishal.l.verma@intel.com>, <iweiny@kernel.org>, <ming.li@zohomail.com>,
- <yishaih@nvidia.com>, <skolothumtho@nvidia.com>, <kevin.tian@intel.com>,
- <bhelgaas@google.com>, <dmatlack@google.com>, <kees@kernel.org>,
- <gustavoars@kernel.org>, <cjia@nvidia.com>, <kjaju@nvidia.com>,
- <vsethi@nvidia.com>, <zhiw@nvidia.com>, <linux-doc@vger.kernel.org>,
- <linux-kernel@vger.kernel.org>, <kvm@vger.kernel.org>,
- <linux-cxl@vger.kernel.org>, <linux-pci@vger.kernel.org>,
- <linux-kselftest@vger.kernel.org>, <linux-hardening@vger.kernel.org>,
- alex@shazbot.org
-Subject: Re: [PATCH v4 15/27] vfio/pci: Call CXL open and close hooks around
- device use
-Message-ID: <20260827170310.5f49eeda@shazbot.org>
-In-Reply-To: <20260813093631.2288172-16-mhonap@nvidia.com>
-References: <20260813093631.2288172-1-mhonap@nvidia.com>
-	<20260813093631.2288172-16-mhonap@nvidia.com>
-X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="W+e5Ej4c"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CD8051F000E9;
+	Thu, 27 Aug 2026 23:34:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1787873669;
+	bh=/mXMC4eIR702xUsXRewyzunPZRbCh6tMC/uGjjHzvxc=;
+	h=From:To:Cc:Subject:Date;
+	b=W+e5Ej4caFPPqC3//BYahm8aRr0KqsNUad5I5Z2puh/YaqIrrdBF2kh3kbm+ga5pA
+	 B3eyrOouNlafCEqGmVPGYeJD/uMbVrnbeVe+FmtEAf7hTa93l2sOyFYRNoIrbR/vHW
+	 b/Be1NGz9fGNKuzvKjKI/x3GZNWkqsiwlr4x4cWPebrayolt7vYAQicmUuGIxcdGXJ
+	 YEAO6H2CPRbQIOIFW/GwnzXcbkvKMPlN25p9K0hMv1rhOyosMRgg1Jv7sTNUuMQn2m
+	 KlwMI2thXos7cVnYmTyAZkuGQneR7S9HfE57Z4qZ3k+VZhtDWQH0mKTRAvNJjRMwTI
+	 3lAVE8IIA9TtQ==
+Received: by pali.im (Postfix)
+	id 379A6648; Fri, 28 Aug 2026 01:34:29 +0200 (CEST)
+From: =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
+To: =?UTF-8?q?Martin=20Mare=C5=A1?= <mj@ucw.cz>
+Cc: =?UTF-8?q?Filip=20=C5=A0t=C4=9Bdronsk=C3=BD?= <p@regnarg.cz>,
+	linux-pci@vger.kernel.org
+Subject: [PATCH] libpci: Add new direct HW access method intel-conf1-ext
+Date: Fri, 28 Aug 2026 01:34:00 +0200
+Message-Id: <20260827233400.3224-1-pali@kernel.org>
+X-Mailer: git-send-email 2.39.5
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On Thu, 13 Aug 2026 15:06:19 +0530
-<mhonap@nvidia.com> wrote:
+Introduce the intel-conf1-ext method, an extension of intel-conf1 that
+allows access to all PCIe registers, including the extended PCIe space
+starting at offset 0x100. This method utilizes four reserved bits above
+the bus bits to represent the extended PCIe registers.
 
-> From: Manish Honap <mhonap@nvidia.com>
-> 
-> Volatile CXL register state must be sampled from live hardware when the
-> guest opens the device, not at bind, because a low-power transition
-> between bind and open can leave bind-time values stale.
+Currently, on x86 architectures, this method is supported exclusively
+by AMD Family 10h-18h CPUs. Newer AMD CPUs require a setup that has not yet
+been documented by AMD and remains unknown. Intel CPUs do not support this
+method yet.
+---
+ lib/i386-cpuid.h | 108 +++++++++++++++++++++
+ lib/i386-ports.c | 245 +++++++++++++++++++++++++++++++++++++++++++++--
+ lib/init.c       |   6 ++
+ lib/internal.h   |   2 +-
+ lib/pci.h        |   1 +
+ pcilib.man       |   4 +
+ 6 files changed, 357 insertions(+), 9 deletions(-)
+ create mode 100644 lib/i386-cpuid.h
 
-But patch 7 prevented such transitions, without really an explanation
-why.  Accounting for being in full power state at open here further
-diminishes the requirement to restrict idle lower power states in that
-patch.
+diff --git a/lib/i386-cpuid.h b/lib/i386-cpuid.h
+new file mode 100644
+index 000000000000..783e9159b5ae
+--- /dev/null
++++ b/lib/i386-cpuid.h
+@@ -0,0 +1,108 @@
++#if defined(__GNUC__) && ((__GNUC__ == 4 && __GNUC_MINOR__ >= 3) || (__GNUC__ > 4))
++
++/*
++ * GCC's cpuid.h header file is buggy and cannot be included more times.
++ * MinGW's intrin.h header file in some versions includes cpuid.h and
++ * therefore intrin.h and cpuid.h cannot be mixed in one source unit.
++ * libpci's i386-io-windows.h in some cases include intrin.h and therefore
++ * in some configurations it is not possible to include cpuid.h here again.
++ * GCC's cpuid.h since beginning define __cpuid macro, so it could be used
++ * as a include guard. But unfortunately MinGW-w64 since version 10.0.0
++ * automatically undefine macro __cpuid in intrin.h.
++ */
++#if defined(__MINGW64_VERSION_MAJOR) && __MINGW64_VERSION_MAJOR >= 10
++#include <intrin.h>
++#elif !defined(__cpuid)
++#include <cpuid.h>
++#endif
++#ifndef __get_cpuid
++#define __get_cpuid __get_cpuid
++#endif
++
++#elif defined (__GNUC__)
++
++static inline int
++__get_cpuid(unsigned int level, unsigned int *eax, unsigned int *ebx, unsigned int *ecx, unsigned int *edx)
++{
++#ifndef __x86_64__
++  /* cpuid does not have to be supported on 32-bit x86, check for it. */
++  unsigned int eflags_orig, eflags_mod;
++  asm (
++    "pushfl\n\t"
++    "pushfl\n\t"
++    "popl\t%0\n\t"
++    "movl\t%0, %1\n\t"
++    "xorl\t%2, %0\n\t"
++    "pushl\t%0\n\t"
++    "popfl\n\t"
++    "pushfl\n\t"
++    "popl\t%0\n\t"
++    "popfl\n\t"
++      : "=&r" (eflags_mod), "=&r" (eflags_orig)
++      : "i" (0x00200000)
++  );
++  if (!((eflags_mod ^ eflags_orig) & 0x00200000))
++    return 0;
++#endif
++
++  asm ("cpuid\n\t" : "=a" (*eax), "=b" (*ebx), "=c" (*ecx), "=d" (*edx) : "0" (level));
++  return 1;
++}
++#define __get_cpuid __get_cpuid
++
++#elif defined(_MSC_VER)
++
++/* MSVC provides intrinsic __cpuid since version 14.00 included in VS2005. */
++#if _MSC_VER >= 1400
++#pragma intrinsic(__cpuid)
++#else
++static void
++__cpuid(int CPUInfo[4], int InfoType)
++{
++  __asm {
++    mov esi, CPUInfo
++    mov eax, InfoType
++    xor ecx, ecx
++    _emit 0x0F __asm _emit 0xA2 /* cpuid */
++    mov dword ptr [esi +  0], eax
++    mov dword ptr [esi +  4], ebx
++    mov dword ptr [esi +  8], ecx
++    mov dword ptr [esi + 12], edx
++  }
++}
++#endif
++static inline int
++__get_cpuid(unsigned int level, unsigned int *eax, unsigned int *ebx, unsigned int *ecx, unsigned int *edx)
++{
++  int regs[4];
++
++#ifndef _M_AMD64
++  /* cpuid does not have to be supported on 32-bit x86, check for it. */
++  unsigned int eflags_orig, eflags_mod;
++  __asm {
++    pushfd
++    pushfd
++    pop eflags_orig
++    push eflags_orig
++    pop eflags_mod
++    xor eflags_mod, 0x00200000
++    push eflags_mod
++    popfd
++    pushfd
++    pop eflags_mod
++    popfd
++  }
++  if (!((eflags_mod ^ eflags_orig) & 0x00200000))
++    return 0;
++#endif
++
++  __cpuid(regs, level);
++  *eax = regs[0];
++  *ebx = regs[1];
++  *ecx = regs[2];
++  *edx = regs[3];
++  return 1;
++}
++#define __get_cpuid __get_cpuid
++
++#endif
+diff --git a/lib/i386-ports.c b/lib/i386-ports.c
+index b9d863c0762a..952e74e9688d 100644
+--- a/lib/i386-ports.c
++++ b/lib/i386-ports.c
+@@ -36,6 +36,8 @@
+ #error Do not know how to access I/O ports on this OS.
+ #endif
  
-> Add open_device and close_device to the CXL ops and call them from the
-> common enable and close paths. A failed open unwinds the enable like any
-> other error. The callbacks are stubs here and are filled in next.
-> 
-> Signed-off-by: Manish Honap <mhonap@nvidia.com>
-> ---
->  drivers/vfio/pci/cxl/vfio_cxl_core.c | 11 +++++++
->  drivers/vfio/pci/vfio_pci_core.c     | 44 ++++++++++++++++++++++------
->  include/linux/vfio_pci_core.h        |  2 ++
->  3 files changed, 48 insertions(+), 9 deletions(-)
-> 
-> diff --git a/drivers/vfio/pci/cxl/vfio_cxl_core.c b/drivers/vfio/pci/cxl/vfio_cxl_core.c
-> index 966b7c22a6ac..d19fd638f538 100644
-> --- a/drivers/vfio/pci/cxl/vfio_cxl_core.c
-> +++ b/drivers/vfio/pci/cxl/vfio_cxl_core.c
-> @@ -100,9 +100,20 @@ static void vfio_cxl_release_device(struct vfio_pci_core_device *vdev)
->  	vdev->cxl = NULL;
->  }
->  
-> +static int vfio_cxl_open_device(struct vfio_pci_core_device *vdev)
-> +{
-> +	return 0;
-> +}
-> +
-> +static void vfio_cxl_close_device(struct vfio_pci_core_device *vdev)
-> +{
-> +}
-> +
->  static const struct vfio_cxl_ops vfio_cxl_ops = {
->  	.init_device	= vfio_cxl_init_device,
->  	.release_device	= vfio_cxl_release_device,
-> +	.open_device	= vfio_cxl_open_device,
-> +	.close_device	= vfio_cxl_close_device,
->  	.owner		= THIS_MODULE,
->  };
->  
-> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
-> index 49dfbdaf3f05..470730cdc88b 100644
-> --- a/drivers/vfio/pci/vfio_pci_core.c
-> +++ b/drivers/vfio/pci/vfio_pci_core.c
-> @@ -584,6 +584,21 @@ static const struct dev_pm_ops vfio_pci_core_pm_ops = {
->  			   NULL)
->  };
->  
-> +static void vfio_pci_core_unmap_bars(struct vfio_pci_core_device *vdev)
-> +{
-> +	struct pci_dev *pdev = vdev->pdev;
-> +	int i, bar;
-> +
-> +	for (i = 0; i < PCI_STD_NUM_BARS; i++) {
-> +		bar = i + PCI_STD_RESOURCES;
-> +		if (IS_ERR_OR_NULL(vdev->barmap[bar]))
-> +			continue;
-> +		pci_iounmap(pdev, vdev->barmap[bar]);
-> +		pci_release_selected_regions(pdev, 1 << bar);
-> +		vdev->barmap[bar] = NULL;
-> +	}
-> +}
-> +
->  int vfio_pci_core_enable(struct vfio_pci_core_device *vdev)
->  {
->  	struct pci_dev *pdev = vdev->pdev;
-> @@ -660,8 +675,23 @@ int vfio_pci_core_enable(struct vfio_pci_core_device *vdev)
->  
->  	vfio_pci_core_map_bars(vdev);
->  
-> +	if (vdev->cxl_ops) {
-> +		ret = vdev->cxl_ops->open_device(vdev);
-> +		if (ret)
-> +			goto out_free_config;
-> +	}
-> +
->  	return 0;
->  
-> +out_free_config:
-> +	/*
-> +	 * open_device() runs after vfio_config_init() and map_bars() have
-> +	 * succeeded, but a failed first open never reaches vfio_pci_core_disable().
-> +	 * Unwind the common vconfig and BAR state here so the allocations and BAR
-> +	 * requests are not leaked for a later open to overwrite.
-> +	 */
-> +	vfio_config_free(vdev);
-> +	vfio_pci_core_unmap_bars(vdev);
-
-Unwind in the reverse order, this should start with unmap bars.  The
-above comment is rather gratuitous and looks a bit like AI slop.
-Thanks,
-
-Alex
-
->  out_free_zdev:
->  	vfio_pci_zdev_close_device(vdev);
->  out_free_state:
-> @@ -682,7 +712,7 @@ void vfio_pci_core_disable(struct vfio_pci_core_device *vdev)
->  	struct pci_dev *pdev = vdev->pdev;
->  	struct vfio_pci_dummy_resource *dummy_res, *tmp;
->  	struct vfio_pci_ioeventfd *ioeventfd, *ioeventfd_tmp;
-> -	int i, bar;
-> +	int i;
->  
->  	/* For needs_reset */
->  	lockdep_assert_held(&vdev->vdev.dev_set->lock);
-> @@ -737,14 +767,7 @@ void vfio_pci_core_disable(struct vfio_pci_core_device *vdev)
->  
->  	vfio_config_free(vdev);
->  
-> -	for (i = 0; i < PCI_STD_NUM_BARS; i++) {
-> -		bar = i + PCI_STD_RESOURCES;
-> -		if (IS_ERR_OR_NULL(vdev->barmap[bar]))
-> -			continue;
-> -		pci_iounmap(pdev, vdev->barmap[bar]);
-> -		pci_release_selected_regions(pdev, 1 << bar);
-> -		vdev->barmap[bar] = NULL;
-> -	}
-> +	vfio_pci_core_unmap_bars(vdev);
->  
->  	list_for_each_entry_safe(dummy_res, tmp,
->  				 &vdev->dummy_resources_list, res_next) {
-> @@ -827,6 +850,9 @@ void vfio_pci_core_close_device(struct vfio_device *core_vdev)
->  #endif
->  	vfio_pci_dma_buf_cleanup(vdev);
->  
-> +	if (vdev->cxl_ops)
-> +		vdev->cxl_ops->close_device(vdev);
-> +
->  	vfio_pci_core_disable(vdev);
->  
->  	mutex_lock(&vdev->igate);
-> diff --git a/include/linux/vfio_pci_core.h b/include/linux/vfio_pci_core.h
-> index 43755b91880f..7354dae1dd85 100644
-> --- a/include/linux/vfio_pci_core.h
-> +++ b/include/linux/vfio_pci_core.h
-> @@ -70,6 +70,8 @@ struct vfio_pci_device_ops {
->  struct vfio_cxl_ops {
->  	int	(*init_device)(struct vfio_pci_core_device *vdev);
->  	void	(*release_device)(struct vfio_pci_core_device *vdev);
-> +	int     (*open_device)(struct vfio_pci_core_device *vdev);
-> +	void    (*close_device)(struct vfio_pci_core_device *vdev);
->  	/* Pinned per bound CXL device so vfio-cxl cannot unload under usage */
->  	struct module *owner;
->  };
++#include "i386-cpuid.h"
++
+ static int conf12_io_enabled = -1;		/* -1=haven't tried, 0=failed, 1=succeeded */
+ 
+ static int
+@@ -50,7 +52,10 @@ static void
+ conf12_init(struct pci_access *a)
+ {
+   if (!conf12_setup_io(a))
++  {
++    a->debug("\n");
+     a->error("No permission to access I/O ports (you probably have to be root).");
++  }
+ }
+ 
+ static void
+@@ -103,8 +108,6 @@ intel_sanity_check(struct pci_access *a, struct pci_methods *m)
+  *	Configuration type 1
+  */
+ 
+-#define CONFIG_CMD(bus, device_fn, where)   (0x80000000 | (bus << 16) | (device_fn << 8) | (where & ~3))
+-
+ static int
+ conf1_detect(struct pci_access *a)
+ {
+@@ -132,19 +135,19 @@ conf1_detect(struct pci_access *a)
+ }
+ 
+ static int
+-conf1_read(struct pci_dev *d, int pos, byte *buf, int len)
++conf1_ext_read(struct pci_dev *d, int pos, byte *buf, int len)
+ {
+   int addr = 0xcfc + (pos&3);
+   int res = 1;
+ 
+-  if (d->domain || pos >= 256)
++  if (d->domain || pos >= 4096)
+     return 0;
+ 
+   if (len != 1 && len != 2 && len != 4)
+     return pci_generic_block_read(d, pos, buf, len);
+ 
+   intel_io_lock();
+-  intel_outl(0x80000000 | ((d->bus & 0xff) << 16) | (PCI_DEVFN(d->dev, d->func) << 8) | (pos&~3), 0xcf8);
++  intel_outl(0x80000000 | ((pos & 0xf00) << 16) | ((d->bus & 0xff) << 16) | (PCI_DEVFN(d->dev, d->func) << 8) | (pos & 0xfc), 0xcf8);
+ 
+   switch (len)
+     {
+@@ -164,19 +167,28 @@ conf1_read(struct pci_dev *d, int pos, byte *buf, int len)
+ }
+ 
+ static int
+-conf1_write(struct pci_dev *d, int pos, byte *buf, int len)
++conf1_read(struct pci_dev *d, int pos, byte *buf, int len)
++{
++  if (pos >= 256)
++    return 0;
++
++  return conf1_ext_read(d, pos, buf, len);
++}
++
++static int
++conf1_ext_write(struct pci_dev *d, int pos, byte *buf, int len)
+ {
+   int addr = 0xcfc + (pos&3);
+   int res = 1;
+ 
+-  if (d->domain || pos >= 256)
++  if (d->domain || pos >= 4096)
+     return 0;
+ 
+   if (len != 1 && len != 2 && len != 4)
+     return pci_generic_block_write(d, pos, buf, len);
+ 
+   intel_io_lock();
+-  intel_outl(0x80000000 | ((d->bus & 0xff) << 16) | (PCI_DEVFN(d->dev, d->func) << 8) | (pos&~3), 0xcf8);
++  intel_outl(0x80000000 | ((pos & 0xf00) << 16) | ((d->bus & 0xff) << 16) | (PCI_DEVFN(d->dev, d->func) << 8) | (pos & 0xfc), 0xcf8);
+ 
+   switch (len)
+     {
+@@ -194,6 +206,15 @@ conf1_write(struct pci_dev *d, int pos, byte *buf, int len)
+   return res;
+ }
+ 
++static int
++conf1_write(struct pci_dev *d, int pos, byte *buf, int len)
++{
++  if (pos >= 256)
++    return 0;
++
++  return conf1_ext_write(d, pos, buf, len);
++}
++
+ /*
+  *	Configuration type 2. Obsolete and brain-damaged, but existing.
+  */
+@@ -294,6 +315,202 @@ conf2_write(struct pci_dev *d, int pos, byte *buf, int len)
+   return res;
+ }
+ 
++static int cpu_detected = -1;
++static int
++conf1_ext_detect_cpu(struct pci_access *a)
++{
++#ifdef __get_cpuid
++  unsigned int eax, ebx, ecx, edx;
++  unsigned int family;
++#endif
++
++  if (cpu_detected >= 0)
++    goto out;
++
++#ifndef __get_cpuid
++  a->debug("...cannot determinate CPU model");
++  cpu_detected = 0;
++  goto out;
++#else
++  if (!__get_cpuid(0, &eax, &ebx, &ecx, &edx))
++    {
++      a->debug("...detected unsupported CPU without cpuid instruction");
++      cpu_detected = 0;
++      goto out;
++    }
++
++  /* Check for AuthenticAMD or HygonGenuine signature. */
++  if ((ebx != 0x68747541 || edx != 0x69746E65 || ecx != 0x444D4163) &&
++      (ebx != 0x6f677948 || edx != 0x6e65476e || ecx != 0x656e6975))
++    {
++      a->debug("...detected unsupported CPU %.4s%.4s%.4s", (char *)&ebx, (char *)&edx, (char *)&ecx);
++      cpu_detected = 0;
++      goto out;
++    }
++
++  /* Get the CPU family number. */
++  if (!__get_cpuid(1, &eax, &ebx, &ecx, &edx))
++    {
++      a->debug("...detected unsupported CPU AMD/Hygon");
++      cpu_detected = 0;
++      goto out;
++    }
++  family = (eax >> 8) & 0xf;
++  if (family == 0xf)
++    family += (eax >> 20) & 0xff;
++
++  /* For now only AMD Family 10h-18h CPUs are supported (see conf1_ext_setup). */
++  if (family < 0x10 || family > 0x18)
++    {
++      a->debug("...detected unsupported CPU AMD Family %xh", family);
++      cpu_detected = 0;
++      goto out;
++    }
++
++  a->debug("...detected supported CPU AMD Family %xh", family);
++  cpu_detected = family;
++  goto out;
++#endif
++
++out:
++  return cpu_detected;
++}
++
++static int
++conf1_ext_setup(struct pci_access *a)
++{
++  const char *reg_name;
++  struct pci_dev d;
++  int off;
++  int bit;
++  u32 val;
++  u32 tmp;
++
++  /*
++   * AMD Family 10h-16h:
++   * EnableCf8ExtCfg bit [46] in NB Configuration 1 [NB_CFG1] register controls
++   * whether CF8 extended configuration cycles are enabled or not. This 64-bit
++   * register is mapped to MSR register [MSRC001_001F] and its upper 32 bits
++   * also to PCI register [D18F3x8C]. That PCI register is in config space of
++   * bus 0x00 device 0x18 function 0x3 offset 0x8c.
++   * AMD Family 17h-18h:
++   * EnableCf8ExtCfg bit [0] in Core Coherent Master Configuration Access
++   * Control register mapped to PCI register [D18F4x044] controls whether CF8
++   * extended configuration cycles are enabled or not. That PCI register is in
++   * config space of bus 0x00 device 0x18 function 0x4 offset 0x44.
++   * AMD Family 19h+:
++   * Not supported for now, seems that EnableCf8ExtCfg bit is by default not
++   * enabled and documentation does not specify where is this register located.
++   * Public references:
++   * BIOS and Kernel Developer's Guide (BKDG) For AMD Family 10h-16h Processors
++   * Non-public/NDA references:
++   * Processor Programming Reference (PPR) for AMD Family 17h Processors
++   */
++
++  memset(&d, 0, sizeof(d));
++  d.bus = 0;
++  d.dev = 0x18;
++  d.func = cpu_detected < 0x17 ? 0x3 : 0x4;
++  off = cpu_detected < 0x17 ? 0x8c : 0x44;
++  bit = cpu_detected < 0x17 ? (46-32) : 0;
++  reg_name = cpu_detected < 0x17 ? "NB_CFG1" : "CCMCAC";
++
++  a->debug("...reading %s", reg_name);
++  if (!conf1_read(&d, off, (byte *)&val, sizeof(val)))
++    {
++      a->debug("...failed");
++      return 0;
++    }
++
++  if (!(val & (1 << bit)))
++    {
++      a->debug("...EnableCf8ExtCfg unset");
++      val |= (1 << bit);
++      a->debug("...setting EnableCf8ExtCfg in %s", reg_name);
++      if (!conf1_write(&d, off, (byte *)&val, sizeof(val)))
++        {
++          a->debug("...failed");
++          return 0;
++        }
++      a->debug("...reading %s", reg_name);
++      if (!conf1_read(&d, off, (byte *)&val, sizeof(val)))
++        {
++          a->debug("...failed");
++          return 0;
++        }
++      a->debug("...verifying EnableCf8ExtCfg");
++      if (!(val & (1 << bit)))
++        {
++          a->debug("...failed");
++          return 0;
++        }
++      a->debug("...passed");
++    }
++  else
++    a->debug("...EnableCf8ExtCfg already set");
++
++  /*
++   * Set CF8 address to the first register from extended config space (0x100)
++   * and verify that address was set the correct value. When Cf8ExtCfg access
++   * is unsupported or not enabled then CF8 address bits for extended config
++   * space cannot be set and are hardwired to zeros.
++   */
++  a->debug("...verifying Cf8ExtCfg access");
++  intel_io_lock();
++  tmp = intel_inl(0xcf8);
++  intel_outl(0x81000000, 0xcf8);
++  val = intel_inl(0xcf8);
++  intel_outl(tmp, 0xcf8);
++  intel_io_unlock();
++  if (val != 0x81000000)
++    {
++      a->debug("...failed");
++      return 0;
++    }
++  a->debug("...passed");
++
++  return 1;
++}
++
++static void
++conf1_ext_init(struct pci_access *a)
++{
++  if (cpu_detected < 0)
++    {
++      a->debug("detecting CPU");
++      conf1_ext_detect_cpu(a);
++    }
++  if (!cpu_detected)
++    {
++      a->debug("\n");
++      a->error("Unsupported CPU for Intel conf1 extended interface (requires AMD Family 10h-18h).");
++    }
++
++  conf12_init(a);
++
++  if (!conf1_ext_setup(a))
++    {
++      a->debug("\n");
++      a->error("Cannot setup Intel conf1 extended interface (probably not supported).");
++    }
++}
++
++static int
++conf1_ext_detect(struct pci_access *a)
++{
++  if (!conf1_ext_detect_cpu(a))
++    return 0;
++
++  if (!conf1_detect(a))
++    return 0;
++
++  if (!conf1_ext_setup(a))
++    return 0;
++
++  a->debug("\n");
++  return 1;
++}
++
+ struct pci_methods pm_intel_conf1 = {
+   .name = "intel-conf1",
+   .help = "Raw I/O port access using Intel conf1 interface",
+@@ -306,6 +523,18 @@ struct pci_methods pm_intel_conf1 = {
+   .write = conf1_write,
+ };
+ 
++struct pci_methods pm_intel_conf1_ext = {
++  .name = "intel-conf1-ext",
++  .help = "Raw I/O port access using Intel conf1 extended interface",
++  .detect = conf1_ext_detect,
++  .init = conf1_ext_init,
++  .cleanup = conf12_cleanup,
++  .scan = pci_generic_scan,
++  .fill_info = pci_generic_fill_info,
++  .read = conf1_ext_read,
++  .write = conf1_ext_write,
++};
++
+ struct pci_methods pm_intel_conf2 = {
+   .name = "intel-conf2",
+   .help = "Raw I/O port access using Intel conf2 interface",
+diff --git a/lib/init.c b/lib/init.c
+index d20cb9b3096a..92d2ddcdda56 100644
+--- a/lib/init.c
++++ b/lib/init.c
+@@ -168,6 +168,11 @@ static struct pci_methods *pci_methods[PCI_ACCESS_MAX] = {
+ #else
+   NULL,
+ #endif
++#ifdef PCI_HAVE_PM_INTEL_CONF
++  &pm_intel_conf1_ext,
++#else
++  NULL,
++#endif
+ };
+ 
+ // If PCI_ACCESS_AUTO is selected, we probe the access methods in this order
+@@ -189,6 +194,7 @@ static int probe_sequence[] = {
+   PCI_ACCESS_RT_THREAD_SMART_DM,
+   // Low-level methods poking the hardware directly
+   PCI_ACCESS_ECAM,
++  PCI_ACCESS_I386_TYPE1_EXT,
+   PCI_ACCESS_I386_TYPE1,
+   PCI_ACCESS_I386_TYPE2,
+   PCI_ACCESS_MMIO_TYPE1_EXT,
+diff --git a/lib/internal.h b/lib/internal.h
+index d889735cf7b4..acc797079cea 100644
+--- a/lib/internal.h
++++ b/lib/internal.h
+@@ -141,7 +141,7 @@ void pci_free_params(struct pci_access *acc);
+ void pci_scan_caps(struct pci_dev *, unsigned int want_fields);
+ void pci_free_caps(struct pci_dev *);
+ 
+-extern struct pci_methods pm_intel_conf1, pm_intel_conf2, pm_linux_proc,
++extern struct pci_methods pm_intel_conf1_ext, pm_intel_conf1, pm_intel_conf2, pm_linux_proc,
+ 	pm_fbsd_device, pm_aix_device, pm_nbsd_libpci, pm_obsd_device,
+ 	pm_dump, pm_linux_sysfs, pm_darwin, pm_sylixos_device, pm_hurd,
+ 	pm_mmio_conf1, pm_mmio_conf1_ext, pm_ecam,
+diff --git a/lib/pci.h b/lib/pci.h
+index db0477d385bd..def8222123db 100644
+--- a/lib/pci.h
++++ b/lib/pci.h
+@@ -57,6 +57,7 @@ enum pci_access_type {
+   PCI_ACCESS_ECAM,			/* PCIe ECAM via /dev/mem */
+   PCI_ACCESS_AOS_EXPANSION,		/* AmigaOS Expansion library */
+   PCI_ACCESS_RT_THREAD_SMART_DM,	/* RT-Thread Smart pci */
++  PCI_ACCESS_I386_TYPE1_EXT,		/* i386 ports, type 1 extended */
+   PCI_ACCESS_MAX
+ };
+ 
+diff --git a/pcilib.man b/pcilib.man
+index 0e4fe1029c5e..eb600ef11111 100644
+--- a/pcilib.man
++++ b/pcilib.man
+@@ -35,6 +35,10 @@ to all users, the rest only to root.
+ Direct hardware access via Intel configuration mechanism 1. Available on i386 and compatibles
+ on Linux, Solaris/x86, GNU Hurd, Windows, BeOS and Haiku. Requires root privileges.
+ .TP
++.B intel-conf1-ext
++Direct hardware access via Extended PCIe Intel configuration mechanism 1. Available on
++AMD Family 10h-18h CPUs. Requires root privileges.
++.TP
+ .B intel-conf2
+ Direct hardware access via Intel configuration mechanism 2. Available on i386 and compatibles
+ on Linux, Solaris/x86, GNU Hurd, Windows, BeOS and Haiku. Requires root privileges. Warning: This method
+-- 
+2.20.1
 
