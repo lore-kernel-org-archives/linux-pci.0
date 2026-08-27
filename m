@@ -1,50 +1,51 @@
 Received: from CY3PR05CU001.outbound.protection.outlook.com (mail-westcentralusazon11013070.outbound.protection.outlook.com [40.93.201.70])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B91536D51F;
-	Thu, 27 Aug 2026 20:32:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA9E2367294;
+	Thu, 27 Aug 2026 20:32:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.201.70
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787862730; cv=fail; b=SPmcIEn2yiH4tTqBVVOuEPdzlWcKiW4j+Ig9IJVBr7eU1yTpyRSy93pPMyT/LJ2N35IMaO2B0wQYgXPGN/rCHndgxb9ntzIZwb3/mhqTh9Q536ct+AIcJ/n60EZ+mUqPkUI+7bexaIzQE7SkNemvavnkAPPPSA0yFzCnK00wXNU=
+	t=1787862733; cv=fail; b=lieoXXjAWh/xSaSLcIse3WS8CeHwmdvPp4yNATfLzlIu2eqzeCjdc42lnhQnIohXcc/pAwGLHXAzZSAPUx5m2aMhh3lFGgeRECXFGB5kHWD4Z8kxNDKug9yiMwLAThXq7ZwwJN+J8ToUn6l1CkQKgfzJyPWl00b0hoCqtb0FCdI=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787862730; c=relaxed/simple;
-	bh=S81vJhgQLFuc/D5aYLcmrP4gDAMg87tU3zsljK6AzgM=;
+	s=arc-20240116; t=1787862733; c=relaxed/simple;
+	bh=7NGnNRa5obwtUPQJ8GqqsYhUCXRvremPR62XVn1de80=;
 	h=Content-Type:Subject:From:To:Cc:In-Reply-To:References:Date:
-	 Message-Id:MIME-Version; b=LRnjaWLdZe+SbqvTF+giyCu+zHzs4K2LN2UkWRK6VKc3aOFtg1nu5DD9sFOGSL/jkuaCn738gZYVv6jUVN7R+in2qElLb30L5eilvRtL2YaU+xa9y+6Vx5v8Hfo+mrIdn/m6O/09/EiNFK5/emLFz8uTjGkDBR5VxAzF22D467U=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=TE/PUZSr; arc=fail smtp.client-ip=40.93.201.70
+	 Message-Id:MIME-Version; b=qopajTgdnal4/5KnTJSoXaYnXQCWyU8DKO+xoTfXNqLlKa+E0bguu4s2wKb+ZExUuIICC0oWdn9uMAWqSs/FaVX55d7jq8x8kqOAi9lprm8pQxjI01pZj1bTd4WgCfKQqHDeGiBP814AOXoFTdmOr2L0nKhSX4h0YNuWm4yHTrU=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=RGEAIRDM; arc=fail smtp.client-ip=40.93.201.70
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="TE/PUZSr"
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="RGEAIRDM"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=Ll4h6tmr8Dt3yPWvPz+qD+NBenpeZdEZGfZqSSAoHNDeCneFaYDY0pDStm9Q5viCbQG4oWJzcJ4CDyMBV9OpaNEbWllvkJa4ODOo8HavioGfDOIvSaWwGa+ecBO0dllyR9dNi4owMgC6lnOjMSYJwKilXHYanN9zBCC0LkAg/LH449BZcTmEri3SpDuJ2qW1o40dOUUPtrqgBlqhbjKrv0G4eJl4zIiwa4+2kcdyfZ87Jk0mZd31iLOySDQoGQybRfzJhizRXCk2pYaHqyw8zBgKXvxtUzZH43hACz0ktvIFr07PKF19Ytdowr5+mkaYeANTJW8OapJWexnEGV4CeA==
+ b=eO27QzxUS4lgiHG/JWnCDC2dFqiq84uLxwuA1Gn57YTXCa5EVkfXwtOCrFO4yPlrLLYwDw6s9TYso2yrVDNbXhlG0GOtWt0VzuvqnUC3o5/fOPEGHn+45tib4FooJf32pLcgWx5WvKe/Gn633tpH00GirPbZkwYM0LhSVoz/hjE+HTi+dN5Q2xPo1d3z5VmKXTysEsci3NzNHHrZM1SIadr8UUOsCA9qxUqbPP2z+QPVB+DaRAFnMz5jDAQoKnfB0R+2wrkspdTQQ1bmXxZDFWH3LgENbUzdHp5DazJ1LOOX5ymCLsGtolWxQEjnmBVOg6hT8NdYSQuab4d6REmodQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=IMYaBezDQvPcj/C0k8R2h7Dr076jQEwDunBCJUP6fQY=;
- b=AwTR4LmqKlCiTPHgRhLJhUSUR39y3hfxAQmIsCwfrlvHXeZ7eo5jQsZ3kPZ4s5nL0Blp5fV1Vi958SlZCa5TjrpZ3tmTdhvEU46hR+NWOCJ3QH9oQ+Y+KI2sNGJnc5mxhOKd0OuTTdpqudHtzeCqvljw5Cp7jWI7pHt7M3RlOaiFJwbNci5IGW8U+CD8UcroExBSWiZWk+iiCU8qFzbrmZ54/0V853pWiF4ajxr/Ei0ao96CXYaluD/FEiJiTlWQvkJmsIxpd2FHVzPrhBV7YubUl/C2icfX+disZG7tdiJjVL88NzMLWirnLrLmtAq6ACrmxKMFNXDcDMyE6QlDeg==
+ bh=+cCPFh/zfu1Etj1KWHhIlBfN/zJwgr/1LOaRF6VtRFI=;
+ b=cZ6SYw8Tvi8rqGbwHNbbdaicbWE7ruR7JCl3rqjK2Gv2FjvMfzBhRNJMnsf4ao62fJ71eGcG7vubE/j1ayf7NnYhrl+jcv9SbORFRaEqUZJCn+ZZxKIb86JOHtm9La8NRaiMpXVi4XtIz+/wwBF5YY0B5lviYE4n0ZvZX3buDhDee7WtYYRqsAzHw5HhM9TZ7i2UJCrIqCbgi4eh0GUjLeLRGqn02B5/dzQsjuGUeUMKDbHUGesVomBtiRjJ0so4yq3yfTpFg01uKG7Rd8nr0HO9W4/6+M4j49NrPv84L1mx0m/fb1pLgrUn5Wl9fNqOUayU+Rb3p90nOPsUZfD96g==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
  dkim=pass header.d=nvidia.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=IMYaBezDQvPcj/C0k8R2h7Dr076jQEwDunBCJUP6fQY=;
- b=TE/PUZSrQ5NcpM3IHriEYYp4hg7yyeiCYQt8aTOkPZPRktAyq/o2SE05k66d4FPDvxFKT3cefPofNrgKvw6HfaYlIOqDEO0NvRmt5U1ykCmgl+rbUQgT9Vu2vgVOoYMTKsXzyVersCijLaH6g5k1HlAlwOjQErYTUEgmwKQwlOifcOf/26+sJeokmyMr8ZJNnlIzNe4MHc4ouGjmb6lsHTyU1cA8BVo7IpPSBnVCCVMLl5upmYeCVTfUxqhFNlqQXh7MPak5MINyD6jVxu+c1nr9DTnAcwkd230OypB7wOtHDf5vnJzs93Bjc9KBTyu4m5mRw9K1p7KQ2BFN7q7oqQ==
+ bh=+cCPFh/zfu1Etj1KWHhIlBfN/zJwgr/1LOaRF6VtRFI=;
+ b=RGEAIRDMGw+RTqb0iProAtbQo3IRnacuK0SLB5fBnJhdxif2qpnYQyLqo6A9eSkzvj90Pd8ryclIxbxla74p9Gw+Cv6Y//UCIJH20PfKUUp6B+TmIz+jxbLcSWfthrR0eHQspTH0XonTGB7UERgjPAgK8znHreQg4ov37pwFlo4KdFcynhtJzQmrzf6e9FME7fSrN4Md2Nm5llG0OHHBC12wLRSxz5f83Vsb/LtBGb3uB6pKe2FDYKSZuv+fzXMOyiSu3tcWCepklSp6ScTxESBFjInXy1RdYJ8/gr/1L3v1zxVwaqeqNC9J9++dU8GXWQ88EPyqTmiBIOr3jAf55g==
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=nvidia.com;
 Received: from LV8PR12MB9620.namprd12.prod.outlook.com (2603:10b6:408:2a1::19)
  by SN7PR12MB6839.namprd12.prod.outlook.com (2603:10b6:806:265::21) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.315.13; Thu, 27 Aug
- 2026 20:31:38 +0000
+ 2026 20:31:39 +0000
 Received: from LV8PR12MB9620.namprd12.prod.outlook.com
  ([fe80::299d:f5e0:3550:1528]) by LV8PR12MB9620.namprd12.prod.outlook.com
  ([fe80::299d:f5e0:3550:1528%4]) with mapi id 15.21.0360.008; Thu, 27 Aug 2026
- 20:31:38 +0000
+ 20:31:39 +0000
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH v5 03/18] PCI: Propagate FLR return values to callers
+Subject: Re: [PATCH v5 01/18] PCI: Don't suspend IOMMU when probing reset
+ capability
 From: Jason Gunthorpe <jgg@nvidia.com>
 To: Nicolin Chen <nicolinc@nvidia.com>
 Cc: Will Deacon <will@kernel.org>, Robin Murphy <robin.murphy@arm.com>, 
@@ -56,14 +57,14 @@ Cc: Will Deacon <will@kernel.org>, Robin Murphy <robin.murphy@arm.com>,
  iommu@lists.linux.dev, linux-kernel@vger.kernel.org, 
  linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org, vsethi@nvidia.com, 
  Shuai Xue <xueshuai@linux.alibaba.com>
-In-Reply-To: <b00acbe0755fa5999491368eaac26a78d522e2ed.1783044582.git.nicolinc@nvidia.com>
+In-Reply-To: <6dbbbbe30cdc08a467de893fb9ecdc07d9cc1fec.1783044582.git.nicolinc@nvidia.com>
 References: <cover.1783044582.git.nicolinc@nvidia.com>
- <b00acbe0755fa5999491368eaac26a78d522e2ed.1783044582.git.nicolinc@nvidia.com>
+ <6dbbbbe30cdc08a467de893fb9ecdc07d9cc1fec.1783044582.git.nicolinc@nvidia.com>
 Date: Thu, 27 Aug 2026 17:31:31 -0300
-Message-Id: <178786269177.3808739.6763094519382046767.b4-review@b4>
+Message-Id: <178786269177.3808739.6471040051117543556.b4-review@b4>
 X-Mailer: b4 0.17-dev
-X-ClientProxiedBy: MN0P223CA0022.NAMP223.PROD.OUTLOOK.COM
- (2603:10b6:208:52b::23) To LV8PR12MB9620.namprd12.prod.outlook.com
+X-ClientProxiedBy: BL1PR13CA0083.namprd13.prod.outlook.com
+ (2603:10b6:208:2b8::28) To LV8PR12MB9620.namprd12.prod.outlook.com
  (2603:10b6:408:2a1::19)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -73,97 +74,115 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: LV8PR12MB9620:EE_|SN7PR12MB6839:EE_
-X-MS-Office365-Filtering-Correlation-Id: e1256b28-6e0c-4677-03a3-08df047a3020
+X-MS-Office365-Filtering-Correlation-Id: 71b24b5c-9ce0-4be4-5ca2-08df047a30aa
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|7416014|1800799024|23010399003|376014|366016|10067099003|4143699003|18002099003|11063799006|56012099006|6133799003|22082099003;
+	BCL:0;ARA:13230040|7416014|1800799024|23010399003|376014|366016|10067099003|4143699003|18002099003|11063799006|56012099006|22082099003;
 X-Microsoft-Antispam-Message-Info:
-	fSCRs22Oy4fICNypF/t5G5rcsbBvoP3FCHo8wlc/IOauVMAlOkPlMsx8jek9TwXJpWz19LGQUKXj1oLoBg3ZcK9pKXI6d/6drz80R/T4rkrQ/sif8lQMoH3PfBffnxk9OhYhK7kUbyDGRbHpLTlDMaN27gm/YMWBRD+KQi28x3VGhEqKteYKZGzkxCFiloSXFGwPzKsXE3o7Y5avOIvUv3GbEpy7Dl3BMt5G7CnC1ETc2frHtCTeva93s3qduLRHXlkRaRTjMaBkeAWW95ZwNr8BzqXEovu8c/JyLf+qyMXctwgZZfAHeYvOGBjmQud/GxWeVVU5938xM93gpgqPKrS5mIzlFX0nBvNzy34hkwGKCan9IZI3h9B+Q4Ow7Yqhh8wx6+Hs/pCtSgQLVOr/dzRkbmZFbD2n5V67TedKRrbig/teOcP+jg8eUIRphca061v9h8JbxoPl5qpagxaM6VpylmhMc2sAz0gYawn3joiqNnQi1Je/7oTORILdVKBerTYvSx8aNCIRHER9qtdDqcRlXmFfvu/0VTPo5GlO9yaOnPEscuv3wZDY/aEHjqu8OAHSJJsY5OV0gpMlgAZxzwFs6LZvcE2tB2s/eo6lTgqBFpI6KtNQJKjnAj+NiiK8SLclJ/6LOw/5sam/j+30DzkVjBlF1KyOrtL4pzlCTxo=
+	sDrI6yMIava4YisZfIxHNuM4yxeo7Rw9dShdQe/CqZvsXBy5NSZQBU4NkHyhTih0cPIpIvng/cOV0TA3sdGdwtFqnSKnw6gSVyTajQ+yQMx5PKx9P7xHUP+nROJvSQA/JIcJx/ssbWbwOZTcDv8iEE4kl0OiiFoFf4paCJ3yr1gmjs+UrymfhVvwejyUfrUZqNcGHCN9NvMTnpc164tcpXtzGSG7sDuBk8PcEAZtdBenb3vUzp4HeC4A+oa2AwSs6YXVvmqcS0s/E0I2lHYr7Z40AjZ/c2u3ZpZ4I/4UXPSD3yGPYitQfgoCPSY647c+RJcZpMiPXJ4RTr49IdRe+q2SUko85LF9LylAmKm3J8c4zySYLLXw1svLild10nEU6+0p9V067J5cVZ1o9CeMcYFp8fmprugjfJIt1dauDyYoKTocX5U+uT/oorJN2jA+MU3h3Z5tqNtCuWP2nfSptZbm6C+lRyvUsKdrO9M1lB3GDcefVNt0bFZhvmFgBDeA6h9xF7G+4YJFZ5QWw3glgUZMZ2Y3c7Si+oJmRoQxBj34cu74N16Q37UoWua6p/WjCE245K5PhxCCgXFrSl8Z+8f/lHuMk9NG2Bf3o3jDD8JZYRj9VXdo6szJS76uGDvoGX7+0SYlRThVyTnmdBpEG+w+mpM60TW1gpQauFlDX1g=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LV8PR12MB9620.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(1800799024)(23010399003)(376014)(366016)(10067099003)(4143699003)(18002099003)(11063799006)(56012099006)(6133799003)(22082099003);DIR:OUT;SFP:1101;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LV8PR12MB9620.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(1800799024)(23010399003)(376014)(366016)(10067099003)(4143699003)(18002099003)(11063799006)(56012099006)(22082099003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?dHhOUDZraXhTYlJ3TDdVcy9PZUp1RzEwQ1B2TUo2aDVPWS9VbmhSRzhEaHpU?=
- =?utf-8?B?TzVaV1JGSjBVNWZVQ1B3bTFhRVVDQWlNSU9Zd0M2a3NMNnJrb0pLWlJ4Rlla?=
- =?utf-8?B?S1A1WmdUMlhlTkxPTnBMOEZGa1EreWZRMFRqVjVaaTdEYm1kMjAvQU0zMmJI?=
- =?utf-8?B?Y0pmWXh3MHk4TFlnZ2tPV0JjRVl0QmtpQzhuektYZXV2dlRnT0hQLzIrWURN?=
- =?utf-8?B?eVVOR2VSK21MZWpiQjgvOExQbzgzYXE4RGsvWURrSk1PK0k2eGMvN0lGWFY2?=
- =?utf-8?B?cG9iU044Tmk5Mk9wV2hHaldaRldYamtXRjNHOHJqZVN4NkI1WW82VElnVURu?=
- =?utf-8?B?SUlnUEQrZUJGanN0ZEYvdTVQR1RadFc2UnhWZWx4L0hGM0F2OXFvV2FTemI2?=
- =?utf-8?B?V2FMZm5Zb0JxV1FTTDJzb04wZ2ZIbjNGNUx6ZTJFMkd4ZW9rc2hUdHM3ZWhW?=
- =?utf-8?B?SmFHd0ZVd2RTaTFvcWk0ZTJvMDIzY00vSUROd2JtU2FDSDNhYkNFMms5aENV?=
- =?utf-8?B?aGs5c3RteWF5VmF1enVoS280MVcvd0FvTTlSdW4vc1NOdnBndHZFZEphY2Ji?=
- =?utf-8?B?SzlaNytVL1l3Z3FKaTVxcTMxVC9wQ3RNUmFpSzQzQ20vdTZ3V0hGdjJhNXVv?=
- =?utf-8?B?dGJIOTJMSXk2bHkvRmtPVytvZlM0ZTQ2bjFGZWZ5MW0wNkdDS1BqMEdITWhr?=
- =?utf-8?B?cXVkL29PbW5FSERpdkZzZXFJbDhBbDhsc25IaEg0Z3pQN0RDeE16aFg2bG5S?=
- =?utf-8?B?WGI5dlJ2K3JsUlNYWlFScnYrd1NTQU0yTWtsaDNLbHZXc1FtK0lxdXRGY2hN?=
- =?utf-8?B?MkE2V2tUTHBpaUtPcnBqd1dwc0ovbFk0d0tOeEYwOUQ0N0NVdWgyTmwzai9O?=
- =?utf-8?B?aEozUjJnQjV1OFc3NnY4NklLVnVCdGJwMTJJUGlyS0VrYm5RUFg0Y2I0akVu?=
- =?utf-8?B?enZrZ0JsWVhXdGhpNVpXcEJhZk5XMThMdXhyWE1DdndyVno2eGNYR2Uyek1m?=
- =?utf-8?B?TFlnQXhLMXFNYlVqTTFvbVo5M25MZS9EclB5SWhxTzcwV0tXSnpRWGp4cThj?=
- =?utf-8?B?MDNraGN6dmtYMk1kaVhwQWprbG1iajdZTkVoUHlMc1RSRGo3NVg1eTUybzNS?=
- =?utf-8?B?TExUS25xRGoweWxtOE1wTDVOaEViK2lRbGxBT2xGQXhwOWZMM2xRRnRsUzJL?=
- =?utf-8?B?TkhJdE5oWExBN1lqNmE5VG5nS3RXTC9EUE5FUEc3NUFuQzZPSE0waG4rSHZ6?=
- =?utf-8?B?MW14NmtvcmtyVU1qbEJmbUpnSCt1ZGd0RzBPZCt6b3laZkVPdWt2VzZFTDA3?=
- =?utf-8?B?bnVTT1k5MWM1ak5GaUt0RW1DbmVVaGk4YjFkcDRzV3FCQW45OE5BaXNKaUdw?=
- =?utf-8?B?TnB2TjAzcW5xWFZ1eWVlSEpIR2xUTFFacXhzOGVXdDJYYlloQnpPTFAvODdk?=
- =?utf-8?B?eXh6K0YzMFhsSnhPeXR3cjc3eXF3VVRqS1VSM3pMbVNPNVVqMitGUnord2FZ?=
- =?utf-8?B?cHd6NGN2QmNLWW91TlFid1k5R3dEZlU1ZU4ydXVUc3hWQm4vSFphZy91T2w2?=
- =?utf-8?B?WVJMb2M1RWtyOWlDUkFHbmUzVGZ5S3ppOUdNb1BJUlpTcGVXMDBpTHBxWjRG?=
- =?utf-8?B?UWNUeTFtbXRjY1E1K1ZtZGpZUUYxTFh5WXBrdC9GNnNwMytISTZKeEpueVhN?=
- =?utf-8?B?cUFqbWptVEF4d3dONVRKNDJjZHM2Qkgwc08yUjV0eWZ1WVkwbDJ6UE85U0or?=
- =?utf-8?B?Y2J6L0dnMjlrU0R5d25SM3pPZEpESjNWV2NSUlhSUGI4TlJOeUo0SCs0amZ6?=
- =?utf-8?B?Y0c0N2gwUFI3WkQ3dzViclNyUmhOU2FCR0hRdklMOHFMMzdJaldUSHQyUnY4?=
- =?utf-8?B?MThwVWVDT1pzTnBvbWUyMGcwcVJoZnZ4TWJyY3BCSktmVExlTmJXdmd1cnRP?=
- =?utf-8?B?L1g3Y1ZCQXpQWGV1SUgyK1FVYTNpbTZLL3JZcURWVmVZVVlTa0FlVXcvQ1A5?=
- =?utf-8?B?MngreWlMRitmL2lmSlNoczlaZmR1NG9MajRYVXZvK0IxQkZXUGE2cUM0Wk85?=
- =?utf-8?B?VWJEb3g4ZjZOKzlwY1dHTWcyOEU2dWZHSy9MU3RSeHlvT3QxcEx2K1JnNm43?=
- =?utf-8?B?eDlrNFlna2tNNzFxT0NHTitMN2hCRmJseVlybVNDNEVWd3AwMlFvQ1YrVE5m?=
- =?utf-8?B?QytvOXJnYVlxZEk1M3FlTVUwbVNlUU84S3RlTFZWSjBvcFFyYmpOK3Rockgy?=
- =?utf-8?B?MjBRb3I4ZjlySmszRyt5M2puUHlmdmZLb1ErKzdWK01hQm5Fbzg3YVNlR3FG?=
- =?utf-8?Q?bMVoZtkQ7m7fs5tYn1?=
+	=?utf-8?B?eEVLZE1FcXc0bDVGR3pYbkMzdGNzMDRLK3NFK1A0NDRnN0hYcEJRNDlTYTdx?=
+ =?utf-8?B?cnJOSmxGZGhYemRSYlNyNUVWZTE1WGpLMFJDOTQwamdLUTc1SDZBRVN5dGRG?=
+ =?utf-8?B?d2QrVy9MY3JVSHRpczgvNmlaRmpqMU1vS0RZenpsR011SkVzSjR0TFFjK0lY?=
+ =?utf-8?B?UEQzclErNTB3Um5mMllUekNYSTFDVGdFaEt5L2M5VzZCV0o2cjlDMXh4SDBP?=
+ =?utf-8?B?L0syTml6QVBKak9WY256NkxSZ21KWUJ3ZjUxcERLQk9CZU42THBmTDIrN0Yx?=
+ =?utf-8?B?OHVhTjcrZWFUUWU3TS9EMG5vS25DeXA4T3hVSXRUQ0F6bU5KMFVyMC9HWmJJ?=
+ =?utf-8?B?cVljT3JJYS9aUTMyckRmNUU2NzczRTl2bTA1NzJvVTVXZjBRdndobDd2Wisw?=
+ =?utf-8?B?YjdCSzNMS0JNbHhlSWpHT3h2bEt3REpaak5iWkJwRjU2Qnp4N3J6TjMyZ3NH?=
+ =?utf-8?B?WjM3S0NEWVlSR25rZkNzT3Fod2srUEFXYzlNNkR6RVZYM1NvUEtBUTJwWTRt?=
+ =?utf-8?B?YjIzblZqTHd4Nm9xQUpDOERBRXVPYVlCWDFpTVFPejRaT3Y2eG9wQzVjYXIx?=
+ =?utf-8?B?OVZxa24rbThMUmlDR09DQjViTWhwNUw2WTFMaW04QlBydjNnam1qQmxYaUVG?=
+ =?utf-8?B?Vm9IOGowS2NZczFKRm9OanNRempLd21YeU5HS2hhdVVsSmNLc0luOWdtdTBZ?=
+ =?utf-8?B?S25xRWF2MC94aVZZU2tMM0ZqcjI4ZFcrd25PUndCUWVvSjVQcXlnOW92ekdt?=
+ =?utf-8?B?MDZ0REl0bEtQVmJPRFlPV0o4MWxoazF3b0VxVm0wNXcrelpITER0YkJBVmRp?=
+ =?utf-8?B?OFdWT1hXdEFKSzdaMGdMQ011N2tGV3dlMTBZSGxTOWdUcTBucmJmS2Z0SDlM?=
+ =?utf-8?B?eUNxS3A2d3IrS3ZrdHF0b2owUnJLaW9LUlJ6K1lTSENseFd2RWZHL2F3cHZ5?=
+ =?utf-8?B?MXY1cXcyOVlQdlpWa3NNMCtMTDMySkNEMG9oOWI0cWthYUdkakJMOXJZWWhL?=
+ =?utf-8?B?ZW10RktwQUNtaCtCOE55U3FLaGhDeXEzNXFzYUpLWXBvY3hFNFRwT1VhME1G?=
+ =?utf-8?B?SjFkb2VpYy9oeGxPSzBvekxjSitPckxUbE8rYi9mR2ZBSDkvN0M3V0xUOFlq?=
+ =?utf-8?B?ZStkQ2V3OXN0Mk92QVZkRWI0TGliNHg5WnVmc1AyQ1piR0RKR3puM204Z3NP?=
+ =?utf-8?B?SU1WSkhOa1VQbUtrdlNwamRIUHE3WmFhUEpENEpOcnNrdFpiMUNxOTg2Z3J6?=
+ =?utf-8?B?UjhsQnd6QUFSMWlTcnpWR2k2MmE0TXVqSGwwb1FHak1Jb2FzNU0zSGNQNWVW?=
+ =?utf-8?B?ZDNpUDAzbDlYdXR6WFN2Uk1QMGQ3ZGJ5NWJtcjVoWjR1dlBYZ2MraXdJTHNa?=
+ =?utf-8?B?THF6NkUzUnpIelZWWHkvczAxd0hLRnJaaEc5bFp4V3NsUHpmcTA3cEZKam8w?=
+ =?utf-8?B?NWhYS1pndXNpZTAzY2pjT1k2emFUWFREOG1pY3cwc1pVUFQzUlBITW5qSDVu?=
+ =?utf-8?B?TXdlMGVpOGlmYmNXOXJ6VFdTWFF0NjVOMnByQU5SZDM4bFAyY0NtWW93T1pU?=
+ =?utf-8?B?YjJaMkltYW9DYUQvWHRKZ3dSWmZwOGxVSWg1V0RsaVdXTFlMK3JDNnpYeEEz?=
+ =?utf-8?B?NG1TR1FZZGFuS3NPTUxqQTB2UUJnb1VBTU9leDdWeDhxMG13dS82enZSanpn?=
+ =?utf-8?B?Nk9oenZyTis4NXJ1U3gwTVhuemJLaERxYlRHalpScHM5WFdnR0FOMkVYWkNR?=
+ =?utf-8?B?cm1YSmxmZ0d4OWtYa2NaTWZUZk1vZ2t1bG9aRTlTWEx0bFpHTEk5ZnhxMkVH?=
+ =?utf-8?B?U2I3Ry82U09RcnljSzRra0FHd1o5dHU3WjJTMEVlSWVpSVdhQ1NHZXRDTVp3?=
+ =?utf-8?B?NDYvOUNUelZHejhnNlF1elNtdlpLb1VkOVJUQ0xoS3RlQmtJaStxRWdXL0Ux?=
+ =?utf-8?B?VEUrcisyb1dPUW5ES1NzNHdhMTJBbmtyWjU2MTlrQkFzWDlBamVXa09sY2Ja?=
+ =?utf-8?B?RndaN3kzUUx1bE5NalJmMjNXSk1wWCtMbk1CME5yWVU3SHpTcDVlVVc3SlpS?=
+ =?utf-8?B?RGNNRmZZR2tCeUR5OEJXUXJHbzVLZFlVM1lRaUhzSkM1MVN4VTR5anE1MW9D?=
+ =?utf-8?B?TDVNbC9jWWVsYkgzQWx2RDB4YWNteldiNHJCQ2NFWW5uUWlpRm5Da0xsakFO?=
+ =?utf-8?B?bVhzMzlpSmN6Q093aDRNN3ozUVJZbUVTY3VxcWxyS0ZQYzBBVjJRbkNIYTJB?=
+ =?utf-8?B?OGNRa2llT29VWkUwQmd6emR0akVVZUVLL0JyZU5iVXI4T1Raa1JZcjlzMnFM?=
+ =?utf-8?Q?TZx9/LkjIYX26WDHPO?=
 X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: e1256b28-6e0c-4677-03a3-08df047a3020
+X-MS-Exchange-CrossTenant-Network-Message-Id: 71b24b5c-9ce0-4be4-5ca2-08df047a30aa
 X-MS-Exchange-CrossTenant-AuthSource: LV8PR12MB9620.namprd12.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 27 Aug 2026 20:31:35.4101
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 27 Aug 2026 20:31:36.1159
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 5y2tsds8QOtkD/E81ffjusvaDXkDoiKZca+kvsx2or6Jx1sc8MOt1gEjjHqX7gHd
+X-MS-Exchange-CrossTenant-UserPrincipalName: g+vPdUSI4O1n1z5S8m2IsIs/cT6PUrx7dw+sFmtKGxR5bFDEt8hk1SIpPb/GLR7g
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN7PR12MB6839
 
-> [ ... 24 lines skipped ... ]
-> Since these quirks have always returned success, escalating
-> would be a new and harmful behavior: the next method is typically the plain
-> "flr" method, which would re-run the same FLR without the extra steps the
-> quirk wraps around its pcie_flr() call. Add quirk_flr_err() converting that
-> -ENOTTY to -ETIMEDOUT, so the cascade still stops at the quirk as before.
-> The early "not applicable" -ENOTTY returns are left intact, and they still
-> ask the caller to try the next method.
-
-This seems like a very suspect AI conclusion to me.
-
-I think I'd drop this patch
-
-> Convert it at the quirk level rather than in pcie_flr() or pci_dev_wait(),
-> because those also serve the native "flr"/"af_flr"/"pm" methods, where the
-> -ENOTTY on timeout is deliberate per commit 91295d79d658 ("PCI: Handle FLR
-> failure and allow other reset types"): a timed-out native FLR escalates to
-> a stronger reset (e.g. bus reset), which skips no workaround there and may
-> recover the device. Converting in the core would also change the value seen
-> by every direct pcie_flr() caller.
+> reset_method_store() in drivers/pci/pci-sysfs.c discovers supported reset
+> methods by calling reset_fn(pdev, PCI_RESET_PROBE, ...) without holding a
+> device_lock, since the probe path is expected to query the device's reset
+> capability without changing device state.
 > 
-> This is not a bug fix, since these functions have always returned success
-> and the propagated values are only consumed by incoming work.
+> However, pci_reset_bus_function() and __pci_dev_specific_reset() violate
+> that contract after pci_dev_reset_iommu_prepare/done() were added, which
+> moves the device into a blocking domain and abruptly aborts any in-flight
+> DMA. Doing this for a probe -- a state-query call that does not even hold
+> device_lock -- can cause driver timeouts and data loss on a DMAing device.
+> 
+> The peer reset helpers all handle this correctly: they short-circuit on a
+> probe input before touching the IOMMU.
+> 
+> Skip pci_dev_reset_iommu_prepare()/_done() entirely when probe is set. The
+> inner reset routines already implement their own probe semantics, and they
+> perform the capability checks and return without changing device state.
+> 
+> Fixes: f5b16b802174 ("PCI: Suspend iommu function prior to resetting a device")
+> Cc: stable@vger.kernel.org
+> Assisted-by: Claude:claude-opus-4-7
+> Signed-off-by: Nicolin Chen <nicolinc@nvidia.com>
+>
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 77b17b13ee6154..01cf3105405614 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -4946,10 +4946,12 @@ static int pci_reset_bus_function(struct pci_dev *dev, bool probe)
+>  	if (bridge && pcie_is_cxl(bridge) && cxl_sbr_masked(bridge))
+>  		return -ENOTTY;
+>  
+> -	rc = pci_dev_reset_iommu_prepare(dev);
+> -	if (rc) {
+> -		pci_err(dev, "failed to stop IOMMU for a PCI reset: %d\n", rc);
+> -		return rc;
+> +	if (!probe) {
 
-In what way? The quirks flows always succeed and it can keep always
-succeeding. If anyone finds this problematic they can properly
-propogate the error.
+Given this is using this funny enum:
 
-Squashing the error just for quirks makes little sense.
+ #define PCI_RESET_PROBE		true
+ #define PCI_RESET_DO_RESET	false
+
+Was the intention to also use it to sample probe? Bit confusing
+
+The actual change looks fine:
+
+Reviewed-by: Jason Gunthorpe <jgg@nvidia.com>
 
 -- 
 Jason
