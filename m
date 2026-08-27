@@ -1,156 +1,326 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.16])
+Received: from fhigh-b8-smtp.messagingengine.com (fhigh-b8-smtp.messagingengine.com [202.12.124.159])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 98398325701
-	for <linux-pci@vger.kernel.org>; Thu, 27 Aug 2026 22:14:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F4F13D75CF;
+	Thu, 27 Aug 2026 22:37:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.159
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787868884; cv=none; b=i1CyNTasaoTPmvIT3ym+FFheQGmcumaLLw9O8EH2NKaKy6IHo5dTJoUJYewapWbo/89rBfQzTZkvWUcPIY1T5o3edDiHU6ygBfhQuPcwufo0XdSjkQZiF+qCg7MF7+maLIIurvoGtCermmYxrlFe8KL/IlBdfKPD3tzRVpngdYE=
+	t=1787870255; cv=none; b=c6tOntqneh7xj6CjORsvo1VNxVjyT7IBoiEBUYFp6oqTVDTCWhW6yq770N2+SlGRysxGsdch4XmsHMXqfECOk8Ln5gXLmmUxBPbmp2SVwYDmi3wiKc+b6SvIPfljCgvNsDDCPR4Q31qH8OMnVIgPnyO+tW3zgy3jot53mClepLo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787868884; c=relaxed/simple;
-	bh=0FJgbP6g3+qK4B5v4A9pqy/ZRTHo09o+plVMF583VTI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=pNflgCm7wkIA8FLGNeo0KUXoF7DUY/LBnGKfmAP9PbN09CojF6h1SifTI7Kn7Qa53qyVAdhz375ELVneUjrImvr6fEEea4LfSnYR5tipNNdz4HUyB2peUghmSM7+LZ+R/C2fchZYyrc4jlyiQLbGxuPZ6FEl/1xJJ+7PFdit+8c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=ax41Zs6/; arc=none smtp.client-ip=192.198.163.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1787870255; c=relaxed/simple;
+	bh=p1DhIwgHkyC/+qU0441ubEQ/B51A67fFmS+Yo1sEkvw=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=dmuLIixoiu/CJd9gCiEFbedLOi59+IMzZtcUumRrCiBOLLiaMfSP7+HS3rIyXihiRQeY6LX2OfcGs4fqk+hDEctqej5RbOdYSpk/8CuIpm2XVMiMBJ2OxNj4eJBW0CBPYkEtr9WPO2IlbA/0QI1ptNAds8vPvY7XZK3JsKbmmRA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=djBle8Sv; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=mRScJFwk; arc=none smtp.client-ip=202.12.124.159
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="ax41Zs6/"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1787868878; x=1819404878;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=0FJgbP6g3+qK4B5v4A9pqy/ZRTHo09o+plVMF583VTI=;
-  b=ax41Zs6/ZII4cJ7u+N7XfZk5N6aP8c7HwNpfNmLciNPJ2V+Kmh0e9RA2
-   pZN+v9PdF+RfR9iV2AyDPdzWDP3grycwCnEwCKK8mL/tejivH0ak2FWZs
-   CHcBUcnFWbIH/xXIWoutmSKllgnXV3Y++13XVTYHlUQ+0GKB2b2moBqst
-   +K7ZmddDLyYCn92FTn2cWt5QHna56YaF4aF2OfFAUmGOlG8zmBz/yOTMn
-   kLXrgTjSboeJhJ6iB+0SHoPSizR5GRzMx/HVcEIHW2w9qGkHUMay4Vuwp
-   jZPTIJg/iENUzYhr4nAdUqK2N6eMD+Z/p1pPkv/u3WqX2NWEdg3dtTVRp
-   A==;
-X-CSE-ConnectionGUID: XqwUISaXRM2LgIBpTf28eA==
-X-CSE-MsgGUID: 982WW0TMR2msKlIdRLs+wA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11888"; a="75921817"
-X-IronPort-AV: E=Sophos;i="6.25,247,1779174000"; 
-   d="scan'208";a="75921817"
-Received: from orviesa010.jf.intel.com ([10.64.159.150])
-  by fmvoesa110.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Aug 2026 15:14:37 -0700
-X-CSE-ConnectionGUID: xlG0FO5iSs6H/L9poYTi/w==
-X-CSE-MsgGUID: VE1PNoxkRu2L/RYvGnyZwg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.25,247,1779174000"; 
-   d="scan'208";a="266687940"
-Received: from lkp-server01.sh.intel.com (HELO 3532383e6126) ([10.239.97.150])
-  by orviesa010.jf.intel.com with ESMTP; 27 Aug 2026 15:14:35 -0700
-Received: from kbuild by 3532383e6126 with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1wziMi-00000000A5t-26AU;
-	Thu, 27 Aug 2026 22:14:32 +0000
-Date: Fri, 28 Aug 2026 06:13:39 +0800
-From: kernel test robot <lkp@intel.com>
-To: Geramy Loveless <gloveless@jqluv.com>, linux-pci@vger.kernel.org
-Cc: oe-kbuild-all@lists.linux.dev, bhelgaas@google.com,
-	alexander.deucher@amd.com, ilpo.jarvinen@linux.intel.com,
-	christian.koenig@amd.com, amd-gfx@lists.freedesktop.org,
-	mario.limonciello@amd.com, nra3088@gmail.com, gloveless@jqluv.com
-Subject: Re: How to correctly reserve prefetchable bridge windows for large,
- resizable BARs behind PCIe switches (8x GPU, PEX890xx) - seeking guidance on
- upstreamable approach.
-Message-ID: <202608280629.PrwiaBTD-lkp@intel.com>
-References: <a2292dfb-2ee5-4988-ac67-c75dd3e97a4c@jqluv.com>
+	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="djBle8Sv";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="mRScJFwk"
+Received: from phl-compute-02.internal (phl-compute-02.internal [10.202.2.42])
+	by mailfhigh.stl.internal (Postfix) with ESMTP id EA44D7A0253;
+	Thu, 27 Aug 2026 18:37:22 -0400 (EDT)
+Received: from phl-frontend-04 ([10.202.2.163])
+  by phl-compute-02.internal (MEProxy); Thu, 27 Aug 2026 18:37:23 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
+	cc:cc:content-transfer-encoding:content-type:content-type:date
+	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to; s=fm2; t=1787870242;
+	 x=1787956642; bh=dakfc/rmFKMGOT0sMdXXsPc2Gkm9QF/BBftWQyxnpIU=; b=
+	djBle8SvoXu41Ghwlm6OQf4Hkvy0vWpWs1Aa+aCsmtebjPJPIJIeXOa21CPKSfKl
+	x/CY3PnKrIMWztN4AVzlXuRpbPsJ/KzIV47xST0kpqHZwhcyQsBuWX1HF9htgd80
+	7Ip+0e3Bux6JmIfyBbTLZXstoCQ8TJnQHswcjZzOMF9/ukE8gkyn9W0JMxlgCpsJ
+	ehRsvFZlP0JvSrNDAr8948Ql9Lwyhn/Gra2RTI+VDdM8DhVkO6kiJbbKWYVyH0r+
+	rokP22c9tDLrLOd4obOV/Sjd9cs8UgfzAMe2mJd3pGW2onruy4/YOv/PeJyh966K
+	w9hSjJvqAfr31iNO029KKA==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-transfer-encoding
+	:content-type:content-type:date:date:feedback-id:feedback-id
+	:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to:x-me-proxy
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=1787870242; x=
+	1787956642; bh=dakfc/rmFKMGOT0sMdXXsPc2Gkm9QF/BBftWQyxnpIU=; b=m
+	RScJFwkczWwS31ubqh11Rm11AjNnnCsMk7px6v3+twIKv4ZZsLB0EVr3utk1twiA
+	D1bQyor+2kiyGnbiHgxtTChVjxXKCsQmu3/7jIUHezELHeIyE/ajJ3hEUnNfFalM
+	2qdDDId+k1MXtZycSn1BKjOqizHaCE+S8ZvbIYXlW5sJjWg5DxjkecIpbxT03iVF
+	kYi0haqQrJ8q5gQ2rv04XK6qCyscJ6EFW+sBI/xY59XpcWR1pd41nmA9Z7UoYjF7
+	12HFS+NhDFQqsqwNundLYAu3PyrArM9qUUguBQk8N9AGDr17vGDqEkHyuwyDN2y6
+	toWZpUJQ5BxuO/0BVqcxw==
+X-ME-Sender: <xms:IryQaihglGVpnSWYGBPRP5t2c31iC4atrRiNOkZHMIFrKgNGaM7iZQ>
+    <xme:IryQagqcEDEHciIn6Gx8nG3p2f3QDdPQAklL2eWr68c_pU0RqnT1TzprOMSXoLjOn
+    TcX7xSmtOv1RkH-yvoCMxs1G-u2SN0UWI2iFqTNDppokw_U8-tTUZI>
+X-ME-Received: <xmr:IryQahf-syTDgtCz30uoQaxlNAzktC8dZlWg1Q5V5AlcT4mXEHnmmT2fXStIeQ>
+X-ME-Proxy-Cause: dmFkZTE58lQ9dphN4MDlYdxE/mBrD74TsRzGaXwdp/mC+QURr2jErIhK8xN+DJ5mAHdH1q
+    N5lP9sc0SixyzfuB1e9SzrYXb7AeJmUkqTpdP2KdUEFJNH7ZB0MSdOA6ZwxvUh8lqezwdb
+    mMUWIxxS9971jzVcbBmkAT3ve8ogkX5rex0HYgoG2Mchg0aNuxeg8D/m3K8z5Bde2cJAhp
+    4rkK8ccZQHH2jTJ3qdYMAwH95UAiBKLW1BKyOtuzuh+Cdrs9haHEvmHPlnTwY9xs1HLxCr
+    7bcLTc4AjrHj8H8qvO7Fbz4MmgZOLEEf5cgApDG5EbPbm6Joo0OCxBMTmyVWgnPRxD2fAh
+    J+sCgvFLKrnhHE7J0DHheDmY3HuKR/vUkWlhCFkkSEWkCVGhLzCTYwE8xc5gNPqAesU2P7
+    6bvYnmzLDmM2xIiQwO/jX6B4IFlsijS09/yn+gyfccmTFxSWIJPy+YJYdwspdFZr3xti/F
+    v5crdVYPCXA8r6vnjkp/ZGtzyUOPfgF8jJ6TA/wCpF+ILb6/p57i7Ld1xEB+ivGPWTptUm
+    ZbcoQwHBrSDltLU14Y3iztb1DvZsQo9zhRyeMEMxyUmun5lySkj3v7rITyxBy6aBv2Zb79
+    7iPzA59v7AF3VAQDnGNyTK5CwUO4sF1r3N5aiYa2zw0e09BApdp9GRCWSjNA
+X-ME-Proxy: <xmx:IryQajemR1i9Q7EmNB7Xq_iga2drRLv3RpVKTRyjJgO7WwMHfsjFqQ>
+    <xmx:IryQanfncuxnKjBGfRmWQVyMW5Gz8watk5qTA4g4jriEQUIvORpW_Q>
+    <xmx:IryQapr4JGAQAELSTmAUTYT8PjKVBKvvTRt4nGDghaU7qdlsbm8QHg>
+    <xmx:IryQanyA7uvxCcN29YX4xy50UnFraw2U1jdeXoRKTX51ACVU399s3A>
+    <xmx:IryQapdCU73ZaYl-u3aS-_1-mN7f0LPhyzUv6X6MrJUeTZegqBKeHnxj>
+Feedback-ID: i03f14258:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Thu,
+ 27 Aug 2026 18:37:19 -0400 (EDT)
+Date: Thu, 27 Aug 2026 16:37:17 -0600
+From: Alex Williamson <alex@shazbot.org>
+To: <mhonap@nvidia.com>
+Cc: <jgg@ziepe.ca>, <ankita@nvidia.com>, <jic23@kernel.org>,
+ <dave.jiang@intel.com>, <alejandro.lucero-palau@amd.com>,
+ <smadhavan@nvidia.com>, <corbet@lwn.net>, <skhan@linuxfoundation.org>,
+ <dave@stgolabs.net>, <alison.schofield@intel.com>,
+ <vishal.l.verma@intel.com>, <iweiny@kernel.org>, <ming.li@zohomail.com>,
+ <yishaih@nvidia.com>, <skolothumtho@nvidia.com>, <kevin.tian@intel.com>,
+ <bhelgaas@google.com>, <dmatlack@google.com>, <kees@kernel.org>,
+ <gustavoars@kernel.org>, <cjia@nvidia.com>, <kjaju@nvidia.com>,
+ <vsethi@nvidia.com>, <zhiw@nvidia.com>, <linux-doc@vger.kernel.org>,
+ <linux-kernel@vger.kernel.org>, <kvm@vger.kernel.org>,
+ <linux-cxl@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+ <linux-kselftest@vger.kernel.org>, <linux-hardening@vger.kernel.org>,
+ alex@shazbot.org
+Subject: Re: [PATCH v4 12/27] vfio/pci: Let a provider exclude a BAR
+ sub-range from mmap
+Message-ID: <20260827163717.6b9c1752@shazbot.org>
+In-Reply-To: <20260813093631.2288172-13-mhonap@nvidia.com>
+References: <20260813093631.2288172-1-mhonap@nvidia.com>
+	<20260813093631.2288172-13-mhonap@nvidia.com>
+X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <a2292dfb-2ee5-4988-ac67-c75dd3e97a4c@jqluv.com>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-Hi Geramy,
+On Thu, 13 Aug 2026 15:06:16 +0530
+<mhonap@nvidia.com> wrote:
 
-kernel test robot noticed the following build errors:
+> From: Manish Honap <mhonap@nvidia.com>
+> 
+> Some devices expose registers in a BAR that must be reached only through
+> a trap, not a direct guest mapping. A CXL Type-2 device's HDM decoder
+> block is one: mapping it would let userspace reprogram the physical
+> decoder that governs host memory decode. Give a provider a way to mark a
+> BAR sub-range off-limits to mmap; it is advertised as a sparse-mmap
+> region and refused in the mmap path, while the provider's own region
+> still serves it.
+> 
+> Signed-off-by: Manish Honap <mhonap@nvidia.com>
+> ---
+>  drivers/vfio/pci/vfio_pci_core.c   | 72 ++++++++++++++++++++++++++++++
+>  drivers/vfio/pci/vfio_pci_dmabuf.c | 13 ++++++
+>  drivers/vfio/pci/vfio_pci_priv.h   | 13 ++++++
+>  include/linux/vfio_pci_core.h      |  6 +++
+>  4 files changed, 104 insertions(+)
+> 
+> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
+> index 0f9b5dfeea66..49dfbdaf3f05 100644
+> --- a/drivers/vfio/pci/vfio_pci_core.c
+> +++ b/drivers/vfio/pci/vfio_pci_core.c
+> @@ -1009,6 +1009,67 @@ static int msix_mmappable_cap(struct vfio_pci_core_device *vdev,
+>  	return vfio_info_add_capability(caps, &header, sizeof(header));
+>  }
+>  
+> +/*
+> + * A provider can keep a BAR sub-range off mmap (for example a CXL device's
+> + * trapped HDM decoder block). Callers hold the resource so /dev/mem is already
+> + * blocked; this only governs the vfio mmap path.
+> + */
+> +void vfio_pci_core_set_mmap_exclude(struct vfio_pci_core_device *vdev, int bar,
+> +				    u64 start, u64 len)
+> +{
+> +	vdev->mmap_exclude_bar = bar;
+> +	vdev->mmap_exclude_start = start;
+> +	vdev->mmap_exclude_len = len;
+> +}
+> +EXPORT_SYMBOL_GPL(vfio_pci_core_set_mmap_exclude);
 
-[auto build test ERROR on pci/next]
-[also build test ERROR on pci/for-linus linus/master next-20260826]
-[cannot apply to drm-misc/drm-misc-next v7.2]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+If we're going to go to the trouble of creating vfio-pci-core
+infrastructure for handling excluded ranges, I'd rather see it handled
+more generically.  One excluded "mmap" range per device is limited,
+leaves MSI-X vector table existing as a separate implementation,
+doesn't accurately describe what it does since it's excluded for both
+mmap, read/write, and ioeventfds, and doesn't make use of the existing
+x_start/x_end infrastructure we already have in read/write paths.
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Geramy-Loveless/How-to-correctly-reserve-prefetchable-bridge-windows-for-large-resizable-BARs-behind-PCIe-switches-8x-GPU-PEX890xx-seeki/20260826-132218
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git next
-patch link:    https://lore.kernel.org/r/a2292dfb-2ee5-4988-ac67-c75dd3e97a4c%40jqluv.com
-patch subject: How to correctly reserve prefetchable bridge windows for large, resizable BARs behind PCIe switches (8x GPU, PEX890xx) - seeking guidance on upstreamable approach.
-config: i386-randconfig-015-20260827 (https://download.01.org/0day-ci/archive/20260828/202608280629.PrwiaBTD-lkp@intel.com/config)
-compiler: gcc-14 (Debian 14.2.0-19) 14.2.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260828/202608280629.PrwiaBTD-lkp@intel.com/reproduce)
+I think we should probably create a list of excluded ranges, each
+containing a BAR index, start, size, and flags.  The flags are
+necessary to manage mmap vs read vs write exclusions, where MSI-X only
+excludes read/write, but this feature wants to exclude them all.
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202608280629.PrwiaBTD-lkp@intel.com/
+All existing use cases of msix_start/size would be migrated to this new
+interface.  Handling in vfio_pci_bar_rw() would also need to account
+for multiple excluded ranges per BAR (HDM exclusion adds that as a
+possibility), iterating for any access extending beyond the intersecting
+exclusion. mmap would generically fail any intersecting range with the
+mmap exclusion flag set and region info would iterate the same set of
+exclusions in generating the sparse mmap capability.
 
-All errors (new ones prefixed by >>):
+This would also correct the behavior of the next patch that
+intersecting read/write accesses generate errors rather than fill reads
+with -1 and drop writes.  Thanks,
 
-   ld: drivers/pci/setup-res.o: in function `pci_align_resource':
->> drivers/pci/setup-res.c:289:(.text+0x92a): undefined reference to `__udivdi3'
->> ld: drivers/pci/setup-res.c:289:(.text+0x939): undefined reference to `__udivdi3'
-   ld: drivers/gpu/drm/amd/display/dc/dml2_0/dml21/src/dml2_utm_soc_bb/dml2_utm_soc_bb_dcn6.o: in function `dchub_v2_get_sop_total_available_bandwidth_KBps':
-   drivers/gpu/drm/amd/amdgpu/../display/dc/dml2_0/dml21/inc/bounding_boxes/utm_qos_model_dchub_v2.h:71:(.text+0x61): undefined reference to `__udivdi3'
-   ld: drivers/gpu/drm/amd/amdgpu/../display/dc/dml2_0/dml21/inc/bounding_boxes/utm_qos_model_dchub_v2.h:79:(.text+0x9d): undefined reference to `__udivdi3'
-   ld: drivers/gpu/drm/amd/amdgpu/../display/dc/dml2_0/dml21/inc/bounding_boxes/utm_qos_model_dchub_v2.h:66:(.text+0xc0): undefined reference to `__udivdi3'
-   ld: drivers/gpu/drm/amd/display/dc/dml2_0/dml21/src/dml2_utm_soc_bb/dml2_utm_soc_bb_dcn6.o:drivers/gpu/drm/amd/amdgpu/../display/dc/dml2_0/dml21/inc/bounding_boxes/utm_qos_model_dchub_v2.h:76: more undefined references to `__udivdi3' follow
+Alex
 
+> +
+> +/* Advertise the BAR as mmappable minus the excluded sub-range. */
+> +static int vfio_pci_mmap_exclude_cap(struct vfio_pci_core_device *vdev,
+> +				     int index, struct vfio_info_cap *caps)
+> +{
+> +	u64 bar_len = pci_resource_len(vdev->pdev, index);
+> +	u64 excl_start = ALIGN_DOWN(vdev->mmap_exclude_start, PAGE_SIZE);
+> +	u64 excl_end = ALIGN(vdev->mmap_exclude_start + vdev->mmap_exclude_len,
+> +			     PAGE_SIZE);
+> +	struct vfio_region_info_cap_sparse_mmap *sparse;
+> +	int nr_areas = 0, i = 0, ret;
+> +	size_t size;
+> +
+> +	/*
+> +	 * mmap is page granular, so the mmappable areas must stop at the page
+> +	 * boundaries enclosing the excluded sub-range. The byte-granular
+> +	 * exclusion still governs the fault and read/write paths; only the
+> +	 * advertised mmap areas round out to whole pages.
+> +	 */
+> +	if (excl_start > 0)
+> +		nr_areas++;
+> +	if (excl_end < bar_len)
+> +		nr_areas++;
+> +
+> +	size = struct_size(sparse, areas, nr_areas);
+> +	sparse = kzalloc(size, GFP_KERNEL);
+> +	if (!sparse)
+> +		return -ENOMEM;
+> +
+> +	sparse->header.id = VFIO_REGION_INFO_CAP_SPARSE_MMAP;
+> +	sparse->header.version = 1;
+> +	sparse->nr_areas = nr_areas;
+> +
+> +	if (excl_start > 0) {
+> +		sparse->areas[i].offset = 0;
+> +		sparse->areas[i].size = excl_start;
+> +		i++;
+> +	}
+> +	if (excl_end < bar_len) {
+> +		sparse->areas[i].offset = excl_end;
+> +		sparse->areas[i].size = bar_len - excl_end;
+> +	}
+> +
+> +	ret = vfio_info_add_capability(caps, &sparse->header, size);
+> +	kfree(sparse);
+> +	return ret;
+> +}
+> +
+>  int vfio_pci_core_register_dev_region(struct vfio_pci_core_device *vdev,
+>  				      unsigned int type, unsigned int subtype,
+>  				      const struct vfio_pci_regops *ops,
+> @@ -1157,6 +1218,13 @@ int vfio_pci_ioctl_get_region_info(struct vfio_device *core_vdev,
+>  				if (ret)
+>  					return ret;
+>  			}
+> +			if (vdev->mmap_exclude_len &&
+> +			    info->index == vdev->mmap_exclude_bar) {
+> +				ret = vfio_pci_mmap_exclude_cap(vdev, info->index,
+> +								caps);
+> +				if (ret)
+> +					return ret;
+> +			}
+>  		}
+>  
+>  		break;
+> @@ -1851,6 +1919,10 @@ int vfio_pci_core_mmap(struct vfio_device *core_vdev, struct vm_area_struct *vma
+>  	if (req_start + req_len > phys_len)
+>  		return -EINVAL;
+>  
+> +	/* An excluded sub-range is reachable only through its trap, not mmap. */
+> +	if (vfio_pci_bar_is_excluded(vdev, index, req_start, req_len))
+> +		return -EINVAL;
+> +
+>  	/*
+>  	 * Ensure the BAR resource region is reserved for use.
+>  	 */
+> diff --git a/drivers/vfio/pci/vfio_pci_dmabuf.c b/drivers/vfio/pci/vfio_pci_dmabuf.c
+> index c16f460c01d6..51983105d38b 100644
+> --- a/drivers/vfio/pci/vfio_pci_dmabuf.c
+> +++ b/drivers/vfio/pci/vfio_pci_dmabuf.c
+> @@ -177,11 +177,24 @@ int vfio_pci_core_get_dmabuf_phys(struct vfio_pci_core_device *vdev,
+>  				  size_t nr_ranges)
+>  {
+>  	struct pci_dev *pdev = vdev->pdev;
+> +	unsigned int i;
+>  
+>  	*provider = pcim_p2pdma_provider(pdev, region_index);
+>  	if (!*provider)
+>  		return -EINVAL;
+>  
+> +	/*
+> +	 * A provider (e.g. vfio-cxl) can exclude a BAR sub-range that must be
+> +	 * reached only through its trap. The mmap and read/write paths already
+> +	 * refuse it; reject a DMA-BUF export overlapping it too, so a device fd
+> +	 * holder cannot map the excluded registers to a peer and bypass the trap.
+> +	 */
+> +	for (i = 0; i < nr_ranges; i++)
+> +		if (vfio_pci_bar_is_excluded(vdev, region_index,
+> +					     dma_ranges[i].offset,
+> +					     dma_ranges[i].length))
+> +			return -EINVAL;
+> +
+>  	return vfio_pci_core_fill_phys_vec(
+>  		phys_vec, dma_ranges, nr_ranges,
+>  		pci_resource_start(pdev, region_index),
+> diff --git a/drivers/vfio/pci/vfio_pci_priv.h b/drivers/vfio/pci/vfio_pci_priv.h
+> index fca9d0dfac90..902d17815ab6 100644
+> --- a/drivers/vfio/pci/vfio_pci_priv.h
+> +++ b/drivers/vfio/pci/vfio_pci_priv.h
+> @@ -44,6 +44,19 @@ ssize_t vfio_pci_config_rw_single(struct vfio_pci_core_device *vdev,
+>  ssize_t vfio_pci_bar_rw(struct vfio_pci_core_device *vdev, char __user *buf,
+>  			size_t count, loff_t *ppos, bool iswrite);
+>  
+> +/*
+> + * A provider (e.g. vfio-cxl) can carve a sub-range out of a BAR that must be
+> + * reached only through its trap, never the direct BAR.  Returns true when
+> + * [start, start + len) on this BAR overlaps that excluded range.
+> + */
+> +static inline bool vfio_pci_bar_is_excluded(struct vfio_pci_core_device *vdev,
+> +					    int bar, u64 start, u64 len)
+> +{
+> +	return vdev->mmap_exclude_len && bar == vdev->mmap_exclude_bar &&
+> +	       start < vdev->mmap_exclude_start + vdev->mmap_exclude_len &&
+> +	       start + len > vdev->mmap_exclude_start;
+> +}
+> +
+>  #ifdef CONFIG_VFIO_PCI_VGA
+>  ssize_t vfio_pci_vga_rw(struct vfio_pci_core_device *vdev, char __user *buf,
+>  			size_t count, loff_t *ppos, bool iswrite);
+> diff --git a/include/linux/vfio_pci_core.h b/include/linux/vfio_pci_core.h
+> index 117cd67995d8..43755b91880f 100644
+> --- a/include/linux/vfio_pci_core.h
+> +++ b/include/linux/vfio_pci_core.h
+> @@ -162,6 +162,10 @@ struct vfio_pci_core_device {
+>  	struct notifier_block	nb;
+>  	struct rw_semaphore	memory_lock;
+>  	struct list_head	dmabufs;
+> +	/* BAR sub-range a provider keeps off mmap, reached only through a trap */
+> +	int			mmap_exclude_bar;
+> +	u64			mmap_exclude_start;
+> +	u64			mmap_exclude_len;
+>  };
+>  
+>  enum vfio_pci_io_width {
+> @@ -176,6 +180,8 @@ int vfio_pci_core_register_dev_region(struct vfio_pci_core_device *vdev,
+>  				      unsigned int type, unsigned int subtype,
+>  				      const struct vfio_pci_regops *ops,
+>  				      size_t size, u32 flags, void *data);
+> +void vfio_pci_core_set_mmap_exclude(struct vfio_pci_core_device *vdev, int bar,
+> +				    u64 start, u64 len);
+>  void vfio_pci_core_close_device(struct vfio_device *core_vdev);
+>  int vfio_pci_core_init_dev(struct vfio_device *core_vdev);
+>  void vfio_pci_core_release_dev(struct vfio_device *core_vdev);
 
-vim +289 drivers/pci/setup-res.c
-
-   262	
-   263	/*
-   264	 * For mem bridge windows, try to relocate tail remainder space to space
-   265	 * before res->start if there's enough free space there. This enables
-   266	 * tighter packing for resources.
-   267	 */
-   268	resource_size_t pci_align_resource(struct pci_dev *dev,
-   269					   const struct resource *res,
-   270					   const struct resource *empty_res,
-   271					   resource_size_t size,
-   272					   resource_size_t align)
-   273	{
-   274		resource_size_t remainder, start_addr;
-   275	
-   276		if (!(res->flags & IORESOURCE_MEM))
-   277			return res->start;
-   278	
-   279		if (IS_ALIGNED(size, align))
-   280			return res->start;
-   281	
-   282		remainder = size - ALIGN_DOWN(size, align);
-   283		/*
-   284		 * A window holding several align-sized resources has one tail per
-   285		 * resource, but only the lowest can tuck below the first aligned
-   286		 * boundary; the rest sit above it. Relocate a single tail's worth.
-   287		 */
-   288		if (ALIGN_DOWN(size, align) > align)
- > 289			remainder /= ALIGN_DOWN(size, align) / align;
-   290		/* Don't mess with size that doesn't align with window size granularity */
-   291		if (!IS_ALIGNED(remainder, pci_min_window_alignment(dev->bus, res->flags)))
-   292			return res->start;
-   293		/* Try to place remainder that doesn't fill align before */
-   294		if (res->start < remainder)
-   295			return res->start;
-   296		start_addr = res->start - remainder;
-   297		if (empty_res->start > start_addr)
-   298			return res->start;
-   299	
-   300		pci_dbg(dev, "%pR: moving candidate start address below align to %llx\n",
-   301			res, (unsigned long long)start_addr);
-   302		return start_addr;
-   303	}
-   304	
-
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
