@@ -1,76 +1,90 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 79AE7443E21;
-	Thu, 27 Aug 2026 16:59:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09DB23859F5;
+	Thu, 27 Aug 2026 17:03:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787849947; cv=none; b=qnFxk0Y0aK5taN65eJ100iUcUsXXwE/+IEGGxbsm2T3PYqqhr3vxwJj3zUNSMV8IbvaCNVEePYgvHv4POgZgALO8rVTxwj/WAE0LaCxoryGaiEZfFbuh40eRiknIROdqM7+4RBoIGhmfjbZUxxzq97etlMqJpX86fwZ7DGdXVB0=
+	t=1787850241; cv=none; b=UAA8x3mqy+JPVbd+zKVQFpvIzPlUfvS1SLRth2T+/+iI9jHSNuN9pPVEAMFUPcnjIQHmNcVBYs4WwnjmdQYgZNSGVQLVUJEe2COhXFiYwXQMjOyqXGkfYokDkkB9Erf6rizgwPnKKrH0DbUu3FQ1CfY2dYOe/mUI/Om98nfhaL0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787849947; c=relaxed/simple;
-	bh=Km1hhgp5FntH5xOTWaanvDMlbJ9XC71doV52pMT6N5Y=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=BA1Bgnq03OgGMUvUpBCj8bpslUDl/o8BHKy50jvG0qjr4UvMzvdcoxXpAKq8MHYy4OK977M9AcE9IOk+Ykm5O0GnIeFk+qL3DUTMjP4z8BnzRND5ujikHvdoEpLCVbPpZXcqsjxBZ010iOwWONnERra3Ijq5HVMtQ3tC44+7byg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WDZoUIP8; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1787850241; c=relaxed/simple;
+	bh=AEDt3/xqtAXQnDiiVH4vwMnE4DlllrmtPoFnHvyi/Is=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=OhTIrISEOHCQl6wp8tPsMM+KmvMUh6ZFi5/S6jJUcTh8VdK2Az3E/q+hWMQAfXwVzKtBpJ13aaW2SI6tWU2MU0oTdFyOdVmQbBCXhC8FOSTT7hku1IWvdb2ee0/jiTIFa/zYh4ETvrZ76SWURaygskPSDf4iBdVNjvPM7bM5hsA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VHM4N6AA; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WDZoUIP8"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 69A731F000E9;
-	Thu, 27 Aug 2026 16:59:04 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VHM4N6AA"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7792E1F000E9;
+	Thu, 27 Aug 2026 17:03:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787849944;
-	bh=Km1hhgp5FntH5xOTWaanvDMlbJ9XC71doV52pMT6N5Y=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=WDZoUIP8Jh088fSZzHBfzmImSzBuaVHblwVx3RLGg8cpc4zo7LZphgy5mebR3zx5w
-	 tLxCfmsQmSOFgKotM7shJOfJntHhxPAOXap7RodYhvOahf7/gW/qX3cPD1npifRKLL
-	 0iA7bFSjPTEHJAUMOj3Mixc/x1KgQoOh8HqKfJM4X+5bRf3mFYGw3+Wryji1u0qv3W
-	 ZR3PQKegT5TF/8IhbiHlDKZ8qg57mUHYIAIv5tlk5PaOSxu8kMZ/FEv8IgU15H3tti
-	 ZA7Lr4Bl4xWqO1lrZUjvg0NTbMauTZGYuHoBMQkIGHL29/Imq5iAVQ6CYaREKtcMCH
-	 h2c1HMVTWAdQg==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH RESEND v2] PCI: imx6: Enable ASPM L1 only iff CLKREQ# is
- supported
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Michal Gorlas" <michal.gorlas@9elements.com>
-Cc: Frank.Li@kernel.org, imx@lists.linux.dev, linux-pci@vger.kernel.org
-In-Reply-To: <20260827-l1-conditional-imx-v2-1-40b324aa2a94@9elements.com>
-References: <20260827-l1-conditional-imx-v2-1-40b324aa2a94@9elements.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 27 Aug 2026 16:59:04 +0000
-Message-Id: <20260827165904.69A731F000E9@smtp.kernel.org>
+	s=k20260515; t=1787850239;
+	bh=9HsenF4HL0pSppXNJ0aCXrQ177zIDCyB3GDzhRJCen4=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=VHM4N6AAuXOiqH7530U6z0VZl5sOcEq80bCG6ZZEIwuKlMS92IGY0s+UKMpjZ7htr
+	 L1BXbrG58L3v0sfeGRRaGEACxY7k1D7+iZbK+2U1XfpDD1dlBP1Mu2aoE2ts2Mw/ux
+	 QzDcBmGaoqEEhntyO0nfw0ug9kmuwdwe9YyvyhpFe4wqwhZQOj8Agw2FhjfXBBcWe2
+	 /G0JCS2XHRBzT1itYRVj79Pz6nNe5lrlrYGQ0xaeKK18rkEdPwl2oFEFgwKEr2q4rU
+	 L6UL5OFJEdRTbpzAkbiFv/X/1q6M+UOAmlmw90/xda+tmRT3MfEkTIjP5udHKVKkMp
+	 vVbb8nF0WACRw==
+Date: Thu, 27 Aug 2026 12:03:58 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Linmao Li <lilinmao@kylinos.cn>
+Cc: thierry.reding@kernel.org, lpieralisi@kernel.org,
+	kwilczynski@kernel.org, mani@kernel.org, robh@kernel.org,
+	bhelgaas@google.com, jonathanh@nvidia.com, mmaddireddy@nvidia.com,
+	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: tegra264: Fix Link Capabilities register offset
+Message-ID: <20260827170358.GA1610989@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260827093919.2825467-1-lilinmao@kylinos.cn>
 
-> Since commit f3ac2ff14834 ("PCI/ASPM: Enable all ClockPM and ASPM
-> states for devicetree platforms"), ASPM states are force enabled
-> on all devicetree platforms. This causes PCI devices on some i.MX SoCs
-> (for e.g. i.MX 8M Plus Kontron SMARC eval carrier) to enter L1 even
-> though CLKREQ# is not supported (and consequently supports-clkreq is
-> not set in pcie controller node of their DT), which causes the device to
-> never wake up from L1.
->=20
-> Hence, disable L1 capability in the LNKCAP register if supports-clkreq
-> is not set in the DT explicitly. For devices that set
-> IMX_PCIE_FLAG_BROKEN_SUSPEND, disable L1 on resume as well, as these
-> skip imx_pcie_host_init().
->=20
-> Note, the logic here is very similar to 613f3255a35a, only difference
-> is that leaving L0s enabled does not cause issues (at least
-> I never encountered them myself when testing on the device) as its
-> not dependent on CLKREQ# being physically there.
-> Since there is already a way of specifying its presence in the DT,
-> the driver should be aware and disable L1.
->=20
-> Fixes: f3ac2ff14834 ("PCI/ASPM: Enable all ClockPM and ASPM states for de=
-vicetree platforms")
-> Signed-off-by: Michal Gorlas <michal.gorlas@9elements.com>
+On Thu, Aug 27, 2026 at 05:39:19PM +0800, Linmao Li wrote:
+> The PCI Express Link Capabilities and Link Status registers are at offsets
+> 0x0c and 0x12 from the capability header, respectively.  Since the driver
+> uses 0x5a for Link Status, Link Capabilities starts at 0x54, not 0x56.
+> 
+> Reading a 16-bit value at 0x56 returns the upper half of the Link
+> Capabilities register.  When a hotplug-capable port has no link during
+> probe, tegra264_pcie_icc_set() consequently derives the maximum speed and
+> width from unrelated bits and requests the wrong interconnect bandwidth.
+> 
+> Use the correct Link Capabilities offset.
+> 
+> Fixes: 01c3c27a0ef6 ("PCI: tegra264: Add Tegra264 support")
+> Signed-off-by: Linmao Li <lilinmao@kylinos.cn>
+> ---
+>  drivers/pci/controller/pcie-tegra264.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/controller/pcie-tegra264.c b/drivers/pci/controller/pcie-tegra264.c
+> index 653136db401e0..3a672d18c4d2d 100644
+> --- a/drivers/pci/controller/pcie-tegra264.c
+> +++ b/drivers/pci/controller/pcie-tegra264.c
+> @@ -49,7 +49,7 @@
+>  #define XAL_RC_BAR_CNTL_STANDARD_64B_BAR_EN	BIT(2)
+>  
+>  /* XTL registers */
+> -#define XTL_RC_PCIE_CFG_LINK_CAPS		0x56
+> +#define XTL_RC_PCIE_CFG_LINK_CAPS		0x54
+>  #define XTL_RC_PCIE_CFG_LINK_STATUS		0x5a
 
-Sashiko has reviewed this patch and found no issues. It looks great!
+If this is a standard PCIe Capability, and since we use the standard
+#defines like PCI_EXP_LNKSTA_CLS and PCI_EXP_LNKCAP_SLS for values
+read from it, it appears to be, I think these XTL_RC* #defines should
+somehow be based on the existing PCI_EXP_LNKSTA and PCI_EXP_LNKCAP.
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260827-l1-conditi=
-onal-imx-v2-1-40b324aa2a94@9elements.com?part=3D1
+E.g., we could read from pcie->ecam + XTL_RC_PCIE_CAP + PCI_EXP_LNKSTA.
+That way grep would be more useful.
 
+>  #define XTL_RC_MGMT_PERST_CONTROL		0x218
+> -- 
+> 2.25.1
+> 
