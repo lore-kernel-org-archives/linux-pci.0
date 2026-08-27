@@ -1,202 +1,189 @@
-Received: from PH7PR06CU001.outbound.protection.outlook.com (mail-westus3azolkn19010022.outbound.protection.outlook.com [52.103.23.22])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f46.google.com (mail-wm1-f46.google.com [209.85.128.46])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C001A485CE8;
-	Thu, 27 Aug 2026 16:07:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.103.23.22
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787846830; cv=fail; b=IFPw7gPEx2W6D65yN73Hup4T2U0y+/Ggh2tUlH3hzMDxYIqzWfsq0ASRvFzsemUM64r9q54aA9NnoxlgCPsg29pKQQKC/hGyvzV5g5G5j7VuJ6VQloasT6OfLoL/iqpWuyx3LCai6npfF4EmWVRPLN1hf5T2G/Q5Q1mwkRnt6zo=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787846830; c=relaxed/simple;
-	bh=mqTINbod+1inTDwo7ZGUAMHxdPSd61sEWF/BVkFGaVw=;
-	h=From:To:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=HDiQuNFksRwB0EX5wY8Yo6P46Wub7zGLA+F5ZoewTMkLXdRyegYs9BOB2udroSZAyVOkQ/DBkhph5rlx92yv9PYUCndZcPti6N37CMGonRPcMABj+iLp93aD5LYn353yjsg9ZNtGw+ABNK2OTBTMIeLT8gkBJwgaBqZQLhDK3Dk=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.com; spf=pass smtp.mailfrom=outlook.com; dkim=pass (2048-bit key) header.d=outlook.com header.i=@outlook.com header.b=IiFK7Hdf; arc=fail smtp.client-ip=52.103.23.22
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=outlook.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7EC72416860
+	for <linux-pci@vger.kernel.org>; Thu, 27 Aug 2026 16:51:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.46
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1787849509; cv=none; b=JHrkFSep5f/ELyWpig7xiE5jpNgnMwU4YMjlCYCk7sT0UnGIePXP0Vr12sfOX66ZOH0UkF+9Fy5imPVr2fnSG4QRPtwEuwrAIPsQFz/gg2cA8Y+lwYleQbbOMio6V/i0Pby9UwhjlSmHX/+840gmBeXx7pH8rKg0ezfsLFveS6o=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1787849509; c=relaxed/simple;
+	bh=Cv42epPoNORB5PcqX0k0Mx2zGd1B1jSGrLyDLj5cWzY=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=Sr84kb3rdsJ7hd+klzAmdZwxRRTN7S0TMrKjFkIG1kRQTRm/+IJx0KSRsvffKEW0oFl27i4FJVlYr2WCk3CHwXuVwr+qbIG75bvs1A5KCsGRaVf4tvu1dZSE2MzE6BR2F3JrTj6FCilmtkP/GEaPRyfR08wtp7h91gcVnxEBUas=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=9elements.com; spf=pass smtp.mailfrom=9elements.com; dkim=pass (2048-bit key) header.d=9elements.com header.i=@9elements.com header.b=UPmiKO5t; arc=none smtp.client-ip=209.85.128.46
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=9elements.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=9elements.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=outlook.com header.i=@outlook.com header.b="IiFK7Hdf"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=CuCND0jbcFSujttf9EjWy3PvQU3t6XtucUuXL722h1zznIHNP47GQPtkRiMt4U5HZv2OLXLIzOrgBTW5lGZrO1F7tZkU8XPOjg04Vwp4xt4hcpeyKdyy2x+bqFT8mRfSnIJS1lwbb9Wd66h+3PxbnEDJQ7uzSsH3pL6rp2cKCf7aBFKNNkSsWF1MteBHvcLINjHpoPskgg2+c4y3DsDPsaXKaLiRnE4aJTcL5KjKJMe3LC/V+EEYvvae81nc74jPTzBmBzYmV9J7N409JrKHmwe+UjxxzSce9UNc6Ckpy5BphBMROYcJTkuEs1JUvz25iSwzJ+hewCeK7TBFMBYw1g==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=AVEem69Z+rTUXv2NKI1+uPZF6VQGpOpsFiE5RSl37EQ=;
- b=t4uMJa5EFog7qegtHGDESox4k2NcdI8sqUTsVMTtuhFqyPHZJ7FuuBu58JHL43580g2pWPxMv0twSGPQHyrp/BTzAwaCL0Ddb/HLRwrOHf3XO/mUafJVuNiovrBHAnkMmIY1bSPYlGmc7mZj2/4x9z9E9ehDAhm2XsTx0LmUY+XVbeXuNYs9hL7cWPMwAyVYf/zRGXj8S0j3egemDNminRMqF3mya1D2NZsvfUvjUzvjhbag3ydu3l4gOT1SMWUxAli8glg1fCGVdV/0HCjEpjacuBQyx10k8Y6QWFut5vs9p/gvv8Gn02TCKSf/qfsXuCYh3acHsYBbGkoSfFQSpQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
- dkim=none; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=outlook.com;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=AVEem69Z+rTUXv2NKI1+uPZF6VQGpOpsFiE5RSl37EQ=;
- b=IiFK7HdfQ7l63cvx6y8hodmv1k/lmo124Jbev3K/I2OPSjOihQj5ICqgum3U8MGgQHAZ42/qrKC0Gj36nEk+GMcUWihKvLXmtyA1jogC4Hqf7eFNwtl+ziC/dxR0XbuklXFxCNfJlnE2ddP9lfwtmFdjVSkhQ8Z6Fzu7zHnpbPLrSBc7KQY9ZzzGG763wqwTjasDcJf3hhlERBvDGl5pmP9o0kvfG4LWegODJx23Zc6ioyc4UMYmlfLRm4uLD337amBelkdMvAfQ43f9Fu2J4DqKN6V3i7IrZN5WJFLYjdNUACTpRREsIHv7iQ0bVG2/eN3fPz+dZYmuP4ALSEZZ6g==
-Received: from SN6PR02MB4157.namprd02.prod.outlook.com (2603:10b6:805:33::23)
- by SA0PR02MB7452.namprd02.prod.outlook.com (2603:10b6:806:ea::21) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.360.10; Thu, 27 Aug
- 2026 16:07:06 +0000
-Received: from SN6PR02MB4157.namprd02.prod.outlook.com
- ([fe80::900:1ccf:2b1e:52b6]) by SN6PR02MB4157.namprd02.prod.outlook.com
- ([fe80::900:1ccf:2b1e:52b6%3]) with mapi id 15.21.0360.005; Thu, 27 Aug 2026
- 16:07:06 +0000
-From: Michael Kelley <mhklinux@outlook.com>
-To: Long Li <longli@microsoft.com>, Naman Jain <namjain@linux.microsoft.com>,
-	Sahil Chandna <sahilchandna@linux.microsoft.com>, KY Srinivasan
-	<kys@microsoft.com>, Haiyang Zhang <haiyangz@microsoft.com>,
-	"wei.liu@kernel.org" <wei.liu@kernel.org>, Dexuan Cui <DECUI@microsoft.com>,
-	"lpieralisi@kernel.org" <lpieralisi@kernel.org>, "kwilczynski@kernel.org"
-	<kwilczynski@kernel.org>, "mani@kernel.org" <mani@kernel.org>,
-	"robh@kernel.org" <robh@kernel.org>, "bhelgaas@google.com"
-	<bhelgaas@google.com>, "linux-hyperv@vger.kernel.org"
-	<linux-hyperv@vger.kernel.org>, "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>, "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH] PCI: hv: Warn when wait_for_response() waits indefinitely
-Thread-Topic: [PATCH] PCI: hv: Warn when wait_for_response() waits
- indefinitely
-Thread-Index: AQG4UhXQUA1TB9NlC8hDWzGtIZRKrwHJvkR+ATw7WGe246Oo0A==
-Date: Thu, 27 Aug 2026 16:07:06 +0000
-Message-ID:
- <SN6PR02MB41578D73327A61FD3D7412C2D4AD2@SN6PR02MB4157.namprd02.prod.outlook.com>
-References: <20260825051850.2438816-1-sahilchandna@linux.microsoft.com>
- <736091cf-8d00-415e-a890-e2dfa6739325@linux.microsoft.com>
- <SA1PR21MB66836C32FD0FABD94B45D7F6CEAF2@SA1PR21MB6683.namprd21.prod.outlook.com>
-In-Reply-To:
- <SA1PR21MB66836C32FD0FABD94B45D7F6CEAF2@SA1PR21MB6683.namprd21.prod.outlook.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-msip_labels:
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ActionId=dc4abd39-7366-4940-aec4-2297ecdf07fb;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ContentBits=0;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Enabled=true;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Method=Standard;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Name=Internal;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SetDate=2026-08-25T17:00:03Z;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SiteId=72f988bf-86f1-41af-91ab-2d7cd011db47;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Tag=10,
- 3, 0, 1;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: SN6PR02MB4157:EE_|SA0PR02MB7452:EE_
-x-ms-office365-filtering-correlation-id: 0c0ddc24-5c36-4c30-4d07-08df04553db8
-x-microsoft-antispam:
- BCL:0;ARA:14566002|25010399006|24021099003|55001999006|51005399006|13091999003|15080799012|31061999003|41001999006|8062599012|37011999003|8060799015|19110799012|440099028|3412199025|102099032|40105399003|2607281247196008;
-x-microsoft-antispam-message-info:
- =?us-ascii?Q?713KiWPBZSMB9wz13gPjvonVxYtLRXIueNtQC7kCdgmQQ1OMSVa5pe8CvIy+?=
- =?us-ascii?Q?s1/EyJiSsUpTuNVjnBqdZnp6/m6miPEUeRUUs9h4Y4a0kACC5SkHw/yoUD1W?=
- =?us-ascii?Q?KDb/+mhJFnB/KXXQTWkGOWjbL7yWauxdBck0ofYrYMUDSr6+2IvgNWbn5qd8?=
- =?us-ascii?Q?m7fSuFdl9RA3Mh2Bkf9iRfAI/tdd6yS0/eCqGy84e7Oki6nCqor3T2MVqG7R?=
- =?us-ascii?Q?Z5OuD4eyYu+nnuzbT5I/z7uNxh9Ay5d2Qa1IudOwli7HkPlec6aQXA2I10t4?=
- =?us-ascii?Q?3BoVTpfC+/xd+KbNc+739hxGufjcYPf3i6tCCafY1wo7oqYPITnTa8NpY615?=
- =?us-ascii?Q?5V9lwTWdj9bfvcqq1yJnaUhrbE4/mfNimboh0NPyAxBj+Q9oLBqsZYLwvtK+?=
- =?us-ascii?Q?HRCmMkik6KIEZCURZHlrOIO8MeALq5L22xXDaWFUsjeBeeMWNrLyb19KPO6k?=
- =?us-ascii?Q?vfKt2Q7tI5HMjHKmGGIQVaD+rQTS0WANfSURhdqyoyDeGHL09Vftj2ppv+XV?=
- =?us-ascii?Q?SFKlcNQT0+xPrOMMQzm4GGZ51SD3ToS6USB55wiwJp7wW7RUHF3f9JSyDraD?=
- =?us-ascii?Q?fwN4jSAjCgfreLmbJS5jKXW74w33rKJWm3knxpiRa/c23o3YmIC7I2Ll/zMq?=
- =?us-ascii?Q?66tIFcEb6vWcjxmkyQLu+mezKrWZZYO1oMNCRFdWQ+IVr+PczoigumEKlsHg?=
- =?us-ascii?Q?yUDj9T7tPK8lYpVSEuYGtkb+wiRb/F4EKJEZgVY0O7eADUPPaV49KH3s3l0P?=
- =?us-ascii?Q?TWOGhctdsBFNVy802r3/hYLejRHAxbKIWVWC6MGLUCNq6qHjpaHW+66RWUjd?=
- =?us-ascii?Q?mwuDeK6K5EU8YArBdcEBzUt1zq0lwJTMiRybFx52ItQvjczji+cNQCj2VLPE?=
- =?us-ascii?Q?IsHbehwKHy00iT7I1Bc6Ve78sr4MxZSq80xVwYjOSG8eASjNNB+D6Rj0/byG?=
- =?us-ascii?Q?PaMV1qvNwKJpwUsq1dLpi9oeYXFqMV5j2JZH/jKCBAB0dJMiFCp+zFHp7vMx?=
- =?us-ascii?Q?RJXT5Yz/s9lzJgvbXsxxXgubwklgeFlPIv2ZI2H2KrzrBqXJzoCHUMgzPIZS?=
- =?us-ascii?Q?RRG8SYjb?=
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?us-ascii?Q?WzGZMHEtW5ZTFcm0s6u44s9r6bOXqgEKEnwz8q1MGXQ9HkTBDY5ErpvjOfHG?=
- =?us-ascii?Q?XkbJ8IpCbrCxwl5OVWg5Gy6ULDe/yD3w+ZiNEiUnQIZff81bBhj7ZLLOqAET?=
- =?us-ascii?Q?DKmxg5EvJCnqdgKWw+4FBGlXcI7MsuoDIAl/chsW8iVyOBS2I5SPltQ+fFjp?=
- =?us-ascii?Q?WBEjGY2qvQyqjp5ANDL7rEuQ99khxurD9zqxlL72lnmskKcfjm3yT4G7/Vac?=
- =?us-ascii?Q?dTMkkveqVnNoCqaZRapyb2AtkrDaQ6MWGKSF7yE0/OXLWpYQ1rRPiy1dx9/e?=
- =?us-ascii?Q?RY1Q2WHZq1eaMKaOitcEeIUNQ6TUi9kosP0pHdDjv9ewYuYGjEw2HOig0DkJ?=
- =?us-ascii?Q?BIIi0ZJ07/iphq6oPMsxfVi6JM85sqWEWoPiWJL92nLOY9S3sn9C12rv1W7S?=
- =?us-ascii?Q?GiV+DdZS6+LAMnJwFvYXVLvZz0YJuMgbsuLtxL4hNlSdrMHTxo462fQclUYi?=
- =?us-ascii?Q?Ha8x244VPJtwLmu6duAq37w2A15yeB//TP0zA1PtKj8ff2gtGrn8BVI7U8M7?=
- =?us-ascii?Q?12lrxsXI2juggbzC2BR0Pxj0BrVibhCRLKFb54Ou3B3jttcv5mRsY5lEECJm?=
- =?us-ascii?Q?MOJjzwkmekJ0ZiaZVAbTJom0Aoa8nNBcc8OJwiPWzWSMnH5CygkMrKqHzLe4?=
- =?us-ascii?Q?ZXjQzTVegzONw8jhXxL6YFEoRvxEmsjzMeUzDjC7aSmVQuxoI5VaCkL1E5BY?=
- =?us-ascii?Q?JgEH7wb/Hk091apugIV1Yxi4ySEMpoziXS7o0hiQioOOyvbT1n1QqiAsSS68?=
- =?us-ascii?Q?zyMT1SwSxNbeJhFMj1tb2/DLukaWjYTk0t4JQEjyepboHLvPCsCJN365nPde?=
- =?us-ascii?Q?qRh3enAenDWJ94mYi9KPY5LUI9mCbuuMqI62w/cZT1RSjh2w8iKfT8vpyYOZ?=
- =?us-ascii?Q?n1ngr+54mSJbSp/HTsiUFtp1VJkz2LIbF52m2CBtcoACzeuebbFEPA5HxAhP?=
- =?us-ascii?Q?J5uyCHtJFP1QiXPFuTtrL71Idpnik/zUegADrcRNdakWvy7cF4YaRFYQ3tJH?=
- =?us-ascii?Q?Kniy2qHg1J8tPl0i8XufeqpT53iIfT1UAL/DZYklSRADm5nYj+bkj1L7ReQK?=
- =?us-ascii?Q?eBEOlOoBTXnGJha+Z+vzUmRFyWGPJ7vYlsVHcqYJ9JTk/XzuP8Clb7qXubsp?=
- =?us-ascii?Q?XxQaaNJE7V2uIzhsVXqec6PCJpGccdk0fZ6zXQg92o1sPHbrwGHbT49H7vxs?=
- =?us-ascii?Q?XgPNj4k9KVGs9VCBo0JKmvs8mHCpi6PrctyfcbNhjez6Q3szrIbInmY9iyYU?=
- =?us-ascii?Q?vP+Tcmv4/mmW5iFuBCF0/aYb2UvnHmypE89lXZGD5Vj33AomMyzY2rfAZHsY?=
- =?us-ascii?Q?7equJRntHaLjBaZYDUyGHaGRWfD2vQKsNcE7pPfLsVfP2IXT/h81ZpXaVGHq?=
- =?us-ascii?Q?L7KTZ/4=3D?=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (2048-bit key) header.d=9elements.com header.i=@9elements.com header.b="UPmiKO5t"
+Received: by mail-wm1-f46.google.com with SMTP id 5b1f17b1804b1-49954b88fffso20196285e9.0
+        for <linux-pci@vger.kernel.org>; Thu, 27 Aug 2026 09:51:42 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=9elements.com; s=google; t=1787849500; x=1788454300; darn=vger.kernel.org;
+        h=cc:to:message-id:content-transfer-encoding:content-type
+         :mime-version:subject:date:from:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=tbqtOFs9zlL8i8nLzqSqayZV4ABdonTOL9PAP1vFtvs=;
+        b=UPmiKO5tjCBgg9Veof5q78GmapElJC/DKhi9U7xlb78/iVwe+eRPB9jz+4hozV3pFu
+         NwClMPn/fdvaA/Ft3eVHeKzIJrTGeCDFj2y10eiPtfufr7Rxqgz7iJCR6TsySmWmic90
+         JRc9lyixKDzgEXxOpkgkkpCtWSMhXWFMxW5R7lWD9r1I/2h/msNzeacDSvNa56mXD4mA
+         eV52zd5g3sNm1+3T2PT18RM34RNXE95uBOBFYHAibAo4oFMMkgUYDdONxgD80SxssHO0
+         9D7eayx8udJ8n4qUEL5wCjfsgLcTZkef3rv1qYK2EgQm6EOzH87oETH7srpONoJdGysb
+         164w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1787849500; x=1788454300;
+        h=cc:to:message-id:content-transfer-encoding:content-type
+         :mime-version:subject:date:from:x-gm-gg:x-gm-message-state:from:to
+         :cc:subject:date:message-id:reply-to:content-type;
+        bh=tbqtOFs9zlL8i8nLzqSqayZV4ABdonTOL9PAP1vFtvs=;
+        b=lkG+66AwNw4R3HG7ynR7nz6D4EqLTCcodK2egQWXGasC5e4Rlx2GndTMLC4POex1Vr
+         FkIfIm6Efs1ka7dl6XmFRoraYxIqBXdcew3Ot9dLBOfmAgrhZWwVI3wfGOcPUTOTaRVJ
+         kza9gnIB/Oek8VRsUrdNe+wMnObakt/IN9Nv4tfCD5E2ZQ9C5tk99VYaRnzw8k12J/Gb
+         2MgECFZHM04WV2PVmf6hPxDVp9MsFv1tmh02v5YAeyVgT19I25p5i2GS93twLZBZOzJQ
+         m2sYjtzNwWHP3v1MTVkBQszGLsX9sxkKwSRDQoTMPKAY7lzKCiIRaq/oJTT5yjmeuIhT
+         v8Uw==
+X-Gm-Message-State: AFuF++nz05B3ot5ziwarf2278uNhTc8+JhgX1Z5xF+YOUBkxQVcuicUK
+	3TO0V/gfb3qGd0zWRdo8RdIOgBEp54/7Ud81WdueavQ91/eInQSQ69U73Tifx67KRw==
+X-Gm-Gg: AR+sD12WcA3cLyYWoJ5o/4N9FgwHMhZG+5T8mP0GHB7oni50kCetRWDDCMGVi64Lkfo
+	jz7/t0Oq0ZHvQHinJCh6bBCSE4huZtU7nYu45OcNSavIAm5N+alhtDtI+uYzeEW37jnhwWctELI
+	ryTLEGYL21rVf8HEF2sX/RCMNWLjx7dlJqSLP4AKt3JodANplnrS1Fzc7E5l+JA0ptDDXMvseZU
+	44LOyR3M24i05PAIV5EezlGEYVrw1iWqLHW+zjQObGDeuW7NuLmuDj7F3InLG3UWU13dCs69Ymi
+	/H+WVHXviEmh+jNfyGpqDhDeE/4nREm/0g2wDp+HW5uXYdwDV+da2Ouo1YkS8TGdIApDXt4xEYg
+	xsor5S5ym48pxRdreMvdLhAGNH+Bca3rMjfAbqMl3RVZ5R9jDM2P2vdB8Y7WSsRavC8ShkRghl+
+	fKJqJ7RZVw+zNrnwH2S9IUeoCexHC+kL6ytq3U5+hXrxyMzh/gs5x9vCVxYDRzbbR33vOW
+X-Received: by 2002:a05:600c:8581:b0:499:a760:722f with SMTP id 5b1f17b1804b1-49b91c47bf8mr3744675e9.13.1787849500201;
+        Thu, 27 Aug 2026 09:51:40 -0700 (PDT)
+Received: from [127.0.0.2] ([188.111.3.154])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-499dd56826bsm78234015e9.4.2026.08.27.09.51.38
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 27 Aug 2026 09:51:39 -0700 (PDT)
+From: Michal Gorlas <michal.gorlas@9elements.com>
+Date: Thu, 27 Aug 2026 18:51:00 +0200
+Subject: [PATCH RESEND v2] PCI: imx6: Enable ASPM L1 only iff CLKREQ# is
+ supported
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-OriginatorOrg: outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: SN6PR02MB4157.namprd02.prod.outlook.com
-X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg: 00000000-0000-0000-0000-000000000000
-X-MS-Exchange-CrossTenant-Network-Message-Id: 0c0ddc24-5c36-4c30-4d07-08df04553db8
-X-MS-Exchange-CrossTenant-originalarrivaltime: 27 Aug 2026 16:07:06.3923
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
-X-MS-Exchange-CrossTenant-rms-persistedconsumerorg: 00000000-0000-0000-0000-000000000000
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA0PR02MB7452
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20260827-l1-conditional-imx-v2-1-40b324aa2a94@9elements.com>
+To: Richard Zhu <hongxing.zhu@nxp.com>, 
+ Lucas Stach <l.stach@pengutronix.de>, 
+ Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
+ Bjorn Helgaas <bhelgaas@google.com>, Frank Li <Frank.Li@nxp.com>, 
+ Sascha Hauer <s.hauer@pengutronix.de>, 
+ Pengutronix Kernel Team <kernel@pengutronix.de>, 
+ Fabio Estevam <festevam@gmail.com>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
+ imx@lists.linux.dev, linux-kernel@vger.kernel.org
+X-Mailer: b4 0.15.2
+X-Developer-Signature: v=1; a=openpgp-sha256; l=3161;
+ i=michal.gorlas@9elements.com; h=from:subject:message-id;
+ bh=Cv42epPoNORB5PcqX0k0Mx2zGd1B1jSGrLyDLj5cWzY=;
+ b=owEBbQKS/ZANAwAKAWKaksyA3pPLAcsmYgBqkGsXl1XXO7CczlDW42hMAd4AcZI7L/miM5XQi
+ 4HNMYkWKaiJAjMEAAEKAB0WIQTgoC0bQQLz7jVH2W9impLMgN6TywUCapBrFwAKCRBimpLMgN6T
+ y4SzD/wJXnY4K3bTVEqMPYGKOQB6IFLjmxS3tCQvn8h7h8t5zTdtMDxOFbhTcZmNtsMWFM2KZ3b
+ hGFQ41UMlczcyAe1IoHiRfx16B6MehkVhQYZaTR9Xc4yIhY4YPDHqMWll3BcRup8lRQDdeeU0z6
+ bcPDaS0n9KjobxN5WwaVucD/5Bz423OQstjwCKLJcDCiGTVKIfMZF7uD420M1SBbMJIvwLiZi/A
+ j8d8OYr9+QTsNKsU6HWf86ylOYXSwl2dH1fzh5rWkfmJitWKAqq7keIyhA3kbrCyVA9fsivsWQ2
+ hOlnFLaXj7zbuKnsYSP1XJ3dlO5XtQ/Wnwt1/ZybSlFY5lVslsBm6Mssdn6ho8xejaRYHnH2/i7
+ bC5g08hPvdLX+E0VkiN07CNG2LIdmYK6gW7+ckVek5T+ddG3i6+Cb/YBB71y4wlqS6o0g++uKzE
+ +HK4CPkHupuSyC2MapHS1fDejhDh8/ab/nETLOz+uZ7SEMXlnCoHuXeCbEuhK0pzeY7VSFVje6V
+ JyHtOsXDPTxO7JTcbhWO4v6rdu6+HAlbkJ/Bl/56rJmxXQqP9g8eK+zd+tIBoqkr+rRZgA37Aa7
+ O0C3NOOnOWAKdeAMraI9QgkEix0O6xybs4nEcQSkUDsa33YGklAhit7mq0u2jBNjiK7Sa3NvDZz
+ NwUnFbNbJkBgepw==
+X-Developer-Key: i=michal.gorlas@9elements.com; a=openpgp;
+ fpr=B4EB74EA41969D1140A4D1791596726986433F8C
 
-From: Long Li <longli@microsoft.com> Sent: Tuesday, August 25, 2026 10:01 A=
-M
+Since commit f3ac2ff14834 ("PCI/ASPM: Enable all ClockPM and ASPM
+states for devicetree platforms"), ASPM states are force enabled
+on all devicetree platforms. This causes PCI devices on some i.MX SoCs
+(for e.g. i.MX 8M Plus Kontron SMARC eval carrier) to enter L1 even
+though CLKREQ# is not supported (and consequently supports-clkreq is
+not set in pcie controller node of their DT), which causes the device to
+never wake up from L1.
 
-[snip]
+Hence, disable L1 capability in the LNKCAP register if supports-clkreq
+is not set in the DT explicitly. For devices that set
+IMX_PCIE_FLAG_BROKEN_SUSPEND, disable L1 on resume as well, as these
+skip imx_pcie_host_init().
 
-> >
-> > Basically something like this:
-> >
-> > #define PCI_RESPONSE_WARN_TIMEOUT_SEC 300
-> >
-> > static int wait_for_response(struct hv_device *hdev,
-> >                   struct completion *comp) {
-> >      unsigned long warn_at =3D
-> >          jiffies + secs_to_jiffies(PCI_RESPONSE_WARN_TIMEOUT_SEC);
-> >      bool warned =3D false;
-> >
-> >      while (true) {
-> >          if (hdev->channel->rescind) {
-> >              dev_warn_once(&hdev->device, "The device is gone.\n");
-> >              return -ENODEV;
-> >          }
-> >
-> >          if (wait_for_completion_timeout(comp, HZ / 10)) {
-> >              if (warned || time_after_eq(jiffies, warn_at))
-> >                  dev_warn(&hdev->device,
-> >                       "PCI response received after prolonged wait.\n");
-> >              return 0;
-> >          }
-> >
-> >          if (!warned && time_after_eq(jiffies, warn_at)) {
-> >              dev_warn(&hdev->device,
-> >                   "PCI still waiting for response.\n");
-> >              warned =3D true;
-> >          }
-> >      }
-> > }
-> >
-> > Regards,
-> > Naman
->=20
-> This looks better.
->=20
+Note, the logic here is very similar to 613f3255a35a, only difference
+is that leaving L0s enabled does not cause issues (at least
+I never encountered them myself when testing on the device) as its
+not dependent on CLKREQ# being physically there.
+Since there is already a way of specifying its presence in the DT,
+the driver should be aware and disable L1.
 
-I like getting the "response received" message if the response
-eventually does come in. It's a judgment call, but I would be OK
-with outputting the "still waiting" message after each wait interval
-rather than doing it only once. And I would make the interval smaller
-than 300 seconds. Five minutes is a long time to wait and wonder
-what's going on when things are hung. 60 or 120 seconds would
-be OK -- a line in dmesg every 1 or 2 minutes doesn't seem like
-spamming to me when something is fundamentally broken.
-And probably don't expect a VM in this broken state to keep running
-for hours -- the sysadmin or automatic monitoring software will
-reboot it to get it working again.
+Fixes: f3ac2ff14834 ("PCI/ASPM: Enable all ClockPM and ASPM states for devicetree platforms")
+Signed-off-by: Michal Gorlas <michal.gorlas@9elements.com>
+Tested-by: Richard Zhu <hongxing.zhu@nxp.com>
+Reviewed-by: Richard Zhu <hongxing.zhu@nxp.com>
+---
+Changes in v2:
+- disable L1 unconditionally on resume for platforms advertising
+IMX_PCIE_FLAG_BROKEN_SUSPEND (Sashiko)
+- typos in the commit message
+- Link to v1: https://patch.msgid.link/20260719-l1-conditional-imx-v1-1-a55a57915c68@9elements.com
+---
+ drivers/pci/controller/dwc/pci-imx6.c | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
 
-Just my $.02. Outputting the "still waiting" message only once is
-also OK. Your call.
+diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
+index 98e1db751132..1fdcbcd2422e 100644
+--- a/drivers/pci/controller/dwc/pci-imx6.c
++++ b/drivers/pci/controller/dwc/pci-imx6.c
+@@ -1318,6 +1318,22 @@ static void imx_pcie_assert_perst(struct imx_pcie *imx_pcie, bool assert)
+ 	}
+ }
+ 
++static void imx_pcie_disable_l1(struct dw_pcie *pci)
++{
++	u32 val;
++	u8 offset;
++
++	offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
++
++	dw_pcie_dbi_ro_wr_en(pci);
++
++	val = dw_pcie_readl_dbi(pci, offset + PCI_EXP_LNKCAP);
++	val &= ~PCI_EXP_LNKCAP_ASPM_L1;
++	dw_pcie_writel_dbi(pci, offset + PCI_EXP_LNKCAP, val);
++
++	dw_pcie_dbi_ro_wr_dis(pci);
++}
++
+ static int imx_pcie_host_init(struct dw_pcie_rp *pp)
+ {
+ 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+@@ -1442,6 +1458,9 @@ static int imx_pcie_host_init(struct dw_pcie_rp *pp)
+ 
+ 	imx_setup_phy_mpll(imx_pcie);
+ 
++	if (!imx_pcie->supports_clkreq)
++		imx_pcie_disable_l1(pci);
++
+ 	return 0;
+ 
+ err_phy_off:
+@@ -1748,6 +1767,7 @@ static int imx_pcie_resume_noirq(struct device *dev)
+ 			return ret;
+ 		imx_pcie_deassert_core_reset(imx_pcie);
+ 		imx_pcie_assert_perst(imx_pcie, false);
++		imx_pcie_disable_l1(imx_pcie->pci);
+ 
+ 		/*
+ 		 * Using PCIE_TEST_PD seems to disable MSI and powers down the
 
-Michael
+---
+base-commit: a13c140cc289c0b7b3770bce5b3ad42ab35074aa
+change-id: 20260713-l1-conditional-imx-c2bfd20ae085
+
+Best regards,
+-- 
+Michal Gorlas <michal.gorlas@9elements.com>
+
