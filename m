@@ -1,74 +1,74 @@
-Received: from fout-b6-smtp.messagingengine.com (fout-b6-smtp.messagingengine.com [202.12.124.149])
+Received: from fhigh-b7-smtp.messagingengine.com (fhigh-b7-smtp.messagingengine.com [202.12.124.158])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5DD5D366075;
-	Thu, 27 Aug 2026 20:58:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.149
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5DED4346AFB;
+	Thu, 27 Aug 2026 21:13:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.158
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787864298; cv=none; b=ImliQo9ngzeXlAnSmi3rbOtyLoR6K7O8j0RpZz5dPbET0PSXXEMqxx5Ou0aBD7xHttdWbRYcza0aH3/8+GHY3BIo0i50acpSNjOw/STQcRPH1og2wkD/7u/RPmlUaYnjjjx/nZNyE1wbV1TBbJkSsSVwCWBIm1wul09FHsRJT8M=
+	t=1787865191; cv=none; b=ODDr2lVyMllf8wtKQxS1N87wJRHk7YtDEvtSPMAjIOCzZPOeQM1kh4UGQQ73fFekMwyhWuOZ7ql+zkNa9u0uzQ+sGXEVZ2ujTheuer9mPpHSd0pGy5cIzcGRgpFlT1AlwobZ8tIgZl3xIUBQblisQglxtoaA13EuoMBWKQ/dNEk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787864298; c=relaxed/simple;
-	bh=/TlWKr4McZNs1ASGXrHzvfLJ/Uf1Hj2JbyuuDXtkYbU=;
+	s=arc-20240116; t=1787865191; c=relaxed/simple;
+	bh=S+fgmtzinaMT6PC/6Y/Opgh/LZ0E7mbntIY/+N5AQ+Y=;
 	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=DNsDNc2LZDWt7kYtIMtdELkMIh9XnqriRHMNwb1jBuch5lkRJZDfxbMc4hXugzEOoUBM8cvrrxsOL4OYpZ5ByYEm7eHwAiHkBm/4Ay+skf5WnjWLQNBKuHAbKeTuRLd0+5eszX6Byib+Md3D1Gmmsg9S6zI8kA9j9MsL5kHnIW8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=ZMlXfAyT; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=aESHjVrn; arc=none smtp.client-ip=202.12.124.149
+	 MIME-Version:Content-Type; b=fIOv195+M5OZerXTsMgVGvKQqYYE0NzHkz9YSxg/KIUMMwjI6TJgJVeZKAdhvwBN9t5q79V6LzM6EYgndVx/276v1bbO4fL1+bOtSacYW/iBmhCOMzhzUZO8wZ4XGgsWeqR/Qp/UJu5OHAavqx060KB3lQY5CnWZk1Xb+JbU5Ds=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=u+3DkoIe; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=YYIpjhlR; arc=none smtp.client-ip=202.12.124.158
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="ZMlXfAyT";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="aESHjVrn"
-Received: from phl-compute-01.internal (phl-compute-01.internal [10.202.2.41])
-	by mailfout.stl.internal (Postfix) with ESMTP id 90C221D00147;
-	Thu, 27 Aug 2026 16:58:14 -0400 (EDT)
-Received: from phl-frontend-04 ([10.202.2.163])
-  by phl-compute-01.internal (MEProxy); Thu, 27 Aug 2026 16:58:15 -0400
+	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="u+3DkoIe";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="YYIpjhlR"
+Received: from phl-compute-05.internal (phl-compute-05.internal [10.202.2.45])
+	by mailfhigh.stl.internal (Postfix) with ESMTP id D0C877A016D;
+	Thu, 27 Aug 2026 17:13:07 -0400 (EDT)
+Received: from phl-frontend-03 ([10.202.2.162])
+  by phl-compute-05.internal (MEProxy); Thu, 27 Aug 2026 17:13:08 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
 	cc:cc:content-transfer-encoding:content-type:content-type:date
 	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm2; t=1787864294;
-	 x=1787950694; bh=OA0cEuqmAckaSq+6h/IJOeNtvGP1snmO6+q9qzzYAgo=; b=
-	ZMlXfAyTgOldy3c8Xai4i5hvFONRufht8GlHX3oHZsLGzf1mJU5wwXPJV+hz2pRk
-	cFOuw5l6IpNQf4LvnyihmWyIYyq2QRD7fVexrdcjru6Grsfy1J0df6pZ3puVO7A3
-	adPkALX/nGHDeGXrUyt/HbsvAl3N2+WX+o1Fcv930saTl+Bv1BKEe5wX3RthQN2F
-	ySCdowzWzM7IcGd5fzWOdCqCio7tl3eQvOPcsAW4kUKEdT7khRemmZ9XjALwF/2h
-	BwqWyRjFFQObF1jWnGqwzP/+Rfqtevyrnsl5Yk/0XV+P3bd3QliUicvLVscnxD19
-	kNZiDyvtxF2WgPJiYZtmTA==
+	:references:reply-to:subject:subject:to:to; s=fm2; t=1787865187;
+	 x=1787951587; bh=LptqgxJzL5yMM8ZmtUBx2wOHsHw6ZM/5+3kHAKDP8/k=; b=
+	u+3DkoIeRgC5MaDtAVLw1+8rAclL1XUYyhj6gqLmeQOVQV1KcliwG0/nQYTBYQRZ
+	iOpLzi31qFbNevL2+rYwq5ynz1bHvP1yswmNNiIlc3ng4BuBN6B7wGnZJ2RV1cQg
+	+/pu9Kn0rwwg13yRl7bAiB0cZ7Je87vvaDIR9KAw3bz2HdYt1zWi2gCIB3Iu7wiC
+	o+EN590kIFZ3FoGfy8I0peYvV4NoNK97mKmpW3AXR3YuZ9XITeaoBVn7TTxYYdzN
+	3Fn2AQTTJpz0owdxBlQWn37DWTWXvIhT12XAwcVLweylivhDDNoC8lFk5NpP9BRJ
+	3C++ptD1ZT8y+2giMJFnBQ==
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
 	messagingengine.com; h=cc:cc:content-transfer-encoding
 	:content-type:content-type:date:date:feedback-id:feedback-id
 	:from:from:in-reply-to:in-reply-to:message-id:mime-version
 	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=1787864294; x=
-	1787950694; bh=OA0cEuqmAckaSq+6h/IJOeNtvGP1snmO6+q9qzzYAgo=; b=a
-	ESHjVrnCvk/1eHHB7bczM3QYOiXLPDe1rDvYbGVWidzlnyS2bJRCqd6DkLxR+Cc8
-	rkANGPM5xSmIBxxEPTluxzYJn2KcMPHQaIS/Gz5RCrSweBTKR6V47aUE6pzb8Nin
-	6YQqtJAFYDsEyh546KyufzI/0qKSBDbn6MLV5iRdI8pmuRZ6cTSbwkJw+n88KWSJ
-	6D7FfyO0KfS4j4rBVmBlGxTFSqgHfEssqor07NbWk52mnuLx+M2iZ8gDj4dPwwXF
-	LlFyMWL2ZVal2CMybKgYS2WKjWbp3+WSNamEkvAW/qQ6hZWIzO2OMmFFp/BB1/w7
-	nF5ixTFbrufi+VgEadvZw==
-X-ME-Sender: <xms:5aSQaojeUWmHxJWDpYOZ_PZaHXrOZHprkI8uMLFT5gna4SIwUZgzSg>
-    <xme:5aSQauqqyci5wrblJPatdNdyd9wZdS41rEpXAS5WInJoSVyNlUKOeOGdtyIU2jXCL
-    E0iK-FC_g6qlMLK0EBnSmd8VyqWLHJgeK-KmSM08Mqim9xOHB33DQ>
-X-ME-Received: <xmr:5aSQaneTXPi4mJtBfkt2Fdz-kCxwqkcp7jDutMjJbYfeqX3i-8ykDTvmebZpnA>
-X-ME-Proxy-Cause: dmFkZTGeDunkvp1BFFT1T4/3lfPMwi85rhuTfg+DHrBStwGaAV66WEnFYJCB8LFq0MsKI8
-    6BeCr3nuBhMVV7ksec53XgaRybwClucYOZ82e6dyTVCxaC3OmvvmnsjlNzI8KoXSOsAhC7
-    1qkH4Y1lYrPVWjqC89t9/IOeZY3XZbOpfz0pXJUc4ZlpD3H7KsieqmSuN/lmIfXDDnWaCs
-    r8Ajzm2XNNaJQ2nPl9RQcmUeBzfu0ZH70dk0erzjASgkbuJFjAuaqMGaZicdw3JYmECnN0
-    4K6wikgOp592ilQ8IYN6noOsqm/t5fkMwaFvVkFimm4GhptC1qwuUTNNCUOltUl2jwR5Ql
-    o68g5WbM+WZ0tnHiJmQAhB5dCctjb99+3WJIvalGLAp4b5jEArGXRabdGR4UJXgTBfQRgF
-    BvM6Y9JMItHGyyAov54AZ+B5BHsCdxEU9hacjZ1z8MFpaQQ94uUx/ecYXalpe0cKXpekx6
-    lE/R+Nd2bkXwP1Id/Guk9u66vAd/pz2evweFurFWAL/SawRAzvwetZSWyGkmDphxuHzeC/
-    I7skzzihYmlCYjBjS4odscVlBT/skFKvEvwPt01QZ0qi6BFRdrPWNgaCrBlkM70N4OXERP
-    YAZjwPFDjAYSZZgunJv0KCnxsCjE+0cvvL2bM+MpEoWo/VZzPF93eXuNB/Zg
-X-ME-Proxy: <xmx:5aSQaheAw-FLPQOz_ZMfdG4y7gDUFw6iMFWLc1PLIRtm9t6InMb4KQ>
-    <xmx:5aSQatfrbdbJ1DEQ5y9oeu7-P6hY2yzPZiHo_ZXlES8ulvTUo7peGQ>
-    <xmx:5aSQanoVdM4WnTQRDB2ihU3lw0t7hw9XxmFf6dvhmxBYbky596bJIg>
-    <xmx:5aSQatwLD9YCAromQMZ0M9dGWkjWHGHCY_oFgsGo4NxqvNmO55CqGw>
-    <xmx:5qSQagrrDpITEbhi_3ClZj9L6FyaJTWeT6WXxSKbdGb1O0nkqFx_pNey>
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=1787865187; x=
+	1787951587; bh=LptqgxJzL5yMM8ZmtUBx2wOHsHw6ZM/5+3kHAKDP8/k=; b=Y
+	YIpjhlRIf3LWT6a4+s9fu4MABtO1lKEbO3EKcCz2GDthH5PPtiYLGga3xPGI4mib
+	lYH2KK5LrdMmSAeYYXzvrQX5NZR7qlHdkWpdUCku4GqKlby1aFKk327iEkxcoZMO
+	2u+o9/Hzq7eZB9yie1w0I+Q3uEwQJRV+PB2ebgT3ZI1WqfO5N48H/0eoYS6HvA4z
+	flDW4tJbmQW9EDW+L9ymgWGeCTs2sL6m19coT923pI/bv6UQiheWr70d2bb56Z8s
+	vc1EjNnE/5OVEm+m9iBV0h4XsW1/mrEnPNwc9MGcyrXbi+2dKPmg4zEGyTMZiLKx
+	X0wZPCrkZ+a9mpmkS9lkA==
+X-ME-Sender: <xms:Y6iQaps6FCeqHQfwG4KeqhrZ2yrwhaWALVDEKCx5vUA-tkc7hCyDqA>
+    <xme:Y6iQagHxx44NZn4Nw_E9fndcI7becgmARf0Vcp_fQ4BUQ_fcWg2SseWbzklKcwa5q
+    14ofCl2Kky9TqnX4aM6bRjKtStWLN2-Y3hwDrUKOuHBnJenpY198Q>
+X-ME-Received: <xmr:Y6iQakIVzUcHkd-ccRCo8BRi6Lw3G9U-EMCIobgjJolZWacuCoMknearj2zMkQ>
+X-ME-Proxy-Cause: dmFkZTFD7fpP5X+zSXO8wgY+6E+tPLtVbuxfzuaraYC70hiVdeQTS49GSMwpZxKEt3Jxdi
+    MG3tqiD+p58SyXN3LKDuWSHN3lirClEsO8vmSYt5rOqUvdtWCvyFveYmFGn1lrFS8CbeHO
+    0Uuq0cif66UGUwt853Q7AXXNjBN7dHr+3FH63ViK/VogHAWZBiA4oHxPim/bVJITaMSvqz
+    Alyhucf5+06WR+ebrdkwzR96Bvcc/xOz5DeOAUsOOdogDAh7vrHlvoTtwbsR2Ks1Js51sZ
+    J2ab9Zb7x5jIPy8uPMGQ29o+nwJodyUg87mfxK0JDYhbHXB8p3xkFAANyRSJrGtTfqqZEx
+    zDgosAnq0XE2QvLA5INdGP/kJjsAb44yFW3XG0eQtHgM0DVm9Mi5P5zS/sT9/l3Hcb5K/o
+    I0kkepkWmdYAnhgWTvLjZJnggkR2TaSVVbFv6KdMLnQxpDANguFoKh0/bC2yp1X5Je9U+g
+    5KWYX/e9NQmmlosfS3jQ0JmHhmRzTd2U1kvTmI+H5ZI6+Jhm04LvNSGF9kt62EwBMK0X9o
+    0ZYtA03US6m3MMMHYQ07aYVFRD7mI3LyTGZDV0DtQwdIex6b5sW8x9ta+eu4nAzwk/zwmw
+    qwFg8BGBXwjE3TCSuEqFzibT9KUNusKj3hcdoMP8FnlEHWFuJW5pxl+aH8ZA
+X-ME-Proxy: <xmx:Y6iQaoYla3rDBva7p-4FtMiswCRAsmbjz1NePWWD2TZUNl9MWRrYNA>
+    <xmx:Y6iQahoWxTgAysoGz-yyDBjjdwoVrFvvmdR-hl2tlmw1qPiOQh813w>
+    <xmx:Y6iQagFGTQ0lCrf0MM57JC5sC3X1yuqCaKGMr5NpqDPSa3ZHhSe8Wg>
+    <xmx:Y6iQalf_lYhoJpXa8SxturcUDr5aZ_unApHJvyHH3_p_bzMMPrV3NA>
+    <xmx:Y6iQataMyPJWFdAROFggImjPu2BN-NM0fT5oLC1hZCRZn3eUlQP-F7Ll>
 Feedback-ID: i03f14258:Fastmail
 Received: by mail.messagingengine.com (Postfix) with ESMTPA; Thu,
- 27 Aug 2026 16:58:11 -0400 (EDT)
-Date: Thu, 27 Aug 2026 14:58:09 -0600
+ 27 Aug 2026 17:13:04 -0400 (EDT)
+Date: Thu, 27 Aug 2026 15:13:03 -0600
 From: Alex Williamson <alex@shazbot.org>
 To: <mhonap@nvidia.com>
 Cc: <jgg@ziepe.ca>, <ankita@nvidia.com>, <jic23@kernel.org>,
@@ -84,12 +84,11 @@ Cc: <jgg@ziepe.ca>, <ankita@nvidia.com>, <jic23@kernel.org>,
  <linux-cxl@vger.kernel.org>, <linux-pci@vger.kernel.org>,
  <linux-kselftest@vger.kernel.org>, <linux-hardening@vger.kernel.org>,
  alex@shazbot.org
-Subject: Re: [PATCH v4 10/27] vfio/cxl: Reject unsupported decoder
- topologies at bind
-Message-ID: <20260827145809.71bcca71@shazbot.org>
-In-Reply-To: <20260813093631.2288172-11-mhonap@nvidia.com>
+Subject: Re: [PATCH v4 11/27] vfio/cxl: Own the whole component register BAR
+Message-ID: <20260827151303.5b34ef3b@shazbot.org>
+In-Reply-To: <20260813093631.2288172-12-mhonap@nvidia.com>
 References: <20260813093631.2288172-1-mhonap@nvidia.com>
-	<20260813093631.2288172-11-mhonap@nvidia.com>
+	<20260813093631.2288172-12-mhonap@nvidia.com>
 X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -100,65 +99,59 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 
-On Thu, 13 Aug 2026 15:06:14 +0530
+On Thu, 13 Aug 2026 15:06:15 +0530
 <mhonap@nvidia.com> wrote:
 
 > From: Manish Honap <mhonap@nvidia.com>
 > 
-> The guest drives a single virtual decoder whose memory maps 1:1, so a
-> device with more than one HDM decoder, or an interleaved one, cannot be
-> represented. Turn that assumption into an explicit refusal at bind rather
-> than a silent misprogramming later.
+> devm_cxl_probe_mem() maps the component registers through the CXL core.
+> By default the core claims each HDM/RAS sub-block, which then collides
+> with the full-BAR request that vfio-pci makes when the guest opens the
+> device.
+> 
+> Discover the component registers into the device reg_map and pass
+> bar_owned to cxl_pci_setup_regs(), so the core maps the sub-blocks
+> without claiming them and vfio-pci owns the whole BAR.
 > 
 > Signed-off-by: Manish Honap <mhonap@nvidia.com>
 > ---
->  drivers/vfio/pci/cxl/vfio_cxl_core.c | 20 ++++++++++++++++++++
->  1 file changed, 20 insertions(+)
+>  drivers/vfio/pci/cxl/vfio_cxl_core.c | 11 +++++++++++
+>  1 file changed, 11 insertions(+)
 > 
 > diff --git a/drivers/vfio/pci/cxl/vfio_cxl_core.c b/drivers/vfio/pci/cxl/vfio_cxl_core.c
-> index 125e11354a46..7edc53b25576 100644
+> index 7edc53b25576..966b7c22a6ac 100644
 > --- a/drivers/vfio/pci/cxl/vfio_cxl_core.c
 > +++ b/drivers/vfio/pci/cxl/vfio_cxl_core.c
-> @@ -36,10 +36,30 @@ static int vfio_cxl_init_device(struct vfio_pci_core_device *vdev)
->  	if (!pdev->hdm)
->  		return -EPROBE_DEFER;
+> @@ -10,6 +10,7 @@
+>  #include <linux/range.h>
+>  #include <linux/vfio_pci_core.h>
+>  #include <cxl/cxl.h>
+> +#include <cxl/pci.h>
 >  
-> +	/* The guest drives one virtual decoder; multiple are unsupported. */
-> +	if (pdev->hdm->decoder_count != 1)
-> +		return -EOPNOTSUPP;
-> +
->  	hdm_size = range_len(&pdev->hdm->settings[0].hpa_range);
->  	if (!hdm_size)
->  		return -ENXIO;
+>  /**
+>   * struct vfio_cxl_state - per-device state for a vfio-cxl device
+> @@ -70,6 +71,16 @@ static int vfio_cxl_init_device(struct vfio_pci_core_device *vdev)
+>  	if (!cxl)
+>  		return -ENOMEM;
 >  
-> +	/* Interleaved decoders are unsupported. */
-> +	if (pdev->hdm->settings[0].interleave_ways != 1)
-> +		return -EOPNOTSUPP;
-> +
 > +	/*
-> +	 * The guest drives resets through the CXL Device DVSEC and polls the
-> +	 * shadow for completion. If the host cannot service a function-scoped
-> +	 * CXL reset (no reset DVSEC, a multifunction device, or no HDM reset
-> +	 * support), that guest request could never complete, so refuse the
-> +	 * device rather than advertise a reset the guest would poll on forever.
+> +	 * vfio-pci requests the whole component BAR when the guest opens the
+> +	 * device. Declare the BAR owned so the CXL core maps the HDM/RAS
+> +	 * sub-blocks without claiming them and that request does not collide.
 > +	 */
-> +	if (!cxl_reset_capable(pdev)) {
-> +		pci_err(pdev, "vfio-cxl: Unsupported device: host cannot service a CXL reset request\n");
-> +		return -EOPNOTSUPP;
-> +	}
+> +	ret = cxl_pci_setup_regs(pdev, CXL_REGLOC_RBI_COMPONENT,
+> +				 &cxl->cxlds.reg_map, true);
+> +	if (ret)
+> +		return ret;
+> +
+>  	ret = cxl_set_capacity(&cxl->cxlds, hdm_size);
+>  	if (ret)
+>  		return ret;
 
-Why does this particular error deserve such a high priority log while
-we silently fail the other two cases added here?
-
-These don't seem particularly noteworthy to split into a separate patch
-versus rolling them into the previous.  I'd probably also group the
-easily testable EOPNOTSUPP errors before we actually start evaluating
-things like the hdm_size.  Thanks,
+Previous comments on patch 2 suggest a different interface here, but do
+note that cxl_pci_set_regs() can return -EPROBE_DEFER and if we do
+actually want to defer the probe (until when?) we'd need to split this
+errno out as a legitimate probe error case versus the fallback mechanism
+for other errnos.  Thanks,
 
 Alex
-
-> +
->  	dvsec = pci_find_dvsec_capability(pdev, PCI_VENDOR_ID_CXL,
->  					  PCI_DVSEC_CXL_DEVICE);
->  	serial = pci_get_dsn(pdev);
-
