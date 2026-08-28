@@ -1,102 +1,122 @@
-Received: from cstnet.cn (smtp81.cstnet.cn [159.226.251.81])
-	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A032224AF1;
-	Fri, 28 Aug 2026 09:17:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.81
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7EC141DF27F
+	for <linux-pci@vger.kernel.org>; Fri, 28 Aug 2026 09:29:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787908682; cv=none; b=Jgkkw1lMw8q/VXu4t4ngyzip2hg/Rv/GIBEIGiALFlfaozm/38TzISDgYTKnRkoGHdiH2a+ZE6iLdSdpomTq2qn165WwhEw77UIPSPXi8yhb2wDAiRi1baZlX4x4W9cReNByfFASNGjr7Pz3cqx45keI4/ueekskP9bH66jgh/Y=
+	t=1787909363; cv=none; b=RlFX/1LIW8fT42XPQua8hW5LbtU0ffcHCw0X/uc1Xk+dIor99Lk5lGqSjOGdSoJrG9K6eejcqVoChLJISsRRqmQeBfikJLAWxCvDNcy0piufc8Ip07E61V6G6N9cuoLwp7oCsfj96/mcIiDggcF3CU2I/Vh+48JJ0ZWgP3awOIU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787908682; c=relaxed/simple;
-	bh=VoGo//QekcH5Wag6hG6dIxgIBuSWA00nRhbmMIj2mlA=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=s7rFLPxVxQdi+cP3n8cgEM+T30jT/QlslDX2y0IUEQV1oHdfEyAxC080qUqogtvfEEt9UqCVxyyeWows3spfRSCOYAd/O4bzlW/GCQeaU/WuSzUWMtn+2O3ZeEzDDhT4SBcRYi4ome//yqvhg87fr7WAa0XC0Gpav2LzOc2LQOQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn; spf=pass smtp.mailfrom=iscas.ac.cn; arc=none smtp.client-ip=159.226.251.81
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
-Received: from localhost.localdomain (unknown [111.196.241.250])
-	by APP-03 (Coremail) with SMTP id rQCowAAHED49UpFqikR1Bg--.12222S2;
-	Fri, 28 Aug 2026 17:17:49 +0800 (CST)
-From: Pengpeng Hou <pengpeng@iscas.ac.cn>
-To: Thierry Reding <thierry.reding@kernel.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>
-Cc: Pengpeng Hou <pengpeng@iscas.ac.cn>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jonathan Hunter <jonathanh@nvidia.com>,
-	linux-tegra@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] PCI: tegra: Unwind partial PHY power-on failures
-Date: Fri, 28 Aug 2026 17:17:47 +0800
-Message-ID: <20260828091747.7976-1-pengpeng@iscas.ac.cn>
-X-Mailer: git-send-email 2.50.1
+	s=arc-20240116; t=1787909363; c=relaxed/simple;
+	bh=Iy3h3TNKKG4a9/4AJi+XbR1bItuZAzoQOJpmtr83vAo=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=ZQYv2pNFNaJJkmGtbrJSZ6AHW1UCmpRN2epPgv4hIZSJKuTgiC3B9dgry1OVWm2sBnAzYNRRtTYuCLtxWXlS2PjbNhTnlJurNNUvX2q0IIufUMfL530ERiQkkWZuc5Ey2837K48igoAJ4fPASN67MAEmvm4ENR/ixsJr81hkdTE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=izKt4zUJ; arc=none smtp.client-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="izKt4zUJ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2CD061F000E9;
+	Fri, 28 Aug 2026 09:29:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1787909362;
+	bh=hjoJri+gQ3cUIJKU2fuCn24AyBCWYYW/l/tQpCqEsL4=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=izKt4zUJ4M0KRANH5IDd22DVN4CyIfc4JtTj9VcL+DrebSHgowgAT4sExWXtWrCy4
+	 v6bCQSuSyCJ9DheiLiMtPp0uUt88EzVl8Ny0eaFx0kpBm85DV1SrTNzLqNp49FPDKI
+	 mu1/08H6eyoEp9HBCrS/VGMda+69RvibxaIatmK6jrwhwQYbkGIpfPAk6XXeQZ6roC
+	 zqzFGcE2/40sYrNdm+OtQ1s7SJJAFsRdDpJic9TOGL2Jx8mDhdSoiUeqjc9ykKrOn4
+	 PBnfJKNgUDWLU2htJ6tWQlFrJILskSxXuTdDZftS2aXGQGIZPsuCaeUgaQbr/CbH0x
+	 Mi4rngjzXfu+Q==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] PCI: tegra: Unwind partial PHY power-on failures
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Pengpeng Hou" <pengpeng@iscas.ac.cn>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260828091747.7976-1-pengpeng@iscas.ac.cn>
+References: <20260828091747.7976-1-pengpeng@iscas.ac.cn>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Fri, 28 Aug 2026 09:29:21 +0000
+Message-Id: <20260828092922.2CD061F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:rQCowAAHED49UpFqikR1Bg--.12222S2
-X-Coremail-Antispam: 1UD129KBjvJXoW7WrW7Kr13Jw1kJw4xGr43trb_yoW8GFWUpa
-	yDta4kt3WkJa1akF43tF15ua4Y9anIkrW7J3ZIkw42vFsxWrWDGr1UtF9Yqa45Crs7t3yU
-	tF1YyF1UJr43WF7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUU9F14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26ryj6F1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-	JVWxJr1l84ACjcxK6I8E87Iv67AKxVWxJr0_GcWl84ACjcxK6I8E87Iv6xkF7I0E14v26r
-	xl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj
-	6xIIjxv20xvE14v26r126r1DMcIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr
-	0_Gr1lF7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7M4IIrI8v6xkF7I0E
-	8cxan2IY04v7MxkF7I0En4kS14v26r1q6r43MxAIw28IcxkI7VAKI48JMxC20s026xCaFV
-	Cjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWl
-	x4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r
-	1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_
-	JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcS
-	sGvfC2KfnxnUUI43ZEXa7VUbtxhJUUUUU==
-X-CM-SenderInfo: pshqw1xhqjqxpvfd2hldfou0/
 
-The Tegra PCIe PHY setup has two nested acquisition loops.  Failure in a
-per-port loop leaves earlier PHYs in that port powered, while failure in
-the outer loop leaves all earlier ports powered.
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [Medium] The new error unwinding path for `tegra_pcie_phy_power_on` uses =
+`tegra_pcie_port_phy_power_off` to power off fully initialized previous por=
+ts. However, `tegra_pcie_port_phy_power_off` iterates over the port's lanes=
+ in forward order and returns early on the first `phy_power_off` failure. T=
+his violates the commit message's claim to unwind in reverse order at both =
+levels, and introduces a resource leak if a `phy_power_off` call fails, bec=
+ause the remaining lanes for that port will incorrectly remain powered on.
+--
 
-Unwind the successfully powered PHYs in reverse order at both levels
-before returning the original error.
+commit 98ccb4105337a9e0fdf96c19a4beba14a45d67f0
+Author: Pengpeng Hou <pengpeng@iscas.ac.cn>
 
-The issue was identified via static analysis and manually reviewed.
+PCI: tegra: Unwind partial PHY power-on failures
 
-Fixes: 6fe7c187e026 ("PCI: tegra: Support per-lane PHYs")
+This commit adds error handling to unwind successfully powered PHYs in the
+Tegra PCIe PHY setup. It attempts to power off PHYs in reverse order for
+both nested acquisition loops (lanes within a port, and ports within the
+controller) when an error occurs.
 
-Assisted-by: LLM
-Signed-off-by: Pengpeng Hou <pengpeng@iscas.ac.cn>
----
- drivers/pci/controller/pci-tegra.c | 4 ++++
- 1 file changed, 4 insertions(+)
+> diff --git a/drivers/pci/controller/pci-tegra.c b/drivers/pci/controller/=
+pci-tegra.c
+> index 59b56446c507e..443fa33b7f0ec 100644
+> --- a/drivers/pci/controller/pci-tegra.c
+> +++ b/drivers/pci/controller/pci-tegra.c
 
-diff --git a/drivers/pci/controller/pci-tegra.c b/drivers/pci/controller/pci-tegra.c
-index 59b56446c507..443fa33b7f0e 100644
---- a/drivers/pci/controller/pci-tegra.c
-+++ b/drivers/pci/controller/pci-tegra.c
-@@ -1002,6 +1002,8 @@ static int tegra_pcie_port_phy_power_on(struct tegra_pcie_port *port)
- 		err = phy_power_on(port->phys[i]);
- 		if (err < 0) {
- 			dev_err(dev, "failed to power on PHY#%u: %d\n", i, err);
-+			while (i--)
-+				phy_power_off(port->phys[i]);
- 			return err;
- 		}
- 	}
-@@ -1051,6 +1053,8 @@ static int tegra_pcie_phy_power_on(struct tegra_pcie *pcie)
- 			dev_err(dev,
- 				"failed to power on PCIe port %u PHY: %d\n",
- 				port->index, err);
-+			list_for_each_entry_continue_reverse(port, &pcie->ports, list)
-+				tegra_pcie_port_phy_power_off(port);
- 			return err;
- 		}
- 	}
--- 
-2.43.0
+[ ... ]
 
+> @@ -1051,6 +1053,8 @@ static int tegra_pcie_phy_power_on(struct tegra_pci=
+e *pcie)
+>  			dev_err(dev,
+>  				"failed to power on PCIe port %u PHY: %d\n",
+>  				port->index, err);
+> +			list_for_each_entry_continue_reverse(port, &pcie->ports, list)
+> +				tegra_pcie_port_phy_power_off(port);
+
+[Severity: Medium]
+The commit message states the code will unwind successfully powered PHYs in
+reverse order at both levels. However, does delegating to
+tegra_pcie_port_phy_power_off() here contradict this design?
+
+Looking at tegra_pcie_port_phy_power_off(), it iterates over the lanes in
+forward order rather than reverse:
+
+static int tegra_pcie_port_phy_power_off(struct tegra_pcie_port *port)
+{
+	...
+	for (i =3D 0; i < port->lanes; i++) {
+		err =3D phy_power_off(port->phys[i]);
+	...
+}
+
+Additionally, if an error occurs during unwinding, does this cause a resour=
+ce
+leak of the remaining PHY power states?
+
+If phy_power_off() fails for any lane, tegra_pcie_port_phy_power_off()
+returns early:
+
+		err =3D phy_power_off(port->phys[i]);
+		if (err < 0) {
+			dev_err(dev, "failed to power off PHY#%u: %d\n", i,
+				err);
+			return err;
+		}
+
+This early return abandons the power-off sequence for the remaining lanes
+in the port, leaving those PHYs incorrectly powered on.
+
+>  			return err;
+>  		}
+>  	}
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260828091747.7976=
+-1-pengpeng@iscas.ac.cn?part=3D1
