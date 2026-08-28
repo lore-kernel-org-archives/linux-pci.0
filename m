@@ -1,142 +1,173 @@
-Received: from mail-ed1-f72.google.com (mail-ed1-f72.google.com [209.85.208.72])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.21])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68218376BF7
-	for <linux-pci@vger.kernel.org>; Fri, 28 Aug 2026 15:50:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.72
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28AF5369990;
+	Fri, 28 Aug 2026 15:59:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.21
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787932263; cv=none; b=XxGE1IGeG3HjcF9V2cYs02q0GKnKReC4u4VGycfj7BGoCo3GdDVwRhpDJwLQxZ+8sNLI4Y05Q1dMxLEaB3abh6m3Znehvyho8Rs07DizYn0a9Azz4pXwJJOVMB3kCf24TxBK4dPis01liwjoEmPebdkWqV5INLqOLZiIwJdMtrY=
+	t=1787932801; cv=none; b=OQMHSm2AEw0IEeDtQjB9aaCJNJb0Ywy5Ao3Y7DbcdNf+J5ksdlAldUsaUhOc1/DjPikfLwxJHNDEUmD3LtXIaakm7hsKJ61KFv/J+GaxFvF0BuhHR8HDjFGQvgkCSL1Gg75IcCU8IZJZs+raG3yDevsOOMLFeNCFLtZVnXQlS+w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787932263; c=relaxed/simple;
-	bh=ReIfV+XfN9CJ7gWGHVy+pvxz4t/Bfm9Oz0pHx1zUvmQ=;
-	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=JQXzH+5IPdaycmo3pmNMx/JqqGNjiosQYKpKcrVPvu2oMh+oLA4yD9ibmlfnozU1BoiInKebGbtsNIDD+4iQGV7cxQXTm1CRpma7bfotb2xF9Kq/x+mIaR0cIMw+VJcdLaAwJWF+QVtnSrBuk/C08wb5IqT9E0VqGj5qmLP74S4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--tarunsahu.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=Po3ok6Co; arc=none smtp.client-ip=209.85.208.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--tarunsahu.bounces.google.com
+	s=arc-20240116; t=1787932801; c=relaxed/simple;
+	bh=+AegtlUreBw0TeBD9YP48QLV31KMxegwuKNHebyj7aU=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=shXiOkNr02zNbPjUPB/GgaU1qOzWURbmuCbbN3ZkaZsOP8zQdR3aBaGHUEXJ9gwVCRTSzFAuFBBIfLbtKZMHW8/7rQ9PovTw0ucblpdj3RhoES1Jn9CzXToY7F4I4CJjne5s9sHswy4Eofyf6Xgy8CbFcrBXNO7MSltiCFv0jfs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=OyQVta7M; arc=none smtp.client-ip=198.175.65.21
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="Po3ok6Co"
-Received: by mail-ed1-f72.google.com with SMTP id 4fb4d7f45d1cf-6a6108d2987so955558a12.1
-        for <linux-pci@vger.kernel.org>; Fri, 28 Aug 2026 08:50:58 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1787932256; x=1788537056; darn=vger.kernel.org;
-        h=content-type:cc:to:from:subject:message-id:references:mime-version
-         :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=uNXgP9aiWGCY8sBDBkxQ5jGmQfHLh/8XePeePdlfGZw=;
-        b=Po3ok6CoqSt0K7p74Ie5YqBocIN+aT+ywCfyYaEW0nyMCqj9P2obgLfhD1uZp3moPR
-         ZOwWxmFXCI4XDkVBaGeCOC79P3b4afBm7F8wF/CDagFghN/DdWkDh3WWpmvzWgeMl8Ve
-         eca34GBPI/3jBYUahiMGbh+fyAxAcAry29jpcoG/RZlzJRU8VaCUWm3Cdjp6/uGeN7DS
-         HGzO3pufLwguWh5e7bjNyWFERjBLppaSQ1XxS2i6ZDmHfUq5tOZDA9ubLCvSxJww2WDu
-         AbbuNAnwdQEZs0jiXOqJpPZa8qiJrE+Dw6WZmGLRPg5P12aM9fA796C0jcpqAOlJ90Ry
-         rTBA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787932256; x=1788537056;
-        h=content-type:cc:to:from:subject:message-id:references:mime-version
-         :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=uNXgP9aiWGCY8sBDBkxQ5jGmQfHLh/8XePeePdlfGZw=;
-        b=Gdxrxljh/jamNbWgBvDcerhoUh5//9dnIUQAd1EAuTaETYuYG79kDyNzfPECFpxwlP
-         p6gp0GG2rpRp9Tcsnc9YWV/e4NmJjpdKyhFNUNMmQ4UOUOGGjoM21q9jeA7R7Qk7gZKP
-         8p6Ct7lBX3dyNKwrsYjMr9McvezDmUBMLzOZa5N3SpY4ybeL3fA8yC0uYxRya4fiI7i5
-         qQhnp2OMNckdnXPhVIBoVM0uU7jtkHiJ3oUYngsz6YS4TJzcmid9vatqcr50OYlXPsmw
-         Yge1ZCDeccFU4Bwf0Dh55VRKx5FmlB3J2PEBl2Xw+U7sAmOxZbNISXY04+xY7Z/8BzF5
-         1EWg==
-X-Forwarded-Encrypted: i=1; AHgh+RrlmeYPqeSLMSguIFgu2eArGjUBX0m3PuvkaNpQeBZZpZBxbjH/KtL7bYDass6Sr3TYLebUeZq8dCk=@vger.kernel.org
-X-Gm-Message-State: AFuF++mx+KgyEs0sjhSfc88SmEgFVAuVqEmfVCNkIXl/5ReVYIhrUgcX
-	7WrtKbhHPXzs2yOli6z4nioQkCEydA93zzGHOL4FSZ05Q+bEGZTbPjYK49mTiGSrCdHFyStyp1r
-	bYEWOcYi+/T6re7mShQ==
-X-Received: from edrb21.prod.google.com ([2002:aa7:d495:0:b0:6a6:a82:8b98])
- (user=tarunsahu job=prod-delivery.src-stubby-dispatcher) by
- 2002:a05:6402:5286:b0:6a6:1c30:bc4c with SMTP id 4fb4d7f45d1cf-6a61c30c3cfmr2134011a12.5.1787932256221;
- Fri, 28 Aug 2026 08:50:56 -0700 (PDT)
-Date: Fri, 28 Aug 2026 15:50:55 +0000
-In-Reply-To: <20260821142414.150892-4-djeffery@redhat.com>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="OyQVta7M"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1787932800; x=1819468800;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=+AegtlUreBw0TeBD9YP48QLV31KMxegwuKNHebyj7aU=;
+  b=OyQVta7MhpZlVYPMRo6qGbJctjw7X8uK9WL6cr8fh0WNWCsWWhIEi8lG
+   Yj5MOM2P1V8Ha07ZDyBUTjaj1ROWuedM2UI+qwqTv8tn9qbyE/ce5fOv9
+   zmQ9CBnxQ2qxQLINzAFpAXmuFqkZyb1cXeiO1euzolHBxM34/FirqYVW7
+   u24vhTk/s0GyZlq60NAGXpF1WlXyUMGewVtNJk9MsmHu91L0pUtt7Nmvo
+   xSeF3oTYGJiWDvoZa/hFQd2BpwAKQd3TKcTfcI+qkFaAhPvmF1pxZBKw+
+   s31V0or1ht2/2o6sBgoKgMwU9kv+BfW4EGpsWXM2/OyzKM4Zv+GCl/AFi
+   A==;
+X-CSE-ConnectionGUID: bzcJr0CwSGKBxknMPW6XgQ==
+X-CSE-MsgGUID: eqQGFVmZRM2E0rFXnk/B2w==
+X-IronPort-AV: E=McAfee;i="6800,10657,11889"; a="88299642"
+X-IronPort-AV: E=Sophos;i="6.25,248,1779174000"; 
+   d="scan'208";a="88299642"
+Received: from orviesa006.jf.intel.com ([10.64.159.146])
+  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Aug 2026 08:59:59 -0700
+X-CSE-ConnectionGUID: yOu767KDTN6AfmDdD3kNLw==
+X-CSE-MsgGUID: qX/wSVlXQTum0ztYfomArA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.25,248,1779174000"; 
+   d="scan'208";a="266388794"
+Received: from sghuge-mobl2.amr.corp.intel.com (HELO [10.125.109.180]) ([10.125.109.180])
+  by orviesa006-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Aug 2026 08:59:57 -0700
+Message-ID: <dbc6658c-9c3d-4590-b9c3-784dcc7846cc@intel.com>
+Date: Fri, 28 Aug 2026 08:59:55 -0700
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-References: <20260821142414.150892-1-djeffery@redhat.com> <20260821142414.150892-4-djeffery@redhat.com>
-Message-ID: <9huzjypaz1k0.fsf@tarunix.c.googlers.com>
-Subject: Re: [PATCH 3/9] driver core: warn should device_move try to move a
- need_parent_lock device
-From: tarunsahu@google.com
-To: David Jeffery <djeffery@redhat.com>, driver-core@lists.linux.dev, 
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>, 
-	Danilo Krummrich <dakr@kernel.org>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, 
-	linux-scsi@vger.kernel.org, Stuart Hayes <stuart.w.hayes@gmail.com>, 
-	Laurence Oberman <loberman@redhat.com>, Bjorn Helgaas <helgaas@kernel.org>, kexec@lists.infradead.org, 
-	David Jeffery <djeffery@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v4 04/27] cxl: Establish media readiness in
+ cxl_mem_probe()
+To: mhonap@nvidia.com, alex@shazbot.org, jgg@ziepe.ca, ankita@nvidia.com,
+ jic23@kernel.org, alejandro.lucero-palau@amd.com, smadhavan@nvidia.com,
+ corbet@lwn.net, skhan@linuxfoundation.org, dave@stgolabs.net,
+ alison.schofield@intel.com, vishal.l.verma@intel.com, iweiny@kernel.org,
+ ming.li@zohomail.com, yishaih@nvidia.com, skolothumtho@nvidia.com,
+ kevin.tian@intel.com, bhelgaas@google.com, dmatlack@google.com,
+ kees@kernel.org, gustavoars@kernel.org
+Cc: cjia@nvidia.com, kjaju@nvidia.com, vsethi@nvidia.com, zhiw@nvidia.com,
+ linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+ kvm@vger.kernel.org, linux-cxl@vger.kernel.org, linux-pci@vger.kernel.org,
+ linux-kselftest@vger.kernel.org, linux-hardening@vger.kernel.org
+References: <20260813093631.2288172-1-mhonap@nvidia.com>
+ <20260813093631.2288172-5-mhonap@nvidia.com>
+From: Dave Jiang <dave.jiang@intel.com>
+Content-Language: en-US
+In-Reply-To: <20260813093631.2288172-5-mhonap@nvidia.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-David Jeffery <djeffery@redhat.com> writes:
 
-> Currently, no device has need_parent_lock set and is moved by
-> device_move. need_parent_lock is only set by the usb bus and very
-> few device types ever use device_move.
->
-> Add a warning to device_move to catch should it ever be used on a
-> device with need_parent_lock set. The combination would break
-> the immutable relationship needed between parent and child for
-> need_parent_lock when locking and unlocking both.
->
-> Signed-off-by: David Jeffery <djeffery@redhat.com>
-> Tested-by: Laurence Oberman <loberman@redhat.com>
+
+On 8/13/26 2:36 AM, mhonap@nvidia.com wrote:
+> From: Manish Honap <mhonap@nvidia.com>
+> 
+> media_ready was only ever set by cxl_pci, in advance of registering a
+> memdev and with CXL Memory Device register assumptions. A consumer that
+> creates a memdev without cxl_pci, such as a mailbox-less Type-2
+> accelerator brought up through devm_cxl_probe_mem(), therefore handed
+> cxl_mem a device with media_ready still false, and cxl_mem_probe()
+> rejected it with -EBUSY. __devm_cxl_add_memdev() turns that into -ENXIO
+> back to the caller and the bind fails.
+> 
+> Move the readiness wait into cxl_mem_probe() so every memdev consumer
+> gets a ready resource regardless of how the memdev was created. When
+> media_ready is not already set, wait on the device's DVSEC
+> Mem_Info_Valid and Mem_Active bits and mark it ready. cxl_pci keeps
+> setting media_ready before it registers its memdev, so that path skips
+> the wait.
+> 
+> The CXL Memory Device register group is optional and many Type-2 devices
+> do not implement it, so cxl_await_media_ready() must not read the Memdev
+> Status register unless the group is mapped. Reading regs.memdev on a
+> device that lacks it would fault. Gate that read on regs.memdev; the
+> DVSEC bits already prove readiness for such devices.
+> 
+> Signed-off-by: Manish Honap <mhonap@nvidia.com>
+
+Agree with Alex's review. First part needs to be a separate patch. And second part, please see drivers/net/ethernet/sfc/efx_cxl.c:efx_cxl_init() on media ready for CXL type2. That should be handled before devm_cxl_probe_mem() gets called. And with that, maybe the first chunk is not even needed?
+
+DJ
 > ---
->  drivers/base/core.c | 8 ++++++++
->  1 file changed, 8 insertions(+)
->
-> diff --git a/drivers/base/core.c b/drivers/base/core.c
-> index bd9c2921e326..75f5931165a8 100644
-> --- a/drivers/base/core.c
-> +++ b/drivers/base/core.c
-> @@ -4712,6 +4712,14 @@ int device_move(struct device *dev, struct device *new_parent,
->  	if (!dev)
->  		return -EINVAL;
+>  drivers/cxl/core/pci.c | 15 +++++++++++----
+>  drivers/cxl/mem.c      |  9 +++++++--
+>  2 files changed, 18 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/cxl/core/pci.c b/drivers/cxl/core/pci.c
+> index 08d4c955137d..9b372d5a1aa4 100644
+> --- a/drivers/cxl/core/pci.c
+> +++ b/drivers/cxl/core/pci.c
+> @@ -151,7 +151,6 @@ int cxl_await_media_ready(struct cxl_dev_state *cxlds)
+>  	struct pci_dev *pdev = to_pci_dev(cxlds->dev);
+>  	int d = cxlds->cxl_dvsec;
+>  	int rc, i, hdm_count;
+> -	u64 md_status;
+>  	u16 cap;
 >  
+>  	rc = pci_read_config_word(pdev,
+> @@ -172,9 +171,17 @@ int cxl_await_media_ready(struct cxl_dev_state *cxlds)
+>  			return rc;
+>  	}
+>  
+> -	md_status = readq(cxlds->regs.memdev + CXLMDEV_STATUS_OFFSET);
+> -	if (!CXLMDEV_READY(md_status))
+> -		return -EIO;
 > +	/*
-> +	 * device_move() should not be used on devices with need_parent_lock
-> +	 * set. Concurrent reparenting will violate the immutable
-> +	 * relationship needed while locking and unlocking both parent and
-> +	 * child.
+> +	 * It is possible some Type-2 devices (CXL_DEVTYPE_DEVMEM) do not
+> +	 * implement regs.memdev; only consult the Memdev Status register when
+> +	 * the group is actually present.
 > +	 */
-> +	WARN_ON(dev->bus && dev->bus->need_parent_lock);
+> +	if (cxlds->regs.memdev) {
+> +		u64 md_status = readq(cxlds->regs.memdev + CXLMDEV_STATUS_OFFSET);
 > +
->  	device_pm_lock();
->  	new_parent = get_device(new_parent);
->  	new_parent_kobj = get_device_parent(dev, new_parent);
-> -- 
+> +		if (!CXLMDEV_READY(md_status))
+> +			return -EIO;
+> +	}
 
-Thankyou for adding this, Please feel free to add
-Suggested-by: Tarun Sahu <tarunsahu@google.com>
+You probably get less code churn if you just returned here:
 
-Also, I have seen sashiko complaining about another problem with
-device_move which is impractical/impossible. So I mentioning it below
-for discussion/information.
+if (!cxlds->regs.memdev)
+	return 0;
 
-Sashiko Claim: There is potential deadlock if a device is being
-registered with DL_FLAG_STATELESS which skips the reordering of
-the list so device_kset->list will have device dependent devices out of
-order. Also same problem can be create by device_move.
+DJ
 
-=> This is impractical because a device being registered with
-DL_FLAG_STATELESS must have its supplier already registered first
-(Documentation/driver-api/device_link.rst) which inherently puts
-them in the order.
+>  
+>  	return 0;
+>  }
+> diff --git a/drivers/cxl/mem.c b/drivers/cxl/mem.c
+> index 798e5c369cfc..9c6e99b9124c 100644
+> --- a/drivers/cxl/mem.c
+> +++ b/drivers/cxl/mem.c
+> @@ -105,8 +105,13 @@ static int cxl_mem_probe(struct device *dev)
+>  	struct dentry *dentry;
+>  	int rc;
+>  
+> -	if (!cxlds->media_ready)
+> -		return -EBUSY;
+> +	if (!cxlds->media_ready) {
+> +		rc = cxl_await_media_ready(cxlds);
+> +		if (rc)
+> +			return rc;
+> +		cxlds->media_ready = true;
+> +		dev_dbg(dev, "CXL media ready\n");
+> +	}
+>  
+>  	/*
+>  	 * Someone is trying to reattach this device after it lost its port
 
-Similarily for device_move() affecting topological order is very
-impractical. Unless someone mis-use the API
-device_move(..., DPM_ORDER_NONE). Which, as well, not favourable
-on upstream.
-
-Once topological order is messed up, neither async shutdown nor serial
-(sync) shutdown can work. As it is precondition for it. except
-DL_FLAG_SYNC_STATE_ONLY, which is handled in both implementation.
-
-
-~Tarun
-
-> 2.55.0
