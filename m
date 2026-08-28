@@ -1,155 +1,146 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.19])
+Received: from SJ2PR03CU001.outbound.protection.outlook.com (mail-westusazon11012053.outbound.protection.outlook.com [52.101.43.53])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DAB093F1ABF
-	for <linux-pci@vger.kernel.org>; Fri, 28 Aug 2026 09:49:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.19
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787910589; cv=none; b=hJLSSoAVrDw3bKlG36GnTf1rpRMWNuwTIcevskKssLMlFRYXXrRTLZQCDo/MHEwN1ztQpW/Pwn2EsU42lhvs0e/dTwPUtflRdz2DDdNRxf0TOyntjd1CDsbINKFZ+aF0dh/+eur6ItoUkrNbCSaPww1JCnU+dWnqJiyx2VRnjdY=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787910589; c=relaxed/simple;
-	bh=E9lkvK6JVHDyf9CsdpdAYjF8Zj+80R9xZDs7n/1hsjs=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=IqW1sen2xZ/p74Czddm6R9VmQ2Dd6GI5zwAtfq7FSrIllHUxCpBzJcB12lOcRxYJxD9cZMS9/VwHryrJb8AhLwcXLDKsJiQK088vYJbvTTIsdDBWVEMOZ8gtfYLYh7MKpHL9BEO/hUJuGoqTIxYLNUQlQZ8tyzLQOzKLQipKGI0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=cWNULJrG; arc=none smtp.client-ip=192.198.163.19
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D941944685D;
+	Fri, 28 Aug 2026 11:53:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.43.53
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1787918025; cv=fail; b=Tzuf8MLTzzRMOYgPHctY1le9Nw0ApaE4YkPoUXjc0B1hUhISbvzw2dxX7I7AVcNE+I/j99TPFsHvZfr5ixdCvXpX/nnpg0OvIJoURx3DfU0mT/kiHzOIPL6AfrP0vCH6pjkkOMwPUdxIwNfbEg5zlJuWNwTA3+56Tr/qJMsbOO4=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1787918025; c=relaxed/simple;
+	bh=b5i91ObM3s17zyDJeQrte/ot0a2e8dg6fkuOupzvHxU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=ERBneRk3mVemQkQeKcLg50HZi9D8kr6aY5b4EYJKu9tEO5pPH17+cDZUc77XZGsovJA1Rq4WeRCgGhPpHJ9u3UmxFJqtBKpgw20mdt586Jy3V3fg9772n7y7oLzwLIh388/fX/ULoevJscQ6qotyKcKuWX5jb2CCjc1HDTKfsf4=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=F4A6dqMF; arc=fail smtp.client-ip=52.101.43.53
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="cWNULJrG"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1787910583; x=1819446583;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=E9lkvK6JVHDyf9CsdpdAYjF8Zj+80R9xZDs7n/1hsjs=;
-  b=cWNULJrG69arv1JGxKzzS0x9KW4Go7xSiGK7XdNN898/U71KRkHnbxEK
-   0IRpTxOHHzsWjIBdIEjcbjRBzqEQC6lX/jQAEecz4m0hVYK738y6ECaKb
-   4eSmxvH00dD7zXBoDJv8aEUhjbG36t3yDONaBvuBiE3KPD/h7NxRLcuKQ
-   rl2DeYsIy1/dTvT2ADSAs33jkkbbQHteMNzd4qQIYEPVYjKtTxJvfsjf0
-   CNbLjLZ8+HyaN+0BjceXVc984YKi/1Ly5QyrF1rJ8Oj/gRSfvi0FZsB2B
-   t9D6atvf1nI9mNUJ8sU1OTb5NQFAcY1rU4EqmpZaSBw0dDAn6Kr8dX2Ej
-   Q==;
-X-CSE-ConnectionGUID: rZchJ8TwQRq28r2VPNHygA==
-X-CSE-MsgGUID: hRirRTTWTKiyxR/kB0vP/g==
-X-IronPort-AV: E=McAfee;i="6800,10657,11888"; a="87360951"
-X-IronPort-AV: E=Sophos;i="6.25,248,1779174000"; 
-   d="scan'208";a="87360951"
-Received: from orviesa008.jf.intel.com ([10.64.159.148])
-  by fmvoesa113.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Aug 2026 02:49:39 -0700
-X-CSE-ConnectionGUID: uCLi9JCNSEW7nXJKgHL2bQ==
-X-CSE-MsgGUID: ULTzFYNqSTGmJdfvzRaD6w==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.25,248,1779174000"; 
-   d="scan'208";a="267516480"
-Received: from lkp-server01.sh.intel.com (HELO 3532383e6126) ([10.239.97.150])
-  by orviesa008.jf.intel.com with ESMTP; 28 Aug 2026 02:49:37 -0700
-Received: from kbuild by 3532383e6126 with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1wztDI-00000000All-22ir;
-	Fri, 28 Aug 2026 09:49:33 +0000
-Date: Fri, 28 Aug 2026 17:49:02 +0800
-From: kernel test robot <lkp@intel.com>
-To: Geramy Loveless <gloveless@jqluv.com>, linux-pci@vger.kernel.org
-Cc: oe-kbuild-all@lists.linux.dev, bhelgaas@google.com,
-	alexander.deucher@amd.com, ilpo.jarvinen@linux.intel.com,
-	christian.koenig@amd.com, amd-gfx@lists.freedesktop.org,
-	mario.limonciello@amd.com, nra3088@gmail.com, gloveless@jqluv.com
-Subject: Re: How to correctly reserve prefetchable bridge windows for large,
- resizable BARs behind PCIe switches (8x GPU, PEX890xx) - seeking guidance on
- upstreamable approach.
-Message-ID: <202608281725.lCnQu9B3-lkp@intel.com>
-References: <a2292dfb-2ee5-4988-ac67-c75dd3e97a4c@jqluv.com>
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="F4A6dqMF"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=P1DurnBdXsv4lKMNt62jRL4ddjxk/fyW6ZPk9MctJ8GKc+r6g2FIvbPCOh5EpZlDQs+MRLSYblEPW+d2OH7DYai9Xu/97vrrqFqVNtG/o64opau+t8y/GeMVjqO2NWZ9kKMjosYjPomCQ1eJ5TejQyF4+POn0XAuHABku3Xb414/cFURpx+0tXguQrUASHlQhJOsDETTMThn7jZF7y0Qk4WLUB3uRXmnxB9Aw8ljhxbxBUN180t2POA2No3F2j+9XCt/dCx1jPXbwJ27SM9w5iDsoDdenggOUSxDdHJyb5sYmXTqizX3MnJ/pfGiSEOgaXQ+N2K3uVcYREqzkxw9Hw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=CZaPisrZJjKFJJwx9ZY8dCeoPgw1xD3pS3/Y+oO2bJw=;
+ b=XkmIB8J6F6cZzPvpf6yPsgmeMacGYfxoA3EECbeJA9vsIPdrSHdNU0aAuQARq7h3p1FdiH8+sRxChmyyjlhZaqLR1Hhg5xiQT9kwaWhVGWGoNFWTCQSJl91SipyOTEt3YqGF0J8UWiiyzW6zPcboDjHqzZfMNwc3BkHLxIKB+823pVA5fNdwc3HpUMtkBvSm+x2zgJdy0riM2AJ8xr209nMzCYbuzwRL/HVV4wT24+qQZ4D0VrIM9Kh7Y/1k3uCc/BaoiFa3LnS+nKwMabn+56SI2nyHlspVY/pvGwi+3HPqEgk7/PMgs1Ks3Y/cO63gc8OdbPcfLopQAbrFiGYyVA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=CZaPisrZJjKFJJwx9ZY8dCeoPgw1xD3pS3/Y+oO2bJw=;
+ b=F4A6dqMF8sTOsLmQPEkM6WpSDg/PBtckSZpxYPDF+7ctiaxbAH/OF8Bk0cifFGPBhIA+Sgubw8sEqLx/9XUCND3VFZuZ14lTNDLr2Im+u4zAFrPVGHyrXsBPgJH+2dse//QJcNAIvaMzpPyITsWl/87qUsV5+jrhtAQLtDcLSzNApM1ICqZ57vEAE15QLHn70H4C09GLdn7m+jKRN8LcGNEev+tSkeh8m9SD+R+cNirwd66N//v8ieIcvxIP1YHVC0ssidYQheqkrhKXMAnA9sDemmq1dZF38go+48RidMlMIKObKMeyWUoyfXbQZXeqfckiSXMwFHrhBg2DAdZaeQ==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from LV8PR12MB9620.namprd12.prod.outlook.com (2603:10b6:408:2a1::19)
+ by DM6PR12MB4387.namprd12.prod.outlook.com (2603:10b6:5:2ac::15) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.360.10; Fri, 28 Aug
+ 2026 11:53:33 +0000
+Received: from LV8PR12MB9620.namprd12.prod.outlook.com
+ ([fe80::299d:f5e0:3550:1528]) by LV8PR12MB9620.namprd12.prod.outlook.com
+ ([fe80::299d:f5e0:3550:1528%4]) with mapi id 15.21.0360.008; Fri, 28 Aug 2026
+ 11:53:33 +0000
+Date: Fri, 28 Aug 2026 08:53:31 -0300
+From: Jason Gunthorpe <jgg@nvidia.com>
+To: Vasant Hegde <vasant.hegde@amd.com>
+Cc: Pranjal Shrivastava <praan@google.com>, iommu@lists.linux.dev,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Joerg Roedel <joro@8bytes.org>,
+	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
+	Ankit Soni <ankit.soni@amd.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Samiullah Khawaja <skhawaja@google.com>, sashiko-bot@kernel.org
+Subject: Re: [PATCH v3 2/5] iommu/amd: Fix DTE clearing and rename
+ iommu_ignore_device()
+Message-ID: <20260828115331.GC3922654@nvidia.com>
+References: <20260824122347.1588592-3-praan@google.com>
+ <178759520117.3131778.15279605903087565179.b4-review@b4>
+ <ao1vJxkZsJpr1qXG@google.com>
+ <20260825114916.GT244917@nvidia.com>
+ <ao3RF0w_AXo5EXxv@google.com>
+ <20260825175315.GD3325090@nvidia.com>
+ <ao3oHn8HiXIx5Wrl@google.com>
+ <50ffc453-f918-47f8-9556-9813308690a9@amd.com>
+ <20260826122147.GA3666382@nvidia.com>
+ <bfb7be5b-2da3-4bd3-8146-9bd079011a75@amd.com>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <bfb7be5b-2da3-4bd3-8146-9bd079011a75@amd.com>
+X-ClientProxiedBy: BN9PR03CA0251.namprd03.prod.outlook.com
+ (2603:10b6:408:ff::16) To LV8PR12MB9620.namprd12.prod.outlook.com
+ (2603:10b6:408:2a1::19)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <a2292dfb-2ee5-4988-ac67-c75dd3e97a4c@jqluv.com>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: LV8PR12MB9620:EE_|DM6PR12MB4387:EE_
+X-MS-Office365-Filtering-Correlation-Id: a8145b51-596e-43dd-5baf-08df04fafbff
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|366016|7416014|376014|23010399003|1800799024|10067099003|56012099006|11063799006|4143699003|22082099003|18002099003;
+X-Microsoft-Antispam-Message-Info:
+	+1W8DCpc18KBtzSa/DXeS04jmhuBDuODzezLDp235L9Tmk+hpUFCKiGh9UgRGe0ci5Kocnqu3F4Ur49Vy1VUAbz8ImN7VycYONyc9JHOC5JfWJEYWv5QYEIIpjQZjKdjon+GSrNE3daa2tD4IKzL0CQRmimzfqUUGXJqPrvM2MCMXM2a6SunVOX900OHexTXMjBYVqVMjcI+veSiJzxHj3+Jqno4uI6v0l7PSy/pSiiO5sjXY5mRbksxq06weWGVKCtfXuSm3uOwOq1e+rtJreSXBzM2HqZeXJ2/kgRZszsoiurKoJhWw6mKWUprxx6ltbVqHBFqgPgnTs1YRJHCTHtd5/3/TaY0U7hA6rPwWOfqgJ6VBBcJHms0aDh/KdshMhPVqa1qgYYP3eyrYJuHjkIv9vbW6l6tPKVazWyqBywU1m33DyZ8WTazg+LLWnx4wX9TmuFiMPa2hGHXw0lmUY6YndkHRCyu1PkTlRgiWVWpATq9/O1uEmxn3U9ohAA+ypDtQuelWVkKQFyWiw0TddrAl2lToqNGacZpP9rcwiWPUqRLDDFzZg8RErcp/HSD9qzbVdGV+uRS6LFbt1Us6hPPCbcrmmeQgYM8Bwyb1DlFRKS68JWxjLXu7LAjVakYp8Jl0NfnSsdNqobpjjm7Xjbn+QyHtfecvrp6IdhFJXU=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LV8PR12MB9620.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(7416014)(376014)(23010399003)(1800799024)(10067099003)(56012099006)(11063799006)(4143699003)(22082099003)(18002099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?XSAHJq0qq0aX/vFh1rewVAnbWT9EtMEz4YU1YAF+f/RH7OHMOuKvVq9Pgmd5?=
+ =?us-ascii?Q?6xyWTZYfUkVkDL+42t2ltdEJlhsrDaQ8dSt0tKsliYaE2tNaXKHY+IF3Aox+?=
+ =?us-ascii?Q?vCV3C+QthFV9RtF7SaUL8+kR9W/lap/yZWz1RoxsHrgycI2HWw+b1pEjUFU7?=
+ =?us-ascii?Q?yODjljhXaDkblwIyf3CRzgypa/e/m4jBSCcPXwIJVZvkoLk0EF8bk/77kj6c?=
+ =?us-ascii?Q?Q/7Q0RJKDg/FOYEeGdJgAlZH4y6MIyau/NaIx50eHZ2+RKhdv6TijiKQ1eWh?=
+ =?us-ascii?Q?UtdbX4DB7Nob2RNw3scosx3lH0NHFBbn7JWpTEqJtZgZ/CDaBfyXWs3HrM3P?=
+ =?us-ascii?Q?Kwhwz7zQi6j1BsWco11lpBh8naUSiDr8n6aeTgMKtgGEz3ka7pyUApgZo0fz?=
+ =?us-ascii?Q?1txYhJFC8B2wqVuGCycYwgUTw3GM37DG9f+jrLFgKQGFKNtO7VUtgY1uxOjG?=
+ =?us-ascii?Q?E39IBYowAGyjxxVGuz3te7Ob1INHNS2TF+AosGZd7jgu3TwvjNTv5M0xnJrK?=
+ =?us-ascii?Q?yhAmEOKCatGUTXVs8TqMoZkUW2J2zOFQaKEbStyNFDgTJTHrZmTBOxiQdmmF?=
+ =?us-ascii?Q?N5BQtTYf2YKxmN+5RPeY4e0mjtgt0i7TcSnR4Zd+bOlRObCAo+EXeYbTMpnm?=
+ =?us-ascii?Q?QKc0a6EwTmkWkkumQiUeisZAtsv5LXdXfuTtdlrANMRX/iVFiWFA1AbZkAIG?=
+ =?us-ascii?Q?LKPNZi71Hoz2a1qQf7ze+QOGen4lQeB1SGxeL/wjuScx8GMUPlv9033OGHPq?=
+ =?us-ascii?Q?2sRO2Z3ryvRFxyvwj9kN0PqG/UDFTZQRbpLeCctBPm26hCp7uu4E3EYtatL1?=
+ =?us-ascii?Q?Mf5FxzdAO1YsIAIYCnhnrMWYdsWCKQaq9WXp+kyVxSqfVOWt2PcxhE+WYqwB?=
+ =?us-ascii?Q?eRNIr3FweKYRGQvb/6qe/Rl7mH+HU7js8+WZk69QvUcA/L6hjZCHJew8JkVU?=
+ =?us-ascii?Q?SM/ayhBXLRhT+6ubQdh3Mcn5H83ire2DlwBhFXHaNErOeweWpT4XxNZrhIPq?=
+ =?us-ascii?Q?Rzh4o1Hydtw2MxpejJFJ0HZ8D+YSDIBwPD+KE1gClf68PCXiJBZxOFnpnLoJ?=
+ =?us-ascii?Q?uE862fq9/O+8pM0OslrI5GKLCV/4/GGmA7sAO8PQ+atM1p+p5601+uIyWS+h?=
+ =?us-ascii?Q?YFdkMJOz84jZjFxTw01IA2paND+YMjSrp+O0mY/aQmHtOXwaDo0O3bdhB12m?=
+ =?us-ascii?Q?mk9miZ7sQYvdSFq8OoI6ffLOGiL2s0W17lZTsSaArXKkpi9Xm2/wGLxvjk5A?=
+ =?us-ascii?Q?GIckmSSNXTCnGGKqnK+xngSeDBtDbRrmip+KnNHVLcoz9I+1o+LUUf7jVOWK?=
+ =?us-ascii?Q?x1hUa1lW5CrtJ/7fs8LNm7smd/vhNaOjPOUBkXs2nAcqQe5wCWUGfDWkV99L?=
+ =?us-ascii?Q?VfEsGC3XwpaNiAwxom1gtGh0scsF03KIu025aUyhtHaNByPfdyPggxYJ7QM7?=
+ =?us-ascii?Q?RTUtiY2B/eqQb8jzp+mryilYXRyfQExgWIm/l73HpSFOBp9jgHXD0zqsk/EI?=
+ =?us-ascii?Q?rQoZR2uLQ7nN6qPV/ybcvBBtCYZTT5b6D309pKZ079wKJwJX+bh12c1Z+VHs?=
+ =?us-ascii?Q?+Gs3KlbvaK36QajByBtvUCYUTH0EvYs4WLN8UmDLmu2Hz1d5gtgYWHrsIEAm?=
+ =?us-ascii?Q?DAGpgdwPoP79szntSP778rlWBjLwGl+LbTtrg3865aLrA76un0B9R2p4bBUS?=
+ =?us-ascii?Q?Hsr7NBoZZmD6FBRqOrHsI0McTNoJp7CZMRNVigI6rnU1vMl8?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: a8145b51-596e-43dd-5baf-08df04fafbff
+X-MS-Exchange-CrossTenant-AuthSource: LV8PR12MB9620.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 28 Aug 2026 11:53:32.9817
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: cikLGdJIEC/BGIWAhurNlWb/U6nxzBIZ+dWcCwYeQxBzvVcAlnvUajnKVPu7eXFr
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR12MB4387
 
-Hi Geramy,
+On Fri, Aug 28, 2026 at 10:46:48AM +0530, Vasant Hegde wrote:
+> > Having the driver boot up with all DTEs programmed to identity (eg
+> > 0'd) and then try to fix them to blocking after the iommu probes
+> > devices is security backwards.
+> 
+> During boot, it only sets dte.v bit.
 
-kernel test robot noticed the following build errors:
+First it clears it to fully 0, what does 0 do in HW?
 
-[auto build test ERROR on pci/next]
-[also build test ERROR on pci/for-linus linus/master next-20260826]
-[cannot apply to drm-misc/drm-misc-next v7.2]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+It doesn't make sense that you'd pass over the DTEs after
+probing if the original 0'd DTE was actually blocking?
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Geramy-Loveless/How-to-correctly-reserve-prefetchable-bridge-windows-for-large-resizable-BARs-behind-PCIe-switches-8x-GPU-PEX890xx-seeki/20260826-132218
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git next
-patch link:    https://lore.kernel.org/r/a2292dfb-2ee5-4988-ac67-c75dd3e97a4c%40jqluv.com
-patch subject: How to correctly reserve prefetchable bridge windows for large, resizable BARs behind PCIe switches (8x GPU, PEX890xx) - seeking guidance on upstreamable approach.
-config: arm-randconfig-r072-20260827 (https://download.01.org/0day-ci/archive/20260828/202608281725.lCnQu9B3-lkp@intel.com/config)
-compiler: arm-linux-gnueabi-gcc (GCC) 10.5.0
-smatch: v0.5.0-9187-g5189e3fb
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260828/202608281725.lCnQu9B3-lkp@intel.com/reproduce)
-
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202608281725.lCnQu9B3-lkp@intel.com/
-
-All errors (new ones prefixed by >>):
-
-   arm-linux-gnueabi-ld: drivers/pci/setup-res.o: in function `pcibios_align_resource':
->> drivers/pci/setup-res.c:289: undefined reference to `__aeabi_uldivmod'
->> arm-linux-gnueabi-ld: drivers/pci/setup-res.c:289: undefined reference to `__aeabi_uldivmod'
-   arm-linux-gnueabi-ld: drivers/pci/setup-res.o: in function `pci_align_resource':
->> drivers/pci/setup-res.c:289: undefined reference to `__aeabi_uldivmod'
->> arm-linux-gnueabi-ld: drivers/pci/setup-res.c:289: undefined reference to `__aeabi_uldivmod'
-
-
-vim +289 drivers/pci/setup-res.c
-
-   262	
-   263	/*
-   264	 * For mem bridge windows, try to relocate tail remainder space to space
-   265	 * before res->start if there's enough free space there. This enables
-   266	 * tighter packing for resources.
-   267	 */
-   268	resource_size_t pci_align_resource(struct pci_dev *dev,
-   269					   const struct resource *res,
-   270					   const struct resource *empty_res,
-   271					   resource_size_t size,
-   272					   resource_size_t align)
-   273	{
-   274		resource_size_t remainder, start_addr;
-   275	
-   276		if (!(res->flags & IORESOURCE_MEM))
-   277			return res->start;
-   278	
-   279		if (IS_ALIGNED(size, align))
-   280			return res->start;
-   281	
-   282		remainder = size - ALIGN_DOWN(size, align);
-   283		/*
-   284		 * A window holding several align-sized resources has one tail per
-   285		 * resource, but only the lowest can tuck below the first aligned
-   286		 * boundary; the rest sit above it. Relocate a single tail's worth.
-   287		 */
-   288		if (ALIGN_DOWN(size, align) > align)
- > 289			remainder /= ALIGN_DOWN(size, align) / align;
-   290		/* Don't mess with size that doesn't align with window size granularity */
-   291		if (!IS_ALIGNED(remainder, pci_min_window_alignment(dev->bus, res->flags)))
-   292			return res->start;
-   293		/* Try to place remainder that doesn't fill align before */
-   294		if (res->start < remainder)
-   295			return res->start;
-   296		start_addr = res->start - remainder;
-   297		if (empty_res->start > start_addr)
-   298			return res->start;
-   299	
-   300		pci_dbg(dev, "%pR: moving candidate start address below align to %llx\n",
-   301			res, (unsigned long long)start_addr);
-   302		return start_addr;
-   303	}
-   304	
-
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+Jason
