@@ -1,571 +1,179 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from CH1PR05CU001.outbound.protection.outlook.com (mail-northcentralusazon11010055.outbound.protection.outlook.com [52.101.193.55])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D7AF368D5F
-	for <linux-pci@vger.kernel.org>; Thu, 27 Aug 2026 23:34:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787873671; cv=none; b=lcL3Oi25IYu98R1X8SIogudQNocsE8je/pxwW4ox6YacTOieudrFAegTXHM/JH3PFOhIyeZw2oiARDRtspXl9c+sWlLisD81uCNcTFrK2NVEle6ZRiMOzlWDhFrYl6KF/7GEqC7WES/nGuyR2suwIuenvTj7iHUoutnPLlBQDSw=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787873671; c=relaxed/simple;
-	bh=lC1UNnEsINoD0MWiFUoZnGV8QhKLQsvXokt+pLuQhIM=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=m8Z+hUqo1O/RLs6CSI6tGZo/pB7bTuDgA+sbpGOL7jCWetNncV3s2Q7b/T8KrmEtN0BiLOw1fGGiXJjCe9a5u/yaxczFHr2jPs9DT6+esShi+8beh1vmBdDfwtUQMCV9gBA9UFRtRadVEqnAN//lRC+7SmDUqRTTSmxuycF7aCw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=W+e5Ej4c; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 80CA33F1069;
+	Fri, 28 Aug 2026 00:00:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.193.55
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1787875260; cv=fail; b=ZTkHiBWWdAM2fbsHGbyuHNcZWqChQLmym4bKF5OeZ8MOw3cWhUYQYCRmThqHbLDPclplkRmsrD7bSPT/APU62/IpfMibHtpPvdCbER6/8afTE9l2u6RLIL9UeHMny7Zemy+OBNhPrgYroUW9vml0DNR6orfFI0/Yd8lB6EiwEAg=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1787875260; c=relaxed/simple;
+	bh=XsFrY/K91Ag7RCQ0wKhPaux5Q+VKwZc8tqFBIfiShj4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=aiWMgdIXfpNXfJHH/9LF7Y0P+vhwdSAri8zxZoqiEkhebWEFCdGcvz/sTlVJsyFvWFJlr3sPizeGD6S8KdpduYKXIVI0sHS9twRF5cjGI8d8DwnXYxB+qs2Yb2y/xagqnWwYJ+DFcNDNXHN0Q+lJZICNJark31jnq3JqIrYNxjI=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=gxKvVBgk; arc=fail smtp.client-ip=52.101.193.55
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="W+e5Ej4c"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CD8051F000E9;
-	Thu, 27 Aug 2026 23:34:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787873669;
-	bh=/mXMC4eIR702xUsXRewyzunPZRbCh6tMC/uGjjHzvxc=;
-	h=From:To:Cc:Subject:Date;
-	b=W+e5Ej4caFPPqC3//BYahm8aRr0KqsNUad5I5Z2puh/YaqIrrdBF2kh3kbm+ga5pA
-	 B3eyrOouNlafCEqGmVPGYeJD/uMbVrnbeVe+FmtEAf7hTa93l2sOyFYRNoIrbR/vHW
-	 b/Be1NGz9fGNKuzvKjKI/x3GZNWkqsiwlr4x4cWPebrayolt7vYAQicmUuGIxcdGXJ
-	 YEAO6H2CPRbQIOIFW/GwnzXcbkvKMPlN25p9K0hMv1rhOyosMRgg1Jv7sTNUuMQn2m
-	 KlwMI2thXos7cVnYmTyAZkuGQneR7S9HfE57Z4qZ3k+VZhtDWQH0mKTRAvNJjRMwTI
-	 3lAVE8IIA9TtQ==
-Received: by pali.im (Postfix)
-	id 379A6648; Fri, 28 Aug 2026 01:34:29 +0200 (CEST)
-From: =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
-To: =?UTF-8?q?Martin=20Mare=C5=A1?= <mj@ucw.cz>
-Cc: =?UTF-8?q?Filip=20=C5=A0t=C4=9Bdronsk=C3=BD?= <p@regnarg.cz>,
-	linux-pci@vger.kernel.org
-Subject: [PATCH] libpci: Add new direct HW access method intel-conf1-ext
-Date: Fri, 28 Aug 2026 01:34:00 +0200
-Message-Id: <20260827233400.3224-1-pali@kernel.org>
-X-Mailer: git-send-email 2.39.5
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="gxKvVBgk"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=wDJhwoFDn6viky2zloxolZioyiU5AsZXz0N0Uu+LfnpR1gwo08bjuzPOzLKW6NeES0cT8ySxNzRmmAHib3PbD64LLfDLKNIJvXX9ZiKdE4whUe76JYYT6upmMUSgFMswtlX2fQyamtvx/Eds9fLDR+Ykyx9HiQvLWzLVICIcC+m0/xzkRs5G7DRTwDy2YjW7Xh0AqMTaK/vGCq3ibNC1BzxDL8c01EjEK/HHqwXBWeALpB0qpikf9G9P7wyrLPmv95ZHjPGA6pZYhghni1g4lBHPHAB/rLB74uMqKB+IIPh2fIDohsVeT4if4wEa48wm40kcAa7XVb+PkKrIKlsZHg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=eH7/aNWP/qNff0UJCCDpymwnPeHCw53vcp4WZSaT4jY=;
+ b=qYbJefHwP7Z6H2W2wZXuRIf+fb9+T27zv/ooo2Z18zVk6LXwBd1JkDJkmd4Yi6/gZbC1i11C8XNsNONxh0Ka9HbU4gKUXDFD7HtW5nT5gBmtlo+p2gW4t1M5vvVUrO12G+QSql2dxGJ+CtPfpXi3wF77ogGAO57wvlJkCbQSfd2FUJ4PPaqonqcus6eZIg4axUGGRtAKXn/Pv3sdiNDTPANMNZSw67c8GCkt9uMWZuSxyfNcOowo2SuPkcyOU/ui6qnIudggfzDq84tvSvPXX29BCiFvsbjEYmuZ/nJCKKzfxzDk1CYgjYKkK2g2642r42R4hb5e/C/+lxqrmnAohA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=eH7/aNWP/qNff0UJCCDpymwnPeHCw53vcp4WZSaT4jY=;
+ b=gxKvVBgkCmVJb4FaPO++PLtGoI4f3MBej4KO602WrQzsS58laBoyme+HK4wFfbr+afAJTHmUtk6aCCEBXsx320r116d172/RuzNopcGdfuCxmW7UfPiPpXw7HV3IS+mNC8ja/Cwvs9A1d7mlE9qnJLdPpT1+T4MN96wudA/jwbc8/8q14gEQbzoggThk0uskTWrRZ3tMEjbTF14CU12AYmXbt/SuOKYr1pFbz9HpLgbDIrKioD2wjehCascTBEDMZQzqcXPQiRCccijStJO9YnO4yz9y+iLpq6vPHKP/aJJ5cVLxq4r40xmG1MjUmcIgM6gTumlvuiv16cLPcJTarg==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from LV8PR12MB9620.namprd12.prod.outlook.com (2603:10b6:408:2a1::19)
+ by CY5PR12MB6453.namprd12.prod.outlook.com (2603:10b6:930:37::11) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.360.10; Fri, 28 Aug
+ 2026 00:00:53 +0000
+Received: from LV8PR12MB9620.namprd12.prod.outlook.com
+ ([fe80::299d:f5e0:3550:1528]) by LV8PR12MB9620.namprd12.prod.outlook.com
+ ([fe80::299d:f5e0:3550:1528%4]) with mapi id 15.21.0360.008; Fri, 28 Aug 2026
+ 00:00:52 +0000
+Date: Thu, 27 Aug 2026 21:00:51 -0300
+From: Jason Gunthorpe <jgg@nvidia.com>
+To: Nicolin Chen <nicolinc@nvidia.com>
+Cc: Will Deacon <will@kernel.org>, Robin Murphy <robin.murphy@arm.com>,
+	Joerg Roedel <joro@8bytes.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J . Wysocki" <rafael@kernel.org>,
+	Len Brown <lenb@kernel.org>, Pranjal Shrivastava <praan@google.com>,
+	Mostafa Saleh <smostafa@google.com>,
+	Lu Baolu <baolu.lu@linux.intel.com>,
+	Kevin Tian <kevin.tian@intel.com>,
+	linux-arm-kernel@lists.infradead.org, iommu@lists.linux.dev,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, vsethi@nvidia.com,
+	Shuai Xue <xueshuai@linux.alibaba.com>
+Subject: Re: [PATCH v5 02/18] PCI/CXL: Probe the underlying bus reset in
+ cxl_reset_bus_function()
+Message-ID: <20260828000051.GA3922654@nvidia.com>
+References: <cover.1783044582.git.nicolinc@nvidia.com>
+ <eb77bc0422c77158f48f370c3f7c1b937c319894.1783044582.git.nicolinc@nvidia.com>
+ <178786269177.3808739.5968833634148757858.b4-review@b4>
+ <apCiweYENYZcBYiV@nvidia.com>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <apCiweYENYZcBYiV@nvidia.com>
+X-ClientProxiedBy: IA4P220CA0012.NAMP220.PROD.OUTLOOK.COM
+ (2603:10b6:208:558::17) To LV8PR12MB9620.namprd12.prod.outlook.com
+ (2603:10b6:408:2a1::19)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: LV8PR12MB9620:EE_|CY5PR12MB6453:EE_
+X-MS-Office365-Filtering-Correlation-Id: 6603a529-4dba-477f-b5c7-08df04976cee
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|366016|376014|7416014|1800799024|23010399003|4143699003|22082099003|56012099006|10067099003|11063799006|18002099003;
+X-Microsoft-Antispam-Message-Info:
+	FbgkTzPoSd7J8qnj5bW9t/T8BhtggDslT3fOmgBUiM7wh+NVoA2jgthhwqOIB9uBXb1pB/bfsiTSSZFZXTs7i4EUcTnJYG6jJz4llulNnVfqgvcvrHfosX1SzbITIG+IvTlv1fq/Jtt1OQkSdBFYtB33gTN/TfeKg8tQN24/rJl81zsXu+UtxwgVh9hNCPCh1J8x7gYY6YKlmnNLZl7uYWvw67Us5R60LeuCT543R6NwuaRNhNm03GnDGJtdSBhZEhIeK6j2yD76Rv8X0KfhCpc/gBvLZsGu+nBZ2GhA8AbBIU1BHr4VoXDOoyKfO7N5hSYgrjJIgMQ3Tj8gwagSl33v5mxxo68sPwMb0mJZ3+HEZSreSX3SLL4qDnhS5/WBE4RvmMCvUb1KVoKMjraSB6Q4hDGZF6Cb+S/7H3e6dTvaSQdL3gKW8hlsIpDuUUDiKfmo6QVJcBkd5a7S/g4j9h1hHYsepi4OJ8fbdhYUdMJvRFsnYCRZ41e10zJH/EhQ9eq4WhvJeQ36+nTlaZ7UjGhSbq1wo/ojtZoIxk4VVSWpvBAzkLqdIIlQfwnHD6fcDoU3+rQAp+lLctGPgcFaPpamTvUssFfwxKYZb0OT27H6CbAZILX71cc1D4JokyZPtmZ5XeSg/fV//Qp9fZMAMD9JzkN+YxsWqf/gOwZ2hq8=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LV8PR12MB9620.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(376014)(7416014)(1800799024)(23010399003)(4143699003)(22082099003)(56012099006)(10067099003)(11063799006)(18002099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?kCeq0LYY8u+H0LyAvytPDmKwSAjPpQBkSDGB5u93T+e1vdjV5ew9gwZdJ87t?=
+ =?us-ascii?Q?dlbMbr4nlL37y/qzQE/z/6UqzdEwawEuzCyAfkr9SC5pERpT4xQ9jzpQUUBM?=
+ =?us-ascii?Q?MHvhmICxLfVUQOxsP2gqMiDZC79Inl8UKyOGAnDqfTRggASmtSs4xBDRiE1Y?=
+ =?us-ascii?Q?5yi4kz5qtKqbgLEUpmn9aYcUFJLjGf5oIHPjAvS4DvF2IYtRR+2kPFKIiZjf?=
+ =?us-ascii?Q?sWX3TIafHxZGulqisHwhaHckmwTd4y4h0Of28omVXpbkVoJ62vWaxsuEoZ3v?=
+ =?us-ascii?Q?JBxOzadhYMu2p1Z9P5TmhFfnayRGUnXFITL7tBO8C/B7XL21BkQqsgSpdJav?=
+ =?us-ascii?Q?yVt2lcwEq7DKDO0kCNJyQXJB7qKZvqnSz0Kx7AKINSZmm6B9sJqv8mTdePwE?=
+ =?us-ascii?Q?VMRo2rVER22xWszVNYwJ/fnm64/fJDVSlf9fcRB30jnrp7senrBSfVrR2hGu?=
+ =?us-ascii?Q?xr/cwaqGYiEnyhrPQvGgLg4S8GzAhceVWI+nqW5CTKA5OrAcJWTiftBEsInf?=
+ =?us-ascii?Q?txnVmeecaCGax1JRtRGHhF3IMZaAFbENEhzDE1IaVy6t46UAp7jVAGs9wSO9?=
+ =?us-ascii?Q?sv1AI+w+MMVsyb2u3dsHtCLsN7xFx57wTTe83yH1KUWiNuDj6+j8zNz428W9?=
+ =?us-ascii?Q?eZ8/Fm4jdAkr3qytLCwJnk5EpvjYlAqh6nx5wwDEQd7bWS1mp872460QT0Ya?=
+ =?us-ascii?Q?CxSZDEXWpKV4qAvnXToYlSD3lWXtD8GTvGU98FZb+3zlpLFE5rKev3L3lhXg?=
+ =?us-ascii?Q?+bQ+c0dOVv+/3BTYKFRR4jeKANvQzWv/SGRUC1vF8tnUCgkPG+Qnb5YvcxSm?=
+ =?us-ascii?Q?be7HFA/jr07ugexSNVb6uaHQmwgkDvtK7LUa02Wo4LpQsRZC44kpN7a9sDf6?=
+ =?us-ascii?Q?o2LtHUWmlMd5MGgq582nEtlXqWGFl2Rwr/Pqa9ecT/AqWsoFuJ0rW2L7L8PA?=
+ =?us-ascii?Q?zRj1ZDVrbLmZ9UpOZzlZDnBgmHvt1ZpkHirfrD84hxtPXpt6LNqCS6+rsg5a?=
+ =?us-ascii?Q?8/YKisNwzU2pv8y0nlORTLD2sHPQd0o2BEgnxDf+zeib7C+Dh0QXFfxaP8NS?=
+ =?us-ascii?Q?cRUzQNrUGfaRCrqGf+u/GQK+4xVyZCjxs9FLFwX8L/KBIleoYTuG69l8034U?=
+ =?us-ascii?Q?20X3cW6YoHtbMMcibcBbFvuR/qpcF4Kgo/siJ/Yo2UEj7cKvLF0kZbquIEsI?=
+ =?us-ascii?Q?AJzvwPqpmjzWbAQVWRqL8zOEaBJt/5ZI7QJ/Zuja03tZh29Em427EdmzxTtw?=
+ =?us-ascii?Q?4Obs17mcAf3Ge9Z/mZc/OCCnIDQWYopUao4RpTSY9BslxELxZfrT0JBuj3xx?=
+ =?us-ascii?Q?Vbvsq+3iYWG4d5N4gcWAzc0JNMrijv8zLL+qWd4MKq3n50szn3wVbhBTzLVL?=
+ =?us-ascii?Q?iED7LnzAOS/4HjOSdq32HnXHcY5MRdGOl5uY9a6Sjc4XPlWUQwsETmcN54fP?=
+ =?us-ascii?Q?fULGf27rCUvOBiKuQT9NV2jLdXnMIV6S2hvAvT5NN3PJuFlq60P8haGV42C4?=
+ =?us-ascii?Q?MZT1EkV+q+nSfox2ryPRTOOhRvc1BS/OLjt9IB/KnsoeD35R12OnLzPyXf3e?=
+ =?us-ascii?Q?P3nTZVnwXHL9om4zSlABvlKNfeO1iaNY40bVTG2w0taFx8++6mVGXSZBMtbx?=
+ =?us-ascii?Q?GhMmqrn2fO7KlJt810sWHAIyLGlH5I/cKB+1/XpY09OJD46rYiTvnqOi+2jY?=
+ =?us-ascii?Q?om9ftkljVc5wYaM8QjHxGKtMJ+uQd2ol6OdsWOaTuuRuSg5T?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 6603a529-4dba-477f-b5c7-08df04976cee
+X-MS-Exchange-CrossTenant-AuthSource: LV8PR12MB9620.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 28 Aug 2026 00:00:52.7397
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: z8rkGJObrbwAE+jZJjIl33P5MqzBVANb2LC6asdcK4VSxyyNZKm8oHMDx2FEqMln
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY5PR12MB6453
 
-Introduce the intel-conf1-ext method, an extension of intel-conf1 that
-allows access to all PCIe registers, including the extended PCIe space
-starting at offset 0x100. This method utilizes four reserved bits above
-the bus bits to represent the extended PCIe registers.
+On Thu, Aug 27, 2026 at 01:49:05PM -0700, Nicolin Chen wrote:
+> On Thu, Aug 27, 2026 at 05:31:31PM -0300, Jason Gunthorpe wrote:
+> > > [ ... 27 lines skipped ... ]
+> > > @@ -4979,8 +4979,16 @@ static int cxl_reset_bus_function(struct pci_dev *dev, bool probe)
+> > >  	if (!dvsec)
+> > >  		return -ENOTTY;
+> > >  
+> > > -	if (probe)
+> > > -		return 0;
+> > > +	/*
+> > > +	 * Do not probe via pci_reset_bus_function(), which would reject a
+> > > +	 * masked SBR that the do-reset path below unmasks before resetting.
+> > > +	 */
+> > > +	if (probe) {
+> > > +		rc = pci_dev_reset_slot_function(dev, PCI_RESET_PROBE);
+> > > +		if (rc != -ENOTTY)
+> > > +			return rc;
+> > > +		return pci_parent_bus_reset(dev, PCI_RESET_PROBE);
+> > > +	}
+> > 
+> > Why not put this a little lower after the:
+> > 
+> > >
+> > >  	rc = pci_read_config_word(bridge, dvsec + PCI_DVSEC_CXL_PORT_CTL, &reg);
+> > >  	if (rc)
+> > 
+> > ?
+> 
+> Hmm, the "if (probe)" was checked before pci_read_config_word, so I
+> kept it there. I don't quite get the reason of putting it behind.
+> 
+> Mind elaborating?
 
-Currently, on x86 architectures, this method is supported exclusively
-by AMD Family 10h-18h CPUs. Newer AMD CPUs require a setup that has not yet
-been documented by AMD and remains unknown. Intel CPUs do not support this
-method yet.
----
- lib/i386-cpuid.h | 108 +++++++++++++++++++++
- lib/i386-ports.c | 245 +++++++++++++++++++++++++++++++++++++++++++++--
- lib/init.c       |   6 ++
- lib/internal.h   |   2 +-
- lib/pci.h        |   1 +
- pcilib.man       |   4 +
- 6 files changed, 357 insertions(+), 9 deletions(-)
- create mode 100644 lib/i386-cpuid.h
+I'm looking at the ENOTTY:
 
-diff --git a/lib/i386-cpuid.h b/lib/i386-cpuid.h
-new file mode 100644
-index 000000000000..783e9159b5ae
---- /dev/null
-+++ b/lib/i386-cpuid.h
-@@ -0,0 +1,108 @@
-+#if defined(__GNUC__) && ((__GNUC__ == 4 && __GNUC_MINOR__ >= 3) || (__GNUC__ > 4))
-+
-+/*
-+ * GCC's cpuid.h header file is buggy and cannot be included more times.
-+ * MinGW's intrin.h header file in some versions includes cpuid.h and
-+ * therefore intrin.h and cpuid.h cannot be mixed in one source unit.
-+ * libpci's i386-io-windows.h in some cases include intrin.h and therefore
-+ * in some configurations it is not possible to include cpuid.h here again.
-+ * GCC's cpuid.h since beginning define __cpuid macro, so it could be used
-+ * as a include guard. But unfortunately MinGW-w64 since version 10.0.0
-+ * automatically undefine macro __cpuid in intrin.h.
-+ */
-+#if defined(__MINGW64_VERSION_MAJOR) && __MINGW64_VERSION_MAJOR >= 10
-+#include <intrin.h>
-+#elif !defined(__cpuid)
-+#include <cpuid.h>
-+#endif
-+#ifndef __get_cpuid
-+#define __get_cpuid __get_cpuid
-+#endif
-+
-+#elif defined (__GNUC__)
-+
-+static inline int
-+__get_cpuid(unsigned int level, unsigned int *eax, unsigned int *ebx, unsigned int *ecx, unsigned int *edx)
-+{
-+#ifndef __x86_64__
-+  /* cpuid does not have to be supported on 32-bit x86, check for it. */
-+  unsigned int eflags_orig, eflags_mod;
-+  asm (
-+    "pushfl\n\t"
-+    "pushfl\n\t"
-+    "popl\t%0\n\t"
-+    "movl\t%0, %1\n\t"
-+    "xorl\t%2, %0\n\t"
-+    "pushl\t%0\n\t"
-+    "popfl\n\t"
-+    "pushfl\n\t"
-+    "popl\t%0\n\t"
-+    "popfl\n\t"
-+      : "=&r" (eflags_mod), "=&r" (eflags_orig)
-+      : "i" (0x00200000)
-+  );
-+  if (!((eflags_mod ^ eflags_orig) & 0x00200000))
-+    return 0;
-+#endif
-+
-+  asm ("cpuid\n\t" : "=a" (*eax), "=b" (*ebx), "=c" (*ecx), "=d" (*edx) : "0" (level));
-+  return 1;
-+}
-+#define __get_cpuid __get_cpuid
-+
-+#elif defined(_MSC_VER)
-+
-+/* MSVC provides intrinsic __cpuid since version 14.00 included in VS2005. */
-+#if _MSC_VER >= 1400
-+#pragma intrinsic(__cpuid)
-+#else
-+static void
-+__cpuid(int CPUInfo[4], int InfoType)
-+{
-+  __asm {
-+    mov esi, CPUInfo
-+    mov eax, InfoType
-+    xor ecx, ecx
-+    _emit 0x0F __asm _emit 0xA2 /* cpuid */
-+    mov dword ptr [esi +  0], eax
-+    mov dword ptr [esi +  4], ebx
-+    mov dword ptr [esi +  8], ecx
-+    mov dword ptr [esi + 12], edx
-+  }
-+}
-+#endif
-+static inline int
-+__get_cpuid(unsigned int level, unsigned int *eax, unsigned int *ebx, unsigned int *ecx, unsigned int *edx)
-+{
-+  int regs[4];
-+
-+#ifndef _M_AMD64
-+  /* cpuid does not have to be supported on 32-bit x86, check for it. */
-+  unsigned int eflags_orig, eflags_mod;
-+  __asm {
-+    pushfd
-+    pushfd
-+    pop eflags_orig
-+    push eflags_orig
-+    pop eflags_mod
-+    xor eflags_mod, 0x00200000
-+    push eflags_mod
-+    popfd
-+    pushfd
-+    pop eflags_mod
-+    popfd
-+  }
-+  if (!((eflags_mod ^ eflags_orig) & 0x00200000))
-+    return 0;
-+#endif
-+
-+  __cpuid(regs, level);
-+  *eax = regs[0];
-+  *ebx = regs[1];
-+  *ecx = regs[2];
-+  *edx = regs[3];
-+  return 1;
-+}
-+#define __get_cpuid __get_cpuid
-+
-+#endif
-diff --git a/lib/i386-ports.c b/lib/i386-ports.c
-index b9d863c0762a..952e74e9688d 100644
---- a/lib/i386-ports.c
-+++ b/lib/i386-ports.c
-@@ -36,6 +36,8 @@
- #error Do not know how to access I/O ports on this OS.
- #endif
- 
-+#include "i386-cpuid.h"
-+
- static int conf12_io_enabled = -1;		/* -1=haven't tried, 0=failed, 1=succeeded */
- 
- static int
-@@ -50,7 +52,10 @@ static void
- conf12_init(struct pci_access *a)
- {
-   if (!conf12_setup_io(a))
-+  {
-+    a->debug("\n");
-     a->error("No permission to access I/O ports (you probably have to be root).");
-+  }
- }
- 
- static void
-@@ -103,8 +108,6 @@ intel_sanity_check(struct pci_access *a, struct pci_methods *m)
-  *	Configuration type 1
-  */
- 
--#define CONFIG_CMD(bus, device_fn, where)   (0x80000000 | (bus << 16) | (device_fn << 8) | (where & ~3))
--
- static int
- conf1_detect(struct pci_access *a)
- {
-@@ -132,19 +135,19 @@ conf1_detect(struct pci_access *a)
- }
- 
- static int
--conf1_read(struct pci_dev *d, int pos, byte *buf, int len)
-+conf1_ext_read(struct pci_dev *d, int pos, byte *buf, int len)
- {
-   int addr = 0xcfc + (pos&3);
-   int res = 1;
- 
--  if (d->domain || pos >= 256)
-+  if (d->domain || pos >= 4096)
-     return 0;
- 
-   if (len != 1 && len != 2 && len != 4)
-     return pci_generic_block_read(d, pos, buf, len);
- 
-   intel_io_lock();
--  intel_outl(0x80000000 | ((d->bus & 0xff) << 16) | (PCI_DEVFN(d->dev, d->func) << 8) | (pos&~3), 0xcf8);
-+  intel_outl(0x80000000 | ((pos & 0xf00) << 16) | ((d->bus & 0xff) << 16) | (PCI_DEVFN(d->dev, d->func) << 8) | (pos & 0xfc), 0xcf8);
- 
-   switch (len)
-     {
-@@ -164,19 +167,28 @@ conf1_read(struct pci_dev *d, int pos, byte *buf, int len)
- }
- 
- static int
--conf1_write(struct pci_dev *d, int pos, byte *buf, int len)
-+conf1_read(struct pci_dev *d, int pos, byte *buf, int len)
-+{
-+  if (pos >= 256)
-+    return 0;
-+
-+  return conf1_ext_read(d, pos, buf, len);
-+}
-+
-+static int
-+conf1_ext_write(struct pci_dev *d, int pos, byte *buf, int len)
- {
-   int addr = 0xcfc + (pos&3);
-   int res = 1;
- 
--  if (d->domain || pos >= 256)
-+  if (d->domain || pos >= 4096)
-     return 0;
- 
-   if (len != 1 && len != 2 && len != 4)
-     return pci_generic_block_write(d, pos, buf, len);
- 
-   intel_io_lock();
--  intel_outl(0x80000000 | ((d->bus & 0xff) << 16) | (PCI_DEVFN(d->dev, d->func) << 8) | (pos&~3), 0xcf8);
-+  intel_outl(0x80000000 | ((pos & 0xf00) << 16) | ((d->bus & 0xff) << 16) | (PCI_DEVFN(d->dev, d->func) << 8) | (pos & 0xfc), 0xcf8);
- 
-   switch (len)
-     {
-@@ -194,6 +206,15 @@ conf1_write(struct pci_dev *d, int pos, byte *buf, int len)
-   return res;
- }
- 
-+static int
-+conf1_write(struct pci_dev *d, int pos, byte *buf, int len)
-+{
-+  if (pos >= 256)
-+    return 0;
-+
-+  return conf1_ext_write(d, pos, buf, len);
-+}
-+
- /*
-  *	Configuration type 2. Obsolete and brain-damaged, but existing.
-  */
-@@ -294,6 +315,202 @@ conf2_write(struct pci_dev *d, int pos, byte *buf, int len)
-   return res;
- }
- 
-+static int cpu_detected = -1;
-+static int
-+conf1_ext_detect_cpu(struct pci_access *a)
-+{
-+#ifdef __get_cpuid
-+  unsigned int eax, ebx, ecx, edx;
-+  unsigned int family;
-+#endif
-+
-+  if (cpu_detected >= 0)
-+    goto out;
-+
-+#ifndef __get_cpuid
-+  a->debug("...cannot determinate CPU model");
-+  cpu_detected = 0;
-+  goto out;
-+#else
-+  if (!__get_cpuid(0, &eax, &ebx, &ecx, &edx))
-+    {
-+      a->debug("...detected unsupported CPU without cpuid instruction");
-+      cpu_detected = 0;
-+      goto out;
-+    }
-+
-+  /* Check for AuthenticAMD or HygonGenuine signature. */
-+  if ((ebx != 0x68747541 || edx != 0x69746E65 || ecx != 0x444D4163) &&
-+      (ebx != 0x6f677948 || edx != 0x6e65476e || ecx != 0x656e6975))
-+    {
-+      a->debug("...detected unsupported CPU %.4s%.4s%.4s", (char *)&ebx, (char *)&edx, (char *)&ecx);
-+      cpu_detected = 0;
-+      goto out;
-+    }
-+
-+  /* Get the CPU family number. */
-+  if (!__get_cpuid(1, &eax, &ebx, &ecx, &edx))
-+    {
-+      a->debug("...detected unsupported CPU AMD/Hygon");
-+      cpu_detected = 0;
-+      goto out;
-+    }
-+  family = (eax >> 8) & 0xf;
-+  if (family == 0xf)
-+    family += (eax >> 20) & 0xff;
-+
-+  /* For now only AMD Family 10h-18h CPUs are supported (see conf1_ext_setup). */
-+  if (family < 0x10 || family > 0x18)
-+    {
-+      a->debug("...detected unsupported CPU AMD Family %xh", family);
-+      cpu_detected = 0;
-+      goto out;
-+    }
-+
-+  a->debug("...detected supported CPU AMD Family %xh", family);
-+  cpu_detected = family;
-+  goto out;
-+#endif
-+
-+out:
-+  return cpu_detected;
-+}
-+
-+static int
-+conf1_ext_setup(struct pci_access *a)
-+{
-+  const char *reg_name;
-+  struct pci_dev d;
-+  int off;
-+  int bit;
-+  u32 val;
-+  u32 tmp;
-+
-+  /*
-+   * AMD Family 10h-16h:
-+   * EnableCf8ExtCfg bit [46] in NB Configuration 1 [NB_CFG1] register controls
-+   * whether CF8 extended configuration cycles are enabled or not. This 64-bit
-+   * register is mapped to MSR register [MSRC001_001F] and its upper 32 bits
-+   * also to PCI register [D18F3x8C]. That PCI register is in config space of
-+   * bus 0x00 device 0x18 function 0x3 offset 0x8c.
-+   * AMD Family 17h-18h:
-+   * EnableCf8ExtCfg bit [0] in Core Coherent Master Configuration Access
-+   * Control register mapped to PCI register [D18F4x044] controls whether CF8
-+   * extended configuration cycles are enabled or not. That PCI register is in
-+   * config space of bus 0x00 device 0x18 function 0x4 offset 0x44.
-+   * AMD Family 19h+:
-+   * Not supported for now, seems that EnableCf8ExtCfg bit is by default not
-+   * enabled and documentation does not specify where is this register located.
-+   * Public references:
-+   * BIOS and Kernel Developer's Guide (BKDG) For AMD Family 10h-16h Processors
-+   * Non-public/NDA references:
-+   * Processor Programming Reference (PPR) for AMD Family 17h Processors
-+   */
-+
-+  memset(&d, 0, sizeof(d));
-+  d.bus = 0;
-+  d.dev = 0x18;
-+  d.func = cpu_detected < 0x17 ? 0x3 : 0x4;
-+  off = cpu_detected < 0x17 ? 0x8c : 0x44;
-+  bit = cpu_detected < 0x17 ? (46-32) : 0;
-+  reg_name = cpu_detected < 0x17 ? "NB_CFG1" : "CCMCAC";
-+
-+  a->debug("...reading %s", reg_name);
-+  if (!conf1_read(&d, off, (byte *)&val, sizeof(val)))
-+    {
-+      a->debug("...failed");
-+      return 0;
-+    }
-+
-+  if (!(val & (1 << bit)))
-+    {
-+      a->debug("...EnableCf8ExtCfg unset");
-+      val |= (1 << bit);
-+      a->debug("...setting EnableCf8ExtCfg in %s", reg_name);
-+      if (!conf1_write(&d, off, (byte *)&val, sizeof(val)))
-+        {
-+          a->debug("...failed");
-+          return 0;
-+        }
-+      a->debug("...reading %s", reg_name);
-+      if (!conf1_read(&d, off, (byte *)&val, sizeof(val)))
-+        {
-+          a->debug("...failed");
-+          return 0;
-+        }
-+      a->debug("...verifying EnableCf8ExtCfg");
-+      if (!(val & (1 << bit)))
-+        {
-+          a->debug("...failed");
-+          return 0;
-+        }
-+      a->debug("...passed");
-+    }
-+  else
-+    a->debug("...EnableCf8ExtCfg already set");
-+
-+  /*
-+   * Set CF8 address to the first register from extended config space (0x100)
-+   * and verify that address was set the correct value. When Cf8ExtCfg access
-+   * is unsupported or not enabled then CF8 address bits for extended config
-+   * space cannot be set and are hardwired to zeros.
-+   */
-+  a->debug("...verifying Cf8ExtCfg access");
-+  intel_io_lock();
-+  tmp = intel_inl(0xcf8);
-+  intel_outl(0x81000000, 0xcf8);
-+  val = intel_inl(0xcf8);
-+  intel_outl(tmp, 0xcf8);
-+  intel_io_unlock();
-+  if (val != 0x81000000)
-+    {
-+      a->debug("...failed");
-+      return 0;
-+    }
-+  a->debug("...passed");
-+
-+  return 1;
-+}
-+
-+static void
-+conf1_ext_init(struct pci_access *a)
-+{
-+  if (cpu_detected < 0)
-+    {
-+      a->debug("detecting CPU");
-+      conf1_ext_detect_cpu(a);
-+    }
-+  if (!cpu_detected)
-+    {
-+      a->debug("\n");
-+      a->error("Unsupported CPU for Intel conf1 extended interface (requires AMD Family 10h-18h).");
-+    }
-+
-+  conf12_init(a);
-+
-+  if (!conf1_ext_setup(a))
-+    {
-+      a->debug("\n");
-+      a->error("Cannot setup Intel conf1 extended interface (probably not supported).");
-+    }
-+}
-+
-+static int
-+conf1_ext_detect(struct pci_access *a)
-+{
-+  if (!conf1_ext_detect_cpu(a))
-+    return 0;
-+
-+  if (!conf1_detect(a))
-+    return 0;
-+
-+  if (!conf1_ext_setup(a))
-+    return 0;
-+
-+  a->debug("\n");
-+  return 1;
-+}
-+
- struct pci_methods pm_intel_conf1 = {
-   .name = "intel-conf1",
-   .help = "Raw I/O port access using Intel conf1 interface",
-@@ -306,6 +523,18 @@ struct pci_methods pm_intel_conf1 = {
-   .write = conf1_write,
- };
- 
-+struct pci_methods pm_intel_conf1_ext = {
-+  .name = "intel-conf1-ext",
-+  .help = "Raw I/O port access using Intel conf1 extended interface",
-+  .detect = conf1_ext_detect,
-+  .init = conf1_ext_init,
-+  .cleanup = conf12_cleanup,
-+  .scan = pci_generic_scan,
-+  .fill_info = pci_generic_fill_info,
-+  .read = conf1_ext_read,
-+  .write = conf1_ext_write,
-+};
-+
- struct pci_methods pm_intel_conf2 = {
-   .name = "intel-conf2",
-   .help = "Raw I/O port access using Intel conf2 interface",
-diff --git a/lib/init.c b/lib/init.c
-index d20cb9b3096a..92d2ddcdda56 100644
---- a/lib/init.c
-+++ b/lib/init.c
-@@ -168,6 +168,11 @@ static struct pci_methods *pci_methods[PCI_ACCESS_MAX] = {
- #else
-   NULL,
- #endif
-+#ifdef PCI_HAVE_PM_INTEL_CONF
-+  &pm_intel_conf1_ext,
-+#else
-+  NULL,
-+#endif
- };
- 
- // If PCI_ACCESS_AUTO is selected, we probe the access methods in this order
-@@ -189,6 +194,7 @@ static int probe_sequence[] = {
-   PCI_ACCESS_RT_THREAD_SMART_DM,
-   // Low-level methods poking the hardware directly
-   PCI_ACCESS_ECAM,
-+  PCI_ACCESS_I386_TYPE1_EXT,
-   PCI_ACCESS_I386_TYPE1,
-   PCI_ACCESS_I386_TYPE2,
-   PCI_ACCESS_MMIO_TYPE1_EXT,
-diff --git a/lib/internal.h b/lib/internal.h
-index d889735cf7b4..acc797079cea 100644
---- a/lib/internal.h
-+++ b/lib/internal.h
-@@ -141,7 +141,7 @@ void pci_free_params(struct pci_access *acc);
- void pci_scan_caps(struct pci_dev *, unsigned int want_fields);
- void pci_free_caps(struct pci_dev *);
- 
--extern struct pci_methods pm_intel_conf1, pm_intel_conf2, pm_linux_proc,
-+extern struct pci_methods pm_intel_conf1_ext, pm_intel_conf1, pm_intel_conf2, pm_linux_proc,
- 	pm_fbsd_device, pm_aix_device, pm_nbsd_libpci, pm_obsd_device,
- 	pm_dump, pm_linux_sysfs, pm_darwin, pm_sylixos_device, pm_hurd,
- 	pm_mmio_conf1, pm_mmio_conf1_ext, pm_ecam,
-diff --git a/lib/pci.h b/lib/pci.h
-index db0477d385bd..def8222123db 100644
---- a/lib/pci.h
-+++ b/lib/pci.h
-@@ -57,6 +57,7 @@ enum pci_access_type {
-   PCI_ACCESS_ECAM,			/* PCIe ECAM via /dev/mem */
-   PCI_ACCESS_AOS_EXPANSION,		/* AmigaOS Expansion library */
-   PCI_ACCESS_RT_THREAD_SMART_DM,	/* RT-Thread Smart pci */
-+  PCI_ACCESS_I386_TYPE1_EXT,		/* i386 ports, type 1 extended */
-   PCI_ACCESS_MAX
- };
- 
-diff --git a/pcilib.man b/pcilib.man
-index 0e4fe1029c5e..eb600ef11111 100644
---- a/pcilib.man
-+++ b/pcilib.man
-@@ -35,6 +35,10 @@ to all users, the rest only to root.
- Direct hardware access via Intel configuration mechanism 1. Available on i386 and compatibles
- on Linux, Solaris/x86, GNU Hurd, Windows, BeOS and Haiku. Requires root privileges.
- .TP
-+.B intel-conf1-ext
-+Direct hardware access via Extended PCIe Intel configuration mechanism 1. Available on
-+AMD Family 10h-18h CPUs. Requires root privileges.
-+.TP
- .B intel-conf2
- Direct hardware access via Intel configuration mechanism 2. Available on i386 and compatibles
- on Linux, Solaris/x86, GNU Hurd, Windows, BeOS and Haiku. Requires root privileges. Warning: This method
--- 
-2.20.1
+	rc = pci_read_config_word(bridge, dvsec + PCI_DVSEC_CXL_PORT_CTL, &reg);
+	if (rc)
+		return -ENOTTY;
 
+If the general point with these fixes was probe should capture all the
+ENOTTY cases under probe there should not be an ENOTTY return outside
+probe.
+
+So maybe that should be ENODEV, or maybe probe should check it. I'm
+not really sure how config read can fail, so maybe ENODEV is the right
+direction
+
+Jason
