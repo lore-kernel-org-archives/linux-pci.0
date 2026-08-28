@@ -1,668 +1,557 @@
-Received: from fout-b5-smtp.messagingengine.com (fout-b5-smtp.messagingengine.com [202.12.124.148])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yw1-f181.google.com (mail-yw1-f181.google.com [209.85.128.181])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A758034A791;
-	Fri, 28 Aug 2026 20:53:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.148
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 834E535E1A8
+	for <linux-pci@vger.kernel.org>; Fri, 28 Aug 2026 21:37:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.181
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787950443; cv=none; b=kFDhhomzTkpk9umJAn+io2ircwEUHLQR8fIkw7AsmnHV4dPEhkhih5dgUUz80e+qPtogsBMi6FiiF/cinBCS+md9GTz/SVPINS5HtZ2e4TmtNcCJGIvKVeTY5yAyz6zMB34zC0ReyBxFIM8ZGICld41G6LxYZYw5KaBV69TTxUo=
+	t=1787953077; cv=none; b=NqWDhRPulcpyvbGFmAtdNDejbhHbdOXrW2rizyqMj3iBpJn9IJ8Vk48YBaaM8L0ZeB83SUFF1T89Z++pIQg957fVX5ZH/6Y4KMfiE74dbOeuVZzDPPYYWtK/0xo4T5I66KKYvhowNSwUcyrp00XWPce6ysIKzjImHUkRuMFw5fA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787950443; c=relaxed/simple;
-	bh=QF1Ywz4ZH0P6r7aNpTIKietqkusOChLJ7NDBfbqCvCI=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=b99s0OieT0rIcxGUUbyUKCXjO5E/2KFiGblqj0GMsEksdSrZGxknRMmjxbMcLIHKIW8eu0ZNOkPiAoWcdQkPz/FW9mTrkQEb9Os2nzkzp6JTPmPl7Las/5d/Kw/WWCWpybh0pyy8W3sojB0LZPWP9g5dFiBhOq7q9vXm6Z9eyT0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=MxIe4wDF; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=TcOy7xXF; arc=none smtp.client-ip=202.12.124.148
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
+	s=arc-20240116; t=1787953077; c=relaxed/simple;
+	bh=nWgypjq0OqvL9GhbEJFbQTIwaZy89fIGjqdrSyZzH9A=;
+	h=Message-ID:Date:MIME-Version:From:To:Cc:Subject:Content-Type; b=oSlsS16+DNbaG0n9mmy8PR3VNRF98v3UTWfr/ZTcpbGb4aCtP+sUtweTtgrNJcFV9mEmWhLlzPKV25zHfMVXOWZFCSrG36p1ijVN8ycItX31EhaSqLDXBtMFxa9J3OvdArcLRwqsHFwl2/yFVHCKb7rcOQ0Ah9o2AYojK9clP0k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=jqluv.com; spf=none smtp.mailfrom=jqluv.com; dkim=pass (2048-bit key) header.d=jqluv-com.20251104.gappssmtp.com header.i=@jqluv-com.20251104.gappssmtp.com header.b=WqU32DB7; arc=none smtp.client-ip=209.85.128.181
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=jqluv.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=jqluv.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="MxIe4wDF";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="TcOy7xXF"
-Received: from phl-compute-02.internal (phl-compute-02.internal [10.202.2.42])
-	by mailfout.stl.internal (Postfix) with ESMTP id F0C6C1D00120;
-	Fri, 28 Aug 2026 16:53:56 -0400 (EDT)
-Received: from phl-frontend-04 ([10.202.2.163])
-  by phl-compute-02.internal (MEProxy); Fri, 28 Aug 2026 16:53:57 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
-	cc:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm2; t=1787950436;
-	 x=1788036836; bh=yR/PJZoQUS5Penn7qLrF4kKyqGAOafOk1kzJX1haLYY=; b=
-	MxIe4wDFd9nJYyEd7DrKWSZP2D9IDKncyYM2zztdY8nThnoK9/TnNKLOM5vYPPM9
-	O1sKtKyK70LMXfRFeYHXTHHKchEB9m5TACMgRWVCw16yeBcdIJlnDUeOEGTkM9QB
-	TRmkCVaDI7iwuv1jQjUD0jINxGnAYNSF9TUCUMzhW4Lr4Z2NfB7cQzme1zvWcnKE
-	mVDpqDGL57pfWBuW4rCL9pwShf1uleIAq8Sph3ThG73o1jzwanI2p82wNtjqBapK
-	r14lv39xnuyGilHo8sJzLXiYATjs3we/ke4PC/PukhvsZKNj3olXw3OpNeaxjqDH
-	ocHzWL8vXq7s33AbLzLHGA==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=1787950436; x=
-	1788036836; bh=yR/PJZoQUS5Penn7qLrF4kKyqGAOafOk1kzJX1haLYY=; b=T
-	cOy7xXFXs027QdweDFkelN8cFtB+z2lNQBbixOR2I1CW0XVNRrm+9RTfTxIgkQ0f
-	yN99fwNkP4FjC8kqbmvPY9T6uUgHhKqVCMfNJKm+esQFycsmH6QiLpUSlU08gWUk
-	6oGCXyN46BCfQqdpAJGtN+YpL0djshzZI1oFjeBxiQ1s+PnY8fyXX6dZ4XID+sHV
-	aY0Os2h4sMBTKbIiD+xWwYXeUEdb/1qSzf8lYdM/iD+mOzPSNSWS5XuumMuMhMih
-	qyKd1kG9dUhx3fdYiIVPxJQQWyArAZ2asJen7Wxmf5Xxm38zzLJgxvy8rvUJFJFS
-	i4gaYr8Nih/bBpckMe8SA==
-X-ME-Sender: <xms:ZPWRap7Lh7BEJ7vyxXremXxASow7nvk8OojuBIGoWJSG_Aja-v_p7w>
-    <xme:ZPWRakhhCTKu549v30mWLRJnaDREg21KocJsjBMakj1V17FzUqjG5EZtt8o-ZKG-z
-    PjsTopjEC5_KEV7fMMaWd8ZsEdo4ZsC_FbV2dCq4HHzDLgczbynhGY>
-X-ME-Received: <xmr:ZPWRan2t_agkEC-R7jCC0sGNoLiYS4eWPvP_txULQyvszSNlyWuVE1qVu8NRiA>
-X-ME-Proxy-Cause: dmFkZTGkMfaReZ7++XlaNlSI+OYF9vOw2ug2GvYBlIR0TUkcPnhYg/xcwQ0TrCWMH505RH
-    x5QQcuUhzdBO1q6HkJbO3ecirh89ebFp3WNtFLiQHnnkNw1iIm0Xtqio90VkjoK5uqQeqM
-    6xd7aNsEmHQWa2LLGrj7nkRkj2jA3u84pHbliwngL3NaXo+KOimTrleyUub1LbVtUfnP9+
-    NF+Z6k4JyZHUWysyrh+NX8E1IpuNszsdz7j2P0jSae2nQvGHlcum1Mmm29cxGi9XIO5hVo
-    K6zN5dHb9GmE8af/iav/vG+9xzvTO/H4bImtMqBNFt/iDgg+1KAbxn6ahT0Td6mmL51xjm
-    fHckDfP8ATLNcYMx99pkVu8cIU/BflvITyPhEB7KYpQGjLUQnHIK5J0/l+iG8bklUzNXXb
-    jCVodqIDv8Fxqx9RYmqc97EFpe952lEt/MaGHIxjLcXdutd9NhwW1Bg57uJdnqkgBn/ovT
-    OrOUwQWxtJrL0cb0WZCjye4cqiEjUpZMBovVCBR22vanngfmAeG0ai0crQcOHKtFHetBCK
-    WHOBKb3xVsfOj9FVyWdsPbXDhuV2yzPYMjmrB1DrBKMIOb3rURe0UaZ/ay+gQo4t2N60HS
-    0nQsXTC2vVJR3gxo0qFfN6QbzCaTYrQZrPoypkv9vvKWCoJgfhdA9cPf7rVw
-X-ME-Proxy: <xmx:ZPWRaqX4RAXwqSfUK6GcztODtBVJdLeFLcIZGyBzihxpw5-KoioSVw>
-    <xmx:ZPWRak3UxY2hjIorGy4IbdG6FynlOHpFOYUWZkVFxMOtLzJR92H9oQ>
-    <xmx:ZPWRargThHpdOqnheCotWzKvWC-CgIDExACf0KdXTnwoL24p2dgSPA>
-    <xmx:ZPWRakIAcpyGQ71QBGd4Tu6zhPO17L-2OsIDg123-DaFJZSnZC3bdw>
-    <xmx:ZPWRauWHA_6mUL2YZRbUIfy0q2uncpCtQYUanWkJiP5FPSy3-Jwd-yv1>
-Feedback-ID: i03f14258:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Fri,
- 28 Aug 2026 16:53:54 -0400 (EDT)
-Date: Fri, 28 Aug 2026 14:53:51 -0600
-From: Alex Williamson <alex@shazbot.org>
-To: <mhonap@nvidia.com>
-Cc: <jgg@ziepe.ca>, <ankita@nvidia.com>, <jic23@kernel.org>,
- <dave.jiang@intel.com>, <alejandro.lucero-palau@amd.com>,
- <smadhavan@nvidia.com>, <corbet@lwn.net>, <skhan@linuxfoundation.org>,
- <dave@stgolabs.net>, <alison.schofield@intel.com>,
- <vishal.l.verma@intel.com>, <iweiny@kernel.org>, <ming.li@zohomail.com>,
- <yishaih@nvidia.com>, <skolothumtho@nvidia.com>, <kevin.tian@intel.com>,
- <bhelgaas@google.com>, <dmatlack@google.com>, <kees@kernel.org>,
- <gustavoars@kernel.org>, <cjia@nvidia.com>, <kjaju@nvidia.com>,
- <vsethi@nvidia.com>, <zhiw@nvidia.com>, <linux-doc@vger.kernel.org>,
- <linux-kernel@vger.kernel.org>, <kvm@vger.kernel.org>,
- <linux-cxl@vger.kernel.org>, <linux-pci@vger.kernel.org>,
- <linux-kselftest@vger.kernel.org>, <linux-hardening@vger.kernel.org>,
- alex@shazbot.org
-Subject: Re: [PATCH v4 18/27] vfio/cxl: Expose the HDM memory and trap the
- decoder registers
-Message-ID: <20260828145351.56f74a1d@shazbot.org>
-In-Reply-To: <20260813093631.2288172-19-mhonap@nvidia.com>
-References: <20260813093631.2288172-1-mhonap@nvidia.com>
-	<20260813093631.2288172-19-mhonap@nvidia.com>
-X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
+	dkim=pass (2048-bit key) header.d=jqluv-com.20251104.gappssmtp.com header.i=@jqluv-com.20251104.gappssmtp.com header.b="WqU32DB7"
+Received: by mail-yw1-f181.google.com with SMTP id 00721157ae682-836c718715fso15132647b3.0
+        for <linux-pci@vger.kernel.org>; Fri, 28 Aug 2026 14:37:54 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=jqluv-com.20251104.gappssmtp.com; s=20251104; t=1787953073; x=1788557873; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:subject:content-language:cc
+         :to:from:user-agent:mime-version:date:message-id:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=W6h4yQC3WmpJM4H9yo/quOb293jR0DM0oMS1Ydqfzx0=;
+        b=WqU32DB78uq5K6YbE4QxgXSUasm5GiInYUC1+CDV5OIKMvuvSCkiu3k22iP9DqFpgR
+         v7GGsSDRouJIG/V8PIDpR+NLo/g8Y7LP3EpyTYdYdvciLIsSKWGUZV5vC8c0qfC74b46
+         xKeDDfK3n8824JU3z0vm+hWcvr3XTCEhgrCPahdXYe+SDDsD2KG70WVcr/hztHEpczeJ
+         M/MhzCP6J0c6IW/osdD75Vtfpq7mEUWysuo9j/G24p29fY1jm2lWn0Frr53bVdMRaSDY
+         H66Rvl1oUHj4HWi3L8PDpdbtHEiXSHj5Y7HFAafrsByGumwgM8xslLcJiAQAfGYSG+V3
+         h3ig==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1787953073; x=1788557873;
+        h=content-transfer-encoding:content-type:subject:content-language:cc
+         :to:from:user-agent:mime-version:date:message-id:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=W6h4yQC3WmpJM4H9yo/quOb293jR0DM0oMS1Ydqfzx0=;
+        b=FXQEgwZaT7VWQJxJHqpfYUIOxqXzX/f8JOK+AjDix5BzypzlN6KPpeVNPzaNmziCg2
+         IVTR+YWF/nn7BQ+wo+hhmxeeZbq6z1dYia+TNJVOU3tuTKjXqsO7LU3+iLVXcDsFalOM
+         WtpRRTIHzsTMfRFFTVnXdnOJYNDpoCZpA0zpaW32I+IIAz2CiZUyBS86f1VmvWuRBCkd
+         oDNw3Jippa3HY86TclCyNH1jiwlm0l4w+t8VwK73yPwUmDMoBWphY4UnzoXv7JoI6XN0
+         gRGmfxhAWw/vwyaWsHqn4pvOHCQasyv2g47p4cw8jWFJ4jeDZDXV3UZVrXtKYYkW9skt
+         O78Q==
+X-Forwarded-Encrypted: i=1; AKwUvBx6G9/xGzXOSWfJiCQ14itvLRBXqKlg4mcJZOyGR88IB061NXLxA7ITpzqM4IaCiOfEgiDvrdcELFA=@vger.kernel.org
+X-Gm-Message-State: AFuF++kB6E9xHtNf/ylIazuxWlXUScomxFqS/cg07qZksF5Tc7PXJEO3
+	ZTbj/Vk202RJ2b04sLBp8dkpb07162wOtiZQuZizX94CX/edFdI8FLSstJhq0GIJiro=
+X-Gm-Gg: AYBFou0IzTuXTn2oEMqoO2mjd+scJXXyyKSO3KcvAW7qSjkUtHOM3tVKPg2NQhAX1A9
+	Mv97JmYNXBHFtEUlCK/HoQ0l1o8fnMDvNH6CbjljSLT65XPA9e2KHB6QMxaZebsfK8H82WtDbjz
+	jNvQ2Rt51e6spORlDugr/3vARW7BMUP1PSaTwgVPVWNGITCUUf6znRRPRPm5AXdzzP6iut6teoa
+	vdX9KahKSJ9khHwtfkgtf84hMpf+546JnxJbgvzbuEQ7GPf/0ZhGjOk3PV0DwSFQrCfnDWq6Kqf
+	XZKHGeuJtu0lCFkjXhxHfbDbBvYrBwnNaKVA9y6oBRS9kDtCn2BOKKELCDiqvGQJb+g0S9Jw0O6
+	qH5X9KwFjLB+77PzVGKmJe9fnN90UnIfoJzAOhV2GJDrvBdliGD0ktlecwMKQH2Wr6rLl8tSdM8
+	o9FDOV0+/28+n36okJTNVUxf+iXeRFDEVlBUsxGCuGXkyQv86NjZLIAGOT74s9/hgB2R8BTKHw4
+	LnLEPzdETIqGpZzxONvAhWX7AfgOTXX22OvD+VXsc7KTjyghPeUpZI=
+X-Received: by 2002:a05:690c:4004:b0:855:1f14:402a with SMTP id 00721157ae682-85d6a2e16acmr35612547b3.22.1787953073181;
+        Fri, 28 Aug 2026 14:37:53 -0700 (PDT)
+Received: from ?IPV6:2600:1700:1782:ba0:3c34:153:94fd:b73a? ([2600:1700:1782:ba0:3c34:153:94fd:b73a])
+        by smtp.gmail.com with ESMTPSA id 00721157ae682-85e5f5f04e4sm12787487b3.21.2026.08.28.14.37.51
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 28 Aug 2026 14:37:52 -0700 (PDT)
+Message-ID: <39e09dd8-f73e-4dc2-ba36-8a9228516d26@jqluv.com>
+Date: Fri, 28 Aug 2026 14:37:51 -0700
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+User-Agent: Mozilla Thunderbird
+From: Geramy Loveless <gloveless@jqluv.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: bhelgaas@google.com, alexander.deucher@amd.com,
+ ilpo.jarvinen@linux.intel.com, amd-gfx@lists.freedesktop.org,
+ mario.limonciello@amd.com, nra3088@gmail.com,
+ =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>,
+ meiling.leung@embeddedllm.com, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+Content-Language: en-US
+Subject: [PATCH] PCI: Reserve prefetchable window headroom for Resizable BARs
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On Thu, 13 Aug 2026 15:06:22 +0530
-<mhonap@nvidia.com> wrote:
+Firmware typically sizes prefetchable bridge windows for the boot-time
+BAR size. Behind a fixed (non-hotplug) PCIe switch fabric, there is then
+no room for a driver to grow a Resizable BAR afterwards: every window
+from the leaf up to the root is sized for the small BAR, so
+pci_resize_resource() fails with -ENOSPC. 
 
-> From: Manish Honap <mhonap@nvidia.com>
-> 
-> Register the HDM region as a CXL VFIO region so the guest can map
-> the device memory.
+Furthermore, a small prefetchable BAR (e.g., a 2 MiB doorbell) sharing a 
+bridge's single prefetchable window with a much larger one (e.g., a 32 GiB 
+VRAM BAR) pushes the required window size past the large BAR's alignment. 
+Because bridge windows round up to a power of two, this forces a massive 
+alignment waste (e.g., 32 GiB + 2 MiB rounds up to a 64 GiB window, 
+wasting ~32 GiB per GPU).
 
-s/VFIO region/VFIO device specific region/
- 
-> CXL.mem is coherent memory, so the guest and KVM need a write-back
-> mapping. Claim the host physical range exclusively at bind so a
-> firmware-owned cacheable alias cannot fault the host once the range is
-> mapped write-back.
+This patch solves both issues to enable ReBAR on cascaded switch fabrics:
 
-I'm not fully following this, claiming it exclusively means no other
-driver can claim it, but is a "firmware-owned cacheable alias"
-generated via another driver or via a side-channel?
- 
-> The region is advertised mmap-able, so a fd holder can fault its
-> struct-page-less device memory in from the host CPU. A memory error on
-> that range would otherwise escalate to a host SError. Register the range
-> with memory_failure() via register_pfn_address_space() so such an error
-> is contained to unmapping the range and a SIGBUS to the fd holder.
-> register_pfn_address_space() returns -EOPNOTSUPP when
-> CONFIG_MEMORY_FAILURE is off, in which case the region is exposed
-> without containment.
+1. Reserve Headroom: 
+Reserve prefetchable window headroom for the maximum size of each 
+downstream Resizable BAR during the bridge sizing pass. The device BAR 
+and hardware ReBAR are left at their boot size to prevent tearing down 
+firmware-loaded state (e.g., AMD R9700 PSP) before the driver binds.
 
-The error containment looks like it could be compartmentalized into
-another patch in the series.
- 
-> A CXL Type-2 guest also reads the HDM decoder registers to learn the
-> HDM region it was handed. Those registers live in the component BAR that
-> vfio-pci owns, so map the decoder block at bind and copy it into a
-> per-open shadow, then expose a read-only region backed by that shadow.
-> The block location comes from the pdev->hdm enumeration cache rather
-> than the CXL core register map.
+2. Pack Oversized Windows (BAR Demotion): 
+The PCI-to-PCI Bridge spec (r1.2, sec 3.2.5) permits a prefetchable BAR 
+to be assigned from the non-prefetchable window. By clearing the PREFETCH 
+flag on small control BARs during enumeration, they are placed below 4 GiB. 
+The prefetchable window is then cleanly sized to the large BAR alone.
 
-This also looks like a separate patch.  Why do we need a static copy of
-it rather than just providing read-only access to the live copy (avoid
-the later refresh, gate on device state)?  Why does it need to be a
-separate device specific region rather than a read-only section of the
-BAR?  Is it just that we don't have a way to express that through the
-vfio uAPI? Could it support read-only mmap?
- 
-> The guest programs a GPA into the decoder while the host resolves the
-> HPA, so it must never reach the physical registers. Serving reads from
-> the shadow keeps the two apart; write emulation follows in a later
-> change.
+Why this is safe for 32-bit (< 4G) MMIO space:
+To prevent exhausting legacy < 4G space, demotion is strictly bounded. It 
+only triggers beside a massive prefetchable BAR (>= 64 MiB), and the demoted 
+BAR is strictly capped at 16 MiB (PCI_BAR_PACK_CAP). Even on an 8x GPU 
+system, this consumes at most 128 MiB of < 4G space. 
 
-This seems to be talking about some virtualization implemented in the
-VMM, nothing here virtualizes decoder programming.  The comp-regs
-region is read-only.
-  
-> Signed-off-by: Manish Honap <mhonap@nvidia.com>
-> ---
->  drivers/vfio/pci/cxl/vfio_cxl_core.c | 347 ++++++++++++++++++++++++++-
->  drivers/vfio/pci/vfio_pci_core.c     |  17 ++
->  include/linux/vfio_pci_core.h        |   1 +
->  include/uapi/linux/vfio.h            |   3 +
->  4 files changed, 367 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/vfio/pci/cxl/vfio_cxl_core.c b/drivers/vfio/pci/cxl/vfio_cxl_core.c
-> index 9fed909cb9d3..07047646edde 100644
-> --- a/drivers/vfio/pci/cxl/vfio_cxl_core.c
-> +++ b/drivers/vfio/pci/cxl/vfio_cxl_core.c
-> @@ -5,10 +5,14 @@
->   * Copyright (c) 2026 NVIDIA Corporation & Affiliates
->   */
->  
-> +#include <linux/cleanup.h>
-> +#include <linux/memory-failure.h>
-> +#include <linux/mm.h>
->  #include <linux/module.h>
->  #include <linux/pci.h>
->  #include <linux/range.h>
->  #include <linux/slab.h>
-> +#include <linux/uaccess.h>
->  #include <linux/vfio_pci_core.h>
->  #include <cxl/cxl.h>
->  #include <cxl/pci.h>
-> @@ -18,21 +22,250 @@
->   * @cxlds: CXL device state; kept first for devm_cxl_dev_state_create()
->   * @cxlmd: memory device joined to the CXL topology at bind
->   * @hpa_range: host physical range of the HDM region
-> + * @dpa_pfn_space: HDM-region pfn range registered with memory_failure()
->   * @dvsec: CXL device DVSEC config-space offset
->   * @dvsec_len: length of the DVSEC body
->   * @dvsec_dwords: dword count of @dvsec_shadow
->   * @dvsec_shadow: guest view of the CXL DVSEC body, sampled at open
-> + * @hdm_regs: mapped HDM decoder registers, source for the open-time snapshot
-> + * @hdm_len: length of the HDM decoder register block
-> + * @hdm_shadow: guest view of the HDM decoder registers, sampled at open
-> + * @hdm_region_idx: vdev->region[] index of the HDM region
-> + * @hdm_valid: true when the decoder is in a known-good restored state and host
-> + *	       CPU access to the HDM range is safe; gated under memory_lock
->   */
->  struct vfio_cxl_state {
->  	struct cxl_dev_state cxlds;
->  	struct cxl_memdev *cxlmd;
->  	struct range hpa_range;
-> +	struct pfn_address_space dpa_pfn_space;
->  	u16 dvsec;
->  	u32 dvsec_len;
->  	u32 dvsec_dwords;
-> +
->  	u32 *dvsec_shadow __counted_by_ptr(dvsec_dwords);
-> +	void __iomem *hdm_regs;
-> +	u32 hdm_len;
-> +	u32 hdm_dwords;
-> +
-> +	__le32 *hdm_shadow __counted_by_ptr(hdm_dwords);
-> +	int hdm_region_idx;
-> +	bool hdm_valid;
-> +};
-> +
-> +static unsigned long vfio_cxl_mem_pgoff(struct vm_area_struct *vma,
-> +					unsigned long addr)
-> +{
-> +	unsigned long mask = (1U << (VFIO_PCI_OFFSET_SHIFT - PAGE_SHIFT)) - 1;
-> +
-> +	return (vma->vm_pgoff & mask) + ((addr - vma->vm_start) >> PAGE_SHIFT);
-> +}
-> +
-> +static vm_fault_t vfio_cxl_mem_huge_fault(struct vm_fault *vmf,
-> +					  unsigned int order)
-> +{
-> +	struct vm_area_struct *vma = vmf->vma;
-> +	struct vfio_pci_core_device *vdev = vma->vm_private_data;
-> +	struct vfio_cxl_state *cxl = vdev->cxl;
-> +	unsigned long addr = ALIGN_DOWN(vmf->address, PAGE_SIZE << order);
-> +	unsigned long pfn = PHYS_PFN(cxl->hpa_range.start) +
-> +			    vfio_cxl_mem_pgoff(vma, addr);
-> +	vm_fault_t ret = VM_FAULT_FALLBACK;
-> +
-> +	if (is_aligned_for_order(vma, addr, pfn, order)) {
-> +		scoped_guard(rwsem_read, &vdev->memory_lock) {
-> +			/*
-> +			 * A reset or D3 transition takes memory_lock for write,
-> +			 * revokes this mapping and clears the decoder. Do not
-> +			 * insert a PFN for a decoder that is not in a known-good
-> +			 * state, or the host CPU could reach a disabled decoder.
-> +			 * vfio_pci_vmf_insert_pfn() adds the Memory-Space gate:
-> +			 * an HDM access while the device has Memory-Space disabled
-> +			 * aborts on the fabric as a fatal host SError, so it must
-> +			 * not be faulted in until the guest re-enables it.
-> +			 */
-> +			if (cxl->hdm_valid)
-> +				ret = vfio_pci_vmf_insert_pfn(vdev, vmf, pfn,
-> +							      order);
-> +			else
-> +				ret = VM_FAULT_SIGBUS;
-> +		}
-> +	}
-> +
-> +	return ret;
-> +}
-> +
-> +static vm_fault_t vfio_cxl_mem_fault(struct vm_fault *vmf)
-> +{
-> +	return vfio_cxl_mem_huge_fault(vmf, 0);
-> +}
-> +
-> +static const struct vm_operations_struct vfio_cxl_mem_vm_ops = {
-> +	.fault = vfio_cxl_mem_fault,
-> +#ifdef CONFIG_ARCH_SUPPORTS_HUGE_PFNMAP
-> +	.huge_fault = vfio_cxl_mem_huge_fault,
-> +#endif
-> +};
-> +
-> +static int vfio_cxl_mem_mmap(struct vfio_pci_core_device *vdev,
-> +			     struct vfio_pci_region *region,
-> +			     struct vm_area_struct *vma)
-> +{
-> +	unsigned long mask = (1U << (VFIO_PCI_OFFSET_SHIFT - PAGE_SHIFT)) - 1;
-> +	u64 req_start = (vma->vm_pgoff & mask) << PAGE_SHIFT;
-> +	u64 req_len = vma->vm_end - vma->vm_start;
-> +
-> +	if (req_start + req_len > region->size)
-> +		return -EINVAL;
-> +
-> +	/*
-> +	 * CXL.mem is coherent memory, so leave the mapping write-back cacheable;
-> +	 * a device or non-cached mapping would break the coherence the guest and
-> +	 * KVM depend on. The host physical range is claimed exclusively at bind,
-> +	 * so no conflicting cacheable alias remains.
-> +	 */
-> +	vm_flags_set(vma, VM_IO | VM_PFNMAP | VM_DONTEXPAND | VM_DONTDUMP);
-> +	vma->vm_ops = &vfio_cxl_mem_vm_ops;
-> +	vma->vm_private_data = vdev;
-> +
-> +	return 0;
-> +}
-> +
-> +static ssize_t vfio_cxl_mem_rw(struct vfio_pci_core_device *vdev,
-> +			       char __user *buf, size_t count, loff_t *ppos,
-> +			       bool iswrite)
-> +{
-> +	/*
-> +	 * The HDM region advertises READ and WRITE so a VMM can derive an
-> +	 * accessible mmap protection for it, but fd read/write is not supported.
-> +	 * The only host-side way to reach the range for a copy is a kernel
-> +	 * mapping of the CXL.mem host physical address (memremap, which reuses
-> +	 * the linear map for this RAM-backed range), and a CPU access through
-> +	 * that mapping aborts on the fabric as a fatal host SError, unlike the
-> +	 * guest-facing mmap fault path which maps the pfn directly. Reject the
-> +	 * transfer rather than fault the host; a consumer mmaps the region and
-> +	 * accesses it that way.
-> +	 */
-> +	return -EIO;
-> +}
+Fallback / Alignment logic:
+If the 32-bit space is exhausted, small BARs remain in the prefetchable 
+window. The alignment logic gracefully handles this by rounding the bridge 
+window up to the next power of two (e.g., growing to 64 GiB to fit a 32 GiB 
+BAR + BAR2) to maintain PCIe compatibility, ensuring sibling GPUs land in 
+properly aligned slots.
 
-This would be unprecedented in vfio and we don't actually have a means
-to express that read/write access is not available.  Can you describe
-further how it's possible that we cannot create a host mapping to
-access the HDM memory without risking a host SError fault?  If there's
-a device state issue here, we have mechanisms to guard such accesses.
+Reserving is safe by default: __assign_resources_sorted() satisfies all
+required resources first. Use pci=no_rebar_reserve and pci=no_bar_demote 
+to restore previous behaviours.
 
-> +
-> +/*
-> + * The CXL regions carry no per-region state (region->data is the shared,
-> + * devm-managed vfio_cxl_state), so releasing a region is a no-op. The hook is
-> + * still required: vfio_pci_core_disable() calls region->ops->release() for
-> + * every region without a NULL check.
-> + */
-> +static void vfio_cxl_region_release(struct vfio_pci_core_device *vdev,
-> +				    struct vfio_pci_region *region)
-> +{
-> +}
-> +
-> +static const struct vfio_pci_regops vfio_cxl_mem_regops = {
-> +	.rw = vfio_cxl_mem_rw,
-> +	.mmap = vfio_cxl_mem_mmap,
-> +	.release = vfio_cxl_region_release,
-> +};
-> +
-> +/*
-> + * Map a poisoned HDM-region pfn back to the file offset of each user mapping so
-> + * memory_failure() can unmap it and signal the fd holder. The region is a
-> + * single linear range at hpa_range.start; recover the per-vma file offset the
-> + * same way the fault handler derived the pfn.
-> + */
-> +static int vfio_cxl_pfn_to_vma_pgoff(struct vm_area_struct *vma,
-> +				     unsigned long pfn, pgoff_t *pgoff)
-> +{
-> +	struct vfio_pci_core_device *vdev;
-> +	struct vfio_cxl_state *cxl;
-> +	pgoff_t vma_off, pfn_off;
-> +	unsigned long start_pfn;
-> +
-> +	if (vma->vm_ops != &vfio_cxl_mem_vm_ops)
-> +		return -ENOENT;
-> +
-> +	vdev = vma->vm_private_data;
-> +	cxl = vdev->cxl;
-> +
-> +	start_pfn = PHYS_PFN(cxl->hpa_range.start);
-> +	if (pfn < start_pfn ||
-> +	    pfn >= start_pfn + (range_len(&cxl->hpa_range) >> PAGE_SHIFT))
-> +		return -EFAULT;
-> +
-> +	pfn_off = pfn - start_pfn;
-> +	vma_off = vma->vm_pgoff &
-> +		  ((1UL << (VFIO_PCI_OFFSET_SHIFT - PAGE_SHIFT)) - 1);
-> +	/* Skip VMAs that do not map the pfn, e.g. a partial mmap of the region. */
-> +	if (pfn_off < vma_off || pfn_off - vma_off >= vma_pages(vma))
-> +		return -EFAULT;
-> +
-> +	*pgoff = vma->vm_pgoff + (pfn_off - vma_off);
-> +	return 0;
-> +}
-> +
-> +/*
-> + * The HDM region is struct-page-less device memory, so a memory error on it
-> + * cannot be routed through the normal page path. Register the range with
-> + * memory_failure() so such an error is contained to unmapping the range and a
-> + * SIGBUS to the fd holder instead of escalating to a host SError.
-> + */
-> +static int vfio_cxl_register_pfn_space(struct vfio_pci_core_device *vdev)
-> +{
-> +	struct vfio_cxl_state *cxl = vdev->cxl;
-> +	unsigned long start_pfn = PHYS_PFN(cxl->hpa_range.start);
-> +
-> +	cxl->dpa_pfn_space.node.start = start_pfn;
-> +	cxl->dpa_pfn_space.node.last =
-> +		start_pfn + (range_len(&cxl->hpa_range) >> PAGE_SHIFT) - 1;
-> +	cxl->dpa_pfn_space.mapping = vdev->vdev.inode->i_mapping;
-> +	cxl->dpa_pfn_space.pfn_to_vma_pgoff = vfio_cxl_pfn_to_vma_pgoff;
-> +
-> +	return register_pfn_address_space(&cxl->dpa_pfn_space);
-> +}
-> +
-> +static ssize_t vfio_cxl_comp_rw(struct vfio_pci_core_device *vdev,
-> +				char __user *buf, size_t count, loff_t *ppos,
-> +				bool iswrite)
-> +{
-> +	struct vfio_cxl_state *cxl = vdev->cxl;
-> +	loff_t pos = *ppos & VFIO_PCI_OFFSET_MASK;
-> +
-> +	/*
-> +	 * The guest programs a GPA into this decoder and the host resolves the
-> +	 * HPA, so the guest never drives the physical decoder. Reads come from
-> +	 * the open-time snapshot; write emulation lands in a later change.
-> +	 */
+Testing Context:
+- ASUS K14PG-D24
+- 2x EPYC 9354
+- 8x Radeon AI PRO R9700 (Navi 48, 1002:7551)
+- Broadcom PEX890xx switches
+- Kernel base: 45c13f3f9e3b (tested with SEV-SNP passthrough=1)
 
-Is write emulation necessary?  Maybe that's an advantage of exposing
-this as a separate device specific region, userspace can be responsible
-for the write virtualization.
+Signed-off-by: Geramy Loveless <gloveless@jqluv.com>
+---
+ .../admin-guide/kernel-parameters.txt         |   8 ++
+ drivers/pci/pci.c                             |  10 ++
+ drivers/pci/pci.h                             |   1 +
+ drivers/pci/setup-bus.c                       | 118 ++++++++++++++++++
+ 4 files changed, 137 insertions(+)
 
-> +	if (iswrite)
-> +		return -EINVAL;
-> +
-> +	if (pos >= cxl->hdm_len)
-> +		return -EINVAL;
+diff --git a/Documentation/admin-guide/kernel-parameters.txt
+b/Documentation/admin-guide/kernel-parameters.txt
+index 37006fc3eac3..82d2b340fb98 100644
+--- a/Documentation/admin-guide/kernel-parameters.txt
++++ b/Documentation/admin-guide/kernel-parameters.txt
+@@ -5246,6 +5246,14 @@ Kernel parameters
+ 		hpbussize=nn	The minimum amount of additional bus numbers
+ 				reserved for buses below a hotplug bridge.
+ 				Default is 1.
++		no_rebar_reserve	Do not reserve prefetchable bridge-window
++				space for the maximum size of downstream Resizable
++				BARs. By default such space is reserved so a driver
++				can grow a BAR later (e.g. GPU VRAM BAR) even behind
++				fixed PCIe switch fabrics that firmware sized for the
++				boot-time BAR; the device BAR is left at its boot size
++				for the driver to resize and only bridge windows are
++				enlarged. Use this to restore the old behaviour.
+ 		realloc=	Enable/disable reallocating PCI bridge resources
+ 				if allocations done by BIOS are too small to
+ 				accommodate resources required by all child
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index b2879a6be5f8..c9901b15432a 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -120,6 +120,14 @@ unsigned long pci_hotplug_mmio_pref_size =
+DEFAULT_HOTPLUG_MMIO_PREF_SIZE;
+ #define DEFAULT_HOTPLUG_BUS_SIZE	1
+ unsigned long pci_hotplug_bus_size = DEFAULT_HOTPLUG_BUS_SIZE;
 
-hdm_shadow is allocated as hdm_len/sizeof(u32).  Something should make
-sure hdm_len based restrictions don't overreach the shadow.
++/*
++ * Prefetchable bridge-window headroom is reserved for the maximum size of
++ * downstream Resizable BARs by default, so a driver can grow one later
++ * (e.g. amdgpu VRAM BAR) even behind fixed PCIe switch fabrics.
++ * pci=no_rebar_reserve disables this.
++ */
++bool pci_rebar_no_reserve;
++
 
-> +
-> +	count = min_t(size_t, count, cxl->hdm_len - pos);
-> +	/*
-> +	 * The shadow mirrors the physical decoder, so BASE_LOW/HIGH carry the
-> +	 * host HPA. That is visible only to the trusted VMM holding the fd; the
-> +	 * VMM virtualizes the base so the guest sees its own GPA and never the
-> +	 * host address.
-> +	 */
-> +	if (copy_to_user(buf, (u8 *)cxl->hdm_shadow + pos, count))
-> +		return -EFAULT;
-> +
-> +	*ppos += count;
-> +	return count;
-> +}
-> +
-> +static const struct vfio_pci_regops vfio_cxl_comp_regops = {
-> +	.rw = vfio_cxl_comp_rw,
-> +	.release = vfio_cxl_region_release,
->  };
->  
-> +static void vfio_cxl_release_hpa(void *data)
-> +{
-> +	struct vfio_cxl_state *cxl = data;
-> +
-> +	release_mem_region(cxl->hpa_range.start, range_len(&cxl->hpa_range));
-> +}
-> +
->  static int vfio_cxl_init_device(struct vfio_pci_core_device *vdev)
->  {
->  	struct pci_dev *pdev = vdev->pdev;
-> @@ -92,6 +325,20 @@ static int vfio_cxl_init_device(struct vfio_pci_core_device *vdev)
->  	if (ret)
->  		return ret;
->  
-> +	/*
-> +	 * Map the HDM decoder registers to sample their programming at open.
-> +	 * The block location comes from the enumeration cache in pdev->hdm, so
-> +	 * this does not reach into the CXL core register map. vfio-pci owns the
-> +	 * BAR, so map without claiming the sub-block.
-> +	 */
-> +	cxl->hdm_regs = devm_ioremap(&pdev->dev,
-> +				     pci_resource_start(pdev, pdev->hdm->hdm_bar) +
-> +				     pdev->hdm->hdm_offset, pdev->hdm->hdm_size);
-> +	if (!cxl->hdm_regs)
-> +		return -ENOMEM;
-> +
-> +	cxl->hdm_len = pdev->hdm->hdm_size;
-> +
->  	ret = cxl_set_capacity(&cxl->cxlds, hdm_size);
->  	if (ret)
->  		return ret;
-> @@ -100,9 +347,30 @@ static int vfio_cxl_init_device(struct vfio_pci_core_device *vdev)
->  	if (IS_ERR(cxlmd))
->  		return PTR_ERR(cxlmd);
->  
-> +	/*
-> +	 * Own the resolved host physical range outright, and exclusively: mark
-> +	 * it IORESOURCE_EXCLUSIVE so /dev/mem cannot map a conflicting alias even
-> +	 * on an IO_STRICT_DEVMEM=n kernel. Firmware that left it as System RAM
-> +	 * would otherwise keep a cacheable alias that faults the host once the
-> +	 * guest maps the range write-back. There is no devm form of the exclusive
-> +	 * request, so pair it with a devm release action.
-> +	 */
+ /* PCIe MPS/MRRS strategy; can be overridden by kernel command-line
+param */
+ enum pcie_bus_config_types pcie_bus_config = PCIE_BUS_DEFAULT;
+@@ -6840,6 +6848,8 @@ static int __init pci_setup(char *str)
+ 					simple_strtoul(str + 10, &str, 0);
+ 				if (pci_hotplug_bus_size > 0xff)
+ 					pci_hotplug_bus_size = DEFAULT_HOTPLUG_BUS_SIZE;
++			} else if (!strncmp(str, "no_rebar_reserve", 16)) {
++				pci_rebar_no_reserve = true;
+ 			} else if (!strncmp(str, "pcie_bus_tune_off", 17)) {
+ 				pcie_bus_config = PCIE_BUS_TUNE_OFF;
+ 			} else if (!strncmp(str, "pcie_bus_safe", 13)) {
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index ba3c3fddddc2..6eddcb492425 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -409,6 +409,7 @@ extern unsigned long pci_hotplug_io_size;
+ extern unsigned long pci_hotplug_mmio_size;
+ extern unsigned long pci_hotplug_mmio_pref_size;
+ extern unsigned long pci_hotplug_bus_size;
++extern bool pci_rebar_no_reserve;
 
-Firmware isn't governed by OS resource structures.  It's useful, but I
-don't think it has the full stated scope.
+ static inline bool pci_is_cardbus_bridge(struct pci_dev *dev)
+ {
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index e8c94aa1d3c1..aa02b8454269 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -19,6 +19,7 @@
+ #include <linux/bug.h>
+ #include <linux/init.h>
+ #include <linux/kernel.h>
++#include <linux/log2.h>
+ #include <linux/minmax.h>
+ #include <linux/module.h>
+ #include <linux/pci.h>
+@@ -1258,6 +1259,53 @@ static bool pbus_size_mem_optional(struct pci_dev
+*dev, int resno,
+ 	return true;
+ }
 
-> +	if (!request_mem_region_exclusive(cxl->hpa_range.start,
-> +					  range_len(&cxl->hpa_range),
-> +					  "vfio-cxl-hdm"))
-> +		return -EBUSY;
-> +	ret = devm_add_action_or_reset(&pdev->dev, vfio_cxl_release_hpa, cxl);
-> +	if (ret)
-> +		return ret;
-> +
->  	cxl->cxlmd = cxlmd;
->  	vdev->cxl = cxl;
->  
-> +	/*
-> +	 * The VFIO regions and the poison-containment pfn space are set up in
-> +	 * open_device(): vfio_pci_core_disable() tears down all dynamic regions on
-> +	 * close, so they must be created per open rather than once at bind.
-> +	 */
->  	return 0;
->  }
->  
-> @@ -114,9 +382,11 @@ static void vfio_cxl_release_device(struct vfio_pci_core_device *vdev)
->  static int vfio_cxl_open_device(struct vfio_pci_core_device *vdev)
->  {
->  	struct vfio_cxl_state *cxl = vdev->cxl;
-> +	void __iomem *hdm = cxl->hdm_regs;
->  	struct pci_dev *pdev = vdev->pdev;
-> +	__le32 *hdm_shadow;
->  	u32 hdr, *shadow;
-> -	int i, dwords;
-> +	int i, dwords, ret;
->  
->  	/*
->  	 * Sample the DVSEC body now rather than at bind: a low-power
-> @@ -137,13 +407,88 @@ static int vfio_cxl_open_device(struct vfio_pci_core_device *vdev)
->  	cxl->dvsec_dwords = dwords;
->  	cxl->dvsec_shadow = shadow;
->  
-> +	dwords = cxl->hdm_len / sizeof(u32);
-> +	hdm_shadow = kcalloc(dwords, sizeof(__le32), GFP_KERNEL);
-> +	if (!hdm_shadow) {
-> +		kfree(shadow);
-> +		cxl->dvsec_shadow = NULL;
-> +		return -ENOMEM;
-> +	}
-> +
-> +	for (i = 0; i < dwords; i++)
-> +		hdm_shadow[i] = cpu_to_le32(readl(hdm + i * sizeof(u32)));
-> +
-> +	cxl->hdm_dwords = dwords;
-> +	cxl->hdm_shadow = hdm_shadow;
-> +
-> +	/*
-> +	 * vfio_pci_core_disable() frees all dynamic regions on close, so register
-> +	 * them here (per open) rather than at bind. A failed first-open never
-> +	 * reaches close_device(), so unwind on error.
-> +	 *
-> +	 * Advertise READ and WRITE alongside MMAP: a VMM derives the mmap
-> +	 * protection from these flags, so without them the HDM memory is mapped
-> +	 * PROT_NONE and a guest access faults (KVM cannot back the mapping). The
-> +	 * flags describe the mmap protection only; fd read/write returns -EIO,
-> +	 * because a host CPU read through a kernel mapping of the coherent
-> +	 * CXL.mem range aborts on the fabric (see vfio_cxl_mem_rw()).
-> +	 */
-> +	ret = vfio_pci_core_register_dev_region(vdev, VFIO_REGION_TYPE_CXL,
-> +						VFIO_REGION_SUBTYPE_CXL_MEM,
-> +						&vfio_cxl_mem_regops,
-> +						range_len(&cxl->hpa_range),
-> +						VFIO_REGION_INFO_FLAG_READ |
-> +						VFIO_REGION_INFO_FLAG_WRITE |
-> +						VFIO_REGION_INFO_FLAG_MMAP, cxl);
-> +	if (ret)
-> +		goto err_free_shadows;
-> +
-> +	ret = vfio_pci_core_register_dev_region(vdev, VFIO_REGION_TYPE_CXL,
-> +						VFIO_REGION_SUBTYPE_CXL_COMP_REGS,
-> +						&vfio_cxl_comp_regops, cxl->hdm_len,
-> +						VFIO_REGION_INFO_FLAG_READ, cxl);
-> +	if (ret)
-> +		goto err_unregister_hdm;
-> +
-> +	/*
-> +	 * The HDM region is advertised mmap-able, so a fd holder can fault its
-> +	 * struct-page-less device memory in from the host CPU. Register it with
-> +	 * memory_failure() to contain a memory error. -EOPNOTSUPP means
-> +	 * CONFIG_MEMORY_FAILURE is off, so run without containment.
-> +	 */
-> +	ret = vfio_cxl_register_pfn_space(vdev);
-> +	if (ret && ret != -EOPNOTSUPP)
-> +		goto err_unregister_comp;
-> +
-> +	/*
-> +	 * The decoder is firmware-committed and the shadow now mirrors it, so
-> +	 * host access to the HDM range is safe. Open the access gate; reset and
-> +	 * power transitions clear it until the decoder is restored.
-> +	 */
-> +	cxl->hdm_valid = true;
-> +
->  	return 0;
-> +
-> +err_unregister_comp:
-> +	vfio_pci_core_unregister_dev_region(vdev);
-> +err_unregister_hdm:
-> +	vfio_pci_core_unregister_dev_region(vdev);
-> +err_free_shadows:
-> +	kfree(cxl->hdm_shadow);
-> +	cxl->hdm_shadow = NULL;
-> +	kfree(cxl->dvsec_shadow);
-> +	cxl->dvsec_shadow = NULL;
-> +	return ret;
->  }
->  
->  static void vfio_cxl_close_device(struct vfio_pci_core_device *vdev)
->  {
->  	struct vfio_cxl_state *cxl = vdev->cxl;
->  
-> +	cxl->hdm_valid = false;
-> +	unregister_pfn_address_space(&cxl->dpa_pfn_space);
-> +	kfree(cxl->hdm_shadow);
-> +	cxl->hdm_shadow = NULL;
++/*
++ * pci_rebar_reserve_size - prefetchable window headroom to reserve for
+a BAR
++ *
++ * Reserve enough prefetchable window space to later grow @resno of @dev to
++ * its maximum Resizable BAR size. This is done for every ReBAR-capable
+device
++ * by default (disable with pci=no_rebar_reserve). Only the optional
+(add_size)
++ * part of the enclosing window is inflated here; the device BAR
+resource and
++ * the hardware ReBAR are left at their boot size, so the driver still
+performs
++ * the actual resize into the reserved window. Reserving the window up
+front
++ * avoids -ENOSPC in pci_resize_resource() on fixed switch fabrics, where a
++ * window shared with a sibling's still-assigned BAR cannot be released and
++ * regrown at resize time.
++ *
++ * The reservation is strictly optional: __assign_resources_sorted()
+satisfies
++ * all required resources first and only then places add_size on leftover
++ * space, so reserving by default cannot make a required BAR or window
+fail.
++ *
++ * Return the extra bytes to reserve and raise *add_align to the BAR's
++ * alignment so the reserved space can actually hold the grown BAR.
++ */
++static resource_size_t pci_rebar_reserve_size(struct pci_dev *dev, int
+resno,
++					      resource_size_t *add_align)
++{
++	struct resource *res = pci_resource_n(dev, resno);
++	resource_size_t max_size, cur_size;
++	int max;
++
++	if (pci_rebar_no_reserve || resno >= PCI_STD_NUM_BARS)
++		return 0;
++
++	if ((res->flags & (IORESOURCE_MEM_64 | IORESOURCE_PREFETCH)) !=
++	    (IORESOURCE_MEM_64 | IORESOURCE_PREFETCH))
++		return 0;
++
++	max = pci_rebar_get_max_size(dev, resno);
++	if (max < 0)
++		return 0;
++
++	max_size = pci_rebar_size_to_bytes(max);
++	cur_size = resource_size(res);
++	if (max_size <= cur_size)
++		return 0;
++
++	*add_align = max(*add_align, max_size);
++	return max_size - cur_size;
++}
++
+ /**
+  * pbus_size_mem() - Size the memory window of a given bus
+  *
+@@ -1285,6 +1333,7 @@ static void pbus_size_mem(struct pci_bus *bus,
+struct resource *b_res,
+ 	int order, max_order;
+ 	resource_size_t children_add_size = 0;
+ 	resource_size_t add_align = 0;
++	resource_size_t rebar_align = 0;
 
-counted_by_ptr needs to be updated as well.  Thanks,
+ 	if (!b_res)
+ 		return;
+@@ -1343,15 +1392,29 @@ static void pbus_size_mem(struct pci_bus *bus,
+struct resource *b_res,
+ 				aligns[order] += align;
+ 			if (order > max_order)
+ 				max_order = order;
++
++			size += pci_rebar_reserve_size(dev, i, &rebar_align);
+ 		}
+ 	}
 
-Alex
+ 	win_align = pci_min_window_alignment(bus, b_res->flags);
+ 	min_align = calculate_head_align(aligns, max_order);
+ 	min_align = max(min_align, win_align);
++	min_align = max(min_align, rebar_align);
+ 	size0 = calculate_memsize(size, realloc_head ? 0 : add_size,
+ 				  0, win_align);
 
->  	kfree(cxl->dvsec_shadow);
->  	cxl->dvsec_shadow = NULL;
->  }
-> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
-> index 470730cdc88b..6f6ebcce86a1 100644
-> --- a/drivers/vfio/pci/vfio_pci_core.c
-> +++ b/drivers/vfio/pci/vfio_pci_core.c
-> @@ -1123,6 +1123,23 @@ int vfio_pci_core_register_dev_region(struct vfio_pci_core_device *vdev,
->  }
->  EXPORT_SYMBOL_GPL(vfio_pci_core_register_dev_region);
->  
-> +/*
-> + * Unregister the most recently registered dynamic region. Used to unwind a
-> + * partially built region set on an open-time error; regions are otherwise
-> + * released together in vfio_pci_core_disable().
-> + */
-> +void vfio_pci_core_unregister_dev_region(struct vfio_pci_core_device *vdev)
-> +{
-> +	struct vfio_pci_region *region;
-> +
-> +	if (WARN_ON(!vdev->num_regions))
-> +		return;
-> +
-> +	region = &vdev->region[--vdev->num_regions];
-> +	region->ops->release(vdev, region);
-> +}
-> +EXPORT_SYMBOL_GPL(vfio_pci_core_unregister_dev_region);
-> +
->  static int vfio_pci_info_atomic_cap(struct vfio_pci_core_device *vdev,
->  				    struct vfio_info_cap *caps)
->  {
-> diff --git a/include/linux/vfio_pci_core.h b/include/linux/vfio_pci_core.h
-> index b9202cb29d96..294e95b5e881 100644
-> --- a/include/linux/vfio_pci_core.h
-> +++ b/include/linux/vfio_pci_core.h
-> @@ -187,6 +187,7 @@ int vfio_pci_core_register_dev_region(struct vfio_pci_core_device *vdev,
->  				      unsigned int type, unsigned int subtype,
->  				      const struct vfio_pci_regops *ops,
->  				      size_t size, u32 flags, void *data);
-> +void vfio_pci_core_unregister_dev_region(struct vfio_pci_core_device *vdev);
->  void vfio_pci_core_set_mmap_exclude(struct vfio_pci_core_device *vdev, int bar,
->  				    u64 start, u64 len);
->  void vfio_pci_core_close_device(struct vfio_device *core_vdev);
-> diff --git a/include/uapi/linux/vfio.h b/include/uapi/linux/vfio.h
-> index 540e62312671..d5b8106625bf 100644
-> --- a/include/uapi/linux/vfio.h
-> +++ b/include/uapi/linux/vfio.h
-> @@ -377,6 +377,9 @@ struct vfio_region_info_cap_type {
->  /* sub-types for VFIO_REGION_TYPE_CXL */
->  /* CXL.mem HDM region of a Type-2 device, mmap-able */
->  #define VFIO_REGION_SUBTYPE_CXL_MEM		(1)
-> +/* CXL HDM decoder registers, trapped so the guest programs a GPA it never owns */
-> +#define VFIO_REGION_SUBTYPE_CXL_COMP_REGS	(2)
-> +/* Subtypes 3+ are reserved for future trapped CXL surfaces, e.g. RAS. */
->  
->  /**
->   * struct vfio_region_gfx_edid - EDID region layout.
++	/*
++	 * A window that reserves ReBAR headroom is larger than its own
++	 * alignment (e.g. 32 GiB BAR + doorbell => 33 GiB > 32 GiB). The
++	 * parent only reserves alignment padding for a child window when
++	 * its size <= its alignment, so round such a window's alignment up
++	 * to a power of two >= its size; sibling 32 GiB BARs behind one
++	 * switch then each land in a properly aligned slot.
++	 */
++	if (rebar_align && size0)
++		min_align = max(min_align, roundup_pow_of_two(size0));
++
+ 	if (size0) {
+ 		resource_set_range(b_res, min_align, size0);
+ 		b_res->flags &= ~IORESOURCE_DISABLED;
+@@ -2179,6 +2242,52 @@ static void pci_prepare_next_assign_round(struct
+list_head *fail_head,
+  * Second and later try will clear small leaf bridge res.
+  * Will stop till to the max depth if can not find good one.
+  */
++/*
++ * Release the 64-bit prefetchable BARs of resizable-BAR display
+devices so the
++ * windows enclosing them empty out and can be re-sized. The BAR *size*
+is left
++ * untouched (only released and re-placed), so the hardware ReBAR is never
++ * programmed here - the driver still owns the actual resize.
++ */
++static int pci_release_rebar_bars_cb(struct pci_dev *dev, void *data)
++{
++	struct resource *r;
++	unsigned int i;
++
++	if ((dev->class >> 16) != PCI_BASE_CLASS_DISPLAY)
++		return 0;
++	if (pci_rebar_get_max_size(dev, 0) <= pci_rebar_get_current_size(dev, 0))
++		return 0;
++	pci_dev_for_each_resource(dev, r, i) {
++		if (i >= PCI_BRIDGE_RESOURCES)
++			break;
++		if (r->parent && (r->flags & IORESOURCE_MEM_64) &&
++		    (r->flags & IORESOURCE_PREFETCH))
++			pci_release_resource(dev, i);
++	}
++	return 0;
++}
++
++/*
++ * Release the now-empty prefetchable bridge windows bottom-up so the
+sizing
++ * pass re-sizes them (with pci_rebar_pref_reserve() reservation) to
+fit the
++ * BARs a driver will later grow.
++ */
++static void pci_release_rebar_windows(struct pci_bus *bus)
++{
++	struct pci_dev *dev;
++	struct resource *w;
++
++	list_for_each_entry(dev, &bus->devices, bus_list)
++		if (dev->subordinate)
++			pci_release_rebar_windows(dev->subordinate);
++
++	if (!bus->self)
++		return;
++	w = &bus->self->resource[PCI_BRIDGE_PREF_MEM_WINDOW];
++	if (w->parent && (w->flags & IORESOURCE_MEM_64) && !w->child)
++		pci_release_resource(bus->self, PCI_BRIDGE_PREF_MEM_WINDOW);
++}
++
+ void pci_assign_unassigned_root_bus_resources(struct pci_bus *bus)
+ {
+ 	LIST_HEAD(realloc_head);
+@@ -2190,6 +2299,15 @@ void
+pci_assign_unassigned_root_bus_resources(struct pci_bus *bus)
+ 	int pci_try_num = 1;
+ 	enum enable_type enable_local;
+
++	/*
++	 * Release resizable device BARs and their prefetchable windows so the
++	 * sizing pass re-sizes those windows large enough
+(pci_rebar_pref_reserve)
++	 * for the BARs a driver will later grow. Only released and re-placed
+- the
++	 * BAR size is left untouched, so the hardware ReBAR is never programmed.
++	 */
++	pci_walk_bus(bus, pci_release_rebar_bars_cb, NULL);
++	pci_release_rebar_windows(bus);
++
+ 	/* Don't realloc if asked to do so */
+ 	enable_local = pci_realloc_detect(bus, pci_realloc_enable);
+ 	if (pci_realloc_enabled(enable_local)) {
+
+base-commit: 45c13f3f9e3bb15fd89ff2864c6f627a3b4b4229
+-- 
+2.53.0
+
+
+From 71cb1c4131d00da973142fce2511636f033c43c1 Mon Sep 17 00:00:00 2001
+From: Geramy Loveless <gloveless@jqluv.com>
+Date: Fri, 28 Aug 2026 21:11:55 +0000
+Subject: [PATCH] PCI: pack oversized prefetchable windows by demoting small
+ BARs at enumeration
+
+Clear PREFETCH on small control BARs beside a large prefetchable BAR at
+enumeration so they are placed below 4 GiB and the prefetchable window
+packs to the large BAR alone. Bounded to small BARs (<=16 MiB) beside a
+big one (>=64 MiB); pci=no_bar_demote disables it.
+---
+ .../admin-guide/kernel-parameters.txt         |  1 +
+ drivers/pci/pci.c                             |  5 ++
+ drivers/pci/pci.h                             |  1 +
+ drivers/pci/quirks.c                          | 54 +++++++++++++++++++
+ 4 files changed, 61 insertions(+)
+
+diff --git a/Documentation/admin-guide/kernel-parameters.txt
+b/Documentation/admin-guide/kernel-parameters.txt
+index 82d2b340fb98..7360407dd4b8 100644
+--- a/Documentation/admin-guide/kernel-parameters.txt
++++ b/Documentation/admin-guide/kernel-parameters.txt
+@@ -5246,6 +5246,7 @@ Kernel parameters
+ 		hpbussize=nn	The minimum amount of additional bus numbers
+ 				reserved for buses below a hotplug bridge.
+ 				Default is 1.
++		no_bar_demote	Do not demote small prefetchable BARs below 4 GiB to
+pack oversized prefetchable bridge windows.
+ 		no_rebar_reserve	Do not reserve prefetchable bridge-window
+ 				space for the maximum size of downstream Resizable
+ 				BARs. By default such space is reserved so a driver
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index c9901b15432a..0bb4ad570171 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -128,6 +128,9 @@ unsigned long pci_hotplug_bus_size =
+DEFAULT_HOTPLUG_BUS_SIZE;
+  */
+ bool pci_rebar_no_reserve;
+
++/* pci=no_bar_demote disables demoting small prefetchable BARs below 4
+GiB. */
++bool pci_bar_demote_disabled;
++
+
+ /* PCIe MPS/MRRS strategy; can be overridden by kernel command-line
+param */
+ enum pcie_bus_config_types pcie_bus_config = PCIE_BUS_DEFAULT;
+@@ -6850,6 +6853,8 @@ static int __init pci_setup(char *str)
+ 					pci_hotplug_bus_size = DEFAULT_HOTPLUG_BUS_SIZE;
+ 			} else if (!strncmp(str, "no_rebar_reserve", 16)) {
+ 				pci_rebar_no_reserve = true;
++			} else if (!strncmp(str, "no_bar_demote", 13)) {
++				pci_bar_demote_disabled = true;
+ 			} else if (!strncmp(str, "pcie_bus_tune_off", 17)) {
+ 				pcie_bus_config = PCIE_BUS_TUNE_OFF;
+ 			} else if (!strncmp(str, "pcie_bus_safe", 13)) {
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 6eddcb492425..0f21972b674a 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -410,6 +410,7 @@ extern unsigned long pci_hotplug_mmio_size;
+ extern unsigned long pci_hotplug_mmio_pref_size;
+ extern unsigned long pci_hotplug_bus_size;
+ extern bool pci_rebar_no_reserve;
++extern bool pci_bar_demote_disabled;
+
+ static inline bool pci_is_cardbus_bridge(struct pci_dev *dev)
+ {
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index de9bbccda21f..57a5926a273c 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -6423,3 +6423,57 @@ static void pci_mask_replay_timer_timeout(struct
+pci_dev *pdev)
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_GLI, 0x9750,
+pci_mask_replay_timer_timeout);
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_GLI, 0x9755,
+pci_mask_replay_timer_timeout);
+ #endif
++
++/*
++ * Pack oversized prefetchable windows.
++ *
++ * A small prefetchable BAR (e.g. a 2 MiB doorbell) sharing a bridge's
+single
++ * prefetchable window with a much larger one (e.g. a 32 GiB
+framebuffer) pushes
++ * the window past the large BAR's alignment, so siblings behind a
+switch waste
++ * an alignment each.  A prefetchable BAR may legally be assigned from the
++ * non-prefetchable window (PCI-to-PCI Bridge spec r1.2 sec 3.2.5);
+clear PREFETCH
++ * on such small BARs so they are placed below 4 GiB and the
+prefetchable window
++ * is sized to the large BAR alone.  Run at enumeration -- before
+resources are
++ * sized -- so the reservation and assignment see the final layout.
+Only small
++ * "control" BARs beside a large one are touched, bounding the extra
+below-4G use.
++ * pci=no_bar_demote disables this.
++ */
++#define PCI_BAR_PACK_MIN	SZ_64M	/* device must have a pref BAR at least
+this big */
++#define PCI_BAR_PACK_CAP	SZ_16M	/* only demote small pref BARs up to
+this size */
++
++static void quirk_pci_pack_prefetch(struct pci_dev *dev)
++{
++	resource_size_t max_align = 0;
++	struct resource *r;
++	int i;
++
++	if (pci_bar_demote_disabled)
++		return;
++
++	for (i = 0; i < PCI_STD_NUM_BARS; i++) {
++		r = pci_resource_n(dev, i);
++		if ((r->flags & (IORESOURCE_MEM | IORESOURCE_PREFETCH)) ==
++		    (IORESOURCE_MEM | IORESOURCE_PREFETCH))
++			max_align = max(max_align, pci_resource_alignment(dev, r));
++	}
++	if (max_align < PCI_BAR_PACK_MIN)
++		return;
++
++	for (i = 0; i < PCI_STD_NUM_BARS; i++) {
++		r = pci_resource_n(dev, i);
++		if ((r->flags & (IORESOURCE_MEM | IORESOURCE_PREFETCH)) !=
++		    (IORESOURCE_MEM | IORESOURCE_PREFETCH))
++			continue;
++		if (r->flags & IORESOURCE_PCI_FIXED)
++			continue;
++		if (pci_resource_alignment(dev, r) >= max_align)
++			continue;		/* an alignment-setting BAR, keep it */
++		if (resource_size(r) > PCI_BAR_PACK_CAP)
++			continue;		/* not a small control BAR */
++
++		r->flags &= ~IORESOURCE_PREFETCH;
++		pci_info(dev, "%pR: assigned from the non-prefetchable window to pack
+the prefetchable window\n",
++			 r);
++	}
++}
++DECLARE_PCI_FIXUP_HEADER(PCI_ANY_ID, PCI_ANY_ID, quirk_pci_pack_prefetch);
+
+base-commit: 45c13f3f9e3bb15fd89ff2864c6f627a3b4b4229
+prerequisite-patch-id: 73634e017e2770ecd47fe4fe434973e280b5d3d8
+prerequisite-patch-id: c397a97535c26763ed6104deba168b0f5e456250
+prerequisite-patch-id: 24c5bab9f84760d15064b6ea7d73720ce33eb5bc
+prerequisite-patch-id: df6cdb5d432ed50ffffc5b31e3df32711c0b98c2
+-- 
+2.53.0
 
