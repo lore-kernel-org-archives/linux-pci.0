@@ -1,173 +1,168 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.21])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f70.google.com (mail-ej1-f70.google.com [209.85.218.70])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28AF5369990;
-	Fri, 28 Aug 2026 15:59:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.21
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 03A243515D1
+	for <linux-pci@vger.kernel.org>; Fri, 28 Aug 2026 16:01:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.70
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787932801; cv=none; b=OQMHSm2AEw0IEeDtQjB9aaCJNJb0Ywy5Ao3Y7DbcdNf+J5ksdlAldUsaUhOc1/DjPikfLwxJHNDEUmD3LtXIaakm7hsKJ61KFv/J+GaxFvF0BuhHR8HDjFGQvgkCSL1Gg75IcCU8IZJZs+raG3yDevsOOMLFeNCFLtZVnXQlS+w=
+	t=1787932907; cv=none; b=CeIbY1W8be4/OtJ8rpV6W6HUXbOZUW7b4xGRRUJ9O1CHNydxE5+09CxNNGY6QlRDxtwFfzRTMLp/5jZ82gmfjnlqCHgcw16jSyktconSpttXvli113kftq9kyOunsAASGXV2AHE5HAOTqy1t3D+FfYMZwGXnvJBp2bFG7c6oODo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787932801; c=relaxed/simple;
-	bh=+AegtlUreBw0TeBD9YP48QLV31KMxegwuKNHebyj7aU=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=shXiOkNr02zNbPjUPB/GgaU1qOzWURbmuCbbN3ZkaZsOP8zQdR3aBaGHUEXJ9gwVCRTSzFAuFBBIfLbtKZMHW8/7rQ9PovTw0ucblpdj3RhoES1Jn9CzXToY7F4I4CJjne5s9sHswy4Eofyf6Xgy8CbFcrBXNO7MSltiCFv0jfs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=OyQVta7M; arc=none smtp.client-ip=198.175.65.21
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1787932907; c=relaxed/simple;
+	bh=UuWnHtXL8N/w/Q5WNTbDJxeFR+DQc7c1YtM6Y9NEeTw=;
+	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
+	 To:Cc:Content-Type; b=ovp8WLmZzTDDDsKDDoVCgkCKHkOqVXUbngHGKpJfvDW+RiVQtk5cbQ3oPmLZmvmbhkZUGqt6jWeUiDr5sqMRaheru+CGSOGojucm9tNchBBuPRk6JhngtPGr53UG4Qv+NuQe+JlHz6LJG/fO6q+1uUj3e9YMa7oDrB29vYrafd8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--tarunsahu.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=DnLREiv6; arc=none smtp.client-ip=209.85.218.70
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--tarunsahu.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="OyQVta7M"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1787932800; x=1819468800;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=+AegtlUreBw0TeBD9YP48QLV31KMxegwuKNHebyj7aU=;
-  b=OyQVta7MhpZlVYPMRo6qGbJctjw7X8uK9WL6cr8fh0WNWCsWWhIEi8lG
-   Yj5MOM2P1V8Ha07ZDyBUTjaj1ROWuedM2UI+qwqTv8tn9qbyE/ce5fOv9
-   zmQ9CBnxQ2qxQLINzAFpAXmuFqkZyb1cXeiO1euzolHBxM34/FirqYVW7
-   u24vhTk/s0GyZlq60NAGXpF1WlXyUMGewVtNJk9MsmHu91L0pUtt7Nmvo
-   xSeF3oTYGJiWDvoZa/hFQd2BpwAKQd3TKcTfcI+qkFaAhPvmF1pxZBKw+
-   s31V0or1ht2/2o6sBgoKgMwU9kv+BfW4EGpsWXM2/OyzKM4Zv+GCl/AFi
-   A==;
-X-CSE-ConnectionGUID: bzcJr0CwSGKBxknMPW6XgQ==
-X-CSE-MsgGUID: eqQGFVmZRM2E0rFXnk/B2w==
-X-IronPort-AV: E=McAfee;i="6800,10657,11889"; a="88299642"
-X-IronPort-AV: E=Sophos;i="6.25,248,1779174000"; 
-   d="scan'208";a="88299642"
-Received: from orviesa006.jf.intel.com ([10.64.159.146])
-  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Aug 2026 08:59:59 -0700
-X-CSE-ConnectionGUID: yOu767KDTN6AfmDdD3kNLw==
-X-CSE-MsgGUID: qX/wSVlXQTum0ztYfomArA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.25,248,1779174000"; 
-   d="scan'208";a="266388794"
-Received: from sghuge-mobl2.amr.corp.intel.com (HELO [10.125.109.180]) ([10.125.109.180])
-  by orviesa006-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Aug 2026 08:59:57 -0700
-Message-ID: <dbc6658c-9c3d-4590-b9c3-784dcc7846cc@intel.com>
-Date: Fri, 28 Aug 2026 08:59:55 -0700
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="DnLREiv6"
+Received: by mail-ej1-f70.google.com with SMTP id a640c23a62f3a-c253185765dso95488266b.0
+        for <linux-pci@vger.kernel.org>; Fri, 28 Aug 2026 09:01:45 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1787932904; x=1788537704; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:from:subject
+         :message-id:references:mime-version:in-reply-to:date:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=rbwr+K5nPn6tIRCwsto5KEIPiqdePxzLIo1QhD83FDw=;
+        b=DnLREiv6DOftqMow2FPIZ5x9Xx0gAKzmcnaAj2IQcYhJ0Meos6uCzsdSGHHQ3a9k3W
+         ECMqr4J2By/m+LevKjkPi1zvjCnN3sI45kOgBqOkxQNSrNLztgwxk4NI1H92jxUo7JzT
+         EIYwPqwYoOgXH3x8jb26DONwnkOOkWOJL4XqgMlVU9sRqTY0PPqPZvL2MTpUAR2m6ecQ
+         VdxsoSSBIv+VSWF6XX8swWtP15116RVoWFm/OiHEpLPRMT36pAIbi9kmWg6ifBCHnM2U
+         C4hgXe0m2GHZvY5S0Uz4zL5WByuIEDu9ZYPJLGZs7EoASriU3CjXVXFToKUQKfr8geE+
+         T9pg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1787932904; x=1788537704;
+        h=content-transfer-encoding:content-type:cc:to:from:subject
+         :message-id:references:mime-version:in-reply-to:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=rbwr+K5nPn6tIRCwsto5KEIPiqdePxzLIo1QhD83FDw=;
+        b=ZmoLp090uySQ1OELQuZF+40rfiSIOIdI6gRvzzRRCMCPr8HlsEsvP0Gjl7kkx1eucz
+         xeUMV5ct5Iakt58V04UBjjHvAIeV9VfLJTtxzdfyb9QKgfBa5aIlH/NCDdOS54gy6qs7
+         hv65f8fy/C7Jftw/SFvSiqmPRR4DzuDVCAuHmxn8ablRLYIchOvtDvqCqUCGC5y5ShDc
+         XkwCmJ219inTNOixJCdRwQPlK1xf6ezImFSif05MDiDqQv2ckjf93v26L1GUgYztZhLf
+         WtOXzNOajqOuRifpJkcPx4Mvv5uCBZhq+RHsmFxCI09ISV+0pQSi4wciy7CPJXQz0FLH
+         B6Ug==
+X-Forwarded-Encrypted: i=1; AHgh+RodxWD3/3gGM2o/4iwRmRLlWq+fuNRN7c3xnFJaRfErD9fzjOGgUEHVoa3/6YpQJ9NZGQzSPYbq/Oo=@vger.kernel.org
+X-Gm-Message-State: AFuF++l+itqubheRRq0aktguvKRow8/1vCXopdeR1zdIB6mxgPgPtjCI
+	p/50yWd58tJLX/wId/ekjLxPjhyDe1JirtHR57vqbBkm/NHDf0GNxf4oMKannVYUo6ojhaMMJqW
+	bInZGoc5oDzqXzYO5BQ==
+X-Received: from edj18.prod.google.com ([2002:a05:6402:3252:b0:6a0:9689:91c0])
+ (user=tarunsahu job=prod-delivery.src-stubby-dispatcher) by
+ 2002:a05:6402:455a:b0:6a3:f74d:6a47 with SMTP id 4fb4d7f45d1cf-6a60d157efamr5227378a12.0.1787932903626;
+ Fri, 28 Aug 2026 09:01:43 -0700 (PDT)
+Date: Fri, 28 Aug 2026 16:01:43 +0000
+In-Reply-To: <20260821144335.1BE1F1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 04/27] cxl: Establish media readiness in
- cxl_mem_probe()
-To: mhonap@nvidia.com, alex@shazbot.org, jgg@ziepe.ca, ankita@nvidia.com,
- jic23@kernel.org, alejandro.lucero-palau@amd.com, smadhavan@nvidia.com,
- corbet@lwn.net, skhan@linuxfoundation.org, dave@stgolabs.net,
- alison.schofield@intel.com, vishal.l.verma@intel.com, iweiny@kernel.org,
- ming.li@zohomail.com, yishaih@nvidia.com, skolothumtho@nvidia.com,
- kevin.tian@intel.com, bhelgaas@google.com, dmatlack@google.com,
- kees@kernel.org, gustavoars@kernel.org
-Cc: cjia@nvidia.com, kjaju@nvidia.com, vsethi@nvidia.com, zhiw@nvidia.com,
- linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
- kvm@vger.kernel.org, linux-cxl@vger.kernel.org, linux-pci@vger.kernel.org,
- linux-kselftest@vger.kernel.org, linux-hardening@vger.kernel.org
-References: <20260813093631.2288172-1-mhonap@nvidia.com>
- <20260813093631.2288172-5-mhonap@nvidia.com>
-From: Dave Jiang <dave.jiang@intel.com>
-Content-Language: en-US
-In-Reply-To: <20260813093631.2288172-5-mhonap@nvidia.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Mime-Version: 1.0
+References: <20260821142414.150892-1-djeffery@redhat.com> <20260821142414.150892-3-djeffery@redhat.com>
+ <20260821144335.1BE1F1F000E9@smtp.kernel.org>
+Message-ID: <9huzh5kez120.fsf@tarunix.c.googlers.com>
+Subject: Re: [PATCH 2/9] driver core: prevent device_add() during system shutdown
+From: tarunsahu@google.com
+To: sashiko-reviews@lists.linux.dev, David Jeffery <djeffery@redhat.com>
+Cc: linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
 
+sashiko-bot@kernel.org writes:
 
+> Thank you for your contribution! Sashiko AI review found 1 potential issu=
+e(s) to consider:
+> - [High] Race condition in device_add() abort path during system shutdown=
+ leading to Use-After-Free.
+> --
+>
+> --- Patch [2]: [PATCH 2/9] driver core: prevent device_add() during syste=
+m shutdown ---
+> commit 17748fb46ccfdb0adadd634adbfe70a9fd601b9a
+> Author: Tarun Sahu <tarunsahu@google.com>
+>
+> driver core: prevent device_add() during system shutdown
+>
+> This commit adds system state checks to device_add() to prevent new
+> devices from being added while the system is halting, powering off, or
+> restarting. It re-checks the state under devices_kset->list_lock to
+> avoid a TOCTOU race window with device_shutdown().
+>
+>> diff --git a/drivers/base/core.c b/drivers/base/core.c
+>> --- a/drivers/base/core.c
+>> +++ b/drivers/base/core.c
+> [ ... ]
+>> @@ -3699,6 +3720,18 @@ int device_add(struct device *dev)
+>>  		goto Error;
+>>  	}
+>> =20
+>> +	/*
+>> +	 * Check system_state again under list_lock to prevent a TOCTOU race
+>> +	 * where device_shutdown() runs concurrently and misses this device.
+>> +	 */
+>> +	spin_lock(&devices_kset->list_lock);
+>> +	if (unlikely(system_is_shutting_down())) {
+>> +		spin_unlock(&devices_kset->list_lock);
+>> +		error =3D -ESHUTDOWN;
+>> +		goto ShutdownError;
+>
+> [Severity: High]
+> Does this error path introduce a use-after-free race with device_shutdown=
+()?
+>
+> If device_add() successfully links the device to devices_kset->list via
+> kobject_add(), device_shutdown() could concurrently run and pull the
+> newly added device from the list:
+>
+> device_shutdown() {
+>     ...
+>     spin_lock(&devices_kset->list_lock);
+>     ...
+>     dev =3D list_entry(devices_kset->list.prev, struct device, kobj.entry=
+);
+>     ...
+>     list_del_init(&dev->kobj.entry);
+>     spin_unlock(&devices_kset->list_lock);
+>     ...
+> }
+>
+> If device_add() then resumes, acquires the list lock, and sees
+> system_is_shutting_down(), it will jump to ShutdownError and return
+> -ESHUTDOWN.
+>
+> The caller of device_add() will typically treat this as a failure and
+> free the device and its associated private data. Meanwhile,
+> device_shutdown() is already outside the lock and actively executing the
+> shutdown callbacks on that exact same device:
+>
+> device_shutdown() {
+>     ...
+>     if (dev->bus && dev->bus->shutdown) {
+>         ...
+>         dev->bus->shutdown(dev);
+>     }
+>     ...
+> }
+>
+> Can this lead to device_shutdown() accessing freed device memory?
 
-On 8/13/26 2:36 AM, mhonap@nvidia.com wrote:
-> From: Manish Honap <mhonap@nvidia.com>
-> 
-> media_ready was only ever set by cxl_pci, in advance of registering a
-> memdev and with CXL Memory Device register assumptions. A consumer that
-> creates a memdev without cxl_pci, such as a mailbox-less Type-2
-> accelerator brought up through devm_cxl_probe_mem(), therefore handed
-> cxl_mem a device with media_ready still false, and cxl_mem_probe()
-> rejected it with -EBUSY. __devm_cxl_add_memdev() turns that into -ENXIO
-> back to the caller and the bind fails.
-> 
-> Move the readiness wait into cxl_mem_probe() so every memdev consumer
-> gets a ready resource regardless of how the memdev was created. When
-> media_ready is not already set, wait on the device's DVSEC
-> Mem_Info_Valid and Mem_Active bits and mark it ready. cxl_pci keeps
-> setting media_ready before it registers its memdev, so that path skips
-> the wait.
-> 
-> The CXL Memory Device register group is optional and many Type-2 devices
-> do not implement it, so cxl_await_media_ready() must not read the Memdev
-> Status register unless the group is mapped. Reading regs.memdev on a
-> device that lacks it would fault. Gate that read on regs.memdev; the
-> DVSEC bits already prove readiness for such devices.
-> 
-> Signed-off-by: Manish Honap <mhonap@nvidia.com>
+We can make device_add and device_shutdown synchronise like
 
-Agree with Alex's review. First part needs to be a separate patch. And second part, please see drivers/net/ethernet/sfc/efx_cxl.c:efx_cxl_init() on media ready for CXL type2. That should be handled before devm_cxl_probe_mem() gets called. And with that, maybe the first chunk is not even needed?
++device_block_adding();
++wait_for_device_add();
 
-DJ
-> ---
->  drivers/cxl/core/pci.c | 15 +++++++++++----
->  drivers/cxl/mem.c      |  9 +++++++--
->  2 files changed, 18 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/cxl/core/pci.c b/drivers/cxl/core/pci.c
-> index 08d4c955137d..9b372d5a1aa4 100644
-> --- a/drivers/cxl/core/pci.c
-> +++ b/drivers/cxl/core/pci.c
-> @@ -151,7 +151,6 @@ int cxl_await_media_ready(struct cxl_dev_state *cxlds)
->  	struct pci_dev *pdev = to_pci_dev(cxlds->dev);
->  	int d = cxlds->cxl_dvsec;
->  	int rc, i, hdm_count;
-> -	u64 md_status;
->  	u16 cap;
->  
->  	rc = pci_read_config_word(pdev,
-> @@ -172,9 +171,17 @@ int cxl_await_media_ready(struct cxl_dev_state *cxlds)
->  			return rc;
->  	}
->  
-> -	md_status = readq(cxlds->regs.memdev + CXLMDEV_STATUS_OFFSET);
-> -	if (!CXLMDEV_READY(md_status))
-> -		return -EIO;
-> +	/*
-> +	 * It is possible some Type-2 devices (CXL_DEVTYPE_DEVMEM) do not
-> +	 * implement regs.memdev; only consult the Memdev Status register when
-> +	 * the group is actually present.
-> +	 */
-> +	if (cxlds->regs.memdev) {
-> +		u64 md_status = readq(cxlds->regs.memdev + CXLMDEV_STATUS_OFFSET);
-> +
-> +		if (!CXLMDEV_READY(md_status))
-> +			return -EIO;
-> +	}
+calling these two in device_shutdown similiarly we have for probing.
 
-You probably get less code churn if you just returned here:
+~Tarun
 
-if (!cxlds->regs.memdev)
-	return 0;
-
-DJ
-
->  
->  	return 0;
->  }
-> diff --git a/drivers/cxl/mem.c b/drivers/cxl/mem.c
-> index 798e5c369cfc..9c6e99b9124c 100644
-> --- a/drivers/cxl/mem.c
-> +++ b/drivers/cxl/mem.c
-> @@ -105,8 +105,13 @@ static int cxl_mem_probe(struct device *dev)
->  	struct dentry *dentry;
->  	int rc;
->  
-> -	if (!cxlds->media_ready)
-> -		return -EBUSY;
-> +	if (!cxlds->media_ready) {
-> +		rc = cxl_await_media_ready(cxlds);
-> +		if (rc)
-> +			return rc;
-> +		cxlds->media_ready = true;
-> +		dev_dbg(dev, "CXL media ready\n");
-> +	}
->  
->  	/*
->  	 * Someone is trying to reattach this device after it lost its port
-
+>
+>> +	}
+>> +	spin_unlock(&devices_kset->list_lock);
+>> +
+>>  	/* notify platform of device entry */
+>>  	device_platform_notify(dev);
+>
+> --=20
+> Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260821142414.15=
+0892-1-djeffery@redhat.com?part=3D2
