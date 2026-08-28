@@ -1,74 +1,74 @@
-Received: from fout-b6-smtp.messagingengine.com (fout-b6-smtp.messagingengine.com [202.12.124.149])
+Received: from fhigh-b8-smtp.messagingengine.com (fhigh-b8-smtp.messagingengine.com [202.12.124.159])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC9131DF748;
-	Fri, 28 Aug 2026 22:33:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.149
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B0033B0584;
+	Fri, 28 Aug 2026 22:56:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.159
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787956413; cv=none; b=kvYHe89CgM7At6Ko0AFA4JibcNqn1YttZ5MJ0cd6VD/UBSSoE0W704UHEiikGra6vr9sefA6Z3/bGnTI30WGiNWdcAhxb642KeyBJ3hgo6a0tlZoyg60+dHVs96oMzVaqzhGKPbxpJyvFMb9NLh57T0DVEFmnob7FAn98cl0Etg=
+	t=1787957814; cv=none; b=gpV6H8ncndfbAb8AfewpKQJ+GHO4lRLBcyzL9bGmCeH+vFuF5YJmNCRf7PwdG1Zxz3lmQdZlG4e3R1MvT8gDlTXZUHoCu9jabiEpt17ptgGkONzxDUf10fMYwHibstuLYTuxrMQgMMcVonPL4qz6VYmxuWBRD7CJXh3zIGDUdc4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787956413; c=relaxed/simple;
-	bh=6rljSf2blq1IuWFPoteYTsefj2D3igoV8joWhKSdYsA=;
+	s=arc-20240116; t=1787957814; c=relaxed/simple;
+	bh=WgSZH6NNpSChURme3PUpCafzgQh7Kg405gcFwErTqaE=;
 	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=uUtNQvFLaRpuLZfi36zRO9vqQInHzCtUcpmNDm/U+ZuXCb318dgzxeH0j2LXYDxYhSHtvSlS06jIsBW1O9Xy/StNBIRHm8P7BN0sWHflTcVnP3GB25fRtlibIzhQfnNOsL5ge+u8r/qPQGPU9/hlIMSZSqcBwchruDo0TxZO4LQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=qZtByXnz; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=SdFe2dIa; arc=none smtp.client-ip=202.12.124.149
+	 MIME-Version:Content-Type; b=OGh3pbv44tOekkBJYvrJg1YugcCrGF5SK6+lM6v3F76zMeTxRIB9CEd2P+yJjFyTRScmDtMRSAwatbIkh+2SrNYCpzggDMIq25EOCAz1CliUJiCFC6imwHhatSI0qUFXdKViEwUN69Ivz9BiYdwvfKEOOjK03Kdk5/DGMjUuaao=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=REk4Qh6t; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=L17FW+JX; arc=none smtp.client-ip=202.12.124.159
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="qZtByXnz";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="SdFe2dIa"
-Received: from phl-compute-02.internal (phl-compute-02.internal [10.202.2.42])
-	by mailfout.stl.internal (Postfix) with ESMTP id 2DE001D00160;
-	Fri, 28 Aug 2026 18:33:29 -0400 (EDT)
+	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="REk4Qh6t";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="L17FW+JX"
+Received: from phl-compute-03.internal (phl-compute-03.internal [10.202.2.43])
+	by mailfhigh.stl.internal (Postfix) with ESMTP id 577017A0135;
+	Fri, 28 Aug 2026 18:56:50 -0400 (EDT)
 Received: from phl-frontend-03 ([10.202.2.162])
-  by phl-compute-02.internal (MEProxy); Fri, 28 Aug 2026 18:33:30 -0400
+  by phl-compute-03.internal (MEProxy); Fri, 28 Aug 2026 18:56:51 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
 	cc:cc:content-transfer-encoding:content-type:content-type:date
 	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm2; t=1787956409;
-	 x=1788042809; bh=PCuhoGNop9xFU6pYipCLMjkZOpCJAx/06aOwcazXm6c=; b=
-	qZtByXnzPf3pcPMVzA0srGeDgFQlzBWtc54Nr6a55xHKRsj5VAcMqglRK0yDKXJx
-	16uG/Bb6aBiiEE82aTFxCV6X9sdmJCf323lx+9hjkOyZU68rPYAjnx93DunX/nGC
-	XmbihOBYFn8t+jkF0IzQzfDI+zjl8vZNwZBLrs0/9P5x/TGVPKVOPmTgl9N1zNoA
-	xwGj3pqndDa29tJwerHUoeW1UmkAPdColcV7kGxIHuDf4nVg5ccgtLTq4OMsELP9
-	eS7JsdYcSC4eKvro44naHDN5GuR1yecvWECI2MLHBpzFjI6zq9JJrIp+ZA0n2aK2
-	BwDC8uG4gUeU+l2ivgUA8w==
+	:references:reply-to:subject:subject:to:to; s=fm2; t=1787957810;
+	 x=1788044210; bh=KKLW8cJOO3AnGkQYNhT+Vc3CEkCeTPPhftnLE/+1Ae4=; b=
+	REk4Qh6t0VL0UDQ6osCEp/b1ympUZ+5JyunEW/SJEccB54w1GnrRCfNAGl+4PCEJ
+	k+WBQ2bJMZxK/3OA4Y3uslCEytGfOaNxVbmd3k6E0HyKw9hPTk3XZ/lZwzpf3F+O
+	D4axy6M7gXpArRhkJkC95NLQZhnCbS78zvPxHGWumQge+vpt+fFWBLQxMV0w7T0R
+	I/Dbg6z+ckVNjIXvOwgh1xMLfyv07MpkM0CwjyDiFcj+kjNULKHUqNPFsWWW+Pxv
+	oHsv+E5AJvOTVrUKYpIaTIL8UOzzIXSxHj9n6MsKzR+d6TwR5UrWMKxxlYMzEYON
+	Qqfaidgd4DWZAp95XDwGwQ==
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
 	messagingengine.com; h=cc:cc:content-transfer-encoding
 	:content-type:content-type:date:date:feedback-id:feedback-id
 	:from:from:in-reply-to:in-reply-to:message-id:mime-version
 	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=1787956409; x=
-	1788042809; bh=PCuhoGNop9xFU6pYipCLMjkZOpCJAx/06aOwcazXm6c=; b=S
-	dFe2dIayd8+CuA3pJhf/K7YGYCTgjy2dPjtZNxgaiyOMRD81p9cuL5L/E7F5DMOW
-	SU+edTxKDwhcRnHFZHREDkuxtXJTu21Q9frnOrH374OG0pNsgZBnE04WWPHw9dkt
-	7BsT9ae2zy4EmGgX7iuQtW2cdtiuhxSVICuXF8Dw6KcDbXSyKfnNVtVA7UsOQJP6
-	Bczpkh5EJX+SqWvcxF7TzLdII4OGIstPxZL9eLs8c6PCthvR1Qk3Pzqyirxr5C4V
-	dVVeYdKv6dWwVti5SvkDWg7An6xfpJpXVU3GNYthA1fTsEiRhrqkmDO2uYl2AuGV
-	fkE/jJW2quLajAPyybhog==
-X-ME-Sender: <xms:uAySar4-3As1NX4oTrxoRX6L6xF8FpwdYNvqWPylcLlbp-B13j-Owg>
-    <xme:uAySaugl7dUWl7tj6qE4mIFQtlZUN__lk8oBnmFnD5SrFv3f6OKmlQ1uUWcx0N22S
-    dhWIEQZIY2x7zPkSxJ8ToBcuXt19yHVxLpYQgUYzzw8glW9NBl->
-X-ME-Received: <xmr:uAySap0lIBf3Zs2V9hknb2M69BGotQR5uS3NflCMjfOpqPkiSbD3SkHw1geX5Q>
-X-ME-Proxy-Cause: dmFkZTFmAobo8XsCAKwNanmqQTHJRfLCVW0AHhVIl3ZZngZ4sY3TkMe0r1t9mp/LT8Wkq6
-    +CKzDDsPIT6Whm0Yx2bRCzj2MhVWdnYFOw+q/2m5TcuCuBlkDf9bz8jfXbDIJBAQBxLdMH
-    AH4wx2RjzN2pP/NLDnaoio/QZ5zhsgREwLHbqx6Rl6se9oCo4/zLNU+QKo68ythyu7gF30
-    R8caLdgjaJ7cLUDwLWKOl/FyGfmMIf1Z5OAMQISLQcjXNXNHsPvxKXh/d3YomD86pOTP1X
-    Ooa/rrqMgMPt/Tag6TWIqGMhH7zp+efst2NUcNo3KPCB+XITIaPxPWIsn+h7t5GmKsXDil
-    9H2sBJqCCcK5i6RkCS1z9nhRkXLAtqL2MFQ28TGTrvV6pexqInjsSY8a1783/r2YpG1PTG
-    kM5ZLTl6lbINKlg1SoRWlQE9reKJxBnG/jM8x9yAWurDgZXDsFEKMqIpTrr6DJwsaFn8BF
-    0giqXXIcUsz7FhKTNn351PNkd+qkMO8QC8iCvhmoQnLrGvmTfjIgkEL/h5b3mIk7mVXpPH
-    3cByl/Yc3HD2b9x+XBzDKL1G9nZrc1NiIBcP/85xyCTnf/eeu3KoBecYhCe9YIEM+/6RCv
-    PTIRO7iGczo1KHSq6epKpmgwLB3WN+NDHlVHtkxj+wVgHpy+p3n5XoVGsIKA
-X-ME-Proxy: <xmx:uAySakXeXl9O-5kaP03c3YkKQCDfKpCyKo38nSu5zgfc0lgVgI3l6g>
-    <xmx:uAySam1Zmp6-cnwayIfqDcYGPURrCcQBYr3mnnQPxC8d3rmUKSroDg>
-    <xmx:uAySaliCGw5JprzNOizSS5pNrnJo7MMM8NRNhhttEwOCku6c9YkJGg>
-    <xmx:uAySamLazzwQnZwYM3lC07Obipvkv-Zsxnr36tIMWmUXKEPR8iCKKQ>
-    <xmx:uQySaoUH_Erhd1dm2Px5qeVWy79GZeYeK-b_hnPl8RB7NnqqA-rt8zPN>
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=1787957810; x=
+	1788044210; bh=KKLW8cJOO3AnGkQYNhT+Vc3CEkCeTPPhftnLE/+1Ae4=; b=L
+	17FW+JXCrXY/0/cyuPw84RmpsvLF4Ur8MttGunqIhhlpO4OjxlK4aFWnCn0fLQ0a
+	FLpRW6swAij8NBbfH8p/5CNM0zzwu1CdSkWgAn34eQ4UJge87GY3ZW2XGsh2pM4m
+	eVWR600S012cmSHvSz9Hs51s3Y5/zAtfRX9XDSu5RgdNvt+q/q81xS8yZ12vFi9q
+	t8BijnLwG7HxQR+2VS385WVmC9ojhuY1WYYZ+K0roy1OqMMnJel/TA0q/g7y7hm3
+	a4WVYfX1VBU/8egY4XLCMnie3m7obl7nThLnVqSq2RUy5hwr2f3nrt24/xgNONjD
+	/EHW4NcPyEDTrBcWJBziA==
+X-ME-Sender: <xms:MRKSaiRLJjtIu7aIp554sjq6qbwVMJgYWgnGHHO7slaktQ7-afUtvw>
+    <xme:MRKSalYRoGGHEiDHKF-wyXGhe7AjddUQCPW4XkPnpcbyWJwxfZT2N3VYqwgu__nbp
+    08F-3tDTGETyhjjthLHqr7EblBhTIS-eQxuZ9qqLgVhJMZ04-FUmw>
+X-ME-Received: <xmr:MRKSanM3O7-uPhm3W4slpT57VYmGH3iUOOOssF3WzPrCSZhlaDCbCi5klxmWNw>
+X-ME-Proxy-Cause: dmFkZTFLGzvkUr5Q+EZ5kOtLvIKlBrEDdYI9l7Awoc8Gq71l6lia3UAsMpqRe49/uwy36X
+    pf3wEUeGiDxiNcHq0cGhYA8UVaFVPV1RIIx5r4LRjEFvEt2Fnp8nkxEfFQCcRsmyKf97qg
+    KSbXPBAtZt0XIBDEGmoERd4ML1CaCxJpqpoTQ7iQhwZ7YrYoN2WtbcF2BIasXK/3zFgGiJ
+    8UxFE5HpYqDQU+6FjOTEyxGJrC83784v32WttMih1yhylE8rQvu6VBjjEbXKKsff6ahZVE
+    B7woNvalxCjeN91ADtoMGYDwXQUMCnXl+NbM/elK+rTRvNYD7spbuFAkptwbpvAKqwybf1
+    Wcv++3S585yQR3Q2EgcXQBoo6fOBDOkffgdFD5Dl5xJP3iCWiVMmgK1XGhXPDnwQPLNP1e
+    KkZVXXJB8KMUbFvPTiqQimezfF7PrbkBySaoYgHYmDtSD+QPGo//dAXlxJlHmx/u+jJZS0
+    pneTx20onV6Rf8XTSKknYaGCDSRduX4zCoBlGgZ1PJ2c3aNnrNpUukfCMbWW2zW1wG/6VP
+    tk8r1w2MTsWSoFIi4PeexS7xTThLLhNvHOUVypa/3y6TB5IyA6wk7/1h/vgiTDZSdCUlsE
+    TnacV+CulHFIoi4W2Y4tr3FkkIofqWNOVQU/eBAJL4kDWuuhakCByuZPy9Fg
+X-ME-Proxy: <xmx:MRKSamO6M0ok5lrfhM9bgYLSI-8EprUs67HGnb61yswNShX8bNasMg>
+    <xmx:MRKSajMGp8j24Yee7PwzLf4TRe6LnyxQHCu3EwOoqVx_f-XcdbD87g>
+    <xmx:MRKSaqb2QlOcfEFtf1vuIkWDIPxzKM7X0Zv3nQVnBy67ewpnyqlz0g>
+    <xmx:MRKSaphzAv2FklB1swsvOyRPMf4hBeZplxDgVRzi1Out11uvF82kKQ>
+    <xmx:MhKSaiZDDI7HgWr2V4Z9dRI2rFqPC6VQXw4k-nLk6Iwmqu0fJBhST_pa>
 Feedback-ID: i03f14258:Fastmail
 Received: by mail.messagingengine.com (Postfix) with ESMTPA; Fri,
- 28 Aug 2026 18:33:26 -0400 (EDT)
-Date: Fri, 28 Aug 2026 16:33:24 -0600
+ 28 Aug 2026 18:56:47 -0400 (EDT)
+Date: Fri, 28 Aug 2026 16:56:45 -0600
 From: Alex Williamson <alex@shazbot.org>
 To: <mhonap@nvidia.com>
 Cc: <jgg@ziepe.ca>, <ankita@nvidia.com>, <jic23@kernel.org>,
@@ -84,12 +84,12 @@ Cc: <jgg@ziepe.ca>, <ankita@nvidia.com>, <jic23@kernel.org>,
  <linux-cxl@vger.kernel.org>, <linux-pci@vger.kernel.org>,
  <linux-kselftest@vger.kernel.org>, <linux-hardening@vger.kernel.org>,
  alex@shazbot.org
-Subject: Re: [PATCH v4 23/27] vfio/cxl: Refresh the decoder snapshot after a
- device reset
-Message-ID: <20260828163324.72a685d1@shazbot.org>
-In-Reply-To: <20260813093631.2288172-24-mhonap@nvidia.com>
+Subject: Re: [PATCH v4 25/27] vfio/pci: Provide an opt-out for the CXL
+ Type-2 extensions
+Message-ID: <20260828165645.03aed778@shazbot.org>
+In-Reply-To: <20260813093631.2288172-26-mhonap@nvidia.com>
 References: <20260813093631.2288172-1-mhonap@nvidia.com>
-	<20260813093631.2288172-24-mhonap@nvidia.com>
+	<20260813093631.2288172-26-mhonap@nvidia.com>
 X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -100,276 +100,105 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 
-On Thu, 13 Aug 2026 15:06:27 +0530
+On Thu, 13 Aug 2026 15:06:29 +0530
 <mhonap@nvidia.com> wrote:
 
 > From: Manish Honap <mhonap@nvidia.com>
 > 
-> A reset clears the HDM decoder registers, so the guest snapshot has to be
-> resampled once the reset settles, on every path that can reset the
-> function: the reset ioctl, an FLR driven through config space, and a bus
-> hot reset. Re-enable Memory Space first, since a config restore can leave
-> it off and the component-BAR read would then take an Unsupported Request.
+> Add an opt-out so users can keep vfio-pci's CXL extensions out of the
+> path for individual devices or for an entire vfio-pci instance. The
+> runtime gates are:
 > 
-> The bus hot reset zaps BARs directly rather than through
-> vfio_pci_zap_and_down_write_memory_lock(), so it also needs the HDM
-> window zapped by hand; route both zap sites through a common helper.
+>   - Module parameter vfio_pci.disable_cxl (bool, 0444). Setting
+>     disable_cxl=1 at modprobe time makes vfio_pci_probe() set
+>     vdev->disable_cxl on every device it binds.
+> 
+>   - Variant drivers (nvgrace, mlx5, and others) may set vdev->disable_cxl
+>     in their own probe for per-device control without the module
+>     parameter. The bit lives on struct vfio_pci_core_device so it is
+>     reachable from any variant.
+> 
+> vfio_pci_core_init_dev() consults vdev->disable_cxl before it probes for
+> a CXL device, so a device that opts out is driven as plain vfio-pci:
+> vfio-cxl is not loaded, init_device() never runs, and the device gets no
+> VFIO_DEVICE_FLAGS_CXL, no HDM or component-register regions, and no DVSEC
+> virtualization.
+> 
+> The module parameter is built only when CONFIG_VFIO_CXL is enabled; the
+> disable_cxl bit itself is unconditional so a variant driver can set it
+> regardless. This mirrors the long-standing disable_denylist opt-out.
 > 
 > Signed-off-by: Manish Honap <mhonap@nvidia.com>
 > ---
->  drivers/vfio/pci/cxl/vfio_cxl_core.c | 82 ++++++++++++++++++++++++++++
->  drivers/vfio/pci/vfio_pci_config.c   |  2 +
->  drivers/vfio/pci/vfio_pci_core.c     | 25 ++++++++-
->  drivers/vfio/pci/vfio_pci_priv.h     | 20 +++++++
->  include/linux/vfio_pci_core.h        |  4 ++
->  5 files changed, 131 insertions(+), 2 deletions(-)
+>  drivers/vfio/pci/vfio_pci.c      | 9 +++++++++
+>  drivers/vfio/pci/vfio_pci_core.c | 8 +++++---
+>  include/linux/vfio_pci_core.h    | 1 +
+>  3 files changed, 15 insertions(+), 3 deletions(-)
 > 
-> diff --git a/drivers/vfio/pci/cxl/vfio_cxl_core.c b/drivers/vfio/pci/cxl/vfio_cxl_core.c
-> index f1c6bf06c408..f45eaa60bad2 100644
-> --- a/drivers/vfio/pci/cxl/vfio_cxl_core.c
-> +++ b/drivers/vfio/pci/cxl/vfio_cxl_core.c
-> @@ -555,6 +555,86 @@ static void vfio_cxl_zap(struct vfio_pci_core_device *vdev)
->  			    range_len(&cxl->hpa_range), true);
->  }
+> diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
+> index 830369ff878d..0ad041fffe48 100644
+> --- a/drivers/vfio/pci/vfio_pci.c
+> +++ b/drivers/vfio/pci/vfio_pci.c
+> @@ -60,6 +60,12 @@ static bool disable_denylist;
+>  module_param(disable_denylist, bool, 0444);
+>  MODULE_PARM_DESC(disable_denylist, "Disable use of device denylist. Disabling the denylist allows binding to devices with known errata that may lead to exploitable stability or security issues when accessed by untrusted users.");
 >  
-> +static void vfio_cxl_post_reset(struct vfio_pci_core_device *vdev)
-> +{
-> +	struct vfio_cxl_state *cxl = vdev->cxl;
-> +	struct pci_dev *pdev = vdev->pdev;
-> +	bool re_enabled = false;
-> +	int i, dwords;
-> +	u16 cmd;
-> +
-> +	lockdep_assert_held_write(&vdev->memory_lock);
-> +
-> +	if (!cxl || !cxl->hdm_shadow)
-> +		return;
-> +
-> +	/*
-> +	 * The decoder registers are read through the component BAR. A config
-> +	 * restore can leave Memory Space disabled, and the read would then
-> +	 * return an Unsupported Request, so re-enable it before sampling.
-> +	 */
-> +	pci_read_config_word(pdev, PCI_COMMAND, &cmd);
-> +	if (!(cmd & PCI_COMMAND_MEMORY)) {
-> +		pci_write_config_word(pdev, PCI_COMMAND,
-> +				      cmd | PCI_COMMAND_MEMORY);
-> +		re_enabled = true;
-> +	}
-> +
-> +	dwords = cxl->hdm_len / sizeof(u32);
-> +	for (i = 0; i < dwords; i++)
-> +		cxl->hdm_shadow[i] = cpu_to_le32(readl(cxl->hdm_regs +
-> +						       i * sizeof(u32)));
-> +	/*
-> +	 * Leave Memory Space as it was found. The guest owns Memory Space
-> +	 * through vconfig, so a physical enable done only to sample must not
-> +	 * outlive the sampling or the function would decode while vconfig
-> +	 * reports it off.
-> +	 */
-> +	if (re_enabled)
-> +		pci_write_config_word(pdev, PCI_COMMAND, cmd);
+> +#if IS_ENABLED(CONFIG_VFIO_CXL)
+> +static bool disable_cxl;
+> +module_param(disable_cxl, bool, 0444);
+> +MODULE_PARM_DESC(disable_cxl, "Disable CXL Type-2 extensions for all devices bound to vfio-pci. A variant driver may instead set vdev->disable_cxl in its own .init callback.");
 
-This is usually done by just saving the original and re-writing it, but
-this whole patch is really just ammunition for why it should be read
-live rather than shadowed.
-
-See also the reset_done callback in pci_error_handlers, we shouldn't be
-open coding calls to this everywhere, but of course this goes away if
-we expose it live rather than shadow it.  Thanks,
+The latter sentence isn't module parameter description material, it's
+aimed at users.  Why does this need to be read-only since it's
+following the latch-at-init flow?  Thanks,
 
 Alex
 
-> +}
+> +#endif
 > +
-> +static int vfio_cxl_pm_restore(struct vfio_pci_core_device *vdev)
-> +{
-> +	struct vfio_cxl_state *cxl = vdev->cxl;
-> +	struct pci_dev *pdev = vdev->pdev;
-> +	int rc;
-> +
-> +	lockdep_assert_held_write(&vdev->memory_lock);
-> +
-> +	if (!cxl || !cxl->hdm_shadow) {
-> +		pci_dbg(pdev, "vfio-cxl: pm_restore: no shadow (device not open), skipping\n");
-> +		return 0;
-> +	}
-> +
-> +	/*
-> +	 * A D3hot->D0 transition can soft-reset the function and clear the HDM
-> +	 * decoder. Restore the physical decoder before the fault gate re-inserts
-> +	 * the mapping. The restore needs the device lock, taken here after
-> +	 * memory_lock to match the reset path ordering. On failure the decoder is
-> +	 * left unrestored, so close the access gate (zap no longer clears it) and
-> +	 * return the error so the caller keeps the HDM range inaccessible.
-> +	 */
-> +	if (!pci_dev_trylock(pdev)) {
-> +		pci_warn(pdev, "vfio-cxl: pm_restore: could not lock device, HDM not restored\n");
-> +		cxl->hdm_valid = false;
-> +		return -EBUSY;
-> +	}
-> +
-> +	rc = cxl_restore_hdm_after_pci_reset(pdev);
-> +	pci_dev_unlock(pdev);
-> +	if (rc) {
-> +		pci_err(pdev, "vfio-cxl: pm_restore: HDM restore failed: %d\n", rc);
-> +		cxl->hdm_valid = false;
-> +		return rc;
-> +	}
-> +
-> +	vfio_cxl_post_reset(vdev);
-> +	/* The decoder is restored and re-sampled, so reopen the access gate. */
-> +	cxl->hdm_valid = true;
-> +	return 0;
-> +}
-> +
->  static int vfio_cxl_open_device(struct vfio_pci_core_device *vdev)
+>  static bool vfio_pci_dev_in_denylist(struct pci_dev *pdev)
 >  {
->  	struct vfio_cxl_state *cxl = vdev->cxl;
-> @@ -767,6 +847,8 @@ static const struct vfio_cxl_ops vfio_cxl_ops = {
->  	.config_read	= vfio_cxl_config_read,
->  	.config_write	= vfio_cxl_config_write,
->  	.zap		= vfio_cxl_zap,
-> +	.post_reset	= vfio_cxl_post_reset,
-> +	.pm_restore	= vfio_cxl_pm_restore,
->  	.owner		= THIS_MODULE,
->  };
+>  	switch (pdev->vendor) {
+> @@ -142,6 +148,9 @@ static int vfio_pci_init_dev(struct vfio_device *core_vdev)
+>  #ifdef CONFIG_VFIO_PCI_VGA
+>  	vdev->disable_vga = disable_vga;
+>  #endif
+> +#if IS_ENABLED(CONFIG_VFIO_CXL)
+> +	vdev->disable_cxl = disable_cxl;
+> +#endif
 >  
-> diff --git a/drivers/vfio/pci/vfio_pci_config.c b/drivers/vfio/pci/vfio_pci_config.c
-> index f088e4ce5e07..01d808546a4c 100644
-> --- a/drivers/vfio/pci/vfio_pci_config.c
-> +++ b/drivers/vfio/pci/vfio_pci_config.c
-> @@ -911,6 +911,7 @@ static int vfio_exp_config_write(struct vfio_pci_core_device *vdev, int pos,
->  			vfio_pci_zap_and_down_write_memory_lock(vdev);
->  			vfio_pci_dma_buf_move(vdev, true);
->  			pci_try_reset_function(vdev->pdev);
-> +			vfio_pci_cxl_post_reset(vdev);
->  			if (__vfio_pci_memory_enabled(vdev))
->  				vfio_pci_dma_buf_move(vdev, false);
->  			up_write(&vdev->memory_lock);
-> @@ -996,6 +997,7 @@ static int vfio_af_config_write(struct vfio_pci_core_device *vdev, int pos,
->  			vfio_pci_zap_and_down_write_memory_lock(vdev);
->  			vfio_pci_dma_buf_move(vdev, true);
->  			pci_try_reset_function(vdev->pdev);
-> +			vfio_pci_cxl_post_reset(vdev);
->  			if (__vfio_pci_memory_enabled(vdev))
->  				vfio_pci_dma_buf_move(vdev, false);
->  			up_write(&vdev->memory_lock);
+>  	return vfio_pci_core_init_dev(core_vdev);
+>  }
 > diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
-> index 1a54f15d1c2c..fc8235c8b4fc 100644
+> index 0fed8e00bc1d..4b51a0f1e847 100644
 > --- a/drivers/vfio/pci/vfio_pci_core.c
 > +++ b/drivers/vfio/pci/vfio_pci_core.c
-> @@ -362,6 +362,14 @@ int vfio_pci_set_power_state(struct vfio_pci_core_device *vdev, pci_power_t stat
->  		} else if (needs_restore) {
->  			pci_load_and_free_saved_state(pdev, &vdev->pm_save);
->  			pci_restore_state(pdev);
-> +			/*
-> +			 * A NoSoftRst- device soft-resets on D3hot->D0, which can
-> +			 * clear a CXL HDM decoder. Restore it before the fault
-> +			 * gate re-inserts the HDM mapping. memory_lock is held on
-> +			 * this path (the PM config write and runtime PM entry both
-> +			 * take it before the D0 transition).
-> +			 */
-> +			vfio_pci_cxl_pm_restore(vdev);
->  		}
->  	}
+> @@ -2423,10 +2423,12 @@ int vfio_pci_core_init_dev(struct vfio_device *core_vdev)
+>  	xa_init(&vdev->ctx);
 >  
-> @@ -529,6 +537,13 @@ static int vfio_pci_core_runtime_resume(struct device *dev)
->  		eventfd_signal(vdev->pm_wake_eventfd_ctx);
->  		__vfio_pci_runtime_pm_exit(vdev);
->  	}
-> +	/*
-> +	 * A NoSoftRst- function can soft-reset on the runtime D3hot->D0
-> +	 * transition and clear a CXL HDM decoder. Restore it while memory_lock
-> +	 * is held, before the fault gate can re-insert the HDM mapping. PCI
-> +	 * config restore alone does not restore the component decoder registers.
-> +	 */
-> +	vfio_pci_cxl_pm_restore(vdev);
->  	up_write(&vdev->memory_lock);
->  
->  	if (vdev->pm_intx_masked)
-> @@ -1449,6 +1464,7 @@ static int vfio_pci_ioctl_reset(struct vfio_pci_core_device *vdev,
->  
->  	vfio_pci_dma_buf_move(vdev, true);
->  	ret = pci_try_reset_function(vdev->pdev);
-> +	vfio_pci_cxl_post_reset(vdev);
->  	if (__vfio_pci_memory_enabled(vdev))
->  		vfio_pci_dma_buf_move(vdev, false);
->  	up_write(&vdev->memory_lock);
-> @@ -1838,8 +1854,7 @@ void vfio_pci_zap_and_down_write_memory_lock(struct vfio_pci_core_device *vdev)
->  	 * a runtime-PM entry, D3 transition, or reset would leave the guest
->  	 * with live mappings into a quiesced device.
+>  	/*
+> -	 * Load vfio-cxl on demand for a CXL device. If it is absent, drive the
+> -	 * device as plain vfio-pci rather than failing the bind.
+> +	 * Load vfio-cxl on demand for a CXL device unless the user opted out.
+> +	 * If it is opted out or absent, drive the device as plain vfio-pci
+> +	 * rather than failing the bind.
 >  	 */
-> -	if (vdev->cxl_ops && vdev->cxl_ops->zap)
-> -		vdev->cxl_ops->zap(vdev);
-> +	vfio_pci_cxl_zap(vdev);
->  }
+> -	if (pcie_is_cxl(vdev->pdev) && vfio_pci_is_cxl_type2(vdev->pdev)) {
+> +	if (!vdev->disable_cxl && pcie_is_cxl(vdev->pdev) &&
+> +	    vfio_pci_is_cxl_type2(vdev->pdev)) {
+>  		const struct vfio_cxl_ops *ops;
 >  
->  u16 vfio_pci_memory_lock_and_enable(struct vfio_pci_core_device *vdev)
-> @@ -2780,6 +2795,8 @@ static int vfio_pci_dev_set_hot_reset(struct vfio_device_set *dev_set,
->  
->  		vfio_pci_dma_buf_move(vdev, true);
->  		vfio_pci_zap_bars(vdev);
-> +		/* zap_bars misses the HDM window; bus reset needs it too */
-> +		vfio_pci_cxl_zap(vdev);
->  	}
->  
->  	if (!list_entry_is_head(vdev,
-> @@ -2802,6 +2819,10 @@ static int vfio_pci_dev_set_hot_reset(struct vfio_device_set *dev_set,
->  
->  	ret = pci_reset_bus(pdev);
->  
-> +	/* Re-sample decoder state for any CXL device the bus reset touched. */
-> +	list_for_each_entry(vdev, &dev_set->device_list, vdev.dev_set_list)
-> +		vfio_pci_cxl_post_reset(vdev);
-> +
->  	vdev = list_last_entry(&dev_set->device_list,
->  			       struct vfio_pci_core_device, vdev.dev_set_list);
->  
-> diff --git a/drivers/vfio/pci/vfio_pci_priv.h b/drivers/vfio/pci/vfio_pci_priv.h
-> index 902d17815ab6..46e67573d264 100644
-> --- a/drivers/vfio/pci/vfio_pci_priv.h
-> +++ b/drivers/vfio/pci/vfio_pci_priv.h
-> @@ -82,6 +82,26 @@ int vfio_pci_set_power_state(struct vfio_pci_core_device *vdev,
->  			     pci_power_t state);
->  
->  void vfio_pci_zap_and_down_write_memory_lock(struct vfio_pci_core_device *vdev);
-> +
-> +static inline void vfio_pci_cxl_zap(struct vfio_pci_core_device *vdev)
-> +{
-> +	if (vdev->cxl_ops && vdev->cxl_ops->zap)
-> +		vdev->cxl_ops->zap(vdev);
-> +}
-> +
-> +static inline void vfio_pci_cxl_post_reset(struct vfio_pci_core_device *vdev)
-> +{
-> +	if (vdev->cxl_ops && vdev->cxl_ops->post_reset)
-> +		vdev->cxl_ops->post_reset(vdev);
-> +}
-> +
-> +static inline int vfio_pci_cxl_pm_restore(struct vfio_pci_core_device *vdev)
-> +{
-> +	if (vdev->cxl_ops && vdev->cxl_ops->pm_restore)
-> +		return vdev->cxl_ops->pm_restore(vdev);
-> +	return 0;
-> +}
-> +
->  u16 vfio_pci_memory_lock_and_enable(struct vfio_pci_core_device *vdev);
->  void vfio_pci_memory_unlock_and_restore(struct vfio_pci_core_device *vdev,
->  					u16 cmd);
+>  		request_module("vfio-cxl");
 > diff --git a/include/linux/vfio_pci_core.h b/include/linux/vfio_pci_core.h
-> index 8b93949d4484..c438d968dc59 100644
+> index 18e206a35d8c..8e3723a55c17 100644
 > --- a/include/linux/vfio_pci_core.h
 > +++ b/include/linux/vfio_pci_core.h
-> @@ -78,6 +78,10 @@ struct vfio_cxl_ops {
->  				int count, __le32 val);
->  	/* Revoke the HDM mapping; paired with the BAR zap */
->  	void    (*zap)(struct vfio_pci_core_device *vdev);
-> +	/* Re-sample the decoder state once a reset has settled */
-> +	void    (*post_reset)(struct vfio_pci_core_device *vdev);
-> +	/* Restore the HDM decoder after a D3hot->D0 soft reset */
-> +	int     (*pm_restore)(struct vfio_pci_core_device *vdev);
->  
->  	/* Pinned per bound CXL device so vfio-cxl cannot unload under usage */
->  	struct module *owner;
+> @@ -158,6 +158,7 @@ struct vfio_pci_core_device {
+>  	bool			disable_idle_d3:1;
+>  	bool			nointxmask:1;
+>  	bool			disable_vga:1;
+> +	bool			disable_cxl:1;
+>  	/* Flags modified at runtime - dedicated storage unit */
+>  	bool			needs_reset;
+>  	bool			pm_intx_masked;
 
