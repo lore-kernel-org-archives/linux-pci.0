@@ -1,727 +1,509 @@
-Received: from fout-b1-smtp.messagingengine.com (fout-b1-smtp.messagingengine.com [202.12.124.144])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f172.google.com (mail-pl1-f172.google.com [209.85.214.172])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B11013F1059;
-	Fri, 28 Aug 2026 23:09:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.144
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE95B1DF98F
+	for <linux-pci@vger.kernel.org>; Sat, 29 Aug 2026 00:43:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787958578; cv=none; b=iAYpT2WG4yJppwlJPchEkFBLxNu9BXoUTEOGAiwp6NeK63mijexUhpXTF8pd230A4+/egCcyVsJa85JXLEQC6qdHwOP1nYjfRJfEgueS6MxtkhyQh7Gm7w7+d5PcgXWH/36UuuloYyzZAE+EjFIPGpRSKp5/ckFXHcRVUayZlmQ=
+	t=1787964224; cv=none; b=u7ukFgkWwp/fI/2Nd0Yb/FyK9BuVy0nuLbtX0Dz+xNz3LZhAgLN60GJRPrvnjbseurBSOOgRUNtXvxh+2lpjZ++QFW3bDegJ8Bwc0kwOqSYuJ5/HZx+Sb5Zb/BZ87O5WsH8qEC+r4yc344KE/qVxsVlA3J7TLIwmsMk1R3T9pYA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787958578; c=relaxed/simple;
-	bh=M+S0Qe6gzD2f2tpvWuC/m/Y9umqZ+IpuVrlzDdCBfAk=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=U/+0GEeYk5W9aUnnfZvXdYDxCMI468jBtSq3xJSJi3nNlzGXqMy13bj9Zh9L/iD/RtS0WKH3r2rbTUGD2VNe785lj9N3notEY0+d1yTX28SvxAYzdMjx7XaI6E9MMHYYLeto9Q/rt38GjwpaD2hx7TL3x7MtsPLEa74aMH86X9g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=G9/iDDhJ; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=KwHO+Sja; arc=none smtp.client-ip=202.12.124.144
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
+	s=arc-20240116; t=1787964224; c=relaxed/simple;
+	bh=vuQWjuWmc/4sF5KKA0zN5j2a6b7warJW3Qjsznw9VoM=;
+	h=Message-ID:Date:MIME-Version:To:Cc:From:Subject:Content-Type; b=b0Fr42RtgYbyb57NMimoL/LlD+YXDAFCqax5iFO4KqoVWPVqfAyBRR54+7YEPaFxosUM9qYECdDQla4TbFuTFX29HxnTJoiQ4WG88hKzyOcdABPuOTSCKjr5yQxshduiuYW/WVFSl4wRM+NXPPXawi77yMCKwugEbceLS18/PAk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=jqluv.com; spf=none smtp.mailfrom=jqluv.com; dkim=pass (2048-bit key) header.d=jqluv-com.20251104.gappssmtp.com header.i=@jqluv-com.20251104.gappssmtp.com header.b=JLMTQU/S; arc=none smtp.client-ip=209.85.214.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=jqluv.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=jqluv.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="G9/iDDhJ";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="KwHO+Sja"
-Received: from phl-compute-06.internal (phl-compute-06.internal [10.202.2.46])
-	by mailfout.stl.internal (Postfix) with ESMTP id 45F161D0016E;
-	Fri, 28 Aug 2026 19:09:34 -0400 (EDT)
-Received: from phl-frontend-03 ([10.202.2.162])
-  by phl-compute-06.internal (MEProxy); Fri, 28 Aug 2026 19:09:35 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
-	cc:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm2; t=1787958574;
-	 x=1788044974; bh=pPZxrUyFD13EwfysWj3Rjbdl39HktBzOywgE979KReA=; b=
-	G9/iDDhJ5zCdXb1HFR6J5nnrhtb24vvd8kqo8eBm3xkS/DYDlY+BY3mLPIXNvB5o
-	4KJqiT5Khjm7AFOBkw9qTKZkYrZakmY5scuxvzI0vCQK3JzoXvmd+HQW03D7Z985
-	XXLvi4ezZ5w9WXgRAe7ej4OFd1jpjqgIXmCPmstchYYjxw8T8zDtc3ZtjvmN3pMA
-	qDozXplGFs8qxuQHNDpRJY2IFjoNFRETqcUmpKELwoAwHXP8eu7eWATW2jS91fK+
-	Rxqle+sn14UlETAOhFvVNBMzLMYtM2NRAN+CT8ANXp/y/vNpLbHLAzthQs81JHue
-	3gMl3ldEEXqecTy5HwuNow==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=1787958574; x=
-	1788044974; bh=pPZxrUyFD13EwfysWj3Rjbdl39HktBzOywgE979KReA=; b=K
-	wHO+SjaA4YK1GpbZtamuZgUPY1yHgxkY7PUrC1SKOrID+emIeKzEK7cpkRpiBasT
-	P324YwNOrgGsKyqmhNpeLJn/uHlQBOQrerpDXuk336GRuR/Wh6DHy40XSKEyFu8U
-	/Mvgt+aMxVC9vcmE24CMMtpbu++jkv8XQzbdfrs57gsvYbSDlow5YiZIIV6rgVLp
-	gzgTlJY7O+BmLVzScshclLC/icVsRQzoYWC9HyO1Fi2YVScFxt8Ls214RjNAwu0Q
-	PQVMKhp90homZ0FZNQHugNDJrTPRatXJgoLYGQrzTochy2Ga8eHZgXUoeBJxeduC
-	fSJLsQmxOjFjU4ldnslIA==
-X-ME-Sender: <xms:LRWSajrKnWSm6PE-tIPPomR33drfWUa6EfGRuxJopTkeiqsgphGJyA>
-    <xme:LRWSarTx9qG4q3mBLX9CVqs63wsGVQ5xXcwic8_YsGg6uv18MtvmFcs_fC2OyQr_i
-    hPOHrDY44h4rrzXZHLsyKP-4QCPgyxwtGfl4vYivjY6J7YzHpeYtTo>
-X-ME-Received: <xmr:LRWSankzdYzjdVQuPWTt0niQrTiztDGKyAV891Z1bGDsnJZKexckUB1gTg23ug>
-X-ME-Proxy-Cause: dmFkZTFp+PjQ+yrWQcI/ldrotP6wjSkrpbEa3IRbYr15x4p1TNwhEJOR+wAdrcWMZ9ZRFX
-    nNVrBzCz6GMcaYxyTcwwjd6E4kH2ddYx1797xH3uiVG6KH7A2qXqRJiS1H3T6uoKLDAcUK
-    l+04ChnlOaPdLEKB4Mzj/666ogNSW0grjdoTnaopX9SahQnp0wAa3SnVeFKcn7rbKSb5dn
-    vVQsJR8IIZtil3ce5G0TD4F/Y+en0lUNJsxLtV+JGP4fT5j8pvl5BOuF2wHw9Ju1+WTCvX
-    00BsQnJXZsZtfHuWGsLgqYgJvxL94ektu9D3su0AqKodLZVO/fDSrKupv3rC0qDsVpPZDC
-    q0TXcG1fOacyymNA4zhpo3zu/MTx4ECic0NGfritqaEbeFISOti5UVt62qJYgZtR1ZBYPI
-    jH6kxKh7/Y1TR6ztsTI6BODLdfZnMk+KnwBwuHvNTkMRuQEz3ce3NxZVEKgf2UhZIcxmUq
-    Aovv0wjKPH1jtklMS2yE/U+X4p4QOCRwjkKESdJgHBIV0Tplfl90/fkBs8b41ssUj6akSp
-    IxdxlsDy0IaSozy3qG4TpWzTYdgJP4iqvwPrsUoUabS/HsUccfVTP7z+MiAhp9frf2AMoY
-    l9x87MoCM/+SXLXJFDzrbCqwHrGyUqyF9/ddGIw23T904eGWrYzfOb1JGvYg
-X-ME-Proxy: <xmx:LRWSavFs2U1FvRo5e4s-3KiRmqxv93HYSgnI8uupHTwp7zMdQnaNlA>
-    <xmx:LRWSaqmgh_PLfpY5ZzfCa10Frc8z3iOXGvwM6oFYeQ5d4UaIdY6fKg>
-    <xmx:LRWSauS-chhhqz-INuCiqJ-2k1qRpeu_iqrzobAK054X_Qa8Puqvzw>
-    <xmx:LRWSav5paj2voT6OJryCa0cGoenpSOVN-g3q4rSi12RHqS56sbOHvw>
-    <xmx:LhWSavE44VGQeGzNv6viATaFPZ5tGPCp6GBSJDpw-8lmHFvjMO4WbrA9>
-Feedback-ID: i03f14258:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Fri,
- 28 Aug 2026 19:09:31 -0400 (EDT)
-Date: Fri, 28 Aug 2026 17:09:30 -0600
-From: Alex Williamson <alex@shazbot.org>
-To: <mhonap@nvidia.com>
-Cc: <jgg@ziepe.ca>, <ankita@nvidia.com>, <jic23@kernel.org>,
- <dave.jiang@intel.com>, <alejandro.lucero-palau@amd.com>,
- <smadhavan@nvidia.com>, <corbet@lwn.net>, <skhan@linuxfoundation.org>,
- <dave@stgolabs.net>, <alison.schofield@intel.com>,
- <vishal.l.verma@intel.com>, <iweiny@kernel.org>, <ming.li@zohomail.com>,
- <yishaih@nvidia.com>, <skolothumtho@nvidia.com>, <kevin.tian@intel.com>,
- <bhelgaas@google.com>, <dmatlack@google.com>, <kees@kernel.org>,
- <gustavoars@kernel.org>, <cjia@nvidia.com>, <kjaju@nvidia.com>,
- <vsethi@nvidia.com>, <zhiw@nvidia.com>, <linux-doc@vger.kernel.org>,
- <linux-kernel@vger.kernel.org>, <kvm@vger.kernel.org>,
- <linux-cxl@vger.kernel.org>, <linux-pci@vger.kernel.org>,
- <linux-kselftest@vger.kernel.org>, <linux-hardening@vger.kernel.org>,
- alex@shazbot.org
-Subject: Re: [PATCH v4 24/27] vfio/cxl: Service a guest-triggered CXL reset
-Message-ID: <20260828170930.3bf438eb@shazbot.org>
-In-Reply-To: <20260813093631.2288172-25-mhonap@nvidia.com>
-References: <20260813093631.2288172-1-mhonap@nvidia.com>
-	<20260813093631.2288172-25-mhonap@nvidia.com>
-X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
+	dkim=pass (2048-bit key) header.d=jqluv-com.20251104.gappssmtp.com header.i=@jqluv-com.20251104.gappssmtp.com header.b="JLMTQU/S"
+Received: by mail-pl1-f172.google.com with SMTP id d9443c01a7336-2caea3f742bso22653585ad.0
+        for <linux-pci@vger.kernel.org>; Fri, 28 Aug 2026 17:43:41 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=jqluv-com.20251104.gappssmtp.com; s=20251104; t=1787964221; x=1788569021; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:subject:from:cc:to
+         :content-language:user-agent:mime-version:date:message-id:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=uQpe6EYgnCeHFjzDxcLFZOag62YE7lR3UJLijS4+XTo=;
+        b=JLMTQU/Suxj2V5ChDefQ2C0F+EXRnYNV6W8UfY+oyiwC3/L+DwZKQ10BfilCsVvjPk
+         MFJXmxbcrsAgkO+t02Rvc0jXfKbSiFJtAYIsjRfEsz9GVfB272BENY7v5ZirPlK5SdX5
+         Ra2pC7R/3Cf949fc3ki2meUCGR0ScFTKtk+WIddWAHMpPIgpYTHgF01a926Lk81icK9O
+         +iXhdquNUrAfAB0Sa9zizhN/QbmtYyPprYNy/FtGtWHuib6pbCfxH7jh4wxz1vdJ6VUw
+         0sFppFfWGs847xh1Rt7V8/IiukdufdPvRwaj3q7qRba212KXTVFURXAzynyKRlRPucLx
+         8m8w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1787964221; x=1788569021;
+        h=content-transfer-encoding:content-type:subject:from:cc:to
+         :content-language:user-agent:mime-version:date:message-id:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=uQpe6EYgnCeHFjzDxcLFZOag62YE7lR3UJLijS4+XTo=;
+        b=pA9ZQGnSMbUohsh+f+v7MbZXF7oC5iiN0csEYjVjIbZvB9A7kHB/YCJufxIu6C6Fwj
+         vo2YxBV+p4kFpyPw2w4GWsD+0kFnZyItVfXazso/i8m0tpwU0M3zz8MARAh1a3dLRkrA
+         iySqqK1kKdyHtaijlnfALAfsMGDPhv49msajyF+2QEB/ZkElK7kFj5dfsPsed0sE3p1w
+         pXABsOST5PqTc4H4Ee18Nf1oMyV3bh/1A0ZTPqwFPmpnqVTirqdEn8fxfNnz21dmnQQS
+         jEAsBhUx2blfZv7SkkxvSugIzRreN84V37ygrowNeWUzi5fwAvB1sRqckVEa0HQ+oS17
+         FVBw==
+X-Forwarded-Encrypted: i=1; AKwUvBz2hmdZeEKPENOFXCeGHG3UWGuDTJ8MOgpAh+oBUwV+rd+iGMLT4rlvh2DE1rXm6Rt9wYgzAMNxxpw=@vger.kernel.org
+X-Gm-Message-State: AFuF++mCOSnfEKFS0Jzj9ehbuyp/Jtfw5E5YW/uT4FXoNMA73/TRo1Ar
+	6icde9127ew1oKfdzxbQk87hHiA7Dce7IHg4UIR17nhmqEnCk0d04UDQTxyoP10TT+c=
+X-Gm-Gg: AYBFou0YdHGgw1oEE/EeDN1QId+1r7KB5vO+DWd3MLwSw9Ctu+FZ14I/aU89DX+l8Rs
+	80bEWxdT9yU0CmP32Hqk5T0TeunbqSA6WoI1YirwkV+JrbslMMCc/UNXBQ3T0oyXRRwVIYu8zO1
+	el1WktAvVElO+UK6Fhn2zP0FRT93FDqUEa2Np1xeK4siGyTkCciNxcXGw8Yw78YfemBWx7bPN0U
+	+MsbL9v31OrfN8MdxtRhKJIfP7kAHFkub4tLE/vdPyWiRzCIVvg0P/Gbvh9kBFM7W2hs7yY/9or
+	je78t1gy5qyOLu3nsiDXMDOFtKcL6rP/y+wC1BZ6SFkQvXKpOwN2ZaHQXHj/8mdi93u+zCqAGWn
+	gbC8HUXik0z4FUaaqUI98Yep0tpJ7yVuDT4fSzztMEwu5aC95q8pPD+RSTTlGGXSF5QEJq4wCpq
+	YKp/jpGF5gsyHRpS3kv4UcyYx8cvFqGPQucyTWzUcygF0E6G1pcKbkY2kF2oTjiMNrbtxMnx4Xh
+	w0irNh+Vw9rfLphWWvllCjFiInVUrkgcZBX8LJCb+85BdL7zvw0aMgJMWti7WT+taJ9
+X-Received: by 2002:a17:902:f688:b0:2d6:fee6:65ae with SMTP id d9443c01a7336-2d74dcafb41mr182731545ad.4.1787964220899;
+        Fri, 28 Aug 2026 17:43:40 -0700 (PDT)
+Received: from ?IPV6:2601:201:8000:f750:9062:e94c:b180:8e48? ([2601:201:8000:f750:9062:e94c:b180:8e48])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3286f784845sm10884356eec.2.2026.08.28.17.43.39
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 28 Aug 2026 17:43:40 -0700 (PDT)
+Message-ID: <10fb16fb-2069-4d89-b473-1006ae5abfbc@jqluv.com>
+Date: Fri, 28 Aug 2026 17:43:38 -0700
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+User-Agent: Mozilla Thunderbird
+Content-Language: en-US
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: alexander.deucher@amd.com, ilpo.jarvinen@linux.intel.com,
+ amd-gfx@lists.freedesktop.org, mario.limonciello@amd.com, nra3088@gmail.com,
+ =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>,
+ meiling.leung@embeddedllm.com, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+From: Geramy Loveless <gloveless@jqluv.com>
+Subject: [PATCH v3] PCI: Reserve prefetchable window headroom for Resizable
+ BARs
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On Thu, 13 Aug 2026 15:06:28 +0530
-<mhonap@nvidia.com> wrote:
+Firmware typically sizes prefetchable bridge windows for the boot-time
+BAR size. Behind a fixed (non-hotplug) PCIe switch fabric, there is then
+no room for a driver to grow a Resizable BAR afterwards: every window
+from the leaf up to the root is sized for the small BAR, so
+pci_resize_resource() fails with -ENOSPC. 
 
-> From: Manish Honap <mhonap@nvidia.com>
-> 
-> When the guest sets Initiate_CXL_Reset in the CXL DVSEC, run the reset on
-> its behalf. The bit is not forwarded to hardware; the CXL core drives the
-> state machine through cxl_reset_dvsec_sequence(). The memory_lock, mapping
-> revoke and dma-buf quiesce are core-internal, so the core exposes a
-> wrapper that runs them around the CXL-specific work.
-> 
-> A CXL reset can clear config like an FLR, so the sequence is bracketed by
-> pci_save_state() and pci_restore_state(), with Bus Master dropped for the
-> window and kept dropped if a step failed, so the function cannot DMA over
-> decoders that were not restored. The guest owns Mem_Clr_Enable, read from
-> the shadow, and the outcome is stamped into STATUS2 for it to poll.
-> 
-> Signed-off-by: Manish Honap <mhonap@nvidia.com>
-> ---
->  drivers/vfio/pci/cxl/vfio_cxl_core.c | 167 ++++++++++++++++++++-
->  drivers/vfio/pci/vfio_pci_config.c   |   4 +-
->  drivers/vfio/pci/vfio_pci_core.c     | 215 +++++++++++++++++++++++++--
->  drivers/vfio/pci/vfio_pci_priv.h     |   2 +
->  include/linux/vfio_pci_core.h        |   3 +
->  5 files changed, 374 insertions(+), 17 deletions(-)
-> 
-> diff --git a/drivers/vfio/pci/cxl/vfio_cxl_core.c b/drivers/vfio/pci/cxl/vfio_cxl_core.c
-> index f45eaa60bad2..b3eaefa03479 100644
-> --- a/drivers/vfio/pci/cxl/vfio_cxl_core.c
-> +++ b/drivers/vfio/pci/cxl/vfio_cxl_core.c
-> @@ -7,6 +7,7 @@
->  
->  #include <linux/cleanup.h>
->  #include <linux/memory-failure.h>
-> +#include <linux/memregion.h>
->  #include <linux/mm.h>
->  #include <linux/module.h>
->  #include <linux/pci.h>
-> @@ -761,6 +762,16 @@ static u16 vfio_cxl_dvsec16(struct vfio_cxl_state *cxl, u32 off)
->  	return (dw >> (8 * (off % sizeof(u32)))) & 0xffff;
->  }
->  
-> +/* Write a 16-bit DVSEC field into the shadow; the field must not straddle a dword. */
-> +static void vfio_cxl_dvsec_write16(struct vfio_cxl_state *cxl, u32 off, u16 val)
-> +{
-> +	u32 shift = 8 * (off % sizeof(u32));
-> +	u32 idx = off / sizeof(u32);
-> +
-> +	cxl->dvsec_shadow[idx] &= ~(0xffffU << shift);
-> +	cxl->dvsec_shadow[idx] |= (u32)val << shift;
-> +}
-> +
->  /*
->   * Apply the CXL r4.0 8.1.3 write class for the 16-bit DVSEC register at @off.
->   * Control is programmable, Status is write-1-to-clear, and Capability, Lock and
-> @@ -815,12 +826,14 @@ static int vfio_cxl_config_write(struct vfio_pci_core_device *vdev, int pos,
->  	int boff = (pos - cxl->dvsec) % sizeof(u32);
->  	u32 off = idx * sizeof(u32);
->  	__le32 le_wval = 0, le_wmask = 0;
-> +	u16 before, after, lo, hi;
->  	u32 old, wval, wmask;
-> -	u16 lo, hi;
->  
->  	if (pos < cxl->dvsec || pos >= cxl->dvsec + cxl->dvsec_len)
->  		return -ENODEV;
->  
-> +	before = vfio_cxl_dvsec16(cxl, PCI_DVSEC_CXL_CTRL2);
-> +
->  	/*
->  	 * Place the guest bytes and a matching byte mask at the write offset,
->  	 * then let the per-field class decide what actually lands in the shadow.
-> @@ -836,9 +849,159 @@ static int vfio_cxl_config_write(struct vfio_pci_core_device *vdev, int pos,
->  	hi = vfio_cxl_dvsec_field(off + 2, old >> 16, wval >> 16, wmask >> 16);
->  	cxl->dvsec_shadow[idx] = lo | ((u32)hi << 16);
->  
-> +	/*
-> +	 * A 0->1 write of Initiate_CXL_Reset asks for a CXL reset. It is not
-> +	 * forwarded to hardware; cxl_reset_dvsec_sequence() drives the state
-> +	 * machine, and the outcome comes back through STATUS2.
-> +	 */
-> +	after = vfio_cxl_dvsec16(cxl, PCI_DVSEC_CXL_CTRL2);
-> +	if (!(before & PCI_DVSEC_CXL_INIT_CXL_RST) &&
-> +	    (after & PCI_DVSEC_CXL_INIT_CXL_RST) &&
-> +	    cxl_reset_capable(vdev->pdev))
-> +		vfio_pci_core_cxl_reset(vdev);
-> +
->  	return count;
->  }
->  
-> +static int vfio_cxl_reset(struct vfio_pci_core_device *vdev)
-> +{
-> +	struct vfio_cxl_state *cxl = vdev->cxl;
-> +	struct pci_dev *pdev = vdev->pdev;
-> +	struct pci_saved_state *saved_state;
-> +	bool mem_clr;
-> +	u16 ctrl2, status2, cmd;
-> +	int ret;
-> +
-> +	lockdep_assert_held_write(&vdev->memory_lock);
-> +
-> +	/*
-> +	 * The host cxl_reset PCI method cannot run for a vfio-owned device: it
-> +	 * requests the HDM range that this driver already holds exclusively, so
-> +	 * it always fails busy. Drive the DVSEC reset directly here. Report
-> +	 * not-capable so the core reset path can fall back to a standard PCI
-> +	 * reset for a device with no CXL reset, such as a multifunction device.
-> +	 */
-> +	if (!cxl_reset_capable(pdev))
-> +		return -ENOTTY;
-> +
-> +	/*
-> +	 * Mem_Clr_En comes from the guest shadow CTRL2 while the device is open.
-> +	 * The core reset path also drives this reset at VM power on and off with
-> +	 * no shadow present, so read it from the live DVSEC then.
-> +	 */
-> +	if (cxl->dvsec_shadow)
-> +		ctrl2 = vfio_cxl_dvsec16(cxl, PCI_DVSEC_CXL_CTRL2);
-> +	else
-> +		pci_read_config_word(pdev, cxl->dvsec + PCI_DVSEC_CXL_CTRL2,
-> +				     &ctrl2);
-> +	mem_clr = ctrl2 & PCI_DVSEC_CXL_RST_MEM_CLR_EN;
-> +
-> +	/*
-> +	 * Mem_Clr is guest-controlled (Mem_Clr_En in the DVSEC CTRL2), so honor it
-> +	 * and pass it to cxl_reset_dvsec_sequence(). It zeroes the device memory,
-> +	 * but that sequence does not write back host CPU caches over the HDM range
-> +	 * the way the host cxl_reset method does. The range is mapped write-back,
-> +	 * so a dirty host line could survive the clear and overwrite it; invalidate
-> +	 * it first when the platform can.
-> +	 *
-> +	 * When cpu_cache_has_invalidate_memregion() is false proceed rather
-> +	 * than abort. Unlike native CXL region invalidation, which the host
-> +	 * manages and must fail safe, the host CPU never writes passthrough
-> +	 * HDM range: the guest owns it through its stage-2 mapping, so there
-> +	 * are no dirty host lines for the clear to lose.
-> +	 * Warn once so the case is visible rather than silent.
-> +	 */
-> +	if (mem_clr) {
-> +		if (cpu_cache_has_invalidate_memregion()) {
-> +			ret = cpu_cache_invalidate_memregion(cxl->hpa_range.start,
-> +							     range_len(&cxl->hpa_range));
-> +			if (ret) {
-> +				pci_err(pdev, "vfio-cxl: reset: CPU cache invalidate failed (%d), aborting reset\n",
-> +					ret);
-> +				return ret;
-> +			}
-> +		} else {
-> +			pci_warn_once(pdev, "vfio-cxl: reset: no CPU cache invalidation available; proceeding with Mem_Clr (host does not cache the HDM range)\n");
-> +		}
-> +	}
-> +
-> +	/*
-> +	 * A CXL reset can clear config like an FLR, so save state and drop Bus
-> +	 * Master for the reset window; the function masters the bus again only
-> +	 * once the decoders are restored.
-> +	 *
-> +	 * Sample the guest's Bus Master intent from live config before the reset
-> +	 * perturbs it, so it can be reapplied after the decoder is known good with
-> +	 * no window in which pci_restore_state() leaves Bus Master enabled.
-> +	 */
-> +	pci_read_config_word(pdev, PCI_COMMAND, &cmd);
-> +
-> +	saved_state = pci_store_saved_state(pdev);
-> +	if (!saved_state && pdev->state_saved) {
-> +		pci_err(pdev, "vfio-cxl: reset: saved-state stash failed (-ENOMEM), aborting reset\n");
-> +		return -ENOMEM;
-> +	}
-> +	if (saved_state)
-> +		pci_save_state(pdev);
-> +	pci_clear_master(pdev);
-> +	ret = cxl_reset_dvsec_sequence(pdev, mem_clr);
-> +	pci_restore_state(pdev);
-> +	pci_clear_master(pdev);
-> +	/*
-> +	 * pci_restore_state() reinstated the guest's PCI_COMMAND, which may have
-> +	 * re-enabled Bus Master while the reset outcome, and thus decoder
-> +	 * validity, is not yet known. The pci_clear_master() above is its
-> +	 * immediate next statement, so there is no window in which a failed reset
-> +	 * could DMA over decoders that were not restored.
-> +	 */
-> +	if (saved_state)
-> +		pci_load_and_free_saved_state(pdev, &saved_state);
-> +	/*
-> +	 * Re-enable Bus Master only for a clean reset or -EBUSY (the reset never
-> +	 * ran, so the firmware-committed decoder is intact), and only if the guest
-> +	 * had it enabled (sampled before the reset).
-> +	 */
-> +	if ((!ret || ret == -EBUSY) && (cmd & PCI_COMMAND_MASTER))
-> +		pci_set_master(pdev);
-> +
-> +	vfio_cxl_post_reset(vdev);
-> +
-> +	/*
-> +	 * A clean reset restored the decoder, and -EBUSY means the reset never
-> +	 * ran so the firmware-committed decoder is intact: both are known-good.
-> +	 * Any other error may have left the decoder unrestored, so close the gate
-> +	 * until the next open or restore. Faults cannot race this: the caller
-> +	 * holds memory_lock for write across the whole reset.
-> +	 */
-> +	if (cxl->hdm_shadow) {
-> +		if (!ret || ret == -EBUSY)
-> +			cxl->hdm_valid = true;
-> +		else
-> +			cxl->hdm_valid = false;
-> +	}
-> +
-> +	/*
-> +	 * The guest-facing DVSEC bookkeeping only applies while the device is
-> +	 * open. Initiate_CXL_Reset self-clears in hardware; mirror that and
-> +	 * stamp the outcome onto a fresh hardware STATUS2 read for the polling
-> +	 * guest. A contended -EBUSY reports as an error so the guest can reissue
-> +	 * rather than poll a result that never comes.
-> +	 */
-> +	if (cxl->dvsec_shadow) {
-> +		vfio_cxl_dvsec_write16(cxl, PCI_DVSEC_CXL_CTRL2,
-> +				       vfio_cxl_dvsec16(cxl, PCI_DVSEC_CXL_CTRL2) &
-> +				       ~PCI_DVSEC_CXL_INIT_CXL_RST);
-> +
-> +		pci_read_config_word(pdev, cxl->dvsec + PCI_DVSEC_CXL_STATUS2,
-> +				     &status2);
-> +		status2 &= ~(PCI_DVSEC_CXL_RST_DONE | PCI_DVSEC_CXL_RST_ERR);
-> +		status2 |= ret ? PCI_DVSEC_CXL_RST_ERR : PCI_DVSEC_CXL_RST_DONE;
-> +		vfio_cxl_dvsec_write16(cxl, PCI_DVSEC_CXL_STATUS2, status2);
-> +	}
-> +
-> +	return ret;
-> +}
-> +
->  static const struct vfio_cxl_ops vfio_cxl_ops = {
->  	.init_device	= vfio_cxl_init_device,
->  	.release_device	= vfio_cxl_release_device,
-> @@ -849,6 +1012,7 @@ static const struct vfio_cxl_ops vfio_cxl_ops = {
->  	.zap		= vfio_cxl_zap,
->  	.post_reset	= vfio_cxl_post_reset,
->  	.pm_restore	= vfio_cxl_pm_restore,
-> +	.reset		= vfio_cxl_reset,
->  	.owner		= THIS_MODULE,
->  };
->  
-> @@ -869,3 +1033,4 @@ MODULE_LICENSE("GPL");
->  MODULE_DESCRIPTION("VFIO support for CXL Type-2 devices");
->  MODULE_ALIAS("vfio-cxl");
->  MODULE_IMPORT_NS("CXL");
-> +MODULE_IMPORT_NS("DEVMEM");
-> diff --git a/drivers/vfio/pci/vfio_pci_config.c b/drivers/vfio/pci/vfio_pci_config.c
-> index 01d808546a4c..f6509824988c 100644
-> --- a/drivers/vfio/pci/vfio_pci_config.c
-> +++ b/drivers/vfio/pci/vfio_pci_config.c
-> @@ -910,7 +910,7 @@ static int vfio_exp_config_write(struct vfio_pci_core_device *vdev, int pos,
->  		if (!ret && (cap & PCI_EXP_DEVCAP_FLR)) {
->  			vfio_pci_zap_and_down_write_memory_lock(vdev);
->  			vfio_pci_dma_buf_move(vdev, true);
-> -			pci_try_reset_function(vdev->pdev);
-> +			vfio_pci_reset_function(vdev);
->  			vfio_pci_cxl_post_reset(vdev);
->  			if (__vfio_pci_memory_enabled(vdev))
->  				vfio_pci_dma_buf_move(vdev, false);
-> @@ -996,7 +996,7 @@ static int vfio_af_config_write(struct vfio_pci_core_device *vdev, int pos,
->  		if (!ret && (cap & PCI_AF_CAP_FLR) && (cap & PCI_AF_CAP_TP)) {
->  			vfio_pci_zap_and_down_write_memory_lock(vdev);
->  			vfio_pci_dma_buf_move(vdev, true);
-> -			pci_try_reset_function(vdev->pdev);
-> +			vfio_pci_reset_function(vdev);
->  			vfio_pci_cxl_post_reset(vdev);
->  			if (__vfio_pci_memory_enabled(vdev))
->  				vfio_pci_dma_buf_move(vdev, false);
-> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
-> index fc8235c8b4fc..0fed8e00bc1d 100644
-> --- a/drivers/vfio/pci/vfio_pci_core.c
-> +++ b/drivers/vfio/pci/vfio_pci_core.c
-> @@ -635,8 +635,26 @@ int vfio_pci_core_enable(struct vfio_pci_core_device *vdev)
->  		goto out_power;
->  
->  	/* If reset fails because of the device lock, fail this path entirely */
-> -	ret = pci_try_reset_function(pdev);
-> -	if (ret == -EAGAIN)
-> +	if (vdev->cxl_ops && vdev->cxl_ops->reset) {
-> +		/*
-> +		 * VM power-on resets a CXL Type-2 device through its DVSEC
-> +		 * sequence. vconfig is not built yet here, so take memory_lock
-> +		 * and call the op directly rather than the wrapper.
-> +		 */
-> +		down_write(&vdev->memory_lock);
-> +		ret = vdev->cxl_ops->reset(vdev);
-> +		up_write(&vdev->memory_lock);
-> +	} else {
-> +		ret = pci_try_reset_function(pdev);
-> +	}
-> +	/*
-> +	 * -EAGAIN means the reset could not run. For a CXL device any reset
-> +	 * error must also fail the open: a failed DVSEC reset can leave the HDM
-> +	 * decoder cleared or unrestored, and continuing would expose the HDM
-> +	 * region for host access through a decoder in an unknown state.
-> +	 */
-> +	if (ret == -EAGAIN ||
-> +	    (vdev->cxl_ops && vdev->cxl_ops->reset && ret))
->  		goto out_disable_device;
->  
->  	vdev->reset_works = !ret;
-> @@ -824,16 +842,30 @@ void vfio_pci_core_disable(struct vfio_pci_core_device *vdev)
->  	 * overwrite the previously restored configuration information.
->  	 */
->  	if (vdev->reset_works) {
-> -		bridge = pci_upstream_bridge(pdev);
-> -		if (bridge && !pci_dev_trylock(bridge))
-> -			goto out_restore_state;
-> -		if (pci_dev_trylock(pdev)) {
-> -			if (!__pci_reset_function_locked(pdev))
-> +		if (vdev->cxl_ops && vdev->cxl_ops->reset) {
-> +			/*
-> +			 * VM power-off resets a CXL Type-2 device through its
-> +			 * DVSEC sequence. The sequence takes its own device lock,
-> +			 * so run it outside the lock below.
-> +			 * vconfig is already freed here, so call the op directly
-> +			 * under memory_lock rather than the wrapper.
-> +			 */
-> +			down_write(&vdev->memory_lock);
-> +			if (!vdev->cxl_ops->reset(vdev))
->  				vdev->needs_reset = false;
-> -			pci_dev_unlock(pdev);
-> +			up_write(&vdev->memory_lock);
-> +		} else {
-> +			bridge = pci_upstream_bridge(pdev);
-> +			if (bridge && !pci_dev_trylock(bridge))
-> +				goto out_restore_state;
-> +			if (pci_dev_trylock(pdev)) {
-> +				if (!__pci_reset_function_locked(pdev))
-> +					vdev->needs_reset = false;
-> +				pci_dev_unlock(pdev);
-> +			}
-> +			if (bridge)
-> +				pci_dev_unlock(bridge);
+Furthermore, a small prefetchable BAR (e.g., a 2 MiB doorbell) sharing a 
+bridge's single prefetchable window with a much larger one (e.g., a 32 GiB 
+VRAM BAR) pushes the required window size past the large BAR's alignment. 
+Because bridge windows round up to a power of two, this forces a massive 
+alignment waste (e.g., 32 GiB + 2 MiB rounds up to a 64 GiB window, 
+wasting ~32 GiB per GPU).
 
-We basically have the function below that would clean this up, but
-we're open coding it still...
+This patch solves both issues to enable ReBAR on cascaded switch fabrics:
 
->  		}
-> -		if (bridge)
-> -			pci_dev_unlock(bridge);
->  	}
->  
->  out_restore_state:
-> @@ -1441,6 +1473,20 @@ static int vfio_pci_ioctl_set_irqs(struct vfio_pci_core_device *vdev,
->  	return ret;
->  }
->  
-> +/*
-> + * Reset a function the way a guest asked for. A CXL Type-2 device resets
-> + * through its DVSEC sequence: the host cxl_reset method would collide
-> + * with the exclusive HDM range this driver holds and fail busy. Everything else
-> + * takes a standard PCI function reset. The caller holds memory_lock, which the
-> + * DVSEC sequence requires.
-> + */
-> +int vfio_pci_reset_function(struct vfio_pci_core_device *vdev)
-> +{
-> +	if (vdev->cxl_ops && vdev->cxl_ops->reset)
-> +		return vdev->cxl_ops->reset(vdev);
-> +	return pci_try_reset_function(vdev->pdev);
-> +}
+1. Reserve Headroom: 
+Reserve prefetchable window headroom for the maximum size of each 
+downstream Resizable BAR during the bridge sizing pass. The device BAR 
+and hardware ReBAR are left at their boot size to prevent tearing down 
+firmware-loaded state (e.g., AMD R9700 PSP) before the driver binds.
 
-"Reset a function the way a guest asked for", but we're actually
-replacing FLR with a CXL reset.  That's not what the user (please don't
-assume a VM use case in vfio kernel code) ask for.
+2. Pack Oversized Windows (BAR Demotion): 
+The PCI-to-PCI Bridge spec (r1.2, sec 3.2.5) permits a prefetchable BAR 
+to be assigned from the non-prefetchable window. By clearing the PREFETCH 
+flag on small control BARs during enumeration, they are placed below 4 GiB. 
+The prefetchable window is then cleanly sized to the large BAR alone.
 
-> +
->  static int vfio_pci_ioctl_reset(struct vfio_pci_core_device *vdev,
->  				void __user *arg)
->  {
-> @@ -1463,7 +1509,7 @@ static int vfio_pci_ioctl_reset(struct vfio_pci_core_device *vdev,
->  	vfio_pci_set_power_state(vdev, PCI_D0);
->  
->  	vfio_pci_dma_buf_move(vdev, true);
-> -	ret = pci_try_reset_function(vdev->pdev);
-> +	ret = vfio_pci_reset_function(vdev);
->  	vfio_pci_cxl_post_reset(vdev);
->  	if (__vfio_pci_memory_enabled(vdev))
->  		vfio_pci_dma_buf_move(vdev, false);
-> @@ -2736,6 +2782,21 @@ static int vfio_pci_dev_set_hot_reset(struct vfio_device_set *dev_set,
->  		goto err_unlock;
->  	}
->  
-> +	/*
-> +	 * A multifunction CXL Type-2 device cannot be bus reset: its DVSEC
-> +	 * reset acts per function, so a shared secondary bus reset would reset
-> +	 * sibling functions out from under their own state. Reject it, matching
-> +	 * the cxl_reset bus method. A single-function device is quiesced through
-> +	 * its DVSEC sequence just before the reset below.
-> +	 */
-> +	list_for_each_entry(vdev, &dev_set->device_list, vdev.dev_set_list) {
-> +		if (vdev->cxl_ops && vdev->cxl_ops->reset &&
-> +		    vdev->pdev->multifunction) {
-> +			ret = -ENOTTY;
-> +			goto err_unlock;
-> +		}
-> +	}
+Why this is safe for 32-bit (< 4G) MMIO space:
+To prevent exhausting legacy < 4G space, demotion is strictly bounded. It 
+only triggers beside a massive prefetchable BAR (>= 64 MiB), and the demoted 
+BAR is strictly capped at 16 MiB (PCI_BAR_PACK_CAP). Even on an 8x GPU 
+system, this consumes at most 128 MiB of < 4G space. 
 
-What?  The whole purpose of the hot reset is to handle bus resets
-affecting multiple devices.  Affecting sibling functions is part of the
-scope agreement of this interface.  This is what the dev_set does.
+Fallback / Alignment logic:
+If the 32-bit space is exhausted, small BARs remain in the prefetchable 
+window. The alignment logic gracefully handles this by rounding the bridge 
+window up to the next power of two (e.g., growing to 64 GiB to fit a 32 GiB 
+BAR + BAR2) to maintain PCIe compatibility, ensuring sibling GPUs land in 
+properly aligned slots.
 
-> +
->  	/*
->  	 * Some of the devices in the dev_set can be in the runtime suspended
->  	 * state. Increment the usage count for all the devices in the dev_set
-> @@ -2817,11 +2878,57 @@ static int vfio_pci_dev_set_hot_reset(struct vfio_device_set *dev_set,
->  	list_for_each_entry(vdev, &dev_set->device_list, vdev.dev_set_list)
->  		vfio_pci_set_power_state(vdev, PCI_D0);
->  
-> +	/*
-> +	 * Quiesce each CXL Type-2 device through its DVSEC sequence before the
-> +	 * secondary bus reset: the bus reset alone does not write back the
-> +	 * device cache or tear down the HDM decoders. memory_lock is held. If a
-> +	 * quiesce fails, abort before the bus reset: resetting an unquiesced CXL
-> +	 * device risks data loss or a fabric error. Every device is locked here,
-> +	 * so unwind from the last one.
-> +	 */
-> +	list_for_each_entry(vdev, &dev_set->device_list, vdev.dev_set_list) {
-> +		if (vdev->cxl_ops && vdev->cxl_ops->reset) {
-> +			ret = vdev->cxl_ops->reset(vdev);
-> +			if (ret) {
-> +				pci_warn(vdev->pdev, "vfio-cxl: hot reset: DVSEC quiesce failed (%d), aborting before bus reset\n",
-> +					 ret);
-> +				vdev = list_last_entry(&dev_set->device_list,
-> +						       struct vfio_pci_core_device,
-> +						       vdev.dev_set_list);
-> +				goto err_undo;
-> +			}
-> +		}
-> +	}
+Reserving is safe by default: __assign_resources_sorted() satisfies all
+required resources first. Use pci=no_rebar_reserve and pci=no_bar_demote 
+to restore previous behaviours.
 
-Does writing back the device cache affect data beyond the scope of the
-user that owns the device?  Preventing fabric errors that might
-escalate to system errors is a concern.  Losing data that the device
-might be caching outside the scope of the user data is a concern.
-Preventing user data loss because they reset a device holding their own
-data is not a concern.
+Testing Context:
+- ASUS K14PG-D24
+- 2x EPYC 9354
+- 8x Radeon AI PRO R9700 (Navi 48, 1002:7551)
+- Broadcom PEX890xx switches
+- Kernel base: 45c13f3f9e3b (tested with SEV-SNP passthrough=1)
 
-> +
->  	ret = pci_reset_bus(pdev);
->  
-> -	/* Re-sample decoder state for any CXL device the bus reset touched. */
-> -	list_for_each_entry(vdev, &dev_set->device_list, vdev.dev_set_list)
-> -		vfio_pci_cxl_post_reset(vdev);
-> +	/*
-> +	 * pci_reset_bus() restored each device's PCI_COMMAND, which can re-enable
-> +	 * Bus Master, but the secondary bus reset cleared the physical HDM decoder
-> +	 * that the CXL quiesce above restored. Until it is restored a CXL device
-> +	 * could DMA over cleared decode, so for each CXL device drop Bus Master,
-> +	 * restore and re-sample the decoder, then re-enable Bus Master to the
-> +	 * guest's intent only once the decoder is known good. Re-sampling alone
-> +	 * would leave hdm_valid true over a cleared decoder. Keep the first restore
-> +	 * error so a failed restore is reported instead of the bus reset's success.
-> +	 */
-> +	list_for_each_entry(vdev, &dev_set->device_list, vdev.dev_set_list) {
-> +		u16 cmd;
-> +		int rret;
-> +
-> +		if (!(vdev->cxl_ops && vdev->cxl_ops->reset))
-> +			continue;
-> +
-> +		pci_read_config_word(vdev->pdev, PCI_COMMAND, &cmd);
-> +		pci_clear_master(vdev->pdev);
-> +		rret = vfio_pci_cxl_pm_restore(vdev);
-> +		if (rret) {
-> +			if (!ret)
-> +				ret = rret;
-> +		} else if (cmd & PCI_COMMAND_MASTER) {
-> +			pci_set_master(vdev->pdev);
-> +		}
-> +	}
+Signed-off-by: Geramy Loveless <gloveless@jqluv.com>
+---
+ .../admin-guide/kernel-parameters.txt         |   9 ++
+ drivers/pci/pci.c                             |  15 ++
+ drivers/pci/pci.h                             |   2 +
+ drivers/pci/quirks.c                          |  89 +++++++++++
+ drivers/pci/setup-bus.c                       | 142 ++++++++++++++++++
+ 5 files changed, 257 insertions(+)
 
-More open coded calls that should be handled via .reset_done.
+diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
+index 37006fc3eac3..7360407dd4b8 100644
+--- a/Documentation/admin-guide/kernel-parameters.txt
++++ b/Documentation/admin-guide/kernel-parameters.txt
+@@ -5246,6 +5246,15 @@ Kernel parameters
+ 		hpbussize=nn	The minimum amount of additional bus numbers
+ 				reserved for buses below a hotplug bridge.
+ 				Default is 1.
++		no_bar_demote	Do not demote small prefetchable BARs below 4 GiB to pack oversized prefetchable bridge windows.
++		no_rebar_reserve	Do not reserve prefetchable bridge-window
++				space for the maximum size of downstream Resizable
++				BARs. By default such space is reserved so a driver
++				can grow a BAR later (e.g. GPU VRAM BAR) even behind
++				fixed PCIe switch fabrics that firmware sized for the
++				boot-time BAR; the device BAR is left at its boot size
++				for the driver to resize and only bridge windows are
++				enlarged. Use this to restore the old behaviour.
+ 		realloc=	Enable/disable reallocating PCI bridge resources
+ 				if allocations done by BIOS are too small to
+ 				accommodate resources required by all child
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index b2879a6be5f8..0bb4ad570171 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -120,6 +120,17 @@ unsigned long pci_hotplug_mmio_pref_size = DEFAULT_HOTPLUG_MMIO_PREF_SIZE;
+ #define DEFAULT_HOTPLUG_BUS_SIZE	1
+ unsigned long pci_hotplug_bus_size = DEFAULT_HOTPLUG_BUS_SIZE;
+ 
++/*
++ * Prefetchable bridge-window headroom is reserved for the maximum size of
++ * downstream Resizable BARs by default, so a driver can grow one later
++ * (e.g. amdgpu VRAM BAR) even behind fixed PCIe switch fabrics.
++ * pci=no_rebar_reserve disables this.
++ */
++bool pci_rebar_no_reserve;
++
++/* pci=no_bar_demote disables demoting small prefetchable BARs below 4 GiB. */
++bool pci_bar_demote_disabled;
++
+ 
+ /* PCIe MPS/MRRS strategy; can be overridden by kernel command-line param */
+ enum pcie_bus_config_types pcie_bus_config = PCIE_BUS_DEFAULT;
+@@ -6840,6 +6851,10 @@ static int __init pci_setup(char *str)
+ 					simple_strtoul(str + 10, &str, 0);
+ 				if (pci_hotplug_bus_size > 0xff)
+ 					pci_hotplug_bus_size = DEFAULT_HOTPLUG_BUS_SIZE;
++			} else if (!strncmp(str, "no_rebar_reserve", 16)) {
++				pci_rebar_no_reserve = true;
++			} else if (!strncmp(str, "no_bar_demote", 13)) {
++				pci_bar_demote_disabled = true;
+ 			} else if (!strncmp(str, "pcie_bus_tune_off", 17)) {
+ 				pcie_bus_config = PCIE_BUS_TUNE_OFF;
+ 			} else if (!strncmp(str, "pcie_bus_safe", 13)) {
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index ba3c3fddddc2..0f21972b674a 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -409,6 +409,8 @@ extern unsigned long pci_hotplug_io_size;
+ extern unsigned long pci_hotplug_mmio_size;
+ extern unsigned long pci_hotplug_mmio_pref_size;
+ extern unsigned long pci_hotplug_bus_size;
++extern bool pci_rebar_no_reserve;
++extern bool pci_bar_demote_disabled;
+ 
+ static inline bool pci_is_cardbus_bridge(struct pci_dev *dev)
+ {
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index de9bbccda21f..1094f618bb1f 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -6423,3 +6423,92 @@ static void pci_mask_replay_timer_timeout(struct pci_dev *pdev)
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_GLI, 0x9750, pci_mask_replay_timer_timeout);
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_GLI, 0x9755, pci_mask_replay_timer_timeout);
+ #endif
++
++/*
++ * A small prefetchable BAR sharing a bridge's single prefetchable window with a
++ * much larger one inflates that window past the large BAR's alignment.  Clear
++ * PREFETCH on such small BARs at enumeration so they land in the
++ * non-prefetchable window and the prefetchable window packs to the large BAR
++ * alone.  pci=no_bar_demote disables this.
++ */
++#define PCI_BAR_PACK_MIN	SZ_64M	/* device must have a pref BAR at least this big */
++#define PCI_BAR_PACK_CAP	SZ_16M	/* only demote small pref BARs up to this size */
++
++/* Demote only if the host's 32-bit aperture has room (tracked per host). */
++static bool pci_pack_low_reserve(struct pci_dev *dev, resource_size_t bytes)
++{
++	static struct { struct pci_bus *root; u64 used; } budget[32];
++	static int nbudget;
++	struct pci_bus *root = dev->bus;
++	struct resource *r;
++	u64 aperture = 0, *usedp = NULL;
++	int i;
++
++	while (root->parent)
++		root = root->parent;
++	pci_bus_for_each_resource(root, r, i) {
++		if (r && (r->flags & (IORESOURCE_MEM | IORESOURCE_PREFETCH)) ==
++		    IORESOURCE_MEM && (u64)r->end < SZ_4G)
++			aperture += resource_size(r);
++	}
++	if (!aperture)
++		return false;
++
++	for (i = 0; i < nbudget; i++) {
++		if (budget[i].root == root) {
++			usedp = &budget[i].used;
++			break;
++		}
++	}
++	if (!usedp) {
++		if (nbudget >= (int)ARRAY_SIZE(budget))
++			return false;
++		budget[nbudget].root = root;
++		budget[nbudget].used = 0;
++		usedp = &budget[nbudget].used;
++		nbudget++;
++	}
++	if (*usedp + bytes > aperture / 2)
++		return false;
++	*usedp += bytes;
++	return true;
++}
++
++static void quirk_pci_pack_prefetch(struct pci_dev *dev)
++{
++	resource_size_t max_align = 0;
++	struct resource *r;
++	int i;
++
++	if (pci_bar_demote_disabled)
++		return;
++
++	for (i = 0; i < PCI_STD_NUM_BARS; i++) {
++		r = pci_resource_n(dev, i);
++		if ((r->flags & (IORESOURCE_MEM | IORESOURCE_PREFETCH)) ==
++		    (IORESOURCE_MEM | IORESOURCE_PREFETCH))
++			max_align = max(max_align, pci_resource_alignment(dev, r));
++	}
++	if (max_align < PCI_BAR_PACK_MIN)
++		return;
++
++	for (i = 0; i < PCI_STD_NUM_BARS; i++) {
++		r = pci_resource_n(dev, i);
++		if ((r->flags & (IORESOURCE_MEM | IORESOURCE_PREFETCH)) !=
++		    (IORESOURCE_MEM | IORESOURCE_PREFETCH))
++			continue;
++		if (r->flags & IORESOURCE_PCI_FIXED)
++			continue;
++		if (pci_resource_alignment(dev, r) >= max_align)
++			continue;		/* an alignment-setting BAR, keep it */
++		if (resource_size(r) > PCI_BAR_PACK_CAP)
++			continue;		/* not a small control BAR */
++
++		if (!pci_pack_low_reserve(dev, resource_size(r)))
++			continue;	/* no room below 4G: leave it prefetchable (fallback) */
++		r->flags &= ~IORESOURCE_PREFETCH;
++		pci_info(dev, "%pR: assigned from the non-prefetchable window to pack the prefetchable window\n",
++			 r);
++	}
++}
++DECLARE_PCI_FIXUP_HEADER(PCI_ANY_ID, PCI_ANY_ID, quirk_pci_pack_prefetch);
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index e8c94aa1d3c1..d8b8cb35b8bb 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -19,6 +19,7 @@
+ #include <linux/bug.h>
+ #include <linux/init.h>
+ #include <linux/kernel.h>
++#include <linux/log2.h>
+ #include <linux/minmax.h>
+ #include <linux/module.h>
+ #include <linux/pci.h>
+@@ -1258,6 +1259,61 @@ static bool pbus_size_mem_optional(struct pci_dev *dev, int resno,
+ 	return true;
+ }
+ 
++/*
++ * pci_rebar_reserve_size - prefetchable window headroom to reserve for a BAR
++ *
++ * Reserve enough prefetchable window space to later grow @resno of @dev to
++ * its maximum Resizable BAR size. This is done for every ReBAR-capable device
++ * by default (disable with pci=no_rebar_reserve). Only the optional (add_size)
++ * part of the enclosing window is inflated here; the device BAR resource and
++ * the hardware ReBAR are left at their boot size, so the driver still performs
++ * the actual resize into the reserved window. Reserving the window up front
++ * avoids -ENOSPC in pci_resize_resource() on fixed switch fabrics, where a
++ * window shared with a sibling's still-assigned BAR cannot be released and
++ * regrown at resize time.
++ *
++ * The reservation is strictly optional: __assign_resources_sorted() satisfies
++ * all required resources first and only then places add_size on leftover
++ * space, so reserving by default cannot make a required BAR or window fail.
++ *
++ * Return the extra bytes to reserve and raise *add_align to the BAR's
++ * alignment so the reserved space can actually hold the grown BAR.
++ */
++/* roundup_pow_of_two() is unsigned long and truncates 64-bit sizes on 32-bit. */
++static resource_size_t resource_size_roundup_pow2(resource_size_t n)
++{
++	if (n && (n & (n - 1)))
++		n = (resource_size_t)1 << fls64(n);
++	return n;
++}
++
++static resource_size_t pci_rebar_reserve_size(struct pci_dev *dev, int resno,
++					      resource_size_t *add_align)
++{
++	struct resource *res = pci_resource_n(dev, resno);
++	resource_size_t max_size, cur_size;
++	int max;
++
++	if (pci_rebar_no_reserve || resno >= PCI_STD_NUM_BARS)
++		return 0;
++
++	if ((res->flags & (IORESOURCE_MEM_64 | IORESOURCE_PREFETCH)) !=
++	    (IORESOURCE_MEM_64 | IORESOURCE_PREFETCH))
++		return 0;
++
++	max = pci_rebar_get_max_size(dev, resno);
++	if (max < 0)
++		return 0;
++
++	max_size = pci_rebar_size_to_bytes(max);
++	cur_size = resource_size(res);
++	if (max_size <= cur_size)
++		return 0;
++
++	*add_align = max(*add_align, max_size);
++	return max_size - cur_size;
++}
++
+ /**
+  * pbus_size_mem() - Size the memory window of a given bus
+  *
+@@ -1285,6 +1341,7 @@ static void pbus_size_mem(struct pci_bus *bus, struct resource *b_res,
+ 	int order, max_order;
+ 	resource_size_t children_add_size = 0;
+ 	resource_size_t add_align = 0;
++	resource_size_t rebar_align = 0;
+ 
+ 	if (!b_res)
+ 		return;
+@@ -1343,15 +1400,26 @@ static void pbus_size_mem(struct pci_bus *bus, struct resource *b_res,
+ 				aligns[order] += align;
+ 			if (order > max_order)
+ 				max_order = order;
++
++			children_add_size += pci_rebar_reserve_size(dev, i,
++								 &rebar_align);
+ 		}
+ 	}
+ 
+ 	win_align = pci_min_window_alignment(bus, b_res->flags);
+ 	min_align = calculate_head_align(aligns, max_order);
+ 	min_align = max(min_align, win_align);
++	min_align = max(min_align, rebar_align);
+ 	size0 = calculate_memsize(size, realloc_head ? 0 : add_size,
+ 				  0, win_align);
+ 
++	/*
++	 * Round a window sized above its own alignment up to a power of two
++	 * >= its size, or siblings behind the same switch will not pack.
++	 */
++	if (rebar_align && size0)
++		min_align = max(min_align, resource_size_roundup_pow2(size0));
++
+ 	if (size0) {
+ 		resource_set_range(b_res, min_align, size0);
+ 		b_res->flags &= ~IORESOURCE_DISABLED;
+@@ -2179,6 +2247,69 @@ static void pci_prepare_next_assign_round(struct list_head *fail_head,
+  * Second and later try will clear small leaf bridge res.
+  * Will stop till to the max depth if can not find good one.
+  */
++/*
++ * Release the 64-bit prefetchable BARs of resizable-BAR display devices so the
++ * windows enclosing them empty out and can be re-sized. The BAR *size* is left
++ * untouched (only released and re-placed), so the hardware ReBAR is never
++ * programmed here - the driver still owns the actual resize.
++ */
++static int pci_release_pref_bars_cb(struct pci_dev *dev, void *data)
++{
++	struct resource *r;
++	unsigned int i;
++
++	pci_dev_for_each_resource(dev, r, i) {
++		if (i >= PCI_BRIDGE_RESOURCES)
++			break;
++		if (r->parent && (r->flags & IORESOURCE_MEM_64) &&
++		    (r->flags & IORESOURCE_PREFETCH))
++			pci_release_resource(dev, i);
++	}
++	return 0;
++}
++
++/* True if the subtree holds a display device with a growable Resizable BAR. */
++static bool pci_bus_needs_rebar_regrow(struct pci_bus *bus)
++{
++	struct pci_dev *dev;
++	int i, max;
++
++	list_for_each_entry(dev, &bus->devices, bus_list) {
++		if ((dev->class >> 16) == PCI_BASE_CLASS_DISPLAY)
++			for (i = 0; i < PCI_STD_NUM_BARS; i++) {
++				max = pci_rebar_get_max_size(dev, i);
++				if (max >= 0 &&
++				    max > pci_rebar_get_current_size(dev, i))
++					return true;
++			}
++		if (dev->subordinate &&
++		    pci_bus_needs_rebar_regrow(dev->subordinate))
++			return true;
++	}
++	return false;
++}
++
++/*
++ * Release the now-empty prefetchable bridge windows bottom-up so the sizing
++ * pass re-sizes them (with pci_rebar_pref_reserve() reservation) to fit the
++ * BARs a driver will later grow.
++ */
++static void pci_release_rebar_windows(struct pci_bus *bus)
++{
++	struct pci_dev *dev;
++	struct resource *w;
++
++	list_for_each_entry(dev, &bus->devices, bus_list)
++		if (dev->subordinate)
++			pci_release_rebar_windows(dev->subordinate);
++
++	if (!bus->self)
++		return;
++	w = &bus->self->resource[PCI_BRIDGE_PREF_MEM_WINDOW];
++	if (w->parent && (w->flags & IORESOURCE_MEM_64) && !w->child)
++		pci_release_resource(bus->self, PCI_BRIDGE_PREF_MEM_WINDOW);
++}
++
+ void pci_assign_unassigned_root_bus_resources(struct pci_bus *bus)
+ {
+ 	LIST_HEAD(realloc_head);
+@@ -2190,6 +2321,17 @@ void pci_assign_unassigned_root_bus_resources(struct pci_bus *bus)
+ 	int pci_try_num = 1;
+ 	enum enable_type enable_local;
+ 
++	/*
++	 * Release resizable device BARs and their prefetchable windows so the
++	 * sizing pass re-sizes those windows large enough (pci_rebar_pref_reserve)
++	 * for the BARs a driver will later grow. Only released and re-placed - the
++	 * BAR size is left untouched, so the hardware ReBAR is never programmed.
++	 */
++	if (pci_bus_needs_rebar_regrow(bus)) {
++		pci_walk_bus(bus, pci_release_pref_bars_cb, NULL);
++		pci_release_rebar_windows(bus);
++	}
++
+ 	/* Don't realloc if asked to do so */
+ 	enable_local = pci_realloc_detect(bus, pci_realloc_enable);
+ 	if (pci_realloc_enabled(enable_local)) {
 
->  
->  	vdev = list_last_entry(&dev_set->device_list,
->  			       struct vfio_pci_core_device, vdev.dev_set_list);
-> @@ -2876,6 +2983,16 @@ static void vfio_pci_dev_set_try_reset(struct vfio_device_set *dev_set)
->  	if (!pdev)
->  		return;
->  
-> +	/*
-> +	 * A multifunction CXL Type-2 device cannot be bus reset (its DVSEC
-> +	 * reset is per function), so skip the automatic reset rather than reset
-> +	 * sibling functions out from under their state.
-> +	 */
-> +	list_for_each_entry(cur, &dev_set->device_list, vdev.dev_set_list)
-> +		if (cur->cxl_ops && cur->cxl_ops->reset &&
-> +		    cur->pdev->multifunction)
-> +			return;
-> +
+base-commit: 45c13f3f9e3bb15fd89ff2864c6f627a3b4b4229
+-- 
+2.53.0
 
-Nope.
-
->  	/*
->  	 * Some of the devices in the bus can be in the runtime suspended
->  	 * state. Increment the usage count for all the devices in the dev_set
-> @@ -2884,9 +3001,56 @@ static void vfio_pci_dev_set_try_reset(struct vfio_device_set *dev_set)
->  	if (vfio_pci_dev_set_pm_runtime_get(dev_set))
->  		return;
->  
-> +	/*
-> +	 * Quiesce each CXL Type-2 device through its DVSEC sequence before the
-> +	 * bus reset, which alone does not write back the device cache or tear
-> +	 * down the HDM decoders. Take memory_lock and zap the HDM window as the
-> +	 * explicit hot reset does. On lock contention or a failed quiesce, skip
-> +	 * the bus reset and leave needs_reset set for a later retry.
-> +	 */
-> +	list_for_each_entry(cur, &dev_set->device_list, vdev.dev_set_list) {
-> +		if (!(cur->cxl_ops && cur->cxl_ops->reset))
-> +			continue;
-> +		if (!down_write_trylock(&cur->memory_lock))
-> +			goto unwind;
-> +		vfio_pci_cxl_zap(cur);
-> +		if (cur->cxl_ops->reset(cur)) {
-> +			up_write(&cur->memory_lock);
-> +			goto unwind;
-> +		}
-> +	}
-
-.reset_prepare?
-
-> +
->  	if (!pci_reset_bus(pdev))
->  		reset_done = true;
->  
-> +	list_for_each_entry(cur, &dev_set->device_list, vdev.dev_set_list) {
-> +		u16 cmd;
-> +
-> +		if (!(cur->cxl_ops && cur->cxl_ops->reset))
-> +			continue;
-> +		/*
-> +		 * pci_reset_bus() restored PCI_COMMAND, which can re-enable Bus
-> +		 * Master, but the bus reset cleared the physical HDM decoder. Drop
-> +		 * Bus Master, restore and re-sample the decoder, then re-enable Bus
-> +		 * Master to the guest's intent once the decoder is known good.
-> +		 * Re-sampling alone would leave hdm_valid true over a cleared
-> +		 * decoder.
-> +		 */
-> +		pci_read_config_word(cur->pdev, PCI_COMMAND, &cmd);
-> +		pci_clear_master(cur->pdev);
-> +		if (!vfio_pci_cxl_pm_restore(cur) && (cmd & PCI_COMMAND_MASTER))
-> +			pci_set_master(cur->pdev);
-> +		up_write(&cur->memory_lock);
-> +	}
-
-.reset_done?  Thanks,
-
-Alex
-
-> +	goto out;
-> +
-> +unwind:
-> +	list_for_each_entry_continue_reverse(cur, &dev_set->device_list,
-> +					     vdev.dev_set_list)
-> +		if (cur->cxl_ops && cur->cxl_ops->reset)
-> +			up_write(&cur->memory_lock);
-> +
-> +out:
->  	list_for_each_entry(cur, &dev_set->device_list, vdev.dev_set_list) {
->  		if (reset_done)
->  			cur->needs_reset = false;
-> @@ -2919,6 +3083,29 @@ void vfio_pci_core_unregister_cxl_ops(const struct vfio_cxl_ops *ops)
->  }
->  EXPORT_SYMBOL_GPL(vfio_pci_core_unregister_cxl_ops);
->  
-> +/*
-> + * Drive a guest-requested CXL reset. The memory_lock, mapping revoke and
-> + * dma-buf quiesce are core-internal, so vfio-cxl calls in here to run them
-> + * around its DVSEC reset sequence.
-> + */
-> +int vfio_pci_core_cxl_reset(struct vfio_pci_core_device *vdev)
-> +{
-> +	int ret;
-> +
-> +	if (!vdev->cxl_ops || !vdev->cxl_ops->reset)
-> +		return -ENOTTY;
-> +
-> +	vfio_pci_zap_and_down_write_memory_lock(vdev);
-> +	vfio_pci_dma_buf_move(vdev, true);
-> +	ret = vdev->cxl_ops->reset(vdev);
-> +	if (__vfio_pci_memory_enabled(vdev))
-> +		vfio_pci_dma_buf_move(vdev, false);
-> +	up_write(&vdev->memory_lock);
-> +
-> +	return ret;
-> +}
-> +EXPORT_SYMBOL_GPL(vfio_pci_core_cxl_reset);
-> +
->  static void vfio_pci_core_cleanup(void)
->  {
->  	vfio_pci_uninit_perm_bits();
-> diff --git a/drivers/vfio/pci/vfio_pci_priv.h b/drivers/vfio/pci/vfio_pci_priv.h
-> index 46e67573d264..8055099cab03 100644
-> --- a/drivers/vfio/pci/vfio_pci_priv.h
-> +++ b/drivers/vfio/pci/vfio_pci_priv.h
-> @@ -102,6 +102,8 @@ static inline int vfio_pci_cxl_pm_restore(struct vfio_pci_core_device *vdev)
->  	return 0;
->  }
->  
-> +int vfio_pci_reset_function(struct vfio_pci_core_device *vdev);
-> +
->  u16 vfio_pci_memory_lock_and_enable(struct vfio_pci_core_device *vdev);
->  void vfio_pci_memory_unlock_and_restore(struct vfio_pci_core_device *vdev,
->  					u16 cmd);
-> diff --git a/include/linux/vfio_pci_core.h b/include/linux/vfio_pci_core.h
-> index c438d968dc59..18e206a35d8c 100644
-> --- a/include/linux/vfio_pci_core.h
-> +++ b/include/linux/vfio_pci_core.h
-> @@ -82,6 +82,8 @@ struct vfio_cxl_ops {
->  	void    (*post_reset)(struct vfio_pci_core_device *vdev);
->  	/* Restore the HDM decoder after a D3hot->D0 soft reset */
->  	int     (*pm_restore)(struct vfio_pci_core_device *vdev);
-> +	/* Run the CXL reset sequence; the core holds memory_lock across it */
-> +	int     (*reset)(struct vfio_pci_core_device *vdev);
->  
->  	/* Pinned per bound CXL device so vfio-cxl cannot unload under usage */
->  	struct module *owner;
-> @@ -89,6 +91,7 @@ struct vfio_cxl_ops {
->  
->  int vfio_pci_core_register_cxl_ops(const struct vfio_cxl_ops *ops);
->  void vfio_pci_core_unregister_cxl_ops(const struct vfio_cxl_ops *ops);
-> +int vfio_pci_core_cxl_reset(struct vfio_pci_core_device *vdev);
->  
->  #if IS_ENABLED(CONFIG_VFIO_PCI_DMABUF)
->  int vfio_pci_core_fill_phys_vec(struct phys_vec *phys_vec,
 
