@@ -1,159 +1,166 @@
-Received: from mail-yw1-f170.google.com (mail-yw1-f170.google.com [209.85.128.170])
+Received: from mail-pl1-f172.google.com (mail-pl1-f172.google.com [209.85.214.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 345EB3A1A3B
-	for <linux-pci@vger.kernel.org>; Sat, 29 Aug 2026 08:30:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.128.170
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787992209; cv=pass; b=RYw0Eo7Dc6JrkCYBQ0M76n7NFAxgQndXb9247+7Q7Mwsf9XZ7L1dFjtrnU34igWDc7le6DrLbGwh24Dala5Q+z4M6Ny8QyVb3Us2B+ehnW9h5DWSsL4zgiKwKgdYLc4B4R3MZtPUjOS9PgxD91AyXEUvHqXmO5tCxfdCQ4TiKoA=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787992209; c=relaxed/simple;
-	bh=xi1lrbzB7mY07CelQmvsb8STnjNlaaz/aUE/jwlo7Bw=;
-	h=MIME-Version:From:Date:Message-ID:Subject:To:Cc:Content-Type; b=TTzkvO715wU70gPrquaxPn0PHSAIR/4KuZ6Zl6Hdfk2jjb3gP8rsAqS3CCQaCbY2q1mbAXE2B8LUVv+IqQ5DaISpdDrx5jr6WOItyEg5uQdTsUTbAX+SN4dnZKdyKyjEH+zCrOqyhI3uv9m1szr+Zh3ipIrVLAWytIo4Tw5ZhKA=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kvisle.no; spf=pass smtp.mailfrom=kvisle.no; dkim=pass (2048-bit key) header.d=kvisle-no.20251104.gappssmtp.com header.i=@kvisle-no.20251104.gappssmtp.com header.b=ApEcNALH; arc=pass smtp.client-ip=209.85.128.170
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kvisle.no
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kvisle.no
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D4791146A66
+	for <linux-pci@vger.kernel.org>; Sat, 29 Aug 2026 09:39:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.172
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1787996376; cv=none; b=PPwOdcTlHwMqL5daqCRrdEnNW9C8AaOVtXJp+KyzZBN036YHEaC4sAYZgiUyT6ywrm+a1wg5ur1lM+0Q2X6CUYFg1yEgW+aN98IUi9XnTLW4VROGaQLNvZGpxh+dGPgfJFx/T5AE0pTfTOidx5AZgynZ2x9ouP38X+/w6e0S218=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1787996376; c=relaxed/simple;
+	bh=kQH8utjEcMuMrgMJOI0fiTjjeIf/7vys7+no0w6kqg4=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=biMQgL/9l7YpiJP4rnKRpp+MPHqYTbCErLgbHHtg2Vc4uiSZmXIHUDcSTEJrHNV8CDrq5za99Nwnjfhr8IjJhsiJtFerOLe5Dhug6zmxL3AjMkepH8GPzzk86xVzGx0NdOW+celM4ClrF9Zl/7xIWSGoPXQJizhAfmXyfeLRjSc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=mu2Qt7+a; arc=none smtp.client-ip=209.85.214.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kvisle-no.20251104.gappssmtp.com header.i=@kvisle-no.20251104.gappssmtp.com header.b="ApEcNALH"
-Received: by mail-yw1-f170.google.com with SMTP id 00721157ae682-85aeb506b78so25903007b3.3
-        for <linux-pci@vger.kernel.org>; Sat, 29 Aug 2026 01:30:06 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1787992206; cv=none;
-        d=google.com; s=arc-20260327;
-        b=OUbNRPOcl+3LACSPgTW6Q0ETGFaWCCwUzlRqhU66AvuHffmS3rLQXD5jQK1kspjUQ5
-         5OnF1KDBA/KsF2aj3TrezMw4r+UwfMTbM/E5y/ZRSjmXJUrOl+vbDbjTZkA3Eue0uP/w
-         feFy63hi8HXO+pFwJ6YoOh6DPgT4FnctYENFLDosQmc5Czi0pLmHsCYKeAlYQ8fJQQLO
-         +BYxWNRq7VzevoV1rI8/SaoIxvCthTHUB5HVwJTt4Wktxm7pCQ2dSVrblDcmBss0UX6L
-         rMXEcPfl6rvIMScVC1PYASYJcaoDBaJJYjs1MEHCxvRFdWWC3B3ElGNfoISWPU6Mclc6
-         Q3gQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=cc:to:subject:message-id:date:from:mime-version:dkim-signature;
-        bh=xi1lrbzB7mY07CelQmvsb8STnjNlaaz/aUE/jwlo7Bw=;
-        fh=nwyVtBQbwuqIbAwGdpPvPWoxhMHCQnT7WhtLLZJF/vs=;
-        b=g5HNKkJM1osgPrMbWQpcozrhlDN9Z8iAbWARxU7GzFhgx3PQKCEchmYsBolRCk3Oe1
-         CymGIG5fBJO1i1wW0UPm0HyimlR087qh5wCNMBLitpNbyVKN7uF7/+1c3L9kV24xjtHX
-         gLnXqLZd12z2+rL8PGzhEtSIb2X4JFiBp24s5EO3MDcXdrDiPa2YHCeHWhU8ZN1WYr4s
-         71nvR9412PvaK0yhjottngHdAVjFf/HMkBpp6ygOuU8eD9gSkETILQ6zC1SEYcgrW7H5
-         Q4ZI+0joeAoocK7/w+6iQG5Yz5I/eFQY//ADufgtAOlfBie0erHCPpQm8O09mO8UA+It
-         enbg==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="mu2Qt7+a"
+Received: by mail-pl1-f172.google.com with SMTP id d9443c01a7336-2d8f2ed7bdcso400135ad.2
+        for <linux-pci@vger.kernel.org>; Sat, 29 Aug 2026 02:39:34 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kvisle-no.20251104.gappssmtp.com; s=20251104; t=1787992206; x=1788597006; darn=vger.kernel.org;
-        h=content-type:cc:to:subject:message-id:date:from:mime-version:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=xi1lrbzB7mY07CelQmvsb8STnjNlaaz/aUE/jwlo7Bw=;
-        b=ApEcNALHH17J3xBGHs5FJ9tC7GYyxrDAd6hSImtidWhyGrk9Af1Efxl+FNZ4F9FeMc
-         E0G7zxg1MnG9POQefQp7QsinrWKPRPne7oVCdofV6jH4fqsPKRHYxW/7aITCBzuUSL8k
-         9DpY45MPhsXyEMIZK2JlQTHGglYT8mGw8ug2obdZ652dL/96ozKi/hN621feX2LcboBL
-         yPPTctITknDMOviVxMRTx63hOwQUcQjec0O3Zr6CgCwVZS7vIKb7SdNcTb9Hy20bg0pm
-         pNb/2lmqiXFSe9/ldV/qs74WTKghuQMCIwWjtSb2IBPpSlBDKafuhAuZgkuRDIn3+Npf
-         aPOA==
+        d=gmail.com; s=20251104; t=1787996374; x=1788601174; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=QwISUhSllAbTBUsml1VPg6731YykdVgMhKzGhwZ5KiQ=;
+        b=mu2Qt7+aAdbwrfTdvj+zIcPwvdnxkntmauvhsd5hyjRmtKIsYC+1RI39dFoxCTChsi
+         5CUeW4KheNoBoiB+YrtX284vbdeIxNA35zr4Ymx4l/bfQ+u/BvScC/dScUb4hOa3vaky
+         FGVghA5v6B+2K32U8McN+QNQ0Uaz25tLLRUXT42PgrLZqxjRKSNhXva8/N41qVRAqASB
+         3rRNZPeNKa+fuEi6BfufkL3LuIIhIUZz8yJQ/oXWEEtHY5SZ12atwxgIuaVH06GNGR/u
+         PKnS376LT1JFRDKJr4rD01QW3uig0QYOt4A9+9SwwGiZH4n9t13K1SnNiZqWhUpMEyHL
+         8Q7w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787992206; x=1788597006;
-        h=content-type:cc:to:subject:message-id:date:from:mime-version
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=xi1lrbzB7mY07CelQmvsb8STnjNlaaz/aUE/jwlo7Bw=;
-        b=KZ8CCIfH62RdxSdqzeUoODrXciqXBZZhPZk5EeadtgK/lIeGkzlv9okrD11J2xqxiB
-         Oh6zVZFJedzu3F/7DwYnel9TY6rV59U/0lBbBPdZLhm+rN8QlcikzTej5uaJSQWK+L92
-         NRPxv16kMLGKQAnwy/J2DgFnlcZw/xhdUdjQyxD06MHZMMD6eIXBU7MOpE3mOnO5Xqu4
-         9gcaxNZaJ6uLqx6T1HuGG2rtpwHC675c1GE8Ptqz+03FgN0U2CJGKlm3yPVGbEDQk3EG
-         XqoHF/emN2/JOVIDhIC8balxRte14bh8KUMERF/9zN1XZMnD9UgHJbFAENpvTDTJrAye
-         RLrA==
-X-Gm-Message-State: AFuF++mcimPpgpegKNveVoixeUnEppxDGihiblsORDGmkJFjoJ8IULs1
-	ykquXgMhinqxeOKoz+3i+Y3GifaXUeB7CrVHN0qUxWyl02B314XwyWUQ+F2HIA1ZQ6qvVHxXfJ0
-	Z1cKQLL+qw9d+Y8HKvPLodMcCWuL6D4YA1M4sLTrpAfA6ug2WWXF2FfHCOg==
-X-Gm-Gg: AYBFou0gjkZzmzGQFuWi0DnFgIorBiriEjh+YNoXAiFZsLa7+Tca+nkYBz4xoJoF1/D
-	uq4MGR013W9i+D9TRVoK6HtvcjKlJJoI8s2P+CCb+II1FIuoj+ZWg0g54MN5jPiL6r97O35PNDy
-	2uAKtmz/UO/aPEVjwU/xxGC1LTnZyytNPNpLtP3Oj77iTsObiPo4dNJ/HgWTNeGYBIXI7xggu8Z
-	af2uBfoVpWJOhKVNJxJOzLbEHZYlN/NAvE/LwZnuc+VJFBlVRMZH+qV9feeLYXNcvfoolAnprNw
-	10mZga08BDlvi4rWNgPZpnIWye54U8jmFCCpioJ7AL9nkAPrS0Z69Gi1jLtDwhHLGC+w6NQCDHf
-	VmLuD8mo+qJmIXt8NNgX7Nss/h5/OgtyAwN0=
-X-Received: by 2002:a53:d60e:0:b0:66e:5649:dadf with SMTP id
- 956f58d0204a3-66e5649f34cmr1250166d50.25.1787992206006; Sat, 29 Aug 2026
- 01:30:06 -0700 (PDT)
+        d=1e100.net; s=20251104; t=1787996374; x=1788601174;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=QwISUhSllAbTBUsml1VPg6731YykdVgMhKzGhwZ5KiQ=;
+        b=Z17ppcQu8jseDGCk743GPVTBqlHJ1bdkz6DXJjbaW6MjqGJpXAHlsA56zikyLNDJiR
+         eiiXT6fFI9NdX7RikRF/G2JRYnmaV7KmEo2sRgTqEDQMQEWInejRWBFjivdz3aAKpUB3
+         Roxq8Z8vm5YqUIomW1wXqiL2nIRlOCPi+X0Ppql3xoeO0Pl8zBSQR8feXezjvDoLzd6P
+         GKXvNqosigA1FU73xYDJYOl0Gf0urOJGJNphfGyJlfcr+K5tImC3t8BeT1QhjGPEwGJl
+         ezbv01n7MrfpbYvKPp9ae1yRP8bDxvTLF32D/zrBXXy1MnIert+uzR58P3Z8DUGOMYHG
+         Pw7w==
+X-Forwarded-Encrypted: i=1; AHgh+RpFantqQISoP2i+NZSLbBodfoHbrNwNeYf6YAsEFbYP4FVq8rd7aEvOzGqbBafmJdYzRJYn2Gt8W1s=@vger.kernel.org
+X-Gm-Message-State: AFuF++kL8sdvzowc8kzT6JkLGfHa01Wz/YqDk89lgw0jporg/c8dl2JI
+	9cyMhozQ0so6CIdp2GHGDhAhr9Ryx+75iprBwAAzWjJJnNvqlzHt7EX6
+X-Gm-Gg: AR+sD113lFtkVeTDHdoecpG7bAmKOfo7wK4GN8bkZDFQf0lc1uo2Z2kuncZn+4Xz7va
+	awPw9JXfmD83/BXJxfCQQEPhZyrhVjBb7s7zPE0lMdRz5Tqs/TL4YTmp0tpgxK9joxMT+oZvskx
+	YtTwo34aKoGfnXSEH7iy2JCAB4qIjDgUHEonhBQ1uTMlsHrGTpvEzNCb2vwYqf4Q4mWrzSTph9L
+	sXm0X9tosOyJA8YQdHsSJoLfM62ISwVjdxUpNqyZ1H+N9/zVgkNcHEESUSQrsU9bO2ZnI7NrQ+5
+	l2bSu+7teuJFVl4KGabVXvIuBRAgk2rwXo0/NwFdnzDjRlzTE1ftQYf2TPeGJRrF40O/LKzkGrV
+	Nz1C7ZM+xRqNV1Uk9spHL11JpHwzg5eAmoBm/QRTM3ihmwIt5bYtKPzrFCkmI652mEdNWNmDl0K
+	eEbQ5vdrifqsi+zPZ1fQoDSA6dhqRCeVqIkAOwvbJ4GzBYkEvH2Z8/+8+lBRYzFgakiX2gXcp+O
+	bhOkO4vFatPh3kX5geJPz58JJBvZjyNGw==
+X-Received: by 2002:a17:902:f542:b0:2cf:9e90:8be with SMTP id d9443c01a7336-2d74e0a47b0mr118524575ad.4.1787996374029;
+        Sat, 29 Aug 2026 02:39:34 -0700 (PDT)
+Received: from cachyos-aura ([2409:40f2:3104:d691:c7eb:3b03:2c8d:127f])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-328713b0451sm16446310eec.16.2026.08.29.02.39.27
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 29 Aug 2026 02:39:33 -0700 (PDT)
+From: Navon John Lukose <navonjohnlukose@gmail.com>
+To: nika@nikableh.moe,
+	emmanuel.grumbach@intel.com
+Cc: helgaas@kernel.org,
+	miriam.rachel.korenblit@intel.com,
+	markpearson@lenovo.com,
+	linux-wireless@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Navon John Lukose <navonjohnlukose@gmail.com>,
+	bhelgaas@google.com
+Subject: Re: [PATCH] x86/PCI: Disable D3cold on Intel BE200 Wi-Fi on Lenovo IdeaPad Pro 5 14IAH10
+Date: Sat, 29 Aug 2026 15:09:22 +0530
+Message-ID: <20260829093922.37103-1-navonjohnlukose@gmail.com>
+X-Mailer: git-send-email 2.55.0
+In-Reply-To: <20260729125202.33719-1-nika@nikableh.moe>
+References: <20260722021321.68902-1-nika@nikableh.moe> <20260729125202.33719-1-nika@nikableh.moe>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-From: Lars-Andreas Kvisle <lars@kvisle.no>
-Date: Sat, 29 Aug 2026 10:29:54 +0200
-X-Gm-Features: AcwNN1VBcYGNZEJfZriNfT-E8xd4-tM3M8IxPvLRDxd33WpHd0J6QyoyCnbGjyk
-Message-ID: <CAH12Smk8jRCNtkWb+-6JJUegcYrH73X_Hv3KgnoWyARUMLmEgA@mail.gmail.com>
-Subject: VMD interrupt timing erratum also affects Arrow Lake (8086:7d0b), not
- just MTL
-To: linux-pci@vger.kernel.org
-Cc: nirmal.patel@linux.intel.com, regressions@leemhuis.info
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 
-Hi,
+I hit this on a Lenovo Yoga Pro 7 14IAH10 (BIOS QGCN35WW), same BE200 and
+the same SUBSYS_00F48086 as your lspci dump, with an identical signature.
+I think I can explain why your AML trace looks clean and the link still
+does not train, and why Emmanuel's firmware-reset hunk made no difference.
 
-I'd like to report that the VMD interrupt-timing erratum discussed
-here in September 2024:
+Short version: PERST# alone does not restart this card once the rail has
+been removed, and the reset that does is already implemented in iwlwifi -
+it is just armed too late to ever run.
 
-https://lkml.iu.edu/2409.0/02004.html (PCI: vmd: Delay interrupt
-handling on MTL VMD controller, Kai-Heng Feng, referencing erratum
-MTL016 and bugzilla.kernel.org/show_bug.cgi?id=217871)
+On my machine:
 
-also reproduces on Arrow Lake, not only Meteor Lake. My VMD controller
-PCI ID is 8086:7d0b. I've also posted this as a comment on the
-bugzilla case above with attached logs.
+_PR3 -> PXP._OFF genuinely removes the module's rail; PON() then restores
+power, waits PEP0, enables the source clock and releases PERST#. I checked
+the pins directly via the ACPI GPIO accessors: after resume the power
+enable reads 1 and PERST# is deasserted. So the firmware does everything
+your trace says it does, and the card still does not come back. What does
+bring it back is a third, WLAN-specific reset line reached only through
+_PRR -> <pwrres>._RST.
 
-System: Acer Swift SFG14-74, Intel Core Ultra 7 255H (Arrow Lake-H)
-Kernel: 7.0.0-30-generic (Ubuntu 26.04 LTS)
-NVMe drive: Micron_2500_MTFDKBA1T0QGN, firmware V8MA000
+That _RST is gated:
 
-dmesg (representative sample, full log attached to the bugzilla case):
-[Sat Aug 22 14:43:26 2026] nvme nvme0: I/O tag 257 (1101) QID 2
-timeout, completion polled
-[Sat Aug 22 14:43:28 2026] nvme nvme0: I/O tag 290 (1122) QID 5
-timeout, completion polled
-[Sat Aug 22 14:43:33 2026] nvme nvme0: I/O tag 301 (612d) QID 2
-timeout, completion polled
-[Sat Aug 22 14:43:33 2026] nvme nvme0: I/O tag 312 (8138) QID 5
-timeout, completion polled
+  Method (_RST) {
+      If (RSTY == One) { ...toggle the WLAN reset... }   /* product reset */
+      Else             { DCTR |= 0x8000; }               /* just an FLR   */
+  }
 
-This is the exact "completion polled" signature described in the
-MTL016 erratum discussion -- the driver's timeout watchdog fires,
-polls the completion queue directly, and finds the command had
-actually completed. The drive itself is healthy: smart-log shows
-critical_warning: 0, media_errors: 0, and the error-log's 64 entries
-are all "Successful Completion" -- this rules out a media or
-controller-firmware fault on the NVMe side.
+Disarmed, it degrades to an FLR, i.e. asking a device with no power to
+reset itself over a bus it is not on. That is the fallback that has been
+running all along.
 
-This is disrupting ordinary desktop use, not only heavy-I/O workloads.
-Occurrences do cluster during boot and during sustained heavy I/O
-(video editing with many concurrent streams), but I also regularly see
-unexplained multi-second to tens-of-seconds freezes during completely
-ordinary usage -- Chrome, Nautilus -- with no obvious I/O-heavy
-activity running at the time.
+RSTY is set over the vendor _DSM by iwl_trans_pcie_set_product_reset(),
+which iwlwifi already calls with EN_PROD_RESET|EN_WIFI_FLR|EN_BT_OFF_ON
+for discrete parts. But it is only called from iwl_trans_pcie_removal_wk(),
+once the device is already being torn down, and the _DSM dispatch is gated
+on the firmware reading the device's PCI ID back out of config space:
 
-lspci for the VMD controller: 0000:00:0e.0 RAID bus controller [0104]:
-Intel Corporation Volume Management Device NVMe RAID Controller Intel
-Corporation [8086:7d0b]
+  Method (WIST) { Switch (ToInteger (VDID)) { Case (0x272B8086) {...} } }
 
-I've already ruled out APST/ASPM power-state transitions as the sole
-cause (nvme_core.default_ps_max_latency_us=0 and pcie_aspm=off are
-both active, confirmed via /proc/cmdline and
-/sys/module/nvme_core/parameters/, with no change in occurrence
-frequency). Setting nvme_core.io_timeout=1 masks the user-visible
-symptom (shortens a 30s desktop freeze to a sub-second hiccup) but
-doesn't address the root cause, and under sustained load the
-accumulation of many short stalls still produces a noticeably stuttery
-experience.
+With the rail off VDID reads 0xffffffff, WIST() returns 0, and the arming
+fails:
 
-Since the proposed VMD_FEAT_INTERRUPT_QUIRK fix from the September
-2024 thread appears to be gated per PCI device ID and, as far as I can
-tell from the current mainline vmd.c, was never extended to 8086:7d0b,
-I wanted to flag that Arrow Lake's VMD silicon appears to share this
-erratum. I'm happy to test a patched kernel build and report back -- I
-can reproduce the issue reliably within minutes under sustained I/O
-load, which should make verification straightforward.
+  scheduling reset (mode=6)
+  ACPI _DSM not available (-19), cannot do product reset
 
-Let me know if there's additional diagnostic data that would help
-(full dmesg, nvme error-log, ACPI tables, etc).
+So it can never be armed at the moment it is needed. I confirmed this
+directly: with the device dead, evaluating the set-mode _DSM returns
+success but RSTY stays 0.
+
+Arming at probe instead, while the device still answers, makes the whole
+existing path work. I will post two small iwlwifi patches for this as a
+separate series and link it here. With them my card dies in D3cold on
+every s2idle exactly as before, and comes back on its own in about 5s,
+repeatedly.
+
+Control: with the reset skipped but everything else identical, the device
+stays absent (2/2), and recovers immediately once a real reset is issued.
+So the reset is doing the work, not the remove/rescan.
+
+Emmanuel - to your question, this is not a firmware reset during
+suspend/resume. It only fires when the device is provably not answering
+config cycles, which today is the case where the driver instead spends
+~2s on handshakes with absent hardware and produces a bogus
+ADVANCED_SYSASSERT dump.
+
+Nika - I could not decode LTSM 0x32B either. Worth noting your sibling
+port 00:06.2 reads 0x33/0x40 with its link up, so 0x01 does look like a
+state the port never occupies while trained - but that is just my
+observation, not a decode.
+
+Caveats, so nobody wastes time: tested on one machine and one BIOS, on the
+discrete (!integrated) path only. I have no integrated/CNVi hardware. The
+recovery costs ~4.3s of Sleep() inside the platform's _RST, which is
+firmware and not something we can shorten. And this is recovery rather
+than avoidance - it keeps D3cold and pays a per-resume cost, where the
+quirk in this thread avoids the problem entirely. I have not measured what
+the rail actually saves, so I am not claiming it is the better trade, only
+that the hardware can recover.
 
 Thanks,
-Lars
+Navon
