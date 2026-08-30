@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 819A82FC037;
-	Sun, 30 Aug 2026 11:16:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 39BED2C08BB;
+	Sun, 30 Aug 2026 11:16:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788088608; cv=none; b=A2rAzT/MLvAQK6FiEBUe5kWNyjOTLudhdSgY8ab6uNVIr5LcIogQKAeCDZOhn0UlJRSsWlIXZlxud84WJNkO3XUugtam0rS3N/6dgj9qojqDZJi5YkQJynxwx56jb0tzjaxhZJXYEwDIF6o3eIZI/usd4n++YYXt53vWWiYGv/M=
+	t=1788088613; cv=none; b=Q20k5YvCDIchJiGHoFqtCLqNa8HbC7dbMyOGmvGOei51F7mFcdwvpHEg598We18Pzk0DO6431WTHbszEvTb11gMMCgnv5lYGOIOyypcWbSN68EnpSfBy6UTHJgSTgeVqbcivsWw/qrmPhEf1NRNtrsMB26zXjuJrvn/eZYDGQfs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788088608; c=relaxed/simple;
-	bh=BKpVxp53wFvGlRYRjDhQtPN3mxR0VIrMUa9NIuhosfs=;
+	s=arc-20240116; t=1788088613; c=relaxed/simple;
+	bh=5N7JkjQRgXMOd9K27Ip3vidVUtsrPx/4to79EI7m8lo=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=jXZ5LcM8jXcZWJQB4150CS83HWJ3tUXXSPb3sApNdB299XPgb5AXJ78dho0NbOGrsCoX8+EA3gPnaluGuB015JHq2GKo0zD1Oz7SoQ3LuHhNW9xt9g2BVzhQp5lCetowt5pVuEIFuhdeOqGr/+YMSN6s89qBJ+LkLV1ikNtFXlU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Uglw11Rp; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=smZIS9CYcW4Cf4+X9PJghN0X4vN+jdf+5akzbbkaq+XURfbu2d2SnHBLIA1NYAJHQSCUM23ks5R7Lp5SQttl7a/+LekpXUshgiqZALFhrpQTxdPkLsJld+1YY2vy8FxCTIUCeQGgD39mKP4ussN4lssHUgXFWIBQVeOq0h7kbLM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fU8LPYwU; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Uglw11Rp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4E6241F00A3D;
-	Sun, 30 Aug 2026 11:16:46 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fU8LPYwU"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 09A1C1F000E9;
+	Sun, 30 Aug 2026 11:16:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788088607;
-	bh=sPzYy38ih5YMqJ5osvNb82dFMuSh9qJRODkldCZTot8=;
+	s=k20260515; t=1788088611;
+	bh=vEfiAdgfV9OK268PtYpN2GbfHnKznFcN2c5SD+05258=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=Uglw11RpgG+CSUd1sOEOYcc+mZdTBZX46mXKW0z/LMfbzB0+4yIagvH5Byu8hzeoU
-	 vq/LF1PPMqNgZBcfW7sLaCMozjZlqg8mhzEE38hDtUwzu6KURUtKLDw6Ec07Yj4zZH
-	 g7mL4/h5vwm7m9qTQbjwfe60SNnVhRWvTw/sBcDyZzC2m6RaTAtBRPrvq8E7V37SnV
-	 ks/txDaJlzcIo5Mkv7nMuXcqJiqQsGKkGUQiTeRvsXhlLMK5qdznK6sUpngC1Jw4h+
-	 7vPldfxKBpnRrSexmf8RRbIcLqSbIZ57PZq/gJrgo626TkzPm7gKJz+yZvNTdmM5Ej
-	 SwqNsJqBIXfZA==
+	b=fU8LPYwUYnp7VkN63nSlcPS42IRhxLi9p2lF4B7HSyISrBTidREwRWVihQA4pxE49
+	 li7PZ/HCSbGkoh+XsAvjYA9eotHT+JAEQYhrmq3W+l0dL1BGAnVzmG16I5cqh4mlia
+	 /IN0gqI7HMulyBQrQC1ehXItFMiWNndIAqBRrBQTD2ZrguVzJ/7GkFSuSoh/cCWXLp
+	 GhuEpLd+QH6aZCTge9u2h73PBdbWKa61i92I/RbU0CuAlzjQKuyx1fRwcV2zRi9A8J
+	 vq8RRU02eA1S9wDs0MJ07TobU6tfjPcQh+gIfce8bx78YAu8W8RyZDq6RWcTjh13u5
+	 0q7wd55t/1U4Q==
 From: Leon Romanovsky <leon@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
 	Logan Gunthorpe <logang@deltatee.com>,
@@ -40,9 +40,9 @@ Cc: linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Tushar Dave <tdave@nvidia.com>,
 	Jason Gunthorpe <jgg@nvidia.com>
-Subject: [PATCH 3/5] PCI/P2PDMA: Restrict the p2pmem search to pool backed providers
-Date: Sun, 30 Aug 2026 14:16:21 +0300
-Message-ID: <20260830-batch-p2p-fixes-v1-3-5044e8dfbe2e@nvidia.com>
+Subject: [PATCH 4/5] PCI/P2PDMA: Safely terminate ACS redirect lists
+Date: Sun, 30 Aug 2026 14:16:22 +0300
+Message-ID: <20260830-batch-p2p-fixes-v1-4-5044e8dfbe2e@nvidia.com>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260830-batch-p2p-fixes-v1-0-5044e8dfbe2e@nvidia.com>
 References: <20260830-batch-p2p-fixes-v1-0-5044e8dfbe2e@nvidia.com>
@@ -58,52 +58,43 @@ Content-Transfer-Encoding: 8bit
 
 From: Leon Romanovsky <leonro@nvidia.com>
 
-pci_p2pmem_find_many() exists to pick a provider that the caller will
-then allocate from with pci_alloc_p2pmem(), which goes straight to the
-gen_pool:
+seq_buf marks an overflow by setting len to size + 1. The ACS diagnostic
+path unconditionally writes a terminator to buffer[len - 1], so a path
+with enough ACS ports to fill the 128-byte buffer writes one byte beyond
+the buffer when verbose diagnostics are requested.
 
-	ret = (void *)gen_pool_alloc_owner(p2pdma->pool, size, (void **) &ref);
+Use seq_buf_str() to terminate truncated output safely and remove the final
+semicolon only when the buffer did not overflow.
 
-pci_has_p2pmem() does not ask for that pool, only for the published flag.
-The two used to be equivalent, because a provider could only exist by way
-of pci_p2pdma_add_resource(), which always creates the pool.
-
-pcim_p2pdma_init() broke that. It registers a provider for the DMABUF
-path and never creates a pool, so pdev->p2pdma is set while
-p2pdma->pool stays NULL. Nothing publishes such a provider today, so the
-search cannot return one yet, but the flag alone no longer says what the
-caller needs.
-
-Ask for the pool as well, so the search covers the providers its result
-is used for. A later patch documents the pdev->p2pdma lifetime and RCU
-rules.
-
+Fixes: 52916982af48 ("PCI/P2PDMA: Support peer-to-peer memory")
 Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
 Reviewed-by: Jason Gunthorpe <jgg@nvidia.com>
 Tested-by: Tushar Dave <tdave@nvidia.com>
 Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
 ---
- drivers/pci/p2pdma.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ drivers/pci/p2pdma.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
-index 52974809e1e1..914848a993ba 100644
+index 914848a993ba..becc869cbc17 100644
 --- a/drivers/pci/p2pdma.c
 +++ b/drivers/pci/p2pdma.c
-@@ -868,7 +868,12 @@ static bool pci_has_p2pmem(struct pci_dev *pdev)
+@@ -772,11 +772,13 @@ calc_map_type_and_dist(struct pci_dev *provider, struct pci_dev *client,
+ 	}
  
- 	rcu_read_lock();
- 	p2pdma = rcu_dereference(pdev->p2pdma);
--	res = p2pdma && p2pdma->p2pmem_published;
-+	/*
-+	 * The callers hand the result to pci_alloc_p2pmem(), so only a
-+	 * provider backed by a pool is of any use here. pcim_p2pdma_init()
-+	 * creates providers without one.
-+	 */
-+	res = p2pdma && p2pdma->pool && p2pdma->p2pmem_published;
- 	rcu_read_unlock();
+ 	if (verbose) {
+-		acs_list.buffer[acs_list.len-1] = 0; /* drop final semicolon */
++		/* Drop the final semicolon; the list is not empty here. */
++		if (!seq_buf_has_overflowed(&acs_list))
++			acs_list.buffer[acs_list.len - 1] = '\0';
+ 		pci_warn(client, "ACS redirect is set between the client and provider (%s)\n",
+ 			 pci_name(provider));
+ 		pci_warn(client, "to disable ACS redirect for this path, add the kernel parameter: pci=disable_acs_redir=%s\n",
+-			 acs_list.buffer);
++			 seq_buf_str(&acs_list));
+ 	}
+ 	acs_redirects = true;
  
- 	return res;
 
 -- 
 2.55.0
