@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 39BED2C08BB;
-	Sun, 30 Aug 2026 11:16:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BDCE33911B2;
+	Sun, 30 Aug 2026 11:16:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788088613; cv=none; b=Q20k5YvCDIchJiGHoFqtCLqNa8HbC7dbMyOGmvGOei51F7mFcdwvpHEg598We18Pzk0DO6431WTHbszEvTb11gMMCgnv5lYGOIOyypcWbSN68EnpSfBy6UTHJgSTgeVqbcivsWw/qrmPhEf1NRNtrsMB26zXjuJrvn/eZYDGQfs=
+	t=1788088617; cv=none; b=emINDZq10BAUVhQjaL6RLpzcppWShfgQ0nLB5w9FPefe47iA+0kvw3rARd4dxZHXERIiluQ7537sH9N/jaE8ccSkpEiBrToCJxwHynp8FJtIdfa1lPQqFFp/wKgRU+VavfyfZwpAKgIumy8xrvXS8BFehTakBuP0Vh93iNVnlIQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788088613; c=relaxed/simple;
-	bh=5N7JkjQRgXMOd9K27Ip3vidVUtsrPx/4to79EI7m8lo=;
+	s=arc-20240116; t=1788088617; c=relaxed/simple;
+	bh=BgPyX35b9suPNW2T4JOwnyvPa21cbCukwwK56ZZK7SA=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=smZIS9CYcW4Cf4+X9PJghN0X4vN+jdf+5akzbbkaq+XURfbu2d2SnHBLIA1NYAJHQSCUM23ks5R7Lp5SQttl7a/+LekpXUshgiqZALFhrpQTxdPkLsJld+1YY2vy8FxCTIUCeQGgD39mKP4ussN4lssHUgXFWIBQVeOq0h7kbLM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fU8LPYwU; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=IgOy0Y4loLM4zILl40OSXssmzyy9bQv2MN8kKcgUX2FDrGY7rkRD6gqLco6PJJ8YXQUhqEeECD4wHKAZ1fyO1X28XT7Mtkxp110vhcUXzYdLIIERJl5JHC6PRuQZDtgVWNSOeNfFN9mU5K6eA6WHLLUoy3V/668mSznmecLW7tA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fU2FB3Ms; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fU8LPYwU"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 09A1C1F000E9;
-	Sun, 30 Aug 2026 11:16:50 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fU2FB3Ms"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B11A11F000E9;
+	Sun, 30 Aug 2026 11:16:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788088611;
-	bh=vEfiAdgfV9OK268PtYpN2GbfHnKznFcN2c5SD+05258=;
+	s=k20260515; t=1788088615;
+	bh=Lc5Iaug9KuYhX8qYuPq3mQvPE1l5alFIeiwqy+WRyOs=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=fU8LPYwUYnp7VkN63nSlcPS42IRhxLi9p2lF4B7HSyISrBTidREwRWVihQA4pxE49
-	 li7PZ/HCSbGkoh+XsAvjYA9eotHT+JAEQYhrmq3W+l0dL1BGAnVzmG16I5cqh4mlia
-	 /IN0gqI7HMulyBQrQC1ehXItFMiWNndIAqBRrBQTD2ZrguVzJ/7GkFSuSoh/cCWXLp
-	 GhuEpLd+QH6aZCTge9u2h73PBdbWKa61i92I/RbU0CuAlzjQKuyx1fRwcV2zRi9A8J
-	 vq8RRU02eA1S9wDs0MJ07TobU6tfjPcQh+gIfce8bx78YAu8W8RyZDq6RWcTjh13u5
-	 0q7wd55t/1U4Q==
+	b=fU2FB3MscpdV26VVD0Aony0aB6ijppmBXgYaAmN3LLKIuPff28UgmMyhfCJ0o7M9D
+	 hy+u8mGBqhau7p5YdMjI2j9inB598HVbvAGRR2PMeTMDNhO8Icc0cPRPbOf7m0hfd4
+	 5XHAgD584gHRD1egBcPXEOutXngd5TPwa6lplTgLwHOV7HqOxVdH1nXe6g8+NgKz+t
+	 1HNv5v6GCXfAmJIa1tRDVUY5jnNiqBdXhgwUrxExGAuSoZ5c4yAPTplYUfejP/gmrG
+	 ks3D9Nw73PxaOHz0/9UMpnIKGKFpz6Y193RJx92Vt74gGKVZZsSN8ShlUfQmJhov2m
+	 EGfk70WqpVPwg==
 From: Leon Romanovsky <leon@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
 	Logan Gunthorpe <logang@deltatee.com>,
@@ -40,9 +40,9 @@ Cc: linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Tushar Dave <tdave@nvidia.com>,
 	Jason Gunthorpe <jgg@nvidia.com>
-Subject: [PATCH 4/5] PCI/P2PDMA: Safely terminate ACS redirect lists
-Date: Sun, 30 Aug 2026 14:16:22 +0300
-Message-ID: <20260830-batch-p2p-fixes-v1-4-5044e8dfbe2e@nvidia.com>
+Subject: [PATCH 5/5] PCI/P2PDMA: Gate the host bridge whitelist warning on verbose
+Date: Sun, 30 Aug 2026 14:16:23 +0300
+Message-ID: <20260830-batch-p2p-fixes-v1-5-5044e8dfbe2e@nvidia.com>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260830-batch-p2p-fixes-v1-0-5044e8dfbe2e@nvidia.com>
 References: <20260830-batch-p2p-fixes-v1-0-5044e8dfbe2e@nvidia.com>
@@ -58,43 +58,75 @@ Content-Transfer-Encoding: 8bit
 
 From: Leon Romanovsky <leonro@nvidia.com>
 
-seq_buf marks an overflow by setting len to size + 1. The ACS diagnostic
-path unconditionally writes a terminator to buffer[len - 1], so a path
-with enough ACS ports to fill the 128-byte buffer writes one byte beyond
-the buffer when verbose diagnostics are requested.
+calc_map_type_and_dist() prints every other diagnostic under its verbose
+argument, but reaches the "Host bridge not in P2PDMA whitelist" warning
+through host_bridge_whitelist(), which it hands acs_redirects instead.
+A caller that asked for a silent answer still gets the warning whenever
+any port on the path has an ACS redirect bit set, the CPU is not
+whitelisted by cpu_supports_p2pdma(), and the host bridge is not in
+pci_p2pdma_whitelist[].
 
-Use seq_buf_str() to terminate truncated output safely and remove the final
-semicolon only when the buffer did not overflow.
+pci_p2pmem_find_many() is such a caller. It sweeps every device with
+published p2pmem and asks for the distance to each client with
+verbose=false, and pci_p2pdma_distance_many() recomputes rather than
+consulting the map_types cache, so the warning repeats on every sweep.
 
-Fixes: 52916982af48 ("PCI/P2PDMA: Support peer-to-peer memory")
-Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
+The argument was never meant to say "ACS redirects were found". When
+commit cf201bfe8cdc ("PCI/P2PDMA: Warn if host bridge not in whitelist")
+added it, acs_redirects was a bool pointer that the quiet entry point
+passed as NULL:
+
+	if (verbose)
+		map = calc_map_type_and_dist_warn(provider, pci_client,
+						  &distance);
+	else
+		map = calc_map_type_and_dist(provider, pci_client,
+					     &distance, NULL, NULL);
+
+so the argument was true on exactly the path that commit describes.
+Folding the two entry points into one verbose flag turned the pointer
+into a value and left the call site alone, silently narrowing the
+warning to paths that carry an ACS redirect.
+
+Pass verbose. This also restores the warning for a verbose caller that
+takes the host bridge route with no ACS redirect on the path, which
+until now was told it could not use peer-to-peer DMA without being told
+which vendor and device would have to be added to the whitelist.
+
+Fixes: d1b8dc09dd71 ("PCI/P2PDMA: Simplify distance calculation")
 Reviewed-by: Jason Gunthorpe <jgg@nvidia.com>
+Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
 Tested-by: Tushar Dave <tdave@nvidia.com>
 Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
 ---
- drivers/pci/p2pdma.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ drivers/pci/p2pdma.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
 diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
-index 914848a993ba..becc869cbc17 100644
+index becc869cbc17..349537b4fa42 100644
 --- a/drivers/pci/p2pdma.c
 +++ b/drivers/pci/p2pdma.c
-@@ -772,11 +772,13 @@ calc_map_type_and_dist(struct pci_dev *provider, struct pci_dev *client,
- 	}
- 
- 	if (verbose) {
--		acs_list.buffer[acs_list.len-1] = 0; /* drop final semicolon */
-+		/* Drop the final semicolon; the list is not empty here. */
-+		if (!seq_buf_has_overflowed(&acs_list))
-+			acs_list.buffer[acs_list.len - 1] = '\0';
- 		pci_warn(client, "ACS redirect is set between the client and provider (%s)\n",
- 			 pci_name(provider));
+@@ -709,7 +709,6 @@ calc_map_type_and_dist(struct pci_dev *provider, struct pci_dev *client,
+ {
+ 	enum pci_p2pdma_map_type map_type = PCI_P2PDMA_MAP_THRU_HOST_BRIDGE;
+ 	struct pci_dev *a = provider, *b = client, *bb;
+-	bool acs_redirects = false;
+ 	struct pci_p2pdma *p2pdma;
+ 	struct seq_buf acs_list;
+ 	int acs_cnt = 0;
+@@ -780,11 +779,10 @@ calc_map_type_and_dist(struct pci_dev *provider, struct pci_dev *client,
  		pci_warn(client, "to disable ACS redirect for this path, add the kernel parameter: pci=disable_acs_redir=%s\n",
--			 acs_list.buffer);
-+			 seq_buf_str(&acs_list));
+ 			 seq_buf_str(&acs_list));
  	}
- 	acs_redirects = true;
+-	acs_redirects = true;
  
+ map_through_host_bridge:
+ 	if (!cpu_supports_p2pdma() &&
+-	    !host_bridge_whitelist(provider, client, acs_redirects)) {
++	    !host_bridge_whitelist(provider, client, verbose)) {
+ 		if (verbose)
+ 			pci_warn(client, "cannot be used for peer-to-peer DMA as the client and provider (%s) do not share an upstream bridge or whitelisted host bridge\n",
+ 				 pci_name(provider));
 
 -- 
 2.55.0
