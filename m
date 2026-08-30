@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E17E42A80;
-	Sun, 30 Aug 2026 11:16:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 819A82FC037;
+	Sun, 30 Aug 2026 11:16:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788088604; cv=none; b=l7Z/zhBZs1sZpAqI6rW0nK88CtQSBhLFNf0As6DT0iujSjElSvSifMzEFT2YKh0V3grGvyrFebdpgyYfOepYIUHty2eemT1K9WctntJPydhdljnSvA2UTtuZEjkb6hWLCXs/ULShmx9lIxU+/ekeLB3e2Bqr9bJIlhqyNdHvLe0=
+	t=1788088608; cv=none; b=A2rAzT/MLvAQK6FiEBUe5kWNyjOTLudhdSgY8ab6uNVIr5LcIogQKAeCDZOhn0UlJRSsWlIXZlxud84WJNkO3XUugtam0rS3N/6dgj9qojqDZJi5YkQJynxwx56jb0tzjaxhZJXYEwDIF6o3eIZI/usd4n++YYXt53vWWiYGv/M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788088604; c=relaxed/simple;
-	bh=MxPchrCGEnW8Fn2Tx11QUCAyap0JeYiS+ef/9Em0MDs=;
+	s=arc-20240116; t=1788088608; c=relaxed/simple;
+	bh=BKpVxp53wFvGlRYRjDhQtPN3mxR0VIrMUa9NIuhosfs=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=lZZ4FQfp7ArDkhyiPZfQ6tgoeQ1sUyc/3rg3U1BNK6L5tXM2xQdIlcc48PypO+6dUsqyMhRthcMXCkg3VK1WZZjTEYzMw39xt1F7X2OiLPzImkJhhsFxkvFjmn855VZoISeboEiuluwXgURIJa9OIevEf/epvvdbFJnJnT5NhMw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HTovb9nP; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=jXZ5LcM8jXcZWJQB4150CS83HWJ3tUXXSPb3sApNdB299XPgb5AXJ78dho0NbOGrsCoX8+EA3gPnaluGuB015JHq2GKo0zD1Oz7SoQ3LuHhNW9xt9g2BVzhQp5lCetowt5pVuEIFuhdeOqGr/+YMSN6s89qBJ+LkLV1ikNtFXlU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Uglw11Rp; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HTovb9nP"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 51A771F000E9;
-	Sun, 30 Aug 2026 11:16:42 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Uglw11Rp"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4E6241F00A3D;
+	Sun, 30 Aug 2026 11:16:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788088603;
-	bh=Bl5Y80X30qdvcME+5ilD24BMrm2KAas3+maUv1puLFs=;
+	s=k20260515; t=1788088607;
+	bh=sPzYy38ih5YMqJ5osvNb82dFMuSh9qJRODkldCZTot8=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=HTovb9nPdUhkyuJB3P2YrINrK/gcsVxxjZUwISCKLwgbU0asgyHwLeLJ9P4nFdkRv
-	 cD7jwjjhKkqeo378pMbJTA95CU0ZSP6YVgd3kTJTaroov6XG+CG5cRXyGw/k5hvL9B
-	 tgQeQdsbAjCKRztlf2PFsNDKwrgjIBTM93DaiCMiZdKG/2kgaIGMq1mkB5TS/TmfPK
-	 IYS6K4U5za9+UMc2c6koCiN7GLIvXR/M2AX0O2gQw6hmp8Myqr36nf72Ks8pSM05Yo
-	 OOrHSS+w6HJxZJXIC4Kdmfr01dc/PEcg4kTOR+V30KQGUcz7OwuLqywuvFFxH+0GFE
-	 lRLsjp4l/8B+Q==
+	b=Uglw11RpgG+CSUd1sOEOYcc+mZdTBZX46mXKW0z/LMfbzB0+4yIagvH5Byu8hzeoU
+	 vq/LF1PPMqNgZBcfW7sLaCMozjZlqg8mhzEE38hDtUwzu6KURUtKLDw6Ec07Yj4zZH
+	 g7mL4/h5vwm7m9qTQbjwfe60SNnVhRWvTw/sBcDyZzC2m6RaTAtBRPrvq8E7V37SnV
+	 ks/txDaJlzcIo5Mkv7nMuXcqJiqQsGKkGUQiTeRvsXhlLMK5qdznK6sUpngC1Jw4h+
+	 7vPldfxKBpnRrSexmf8RRbIcLqSbIZ57PZq/gJrgo626TkzPm7gKJz+yZvNTdmM5Ej
+	 SwqNsJqBIXfZA==
 From: Leon Romanovsky <leon@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
 	Logan Gunthorpe <logang@deltatee.com>,
@@ -40,9 +40,9 @@ Cc: linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Tushar Dave <tdave@nvidia.com>,
 	Jason Gunthorpe <jgg@nvidia.com>
-Subject: [PATCH 1/5] PCI/P2PDMA: Do not tear down the allocate attribute on registration failure
-Date: Sun, 30 Aug 2026 14:16:19 +0300
-Message-ID: <20260830-batch-p2p-fixes-v1-1-5044e8dfbe2e@nvidia.com>
+Subject: [PATCH 3/5] PCI/P2PDMA: Restrict the p2pmem search to pool backed providers
+Date: Sun, 30 Aug 2026 14:16:21 +0300
+Message-ID: <20260830-batch-p2p-fixes-v1-3-5044e8dfbe2e@nvidia.com>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260830-batch-p2p-fixes-v1-0-5044e8dfbe2e@nvidia.com>
 References: <20260830-batch-p2p-fixes-v1-0-5044e8dfbe2e@nvidia.com>
@@ -58,79 +58,52 @@ Content-Transfer-Encoding: 8bit
 
 From: Leon Romanovsky <leonro@nvidia.com>
 
-pci_p2pdma_add_resource() installs pci_p2pdma_unmap_mappings() as a devres
-action with the devres allocated p2p_pgmap as its data, and only then adds
-the range to the pool:
+pci_p2pmem_find_many() exists to pick a provider that the caller will
+then allocate from with pci_alloc_p2pmem(), which goes straight to the
+gen_pool:
 
-	error = devm_add_action_or_reset(&pdev->dev, pci_p2pdma_unmap_mappings,
-					 p2p_pgmap);
-	if (error)
-		goto pages_free;
+	ret = (void *)gen_pool_alloc_owner(p2pdma->pool, size, (void **) &ref);
 
-	p2pdma = rcu_dereference_protected(pdev->p2pdma, 1);
-	error = gen_pool_add_owner(p2pdma->pool, ...);
-	if (error)
-		goto pages_free;
+pci_has_p2pmem() does not ask for that pool, only for the published flag.
+The two used to be equivalent, because a provider could only exist by way
+of pci_p2pdma_add_resource(), which always creates the pool.
 
-The action removes the allocate attribute for the whole device, which
-tears down existing userspace mappings of every BAR already registered on
-it. Both failures here get that wrong, in opposite ways.
+pcim_p2pdma_init() broke that. It registers a provider for the DMABUF
+path and never creates a pool, so pdev->p2pdma is set while
+p2pdma->pool stays NULL. Nothing publishes such a provider today, so the
+search cannot return one yet, but the flag alone no longer says what the
+caller needs.
 
-devm_add_action_or_reset() runs the action when it cannot allocate its
-devres node, so an -ENOMEM while registering a second BAR unmaps the
-first one. Use devm_add_action() and let the error path unwind only what
-this call created.
+Ask for the pool as well, so the search covers the providers its result
+is used for. A later patch documents the pdev->p2pdma lifetime and RCU
+rules.
 
-gen_pool_add_owner() allocates a chunk and can also fail with -ENOMEM.
-There the action is registered, and the error path frees p2p_pgmap with
-devm_kfree() while leaving the action pointing at it. On unbind devres
-runs the action and pci_p2pdma_unmap_mappings() dereferences
-p2p_pgmap->mem->owner->kobj, which is freed memory. Give that failure its
-own label and drop the action with devm_remove_action(), which removes it
-without running it.
-
-Fixes: 7e9c7ef83d78 ("PCI/P2PDMA: Allow userspace VMA allocations through sysfs")
-Fixes: f58ef9d1d135 ("PCI/P2PDMA: Separate the mmap() support from the core logic")
 Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
 Reviewed-by: Jason Gunthorpe <jgg@nvidia.com>
 Tested-by: Tushar Dave <tdave@nvidia.com>
 Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
 ---
- drivers/pci/p2pdma.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+ drivers/pci/p2pdma.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
-index 9334eb314663..8124bcebfa2d 100644
+index 52974809e1e1..914848a993ba 100644
 --- a/drivers/pci/p2pdma.c
 +++ b/drivers/pci/p2pdma.c
-@@ -440,8 +440,8 @@ int pci_p2pdma_add_resource(struct pci_dev *pdev, int bar, size_t size,
- 		goto pgmap_free;
- 	}
+@@ -868,7 +868,12 @@ static bool pci_has_p2pmem(struct pci_dev *pdev)
  
--	error = devm_add_action_or_reset(&pdev->dev, pci_p2pdma_unmap_mappings,
--					 p2p_pgmap);
-+	error = devm_add_action(&pdev->dev, pci_p2pdma_unmap_mappings,
-+				p2p_pgmap);
- 	if (error)
- 		goto pages_free;
+ 	rcu_read_lock();
+ 	p2pdma = rcu_dereference(pdev->p2pdma);
+-	res = p2pdma && p2pdma->p2pmem_published;
++	/*
++	 * The callers hand the result to pci_alloc_p2pmem(), so only a
++	 * provider backed by a pool is of any use here. pcim_p2pdma_init()
++	 * creates providers without one.
++	 */
++	res = p2pdma && p2pdma->pool && p2pdma->p2pmem_published;
+ 	rcu_read_unlock();
  
-@@ -451,13 +451,15 @@ int pci_p2pdma_add_resource(struct pci_dev *pdev, int bar, size_t size,
- 			range_len(&pgmap->range), dev_to_node(&pdev->dev),
- 			&pgmap->ref);
- 	if (error)
--		goto pages_free;
-+		goto mappings_remove;
- 
- 	pci_info(pdev, "added peer-to-peer DMA memory %#llx-%#llx\n",
- 		 pgmap->range.start, pgmap->range.end);
- 
- 	return 0;
- 
-+mappings_remove:
-+	devm_remove_action(&pdev->dev, pci_p2pdma_unmap_mappings, p2p_pgmap);
- pages_free:
- 	devm_memunmap_pages(&pdev->dev, pgmap);
- pgmap_free:
+ 	return res;
 
 -- 
 2.55.0
