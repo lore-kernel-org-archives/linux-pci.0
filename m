@@ -1,48 +1,48 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.18])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.8])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0F8BBA3D;
-	Sun, 30 Aug 2026 07:22:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29B337082D;
+	Sun, 30 Aug 2026 07:22:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.8
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788074529; cv=none; b=n/ZmH62WN9WH8d4ytq1iByoyko/4Mm6krihOqk9g0WO6sljT0HNY9jp5D4iFq4wjkPbBiMYGBCx5IdbL3QFlMrHnqZdjHoQu/H9HMO3yBVSBdM0kedpVr9hxPxx70ER28c89ykre7joElmZ7wp649fB/gMgYXpYM9En8terLyGQ=
+	t=1788074556; cv=none; b=g9FaQ9tSSOP9n4ywuANzWx97Fti/0cgqDv7R7MHT67rD4imF/v2/s0XYybyjWU8rqOil91wLNGMnaEJoq4aeYlI9pb0lHtnzQ640Z4Bpo3xZV/nSu+pa9EA7+S7IfnmkDcBEg8SbMcrjBgdF1JrYRkywQMCVioCZMDpBJCBy9ME=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788074529; c=relaxed/simple;
-	bh=0IRzBSt4eT9lZudaOi0rawYsLP13G2f+Dg+z1fvfCy0=;
+	s=arc-20240116; t=1788074556; c=relaxed/simple;
+	bh=jUegJOR4pPawE5ph/mewC+UoL2k0Lo4ladFvM+3M7vk=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=TMhr7KwOSsooUVKwIFtHnOjvsZZMuCAX+POHZWWZmwbZ1Jpd1Fyes7jk1f/CAB9EsvUfciq0upjoByYrHpdQ6awLsqbdZTfE4YQKz+xTJ8rj51QU7y1rzZGJHKhbsCetDYVRNpO1tkvWGI3ggVaM1KAD/bbfUFe9bCq9T7XH5mM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=anDiVqEH; arc=none smtp.client-ip=192.198.163.18
+	 MIME-Version; b=Gh5aV1GGHZASB3V3BWLq6tVLS6m5LY/LEIZUzZ6pmu2GOrGS3TDEQW4Na4mgD6RuemmjhVUsyh1iNCJbQjEebgXtpp/73Smk0C7NYUM+hzKDoUz4ckVGNJtc++LJa/nJx9HNQrZECQKcD0w+qx2HkcrlNt9ghX35cF4EwFU+ckk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=csoZ0JEj; arc=none smtp.client-ip=192.198.163.8
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="anDiVqEH"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="csoZ0JEj"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1788074528; x=1819610528;
+  t=1788074555; x=1819610555;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=0IRzBSt4eT9lZudaOi0rawYsLP13G2f+Dg+z1fvfCy0=;
-  b=anDiVqEHWTaOa6sDVipNHgvF2Mn/qrsjcE4w4sUl+CZkbHJjH3bbwHiS
-   UD/9ZQjmusLorTx3Ek05vuYb7tb4elYV7DSbCtbZ5RhuFvgUjSlHzRANY
-   Zv6NZ3abmSWEpcFlE8RIjFcxEgy+w1yDk5pk/arkvsW+sQzBdzfqgnjWm
-   qRXw7rvY84F5kxh03jotmCLtiHWo0Krprr36dpgX3I3Y3rS3VkfPKflVe
-   +owW72cG1myfqrshUcKoOz940X9FiK6gi0S1U/u6snZ58Eh3gL+roPe5V
-   1z/nC1acHEnO+vC6cymZAhHfj+B/s060u7vKC/trsG5R5ZGjEaB+tUbEY
-   A==;
-X-CSE-ConnectionGUID: FUWvhyFMTpGE0+QxiT1wKw==
-X-CSE-MsgGUID: 8+6r7EDmS7e8N2Sa7fpzYw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11890"; a="87648935"
+  bh=jUegJOR4pPawE5ph/mewC+UoL2k0Lo4ladFvM+3M7vk=;
+  b=csoZ0JEj07VGHDOaRPoShZ/Qszcf/1rIaVT0mh/b2b9ywQMC+dFmE12J
+   iJCEaGAhrQOXuVOAyXZAH7ceViLCd8ZCDgSOl5xVF85BIXl8AfTqo4TXw
+   x0twpiQd5u+FeORSv80nxRsHff0ZIAKiynFe4QDyU6IEMBra34UFvh5YB
+   +SWlorUgm2hjG/p5MlRs5xxHms5ZnLRv9BjQSftmIzuNlBfirusxoX/02
+   jShJ3370nJrqSvWAFCHPX4UVgkb5iergTg5mT5nkUKwSNaCmM8qSo6N+B
+   6FnLUNqSsooF5gMfytpM4xEu+GwAWNooUpGcX8WTOBnY0c8KAgSXZNuaD
+   w==;
+X-CSE-ConnectionGUID: /QjcBvrjRc2a8kNpDrmrsw==
+X-CSE-MsgGUID: YLUvvilfS+yZgCAdQqH8Bw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11890"; a="106041839"
 X-IronPort-AV: E=Sophos;i="6.25,251,1779174000"; 
-   d="scan'208";a="87648935"
-Received: from orviesa006.jf.intel.com ([10.64.159.146])
-  by fmvoesa112.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Aug 2026 00:22:07 -0700
-X-CSE-ConnectionGUID: woQLyEEFQLauLj2+pTY8lg==
-X-CSE-MsgGUID: azVJ2Ex6QNmQrox5/86hyw==
+   d="scan'208";a="106041839"
+Received: from orviesa001.jf.intel.com ([10.64.159.141])
+  by fmvoesa102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Aug 2026 00:22:34 -0700
+X-CSE-ConnectionGUID: 2yD5x09dT5KrKbnDj/aPEQ==
+X-CSE-MsgGUID: bKN3jF5FTTCcgMQMy+AIvA==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.25,251,1779174000"; 
-   d="scan'208";a="266710378"
+   d="scan'208";a="306759943"
 Received: from junjie-desk-dev.bj.intel.com (HELO junjie-desk-dev.tail2c02c1.ts.net) ([10.238.152.71])
-  by orviesa006-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Aug 2026 00:22:04 -0700
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Aug 2026 00:22:31 -0700
 From: Junjie Cao <junjie.cao@intel.com>
 To: Shrihari E S <shrihari.s@samsung.com>
 Cc: jic23@kernel.org,
@@ -59,12 +59,12 @@ Cc: jic23@kernel.org,
 	linux-cxl@vger.kernel.org,
 	linux-pci@vger.kernel.org,
 	qemu-devel@nongnu.org
-Subject: Re: [RFC V2 06/10] hw/pci: Add PCIe Streamlined Virtual Channel (SVC) capability.
-Date: Sun, 30 Aug 2026 15:21:44 +0800
-Message-ID: <20260830072144.399508-1-junjie.cao@intel.com>
+Subject: Re: [RFC V2 07/10] hw/pci: hw/cxl: Wire SVC initialization into port realize functions.
+Date: Sun, 30 Aug 2026 15:22:09 +0800
+Message-ID: <20260830072209.399529-1-junjie.cao@intel.com>
 X-Mailer: git-send-email 2.43.0
-In-Reply-To: <1212772528.01787732282387.JavaMail.epsvc@epcpadp2new>
-References: <1212772528.01787732282387.JavaMail.epsvc@epcpadp2new>
+In-Reply-To: <111374580.41787732282793.JavaMail.epsvc@epcpadp2new>
+References: <111374580.41787732282793.JavaMail.epsvc@epcpadp2new>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -75,60 +75,65 @@ Content-Transfer-Encoding: 8bit
 
 Hi Shrihari,
 
-On Wed, 26 Aug 2026 11:04:06 +0530, Shrihari E S wrote:
-> +            /*
-> +             * SVC3 is only meant for UIO TLPs and The non-UIO protocol 0000
-> +             * should be for VC0 only. Also checking the TC-VC mapping.
-> +             */
-> +            if ((i == 3) || (res_ctrl & PCI_SVC_VC0_PROTOCOL) ||
-> +                 !(res_ctrl & BIT(i))) {
-> +                valid = false;
-> +            }
+On Wed, 26 Aug 2026 11:04:07 +0530, Shrihari E S wrote:
+> +    if (p->svc) {
+> +        rc = pcie_svc_cap_init(d, CXL_UPSTREAM_PORT_SVC_OFFSET, errp);
+> +        if (p->flitmode && rc >= 0) {
+> +            usp->uio_capable = true;
+> +        }
+> +    }
 
-PCI_SVC_VC0_PROTOCOL is (0x0 << 8), so "res_ctrl & PCI_SVC_VC0_PROTOCOL"
-is always 0 and the protocol-0000 rejection this comment describes can
-never fire.  I tested it: wrote 0x80000010 (VC Enable | TC/VC map bit 4,
-protocol select = 0000) to the VC4 Resource Control register of a
-cxl-rp; the readback keeps VC Enable set (and, going by the code,
-pcie_svc_update_map() then marks uio_opt_svc), where per the comment
-the write should have been rejected.  Protocol == 0000 needs the
-whole field tested, e.g. !(res_ctrl & PCI_SVC_VC_PROTOCOL_SELECTED).
+This gate never opens on cxl-upstream: p->flitmode is the PCIEPort
+field, but the USP's x-256b-flit property still targets its own
+CXLUpstreamPort::flitmode rather than the field patch 1 moved to
+PCIEPort, and nothing sets the PCIEPort one there.  Everything else on
+the USP (pcie_cap_fill_link_ep_usp(), the DVSEC status,
+latch_registers()) reads usp->flitmode, so the port reports flit active
+while uio_capable stays false.  I read the HDM Decoder Capability
+register back on the patch-10 example topology with
+x-svc=on,x-256b-flit=on everywhere: the USP reads 0x00000382 -- UIO
+clear, UIO decoder count 0 -- while cxl-rp reads 0x00042312 with UIO
+set.  A switch topology, the case the cover letter leads with, can't
+advertise UIO through the USP.  What worked for me was dropping the
+CXLUpstreamPort copy so both readers take the PCIEPort field: with
+that the USP reads 0x00042382 and nothing else in the topology moves.
+I'd put it in 1/10, which left CXLUpstreamPort::flitmode behind while
+its message says the refactor "allows all the derived ports ... to
+use this property".
 
-The UIO branch has the same pattern:
+rpc->svc_offset is only set by gen_pcie_root_port; ioh3420,
+pnv-phb-root-port and aspeed.pcie-root-port leave it 0, so
 
-> +        if (res_ctrl & SVC_UIO_PROTOCOL_SELECTED) {
+  qemu-system-x86_64 -M q35 -display none -device ioh3420,x-svc=on
 
-Matches any protocol value with bit 9 set -- including the
-vendor-defined 1111b -- not just 0010b.  Comparing the extracted 4-bit
-field against the expected value in both branches would close that.
+aborts:
 
-Same run: Port Cap1 reads back EVCC=7, but the init loop only populates
-sets 0, 3 and 4 -- the rest read VC ID 000b, the same as VC0, which
-7.9.29.6 wants unique.  Was EVCC=2 with sets 1/2 carrying 3/4 the shape
-you were after?  (Quoting 6.2 throughout -- newest spec I have.)
+  ../hw/pci/pcie.c:1140: pcie_add_capability: Assertion `offset >= PCI_CONFIG_SPACE_SIZE' failed.
 
-> +void pcie_svc_cap_reset(PCIDevice *dev)
-> +{
-[...]
-> +    pci_set_long(dev->config + offset + PCI_SVC_CTL_OFFSET, 0);
-> +    pci_set_long(dev->config + offset + PCI_SVC_STA_OFFSET, 0);
-> +}
+I'd either give them svc_offsets or fail realize with a proper error
+when svc_offset is 0 and x-svc is set.
 
-The init function sets USE_VC_MFVC and this clears it again, before
-a cold-plugged guest ever runs -- SVC status reads 0 on all four port
-types at first boot.  0 is the conformant value anyway (7.9.29.5, and
-the comment above the set says as much), so I'd drop the set at init
-rather than restore the bit here.
+Neither of those shows up in make check.  A qtest instantiating
+ioh3420,x-svc=on would have caught the abort; the USP gate only shows
+up in the component BAR, where I read it in the HDM Decoder Capability
+register, so a chain walk wouldn't catch that one.  Worth some
+coverage for the two new capabilities.
 
-The asymmetry does bite for the rest of the state: a guest-set VC
-Enable in RES_CTRL(3)/(4) survives a system reset while CTL/STA are
-cleared, and the dev->exp.svc shadow flags set by
-pcie_svc_update_map() aren't cleared either.
+The v1 SVC/AER collision is fixed -- I walked the extended chains
+over ECAM: gen pcie-root-port has SVC at 0x150 after AER/ACS, cxl-rp's
+four DVSECs moved out to 0x1c4 with SVC taking 0x150, and usp/dsp have
+SVC at 0x148 with SN/DVSEC offsets shifted to match.
 
-On the register defines: v1 ended with routing these through
-pci_regs.h plus a note on when the kernel header picks them up; they
-went into QEMU's pcie_regs.h instead.  Still the plan for a later
-spin, or intentional?
+The DVSEC moves are unconditional, though.  CXL_ROOT_PORT_DVSEC_OFFSET
+and the usp/dsp equivalents are compile-time chains through
+PCI_SVC_SIZEOF, so x-svc=off changes nothing: on a topology with no
+x-svc anywhere I read cxl-rp DVSECs at 0x1c4 (0x150 on the base
+branch), usp DSN at 0x1bc (0x148), dsp DVSEC at 0x1bc (0x148).  That's
+a config space change on existing CXL machines with no property to gate
+it.  Migration won't notice -- none of the CXL devices carries a
+VMStateDescription, so their config space never reaches the stream --
+but a guest on an unchanged machine type sees the DVSECs move across
+QEMU versions, and there's no knob to hang a hw_compat entry on.
 
 Many thanks,
 Junjie
