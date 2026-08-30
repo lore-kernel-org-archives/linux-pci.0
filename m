@@ -1,111 +1,208 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD1A323504B;
-	Sun, 30 Aug 2026 15:32:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 433C02BD11;
+	Sun, 30 Aug 2026 15:36:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788103966; cv=none; b=TlnPIHf3Z9YzbQaPvwhAPXQSaqmzAUiAIXoMCtIeHQfFkQfFwF4kjcTHmioyimzYDEXjO0oszodmViTD4mYjf53lx4ODucJUPTvXf162YjPWG7cT/oGpFjSK95TNAR7bEfSBrFvOZx7uZXcbY/mVqiuRqhhL7TuySxvW9Zrd/aU=
+	t=1788104174; cv=none; b=ek7xg2HdspnpxOqqrZLROsrH/TgD/6KJNZp0dKyLsQYRIaujo5ozoso/KfhhtO2LDecPA9B5qD0fHUhchz8BOUB4i6MJtkkkz2T4U9ZWn7gCKB23L04Vvkcke6f7LVKfYuoRmlqGL+MItsV7AEHXS8m2N+AOoMhKtNZ+0zfK1sI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788103966; c=relaxed/simple;
-	bh=KdGEzG45K6trpFsuKE7q/q/rEHNVUpGjlrPvyWyd5LQ=;
+	s=arc-20240116; t=1788104174; c=relaxed/simple;
+	bh=mQ0L375f+DUM1DHfoOWTE3TdY4bn6nt4Smv6BMX/9n0=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Gdh5f78KlmvyLMzpzv8TKzsnxmm/YWYk8YLRuUWOWBJsX8vcbgoaTIE74/5CQ8FafgPlWVV+6/9SVzO8HF0Le8YnDoykZQSI78a2SmzqdaFTOUtBBC1tgH1rYM4XYBSlvzlA/ZFa2LkpzWJV1IVPUBL+AC+8TCTjaoNS9sfq5Vs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YoUWbBDW; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=QwJManv3ktafmy9YLRAybydu1Wix+wEww1SCtM6bW1u7hNqGpjbLAIIjh/U4JgiXwiDbOs6sfDjYSKwezWPiYNvCZfo73MU5ZipAfHvnEPwbWKCToE6V30O3IouYhWRl4t3ENIqxsCSa1rHvoSz3dA4I0QhpusviSiJi9Udcy7k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HVCaCgeJ; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YoUWbBDW"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3C6431F000E9;
-	Sun, 30 Aug 2026 15:32:45 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HVCaCgeJ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 943A41F000E9;
+	Sun, 30 Aug 2026 15:36:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788103965;
-	bh=aivJ0zOgOMAo/ilxfyE6mFc3gzaEpteEvl9RE+0E6iU=;
+	s=k20260515; t=1788104172;
+	bh=I8tzyErQTgkfDz0nuCnDiYdDENzkJKuPU6Oep0j7Oqk=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=YoUWbBDWtlZETh7aA+cggycI2/D0C4SWDqKKGs+oX8kM0tbb78RpIWuT+9YRWhZdd
-	 d0zePZMkGsnfHdtH6oVU2tmMFZlT/FFaHWGd83ChVwbh2rElCdrVxwAZRSNRytCns7
-	 rRewd93qML7T0MzNRFa1KgOKwXi8gEByVWKPkX+pNDue8zcimviWq9oHYhReVubEv7
-	 UIVvOER0XcSFeJyT6v9a1fGHfqBZVMfA+sH3KcYV7AleVdVlfIodgyGCee7F24zi2Q
-	 nBgWC8ATET5oo+uwNl2RdX1AOfaUf4Q78JiLPI0sKJF8HfRVfu1oZzT2i7TYFahBXj
-	 izeiokzUg0jJg==
+	b=HVCaCgeJ5kHAlA/rBOHE/aLqMDYWCsKUDaZ/YVFpEZX6NiC7CcQ1t22TBLxpDJ+xk
+	 TGP8KKKjGudrZ3wOPb1Nu8C/u0NdVVLoP5V6dzX59Oo5Z01QiOOEHSVjFrWTvVGiZ3
+	 XLvsk8j9RkB+tSvZt909dpW9lyd6Y67w1h2dTrXjgIHc5b6fsUMVIrPndOMhovwZrD
+	 Zjj/5oZjuRAxcDiZMSrwphMpfJZxX0bM3S0me9CREnb+U7plzKgVgKgk+a4RLDmlj8
+	 Q2CqoSLlJRBCxbPAX6/5XMA4H6DosXsCgjjhN+4s1dTcYz/Cdoe4wdJm6vifS/XVHT
+	 Oo8ljgtKwIhag==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 1/3] PCI: endpoint: Support hardware-owned MSI-X
- table and PBA
+Subject: Re: [PATCH v2 3/3] PCI: endpoint: pci-epf-vntb: Honor MSI-X
+ selection
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Koichiro Den" <den@valinux.co.jp>
-Cc: linux-pci@vger.kernel.org, ntb@lists.linux.dev
-In-Reply-To: <20260830151948.3547577-2-den@valinux.co.jp>
+Cc: ntb@lists.linux.dev, linux-pci@vger.kernel.org
+In-Reply-To: <20260830151948.3547577-4-den@valinux.co.jp>
 References: <20260830151948.3547577-1-den@valinux.co.jp>
- <20260830151948.3547577-2-den@valinux.co.jp>
+ <20260830151948.3547577-4-den@valinux.co.jp>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Sun, 30 Aug 2026 15:32:44 +0000
-Message-Id: <20260830153245.3C6431F000E9@smtp.kernel.org>
+Date: Sun, 30 Aug 2026 15:36:12 +0000
+Message-Id: <20260830153612.943A41F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+Thank you for your contribution! Sashiko AI review found 4 potential issue(=
 s) to consider:
 
+New issues:
+- [Critical] Missing validation of MSI-X capability before honoring peer ho=
+st's MSI-X configuration command.
+- [High] TOCTOU race in doorbell processing leading to IOMMU faults on the =
+Root Complex.
+
 Pre-existing issues:
-- [Critical] Peer host can trigger an out-of-bounds read of the MSI-X table=
- by sending a `db_count` larger than the locally configured `ntb->db_count`.
+- [High] The driver allows raising MSI interrupt numbers that exceed the ha=
+rdcoded requested amount.
+- [High] Integer overflow in `spad_size` calculation leads to out-of-bounds=
+ kernel memory accesses.
 --
 
-commit 295a1c24101afaf6161eaaa30348ba3941a52791
+commit 1b7eaae5c163696a2f15c6766f5254a75b259ab0
 Author: Koichiro Den <den@valinux.co.jp>
+Subject: PCI: endpoint: pci-epf-vntb: Honor MSI-X selection
 
-PCI: endpoint: Support hardware-owned MSI-X table and PBA
+ntb_hw_epf tries MSI-X first and falls back to MSI. It reports the
+result in COMMAND_CONFIGURE_DOORBELL. pci-epf-vntb ignores MSIX_ENABLE,
+configures only MSI, and always raises peer doorbells with PCI_IRQ_MSI.
+When MSI-X is selected, the host does not program MSI, so raising it can
+issue a write to an invalid address. This was observed with an IOMMU
+enabled on the RC.
 
-Some endpoint controllers expose the MSI-X table and Pending Bit Array in
-fixed, hardware-owned BAR regions. This patch introduces a new
-struct pci_epc_msix_layout to describe a fixed layout where the table and
-PBA have independent locations. It also updates existing EPF implementations
-and callers to validate and use this new layout format.
-
-> diff --git a/drivers/pci/endpoint/functions/pci-epf-ntb.c b/drivers/pci/e=
-ndpoint/functions/pci-epf-ntb.c
-> index 5314aca2188a0..f3e0e1b3ffb99 100644
-> --- a/drivers/pci/endpoint/functions/pci-epf-ntb.c
-> +++ b/drivers/pci/endpoint/functions/pci-epf-ntb.c
+> diff --git a/drivers/pci/endpoint/functions/pci-epf-vntb.c b/drivers/pci/=
+endpoint/functions/pci-epf-vntb.c
+> index c3caec927d748..d9622a5d47102 100644
+> --- a/drivers/pci/endpoint/functions/pci-epf-vntb.c
+> +++ b/drivers/pci/endpoint/functions/pci-epf-vntb.c
 [ ... ]
-> @@ -505,8 +504,8 @@ static int epf_ntb_configure_msix(struct epf_ntb *ntb,
->  	ntb_epc =3D ntb->epc[type];
->  	epc =3D ntb_epc->epc;
+> @@ -303,6 +305,7 @@ static void epf_ntb_cmd_handler(struct work_struct *w=
+ork)
 > =20
-> -	epf_bar =3D &ntb_epc->epf_bar[ntb_epc->msix_bar];
-> -	msix_tbl =3D epf_bar->addr + ntb_epc->msix_table_offset;
-> +	epf_bar =3D &ntb_epc->epf_bar[ntb_epc->msix_layout.table_bar];
-> +	msix_tbl =3D epf_bar->addr + ntb_epc->msix_layout.table_offset;
-> =20
->  	peer_ntb_epc =3D ntb->epc[!type];
->  	peer_barno =3D peer_ntb_epc->epf_ntb_bar[BAR_DB_MW1];
+>  	switch (command) {
+>  	case COMMAND_CONFIGURE_DOORBELL:
+> +		WRITE_ONCE(ntb->peer_msix, argument & MSIX_ENABLE);
 
 [Severity: Critical]
-This isn't a bug introduced by this patch, but can a remote peer host
-trigger an out-of-bounds read that leads to arbitrary memory access?
+Is it safe to unconditionally set ntb->peer_msix based on the host's request
+without verifying if the endpoint actually supports MSI-X?
 
-When the remote peer host writes to its control region and provides a
-db_count, it appears epf_ntb_configure_db() validates this count against
-the global MAX_DB_COUNT (32) instead of the local ntb->db_count.
+If the host requests MSI-X but the endpoint doesn't support it
+(epc_features->msix_capable is false), could this cause vntb_epf_peer_db_wo=
+rk()
+to call pci_epc_raise_irq() with PCI_IRQ_MSIX, potentially triggering a NULL
+pointer dereference if the EPC driver hasn't initialized MSI-X structures?
 
-If the peer host sends a db_count larger than the local ntb->db_count,
-could the loop in epf_ntb_configure_msix() read past the end of the
-allocated msix_tbl?
+>  		ctrl->command_status =3D COMMAND_STATUS_OK;
+>  		break;
+>  	case COMMAND_TEARDOWN_DOORBELL:
+[ ... ]
+> @@ -454,7 +457,7 @@ static int epf_ntb_config_spad_bar_alloc(struct epf_n=
+tb *ntb)
+>  	struct device *dev =3D &epf->dev;
+>  	u32 spad_count;
+>  	void *base;
+> -	int i;
+> +	int i, ret;
+>  	const struct pci_epc_features *epc_features =3D pci_epc_get_features(ep=
+f->epc,
+>  								epf->func_no,
+>  								epf->vfunc_no);
+> @@ -462,6 +465,29 @@ static int epf_ntb_config_spad_bar_alloc(struct epf_=
+ntb *ntb)
+>  	spad_count =3D ntb->spad_count;
+> =20
+>  	ctrl_size =3D ALIGN(sizeof(struct epf_ntb_ctrl), sizeof(u32));
+[ ... ]
+>  	spad_size =3D 2 * spad_count * sizeof(u32);
+> =20
+>  	base =3D pci_epf_alloc_space(epf, ctrl_size + spad_size,
 
-for (i =3D 0; i < db_count; i++) {
-	msg_addr =3D ALIGN_DOWN(msix_tbl[i].msg_addr, align);
-	msg_data =3D msix_tbl[i].msg_data;
-	...
-}
+[Severity: High]
+This is a pre-existing issue, but does the spad_size calculation have an in=
+teger
+overflow risk?
 
-If msix_tbl is overrun, the code might read untrusted data from adjacent
-memory regions (such as the peer-writable SPAD region). Since msg_addr is
-then passed to pci_epc_map_addr(), could this allow the remote host to map
-outbound PCIe windows to arbitrary physical memory addresses on the local
-host?
+Since spad_count is populated from configfs without bounds checking, could a
+large value cause the 64-bit result of 2 * spad_count * sizeof(u32) to be
+truncated when assigned to the 32-bit spad_size variable?
+
+This could lead to a small memory allocation from pci_epf_alloc_space(). La=
+ter,
+when vntb_epf_spad_write() calculates offsets using the un-wrapped spad_cou=
+nt,
+could this write out of bounds and corrupt kernel memory?
+
+>  				   barno, epc_features, 0);
+>  	if (!base) {
+>  		dev_err(dev, "Config/Status/SPAD alloc region fail\n");
+[ ... ]
+> @@ -521,16 +548,22 @@ static int epf_ntb_configure_interrupt(struct epf_n=
+tb *ntb)
+>  	}
+> =20
+>  	if (epc_features->msi_capable) {
+> -		ret =3D pci_epc_set_msi(ntb->epf->epc,
+> -				      ntb->epf->func_no,
+> -				      ntb->epf->vfunc_no,
+> -				      16);
+> +		ret =3D pci_epc_set_msi(epf->epc, epf->func_no, epf->vfunc_no, 16);
+
+[Severity: High]
+This is a pre-existing issue, but I noticed that 16 MSI interrupts are
+statically requested regardless of ntb->db_count.
+
+If a user configures db_count to a value greater than 16 (up to MAX_DB_COUN=
+T),
+could vntb_epf_peer_db_work() compute an interrupt_num that exceeds the 16
+requested vectors? Could raising an out-of-bounds MSI interrupt cause spuri=
+ous
+interrupts or issues on the Root Complex?
+
+>  		if (ret) {
+>  			dev_err(dev, "MSI configuration failed\n");
+>  			return ret;
+>  		}
+>  	}
+[ ... ]
+> @@ -1523,6 +1557,7 @@ static void vntb_epf_peer_db_work(struct work_struc=
+t *work)
+> =20
+>  	func_no =3D epf->func_no;
+>  	vfunc_no =3D epf->vfunc_no;
+> +	irq_type =3D READ_ONCE(ntb->peer_msix) ? PCI_IRQ_MSIX : PCI_IRQ_MSI;
+> =20
+>  	/*
+>  	 * Drain doorbells from peer_db_pending in snapshots (atomic64_xchg()).
+> @@ -1536,16 +1571,16 @@ static void vntb_epf_peer_db_work(struct work_str=
+uct *work)
+> =20
+>  		while (db_bits) {
+[ ... ]
+>  			db_bits &=3D ~BIT_ULL(db_bit);
+> =20
+>  			ret =3D pci_epc_raise_irq(epf->epc, func_no, vfunc_no,
+> -						PCI_IRQ_MSI, interrupt_num);
+> +						irq_type, interrupt_num);
+
+[Severity: High]
+Since irq_type is read and cached outside the budget loop, what happens if =
+the
+host concurrently sends COMMAND_CONFIGURE_DOORBELL to switch from MSI to MS=
+I-X
+during a doorbell storm?
+
+Could the workqueue loop process new doorbells using the stale, cached irq_=
+type,
+causing the endpoint to raise MSI instead of the expected MSI-X, which might
+lead to an IOMMU fault on the Root Complex?
+
+>  			if (ret)
+>  				dev_err(&ntb->ntb.dev,
+>  					"Failed to raise IRQ for interrupt_num %u: %d\n",
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260830151948.3547=
-577-1-den@valinux.co.jp?part=3D1
+577-1-den@valinux.co.jp?part=3D3
