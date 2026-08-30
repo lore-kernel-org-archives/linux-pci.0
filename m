@@ -1,48 +1,48 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.18])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 48CD27082D;
-	Sun, 30 Aug 2026 07:21:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B8A72C08BB;
+	Sun, 30 Aug 2026 07:21:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788074478; cv=none; b=ZMiIYal52Usc9wRldrh9yeWLPVf1GtHagafzB+jwDTnmoHX/C6oPIdRj4eG0qTdRpZdAebRdQ69Y74W2K0l2yIrZ5piC3u81XZsRiLmOjMC2hQQ+6GvhxZNvaJbZY4bnjGGpzOETeS+nBfPQuPmYIaSb1sraS5CsI/la7a2ChV4=
+	t=1788074504; cv=none; b=hedcq1qX1CeR46lWTzcvVSOVSHypWnyz7H2Wke+ZUo9jmt+1IcuQf7ea6Jus3OmIKVDmHnFkOxsCjzkS7k/+0aFMybK11YiW9kkVxXMUHFMcKnB7eqdEQmFHIHgUj9STjS8S9f6l2GbtS19GrvHqOwfiogMVYW+vNvxE6PSLhMo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788074478; c=relaxed/simple;
-	bh=nZzvt0iW2Q7KLQNgSo/G2fUMX1/yU6BP1yQMPTPTucE=;
+	s=arc-20240116; t=1788074504; c=relaxed/simple;
+	bh=p1aIId6OF51IkNNctX/PRW+eNkg+BLyFrTHN13rl6Qc=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=SSmP6fBYzS4jT6onbyO85AmKxG+rKXa2RcG0G2CAP+G9ZWtDi7wW736irnx8wUS5W6IEZtu2hP4z3xHtrIBaA65+/ne1CIdPi4e0RtyVHIW9/4KCs55w9CWPPmOS4BnY3Zk7SmK92FcHlWsD/X5TRmeMvE9Q/6GUvgBfrvouKvs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=GCjqVewq; arc=none smtp.client-ip=198.175.65.18
+	 MIME-Version; b=e835aD7lsuy5lt18+F3oRoNH/pu9HCV6j0Eiu8qwX6uzREFCCmUSadppehbTTUGeMtk5YPxdr6/rLZ6BGN2S5IGgxy7TbiI26lIqLPij5Ei7hD3PS8skpAA1IvZUtDgsm5SHGJL43FYzZ/eD379g/RpqxWRhgFltCAiyIAHTvd8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=PmHOJ4aM; arc=none smtp.client-ip=192.198.163.18
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="GCjqVewq"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="PmHOJ4aM"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1788074478; x=1819610478;
+  t=1788074503; x=1819610503;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=nZzvt0iW2Q7KLQNgSo/G2fUMX1/yU6BP1yQMPTPTucE=;
-  b=GCjqVewq9MJCjZ2FeoevQy2hRj0IdbsaLbwk8WDBvBZ8Yg+MImn+xi9D
-   sgbLhwlLPS09JeoKapEceJ/JGp2p1G7IfpJ3UZ7Sv9KJPpQONDj/UGguY
-   LDNjkU5ijQiHj+ZmOLpnGCmrea+AAssy6viQ5htbmvhMwHsFCqdOAqy+q
-   GmFWCvV/ZwTRBEiokx5Tfr3YhCps9t5+4eE2MhktZJnA0EJQcuXsR1WK4
-   bIDuhJmaSJsuIs1sXefiSNdHKQuqPYPlnW1P0XOUyOA1kTVh05meKcR2A
-   h9nPMZiafy6+9rjYlpKf1vjl4bJ2XqiEtJOBENh2zQHUzNT7lcvnca9ez
-   A==;
-X-CSE-ConnectionGUID: aha7nHb7TqSB0AxMrZo8ow==
-X-CSE-MsgGUID: VUrKNL3iStGQk3JZ4ozsQQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11890"; a="88565404"
+  bh=p1aIId6OF51IkNNctX/PRW+eNkg+BLyFrTHN13rl6Qc=;
+  b=PmHOJ4aMV/3hskDv6Lg10sSl9QyfRs1cggxyPvMY2yzGswPm3vAMKni6
+   12Tb2pcULC/mCFWp7bqs0PxIcTczD73Qv76IfsTO3YZOkUbybKj09Q5Xg
+   zynCHZw7BAmsNDk8vUTU4aSNTwUYkZ+Ip3fEXMKallGuEAnj0g6YNNFSr
+   3lH34ksCRbDi2IuvYkP1jTDBZ9hhHY60reULSSfOVzczCfjRBI/dRRPlQ
+   BUlIwi5vdyEkZUC5LbcyKPVcWGMIkVwi7Vb6GlRYZeYlXWW/SvqNJ5URI
+   n1wmN9rzteP5F9iDfXsl2+AjhW3ETdeltt1kdjr49nvyXFknzKvU5TIWX
+   g==;
+X-CSE-ConnectionGUID: PQoJ7RaKTNSBK5E+jXOiNQ==
+X-CSE-MsgGUID: +kB8W/chRhObGFI9wQvLKg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11890"; a="87648922"
 X-IronPort-AV: E=Sophos;i="6.25,251,1779174000"; 
-   d="scan'208";a="88565404"
-Received: from fmviesa008.fm.intel.com ([10.60.135.148])
-  by orvoesa110.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Aug 2026 00:21:17 -0700
-X-CSE-ConnectionGUID: Scg0oMW4RY2iI0umtxW6dA==
-X-CSE-MsgGUID: 7BYKUOHqQEmEENak+UP5wQ==
+   d="scan'208";a="87648922"
+Received: from orviesa006.jf.intel.com ([10.64.159.146])
+  by fmvoesa112.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Aug 2026 00:21:42 -0700
+X-CSE-ConnectionGUID: q7DV/ze/QZKouI+R5fR6uw==
+X-CSE-MsgGUID: 82SegnomR8KdHAghDREvOQ==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.25,251,1779174000"; 
-   d="scan'208";a="265948510"
+   d="scan'208";a="266710316"
 Received: from junjie-desk-dev.bj.intel.com (HELO junjie-desk-dev.tail2c02c1.ts.net) ([10.238.152.71])
-  by fmviesa008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Aug 2026 00:21:13 -0700
+  by orviesa006-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Aug 2026 00:21:39 -0700
 From: Junjie Cao <junjie.cao@intel.com>
 To: Shrihari E S <shrihari.s@samsung.com>
 Cc: jic23@kernel.org,
@@ -59,12 +59,12 @@ Cc: jic23@kernel.org,
 	linux-cxl@vger.kernel.org,
 	linux-pci@vger.kernel.org,
 	qemu-devel@nongnu.org
-Subject: Re: [RFC V2 03/10] hw/pci: Add SVC capability and UIO properties to PCIe ports
-Date: Sun, 30 Aug 2026 15:20:53 +0800
-Message-ID: <20260830072053.399466-1-junjie.cao@intel.com>
+Subject: Re: [RFC V2 05/10] hw/cxl: Wire UIO capability into HDM decoder and DVSEC registers
+Date: Sun, 30 Aug 2026 15:21:18 +0800
+Message-ID: <20260830072118.399487-1-junjie.cao@intel.com>
 X-Mailer: git-send-email 2.43.0
-In-Reply-To: <124323713.61787732103161.JavaMail.epsvc@epcpadp1new>
-References: <124323713.61787732103161.JavaMail.epsvc@epcpadp1new>
+In-Reply-To: <1646464088.101787732103895.JavaMail.epsvc@epcpadp1new>
+References: <1646464088.101787732103895.JavaMail.epsvc@epcpadp1new>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -75,24 +75,47 @@ Content-Transfer-Encoding: 8bit
 
 Hi Shrihari,
 
-On Wed, 26 Aug 2026 11:04:03 +0530, Shrihari E S wrote:
-> +static const Property xio3130_upstream_props[] = {
-> +    DEFINE_PROP_BOOL("x-svc", PCIEPort, svc, false),
-> +    DEFINE_PROP_BOOL("x-256b-flit", PCIEPort, flitmode, false),
-> +};
+On Wed, 26 Aug 2026 11:04:05 +0530, Shrihari E S wrote:
+>      ARRAY_FIELD_DP32(reg_state, CXL_HDM_DECODER_CAPABILITY,
+> +                     UIO_DECODER_COUNT,
+> +                     (type == CXL2_TYPE3_DEVICE || type == CXL2_UPSTREAM_PORT
+> +                     || type == CXL2_ROOT_PORT) && uio ? decoder_count : 0);
 
-x-256b-flit is a no-op on x3130-upstream: nothing in
-xio3130_upstream.c reads PCIEPort::flitmode.  pcie_cap_fill_slot_lnk()
-does run from pcie_cap_init(), but returns early -- an upstream port is
-a PCIEPort, not a PCIESlot -- and pcie_cap_fill_link_ep_usp(), the path
-cxl-upstream and cxl-type3 take, isn't called here.  So with
-x-256b-flit=on the Flags bit 15 and LNKSTA2 flit bits stay 0.  I'd
-either wire up pcie_cap_fill_link_ep_usp() the way cxl-upstream does,
-from its reset handler, or drop x-256b-flit from this hunk.
+The always-true expression from v1 is a real type test now, but UIO
+Capable Decoder Count uses the same encoding as Decoder Count -- CXL
+3.2 8.2.4.20.1: "See the Decoder Count field in this register for
+enumeration" -- so writing decoder_count raw advertises 4h = 8 UIO
+decoders while Decoder Count reads 2h = 4.  I read the register back on
+a cxl-rp: 0x00042312, bits[3:0] = 2h but bits[19:16] = 4h.
+cxl_decoder_count_enc() would line the two up.  The same field
+description also marks it reserved for CXL.mem devices ("not permitted
+to limit the number of UIO-capable HDM decoders"), so CXL2_TYPE3_DEVICE
+should drop out of the count expression.
 
-x-svc has no reader until 7/10 either, so x-svc=on has no effect for
-four commits.  Same thing Jonathan asked for on v1: bring the state in
-with the patch that uses it.  Here that would fold 3 and 4 into 7.
+On the type list itself: 8.2.4.20.1 enumerates UIO Capable for CXL.mem
+devices, USPs and CXL Host Bridges, the Host Bridge case being the one
+that means "all the root ports within this Host Bridge are capable of
+routing UIO requests".  This sets it per root port instead, and
+pci_expander_bridge.c passes uio=false for CXL2_RC unconditionally, so
+the host bridge never advertises it.  On v1 I said a root port may well
+be intended, going off crp->uio_capable in the SVC wiring, but the
+enumeration above doesn't list one.  Is the root port the intended
+carrier?
+
+> +        if (uio) {
+> +            write_msk[R_CXL_HDM_DECODER0_CTRL + i * hdm_inc] |=
+> +                R_CXL_HDM_DECODER0_CTRL_UIO_MASK |
+> +                R_CXL_HDM_DECODER0_CTRL_UIG_MASK |
+> +                R_CXL_HDM_DECODER0_CTRL_UIW_MASK;
+> +        }
+
+The if (uio) block adds UIG and UIW to the write mask for every type,
+type3 included.  8.2.4.20.7 makes both "RWL for a switch and a Host
+Bridge if the UIO Capable bit ... is set" and then "reserved for
+CXL.mem devices."  I wrote 0x00ff0000 to decoder 0's Control register
+on an x-uio=on type3 and read it straight back; the same write on a
+type3 without x-uio reads back 0.  Gating UIG/UIW on the port types,
+and leaving UIO alone, would match the table.
 
 Many thanks,
 Junjie
