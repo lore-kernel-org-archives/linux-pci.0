@@ -1,117 +1,135 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E79894A499A
-	for <linux-pci@vger.kernel.org>; Mon, 31 Aug 2026 13:43:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD4855221C9;
+	Mon, 31 Aug 2026 13:44:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788183812; cv=none; b=cGnzQjbWXtvKIzN0lfCrNax/wwLnf9lvBbKV+ajGXMlomPtE2ID7Xvd+Ldtjjk1vH6h4mi/Njye35TEl0I5IB8F9Q5bZwuEdgnboaK9halAax50f7igOt/qacnAGl54HjmkdkKIoAE+u2wVmjUqOLrxfBIGqWezN9/rLzCaOJ2E=
+	t=1788183851; cv=none; b=inhxO6VBJvasYCnbySvO9HG39eqHGm4nf/qi+U6ZJ0ybWIjdWzlDYlBCky2Kjm8VivIeQ4BIc02ccOFsSKitjPdQn/fmwL1X9VzsB2IyrTzkTUF7WK80qInhNrnHesQO1yyM29gPBh6xLCy3aPioVyNtZ72K2en/OdhGdNDEJU4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788183812; c=relaxed/simple;
-	bh=ii2i5n6GbsLHg3ZBl0GOlxCNkl8bjl8ZsjZ5+wBS1so=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Xf9bJ39csge/u4ZPLnwr2Tf5MuloKrg25iGwX+7ANYGUj4EUEfPzUw1MvsJuNcZBl6Pwaf28UqLlt14aaN8MfRsXi0JHn66ZIaMkyD0mqCuu5CJVg0ZIEvvnV6AToj/Mb/fCE0Rk1gf3QCQBb+hRZiOgMyxiJ8no6Roccr+RjCs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=C8vfOold; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788183851; c=relaxed/simple;
+	bh=F3ru9bMztZIqXY0REiurYx26QOeb/CEh/lrLHJg+CUI=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=mpjc93WfoyqLsjIZrvKrpkOJeLvNN5k7AjfvTxNK743cwZ0xvjuiLYcjK0/X/tfze9gysS3FfkrJtM1ZrCmlY1O8jmZwKx60Yjo4hPMEfDQyptXA71P94qtkukUBYDiLuscCVMmEOXe7CD6UVnOKSyWj0vDuKLPcZ5tY4g61xfs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Q/WC+K47; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="C8vfOold"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9FAE51F00A3F;
-	Mon, 31 Aug 2026 13:43:29 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Q/WC+K47"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A6A4A1F00A3D;
+	Mon, 31 Aug 2026 13:44:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788183809;
-	bh=6weoIsAZbWKI35bjycS1wgLGpu2omyIPea7OaZu2hkk=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=C8vfOoldo8daZPjxI7ureRQpEvDe8KiQhZYIDyrLmvw1bgWF/GA+QvwRZJySwcZVI
-	 blUmZJLsmKb1BmI4v9y6VUdlHdTF2eysoKINSL4awlFVYEVs4KFrDKCWVEKElnQ1o9
-	 qWI5lubVIAhe8M/o4bDhv9gU8INoMvX7TeNZPDFrWD3s5pniopYHO7fySa55QDQdfX
-	 vlY8grOYqfmiWEnuw2yAVd6bYtGxQXgqU/3WIBYCJgEfxonlaPdEQPVqd1KfqaoJwy
-	 qTeiFrlxHZd01vqRjUcLhdLxWemfQ4gntVqnRvWnyLzok9A31srOvymjKXqqwsjTzB
-	 reOLRR+zkLgxg==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH AUTOSEL 6.18-6.12] PCI: plda: Protect root bus removal
- with rescan lock
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Sasha Levin" <sashal@kernel.org>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260831133314.4125787-4-sashal@kernel.org>
+	s=k20260515; t=1788183849;
+	bh=42PZeB3SO7oRjnzW5UFefbIM4iCarF2btVqJidzfVPU=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=Q/WC+K47SVNq7USBO89u9AlwVS7rfz+v9eWM4WyPUVhwPWq49K/6LHTWrGH4A9O7j
+	 UunJvVQ60g9FfcNo1ubuE84HsNKhXYwtv1uv2Sl5fP0ATmJKm1cJNDGwP5ceZE8wR1
+	 wurb/29+OmAt43RUoA107vcOtWtC5brR+KPh2zfVLzbdH+olJzAuzj+NL/fkBGKRK8
+	 cZJjOgARUa5chpzn5kPDVBiH6+hmk5KAtGQrUQhD94fDAzS5aahiTa7f5hWVwVq6iW
+	 pjHmZsF3efJE3pGgvvRdduN8kNWd6FiPMlxbWfn4J6pHzYSjXTl/XDloW5p6PtNM/6
+	 L+vOOylBeOC/A==
+From: Sasha Levin <sashal@kernel.org>
+To: patches@lists.linux.dev,
+	stable@vger.kernel.org
+Cc: Ben Reed <Ben.Reed@microchip.com>,
+	Logan Gunthorpe <logang@deltatee.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Sasha Levin <sashal@kernel.org>,
+	kurt.schwemmer@microsemi.com,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.18-6.1] PCI: switchtec: Add Gen6 Device IDs
+Date: Mon, 31 Aug 2026 09:26:09 -0400
+Message-ID: <20260831133314.4125787-341-sashal@kernel.org>
+X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20260831133314.4125787-1-sashal@kernel.org>
 References: <20260831133314.4125787-1-sashal@kernel.org>
- <20260831133314.4125787-4-sashal@kernel.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 31 Aug 2026 13:43:29 +0000
-Message-Id: <20260831134329.9FAE51F00A3F@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+X-stable: review
+X-Patchwork-Hint: Ignore
+X-stable-base: Linux 6.18.48
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
+From: Ben Reed <Ben.Reed@microchip.com>
 
-Pre-existing issues:
-- [High] Premature runtime PM suspend during device removal in starfive_pci=
-e_remove() risks system crash.
---
+[ Upstream commit 5e6c21c56998e1e58d2f314e70779989ea0fee5d ]
 
-commit deb27e1c30d66425178af3188e74b7f9e994d90f
-Author: Hans Zhang <18255117159@163.com>
+Add device IDs for the next generation of switchtec products.
 
-PCI: plda: Protect root bus removal with rescan lock
+No changes to the driver were required with the new version of the
+hardware.
 
-This commit adds the pci_rescan_remove_lock around pci_stop_root_bus() and
-pci_remove_root_bus() during driver teardown to prevent races with sysfs
-rescan or hotplug operations.
+[logang: rewrote commit message]
 
-Link: https://patch.msgid.link/20260521161822.132996-10-18255117159@163.com
+Signed-off-by: Ben Reed <Ben.Reed@microchip.com>
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Link: https://patch.msgid.link/20260505161633.67454-1-logang@deltatee.com
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
 
-> diff --git a/drivers/pci/controller/plda/pcie-plda-host.c b/drivers/pci/c=
-ontroller/plda/pcie-plda-host.c
-> index 3c2f683830107..f9a34f323ad8c 100644
-> --- a/drivers/pci/controller/plda/pcie-plda-host.c
-> +++ b/drivers/pci/controller/plda/pcie-plda-host.c
-> @@ -640,8 +640,10 @@ EXPORT_SYMBOL_GPL(plda_pcie_host_init);
-> =20
->  void plda_pcie_host_deinit(struct plda_pcie_rp *port)
->  {
-> +	pci_lock_rescan_remove();
->  	pci_stop_root_bus(port->bridge->bus);
+LLM Generated explanations, may be completely bogus:
 
-[Severity: High]
-This is a pre-existing issue, but does dropping the runtime PM references
-in starfive_pcie_remove() before calling plda_pcie_host_deinit() risk a
-system crash?
+The background history search finished. In this 6.18.43 checkout, `git
+log -S 'SWITCHTEC_GEN5'` and `git log --grep='switchtec: Add'` didn’t
+turn up individual Switchtec ID commits — only the bulk merge
+`5d324e5159d9e` and unrelated history. That matches what we already saw:
+Gen3/4/5 support is present, but this tree doesn’t have granular
+Switchtec commit history.
 
-When the pcie-starfive driver is removed, starfive_pcie_remove() is
-executed. This function drops the runtime PM usage count and disables
-runtime PM before fully tearing down the child PCI devices:
+That doesn’t change the backport assessment: this is a standard PCI
+device ID addition for an existing driver, it fits the stable “just add
+a device ID” rule, and it should apply cleanly to 6.18.43.
 
-drivers/pci/controller/plda/pcie-starfive.c:starfive_pcie_remove() {
-        ...
-        pm_runtime_put(&pdev->dev);
-        pm_runtime_disable(&pdev->dev);
-        plda_pcie_host_deinit(&pcie->plda);
-        ...
-}
+**YES**
 
-If child PCI devices are already runtime-suspended, dropping the host
-controller's PM reference allows the PM domain to suspend the controller
-(e.g., via clock or power gating). Because pm_runtime_disable() is also
-called, the controller cannot be runtime-resumed.
+ drivers/pci/switch/switchtec.c | 16 ++++++++++++++++
+ include/linux/switchtec.h      |  1 +
+ 2 files changed, 17 insertions(+)
 
-Subsequently, plda_pcie_host_deinit() calls pci_stop_root_bus(), which
-unbinds the endpoint drivers. When the endpoint drivers' remove callbacks
-execute and attempt to access PCI configuration or MMIO space, the accesses
-will hit a powered-down bus, which can result in a synchronous external
-abort (SError) and a kernel panic.
+diff --git a/drivers/pci/switch/switchtec.c b/drivers/pci/switch/switchtec.c
+index 5ff84fb8fb0f4..f32ddfa79da99 100644
+--- a/drivers/pci/switch/switchtec.c
++++ b/drivers/pci/switch/switchtec.c
+@@ -1852,6 +1852,22 @@ static const struct pci_device_id switchtec_pci_tbl[] = {
+ 	SWITCHTEC_PCI_DEVICE(0x5552, SWITCHTEC_GEN5),  /* PAXA 52XG5 */
+ 	SWITCHTEC_PCI_DEVICE(0x5536, SWITCHTEC_GEN5),  /* PAXA 36XG5 */
+ 	SWITCHTEC_PCI_DEVICE(0x5528, SWITCHTEC_GEN5),  /* PAXA 28XG5 */
++	SWITCHTEC_PCI_DEVICE(0x6048, SWITCHTEC_GEN6),  /* PFXs 48XG6 */
++	SWITCHTEC_PCI_DEVICE(0x6064, SWITCHTEC_GEN6),  /* PFXs 64XG6 */
++	SWITCHTEC_PCI_DEVICE(0x6044, SWITCHTEC_GEN6),  /* PFXs 144XG6 */
++	SWITCHTEC_PCI_DEVICE(0x6060, SWITCHTEC_GEN6),  /* PFXs 160XG6 */
++	SWITCHTEC_PCI_DEVICE(0x6148, SWITCHTEC_GEN6),  /* PSXs 48XG6 */
++	SWITCHTEC_PCI_DEVICE(0x6164, SWITCHTEC_GEN6),  /* PSXs 64XG6 */
++	SWITCHTEC_PCI_DEVICE(0x6144, SWITCHTEC_GEN6),  /* PSXs 144XG6 */
++	SWITCHTEC_PCI_DEVICE(0x6160, SWITCHTEC_GEN6),  /* PSXs 160XG6 */
++	SWITCHTEC_PCI_DEVICE(0x6248, SWITCHTEC_GEN6),  /* PFX 48XG6 */
++	SWITCHTEC_PCI_DEVICE(0x6264, SWITCHTEC_GEN6),  /* PFX 64XG6 */
++	SWITCHTEC_PCI_DEVICE(0x6244, SWITCHTEC_GEN6),  /* PFX 144XG6 */
++	SWITCHTEC_PCI_DEVICE(0x6260, SWITCHTEC_GEN6),  /* PFX 160XG6 */
++	SWITCHTEC_PCI_DEVICE(0x6348, SWITCHTEC_GEN6),  /* PSX 48XG6 */
++	SWITCHTEC_PCI_DEVICE(0x6364, SWITCHTEC_GEN6),  /* PSX 64XG6 */
++	SWITCHTEC_PCI_DEVICE(0x6344, SWITCHTEC_GEN6),  /* PSX 144XG6 */
++	SWITCHTEC_PCI_DEVICE(0x6360, SWITCHTEC_GEN6),  /* PSX 160XG6 */
+ 	SWITCHTEC_PCI100X_DEVICE(0x1001, SWITCHTEC_GEN4),  /* PCI1001 16XG4 */
+ 	SWITCHTEC_PCI100X_DEVICE(0x1002, SWITCHTEC_GEN4),  /* PCI1002 12XG4 */
+ 	SWITCHTEC_PCI100X_DEVICE(0x1003, SWITCHTEC_GEN4),  /* PCI1003 16XG4 */
+diff --git a/include/linux/switchtec.h b/include/linux/switchtec.h
+index cdb58d61c1526..724da6c08bf7d 100644
+--- a/include/linux/switchtec.h
++++ b/include/linux/switchtec.h
+@@ -42,6 +42,7 @@ enum switchtec_gen {
+ 	SWITCHTEC_GEN3,
+ 	SWITCHTEC_GEN4,
+ 	SWITCHTEC_GEN5,
++	SWITCHTEC_GEN6,
+ };
+ 
+ struct mrpc_regs {
+-- 
+2.53.0
 
-Should plda_pcie_host_deinit() be called before dropping the runtime PM
-references to avoid this?
-
->  	pci_remove_root_bus(port->bridge->bus);
-> +	pci_unlock_rescan_remove();
-> =20
->  	plda_pcie_irq_domain_deinit(port);
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260831133314.4125=
-787-4-sashal@kernel.org?part=3D1
