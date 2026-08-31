@@ -1,43 +1,45 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B40A043CE45;
-	Mon, 31 Aug 2026 13:33:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD50F459AFC;
+	Mon, 31 Aug 2026 13:34:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788183223; cv=none; b=gFQ6EOiqs9dqz+zLYez8oeoasew7pFpZC74EPjAKneOOkJzwgQO9r71k9WmoVK2SpRLR6M33dPpWoQnXtiqh+sGGGaP1DU5qq5qHV0FK9uGDXn+RizA8bi4ah8DXclZPWaw4B/WW4I5KKLunBRItZG3DyrIDTMFeMTe7jaIjWz0=
+	t=1788183290; cv=none; b=HVN6gu7OiM2bk68AgdRdOlDfTkuRjQ/A7IVd2+LxqMk8JUCe422rCLK+5pIQlNAUffovrqYV0CC2SuBWaRmRsVRE3qC3EB8Eojn3J90vmrHIuGh7XNDR2nRBo/FQsXzjXSeF1AXfPokkaQreWJbP/FmMfpqtPDypfC6dWdNyIwk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788183223; c=relaxed/simple;
-	bh=Tl1v/cimUpoFpd5bYni/skBDPyh2oGsc1aCdnnKwfac=;
+	s=arc-20240116; t=1788183290; c=relaxed/simple;
+	bh=TWTekj89miw1K0rfAJArYJpEzMAq2gQ/4T0vpcyUAl4=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=JMiXovpJs2Xxkvw1hWtY8y3HbVkjwiUoMr080CgBfKweNeYF+jjNS7BVH/a9N1vn9QYJd2FdhjN/Z6lt5cnRBW7kVAv71FGiWOuHwEpGBN9WnyWbsi2WUMYFzFnFsQEfSDiSjwGbHaJXr8iMCh9G09H4AMHIZj8hdueO6xcJ8Qk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RfXbVWKN; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=Xd1JlVYtZ0F978t2LsZ7vw7us8o/ZdjmMEyw0w5cpAuUsDwdZfo2rP2QNdqXJWfUBDxER8p6QcVgO9QF1TrM6T9KkUuxR0gRT2KBfSCXFL+oPJwN1da4x075wdMFSLUrC7Fa3siH5iPojFfd8GsPO1KqChSQhrRX9g8a3bUvqq8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Vhurul7X; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RfXbVWKN"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BD4331F00A3E;
-	Mon, 31 Aug 2026 13:33:39 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Vhurul7X"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 525D81F00ACF;
+	Mon, 31 Aug 2026 13:34:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788183220;
-	bh=NbhIsQ5XWGPMR7qzfTNPMiqgmyRfRwNggMAQWX1gIkw=;
+	s=k20260515; t=1788183287;
+	bh=8H4D6esrqEhZzO5igNe5K5dyRdu+n361wC3B0JmmHn8=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=RfXbVWKN7hRB05tSZjwvMHAERLJrnq4e5/ZRanFkZ/jaFJ8rAkkVP/wHJ4ivHpke1
-	 69tlD1d5Vih7zyHZrgI0FRtwx/DDjyy1JFLucETu+9lb0f1wdWNuI72D426T3vCc8o
-	 rR+x5zTR8bf2NWozqIxKUjWpEZUuxho4TZVxKwH6B3JBWIq/UCa9Ur5Hs89QkP71he
-	 I7hCBWXmk9jj2eQS+10haB6u+foEUOj0i7KjiSRIaw+eHh2bYjYRefQzPVyNiI5xy2
-	 SWHoK5dsP2+rLxgtS0dWwHW5RQQ3biLKOKUbRb1jZ6EnaPA/s7aod4kjkwpSZ9GXl+
-	 G1EdqsuJaYYPA==
+	b=Vhurul7XerXXIZZ5kv9LEJf5Eugy34fLK5wWdImNHhUV74IAOzJlL8Z1b88R6LmRU
+	 NF1YNykG8Dn5ttwig0jWaGC6W2I/x0hz+isgARZlzXD8MXX64zcK12mwPPgTl/5EyF
+	 vq3CP1vdX5wxlwKg3N6YyE+8IRFDBqHH4WBUiHRy96mmFLVqcDa94QRCtntGKFRzLS
+	 xoOyZwAIIn2+D/Kqgns88AakhY+EJwjyFqekI8Z0KQqGZvMO3ZYAvlnD7OYbHvi2Wx
+	 6Ybu4SiT2CNnI0XJb7LQRCnRbGuW7a5ikCMRxIjLQengjTLOlwoxgwMA0ApcDoOinN
+	 kNpLzkkqUjUIA==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
+Cc: Hans Zhang <18255117159@163.com>,
 	Manivannan Sadhasivam <mani@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
 	Sasha Levin <sashal@kernel.org>,
+	lpieralisi@kernel.org,
+	kwilczynski@kernel.org,
 	linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.18-6.12] PCI: Avoid FLR for MediaTek MT7925 WiFi
-Date: Mon, 31 Aug 2026 09:20:45 -0400
-Message-ID: <20260831133314.4125787-17-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.18-5.10] PCI: altera: Protect root bus removal with rescan lock
+Date: Mon, 31 Aug 2026 09:21:26 -0400
+Message-ID: <20260831133314.4125787-58-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260831133314.4125787-1-sashal@kernel.org>
 References: <20260831133314.4125787-1-sashal@kernel.org>
@@ -53,97 +55,68 @@ X-stable-base: Linux 6.18.48
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+From: Hans Zhang <18255117159@163.com>
 
-[ Upstream commit 9f22b92259bb5ac43e2b9007103787d4418fec56 ]
+[ Upstream commit a8759c8ac48c0419f5899e95a6ffc611b07c965b ]
 
-The MediaTek MT7925 WiFi device advertises FLR capability, but it does not
-work correctly. This manifests in VFIO passthrough scenarios. Normal VM
-operation works fine, including clean shutdown/reboot. However, when the VM
-terminates uncleanly (crash, force-off), VFIO attempts to reset the device
-before it can be assigned to another VM. Because FLR is broken, the reset
-fails, preventing reuse.
+Hold the pci_rescan_remove_lock lock while stopping and removing a root bus
+to avoid racing with concurrent rescan or hotplug operations triggered via
+sysfs.  Such races may lead to use-after-free issues or system crashes.
 
-This is similar to its predecessor MT7922 (see 81f64e925c29 ("PCI: Avoid
-FLR for Mediatek MT7922 WiFi")), but with different symptoms.  The MT7922
-issue manifests as config read failures (returning ~0) after FLR. The
-MT7925 shows different behavior: config reads work correctly after FLR, but
-firmware communication fails.
-
-First VM start with MT7925 works fine:
-
-  mt7925e 0000:08:00.0: ASIC revision: 79250000
-  mt7925e 0000:08:00.0: WM Firmware Version: ____000000, Build Time: 20260106153120
-
-After force reset or VM crash, when VFIO attempts FLR to reset the device
-for reassignment, firmware initialization fails:
-
-  mt7925e 0000:08:00.0: ASIC revision: 79250000
-  mt7925e 0000:08:00.0: Message 00000010 (seq 1) timeout
-  mt7925e 0000:08:00.0: Failed to get patch semaphore
-  [Repeats with increasing sequence numbers 2-10]
-  mt7925e 0000:08:00.0: hardware init failed
-
-The driver cannot acquire the patch semaphore needed for firmware
-initialization, indicating that FLR does not properly reset the firmware
-state. The device remains in this broken state until physical power cycle.
-
-Disable FLR for MT7925 so the PCI core falls back to other reset methods,
-e.g., Secondary Bus Reset, which successfully resets the device and allows
-reinitialization for VFIO passthrough reuse.
-
-Signed-off-by: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+Signed-off-by: Hans Zhang <18255117159@163.com>
+Signed-off-by: Manivannan Sadhasivam <mani@kernel.org>
+[bhelgaas: commit log]
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
-Link: https://patch.msgid.link/20260522070646.203115-1-jtornosm@redhat.com
+Link: https://patch.msgid.link/20260521161822.132996-4-18255117159@163.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
 LLM Generated explanations, may be completely bogus:
 
+# Stable Backport Analysis: PCI: altera: Protect root bus removal with
+rescan lock
+
+**Local tree:** `v6.18.44-1-g2736c32da98b9` (kernel 6.18.44)
+**Fix commit on mainline:** `a8759c8ac48c0` — **not present in this
+tree**
+**Buggy code:** present since `ec15c4d0d5d2e` (2019, "PCI: altera: Allow
+building as module")
+
+---
+
 ## PHASE 1: COMMIT MESSAGE FORENSICS
 
 ### Step 1.1: Subject line
-**Record:** `[PCI] [avoid] Avoid FLR for MediaTek MT7925 WiFi — disable
-broken Function Level Reset so PCI core falls back to Secondary Bus
-Reset`
+**Record:** `[PCI: altera]` `[Protect]` — Protect root bus removal with
+rescan lock during driver teardown.
 
 ### Step 1.2: Tags
 **Record:**
-- **Signed-off-by:** Jose Ignacio Tornos Martinez
-  `<jtornosm@redhat.com>` (author)
+- **Signed-off-by:** Hans Zhang `<18255117159@163.com>` (author)
+- **Signed-off-by:** Manivannan Sadhasivam `<mani@kernel.org>` (PCI
+  maintainer reviewer)
 - **Signed-off-by:** Bjorn Helgaas `<bhelgaas@google.com>` (PCI
-  maintainer)
-- **Reviewed-by:** Manivannan Sadhasivam `<mani@kernel.org>` (MediaTek
-  wireless maintainer)
+  maintainer, committer)
 - **Link:**
-  https://patch.msgid.link/20260522070646.203115-1-jtornosm@redhat.com
-- No Fixes:, Reported-by:, Tested-by:, Cc: stable, or syzbot tags
-- Notable: PCI subsystem maintainer sign-off + MediaTek maintainer
-  review; references prior MT7922 quirk commit `81f64e925c29`
+  `https://patch.msgid.link/20260521161822.132996-4-18255117159@163.com`
+- No Fixes:, Reported-by:, Tested-by:, Cc: stable@vger.kernel.org
+- Notable: maintainer sign-offs from PCI subsystem; no syzbot or user
+  crash report
 
 ### Step 1.3: Body analysis
 **Record:**
-- **Bug:** MT7925 advertises PCIe FLR capability but FLR does not
-  correctly reset firmware state
-- **Symptom:** After unclean VM termination (crash/force-off), VFIO
-  triggers FLR to reset the device before reassignment; firmware init
-  fails with patch-semaphore timeouts; device stays broken until
-  physical power cycle
-- **Normal use unaffected:** Clean VM shutdown/reboot and host-driver
-  operation work fine
-- **Root cause:** FLR completes from PCI core’s perspective (config
-  reads succeed), so no fallback to SBR; firmware state is not properly
-  reset
-- **Fix:** Set `PCI_DEV_FLAGS_NO_FLR_RESET` via existing `quirk_no_flr`
-  for device ID `0x7925`
-- **Precedent:** MT7922 (`0x0616`) has the same quirk since commit
-  `81f64e925c29` (present in this tree)
+- **Bug:** `altera_pcie_remove()` calls `pci_stop_root_bus()` /
+  `pci_remove_root_bus()` without holding `pci_rescan_remove_lock`.
+- **Symptom:** Race with concurrent sysfs-triggered PCI rescan or
+  hotplug → use-after-free or system crash.
+- **Root cause:** Root bus teardown and sysfs rescan/remove paths can
+  run concurrently on the same bus topology.
+- **Version info:** None explicit; bug dates to 2019 module-support
+  commit in this tree.
 
 ### Step 1.4: Hidden bug fix?
-**Record:** Not disguised — this is an explicit hardware quirk for
-broken FLR. It prevents a real device-stuck failure in VFIO passthrough
-scenarios.
+**Record:** No — this is an explicit synchronization bug fix, not
+disguised cleanup.
 
 ---
 
@@ -151,35 +124,37 @@ scenarios.
 
 ### Step 2.1: Inventory
 **Record:**
-- **Files:** `drivers/pci/quirks.c` only (+2 lines of code, +1 comment
-  line)
-- **Functions:** `quirk_no_flr()` (unchanged); new
-  `DECLARE_PCI_FIXUP_EARLY` for `PCI_VENDOR_ID_MEDIATEK, 0x7925`
-- **Scope:** Single-file surgical hardware-quirk addition
+- **File:** `drivers/pci/controller/pcie-altera.c` (+2 lines)
+- **Function:** `altera_pcie_remove()`
+- **Scope:** Single-file, surgical fix (2 insertions)
 
 ### Step 2.2: Code flow change
 **Record:**
-- **Before:** MT7925 uses FLR when VFIO/PCI core resets the device; FLR
-  appears successful but leaves firmware in a bad state
-- **After:** Early boot quirk sets `PCI_DEV_FLAGS_NO_FLR_RESET`;
-  `pcie_reset_flr()` / `pci_af_flr()` return `-ENOTTY`;
-  `__pci_reset_function_locked()` falls through to bus reset (SBR),
-  which works
+- **Before:** `pci_stop_root_bus()` → `pci_remove_root_bus()` →
+  `altera_pcie_irq_teardown()` with no lock.
+- **After:** Same sequence wrapped in `pci_lock_rescan_remove()` /
+  `pci_unlock_rescan_remove()`.
+- **Path affected:** Platform driver `.remove` callback (module unload /
+  device unbind).
 
 ### Step 2.3: Bug mechanism
-**Record:** **Category (h): Hardware workaround / PCI quirk**
-- Broken FLR on MT7925 leaves firmware state inconsistent
-- Unlike MT7922 (config reads fail after FLR, eventually timing out to
-  SBR), MT7925 config reads succeed after FLR, so the reset chain never
-  falls back — device remains broken
+**Record:** **Category: synchronization / race condition.**
+- Sysfs rescan (`rescan_store`, `dev_rescan_store` in `pci-sysfs.c`)
+  holds `pci_rescan_remove_lock`.
+- `altera_pcie_remove()` did not, so teardown and rescan could
+  interleave on the same bus.
+- `pci_stop_and_remove_bus_device()` uses
+  `lockdep_assert_held(&pci_rescan_remove_lock)` — the PCI core expects
+  this lock for bus mutation; root-bus removal should follow the same
+  rule.
 
 ### Step 2.4: Fix quality
 **Record:**
-- **Quality:** High — identical pattern to MT7922 and other devices in
-  the same `quirk_no_flr` block
-- **Regression risk:** Very low — only affects MT7925 reset path; SBR is
-  the known-working fallback
-- **No unrelated changes**
+- **Quality:** High — matches `pci-aardvark.c`, `pci-mvebu.c`, `pci-
+  host-common.c`, `pci-hyperv.c`, `pcie-mediatek-gen3.c`.
+- **Regression risk:** Very low — standard mutex, no API change, IRQ
+  teardown stays outside the lock (same as other drivers).
+- **Red flags:** None.
 
 ---
 
@@ -187,149 +162,175 @@ scenarios.
 
 ### Step 3.1: Blame
 **Record:**
-- `quirk_no_flr` block and MT7922 entry (`0x0616`) introduced by
-  `81f64e925c29` (2025-02-12, Bjorn Helgaas)
-- MT7925 quirk line (`0x7925`) is **not** in this tree yet
+- Buggy `pci_stop_root_bus`/`pci_remove_root_bus` calls introduced in
+  `ec15c4d0d5d2e` (Ley Foon Tan, 2019-04-24).
+- Function signature updated in `3a610560aa4fc` (2023) — void remove
+  callback; lock omission unchanged.
 
 ### Step 3.2: Fixes: tag
-**Record:** N/A — no Fixes: tag. Bug is inherent broken hardware FLR
-behavior, not a regression from a specific kernel commit.
+**Record:** N/A — no Fixes: tag.
 
 ### Step 3.3: Related file history
 **Record:**
-- `81f64e925c29` — MT7922 FLR quirk (in tree, was Cc’d stable)
-- Recent `quirks.c` changes in 6.18.44 are unrelated PCI quirks (link
-  retraining, BW controller, bus-reset avoidance)
-- Standalone one-commit fix, not part of a series
+- Part of 9-patch series `[PATCH 0/9] PCI: controller: Add missing
+  rescan lock around root bus removal` (Hans Zhang, May 2026).
+- Cover letter: **"Each patch is independent."**
+- Merged to mainline as `a8759c8ac48c0` via `7c97ee7c4951a` (Merge
+  branch 'pci/controller/rescan_lock').
+- Related precedent: `1d59d474e1cb7` "PCI: Hold rescan lock while adding
+  devices during host probe" — **present in this tree**; documents a
+  real NULL-deref crash from missing rescan lock.
 
 ### Step 3.4: Author context
-**Record:** Jose Ignacio Tornos Martinez (Red Hat); co-signed by PCI
-maintainer Bjorn Helgaas. MT7922 quirk was authored by Bjorn Helgaas
-with Tested-by from QubesOS developer.
+**Record:** Hans Zhang — active PCI contributor (cadence, dwc capability
+search, etc.). Patch reviewed/signed by PCI maintainers.
 
 ### Step 3.5: Dependencies
-**Record:**
-- Requires existing `quirk_no_flr` infrastructure — **present** in this
-  tree
-- Requires MT7925 PCI device support — **present**
-  (`drivers/net/wireless/mediatek/mt76/mt7925/pci.c`, device ID
-  `0x7925`)
-- No prerequisite commits needed; applies standalone
+**Record:** None.
+- `pci_lock_rescan_remove()` exists since `9d16947b75831` (2014) — **in
+  this tree**.
+- `<linux/pci.h>` already included in `pcie-altera.c`.
+- Standalone; applies cleanly to current `pcie-altera.c`.
 
 ---
 
 ## PHASE 4: MAILING LIST AND EXTERNAL RESEARCH
 
-### Step 4.1–4.5: Lore / b4 dig
+### Step 4.1: Original discussion
 **Record:**
-- `b4 dig -c <hash>`: **N/A** — commit not in this checkout; no commit
-  hash available
-- WebFetch/curl to lore.kernel.org and patch.msgid.link: **blocked** by
-  Anubis bot protection; could not read thread
-- From commit message only: Reviewed-by Manivannan Sadhasivam; Link to
-  patch submission
-- **UNVERIFIED:** Whether reviewers explicitly nominated for stable in
-  the mailing list thread
+- `b4 dig -c` failed (commit not in HEAD).
+- Local mbox/cover: `20260522_18255117159_pci_controller_add_missing_res
+  can_lock_around_root_bus_removal.{cover,mbx}`.
+- Cover letter explains race with sysfs rescan/hotplug → UAF/crash.
+- Triggered by sashiko-bot review of a related cadence patch asking
+  whether root bus teardown needs the lock.
+- Lore fetch blocked (Anubis bot protection) — discussion content taken
+  from local mbox.
+
+### Step 4.2: Reviewers
+**Record:** Signed-off-by Manivannan Sadhasivam and Bjorn Helgaas.
+Series sent to linux-pci.
+
+### Step 4.3: Bug report
+**Record:** No syzbot, bugzilla, or user crash report for Altera
+specifically. Cover letter and `1d59d474e1cb7` provide class-of-bug
+evidence in PCI core.
+
+### Step 4.4: Series context
+**Record:** Patch 3/9; independent per cover letter. Other drivers in
+series (cadence, dwc, brcmstb, etc.) have the same bug pattern.
+
+### Step 4.5: Stable list
+**Record:** Not searched (lore blocked). No stable nomination found in
+local mbox.
 
 ---
 
 ## PHASE 5: CODE SEMANTIC ANALYSIS
 
 ### Step 5.1: Key functions
-**Record:** `quirk_no_flr()` (early fixup), `pcie_reset_flr()`,
-`pci_af_flr()`, `__pci_reset_function_locked()`
+**Record:** `altera_pcie_remove()` only.
 
 ### Step 5.2: Callers
-**Record:**
-- `quirk_no_flr` runs at `DECLARE_PCI_FIXUP_EARLY` during PCI
-  enumeration
-- `PCI_DEV_FLAGS_NO_FLR_RESET` checked in `pcie_reset_flr()` and
-  `pci_af_flr()` (`drivers/pci/pci.c:4357, 4379`)
-- `__pci_reset_function_locked()` iterates reset methods; FLR skipped →
-  bus reset used (`drivers/pci/pci.c:5008-5067`)
-- VFIO calls `__pci_reset_function_locked()` on device release/reset
-  (`drivers/vfio/pci/vfio_pci_core.c:707`)
+**Record:** Called from platform driver framework on:
+- `rmmod` (driver is tristate module since 2019)
+- platform device unbind
+- Module unload is an explicit design goal for post-boot FPGA
+  programming.
 
 ### Step 5.3: Callees
-**Record:** Quirk only sets `dev->dev_flags |=
-PCI_DEV_FLAGS_NO_FLR_RESET`; reset path uses existing PCI reset
-machinery
+**Record:** `pci_lock_rescan_remove()`, `pci_stop_root_bus()`,
+`pci_remove_root_bus()`, `pci_unlock_rescan_remove()`,
+`altera_pcie_irq_teardown()`.
 
 ### Step 5.4: Reachability
 **Record:**
-- Trigger: VFIO PCI passthrough + unclean VM termination (crash/force-
-  off)
-- Requires `CONFIG_VFIO_PCI` + `CONFIG_MT7925E` + MT7925 hardware
-- Not a general syscall path, but a documented, reproducible VFIO
-  workflow
+- Unprivileged users can trigger sysfs PCI rescan
+  (`/sys/bus/pci/rescan`, per-device `rescan`).
+- Root can unload the module (`rmmod`).
+- Concurrent rescan + unload is the race window — realistic on FPGA
+  systems that reload bitstreams.
+- **Userspace-reachable rescan path:** yes (with appropriate
+  privileges).
 
 ### Step 5.5: Similar patterns
-**Record:** MT7922 (`0x0616`), AMD USB/audio controllers, Intel 82579,
-SolidRun SNET — all use the same `quirk_no_flr` mechanism in this file
+**Record:** Same missing-lock pattern in cadence, dwc, brcmstb, iproc,
+mediatek, rockchip, plda, vmd (series). Already-fixed examples:
+aardvark, mvebu, host-common, hyperv, mediatek-gen3.
 
 ---
 
-## PHASE 6: CROSS-REFERENCING AGAINST LOCAL TREE
+## PHASE 6: CROSS-REFERENCE WITH LOCAL TREE
 
-### Step 6.1: Buggy code exists?
-**Record:**
-- **Local tree:** Linux **6.18.44** (`git describe HEAD` → `v6.18.44`,
-  `make kernelversion` → `6.18.44`)
-- MT7925 driver present since `c948b5da6bbec` (2023-09-30), ancestor of
-  HEAD
-- MT7922 FLR quirk present (`0x0616` at `quirks.c:5578`)
-- **MT7925 FLR quirk absent** — `0x7925` not in `quirks.c`; commit not
-  applied
-- Bug is reachable: hardware advertises FLR, kernel will use it without
-  this quirk
+### Step 6.1: Buggy code present?
+**Record:** **Yes.** Current HEAD at lines 1078–1079:
+
+```1073:1081:drivers/pci/controller/pcie-altera.c
+static void altera_pcie_remove(struct platform_device *pdev)
+{
+        struct altera_pcie *pcie = platform_get_drvdata(pdev);
+        struct pci_host_bridge *bridge =
+pci_host_bridge_from_priv(pcie);
+
+        pci_stop_root_bus(bridge->bus);
+        pci_remove_root_bus(bridge->bus);
+        altera_pcie_irq_teardown(pcie);
+}
+```
+
+No `pci_lock_rescan_remove()`. Bug present since v4.19-era module
+support.
 
 ### Step 6.2: Backport complications
-**Record:** **Clean apply expected** — two-line addition to existing
-quirk block with no structural changes
+**Record:** **Clean apply** — 2-line addition, no conflicts expected.
+`git show a8759c8ac48c0` matches current file context.
 
 ### Step 6.3: Related fixes already present?
-**Record:** MT7922 quirk (`81f64e925c29`) is in tree; no MT7925-specific
-FLR fix present
+**Record:** `1d59d474e1cb7` (probe-side rescan lock) is in tree. Altera-
+specific remove-path fix (`a8759c8ac48c0`) is **not** in tree.
 
 ---
 
-## PHASE 7: SUBSYSTEM AND MAINTAINER CONTEXT
+## PHASE 7: SUBSYSTEM CONTEXT
 
 ### Step 7.1: Subsystem criticality
-**Record:** **PCI core quirks** — IMPORTANT for PCI/VFIO virtualization
-users with MT7925 hardware
+**Record:** **PERIPHERAL** — `CONFIG_PCIE_ALTERA` host controller for
+Altera/Intel FPGA (ARM, ARM64, NIOS2). Not universal, but crash/UAF
+severity is high when triggered.
 
 ### Step 7.2: Activity
-**Record:** `quirks.c` actively maintained; FLR quirks are a well-
-established pattern in this subsystem
+**Record:** Moderately active — recent probe leak fix (`09c43b7b7d29c`),
+Agilex support, IRQ domain updates.
 
 ---
 
-## PHASE 8: IMPACT AND RISK ASSESSMENT
+## PHASE 8: IMPACT AND RISK
 
 ### Step 8.1: Who is affected
-**Record:** Users of MT7925 PCIe WiFi (`mt7925e`) with VFIO PCI
-passthrough — config-specific but real production use (e.g., QubesOS-
-style setups)
+**Record:** Users with `CONFIG_PCIE_ALTERA` on Altera/Intel FPGA PCIe
+platforms who unload/reload the driver while PCI sysfs rescan or hotplug
+runs.
 
 ### Step 8.2: Trigger conditions
-**Record:** VFIO-assigned MT7925 + unclean VM shutdown; not every boot,
-but reproducible and common in VM crash scenarios; requires privileges
-to use VFIO
+**Record:**
+- Concurrent `altera_pcie_remove()` and sysfs `rescan` or `remove` on
+  the same bus.
+- More likely than average because the driver is a module for post-boot
+  FPGA loading.
+- Requires root for module unload; rescan also typically root.
+- **Likelihood:** uncommon but realistic on target hardware.
 
 ### Step 8.3: Failure mode severity
-**Record:** Device stuck in broken state until **physical power cycle**;
-firmware init permanently fails on reassignment. **Severity: HIGH** for
-affected users (not kernel oops, but hardware effectively bricked until
-reboot/power-cycle)
+**Record:** **HIGH** — UAF and kernel crash (per commit message and PCI
+subsystem precedent in `1d59d474e1cb7`).
 
 ### Step 8.4: Risk-benefit
 **Record:**
-- **Benefit:** HIGH for VFIO + MT7925 users — restores device
-  reusability after unclean VM exit
-- **Risk:** VERY LOW — 2-line quirk, proven pattern, PCI maintainer
-  authored/reviewed
-- **Ratio:** Strongly favors backport
+- **Benefit:** Prevents crash/UAF on supported FPGA platforms during
+  driver teardown.
+- **Risk:** Very low — 2 lines, established pattern, no behavior change
+  beyond serialization.
+- **Ratio:** Favorable for backport.
 
 ---
 
@@ -337,114 +338,116 @@ reboot/power-cycle)
 
 ### Step 9.1: Evidence summary
 
-**FOR backport:**
-- Real hardware bug with documented failure logs in commit message
-- Device unusable until power cycle after VFIO FLR — serious for
-  virtualization users
-- Trivial 2-line PCI quirk, same pattern as MT7922 (already in this
-  tree, was stable-nominated)
-- PCI maintainer (Bjorn Helgaas) sign-off; MediaTek maintainer review
-- MT7925 driver and PCI device ID `0x7925` both present in 6.18.44
-- Classic stable exception: hardware quirk/workaround
+**FOR:**
+- Real synchronization bug with documented PCI class-of-crash precedent
+- UAF/crash failure mode
+- Minimal, obviously correct fix matching multiple peer drivers
+- Bug present in this tree since 2019
+- No dependencies; clean apply
+- Maintainer-reviewed (Helgaas, Sadhasivam)
+- Driver explicitly supports module unload scenarios
 
-**AGAINST backport:**
-- Only affects VFIO passthrough path, not normal host-driver operation
-- Narrow hardware population (MT7925 PCIe specifically)
-- No syzbot/fuzzer report or Cc: stable tag (expected for manual review)
+**AGAINST:**
+- No Altera-specific crash report or syzbot hit
+- Niche driver (`CONFIG_PCIE_ALTERA`)
+- Race needs concurrent unload + rescan
 
 **UNRESOLVED:**
-- Mailing list thread content (lore blocked)
-- Whether explicit stable nomination appeared in review thread
+- Lore thread not readable (bot protection); relied on local mbox
+- No independent runtime test evidence for Altera specifically
 
 ### Step 9.2: Stable rules checklist
-1. Obviously correct and tested? **PASS** — identical to in-tree MT7922
-   quirk; maintainer-reviewed
-2. Fixes a real bug affecting users? **PASS** — VFIO device stuck after
-   unclean VM exit
-3. Important issue? **PASS** — hardware effectively bricked until power
-   cycle (HIGH for affected users)
-4. Small and contained? **PASS** — 2 lines in one file
-5. No new features or APIs? **PASS** — PCI quirk only
-6. Can apply to local tree? **PASS** — infrastructure and hardware
-   support both present
+| Criterion | Result |
+|-----------|--------|
+| 1. Obviously correct and tested? | **PASS** — matches established PCI
+pattern; maintainer-reviewed |
+| 2. Fixes real bug affecting users? | **PASS** — race on module unload
+vs sysfs rescan |
+| 3. Important issue? | **PASS** — UAF/crash (HIGH severity) |
+| 4. Small and contained? | **PASS** — 2 lines, one function |
+| 5. No new features/APIs? | **PASS** — synchronization only |
+| 6. Can apply to local tree? | **PASS** — clean apply, APIs present |
 
-### Step 9.3: Exception category
-**Record:** **Hardware quirk/workaround** — explicitly allowed for
-stable
+### Step 9.3: Exception categories
+**Record:** None (not device ID, quirk, DT, build, or docs). Standard
+race-condition fix.
 
 ### Step 9.4: Decision rationale
-
-For **Linux 6.18.44**, this commit should be backported. The MT7925 PCIe
-driver and device ID are in this tree, the `quirk_no_flr` mechanism is
-established (including the MT7922 precedent), and without this quirk
-VFIO users with MT7925 hardware hit a broken FLR path that leaves the
-device unusable until a physical power cycle. The fix is minimal,
-follows an existing in-tree pattern, and carries negligible regression
-risk.
+This is a missing-lock race in root bus teardown — the same class of bug
+that caused a documented crash in `1d59d474e1cb7`, already in 6.18.y.
+The Altera driver has lacked this protection since module support was
+added in 2019. The fix is trivial, follows peer drivers, and prevents
+UAF/crash on FPGA platforms where module reload is an intended use case.
+Niche scope is offset by high severity and very low backport risk.
 
 ---
 
 ## Verification
 
-- [Phase 1] Parsed commit message: PCI FLR quirk for MT7925; tags: SOB
-  (author + Bjorn Helgaas), Reviewed-by Manivannan Sadhasivam, Link to
-  patch
-- [Phase 2] Diff: +1 comment line, +1
-  `DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_MEDIATEK, 0x7925,
-  quirk_no_flr)` in `drivers/pci/quirks.c`
-- [Phase 3] `git blame` line 5578: MT7922 quirk from `81f64e925c29`
-  (2025-02-12)
-- [Phase 3] `git show 81f64e925c29`: MT7922 quirk had Cc:
-  stable@vger.kernel.org
-- [Phase 3] `git merge-base --is-ancestor 81f64e925c29 HEAD`: MT7922
-  quirk is in tree
-- [Phase 3] `git merge-base --is-ancestor c948b5da6bbec HEAD`: MT7925
-  driver is in tree
-- [Phase 3] `c948b5da6bbec` dated 2023-09-30: initial MT7925 driver
-- [Phase 4] `b4 dig`: N/A — commit hash not in checkout
-- [Phase 4] WebFetch/curl lore.kernel.org: **FAILED** (bot protection)
-- [Phase 5] `grep PCI_DEV_FLAGS_NO_FLR_RESET`: used in `pci.c:4357,
-  4379`
-- [Phase 5] Read `pci_reset_fn_methods`: FLR before bus reset in reset
-  chain
-- [Phase 5] VFIO calls `__pci_reset_function_locked` at
-  `vfio_pci_core.c:707`
-- [Phase 6] `git describe HEAD` → `v6.18.44`; `make kernelversion` →
-  `6.18.44`
-- [Phase 6] `grep 0x7925 drivers/pci/quirks.c`: **NOT FOUND** — quirk
-  absent
-- [Phase 6] `mt7925/pci.c:14`: `PCI_DEVICE(PCI_VENDOR_ID_MEDIATEK,
-  0x7925)` confirmed
-- [Phase 6] Read `quirks.c:5558-5586`: `quirk_no_flr` block with MT7922,
-  no MT7925
-- [Phase 8] Failure mode from commit message: firmware init fails,
-  device stuck until power cycle
+- **[Phase 1]** `git show a8759c8ac48c0`: parsed subject, tags, body
+- **[Phase 1]** Local mbox/cover: series context, bot review,
+  independent patches
+- **[Phase 2]** Diff: +2 lines in `altera_pcie_remove()`
+- **[Phase 2]** `drivers/pci/remove.c:143`:
+  `lockdep_assert_held(&pci_rescan_remove_lock)` on bus removal helpers
+- **[Phase 2]** `drivers/pci/pci-sysfs.c:470,504,539`: sysfs rescan
+  holds same lock
+- **[Phase 3]** `git blame -L 1073,1081`: bug from `ec15c4d0d5d2e`
+  (2019)
+- **[Phase 3]** `git show 9d16947b75831`: lock API since 2014
+- **[Phase 3]** `git show 1d59d474e1cb7`: related crash from missing
+  lock; in tree
+- **[Phase 3]** `git log master --grep="Protect root bus removal"`: fix
+  `a8759c8ac48c0` on mainline
+- **[Phase 3]** `git merge-base --is-ancestor a8759c8ac48c0 HEAD`: fix
+  NOT in HEAD
+- **[Phase 4]** `b4 dig`: failed; used local mbox instead
+- **[Phase 4]** WebFetch lore: blocked by Anubis
+- **[Phase 5]** `grep pci_lock_rescan_remove drivers/pci/controller/`:
+  peer drivers use same pattern
+- **[Phase 5]** `Kconfig`: `PCIE_ALTERA` tristate, ARM/ARM64/NIOS2
+- **[Phase 6]** `git describe HEAD`: v6.18.44
+- **[Phase 6]** Read `pcie-altera.c:1073-1081`: buggy code confirmed in
+  HEAD
+- **[Phase 6]** `git show master:.../pcie-altera.c`: fix confirmed on
+  mainline
+- **[Phase 8]** `ec15c4d0d5d2e` commit message: module support for post-
+  boot FPGA load
 
-**YES**
+**YES**The background checks finished and match what we already
+concluded:
 
- drivers/pci/quirks.c | 2 ++
+- **Altera history:** `pcie-altera.c` has never used
+  `pci_lock_rescan_remove()`; the missing lock goes back to the 2019
+  module-support commit. The lock API itself has been in the tree since
+  2014.
+- **Mainline status:** The fix landed on `master` via merge
+  `7c97ee7c4951a` (`PCI: altera: Protect root bus removal with rescan
+  lock`, `a8759c8ac48c0`). It is **not** in your current `v6.18.44`
+  checkout.
+
+**Verdict remains YES** for backporting to this 6.18.y tree — small,
+obviously correct race fix with crash/UAF potential, and it should apply
+cleanly.
+
+ drivers/pci/controller/pcie-altera.c | 2 ++
  1 file changed, 2 insertions(+)
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index f6001be94955e..88d4a3f76bf3b 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -5564,6 +5564,7 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x443, quirk_intel_qat_vf_cap);
-  * Intel 82579LM Gigabit Ethernet Controller 0x1502
-  * Intel 82579V Gigabit Ethernet Controller 0x1503
-  * Mediatek MT7922 802.11ax PCI Express Wireless Network Adapter
-+ * Mediatek MT7925 802.11be PCI Express Wireless Network Adapter
-  */
- static void quirk_no_flr(struct pci_dev *dev)
- {
-@@ -5576,6 +5577,7 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x7901, quirk_no_flr);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1502, quirk_no_flr);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1503, quirk_no_flr);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_MEDIATEK, 0x0616, quirk_no_flr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_MEDIATEK, 0x7925, quirk_no_flr);
+diff --git a/drivers/pci/controller/pcie-altera.c b/drivers/pci/controller/pcie-altera.c
+index 76f3823d96139..8ef56e2fabcfb 100644
+--- a/drivers/pci/controller/pcie-altera.c
++++ b/drivers/pci/controller/pcie-altera.c
+@@ -1075,8 +1075,10 @@ static void altera_pcie_remove(struct platform_device *pdev)
+ 	struct altera_pcie *pcie = platform_get_drvdata(pdev);
+ 	struct pci_host_bridge *bridge = pci_host_bridge_from_priv(pcie);
  
- /* FLR may cause the SolidRun SNET DPU (rev 0x1) to hang */
- static void quirk_no_flr_snet(struct pci_dev *dev)
++	pci_lock_rescan_remove();
+ 	pci_stop_root_bus(bridge->bus);
+ 	pci_remove_root_bus(bridge->bus);
++	pci_unlock_rescan_remove();
+ 	altera_pcie_irq_teardown(pcie);
+ }
+ 
 -- 
 2.53.0
 
