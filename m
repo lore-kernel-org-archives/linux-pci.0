@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C0B738DC7D;
-	Mon, 31 Aug 2026 18:03:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 24A7338E8A2;
+	Mon, 31 Aug 2026 18:03:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788199406; cv=none; b=AMbWkfTdHy7hSUWQCa8duWw16j1zsoOOsqqttp8AtsM4KL9QJsG9CQXD0LwMYpgwXJ8wuwNb/W+dZkoVohn+Aj/XkC9QhCDNlGZZxYb/1c+p+rHvEkJREowrkkzmGkArZ3IBl+ogxkVtjk0cfSP8YAFmo//hEUTn0f9clU9kvgE=
+	t=1788199411; cv=none; b=qBPY7HjkAORsRfINmFNPc4gHlMGIlb2dspTARFI/909u8DUwb+a8gxA92GDaHQEofBgN+5E3FYzeyXpvQd252q7JTL1mNOl4WxzKw2hSOl6zEngh/uINB1wy/nuaTJfBFHzeVBoDEjFWaIF/Fs6Oveq0kNcxPVcn8pUEPNP802Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788199406; c=relaxed/simple;
-	bh=gFd0bJceZRbhmNr1NylyJtrUq/eohfDtcuJOnaDCZis=;
+	s=arc-20240116; t=1788199411; c=relaxed/simple;
+	bh=iHgX4wPZ797duEz+UZ3coCSjqsjhTVQSCXWGsca1UIM=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=rnehYekHEOifywYNkEoRbn0iKYFwnTYbirFeCqke2UqUzlW37JgAnDj5nFnSWJlhNe/Bl2y/jT3QbACMHQLlkZvLJM4xOXucpZIlDh9II1bnukVoHLsLpFRTJnHC9pTwAZiQR4v+QKMAJXWCQIkYbGjwP8z1tFj2H3bpgnSZv1Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=P/0wkucI; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=M1ABnICCtOTV3L+z/N1TBHTOHw1iblSf1H+IVm70uviPMpaaPHOxqFIeC9Yn7DlQbVihIbAFyFK2qupdtDjc8Som8KgCnX9zOz56rpAnIPlc+zLS63klXqCJZGe9ryLQCglS+KFOaWUe3l3S4Yco2w1OKFIhwcdmlA+yyDkJyLY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GH9aGm79; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="P/0wkucI"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 13D301F000E9;
-	Mon, 31 Aug 2026 18:03:21 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GH9aGm79"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 189441F00A3D;
+	Mon, 31 Aug 2026 18:03:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788199404;
-	bh=RIJXAeTE/524kPKgwK0kh3gpXIdyXkgU64O8BI3fE0A=;
+	s=k20260515; t=1788199409;
+	bh=PORnacK5J4/pKyaM9WzCxndGZ36BCmS3WYRH2I/takw=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=P/0wkucIRpyHgkZTScrkx2Ofkpesb/4iv1thOhtGmHF++4cNVJhosRFP+wOCi/vp+
-	 FQdDw2La6HdHddTbPT8FK+vNtvCKK+hH8q9sPO7KQXebUqtxCwOVKz7L041gf30LjL
-	 hAP4WDevaQUi4xtO5p0QaSLKhh2R1Eyn663x6C1RDeGZdUWh3Q5twmqThQL3kQq5NR
-	 dTUHEIUeVpjyQEmKO6uLNRDwy/MQ0OXPeT2g2CM9Ho5lRpzyZdYHkX1kOnPrJ2xKJX
-	 zpkQxTYRV4h/a2Rq+ItRL9uLfC4BrLvYcjLX+0oKIXxLi8hmZp6mwa8ZsoqWG+ynf2
-	 rChclA+66S7Lg==
+	b=GH9aGm79wshjTiR5zp7thEDZ9htBCOfRoFrbDLPHRKCnelC71vtE3nf/gqkqa9M2l
+	 fxfD8ZKIOIcOopKJaakQj6i3W4UFH9UQe9aijDSUYqhCs3hiw3grgjZAkv433Vj9jD
+	 S5jfPIRei06srwCaog//JmNeQYu4QCdkQolEU/QfplYpUistdOFLBHhf95UjY7z2gP
+	 ibdVi6Fu7LQLSCRL38jfz/s/ClJqXJ533yYcHXLTTQ7IdcOsN8WnUcjMQfEWbIZOdP
+	 ODH4Muy1IZtm72xGYzE9yWE/+KUnE+n2X5B54OLLCseFVlEL1pXgkQDcXzesCxBf+C
+	 rB940U10W9FKA==
 From: "Rafael J. Wysocki" <rafael@kernel.org>
 To: Linux ACPI <linux-acpi@vger.kernel.org>
 Cc: Linux PM <linux-pm@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>,
@@ -36,10 +36,9 @@ Cc: Linux PM <linux-pm@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>,
  Linux PCI <linux-pci@vger.kernel.org>, Bjorn Helgaas <helgaas@kernel.org>,
  Hans de Goede <hansg@kernel.org>,
  Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject:
- [PATCH v1 3/7] ACPI: bus: Drop initialized flag from struct acpi_device_flags
-Date: Mon, 31 Aug 2026 19:59:23 +0200
-Message-ID: <3782570.R56niFO833@rafael.j.wysocki>
+Subject: [PATCH v1 2/7] ACPI: PM: Introduce acpi_device_init_power()
+Date: Mon, 31 Aug 2026 18:25:52 +0200
+Message-ID: <2055986.PYKUYFuaPT@rafael.j.wysocki>
 Organization: Linux Kernel Development - Intel
 In-Reply-To: <3435655.aeNJFYEL58@rafael.j.wysocki>
 References: <3435655.aeNJFYEL58@rafael.j.wysocki>
@@ -54,69 +53,112 @@ Content-Type: text/plain; charset="UTF-8"
 
 From: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
 
-After previous changes, the ACPI device object "initialized" flag is
-not particularly useful.  It is set almost all the time and it is
-only checked along with the "visited" flag, but checking the latter
-is sufficient.
+Two out of three callers of acpi_bus_init_power() need to clear
+flags.power_manageable for the target device on errors, which
+is somewhat cumbersome, so rename the function to
+__acpi_device_init_power(), add a wrapper called
+acpi_device_init_power() around it that will take care
+of the flags.power_manageable clearing, and make the two
+callers of acpi_bus_init_power() in question invoke that
+wrapper.
 
-Drop it accordingly.
+While at it, clean up the declaration of local variables
+in __acpi_device_init_power().
+
+No intentional functional impact.
 
 Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 ---
- drivers/acpi/scan.c     | 2 --
- include/acpi/acpi_bus.h | 5 ++---
- 2 files changed, 2 insertions(+), 5 deletions(-)
+ drivers/acpi/device_pm.c | 22 +++++++++++++++-------
+ drivers/acpi/scan.c      |  5 ++---
+ include/acpi/acpi_bus.h  |  2 +-
+ 3 files changed, 18 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
-index 5aa3ecb000e1..019a43e3b5d7 100644
---- a/drivers/acpi/scan.c
-+++ b/drivers/acpi/scan.c
-@@ -281,7 +281,6 @@ static int acpi_scan_check_and_detach(struct acpi_device *adev, void *p)
- 	 * that.
- 	 */
- 	acpi_device_set_power(adev, ACPI_STATE_D3_COLD);
--	adev->flags.initialized = false;
+diff --git a/drivers/acpi/device_pm.c b/drivers/acpi/device_pm.c
+index a680e6972a8c..7fd780125177 100644
+--- a/drivers/acpi/device_pm.c
++++ b/drivers/acpi/device_pm.c
+@@ -169,10 +169,8 @@ int acpi_device_set_power(struct acpi_device *device, int state)
+ 		return -EINVAL;
  
- 	/* For eject this is deferred to acpi_bus_post_eject() */
- 	if (!(flags & ACPI_SCAN_CHECK_FLAG_EJECT)) {
-@@ -1827,7 +1826,6 @@ void acpi_init_device_object(struct acpi_device *device, acpi_handle handle,
- 	acpi_set_pnp_ids(handle, &device->pnp, type);
- 	acpi_init_properties(device);
- 	acpi_bus_get_flags(device);
--	device->flags.initialized = true;
- 	device->flags.enumeration_by_parent =
- 		acpi_device_enumeration_by_parent(device);
- 	acpi_device_clear_enumerated(device);
-diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
-index b0d9057ccb8a..596fbd748e88 100644
---- a/include/acpi/acpi_bus.h
-+++ b/include/acpi/acpi_bus.h
-@@ -180,7 +180,6 @@ struct acpi_device_flags {
- 	u32 removable:1;
- 	u32 ejectable:1;
- 	u32 power_manageable:1;
--	u32 initialized:1;
- 	u32 visited:1;
- 	u32 hotplug_notify:1;
- 	u32 is_dock_station:1;
-@@ -189,7 +188,7 @@ struct acpi_device_flags {
- 	u32 cca_seen:1;
- 	u32 enumeration_by_parent:1;
- 	u32 honor_deps:1;
--	u32 reserved:19;
-+	u32 reserved:20;
- };
+ 	if (device->power.state == ACPI_STATE_UNKNOWN &&
+-	    acpi_bus_init_power(device)) {
+-		device->flags.power_manageable = 0;
++	    acpi_device_init_power(device))
+ 		return -ENODEV;
+-	}
  
- /* File System */
-@@ -654,7 +653,7 @@ void acpi_set_modalias(struct acpi_device *adev, const char *default_id,
+ 	acpi_handle_debug(device->handle, "Power state change: %s -> %s\n",
+ 			  acpi_power_state_string(device->power.state),
+@@ -310,10 +308,9 @@ int acpi_bus_set_power(acpi_handle handle, int state)
+ }
+ EXPORT_SYMBOL(acpi_bus_set_power);
  
- static inline bool acpi_device_enumerated(struct acpi_device *adev)
+-int acpi_bus_init_power(struct acpi_device *device)
++static int __acpi_device_init_power(struct acpi_device *device)
  {
--	return adev && adev->flags.initialized && adev->flags.visited;
-+	return adev && adev->flags.visited;
+-	int state;
+-	int result;
++	int result, state;
+ 
+ 	result = acpi_device_get_power(device, &state);
+ 	if (result)
+@@ -355,6 +352,17 @@ int acpi_bus_init_power(struct acpi_device *device)
+ 	return 0;
  }
  
- /*
++int acpi_device_init_power(struct acpi_device *device)
++{
++	int ret;
++
++	ret = __acpi_device_init_power(device);
++	if (ret)
++		device->flags.power_manageable = 0;
++
++	return ret;
++}
++
+ /**
+  * acpi_device_fix_up_power - Force device with missing _PSC into D0.
+  * @device: Device object whose power state is to be fixed up.
+@@ -417,7 +425,7 @@ int acpi_device_update_power(struct acpi_device *device, int *state_p)
+ 	int result;
+ 
+ 	if (device->power.state == ACPI_STATE_UNKNOWN) {
+-		result = acpi_bus_init_power(device);
++		result = __acpi_device_init_power(device);
+ 		if (!result && state_p)
+ 			*state_p = device->power.state;
+ 
+diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
+index 1ad8dffc2daf..5aa3ecb000e1 100644
+--- a/drivers/acpi/scan.c
++++ b/drivers/acpi/scan.c
+@@ -2362,9 +2362,8 @@ static int acpi_bus_attach(struct acpi_device *device, void *first_pass)
+ 	acpi_ec_register_opregions(device);
+ 
+ 	if (device->flags.power_manageable &&
+-	    device->power.state == ACPI_STATE_UNKNOWN &&
+-	    acpi_bus_init_power(device))
+-		device->flags.power_manageable = 0;
++	    device->power.state == ACPI_STATE_UNKNOWN)
++		acpi_device_init_power(device);
+ 
+ 	if (device->flags.visited)
+ 		goto ok;
+diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
+index 1a45e0d521d8..b0d9057ccb8a 100644
+--- a/include/acpi/acpi_bus.h
++++ b/include/acpi/acpi_bus.h
+@@ -618,7 +618,7 @@ int acpi_bus_get_status(struct acpi_device *device);
+ int acpi_bus_set_power(acpi_handle handle, int state);
+ const char *acpi_power_state_string(int state);
+ int acpi_device_set_power(struct acpi_device *device, int state);
+-int acpi_bus_init_power(struct acpi_device *device);
++int acpi_device_init_power(struct acpi_device *device);
+ int acpi_device_fix_up_power(struct acpi_device *device);
+ void acpi_device_fix_up_power_extended(struct acpi_device *adev);
+ void acpi_device_fix_up_power_children(struct acpi_device *adev);
 -- 
 2.51.0
 
