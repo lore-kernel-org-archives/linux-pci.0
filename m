@@ -1,119 +1,112 @@
-Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 93D0E38DC5C;
-	Mon, 31 Aug 2026 19:14:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=204.191.154.188
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E682377A99
+	for <linux-pci@vger.kernel.org>; Mon, 31 Aug 2026 19:46:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788203672; cv=none; b=QQy+WwSOvcrG9uJ/fqsX77sX5Nl7fblELQ6yS7SoZv78cLvXkftn0y0Pe6f1fNv640r3gBwSXG3LJwroh1ukVxH56GzkPmvWL9VMyQt/MJzWpKi+otd1vso/1nnzyxxsYZKfuCHfheTf9qthDrt+U3FD2lWHK+tieeqDGg+EeZQ=
+	t=1788205580; cv=none; b=TIqHbhpC+rX+IX1FQ7tTlyvRQkip+jaficP9UdJcJbjO7Da+dWv4DUufs08F1uwgoMSb1DAfjE/Wiu+/+a5uqb3GsngOUjI4aaLGViB/cA0hIBr5+e6CChfQzh4nLhfIxQnRljbQb2R68wjSIr7qZF7GzUbVmlOPxWdTz9nVUiI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788203672; c=relaxed/simple;
-	bh=J5Z+negq9t0hkOPhOevbAhPTgwWt6tQSntxeoP4sOG4=;
-	h=From:To:Cc:Date:Message-ID:In-Reply-To:References:MIME-Version:
-	 Subject; b=IwYbQmgss8rz4fEorTjJKLFMhbEc5f/S9S2WALpMOvHn0RdNOYCGzp6ZfRcx56YOILM4X21q+OMku2ZdY4K60mLFBZezZ9vcTcxTV3vJ4KuGqMwDwNSZaSucHrLjB7JvjadIVVKGmQnIP22c8lErAQdFGCCqeqVJsxYSdcx4xm4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com; spf=pass smtp.mailfrom=deltatee.com; dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b=Yxk60JSH; arc=none smtp.client-ip=204.191.154.188
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=deltatee.com
+	s=arc-20240116; t=1788205580; c=relaxed/simple;
+	bh=f2NmndtY7RCKltp9GrbvpGWWVdO1m1wy9Ct2uDt4EsA=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=uHVBef8fBP03n1ookwC39tSe9tAGMwbp6RoulCf8LfNVjFMnpKFfj3gX6cbXtqTuKaJUxba8/PV9kCrzFZ0VI4LY4eDgbFb4gqzB4NIf37c0PBtt78yOeKIZKQSGIIb5tOMeBZBEYcwlZT8zqPoeK44NfXNBf46p4gwuMWEGZ1Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IyuLzuSm; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b="Yxk60JSH"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=deltatee.com; s=20200525; h=Subject:MIME-Version:References:In-Reply-To:
-	Message-ID:Date:Cc:To:From:content-disposition;
-	bh=RnnO1NNcjLe9HNz+vfdGpNqTtaHUrE/25DnSIreOxdA=; b=Yxk60JSHW8Qzbn10IR5B1ZoEA5
-	pL2EtJqGqkgA//b7DbBZzzsFDMQoP20RZW+t9QTWhh0mu0qdW/LG1ZMCoN5kh7iWc6hqDEkoLjwdv
-	DoCt4PZqEhCFM1Zkl6Y2ENCTh4kCu4FXQjycvkfEyVZu9fRld07brSqfGfEVhxGZNimufB6CanZ3m
-	qKmwO0hK9VsG2Thd+UWhcqKR//1RNzSG6bKMxpMlEsZ/J2hxZNfbCtD53gDHVF6bZW0spbrlJe6QF
-	tFsdyRSfErKlYVez/oqmMttLKswlc6PYFZA+PmDvhrc5dXKhVgkTluu/Ww5ChIVJ9VakAVkGT0Gl0
-	52R+cO5A==;
-Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
-	by ale.deltatee.com with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-	(Exim 4.98.2)
-	(envelope-from <gunthorp@deltatee.com>)
-	id 1x17Se-000000007Eg-4246;
-	Mon, 31 Aug 2026 13:14:29 -0600
-Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.98.2)
-	(envelope-from <gunthorp@deltatee.com>)
-	id 1x17SJ-00000000s1r-0Ltr;
-	Mon, 31 Aug 2026 13:14:07 -0600
-From: Logan Gunthorpe <logang@deltatee.com>
-To: linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	dmaengine@vger.kernel.org,
-	Vinod Koul <vkoul@kernel.org>
-Cc: Frank Li <Frank.li@nxp.com>,
-	Kelvin Cao <kelvin.cao@microchip.com>,
-	=?UTF-8?q?Thomas=20Wei=C3=9Fschuh?= <linux@weissschuh.net>,
-	Dave Jiang <dave.jiang@intel.com>,
-	George Ge <george.ge@microchip.com>,
-	Jaeyoung Chung <jjy600901@snu.ac.kr>,
-	Logan Gunthorpe <logang@deltatee.com>,
-	Sangyun Kim <sangyun.kim@snu.ac.kr>,
-	Kyungwook Boo <bookyungwook@gmail.com>,
-	Frank Li <Frank.Li@nxp.com>
-Date: Mon, 31 Aug 2026 13:14:02 -0600
-Message-ID: <20260831191403.207631-13-logang@deltatee.com>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20260831191403.207631-1-logang@deltatee.com>
-References: <20260831191403.207631-1-logang@deltatee.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IyuLzuSm"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 63E6A1F000E9;
+	Mon, 31 Aug 2026 19:46:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1788205578;
+	bh=tRQn8gm11xCkD1foydzBVsEpC6Rw5OWfkBV/WtLIE00=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=IyuLzuSmanVaS9UI0ZGBp2/UDLZoQpPzAMExx5HC2bQbAIehhqrqBYjbWgkJq3JmZ
+	 ZEGeepnTfNmXVFE0sv+N30z57fkS1FAg7Fzr8xWWoUFE9Njf/fn6MdPCu1qkJEBw0x
+	 drpESuO5RciXOSBxnEEFMkDHbkWAY4HZDe6Tvs5tP8atUAQrU3AHa+pxAyy02goR/p
+	 nOhRRtib9ws2wFtfVy7de/Mn5OO0bpDJp9OSgzrXiq5WKbFRgZZ+psdM8sHegS/K13
+	 EqMUHUmKZHi4UCMg4pCvWJujgz63emIBFBkcLqhfW8a3n8hDUoMa1d2R+LBzyUQAR2
+	 PGO0jQ5bRKNJg==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v4] rust: pci: reject IRQ vector indices that do not fit
+ in u32
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Sophon Zhang" <aiqubits@hotmail.com>
+Cc: linux-pci@vger.kernel.org, ojeda@kernel.org
+In-Reply-To: <20260901-fix-pci-irq-vector-index-truncation-v4-1-f94aa6932fd9@hotmail.com>
+References: <20260901-fix-pci-irq-vector-index-truncation-v4-1-f94aa6932fd9@hotmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Mon, 31 Aug 2026 19:46:17 +0000
+Message-Id: <20260831194618.63E6A1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SA-Exim-Connect-IP: 172.16.1.31
-X-SA-Exim-Rcpt-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, dmaengine@vger.kernel.org, vkoul@kernel.org, linux@weissschuh.net, dave.jiang@intel.com, kelvin.cao@microchip.com, george.ge@microchip.com, logang@deltatee.com, jjy600901@snu.ac.kr, sangyun.kim@snu.ac.kr, bookyungwook@gmail.com, Frank.li@nxp.com, Frank.Li@nxp.com
-X-SA-Exim-Mail-From: gunthorp@deltatee.com
-X-Spam-Level: 
-Subject: [PATCH v5 12/12] dmaengine: plx_dma: fix NULL pointer deref in plx_dma_isr()
-X-SA-Exim-Version: 4.2.1 (built Sun, 23 Feb 2025 07:57:16 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 
-plx_dma_create() registered the interrupt handler with request_irq()
-before initializing plxdev->bar. If the device raised an interrupt in
-that window, plx_dma_isr() would dereference the still-NULL bar.
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
 
-Move the bar assignment ahead of request_irq() so everything the
-handler can touch is initialized before it can run.
+Pre-existing issues:
+- [High] Missing bounds check in `IrqVectorRegistration::index()` leads to =
+kernel warning/panic via C API.
+--
 
-Reported-by: Sangyun Kim <sangyun.kim@snu.ac.kr>
-Reported-by: Kyungwook Boo <bookyungwook@gmail.com>
-Link: https://lore.kernel.org/all/20260610112121.676561-1-jjy600901@snu.ac.kr
-Fixes: c2dbcaa8c672 ("dmaengine: plx-dma: Implement hardware initialization and cleanup")
-Reviewed-by: Frank Li <Frank.Li@nxp.com>
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
----
- drivers/dma/plx_dma.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+commit 97b70137801249b8b3a7409015c5b394925bf777
+Author: Sophon Zhang <aiqubits@hotmail.com>
+rust: pci: reject IRQ vector indices that do not fit in u32
 
-diff --git a/drivers/dma/plx_dma.c b/drivers/dma/plx_dma.c
-index 84941a918b01..409898e92c32 100644
---- a/drivers/dma/plx_dma.c
-+++ b/drivers/dma/plx_dma.c
-@@ -504,17 +504,17 @@ static int plx_dma_create(struct pci_dev *pdev)
- 	if (!plxdev)
- 		return -ENOMEM;
- 
--	rc = request_irq(pci_irq_vector(pdev, 0), plx_dma_isr, 0,
--			 KBUILD_MODNAME, plxdev);
--	if (rc)
--		goto free_plx;
--
- 	spin_lock_init(&plxdev->ring_lock);
- 	tasklet_setup(&plxdev->desc_task, plx_dma_desc_task);
- 
- 	RCU_INIT_POINTER(plxdev->pdev, pdev);
- 	plxdev->bar = pcim_iomap_table(pdev)[0];
- 
-+	rc = request_irq(pci_irq_vector(pdev, 0), plx_dma_isr, 0,
-+			 KBUILD_MODNAME, plxdev);
-+	if (rc)
-+		goto free_plx;
-+
- 	dma = &plxdev->dma_dev;
- 	INIT_LIST_HEAD(&dma->channels);
- 	dma_cap_set(DMA_MEMCPY, dma->cap_mask);
--- 
-2.47.3
+This commit attempts to prevent 64-bit Rust IRQ vector indices from wrapping
+when passed to the C API by introducing a checked cast to u32. It relies on
+the PCI core to validate the range of the index rather than doing a bounds
+check in Rust.
 
+> diff --git a/rust/kernel/pci/irq.rs b/rust/kernel/pci/irq.rs
+> --- a/rust/kernel/pci/irq.rs
+> +++ b/rust/kernel/pci/irq.rs
+> @@ -151,8 +151,10 @@ pub fn irq_type(&self) -> IrqType {
+>      /// [Self::len()].
+>      #[inline]
+>      pub fn index(&self, index: usize) -> Result<IrqVector<'_>> {
+> +        let index =3D u32::try_from(index)?;
+> +
+>          // SAFETY: self.dev.as_raw() is a valid pointer to a struct pci_=
+dev.
+> -        let irq =3D unsafe { bindings::pci_irq_vector(self.dev.as_raw(),=
+ index as u32) };
+> +        let irq =3D unsafe { bindings::pci_irq_vector(self.dev.as_raw(),=
+ index) };
+
+[Severity: High]
+This is a pre-existing issue, but does relying on the C API for bounds
+checking violate Rust safety guarantees by triggering a kernel warning or
+panic?
+
+If a driver calls this safe Rust function with an out-of-bounds index that
+still fits in a u32 (for example, 65536), it will pass the u32 conversion
+and be handed directly to bindings::pci_irq_vector().
+
+If MSI is enabled, this eventually calls msi_domain_get_virq() in
+kernel/irq/msi.c, which executes:
+
+    if (WARN_ON_ONCE(index > MSI_MAX_INDEX || domid >=3D MSI_MAX_DEVICE_IRQ=
+DOMAINS))
+        return 0;
+
+Because MSI_MAX_INDEX is 65535, an index of 65536 will trigger the
+WARN_ON_ONCE, which can crash the kernel if panic_on_warn is set.
+
+Furthermore, if the kernel is built without CONFIG_PCI_MSI, the fallback
+inline pci_irq_vector() in include/linux/pci.h will trigger a similar
+warning for any index > 0:
+
+    if (WARN_ON_ONCE(nr > 0))
+        return -EINVAL;
+
+Since IrqVectorRegistration::index() is exposed as a safe Rust API, could an
+explicit check against self.len() be added here to avoid relying on C-side
+WARN_ON_ONCE checks for validation?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260901-fix-pci-ir=
+q-vector-index-truncation-v4-1-f94aa6932fd9@hotmail.com?part=3D1
