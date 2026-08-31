@@ -1,63 +1,70 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A8E0238F24B;
-	Mon, 31 Aug 2026 20:23:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C7BBC3A4539
+	for <linux-pci@vger.kernel.org>; Mon, 31 Aug 2026 20:25:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788207782; cv=none; b=dpsGfG7zKnhSpsd7K7vr9FtKnRjT85RJ+zfBpsnuavgX+ikRs4+ZiQLSSJlpZCUrg9DnPwUu+6a2pgbwiJjFNLZ4UhJAYBtgourWC1x761fHPL4824IcEbb8hYRRKUjJaHdAXfUSfWiZXwmf7+XBASQYdbFoNp570RqRg1A6dhw=
+	t=1788207915; cv=none; b=gbw0ZwyLr3r6Bb0V0E6kOVgDE0EE1MPgN1o02g1XEw2cAGwIxApYICeB3jowcEGe2h/2cc08dD4MmRRHTVp0UW71cVBMSNe21d49Eqi+c4+3OrK1Leh1nKNmOqIzKneDwWRyOckOzxi3gx1xEswhuRWHxsP60nBlVN2mFOtEfPE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788207782; c=relaxed/simple;
-	bh=WKkY0cEhjc4QXxYUnMJVLPH4yRsmyftuFa3NsyidTZg=;
+	s=arc-20240116; t=1788207915; c=relaxed/simple;
+	bh=itGXS/9wIJLd92FC8pYXnMppREA9f877Ya6esiB7+k4=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=TL/xq46dVsMuh703vHZu/spuRfhFXFEJnjI4FdHkjdWp++XKepLtGe9wyJjXMs4NrOeWqaR4P3dISy9OaRpJ6BSYQ4Vmgre1NTnqlWoq/v40RUVLiBfkQfb512GTNSTvil8rY/xgtMUk1YtJ9Gq+P/QzmHT0eElcVeHoaT70nIE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hLkP5vs9; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=tWnx3tgBE6zZJWurLHh2egdHhKyz2s1p/IcEptjEvcrnpP8S2eBhc1Yi8l6fep6dBIoZLlN6HdlhgGQ2FugG7QWqQ2cFFYE1itEmRM1nctWLemdt/rM4jhFyG6uHnDnW0+E1Ni90ZW/GIG3jyjatA47U4lzn0Wpc7RrVLtO8ZhQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EFvOWIU2; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hLkP5vs9"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5BB851F000E9;
-	Mon, 31 Aug 2026 20:23:00 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EFvOWIU2"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5857C1F00A3E;
+	Mon, 31 Aug 2026 20:25:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788207780;
-	bh=WKkY0cEhjc4QXxYUnMJVLPH4yRsmyftuFa3NsyidTZg=;
+	s=k20260515; t=1788207913;
+	bh=itGXS/9wIJLd92FC8pYXnMppREA9f877Ya6esiB7+k4=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=hLkP5vs9y3/spH2Ik8LIwpoS/n+Yl6icFMRHP3OKfJX/3PbODmilfb79pEmNcbLBC
-	 pUwH2voPVHVOTJPJOsllWBoXXdlsCsUndt5WDGu5VAIc85HEq2L9DoZ3QNgSvuhcVi
-	 bf42km22e8Rrm4L15pq4O19JuEkoVyBnbSJIwGOvn6SSZw2xgqtSduwaQN0DWDCB6N
-	 Rrk6ZoZ51SxKnwwkRSG4+Qkb84ZwmF0TWXDMzatIcxYstLBNZaFKJ5d2Wo+0too3F5
-	 Z3RFBvFeMIS4UAvRaKsoSZSOqUzn63Hn5DoF/sQSL6YGTMgAEeWUdZwIW/AWadBAHs
-	 jLcAdMcktBw0A==
+	b=EFvOWIU2cDhbp6X9CymXQ5DYZrr5+rhfJyrlu8RG5YHvcDBsSCDBbloPYdqr6BDKa
+	 PMl+bKBq7GcqAXNlaFzwaWO57rH2HfnFGCTzufpksiCUpVk8AkWGRIgyRBuIJzp+ZY
+	 wnaUmB+3FqbnagXBW+XvBfXPO+s51eDpAzpygb8LiJu3iUQo+OzfUUqfBq2it4iZYp
+	 YPvGozuBUF+IPoS4dSa3idLTWkwO1a5AxbsoI7ZgUiPMljbg/olMXMOIJb3n3f63PQ
+	 rpb1ucY0ibR6LWn+cPUF4UFdntgDg6W7228QpwUoU4/IOnD7hR+r2BTWuvqFScAUtN
+	 u2IF7kPs/EVlw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 1/7] PCI: endpoint: Add DMA auxiliary resource
- metadata
+Subject: Re: [PATCH v1 2/7] ACPI: PM: Introduce acpi_device_init_power()
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "Koichiro Den" <den@valinux.co.jp>
-Cc: ntb@lists.linux.dev, linux-pci@vger.kernel.org
-In-Reply-To: <20260831182657.329614-2-den@valinux.co.jp>
-References: <20260831182657.329614-1-den@valinux.co.jp>
- <20260831182657.329614-2-den@valinux.co.jp>
+To: "Rafael J. Wysocki" <rafael@kernel.org>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <2055986.PYKUYFuaPT@rafael.j.wysocki>
+References: <3435655.aeNJFYEL58@rafael.j.wysocki>
+ <2055986.PYKUYFuaPT@rafael.j.wysocki>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 31 Aug 2026 20:22:59 +0000
-Message-Id: <20260831202300.5BB851F000E9@smtp.kernel.org>
+Date: Mon, 31 Aug 2026 20:25:13 +0000
+Message-Id: <20260831202513.5857C1F00A3E@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-> Endpoint functions that export controller-local DMA channels need the
-> controller register and descriptor-memory layout.
+> From: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
 >=20
-> Add DMA control and descriptor-memory resource types. The control resource
-> carries the register layout and channel counts. Each descriptor region is
-> associated with the static channel ID assigned by the local DMA driver.
+> Two out of three callers of acpi_bus_init_power() need to clear
+> flags.power_manageable for the target device on errors, which
+> is somewhat cumbersome, so rename the function to
+> __acpi_device_init_power(), add a wrapper called
+> acpi_device_init_power() around it that will take care
+> of the flags.power_manageable clearing, and make the two
+> callers of acpi_bus_init_power() in question invoke that
+> wrapper.
 >=20
-> Reviewed-by: Frank Li <Frank.Li@nxp.com>
-> Signed-off-by: Koichiro Den <den@valinux.co.jp>
+> While at it, clean up the declaration of local variables
+> in __acpi_device_init_power().
+>=20
+> No intentional functional impact.
+>=20
+> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
 Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260831182657.3296=
-14-1-den@valinux.co.jp?part=3D1
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/3435655.aeNJFYEL58@=
+rafael.j.wysocki?part=3D2
 
