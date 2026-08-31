@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 650A0388879;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED95F3955DC;
 	Mon, 31 Aug 2026 20:21:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788207703; cv=none; b=ry7reQmXWdIq3C1L+AT2ly2Bmq6+Z4xOQiS4McxRXYGY3hIlIURfuzutiB2QxyvSjT/H+wqFO3v1OYhlnpHW9HADZHfo3Cv3s7s57DGCJ9cGXXYmp4X7VJHvTkM1i1KCtGlRFz2GfMPPLPlXc8q5uGZUcESbhrX6ucJhavYa244=
+	t=1788207704; cv=none; b=rZ8nZ3iRpbLHqtYYoMmWgyZUPmp85FE33zU55Kj81F3E+UcPz+XS7IPYRgBbN4RUDnUyskkK+r4/Jvf2dpvRUcFmwAI+cUk6/eoqi+i2aNKaJPAK1Cfu+1PmL86UiSE/wjBekINSlp3svuIlg4Oq65Odpk13J9Lk56Mo8hONocg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788207703; c=relaxed/simple;
-	bh=XurowtO06U8Aw7Fm1KH5LvPHuNiKbK3anO2uAVzxjtg=;
+	s=arc-20240116; t=1788207704; c=relaxed/simple;
+	bh=mWd+Mb5Z4+HSOwmsDqY0t200hb3Jq63Kx4MbFS7HBvw=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=qMPZNQga5mPp+DUG1AcH82Tj1cTdoYXaXGiSnRlmrUL2q/D569g+fc16J+znmGuyo7oR8in3qNY7zdqLKV3VOxug7M4uztGKoH2mSstWtAI4EalVO/HCjSM0u0PDOF9hSy2Zavp2GsE/vgGQ/2+COSP9nl7pjyRd7ZH82dLD5l0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=clOZWt61; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=RR2kwOZVulaJXudia8f5zN49fbkT7JE31O0n6Zu3gUheeWJakm9WSUhT9PM+Wd2ZSTbTTF3iCWx5lOzfhpgtD4L8qoKSsQQkQ/XerQmfjZ+otuAhvb//M6r4n2cFZNNHVHjz2U4LonRGByRZGPyjbrG+dn/5s1FeFqo9em8lnxc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gxCH2VpX; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="clOZWt61"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C9E701F000E9;
-	Mon, 31 Aug 2026 20:21:40 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gxCH2VpX"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E10D71F00ADE;
+	Mon, 31 Aug 2026 20:21:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788207701;
-	bh=OOKF7tUXCi5ikEhu2FlHAXW9zvzpSMnU5r0cL+QJIe0=;
+	s=k20260515; t=1788207702;
+	bh=sTN0Gf9Aj13nHFatd/xmnH9hA5RP7BLUG26PmGdZLWc=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=clOZWt61PRPuL3KCw9Qs8yNi0yutMS9Gs1FsRW4+f9F9e3IjBsyrSQ6nmet/2TEl0
-	 LS/EDCik8oFKKgWnpPnd5bqrquloqLZ8HyZ6A9Vv0aNf6rgpWhqH3KlRjyUFn/moIY
-	 EvW/rTMEhiS4JkSPHIbNWjS1Fv6lH+8ottm73Lpsh3zUSW8qxYAZPTaymNvfkXzuR6
-	 mOY0341Cg0vS0eXYnGJutC7fTeo8/3A30eFc6YhqEzqKD/s635zpPLuzmFiIbNvOwe
-	 kPCB4cK2RFMOY5sYqNqlgO024kiPyav2GG4BDcpzNMkWChs3T72LeLA4RyvPBSQXem
-	 qtJcT9P7yy07A==
+	b=gxCH2VpXNbIUrT8A2Qu86ZHI6OZtFMLvED4eNaBumxVRTziZ9eQTKLDAM7wJph67O
+	 ts4HU9w2fbAJYqyS7cEw2tqsNx/u1CXP3Du11W4gTrTP6UJd0V52K4Td/1Hn0tsSZh
+	 PH8XOEpurbEM4bRRWFtF6AptscF5P3cMAm2JTZcjLOuiWQcZ2hJycHaSK4DQCWRVtD
+	 TrfbK5nbOmK+rccqhWCeJYL6lVkaEBQxPWr6KBz3ZrNQ1c+WaFIvrVIL25J/tR8SRn
+	 q/Ryjf7zEWsQygov/5kgPOjjx7tDQ6JmZydCNU+14jzvMXB9yocY1O0DSRJlc/UABg
+	 +L7dAzZlTeZIg==
 From: Bjorn Andersson <andersson@kernel.org>
 To: Konrad Dybcio <konradybcio@kernel.org>,
 	Rob Herring <robh@kernel.org>,
@@ -39,13 +39,15 @@ Cc: linux-arm-msm@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	linux-pci@vger.kernel.org,
 	linux-pm@vger.kernel.org,
-	Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
-Subject: Re: [PATCH v2 0/2] arm64: dts: qcom: eliza-evk: Enable PCIe0 and PCIe1 with M.2 and TC9563 switch
-Date: Mon, 31 Aug 2026 15:21:19 -0500
-Message-ID: <178820768627.1699313.17548578412208976636.b4-ty@kernel.org>
+	Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>,
+	Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>,
+	Abel Vesa <abel.vesa@oss.qualcomm.com>
+Subject: Re: (subset) [PATCH v7 0/3] arm64: dts: qcom: eliza-evk: Enable PCIe0 and PCIe1 with M.2 and TC9563 switch
+Date: Mon, 31 Aug 2026 15:21:20 -0500
+Message-ID: <178820768644.1699313.8603462826395094258.b4-ty@kernel.org>
 X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260708-eliza_evk-v2-0-c599246ceba1@oss.qualcomm.com>
-References: <20260708-eliza_evk-v2-0-c599246ceba1@oss.qualcomm.com>
+In-Reply-To: <20260730-eliza_evk-v7-0-7ac7b66a3e6d@oss.qualcomm.com>
+References: <20260730-eliza_evk-v7-0-7ac7b66a3e6d@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -56,7 +58,7 @@ Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 
 
-On Wed, 08 Jul 2026 11:47:15 +0530, Krishna Chaitanya Chundru wrote:
+On Thu, 30 Jul 2026 17:30:15 +0530, Krishna Chaitanya Chundru wrote:
 > This series enables PCIe for the Eliza EVK board (CQS SoM on EVK carrier).
 > 
 > The Eliza EVK exposes two PCIe ports:
@@ -70,9 +72,11 @@ On Wed, 08 Jul 2026 11:47:15 +0530, Krishna Chaitanya Chundru wrote:
 
 Applied, thanks!
 
-[1/2] arm64: dts: qcom: eliza-evk: Add PCIe0 with M.2 E key connector
+[1/3] arm64: dts: qcom: eliza: Add PCIe PHY and controller nodes
+      commit: b47be235dcc5b512b5af4ee0e1c014571155edb2
+[2/3] arm64: dts: qcom: eliza-evk: Add PCIe0 with M.2 E key connector
       commit: 073c6a891eb39578ab85d8a1ccff156ad1d8a98f
-[2/2] arm64: dts: qcom: eliza-evk: Add PCIe1 with TC9563 PCIe switch
+[3/3] arm64: dts: qcom: eliza-evk: Add PCIe1 with TC9563 PCIe switch
       commit: 9439277347656b22957a8b9156b0e33c446b490d
 
 Best regards,
