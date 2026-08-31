@@ -1,44 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B77014446F4
-	for <linux-pci@vger.kernel.org>; Mon, 31 Aug 2026 14:12:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED8524D90CD
+	for <linux-pci@vger.kernel.org>; Mon, 31 Aug 2026 14:25:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788185524; cv=none; b=RPWPlMDjCkPA8uU3t/hf7WkFTGTU93OjelgVZsLQiwbAnQ8J+z4pgGRrKOZfiDcJ4/1/3LGDD4gE0vM5qGkNWW4sGFomtAa11NQ65lH2nHGiLYLbz70A7QU/DZ0kOYSBbcMiH0s3D20e2EMoXcedYstj3+9Wsr6i0pV75NjoXQw=
+	t=1788186306; cv=none; b=FoB+dZnghnfVI1dtYj7ONFOwWAREhq+A7+mDuGz8vm+mk3Erj6bF3hSgzilKpMlvhe8Vg+p42Es8PC4ObdupBxRtgokrx7pnyNRcyGXlNQXAP+doucNcX0/n19lBhHVpyr3+wyl3wDCIN4/YOsXumNkSHrpux6rGnBgUtydXKAQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788185524; c=relaxed/simple;
-	bh=39WJUToiizjuGxZ+2pnbatEuwx+McVAuXnOcY5IUNoM=;
+	s=arc-20240116; t=1788186306; c=relaxed/simple;
+	bh=7MpR5ekUBzI1UzJsOKHWRyhnL1oCJHvHXwT/erCJOVQ=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=l9hVq/gEi8t4Aq/jbKRAkz0V4VqCCkP1gnapoXuUu8C8GLS2ZAjjODxgLLJB4gBCu6KElMlBLyyp0UrYnIS88/4xa+3VyrigX+G+Op7WsBCcOb5UNfAqk+LnIMqqzC0W8tLGBuK94K+BNjYZ9tS9WuN7BxtAncW+CLh61PNVKTg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kZmQM+UG; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=Ws4Wnr5gBHMr0MsX/0EjZrzXmCzNpbe9gKAGUFZENaSQPdiys21rFSVnmHYLoSW93eH4kmtT+pPIlFd/H+P9OPE/TrXpjt0xI4d2RRGrVFKBCN9bxpZ5HXSEnEConFeqoRw4elTxlzhYPnCUaEkyFxTw1B/G+SgGRTZWFMbepLs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QO68rDZR; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kZmQM+UG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CC04B1F000E9;
-	Mon, 31 Aug 2026 14:12:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QO68rDZR"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5EC871F00A3D;
+	Mon, 31 Aug 2026 14:25:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788185522;
-	bh=Aw/PlZJM2mUmAp/qFsgL48YNrGgqXs4radrS+RTDqYk=;
+	s=k20260515; t=1788186304;
+	bh=xmSC/nYYITSZwCP72nkXMgj3B5GvaMx+2yn4onGlVwA=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=kZmQM+UG1qsg4XS6m3YPOtL2vQUlHq2YUcBLbd2JIUW8bxLW29yqXbfBEqy4r2wB4
-	 DJBAwytj8hrWztVeniAwCYEO9WjMehBR9aTopRZUUM5imFprUf8kw4QGkB3eHHZwqn
-	 IdH+t1pIhNcP4x6BHg+PKD6iM5GT3KGCWZobSL34IQsK/ywqsSqmmF4Xm//4bYTKBx
-	 1wsPzpz6nGmLaTWg9VEJIWNrMovM8bdtGVCotdTG7GpwL+Hv0sgYJWzvqFgYF2P7Yd
-	 Gl2Ij1ArGnuZWWPv1aoIbBxeP5h4XoEkTV4utYKRFY9HrE9gAh9nBd+goNTWbrm7xS
-	 n4VrgZHf6tGTA==
+	b=QO68rDZRlLcILn7PxTBZgc8CAKy0H2LC0VpXDPLTWuKeOkxQ/Pf+5plxR2WJTO7Xs
+	 WoMG6GbqdzCCLz5KaeKeTXdSsUHqeSXWujeV0KBa5qKd2cC98ntxjUQpGsQWUT0ro7
+	 DKIltTVLGuTIfQy7BqFCnT1cYF+1ofMxf8+J64ZQAnylHhLb8d2jM1RImGE6TspnAO
+	 +eEVS3JByzpsl0wIn1HQ/kgeszeVGlxN+7JmuXcoQm2axjAoV+lhdQjQHwZw1zvycs
+	 seTOaCjWNlkFz+wX8DvbehxAq536ewVRcLIPrk8oQOoQU6Cwyou0VCJpA7jcw8FN+O
+	 sKomp4Bq0+b2A==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH AUTOSEL 6.18-6.1] PCI: intel-gw: Enable clock before PHY
- init
+Subject: Re: [PATCH] PCI: qcom: Skip system suspend/resume for
+ firmware-managed PCIe
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "Sasha Levin" <sashal@kernel.org>
+To: "Mrinmay Sarkar" <mrinmay.sarkar@oss.qualcomm.com>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260831133314.4125787-63-sashal@kernel.org>
-References: <20260831133314.4125787-1-sashal@kernel.org>
- <20260831133314.4125787-63-sashal@kernel.org>
+In-Reply-To: <20260831-skip_suspend-v1-1-ba2d877e22b1@oss.qualcomm.com>
+References: <20260831-skip_suspend-v1-1-ba2d877e22b1@oss.qualcomm.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 31 Aug 2026 14:12:01 +0000
-Message-Id: <20260831141201.CC04B1F000E9@smtp.kernel.org>
+Date: Mon, 31 Aug 2026 14:25:03 +0000
+Message-Id: <20260831142504.5EC871F00A3D@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -47,72 +46,76 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] The teardown sequence in `__intel_pcie_remove()` was not updated t=
-o match the new initialization order, leading to `phy_exit()` being called =
-while the core clock is disabled.
+- [Low] Redundant OF match lookup in latency-sensitive noirq suspend/resume=
+ fastpaths
 --
 
-commit f996b74a9755733be971c866c8fb2dd5071a2fa4
-Author: Florian Eckert <fe@dev.tdt.de>
+commit c4c9a4ee7ca3ece5a2758b2afa96d34b1ed85c1a
+Author: Mrinmay Sarkar <mrinmay.sarkar@oss.qualcomm.com>
 
-PCI: intel-gw: Enable clock before PHY init
+PCI: qcom: Skip system suspend/resume for firmware-managed PCIe
 
-This commit reorders the initialization sequence to enable the DWC PCIe
-core clock before calling phy_init() to ensure the correct boot sequence.
-It also updates the error handling path to symmetrically reverse this
-new order.
+This commit skips host-managed suspend and resume operations for PCIe
+controllers that are managed by firmware. It relies on the generic power
+domain framework to handle the necessary transitions instead.
 
-Link: https://patch.msgid.link/20260417-pcie-intel-gw-v5-4-0a2b933fe04f@dev=
-.tdt.de
+> diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/control=
+ler/dwc/pcie-qcom.c
+> --- a/drivers/pci/controller/dwc/pcie-qcom.c
+> +++ b/drivers/pci/controller/dwc/pcie-qcom.c
+> @@ -2341,6 +2341,10 @@ static int qcom_pcie_suspend_noirq(struct device *=
+dev)
+>  {
+>  	struct qcom_pcie *pcie;
+>  	int ret =3D 0;
+> +	const struct qcom_pcie_cfg *pcie_cfg =3D of_device_get_match_data(dev);
+> +
+> +	if (pcie_cfg && pcie_cfg->firmware_managed)
+> +		return 0;
 
-> diff --git a/drivers/pci/controller/dwc/pcie-intel-gw.c b/drivers/pci/con=
-troller/dwc/pcie-intel-gw.c
-> index c21906eced618..8b51eb30112d9 100644
-> --- a/drivers/pci/controller/dwc/pcie-intel-gw.c
-> +++ b/drivers/pci/controller/dwc/pcie-intel-gw.c
+[Severity: Low]
+Is this new OF match lookup redundant?
+
+Since qcom_pcie_probe() bypasses setting drvdata for firmware-managed
+controllers, dev_get_drvdata() already natively returns NULL for these
+devices. The pre-existing check just below this addition handles that:
+
+    pcie =3D dev_get_drvdata(dev);
+    if (!pcie)
+        return 0;
+
+Because this executes in the noirq phase where local CPU interrupts are
+disabled and latency is critical, does it make sense to avoid the overhead
+of of_device_get_match_data() string comparisons and just rely on the
+existing NULL check?
+
+> =20
+>  	pcie =3D dev_get_drvdata(dev);
+>  	if (!pcie)
 
 [ ... ]
 
-> @@ -323,11 +323,12 @@ static int intel_pcie_host_setup(struct intel_pcie =
-*pcie)
+> @@ -2399,6 +2403,10 @@ static int qcom_pcie_resume_noirq(struct device *d=
+ev)
+>  {
+>  	struct qcom_pcie *pcie;
+>  	int ret;
+> +	const struct qcom_pcie_cfg *pcie_cfg =3D of_device_get_match_data(dev);
+> +
+> +	if (pcie_cfg && pcie_cfg->firmware_managed)
+> +		return 0;
+
+[Severity: Low]
+Similarly for the resume path, does this introduce unnecessary overhead in
+the noirq phase?
+
+The identical dev_get_drvdata() check is present just below this addition,
+which already safely catches firmware-managed controllers and returns 0.
+
 > =20
->  	return 0;
-> =20
-> -app_init_err:
-> +err:
-> +	phy_exit(pcie->phy);
-> +phy_err:
->  	clk_disable_unprepare(pcie->core_clk);
->  clk_err:
->  	intel_pcie_core_rst_assert(pcie);
-> -	phy_exit(pcie->phy);
-> =20
->  	return ret;
->  }
-
-[Severity: High]
-Since the error handling path was updated to symmetrically reverse the new
-initialization order, does the teardown sequence in __intel_pcie_remove()
-also need to be updated?
-
-Looking at __intel_pcie_remove():
-
-static void __intel_pcie_remove(struct intel_pcie *pcie)
-{
-	intel_pcie_core_irq_disable(pcie);
-	intel_pcie_turn_off(pcie);
-	clk_disable_unprepare(pcie->core_clk);
-	intel_pcie_core_rst_assert(pcie);
-	phy_exit(pcie->phy);
-}
-
-This calls phy_exit() after clk_disable_unprepare() and
-intel_pcie_core_rst_assert(), which leaves the PHY being exited without its
-required core clock.
-
-Can this sequence lead to unclocked hardware accesses during driver unbind,
-potentially triggering an asynchronous external abort or hard bus lockup?
+>  	pcie =3D dev_get_drvdata(dev);
+>  	if (!pcie)
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260831133314.4125=
-787-63-sashal@kernel.org?part=3D1
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260831-skip_suspe=
+nd-v1-1-ba2d877e22b1@oss.qualcomm.com?part=3D1
