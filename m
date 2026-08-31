@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 51E0F3B531A;
-	Mon, 31 Aug 2026 22:18:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F1ED3B3C05
+	for <linux-pci@vger.kernel.org>; Mon, 31 Aug 2026 22:20:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788214734; cv=none; b=NlH0ZZ+tURRGOHZOwgkze4uDYXVyTv1lHICfaPvI1cugSPdVK/X+y/cq+Tdw9ddlTyeh5wn3MVnqR49deA+tDVBug+nxLTwv7zZHTe8yA21lMHnxi7dPTqVgSYXCit475dHOM7iwuPzAkv6PR7N408Yo1FobE//N8S/arD/GKWk=
+	t=1788214807; cv=none; b=MY+GbBHty36oWML8EWchnSj1c2pfAI/5z1Bu3U8itHwgjirEi4RFS4R32XVzQnG2gLPVGdEzZLr5fmtmE7zA3bGkghBUphoOq1C/aL0jc7XAKTVWANF3Snql24O2/NCJf+azy3a9Lg114MhepIo1s0M5kjr2JknBPPHK9EJ0ZhQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788214734; c=relaxed/simple;
-	bh=08yItknhCfu1Zmtp2WmcrwsPk2AMRFQZQ9saOGK1E2Q=;
+	s=arc-20240116; t=1788214807; c=relaxed/simple;
+	bh=gJEi1rFUP4xOjMfWlc8itLVzxHhH6m/T+bZkAUil81k=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=qgE28kGE8meo/2i5A0nZAI8i5UqDpyEZ3Haf7Dw7PFMUDv+1Hxxv24/xUvKs8diChO6JHizJ4uYOVicQmId5zsJCIZHgt4NnMbmFaovlLXumSW0EoECNwIqsGIlaWGPnLOfqpwokSdMPNwNbh6tXCtHJsJTS+Twjvxrg6P/J+tA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=geaT8Tgi; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=uDh2hhufNPMgL7SWh3LGZQLqpyS4vOF2+NHujnrxUjKl7ffdHD6XkG/Hu1q2q8eeJdYf3G/xbGTKmEpsqYAxTCMGaBSqujepqfbZNZdD6sRwOF3tYXiSNArcbEji3dv1uq+lh3xHpoyW/JGD1HOdJr1R23Dcb8z95EVYrAhWxTs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VYcRmhly; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="geaT8Tgi"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 83F331F000E9;
-	Mon, 31 Aug 2026 22:18:52 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VYcRmhly"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E01051F000E9;
+	Mon, 31 Aug 2026 22:20:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788214732;
-	bh=9zDzN/8K7TSRvci9UFUO7/ABM7AVNO3NaCultq+XFo4=;
+	s=k20260515; t=1788214806;
+	bh=lNUwUe/RLVZyFzLMbMluBXER04FMwiHE3RLFzMyQcjw=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=geaT8TgimexVLnkEnIkWjVk3LBZyeAc/IL6gos3kIHeSB+AehK355MdCrcbF7ZkxS
-	 bP0H6IM03zZ/E5HYgwhHnJOVlcuYPhOmsmw6QsM0jVywq9OPJ/27j+RZDR6g/ZZkLL
-	 WNtkY9z0Fk+pmqmI+g2oroyXS1u66sr0HM5abPpI9WGs13gE50WJiq6MI4zSvxja6H
-	 VBLC0XfR+yhflCjNLyy/TIoGRyzh47qzTppAvYqW6REP1XXg62JoedRHZvNkohALK1
-	 RdgI3xTmQAvJ1PuZAXRgTNW5nsUW9SZKwOpegCrS7IgR/fXf2GPQ+VGRD6WogLx9Nt
-	 jKXewjUEhky2w==
+	b=VYcRmhlyDEBRN16KcmpiLXcxexltp1WPRyXBu0tVcDuKFkHHSUKW2pBcTzrTsvxgg
+	 3C3RP1qs44gLd1kNFXd8JYVn7ythKO+rgtYeeghnGG2w1XGzdC+l9T+4Z00IxQH8ou
+	 48oYOzX9VEUMne7f+sEEBekdO9ftuOqlw7G5bDii2XESdpomd2NjbcvVs0s6HX3qAO
+	 RyOkYrDDVX7gxV8ZePCQtYXWWlupmWtNVDD2YM2FWhvPtD+BZ2Yl5LIvaSdCDUDTQz
+	 6gDplqfhOZ0ko+oCErOVZKKZh5SEcZBHT9gSQLFAo4ntOVJm6PIPhDbYqs1E/sW27+
+	 ESjnlqYLqYcBg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5 05/12] dmaengine: switchtec-dma: fix channel leak on
- registration failure
+Subject: Re: [PATCH v3 3/3] PCI: Put PCIe bridges with downstream devices
+ into D3 at hibernate
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "Logan Gunthorpe" <logang@deltatee.com>
-Cc: Frank.Li@kernel.org, dmaengine@vger.kernel.org, linux-pci@vger.kernel.org, vkoul@kernel.org
-In-Reply-To: <20260831191403.207631-6-logang@deltatee.com>
-References: <20260831191403.207631-1-logang@deltatee.com>
- <20260831191403.207631-6-logang@deltatee.com>
+To: "Mario Limonciello" <mario.limonciello@amd.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260831205533.2325747-4-mario.limonciello@amd.com>
+References: <20260831205533.2325747-1-mario.limonciello@amd.com>
+ <20260831205533.2325747-4-mario.limonciello@amd.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 31 Aug 2026 22:18:52 +0000
-Message-Id: <20260831221852.83F331F000E9@smtp.kernel.org>
+Date: Mon, 31 Aug 2026 22:20:05 +0000
+Message-Id: <20260831222005.E01051F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -47,80 +47,68 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-
-Pre-existing issues:
-- [High] Uninitialized list head iteration in ISR causing NULL pointer dere=
-ference.
+- [High] Hibernation restore skips mandatory PCIe bridge link retraining de=
+lays due to snapshot state mismatch, leading to fatal PCIe errors when down=
+stream devices are accessed.
 --
 
-commit bbb6888bb23afe2e2ce4a0388779ab6fa86e4ce3
-Author: Logan Gunthorpe <logang@deltatee.com>
+commit daecc28d1bb864ce78fb9c9df2c8ecd53a30fb12
+Author: Mario Limonciello (AMD) <superm1@kernel.org>
 
-dmaengine: switchtec-dma: fix channel leak on registration failure
+PCI: Put PCIe bridges with downstream devices into D3 at hibernate
 
-This patch introduces a helper function to free DMA channel memory and ensu=
-res
-it is called correctly during registration failures and cleanup. It also up=
-dates
-the channel count on initialization failure to allow safe cleanup of partia=
-lly
-allocated channels.
+This commit aligns the hibernation path with the S3 suspend path by making
+pci_pm_poweroff_noirq() use pci_pm_suspend_noirq_common(). This allows PCIe
+bridges with downstream devices to enter low-power states like D3cold during
+hibernation.
 
-Link: https://lore.kernel.org/dmaengine/20260717223024.9BB8A1F000E9@smtp.ke=
-rnel.org
-Link: https://lore.kernel.org/dmaengine/20260727190604.397DB1F000E9@smtp.ke=
-rnel.org
+> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> index d15b3eb55ec53..a6fb731378d9c 100644
+> --- a/drivers/pci/pci-driver.c
+> +++ b/drivers/pci/pci-driver.c
 
-> diff --git a/drivers/dma/switchtec_dma.c b/drivers/dma/switchtec_dma.c
-> index 2d5ba194c99a1..f71c64c137e83 100644
-> --- a/drivers/dma/switchtec_dma.c
-> +++ b/drivers/dma/switchtec_dma.c
 [ ... ]
-> @@ -1329,6 +1335,7 @@ static int switchtec_dma_create(struct pci_dev *pde=
-v)
+
+> @@ -1278,8 +1281,9 @@ static int pci_pm_poweroff_noirq(struct device *dev)
+>  			return error;
+>  	}
 > =20
->  err_chans_release_exit:
->  	switchtec_dma_chans_release(pdev, swdma_dev);
-> +	switchtec_dma_chans_free(swdma_dev);
-> =20
->  err_exit:
->  	if (swdma_dev->chan_status_irq)
+> -	if (!pci_dev->state_saved && !pci_has_subordinate(pci_dev))
+> -		pci_prepare_to_sleep(pci_dev);
+> +	pci_pm_suspend_noirq_common(pci_dev, &skip_bus_pm);
+> +	if (skip_bus_pm)
+> +		goto Fixup;
 
 [Severity: High]
-This is a pre-existing issue, but I noticed a potential race condition
-during device initialization earlier in switchtec_dma_create().
+Does this cause mandatory PCIe bridge link retraining delays to be skipped =
+on
+resume from hibernation?
 
-The IRQ is requested and enabled before the channels list head is
-initialized:
+During hibernation, pci_pm_freeze_noirq() sets the device state to PCI_UNKN=
+OWN
+via pci_pm_set_unknown_state() just before the memory snapshot is taken. The
+snapshot therefore records the state as PCI_UNKNOWN.
 
-drivers/dma/switchtec_dma.c:switchtec_dma_create() {
-	...
-	rc =3D pci_request_irq(pdev, irq, NULL, switchtec_dma_chan_status_isr,
-			     swdma_dev, KBUILD_MODNAME);
-	...
-	chan_cnt =3D switchtec_dma_chans_enumerate(swdma_dev, pdev, chan_cnt);
-	...
-}
+Later in the hibernation process, pci_pm_suspend_noirq_common() powers the
+bridge down to D3cold.
 
-If a pending device interrupt or a spurious interrupt fires immediately
-after pci_request_irq() is called, switchtec_dma_chan_status_isr() will
-execute.
+On system resume, the boot kernel loads the memory snapshot, reverting the
+in-memory state back to PCI_UNKNOWN.
 
-In the ISR, list_for_each_entry() iterates over dma_dev->channels:
+When pci_pm_restore_noirq() executes, it skips the bridge power up actions
+because the restored state doesn't match PCI_D3cold:
 
-drivers/dma/switchtec_dma.c:switchtec_dma_chan_status_isr() {
-	...
-	list_for_each_entry(chan, &dma_dev->channels, device_node) {
-	...
-}
+    if (!skip_bus_pm && prev_state =3D=3D PCI_D3cold)
+        pci_pm_bridge_power_up_actions(pci_dev);
 
-Since switchtec_dma_chans_enumerate() hasn't called INIT_LIST_HEAD()
-on dma_dev->channels yet, the list head remains zero-initialized by
-the earlier kzalloc().
+Can this state mismatch lead to downstream device accesses failing with fat=
+al
+PCIe errors on resume?
 
-Could this cause a NULL pointer dereference when the ISR attempts to
-iterate over the uninitialized list?
+> =20
+>  	/*
+>  	 * The reason for doing this here is the same as for the analogous code
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260831191403.2076=
-31-1-logang@deltatee.com?part=3D5
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260831205533.2325=
+747-1-mario.limonciello@amd.com?part=3D3
