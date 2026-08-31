@@ -1,140 +1,78 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA91033B97D;
-	Mon, 31 Aug 2026 17:15:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 021A642AF9C
+	for <linux-pci@vger.kernel.org>; Mon, 31 Aug 2026 17:28:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788196552; cv=none; b=WviWVx9t47cQICOI9H/yA/f1QAegYrT7tyuwt3i2XllvFHmSvG9DyXjpa8PXa/YaBPveDy6RQneUPweXjAD20TcTaBPTZchXfRhsAX9LpQgH2Zu3+c8N+rB6IIdilECwEf5VD1Qcc/jL3rBimcwr6Vd57J1ddJoDD6jfvTmAEH4=
+	t=1788197319; cv=none; b=nIgJT6IeBc5tk6nzfmO6qNoAzEAqFvhRV/X7cYOCuCwRzuljr7VoUnoOjrEzjKYS5C3YS3SibP8axkD+cq5wLkhdWNtPouGeAYlGHRvyb6JeJLcEJqCCimoJUqjb+eA2w1SHATiZ4/aRqyxPmaCIfUx2+iL5HCSxVARYzSS6BSg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788196552; c=relaxed/simple;
-	bh=qhps3i/s6KKq+LUWs2P9LFVcYQc2rWPelFcUqOtIChA=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=QgQTn5HYRBo10f2q6f4eLAAikkkEhTnt8ptY/tMcpFtsQL6bvGAIMdXwbB3GyE2wm5ZMd/aYbIRSzAd8hWXcL+Vr6DYuf3lLsoEXajnMqWFbzIkbSrd8sk2NSeNwcvQ3lyB9LEIJQhkBRhotzqYN1Wc0FoEG36Hl4rmQ0aByKsE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mdZ1In+j; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1788197319; c=relaxed/simple;
+	bh=QWlQXqeOY2ChbBvWCt8Jmy2NuXeSNrjSIrdFbLyi9kI=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=P4oGPlORSwX1g6RiK26ogx71mpgnfYwlVc72bJIDke/yQZontJFyXX59LtQQWot6RsY2c1hpYn6v/VLU6Va9SZXTwZrqsqXoFl6OgCmLdOdR6faNl+IkZMGdupKlSSuJFEqpZJXI+2+cxsuGujynozRAEFaSqfA9RAzymhOlejk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iYWMr9Wo; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mdZ1In+j"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 64911C2BCB8;
-	Mon, 31 Aug 2026 17:15:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1788196552;
-	bh=qhps3i/s6KKq+LUWs2P9LFVcYQc2rWPelFcUqOtIChA=;
-	h=From:Date:Subject:To:Cc:Reply-To:From;
-	b=mdZ1In+j1Tbsx2leubMe4rl5fv94iDQglSmFwMzbd9Dv2mfjIOHX+tyBPPPLscBdT
-	 ATG/MZwJbl40bEsZ5b01E4jj2i5BRMqZRggsOu4LmxFS76UTEHcp6yFyQmmYw/i/Dt
-	 FJRSDGJDSpIcGuW4Gcp+2ZH1z3PwFf0IdHQ4G6aIynP63vSCePV/cRDvhab36KNrfv
-	 wsF8ZUyzZyAk/ZkFQTxRWE5lQ5IAjexNhagNc16JWTc/jECsB9FG40l7Qj/dCVBtwX
-	 VxpQKx2O+/lnW1Fl5dUAVQT4SFrF9sAybLliLPVBOwuR6rFkM2c2wQSAwva+DZzIXM
-	 tBCpM+9ZQfDSg==
-Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3EB2AC624C6;
-	Mon, 31 Aug 2026 17:15:52 +0000 (UTC)
-From: Sophon Zhang via B4 Relay <devnull+aiqubits.hotmail.com@kernel.org>
-Date: Tue, 01 Sep 2026 01:09:53 +0800
-Subject: [PATCH v4] rust: pci: reject IRQ vector indices that do not fit in
- u32
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iYWMr9Wo"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 826D91F000E9;
+	Mon, 31 Aug 2026 17:28:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1788197317;
+	bh=l7KBsgrBZ9NBO0K4XWHxv4xN/J4BGa+Pi/RXnDD12ak=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=iYWMr9WocKuurfOMr4iqS0MBqY71O4ffbBifMWGPF10Z0F+nyIU5iBnBK1ptrVksL
+	 t93+0Ruq79TvWfv55uF64/kCOllEj4mJEpemyRUhHQrglbjDxGoxoSIHcb/Y5zKdXv
+	 WI9IOtGu2LGb6gFwPzJ/WCFlXZOHeREBtP/uQqYe1xmT7koA7Z397ZJygtEc2xRhw7
+	 aIY9+9wRAo05JR/85DBGS3bKeijYszL8NMyk7euVvtGLUtgwKVe37hThc37Xt+yqnY
+	 hI9u7O1Wb1xilgZ5QwFVSWLEBfR148PGPUb9CD8ZudsiTEdgilU+KJ9RoFrQlCpcLT
+	 wU0eaZk2Jny8g==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH AUTOSEL 6.18-5.10] PCI: Stop setting cached power state
+ to 'unknown' on unbind
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Sasha Levin" <sashal@kernel.org>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260831133314.4125787-634-sashal@kernel.org>
+References: <20260831133314.4125787-1-sashal@kernel.org>
+ <20260831133314.4125787-634-sashal@kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Mon, 31 Aug 2026 17:28:37 +0000
+Message-Id: <20260831172837.826D91F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20260901-fix-pci-irq-vector-index-truncation-v4-1-f94aa6932fd9@hotmail.com>
-X-B4-Tracking: v=1; b=H4sIAGC1lWoC/53OPQ7CMAwF4KugzBjlpySUiXsghpAYagQtJCUCo
- d4dFybEBOOT/L7nh8iYCLNYTh4iYaFMXcuhmk5EaHy7R6DIWWiprVwYBTu6wTkQULpAwdB3Cai
- NeIM+Xdvge+6DdXO9M26uvIyCpXNCrr1W1pt3ztftgdsjPV40lFm6v94oarz7bbEoUBCt0crFu
- t5at2q6/uTpOAvdSYybRf+halYraSR65yrr62/V/KEaVr1W7C6qqCV+qsMwPAH8zWrBlgEAAA=
- =
-X-Change-ID: 20260831-fix-pci-irq-vector-index-truncation-6752f3751a0d
-To: Danilo Krummrich <dakr@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
- Miguel Ojeda <ojeda@kernel.org>, Boqun Feng <boqun@kernel.org>, 
- Gary Guo <gary@garyguo.net>, 
- =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, 
- Benno Lossin <lossin@kernel.org>, Andreas Hindborg <a.hindborg@kernel.org>, 
- Alice Ryhl <aliceryhl@google.com>, Trevor Gross <tmgross@umich.edu>, 
- Daniel Almeida <daniel.almeida@collabora.com>, 
- Tamir Duberstein <tamird@kernel.org>, 
- Alexandre Courbot <acourbot@nvidia.com>, 
- =?utf-8?q?Onur_=C3=96zkan?= <work@onurozkan.dev>
-Cc: linux-pci@vger.kernel.org, rust-for-linux@vger.kernel.org, 
- linux-kernel@vger.kernel.org, Sophon Zhang <aiqubits@hotmail.com>
-X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1788196549; l=2550;
- i=aiqubits@hotmail.com; s=20260831; h=from:subject:message-id;
- bh=aDpWwnCHJqNDAl+iMV/Pt6CcKak8JY7tJ57zkb1ld5w=;
- b=NHZdgqGpnU8lETGIZIzu3ZLXvJ5MUb7qp3HPbYOF5EZ6zD3TUOvdD19e2lx9OaKdyoL8P9bx0
- oXZbGHZhaj/BBqC18cpsZ4tDH2lJz928e3nN1ux9aBvnlhVV2c3sNI9
-X-Developer-Key: i=aiqubits@hotmail.com; a=ed25519;
- pk=+mrkwQAyCCkZdVPpu+CBQr1VZQlkXa7/1WizfeSF/yg=
-X-Endpoint-Received: by B4 Relay for aiqubits@hotmail.com/20260831 with
- auth_id=992
-X-Original-From: Sophon Zhang <aiqubits@hotmail.com>
-Reply-To: aiqubits@hotmail.com
 
-From: Sophon Zhang <aiqubits@hotmail.com>
+> From: Lukas Wunner <lukas@wunner.de>
+>=20
+> [ Upstream commit d462c8e89e84bfb6417e6b4c88e0cb7cc747ba41 ]
+>=20
+> When a PCI device is unbound from its driver, pci_device_remove() sets the
+> cached power state in pci_dev->current_state to PCI_UNKNOWN.  This was
+> introduced by commit 2449e06a5696 ("PCI: reset pci device state to unknown
+> state for resume") to invalidate the cached power state in case the system
+> is subsequently put to sleep.
+>=20
+> For bound devices, the cached power state is set to PCI_UNKNOWN in
+> pci_pm_suspend_noirq(), immediately before entering system sleep.
+>=20
+> Extend to unbound devices for consistency.
+>=20
+> This obviates the need to change the cached power state on unbind, so stop
+> doing so.
+>=20
+> Signed-off-by: Lukas Wunner <lukas@wunner.de>
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> Reviewed-by: Mario Limonciello (AMD) <superm1@kernel.org>
+> Link: https://patch.msgid.link/af7d11d3ceb231acc90829f7a5c8400c2446744f.1=
+776415510.git.lukas@wunner.de
+> Signed-off-by: Sasha Levin <sashal@kernel.org>
 
-IrqVectorRegistration::index() accepts a usize, but pci_irq_vector()
-takes an unsigned int. On 64-bit architectures, casting an index larger
-than u32::MAX wraps it before the PCI core can validate it. In
-particular, u32::MAX + 1 becomes zero and can resolve to the first
-allocated vector.
+Sashiko has reviewed this patch and found no issues. It looks great!
 
-Use a checked conversion and return EINVAL when the index cannot be
-represented by the C API.
-
-Fixes: 2fb7755b0a7e ("rust: pci: resolve IRQ in index() and embed IrqRequest in IrqVector")
-Signed-off-by: Sophon Zhang <aiqubits@hotmail.com>
----
-Prevent 64-bit Rust IRQ vector indices from wrapping when they cross the
-PCI C API boundary.
----
-Changes in v4:
-- Drop the explicit length check in favor of PCI core range validation.
-- Use the existing TryFromIntError-to-Error conversion directly.
-- Keep commit trailers adjacent and narrow the description to truncation.
-- Link to v3: https://patch.msgid.link/20260831-fix-pci-irq-vector-index-truncation-v3-1-a2103084d20e@hotmail.com
-
-Changes in v3:
-- Check the index against the allocated vector count before entering the C API.
-- Keep the checked usize-to-u32 conversion and document the C-side warning.
-- Link to v2: https://patch.msgid.link/20260831-fix-pci-irq-vector-index-truncation-v2-1-4030ea7746a9@hotmail.com
-
-Changes in v2:
-- No code changes.
-- Link to v1: https://patch.msgid.link/20260831-fix-pci-irq-vector-index-truncation-v1-1-d63217d99b67@hotmail.com
-
-Testing:
-- make rustfmtcheck
-- Not build- or hardware-tested; bindgen is unavailable in the test environment.
----
- rust/kernel/pci/irq.rs | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
-diff --git a/rust/kernel/pci/irq.rs b/rust/kernel/pci/irq.rs
-index 6741046ec1c0..22e2cdf82a21 100644
---- a/rust/kernel/pci/irq.rs
-+++ b/rust/kernel/pci/irq.rs
-@@ -151,8 +151,10 @@ pub fn irq_type(&self) -> IrqType {
-     /// [`Self::len()`].
-     #[inline]
-     pub fn index(&self, index: usize) -> Result<IrqVector<'_>> {
-+        let index = u32::try_from(index)?;
-+
-         // SAFETY: `self.dev.as_raw()` is a valid pointer to a `struct pci_dev`.
--        let irq = unsafe { bindings::pci_irq_vector(self.dev.as_raw(), index as u32) };
-+        let irq = unsafe { bindings::pci_irq_vector(self.dev.as_raw(), index) };
-         if irq < 0 {
-             return Err(Error::from_errno(irq));
-         }
-
----
-base-commit: cee9395acd8043be0644b25c34bfa86623f2b935
-change-id: 20260831-fix-pci-irq-vector-index-truncation-6752f3751a0d
-
-Best regards,
---  
-Sophon Zhang <aiqubits@hotmail.com>
-
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260831133314.4125=
+787-634-sashal@kernel.org?part=3D1
 
