@@ -1,46 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3438858B6C7;
-	Mon, 31 Aug 2026 13:50:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 096094749FA;
+	Mon, 31 Aug 2026 13:52:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788184235; cv=none; b=NjVr19e+EqQRH3xNHaPZJ7ZE9ohM0xs3yT5cXbbOlOy+KTTLAT2XIHRJEnRKeYuDxzXTcVso48YH+RRzWwCmSIo9L4K75TJf5zN7w7oNDFI4uZLpScy50FeXKqZ6KAmrC/4mN6Wt21nswYx/SyR/il/BJsLLMQkSo/g+eT1DtQ4=
+	t=1788184340; cv=none; b=PWfi+Nav29EJs5q9GFV844LSsb3geu+9nc6g4khMfBM2726eFHn8ymO1N6nJEPbWE852LkrF87p/BLNWtIPB/ARfwJfzoD05rixEDcuRif+gfh/KIEzEDZUTLctMiOiSRn2AO1umhX7tfSQaXK/4qsoaHi524dAmJBYR/OKAeE4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788184235; c=relaxed/simple;
-	bh=Wcghe1FVJIscBa5KOWBEgGmrrpcV3pXkLc3/u2Ln1JU=;
+	s=arc-20240116; t=1788184340; c=relaxed/simple;
+	bh=KJK3ycfqUwN1KDk7Ki5klCghE4HY+wFirozkycJ1jTQ=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=TGs7gJriUzat+Q6a90SR0/JDgY0YPb2fXAUWXXEZw/YloHlgX6MuhHIxxQPxZjepnPjneQ1brYBe/i2TO3emTVJz8XauxVJSTBnfj8OefRFG/0EaqL2jIKhN14kBqaY0cwywG69S/Bzql6uHwqC2qkDkZRpcl9k45egxTfJ4Vms=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SnhtfPUh; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=FGEpGftJ2jOjLuZdqpBcLy3l7kWci1Zz6a32XRCDhfwHXb4yh+0QEXEShzF7+yBAidma6HV79YrbdodGkEzlq8lZlUX1CE8a9PpQV0v61JFqYJWjEEv0Zlnz1BXBH1J3RQ2Gh7y12Tl4iT41dUuYQi0JdsV9ojytzHkzlS43Mgc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZE8Mi7A5; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SnhtfPUh"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D3B781F00A3E;
-	Mon, 31 Aug 2026 13:50:30 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZE8Mi7A5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 88F651F000E9;
+	Mon, 31 Aug 2026 13:52:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788184232;
-	bh=GWWRbb5fx/50qNvFfhxhjVCsZ2dC5kuRKeGuqJBIxak=;
+	s=k20260515; t=1788184337;
+	bh=l6e8MCFDdZ45iyK12XDZh0vNZV6G6YO/jnD4tg1Cyk0=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=SnhtfPUhVX74L1ZiyCv6GpdPBCNNhURN5zDrCnYxj9ZKVh7BVKduUlVx1BXs1rms9
-	 lNrfZvFtQCtrgz+ZFA19cvg6WDXOYIYAPo23lCftcmlYqqvo+XyTfOFFYhlz7f6sVB
-	 Esj+JDdXaTquKP0qlALYL8xI5IQ+bJIqRshmtD1mZloQ8Yai5owpTyll6cfZ9Er+6C
-	 7MxUFCe66q9tw2la0wtz1bGIf+XEawLHnl8bS40sMvyed+XYI/8x70BZhZ3aYCLIJu
-	 woxU6SJ3g0e+XwpU6sUnYXFieRap8Joy/1G29h4KVQZFs9kQlRDZdrTW57YPd+twgX
-	 vNbBXNQdkJtHQ==
+	b=ZE8Mi7A5yg/6WplFYswVtgx7NgZkOyrUEk9jxNraymfyeTyZYxLA34mCYA2k6pTBZ
+	 bElGVpLAZUCM/75XaoVEUmGEJh2+6156p6Q9D+kWeuAzvRdpdvp3565VsdUDSJHNrB
+	 sBkp3aljiURPVEyFj+8Yf32EAalUL05vEvDECWiDhNISI6EqX0ldEy/t4WEWE9mS34
+	 xabs/xqwHUXRViLoaDUApRmUPihUsLNXNENBEnOjV95MWUw0WNkhh7ads92bextwoi
+	 0aodmWhgRfniPmq2AEK9wEBqE0IFr9CUE6Y6LO+SMW7fPMubdJ4o3TmLyzhQcDR/8o
+	 IYsFR9PdUQdEQ==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: Hans Zhang <18255117159@163.com>,
-	Manivannan Sadhasivam <mani@kernel.org>,
+Cc: Lukas Wunner <lukas@wunner.de>,
 	Bjorn Helgaas <bhelgaas@google.com>,
+	"Mario Limonciello (AMD)" <superm1@kernel.org>,
 	Sasha Levin <sashal@kernel.org>,
-	jingoohan1@gmail.com,
-	lpieralisi@kernel.org,
-	kwilczynski@kernel.org,
 	linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.18] PCI: dwc: Protect root bus removal with rescan lock
-Date: Mon, 31 Aug 2026 09:29:58 -0400
-Message-ID: <20260831133314.4125787-570-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.18-5.10] PCI: Stop setting cached power state to 'unknown' on unbind
+Date: Mon, 31 Aug 2026 09:31:02 -0400
+Message-ID: <20260831133314.4125787-634-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260831133314.4125787-1-sashal@kernel.org>
 References: <20260831133314.4125787-1-sashal@kernel.org>
@@ -56,406 +53,384 @@ X-stable-base: Linux 6.18.48
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Hans Zhang <18255117159@163.com>
+From: Lukas Wunner <lukas@wunner.de>
 
-[ Upstream commit 26335696498ab502e907a556e97c7039bc80a87e ]
+[ Upstream commit d462c8e89e84bfb6417e6b4c88e0cb7cc747ba41 ]
 
-Hold the pci_rescan_remove_lock lock while stopping and removing a root bus
-to avoid racing with concurrent rescan or hotplug operations triggered via
-sysfs.  Such races may lead to use-after-free issues or system crashes.
+When a PCI device is unbound from its driver, pci_device_remove() sets the
+cached power state in pci_dev->current_state to PCI_UNKNOWN.  This was
+introduced by commit 2449e06a5696 ("PCI: reset pci device state to unknown
+state for resume") to invalidate the cached power state in case the system
+is subsequently put to sleep.
 
-Signed-off-by: Hans Zhang <18255117159@163.com>
-Signed-off-by: Manivannan Sadhasivam <mani@kernel.org>
-[bhelgaas: commit log]
+For bound devices, the cached power state is set to PCI_UNKNOWN in
+pci_pm_suspend_noirq(), immediately before entering system sleep.
+
+Extend to unbound devices for consistency.
+
+This obviates the need to change the cached power state on unbind, so stop
+doing so.
+
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Link: https://patch.msgid.link/20260521161822.132996-3-18255117159@163.com
+Reviewed-by: Mario Limonciello (AMD) <superm1@kernel.org>
+Link: https://patch.msgid.link/af7d11d3ceb231acc90829f7a5c8400c2446744f.1776415510.git.lukas@wunner.de
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
 LLM Generated explanations, may be completely bogus:
 
-## PHASE 1: COMMIT MESSAGE FORENSICS
+## Phase 1: Commit Message Forensics
 
-### Step 1.1: PARSE THE SUBJECT LINE
-**Record:** `[PCI: dwc]` `[Protect]` — Add synchronization around root
-bus teardown in the DesignWare PCIe host controller to prevent races
-with concurrent PCI rescan/hotplug.
+### Step 1.1: Subject Line
+**Record:** `[PCI]` `[Stop]` — Stop setting cached power state to
+`PCI_UNKNOWN` on driver unbind; move invalidation to the system-suspend
+path for driverless devices.
 
-### Step 1.2: PARSE ALL COMMIT MESSAGE TAGS
+### Step 1.2: Tags
 **Record:**
-- **Link:**
-  `https://patch.msgid.link/20260521161822.132996-3-18255117159@163.com`
-- **Signed-off-by:** Hans Zhang `<18255117159@163.com>`
-- **Signed-off-by:** Manivannan Sadhasivam `<mani@kernel.org>`
-- **Signed-off-by:** Bjorn Helgaas `<bhelgaas@google.com>` (with
-  `[bhelgaas: commit log]`)
-- No `Fixes:`, `Reported-by:`, `Tested-by:`, `Reviewed-by:`, `Acked-
-  by:`, or `Cc: stable@vger.kernel.org`
-- Notable: PCI maintainer (Bjorn Helgaas) committed; DWC maintainer
-  (Mani) signed off. No syzbot or user crash report in the message
-  itself.
+- **Signed-off-by:** Lukas Wunner `<lukas@wunner.de>` (author)
+- **Signed-off-by:** Bjorn Helgaas `<bhelgaas@google.com>` (PCI
+  maintainer)
+- **Reviewed-by:** Mario Limonciello (AMD) `<superm1@kernel.org>`
+- **Link:** https://patch.msgid.link/af7d11d3ceb231acc90829f7a5c8400c244
+  6744f.1776415510.git.lukas@wunner.de
+- **No** Fixes:, Reported-by:, Tested-by:, Cc: stable@vger.kernel.org,
+  or syzbot tags
+- Notable: PCI subsystem maintainer sign-off; AMD reviewer found no
+  corner cases
 
-### Step 1.3: ANALYZE THE COMMIT BODY TEXT
+### Step 1.3: Body Analysis
 **Record:**
-- **Bug:** `dw_pcie_host_deinit()` stops and removes the root bus
-  without holding `pci_rescan_remove_lock`.
-- **Symptom:** Race with concurrent sysfs-triggered PCI rescan or
-  hotplug; may cause use-after-free or system crashes.
-- **Root cause:** `pci_stop_root_bus()` / `pci_remove_root_bus()` are
-  not serialized against sysfs paths that already take
-  `pci_lock_rescan_remove()`.
-- **Version info:** None in the message.
+- **Bug described:** On driver unbind, `pci_device_remove()` sets
+  `pci_dev->current_state = PCI_UNKNOWN` while hardware may still be in
+  D0. Bound devices only invalidate the cache in
+  `pci_pm_suspend_noirq()` right before sleep. Driverless/unbound
+  devices on the `!pm` suspend path skipped that invalidation.
+- **Symptom/failure mode:** Stale cached power state after
+  suspend/resume can cause `pci_set_power_state(dev, PCI_D0)` to return
+  early (believing the device is already in D0) when hardware is
+  actually in D3 — the same class of failure as bugzilla #6024 fixed by
+  commit 2449e06a5696.
+- **Version info:** References 2449e06a5696 (2006); commit d462c8e89e84
+  landed in mainline April 2026.
+- **Root cause:** PCI_UNKNOWN invalidation was done at unbind time (too
+  early) and was missing from the `!pm` branch of
+  `pci_pm_suspend_noirq()`.
 
-### Step 1.4: DETECT HIDDEN BUG FIXES
-**Record:** Not hidden — this is an explicit synchronization bug fix.
-The “protect” wording and UAF/crash description clearly indicate a real
-concurrency defect, not cleanup.
+### Step 1.4: Hidden Bug Fix?
+**Record:** Yes. Described as “consistency,” but it closes a real PM
+correctness gap: driverless PCI devices on S2RAM suspend never had their
+cached state invalidated, and prematurely setting UNKNOWN at unbind left
+cache ≠ hardware between unbind and suspend.
 
 ---
 
-## PHASE 2: DIFF ANALYSIS
+## Phase 2: Diff Analysis
 
-### Step 2.1: INVENTORY THE CHANGES
+### Step 2.1: Inventory
 **Record:**
-- **Files:** `drivers/pci/controller/dwc/pcie-designware-host.c` (+2
-  lines)
-- **Function:** `dw_pcie_host_deinit()`
-- **Scope:** Single-file, surgical fix (2 insertions around existing
-  calls)
+- **File:** `drivers/pci/pci-driver.c` (+2 / −8 lines)
+- **Functions:** `pci_device_remove()`, `pci_pm_suspend_noirq()`
+- **Scope:** Single-file surgical fix
 
-### Step 2.2: UNDERSTAND THE CODE FLOW CHANGE
+### Step 2.2: Code Flow Changes
 **Record:**
-- **Hunk (deinit path):**
-  - **Before:** `pci_stop_root_bus()` and `pci_remove_root_bus()` run
-    unlocked during driver teardown.
-  - **After:** Same operations run under `pci_lock_rescan_remove()` /
-    `pci_unlock_rescan_remove()`.
-  - **Path affected:** Platform driver remove / module unload / probe
-    error cleanup via `dw_pcie_host_deinit()`.
+- **Hunk 1 (`pci_device_remove`):** Before — set `PCI_UNKNOWN` on unbind
+  if cached state was D0. After — remove that; cached state stays
+  accurate while hardware is still D0.
+- **Hunk 2 (`pci_pm_suspend_noirq`):** Before — `!pm` path
+  (`pci_save_state` then `goto Fixup`) skipped
+  `pci_pm_set_unknown_state()`. After — `goto set_unknown` ensures
+  driverless devices also invalidate cache immediately before sleep,
+  same as bound devices.
 
-### Step 2.3: IDENTIFY THE BUG MECHANISM
-**Record:**
-- **Category:** Race condition / synchronization bug (can manifest as
-  UAF or crash).
-- **Mechanism:** Sysfs rescan/remove (`rescan_store`, `remove_store`,
-  `bus_rescan_store` in `pci-sysfs.c`) holds `pci_rescan_remove_lock`.
-  DWC host teardown did not, so two threads could concurrently mutate
-  the same PCI bus/device tree.
+### Step 2.3: Bug Mechanism
+**Record:** **Logic / correctness fix (PCI PM cache coherency).**
+`pci_set_power_state()` early-returns when `dev->current_state == state`
+(see `__pci_set_power_state()` at line 1545 in `pci.c`). Stale D0 after
+BIOS changes hardware to D3 during suspend prevents powering the device
+back up on driver bind — identical mechanism to bugzilla #6024.
 
-### Step 2.4: ASSESS THE FIX QUALITY
-**Record:**
-- **Quality:** Obviously correct; matches the established pattern in
-  `pci_host_common_remove()`, `pci-aardvark.c`, `pci-mvebu.c`, `pci-
-  hyperv.c`, etc.
-- **Regression risk:** Very low. The lock is a global PCI mutex already
-  used widely; holding it only around bus stop/remove is the intended
-  usage documented in `probe.c`.
-- **Red flags:** None.
+### Step 2.4: Fix Quality
+**Record:** Minimal, obviously correct, mirrors existing bound-device
+behavior. Low regression risk: only moves UNKNOWN invalidation from
+unbind to suspend_noirq; hibernate path (`pci_pm_freeze_noirq`) already
+called `pci_pm_set_unknown_state()` for all devices.
 
 ---
 
-## PHASE 3: GIT HISTORY INVESTIGATION
+## Phase 3: Git History Investigation
 
-### Step 3.1: BLAME THE CHANGED LINES
-**Record:**
-- `pci_stop_root_bus()` / `pci_remove_root_bus()` in
-  `dw_pcie_host_deinit()` introduced in commit `5808d43e7c91b2` (Rob
-  Herring, Aug 2020).
-- `dw_pcie_host_deinit()` itself dates to 2019.
-- **Bug present since:** ~2020 in this function; DWC host code never had
-  the rescan lock (`git log -S 'pci_lock_rescan_remove' -- pcie-
-  designware-host.c` returned empty).
+### Step 3.1: Blame
+**Record:** Unbind-time `PCI_UNKNOWN` logic traces to 2449e06a5696
+(“PCI: reset pci device state to unknown state for resume”, 2006). That
+commit is present in this tree. `pci_pm_set_unknown_state()` exists at
+line 606 in current `pci-driver.c`.
 
-### Step 3.2: FOLLOW THE FIXES: TAG
-**Record:** No `Fixes:` tag. N/A.
+### Step 3.2: Fixes: Tag
+**Record:** N/A — no Fixes: tag. Referenced commit 2449e06a5696 is in
+this tree and introduced the unbind-time behavior this patch refines.
 
-### Step 3.3: CHECK FILE HISTORY FOR RELATED CHANGES
-**Record:**
-- Related fix in-tree: `1d59d474e1cb7` — “PCI: Hold rescan lock while
-  adding devices during host probe” (Oct 2024), with a documented NULL
-  deref crash from concurrent probe vs. sysfs remove.
-- This commit is patch **2/9** in series “PCI: controller: Add missing
-  rescan lock around root bus removal”; cover letter states **each patch
-  is independent**.
-- Fix is **not yet merged** in this tree (current `pcie-designware-
-  host.c` still lacks the lock).
+### Step 3.3: Related Changes
+**Record:** Related recent fix: 382895a288515 “PCI/PM: Reinstate
+clearing state_saved in legacy and !PM codepaths” (already in 6.18.43).
+No patch-series dependency; standalone 1/1 commit (d462c8e89e84).
 
-### Step 3.4: CHECK THE AUTHOR'S OTHER COMMITS
-**Record:** Hans Zhang is an active PCI contributor (capability-search
-refactors, cadence/dwc work). This series is a targeted locking fix, not
-part of a larger refactor.
+### Step 3.4: Author Context
+**Record:** Lukas Wunner is a regular PCI/PM contributor. Bjorn Helgaas
+(PCI maintainer) applied and signed off. No other related commits from
+this author in the immediate `pci-driver.c` history of this tree.
 
-### Step 3.5: CHECK FOR DEPENDENT/PREREQUISITE COMMITS
-**Record:**
-- **Dependency:** `pci_lock_rescan_remove()` API from `9d16947b75831`
-  (Jan 2014) — **present in this tree**.
-- **Standalone:** Yes; no structural/API prerequisites beyond the
-  existing lock helpers.
-- Buggy code (`5808d43e7c91b2`) is also an ancestor of HEAD.
+### Step 3.5: Dependencies
+**Record:** No prerequisites. Requires only existing
+`pci_pm_set_unknown_state()` and `pci_pm_suspend_noirq()` `!pm` path —
+all present in Linux 6.18.43. Patch applies cleanly (`git apply --check`
+passed).
 
 ---
 
-## PHASE 4: MAILING LIST AND EXTERNAL RESEARCH
+## Phase 4: Mailing List and External Research
 
-### Step 4.1: FIND THE ORIGINAL PATCH DISCUSSION
-**Record:**
-- `b4 dig -c` failed (commit not in local history yet).
-- Local mbox/cover files found: `20260522_18255117159_pci_controller_add
-  _missing_rescan_lock_around_root_bus_removal.{cover,mbx}`.
-- **Series:** 9 independent patches; this is patch 2/9 (DWC).
-- **Cover letter context:** Bot review on a separate cadence patch
-  flagged the same missing-lock pattern; author submitted this series to
-  fix all affected controllers.
-- **Lore URL fetch:** Blocked by Anubis anti-bot on lore.kernel.org.
+### Step 4.1: Original Discussion
+**Record:** b4 dig found thread at https://patch.msgid.link/af7d11d3ceb2
+31acc90829f7a5c8400c2446744f.1776415510.git.lukas@wunner.de. Single v1
+patch; Bjorn applied to `pci/pm`; Mario Limonciello Reviewed-by with no
+corner cases found. No stable nomination or NAKs.
 
-### Step 4.2: CHECK WHO REVIEWED THE PATCH
-**Record:** From commit message: Manivannan Sadhasivam (DWC maintainer)
-SOB; Bjorn Helgaas (PCI maintainer) committed. `b4 dig -w` not available
-for this unreleased commit.
+### Step 4.2: Reviewers
+**Record:** b4 dig -w: To/Cc included Bjorn Helgaas, Rafael Wysocki,
+Mario Limonciello, Alex Williamson, linux-pci@vger.kernel.org.
 
-### Step 4.3: SEARCH FOR THE BUG REPORT
-**Record:** No `Reported-by:` or crash trace in this specific patch.
-Precedent crash documented in `1d59d474e1cb7` for the **probe/add** side
-of the same locking gap. This fix addresses the symmetric **remove**
-side.
+### Step 4.3: Bug Reports
+**Record:** No new bug report. Commit references historical bugzilla
+#6024 class via 2449e06a5696. No syzbot link.
 
-### Step 4.4: CHECK FOR RELATED PATCHES AND SERIES
-**Record:** 8 sibling patches fix the same pattern in cadence, altera,
-brcmstb, iproc, mediatek, rockchip, vmd, plda. Each is independently
-backportable.
+### Step 4.4: Series Context
+**Record:** Standalone patch, not part of a multi-patch series.
 
-### Step 4.5: CHECK STABLE MAILING LIST HISTORY
-**Record:** Not searched (lore blocked). No stable-list discussion found
-in local mbox files.
+### Step 4.5: Stable List History
+**Record:** lore.kernel.org blocked by bot protection; no stable-list
+discussion found via b4 mbox thread.
 
 ---
 
-## PHASE 5: CODE SEMANTIC ANALYSIS
+## Phase 5: Code Semantic Analysis
 
-### Step 5.1: IDENTIFY KEY FUNCTIONS IN THE DIFF
-**Record:** `dw_pcie_host_deinit()` — only function modified.
+### Step 5.1: Key Functions
+**Record:** `pci_device_remove()`, `pci_pm_suspend_noirq()`,
+`pci_pm_set_unknown_state()`, `pci_set_power_state()` /
+`__pci_set_power_state()`.
 
-### Step 5.2: TRACE CALLERS
-**Record:** `dw_pcie_host_deinit()` is called from multiple DWC-based
-platform drivers:
-- `pcie-tegra194.c` (`tegra_pcie_deinit_controller()` → platform
-  `.remove` and probe error path)
-- `pcie-stm32.c`, `pcie-rcar-gen4.c`, `pci-meson.c`, `pci-dra7xx.c`,
-  `pcie-bt1.c`, `pci-exynos.c`, `pcie-kirin.c`, `pcie-intel-gw.c`
-- **Context:** Driver remove, module unload, and probe failure cleanup
-  on embedded/SoC platforms using Synopsys DWC PCIe.
+### Step 5.2: Callers
+**Record:** `pci_device_remove` — PCI bus `.remove` callback (sysfs
+unbind, module unload). `pci_pm_suspend_noirq` — PCI bus
+`.suspend_noirq` for every PCI device during system suspend.
 
-### Step 5.3: TRACE CALLEES
-**Record:** Key callees in the critical section:
-- `pci_stop_root_bus()` — stops child devices, releases host bridge
-  driver
-- `pci_remove_root_bus()` — removes child devices, deletes host bridge
-  from device model
-- Both documented to require the rescan/remove lock when racing with
-  sysfs operations.
+### Step 5.3: Callees
+**Record:** `pci_save_state()`, `pci_pm_set_unknown_state()`,
+`pci_fixup_device()`, `pci_prepare_to_sleep()` (bound path only).
 
-### Step 5.4: FOLLOW THE CALL CHAIN
-**Record:**
-- **Trigger A:** Platform device remove / module rmmod →
-  `dw_pcie_host_deinit()` → unlocked bus teardown.
-- **Trigger B (concurrent):** Root/admin writes to
-  `/sys/bus/pci/rescan`, `/sys/bus/pci/devices/.../remove`, or per-bus
-  rescan sysfs → `pci_lock_rescan_remove()` → bus mutation.
-- **Userspace reachability:** Sysfs PCI operations require privileges;
-  race is realistic during driver unbind/rebind, hotplug, or admin
-  tooling — not merely theoretical.
+### Step 5.4: Reachability
+**Record:** Any PCI device without a bound driver (or driver without PM
+ops) going through system suspend hits the `!pm` path. Users can trigger
+via S3/S2RAM; driver bind after resume via `modprobe` or sysfs is
+common. Reachable without privileges for suspend; driver bind typically
+requires root.
 
-### Step 5.5: SEARCH FOR SIMILAR PATTERNS
-**Record:** In this tree, several controllers already protect removal
-with the lock (`pci-host-common.c`, `pci-aardvark.c`, `pci-mvebu.c`,
-`pcie-mediatek-gen3.c`, `pci-hyperv.c`). DWC and others listed in the
-series do **not** — inconsistent, known-bad pattern.
+### Step 5.5: Similar Patterns
+**Record:** `pci_pm_freeze_noirq()` already calls
+`pci_pm_set_unknown_state()` unconditionally (line 1098). Suspend path
+was inconsistent for driverless devices.
 
 ---
 
-## PHASE 6: CROSS-REFERENCING AGAINST THE LOCAL TREE
+## Phase 6: Cross-Reference Against Local Tree
 
-### Step 6.1: DOES THE BUGGY CODE EXIST IN THIS TREE?
-**Record:**
-- **Tree:** `v6.18.44` (`stable/linux-6.18.y`, detached HEAD at
-  `2736c32da98b9`)
-- **Buggy code:** **YES** — `pcie-designware-host.c:709-710` calls
-  `pci_stop_root_bus()` / `pci_remove_root_bus()` without locking.
-- **Bug age:** Present since ~2020; not a post-6.18 regression.
+### Step 6.1: Buggy Code Present?
+**Record:** **Yes.** Tree is **Linux 6.18.43** (`git describe HEAD` →
+v6.18.43). Buggy code confirmed at lines 497–498 (unbind UNKNOWN) and
+line 874 (`goto Fixup` skipping `pci_pm_set_unknown_state` for `!pm`).
 
-### Step 6.2: CHECK FOR BACKPORT COMPLICATIONS
-**Record:** **Clean apply expected** — 2-line addition with no context
-conflicts. File has recent churn but the `dw_pcie_host_deinit()`
-teardown block is stable and matches the patch hunk.
+### Step 6.2: Backport Complications
+**Record:** Patch applies cleanly with no modifications. No significant
+refactoring conflicts in this area of 6.18.43.
 
-### Step 6.3: CHECK IF RELATED FIXES ARE ALREADY HERE
-**Record:** Probe-side rescan lock fix (`1d59d474e1cb7`) is in-tree.
-Remove-side DWC fix is **not** present. No duplicate fix found.
+### Step 6.3: Related Fixes Already Present?
+**Record:** No equivalent fix in this tree. Commit d462c8e89e84 is not
+in 6.18.43.
 
 ---
 
-## PHASE 7: SUBSYSTEM AND MAINTAINER CONTEXT
+## Phase 7: Subsystem Context
 
-### Step 7.1: IDENTIFY THE SUBSYSTEM AND ITS CRITICALITY
-**Record:** **PCI / DWC host controller drivers** — **IMPORTANT**.
-Affects many ARM/embedded SoC platforms (Tegra, STM32, Kirin, Meson,
-Exynos, R-Car, etc.), not universal but widely deployed.
+### Step 7.1: Subsystem / Criticality
+**Record:** **drivers/pci** — CORE subsystem. PCI PM affects virtually
+all systems.
 
-### Step 7.2: ASSESS SUBSYSTEM ACTIVITY
-**Record:** PCI controller code is actively maintained; recent related
-stable-worthy fix (`1d59d474e1cb7`) shows the subsystem maintainers
-treat rescan-lock gaps as real crash bugs.
+### Step 7.2: Activity
+**Record:** Actively maintained; recent PM fix 382895a288515 already
+backported to this tree.
 
 ---
 
-## PHASE 8: IMPACT AND RISK ASSESSMENT
+## Phase 8: Impact and Risk Assessment
 
-### Step 8.1: DETERMINE WHO IS AFFECTED
-**Record:** Users of DWC-based PCIe host controllers on platforms using
-`dw_pcie_host_deinit()` — embedded ARM servers/devices, Tegra, various
-SoCs. Config-dependent on `CONFIG_PCIE_DW_HOST` and specific platform
-drivers.
+### Step 8.1: Who Is Affected
+**Record:** Systems with PCI devices that are driverless at suspend time
+(never probed, intentionally unbound, or drivers without PM ops) that
+later get a driver bound after resume.
 
-### Step 8.2: DETERMINE THE TRIGGER CONDITIONS
-**Record:**
-- **Trigger:** Concurrent root bus removal (driver unload/remove) with
-  sysfs PCI rescan/remove/hotplug.
-- **Likelihood:** Uncommon but realistic during driver rebinding,
-  development, or admin maintenance.
-- **Unprivileged trigger:** No direct unprivileged sysfs access; race
-  still matters for system stability under privileged operations.
+### Step 8.2: Trigger Conditions
+**Record:** System suspend (S2RAM) → resume → driver bind. Uncommon but
+realistic for manual sysfs bind/unbind workflows and devices without in-
+tree drivers. Not security-relevant; requires suspend cycle.
 
-### Step 8.3: DETERMINE THE FAILURE MODE SEVERITY
-**Record:**
-- **Failure mode:** Use-after-free, NULL pointer dereference, kernel
-  oops/crash during concurrent bus teardown.
-- **Severity:** **CRITICAL** (system crash; potential memory
-  corruption).
+### Step 8.3: Failure Mode Severity
+**Record:** Device fails to power up / probe after resume (stale D0
+cache). **Severity: MEDIUM-HIGH** for affected users (hardware non-
+functional), but not a kernel crash, deadlock, or data corruption.
 
-### Step 8.4: CALCULATE RISK-BENEFIT RATIO
-**Record:**
-- **Benefit:** **High** — prevents crashes on a common PCIe IP block
-  across many platforms; aligns DWC with already-fixed controllers.
-- **Risk:** **Very low** — 2-line, established locking pattern, no
-  API/behavior change beyond proper serialization.
-- **Ratio:** Strong benefit, minimal risk.
+### Step 8.4: Risk-Benefit
+**Record:** **Benefit:** MEDIUM — fixes latent PM bug for driverless
+devices; improves cache accuracy between unbind and suspend. **Risk:**
+VERY LOW — 10-line change, maintainer-reviewed, net deletion of code.
+**Ratio:** Favorable.
 
 ---
 
-## PHASE 9: FINAL SYNTHESIS
+## Phase 9: Final Synthesis
 
-### Step 9.1: COMPILE THE EVIDENCE
+### Step 9.1: Evidence Summary
 
-**FOR backporting:**
-- Real race between bus removal and sysfs rescan/remove paths.
-- Documented failure modes (UAF/crash) in commit message; strong
-  precedent in `1d59d474e1cb7`.
-- Tiny, obviously correct fix matching multiple in-tree controllers.
-- Buggy code present in v6.18.44; prerequisites
-  (`pci_lock_rescan_remove`) present.
-- Standalone patch; maintainer-reviewed.
-- Affects widely used DWC PCIe host path on many embedded platforms.
+**FOR backport:**
+- Fixes real PCI PM cache bug for driverless devices on S2RAM suspend
+  (same failure class as bugzilla #6024)
+- Stops incorrect premature UNKNOWN at unbind while hardware is still D0
+- Tiny, surgical, PCI maintainer + AMD reviewed
+- Applies cleanly to 6.18.43
+- Aligns suspend path with existing hibernate path behavior
 
-**AGAINST backporting:**
-- No explicit user crash report or syzbot entry for this specific patch.
-- Race requires concurrent privileged sysfs activity (somewhat
-  uncommon).
-- Part of a 9-patch series (though each patch is independent).
+**AGAINST backport:**
+- No explicit user bug report or syzbot hit
+- Failure is device malfunction, not kernel oops/panic
+- Described primarily as “consistency” in commit message
+- No stable nomination in review thread
 
-**UNRESOLVED:**
-- Full lore.kernel.org review thread (blocked by anti-bot).
-- No independent `Tested-by:` on this specific DWC patch.
+**Unresolved:** None material to the decision.
 
-### Step 9.2: STABLE RULES CHECKLIST
-1. Obviously correct and tested? **PASS** — pattern is standard;
-   maintainer SOBs; no test report but fix is trivial and well-
-   precedented.
-2. Fixes a real bug? **PASS** — missing lock on a documented race path.
-3. Important issue? **PASS** — UAF/kernel crash potential
-   (**CRITICAL**).
-4. Small and contained? **PASS** — 2 lines, one function.
-5. No new features or APIs? **PASS** — uses existing lock API only.
-6. Can apply to the local tree? **PASS** — buggy code and API both
-   present; clean apply expected.
+### Step 9.2: Stable Rules Checklist
+1. Obviously correct and tested? **PASS** — minimal diff, maintainer-
+   reviewed, corner-case review done
+2. Fixes a real bug affecting users? **PASS** — stale power-state cache
+   prevents device power-up after suspend+bind
+3. Important issue? **PASS (moderate)** — device non-functionality after
+   suspend, same class as historical PCI PM bug
+4. Small and contained? **PASS** — 1 file, 10 lines
+5. No new features or APIs? **PASS**
+6. Can apply to local tree? **PASS** — verified clean apply
 
-### Step 9.3: EXCEPTION CATEGORIES
-**Record:** None (not a quirk/DT/build/docs fix). This is a core
-synchronization bug fix.
+### Step 9.3: Exception Categories
+**Record:** None (not a quirk, device ID, DT, or build fix).
 
-### Step 9.4: DECISION RATIONALE
+### Step 9.4: Problem Summary for Stable Users
 
-For **linux-6.18.y** (`v6.18.44`), `dw_pcie_host_deinit()` removes the
-root PCI bus without the global rescan/remove lock that sysfs PCI
-operations already use. That is the same class of defect already fixed
-on the probe/add path (`1d59d474e1cb7`) and already handled correctly in
-several other PCI host controller drivers in this tree. The fix is
-minimal, self-contained, and prevents realistic kernel crashes during
-driver teardown on DWC-based platforms.
+This commit fixes a gap in PCI core suspend handling: devices without a
+driver (or without PM callbacks) never had their cached power state
+invalidated before sleep, while bound devices did. After suspend/resume,
+if the BIOS changes the hardware power state, the kernel can believe the
+device is still in D0 and skip the transition back to D0 when a driver
+is later bound — leaving hardware dead. The patch also stops marking the
+cache as UNKNOWN at unbind time when hardware is still in D0, deferring
+invalidation to `pci_pm_suspend_noirq()` where bound devices already do
+it.
+
+For Linux 6.18.43, the buggy code is present, prerequisites exist, and
+the patch applies cleanly with very low risk.
 
 ---
 
 ## Verification
 
-- **[Phase 1]** Parsed subject, tags, body; no Fixes/Reported-by;
-  maintainer SOBs present.
-- **[Phase 2]** Confirmed diff: +2 lines wrapping
-  `pci_stop/remove_root_bus` in `dw_pcie_host_deinit()`.
-- **[Phase 3]** `git blame`: buggy calls from `5808d43e7c91b2` (2020);
-  `git log -S`: DWC never had rescan lock.
-- **[Phase 3]** `git merge-base --is-ancestor`: `9d16947b75831` YES,
-  `5808d43e7c91b2` YES.
-- **[Phase 3]** Related fix `1d59d474e1cb7` confirmed in tree with crash
-  stack trace.
-- **[Phase 3]** `git log --grep`: fix not merged in this tree.
-- **[Phase 4]** Read local mbox/cover for series context; patch 2/9,
-  independent patches stated.
-- **[Phase 4]** `b4 dig -c`: failed (commit not in tree); lore fetch
-  blocked.
-- **[Phase 5]** `grep dw_pcie_host_deinit(`: 9 platform driver call
-  sites verified.
-- **[Phase 5]** Read `pci-sysfs.c`: rescan/remove paths use
-  `pci_lock_rescan_remove()`.
-- **[Phase 5]** Read `pci-host-common.c`, `probe.c`: lock pattern and
-  API confirmed.
-- **[Phase 5]** `grep pci_lock_rescan_remove` in
-  `drivers/pci/controller/`: multiple drivers already protected; DWC
-  not.
-- **[Phase 6]** `git describe HEAD`: `v6.18.44-1-g2736c32da98b9`;
-  `Makefile`: 6.18.44.
-- **[Phase 6]** Read `pcie-designware-host.c:703-724`: buggy code
-  confirmed present.
-- **[Phase 8]** Traced `tegra_pcie_dw_remove` →
-  `tegra_pcie_deinit_controller` → `dw_pcie_host_deinit`.
+- [Phase 1] Parsed subject, tags, body from provided commit message and
+  kernel.org (d462c8e89e84)
+- [Phase 1] Confirmed no Reported-by/syzbot/Fixes:/Cc: stable tags
+- [Phase 2] Diff analysis: 2 insertions, 8 deletions in `pci-driver.c`;
+  two functions modified
+- [Phase 2] Read `__pci_set_power_state()` early-return at line 1545 in
+  `pci.c`
+- [Phase 3] `git describe HEAD` → v6.18.43; Makefile VERSION 6.18.43
+- [Phase 3] `git show 2449e06a5696` — original unbind UNKNOWN logic and
+  bugzilla #6024 context
+- [Phase 3] `git blame` lines 493–498 — unbind UNKNOWN code present
+- [Phase 3] Confirmed `pci_pm_set_unknown_state()` at line 606 in local
+  tree
+- [Phase 4] `b4 dig -c d462c8e89e84` — found lore thread URL
+- [Phase 4] `b4 dig -w` — reviewers/maintainers CC'd
+- [Phase 4] Downloaded mbox: Bjorn applied, Mario Reviewed-by, no stable
+  nomination
+- [Phase 4] lore.kernel.org direct fetch blocked (403/bot protection)
+- [Phase 5] Traced `pci_pm_suspend_noirq` `!pm` → `goto Fixup` at line
+  874 (buggy)
+- [Phase 5] Confirmed `pci_pm_freeze_noirq` already sets UNKNOWN at line
+  1098
+- [Phase 6] Buggy code at lines 497–498 and 874 confirmed in 6.18.43
+- [Phase 6] `git apply --check` on upstream patch — applies cleanly
+- [Phase 6] Commit d462c8e89e84 not in 6.18.43 tree
+- [Phase 8] Failure mode: stale D0 → device won't power up on driver
+  bind; severity MEDIUM-HIGH for affected cases
 
-**YES**The analysis is complete: **backport this commit to
-linux-6.18.y**.
+**YES**The background searches finished and line up with the earlier
+analysis:
 
-`dw_pcie_host_deinit()` in `pcie-designware-host.c` removes the root PCI
-bus without `pci_lock_rescan_remove()`, which can race with sysfs
-rescan/remove and cause UAF or kernel crashes. The fix is two lines,
-matches patterns already used in other PCI host drivers in this tree,
-and applies cleanly to v6.18.44 where the bug is still present.
+- **Local tree (6.18.43):** The fix is **not** present. The buggy paths
+  are still there — `PCI_UNKNOWN` is set on unbind, and the `!pm` branch
+  in `pci_pm_suspend_noirq()` still skips `pci_pm_set_unknown_state()`.
+- **Mainline (kernel.org):** The commit is **d462c8e89e84** (“PCI: Stop
+  setting cached power state to 'unknown' on unbind”), merged April 27,
+  2026 via the `pci/pm` branch.
 
-**YES**
+That confirms the patch is a valid backport candidate for this tree and
+applies cleanly. **Verdict remains YES.**
 
- drivers/pci/controller/dwc/pcie-designware-host.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/pci/pci-driver.c | 10 ++--------
+ 1 file changed, 2 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
-index 48e4a887bb1bb..d5c24098c3dd3 100644
---- a/drivers/pci/controller/dwc/pcie-designware-host.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-@@ -706,8 +706,10 @@ void dw_pcie_host_deinit(struct dw_pcie_rp *pp)
+diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+index f9ead94d5ebb6..1219f39b1c69b 100644
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -490,13 +490,6 @@ static void pci_device_remove(struct device *dev)
+ 	/* Undo the runtime PM settings in local_pci_probe() */
+ 	pm_runtime_put_sync(dev);
  
- 	dwc_pcie_debugfs_deinit(pci);
+-	/*
+-	 * If the device is still on, set the power state as "unknown",
+-	 * since it might change by the next time we load the driver.
+-	 */
+-	if (pci_dev->current_state == PCI_D0)
+-		pci_dev->current_state = PCI_UNKNOWN;
+-
+ 	/*
+ 	 * We would love to complain here if pci_dev->is_enabled is set, that
+ 	 * the driver should have called pci_disable_device(), but the
+@@ -871,7 +864,7 @@ static int pci_pm_suspend_noirq(struct device *dev)
  
-+	pci_lock_rescan_remove();
- 	pci_stop_root_bus(pp->bridge->bus);
- 	pci_remove_root_bus(pp->bridge->bus);
-+	pci_unlock_rescan_remove();
+ 	if (!pm) {
+ 		pci_save_state(pci_dev);
+-		goto Fixup;
++		goto set_unknown;
+ 	}
  
- 	dw_pcie_stop_link(pci);
+ 	if (pm->suspend_noirq) {
+@@ -923,6 +916,7 @@ static int pci_pm_suspend_noirq(struct device *dev)
+ 		goto Fixup;
+ 	}
  
++set_unknown:
+ 	pci_pm_set_unknown_state(pci_dev);
+ 
+ 	/*
 -- 
 2.53.0
 
