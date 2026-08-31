@@ -1,211 +1,209 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8097E3A7193;
-	Mon, 31 Aug 2026 21:51:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA6193B3C05;
+	Mon, 31 Aug 2026 22:04:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788213109; cv=none; b=FPKlV1rBwHzVeT0kWzqxUjkKp2Vl6UCekdbczf+Bv1Eg5RXZ49N54W55DlB9m82RhUXRXRxgUS3z6f/ZJfFsokryk6sA+1G7GvqCpoZoCMe5YhhnZihfY8jHxOxX1NXE1Y9weuXx62eRyDl30bcujBJwfi+gSiak4TB8DstrKh8=
+	t=1788213865; cv=none; b=Z9Kum9E7yWTUzy+vT9SoySwMZrDBrfeO3o8vbl5zZceWrz6Ll3NorX9nlUMq90vARdZz5yF5bzFOVrkf+0oDD/Mr02tLqcXjdDzcqjJBW5ab9Aq23n41BGPI0XKwKjwGDHqSWrVSf1eEIseZ8nLgN7a430NJFm6PJblbYhTLotE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788213109; c=relaxed/simple;
-	bh=Tcg6eZmO8d0Tlm4u1p5bMWUwhjyRFqGp2AxI2+/LNXw=;
+	s=arc-20240116; t=1788213865; c=relaxed/simple;
+	bh=72x5jFQ6I8Crt5XlI5K4kCBkNAAhHeAOzNpxHDANRMQ=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=KAcCJWBXN3k+eMfKBxECvVX8W5RO5UP3K/gjsQj22TyLBtrZg/nLdYcVm5n0nD55uany2LLaxVMw15r/bc1amlI8S50ai2NjIKsa/0R+j1FRnnsc6uuNZRF+F6dkrYhUJAnHoLr0jrdrBv0xBwTfH6LS+zzK/N9fo4vqRgJ4LQA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RuetseCv; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=kh8hTsnrbDnGpOk88SAoBLjGtaaK29mEiFu+zjFjvCsJYaOxYqQYwpiP5cgkO5kDbdHRp01SzMHPnz7h9whunHH5HGUl0Py5vDYF1g6V2ONb1HeYBsBlbOMqfGUsIiyAO2FI8Kg9nPQJLnR5aTUUvZDYFACaPUvQ9pEDOzm97fc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=I8hOnke8; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RuetseCv"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4EC931F000E9;
-	Mon, 31 Aug 2026 21:51:46 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="I8hOnke8"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 846361F000E9;
+	Mon, 31 Aug 2026 22:04:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788213106;
-	bh=inFG7vCK9weH1i7XRSWpKuR3G88n6g0Ep4wLmlA/p2c=;
+	s=k20260515; t=1788213860;
+	bh=bOvJIYUPNxFJLvNnCJ7NLU7ZGtC4XKjzK7AKUmXWY+8=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=RuetseCvis6g18HkmgkThAay1GGrM+58Jl5XIDInC8iZEC+G3MymCRQRf2ULxptb9
-	 BslfTj7e+qX3ZX+BXkQcC20fiotVVJlKShP8dlwfa6S29sKW0tnSwbvx8qKOxD/ouR
-	 mZzL4k2Po5oS2mc4j225RQEyS+H5NZn3Lby5SgSQsmcE2Zbn/2BLp1Nii504VsogoU
-	 Vj8a1IAeTD+LzOdOiKentSI3C1OKOusNVys6O0Tlk4eZ8rsrUgA5mfpX27BtvwyUJ9
-	 e8fk5LoLyfn5SqwJ5fV3oNs0R0rYjERcZxHlD+SgceHM+YgoppzZKaXsehD1YEijFR
-	 1R7PDrHZJdf7w==
+	b=I8hOnke8LaQCSOEuTX2zwxDj1EsU93Dod5boISKIkzUQQfYgkcuTeahc3a5nLluC5
+	 L48h/TDxr6dVogF1psiBQT42m9trbfPi93iTxp1d3BGNt+IvhgFVlM9uzhnvaWgVuA
+	 6n/mCbu26xioRaDIILCglQeOHcumyZlMCtGFa5dzBdNnaVdJ1FbLhOn4M4n3pJHzTp
+	 b5BKUT4oI9q23ub46hf8e4zr7AHVgAqe69Y42sRQBjGJwFoE/deOcbFN+65cbUkY9K
+	 ndkFKPWct1Fr4l0uhs/HAFE1KZlxyqR0lU1rOykBzLwDLrdWDMg2gc7qK+Gj8Fc5s9
+	 djjiHcyTXqGSA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5 03/12] dmaengine: switchtec-dma: always clear DMA
- base registers on chan_stop()
+Subject: Re: [PATCH v5 04/12] dmaengine: switchtec-dma: halt channel on
+ alloc_chan_resources error
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Logan Gunthorpe" <logang@deltatee.com>
-Cc: vkoul@kernel.org, linux-pci@vger.kernel.org, Frank.Li@kernel.org, dmaengine@vger.kernel.org
-In-Reply-To: <20260831191403.207631-4-logang@deltatee.com>
+Cc: Frank.Li@kernel.org, dmaengine@vger.kernel.org, vkoul@kernel.org, linux-pci@vger.kernel.org
+In-Reply-To: <20260831191403.207631-5-logang@deltatee.com>
 References: <20260831191403.207631-1-logang@deltatee.com>
- <20260831191403.207631-4-logang@deltatee.com>
+ <20260831191403.207631-5-logang@deltatee.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 31 Aug 2026 21:51:45 +0000
-Message-Id: <20260831215146.4EC931F000E9@smtp.kernel.org>
+Date: Mon, 31 Aug 2026 22:04:19 +0000
+Message-Id: <20260831220420.846361F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 4 potential issue(=
+Thank you for your contribution! Sashiko AI review found 6 potential issue(=
 s) to consider:
-
-New issues:
-- [High] Clearing DMA base registers to 0 redirects runaway DMA to physical=
- address 0, causing critical memory corruption.
-- [High] Unconditional memory leak of DMA descriptor rings during device ho=
-t-unplug because -ENODEV is treated as a halt timeout.
-- [High] Dangling pointers allow intentionally leaked DMA memory to be acci=
-dentally freed on subsequent channel allocation failure, risking hardware m=
-emory corruption.
-
-Pre-existing issues:
-- [Critical] Client data buffers can be trashed by runaway hardware because=
- pending descriptors are aborted and unmapped despite a halt failure.
+- [Critical] Zeroing DMA base registers when hardware fails to halt redirec=
+ts runaway DMA to physical address 0x0.
+- [High] Intentional descriptor leak leaves stale pointers intact, causing =
+Use-After-Free of active DMA memory during allocation retries.
+- [High] Mishandling of `-ENODEV` causes a deterministic, permanent memory =
+leak of descriptor rings upon device hot-unplug.
+- [High] The mitigation for `unhalt_channel()` timeout is completely bypass=
+ed because `halt_channel()` instantly returns success.
+- [High] The intentional memory leak on channel initialization timeout crea=
+tes an unbounded memory exhaustion vector if allocation is retried.
+- [Medium] The error path needlessly leaks purely software-backed structure=
+s (`desc_ring`) when attempting to leak hardware rings.
 --
 
-commit 76ff5cafd116d5c109fd77135de2f45efb9196b7
+commit 28f07bd0419a79f1993daba83975c013aac2cba4
 Author: Logan Gunthorpe <logang@deltatee.com>
 
-dmaengine: switchtec-dma: always clear DMA base registers on chan_stop()
+dmaengine: switchtec-dma: halt channel on alloc_chan_resources error
 
-Attempt the register clear regardless of whether the halt was successful,
-and have switchtec_dma_chan_stop() return the halt result. In case of failu=
-re,
-descriptor rings are intentionally leaked to prevent buggy hardware from
-trashing freed memory.
+The error-unwind path called disable_channel() before freeing the
+descriptor rings, but that only clears the enable bit with an
+unflushed write -- it doesn't halt the channel or clear its DMA base
+address registers. If unhalt_channel() timed out, the channel's actual
+state is unknown at that point, so nothing guarantees the hardware
+isn't still touching the rings when they're freed.
 
-Link: https://lore.kernel.org/dmaengine/20260721162531.BA01A1F01560@smtp.ke=
+Link: https://lore.kernel.org/dmaengine/20260717223647.F0A051F000E9@smtp.ke=
+rnel.org
+Link: https://lore.kernel.org/dmaengine/20260727185101.D221C1F000E9@smtp.ke=
 rnel.org
 
 > diff --git a/drivers/dma/switchtec_dma.c b/drivers/dma/switchtec_dma.c
-> index e55fe9ff7e2c5..e2bb65237d2c9 100644
+> index e2bb65237d2c9..2d5ba194c99a1 100644
 > --- a/drivers/dma/switchtec_dma.c
 > +++ b/drivers/dma/switchtec_dma.c
-> @@ -543,26 +543,33 @@ switchtec_dma_abort_desc(struct switchtec_dma_chan =
-*swdma_chan, int force)
->  	spin_unlock_bh(&swdma_chan->complete_lock);
->  }
-> =20
-> -static void switchtec_dma_chan_stop(struct switchtec_dma_chan *swdma_cha=
-n)
-> +static int switchtec_dma_chan_stop(struct switchtec_dma_chan *swdma_chan)
->  {
-> +	struct pci_dev *pdev;
->  	int rc;
-> =20
->  	rc =3D halt_channel(swdma_chan);
-> -	if (rc)
-> -		return;
-> =20
->  	rcu_read_lock();
-> -	if (!rcu_dereference(swdma_chan->swdma_dev->pdev)) {
-> +	pdev =3D rcu_dereference(swdma_chan->swdma_dev->pdev);
-> +	if (!pdev) {
->  		rcu_read_unlock();
-> -		return;
-> +		return rc;
->  	}
-> =20
-> +	if (rc)
-> +		pci_err(pdev,
-> +			"Channel %d halt timed out, clearing DMA base registers anyway\n",
-> +			swdma_chan->index);
-> +
->  	writel(0, &swdma_chan->mmio_chan_fw->sq_base_lo);
->  	writel(0, &swdma_chan->mmio_chan_fw->sq_base_hi);
->  	writel(0, &swdma_chan->mmio_chan_fw->cq_base_lo);
->  	writel(0, &swdma_chan->mmio_chan_fw->cq_base_hi);
-
-[Severity: High]
-If the channel fails to halt (times out), writing 0 to sq_base and cq_base
-will point the hardware's queues to physical address 0.
-
-If the active hardware fetches a descriptor or writes a completion, does th=
-is
-redirect runaway DMA to corrupt physical memory at address 0 instead of wri=
-ting
-to the intentionally leaked descriptor rings?
-
-> =20
->  	rcu_read_unlock();
-> +
-> +	return rc;
->  }
-
-[ ... ]
-
-> @@ -1050,6 +1057,7 @@ static void switchtec_dma_free_chan_resources(struc=
-t dma_chan *chan)
->  {
->  	struct switchtec_dma_chan *swdma_chan =3D
->  		container_of(chan, struct switchtec_dma_chan, dma_chan);
-> +	int rc;
-> =20
->  	spin_lock_bh(&swdma_chan->submit_lock);
->  	swdma_chan->ring_active =3D false;
-> @@ -1059,9 +1067,10 @@ static void switchtec_dma_free_chan_resources(stru=
+> @@ -1047,6 +1047,10 @@ static int switchtec_dma_alloc_chan_resources(stru=
 ct dma_chan *chan)
 >  	swdma_chan->comp_ring_active =3D false;
 >  	spin_unlock_bh(&swdma_chan->complete_lock);
-> =20
-> -	switchtec_dma_chan_stop(swdma_chan);
-> +	rc =3D switchtec_dma_chan_stop(swdma_chan);
->  	switchtec_dma_abort_desc(swdma_chan, 0);
+>  err_disable_channel:
+> +	if (switchtec_dma_chan_stop(swdma_chan)) {
+
+[Severity: High]
+Is the mitigation for an unhalt_channel() timeout bypassed here?
+
+If unhalt_channel() times out, the SWITCHTEC_CHAN_STS_HALTED bit remains 1.
+
+When switchtec_dma_chan_stop() subsequently calls halt_channel():
+
+drivers/dma/switchtec_dma.c:halt_channel() {
+    ...
+	ret =3D wait_for_chan_status(chan_hw, SWITCHTEC_CHAN_STS_HALTED, true);
+    ...
+}
+
+Because the bit is already 1, wait_for_chan_status() instantly returns 0.
+
+Does this cause the error path to mistakenly perceive a successful halt and
+proceed to free the descriptor rings while the hardware state is unknown?
 
 [Severity: Critical]
-This is a pre-existing issue, but does calling switchtec_dma_abort_desc()
-here defeat the purpose of leaking the descriptor memory?
+Does zeroing the DMA base registers when the hardware fails to halt redirect
+runaway DMA to physical address 0x0?
 
-If switchtec_dma_chan_stop() times out due to a hardware hang, this code
-still unconditionally calls dma_descriptor_unmap() and invokes client
-callbacks with DMA_TRANS_ABORTED:
+Looking at switchtec_dma_chan_stop():
 
-switchtec_dma_abort_desc()
+drivers/dma/switchtec_dma.c:switchtec_dma_chan_stop() {
     ...
-    dma_cookie_complete(&desc->txd);
-    dma_descriptor_unmap(&desc->txd);
-    if (!force)
-        dmaengine_desc_get_callback_invoke(&desc->txd, &res);
+	if (rc)
+		pci_err(pdev,
+			"Channel %d halt timed out, clearing DMA base registers anyway\n",
+			swdma_chan->index);
 
-Could this cause clients to free or reuse their data buffers while the
-runaway hardware is still actively writing to or reading from them?
+	writel(0, &swdma_chan->mmio_chan_fw->sq_base_lo);
+    ...
+}
 
-> -	switchtec_dma_free_desc(swdma_chan);
-> +	if (!rc)
-> +		switchtec_dma_free_desc(swdma_chan);
+If the hardware is unhalted and active, and it dynamically fetches the zero=
+ed
+base addresses, can it begin performing DMA at physical address 0x0, causing
+severe memory corruption?
 
-[Severity: High]
-If the PCI device is removed (e.g. hot-unplug), pdev is set to NULL, and
-switchtec_dma_chan_stop() detects this and returns -ENODEV.
-
-Does treating -ENODEV as a hardware halt failure here intentionally skip
-switchtec_dma_free_desc(), causing a permanent memory leak of the DMA
-descriptor rings during normal device unbind?
+> +		disable_channel(swdma_chan);
+> +		return rc;
 
 [Severity: High]
-If switchtec_dma_chan_stop() times out, the descriptor memory is
-intentionally leaked by skipping switchtec_dma_free_desc(), but the pointers
-(hw_sq, hw_cq, desc_ring) are not cleared to NULL in the struct.
+Does this intentional memory leak on timeout create an unbounded memory
+exhaustion vector?
 
-If a client subsequently allocates the channel again, and any part of the
-new allocation fails:
+If a client driver repeatedly retries alloc_chan_resources after it fails
+with -ETIMEDOUT, could each attempt continuously leak kernel memory until t=
+he
+system is exhausted?
 
-switchtec_dma_alloc_desc()
-    swdma_chan->hw_sq =3D dma_alloc_coherent(swdma_dev->dma_dev.dev, size,
-                                           &swdma_chan->dma_addr_sq,
-                                           GFP_NOWAIT);
-    if (!swdma_chan->hw_sq) {
-        rc =3D -ENOMEM;
-        goto free_and_exit;
-    }
+[Severity: Medium]
+Does this error path needlessly leak purely software-backed structures?
 
-Would the error path (free_and_exit) call switchtec_dma_free_desc() and
-erroneously free the old, leaked memory that the runaway hardware might
-still be writing to?
+While returning early prevents buggy hardware from writing to the physical
+rings, this broadly skips freeing desc_ring.
 
-> =20
+Since the hardware has no knowledge of this purely software-backed array, c=
+an
+this leak kernel memory unnecessarily?
+
+[Severity: High]
+Can this intentional descriptor leak leave stale pointers intact, leading to
+a use-after-free during allocation retries?
+
+If a client retries alloc_chan_resources after a timeout, the pointers for
+hw_cq and desc_ring are not cleared.
+
+When switchtec_dma_alloc_desc() is called again:
+
+drivers/dma/switchtec_dma.c:switchtec_dma_alloc_desc() {
+    ...
+	swdma_chan->hw_sq =3D dma_alloc_coherent(swdma_dev->dma_dev.dev, size,
+					       &swdma_chan->dma_addr_sq,
+					       GFP_NOWAIT);
+	if (!swdma_chan->hw_sq) {
+		rc =3D -ENOMEM;
+		goto free_and_exit;
+	}
+    ...
+}
+
+If the coherent allocation for hw_sq fails (e.g., -ENOMEM), the error path
+calls switchtec_dma_free_desc().
+
+Since hw_cq still holds the stale pointer to the leaked ring, would it be
+erroneously freed while the unhalted hardware might still be actively writi=
+ng
+to it?
+
+> +	}
 >  	disable_channel(swdma_chan);
->  }
+>  err_free_desc:
+>  	switchtec_dma_free_desc(swdma_chan);
+
+[Severity: High]
+Does mishandling -ENODEV cause a permanent memory leak of the descriptor
+rings upon device hot-unplug?
+
+Looking at switchtec_dma_free_chan_resources():
+
+drivers/dma/switchtec_dma.c:switchtec_dma_free_chan_resources() {
+    ...
+	rc =3D switchtec_dma_chan_stop(swdma_chan);
+	switchtec_dma_abort_desc(swdma_chan, 0);
+	if (!rc)
+		switchtec_dma_free_desc(swdma_chan);
+    ...
+}
+
+If the device is removed and switchtec_dma_chan_stop() returns -ENODEV from
+halt_channel(), does the !rc check evaluate to false and permanently skip
+freeing the descriptors?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260831191403.2076=
-31-1-logang@deltatee.com?part=3D3
+31-1-logang@deltatee.com?part=3D4
