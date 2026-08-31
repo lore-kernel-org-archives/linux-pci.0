@@ -1,58 +1,68 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4730C39C00F;
-	Mon, 31 Aug 2026 21:21:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 421833A9871
+	for <linux-pci@vger.kernel.org>; Mon, 31 Aug 2026 21:23:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788211272; cv=none; b=IMqjU485s/Ji8fmrOlLoA5p0eZiXjKfBLXCuOLitp2Xwb9CApel1KExqcvhAK31JvGb5HmxSujP9SCnlJ3jr0pQLL2OURnZ/hMKsJqSHskYIwks1GLLl7nRyEyly+DDNk4tYkLyPfS7XGr6y0fAGD5aYnmeZakDS+/JDq6nW+DQ=
+	t=1788211403; cv=none; b=G/wyt9MvLcTcr3sYlox+J61gIq6KGabFYlvPPnFUcpacn7H2dGZAlp083BPddrV/91glcm5U+wdtJi5tFi1T0AxEjNfXJnOsxC9T0Gg57/SMrNplsja7APzi4Fedt9Z3cyYiO7jU6OBpmS1ef8ibWDUlLhBXmz/sdMUjY8fWZKY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788211272; c=relaxed/simple;
-	bh=3lFF+50xOQtVEFBvv/mpT10KWYPriQtvi/aqggN6hZc=;
+	s=arc-20240116; t=1788211403; c=relaxed/simple;
+	bh=VYZE0nAcvprEH93zh62ikZlyk6t3BMK2x/zxTmmmGjw=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=eKLHJwbuzoQIqCwL+WZidzI6KFTHfLoVciQ2g6BQczdLrE6twb6JL9Pj1zIRwDo7WHehV8PE+LVL41/Zkeo1U1tiBR0jqBl9w8826pMaKg4d/EkybwuCv7c5dhl+ptG6hddA5ffRYhMZaX9YsBo8fBqr5DgwTRNGk+0CkdXeRdI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZOwAm3Wv; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=HVGnhNbjcp7r3LfCNxPuekO83gTSYGvBPjXYDu/LZp74wf59PMcsONzSw/moV1mqvwanxPREC17rAZapsecNn3tvlAwYWrYAE7kBOZ+NcVMqv6g/rQwTjbJir8+a6qB3ml3DUcT1tdfiLgspE6RtTCKQlgyCffJvk4x5GjwZyuE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=i936lf1Y; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZOwAm3Wv"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8F3F01F000E9;
-	Mon, 31 Aug 2026 21:21:10 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="i936lf1Y"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B18601F00A3D;
+	Mon, 31 Aug 2026 21:23:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788211270;
-	bh=3lFF+50xOQtVEFBvv/mpT10KWYPriQtvi/aqggN6hZc=;
+	s=k20260515; t=1788211401;
+	bh=VYZE0nAcvprEH93zh62ikZlyk6t3BMK2x/zxTmmmGjw=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=ZOwAm3WvDgwrxh+/k9yoqSB7BWPnnZ7gh5mErXU0C2Gd+YVpkO0pMHGmAcwMyxV1v
-	 jLNSFZPJHFbkfA7Y3DKK3QLW6q8llYsJKJD6dlEGi1q3dEUYlP3rCf7SDwwdxRGns/
-	 06QIU21bIs+N5h2na0X48w6najnHMYZB9jlUo5X1Vfo9rMEZ1tvkiMb7G7WUSKyVTM
-	 BT50WZYLS9u0qP6cPS4KLln7AgEuiUcLXNkYrT/HD0xUy5hP1mISEswQGzjgEJshHK
-	 jM50zPxGoS5vz6UuL3y6HIhhR5L9VRYhSAM5GD2oYBajxXZhaMsiRAGnhR5R4MHgaQ
-	 b3WpxTUcQkMhw==
+	b=i936lf1YeKog+mTkCLyvZDR0ZK3Gey8ESwsXZtz+sj+hkp/W5p92rp+z5/sY3afMr
+	 rMWfw6EeT8eG9JjRE9aJP6kuG5Vv4sPD8iIeVFWbAE2i9aaB7E0GB8MXYQexonlWpx
+	 xlJB3UpFb7r8bRBFqLse8W+nW+Un9xeLFWLn/AvcKBcpcYvDCYG0yD5i97o4KzM0qe
+	 vizo4PUT/jGFQnuynnNMUJHva5bh9ZvtbUnddgdw+OAeE4qVPB0Kk6k/xIAHs5aMU6
+	 JfRLQe+VUkictyaD968sskV81uxPVBn7I2Y+icRY59QuOM6/vatYnpllmwUMFVmlg5
+	 1VZGRey0mIAcQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 7/7] Documentation: PCI: endpoint: Document vNTB DMA
- export
+Subject: Re: [PATCH v1 7/7] ACPI: scan: Take PCI device enumeration into
+ account directly
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "Koichiro Den" <den@valinux.co.jp>
-Cc: ntb@lists.linux.dev, linux-pci@vger.kernel.org
-In-Reply-To: <20260831182657.329614-8-den@valinux.co.jp>
-References: <20260831182657.329614-1-den@valinux.co.jp>
- <20260831182657.329614-8-den@valinux.co.jp>
+To: "Rafael J. Wysocki" <rafael@kernel.org>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <2497062.NG923GbCHz@rafael.j.wysocki>
+References: <3435655.aeNJFYEL58@rafael.j.wysocki>
+ <2497062.NG923GbCHz@rafael.j.wysocki>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 31 Aug 2026 21:21:10 +0000
-Message-Id: <20260831212110.8F3F01F000E9@smtp.kernel.org>
+Date: Mon, 31 Aug 2026 21:23:21 +0000
+Message-Id: <20260831212321.B18601F00A3D@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-> Document the dma_bar attribute and the requirements for exporting endpoint
-> DMA channels. Also document how the selected BAR may be shared with an MW.
+> From: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
 >=20
-> Signed-off-by: Koichiro Den <den@valinux.co.jp>
+> The ACPI companions of PCI devices are associated with the corresponding
+> PCI devices before being processed by acpi_scan_attach() and by the time
+> they are passed to attach_subtree(), the PCI devices associated with
+> them have been already enumerated and initialized (including power
+> management initialization).
+>=20
+> Accordingly, it is not necessary or even useful to check their status in
+> attach_subtree(), so do not do that.
+>=20
+> Fixes: 2c22e6520ac8 ("ACPI / scan: Use direct recurrence for device hiera=
+rchy walks")
+> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
 Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260831182657.3296=
-14-1-den@valinux.co.jp?part=3D7
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/3435655.aeNJFYEL58@=
+rafael.j.wysocki?part=3D7
 
