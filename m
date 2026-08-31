@@ -1,283 +1,184 @@
-Received: from mail-pg1-f200.google.com (mail-pg1-f200.google.com [209.85.215.200])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2533E37E5F4
-	for <linux-pci@vger.kernel.org>; Mon, 31 Aug 2026 20:05:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.200
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 07C88383C67
+	for <linux-pci@vger.kernel.org>; Mon, 31 Aug 2026 20:14:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788206704; cv=none; b=luR1Z/aGW2Nc6PbNd1TGW0McCeDMsye5wQtnXFu+boXp+vBPLLqcOqA8NcD3YMShpd+nAYT5K49OTINzqau4CMuDI8yNgxQNFiYfkZmC2iJf+obm9+lKPz7+E2T9zqmbbGpGxbIlXqDmg7aflYNDhpFVBnu4GMYWNAZHba236CI=
+	t=1788207268; cv=none; b=Tdu0R1QYcIZ1tZeG4n67MWzMHUUqnjRNMYLrkWCZCnRQfMzTX/W76kWKOQh4xoYQr+OthESzA5O6MISDKFwj49gERxS9cD1OC7Kd66uvi+A1O/z5B+IlBN6NgMPtiXlHH1SDUw6liGz6hmTq1Dw4ORLMTwe6PtSDX+aJUWq+bBQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788206704; c=relaxed/simple;
-	bh=ogaNwEJPj1anxxgzO5JbrX2B9A0WCXUin+5LwdkKgb0=;
-	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=Ypwx9930XkoY3wavkiAMZIpf2ZtPPg3m28IRb7y89iEtLuxwMr97+2DXz8UGR72obMEatsUIj4SIhCroS1YriT+Myu2tnpEfuiuB0oMah7YBPhhCqJoKVPFKWiBSD6KKVyt92aUVe3EXe4n3nyPwFAXe/7kyqTXlD2ZFO5Dq6sQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--rathodpriyank.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=R8kStlbG; arc=none smtp.client-ip=209.85.215.200
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--rathodpriyank.bounces.google.com
+	s=arc-20240116; t=1788207268; c=relaxed/simple;
+	bh=Jix3tJs8AbXT1wCIVwpAjkfRp2fydQXZwVeHhU5XadE=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=DEoJNxz7cKb3T6fVKVw8cMj5jsLJNxRqbv5eNUdLCTlw6nWMC1S4NBj4R0PUnDoBQ/ZqFsSKVnY9dyi36bZWBF4OK8rN7czxtviZ3rcOqVJxdXNhVjxQjQAvn84QZrxMzmbJixCbtVwSsJqBb0LhGOL64gFIiR4yxiONRzd+3aU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kI8XsFPW; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="R8kStlbG"
-Received: by mail-pg1-f200.google.com with SMTP id 41be03b00d2f7-cbee6bb8408so5260157a12.3
-        for <linux-pci@vger.kernel.org>; Mon, 31 Aug 2026 13:05:01 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1788206701; x=1788811501; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:from:subject
-         :message-id:mime-version:date:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=VQEcr/OvKrgDDu2LGE7v3a5Mgn/4plrpKKfKHe+7A/w=;
-        b=R8kStlbGpjB53aldvz1HubwAU1QUb2UW+31uAWZrRZq+NoVVRpxl522Q5wD9168j5y
-         AD62QrpoICAsvt88/ZjZpTB+cbceeeNOBPlpvV+BX6ZPHVumHCDrOnfavcGjqz7yqfJ9
-         E6Gc0sDhq2pt9Vhw5XvhqgyJvE8CPH4XKku/r9npipCz9QgznhmhvQ9VPvCtPW1aIICp
-         63Bd9buoF3PCvR+XNIfO0ROkSRM6Aqr4rt2HY5jcNFL6pQygKMAAIQY+M0WgGldmNEaJ
-         icTjnx7gUTfw+EMWSUEwEoiHsW5+HnFcpBVmlBLH82COR+XB0gGgcrSH7o+ek25457R6
-         g9cg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788206701; x=1788811501;
-        h=content-transfer-encoding:content-type:cc:to:from:subject
-         :message-id:mime-version:date:x-gm-message-state:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=VQEcr/OvKrgDDu2LGE7v3a5Mgn/4plrpKKfKHe+7A/w=;
-        b=D7BZwCp/xJFDZz0pVZxVxl8F7NHbhMcAj1ClyJkSEYicRXPD2Y0D8/8A8T/JBOxHEg
-         Tx3vInQnEfJzp7X0cQ+SQIJWUE34ACHUxyvsqmiXJCjC+7ZuTrfvdBYstQWPnsYi60J2
-         0QJ0xE+1l2RNvZYb0xlUz2Vofa1Kt9Wft6T78UkI5+1nNcuF4uJnwAVescrBBqeJBUo2
-         S6L9Eo789KkvEFwiIRu0Q4/PHsXtt2Tw4ckkY2c2oth/61Q0wLx8N8qTs+QKS6AIkbka
-         D7U4FcOYNee/RhdXjloaz9Iui518kirGEWkUZUsduoYvRED7aEueCVjracxGSG5NU+6U
-         3t7w==
-X-Forwarded-Encrypted: i=1; AHgh+RqW+CRDzkM0xSRhe4YAtZb5IyTCNH4tS2mtXGjPCK8c8p6hFEMMTdYteNcjTVhosZVxI/WKqENjSj8=@vger.kernel.org
-X-Gm-Message-State: AFuF++mceSbznVNNR+rKMNNZKscU3T+8tNJqq0Hg+H/K+fwlxYzM3MN5
-	dWKHOcoU9qXPwflvu/f7vBm+xH0smonosH6WJhqmZ9h4Q+dXhM0vOWFQQWacsUJnaU6Q9kIx5MF
-	lxHkO4+LNKi+nB+adXwTlOMt/OVTYtGWU+g==
-X-Received: from pgbaz9.prod.google.com ([2002:a05:6a02:49:b0:cc1:c899:13e5])
- (user=rathodpriyank job=prod-delivery.src-stubby-dispatcher) by
- 2002:a05:6a20:918f:b0:3d1:e510:905f with SMTP id adf61e73a8af0-3d265e3f7b2mr36171322637.1.1788206701180;
- Mon, 31 Aug 2026 13:05:01 -0700 (PDT)
-Date: Mon, 31 Aug 2026 20:04:44 +0000
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kI8XsFPW"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 92F091F000E9;
+	Mon, 31 Aug 2026 20:14:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1788207266;
+	bh=OZ6ygt/2MLRVTSaLA+SkIWFbuEbZ5dMlh0skzcso72Y=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=kI8XsFPWLPN+iU3yPXgDteKpIw9tN2e1Z3niX5D8p0jl0vA241XitFSdVGkdkOn7Y
+	 olgUCn2nBAguunNIWxDSOjQ/vIL4IbJ7dRf/IImVIOZlcvLWxUcDLqTJ8yT+ecSTeL
+	 XFGqOOrutp8Q857NxkcsQSIWvNqxw1Ml0w+hqOR44pU8tfD1zDaeS60o31GTZhuZQs
+	 jAs6FuI/QJHy5J3XU8G5RF149YbMh2Tac6nWlIoCBVW5lLiWidS1jRPrqKTTxw45Pk
+	 RsjOzgD7qmU4yNEoXfBKZMgUt9Gj70rCfyx1wk9GyOZm0QP4VeqxG3HTsmXEt4cJbI
+	 g2Nrc+binLsvQ==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v1 1/7] ACPI: scan: Stop calling acpi_bus_init_power()
+ early
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Rafael J. Wysocki" <rafael@kernel.org>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <10913616.nUPlyArG6x@rafael.j.wysocki>
+References: <3435655.aeNJFYEL58@rafael.j.wysocki>
+ <10913616.nUPlyArG6x@rafael.j.wysocki>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Mon, 31 Aug 2026 20:14:26 +0000
+Message-Id: <20260831201426.92F091F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-X-B4-Tracking: v=1; b=H4sIAFvelWoC/x3MSwqAMAwA0atI1gZSxe9VxIXYqEGJpRURine3u
- HyLmQiBvXCAPovg+ZYgpyaYPIN5m3RlFJsMBRU1taVBNwvjIbojq3Wn6BWwa1o2RLayVEMqned Fnv86jO/7AZdCKSdlAAAA
-X-Change-Id: 20260831-pcie-link-endpoints-978e100d5d06
-X-Mailer: b4 0.14.3
-Message-ID: <20260831-pcie-link-endpoints-v1-1-32c2fd893e9e@google.com>
-Subject: [PATCH] PCI: Add pcie_get_link_endpoints() helper
-From: Priyank Rathod <rathodpriyank@google.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "=?utf-8?q?Ilpo_J=C3=A4rvinen?=" <ilpo.jarvinen@linux.intel.com>, linux-pci@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, Priyank Rathod <rathodpriyank@google.com>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
 
-In PCIe topologies, physical links are point-to-point connections
-between an Upstream Component (Downstream Port, such as a Root Port
-or Switch Downstream Port) and a Downstream Component (Upstream Port,
-such as an Endpoint or Switch Upstream Port), per PCIe Base Specification
-r7.0/r6.0 sec 1.3.1.
+Thank you for your contribution! Sashiko AI review found 4 potential issue(=
+s) to consider:
+- [High] Transient failures in early PCI enumeration due to unmet ACPI depe=
+ndencies permanently disable ACPI power management for the device.
+- [High] Concurrent execution of `acpi_device_set_power` and `acpi_bus_atta=
+ch` leads to power resource reference count leaks.
+- [High] Bitfield data race on `struct acpi_device_flags` leading to corrup=
+ted device flags.
+- [High] Unprivileged sysfs access to a child's power state bypasses the pa=
+rent's power resource initialization, leading to reference count underflow =
+and permanent power leaks.
+--
 
-Currently, various drivers across drivers/pci/ independently infer the
-two ends of a PCIe link using varied ad-hoc methods:
-  - ASPM (drivers/pci/pcie/aspm.c): pcie_aspm_get_link(),
-    alloc_pcie_link_state(), and pci_configure_ltr() resolve parent
-    bridges and subordinate function 0.
-  - Precision Time Measurement (drivers/pci/pcie/ptm.c):
-    pci_upstream_ptm() traverses pci_upstream_bridge() to validate
-    upstream link partner capabilities.
-  - PCIe Link Retrain (drivers/pci/pci.c): pcie_retrain_link() and
-    pcie_update_link_speed() coordinate link retraining from the
-    Downstream Port across the subordinate bus.
-  - AER/DPC Recovery (drivers/pci/pcie/err.c): pcie_do_recovery()
-    identifies the parent bridge via pci_upstream_bridge() to trigger
-    secondary bus reset and broadcast driver recovery callbacks.
-  - Lane Margining at Receiver (LMR): margin_enable_write() requires
-    both link endpoints to establish hierarchical locking and runtime PM
-    pinning.
+commit 00db710bd9860a36a16f28aa782d074b11d43aab
+Author: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Ad-hoc subordinate bus iteration risks races with concurrent device
-removal or hotplug if pci_bus_sem is omitted.
+ACPI: scan: Stop calling acpi_bus_init_power() early
 
-Introduce pcie_get_link_endpoints() and pcie_put_link_endpoints() in the
-PCI core to provide a standardized, symmetric, and race-safe helper:
-  - For Endpoints: resolves the parent Downstream Port via
-    pci_upstream_bridge(pdev).
-  - For Downstream Ports: safely inspects the subordinate bus under
-    down_read(&pci_bus_sem) and acquires a reference via pci_dev_get()
-    on the child device.
+This commit prevents premature transition into the D0 power state for
+devices with missing dependencies by changing when acpi_bus_init_power()
+is called. It updates acpi_device_set_power() to initialize power upfront
+and adjusts acpi_bus_attach() to use ACPI power state tracking instead of
+the initialized flag.
 
-Callers release the acquired reference using pcie_put_link_endpoints().
+Link: https://lore.kernel.org/linux-acpi/20260820-acpi-power-resource-ref-f=
+ix-v2-1-29818173ea13@linux.spacemit.com/ [1]
 
-Signed-off-by: Priyank Rathod <rathodpriyank@google.com>
----
-Hi Bjorn, Ilpo, and PCI maintainers,
+> diff --git a/drivers/acpi/device_pm.c b/drivers/acpi/device_pm.c
+> index aa55ecfc2923c..a680e6972a8c2 100644
+> --- a/drivers/acpi/device_pm.c
+> +++ b/drivers/acpi/device_pm.c
 
-During the review of the PCIe Lane Margining at Receiver (LMR) patch series
-(v7: https://lore.kernel.org/linux-pci/20260828-pcie-lmt-v7-1-6012e9e0940a@=
-google.com/),
-Ilpo J=C3=A4rvinen pointed out that feature drivers (such as LMR) resolving=
- link
-partners duplicate link traversal logic that is already present in drivers =
-such
-as ASPM:
+[ ... ]
 
-  "This feels like duplicating similar functionality with the aspm driver
-   that also wants to infer ends of the link when giving a pci_dev in.
-   The aspm driver currently does that within, but it kind of duplicating
-   pci_bus. It would be nice to avoid the duplication and have something
-   similar for this in PCI core."
+> @@ -168,6 +168,12 @@ int acpi_device_set_power(struct acpi_device *device=
+, int state)
+>  	    || (state < ACPI_STATE_D0) || (state > ACPI_STATE_D3_COLD))
+>  		return -EINVAL;
+> =20
+> +	if (device->power.state =3D=3D ACPI_STATE_UNKNOWN &&
+> +	    acpi_bus_init_power(device)) {
+> +		device->flags.power_manageable =3D 0;
 
-In PCIe topologies, physical links are point-to-point interconnects
-between an Upstream Component (Downstream Port, such as a Root Port or Swit=
-ch
-Downstream Port) and a Downstream Component (Upstream Port, such as an Endp=
-oint
-or Switch Upstream Port), per PCIe Base Specification Revision 7.0 / 6.0
-Section 1.3.1.
+[Severity: High]
+If acpi_bus_init_power() fails transiently here because dependencies are
+unmet (for instance, _PSC or _ON evaluations fail during early PCI
+discovery), does this permanently disable ACPI power management for the
+device? Since the prior restoration logic was removed from
+acpi_bus_attach(), it appears there is no mechanism to recover from this
+transient failure when dependencies are met later.
 
-Several subsystems across drivers/pci/ independently infer and coordinate b=
-oth
-ends of a PCIe link:
-  1. ASPM (drivers/pci/pcie/aspm.c): pcie_aspm_get_link(),
-     alloc_pcie_link_state(), and pci_configure_ltr() resolve parent bridge=
-s
-     and subordinate function 0 to configure ASPMC and L1SS.
-  2. Precision Time Measurement (drivers/pci/pcie/ptm.c): pci_upstream_ptm(=
-)
-     traverses pci_upstream_bridge() to validate upstream link partner
-     capabilities.
-  3. PCIe Link Retrain (drivers/pci/pci.c): pcie_retrain_link() and
-     pcie_update_link_speed() coordinate link retraining from the Downstrea=
-m
-     Port across the subordinate bus.
-  4. AER & DPC Recovery (drivers/pci/pcie/err.c): pcie_do_recovery() identi=
-fies
-     the parent bridge via pci_upstream_bridge() to trigger secondary bus
-     resets and broadcast driver error callbacks.
-  5. Lane Margining at Receiver (LMR): margin_enable_write() requires both
-     link endpoints to establish hierarchical locking (pci_dev_lock) and
-     runtime PM pinning.
+[Severity: High]
+Because struct acpi_device_flags is a bitfield, does modifying
+power_manageable here without mutual exclusion risk a data race?=20
 
-Currently, these drivers independently implement ad-hoc traversals via
-pci_upstream_bridge() or subordinate bus device iteration. Ad-hoc subordina=
-te
-bus iteration is error-prone and risks races with concurrent hot-unplug or
-device removal if pci_bus_sem is omitted.
+If acpi_device_set_power() runs concurrently with async enumeration
+(such as acpi_bus_attach() calling acpi_device_set_enumerated()), they
+could perform concurrent read-modify-write operations on the bitfield.
+This could cause one of the flag updates (like the visited or enumerated
+flag) to be silently lost.
 
-This patch introduces pcie_get_link_endpoints() and pcie_put_link_endpoints=
-()
-in the PCI core (drivers/pci/pci.c and include/linux/pci.h) as a standalone
-helper:
-  - For Endpoints: resolves the parent Downstream Port via
-    pci_upstream_bridge(pdev).
-  - For Downstream Ports: safely inspects the subordinate bus under
-    down_read(&pci_bus_sem) and acquires a reference via pci_dev_get() on t=
-he
-    child device.
+> +		return -ENODEV;
+> +	}
+> +
+>  	acpi_handle_debug(device->handle, "Power state change: %s -> %s\n",
+>  			  acpi_power_state_string(device->power.state),
+>  			  acpi_power_state_string(state));
 
-Callers release the acquired reference with pcie_put_link_endpoints().
+[ ... ]
 
-Validation:
-  - Compiled clean on x86_64 defconfig (0 warnings, 0 errors).
-  - Multi-architecture build validated for ARM64 and x86_64 targets.
-  - Passed checkpatch.pl (0 warnings, 0 errors).
-  - Passed Sashiko pre-commit test runner (ID: 46b5f8a3da1ca0056407b3db6c82=
-b001264f86b7).
----
- drivers/pci/pci.c   | 50 +++++++++++++++++++++++++++++++++++++++++++++++++=
-+
- include/linux/pci.h |  6 ++++++
- 2 files changed, 56 insertions(+)
+> diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
+> index f48715ed827c7..1ad8dffc2dafe 100644
+> --- a/drivers/acpi/scan.c
+> +++ b/drivers/acpi/scan.c
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 77b17b13ee61..7bdfe7e5ab3a 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4618,6 +4618,56 @@ int pcie_retrain_link(struct pci_dev *pdev, bool use=
-_lt)
- 	return rc;
- }
-=20
-+/**
-+ * pcie_get_link_endpoints - Identify Upstream and Downstream ends of a PC=
-Ie link
-+ * @pdev: Any PCIe device on the link (Downstream Port or Endpoint)
-+ * @downstream_port: Output pointer to Downstream Port (Upstream Component=
-)
-+ * @upstream_port: Output pointer to Upstream Port (Downstream Component)
-+ *
-+ * Identifies both ends of a point-to-point PCIe link. Increments referenc=
-e count
-+ * on @upstream_port if dynamically discovered on a downstream port. Calle=
-rs must
-+ * release with pcie_put_link_endpoints().
-+ *
-+ * Return: 0 on success, or -EINVAL if @pdev is NULL or not PCIe.
-+ */
-+int pcie_get_link_endpoints(struct pci_dev *pdev,
-+			    struct pci_dev **downstream_port,
-+			    struct pci_dev **upstream_port)
-+{
-+	if (!pdev || !pci_is_pcie(pdev))
-+		return -EINVAL;
-+
-+	if (pcie_downstream_port(pdev)) {
-+		*downstream_port =3D pdev;
-+		down_read(&pci_bus_sem);
-+		*upstream_port =3D pdev->subordinate ?
-+			pci_dev_get(list_first_entry_or_null(&pdev->subordinate->devices,
-+							     struct pci_dev, bus_list)) : NULL;
-+		up_read(&pci_bus_sem);
-+	} else {
-+		*downstream_port =3D pci_upstream_bridge(pdev);
-+		*upstream_port =3D pdev;
-+	}
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(pcie_get_link_endpoints);
-+
-+/**
-+ * pcie_put_link_endpoints - Release references acquired by pcie_get_link_=
-endpoints
-+ * @pdev: Device passed to pcie_get_link_endpoints()
-+ * @downstream_port: Downstream Port pointer
-+ * @upstream_port: Upstream Port pointer
-+ */
-+void pcie_put_link_endpoints(struct pci_dev *pdev,
-+			     struct pci_dev *downstream_port,
-+			     struct pci_dev *upstream_port)
-+{
-+	if (pdev && pcie_downstream_port(pdev) && upstream_port)
-+		pci_dev_put(upstream_port);
-+}
-+EXPORT_SYMBOL_GPL(pcie_put_link_endpoints);
-+
- /**
-  * pcie_wait_for_link_delay - Wait until link is active or inactive
-  * @pdev: Bridge device
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 64b308b6e61c..d30bf056a7ce 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1264,6 +1264,12 @@ struct resource *pci_find_parent_resource(const stru=
-ct pci_dev *dev,
- u8 pci_swizzle_interrupt_pin(const struct pci_dev *dev, u8 pin);
- int pci_get_interrupt_pin(struct pci_dev *dev, struct pci_dev **bridge);
- u8 pci_common_swizzle(struct pci_dev *dev, u8 *pinp);
-+int pcie_get_link_endpoints(struct pci_dev *pdev,
-+			    struct pci_dev **downstream_port,
-+			    struct pci_dev **upstream_port);
-+void pcie_put_link_endpoints(struct pci_dev *pdev,
-+			     struct pci_dev *downstream_port,
-+			     struct pci_dev *upstream_port);
- struct pci_dev *pci_dev_get(struct pci_dev *dev);
- void pci_dev_put(struct pci_dev *dev);
- DEFINE_FREE(pci_dev_put, struct pci_dev *, if (_T) pci_dev_put(_T))
+[ ... ]
 
----
-base-commit: 0f23d56f17fdfc7db69d51f64c8b91bbab947aa9
-change-id: 20260831-pcie-link-endpoints-978e100d5d06
+> @@ -2364,16 +2361,13 @@ static int acpi_bus_attach(struct acpi_device *de=
+vice, void *first_pass)
+> =20
+>  	acpi_ec_register_opregions(device);
+> =20
+> -	if (!device->flags.initialized) {
+> -		device->flags.power_manageable =3D
+> -			device->power.states[ACPI_STATE_D0].flags.valid;
+> -		if (acpi_bus_init_power(device))
+> -			device->flags.power_manageable =3D 0;
+> +	if (device->flags.power_manageable &&
+> +	    device->power.state =3D=3D ACPI_STATE_UNKNOWN &&
+> +	    acpi_bus_init_power(device))
 
-Best regards,
+[Severity: High]
+Is it possible for acpi_bus_attach() (running asynchronously via
+acpi_scan_clear_dep_fn()) and acpi_device_set_power() (reachable via
+sysfs power/control) to execute concurrently?=20
+
+Both paths now perform a lockless check of
+device->power.state =3D=3D ACPI_STATE_UNKNOWN and subsequently call
+acpi_bus_init_power(). Could this lead to both threads acquiring power
+resource references via acpi_power_on_resources(), keeping the hardware
+powered on indefinitely when the second set of references is leaked?
+
+[Severity: High]
+Could an unprivileged user reading the real_power_state sysfs attribute
+of a child device bypass this parent initialization?
+
+If a sysfs read calls acpi_device_get_power() on the child, it can
+locklessly mutate the parent's state to ACPI_STATE_D0:
+
+acpi_device_get_power() {
+    ...
+    if (!device->power.flags.ignore_parent && parent &&
+        parent->power.state =3D=3D ACPI_STATE_UNKNOWN &&
+        result =3D=3D ACPI_STATE_D0)
+            parent->power.state =3D ACPI_STATE_D0;
+    ...
+}
+
+If this occurs before acpi_bus_attach() runs for the parent, the
+lockless check here in acpi_bus_attach() will see a state other than
+ACPI_STATE_UNKNOWN and skip calling acpi_bus_init_power().=20
+
+Does this result in the parent's power resources never being initialized,
+leading to a reference count underflow when the device later transitions
+to D3?
+
+> +		device->flags.power_manageable =3D 0;
+> =20
+> -		device->flags.initialized =3D true;
+> -	} else if (device->flags.visited) {
+> +	if (device->flags.visited)
+>  		goto ok;
+> -	}
+
 --=20
-Priyank Rathod <rathodpriyank@google.com>
-
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/3435655.aeNJFYEL58@=
+rafael.j.wysocki?part=3D1
