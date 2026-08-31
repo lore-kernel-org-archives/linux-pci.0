@@ -1,128 +1,126 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7FD713A9861
-	for <linux-pci@vger.kernel.org>; Mon, 31 Aug 2026 22:06:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 51E0F3B531A;
+	Mon, 31 Aug 2026 22:18:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788214019; cv=none; b=aByNXiwnaOWwghAfTj7b+Z7M2N6ucAbGN4v8bYe/G1RbozqzewD5kNZsZndxjm9A6/zqysAKFloUVv3BeNtyikFVZkw6st1PVij7ly0b5cfQyVUU113/Dvf1zYmaU39p9SQnRIJP82J7b6LTLxY+FRB1gUTkPG15wq9C86wyt7Q=
+	t=1788214734; cv=none; b=NlH0ZZ+tURRGOHZOwgkze4uDYXVyTv1lHICfaPvI1cugSPdVK/X+y/cq+Tdw9ddlTyeh5wn3MVnqR49deA+tDVBug+nxLTwv7zZHTe8yA21lMHnxi7dPTqVgSYXCit475dHOM7iwuPzAkv6PR7N408Yo1FobE//N8S/arD/GKWk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788214019; c=relaxed/simple;
-	bh=/TU7K3LchR4y+B4soDSpCzW6QG0VZNVwfT/wOs2RxWo=;
+	s=arc-20240116; t=1788214734; c=relaxed/simple;
+	bh=08yItknhCfu1Zmtp2WmcrwsPk2AMRFQZQ9saOGK1E2Q=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=IjxSJUlCueXVGWSBv3G9lL54hTRcsB2546FBFhSwljEgyqqxYHaFp9nWq1PepL+0p8LfEn6+oyP7RiUPkIIUmVaozgWENY+l3jDX4OjDpILRUWjznOc1ET26ScAITXDPPGbXLo1X0qzbcs/vPK6BipkgcZiVKK+JBY0skzSGGhM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BK0HkX2k; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=qgE28kGE8meo/2i5A0nZAI8i5UqDpyEZ3Haf7Dw7PFMUDv+1Hxxv24/xUvKs8diChO6JHizJ4uYOVicQmId5zsJCIZHgt4NnMbmFaovlLXumSW0EoECNwIqsGIlaWGPnLOfqpwokSdMPNwNbh6tXCtHJsJTS+Twjvxrg6P/J+tA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=geaT8Tgi; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BK0HkX2k"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DB8C31F000E9;
-	Mon, 31 Aug 2026 22:06:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="geaT8Tgi"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 83F331F000E9;
+	Mon, 31 Aug 2026 22:18:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788214018;
-	bh=QCruQoEPP3p+U6JVZtRkpVxcM0BbPpB6lcUiNMs5Xc0=;
+	s=k20260515; t=1788214732;
+	bh=9zDzN/8K7TSRvci9UFUO7/ABM7AVNO3NaCultq+XFo4=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=BK0HkX2kZc7ZBJT6rk/Nrv7npsLmTsO46lnokoDfW9sO9NnkvNcLQMfq1Voi3BspG
-	 6L9ulXyt0xTGOM40SzC68FpuRN3jh3QnZ2zEUQrELI2vuwFDgshRjL+hDDsRThVBtF
-	 4a3+NwustZKt7MFfCDEDzlKBwou/+rIFL4Z/n/8RD1CSemBgxBAhQvRtoyrGUeQk9z
-	 y0eMLp4bTVmfThdcVlF2up1yTim6SUiJB4CPx3U0W2BEJ82FVr5Hnz2xtnoHB0ghs+
-	 6qKWSCMPLJR1KkfJpjk0W1KGw+fPGHt5NPh6Tx6SadLQGIumDv+/qMxxsixamBJAEx
-	 ADwXhGCNno5BQ==
+	b=geaT8TgimexVLnkEnIkWjVk3LBZyeAc/IL6gos3kIHeSB+AehK355MdCrcbF7ZkxS
+	 bP0H6IM03zZ/E5HYgwhHnJOVlcuYPhOmsmw6QsM0jVywq9OPJ/27j+RZDR6g/ZZkLL
+	 WNtkY9z0Fk+pmqmI+g2oroyXS1u66sr0HM5abPpI9WGs13gE50WJiq6MI4zSvxja6H
+	 VBLC0XfR+yhflCjNLyy/TIoGRyzh47qzTppAvYqW6REP1XXg62JoedRHZvNkohALK1
+	 RdgI3xTmQAvJ1PuZAXRgTNW5nsUW9SZKwOpegCrS7IgR/fXf2GPQ+VGRD6WogLx9Nt
+	 jKXewjUEhky2w==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 2/3] PCI/PM: Run bridge power up actions as part of
- restore phase
+Subject: Re: [PATCH v5 05/12] dmaengine: switchtec-dma: fix channel leak on
+ registration failure
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "Mario Limonciello" <mario.limonciello@amd.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260831205533.2325747-3-mario.limonciello@amd.com>
-References: <20260831205533.2325747-1-mario.limonciello@amd.com>
- <20260831205533.2325747-3-mario.limonciello@amd.com>
+To: "Logan Gunthorpe" <logang@deltatee.com>
+Cc: Frank.Li@kernel.org, dmaengine@vger.kernel.org, linux-pci@vger.kernel.org, vkoul@kernel.org
+In-Reply-To: <20260831191403.207631-6-logang@deltatee.com>
+References: <20260831191403.207631-1-logang@deltatee.com>
+ <20260831191403.207631-6-logang@deltatee.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 31 Aug 2026 22:06:57 +0000
-Message-Id: <20260831220657.DB8C31F000E9@smtp.kernel.org>
+Date: Mon, 31 Aug 2026 22:18:52 +0000
+Message-Id: <20260831221852.83F331F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] The condition `prev_state =3D=3D PCI_D3cold` in `pci_pm_restore_no=
-irq()` will always evaluate to false for devices active before hibernation,=
- causing bridge power-up actions to be incorrectly skipped.
-- [High] `skip_bus_pm` evaluates to stale or uninitialized values during hi=
-bernation restore.
+
+Pre-existing issues:
+- [High] Uninitialized list head iteration in ISR causing NULL pointer dere=
+ference.
 --
 
-commit bf2b47aa05ce71a85384cc813156b2a5ff4653d5
-Author: Mario Limonciello (AMD) <superm1@kernel.org>
+commit bbb6888bb23afe2e2ce4a0388779ab6fa86e4ce3
+Author: Logan Gunthorpe <logang@deltatee.com>
 
-PCI/PM: Run bridge power up actions as part of restore phase
+dmaengine: switchtec-dma: fix channel leak on registration failure
 
-This commit adds bridge power up actions to the hibernate restore phase in
-pci_pm_restore_noirq(), gated by the previous power state and whether bus PM
-was skipped. This aims to ensure mandatory link training delays are observed
-before downstream devices are accessed, mirroring the S3 suspend path.
+This patch introduces a helper function to free DMA channel memory and ensu=
+res
+it is called correctly during registration failures and cleanup. It also up=
+dates
+the channel count on initialization failure to allow safe cleanup of partia=
+lly
+allocated channels.
 
-> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> index e3d352c7b31d4..d15b3eb55ec53 100644
-> --- a/drivers/pci/pci-driver.c
-> +++ b/drivers/pci/pci-driver.c
-> @@ -1297,10 +1297,15 @@ static int pci_pm_restore_noirq(struct device *de=
+Link: https://lore.kernel.org/dmaengine/20260717223024.9BB8A1F000E9@smtp.ke=
+rnel.org
+Link: https://lore.kernel.org/dmaengine/20260727190604.397DB1F000E9@smtp.ke=
+rnel.org
+
+> diff --git a/drivers/dma/switchtec_dma.c b/drivers/dma/switchtec_dma.c
+> index 2d5ba194c99a1..f71c64c137e83 100644
+> --- a/drivers/dma/switchtec_dma.c
+> +++ b/drivers/dma/switchtec_dma.c
+[ ... ]
+> @@ -1329,6 +1335,7 @@ static int switchtec_dma_create(struct pci_dev *pde=
 v)
->  {
->  	struct pci_dev *pci_dev =3D to_pci_dev(dev);
->  	const struct dev_pm_ops *pm =3D dev->driver ? dev->driver->pm : NULL;
-> +	pci_power_t prev_state =3D pci_dev->current_state;
-
-[Severity: High]
-Will prev_state always evaluate to PCI_UNKNOWN instead of PCI_D3cold?
-
-During hibernation, the memory snapshot is taken in the FREEZE phase.
-pci_pm_freeze() resumes devices to PCI_D0, and pci_pm_freeze_noirq()
-subsequently sets their current_state to PCI_UNKNOWN.
-
-This PCI_UNKNOWN state is what gets saved in the memory snapshot and restor=
-ed
-here. Although devices are put in PCI_D3cold during the POWEROFF phase, this
-occurs after the snapshot has already been captured and written to disk.
-
-> +	bool skip_bus_pm =3D pci_dev->skip_bus_pm;
-
-[Severity: High]
-Could pci_dev->skip_bus_pm evaluate to a stale or uninitialized value here?
-
-The hibernation snapshot is captured during the FREEZE phase, where neither
-pci_pm_freeze() nor pci_pm_freeze_noirq() initialize or update skip_bus_pm.
-The snapshot merely captures whatever stale value it had, such as from a pr=
-ior
-S3 suspend.
-
-While skip_bus_pm is initialized in pci_pm_poweroff(), that function runs in
-the POWEROFF phase after the hibernation snapshot has been completed, so the
-initialized value is never saved to the image.
-
 > =20
->  	pci_pm_default_resume_early(pci_dev);
->  	pci_fixup_device(pci_fixup_resume_early, pci_dev);
+>  err_chans_release_exit:
+>  	switchtec_dma_chans_release(pdev, swdma_dev);
+> +	switchtec_dma_chans_free(swdma_dev);
 > =20
-> +	if (!skip_bus_pm && prev_state =3D=3D PCI_D3cold)
-> +		pci_pm_bridge_power_up_actions(pci_dev);
+>  err_exit:
+>  	if (swdma_dev->chan_status_irq)
 
 [Severity: High]
-Since prev_state is PCI_UNKNOWN and skip_bus_pm may be stale, is it possible
-that this condition will always fail and cause the required bridge retraini=
-ng
-to be skipped?
+This is a pre-existing issue, but I noticed a potential race condition
+during device initialization earlier in switchtec_dma_create().
 
-This could lead to accessing downstream devices before the bridge link is
-retrained, resulting in PCIe errors or system crashes on hibernation resume.
+The IRQ is requested and enabled before the channels list head is
+initialized:
 
-> +
->  	if (pci_has_legacy_pm_support(pci_dev))
->  		return 0;
->
+drivers/dma/switchtec_dma.c:switchtec_dma_create() {
+	...
+	rc =3D pci_request_irq(pdev, irq, NULL, switchtec_dma_chan_status_isr,
+			     swdma_dev, KBUILD_MODNAME);
+	...
+	chan_cnt =3D switchtec_dma_chans_enumerate(swdma_dev, pdev, chan_cnt);
+	...
+}
+
+If a pending device interrupt or a spurious interrupt fires immediately
+after pci_request_irq() is called, switchtec_dma_chan_status_isr() will
+execute.
+
+In the ISR, list_for_each_entry() iterates over dma_dev->channels:
+
+drivers/dma/switchtec_dma.c:switchtec_dma_chan_status_isr() {
+	...
+	list_for_each_entry(chan, &dma_dev->channels, device_node) {
+	...
+}
+
+Since switchtec_dma_chans_enumerate() hasn't called INIT_LIST_HEAD()
+on dma_dev->channels yet, the list head remains zero-initialized by
+the earlier kzalloc().
+
+Could this cause a NULL pointer dereference when the ISR attempts to
+iterate over the uninitialized list?
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260831205533.2325=
-747-1-mario.limonciello@amd.com?part=3D2
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260831191403.2076=
+31-1-logang@deltatee.com?part=3D5
