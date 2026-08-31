@@ -1,66 +1,73 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 047A3357A25
-	for <linux-pci@vger.kernel.org>; Mon, 31 Aug 2026 06:17:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4604534DCE3
+	for <linux-pci@vger.kernel.org>; Mon, 31 Aug 2026 06:21:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788157064; cv=none; b=fFG2O8Vt5T8duUNGga9DoaSZlaAuqmMiNOpcYp8DLiJqTPQ3iwrlX5SvLOPIzhp5z1gqlcbgq3d66sreHpsDWNTKSVp2cZQQUaWqqx3G7vLmnv2DvONs/WYbIf76d/jvRj9g+LLG1zxNxkDs167Ed2ZBM+3RlsBln5ry/mpOCro=
+	t=1788157302; cv=none; b=YMz3JoOEL0iOHAJx11MmftGzwcXE9vvoGWRmI5ZswGHShz/cBCCXShtUMNVQQduoD2TX+DvhX2DjpUz4InhuXOSbsODj76olId88ELB1F+sSoepQR69aSS1KI+BXoxEciGn6nng7XoDUEY/aAE3V2/0vCwlblDT9oaSXzVrjvy0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788157064; c=relaxed/simple;
-	bh=MD+kkahZJBuohcTsDHguIhxcqXMVhPbEB/Yvb1Qkc/k=;
+	s=arc-20240116; t=1788157302; c=relaxed/simple;
+	bh=6qBjBrP80cbhlB7V8dUd/vDLrxl3DjQEPsB23bkWvj4=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=X48L+mMMkc2paD0/qBwship92xjz5FJB5uti/qHChSwwzVjRnYJJDQrgc4RaQ/4fwXgHHh+uJ2m9OAf0d6sFXJtv1/EiRNvZy+DE7oj9vevkHqpF3QwLrRty2u7TspZitOCUZKeKZeOfoyZ3y2mQOA63m/48Jwq6EULADSQpzXY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=U2MZd2cT; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=jxjI17tMAWv0Duq9pli9pZeQfb2KpGCVPhCh3lHiww4CRrn1RTZRwul+X/rIa/aiTEX6EJ6jfoTwCmOiLi83+dn/5042yi1M1l2ASTSjInxUivtRd+0Y86YVGkU/XS/2Blt98rm8U8v00CVT+V67B373xb+uD6a/syN7bI6Rw7o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DmJwmw0x; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="U2MZd2cT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8A32E1F000E9;
-	Mon, 31 Aug 2026 06:17:42 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DmJwmw0x"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B23841F000E9;
+	Mon, 31 Aug 2026 06:21:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788157062;
-	bh=IzIOz1SAP7VNHkfVg9CoqYNRHGi1ULuVFx0TUrQ4Fjg=;
+	s=k20260515; t=1788157300;
+	bh=DEeOS0IMt5cNO2a1SWVs2nmCuOH6kgLYflESy9ZCxYs=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=U2MZd2cT3x+XcQufRtHurtWcQQH3mpKwf7I5tfooYxsf+uabzRCRrOzVYWSEIzj9r
-	 DqSKd/Q2xxrmHVYm1QWKjEOzPP7EqkxOkmHVt/NbKLGQvVTymX9CTGbAJH5Be1V6Ph
-	 c3gyeIZ6epkzsakzFjhbre4nwMlkCw7arMMnWSsEjeKJQcTeddSgkehYSjITx4f/w1
-	 XcxYu+Bo7J/EOx+w9gHvzu8vAeq9/hcuQqcQmMlBh0l8wiNPm/+IRUyMz874Eoz85Z
-	 T8WzsLGRTZi3qR8t0v4ebTNlbYr51y+X9YR3+c184z4md5YxrS/TVMKcMievpWh5hE
-	 V6dwmSg0CCo5Q==
+	b=DmJwmw0xcZP2VP0wHjdmDjI4enCYYlcthQj0IeycSLYzOh6HydtzxPEDoeKj46BR+
+	 bwAdjGkS7di8/I2m8bpKRDJtf+eCnwQ+Uridc0G4SxNbyjGd/Qh+I6nPnzHpsQfTk3
+	 egQ4I2fjDiWWkFJQiJbUFVK+pNir3/wqa+ioUy/4QPPKiWVOtFKuJjj3j14pQiHsQZ
+	 qfz1pYdrtvyMTqrVvOn8F6SgGqWn++yJIVdIX6dMM5sawOaf/GgeIdX21uNMSF7K7R
+	 L14E2dSMsks8gF9B0DuJxxUbXdcIWknuGCBuMZKZxawhl3Sm0gqdz2V5oKvYjf19JZ
+	 kue7TOsdls8Nw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2] rust: pci: Reject IRQ vector indices that do not fit
- in u32
+Subject: Re: [PATCH] rust: pci: Reject IRQ vector indices that do not fit in
+ u32
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Sophon Z" <aiqubits@hotmail.com>
-Cc: linux-pci@vger.kernel.org, ojeda@kernel.org
-In-Reply-To: <20260831-fix-pci-irq-vector-index-truncation-v2-1-4030ea7746a9@hotmail.com>
-References: <20260831-fix-pci-irq-vector-index-truncation-v2-1-4030ea7746a9@hotmail.com>
+Cc: ojeda@kernel.org, linux-pci@vger.kernel.org
+In-Reply-To: <20260831-fix-pci-irq-vector-index-truncation-v1-1-d63217d99b67@hotmail.com>
+References: <20260831-fix-pci-irq-vector-index-truncation-v1-1-d63217d99b67@hotmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 31 Aug 2026 06:17:42 +0000
-Message-Id: <20260831061742.8A32E1F000E9@smtp.kernel.org>
+Date: Mon, 31 Aug 2026 06:21:40 +0000
+Message-Id: <20260831062140.B23841F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
 
 Pre-existing issues:
-- [High] `IrqVectorRegistration::index` delegates out-of-bounds validation =
-entirely to the C API `pci_irq_vector`, which triggers a `WARN_ON_ONCE` for=
- sufficiently large indices, potentially causing a kernel panic.
+- [High] Missing bounds check in `IrqVectorRegistration::index()` allows ou=
+t-of-bounds indices to trigger a C-side kernel warning and potential kernel=
+ panic.
+- [High] `Device::alloc_irq_vectors` fails to enforce `min_vecs >=3D 1`, le=
+ading to a resource leak and broken device state when `0` is passed.
 --
 
-commit 1d05a4f88062a655f88b6ab70e939331e2445d7b
+commit 4de7f8d3881b1c14eada957c4affb1c9815e3096
 Author: Sophon Z <aiqubits@hotmail.com>
 
 rust: pci: Reject IRQ vector indices that do not fit in u32
 
-IrqVectorRegistration::index() accepts a usize, but pci_irq_vector() takes
-an unsigned int. This commit adds a checked conversion to prevent wrapping
-on 64-bit architectures, returning EINVAL if the index exceeds u32 limits.
+IrqVectorRegistration::index() accepts a usize, but pci_irq_vector()
+takes an unsigned int. On 64-bit architectures, casting an index
+larger than u32::MAX wraps it before the PCI core can validate it.
+In particular, u32::MAX + 1 becomes zero and can resolve to the first
+allocated vector.
+
+Use a checked conversion and return EINVAL when the index cannot be
+represented by the C API.
 
 > diff --git a/rust/kernel/pci/irq.rs b/rust/kernel/pci/irq.rs
 > index 6741046ec1c09..1bf91973cb1f4 100644
@@ -73,21 +80,24 @@ on 64-bit architectures, returning EINVAL if the index exceeds u32 limits.
 > +        let index =3D u32::try_from(index).map_err(|_| EINVAL)?;
 
 [Severity: High]
-This is a pre-existing issue, but does this adequately prevent out-of-bounds
-indices from reaching the C API?
+This is a pre-existing issue, but does this function also need to verify th=
+at
+the index is within self.len()?
 
-Passing an index greater than 65535 (MSI_MAX_INDEX) causes the underlying
-C API msi_domain_get_virq() to trigger a WARN_ON_ONCE(index > MSI_MAX_INDEX=
-).
-On systems configured with panic_on_warn=3D1, this leads to a kernel panic.
+If IrqVectorRegistration::index() receives an out-of-bounds index that fits
+in u32, the bounds check is missed, and it is passed directly to the C PCI
+core:
 
-If a driver exposes IRQ vector selection to userspace without its own bounds
-checking, relying on this abstraction to return EINVAL, this could result in
-a Denial of Service.
+rust/kernel/pci/irq.rs:IrqVectorRegistration::index() {
+    ...
+    let irq =3D unsafe { bindings::pci_irq_vector(self.dev.as_raw(), index)=
+ };
+    ...
+}
 
-Since self.len() is already known and guaranteed to be at most 2048 for
-MSI-X, wouldn't explicitly checking if index >=3D self.len() be safer and
-inherently prevent the warning from being triggered?
+This can allow large indices to reach msi_domain_get_virq() and trigger a
+WARN_ON_ONCE in the C PCI core, which on systems with panic_on_warn=3D1 will
+result in a kernel panic and a complete denial of service.
 
 > +
 >          // SAFETY: `self.dev.as_raw()` is a valid pointer to a `struct p=
@@ -100,6 +110,35 @@ ci_dev`.
 >              return Err(Error::from_errno(irq));
 >          }
 
+While reviewing this code, I also noticed another pre-existing issue in the
+same file:
+
+rust/kernel/pci/irq.rs:Device::alloc_irq_vectors() {
+    ...
+    let ret =3D unsafe {
+        bindings::pci_alloc_irq_vectors(self.as_raw(), min_vecs, max_vecs, =
+irq_types.as_raw())
+    };
+    to_result(ret)?;
+
+    let len =3D NonZero::new(ret as usize).ok_or(EINVAL)?;
+    ...
+}
+
+[Severity: High]
+This isn't a bug introduced by this patch, but should alloc_irq_vectors()
+enforce min_vecs >=3D 1 before calling the C API?
+
+If alloc_irq_vectors() is called with min_vecs =3D 0, the C PCI core
+initializes MSI/MSI-X capabilities for 0 vectors and returns 0. The Rust
+wrapper treats this 0 return value as an error (NonZero::new fails) and bai=
+ls
+out without invoking pci_free_irq_vectors().
+
+Because no IrqVectorRegistration is constructed, its Drop handler is
+bypassed, permanently leaking the mapped MSI-X table and leaving the PCI
+device in a broken state where subsequent allocation attempts will fail.
+
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260831-fix-pci-ir=
-q-vector-index-truncation-v2-1-4030ea7746a9@hotmail.com?part=3D1
+q-vector-index-truncation-v1-1-d63217d99b67@hotmail.com?part=3D1
