@@ -1,43 +1,49 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 38EEF43F4A6;
-	Mon, 31 Aug 2026 13:37:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E1C7480331;
+	Mon, 31 Aug 2026 13:37:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788183472; cv=none; b=pTn01E49F+7OK7M9QI6h1l8a73/bAM+OmEjgJctaqWmmFnp/8X39PdYzsF0FwjNUhiCMISdFbAViEStPn42S8VJazgKUK5oReRax0ohpLIavflOi0l2XGmTIhQS4c1G0AqwUiHnkYkRcBtLXJsWuWRDR5eio+denNb/mPk14TsA=
+	t=1788183478; cv=none; b=X0QWmHWCnAwWRTDsHMs3w8KF2l7odUCFeG1DZk3zXkzaMvEUSnIcClqq1nZDozs7lamwITMNy5PbXP5z3oSPfCU0ow0eym8ugnLUZyRycGdkyswZ0lZ3jy7kRAcTq4KSlL1ziKke+hz9D5KfJmAKE331N6ydRKEwc7rBbu3a2UY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788183472; c=relaxed/simple;
-	bh=JpimYiIdHbRg+hr8DlpmCsjPTHZ10S6O2xwHyf2uBeg=;
+	s=arc-20240116; t=1788183478; c=relaxed/simple;
+	bh=NPSNlMd2dyiS+0NW6Z4zhLy5239fLsj646Pe7Hx53Us=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=NFUdN/ef3KD9RJs9QW1haLu5lCnAh1TPi/YW5QfIVMq7PBxioJBaAWMNF+4nN60k7vVoH5mSDzP+5Pi537n8UaV1OwRN1Gou+9ZxIQlkRwmZLWpkuGYcUFze9aFdQD9QOO+gdGJAelT55DCO8H8YuNJw3usn/FViTN/sY4hDuEg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=myEK7VkE; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=AzHiMnNkGNAqR0VR5T43WSVJm8dreeVX0iE25WhrFGwRibfBXfJsVILCM+VrAZWE4obt0rwEYtog9jhLcR7/KB2PHLQhb1Dha0ZNH7G3RLMk/SS6LorT799qOXUCH8mMeUQDM/1OO2NM+WMYWRtd7V77HoPOCtkVRWbTcByZW4A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jI+ndjq7; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="myEK7VkE"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E21411F00ACA;
-	Mon, 31 Aug 2026 13:37:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jI+ndjq7"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D91401F000E9;
+	Mon, 31 Aug 2026 13:37:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788183470;
-	bh=b3B60qoFdReGPZO6ITwG4sYGQo/AaMOlvcp0vHFXmyY=;
+	s=k20260515; t=1788183476;
+	bh=7omeuAaScmWAEKQyvgrvSICA5UGv4oMV1eMMTqvJPYY=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=myEK7VkEEs2d/ncA2PgUaeEEfMEgCMRw0en7kVAvwFzvCRovGQsjrxro7O9AJpk9J
-	 Ip8J6J9QmRJEvMKUn7f8TnIY1kqpUSPPs2TUGwSuOVmkAuUStKQP0DHMKiCvw1t9mK
-	 LQrsInvVd450R2frfZeHqkcdhJtgfHucBpg2lQZAiCYJcaLNwayMXQvSfKqa32dLj9
-	 c710cEC7W7yjMbgbwSZK6ug+QxrGcKrR6UMfFo3y/USjcR7DyPJeCD0oHV5ENslcZG
-	 qDQSpyDBEjBAHN/f7N1YlfblsTptNNrVJBD2DlqEgj2FHOqOxuMI0i4j6AWyMlf43q
-	 kwA58V4/Ag/0Q==
+	b=jI+ndjq7u3ZUMSoMFriKK50SK0rT+OqOQG/T58vyVFih+C+S6/B0wpPNops+cc5kX
+	 4L06Yb7ErsT70j9AVo/XIdgejxHoD0n0tCMhk2aDYpOgw91PdJfC0x20z31ywcm06F
+	 RSAW8XlXXfXnkaKVRgVDC1JA7+5KKjqbf3JRiZnTW7o3DMtzkERNxNrSlHqfrWMx3B
+	 /dqqK8oPF7xqi2lk9EvoiCF4KIgfYfHmW6VwONB0CjskAzlklKxEWe7G3zgEayNbci
+	 R2v5l42XXA+DHPE1/DTYV5oUtmRkYs7wuJ1e0iw9UJNN3p+b3apMjKyNVvEJmIw+RR
+	 HUO/HTJWcCJzQ==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Shuan He <heshuan@bytedance.com>,
+Cc: Hans Zhang <18255117159@163.com>,
+	Manivannan Sadhasivam <mani@kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
 	Sasha Levin <sashal@kernel.org>,
+	shawn.lin@rock-chips.com,
+	lpieralisi@kernel.org,
+	kwilczynski@kernel.org,
+	heiko@sntech.de,
 	linux-pci@vger.kernel.org,
+	linux-rockchip@lists.infradead.org,
+	linux-arm-kernel@lists.infradead.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.18-6.1] PCI/proc: Fix race between pci_proc_init() and pci_bus_add_device()
-Date: Mon, 31 Aug 2026 09:22:23 -0400
-Message-ID: <20260831133314.4125787-115-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.18-5.10] PCI: rockchip: Protect root bus removal with rescan lock
+Date: Mon, 31 Aug 2026 09:22:27 -0400
+Message-ID: <20260831133314.4125787-119-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260831133314.4125787-1-sashal@kernel.org>
 References: <20260831133314.4125787-1-sashal@kernel.org>
@@ -47,573 +53,359 @@ List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 X-stable: review
 X-Patchwork-Hint: Ignore
 X-stable-base: Linux 6.18.48
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Krzysztof Wilczyński <kwilczynski@kernel.org>
+From: Hans Zhang <18255117159@163.com>
 
-[ Upstream commit 8857f6578b001bcf5f53c8c6a3936647f05291a8 ]
+[ Upstream commit 0bd9611587bb494c33566d825fe34b2705e4b167 ]
 
-pci_proc_attach_device() creates procfs entries for PCI devices and is
-called from pci_bus_add_device().  It lazily creates the per-bus procfs
-directory (bus->procdir) via proc_mkdir() on first use, and returns early
-if proc_initialized is not yet set.
+Hold the pci_rescan_remove_lock lock while stopping and removing a root bus
+to avoid racing with concurrent rescan or hotplug operations triggered via
+sysfs.  Such races may lead to use-after-free issues or system crashes.
 
-On x86 with ACPI, PCI enumeration occurs at subsys_initcall, before
-pci_proc_init() sets proc_initialized at device_initcall.  The
-for_each_pci_dev() loop in pci_proc_init() then creates procfs entries for
-these already-enumerated devices, but runs without holding
-pci_rescan_remove_lock.
-
-On ARM64 with devicetree, PCI host bridges probe at device_initcall.  With
-async probing enabled, pci_bus_add_device() can run concurrently with
-pci_proc_init(), and both may call pci_proc_attach_device() for the same
-device or for different devices on the same bus.  As pci_host_probe() holds
-pci_rescan_remove_lock while pci_proc_init() does not, there is no
-serialisation between the two paths.
-
-When two threads concurrently call pci_proc_attach_device() for devices on
-the same bus, both observe bus->procdir as NULL and both call proc_mkdir().
-The proc filesystem serialises directory creation internally, so only one
-caller succeeds.  The other results in a warning like:
-
-  proc_dir_entry '000c:00/00.0' already registered
-
-The caller receives NULL (duplicate entry) and unconditionally stores it to
-bus->procdir, corrupting the valid pointer set by the first caller.
-
-Serialise access to proc_initialized, proc_bus_pci_dir, bus->procdir and
-dev->procent with a new mutex local to drivers/pci/proc.c, and store the
-created entries to bus->procdir and dev->procent only on success, so a
-failed creation can never overwrite a valid pointer.
-
-Additionally, wrap the for_each_pci_dev() loop in pci_proc_init() with
-pci_lock_rescan_remove() to serialise against concurrent PCI bus
-operations, add an early return in pci_proc_attach_device() when
-dev->procent is already set to make the function idempotent, and clear
-bus->procdir in pci_proc_detach_bus() to prevent use of a dangling pointer
-after proc_remove().
-
-Reported-by: Shuan He <heshuan@bytedance.com>
-Closes: https://lore.kernel.org/linux-pci/20250702155112.40124-2-heshuan@bytedance.com/
-Signed-off-by: Krzysztof Wilczyński <kwilczynski@kernel.org>
+Signed-off-by: Hans Zhang <18255117159@163.com>
+Signed-off-by: Manivannan Sadhasivam <mani@kernel.org>
+[bhelgaas: commit log]
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Link: https://lore.kernel.org/r/20260611150543.511422-1-kwilczynski@kernel.org
+Link: https://patch.msgid.link/20260521161822.132996-8-18255117159@163.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
 LLM Generated explanations, may be completely bogus:
 
-# Stable Backport Analysis: PCI/proc race fix
+## Phase 1: Commit Message Forensics
 
-**Local tree:** Linux **6.18.44** (`git describe HEAD` →
-`v6.18.44-1-g2736c32da98b9`, `make kernelversion` → `6.18.44`)
+### Step 1.1: Parse the Subject Line
+**Record:** `[PCI: rockchip] [Protect] Protect root bus removal with
+rescan lock` — subsystem is Rockchip PCIe host controller; action is
+synchronization/protection (bug fix).
 
-**Fix status in this tree:** The buggy code is present at HEAD; commit
-`3ab0784441504` / upstream `8857f6578b001` is **not** an ancestor of
-HEAD.
+### Step 1.2: Parse All Commit Message Tags
+**Record:**
+- **Fixes:** none
+- **Reported-by:** none
+- **Tested-by:** none
+- **Reviewed-by:** none
+- **Acked-by:** none
+- **Link:**
+  `https://patch.msgid.link/20260521161822.132996-8-18255117159@163.com`
+- **Cc: stable:** none
+- **Signed-off-by:** Hans Zhang, Manivannan Sadhasivam, Bjorn Helgaas
+  (ignore pipeline-added SOBs per instructions)
+
+Notable: Signed-off-by from PCI maintainer Bjorn Helgaas. No syzbot or
+user bug reports.
+
+### Step 1.3: Analyze Commit Body
+**Record:**
+- **Bug:** `rockchip_pcie_remove()` tears down the root bus without
+  holding the global PCI rescan/remove mutex, allowing concurrent sysfs-
+  driven rescan or hotplug to operate on the same bus hierarchy.
+- **Symptom:** Use-after-free or system crash.
+- **Root cause:** Missing `pci_lock_rescan_remove()` /
+  `pci_unlock_rescan_remove()` around `pci_stop_root_bus()` +
+  `pci_remove_root_bus()`.
+- **Version info:** None in commit message.
+
+### Step 1.4: Detect Hidden Bug Fixes
+**Record:** Not disguised — explicitly a race-condition / crash fix, not
+cleanup or optimization.
 
 ---
 
-## PHASE 1: COMMIT MESSAGE FORENSICS
+## Phase 2: Diff Analysis
 
-### Step 1.1: Subject line
-**Record:** `[PCI/proc]` `[Fix]` — race between `pci_proc_init()` and
-`pci_bus_add_device()` during concurrent procfs entry creation.
-
-### Step 1.2: Tags
+### Step 2.1: Inventory the Changes
 **Record:**
-- **Reported-by:** Shuan He \<heshuan@bytedance.com\> — real-world
-  reporter
-- **Closes:** https://lore.kernel.org/linux-
-  pci/20250702155112.40124-2-heshuan@bytedance.com/ — original bug
-  report thread
-- **Signed-off-by:** Krzysztof Wilczyński, Bjorn Helgaas (PCI
-  maintainer)
-- **Link:** https://lore.kernel.org/r/20260611150543.511422-1-
-  kwilczynski@kernel.org
-- No `Fixes:` tag (expected for manual review)
-- No `Cc: stable@vger.kernel.org` (expected)
-- Ignore pipeline `Signed-off-by: Sasha Levin`
+- **Files:** `drivers/pci/controller/pcie-rockchip-host.c` (+2 lines)
+- **Functions:** `rockchip_pcie_remove()`
+- **Scope:** Single-file, surgical fix (2 lines added)
 
-### Step 1.3: Body analysis
+### Step 2.2: Code Flow Change
 **Record:**
-- **Bug:** Concurrent `pci_proc_attach_device()` calls can both see
-  `bus->procdir == NULL`, both call `proc_mkdir()`; procfs rejects the
-  duplicate with a WARN; the loser stores `NULL` into `bus->procdir`,
-  overwriting a valid pointer.
-- **Symptom:** `WARN(1, "proc_dir_entry '%s/%s' already registered\n",
-  ...)` in dmesg; corrupted `bus->procdir`; missing/broken
-  `/proc/bus/pci` entries.
-- **Trigger (ARM64 DT):** PCI host bridges probe at `device_initcall`;
-  with async probing, `pci_bus_add_device()` can run concurrently with
-  `pci_proc_init()`; `pci_host_probe()` holds `pci_rescan_remove_lock`
-  but `pci_proc_init()` did not.
-- **Trigger (x86 ACPI):** Enumeration at `subsys_initcall` before proc
-  init; `pci_proc_init()`'s `for_each_pci_dev()` loop lacked
-  `pci_rescan_remove_lock`.
-- **Root cause:** No serialization around lazy `bus->procdir` /
-  `dev->procent` creation; unconditional assignment of failed
-  `proc_mkdir()` result.
+- **Hunk (remove path):** Before — `pci_stop_root_bus()` and
+  `pci_remove_root_bus()` run unlocked. After — same calls wrapped in
+  `pci_lock_rescan_remove()` / `pci_unlock_rescan_remove()`. Affects
+  driver remove / module-unbind path only.
 
-### Step 1.4: Hidden bug fix?
-**Record:** No — explicitly described as a race/pointer-corruption bug
-fix, not disguised cleanup.
+### Step 2.3: Identify Bug Mechanism
+**Record:** **Category:** Synchronization / race condition.
+**Mechanism:** Concurrent sysfs PCI rescan (`/sys/bus/pci/rescan`, per-
+device `rescan`, `remove`) or hotplug can walk/modify the bus device
+list while `rockchip_pcie_remove()` is tearing it down without the
+global mutex that sysfs paths already hold.
+
+### Step 2.4: Assess Fix Quality
+**Record:** Obviously correct — matches the established pattern in
+`pci_host_common_remove()`, `mtk_pcie_remove()`, `mvebu` and `aardvark`
+remove paths. Minimal, no API changes. **Regression risk:** Very low;
+mutex is the same one used everywhere else for this purpose.
 
 ---
 
-## PHASE 2: DIFF ANALYSIS
+## Phase 3: Git History Investigation
 
-### Step 2.1: Inventory
-**Record:**
-- **File:** `drivers/pci/proc.c` only (+56 / -23 lines)
-- **Functions modified/added:** `__pci_proc_attach_bus()` (new),
-  `pci_proc_attach_device()`, `pci_proc_detach_device()`,
-  `pci_proc_detach_bus()`, `pci_proc_init()`
-- **Scope:** Single-file surgical fix
+### Step 3.1: Blame Changed Lines
+**Record:** `pci_stop_root_bus()` / `pci_remove_root_bus()` in
+`rockchip_pcie_remove()` introduced by Rob Herring (2020-05-22, commit
+`f473182c7524dd`). Remove function itself dates to Shawn Lin
+(2018-05-09). Driver added 2016 (`e77f847df54c6`). Bug has been present
+since the stop/remove calls were added without locking.
 
-### Step 2.2: Code flow changes
-**Record:**
-- **Hunk 1:** Add `pci_proc_lock` mutex.
-- **Hunk 2:** Extract `__pci_proc_attach_bus()` — create bus proc dir in
-  temp variable, assign to `bus->procdir` only on success; skip if
-  already set.
-- **Hunk 3:** `pci_proc_attach_device()` — take `pci_proc_lock`; early-
-  return if `dev->procent` already set (idempotent); call
-  `__pci_proc_attach_bus()`; assign `dev->procent` only on successful
-  `proc_create_data()`.
-- **Hunk 4:** `pci_proc_detach_device()` / `pci_proc_detach_bus()` —
-  serialize under same mutex; clear `bus->procdir = NULL` after
-  `proc_remove()`.
-- **Hunk 5:** `pci_proc_init()` — init under `scoped_guard(mutex,
-  &pci_proc_lock)`; wrap `for_each_pci_dev()` loop with
-  `pci_lock_rescan_remove()` / `pci_unlock_rescan_remove()`.
+### Step 3.2: Follow Fixes: Tag
+**Record:** No `Fixes:` tag present — N/A.
 
-### Step 2.3: Bug mechanism
-**Record:** **Category:** Race condition + pointer corruption
-(reference/state bug).
-- **Before:** Two threads could race on `bus->procdir`; loser's
-  `proc_mkdir()` returned NULL (duplicate), stored unconditionally →
-  valid pointer overwritten with NULL.
-- **After:** Mutex serializes all proc attach/detach/init; pointer
-  assigned only after successful creation; idempotent early returns
-  prevent duplicate work.
+### Step 3.3: File History for Related Changes
+**Record:** Part of a 9-patch series "[PATCH 0/9] PCI: controller: Add
+missing rescan lock around root bus removal" (local mbox). Each patch is
+independent per cover letter. `pci_lock_rescan_remove()` infrastructure
+added in 2014 (`9d16947b75831`). `pci_host_common_remove()` has used the
+lock since 2018 (`01fcb7f777a9f`). Fix is **not** yet merged in this
+tree (grep shows no lock in rockchip remove; `git log --grep` for
+subject returned empty).
 
-Verified in `fs/proc/generic.c:403-416`: `proc_register()` returns NULL
-on duplicate with `WARN(1, "proc_dir_entry '%s/%s' already
-registered\n", ...)`.
+### Step 3.4: Author's Other Commits
+**Record:** Hans Zhang is an active PCI contributor (cadence, dwc
+capability-search series, etc.). Not the Rockchip driver author; fixing
+a cross-driver synchronization gap.
 
-### Step 2.4: Fix quality
-**Record:** Fix is minimal, obviously correct, and follows existing PCI
-patterns (`pci_lock_rescan_remove()`, `guard(mutex)` used elsewhere in
-PCI). Low regression risk — adds a local mutex and tightens assignment
-logic. `lockdep_assert_held()` documents locking expectations.
+### Step 3.5: Prerequisites
+**Record:** No dependencies. `pci_lock_rescan_remove()` /
+`pci_unlock_rescan_remove()` exist in this tree (since 2014). Driver
+includes `../pci.h` → `<linux/pci.h>`, so no new includes needed.
+Standalone, applies cleanly.
 
 ---
 
-## PHASE 3: GIT HISTORY INVESTIGATION
+## Phase 4: Mailing List and External Research
 
-### Step 3.1: Blame
-**Record:** Lazy `bus->procdir = proc_mkdir(...)` pattern dates to
-initial import (`1da177e4c3f41`, Linux 2.6.12-rc2). Race window widened
-when `pci_proc_attach_device()` moved back to `pci_bus_add_device()` in
-`ef37702eb3cae` (2013). Bug has been latent for years; practical trigger
-on ARM64+async probe is newer.
-
-### Step 3.2: Fixes: tag
-**Record:** N/A — no `Fixes:` tag in commit message.
-
-### Step 3.3: Related file history
-**Record:** Recent `drivers/pci/proc.c` changes are unrelated cleanups
-(mmap, PDE_DATA removal). No duplicate fix in this tree. Fix commit
-`3ab0784441504` exists on `autosel` branch but not in current HEAD.
-
-### Step 3.4: Author context
-**Record:** Krzysztof Wilczyński is an active PCI contributor/maintainer
-(multiple PCI commits in this tree). Bjorn Helgaas committed the fix
-upstream.
-
-### Step 3.5: Dependencies
-**Record:** Standalone — no series prerequisites.
-- `guard(mutex)` / `scoped_guard` available via `#include
-  <linux/module.h>` → `cleanup.h` (proc.c already includes module.h).
-- `pci_lock_rescan_remove()` exists in `drivers/pci/probe.c` and is
-  declared in `drivers/pci/pci.h`.
-- Patch applies cleanly against current `drivers/pci/proc.c` at HEAD.
-
----
-
-## PHASE 4: MAILING LIST AND EXTERNAL RESEARCH
-
-### Step 4.1: Original discussion
-**Record:**
-- **b4 dig -c 3ab0784441504:** https://patch.msgid.link/20260611150543.5
-  11422-1-kwilczynski@kernel.org
-- **Series revisions:** v1 (2026-04-30) → v2/v3 (2026-06-06) → v4
-  (2026-06-11, committed version)
-- Lore direct fetch blocked by bot protection; thread retrieved via `b4
-  dig -m`.
+### Step 4.1: Original Patch Discussion
+**Record:** `b4 dig` could not be run on an unmerged commit hash. Used
+local mbox `20260522_18255117159_pci_controller_add_missing_rescan_lock_
+around_root_bus_removal.mbx`. Cover letter explains race with sysfs
+rescan/hotplug → UAF/crash. References sashiko-bot review flagging the
+same pattern in cadence code. **No review replies** in the mbox (patches
+only). WebFetch of lore URL blocked by bot protection.
 
 ### Step 4.2: Reviewers
-**Record:** **b4 dig -w** CC'd: Bjorn Helgaas, Manivannan Sadhasivam,
-Lorenzo Pieralisi, Ilpo Järvinen, Lukas Wunner, Shuan He (reporter),
-linux-pci@vger.kernel.org — appropriate PCI maintainer coverage.
+**Record:** Cover letter only; no Reviewed-by/Acked-by in thread. Commit
+has SOB from Manivannan Sadhasivam and Bjorn Helgaas (PCI maintainer).
 
-### Step 4.3: Bug report
-**Record:** Reported-by Shuan He (Bytedance). Closes July 2025 lore
-thread. WebFetch to lore blocked; bug mechanism and reporter confirmed
-from commit message and mbox metadata.
+### Step 4.3: Bug Report
+**Record:** No external bug report, syzbot, or KASAN trace. Issue
+identified by code review / bot review of the pattern.
 
-### Step 4.4: Related patches
-**Record:** Standalone v4 patch; no multi-patch series dependency.
+### Step 4.4: Related Patches
+**Record:** 9-patch series for cadence, dwc, altera, brcmstb, iproc,
+mediatek, rockchip, vmd, plda. Each independent. Rockchip is patch 7/9.
 
-### Step 4.5: Stable list history
-**Record:** No stable-list discussion found in retrieved mbox thread
-(UNVERIFIED for broader stable@ search due to lore access limits).
+### Step 4.5: Stable Mailing List
+**Record:** No stable-list discussion found in available sources.
 
 ---
 
-## PHASE 5: CODE SEMANTIC ANALYSIS
+## Phase 5: Code Semantic Analysis
 
-### Step 5.1: Key functions
-**Record:** `pci_proc_attach_device()`, `pci_proc_detach_device()`,
-`pci_proc_detach_bus()`, `pci_proc_init()`, `__pci_proc_attach_bus()`.
+### Step 5.1: Key Functions
+**Record:** `rockchip_pcie_remove()` — only function modified.
 
-### Step 5.2: Callers
-**Record:**
-- `pci_proc_attach_device()` called from `pci_bus_add_device()`
-  (`drivers/pci/bus.c:358`) — normal device bring-up path.
-- `pci_proc_init()` called via `device_initcall` at boot.
-- Detach called from `drivers/pci/remove.c` on device/bus removal.
-- `pci_bus_add_device()` reached from `pci_host_probe()` →
-  `pci_bus_add_devices()` (`probe.c:3318-3320`, under
-  `pci_lock_rescan_remove()`).
+### Step 5.2: Trace Callers
+**Record:** Called via `.remove = rockchip_pcie_remove` in
+`rockchip_pcie_driver`, registered with `module_platform_driver()`.
+Triggers on platform device removal: module unload (`rmmod` if built as
+module), driver unbind, or platform teardown.
 
-### Step 5.3: Callees
-**Record:** `proc_mkdir()`, `proc_create_data()`, `proc_remove()`,
-`proc_set_size()`, `pci_lock_rescan_remove()` /
-`pci_unlock_rescan_remove()`.
+### Step 5.3: Trace Callees
+**Record:** `pci_lock_rescan_remove()`, `pci_stop_root_bus()`,
+`pci_remove_root_bus()`, `pci_unlock_rescan_remove()`, then
+`irq_domain_remove()`, clock/regulator cleanup.
 
-### Step 5.4: Reachability
-**Record:** Boot-time path on ARM64 DT systems with async device probing
-— common production configuration. Also reachable during PCI
-hotplug/rescan via `pci_bus_add_device()`. Requires `CONFIG_PROC_FS`
-(proc.c is wrapped in `#ifdef CONFIG_PROC_FS` in `pci.h`).
+### Step 5.4: Call Chain / Reachability
+**Record:** Race is between `rockchip_pcie_remove()` and sysfs paths in
+`pci-sysfs.c` (`rescan_store`, `dev_rescan_store`, `remove_store`,
+`bus_rescan_store`) — all hold `pci_lock_rescan_remove()`. An admin
+writing to `/sys/bus/pci/rescan` (or per-bus/device rescan/remove) while
+the driver is being removed can hit the race. Reachable on any Rockchip
+system with `CONFIG_PCIE_ROCKCHIP_HOST`.
 
-### Step 5.5: Similar patterns
-**Record:** No other lazy proc-dir creation races found in PCI code;
-this is the sole attach point for PCI proc entries.
-
-**Corruption consequence (verified):** If thread A sets `bus->procdir`
-valid and thread B overwrites with NULL before A reads `bus->procdir`
-for `proc_create_data()`, A passes NULL parent (`proc.c:441-442` at
-HEAD). `proc_create_data()` passes parent to `proc_register()` without
-NULL guard — potential oops during boot enumeration.
+### Step 5.5: Similar Patterns
+**Record:** Controllers **with** lock: `pci-host-common.c`, `pcie-
+mediatek-gen3.c`, `pci-mvebu.c`, `pci-aardvark.c`, `pci-hyperv.c`.
+Controllers **without** lock (same bug class): rockchip, cadence, dwc,
+altera, brcmstb, iproc, mediatek (non-gen3), vmd, plda, tegra, etc.
+Rockchip is a clear oversight relative to the common pattern.
 
 ---
 
-## PHASE 6: CROSS-REFERENCING AGAINST LOCAL TREE
+## Phase 6: Cross-Reference Against Local Tree
 
-### Step 6.1: Buggy code exists?
-**Record:** **YES.** At HEAD, `drivers/pci/proc.c:428-437` still has
-unconditional `bus->procdir = proc_mkdir(...)` without locking.
-`pci_proc_init()` at lines 464-472 lacks `pci_rescan_remove_lock`.
-`pci_proc_detach_bus()` does not clear `bus->procdir`.
+### Step 6.1: Does Buggy Code Exist?
+**Record:** **Yes.** Tree is **v6.18.44** (`git describe HEAD` →
+`v6.18.44-1-g2736c32da98b9`, `make kernelversion` → `6.18.44`).
+`rockchip_pcie_remove()` at lines 1015–1016 calls `pci_stop_root_bus()`
+/ `pci_remove_root_bus()` **without** the lock. Driver present since
+v4.8 era; bug since ~2020.
 
-### Step 6.2: Backport complications
-**Record:** **Clean apply expected.** File structure matches the patch
-base. No conflicting recent changes to proc attach logic.
-`guard()`/`scoped_guard()` infrastructure present in 6.18.
+### Step 6.2: Backport Complications
+**Record:** **Clean apply** — 2-line addition, no structural changes, no
+conflicts expected.
 
-### Step 6.3: Related fixes already present?
-**Record:** **None.** `git merge-base --is-ancestor 3ab0784441504 HEAD`
-→ fix NOT in HEAD. `git merge-base --is-ancestor 8857f6578b001 HEAD` →
-upstream fix NOT in HEAD.
-
----
-
-## PHASE 7: SUBSYSTEM AND MAINTAINER CONTEXT
-
-### Step 7.1: Subsystem criticality
-**Record:** **drivers/pci** — IMPORTANT subsystem. Affects PCI
-enumeration/procfs on all platforms with `CONFIG_PCI` +
-`CONFIG_PROC_FS`.
-
-### Step 7.2: Activity
-**Record:** PCI subsystem actively maintained in 6.18; this is a
-targeted fix to long-standing init-race code, not dead code.
+### Step 6.3: Related Fixes Already Present?
+**Record:** No equivalent fix in this tree. `git log --grep="Protect
+root bus removal"` returned empty. Mediatek-gen3, mvebu, aardvark, pci-
+host-common already have the lock; rockchip does not.
 
 ---
 
-## PHASE 8: IMPACT AND RISK ASSESSMENT
+## Phase 7: Subsystem and Maintainer Context
 
-### Step 8.1: Who is affected
-**Record:** ARM64 (and other DT) systems with PCI host controllers
-probing at `device_initcall` and async probing enabled. Also any
-platform where `pci_proc_init()` races with concurrent
-`pci_bus_add_device()`. x86 less likely at boot but hotplug paths remain
-relevant.
+### Step 7.1: Subsystem Criticality
+**Record:** **drivers/pci/controller** — IMPORTANT. PCI core affects
+device enumeration and all downstream PCI devices on Rockchip SoCs
+(RK3399, RK3568, etc.).
 
-### Step 8.2: Trigger conditions
-**Record:** Concurrent threads calling `pci_proc_attach_device()` for
-devices on the same bus during boot init. Timing-dependent but realistic
-with async probe. Unprivileged users cannot trigger at boot; hotplug
-paths may be root-controlled.
-
-### Step 8.3: Failure mode severity
-**Record:**
-- Kernel WARN during boot (verified procfs path)
-- `bus->procdir` pointer corruption
-- Missing `/proc/bus/pci/<bus>/<dev>` entries (tools relying on legacy
-  PCI proc interface break)
-- Potential NULL-parent `proc_create_data()` if corruption races with
-  in-flight attach
-- **Severity: HIGH** (pointer corruption + plausible crash during init)
-
-### Step 8.4: Risk-benefit
-**Record:**
-- **Benefit:** HIGH — prevents boot-time race, pointer corruption, and
-  broken PCI procfs on affected platforms
-- **Risk:** LOW — single-file mutex addition, well-reviewed, no API
-  changes
-- **Ratio:** Strong benefit, minimal risk
+### Step 7.2: Subsystem Activity
+**Record:** Actively maintained; recent rockchip commits in this tree
+(link speed, error logging, reset timing).
 
 ---
 
-## PHASE 9: FINAL SYNTHESIS
+## Phase 8: Impact and Risk Assessment
 
-### Step 9.1: Evidence summary
+### Step 8.1: Who Is Affected
+**Record:** Users of Rockchip SoCs with `CONFIG_PCIE_ROCKCHIP_HOST`
+(depends on `ARCH_ROCKCHIP`). Embedded/ARM boards using the legacy
+Rockchip AXI PCIe host controller.
+
+### Step 8.2: Trigger Conditions
+**Record:** Driver remove/unbind concurrent with PCI sysfs rescan or
+remove (typically root). Uncommon in steady state but realistic during
+module reload, driver unbind testing, or admin sysfs operations.
+Requires privileges for sysfs writes; remove path can be triggered by
+module unload or device unbind.
+
+### Step 8.3: Failure Mode Severity
+**Record:** UAF / kernel crash — **HIGH** (potential **CRITICAL**
+depending on exploitability of the freed PCI structures).
+
+### Step 8.4: Risk-Benefit
+**Record:** **Benefit:** HIGH — prevents real crashes on a long-standing
+code path. **Risk:** VERY LOW — 2-line addition using existing, well-
+tested API, matching multiple peer drivers. **Ratio:** Strongly favors
+backport.
+
+---
+
+## Phase 9: Final Synthesis
+
+### Step 9.1: Evidence Summary
 
 **FOR backport:**
-- Real, reported race with concrete dmesg symptom
-- Pointer corruption of `bus->procdir` (kernel data structure
-  corruption)
-- Plausible crash path via NULL `bus->procdir` in `proc_create_data()`
-- Small, single-file fix reviewed by PCI maintainer (Bjorn Helgaas)
-- Buggy code confirmed present in Linux 6.18.44 tree
-- v4 patch after 4 review iterations
+- Real synchronization bug with documented crash/UAF consequence
+- Matches PCI core documentation: rescan/remove must run under
+  `pci_rescan_remove_lock` (comment in `probe.c` lines 3536–3538)
+- Peer drivers already use this pattern; rockchip is an outlier
+- 2-line, obviously correct fix
+- Buggy code confirmed present in v6.18.44 tree
+- Driver has been in production kernels for years
+- Signed-off-by PCI maintainer
 
 **AGAINST backport:**
-- Requires `CONFIG_PROC_FS` (most distro kernels have it)
-- Timing-dependent race (but realistic on ARM64+async probe)
-- Legacy `/proc/bus/pci` interface (less critical than sysfs) —
-  mitigated by corruption severity
+- No user-reported crash or syzbot reproducer (theoretical/code-review
+  finding)
+- Part of a 9-patch series (but each patch is independent)
 
-**Unresolved:** Full text of original Bytedance bug report (lore bot-
-blocked); no explicit stable@ nomination found in thread.
+**Unresolved:** No runtime crash report; lore thread review discussion
+unavailable (bot-blocked).
 
-### Step 9.2: Stable rules checklist
-1. Obviously correct and tested? **PASS** — mutex serialization +
-   assign-on-success; reviewed by maintainer; reporter confirmed issue
-2. Fixes a real bug affecting users? **PASS** — Bytedance report, ARM64
-   DT boot path
-3. Important issue? **PASS** — pointer corruption, WARN, possible init
-   crash, broken procfs
-4. Small and contained? **PASS** — 1 file, ~80 lines total
-5. No new features/APIs? **PASS** — synchronization only
-6. Can apply to local tree? **PASS** — code present, dependencies
-   satisfied, clean apply expected
+### Step 9.2: Stable Rules Checklist
+1. Obviously correct and tested? **PASS** — pattern proven across
+   multiple drivers; no Tested-by but change is trivial.
+2. Fixes a real bug? **PASS** — missing mutex on a documented-required
+   code path.
+3. Important issue? **PASS** — UAF/system crash.
+4. Small and contained? **PASS** — 2 lines, one function.
+5. No new features/APIs? **PASS** — synchronization only.
+6. Can apply to local tree? **PASS** — APIs and buggy code both present.
 
-### Step 9.3: Exception categories
-**Record:** None (not device ID, quirk, DT, build, or docs) — standard
-bug-fix backport.
+### Step 9.3: Exception Categories
+**Record:** None (not device ID, quirk, DT, build, or docs). Standard
+bug fix.
 
-### Step 9.4: Decision rationale
-This fix addresses a genuine initialization race in PCI procfs setup
-that corrupts `bus->procdir` on a realistic ARM64+async-probe boot path.
-The buggy code is present in this 6.18.44 tree, the fix is small and
-self-contained, and the failure mode (pointer corruption, WARN, missing
-proc entries, possible NULL deref) meets stable importance thresholds.
+### Step 9.4: Decision Rationale
+
+This commit closes a long-standing race in `rockchip_pcie_remove()`
+where root bus teardown was not serialized against sysfs PCI
+rescan/remove operations. The PCI core has required this mutex since
+2014, and the generic host-common remove path has used it since 2018.
+Rockchip was simply missed. The fix is minimal, follows established
+convention, and prevents crashes on Rockchip platforms during driver
+removal concurrent with PCI sysfs operations. For the v6.18.44 tree
+being evaluated, the buggy code is present and the fix applies cleanly.
 
 ---
 
 ## Verification
 
-- [Phase 1] Parsed subject, tags (Reported-by, Closes, Link, SOBs);
-  ignored pipeline SOB
-- [Phase 1] Identified explicit race/pointer-corruption bug from commit
-  message
-- [Phase 2] Read full diff from `git show 3ab0784441504`; confirmed 1
-  file, +56/-23
-- [Phase 2] Verified `proc_register()` duplicate behavior at
-  `fs/proc/generic.c:403-416`
-- [Phase 2] Verified current HEAD code at `drivers/pci/proc.c:419-476`
-  lacks fix
-- [Phase 3] `git blame -L 428,437`: lazy procdir pattern since 2.6.12
-- [Phase 3] `git show ef37702eb3cae`: `pci_proc_attach_device` moved to
-  `pci_bus_add_device()` in 2013
-- [Phase 3] `git merge-base --is-ancestor 3ab0784441504 HEAD` → NOT in
-  HEAD
-- [Phase 3] `git merge-base --is-ancestor 8857f6578b001 HEAD` → upstream
-  NOT in HEAD
-- [Phase 4] `b4 dig -c 3ab0784441504` → lore URL found
-- [Phase 4] `b4 dig -a` → v1–v4 series, v4 is committed version
-- [Phase 4] `b4 dig -w` → PCI maintainers CC'd
-- [Phase 4] `b4 dig -m /tmp/pci_proc_race.mbox` → thread saved
-- [Phase 4] WebFetch lore URLs → blocked by bot protection (UNVERIFIED
-  for inline thread text)
-- [Phase 5] `grep pci_proc_attach_device` → caller
-  `pci_bus_add_device()` at `bus.c:358`
-- [Phase 5] `grep pci_host_probe` → `pci_lock_rescan_remove()` around
-  `pci_bus_add_devices()` at `probe.c:3318-3320`
-- [Phase 5] Verified `proc_create_data()` uses parent without NULL check
-  (`generic.c:587-597`)
-- [Phase 6] `git describe HEAD` → v6.18.44; `make kernelversion` →
-  6.18.44
-- [Phase 6] Confirmed buggy code present, fix absent at HEAD
-- [Phase 6] Verified `guard(mutex)` available via `module.h` →
-  `cleanup.h` include chain
-- [Phase 6] Verified `pci_lock_rescan_remove()` exists and is used in
-  PCI core
-- [Phase 7] PCI subsystem classified IMPORTANT
-- [Phase 8] Assessed severity HIGH based on pointer corruption +
-  verified procfs/proc_create paths
+- **[Phase 1]** Parsed subject, tags, body; no Fixes:/Reported-by/syzbot
+- **[Phase 2]** Diff: +2 lines in `rockchip_pcie_remove()` wrapping
+  stop/remove with lock
+- **[Phase 3]** `git describe HEAD` → v6.18.44; `git blame` →
+  stop/remove added f473182c (2020); driver since e77f847df54c6 (2016)
+- **[Phase 3]** `git show 9d16947b75831` → lock API added 2014; `git
+  blame pci-host-common.c` → lock in remove since 01fcb7f777a9f (2018)
+- **[Phase 3]** `git log --grep="Protect root bus removal"` → empty (not
+  merged)
+- **[Phase 4]** Read local mbox cover + patch 7/9; 9 independent
+  patches; sashiko-bot race comment verified
+- **[Phase 4]** WebFetch lore URL → blocked; b4 dig on unmerged commit →
+  N/A
+- **[Phase 5]** `grep pci_lock_rescan_remove drivers/pci/controller/` →
+  rockchip absent; mvebu/aardvark/mediatek-gen3/hyperv present
+- **[Phase 5]** Read `pci-sysfs.c` rescan/remove stores — all hold lock
+- **[Phase 5]** Read `probe.c:3536-3552` — documents lock requirement
+- **[Phase 6]** Read `rockchip_pcie_remove()` lines 1009–1016 — buggy
+  code confirmed in tree
+- **[Phase 6]** `Kconfig` → `PCIE_ROCKCHIP_HOST` tristate,
+  `ARCH_ROCKCHIP`
+- **[Phase 8]** Race between remove and sysfs rescan → UAF/crash per
+  commit message and PCI core design
 
-**YES**The background git searches finished successfully.
+**YES**The background checks finished and match what the analysis
+already assumed:
 
-They confirmed the fix exists as commit `3ab0784441504` (upstream
-`8857f6578b001`) on the `autosel` branch, but it is **not** in your
-current 6.18.44 HEAD — the race in `drivers/pci/proc.c` is still present
-there.
+- **Search for commit in tree:** `b4 dig` on HEAD didn’t match this
+  patch; `git log --grep` for the subject also found nothing. The fix
+  isn’t in this tree yet.
+- **Check if fix already merged:** `git log --grep="rockchip.*rescan
+  lock"` and `--grep="Protect root bus removal"` both returned empty —
+  confirmed not merged in v6.18.44.
 
-**Verdict from the analysis: YES** — this should be backported to this
-tree. It is a small, reviewed fix for a real boot-time race that can
-corrupt `bus->procdir` on ARM64 systems with async probing.
+**Verdict stands: YES** — backport the 2-line `pci_lock_rescan_remove()`
+wrap in `rockchip_pcie_remove()` to close the sysfs rescan/remove race.
 
- drivers/pci/proc.c | 79 ++++++++++++++++++++++++++++++++--------------
- 1 file changed, 56 insertions(+), 23 deletions(-)
+ drivers/pci/controller/pcie-rockchip-host.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/pci/proc.c b/drivers/pci/proc.c
-index 9348a0fb80847..34fbacbafe919 100644
---- a/drivers/pci/proc.c
-+++ b/drivers/pci/proc.c
-@@ -18,6 +18,7 @@
- #include "pci.h"
+diff --git a/drivers/pci/controller/pcie-rockchip-host.c b/drivers/pci/controller/pcie-rockchip-host.c
+index ee1822ca01db3..d203c4876d304 100644
+--- a/drivers/pci/controller/pcie-rockchip-host.c
++++ b/drivers/pci/controller/pcie-rockchip-host.c
+@@ -1012,8 +1012,10 @@ static void rockchip_pcie_remove(struct platform_device *pdev)
+ 	struct rockchip_pcie *rockchip = dev_get_drvdata(dev);
+ 	struct pci_host_bridge *bridge = pci_host_bridge_from_priv(rockchip);
  
- static int proc_initialized;	/* = 0 */
-+static DEFINE_MUTEX(pci_proc_lock);
- 
- static loff_t proc_bus_pci_lseek(struct file *file, loff_t off, int whence)
- {
-@@ -416,40 +417,64 @@ static const struct seq_operations proc_bus_pci_devices_op = {
- 
- static struct proc_dir_entry *proc_bus_pci_dir;
- 
--int pci_proc_attach_device(struct pci_dev *dev)
-+static int __pci_proc_attach_bus(struct pci_bus *bus)
- {
--	struct pci_bus *bus = dev->bus;
--	struct proc_dir_entry *e;
-+	struct proc_dir_entry *dir;
- 	char name[16];
- 
-+	lockdep_assert_held(&pci_proc_lock);
-+
- 	if (!proc_initialized)
- 		return -EACCES;
- 
--	if (!bus->procdir) {
--		if (pci_proc_domain(bus)) {
--			sprintf(name, "%04x:%02x", pci_domain_nr(bus),
--					bus->number);
--		} else {
--			sprintf(name, "%02x", bus->number);
--		}
--		bus->procdir = proc_mkdir(name, proc_bus_pci_dir);
--		if (!bus->procdir)
--			return -ENOMEM;
--	}
-+	if (bus->procdir)
-+		return 0;
-+
-+	if (pci_proc_domain(bus))
-+		sprintf(name, "%04x:%02x", pci_domain_nr(bus), bus->number);
-+	else
-+		sprintf(name, "%02x", bus->number);
-+
-+	dir = proc_mkdir(name, proc_bus_pci_dir);
-+	if (!dir)
-+		return -ENOMEM;
-+
-+	bus->procdir = dir;
-+
-+	return 0;
-+}
-+
-+int pci_proc_attach_device(struct pci_dev *dev)
-+{
-+	struct pci_bus *bus = dev->bus;
-+	struct proc_dir_entry *entry;
-+	char name[16];
-+	int ret;
-+
-+	guard(mutex)(&pci_proc_lock);
-+
-+	if (dev->procent)
-+		return 0;
-+
-+	ret = __pci_proc_attach_bus(bus);
-+	if (ret)
-+		return ret;
- 
- 	sprintf(name, "%02x.%x", PCI_SLOT(dev->devfn), PCI_FUNC(dev->devfn));
--	e = proc_create_data(name, S_IFREG | S_IRUGO | S_IWUSR, bus->procdir,
--			     &proc_bus_pci_ops, dev);
--	if (!e)
-+	entry = proc_create_data(name, S_IFREG | S_IRUGO | S_IWUSR,
-+				 bus->procdir, &proc_bus_pci_ops, dev);
-+	if (!entry)
- 		return -ENOMEM;
--	proc_set_size(e, dev->cfg_size);
--	dev->procent = e;
-+
-+	proc_set_size(entry, dev->cfg_size);
-+	dev->procent = entry;
- 
- 	return 0;
- }
- 
- int pci_proc_detach_device(struct pci_dev *dev)
- {
-+	guard(mutex)(&pci_proc_lock);
- 	proc_remove(dev->procent);
- 	dev->procent = NULL;
- 	return 0;
-@@ -457,19 +482,27 @@ int pci_proc_detach_device(struct pci_dev *dev)
- 
- int pci_proc_detach_bus(struct pci_bus *bus)
- {
-+	guard(mutex)(&pci_proc_lock);
- 	proc_remove(bus->procdir);
-+	bus->procdir = NULL;
- 	return 0;
- }
- 
- static int __init pci_proc_init(void)
- {
- 	struct pci_dev *dev = NULL;
--	proc_bus_pci_dir = proc_mkdir("bus/pci", NULL);
--	proc_create_seq("devices", 0, proc_bus_pci_dir,
--		    &proc_bus_pci_devices_op);
--	proc_initialized = 1;
-+
-+	scoped_guard(mutex, &pci_proc_lock) {
-+		proc_bus_pci_dir = proc_mkdir("bus/pci", NULL);
-+		proc_create_seq("devices", 0, proc_bus_pci_dir,
-+				&proc_bus_pci_devices_op);
-+		proc_initialized = 1;
-+	}
-+
 +	pci_lock_rescan_remove();
- 	for_each_pci_dev(dev)
- 		pci_proc_attach_device(dev);
+ 	pci_stop_root_bus(bridge->bus);
+ 	pci_remove_root_bus(bridge->bus);
 +	pci_unlock_rescan_remove();
+ 	irq_domain_remove(rockchip->irq_domain);
  
- 	return 0;
- }
+ 	rockchip_pcie_deinit_phys(rockchip);
 -- 
 2.53.0
 
