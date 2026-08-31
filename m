@@ -1,161 +1,283 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f200.google.com (mail-pg1-f200.google.com [209.85.215.200])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA6A74CCDC1;
-	Mon, 31 Aug 2026 20:01:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2533E37E5F4
+	for <linux-pci@vger.kernel.org>; Mon, 31 Aug 2026 20:05:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.200
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788206500; cv=none; b=AgKRL60Y29pXm2xR4RKHZgkmxMHWOMws3ykXGh1oAG54jlRLveu5WPj24SkfaQLDNE9NM5sf0dX78Cv58NiMEW1WSAiGcxa6GqXzg1cbsYX7S93hiXNW9kCraKri7ZIfMs7IKc71XqaElF2AYzclnkzajVS1yzA9RY3SUCmZY1o=
+	t=1788206704; cv=none; b=luR1Z/aGW2Nc6PbNd1TGW0McCeDMsye5wQtnXFu+boXp+vBPLLqcOqA8NcD3YMShpd+nAYT5K49OTINzqau4CMuDI8yNgxQNFiYfkZmC2iJf+obm9+lKPz7+E2T9zqmbbGpGxbIlXqDmg7aflYNDhpFVBnu4GMYWNAZHba236CI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788206500; c=relaxed/simple;
-	bh=37ri+mS2J7OBU9BSGk6AePbur0ku4bt1FR/6mIhRK1c=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=G7EhmzH9myR0DGbxj1MjxrAuM513LGbhmwt53ganesmcoIaCd+w1GxV8njruOCQk4GmAN5LLYc7WyKYi9kaKSbKnyfKluQj1glh6CAYcurBWgyL4cbK+YuOc/WI7/I7uT6LPXInXgaLOSJ/C6FG8AUARCWVLtjmLHzngH1NY648=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YugaleRA; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788206704; c=relaxed/simple;
+	bh=ogaNwEJPj1anxxgzO5JbrX2B9A0WCXUin+5LwdkKgb0=;
+	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=Ypwx9930XkoY3wavkiAMZIpf2ZtPPg3m28IRb7y89iEtLuxwMr97+2DXz8UGR72obMEatsUIj4SIhCroS1YriT+Myu2tnpEfuiuB0oMah7YBPhhCqJoKVPFKWiBSD6KKVyt92aUVe3EXe4n3nyPwFAXe/7kyqTXlD2ZFO5Dq6sQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--rathodpriyank.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=R8kStlbG; arc=none smtp.client-ip=209.85.215.200
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--rathodpriyank.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YugaleRA"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 334461F000E9;
-	Mon, 31 Aug 2026 20:01:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788206499;
-	bh=HuXKZEy2/gGYSP0cASGT4oXqgM10s/kica6ZcwczuKk=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=YugaleRAWIZdGULgBKX3mJmnVeLCqhhf4x6+DZ/M5f/lmxmjdcCKsoo24JuxKNJTr
-	 J4hyDstawePgx/NwM0qB0musRRnAHBXtoMc7qcgEJp54ZzuqSIbxsiFiuS9YG/TWJP
-	 tj7oIQZxpoyC5Ndon67lqG0YYlVD45sq/stx06Jm3CfVI87XOasFSyH2gPikoapNo2
-	 swBfl/+AXDCW3ma/hux93iYzwnzQhmGmCM1FthoAn68eRTuwh8b3Q9qJgPhr0j7a/S
-	 zOc6ceHwHlppyKu9jyKm5uSgYaOAjbRrGhJJD2jBqGsvgqF2cL79I7g0fs5uGO7N1t
-	 hUQgM5lc6SCyA==
-Date: Mon, 31 Aug 2026 22:01:31 +0200
-From: Niklas Cassel <cassel@kernel.org>
-To: Koichiro Den <den@valinux.co.jp>
-Cc: Manivannan Sadhasivam <mani@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Kishon Vijay Abraham I <kishon@kernel.org>,
-	Frank Li <Frank.Li@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Rob Herring <robh@kernel.org>, Aksh Garg <a-garg7@ti.com>,
-	Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>,
-	Chaitanya Kulkarni <kch@nvidia.com>, Jon Mason <jdmason@kudzu.us>,
-	Dave Jiang <dave.jiang@intel.com>, Allen Hubbe <allenbh@gmail.com>,
-	Heiko Stuebner <heiko@sntech.de>,
-	Shawn Lin <shawn.lin@rock-chips.com>,
-	Manikanta Maddireddy <mmaddireddy@nvidia.com>,
-	Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
-	linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
-	ntb@lists.linux.dev, linux-rockchip@lists.infradead.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 0/3] PCI: endpoint: Support hardware-owned MSI-X table
- and PBA
-Message-ID: <apXdm2I33edo8kpZ@ryzen>
-References: <20260830151948.3547577-1-den@valinux.co.jp>
- <apVWd1u9JjTKQczu@ryzen>
- <pj5vpwwd5tr5tuvhdq3bcpefnq27r6ljvwoysguz2o4tglcqx5@l7zmb6wjnhla>
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="R8kStlbG"
+Received: by mail-pg1-f200.google.com with SMTP id 41be03b00d2f7-cbee6bb8408so5260157a12.3
+        for <linux-pci@vger.kernel.org>; Mon, 31 Aug 2026 13:05:01 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1788206701; x=1788811501; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:from:subject
+         :message-id:mime-version:date:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=VQEcr/OvKrgDDu2LGE7v3a5Mgn/4plrpKKfKHe+7A/w=;
+        b=R8kStlbGpjB53aldvz1HubwAU1QUb2UW+31uAWZrRZq+NoVVRpxl522Q5wD9168j5y
+         AD62QrpoICAsvt88/ZjZpTB+cbceeeNOBPlpvV+BX6ZPHVumHCDrOnfavcGjqz7yqfJ9
+         E6Gc0sDhq2pt9Vhw5XvhqgyJvE8CPH4XKku/r9npipCz9QgznhmhvQ9VPvCtPW1aIICp
+         63Bd9buoF3PCvR+XNIfO0ROkSRM6Aqr4rt2HY5jcNFL6pQygKMAAIQY+M0WgGldmNEaJ
+         icTjnx7gUTfw+EMWSUEwEoiHsW5+HnFcpBVmlBLH82COR+XB0gGgcrSH7o+ek25457R6
+         g9cg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1788206701; x=1788811501;
+        h=content-transfer-encoding:content-type:cc:to:from:subject
+         :message-id:mime-version:date:x-gm-message-state:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=VQEcr/OvKrgDDu2LGE7v3a5Mgn/4plrpKKfKHe+7A/w=;
+        b=D7BZwCp/xJFDZz0pVZxVxl8F7NHbhMcAj1ClyJkSEYicRXPD2Y0D8/8A8T/JBOxHEg
+         Tx3vInQnEfJzp7X0cQ+SQIJWUE34ACHUxyvsqmiXJCjC+7ZuTrfvdBYstQWPnsYi60J2
+         0QJ0xE+1l2RNvZYb0xlUz2Vofa1Kt9Wft6T78UkI5+1nNcuF4uJnwAVescrBBqeJBUo2
+         S6L9Eo789KkvEFwiIRu0Q4/PHsXtt2Tw4ckkY2c2oth/61Q0wLx8N8qTs+QKS6AIkbka
+         D7U4FcOYNee/RhdXjloaz9Iui518kirGEWkUZUsduoYvRED7aEueCVjracxGSG5NU+6U
+         3t7w==
+X-Forwarded-Encrypted: i=1; AHgh+RqW+CRDzkM0xSRhe4YAtZb5IyTCNH4tS2mtXGjPCK8c8p6hFEMMTdYteNcjTVhosZVxI/WKqENjSj8=@vger.kernel.org
+X-Gm-Message-State: AFuF++mceSbznVNNR+rKMNNZKscU3T+8tNJqq0Hg+H/K+fwlxYzM3MN5
+	dWKHOcoU9qXPwflvu/f7vBm+xH0smonosH6WJhqmZ9h4Q+dXhM0vOWFQQWacsUJnaU6Q9kIx5MF
+	lxHkO4+LNKi+nB+adXwTlOMt/OVTYtGWU+g==
+X-Received: from pgbaz9.prod.google.com ([2002:a05:6a02:49:b0:cc1:c899:13e5])
+ (user=rathodpriyank job=prod-delivery.src-stubby-dispatcher) by
+ 2002:a05:6a20:918f:b0:3d1:e510:905f with SMTP id adf61e73a8af0-3d265e3f7b2mr36171322637.1.1788206701180;
+ Mon, 31 Aug 2026 13:05:01 -0700 (PDT)
+Date: Mon, 31 Aug 2026 20:04:44 +0000
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <pj5vpwwd5tr5tuvhdq3bcpefnq27r6ljvwoysguz2o4tglcqx5@l7zmb6wjnhla>
+Mime-Version: 1.0
+X-B4-Tracking: v=1; b=H4sIAFvelWoC/x3MSwqAMAwA0atI1gZSxe9VxIXYqEGJpRURine3u
+ HyLmQiBvXCAPovg+ZYgpyaYPIN5m3RlFJsMBRU1taVBNwvjIbojq3Wn6BWwa1o2RLayVEMqned Fnv86jO/7AZdCKSdlAAAA
+X-Change-Id: 20260831-pcie-link-endpoints-978e100d5d06
+X-Mailer: b4 0.14.3
+Message-ID: <20260831-pcie-link-endpoints-v1-1-32c2fd893e9e@google.com>
+Subject: [PATCH] PCI: Add pcie_get_link_endpoints() helper
+From: Priyank Rathod <rathodpriyank@google.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "=?utf-8?q?Ilpo_J=C3=A4rvinen?=" <ilpo.jarvinen@linux.intel.com>, linux-pci@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, Priyank Rathod <rathodpriyank@google.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
 
-Hello Koichiro,
+In PCIe topologies, physical links are point-to-point connections
+between an Upstream Component (Downstream Port, such as a Root Port
+or Switch Downstream Port) and a Downstream Component (Upstream Port,
+such as an Endpoint or Switch Upstream Port), per PCIe Base Specification
+r7.0/r6.0 sec 1.3.1.
 
-On Tue, Sep 01, 2026 at 01:11:09AM +0900, Koichiro Den wrote:
-> This is not driven by a performance target, so I do not have numbers. The
-> immediate issue is correctness. ntb_hw_epf can select MSI-X, but pci-epf-vntb
-> currently configures and raises MSI. I want that MSI-X path to work on RK3588
-> with the controller doorbell. I will make it clear in the next cover letter
-> that, with this series, a doorbell sent from ntb_tool on the pci-epf-vntb side
-> of RK3588 reaches ntb_tool on the ntb_hw_epf host side when MSI-X is selected.
-> I believe that is the simplest E2E test showing what this series fixes.
+Currently, various drivers across drivers/pci/ independently infer the
+two ends of a PCIe link using varied ad-hoc methods:
+  - ASPM (drivers/pci/pcie/aspm.c): pcie_aspm_get_link(),
+    alloc_pcie_link_state(), and pci_configure_ltr() resolve parent
+    bridges and subordinate function 0.
+  - Precision Time Measurement (drivers/pci/pcie/ptm.c):
+    pci_upstream_ptm() traverses pci_upstream_bridge() to validate
+    upstream link partner capabilities.
+  - PCIe Link Retrain (drivers/pci/pci.c): pcie_retrain_link() and
+    pcie_update_link_speed() coordinate link retraining from the
+    Downstream Port across the subordinate bus.
+  - AER/DPC Recovery (drivers/pci/pcie/err.c): pcie_do_recovery()
+    identifies the parent bridge via pci_upstream_bridge() to trigger
+    secondary bus reset and broadcast driver recovery callbacks.
+  - Lane Margining at Receiver (LMR): margin_enable_write() requires
+    both link endpoints to establish hierarchical locking and runtime PM
+    pinning.
 
-Okay, if the main issue is that pci-epf-vntb does not raise MSI-X, even when
-ntb_hw_epf host side has requested MSI-X, then I think that the first patch
-in the series should fix this, so that the fix can easily be backported.
+Ad-hoc subordinate bus iteration risks races with concurrent device
+removal or hotplug if pci_bus_sem is omitted.
 
-(Right now you fix this in patch 3/3, and the fix in patch 3/3 depends on
-both patches 1/3 and 2/3.)
+Introduce pcie_get_link_endpoints() and pcie_put_link_endpoints() in the
+PCI core to provide a standardized, symmetric, and race-safe helper:
+  - For Endpoints: resolves the parent Downstream Port via
+    pci_upstream_bridge(pdev).
+  - For Downstream Ports: safely inspects the subordinate bus under
+    down_read(&pci_bus_sem) and acquires a reference via pci_dev_get()
+    on the child device.
 
-I think that pci-epf-vntb actually respecting the configured IRQ type by the
-host is a separate logical change from adding support for HW defined layout.
+Callers release the acquired reference using pcie_put_link_endpoints().
 
+Signed-off-by: Priyank Rathod <rathodpriyank@google.com>
+---
+Hi Bjorn, Ilpo, and PCI maintainers,
 
-> I initially considered making the hardware-owned layout automatic for every EPF.
-> pci-epf-ntb (not vNTB!) is the reason I did not. It currently reads
-> host-programmed MSI-X entries through epf_bar[] backing and uses them to set up
-> peer outbound mappings. A hardware-owned Table has no such backing, and the
-> current EPC API has no generic way to read those entries. I suspect that
-> supporting it there would require a broader design change. Also, I do not have
-> hardware for the pci-epf-ntb bridge configuration.
-> 
-> pci-epf-test and nvmet-pci-epf should be easier to convert. However, converting
-> only those would not remove the per-layout handling while pci-epf-ntb still uses
-> an EPF-owned Table. I would prefer to handle those separately when they can be
-> properly tested. This is what I meant by this part of the cover letter:
-> 
->      [...]
-> 
->      layouts. This avoids unnecessary changes and reduces regression risk.
->      They can use a hardware-owned layout later if/when needed.
+During the review of the PCIe Lane Margining at Receiver (LMR) patch series
+(v7: https://lore.kernel.org/linux-pci/20260828-pcie-lmt-v7-1-6012e9e0940a@=
+google.com/),
+Ilpo J=C3=A4rvinen pointed out that feature drivers (such as LMR) resolving=
+ link
+partners duplicate link traversal logic that is already present in drivers =
+such
+as ASPM:
 
-Okay, if pci-epf-ntb is special, perhaps we should add a comment in
-pci-epf-ntb which explains why it cannot support HW defined layout.
+  "This feels like duplicating similar functionality with the aspm driver
+   that also wants to infer ends of the link when giving a pci_dev in.
+   The aspm driver currently does that within, but it kind of duplicating
+   pci_bus. It would be nice to avoid the duplication and have something
+   similar for this in PCI core."
 
-But for consistency, if we modify pci-epf-vntb, I think it would make sense
-to also modify pci-epf-test and nvmet-pci-epf as well in the same series.
+In PCIe topologies, physical links are point-to-point interconnects
+between an Upstream Component (Downstream Port, such as a Root Port or Swit=
+ch
+Downstream Port) and a Downstream Component (Upstream Port, such as an Endp=
+oint
+or Switch Upstream Port), per PCIe Base Specification Revision 7.0 / 6.0
+Section 1.3.1.
 
-pci-epf-test should be easy to test, just run the pci endpoint selftest.
+Several subsystems across drivers/pci/ independently infer and coordinate b=
+oth
+ends of a PCIe link:
+  1. ASPM (drivers/pci/pcie/aspm.c): pcie_aspm_get_link(),
+     alloc_pcie_link_state(), and pci_configure_ltr() resolve parent bridge=
+s
+     and subordinate function 0 to configure ASPMC and L1SS.
+  2. Precision Time Measurement (drivers/pci/pcie/ptm.c): pci_upstream_ptm(=
+)
+     traverses pci_upstream_bridge() to validate upstream link partner
+     capabilities.
+  3. PCIe Link Retrain (drivers/pci/pci.c): pcie_retrain_link() and
+     pcie_update_link_speed() coordinate link retraining from the Downstrea=
+m
+     Port across the subordinate bus.
+  4. AER & DPC Recovery (drivers/pci/pcie/err.c): pcie_do_recovery() identi=
+fies
+     the parent bridge via pci_upstream_bridge() to trigger secondary bus
+     resets and broadcast driver error callbacks.
+  5. Lane Margining at Receiver (LMR): margin_enable_write() requires both
+     link endpoints to establish hierarchical locking (pci_dev_lock) and
+     runtime PM pinning.
 
-nvmet-pci-epf should be quite easy to test too, just run the normal fio based
-testing that we usually run, and unless you see worse performance, I think we
-are good. (If we see worse performance, that could be an indication that one
-of the MSI-X for the different completion queues are not being correctly
-triggered. By default, the host side nvme driver creates one completion queue
-(and one submission queue) per host CPU.
+Currently, these drivers independently implement ad-hoc traversals via
+pci_upstream_bridge() or subordinate bus device iteration. Ad-hoc subordina=
+te
+bus iteration is error-prone and risks races with concurrent hot-unplug or
+device removal if pci_bus_sem is omitted.
 
+This patch introduces pcie_get_link_endpoints() and pcie_put_link_endpoints=
+()
+in the PCI core (drivers/pci/pci.c and include/linux/pci.h) as a standalone
+helper:
+  - For Endpoints: resolves the parent Downstream Port via
+    pci_upstream_bridge(pdev).
+  - For Downstream Ports: safely inspects the subordinate bus under
+    down_read(&pci_bus_sem) and acquires a reference via pci_dev_get() on t=
+he
+    child device.
 
-What I suggest that you instead do something like:
-Patch 1/7: pci-epf-vntb: Fix to actually use MSI-X when requested.
-           This probably includes adding the code that is inside the
-	   if (ret == -ENOENT) { }.
-Patch 2/7: PCI: endpoint: Support hardware-owned MSI-X table and PBA
-Patch 3/7: PCI: dw-rockchip: Support fixed MSI-X table and PBA on RK3588
-Patch 4/7: pci-epf-vntb: Add code that calls pci_epc_get_hw_msix_layout()
-           and uses that layout, if the function returned success.
-Patch 5/7: pci-epf-test: Add code that calls pci_epc_get_hw_msix_layout()
-           and uses that layout, if the function returned success.
-Patch 6/7: nvmet-pci-epf: Add code that calls pci_epc_get_hw_msix_layout()
-           and uses that layout, if the function returned success.
-Patch 7/7: pci-epf-ntb: Add comment that explains why it cannot call
-           pci_epc_get_hw_msix_layout() like all other EPF drivers that
-	   support MSI-X.
+Callers release the acquired reference with pcie_put_link_endpoints().
 
+Validation:
+  - Compiled clean on x86_64 defconfig (0 warnings, 0 errors).
+  - Multi-architecture build validated for ARM64 and x86_64 targets.
+  - Passed checkpatch.pl (0 warnings, 0 errors).
+  - Passed Sashiko pre-commit test runner (ID: 46b5f8a3da1ca0056407b3db6c82=
+b001264f86b7).
+---
+ drivers/pci/pci.c   | 50 +++++++++++++++++++++++++++++++++++++++++++++++++=
++
+ include/linux/pci.h |  6 ++++++
+ 2 files changed, 56 insertions(+)
 
-This way, patch 1/7 can be backported, and will help all users vNTB users,
-even the users that do not use RK3588 as an EPC.
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 77b17b13ee61..7bdfe7e5ab3a 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4618,6 +4618,56 @@ int pcie_retrain_link(struct pci_dev *pdev, bool use=
+_lt)
+ 	return rc;
+ }
+=20
++/**
++ * pcie_get_link_endpoints - Identify Upstream and Downstream ends of a PC=
+Ie link
++ * @pdev: Any PCIe device on the link (Downstream Port or Endpoint)
++ * @downstream_port: Output pointer to Downstream Port (Upstream Component=
+)
++ * @upstream_port: Output pointer to Upstream Port (Downstream Component)
++ *
++ * Identifies both ends of a point-to-point PCIe link. Increments referenc=
+e count
++ * on @upstream_port if dynamically discovered on a downstream port. Calle=
+rs must
++ * release with pcie_put_link_endpoints().
++ *
++ * Return: 0 on success, or -EINVAL if @pdev is NULL or not PCIe.
++ */
++int pcie_get_link_endpoints(struct pci_dev *pdev,
++			    struct pci_dev **downstream_port,
++			    struct pci_dev **upstream_port)
++{
++	if (!pdev || !pci_is_pcie(pdev))
++		return -EINVAL;
++
++	if (pcie_downstream_port(pdev)) {
++		*downstream_port =3D pdev;
++		down_read(&pci_bus_sem);
++		*upstream_port =3D pdev->subordinate ?
++			pci_dev_get(list_first_entry_or_null(&pdev->subordinate->devices,
++							     struct pci_dev, bus_list)) : NULL;
++		up_read(&pci_bus_sem);
++	} else {
++		*downstream_port =3D pci_upstream_bridge(pdev);
++		*upstream_port =3D pdev;
++	}
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(pcie_get_link_endpoints);
++
++/**
++ * pcie_put_link_endpoints - Release references acquired by pcie_get_link_=
+endpoints
++ * @pdev: Device passed to pcie_get_link_endpoints()
++ * @downstream_port: Downstream Port pointer
++ * @upstream_port: Upstream Port pointer
++ */
++void pcie_put_link_endpoints(struct pci_dev *pdev,
++			     struct pci_dev *downstream_port,
++			     struct pci_dev *upstream_port)
++{
++	if (pdev && pcie_downstream_port(pdev) && upstream_port)
++		pci_dev_put(upstream_port);
++}
++EXPORT_SYMBOL_GPL(pcie_put_link_endpoints);
++
+ /**
+  * pcie_wait_for_link_delay - Wait until link is active or inactive
+  * @pdev: Bridge device
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 64b308b6e61c..d30bf056a7ce 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1264,6 +1264,12 @@ struct resource *pci_find_parent_resource(const stru=
+ct pci_dev *dev,
+ u8 pci_swizzle_interrupt_pin(const struct pci_dev *dev, u8 pin);
+ int pci_get_interrupt_pin(struct pci_dev *dev, struct pci_dev **bridge);
+ u8 pci_common_swizzle(struct pci_dev *dev, u8 *pinp);
++int pcie_get_link_endpoints(struct pci_dev *pdev,
++			    struct pci_dev **downstream_port,
++			    struct pci_dev **upstream_port);
++void pcie_put_link_endpoints(struct pci_dev *pdev,
++			     struct pci_dev *downstream_port,
++			     struct pci_dev *upstream_port);
+ struct pci_dev *pci_dev_get(struct pci_dev *dev);
+ void pci_dev_put(struct pci_dev *dev);
+ DEFINE_FREE(pci_dev_put, struct pci_dev *, if (_T) pci_dev_put(_T))
 
+---
+base-commit: 0f23d56f17fdfc7db69d51f64c8b91bbab947aa9
+change-id: 20260831-pcie-link-endpoints-978e100d5d06
 
-> > I understand that you introduce dw_pcie_ep_msix_layout_is_hw_owned()
-> > because you want an EPF driver optionally use the HW defined table.
-> > But if all EPF drivers always use the HW defined table if available, I think
-> > you can avoid introducing this helper, and let rockchip_pcie_raise_irq()
-> > unconditionally call dw_pcie_ep_raise_msix_irq_doorbell() for case PCI_IRQ_MSIX.
-> 
-> Yes, under that assumption I agree. With the current mix, however, the Rockchip
-> callback still has to choose the helper according to the selected layout. That
-> is why the DWC code records which layout was selected.
-> 
-> I will update the cover letter to state the motivation and this boundary more
-> directly. Does keeping the layout choice with each EPF for this reason sound
-> reasonable?
+Best regards,
+--=20
+Priyank Rathod <rathodpriyank@google.com>
 
-Yes, since pci-epf-ntb apparently is special, I can see why you need
-both ep_func->msix_hw_owned and dw_pcie_ep_msix_layout_is_hw_owned().
-
-
-Kind regards,
-Niklas
