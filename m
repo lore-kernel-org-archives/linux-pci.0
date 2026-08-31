@@ -1,184 +1,80 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 07C88383C67
-	for <linux-pci@vger.kernel.org>; Mon, 31 Aug 2026 20:14:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 650A0388879;
+	Mon, 31 Aug 2026 20:21:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788207268; cv=none; b=Tdu0R1QYcIZ1tZeG4n67MWzMHUUqnjRNMYLrkWCZCnRQfMzTX/W76kWKOQh4xoYQr+OthESzA5O6MISDKFwj49gERxS9cD1OC7Kd66uvi+A1O/z5B+IlBN6NgMPtiXlHH1SDUw6liGz6hmTq1Dw4ORLMTwe6PtSDX+aJUWq+bBQ=
+	t=1788207703; cv=none; b=ry7reQmXWdIq3C1L+AT2ly2Bmq6+Z4xOQiS4McxRXYGY3hIlIURfuzutiB2QxyvSjT/H+wqFO3v1OYhlnpHW9HADZHfo3Cv3s7s57DGCJ9cGXXYmp4X7VJHvTkM1i1KCtGlRFz2GfMPPLPlXc8q5uGZUcESbhrX6ucJhavYa244=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788207268; c=relaxed/simple;
-	bh=Jix3tJs8AbXT1wCIVwpAjkfRp2fydQXZwVeHhU5XadE=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=DEoJNxz7cKb3T6fVKVw8cMj5jsLJNxRqbv5eNUdLCTlw6nWMC1S4NBj4R0PUnDoBQ/ZqFsSKVnY9dyi36bZWBF4OK8rN7czxtviZ3rcOqVJxdXNhVjxQjQAvn84QZrxMzmbJixCbtVwSsJqBb0LhGOL64gFIiR4yxiONRzd+3aU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kI8XsFPW; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788207703; c=relaxed/simple;
+	bh=XurowtO06U8Aw7Fm1KH5LvPHuNiKbK3anO2uAVzxjtg=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=qMPZNQga5mPp+DUG1AcH82Tj1cTdoYXaXGiSnRlmrUL2q/D569g+fc16J+znmGuyo7oR8in3qNY7zdqLKV3VOxug7M4uztGKoH2mSstWtAI4EalVO/HCjSM0u0PDOF9hSy2Zavp2GsE/vgGQ/2+COSP9nl7pjyRd7ZH82dLD5l0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=clOZWt61; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kI8XsFPW"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 92F091F000E9;
-	Mon, 31 Aug 2026 20:14:26 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="clOZWt61"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C9E701F000E9;
+	Mon, 31 Aug 2026 20:21:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788207266;
-	bh=OZ6ygt/2MLRVTSaLA+SkIWFbuEbZ5dMlh0skzcso72Y=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=kI8XsFPWLPN+iU3yPXgDteKpIw9tN2e1Z3niX5D8p0jl0vA241XitFSdVGkdkOn7Y
-	 olgUCn2nBAguunNIWxDSOjQ/vIL4IbJ7dRf/IImVIOZlcvLWxUcDLqTJ8yT+ecSTeL
-	 XFGqOOrutp8Q857NxkcsQSIWvNqxw1Ml0w+hqOR44pU8tfD1zDaeS60o31GTZhuZQs
-	 jAs6FuI/QJHy5J3XU8G5RF149YbMh2Tac6nWlIoCBVW5lLiWidS1jRPrqKTTxw45Pk
-	 RsjOzgD7qmU4yNEoXfBKZMgUt9Gj70rCfyx1wk9GyOZm0QP4VeqxG3HTsmXEt4cJbI
-	 g2Nrc+binLsvQ==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v1 1/7] ACPI: scan: Stop calling acpi_bus_init_power()
- early
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Rafael J. Wysocki" <rafael@kernel.org>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <10913616.nUPlyArG6x@rafael.j.wysocki>
-References: <3435655.aeNJFYEL58@rafael.j.wysocki>
- <10913616.nUPlyArG6x@rafael.j.wysocki>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 31 Aug 2026 20:14:26 +0000
-Message-Id: <20260831201426.92F091F000E9@smtp.kernel.org>
+	s=k20260515; t=1788207701;
+	bh=OOKF7tUXCi5ikEhu2FlHAXW9zvzpSMnU5r0cL+QJIe0=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=clOZWt61PRPuL3KCw9Qs8yNi0yutMS9Gs1FsRW4+f9F9e3IjBsyrSQ6nmet/2TEl0
+	 LS/EDCik8oFKKgWnpPnd5bqrquloqLZ8HyZ6A9Vv0aNf6rgpWhqH3KlRjyUFn/moIY
+	 EvW/rTMEhiS4JkSPHIbNWjS1Fv6lH+8ottm73Lpsh3zUSW8qxYAZPTaymNvfkXzuR6
+	 mOY0341Cg0vS0eXYnGJutC7fTeo8/3A30eFc6YhqEzqKD/s635zpPLuzmFiIbNvOwe
+	 kPCB4cK2RFMOY5sYqNqlgO024kiPyav2GG4BDcpzNMkWChs3T72LeLA4RyvPBSQXem
+	 qtJcT9P7yy07A==
+From: Bjorn Andersson <andersson@kernel.org>
+To: Konrad Dybcio <konradybcio@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Bartosz Golaszewski <brgl@kernel.org>,
+	Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+Cc: linux-arm-msm@vger.kernel.org,
+	devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-pm@vger.kernel.org,
+	Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
+Subject: Re: [PATCH v2 0/2] arm64: dts: qcom: eliza-evk: Enable PCIe0 and PCIe1 with M.2 and TC9563 switch
+Date: Mon, 31 Aug 2026 15:21:19 -0500
+Message-ID: <178820768627.1699313.17548578412208976636.b4-ty@kernel.org>
+X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20260708-eliza_evk-v2-0-c599246ceba1@oss.qualcomm.com>
+References: <20260708-eliza_evk-v2-0-c599246ceba1@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 4 potential issue(=
-s) to consider:
-- [High] Transient failures in early PCI enumeration due to unmet ACPI depe=
-ndencies permanently disable ACPI power management for the device.
-- [High] Concurrent execution of `acpi_device_set_power` and `acpi_bus_atta=
-ch` leads to power resource reference count leaks.
-- [High] Bitfield data race on `struct acpi_device_flags` leading to corrup=
-ted device flags.
-- [High] Unprivileged sysfs access to a child's power state bypasses the pa=
-rent's power resource initialization, leading to reference count underflow =
-and permanent power leaks.
---
 
-commit 00db710bd9860a36a16f28aa782d074b11d43aab
-Author: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Wed, 08 Jul 2026 11:47:15 +0530, Krishna Chaitanya Chundru wrote:
+> This series enables PCIe for the Eliza EVK board (CQS SoM on EVK carrier).
+> 
+> The Eliza EVK exposes two PCIe ports:
+> 
+> - PCIe0 drives an M.2 E key connector. The 3.3V supply is GPIO-controlled
+>   via a TCA9538 I/O expander on I2C4. The slot hosts a WLAN module
+>   (connected over PCIe) and a Bluetooth device (connected over UART5),
+>   modelled with the pcie-m2-e-connector binding.
+> 
+> [...]
 
-ACPI: scan: Stop calling acpi_bus_init_power() early
+Applied, thanks!
 
-This commit prevents premature transition into the D0 power state for
-devices with missing dependencies by changing when acpi_bus_init_power()
-is called. It updates acpi_device_set_power() to initialize power upfront
-and adjusts acpi_bus_attach() to use ACPI power state tracking instead of
-the initialized flag.
+[1/2] arm64: dts: qcom: eliza-evk: Add PCIe0 with M.2 E key connector
+      commit: 073c6a891eb39578ab85d8a1ccff156ad1d8a98f
+[2/2] arm64: dts: qcom: eliza-evk: Add PCIe1 with TC9563 PCIe switch
+      commit: 9439277347656b22957a8b9156b0e33c446b490d
 
-Link: https://lore.kernel.org/linux-acpi/20260820-acpi-power-resource-ref-f=
-ix-v2-1-29818173ea13@linux.spacemit.com/ [1]
-
-> diff --git a/drivers/acpi/device_pm.c b/drivers/acpi/device_pm.c
-> index aa55ecfc2923c..a680e6972a8c2 100644
-> --- a/drivers/acpi/device_pm.c
-> +++ b/drivers/acpi/device_pm.c
-
-[ ... ]
-
-> @@ -168,6 +168,12 @@ int acpi_device_set_power(struct acpi_device *device=
-, int state)
->  	    || (state < ACPI_STATE_D0) || (state > ACPI_STATE_D3_COLD))
->  		return -EINVAL;
-> =20
-> +	if (device->power.state =3D=3D ACPI_STATE_UNKNOWN &&
-> +	    acpi_bus_init_power(device)) {
-> +		device->flags.power_manageable =3D 0;
-
-[Severity: High]
-If acpi_bus_init_power() fails transiently here because dependencies are
-unmet (for instance, _PSC or _ON evaluations fail during early PCI
-discovery), does this permanently disable ACPI power management for the
-device? Since the prior restoration logic was removed from
-acpi_bus_attach(), it appears there is no mechanism to recover from this
-transient failure when dependencies are met later.
-
-[Severity: High]
-Because struct acpi_device_flags is a bitfield, does modifying
-power_manageable here without mutual exclusion risk a data race?=20
-
-If acpi_device_set_power() runs concurrently with async enumeration
-(such as acpi_bus_attach() calling acpi_device_set_enumerated()), they
-could perform concurrent read-modify-write operations on the bitfield.
-This could cause one of the flag updates (like the visited or enumerated
-flag) to be silently lost.
-
-> +		return -ENODEV;
-> +	}
-> +
->  	acpi_handle_debug(device->handle, "Power state change: %s -> %s\n",
->  			  acpi_power_state_string(device->power.state),
->  			  acpi_power_state_string(state));
-
-[ ... ]
-
-> diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
-> index f48715ed827c7..1ad8dffc2dafe 100644
-> --- a/drivers/acpi/scan.c
-> +++ b/drivers/acpi/scan.c
-
-[ ... ]
-
-> @@ -2364,16 +2361,13 @@ static int acpi_bus_attach(struct acpi_device *de=
-vice, void *first_pass)
-> =20
->  	acpi_ec_register_opregions(device);
-> =20
-> -	if (!device->flags.initialized) {
-> -		device->flags.power_manageable =3D
-> -			device->power.states[ACPI_STATE_D0].flags.valid;
-> -		if (acpi_bus_init_power(device))
-> -			device->flags.power_manageable =3D 0;
-> +	if (device->flags.power_manageable &&
-> +	    device->power.state =3D=3D ACPI_STATE_UNKNOWN &&
-> +	    acpi_bus_init_power(device))
-
-[Severity: High]
-Is it possible for acpi_bus_attach() (running asynchronously via
-acpi_scan_clear_dep_fn()) and acpi_device_set_power() (reachable via
-sysfs power/control) to execute concurrently?=20
-
-Both paths now perform a lockless check of
-device->power.state =3D=3D ACPI_STATE_UNKNOWN and subsequently call
-acpi_bus_init_power(). Could this lead to both threads acquiring power
-resource references via acpi_power_on_resources(), keeping the hardware
-powered on indefinitely when the second set of references is leaked?
-
-[Severity: High]
-Could an unprivileged user reading the real_power_state sysfs attribute
-of a child device bypass this parent initialization?
-
-If a sysfs read calls acpi_device_get_power() on the child, it can
-locklessly mutate the parent's state to ACPI_STATE_D0:
-
-acpi_device_get_power() {
-    ...
-    if (!device->power.flags.ignore_parent && parent &&
-        parent->power.state =3D=3D ACPI_STATE_UNKNOWN &&
-        result =3D=3D ACPI_STATE_D0)
-            parent->power.state =3D ACPI_STATE_D0;
-    ...
-}
-
-If this occurs before acpi_bus_attach() runs for the parent, the
-lockless check here in acpi_bus_attach() will see a state other than
-ACPI_STATE_UNKNOWN and skip calling acpi_bus_init_power().=20
-
-Does this result in the parent's power resources never being initialized,
-leading to a reference count underflow when the device later transitions
-to D3?
-
-> +		device->flags.power_manageable =3D 0;
-> =20
-> -		device->flags.initialized =3D true;
-> -	} else if (device->flags.visited) {
-> +	if (device->flags.visited)
->  		goto ok;
-> -	}
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/3435655.aeNJFYEL58@=
-rafael.j.wysocki?part=3D1
+Best regards,
+-- 
+Bjorn Andersson <andersson@kernel.org>
