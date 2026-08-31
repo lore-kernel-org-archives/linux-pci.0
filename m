@@ -1,88 +1,87 @@
 Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 46C6B3C10B5
-	for <linux-pci@vger.kernel.org>; Mon, 31 Aug 2026 07:26:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D90F83C1D5E
+	for <linux-pci@vger.kernel.org>; Mon, 31 Aug 2026 07:26:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788161187; cv=none; b=QeQcUy9DzPMho8l8/U89s09Xo3cDj0q4Wz6/jSKNPQrRf8bbdwJHht2EghyOJHUwUMAp6RTHL0/s7gDFwG0j/KERNwlHbkB9Gx+WJkIP4oskJm+4qBeI6fpLJsOCBduai1l+laQxnZi8nB+fy6mlclgf0/12mBPbCAtiw56MGXs=
+	t=1788161194; cv=none; b=J8LXTFhvokzzFQ2VRekixMKlqutiPWVuW1WKdWt3Ihcp20YaQ+EafOtPyp0Ih6jpyo4S5VwoyzBDq/YD1fgt7g041RnaClB26gqj8Asmw5WIIfkkE4IrtSI1m+Nt46S+eEDNChGHfq9RUj8oGYKNJ+OtiaKRF8mAnxxJR76YXoA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788161187; c=relaxed/simple;
-	bh=Iinqn3CFgHeyIBdcRbNUR2dz9SWr2cQBVBMh0hJXQuU=;
+	s=arc-20240116; t=1788161194; c=relaxed/simple;
+	bh=GecsPtDzBCsWNuDkEsU+ZgpETbYSghfoMtZfgts9qAA=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=Yh3L+hBLirhWqtIMRbpkDV5O0jtw23ae86uCn52uSC+NqtW65uI2rouMQaChAcC8S854ASDcnjS0vSz0M+7XdekzocbpvBosRa3OkfmIpKTo/0qCJ371Zujbm6QOog+jRMHGh73AptDuJzdnmuM/hwxhzfRtdu7vNg+X5ssp/Ig=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=lIq1OakH; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=CTNoWNee; arc=none smtp.client-ip=205.220.180.131
+	 In-Reply-To:To:Cc; b=HojtgKK3bcw6aabKLJ7Uk1ZYnpYT/aw0W3bIbD8UaxJ0SqvfpIpDfOUrVTjs631KtXHsvCcl/ilxPPg4gWsCaYETtfYU7UZ5Fi8Tx/44YDORE1K1gzi1xDjzNuSga5R7NTfmUIRJL2a272hpPXaatQKBo5keHMXPa4bWeSpCOcE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=cb+W6Ypv; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=EDXIIedV; arc=none smtp.client-ip=205.220.180.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="lIq1OakH";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="CTNoWNee"
-Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 67V52x8Q2424047
-	for <linux-pci@vger.kernel.org>; Mon, 31 Aug 2026 07:26:25 GMT
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="cb+W6Ypv";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="EDXIIedV"
+Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 67V52aFN2764501
+	for <linux-pci@vger.kernel.org>; Mon, 31 Aug 2026 07:26:31 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	rOiupcclxla78tZiKkuSNISl5an4+Id+Wf1YJmJcvsM=; b=lIq1OakHPKH0hTPg
-	uk4XqROltV9UoB8RUIiihIxyE3oppv8jno1LNbEYfMHOb8ZKN6a52Prw6x0sprgC
-	ZLoYIqibo98G7nnniLjQcs5rD/3czGtdQzf+Li/gIqvXDSR9NKyMMw2h5aWaKogp
-	8QNttkZV+S5pX7FFR/CSGFxOWQiMwegYAFAE68+JI+oilkndhinDNb/GneBSAGfz
-	BrtCNPNDwmeYuRRnOkx8um7x5sdaQ0hv8XCQNOxA62bliWkfBXiyEEZiufN7zvTj
-	VtPx4PdTojwqLIXC7i01ZkaNqUz6Q25xEECMm7uv+TCiL4HcrPizgR0P7TTDeKxp
-	0CFq/g==
-Received: from mail-pl1-f197.google.com (mail-pl1-f197.google.com [209.85.214.197])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4gbqe2d67t-1
+	GCgClY81I44AjvbZ/aXoo8VK5dN9dzyBFnWzQ9hfEIY=; b=cb+W6YpvtF5y3yAX
+	6rv+oXd/Q+wYrFm2Yws/rl/HK2EjfIoPbxBJtMqDwQ+JCI732Mfj8v5dJIT6Uxcb
+	9HQgyQrV7Kr1TEn514xea1pMVxR7b+LRX/Nv8oWaRKszT7aArUrkQx6p4ur/AmsO
+	fS51NXhrRC8itp+FNwS75r939xLjcCMl+Lrao09ZCUmh6IJ6vEi6Yk+8YSEcXNEZ
+	oiWRDeWJeH1COoI7yOKlO3PxoTz6o2s8NLZrw5YPIKDN1cG1g23tHhxBkEf4u9xZ
+	w89shjs6k9ZouofbOPUZlGPCuaRGsA4kHuvY5oI2qj4Xq0n9uW7m0wWcq38W4wdW
+	oezlqA==
+Received: from mail-pj1-f69.google.com (mail-pj1-f69.google.com [209.85.216.69])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4gbqgyn6xk-1
 	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Mon, 31 Aug 2026 07:26:25 +0000 (GMT)
-Received: by mail-pl1-f197.google.com with SMTP id d9443c01a7336-2d52734fc41so68234355ad.1
-        for <linux-pci@vger.kernel.org>; Mon, 31 Aug 2026 00:26:25 -0700 (PDT)
+	for <linux-pci@vger.kernel.org>; Mon, 31 Aug 2026 07:26:31 +0000 (GMT)
+Received: by mail-pj1-f69.google.com with SMTP id 98e67ed59e1d1-38ecc48b3c2so5511374a91.1
+        for <linux-pci@vger.kernel.org>; Mon, 31 Aug 2026 00:26:31 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1788161184; x=1788765984; darn=vger.kernel.org;
+        d=oss.qualcomm.com; s=google; t=1788161191; x=1788765991; darn=vger.kernel.org;
         h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
          :content-type:mime-version:subject:date:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=rOiupcclxla78tZiKkuSNISl5an4+Id+Wf1YJmJcvsM=;
-        b=CTNoWNeeYOG8OZHtdS/dW/HQBI6zbHHZFKwgUeAsJYpz3PhU7+9b3MlF9fBEH5Vpca
-         od1Dv2Hh6c2USrhKLYBr20RQREULES/3PwGNrfO2jFw0nm83HzZVUlKE79DgS/mIXijT
-         GTsCLKFs9gCks0eNPv5dPzwM2fSvgwnVbwKxfxUU9VbyaD7XkV92Y7A4lTLH0zJvmGXn
-         udB0AMulP20Iq5Jh0Oupdn+UUaAZwcU1de2T6L6dXKFNlxzCGoYbwQVL2lEjV43efEIb
-         r2cRsxCSG3rFmR+/ylJztewKXShHJQZh5EvvHDYCD4UUerTLHeGSSW7TcLvLxotnwHfi
-         RhTw==
+        bh=GCgClY81I44AjvbZ/aXoo8VK5dN9dzyBFnWzQ9hfEIY=;
+        b=EDXIIedVfKqKQixsOyKIAoF0BZ6YjtUg2z6HLJKTDwsaNSuPCQkmEyhI2rtm1LL1SH
+         e6lM2JW3ydC3KblbnAF2sny5wXuVGh7aLOYYo1LHPjckjGxgmV0w+KR4o8oIVnXv/mq5
+         PY9HVPi3VT0EMSLGsVzHJOninPOH20SG8HrfTUHId8no3Jo+2gW3YDTn7GqmZKOolCMd
+         N9XHRE8vfXiNXP6k1Fw5P9dxCTHApijLai+Kl20geJl7QIyjMSoyzU1yp+6cmhqXjosS
+         vqipFcfwXk3cZgK9JsHgb9uwlvoKdmUpymM+emxRYdUCDdMOJiTPXqpVizlp4KYAdRam
+         d56w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788161184; x=1788765984;
+        d=1e100.net; s=20251104; t=1788161191; x=1788765991;
         h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
          :content-type:mime-version:subject:date:from:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=rOiupcclxla78tZiKkuSNISl5an4+Id+Wf1YJmJcvsM=;
-        b=BFDnwQqKcfjS6ABjWVLN/X3SWD0w6l78p5Mla8bQ9p/4lUxv60wTqkBp2Z8Y1A/gvQ
-         TDgMr0P4AMQzSvg5fYf6HKcBSTaBIynKiYGBQUoLWb45D5TEKi6B54+MokTG0ohUPb0B
-         0dKZJ+am6iYNmeBshPEx/Tn2mS6uKCDCaNGYF27BU6r3DxpyNRv1A+P2Lsdhlem3fHAf
-         fHisLoem29IDlJnEaZT2gx8LIJBLGa3SaqHxMQYK4tWmsgeZHiK0ajyctsLah9CwCCQ4
-         T9K6Pf6sLTsE6ZIgOQwtZaLuqX9RUFMX3uohGxvvu+WidCNScSXye2MMT9GBJ4/2SPCA
-         pG1w==
-X-Forwarded-Encrypted: i=1; AHgh+RqLEHnrKnDSlqvgv8r3PFpynobrXUfNtlagSY5Nv5PFHjb/sTVCAApg8yOqtQaQuKjzbd35b2uM7fs=@vger.kernel.org
-X-Gm-Message-State: AFuF++kohREDddWCgfTpAfipuEPzrcI4pVnyWXceqTRKAGp/CgncP+S3
-	NCjYuB/0I2tlRZCdEPXYkUv6aB+ahxCxRfqCV64KgMiecmgScpj3zNEozW8MrpcQqwCvpqqxe6s
-	B7WISz13bgOPcojBtil2RELTW5BMgXWB/RKChTZvnVn0vFWPE9tS3IAmVA0kyVU0=
-X-Gm-Gg: AR+sD12IbaQr1J3wA0Fz2rlZ3qCgwE1WfBu7vFlA+i8Qgr/3d9ct8RLEm/jTJRMJ2BE
-	oFgfMcryzm+cqUOczjZfMn8s6bhFmM162CUpAOfrsKOs+N8ZvQ/wLls97t32FrWOfRuZ5INYX5O
-	RokJLfZzuB8DU5nkfRxqqHEs3s154vEec5ej39bnA68jwNh+8R+xTgZASvm1yX+u6Ndgb+/UyoW
-	s+9vC09Lx5x6Ohrz7DFbUiBZ9BmEwaMIc8Jyckt3oTM4pXGnHgz7yNTWU6+5flv6DV4VlHbRY73
-	nrGn2phqRALy259FmCwkPuULLcoep2BKKMO3KlorMkTCfv3PUFXiqfkjkIu/juOG4dJ4gTIf4BW
-	ZqCEB54KUrM4i/aAdEaFQXz+ELWrIXNvA2XIb
-X-Received: by 2002:a05:6a21:6e88:b0:3c4:46ca:334b with SMTP id adf61e73a8af0-3d267b60e7emr42451776637.9.1788161184147;
-        Mon, 31 Aug 2026 00:26:24 -0700 (PDT)
-X-Received: by 2002:a05:6a21:6e88:b0:3c4:46ca:334b with SMTP id adf61e73a8af0-3d267b60e7emr42451711637.9.1788161183669;
-        Mon, 31 Aug 2026 00:26:23 -0700 (PDT)
+        bh=GCgClY81I44AjvbZ/aXoo8VK5dN9dzyBFnWzQ9hfEIY=;
+        b=GWuCO+0qAykxu+afdIvFwwTKOK6UhhI8z34llr12V3HBbVLJIUhQ14vmDYWalvfZYb
+         QHtX0EWtP1hFbb0cvBPJvckc8pgqEvb0+smnuMf6dZH/GgTngcRiLBT/5evsLPG71Yd1
+         U7tfWL7/zNZnKIIVLz1a3glqxBZCA1M3XxTSNr6sNB9xICWgU8chUx1zuMVkk6OiqGuF
+         yTzdQ1j+7xitEBEYTTSor1TCfeutqvBY/T42j5RGL0ha3yfx2YiScFplEG6tgn9b/f/B
+         eOxc8nNmSVRM0h3UySoZq0cKeJX08A9HbP7vchl9oIePiP+n6AEtbiEd2XQLyo2hQztF
+         2J3Q==
+X-Forwarded-Encrypted: i=1; AKwUvBxp1AwMGJaSVuH2OiIVO+aJ9uS4dR5PeFHpEhDuLr8ujU5QEZxQNx+Wr7JF2aUF+hAr2hXS8DheZME=@vger.kernel.org
+X-Gm-Message-State: AFuF++nZbiJeufkGsZJ312tE7Ohhds3GXbLb/3HSEuNEzIexA8CU3rxt
+	EXdJmGFm3hBSKD/Tw1mX0spA02Jf6X6KqG/lD2izyLwaydme35tCQVDFIQEeQDx+CBz7dcqiDu0
+	MwStSG11FoHpztFoaebf3IMt34v1DcZIDJIi0UtdO5zO8A/W272raCLvZ8YssIF4=
+X-Gm-Gg: AYBFou2xaRRNy2WtRPBLKSlRxvv1PpluujoN3wZZIKD55Z/lMxtnmkCccLQoRkAoHdu
+	gJvjlGwQa0ZdEmHSzI1TFxp/eWF3Qy+8D5sLtc9cm+VaHrVq5AnHiKjbWE+SCKJNCmzM+HYN/bm
+	d/er90uBUuKcTTjaVvO22Ngyv9qkQKQ1vqDCLE8j0owmDzEjPQcRf3VldPZ647lkzYYQSUjo6p+
+	mSEOO2L16TwrhnoVSszPZsvVPxaLmbaw2xq6tynHgtFUp9WB21vbxUSdeX/YMgDAxt+s0s2y69R
+	+RXqrkyeTt+BlzuR/gnVjMSJROySJjVPx5bBBjcVHWnCSvYBzK+150WZRuCowR5UUygNSeR7AkN
+	a8vddwwi9OLcT81QEokYm/5yjwcF87FboEo9e
+X-Received: by 2002:a17:90b:1a90:b0:36b:bec8:94c5 with SMTP id 98e67ed59e1d1-396d0f8e80cmr34398747a91.10.1788161190471;
+        Mon, 31 Aug 2026 00:26:30 -0700 (PDT)
+X-Received: by 2002:a17:90b:1a90:b0:36b:bec8:94c5 with SMTP id 98e67ed59e1d1-396d0f8e80cmr34398691a91.10.1788161189996;
+        Mon, 31 Aug 2026 00:26:29 -0700 (PDT)
 Received: from hu-sushruts-hyd.qualcomm.com ([202.46.22.19])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3286f9595bbsm31327059eec.14.2026.08.31.00.26.17
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3286f9595bbsm31327059eec.14.2026.08.31.00.26.24
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 31 Aug 2026 00:26:23 -0700 (PDT)
+        Mon, 31 Aug 2026 00:26:29 -0700 (PDT)
 From: Sushrut Shree Trivedi <sushrut.trivedi@oss.qualcomm.com>
-Date: Mon, 31 Aug 2026 12:56:02 +0530
-Subject: [PATCH v2 2/5] dt-bindings: PCI: qcom,shikra-pcie: Document the
- Shikra PCIe Controller
+Date: Mon, 31 Aug 2026 12:56:03 +0530
+Subject: [PATCH v2 3/5] PCI: qcom: Add support for Shikra
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -91,7 +90,7 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260831-shikra-upstream-v2-2-406661d75afa@oss.qualcomm.com>
+Message-Id: <20260831-shikra-upstream-v2-3-406661d75afa@oss.qualcomm.com>
 References: <20260831-shikra-upstream-v2-0-406661d75afa@oss.qualcomm.com>
 In-Reply-To: <20260831-shikra-upstream-v2-0-406661d75afa@oss.qualcomm.com>
 To: Vinod Koul <vkoul@kernel.org>, Neil Armstrong <neil.armstrong@linaro.org>,
@@ -111,278 +110,61 @@ Cc: linux-arm-msm@vger.kernel.org, linux-phy@lists.infradead.org,
         linux-pci@vger.kernel.org,
         Sushrut Shree Trivedi <sushrut.trivedi@oss.qualcomm.com>
 X-Mailer: b4 0.13.0
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1788161164; l=8118;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1788161164; l=854;
  i=sushrut.trivedi@oss.qualcomm.com; s=20251127; h=from:subject:message-id;
- bh=Iinqn3CFgHeyIBdcRbNUR2dz9SWr2cQBVBMh0hJXQuU=;
- b=BIZRWB9SV+cDNC20B4KDEAlZCNU5Avqum/H818pohP+gcdQ5vOaC+vg1CGBYUlmfvlmU8M3u/
- sj7UHjGjZzDCtIs87dBfa1OQVursNKPu759UztpyNybh45oRo+kUe2i
+ bh=GecsPtDzBCsWNuDkEsU+ZgpETbYSghfoMtZfgts9qAA=;
+ b=55ch1aG1G4LspPpgrm0K7D/1FVbflwomwl/UnDiUlC25zvssra1xrNLuTowwVyhnQIx1T7i3y
+ BD5Bn6bEEdKCCwrq2EXn6BNFfR1UIiPZkXZLQs7q6LSnHDVPq6rJGyE
 X-Developer-Key: i=sushrut.trivedi@oss.qualcomm.com; a=ed25519;
  pk=OrUHTxBaSg1oY3CtCictJ5A4bDMNLRZS1S+QfD9pdjw=
-X-Authority-Analysis: v=2.4 cv=Iskutr/g c=1 sm=1 tr=0 ts=6a952ca1 cx=c_pps
- a=cmESyDAEBpBGqyK7t0alAg==:117 a=fChuTYTh2wq5r3m49p7fHw==:17
+X-Proofpoint-Spam-Info: AW1haW4tMjYwODMxMDA2MyBTYWx0ZWRfX8AJPGUETSksx
+ SwWwIiMqi4Kmx79Jke7DjoBnFtMmie5bscCw8JLV5bq5A2xR7itnfzeBaocA71dhRXlhWfRJMKs
+ sfCRG4e6kgiGXntcmaOfa3AXEGn4JLQ=
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODMxMDA2MyBTYWx0ZWRfX+MhyECgQUgNY
+ sT1i1uudL03G7tqKCw5dmL0YZvWns1RJxAAsFbVBwsSvMqmqo0KWDbHJyY7qVZ5wEaSREDHqV6L
+ CxT/L5lo6JxXDWSRiVjmPw1X6SJOF58qqo1brqhdvz+5b3tE/G/AyFI7NmwgRkaR1+Xf6WlSSgb
+ upeH1JyGEGg3DgnbYgNmrcCf8K3evc0CneZKu5zBru/0wPAbaMZHyk8lXsMyC59m9q+ZGbvgtTb
+ oOthmvTlQFdKTLTrIRS+bSq1lncmeSeCqOOizE408kxQW9CxZuz5HwPtsCvLKMLcnCqWvPQGwC4
+ TyA6683ZfmUiFTbbi0cFEK+Nv+R4RpTq1EX+sFI43DZaXl+gG0ePb6LPjwPqC14+3qWcH/VdHjZ
+ H31BivukFT9BlzXyvQuDfXlcKdaKRceKdqjcmp3Es1KOaPwHbCZoR1d0/RNzC/JIhuSD1DFEMIC
+ 2ZkyqeiFa89ZOkwWSrg==
+X-Proofpoint-ORIG-GUID: zFakdYreCWR9wFQP6eqP-hUsM_PsjTkU
+X-Authority-Analysis: v=2.4 cv=R5Ez39RX c=1 sm=1 tr=0 ts=6a952ca7 cx=c_pps
+ a=vVfyC5vLCtgYJKYeQD43oA==:117 a=fChuTYTh2wq5r3m49p7fHw==:17
  a=IkcTkHD0fZMA:10 a=Sv0fKeRqtYgA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=ZpdpYltYx_vBUK5n70dp:22
- a=gEfo2CItAAAA:8 a=EUspDBNiAAAA:8 a=VwQbUJbxAAAA:8 a=KKAkSRfTAAAA:8
- a=y3igNv8VU7KrM5vZpNgA:9 a=QEXdDO2ut3YA:10 a=1OuFwYUASf3TG4hYMiVC:22
- a=sptkURWiP4Gy88Gu7hUp:22 a=cvBusfyB2V15izCimMoJ:22
-X-Proofpoint-GUID: uOQ-14Afnz987ek2jcEcKNP9b0CkN-Ht
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODMxMDA2MyBTYWx0ZWRfXzTXRvd1ysFPx
- dCQHootURPDXLCzq61zy2m7P8vMaG0kddydSX5NZE2OhDL7ngMn97mVJ/z0Q8WFIDG4GOn3muxt
- 8EvOSyvKB30Jr02U/3O4wHyd6C0nJtTtSaxy+1/ZhFLIzFfoJTq5cOPYOtsm5238sqZmQY/BWvO
- Gt95Auyezt66doT1UYs1MDRu5iRdtr6fnaC6SSJCXVGhnvxGUB1xg74owgb894piu4ZzhjaWAVM
- LgA5BcTj5iB2Do1/P3XtYK5iXfw732FpTljEY9ElPhMs9UzcUBu7c5+UI2I9i9H3OXhsO9VgnCa
- xcLAXoMdYArBPizTuTUDNrWpek3VDfN5e3sACQpDRnY7P54QPM+jh6A483afrikZzMWqFcz8yFW
- ihjd2A28Az6FXryMd4agwbUpbOGV5thL7g2ru6j306r/uSPyAxUfG80+tlBKDWPyAjVEXJsS/Cs
- 9GDflS6rTFCxASSef4g==
-X-Proofpoint-ORIG-GUID: uOQ-14Afnz987ek2jcEcKNP9b0CkN-Ht
-X-Proofpoint-Spam-Info: AW1haW4tMjYwODMxMDA2MyBTYWx0ZWRfX3H5SimJZRCN8
- XVcgxLTILAN0g71txBJp22S1WGriZnV6B1sEvN7WLM3L8/YnQnNF1ki0KDxR136121Wq49rPVfB
- v7AwfgDo7e523vAGAiq07VrrlmpDChs=
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=_glEPmIy2e8OvE2BGh3C:22
+ a=EUspDBNiAAAA:8 a=sKgv3_SsqRtbfYgyWx4A:9 a=QEXdDO2ut3YA:10
+ a=rl5im9kqc5Lf4LNbBjHf:22
+X-Proofpoint-GUID: zFakdYreCWR9wFQP6eqP-hUsM_PsjTkU
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
  definitions=2026-08-31_02,2026-08-27_02,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- spamscore=0 bulkscore=0 malwarescore=0 adultscore=0 lowpriorityscore=0
- clxscore=1015 priorityscore=1501 impostorscore=0 suspectscore=0 phishscore=0
+ malwarescore=0 suspectscore=0 phishscore=0 impostorscore=0 spamscore=0
+ bulkscore=0 adultscore=0 clxscore=1015 priorityscore=1501 lowpriorityscore=0
  classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
  reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2608310063
 
-Add a dedicated schema for the PCIe controller found on the Shikra
-platform.
-
-Shikra controller supports upto PCIe Gen3 but the PHY is
-only capable of Gen2, hence the max link speed  is limited
-to Gen2 to avoid link-up failures.
+Add support for the single PCIe controller on Shikra platform
+which is capable of Gen2x1 operation.
 
 Signed-off-by: Sushrut Shree Trivedi <sushrut.trivedi@oss.qualcomm.com>
 ---
- .../devicetree/bindings/pci/qcom,shikra-pcie.yaml  | 218 +++++++++++++++++++++
- 1 file changed, 218 insertions(+)
+ drivers/pci/controller/dwc/pcie-qcom.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/Documentation/devicetree/bindings/pci/qcom,shikra-pcie.yaml b/Documentation/devicetree/bindings/pci/qcom,shikra-pcie.yaml
-new file mode 100644
-index 000000000000..73b8ec722f2a
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/qcom,shikra-pcie.yaml
-@@ -0,0 +1,218 @@
-+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-+%YAML 1.2
-+---
-+$id: http://devicetree.org/schemas/pci/qcom,shikra-pcie.yaml#
-+$schema: http://devicetree.org/meta-schemas/core.yaml#
-+
-+title: Qualcomm Shikra PCI Express Root Complex
-+
-+maintainers:
-+  - Bjorn Andersson <andersson@kernel.org>
-+  - Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-+
-+description:
-+  Qualcomm Shikra SoC PCIe Root Complex is based on
-+  the Synopsys DesignWare PCIe IP.
-+
-+properties:
-+  compatible:
-+    const: qcom,shikra-pcie
-+
-+  reg:
-+    items:
-+      - description: Qualcomm specific registers
-+      - description: DesignWare PCIe registers
-+      - description: External local bus interface registers
-+      - description: ATU address space
-+      - description: PCIe configuration space
-+      - description: MHI registers
-+
-+  reg-names:
-+    items:
-+      - const: parf
-+      - const: dbi
-+      - const: elbi
-+      - const: atu
-+      - const: config
-+      - const: mhi
-+
-+  clocks:
-+    items:
-+      - description: PCIe Auxiliary clock
-+      - description: PCIe Configuration clock
-+      - description: PCIe Master AXI clock
-+      - description: PCIe Slave AXI clock
-+      - description: PCIe Slave Q2A AXI clock
-+      - description: PCIe SF TBU clock
-+      - description: PCIe Aggre NoC AXI clock
-+      - description: PCIe QMIP AHB clock
-+
-+  clock-names:
-+    items:
-+      - const: aux
-+      - const: cfg
-+      - const: bus_master
-+      - const: bus_slave
-+      - const: slave_q2a
-+      - const: ddrss_sf_tbu
-+      - const: noc_aggr
-+      - const: qmip_pcie_ahb
-+
-+  interrupts:
-+    minItems: 9
-+    maxItems: 9
-+
-+  interrupt-names:
-+    items:
-+      - const: msi0
-+      - const: msi1
-+      - const: msi2
-+      - const: msi3
-+      - const: msi4
-+      - const: msi5
-+      - const: msi6
-+      - const: msi7
-+      - const: global
-+
-+  resets:
-+    items:
-+      - description: PCIe core reset
-+
-+  reset-names:
-+    items:
-+      - const: pci
-+
-+required:
-+  - power-domains
-+  - resets
-+  - reset-names
-+
-+allOf:
-+  - $ref: qcom,pcie-common.yaml#
-+
-+unevaluatedProperties: false
-+
-+examples:
-+  - |
-+    #include <dt-bindings/clock/qcom,shikra-gcc.h>
-+    #include <dt-bindings/gpio/gpio.h>
-+    #include <dt-bindings/interconnect/qcom,shikra.h>
-+    #include <dt-bindings/interconnect/qcom,rpm-icc.h>
-+    #include <dt-bindings/interrupt-controller/arm-gic.h>
-+
-+    soc {
-+        #address-cells = <2>;
-+        #size-cells = <2>;
-+
-+        pcie@45e8000 {
-+            device_type = "pci";
-+            compatible = "qcom,shikra-pcie";
-+            reg = <0x0 0x045e8000 0x0 0x3000>,
-+                  <0x0 0x60000000 0x0 0xf1d>,
-+                  <0x0 0x60000f20 0x0 0xa8>,
-+                  <0x0 0x60001000 0x0 0x1000>,
-+                  <0x0 0x60100000 0x0 0x100000>,
-+                  <0x0 0x045eb000 0x0 0x1000>;
-+            reg-names = "parf",
-+                        "dbi",
-+                        "elbi",
-+                        "atu",
-+                        "config",
-+                        "mhi";
-+            #address-cells = <3>;
-+            #size-cells = <2>;
-+            ranges = <0x01000000 0x0 0x00000000 0x0 0x60200000 0x0 0x100000>,
-+                     <0x02000000 0x0 0x60300000 0x0 0x60300000 0x0 0x3d00000>,
-+                     <0x03000000 0x4 0x00000000 0x4 0x00000000 0x3 0x0000000>;
-+            bus-range = <0x00 0xff>;
-+
-+            linux,pci-domain = <0>;
-+            num-lanes = <1>;
-+
-+            interrupts = <GIC_SPI 491 IRQ_TYPE_LEVEL_HIGH 0>,
-+                         <GIC_SPI 492 IRQ_TYPE_LEVEL_HIGH 0>,
-+                         <GIC_SPI 493 IRQ_TYPE_LEVEL_HIGH 0>,
-+                         <GIC_SPI 494 IRQ_TYPE_LEVEL_HIGH 0>,
-+                         <GIC_SPI 495 IRQ_TYPE_LEVEL_HIGH 0>,
-+                         <GIC_SPI 496 IRQ_TYPE_LEVEL_HIGH 0>,
-+                         <GIC_SPI 497 IRQ_TYPE_LEVEL_HIGH 0>,
-+                         <GIC_SPI 498 IRQ_TYPE_LEVEL_HIGH 0>,
-+                         <GIC_SPI 489 IRQ_TYPE_LEVEL_HIGH 0>;
-+            interrupt-names = "msi0",
-+                              "msi1",
-+                              "msi2",
-+                              "msi3",
-+                              "msi4",
-+                              "msi5",
-+                              "msi6",
-+                              "msi7",
-+                              "global";
-+
-+            interrupt-map = <0 0 0 1 &intc 0 0 0 499 IRQ_TYPE_LEVEL_HIGH>,
-+                            <0 0 0 2 &intc 0 0 0 500 IRQ_TYPE_LEVEL_HIGH>,
-+                            <0 0 0 3 &intc 0 0 0 501 IRQ_TYPE_LEVEL_HIGH>,
-+                            <0 0 0 4 &intc 0 0 0 502 IRQ_TYPE_LEVEL_HIGH>;
-+            interrupt-map-mask = <0 0 0 0x7>;
-+            #interrupt-cells = <1>;
-+
-+            clocks = <&gcc GCC_PCIE_AUX_CLK>,
-+                     <&gcc GCC_PCIE_CFG_AHB_CLK>,
-+                     <&gcc GCC_PCIE_MSTR_AXI_CLK>,
-+                     <&gcc GCC_PCIE_SLV_AXI_CLK>,
-+                     <&gcc GCC_PCIE_SLV_Q2A_AXI_CLK>,
-+                     <&gcc GCC_DDRSS_MEMNOC_PCIE_SF_CLK>,
-+                     <&gcc GCC_PCIE_TILE_AXI_SYS_NOC_CLK>,
-+                     <&gcc GCC_QMIP_PCIE_CFG_AHB_CLK>;
-+            clock-names = "aux",
-+                          "cfg",
-+                          "bus_master",
-+                          "bus_slave",
-+                          "slave_q2a",
-+                          "ddrss_sf_tbu",
-+                          "noc_aggr",
-+                          "qmip_pcie_ahb";
-+
-+            assigned-clocks = <&gcc GCC_PCIE_AUX_CLK>;
-+            assigned-clock-rates = <19200000>;
-+
-+            interconnects = <&system_noc MASTER_PCIE2_0 RPM_ALWAYS_TAG
-+                            &mc_virt SLAVE_EBI_CH0 RPM_ALWAYS_TAG>,
-+                            <&mem_noc MASTER_AMPSS_M0 RPM_ACTIVE_TAG
-+                            &config_noc SLAVE_PCIE2_0 RPM_ACTIVE_TAG>;
-+
-+            interconnect-names = "pcie-mem",
-+                                 "cpu-pcie";
-+
-+            iommu-map = <0x0 &apps_smmu 0x800 0x0 0x1>,
-+                        <0x100 &apps_smmu 0x801 0x0 0x1>;
-+
-+            resets = <&gcc GCC_PCIE_BCR>;
-+            reset-names = "pci";
-+
-+            power-domains = <&gcc GCC_PCIE_GDSC>;
-+
-+            max-link-speed = <2>;
-+
-+            operating-points-v2 = <&pcie_opp_table>;
-+
-+            pcie_opp_table: opp-table {
-+                    compatible = "operating-points-v2";
-+
-+                    /* GEN 1 x1 */
-+                    opp-2500000 {
-+                            opp-hz = /bits/ 64 <2500000>;
-+                            required-opps = <&rpmpd_opp_low_svs>;
-+                            opp-peak-kBps = <250000 1>;
-+                            opp-level = <1>;
-+                    };
-+
-+                    /* GEN 2 x1 */
-+                    opp-5000000 {
-+                            opp-hz = /bits/ 64 <5000000>;
-+                            required-opps = <&rpmpd_opp_low_svs>;
-+                            opp-peak-kBps = <500000 1>;
-+                            opp-level = <2>;
-+                    };
-+            };
-+        };
-+    };
+diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+index d8eb52857f69..19daadee65f7 100644
+--- a/drivers/pci/controller/dwc/pcie-qcom.c
++++ b/drivers/pci/controller/dwc/pcie-qcom.c
+@@ -2309,6 +2309,7 @@ static const struct of_device_id qcom_pcie_match[] = {
+ 	{ .compatible = "qcom,pcie-sm8450-pcie1", .data = &cfg_1_9_0 },
+ 	{ .compatible = "qcom,pcie-sm8550", .data = &cfg_1_9_0 },
+ 	{ .compatible = "qcom,pcie-x1e80100", .data = &cfg_sc8280xp },
++	{ .compatible = "qcom,shikra-pcie", .data = &cfg_1_9_0 },
+ 	{ }
+ };
+ 
 
 -- 
 2.43.0
