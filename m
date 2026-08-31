@@ -1,43 +1,48 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 096094749FA;
-	Mon, 31 Aug 2026 13:52:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6011D4B5CD1;
+	Mon, 31 Aug 2026 13:52:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788184340; cv=none; b=PWfi+Nav29EJs5q9GFV844LSsb3geu+9nc6g4khMfBM2726eFHn8ymO1N6nJEPbWE852LkrF87p/BLNWtIPB/ARfwJfzoD05rixEDcuRif+gfh/KIEzEDZUTLctMiOiSRn2AO1umhX7tfSQaXK/4qsoaHi524dAmJBYR/OKAeE4=
+	t=1788184379; cv=none; b=h+QfPwogCYbK6l3rCIZ4jmM113Me1Rh8hdl/jDCdRuPAGei7kbOQnWwmFt4WohXqJAy+v9FNUqEdFnK8z5EP+BrcbWhkoifQKyWJqMTIG6+6us6k4Y2g4VgBo7lmAkQ8Xi9lpEgdAU/lHKuA4lsjsNrHzIdAHXohKj5ZaQQpD0c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788184340; c=relaxed/simple;
-	bh=KJK3ycfqUwN1KDk7Ki5klCghE4HY+wFirozkycJ1jTQ=;
+	s=arc-20240116; t=1788184379; c=relaxed/simple;
+	bh=vPZwDHvCl0UvoVa6vZba7WM0FsaIr4gjgJ5uDGtZu6Q=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=FGEpGftJ2jOjLuZdqpBcLy3l7kWci1Zz6a32XRCDhfwHXb4yh+0QEXEShzF7+yBAidma6HV79YrbdodGkEzlq8lZlUX1CE8a9PpQV0v61JFqYJWjEEv0Zlnz1BXBH1J3RQ2Gh7y12Tl4iT41dUuYQi0JdsV9ojytzHkzlS43Mgc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZE8Mi7A5; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=eHogdKJpdtF1rqncGqOsrb6sJywq63YK9c1Qy33YIDB1JLLNGJm7zI7RLYQ/k+PPcU/UZcPd9f0rWqQEflAZyNq+sGP4pqcSnB4VGfPGTe4l05rHAXkGg+s80bYxMc34LiFvdpF4bGfaJefNCHmm8+SkviaCMpRK+Janv7gUqf4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fFaniP5O; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZE8Mi7A5"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 88F651F000E9;
-	Mon, 31 Aug 2026 13:52:16 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fFaniP5O"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 36BBE1F000E9;
+	Mon, 31 Aug 2026 13:52:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788184337;
-	bh=l6e8MCFDdZ45iyK12XDZh0vNZV6G6YO/jnD4tg1Cyk0=;
+	s=k20260515; t=1788184377;
+	bh=DtZxmLvCsMtoIG8f2Rt3cQyCzEDVhJyq6BhHLkq4LkQ=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=ZE8Mi7A5yg/6WplFYswVtgx7NgZkOyrUEk9jxNraymfyeTyZYxLA34mCYA2k6pTBZ
-	 bElGVpLAZUCM/75XaoVEUmGEJh2+6156p6Q9D+kWeuAzvRdpdvp3565VsdUDSJHNrB
-	 sBkp3aljiURPVEyFj+8Yf32EAalUL05vEvDECWiDhNISI6EqX0ldEy/t4WEWE9mS34
-	 xabs/xqwHUXRViLoaDUApRmUPihUsLNXNENBEnOjV95MWUw0WNkhh7ads92bextwoi
-	 0aodmWhgRfniPmq2AEK9wEBqE0IFr9CUE6Y6LO+SMW7fPMubdJ4o3TmLyzhQcDR/8o
-	 IYsFR9PdUQdEQ==
+	b=fFaniP5ORkDm3qpNhb/I3fYfQWNehDvhlZczoYbg2YWgK0h+SvMVooeW8MF4uQlLu
+	 FC4FqdAUFtGhJTLcTcuUNPUmleGuVEnsKIfEMqcTFKVX7dK6YFH6uzjj9J8k3S/QPE
+	 CXjcq8yrfB9FiRgMrEYaLW2GzmD0slnVVGa1l2vKUGQTNISScLWkPUU5vApamkbs4D
+	 2HTRvo9oddZg8dTEGtUFxEh3K6etm/Bq5WffTkT1rKJUJfczP7fe63V0TYIXH9tbBU
+	 ToMowI2RR3edqneK0znhcDgomwIbhyQnoRIPYbIHg3seAieW9LGTYAIoNTMgAdG0ce
+	 aSwQTNeBvhe5w==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: Lukas Wunner <lukas@wunner.de>,
+Cc: Hans Zhang <18255117159@163.com>,
+	Manivannan Sadhasivam <mani@kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	"Mario Limonciello (AMD)" <superm1@kernel.org>,
 	Sasha Levin <sashal@kernel.org>,
+	lpieralisi@kernel.org,
+	kwilczynski@kernel.org,
+	rjui@broadcom.com,
+	sbranden@broadcom.com,
 	linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.18-5.10] PCI: Stop setting cached power state to 'unknown' on unbind
-Date: Mon, 31 Aug 2026 09:31:02 -0400
-Message-ID: <20260831133314.4125787-634-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.18-5.10] PCI: iproc: Protect root bus removal with rescan lock
+Date: Mon, 31 Aug 2026 09:31:25 -0400
+Message-ID: <20260831133314.4125787-657-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260831133314.4125787-1-sashal@kernel.org>
 References: <20260831133314.4125787-1-sashal@kernel.org>
@@ -53,28 +58,19 @@ X-stable-base: Linux 6.18.48
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Lukas Wunner <lukas@wunner.de>
+From: Hans Zhang <18255117159@163.com>
 
-[ Upstream commit d462c8e89e84bfb6417e6b4c88e0cb7cc747ba41 ]
+[ Upstream commit a6a64e150f12ad5391e0a0d60f6a3d119b06ce50 ]
 
-When a PCI device is unbound from its driver, pci_device_remove() sets the
-cached power state in pci_dev->current_state to PCI_UNKNOWN.  This was
-introduced by commit 2449e06a5696 ("PCI: reset pci device state to unknown
-state for resume") to invalidate the cached power state in case the system
-is subsequently put to sleep.
+Hold the pci_rescan_remove_lock lock while stopping and removing a root bus
+to avoid racing with concurrent rescan or hotplug operations triggered via
+sysfs.  Such races may lead to use-after-free issues or system crashes.
 
-For bound devices, the cached power state is set to PCI_UNKNOWN in
-pci_pm_suspend_noirq(), immediately before entering system sleep.
-
-Extend to unbound devices for consistency.
-
-This obviates the need to change the cached power state on unbind, so stop
-doing so.
-
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
+Signed-off-by: Hans Zhang <18255117159@163.com>
+Signed-off-by: Manivannan Sadhasivam <mani@kernel.org>
+[bhelgaas: commit log]
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Mario Limonciello (AMD) <superm1@kernel.org>
-Link: https://patch.msgid.link/af7d11d3ceb231acc90829f7a5c8400c2446744f.1776415510.git.lukas@wunner.de
+Link: https://patch.msgid.link/20260521161822.132996-6-18255117159@163.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
@@ -83,219 +79,228 @@ LLM Generated explanations, may be completely bogus:
 ## Phase 1: Commit Message Forensics
 
 ### Step 1.1: Subject Line
-**Record:** `[PCI]` `[Stop]` — Stop setting cached power state to
-`PCI_UNKNOWN` on driver unbind; move invalidation to the system-suspend
-path for driverless devices.
+**Record:** `[PCI: iproc]` `[Protect]` — Add missing
+`pci_rescan_remove_lock` protection around root bus teardown in
+`iproc_pcie_remove()`.
 
-### Step 1.2: Tags
+### Step 1.2: Commit Message Tags
 **Record:**
-- **Signed-off-by:** Lukas Wunner `<lukas@wunner.de>` (author)
-- **Signed-off-by:** Bjorn Helgaas `<bhelgaas@google.com>` (PCI
-  maintainer)
-- **Reviewed-by:** Mario Limonciello (AMD) `<superm1@kernel.org>`
-- **Link:** https://patch.msgid.link/af7d11d3ceb231acc90829f7a5c8400c244
-  6744f.1776415510.git.lukas@wunner.de
-- **No** Fixes:, Reported-by:, Tested-by:, Cc: stable@vger.kernel.org,
-  or syzbot tags
-- Notable: PCI subsystem maintainer sign-off; AMD reviewer found no
-  corner cases
+- **Link:**
+  `https://patch.msgid.link/20260521161822.132996-6-18255117159@163.com`
+- **Signed-off-by:** Hans Zhang, Manivannan Sadhasivam, Bjorn Helgaas
+- No `Fixes:`, `Reported-by:`, `Cc: stable@vger.kernel.org`, `Tested-
+  by:`, or `Reviewed-by:` tags
+- Notable: absence of `Fixes:`/`Cc: stable` is expected for manual
+  review; not a negative signal
 
-### Step 1.3: Body Analysis
+### Step 1.3: Commit Body Analysis
 **Record:**
-- **Bug described:** On driver unbind, `pci_device_remove()` sets
-  `pci_dev->current_state = PCI_UNKNOWN` while hardware may still be in
-  D0. Bound devices only invalidate the cache in
-  `pci_pm_suspend_noirq()` right before sleep. Driverless/unbound
-  devices on the `!pm` suspend path skipped that invalidation.
-- **Symptom/failure mode:** Stale cached power state after
-  suspend/resume can cause `pci_set_power_state(dev, PCI_D0)` to return
-  early (believing the device is already in D0) when hardware is
-  actually in D3 — the same class of failure as bugzilla #6024 fixed by
-  commit 2449e06a5696.
-- **Version info:** References 2449e06a5696 (2006); commit d462c8e89e84
-  landed in mainline April 2026.
-- **Root cause:** PCI_UNKNOWN invalidation was done at unbind time (too
-  early) and was missing from the `!pm` branch of
-  `pci_pm_suspend_noirq()`.
+- **Bug:** `iproc_pcie_remove()` calls `pci_stop_root_bus()` /
+  `pci_remove_root_bus()` without holding the global PCI rescan/remove
+  mutex
+- **Symptom:** Race with concurrent sysfs-triggered PCI rescan or
+  hotplug → use-after-free or system crash
+- **Root cause:** Driver teardown and sysfs rescan/remove paths can run
+  concurrently on the same bus hierarchy without synchronization
+- **Version info:** None in commit message
 
-### Step 1.4: Hidden Bug Fix?
-**Record:** Yes. Described as “consistency,” but it closes a real PM
-correctness gap: driverless PCI devices on S2RAM suspend never had their
-cached state invalidated, and prematurely setting UNKNOWN at unbind left
-cache ≠ hardware between unbind and suspend.
+### Step 1.4: Hidden Bug Fix Detection
+**Record:** Not disguised — explicitly a synchronization bug fix.
+Matches a well-established PCI core pattern (`pci_lock_rescan_remove()`
+/ `pci_unlock_rescan_remove()`).
 
 ---
 
 ## Phase 2: Diff Analysis
 
-### Step 2.1: Inventory
+### Step 2.1: Change Inventory
 **Record:**
-- **File:** `drivers/pci/pci-driver.c` (+2 / −8 lines)
-- **Functions:** `pci_device_remove()`, `pci_pm_suspend_noirq()`
-- **Scope:** Single-file surgical fix
+- **File:** `drivers/pci/controller/pcie-iproc.c` (+2 lines)
+- **Function:** `iproc_pcie_remove()`
+- **Scope:** Single-file, surgical fix (2 insertions)
 
-### Step 2.2: Code Flow Changes
+### Step 2.2: Code Flow Change
 **Record:**
-- **Hunk 1 (`pci_device_remove`):** Before — set `PCI_UNKNOWN` on unbind
-  if cached state was D0. After — remove that; cached state stays
-  accurate while hardware is still D0.
-- **Hunk 2 (`pci_pm_suspend_noirq`):** Before — `!pm` path
-  (`pci_save_state` then `goto Fixup`) skipped
-  `pci_pm_set_unknown_state()`. After — `goto set_unknown` ensures
-  driverless devices also invalidate cache immediately before sleep,
-  same as bound devices.
+- **Before:** `pci_stop_root_bus()` → `pci_remove_root_bus()` with no
+  lock
+- **After:** `pci_lock_rescan_remove()` → stop/remove →
+  `pci_unlock_rescan_remove()`
+- **Path:** Driver remove (platform unbind, BCMA remove, module unload)
 
 ### Step 2.3: Bug Mechanism
-**Record:** **Logic / correctness fix (PCI PM cache coherency).**
-`pci_set_power_state()` early-returns when `dev->current_state == state`
-(see `__pci_set_power_state()` at line 1545 in `pci.c`). Stale D0 after
-BIOS changes hardware to D3 during suspend prevents powering the device
-back up on driver bind — identical mechanism to bugzilla #6024.
+**Record:**
+- **Category:** Race condition / potential UAF
+- **Mechanism:** `pci-sysfs.c` rescan/remove handlers (`rescan_store`,
+  `dev_rescan_store`, `remove_store`, `bus_rescan_store`) hold
+  `pci_rescan_remove_lock`. `iproc_pcie_remove()` did not. Concurrent
+  sysfs operations and driver removal can corrupt or free PCI bus/device
+  structures still in use.
 
 ### Step 2.4: Fix Quality
-**Record:** Minimal, obviously correct, mirrors existing bound-device
-behavior. Low regression risk: only moves UNKNOWN invalidation from
-unbind to suspend_noirq; hibernate path (`pci_pm_freeze_noirq`) already
-called `pci_pm_set_unknown_state()` for all devices.
+**Record:**
+- Obviously correct — identical to `pci_host_common_remove()`, `pci-
+  aardvark`, `pci-mvebu`, `pcie-mediatek-gen3`, `pci-hyperv`, and others
+- Minimal, no API changes
+- **Regression risk:** Very low; only serializes an already-required
+  critical section
 
 ---
 
 ## Phase 3: Git History Investigation
 
 ### Step 3.1: Blame
-**Record:** Unbind-time `PCI_UNKNOWN` logic traces to 2449e06a5696
-(“PCI: reset pci device state to unknown state for resume”, 2006). That
-commit is present in this tree. `pci_pm_set_unknown_state()` exists at
-line 606 in current `pci-driver.c`.
+**Record:**
+- `iproc_pcie_remove()` dates to Ray Jui (2015); `pci_stop_root_bus()` /
+  `pci_remove_root_bus()` added in `81ce3cf4a246d` (2020, "PCI: iproc:
+  Use pci_host_probe()")
+- Unprotected removal pattern present since 2020 in this tree
 
 ### Step 3.2: Fixes: Tag
-**Record:** N/A — no Fixes: tag. Referenced commit 2449e06a5696 is in
-this tree and introduced the unbind-time behavior this patch refines.
+**Record:** N/A — no `Fixes:` tag
 
-### Step 3.3: Related Changes
-**Record:** Related recent fix: 382895a288515 “PCI/PM: Reinstate
-clearing state_saved in legacy and !PM codepaths” (already in 6.18.43).
-No patch-series dependency; standalone 1/1 commit (d462c8e89e84).
+### Step 3.3: Related File History
+**Record:**
+- Part of 9-patch series "[PATCH 0/9] PCI: controller: Add missing
+  rescan lock around root bus removal"
+- Cover letter states each patch is independent
+- Same missing-lock pattern exists in several sibling drivers (cadence,
+  dwc, altera, brcmstb, mediatek, rockchip, vmd, plda) — not yet fixed
+  in this 6.18.44 tree
 
 ### Step 3.4: Author Context
-**Record:** Lukas Wunner is a regular PCI/PM contributor. Bjorn Helgaas
-(PCI maintainer) applied and signed off. No other related commits from
-this author in the immediate `pci-driver.c` history of this tree.
+**Record:** Hans Zhang is an active PCI contributor (cadence/dwc
+capability search, etc.). Patch signed by PCI maintainer Bjorn Helgaas.
 
 ### Step 3.5: Dependencies
-**Record:** No prerequisites. Requires only existing
-`pci_pm_set_unknown_state()` and `pci_pm_suspend_noirq()` `!pm` path —
-all present in Linux 6.18.43. Patch applies cleanly (`git apply --check`
-passed).
+**Record:** None. `pci_lock_rescan_remove()` /
+`pci_unlock_rescan_remove()` exist in this tree since commit
+`9d16947b75831` (2014). `pcie-iproc.c` already includes `<linux/pci.h>`.
+Standalone backport.
 
 ---
 
 ## Phase 4: Mailing List and External Research
 
 ### Step 4.1: Original Discussion
-**Record:** b4 dig found thread at https://patch.msgid.link/af7d11d3ceb2
-31acc90829f7a5c8400c2446744f.1776415510.git.lukas@wunner.de. Single v1
-patch; Bjorn applied to `pci/pm`; Mario Limonciello Reviewed-by with no
-corner cases found. No stable nomination or NAKs.
+**Record:**
+- Commit not in local tree; `b4 dig -c` could not match it
+- Local mbox/cover files available in workspace
+- Cover letter lore reference: `https://lore.kernel.org/linux-
+  pci/20260519132017.63E1BC2BCB3@smtp.kernel.org/` (sashiko-bot review
+  flagging the missing-lock pattern)
+- Series: v1, 9 independent patches, May 22 2026
+- **UNVERIFIED:** Full lore thread replies (Anubis blocked WebFetch on
+  lore.kernel.org)
 
 ### Step 4.2: Reviewers
-**Record:** b4 dig -w: To/Cc included Bjorn Helgaas, Rafael Wysocki,
-Mario Limonciello, Alex Williamson, linux-pci@vger.kernel.org.
+**Record:** Cover letter references automated sashiko-bot review
+identifying the race. Bjorn Helgaas committed. **UNVERIFIED:** Full
+recipient list via `b4 dig -w` (commit not in tree).
 
 ### Step 4.3: Bug Reports
-**Record:** No new bug report. Commit references historical bugzilla
-#6024 class via 2449e06a5696. No syzbot link.
+**Record:** No syzbot or user bug reports. Issue identified via code
+review / pattern analysis (same class of bug Rafael Wysocki documented
+in `9d16947b75831`).
 
-### Step 4.4: Series Context
-**Record:** Standalone patch, not part of a multi-patch series.
+### Step 4.4: Related Patches
+**Record:** 8 sibling patches in the same series for other host
+controllers; each independent.
 
 ### Step 4.5: Stable List History
-**Record:** lore.kernel.org blocked by bot protection; no stable-list
-discussion found via b4 mbox thread.
+**Record:** **UNVERIFIED** — could not search lore stable list
+(blocked). No stable nomination found in local cover letter.
 
 ---
 
 ## Phase 5: Code Semantic Analysis
 
 ### Step 5.1: Key Functions
-**Record:** `pci_device_remove()`, `pci_pm_suspend_noirq()`,
-`pci_pm_set_unknown_state()`, `pci_set_power_state()` /
-`__pci_set_power_state()`.
+**Record:** `iproc_pcie_remove()` (modified)
 
 ### Step 5.2: Callers
-**Record:** `pci_device_remove` — PCI bus `.remove` callback (sysfs
-unbind, module unload). `pci_pm_suspend_noirq` — PCI bus
-`.suspend_noirq` for every PCI device during system suspend.
+**Record:**
+- `iproc_pltfm_pcie_remove()` in `pcie-iproc-platform.c` (platform
+  driver `.remove`)
+- `iproc_bcma_pcie_remove()` in `pcie-iproc-bcma.c` (BCMA driver
+  `.remove`)
+- Triggered on device unbind, module unload, shutdown
 
 ### Step 5.3: Callees
-**Record:** `pci_save_state()`, `pci_pm_set_unknown_state()`,
-`pci_fixup_device()`, `pci_prepare_to_sleep()` (bound path only).
+**Record:** `pci_lock_rescan_remove()`, `pci_stop_root_bus()`,
+`pci_remove_root_bus()`, `pci_unlock_rescan_remove()`, then MSI/PHY
+cleanup
 
 ### Step 5.4: Reachability
-**Record:** Any PCI device without a bound driver (or driver without PM
-ops) going through system suspend hits the `!pm` path. Users can trigger
-via S3/S2RAM; driver bind after resume via `modprobe` or sysfs is
-common. Reachable without privileges for suspend; driver bind typically
-requires root.
+**Record:**
+- Driver remove is reachable on Broadcom iProc platforms
+  (`CONFIG_PCIE_IPROC_PLATFORM`, `CONFIG_PCIE_IPROC_BCMA`)
+- Concurrent sysfs PCI rescan/remove requires appropriate privileges
+  (typically root), but is realistic during admin operations, hotplug
+  testing, or scripted teardown
+- Race window is real when both paths run concurrently
 
 ### Step 5.5: Similar Patterns
-**Record:** `pci_pm_freeze_noirq()` already calls
-`pci_pm_set_unknown_state()` unconditionally (line 1098). Suspend path
-was inconsistent for driverless devices.
+**Record:** Multiple controllers already use this lock pattern. `pcie-
+iproc.c` is an outlier. `pci_stop_and_remove_bus_device()` asserts
+`lockdep_assert_held(&pci_rescan_remove_lock)` — sysfs remove uses the
+locked variant; host driver remove did not.
 
 ---
 
-## Phase 6: Cross-Reference Against Local Tree
+## Phase 6: Cross-Reference Against Local Tree (6.18.44)
 
-### Step 6.1: Buggy Code Present?
-**Record:** **Yes.** Tree is **Linux 6.18.43** (`git describe HEAD` →
-v6.18.43). Buggy code confirmed at lines 497–498 (unbind UNKNOWN) and
-line 874 (`goto Fixup` skipping `pci_pm_set_unknown_state` for `!pm`).
+### Step 6.1: Buggy Code Exists?
+**Record:** **YES.** At lines 1543–1544 of `drivers/pci/controller/pcie-
+iproc.c`, `iproc_pcie_remove()` calls `pci_stop_root_bus()` /
+`pci_remove_root_bus()` without the lock. Fix is **not** yet applied in
+this tree (`git describe HEAD` → `v6.18.44-1-g2736c32da98b9`).
 
 ### Step 6.2: Backport Complications
-**Record:** Patch applies cleanly with no modifications. No significant
-refactoring conflicts in this area of 6.18.43.
+**Record:** Clean apply expected — 2-line addition, no structural
+conflicts. `pci_lock_rescan_remove` API unchanged.
 
 ### Step 6.3: Related Fixes Already Present?
-**Record:** No equivalent fix in this tree. Commit d462c8e89e84 is not
-in 6.18.43.
+**Record:** No equivalent fix for iproc in this tree. `pci-host-
+common.c`, `pci-aardvark.c`, `pci-mvebu.c`, `pcie-mediatek-gen3.c`
+already hold the lock.
 
 ---
 
 ## Phase 7: Subsystem Context
 
-### Step 7.1: Subsystem / Criticality
-**Record:** **drivers/pci** — CORE subsystem. PCI PM affects virtually
-all systems.
+### Step 7.1: Subsystem and Criticality
+**Record:** `drivers/pci/controller/` — **IMPORTANT** (PCI host
+controller; affects platform-specific hardware but uses core PCI
+infrastructure shared with sysfs paths)
 
-### Step 7.2: Activity
-**Record:** Actively maintained; recent PM fix 382895a288515 already
-backported to this tree.
+### Step 7.2: Subsystem Activity
+**Record:** Actively maintained; recent iproc commit `f37f2f804796e` in
+this tree.
 
 ---
 
 ## Phase 8: Impact and Risk Assessment
 
 ### Step 8.1: Who Is Affected
-**Record:** Systems with PCI devices that are driverless at suspend time
-(never probed, intentionally unbound, or drivers without PM ops) that
-later get a driver bound after resume.
+**Record:** Users of Broadcom iProc PCIe (`ARCH_BCM_IPROC`, BCM5301X
+BCMA). Not universal, but real production embedded/SoC deployments.
 
 ### Step 8.2: Trigger Conditions
-**Record:** System suspend (S2RAM) → resume → driver bind. Uncommon but
-realistic for manual sysfs bind/unbind workflows and devices without in-
-tree drivers. Not security-relevant; requires suspend cycle.
+**Record:** Driver remove/unbind concurrent with sysfs PCI rescan or
+device removal. Uncommon but plausible under admin maintenance, module
+reload, or testing. Requires privileges for sysfs side.
 
 ### Step 8.3: Failure Mode Severity
-**Record:** Device fails to power up / probe after resume (stale D0
-cache). **Severity: MEDIUM-HIGH** for affected users (hardware non-
-functional), but not a kernel crash, deadlock, or data corruption.
+**Record:** Use-after-free / kernel crash — **HIGH** (potential
+**CRITICAL** if exploited, though sysfs access limits practical
+exploitability)
 
 ### Step 8.4: Risk-Benefit
-**Record:** **Benefit:** MEDIUM — fixes latent PM bug for driverless
-devices; improves cache accuracy between unbind and suspend. **Risk:**
-VERY LOW — 10-line change, maintainer-reviewed, net deletion of code.
-**Ratio:** Favorable.
+**Record:**
+- **Benefit:** Prevents real race/UAF during teardown on affected
+  hardware
+- **Risk:** Minimal — 2 lines matching established PCI convention
+- **Ratio:** Strongly favorable
 
 ---
 
@@ -304,133 +309,100 @@ VERY LOW — 10-line change, maintainer-reviewed, net deletion of code.
 ### Step 9.1: Evidence Summary
 
 **FOR backport:**
-- Fixes real PCI PM cache bug for driverless devices on S2RAM suspend
-  (same failure class as bugzilla #6024)
-- Stops incorrect premature UNKNOWN at unbind while hardware is still D0
-- Tiny, surgical, PCI maintainer + AMD reviewed
-- Applies cleanly to 6.18.43
-- Aligns suspend path with existing hibernate path behavior
+- Fixes a real synchronization bug (race with sysfs PCI operations)
+- Failure mode is UAF/system crash
+- Fix is 2 lines, obviously correct, matches multiple existing drivers
+  in this tree
+- Bug has existed since 2020 when iproc adopted `pci_remove_root_bus()`
+- No dependencies; API present since 2014
+- Buggy code confirmed present in 6.18.44
+- PCI maintainer committed the patch
 
 **AGAINST backport:**
-- No explicit user bug report or syzbot hit
-- Failure is device malfunction, not kernel oops/panic
-- Described primarily as “consistency” in commit message
-- No stable nomination in review thread
+- No syzbot/user crash report (theoretical/code-review finding)
+- Affects specific hardware platform only
+- Part of a 9-patch series (but explicitly independent)
 
-**Unresolved:** None material to the decision.
+**Unresolved:**
+- Full lore review thread and stable-list discussion (WebFetch blocked)
 
 ### Step 9.2: Stable Rules Checklist
-1. Obviously correct and tested? **PASS** — minimal diff, maintainer-
-   reviewed, corner-case review done
-2. Fixes a real bug affecting users? **PASS** — stale power-state cache
-   prevents device power-up after suspend+bind
-3. Important issue? **PASS (moderate)** — device non-functionality after
-   suspend, same class as historical PCI PM bug
-4. Small and contained? **PASS** — 1 file, 10 lines
-5. No new features or APIs? **PASS**
-6. Can apply to local tree? **PASS** — verified clean apply
+1. Obviously correct and tested? **PASS** — matches established pattern;
+   no functional change beyond serialization
+2. Fixes a real bug? **PASS** — documented race with sysfs PCI paths
+3. Important issue? **PASS** — UAF/crash severity HIGH
+4. Small and contained? **PASS** — 2 lines, one function
+5. No new features/APIs? **PASS**
+6. Can apply to local tree? **PASS** — buggy code present, clean apply
+   expected
 
 ### Step 9.3: Exception Categories
-**Record:** None (not a quirk, device ID, DT, or build fix).
+**Record:** None (not device ID, quirk, DT, build, or docs). Standard
+bug fix.
 
-### Step 9.4: Problem Summary for Stable Users
+### Step 9.4: Decision Rationale
 
-This commit fixes a gap in PCI core suspend handling: devices without a
-driver (or without PM callbacks) never had their cached power state
-invalidated before sleep, while bound devices did. After suspend/resume,
-if the BIOS changes the hardware power state, the kernel can believe the
-device is still in D0 and skip the transition back to D0 when a driver
-is later bound — leaving hardware dead. The patch also stops marking the
-cache as UNKNOWN at unbind time when hardware is still in D0, deferring
-invalidation to `pci_pm_suspend_noirq()` where bound devices already do
-it.
-
-For Linux 6.18.43, the buggy code is present, prerequisites exist, and
-the patch applies cleanly with very low risk.
+For Linux **6.18.44**, `iproc_pcie_remove()` lacks the PCI rescan/remove
+lock that sysfs PCI operations already use. This is a long-standing
+oversight relative to the locking contract introduced in 2014 and
+followed by `pci-host-common` and several other host drivers in this
+tree. The fix is minimal, self-contained, and prevents a realistic race
+during driver teardown that can cause use-after-free or crashes. It
+meets all stable kernel criteria.
 
 ---
 
 ## Verification
 
-- [Phase 1] Parsed subject, tags, body from provided commit message and
-  kernel.org (d462c8e89e84)
-- [Phase 1] Confirmed no Reported-by/syzbot/Fixes:/Cc: stable tags
-- [Phase 2] Diff analysis: 2 insertions, 8 deletions in `pci-driver.c`;
-  two functions modified
-- [Phase 2] Read `__pci_set_power_state()` early-return at line 1545 in
-  `pci.c`
-- [Phase 3] `git describe HEAD` → v6.18.43; Makefile VERSION 6.18.43
-- [Phase 3] `git show 2449e06a5696` — original unbind UNKNOWN logic and
-  bugzilla #6024 context
-- [Phase 3] `git blame` lines 493–498 — unbind UNKNOWN code present
-- [Phase 3] Confirmed `pci_pm_set_unknown_state()` at line 606 in local
-  tree
-- [Phase 4] `b4 dig -c d462c8e89e84` — found lore thread URL
-- [Phase 4] `b4 dig -w` — reviewers/maintainers CC'd
-- [Phase 4] Downloaded mbox: Bjorn applied, Mario Reviewed-by, no stable
-  nomination
-- [Phase 4] lore.kernel.org direct fetch blocked (403/bot protection)
-- [Phase 5] Traced `pci_pm_suspend_noirq` `!pm` → `goto Fixup` at line
-  874 (buggy)
-- [Phase 5] Confirmed `pci_pm_freeze_noirq` already sets UNKNOWN at line
-  1098
-- [Phase 6] Buggy code at lines 497–498 and 874 confirmed in 6.18.43
-- [Phase 6] `git apply --check` on upstream patch — applies cleanly
-- [Phase 6] Commit d462c8e89e84 not in 6.18.43 tree
-- [Phase 8] Failure mode: stale D0 → device won't power up on driver
-  bind; severity MEDIUM-HIGH for affected cases
+- **[Phase 1]** Parsed subject, tags, body from user-provided commit
+  message and local mbox
+- **[Phase 2]** Confirmed diff: +2 lines in `iproc_pcie_remove()`
+  wrapping stop/remove with lock
+- **[Phase 3]** `git describe HEAD`: v6.18.44; `git blame`: unprotected
+  pattern since `81ce3cf4a246d` (2020)
+- **[Phase 3]** `git show 9d16947b75831`: `pci_lock_rescan_remove()`
+  introduced 2014, present in tree
+- **[Phase 3]** Read local cover letter: 9-patch independent series,
+  sashiko-bot flagged race
+- **[Phase 4]** `b4 dig -c HEAD`: no match (commit not in tree)
+- **[Phase 4]** Read `20260522_...rescan_lock...cover` and `.mbx`:
+  series context and bot review
+- **[Phase 4]** WebFetch lore/patch.msgid.link: blocked by Anubis —
+  **UNVERIFIED** thread replies
+- **[Phase 5]** `grep iproc_pcie_remove`: callers in `pcie-iproc-
+  platform.c`, `pcie-iproc-bcma.c`
+- **[Phase 5]** Read `pci-sysfs.c`: rescan/remove paths hold
+  `pci_lock_rescan_remove()`
+- **[Phase 5]** Read `pci-host-common.c`, `pci-aardvark.c`, `pci-
+  mvebu.c`: established lock pattern
+- **[Phase 5]** Read `remove.c`: `pci_stop_and_remove_bus_device()`
+  asserts lock held
+- **[Phase 6]** Read `pcie-iproc.c` lines 1539–1549: buggy code
+  confirmed, fix absent
+- **[Phase 6]** `grep CONFIG_PCIE_IPROC` in Kconfig: Broadcom iProc
+  platforms
+- **[Phase 8]** Assessed severity: UAF/crash, HIGH
 
-**YES**The background searches finished and line up with the earlier
-analysis:
+**YES**
 
-- **Local tree (6.18.43):** The fix is **not** present. The buggy paths
-  are still there — `PCI_UNKNOWN` is set on unbind, and the `!pm` branch
-  in `pci_pm_suspend_noirq()` still skips `pci_pm_set_unknown_state()`.
-- **Mainline (kernel.org):** The commit is **d462c8e89e84** (“PCI: Stop
-  setting cached power state to 'unknown' on unbind”), merged April 27,
-  2026 via the `pci/pm` branch.
+ drivers/pci/controller/pcie-iproc.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-That confirms the patch is a valid backport candidate for this tree and
-applies cleanly. **Verdict remains YES.**
-
- drivers/pci/pci-driver.c | 10 ++--------
- 1 file changed, 2 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index f9ead94d5ebb6..1219f39b1c69b 100644
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -490,13 +490,6 @@ static void pci_device_remove(struct device *dev)
- 	/* Undo the runtime PM settings in local_pci_probe() */
- 	pm_runtime_put_sync(dev);
+diff --git a/drivers/pci/controller/pcie-iproc.c b/drivers/pci/controller/pcie-iproc.c
+index 5aa677f81e4fa..61dcb232757fb 100644
+--- a/drivers/pci/controller/pcie-iproc.c
++++ b/drivers/pci/controller/pcie-iproc.c
+@@ -1540,8 +1540,10 @@ void iproc_pcie_remove(struct iproc_pcie *pcie)
+ {
+ 	struct pci_host_bridge *host = pci_host_bridge_from_priv(pcie);
  
--	/*
--	 * If the device is still on, set the power state as "unknown",
--	 * since it might change by the next time we load the driver.
--	 */
--	if (pci_dev->current_state == PCI_D0)
--		pci_dev->current_state = PCI_UNKNOWN;
--
- 	/*
- 	 * We would love to complain here if pci_dev->is_enabled is set, that
- 	 * the driver should have called pci_disable_device(), but the
-@@ -871,7 +864,7 @@ static int pci_pm_suspend_noirq(struct device *dev)
++	pci_lock_rescan_remove();
+ 	pci_stop_root_bus(host->bus);
+ 	pci_remove_root_bus(host->bus);
++	pci_unlock_rescan_remove();
  
- 	if (!pm) {
- 		pci_save_state(pci_dev);
--		goto Fixup;
-+		goto set_unknown;
- 	}
+ 	iproc_pcie_msi_disable(pcie);
  
- 	if (pm->suspend_noirq) {
-@@ -923,6 +916,7 @@ static int pci_pm_suspend_noirq(struct device *dev)
- 		goto Fixup;
- 	}
- 
-+set_unknown:
- 	pci_pm_set_unknown_state(pci_dev);
- 
- 	/*
 -- 
 2.53.0
 
