@@ -1,69 +1,140 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C6354A4413
-	for <linux-pci@vger.kernel.org>; Mon, 31 Aug 2026 17:09:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA91033B97D;
+	Mon, 31 Aug 2026 17:15:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788196187; cv=none; b=N75aZNVavlwWsvohd+BV/CoGDtQ6mc0SJVxUFtcNG2oqcE6zkr5fxe7PtZpQrlX6ShMQmB6+yiNIzfL+DduQLW4UNU/TnCgaXEnrGW8UIfWGUERfL2wHkMdQmT/QdSxYt11NU/ikNAy4UKT4TNZLmIwQraxPd2UybiWe/EneR5g=
+	t=1788196552; cv=none; b=WviWVx9t47cQICOI9H/yA/f1QAegYrT7tyuwt3i2XllvFHmSvG9DyXjpa8PXa/YaBPveDy6RQneUPweXjAD20TcTaBPTZchXfRhsAX9LpQgH2Zu3+c8N+rB6IIdilECwEf5VD1Qcc/jL3rBimcwr6Vd57J1ddJoDD6jfvTmAEH4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788196187; c=relaxed/simple;
-	bh=v9osccPwm4zvf6EU/TtWjOtSZv+aUOvTr1Af1qQoA/s=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=d8mfS1wxpdbukPpnvfTrL21YF4Aojdaw/mjsbs3sqX/fQFCbjFhL7kJInOWDZJctNMPVmL9H5QVVJGo78hAIHcxIzB7EoqSxuhTcn37U0uiJGy52asYxemqHIWUCSA54hd9xQ7+ZSFsICAQEDXUzornbHmdskrYtLDRJR28o6P4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bYG4mJ0+; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788196552; c=relaxed/simple;
+	bh=qhps3i/s6KKq+LUWs2P9LFVcYQc2rWPelFcUqOtIChA=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=QgQTn5HYRBo10f2q6f4eLAAikkkEhTnt8ptY/tMcpFtsQL6bvGAIMdXwbB3GyE2wm5ZMd/aYbIRSzAd8hWXcL+Vr6DYuf3lLsoEXajnMqWFbzIkbSrd8sk2NSeNwcvQ3lyB9LEIJQhkBRhotzqYN1Wc0FoEG36Hl4rmQ0aByKsE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mdZ1In+j; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bYG4mJ0+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A13E61F00A3E;
-	Mon, 31 Aug 2026 17:09:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788196185;
-	bh=EZ3r5VjWDg7B6gtHUb5vHFPc0e7tSSbBapybqqLQCqE=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=bYG4mJ0+AL1ncL++E8T+QXYPzQltRu9XCwmhlj1jTbH06ReQgWNkmq3eu1va6lwqy
-	 u+6wm4PFnOr+kVLzt5n/827U0nH1J9qc4e61c5ejwSId2SHoeuGt0YLMdHCVIut8D+
-	 ekTIu7bwfHghd/5hhm75eCS6tohbK76qf5Uahuk3pEzAvaMGNep+glFH/cdY5Xj7fv
-	 2DzhT2HaWryGnQTO3g/9cgaIqmDXwfh0utEUgbix97Dq7ZJWefk1OspeloA+Jcgf7t
-	 CLZQ7/LnFF3mRYf1F65cJSbp1OmuVryO9PbP0NWPIPtpiPgN9HrJAjJsV4ilwyhPLt
-	 fhTt0LeF2SvWQ==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH AUTOSEL 6.18] PCI: dwc: Protect root bus removal with
- rescan lock
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Sasha Levin" <sashal@kernel.org>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260831133314.4125787-570-sashal@kernel.org>
-References: <20260831133314.4125787-1-sashal@kernel.org>
- <20260831133314.4125787-570-sashal@kernel.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 31 Aug 2026 17:09:45 +0000
-Message-Id: <20260831170945.A13E61F00A3E@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mdZ1In+j"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 64911C2BCB8;
+	Mon, 31 Aug 2026 17:15:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1788196552;
+	bh=qhps3i/s6KKq+LUWs2P9LFVcYQc2rWPelFcUqOtIChA=;
+	h=From:Date:Subject:To:Cc:Reply-To:From;
+	b=mdZ1In+j1Tbsx2leubMe4rl5fv94iDQglSmFwMzbd9Dv2mfjIOHX+tyBPPPLscBdT
+	 ATG/MZwJbl40bEsZ5b01E4jj2i5BRMqZRggsOu4LmxFS76UTEHcp6yFyQmmYw/i/Dt
+	 FJRSDGJDSpIcGuW4Gcp+2ZH1z3PwFf0IdHQ4G6aIynP63vSCePV/cRDvhab36KNrfv
+	 wsF8ZUyzZyAk/ZkFQTxRWE5lQ5IAjexNhagNc16JWTc/jECsB9FG40l7Qj/dCVBtwX
+	 VxpQKx2O+/lnW1Fl5dUAVQT4SFrF9sAybLliLPVBOwuR6rFkM2c2wQSAwva+DZzIXM
+	 tBCpM+9ZQfDSg==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3EB2AC624C6;
+	Mon, 31 Aug 2026 17:15:52 +0000 (UTC)
+From: Sophon Zhang via B4 Relay <devnull+aiqubits.hotmail.com@kernel.org>
+Date: Tue, 01 Sep 2026 01:09:53 +0800
+Subject: [PATCH v4] rust: pci: reject IRQ vector indices that do not fit in
+ u32
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20260901-fix-pci-irq-vector-index-truncation-v4-1-f94aa6932fd9@hotmail.com>
+X-B4-Tracking: v=1; b=H4sIAGC1lWoC/53OPQ7CMAwF4KugzBjlpySUiXsghpAYagQtJCUCo
+ d4dFybEBOOT/L7nh8iYCLNYTh4iYaFMXcuhmk5EaHy7R6DIWWiprVwYBTu6wTkQULpAwdB3Cai
+ NeIM+Xdvge+6DdXO9M26uvIyCpXNCrr1W1pt3ztftgdsjPV40lFm6v94oarz7bbEoUBCt0crFu
+ t5at2q6/uTpOAvdSYybRf+halYraSR65yrr62/V/KEaVr1W7C6qqCV+qsMwPAH8zWrBlgEAAA=
+ =
+X-Change-ID: 20260831-fix-pci-irq-vector-index-truncation-6752f3751a0d
+To: Danilo Krummrich <dakr@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ Miguel Ojeda <ojeda@kernel.org>, Boqun Feng <boqun@kernel.org>, 
+ Gary Guo <gary@garyguo.net>, 
+ =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, 
+ Benno Lossin <lossin@kernel.org>, Andreas Hindborg <a.hindborg@kernel.org>, 
+ Alice Ryhl <aliceryhl@google.com>, Trevor Gross <tmgross@umich.edu>, 
+ Daniel Almeida <daniel.almeida@collabora.com>, 
+ Tamir Duberstein <tamird@kernel.org>, 
+ Alexandre Courbot <acourbot@nvidia.com>, 
+ =?utf-8?q?Onur_=C3=96zkan?= <work@onurozkan.dev>
+Cc: linux-pci@vger.kernel.org, rust-for-linux@vger.kernel.org, 
+ linux-kernel@vger.kernel.org, Sophon Zhang <aiqubits@hotmail.com>
+X-Mailer: b4 0.16.0
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1788196549; l=2550;
+ i=aiqubits@hotmail.com; s=20260831; h=from:subject:message-id;
+ bh=aDpWwnCHJqNDAl+iMV/Pt6CcKak8JY7tJ57zkb1ld5w=;
+ b=NHZdgqGpnU8lETGIZIzu3ZLXvJ5MUb7qp3HPbYOF5EZ6zD3TUOvdD19e2lx9OaKdyoL8P9bx0
+ oXZbGHZhaj/BBqC18cpsZ4tDH2lJz928e3nN1ux9aBvnlhVV2c3sNI9
+X-Developer-Key: i=aiqubits@hotmail.com; a=ed25519;
+ pk=+mrkwQAyCCkZdVPpu+CBQr1VZQlkXa7/1WizfeSF/yg=
+X-Endpoint-Received: by B4 Relay for aiqubits@hotmail.com/20260831 with
+ auth_id=992
+X-Original-From: Sophon Zhang <aiqubits@hotmail.com>
+Reply-To: aiqubits@hotmail.com
 
-> From: Hans Zhang <18255117159@163.com>
->=20
-> [ Upstream commit 26335696498ab502e907a556e97c7039bc80a87e ]
->=20
-> Hold the pci_rescan_remove_lock lock while stopping and removing a root b=
-us
-> to avoid racing with concurrent rescan or hotplug operations triggered via
-> sysfs.  Such races may lead to use-after-free issues or system crashes.
->=20
-> Signed-off-by: Hans Zhang <18255117159@163.com>
-> Signed-off-by: Manivannan Sadhasivam <mani@kernel.org>
-> [bhelgaas: commit log]
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> Link: https://patch.msgid.link/20260521161822.132996-3-18255117159@163.com
-> Signed-off-by: Sasha Levin <sashal@kernel.org>
+From: Sophon Zhang <aiqubits@hotmail.com>
 
-Sashiko has reviewed this patch and found no issues. It looks great!
+IrqVectorRegistration::index() accepts a usize, but pci_irq_vector()
+takes an unsigned int. On 64-bit architectures, casting an index larger
+than u32::MAX wraps it before the PCI core can validate it. In
+particular, u32::MAX + 1 becomes zero and can resolve to the first
+allocated vector.
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260831133314.4125=
-787-570-sashal@kernel.org?part=3D1
+Use a checked conversion and return EINVAL when the index cannot be
+represented by the C API.
+
+Fixes: 2fb7755b0a7e ("rust: pci: resolve IRQ in index() and embed IrqRequest in IrqVector")
+Signed-off-by: Sophon Zhang <aiqubits@hotmail.com>
+---
+Prevent 64-bit Rust IRQ vector indices from wrapping when they cross the
+PCI C API boundary.
+---
+Changes in v4:
+- Drop the explicit length check in favor of PCI core range validation.
+- Use the existing TryFromIntError-to-Error conversion directly.
+- Keep commit trailers adjacent and narrow the description to truncation.
+- Link to v3: https://patch.msgid.link/20260831-fix-pci-irq-vector-index-truncation-v3-1-a2103084d20e@hotmail.com
+
+Changes in v3:
+- Check the index against the allocated vector count before entering the C API.
+- Keep the checked usize-to-u32 conversion and document the C-side warning.
+- Link to v2: https://patch.msgid.link/20260831-fix-pci-irq-vector-index-truncation-v2-1-4030ea7746a9@hotmail.com
+
+Changes in v2:
+- No code changes.
+- Link to v1: https://patch.msgid.link/20260831-fix-pci-irq-vector-index-truncation-v1-1-d63217d99b67@hotmail.com
+
+Testing:
+- make rustfmtcheck
+- Not build- or hardware-tested; bindgen is unavailable in the test environment.
+---
+ rust/kernel/pci/irq.rs | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/rust/kernel/pci/irq.rs b/rust/kernel/pci/irq.rs
+index 6741046ec1c0..22e2cdf82a21 100644
+--- a/rust/kernel/pci/irq.rs
++++ b/rust/kernel/pci/irq.rs
+@@ -151,8 +151,10 @@ pub fn irq_type(&self) -> IrqType {
+     /// [`Self::len()`].
+     #[inline]
+     pub fn index(&self, index: usize) -> Result<IrqVector<'_>> {
++        let index = u32::try_from(index)?;
++
+         // SAFETY: `self.dev.as_raw()` is a valid pointer to a `struct pci_dev`.
+-        let irq = unsafe { bindings::pci_irq_vector(self.dev.as_raw(), index as u32) };
++        let irq = unsafe { bindings::pci_irq_vector(self.dev.as_raw(), index) };
+         if irq < 0 {
+             return Err(Error::from_errno(irq));
+         }
+
+---
+base-commit: cee9395acd8043be0644b25c34bfa86623f2b935
+change-id: 20260831-fix-pci-irq-vector-index-truncation-6752f3751a0d
+
+Best regards,
+--  
+Sophon Zhang <aiqubits@hotmail.com>
+
 
