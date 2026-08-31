@@ -1,80 +1,99 @@
-Received: from mailout1.hostsharing.net (mailout1.hostsharing.net [83.223.95.204])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f71.google.com (mail-pj1-f71.google.com [209.85.216.71])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32C7D16F288;
-	Sun, 30 Aug 2026 21:22:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.223.95.204
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 03F363AE185
+	for <linux-pci@vger.kernel.org>; Mon, 31 Aug 2026 03:24:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.71
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788124977; cv=none; b=kAwsEvpJAaoSiI2zPZiwd58QkuRjndI2KCHPSvN3pjgnyRRf4Mi49zHRUGEXyBGIGR4nglHpP/TDIfnJfiIB4aYgZ0p33Hi8h8FIjwTLGxDIPtlQKzSYIGqT46ptZtghBkMyS6sfmWPpSKqKnIX9cJ0IV4emv9rWrw9PSt/KXrI=
+	t=1788146683; cv=none; b=GHPQiWMdJvMXHxd5y90XYnWU9yWYptOcNZT/xHMLr+mxDa0vp87R7jbyRVNlTVZUO6a19cT2u71nCZPnsVWPDBVhxQIn++a+qxUbQ8tl3HXBNKhpfKEujRdpzBXtpcLWk7586V+80il2qThOgETAZ3vctiRn36rIaJtEpAx4sW0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788124977; c=relaxed/simple;
-	bh=WQ/IXl/OpTD5uewQ/EiL1rbKfLw1OxjhO4kGhLECfB0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=cKD4ITEWwLfjZpMet2kOraxpmeI49lQWxO7oCQQP9QAfBGk5NvxosGKU9f61STN31uixgnORi/tsH5N3D37pY1xXJJch1FGZ2AHFOVQA1usM9dr+S/tCIjintfidR8rqYjpnFcxJe9mpRaL5uXKKoP7vMWip1P2yNXSM1Gf927U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=83.223.95.204
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
-Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
-	 client-signature ECDSA (secp384r1) client-digest SHA384)
-	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
-	by mailout1.hostsharing.net (Postfix) with ESMTPS id 31ED837A;
-	Sun, 30 Aug 2026 23:14:34 +0200 (CEST)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-	id 0E4A160FBB96; Sun, 30 Aug 2026 23:14:34 +0200 (CEST)
-Date: Sun, 30 Aug 2026 23:14:34 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Priyank Rathod <rathodpriyank@google.com>
-Cc: Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
-	Oliver O'Halloran <oohall@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Stefan Roese <stefan.roese@mailbox.org>,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI/AER: Fix struct pci_dev reference leak in
- aer_process_err_devices()
-Message-ID: <apSdOnbdLdrJ7ksF@wunner.de>
-References: <20260830-fix-aer-refcount-leak-v1-1-64e1013add12@google.com>
+	s=arc-20240116; t=1788146683; c=relaxed/simple;
+	bh=+jYrMNj4gYVMpOQjdgm3R6wNO/eAnlIxPedhB6P4YHU=;
+	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
+	 To:Cc:Content-Type; b=B4nLKYNBYsd2S6AKD6YClrTpPxFrtK8xADs6rA7qbHupCYkc0pGg5q7yKnRGPxGjXiE4ce5NLia4wFhn98MKh85cVPgwfbW/wOCchYs9XbGvUepjkjf2KurqR7/Lr/Gj7p98EkwcQlpnVkgILWW55AixeKW7J7QTY1sWhAPyqKs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--rathodpriyank.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=eX+7MwOC; arc=none smtp.client-ip=209.85.216.71
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--rathodpriyank.bounces.google.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="eX+7MwOC"
+Received: by mail-pj1-f71.google.com with SMTP id 98e67ed59e1d1-396901263b6so4724134a91.2
+        for <linux-pci@vger.kernel.org>; Sun, 30 Aug 2026 20:24:41 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1788146681; x=1788751481; darn=vger.kernel.org;
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=LqUXShy4Y1uwDBlZFsBdfY3ls/HGLA3gGP5AeZZ/dKE=;
+        b=eX+7MwOChS4Fnsiwvda0cscMBNlOieLpIwoNf/lRnLvsYdqgCHDyepNM6TE9FjrU/h
+         WvXNuA90ZSFAAe8D9QEPfMKOtg+t9/OZ53nDzlnCPp/9KO7dwOPYsS5SigHU7U8vVg5X
+         WSaK0ds7yWk9I46AFQgnkVFAa+IO12XDJx6rlqL5WpRQ9X6uQyRbtWW216ZfBIJY+M5+
+         VHURdv+mGDAt8p1vG3zluw0KNYbuPHwOZu13bNUCq1S+ZWjfDB+C5XuGmIYZJ8IV8vTw
+         i4cBcQZSDDDQ8VfbDUitf73+HcqRQqPOFbqTM0zb4cr9tnO/zLGDBWtp8qLOFQsiXQne
+         OTtA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1788146681; x=1788751481;
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=LqUXShy4Y1uwDBlZFsBdfY3ls/HGLA3gGP5AeZZ/dKE=;
+        b=ExCcEzK4YyiaHHi3bNNHeOcyV6IyafXY1rNEa35JDExGkrNd1L9Cho7LkwWb/o/HK9
+         LUE5An6IngAfSoc+K+UafMjcY0f9QR22vh5KBlK6XILit5EwD8sYkKsMRuotqzJbI+QB
+         W37qSxV2kT9+PmlLr0cqWdXBIyjAGHiap9MrH7oB+RGZNYt0mHFyTdueuXC6tEgJf36d
+         gQE3BHA8L7HVgjSnv0qKoNPZxzVGO80xA+QFgBhiZLlS0x7HKVk4zpAZ6q/aciA5c6Pe
+         uIzXr5iZ2WLvl3ymwQOEPCRE5r7fC+Kp6wKkzc4hoGAn6rV8iGZDTaM1+rV6/5AzTWvJ
+         WMhw==
+X-Forwarded-Encrypted: i=1; AKwUvBzlefAkZXtNpZ7clsPUQgS1Dwcewhv3rTTuKqp65q++2motGq2RueJGusGt03QYx4sD5oMI+oHv8rM=@vger.kernel.org
+X-Gm-Message-State: AFuF++l8xN7J/qMOpLyO6z3I/sN+YRAWtF/iG8U5ENytiCXjpL5tmJIR
+	5dt6ouNyTWcxWpUq6AGvV8WWAk3iOs3C1GrzwRNuxvWAGUUz39dEO/4rAs65iFZrYhFKq6OH2rL
+	qnsAcbbjBRacJCryKWj/XnAacMnEHB6avBw==
+X-Received: from pjbgw21.prod.google.com ([2002:a17:90b:a55:b0:383:7b51:b1cd])
+ (user=rathodpriyank job=prod-delivery.src-stubby-dispatcher) by
+ 2002:a17:90b:3d4b:b0:398:9be8:ea6a with SMTP id 98e67ed59e1d1-398f87e4b39mr785477a91.23.1788146681049;
+ Sun, 30 Aug 2026 20:24:41 -0700 (PDT)
+Date: Mon, 31 Aug 2026 03:24:40 +0000
+In-Reply-To: <apSdOnbdLdrJ7ksF@wunner.de>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260830-fix-aer-refcount-leak-v1-1-64e1013add12@google.com>
+Mime-Version: 1.0
+References: <20260830-fix-aer-refcount-leak-v1-1-64e1013add12@google.com> <apSdOnbdLdrJ7ksF@wunner.de>
+X-Mailer: git-send-email 2.55.0.897.gb25b4bd76c-goog
+Message-ID: <20260831032440.1053206-1-rathodpriyank@google.com>
+Subject: Re: [PATCH] PCI/AER: Fix struct pci_dev reference leak in aer_process_err_devices()
+From: Priyank Rathod <rathodpriyank@google.com>
+To: lukas@wunner.de
+Cc: Priyank Rathod <rathodpriyank@google.com>, Mahesh J Salgaonkar <mahesh@linux.ibm.com>, 
+	"Oliver O'Halloran" <oohall@gmail.com>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Stefan Roese <stefan.roese@mailbox.org>, linuxppc-dev@lists.ozlabs.org, 
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
 
-On Sun, Aug 30, 2026 at 08:28:28PM +0000, Priyank Rathod wrote:
-> If is_error_source() matches a device purely by Requester/Completer ID
-> match (e_info->id == pci_dev_id(dev)), the device is added to e_info->dev[]
-> even if it lacks the AER extended capability (dev->aer_cap == 0).
+On Sun, Aug 30, 2026 at 11:14:34PM +0200, Lukas Wunner wrote:
+> The "no active error status is read" is the only scenario where
+> this *could* happen.  However if no error bits are set in the
+> status register, why did the device send an error message upstream
+> in the first place?  That would be a broken device.
+> 
+> Another theoretical possibility would be that the device becomes
+> inaccessible by the time aer_get_device_error_info() reads the
+> status/mask registers.  They'd both be read as "all ones",
+> hence info->status & ~info->mask == 0.
 
-Hallucination, we do not enable error reporting on devices without
-AER capability, see pci_aer_init().
+Hi Lukas,
 
-> Later, during aer_process_err_devices(), aer_get_device_error_info()
-> returns 0 when dev->aer_cap is 0 (or if no active error status is read),
+Thanks for the review and clarifying that.
 
-The "no active error status is read" is the only scenario where
-this *could* happen.  However if no error bits are set in the
-status register, why did the device send an error message upstream
-in the first place?  That would be a broken device.
+The underlying reference count leak is genuine, but the additional topology
+scenarios listed in v1 were inadvertently incorporated from an automated AI
+review bot report, which introduced those inaccurate/hallucinated cases.
 
-Another theoretical possibility would be that the device becomes
-inaccessible by the time aer_get_device_error_info() reads the
-status/mask registers.  They'd both be read as "all ones",
-hence info->status & ~info->mask == 0.
-
-> On the ID-match fast path (a), is_error_source() returns true without
-> checking whether the device implements the AER extended capability
-> (dev->aer_cap != 0). This creates a real, non-exotic situation in several
-> common hardware topologies and operational states:
-
-Hallucination, this is by no means "real, non-exotic",
-it's an unlikely corner case.
+I have updated this in v2:
+- Corrected the Fixes tag to 60271ab044a5 ("PCI/AER: Take reference on error devices").
+- Cleaned up the commit description to remove the extra scenarios and focus
+  strictly on the actual failure path (device becoming inaccessible / register
+  read returning no active unmasked status).
 
 Thanks,
-
-Lukas
+Priyank
