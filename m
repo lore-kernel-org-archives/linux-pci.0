@@ -1,144 +1,117 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4604534DCE3
-	for <linux-pci@vger.kernel.org>; Mon, 31 Aug 2026 06:21:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 811F1370AD4;
+	Mon, 31 Aug 2026 06:33:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788157302; cv=none; b=YMz3JoOEL0iOHAJx11MmftGzwcXE9vvoGWRmI5ZswGHShz/cBCCXShtUMNVQQduoD2TX+DvhX2DjpUz4InhuXOSbsODj76olId88ELB1F+sSoepQR69aSS1KI+BXoxEciGn6nng7XoDUEY/aAE3V2/0vCwlblDT9oaSXzVrjvy0=
+	t=1788158038; cv=none; b=fQ3iYteHOvxxYzWEusRvRIVq3Zf5qoXMAOjUnkHyLOnyKhTXtfHOEuN7vPjsEbOwXM2t3HoOg1dXr69VCMhXq1cYS3aTvRmsSHZmpZDhZHiy97uXyNAB+WWcWrnobjqyHQu0Sty0oIOmuxwmho5sdLl8KYPkHLhbY+CsNdqJKlU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788157302; c=relaxed/simple;
-	bh=6qBjBrP80cbhlB7V8dUd/vDLrxl3DjQEPsB23bkWvj4=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=jxjI17tMAWv0Duq9pli9pZeQfb2KpGCVPhCh3lHiww4CRrn1RTZRwul+X/rIa/aiTEX6EJ6jfoTwCmOiLi83+dn/5042yi1M1l2ASTSjInxUivtRd+0Y86YVGkU/XS/2Blt98rm8U8v00CVT+V67B373xb+uD6a/syN7bI6Rw7o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DmJwmw0x; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788158038; c=relaxed/simple;
+	bh=K342pN9R5l9Amf3yIne5jhRsFkAPNtSws5F1C1XTfYM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=tRLZo2H4oylf9thYGKqHGeaK26qxp6bkEX5i4c2oU3THSg4Y/hX9kqydYvCCKuBr7jzu9nX87doO+tlFzyehQK44Z4i7npbI4OvuX3PX1QxEf5sDucrCT7jm/3gGRtyvDB98Dn/zEvlscQ0svjSnpshDjzjSE20z9EwdOyXNzrA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HXBHbr8Q; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DmJwmw0x"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B23841F000E9;
-	Mon, 31 Aug 2026 06:21:40 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HXBHbr8Q"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 20F3E1F000E9;
+	Mon, 31 Aug 2026 06:33:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788157300;
-	bh=DEeOS0IMt5cNO2a1SWVs2nmCuOH6kgLYflESy9ZCxYs=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=DmJwmw0xcZP2VP0wHjdmDjI4enCYYlcthQj0IeycSLYzOh6HydtzxPEDoeKj46BR+
-	 bwAdjGkS7di8/I2m8bpKRDJtf+eCnwQ+Uridc0G4SxNbyjGd/Qh+I6nPnzHpsQfTk3
-	 egQ4I2fjDiWWkFJQiJbUFVK+pNir3/wqa+ioUy/4QPPKiWVOtFKuJjj3j14pQiHsQZ
-	 qfz1pYdrtvyMTqrVvOn8F6SgGqWn++yJIVdIX6dMM5sawOaf/GgeIdX21uNMSF7K7R
-	 L14E2dSMsks8gF9B0DuJxxUbXdcIWknuGCBuMZKZxawhl3Sm0gqdz2V5oKvYjf19JZ
-	 kue7TOsdls8Nw==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] rust: pci: Reject IRQ vector indices that do not fit in
- u32
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Sophon Z" <aiqubits@hotmail.com>
-Cc: ojeda@kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260831-fix-pci-irq-vector-index-truncation-v1-1-d63217d99b67@hotmail.com>
-References: <20260831-fix-pci-irq-vector-index-truncation-v1-1-d63217d99b67@hotmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 31 Aug 2026 06:21:40 +0000
-Message-Id: <20260831062140.B23841F000E9@smtp.kernel.org>
+	s=k20260515; t=1788158037;
+	bh=GP2C2mZreAalLgcgv4kH52hh++chyCXbyU5k8g3nVAw=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=HXBHbr8QuA/1GL+lcq09OgnCqRhxC7HarHVZt/raxamgMrw2e/zqzfkIlcy3bv+KJ
+	 +Or0czqXZnS5CX2a+GUc4ML5WTnln7D6oxSskL07rpWlvKSUa3b2QEnLSIY692Eiz9
+	 88tPzxGya7NYZsPMYjSH9BH0rsmGEO3HvO+RbLn+lYbRhMmLkhVrFw9ra3u/KX7NHX
+	 WGxSwq9U+JOgXwI6X5NEV9ZTUyuieBsY8O5DAQkoJ8BLYv7yqiL1jmWi00MqBz/P8w
+	 sly7jgqAaZqlTiKeHwrKGk+Fg2Ob8XqO3aQE3B3at+5xDUbKLI8tlVXz6trPZh7KSt
+	 B+9Lg9jsuKpfw==
+Date: Mon, 31 Aug 2026 08:33:52 +0200
+From: Krzysztof Kozlowski <krzk@kernel.org>
+To: Biju <biju.das.au@gmail.com>
+Cc: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>, 
+	Bjorn Helgaas <bhelgaas@google.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Manivannan Sadhasivam <mani@kernel.org>, 
+	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
+	Geert Uytterhoeven <geert+renesas@glider.be>, Magnus Damm <magnus.damm@gmail.com>, 
+	Biju Das <biju.das.jz@bp.renesas.com>, Rob Herring <robh@kernel.org>, linux-pci@vger.kernel.org, 
+	linux-renesas-soc@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	Prabhakar Mahadev Lad <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Subject: Re: [PATCH 1/4] dt-bindings: PCI: renesas,r9a08g045s33-pcie:
+ Document RZ/G3L SoC
+Message-ID: <20260831-neon-responsible-ape-e0cd02@quoll>
+References: <20260825095047.9971-1-biju.das.jz@bp.renesas.com>
+ <20260825095047.9971-2-biju.das.jz@bp.renesas.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <20260825095047.9971-2-biju.das.jz@bp.renesas.com>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
+On Tue, Aug 25, 2026 at 10:50:40AM +0100, Biju wrote:
+> From: Biju Das <biju.das.jz@bp.renesas.com>
+> 
+> Extend the existing device tree bindings for Renesas RZ/G3S PCIe
+> controller to include support for the RZ/G3L (renesas,r9a08g046-pcie)
+> PCIe controller. The RZ/G3L PCIe controller is similar to RZ/G3S but has
+> some key differences:
+>      - Has 3 clocks compared to 2 on other SoCs.
+>      - Has a different set of reset signals
+> 
+> Add device tree bindings for renesas,r9a08g046-pcie compatible IPs.
+> 
+> Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+> ---
+>  .../bindings/pci/renesas,r9a08g045-pcie.yaml  | 33 ++++++++++++++++++-
+>  1 file changed, 32 insertions(+), 1 deletion(-)
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/renesas,r9a08g045-pcie.yaml b/Documentation/devicetree/bindings/pci/renesas,r9a08g045-pcie.yaml
+> index 09d78bd1a577..911b1976bf53 100644
+> --- a/Documentation/devicetree/bindings/pci/renesas,r9a08g045-pcie.yaml
+> +++ b/Documentation/devicetree/bindings/pci/renesas,r9a08g045-pcie.yaml
+> @@ -13,7 +13,7 @@ description: |
+>    PCIe host controller found in Renesas RZ/G3S and similar SoCs complies
+>    with PCIe Base Specification 4.0 and supports different link speeds
+>    depending on the SoC variant:
+> -    - Gen2 (5 GT/s): RZ/G3S
+> +    - Gen2 (5 GT/s): RZ/G3{L,S}
+>      - Gen3 (8 GT/s): RZ/G3E, RZ/V2H(P), RZ/V2N
+>  
+>  properties:
+> @@ -21,6 +21,7 @@ properties:
+>      oneOf:
+>        - enum:
+>            - renesas,r9a08g045-pcie # RZ/G3S
+> +          - renesas,r9a08g046-pcie # RZ/G3L
+>            - renesas,r9a09g047-pcie # RZ/G3E
+>            - renesas,r9a09g057-pcie # RZ/V2H(P)
+>        - items:
+> @@ -87,14 +88,18 @@ properties:
+>    interrupt-controller: true
+>  
+>    clocks:
+> +    minItems: 2
+>      items:
+>        - description: System clock
+>        - description: PM control clock or clock for L1 substate handling
+> +      - description: PM control clock or clock for L1 substate handling
 
-Pre-existing issues:
-- [High] Missing bounds check in `IrqVectorRegistration::index()` allows ou=
-t-of-bounds indices to trigger a C-side kernel warning and potential kernel=
- panic.
-- [High] `Device::alloc_irq_vectors` fails to enforce `min_vecs >=3D 1`, le=
-ading to a resource leak and broken device state when `0` is passed.
---
+PMU? You list both clocks, but is there any different between them?
 
-commit 4de7f8d3881b1c14eada957c4affb1c9815e3096
-Author: Sophon Z <aiqubits@hotmail.com>
+>  
+>    clock-names:
+> +    minItems: 2
+>      items:
+>        - const: aclk
+>        - enum: [pm, pmu]
+> +      - enum: [pm, pmu]
 
-rust: pci: Reject IRQ vector indices that do not fit in u32
+This should be "const: pmu" in such case.
 
-IrqVectorRegistration::index() accepts a usize, but pci_irq_vector()
-takes an unsigned int. On 64-bit architectures, casting an index
-larger than u32::MAX wraps it before the PCI core can validate it.
-In particular, u32::MAX + 1 becomes zero and can resolve to the first
-allocated vector.
+Best regards,
+Krzysztof
 
-Use a checked conversion and return EINVAL when the index cannot be
-represented by the C API.
-
-> diff --git a/rust/kernel/pci/irq.rs b/rust/kernel/pci/irq.rs
-> index 6741046ec1c09..1bf91973cb1f4 100644
-> --- a/rust/kernel/pci/irq.rs
-> +++ b/rust/kernel/pci/irq.rs
-> @@ -151,8 +151,10 @@ pub fn irq_type(&self) -> IrqType {
->      /// [`Self::len()`].
->      #[inline]
->      pub fn index(&self, index: usize) -> Result<IrqVector<'_>> {
-> +        let index =3D u32::try_from(index).map_err(|_| EINVAL)?;
-
-[Severity: High]
-This is a pre-existing issue, but does this function also need to verify th=
-at
-the index is within self.len()?
-
-If IrqVectorRegistration::index() receives an out-of-bounds index that fits
-in u32, the bounds check is missed, and it is passed directly to the C PCI
-core:
-
-rust/kernel/pci/irq.rs:IrqVectorRegistration::index() {
-    ...
-    let irq =3D unsafe { bindings::pci_irq_vector(self.dev.as_raw(), index)=
- };
-    ...
-}
-
-This can allow large indices to reach msi_domain_get_virq() and trigger a
-WARN_ON_ONCE in the C PCI core, which on systems with panic_on_warn=3D1 will
-result in a kernel panic and a complete denial of service.
-
-> +
->          // SAFETY: `self.dev.as_raw()` is a valid pointer to a `struct p=
-ci_dev`.
-> -        let irq =3D unsafe { bindings::pci_irq_vector(self.dev.as_raw(),=
- index as u32) };
-> +        let irq =3D unsafe { bindings::pci_irq_vector(self.dev.as_raw(),=
- index) };
->          if irq < 0 {
->              return Err(Error::from_errno(irq));
->          }
-
-While reviewing this code, I also noticed another pre-existing issue in the
-same file:
-
-rust/kernel/pci/irq.rs:Device::alloc_irq_vectors() {
-    ...
-    let ret =3D unsafe {
-        bindings::pci_alloc_irq_vectors(self.as_raw(), min_vecs, max_vecs, =
-irq_types.as_raw())
-    };
-    to_result(ret)?;
-
-    let len =3D NonZero::new(ret as usize).ok_or(EINVAL)?;
-    ...
-}
-
-[Severity: High]
-This isn't a bug introduced by this patch, but should alloc_irq_vectors()
-enforce min_vecs >=3D 1 before calling the C API?
-
-If alloc_irq_vectors() is called with min_vecs =3D 0, the C PCI core
-initializes MSI/MSI-X capabilities for 0 vectors and returns 0. The Rust
-wrapper treats this 0 return value as an error (NonZero::new fails) and bai=
-ls
-out without invoking pci_free_irq_vectors().
-
-Because no IrqVectorRegistration is constructed, its Drop handler is
-bypassed, permanently leaking the mapped MSI-X table and leaving the PCI
-device in a broken state where subsequent allocation attempts will fail.
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260831-fix-pci-ir=
-q-vector-index-truncation-v1-1-d63217d99b67@hotmail.com?part=3D1
