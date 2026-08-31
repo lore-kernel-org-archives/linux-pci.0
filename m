@@ -1,39 +1,40 @@
 Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A39942BE639;
-	Mon, 31 Aug 2026 19:14:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7CD522C026C;
+	Mon, 31 Aug 2026 19:14:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=204.191.154.188
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788203667; cv=none; b=T+LRuJ8KIynL5FshlNClgMKlNbd60QesYUGR/nY1PJ/HMJN42jujauw7QpyKidk0rdmncgFpziuxTjVPi8uxWhSlT3fRhJPpPeMQIId8lP0pOxrBk4FN9ZR5OxuKKfqCuL6BTd0bwKFeRwpHhYnSnvbGzaPkcoWII7cR2CxYcMg=
+	t=1788203668; cv=none; b=iNgVdGJwDEmgVJqac5fwdS1vkLowCnNFZ/hOP+zQ9lw3m6Y8uw5cK9MluarwDEbKOyfIUYoPqPCcB92Uy6PT6z9vO80gi1FAN2ZDFsgEirrtkoFtAsnhG4khgfBe7wJ8BT0hV/BWt0nhdWqYFplfR0fJO0NzSvPCreLNZF3iurI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788203667; c=relaxed/simple;
-	bh=HC94LW7Mw0CNj4s1GfvGmeMNjjo/1pCpAxQLLKyEUGk=;
-	h=From:To:Cc:Date:Message-ID:MIME-Version:Subject; b=b4RfdG8COJx0jNbuYU7bKPEVp/eU0y4S/uv/RIctbzA2dnlj3S/Xi00iaF0kz0GF/S2Qq4cieTy7DkRVH8nkce9kacU/xlkKqMohnEPRK5Sa+KR3AbvZOuPECsbvbF0ggedWbtEsXB32jcndHGwP5yY5qUmgI0DtznphQ6obufA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com; spf=pass smtp.mailfrom=deltatee.com; dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b=XK5kcQBm; arc=none smtp.client-ip=204.191.154.188
+	s=arc-20240116; t=1788203668; c=relaxed/simple;
+	bh=79mYpblsmiFWw8Bbx73RKfKeWgDVSiOSpcI2GZ4zFVc=;
+	h=From:To:Cc:Date:Message-ID:In-Reply-To:References:MIME-Version:
+	 Subject; b=Fw+UwhKBUur0xZNj0C3dEt4ZES6ZAWixrQmhAdf48VFWNUUr3s5uNu8YZIiIphMFccR/9D3ugFRtyva37Kahy+yxR5kqUT26Ip7j/4YxSEedM2m/lTvTnW4QyF0mS5ZXfS1JprmABdL4/dG+MmZKdw1qBRpDZuirP+8hoQE4+ns=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com; spf=pass smtp.mailfrom=deltatee.com; dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b=TG4tak9S; arc=none smtp.client-ip=204.191.154.188
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=deltatee.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b="XK5kcQBm"
+	dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b="TG4tak9S"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=deltatee.com; s=20200525; h=Subject:MIME-Version:Message-ID:Date:Cc:To:From
-	:references:content-disposition:in-reply-to;
-	bh=l2IUnbDb9sdLbiqKCxC1J9ILA8d+mipnpCNTmBoLTX8=; b=XK5kcQBme4qli89vOz33QSqMhz
-	AkubjDXfJWmZoYZznAG35kw6iB0HGcRSFZue5LOkhnbCo7QeOuBMb63uvYtyF3oJXR4Qy1jo0ApSm
-	/195At4XEVKNkB6fhuMwsA3/+ViBW3y9LrK4WzXDll/s0BzG30O7yCsL54Iw1ImfTjjZluEKLKu7C
-	xlvxDcj7Hnc3Wxf6ZtXcwfpYIj5dE9+RelQ8KS1qw8yn0wHxC2tDuck3qCr6cAPPYqZzrFb9flkcn
-	08q8PW1D0GKzWWFLtFNJljvhRcAADTfjfc+EXNsJsShlk/pBBS9i1kjIO3reXl5Z5jc1Sinbz6AJq
-	wTo2JE7A==;
+	d=deltatee.com; s=20200525; h=Subject:MIME-Version:References:In-Reply-To:
+	Message-ID:Date:Cc:To:From:content-disposition;
+	bh=Aaf6JxG1s0jf/AwW6M43JQGZZntdld7FYYVpfPheOg0=; b=TG4tak9SUxWempf10qjNAOP0kc
+	5p38jXv8sDYj/GMr0CeJOPxsEcQu3rZHxV0kvzySDGNvMTRkMvMttetTRRKRsbLaEVHFnVr42i0u4
+	B9N4td1DZX4pezlnTdz6/PSBMhjoZYyVBOh7IpP7iRu29wWe4xCXScGtWMSb7HqsO3tIWFty6I6Bc
+	OdQBXKF11Df/d4BVUpRJWvFnXe6d+GNi+4D5z2bM3vBkzbs5Ex6ke7gtE0kaUUCGwyuNrFV8l06a6
+	eewusZEQLN7RK9oBIIGwmlEy6l3OGRbvdtzIHvq93W+RsL8ecXan020k6yYijxusDg9MBl37znWCb
+	QQrIgPXg==;
 Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
 	by ale.deltatee.com with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
 	(Exim 4.98.2)
 	(envelope-from <gunthorp@deltatee.com>)
-	id 1x17SU-000000007Bg-0E8W;
-	Mon, 31 Aug 2026 13:14:18 -0600
+	id 1x17Sb-000000007DZ-0vVO;
+	Mon, 31 Aug 2026 13:14:25 -0600
 Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.98.2)
 	(envelope-from <gunthorp@deltatee.com>)
-	id 1x17SH-00000000s1T-1EwG;
-	Mon, 31 Aug 2026 13:14:05 -0600
+	id 1x17SI-00000000s1j-2AK7;
+	Mon, 31 Aug 2026 13:14:06 -0600
 From: Logan Gunthorpe <logang@deltatee.com>
 To: linux-kernel@vger.kernel.org,
 	linux-pci@vger.kernel.org,
@@ -45,10 +46,14 @@ Cc: Frank Li <Frank.li@nxp.com>,
 	Dave Jiang <dave.jiang@intel.com>,
 	George Ge <george.ge@microchip.com>,
 	Jaeyoung Chung <jjy600901@snu.ac.kr>,
-	Logan Gunthorpe <logang@deltatee.com>
-Date: Mon, 31 Aug 2026 13:13:50 -0600
-Message-ID: <20260831191403.207631-1-logang@deltatee.com>
+	Logan Gunthorpe <logang@deltatee.com>,
+	Sashiko <sashiko-bot@kernel.org>,
+	Frank Li <Frank.Li@nxp.com>
+Date: Mon, 31 Aug 2026 13:13:58 -0600
+Message-ID: <20260831191403.207631-9-logang@deltatee.com>
 X-Mailer: git-send-email 2.47.3
+In-Reply-To: <20260831191403.207631-1-logang@deltatee.com>
+References: <20260831191403.207631-1-logang@deltatee.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -57,100 +62,68 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SA-Exim-Connect-IP: 172.16.1.31
-X-SA-Exim-Rcpt-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, dmaengine@vger.kernel.org, vkoul@kernel.org, Frank.li@nxp.com, linux@weissschuh.net, dave.jiang@intel.com, kelvin.cao@microchip.com, george.ge@microchip.com, jjy600901@snu.ac.kr, logang@deltatee.com
+X-SA-Exim-Rcpt-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, dmaengine@vger.kernel.org, linux@weissschuh.net, dave.jiang@intel.com, kelvin.cao@microchip.com, george.ge@microchip.com, jjy600901@snu.ac.kr, logang@deltatee.com, vkoul@kernel.org, sashiko-bot@kernel.org, Frank.li@nxp.com, Frank.Li@nxp.com
 X-SA-Exim-Mail-From: gunthorp@deltatee.com
 X-Spam-Level: 
-Subject: [PATCH v5 00/12] dmaengine: miscellaneous fixes for ioat, switchtec_dma and plx_dma
+Subject: [PATCH v5 08/12] dmaengine: switchtec-dma: disable channels before freeing on registration failure
 X-SA-Exim-Version: 4.2.1 (built Sun, 23 Feb 2025 07:57:16 +0000)
 X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 
-This is the latest series of fixes that has been rebased onto v7.3-rc1.
+When switchtec_dma_create() fails after channels have been added to
+dma_dev->channels (either from switchtec_dma_chans_enumerate()'s own
+error path, or from dma_async_device_register() failing), the channel
+status IRQ is still live while the channels are released and freed,
+so it can fire mid-teardown against channels that are only partially
+torn down.
 
-There is an unresolved disagreement between me and Frank who does not
-think patches 3 and 4 are worth taking. I think they fix unlikely but
-theoretically possible issues with hardware failing to tear down
-correctly. I think these patches are correct, the best we can do and worth
-doing. And I especially want to have them merged if only to not have
-Sashiko bringing up the same issues every time we send a patch set.
+Add switchtec_dma_chans_disable(), which frees the channel status IRQ
+before releasing and freeing channels in both error paths.
 
-Please note: I'm going to be on vacation starting Friday the 4th until
-the 15th so if there is any feedback in that window I'll respond when
-I get back.
+Reported-by: Sashiko <sashiko-bot@kernel.org>
+Link: https://lore.kernel.org/dmaengine/20260717223431.625EE1F000E9@smtp.kernel.org
+Link: https://lore.kernel.org/dmaengine/20260721162822.05CDD1F000E9@smtp.kernel.org
+Reviewed-by: Frank Li <Frank.Li@nxp.com>
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+---
+ drivers/dma/switchtec_dma.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
-Thanks,
-
-Logan
-
-Changes since v4:
- * Rebased onto v7.3-rc1.
- * Added paragraph to patches 3 and 4 to make clear that they are
-   leaking memory in favour of preventing theoretically buggy hardware
-   from trashing re-used memory. I think this is the best thing to do.
-
-Changes since v3:
- * Add a patch (3) making switchtec_dma_chan_stop() clear the DMA base
-   registers even when halt_channel() times out, and return the halt
-   result. switchtec_dma_free_chan_resources() (patch 3) and the
-   alloc_chan_resources() error path (patch 4) now skip freeing the
-   descriptor rings when the halt wasn't confirmed. This will leak some
-   memory on tear down but that avoids broken hardware from scribbling
-   on memory that may have been freed and reallocated. (Per Sashiko)
- * Remove each channel's list entry in switchtec_dma_chans_free()
-   (patch 5), immediately before the memory is freed, instead of in
-   switchtec_dma_chans_disable() (patch 8), which now only frees the
-   channel status IRQ. (Per Sashiko)
- * Collected Reviewed-by tags from Frank and applied one of his
-   commit message suggestions.
-
-Changes since v2:
-
- * Fixed a race when unlisting the channels in the error path.
-   The interrupt needed to be disabled before hand. (Per Sashiko)
- * Picked up Acked-by from Dave Jiang on the two ioat patches.
-
-Changes since v1:
-
- * Added a fix for switchtec_dma_alloc_chan_resources()'s error path
-   calling disable_channel() instead of properly halting the channel
-   before freeing the descriptor rings. (Per Sashiko)
- * Added a fix for switchtec-dma channel structs being freed without
-   being removed from dma_dev->channels on a registration failure,
-   while the channel status IRQ is still live. (Per Sashiko)
- * Added a fix for switchtec_dma_remove() using swdma_dev after it may
-   already have been freed by dma_async_device_unregister(). (Per
-   Sashiko)
- * Added a fix for chan_status_irq being freed with the wrong API, and
-   a valid vector index of 0 being incorrectly treated as unset.
-   (Per Sashiko)
- * Made switchtec_dma_chans_release() void, since nothing checked its
-   return value. (Noticed while reviewing the code for these changes).
-
-Logan Gunthorpe (12):
-  dmaengine: switchtec-dma: fix double-free in switchtec_dma_free_desc()
-  dmaengine: switchtec-dma: fix resource leak in alloc_chan_resources
-  dmaengine: switchtec-dma: always clear DMA base registers on
-    chan_stop()
-  dmaengine: switchtec-dma: halt channel on alloc_chan_resources error
-  dmaengine: switchtec-dma: fix channel leak on registration failure
-  dmaengine: switchtec-dma: make switchtec_dma_chans_release() void
-  dmaengine: switchtec-dma: fix chan_status_irq cleanup on create()
-    error
-  dmaengine: switchtec-dma: disable channels before freeing on
-    registration failure
-  dmaengine: switchtec-dma: fix use-after-free of swdma_dev in remove()
-  dmaengine: ioat: disable relaxed ordering before registering the
-    device
-  dmaengine: ioat: use sysfs_emit() in per-channel sysfs show()
-  dmaengine: plx_dma: fix NULL pointer deref in plx_dma_isr()
-
- drivers/dma/ioat/init.c     |  18 +++---
- drivers/dma/ioat/sysfs.c    |  22 ++++----
- drivers/dma/plx_dma.c       |  10 ++--
- drivers/dma/switchtec_dma.c | 107 ++++++++++++++++++++++++++----------
- 4 files changed, 104 insertions(+), 53 deletions(-)
-
-
-base-commit: cee9395acd8043be0644b25c34bfa86623f2b935
+diff --git a/drivers/dma/switchtec_dma.c b/drivers/dma/switchtec_dma.c
+index 3068d9de4e6d..c2803af6589d 100644
+--- a/drivers/dma/switchtec_dma.c
++++ b/drivers/dma/switchtec_dma.c
+@@ -1198,6 +1198,15 @@ static void switchtec_dma_chans_free(struct switchtec_dma_dev *swdma_dev)
+ 	kfree(swdma_dev->swdma_chans);
+ }
+ 
++static void switchtec_dma_chans_disable(struct pci_dev *pdev,
++					struct switchtec_dma_dev *swdma_dev)
++{
++	if (swdma_dev->chan_status_irq >= 0) {
++		pci_free_irq(pdev, swdma_dev->chan_status_irq, swdma_dev);
++		swdma_dev->chan_status_irq = -1;
++	}
++}
++
+ static int switchtec_dma_chans_enumerate(struct switchtec_dma_dev *swdma_dev,
+ 					 struct pci_dev *pdev, int chan_cnt)
+ {
+@@ -1231,6 +1240,7 @@ static int switchtec_dma_chans_enumerate(struct switchtec_dma_dev *swdma_dev,
+ 	return chan_cnt;
+ 
+ err_exit:
++	switchtec_dma_chans_disable(pdev, swdma_dev);
+ 	switchtec_dma_chans_release(pdev, swdma_dev);
+ 	switchtec_dma_chans_free(swdma_dev);
+ 
+@@ -1334,6 +1344,7 @@ static int switchtec_dma_create(struct pci_dev *pdev)
+ 	return 0;
+ 
+ err_chans_release_exit:
++	switchtec_dma_chans_disable(pdev, swdma_dev);
+ 	switchtec_dma_chans_release(pdev, swdma_dev);
+ 	switchtec_dma_chans_free(swdma_dev);
+ 
 -- 
 2.47.3
 
