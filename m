@@ -1,84 +1,84 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 54EDF470EA8;
-	Tue,  1 Sep 2026 09:46:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5013D31E846;
+	Tue,  1 Sep 2026 09:47:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788255981; cv=none; b=iidYw60R+cBzKMYJbZgAb5OUxicd4M7BuAxqrSDb4w8YFiiGkvjDzlvyDWMs3nEuQa9nFRYG8AtL2H9PQHhFuoHIHz4JkiAn7daGG9vM2AJ1jBqxwLTFgvEhxG4DdxwKbHAsNNrQ1c4Yqg8DFmMoWCt83NUKmrZtC9orGIdylYQ=
+	t=1788256057; cv=none; b=EfKfrvjAC8zQYT0HkhmTujeVMhQrx65FFVybBODH0nUsmRmRhOZ8H84UD74xWRQde9pKjnIi4GwFEEI9EUD5U5QvAH8ZjVEq+jugqdCwuCjg0xwFxa7CxEUppdm36lXU58BhycRwK02KrlBsfH6UqtqPBV/d+Hwm+l4hO9zfVcQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788255981; c=relaxed/simple;
-	bh=MNDvjwNjtFV4OvCr4CAGheu33UIycLSRCz4pbCT3npQ=;
+	s=arc-20240116; t=1788256057; c=relaxed/simple;
+	bh=ufr0k3XOUOCZJ79uw2Wq+k45ckO6jAVwT3pyWX3PfX4=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=mVsjr+ocXqcZClYk53UmcPEqSauioxc5Xt5VNCRt8/lUly3baqDxXHNYL/HzKKUN8KRfLIcqAMuA18+0lu3kJfBCBFnBXrt7ju+2zfCQW97D7YMnILlM1ovcsvBqU+ZGvrjkuLsvtbrDvKGmjYJXevHgjR2VGWb9Gf/8tN18iK4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LP09eZQh; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=uCMsfASY46NyHZPyHAJNj7Gm+WTtiYAyK05bVapSge57mQPuNn/++GQfUVBjqpabXQQ7r/+trzPSyTUyY1QHNl09/27+z+z2+mYF8olrMzq6dz8vvLp/9AVbHVbatTp6ZqdTeDvaoAOsvIPpuImeEtMmuqC9YfLkHZFlPwf8Sjo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VeuJAmjy; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LP09eZQh"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B155E1F000E9;
-	Tue,  1 Sep 2026 09:46:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VeuJAmjy"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 915D91F000E9;
+	Tue,  1 Sep 2026 09:47:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788255979;
-	bh=MNDvjwNjtFV4OvCr4CAGheu33UIycLSRCz4pbCT3npQ=;
+	s=k20260515; t=1788256055;
+	bh=ufr0k3XOUOCZJ79uw2Wq+k45ckO6jAVwT3pyWX3PfX4=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=LP09eZQhWxo0DKGJN8XwYpsRhocnAYFqP+X/8gdeJAw4oxGZO96XJVrMzQWvwbTUY
-	 yp7+Sm6nyLfDIJebMm9W1bl6AnhsdzFoEiYIibw9uJdMG8EVi5P/vmlgCuUM4Uawpv
-	 e0FmRiDIsEKvVIT3Qv7imbjOiT2Z4BtB6uT/CPPkM75yoAuPKIEPoaAr8ebBmh6z3E
-	 7cVd14BtupOXyUsi61RMCDcKSxsdAqnbpxnw0dr6eVXYy9iFQ+7m61d6AKxWsz35c2
-	 VHwzO/hLqopM8C/iqSGbyQyqk/+RRVuvVoucZG0RXEifNV0RPIM+6Apa54FQ8SiZph
-	 0qNWBeOBtLehg==
+	b=VeuJAmjySszcejcxGGURm/NufoDlDbXzoFbcr+vn6kohEG53CuFDEvo3n8Dz1EtTE
+	 6BAywJfUZu0vE35CW4zS+COS+Ljyksp4sKp4yW/fnGwSH/BuHAP5OX2DsBJkQwT5tm
+	 RDFp/PnGeoWMVxaNS9mbgHjh1q3W7hQbbEzQiaVXhvyTpD0tAwUtZWzvrODlE3lvaI
+	 M8VFmbs7KDkwv+eoFoNgDzs+HBtpevpQ4EoaNJ5rJe7yMWXIXak+T5qeRMf5Us1SvE
+	 eYnHg3sU7KpnLMhd+0b0ydTK9TT+gZkwCFAZExMFU66mk5JzHAIOL/xhaS5v/CtmGB
+	 NtttsUuYwOB3Q==
 From: sashiko-bot@kernel.org
-Subject: Re: [RFC PATCH 05/19] vfio/pci: Serialize config access with
- recovery
+Subject: Re: [RFC PATCH 02/19] vfio/pci: Serialize generic device lifetime
+ with recovery
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Shameer Kolothum" <skolothumtho@nvidia.com>
 Cc: kvm@vger.kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260901093217.8539-6-skolothumtho@nvidia.com>
+In-Reply-To: <20260901093217.8539-3-skolothumtho@nvidia.com>
 References: <20260901093217.8539-1-skolothumtho@nvidia.com>
- <20260901093217.8539-6-skolothumtho@nvidia.com>
+ <20260901093217.8539-3-skolothumtho@nvidia.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 01 Sep 2026 09:46:19 +0000
-Message-Id: <20260901094619.B155E1F000E9@smtp.kernel.org>
+Date: Tue, 01 Sep 2026 09:47:35 +0000
+Message-Id: <20260901094735.915D91F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-> Hold recovery_lock for reading across each config space operation, so
-> recovery can shut out new ones and wait for whatever is already running.
-> The user copies stay outside the lock, since a copy can fault.
+> vfio_pci_core_disable() frees vconfig while holding only the vfio
+> device_set mutex. The PCI error callbacks never take that one. They run
+> under the PCI device_lock instead, and vfio's close path does not hold
+> that. So a callback still running when close starts can walk into state
+> which is being freed.
 >=20
-> Take the lock in the dispatcher rather than around the individual
-> hardware accessors. That means once recovery blocks access every config
-> read fails with -EIO, even a read served entirely from vconfig which
-> never touches the device. Userspace which wants to know what is going on
-> reads the device feature instead. That one stays available during an
-> event.
+> Publish a device_open flag under recovery_lock. enable() clears it before
+> it touches the device, finish_enable() sets it once vfio_config_init()
+> has allocated vconfig, and prepare_close() clears it again before the
+> teardown frees vconfig. All three take recovery_lock for writing, so a
+> callback either gets there first and close waits for it, or it finds the
+> flag clear and does nothing. The access guards added later test the same
+> flag.
 >=20
-> The PCIe and AF capability writes no longer reset the device themselves,
-> and the power management write no longer moves it to D0 itself. They
-> record what was asked for and the dispatcher does it after dropping
-> recovery_lock. Both take pci_bus_sem, which AER already holds when it
-> calls into the driver, so doing either inside the lock would be the wrong
-> order. A reset method reaches it directly, and a D0 transition reaches it
-> through pci_set_full_power_state() calling
-> pcie_aspm_pm_state_change(). The lower power states take neither, so
-> those still run in the writefn. The writefn declaration says so.
+> recovery_lock is not held across vfio_pci_core_disable(). A later patch
+> has error_detected() take it from under pci_bus_sem, and disable() gets
+> to pci_reset_bus(), which takes pci_bus_sem the other way round.
 >=20
-> Both stay best effort, as the guest requested FLR always was. The result
-> is not reported back through the config write. With recovery enabled they
-> are dropped while a recovery or reset is already in flight, since that
-> leaves the device in D0 and reset anyway. The reset helper tests the
-> recovery state for itself. The power up does not, so the dispatcher
-> tests it before that one.
+> access_blocked is only ever set while device_open is set. Nothing sets it
+> without testing device_open first, and close clears access_blocked before
+> it clears device_open. If close left it set, nothing could clear it
+> afterwards.
+> The transaction which set it cannot clear it once device_open is gone,
+> and every path which refuses work on a blocked device would go on
+> refusing. Clear it before device_open so a lock-free reader never sees
+> it set on a device which is closed.
 >=20
-> Assisted-by: Claude:claude-opus-5
+> open() now refuses a disconnected device with -ENODEV. That is new.
+>=20
 > Signed-off-by: Shameer Kolothum <skolothumtho@nvidia.com>
 
 Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260901093217.8539=
--1-skolothumtho@nvidia.com?part=3D5
+-1-skolothumtho@nvidia.com?part=3D2
 
