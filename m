@@ -1,63 +1,64 @@
-Received: from mail-pj1-f50.google.com (mail-pj1-f50.google.com [209.85.216.50])
+Received: from mail-pj1-f43.google.com (mail-pj1-f43.google.com [209.85.216.43])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F018B38D41A
-	for <linux-pci@vger.kernel.org>; Tue,  1 Sep 2026 01:04:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29DFE380FF2
+	for <linux-pci@vger.kernel.org>; Tue,  1 Sep 2026 01:04:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788224669; cv=none; b=lANPUPKjBOcaOkhjUdKTNQMvVt978qRERBucPOOM3rxasxSmdcdCnQhx4J6je16B9jaIQ1DvwEV/ZeOPZO2zaJH/ZzmW0nbeLzgojqwwsgArRvmgOHTzeoJQ6agisjuKNZAFA7JO93j50yVOvTclVFBSthrqRAfvWpG9CoTeGbM=
+	t=1788224677; cv=none; b=MZgHGdRqL+KPXlE1IXePs8hA3oHRjAyWKRTOp25j84wcFXaO4vLnQLLDkQiSb16lNZmFCp9Uu+atexN5dXq85avMkWgufzw2FvR1UPZltKzJ41o69GAbiadyAPsYlC8HFcO0cwCf6GIpk6b9K4AvqwHNu9wT9rTpbMU6AJ7nWM4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788224669; c=relaxed/simple;
-	bh=BiaV76NHkxz06E8kYtTux48D14DxjulaUaglF1xarVA=;
+	s=arc-20240116; t=1788224677; c=relaxed/simple;
+	bh=CQFEUDdrBOr25kMcKMXOfOQ/OinpeF576SKItpXVsJg=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=oGWwe4nG0qHBgp/ufYJIRirhUsKJBogPdOimlkZBBO+2XEkaxEW6Y+zeoeHskoxZDtR4TKKab37wV5Fp1YXT9kLtsgXv4FPLiG7e1VtSKGUD5wSShFYxA0GkXN9AYb6D3GyNGEie4elYaun2tx1hfXQlqPeBdYLB2BwjOKNRLps=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=FQCg7ZlO; arc=none smtp.client-ip=209.85.216.50
+	 MIME-Version:Content-Type; b=dJIHEjoPFGWxlkf4CRQl98EKHGFJqNSTpx5p4z4LHkUJYqT4/AHEhUd+sBi/xfQjsDRMVNIlp5oheYs5UCn3gVygBDK3eg2QF4M+9pr5DRb28s/Ed8iQ8T317vLdD2ILe9Sinf2k1Xj9sUhfufQq+U90+HVTbOXyJKG5c95I+ek=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ZsBDaC0/; arc=none smtp.client-ip=209.85.216.43
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FQCg7ZlO"
-Received: by mail-pj1-f50.google.com with SMTP id 98e67ed59e1d1-38511175ad3so4281710a91.2
-        for <linux-pci@vger.kernel.org>; Mon, 31 Aug 2026 18:04:26 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ZsBDaC0/"
+Received: by mail-pj1-f43.google.com with SMTP id 98e67ed59e1d1-39266382df6so3537881a91.3
+        for <linux-pci@vger.kernel.org>; Mon, 31 Aug 2026 18:04:35 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1788224666; x=1788829466; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=1Y85wCLF7sPuzEoPMS3iNY9FbVM2HqAZF/UVKCQfhZk=;
-        b=FQCg7ZlO5dP6o1Jmz76SfkFYqPGzEpZizZfVOWQ9mU0SfidARzmD776FAT7MTh5m2M
-         9tCZY/tJx22nt3GeC8eznD5oKRkxbaXyMJ6RmtlIW71yX9ZCt/YNz70Dd1M1zWw5pyHp
-         FKBkXsMooV0n+9HNYBoHrATgB/4LKH2LcpYK06yMJWA2w6a0Ah/PFPDM9jfCZSSk+FZh
-         wRwv+m+9QG7j6Vp7bmEIDAd0ZJIO47kWZLLHPJCsddGdxLYwJngLB0gi7lYMMFMii258
-         YKH2XdZoeRXeHXWP0woeAenbo58lPuqsjCYKMWaTiH5N/0D1RHdcdjb24Dj8VwNmgDlW
-         IQhA==
+        d=gmail.com; s=20251104; t=1788224675; x=1788829475; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:mime-version:references
+         :in-reply-to:message-id:date:subject:cc:to:from:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=UyJ6OADjMeEJ9CwYlU3XCJzTi4L5CBgkg5gwk3kMxf4=;
+        b=ZsBDaC0/+fQmyD8tSNma39eqdyThM8INc0UOACy2Uaxa6xkRXPoltbKVX9msgUyY4j
+         HDRReL3Hu9mqFn0Lj7970n4SznkLZri3iVOHP9GPmteNf73PClvaBg61H2fabq4dyoOh
+         cYPi10HRGV+j6vTQ7rWmH2UHTqmloTehgFJKpe6PB6tv8FJMQdvC77/IK/BCRxL2Sl2t
+         3A/puScoxik8/IcLJKrXhZ9TikflCIgYwSe6qu73WcYbLMCspK75Ai4l2aiQkQz26Fvs
+         6PDEbZjmMUOTG5oSZnWWwvYkyA535ABSgC0DEdMnaTdtOiMJ69mCj2T3m0CItNZdQnR5
+         LT5g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788224666; x=1788829466;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=1Y85wCLF7sPuzEoPMS3iNY9FbVM2HqAZF/UVKCQfhZk=;
-        b=cIfSj9AhmwaNX0QYC2fWlTt7WoR8ffzeitkRwuT+g5KTSwMg2mWLNN+h3DCQB3EM8Y
-         24GLkzlFmPjIBPmPA0CJEdL7jaV2JFzz7wdEgNXUsRA3zGIjHWTKUpbjPIW2QGelYitu
-         U3ADBu6MaPXR+Ch/7uYVm776pfm+m2V1pCtWI4CCBoSXjGpLRVRf79UfW9A+cqbg0/gz
-         NLcUfsXdxZHpY5y1A4SsvjKJni/70FabzAnr/HVNPI1MYsOozHOhnPNNZkimV6T/meMz
-         7O6XcMTIaaJB7CODF6czXfuAjjsv1XRpERl03OkjG4XLIqJyW2mKIeeo/GOq8r9k6Vws
-         GtuQ==
-X-Gm-Message-State: AFuF++n5ZRr+y8WwHVnbeiOPWnNrT8kuBKT1QjT/EBA8LSzOky2FNemR
-	wpMG7sG33pT8hCDma4bTn6FsWs5RFaBHbTNcxDTvY5eUCFg8c5lMIX+p+sIvJg==
-X-Gm-Gg: AYBFou1etyaayQHHolOaZicJjlpnvELNyMWpzWKKzaKq0iG784T0v6EVqSJG4+TxGv6
-	weWkKFHZ+y0cf8MYbQenuWO3iOvn5X4LclChIzT2SSHwjqvvP8uezZtxiSuLvl1Y5RQHCBmXPuY
-	DaFSuwOzYzjn1b5lvswkGu8bIl0gQDURGXtDPLPnOm2fFwoH4xzF6HPq+HZaV+Mxbe6KUtc+ZVR
-	K7MeQ9syaL7WdZAiJflEDL20bp+ybuyzDsJhrMgNlKEK3Pn9qof2ImziDaXt+1BThuTwtNnGIQd
-	domEW8fFar3eaurvG+0G9wzXW3JdgBbcNN+FjKb31CiyFJYGqCfmRO4vfwuBSOLbahVICSKJTic
-	m+/lI9GKFZjRXFEg/5tMYQ4xtFW0T8mh0lFyztULoCbEpB350A30Im+1wXx09IZugQEuO/zLHKj
-	tzR39+4LA2dvC6h+w+f1XzF4B4MiWCmO5Wf5wMTQm11hgjg+b0Tnw7+3caeQGiQ8nFLJOSHj3pg
-	PpyKQ==
-X-Received: by 2002:a17:90a:e7d2:b0:398:9bd4:d15 with SMTP id 98e67ed59e1d1-39907e73facmr5625095a91.20.1788224666148;
-        Mon, 31 Aug 2026 18:04:26 -0700 (PDT)
+        d=1e100.net; s=20251104; t=1788224675; x=1788829475;
+        h=content-transfer-encoding:content-type:mime-version:references
+         :in-reply-to:message-id:date:subject:cc:to:from:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=UyJ6OADjMeEJ9CwYlU3XCJzTi4L5CBgkg5gwk3kMxf4=;
+        b=FlVnXNiYd8a+dnyJYoTXxPCKinxcl80r58nFCi9VWcx9SYDT4HzXtb51CZdvzIjxB1
+         Z80hn/sXy59ryRd8aPAEKsQ8+w97l4QzqebwBP+YL9qKkzq0DUW6Gg3yB4CptJjwRKYV
+         Vh3v2eEwuCxMlyaLKzI4KDgIi5ZYyAhi0CbWx66GPSI/I9lq+ynZ1XP4XYLIAuyV9ftR
+         JFT1CGgYySXRj+LGI7NA3ruV1Fx0JZ7GGhToaw89esPuDO7g1mWLTk4J+GIAMIaOMqJH
+         lYxTBUpnhXShuyk1YqXWAgnV9Nl/uI8qGDggn6XVL6NwPQTQMW/RFh7AvUPVIWLMMOQE
+         CVQw==
+X-Gm-Message-State: AFuF++nji6X71XATKaxgOqCWcZ5pRvz+pHCmCfmLTGf64ex9XeOJHjsE
+	TtgLvmBbwL16/cfFwS9CUWGo5U11WT6PtNneOcmzgvRlXg1uJz/N1RyY4RU4ZA==
+X-Gm-Gg: AYBFou1LBZ5u7T4a6MLw72J9r9ThRzR62kzNErwhhYcKZs0YkIXDDbfZV5MI2JiJ/Om
+	qn1ILkBx8qesoO0cHcxwxfbUlopOcCHbuyd5z2M8QsiSa1jrvcGtXM+Hc/sHBH3Xgun1ASRf3Xy
+	a9Ro0KQrO18psz/JoW8lw8cfr27RWqQ9sbbs9bWks1FNKMpYTTGiDj6cgee1iIlhvM4SBkuWHtV
+	d+JYsfx3xBXG6F8dqMWk1VUjIsx6Nw0eqHBIzQmbZZg6nxECmBMR5BU9yVmjGojt56o2PsT+niB
+	TtFlAZDf9qFTGs4vTQchexzpoUyXC9jUclk6ovm2hkoxJKArg/Q5rCsEahhb1Ew8im1ICWV6cUn
+	fXF5epTvrN5Nr0Ay9f3PBkQw9YWJ8bRlK3wlCERwQ5Fp5fg46SH7Lp6C29pczUWPKSnjHsBX6Qk
+	pKjbOzT6MIXLP08d26shj0yfiss4H9dCXaowSzSPjmrtWOqvWBSgZVTldE+kA6pXlcg2Zxz3BXE
+	OO+tw==
+X-Received: by 2002:a17:90b:54d0:b0:398:d93a:b343 with SMTP id 98e67ed59e1d1-39907ab0ec5mr6643406a91.3.1788224675395;
+        Mon, 31 Aug 2026 18:04:35 -0700 (PDT)
 Received: from toolbx.alistair23.me ([2403:581e:fdf9:0:13b2:851f:d9cb:44c5])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3990d49e9e0sm2372024a91.11.2026.08.31.18.04.18
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3990d49e9e0sm2372024a91.11.2026.08.31.18.04.26
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 31 Aug 2026 18:04:25 -0700 (PDT)
+        Mon, 31 Aug 2026 18:04:34 -0700 (PDT)
 From: alistair23@gmail.com
 X-Google-Original-From: alistair.francis@wdc.com
 To: linux-pci@vger.kernel.org,
@@ -81,10 +82,13 @@ Cc: gary@garyguo.net,
 	boqun.feng@gmail.com,
 	bjorn3_gh@protonmail.com,
 	alex.gaynor@gmail.com,
-	aliceryhl@google.com
-Subject: [PATCH v3 03/21] rust: validate: add `Validate` trait
-Date: Tue,  1 Sep 2026 11:03:29 +1000
-Message-ID: <20260901010347.2614656-4-alistair.francis@wdc.com>
+	aliceryhl@google.com,
+	Dan Williams <dan.j.williams@intel.com>,
+	Alistair Francis <alistair.francis@wdc.com>,
+	=?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Subject: [PATCH v3 04/21] X.509: Make certificate parser public
+Date: Tue,  1 Sep 2026 11:03:30 +1000
+Message-ID: <20260901010347.2614656-5-alistair.francis@wdc.com>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260901010347.2614656-1-alistair.francis@wdc.com>
 References: <20260901010347.2614656-1-alistair.francis@wdc.com>
@@ -94,130 +98,156 @@ List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Benno Lossin <benno.lossin@proton.me>
+From: Lukas Wunner <lukas@wunner.de>
 
-Introduce the `Validate<Input>` trait and functions to validate
-`Untrusted<T>` using said trait. This allows one to access the inner
-value of `Untrusted<T>` via `validate{,_ref,_mut}` functions which
-subsequently delegate the validation to user-implemented `Validate`
-trait.
+The upcoming support for PCI device authentication with CMA-SPDM
+(PCIe r6.1 sec 6.31) requires validating the Subject Alternative Name
+in X.509 certificates.
 
-The `Validate` trait is the only entry point for validation code, making
-it easy to spot where data is being validated.
+High-level functions for X.509 parsing such as key_create_or_update()
+throw away the internal, low-level struct x509_certificate after
+extracting the struct public_key and public_key_signature from it.
+The Subject Alternative Name is thus inaccessible when using those
+functions.
 
-The reason for restricting the types that can be inputs to
-`Validate::validate` is to be able to have the `validate...` functions
-on `Untrusted`. This is also the reason for the suggestions in the
-`Usage in API Design` section in the commit that introduced
-`Untrusted<T>`.
+Afford CMA-SPDM access to the Subject Alternative Name by making struct
+x509_certificate public, together with the functions for parsing an
+X.509 certificate into such a struct and freeing such a struct.
 
-Signed-off-by: Benno Lossin <benno.lossin@proton.me>
-Message-ID: <20250814124424.516191-4-lossin@kernel.org>
+No functional change intended.
+
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+Reviewed-by: Dan Williams <dan.j.williams@intel.com>
+Reviewed-by: Alistair Francis <alistair.francis@wdc.com>
+Reviewed-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
+Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
 ---
- rust/kernel/validate.rs | 70 ++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 69 insertions(+), 1 deletion(-)
+ crypto/asymmetric_keys/x509_parser.h | 42 +--------------------
+ include/keys/x509-parser.h           | 55 ++++++++++++++++++++++++++++
+ 2 files changed, 56 insertions(+), 41 deletions(-)
+ create mode 100644 include/keys/x509-parser.h
 
-diff --git a/rust/kernel/validate.rs b/rust/kernel/validate.rs
-index 2b28625c25ef..663681b633c8 100644
---- a/rust/kernel/validate.rs
-+++ b/rust/kernel/validate.rs
-@@ -11,6 +11,9 @@
- //! APIs that write back into userspace usually allow writing untrusted bytes directly, allowing
- //! direct copying of untrusted user data back into userspace without validation.
- //!
-+//! The only way to access untrusted data is to [`Validate::validate`] it. This is facilitated by
-+//! the [`Validate`] trait.
-+//!
- //! # Rationale
- //!
- //! When reading data from an untrusted source, it must be validated before it can be used for
-@@ -52,7 +55,7 @@
- /// untrusted, as it would otherwise violate normal Rust rules. For this reason, one can easily
- /// convert that reference to `&[Untrusted<u8>]`. Another such example is `Untrusted<KVec<T>>`, it
- /// derefs to `KVec<Untrusted<T>>`. Raw bytes however do not behave in this way, `Untrusted<u8>` is
--/// totally opaque.
-+/// totally opaque and one can only access its value by calling [`Untrusted::validate()`].
- ///
- /// # Usage in API Design
- ///
-@@ -107,6 +110,30 @@ pub fn new(value: T) -> Self
-     {
-         Self(value)
-     }
-+
-+    /// Validate the underlying untrusted data.
-+    ///
-+    /// See the [`Validate`] trait for more information.
-+    pub fn validate<V: Validate<Self>>(self) -> Result<V, V::Err>
-+    where
-+        T: Sized,
-+    {
-+        V::validate(self.0)
-+    }
-+
-+    /// Validate the underlying untrusted data.
-+    ///
-+    /// See the [`Validate`] trait for more information.
-+    pub fn validate_ref<'a, V: Validate<&'a Self>>(&'a self) -> Result<V, V::Err> {
-+        V::validate(&self.0)
-+    }
-+
-+    /// Validate the underlying untrusted data.
-+    ///
-+    /// See the [`Validate`] trait for more information.
-+    pub fn validate_mut<'a, V: Validate<&'a mut Self>>(&'a mut self) -> Result<V, V::Err> {
-+        V::validate(&mut self.0)
-+    }
- }
+diff --git a/crypto/asymmetric_keys/x509_parser.h b/crypto/asymmetric_keys/x509_parser.h
+index b7aeebdddb36..39f1521b773d 100644
+--- a/crypto/asymmetric_keys/x509_parser.h
++++ b/crypto/asymmetric_keys/x509_parser.h
+@@ -5,51 +5,11 @@
+  * Written by David Howells (dhowells@redhat.com)
+  */
  
- impl<T> Deref for Untrusted<[T]> {
-@@ -146,3 +173,44 @@ fn deref_mut(&mut self) -> &mut Self::Target {
-         unsafe { &mut *ptr }
-     }
- }
+-#include <linux/cleanup.h>
+-#include <linux/time.h>
+-#include <crypto/public_key.h>
+-#include <keys/asymmetric-type.h>
+-#include <crypto/sha2.h>
+-
+-struct x509_certificate {
+-	struct x509_certificate *next;
+-	struct x509_certificate *signer;	/* Certificate that signed this one */
+-	struct public_key *pub;			/* Public key details */
+-	struct public_key_signature *sig;	/* Signature parameters */
+-	u8		sha256[SHA256_DIGEST_SIZE]; /* Hash for blacklist purposes */
+-	char		*issuer;		/* Name of certificate issuer */
+-	char		*subject;		/* Name of certificate subject */
+-	struct asymmetric_key_id *id;		/* Issuer + Serial number */
+-	struct asymmetric_key_id *skid;		/* Subject + subjectKeyId (optional) */
+-	time64_t	valid_from;
+-	time64_t	valid_to;
+-	const void	*tbs;			/* Signed data */
+-	unsigned	tbs_size;		/* Size of signed data */
+-	unsigned	raw_sig_size;		/* Size of signature */
+-	const void	*raw_sig;		/* Signature data */
+-	const void	*raw_serial;		/* Raw serial number in ASN.1 */
+-	unsigned	raw_serial_size;
+-	unsigned	raw_issuer_size;
+-	const void	*raw_issuer;		/* Raw issuer name in ASN.1 */
+-	const void	*raw_subject;		/* Raw subject name in ASN.1 */
+-	unsigned	raw_subject_size;
+-	unsigned	raw_skid_size;
+-	const void	*raw_skid;		/* Raw subjectKeyId in ASN.1 */
+-	unsigned	index;
+-	bool		seen;			/* Infinite recursion prevention */
+-	bool		verified;
+-	bool		self_signed;		/* T if self-signed (check unsupported_sig too) */
+-	bool		unsupported_sig;	/* T if signature uses unsupported crypto */
+-	bool		blacklisted;
+-};
++#include <keys/x509-parser.h>
+ 
+ /*
+  * x509_cert_parser.c
+  */
+-extern void x509_free_certificate(struct x509_certificate *cert);
+-DEFINE_FREE(x509_free_certificate, struct x509_certificate *,
+-	    if (!IS_ERR(_T)) x509_free_certificate(_T))
+-extern struct x509_certificate *x509_cert_parse(const void *data, size_t datalen);
+ extern int x509_decode_time(time64_t *_t,  size_t hdrlen,
+ 			    unsigned char tag,
+ 			    const unsigned char *value, size_t vlen);
+diff --git a/include/keys/x509-parser.h b/include/keys/x509-parser.h
+new file mode 100644
+index 000000000000..8b68e720693a
+--- /dev/null
++++ b/include/keys/x509-parser.h
+@@ -0,0 +1,55 @@
++/* SPDX-License-Identifier: GPL-2.0-or-later */
++/* X.509 certificate parser
++ *
++ * Copyright (C) 2012 Red Hat, Inc. All Rights Reserved.
++ * Written by David Howells (dhowells@redhat.com)
++ */
 +
-+/// Marks valid input for the [`Validate`] trait.
-+pub trait ValidateInput: private::Sealed {
-+    /// Type of the inner data.
-+    type Inner: ?Sized;
-+}
++#ifndef _KEYS_X509_PARSER_H
++#define _KEYS_X509_PARSER_H
 +
-+impl<T: ?Sized> ValidateInput for Untrusted<T> {
-+    type Inner = T;
-+}
++#include <linux/cleanup.h>
++#include <linux/time.h>
++#include <crypto/public_key.h>
++#include <keys/asymmetric-type.h>
++#include <crypto/sha2.h>
 +
-+impl<'a, T: ?Sized> ValidateInput for &'a Untrusted<T> {
-+    type Inner = &'a T;
-+}
++struct x509_certificate {
++	struct x509_certificate *next;
++	struct x509_certificate *signer;	/* Certificate that signed this one */
++	struct public_key *pub;			/* Public key details */
++	struct public_key_signature *sig;	/* Signature parameters */
++	u8		sha256[SHA256_DIGEST_SIZE]; /* Hash for blacklist purposes */
++	char		*issuer;		/* Name of certificate issuer */
++	char		*subject;		/* Name of certificate subject */
++	struct asymmetric_key_id *id;		/* Issuer + Serial number */
++	struct asymmetric_key_id *skid;		/* Subject + subjectKeyId (optional) */
++	time64_t	valid_from;
++	time64_t	valid_to;
++	const void	*tbs;			/* Signed data */
++	unsigned	tbs_size;		/* Size of signed data */
++	unsigned	raw_sig_size;		/* Size of signature */
++	const void	*raw_sig;		/* Signature data */
++	const void	*raw_serial;		/* Raw serial number in ASN.1 */
++	unsigned	raw_serial_size;
++	unsigned	raw_issuer_size;
++	const void	*raw_issuer;		/* Raw issuer name in ASN.1 */
++	const void	*raw_subject;		/* Raw subject name in ASN.1 */
++	unsigned	raw_subject_size;
++	unsigned	raw_skid_size;
++	const void	*raw_skid;		/* Raw subjectKeyId in ASN.1 */
++	unsigned	index;
++	bool		seen;			/* Infinite recursion prevention */
++	bool		verified;
++	bool		self_signed;		/* T if self-signed (check unsupported_sig too) */
++	bool		unsupported_sig;	/* T if signature uses unsupported crypto */
++	bool		blacklisted;
++};
 +
-+impl<'a, T: ?Sized> ValidateInput for &'a mut Untrusted<T> {
-+    type Inner = &'a mut T;
-+}
++struct x509_certificate *x509_cert_parse(const void *data, size_t datalen);
++void x509_free_certificate(struct x509_certificate *cert);
 +
-+mod private {
-+    use super::Untrusted;
++DEFINE_FREE(x509_free_certificate, struct x509_certificate *,
++	    if (!IS_ERR(_T)) x509_free_certificate(_T))
 +
-+    pub trait Sealed {}
-+
-+    impl<T: ?Sized> Sealed for Untrusted<T> {}
-+    impl<'a, T: ?Sized> Sealed for &'a Untrusted<T> {}
-+    impl<'a, T: ?Sized> Sealed for &'a mut Untrusted<T> {}
-+}
-+
-+/// Validate [`Untrusted`] data.
-+///
-+/// Care must be taken when implementing this trait, as unprotected access to unvalidated data is
-+/// given to the [`Validate::validate`] function. The implementer must ensure that the data is only
-+/// used for logic after successful validation.
-+pub trait Validate<Input: ValidateInput>: Sized {
-+    /// Validation error.
-+    type Err;
-+
-+    /// Validate the raw input.
-+    fn validate(raw: Input::Inner) -> Result<Self, Self::Err>;
-+}
++#endif /* _KEYS_X509_PARSER_H */
 -- 
 2.55.0
 
