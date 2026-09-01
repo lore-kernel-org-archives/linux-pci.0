@@ -1,77 +1,80 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B34FF371076
-	for <linux-pci@vger.kernel.org>; Tue,  1 Sep 2026 00:47:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 99465233955
+	for <linux-pci@vger.kernel.org>; Tue,  1 Sep 2026 00:48:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788223672; cv=none; b=WPZ2ASodjPPA67sXkPc9ixeauEnTOufyoftBKHJUE0Ii/aV1+qPP1rquIiyghLj54tF3ziFFg7v+5iXiyV+PbT9r5GHpoVtZmJq+nb+lD29fq715qpmJhFGdOKEYoIoI5h2j7CMbrknKuzAtTzGtruAL345eBCe63o6wzHf0Lqc=
+	t=1788223713; cv=none; b=L2SRMaMVfj0Iosqf12VNYOlwG+rk6fZtrRrXrPD/WUkBwXpZufUo9mEIhl2Ky6QZf9xObePu6zZcuiyc86hIO9ZvbonVeEoO6RET8TQ4PxujXGKbOYSXe8WV6mb3qbuXfq2Yb0impx/gVD7W/v7duJkTbFPdsVW7HjFgzFq9XMM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788223672; c=relaxed/simple;
-	bh=hi22p/xcPonsjDCHQ2d4Kko7BcOgS+xTftqZl6PbI38=;
+	s=arc-20240116; t=1788223713; c=relaxed/simple;
+	bh=qderzRJmnGEKMR/5T/fanJ9dWBmbheKBev2qBaxmf4M=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=h8S30vuLbn4go63c3pFr5cGL4Jw6CU+/JOMAfY4dZz7d/m+VU8QF2kdhJOOvBKXbYFBlXucd0sfKMxRSynatJmiOXBg4h+o1kG5qyVQTZYg2fGQYtXrRnahxrPSlAni+dIOYETvhjQjW7MT2IN0JksYcC9Zi6Hff3rwvVIeCJLo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MdlxFUnE; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=NCHHXGYYg9/hlK9CaEWy26H8fm2CvkK4mUeFrL7Ot6e46btfhUlF5OGhkCNVtUxrONOiGGGV5IR8p3muXuasqPL/S3muIXSHsJOE0qYRbQm+J9WowgGkjjaCD+VNTcMDpcXhyeSJyG6e27eGJrqMCr/odARGi1UfaurCmNQ8Ni4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RgR5H6X7; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MdlxFUnE"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 33F221F000E9;
-	Tue,  1 Sep 2026 00:47:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RgR5H6X7"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1779D1F000E9;
+	Tue,  1 Sep 2026 00:48:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788223671;
-	bh=hi22p/xcPonsjDCHQ2d4Kko7BcOgS+xTftqZl6PbI38=;
+	s=k20260515; t=1788223712;
+	bh=qderzRJmnGEKMR/5T/fanJ9dWBmbheKBev2qBaxmf4M=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=MdlxFUnEuARmByU+pe4vBpGVS+7uce6UPrFdcgIW6dUOSRV6gL0j4HG2g3e0cbMJA
-	 1v32rjYP2W+N61yvHcWhX+oYU0r5OMsOytNdLHf9nvSjyHTJXs3IP4+AmIj0C3Scuz
-	 IGfmMdz/YRaPnSo+x3Vn1mcBUreXCOcCRsZYNh52eVwGzFKD0pDV+C9GI8QcWJ/GW/
-	 wwpeme7k/FCWResy1E3wh6BGBCLgWDtg32JHCYEILrg37FymzpcAI3BLx2CgWe+K19
-	 ShytonvVOJ4GtuIZtzYqpthDkrJkcJqVTMrzmqLIFZOW/gRPx2sI3nn79AQdK9QSMT
-	 JJChnSzrt/TPw==
+	b=RgR5H6X7KDQ2QSEeIWroVTmPh+bFx7i8Y2jjCrP1n+QwOGAskLuWHJmwpJanXFtUo
+	 D8m0afryxnTrx5lwMzckfivVnEuCUB80aTj6sKfOQHl7Cav0PZ9edFxxW2535A9ZRV
+	 iapylBGwGqsUN1piXysqVogeMRjpKWufUMB+quQmZSHEfUkaCqbHoSIDv+THyNpxvf
+	 6ATs7pZ02sJZymZlVNCsk/6qEJ5zmNFZVydc35UJV7Tnvsc6iY1DdYQ1sWpmn7G0YP
+	 wOBPQX83l9LvramamTc8ZPpxdHjF6+STkDI8UFDLXF3/qnCgvVNEgEo/gGEuo35fPJ
+	 T4JN3wUNQCBqQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 08/13] iommu/arm-smmu-v3: Disable PRI when no IRQ
- handler is registered
+Subject: Re: [PATCH v3 03/13] iommu/arm-smmu-v3: Drain in-flight fault
+ events on domain detach
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Nicolin Chen" <nicolinc@nvidia.com>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <0b5282c7e850f1a1c650e43670899b4ef5335efd.1788222486.git.nicolinc@nvidia.com>
+In-Reply-To: <8717f3329313f40308cff20006066283ebbb3a56.1788222485.git.nicolinc@nvidia.com>
 References: <cover.1788222485.git.nicolinc@nvidia.com>
- <0b5282c7e850f1a1c650e43670899b4ef5335efd.1788222486.git.nicolinc@nvidia.com>
+ <8717f3329313f40308cff20006066283ebbb3a56.1788222485.git.nicolinc@nvidia.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 01 Sep 2026 00:47:50 +0000
-Message-Id: <20260901004751.33F221F000E9@smtp.kernel.org>
+Date: Tue, 01 Sep 2026 00:48:31 +0000
+Message-Id: <20260901004832.1779D1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-> arm_smmu_setup_irqs() has three failure paths that leave the priq without
-> a handler: a missing priq IRQ line, devm_request_threaded_irq() failure on
-> the priq IRQ, and devm_request_threaded_irq() failure on the combined IRQ.
-> Each path warned but kept ARM_SMMU_FEAT_PRI set in smmu->features.
+> When a device is switching away from a domain, either through a detach or=
+ a
+> replace operation, in-flight stall events for the old domain might still =
+be
+> on the SMMU's hardware event queue or on the IOMMU core's IOPF queue. Thu=
+s,
+> if the IOMMU core swaps the device's attach_handle and frees the old doma=
+in
+> before those handlers complete, the IOPF work might hit use-after-free.
 >=20
-> With FEAT_PRI still set, arm_smmu_setup_irqs() enables IRQ_CTRL_PRIQ_IRQEN
-> against a handler that does not exist, and a later change would then have
-> arm_smmu_probe_device() call pci_enable_pri() on PCIe endpoints, allowing
-> them to issue PRI Page Requests that pile up in the priq with no drainer.
-> Separately, arm_smmu_device_reset() has already enabled CR0_PRIQEN before
-> it invoked arm_smmu_setup_irqs(), so the hardware queue would stay enabled
-> regardless of what setup_irqs decides.
+> Two queues need to be drained: the SMMU hardware event queue and the IOMMU
+> core IOPF software workqueue. Start with the former: add a counting-based
+> arm_smmu_drain_queue() helper, and poll the evtq on a domain detach, so a
+> pending IRQ won't let the threaded handler run after the drain and queue a
+> fault referencing the domain being freed. Its until_empty mode serves the
+> suspend and runtime PM routines that would drain the CMDQ. Any timed-out
+> drain fires a WARN_ON as well, since reaching the timeout would take some
+> stuck consumer in any realistic case.
 >=20
-> Clear ARM_SMMU_FEAT_PRI in all three failure paths, so that subsequent co=
-de
-> treats PRI as unavailable. And disable CR0_PRIQEN after the setup function
-> returns.
+> [ ... ]
 >=20
-> A kdump kernel cannot service page requests: strip FEAT_PRI when detecting
-> features, so downstream PRI setup is skipped.
->=20
-> Assisted-by: Claude:claude-opus-4-8
+> Fixes: cfea71aea921 ("iommu/arm-smmu-v3: Put iopf enablement in the domai=
+n attach path")
+> Cc: stable@vger.kernel.org # v6.16
+> Assisted-by: Claude:claude-fable-5
 > Signed-off-by: Nicolin Chen <nicolinc@nvidia.com>
 
 Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/cover.1788222485.gi=
-t.nicolinc@nvidia.com?part=3D8
+t.nicolinc@nvidia.com?part=3D3
 
