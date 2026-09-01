@@ -1,55 +1,56 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 46B66379989
-	for <linux-pci@vger.kernel.org>; Tue,  1 Sep 2026 19:12:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D3C94A205A
+	for <linux-pci@vger.kernel.org>; Tue,  1 Sep 2026 19:15:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788289948; cv=none; b=PcN+TSMbyG/aDvx77R2uyvZWVhiTBtR5NKQmj4VJGpCMLJ1rzqr3QwwlXUGg8j7d6yFYMQI7BAjBopRpTbvXtCLAKMS9L5ASlSq1LkdxGYIN4DU+ZNQmpc3sLEnyYfgo3ssfD3iBu2YbuAPK7UXUDMdDZCoUNwDx+cI+mW1j7GU=
+	t=1788290125; cv=none; b=dzpXwcNsOwXkFXRPQgyQbhUdrG3YQsxUkl74tUNTVx4l32AinKjR01z8QR65TE1dWioO1+nzOGGbQdz7zpBI+JVf4S9uTQ/8tPl0u1D32TgKeZ51erIiLGxxeRh26kw0gicbumG4lk1acMxD2gXtj3isS41tjJIQnI3i4B91nhI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788289948; c=relaxed/simple;
-	bh=nhisCh+ihwHTyvRNLjNIpcqJgcEdj09IgLhKNEbJRh8=;
+	s=arc-20240116; t=1788290125; c=relaxed/simple;
+	bh=zFgPNUcADR/j94/tcNEBzI9E7MRbrav5+S3mPcZYaCo=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=nTJOaWtrCHbFuY1DJGhxZT/xP4qUEvkYUyuEx14wqpc2MOJ4+cx4TQ9Gn6rQqideZGdZ4kMiCI2fNEth0ZB/gjTuSD0LOsPfvvsmMKZV6BVluTcyogKZnSi/fxLOPxsBQQhMBt2cdhmOkNZLJxYR9HMJqPj06d9loCt0coxWy5U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BBOu/Gqx; arc=none smtp.client-ip=100.103.45.18
+	 To:Cc:Content-Type; b=cZEnN3WQxgGBPm8OpnwS5DJbppA4h45EIVI+DWZDqKiDi5VvCTDC9sptHBI9VXbnKxacOlPWXh/IojYw32EPPk4n+IPTRmpQu2d2isZBen/OMsQAG3JO0yaaFsnfBm6OzXVE+gJda26H9GoXQRMh/6hS/hwlBU8LdZkAkdhzJIo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lXDvCl9j; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BBOu/Gqx"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A0DBA1F00ADB
-	for <linux-pci@vger.kernel.org>; Tue,  1 Sep 2026 19:12:24 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lXDvCl9j"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1545E1F00ADF
+	for <linux-pci@vger.kernel.org>; Tue,  1 Sep 2026 19:15:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788289944;
-	bh=TG3sfq3Q9eRabuWHt0uykLCNRXVg7IkhmV7MJfFm0Zg=;
+	s=k20260515; t=1788290124;
+	bh=WGHZuGxkBMEGcBScQhd+KOYO8aGNNbmgGdXxIib6dAg=;
 	h=References:In-Reply-To:From:Date:Subject:To:Cc;
-	b=BBOu/GqxmIEJHpaefNA2RSeSoJSFt4IBxBtIdo2YvAJ80OYU3QYgX1ublVdTORbew
-	 K52Z4J+rKcsK4xUJmqi7p+cy2xvm/6+10KUKlXVpAPmiQ/adh8Zih1Zc1vBRKb6GOw
-	 5s/zFWeplHRqr5TCfHYuLF1PGXHVwyb/guFF4dhooUsOrpzr0sY7+oMQGxdGU5CzCF
-	 ufTb8+CmnP1rFMKWnYPf9S5Xr/aOHfug1rF8DMANDWfC/nZMrM7LtO8LMWwduEJkNf
-	 ipJlImYX1BT6RFGdsAo44xAEptoXY+vrCIAKZ6Nj494JfSNMF1WoQD0pDovtPwixRe
-	 05kmKwx8Clv6g==
-Received: by mail-lj1-f175.google.com with SMTP id 38308e7fff4ca-39faf9e2c62so1507301fa.3
-        for <linux-pci@vger.kernel.org>; Tue, 01 Sep 2026 12:12:24 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AKwUvBwne/ge8IMcHSJVpJLdBYoQNipuQtb+WNVwjtu2twa+mJ9v/rg4+aP7lCOqBGDGs41wPm48Ez/45TQ=@vger.kernel.org
-X-Gm-Message-State: AFuF++mZy4FpcriJDWUz/Mv6Z33j+ioy8r3umCdEFq/xrWHIfi9nm8KU
-	P+KW7vQHvUztbpoGw8beA3vFYutyq3zyp3NeD/NVBbwnl94vYY2Y3zZj6tJMn6vEJ2J1TbwP8mZ
-	ZfH7VhZYhPImy20cYi26fyBtdS4NnwrA=
-X-Received: by 2002:a05:651c:25c3:10b0:3a1:7f10:912b with SMTP id
- 38308e7fff4ca-3a301ae9c8amr61000231fa.12.1788289942740; Tue, 01 Sep 2026
- 12:12:22 -0700 (PDT)
+	b=lXDvCl9j8wTk7PGbeP5MFub94EwfxHnwUmEn9Lacv6ocTmJNbab/BpYMfOLo7yYpk
+	 apwS4jpRfXmg4BqaIZFRSD6DKIi7OofrORRwIlYfGMPmSOv0zcZ6jymuKXuunvCy48
+	 6wv795n1x1tge/vTmvh9i8YqgLFFtzPC3rCLjjGYjEOcqol7WVAbrI7J+dkhvwgf7/
+	 CWrTXd1bnRVXGWI7BH+d/tRxXmA/0VqYX8pAssv4Jnib7ImZOwQD9xFKPMrItqnt9I
+	 jMfLvTwX4jeYh0CthdOAKqbiN3AEtezueClffX8Xr8gk3I+ghFIuAcruXL8SahMpWp
+	 NJboT2vkEktfQ==
+Received: by mail-lf1-f44.google.com with SMTP id 2adb3069b0e04-5b4ab4b4179so139139e87.0
+        for <linux-pci@vger.kernel.org>; Tue, 01 Sep 2026 12:15:23 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AKwUvBy67b8djY68LMaZABEa9aFyT5yirmFX4tGCjyAo0CWU68qHEPUKSXAWVh0th6+pJpwqPosXxB2oBVU=@vger.kernel.org
+X-Gm-Message-State: AFuF++lQYfKHNYzWzAviR1mAd5EuJdfNTHRU9WzJAa9r0HF/T+u3PMcG
+	FqUgLgnK6TEYbWCJJXKKwXy3VCMcKmHF6g19u0aaJqN5clKk/Fa28ZEgwWdE4P7QG6Hi7OxE/7V
+	HyR5FliYqXhH9OA0UbclfWxfrEz3kEu8=
+X-Received: by 2002:a05:6512:2311:b0:5b0:113d:8ae5 with SMTP id
+ 2adb3069b0e04-5b60853aefdmr5483e87.10.1788290122246; Tue, 01 Sep 2026
+ 12:15:22 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <3435655.aeNJFYEL58@rafael.j.wysocki> <2021470.taCxCBeP46@rafael.j.wysocki>
- <apaPjaBH48O4V03m@ashevche-desk.local>
-In-Reply-To: <apaPjaBH48O4V03m@ashevche-desk.local>
+References: <3435655.aeNJFYEL58@rafael.j.wysocki> <2497062.NG923GbCHz@rafael.j.wysocki>
+ <apaQZr71mBe0_3fU@ashevche-desk.local>
+In-Reply-To: <apaQZr71mBe0_3fU@ashevche-desk.local>
 From: "Rafael J. Wysocki (Intel)" <rafael@kernel.org>
-Date: Tue, 1 Sep 2026 21:11:26 +0200
-X-Gmail-Original-Message-ID: <CAJZ5v0h7BHATHmLNftYHqdy-Ab-Dpq0PySV9q8BONc7KO30JqQ@mail.gmail.com>
-X-Gm-Features: AcwNN1WG8gPxeTQ2F4zR4GcATKypWSZjtI14jt-NrdwQ4_9NpORm45pqC9DZBuE
-Message-ID: <CAJZ5v0h7BHATHmLNftYHqdy-Ab-Dpq0PySV9q8BONc7KO30JqQ@mail.gmail.com>
-Subject: Re: [PATCH v1 4/7] ACPI: scan: Combine two conditionals in acpi_bus_attach()
+Date: Tue, 1 Sep 2026 21:14:26 +0200
+X-Gmail-Original-Message-ID: <CAJZ5v0g+N--XQFuD=ZD9tmevU6dQ32-VHJhbVVsDwqR9wM5BkA@mail.gmail.com>
+X-Gm-Features: AcwNN1XyDF_pJJDrGrFfnXssS0wiNeSsDyVEpRrO1PBBZ79tCWrSAeBzZgk0EBA
+Message-ID: <CAJZ5v0g+N--XQFuD=ZD9tmevU6dQ32-VHJhbVVsDwqR9wM5BkA@mail.gmail.com>
+Subject: Re: [PATCH v1 7/7] ACPI: scan: Take PCI device enumeration into
+ account directly
 To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 Cc: "Rafael J. Wysocki" <rafael@kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, 
 	Linux PM <linux-pm@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, 
@@ -61,57 +62,30 @@ Cc: "Rafael J. Wysocki" <rafael@kernel.org>, Linux ACPI <linux-acpi@vger.kernel.
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, Sep 1, 2026 at 10:40=E2=80=AFAM Andy Shevchenko
+On Tue, Sep 1, 2026 at 10:44=E2=80=AFAM Andy Shevchenko
 <andriy.shevchenko@linux.intel.com> wrote:
 >
-> On Mon, Aug 31, 2026 at 07:59:32PM +0200, Rafael J. Wysocki wrote:
+> On Mon, Aug 31, 2026 at 07:59:48PM +0200, Rafael J. Wysocki wrote:
 >
-> > There are two conditionals in acpi_bus_attach() that can be combined,
-> > which slightly reduces the overhead and makes the code a bit easier
-> > to follow, so do that.
+> > The ACPI companions of PCI devices are associated with the correspondin=
+g
+> > PCI devices before being processed by acpi_scan_attach() and by the tim=
+e
+> > they are passed to attach_subtree(), the PCI devices associated with
+> > them have been already enumerated and initialized (including power
+> > management initialization).
 > >
-> > No intentional functional impact.
+> > Accordingly, it is not necessary or even useful to check their status i=
+n
+> > attach_subtree(), so do not do that.
 >
 > ...
 >
-> > -     if (ret > 0 && !device->flags.enumeration_by_parent) {
-> > +     if (!device->flags.enumeration_by_parent && (ret > 0 ||
-> > +         (!device->pnp.type.platform_id && !device->pnp.type.backlight=
-)))
-> >               acpi_device_set_enumerated(device);
-> > -             goto ok;
-> > -     }
-> > -
-> > -     if (device->pnp.type.platform_id || device->pnp.type.backlight ||
-> > -         device->flags.enumeration_by_parent)
-> > -             acpi_default_enumeration(device);
-> >       else
-> > -             acpi_device_set_enumerated(device);
-> > +             acpi_default_enumeration(device);
+> > +     if (pci) {
+> > +             acpi_handle_debug(device->handle, "PCI companion %s found=
+\n",
+> > +                               dev_name(&pci->dev));
 >
-> I would leave a longer line (having logical split)
->
->         if (!device->flags.enumeration_by_parent &&
->             (ret > 0 || (!device->pnp.type.platform_id && !device->pnp.ty=
-pe.backlight)))
->                 acpi_device_set_enumerated(device);
->         else
->                 acpi_default_enumeration(device);
->
-> Or even going further and cleaning too many negations (if I'm not mistake=
-n in
-> the logic)
->
->         if (device->flags.enumeration_by_parent ||
-> // not sure what the expected ret values here, maybe < 0 or =3D=3D 0 part=
- is not needed
+> We have pci_name().
 
-!ret should be fine.
-
->             (ret <=3D 0 && (device->pnp.type.platform_id || device->pnp.t=
-ype.backlight)))
->                 acpi_default_enumeration(device);
->         else
->                 acpi_device_set_enumerated(device);
-
-Yes, it looks better this way.
+Ah, OK
