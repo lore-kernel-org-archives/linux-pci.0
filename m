@@ -1,32 +1,31 @@
-Received: from smtpbgsg1.qq.com (smtpbgsg1.qq.com [54.254.200.92])
+Received: from smtpbgsg2.qq.com (smtpbgsg2.qq.com [54.254.200.128])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C13E6473C86;
-	Tue,  1 Sep 2026 08:48:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=54.254.200.92
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C71704766B6;
+	Tue,  1 Sep 2026 08:48:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=54.254.200.128
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788252535; cv=none; b=jLW+HJuyf5MpNekdQdJGhAGaHewPV9G4oE4eLY2YP2jsairrxl9sVo6IXK29vNkD/ot3QIqxSgBiYs+M3nT1Qtq4BDEL7b3Lr5HT1dhWWyVB6aH83Qwlbe9jSScZriZscHs8EQP/qMm4/roWemm3OPzLlGT0rpF35ZSOxdqNRP0=
+	t=1788252538; cv=none; b=V/M2UJUmFt901w1bPqQLzeuA9ca2IyGqCY0iVhC+TVtMxFq/n6qw4A5UU0xZHbd5fU7XKPFoLFqiSdSu3S2I+EZb+HJQa4snuje6vpL1RmE7zNBnghrgrV+mV8D1EfL4qi4dkF7ncwyXT+YOLxQvs2f0QqyHTMWFqvp1e86qqiA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788252535; c=relaxed/simple;
-	bh=XiivO9ePSRP/6Irz+PM55rhD9kC4gh2QxLZOX5pCwp0=;
+	s=arc-20240116; t=1788252538; c=relaxed/simple;
+	bh=oDplWRoiwO5NuQtrHxA7ZfWcC6OR+6v2pC5fKH/TROk=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=TKgrBJhMVUhGWU2WmCRGj2auHFCtUgBczHEhCgX1FHokr3t0PvWVsWZz44fhmmC6y+G0Q7ZjscIvhtn7h8fp7QjkG27xF9fNauvw21YfimIzQY/U0OZ8u65Ih4iYi5/2l3qQat02bQ3nVooHYBM2St4aqtUj9bZMB/v7Oy/ioUM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=radxa.com; spf=pass smtp.mailfrom=radxa.com; arc=none smtp.client-ip=54.254.200.92
+	 In-Reply-To:To:Cc; b=MK+jOgKsT4FKFv2vmP6PD+v84paoOeDapye9Mu6Ojzc9Un8Pdb0PfbJ22B4wWpP6z5kmvqKJ/RwuwpBQF86cITrmz2pV0lwvZiBUOXTm5mmwYUraqxrYRMw7LKL/I/84KYIL0ivKOGu7NTRFu0IxKtWQvrG31vEajw6qHHlm/hA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=radxa.com; spf=pass smtp.mailfrom=radxa.com; arc=none smtp.client-ip=54.254.200.128
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=radxa.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=radxa.com
-X-QQ-mid: zesmtpip4t1788252509t94851027
-X-QQ-Originating-IP: lIvP1GpVQQqw+C7jJ6FIpBcVY6xKxry0TN9Yl3JnFvM=
+X-QQ-mid: zesmtpip4t1788252505te49710af
+X-QQ-Originating-IP: j0zn8JV8YG2Na5F1kBXtTpcNGNwxlSCLn2r/eXAtkZE=
 Received: from [192.168.30.32] ( [localhost])
 	by bizesmtp.qq.com (ESMTP) with 
-	id ; Tue, 01 Sep 2026 16:48:27 +0800 (CST)
+	id ; Tue, 01 Sep 2026 16:48:22 +0800 (CST)
 X-QQ-SSF: 0000000000000000000000000000000
 X-QQ-GoodBg: 0
-X-BIZMAIL-ID: 16756156345845701689
+X-BIZMAIL-ID: 8002565544933552914
 EX-QQ-RecipientCnt: 29
 From: Xilin Wu <sophon@radxa.com>
-Date: Tue, 01 Sep 2026 16:47:58 +0800
-Subject: [PATCH 5/6] dt-bindings: pinctrl: qcom,sc8280xp-tlmm: allow
- gpio-line-names
+Date: Tue, 01 Sep 2026 16:47:57 +0800
+Subject: [PATCH 4/6] dt-bindings: arm: qcom: document Radxa Dragon Q8B
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -35,7 +34,7 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260901-q8b-dts-v1-5-7de0b6a73d08@radxa.com>
+Message-Id: <20260901-q8b-dts-v1-4-7de0b6a73d08@radxa.com>
 References: <20260901-q8b-dts-v1-0-7de0b6a73d08@radxa.com>
 In-Reply-To: <20260901-q8b-dts-v1-0-7de0b6a73d08@radxa.com>
 To: Bjorn Helgaas <bhelgaas@google.com>, 
@@ -57,59 +56,57 @@ Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
  Stephen Chen <stephen@radxa.com>, Junhao Xie <bigfoot@radxa.com>, 
  Xilin Wu <sophon@radxa.com>
 X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=openpgp-sha256; l=866; i=sophon@radxa.com;
- h=from:subject:message-id; bh=XiivO9ePSRP/6Irz+PM55rhD9kC4gh2QxLZOX5pCwp0=;
- b=owGbwMvMwCVmdFg0fe08Iz/G02pJDFnTJrrkHHs+38bv27U78yvk/YXve736EWrMOM3PuUz7y
- yMr9YSIjlIWBjEuBlkxRRaFeIa57JW5156KlerBzGFlAhnCwMUpABPhVGRk+DvJIVHi+Hrt9TeZ
- dDZ7qz53V3614516ve/ZfXMeMIrs9mdk+O55aOXMVfGzH2zu7l9hc1ZzcaCWzhS2xv83cuMeuUd
- 84AYA
+X-Developer-Signature: v=1; a=openpgp-sha256; l=789; i=sophon@radxa.com;
+ h=from:subject:message-id; bh=oDplWRoiwO5NuQtrHxA7ZfWcC6OR+6v2pC5fKH/TROk=;
+ b=owGbwMvMwCVmdFg0fe08Iz/G02pJDFnTJjqzbZkX+ofzc+sR0R4nue1x+naVL37ekzz5Y5PLk
+ T2n3dOsOkpZGMS4GGTFFFkU4hnmslfmXnsqVqoHM4eVCWQIAxenAEzEPZuR4dqe5vPLFuZ15f1Y
+ 8jKr6qR3rbzwn2N1fsm6ffL+IuzHpzL8r51lzRt5QdNJYD7v2i+cCjd0lZsqF878U/JHPLt5nmA
+ KLwA=
 X-Developer-Key: i=sophon@radxa.com; a=openpgp;
  fpr=205F009D07796DD6E516752E32C31567AD9E324E
 X-QQ-SENDSIZE: 520
 Feedback-ID: zesmtpip:radxa.com:qybglogicsvrsz:qybglogicsvrsz3b-0
-X-QQ-XMAILINFO: MZ8WYWnVbnpdI1ZlK/fXVvGDfy7s2qybm1HU8S8IlRpNhYZVFxXZVtL/
-	gtf2+NetTAGelWM+U8a51NLjqvxxb69Je6DMVJ5TY/2kazQTrUk/dd/4dO868OC/FhA1v0A
-	Z2v43GE8fJpA6ccmPAaWCD6ZZ1AFPtQL8JW3g0JP98j0R/RyRUjZqvR0wxwWc9H2vf8lig6
-	I4Lu+amQZ3crGrPOmqpMfMRopjDZ1FfAMr9KBynjhjUMXEO8nDgrcZrQJ5ZVt7dj78k1tq2
-	Q5TKlafNp/Bn3uLkIUdtKlv/3xtDS+eTZol+Ah6L1JXeNSmnkV/a0oHxgmIeLF8VQchRJbm
-	asCiBvgPHYB2t5HJrIbQ9YN9msANMKb/P0yO6rMWmReNGTCeYBRTAiLTb933HCb5VJw6TbI
-	I6fzsBAt0YSCUDvrpob+coKtNelp6WhQ++OzsrU43ZPfJNYL8MD38T7OZ/cyWhbEg0OM8wj
-	wFx0YaIZqBNsS6wzuDfeyBEqi2doyMNT5S/vsCzVAqmz3isFmZBCcidb5xtWBS0/zogXc87
-	5dvgU77hsucVHRB75Kf8F2E8j2bLlF7kwDirSUsWyLkDRqlZP4t75UkmN1PdPEhsoSSmS7x
-	f8ieDwesWyUPIZdBY/gXKWgai4vGJYrjiSBveAVCTma6ca7aGLvc42jkdv+qGWXq5qN6Igp
-	fQ5gxkAC9Cc6QfIFUO7DeHgpwEjpz4Qkhcbed0UCJGqo69PeRR/ZOsH57Es1bejn4pTaTHY
-	O6fZY0J1ootbTykAUacBXZJPzQdvYMb/86Att8k2czclIUMVVvcWK/CPqv/R8HA48+5qJYp
-	+dppfVuRAFzX/6Is2oQx1GGs2jJw6TO0cM0EBfhk6wyr471IkTmNG2dW43gzhpgwKURx9Ui
-	y01CvHZWC/Py6S9fDzSfbQvPt32ywm1X+3RN5hAVAaRUsz2+H9xdp4EAcNbsDeHmji9knS/
-	ILN4t7Eae3Qjt3o4sJVy3qHEYqZFshsn9w3UPVPMfHz8CKEllkJVblkInpaNvvzHtOWNFNv
-	rwwloFCAQ8WNjra9cJYh/qtO7ASZUK9hXlaFML1Ghrl8vb4k/mADoNIudEyRI93f91RHxIh
-	OCvcdW59PfY5eJZUaNjpIXgFd2z64caNw==
-X-QQ-XMRINFO: OD9hHCdaPRBwH5bRRRw8tsiH4UAatJqXfg==
+X-QQ-XMAILINFO: OYMEOeTae7mlmx+Rp0A0Ql7aIoOG6RVaU5J8cPw3jOtO2akVFB69QBW0
+	wny2TQtfpO4Owh4Wko6ZNGrmv4l/MaK8pFIBrcdE1CNZMVrR6B9lhhZfLyjZg2X5Vllhg7D
+	v6zw50oZK5QUGxLlAsG4WnKmdVM7UJRcH8Q6ZYS1RmjtEq8Twm9tZGkXRUWnuuTiImmhDqF
+	6wevIAxqitWAZka1oj2D+MywFB834cN2Rr9G25bSfoOcd8ky0HZZfx43r9BPdv2rYiSowKl
+	SXLDOCnrc5l/CzDUtiFuHUIhPD1GR+SvNWimbhZCnmdbpNWN8CKXeOe2a6reDe1sTmYiGys
+	ShXbkzGivSayxu15fmzFUPHskFTwVzzKgvJ2bK6FZRV9eSwnCQ07JwS2EZXy9+POAWil8jH
+	T1RetR2h3ctBvjNSEMmULsR3fMVjQjGaaaVCxFevJWPNkJLJ7+jQ2s4AAlT1I5KhO+f5zyP
+	nZCDfEY0lPPc8Qr69sp/UxgggpU/amRdG0Lsf/OvVQcdaPdrXcdifO5bz772svFZ2yN4Yma
+	ODyzqGz0jj/QgaRoLmRUrzzIAF5sv/4V//jV0SRZJ30SOSHHVmuZ5XcmGr0CkqYa62Ib1Mb
+	z0zhV0/HXibDg0035G5sRUirjBnvWBibZICaGnysckgHHQ42fRRSiO+jwLs3lelrWewodga
+	Ia6QS6E9KXXM8dHFt/Rw1UwkHe2MTI9zr/oVQx04dxw5ZZeaT55Va7KOPo0hxDs2zNvTt9j
+	1wO+5pL8ziPiBzixt/aGzn0MjvOsO4ZneddFnsFgHyaae0AAndTfww4UldhtFA+JRzUcX4d
+	eCoOVzbZZ2FGt2j3J3PrgCWNTEIBXwC4wzyTYDVJNKtpv6sj/6AWq4N9c5Tffk6cViVAxA+
+	fiu6evohBClU6BVhH2VFP3as26TXTYd7UGjCI1O83HSXnlMJ2UVCQ4x7CQ5CuiOEvG3MoWQ
+	n5l8EkJcXW2SzWrTmX3XVCg7DSjJZ7/o1uHiT0Nm5yrOkEmfc7hvGOWo1zo+F6+1tVwexqy
+	huLlzQ4Q46l3fxotnddzd4LKUS1qLWqCWaQ2G15iS1XVDt4drmrk+XhBL8WW0=
+X-QQ-XMRINFO: OWPUhxQsoeAVwkVaQIEGSKwwgKCxK/fD5g==
 X-QQ-RECHKSPAM: 0
 
-The SC8280XP TLMM GPIO controller exposes 230 GPIO lines. Allow boards to
-provide descriptive names for these lines and constrain the list to the
-number of GPIOs exposed by the controller.
+The Radxa Dragon Q8B is a single-board computer based on the Qualcomm
+SC8280XP platform.
+
+Document its radxa,dragon-q8b compatible.
 
 Signed-off-by: Xilin Wu <sophon@radxa.com>
 ---
- Documentation/devicetree/bindings/pinctrl/qcom,sc8280xp-tlmm.yaml | 3 +++
- 1 file changed, 3 insertions(+)
+ Documentation/devicetree/bindings/arm/qcom.yaml | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/Documentation/devicetree/bindings/pinctrl/qcom,sc8280xp-tlmm.yaml b/Documentation/devicetree/bindings/pinctrl/qcom,sc8280xp-tlmm.yaml
-index ed344deaf8b9..ebc3a8b34a4c 100644
---- a/Documentation/devicetree/bindings/pinctrl/qcom,sc8280xp-tlmm.yaml
-+++ b/Documentation/devicetree/bindings/pinctrl/qcom,sc8280xp-tlmm.yaml
-@@ -27,6 +27,9 @@ properties:
+diff --git a/Documentation/devicetree/bindings/arm/qcom.yaml b/Documentation/devicetree/bindings/arm/qcom.yaml
+index ff8a35df7862..4341bb04f912 100644
+--- a/Documentation/devicetree/bindings/arm/qcom.yaml
++++ b/Documentation/devicetree/bindings/arm/qcom.yaml
+@@ -902,6 +902,7 @@ properties:
+               - microsoft,blackrock
+               - qcom,sc8280xp-crd
+               - qcom,sc8280xp-qrd
++              - radxa,dragon-q8b
+           - const: qcom,sc8280xp
  
-   gpio-reserved-ranges: true
- 
-+  gpio-line-names:
-+    maxItems: 230
-+
- patternProperties:
-   "-state$":
-     oneOf:
+       - items:
 
 -- 
 2.55.0
