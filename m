@@ -1,196 +1,455 @@
-Received: from SN4PR2101CU001.outbound.protection.outlook.com (mail-southcentralusazon11012017.outbound.protection.outlook.com [40.93.195.17])
+Received: from smtpbgbr1.qq.com (smtpbgbr1.qq.com [54.207.19.206])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D1C352E7373;
-	Tue,  1 Sep 2026 13:52:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.195.17
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788270777; cv=fail; b=tKSrqIoNW40FtbeeI5MYoIBjNQiuKq+1bsyZtyPEXULf+FiGw7YHmTyNs5vnzKSMhtIFj1muUji0mnswLaXilKQvLO2W4PRFa9vmn3PchmwstN5hyafOK9QmkmUIyhpRE77MG6Mf+ZGyA0j/RwjJKWPoSbD2XbEmuMG+ujPF3tw=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788270777; c=relaxed/simple;
-	bh=7lWO1+JZvatBN9CYTP6BSpThyUOvIGgJyor+iNpUV3I=;
-	h=Content-Type:Date:Message-Id:From:To:Cc:Subject:References:
-	 In-Reply-To:MIME-Version; b=P2Lxkct3iwrtXlG40W7pYjyjHEkBmDczr3vJSpmTRX1zXgIiixaaLqqLZ3WjaoMpR1kRh8gAUIWX7B02jVDyB9Lja6vn/mIoxe5iy4EKeg4NeDalVk6qzVEtUtxLb0JByYlIfefAFM8v47/Cxn6yBhZkmzsLGAIAoGa1rVcjNXE=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=aDWmlMzj; arc=fail smtp.client-ip=40.93.195.17
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="aDWmlMzj"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=Fo9ERdDHb2HXp/LnEA52Vm4SrmYiMXJ3En1e8sxd1ePZDT6mceDTiboSyt9yI4w12kvNLR626VLwrh/bH5w4UWs0lQ0rBgxae8pQmQkR5uBAmDPMTmJB3ciwWkW2olIU2yRpI+NBVenyL73B5wPm7E4QV+xfEnpCKvehd5Ro07HAcif8SW23ThdH9GgaTIeVOARdDPRckTmi8c0sSFRNcfytV9SfgRchmMKyRbMDmXA7l824wNSRKrGs71lRSoZpnSfNtSFHTRyCUjOxCRwxZrW8lMbgEluSHqn9Kisvsm8+b+13uWAxjvrkjY3vyiqnVvgURPAfm0xpvtOO9DGDKQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=wY1+GFe/deIw23LVanjPT5n7MxEXBk59iQGKK/jnVFE=;
- b=pZGzHFvuf4XVDybdLTneprJbQRsec694Lar24xxrN6m67aBqVA8p7nG3rp8wygiZz+KqSJSXHm3y5y86y5tge7YFLFdnDA9zyCDxYa/gxnQbmcmLsz3xDtUPPNa8MEnBMCRQIzl8A0Pr6LDTeDgPjk+cUpF+SKrjs5EDe/pC1p84sLQusvZrwxmwQCzQXo/KMpCc1eL9ZP12umlKVT376ziVVOcEZnu3kYWWYrXmyUxMwUgEzWmnxuA/rHuRJVdcXw1T0NUfiObff3GEJG/9/yLxikDZ59Sdu3OXYjr+hGqQ3Ok4hjd+H7bgPSm+paQJyZf5Q3Bzw9pWQQOrhwWT6A==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=wY1+GFe/deIw23LVanjPT5n7MxEXBk59iQGKK/jnVFE=;
- b=aDWmlMzjRg5DMkB3LE88ekOOEBAymdlVhaZ2ySQ9ldxqc3FRg1n9X2Bdq/8QlejqipVEt0k/FufweHovE4zEhVuVlRRq85ry1ScOfVS0I/B7Em/L2ZkWdHt/JZAapEDn0LJpOkXBef6+EY6XvqtU7RYjzZ6Q6tTOLWg9QN/yJ2Oo6lCg6j93pZsk/fKG8l4KR/Egz4cRaWxwMn619pPCaBsNoDxPHWQWgCW7/U/oa0kYkzCZ/8vPxwWgxKomZDp5vLj6ZU7aAY1KJ+CSViyNQ6NvTF4C2SYWvnGAiZRhOQHMa5Ww9m8ru6Ck5swY9T5IBUVc1yjjP35cv11fqHByJw==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from MW4PR12MB6873.namprd12.prod.outlook.com (2603:10b6:303:20c::17)
- by PH7PR12MB8177.namprd12.prod.outlook.com (2603:10b6:510:2b4::8) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.360.10; Tue, 1 Sep
- 2026 13:52:51 +0000
-Received: from MW4PR12MB6873.namprd12.prod.outlook.com
- ([fe80::a338:bd2c:3a38:ece1]) by MW4PR12MB6873.namprd12.prod.outlook.com
- ([fe80::a338:bd2c:3a38:ece1%5]) with mapi id 15.21.0382.007; Tue, 1 Sep 2026
- 13:52:51 +0000
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Tue, 01 Sep 2026 22:52:48 +0900
-Message-Id: <DL412XWBP4Y2.K1TH9NELBKPR@nvidia.com>
-From: "Alexandre Courbot" <acourbot@nvidia.com>
-To: "Danilo Krummrich" <dakr@kernel.org>
-Cc: "Sophon Zhang via B4 Relay" <devnull+aiqubits.hotmail.com@kernel.org>,
- <aiqubits@hotmail.com>, "Bjorn Helgaas" <bhelgaas@google.com>,
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, "Miguel
- Ojeda" <ojeda@kernel.org>, "Boqun Feng" <boqun@kernel.org>, "Gary Guo"
- <gary@garyguo.net>, =?utf-8?q?Bj=C3=B6rn_Roy_Baron?=
- <bjorn3_gh@protonmail.com>, "Benno Lossin" <lossin@kernel.org>, "Andreas
- Hindborg" <a.hindborg@kernel.org>, "Alice Ryhl" <aliceryhl@google.com>,
- "Trevor Gross" <tmgross@umich.edu>, "Daniel Almeida"
- <daniel.almeida@collabora.com>, "Tamir Duberstein" <tamird@kernel.org>,
- =?utf-8?q?Onur_=C3=96zkan?= <work@onurozkan.dev>,
- <linux-pci@vger.kernel.org>, <rust-for-linux@vger.kernel.org>,
- <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v4] rust: pci: reject IRQ vector indices that do not fit
- in u32
-References: <20260901-fix-pci-irq-vector-index-truncation-v4-1-f94aa6932fd9@hotmail.com> <DL3XDBBHXKKV.G9P6KRSSX1DN@nvidia.com> <DL3XLHXS647M.1LMHQUVX5RTI@kernel.org> <DL40NH1AX8WN.2ZPY7GDL0FSEW@nvidia.com> <f1930f04-a09b-4425-8ce3-a9229e52acfd@kernel.org>
-In-Reply-To: <f1930f04-a09b-4425-8ce3-a9229e52acfd@kernel.org>
-X-ClientProxiedBy: TYWP286CA0011.JPNP286.PROD.OUTLOOK.COM
- (2603:1096:400:178::18) To MW4PR12MB6873.namprd12.prod.outlook.com
- (2603:10b6:303:20c::17)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 95A82375F88
+	for <linux-pci@vger.kernel.org>; Tue,  1 Sep 2026 14:06:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=54.207.19.206
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1788271607; cv=none; b=ocWeAMOPHBuUanvg6o4dHTjoNEk5hp2pvVD5fAt/lhhCYncO08gqJ2177EBjJpGwPN+2OAt5fm22iWowYZxwMRjPNLs5sLyVhrIk5SjuMbUwHlv/KyjXRiy5KNAtDzXG+tE+cl/hqgSWNLRiEdnfAcVeZnIe49kU1OjQPRuXS2Y=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1788271607; c=relaxed/simple;
+	bh=4VcZPKmz1oAZNJJhoHnFS5mzLuuV7Cs4X2mBLwBYpNA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Vhe7R03TvUXbIE3Itol16QpY8CgYvhl+2AcXR6wX+8SLZR3yuWmOfpd3JbRpeBrByG6aef3Sj8eaN4wp+38Az8Ei8EAVqwD62EhFnkMDfssY8NarRHjZdAJ4mcKIhbJ2StsQ/LNaPHq7hpcx7m3kJHVLZz3ylm79Z488o9RgOd0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=radxa.com; spf=pass smtp.mailfrom=radxa.com; arc=none smtp.client-ip=54.207.19.206
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=radxa.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=radxa.com
+X-QQ-mid: zesmtpip3t1788271589t8ffbd6d7
+X-QQ-Originating-IP: as5/W2TwXLPeesVJWweakHYEW5xtScaU6gDGlsSEegg=
+Received: from [127.0.0.1] ( [localhost])
+	by bizesmtp.qq.com (ESMTP) with 
+	id ; Tue, 01 Sep 2026 22:06:27 +0800 (CST)
+X-QQ-SSF: 0000000000000000000000000000000
+X-QQ-GoodBg: 0
+X-BIZMAIL-ID: 13051283628957585510
+Message-ID: <04AA86372CF743AE+883f17f9-79f7-4542-ba07-67a1dc965ecd@radxa.com>
+Date: Tue, 1 Sep 2026 22:06:26 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: MW4PR12MB6873:EE_|PH7PR12MB8177:EE_
-X-MS-Office365-Filtering-Correlation-Id: 35e45214-f171-485c-7d6d-08df08305098
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|23010399003|376014|7416014|10070799003|366016|1800799024|6133799003|10067099003|4143699003|56012099006|11063799006|18002099003|22082099003;
-X-Microsoft-Antispam-Message-Info:
-	5Cr2GcULhwNGLip6ObrjD+e3wxmjeOCjmLMC0Thu1D/vL44cMJmZflY/iW+E7emCZJNM5QRh9fiUpxKHiNkttUNKHx+t++fg9HCaDDN7RxOgRgRFeRKs5Ap1ShbSoY3VswvaMXui6LzKaCipZTqwZ813Tyrf2yk8LiiCsutzMiJylwrk9fRI0pamyQcJD0GkGqnrU96/UIAobXxvBImbxOC+wljE2nS0L5VhK5U+Y032YYn1A0hkBBhcFLTuGAamlcuISZ+2u/odZdLuAPTiE9fHN+UQ8G/7Yyj0lXqOZLMvIOVxa/W/LH6hqqibIm7L24FBv6pE4D3hv3Fj6cZS1DarsfPYpHp5f9/1MswopuQnHHUTyT0FEGrLm4Sv/5bSr+D/11nXK1/4hRdj4l6wJN05vdMbZe1p1n8xggCpDvl6KUHuIeqdVRmYJIOA28rNj/PcbimK87g08cpWkaEvZi9sFYSLHNqMXUjrIS51aS2lhaaRlZNDUQtGpVbmjVu5Fo29rHR3OLjnCsvFzI1nhrCBiYiOlQfGPkJdQVTZv9v9pM28w/lMF+j4BVVLHcMvhuev8qfIFXZYyehG5yZIYwqvF48gswEGe+8M5FG9JfY5hJbT+3ssEXI+LR/DwGWR30elaLE38zqk81NIEmLSVxS7vplItsTZBA4r8iJ6ql8=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MW4PR12MB6873.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(376014)(7416014)(10070799003)(366016)(1800799024)(6133799003)(10067099003)(4143699003)(56012099006)(11063799006)(18002099003)(22082099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?aDlYQkhlYTdNNmwvdjlVNWV3K3dFeStWMTMxdVpDaWd2MWUwOFNOZ2JET1FF?=
- =?utf-8?B?ay9ZT0wvUll2WDU2N1FzU21tMXM2Ly9RYjJOdmx4WFRNKzZXbkNlanBZcGI0?=
- =?utf-8?B?L24yaXV1YUFKdEtSZXo1S0ZKUzdNMElpanpKMWlVTnNRbWZNZVBHTDhheFZh?=
- =?utf-8?B?K2I3SVRja21PRm1meW1HM053OW8rZzZKb3R6ZGFaWDBUM3dFYm9VMCtHdzd1?=
- =?utf-8?B?NWRLTWQ4aXArTmtUOHZzRlUxUkRKUUtoZzJtNHdpQ1NDb0xOU0RTQkY0a29x?=
- =?utf-8?B?Z2xuTEFGU3hDalF2b0ZUSlZVNzhmRzlwQ3Q0NkhXVXcza3lzZjVxUytmcVU3?=
- =?utf-8?B?c0hOQlkvdXFmNitvZ3c4eGlvOGFzZ0pSOExWWFV1aS9DdUlxMi9uRGlGV2h1?=
- =?utf-8?B?MXVDbEVMUnZTVzhvckZjMldNWm1seFJkRHViVDlYb2kxNHVERGc1WC91Vkdu?=
- =?utf-8?B?UXZtbURtK2hDKzA1NU5mWmNZMllkdHVST1FYakdVTHR4T3RlK3MrZTM0Vm1Y?=
- =?utf-8?B?NXJwdUpVaGJIVnE5MEkyRXhuUXQ5bHE0RFo4YWQ1TjY5QnBONDY5Zml0OWc5?=
- =?utf-8?B?VDRtbjVWblJuQVZMSzdnQWVReWp5Qm82d3k2Yi9VcFkxT1Nodit1bXYvSk00?=
- =?utf-8?B?LzM0dGRUSVhzVE9Hc1VhekcxMFBNVjlCQ2hlekZVR1V0QlYySEVmYUJKTlY2?=
- =?utf-8?B?dEc0Rm1HWTdwdUpFbU9GVVl3azc4ZDVhZ3U2bEVTZnRjbVZ6NERIWWJUMEt0?=
- =?utf-8?B?NERWOHBzSXo4ZkFzRitrYmp4bDFqUHhaMjlTRC9NOGFXUlk1dmJNUlF1TC9w?=
- =?utf-8?B?amFIeFR4YWJWVHRkR05TdU5oaUYwTmRMQ2JvUG9qK3JXcnExVHZnNC9BQWY1?=
- =?utf-8?B?dENEbUhUYVFXVENKd0I5dkJwbTllcDRkQnVyUm4wWHJYOXUwSy9lbjBCdVJT?=
- =?utf-8?B?ZzY3dlFtVzhCcE1lVEZPR25ncVZBNUdaL0gvdkE4d0tPamJzMjc0Q1E4TWxh?=
- =?utf-8?B?cFhqZVRoSkxOWExtMXF4U1FJaGNrZ3U4VUN2M21RbWNLaVNsVVJLaGNIekdH?=
- =?utf-8?B?RFhDaTVpQUQ4dUxLckVnTnJFeitsTjBJOXdVL3NhclBtSk9xVFRLdjN4OHNZ?=
- =?utf-8?B?YjdJWjducXQ0TUJUejg5NG8rSzFHK2FhM0k2NjBjbnFlRjE1UHRUV05XaVQy?=
- =?utf-8?B?Zi9iR1A1V3VSRTMzQTB4Nlk4dHVtZTJPeGorUG5sMG90S3ducmNjMHlvRFBJ?=
- =?utf-8?B?MUloS2FTYkUxNmgwYm1sYWNqVHc5anRXZXVLZTM1TTlSMUUzcWlkQy91aWJV?=
- =?utf-8?B?Tm1ZcG5BeWI3OGNxcjdkVllGdW9hWkFsSnRWQUVvZkVyQkFZOUo1TTRFZmsv?=
- =?utf-8?B?Vjc3dDFUbEV0U2RtYmdJNDBCSnlTblVCdTdBWE5QaUU1bzFySHM5V2J1VUZ3?=
- =?utf-8?B?SUUySHhKbXBoZXd2ZTZkTmxXRzJTTlpoa1dwQUw2TmdaYWp5eDBtaG9oM093?=
- =?utf-8?B?K3hiZk1tV2cyM29EZTFFN29VQmlxY0gyc1hqeFRKQ3ZaOEVKblBGWUJPMGFQ?=
- =?utf-8?B?RHF5aDcyZkkwOFJGMWJYZ0xiSzJYSDl5NDdvcnp5eHNScUNMNHUzT25XMkV0?=
- =?utf-8?B?cFVMdzlCc0sxME1OVHF3S01ybmNKczZLNjlncXRaaG5qTUtUdEdEOU1sYUFI?=
- =?utf-8?B?N3BTRDJaVWRIT0t4Z29BOFFUWkFPMEZlM0YxdTh2NG5jblZiVkNNSkdwcThU?=
- =?utf-8?B?dy9JOUNuV3dxOXJXNE8yaWh4azBaMkU1QkJLVkVsSUNlV2R2dFNhNWFQbE5z?=
- =?utf-8?B?QmFROGtIYnhJUUlMZUoxU3dLU0E4VTI1WVFtL2Z1LzAyZ3phTjU3NUIweWtN?=
- =?utf-8?B?bGZCRGNUa05pemJvM29KZXZUQjBWS29wVktmb05PaWQ3cmZjSDN6T1UxMVBI?=
- =?utf-8?B?dDdMNDhJVVh6ZDlMaHF4VVU1R0pUYmZ3L1FJQTFiSFlVYUhUd05XVG5BT3Jx?=
- =?utf-8?B?VG9LVUJYOGxLMG1KVUEvbjJGTVVENGJVU1lNSDYzd3oyeFdPaHpyVFdGYnd6?=
- =?utf-8?B?ZmNBaktaUCtCajJxcE9RS2ZXTTExa1Y3dWk4UjJOSllSRldkcUU0eTNIdlBN?=
- =?utf-8?B?eDhCdVU5UmM3UGNvYVVuUGZSWUM0MDVqaEJRRzdYc1h2QitLOGhWTUtLZkxD?=
- =?utf-8?B?aEg2b200Q1ByOEsyRjA0K05vaEhJUTVCaHV3TTNuL2U3Um10Ym5TVmFJUUFW?=
- =?utf-8?B?Z2c3eFlmbVRheTczTVVqdE92WHdjanlmOEowWnNYMkVOT25Jb3FXODBtTSsx?=
- =?utf-8?B?UzNEajdYSVM2QlpiVkJpZVpVM1RoamJBZzg3OHBLcHhTOEVhVTMxVDNkcHlq?=
- =?utf-8?Q?t5HlL4p9T0C5EuBwrsxCg7WBsmvKWNgBe6+TLSOnwF78E?=
-X-MS-Exchange-AntiSpam-MessageData-1: b+lqfBNY4i7aNA==
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 35e45214-f171-485c-7d6d-08df08305098
-X-MS-Exchange-CrossTenant-AuthSource: MW4PR12MB6873.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 01 Sep 2026 13:52:51.4853
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 2f7Qnv+lIZBp1fVIJSMWb5ZAq7kG1eOjJ+Ur4pZfeG3uaJeUCOsNwWC5lx8ogITTfzipSvIJo2cu9hLPXwGpng==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH7PR12MB8177
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2] PCI: qcom: Block accesses to downstream devices on
+ link down
+To: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>,
+ Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>,
+ Manivannan Sadhasivam <mani@kernel.org>,
+ Lorenzo Pieralisi <lpieralisi@kernel.org>,
+ =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+ Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ Qiang Yu <qiang.yu@oss.qualcomm.com>
+Cc: linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+References: <20260819-ecam_blocker-v2-1-e7a8fdc1c5cb@oss.qualcomm.com>
+ <178826612782.58092.15490835074765422013.b4-ty@b4>
+ <74c0fc35-a56d-4297-9fcb-23e2df8646c3@oss.qualcomm.com>
+Content-Language: en-US
+From: Xilin Wu <sophon@radxa.com>
+In-Reply-To: <74c0fc35-a56d-4297-9fcb-23e2df8646c3@oss.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-QQ-SENDSIZE: 520
+Feedback-ID: zesmtpip:radxa.com:qybglogicsvrsz:qybglogicsvrsz3b-0
+X-QQ-XMAILINFO: NufIo3p1KGhBml7Uywv6vGbtDXDnbDY4M0VwyJ2k+VH0u09gnlasxff+
+	dbHodIuAfMyUl7FFOHPNYfgY56xPjutkQhP0Vls+UmSH20tlSjTesCaW9Veb9TUXuTmnH9U
+	PHKfiIschBQMyGk29z39BX1VmBFOLir2z4MLDXZGlaVZKoczVG8tNcY28fHYmUsMscgQZsa
+	4iYzpmz8uFIcdsMNQR6jl/Y43Sk8/E25R+mAYn8W0qU4/j3/cje0W5Y+kWeD4eyK+c+AOLk
+	csun19Mzxe3qAjpr8YGhinwHqbjLs1TP9G0ryPJHr7g4P0M751Gxe7GkSeFyxo834hSjM/o
+	BkMsWSK9dDbPKxZ+0DD71CgCI54E/5J29UNulyC7SDNVOxAebjVcit5aUNLWqA3q086KXL7
+	o58R3uivrtjzR6Z+wFN1X7EXZXzZqug20zr3AN9umysyKOak0I3XzhdIQVXuVJF0IFyoImO
+	/bwo3EthFg75MZdZzW09i77K/IysZo8QeJ3xMy3aZrKglh0gOYHx0qwAG2IaIavmxG1t9iW
+	TFSBDi8UraDdn7FW5GvvoCJErqInPoBPKVBAOWiWE0VbunPZzip7TBEOQkFkV2Azcp97e+p
+	QrSZKIKQtzQmTs9bbpc66Mo0FgfYg05jEdmr6GdAS9vtHLM7Hy0ItK5XGK+IXZr3bDLJh2m
+	/xHsdrlnL6CwKyy3v5K5eHuj8mCtuDEEgy9ZUVNjPph1fWKABlFRSvQ8VJ0gPgLE+j7J2Jq
+	ekNRpST+SxNeIGN7/6zu9d0AGw1Atno+9NRDLrSYyxXR4sP+95+F3uDqa4thiyFoC5HPFdp
+	0M97nB66q2LQnDzFWTObURRLd4ITaCFCY8IaCUPq+4aaLW7sHdsmrUxBAs38tGFC+tv2ya3
+	xkTTv1z9zA3KafbyDDnRJjtwk/F6UvI05xBL5Cn46IeT/lUnMBCc/5sW5eDPS8FicZdqM8Z
+	0UOEc2OBPVwofnFCiqQ1qOxiFw2Cav6yc5RZ6Flh0neDJsqgaiqnyvM8utJlyVNGVstgXiZ
+	F3wM27OuyZwJod/ybFx4Vtb1VuWh9QER+KSLHEudC5DIFlK/aWDJIpk07tBJbEy2+v9gwpq
+	9lOPv9huCIFtcwL8WytgCSbmnyXrCr6LaUdhp6uqXaJ
+X-QQ-XMRINFO: Mp0Kj//9VHAxzExpfF+O8yhSrljjwrznVg==
+X-QQ-RECHKSPAM: 0
 
-On Tue Sep 1, 2026 at 10:36 PM JST, Danilo Krummrich wrote:
-> On 9/1/26 3:32 PM, Alexandre Courbot wrote:
->> On Tue Sep 1, 2026 at 8:08 PM JST, Danilo Krummrich wrote:
->>> On Tue Sep 1, 2026 at 12:58 PM CEST, Alexandre Courbot wrote:
->>>> That makes me wonder, shouldn't we make `index` take a `u32` directly?
->>>> If that's what the C API expects, it does make sense to align to it
->>>> instead of forcing users to make a potential unneeded conversion if th=
-ey
->>>> already have a u32.
+On 9/1/2026 8:39 PM, Konrad Dybcio wrote:
+> On 9/1/26 2:35 PM, Manivannan Sadhasivam wrote:
+>>
+>> On Wed, 19 Aug 2026 23:36:54 -0700, Qiang Yu wrote:
+>>> After a PCIe link goes down, software may still access the BAR (MMIO)
+>>> space or configuration space of devices behind that link before recovery
+>>> has run. As the link is down, these accesses never complete, resulting in
+>>> a storm of Completion Timeout AERs.
 >>>
->>> I intentionally did not do this, as the common type for an index is usi=
-ze. Thus,
->>> I do not expect anyone to already have a u32, but to already have a usi=
-ze, e.g.
->>> from some iterator.
+>>> Use the controller's ECAM blocker to drop these accesses to the PCIe
+>>> address space as soon as the link-down interrupt fires, so that Completion
+>>> Timeout AERs are reduced. The blocked range covers the entire address
+>>> space (base 0x0, all-ones limit), since the Root Port's own DBI/iATU
+>>> register space remains accessible regardless.
 >>>
->>> The fact that the C API did pick unsigned int as index type is an imple=
-mentation
->>> detail the abstraction should bother with.
->>=20
->> Thanks for the clarification (and Miguel for elaborating - I wasn't
->> completely aware of it!). In that case this patch looks correct to me.
->>=20
->> Note that there is another `as` right after, in the same method:
->>=20
->>   if irq < 0 {
->>       return Err(Error::from_errno(irq));
->>   }
->>=20
->>   // SAFETY: `irq` is a valid IRQ number for `self.dev`, resolved from t=
-his registration.
->>   Ok(unsafe { IrqVector::new(IrqRequest::new(self.dev.as_ref(), irq as u=
-32), self) })
->>=20
->>=20
->> We could get rid of it by replacing the `if irq < 0` test with:
->>=20
->>   let irq =3D u32::try_from(irq).map_err(|_| Error::from_errno(irq))?;
->
-> That's a good suggestion!
+>>> [...]
+>>
+>> Applied, thanks!
+>>
+>> [1/1] PCI: qcom: Block accesses to downstream devices on link down
+>>        commit: 86624b718f94517b26f96c1d7beb7632e5562afd
+> 
+> Could this be a fix for
+> 
+> https://lore.kernel.org/linux-arm-msm/b461c125-947b-4e06-b502-abb354e0cba6@oss.qualcomm.com/
+> 
+> ?
+> 
+> (+Xilin)
 
-I expect this pattern to be common, so how about we add a variant of
-`error::to_result` that returns the value as a `u32`? I.e.
+I'm not sure. Actually, we still have PCIe-related issues during reboot 
+after reverting the flattened USB patch, though at a much lower 
+occurrence rate.
 
-  pub fn to_result_value(err: crate::ffi::c_int) -> Result<u32>
+I hope this series fixes it, but I haven't tested it yet.
 
->
->> Sophon, if you feel like doing it I think this could improve the patch
->> further.
->
-> Let's please do that as a separate patch though.
+https://patchwork.kernel.org/project/linux-arm-msm/list/?series=1151871&state=%2A&archive=both
 
-In this case, the current patch is
+Case 1 log:
 
-Reviewed-by: Alexandre Courbot <acourbot@nvidia.com>
+Reboot count: 97
+Reboot in 10 seconds, press any key to abort... [   12.260389] qcom-apm 
+gprsvc:service:2:1: CMD timeout for [1001021] opcode
+[   12.615536] qcom-soundwire 3210000.soundwire: din-ports (0) mismatch 
+with controller (1)
+[   12.626249] qcom-soundwire 3210000.soundwire: dout-ports (5) mismatch 
+with controller (6)
+[   39.120833] systemd-shutdown[1]: Failed to set watchdog hardware 
+timeout to 10min: Invalid argument
+[   40.341886] ------------[ cut here ]------------
+[   40.346737] phy_check_link_status+0x0/0x118: returned: -16
+[   40.352528] WARNING: drivers/net/phy/phy.c:1352 at 
+_phy_state_machine+0x190/0x330, CPU#1: kworker/u32:2/72
+[   40.362549] Modules linked in: q6prm_clocks q6apm_lpass_dais 
+snd_q6dsp_common q6apm_dai q6prm joydev mousedev algif_hash 
+algif_skcipher af_alg bnep rtw89_8852be rtw89_8852b rtw89_8852b_common 
+rtw89_pci rtw89_core mac80211 qcom_iris cfg80211 videobuf2_dma_contig 
+btusb v4l2_mem2mem btmtk videobuf2_memops btrtl btbcm videobuf2_v4l2 
+libarc4 btintel videodev snd_soc_wcd938x bluetooth snd_soc_wcd938x_sdw 
+snd_soc_wcd_classh videobuf2_common snd_soc_wcd_common snd_soc_sc8280xp 
+rfkill mc snd_soc_qcom_common snd_soc_wcd_mbhc qcom_spmi_adc_tm5 
+qcom_spmi_adc5 snd_soc_qcom_sdw soundwire_qcom qcom_vadc_common 
+regmap_sdw snd_soc_lpass_tx_macro soundwire_bus snd_soc_lpass_rx_macro 
+qcom_spmi_temp_alarm snd_q6apm snd_soc_lpass_va_macro radxa_svc_glink 
+qcomtee snd_soc_lpass_macro_common slimbus sg fastrpc qcom_scm_storage 
+platform_profile qcom_rng libcomposite uinput pmic_pdcharger_ulog 
+nfnetlink dwmac_tc956x stmmac gpio_tc956x pcs_xpcs phylink rtc_ds1307 
+at24 rpmsg_ctrl tc956x_pci qrtr_smd rpmsg_char qcom_pd_mapper uas qcom_pon
+[   40.362750]  i2c_qcom_geni videocc_sm8350 camcc_sc8280xp 
+qcom_q6v5_pas qcom_pil_info qcom_common qcom_refgen_regulator 
+pinctrl_sc8280xp_lpass_lpi ucsi_glink qcom_glink_smem pinctrl_lpass_lpi 
+qcom_q6v5 lpasscc_sc8280xp typec_ucsi qcom_sysmon qcom_wdt [last 
+unloaded: 842_decompress]
+[   40.480794] CPU: 1 UID: 0 PID: 72 Comm: kworker/u32:2 Not tainted 
+7.0.11+ #38 PREEMPT(lazy)  a69a8d0b840e8538e5b93598a4d4312fb8da4861
+[   40.493213] Hardware name: Radxa Computer Co., Ltd. Radxa Dragon 
+Q8B/RS782-D16S32W0, BIOS 6.0.260812.BOOT.MXF.1.1.c1-00167-MAKENA-1 
+08/12/2026
+[   40.506435] Workqueue: events_power_efficient phy_state_machine
+[   40.512577] pstate: 60400005 (nZCv daif +PAN -UAO -TCO -DIT -SSBS 
+BTYPE=--)
+[   40.519788] pc : _phy_state_machine+0x190/0x330
+[   40.524500] lr : _phy_state_machine+0x190/0x330
+[   40.529209] sp : ffff800080a6bd20
+[   40.532663] x29: ffff800080a6bd40 x28: 0000000000000000 x27: 
+0000000000000000
+[   40.540058] x26: ffff000080041028 x25: 0000000000000000 x24: 
+ffff0000800c1605
+[   40.547453] x23: ffff0000855b9cf8 x22: ffff000080041000 x21: 
+0000000000000000
+[   40.554845] x20: 0000000000000006 x19: ffff0000855b9800 x18: 
+ffff3b3b60d68000
+[   40.562236] x17: 000000040044ffff x16: ffffc4cc93b2a028 x15: 
+ffffc4cc950c3c70
+[   40.569632] x14: ffffc4cc94f8b480 x13: 0000000000000180 x12: 
+ffff0007f5cf3480
+[   40.577025] x11: 00000000000000c0 x10: 7ca63edf1413fc9b x9 : 
+ffffc4cc92dc2df4
+[   40.584427] x8 : ffff000080c9eba8 x7 : 0000000000000004 x6 : 
+0000000000000000
+[   40.591829] x5 : ffff3b3b60d68000 x4 : ffff000080c9da00 x3 : 
+ffff00008e41da00
+[   40.599223] x2 : 0000000000000000 x1 : 0000000000000000 x0 : 
+ffff000080c9da00
+[   40.606625] Call trace:
+[   40.609174]  _phy_state_machine+0x190/0x330 (P)
+[   40.613878]  phy_state_machine+0x34/0xc0
+[   40.617953]  process_one_work+0x194/0x570
+[   40.622129]  worker_thread+0x18c/0x320
+[   40.626033]  kthread+0x134/0x148
+[   40.629399]  ret_from_fork+0x10/0x20
+[   40.633127] ---[ end trace 0000000000000000 ]---
+[   40.946101] SError Interrupt on CPU5, code 0x00000000be000011 -- SError
+[   40.946109] CPU: 5 UID: 0 PID: 335 Comm: irq/277-aerdrv Tainted: G 
+M    W           7.0.11+ #38 PREEMPT(lazy) 
+a69a8d0b840e8538e5b93598a4d4312fb8da4861
+[   40.946115] Tainted: [M]=MACHINE_CHECK, [W]=WARN
+[   40.946116] Hardware name: Radxa Computer Co., Ltd. Radxa Dragon 
+Q8B/RS782-D16S32W0, BIOS 6.0.260812.BOOT.MXF.1.1.c1-00167-MAKENA-1 
+08/12/2026
+[   40.946119] pstate: 204000c5 (nzCv daIF +PAN -UAO -TCO -DIT -SSBS 
+BTYPE=--)
+[   40.946121] pc : pci_generic_config_read+0x48/0xd0
+[   40.946128] lr : pci_generic_config_read+0x2c/0xd0
+[   40.946130] sp : ffff80008002bbb0
+[   40.946132] x29: ffff80008002bbb0 x28: ffff000088fd9200 x27: 
+ffffc4cc9599029f
+[   40.946136] x26: ffffc4cc959902a0 x25: ffff000085a6b000 x24: 
+ffffc4cc950bfd68
+[   40.946138] x23: 0000000000000115 x22: 0000000000000100 x21: 
+0000000000000000
+[   40.946140] x20: 0000000000000004 x19: ffff80008002bbf4 x18: 
+ffff3b3b60df4000
+[   40.946142] x17: ffff3b3b60df4000 x16: ffff800080028000 x15: 
+0000000000001900
+[   40.946143] x14: 00000f423fffe700 x13: 0000000000000000 x12: 
+000000000000af3b
+[   40.946145] x11: 000000000000b67e x10: 00000000010b218c x9 : 
+ffffc4cc937b28c4
+[   40.946147] x8 : ffffc4cc937b2898 x7 : ffff00008b4a8800 x6 : 
+ffffc4cc95ed5000
+[   40.946148] x5 : ffff80008002bc30 x4 : ffff80008002bbf4 x3 : 
+0000000000000000
+[   40.946150] x2 : 0000000000000130 x1 : 0000000000000000 x0 : 
+0000000000000000
+[   40.946153] Kernel panic - not syncing: Asynchronous SError Interrupt
+[   40.946156] CPU: 5 UID: 0 PID: 335 Comm: irq/277-aerdrv Tainted: G 
+M    W           7.0.11+ #38 PREEMPT(lazy) 
+a69a8d0b840e8538e5b93598a4d4312fb8da4861
+[   40.946158] Tainted: [M]=MACHINE_CHECK, [W]=WARN
+[   40.946159] Hardware name: Radxa Computer Co., Ltd. Radxa Dragon 
+Q8B/RS782-D16S32W0, BIOS 6.0.260812.BOOT.MXF.1.1.c1-00167-MAKENA-1 
+08/12/2026
+[   40.946161] Call trace:
+[   40.946162]  show_stack+0x20/0x38 (C)
+[   40.946171]  dump_stack_lvl+0x7c/0xa0
+[   40.946176]  dump_stack+0x18/0x2c
+[   40.946178]  vpanic+0x2a8/0x4b8
+[   40.946181]  panic+0x68/0x70
+[   40.946182]  nmi_panic+0x74/0x80
+[   40.946185]  arm64_serror_panic+0x78/0x90
+[   40.946187]  arm64_is_fatal_ras_serror+0x90/0x98
+[   40.946189]  do_serror+0x38/0x60
+[   40.946191]  el1h_64_error_handler+0x40/0x70
+[   40.946196]  el1h_64_error+0x84/0x88
+[   40.946197]  pci_generic_config_read+0x48/0xd0 (P)
+[   40.946198]  pci_bus_read_config_dword+0x80/0xf0
+[   40.946199]  pci_read_config_dword+0x34/0x60
+[   40.946201]  aer_irq+0x50/0xf8
+[   40.946204]  __handle_irq_event_percpu+0x74/0x3d0
+[   40.946208]  handle_irq_event+0x4c/0x120
+[   40.946210]  handle_fasteoi_irq+0xfc/0x1b0
+[   40.946213]  handle_irq_desc+0x3c/0x68
+[   40.946215]  generic_handle_domain_irq+0x20/0x40
+[   40.946217]  gic_handle_irq+0x168/0x300
+[   40.946218]  do_interrupt_handler+0x58/0xa0
+[   40.946219]  el1_interrupt+0x48/0xb0
+[   40.946222]  el1h_64_irq_handler+0x18/0x28
+[   40.946223]  el1h_64_irq+0x84/0x88
+[   40.946225]  handle_softirqs+0xb0/0x4b0 (P)
+[   40.946228]  __do_softirq+0x1c/0x28
+[   40.946229]  ____do_softirq+0x18/0x30
+[   40.946231]  call_on_irq_stack+0x30/0x48
+[   40.946234]  do_softirq_own_stack+0x24/0x50
+[   40.946236]  __irq_exit_rcu+0x13c/0x168
+[   40.946238]  irq_exit_rcu+0x18/0x30
+[   40.946240]  el1_interrupt+0x4c/0xb0
+[   40.946242]  el1h_64_irq_handler+0x18/0x28
+[   40.946244]  el1h_64_irq+0x84/0x88
+[   40.946245]  _raw_spin_unlock_irqrestore+0x14/0x70 (P)
+[   40.946248]  pci_read_config_dword+0x34/0x60
+[   40.946249]  find_device_iter+0xbc/0x1e8
+[   40.946251]  __pci_walk_bus+0x68/0xa0
+[   40.946253]  __pci_walk_bus+0x4c/0xa0
+[   40.946254]  __pci_walk_bus+0x4c/0xa0
+[   40.946255]  pci_walk_bus+0x38/0x60
+[   40.946257]  aer_isr_one_error_type+0x54/0x338
+[   40.946259]  aer_isr_one_error+0x104/0x180
+[   40.946261]  aer_isr+0x78/0x120
+[   40.946263]  irq_thread_fn+0x30/0xb8
+[   40.946264]  irq_thread+0x1a8/0x400
+[   40.946265]  kthread+0x134/0x148
+[   40.946268]  ret_from_fork+0x10/0x20
+[   41.146728] Kernel Offset: 0x44cc12c80000 from 0xffff800080000000
+[   41.146730] PHYS_OFFSET: 0xfff1000080000000
+[   41.146731] CPU features: 0x2000000,002e0005,00230501,540172ab
+[   41.146732] Memory Limit: none
+[   41.565732] ---[ end Kernel panic - not syncing: Asynchronous SError 
+Interrupt ]---
+
+Case 2 log:
+
+Reboot count: 65
+Reboot in 10 seconds, press any key to abort... [   13.281893] qcom-apm 
+gprsvc:service:2:1: CMD timeout for [1001021] opcode
+[   13.340861] qcom-soundwire 3210000.soundwire: din-ports (0) mismatch 
+with controller (1)
+[   13.351390] qcom-soundwire 3210000.soundwire: dout-ports (5) mismatch 
+with controller (6)
+[   41.120391] systemd-shutdown[1]: Failed to set watchdog hardware 
+timeout to 10min: Invalid argument
+[   42.128807] pcieport 0004:00:00.0: PCIe Bus Error: 
+severity=Uncorrectable (Non-Fatal), type=Transaction Layer, (Requester ID)
+[   42.140459] pcieport 0004:00:00.0:   device [17cb:010e] error 
+status/mask=00004000/00400000
+[   42.149053] pcieport 0004:00:00.0:    [14] CmpltTO                (First)
+[   42.302328] ------------[ cut here ]------------
+[   42.307148] phy_check_link_status+0x0/0x118: returned: -16
+[   42.312945] WARNING: drivers/net/phy/phy.c:1352 at 
+_phy_state_machine+0x190/0x330, CPU#3: kworker/u32:0/12
+[   42.322951] Modules linked in: q6prm_clocks q6apm_lpass_dais 
+snd_q6dsp_common q6prm q6apm_dai joydev mousedev algif_hash 
+algif_skcipher af_alg bnep zram 842_decompress 842_compress 
+lz4hc_compress lz4_compress rtw89_8852be rtw89_8852b rtw89_8852b_common 
+rtw89_pci rtw89_core btusb mac80211 btmtk qcom_iris btrtl btbcm cfg80211 
+videobuf2_dma_contig btintel v4l2_mem2mem videobuf2_memops libarc4 
+videobuf2_v4l2 snd_soc_wcd938x bluetooth snd_soc_wcd938x_sdw videodev 
+snd_soc_wcd_classh rfkill snd_soc_wcd_common snd_soc_wcd_mbhc regmap_sdw 
+snd_soc_sc8280xp videobuf2_common qcom_spmi_adc_tm5 snd_soc_qcom_common 
+qcom_spmi_adc5 snd_soc_lpass_tx_macro snd_soc_qcom_sdw 
+snd_soc_lpass_va_macro snd_soc_lpass_rx_macro mc qcom_vadc_common 
+snd_q6apm soundwire_qcom snd_soc_lpass_macro_common soundwire_bus 
+qcom_spmi_temp_alarm radxa_svc_glink fastrpc qcom_scm_storage slimbus sg 
+platform_profile qcomtee qcom_rng libcomposite uinput 
+pmic_pdcharger_ulog nfnetlink rpmsg_ctrl rpmsg_char qrtr_smd 
+dwmac_tc956x stmmac qcom_pd_mapper pcs_xpcs
+[   42.323138]  phylink
+[   42.415567]  gpio_tc956x qcom_q6v5_pas qcom_pil_info rtc_ds1307 at24 
+qcom_common qcom_glink_smem tc956x_pci uas qcom_pon camcc_sc8280xp 
+pinctrl_sc8280xp_lpass_lpi videocc_sm8350 i2c_qcom_geni 
+qcom_refgen_regulator pinctrl_lpass_lpi ucsi_glink lpasscc_sc8280xp 
+qcom_q6v5 qcom_wdt qcom_sysmon typec_ucsi
+[   42.445394] CPU: 3 UID: 0 PID: 12 Comm: kworker/u32:0 Not tainted 
+7.0.11+ #37 PREEMPT(lazy)  452f60429f6b383145c5e2c98b90ac68d2bd4e3a
+[   42.457814] Hardware name: Radxa Computer Co., Ltd. Radxa Dragon 
+Q8B/RS782-D16S32W0, BIOS 6.0.260812.BOOT.MXF.1.1.c1-00167-MAKENA-1 
+08/12/2026
+[   42.471031] Workqueue: events_power_efficient phy_state_machine
+[   42.477171] pstate: 60400005 (nZCv daif +PAN -UAO -TCO -DIT -SSBS 
+BTYPE=--)
+[   42.484381] pc : _phy_state_machine+0x190/0x330
+[   42.489080] lr : _phy_state_machine+0x190/0x330
+[   42.493790] sp : ffff8000800e3d20
+[   42.497233] x29: ffff8000800e3d40 x28: 0000000000000000 x27: 
+0000000000000000
+[   42.504629] x26: ffff000080041028 x25: 0000000000000000 x24: 
+ffff0000800c2a05
+[   42.512024] x23: ffff000085e524f8 x22: ffff000080041000 x21: 
+0000000000000000
+[   42.519419] x20: 0000000000000006 x19: ffff000085e52000 x18: 
+ffff59480c02f000
+[   42.526813] x17: ffff59480c02f000 x16: ffffa6bfe88a8cc8 x15: 
+ffffa6bfe9e43c70
+[   42.534206] x14: ffffa6bfe9d0b480 x13: 0000000000000180 x12: 
+ffff0007f5d3a480
+[   42.541598] x11: 00000000000000c0 x10: 71e4c81c85622a03 x9 : 
+ffffa6bfe7b42df4
+[   42.548992] x8 : ffff0000808d47a8 x7 : 0000000000000004 x6 : 
+0000000000000000
+[   42.556387] x5 : ffff59480c02f000 x4 : ffff0000808d3600 x3 : 
+ffff000081c9b600
+[   42.563777] x2 : 0000000000000000 x1 : 0000000000000000 x0 : 
+ffff0000808d3600
+[   42.571174] Call trace:
+[   42.573724]  _phy_state_machine+0x190/0x330 (P)
+[   42.578438]  phy_state_machine+0x34/0xc0
+[   42.582513]  process_one_work+0x194/0x570
+[   42.586688]  worker_thread+0x18c/0x320
+[   42.590592]  kthread+0x134/0x148
+[   42.593953]  ret_from_fork+0x10/0x20
+[   42.597680] ---[ end trace 0000000000000000 ]---
+[   43.035576] SError Interrupt on CPU5, code 0x00000000be000011 -- SError
+[   43.035582] CPU: 5 UID: 0 PID: 0 Comm: swapper/5 Tainted: G   M    W 
+          7.0.11+ #37 PREEMPT(lazy) 
+452f60429f6b383145c5e2c98b90ac68d2bd4e3a
+[   43.035586] Tainted: [M]=MACHINE_CHECK, [W]=WARN
+[   43.035587] Hardware name: Radxa Computer Co., Ltd. Radxa Dragon 
+Q8B/RS782-D16S32W0, BIOS 6.0.260812.BOOT.MXF.1.1.c1-00167-MAKENA-1 
+08/12/2026
+[   43.035588] pstate: 204000c5 (nzCv daIF +PAN -UAO -TCO -DIT -SSBS 
+BTYPE=--)
+[   43.035590] pc : pci_generic_config_read+0x48/0xd0
+[   43.035595] lr : pci_generic_config_read+0x2c/0xd0
+[   43.035596] sp : ffff80008002be00
+[   43.035597] x29: ffff80008002be00 x28: ffff0000808f4800 x27: 
+ffffa6bfea71029f
+[   43.035600] x26: ffffa6bfea7102a0 x25: ffff000085926e00 x24: 
+ffffa6bfe9e3fd68
+[   43.035601] x23: 0000000000000105 x22: 0000000000000020 x21: 
+0000000000000000
+[   43.035603] x20: 0000000000000004 x19: ffff80008002be44 x18: 
+ffff59480c075000
+[   43.035604] x17: ffff59480c075000 x16: ffff800080028000 x15: 
+0000000000000000
+[   43.035606] x14: ffff0000808f4800 x13: ffff59480c075000 x12: 
+00000000b474d91d
+[   43.035607] x11: 0000000000000000 x10: 0000000000001000 x9 : 
+ffffa6bfe85328c4
+[   43.035609] x8 : ffffa6bfe8532898 x7 : ffff0007f7eb4800 x6 : 
+ffffa6bfeac55000
+[   43.035610] x5 : ffff80008002bea4 x4 : ffff80008002be44 x3 : 
+0000000000000000
+[   43.035612] x2 : 0000000000000090 x1 : 0000000000000000 x0 : 
+0000000000000000
+[   43.035614] Kernel panic - not syncing: Asynchronous SError Interrupt
+[   43.035615] CPU: 5 UID: 0 PID: 0 Comm: swapper/5 Tainted: G   M    W 
+          7.0.11+ #37 PREEMPT(lazy) 
+452f60429f6b383145c5e2c98b90ac68d2bd4e3a
+[   43.035617] Tainted: [M]=MACHINE_CHECK, [W]=WARN
+[   43.035618] Hardware name: Radxa Computer Co., Ltd. Radxa Dragon 
+Q8B/RS782-D16S32W0, BIOS 6.0.260812.BOOT.MXF.1.1.c1-00167-MAKENA-1 
+08/12/2026
+[   43.035619] Call trace:
+[   43.035621]  show_stack+0x20/0x38 (C)
+[   43.035629]  dump_stack_lvl+0x7c/0xa0
+[   43.035633]  dump_stack+0x18/0x2c
+[   43.035635]  vpanic+0x2a8/0x4b8
+[   43.035637]  panic+0x68/0x70
+[   43.035639]  nmi_panic+0x74/0x80
+[   43.035641]  arm64_serror_panic+0x78/0x90
+[   43.035644]  arm64_is_fatal_ras_serror+0x90/0x98
+[   43.035646]  do_serror+0x38/0x60
+[   43.035648]  el1h_64_error_handler+0x40/0x70
+[   43.035651]  el1h_64_error+0x84/0x88
+[   43.035652]  pci_generic_config_read+0x48/0xd0 (P)
+[   43.035653]  pci_bus_read_config_dword+0x80/0xf0
+[   43.035656]  pcie_capability_read_dword+0x90/0xc0
+[   43.035657]  pcie_pme_irq+0x58/0xf0
+[   43.035660]  __handle_irq_event_percpu+0x74/0x3d0
+[   43.035664]  handle_irq_event+0x4c/0x120
+[   43.035666]  handle_fasteoi_irq+0xfc/0x1b0
+[   43.035668]  handle_irq_desc+0x3c/0x68
+[   43.035670]  generic_handle_domain_irq+0x20/0x40
+[   43.035672]  gic_handle_irq+0x168/0x300
+[   43.035673]  call_on_irq_stack+0x30/0x48
+[   43.035675]  do_interrupt_handler+0x88/0xa0
+[   43.035676]  el1_interrupt+0x48/0xb0
+[   43.035679]  el1h_64_irq_handler+0x18/0x28
+[   43.035680]  el1h_64_irq+0x84/0x88
+[   43.035681]  cpuidle_enter_state+0xc4/0x7c0 (P)
+[   43.035682]  cpuidle_enter+0x3c/0x60
+[   43.035686]  do_idle+0x168/0x320
+[   43.035688]  cpu_startup_entry+0x3c/0x50
+[   43.035689]  secondary_start_kernel+0x13c/0x180
+[   43.035691]  __secondary_switched+0xc0/0xc8
+[   43.036060] SError Interrupt on CPU4, code 0x00000000be000411 -- SError
+[   43.237107] Kernel Offset: 0x26bf67a00000 from 0xffff800080000000
+[   43.237109] PHYS_OFFSET: 0xfff1000080000000
+[   43.237109] CPU features: 0x2000000,002e0005,00230501,540172ab
+[   43.237111] Memory Limit: none
+[   43.595524] ---[ end Kernel panic - not syncing: Asynchronous SError 
+Interrupt ]---
+
+> 
+> Konrad
+> 
+
+
+-- 
+Best regards,
+Xilin Wu <sophon@radxa.com>
