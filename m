@@ -1,135 +1,264 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mail-4318.protonmail.ch (mail-4318.protonmail.ch [185.70.43.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D12F2374E45
-	for <linux-pci@vger.kernel.org>; Tue,  1 Sep 2026 00:55:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 55B2B30B521;
+	Tue,  1 Sep 2026 00:59:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.70.43.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788224161; cv=none; b=RLmN2oFSPwYgADqz5ApM49BBXGX9RJZfw6aQtUDQqYw7jofdqSh9CsNnc7nlZSwvzsOtWnG0y8KDJGGZilPYU80vluMfqyDPfKoyag709fMAZBUX9FeGTq49ZLhTzHsuIBKyOkNugdqdyEd4GueE73ZafpsWcV71NOcC51PGf3s=
+	t=1788224375; cv=none; b=RP2o9G0XDHabd3H4OnHVdZCOfFQPEILzDqn1TX01XFX+ES91WjtmVx+edFLpVtikso7nHtc2YYQCx1/Zo9wKhI1e+gII7ohjYvgoeDqwraWg0p3cQV/OR12IYeFlvAsF+O7AakWWjZ58YMjRZi5hGw/dyDbce8y/7hd5D8Tghz4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788224161; c=relaxed/simple;
-	bh=vlQX3jADO1ATLjaXbbMsuuPr/YN1WTzSMEnJyOnHDiU=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=f5MMLximWOgE48RFXIs+VyF0/kGGzbso13sstW7aOrgCIxSax5kOl6O8aPMiQW3o9f2sC2jrkBpSaTbq2DJA5MWvcnqt2TTMaYbQt7QNxPhBotnnkAtB1D/ZqKSdoyIbAskMd45xXip4MPCufcCj6piHCuO+JLh9f8ZJUT9R9D8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eoRG2i1x; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788224375; c=relaxed/simple;
+	bh=+3rpXvdizBAasQQCZSs50TByA2/x7dRZogapzcQCMRw=;
+	h=Date:To:From:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=C1J8HmVoEce3Ml3rAq7R9IMeS5U/k//8V96ran3ZszlnUwsxuqm/Axo1IK741NMr1cc6lwvpW2JCfrsdKLnjIpbRXCkFY1GB13F2BUQawxD8Ml2xXxP8Jmb6p4YfspblgXXOcu5LC1mdDkOqbsTrhwbTN1ufy29EpjKJZAvCj6Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=httpd.dev; spf=pass smtp.mailfrom=httpd.dev; dkim=pass (2048-bit key) header.d=httpd.dev header.i=@httpd.dev header.b=eyZ4rKrU; arc=none smtp.client-ip=185.70.43.18
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=httpd.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=httpd.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eoRG2i1x"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 450671F000E9;
-	Tue,  1 Sep 2026 00:55:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788224159;
-	bh=7VpmnnMkuFN1J+RkgqIQI3wJBj0woMrq9iO+dMNtt88=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=eoRG2i1xmnXOC9h/gB1oSAahFK1Hjq51qTkRPdb46rA8r+PKW70nGAzR3LKPKsHRK
-	 hgkHcatPWatXLqi9vyH81FvBvThnhN+9lyFUIdAZpRWWMJumSvZPgj3fQ2B/GyEARz
-	 DVTLfoAZQBrCIGuPJLDVBGms7aAB8o3+hI3jSAACTOcavnQmYyyI/j07xkc6ENEA6G
-	 Fp5HSToB1Fp1xzD/zg/kMg0VRQx0CRRgvXvKoPwiNnBVZXCT8df40r1tACU/2FvWS2
-	 t/eC2HO8fahynDlKadDOg+YRiE7FolWuQ/sFlShAeYz5d2pu/v2Yrqno9KslpAUax1
-	 5qw2mAhpa4kbA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 07/13] iommu/arm-smmu-v3: Disable the queue IRQs
- before disabling the SMMU
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Nicolin Chen" <nicolinc@nvidia.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <a6fba7f7a01f5955dfb44d34adc6262c8534e829.1788222486.git.nicolinc@nvidia.com>
-References: <cover.1788222485.git.nicolinc@nvidia.com>
- <a6fba7f7a01f5955dfb44d34adc6262c8534e829.1788222486.git.nicolinc@nvidia.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 01 Sep 2026 00:55:58 +0000
-Message-Id: <20260901005559.450671F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=httpd.dev header.i=@httpd.dev header.b="eyZ4rKrU"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=httpd.dev;
+	s=protonmail2; t=1788224369; x=1788483569;
+	bh=dsiMiEDU1iyqNugGv5MENp6q2JX/4otwgNxyz/lzYSA=;
+	h=Date:To:From:Cc:Subject:Message-ID:In-Reply-To:References:
+	 Feedback-ID:From:To:Cc:Date:Subject:Reply-To:Feedback-ID:
+	 Message-ID:BIMI-Selector;
+	b=eyZ4rKrUt95gUpqH2GtBgTuAWyqVXqdFv6BWKJVHnaaw6BIc8ukN/w1d1m14h6uZb
+	 qRS1Ke6znhKhp66XqY/aZrkg1DyrpD/KHYNEwHozBhwky6FNjNkne5rkitYKNgfZZ4
+	 mnC1TGoJdO+gRCi93bp4ZYbkRHmFEkv4Ivcfqmm0XbJZjv/h+XYcTIlJYMAIBdg6Pq
+	 Y/902OM5RIUUg/VrrtggZph4h/Wes50V6/DeV5QuRYV4AhlUSacZC9a8jlROgXKn5c
+	 SOSqbHBnolmCUnfC6IewVLdYdkJRL9PcRE6A8L1MZCVmTLSSh8TSOkInuYcVJtV/Kv
+	 FSmCuPhbYMutw==
+Date: Tue, 01 Sep 2026 00:59:25 +0000
+To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+From: Angel J <iamanaws@httpd.dev>
+Cc: "regressions@lists.linux.dev" <regressions@lists.linux.dev>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-rpi-kernel@lists.infradead.org" <linux-rpi-kernel@lists.infradead.org>, "helgaas@kernel.org" <helgaas@kernel.org>, "robh@kernel.org" <robh@kernel.org>, "andrea.porta@suse.com" <andrea.porta@suse.com>, "florian.fainelli@broadcom.com" <florian.fainelli@broadcom.com>
+Subject: Re: [REGRESSION] PCI: Dynamic OF node creation hangs on invalid bridge configuration
+Message-ID: <-KoxZtWNyNmnEu6-RkoMW2kenooTum0AiXwENwNBtoxqyI9wDXo1UJik1Wn9Igj_VRQ9bcYlva6FUZYq17UdPChUz_-mtDyrHSFO7t_broI=@httpd.dev>
+In-Reply-To: <GXe6anuewkS4bLNwca3cYOmUxN9csc0TxLYGSBc1qNRmfrmvFlcmD62wEM23TxfzfuXAv4P3yvUv7pyraleARrL1Na-aN8w-t9uc1Igu8DA=@httpd.dev>
+References: <GXe6anuewkS4bLNwca3cYOmUxN9csc0TxLYGSBc1qNRmfrmvFlcmD62wEM23TxfzfuXAv4P3yvUv7pyraleARrL1Na-aN8w-t9uc1Igu8DA=@httpd.dev>
+Feedback-ID: 163474212:user:proton
+X-Pm-Message-ID: 1031240fee8ce565906bd8ac4c0dbb2408b2550f
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: multipart/signed; protocol="application/pgp-signature"; micalg=pgp-sha512; boundary="------92b2098d95252a39ada38c9e88383d14dd60f1ac3fa7fee7e6a674a7c834e248"; charset=utf-8
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--------92b2098d95252a39ada38c9e88383d14dd60f1ac3fa7fee7e6a674a7c834e248
+Content-Type: multipart/mixed;boundary=---------------------9fc1428e6ff9ebac9729a5244b051e32
 
-Pre-existing issues:
-- [High] The system shutdown path disables the SMMU without quiescing queue=
- IRQs, leading to an infinite loop in the kernel thread.
---
+-----------------------9fc1428e6ff9ebac9729a5244b051e32
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain;charset=utf-8
 
-commit 723b797a0d5bc30d8469f53716a51e3b4d1bb03c
-Author: Nicolin Chen <nicolinc@nvidia.com>
+Hello,
 
-iommu/arm-smmu-v3: Disable the queue IRQs before disabling the SMMU
+A friendly ping on this regression. It still affects Linux 6.18, and
+the tested invalid-bridge guard allows the machine to boot with
+CONFIG_PCI_DYNAMIC_OF_NODES=3Dy.
 
-This commit addresses an issue where disabling the SMMU while queue IRQs are
-running leads to commands being issued to a queue consuming nothing. It
-ensures that the queue IRQ threads are quiesced by disabling the IRQs before
-the SMMU is disabled in device reset and disable action paths.
+Is any additional information or testing needed from me?
 
-> diff --git a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c b/drivers/iommu/=
-arm/arm-smmu-v3/arm-smmu-v3.c
-> index 64540cfb73244..d45d97f356cf0 100644
-> --- a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
-> +++ b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
-[ ... ]
-> @@ -4992,10 +5001,22 @@ static int arm_smmu_device_disable(struct arm_smm=
-u_device *smmu)
->  	return ret;
->  }
-> =20
-> +/* Quiesce the queue IRQ threads, e.g. before disabling the SMMU */
-> +static void arm_smmu_disable_irqs(struct arm_smmu_device *smmu)
-> +{
-> +	if (smmu->combined_irq)
-> +		disable_irq(smmu->combined_irq);
-> +	if (smmu->evtq.q.irq)
-> +		disable_irq(smmu->evtq.q.irq);
-> +	if (smmu->priq.q.irq)
-> +		disable_irq(smmu->priq.q.irq);
-> +}
-> +
->  static void arm_smmu_disable_action(void *data)
->  {
->  	struct arm_smmu_device *smmu =3D data;
-> =20
-> +	arm_smmu_disable_irqs(smmu);
+Thanks,
+Angel
 
-[Severity: High]
-This is a pre-existing issue, but since this patch explicitly aims to fix
-the vulnerability where the SMMU is disabled without quiescing the IRQs,
-does the system shutdown path also need to be updated to call
-arm_smmu_disable_irqs()?
 
-Looking at arm_smmu_device_shutdown() which is called during system shutdow=
-n:
 
-static void arm_smmu_device_shutdown(struct platform_device *pdev)
-{
-	struct arm_smmu_device *smmu =3D platform_get_drvdata(pdev);
+On Saturday, August 22nd, 2026 at 19:14, Angel J <iamanaws@httpd.dev> wrot=
+e:
 
-	arm_smmu_device_disable(smmu);
-}
+> Hello,
+> =
 
-The shutdown path directly disables the SMMU without first quiescing the
-threaded IRQs. Because devm callbacks do not run on shutdown, the IRQ handl=
-ers
-remain active while the hardware is disabled.
 
-If a pending PRIQ or EVTQ event triggers, the threaded handler
-(e.g., arm_smmu_priq_thread) executes and calls arm_smmu_page_response(),
-which attempts to insert a PRI_RESP command into the CMDQ without waiting f=
-or
-a SYNC. Since the SMMU is hardware-disabled, it will not process commands a=
-nd
-the CMDQ software ring buffer quickly fills up. Once full,
-__arm_smmu_cmdq_issue_cmdlist() enters a while (!queue_has_space(...)) loop
-which either spins tightly or times out every second, looping indefinitely
-without any breakout condition.
+> This regression was introduced in v6.17-rc1 and remains in the dynamic
+> PCI OF node code. Linux 6.18 fails very early during boot on my Dell XPS
+> 8940 when CONFIG_PCI_DYNAMIC_OF_NODES=3Dy. The display goes black before
+> any useful console or pstore output appears, and the machine remains
+> hung.
+> =
 
-Could we also add a call to arm_smmu_disable_irqs(smmu) in
-arm_smmu_device_shutdown() to prevent this infinite loop?
 
->  	if (smmu->impl_ops && smmu->impl_ops->device_disable)
->  		smmu->impl_ops->device_disable(smmu);
->  	arm_smmu_device_disable(smmu);
+> Disabling CONFIG_PCI_DYNAMIC_OF_NODES makes the same kernel boot normall=
+y.
+> Linux v6.19-rc5 also boots because the RP1 driver stopped selecting that
+> option, not because the dynamic PCI OF node code changed.
+> =
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/cover.1788222485.gi=
-t.nicolinc@nvidia.com?part=3D7
+
+> Hardware:
+> =
+
+
+>   System: Dell XPS 8940, board 0K3CM7, BIOS 2.27.1 (2025-04-03)
+>   CPU: Intel Core i7-11700 (Rocket Lake)
+>   Triggering device: 0000:00:00.0, Intel 8086:4c43
+>   Firmware boot: UEFI, ACPI-based x86_64
+> =
+
+
+> Test results:
+> =
+
+
+>   Linux 6.12.103: good
+>   Linux v6.17-rc1: bad
+>   Linux 6.18.44, CONFIG_PCI_DYNAMIC_OF_NODES=3Dy: bad
+>   Linux 6.18.44, CONFIG_PCI_DYNAMIC_OF_NODES=3Dn: good
+>   Linux 6.18.44, CONFIG_PCI_DYNAMIC_OF_NODES=3Dy, skip invalid bridge: g=
+ood
+>   Linux v6.19-rc4: bad
+>   Linux v6.19-rc5: good
+>   Linux 4621c338d33f: bad
+>   Linux e55feea3a03a: good
+> =
+
+
+> The first-parent boundary between the last two tests is:
+> =
+
+
+>   e55feea3a03a ("Merge tag 'soc-fixes-6.19' ...")
+> =
+
+
+> That merge contains ce26f588c831 ("misc: rp1: drop overlay support"), wh=
+ich
+> removes:
+> =
+
+
+>   select PCI_DYNAMIC_OF_NODES
+> =
+
+
+> from MISC_RP1. The generated configurations differed only by:
+> =
+
+
+>   -CONFIG_PCI_DYNAMIC_OF_NODES=3Dy
+>   +# CONFIG_PCI_DYNAMIC_OF_NODES is not set
+> =
+
+
+> CONFIG_MISC_RP1=3Dm in both. The known-bad 4621c338d33f and Linux 6.18.4=
+4
+> both boot after disabling PCI_DYNAMIC_OF_NODES (and MISC_RP1, whose Kcon=
+fig
+> select otherwise forces it on).
+> =
+
+
+> There is no RP1 device in this machine, and its driver does not probe.
+> MISC_RP1 affects this x86 system only because its Kconfig select enables
+> PCI_DYNAMIC_OF_NODES globally.
+> =
+
+
+> I narrowed the hang to dynamic OF node creation for 0000:00:00.0
+> (8086:4c43), the Intel Rocket Lake-S integrated memory controller. On
+> this machine it reports PCI class 0604 and header type 1, but it is boun=
+d
+> to icl_uncore and is not a usable forwarding bridge:
+> =
+
+
+>   Bus: primary=3Dff, secondary=3Dff, subordinate=3Dff
+>   I/O and memory bridge windows: invalid/all ones
+>   kernel: bridge configuration invalid ([bus ff-ff]), reconfiguring
+> =
+
+
+> A minimal dynamic node for this device boots. Adding only
+> device_type=3D"pci" makes it hang. Full PCI dynamic OF node generation a=
+lso
+> boots when only 0000:00:00.0 is skipped.
+> =
+
+
+> I also tested a generic guard in of_pci_make_dev_node(). It reads
+> PCI_PRIMARY_BUS and skips node creation if the primary bus does not matc=
+h
+> pdev->bus->number, the secondary bus is not greater than the primary bus=
+,
+> or the secondary bus is greater than the subordinate bus. Linux 6.18.44
+> boots with CONFIG_PCI_DYNAMIC_OF_NODES=3Dy and logs:
+> =
+
+
+>   pci 0000:00:00.0: skipping dynamic OF node for invalid bridge
+> =
+
+
+> The regression was introduced by 49d63971f963 in v6.17-rc1. Commit
+> ce26f588c831 made v6.19-rc5 boot by removing MISC_RP1's select of
+> PCI_DYNAMIC_OF_NODES. That avoids the failing path in the tested
+> configuration but does not change of_pci_make_dev_node().
+> =
+
+
+> I do not have a log from the failed boots. No output appeared with
+> earlyprintk=3Defi,keep, keep_bootcon, ignore_loglevel, loglevel=3D8,
+> initcall_debug, and EFI pstore enabled. Blacklisting both GPU drivers an=
+d
+> disabling the Intel IOMMU did not make the bad kernel boot.
+> =
+
+
+> Should of_pci_make_dev_node() reject devices with invalid bridge bus
+> configuration, or should 8086:4c43 use a device-specific quirk? I can
+> prepare and test a patch for either approach. For Linux 6.18 stable,
+> would that fix be preferable to backporting ce26f588c831 and its
+> dependencies?
+> =
+
+
+> #regzbot introduced: 49d63971f963
+> #regzbot title: PCI_DYNAMIC_OF_NODES early boot hang on ACPI x86
+> =
+
+
+> Thanks,
+> Angel J
+> =
+
+
+> =
+
+
+> =
+
+
+> =
+
+
+> =
+
+
+> =
+
+
+-----------------------9fc1428e6ff9ebac9729a5244b051e32--
+
+--------92b2098d95252a39ada38c9e88383d14dd60f1ac3fa7fee7e6a674a7c834e248
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: ProtonMail
+
+wrsEARYKAG0FgmqWI18JEBoBbwppzUxnRRQAAAAAABwAIHNhbHRAbm90YXRp
+b25zLm9wZW5wZ3Bqcy5vcmfl/6uNekZTiSEcr0zFYMmZB7pZXzWkFaFAVYQ1
+zRRp2xYhBEAFf9htFyVnqZzmVhoBbwppzUxnAAAzOwD9FRMnq+YbDgEDUc3n
+pVpEge+RLMOPpjo9taK9Dno8I+gA/0J3r7cKUxlGLsTjReprBRnyMa4sDEjT
+KBCLgZOvyacC
+=k1eP
+-----END PGP SIGNATURE-----
+
+
+--------92b2098d95252a39ada38c9e88383d14dd60f1ac3fa7fee7e6a674a7c834e248--
+
