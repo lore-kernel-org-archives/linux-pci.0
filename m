@@ -1,27 +1,28 @@
-Received: from SN4PR0501CU005.outbound.protection.outlook.com (mail-southcentralusazon11011021.outbound.protection.outlook.com [40.93.194.21])
+Received: from DM1PR04CU001.outbound.protection.outlook.com (mail-centralusazon11010051.outbound.protection.outlook.com [52.101.61.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 577AA29D294;
-	Tue,  1 Sep 2026 00:34:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.194.21
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E4181361969;
+	Tue,  1 Sep 2026 00:34:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.61.51
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788222863; cv=fail; b=eH96EGKViXVVB9priPP498NfRFoDCY1kYbEks580X2C7/c2DdFzUiZ17yucL6W3qPxh5Xey4398A5iMXIVJS+O9lvMUvmZeOBuBUNPQkIvg5OMVx77mLUIhNJzlic3M5oljNQO/kFgGcsssQ4mM31LMY+zu9YFmRJNQLbODFuGk=
+	t=1788222866; cv=fail; b=dxnFLLnDIMGXj82XV7bXL3sgrDdXu9OWt68NwRii9mQ9HpTc5lgZcjYPZ8Qu6FnZQjINhtdTZ92yTNODKdjud3N9lcsZPq65TTS1jmFaFo4qqio62g0Dg2zvbrSsbM2NyyNsXodB4i9O0t0LS4/kGR8IspkhA2AQB16bxTtBSLQ=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788222863; c=relaxed/simple;
-	bh=TE6ccWyYSowQ8m2L/YcMLGMArcNdzogly76ysamPvTo=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=bQ+Gp0MRgxWeuVTsRoug2vsriBIKZcIRwH7bdvBrCcwDR9/lCKbkVKGiH44UL2FWBZKaNSmaHHgPWKbjVsSKmVCWMlf0cvWC6HbaD4GefMQ98kRIC0N/IjksDiIjbCqlVFvsRZBBiLzUxi97FY2XdsWXXbURJMRJtp7it7eCTQs=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=gugfjEje; arc=fail smtp.client-ip=40.93.194.21
+	s=arc-20240116; t=1788222866; c=relaxed/simple;
+	bh=jwToBBSSGHSYdmmE1Jx3R7Tbd7kldO+/xesBnFURO8g=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=pVnsauipEBsXAQUQ/sYN5nbNbytmmGMEZM5MZyMrDp9v8SYUbLqQoRpGdrIyTxn7P4WxZFQaNujl7ai3iWEWR5bMCAiyHPHqWGQyXvlC8sgUcxyOGX8zVBi4ZqUJGCuCslZJmDy7dyUoExD1Dp9SI+Dkw8hraKeWLjTFHKB2lP4=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=jDQ+lE74; arc=fail smtp.client-ip=52.101.61.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="gugfjEje"
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="jDQ+lE74"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=pZh+bG3Fa1FXV6IU04BFQlWNUNo/3d7dDHGN7fd6hiFn3vkkqCgUU8wgKLQ4VpAoghqoJE0JphX/y3g39Z2bzJv857ke+eJnCnr6EP4PcV7K2Sid1GFHzXy+bMSw8eO5D5tRD3I19cso2NJhiAxMbXZON4bX8EeHJnUbGbLGOxSnNjEO7t0kUvF7+AibcQJ6MxvGi08/FFlPtTcSEYqwHs5LFw88ZMwIimb+Jj2uTHwDGDCm4Aug4pagZDCckOFwTm5xncffM7ueA0RO/t8oqo/a28eJ9O6XdHA+j8qyGyCKHZZ8/y+mRgNg705DMowhlYVWjvkBXM8xygU7VDDgYg==
+ b=fhdfgR7x9DLEDmy5EcLkAqw/X4JT1ez4a84Y+fRwrzBtvEVRqaF70V6s8wdsWbLZ1I89iKWWHz0eV4qsUmuNbVrVLQ3PLVF3ZnJ3tXXUfCq1eEhM5M1tuDJHwu/bVmOe+aWjf6ul9/AFnO5WoxxUH4jjU/XMQ8MmOpFQxn1czjcWK8r7evSt0i6qOKAaudn9wZpBcZ2BNQ178hU7LvA4lUnxTMUqWTm5/jExavfNRFsXPolJpsjNYLxQ+BFQyj9Ng75d3IfNhVigdSF0YzgidG3oluE0KETpoYAImqlHzs0K1NKFV+mkQoiLZFrbwyV4UBnZDCt0wjmoFZNRDvd6kw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=A4imLcEdQUf3mRaXJaGjH2FDFDtfAUAkvpv/dUyehUw=;
- b=QLEjYmXu3iIx1pCp9orpMDPyUcViZGBheZGj/DOKYhHMZVdPEW1vrVQOhn9cFolxJbmKcVgDL+KbRqhWf2B3ZJGpe082j/uhQMf7o/8VsNzp315lXMONJv89aOPtKOV6FbB0XWfdw60g+IEUs2fyDk+Tv24rdFi2m8Hsx+BEEPEp7qNC5sO0e+lD4DZ1HyDAwuYQCuAjtpyCoRENcvjztfSolM1ygfRW6+7NN+7jzgF1KIopVEji82Chi+H6ai6xAfkEfPxpzXyfTP1J8Sdrev+2Jx7HWfl7LkwE7J95hcnxqJayQjHrXhQtc0lwSo0D3Rx1KIvs62Dy/YRoKKGFBw==
+ bh=J7tGRXSkBp1nsYD0Ez+0KRjCrJlDk8FWj+7uBNtWEoE=;
+ b=m8l4pTMKjpXiLDCN6JW1JOYRlrgx8OKCX/y4UAbWywflKendfv6iYRALMKVb9yRJS/gsbgwsinaUKWp/BzDCAsmlb7uatQ+JcqDGiKKRKrA/h7dA21KG912BaHatI/9QQvygBM3lysHOZjim6RhIxu5u/+l+QGdmvZB6b9jRha9/QoUy1XIUrkNJttcoTB/QftEfMTkl/V1PtLZgKTPhjd2yxrRckw/SP3pVG+uEjocxbQV45DMecotHxB5blJK/U/lay8oFOWAKUQTO0KrWQejUfb5DGgapOZJZSXr2SIMzMDDA9eW1TqvXH3Lq/Op5aGC6qJPKAGru9V9frxKHtw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  216.228.117.161) smtp.rcpttodomain=kernel.org smtp.mailfrom=nvidia.com;
  dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
@@ -29,18 +30,18 @@ ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=A4imLcEdQUf3mRaXJaGjH2FDFDtfAUAkvpv/dUyehUw=;
- b=gugfjEjenFFUFf7u/l9dMbcuuJLP9FFhqTPYtCKYlxgj92QqXrtsBxo01uUayWCynKSac6FEe2Lwqkjn9we7hBKBkcauuveYPjyOlafDOphh8LOAa4mX6b0+vzLvKG8PD+wy23bRyhN0zc8jK7XlETWPKnNW8fu6IhlmInt8cY7vOPP7LNoAcX5jWxlZjGsfFcivS5eODl1skhODj5r6j7aYqLRlXVEduy3Z6mjMp2c30utEULrAyG2dtR0zplGavnacKuv1t6fZ5CLkhzigrqT27+qByen7POwxKvArwcfNnKs4rNubsVd/5QjWNWFc5XgHEKyy9uQMveWY3MW84A==
-Received: from MW4PR03CA0093.namprd03.prod.outlook.com (2603:10b6:303:b7::8)
- by SA1PR12MB7152.namprd12.prod.outlook.com (2603:10b6:806:2b2::13) with
+ bh=J7tGRXSkBp1nsYD0Ez+0KRjCrJlDk8FWj+7uBNtWEoE=;
+ b=jDQ+lE7403K3YTYGVpOsDKx/v/R0QlT/bzJOFlEib927SGXLG74C014FoB8aMCtF6bcpq8dIpN6387eFPGk68QJIaTyXA1ew4kMsICB+SKwykBsuNFi7p4EO1O3iyVSExqIs25SnnnXdmyvzRxCJnRz13UigEqX3kUhz+831qtBB+RsEpAQQmnvo+ALZe3+J4IudIkn9byo0LB/gJrNCs6do6VnCb+2YL6a9zSKeTE0vNSw67WiBWQU+AsLRkGSB5MqTpUd3L5DKFWzjxigxdsninBrIDHLjzXUHl81xp8a/nUN/wqTHnu+CsZFoVV3oLqCCysgK7dG/rj2Oyn022Q==
+Received: from BYAPR21CA0019.namprd21.prod.outlook.com (2603:10b6:a03:114::29)
+ by IA0PR12MB8373.namprd12.prod.outlook.com (2603:10b6:208:40d::11) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.360.13; Tue, 1 Sep
- 2026 00:34:17 +0000
-Received: from SJ1PEPF000026CA.namprd04.prod.outlook.com
- (2603:10b6:303:b7:cafe::88) by MW4PR03CA0093.outlook.office365.com
- (2603:10b6:303:b7::8) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.21.339.12 via Frontend Transport; Tue, 1
- Sep 2026 00:34:16 +0000
+ 2026 00:34:21 +0000
+Received: from SJ1PEPF000026C5.namprd04.prod.outlook.com
+ (2603:10b6:a03:114:cafe::9f) by BYAPR21CA0019.outlook.office365.com
+ (2603:10b6:a03:114::29) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.21.382.10 via Frontend Transport; Tue, 1
+ Sep 2026 00:34:20 +0000
 X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.117.161)
  smtp.mailfrom=nvidia.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=nvidia.com;
@@ -48,20 +49,20 @@ Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
  216.228.117.161 as permitted sender) receiver=protection.outlook.com;
  client-ip=216.228.117.161; helo=mail.nvidia.com; pr=C
 Received: from mail.nvidia.com (216.228.117.161) by
- SJ1PEPF000026CA.mail.protection.outlook.com (10.167.244.107) with Microsoft
+ SJ1PEPF000026C5.mail.protection.outlook.com (10.167.244.102) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.382.8 via Frontend Transport; Tue, 1 Sep 2026 00:34:16 +0000
+ 15.21.382.8 via Frontend Transport; Tue, 1 Sep 2026 00:34:20 +0000
 Received: from rnnvmail204.nvidia.com (10.129.68.6) by mail.nvidia.com
  (10.129.200.67) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.46; Mon, 31 Aug
- 2026 17:34:02 -0700
+ 2026 17:34:05 -0700
 Received: from rnnvmail203.nvidia.com (10.129.68.9) by rnnvmail204.nvidia.com
  (10.129.68.6) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.46; Mon, 31 Aug
- 2026 17:34:01 -0700
+ 2026 17:34:04 -0700
 Received: from Asurada-Nvidia.nvidia.com (10.127.8.14) by mail.nvidia.com
  (10.129.68.9) with Microsoft SMTP Server id 15.2.2562.46 via Frontend
- Transport; Mon, 31 Aug 2026 17:34:00 -0700
+ Transport; Mon, 31 Aug 2026 17:34:03 -0700
 From: Nicolin Chen <nicolinc@nvidia.com>
 To: <will@kernel.org>, <robin.murphy@arm.com>, <jgg@nvidia.com>
 CC: <joro@8bytes.org>, <bhelgaas@google.com>, <praan@google.com>,
@@ -70,10 +71,12 @@ CC: <joro@8bytes.org>, <bhelgaas@google.com>, <praan@google.com>,
 	<iommu@lists.linux.dev>, <linux-kernel@vger.kernel.org>,
 	<linux-pci@vger.kernel.org>, <skaestle@nvidia.com>, <mmarrid@nvidia.com>,
 	<skolothumtho@nvidia.com>, <bbiber@nvidia.com>, <harsha.v@oss.qualcomm.com>
-Subject: [PATCH v3 00/13] iommu/arm-smmu-v3: Add PRI support
-Date: Mon, 31 Aug 2026 17:33:25 -0700
-Message-ID: <cover.1788222485.git.nicolinc@nvidia.com>
+Subject: [PATCH v3 02/13] iommu/arm-smmu-v3: Add Q_POS() macro
+Date: Mon, 31 Aug 2026 17:33:27 -0700
+Message-ID: <4aede16c4e2b68b280793a927fe32b6bd8ef457a.1788222485.git.nicolinc@nvidia.com>
 X-Mailer: git-send-email 2.43.0
+In-Reply-To: <cover.1788222485.git.nicolinc@nvidia.com>
+References: <cover.1788222485.git.nicolinc@nvidia.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -85,119 +88,99 @@ Content-Type: text/plain
 X-NV-OnPremToCloud: ExternallySecured
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: SJ1PEPF000026CA:EE_|SA1PR12MB7152:EE_
-X-MS-Office365-Filtering-Correlation-Id: 40b1c3e1-6f8f-4b20-26cb-08df07c0c155
+X-MS-TrafficTypeDiagnostic: SJ1PEPF000026C5:EE_|IA0PR12MB8373:EE_
+X-MS-Office365-Filtering-Correlation-Id: 8a768b64-b617-458f-3805-08df07c0c370
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|376014|7416014|82310400026|36860700016|23010399003|10067099003|11063799006|56012099006|13003099007|6133799003|18002099003;
+	BCL:0;ARA:13230040|36860700016|82310400026|1800799024|23010399003|376014|7416014|10067099003|11063799006|56012099006|18002099003|22082099003;
 X-Microsoft-Antispam-Message-Info:
-	Y12qxHreeOdqKsT50OAg2VXj+aqyn3hUVut+7G+bIm7d3F48x44p5NGV/C7gpYqcPAtatkBn0wpKxMwMOyEhr9DnMjJ2nBDXhg0/8Y6U3eUqRCW/ka3VbnhqKUyCtA40iUc/cPIyHQmjEj1Zu1Mgs7DzvQsJA0cv/11P4n4VzungLy+d3lFK1BoX52BjLB4sO5qEKgJvNAz3UUKYquhkf1fB8+Jol/fbendL5HKaMv/YOg0XkpxshtyDuBJEYiTHzpAWFbZsOc6X3jmq+tA4+rWynuzmImUE99TIEmyyP9X3ZCtr8XeWVqo0NZ9+8F0kOwL78b5uq/rk5qLaX86eRTiTmabJoxIZUYhAmJesD3yo1becdhYv9R1tyQtzGVNIhlDzTYCJAb6uYqr2c8DKalPxkHiyEt45eRTCHxOZ00q9JBrkcNO1QXvRUIBez+q8o/7nMEq88Fk22oVF6tcZUheTG4uxYU8vaxSQdP0QB9Urps+HyeYDC3k2CJie6TC5aM6JHRzsHYHb8ucq7MUt3cHt9/B3zVUl69alxpLbbejVwTGfovNad2HcE/VpRzGiQLeJbH6vjKoGbmN+724J4xfVsyyzzdDECzX0TyV0YeDDlCUhY62yqUvMxnytHW2Q0t595EH1DJ6uo4R6HIj32BrWLOuSgnxjnj4dFc3c9iH0V/nKFGeNVulgdHi+3oFFUBEs68xhze7dGOpiD4V1mw==
+	/MG4QMmgKfsEfJWkP7xzlzOOGRnQBGwI/GKwIkOhuyjRUsyF4V4iQDorQxvQWG7GcVPrm5wG2K44TzJuBXJPXj5yqCp5kJEw0TUXP4FQ8c3ww5b58xP190e1N6sKcrV3LluVCIUeAh7kRdbmMOxhbgurtok0848DyMPas/xM5n7wHIJ8duAHcBt8GIDpRS7KKpaV3MrfLzRh0Zg0fSPI0IgUo9HdGp0KXpex4WUsy150t8OrToAjlDVB3WupT+2ArwJwgnK3PJTku6I1n5Is/jOvUJXs4Bcs402CNHjHk7BwI1aJ8hJQrHr4Fq+5/FBKKp9sSjDGmgFpIDoYQa+sRhqIHFg/v6tlJhdslQJ6gQWhTZhT11MZ7kHxK9DueYVAQxScUbOiwnnuCAdlOfxok2Jh6ZDagJANX/EQdtfATf82OQlFbuCs11P82sQ+JeyTlqTocVTodpP8EUoFlbSoTCrISHWc5qwnKN/pLZnb7F8adzh/Libwa4cFUr7F8hZhCw38ActoLggHWsJKt5CTJMu4mrVk6os8L3+btmc2JazhK9ADtvquE0GX5cUVemR0F7GMJVqhRjmY+T/tHnbNc0j8JIdX48uwMW4Nevy3YlLRiAElaoMNLtohQ3/O+4HW/7VzklKrUvaKDTuI4vX9yEpEQYwhrxdN2l/o/sTy3oQgthEwd9kMxXPBlzsSRX4jm7iRnsP3nyE+Y81OJ/S5hg==
 X-Forefront-Antispam-Report:
-	CIP:216.228.117.161;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge2.nvidia.com;CAT:NONE;SFS:(13230040)(1800799024)(376014)(7416014)(82310400026)(36860700016)(23010399003)(10067099003)(11063799006)(56012099006)(13003099007)(6133799003)(18002099003);DIR:OUT;SFP:1101;
+	CIP:216.228.117.161;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge2.nvidia.com;CAT:NONE;SFS:(13230040)(36860700016)(82310400026)(1800799024)(23010399003)(376014)(7416014)(10067099003)(11063799006)(56012099006)(18002099003)(22082099003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	WhvMDQd4F4+EAFvo/7eKMys4wOaRyDDniWSbjNgLPr/FRQuzc52hyBsVsD4UfYwtUAcMIVb2wk6XbLTa55SJqWt6fOqJXwoABxuk26N2a4Xu/YS7tDeBm30dXK6DNVZYsx9hIdU2y640v3RjeNTXR+6cae4MMZC12OIMjRIshS2+zr81QK5wLkJWaSu8+9B++6S4T92su+Q5KVRrOCaY1M6z/vYumigsO6x6PUFo1K4GnQbzF1J8a4IdHCxgqewKeuozzk2E2VL6QzUxzPj6QeWbB9qw13n9XbyuYaiYyvrTjzJw5Cm+zaNdrgybROpJbmRqqU8+ZYwQtkc7YD3Ff9IeVrID6Zc8BPRhWrroLqNWn2d/ZaMRkGh1vFSb1P0Lqg78cK3xlPN8OjDC2y8uuqT9kXo4Q9swIMWr+wqP6EqrewZ42uZl7tvCD1y1bzPD
+	FyIH3mLNppHss1qs+3U36/VYzbSCeELGdW6BVKAC3n9M/Ahj/Iw+UUJ7J6UE8g/snXt9IDSgC1MJ3Awj5krxg1WAC5vr7RrfzLke8Iw9HuWgj0fz0/HhJ2P/kROvc4qEUgDu0m86epwAk02ENyJ6+4LFVU+KtMcGqfFZdycPhFj6+RRaJYGDEbRr7+XQoYDfTf8tAe+k7lNbG7cnfB+XgD/VTTbl4TWAgvachzvt0HhG6qTcW3Hx3IP0iXZ7h4H7MjXRsfRfseoMQEGV/VV8Dcp6IQdZnX6ueSspW5Th4uO685eAIxTWotUb3IlqG0K+zEB+vuIovmE2gdKAbyBP38BTwI+XieKMPZXrtRRWOS09kfrKZCcpBme/F/NIaf6Vq/qD8XfHKsXglMvzMcaqD0hxnQgI2H1ptEjDa4tcFf5Q2Hy1JORLnSGjGVfLUnXE
 X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 01 Sep 2026 00:34:16.7172
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 01 Sep 2026 00:34:20.2901
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 40b1c3e1-6f8f-4b20-26cb-08df07c0c155
+X-MS-Exchange-CrossTenant-Network-Message-Id: 8a768b64-b617-458f-3805-08df07c0c370
 X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.161];Helo=[mail.nvidia.com]
 X-MS-Exchange-CrossTenant-AuthSource:
-	SJ1PEPF000026CA.namprd04.prod.outlook.com
+	SJ1PEPF000026C5.namprd04.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA1PR12MB7152
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA0PR12MB8373
 
-The SMMUv3 driver doesn't handle events on the PRI queue or respond to IOPF
-faults. This series adds the missing pieces, using the IOPF infrastructure,
-to convert PRI page requests into iopf_faults and issue CMDQ_OP_PRI_RESP.
+A queue position, the wrap bit combined with the index, is Q_WRP | Q_IDX.
+It is a (max_n_shift + 1)-bit value that wraps at twice the queue capacity.
+queue_inc_cons(), queue_sync_cons_ovf(), and queue_inc_prod_n() currently
+compute such positions by open-coding the two macros at each call site.
 
-The iopf_queue_flush_dev() contract requires the driver to first drain the
-hardware PRI queue and synchronize using a threaded IRQ handler before the
-IOPF software flush. This drove the additional commits compared to v1:
- - arm_smmu_drain_queue() drains the hardware queue by counting the
-   entries that the threaded IRQ handler consumes
- - arm_smmu_attach_release() moves the teardown outside the global lock
- - synchronize_irq() closes the gap before the final flush
+Add a Q_POS() macro and switch the open-coded sites to it.
 
-Note that, although this series is only about PRIQ and EVTQ, the Q_POS and
-arm_smmu_drain_queue() helpers will be shared with Pranj's RPM series, per
-discussion below for CMDQ to use as well:
-https://lore.kernel.org/all/ao3ljjiXhnSJte5A@google.com/
+A subsequent change will apply Q_POS() to a position difference, to count
+the entries that a queue pointer moved past.
 
-Also, two patches in this series have some conflict with the kdump series:
-https://lore.kernel.org/all/cover.1788130528.git.nicolinc@nvidia.com/
+No functional change intended.
 
-As the kdump one is still under review, I leave those as-is, since Sashiko
-review relies on a clean rebase on linux-next to scan the series. Once the
-kdump series gets merged, I will rebase those kdump related stuff. For now,
-I think the series is good to collect review comments.
+Assisted-by: Claude:claude-fable-5
+Signed-off-by: Nicolin Chen <nicolinc@nvidia.com>
+---
+ drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.h |  2 ++
+ drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c | 11 +++++------
+ 2 files changed, 7 insertions(+), 6 deletions(-)
 
-This is on Github:
-https://github.com/nicolinc/iommufd/commits/smmuv3_pri-v3
-
-FWIW, engineers on the NVIDIA side have managed to verify the PRI feature.
-
-Changelog
-v3:
- * Rebase on v7.3-rc1
- * Drop FEAT_SVA gate on IOPF queue allocation
- * Discard partial PRI faults on PRIQ overflow
- * Refuse PRI on a PCIe master with stall_enabled
- * Merge and ratelimit the unexpected PRI request prints
- * Disable EVTQ/PRIQ/combined IRQs before iopf_queue_free()
- * Reclaim a leaked IOPF enrollment in arm_smmu_release_device()
- * Leak master_domain on a drain timeout instead of risking a UAF
- * Fix the IOMMU_PAGE_RESP code mapping in arm_smmu_page_response()
- * Rework arm_smmu_drain_queue() into a counting-based sleeping poll
- * Split the fault event drain and the fault work flush into two patches
- * Drop IOMMU_FAULT_PAGE_REQUEST_STALLS_TRANS; dispatch on per-master state
-v2:
- https://lore.kernel.org/all/cover.1779944354.git.nicolinc@nvidia.com/
- * Allocate evtq.iopf for ARM_SMMU_FEAT_PRI
- * Pick up Jean's PRI stubs and PRI export patches
- * Enable PRI for PCI devices in arm_smmu_probe_device()
- * Add arm_smmu_drain_queue_for_iopf() for EVTQ and PRIQ
- * Add arm_smmu_attach_release() to rework the IOPF drain
- * Add IOMMU_FAULT_PAGE_REQUEST_STALLS_TRANS for STALL mode
- * Gate pci_enable_pri() on FEAT_PRI plus a non-NULL evtq.iopf
- * Deny unrecognised-StreamID PRG_LAST in arm_smmu_handle_ppr()
- * Disable PRI when no IRQ handler is registered (unique or combined IRQ)
-v1:
- https://lore.kernel.org/all/cover.1772568590.git.nicolinc@nvidia.com/
-
-Jean-Philippe Brucker (2):
-  PCI/ATS: Add PRI stubs
-  PCI/ATS: Export pci_enable_pri() and pci_reset_pri()
-
-Malak Marrid (1):
-  iommu/arm-smmu-v3: Submit CMDQ_OP_PRI_RESP for IOPF event
-
-Nicolin Chen (10):
-  iommu/arm-smmu-v3: Add arm_smmu_attach_release()
-  iommu/arm-smmu-v3: Add Q_POS() macro
-  iommu/arm-smmu-v3: Drain in-flight fault events on domain detach
-  iommu/arm-smmu-v3: Flush in-flight fault work on domain detach
-  iommu/arm-smmu-v3: Allocate IOPF queue without FEAT_SVA
-  iommu/arm-smmu-v3: Disable the queue IRQs before disabling the SMMU
-  iommu/arm-smmu-v3: Disable PRI when no IRQ handler is registered
-  iommu/arm-smmu-v3: Support PRI Page Request in arm_smmu_handle_ppr()
-  iommu/arm-smmu-v3: Allocate IOPF queue for ARM_SMMU_FEAT_PRI
-  iommu/arm-smmu-v3: Enable PRI for PCI device in
-    arm_smmu_probe_device()
-
- drivers/iommu/arm/Kconfig                     |   2 +
- drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.h   |   5 +
- include/linux/pci-ats.h                       |   5 +
- .../arm/arm-smmu-v3/arm-smmu-v3-iommufd.c     |   1 +
- drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c   | 417 +++++++++++++++---
- drivers/pci/ats.c                             |   2 +
- 6 files changed, 382 insertions(+), 50 deletions(-)
-
-
-base-commit: cee9395acd8043be0644b25c34bfa86623f2b935
+diff --git a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.h b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.h
+index 5b89bad71c102..de7e4284658a1 100644
+--- a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.h
++++ b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.h
+@@ -187,6 +187,8 @@ struct arm_vsmmu;
+ 
+ #define Q_IDX(llq, p)			((p) & ((1 << (llq)->max_n_shift) - 1))
+ #define Q_WRP(llq, p)			((p) & (1 << (llq)->max_n_shift))
++/* A position is Q_WRP | Q_IDX, wrapping at twice the queue capacity */
++#define Q_POS(llq, p)			(Q_WRP(llq, p) | Q_IDX(llq, p))
+ #define Q_OVERFLOW_FLAG			(1U << 31)
+ #define Q_OVF(p)			((p) & Q_OVERFLOW_FLAG)
+ #define Q_ENT(q, p)			((q)->base +			\
+diff --git a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
+index 99baa59b39c9d..e00b6c88214f5 100644
+--- a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
++++ b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
+@@ -181,8 +181,8 @@ static void queue_sync_cons_out(struct arm_smmu_queue *q)
+ 
+ static void queue_inc_cons(struct arm_smmu_ll_queue *q)
+ {
+-	u32 cons = (Q_WRP(q, q->cons) | Q_IDX(q, q->cons)) + 1;
+-	q->cons = Q_OVF(q->cons) | Q_WRP(q, cons) | Q_IDX(q, cons);
++	u32 cons = Q_POS(q, q->cons) + 1;
++	q->cons = Q_OVF(q->cons) | Q_POS(q, cons);
+ }
+ 
+ static void queue_sync_cons_ovf(struct arm_smmu_queue *q)
+@@ -192,8 +192,7 @@ static void queue_sync_cons_ovf(struct arm_smmu_queue *q)
+ 	if (likely(Q_OVF(llq->prod) == Q_OVF(llq->cons)))
+ 		return;
+ 
+-	llq->cons = Q_OVF(llq->prod) | Q_WRP(llq, llq->cons) |
+-		      Q_IDX(llq, llq->cons);
++	llq->cons = Q_OVF(llq->prod) | Q_POS(llq, llq->cons);
+ 	queue_sync_cons_out(q);
+ }
+ 
+@@ -218,8 +217,8 @@ static int queue_sync_prod_in(struct arm_smmu_queue *q)
+ 
+ static u32 queue_inc_prod_n(struct arm_smmu_ll_queue *q, int n)
+ {
+-	u32 prod = (Q_WRP(q, q->prod) | Q_IDX(q, q->prod)) + n;
+-	return Q_OVF(q->prod) | Q_WRP(q, prod) | Q_IDX(q, prod);
++	u32 prod = Q_POS(q, q->prod) + n;
++	return Q_OVF(q->prod) | Q_POS(q, prod);
+ }
+ 
+ static void queue_poll_init(struct arm_smmu_device *smmu,
 -- 
 2.43.0
 
