@@ -1,72 +1,167 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D788647D470;
-	Tue,  1 Sep 2026 11:09:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id B7A0B3B52EE;
+	Tue,  1 Sep 2026 11:14:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788260947; cv=none; b=KxznHjpOsZGIZiv5yvYZG3+U+cEQymqsD4iPVTHWEfH2uYtI/AiZ9+hNtnXksMERkAO4V/jrqikwbzqa764CwTQpv+bC+YdFCYHZBJelR97mK75hHcfCWDS5iK7O6XXEXzaDE8kFvKUabQ16VIp58lsZAcWC1ykjbN9V+xE9E/8=
+	t=1788261266; cv=none; b=BUc8mxmYZafl2CJkYbFK6bJPgLaXYch994orUcAKK3MG3RFXVti3lGfQ0C30YAlBdv43Tr+J82bhiLk1w/LhgU5l8OmeqeqoQQDO5rV+oBNQG/FDt+sO9wfufo+Xf2kYgIPMrVODTjyNmaz5XiS7QorAUM9MfX24TWjfnVe9OhM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788260947; c=relaxed/simple;
-	bh=VNLnXhLOt+MCY50q0Qc0CkTZqllQGQfSGlBtAl1Vr6U=;
-	h=Mime-Version:Content-Type:Date:Message-Id:Subject:Cc:To:From:
-	 References:In-Reply-To; b=BmVsQqTuReMH/mK3a/rjSkiMdejeZZZ/53ycmkXDkXBsCTmbghUe3P1rDh+jdlxKhRuo0XV4yqJrcFVlezDXFpdEOjNqXHMNTHvNCOflMpW3UhH4raG3i7gPsLnQxyBjZ7CyU/i+BlFRqEUfdIPYyB2YAuJezDAo+//hXrv5vc0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CY2ihX9M; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788261266; c=relaxed/simple;
+	bh=daF9HesEza6SWtOhkfKbGfBWgHHoBdo2R/qUMpIeFV0=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=jjaxtMgVrbMj1lrlk26ky+T5Rg9zoYr54B8M5Nxkd742+FdCkpvOMAuxQledZgzQAwYXjd6j5u/ENRYvubrBSg1cS+vZtGOWAmejmkZt5ks2yhyADbXwFNp7CSN8aSd5g8eNP4gW1sIvZVENEwQzUotAgP/cLpgGpGJYKJCzDnk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=mLIHkO2t; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CY2ihX9M"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8FCBF1F00A3F;
-	Tue,  1 Sep 2026 11:09:00 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788260945;
-	bh=VNLnXhLOt+MCY50q0Qc0CkTZqllQGQfSGlBtAl1Vr6U=;
-	h=Date:Subject:Cc:To:From:References:In-Reply-To;
-	b=CY2ihX9MxMDxMPHfljgNIH9Fa/9eCdXynGGOMRqQdV8NVhBeLgAO5Guk6tikCuhZW
-	 Z/7N7JLM82Nb3VbjIGxI5m7SGbMLGlujuWYDQuwQHDBOM5YRxMd6U4F2VnOmxrQkIm
-	 6bssvHCAp6oU9pGyCMY4/Z1L7A9K/EyqsYSNFnb9Bne/H3DPslCmVps8kgwTg5mf/F
-	 icJ8Z+PcyuezhGdgVfFyKxb/XmLxcggJ1p1s3ktwGstt0QzD2G0YrdqYoZh4Eypd58
-	 5OWJt1ArdpwsBtgySrotAM1hPBE5UfVUvLUZ/kqFrkwmzCguSKs97casKMLgsHpPtL
-	 YH4kSX5WuBDzQ==
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="mLIHkO2t"
+Received: from [10.26.7.43] (unknown [4.213.232.20])
+	by linux.microsoft.com (Postfix) with ESMTPSA id 6DE5520B7166;
+	Tue,  1 Sep 2026 04:13:38 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 6DE5520B7166
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1788261222;
+	bh=QqqOU0jY9csntePR9q0ubjJbXt4KO8x1A3BS7Bvcyeo=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=mLIHkO2tcjv6Htlrs6ZB0dY4dv8tx6hCsACqBVcpciOB+2qqE+gmq89hiN2fD69oq
+	 oy1528fY8KTmAnGKihSxZT7oOsHONC5IO3ebTDr/a04be4DnI40PaiHfuY+ebdWqFW
+	 ijBavg4KTitkAg6mbUxFnxCmdk8bUY58148znJHo=
+Message-ID: <b66a428d-b6c0-4ec1-8644-504749be308c@linux.microsoft.com>
+Date: Tue, 1 Sep 2026 16:44:11 +0530
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] PCI: hv: Warn when wait_for_response() waits indefinitely
+To: Hamza Mahfooz <hamzamahfooz@linux.microsoft.com>,
+ Naman Jain <namjain@linux.microsoft.com>
+Cc: Saurabh Singh Sengar <ssengar@linux.microsoft.com>,
+ Michael Kelley <mhklinux@outlook.com>, Long Li <longli@microsoft.com>,
+ KY Srinivasan <kys@microsoft.com>, Haiyang Zhang <haiyangz@microsoft.com>,
+ "wei.liu@kernel.org" <wei.liu@kernel.org>, Dexuan Cui <DECUI@microsoft.com>,
+ "lpieralisi@kernel.org" <lpieralisi@kernel.org>,
+ "kwilczynski@kernel.org" <kwilczynski@kernel.org>,
+ "mani@kernel.org" <mani@kernel.org>, "robh@kernel.org" <robh@kernel.org>,
+ "bhelgaas@google.com" <bhelgaas@google.com>,
+ "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+References: <20260825051850.2438816-1-sahilchandna@linux.microsoft.com>
+ <736091cf-8d00-415e-a890-e2dfa6739325@linux.microsoft.com>
+ <SA1PR21MB66836C32FD0FABD94B45D7F6CEAF2@SA1PR21MB6683.namprd21.prod.outlook.com>
+ <SN6PR02MB41578D73327A61FD3D7412C2D4AD2@SN6PR02MB4157.namprd02.prod.outlook.com>
+ <apB1HytkO5xu7jP6@linuxonhyperv3.guj3yctzbm1etfxqx2vob5hsef.xx.internal.cloudapp.net>
+ <27277d1e-fd41-4dc9-aea2-eae3773ba322@linux.microsoft.com>
+ <apGiT0ZKIetmsbn8@linuxonhyperv3.guj3yctzbm1etfxqx2vob5hsef.xx.internal.cloudapp.net>
+Content-Language: en-US
+From: Sahil Chandna <sahilchandna@linux.microsoft.com>
+In-Reply-To: <apGiT0ZKIetmsbn8@linuxonhyperv3.guj3yctzbm1etfxqx2vob5hsef.xx.internal.cloudapp.net>
 Content-Type: text/plain; charset=UTF-8
-Date: Tue, 01 Sep 2026 13:08:58 +0200
-Message-Id: <DL3XLHXS647M.1LMHQUVX5RTI@kernel.org>
-Subject: Re: [PATCH v4] rust: pci: reject IRQ vector indices that do not fit
- in u32
-Cc: "Sophon Zhang via B4 Relay" <devnull+aiqubits.hotmail.com@kernel.org>,
- <aiqubits@hotmail.com>, "Bjorn Helgaas" <bhelgaas@google.com>,
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, "Miguel
- Ojeda" <ojeda@kernel.org>, "Boqun Feng" <boqun@kernel.org>, "Gary Guo"
- <gary@garyguo.net>, =?utf-8?q?Bj=C3=B6rn_Roy_Baron?=
- <bjorn3_gh@protonmail.com>, "Benno Lossin" <lossin@kernel.org>, "Andreas
- Hindborg" <a.hindborg@kernel.org>, "Alice Ryhl" <aliceryhl@google.com>,
- "Trevor Gross" <tmgross@umich.edu>, "Daniel Almeida"
- <daniel.almeida@collabora.com>, "Tamir Duberstein" <tamird@kernel.org>,
- =?utf-8?q?Onur_=C3=96zkan?= <work@onurozkan.dev>,
- <linux-pci@vger.kernel.org>, <rust-for-linux@vger.kernel.org>,
- <linux-kernel@vger.kernel.org>
-To: "Alexandre Courbot" <acourbot@nvidia.com>
-From: "Danilo Krummrich" <dakr@kernel.org>
-References: <20260901-fix-pci-irq-vector-index-truncation-v4-1-f94aa6932fd9@hotmail.com> <DL3XDBBHXKKV.G9P6KRSSX1DN@nvidia.com>
-In-Reply-To: <DL3XDBBHXKKV.G9P6KRSSX1DN@nvidia.com>
+Content-Transfer-Encoding: 7bit
 
-On Tue Sep 1, 2026 at 12:58 PM CEST, Alexandre Courbot wrote:
-> That makes me wonder, shouldn't we make `index` take a `u32` directly?
-> If that's what the C API expects, it does make sense to align to it
-> instead of forcing users to make a potential unneeded conversion if they
-> already have a u32.
+On 28-08-2026 20:29, Hamza Mahfooz wrote:
+> On Fri, Aug 28, 2026 at 11:10:22AM +0530, Naman Jain wrote:
+>>
+>>
+>> On 8/27/2026 11:04 PM, Saurabh Singh Sengar wrote:
+>>> On Thu, Aug 27, 2026 at 04:07:06PM +0000, Michael Kelley wrote:
+>>>> From: Long Li <longli@microsoft.com> Sent: Tuesday, August 25, 2026 10:01 AM
+>>>>
+>>>> [snip]
+>>>>
+>>>>>>
+>>>>>> Basically something like this:
+>>>>>>
+>>>>>> #define PCI_RESPONSE_WARN_TIMEOUT_SEC 300
+>>>>>>
+>>>>>> static int wait_for_response(struct hv_device *hdev,
+>>>>>>                    struct completion *comp) {
+>>>>>>       unsigned long warn_at =
+>>>>>>           jiffies + secs_to_jiffies(PCI_RESPONSE_WARN_TIMEOUT_SEC);
+>>>>>>       bool warned = false;
+>>>>>>
+>>>>>>       while (true) {
+>>>>>>           if (hdev->channel->rescind) {
+>>>>>>               dev_warn_once(&hdev->device, "The device is gone.\n");
+>>>>>>               return -ENODEV;
+>>>>>>           }
+>>>>>>
+>>>>>>           if (wait_for_completion_timeout(comp, HZ / 10)) {
+>>>>>>               if (warned || time_after_eq(jiffies, warn_at))
+>>>>>>                   dev_warn(&hdev->device,
+>>>>>>                        "PCI response received after prolonged wait.\n");
+>>>>>>               return 0;
+>>>>>>           }
+>>>>>>
+>>>>>>           if (!warned && time_after_eq(jiffies, warn_at)) {
+>>>>>>               dev_warn(&hdev->device,
+>>>>>>                    "PCI still waiting for response.\n");
+>>>>>>               warned = true;
+>>>>>>           }
+>>>>>>       }
+>>>>>> }
+>>>>>>
+>>>>>> Regards,
+>>>>>> Naman
+>>>>>
+>>>>> This looks better.
+>>>>>
+>>>>
+>>>> I like getting the "response received" message if the response
+>>>> eventually does come in. It's a judgment call, but I would be OK
+>>>> with outputting the "still waiting" message after each wait interval
+>>>> rather than doing it only once. And I would make the interval smaller
+>>>> than 300 seconds. Five minutes is a long time to wait and wonder
+>>>> what's going on when things are hung. 60 or 120 seconds would
+>>>> be OK -- a line in dmesg every 1 or 2 minutes doesn't seem like
+>>>> spamming to me when something is fundamentally broken.
+>>>> And probably don't expect a VM in this broken state to keep running
+>>>> for hours -- the sysadmin or automatic monitoring software will
+>>>> reboot it to get it working again.
+>>
+>> I think this is a main point of this discussion. FWIK, this is not
+>> automatically recovered as of now, ever. With these changes, we could get
+>> dmesg logs completely filled with this same log, which does not add any
+>> value. On the other hand, I was suggesting Sahil if this problem is not
+>> recoverable by Azure fabric layer or other monitoring services, and is
+>> extremely rare and the VM is unusable, perhaps we should consider adding a
+>> bug/timeout in this path instead of just logging about it.
+>>
+>> Regards,
+>> Naman
+> 
+Thanks everyone for review, based on dmesg logs recovered from affected
+VMs this does introduce non-recoverable hang for hours, I am going to
+work on this in a patch along with fixing sashiko warnings.
 
-I intentionally did not do this, as the common type for an index is usize. =
-Thus,
-I do not expect anyone to already have a u32, but to already have a usize, =
-e.g.
-from some iterator.
+> Along with what everyone else has suggested I would suggest printing out the
+> state of the device's VMBus channel (i.e. the child_relid and inbound and
+> outbound status in particular). Since, that information is useful to the hv
+> guys and should help disambiguate between "host never picked it up" vs. 
+> "host picked it up but never replied."
+> 
+> Hamza
+> 
+Ack.
+>>
+>>>
+>>> I will also vote for repeated message as long as interval between two
+>>> messages is greater than 60 seconds.
+>>>
+>>> - Saurabh
+>>>
+>>>>
+>>>> Just my $.02. Outputting the "still waiting" message only once is
+>>>> also OK. Your call.
+>>>>
+>>>> Michael
+>>
+>>
 
-The fact that the C API did pick unsigned int as index type is an implement=
-ation
-detail the abstraction should bother with.
+I am going to send next version to log "stuck waiting for response"
+warning only once at 2 mins boundary and will also log late completion
+as per feedback.
+Regards,
+Sahil
