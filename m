@@ -1,54 +1,53 @@
-Received: from LO0P265CU003.outbound.protection.outlook.com (mail-uksouthazon11022089.outbound.protection.outlook.com [52.101.96.89])
+Received: from LO3P265CU004.outbound.protection.outlook.com (mail-uksouthazon11020089.outbound.protection.outlook.com [52.101.196.89])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 51928483BEE;
-	Tue,  1 Sep 2026 16:50:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.96.89
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 46CDF484255;
+	Tue,  1 Sep 2026 16:50:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.196.89
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788281445; cv=fail; b=mL0IU74CqsGs+4Fa1bzOli9y9HZM7PfSwnQSW0DjR7+mTnkAGM4hwjPS/NdQaEx8e9VuaXUBYDMFGoLtMNQ20N+822nXCqBHnhoma7eSrGW4k9+Yy0oDhoe9D9wm3hZy8+B42KhI5axoa8gewpt6mwX8QoBWi2t+d1iCr9OY43Y=
+	t=1788281447; cv=fail; b=V7f2shaUUPq35fmDDFsuJsWVbB8h2uGyzGuAnV2Ohp7any9bZKzV7wv4efkj1AtI0LV8T3rlWnA71pYeTfuvwokWNq/sP27OiqqR/JLxI/uw98ZNZtsday4DKhIxBlHCc0cW6Hqn27C3ivfgLGmcqL5VGtCTIuwHhHusW8mJuNE=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788281445; c=relaxed/simple;
-	bh=NeZrH9hBHB4zTmEF8ZFX2YA8HrTA9PebDOQbzpjmQYI=;
+	s=arc-20240116; t=1788281447; c=relaxed/simple;
+	bh=a4e0IW7uOdgVQTyEzPyQL8e411BYAWC48EB6qOIO1d8=;
 	h=From:Date:Subject:Content-Type:Message-Id:References:In-Reply-To:
-	 To:Cc:MIME-Version; b=Hdr5qdW9fQD0RYU1AiGs63KHF0offZRjV/tvc/T6eEGhLugi9/Ro8w3923aZAleVijQRnXsCQ6qbL8ROEAdixRDHriQB81ncQbUimCU+ksi3OA1u/oE993xonbxaRflXZA2YGad7SUJqi0rbaxwxGlmiFb/CQgmWJ4neB4gctzI=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net; spf=pass smtp.mailfrom=garyguo.net; dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b=C1Su3NhW; arc=fail smtp.client-ip=52.101.96.89
+	 To:Cc:MIME-Version; b=mgGM1Mx2F1/Np6SL0FIIgzwyBATBGYicls9DkHKL7o1yIUjuq9RoWK8/v56E7Em8RgueKL9LORklmA+BsLTakLqMatTEgH9fie29bYwsPme4OCyNPqZUfOWomQiHdSbgcRZdRIpXj+IxvRttROdCGbXlbuQ4Q+JarebhKKgzD44=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net; spf=pass smtp.mailfrom=garyguo.net; dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b=TEr9m4EL; arc=fail smtp.client-ip=52.101.196.89
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=garyguo.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b="C1Su3NhW"
+	dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b="TEr9m4EL"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=mvBRYlj9+UnNLp7MN92pEmYbVNJ4DyQHXYBOU80QSXWSfc/T/Vp1NowW4GVztK1NJ7muzibfGFZVb6JUwO8FwBa/bWcQxZIO536kvNoW6BOIftUsvg+SjMIBIJ7mmpKWGUNneXajlhR7edYNaU+HV6vwUUY/wG1nvB9NOCtDISVg37DOqXIEAasZ6M/Fxtg76eYjWAY/hMWzeY4GGYxSZE9P1S7ZwOnB9zxnRavRwqGlELh6wUdWAyuahIeK5Aq9X8asGzfoaKU6yaWjHdzsKLX0f01c+f8zb97YW/lA5CIopH/n9RrRie3FiUZ5l0qbZ0UCSPeROSOztLmrxP9IZQ==
+ b=fQ4ofD/ecyR+qtWKjVxAPyO4DKorOeZKCs9638HX3EZBRX9cQLnI5h95VIW2MpooS4F3JhOUMCFCuULCbmIQdGj/F3U82t6vaMNivwsYj1geRO1GZDV2nyuZQ8aJHBSuOc4mr/5GAb0RJaOVkHnQ0RA1gU3c40c4sujkPfm14Zjb+1BbMkJ4Zg2tOqkyQp498ZbR5HZXBkYJEbs2ynASC8m46VyTOkbQHs7ZzFZEiPiqrqagQUlRAke9NJidr0a1IceFs/TRgDMXIwvaSvMqwGtCoU/xz/Iw3uq/9p7ktRPTtqxzfETnQL8SQnV9EVZqCXXKTXFms9yDv92hbbxNaA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=xMMf2NaTFafdLzX6/WyXaRTQYT3NlqItnQqMVq4Dwvg=;
- b=VXTEOua/tBAS/YX6993XaizAxvvgjRHkXPgl8MpCWFSo2Qpj1AdO42ADcv7CKYLzqbaUDVIiH+Nkn3AkfDNHqwiqYjtSzxYEePPhZhJ8O63jNgYQpRn/KZk5oQxxS6lDuAMWbe7TuwSHM+TFSp7/KoROiNfF8nJ0jzB73SPTOxfiSq5l/0ysAkcogSLcvuXoDmMBM1vSIR0GK9VHkqWv+dZfvGyA0hkpiX0GiSGp10dkldILgWyNCbLaFChy+6Hh4d21E0qONhzXCOEUF8OM5SolYFCbU5aa7VrzVipda9Ur2o+YDd5E9F6d+OyyFDZjFcURhPXWvaGrkjSGa4srmA==
+ bh=+DEKIwi5XRlMtlt/hNGKxVbZBbR6FHV50Rhc592Fzww=;
+ b=cmo77OThY5Pav47wpF+TgeTtRCgi2UV8Sb9clQG+3HY61JerDMtETb83U/3t5kiZIdSqGxqlRzPeL8BUhUNUIiub83KLapGEGRfn1QZFCZyI8ybXxrpREBxLB4aV3PbFxPKiG5wOKsPgVl1W/MUbgNo5A6hk56IRd882q/KtFXprvvb7lpXNXZNAW7bK8Hj5gdkRW4ALFV98wpiQf/HU0Vxhnxe2iWgwn0jkQ4ySEQ19Z/7aL0XBKAPXnZbYg77tcb8ghEfQiRgF1V0PmvDeiRWnol8GNtuR09bbVHyG7DgDwTG518aQtMFs0S66PMUTTx34puvbk/UGf+lGDah3mQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=garyguo.net; dmarc=pass action=none header.from=garyguo.net;
  dkim=pass header.d=garyguo.net; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=garyguo.net;
  s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=xMMf2NaTFafdLzX6/WyXaRTQYT3NlqItnQqMVq4Dwvg=;
- b=C1Su3NhWls1cgGfiCswyLszrAwzeA/CcddbszuJoQGnMX3gJFuWXmOLQ5E+fI5HvBxXBZoN1HV52fJivTVODCIKuKmwS7Kda/c6Uv+TiYtmJjMjBTRNVQV0II2JnAYPRPq0kD5eS5mVPPJ3aM8zaKu4A2/GyRFCPgxgfrs/yNMg=
+ bh=+DEKIwi5XRlMtlt/hNGKxVbZBbR6FHV50Rhc592Fzww=;
+ b=TEr9m4ELenwK36xlSKUYV5QS3LW2YU1C/eK1SXdbzglnkfgoWyFVChI5Ugh6W7T33owIDtqkPI4fh/sdLkUoYLrhF6nlH7GGrgaOsN5qYq1Kie4nyXEPN3wc/eUQVRGBU57fCI6rUDacp/rnEDvqSsuDNqjQYsQ21CBAJsbZUlg=
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=garyguo.net;
 Received: from LOAP265MB8560.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:4ab::19)
  by LO0P265MB7316.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:2ef::11) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.360.13; Tue, 1 Sep
- 2026 16:50:34 +0000
+ 2026 16:50:36 +0000
 Received: from LOAP265MB8560.GBRP265.PROD.OUTLOOK.COM
  ([fe80::f60b:1537:68d7:4fc1]) by LOAP265MB8560.GBRP265.PROD.OUTLOOK.COM
  ([fe80::f60b:1537:68d7:4fc1%4]) with mapi id 15.21.0360.008; Tue, 1 Sep 2026
- 16:50:34 +0000
+ 16:50:36 +0000
 From: Gary Guo <gary@garyguo.net>
-Date: Tue, 01 Sep 2026 17:50:26 +0100
-Subject: [PATCH v4 02/16] rust: mem: add `transmute` with deferred size
- check
+Date: Tue, 01 Sep 2026 17:50:28 +0100
+Subject: [PATCH v4 04/16] rust: io: perform conversions using `AsRepr`
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260901-typed_register-v4-2-5552b1d59525@garyguo.net>
+Message-Id: <20260901-typed_register-v4-4-5552b1d59525@garyguo.net>
 References: <20260901-typed_register-v4-0-5552b1d59525@garyguo.net>
 In-Reply-To: <20260901-typed_register-v4-0-5552b1d59525@garyguo.net>
 To: Danilo Krummrich <dakr@kernel.org>, Alice Ryhl <aliceryhl@google.com>, 
@@ -67,11 +66,11 @@ Cc: driver-core@lists.linux.dev, rust-for-linux@vger.kernel.org,
  dri-devel@lists.freedesktop.org, linux-pci@vger.kernel.org, 
  Gary Guo <gary@garyguo.net>
 X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1788281431; l=6609;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1788281431; l=18332;
  i=gary@garyguo.net; s=20221204; h=from:subject:message-id;
- bh=NeZrH9hBHB4zTmEF8ZFX2YA8HrTA9PebDOQbzpjmQYI=;
- b=j/l/DCuKl7OcUMWnABSd13Ln6Fy+sgUce64a4JM/Fv1++hzQ/scyRJ3WUVFZzh30cwCxzsxp/
- PBML7zc8eWiAqx0Ok9yR6YV5SMTEWp86+A/0E56M3l62qTqP+wHTIit
+ bh=a4e0IW7uOdgVQTyEzPyQL8e411BYAWC48EB6qOIO1d8=;
+ b=wFxuX2Fy0md6c2KfGcum6OOQ/wuh4+GStOBNPLd7ztoe4Vr7TkLJ9gIQNz+nqVESmIwHHe/lD
+ xt0HOgwRKxIB7kbwIwCrZ062pjVFPLu2W0TExbdcx50iFxHy57Ha/KY
 X-Developer-Key: i=gary@garyguo.net; a=ed25519;
  pk=vB3uIX95SM4eVrIqo1DWNWKDKD2xzB+yLLLr0yOPYMo=
 X-ClientProxiedBy: PAZP264CA0173.FRAP264.PROD.OUTLOOK.COM
@@ -85,244 +84,568 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: LOAP265MB8560:EE_|LO0P265MB7316:EE_
-X-MS-Office365-Filtering-Correlation-Id: 4df27b02-bd79-4c24-ec51-08df084923d7
+X-MS-Office365-Filtering-Correlation-Id: e2558477-487b-49ab-94ff-08df0849253e
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
 	BCL:0;ARA:13230040|366016|1800799024|23010399003|10070799003|376014|7416014|10067099003|6133799003|22082099003|56012099006|5023799004|18002099003|921020;
 X-Microsoft-Antispam-Message-Info:
-	wdeW5+VFB3fEIr5zcZjfsAtrjANdTlIT9ykQVoW/pdfzlddMezmLHFmGv4F8vk9vbC4GI8C8w5m++kkTpncHDomh0pUG1hkMCxZYRcFHU8wYFzjhUA/t5svLcAUoXDFkNUjcOOloMBg/Nq1Pkm7hGtkB71ZGaYWcymf9uf5hDLtREL4LsL78uZGZzKQBESfgB7DwvcVDGF9uakzPu+qx7WkYuFkokhOUDj0vFVpydRH45SbIfmq4cIm1Zb5gMj81JqdkCcvit5RVKTto6wbGrW862bQT9tBDgqXUxbtzIL6K/DA8s99httLyj+3hhVR8KxDcXshHjrVN8PdnW11dk2K6R0/BRwTsq7xoLTGi5F4kNscGb3ummVuTudESjePcZW4U6zZHDJHs+OtAyv6UjzCD4g5/DHGIxiJ/c2BGxklojNdUz8OaqFBMtG4tKg66kWT7btBsvOUQgHq88iOyFjnB78wSXyNveDNxZINW6eo2eA+YdQKcn5lU8DUxOkTIiI+JoaHyDSYOkLZUVyktJJhsnVSmpmA2+WKLMW+XUa3v+NobWdTCh7JOW+W+mKKgOJKxUtwudzDsNzaL7L+R8rmddTkj1Z3Oy+bSM6QPfEQfXXLNBzP1BzB0qEQ2DRYUw5AUD7/94zpQ0H4AWZWqTNZP5lTErAwCoPPcGBh3OEuSEDCT4ZM8qIrcfZJx+J3FjJHP8hn9Lne2PidQoThmYA==
+	80FzFT4d9/i93bE/YA12pc6NYrS/+WzKhZzetusG5/PD+UTCGwn0BuSYLxaq19x0M7fjiCaw270kFzBFH5n2EHPiV7Ulia9cUy5YZbpTxbi0SaYIPOJGjoK9LeUMWzFWMVG5/+OZ7QZf7Ix+50SoK8KfSKVNq78wmf6tSFNYhXsVIene5csO0YkgERBh5ZzuP7+72ujUTPk8gJmPfwc6rnzAlwSO1aHONYQ9d6khXFOONncg3626ezjgxN+Y+WhaVoxxJTfazy/BRoa8ag0N22U8NHzOL1HQFLw6ArrwK2GvlFPBGe3vkYltwvnh3X+7vqXvcfjVdMZKyaqUFYDhFCahVyhx9qy8BkVDWjU1XF9Xobv91zaMFu2lCw3ab+wWTig7aiOtcOeGMPYpm/yuEIiVWftrIIaGInEZc7sTcn47NNh/+0pGEhthpedhbZ6N/R/Sz4P6whW0QMuWU0xNjlPKXHIFF7OKxrrlm4V1hzJZsVmW9sAU7l256YJAVnUZc34VwrDmC66pLehcYlWZAoh/49a14WYhoo5yygsC8a9AwYiZLKQWfIoUQxPW+pj+bduCm0nUQwuYYJqOKHF8mOu+0sGErohnPo8Yv2t8pvavNgd3GnGXOnv0bvGim1If0FKZ0ruDgOyPL2dJjTEQ6iorGxBuyvpXVvfAqoh2fO2DWyPkvZKGA8qg60GWu1GumiM2CiEY2VesL69iHRimmg==
 X-Forefront-Antispam-Report:
 	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LOAP265MB8560.GBRP265.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(23010399003)(10070799003)(376014)(7416014)(10067099003)(6133799003)(22082099003)(56012099006)(5023799004)(18002099003)(921020);DIR:OUT;SFP:1102;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?ZHhlYVJ4K0FmZFFtOEROb256Ym9SUEVkU25FdXIwVWR6M3JaQkRReFZpd1lM?=
- =?utf-8?B?RVJ4TU9DazNIdFdjSittOG5aVnV2YkxVSXBWU1FzUUE2b1BBbXJrSnErWGRv?=
- =?utf-8?B?RjZoM2FDcGx3eUYrYXBOZUtFUjFBQXBHV0p0V3d3eFdjQ1lZeEkrMHUvYndL?=
- =?utf-8?B?bXRHVW5mWW9uaTJJRU9qbnFoQ09GemcyaGZXZVp3MWo5VGpFY2NNNDI3U0I0?=
- =?utf-8?B?Z1FYb2pxNzYvV0hQZ0J2SkhLaDdTaWhmdHJWYnNoY3BQYy93b05oTTdsclIw?=
- =?utf-8?B?V1dXT1FONExYRFZNZ0N2TkpkTTZqUGt1REM1Z1NUM3RoWHVodlB6UWp3Vi9y?=
- =?utf-8?B?SjhmTWdlZHFmdzRkcCt3aElaQzFndkxUOGJmVjVYb2RxMmI2WXh5REV1TEdp?=
- =?utf-8?B?alptb1JwaWtnbEZjS0M0TGQ4akc1Q2JlUGtGOGFIWFR3ZUQxZ3ozb2xmUmpo?=
- =?utf-8?B?VmNUbCs5TkRkY2dkUlBoNXhMazNCRXo1MWJUdjVFMDhTaUthbHErM3FZZVpS?=
- =?utf-8?B?a3VRdHdGbVBjV0RGZXd0QnE0K29EWk94QmJoY002TUx5L3g1QmFieGFrNGxT?=
- =?utf-8?B?TU84REx2NUJjS2hDMzBZcUg0UG9CL1IwV2RvNXBLS1hwM0hFKy95K0d2dEtW?=
- =?utf-8?B?S1JwRnpYejU1dFduV1NuK09PV0htTzFZZktmaURGUHBXSW5kTTdpRUdLRHg3?=
- =?utf-8?B?MWFBVmpwaE00T1luRG1JdmVDZEoybFRZU0dqa2tiampUeERrM1I1ZWRHcHdY?=
- =?utf-8?B?MTdNTVROZnpJT0lrclVtaS9FYXg5b0xJeGZRb1BoWWRneHo5R09jaHd3MXdS?=
- =?utf-8?B?eUlpWDhWelRZNlB6NTVKbWdhL1k5UEQxWTh5dUFBcWY5SXNodTR1U1JlNkRm?=
- =?utf-8?B?a21jb2FuM0N4NFFibS82eG41ci9zMlovZmxsNG5CcFR6QUtXV3habStwZVpJ?=
- =?utf-8?B?NUtXaERUZmlqMUhWUHlFWXNPak9JSWgrNnkyZCtYNkNXbXAvMUJXVHNDN0ZC?=
- =?utf-8?B?ZUUrMG1lWmgvWFdZNzQ1TFlwTGthRzdTa3Zqa1ZtV25NV2xJWG1BSVVuaXpP?=
- =?utf-8?B?UzJSdFd5Q1RTQ21aOWhXYW1tYTdMSnhaQmVyWVBoMkRTb2JXZVJpa2lWVzZ5?=
- =?utf-8?B?elJFSnVkdTMwdlRqOXVTN0taYm1FS25Ncmt1eEVNTGI3ejdpRHhMUytjdVFz?=
- =?utf-8?B?anBEa3A0N3R3Vmk2Rnk5Rm9rNmhoNGFKYlcvRjFLL0dsMHJiN25YRG5qTmli?=
- =?utf-8?B?Y2YyU1VQeDd0bFdYVWxNZTMvSld3UUJwVTVvelNnL1ZTYTBlY21SNS8rdS8r?=
- =?utf-8?B?MGdGSlcxdDNTb3dyeTNxYXY2Mi9hQ09JNVQ4TlpjUjlRVUlKd1lnekRwVWpq?=
- =?utf-8?B?RVByVjJxQURQd0JZMTAxM1JiT3Zsd1RFa2tTa05NRXZOaHJpRUdHdkxTeUs3?=
- =?utf-8?B?WUwzbmh3c050b3YzeTFJS25vQ3J2RFR2amlZeDJtU1BSSEZoS0l3eVpHUUx1?=
- =?utf-8?B?dHdjbnZiQy9oelloOVh0ZE83MTFoU0N2bS96K1RUOG5VamN2SnErK2k1WEFr?=
- =?utf-8?B?ai82TDNHb3JjZGMyb2dMQkowNnZTb3dkSzlUZlRlYVR5RmN1WmFzWU9VK3Yz?=
- =?utf-8?B?UjIzbW83K05vd0VLR0FmQzBYZWhCbUozeWpqQ0lNQWhkbHFGVFk2NXZvQlhp?=
- =?utf-8?B?eldxWTVXTWgyVm5CSHVpdkFqdEJIMnp1VUdLREVUNmlFeGtQWkc4UjR1a3V5?=
- =?utf-8?B?RzJ4cTZoQnNweG4vR244aU9lR1ZUQlFOWS9jaHM2MXI3RVE3czAzTlYxcndm?=
- =?utf-8?B?ZVQ3OTJCNFBiL0NONmQvWDJ0cXZpSGlzVUY1c0dOL2pCbEIrTzBiYmc0UXgy?=
- =?utf-8?B?TnM4ZDJkQXBVa1NuVU1zTmh5L2x2eXhMSkI5clhjRzlLMElwQ1lKSytRMVpJ?=
- =?utf-8?B?UGtRSUEwS1JQNGhRM1lGYWdqN3ZtbFRlYnE5dW0wYmdaVFM1T0V1cTd0NE5q?=
- =?utf-8?B?Rzl5OXp5ekZLMmxmTGlpZFV1UmYxc0NsOUpxOXBLY21xTnBxUFpTUW9hVUxK?=
- =?utf-8?B?M1IzS0NjY0dTdG5TYUdvWTRha0NydVRLZzVNZ0hXdllMZXp2NEhhdFIzbHpr?=
- =?utf-8?B?emMrdlNhUWIyWTlGb0NMaWQ1c3I0R3VUWFVYelQxbUEwU0dIaGM0cXAwVGhJ?=
- =?utf-8?B?cnFaNkpia3Q5cXFpM1ljU1UzR3I3Q0NMTnZvVkUwcURiSEovcGVlQW1nQTlj?=
- =?utf-8?B?c01naHFsUGdKcFhIc2VYVVRMWUVDcDBqTjlqbEZsSVIyVjNUb3hCZWpXcVRC?=
- =?utf-8?B?azV1QzVSWXB6OUlkNkpia2xsQnMxTHU3bVowL1Vjb1ZRZ29QeTd4dz09?=
+	=?utf-8?B?YkExa0hNRGVoWlBNeGMzS3l2Q0V3LzdGRTg1T2YxQXJZZFNFN1lLVmtHWjBJ?=
+ =?utf-8?B?Vkl0cVM5RVYyQW9HbE5vSC9uTGZ2RXg3T1NsU1h0Z0ZGd3lNV0dlejhGelhw?=
+ =?utf-8?B?eVBPeGNvT2kyN0ZtcmlNUmp2ZDlFZU91a2lLdjcxQnI4c1h1VDY4QzEyV3Ns?=
+ =?utf-8?B?Z3dvRkZPSnRWblRPMlA0UGZBSk9OaWZWLyswZ0NKT3lZQXJkSmdNVHlLLyt0?=
+ =?utf-8?B?Nm0rTVZxWS9IeUhjWG14YXZjdDEraVpPYlFzcE5OYSs5UW5NU2FZdi9RWGli?=
+ =?utf-8?B?OEVaSzFyMmtoZzNlUDUrVWt1SHVrSCtxMTYvNHVZYXI4NDdQeGlXRFNxMmhp?=
+ =?utf-8?B?bXI1RVNXV1ZKOHFQdDdkUEI1cUlMMVVKdzVVMGhKT084M20wUWpRL3IwWlI5?=
+ =?utf-8?B?emFnUUxVWmZuS3FndHNFemIvcWFFcVhUVnZ3Yk9RUFFPM1FaNXU1d0hSNys3?=
+ =?utf-8?B?Qk1RaUJQdGZySGpWUVR6OS9VTGpKT1V6eFlCVk9lUDZOOEl0OWJYOVlTRE5h?=
+ =?utf-8?B?QjRVZjRUQ1RlWEVFbUtuWUxLUE04UTlIek8wa0xFbUFlY2dFSThZS1VGMTN3?=
+ =?utf-8?B?TVBMUWVFOGFrdlZ1RlBXb2EyejIzK0hWaVBBcDhFUXFRUTJzd0JSbVpxYm5i?=
+ =?utf-8?B?K3oyaTVXYjNUUzJVdTJ0YXlReVdwSk83bStVeUdKUXJZWFlTcDZhdG1ObUFM?=
+ =?utf-8?B?bXNmNGtwN3BWNTBIU0VFRFZ2aldyR3dTekFHWC9zTTA1RFdOKzR2VFFlR3pU?=
+ =?utf-8?B?M0hwN3ovSHR5eHF6a0Ztd3hEZjh2Qm1uMzZaaGVoWFU2NVlHd0dnSjRVQjg0?=
+ =?utf-8?B?alhzZGQ4TkkvNy9JRndoV3RISlNZd0VtenY5ZlUyNWFCVkNLUEwvYituTis4?=
+ =?utf-8?B?VWZzQit2U0pVdytmaDY2MFU1MVRZVEhIVk95NTBlQjNEeG8yZ0xrZGIxVE5m?=
+ =?utf-8?B?eHk4RDl5YjlLVmhzZGNLVUtzUjZzS0FEMlNkcVRzYjIzWlp1RURMV3lPaGpI?=
+ =?utf-8?B?ZFlXRmt3c2F1V0RIYURWOUJoQVJWNE1aYW4xWjBuK3lVZGNUa0dOVk9uYi9N?=
+ =?utf-8?B?cDJqa2VZMWVmWmtCQVJWZS9LTXZUWFEyR2hnbkdsbkw5QlNCK0NIWVRQayts?=
+ =?utf-8?B?SFNnblZ1eDZEYVhDVlc2bTlBWDNZUE9EcTZUZGVTQTV0RnNWcVQ0Z2lmOURM?=
+ =?utf-8?B?Uzh1ZldtRDNwZ2xlZ3JyTXNqdE5BOEU0cmx2R1lSajdGNGd3VUVLQkNNWVBs?=
+ =?utf-8?B?ZlFDT0pjYWRIYjFsaUdpOHdXU210N2pTREZ0d1NiOTlQdHFGTkJta2YxNVIy?=
+ =?utf-8?B?U1NIT3IrSmZBRXU0dnE5NUNaUTAxc253UmNoMElDTVVEeFZYdjVwSVFFcTR4?=
+ =?utf-8?B?blNBWmRFa2FLM0RSZUZIVGlMSDM5WHROQTJRZUQ0VFRsMDZJb3dDK2JJRHo2?=
+ =?utf-8?B?d0hNRzRNdTAzT0c3K3RYc0p1OXhEcUJmM2txMzVMNDA2RWlkdG5ocUJGVFJX?=
+ =?utf-8?B?ZnlzQ0xkYTl6ZVJ3cUI5U2FicFU4OHhPc3FOVFZEL0FOeFpmY0ozdW4zazd4?=
+ =?utf-8?B?bWFsQVZiSXRnMktrZEt1aXlnUmkrc1FQZ1ZGQ1JqYTFvU2pZRk00ak1hanp4?=
+ =?utf-8?B?MHVQbUNDaDNlSGNobHgzVFYvM0hXMkE1R1F2dUVqYUZ5L0hhRHl6V01FT256?=
+ =?utf-8?B?WGV3NkhzcC9Cc0FCeDZTUUEwalRCenpoQk5vNkZZT2RqckJPM1I3YXpZQ0Rp?=
+ =?utf-8?B?M0pOVzk0RUFYTmlTeVlwWWlXRHo0S3FVcXpHbGVnazc1aHNlUWREMmZKblpn?=
+ =?utf-8?B?NTRwOXRUSW1oL21FOFdidjVtREVRY29LREtIWTBycVh6TUdHb2V6dTlZeVdM?=
+ =?utf-8?B?VDRBR2JJV2xvQWZ0czVuZ3JtU3FCNUVwZjRsOHlNODlKQUp2WTE3UjFaMnJ2?=
+ =?utf-8?B?Y0YxMHh0MnlMNVVwV2F2K29jYks2MVJLeFdTZENiV1ZmaHhsRXJPRGlHb2c5?=
+ =?utf-8?B?K1NsRkw0QlB3ZXorZVZoWitYelhETGhGM1lBdndjZ09vNWRiT2p3U0ZtbFc0?=
+ =?utf-8?B?L1F3dlg2SklWSWNobm9mNjhNMGdURmpQb2RNSTh1WGFWN0pHMGhoUVVxRHZ3?=
+ =?utf-8?B?cUs0S2RuRjVBRnV6aWQ4N3ZQUUtCd29qQXFuanRBNmQrWHlTZFNoclpsMjh5?=
+ =?utf-8?B?OFNiVVNUMU9BbW9uN1JHOXM3U2hKb1BsczBUWUxMV3h4RHpwWXpIalZjY3lK?=
+ =?utf-8?B?N3NYSnFjaUhUM2o3SUs1UVFhbDNEektLdjBNZUlpbHJscGpZMXVCVWxCSlpi?=
+ =?utf-8?B?V085ZjJMc1hwaVRQdlFMYWlmdkJubUM3dERObzUzQ3hOcExBdHo2Zz09?=
 X-OriginatorOrg: garyguo.net
-X-MS-Exchange-CrossTenant-Network-Message-Id: 4df27b02-bd79-4c24-ec51-08df084923d7
+X-MS-Exchange-CrossTenant-Network-Message-Id: e2558477-487b-49ab-94ff-08df0849253e
 X-MS-Exchange-CrossTenant-AuthSource: LOAP265MB8560.GBRP265.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 01 Sep 2026 16:50:33.9775
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 01 Sep 2026 16:50:36.1403
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: bbc898ad-b10f-4e10-8552-d9377b823d45
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: vbOqz92+XyPONSHxNyvYRGl/7acWbGhSNq1BlHY/8GrGj5wx+Lc2gpTv6U3qxuIXaRaxxfkKr25WzOEFerEK4g==
+X-MS-Exchange-CrossTenant-UserPrincipalName: Yp1b+7tQKBbeJ9o+FybnDV4pYfjgIq8m567VNh6xtp21VLULfGxBSNoWBG35hT2NiXK5R5bHIgBGuFo4Bjcu0w==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: LO0P265MB7316
 
-Implement a `transmute/safe_transmute` that checks size at
-monomorphization time instead of type-checking time. This allows more cases
-where we know that the size matches but this is not generically checkable.
+For types that are layout-compatible with an I/O capable type, we would
+want the ability to use them directly for I/O operations. E.g.
 
-The signature is equivalent to the unstable `transmute_neo` function in the
-standard library. A safe variant is provided to use with types implementing
-`FromBytes` and `IntoBytes`.
+    bitfield! {
+        pub struct Foo(u32) {
+            ...
+        }
+    }
 
-Existing users of `transmute_copy` to bypass size checks are converted.
+    #[repr(C)]
+    struct Bar {
+        foo: Foo,
+    }
 
+    let mmio: Mmio<'_, Bar> = ...;
+    io_read!(mmio, .foo)
+
+Currently this feature is available from `register!()` macro but not
+otherwise available with `io_read!`, `io_write!`. Support this by
+performing conversions to I/O primitives via the `AsRepr`/`AsReprMut`
+trait.
+
+This makes the `IoLoc::IoType` and `Register::Storage` redundant; thus
+remove them; also convert register methods to use the `read_val` and
+`write_val` instead.
+
+Reviewed-by: Alexandre Courbot <acourbot@nvidia.com>
 Signed-off-by: Gary Guo <gary@garyguo.net>
 ---
-Changes since v3:
-- Renamed the methods to `transmute` and `safe_transmute`, so the name
-  `transmute_unchecked` is for the completely unchecked variant instead,
-  matching that of Rust intrinsics.
----
- rust/kernel/device_id.rs   |  3 +-
- rust/kernel/lib.rs         |  1 +
- rust/kernel/mem.rs         | 99 ++++++++++++++++++++++++++++++++++++++++++++++
- rust/kernel/sync/atomic.rs |  4 +-
- 4 files changed, 103 insertions(+), 4 deletions(-)
+ rust/kernel/bitfield.rs    |   9 ++++
+ rust/kernel/io.rs          | 128 ++++++++++++++++++++++++---------------------
+ rust/kernel/io/register.rs |  15 ------
+ rust/macros/io/register.rs |   2 -
+ 4 files changed, 78 insertions(+), 76 deletions(-)
 
-diff --git a/rust/kernel/device_id.rs b/rust/kernel/device_id.rs
-index c81fca5b4986..f0b9cb84e58e 100644
---- a/rust/kernel/device_id.rs
-+++ b/rust/kernel/device_id.rs
-@@ -146,8 +146,7 @@ impl<T: RawDeviceId, const N: usize> IdArray<T, (), N> {
-     /// If the device implements [`RawDeviceIdIndex`], consider using [`IdArray::new`] instead.
-     pub const fn new_without_index(ids: [T; N]) -> Self {
-         // SAFETY: `T` is layout-wise compatible with `T::RawType`, so is the array of them.
--        let raw_ids: [MaybeUninit<T::RawType>; N] = unsafe { core::mem::transmute_copy(&ids) };
--        core::mem::forget(ids);
-+        let raw_ids: [MaybeUninit<T::RawType>; N] = unsafe { crate::mem::transmute(ids) };
+diff --git a/rust/kernel/bitfield.rs b/rust/kernel/bitfield.rs
+index a0d089423f21..15c78790e151 100644
+--- a/rust/kernel/bitfield.rs
++++ b/rust/kernel/bitfield.rs
+@@ -346,6 +346,15 @@ fn from(val: $storage) -> $name {
+                 Self::from_raw(val)
+             }
+         }
++
++        // SAFETY: `$name` is transparent over `$storage` and `$storage` has no interior mutability.
++        unsafe impl $crate::mem::AsRepr for $name {
++            // Normalize `$storage` to the canonical repr type in case it is signed.
++            type Repr = <$storage as $crate::mem::AsRepr>::Repr;
++        }
++
++        // SAFETY: `$name` is transparent over `$storage`.
++        unsafe impl $crate::mem::AsReprMut for $name {}
+     };
  
-         Self {
-             ids: raw_ids,
-diff --git a/rust/kernel/lib.rs b/rust/kernel/lib.rs
-index 4d5c96ddc49c..7225abc64084 100644
---- a/rust/kernel/lib.rs
-+++ b/rust/kernel/lib.rs
-@@ -98,6 +98,7 @@
- pub mod kunit;
- pub mod list;
- pub mod maple_tree;
-+pub mod mem;
- pub mod miscdevice;
- pub mod mm;
- pub mod module;
-diff --git a/rust/kernel/mem.rs b/rust/kernel/mem.rs
-new file mode 100644
-index 000000000000..958e43bbcc3a
---- /dev/null
-+++ b/rust/kernel/mem.rs
-@@ -0,0 +1,99 @@
-+// SPDX-License-Identifier: GPL-2.0
-+
-+//! Basic utilities for dealing with memory, values, and types.
-+
-+use crate::prelude::*;
-+
-+/// Transmute between two types.
-+///
-+/// Use this instead of [`core::mem::transmute`] when it is known that sizes are identical but this
-+/// cannot be proven by the compiler.
-+///
-+/// This is equivalent to Rust's `transmute_unchecked` intrinsics.
-+///
-+/// # Safety
-+///
-+/// All safety requirements of [`core::mem::transmute`] apply, plus that the size `Src` and `Dst`
-+/// must match.
-+///
-+/// # Example
-+///
-+/// This can be used when types are known to have the same size, but only at runtime.
-+/// ```no_run
-+/// # use core::any::TypeId;
-+/// fn to_u32<T: 'static>(v: T) -> Option<u32> {
-+///     if TypeId::of::<T>() != TypeId::of::<u32>() {
-+///         return None;
-+///     }
-+///
-+///     // `core::mem::transmute` won't work here.
-+///     // SAFETY: We've checked that `T` is u32!
-+///     Some(unsafe { kernel::mem::transmute_unchecked(v) })
-+/// }
-+///
-+/// to_u32(1u32);
-+#[inline(always)]
-+pub const unsafe fn transmute_unchecked<Src, Dst>(val: Src) -> Dst {
-+    // SAFETY: This is identical to `transmute` except that we bypassed the size check; which is
-+    // true per safety requirement.
-+    unsafe { core::mem::transmute_copy(&core::mem::ManuallyDrop::new(val)) }
-+}
-+
-+/// Version of `transmute` that performs size check at monomorphization-time.
-+///
-+/// Use this instead of [`core::mem::transmute`] when it is known that sizes are identical but this
-+/// cannot be proven by the compiler during type checking and can be proven during monomorphization.
-+///
-+/// The signature is equivalent to Rust standard library's unstable `transmute_neo` and that of
-+/// [RFC 3844](https://github.com/rust-lang/rfcs/pull/3844).
-+///
-+/// # Safety
-+///
-+/// Same as [`core::mem::transmute`].
-+///
-+/// # Examples
-+///
-+/// This is typically used in generic code where it's known that type will have the same size, but
-+/// the compiler cannot prove it generically.
-+/// ```no_run
-+/// trait IsU32 {}
-+/// impl IsU32 for u32 {}
-+///
-+/// fn to_u32<T: IsU32>(v: T) -> u32 {
-+///     // `core::mem::transmute` won't work here.
-+///     // SAFETY: We know that `v` is u32!
-+///     unsafe { kernel::mem::transmute(v) }
-+/// }
-+///
-+/// to_u32(1u32);
-+/// ```
-+#[inline(always)]
-+pub const unsafe fn transmute<Src, Dst>(val: Src) -> Dst {
-+    const_assert!(size_of::<Src>() == size_of::<Dst>());
-+
-+    // SAFETY: Size is checked above. Other safety requirements follow those of the function.
-+    unsafe { transmute_unchecked(val) }
-+}
-+
-+/// Safely transmutes a value of one type to a value of another type of the same size.
-+///
-+/// The sizes are checked during monomorphization.
-+///
-+/// This can be considered as generic version of [`zerocopy::transmute!`] macro that defers the size
-+/// check and thus can be used in more cases.
-+///
-+/// # Examples
-+///
-+/// ```no_run
-+/// fn to_u32<T: FromBytes + IntoBytes>(v: T) -> u32 {
-+///     // `zerocopy::transmute!` won't work here.
-+///     kernel::mem::safe_transmute(v)
-+/// }
-+///
-+/// to_u32(1i32);
-+/// ```
-+#[inline(always)]
-+pub const fn safe_transmute<Src: IntoBytes, Dst: FromBytes>(val: Src) -> Dst {
-+    // SAFETY: transmute is safe with `IntoBytes` and `FromBytes` bounds.
-+    unsafe { transmute(val) }
-+}
-diff --git a/rust/kernel/sync/atomic.rs b/rust/kernel/sync/atomic.rs
-index 9cd009d57e35..6d27898add42 100644
---- a/rust/kernel/sync/atomic.rs
-+++ b/rust/kernel/sync/atomic.rs
-@@ -140,7 +140,7 @@ pub unsafe trait AtomicAdd<Rhs = Self>: AtomicType {
- const fn into_repr<T: AtomicType>(v: T) -> T::Repr {
-     // SAFETY: Per the safety requirement of `AtomicType`, `T` is round-trip transmutable to
-     // `T::Repr`, therefore the transmute operation is sound.
--    unsafe { core::mem::transmute_copy(&v) }
-+    unsafe { crate::mem::transmute(v) }
+     // Definitions requiring knowledge of individual fields: private and public field accessors,
+diff --git a/rust/kernel/io.rs b/rust/kernel/io.rs
+index 5ce9fd129068..18c71bd765b2 100644
+--- a/rust/kernel/io.rs
++++ b/rust/kernel/io.rs
+@@ -11,6 +11,10 @@
+ 
+ use crate::{
+     bindings,
++    mem::{
++        AsRepr,
++        AsReprMut, //
++    },
+     prelude::*,
+     ptr::{
+         Alignment,
+@@ -226,6 +230,17 @@ fn io_view<'a, IO: Io<'a>, U>(
+     Ok(unsafe { IO::Backend::project_view(view, projected_ptr) })
  }
  
- /// # Safety
-@@ -149,7 +149,7 @@ const fn into_repr<T: AtomicType>(v: T) -> T::Repr {
- #[inline(always)]
- const unsafe fn from_repr<T: AtomicType>(r: T::Repr) -> T {
-     // SAFETY: Per the safety requirement of the function, the transmute operation is sound.
--    unsafe { core::mem::transmute_copy(&r) }
-+    unsafe { crate::mem::transmute(r) }
++/// Returns the primitive view of a I/O view.
++#[inline]
++fn io_view_as_repr<'a, IO: Io<'a, Target = T>, T: AsRepr>(
++    this: IO,
++) -> <IO::Backend as IoBackend>::View<'a, T::Repr> {
++    let view = this.as_view();
++
++    // SAFETY: `AsRepr` guarantees layout compatibility.
++    unsafe { IO::Backend::project_view(view, IO::Backend::as_ptr(view).cast::<T::Repr>()) }
++}
++
+ /// I/O backends.
+ ///
+ /// This is an abstract representation to be implemented by arbitrary I/O
+@@ -353,15 +368,12 @@ fn copy_write<T: IntoBytes>(view: Self::View<'_, T>, value: T) {
+ ///
+ /// - The valid `Base` to operate on. For most registers, this should be [`Region`].
+ /// - The offset to access (returned by [`IoLoc::offset`]),
+-/// - The width of the access (determined by [`IoLoc::IoType`]),
+-/// - The type `T` in which the raw data is returned or provided.
++/// - The type `T` in which the data is returned or provided.
+ ///
+-/// `T` and `IoLoc::IoType` may differ: for instance, a typed register has `T` = the register type
+-/// with its bitfields, and `IoType` = its backing primitive (e.g. `u32`).
++/// `T` is not necessarily the type for underlying I/O operation. Methods that take `IoLoc` have `T:
++/// AsRepr` bound and the `<T as AsRepr>::Repr` type would be used to perform I/O and converted to
++/// `T` instead.
+ pub trait IoLoc<Base: ?Sized, T> {
+-    /// Size ([`u8`], [`u16`], etc) of the I/O performed on the returned [`offset`](IoLoc::offset).
+-    type IoType: Into<T> + From<T>;
+-
+     /// Consumes `self` and returns the offset of this location.
+     fn offset(self) -> usize;
+ }
+@@ -372,8 +384,6 @@ macro_rules! impl_usize_ioloc {
+     ($($ty:ty),*) => {
+         $(
+             impl<const SIZE: usize> IoLoc<Region<SIZE>, $ty> for usize {
+-                type IoType = $ty;
+-
+                 #[inline(always)]
+                 fn offset(self) -> usize {
+                     self
+@@ -498,10 +508,10 @@ fn try_cast<U>(self) -> Result<<Self::Backend as IoBackend>::View<'a, U>>
+     #[inline]
+     fn read_val(self) -> Self::Target
+     where
+-        Self::Backend: IoCapable<Self::Target>,
+-        Self::Target: Sized,
++        Self::Target: AsReprMut,
++        Self::Backend: IoCapable<<Self::Target as AsRepr>::Repr>,
+     {
+-        Self::Backend::io_read(self.as_view())
++        Self::Target::from_repr(Self::Backend::io_read(io_view_as_repr(self)))
+     }
+ 
+     /// Write a value to I/O.
+@@ -520,10 +530,10 @@ fn read_val(self) -> Self::Target
+     #[inline]
+     fn write_val(self, value: Self::Target)
+     where
+-        Self::Backend: IoCapable<Self::Target>,
+-        Self::Target: Sized,
++        Self::Target: AsRepr,
++        Self::Backend: IoCapable<<Self::Target as AsRepr>::Repr>,
+     {
+-        Self::Backend::io_write(self.as_view(), value)
++        Self::Backend::io_write(io_view_as_repr(self), Self::Target::into_repr(value))
+     }
+ 
+     /// Copy-read from I/O memory.
+@@ -645,7 +655,7 @@ fn copy_to_slice(self, data: &mut [u8])
+     #[inline(always)]
+     fn try_read8(self, offset: usize) -> Result<u8>
+     where
+-        usize: IoLoc<Self::Target, u8, IoType = u8>,
++        usize: IoLoc<Self::Target, u8>,
+         Self::Backend: IoCapable<u8>,
+     {
+         self.try_read(offset)
+@@ -655,7 +665,7 @@ fn try_read8(self, offset: usize) -> Result<u8>
+     #[inline(always)]
+     fn try_read16(self, offset: usize) -> Result<u16>
+     where
+-        usize: IoLoc<Self::Target, u16, IoType = u16>,
++        usize: IoLoc<Self::Target, u16>,
+         Self::Backend: IoCapable<u16>,
+     {
+         self.try_read(offset)
+@@ -665,7 +675,7 @@ fn try_read16(self, offset: usize) -> Result<u16>
+     #[inline(always)]
+     fn try_read32(self, offset: usize) -> Result<u32>
+     where
+-        usize: IoLoc<Self::Target, u32, IoType = u32>,
++        usize: IoLoc<Self::Target, u32>,
+         Self::Backend: IoCapable<u32>,
+     {
+         self.try_read(offset)
+@@ -675,7 +685,7 @@ fn try_read32(self, offset: usize) -> Result<u32>
+     #[inline(always)]
+     fn try_read64(self, offset: usize) -> Result<u64>
+     where
+-        usize: IoLoc<Self::Target, u64, IoType = u64>,
++        usize: IoLoc<Self::Target, u64>,
+         Self::Backend: IoCapable<u64>,
+     {
+         self.try_read(offset)
+@@ -685,7 +695,7 @@ fn try_read64(self, offset: usize) -> Result<u64>
+     #[inline(always)]
+     fn try_write8(self, value: u8, offset: usize) -> Result
+     where
+-        usize: IoLoc<Self::Target, u8, IoType = u8>,
++        usize: IoLoc<Self::Target, u8>,
+         Self::Backend: IoCapable<u8>,
+     {
+         self.try_write(offset, value)
+@@ -695,7 +705,7 @@ fn try_write8(self, value: u8, offset: usize) -> Result
+     #[inline(always)]
+     fn try_write16(self, value: u16, offset: usize) -> Result
+     where
+-        usize: IoLoc<Self::Target, u16, IoType = u16>,
++        usize: IoLoc<Self::Target, u16>,
+         Self::Backend: IoCapable<u16>,
+     {
+         self.try_write(offset, value)
+@@ -705,7 +715,7 @@ fn try_write16(self, value: u16, offset: usize) -> Result
+     #[inline(always)]
+     fn try_write32(self, value: u32, offset: usize) -> Result
+     where
+-        usize: IoLoc<Self::Target, u32, IoType = u32>,
++        usize: IoLoc<Self::Target, u32>,
+         Self::Backend: IoCapable<u32>,
+     {
+         self.try_write(offset, value)
+@@ -715,7 +725,7 @@ fn try_write32(self, value: u32, offset: usize) -> Result
+     #[inline(always)]
+     fn try_write64(self, value: u64, offset: usize) -> Result
+     where
+-        usize: IoLoc<Self::Target, u64, IoType = u64>,
++        usize: IoLoc<Self::Target, u64>,
+         Self::Backend: IoCapable<u64>,
+     {
+         self.try_write(offset, value)
+@@ -727,7 +737,7 @@ fn try_write64(self, value: u64, offset: usize) -> Result
+     #[inline(always)]
+     fn read8(self, offset: usize) -> u8
+     where
+-        usize: IoLoc<Self::Target, u8, IoType = u8>,
++        usize: IoLoc<Self::Target, u8>,
+         Self::Backend: IoCapable<u8>,
+     {
+         self.read(offset)
+@@ -739,7 +749,7 @@ fn read8(self, offset: usize) -> u8
+     #[inline(always)]
+     fn read16(self, offset: usize) -> u16
+     where
+-        usize: IoLoc<Self::Target, u16, IoType = u16>,
++        usize: IoLoc<Self::Target, u16>,
+         Self::Backend: IoCapable<u16>,
+     {
+         self.read(offset)
+@@ -751,7 +761,7 @@ fn read16(self, offset: usize) -> u16
+     #[inline(always)]
+     fn read32(self, offset: usize) -> u32
+     where
+-        usize: IoLoc<Self::Target, u32, IoType = u32>,
++        usize: IoLoc<Self::Target, u32>,
+         Self::Backend: IoCapable<u32>,
+     {
+         self.read(offset)
+@@ -763,7 +773,7 @@ fn read32(self, offset: usize) -> u32
+     #[inline(always)]
+     fn read64(self, offset: usize) -> u64
+     where
+-        usize: IoLoc<Self::Target, u64, IoType = u64>,
++        usize: IoLoc<Self::Target, u64>,
+         Self::Backend: IoCapable<u64>,
+     {
+         self.read(offset)
+@@ -775,7 +785,7 @@ fn read64(self, offset: usize) -> u64
+     #[inline(always)]
+     fn write8(self, value: u8, offset: usize)
+     where
+-        usize: IoLoc<Self::Target, u8, IoType = u8>,
++        usize: IoLoc<Self::Target, u8>,
+         Self::Backend: IoCapable<u8>,
+     {
+         self.write(offset, value)
+@@ -787,7 +797,7 @@ fn write8(self, value: u8, offset: usize)
+     #[inline(always)]
+     fn write16(self, value: u16, offset: usize)
+     where
+-        usize: IoLoc<Self::Target, u16, IoType = u16>,
++        usize: IoLoc<Self::Target, u16>,
+         Self::Backend: IoCapable<u16>,
+     {
+         self.write(offset, value)
+@@ -799,7 +809,7 @@ fn write16(self, value: u16, offset: usize)
+     #[inline(always)]
+     fn write32(self, value: u32, offset: usize)
+     where
+-        usize: IoLoc<Self::Target, u32, IoType = u32>,
++        usize: IoLoc<Self::Target, u32>,
+         Self::Backend: IoCapable<u32>,
+     {
+         self.write(offset, value)
+@@ -811,7 +821,7 @@ fn write32(self, value: u32, offset: usize)
+     #[inline(always)]
+     fn write64(self, value: u64, offset: usize)
+     where
+-        usize: IoLoc<Self::Target, u64, IoType = u64>,
++        usize: IoLoc<Self::Target, u64>,
+         Self::Backend: IoCapable<u64>,
+     {
+         self.write(offset, value)
+@@ -843,11 +853,12 @@ fn write64(self, value: u64, offset: usize)
+     #[inline(always)]
+     fn try_read<T, L>(self, location: L) -> Result<T>
+     where
++        T: AsReprMut,
+         L: IoLoc<Self::Target, T>,
+-        Self::Backend: IoCapable<L::IoType>,
++        Self::Backend: IoCapable<<T as AsRepr>::Repr>,
+     {
+-        let view = io_view::<Self, L::IoType>(self, location.offset())?;
+-        Ok(Self::Backend::io_read(view).into())
++        let view = io_view::<Self, T>(self, location.offset())?;
++        Ok(view.read_val())
+     }
+ 
+     /// Generic fallible write with runtime bounds check.
+@@ -876,12 +887,12 @@ fn try_read<T, L>(self, location: L) -> Result<T>
+     #[inline(always)]
+     fn try_write<T, L>(self, location: L, value: T) -> Result
+     where
++        T: AsRepr,
+         L: IoLoc<Self::Target, T>,
+-        Self::Backend: IoCapable<L::IoType>,
++        Self::Backend: IoCapable<<T as AsRepr>::Repr>,
+     {
+-        let view = io_view::<Self, L::IoType>(self, location.offset())?;
+-        let io_value = value.into();
+-        Self::Backend::io_write(view, io_value);
++        let view = io_view::<Self, T>(self, location.offset())?;
++        view.write_val(value);
+         Ok(())
+     }
+ 
+@@ -920,9 +931,10 @@ fn try_write<T, L>(self, location: L, value: T) -> Result
+     #[inline(always)]
+     fn try_write_reg<T, L, V>(self, value: V) -> Result
+     where
++        T: AsRepr,
+         L: IoLoc<Self::Target, T>,
+         V: LocatedRegister<Self::Target, Location = L, Value = T>,
+-        Self::Backend: IoCapable<L::IoType>,
++        Self::Backend: IoCapable<<T as AsRepr>::Repr>,
+     {
+         let (location, value) = value.into_io_op();
+ 
+@@ -954,16 +966,13 @@ fn try_write_reg<T, L, V>(self, value: V) -> Result
+     #[inline(always)]
+     fn try_update<T, L, F>(self, location: L, f: F) -> Result
+     where
++        T: AsReprMut,
+         L: IoLoc<Self::Target, T>,
+-        Self::Backend: IoCapable<L::IoType>,
++        Self::Backend: IoCapable<<T as AsRepr>::Repr>,
+         F: FnOnce(T) -> T,
+     {
+-        let view = io_view::<Self, L::IoType>(self, location.offset())?;
+-
+-        let value: T = Self::Backend::io_read(view).into();
+-        let io_value = f(value).into();
+-        Self::Backend::io_write(view, io_value);
+-
++        let view = io_view::<Self, T>(self, location.offset())?;
++        view.write_val(f(view.read_val()));
+         Ok(())
+     }
+ 
+@@ -991,11 +1000,12 @@ fn try_update<T, L, F>(self, location: L, f: F) -> Result
+     #[inline(always)]
+     fn read<T, L>(self, location: L) -> T
+     where
++        T: AsReprMut,
+         L: IoLoc<Self::Target, T>,
+-        Self::Backend: IoCapable<L::IoType>,
++        Self::Backend: IoCapable<<T as AsRepr>::Repr>,
+     {
+-        let view = io_view_assert::<Self, L::IoType>(self, location.offset());
+-        Self::Backend::io_read(view).into()
++        let view = io_view_assert::<Self, T>(self, location.offset());
++        view.read_val()
+     }
+ 
+     /// Generic infallible write with compile-time bounds check.
+@@ -1022,12 +1032,12 @@ fn read<T, L>(self, location: L) -> T
+     #[inline(always)]
+     fn write<T, L>(self, location: L, value: T)
+     where
++        T: AsRepr,
+         L: IoLoc<Self::Target, T>,
+-        Self::Backend: IoCapable<L::IoType>,
++        Self::Backend: IoCapable<<T as AsRepr>::Repr>,
+     {
+-        let view = io_view_assert::<Self, L::IoType>(self, location.offset());
+-        let io_value = value.into();
+-        Self::Backend::io_write(view, io_value);
++        let view = io_view_assert::<Self, T>(self, location.offset());
++        view.write_val(value)
+     }
+ 
+     /// Generic infallible write of a fully-located register value.
+@@ -1064,9 +1074,10 @@ fn write<T, L>(self, location: L, value: T)
+     #[inline(always)]
+     fn write_reg<T, L, V>(self, value: V)
+     where
++        T: AsRepr,
+         L: IoLoc<Self::Target, T>,
+         V: LocatedRegister<Self::Target, Location = L, Value = T>,
+-        Self::Backend: IoCapable<L::IoType>,
++        Self::Backend: IoCapable<<T as AsRepr>::Repr>,
+     {
+         let (location, value) = value.into_io_op();
+ 
+@@ -1098,14 +1109,13 @@ fn write_reg<T, L, V>(self, value: V)
+     #[inline(always)]
+     fn update<T, L, F>(self, location: L, f: F)
+     where
++        T: AsReprMut,
+         L: IoLoc<Self::Target, T>,
+-        Self::Backend: IoCapable<L::IoType>,
++        Self::Backend: IoCapable<<T as AsRepr>::Repr>,
+         F: FnOnce(T) -> T,
+     {
+-        let view = io_view_assert::<Self, L::IoType>(self, location.offset());
+-        let value: T = Self::Backend::io_read(view).into();
+-        let io_value = f(value).into();
+-        Self::Backend::io_write(view, io_value);
++        let view = io_view_assert::<Self, T>(self, location.offset());
++        view.write_val(f(view.read_val()));
+     }
  }
  
- impl<T: AtomicType> Atomic<T> {
+diff --git a/rust/kernel/io/register.rs b/rust/kernel/io/register.rs
+index 6a19552ffb95..45d2e73a92e7 100644
+--- a/rust/kernel/io/register.rs
++++ b/rust/kernel/io/register.rs
+@@ -117,9 +117,6 @@
+ 
+ /// Trait implemented by all registers.
+ pub trait Register: Sized {
+-    /// Backing primitive type of the register.
+-    type Storage: Into<Self> + From<Self>;
+-
+     /// Start offset of the register.
+     ///
+     /// The interpretation of this offset depends on the type of the register.
+@@ -135,8 +132,6 @@ impl<const SIZE: usize, T> IoLoc<Region<SIZE>, T> for ()
+ where
+     T: FixedRegister,
+ {
+-    type IoType = T::Storage;
+-
+     #[inline(always)]
+     fn offset(self) -> usize {
+         T::OFFSET
+@@ -149,8 +144,6 @@ impl<const SIZE: usize, T> IoLoc<Region<SIZE>, T> for T
+ where
+     T: FixedRegister,
+ {
+-    type IoType = T::Storage;
+-
+     #[inline(always)]
+     fn offset(self) -> usize {
+         T::OFFSET
+@@ -174,8 +167,6 @@ impl<const SIZE: usize, T> IoLoc<Region<SIZE>, T> for FixedRegisterLoc<T>
+ where
+     T: FixedRegister,
+ {
+-    type IoType = T::Storage;
+-
+     #[inline(always)]
+     fn offset(self) -> usize {
+         T::OFFSET
+@@ -246,8 +237,6 @@ impl<const SIZE: usize, T, B> IoLoc<Region<SIZE>, T> for RelativeRegisterLoc<T,
+     T: RelativeRegister,
+     B: RegisterBase<T::BaseFamily> + ?Sized,
+ {
+-    type IoType = T::Storage;
+-
+     #[inline(always)]
+     fn offset(self) -> usize {
+         RelativeRegisterLoc::offset(self)
+@@ -289,8 +278,6 @@ impl<const SIZE: usize, T> IoLoc<Region<SIZE>, T> for RegisterArrayLoc<T>
+ where
+     T: RegisterArray,
+ {
+-    type IoType = T::Storage;
+-
+     #[inline(always)]
+     fn offset(self) -> usize {
+         T::OFFSET + self.0 * T::STRIDE
+@@ -377,8 +364,6 @@ impl<const SIZE: usize, T, B> IoLoc<Region<SIZE>, T> for RelativeRegisterArrayLo
+     T: RelativeRegisterArray,
+     B: RegisterBase<T::BaseFamily> + ?Sized,
+ {
+-    type IoType = T::Storage;
+-
+     #[inline(always)]
+     fn offset(self) -> usize {
+         self.0.offset() + self.1 * T::STRIDE
+diff --git a/rust/macros/io/register.rs b/rust/macros/io/register.rs
+index 83ba4dd75ab3..9b92c8099edd 100644
+--- a/rust/macros/io/register.rs
++++ b/rust/macros/io/register.rs
+@@ -213,8 +213,6 @@ pub(crate) fn register(def: RegDef) -> Result<TokenStream> {
+             );
+ 
+             impl ::kernel::io::register::Register for #name {
+-                type Storage = #storage;
+-
+                 const OFFSET: usize = #offset;
+             }
+         ));
 
 -- 
 2.54.0
