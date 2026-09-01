@@ -1,57 +1,59 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B15F846AA65
-	for <linux-pci@vger.kernel.org>; Tue,  1 Sep 2026 07:32:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 94F6443846E
+	for <linux-pci@vger.kernel.org>; Tue,  1 Sep 2026 07:34:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788247977; cv=none; b=QPV7LhLC+/vC8Iy7YBQ7YMeeajJBGBseXFemmmj4J7/799PZQ/ALIVkYlcGQR57lUgytrIcTp0TiRkdaOZI9vntYjv5CIxwjXsW+tVNUNYb2CrWfeHiCjUg/Tj2wdsbsqmjV5eoc0s/xXEFDk76iDPDOvb/dXm+uZNrZw/a/s/0=
+	t=1788248043; cv=none; b=rROp8IZ0AMS+jsYfG0h4wLToN9Va0AJOLpKeNDVLuvnQvZGY47QsvxEr+mrKm1JB2RUGS9OzLvpD+BCcK2jPuQIe5MHVxQigcTUsTILZ6ZY/VlWn5UEYLDj/lyNFdyyUAKL7KU+on5fg81IOmKphOTjfaaYjOCfyQmIx7GCp8Cc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788247977; c=relaxed/simple;
-	bh=W4u3a4FUSbj0gjLb9g5X7Z1ty0H8/k88ORY3ExKR9XI=;
+	s=arc-20240116; t=1788248043; c=relaxed/simple;
+	bh=Cpye+z7RjWYHu6tKBxGDIrNOtY/JUNOksuYckdyF7jU=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=VsCusGKVXwXY8nBXlW7V3ww9OWHMMxnbq/flMLwla/SYY37By9WuqxMyRecCVN+/FgpMZqNx10slKXXNCPI6dk+8LGVnQ0akeP9RsgMxb4+wURRQgPkARcNWO0EAjdK5H/mfAqSW3afE+byLBcdUhvgEr2xbozj47ZEBtBa1+r8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Bn+SSBiV; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=XETr2nvDLVH+Oq0xAyhIrlXzxcNFhg8C2zbOctInCzimUx4gDZbRDTlv/lwZRUYfusUgxIrtoRuS64GVMW9vqzAdmKTLWxEEJ3OCSndAzpK9BaYQVxytFiwtsyrEPfGoS6jo0J64PIFw+2yW2xd/WsPmZK9otdc/UJuU6IsCmTI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CUOKHPFP; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Bn+SSBiV"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 228F41F000E9;
-	Tue,  1 Sep 2026 07:32:56 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CUOKHPFP"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 052341F000E9;
+	Tue,  1 Sep 2026 07:34:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788247976;
-	bh=W4u3a4FUSbj0gjLb9g5X7Z1ty0H8/k88ORY3ExKR9XI=;
+	s=k20260515; t=1788248042;
+	bh=Cpye+z7RjWYHu6tKBxGDIrNOtY/JUNOksuYckdyF7jU=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Bn+SSBiVLIwmivGj0tKQSK/X2pZeqFGaXAUwjk1V15GLd8GPKCCw3tRq1NCsZ/Vsw
-	 CFW2eNG9Jfrhgok2lTkiRAxKb5xDMY/ta1wcnGlPOXbazf7HdWPyhLp4Qu2U23N9PR
-	 4feGO5uqC0yTOsNKmXsk8nd8mcYkZH5AXhkgMiuPAm7NXpK4SY/YGXmRv4jlPU7Qdb
-	 RlqEShL6xqXWaEHLjiOTxkq+tJWGaT972scWF5oKDmK5dDWIYnkLc9zZPJk39mLg4e
-	 CtZrb8SAWJbwzXHEbL+y8TjM46l8TFA29b4Uv7/GgJV/trJVeooOEFDqLebz2PuMVn
-	 6yvy2+Pv16KzQ==
+	b=CUOKHPFPTYEVbl42bm5ET4jp51eqRysfVGPbB99x4AdkAOi0pi5dCZCZDoMWt4TvW
+	 l/ttJal92u6r00Wiqoe1MDSQnQGKy5YLH96AqVzbTntNlXWvS9FcUUMWTcI3IeVt8K
+	 5DOwGJYqC5LIx1ksqdQWTN9Xe9AtiWzC1RXBcC8VD5R1/+oHUbb7+Qqd2CluSiLWrF
+	 uJlNfS8P4MzZ1uY6hVy8uAeQFU6XUEq8Tvk36T+xwsReITOSE0Vr8fhqyjx6y+BQXy
+	 YiwZlq/1s12RCWxZ9gRmukQV5tr8xsomeRU9zuu5eFyAAwg1LsrzYNYmr7af3LOjY2
+	 sCCg+FJNe7MUA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 3/5] x86/hygon: Map CPU NodeIds to DF nodes
+Subject: Re: [PATCH v4 1/5] pci_ids: Add Hygon Family 0x18 DF F3/F4 device
+ IDs
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Lin Wang" <wanglin@open-hieco.net>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260901071700.3255382-4-wanglin@open-hieco.net>
+In-Reply-To: <20260901071700.3255382-2-wanglin@open-hieco.net>
 References: <20260901071700.3255382-1-wanglin@open-hieco.net>
- <20260901071700.3255382-4-wanglin@open-hieco.net>
+ <20260901071700.3255382-2-wanglin@open-hieco.net>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 01 Sep 2026 07:32:55 +0000
-Message-Id: <20260901073256.228F41F000E9@smtp.kernel.org>
+Date: Tue, 01 Sep 2026 07:34:01 +0000
+Message-Id: <20260901073402.052341F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-> On bare-metal Hygon systems, CPUID 0x8000001E ECX[7:0] encodes a
-> CPU's socket and local CDD ordinal. The value is sparse across sockets
-> and cannot be used as an index into the dense DF node cache.
+> Hygon Family 0x18 node discovery identifies Data Fabric misc (F3) and
+> link (F4) functions by PCI ID rather than a fixed PCI slot.
 >=20
-> Translate the CPUID value through the CDDs sorted by socket and DFID.
-> The NodeId reported by CPUID in a guest may not describe the physical
-> DF topology. Return -ENODEV in guests or when the NodeId does not
-> identify an enumerated CDD.
+> Models 0x04 use 0x1463/0x1464, with 0x1493/0x1494 on the mixed-silicon
+> variant. Models 0x05 through 0x08 use 0x14b3/0x14b4.
+>=20
+> Some IDs have the same numeric values as AMD DF devices. PCI identity
+> also includes the vendor, so Hygon-prefixed names keep the two vendors'
+> definitions independent.
 >=20
 > Signed-off-by: Lin Wang <wanglin@open-hieco.net>
 
@@ -59,5 +61,5 @@ Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260901071700.3255=
-382-1-wanglin@open-hieco.net?part=3D3
+382-1-wanglin@open-hieco.net?part=3D1
 
