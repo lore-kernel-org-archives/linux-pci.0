@@ -1,150 +1,122 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA19D369206;
-	Tue,  1 Sep 2026 06:47:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 08A3D4CCDF8
+	for <linux-pci@vger.kernel.org>; Tue,  1 Sep 2026 06:57:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788245259; cv=none; b=n12vCjtsZwxQOq/GHwZCv0deoD6wrcbD2DsUdkjXqkAhK8jFoDBmmGOB9TeaNLbGujvga+F5eDpfpTgV7LztyqNArq3aboIr8Fm5VMoSMHVPX2fyONY9iq5Ag4M7xy4um/GE29Wrz1BXQB/b9JEIVraOUopiTDN+YgS7aWb5nhw=
+	t=1788245833; cv=none; b=rOkeWIxZZw6eco+EtHXG0XtOCBStbSL5860IgSwFN6uS1jpZ7P/9i5r4UsB0hanfKSmalTA+vQFqoSjx6K2DZodio3cFY8WNGgpBrb4MWR6+dcJPW+wZQ1tP0citJhRVGDuF8nYsZ7FvooSFnyEiSOvJY1pVshTy33acsoVEFDU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788245259; c=relaxed/simple;
-	bh=sXWcuLnegOxCEGRzXJ4kFlINiQaXhSO/uNE6YLafAFc=;
+	s=arc-20240116; t=1788245833; c=relaxed/simple;
+	bh=zcii4c/7zyLpfS31aOAflSGR5r2ksAl66YZ2DzqIBqk=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=D6qqBabe9WVg/9vhDPoe5Cs0kSi9m5vBakaTxfb7nuPW9BHirJswmJ6gzBTb4UbYhX51qRB2ufjOQTo4FRaU0yzyeTHjNRnnO+UKXo9fUS5v2rR3omwI9QWiOuYq2m392CjLTgeS3Q7k0m2wokxlBcLs8USfKW+VICQPhzGiYII=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ADQlEyrR; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=CNtMCD85kPZZepCh+tM9x+VN6fLfItogE36W4khyZpyE5yblLLHfhsWvC5yL65jEQccllBJh29Pvna1uNSNqRqWuse0I22IHroVJfNFKJAEi2Li429aKhqr2NEZCH2LHuKwim5gw/0AWXuUQaupdM12x0nSW59SvFoZ+xOjBLJU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mbHmTBvq; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ADQlEyrR"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 87D941F000E9;
-	Tue,  1 Sep 2026 06:47:37 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mbHmTBvq"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7AEC91F000E9;
+	Tue,  1 Sep 2026 06:57:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788245257;
-	bh=gm+ku6Ht59Gp068OgMTmQcgzHkY9abxoa10ok3pxP/M=;
+	s=k20260515; t=1788245831;
+	bh=stJwvZoXaAqxnk3AmSxKZ2f1o7e6HgaUJ1H1+RXNhN4=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=ADQlEyrRTsN3ulQlt2h9tuCLge4SCgEk8u0ifpPh/MU/acDbRpOjDkPVkRpQjQ0qF
-	 2AppInpFIhHiXLoJ8LQL3UMnna6LU/IBvlH9NZ2cT5EKVz37b9ERG5tL1qI6Dv0WFy
-	 kQBShRczCl43yN3Itsf5j0aKqurBOzmLQayKQHiG/a9MnN+C7jE/lJ2h5aA6fbr48p
-	 nrR8WLPxn1Ehu3U+Yo2nJPVOxda7Nc77sfBGh6KH0NeFQrp+HEPIHH4bXlBar7yNCH
-	 N/NVn29aBg7R8HpEV0295bujcCNq4bi2AaKi8FVS76/DLyvcZ2Bii35PU2rtuv4g9I
-	 IMCf3WQ06tSag==
+	b=mbHmTBvqL0cU9OA+FV/xSrWTkCFVbEZ6/Cyw9edJgu/0mjjpn0012fQ+63cOMfCea
+	 U6lniNbbuhI0ptXOGaTUsYiX787eH1pp2Escup5zqG/joE/tqxLRpQbILZDw4x9UON
+	 fMfySBh5YqP06FRBcU36ejH3yaOX6cejhbZdKDvUGv90oKKT1nsoC4mH+1st6e8rnx
+	 M4Hr5ROiv7mLJxVO54zhjHv+pnxFhn60kOqS7RdmsDtd9Un6n94SccvLcoJCEdww/7
+	 7QfLopoz1AmhZo+kyZjRNHLi0nEbUr+HqDp6XboffzmUu/bKDMFy6cfkgGOtaygFNz
+	 nF0OrLxa0QGTw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v6 1/2] PCI: endpoint: pci-epf-vntb: Serialize virtual
- PCI bus scan
+Subject: Re: [PATCH] PCI/DPC: Honor "pcie_ports=native" when enabling DPC
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "Koichiro Den" <den@valinux.co.jp>
-Cc: ntb@lists.linux.dev, linux-pci@vger.kernel.org
-In-Reply-To: <20260901063238.631166-2-den@valinux.co.jp>
-References: <20260901063238.631166-1-den@valinux.co.jp>
- <20260901063238.631166-2-den@valinux.co.jp>
+To: "Guixin Liu" <kanie@linux.alibaba.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260901064554.2178688-1-kanie@linux.alibaba.com>
+References: <20260901064554.2178688-1-kanie@linux.alibaba.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 01 Sep 2026 06:47:37 +0000
-Message-Id: <20260901064737.87D941F000E9@smtp.kernel.org>
+Date: Tue, 01 Sep 2026 06:57:11 +0000
+Message-Id: <20260901065711.7AEC91F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
 
 Pre-existing issues:
-- [High] Global static PCI driver and ID table are mutated and registered i=
-nside a per-device bind callback, preventing multi-instance support and cor=
-rupting global state.
-- [High] Improper mixing of C struct accesses and I/O accessors (readl/writ=
-el) on a DMA coherent RAM pointer.
+- [High] This problem wasn't introduced by this patch, but pre-existed in t=
+he codebase. Various PCI and CXL subsystems incorrectly check `host->native=
+_*` flags directly without honoring the `pcie_ports=3Dnative` or `pcie_port=
+s_dpc_native` command-line overrides.
 --
 
-commit 52fb844432dfeb3fe13eef7dc35765e5cdc04cfa
-Author: Koichiro Den <den@valinux.co.jp>
+commit bed1438fd8fcfc05e1122790665a4045a06281cf
+Author: Guixin Liu <kanie@linux.alibaba.com>
 
-PCI: endpoint: pci-epf-vntb: Serialize virtual PCI bus scan
+PCI/DPC: Honor "pcie_ports=3Dnative" when enabling DPC
+   =20
+This commit fixes an issue where the "pcie_ports=3Dnative" command-line
+override was ignored when deciding whether to create a DPC service
+device. This ensures both command-line overrides continue to work when
+firmware retains AER control.
 
-The virtual PCI bus is scanned without holding the PCI rescan/remove
-lock. This can race with other PCI topology changes.
+Cc: stable@vger.kernel.org
 
-Hold the lock across the bus scan and device addition.
-
-Fixes: e35f56bb0330 ("PCI: endpoint: Support NTB transfer between RC and EP=
-")
-Link: https://lore.kernel.org/r/3tgrcel5fl55ulf3zjya4fkz4t2ms7iwwjif5rnzn2r=
-afsydd6@i4e5etm7uqvz/
-
-> diff --git a/drivers/pci/endpoint/functions/pci-epf-vntb.c b/drivers/pci/=
-endpoint/functions/pci-epf-vntb.c
-> index c3caec927d748..412e8cc6fb1d2 100644
-> --- a/drivers/pci/endpoint/functions/pci-epf-vntb.c
-> +++ b/drivers/pci/endpoint/functions/pci-epf-vntb.c
-
-[ ... ]
-
-While reviewing this file, I noticed a couple of pre-existing issues.
-
-drivers/pci/endpoint/functions/pci-epf-vntb.c:epf_ntb_bind() {
-    ...
-	pci_space[0] =3D (ntb->vntb_pid << 16) | ntb->vntb_vid;
-	pci_vntb_table[0].vendor =3D ntb->vntb_vid;
-	pci_vntb_table[0].device =3D ntb->vntb_pid;
-
-	ret =3D pci_register_driver(&vntb_pci_driver);
-    ...
-}
+> diff --git a/drivers/pci/pcie/portdrv.c b/drivers/pci/pcie/portdrv.c
+> index a9cbfc1d2bc75..a05ee7980fb27 100644
+> --- a/drivers/pci/pcie/portdrv.c
+> +++ b/drivers/pci/pcie/portdrv.c
+> @@ -264,7 +264,7 @@ static int get_port_device_capability(struct pci_dev =
+*dev)
+>  	 */
+>  	if (pci_find_ext_capability(dev, PCI_EXT_CAP_ID_DPC) &&
+>  	    pci_aer_available() &&
+> -	    (pcie_ports_dpc_native || host->native_aer))
+> +	    (pcie_ports_native || pcie_ports_dpc_native || host->native_aer))
+>  		services |=3D PCIE_PORT_SERVICE_DPC;
 
 [Severity: High]
-This isn't a bug introduced by this patch, but does this code corrupt global
-state if multiple instances of the endpoint function are bound?
+This isn't a bug introduced by this patch, but pre-existed in the codebase.
+Since this patch correctly restores the pcie_ports_native override here,
+should we also fix other subsystems that incorrectly check host->native_*
+flags directly without honoring the command-line overrides?
 
-If multiple endpoint functions are bound via configfs, a second call to
-epf_ntb_bind() would overwrite the shared pci_vntb_table[0] and pci_space[0]
-without synchronization, corrupting the first instance's state.
+For example, in drivers/cxl/core/ras.c:devm_cxl_dport_rch_ras_setup(),
+the code drops the override, which can lead to broken error reporting for
+uncorrectable errors:
 
-Also, won't calling pci_register_driver(&vntb_pci_driver) a second time fail
-with -EEXIST, preventing the bind? Should this dynamic registration of a
-global PCI driver be moved to the module initialization sequence instead?
+	host_bridge =3D to_pci_host_bridge(dport->dport_dev);
+	if (!host_bridge->native_aer)
+		return;
 
+	cxl_dport_map_rch_aer(dport);
 
-A second issue occurs when allocating and accessing spad memory:
+Similarly, in drivers/pci/pci-acpi.c:pci_acpi_program_hpx_type2(), it
+fails to account for the command line override which should prevent
+programming when the OS forces AER:
 
-drivers/pci/endpoint/functions/pci-epf-vntb.c:epf_ntb_config_spad_bar_alloc=
-() {
-    ...
-	base =3D pci_epf_alloc_space(epf, ctrl_size + spad_size,
-				   barno, epc_features, 0);
-    ...
-	ntb->reg =3D base;
+	/*
+	 * Only do the _HPX Type 2 programming if OS owns PCIe native
+	 * hotplug but not AER.
+	 */
+	if (!host->native_pcie_hotplug || host->native_aer)
+		return;
 
-	ctrl =3D ntb->reg;
-	ctrl->spad_offset =3D ctrl_size;
-    ...
-}
+Also, in drivers/pci/pcie/dpc.c:pci_dpc_recovered(), this check bypasses
+the synchronization wait if it fails to recognize OS-forced DPC
+ownership:
 
-The exact same RAM pointer is then accessed via I/O accessors:
+	host =3D pci_find_host_bridge(pdev->bus);
+	if (!host->native_dpc && !IS_ENABLED(CONFIG_PCIE_EDR))
+		return false;
 
-drivers/pci/endpoint/functions/pci-epf-vntb.c:vntb_epf_spad_read() {
-    ...
-	void __iomem *base =3D (void __iomem *)ntb->reg;
-
-	val =3D readl(base + off + ct + idx * sizeof(u32));
-    ...
-}
-
-[Severity: High]
-This is a pre-existing issue, but does this code cause undefined behavior by
-mixing C struct accesses and I/O accessors on a standard RAM pointer?
-
-The driver allocates memory via pci_epf_alloc_space() (which uses
-dma_alloc_coherent()) and assigns the returned standard virtual memory
-pointer to ntb->reg.
-
-Later, in vntb_epf_spad_read(), this standard RAM pointer is forcefully cast
-to void __iomem * and accessed via readl().
-
-On architectures with strictly separated I/O memory or strictly typed memory
-domains, using MMIO instructions on standard cacheable memory can trigger
-exceptions or alignment faults. Is it possible to avoid using MMIO accessors
-on memory that isn't mapped as I/O memory?
+Because pci_dpc_recovered() prematurely returns false, the pciehp driver
+will not ignore spurious Link Down/Up events during DPC. Does this cause
+hotplug to incorrectly race with DPC recovery?
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260901063238.6311=
-66-1-den@valinux.co.jp?part=3D1
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260901064554.2178=
+688-1-kanie@linux.alibaba.com?part=3D1
