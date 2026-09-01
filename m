@@ -1,86 +1,150 @@
-Received: from out30-110.freemail.mail.aliyun.com (out30-110.freemail.mail.aliyun.com [115.124.30.110])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB171352022;
-	Tue,  1 Sep 2026 06:46:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.110
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA19D369206;
+	Tue,  1 Sep 2026 06:47:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788245171; cv=none; b=h4N0nFizNJtAcFm7MFNhhuHlsd293IeztaUMVUXdG7ertPphjJaPdl7NjvxvFTUQZKBpWvJ6dJNuOlLjXsKpUfxO6Oa17obAA3HAwqx1oeE2oGZGGJP9RyUo5Qlr0HHGeJeFJHm58TXehFXpgfAQwLm264RGIlDW8dlkJdLlFNk=
+	t=1788245259; cv=none; b=n12vCjtsZwxQOq/GHwZCv0deoD6wrcbD2DsUdkjXqkAhK8jFoDBmmGOB9TeaNLbGujvga+F5eDpfpTgV7LztyqNArq3aboIr8Fm5VMoSMHVPX2fyONY9iq5Ag4M7xy4um/GE29Wrz1BXQB/b9JEIVraOUopiTDN+YgS7aWb5nhw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788245171; c=relaxed/simple;
-	bh=vG8hwiUFswpP/BGb44DmdmgeFuQmtqjRMak6ZRhW77U=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=guzs+waTmV9CAumMeMJZFMj63fjZL0pkLEc/HUpJ8Qt2YjCmK5499+J3j57sOS3vpMdXkKv+qpsZsJ7hWb7MWEBRUCnC190g0zgKsVF3kfV4BMYYoMBh69AsRtiW7LSBlpKMaRoT7wZ2UDpgkMAByTv5/xadg3c+/AHkyRJNc+U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=ELQlREv7; arc=none smtp.client-ip=115.124.30.110
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
+	s=arc-20240116; t=1788245259; c=relaxed/simple;
+	bh=sXWcuLnegOxCEGRzXJ4kFlINiQaXhSO/uNE6YLafAFc=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=D6qqBabe9WVg/9vhDPoe5Cs0kSi9m5vBakaTxfb7nuPW9BHirJswmJ6gzBTb4UbYhX51qRB2ufjOQTo4FRaU0yzyeTHjNRnnO+UKXo9fUS5v2rR3omwI9QWiOuYq2m392CjLTgeS3Q7k0m2wokxlBcLs8USfKW+VICQPhzGiYII=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ADQlEyrR; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="ELQlREv7"
-DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=linux.alibaba.com; s=default;
-	t=1788245163; h=From:To:Subject:Date:Message-ID:MIME-Version;
-	bh=WNwgnohXcpMa7shgXWCJ9xpd8rY4iBnfjmJSgYvbf8s=;
-	b=ELQlREv7uOQQ/Ugq1juk0qIWkdVH/y4FLsaTJbzIF64vhX2gg52QXMLNh0CBc5jMldpcyvndrGflK+cZCiRpeqE4p5gHa7lV8eWnd3BDmf82OvQ5FTetWSyr82qcJoeiSU0xsZd2bWJ2oX3LpJdNwsVJ1MxPAD8h0I6UIjJGLGw=
-X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R181e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam033032089153;MF=kanie@linux.alibaba.com;NM=1;PH=DS;RN=11;SR=0;TI=SMTPD_---0XA4lrWo_1788245162;
-Received: from localhost(mailfrom:kanie@linux.alibaba.com fp:SMTPD_---0XA4lrWo_1788245162 cluster:ay36)
-          by smtp.aliyun-inc.com;
-          Tue, 01 Sep 2026 14:46:03 +0800
-From: Guixin Liu <kanie@linux.alibaba.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	=?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= <u.kleine-koenig@baylibre.com>,
-	Jonathan Cameron <jic23@kernel.org>,
-	Lukas Wunner <lukas@wunner.de>,
-	=?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
-	Kees Cook <kees@kernel.org>,
-	Darshit Shah <darnshah@amazon.de>,
-	Brian Norris <briannorris@chromium.org>,
-	Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
-Cc: linux-pci@vger.kernel.org,
-	stable@vger.kernel.org
-Subject: [PATCH] PCI/DPC: Honor "pcie_ports=native" when enabling DPC
-Date: Tue,  1 Sep 2026 14:45:54 +0800
-Message-ID: <20260901064554.2178688-1-kanie@linux.alibaba.com>
-X-Mailer: git-send-email 2.43.7
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ADQlEyrR"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 87D941F000E9;
+	Tue,  1 Sep 2026 06:47:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1788245257;
+	bh=gm+ku6Ht59Gp068OgMTmQcgzHkY9abxoa10ok3pxP/M=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=ADQlEyrRTsN3ulQlt2h9tuCLge4SCgEk8u0ifpPh/MU/acDbRpOjDkPVkRpQjQ0qF
+	 2AppInpFIhHiXLoJ8LQL3UMnna6LU/IBvlH9NZ2cT5EKVz37b9ERG5tL1qI6Dv0WFy
+	 kQBShRczCl43yN3Itsf5j0aKqurBOzmLQayKQHiG/a9MnN+C7jE/lJ2h5aA6fbr48p
+	 nrR8WLPxn1Ehu3U+Yo2nJPVOxda7Nc77sfBGh6KH0NeFQrp+HEPIHH4bXlBar7yNCH
+	 N/NVn29aBg7R8HpEV0295bujcCNq4bi2AaKi8FVS76/DLyvcZ2Bii35PU2rtuv4g9I
+	 IMCf3WQ06tSag==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v6 1/2] PCI: endpoint: pci-epf-vntb: Serialize virtual
+ PCI bus scan
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Koichiro Den" <den@valinux.co.jp>
+Cc: ntb@lists.linux.dev, linux-pci@vger.kernel.org
+In-Reply-To: <20260901063238.631166-2-den@valinux.co.jp>
+References: <20260901063238.631166-1-den@valinux.co.jp>
+ <20260901063238.631166-2-den@valinux.co.jp>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Tue, 01 Sep 2026 06:47:37 +0000
+Message-Id: <20260901064737.87D941F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-Commit 97ca178c899d ("PCI/DPC: Allow DPC on all Downstream Ports when
-OS controls AER") replaced the AER service bit with host->native_aer
-when deciding whether to create a DPC service device.  Unlike the AER
-service bit, host->native_aer does not reflect the "pcie_ports=native"
-command-line override.
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
 
-Consequently, if firmware retains AER control, "pcie_ports=native" no
-longer enables DPC on Root Ports that advertise both AER and DPC, even
-though the option is documented to force native DPC handling.
+Pre-existing issues:
+- [High] Global static PCI driver and ID table are mutated and registered i=
+nside a per-device bind callback, preventing multi-instance support and cor=
+rupting global state.
+- [High] Improper mixing of C struct accesses and I/O accessors (readl/writ=
+el) on a DMA coherent RAM pointer.
+--
 
-Check pcie_ports_native explicitly so both command-line overrides
-continue to work.
+commit 52fb844432dfeb3fe13eef7dc35765e5cdc04cfa
+Author: Koichiro Den <den@valinux.co.jp>
 
-Fixes: 97ca178c899d ("PCI/DPC: Allow DPC on all Downstream Ports when OS controls AER")
-Cc: stable@vger.kernel.org
-Signed-off-by: Guixin Liu <kanie@linux.alibaba.com>
----
- drivers/pci/pcie/portdrv.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+PCI: endpoint: pci-epf-vntb: Serialize virtual PCI bus scan
 
-diff --git a/drivers/pci/pcie/portdrv.c b/drivers/pci/pcie/portdrv.c
-index a9cbfc1d2bc7..a05ee7980fb2 100644
---- a/drivers/pci/pcie/portdrv.c
-+++ b/drivers/pci/pcie/portdrv.c
-@@ -264,7 +264,7 @@ static int get_port_device_capability(struct pci_dev *dev)
- 	 */
- 	if (pci_find_ext_capability(dev, PCI_EXT_CAP_ID_DPC) &&
- 	    pci_aer_available() &&
--	    (pcie_ports_dpc_native || host->native_aer))
-+	    (pcie_ports_native || pcie_ports_dpc_native || host->native_aer))
- 		services |= PCIE_PORT_SERVICE_DPC;
- 
- 	/* Enable bandwidth control if more than one speed is supported. */
--- 
-2.43.7
+The virtual PCI bus is scanned without holding the PCI rescan/remove
+lock. This can race with other PCI topology changes.
 
+Hold the lock across the bus scan and device addition.
+
+Fixes: e35f56bb0330 ("PCI: endpoint: Support NTB transfer between RC and EP=
+")
+Link: https://lore.kernel.org/r/3tgrcel5fl55ulf3zjya4fkz4t2ms7iwwjif5rnzn2r=
+afsydd6@i4e5etm7uqvz/
+
+> diff --git a/drivers/pci/endpoint/functions/pci-epf-vntb.c b/drivers/pci/=
+endpoint/functions/pci-epf-vntb.c
+> index c3caec927d748..412e8cc6fb1d2 100644
+> --- a/drivers/pci/endpoint/functions/pci-epf-vntb.c
+> +++ b/drivers/pci/endpoint/functions/pci-epf-vntb.c
+
+[ ... ]
+
+While reviewing this file, I noticed a couple of pre-existing issues.
+
+drivers/pci/endpoint/functions/pci-epf-vntb.c:epf_ntb_bind() {
+    ...
+	pci_space[0] =3D (ntb->vntb_pid << 16) | ntb->vntb_vid;
+	pci_vntb_table[0].vendor =3D ntb->vntb_vid;
+	pci_vntb_table[0].device =3D ntb->vntb_pid;
+
+	ret =3D pci_register_driver(&vntb_pci_driver);
+    ...
+}
+
+[Severity: High]
+This isn't a bug introduced by this patch, but does this code corrupt global
+state if multiple instances of the endpoint function are bound?
+
+If multiple endpoint functions are bound via configfs, a second call to
+epf_ntb_bind() would overwrite the shared pci_vntb_table[0] and pci_space[0]
+without synchronization, corrupting the first instance's state.
+
+Also, won't calling pci_register_driver(&vntb_pci_driver) a second time fail
+with -EEXIST, preventing the bind? Should this dynamic registration of a
+global PCI driver be moved to the module initialization sequence instead?
+
+
+A second issue occurs when allocating and accessing spad memory:
+
+drivers/pci/endpoint/functions/pci-epf-vntb.c:epf_ntb_config_spad_bar_alloc=
+() {
+    ...
+	base =3D pci_epf_alloc_space(epf, ctrl_size + spad_size,
+				   barno, epc_features, 0);
+    ...
+	ntb->reg =3D base;
+
+	ctrl =3D ntb->reg;
+	ctrl->spad_offset =3D ctrl_size;
+    ...
+}
+
+The exact same RAM pointer is then accessed via I/O accessors:
+
+drivers/pci/endpoint/functions/pci-epf-vntb.c:vntb_epf_spad_read() {
+    ...
+	void __iomem *base =3D (void __iomem *)ntb->reg;
+
+	val =3D readl(base + off + ct + idx * sizeof(u32));
+    ...
+}
+
+[Severity: High]
+This is a pre-existing issue, but does this code cause undefined behavior by
+mixing C struct accesses and I/O accessors on a standard RAM pointer?
+
+The driver allocates memory via pci_epf_alloc_space() (which uses
+dma_alloc_coherent()) and assigns the returned standard virtual memory
+pointer to ntb->reg.
+
+Later, in vntb_epf_spad_read(), this standard RAM pointer is forcefully cast
+to void __iomem * and accessed via readl().
+
+On architectures with strictly separated I/O memory or strictly typed memory
+domains, using MMIO instructions on standard cacheable memory can trigger
+exceptions or alignment faults. Is it possible to avoid using MMIO accessors
+on memory that isn't mapped as I/O memory?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260901063238.6311=
+66-1-den@valinux.co.jp?part=3D1
