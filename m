@@ -1,53 +1,54 @@
-Received: from LO3P265CU004.outbound.protection.outlook.com (mail-uksouthazon11020089.outbound.protection.outlook.com [52.101.196.89])
+Received: from CWXP265CU009.outbound.protection.outlook.com (mail-ukwestazon11021101.outbound.protection.outlook.com [52.101.100.101])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 41A19483BF2;
-	Tue,  1 Sep 2026 16:50:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.196.89
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 801A3481669;
+	Tue,  1 Sep 2026 16:50:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.100.101
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788281444; cv=fail; b=Y5Ams3kvbZIjEi7/igOedcJDwuXswqb8pcoR/oZQLveJtNjiQv4y0cE+X6PMKzyJ5cJfcJlClbfooX1ZB8UdW3LvAzXS77qJe9RSRMkzZjLAyyz9Zn1b+kpewAyZdGHE8AU5aFiJpTM9CP2h2JPgvgA/e8CiVvfktEWhen5ROGg=
+	t=1788281445; cv=fail; b=cbU/YCZz0q3W7fYNScW2/iOXsgRWXTFXkEOHeLV0F/pQ16e9dM42p/S8sH11zr5wqSkAbaRzGGWsnQbMmIWRS0MIj+i+Ccyi8KcUWwBeOVY+e+2xtFbRlgpmu8GJuso0t0aKZfMFQjnCDcZkBEiIuyW+O84NPTPPDGY6OhxwfLQ=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788281444; c=relaxed/simple;
-	bh=aqM1m8hQVBQcfuLUtUp2YErCndlB9UHKXD3Qyyki3X0=;
+	s=arc-20240116; t=1788281445; c=relaxed/simple;
+	bh=sSdw1Dv5hlsSyV6K0T7adkobqSvSgIeuYjKeEZiTdAE=;
 	h=From:Date:Subject:Content-Type:Message-Id:References:In-Reply-To:
-	 To:Cc:MIME-Version; b=WX/VVh5OnbjEZIKe3DOjCp5M9sY40y6PB8CZb/kEXa8vIPF+MoXLVN85NyHBnFN5k4Bx14DMhE3yZpVEY2o4HLEGExtUFwg+9UdAphQHEOnUNAHxI2azFwtyp/8k4mcgH852/oz7W45JLAczvedhmmn96RMsQTAqdlPYe6/DEfg=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net; spf=pass smtp.mailfrom=garyguo.net; dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b=SOHoEwq8; arc=fail smtp.client-ip=52.101.196.89
+	 To:Cc:MIME-Version; b=aDspcRBU6jEbIgjkGQGDVeIjro7CI4gIHXPltKq+Ow5Rcrtyh/UCaK05SfG+ZPQgxU1PVyLlYH1BNrjPuczZR3SePn12DaTQBrruyYnReIZbERrjf1yPhnE92RaxLyVAWuxff5nHv8y7IyU1gkDteC/Ejgm9xiK87LlCIypGSqk=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net; spf=pass smtp.mailfrom=garyguo.net; dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b=Es/yGJVh; arc=fail smtp.client-ip=52.101.100.101
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=garyguo.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b="SOHoEwq8"
+	dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b="Es/yGJVh"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=CKIsAk9ZbaU/7G2lApYykoq+BCVINm1rMpOsI7ZJDusqWkVGUlmL/sLSpnlNOcTM6uPqH5IpX4OU9X1qKNL13se4CfLuNK8pe2o81gDJmo0rEuB537OL5Fa7bhYoQ0UxN4ln9OdAO/1KvIHPAOflEIE5sRL/MTCUYKIfuE/fmag1MENl76Z72gRoAi36VmaEp3cqxJYj8gxFiut97H206Kq4WISEnibbdMZS4GXDr3hvH/dAgSRFilkS4GFi5BzqVZTQdxy3C6RW8pQ7TCoSw9lYCY6lwk0e0Tlz3J6Yav77HYG898NdbDzRphowMQuYGOEcPqshGxSIpKNuv9WYzw==
+ b=mGlhk9cuh8+VK/dEMT9I9u1tap+fMMBQCMVQRMcdKKOPkgZHh75HP5R80TZsL9p+Twz1EyvAtcCkSXWeP4VzjtShvmH/614UQGLBrY92v+AOT/4ooLM5aDB6rnfG17AKG9JZfo804IcZOtotJTC2EAIGTbPD8aYTfCZTNhJdHMPd5HSsis/bamVxMpdWFiKQ0Sl/1GIEB+JlPEpGadVMuF15AOoJ//pWvHFvUDQCMJsBXf1L6mYmfwU5c7FK76c0l4hua64cJo7FsvrTaLoELTyK1Qk1gpuJR0S+kGgAzEOJIHzVV8yXqXRC+CJ2XLDuCLuFd6uJrLLknsjIWFs0LA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=/LIgUQ0Lq8xjNZ53P0UEI58qk7Zc3xSvgVWc9JA3104=;
- b=rdRvGCagnZmzO82qSasZMQwn+pWawA1tLow81rAxzZDwHUk+UW2IGgqHII7pKKKZsPRfV7wi+Fj6Bpq4KZ5RqqgL6Z4IY4MoVC5rx+QrQbI9lOM31qKwo9auZbLAgLv/T0XCV2QeKNvOcdUjXXtFJUAeIBkVMMj5LwulZQHxGLL7y6jag3LI4hQYU4UFA+ll79+WRMVKBBDSdPPuRfvUjaKb0bt2vFZSApgSWNwqNy4eABCPNdMCUmlFwO4i2QsBoS/3eNIN0JWDHq8ytSM+WqVsiunsX9DISHnMyU1KWuLFTi0K4Pbw4b5CrzDeY47e3BacknXb0jAgv0Oc5xInKw==
+ bh=uDHJXJ/+khNEoOPvYRZ9OmruChe2fAgBcIw89OaS+4c=;
+ b=AGzlv9SpwAxqbcfdXVL1EJf7kIePfrtcVzieJObdEcGvSPWZRKU4ivYf0iB/IfMBSjVQaRfCEkILsEAvY6GCUPFN+W/B+rMxREySyLBHCyyoSqyGul3IwDrCfJV5ruk5kgoN5g55ZWZLjEeom78PxmAjel/LBnkXSdz1xDBH3L+tdjFdLjMPx/c9IDcZ5P/V6+SNxS56FY6lChLsVEfaVElBcLfh2Fy/OD7zqukIlG76yaz0j+qoN3VkbjjDpB3vdXz6KmEBOdgMoosCqq2AQYJxYQP6odz2G90uWVSnPNfMqtrY0eWp+vFeP/gQ2voLe9YQGhIwvYF9TarZS8uiCw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=garyguo.net; dmarc=pass action=none header.from=garyguo.net;
  dkim=pass header.d=garyguo.net; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=garyguo.net;
  s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=/LIgUQ0Lq8xjNZ53P0UEI58qk7Zc3xSvgVWc9JA3104=;
- b=SOHoEwq8wTzcO0q+2kl61gVgKzaME7WAm0U0ocdel/CmP84P6Rol4h/4mEB7S7Qj42u8fnPCSfuZbrFT/gqcvjGInEpTgzytogz9CjspFR70CetKOVP+6GHocO0eQIyzdcfQAnmXG+hNsqP4fYWq42i2yRU48me1fhwajO7lTHg=
+ bh=uDHJXJ/+khNEoOPvYRZ9OmruChe2fAgBcIw89OaS+4c=;
+ b=Es/yGJVhu/Q75rUdASuW1gfu387vGTpC2fNgglRy3qsEHPjxjYTgbRs5qYYP0HekAplxR/a4YguSt/lkPizEyI5tLHB2KxuyRV854NDfBp7siEyrBNxm8I9wF1rQFHLT/OYJdJAV+UW4bFxKEdilBYBbzOte8VDm4xHryfGRKVE=
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=garyguo.net;
 Received: from LOAP265MB8560.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:4ab::19)
- by LO0P265MB7316.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:2ef::11) with
+ by CW1P265MB9199.GBRP265.PROD.OUTLOOK.COM (2603:10a6:400:272::22) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.360.13; Tue, 1 Sep
- 2026 16:50:35 +0000
+ 2026 16:50:40 +0000
 Received: from LOAP265MB8560.GBRP265.PROD.OUTLOOK.COM
  ([fe80::f60b:1537:68d7:4fc1]) by LOAP265MB8560.GBRP265.PROD.OUTLOOK.COM
  ([fe80::f60b:1537:68d7:4fc1%4]) with mapi id 15.21.0360.008; Tue, 1 Sep 2026
- 16:50:35 +0000
+ 16:50:40 +0000
 From: Gary Guo <gary@garyguo.net>
-Date: Tue, 01 Sep 2026 17:50:27 +0100
-Subject: [PATCH v4 03/16] rust: mem: add `AsRepr` and `AsReprMut`
+Date: Tue, 01 Sep 2026 17:50:33 +0100
+Subject: [PATCH v4 09/16] samples: rust: pci: specify base type for
+ registers
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260901-typed_register-v4-3-5552b1d59525@garyguo.net>
+Message-Id: <20260901-typed_register-v4-9-5552b1d59525@garyguo.net>
 References: <20260901-typed_register-v4-0-5552b1d59525@garyguo.net>
 In-Reply-To: <20260901-typed_register-v4-0-5552b1d59525@garyguo.net>
 To: Danilo Krummrich <dakr@kernel.org>, Alice Ryhl <aliceryhl@google.com>, 
@@ -66,11 +67,11 @@ Cc: driver-core@lists.linux.dev, rust-for-linux@vger.kernel.org,
  dri-devel@lists.freedesktop.org, linux-pci@vger.kernel.org, 
  Gary Guo <gary@garyguo.net>
 X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1788281431; l=6839;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1788281431; l=993;
  i=gary@garyguo.net; s=20221204; h=from:subject:message-id;
- bh=aqM1m8hQVBQcfuLUtUp2YErCndlB9UHKXD3Qyyki3X0=;
- b=enlmFjuj+HDXPvXRhhJv3ET7jkW9NEJzhAbRX6Kuy55iCm4ZJ6qZ+7W/khraQMtw/YboG3onn
- dN22aHbn6dEBaecVUk3QbZ6s62Z+Vx8zuUTzZhWR1AqeLsmfTbKM7DV
+ bh=sSdw1Dv5hlsSyV6K0T7adkobqSvSgIeuYjKeEZiTdAE=;
+ b=BGW+bCFaAxx/XFZbYYhjY7dh4ectiA84l9SMk5lqC3cPQikq0d/Mi3DbEgjozYq7FEKL6J6Wy
+ 4BX8BbZpb/bBFSR3JlV3AkHEb+iWiDTCdjWz7sktrgDU/BQD1+j/2ih
 X-Developer-Key: i=gary@garyguo.net; a=ed25519;
  pk=vB3uIX95SM4eVrIqo1DWNWKDKD2xzB+yLLLr0yOPYMo=
 X-ClientProxiedBy: PAZP264CA0173.FRAP264.PROD.OUTLOOK.COM
@@ -83,241 +84,100 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: LOAP265MB8560:EE_|LO0P265MB7316:EE_
-X-MS-Office365-Filtering-Correlation-Id: f3b5ef96-960c-439d-df8f-08df08492495
+X-MS-TrafficTypeDiagnostic: LOAP265MB8560:EE_|CW1P265MB9199:EE_
+X-MS-Office365-Filtering-Correlation-Id: 036a5c3e-54f4-4da7-363a-08df084927c2
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|366016|1800799024|23010399003|10070799003|376014|7416014|10067099003|6133799003|22082099003|56012099006|18002099003|921020;
+	BCL:0;ARA:13230040|1800799024|7416014|10070799003|376014|23010399003|366016|921020|6133799003|10067099003|56012099006|22082099003|18002099003;
 X-Microsoft-Antispam-Message-Info:
-	ApGvS0sXhGTZNZI29jPsMFXuEpurZ3CNR3qp8UHrTXYHyaIVArZ4Sg8tMqVL195V6WqsHrCkBvP9kH3R67T4ybjJsaWUVqbnsiJ85d81OZ04TFfMQFTl4GUbbaxpTrbNCA/6daDFmUpXdfGDKAeaTyfjGmVm9+EjvwYEoRt+aNpjPYMO7v5kstKUqMqD1d4GoQCciDH6Pr6Qwx5JWIvJElFyEvmp0Q14qnockQqreR2rjOCYA+uTSDAs6teTlT8qvZhqPw8QjwgQiOK5tXt/GjpiraiHdnfxVFD5udtgRZTjARg/arwliEDmgxYWcdnHn0gsDnGtlFFEmSOPVXp0C6W1FPE0ACf+6aflhyjxuirxvEr+OeZNeiQnCCL1VEWQWXo1AsKMj6fuIK9nd7WSxo9ClcRmn67BXocLY0OgsigIWTUxO7ZniSgEyVHtR6RZ16/o0PX4EyOiwe9OkAWibxrFMVL6BL6/uSG3XT++6gtLeQjQ9Ca67WrlpkV5NqfRMDDKwdNlmczLvCTu7vtEef6PPtIdsT7iskOcA7Wl9TiMQU39YFZnxx1PyYcIpvlCH0mA6maNHCaOEmkxUQUP3RdX3UFphfzjuRjWrGRargdyywJcZzwAdpHiuJK7NC6tqdn/QVlZ5ZnnGRgUnuniAx9Q31zrZJg8LqCm9hTAi0a6nRISsC3jUbU/8SKbWwHEnvpVBQ1Lj8fdWCanSrNOyw==
+	7M6RLwvUXy2nk9IPTarJOEQQ4u3exZ8sIDX5uKFtw39Vbg3RBJrMPKc7sZo6DR3v7ufRRUtI6n78UewWppK1S9MGaghJuiKaWJ7XSBH0zADOhom9RBTnWq8sFk9g4GdvxWAvHT10iVHWC0vUi6vNi9YidpG3dcBLTitqDx4oTY4UjfDvbQJFYr1VkpNbMm8qpIlgwrrPFC1xUmimK4vIv1SAhg5tyUwQxNYH+qkJ2KL8TH/ry8+sFFTFPftthhz/OOeUGFMZnuhvYcGbCPRsEQWbirp4wgvVq9lgLJ18YYtj36783gySLXlSPe7lr1+7KscbGyA/SBlG02IPuEbt5ZB8zG6lPxUOLYW7IhUsQ+CA4elnAqi3kEVtWq+x+adbdKivq8dZGEB+vzToA0ZXLo22svhEtxRT7vnaotbEMbcmw280DqOx/SdvwkgWLPwXxiOphlmm8HRBQpKZ74sgx0iPwrQe/U+8dtcMlHKRKBJpEOB8Az6r6Jmb45m8HvzbQn22E/6HYVH4IWpOUWg95lWIKrQR47/1f/x6iWL5fV1mH77MRNYOKlWltlw2l/lfCdKac+ukYlzDIyIe3gpzF+3C+xD8h5SHZPxzYxoaaOr1/Vl3ExvRBs8124yFzBZUaKkRuTNPFhAsX8y3VdseQPURN2A4foxaBd2PP+4AafvTVltO2OuSpq/6x6cz4UFwrD6YxGI+b1ukRVA+CSYLBw==
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LOAP265MB8560.GBRP265.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(23010399003)(10070799003)(376014)(7416014)(10067099003)(6133799003)(22082099003)(56012099006)(18002099003)(921020);DIR:OUT;SFP:1102;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LOAP265MB8560.GBRP265.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(7416014)(10070799003)(376014)(23010399003)(366016)(921020)(6133799003)(10067099003)(56012099006)(22082099003)(18002099003);DIR:OUT;SFP:1102;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?a290RmdYSTNISnRGMmpITTcwNysveFM2TVNnUHRkR1RyNlNnclkvVHNidGh0?=
- =?utf-8?B?aFovMW5FaU4xVDllYjZ1Q2ExUVg1WGdVVldRZkduTlVHWkEvajBPRFdMTkIr?=
- =?utf-8?B?cUJtRnVxOWVLcnlJYkE5QStYaXpmOW1oTnpxSVFRSnoxOFpPQlE5L2NhS01X?=
- =?utf-8?B?ZjVQSTJGVzFQRkxtUi8yYnRwMWI4UG9GcDhQWjhtWnZWcTV0dEFZcG5TRExn?=
- =?utf-8?B?WDNIVDNDU2dkWTZUL3VkVFFtZFg3cHR0OVV0NC94TW5ZRmJ5SjJ5OVJ5VDRW?=
- =?utf-8?B?dUZHVkI4dnU5YlQ3czdmM2tpU2xXaEIxdlVuNXM2djlmcXk5ZnhWL2xGTHln?=
- =?utf-8?B?L1hVaFZVWm5rTURjWVA2aS8rUlFSY2F0bEZNcnhuRzZod3l2ODV1a3pHdFE3?=
- =?utf-8?B?Y1hOWStPYXErVW1tWUd5QTQ4K1dCNmJwZlU0UGlqczhNd0I4b3l1WUdtc1g3?=
- =?utf-8?B?eWo5WU9zQ0ZrN095a2laY2lvQzU3VldEcDFqeWxkOE9xclllc2hnd21wMG0y?=
- =?utf-8?B?KzFkamFXLzliQUdzVmJKNjFsREYwdzRnck5ibXhqOFhMMXNWZVpQejBCazdX?=
- =?utf-8?B?b2U0M1M5WDJiUW5MTlpXRC9PR1dUS3pSQVdIWkJYYmlPY0wxNWgzWVpUdkVm?=
- =?utf-8?B?SW12SDNnUVV4OUNUSVhKNEtNTFgwVnI5ckF4aW51WmduYWJDam90eFJWV2dy?=
- =?utf-8?B?VllrUHBQL1dXRHRTZit2RUFiSnBIYWUxcGxOdUQ1TVNDZytuK2p6MUNUYzRw?=
- =?utf-8?B?WkowbnFFeGJ1STdNMmtSRE55UkNST2FwU2orN3lKTEhzVmRyc1NiVFkrdWhK?=
- =?utf-8?B?bTNONGxSV0xaR0lVSGJzSkwrTVZFVVo0aGRGNHR4NTN3NG1jT0ErVmwwaW9N?=
- =?utf-8?B?UVRLSjB4bG12ZC9GT25YR3h4cUJyaCtTT0YwbEU1cnJQbnlaWGxURFdNOXY1?=
- =?utf-8?B?SWVieWc1V2dDRDAvcWdxN0VoMmJUNlM5Y3BtSWViWVZMUms5eFVsMlA3RnE3?=
- =?utf-8?B?MEprRzcrOGM0QkYvcHY1V2h4d1hGVThGTmdVUVVVK1NrazlrK3d5dUU2V1lV?=
- =?utf-8?B?ZmN5NzlkSzkwYUNBT2p4dmZaMDcyWkdzZW5lWmtWN2V5Z2cvTXJQYzIzWmhS?=
- =?utf-8?B?MnA3SzMvL0l1ODl0RDZBTjJvMElxUU8xZE5HMGFzZ2RLQkhLNjZEbWRZUnhD?=
- =?utf-8?B?bEUrYnB2K0dOVEhzYWxDV0RuMnFHaStUekNWMWdoSHVnbDRxWHp1N1VSUTVp?=
- =?utf-8?B?dFY4WDZaeFJUdm5OZU1nekdnUUlwdjlhL1lVMEpCanlTQ2xZbmtYbnQ1Nmpk?=
- =?utf-8?B?NEFQamZBRnBjMHRwTDgvNTdLOFZnd05zRzhWMEdRTWJxVXkrNktLNXhRd1Er?=
- =?utf-8?B?bnNxLzhwd01RZWxJNklHVkc2N1ZCb2VsdjU0Si9WVjRxeFFpdHQrQk95VE8x?=
- =?utf-8?B?RmRxaXpiUXpCTjJDUmh3dTdNVml5M3J6dm1Ma0lXTUNqUS9JRS92YXdiK0pl?=
- =?utf-8?B?c0dUbzlKZ0NnclkzdjVoa0VCNkhHZkFjNjhwcW5tVzNmKzUyMzJ3TVdvYkVp?=
- =?utf-8?B?Z0Z5cnRpWngzeFhBaUhHZm1ZZ1pWanZRa2p2WC9NSjJlSEVBU25Tc1VHaHhk?=
- =?utf-8?B?ckZreTNjS2YwNlJIV3hFdmI0eEN6OU1oSms3RTV6OVRsVG5zUGZ3MVJ6aWJP?=
- =?utf-8?B?djNBT05IUmQ3MWg3dGxrMy9JMUk5OVl2NXoxYVJNQWpXakl0Njhoc3NIM1NP?=
- =?utf-8?B?UHgzRDFVRW5XNXlWWmpVenlyL1VpMlFwTmtFbEFpY1VMc2JVSVZjUGVZdmdF?=
- =?utf-8?B?dzNJb3BTZ1VMM2lNZEZGelkwTko5bEJkOHIzL1ArWEJVMlVsM2FaQms5aFZy?=
- =?utf-8?B?OE1oam94Wi9PWnh2N3FyMGhNek5VeWttWjRRaEhWczBIamtMaGJvaHUvOTJt?=
- =?utf-8?B?dGo4enlzSHNMVWZqTEVsNVFjK0lqdlQzbnhYWTF4bHNNMWRHK0tTQi9YbTJ4?=
- =?utf-8?B?dy83OC96N1ltZHRnU2tkN0FQMGF0K1pyc3huZXhNamxVaFErNWRFUzZFUzZM?=
- =?utf-8?B?dUFIOUZQamxnbHNFWEJQYlQ2c000c1lTdHhHZHlZa2ZidzdxaCs1YlMxSGFr?=
- =?utf-8?B?Y3MxY2lNSFhNUUZqK0t2OEJwR2dLRVkwdHNtVkR1b1JnUDdDK2hHb0gyaWdI?=
- =?utf-8?B?UEdwTEp1R3lzM2RmbWpDUWhFVXhtZmR6Yno4TWE5OGFFc0FORlE3MFNkWEpJ?=
- =?utf-8?B?QjhYSkpHM3FIdTlKVmc4OThBQzFhRlg5YjFOYnNkdkdkV3kyVEVpMnBsNERH?=
- =?utf-8?B?SUVZL1ArY0VITFpLYU5HZWdPSHl3enNTYzI2dkVRSHZWV3Z5bWVMZz09?=
+	=?utf-8?B?dzlSMnB4MGl2SDRIY2FaVmRpaDNkNHdKekU2MzdDNXRUaEdhZGs4a0JXaU5T?=
+ =?utf-8?B?VDNqbkIxdHVYank0SS9EMEFFdXdrTDJEbjRadm9lR25zVE0rbVMxTE9KMlhm?=
+ =?utf-8?B?Qml3b0pKc3FubVZZLzIveWE1QVIreGxZaWh2aVVzbitlWFdOdWVBVW5DdUxi?=
+ =?utf-8?B?MU9VWHRUKytQUlNFTDZOVDJ2U0U4YkxiUmpYaWMxRlZ6TGxraFB4SVZUamJJ?=
+ =?utf-8?B?eXFHdkswL3k4USt5TzF5QjhOMmkzaDJzcFlKOHZ5azRGR3JPK2hTeWRHeXJQ?=
+ =?utf-8?B?Rkw5QVpscTBnK1crRXJLQmtTQ1JIYVB3KzFucUMrdVJlWHJmam14OHErVTVU?=
+ =?utf-8?B?MEhkY2hLRDFlRWYzOEx3VzlkM2kvckNuQzJMcDhJTm52SEFoUWtpOUdwMWMv?=
+ =?utf-8?B?aFVUN2ZLOVQzSVRQdDFDYngyWWpkL1pwK1hDcFc2eENIdDJlMVFUejVENnph?=
+ =?utf-8?B?b21MU3BzVFF2RTV6V2NBVTdmd21aMFJ0RjQyREp0OFFaaFFTbzFWdmMxQSs4?=
+ =?utf-8?B?WkZ1VXo0ZEZoYzdETm1BY1VRM0NiY2JaeVR3amZtZFJyZWFjUWx1aXY0MENI?=
+ =?utf-8?B?RFdtNXlsQVBreXQ2a0lsazJaMnphL0hBM0tzR2ViMm9naWdHb005VUFZbXI0?=
+ =?utf-8?B?M0NzamFZZ3BnamxvbzN6L3h2ODhzUWw4c0xHLzh4ajU4SjMyYW1Sa0lxRlpa?=
+ =?utf-8?B?bEZQL00yQlFwQ01uUnFoUGE5amhpT051RFFIemZYa01HYjNnc081QmhXR09H?=
+ =?utf-8?B?QnVUZGxZQ1c5emNOem9hdmd3VEF0QWw0U1NVNTBUM3BuZ0FYSFhIZEdVeXd1?=
+ =?utf-8?B?VkR5TEJlVi9NcXhzM1l3MzlRR3RQMmczcmxFVVRhZ0ZyUmtkelR3RjRMVXcr?=
+ =?utf-8?B?Z2o4eG50S1lhcUlyckxuc1ZRT2FUK3p4R2FWazN5SzAzcjlweVFlSTkzVGht?=
+ =?utf-8?B?djFuVFBUTzd4bkZrTTVvQmd1dWFkWFViT1BlUS9DWEhpTTZ4Q2hZdGtST0Jk?=
+ =?utf-8?B?RmFacitZMGRWMlU2YW1DcDRrclEwSVUxVTlLRlBNais3c0E1TGpTQkd1L1dF?=
+ =?utf-8?B?SExnMWl2bis0ZS9ZSVp4TXpzOHVRN0x1ODdMSkZ3YitlYWRVTHpiZmY3cGxE?=
+ =?utf-8?B?Q0VZWi9DaXFMN1hnTU44TTZTUjRDZW1MdzVkTFR5V1JWT1lDU3hETEQ4VGs0?=
+ =?utf-8?B?Zm5RcEp6TmFlWC9ZTms0bStpNmxkMEh6SDJ0WWdKaWR3WGZrbDBPOEhQanhh?=
+ =?utf-8?B?V1pwK2hxV2o4aGdpeHJrb2Zpb1Jmd0pwY1dsQ1NTU2tudnhVMktjRk8weTdW?=
+ =?utf-8?B?TnJtYnROa2xXQ3dNcmFpbzlqQlcrUG5pMy9zRW15emtvdERRVU9aZTVyQUFN?=
+ =?utf-8?B?ZGJtTlNQZzlmWUhmMCt4QnNEVzdvQVFOeTdxK21PVzVJV0hXVm1BcUQ1Qm9D?=
+ =?utf-8?B?TFZrTzRLZHpGSmFCWC9wcHhwelFXMmpNNmNienU1OHdTbW9wdit5TEQwVWVO?=
+ =?utf-8?B?bDhnazF4QWNjTmZ4NDZZU056OTlRUCtWUXhpenhvdnp5T1FrdURUSWJoTEdU?=
+ =?utf-8?B?RDF5QnFqSi8wYmNDbU9WbDZRcUVRM2VzMlhjQUlHMnRqTDM3SDNOWktMaTRV?=
+ =?utf-8?B?S1VvejRXOVZEWW5RbTFkT3I1NndCVUxidlEzQmp6M0hQMm5KYU9yeU54SmRx?=
+ =?utf-8?B?VTVrbXVFeFZOUlI4T3ZTQS9KVmVXNDN3Ymt2M1J5RktyN0VndkNOU056NjBm?=
+ =?utf-8?B?RHZhODVzaE5Na1RGaG9HODhGOGt5Yy8rUlcxMVRuTUl4cy9FRCsxcDJNWC95?=
+ =?utf-8?B?dnJiNnM1WFl6Y3hCQ1JWaGg0aGZNcDlxcEhvQktmUlVna1F0dEs1YTlkMEVn?=
+ =?utf-8?B?NzdNTDhJNS9xWXVRb1g0cTRQT0lGb0RrUUNRVEM2QWlJZGpIOFlMUGg5Q2JI?=
+ =?utf-8?B?WjJjQko0NXpRWnlmTW1kNmtNc1RrUFF1ZWI1WVY2cVZnVzRjT0l2aE1SY0t2?=
+ =?utf-8?B?WDBBajQ4L0ZtYk1JeDN6YmhPMnQ4S1hldGJtSDdLUk1VRnlXMnRmSFhubEpW?=
+ =?utf-8?B?djBZSkNGdXRhSzE2Vk9YbHdiZXF0NHpXQjZwNVkrV1gwdmEzaHp4aFExclBw?=
+ =?utf-8?B?U09keXo5Tk00Z2tZRVNNZVRCNzlCanRxTHFhQ25PWjBuZTJRZzJYb1Q0MG85?=
+ =?utf-8?B?cWllZ0JqZndnUE5XQWF2UjB0SkUzK3JYc2tUMlFrMjZ3MnFWZFZnNGNNcWVJ?=
+ =?utf-8?B?c2Y3SUdtU3lsaWVPeVplM09UVFZzRFpSeTZSaFhZaEd5UXFZeFg1S3IxTU1T?=
+ =?utf-8?B?b0p1MUN6M0ZLbmp1TmgvVDNhcG5tWHJueHlQdlAwamNyWEpqL2dRQT09?=
 X-OriginatorOrg: garyguo.net
-X-MS-Exchange-CrossTenant-Network-Message-Id: f3b5ef96-960c-439d-df8f-08df08492495
+X-MS-Exchange-CrossTenant-Network-Message-Id: 036a5c3e-54f4-4da7-363a-08df084927c2
 X-MS-Exchange-CrossTenant-AuthSource: LOAP265MB8560.GBRP265.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 01 Sep 2026 16:50:34.9904
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 01 Sep 2026 16:50:40.3329
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: bbc898ad-b10f-4e10-8552-d9377b823d45
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: LbR3wIuREzRA1bxNhtdNCuSc+pw981etpsR8CeUmlaOSVyzqBRLbApVngmem/uPWISMYle0oU3lq4n0zEJZ6yA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: LO0P265MB7316
+X-MS-Exchange-CrossTenant-UserPrincipalName: rJGX04a9YxfUpmwQwwih7lDO/UHsYrC21rbgfrTnjSXpMl8l64uZlfYCCn8LFvNNYlzUXAitoyGzvPpfJs9c9Q==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CW1P265MB9199
 
-Some API like atomics and I/O operate on primitives only; therefore other
-types would need to converted to these primitive first. Add two traits
-`AsRepr` and `AsReprMut` to indicate that the type can be turned into a
-primitive for these operations.
+The `register!` macro is going to require explicit base type, specify it
+for both `register!` usages in PCI sample driver.
 
-`T: AsRepr` means that `&T` can be viewed as `&T::Repr` and thus it needs
-to support transmutability in one direction. `T: AsReprMut` means that
-`&mut T` can be viewed as `&mut T::Repr` and thus it needs to support
-bi-directional transmutability.
-
-To avoid duplicating implementations, all repr types are normalized to
-unsigned integers.
-
+Reviewed-by: Alexandre Courbot <acourbot@nvidia.com>
 Signed-off-by: Gary Guo <gary@garyguo.net>
 ---
-Changes since v3:
-- Added `as_repr` and `as_repr_mut` so the name makes sense (Alex).
-  I did not add `Copy` bound because it is not necessary (adding it won't
-  simplify the implementation without also requring `Self: Copy`, which I
-  don't want to add).
+ samples/rust/rust_driver_pci.rs | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-- Dropped round-trip transmutability as a concept, as it can be proved
-  correct because `from_repr_unchecked(into_repr(v))` is basically just
-  `move v`.
-
-  Even for the `AtomicType`'s use case where copies are made, it can still
-  be proven by observing that `from_repr_unchecked(copy into_repr(v))` is
-  not distinguishable from `from_repr_unchecked(into_repr(copy v))`.
----
- rust/kernel/mem.rs | 132 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 132 insertions(+)
-
-diff --git a/rust/kernel/mem.rs b/rust/kernel/mem.rs
-index 958e43bbcc3a..0bfd6929ae45 100644
---- a/rust/kernel/mem.rs
-+++ b/rust/kernel/mem.rs
-@@ -97,3 +97,135 @@ pub const fn safe_transmute<Src: IntoBytes, Dst: FromBytes>(val: Src) -> Dst {
-     // SAFETY: transmute is safe with `IntoBytes` and `FromBytes` bounds.
-     unsafe { transmute(val) }
- }
+diff --git a/samples/rust/rust_driver_pci.rs b/samples/rust/rust_driver_pci.rs
+index 2282191e6292..13b035a95756 100644
+--- a/samples/rust/rust_driver_pci.rs
++++ b/samples/rust/rust_driver_pci.rs
+@@ -23,6 +23,8 @@ mod regs {
+     use super::*;
+ 
+     register! {
++        base: kernel::io::Region<END>;
 +
-+/// Type that is layout-compatible with a primitive representation.
-+///
-+/// # Safety
-+///
-+/// - `Self` must have the same size and alignment as [`Self::Repr`].
-+/// - `Self` can be [transmutable] to [`Self::Repr`].
-+/// - Neither `Self` nor [`Self::Repr`] contains interior mutability.
-+///
-+/// The above basically says that `&Self` can be transmuted to `&Self::Repr`.
-+///
-+/// [transmutable]: core::mem::transmute
-+pub unsafe trait AsRepr: Sized {
-+    /// Primitive representation of this type.
-+    type Repr;
+         pub(super) TEST(u8) @ 0x0 {
+             7:0 index => TestIndex;
+         }
+@@ -102,6 +104,8 @@ fn config_space(pdev: &pci::Device<Bound>) {
+ 
+         // Some PCI configuration space registers.
+         register! {
++            base: pci::Normal;
 +
-+    /// Convert from `&Self` to [`&Self::Repr`](AsRepr::Repr).
-+    #[inline(always)]
-+    fn as_repr(this: &Self) -> &Self::Repr {
-+        // SAFETY: Per safety requirement of the trait.
-+        unsafe { core::mem::transmute(this) }
-+    }
-+
-+    /// Convert from `Self` to [`Self::Repr`].
-+    #[inline(always)]
-+    fn into_repr(this: Self) -> Self::Repr {
-+        // SAFETY: Per safety requirement of the trait.
-+        unsafe { transmute(this) }
-+    }
-+
-+    /// Convert from [`Self::Repr`] to `Self`.
-+    ///
-+    /// # Safety
-+    ///
-+    /// `repr` must be a valid bit pattern of `Self` and satisfy type-specific invariants of it.
-+    ///
-+    /// Alternatively, if `repr` is previously obtained using [`Self::into_repr`], and each
-+    /// `from_repr_unchecked` should corresponds to a unique `into_repr` call, then it is safe to
-+    /// call as well (this means that we're undoing a `into_repr` call getting the exact bytes
-+    /// back).
-+    ///
-+    /// This method makes no guarantee if a `into_repr` corresponds to multiple
-+    /// `from_repr_unchecked` (i.e. copies are made), to allow for cases where `Repr` is a pointer
-+    /// and the user of the API wants ownership transfer. Users that want the ability to call
-+    /// `from_repr_unchecked` after copying can require `Copy` bound explicitly.
-+    #[inline(always)]
-+    unsafe fn from_repr_unchecked(repr: Self::Repr) -> Self {
-+        // SAFETY: Per safety requirement, `repr` is valid repr of `Self`, or it is previously from
-+        // `into_repr`, in which case we're undoing the transmute so it is also safe.
-+        unsafe { transmute(repr) }
-+    }
-+}
-+
-+/// Type that is bi-directionally transmutable with a primitive representation.
-+///
-+/// # Safety
-+///
-+/// - [`Self`] must be [transmutable] from [`Self::Repr`].
-+///
-+/// [transmutable]: core::mem::transmute
-+/// [`Self::Repr`]: AsRepr::Repr
-+pub unsafe trait AsReprMut: AsRepr {
-+    /// Convert from `&mut Self` to [`&mut Self::Repr`](AsRepr::Repr).
-+    #[inline(always)]
-+    fn as_repr_mut(this: &mut Self) -> &mut Self::Repr {
-+        // SAFETY: Per safety requirement of the trait.
-+        unsafe { core::mem::transmute(this) }
-+    }
-+
-+    /// Convert from [`Self::Repr`](AsRepr::Repr) to `Self`.
-+    #[inline(always)]
-+    fn from_repr(repr: Self::Repr) -> Self {
-+        // SAFETY: Per safety requirement of the trait.
-+        unsafe { transmute(repr) }
-+    }
-+}
-+
-+// SAFETY: `bool` has the same size and alignment as `u8`, and Rust guarantees that `bool` has
-+// only two valid bit patterns: 0 (false) and 1 (true). Thus `bool` can be transmuted to `u8`.
-+// Neither types contain interior mutability.
-+unsafe impl AsRepr for bool {
-+    type Repr = u8;
-+}
-+
-+// SAFETY: `*mut T` has the same size and alignment with `*const c_void`, and thus `*mut T` is
-+// transmutable to `*const c_void`. Neither types contain interior mutability.
-+unsafe impl<T> AsRepr for *mut T {
-+    type Repr = *const c_void;
-+}
-+
-+// SAFETY: `*mut T` is transmutable from `*const c_void`.
-+unsafe impl<T> AsReprMut for *mut T {}
-+
-+// SAFETY: `*const T` has the same size and alignment with `*const c_void`, and is transmutable to
-+// `*const c_void`. Neither types contain interior mutability.
-+unsafe impl<T> AsRepr for *const T {
-+    type Repr = *const c_void;
-+}
-+
-+// SAFETY: `*const T` is transmutable from `*const c_void`.
-+unsafe impl<T> AsReprMut for *const T {}
-+
-+macro_rules! int_impl {
-+    ($($unsigned:ident $signed:ident ,)*) => {$(
-+        // SAFETY: $unsigned has the same size and alignment with itself, and is transmutable to
-+        // itself. It does not contain interior mutability.
-+        unsafe impl AsRepr for $unsigned {
-+            type Repr = $unsigned;
-+        }
-+
-+        // SAFETY: $unsigned is transmutable from itself.
-+        unsafe impl AsReprMut for $unsigned {}
-+
-+        // SAFETY: $signed has the same size and alignment with $unsigned, and is transmutable to it
-+        // Neither types contain interior mutability.
-+        unsafe impl AsRepr for $signed {
-+            type Repr = $unsigned;
-+        }
-+
-+        // SAFETY: $signed is transmutable from $unsigned.
-+        unsafe impl AsReprMut for $signed {}
-+    )*};
-+}
-+
-+int_impl! {
-+    u8 i8,
-+    u16 i16,
-+    u32 i32,
-+    u64 i64,
-+    // `usize` is not normalized to particular integer for portability.
-+    usize isize,
-+}
+             VENDOR_ID(u16) @ 0x0 {
+                 15:0 vendor_id;
+             }
 
 -- 
 2.54.0
