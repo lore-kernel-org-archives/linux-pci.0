@@ -1,99 +1,72 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.14])
+Received: from MW6PR02CU001.outbound.protection.outlook.com (mail-westus2azon11012008.outbound.protection.outlook.com [52.101.48.8])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB09246D2AF;
-	Tue,  1 Sep 2026 13:14:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=198.175.65.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C8F9C2D7398;
+	Tue,  1 Sep 2026 13:32:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.48.8
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788268474; cv=fail; b=CHOIyLnVYstUmcLtGgTRNDN0RzY1HLGazGuqXG+jMOFJxuHol0TZIRJKRNH7p1Y+TKMLfPTAnsyj1ymVFrezMAlOibxYfSf2Gia+0A9Z2EtqArgAkVuip6A/MF8+z9y5lz7F5H3GB1KscYAPzi+pNxHT4mpvPKW4+N4VNtS5ahg=
+	t=1788269566; cv=fail; b=IRYYG2C1Qe2eNmu+w17iSoJxfaozSc0t9Uh3NEVMP5yEzLvCw6Uueb8Ncz/5Yc3pKsDBApv6yMNSrRa4HlNmYPqwVpedaLQi8uEKPpi0a8X+AYhlGxLjiuy422buNtBl3LWtx6Tiv2DCAZJW4I0HOdT9Dqe2Z0sAm4o1EfYq+F8=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788268474; c=relaxed/simple;
-	bh=NfsiiXk+0H97DXOEsNmyxAxSudDhmRMECjEa5xgG4AE=;
-	h=Message-ID:Date:Subject:To:CC:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=b1sIO4zkDLM3n94h9OS94uOoqjw0cflX9FZodq/5Mz9+bjonR+IuQLRoIymAkt5CMcDBaRP1MSqSxLi1ldtzfPuxHAm1stee7En0lKeyxEMHcIDslcW33yHGoYhOtAisEsgBoTNTPioLjX+Izv2YEZ4W0lOCIRhScuwHWtQ7e58=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=B69UBSMw; arc=fail smtp.client-ip=198.175.65.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1788269566; c=relaxed/simple;
+	bh=/gYGUr/A3rGaU1pasNl0zqqo9GVt0IZ+59SwhRwMfuU=;
+	h=Content-Type:Date:Message-Id:Cc:Subject:From:To:References:
+	 In-Reply-To:MIME-Version; b=BZgrrPerz3y8DG38DA8UFPOyTdUV9b0UO4h/Elm2lfok01tATE1kprsRNlJep4OANZNgW5x3z1STpkbU7NAu87DU8LHL+pEIdCzsJ/tb+ZQHyYiR5dQKdiWgvRNzp8KLqsVp75r23Jj2lyyf9IEB5UUKrFz0xktOa9bGsAv1j1A=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=UYfzZB5v; arc=fail smtp.client-ip=52.101.48.8
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="B69UBSMw"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1788268472; x=1819804472;
-  h=message-id:date:subject:to:cc:references:from:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=NfsiiXk+0H97DXOEsNmyxAxSudDhmRMECjEa5xgG4AE=;
-  b=B69UBSMwyJ82YQVKpwh+GGFvUNAaWQTuwEoPAxMxQ3WmubutmyPj7MtG
-   NnGdg9dNfjzHaZ57B1A4y+nQrPdSdiaE50q4DouFi1CmMMZRMcrpRTq0h
-   HTfs2wx73klQVFwiKp95jStnwYGPqMDRITmhxCh83TMxqUCqEMVkkahvG
-   l0HBVOn/rQBQxpAYak/71Gi0uV0gzuylT87VcEp+k/Xb4ZIF5JlykvNkk
-   hg00kRuWiJRkweOAvfuJCLZe2gx9gFu4ZvJjDNPR5UQ5tWCi5Jt7vJZSc
-   jLlkNklY8Udx1yJIld3rZhanXWF8PU/g6LEzzBlLCtbxd2k+/4QrMgHAh
-   A==;
-X-CSE-ConnectionGUID: FDLQ0SS4TxmSerEkdMsYgg==
-X-CSE-MsgGUID: Yoy4471IRaKDfaeE4TuQ4A==
-X-IronPort-AV: E=McAfee;i="6800,10657,11892"; a="92564249"
-X-IronPort-AV: E=Sophos;i="6.25,256,1779174000"; 
-   d="scan'208";a="92564249"
-Received: from fmviesa003.fm.intel.com ([10.60.135.143])
-  by orvoesa106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Sep 2026 06:14:31 -0700
-X-CSE-ConnectionGUID: N8O7M3g6QZWSI1DvFjXXOQ==
-X-CSE-MsgGUID: 68p2b+1fTKOSuq0dw9O0SA==
-X-ExtLoop1: 1
-Received: from orsmsx902.amr.corp.intel.com ([10.22.229.24])
-  by fmviesa003.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Sep 2026 06:14:30 -0700
-Received: from ORSMSX902.amr.corp.intel.com (10.22.229.24) by
- ORSMSX902.amr.corp.intel.com (10.22.229.24) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.46; Tue, 1 Sep 2026 06:14:30 -0700
-Received: from ORSEDG902.ED.cps.intel.com (10.7.248.12) by
- ORSMSX902.amr.corp.intel.com (10.22.229.24) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.46 via Frontend Transport; Tue, 1 Sep 2026 06:14:30 -0700
-Received: from MW6PR02CU001.outbound.protection.outlook.com (52.101.48.39) by
- edgegateway.intel.com (134.134.137.112) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.46; Tue, 1 Sep 2026 06:14:29 -0700
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="UYfzZB5v"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=uy3L96KFNiHbyZbkEDeOjW8PwGx5lcmqHl4aVV9KZIqep0caUaHp9qo/rcfy0bfRH2xQ8Yf/tBvAGlZ82CvyuehfwE4VspAGLkMdLSff5UzJT1BHanxyaAfLYdoF/5WKOwDtFlC1QigfivIw9xUbKWMFqUJQJ24V3TBMiry6jTjmJxZMU5OqCpFP6JSbcaEcJs4lnSM6OOU+SmBcbC7rBy1ySrLxqbyocmWJlQhECDQKm5Flxa0X0sxHEyrmxdY5ZKdut7YP5wvEHFlHQJa2jtaC1EjQhe7wWj39OMboDIAxoER+feBxxta+xyTlADhwMJ8BKA8p8K/7BRNqhRnMzA==
+ b=ZcevcwGHgWFpOvx+WRMMaXawvyKNa0jmqTBzOKBvvtiPPtRQzHA56NW0pUh5xNQkDUhx9l7aFTnLVZLoexPQ/fs2Jqx3wDVrFA3jSNc6w8NoDr0bcUHRUNONkWF0DsxvlZ9z/Ur5GdtIls1vkWCdpLGbvMjCmdHzy8tm28fArn4M4IGfrNRFrqZ4W/ixUKL4PDO6yTqbOgH84n+PCEUkcx3AbIzOIfNTDDMVgN5en+ZdtwI/ll/wK8Xd6NYeCySmoYwAjgXBaYQXLtzOU5h/sRl/HsqgyKIf9yvQDv9D+O3n1zi40BVzm0qvriDcnTVMo5fQXuXHsLSCyZAIr1LMKA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=ydS4EudxzmhVB/0knOb4CD+ZPOji8gKIbW/eUKm1r6g=;
- b=CH2nl74QkSqXHU57Y++86gw4EeVgWQ4zmmxbuK59TZJD+SeNltfvliprrBZbndYITjNSPjjaHAHJ8TWdjRCMcuiSn3+UUiISLqlWE4KffD73qQy4uw+Ae7mM1x9Mv5jWrYRltXqf9BqK1C0I/qcB+oHvUzwuu+CSq8n+36WY4MpQRDetVnnSRI70wvhWn4j34E4c+9AjIBgkPMdlaWWze6Ek/yEqRmze66nkSBF/L6T7EQIznjjBVn1xucrLNKBMADGV0Y0+PVGWv6GxvBsVc2WJNxrA8nxoUN5i6sk+xWET/6rWUFHi2fGVop+U+Cg0+vtvO1JTRbHiRguymzdAng==
+ bh=CRoo0diEn20UTRVxePTdAAGqTdKFehrCx/C4SSvR52k=;
+ b=bMkkVVD5LkD7Zti7LLWV2rcRDy0uszStX+aLUYm88JaZe17/Wi+bejYSb2WgUlR3RiI2d1ni0an+Yqa7kzOh4o/OVPtryKIaibKnk2YRPXv3SU/r9JVDxnCB65IRzCspdoPonRJpYRE8wfgVzW/W3PYNn6bFiNrNOw1Nve/4ck8IeKFVHywZxCHX4Ht9PehfKgW+c866mrYrtRFG0x9HO7EAe3WhYrE4YryCxAT9bkxErZJdGQOw2c+iKUeRnMPR8SNFs1UO/92yTslc0QkmCaGVIoLj/zbEDJKII9GYCcpdnAkea+q7ry0d/Vm6j9Qy3LZ6uzCL0PPxP1993TfL4A==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
- dkim=pass header.d=intel.com; arc=none
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=CRoo0diEn20UTRVxePTdAAGqTdKFehrCx/C4SSvR52k=;
+ b=UYfzZB5vnV8/UDgmz8MXLa9IhepPgpBnkAUcxfsrhxy43Ok6WjmlLJrilQNBo7hcLHyrY6W7O8g5aTRpkleKROp9K/0UUFq00luZRfeh+89O/NhQOWlDGshapXzLUm3b9zLrVqLQKmBrXyS+fgrFPmBT2snox4ZFXWpDuBM1udfwySv9viVRsBF3WYlKLyeFgK8KtbIR+zVjCYD0s+7fp7XZGp2iMvJq7ieIqOMc865HmrA7M/rSqssnskABFAU41UR7f9EVOh96TTLcYo9IIxbZgcDeqzXT1PPwtPfYZ5vpWFYnOOhm4jhZNMGHO3XkckH76tcx+71d7STJYa1FDg==
 Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=intel.com;
-Received: from LV3PR11MB8695.namprd11.prod.outlook.com (2603:10b6:408:211::15)
- by DS0PR11MB7334.namprd11.prod.outlook.com (2603:10b6:8:11d::21) with
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from MW4PR12MB6873.namprd12.prod.outlook.com (2603:10b6:303:20c::17)
+ by SAWPR12MB999115.namprd12.prod.outlook.com (2603:10b6:806:4e3::16) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.360.13; Tue, 1 Sep
- 2026 13:14:25 +0000
-Received: from LV3PR11MB8695.namprd11.prod.outlook.com
- ([fe80::ccc3:3fd6:58f5:927]) by LV3PR11MB8695.namprd11.prod.outlook.com
- ([fe80::ccc3:3fd6:58f5:927%6]) with mapi id 15.21.0360.008; Tue, 1 Sep 2026
- 13:14:25 +0000
-Message-ID: <562f64cd-1c85-45bc-99da-89e8ec168b11@intel.com>
-Date: Tue, 1 Sep 2026 18:44:16 +0530
-User-Agent: Mozilla Thunderbird
-Subject: Re: [RFC PATCH 02/19] vfio/pci: Serialize generic device lifetime
- with recovery
-To: Shameer Kolothum <skolothumtho@nvidia.com>, <kvm@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-CC: <alex@shazbot.org>, <jgg@ziepe.ca>, <kevin.tian@intel.com>,
-	<kbusch@meta.com>, <michal.winiarski@intel.com>, <sonangp@nvidia.com>,
-	<nathanc@nvidia.com>, <mochs@nvidia.com>
-References: <20260901093217.8539-1-skolothumtho@nvidia.com>
- <20260901093217.8539-3-skolothumtho@nvidia.com>
-Content-Language: en-US
-From: "K V P, Satyanarayana" <satyanarayana.k.v.p@intel.com>
-In-Reply-To: <20260901093217.8539-3-skolothumtho@nvidia.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: MA5P287CA0062.INDP287.PROD.OUTLOOK.COM
- (2603:1096:a01:1d3::15) To LV3PR11MB8695.namprd11.prod.outlook.com
- (2603:10b6:408:211::15)
+ 2026 13:32:39 +0000
+Received: from MW4PR12MB6873.namprd12.prod.outlook.com
+ ([fe80::a338:bd2c:3a38:ece1]) by MW4PR12MB6873.namprd12.prod.outlook.com
+ ([fe80::a338:bd2c:3a38:ece1%5]) with mapi id 15.21.0382.007; Tue, 1 Sep 2026
+ 13:32:39 +0000
+Content-Type: text/plain; charset=UTF-8
+Date: Tue, 01 Sep 2026 22:32:36 +0900
+Message-Id: <DL40NH1AX8WN.2ZPY7GDL0FSEW@nvidia.com>
+Cc: "Sophon Zhang via B4 Relay" <devnull+aiqubits.hotmail.com@kernel.org>,
+ <aiqubits@hotmail.com>, "Bjorn Helgaas" <bhelgaas@google.com>,
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, "Miguel
+ Ojeda" <ojeda@kernel.org>, "Boqun Feng" <boqun@kernel.org>, "Gary Guo"
+ <gary@garyguo.net>, =?utf-8?q?Bj=C3=B6rn_Roy_Baron?=
+ <bjorn3_gh@protonmail.com>, "Benno Lossin" <lossin@kernel.org>, "Andreas
+ Hindborg" <a.hindborg@kernel.org>, "Alice Ryhl" <aliceryhl@google.com>,
+ "Trevor Gross" <tmgross@umich.edu>, "Daniel Almeida"
+ <daniel.almeida@collabora.com>, "Tamir Duberstein" <tamird@kernel.org>,
+ =?utf-8?q?Onur_=C3=96zkan?= <work@onurozkan.dev>,
+ <linux-pci@vger.kernel.org>, <rust-for-linux@vger.kernel.org>,
+ <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v4] rust: pci: reject IRQ vector indices that do not fit
+ in u32
+From: "Alexandre Courbot" <acourbot@nvidia.com>
+To: "Danilo Krummrich" <dakr@kernel.org>
+Content-Transfer-Encoding: quoted-printable
+References: <20260901-fix-pci-irq-vector-index-truncation-v4-1-f94aa6932fd9@hotmail.com> <DL3XDBBHXKKV.G9P6KRSSX1DN@nvidia.com> <DL3XLHXS647M.1LMHQUVX5RTI@kernel.org>
+In-Reply-To: <DL3XLHXS647M.1LMHQUVX5RTI@kernel.org>
+X-ClientProxiedBy: TYCP286CA0155.JPNP286.PROD.OUTLOOK.COM
+ (2603:1096:400:383::13) To MW4PR12MB6873.namprd12.prod.outlook.com
+ (2603:10b6:303:20c::17)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -101,211 +74,106 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: LV3PR11MB8695:EE_|DS0PR11MB7334:EE_
-X-MS-Office365-Filtering-Correlation-Id: 4d55af5d-e15e-4c03-60c5-08df082af1e3
+X-MS-TrafficTypeDiagnostic: MW4PR12MB6873:EE_|SAWPR12MB999115:EE_
+X-MS-Office365-Filtering-Correlation-Id: fe0951ef-4853-48a1-d73a-08df082d7de2
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|376014|23010399003|7416014|366016|1800799024|4143699003|11063799006|10067099003|5023799004|22082099003|18002099003|6133799003|56012099006;
-X-Microsoft-Antispam-Message-Info: Ep7+X0wQw5A0ukAUTQlKTLP2bYIfFf0SErtYVik5j2fQK4D2bKGHRLk/Jr6Nz3FVC6gprHQa0jQ3/sld0MSjSkDRR8V//HMOTzCdvGjrLfaW2LoskZqcdrQ38ujTJ/WU/Qoh1at0E/9b4FHOMMNSlBA8Veh7D/IaVj9Zu15AUn3c29DU6aGdVJx905wrK0FaB87Yd8t/iMMI18E15cxstQnTA0avB9qwzpmFhUM2alNwxMEv5AQXaI9dRsD/PeSjly+QEksSRBPewoElsJlpQqTslfrKYOOMmI81oaf3ni9lAwY6I8vJEUDWlcU3viFeQEA2aleB2z2RZDWAlLAt/wrnq/hnKrgq3yjeL7MZ+tcLTA7PCApd69pQBnuYoraYo1G3bjTZ5H9/PiwYVt5bqLtvRzn8BDiDVt+gDKxUX3kn5Jti7jd/Vfba8fm594db0IxVe1/nXkl8yVYWUSYQnJyI8t1A55xn7p/zu3Bmx4o+rrB4WG1bRxV0ixPsohIZ7eimNAs/5i5p5RAOgSq3afD2FsG8inj7dZuuhKQb587YobOoSqTsXdX4UwRkI8pfZ2vr1JP4af7hZDahcY6WZCWZx2vVy3zSY27aRurnQFyEXpuKRZVW1TVaZ1Z6jMiqztUqgraICu0xdTitlM+RFSBkRXdHDAvElllKaBkp4js=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LV3PR11MB8695.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(23010399003)(7416014)(366016)(1800799024)(4143699003)(11063799006)(10067099003)(5023799004)(22082099003)(18002099003)(6133799003)(56012099006);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?eDUyQTBsMGU5WkJaQmpaYjRpZmVKRnRwSEJRS1Z6NnFDaExoblpzOUl2aXpU?=
- =?utf-8?B?ejB5ZFBZSjZGSk5yc0lVVTY3Z1hZUjN1OVllamZpZnRNcXFzN1Q5a2h1cnZ5?=
- =?utf-8?B?MzdlVDBZRmV2a0Z4VUY3Qnh0SDhOd2VVUE51a0RWSGFCdldWWU1pb2tPdlZp?=
- =?utf-8?B?MFdFcStLMHZaRHFoaEIzY3Y3aG41L0xHOXpmbEYrNDUwd2cyeHFzb2x6alFw?=
- =?utf-8?B?ekVMbW5rOGlCSEtaQ3lDK0lBQVY1cU1oZHJ1U2xuMkMxUkpRaEFXYXZsZmNM?=
- =?utf-8?B?cWNHY0lhWTBjZ2VJWFBOaEd6OUpVbUM0dFpBcnBCdUJ0WjRGNmhBbmlKbWFk?=
- =?utf-8?B?d1oyWWpCVytNajhHK2U2dm1vTUFzZG1xS2xxSHFjenMwK3kwb3l1RytnL1NJ?=
- =?utf-8?B?WWxhMXRtZkpHNVpTYUxiNlFPemhlaDhsc0tTU2Z2cHl3ZUg5VUtacDdEZDFW?=
- =?utf-8?B?QTZZNHpGaEw1K242SytPWDV5Y3hYbjJzSktxUldxVWJhbFVzMzQ3anVIWi8x?=
- =?utf-8?B?VUZNUDlsZHJXMm5yenJSb2NqTWMzUWJVbCs0WVl0cUhrOXBFNmRldW14bGVE?=
- =?utf-8?B?bFdmZFk3c1FwSlNSL3AzR0VNNkVOaEdnSHVENUxmUElPZEpMaTdIVUlRWUVK?=
- =?utf-8?B?blNTWm1sWXVTektSU0M0QnhnK0hibVIwS3poZms2YkFOc0pHWm9qek5jcyt0?=
- =?utf-8?B?ZEM4QmRUUy9hUXBIN3dTVmFKcWJpeTZxZzFKYjh2dnY1WEJBalJDNDA4V0lV?=
- =?utf-8?B?TXdYRHVjU2dJVXhxUlRrajFvSC9zTml3TEt3MXBIdUZXUm9kYWxhdUQ2Y2RO?=
- =?utf-8?B?Tk92OHB5RDgzTlZZRFRCR0hsZ0ppNndWTDZDUFhEUE9iNFgwMUhHc1djQ3ZI?=
- =?utf-8?B?RjBwUm4ydUtPM3QzVVpGK21TcUxvUnFYTDBSc1FoTDZrdlJTQStvV0U5OStY?=
- =?utf-8?B?RTIvbmFBZHJJeW1HT0lDLzJtUnFQUkRuWnVZOENrZ0ZYbXNXbHV4bEVSaDQ1?=
- =?utf-8?B?d1NEdS9KalU4WXdSbzRPL3E5aXVmSCtETFdNeWFYTmNjTjJyR2NKcExXR0t6?=
- =?utf-8?B?bzVnKzBnbHZjR1lqbHdVazBvNDFzTU5NVFZ0NUR5VjhvdVY2TjJNWm5uTmdE?=
- =?utf-8?B?dTFSYUFHRnRLbDdjdTZidGdLb3o0MERQWnY2OE4zN0djM2hQMVRybnUrbm9E?=
- =?utf-8?B?TXJ1eFZQT3J0YlhxTEkyNzNIWjZNeW5VbE1QZ3lJT2tRMHRsOFJXMk43c2V3?=
- =?utf-8?B?bFFYTTFkdFhDOEExa21ic3AxYzBVTFUreWl1RVlMeEVPQ3JQZ1dycW9uemV2?=
- =?utf-8?B?Qy9KZ1M5QlpqMFJYR3NsMytsVm5vZFVsZVJ3Y3lRdk94bGhzNVNqamtoYlh6?=
- =?utf-8?B?eVppQlFBZndwZTFEdk9mTHo2OWdEWHVyMnl6K2ZJamRhN1VIQU5VVlZSSTc3?=
- =?utf-8?B?QzYvMWd6WG1mS3NWNUUxYUplQUV0aXY1OEhLMXRSRFA3WUVYVUN0dTZsSGZx?=
- =?utf-8?B?RFFLdmVML20waUNOYk83aDkxOTJJTXNKTmRtaW54VkVSZUlDMmpldUJOMHdt?=
- =?utf-8?B?S08xVTdZY2trbVoxSGhLUFR5RVczTkdjanhydjlmM2tkUUdCaXREbU9HTzFW?=
- =?utf-8?B?TWRUK0VKcEJpeFo4SlRQdzJiR2dGS3ovMWlyWUpaejhDZ3lacFNIWWV1SlVw?=
- =?utf-8?B?WEJqdm8yR2NDREc5UEI0MkFwMXVHL0Z5TE5Ia2wyN0pTMitFZzVzOExhNFM5?=
- =?utf-8?B?NGxIcFdSaEYvT2lwUVNRaHN6R0JicGllY0pyYVFyNkZWdW5HaWNaWS9Lbk9w?=
- =?utf-8?B?ejR3dFZ2emw5c081cklNZGJMczk4N1lNbmFpK2I5czJlV1VCOW45a3k3ZnlR?=
- =?utf-8?B?R0RqMmdIcEFnSUt4TmJxRlNoRCtIZXF6SWxxUFNiamViR0RPS2RocWRhaWlk?=
- =?utf-8?B?MjMrUEpXbDZRaG1rMmM1TjcxcEdWYXRVUjFWdjIwUUx3cmtnQjNIRStlUURR?=
- =?utf-8?B?Y01HdmZDYTZ2M2VlZzlWWTB6NkZxMWdRL05zSzNoMXVvYWdSeUtKVWpzdTVm?=
- =?utf-8?B?ZHN1dlVjdFc4Mnp2aDlOOTJodm91b3grUHZrdzVlWU0raVRSS0lPS3duNTl5?=
- =?utf-8?B?aUtOY1Q0V0FwRlVJQllJeHFYZVN0VG5tQjhjWDV5dGFvYXNrUnViVjNNUWdk?=
- =?utf-8?B?MVc1b3BxcUhIdVdIVDZ5Q2JPdlVWdEh0ajNtWWNMV0RBRWdOQkhRN3NOM3FE?=
- =?utf-8?B?cVlaK1d0a2E3REVpQm9YcDRpZUFpL2thOER4ek5XbnBrVkcwa0ExY28xUFhl?=
- =?utf-8?B?ZUs0elhvT1hXakErSWNDVXRCR3E3bytoQU1PTEFTSmhpelhRbnpJUDRSaXNx?=
- =?utf-8?Q?lHrIOWqgq0ZOU8w8=3D?=
-X-Exchange-RoutingPolicyChecked: UQL4yY1GXh1YmuTEHAc3yQxkn88xrPrFkzYgUa/ZA3ppLWx4V2oqFPI1k+HVBSNKhzGsi6WMDzCOWno0Z2UiPjYaxt1lfv/VgmJAnno4GpMfLgwTkwdei/tBdkZ8C/S6HySz561FUHXGWGJ86Sgx92A3jgkRkE6JSmoscAQ8XkzYbLyRFoki3QIo2XCLOnySLQWg2HciMCM1nKijP11Y+hDW2fJq22y8YDvwXHvFBQJ2IUkYAP04/XlRy8zLETDHng9XI4GgaFKtvVuymMu4RwSRYw/CTMq2MRw+TBOah8OuUDvvgWMnWAojjU7XMsxjs76sMyy9KM6rD6iTrslR8Q==
-X-MS-Exchange-CrossTenant-Network-Message-Id: 4d55af5d-e15e-4c03-60c5-08df082af1e3
-X-MS-Exchange-CrossTenant-AuthSource: LV3PR11MB8695.namprd11.prod.outlook.com
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|10070799003|376014|7416014|366016|23010399003|1800799024|10067099003|6133799003|22082099003|18002099003|11063799006|4143699003|56012099006;
+X-Microsoft-Antispam-Message-Info:
+	LVwQ9IyYyMuLTSNnbEn9LJGKJrN36SEqv/stX3banR+mq+o4eM+jD1D26Jg78WBEntOuZmsRPoaeQ+50QcHbb68QSWfIu7tZ1IzcYt/kCiXSZyVAun/C8aNFlbbqW+iNZ7/h3RuoU5Gw3sN4pCGfQsliT0oUPJRDdpLDsJ0k91XYFJdUHIAK5KExiN3wWJ5w90o9eWcBfaIdEPuH/odOkD13zlnDitRJD7aTMTxmEtrqTR87O/KD9jwNTale/EZRvhwzqrUlJ144TT1VH/LSssRPCxAijvxpn6zf/6Sf2zzRx668Dvg5ZtVqJmpP5hmcGqkRGieDTaY70LKiBVj5diHNK3kCvBJyZS7w9g4UuUkrhL8bGmL+CpAtKwW1KuzXcGkgsi7iUaEzOWzc+WWuU5Oy2qSp9EiuxmFhKFdmNVb8FnRQy3oCiNFgNUTx8GNbNAeVYCpelH35OnAF8xXeZONE7CpKuaOfhaFLw7DJ2pZCPZ67SKYaJHfyiAVxg2BZw0JQDSMDhbqZc/9O5jrj1f7bDnJgpD7g11swAbic6MLU7H77OzezUb2IRjLhNlpnOHCRi6Wko98i2V2zahlE18ra+d/hOAMJrZr+jDIRvU8ZSnGlFwt/6TsPNjhjh1SffJGaIN3AqnSToTzhdlJzEn0or1HfouGqn+W2oF2aBp0=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MW4PR12MB6873.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(10070799003)(376014)(7416014)(366016)(23010399003)(1800799024)(10067099003)(6133799003)(22082099003)(18002099003)(11063799006)(4143699003)(56012099006);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?NWRnbC9nRHZqUEtPWGZNVHlqMlVDTjRtb0VjMFNCNVN3bmxZa25BbUFSTDNR?=
+ =?utf-8?B?S2lnRXdvNi8zNXZYNHVGTG9qOGVEM2tYMjV1KzZYOE1EeUIzSFNwWFZEK3N2?=
+ =?utf-8?B?blErQllmVGNBTkRMandNZDZZU0xrZ3BQY2EwUVJFc3BSUENCT1JqbGNhTzZZ?=
+ =?utf-8?B?aTk4L1dzZmI0UmVtS05IdllvNzMxU0t1bUNpUGg2NGtOcVFCa3NMdkRSUHkx?=
+ =?utf-8?B?bHNKa1JXRkdFMVJuY3pVTGV3SHl1ck0rWmxaTk1rTDRrNFg4Qzc1MTVlRUlZ?=
+ =?utf-8?B?dVNKdHRsTHJuc3YzY251anlObzVncjlweWlTM3RzcEFKWFMxalBYYVpiZnFT?=
+ =?utf-8?B?SjZ2RnlQUlNGQ3FGYUlzcFljWnJNeFpBbEszdyt1d1BIOE5WN3pCazdsZG1N?=
+ =?utf-8?B?OUxpV3o1VUMxZDlLTHo4OVRzTTAycjI1SnhNdjE4RExVaVFrNlJCem1pNlRq?=
+ =?utf-8?B?eHFmQzc2enJYdW5hcnMvWFpPUWx2Yk1DZS9HQnRQbTRna2J2ZVlEbUF5Ti9N?=
+ =?utf-8?B?MHl2b0c1Z2RhUmdtWG9STFoyQmJ6VEgyYTlSemFhVVZvY21USmtHcktaQWFy?=
+ =?utf-8?B?UmNJeVlFdjNWbTYwOVlTWG5HMWNPOXA3SWthZCtlNktxb3FTWkhBMjNxbzgy?=
+ =?utf-8?B?Y21McFdyRjVZaEZ4NHdGejREbXVFVDF4WmdTK2pyRW1GT3dRVXBoNHNjSVBM?=
+ =?utf-8?B?bzBySlNUNEpkR0wySnBJN29TczBRQlkweTczd2FFQTl3cHFqWmN1dFJLa1g4?=
+ =?utf-8?B?aDBtZzlQaWs4OVlkVHVhTlUxSGZGMTFLK2RIcjBZWHFqZ2VqYjhYd0ZXWnBn?=
+ =?utf-8?B?U2tCcnl4WUNGMys1OHFYaUpQbC9jM2Qyb2JYYVhhTTNaelNpV1pRTkZyajhr?=
+ =?utf-8?B?TVNoeDdpWE1NYkZickFQTXpabkVwT05RVDc0aWF1b3MycGtQVDU2dnB4M0xL?=
+ =?utf-8?B?ei9IaWd0VnhYS05ndHJ5WTZuK3lFak1vMS91YmNtV0RRTXlzWFM2S2hpOHdy?=
+ =?utf-8?B?NkRRbmdOMVgrc2xBUGJ2VW1Fa3ZuZFpYTGZvWXpqaGNNOVZWY1l0TjF6RVVo?=
+ =?utf-8?B?NmZ2RndzTU8xRTdOK3hWNDV1K3hzOU93bDZwb2ZrT0ZtcU0raUpRM0h3M1ps?=
+ =?utf-8?B?YVJ6enpYbHF2OVgxcEJyWGlBdjJOc092QUxmTzRYZHJRcU5iSVdTZVRCbTN2?=
+ =?utf-8?B?SXZ6dlNlUW1POTdIcnBNZVFNUy9oRE9TMk9NdHVycGJBbnIvRFdFZm9vYWhs?=
+ =?utf-8?B?SU8xS3dGTWFXMTVLN0hiSEVISjVkZVJVZUVDSmZuQlNFc2JEcWVHeC84d3lt?=
+ =?utf-8?B?eDlZRXZlR3VlNjl4TC8wZDdIM29MRmFSV01aa2ZzNndiSHFqRnRUWjJZekpY?=
+ =?utf-8?B?UW15NVpVazJoUndtVkhIY3dzZ0RFdk9kbVZ0bnFtY1hqZSthVkJmYTBuQjg2?=
+ =?utf-8?B?d2x1dURRVWxJQ24zZGxZQkJiV01PWHdERDNBeEh1NC9BRkpRU3FpeHRlL1E4?=
+ =?utf-8?B?WnIzdWwvL3REeFE3TUptM09wRm8xT3BpamdpcjlhaGRRN3k1QTlKcU5peDg2?=
+ =?utf-8?B?SG5wU3pmTlBGc1l6TDRZMlAxcG03SGlWMi9rajkrRGQ4REJVK2tOUTBVNVFS?=
+ =?utf-8?B?VTRNbThjQlhhY1lpVnprK1AzYk1RZldMNHMxcjFuUWZvendBckZMeEhlZWpR?=
+ =?utf-8?B?elV2Wng4amMza3gyNWxMbEp4WWJXTU9ZVVFXaGM5T2FMSzJRdWVub2pMMTRt?=
+ =?utf-8?B?Y0FwV2szbXQxdERBN2JDZHVoTHhLZG1jRjVGdm10Tk12K0lEVkF2KzJCeUh0?=
+ =?utf-8?B?b1ExVkFMeHZLWGdDSDhva3lrYXBaSVZ1VGhmNjNhYTdUb3pTZUlJTGlGLzVS?=
+ =?utf-8?B?Y25KWFB2TmR3cy9DWDNoL0IxQXA5dGtpbkdybzdmK0pYcisrS1JNTWRKMW82?=
+ =?utf-8?B?TVpYOFg3N0lxWEIwUUpQL04yTXhhWXJYalJoZ3RjUDdTajR2YVlzbmkwd3NK?=
+ =?utf-8?B?d2tMU3VLVkxhSjhwUTIxZ2dBWnJsOHhkTlFFMVg4WUh1MkhIbmk5NDFUWWZY?=
+ =?utf-8?B?d2lUL3FjNmV4bFN0S1hWaXE1NlVMN0hWcXpoYms1V1l5Z2pXVDFDRDU2TUEx?=
+ =?utf-8?B?V0VHaWlaZk5yOHg5ZlZRQlB5eW9NWnFlbkl1WEw3RmNHWW1BUjRJSmZmWWY3?=
+ =?utf-8?B?c05vZUJvWTQ0SGVpMVhqWkU1Qk5xdkJsQUZVU242UEJER0ZaRlZ0eEswdGRZ?=
+ =?utf-8?B?OTdsNHNQdndwWHRrcy9FRXg3Ly9nYTZqb1dzV0NWNkhmV0x4WkppVldyUVUz?=
+ =?utf-8?B?c0lkSUJLWHNKckhEdCtkbm5ieEdGYVlQK2xoNVIrTnNtL3R2VHBCQkJVcnZo?=
+ =?utf-8?Q?iNWv4MzfElFyoVPOUNFWEoT4FjjVvPz7QL0snCKg9gnhz?=
+X-MS-Exchange-AntiSpam-MessageData-1: L4JL6TlDh+PdRg==
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: fe0951ef-4853-48a1-d73a-08df082d7de2
+X-MS-Exchange-CrossTenant-AuthSource: MW4PR12MB6873.namprd12.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 01 Sep 2026 13:14:25.3894
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 01 Sep 2026 13:32:38.9544
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: DbQ+xJJDZkYbTQgOQFEbccL6yWCHZbwd1jEA+dQnZ1CHPG7lzH35+VI7GUM9oAFcih6yJroQIH9VmfTuHrUP9vhcpoEuAm5EiDp8SVD7b3w=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS0PR11MB7334
-X-OriginatorOrg: intel.com
+X-MS-Exchange-CrossTenant-UserPrincipalName: toTxE1mZHUgNK2YLKZ9EwqwMr88ohgF5uS+MB3O9sLPltq52XKR+gDQtaHcv5N1bywrs613xTzZMpq+PtAE4fQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SAWPR12MB999115
+
+On Tue Sep 1, 2026 at 8:08 PM JST, Danilo Krummrich wrote:
+> On Tue Sep 1, 2026 at 12:58 PM CEST, Alexandre Courbot wrote:
+>> That makes me wonder, shouldn't we make `index` take a `u32` directly?
+>> If that's what the C API expects, it does make sense to align to it
+>> instead of forcing users to make a potential unneeded conversion if they
+>> already have a u32.
+>
+> I intentionally did not do this, as the common type for an index is usize=
+. Thus,
+> I do not expect anyone to already have a u32, but to already have a usize=
+, e.g.
+> from some iterator.
+>
+> The fact that the C API did pick unsigned int as index type is an impleme=
+ntation
+> detail the abstraction should bother with.
+
+Thanks for the clarification (and Miguel for elaborating - I wasn't
+completely aware of it!). In that case this patch looks correct to me.
+
+Note that there is another `as` right after, in the same method:
+
+  if irq < 0 {
+      return Err(Error::from_errno(irq));
+  }
+
+  // SAFETY: `irq` is a valid IRQ number for `self.dev`, resolved from this=
+ registration.
+  Ok(unsafe { IrqVector::new(IrqRequest::new(self.dev.as_ref(), irq as u32)=
+, self) })
 
 
-On 01-Sep-26 3:02 PM, Shameer Kolothum wrote:
-> vfio_pci_core_disable() frees vconfig while holding only the vfio
-> device_set mutex. The PCI error callbacks never take that one. They run
-> under the PCI device_lock instead, and vfio's close path does not hold
-> that. So a callback still running when close starts can walk into state
-> which is being freed.
->
-> Publish a device_open flag under recovery_lock. enable() clears it before
-> it touches the device, finish_enable() sets it once vfio_config_init()
-> has allocated vconfig, and prepare_close() clears it again before the
-> teardown frees vconfig. All three take recovery_lock for writing, so a
-> callback either gets there first and close waits for it, or it finds the
-> flag clear and does nothing. The access guards added later test the same
-> flag.
->
-> recovery_lock is not held across vfio_pci_core_disable(). A later patch
-> has error_detected() take it from under pci_bus_sem, and disable() gets
-> to pci_reset_bus(), which takes pci_bus_sem the other way round.
->
-> access_blocked is only ever set while device_open is set. Nothing sets it
-> without testing device_open first, and close clears access_blocked before
-> it clears device_open. If close left it set, nothing could clear it
-> afterwards.
-> The transaction which set it cannot clear it once device_open is gone,
-> and every path which refuses work on a blocked device would go on
-> refusing. Clear it before device_open so a lock-free reader never sees
-> it set on a device which is closed.
->
-> open() now refuses a disconnected device with -ENODEV. That is new.
->
-> Signed-off-by: Shameer Kolothum <skolothumtho@nvidia.com>
-> ---
->   drivers/vfio/pci/vfio_pci_core.c | 69 +++++++++++++++++++++++++++++++-
->   1 file changed, 68 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
-> index e0be5ddf7039..8de586e4bb73 100644
-> --- a/drivers/vfio/pci/vfio_pci_core.c
-> +++ b/drivers/vfio/pci/vfio_pci_core.c
-> @@ -591,10 +591,23 @@ static const struct dev_pm_ops vfio_pci_core_pm_ops = {
->   int vfio_pci_core_enable(struct vfio_pci_core_device *vdev)
->   {
->   	struct pci_dev *pdev = vdev->pdev;
-> +	bool supported = vdev->pci_recovery_supported;
->   	int ret;
->   	u16 cmd;
->   	u8 msix_pos;
->   
-> +	if (supported) {
-> +		down_write(&vdev->recovery_lock);
-> +		if (pci_dev_is_disconnected(pdev)) {
-> +			up_write(&vdev->recovery_lock);
-> +			return -ENODEV;
-> +		}
-> +
-> +		vdev->pci_recovery_command_valid = false;
-> +		WRITE_ONCE(vdev->pci_recovery_device_open, false);
-> +		up_write(&vdev->recovery_lock);
-> +	}
-> +
+We could get rid of it by replacing the `if irq < 0` test with:
 
-Can we use scoped_guard()/guard() instead of down_write()/up_write()? 
-The same comment applies across all similar sections.
+  let irq =3D u32::try_from(irq).map_err(|_| Error::from_errno(irq))?;
 
-- Satya.
-
->   	if (!vdev->disable_idle_d3) {
->   		ret = pm_runtime_resume_and_get(&pdev->dev);
->   		if (ret < 0)
-> @@ -815,7 +828,40 @@ void vfio_pci_core_disable(struct vfio_pci_core_device *vdev)
->   }
->   EXPORT_SYMBOL_GPL(vfio_pci_core_disable);
->   
-> -void vfio_pci_core_close_device(struct vfio_device *core_vdev)
-> +static void vfio_pci_core_prepare_close(struct vfio_pci_core_device *vdev)
-> +{
-> +	if (!vdev->pci_recovery_supported)
-> +		return;
-> +
-> +	down_write(&vdev->recovery_lock);
-> +	WRITE_ONCE(vdev->pci_recovery_enabled, false);
-> +	vdev->pci_recovery_command_valid = false;
-> +	/*
-> +	 * Clear access_blocked before device_open, so a lock-free reader
-> +	 * never sees it set on a device which is no longer open. A
-> +	 * transaction which is still running cannot clear it once
-> +	 * device_open is gone, and paths which refuse work on a blocked
-> +	 * device would then refuse it for good.
-> +	 */
-> +	WRITE_ONCE(vdev->pci_recovery_access_blocked, false);
-> +	WRITE_ONCE(vdev->pci_recovery_device_open, false);
-> +	WRITE_ONCE(vdev->pci_recovery_flags, 0);
-> +
-> +	/*
-> +	 * Publish the closing state and drop recovery_lock before any
-> +	 * teardown. Recovery is disabled and its state cleared, so
-> +	 * slot_reset() and resume() become no-ops and a later
-> +	 * error_detected() only follows the legacy notification path.
-> +	 * Holding the lock across vfio_pci_core_disable() protects nothing
-> +	 * and inverts the lock order. disable() reaches pci_reset_bus(),
-> +	 * which takes pci_bus_sem, while error_detected() takes
-> +	 * recovery_lock from under pci_bus_sem.
-> +	 */
-> +	up_write(&vdev->recovery_lock);
-> +	wake_up_all(&vdev->pci_recovery_wait);
-> +}
-> +
-> +static void vfio_pci_core_finish_close(struct vfio_device *core_vdev)
->   {
->   	struct vfio_pci_core_device *vdev =
->   		container_of(core_vdev, struct vfio_pci_core_device, vdev);
-> @@ -838,6 +884,15 @@ void vfio_pci_core_close_device(struct vfio_device *core_vdev)
->   	vfio_pci_eventfd_replace_locked(vdev, &vdev->req_trigger, NULL);
->   	mutex_unlock(&vdev->igate);
->   }
-> +
-> +void vfio_pci_core_close_device(struct vfio_device *core_vdev)
-> +{
-> +	struct vfio_pci_core_device *vdev =
-> +		container_of(core_vdev, struct vfio_pci_core_device, vdev);
-> +
-> +	vfio_pci_core_prepare_close(vdev);
-> +	vfio_pci_core_finish_close(core_vdev);
-> +}
->   EXPORT_SYMBOL_GPL(vfio_pci_core_close_device);
->   
->   void vfio_pci_core_finish_enable(struct vfio_pci_core_device *vdev)
-> @@ -852,6 +907,18 @@ void vfio_pci_core_finish_enable(struct vfio_pci_core_device *vdev)
->   		vdev->sriov_pf_core_dev->vf_token->users++;
->   		mutex_unlock(&vdev->sriov_pf_core_dev->vf_token->lock);
->   	}
-> +
-> +	if (vdev->pci_recovery_supported) {
-> +		down_write(&vdev->recovery_lock);
-> +		WRITE_ONCE(vdev->pci_recovery_flags, 0);
-> +		vdev->pci_recovery_sequence = 0;
-> +		WRITE_ONCE(vdev->pci_recovery_enabled, false);
-> +		/* Close clears this too. Start unblocked either way. */
-> +		WRITE_ONCE(vdev->pci_recovery_access_blocked, false);
-> +		WRITE_ONCE(vdev->pci_recovery_device_open, true);
-> +		WRITE_ONCE(vdev->pci_recovery_rom_disable, false);
-> +		up_write(&vdev->recovery_lock);
-> +	}
->   }
->   EXPORT_SYMBOL_GPL(vfio_pci_core_finish_enable);
->   
+Sophon, if you feel like doing it I think this could improve the patch
+further.
