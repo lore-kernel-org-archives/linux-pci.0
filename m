@@ -1,122 +1,81 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from out28-4.mail.aliyun.com (out28-4.mail.aliyun.com [115.124.28.4])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 08A3D4CCDF8
-	for <linux-pci@vger.kernel.org>; Tue,  1 Sep 2026 06:57:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 34E30455606;
+	Tue,  1 Sep 2026 07:17:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.28.4
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788245833; cv=none; b=rOkeWIxZZw6eco+EtHXG0XtOCBStbSL5860IgSwFN6uS1jpZ7P/9i5r4UsB0hanfKSmalTA+vQFqoSjx6K2DZodio3cFY8WNGgpBrb4MWR6+dcJPW+wZQ1tP0citJhRVGDuF8nYsZ7FvooSFnyEiSOvJY1pVshTy33acsoVEFDU=
+	t=1788247060; cv=none; b=dvhpU3Y/G1VNOW2Ms1OfTNlhNSJ5YSawqDSZasUM3+ahGgGkoZIheJtPn4bB4HJI97YfREa6SrDE/rdO1cVoFzZcfwFKk7yj0heY2w3PFYuS01R+g586OyPZoefmhfflnx+P5ZxqFMRIwqgszKZYD2CtefcxlqPk92V36dLyje8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788245833; c=relaxed/simple;
-	bh=zcii4c/7zyLpfS31aOAflSGR5r2ksAl66YZ2DzqIBqk=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=CNtMCD85kPZZepCh+tM9x+VN6fLfItogE36W4khyZpyE5yblLLHfhsWvC5yL65jEQccllBJh29Pvna1uNSNqRqWuse0I22IHroVJfNFKJAEi2Li429aKhqr2NEZCH2LHuKwim5gw/0AWXuUQaupdM12x0nSW59SvFoZ+xOjBLJU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mbHmTBvq; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mbHmTBvq"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7AEC91F000E9;
-	Tue,  1 Sep 2026 06:57:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788245831;
-	bh=stJwvZoXaAqxnk3AmSxKZ2f1o7e6HgaUJ1H1+RXNhN4=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=mbHmTBvqL0cU9OA+FV/xSrWTkCFVbEZ6/Cyw9edJgu/0mjjpn0012fQ+63cOMfCea
-	 U6lniNbbuhI0ptXOGaTUsYiX787eH1pp2Escup5zqG/joE/tqxLRpQbILZDw4x9UON
-	 fMfySBh5YqP06FRBcU36ejH3yaOX6cejhbZdKDvUGv90oKKT1nsoC4mH+1st6e8rnx
-	 M4Hr5ROiv7mLJxVO54zhjHv+pnxFhn60kOqS7RdmsDtd9Un6n94SccvLcoJCEdww/7
-	 7QfLopoz1AmhZo+kyZjRNHLi0nEbUr+HqDp6XboffzmUu/bKDMFy6cfkgGOtaygFNz
-	 nF0OrLxa0QGTw==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] PCI/DPC: Honor "pcie_ports=native" when enabling DPC
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Guixin Liu" <kanie@linux.alibaba.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260901064554.2178688-1-kanie@linux.alibaba.com>
-References: <20260901064554.2178688-1-kanie@linux.alibaba.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 01 Sep 2026 06:57:11 +0000
-Message-Id: <20260901065711.7AEC91F000E9@smtp.kernel.org>
+	s=arc-20240116; t=1788247060; c=relaxed/simple;
+	bh=bzYTH4+M3T/zklhRcUkacMj2cPGw/98t9zQ04BhEHBM=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=Pmu0+ttkn7dND/VCOWjFcF1nxauNe7y05UJf2QDDHhQx/2HXLQR6cWFrWHiJSMDq+1cH3C6UBOGd6wR6n59RjWZVLO5gzNf37UZXjKtolWfRkLTlpbshqQDbfRFbVS/4pxiysBllhfnHalR4ApQNk2T1pI0eEpo/sOwr7TgxIuo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=open-hieco.net; spf=pass smtp.mailfrom=open-hieco.net; arc=none smtp.client-ip=115.124.28.4
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=open-hieco.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=open-hieco.net
+X-Alimail-AntiSpam:AC=CONTINUE;BC=0.1416918|-1;CH=green;DM=|CONTINUE|false|;DS=CONTINUE|ham_system_inform|0.0639844-0.000926813-0.935089;FP=18001774820116282811|0|0|0|0|-1|-1|-1;HT=maildocker-contentspam033037031241;MF=wanglin@open-hieco.net;NM=1;PH=DS;RN=11;RT=11;SR=0;TI=SMTPD_---.j2BhS3u_1788247047;
+Received: from localhost.localdomain(mailfrom:wanglin@open-hieco.net fp:SMTPD_---.j2BhS3u_1788247047 cluster:ay29)
+          by smtp.aliyun-inc.com;
+          Tue, 01 Sep 2026 15:17:27 +0800
+From: Lin Wang <wanglin@open-hieco.net>
+To: Borislav Petkov <bp@alien8.de>,
+	yazen.ghannam@amd.com,
+	mario.limonciello@amd.com
+Cc: tglx@linutronix.de,
+	mingo@redhat.com,
+	dave.hansen@linux.intel.com,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	bhelgaas@google.com,
+	x86@kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v4 1/5] pci_ids: Add Hygon Family 0x18 DF F3/F4 device IDs
+Date: Tue,  1 Sep 2026 15:16:56 +0800
+Message-ID: <20260901071700.3255382-2-wanglin@open-hieco.net>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20260901071700.3255382-1-wanglin@open-hieco.net>
+References: <20260901071700.3255382-1-wanglin@open-hieco.net>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
+Hygon Family 0x18 node discovery identifies Data Fabric misc (F3) and
+link (F4) functions by PCI ID rather than a fixed PCI slot.
 
-Pre-existing issues:
-- [High] This problem wasn't introduced by this patch, but pre-existed in t=
-he codebase. Various PCI and CXL subsystems incorrectly check `host->native=
-_*` flags directly without honoring the `pcie_ports=3Dnative` or `pcie_port=
-s_dpc_native` command-line overrides.
---
+Models 0x04 use 0x1463/0x1464, with 0x1493/0x1494 on the mixed-silicon
+variant. Models 0x05 through 0x08 use 0x14b3/0x14b4.
 
-commit bed1438fd8fcfc05e1122790665a4045a06281cf
-Author: Guixin Liu <kanie@linux.alibaba.com>
+Some IDs have the same numeric values as AMD DF devices. PCI identity
+also includes the vendor, so Hygon-prefixed names keep the two vendors'
+definitions independent.
 
-PCI/DPC: Honor "pcie_ports=3Dnative" when enabling DPC
-   =20
-This commit fixes an issue where the "pcie_ports=3Dnative" command-line
-override was ignored when deciding whether to create a DPC service
-device. This ensures both command-line overrides continue to work when
-firmware retains AER control.
+Signed-off-by: Lin Wang <wanglin@open-hieco.net>
+---
+ include/linux/pci_ids.h | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-Cc: stable@vger.kernel.org
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index 63774ae2bf71..d9f3e01033f9 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -2615,6 +2615,12 @@
+ #define PCI_VENDOR_ID_ROCKCHIP		0x1d87
+ 
+ #define PCI_VENDOR_ID_HYGON		0x1d94
++#define PCI_DEVICE_ID_HYGON_18H_M04H_DF_F3	0x1463
++#define PCI_DEVICE_ID_HYGON_18H_M04H_DF_F4	0x1464
++#define PCI_DEVICE_ID_HYGON_18H_M04H_DF_F3B	0x1493
++#define PCI_DEVICE_ID_HYGON_18H_M04H_DF_F4B	0x1494
++#define PCI_DEVICE_ID_HYGON_18H_M05H_DF_F3	0x14b3
++#define PCI_DEVICE_ID_HYGON_18H_M05H_DF_F4	0x14b4
+ 
+ #define PCI_VENDOR_ID_META		0x1d9b
+ 
+-- 
+2.43.0
 
-> diff --git a/drivers/pci/pcie/portdrv.c b/drivers/pci/pcie/portdrv.c
-> index a9cbfc1d2bc75..a05ee7980fb27 100644
-> --- a/drivers/pci/pcie/portdrv.c
-> +++ b/drivers/pci/pcie/portdrv.c
-> @@ -264,7 +264,7 @@ static int get_port_device_capability(struct pci_dev =
-*dev)
->  	 */
->  	if (pci_find_ext_capability(dev, PCI_EXT_CAP_ID_DPC) &&
->  	    pci_aer_available() &&
-> -	    (pcie_ports_dpc_native || host->native_aer))
-> +	    (pcie_ports_native || pcie_ports_dpc_native || host->native_aer))
->  		services |=3D PCIE_PORT_SERVICE_DPC;
-
-[Severity: High]
-This isn't a bug introduced by this patch, but pre-existed in the codebase.
-Since this patch correctly restores the pcie_ports_native override here,
-should we also fix other subsystems that incorrectly check host->native_*
-flags directly without honoring the command-line overrides?
-
-For example, in drivers/cxl/core/ras.c:devm_cxl_dport_rch_ras_setup(),
-the code drops the override, which can lead to broken error reporting for
-uncorrectable errors:
-
-	host_bridge =3D to_pci_host_bridge(dport->dport_dev);
-	if (!host_bridge->native_aer)
-		return;
-
-	cxl_dport_map_rch_aer(dport);
-
-Similarly, in drivers/pci/pci-acpi.c:pci_acpi_program_hpx_type2(), it
-fails to account for the command line override which should prevent
-programming when the OS forces AER:
-
-	/*
-	 * Only do the _HPX Type 2 programming if OS owns PCIe native
-	 * hotplug but not AER.
-	 */
-	if (!host->native_pcie_hotplug || host->native_aer)
-		return;
-
-Also, in drivers/pci/pcie/dpc.c:pci_dpc_recovered(), this check bypasses
-the synchronization wait if it fails to recognize OS-forced DPC
-ownership:
-
-	host =3D pci_find_host_bridge(pdev->bus);
-	if (!host->native_dpc && !IS_ENABLED(CONFIG_PCIE_EDR))
-		return false;
-
-Because pci_dpc_recovered() prematurely returns false, the pciehp driver
-will not ignore spurious Link Down/Up events during DPC. Does this cause
-hotplug to incorrectly race with DPC recovery?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260901064554.2178=
-688-1-kanie@linux.alibaba.com?part=3D1
