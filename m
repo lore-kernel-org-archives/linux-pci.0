@@ -1,65 +1,65 @@
-Received: from BN1PR04CU002.outbound.protection.outlook.com (mail-eastus2azon11010001.outbound.protection.outlook.com [52.101.56.1])
+Received: from BN8PR05CU002.outbound.protection.outlook.com (mail-eastus2azon11011043.outbound.protection.outlook.com [52.101.57.43])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9BA6377553;
-	Tue,  1 Sep 2026 09:34:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.56.1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A868D3955EF;
+	Tue,  1 Sep 2026 09:34:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.57.43
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788255287; cv=fail; b=HZZXG/pGpoTE3MKg7nWtbI4X4Ihf0IXCKuWYKhpbJGQlAydZszyLSD/Txm3c3gy8zwXzqAvmjmuuZZT4rC+qU4TIPavRpo8rpBYqzb9j71bDPvOM47WIAsJlqd+DACpdmnlfGswoiq8O91BGXryfqzk0RxhH7B+dFpFrqNaApsg=
+	t=1788255291; cv=fail; b=JxI4c8pJLhKz755P5wyPAgWwQyU0xzY70CapTpyA9K47j9BlBe/x+vvudztEDd1nEUp3dYOdXCsX7ibhGtPxJMy4cVe9koj3WuvyvN6B3B/1H2WYYViatFa0kI1bBWH+kWkOtiJ7JOhohZYbki1y6Ksj91MyP/kLYF/fp4+eSs0=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788255287; c=relaxed/simple;
-	bh=RT0Gc85JUb/6wT1vm+vaOpL4a8dvcUODNT6FxY2KINo=;
+	s=arc-20240116; t=1788255291; c=relaxed/simple;
+	bh=lP9kP7DCdKujEUq/92dquV6AQq1zF82/IU9NMClYwf0=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=EbABncGz8iOcpzsfuuZtw04Tw2JU1BRBBbNk0JCFGqLsW35kBKd7qXkrYfXYidzPNbyTb2nQ4g9z7d8BmHr0+YM+O6bpk1DIPOLPsNZKGX117rzxABDsPiBERr2Y5FwNsvctkg3+deWwyHvMjUa5VkRFRs7e6N5UXcaQwEQ4myY=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=c+iSk81v; arc=fail smtp.client-ip=52.101.56.1
+	 MIME-Version:Content-Type; b=NLQZnSv9beB9AL51NywrxyngvzRH3XpQb28+WdNGXCxUyetx0El3BmlfI40JUf7I8XzJx+fQ8Dp1idiraT7297vLNJ6Yv0+VTWUVnMa+dqiH+MPw4PN88rSP0nDe/n6xVGVovp81e50m4PrC5wJGBPXlmnLOeTNwVTv3UFmtHig=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=Jn0TSUOS; arc=fail smtp.client-ip=52.101.57.43
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="c+iSk81v"
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="Jn0TSUOS"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=UuO9atuDBAAu8QtixR9Z2d68p/2T07c+OQZHrjTClh9x6UE4Vvux3upiN8FO3YiLDgyAnxolSeD+MxERWKAZumixmrdUVnmFL7VECynPQksDZVECJEvTpPfF/+dItuhbyWo/vgqdz4ay3JtVPZqMfCN017yUmyper68GlKBJcHLN5ne5BxICrLsyGLmuE3f8uwUS8kG7SHZcuzHfJaYFFklCutlCQnwjN9h+PlQpQYpZmEy61LFaJ+PokrF3UL3QEGp5HHldUgfJ8gPkXXP3apGFrjTDxdAQz7x7ghfw5wuV326bvD38jYN23owenr8/Z83IhD239/r4/cRlPR70uA==
+ b=LuyzUD9zImcPK9PYz7yHZDylLCfgnOsrQ4GGlthnqlqgPt3liSZgV3pKVkgQKkqHedyvhkFwdxCmRcN7qZGGdB0b3+OTludX0YQUUObj6bNCoZ0ciDSe0yVtmBscYj8WwcOSTFkzugJKidzForRQ7ccbGKCpseqSzcfqC5dSdOOK8ajQiEPqjedEzjaa8bvjNQ5TfOta/c3HVpNvi8hsrOxE/fbkq0JD/2f5sEmH7lltI/GJd/ztDLlLRtm7NtyqyKkFozJHwMA3rbEHKM9a9G2/izVDSvaCQ7+oeMI0++td/n0bnbvCriKiCOVwcZnzkddLWYUrdF1MTfHOapoJTA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=STyc5hfCh9lq32weljCIPCl8r2ZXaM3EAl7Wxg/bxD4=;
- b=xY8biZpMUblGhdEB36UJTrXp39TIPiBxkbPz7aNh5h2OQMRcsSr/VAxLVFxf8+zSYzvgD9IiYCRcVR+AVeOUK2X+/vfgGia2pIwbLibfB5TtCZu7GSgFK7sLbAU2sQ5zH6Qd/njs3SEbK9++3D+bhPafbJE+yCP40wtEithII6uvTHhp6A6V9fmBH5z3xb5mQZGkim4sLhwqJYacXkTuokVIFtKx0zfB1rqRq3i+bK5rcuOgGXjs/JKLca9n2q57/GLlr2+db7vM+C/HWt9rtJiHOwv5DE9iGFSuyBHX5qV7MnOm1GHa+IFEoJiTsHw/t8BITgrQ4rKeqLiU1lPvOA==
+ bh=Cd0srwENxB6+E1FwtIKPOG831nCxmcLFbgoM+joZ+O0=;
+ b=WjyTR4YMiTd3M4UzLuChuMomv0U4hYOMrYVuG3Y479jVPrHOH6apxmjzMemk10essQ1cgFi2TMB9jY1DZmqmzJ7u9FQCsbpq3OnzBFKWp++DCO6yQIFNDDJ+Ot2XIqagIqeZ2lyO1gwqvTS9wrCUGiKh3lVu+lRnZkjk0k8IFNCd5Q4eXLM9tfAe4SrKuKPHLr/ZmSq7MzK2LBAi7GN+JgPfVLQrNRdRk2z/7pBbreFSE/yDDLsRsDQJkBmsJy36t+wGHZ17Gpo45/PL/doN7hRdJ9sIcu5M1ZWNc+Z6zFoKMGmLDC85iUHUPBZ/Og9x4e+USgRaxufOP20X5di3HA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 216.228.117.160) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=nvidia.com;
+ 216.228.117.161) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=nvidia.com;
  dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
  dkim=none (message not signed); arc=none (0)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=STyc5hfCh9lq32weljCIPCl8r2ZXaM3EAl7Wxg/bxD4=;
- b=c+iSk81v3TppVxE/2WNqm0sunueE1ziSFu57PXSwPBEll/FceS+PPYXtrYF0xxiX9GJOvkRyhAO2KzSdEn0bWK5UVJqo/5tjPdOxLchEizZM+aGfnj8jC21uQtfbNNpcc+uWhQHJQWq32Q+biJ9sD1OTwbsBRHktCaDxg8DRYwckbMBmw+s2oNI6EOMcgJP8qPVd3/qftbJcRUP3Fq1o2rG+Tc7bZy85YR7j6maSwwF/l77twk2YKiWbmAplePylHUUdqgBpj4EOUQ3Ts2t9VYoJb4moZdjseqFiFtAYQy/N0fcxOLdEuuTrXnY/ESVJWPfS7jG6WxrqZ8AWxl5Zkg==
-Received: from BN9PR03CA0228.namprd03.prod.outlook.com (2603:10b6:408:f8::23)
- by IA0PR12MB8648.namprd12.prod.outlook.com (2603:10b6:208:486::19) with
+ bh=Cd0srwENxB6+E1FwtIKPOG831nCxmcLFbgoM+joZ+O0=;
+ b=Jn0TSUOSK6Gxd+u8HiJbVKIy6Q8enRIql8czs12rpBv91IqEIsX3O9Xwe3Icr0O/h8NAxoe4+hPank2APi6lhRl1svmnznpdUeUCSMbR8704N4F71kQXt2hHe85iKlMxo/L/Ux0UNEr+5ZdoPBjR2jIiZPHLQMu2h/1TXCzC69UC1DDoItDne6ihOhHCMaU6dli3FJC/sGJQDThvWXVfI4paOjM1cUIPxIyqT/fm0HTeQvQF3MZTFm8MUuBnOP/hTWQIuDBZz9PZQdI4Vr+TbxCacUq50kfwckW+njSJHN9KYuNqbMeiJPkT8pI65eTFppshVuJULVklQDnr8/pVyQ==
+Received: from CH2PR16CA0018.namprd16.prod.outlook.com (2603:10b6:610:50::28)
+ by CH3PR12MB9098.namprd12.prod.outlook.com (2603:10b6:610:19e::15) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.360.13; Tue, 1 Sep
- 2026 09:34:27 +0000
-Received: from BL02EPF00021F6D.namprd02.prod.outlook.com
- (2603:10b6:408:f8:cafe::28) by BN9PR03CA0228.outlook.office365.com
- (2603:10b6:408:f8::23) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.360.12; Tue, 1 Sep
+ 2026 09:34:31 +0000
+Received: from CH2PEPF00000148.namprd02.prod.outlook.com
+ (2603:10b6:610:50:cafe::53) by CH2PR16CA0018.outlook.office365.com
+ (2603:10b6:610:50::28) with Microsoft SMTP Server (version=TLS1_3,
  cipher=TLS_AES_256_GCM_SHA384) id 15.21.360.13 via Frontend Transport; Tue, 1
- Sep 2026 09:34:27 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.117.160)
+ Sep 2026 09:34:31 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.117.161)
  smtp.mailfrom=nvidia.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=nvidia.com;
 Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
- 216.228.117.160 as permitted sender) receiver=protection.outlook.com;
- client-ip=216.228.117.160; helo=mail.nvidia.com; pr=C
-Received: from mail.nvidia.com (216.228.117.160) by
- BL02EPF00021F6D.mail.protection.outlook.com (10.167.249.9) with Microsoft
+ 216.228.117.161 as permitted sender) receiver=protection.outlook.com;
+ client-ip=216.228.117.161; helo=mail.nvidia.com; pr=C
+Received: from mail.nvidia.com (216.228.117.161) by
+ CH2PEPF00000148.mail.protection.outlook.com (10.167.244.105) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.382.8 via Frontend Transport; Tue, 1 Sep 2026 09:34:26 +0000
+ 15.21.382.8 via Frontend Transport; Tue, 1 Sep 2026 09:34:31 +0000
 Received: from rnnvmail201.nvidia.com (10.129.68.8) by mail.nvidia.com
- (10.129.200.66) with Microsoft SMTP Server (version=TLS1_2,
+ (10.129.200.67) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.46; Tue, 1 Sep
- 2026 02:34:09 -0700
+ 2026 02:34:13 -0700
 Received: from NV-2Y5XW94.nvidia.com (10.126.230.37) by rnnvmail201.nvidia.com
  (10.129.68.8) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.46; Tue, 1 Sep
- 2026 02:34:06 -0700
+ 2026 02:34:10 -0700
 From: Shameer Kolothum <skolothumtho@nvidia.com>
 To: <kvm@vger.kernel.org>, <linux-pci@vger.kernel.org>,
 	<linux-kernel@vger.kernel.org>
@@ -67,9 +67,9 @@ CC: <alex@shazbot.org>, <jgg@ziepe.ca>, <kevin.tian@intel.com>,
 	<kbusch@meta.com>, <michal.winiarski@intel.com>,
 	<satyanarayana.k.v.p@intel.com>, <sonangp@nvidia.com>, <nathanc@nvidia.com>,
 	<mochs@nvidia.com>
-Subject: [RFC PATCH 15/19] vfio/pci: Add INTx helpers for PCI recovery
-Date: Tue, 1 Sep 2026 10:32:13 +0100
-Message-ID: <20260901093217.8539-16-skolothumtho@nvidia.com>
+Subject: [RFC PATCH 16/19] vfio/pci: Quiesce INTx during PCI recovery
+Date: Tue, 1 Sep 2026 10:32:14 +0100
+Message-ID: <20260901093217.8539-17-skolothumtho@nvidia.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20260901093217.8539-1-skolothumtho@nvidia.com>
 References: <20260901093217.8539-1-skolothumtho@nvidia.com>
@@ -85,219 +85,215 @@ X-ClientProxiedBy: rnnvmail203.nvidia.com (10.129.68.9) To
  rnnvmail201.nvidia.com (10.129.68.8)
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BL02EPF00021F6D:EE_|IA0PR12MB8648:EE_
-X-MS-Office365-Filtering-Correlation-Id: 5b5a9988-0ade-4e63-6974-08df080c375b
+X-MS-TrafficTypeDiagnostic: CH2PEPF00000148:EE_|CH3PR12MB9098:EE_
+X-MS-Office365-Filtering-Correlation-Id: cb0693c4-41d1-4ce9-56e4-08df080c39e8
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|82310400026|376014|1800799024|23010399003|36860700016|22082099003|18002099003|56012099006|5023799004|6133799003|11063799006|10067099003;
+	BCL:0;ARA:13230040|376014|23010399003|36860700016|82310400026|1800799024|6133799003|5023799004|11063799006|10067099003|56012099006|22082099003|18002099003;
 X-Microsoft-Antispam-Message-Info:
-	012P70SioJlY3MRHc8725nWOBQwDOO0dlGRcUJca7TpE0j2/LdJ9eSMESSRYQu/grMqHlULDXcmevEFQpJb44inEnGv4duMCZGhmHfqJffnDYCijN5GgA01F4eRmC3GzrSD7n5jNXZhfRwkDlHk+YlwP6Xpyj/ZfgqVTPv1ryra5afEhZdhZwaqsHohZ4s7hQNrFgGjmfkV+osHGgFMOW5EhgVOd7v3SV1iFo0qNzhpUDxxRt66YLNMIbh7qxp4m/8jOtO9ozUER3/qlzeZkSf/zoARMIPzZRdbsULvNz0LvIaYHNSt7LROALEmOb2JTh5tJa5Tp/AweUjnyPtue3e3uCtDmMGG7VY4Inqz1KjfHntmLBv4adjv8qFf+L+VgVmvVIcegIoQnixHrZyQ1V86n9GfpTebOn6kOGVidx3oh7pXDs3Z12RsihHvi6YfVBIoWzTuP4h8bOJoV/HYvsJyDjIZVzd3Lz/5uK3G5CPkNw9UuhMLxf2FS5k9sTpS5Cn3odYF1UxEc25H358nNPIHGFbUwXGt9Nf1B4wFRcoqIWgtulBuOqBT3TrHQ8T61pCAzxfIpnczvIH6mzn6fhaNj6wBRjRgpTF8yCMa2KggLrS4jn/omB5+2AMRZLbmrQJjrW9cQRa368so6N6/SWG4u+QzpSuSj4yxgMEc3afNgDpqMzA01sKRw9a2CPyZSyJ3HyiakLU22gzNxks26cg==
+	aO5W8mSZMLmXO3yUVXEHRUfz2WUuJ4PERqtuc9jcqGrQqLdIzv9x7EBdSYnj3SiYri/lKVuYy4Q2BCU8IFCgUD9JfAuIfWUbH9Dky1icETNRXdNpt6GrX743PjLi/r8Pzbs2CRyBMGXT9namKgTJqGrpuK1s6H8iRlooFf+YsgXhlByoS6wZBIYwGc8E7YA8qYjI3F0jTdTix7zbG/RoT4HoEcy5+cm1EoOHp1LNS/m8ZZNKeTV34eWIJLblgMXnCRhghjbsjaVfoXfqpxgjksOCVc6B99CxDv3jaaSAYEri0yRNvuTl9A4PO8RSOrimDKhnWqPmkjvDO2P1Ijv07NeMbZA199Noep9FyqPkzP8nAcQ82X1FkbNyiDz/N69odbhpqnpXlLz9/aBUg9QGo1qu4ZTt7sncHeu137HTJs5AD48TM/Wpn4Vf9mPjJ1iWHEgVhUh/Qu3OxkNcq6Qq8OcQY+G9jUz6nMd8X/8l7M8xEIWMhnxDkDDoWd38AUz7hOZB3RA5AOdEY8rueIOeWn/pd5ZVVVOasUf82VqG013CzYdx8o84IhClNbOboe0EYbWmBuwp78sAxzJL40mXYSxjf+5axPaK+piBI5Hc8WGZjg+YLG0Hl7Vh9t4pByQmM6rVR97kZPS0bIcP6vHuHfMk6YLpzaOjOy2ZhjSKDJYXLngQpFKrZHl/BRh5lxqUwW5t9/yiKgoqFDGkYtEcbQ==
 X-Forefront-Antispam-Report:
-	CIP:216.228.117.160;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge1.nvidia.com;CAT:NONE;SFS:(13230040)(82310400026)(376014)(1800799024)(23010399003)(36860700016)(22082099003)(18002099003)(56012099006)(5023799004)(6133799003)(11063799006)(10067099003);DIR:OUT;SFP:1101;
+	CIP:216.228.117.161;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge2.nvidia.com;CAT:NONE;SFS:(13230040)(376014)(23010399003)(36860700016)(82310400026)(1800799024)(6133799003)(5023799004)(11063799006)(10067099003)(56012099006)(22082099003)(18002099003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	YvToXHLGtDEHdzODkJtU3aiwQ7yCGyIktQwcED+xiI7VibLYZqK4GWMwpj3md0ssUGDkd0WGP855PTiiouUtZUq5Y2OxCoPQSiF0FnwMDvDnxuOBY9wzxp8yglKVXet15y3GVd3sd9U7O0QYhSgErUQ+A8PRTtVlo8JWBOYjBgJUAXTZdBXgrKgfWlZqye/ja4NigCo8pQYcqOLPA/0Uly/Bm5pw3AKOMu7yG+dR5UBXSEvBbLpDEjfH+vky6SWAF8vM0ctxrH98jRTCG20BOJ7/pJn7Q73iFyRhxsLVHsjzBHyE4rS/QvfzoJLzwNW0UIIO34wMzzOIs21OctHsJliILf92q6wINQXOECzuoOonKJhlx3IRikR8x9nhZZprOn7dTt/Y7BQBqCe/+Vb7IMpmDk7U+zzwsMQg8UFr4dzYqSAL5N8Urck1rZjIlmUj
+	bTKRxJ9jkYbRtiGkKma1YD+x0GoE9SJAQGwSqUCn28ylwlLgHeY4O17mvH2iEqoN7enaDuecDS8vtRIsaJGeCqFj4Xt8K+IzZLiZi+NJRMHD2Z46CqV3SwxkL3cCCbD1TojvPFNo7tERDugbMruysUbEgHzclXxyWWa3qlExO3teUwKlVnoZ4psWDxTM4qkQc02wH5FG+FEb0fCEwwcIf5X855R2Ve4rCrkXXQku1vPGz2HjL8WFuXGmsOCjkgHNV9+mTXWSArPq9pjIgdzOYNPZFdwQ6LJHsYVbeqPkWyktAEIsA2RIvGfvGGLPWlcuCfoLT5C8fXSUFuHtmaMY/IygqCPQ+9kAKhoceqv6gW6eJHTtc23IAT4Vx7ufh2muoaPjWMsscEnYu+8vhN7emUratASgvMU/pVTx+ocyRhV3tlHwsPOGYBULjRvNAloP
 X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 01 Sep 2026 09:34:26.9472
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 01 Sep 2026 09:34:31.2565
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 5b5a9988-0ade-4e63-6974-08df080c375b
+X-MS-Exchange-CrossTenant-Network-Message-Id: cb0693c4-41d1-4ce9-56e4-08df080c39e8
 X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.160];Helo=[mail.nvidia.com]
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.161];Helo=[mail.nvidia.com]
 X-MS-Exchange-CrossTenant-AuthSource:
-	BL02EPF00021F6D.namprd02.prod.outlook.com
+	CH2PEPF00000148.namprd02.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA0PR12MB8648
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH3PR12MB9098
 
-Add the helpers the recovery callbacks need to keep INTx in step with an
-error event, and the two per-context flags they record it in. Nothing
-calls them yet.
+Mask INTx when recovery blocks device access. A PCI 2.3 device shares its
+line, so leaving a level interrupt asserted and returning IRQ_NONE would
+storm until note_interrupt() disables the line for every device on it.
+Mask through pci_check_and_mask_intx() and return IRQ_HANDLED instead. A
+device without per-function masking has the line to itself and is quiesced
+through genirq.
 
-vfio_pci_intx_recovery_start() masks the line when an event begins.
-Nothing has fired at that point, and pci_check_and_mask_intx() only writes
-DisINTx when the status register says an interrupt is pending, so it would
-find nothing to do and leave the line enabled. Use pci_intx() instead,
-which masks whatever the device is doing. __vfio_pci_intx_mask() already
-does this for the same reason.
+That is a different job from the masking recovery does for itself, so
+vfio_pci_intx_mask_for_recovery() gains a @quiesce argument to tell them
+apart. The handler knows an interrupt has fired but not whether this
+device is the one asserting the shared line, which is what
+pci_check_and_mask_intx() reports, and a false return means the interrupt
+belongs to another device. It is also the user who unmasks afterwards,
+having been sent the eventfd, so the handler does not record the mask as
+one recovery owes.
 
-vfio_pci_intx_recovery_finish() replays what the event masked, and any
-unmask which arrived while it ran, once the event ends. An interrupt which
-was masked and delivered while access was blocked is not replayed. The
-user was told about it, and unmasks it as it would outside recovery.
+Record unmask requests received during recovery instead of losing them, so
+vfio_pci_intx_recovery_finish() can replay them once the event ends.
 
-vfio_pci_intx_recovery_command() reconciles INTX_DISABLE with the command
-word error_detected() saves. error_detected() sets that bit when it writes
-the quiesced command word, without recording it as a mask, so the saved
-word and ctx->masked can disagree about it. The helper keeps the bit as
-the INTx state has it, for resume() to use when it restores the word.
-Restoring the saved bit instead would unmask a line the handler still
-believes is masked, and a shared pci_2_3 line would storm until
-note_interrupt() disabled it for every device on it.
+The unmask handler checks for a blocked device before the existing INTx
+test, so a blocked device is not touched through pci_intx(). It only
+dereferences the interrupt context once that test has passed. The DisINTx
+emulation calls the unmask path whatever irq_type is set to, and the
+context is NULL when INTx is not in use.
+
+Replay from the reset path as well. The unmask eventfd reaches
+vfio_pci_intx_unmask_handler() through virqfd, which takes no recovery_lock
+and so cannot be refused, and VFIO_DEVICE_RESET blocks access for its
+duration. Without a replay there the line stays masked and the guest waits
+for an interrupt which cannot arrive, since it only unmasks again after
+receiving one.
 
 Assisted-by: Claude:claude-opus-5
 Signed-off-by: Shameer Kolothum <skolothumtho@nvidia.com>
 ---
- drivers/vfio/pci/vfio_pci_priv.h  |   4 ++
- drivers/vfio/pci/vfio_pci_intrs.c | 116 ++++++++++++++++++++++++++++++
- 2 files changed, 120 insertions(+)
+ drivers/vfio/pci/vfio_pci_core.c  |  1 +
+ drivers/vfio/pci/vfio_pci_intrs.c | 61 ++++++++++++++++++++++++++-----
+ 2 files changed, 53 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/vfio/pci/vfio_pci_priv.h b/drivers/vfio/pci/vfio_pci_priv.h
-index 8a7f9fe22386..5598e472da4b 100644
---- a/drivers/vfio/pci/vfio_pci_priv.h
-+++ b/drivers/vfio/pci/vfio_pci_priv.h
-@@ -25,6 +25,10 @@ struct vfio_pci_ioeventfd {
- 
- bool vfio_pci_intx_mask(struct vfio_pci_core_device *vdev);
- void vfio_pci_intx_unmask(struct vfio_pci_core_device *vdev);
-+void vfio_pci_intx_recovery_start(struct vfio_pci_core_device *vdev);
-+void vfio_pci_intx_recovery_finish(struct vfio_pci_core_device *vdev);
-+u16 vfio_pci_intx_recovery_command(struct vfio_pci_core_device *vdev,
-+				   u16 command);
- 
- int vfio_pci_eventfd_replace_locked(struct vfio_pci_core_device *vdev,
- 				    struct vfio_pci_eventfd __rcu **peventfd,
+diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
+index b3ad7ed261e1..658cccecab12 100644
+--- a/drivers/vfio/pci/vfio_pci_core.c
++++ b/drivers/vfio/pci/vfio_pci_core.c
+@@ -1558,6 +1558,7 @@ int vfio_pci_try_reset_function(struct vfio_pci_core_device *vdev,
+ 						  VFIO_PCI_RECOVERY_FAILED))) {
+ 			vfio_pci_recovery_rom_disable(vdev);
+ 			WRITE_ONCE(vdev->pci_recovery_access_blocked, false);
++			vfio_pci_intx_recovery_finish(vdev);
+ 		}
+ 		up_write(&vdev->recovery_lock);
+ 		/*
 diff --git a/drivers/vfio/pci/vfio_pci_intrs.c b/drivers/vfio/pci/vfio_pci_intrs.c
-index 64f80f64ff57..c4a075b5bb2e 100644
+index c4a075b5bb2e..1981a64b6e18 100644
 --- a/drivers/vfio/pci/vfio_pci_intrs.c
 +++ b/drivers/vfio/pci/vfio_pci_intrs.c
-@@ -29,6 +29,8 @@ struct vfio_pci_irq_ctx {
- 	struct virqfd			*mask;
- 	char				*name;
- 	bool				masked;
-+	bool				recovery_masked;
-+	bool				unmask_pending;
- 	struct irq_bypass_producer	producer;
- };
- 
-@@ -220,6 +222,40 @@ void vfio_pci_intx_unmask(struct vfio_pci_core_device *vdev)
- 	mutex_unlock(&vdev->igate);
+@@ -51,6 +51,15 @@ static bool is_irq_none(struct vfio_pci_core_device *vdev)
+ 		 vdev->irq_type == VFIO_PCI_MSIX_IRQ_INDEX);
  }
  
-+/*
-+ * Mask INTx because recovery has blocked device access. Returns true if this
-+ * call did the masking, which means recovery is the one which must unmask.
-+ *
-+ * Nothing is normally asserted when a recovery starts, and
-+ * pci_check_and_mask_intx() only writes DisINTx when the status register says
-+ * an interrupt is pending, so it would leave the line alone. pci_intx() masks
-+ * whatever the device is doing, as __vfio_pci_intx_mask() already does for the
-+ * same reason.
-+ *
-+ * Masking a pci_2_3 device goes through config space. If the error left
-+ * config space unreadable the write has no effect and the line stays
-+ * asserted, which is no worse than not trying. For a non-fatal error config
-+ * space still works, and this is what keeps a shared line from storming while
-+ * access is blocked.
-+ */
-+static bool vfio_pci_intx_mask_for_recovery(struct vfio_pci_core_device *vdev,
-+					    struct vfio_pci_irq_ctx *ctx)
++static bool vfio_pci_recovery_blocks_irq(struct vfio_pci_core_device *vdev)
 +{
-+	lockdep_assert_held(&vdev->irqlock);
-+
-+	if (ctx->masked)
++	if (!vdev->pci_recovery_supported)
 +		return false;
 +
-+	if (!vdev->pci_2_3)
-+		disable_irq_nosync(vdev->pdev->irq);
-+	else
-+		pci_intx(vdev->pdev, 0);
-+
-+	ctx->masked = true;
-+	ctx->recovery_masked = true;
-+	return true;
++	return READ_ONCE(vdev->pci_recovery_enabled) &&
++	       READ_ONCE(vdev->pci_recovery_access_blocked);
 +}
 +
- static irqreturn_t vfio_intx_handler(int irq, void *dev_id)
+ static
+ struct vfio_pci_irq_ctx *vfio_irq_ctx_get(struct vfio_pci_core_device *vdev,
+ 					  unsigned long index)
+@@ -173,6 +182,16 @@ static int vfio_pci_intx_unmask_handler(void *opaque, void *data)
+ 	int ret = 0;
+ 
+ 	spin_lock_irqsave(&vdev->irqlock, flags);
++	/*
++	 * Check for a blocked device before the INTx test below, so a blocked
++	 * device is not touched through pci_intx(). @ctx is only valid when
++	 * INTx is in use, so record the request only then.
++	 */
++	if (unlikely(vfio_pci_recovery_blocks_irq(vdev))) {
++		if (is_intx(vdev))
++			ctx->unmask_pending = true;
++		goto out_unlock;
++	}
+ 
+ 	/*
+ 	 * Unmasking comes from ioctl or config, so again, have the
+@@ -184,6 +203,9 @@ static int vfio_pci_intx_unmask_handler(void *opaque, void *data)
+ 		goto out_unlock;
+ 	}
+ 
++	ctx->unmask_pending = false;
++	ctx->recovery_masked = false;
++
+ 	if (ctx->masked && !vdev->virq_disabled) {
+ 		/*
+ 		 * A pending interrupt here would immediately trigger,
+@@ -224,13 +246,16 @@ void vfio_pci_intx_unmask(struct vfio_pci_core_device *vdev)
+ 
+ /*
+  * Mask INTx because recovery has blocked device access. Returns true if this
+- * call did the masking, which means recovery is the one which must unmask.
++ * call did the masking.
+  *
+- * Nothing is normally asserted when a recovery starts, and
++ * Set @quiesce when recovery is masking the line itself rather than masking
++ * one delivered interrupt. Nothing is normally asserted at that point, and
+  * pci_check_and_mask_intx() only writes DisINTx when the status register says
+- * an interrupt is pending, so it would leave the line alone. pci_intx() masks
+- * whatever the device is doing, as __vfio_pci_intx_mask() already does for the
+- * same reason.
++ * an interrupt is pending, so it would leave the line alone. The interrupt
++ * handler wants that test, since a false return there means the interrupt
++ * belongs to another device on a shared line. @quiesce also records that
++ * recovery is the one which must unmask. A masked interrupt which was
++ * delivered is the user's to unmask, exactly as outside recovery.
+  *
+  * Masking a pci_2_3 device goes through config space. If the error left
+  * config space unreadable the write has no effect and the line stays
+@@ -239,7 +264,8 @@ void vfio_pci_intx_unmask(struct vfio_pci_core_device *vdev)
+  * access is blocked.
+  */
+ static bool vfio_pci_intx_mask_for_recovery(struct vfio_pci_core_device *vdev,
+-					    struct vfio_pci_irq_ctx *ctx)
++					    struct vfio_pci_irq_ctx *ctx,
++					    bool quiesce)
  {
- 	struct vfio_pci_irq_ctx *ctx = dev_id;
-@@ -247,6 +283,86 @@ static irqreturn_t vfio_intx_handler(int irq, void *dev_id)
- 	return ret;
+ 	lockdep_assert_held(&vdev->irqlock);
+ 
+@@ -248,11 +274,14 @@ static bool vfio_pci_intx_mask_for_recovery(struct vfio_pci_core_device *vdev,
+ 
+ 	if (!vdev->pci_2_3)
+ 		disable_irq_nosync(vdev->pdev->irq);
+-	else
++	else if (quiesce)
+ 		pci_intx(vdev->pdev, 0);
++	else if (!pci_check_and_mask_intx(vdev->pdev))
++		return false;
+ 
+ 	ctx->masked = true;
+-	ctx->recovery_masked = true;
++	if (quiesce)
++		ctx->recovery_masked = true;
+ 	return true;
  }
  
-+void vfio_pci_intx_recovery_start(struct vfio_pci_core_device *vdev)
-+{
-+	struct vfio_pci_irq_ctx *ctx;
-+	unsigned long flags;
-+
-+	lockdep_assert_held_write(&vdev->recovery_lock);
-+
-+	spin_lock_irqsave(&vdev->irqlock, flags);
-+	if (!is_intx(vdev))
+@@ -264,6 +293,19 @@ static irqreturn_t vfio_intx_handler(int irq, void *dev_id)
+ 	int ret = IRQ_NONE;
+ 
+ 	spin_lock_irqsave(&vdev->irqlock, flags);
++	if (unlikely(vfio_pci_recovery_blocks_irq(vdev))) {
++		/*
++		 * Mask rather than return IRQ_NONE with the line still
++		 * asserted. For a shared pci_2_3 line an unhandled level
++		 * interrupt storms until note_interrupt() disables the line
++		 * for every device on it, not just this one.
++		 */
++		if (vfio_pci_intx_mask_for_recovery(vdev, ctx, false))
++			ret = IRQ_HANDLED;
++		else if (ctx->masked && !vdev->pci_2_3)
++			ret = IRQ_HANDLED;
 +		goto out_unlock;
-+
-+	ctx = vfio_irq_ctx_get(vdev, 0);
-+	if (WARN_ON_ONCE(!ctx))
-+		goto out_unlock;
-+
-+	vfio_pci_intx_mask_for_recovery(vdev, ctx);
-+
++	}
+ 
+ 	if (!vdev->pci_2_3) {
+ 		disable_irq_nosync(vdev->pdev->irq);
+@@ -275,6 +317,7 @@ static irqreturn_t vfio_intx_handler(int irq, void *dev_id)
+ 		ret = IRQ_HANDLED;
+ 	}
+ 
 +out_unlock:
-+	spin_unlock_irqrestore(&vdev->irqlock, flags);
-+}
-+
-+/*
-+ * Replay the masking recovery did, and any unmask which arrived while it was
-+ * blocked. Call this only after access_blocked has been cleared, or the
-+ * replayed unmask is swallowed and recorded as pending again with nothing
-+ * left to replay it.
-+ */
-+/*
-+ * The command word saved before the quiesce can have INTX_DISABLE clear, but
-+ * the INTx handler may have masked the line since. Keep the bit as the INTx
-+ * state has it, so hardware and ctx->masked agree until
-+ * vfio_pci_intx_recovery_finish() replays. Restoring the saved bit instead
-+ * would unmask a line the handler still believes is masked, and a shared
-+ * pci_2_3 line would then storm until note_interrupt() disables it.
-+ */
-+u16 vfio_pci_intx_recovery_command(struct vfio_pci_core_device *vdev,
-+				   u16 command)
-+{
-+	struct vfio_pci_irq_ctx *ctx;
-+
-+	lockdep_assert_held(&vdev->irqlock);
-+
-+	if (!is_intx(vdev))
-+		return command;
-+
-+	ctx = vfio_irq_ctx_get(vdev, 0);
-+	if (ctx && ctx->masked)
-+		command |= PCI_COMMAND_INTX_DISABLE;
-+
-+	return command;
-+}
-+
-+void vfio_pci_intx_recovery_finish(struct vfio_pci_core_device *vdev)
-+{
-+	struct vfio_pci_irq_ctx *ctx;
-+	unsigned long flags;
-+	bool replay = false;
-+
-+	lockdep_assert_held_write(&vdev->recovery_lock);
-+
-+	mutex_lock(&vdev->igate);
-+	spin_lock_irqsave(&vdev->irqlock, flags);
-+	if (!is_intx(vdev))
-+		goto out_unlock;
-+
-+	ctx = vfio_irq_ctx_get(vdev, 0);
-+	if (WARN_ON_ONCE(!ctx))
-+		goto out_unlock;
-+
-+	replay = ctx->recovery_masked || ctx->unmask_pending;
-+	ctx->recovery_masked = false;
-+	ctx->unmask_pending = false;
-+
-+out_unlock:
-+	spin_unlock_irqrestore(&vdev->irqlock, flags);
-+	if (replay)
-+		__vfio_pci_intx_unmask(vdev);
-+	mutex_unlock(&vdev->igate);
-+}
-+
- static int vfio_intx_enable(struct vfio_pci_core_device *vdev,
- 			    struct eventfd_ctx *trigger)
- {
+ 	spin_unlock_irqrestore(&vdev->irqlock, flags);
+ 
+ 	if (ret == IRQ_HANDLED)
+@@ -298,7 +341,7 @@ void vfio_pci_intx_recovery_start(struct vfio_pci_core_device *vdev)
+ 	if (WARN_ON_ONCE(!ctx))
+ 		goto out_unlock;
+ 
+-	vfio_pci_intx_mask_for_recovery(vdev, ctx);
++	vfio_pci_intx_mask_for_recovery(vdev, ctx, true);
+ 
+ out_unlock:
+ 	spin_unlock_irqrestore(&vdev->irqlock, flags);
 -- 
 2.43.0
 
