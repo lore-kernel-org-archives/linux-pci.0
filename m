@@ -1,264 +1,288 @@
-Received: from mail-4318.protonmail.ch (mail-4318.protonmail.ch [185.70.43.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 55B2B30B521;
-	Tue,  1 Sep 2026 00:59:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.70.43.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 74D22389115
+	for <linux-pci@vger.kernel.org>; Tue,  1 Sep 2026 01:04:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.181
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788224375; cv=none; b=RP2o9G0XDHabd3H4OnHVdZCOfFQPEILzDqn1TX01XFX+ES91WjtmVx+edFLpVtikso7nHtc2YYQCx1/Zo9wKhI1e+gII7ohjYvgoeDqwraWg0p3cQV/OR12IYeFlvAsF+O7AakWWjZ58YMjRZi5hGw/dyDbce8y/7hd5D8Tghz4=
+	t=1788224643; cv=none; b=Zwy1fxKpJNfjcyU006NfQjOBbEqD3xn66RpkHcCv6UtkoKpsAPhJKN6t3pWIKe4i+FkXiSsuWS5w9g4DmUf5PtYn292781OX+ouQPgpfmyW0yJzARpcr7x9VfJRMv7p4OeRVJEsnmtKMZ5jt+L1NLvPVrfpT65qA4U2/on3PaGE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788224375; c=relaxed/simple;
-	bh=+3rpXvdizBAasQQCZSs50TByA2/x7dRZogapzcQCMRw=;
-	h=Date:To:From:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=C1J8HmVoEce3Ml3rAq7R9IMeS5U/k//8V96ran3ZszlnUwsxuqm/Axo1IK741NMr1cc6lwvpW2JCfrsdKLnjIpbRXCkFY1GB13F2BUQawxD8Ml2xXxP8Jmb6p4YfspblgXXOcu5LC1mdDkOqbsTrhwbTN1ufy29EpjKJZAvCj6Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=httpd.dev; spf=pass smtp.mailfrom=httpd.dev; dkim=pass (2048-bit key) header.d=httpd.dev header.i=@httpd.dev header.b=eyZ4rKrU; arc=none smtp.client-ip=185.70.43.18
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=httpd.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=httpd.dev
+	s=arc-20240116; t=1788224643; c=relaxed/simple;
+	bh=0N7PZFteYPmAdCXOV/1Ri00KQjA0+w/H1rYBhz7BBzg=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=VQT8cE326vQdU1Geo5JLzFnv4f2LBDIYKT33feZuxdVLB8biS5CmAmTeiRFM8Z7ltvY5C0RXB0SsX0z+kiFe16B5MVf4iFRbYIdj1uV8MC8PJSq5qe9wV7q9YTLisULqL0ojNiamYUmNuLLZyqeBjnQiSvgKNe/K1aVGDasrQDA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=dZsNlE05; arc=none smtp.client-ip=209.85.214.181
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=httpd.dev header.i=@httpd.dev header.b="eyZ4rKrU"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=httpd.dev;
-	s=protonmail2; t=1788224369; x=1788483569;
-	bh=dsiMiEDU1iyqNugGv5MENp6q2JX/4otwgNxyz/lzYSA=;
-	h=Date:To:From:Cc:Subject:Message-ID:In-Reply-To:References:
-	 Feedback-ID:From:To:Cc:Date:Subject:Reply-To:Feedback-ID:
-	 Message-ID:BIMI-Selector;
-	b=eyZ4rKrUt95gUpqH2GtBgTuAWyqVXqdFv6BWKJVHnaaw6BIc8ukN/w1d1m14h6uZb
-	 qRS1Ke6znhKhp66XqY/aZrkg1DyrpD/KHYNEwHozBhwky6FNjNkne5rkitYKNgfZZ4
-	 mnC1TGoJdO+gRCi93bp4ZYbkRHmFEkv4Ivcfqmm0XbJZjv/h+XYcTIlJYMAIBdg6Pq
-	 Y/902OM5RIUUg/VrrtggZph4h/Wes50V6/DeV5QuRYV4AhlUSacZC9a8jlROgXKn5c
-	 SOSqbHBnolmCUnfC6IewVLdYdkJRL9PcRE6A8L1MZCVmTLSSh8TSOkInuYcVJtV/Kv
-	 FSmCuPhbYMutw==
-Date: Tue, 01 Sep 2026 00:59:25 +0000
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-From: Angel J <iamanaws@httpd.dev>
-Cc: "regressions@lists.linux.dev" <regressions@lists.linux.dev>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-rpi-kernel@lists.infradead.org" <linux-rpi-kernel@lists.infradead.org>, "helgaas@kernel.org" <helgaas@kernel.org>, "robh@kernel.org" <robh@kernel.org>, "andrea.porta@suse.com" <andrea.porta@suse.com>, "florian.fainelli@broadcom.com" <florian.fainelli@broadcom.com>
-Subject: Re: [REGRESSION] PCI: Dynamic OF node creation hangs on invalid bridge configuration
-Message-ID: <-KoxZtWNyNmnEu6-RkoMW2kenooTum0AiXwENwNBtoxqyI9wDXo1UJik1Wn9Igj_VRQ9bcYlva6FUZYq17UdPChUz_-mtDyrHSFO7t_broI=@httpd.dev>
-In-Reply-To: <GXe6anuewkS4bLNwca3cYOmUxN9csc0TxLYGSBc1qNRmfrmvFlcmD62wEM23TxfzfuXAv4P3yvUv7pyraleARrL1Na-aN8w-t9uc1Igu8DA=@httpd.dev>
-References: <GXe6anuewkS4bLNwca3cYOmUxN9csc0TxLYGSBc1qNRmfrmvFlcmD62wEM23TxfzfuXAv4P3yvUv7pyraleARrL1Na-aN8w-t9uc1Igu8DA=@httpd.dev>
-Feedback-ID: 163474212:user:proton
-X-Pm-Message-ID: 1031240fee8ce565906bd8ac4c0dbb2408b2550f
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="dZsNlE05"
+Received: by mail-pl1-f181.google.com with SMTP id d9443c01a7336-2cace91f112so34148535ad.0
+        for <linux-pci@vger.kernel.org>; Mon, 31 Aug 2026 18:04:01 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1788224641; x=1788829441; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:mime-version:message-id:date
+         :subject:cc:to:from:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=jWR/AgMdqB4Pk8bTidltEk6Rcw76/YkJaVkIRSZ9AmY=;
+        b=dZsNlE05r7kiAEuSerS7zkQaeQ6ZI66/+jNaO05wgRJS5cIB61LkTcD91nYT6KQeGy
+         IfooLJj1APQtKdyQntzmCwdI31zmzPBu2ki+H/3izpmmJ/aBGL7Jied2G/mBITgCdSpE
+         2t85yQWtB+ImUErSQyi0VQp6gORooPEOpW2dDxz99PLHHRveDamOTSdKYjJCaktESoC3
+         PPTaHHD0OLUamnJPX3qDpmD3hUeRHTX08VSgv4R0l7cCWNDl5yXZvIVOMdNyT9lQsbjn
+         AJkxGtK+oSyDsQcs7NV0UuMtJ4j3SauujtB+U9AsIlQKBRaBOwb+md9NhovwPtHpKOnM
+         HQKg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1788224641; x=1788829441;
+        h=content-transfer-encoding:content-type:mime-version:message-id:date
+         :subject:cc:to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=jWR/AgMdqB4Pk8bTidltEk6Rcw76/YkJaVkIRSZ9AmY=;
+        b=VkKc+4aGuNHmgmrLGFAFytOMgeSEn5BE8kNiznqzmgx1ynbnE8/5ak+g7f75has45K
+         737xmpMZdpCzm/LLDEnSwwpRDebbV8Dap9AePfOF0ZeAsNvti0nedRGEpxIF1qYN+MZv
+         lUsoLSrPQ2AlZpkLbKzp3h4vmK5qvKX4vCkB+6a8AKm0CUxUZ/VeJ/xx+GXnrqEFR3aC
+         c7OuTceHNSbsGQffjEAcl9GbC8UelRhTn9358snayG+E2znUmfqV/G2yopbbPvYm4D8L
+         Iz0KqjIw4SkwniHRndnX+PQBRB3KqWOf308rdKDzd8M134xZu+rGuH1Z42UhZHkCgegI
+         PAoA==
+X-Gm-Message-State: AFuF++nmHDlgyKTWPrPd3A7C7wJhTHrlaZTARk+so4RAt8Eq5CYUkhlF
+	lKZot0i/tzCjtY31AaWtOTxomgZIwlFWs2/nluGnTWyYZ4fJprP23nq6fcg0fA==
+X-Gm-Gg: AYBFou3+l0ApOFcewF7tCdsZy5MGlnTi5Xt4F97tR0YStzX1oWc2Xo+QUzx5akFxAfH
+	G+EZTV/Tm9GTxD8yiYPPstDc2XjPkQQOzxM7r5NIeVwXaQJw7zZRWHO1OGStdEMSmdIez1t1nUc
+	/lGkoHbgO40CT0znGIE7fmqpo+NvgkDIDYQQlQj+a7mXI68USM89Z5JDouTdp6lf3ngVzAZzjN0
+	KSDWpP2aLXjdon+xG75MdAFXIA6+1saCSnCC6/+hOsoRIIR7vbvBYytpqK38jqIsH0paWn3Cv6I
+	oppah2VocC9YodkD8a4mrCgsRe7TLvp4cXags1LwPKjYT3EeOIRFN859jwXjkoJRGDA3qDoslB6
+	rK1AVwtRnXibrJ0n+XtnD8uT/Rqmp6kn3JPmubTFDJoItAPhnb9s+y56HTk8VGPlFNgTqK57sfw
+	7NEXd3us/ae6bA5T7YDnNZu0cIhZlc/vPcMfxm4stFA/PnP/3+mqoIRkNrMKKQgsOrrWRF6hN0f
+	FL/zw==
+X-Received: by 2002:a17:90b:2783:b0:398:9beb:5c19 with SMTP id 98e67ed59e1d1-3989beb6352mr31989254a91.20.1788224640516;
+        Mon, 31 Aug 2026 18:04:00 -0700 (PDT)
+Received: from toolbx.alistair23.me ([2403:581e:fdf9:0:13b2:851f:d9cb:44c5])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3990d49e9e0sm2372024a91.11.2026.08.31.18.03.51
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 31 Aug 2026 18:03:59 -0700 (PDT)
+From: alistair23@gmail.com
+X-Google-Original-From: alistair.francis@wdc.com
+To: linux-pci@vger.kernel.org,
+	Jonathan.Cameron@huawei.com,
+	djbw@kernel.org,
+	rust-for-linux@vger.kernel.org,
+	lukas@wunner.de,
+	alistair@alistair23.me,
+	jic23@kernel.org,
+	linux-cxl@vger.kernel.org,
+	bhelgaas@google.com,
+	akpm@linux-foundation.org,
+	linux-kernel@vger.kernel.org
+Cc: gary@garyguo.net,
+	ojeda@kernel.org,
+	benno.lossin@proton.me,
+	a.hindborg@kernel.org,
+	wilfred.mallawa@wdc.com,
+	tmgross@umich.edu,
+	alistair23@gmail.com,
+	boqun.feng@gmail.com,
+	bjorn3_gh@protonmail.com,
+	alex.gaynor@gmail.com,
+	aliceryhl@google.com,
+	Alistair Francis <alistair.francis@wdc.com>
+Subject: [PATCH v3 00/21] lib: Rust implementation of SPDM
+Date: Tue,  1 Sep 2026 11:03:26 +1000
+Message-ID: <20260901010347.2614656-1-alistair.francis@wdc.com>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pgp-signature"; micalg=pgp-sha512; boundary="------92b2098d95252a39ada38c9e88383d14dd60f1ac3fa7fee7e6a674a7c834e248"; charset=utf-8
-
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---------92b2098d95252a39ada38c9e88383d14dd60f1ac3fa7fee7e6a674a7c834e248
-Content-Type: multipart/mixed;boundary=---------------------9fc1428e6ff9ebac9729a5244b051e32
-
------------------------9fc1428e6ff9ebac9729a5244b051e32
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain;charset=utf-8
-
-Hello,
-
-A friendly ping on this regression. It still affects Linux 6.18, and
-the tested invalid-bridge guard allows the machine to boot with
-CONFIG_PCI_DYNAMIC_OF_NODES=3Dy.
-
-Is any additional information or testing needed from me?
-
-Thanks,
-Angel
-
-
-
-On Saturday, August 22nd, 2026 at 19:14, Angel J <iamanaws@httpd.dev> wrot=
-e:
-
-> Hello,
-> =
-
-
-> This regression was introduced in v6.17-rc1 and remains in the dynamic
-> PCI OF node code. Linux 6.18 fails very early during boot on my Dell XPS
-> 8940 when CONFIG_PCI_DYNAMIC_OF_NODES=3Dy. The display goes black before
-> any useful console or pstore output appears, and the machine remains
-> hung.
-> =
-
-
-> Disabling CONFIG_PCI_DYNAMIC_OF_NODES makes the same kernel boot normall=
-y.
-> Linux v6.19-rc5 also boots because the RP1 driver stopped selecting that
-> option, not because the dynamic PCI OF node code changed.
-> =
-
-
-> Hardware:
-> =
-
-
->   System: Dell XPS 8940, board 0K3CM7, BIOS 2.27.1 (2025-04-03)
->   CPU: Intel Core i7-11700 (Rocket Lake)
->   Triggering device: 0000:00:00.0, Intel 8086:4c43
->   Firmware boot: UEFI, ACPI-based x86_64
-> =
-
-
-> Test results:
-> =
-
-
->   Linux 6.12.103: good
->   Linux v6.17-rc1: bad
->   Linux 6.18.44, CONFIG_PCI_DYNAMIC_OF_NODES=3Dy: bad
->   Linux 6.18.44, CONFIG_PCI_DYNAMIC_OF_NODES=3Dn: good
->   Linux 6.18.44, CONFIG_PCI_DYNAMIC_OF_NODES=3Dy, skip invalid bridge: g=
-ood
->   Linux v6.19-rc4: bad
->   Linux v6.19-rc5: good
->   Linux 4621c338d33f: bad
->   Linux e55feea3a03a: good
-> =
-
-
-> The first-parent boundary between the last two tests is:
-> =
-
-
->   e55feea3a03a ("Merge tag 'soc-fixes-6.19' ...")
-> =
-
-
-> That merge contains ce26f588c831 ("misc: rp1: drop overlay support"), wh=
-ich
-> removes:
-> =
-
-
->   select PCI_DYNAMIC_OF_NODES
-> =
-
-
-> from MISC_RP1. The generated configurations differed only by:
-> =
-
-
->   -CONFIG_PCI_DYNAMIC_OF_NODES=3Dy
->   +# CONFIG_PCI_DYNAMIC_OF_NODES is not set
-> =
-
-
-> CONFIG_MISC_RP1=3Dm in both. The known-bad 4621c338d33f and Linux 6.18.4=
-4
-> both boot after disabling PCI_DYNAMIC_OF_NODES (and MISC_RP1, whose Kcon=
-fig
-> select otherwise forces it on).
-> =
-
-
-> There is no RP1 device in this machine, and its driver does not probe.
-> MISC_RP1 affects this x86 system only because its Kconfig select enables
-> PCI_DYNAMIC_OF_NODES globally.
-> =
-
-
-> I narrowed the hang to dynamic OF node creation for 0000:00:00.0
-> (8086:4c43), the Intel Rocket Lake-S integrated memory controller. On
-> this machine it reports PCI class 0604 and header type 1, but it is boun=
-d
-> to icl_uncore and is not a usable forwarding bridge:
-> =
-
-
->   Bus: primary=3Dff, secondary=3Dff, subordinate=3Dff
->   I/O and memory bridge windows: invalid/all ones
->   kernel: bridge configuration invalid ([bus ff-ff]), reconfiguring
-> =
-
-
-> A minimal dynamic node for this device boots. Adding only
-> device_type=3D"pci" makes it hang. Full PCI dynamic OF node generation a=
-lso
-> boots when only 0000:00:00.0 is skipped.
-> =
-
-
-> I also tested a generic guard in of_pci_make_dev_node(). It reads
-> PCI_PRIMARY_BUS and skips node creation if the primary bus does not matc=
-h
-> pdev->bus->number, the secondary bus is not greater than the primary bus=
-,
-> or the secondary bus is greater than the subordinate bus. Linux 6.18.44
-> boots with CONFIG_PCI_DYNAMIC_OF_NODES=3Dy and logs:
-> =
-
-
->   pci 0000:00:00.0: skipping dynamic OF node for invalid bridge
-> =
-
-
-> The regression was introduced by 49d63971f963 in v6.17-rc1. Commit
-> ce26f588c831 made v6.19-rc5 boot by removing MISC_RP1's select of
-> PCI_DYNAMIC_OF_NODES. That avoids the failing path in the tested
-> configuration but does not change of_pci_make_dev_node().
-> =
-
-
-> I do not have a log from the failed boots. No output appeared with
-> earlyprintk=3Defi,keep, keep_bootcon, ignore_loglevel, loglevel=3D8,
-> initcall_debug, and EFI pstore enabled. Blacklisting both GPU drivers an=
-d
-> disabling the Intel IOMMU did not make the bad kernel boot.
-> =
-
-
-> Should of_pci_make_dev_node() reject devices with invalid bridge bus
-> configuration, or should 8086:4c43 use a device-specific quirk? I can
-> prepare and test a patch for either approach. For Linux 6.18 stable,
-> would that fix be preferable to backporting ce26f588c831 and its
-> dependencies?
-> =
-
-
-> #regzbot introduced: 49d63971f963
-> #regzbot title: PCI_DYNAMIC_OF_NODES early boot hang on ACPI x86
-> =
-
-
-> Thanks,
-> Angel J
-> =
-
-
-> =
-
-
-> =
-
-
-> =
-
-
-> =
-
-
-> =
-
-
------------------------9fc1428e6ff9ebac9729a5244b051e32--
-
---------92b2098d95252a39ada38c9e88383d14dd60f1ac3fa7fee7e6a674a7c834e248
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: ProtonMail
-
-wrsEARYKAG0FgmqWI18JEBoBbwppzUxnRRQAAAAAABwAIHNhbHRAbm90YXRp
-b25zLm9wZW5wZ3Bqcy5vcmfl/6uNekZTiSEcr0zFYMmZB7pZXzWkFaFAVYQ1
-zRRp2xYhBEAFf9htFyVnqZzmVhoBbwppzUxnAAAzOwD9FRMnq+YbDgEDUc3n
-pVpEge+RLMOPpjo9taK9Dno8I+gA/0J3r7cKUxlGLsTjReprBRnyMa4sDEjT
-KBCLgZOvyacC
-=k1eP
------END PGP SIGNATURE-----
-
-
---------92b2098d95252a39ada38c9e88383d14dd60f1ac3fa7fee7e6a674a7c834e248--
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+
+From: Alistair Francis <alistair.francis@wdc.com>
+
+Security Protocols and Data Models (SPDM) [1] is used for authentication,
+attestation and key exchange. SPDM is generally used over a range of
+transports, such as PCIe, MCTP/SMBus/I3C, ATA, SCSI, NVMe or TCP.
+
+From the kernels perspective SPDM is used to authenticate and attest devices.
+In this threat model a device is considered untrusted until it can be verified
+by the kernel and userspace using SPDM. As such SPDM data is untrusted data
+that can be mallicious.
+
+The SPDM specification is also complex, with the 1.2.1 spec being almost 200
+pages and the 1.3.0 spec being almost 250 pages long.
+
+As such we have the kernel parsing untrusted responses from a complex
+specification, which sounds like a possible exploit vector. This is the type
+of place where Rust excels!
+
+This series implements a SPDM requester in Rust.
+
+This is based on Lukas' C implementation [2], but has been refacted during the
+first few RFCs. I have included some of the relevent patchesfrom Lukas' C
+SPDM implementation in this series where they are required.
+
+This is a standalone series and doesn't depend on Lukas' implementation.
+
+The goal of this series is to get the smallest possible SPDM implementation
+upstream. That will provide building blocks for us to continue working on.
+
+As such we don't yet provide evidence or certificates to userspace, allow
+userspace to provide a nonce, support PQC or more advanced SPDM features.
+This is enough to communicate with a device and return "authenticated" to
+userspace.
+
+Note that RFC v3 did provide evidence and certificates to userspace and
+allowed a custom nonce. Showing that it's possible. I also have patches
+that build apon [4] to do this via a TSM driver, again showing it's
+possible with the current approach.
+We just don't support it yet and for TSM I need [4] upstream first.
+
+This series is different to Lukas' original approach and the approach taken
+in the previous RFCs and instead adds the PCI-CMA support as a TSM driver.
+This was described by Dan in [3] and [5]. The advantage here is that for PCIe
+we can leverage the TSM work for a lot of the features and provide userspace
+a consistient interface between PCI TSM and CMA.
+
+This series also doesn't check the certificate chain against the kernel
+keyring and will instead leave that to userspace once [4] is merged.
+
+Other transport mode (such as ATA, SCSI, NVMe and MCTP) will
+therefore need slightly different approaches, as TSM doesn't apply.
+The library can support this though, it will just need some netlink
+and sysfs wrappers added as applicable. This way each transport can support
+SPDM in the way it sees fit.
+
+The entire tree can be seen here:
+https://github.com/alistair23/linux/tree/alistair/spdm-rust-tsm
+
+I'm testing this by running the following
+
+```shell
+cargo run -- --qemu-server response
+
+qemu-system-x86_64 \
+  -nic none \
+  -object rng-random,filename=/dev/urandom,id=rng0 \
+  -device virtio-rng-pci,rng=rng0 \
+  -drive file=deploy/images/qemux86-64/core-image-pcie-qemux86-64.rootfs.ext4,if=virtio,format=raw \
+  -usb -device usb-tablet -usb -device usb-kbd \
+  -cpu Skylake-Client \
+  -machine q35,i8042=off \
+  -smp 4 -m 2G \
+  -drive file=blknvme,if=none,id=mynvme,format=raw \
+  -device nvme,drive=mynvme,serial=deadbeef,spdm_port=2323,spdm_trans=doe \
+  -snapshot \
+  -serial mon:stdio -serial null -nographic \
+  -kernel deploy/images/qemux86-64/bzImage \
+  -append 'root=/dev/vda rw  console=ttyS0 console=ttyS1 oprofile.timer=1 tsc=reliable no_timer_check rcupdate.rcu_expedited=1 swiotlb=0 '
+
+ls /sys/devices/pci0000:00/0000:00:03.0/
+ls /sys/devices/pci0000:00/0000:00:03.0/tsm/
+cat  /sys/devices/pci0000:00/0000:00:03.0/authenticated
+echo tsm0 > /sys/devices/pci0000:00/0000:00:03.0/tsm/connect
+cat  /sys/devices/pci0000:00/0000:00:03.0/authenticated
+```
+
+1: https://www.dmtf.org/standards/spdm
+2: https://lore.kernel.org/all/cover.1719771133.git.lukas@wunner.de/
+3: http://lore.kernel.org/69976d7d39c60_2f4a1009@dwillia2-mobl4.notmuch
+4: https://lore.kernel.org/all/69976d7d39c60_2f4a1009@dwillia2-mobl4.notmuch/
+5: https://lore.kernel.org/lkml/69e19c80b892b_fe0831000@djbw-dev.notmuch/
+
+v3:
+ - Rebase on 7.3-rc1
+v2:
+ - Tidy up the PCI/TSM function naming and is_pci_tsm_host()
+ - A large number of changes (mostly to the Rust code) based on Sashiko reviews
+     - This includes a few local runs of Sashiko
+     - This has fixed a few undefined behviour bugs in the Rust code
+ - Rebase on v4 of Benno's validate patches (patch 1, 2, 3)
+v1:
+ - Add CMA as a TSM driver
+ - Initial support for SPDM 1.4
+ - Cleanup a range of comments and concerns from RFC
+ - Remove kernel keyring checks
+RFC v3:
+ - Use netlink to send information to userspace
+ - Don't autogenerate Rust helpers
+RFC v2:
+ - Drop support for Rust and C implementations
+ - Include patches from Lukas to reduce series deps
+ - Large code cleanups based on more testing
+ - Support for authentication
+
+Alistair Francis (14):
+  rust: add bindings for hash.h
+  rust: error: impl From<FromBytesWithNulError> for Kernel Error
+  lib: rspdm: Initial commit of Rust SPDM
+  PCI/TSM: Rename pf0 to host
+  PCI/TSM: Support connecting to PCIe CMA devices
+  PCI/CMA: Add a PCI TSM CMA driver using SPDM
+  lib: rspdm: Support SPDM get_version
+  lib: rspdm: Support SPDM get_capabilities
+  lib: rspdm: Support SPDM negotiate_algorithms
+  lib: rspdm: Support SPDM get_digests
+  lib: rspdm: Support SPDM get_certificate
+  lib: rspdm: Support SPDM certificate validation
+  rust: allow extracting the buffer from a CString
+  lib: rspdm: Support SPDM challenge
+
+Benno Lossin (3):
+  rust: transmute: add `cast_slice[_mut]` functions
+  rust: create basic untrusted data API
+  rust: validate: add `Validate` trait
+
+Lukas Wunner (4):
+  X.509: Make certificate parser public
+  X.509: Parse Subject Alternative Name in certificates
+  X.509: Move certificate length retrieval into new helper
+  PCI/CMA: Validate Subject Alternative Name in certificates
+
+ MAINTAINERS                               |   13 +
+ crypto/asymmetric_keys/x509_cert_parser.c |    9 +
+ crypto/asymmetric_keys/x509_loader.c      |   38 +-
+ crypto/asymmetric_keys/x509_parser.h      |   42 +-
+ drivers/crypto/ccp/sev-dev-tio.h          |    4 +-
+ drivers/crypto/ccp/sev-dev-tsm.c          |   12 +-
+ drivers/pci/Kconfig                       |   14 +
+ drivers/pci/Makefile                      |    5 +
+ drivers/pci/cma.asn1                      |   41 +
+ drivers/pci/cma.c                         |  275 +++++
+ drivers/pci/doe.c                         |    6 +-
+ drivers/pci/tsm.c                         |  115 +-
+ include/keys/asymmetric-type.h            |    2 +
+ include/keys/x509-parser.h                |   57 +
+ include/linux/oid_registry.h              |    3 +
+ include/linux/pci-doe.h                   |    4 +
+ include/linux/pci-tsm.h                   |   30 +-
+ include/linux/pci.h                       |    1 +
+ include/linux/spdm.h                      |   37 +
+ lib/Kconfig                               |   15 +
+ lib/Makefile                              |    2 +
+ lib/rspdm/Makefile                        |   10 +
+ lib/rspdm/consts.rs                       |  184 +++
+ lib/rspdm/lib.rs                          |  167 +++
+ lib/rspdm/state.rs                        | 1230 +++++++++++++++++++++
+ lib/rspdm/validator.rs                    |  554 ++++++++++
+ rust/bindings/bindings_helper.h           |    5 +
+ rust/helpers/hash.c                       |   18 +
+ rust/helpers/helpers.c                    |    1 +
+ rust/kernel/error.rs                      |   18 +-
+ rust/kernel/lib.rs                        |    1 +
+ rust/kernel/str.rs                        |   13 +-
+ rust/kernel/transmute.rs                  |   59 +
+ rust/kernel/validate.rs                   |  216 ++++
+ 34 files changed, 3071 insertions(+), 130 deletions(-)
+ create mode 100644 drivers/pci/cma.asn1
+ create mode 100644 drivers/pci/cma.c
+ create mode 100644 include/keys/x509-parser.h
+ create mode 100644 include/linux/spdm.h
+ create mode 100644 lib/rspdm/Makefile
+ create mode 100644 lib/rspdm/consts.rs
+ create mode 100644 lib/rspdm/lib.rs
+ create mode 100644 lib/rspdm/state.rs
+ create mode 100644 lib/rspdm/validator.rs
+ create mode 100644 rust/helpers/hash.c
+ create mode 100644 rust/kernel/validate.rs
+
+-- 
+2.55.0
 
