@@ -1,142 +1,86 @@
-Received: from smtpout-02.galae.net (smtpout-02.galae.net [185.246.84.56])
+Received: from out30-110.freemail.mail.aliyun.com (out30-110.freemail.mail.aliyun.com [115.124.30.110])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3FCA536B90A;
-	Tue,  1 Sep 2026 06:45:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.246.84.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB171352022;
+	Tue,  1 Sep 2026 06:46:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.110
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788245159; cv=none; b=YI2MizmFlKP/ltCAqvG0zwSybdWnfpZbZhJjZbjlKhHcKKeR14SIKNtuNhKitEq0mtWTlug2EMysje3K9lb9t1VwH/1ygE0uhYEkm/7pXhQT0SblwoVYa6CwXLPcXCAXMOAKig6lMwb9y9UZ0hnOknOBdyQ0qvZKDvSODoGjtHM=
+	t=1788245171; cv=none; b=h4N0nFizNJtAcFm7MFNhhuHlsd293IeztaUMVUXdG7ertPphjJaPdl7NjvxvFTUQZKBpWvJ6dJNuOlLjXsKpUfxO6Oa17obAA3HAwqx1oeE2oGZGGJP9RyUo5Qlr0HHGeJeFJHm58TXehFXpgfAQwLm264RGIlDW8dlkJdLlFNk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788245159; c=relaxed/simple;
-	bh=W/nwyhnsYv/268Axgt633KDCI9dPa5FEesZko/5uCDE=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ciOqigfRWXGLv5sO0q/FWhx4HIETNF8HYNicKyKKUWt5dfqrDrzfigu1nflYSxX3QAB9WE2VXNsrJWxmkpMOusiMGJXxTzvsFzdZdob9VoWIG0775AEoBrOhNNIfByBe8aGXnaIvZwY+j4gBu+cwwd62qvJX6z/ovNAcqOqi9II=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=g39Qc0Hh; arc=none smtp.client-ip=185.246.84.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
+	s=arc-20240116; t=1788245171; c=relaxed/simple;
+	bh=vG8hwiUFswpP/BGb44DmdmgeFuQmtqjRMak6ZRhW77U=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=guzs+waTmV9CAumMeMJZFMj63fjZL0pkLEc/HUpJ8Qt2YjCmK5499+J3j57sOS3vpMdXkKv+qpsZsJ7hWb7MWEBRUCnC190g0zgKsVF3kfV4BMYYoMBh69AsRtiW7LSBlpKMaRoT7wZ2UDpgkMAByTv5/xadg3c+/AHkyRJNc+U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=ELQlREv7; arc=none smtp.client-ip=115.124.30.110
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="g39Qc0Hh"
-Received: from smtpout-01.galae.net (smtpout-01.galae.net [212.83.139.233])
-	by smtpout-02.galae.net (Postfix) with ESMTPS id 8F3891A192B;
-	Tue,  1 Sep 2026 06:45:54 +0000 (UTC)
-Received: from mail.galae.net (mail.galae.net [212.83.136.155])
-	by smtpout-01.galae.net (Postfix) with ESMTPS id 5D5E66053C;
-	Tue,  1 Sep 2026 06:45:54 +0000 (UTC)
-Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id CFBE211C7923C;
-	Tue,  1 Sep 2026 08:45:47 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=dkim;
-	t=1788245149; h=from:subject:date:message-id:to:cc:mime-version:content-type:
-	 content-transfer-encoding:in-reply-to:references;
-	bh=UaE3AUwBFLv/HV5738IQzS7QClGRaDYytvnf8R7BOZw=;
-	b=g39Qc0Hh8RF/fXRwcqE57liEKzLtqtjL9mQ0IQxupxbRily1EN5mYlOIr9v4ScgYnDyWBf
-	WsmZezMEUj9L+Fu7+Cd2H0khiRlgy0ntlkonsYLomh9d908+TTOa7iAlAEJ8aSlkCAisCn
-	3eA9d3VR/W/9Q+KNtXZM2vdEa/69hx7TC955v16LlyzOc2qIqOd1ougSXCf5o0PmI/neWv
-	dWU+SKWrbL+ga4LlC+gfe/jbm5g8nr9l2O46sPWbGXwQOp+AAYJJX3CKc1tOVSOQxMByOn
-	6iEm+OruRJeJTqAFf4hiR4R45n5+zHc2QMVrVC4HiBXtc5WlmZ7aucsgoaw2Sg==
-Date: Tue, 1 Sep 2026 08:45:46 +0200
-From: Herve Codina <herve.codina@bootlin.com>
-To: Alex Elder <elder@riscstar.com>
-Cc: bhelgaas@google.com, robh@kernel.org, saravanak@kernel.org,
- daniel@riscstar.com, mohd.anwar@oss.qualcomm.com,
- lorenzo.bianconi@oss.qualcomm.com, linux-pci@vger.kernel.org,
- devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3 4/4] of: address: kill of_node_is_pcie()
-Message-ID: <20260901084546.424c6ef2@bootlin.com>
-In-Reply-To: <20260901011338.1323243-5-elder@riscstar.com>
-References: <20260901011338.1323243-1-elder@riscstar.com>
-	<20260901011338.1323243-5-elder@riscstar.com>
-Organization: Bootlin
-X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-redhat-linux-gnu)
+	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="ELQlREv7"
+DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=linux.alibaba.com; s=default;
+	t=1788245163; h=From:To:Subject:Date:Message-ID:MIME-Version;
+	bh=WNwgnohXcpMa7shgXWCJ9xpd8rY4iBnfjmJSgYvbf8s=;
+	b=ELQlREv7uOQQ/Ugq1juk0qIWkdVH/y4FLsaTJbzIF64vhX2gg52QXMLNh0CBc5jMldpcyvndrGflK+cZCiRpeqE4p5gHa7lV8eWnd3BDmf82OvQ5FTetWSyr82qcJoeiSU0xsZd2bWJ2oX3LpJdNwsVJ1MxPAD8h0I6UIjJGLGw=
+X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R181e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam033032089153;MF=kanie@linux.alibaba.com;NM=1;PH=DS;RN=11;SR=0;TI=SMTPD_---0XA4lrWo_1788245162;
+Received: from localhost(mailfrom:kanie@linux.alibaba.com fp:SMTPD_---0XA4lrWo_1788245162 cluster:ay36)
+          by smtp.aliyun-inc.com;
+          Tue, 01 Sep 2026 14:46:03 +0800
+From: Guixin Liu <kanie@linux.alibaba.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	=?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= <u.kleine-koenig@baylibre.com>,
+	Jonathan Cameron <jic23@kernel.org>,
+	Lukas Wunner <lukas@wunner.de>,
+	=?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+	Kees Cook <kees@kernel.org>,
+	Darshit Shah <darnshah@amazon.de>,
+	Brian Norris <briannorris@chromium.org>,
+	Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+Cc: linux-pci@vger.kernel.org,
+	stable@vger.kernel.org
+Subject: [PATCH] PCI/DPC: Honor "pcie_ports=native" when enabling DPC
+Date: Tue,  1 Sep 2026 14:45:54 +0800
+Message-ID: <20260901064554.2178688-1-kanie@linux.alibaba.com>
+X-Mailer: git-send-email 2.43.7
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-Last-TLS-Session-Version: TLSv1.3
 
-Hi Alex,
+Commit 97ca178c899d ("PCI/DPC: Allow DPC on all Downstream Ports when
+OS controls AER") replaced the AER service bit with host->native_aer
+when deciding whether to create a DPC service device.  Unlike the AER
+service bit, host->native_aer does not reflect the "pcie_ports=native"
+command-line override.
 
-On Mon, 31 Aug 2026 20:13:37 -0500
-Alex Elder <elder@riscstar.com> wrote:
+Consequently, if firmware retains AER control, "pcie_ports=native" no
+longer enables DPC on Root Ports that advertise both AER and DPC, even
+though the option is documented to force native DPC handling.
 
-> The of_bus->match function for the "PCI" bus type is fairly liberal
-> in what it accepts as a PCI bus devicetree node.  If a node has no
-> device_type property, it even allows a node named "pcie@" to be
-> accepted as represnting a devicetree bus, though it issues a warning
-> in that case.
-> 
-> A recent PCI commit introduced of_pci_verify_node().  When a PCI
-> device is added, if it has a devicetree node, that function checks
-> its device_type property.  For PCI bridge devices, if there is no
-> device_type property (value "pci"), a warning is issued.
-> 
-> That warning duplicates the warning made by of_node_is_pcie(), and
-> there's no point in that.  Avoid the second (OF) warning by just
-> checking the node name directly in of_bus_pci_match().
-> 
-> That leaves of_node_is_pcie() unused, so get rid of it.
-> 
-> Signed-off-by: Alex Elder <elder@riscstar.com>
-> ---
-> v3: - Added (new) in this version of the series
-> 
->  drivers/of/address.c | 12 +-----------
->  1 file changed, 1 insertion(+), 11 deletions(-)
-> 
-> diff --git a/drivers/of/address.c b/drivers/of/address.c
-> index 499d37ceae210..ee2eb44884d85 100644
-> --- a/drivers/of/address.c
-> +++ b/drivers/of/address.c
-> @@ -134,16 +134,6 @@ static unsigned int of_bus_pci_get_flags(const __be32 *addr)
->   * PCI bus specific translator
->   */
->  
-> -static bool of_node_is_pcie(const struct device_node *np)
-> -{
-> -	bool is_pcie = of_node_name_eq(np, "pcie");
-> -
-> -	if (is_pcie)
-> -		pr_warn_once("%pOF: Missing device_type\n", np);
-> -
-> -	return is_pcie;
-> -}
-> -
->  static int of_bus_pci_match(struct device_node *np)
->  {
->  	/*
-> @@ -156,7 +146,7 @@ static int of_bus_pci_match(struct device_node *np)
->  	 */
->  	return of_node_is_type(np, "pci") || of_node_is_type(np, "pciex") ||
->  		of_node_is_type(np, "vci") || of_node_is_type(np, "ht") ||
-> -		of_node_is_pcie(np);
-> +		of_node_name_eq(np, "pcie");
->  }
->  
->  static void of_bus_pci_count_cells(struct device_node *np,
+Check pcie_ports_native explicitly so both command-line overrides
+continue to work.
 
-The warning here was printed based on the node name whereas of_node_is_pcie()
-prints the message based on the 'device_type' property of a pci_dev node.
+Fixes: 97ca178c899d ("PCI/DPC: Allow DPC on all Downstream Ports when OS controls AER")
+Cc: stable@vger.kernel.org
+Signed-off-by: Guixin Liu <kanie@linux.alibaba.com>
+---
+ drivers/pci/pcie/portdrv.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-For PCI to PCI bridges, no problem the warning is indeed duplicated but what
-happens for the PCI host controller?
+diff --git a/drivers/pci/pcie/portdrv.c b/drivers/pci/pcie/portdrv.c
+index a9cbfc1d2bc7..a05ee7980fb2 100644
+--- a/drivers/pci/pcie/portdrv.c
++++ b/drivers/pci/pcie/portdrv.c
+@@ -264,7 +264,7 @@ static int get_port_device_capability(struct pci_dev *dev)
+ 	 */
+ 	if (pci_find_ext_capability(dev, PCI_EXT_CAP_ID_DPC) &&
+ 	    pci_aer_available() &&
+-	    (pcie_ports_dpc_native || host->native_aer))
++	    (pcie_ports_native || pcie_ports_dpc_native || host->native_aer))
+ 		services |= PCIE_PORT_SERVICE_DPC;
+ 
+ 	/* Enable bandwidth control if more than one speed is supported. */
+-- 
+2.43.7
 
-PCI host controller drivers calls pci_host_probe() and are seen by the PCI core
-as a struct pci_host_bridge.
-
-of_node_is_pcie() is called for children of the PCI host controller (i.e. PCI
-devices scanned on the PCI bus handled by the host controller) but not for the
-PCI host controller itself.
-
-The OF node of the host controller must have the 'device_type' property set
-to "pci".
-
-I am not so sure that this warning was duplicated when we consider the PCI
-host controller node.
-
-Can you double check on your side?
-
-Best regards,
-Hervé
