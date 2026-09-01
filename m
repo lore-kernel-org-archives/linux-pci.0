@@ -1,150 +1,216 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F116239E190
-	for <linux-pci@vger.kernel.org>; Tue,  1 Sep 2026 17:04:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 48231274658
+	for <linux-pci@vger.kernel.org>; Tue,  1 Sep 2026 17:32:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788282282; cv=none; b=swXRuRf678GkhDQXVBVMwoOsa6FAy4FCp0GrpFTnT6nxMLsstw+LPn4CPeuBwqBz273ozGA061a5VpUI+Va8Xw/KjHOh/Q7DPhz6OsguIilw/EnCPQaGbaqbNixgZgA8gUhLWoO2EkLbVCTwr6rSIaT+VcgraWypv+2jJ+3MiTE=
+	t=1788283952; cv=none; b=l8jt0miuKx6PBrvaEOr5xjHhwnEfSsrCitpzITP2QHv2wrm9ZYy9R6Rd6OOi6ltJzZEDGLTvwcCow4O1+a3a6yS2Daa0TVhxL4qotjkl6+FQVRUYnXpxTn48WSKYAUBzDNflQRKdWGGKas/bBIqnh9ZYX1zSanVKFm7rjG+akNo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788282282; c=relaxed/simple;
-	bh=2kHVII0XzTUQFkmHochN7e81wJdTKrJMazs/eggGNLU=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=jTpCO42ZQXdSeHPQfBmw7Cc1EzEOuW5VDoQKnyLOq7KbdaKKdd6/6SGsXYqudYEhI3yChrRdaWLslNPspH/C3q3V3r7gQnk1spfEBIPy7KEalUQ6+QL/eyKxa6tKcN3C7vQDO9Vp7EqkSNu6YNjzx0IpsNwaA6X9JLvZMjD7nAU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=elotwXB0; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788283952; c=relaxed/simple;
+	bh=0UnN7pOWdscf3V3uG2oqNtzUQ7WE4DwVAqmUMMlArLo=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=DMbe5947Egfd7NOGOk/L25aNwRP4FvXmNHq7MM+rapxZFRmwTfwurKayEJLb6AJLUKid+g9r/+h8tPqLsrjjhsgAByjoJyt6L2/xV/frZo5NhJrNwxH5Q0KQYzZYF2XKrDyulV/i4yDfeVg/A8I/QY6NBOGv/QuBrGrtjViwc74=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hnYIGei7; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="elotwXB0"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4EC8A1F000E9;
-	Tue,  1 Sep 2026 17:04:40 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hnYIGei7"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F20F41F00A3A
+	for <linux-pci@vger.kernel.org>; Tue,  1 Sep 2026 17:32:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788282280;
-	bh=DfszqUODh+/sp6+MqyvHBr9pWYxMGMUBzWg4Ho9mFsg=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=elotwXB0b3xORhAxg7fussPlhjzd/iiUNcfwGaYTegjcHOsXMwc15YGtUD8NgMo2Y
-	 WVhrRCSSfZvqLZGWQtonAUmXQ1iiPk/bCSTOQRA15Fbsji09PMLBKrWJcOuEPE1Jbj
-	 P1MP0JJaPVe5MLJCRVwCkJJsccy6qCwFNflBLzPhnUTr2Hp3ylVrJU3qCMtGkFZz84
-	 TCkH5p1p4Rez+phOUSJpngTP7ymjK8UkJzOfrHqRbVMTMcZdpdYQK+jrS8VgPYObeT
-	 r8OY3xhmoHNEbTDXcv/IsAMpjSSyRJWuPvay1hkfS9Hj8mRGMrOEphNxW+9ETrZKeM
-	 wzSEzb9H1ZPtQ==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 08/16] drm/tyr: specify base type for registers
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Gary Guo" <gary@garyguo.net>
-Cc: "Danilo Krummrich" <dakr@kernel.org>, ojeda@kernel.org, "Alexandre
- Courbot" <acourbot@nvidia.com>, dri-devel@lists.freedesktop.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260901-typed_register-v4-8-5552b1d59525@garyguo.net>
-References: <20260901-typed_register-v4-0-5552b1d59525@garyguo.net>
- <20260901-typed_register-v4-8-5552b1d59525@garyguo.net>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 01 Sep 2026 17:04:39 +0000
-Message-Id: <20260901170440.4EC8A1F000E9@smtp.kernel.org>
+	s=k20260515; t=1788283951;
+	bh=gHmwpsKoLpq6NlHt2ZG2kyAm1yl7EZ9b4eNKciqlHGQ=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc;
+	b=hnYIGei7berEk4f09pt7Uznq9FrHE5VMGk9m4S7GRB2D7zws4zl8ExruAFc/EBjyy
+	 dbvv7i+f6nhiuTyF2K/5ZpSbFrLa5EIkTIPpNn67dPvoZ5G6ESvxlBQnjqEnfl3tbU
+	 g0y30awX8y3er9u7Pf1JIfjHELtRmJ5qsfhZaW38IPIVGqtj91/7D1s4glWIH3lsKe
+	 sLgvDbWSRuA4YeDmKjhpDiThlIV1MLqm2JE0dD2LEgfxIng1ZqAkk9vwGj4+afCCwc
+	 kpnUgXxRI+I1M6KU79SH1+9UyMxcrJ7Kz2Ia3/bCbNQCAnKy+zRtuan+d5KPi+/Alx
+	 m3dhyONeiHWMw==
+Received: by mail-lj1-f170.google.com with SMTP id 38308e7fff4ca-3a1a3bb6c5dso646181fa.2
+        for <linux-pci@vger.kernel.org>; Tue, 01 Sep 2026 10:32:30 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AKwUvByKtf7RcbBclUboAK6vAbsjV3NNgU+hqMlVM7EhU4HucA76gn+33N/eKswYCC0fbiBX5mF2+XMas8g=@vger.kernel.org
+X-Gm-Message-State: AFuF++mYdzCKYTi3SQCWcwKKJG7odg8hrd2HrZx3ojMI/nr2HC8C+tvc
+	caERVfEqWLSStESozGrSdzLb1brnBxY8ZqKZIn7w8MCFJr0DgYo/icG5HhKwl455/qiyjwxiHlr
+	u5iTPCYkdFwh6Rj3mXm6kf8jUwJuehfM=
+X-Received: by 2002:a05:651c:211c:b0:3a3:2585:3bc5 with SMTP id
+ 38308e7fff4ca-3a325853cebmr42466371fa.3.1788283949159; Tue, 01 Sep 2026
+ 10:32:29 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+References: <3435655.aeNJFYEL58@rafael.j.wysocki> <10913616.nUPlyArG6x@rafael.j.wysocki>
+ <20260831201426.92F091F000E9@smtp.kernel.org>
+In-Reply-To: <20260831201426.92F091F000E9@smtp.kernel.org>
+From: "Rafael J. Wysocki (Intel)" <rafael@kernel.org>
+Date: Tue, 1 Sep 2026 19:31:33 +0200
+X-Gmail-Original-Message-ID: <CAJZ5v0i9+UaHF__1C+nZHjerChegZSewYsnU3viP=HW5Mq9UHw@mail.gmail.com>
+X-Gm-Features: AcwNN1WpAOu2_0FJ-2hVzFHffFn7LMFme4B-bGrNMakdHK13wBDpU2UyL7ExrlE
+Message-ID: <CAJZ5v0i9+UaHF__1C+nZHjerChegZSewYsnU3viP=HW5Mq9UHw@mail.gmail.com>
+Subject: Re: [PATCH v1 1/7] ACPI: scan: Stop calling acpi_bus_init_power() early
+To: sashiko-reviews@lists.linux.dev
+Cc: "Rafael J. Wysocki" <rafael@kernel.org>, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
-- [Medium] Out-of-bounds Register Definition: The `DOORBELL` register array=
- exceeds the maximum size of its specified base type `TyrRegisters`.
-- [Low] API Misuse: Applying `base: TyrRegisters;` to purely in-memory bitf=
-ields allows them to silently alias hardware MMIO registers.
---
+On Mon, Aug 31, 2026 at 10:14=E2=80=AFPM <sashiko-bot@kernel.org> wrote:
+>
+> Thank you for your contribution! Sashiko AI review found 4 potential issu=
+e(s) to consider:
+> - [High] Transient failures in early PCI enumeration due to unmet ACPI de=
+pendencies permanently disable ACPI power management for the device.
+> - [High] Concurrent execution of `acpi_device_set_power` and `acpi_bus_at=
+tach` leads to power resource reference count leaks.
+> - [High] Bitfield data race on `struct acpi_device_flags` leading to corr=
+upted device flags.
+> - [High] Unprivileged sysfs access to a child's power state bypasses the =
+parent's power resource initialization, leading to reference count underflo=
+w and permanent power leaks.
+> --
+>
+> commit 00db710bd9860a36a16f28aa782d074b11d43aab
+> Author: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+>
+> ACPI: scan: Stop calling acpi_bus_init_power() early
+>
+> This commit prevents premature transition into the D0 power state for
+> devices with missing dependencies by changing when acpi_bus_init_power()
+> is called. It updates acpi_device_set_power() to initialize power upfront
+> and adjusts acpi_bus_attach() to use ACPI power state tracking instead of
+> the initialized flag.
+>
+> Link: https://lore.kernel.org/linux-acpi/20260820-acpi-power-resource-ref=
+-fix-v2-1-29818173ea13@linux.spacemit.com/ [1]
+>
+> > diff --git a/drivers/acpi/device_pm.c b/drivers/acpi/device_pm.c
+> > index aa55ecfc2923c..a680e6972a8c2 100644
+> > --- a/drivers/acpi/device_pm.c
+> > +++ b/drivers/acpi/device_pm.c
+>
+> [ ... ]
+>
+> > @@ -168,6 +168,12 @@ int acpi_device_set_power(struct acpi_device *devi=
+ce, int state)
+> >           || (state < ACPI_STATE_D0) || (state > ACPI_STATE_D3_COLD))
+> >               return -EINVAL;
+> >
+> > +     if (device->power.state =3D=3D ACPI_STATE_UNKNOWN &&
+> > +         acpi_bus_init_power(device)) {
+> > +             device->flags.power_manageable =3D 0;
+>
+> [Severity: High]
+> If acpi_bus_init_power() fails transiently here because dependencies are
+> unmet (for instance, _PSC or _ON evaluations fail during early PCI
+> discovery), does this permanently disable ACPI power management for the
+> device? Since the prior restoration logic was removed from
+> acpi_bus_attach(), it appears there is no mechanism to recover from this
+> transient failure when dependencies are met later.
 
-commit 1d550d1a42720086769c2c8dc9fd2f019102d497
-Author: Gary Guo <gary@garyguo.net>
+Good point.
 
-drm/tyr: specify base type for registers
+> [Severity: High]
+> Because struct acpi_device_flags is a bitfield, does modifying
+> power_manageable here without mutual exclusion risk a data race?
+>
+> If acpi_device_set_power() runs concurrently with async enumeration
+> (such as acpi_bus_attach() calling acpi_device_set_enumerated()), they
+> could perform concurrent read-modify-write operations on the bitfield.
+> This could cause one of the flag updates (like the visited or enumerated
+> flag) to be silently lost.
 
-This commit updates register definitions to specify TyrRegisters as the base
-type for all register! invocations.
+This will not happen AFAICS, but in fact it is not necessary to clear
+flags.power_manageable in acpi_device_set_power() which will also
+address the previous comment.
 
-> diff --git a/drivers/gpu/drm/tyr/driver.rs b/drivers/gpu/drm/tyr/driver.rs
-> index bfb0ba19caff9..730b84e37a544 100644
-> --- a/drivers/gpu/drm/tyr/driver.rs
-> +++ b/drivers/gpu/drm/tyr/driver.rs
-> @@ -46,6 +46,7 @@
->  };
-> =20
->  pub(crate) type IoMem<'a> =3D kernel::io::mem::IoMem<'a, SZ_2M>;
-> +pub(crate) type TyrRegisters =3D kernel::io::Region<SZ_2M>;
+The power state will remain ACPI_STATE_UNKNOWN until it gets properly
+initialized either during acpi_device_set_power() execution or by
+acpi_bus_attach() which both call acpi_bus_init_power() if the power
+state is unknown.
 
-[ ... ]
+>
+> > +             return -ENODEV;
+> > +     }
+> > +
+> >       acpi_handle_debug(device->handle, "Power state change: %s -> %s\n=
+",
+> >                         acpi_power_state_string(device->power.state),
+> >                         acpi_power_state_string(state));
+>
+> [ ... ]
+>
+> > diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
+> > index f48715ed827c7..1ad8dffc2dafe 100644
+> > --- a/drivers/acpi/scan.c
+> > +++ b/drivers/acpi/scan.c
+>
+> [ ... ]
+>
+> > @@ -2364,16 +2361,13 @@ static int acpi_bus_attach(struct acpi_device *=
+device, void *first_pass)
+> >
+> >       acpi_ec_register_opregions(device);
+> >
+> > -     if (!device->flags.initialized) {
+> > -             device->flags.power_manageable =3D
+> > -                     device->power.states[ACPI_STATE_D0].flags.valid;
+> > -             if (acpi_bus_init_power(device))
+> > -                     device->flags.power_manageable =3D 0;
+> > +     if (device->flags.power_manageable &&
+> > +         device->power.state =3D=3D ACPI_STATE_UNKNOWN &&
+> > +         acpi_bus_init_power(device))
+>
+> [Severity: High]
+> Is it possible for acpi_bus_attach() (running asynchronously via
+> acpi_scan_clear_dep_fn()) and acpi_device_set_power() (reachable via
+> sysfs power/control) to execute concurrently?
 
-> diff --git a/drivers/gpu/drm/tyr/fw.rs b/drivers/gpu/drm/tyr/fw.rs
-> index 47d25c901bd01..7edb5eff17077 100644
-> --- a/drivers/gpu/drm/tyr/fw.rs
-> +++ b/drivers/gpu/drm/tyr/fw.rs
-> @@ -101,6 +102,8 @@ fn from(value: CacheMode) -> Self {
->  }
-> =20
->  register! {
-> +    base: TyrRegisters;
-> +
->       #[allow(non_upper_case_globals)]
->      pub(super) SectionFlags(u32) @ 0x0 {
->          0:0 read =3D> bool;
+This can only happen for PCI devices and only when their initial
+power-up fails to initialize the ACPI power state.
 
-[Severity: Low]
-Does applying an MMIO base to this firmware struct unintentionally allow it
-to be used in hardware I/O operations?
+> Both paths now perform a lockless check of
+> device->power.state =3D=3D ACPI_STATE_UNKNOWN and subsequently call
+> acpi_bus_init_power(). Could this lead to both threads acquiring power
+> resource references via acpi_power_on_resources(), keeping the hardware
+> powered on indefinitely when the second set of references is leaked?
 
-By specifying base: TyrRegisters; and @ 0x0, SectionFlags gains I/O traits
-tied to the hardware MMIO base. Since this appears to be an in-memory bitfi=
-eld
-used for parsing firmware, should the bitfield! macro be used instead to
-prevent it from silently aliasing hardware registers?
+This can be addressed by pulling the PCI device checks from the last
+patch into the first one.
 
-[ ... ]
+> [Severity: High]
+> Could an unprivileged user reading the real_power_state sysfs attribute
+> of a child device bypass this parent initialization?
+>
+> If a sysfs read calls acpi_device_get_power() on the child, it can
+> locklessly mutate the parent's state to ACPI_STATE_D0:
+>
+> acpi_device_get_power() {
+>     ...
+>     if (!device->power.flags.ignore_parent && parent &&
+>         parent->power.state =3D=3D ACPI_STATE_UNKNOWN &&
+>         result =3D=3D ACPI_STATE_D0)
+>             parent->power.state =3D ACPI_STATE_D0;
+>     ...
+> }
+>
+> If this occurs before acpi_bus_attach() runs for the parent, the
+> lockless check here in acpi_bus_attach() will see a state other than
+> ACPI_STATE_UNKNOWN and skip calling acpi_bus_init_power().
+>
+> Does this result in the parent's power resources never being initialized,
+> leading to a reference count underflow when the device later transitions
+> to D3?
 
-> diff --git a/drivers/gpu/drm/tyr/regs.rs b/drivers/gpu/drm/tyr/regs.rs
-> index a62724378ced2..0c419c4e1186c 100644
-> --- a/drivers/gpu/drm/tyr/regs.rs
-> +++ b/drivers/gpu/drm/tyr/regs.rs
-[ ... ]
-> @@ -1104,6 +1131,8 @@ fn from(val: MemoryType) -> Self {
->          }
-> =20
->          register! {
-> +            base: TyrRegisters;
-> +
->              /// Stage 1 memory attributes (8-bit bitfield).
->              ///
->              /// This is not an actual register, but a bitfield definitio=
-n used by the MEMATTR
+Good catch.  This parent power state update is fishy and shouldn't be
+done anyway.
 
-[Severity: Low]
-Similar to SectionFlags above, the comment explicitly notes this is not an
-actual register. Does adding base: TyrRegisters; here mistakenly grant it
-MMIO traits and allow accidental I/O operations?
-
-[ ... ]
-
-> @@ -1770,6 +1811,8 @@ pub(crate) mod doorbell_block {
->      const STRIDE: usize =3D 0x10000;
-> =20
->      register! {
-> +        base: TyrRegisters;
-> +
->          /// Doorbell request register. Write-only.
->          pub(crate) DOORBELL(u32)[NUM_DOORBELLS, stride =3D STRIDE] @ 0x8=
-0000 {
->              /// Doorbell set. Writing 1 triggers the doorbell.
-
-[Severity: Medium]
-Does this base type provide enough address space for the entire array?
-
-TyrRegisters is defined in driver.rs as kernel::io::Region<SZ_2M>
-(a 2MB limit). However, the DOORBELL array has 64 elements (NUM_DOORBELLS)
-with a stride of 0x10000 and starts at offset 0x80000.=20
-
-Accessing higher indices in this array will exceed the 2MB limit (e.g., the
-maximum offset is 0x80000 + 63 * 0x10000 =3D 0x470000, ~4.5MB). Will this
-result in a build assertion failure or runtime out-of-bounds error when
-upper doorbell indices are accessed?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260901-typed_regi=
-ster-v4-0-5552b1d59525@garyguo.net?part=3D8
+> > +             device->flags.power_manageable =3D 0;
+> >
+> > -             device->flags.initialized =3D true;
+> > -     } else if (device->flags.visited) {
+> > +     if (device->flags.visited)
+> >               goto ok;
+> > -     }
+>
+> --
