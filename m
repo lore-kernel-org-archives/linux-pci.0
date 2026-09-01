@@ -1,28 +1,28 @@
-Received: from PH0PR06CU001.outbound.protection.outlook.com (mail-westus3azon11011017.outbound.protection.outlook.com [40.107.208.17])
+Received: from BYAPR05CU005.outbound.protection.outlook.com (mail-westusazon11010033.outbound.protection.outlook.com [52.101.85.33])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED28A479876;
-	Tue,  1 Sep 2026 09:33:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.208.17
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E00D47ACE9;
+	Tue,  1 Sep 2026 09:34:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.85.33
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788255242; cv=fail; b=Uo98wS7sS/4Gx7OLQqMyC4cOnNwFDx5+MdtUXX16pa2OlEGH9xUJzYFOnbjwkMC8vLbP6wTc3Uug8QLfNpfi9ZZEbCBZdcQ2AC5Y0oRutgilbfFO1ga6n7Td57VGvySxZayGgG/Ati+siq0bnrPdEAgxFMvsrdMsmoQBXD+PFGo=
+	t=1788255244; cv=fail; b=F8HDcuQfPhTfw/+RGmYerF/+xiX7ib8wOogZGKgpG+FOI28rdihEKGYvEMpWt7SmxzyV4fnRAokXtQ724JU2o77+2LJTJOqUK3PFPkMo/+T5HFz+q+WCh6uaux42f8eMH+xBWCmYCrvGZOn6nI5sIrwxO666Vkip+P9DXw5s2as=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788255242; c=relaxed/simple;
-	bh=Iw4gEiXk5lRr2qefpjCONKqU6fA/t+be5+41zix5pvQ=;
+	s=arc-20240116; t=1788255244; c=relaxed/simple;
+	bh=Fcd2St04MedTpPfLOqj+akdHwJ/JdWyLbXl2ahjPKDM=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=mpKGFJOb1HI/WP1NlZFTMsF2bZvUOFf8mY8zvpHSQyAMXpFbtr2BJKxW6G74WvpGzHYzfnr2s+JRBh2ro6UShjj9fEqRmIMzBD01GkXMYCkTZmAaBjsVqcw32DMCgFDdkNt+oE9senricsTg+miK5W83NLM7U+7lMA11JtrU+Wc=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=XaDHWJIn; arc=fail smtp.client-ip=40.107.208.17
+	 MIME-Version:Content-Type; b=aFG/GPc9CV+FSBc8B+50ofYVOH9gaj8ogRFkaFFcXK6/ib42Cx4ZJIa8cAV4opEaaMbcmAJFJ91mIFcL0B9XQGvIUO4yfpY8sVR0HGJorOoN6EZNHppKyLhzstlMOUITKhUvr7P1MjmIgBoyXGaHruJ4F4Alu95UyjixrT44lzw=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=dfPJeB2q; arc=fail smtp.client-ip=52.101.85.33
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="XaDHWJIn"
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="dfPJeB2q"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=KCHvjzF74TtUcnS/OSclkyk8C8MjnCwHgiqhGcb0Qll0QxCVTWy6boXEoAcPFdKRednoah6CoTvNMPTlg8QB40y5ZbAiHS41OT4mg0zYjT4uTOKYT477fBz98bF9npBDkseAl8IrlszrsayoNEZ5IRRcpOUniWnAmPP5arPTVKJZLHoiATwRYJbMybXs38dhbQtv4sJAmOIzjV/A50AEuY1dUoJzxjgOF0h/Cm9ykZR/nRnQ5qetLiwsjF/q/vHYvcM9RXkXlPU5O68UaXmlQLOVu4T9I/fafvxnSvJjWlXYo9p1htffwjbqNtM17HyCSU3N9cDq9oCRjqSCXHhOqg==
+ b=azvBqgORumC/0W63Ca+iWsppkz6joJ+DpVxhhPbY9yQESbT6buDjX19LbXqWfwbDZpBTOMzOnkPTfpvrbN2M7H9/QKw1XTZ3K2HvUjJosEnKAwlyTEcSvYFwGTMU5nK0fuH/2Q5QGLcXazHlC0v96zmsZFlbtgSEmyXnb5/Z0j555NKSJRQ/AFyclfFpOfL5n9hckNFL7jFJaemucPZG6/QqkZA7nxf0W1mYYmw4xD8dmgaGLGBjFft7ZyVOZSvjLMMY0ybIjn2YR8LZ8z4sj15kWvuJFJG3Ru4KMcLUUZ5XXU05tXgX8XHhwmSjdl6SfJ3jy+Yrvh+SkEUUg0E6Ow==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=JhaNg42w3D8r+kjVMls62vmV4oSyLHZtbFn3wn45MN8=;
- b=Xy/N3bpEwRQ7ix6U4no4RXcMOrMWhMCGaH0kVrdXsKEEAJ7mSvQyr3tyVVI01RscfbWjWxE4+k6IWBDqXfmllICV0zUvGP6ih05rk7cwoZ+9Yy4I/a4EmCfZ4/AdVl3XvYwPTzwIA/LRslcw+/92dkXMVdoHyhLHkKs63FnHd+ETyR8h59IgGl1EaHdM1wPoC+ngzd3Gq4Vt5HN6xJDJu1z7v3Vu68OejvBasc6cG1pegMqAs7wjiR2kGQKm+BmFoOl107QBitdllLEoVSUJkEJts4WWGPTd1hx1XZZaR9LJFrSKqCRiPUWlZU42yjwnK7oBCYRBVeU0bCaTsFsFwg==
+ bh=Lq7zjeRolvU5bJGzirYTyvOwGz2HoIXIjjGAtlBnHxU=;
+ b=JsS1YRiHo88qK+vS6GK16umzrHzFowrl8JVkgXxa+XOA1h+pBol95nHXROV4kd+02Gl3QGw6jmbaHAgxA0oPizWl1y9ZACsf77NmuVY3LoCJKaMq/26TFTO0+AW894p2TbJ7EKHgWWwbVuAUjMK0fphL3vyyLgAoK1HKjeYtuJlaaGXfWJnLqFzH8H3lKsDRHBvUvL895X2fsyIZRwwiJm88AmuUD/k3S6Y/wK2wDJofpCh8mJ8T+9nSrMNQYdd7FkHmmRHx9ZNWAMGI3YIzlY+bIVpuOpVELdLtgDQ8u5Fo4Nh9thRXXoU5CornH1c03V9gQBQrUNt5loY3c6qMVg==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  216.228.117.161) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=nvidia.com;
  dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
@@ -30,18 +30,18 @@ ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=JhaNg42w3D8r+kjVMls62vmV4oSyLHZtbFn3wn45MN8=;
- b=XaDHWJInkjudh0TiWNbK7RmSpU+gMjGpT72cn5DQ1JPK5ZG/k/slmrtPsaD7Wx4eCxPSDYjpWhT/vih0rfqiMQifXVRb42hAafW2FObIFGdQR6O9ElaLxPMwtFSxxwVRIZNCBcEmYGWvuGe8X+r47ZPg59U2jZojdT85xl3h+0/myIs1DFhSKDJhaFbv3+XUcnwYiTxX95TI4J5iqcaK5/SMKSNY+x+ux5I8YxLsXNZ49ywN4OBnUiUkbN2lrXxrTCqSxnC+m6e7Q76lPqiIgoxAOVKQUJak9hXfo6umdLZVI1CMCSldW40SNiDSw0iCJSSwCdkUN5LsVIdtrNgJqg==
-Received: from CH0P220CA0023.NAMP220.PROD.OUTLOOK.COM (2603:10b6:610:ef::25)
- by IA0PR12MB8326.namprd12.prod.outlook.com (2603:10b6:208:40d::7) with
+ bh=Lq7zjeRolvU5bJGzirYTyvOwGz2HoIXIjjGAtlBnHxU=;
+ b=dfPJeB2qMOCLYBHx1JjW/mF5bwuURNDC6Z4lmKHxLuosFLaprQV7asDoLd4UVcQMaU+hgJZ4R446KzNbkKpt9S+jc6KeE84lgQQiSx3JiGyXxFtxbndAyRIrmPlF7S5BX04kjlY6sOionuwC+Hkn/r9pks5QjkNgIAOAwzwSVTiqRqhiWWTso3RpQ77eQlUlkUbMTRXJ9FWyG4gk4v/Ma2AGaG9hNFn1ueVkLmJFDgXLaxoNCxpnScTxY2rh+yt+Ea1crr0yrgw/Iotzngx4nwxVlyOEgq5SAC6JziA40fSfj7IuQ8K0OzX+Qm8Y5mjrjD127sAXlu/MlGDqjLX9Qg==
+Received: from CH0PR13CA0047.namprd13.prod.outlook.com (2603:10b6:610:b2::22)
+ by BL1PR12MB5754.namprd12.prod.outlook.com (2603:10b6:208:391::20) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.360.13; Tue, 1 Sep
- 2026 09:33:43 +0000
-Received: from CH2PEPF00000146.namprd02.prod.outlook.com
- (2603:10b6:610:ef:cafe::a5) by CH0P220CA0023.outlook.office365.com
- (2603:10b6:610:ef::25) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.21.360.13 via Frontend Transport; Tue, 1
- Sep 2026 09:33:43 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.360.12; Tue, 1 Sep
+ 2026 09:33:51 +0000
+Received: from CH2PEPF00000144.namprd02.prod.outlook.com
+ (2603:10b6:610:b2:cafe::6f) by CH0PR13CA0047.outlook.office365.com
+ (2603:10b6:610:b2::22) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.21.382.10 via Frontend Transport; Tue, 1
+ Sep 2026 09:33:51 +0000
 X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.117.161)
  smtp.mailfrom=nvidia.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=nvidia.com;
@@ -49,17 +49,17 @@ Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
  216.228.117.161 as permitted sender) receiver=protection.outlook.com;
  client-ip=216.228.117.161; helo=mail.nvidia.com; pr=C
 Received: from mail.nvidia.com (216.228.117.161) by
- CH2PEPF00000146.mail.protection.outlook.com (10.167.244.103) with Microsoft
+ CH2PEPF00000144.mail.protection.outlook.com (10.167.244.101) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.382.8 via Frontend Transport; Tue, 1 Sep 2026 09:33:43 +0000
+ 15.21.382.8 via Frontend Transport; Tue, 1 Sep 2026 09:33:51 +0000
 Received: from rnnvmail201.nvidia.com (10.129.68.8) by mail.nvidia.com
  (10.129.200.67) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.46; Tue, 1 Sep
- 2026 02:33:28 -0700
+ 2026 02:33:36 -0700
 Received: from NV-2Y5XW94.nvidia.com (10.126.230.37) by rnnvmail201.nvidia.com
  (10.129.68.8) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.46; Tue, 1 Sep
- 2026 02:33:25 -0700
+ 2026 02:33:33 -0700
 From: Shameer Kolothum <skolothumtho@nvidia.com>
 To: <kvm@vger.kernel.org>, <linux-pci@vger.kernel.org>,
 	<linux-kernel@vger.kernel.org>
@@ -67,9 +67,9 @@ CC: <alex@shazbot.org>, <jgg@ziepe.ca>, <kevin.tian@intel.com>,
 	<kbusch@meta.com>, <michal.winiarski@intel.com>,
 	<satyanarayana.k.v.p@intel.com>, <sonangp@nvidia.com>, <nathanc@nvidia.com>,
 	<mochs@nvidia.com>
-Subject: [RFC PATCH 04/19] vfio/pci: Serialize function reset with recovery
-Date: Tue, 1 Sep 2026 10:32:02 +0100
-Message-ID: <20260901093217.8539-5-skolothumtho@nvidia.com>
+Subject: [RFC PATCH 06/19] vfio/pci: Serialize ioeventfd writes with recovery
+Date: Tue, 1 Sep 2026 10:32:04 +0100
+Message-ID: <20260901093217.8539-7-skolothumtho@nvidia.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20260901093217.8539-1-skolothumtho@nvidia.com>
 References: <20260901093217.8539-1-skolothumtho@nvidia.com>
@@ -85,198 +85,191 @@ X-ClientProxiedBy: rnnvmail203.nvidia.com (10.129.68.9) To
  rnnvmail201.nvidia.com (10.129.68.8)
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CH2PEPF00000146:EE_|IA0PR12MB8326:EE_
-X-MS-Office365-Filtering-Correlation-Id: 74c63cee-cc91-4b1c-da07-08df080c1d28
+X-MS-TrafficTypeDiagnostic: CH2PEPF00000144:EE_|BL1PR12MB5754:EE_
+X-MS-Office365-Filtering-Correlation-Id: e99b1f56-16bc-49ea-72b1-08df080c2200
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|23010399003|36860700016|82310400026|376014|1800799024|6133799003|56012099006|10067099003|11063799006|5023799004|22082099003|18002099003;
+	BCL:0;ARA:13230040|82310400026|1800799024|376014|23010399003|36860700016|10067099003|56012099006|11063799006|18002099003|22082099003;
 X-Microsoft-Antispam-Message-Info:
-	E7Sl2qdOC8Xst5m+ialE7bMcXs8ns5dvElUL/Idz0cxSNphVyV4o1w5u7ZODowGAs1+0uTzivizA2iez+vobebTyfxYGma/7k20rnQ50qF4/+Np+dO4C1ZiSdI6GVWm/srpnmjrpf14HlKChGAb0VRETc6rh1jeYFtK3G8ycoN8PIrrXKZdS2ec1j3WEnwvkkNGT03rXAoFN92tJEEBOze7lI8QozBffYwkW0n4ebDhje7dz+FlfKq/eZkWwZKd7ZzuLSjOwC0jRkw72Qu9/CWdg/PRyaZ/2dwvHmqZsTNAFURqWJGG0pYwtYG4HPsZD8D3Vr7iBSYnUUQKSDdZyrKOk2Pp7mUtEiZVEaITr0YQwnEbza7I2+RNu8v1rd26dgS75sht/0QP8redK6HlAXFlTfRoKtLLzi7GfzMW0Ycebf3knE7dzB1qgCiLGO/Kg5pEPmVCpaa5n/JbMUv+d+1craq2C8YQwd0fZk/zw4xAQ6OqK/jHqqBJ6T3+Xv+rzxZoJ5p0qZRJidJ1BMOI5jwcM46I24L+nULzfeYjjf+Bs/GVt8rhpW7NHf/OkOZQsbEq+o/chBU1Cm7Tyv2mNC8OnsOY6CePwI9lrEpmGEHKZvRCczepRv/j81PiiesEI/6yc3xlrlhIRaVj0UgpEs0Wbc8v7RYIabe/Wh7/kZiOtHuOs1Bebc2mwYZj7pnQ5t0QDTAwPI3pex7wyYCp/JQ==
+	Hp0e7//UX0AdPvz6/WLNVrnx4pnptcrI9469IGOAOTsh4nl6ilWn34LGxwgWLbv3WKJclj1kQypafq/ONdHiXFGUMLoqUakFICNE1aSye9ssssYOGZe8nkz6HqQ5GHi/mqFxI8z43x39Hlmtfnc0reBVwSkv0zoST4DpMvSl/yXGlKq59PhloHndPjSBdcG0djOFYqEPJkgi/xApyksnS0xYHg2qh3AULabqp8W6++r/tg0Cdl9WKxKQRKIngbot3bef0/17OHgmtXzvE6ppHJqVXsEGNRe81n89tbbvT89mL00Iig12oQ6y/I2e8bM2KkpMaf6UzxhDei/iZVB93Cp83qIJFKY4/YBiGz4PupYcvjgrdie4zuhktk2PKh0n7W8kdstJGNbq0obd+C75G3LS5RJ5xx5Eb64CDReWl9/HdkufwuZalUPeqA9CCjUmMC6cW66Rjox64wcGHB2f6hWTcPB/r7RGDgyUMKt7lHi19HpoZPJQoRxK0O29qiy6k5mCQwby3De78B31fyvzBGye/TZxgTEdm+ax5aEtyRwMMvkx2kP3q0JRZyGRzDJuui3gAHeGVpg7tygIwWJ+X+axmupZ2Dddb7PhJrdoJpRMzl2X07/hy/j/AqN4QQfT4p/d8DndtOyPGP4Wg1tNgz4FUE+YMrGcaX2xhG7kAfjYcORpaR4oqYVVnBpfphkAugZT2ba9UlMckwjNgl/fFQ==
 X-Forefront-Antispam-Report:
-	CIP:216.228.117.161;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge2.nvidia.com;CAT:NONE;SFS:(13230040)(23010399003)(36860700016)(82310400026)(376014)(1800799024)(6133799003)(56012099006)(10067099003)(11063799006)(5023799004)(22082099003)(18002099003);DIR:OUT;SFP:1101;
+	CIP:216.228.117.161;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge2.nvidia.com;CAT:NONE;SFS:(13230040)(82310400026)(1800799024)(376014)(23010399003)(36860700016)(10067099003)(56012099006)(11063799006)(18002099003)(22082099003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	a1ZbyUklArfNGIy1Sg1mIQNV3HYLljoBuoSkGLOQTvL47Oet2GSTTzp2nFnFfGA4sxVPZpVbEjIV2DyQd49D4lYZAHNxIw6DQYPPV7ROzEbeWahNykOB4rzpFDPKRz1te8/j4KCBuJpwYXioUK4JtDNPNQtzZHl8GePTC2p2GePvWe2bPevb+FNIfotF6QE6n72/PShcIUebWaphK+ut497PCXuRh539rawUCiZwGngMET4htQw/4VVzmkUrwvGrwTOjX50fSME1tvQY+hsgFBDWoBa768AerXlRPuP/PkEiQyn+Z6CbF0uSQH6iL4WSN3d7mySjo7Qtahs00n827/OA14yai/E/4Ifbup0ejeE+SQ8+HFo3gaBzfCoAkTK3iDeTsjsB+ObeIxoACkMxl/9jfBlG7MBETQwcGrbUOmeDJD5XevvceiLL5Ky0woyN
+	B8H61ERdqEoYtvt1218XKstH3P8Hdlg9aC0Ofv/ZrywimPKN77Kd4k/Qbxah6DyRDs5S5D2I8IdilVUsWa0xhr34/mDVHGvqVTF5EIq8rRMpDi6LABcImgMeD8/BKmmEL/D+gJ0dMfIWDlMu2CTrDj365vg+83c9q2UAYf/PEvzf6sdhXohlyuvz+N4qeUWxTX4iqo04shSuobbqed5j9Z/AR7oWTAJBRlkNqO71AHLuHkhXWRMvkldLBPum4/hpM3Q2TrjqKBeHMGBpsK2V6GMVQkXUPxNW4MClMdVnR+i7RxJ7gerUxQtCBGmpSBTaWEHYMsWCjZxVcpopYOJSd77Rl0Q5STGAWU7G+zRQUkmhQykl0URDhEfd4hBjkY6wx/7BjVeRuS7lTysLL6IydygP5zJHACM+wb/iYf/4MCO2ICKebzuGKeXeN1RbvUEP
 X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 01 Sep 2026 09:33:43.0233
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 01 Sep 2026 09:33:51.1408
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 74c63cee-cc91-4b1c-da07-08df080c1d28
+X-MS-Exchange-CrossTenant-Network-Message-Id: e99b1f56-16bc-49ea-72b1-08df080c2200
 X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.161];Helo=[mail.nvidia.com]
 X-MS-Exchange-CrossTenant-AuthSource:
-	CH2PEPF00000146.namprd02.prod.outlook.com
+	CH2PEPF00000144.namprd02.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA0PR12MB8326
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BL1PR12MB5754
 
-Add a function reset helper and use it for VFIO_DEVICE_RESET. A later
-patch routes the guest triggered config space FLR through it as well.
-That path never did the power state transition, so make it optional.
+Share one write helper between the ioeventfd fast path and the threaded
+one. It takes memory_lock, checks the recovery state, then writes. The
+fast path runs from the virqfd wakeup with a spinlock held, so it
+trylocks and hands off to the thread if the lock is busy. The thread can
+block.
 
-With recovery enabled, take recovery_lock for writing, refuse the reset
-with -EBUSY if access is already blocked, otherwise block access and drop
-the lock again before revoking mappings or running the reset.
-recovery_lock cannot be held across the reset because a reset method can
-take pci_bus_sem, and the PCI error callbacks take recovery_lock from
-under it.
+The ioeventfd write path must not take recovery_lock at all. It is
+reached through flush_work() from the virqfd cleanup workqueue, and
+VFIO_DEVICE_SET_IRQS later calls vfio_virqfd_disable(), which does that
+flush while holding recovery_lock for reading. If the write then blocked
+on recovery_lock behind a queued AER writer, all three would be stuck.
+The flush waits for the write, the write waits for the AER writer, and
+the AER writer waits for the reader driving the flush.
 
-Dropping it is safe in both directions. The error callbacks hold
-recovery_lock for their whole body, so one already running has finished
-before the reset starts. One which arrives while the lock is down runs
-its own event, and the PCI core calls it with the device lock held, which
-pci_try_reset_function() also takes, so it cannot overlap the reset
-itself.
+So the recovery state is read lock-free, and the write goes through the
+raw vfio_iowrite*() accessors rather than vfio_pci_core_iowrite*(). A
+later patch makes those take recovery_lock, which is what this path has
+to stay clear of.
 
-Only unblock access at the end for a reset which is still the one
-blocking it. An event which started meanwhile owns the state from then
-on, and resume() is what ends it.
+memory_lock is still what drains a write already under way, and the
+order is what makes it safe. The lock is taken before the flag is read,
+so a write which saw the flag clear is already holding the read side,
+and recovery waits for it when it takes memory_lock for writing. A write
+to an I/O port BAR takes no memory_lock and is not drained. Those are
+best effort. So is a write which arrives just after a reset has finished,
+since VFIO_DEVICE_RESET releases memory_lock before it retakes
+recovery_lock to unblock access.
 
-With recovery not enabled, leave access_blocked alone. Two concurrent
-resets still serialize on memory_lock, same as today. Setting the flag
-for a device which never opted in would turn a working VFIO_DEVICE_RESET
-into -EBUSY.
-
-Access stays blocked until the reset is done and memory state is back,
-and the wait queue is woken once it clears. A later patch adds the BAR
-fault path, which waits there rather than failing the fault while a
-reset is in flight.
+The check is skipped for drivers which do not advertise support.
+pci_recovery_device_open is only ever set when the recovery machinery is
+live, so testing it unconditionally would drop every ioeventfd write for
+every other vfio-pci-core driver.
 
 Assisted-by: Claude:claude-opus-5
 Signed-off-by: Shameer Kolothum <skolothumtho@nvidia.com>
 ---
- drivers/vfio/pci/vfio_pci_priv.h |  3 ++
- drivers/vfio/pci/vfio_pci_core.c | 85 +++++++++++++++++++++++++++++---
- 2 files changed, 82 insertions(+), 6 deletions(-)
+ drivers/vfio/pci/vfio_pci_rdwr.c | 91 +++++++++++++++++++++-----------
+ 1 file changed, 60 insertions(+), 31 deletions(-)
 
-diff --git a/drivers/vfio/pci/vfio_pci_priv.h b/drivers/vfio/pci/vfio_pci_priv.h
-index 6daf51669d05..8a7f9fe22386 100644
---- a/drivers/vfio/pci/vfio_pci_priv.h
-+++ b/drivers/vfio/pci/vfio_pci_priv.h
-@@ -41,6 +41,9 @@ ssize_t vfio_pci_config_rw_single(struct vfio_pci_core_device *vdev,
- 				  char __user *buf, size_t count, loff_t *ppos,
- 				  bool iswrite);
- 
-+int vfio_pci_try_reset_function(struct vfio_pci_core_device *vdev,
-+				bool reset_power_state);
-+
- ssize_t vfio_pci_bar_rw(struct vfio_pci_core_device *vdev, char __user *buf,
- 			size_t count, loff_t *ppos, bool iswrite);
- 
-diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
-index 4194d44d6530..3645daa8891f 100644
---- a/drivers/vfio/pci/vfio_pci_core.c
-+++ b/drivers/vfio/pci/vfio_pci_core.c
-@@ -1379,14 +1379,53 @@ static int vfio_pci_ioctl_set_irqs(struct vfio_pci_core_device *vdev,
- 	return ret;
+diff --git a/drivers/vfio/pci/vfio_pci_rdwr.c b/drivers/vfio/pci/vfio_pci_rdwr.c
+index 7f14dd46de17..20362e2f0166 100644
+--- a/drivers/vfio/pci/vfio_pci_rdwr.c
++++ b/drivers/vfio/pci/vfio_pci_rdwr.c
+@@ -349,56 +349,85 @@ ssize_t vfio_pci_vga_rw(struct vfio_pci_core_device *vdev, char __user *buf,
  }
+ #endif
  
--static int vfio_pci_ioctl_reset(struct vfio_pci_core_device *vdev,
--				void __user *arg)
-+int vfio_pci_try_reset_function(struct vfio_pci_core_device *vdev,
-+				bool reset_power_state)
+-static void vfio_pci_ioeventfd_do_write(struct vfio_pci_ioeventfd *ioeventfd,
+-					bool test_mem)
++static int vfio_pci_ioeventfd_do_write(struct vfio_pci_ioeventfd *ioeventfd,
++				       bool trylock)
  {
-+	struct pci_dev *pdev = vdev->pdev;
-+	bool enabled = false;
-+	bool supported = vdev->pci_recovery_supported;
- 	int ret;
- 
--	if (!vdev->reset_works)
--		return -EINVAL;
-+	/*
-+	 * Claim the device against recovery before resetting it. The PCI
-+	 * error callbacks hold recovery_lock for their whole body, so taking
-+	 * it for writing here waits for one already running, and
-+	 * access_blocked keeps a later one away while the lock is dropped.
-+	 */
-+	if (supported) {
-+		down_write(&vdev->recovery_lock);
-+		if (!vdev->pci_recovery_device_open) {
-+			ret = -ENODEV;
-+			goto out_recovery;
-+		}
- 
-+		enabled = vdev->pci_recovery_enabled;
++	struct vfio_pci_core_device *vdev = ioeventfd->vdev;
 +
-+		/*
-+		 * Only claim access_blocked when recovery is enabled.
-+		 * error_detected() returns early for a device which has not
-+		 * enabled it, so there is nothing to exclude, and claiming it
-+		 * anyway would fail the second of two concurrent
-+		 * VFIO_DEVICE_RESET calls with -EBUSY.
-+		 */
-+		if (enabled) {
-+			if (vdev->pci_recovery_access_blocked) {
-+				ret = -EBUSY;
-+				goto out_recovery;
-+			}
-+			WRITE_ONCE(vdev->pci_recovery_access_blocked, true);
++	if (ioeventfd->test_mem) {
++		if (trylock) {
++			if (!down_read_trylock(&vdev->memory_lock))
++				return 1; /* Lock contended, use thread */
++		} else {
++			down_read(&vdev->memory_lock);
 +		}
-+		up_write(&vdev->recovery_lock);
 +	}
 +
 +	/*
-+	 * On a device which supports recovery, taking recovery_lock for
-+	 * writing above waited for anything already past its access check,
-+	 * and if recovery is enabled access_blocked keeps new ones out. Do
-+	 * not hold recovery_lock while taking memory_lock or running a reset
-+	 * method, since a reset can take pci_bus_sem.
++	 * Read the recovery state lock-free rather than under recovery_lock.
++	 * This path runs from the virqfd cleanup workqueue, which is flushed
++	 * from paths that take recovery_lock for reading, so blocking on it
++	 * here would deadlock behind a queued writer.
++	 *
++	 * For a memory BAR, a blocked device still waits for a write already
++	 * under way, through memory_lock. The lock is taken above before the
++	 * flag is read, so a write which saw the flag clear is already
++	 * holding the read side, and the blocker waits for it when it takes
++	 * memory_lock for writing. An I/O port BAR takes no memory_lock, so
++	 * a write which saw the flag clear can still land afterwards. Port
++	 * writes are best effort here.
++	 *
++	 * A write can also be dropped for a short while after a reset has
++	 * finished, since VFIO_DEVICE_RESET releases memory_lock before it
++	 * retakes recovery_lock to unblock access. Closing that would mean
++	 * taking recovery_lock inside memory_lock, which is the wrong way
++	 * round.
++	 *
++	 * pci_recovery_device_open records that the recovery machinery is
++	 * live, so it is only ever set for drivers which advertise support.
++	 * Testing it unconditionally would drop every write for every other
++	 * driver.
++	 *
++	 * The raw vfio_iowrite*() accessors below are used for the same
++	 * reason. This path must not take recovery_lock.
 +	 */
- 	vfio_pci_zap_and_down_write_memory_lock(vdev);
++	if (vdev->pci_recovery_supported &&
++	    (!READ_ONCE(vdev->pci_recovery_device_open) ||
++	     READ_ONCE(vdev->pci_recovery_access_blocked)))
++		goto out_memory;
++
++	if (ioeventfd->test_mem && !__vfio_pci_memory_enabled(vdev))
++		goto out_memory;
++
+ 	switch (ioeventfd->count) {
+ 	case 1:
+-		vfio_pci_core_iowrite8(ioeventfd->vdev, test_mem,
+-				       ioeventfd->data, ioeventfd->addr);
++		vfio_iowrite8(ioeventfd->data, ioeventfd->addr);
+ 		break;
+ 	case 2:
+-		vfio_pci_core_iowrite16(ioeventfd->vdev, test_mem,
+-					ioeventfd->data, ioeventfd->addr);
++		vfio_iowrite16(ioeventfd->data, ioeventfd->addr);
+ 		break;
+ 	case 4:
+-		vfio_pci_core_iowrite32(ioeventfd->vdev, test_mem,
+-					ioeventfd->data, ioeventfd->addr);
++		vfio_iowrite32(ioeventfd->data, ioeventfd->addr);
+ 		break;
+ 	case 8:
+-		vfio_pci_core_iowrite64(ioeventfd->vdev, test_mem,
+-					ioeventfd->data, ioeventfd->addr);
++		vfio_iowrite64(ioeventfd->data, ioeventfd->addr);
+ 		break;
+ 	}
+-}
+-
+-static int vfio_pci_ioeventfd_handler(void *opaque, void *unused)
+-{
+-	struct vfio_pci_ioeventfd *ioeventfd = opaque;
+-	struct vfio_pci_core_device *vdev = ioeventfd->vdev;
+-
+-	if (ioeventfd->test_mem) {
+-		if (!down_read_trylock(&vdev->memory_lock))
+-			return 1; /* Lock contended, use thread */
+-		if (!__vfio_pci_memory_enabled(vdev)) {
+-			up_read(&vdev->memory_lock);
+-			return 0;
+-		}
+-	}
+-
+-	vfio_pci_ioeventfd_do_write(ioeventfd, false);
  
- 	/*
-@@ -1398,15 +1437,49 @@ static int vfio_pci_ioctl_reset(struct vfio_pci_core_device *vdev,
- 	 * reset without restoring the original state (saved locally in
- 	 * 'vdev->pm_save').
- 	 */
--	vfio_pci_set_power_state(vdev, PCI_D0);
-+	if (reset_power_state)
-+		vfio_pci_set_power_state(vdev, PCI_D0);
- 
- 	vfio_pci_dma_buf_move(vdev, true);
--	ret = pci_try_reset_function(vdev->pdev);
-+	ret = pci_try_reset_function(pdev);
- 	if (__vfio_pci_memory_enabled(vdev))
- 		vfio_pci_dma_buf_move(vdev, false);
- 	up_write(&vdev->memory_lock);
- 
-+	if (enabled) {
-+		down_write(&vdev->recovery_lock);
-+		/*
-+		 * An error callback can have started an event while the lock
-+		 * was down. Leave the state to it. Only unblock access for a
-+		 * reset which is still the one holding it.
-+		 */
-+		if (vdev->pci_recovery_device_open &&
-+		    !(vdev->pci_recovery_flags & (VFIO_PCI_RECOVERY_IN_PROGRESS |
-+						  VFIO_PCI_RECOVERY_FAILED)))
-+			WRITE_ONCE(vdev->pci_recovery_access_blocked, false);
-+		up_write(&vdev->recovery_lock);
-+		/*
-+		 * Access is blocked for the length of the reset, so anything
-+		 * waiting for it to clear has to be woken here. A later patch
-+		 * adds the BAR fault path which waits on this.
-+		 */
-+		wake_up_all(&vdev->pci_recovery_wait);
-+	}
-+
- 	return ret;
-+
-+out_recovery:
-+	up_write(&vdev->recovery_lock);
-+	return ret;
-+}
-+
-+static int vfio_pci_ioctl_reset(struct vfio_pci_core_device *vdev,
-+				void __user *arg)
-+{
-+	if (!vdev->reset_works)
-+		return -EINVAL;
-+
-+	return vfio_pci_try_reset_function(vdev, true);
++out_memory:
+ 	if (ioeventfd->test_mem)
+ 		up_read(&vdev->memory_lock);
+-
+ 	return 0;
  }
  
- static int vfio_pci_ioctl_get_pci_hot_reset_info(
+-static void vfio_pci_ioeventfd_thread(void *opaque, void *unused)
++static int vfio_pci_ioeventfd_handler(void *opaque, void *unused)
+ {
+-	struct vfio_pci_ioeventfd *ioeventfd = opaque;
++	return vfio_pci_ioeventfd_do_write(opaque, true);
++}
+ 
+-	vfio_pci_ioeventfd_do_write(ioeventfd, ioeventfd->test_mem);
++static void vfio_pci_ioeventfd_thread(void *opaque, void *unused)
++{
++	vfio_pci_ioeventfd_do_write(opaque, false);
+ }
+ 
+ int vfio_pci_ioeventfd(struct vfio_pci_core_device *vdev, loff_t offset,
 -- 
 2.43.0
 
