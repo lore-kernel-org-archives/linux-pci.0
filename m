@@ -1,156 +1,83 @@
-Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
+Received: from out198-21.us.a.mail.aliyun.com (out198-21.us.a.mail.aliyun.com [47.90.198.21])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5326B382F15;
-	Wed,  2 Sep 2026 06:22:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=204.191.154.188
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C4BDD243956;
+	Wed,  2 Sep 2026 06:22:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=47.90.198.21
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788330158; cv=none; b=KlOHMRhtYZl5ami4wvXzpFDba7h1/A0ZbANvf9i1vW7Pj+TBBofxv6vF2K3uoDCM0Mcbc0m5NiaP0ZfDACEU8W6Cc11tcVQu+E+b66p657eEjan3ED1AwjnNwnDGF0GcoEhbHjDZZbp23Seo8XhnFlAyA0t3yEC2UtyaoF4gIlQ=
+	t=1788330159; cv=none; b=AqwEeFPY8P1eOcMdP5kM25wfMELvgm3ad4I8AiZYr4fSLWDL7Xhy8amEswsAfDW++bx56AvJiGrMnIDqCjg7Ii7yU4ZB4qNLLDhoyueyzaElGCjtWwJXBoU91b95xvY/Ccai5b6DuqFSa+Cnztc1JKC4jCtarzoEQcLF9UUFzVk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788330158; c=relaxed/simple;
-	bh=ycRgV6qO1wDEZmcsG0HnqvCRpxdtAUy7b3nM+piqew4=;
-	h=From:To:Cc:Date:Message-ID:In-Reply-To:References:MIME-Version:
-	 Subject; b=s+Y5UzIdT7tvSEEddbwqphYtWkEf+2AvGrXbsDlnMWVW8/8Dmf/0iz2G7iB+GXDp0oUleWh2ScTzWRZq77KfFGokOmD1Hye5LQYyhn6M045W3q24ddlrqzvcyQ7720p7sEn4OC+IauOg885dCHQoiKtX32Ujbu8Fq/V4TPd/xsU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com; spf=pass smtp.mailfrom=deltatee.com; dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b=WDv/q3og; arc=none smtp.client-ip=204.191.154.188
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=deltatee.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b="WDv/q3og"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=deltatee.com; s=20200525; h=Subject:MIME-Version:References:In-Reply-To:
-	Message-ID:Date:Cc:To:From:content-disposition;
-	bh=wfVFx652V47CW2/a10uYkNzuZ9R9O+SHTNbUJClacJA=; b=WDv/q3ogQynmjgpEn79GqLH8PC
-	W73nqJwQMHbUGly5FfvqBrasdrC969WPL842Mx/odzgl5MzVk47jImm4U1XG4HVP7d3A0LcpFbbFn
-	jFYng2LTr566xVfKhFbE6y9kGYUEsL+nK6BZBAFy3OytoB/sgzrZ6S5/ff6OPQnWUl/brhAg0lW98
-	Gf8LYwLIcKud2EoI3tIxEZCMTCiDROHWEh/KFFMn+JHzQt41TlIN+kA9IGRkwMf5gJ+mnZQfcUeRo
-	yBwrDe2bzcmu0U0udMrPoghwRWdkqJQsfuoqJDoeO8vNmHA/b4ARx7/iO/E3QYKGU1xAH3r6HFL4q
-	SRdo0Ftw==;
-Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
-	by ale.deltatee.com with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-	(Exim 4.98.2)
-	(envelope-from <gunthorp@deltatee.com>)
-	id 1x1eMg-00000000Lqi-2Aqy;
-	Wed, 02 Sep 2026 00:22:31 -0600
-Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.98.2)
-	(envelope-from <gunthorp@deltatee.com>)
-	id 1x1eMA-0000000085N-3ArI;
-	Wed, 02 Sep 2026 00:21:58 -0600
-From: Logan Gunthorpe <logang@deltatee.com>
-To: linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	dmaengine@vger.kernel.org,
-	Vinod Koul <vkoul@kernel.org>
-Cc: Frank Li <Frank.li@nxp.com>,
-	Kelvin Cao <kelvin.cao@microchip.com>,
-	=?UTF-8?q?Thomas=20Wei=C3=9Fschuh?= <linux@weissschuh.net>,
-	Dave Jiang <dave.jiang@intel.com>,
-	George Ge <george.ge@microchip.com>,
-	Jaeyoung Chung <jjy600901@snu.ac.kr>,
-	Logan Gunthorpe <logang@deltatee.com>,
-	Sashiko <sashiko-bot@kernel.org>,
-	Frank Li <Frank.Li@nxp.com>
-Date: Wed,  2 Sep 2026 00:21:44 -0600
-Message-ID: <20260902062153.31048-3-logang@deltatee.com>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20260902062153.31048-1-logang@deltatee.com>
-References: <20260902062153.31048-1-logang@deltatee.com>
+	s=arc-20240116; t=1788330159; c=relaxed/simple;
+	bh=dXEcfhD5yDg66IOIu9KvXrOCJWfxnipSzTXzf/cCccU=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=BK9juI8UATt/ABM/jVXSZh+qGcGGOHsbcAGo1KHCJcmf/sfqzJsv4LFb0c+p+aWMhm9haPHK7D3xECFYa905xjGv7ofSRmVSKcdKZUxR0MoiNrUkib8igayhfusCwT2SPVVjZaEZiaXEIZfEXMxx6tSXp0odhbuTmsRa02DC9Lk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=open-hieco.net; spf=pass smtp.mailfrom=open-hieco.net; arc=none smtp.client-ip=47.90.198.21
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=open-hieco.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=open-hieco.net
+X-Alimail-AntiSpam:AC=CONTINUE;BC=0.08171883|-1;CH=green;DM=|CONTINUE|false|;DS=CONTINUE|ham_social|0.00775139-0.00178939-0.990459;FP=6992961113209668745|0|0|0|0|-1|-1|-1;HT=maildocker-contentspam033032023038;MF=wanglin@open-hieco.net;NM=1;PH=DS;RN=11;RT=11;SR=0;TI=SMTPD_---.j3B4ChJ_1788330133;
+Received: from 172.18.24.170(mailfrom:wanglin@open-hieco.net fp:SMTPD_---.j3B4ChJ_1788330133 cluster:ay29)
+          by smtp.aliyun-inc.com;
+          Wed, 02 Sep 2026 14:22:14 +0800
+Message-ID: <5c6ebbf5-3b3c-47e7-800d-adb4049cd636@open-hieco.net>
+Date: Wed, 2 Sep 2026 14:22:13 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SA-Exim-Connect-IP: 172.16.1.31
-X-SA-Exim-Rcpt-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, dmaengine@vger.kernel.org, linux@weissschuh.net, dave.jiang@intel.com, kelvin.cao@microchip.com, george.ge@microchip.com, jjy600901@snu.ac.kr, logang@deltatee.com, vkoul@kernel.org, sashiko-bot@kernel.org, Frank.li@nxp.com, Frank.Li@nxp.com
-X-SA-Exim-Mail-From: gunthorp@deltatee.com
-X-Spam-Level: 
-Subject: [PATCH v6 02/10] dmaengine: switchtec-dma: fix resource leak in alloc_chan_resources
-X-SA-Exim-Version: 4.2.1 (built Sun, 23 Feb 2025 07:57:16 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v4 4/5] x86/amd_node: Skip SMN setup on Hygon Fam18h
+ models 0x04-0x08
+To: Borislav Petkov <bp@alien8.de>
+Cc: yazen.ghannam@amd.com, mario.limonciello@amd.com, tglx@linutronix.de,
+ mingo@redhat.com, dave.hansen@linux.intel.com, "H. Peter Anvin"
+ <hpa@zytor.com>, bhelgaas@google.com, x86@kernel.org,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20260901071700.3255382-1-wanglin@open-hieco.net>
+ <20260901071700.3255382-5-wanglin@open-hieco.net>
+ <20260902024833.GJapeOgRJ50RAZvI3e@fat_crate.local>
+Content-Language: en-US
+From: Lin Wang <wanglin@open-hieco.net>
+In-Reply-To: <20260902024833.GJapeOgRJ50RAZvI3e@fat_crate.local>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-switchtec_dma_alloc_chan_resources() returns directly on any later
-failure, without ever freeing the descriptor rings and coherent DMA
-memory it just allocated. The dmaengine core does not call
-device_free_chan_resources() when device_alloc_chan_resources() fails,
-so the driver has to unwind its own partial state.
 
-The device-removed check also runs after ring_active and
-comp_ring_active have already been set true, so a failure there left
-the channel marked active despite alloc_chan_resources() reporting
-failure.
 
-Add an error-unwind path that disables the channel and frees the
-descriptor rings on every failure after allocation. ring_active and
-comp_ring_active are cleared under the same locks
-switchtec_dma_free_chan_resources() already uses, since the completion
-tasklet checks comp_ring_active under complete_lock before touching
-the completion ring, and a stale IRQ can still be in flight when this
-unwind path runs.
+On 9/2/2026 10:48 AM, Borislav Petkov wrote:
+> On Tue, Sep 01, 2026 at 03:16:59PM +0800, Lin Wang wrote:
+>> @@ -252,6 +252,18 @@ static int __init amd_smn_init(void)
+>>   	if (!cpu_feature_enabled(X86_FEATURE_ZEN))
+> 
+> This driver should exit on Hygon right here.
+> 
+> Why doesn't it do that?
+> 
+> I know why - you set X86_FEATURE_ZEN.
+> 
+> Why?
+> 
+> What do you really need it for?
+> 
 
-Reported-by: Sashiko <sashiko-bot@kernel.org>
-Link: https://lore.kernel.org/dmaengine/20260707165555.350951F000E9@smtp.kernel.org
-Fixes: 30eba9df76ad ("dmaengine: switchtec-dma: Implement hardware initialization and cleanup")
-Reviewed-by: Frank Li <Frank.Li@nxp.com>
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
----
- drivers/dma/switchtec_dma.c | 23 +++++++++++++++++++----
- 1 file changed, 19 insertions(+), 4 deletions(-)
+Hi Boris,
 
-diff --git a/drivers/dma/switchtec_dma.c b/drivers/dma/switchtec_dma.c
-index a10818efba4e..e55fe9ff7e2c 100644
---- a/drivers/dma/switchtec_dma.c
-+++ b/drivers/dma/switchtec_dma.c
-@@ -988,15 +988,15 @@ static int switchtec_dma_alloc_chan_resources(struct dma_chan *chan)
- 
- 	rc = enable_channel(swdma_chan);
- 	if (rc)
--		return rc;
-+		goto err_free_desc;
- 
- 	rc = reset_channel(swdma_chan);
- 	if (rc)
--		return rc;
-+		goto err_disable_channel;
- 
- 	rc = unhalt_channel(swdma_chan);
- 	if (rc)
--		return rc;
-+		goto err_disable_channel;
- 
- 	swdma_chan->ring_active = true;
- 	swdma_chan->comp_ring_active = true;
-@@ -1007,7 +1007,8 @@ static int switchtec_dma_alloc_chan_resources(struct dma_chan *chan)
- 	rcu_read_lock();
- 	if (!rcu_dereference(swdma_dev->pdev)) {
- 		rcu_read_unlock();
--		return -ENODEV;
-+		rc = -ENODEV;
-+		goto err_ring_inactive;
- 	}
- 
- 	perf_cfg = readl(&swdma_chan->mmio_chan_fw->perf_cfg);
-@@ -1029,6 +1030,20 @@ static int switchtec_dma_alloc_chan_resources(struct dma_chan *chan)
- 		FIELD_GET(PERF_MRRS_MASK, perf_cfg));
- 
- 	return SWITCHTEC_DMA_SQ_SIZE;
-+
-+err_ring_inactive:
-+	spin_lock_bh(&swdma_chan->submit_lock);
-+	swdma_chan->ring_active = false;
-+	spin_unlock_bh(&swdma_chan->submit_lock);
-+
-+	spin_lock_bh(&swdma_chan->complete_lock);
-+	swdma_chan->comp_ring_active = false;
-+	spin_unlock_bh(&swdma_chan->complete_lock);
-+err_disable_channel:
-+	disable_channel(swdma_chan);
-+err_free_desc:
-+	switchtec_dma_free_desc(swdma_chan);
-+	return rc;
- }
- 
- static void switchtec_dma_free_chan_resources(struct dma_chan *chan)
--- 
-2.47.3
+Thanks for pointing this out.
 
+X86_FEATURE_ZEN has been set in init_hygon() since the initial Hygon
+CPU support. I knew that it made amd_smn_init() run on Hygon, but I
+treated it as part of the existing CPU setup and did not revisit
+whether Hygon still needed it.
+
+However, removing it would change other existing code paths that use
+this feature. That would need a separate audit and hardware testing,
+which I did not do for this series. I am therefore not sure that
+changing the CPU capability here only to avoid an explicit Hygon check
+in the SMN code would be safe.
+
+Please let me know how you would prefer this to be handled.
+
+Thanks & Br;
+
+Lin
