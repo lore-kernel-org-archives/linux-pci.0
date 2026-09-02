@@ -1,137 +1,128 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.19])
+Received: from fout-a4-smtp.messagingengine.com (fout-a4-smtp.messagingengine.com [103.168.172.147])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F6FA4A8A38
-	for <linux-pci@vger.kernel.org>; Wed,  2 Sep 2026 17:27:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.19
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85DCF366042;
+	Wed,  2 Sep 2026 17:51:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.147
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788370065; cv=none; b=iXjem4dtVuJ3YwJ/u4pUgIrjftf44QGioZAdhb94JfKza/lgQODuj4zsFc77bJSWG3PMzUCnl/Lz1UFO6cEsAHe7i60YWr155vpZJyRKF0VzA67ZifJlWyV75gzpM2eVKqNNvEIQnBkV54jY3RwbZoPwd6l2pBwJNo9ewhB8O+A=
+	t=1788371484; cv=none; b=aELQt+Czu4GA+Hfa/Jb/iOP0HoQKBseh3pFj2xN/k6ns5sCTQH7luE5QtgmZdXf0BoDzOk9DENFxLdLMxoR9SpXLdHYgi3hp2PoP1t1FceHANiiilGY5FWI6NXneGQ6ivSfGACUsW+XeKUYcWm5zOzBKnfPpmqWri8hZ6QKaZrU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788370065; c=relaxed/simple;
-	bh=8xWywPeWqS+MKVrlSNL5hQErnTvgoFOU1Z15mM/bsHs=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=c2Tsf9X/zK+9jmdG/ByMA/DRgUqPQzn9f4kCxNqQ6TdEWOoGSawPxP3cnTZpgZV4x8gMj8TWOcvR6mIoQ9NpXoQbK0f37fHGVj1O6+6yXdSnGkS3WsaN6kKI/eZYUYUbDh7KD1Nszj3zgbdEn9/MJp8eD0AcSMHIcwXl+Pk+a0Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=KLfm19vy; arc=none smtp.client-ip=198.175.65.19
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1788371484; c=relaxed/simple;
+	bh=LxOx4KyrI6RK1gGuJuG6n1nqZVEBurxDU6elqjbq2Ww=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=ioMtPsVW7ZCfto/mBEZJkd9HkOkKShJ32TDazroJBPrSoSMsS3xxC9MngsetKoZEcGyPeqBy7FhUdGNcUSAIC9y3ybQRYHBidd4VMMnTM4ecEkBdZzhXCAm9TfR760r4QNzYTz1Zyag8h8h8I9FvOvPwuW+ZB9IaSe0yvBh/bJw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=kITNFKye; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=QbFOSFi2; arc=none smtp.client-ip=103.168.172.147
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="KLfm19vy"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1788370064; x=1819906064;
-  h=date:from:to:cc:subject:message-id;
-  bh=8xWywPeWqS+MKVrlSNL5hQErnTvgoFOU1Z15mM/bsHs=;
-  b=KLfm19vym4++Vu/cx+BnbmlZSZJYkEwqRBZXNbRqTJ2+7D0zjH58ToHb
-   9TE6aePTjwRIHPgW3pn4Ei/88Xt+VKTruDfyBRQJ0nAArV7wonRTvQ9uj
-   kP/vqqkrdTjTJh+91XJzgiZb0aPnqNaoMgFvxUX6jaYL3pxSJ/c8n9gh4
-   bumRoLksTur07wYX0oIi/pQMdZLW3NrtHhAjgda7FyWkUvP/md95+99rM
-   JAUMQ5LuDKe8scudWCm0P4t6t39RLpbH9v/rfgL7tj8/Dr9dYEKWNugCz
-   aNmI6xDsW8rV1ee1Ie1EhSJMEb2RVBDd6FkjsuDXw8XK62k1P7Ffkt9pI
-   g==;
-X-CSE-ConnectionGUID: FAIYrI7FSRu5bohkvz7pjA==
-X-CSE-MsgGUID: oKtFEX8YRkWpGyDFJtyQiw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11894"; a="88763076"
-X-IronPort-AV: E=Sophos;i="6.25,258,1779174000"; 
-   d="scan'208";a="88763076"
-Received: from fmviesa005.fm.intel.com ([10.60.135.145])
-  by orvoesa111.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Sep 2026 10:27:43 -0700
-X-CSE-ConnectionGUID: edLMiNa0SjyMfUPHUWPdeg==
-X-CSE-MsgGUID: B6E6Fvt3R62lnfR4oUcp/A==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.25,258,1779174000"; 
-   d="scan'208";a="274749481"
-Received: from lkp-server01.sh.intel.com (HELO bfac249b2189) ([10.239.97.150])
-  by fmviesa005.fm.intel.com with ESMTP; 02 Sep 2026 10:27:41 -0700
-Received: from kbuild by bfac249b2189 with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1x1okM-00000000344-3OnC;
-	Wed, 02 Sep 2026 17:27:38 +0000
-Date: Thu, 03 Sep 2026 01:27:29 +0800
-From: kernel test robot <lkp@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org
-Subject: [pci:controller:aspeed] BUILD SUCCESS
- a54ac2eb6eca8baa86b89494b8a0d9439a0f72ee
-Message-ID: <202609030109.c6ifzEHC-lkp@intel.com>
-User-Agent: s-nail v14.9.25
+	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="kITNFKye";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="QbFOSFi2"
+Received: from phl-compute-05.internal (phl-compute-05.internal [10.202.2.45])
+	by mailfout.phl.internal (Postfix) with ESMTP id 75046EC024B;
+	Wed,  2 Sep 2026 13:51:20 -0400 (EDT)
+Received: from phl-frontend-04 ([10.202.2.163])
+  by phl-compute-05.internal (MEProxy); Wed, 02 Sep 2026 13:51:20 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
+	cc:cc:content-transfer-encoding:content-type:content-type:date
+	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to; s=fm3; t=1788371480;
+	 x=1788457880; bh=25nu+mAM72FWm74neCfGiGekQNAH5/WUm2RaHj6bU+A=; b=
+	kITNFKyeqz+6xOyK0vqm/3NcONDqgIA9rG6L+hWSDCCxAW0D0IdmJ/aWy0SlEPbz
+	a9/7TTvMPllo72x3tP7jsHKFZpgogFXm9WTXiVkGVOs2GR2C/gIwG2Fpvw90f5uT
+	k8QowhyozKlx9pXe5XKQRuYVj6IOywxeUtnGtJhcKMA5gh9k2B52xhee0IOL7w2U
+	/oGNBhosgcDxpG0NS+xmuMNlEsSFQjKKqeLvnEMFWMaWXRosptS2SCazlY5UM8Xj
+	i848BUbzq3N3AqW/WuP8JEyIBiyvQA02WLq2CwCKRi8+WBSFQt6J7FGlU5zr5+VM
+	sKlmW0p5dnYTcmf/MP3++A==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-transfer-encoding
+	:content-type:content-type:date:date:feedback-id:feedback-id
+	:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to:x-me-proxy
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=1788371480; x=
+	1788457880; bh=25nu+mAM72FWm74neCfGiGekQNAH5/WUm2RaHj6bU+A=; b=Q
+	bFOSFi2ypkDiLsBJ4NNH9Hj6EQshvWlrortDpFQUm8nLTUiBG6GgFwZkeEM7S9e/
+	1HQxurkl+dM4wzckPaRkicF9yUCYF3ADGADMng9AxQmgQgWzMxGD6aNclDN5ymG1
+	iYHbEdALH1UDbMl4l4VoFBB7OJ1HpKl0Y/3bBcGjrKf4/auSVeb61vOX1S+bIQuc
+	12AXIfkLS25vdPmYj4d4L/PEscxlCUIQzTzu6lFO94AWt7Nsr0VoIq1p6mPSk/zs
+	4RxEQTo9fw2t8fi+BjmEnRHGwiMkIUHYer40lxqFo64p/uTNqIzEOoLCgs2NWhsT
+	9eX7ljFP/gKpYMGKcpn9Q==
+X-ME-Sender: <xms:GGKYaphqu7bg1W7Oju-NUAGZQTxOrn-uvvvJVZYwFkock_4jICKBfg>
+    <xme:GGKYautgYNIK_xZyw187CCiV5fKKHZlxFPY_JEsauY523t_nli16OkuhInvJyhJm3
+    yLKio0yZn3qzeHNd4JHYzhFtyW4GhmJqapmBO2xTQ0bwVSpf07PjQ>
+X-ME-Received: <xmr:GGKYanQ6dZRe1fDPFGaRl8Z5Di0qM_opBRTSEkMGxDo5x6p5LX9fE4qHGrwH4A>
+X-ME-Proxy-Cause: dmFkZTGDJck7fZxKNC0z+GPhR8KK5JwLKRVzK94YiDSk+UZwDaSfCWjrWafoOviw9ksaDU
+    wDfg9nunWQpBX++4+ye668bDpkBPNzzCmWve6NzXEONIxhqZwz27oFAEWy3hsOSE9l8bNG
+    gq9yWaQ1cEaI8J5IxmJhx9JDHCt2BT8pa1jDjnvb/CvGBpw4Zt+zHk6fItE8UYZDL7zVSv
+    pZCsQdzqAaeEUsNon5yB9pSUqC9KpmaOIP4iL2KzRvj5M2qFhlnoOUxzgPlPD8Nn+06bhm
+    nru+LSRIVvuXWYNPW/dXG6n4x6u0XOFbuuIxgXTY9xzypa66DfEhLxs6kQNfPTu2rr5gmX
+    JSLO5Hve4YWZSg2aj5OkCLqL0D+aGmlpwlO/QsK4aNgV+nOMIa46Pt1/g2W5pUx/gQYE5Q
+    hvcOhw1Lnlp75uAPghfwliyHwWmQfpcGRCxwER1/Ljbdcw3IEo1rifnYqOWvAwrCrtDko+
+    O1u9g5HX7dax9dNRlkIuYgZSyc05bdPnHGHqNpcYyutUMyWX7ZVKRTZ3QUudH7QmCLgjZo
+    SpAfu+f+NmAGJqU8Yo4Sm5eReTW5fGWFeL4YhsC6dr6mZHvSUHLFUcuDrpX9ZBKdWDiOk/
+    ZomG6vgeJuX3oUiJyPDexW5h0xN83O59x+lJSM6kWw/geJZnTJvS3DmOIatA
+X-ME-Proxy: <xmx:GGKYai17q1X66vd34caVwTCSI5MMjnnf8ZbDUBMu-rGA7VkESygZ7w>
+    <xmx:GGKYass7BJI8nXgnwIhXLLKAnY7SzCHOX4B81bcQun9tDHlEG1hs8Q>
+    <xmx:GGKYaojSErFCdojuw3Noba-LxRhYgZg4hLDkqeZbBrPy56IoamVOGw>
+    <xmx:GGKYat-RFudpiF5oGfVub4_pEqWUsFnxFKyvhzmeWh5mefobjNBUwA>
+    <xmx:GGKYaud6Z4RRPUG19liIjEHooklGWuQR3L5i338sZkKBrtgVoZNqrlAY>
+Feedback-ID: i03f14258:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Wed,
+ 2 Sep 2026 13:51:19 -0400 (EDT)
+Date: Wed, 2 Sep 2026 11:51:17 -0600
+From: Alex Williamson <alex@shazbot.org>
+To: Mohamad Raizudeen <raizudeen.kerneldev@gmail.com>
+Cc: bhelgaas@google.com, skhan@linuxfoundation.org, jkoolstra@xs4all.nl,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, alex@shazbot.org
+Subject: Re: [PATCH] PCI: quirks: Fix out-of-bounds MMIO read in
+ nvme_disable_and_flr()
+Message-ID: <20260902115117.34a30084@shazbot.org>
+In-Reply-To: <20260817092448.4395-1-raizudeen.kerneldev@gmail.com>
+References: <20260817092448.4395-1-raizudeen.kerneldev@gmail.com>
+X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/aspeed
-branch HEAD: a54ac2eb6eca8baa86b89494b8a0d9439a0f72ee  PCI: aspeed: Fix clk and PHY leak in aspeed_pcie_port_init() error paths
+On Mon, 17 Aug 2026 14:54:47 +0530
+Mohamad Raizudeen <raizudeen.kerneldev@gmail.com> wrote:
 
-elapsed time: 1530m
+> In nvme_disable_and_flr(), the PCI bar is mapped using
+> NVME_REG_CC + sizeof(cfg) which is (0x14 + 4 = 0x18 bytes)
+> 
+> However, the function later reads the controller status from
+> NVME_REG_CSTS - offset 0x1C, which is outside the mapped 0x18 byte
+> boundary and it can cause a page fault or kernel panic on architectures
+> that enforce strict MMIO boundaries.
 
-configs tested: 60
-configs skipped: 0
+What are those architectures?  The bug and fix look correct, but the
+risk seems overstated.  Thanks,
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+Alex
 
-tested configs:
-alpha         allnoconfig    gcc-16.1.0
-alpha        allyesconfig    gcc-16.1.0
-arc          allmodconfig    clang-24
-arc           allnoconfig    gcc-16.1.0
-arc          allyesconfig    clang-24
-arc          allyesconfig    gcc-16.1.0
-arm           allnoconfig    gcc-16.1.0
-arm          allyesconfig    clang-24
-arm64        allmodconfig    clang-24
-arm64         allnoconfig    gcc-16.1.0
-csky         allmodconfig    gcc-16.1.0
-csky          allnoconfig    gcc-16.1.0
-hexagon      allmodconfig    gcc-16.1.0
-hexagon       allnoconfig    gcc-16.1.0
-i386         allmodconfig    clang-22
-i386          allnoconfig    gcc-16.1.0
-i386         allyesconfig    clang-22
-loongarch    allmodconfig    clang-19
-loongarch    allmodconfig    clang-24
-loongarch     allnoconfig    gcc-16.1.0
-m68k         allmodconfig    gcc-16.1.0
-m68k          allnoconfig    gcc-16.1.0
-m68k         allyesconfig    clang-24
-microblaze    allnoconfig    gcc-16.1.0
-microblaze   allyesconfig    gcc-16.1.0
-mips         allmodconfig    gcc-16.1.0
-mips          allnoconfig    gcc-16.1.0
-mips         allyesconfig    gcc-16.1.0
-nios2        allmodconfig    clang-20
-nios2         allnoconfig    gcc-11.5.0
-openrisc     allmodconfig    clang-20
-openrisc      allnoconfig    gcc-16.1.0
-parisc       allmodconfig    gcc-16.1.0
-parisc        allnoconfig    gcc-16.1.0
-parisc       allyesconfig    clang-17
-parisc       allyesconfig    gcc-16.1.0
-powerpc      allmodconfig    gcc-16.1.0
-powerpc       allnoconfig    gcc-16.1.0
-riscv        allmodconfig    clang-24
-riscv         allnoconfig    gcc-16.1.0
-riscv        allyesconfig    clang-24
-s390         allmodconfig    clang-17
-s390         allmodconfig    clang-24
-s390          allnoconfig    clang-24
-s390         allyesconfig    gcc-16.1.0
-sh           allmodconfig    gcc-16.1.0
-sh            allnoconfig    gcc-16.1.0
-sh           allyesconfig    clang-17
-sh           allyesconfig    gcc-16.1.0
-sparc         allnoconfig    gcc-16.1.0
-sparc64      allmodconfig    clang-20
-um           allmodconfig    clang-17
-um            allnoconfig    clang-17
-um           allyesconfig    gcc-16.1.0
-x86_64       allmodconfig    clang-22
-x86_64        allnoconfig    clang-22
-x86_64       allyesconfig    clang-22
-x86_64      rhel-9.4-rust    clang-22
-xtensa        allnoconfig    gcc-16.1.0
-xtensa       allyesconfig    clang-20
+> Fix this by increasing the mapping size to include NVME_REG_CSTS.
+> 
+> Fixes: ffb0863426eb9 ("PCI: Disable Samsung SM961/PM961 NVMe before FLR")
+> Signed-off-by: Mohamad Raizudeen <raizudeen.kerneldev@gmail.com>
+> ---
+>  drivers/pci/quirks.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index b09f27f7846f..ed03892cc960 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -4090,7 +4090,7 @@ static int nvme_disable_and_flr(struct pci_dev *dev, bool probe)
+>  	if (probe)
+>  		return 0;
+>  
+> -	bar = pci_iomap(dev, 0, NVME_REG_CC + sizeof(cfg));
+> +	bar = pci_iomap(dev, 0, NVME_REG_CSTS + sizeof(cfg));
+>  	if (!bar)
+>  		return -ENOTTY;
+>  
 
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
