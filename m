@@ -1,128 +1,124 @@
-Received: from fout-a4-smtp.messagingengine.com (fout-a4-smtp.messagingengine.com [103.168.172.147])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85DCF366042;
-	Wed,  2 Sep 2026 17:51:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.147
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E6C3374730;
+	Wed,  2 Sep 2026 17:56:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788371484; cv=none; b=aELQt+Czu4GA+Hfa/Jb/iOP0HoQKBseh3pFj2xN/k6ns5sCTQH7luE5QtgmZdXf0BoDzOk9DENFxLdLMxoR9SpXLdHYgi3hp2PoP1t1FceHANiiilGY5FWI6NXneGQ6ivSfGACUsW+XeKUYcWm5zOzBKnfPpmqWri8hZ6QKaZrU=
+	t=1788371800; cv=none; b=kkjP08lx0NkxIaIzFkJwKkTx7yhv9RbKHNBFetXQPJq/QAAy8M5OqdcJRY/phhaJBAy/2QLZu1vQHapFcsF2N1HGxIIcpbsMMjdxvm1Dm8b8ggqNtUckMqpKYDzW8dsh8hMX6yD+djTQIQLwkuMGyRFs9Vr1T2reUuM7iz2fxQc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788371484; c=relaxed/simple;
-	bh=LxOx4KyrI6RK1gGuJuG6n1nqZVEBurxDU6elqjbq2Ww=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ioMtPsVW7ZCfto/mBEZJkd9HkOkKShJ32TDazroJBPrSoSMsS3xxC9MngsetKoZEcGyPeqBy7FhUdGNcUSAIC9y3ybQRYHBidd4VMMnTM4ecEkBdZzhXCAm9TfR760r4QNzYTz1Zyag8h8h8I9FvOvPwuW+ZB9IaSe0yvBh/bJw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=kITNFKye; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=QbFOSFi2; arc=none smtp.client-ip=103.168.172.147
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
+	s=arc-20240116; t=1788371800; c=relaxed/simple;
+	bh=bzWHwfqsQDXM0tVfGhFcQoJE70q1pRuWiOSa6aqUEOM=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=LkRrGsKjoXrjQclusOtcQ9J84UidOyCDp/FYtaLtRm8U2Pl+ULQk8wHhOXomhjxU/UGDuZvZti8eKYfxqpUFqtatB/nUN1R24pWdFKArVNZ74EBZJQUJidqchjnM9bYwqlH5oa1fDtRSuf6ZSZugs7iBKVnizV42+sWFTp9DYG0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ngs7g4Ru; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="kITNFKye";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="QbFOSFi2"
-Received: from phl-compute-05.internal (phl-compute-05.internal [10.202.2.45])
-	by mailfout.phl.internal (Postfix) with ESMTP id 75046EC024B;
-	Wed,  2 Sep 2026 13:51:20 -0400 (EDT)
-Received: from phl-frontend-04 ([10.202.2.163])
-  by phl-compute-05.internal (MEProxy); Wed, 02 Sep 2026 13:51:20 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
-	cc:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm3; t=1788371480;
-	 x=1788457880; bh=25nu+mAM72FWm74neCfGiGekQNAH5/WUm2RaHj6bU+A=; b=
-	kITNFKyeqz+6xOyK0vqm/3NcONDqgIA9rG6L+hWSDCCxAW0D0IdmJ/aWy0SlEPbz
-	a9/7TTvMPllo72x3tP7jsHKFZpgogFXm9WTXiVkGVOs2GR2C/gIwG2Fpvw90f5uT
-	k8QowhyozKlx9pXe5XKQRuYVj6IOywxeUtnGtJhcKMA5gh9k2B52xhee0IOL7w2U
-	/oGNBhosgcDxpG0NS+xmuMNlEsSFQjKKqeLvnEMFWMaWXRosptS2SCazlY5UM8Xj
-	i848BUbzq3N3AqW/WuP8JEyIBiyvQA02WLq2CwCKRi8+WBSFQt6J7FGlU5zr5+VM
-	sKlmW0p5dnYTcmf/MP3++A==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=1788371480; x=
-	1788457880; bh=25nu+mAM72FWm74neCfGiGekQNAH5/WUm2RaHj6bU+A=; b=Q
-	bFOSFi2ypkDiLsBJ4NNH9Hj6EQshvWlrortDpFQUm8nLTUiBG6GgFwZkeEM7S9e/
-	1HQxurkl+dM4wzckPaRkicF9yUCYF3ADGADMng9AxQmgQgWzMxGD6aNclDN5ymG1
-	iYHbEdALH1UDbMl4l4VoFBB7OJ1HpKl0Y/3bBcGjrKf4/auSVeb61vOX1S+bIQuc
-	12AXIfkLS25vdPmYj4d4L/PEscxlCUIQzTzu6lFO94AWt7Nsr0VoIq1p6mPSk/zs
-	4RxEQTo9fw2t8fi+BjmEnRHGwiMkIUHYer40lxqFo64p/uTNqIzEOoLCgs2NWhsT
-	9eX7ljFP/gKpYMGKcpn9Q==
-X-ME-Sender: <xms:GGKYaphqu7bg1W7Oju-NUAGZQTxOrn-uvvvJVZYwFkock_4jICKBfg>
-    <xme:GGKYautgYNIK_xZyw187CCiV5fKKHZlxFPY_JEsauY523t_nli16OkuhInvJyhJm3
-    yLKio0yZn3qzeHNd4JHYzhFtyW4GhmJqapmBO2xTQ0bwVSpf07PjQ>
-X-ME-Received: <xmr:GGKYanQ6dZRe1fDPFGaRl8Z5Di0qM_opBRTSEkMGxDo5x6p5LX9fE4qHGrwH4A>
-X-ME-Proxy-Cause: dmFkZTGDJck7fZxKNC0z+GPhR8KK5JwLKRVzK94YiDSk+UZwDaSfCWjrWafoOviw9ksaDU
-    wDfg9nunWQpBX++4+ye668bDpkBPNzzCmWve6NzXEONIxhqZwz27oFAEWy3hsOSE9l8bNG
-    gq9yWaQ1cEaI8J5IxmJhx9JDHCt2BT8pa1jDjnvb/CvGBpw4Zt+zHk6fItE8UYZDL7zVSv
-    pZCsQdzqAaeEUsNon5yB9pSUqC9KpmaOIP4iL2KzRvj5M2qFhlnoOUxzgPlPD8Nn+06bhm
-    nru+LSRIVvuXWYNPW/dXG6n4x6u0XOFbuuIxgXTY9xzypa66DfEhLxs6kQNfPTu2rr5gmX
-    JSLO5Hve4YWZSg2aj5OkCLqL0D+aGmlpwlO/QsK4aNgV+nOMIa46Pt1/g2W5pUx/gQYE5Q
-    hvcOhw1Lnlp75uAPghfwliyHwWmQfpcGRCxwER1/Ljbdcw3IEo1rifnYqOWvAwrCrtDko+
-    O1u9g5HX7dax9dNRlkIuYgZSyc05bdPnHGHqNpcYyutUMyWX7ZVKRTZ3QUudH7QmCLgjZo
-    SpAfu+f+NmAGJqU8Yo4Sm5eReTW5fGWFeL4YhsC6dr6mZHvSUHLFUcuDrpX9ZBKdWDiOk/
-    ZomG6vgeJuX3oUiJyPDexW5h0xN83O59x+lJSM6kWw/geJZnTJvS3DmOIatA
-X-ME-Proxy: <xmx:GGKYai17q1X66vd34caVwTCSI5MMjnnf8ZbDUBMu-rGA7VkESygZ7w>
-    <xmx:GGKYass7BJI8nXgnwIhXLLKAnY7SzCHOX4B81bcQun9tDHlEG1hs8Q>
-    <xmx:GGKYaojSErFCdojuw3Noba-LxRhYgZg4hLDkqeZbBrPy56IoamVOGw>
-    <xmx:GGKYat-RFudpiF5oGfVub4_pEqWUsFnxFKyvhzmeWh5mefobjNBUwA>
-    <xmx:GGKYaud6Z4RRPUG19liIjEHooklGWuQR3L5i338sZkKBrtgVoZNqrlAY>
-Feedback-ID: i03f14258:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Wed,
- 2 Sep 2026 13:51:19 -0400 (EDT)
-Date: Wed, 2 Sep 2026 11:51:17 -0600
-From: Alex Williamson <alex@shazbot.org>
-To: Mohamad Raizudeen <raizudeen.kerneldev@gmail.com>
-Cc: bhelgaas@google.com, skhan@linuxfoundation.org, jkoolstra@xs4all.nl,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, alex@shazbot.org
-Subject: Re: [PATCH] PCI: quirks: Fix out-of-bounds MMIO read in
- nvme_disable_and_flr()
-Message-ID: <20260902115117.34a30084@shazbot.org>
-In-Reply-To: <20260817092448.4395-1-raizudeen.kerneldev@gmail.com>
-References: <20260817092448.4395-1-raizudeen.kerneldev@gmail.com>
-X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ngs7g4Ru"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DE78B1F000E9;
+	Wed,  2 Sep 2026 17:56:38 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1788371799;
+	bh=QWeMfYXOTyMFSUAfAZF9yC+OI2pdAboC2YztJrUE0/c=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=ngs7g4RuL2HQstK3A+oCvHnGI5nS1c2TgyKG8tAFHaqb90ukyZkCUxUBssg/CJG8a
+	 GePMjAraZw57A9UaS8U5TnPELx2b/abWZBNOvBET6uUpO6MxAvpl7nMDXYXPcpjWcZ
+	 7N4mKfsIOYtXmji3pOR5N6Vei1LeXPItNw6voC2MqX4i/7H8uXqWaNVZptXH3Lm+g3
+	 nmVGVeZ/zQ58j/f5+E9END4ACoOX7Ym1S5HWz7zvb1MReXKMtmGTHhjw4ec62/zurW
+	 U7slqKPTTO2dl68b18GN+5V8TvjlqAGJy3f+W1RCMqEKci+jL6nSQltpq0VVyOZJ3U
+	 dh9up44Cw44vA==
+Date: Wed, 2 Sep 2026 12:56:37 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Mahesh Vaidya <mahesh.vaidya@altera.com>
+Cc: joyce.ooi@intel.com, lpieralisi@kernel.org, kwilczynski@kernel.org,
+	mani@kernel.org, robh@kernel.org, bhelgaas@google.com,
+	ley.foon.tan@intel.com, dinguyen@kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	subhransu.sekhar.prusty@altera.com, preetam.narayan@altera.com,
+	cheryl.bansal@altera.com, stable@vger.kernel.org
+Subject: Re: [PATCH v2 2/2] PCI: altera: Fix resource leaks on probe failure
+Message-ID: <20260902175637.GA1993694@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260430204330.3121003-3-mahesh.vaidya@altera.com>
 
-On Mon, 17 Aug 2026 14:54:47 +0530
-Mohamad Raizudeen <raizudeen.kerneldev@gmail.com> wrote:
-
-> In nvme_disable_and_flr(), the PCI bar is mapped using
-> NVME_REG_CC + sizeof(cfg) which is (0x14 + 4 = 0x18 bytes)
+On Thu, Apr 30, 2026 at 01:43:30PM -0700, Mahesh Vaidya wrote:
+> The chained IRQ handler is installed during probe but is only removed
+> from the remove path. If pci_host_probe() fails, the handler and INTx IRQ
+> domain remain installed even though the devm-managed host bridge storage
+> containing struct altera_pcie will be released, leaving the handler with
+> a stale data pointer.
 > 
-> However, the function later reads the controller status from
-> NVME_REG_CSTS - offset 0x1C, which is outside the mapped 0x18 byte
-> boundary and it can cause a page fault or kernel panic on architectures
-> that enforce strict MMIO boundaries.
-
-What are those architectures?  The bug and fix look correct, but the
-risk seems overstated.  Thanks,
-
-Alex
-
-> Fix this by increasing the mapping size to include NVME_REG_CSTS.
+> Interrupts are also enabled before pci_host_probe() is called. If probe
+> fails after that point, the controller interrupt source should be disabled
+> before the chained handler and INTx domain are removed.
 > 
-> Fixes: ffb0863426eb9 ("PCI: Disable Samsung SM961/PM961 NVMe before FLR")
-> Signed-off-by: Mohamad Raizudeen <raizudeen.kerneldev@gmail.com>
+> Install the chained handler only after the INTx domain has been created.
+> Disable controller interrupts during IRQ teardown, and tear the IRQ setup
+> down if pci_host_probe() fails.
+> 
+> Fixes: c63aed7334c2 ("PCI: altera: Use pci_host_probe() to register host")
+> Cc: stable@vger.kernel.org
+> Reviewed-by: Subhransu S. Prusty <subhransu.sekhar.prusty@altera.com>
+> Signed-off-by: Mahesh Vaidya <mahesh.vaidya@altera.com>
 > ---
->  drivers/pci/quirks.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+>  drivers/pci/controller/pcie-altera.c | 35 ++++++++++++++++++++++++++--
+>  1 file changed, 33 insertions(+), 2 deletions(-)
 > 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index b09f27f7846f..ed03892cc960 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -4090,7 +4090,7 @@ static int nvme_disable_and_flr(struct pci_dev *dev, bool probe)
->  	if (probe)
->  		return 0;
+> diff --git a/drivers/pci/controller/pcie-altera.c b/drivers/pci/controller/pcie-altera.c
+> index 3d3519b8d88f..902ae2d81763 100644
+> --- a/drivers/pci/controller/pcie-altera.c
+> +++ b/drivers/pci/controller/pcie-altera.c
+> @@ -864,8 +864,23 @@ static int altera_pcie_init_irq_domain(struct altera_pcie *pcie)
+>  	return 0;
+>  }
 >  
-> -	bar = pci_iomap(dev, 0, NVME_REG_CC + sizeof(cfg));
-> +	bar = pci_iomap(dev, 0, NVME_REG_CSTS + sizeof(cfg));
->  	if (!bar)
->  		return -ENOTTY;
->  
+> +static void altera_pcie_disable_irq(struct altera_pcie *pcie)
+> +{
+> +	if (pcie->pcie_data->version == ALTERA_PCIE_V1 ||
+> +	    pcie->pcie_data->version == ALTERA_PCIE_V2) {
+> +		/* Disable all P2A interrupts */
+> +		cra_writel(pcie, 0, P2A_INT_ENABLE);
+> +	} else if (pcie->pcie_data->version == ALTERA_PCIE_V3) {
+> +		/* Disable port-level interrupts (CFG_AER, etc.) */
+> +		writel(0, pcie->hip_base +
+> +			  pcie->pcie_data->port_conf_offset +
+> +			  pcie->pcie_data->port_irq_enable_offset);
+> +	}
+> +}
+> +
+>  static void altera_pcie_irq_teardown(struct altera_pcie *pcie)
+>  {
+> +	altera_pcie_disable_irq(pcie);
+>  	irq_set_chained_handler_and_data(pcie->irq, NULL, NULL);
+>  	irq_domain_remove(pcie->irq_domain);
+>  }
+
+This patch appeared in v7.2 as 7a94138caeb2 ("PCI: altera: Fix
+resource leaks on probe failure").
+
+While considering this for backporting, sashiko came up with the
+questions below.  Can you take a look and see if they make sense?
+
+  This is a pre-existing issue, but does altera_pcie_irq_teardown()
+  lack synchronization with in-flight interrupts?
+
+  If a device interrupt fires just before altera_pcie_disable_irq()
+  masks it, could the chained ISR (altera_pcie_isr) execute
+  concurrently with altera_pcie_irq_teardown() on another CPU?
+
+  Because irq_set_chained_handler_and_data() unregisters the handler
+  but does not wait for currently executing ISRs on other CPUs, could
+  irq_domain_remove() free the domain while the ISR is still using it
+  to call generic_handle_domain_irq(), leading to a use-after-free and
+  a kernel panic?
+
+  Would adding a call to synchronize_irq() before removing the IRQ
+  domain prevent this race during driver removal or when
+  pci_host_probe() fails?
 
