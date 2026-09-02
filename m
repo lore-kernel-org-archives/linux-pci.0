@@ -1,47 +1,47 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A64594AC154
-	for <linux-pci@vger.kernel.org>; Wed,  2 Sep 2026 17:09:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A408F4ADDBF
+	for <linux-pci@vger.kernel.org>; Wed,  2 Sep 2026 17:09:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788368955; cv=none; b=NHS0JjhGk30iCeE+wJuwpWeBdNXck84RzNKgnA4+YcYOQCEPBNVsrnSFn6L7oeZChA+pTrKviZudIhSq9oDKtnOqGAXBp59kRUFfaN2/ab70hQca20U+gXxRk0/dooYIsnZlYLbtAocj9Bqvx6BSTNg+4Xy53arKAwN2JFL8YHI=
+	t=1788368961; cv=none; b=Nn5dl0yRJzybNRyeBT60lNnQPbgTFHUpFUfyiYO+DTzplXSoD+au9Dc9czH5H/iEumlpRtdWXuTlnhH0k7KkCwHUkWjIqnoMFbOtimt92+71UZncXE5UlQKAgq6tQKPByBU7Zy41o/jIRTd849wdRZ7SfZQR5hd4cyLOZBopd3I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788368955; c=relaxed/simple;
-	bh=cC2isaE+1W+YicVT8Qyd5eWBKkTFJ4yHKIV3K9h3ZPk=;
+	s=arc-20240116; t=1788368961; c=relaxed/simple;
+	bh=+TFumKg4vUw97Pul2ExjPcC44bsRVHJ+Tf9Dy7/Z9m8=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=WEYAcv06RFg0v3Ip4t6JNZO8rEeMsYTGdh7tJ3ZYu56amkI7+68qlNjA9xxZeWwH16KRuyu4w1J6goMK8H9zxWYnEhLDYmxnxIq7mpKrDZlvfHCpSKO5QaoI0XRf3MCvQm1SG+Vxt0KaBIRwigzqXxLjbZGOJvs34ctwrR8wduY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=eKGGtoG6; arc=none smtp.client-ip=170.10.133.124
+	 MIME-Version; b=dQcJ/DBOJYBViXI5ZujpqsSPpkrqzXgIoTxYITpGq6nT8US2TPsCZ9gaYXq+7PlZUJjo3JdsAJH5/2MiYYdjxLgz9R3E91kRD9xiFsUjInFRlbtIWnU0yZIl5CA2B9o3KGmWcp8zzFApvrBqrYvxismXh2N/bc9DORK4BDsKx2k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=D0nvOKeH; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="eKGGtoG6"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="D0nvOKeH"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1788368952;
+	s=mimecast20190719; t=1788368958;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=xFedaJf96u/IFmXVEGhrII3ALQIExPZnlCwobbHj5Ck=;
-	b=eKGGtoG6f1XFfnHFKW6YwfOG1zKlW+BvB7WKhPozFPTodBhbf5YSDPscqTzMmdA/U03d83
-	E5oTCnxNXBmB8UL+FhXtv1OD0Rzc5tckAdwarTw4xrJfket1pbFwi4FBvGfASyMGvkKEcn
-	c2c+1LRcaAbj1wtGm4HOffnDK7z5+Ck=
+	bh=6VcPgyv1gE40oA19P7nVU/CSABYm1sXHl0KxbrSx48A=;
+	b=D0nvOKeH4Lrv5R/Swjgzs8bYHQFy79IP9X/8D6IpVp5mfinBzhI11nIN3VndtrQ4sKOEZX
+	tmFU/nfGDpEC82o2/NKB+UijCCsyWyiWpnl8piLoOWaC4wFe8dEJ6MsP7FuYp6PtjLqnFd
+	7gOoYycCGQUUumutHsH8ut2QlcXD53g=
 Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
  (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-382-2b6pOkKVPKqro4x_LFnWaA-1; Wed,
- 02 Sep 2026 13:09:11 -0400
-X-MC-Unique: 2b6pOkKVPKqro4x_LFnWaA-1
-X-Mimecast-MFC-AGG-ID: 2b6pOkKVPKqro4x_LFnWaA_1788368947
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-357-9ohpF6yuO9K3q3jbMtnuDg-1; Wed,
+ 02 Sep 2026 13:09:17 -0400
+X-MC-Unique: 9ohpF6yuO9K3q3jbMtnuDg-1
+X-Mimecast-MFC-AGG-ID: 9ohpF6yuO9K3q3jbMtnuDg_1788368955
 Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id C3FCC1834577;
-	Wed,  2 Sep 2026 17:09:07 +0000 (UTC)
+	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 09AB8180267F;
+	Wed,  2 Sep 2026 17:09:15 +0000 (UTC)
 Received: from djeffery-thinkpadp1gen3.rmtusga.csb (headnet04.pony-001.prod.iad2.dc.redhat.com [10.2.32.116])
-	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 613211955D8D;
-	Wed,  2 Sep 2026 17:09:04 +0000 (UTC)
+	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id AF3D11955D8D;
+	Wed,  2 Sep 2026 17:09:11 +0000 (UTC)
 From: David Jeffery <djeffery@redhat.com>
 To: driver-core@lists.linux.dev,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
@@ -64,9 +64,9 @@ Cc: linux-kernel@vger.kernel.org,
 	"Martin K . Petersen" <martin.petersen@oracle.com>,
 	"Pasha Tatashin" <tatashin@google.com>,
 	David Jeffery <djeffery@redhat.com>
-Subject: [PATCH 5/9] driver core: do not always lock parent in shutdown
-Date: Wed,  2 Sep 2026 13:07:30 -0400
-Message-ID: <20260902170734.95504-6-djeffery@redhat.com>
+Subject: [PATCH 7/9] PCI: Link a virtual function to its physical function
+Date: Wed,  2 Sep 2026 13:07:32 -0400
+Message-ID: <20260902170734.95504-8-djeffery@redhat.com>
 In-Reply-To: <20260902170734.95504-1-djeffery@redhat.com>
 References: <20260902170734.95504-1-djeffery@redhat.com>
 Precedence: bulk
@@ -78,110 +78,57 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
 
-Don't lock a parent device unless it is needed in device_shutdown. This
-is in preparation for making device shutdown asynchronous, when it will
-be needed to allow children of a common parent to shut down
-simultaneously.
+With a PCI virtual function having the same bus for its parent
+as the physical function it is associated with, there is no
+explicit dependency between the two in the device tree. With
+async shutdown, this can result in the PF being shutdown before the
+VF has an opportunity to shutdown.
 
-And only acquire a reference to the parent device if the parent is to be
-locked.
+Link the VF as a consumer of the PF to note its dependency and
+ensure clean shutdown ordering.
 
-Signed-off-by: Stuart Hayes <stuart.w.hayes@gmail.com>
-Signed-off-by: David Jeffery <djeffery@redhat.com>
 Signed-off-by: Tarun Sahu <tarunsahu@google.com>
+Signed-off-by: David Jeffery <djeffery@redhat.com>
 Tested-by: Laurence Oberman <loberman@redhat.com>
 ---
- drivers/base/core.c | 44 ++++++++++++++++++++++++++++----------------
- 1 file changed, 28 insertions(+), 16 deletions(-)
+ drivers/pci/iov.c | 11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/base/core.c b/drivers/base/core.c
-index 7fe3fa6870a7..05285fae143d 100644
---- a/drivers/base/core.c
-+++ b/drivers/base/core.c
-@@ -4903,12 +4903,10 @@ int device_change_owner(struct device *dev, kuid_t kuid, kgid_t kgid)
- 	return error;
- }
- 
--static void shutdown_one_device(struct device *dev, struct device *parent)
-+static void __shutdown_one_device(struct device *dev)
- {
--	/* hold lock to avoid race with probe/release */
--	if (parent)
--		device_lock(parent);
--	device_lock(dev);
-+	if (!dev->p || dev->p->dead)
-+		return;
- 
- 	/* Don't allow any more runtime suspends */
- 	pm_runtime_get_noresume(dev);
-@@ -4928,13 +4926,33 @@ static void shutdown_one_device(struct device *dev, struct device *parent)
- 			dev_info(dev, "shutdown\n");
- 		dev->driver->shutdown(dev);
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index 9d408fb8ac25..9b74211c6ab4 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -382,14 +382,20 @@ int pci_iov_add_virtfn(struct pci_dev *dev, int id)
  	}
-+}
  
--	device_unlock(dev);
--	if (parent)
-+static void shutdown_one_device(struct device *dev)
-+{
-+	struct device *parent;
-+
-+	device_lock(dev);
-+
-+	/* use parent lock if needed to avoid race with probe/release */
-+	if (dev->bus && dev->bus->need_parent_lock && dev->p && !dev->p->dead &&
-+	    (parent = get_device(dev->parent))) {
-+		/* the parent lock needs to be acquired first, so re-lock */
-+		device_unlock(dev);
-+
-+		device_lock(parent);
-+		device_lock(dev);
-+
-+		__shutdown_one_device(dev);
-+		device_unlock(dev);
- 		device_unlock(parent);
-+		put_device(parent);
-+	} else {
-+		__shutdown_one_device(dev);
-+		device_unlock(dev);
+ 	pci_device_add(virtfn, virtfn->bus);
++	if (!device_link_add(&virtfn->dev, &dev->dev, DL_FLAG_STATELESS)) {
++		rc = -ENOMEM;
++		goto failed1;
 +	}
++
+ 	rc = pci_iov_sysfs_link(dev, virtfn, id);
+ 	if (rc)
+-		goto failed1;
++		goto unlink;
  
- 	put_device(dev);
--	put_device(parent);
- }
+ 	pci_bus_add_device(virtfn);
  
- /**
-@@ -4942,7 +4960,7 @@ static void shutdown_one_device(struct device *dev, struct device *parent)
-  */
- void device_shutdown(void)
- {
--	struct device *dev, *parent;
-+	struct device *dev;
+ 	return 0;
+-
++unlink:
++	device_link_remove(&virtfn->dev, &dev->dev);
+ failed1:
+ 	pci_stop_and_remove_bus_device(virtfn);
+ 	pci_dev_put(dev);
+@@ -421,6 +427,7 @@ void pci_iov_remove_virtfn(struct pci_dev *dev, int id)
+ 	if (virtfn->dev.kobj.sd)
+ 		sysfs_remove_link(&virtfn->dev.kobj, "physfn");
  
- 	wait_for_device_probe();
- 	device_block_probing();
-@@ -4960,12 +4978,6 @@ void device_shutdown(void)
- 		dev = list_entry(devices_kset->list.prev, struct device,
- 				kobj.entry);
++	device_link_remove(&virtfn->dev, &dev->dev);
+ 	pci_stop_and_remove_bus_device(virtfn);
+ 	virtfn_remove_bus(dev->bus, virtfn->bus);
  
--		/*
--		 * hold reference count of device's parent to
--		 * prevent it from being freed because parent's
--		 * lock is to be held
--		 */
--		parent = get_device(dev->parent);
- 		get_device(dev);
- 		/*
- 		 * Make sure the device is off the kset list, in the
-@@ -4974,7 +4986,7 @@ void device_shutdown(void)
- 		list_del_init(&dev->kobj.entry);
- 		spin_unlock(&devices_kset->list_lock);
- 
--		shutdown_one_device(dev, parent);
-+		shutdown_one_device(dev);
- 
- 		spin_lock(&devices_kset->list_lock);
- 	}
 -- 
 2.55.0
 
