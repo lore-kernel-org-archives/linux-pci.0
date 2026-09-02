@@ -1,182 +1,298 @@
-Received: from BYAPR05CU005.outbound.protection.outlook.com (mail-westusazon11010005.outbound.protection.outlook.com [52.101.85.5])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2EF582C235E;
-	Wed,  2 Sep 2026 04:52:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.85.5
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788324732; cv=fail; b=T3V6Oar9L0HOHwLVl1mxcbmPgUtbBV7ggSlsYcWhCZxpa290lLMfrqDVp9jpWGIZ6qpaK8oCf9GRHQY8r5T66ZxB9QzIg/abimxL6imcGakonmZ40ytBXRfUZMEJ5p6xFVLmLczs7lXVGeQq6n9b9e7jcjtqpaIa3Ccb9ITYz8A=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788324732; c=relaxed/simple;
-	bh=TzKpBciwxRG+vmv4VMs1dqeK/qbLD69VhwEvnajoBH0=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=igJaOQ8Lej1lIS5wu1+DvkDiFvoF5i1qr2M6OyrJz/gikBP9MgG3OReBUFybzvVEJ3ixxZFIqU8RKxljLc6Ca0H3FrNKvEzBVwS/Pu9zp9Cfe3gMRMR5FTotVjsDBpA+CzIHa337+cTwoJc+ueMIw1pkK3852CQx3tPNw6OCxnI=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=aPGaEKM+; arc=fail smtp.client-ip=52.101.85.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB5D7365A14
+	for <linux-pci@vger.kernel.org>; Wed,  2 Sep 2026 04:53:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1788324785; cv=none; b=CIDUEtGu67tkh49VW6jMG4YBA5M+qP2L9cGlqhX5RuSk+Rgcsm4IdeBJ2zIoGzAthXhzA20fJDdHrLAn4xjfxtuQN0ZnScESWFP83gH7LY6Ldnvyk8QqzakF7EMiyxqegLxLRqq2ENpNHtCPfTVVTg5Xcc8YdwUYHnBcUCw9eRc=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1788324785; c=relaxed/simple;
+	bh=lzwBvj5rCRwC9vpohTFNC3A3Mdt/eIKsHDElx/0cUzk=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Je+yRfpUi4rJ5XHxXsUYHIwo0HsdxAn1+zDebUYdd6AXkwgaQ2gUObSw/vYjcHKPO0EpHC+tS+G0ZpwB+e6KsK7UwVKAIIfDWCRKTOkDedLcY8a5AlP+8i9wc3vdmVepxpOd7s5VQxrjvNq9FS44x6Ir7dz0XAZFbr45/EmPN8I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=U4UyBEj7; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=LaL1zUzh; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="aPGaEKM+"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=j6il3kUprpWpgpobFBfsWHSKxVIiUizERC3o60M3rxm6gQ7Fh+Ree3PGWCr/GHri0QtUgWYk/B/5+gcOiEZrjphIrBfuDeu8KnzK1ncsOHVKRuBhYQYodO51PjKatLqReVv17PFxMiHZYZy2jpqpfE7d8PRKAAV68slmCkfBPa94D3Ejd9kp4WVDnOmRzq3dCHTny0qVBCjJamdQSGKMH8+pCLXeAUfT3fGZMpeaDkzTBfeZkcZYxJCQeVPU0LT8oSRmKWIAmsquVzQ7LF1G1fTRVoAl04ue318j1+b5qXpe+IGQOAtAz0tiSEVEEPap5omDnt7Y7wbej6I9FkT1Ig==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=eW539KEqtUcp6SzBAcLbDcDrQliAU+j/SRXOeFztEiI=;
- b=P8X6uQMQzpplkPKqnWTF+pdIndFPeVHUFigs3gsIN4NXw+guA9f6dDvHxb4SQszjgk5z1Hy7hL63+1D0urxA59BfsN7ecMPbtCmvRSJT0BKLrAsRRM/Xve2Fo4r0QgTrFaOtNqajbkocwxaWChQxhKk4XpFG5decO/ZxfQgzAvba3NQ2FSBPXBGxS2dMoj9Z1J78d01Cu8dEnpyM8DksanX/ibb2lXflhoC0WqzDRhoFKxz+5SQ+ibfhUe6JZay6IGyiXG6L/oIHltoh5KPH2W1iv9Jj1Cwn2oNlttNse4Wu3Es+SGdnER/gyTI3f/kXZ7yriWq0LKk4BYZOzvJgCQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=eW539KEqtUcp6SzBAcLbDcDrQliAU+j/SRXOeFztEiI=;
- b=aPGaEKM+0GiFw8faPm85oNiEIuXH+K//BjMjnKJh+qYY9M+OG7ehtrT2xeF/546Wb84fxNNYe8SZxPjwDkzzp20X4n1B0ahdSayxCHcB2reOrLAicvTBlRPMJ/kmv18r13vWmRV1UvJvHzyG0DB7CJwU0yneuC54VzvUw8eILBCITkUJvgiZWYxexuIcZEWTc6wXuS0dlcWkhtHDmMA8FAF6EeXgwNLs+1ZWLijd9Qwli1tyPTDvL0xb2OGIBw8bqbS+JA1ljGT8+m0gUnYfYKASmI7Ke0Mj21IdsxKOY6BV1Mx8vygTIuWChh2QLV6wsKey61WNzGhKQ7JDqHxb9Q==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from DS7PR12MB9474.namprd12.prod.outlook.com (2603:10b6:8:252::17)
- by CH0PR12MB8462.namprd12.prod.outlook.com (2603:10b6:610:190::20) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.382.10; Wed, 2 Sep
- 2026 04:52:06 +0000
-Received: from DS7PR12MB9474.namprd12.prod.outlook.com
- ([fe80::31ad:931:ef07:8ad7]) by DS7PR12MB9474.namprd12.prod.outlook.com
- ([fe80::31ad:931:ef07:8ad7%4]) with mapi id 15.21.0360.008; Wed, 2 Sep 2026
- 04:52:06 +0000
-Message-ID: <ece6d3a5-8a44-425f-a3c8-7c046a699b4b@nvidia.com>
-Date: Tue, 1 Sep 2026 21:52:04 -0700
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v10 08/12] cxl: Reject CXL Reset on multifunction devices
-To: "Lucero Palau, Alejandro" <alejandro.lucero-palau@amd.com>,
- Alison Schofield <alison.schofield@intel.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Dave Jiang <dave.jiang@intel.com>,
- Davidlohr Bueso <dave@stgolabs.net>, Ira Weiny <ira.weiny@intel.com>,
- Jonathan Cameron <jic23@kernel.org>, Vishal Verma
- <vishal.l.verma@intel.com>, linux-cxl@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Alex Williamson <alex.williamson@redhat.com>, vsethi@nvidia.com,
- alwilliamson@nvidia.com,
- Sai Yashwanth Reddy Kancherla <skancherla@nvidia.com>,
- Vishal Aslot <vaslot@nvidia.com>, Manish Honap <mhonap@nvidia.com>,
- Jiandi An <jan@nvidia.com>, Richard Cheng <icheng@nvidia.com>,
- linux-tegra@vger.kernel.org
-References: <20260804192958.1823952-1-smadhavan@nvidia.com>
- <20260804192958.1823952-9-smadhavan@nvidia.com>
- <ec0509dd-8bfb-4b97-a8bd-3ba450cc4dc0@amd.com>
-Content-Language: en-US
-From: Srirangan Madhavan <smadhavan@nvidia.com>
-In-Reply-To: <ec0509dd-8bfb-4b97-a8bd-3ba450cc4dc0@amd.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: SJ0PR03CA0029.namprd03.prod.outlook.com
- (2603:10b6:a03:33a::34) To DS7PR12MB9474.namprd12.prod.outlook.com
- (2603:10b6:8:252::17)
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="U4UyBEj7";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="LaL1zUzh"
+Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 681KTRTY3048691
+	for <linux-pci@vger.kernel.org>; Wed, 2 Sep 2026 04:53:00 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	IpYFqn52MzyyerSAhaJx9+MNvz9oY9L3KfTClhX+lTk=; b=U4UyBEj7NkKGWdyG
+	q1Mw86N1eMYbj6BtBltl9J7A3Z+rgCHPb119lZGYX+tbBY/HGzzj3TpPCEBcetXJ
+	4XHJtslfDYoCb3ffmVQ1PqrqP5lWLoidDLlug+RFQ8pZQ03HVcOwjQTD5QWaU5en
+	3UxryAXhnO3d6IlcYOZedDq9+5OwmRb3zyi3c3dgniofwggkfUMXuJ7hfiBeWg0a
+	wHvcYZnf0YVm352Hgqbz8R7aioJPAdQUFgTWonWPAfzzCd4xJw9yEpq2F9nMje8n
+	7hz+fD5fMjARQL6AApAJ7wgacICECaAMu452SzxLIDvqWIs+YU0ZbsB9L/oM2rxu
+	Rn/CFA==
+Received: from mail-pj1-f69.google.com (mail-pj1-f69.google.com [209.85.216.69])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4ge397a628-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Wed, 02 Sep 2026 04:53:00 +0000 (GMT)
+Received: by mail-pj1-f69.google.com with SMTP id 98e67ed59e1d1-398ba5404d2so915687a91.1
+        for <linux-pci@vger.kernel.org>; Tue, 01 Sep 2026 21:53:00 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1788324779; x=1788929579; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=IpYFqn52MzyyerSAhaJx9+MNvz9oY9L3KfTClhX+lTk=;
+        b=LaL1zUzhlhZYmx99JcqRHY1Au9CYg8qCu6FnA9fB+knjWPAc/AlrOgqzT7HdWj5Twi
+         bxTZF9hby9JBZGslTp4QZ4n3RQ6Q0cHUpxcIzLD3bVDeZTA3CDEkz0MqfhgR8Dw2Lu/A
+         eb5b2+8yG/QDcSJPyKFXsISF6eSG+e3IoZ5bMrmI8VSUvqAFhCKenuySBGdkSjRPWNUI
+         ZNaxqJ1IfONRlhZ5Dt4wHdJwSimMB495ROkKdOKFospGBzShKiecBM7IOFd/m8wu655y
+         kyczeuR/m/YqkmdqKLzjBi3fRZykOKcQKRmTBEVB2P39vNaz4udyLC4ru0C8DvDpmjzJ
+         t5kQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1788324779; x=1788929579;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=IpYFqn52MzyyerSAhaJx9+MNvz9oY9L3KfTClhX+lTk=;
+        b=kRYG18Y6nK4WjOGZGQqC/g1AJ/dv1sFrpwrvRlj+qU0Aqy9Skn6xPbgk8PmIHknav6
+         Ziwc4jCq319HNV+2Xt9l8mz0GWeKJJ12da6qVkpb+QKm12PNlBVzC3lQL4bb43oZMU1y
+         kH/dxODGnt1bUcaeBTzNW+3ApKpqbPo4R8R1xsMx0/kOVPKz7QAuTocEHkQ3O/uY5pQQ
+         l5oIcQLBhQ4byouBKaKA8rt6CDYqchFzuUNzNC5YIjhtxPgo5UPQleM4UQUA9WBS1Y+z
+         3ptIVDCzKrdbADEVEOyrdxd8n8nVloLORvYd+EFPaKGSNs7Pdhp9lkxN1ZqBrPynRGtt
+         J5Ag==
+X-Forwarded-Encrypted: i=1; AKwUvBynJfVk6gg/smzK41CRhK/OgmyFiJLbZMwfqLeU3JwadUxK2z4vgvBvNX0l7J5ZbNlxmCMQYb9nMEI=@vger.kernel.org
+X-Gm-Message-State: AFuF++k0+oZKnHBKH3Yoxpn8jw8fI8g5nn0sqzorB2t3F3PQEcon4ZWk
+	EKs8QqC8dviB08ipIZdPjQjwOR89tWqnqI5F3BpsJkre0n++/kX9kEbTYTe7DPnixMCrOqm1adx
+	HtoJlUVtQh+C8L/f0Y76uaMDTfQ3miKom5YXk5lEhNIWPANwgpW+UkXqdwbvCaoA=
+X-Gm-Gg: AYBFou0xiMHiXz2iB8J6rSN7yTYUyNUSc3m9pwa8eEdmfSUiV/2G3rtfjuaNkd4CzsW
+	tB87uqo4OXoehFl6gBji7SLKonjNhLawM9z8fRNNb/q7W/hz0/10Vyu9Y5UAKTofkR/rhLhf7q4
+	b9B2dwXVP86sGy4bs+FIiCFmai7EjC0knkApKfOwKepXxQ8vcERwJQ+3nDvYughCAJ5GcTYoW8l
+	xRme2UQ3JrSkJ79o+wYOem0bXD5YweZhFhipJ1yp/dfbc3eAhe2r3MQyR+a/Y0gRxWbUW2l3Lc1
+	8G1yecnENSGiqZFOCP3uVi/pyH91PDbOIqfpywvfPKQpdKJhXSO6uCTLEm4nAevcuJ690I03vnu
+	olHx7pfWBrSSGCI9DRn8SBA/ZUhlsX2Ma
+X-Received: by 2002:a17:90b:35c8:b0:393:194d:5366 with SMTP id 98e67ed59e1d1-39aedf43130mr3258285a91.10.1788324778535;
+        Tue, 01 Sep 2026 21:52:58 -0700 (PDT)
+X-Received: by 2002:a17:90b:35c8:b0:393:194d:5366 with SMTP id 98e67ed59e1d1-39aedf43130mr3258234a91.10.1788324778096;
+        Tue, 01 Sep 2026 21:52:58 -0700 (PDT)
+Received: from [10.218.35.45] ([202.46.22.19])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-14310adaeaasm1068788c88.10.2026.09.01.21.52.52
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 01 Sep 2026 21:52:57 -0700 (PDT)
+Message-ID: <5c3f1611-275e-4664-b3e2-748da6d210ed@oss.qualcomm.com>
+Date: Wed, 2 Sep 2026 10:22:51 +0530
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DS7PR12MB9474:EE_|CH0PR12MB8462:EE_
-X-MS-Office365-Filtering-Correlation-Id: b8bf7f93-3f9f-4c77-2823-08df08adf07a
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|23010399003|366016|7416014|376014|10067099003|6133799003|32116099003|18002099003|22082099003|56012099006|11063799006|4143699003|921020;
-X-Microsoft-Antispam-Message-Info:
-	Ed2S/tUEYsIISZGnwp+bqB7REOVi3+kIi/4aQj3unxlrXxmuZ8BRO413tbRqF1ip1F9/OY/mxJdXfZt9Ntp75sJGGC1fg8f5r2DuAGM3HOPdFX22UPRGPQQrq67yzPgme1OqwZBmSPlSlDI14h19Kf0EoegklXQ7nqruOw74upQ0RkdzRuTAPYKeckcPn6O1tiB/Low4R1SbyTJdVsfbkt3bmnehF/BFzfiD37eWdfHAvycM/GTK4zlj7RSOfGL/oH13byJOWv+TcOoE9zZCi7i1JrErXzmPz4xm1ccseH4hcQFbhzrTT30Ov3DB8LihAhINeNtShyv0xGkQ+Vl2SDrpI0y6/VeQfaJFttwZ5GccrnAgEujDmTnLHGDgTr5BCmf0l33gcYZ2zQq1MVYgd1F0S047Ok0t9zRqF2UOxHhCf2zp5tLbCQH8oumvL6GCtVEYm7MH2ig8wPOLET3DDpKHo2BvxWmLFWhtQtUAxJrecitCcIU4rvcC7AzGm9E3TrrGJntgUIhSLGvDoMlioHXyAC69cw4E2yb7kCUkxm8YIuSmHu5AhEWnwCMPMIGUoxv6Mfax9iKC1iZFGweYH3FUdp3JLguEwLyDolI0zmhinS/BBsTMyreuPGXYk/d7GIEoOmIDZR1pAKTZOWygWGvh/txD1mxeJ/PohasxaR+QeI8QDMaHHHgsZ1Lizd90TXUp+J4zmMV90l8Y1hJQiQ==
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DS7PR12MB9474.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(23010399003)(366016)(7416014)(376014)(10067099003)(6133799003)(32116099003)(18002099003)(22082099003)(56012099006)(11063799006)(4143699003)(921020);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?UEd1MFpNaUIremNJT2ZRcHEyV2Y0U3MvZ2tTS1pGRElPa3pJbnNNS0Q3djFC?=
- =?utf-8?B?ekRKd3cxN054eGFNZkVGUmwrZkdaVjN5YkJPcmhoUkpHK2VYUTBNWmVyeXJ0?=
- =?utf-8?B?M05SM1M4NGNNRjBmMzlYZGdObTFGNFJHaVQyZHdqRnJEVGRlYlMrc2Z2aWEv?=
- =?utf-8?B?SFFzakdFWnVHWWpyYXhmK3lYWUZKNEpDRHBDeFo3VHB0OC92YmNDMkhvU2ti?=
- =?utf-8?B?aHF5czNjOUp2Y1pNQ0JVODN0em11WnRYdFdCVjFLb05icTVwY1FFUEZZY0h5?=
- =?utf-8?B?NUhvRkdqYVdTQWRCR05TZ1RHd3Vhblc2a3gxSkpCajNDZS9yOWlLWmREVURw?=
- =?utf-8?B?VWtoU0o3WDV5WHNlUzVVODBZelBHT1JsR21CZ0Z3QWJieVBYRUl2TSs0bjdE?=
- =?utf-8?B?cmpLbGdPMGlJQkZNdDdUcTdYSFdwVFhSOGRndUJ0R2c3WVcyYVhFbUJESlhy?=
- =?utf-8?B?ekpjbTBVcngzT3NGc214a0Y5OG1xSytHd3huNUhvelBYNmR5eFRQR2djdndm?=
- =?utf-8?B?U3E3WE5kSk9hMExUZTgzWGRrUVIxZWtaQ2NvcTByVGtPVURXSUJSNkN4aVUv?=
- =?utf-8?B?TC80ZTRRRmxRK0ZkYll2ODAzK2pna0Fva05jb2Ezd3dNbTFvQXNDWWgvZERE?=
- =?utf-8?B?dFp5allTdmQzUWV5ZTRZSzFHV0IyOFNpSG40V1RNMXlRSjdtKzBhTnFHeDdp?=
- =?utf-8?B?eENMM2xKQW1RVkh3dEFIZGVmTkhpcHFwcWNxOEp6QnFXeStweHR2TGpyMDNV?=
- =?utf-8?B?OHlUc1V4REs1NHpHUktXMUsxT21NaFFJMmpaOTRjdnRvU2lnRmtKN0pRY2gz?=
- =?utf-8?B?dWY2VGZTc1lCbjl3RTJBK3hsUmsxZVd4UytTUkkvSnB4MENzd29saG5jZVl5?=
- =?utf-8?B?S2xDY1kxT1ZNOVZ0Y21xamk2dHdkOFRremdMUU1PaFE0YzVkZWRjUENjOVNG?=
- =?utf-8?B?cCtnVFd4WXlFR3dTVDE1YmpIZDVDY1V4WnF3SzJjOHF3cGhjRTBON294S3c3?=
- =?utf-8?B?WkNqTFlIKzZWMU11RnRNNlFJcW1wR2xBYUNYTWZJRE5OWlZ3dU9MSXNhdHl0?=
- =?utf-8?B?S0tVdnVGSjVReDJ4Z085bm04dDNCdkhMTjJJTndzTm90U1NtV3JOYVNBTjdT?=
- =?utf-8?B?TE9nZURDUXJ3WUlucyt6SzJxRlBnTnlKelk4Q2Z4WXBVK24yRkZyaEd0RHRX?=
- =?utf-8?B?UHN0QkdHaVI3Y2JGNnExN0xyRGxsZnZNUTVlLzcwTlkxcEhvTWpjQWozVG1G?=
- =?utf-8?B?aXdHZGVBcVFNdzNNend3N0ZSRDJhRnZXVEh1SjJTWDFJQ1l3TWFWN2hqL0d5?=
- =?utf-8?B?OUg4NnJiV09PaXQwdGtoU2c2ZXpVZVhyYUxWMkdBdWlnbWZ1a21ydXB5Rlk0?=
- =?utf-8?B?L0hwTlllbWorOHV1bVVSbVE4NHV5eWtIQ09yR2o4cm5DOEhhSXhpWW9Wdmsv?=
- =?utf-8?B?R1crM0FDZGJ2dVdZeG9RWGlWUXRkeFNvL2p0T05tNzJHVUMrcExVR1hpYzhq?=
- =?utf-8?B?UHBWa2l6Nng3SDNjNEY4RnlzMzJOaU5vSjByTVE2QzkzMkRsYlYwMHB3U1VQ?=
- =?utf-8?B?UU15M0xwUlYzVHQyRkJ4Nys1aHIwNE82Vmd1aGNOaGh2WDE0VDNsT0lqZ1Rj?=
- =?utf-8?B?R2R3TFpCTVloMFpadkRWMkhBejQwL203dUFwZjZxZWQ3Z0pweGZwZlBYQmUw?=
- =?utf-8?B?WmNVNVBVNGkrcUY0NWhDV2ZDb2ZvbDJRdm94aytBRXRCUS9XdWp0SmpTeG9C?=
- =?utf-8?B?VEx2eHF6UmE0T0lXZS9wc0RUVmdManQ0NWZ2NDNhQTFyUUI5T1RQMTVCeFNS?=
- =?utf-8?B?MTFhNFlaNFpuVkhSdFBZYzl3Y25RRHhzY1I4S29MenllcEVWZWRJWmRjbUJD?=
- =?utf-8?B?SUprTHBQcUorRUxab3g2TC9HcmdWMndDMzF0c2JoenZGT0RqaGU3Y3VFYVVj?=
- =?utf-8?B?YXdyblluRThiL01RSzFEWDd2SXlVb0M1REgrYjQrdHlhWXRDVG5IUFplMS9R?=
- =?utf-8?B?amp1cVVmUVRwUkJ3THlMREd0SUJQaE1UWlU5SG5aeGw5QTBnb3o2RXBUV2ho?=
- =?utf-8?B?N0c4ZkNtMktES2xSQnJ6dEZ5dkI2dXFpV1JZdy9nUDZiY1ZKT1hzUVFZQk9N?=
- =?utf-8?B?U09RMzdCZVhGWDRsN3R4elhmdFE5QU52eWx0WHFpMWVvamlvQkdRa3I0a1l2?=
- =?utf-8?B?N1hVNDJFS2Y3MDJ4ZHEwTXgxZE5WdTNjakRyZVNyZVVWSURZeHhnUmI2MGJk?=
- =?utf-8?B?LzFHa0lNbDZtOTF4eGw2dzdOdUp0NHBGNlAyWTJ0ZFN6ZEh6N2RlVkc4Q2J5?=
- =?utf-8?B?VWw0MXo1a1VpZ1l3M3hPRXlZOGtQeHNvaDJXaHh2ZDBvMGxGRy95QT09?=
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: b8bf7f93-3f9f-4c77-2823-08df08adf07a
-X-MS-Exchange-CrossTenant-AuthSource: DS7PR12MB9474.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 02 Sep 2026 04:52:06.8331
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: fw73uIGAZvErQYbuxydQOBx5fWUYdxk/7ZDa06btcZi96w5NJGlJ8IAxmOfkOB+8FRt662PSA1wTXnFEbR5i/g==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH0PR12MB8462
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v5 1/6] PCI/bwctrl: Set host bridge OPP and optionally
+ disable ASPM around link retraining
+To: Manivannan Sadhasivam <mani@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Lorenzo Pieralisi
+ <lpieralisi@kernel.org>,
+        Rob Herring <robh@kernel.org>, Jeff Johnson <jjohnson@kernel.org>,
+        Bartosz Golaszewski <brgl@bgdev.pl>,
+        =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org, mhi@lists.linux.dev,
+        linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
+        qiang.yu@oss.qualcomm.com
+References: <20260819-bwscale-v5-0-6dea79786b37@oss.qualcomm.com>
+ <20260819-bwscale-v5-1-6dea79786b37@oss.qualcomm.com>
+ <atba2336nxz566wvbfrvclbx7yyma5elhnojb7ozz4ku6dk3q3@c2wa24laiqyd>
+Content-Language: en-US
+From: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+In-Reply-To: <atba2336nxz566wvbfrvclbx7yyma5elhnojb7ozz4ku6dk3q3@c2wa24laiqyd>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTAyMDA0MSBTYWx0ZWRfX1naJONut+wFD
+ WVoPdTIhfBq638T46JSi8M7rx89m00EZLmNRsQLCLLaNAvtvy1eBheJfo0Vj3P9KS8Le4ogfuvw
+ AiLjq0D3EeGzp2+kKLspVVu1WaLW4TQth+UZJtps1PU9E2b5yQiRybD+YaRPWHRJn0wSXClwtb2
+ fdj3wtt8UFtgdsfwkajeuH99cSIlivKPz72byOMpxRsHiIzEjZTTvrjwCwIHfR29Wtpzp1Am0pc
+ OYyQSwWtyMUdTh5qvnvXVixisj4qijN1nHC2p7anD/0R5uFy4oGfuaFECBcTaZ9e4lfy0pc/Iv6
+ cS+dayK45+XMIYS/UybuN7ZsBp9ZLvemdcyxpm5zBtYAolQx1RpKlUy/nRXBIy1AVlmFcP129EJ
+ cxE85dr1K5Ij9JAxsvfGxvAUiu1/lMaSilgauTF+RvZQVkOP7Y3Ay/lw2ndYCL++U+fvh3n5q9S
+ uC+mRWOJTM55sVoM7sw==
+X-Proofpoint-GUID: IPBSH94Iefz9cadj55y9BhRE4lLID_cW
+X-Proofpoint-ORIG-GUID: IPBSH94Iefz9cadj55y9BhRE4lLID_cW
+X-Authority-Analysis: v=2.4 cv=Re6gzVtv c=1 sm=1 tr=0 ts=6a97abac cx=c_pps
+ a=vVfyC5vLCtgYJKYeQD43oA==:117 a=fChuTYTh2wq5r3m49p7fHw==:17
+ a=IkcTkHD0fZMA:10 a=VdqzKS8jKosA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=yx91gb_oNiZeI1HMLzn7:22
+ a=EUspDBNiAAAA:8 a=6HI80psrSe5n1y8aGwAA:9 a=QEXdDO2ut3YA:10
+ a=rl5im9kqc5Lf4LNbBjHf:22
+X-Proofpoint-Spam-Info: AW1haW4tMjYwOTAyMDA0MSBTYWx0ZWRfX8G1nkjyC4rct
+ 9fSJBWJ33Jb+FmHlCgCTo5ymO4Wd5+C5gVT+U18sd+n4e4nzXcaT03Q8IiKVMer0zd/3k3FWD16
+ xpBMekLL44ZVdHvfPQVIvWWpalaUwXE=
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-09-01_06,2026-09-01_03,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ spamscore=0 bulkscore=0 adultscore=0 impostorscore=0 malwarescore=0
+ suspectscore=0 lowpriorityscore=0 phishscore=0 clxscore=1015
+ priorityscore=1501 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2606150000
+ definitions=main-2609020041
 
-On 8/26/26 11:47 AM, Lucero Palau, Alejandro wrote:
-> I think I'm the one to blame for adding this patch after my comment in
-> v9 ... and to blame because I think it is not needed after all.
-> 
-> 
-> I thought the reset_method() and the reset() sysfs files would be
-> specifically created for this cxl reset functionality, but they are pci
-> related and will be for any function. Because the check already present
-> in v9 in cxl_reset_dvsec, non-PF0 functions can not have the cxl_reset
-> method, what is good enough. So multipf can be supported and this check
-> removed, as no non-PF0 function can use the potential memdev if PF0 is
-> not using it, what is already ensured in your patchset.
-> 
-> 
-> Maybe to add some warning/info when someone tries to configure cxl_reset
-> for a non-PF0 function, like "PF0 owns the CXL functionality".
-> 
-> 
-> In any case, apologies for the confusion.
-> 
-> 
-> Thanks,
-> 
-> Alejandro.
 
-No worries, and thanks for following up.
 
-I agree that the existing DVSEC checks prevent non-PF0 functions from 
-advertising cxl_reset. However, Dan’s later feedback was to keep the 
-simple dev->multifunction rejection for now and handle the 
-function-0-only exception as a follow-up if needed. I retained that 
-conservative check in v11 and applied the same
-check to cxl_bus, with the requested credit to Alex.
+On 9/1/2026 1:12 PM, Manivannan Sadhasivam wrote:
+> On Wed, Aug 19, 2026 at 06:55:52PM +0530, Krishna Chaitanya Chundru wrote:
+>> PCIe host bridge controllers may need their operating point raised before
+> Use either "Host Bridge devices" or "PCIe controllers".
+>
+>> retraining to a higher link speed so that hardware resources (e.g., RPMh
+>> votes on Qualcomm platforms) are available at the requested data rate.
+>> After retraining, the operating point must be updated to reflect the
+>> actual negotiated speed.
+>>
+>> Add pcie_set_opp() to look up an OPP on the host bridge parent device
+>> using a key of (per-lane frequency in kHz, LNKCTL2 Target Link Speed
+>> level).  Keying by generation rather than total bandwidth lets OPP tables
+>> remain width-independent.
+>>
+>> In pcie_set_target_speed(), call pcie_set_opp() before retraining only
+>> when upscaling (speed_req > cur_bus_speed), since only raising the
+>> operating point requires pre-staging hardware.  After retraining, call
+>> pcie_set_opp() unconditionally with the actual cur_bus_speed to settle
+>> the votes.  Both calls are skipped for downstream ports of PCIe switches,
+>> as those are outside the host controller's scope.
+>>
+>> Some controllers also require ASPM to be disabled around link retraining.
+>> Add a disable_aspm_for_retrain flag to pci_host_bridge; when set,
+>> pcie_set_target_speed() saves the child device's ASPM state, disables all
+>> ASPM link states before retraining, and restores them afterward.
+>>
+>> Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+>> ---
+>>  drivers/pci/pcie/bwctrl.c | 63 ++++++++++++++++++++++++++++++++++++++++++++++-
+>>  include/linux/pci.h       |  1 +
+>>  2 files changed, 63 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/pci/pcie/bwctrl.c b/drivers/pci/pcie/bwctrl.c
+>> index c4c8d260bf96..6fa1522c47db 100644
+>> --- a/drivers/pci/pcie/bwctrl.c
+>> +++ b/drivers/pci/pcie/bwctrl.c
+>> @@ -28,9 +28,11 @@
+>>  #include <linux/mutex.h>
+>>  #include <linux/pci.h>
+>>  #include <linux/pci-bwctrl.h>
+>> +#include <linux/pm_opp.h>
+>>  #include <linux/rwsem.h>
+>>  #include <linux/slab.h>
+>>  #include <linux/types.h>
+>> +#include <linux/units.h>
+>>  
+>>  #include "../pci.h"
+>>  #include "portdrv.h"
+>> @@ -120,6 +122,38 @@ static int pcie_bwctrl_change_speed(struct pci_dev *port, u16 target_speed, bool
+>>  	return pcie_retrain_link(port, use_lt);
+>>  }
+>>  
+>> +static int pcie_set_opp(struct pci_dev *pdev, struct pci_host_bridge *host,
+>> +			enum pci_bus_speed speed)
+>> +{
+>> +	struct device *dev = host->dev.parent;
+>> +	struct dev_pm_opp_key key = {};
+>> +	int ret, freq_mbps, width;
+>> +	unsigned long freq_kbps;
+>> +	struct dev_pm_opp *opp;
+>> +	u16 lnksta;
+>> +
+>> +	pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnksta);
+>> +	width = FIELD_GET(PCI_EXP_LNKSTA_NLW, lnksta);
+>> +
+>> +	freq_mbps = pcie_dev_speed_mbps(speed);
+>> +	if (freq_mbps < 0)
+>> +		return -EINVAL;
+>> +
+>> +	freq_kbps = freq_mbps * KILO;
+>> +	key.freq = freq_kbps;
+>> +	key.level = pci_bus_speed2lnkctl2(speed);
+>> +	key.bw = 0;
+> 'key' is already 0 initialized above.
+>
+>> +	opp = dev_pm_opp_find_key_exact(dev, &key, true);
+>> +	if (!IS_ERR(opp)) {
+>> +		ret = dev_pm_opp_set_opp(dev, opp);
+>> +		if (ret)
+>> +			dev_err(dev, "Failed to set OPP for freq (%lu): %d\n",
+>> +				freq_kbps * width, ret);
+>> +		dev_pm_opp_put(opp);
+>> +	}
+>> +	return 0;
+>> +}
+>> +
+>>  /**
+>>   * pcie_set_target_speed - Set downstream Link Speed for PCIe Port
+>>   * @port:	PCIe Port
+>> @@ -140,9 +174,12 @@ static int pcie_bwctrl_change_speed(struct pci_dev *port, u16 target_speed, bool
+>>  int pcie_set_target_speed(struct pci_dev *port, enum pci_bus_speed speed_req,
+>>  			  bool use_lt)
+>>  {
+>> +	struct pci_host_bridge *host = pci_find_host_bridge(port->bus);
+>> +	bool is_rootbus = pci_is_root_bus(port->bus);
+>>  	struct pci_bus *bus = port->subordinate;
+>> +	struct pci_dev *child = NULL;
+>> +	int aspm_state = 0, ret;
+>>  	u16 target_speed;
+>> -	int ret;
+>>  
+>>  	if (WARN_ON_ONCE(!pcie_valid_speed(speed_req)))
+>>  		return -EINVAL;
+>> @@ -152,6 +189,24 @@ int pcie_set_target_speed(struct pci_dev *port, enum pci_bus_speed speed_req,
+>>  
+>>  	target_speed = pcie_bwctrl_select_speed(port, speed_req);
+>>  
+>> +	/*
+>> +	 * The host bridge driver may need to be scaled for targeted speed
+> "Host Bridge resources may need to be..."
+>
+>> +	 * otherwise link might not come up at requested speed.
+>> +	 */
+>> +	if (is_rootbus && host && bus) {
+>> +		/* Get function 0 of downstream device */
+>> +		list_for_each_entry(child, &bus->devices, bus_list)
+>> +			if (PCI_FUNC(child->devfn) == 0)
+>> +				break;
+>> +
+>> +		if (child && host->disable_aspm_for_retrain) {
+>> +			aspm_state = pcie_aspm_enabled(child);
+>> +			pci_disable_link_state_locked(child, PCIE_LINK_STATE_ALL);
+>> +		}
+> You mentioned that the Host Bridge requires disabling ASPM during retraining,
+> but here you are disabling ASPM of the downstream device. So the issue is device
+> specific or Host Bridge (RP?) specific?
+Issue is RP specific, if aspm driver disables the ASPM only when we pass the
+child, if the we pass root port dev, it will just return without modifying the
+aspm.
 
-I did not add a warning for non-PF0 functions because returning -ENOTTY 
-during reset-method probing should already prevent the unsupported 
-method from being advertise.
--- 
-Regards,
-Srirangan
+Ack for remaining comments.
+
+- Krishna Chaitanya.
+>> +		if (speed_req > bus->cur_bus_speed)
+>> +			pcie_set_opp(port, host, speed_req);
+>> +	}
+>> +
+>>  	scoped_guard(rwsem_read, &pcie_bwctrl_setspeed_rwsem) {
+>>  		struct pcie_bwctrl_data *data = port->link_bwctrl;
+>>  
+>> @@ -176,6 +231,12 @@ int pcie_set_target_speed(struct pci_dev *port, enum pci_bus_speed speed_req,
+>>  	    !list_empty(&bus->devices))
+>>  		ret = -EAGAIN;
+>>  
+>> +	if (bus && is_rootbus && host) {
+> Maintain an order for this check. I think this order makes sense than the above
+> one.
+>
+>
+> - Mani
+>
+
