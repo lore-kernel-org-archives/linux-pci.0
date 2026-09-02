@@ -1,135 +1,58 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.18])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5EAE14ACC98
-	for <linux-pci@vger.kernel.org>; Wed,  2 Sep 2026 17:25:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 148304A9D56;
+	Wed,  2 Sep 2026 17:26:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788369947; cv=none; b=VAzhOT2c4M+2c/ZoHT+FfaPcZxgPl8UXbYH511P+wSsa5Jab6V0umNO+fYk5iC6sJf9gqN5iT67/C/F+HqFNMh1eXTKYl91DUICjVMUqST9Ox4pHm35Kj3GhVNxMC3bvybZsp1poDLPWToDOP0nAPIavFlq9ke/L3F5J9X8eRMk=
+	t=1788370016; cv=none; b=SBmR10s23PQmdibxlWCPjDWNSuSlzaMf3Nw89Zlg3lGqlXrNuwoSFsyr+xy3l0MabSKdtq2dhPjX/GmjgajE4booQAnUmLAkK1vbeSF1gbBZ58RB249AP6meD4A7rjZ2CCJDv1rMr5cQChEbuYSfcnlNx7uT2dzcykwwrpSOjs8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788369947; c=relaxed/simple;
-	bh=IXldv3Jo7Rne+kc00Zi7U+kL4yxydL073z00KCNtW4A=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=uQt64ScWHi9C+GHng7rep/wEvhQbD6DHWL2eg4WVu3QE+rFYlBdbwqG/XuWi1qX+gtKCBAVv0prjQtBR5yvhTsWP7Q9DyY4ERvlL/A1SsszBiVhAajJIZ1PEHXE/B7PUE+Xa52zE9FZDcKWra6Rn2eYSo8yfbdwKM8ih4TsmFX0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Aiqn/GQa; arc=none smtp.client-ip=198.175.65.18
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1788370016; c=relaxed/simple;
+	bh=2Titb9EJ+juJdzlTYUi7QsHJbQljekvjoACvaaB0PaY=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=A0JsuXcPvPSnHuzeEh/TnrYFNoJzPzjat1EofYXtblvIM+ncLva2d444sufpKh63ZbnH6VJpXaVnfG1XzYJxhfeLJOUIpES6dI+pmnHuv9WLU0lVQv0UrB7zYo2akT1hMtfE2AF899KxCDvoAiwdHw+JXbM/D34g7QnGEUOt4NA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=P7DwEaCU; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Aiqn/GQa"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1788369946; x=1819905946;
-  h=date:from:to:cc:subject:message-id;
-  bh=IXldv3Jo7Rne+kc00Zi7U+kL4yxydL073z00KCNtW4A=;
-  b=Aiqn/GQa+wz7bMA5eT7gFm15hZ4k7Vcb7g0qmNqETQUTbGg80/tBNEuM
-   6b0bueJ8EfSHd2czFVCKM4TuWzeqRHTmn3ljlEdlSByGMjDZMuo/YfEu6
-   gNm5BD0lbZ3bRG9qTGl9CUUDsINTnF14GlkVE/hIs0h6amB5Z17r5dw/U
-   XMofTRdygeGBOJ9N/ooYS6xolbrngeIkG6ct8yeVbzr1VjBIyFmXLpvYm
-   3vt88rdRvUpifr2HDWi/589C7f65bvrH7NeAqVv2lS3TXZMhuFICNviGU
-   5Nh6W96P4ueIc4uY39GLw9ejGDnH3VYL5wLiuC0Or1KLGtjlUzvXj63LY
-   w==;
-X-CSE-ConnectionGUID: zQgPKwfPQUyVDhTXhCEulA==
-X-CSE-MsgGUID: t9taJDAGR+KOSAxv94Wh/Q==
-X-IronPort-AV: E=McAfee;i="6800,10657,11894"; a="88888360"
-X-IronPort-AV: E=Sophos;i="6.25,258,1779174000"; 
-   d="scan'208";a="88888360"
-Received: from orviesa010.jf.intel.com ([10.64.159.150])
-  by orvoesa110.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Sep 2026 10:25:42 -0700
-X-CSE-ConnectionGUID: M8R1bRnFTb2Lm9v46b7WyQ==
-X-CSE-MsgGUID: Wbcah9znRKOjo+aWNZcnmA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.25,258,1779174000"; 
-   d="scan'208";a="268152380"
-Received: from lkp-server01.sh.intel.com (HELO bfac249b2189) ([10.239.97.150])
-  by orviesa010.jf.intel.com with ESMTP; 02 Sep 2026 10:25:40 -0700
-Received: from kbuild by bfac249b2189 with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1x1oiQ-0000000033q-2D1l;
-	Wed, 02 Sep 2026 17:25:38 +0000
-Date: Thu, 03 Sep 2026 01:25:04 +0800
-From: kernel test robot <lkp@intel.com>
-To: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-Cc: linux-pci@vger.kernel.org
-Subject: [pci:controller:dwc-rcar-gen4] BUILD SUCCESS
- d9113a8a6bdda348d590845da014ab0e01afe638
-Message-ID: <202609030159.uSdrShSl-lkp@intel.com>
-User-Agent: s-nail v14.9.25
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="P7DwEaCU"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8A5541F000E9;
+	Wed,  2 Sep 2026 17:26:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1788370014;
+	bh=2Titb9EJ+juJdzlTYUi7QsHJbQljekvjoACvaaB0PaY=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=P7DwEaCUOPh3lA+YMIpvcfX/1LFh07vxQNo1ARQl87U52B3EbuvqQSd9PTXexIjUd
+	 +oY8+03a6DOyFryBQMC4vth003hU0zgLgRqNFsgsRDtil9rpWQzTet7VFiWEsF/i3K
+	 B0J7HJzBhyOHA58PHC6jP9h/LyDMlTKMZvCOKx/Z8BFcKvSeKZgNEipfYbw51N4AFV
+	 Cxc6XLWT91fl28lJ5dD0Vex0oTt6vy2lEh3WpUYKddmYp64Jr/wZbgjp/xWM/Bc0hL
+	 LbpJjkS0jBlK5sl9oULvPqTnR18mP5U//ffla58RrLtKHc8aZeqolKFxrGKmjKuoLr
+	 RVpPemPFNhOmA==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH 9/9] scsi: Enable async shutdown support
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "David Jeffery" <djeffery@redhat.com>
+Cc: linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org
+In-Reply-To: <20260902170734.95504-10-djeffery@redhat.com>
+References: <20260902170734.95504-1-djeffery@redhat.com>
+ <20260902170734.95504-10-djeffery@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 02 Sep 2026 17:26:54 +0000
+Message-Id: <20260902172654.8A5541F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/dwc-rcar-gen4
-branch HEAD: d9113a8a6bdda348d590845da014ab0e01afe638  PCI: rcar-gen4: Use .post_deinit to handle dw_pcie_ep_init() failures
+> Like scsi's async suspend support, allow scsi devices to be shut down
+> asynchronously to reduce system shutdown time.
+>=20
+> Signed-off-by: David Jeffery <djeffery@redhat.com>
+> Signed-off-by: Stuart Hayes <stuart.w.hayes@gmail.com>
 
-elapsed time: 1588m
+Sashiko has reviewed this patch and found no issues. It looks great!
 
-configs tested: 58
-configs skipped: 0
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260902170734.9550=
+4-1-djeffery@redhat.com?part=3D9
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
-
-tested configs:
-alpha         allnoconfig    gcc-16.1.0
-alpha        allyesconfig    gcc-16.1.0
-arc          allmodconfig    clang-24
-arc           allnoconfig    gcc-16.1.0
-arc          allyesconfig    clang-24
-arm           allnoconfig    gcc-16.1.0
-arm          allyesconfig    clang-24
-arm64        allmodconfig    clang-24
-arm64         allnoconfig    gcc-16.1.0
-csky         allmodconfig    gcc-16.1.0
-csky          allnoconfig    gcc-16.1.0
-hexagon      allmodconfig    gcc-16.1.0
-hexagon       allnoconfig    gcc-16.1.0
-i386         allmodconfig    clang-22
-i386          allnoconfig    gcc-16.1.0
-i386         allyesconfig    clang-22
-loongarch    allmodconfig    clang-24
-loongarch     allnoconfig    gcc-16.1.0
-m68k         allmodconfig    gcc-16.1.0
-m68k          allnoconfig    gcc-16.1.0
-m68k         allyesconfig    clang-24
-microblaze    allnoconfig    gcc-16.1.0
-microblaze   allyesconfig    gcc-16.1.0
-mips         allmodconfig    gcc-16.1.0
-mips          allnoconfig    gcc-16.1.0
-mips         allyesconfig    gcc-16.1.0
-nios2        allmodconfig    clang-20
-nios2         allnoconfig    gcc-11.5.0
-openrisc     allmodconfig    clang-20
-openrisc      allnoconfig    gcc-16.1.0
-parisc       allmodconfig    gcc-16.1.0
-parisc        allnoconfig    gcc-16.1.0
-parisc       allyesconfig    clang-17
-parisc       allyesconfig    gcc-16.1.0
-powerpc      allmodconfig    gcc-16.1.0
-powerpc       allnoconfig    gcc-16.1.0
-riscv        allmodconfig    clang-24
-riscv         allnoconfig    gcc-16.1.0
-riscv        allyesconfig    clang-24
-s390         allmodconfig    clang-17
-s390         allmodconfig    clang-24
-s390          allnoconfig    clang-24
-s390         allyesconfig    gcc-16.1.0
-sh           allmodconfig    gcc-16.1.0
-sh            allnoconfig    gcc-16.1.0
-sh           allyesconfig    clang-17
-sh           allyesconfig    gcc-16.1.0
-sparc         allnoconfig    gcc-16.1.0
-sparc64      allmodconfig    clang-20
-um           allmodconfig    clang-17
-um            allnoconfig    clang-17
-um           allyesconfig    gcc-16.1.0
-x86_64       allmodconfig    clang-22
-x86_64        allnoconfig    clang-22
-x86_64       allyesconfig    clang-22
-x86_64      rhel-9.4-rust    clang-22
-xtensa        allnoconfig    gcc-16.1.0
-xtensa       allyesconfig    clang-20
-
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
