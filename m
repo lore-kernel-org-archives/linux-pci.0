@@ -1,135 +1,258 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1CF56372EE9;
-	Wed,  2 Sep 2026 17:02:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD35C4A8FD7
+	for <linux-pci@vger.kernel.org>; Wed,  2 Sep 2026 17:08:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788368556; cv=none; b=gxi4IeTWQpErjnkEagvNnNpLwXu5iBree1UE5FHohBBxaFiEhjbQFj42SCE6qAVcC+7ouNLZCGuNOwE/upAUoRw03n2cz1WLGN0sQqjV1gqPXJM8USV5MeBN5t2FqBpBs+/2OlaeA6BoevlwCSLOnUCShKJWRvemqFbfZs7fP28=
+	t=1788368937; cv=none; b=h3NNtfRnio/BWwJJcUsfhrG7GXP49AeN1ZRKOH8pK5tmcBG2K1J6N3qwucEHmPvUnXAb9LreQaWzVocc+COW8XBe0CHxDpk9wiqDkjQHeEtHeEK85zrGCtnaePNN8+hDKvAM/fJLaUZi1vea5EWCefPouIsze9zOj/V5CAf4jiI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788368556; c=relaxed/simple;
-	bh=2ps60H3UPkGePyIUY8BslXowLwMg3bBVIE5cYrw8G4M=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=CzBi/VSxkiaBaFUSbxOJkTvdIwlxD88prcrk7hV4s8qn8/GblgOsmkZuBCQSl+wLyrowcmHoJINSau+n5ndKd+P/CWS3Vtz1HjFJQ1yOi4tTSUVZBf5RZDNy/J5J0x3jkD1x6q3DDfrLdFBiB7BreJlEQ9iVVAcO4To45hzdLQ0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KSwx4Abx; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788368937; c=relaxed/simple;
+	bh=TMIYaTI/mkH0viaYqmV8FJlYo1dAnCICTFz6ny5+zUk=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=avxXx/9En45j0tQIboBdmAPCyC23Bor6SCOeRGbAao/fVKF7HwmuY4radRkktsYrRiye+/7rIz8mZ7xNky2oTuxYp7Rr3d9g7PFgBXOBwDOJMs+6A/al5LRDq+IW71L1JZbsdVy+NYrJAF92tC6nW/JsnomRoKNELuOhJqnZkgY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=g9DwUUPV; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KSwx4Abx"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6D37F1F00A3A;
-	Wed,  2 Sep 2026 17:02:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788368554;
-	bh=lZM3OVNQpFxKSG+7Gae1Fc30ECjuYgQUff167olyWVk=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=KSwx4Abxuplqx/SHHYbRhp8IoydXqTsXvDhJ1RZNhHsHzmWL0QS4TlgWr7NToHnh5
-	 bexXcXXGP2l73TRckdrheEavAEV9MYQYEiXagXKLWxzStkUKX69GYsiM5Fp3Adkjlk
-	 LmVApr9cjvW6qw7GqtAxb1ougRuKIKTFOjVtdDQffDUieqJmaQ0aq6FgQTJU6/cnVw
-	 bZcdpKgcCejLglgc0gcCgOENPwiya/8gKVa/IqP20O1aivc3ck/dw3Qf0rrOkKjb/y
-	 bmGrPjmWgrac0U5VPVNhcIjX0ORRw49l/b938QhnV+EZPj/j55/VpeT3rMHGc2khr5
-	 E9UlkXZBhWQDA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5] PCI: imx6: fix resource leaks in probe error paths
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Zhijian Han" <hanzhijian1991@gmail.com>
-Cc: imx@lists.linux.dev, Frank.Li@kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260902164313.2901302-1-hanzhijian1991@gmail.com>
-References: <20260902164313.2901302-1-hanzhijian1991@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 02 Sep 2026 17:02:33 +0000
-Message-Id: <20260902170234.6D37F1F00A3A@smtp.kernel.org>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="g9DwUUPV"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1788368933;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=xOI6fE6IFzn2Y2SJgYgTQiaYQdwE/HE1TtjRKTx+nYQ=;
+	b=g9DwUUPV+ipGPSPhOYUkk594u+i6mmAR1bFMRfKpq/e2wJGq5pPW6FHpW63MLdqe7BDZyy
+	TiDUdkHn+ObY5GRx5yOkhxKzbP5SXbtP+zmy1rgTLqL6l93HSi0Jw6VSFwZOSqO7lRHI3V
+	nrN0owEEOrEuN5tDCFBs7cdG2Q9o3dw=
+Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-190-QabH0riVNguA83tMeaLkNg-1; Wed,
+ 02 Sep 2026 13:08:52 -0400
+X-MC-Unique: QabH0riVNguA83tMeaLkNg-1
+X-Mimecast-MFC-AGG-ID: QabH0riVNguA83tMeaLkNg_1788368928
+Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id A0D9D195E920;
+	Wed,  2 Sep 2026 17:08:47 +0000 (UTC)
+Received: from djeffery-thinkpadp1gen3.rmtusga.csb (headnet04.pony-001.prod.iad2.dc.redhat.com [10.2.32.116])
+	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id A00C01955D8D;
+	Wed,  2 Sep 2026 17:08:43 +0000 (UTC)
+From: David Jeffery <djeffery@redhat.com>
+To: driver-core@lists.linux.dev,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Danilo Krummrich <dakr@kernel.org>
+Cc: linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	Tarun Sahu <tarunsahu@google.com>,
+	Stuart Hayes <stuart.w.hayes@gmail.com>,
+	Laurence Oberman <loberman@redhat.com>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	kexec@lists.infradead.org,
+	"Ewan Milne" <emilne@redhat.com>,
+	"John Meneghini" <jmeneghi@redhat.com>,
+	"Lombardi, Maurizio" <mlombard@redhat.com>,
+	"Bart Van Assche" <bvanassche@acm.org>,
+	"John Garry" <john.g.garry@oracle.com>,
+	"Jeremy Allison" <jallison@ciq.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	"Pasha Tatashin" <tatashin@google.com>,
+	David Jeffery <djeffery@redhat.com>
+Subject: [PATCH v21 0/9] shut down devices asynchronously
+Date: Wed,  2 Sep 2026 13:07:25 -0400
+Message-ID: <20260902170734.95504-1-djeffery@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [High] Replacing DL_FLAG_STATELESS with DL_FLAG_AUTOREMOVE_CONSUMER for d=
-evice links to virtual PM domain devices creates managed links that violate=
- the driver core state machine, triggering a WARN_ON during successful prob=
-e.
---
+These patches are rebased against the driver-core tree's driver-core-next
+branch and should also apply against recent linux-next. Changes for v18 are
+contained in patch 3.
 
-commit 36162fbf1662cbc9312c01c7d2c2113d6c77e624
-Author: Zhijian Han <hanzhijian1991@gmail.com>
+This patchset allows the kernel to shutdown devices asynchronously and
+unrelated async devices to be shut down in parallel to each other.
 
-PCI: imx6: fix resource leaks in probe error paths
+Only devices which explicitly enable it are shut down asynchronously. The
+default is for a device to be shut down from the synchronous shutdown loop.
 
-This commit fixes resource leaks involving pwrctrl devices and power domains
-in the imx_pcie_probe() error paths. It adds a devm action to detach the
-power domains and replaces the stateless device link flag with an autoremove
-consumer flag so links are cleaned up automatically.
+This can dramatically reduce system shutdown/reboot time on systems that
+have multiple devices that take many seconds to shut down (like certain
+NVMe drives). On one system tested, the shutdown time went from 11 minutes
+without this patch to 55 seconds with the patch. And on another system from
+80 seconds to 11.
 
-Link: https://lore.kernel.org/all/20260822013640.182C01F000E9@smtp.kernel.o=
-rg/
+And thank you to everyone who has spent some of their valuable time
+providing reviews, suggestions, criticisms, or tests on the various
+iterations of this patchset.
 
-> diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controll=
-er/dwc/pci-imx6.c
-> index 39790e66b98dc..ec8339e03d584 100644
-> --- a/drivers/pci/controller/dwc/pci-imx6.c
-> +++ b/drivers/pci/controller/dwc/pci-imx6.c
+Changes from V20:
+- Move PCI bridge async enablement to before its call to device_add
+- Use srcu to prevent ensure any active device_add is completed before
+  device_shutdown begins shutting down devices.
 
-[ ... ]
+Changes from V19:
+- Convert initial creation of shutdown_one_device to a code move with no
+  changes or side effects
+- Add a warning to device_move should some device ever mix need_parent_lock
+  with device_move in the future
+- Link a PCI virtual function as consumer of its associated physical
+  function to ensure proper shutdown order
 
-> @@ -655,24 +672,30 @@ static int imx_pcie_attach_pd(struct device *dev)
->  	if (!imx_pcie->pd_pcie)
->  		return 0;
->  	link =3D device_link_add(dev, imx_pcie->pd_pcie,
-> -			DL_FLAG_STATELESS |
->  			DL_FLAG_PM_RUNTIME |
-> -			DL_FLAG_RPM_ACTIVE);
-> +			DL_FLAG_RPM_ACTIVE |
-> +			DL_FLAG_AUTOREMOVE_CONSUMER);
+Changes from V18:
+- Fix deadlock and race condition on concurrent device_add
+- Use local variable to device_shutdown for caching async_shutdown
+- Added dev->p check to avoid NULL pointer deference and tell if the
+  device is not registered so no need to be shutdown. This is to handle
+  the cases when devices consumers list might have devices that are not
+  yet registered.
 
-[Severity: High]
-Does changing this link from stateless to managed violate the driver core
-state machine for virtual PM domain devices?
+Changes from V17:
 
-Virtual PM domain devices created on the genpd bus never bind to drivers,
-so their driver status remains DL_DEV_NO_DRIVER. Because of this,
-device_link_add() will initialize a managed link to DL_STATE_DORMANT.
+Fix mangled text in kernel parameter description
+Re-protect the list removal with the spinlock
+  * Hold a device reference to ensure the device cannot be freed before
+    attempting list removal
 
-When the consumer device successfully completes its probe, the driver core
-calls device_links_driver_bound(). That function iterates over all managed
-supplier links and evaluates:
+Changes from V16:
 
-WARN_ON(link->status !=3D DL_STATE_CONSUMER_PROBE)
+Drop spinlock before async subsystem call which uses GFP_KERNEL
+Handle that async shutdown can widen races between device shutdown and deletion
+  * __shutdown_one_device will immediately return if a device is dead
+  * Set shutdown device completion to complete when marking a device dead to
+      prevent waiting on a dead device
+  * Only late-access a parent pointer if device is in a non-dead state to
+      ensure the pointer is still valid
 
-Since this link is dormant, won't this trigger the WARN_ON and turn a
-successful normal boot sequence into a kernel panic on systems with
-panic_on_warn enabled?
+Changes from V15:
 
->  	if (!link) {
->  		dev_err(dev, "Failed to add device_link to pcie pd\n");
-> +		imx_pcie_detach_pd(imx_pcie);
->  		return -EINVAL;
->  	}
-> =20
->  	imx_pcie->pd_pcie_phy =3D dev_pm_domain_attach_by_name(dev, "pcie_phy");
-> -	if (IS_ERR(imx_pcie->pd_pcie_phy))
-> -		return PTR_ERR(imx_pcie->pd_pcie_phy);
-> +	if (IS_ERR(imx_pcie->pd_pcie_phy)) {
-> +		int ret =3D PTR_ERR(imx_pcie->pd_pcie_phy);
-> +
-> +		imx_pcie_detach_pd(imx_pcie);
-> +		return ret;
-> +	}
-> =20
->  	link =3D device_link_add(dev, imx_pcie->pd_pcie_phy,
-> -			DL_FLAG_STATELESS |
->  			DL_FLAG_PM_RUNTIME |
-> -			DL_FLAG_RPM_ACTIVE);
-> +			DL_FLAG_RPM_ACTIVE |
-> +			DL_FLAG_AUTOREMOVE_CONSUMER);
+The async_shutdown bit field is converted to a device flags bit
+Convert all patches to use the flag bit accessor macros to set or check if
+  async shutdown should be used
+Added documentation on the kernel parameter to control use of async shutdown
 
-[Severity: High]
-This has the same issue as the pcie power domain link creation above.
+Changes from V14:
 
-Since DL_FLAG_AUTOREMOVE_CONSUMER implies a managed link, should these
-links for virtual PM domain devices remain DL_FLAG_STATELESS to avoid
-the WARN_ON during device_links_driver_bound()?
+Remove unneeded use of '!!' with boolean type
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260902164313.2901=
-302-1-hanzhijian1991@gmail.com?part=3D1
+Changes from V13:
+
+Remove duplicate flagging of async shutdown on scsi hosts/targets/devices
+
+Changes from V12:
+
+Only acquire a parent reference if acquiring the parent's lock
+device_enable_async_shutdown should return void
+Minor comment and description cleanups
+
+Changes from V11:
+
+  * Swap the order of the first two patches
+  * Rework conditional parent locking so that lock and unlock no longer use
+    separate conditional checks
+  * Remove an used variable
+  * Comment and description text cleanups
+
+Changes from V10:
+
+Reworked to more closely match the design used for async suspend
+  * No longer uses async subsystem cookies for synchronization
+  * Minimized changes to struct device
+  * Enable async shutdown for pci and scsi devices which support async suspend
+
+Changes from V9:
+
+Address resource and timing issues when spawning a unique async thread
+for every device during shutdown:
+  * Make the asynchronous threads able to shut down multiple devices,
+    instead of spawning a unique thread for every device.
+  * Modify core kernel async code with a custom wake function so it
+    doesn't wake up a thread waiting to synchronize on a cookie until
+    the cookie has reached the desired value, instead of waking up
+    every waiting thread to check the cookie every time an async thread
+    ends.
+
+Changes from V8:
+
+Deal with shutdown hangs resulting when a parent/supplier device is
+  later in the devices_kset list than its children/consumers:
+  * Ignore sync_state_only devlinks for shutdown dependencies
+  * Ignore shutdown_after for devices that don't want async shutdown
+  * Add a sanity check to revert to sync shutdown for any device that
+    would otherwise wait for a child/consumer shutdown that hasn't
+    already been scheduled
+
+Changes from V7:
+
+Do not expose driver async_shutdown_enable in sysfs.
+Wrapped a long line.
+
+Changes from V6:
+
+Removed a sysfs attribute that allowed the async device shutdown to be
+"on" (with driver opt-out), "safe" (driver opt-in), or "off"... what was
+previously "safe" is now the only behavior, so drivers now only need to
+have the option to enable or disable async shutdown.
+
+Changes from V5:
+
+Separated into multiple patches to make review easier.
+Reworked some code to make it more readable
+Made devices wait for consumers to shut down, not just children
+  (suggested by David Jeffery)
+
+Changes from V4:
+
+Change code to use cookies for synchronization rather than async domains
+Allow async shutdown to be disabled via sysfs, and allow driver opt-in or
+  opt-out of async shutdown (when not disabled), with ability to control
+  driver opt-in/opt-out via sysfs
+  
+Changes from V3:
+
+Bug fix (used "parent" not "dev->parent" in device_shutdown)
+ 
+Changes from V2:
+ 
+Removed recursive functions to schedule children to be shutdown before
+  parents, since existing device_shutdown loop will already do this
+ 
+Changes from V1:
+
+Rewritten using kernel async code (suggested by Lukas Wunner)
+
+David Jeffery (7):
+  driver core: warn should device_move try to move a need_parent_lock
+    device
+  driver core: separate function to shutdown one device
+  driver core: do not always lock parent in shutdown
+  driver core: async device shutdown infrastructure
+  PCI: Link a virtual function to its physical function
+  PCI: Enable async shutdown support
+  scsi: Enable async shutdown support
+
+Tarun Sahu (2):
+  driver core: rely on put_device to free dev->p
+  driver core: prevent device_add() during system shutdown
+
+ .../admin-guide/kernel-parameters.txt         |  10 +
+ drivers/base/base.h                           |   2 +
+ drivers/base/core.c                           | 269 +++++++++++++++---
+ drivers/pci/iov.c                             |  11 +-
+ drivers/pci/probe.c                           |   2 +
+ drivers/scsi/hosts.c                          |   2 +
+ drivers/scsi/scsi_sysfs.c                     |   3 +
+ include/linux/device.h                        |   2 +
+ 8 files changed, 260 insertions(+), 41 deletions(-)
+
+-- 
+2.55.0
+
