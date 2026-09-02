@@ -1,75 +1,64 @@
-Received: from BN8PR05CU002.outbound.protection.outlook.com (mail-eastus2azon11011044.outbound.protection.outlook.com [52.101.57.44])
+Received: from OS0P286CU010.outbound.protection.outlook.com (mail-japanwestazon11021095.outbound.protection.outlook.com [40.107.74.95])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D4A9028E0;
-	Wed,  2 Sep 2026 02:30:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.57.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB1372F6565
+	for <linux-pci@vger.kernel.org>; Wed,  2 Sep 2026 02:40:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.74.95
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788316257; cv=fail; b=cEacEwea4XTiiIWhIjcaPhUDpICjH6gg5C49oTQ4zxe9eaTKjXWj8s3+jWj8IU7TkfbJ+HjcSwc0Um2Q76Y7h2j0NyNK2qqQY320R6+WYeD1dHnOETPixDa6OQjarTuxzsRSt2DQfY6OA0g4m2M1j0HKTSLJgskYEWZD/cKZH9w=
+	t=1788316810; cv=fail; b=D3D2pE9yWrZTTkT6jp6oqos2XWZ29520fJRQW8jOz3nqXehdIvhbg3w+Z5snR/1EzEh2NuYAOkgxwVgg1YWtYUZw/sN3aknsWgaFfuL5RtdHm/eeZKVHMONFVziL3mlDMNyiXiSR0mnJHhcbc/FuCu76PeK4U5bLpqfB21B4gig=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788316257; c=relaxed/simple;
-	bh=xeBqHiE2t75zO+toXex6F+vNy15u+rxym1Lm9x0FpHQ=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=D56+5v8nVcKniinb8fkhCD293J1hZ9BQuXhCHHyDtjEOlszoM5+MLeBkMovMV/spEq2lOhOdbm3p77mTtuRKtnNuSM8CVuxo2fiaKnr+iWJoQI1Cc9g9MQcjxmpFRXkil/mqxpTIowyivSXxBrXGvt3wWtkdJrFc7i3+rRIliLc=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=BsBsGvfr; arc=fail smtp.client-ip=52.101.57.44
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	s=arc-20240116; t=1788316810; c=relaxed/simple;
+	bh=eka2Mi3qvJNGHmKetbJJ7Pdgs7AzFOfIv6MTirfdy0Y=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=X6tBGomPtioRgpU2p1/4DxzPc7bmh+NonE+xXgjGNjhyVsZ7+6YTUhGdVqSpbMuCH5KqzvXfxdy0BViXQQfdREqMPGx0lqm7LCq+e1NZRLFRnetPo/Q8xlGv5zJiPxwRsDFQtSJ2iuiSxqt+yNiifvlI4ZOTQKOi2UZcbRReOxQ=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp; spf=pass smtp.mailfrom=valinux.co.jp; dkim=fail (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b=uc79COum reason="signature verification failed"; arc=fail smtp.client-ip=40.107.74.95
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=valinux.co.jp
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="BsBsGvfr"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b="uc79COum"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=NQHHuo2YdqbkG/lOIlUmSBGyor7AO4G72dc9FIdExB26bBttrav+w3bMm21FXKuhx57OM5Vw7q5lhWnv+J4XkU5rekkd02MfDJYbpuHvKCAQvyxK0zG9OZq7OdxNHpXmBfqaaQ6EW9ZWBxHoIHw/I/EdSaTx7QlaUQTKokNj6WZuU3si8AuvUgZEzN75LvAbWv2acyqm2QZNARtF3dBWvuNUlp0a0yLpz1yVvo1CyG00PYj3z15fCRQ/rnwVm+TlwhzB0be1Pgy0pQj2ga1j3NI9lbDnTlPZylLy8FiO5q6DQ016swS8qCg1Eb77vWm/wTX/yd9NPLC3pvn04k3eEg==
+ b=rnTJPN6jHsTaH+JapvBZDG9OrjVWkGpqKGbFxj4Do9TH4I1HwnjOXC+S2dGSxZ6G67sfoEctLPfiHNj957WW7Y93XaGLv6EgmVqw2/2NU1MMezEjL4IILdmxCt7j4DHDQ7J6YjRG+bZzcpRffsIgh31/ZKSG7K6p7m/Qef0fNilLSIAK7xTGmd63O1pp+WUvyOHOlyr2jGGVy8ANet5WsQW+T408atRQNyJGULvbw8xHDNUKNUJUqKrNiyDp44/bnwe0czjaV5dcYYgfosH++2ACvAXSaUZlDDe7s9OViMe8zzMV7fJtjBtj7OMNX40oslIKuXEcjV8TbRw/lf4ZXA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=5pX91pspiVNp+jLlpNH8DieT30od/xqF+SITz+4c56U=;
- b=tgk8pjw6BJt6Wc2MtC5Qti6ECeTPxmA3jteusucXvWWxTj7sjEzoha5RbzXqHDkGt2p8RIgWs6J59fM1QeswguaQx/+xuVYlqFd+C7p9E7PHoC/3z9FCw1XcIppMfaWjPgu3GiYfYqTBrkWKngbROioQIsP6aZ1Iblk9LZ6NIzoBcwTYLmhai2zpcNEF+XH+mIdksUTRx53x/+MU+1s3/OShyRE/RQfVx+M/ADDAntK9aGbpb4rOpmYaTUoqGiNmwZnFM9LchikUVcPEseqORjIfZ6qrO65dmchcBAoQ7J6wuamrsSOrCerpY2tbRIGjWMIgBCdMTL3fBlSUlcfCIQ==
+ bh=WSvaniITY8VlXe2egqeg9fCNofbQnaVnojVhv3u/aOg=;
+ b=Nbss7zduG9BoXe84WK0zEdJJQYgnmGtLpWUlIXdpEUsJedRjzzUuEr+e3norpzppxgRNJwut4A8FMl59caDhq4KFg5lVcqezc6h5IMGKuIpUA0fLNc5oPhcQVSGB8P0xflqxbWbrG/x/OnKGSE9wJFaF9gmk0p2YrBH/ZKorx1ti0MKJRmiYBAP/MY3EyjkOED1o3JjD0qpKPdyMKE/sXFT/kqO5cvGtt6CD5IjB6NzA9YM5iMTHQ8xnHTZ9WlKSiYESOMQ8BVxDVLBA0fySt/FjZD6pUSsXG1fbPD+fLamjKYyebA/BlhiINgwQA8/WTU2p1I512cx+lpp7g+Z6XA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
+ smtp.mailfrom=valinux.co.jp; dmarc=pass action=none
+ header.from=valinux.co.jp; dkim=pass header.d=valinux.co.jp; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=valinux.co.jp;
+ s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=5pX91pspiVNp+jLlpNH8DieT30od/xqF+SITz+4c56U=;
- b=BsBsGvfreyM3Mu6z0klMFHvA1mPZXMSxghb/RSL9C6wMpPdcnEU15tBb6Oy+QfQ1dQ7m/xjtlyZauxV9+AYqyr/YQJWqsynnWj/v39iwgHX9b2R+nVhaU1nYDz8meeTvKdZfcJUgnnGZyOrVrAOmC/w5S1aZI6l8MfXhRPznOhO9b/2FN27oBSN3fqhn3eNMhmZQzHNKIVtxgrfT5ofacz3/lw4K7Qv1SVKu7bVSnAHBCdKSDrbzicVHSqo7xFFFTOM0dAQlFp5eeCbAGnOLcfUtI7z1ghOfKqjkxdolS/xO3mLLhPk2/ZI86KoEUGHQ6GcjwSpTHEoPRvFr7zqJGg==
+ bh=WSvaniITY8VlXe2egqeg9fCNofbQnaVnojVhv3u/aOg=;
+ b=uc79COumgLqzZsorL3eRxNW0TSLzvk0zSx1DC0e7rlzKKdgglrNzVSmQmbjMVilowLjOISV09mvF9M/sqGyzzCMbTyJifYeOkc1R+Kxw6vXqMsSR5RQ4JAelL4RZ+wtU/oTtgY2Eb17eASjc0daxAmSoJuXk3gzzRyzJuqRmMWQ=
 Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from DS7PR12MB9474.namprd12.prod.outlook.com (2603:10b6:8:252::17)
- by SA1PR12MB7367.namprd12.prod.outlook.com (2603:10b6:806:2b5::12) with
+ header.d=none;dmarc=none action=none header.from=valinux.co.jp;
+Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:38f::10)
+ by TY4P286MB6927.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:340::8) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.360.13; Wed, 2 Sep
- 2026 02:30:47 +0000
-Received: from DS7PR12MB9474.namprd12.prod.outlook.com
- ([fe80::31ad:931:ef07:8ad7]) by DS7PR12MB9474.namprd12.prod.outlook.com
- ([fe80::31ad:931:ef07:8ad7%4]) with mapi id 15.21.0360.008; Wed, 2 Sep 2026
- 02:30:47 +0000
-Message-ID: <6353b16d-36a0-4fa1-9b9e-8a3448b6e07e@nvidia.com>
-Date: Tue, 1 Sep 2026 19:30:45 -0700
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v10 05/12] cxl: Cache endpoint decoder settings during PCI
- enumeration
-To: Dave Jiang <dave.jiang@intel.com>,
- Alison Schofield <alison.schofield@intel.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Davidlohr Bueso <dave@stgolabs.net>,
- Jonathan Cameron <jic23@kernel.org>, Vishal Verma
- <vishal.l.verma@intel.com>, linux-cxl@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Alex Williamson <alex.williamson@redhat.com>, vsethi@nvidia.com,
- alwilliamson@nvidia.com,
- Sai Yashwanth Reddy Kancherla <skancherla@nvidia.com>,
- Vishal Aslot <vaslot@nvidia.com>, Manish Honap <mhonap@nvidia.com>,
- Jiandi An <jan@nvidia.com>, Richard Cheng <icheng@nvidia.com>,
- linux-tegra@vger.kernel.org
-References: <20260804192958.1823952-1-smadhavan@nvidia.com>
- <20260804192958.1823952-6-smadhavan@nvidia.com>
- <1c648e0d-eb07-4006-91ec-9f092fd7c8ec@intel.com>
-Content-Language: en-US
-From: Srirangan Madhavan <smadhavan@nvidia.com>
-In-Reply-To: <1c648e0d-eb07-4006-91ec-9f092fd7c8ec@intel.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: SJ0PR13CA0124.namprd13.prod.outlook.com
- (2603:10b6:a03:2c6::9) To DS7PR12MB9474.namprd12.prod.outlook.com
- (2603:10b6:8:252::17)
+ 2026 02:40:03 +0000
+Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ ([fe80::2305:327c:28ec:9b32]) by TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ ([fe80::2305:327c:28ec:9b32%4]) with mapi id 15.21.0360.008; Wed, 2 Sep 2026
+ 02:40:03 +0000
+Date: Wed, 2 Sep 2026 11:40:02 +0900
+From: Koichiro Den <den@valinux.co.jp>
+To: sashiko-reviews@lists.linux.dev
+Cc: ntb@lists.linux.dev, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v3 5/7] PCI: endpoint: pci-epf-vntb: Allow DMA and MW to
+ share a BAR
+Message-ID: <5zkxmgcxmzubimiftjdwpjuggphwn3ygc5dv45llnn2w6g57cj@7a6vzluyjws3>
+References: <20260831182657.329614-1-den@valinux.co.jp>
+ <20260831182657.329614-6-den@valinux.co.jp>
+ <20260831210549.30AC31F000E9@smtp.kernel.org>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260831210549.30AC31F000E9@smtp.kernel.org>
+X-ClientProxiedBy: TYCP286CA0047.JPNP286.PROD.OUTLOOK.COM
+ (2603:1096:400:2b5::18) To TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ (2603:1096:405:38f::10)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -77,144 +66,199 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DS7PR12MB9474:EE_|SA1PR12MB7367:EE_
-X-MS-Office365-Filtering-Correlation-Id: d6bb1e51-149c-41ec-878f-08df089a325f
+X-MS-TrafficTypeDiagnostic: TY7P286MB7722:EE_|TY4P286MB6927:EE_
+X-MS-Office365-Filtering-Correlation-Id: 08866936-4d0f-44de-9b18-08df089b7dea
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|366016|376014|7416014|1800799024|23010399003|56012099006|11063799006|5023799004|4143699003|10067099003|22082099003|18002099003;
+	BCL:0;ARA:13230040|1800799024|376014|366016|23010399003|10070799003|3023799007|6133799003|4143699003|22082099003|18002099003|56012099006|10067099003;
 X-Microsoft-Antispam-Message-Info:
-	clHCgDNMGdBPkzHH3D5CFLAhAwHRR7udzGjxeM2YSf8RAHFuRgghFbjgvOT21lge6byYjbepxNMuBiJtm1srtg0M7088C9HS08G24sDUHBBzX4CBfeu1TL1gqNtGqfh1g9GiiSoEpiUQcKRSIYoKZtx76UekXMXQdOPuG9SuWTmguNd9G20ldd9Doif6zlBICCDHQjFcsStNnP+uozi71bPbXI5t3SAKs/f90ixqOYI0TCUFhL+VolZhEPeet1vPNjc3UHqIsGTSe9OtAE8rS/ZAB8VjJ56q/vC5IS96vuTcTFnZvd+xgY6c4HJwArF9aGtmA4Ezm1EGjgo6uba4YelvrgVGEU7bRrOGnduHcSZxFo4LwEWxSmL04mIBx9kEbUVfZGBsAGs3zQnaqdMEpTukYUNoZ+uR4kV9jcOn3+k30OGgo7IZpdmc1EGFpkLPfB6MDW2wWCuzhPrZl351TL37HKurRR/NeOK6ThKt7vFkboFNKkSeoQ1xDb10bSpU5lljt5kHBHCnbp4ETN/GqhRfrXsTc+qkBdv/5AdLIjvDlf2mlGwXfr0Le/lOf+QTI+a6A5DVnj/T+53cc383pija2L2dHxqmRaMofVLUFY22SFQ1r0R94HHpYbyFgw7/5R7yNyoN7IgAvsP5GtadiHHMJaflmHiNa227VtsTFnY=
+	mD/NEY4OnIRxFE2+YhhGD1Ypd1SXTz6v+uSNJDxIb8kr7+RXBqlnzgYx13ota8zWWAt9rEl8ysQ4j3NwJ3AviAUa6fgp1UmAuMbnixdUf2nBXnp7Mhg9c+MrJd1FDe9rRoq/c8yhwhBhY3lqiVqAZNOiEFgO5VznNYzoexeBQS6muKeVwhMWYMXG5VA+7lTb6d5YHjdeWvPhpb2YoQeDRcsJFNgAtz/LtnO0FIVJPMT8dKJ2UMucbXFthAm8EktDSbWMTTkA5U1kD3g/BoC+xglbFOrPAu9+JYVzNiFrcniwDLcAX3KCsl8z7Jw54n2N6Hwmb/cK3VujYKzcxNeKDMkjZ0cqI//lw7Q4ioaU2tzKqQ0MbNDStoShelopvtyAV0/PTk8SYETnyVsj9Ma5tyAX2X+byXhd3xs4PGh+I1fkZIMRET+GkStF58jlFsv54pOGPnJ7jZk+7ZcvF7cpom1cZOHxm+AvC31O5PhENEKEEX9ItdFwI0e8zYGiCyDmhh1M+JOp/udWGNIb/5zj98+MQzoGJemU8RDyxxpq+2a7vSVnJM87IglkPZCti0vc748osDp2EjnJhmmLERwhJRMGwSutWlbsEYxMJwq5PHI=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DS7PR12MB9474.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(376014)(7416014)(1800799024)(23010399003)(56012099006)(11063799006)(5023799004)(4143699003)(10067099003)(22082099003)(18002099003);DIR:OUT;SFP:1101;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(376014)(366016)(23010399003)(10070799003)(3023799007)(6133799003)(4143699003)(22082099003)(18002099003)(56012099006)(10067099003);DIR:OUT;SFP:1102;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?blJ5ZG5FQTRROGhyTE1jTVlwZWFXY0dSV1UzNUdQZmxYU2FMNEhCVWNkRnFQ?=
- =?utf-8?B?UWIxbDZRTHNKd1BETVhvWUw4ZTMwQzdFQk52aWNIRFVTOXhsckt3RkdPMWdH?=
- =?utf-8?B?bkdKeTFGclJaZ3RJamVoMzgyMW84eGVkZUxNYlZaQkVpTnVGSUNrbVdWWDc2?=
- =?utf-8?B?TlZSekNNam1jeTgydWhJOW1wRDRCNFBzZGhaNkZscytncEVxOFlja0hIWG9n?=
- =?utf-8?B?M0hCRlZhVjF3TStrczJFOHF5Tk5xOXBtb1Byd0g3RE5SVTAzSXB3VGM4emVD?=
- =?utf-8?B?bzVkV2tRYjkzTnNjQy9MdEdKZEwzR3NuWDZlRjg0MUFjcEFDQ3Ayc1JRVjdm?=
- =?utf-8?B?aFFqREFOTjdhZGd1dTE5VEpPQWk1RzBjWVB2MXlmWTZoalhtVHZwM2pJZmky?=
- =?utf-8?B?REZBdTYvWStXdTJ0cGpSVHVxK3YxNUlJUVM1UjgvQUNLY3ZEakp3NHdTZGdU?=
- =?utf-8?B?OVZlajBISjRsek1sV3JqMTFFd0VMMkN6WWgwUHVtcVI0SDZFbUtyc1V2RVFq?=
- =?utf-8?B?YUxoZ28raHlZc0lvZGFqNmdyTE5YTzc2cUFMcE42eUhIb3ZaN0VyR3VJc2px?=
- =?utf-8?B?T2dVY1VJSXJZdFFIeWNqSmlmZitGNXRmVkpaaGFyb3hwR3Y2Y0I1bHlGYXFu?=
- =?utf-8?B?K0Y0K3o1ZnRlcWxYakNhNXpjRERRSjdZNnpjenRMQ0tYRFNxUzlmdC85ZjlH?=
- =?utf-8?B?TFZjSHYya1g1Qk9GQ2FyWkoxc1hEV001MEZyWWFYMHRLK2tYZUlDMWVHTmNv?=
- =?utf-8?B?OE5Cait3ODhXK0lpWU1wcDlWeGFvU0FWQUZ4clB3MmhBNzVwdFlzajQxenVi?=
- =?utf-8?B?ZmUxL2FxVStqRXlaNVhmZmdTcUF1YUgxaHpOSHBVL2owMFMwQnVCeC9MMGZw?=
- =?utf-8?B?ZDhQUHRYdnVielorTlVMc2UrV0VUa0VMWUIrOWwyRndjcXhZMVBEN29XZHp5?=
- =?utf-8?B?Z3l5VlJtSU5VYjdaVmlmUmpJZ3FmbFZTbTZnZGhpdis2RmNHYTJDOEJDUVhw?=
- =?utf-8?B?YlYzZ3JEdmkwZ2hUcnRVczVJL1pOallBUlg5MUUrUGpGRnlhVkwrUndocU0y?=
- =?utf-8?B?cjlXNW5QMmpYL2J2TmJiNEExVDdpcXVnd1JlTElhZHF1K0FZekdMS01tZXNH?=
- =?utf-8?B?ZXdGTk5zSExmY1ZJdElWb0Z0QWpuMlNPTjJZYlBoMzN1bEhVRDBrUndNSnk4?=
- =?utf-8?B?RUlxVDZGaEg4ZXZYRzQ2VXdUNXNFTk9PUGcySHZ3MTJaRWN0TCs1TXdMZEov?=
- =?utf-8?B?MFJXS0s1dTBKYTRFUkR1NFdISFcyemRDRk8wKzBVSXZVVm15SUdoalM4UTV0?=
- =?utf-8?B?YlZwRzdzMVJVTVp2OGJxclExcmJDRGZHVmZuUlI5ZHk5THpudTUwRWE2N0xJ?=
- =?utf-8?B?cjRHN2lueGtUWVAxTXpoY2NYbEFkVXNMZzBLYlVoSTdUZThsTmxyWmVxZkpt?=
- =?utf-8?B?Y3psOFZmb1R4ZnZ0L2NyVlFUOTNtUHZlT2UzT2gvcTMvY1ZXbVR6ZERQcW9N?=
- =?utf-8?B?ZXlrVGN0L0RQK29JaFM1YXdmVG5pZVFhall3UUQxUXN5OVV6emJaVVVGN2Vx?=
- =?utf-8?B?dVBmSDU2K0FTRnAxRWt6OXVHdUdpUWNMVXRTdEp3YWVhT0RvMnNBREFIYjY1?=
- =?utf-8?B?eEJxQ1NzL1R5TjRNcDN3a2tQR0lHWGdJa1FIVUdSRUtZL2dNV09GS3ROaWFE?=
- =?utf-8?B?bmFmWU4rZFpqbEdzb2p4ZWF6cnlkNFhUYi9DTStjaG1MaU1FNDJNZEM3cmxj?=
- =?utf-8?B?UGRHdEN2dUowWnk4T09VTVJEUU1nYXVvSURxMWdTejlqbXVNbDI5VE1vQkNP?=
- =?utf-8?B?TlMyYlVuRUtYN3V3N3JCSTNVOWxYUm83dmloSW4yY0x6cENBc0dNRjBWS1NN?=
- =?utf-8?B?d2FwNnFUdkk2MGlwdkhoS29kdHQ2YVRUZ0RqNVdZK0lwek5Pb3dPYTU2M0Jv?=
- =?utf-8?B?WVAvei9wRUZram5LekRrYWpVNVltNkNBNXV4OVJiYzhlaWVhaUNSZDRQTit5?=
- =?utf-8?B?OFBycGk2bDM3dm1HYmxJWkFyQm1ZdTJrdmxpU1RvVWJoRW43bk1zYWQ2a2hE?=
- =?utf-8?B?dVBoNHVTNzk5cTFQdmIvQkFlbXpJUWd5NFM2WVBPSm44RWVYdEp2TmZNeUw1?=
- =?utf-8?B?ZlVSZVF4d2sxa2N1MmN1d0FPdUQvaVpHeER6bVBISUNuL0VDajN4RWhRZlJn?=
- =?utf-8?B?YVpTc2tyN3VoekNORS84aXA2M0JJNEJ4RDc4WmhUajR4aER6Y2c5T3FNS1BK?=
- =?utf-8?B?U0hDTENYNGNuSzJvTDZ6RGVWT3B0YlFYWFN5L1hLdjgxTlQ0SElQRjcxT0ZP?=
- =?utf-8?B?WEFNQ0IveGNLRWZhdkFaSmpLTDRUdkZsVmtYWHVLZTh5M1UrK0s0QT09?=
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: d6bb1e51-149c-41ec-878f-08df089a325f
-X-MS-Exchange-CrossTenant-AuthSource: DS7PR12MB9474.namprd12.prod.outlook.com
+	=?iso-8859-1?Q?TvJQ2ZaRR0aS9Dt56+kX983vC0yBfqRtWD37CLNELa+fIH/RYxfmroNWXT?=
+ =?iso-8859-1?Q?nUP/Ns5LaltalUAo1inD7GYhfT+InKS8PvPl8kOyz5JREGLYWoZLKYoUQ7?=
+ =?iso-8859-1?Q?RijvGAwvcmE8gsk6VsEr7uGgLagxK4K2yn06B4u0r459ezTolTXSKlyaAY?=
+ =?iso-8859-1?Q?oMZ3DiGIJ4OVDFvPtrSOyLQyY9zhzbKwGRbqO3wQz6Nhkok4elC+xIlbHZ?=
+ =?iso-8859-1?Q?Mq+B5MM5PT8Fm8YMSCkN5BKqjIe4jBt15gWxRPlmPY6gIcxrHfnqtXCYGO?=
+ =?iso-8859-1?Q?W12BSuOwyuX4H5voB3NGtr7VHbZ3I7YrcYSYFarl3l+N2dWqpcbD4Y2kNS?=
+ =?iso-8859-1?Q?JY60K11eN+5ciZK8pVoujlCsv9kI5UWXmM6sdBCav+QwN3dOjcGpPWU3Ck?=
+ =?iso-8859-1?Q?o999gEWZeAn0Y6r9noDUvxV22obybvjVdqQXnwRJJlLPVbbI92DcuLS3jN?=
+ =?iso-8859-1?Q?GX7vlQndC4X1cG+/Y5YkV/jV2fRcxSkPRICodeYX3U791q9NKpt73Nt/XR?=
+ =?iso-8859-1?Q?ZSUEXsacU+A1sf3BDuUYHzWuyd00B9cXpI944u51W+fA0y9lE9a58LTzJ1?=
+ =?iso-8859-1?Q?jsfqEvSvdINua7sc7ZVLmP78+7bljko++aFOwBvx4un9c3Jpfx+diigP7U?=
+ =?iso-8859-1?Q?r56eOJJi/7G8vnDqyxV2A7v25KUL9ODlr1Ux0E/X7eeICKmtYTe3BrcF3P?=
+ =?iso-8859-1?Q?XLKX/NFgdVwCEyYsnUXjFzyMy7SBshAeTN9/jq53pzH2EoRG1cbosDFEc9?=
+ =?iso-8859-1?Q?VkxfNs9JTSEx6Mt2stnokwGdaSVVBkKLgVPHm1/mPlcaLSp7tT1oW81sb4?=
+ =?iso-8859-1?Q?Zd+SwcYUrG24a9HbCQmLMNzfpU3S7AD6VGhNHbRJhjg10DRvghFABX8SE4?=
+ =?iso-8859-1?Q?2N0mB9jeKz6vDPqSMiXXOmYSk0GqEIgxdhU1EB7GB7hAqVBe+XmxDLVRAw?=
+ =?iso-8859-1?Q?nDISfKQ3FaW8MUHFaZepwN/cDEvTFPYEArEo3Swkz2BpZsaENgUelBRyLW?=
+ =?iso-8859-1?Q?9iLMTI9AP55eiSdJGLEvHatJK1sQQOCnYO5xctgK1vGQYoOlhQ1AH4nWf2?=
+ =?iso-8859-1?Q?+xHSwqPx28ZWsUX8UqLwo2fEigGwevXgWJySgh1YaMVOHGs59qffrf9AFX?=
+ =?iso-8859-1?Q?fmdMRhaLHKXvvKQrSIEH2nOImdoqCPBt+86br+Bcimf4/uycrEkGOWamaM?=
+ =?iso-8859-1?Q?cHxBH6sKlxHrfhKfMAgi0fhl2U3V1d5d3704JHo5hccDYsVs5QYDKzf+fB?=
+ =?iso-8859-1?Q?uaxbAhIagzy2hSV1xysECZbGdS8XfRwhJZ3l9G+hPAPhLvKdU3jXZUcHox?=
+ =?iso-8859-1?Q?hC1Je0f8VVr5E8Z6we/dahIDxNw8MxHYyMtjilkWdwOtJ7YEYOJdnbSjSC?=
+ =?iso-8859-1?Q?1kvKFybJ3ZcXOMWhdX6hTySqKEIAcY1a8xzHP9s8g4TLd2AjLYbRpWwfJN?=
+ =?iso-8859-1?Q?u9JXv5wi6Bmk80df5gLabCzZkkF356hyOTjxs/j2V7lsrbYgMphXLB0P2w?=
+ =?iso-8859-1?Q?OLYwEGsCMxstAauIYPP/JiyW3rdZ9jAKtVpt/CamqylVpUdBamHbJfakvu?=
+ =?iso-8859-1?Q?LvkBQOcIHDXCzB3KACwkJqosbbzrdgzinyBMtNk7LyBG8nBAqeVHeAur7F?=
+ =?iso-8859-1?Q?oLKefZ9YaYzwExz26T9/wQV3N27lRck1aCunle2yjnCwww3HZv8g3K4f6N?=
+ =?iso-8859-1?Q?mNgulKdTPTpFTLdwlfc3vC+sov7/5GYVNXI3pgtPISEM/KklHzezcCp0Aq?=
+ =?iso-8859-1?Q?leh7tCSl4e8SnVhkI6iaE1/CCWYQJujVOss76OXROucHeCsf3+ZsI+fw4y?=
+ =?iso-8859-1?Q?x1HhupbvxbV7V5r+JIJnmS5glq1G0/Jbjpx/l7Pv/GTCDNtky77g?=
+X-OriginatorOrg: valinux.co.jp
+X-MS-Exchange-CrossTenant-Network-Message-Id: 08866936-4d0f-44de-9b18-08df089b7dea
+X-MS-Exchange-CrossTenant-AuthSource: TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 02 Sep 2026 02:30:47.4289
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 02 Sep 2026 02:40:03.6453
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-Id: 7a57bee8-f73d-4c5f-a4f7-d72c91c8c111
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: zqSuRPUDOFIJXMCgZYdteo11toQh7b0eK+80NOEqGn22rtWqVRl57WpAb2mE1oxpMdefh7L12R6FuaKSUOE6EA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA1PR12MB7367
+X-MS-Exchange-CrossTenant-UserPrincipalName: WbPqFHX9m4m1dc7Zpz64ECPqGDj6G80ZiJYjLDw/zHZm9C1qWecV41y1IMoZ1hESbQenJjjHfxCZGSLxV+X0gQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: TY4P286MB6927
 
-On 8/21/26 4:33 PM, Dave Jiang wrote:
->> +}
->> +
->> +static int cxl_pci_hdm_capable(struct pci_dev *pdev)
-> Function should return a bool.
+On Mon, Aug 31, 2026 at 09:05:48PM +0000, sashiko-bot@kernel.org wrote:
+> Thank you for your contribution! Sashiko AI review found 3 potential issue(s) to consider:
 > 
-> cxl_pci_mem_capable() would be clearer on what this function is checking. Although do you want to check the hdm_count as well? That would make the original function name make sense.
-> 
-> Also a helper that returns the DVSEC offset and the cap word can be shared with cxl_dvsec_rr_decode() and cxl_reset_dvsec().
-> 
-> 
->> +{
->> +     u16 cap;
->> +     int dvsec;
->> +     int rc;
->> +
->> +     dvsec = pci_find_dvsec_capability(pdev, PCI_VENDOR_ID_CXL,
->> +                                       PCI_DVSEC_CXL_DEVICE);
->> +     if (!dvsec)
->> +             return -ENOTTY;
->> +
->> +     rc = pci_read_config_word(pdev, dvsec + PCI_DVSEC_CXL_CAP, &cap);
->> +     if (rc)
->> +             return pcibios_err_to_errno(rc);
->> +
->> +     if (!(cap & PCI_DVSEC_CXL_MEM_CAPABLE))
->> +             return -ENOTTY;
->> +
->> +     return 0;
->> +}
->> +
->> +static int cxl_pci_hdm_read_info(struct pci_dev *pdev,
->> +                              struct cxl_register_map *map,
->> +                              struct cxl_hdm_info *info)
->> +{
->> +     struct cxl_decoder_settings *settings;
->> +     void __iomem *hdm;
->> +     int decoder_count;
->> +     int rc;
->> +
->> +     rc = cxl_setup_regs(map);
->> +     if (rc)
->> +             return rc;
->> +
->> +     if (!map->component_map.hdm_decoder.valid)
->> +             return -ENODEV;
->> +
->> +     hdm = cxl_pci_hdm_map(pdev, map, info);
-> I think you can setup a custom __free() for the hdm so you don't need to have the gotos.
-> 
->> +     if (IS_ERR(hdm))
->> +             return PTR_ERR(hdm);
->> +
->> +     decoder_count = cxl_hdm_decoder_count(readl(hdm +
->> +                                                 CXL_HDM_DECODER_CAP_OFFSET));
->> +     if (decoder_count < 0) {
->> +             rc = decoder_count;
->> +             goto out_unmap;
->> +     }
->> +
->> +     if (decoder_count > CXL_HDM_DECODER_MAX_COUNT) {
-> There's no need to check this. The register cannot decoder larger than a value of 32. So this scenario would never happen. Maybe
->          if (decoder_count > ARRAY_SIZE(info->settings))
-> 
-> DJ
+> New issues:
+> - [Critical] Deactivating a shared DMA BAR unconditionally clears all submaps, breaking the active Memory Window (MW) mapping and causing severe memory corruption.
+> - [High] The `ntb->dma` structure is freed in `epf_ntb_unbind()` before the driver is unregistered, allowing concurrent NTB subsystem operations to use a freed pointer and its lock.
 
-Ack. I've addressed this in v11. The helper now returns bool, and I 
-retained the cxl_pci_hdm_capable() name because it checks both CXL.mem 
-capability and HDM decoder count.
+Both are valid, thanks for the catch.
 
-   I also added a shared helper for retrieving the CXL Device DVSEC 
-offset and capability word, added a custom __free() cleanup for the HDM 
-mapping, and replaced the fixed decoder-count limit with an ARRAY_SIZE() 
-check.
+The second issue comes directly from the pre-existing vNTB lifetime handling. I
+posted the prerequisite fix series here:
 
--- 
-Regards,
-Srirangan
+  https://lore.kernel.org/r/20260901063238.631166-1-den@valinux.co.jp/
+
+That fix also gives the DMA BAR mapping a clear lifetime. The EP owns the DMA
+resources and their BAR submaps for the whole EPF bind lifetime, so a
+host-driven TEARDOWN_DMA is unnecessary and, for a shared BAR, unsafe. I will
+drop it and rename CONFIGURE_DMA to SETUP_DMA_BAR in the next revision.
+(The CONFIGURE_DMA naming was misleading even in this v3. Unlike CONFIGURE_MW
+and TEARDOWN_MW, it installs an EP-side inbound mapping rather than managing an
+outbound mapping.)
+
+Best regards,
+Koichiro
+
+> 
+> Pre-existing issues:
+> - [High] The virtual PCI driver `vntb_pci_driver` lacks a `.remove` callback, causing the NTB device and virtual PCI bus devices to leak and potentially use freed memory.
+> --
+> 
+> commit 4680cfd6b651b64bf9225e9233e1d66310c8b0da
+> Author: Koichiro Den <den@valinux.co.jp>
+> 
+> PCI: endpoint: pci-epf-vntb: Allow DMA and MW to share a BAR
+> 
+> This patch modifies the PCI endpoint vNTB function to allow a DMA BAR to
+> select an MW BAR and place DMA ranges after it. This enables configurations
+> that have no spare BAR for DMA resources to share one.
+> 
+> > diff --git a/drivers/pci/endpoint/functions/pci-epf-vntb.c b/drivers/pci/endpoint/functions/pci-epf-vntb.c
+> > index 1842493c33b02..aa659ec62d931 100644
+> > --- a/drivers/pci/endpoint/functions/pci-epf-vntb.c
+> > +++ b/drivers/pci/endpoint/functions/pci-epf-vntb.c
+> [ ... ]
+> > @@ -621,17 +648,25 @@ static void epf_ntb_dma_release(struct epf_ntb *ntb, bool quiesce)
+> >  	ntb->dma = NULL;
+> >  }
+> >  
+> > -static int epf_ntb_dma_set_bar(struct epf_ntb *ntb, bool active)
+> > +static int epf_ntb_dma_set_bar_locked(struct epf_ntb *ntb, bool active,
+> > +				      const dma_addr_t *mw_addr)
+> >  {
+> >  	struct pci_epf_bar_submap *old_submap;
+> >  	struct epf_ntb_dma *dma = ntb->dma;
+> >  	struct pci_epf_bar *bar;
+> >  	unsigned int old_num_submap;
+> > +	dma_addr_t old_mw_addr;
+> >  	int restore, ret;
+> >  
+> > +	lockdep_assert_held(&dma->lock);
+> > +
+> >  	bar = &ntb->epf->bar[ntb->epf_ntb_bar[BAR_DMA]];
+> >  	old_submap = bar->submap;
+> >  	old_num_submap = bar->num_submap;
+> > +	if (mw_addr) {
+> > +		old_mw_addr = dma->submap[0].phys_addr;
+> > +		dma->submap[0].phys_addr = *mw_addr;
+> > +	}
+> > -	bar->submap = active ? dma->submap : NULL;
+> > -	bar->num_submap = active ? dma->num_submap : 0;
+> > +	bar->submap = active ? dma->submap : NULL;
+> > +	bar->num_submap = active ? dma->num_submap : 0;
+> 
+> [Severity: Critical]
+> If the host sends a COMMAND_TEARDOWN_DMA while a Memory Window is still
+> active, epf_ntb_dma_set_active() will call this function with active set to
+> false.
+> 
+> Does this unconditionally clear all submaps on the BAR, including submap[0]
+> which covers the MW prefix? 
+> 
+> Since pci_epf_assign_bar_space() used address 0 as the fallback base physical
+> address, clearing the submap would cause pci_epc_set_bar() to map the entire
+> BAR to CPU physical address 0 on the endpoint. Could this corrupt memory when
+> the host subsequently accesses the MW?
+> 
+> >  
+> >  	ret = pci_epc_set_bar(ntb->epf->epc, ntb->epf->func_no,
+> >  			      ntb->epf->vfunc_no, bar);
+> [ ... ]
+> > @@ -1974,6 +2019,16 @@ static int vntb_epf_mw_set_trans(struct ntb_dev *ndev, int pidx, int idx,
+> >  	dev = &ntb->ntb.dev;
+> >  	barno = ntb->epf_ntb_bar[BAR_MW1 + idx];
+> >  	epf_bar = &ntb->epf->bar[barno];
+> > +	if (epf_ntb_dma_shares_bar(ntb, barno)) {
+> > +		/* DMA submaps follow this MW, so its extent cannot be changed. */
+> > +		if (size != ntb->mws_size[idx])
+> > +			return -EINVAL;
+> > +
+> > +		guard(mutex)(&ntb->dma->lock);
+> 
+> [Severity: High]
+> Can this lock be accessed after ntb->dma has been freed?
+> 
+> In epf_ntb_unbind(), epf_ntb_dma_release() is called, which frees ntb->dma
+> via kfree(). However, pci_unregister_driver(&vntb_pci_driver) is called
+> after this.
+> 
+> If a host MW configuration command runs concurrently with unbind, could
+> vntb_epf_mw_set_trans() check epf_ntb_dma_shares_bar() and then attempt to
+> acquire this mutex on the freed ntb->dma pointer?
+> 
+> > +
+> > +		return epf_ntb_dma_set_bar_locked(ntb, true, &addr);
+> > +	}
+> > +
+> >  	epf_bar->phys_addr = addr;
+> >  	epf_bar->barno = barno;
+> >  	epf_bar->size = size;
+> 
+> [Severity: High]
+> This is a pre-existing issue, but I noticed that vntb_pci_driver lacks a
+> remove callback:
+> 
+> static struct pci_driver vntb_pci_driver = {
+> 	.name           = "pci-vntb",
+> 	.id_table       = pci_vntb_table,
+> 	.probe          = pci_vntb_probe,
+> };
+> 
+> When epf_ntb_unbind() calls pci_unregister_driver(), it unbinds the driver
+> but ntb_unregister_device() is never called because there is no cleanup
+> function. 
+> 
+> Since the struct epf_ntb instance is allocated via devm_kzalloc() tied to
+> the EPF device, it gets freed when the EPF device is removed. Does this
+> cause the NTB device and virtual PCI bus devices to leak, leading to a
+> use-after-free if the NTB subsystem makes subsequent calls?
+> 
+> -- 
+> Sashiko AI review · https://sashiko.dev/#/patchset/20260831182657.329614-1-den@valinux.co.jp?part=5
