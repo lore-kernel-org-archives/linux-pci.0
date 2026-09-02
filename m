@@ -1,105 +1,65 @@
-Received: from mail-qk1-f182.google.com (mail-qk1-f182.google.com [209.85.222.182])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mail.alien8.de (mail.alien8.de [65.109.113.108])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF13B4A49A5
-	for <linux-pci@vger.kernel.org>; Wed,  2 Sep 2026 15:01:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.182
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 53E353DDB0A;
+	Wed,  2 Sep 2026 15:14:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=65.109.113.108
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788361295; cv=none; b=Mx+q82ppMXqEW537OlMZQVOfg4k2JHsXR5AoGG8RGPLuxpmx7fxTLsYW/QQAMP3yurZM80UP4lUWvpHMZoZDBTcTd330dFVyDLoLTjGD6Idj0u7nwBAxqyJuYQj4L/nnRYVy0ashcuXcVwvrGu4y5vPFDXkvC3Gsfi1JDVTMimo=
+	t=1788362060; cv=none; b=QUKW2G0vBSlEgbtRAM+8e3CTCoCSrDkWzxjSXnOHSvQmQZDlR6DRpyXLqFe5C9hK7LAKfiVxLtQlCqykPWImeWRExmdLrNVzT5YhMvX83HkVl5QZZs1PLqeU+tVjYmWclQETdWxuPv/bUMY5robO/X1VFmWuw/T35nlMBue3KWA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788361295; c=relaxed/simple;
-	bh=vyI0+5T8UYK55sjN7c+Akwn7k1qbx8c77K/++T6sd1I=;
+	s=arc-20240116; t=1788362060; c=relaxed/simple;
+	bh=mZD4+9zNMilKUrKEQmGK4V8mTRae7XvHliv57yrDxUE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=BkofXubTxY5MgE6lqEf22IDPHzF3Z2AVT8c/0YViEpTmGTh3O86T4DjAZcLCwJLbVJrYnC6oVMOTxUg/zawNdALw5sIJuAtslFVlLHOoFnCJX5tNDyZTILT5kHDxWcvw9+VWqd56iPAUzwub4aTwgRK0oD9dMoGHW7BPCUpWUaI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca; spf=pass smtp.mailfrom=ziepe.ca; dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b=LDYUV4yu; arc=none smtp.client-ip=209.85.222.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
+	 Content-Type:Content-Disposition:In-Reply-To; b=O8YkNKjv0OCTnNc5EKRIFP4T3QfS6J7WwdW4yzu4Tx8bJseDkSddVuuweKhUJ+Nepn3y5i+iiUX37kOajy55tExjtW4CLfcT6U2MaNoyEUkaR7PCl6pb1WS41IoxvDEThnI4BnN4YQBkEjEP956C+HYAN9C4iKEaNdfayJ8MO7o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=alien8.de; spf=pass smtp.mailfrom=alien8.de; dkim=pass (4096-bit key) header.d=alien8.de header.i=@alien8.de header.b=hjEqhnF3; arc=none smtp.client-ip=65.109.113.108
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=alien8.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=alien8.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="LDYUV4yu"
-Received: by mail-qk1-f182.google.com with SMTP id af79cd13be357-930c0f9c1b1so127731385a.1
-        for <linux-pci@vger.kernel.org>; Wed, 02 Sep 2026 08:01:30 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ziepe.ca; s=google; t=1788361288; x=1788966088; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :content-type:mime-version:references:message-id:subject:cc:to:from
-         :date:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=giebtW14WRSNN/oAZ2HvlFksj8A4SENo3e4Bwxaljok=;
-        b=LDYUV4yuEtDJRMCMwaI/aKWDQAoVLE++IMs6T4Ss6v8LET3YKOmk9oObpVDN5ywC0N
-         bFnDxvtzFR7JXk4VH3FpfQjzj/GRd0j2ifRA5451fsLmGwCT5QPMJ70aLLCfo8Xz8sco
-         RAMT/uJiAsdLZVB65wNDYC6GSGRcDFDZ5Z9BfWkKYx3j/W4tTAm8CUORIDnBU9OQtzHv
-         86syV5D+PsKhEhZWQNRgYgj1dB/L0tzCwpZ7Zp1Evdbw49O3CBUBFxqPeHpTfDGkgGR9
-         imE2UWXu+IrdDItEydMBvTaTMMhqNy3tiitpJxT4d65m1zBiyWssT+uG22s7/pHbVpL1
-         mFFA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788361288; x=1788966088;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :content-type:mime-version:references:message-id:subject:cc:to:from
-         :date:x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=giebtW14WRSNN/oAZ2HvlFksj8A4SENo3e4Bwxaljok=;
-        b=bBdSl9mwQba+OdKIqcvElpPtgP+0fartvnSeN2lanHg9O2H70pAmuaCl2eRnWFuCFi
-         hIeV8CUktqXINGp07nm5Aoz4Dc8EvmXB8m5brYLMhh2PxbyULuw3r1AnAcMfSRtTE+wZ
-         8pee1Vz6yYxlwxTc+Fb2cglUQ3r5LpkIZEEY119owXJRZQicG/BtZBXv3gig+7yPAcGp
-         L5ijfl2+9I+H5DJRJDTWQI95CBbo10VPm2yJLzNJijkfFoJrUiIZiOmN/SCZUXSRpCL2
-         ZwJMqS1py9p5QNpFHluyJJCQVLApI+FquaEF9ClGP6TsOk/avpcCUOQzObNAbY7fgyJj
-         mGiQ==
-X-Forwarded-Encrypted: i=1; AHgh+RofoEW8VxvoEaVNV35H0fE9K8FQccALbtLenVTmfSyU1JTc9UWaW9ZZiwL5Val/Hi1BrPo5vgwRmL8=@vger.kernel.org
-X-Gm-Message-State: AFuF++kNlDv6fb0RywOoA4lrMnz0/xDPQYTFXsWWeiH4NyrUIi7XVIsk
-	chHWvo08MEfmURd4c19V6XY279kZL/RDDBvHLpaTSPmbsE7ZFgszDqYfUeKMlI/pIPA=
-X-Gm-Gg: AR+sD12HJ8nXyK8jgrFVsIHJ/q7C9b6nicG5MpjeJE71OJvpbjOJplXed4Yls8E5fMX
-	XuYzV4hP5lHo0aTAOAXSOjuy3Te50uAD1vM0LTvxT8QajoYxq9Fo/iqj9rxoRuDwo1dFwwM+X5z
-	yKrujJznv2dJFvnAnHKbDOZL2xPNOaSsSnzgX+/EGegBEXZZX6c/eVwIUFvxThlR7wYCq1CfdQR
-	gGjZrKXtjIn81VKa8njBLuuK+MvF7qZrDRWnp/8c0lb+UxTk0qfmx6hdYRXcxYMPTHmz2QlGJ69
-	Ruo70VWBYLKTUTA2OmvTEewbzUl/SVao5b/AhC07Fb7OgohFnedbhWiNbUMAov+ZO36ZXDb4Xd/
-	jAo679KgiaVH4HZsnWywaQjiJA2CXCNKknTYKdLBBwyiqi+MzsaQMh28r3EHlCM6ort+y1VmpCH
-	R39zGK2pUASaGElNsYcIccEjnsi/8qons+Y4b8HEV9HDUpTr3WCtYr8RMnvQAobbFE/WMfnjciS
-	CnxCRgpyJGBbVleuNRwlptMh9tqpmxbPbIAHMmpxq/MBg==
-X-Received: by 2002:a05:620a:178c:b0:937:372a:b97 with SMTP id af79cd13be357-93960dd7c34mr628429685a.17.1788361287651;
-        Wed, 02 Sep 2026 08:01:27 -0700 (PDT)
-Received: from ziepe.ca (hlfxns010zw-159-2-239-150.pppoe-dynamic.high-speed.ns.bellaliant.net. [159.2.239.150])
-        by smtp.gmail.com with ESMTPSA id af79cd13be357-9395f157adesm227012985a.1.2026.09.02.08.01.26
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 02 Sep 2026 08:01:26 -0700 (PDT)
-Received: from jgg by wakko with local (Exim 4.97)
-	(envelope-from <jgg@ziepe.ca>)
-	id 1x1mSr-0000000EU0M-3Bwb;
-	Wed, 02 Sep 2026 12:01:25 -0300
-Date: Wed, 2 Sep 2026 12:01:25 -0300
-From: Jason Gunthorpe <jgg@ziepe.ca>
-To: Alexey Kardashevskiy <aik@amd.com>
-Cc: Xu Yilun <yilun.xu@linux.intel.com>, ankita@nvidia.com,
-	linux-coco@lists.linux.dev, linux-pci@vger.kernel.org,
-	driver-core@lists.linux.dev, Aaron Tomlin <atomlin@atomlin.com>,
-	Alistair Francis <alistair.francis@wdc.com>,
-	"Aneesh Kumar K.V" <aneesh.kumar@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>,
-	Daniel Gomez <da.gomez@kernel.org>,
-	Danilo Krummrich <dakr@kernel.org>,
-	Dexuan Cui <decui@microsoft.com>,
-	Donald Hunter <donald.hunter@gmail.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Jakub Kicinski <kuba@kernel.org>,
-	Luis Chamberlain <mcgrof@kernel.org>,
-	Lukas Wunner <lukas@wunner.de>, Petr Pavlu <petr.pavlu@suse.com>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Robin Murphy <robin.murphy@arm.com>,
-	Sami Tolvanen <samitolvanen@google.com>,
-	Samuel Ortiz <sameo@rivosinc.com>,
-	Saravana Kannan <saravanak@google.com>,
-	Will Deacon <will@kernel.org>,
-	"Fontenot, Nathan" <Nathan.Fontenot@amd.com>,
-	rick.p.edgecombe@intel.com, yilun.xu@intel.com,
-	Jiri Pirko <jiri@resnulli.us>, Leon Romanovsky <leon@kernel.org>
-Subject: Re: [PATCH 00/15] Device Evidence and Trust for PCI Security
- Protocol (TDISP)
-Message-ID: <20260902150125.GD2890729@ziepe.ca>
-References: <20260705220819.2472765-1-djbw@kernel.org>
- <4c43da3e-c598-48cf-8491-cb958e574c9c@amd.com>
- <amk7Xzm5jmz+6SPJ@ziepe.ca>
- <anFE7m164AmchTy/@yilunxu-OptiPlex-7050>
- <20260805005533.GB28508@ziepe.ca>
- <apeF/peEzdxvKeWR@yilunxu-OptiPlex-7050>
- <2e721509-0aee-47ee-b17a-688876e02f74@amd.com>
+	dkim=pass (4096-bit key) header.d=alien8.de header.i=@alien8.de header.b="hjEqhnF3"
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by mail.alien8.de (SuperMail on ZX Spectrum 128k) with ESMTP id 81BC540E02C2;
+	Wed,  2 Sep 2026 15:14:06 +0000 (UTC)
+X-Virus-Scanned: Debian amavisd-new at mail.alien8.de
+Authentication-Results: mail.alien8.de (amavisd-new); dkim=pass (4096-bit key)
+	header.d=alien8.de
+Received: from mail.alien8.de ([127.0.0.1])
+	by localhost (mail.alien8.de [127.0.0.1]) (amavisd-new, port 10026)
+	with ESMTP id AYVx6gYArKhO; Wed,  2 Sep 2026 15:13:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=alien8.de; s=alien8;
+	t=1788362036; bh=0/7TFecHgxfgCO5pVrEG5Te+we3BLLQUU8o9mjQMmaA=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=hjEqhnF3HecIstgHusjlIqnW0ry/eCmQcwtmDLIrWH7YP0JR6sCXSBFwT0vaLG3Z+
+	 mEScjGSCg1YCIqamq0mA8UVaxaQRQHe5KWPyYkNAPkSrtCb6spjSgnTxNn4hgHK1EY
+	 UDY7G07q+KVHLpXD7iTqIX912lAonnhkwXGL99560+nw4B24Po1zbC7LNJNeWEWXQc
+	 NKOBT8PxWLrvbWFS3cz4YsRye7IsqHuCiow9JhY5/10uOZr8hyu59oAIeMqKub/DJa
+	 tRB2dAn7rnBL7Kpq/K9LgFIN02Q5FhAwR49lvVucU+0CdIhMW3vsIsHodm5h37cEo0
+	 V/1vh9orBNm1oL50CHi1vAdLTfX1gSe+Ks2SDQpGqMxMrY9ji1g4ZwnlcXLd/aazFt
+	 prLx8uhHsxSNN27oNCwpdFL8QE25n83lP6Y6p0Ezp+/p7h9oWJ4Al8I0jJiSc32C6G
+	 T49YF63h4RbeXe4D8C6BDGCNdHBde8xiZJz0jV/5AmM9H8nF2b7LQb2t03j2I0V3H2
+	 322iSYHGkywRBYRD8pXriJDdADwpPYsKQhaDGev9c355kJgpXQWZXm13lYm9zOh0M5
+	 IfPQBCfPOcyW4T8oZ04SAU70DiQlj4qBi7cmgy7mZTnL/S5yjNzWZWm+NDXc0U1QKU
+	 f7FYxVDVvi6iRitC1JAwEWN0=
+Received: from stx.tnic (unknown [IPv6:2600:1700:38ca:c00::a])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (P-256) server-signature ECDSA (P-256) server-digest SHA256)
+	(No client certificate requested)
+	by mail.alien8.de (SuperMail on ZX Spectrum 128k) with ESMTPSA id 7FD6640E024B;
+	Wed,  2 Sep 2026 15:13:44 +0000 (UTC)
+Date: Wed, 2 Sep 2026 08:13:40 -0700
+From: Borislav Petkov <bp@alien8.de>
+To: Lin Wang <wanglin@open-hieco.net>
+Cc: yazen.ghannam@amd.com, mario.limonciello@amd.com, tglx@linutronix.de,
+	mingo@redhat.com, dave.hansen@linux.intel.com,
+	"H. Peter Anvin" <hpa@zytor.com>, bhelgaas@google.com,
+	x86@kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v4 4/5] x86/amd_node: Skip SMN setup on Hygon Fam18h
+ models 0x04-0x08
+Message-ID: <20260902151340.GAapg9JDQMt2WTkjLM@fat_crate.local>
+References: <20260901071700.3255382-1-wanglin@open-hieco.net>
+ <20260901071700.3255382-5-wanglin@open-hieco.net>
+ <20260902024833.GJapeOgRJ50RAZvI3e@fat_crate.local>
+ <5c6ebbf5-3b3c-47e7-800d-adb4049cd636@open-hieco.net>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -108,74 +68,31 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <2e721509-0aee-47ee-b17a-688876e02f74@amd.com>
+In-Reply-To: <5c6ebbf5-3b3c-47e7-800d-adb4049cd636@open-hieco.net>
 
-On Wed, Sep 02, 2026 at 12:20:51PM +1000, Alexey Kardashevskiy wrote:
-> On 2/9/26 12:12, Xu Yilun wrote:
-> > On Tue, Aug 04, 2026 at 09:55:33PM -0300, Jason Gunthorpe wrote:
-> > > On Tue, Aug 04, 2026 at 09:48:30AM +0800, Xu Yilun wrote:
-> > > 
-> > > > Glad to see you all here to make progress! Intel can also help on this.
-> > > > Can we have a meeting to discuss on these topics? As Alexey mentioned,
-> > > > previously we had a bi-weekly call, perhaps use that for our first
-> > > > meeting? Or what time works best for everyone?
-> > > 
-> > > I prefer we defer such community discussions till September, that
-> > > seems appropriate given some dates I've seen.
-> > 
-> > Hi Ankit & Jason,
-> > 
-> > Do we have a plan to schedule a meeting to discuss next steps?
-> > 
-> > If so, we can figure out a specific time on the Discord channel.
-> > https://discord.gg/KKqC438c
+On Wed, Sep 02, 2026 at 02:22:13PM +0800, Lin Wang wrote:
+> Please let me know how you would prefer this to be handled.
 
-> So I've been trying to find a time slot. Say, keep it on Thursdays
-> (USA) (kinda short notice), bi-weekly, we can do:
+Well, X86_FEATURE_ZEN isn't Hygon apparently. Otherwise, we wouldn't be having
+this conversation. And we wouldn't need ugly workarounds like that.
 
-I've asked several people in Europe to help on parts of this series,
-and combined with China/Aus someone is going to end up left out.
+Which means, you cannot set it on Hygon. Instead, you should check vendor or
+define your own X86_FEATURE_HYGON if you think it would be useful to denote
+common set of features between all Hygon cores.
 
-I know people are anxious about their projects. In the short term I
-will volunteer to send patches (ie bug fixes!) to Linus in the CC area
-Dan was responsible for. Please email me if something needs some
-attention and we can figure it out.
+Reusing an AMD-specific flag but then having different hardware which needs
+hacks and workarounds to the code is not what you do. Hygon is a different
+vendor and it should be treated as such - not piggyback on AMD code.
 
-To fully move forward we need to establish a new TSM maintainer
-team. In my past experience a consensus has emerged off list, I
-suggest we try that here as well. Several people should be
-recruited. I will also volunteer to help train and launch a new team.
+Unless you wanna piggyback. But then you have to extract it properly and make
+it generic so that it can be shared. I have been asking all people submitting
+Hygon code to do that and you are starting to do it but then you need to stick
+to it and do only that.
 
-I can say that several people from NVIDIA are working on the ideas in
-this patch series. Ankit is setting up a team to focus on upstream
-patches for all of CC inside NVIDIA. I've asked Jiri Pirko to work on
-the PCI evidence uAPI based on his deep netlink experience, and Leon
-Romanovsky to work on the binding problem/adversarial/trust level
-driver core idea. They will share their approaches for solving these
-problems as seperate proposals.
+Thx.
 
-> Scenario A:
-> Seattle (PDT, UTC-7)		07:00 – 08:00	Day 1
-> Atlantic Time (ADT, UTC-3)	11:00 – 12:00	Day 1
-> Berlin (CEST, UTC+2)		16:00 – 17:00	Day 1
-> India (IST, UTC+5:30)		19:30 – 20:30	Day 1
-> China (CST, UTC+8)		22:00 – 23:00	Day 1
-> Sydney (AEST, UTC+10)		00:00 – 01:00	Day 2 (I can do it once in 2 weeks)
+-- 
+Regards/Gruss,
+    Boris.
 
-This is the only time Europe could reasonably participate in,
-obviously it is not OK for China and Aus.
-
-> Please, comment. I find these calls pretty productive syncups. So
-> far we were not having Europe in these calls.
-
-Calls are undoutably useful!
-
-> Alternatively, wait until the LPC in a month but I suspect not
-> everybody is going to be there.
- 
-LPC is not that far away, I think we should have a goal of having a
-consensus for or at LPC
-
-Regards,
-Jason
+https://people.kernel.org/tglx/notes-about-netiquette
