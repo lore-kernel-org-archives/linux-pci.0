@@ -1,125 +1,79 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from out162-62-57-87.mail.qq.com (out162-62-57-87.mail.qq.com [162.62.57.87])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B88FA38D3F2;
-	Wed,  2 Sep 2026 06:34:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8A8633C18B
+	for <linux-pci@vger.kernel.org>; Wed,  2 Sep 2026 06:35:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=162.62.57.87
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788330897; cv=none; b=HYrK3x1WrEZLFb8G4hxzdmCpipbxUXDYV/i6vi6n7l85C5bQxbKurtCACO/SiJGzkrCoAjFRSipBlz/g8Gi/G3D/6h/SZXJFrftok2bTuFTiR+PRBKSsWpQ68YS/0LmAWiI6CzZixgl8K6yIH0HizXd05YNUWzGR71mvdULIO+M=
+	t=1788330938; cv=none; b=L1wZW3VNBu0h5+CO1iN4ocqwwifB+3z/u97GhY7kXa+Oh5Y10PYTG+N9/6haQkpj/MCet8J0PNej4WX+GUlnKdxrP0mtdl42jjZjc/AaJjWbobBv1x04CRpjeneUwr0/rYoRVwx/MqyFfnYtJmvZ0w/Sqyx841CD14Jep1cVj1w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788330897; c=relaxed/simple;
-	bh=sxv+t7QEdqRawlC9WROHZUJdNTqE8Y5dkfl+46wgun4=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=YyOwf9BkYsu8DNkxNYUS5fppxdoWC2Fkqkqnewu90Fsl3gABlSzUpYA9dbr9LnroxtelU4wG036N7IHEtWg7AoOJJv6/fhjD8AbIFaEHLXzMDMLAfqxIjZt5wUZ0nXbskWSSziLgZSZTrZ/ryPGaGFAkL8Wgi9uIB+5vppl99Hc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Rr04QbEU; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788330938; c=relaxed/simple;
+	bh=YwH9ABw/DM5LWNp+iWqHtTnGq3exluZ0De94TCsyzWw=;
+	h=Message-ID:Date:From:To:Cc:Subject:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To:References; b=Lw7s2PJoOlloMcngzM19DlyKw+Qe4YTdp+xBBghRGPO8+kdBUqwExNmwZckvE0MN6ep1xaFZBI8ridHqouea6wH2IG6wXD4gcOylbeUjjuGuhDNQR5hJphZyuh+mCjOW0N3MXN64PnD3+zw0KqsYVaucf2vXPemlrtb59YhybMg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com; spf=pass smtp.mailfrom=qq.com; dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b=rCcqTu9k; arc=none smtp.client-ip=162.62.57.87
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qq.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Rr04QbEU"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2C11B1F000E9;
-	Wed,  2 Sep 2026 06:34:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788330896;
-	bh=PK3BU/9xRl8YL0nfkNQTFyIpwRw6fICW9Hk2F7X0BHM=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Rr04QbEU5+hFQ0q9LrNxlsQG+7Gp28w0WFD5ycIxf9I6ZtCtngYPLwbQsuf8cSCdt
-	 brFpLp2HUcT3JOFDeUmUbS7Tt1ILAbA2oZ15UqRQ0q7qfuylml3bEZYYQuYr/UYmEP
-	 S2h9mXTKrXXoE7zl4CqeQfWFt3weoDGzyCKOlVyHQj7+hrgsMWtKGUv6kFBOwl3RkY
-	 rU8XZYKK20pSfdkRRNYXYmU/jmAcAyrh2n6m2KGtcs+1ViXlQLzsLCTDfrPUNNPRjm
-	 QGFI7Vq2q4s2gVz9HNhVEYhAMx40lfxeenUypTzFvBAy2HaD1Qz6SZ2zy3o9cxMei7
-	 TygPXZDvmpM3Q==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v6 05/10] dmaengine: switchtec-dma: fix chan_status_irq
- cleanup on create() error
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Logan Gunthorpe" <logang@deltatee.com>
-Cc: vkoul@kernel.org, Frank.Li@kernel.org, dmaengine@vger.kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260902062153.31048-6-logang@deltatee.com>
-References: <20260902062153.31048-1-logang@deltatee.com>
- <20260902062153.31048-6-logang@deltatee.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 02 Sep 2026 06:34:55 +0000
-Message-Id: <20260902063456.2C11B1F000E9@smtp.kernel.org>
+	dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b="rCcqTu9k"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qq.com; s=s201512;
+	t=1788330924; bh=YwH9ABw/DM5LWNp+iWqHtTnGq3exluZ0De94TCsyzWw=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References;
+	b=rCcqTu9kTh4ptTsY7yyn8b1oCi7U5TjYJsbKs2aOS2PMOjO0PzPAVhYymqVVutIfs
+	 bqvQJo+xEfU00WG8MyH8/YqSfaHtxFsMnSMWTfNFaPjPa4WflL0iKNz7Z2SvCO7B9s
+	 ZJE+QAOrbKS4J4AQTx8Ns/1Gn7h6l/E1rz2kkwyo=
+Received: from localhost ([58.240.122.156])
+	by newxmesmtplogicsvrszb51-1.qq.com (NewEsmtp) with SMTP
+	id 8D5AE878; Wed, 02 Sep 2026 14:35:21 +0800
+X-QQ-mid: xmsmtpt1788330921tfwguak9h
+Message-ID: <tencent_BD8B7DCB7F9C5B07D7EDF04E47DE1F41A208@qq.com>
+X-QQ-XMAILINFO: MqswyhUqVe0C0RtcQUTbRaXR+/SrHTTmTaLeaKKyUG76GETP49CR7iM9aOyiYr
+	 z/lHjInZ/qyrDzNHVbd+LPoea2AUlKHvWUTQeYElUSvxB4MLbk0XSlsJ7Sa/9czd3TI4J20Ru+YO
+	 ScGs9Ji2fCX8CsIuunCIgcB4aaiuhpWVYrVUfiogvl9EB5tRupaFPo9NdfK5Jj3ahHB0m5BSRz72
+	 GzU5/umsJMtqifR0iaHA10oePvH5gmHtKDWhkaytzrPHa/1HXnSuVLSmc67HyqOY713XqTXLwdfq
+	 JynDa+P5UnWYx8DlN9GGHqXcMe3m6utGeTvmW498c1/gmSSYHHCwsQXA+WWq7TAzhZcj8xyaeXc+
+	 rMGJNCHHY1wm9zNj4BmEyPAi1mGKfrJAkmx0iDcl2lAHany4i4DDkriGftMRefUN4BvFwOg1qLBW
+	 +M0/YcwlOrHt8/MZJqlv9jFbWgWCjP+vclwWpXSJm4gsyziXivaHxCrR3YwJljYuuqll/TK7GKJS
+	 YwYVKXtMD6Zw6c43drrFQFlHJBaNa84wULKaBK4if5gk3cHmu6su5Lm7cs9nmQRI9qr2ZFOa6bWg
+	 yOH7D5TYkw1qGAOyftoDp/GyDgGb2xUNXdRa/N3kPzYq79GNvJgEsbwjxVn1WoDF4QSL96j+03Ga
+	 4Bkc4dDWGZ6JklNPjSvsngHsSr85+CSz1gC1RIjdAWbS5tUPf/ORaO4RLx4lMC6eFCQu2HgEDHwm
+	 WQh//+zqYpQJ5YcIB5eQK7cQLVpSpJ8hdY0ZSV2wX8rIeTYP+uRmMNXbs3sza5sHt79Qz6Gxup+Q
+	 6qFU/sYhVv/duQg8m/kbh29CWd+32dVr5vcXOmOzZT5HwGq+BpVzQkG8ZtEb31KcSa9Ys9vf8MFB
+	 UaHJe+egqpLn32gIT6HrhCzxzLh5AtX6NoIZrPDktpPHEHAiM7oKJFJLZfiC7paMfs94qMikIQVh
+	 eumCxbdJXJGgU0BgA9hwuuL9kQympreXAte8PGIeOzsWNBFL6GxEs/B7hTeP7pt9ckLt/iIN4u5J
+	 Sda3pdG3wdHN7l8o02XB9oKvRRgsON1aIfZQ21BMHWIuy3qfSOs2B6CCp6u0lT1Ec6DfeB4Q==
+X-QQ-XMRINFO: NS+P29fieYNwqS3WCnRCOn9D1NpZuCnCRA==
+Date: Wed, 2 Sep 2026 14:35:21 +0800
+From: Zhengping Zhang <aquapinn@qq.com>
+To: ryder.lee@mediatek.com, lpieralisi@kernel.org, kwilczynski@kernel.org,
+	mani@kernel.org, robh@kernel.org, bhelgaas@google.com,
+	matthias.bgg@gmail.com, angelogioacchino.delregno@collabora.com
+Cc: linux-pci@vger.kernel.org, linux-mediatek@lists.infradead.org,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	zhengping.zhang@airoha.com, lei.dong@airoha.com, hui.ma@airoha.com,
+	upstream@airoha.com
+Subject: Re: [PATCH] PCI: mediatek: Find INTx controller by property
+X-OQ-MSGID: <apfDqZZJv7PN8cBu@PC24010019>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <tencent_5E7D6E7FB25B4CD732F08547C11F5DA24808@qq.com>
+References: <tencent_5E7D6E7FB25B4CD732F08547C11F5DA24808@qq.com>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
+Hi all,
 
-Pre-existing issues:
-- [High] Missing pci_free_irq_vectors() in the error paths of switchtec_dma=
-_create() violates strict PCI subsystem guidelines.
-- [High] Missing NULL check for the result of ioremap() leads to a potentia=
-l NULL pointer dereference.
---
+Gentle ping on this patch:
 
-commit c928a877b10b083c93ce575c29fbbff0e54d5b5a
-Author: Logan Gunthorpe <logang@deltatee.com>
+[PATCH] PCI: mediatek: Find INTx controller by property
 
-dmaengine: switchtec-dma: fix chan_status_irq cleanup on create() error
+This patch has been pending since August 5. Could a maintainer or
+reviewer please take a look when you have time?
 
-This commit replaces free_irq() with pci_free_irq() to correctly free MSI-X
-vectors. It also changes the default initialization of chan_status_irq to -1
-so that index 0 is not skipped during cleanup.
+Thanks,
+Zhengping
 
-Link: https://lore.kernel.org/dmaengine/20260717223431.625EE1F000E9@smtp.ke=
-rnel.org
-
-> diff --git a/drivers/dma/switchtec_dma.c b/drivers/dma/switchtec_dma.c
-> index 17bbf85bcb169..430b09fa5102e 100644
-> --- a/drivers/dma/switchtec_dma.c
-> +++ b/drivers/dma/switchtec_dma.c
-> @@ -1249,6 +1249,8 @@ static int switchtec_dma_create(struct pci_dev *pde=
-v)
->  	if (!swdma_dev)
->  		return -ENOMEM;
-> =20
-> +	swdma_dev->chan_status_irq =3D -1;
-> +
->  	swdma_dev->bar =3D ioremap(pci_resource_start(pdev, 0),
->  				 pci_resource_len(pdev, 0));
-> =20
-
-[Severity: High]
-This isn't a bug introduced by this patch, but does ioremap() need to be
-checked for failure?
-
-If ioremap() fails and returns NULL, swdma_dev->bar is assigned NULL. A bit
-later in switchtec_dma_create(), swdma_dev->bar is dereferenced uncondition=
-ally
-when reading the IRQ vector:
-
-    irq =3D readw(swdma_dev->bar + SWITCHTEC_REG_CHAN_STS_VEC);
-
-Could this result in a NULL pointer dereference?
-
-[ ... ]
-
-> @@ -1323,8 +1325,8 @@ static int switchtec_dma_create(struct pci_dev *pde=
-v)
->  	switchtec_dma_chans_free(swdma_dev);
-> =20
->  err_exit:
-> -	if (swdma_dev->chan_status_irq)
-> -		free_irq(swdma_dev->chan_status_irq, swdma_dev);
-> +	if (swdma_dev->chan_status_irq >=3D 0)
-> +		pci_free_irq(pdev, swdma_dev->chan_status_irq, swdma_dev);
-> =20
->  	iounmap(swdma_dev->bar);
->  	kfree(swdma_dev);
-
-[Severity: High]
-This is a pre-existing issue, but does this error path need to free the IRQ
-vectors?
-
-In switchtec_dma_create(), if an error occurs after pci_alloc_irq_vectors()
-succeeds, control jumps to err_exit and the function returns without calling
-pci_free_irq_vectors().
-
-Does this leak IRQ resources on error paths?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260902062153.3104=
-8-1-logang@deltatee.com?part=3D5
