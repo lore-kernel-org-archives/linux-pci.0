@@ -1,125 +1,135 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 41D214AC14F;
-	Wed,  2 Sep 2026 17:25:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5EAE14ACC98
+	for <linux-pci@vger.kernel.org>; Wed,  2 Sep 2026 17:25:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788369925; cv=none; b=pqwSbpUyOuDedw9QMKGuQwtJRvUr7Eni/Lky8ExLJe4Dh82kUN4jPO+Bre+iVbFm4lGANiG/gUYLbJX34ufTmXxibYHa89rKgYSoJg+Ag8Embv5iWrWv+hrt40TBmJUOHpHmz9ddP7YjoTugqPFISGfaINjDPGsS/HleYenhb5I=
+	t=1788369947; cv=none; b=VAzhOT2c4M+2c/ZoHT+FfaPcZxgPl8UXbYH511P+wSsa5Jab6V0umNO+fYk5iC6sJf9gqN5iT67/C/F+HqFNMh1eXTKYl91DUICjVMUqST9Ox4pHm35Kj3GhVNxMC3bvybZsp1poDLPWToDOP0nAPIavFlq9ke/L3F5J9X8eRMk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788369925; c=relaxed/simple;
-	bh=yYDQFxfQU1H7CFKqQI64S+eVxBQIPhTJ9tHFeQ9EG/I=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=ratTRDoBbrKdXWFg9H0HvoNm65ypWSO2xIrX1I9CQIvYrcvf/8jiC4B9zvioml7caj8lZva9okDGl8nciRVPnM95Z9fw0vvuhqKdIT9lFighyMi68j8HMbwJy/uOzYgSx+zyf7yqvXVKxqUnh2eDlgVpqVbtyqzqUX3tfLijHfc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jV/mnstK; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788369947; c=relaxed/simple;
+	bh=IXldv3Jo7Rne+kc00Zi7U+kL4yxydL073z00KCNtW4A=;
+	h=Date:From:To:Cc:Subject:Message-ID; b=uQt64ScWHi9C+GHng7rep/wEvhQbD6DHWL2eg4WVu3QE+rFYlBdbwqG/XuWi1qX+gtKCBAVv0prjQtBR5yvhTsWP7Q9DyY4ERvlL/A1SsszBiVhAajJIZ1PEHXE/B7PUE+Xa52zE9FZDcKWra6Rn2eYSo8yfbdwKM8ih4TsmFX0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Aiqn/GQa; arc=none smtp.client-ip=198.175.65.18
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jV/mnstK"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C99101F000E9;
-	Wed,  2 Sep 2026 17:25:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788369924;
-	bh=PtgQHWkTF3ZHcJbNave0cwUqfuQ91iZ38NCtFsNv9yc=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=jV/mnstKv78tjJJZmjs4M591nlVhOzrma0RedVofgdBcGvFrFurrOP6CvfiM+ocPD
-	 jMmdasPrC5vGO/QudC5SR6Awy4dbmPVdui9IZ2hyWJpk4oBBBopYj6no4Mc1m+dTuZ
-	 c34z77xId+iwLW9HReuLQm4hxhpfrLSEfErczXYBhbmz8gwIlmK0bv+d8kpYgDXYJq
-	 KpUCUB/SVRL59vefLhE4Xq2cSiEhNwJMx5mHG5ZkHnIR5H6G82Haf22XzJuk46Iw8o
-	 /zMQObLW85KWeW9SO3rG+8DMNk+zm6kKyja+rCUVq59932SoCsrbLygMVHUzpKWO2Z
-	 U9nQLjX5KTEDg==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 5/9] driver core: do not always lock parent in shutdown
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "David Jeffery" <djeffery@redhat.com>
-Cc: linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260902170734.95504-6-djeffery@redhat.com>
-References: <20260902170734.95504-1-djeffery@redhat.com>
- <20260902170734.95504-6-djeffery@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 02 Sep 2026 17:25:23 +0000
-Message-Id: <20260902172523.C99101F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Aiqn/GQa"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1788369946; x=1819905946;
+  h=date:from:to:cc:subject:message-id;
+  bh=IXldv3Jo7Rne+kc00Zi7U+kL4yxydL073z00KCNtW4A=;
+  b=Aiqn/GQa+wz7bMA5eT7gFm15hZ4k7Vcb7g0qmNqETQUTbGg80/tBNEuM
+   6b0bueJ8EfSHd2czFVCKM4TuWzeqRHTmn3ljlEdlSByGMjDZMuo/YfEu6
+   gNm5BD0lbZ3bRG9qTGl9CUUDsINTnF14GlkVE/hIs0h6amB5Z17r5dw/U
+   XMofTRdygeGBOJ9N/ooYS6xolbrngeIkG6ct8yeVbzr1VjBIyFmXLpvYm
+   3vt88rdRvUpifr2HDWi/589C7f65bvrH7NeAqVv2lS3TXZMhuFICNviGU
+   5Nh6W96P4ueIc4uY39GLw9ejGDnH3VYL5wLiuC0Or1KLGtjlUzvXj63LY
+   w==;
+X-CSE-ConnectionGUID: zQgPKwfPQUyVDhTXhCEulA==
+X-CSE-MsgGUID: t9taJDAGR+KOSAxv94Wh/Q==
+X-IronPort-AV: E=McAfee;i="6800,10657,11894"; a="88888360"
+X-IronPort-AV: E=Sophos;i="6.25,258,1779174000"; 
+   d="scan'208";a="88888360"
+Received: from orviesa010.jf.intel.com ([10.64.159.150])
+  by orvoesa110.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Sep 2026 10:25:42 -0700
+X-CSE-ConnectionGUID: M8R1bRnFTb2Lm9v46b7WyQ==
+X-CSE-MsgGUID: Wbcah9znRKOjo+aWNZcnmA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.25,258,1779174000"; 
+   d="scan'208";a="268152380"
+Received: from lkp-server01.sh.intel.com (HELO bfac249b2189) ([10.239.97.150])
+  by orviesa010.jf.intel.com with ESMTP; 02 Sep 2026 10:25:40 -0700
+Received: from kbuild by bfac249b2189 with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1x1oiQ-0000000033q-2D1l;
+	Wed, 02 Sep 2026 17:25:38 +0000
+Date: Thu, 03 Sep 2026 01:25:04 +0800
+From: kernel test robot <lkp@intel.com>
+To: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Cc: linux-pci@vger.kernel.org
+Subject: [pci:controller:dwc-rcar-gen4] BUILD SUCCESS
+ d9113a8a6bdda348d590845da014ab0e01afe638
+Message-ID: <202609030159.uSdrShSl-lkp@intel.com>
+User-Agent: s-nail v14.9.25
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [High] Incorrect condition ordering leads to a potential Use-After-Free o=
-f `dev->bus` during device shutdown.
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/dwc-rcar-gen4
+branch HEAD: d9113a8a6bdda348d590845da014ab0e01afe638  PCI: rcar-gen4: Use .post_deinit to handle dw_pcie_ep_init() failures
+
+elapsed time: 1588m
+
+configs tested: 58
+configs skipped: 0
+
+The following configs have been built successfully.
+More configs may be tested in the coming days.
+
+tested configs:
+alpha         allnoconfig    gcc-16.1.0
+alpha        allyesconfig    gcc-16.1.0
+arc          allmodconfig    clang-24
+arc           allnoconfig    gcc-16.1.0
+arc          allyesconfig    clang-24
+arm           allnoconfig    gcc-16.1.0
+arm          allyesconfig    clang-24
+arm64        allmodconfig    clang-24
+arm64         allnoconfig    gcc-16.1.0
+csky         allmodconfig    gcc-16.1.0
+csky          allnoconfig    gcc-16.1.0
+hexagon      allmodconfig    gcc-16.1.0
+hexagon       allnoconfig    gcc-16.1.0
+i386         allmodconfig    clang-22
+i386          allnoconfig    gcc-16.1.0
+i386         allyesconfig    clang-22
+loongarch    allmodconfig    clang-24
+loongarch     allnoconfig    gcc-16.1.0
+m68k         allmodconfig    gcc-16.1.0
+m68k          allnoconfig    gcc-16.1.0
+m68k         allyesconfig    clang-24
+microblaze    allnoconfig    gcc-16.1.0
+microblaze   allyesconfig    gcc-16.1.0
+mips         allmodconfig    gcc-16.1.0
+mips          allnoconfig    gcc-16.1.0
+mips         allyesconfig    gcc-16.1.0
+nios2        allmodconfig    clang-20
+nios2         allnoconfig    gcc-11.5.0
+openrisc     allmodconfig    clang-20
+openrisc      allnoconfig    gcc-16.1.0
+parisc       allmodconfig    gcc-16.1.0
+parisc        allnoconfig    gcc-16.1.0
+parisc       allyesconfig    clang-17
+parisc       allyesconfig    gcc-16.1.0
+powerpc      allmodconfig    gcc-16.1.0
+powerpc       allnoconfig    gcc-16.1.0
+riscv        allmodconfig    clang-24
+riscv         allnoconfig    gcc-16.1.0
+riscv        allyesconfig    clang-24
+s390         allmodconfig    clang-17
+s390         allmodconfig    clang-24
+s390          allnoconfig    clang-24
+s390         allyesconfig    gcc-16.1.0
+sh           allmodconfig    gcc-16.1.0
+sh            allnoconfig    gcc-16.1.0
+sh           allyesconfig    clang-17
+sh           allyesconfig    gcc-16.1.0
+sparc         allnoconfig    gcc-16.1.0
+sparc64      allmodconfig    clang-20
+um           allmodconfig    clang-17
+um            allnoconfig    clang-17
+um           allyesconfig    gcc-16.1.0
+x86_64       allmodconfig    clang-22
+x86_64        allnoconfig    clang-22
+x86_64       allyesconfig    clang-22
+x86_64      rhel-9.4-rust    clang-22
+xtensa        allnoconfig    gcc-16.1.0
+xtensa       allyesconfig    clang-20
+
 --
-
-commit b894dd7ffd5113988601f8e495c49a29524ecb74
-Author: David Jeffery <djeffery@redhat.com>
-
-driver core: do not always lock parent in shutdown
-
-This commit avoids unconditionally locking a parent device during device
-shutdown. It introduces __shutdown_one_device and updates
-shutdown_one_device to only acquire the parent lock when needed to prevent
-races with probe or release operations.
-
-> diff --git a/drivers/base/core.c b/drivers/base/core.c
-> index 7fe3fa6870a72..05285fae143d3 100644
-> --- a/drivers/base/core.c
-> +++ b/drivers/base/core.c
-[ ... ]
-> @@ -4928,13 +4926,33 @@ static void shutdown_one_device(struct device *de=
-v, struct device *parent)
->  			dev_info(dev, "shutdown\n");
->  		dev->driver->shutdown(dev);
->  	}
-> +}
-> =20
-> -	device_unlock(dev);
-> -	if (parent)
-> +static void shutdown_one_device(struct device *dev)
-> +{
-> +	struct device *parent;
-> +
-> +	device_lock(dev);
-> +
-> +	/* use parent lock if needed to avoid race with probe/release */
-> +	if (dev->bus && dev->bus->need_parent_lock && dev->p && !dev->p->dead &&
-[Severity: High]
-Could this condition ordering lead to a use-after-free during device shutdo=
-wn?
-
-If a module is unloaded concurrently with system shutdown, device_del() sets
-dev->p->dead to true and removes the device from the bus.
-
-Since device_shutdown() already incremented the device's refcount, the
-device structure is preserved. However, when the module finishes unloading,=
- it
-unregisters the bus and frees the bus_type structure.
-
-Because of left-to-right evaluation in this if statement,
-dev->bus->need_parent_lock is accessed before checking !dev->p->dead.
-
-Would checking dev->p && !dev->p->dead before accessing bus properties
-prevent reading from the potentially unmapped bus structure?
-
-> +	    (parent =3D get_device(dev->parent))) {
-> +		/* the parent lock needs to be acquired first, so re-lock */
-> +		device_unlock(dev);
-> +
-> +		device_lock(parent);
-> +		device_lock(dev);
-> +
-> +		__shutdown_one_device(dev);
-> +		device_unlock(dev);
->  		device_unlock(parent);
-> +		put_device(parent);
-> +	} else {
-> +		__shutdown_one_device(dev);
-> +		device_unlock(dev);
-> +	}
-> =20
->  	put_device(dev);
-> -	put_device(parent);
->  }
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260902170734.9550=
-4-1-djeffery@redhat.com?part=3D5
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
