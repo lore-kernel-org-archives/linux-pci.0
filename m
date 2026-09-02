@@ -1,195 +1,165 @@
-Received: from DM5PR21CU001.outbound.protection.outlook.com (mail-centralusazon11011018.outbound.protection.outlook.com [52.101.62.18])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 627873859F0;
-	Wed,  2 Sep 2026 05:17:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.62.18
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788326268; cv=fail; b=TkWBvuGWZSLJJVc15XhcTgByBiqaYgo4VfrKOejOHia21LgsXssR91BACA6bb+apien6hR6iBkHcvhkIEGQNhiP1d/AChAnzz1w8aqYr8YMAUDkr2Ydsw7EPQ4UE9jbppunZWnll6eDdYDXZGJo/GP6Vdgjzun71Ejkg7d5ilbI=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788326268; c=relaxed/simple;
-	bh=nwYeJ+LU0e1ieLzJwjBUoBxoHWP7sOQU/UVr/0IH8ww=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=kUWnU0WYebLWKrd9Usp/aFNLo5ZbRkaC1NrOjoo9lvXTC+JdMmLJi5TeaXtrMYtb5IXzpkOAsu3K5pn2iYx+LBHPAz+h9g3M5svs/jnzT3PcjNvUdB+PKPeQqtbKroo2+DpWz9VI5gUpVhwVDRdXhMbdwUpuLWsE4+29rL5K9c0=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=Rkq/rtxR; arc=fail smtp.client-ip=52.101.62.18
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A8733358363
+	for <linux-pci@vger.kernel.org>; Wed,  2 Sep 2026 05:22:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1788326546; cv=none; b=CYtU3vENrv4uPlg5lPWbLFIP1YwGjkNyKQ/lzQbxXo1P7xipf1ZH/6K6Vmgm7oojUKudwwffUPrmC4ux4jfWeFqpkDyiN2B83HQz49uZ2l6L5Fyg4vkOlDbgXDJ5cXRDH7sr+BBre1oPIrdJzSVyem4Cp05bnWdEGDS4yhjZ1cc=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1788326546; c=relaxed/simple;
+	bh=RX1tqIKGVP0bUorI/5rlQmkq+iT8Q7dOX+hFIanw6B4=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=fA8Y9sLON+fzsin2kDId68tMSyaKs7lGCPqmYWHvpbq/bO84gRp8P/kgwp/psd7hOsIJW9E0H8l0dBWzehcQvPZ9wmJJC5x7yyVndRobJNrMLOriH0jc3St/6gBY80dAJaJNm0u2vQYcDgOPaY5VrqnCXRkC4QfnQAHxsBCEy2o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=m7PaReY9; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=bqZLLBT3; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="Rkq/rtxR"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=sZDtskyRDX06Jk9x0njkhx7zprHH+Id24F43Wz/TuuzwYSsoG7q/3RlSTYx1IImx/pohnCYU2326qQyrr6BHpnjiIahQMIPYNT0UMwUoN6ppUdx4dlJ4gV3zhs9CSJsnWk2LWYmpMRSz1y4NPZIvOU7N0MUmSbRhLemfpMSHh/NXJdHv2UiOqux7gobPSj2+slGeOjsslEqWLyzrk52YorQY6n0e05U2qNaJ8uRvEuBaidMySFqpZBp4rpTCUhxal3nj5llRzias+DAbk+PY/eJnQDW+cFFZCcGk2C5KLl3aTL9JEvtR9YePmKRuOJ0N6fdHSVjP2AK+ujc3GSyRsg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=pvQa2s9kse89oJNnUotPiZugLcWM0BrMrvxcJkgwm28=;
- b=ko/9fIJw8EImgJAPswRZy/HePl4X+nkL4Gn+UAS4DuSy2pY5YbCvco16QMA2PvXaOvlL5vfZixzi2+hI7AcBUvSnGg7alLsuFP/Ee3y515Rx6UKJ4smHfsMoT7wBoM09ThCcHSRbKBOOvGsYszPpmJRk8CpzPvDbB1w6IlTRGtJJjAnTDy5hMlW0+yusgDtQ8QEVxDxm+O21vL5TbfXx56i91FNa0dZf1VHnP8ELx1ArHV6Z1gfEl4ca6RRGgkfAYCPgAFd1jnxRMX//G14PmO5pV4riZiIbiBUhjleh6wAnoM1f3Bbzf/X5cZHpwH4AcU3+qCiZLF4mzhG8FgXlvg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=pvQa2s9kse89oJNnUotPiZugLcWM0BrMrvxcJkgwm28=;
- b=Rkq/rtxRGpVrXPJzkSC87gh/qwgQwojRIwxC3hJUfZcXLdqRC7PNVvdjZ8DIDi8cV/RJ4xBVMW63r0P8PmwKD9RubJP7t96DL3Y8opGzQQcllQzRs/bBL7/oLTbeXXFw/xZhXtUD0fahTVTjHicDFK3DWPqmmfVDfbtfF9bisgCzItJxmEqlJIjbXeMTMSD46uwYILp17BDWIxpKbSM/yHP78RQ6eQMDNXTF+yyAkSg/dtjb+CyOZuRchpUadLQo2O8DgagUxZPs4xcm84FnXU6UlhVYhN2bI8p2i8GnLem4fgDv4JXixCIcpao1nbmEnh+xUPRTg8ioj3vOrNdY6w==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from DS7PR12MB9474.namprd12.prod.outlook.com (2603:10b6:8:252::17)
- by DS0PR12MB7803.namprd12.prod.outlook.com (2603:10b6:8:144::18) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.360.13; Wed, 2 Sep
- 2026 05:17:42 +0000
-Received: from DS7PR12MB9474.namprd12.prod.outlook.com
- ([fe80::31ad:931:ef07:8ad7]) by DS7PR12MB9474.namprd12.prod.outlook.com
- ([fe80::31ad:931:ef07:8ad7%4]) with mapi id 15.21.0360.008; Wed, 2 Sep 2026
- 05:17:42 +0000
-Message-ID: <cf6b6a2b-0b45-4bb8-992c-cc63235be5b0@nvidia.com>
-Date: Tue, 1 Sep 2026 22:17:39 -0700
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v10 09/12] cxl: Restore CXL HDM state after PCI reset
-To: Richard Cheng <icheng@nvidia.com>
-Cc: Alison Schofield <alison.schofield@intel.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Dave Jiang <dave.jiang@intel.com>,
- Davidlohr Bueso <dave@stgolabs.net>, Ira Weiny <ira.weiny@intel.com>,
- Jonathan Cameron <jic23@kernel.org>, Vishal Verma
- <vishal.l.verma@intel.com>, linux-cxl@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- Alex Williamson <alex.williamson@redhat.com>, vsethi@nvidia.com,
- alwilliamson@nvidia.com,
- Sai Yashwanth Reddy Kancherla <skancherla@nvidia.com>,
- Vishal Aslot <vaslot@nvidia.com>, Manish Honap <mhonap@nvidia.com>,
- Jiandi An <jan@nvidia.com>, linux-tegra@vger.kernel.org
-References: <20260804192958.1823952-1-smadhavan@nvidia.com>
- <20260804192958.1823952-10-smadhavan@nvidia.com>
- <aoKx7q0baAPJt2qP@MWDK4CY14F>
-Content-Language: en-US
-From: Srirangan Madhavan <smadhavan@nvidia.com>
-In-Reply-To: <aoKx7q0baAPJt2qP@MWDK4CY14F>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: BY3PR04CA0022.namprd04.prod.outlook.com
- (2603:10b6:a03:217::27) To DS7PR12MB9474.namprd12.prod.outlook.com
- (2603:10b6:8:252::17)
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="m7PaReY9";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="bqZLLBT3"
+Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6824cSUT3485789
+	for <linux-pci@vger.kernel.org>; Wed, 2 Sep 2026 05:22:23 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	RX1tqIKGVP0bUorI/5rlQmkq+iT8Q7dOX+hFIanw6B4=; b=m7PaReY9pZUxLkDN
+	dqh44VsclV1XXF4zYuQ1SDCcxyEF1yYKhrLWFgdXUCgKFj9NP+ITQvGs+aQNz0zz
+	Yc26OZM1m8LIQPY2lKNMoPrLGCWaEdM/nR5WuxXAJymwnXaZQGE/5tOq6Z2w/BUm
+	k2Sg/UK1POZD4ZOhzUNqjlJsNRFKYP/ZK0naZhLk8K8a19rRz3SD4rJlJ4fVFQxm
+	oVrJVAFxEDpHQle1gjlCDH5kVr0O415/CNuBvgmrEmIiQjtjK5lglTDXLeTmLM58
+	yTBjBuOtQS4+EKooZK6BtG5FRRj1qBbRDlidekgf8NcAohzmg66sgexDJKAmfF2k
+	l6vZwg==
+Received: from mail-pj1-f71.google.com (mail-pj1-f71.google.com [209.85.216.71])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4ge435syx0-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Wed, 02 Sep 2026 05:22:23 +0000 (GMT)
+Received: by mail-pj1-f71.google.com with SMTP id 98e67ed59e1d1-396638f9a18so1198621a91.2
+        for <linux-pci@vger.kernel.org>; Tue, 01 Sep 2026 22:22:23 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1788326543; x=1788931343; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=RX1tqIKGVP0bUorI/5rlQmkq+iT8Q7dOX+hFIanw6B4=;
+        b=bqZLLBT30NGMzLyrFxLYUJmHreE9NIBJ6H0VD66HBddlSn4Djg3L/lJDwkA/GePToL
+         Gsi/df1l4oeesFxXoVcKnpIQ8d3J93HVOe3xZ0NkK+LrQEZe2ZAunbeYWl/l4Uk0V7e+
+         pgGZ5Ks6M4LsrRsiWqYBrNwJu8KUxA2EgrV5GJAwHXbxrHWm2hHZdbRwdt8oUyHoDCey
+         socUrMOZeaJ68i2ppqQbmTdjeiA5skanBXPuarrZ4kTsaDMqBfblaP/QtmX4GCgDVYys
+         qvfGWpphv1ZYwzEwJaO5iUF/Z2IeEpmP03EQ55DDfaXE/gt7zUZMNhBF116O/MkfttGI
+         RF5g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1788326543; x=1788931343;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=RX1tqIKGVP0bUorI/5rlQmkq+iT8Q7dOX+hFIanw6B4=;
+        b=jA+/839JoxmgP69sUd636r4SumWJG9JhvIoHOTY3rygrpT/QjzSZm7hxu3vhLoQF/E
+         0Nblq9Jm2sX28wHtBHcQvOmSCMouDJQodXd/F/sHL04DlxgoM731IKF6UgH31KMftUlg
+         sf3W/9yWbDC+UM3JLuL68Q4CiTZ8+itOMrBApBJUCzuu9lwwWcuPc0qUF1cTh5ljzWXc
+         +h64/Vt/HhRM6t3qpWkwDYlNijO/LVc3FV9Kg1zx+8lpP2gr5WuOy1DHd9v5js5aFf4B
+         xYJQeHwKEZMIqG2jX9NkwmjlAlliuO2HEJOFaPndt0YCNnXpjWO5g7r/hMP7D1vBP3y4
+         7UVA==
+X-Forwarded-Encrypted: i=1; AKwUvBxIe23yds/7iqElR177+oHXj1UVrbJXdjFtHupEvkkTwYM/b7vz+FDqQ6Xc1E1mZWgtpSbdmG4GXxE=@vger.kernel.org
+X-Gm-Message-State: AFuF++n/7FOf/mZ9mGxvGmXrE/Q1GKaFD9E2faQsVRGmcXjxTzy+jUog
+	RRPmp6qqJ6L7r6tZLC39SVflpIVzRxAZop/RDUTVIISMDcpdNy9wUCAe5np4zC5Y2ReRo7dT8nG
+	HeJYAW/9q0VtLyWi5Wdh1YdSX+5gXaviCmw40V/zQ4xCA0ulL8C4fM6ra9fhr+44=
+X-Gm-Gg: AYBFou1u2Y9vmIibwzmsgPID5S58FNWBJZnUlihvaw5AwAITWZlnwuiK6LGk0snIhxQ
+	r5sBJkdiBOhnWVuJ6C72fXDpH/vPDz64+yGiLC4JLd25MT577qS6pHHIjp1Yy7w6WLAqiffyRAa
+	zmR5LO6BtYSdD77zOtIEGeHy79CAtHU+fpioDkNJdmITuzxO2N2idwx47FmVNbyprx7IVspmSZM
+	rzc2Xa4AbjrMfbLgiaOZRxPLnUC4IrvLm1CNZySBGiT93NRaOT19YSbYNfRAnOan3GvwaQEvzL0
+	8CZzzWSokbpPyDAXj+7GqYw7jwyv6quoLXOiHI7Gvu8Yl31Z47xEHZxQISY7oRc64Y4gJ1zlWTl
+	8QceC1QF6IJUM74H+PTEq9yUZKRbE2LJZ
+X-Received: by 2002:a17:90b:2f0b:b0:398:9c00:29ed with SMTP id 98e67ed59e1d1-39aee1f5fc2mr3694907a91.21.1788326542665;
+        Tue, 01 Sep 2026 22:22:22 -0700 (PDT)
+X-Received: by 2002:a17:90b:2f0b:b0:398:9c00:29ed with SMTP id 98e67ed59e1d1-39aee1f5fc2mr3694846a91.21.1788326542204;
+        Tue, 01 Sep 2026 22:22:22 -0700 (PDT)
+Received: from [10.218.35.45] ([202.46.22.19])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-1430eafc907sm3003702c88.9.2026.09.01.22.22.17
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 01 Sep 2026 22:22:21 -0700 (PDT)
+Message-ID: <cf33b23b-9068-42e5-ab90-ad7f42d72b74@oss.qualcomm.com>
+Date: Wed, 2 Sep 2026 10:52:15 +0530
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DS7PR12MB9474:EE_|DS0PR12MB7803:EE_
-X-MS-Office365-Filtering-Correlation-Id: 50c54a88-2013-479c-c0c1-08df08b18379
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|366016|23010399003|7416014|376014|6133799003|22082099003|18002099003|3023799007|56012099006|10067099003|11063799006|4143699003;
-X-Microsoft-Antispam-Message-Info:
-	hEesTVO/coraxI9/4MnOSICe2kEkBYjmensSJLokw/XwN5cfMJv7l9zNJ+W/hbUykW1e6Ad57xuXP0GOk87+tmsks1mJteJwaJboMCKzApkYjCgcL6jcaJWxx/wQw1w0fn17FdW4HcRxRE2Vh7JoeGn9JkJUzPFgtgaUbLEJUCr+w+FW5CFVBmn2RQ1JW/ubqjhCNY4hRix/+OBtphWChMr4jJGpDkzi1VZdU1T2CKVZHPLeXJRko7vrwFLTTTczeH/KI8x3RbrM+rhAZ3GOQfFm/qT5UtYFQ2vIeIg2vWyBeHOGCTNhrkB/ATjQ0CkujqWEqCc5M2ITIKaqJCkQ4tj/GbP1RBMRsDzeKAgGGFwNQv/NBmxLnB7IEN/fQY+2JNG8EGf19j6ayBzw1Ofwz9q8N/wrT77dK14CQK3RW2SXJGG2YjJo5hR4zvW+a0wxkd2DY7HaUkNzOFtAg2YS/gNCHBt4vsIG68yjPtAHHYOQNS8tLqFtcfLcyNpp9h/ZTvKSaq56+FINIz09yDyfrsnhEhLgcX8PM65xLsxuIy8i4sTagMAAeGMFqzI8MY04b5doGaozrf4WrlWq5nQzJZl/8lIgc/+ixYhFI6eTY8/dBCAdETh7/45sKaDZ4L9eagwhLugA7f+OUAa63jvOqXOmPh1H4BpMZfQkBalCac4=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DS7PR12MB9474.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(23010399003)(7416014)(376014)(6133799003)(22082099003)(18002099003)(3023799007)(56012099006)(10067099003)(11063799006)(4143699003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?cjRIak96dXF0QWVyKzNLTEJXZmxESFpxRXA1UXZkZ1FoaG52NjhoYlFXRjFO?=
- =?utf-8?B?YUxzUktSSURyR1dwWjFMaFVQQ0UzU1Y5TmNBOFNSYWh2aFkyK25QbW5ic2dm?=
- =?utf-8?B?eWs5ZC8wM3o4eWFIM2ZHNGd1TWQ3eGREbDZMRlJFQjN6NUZSSG85aE40MnJu?=
- =?utf-8?B?aVVCMXFGcUtLb1A4a1Q0d0xiU0Z3U2QvWmc3NHpFWG5ObkZnR2IvdzcrS2xK?=
- =?utf-8?B?aCtub3pzRXVmU3V2RFZxZGowYnNINU5QT3J2dys4akxXa0haN29GZGY5SzFi?=
- =?utf-8?B?UkRUV0dJKzZqeHdHbkpSay9rNy92RThFczJWck9pQ0l6SHFwV1dDdk40b3M2?=
- =?utf-8?B?enBGTFF1bmtHZTNLMmFJT3BwWlhobzd2WXNjR1RWeDBOREEyYlo2bUF0R01L?=
- =?utf-8?B?cDFobksrZzJBSWNoVTk1Q3lXTmpFRmkxN2hMdTgwMDJFSHg1TzMyMklJaTdj?=
- =?utf-8?B?MmYwa2tmbjF6Z0ZWcldMa0ZaQU1Xd1pyL2xJcUJ6dUc5VGhBSXhNbTVPMlJH?=
- =?utf-8?B?UjM0R1VlNHlUdzNmRDJpR2EyRFFkcDcxZ2R1U3N5Ukk3YjNITnJ3cG93dHVn?=
- =?utf-8?B?WUpDYytDbHRvOG9FOWx6Z2RTcGZQQ2YraEpLOFkySkxOS2RsdDFBUzU3eC93?=
- =?utf-8?B?TnRPYWxWaFg5MElWZTFsdGZTeHArY1BUSHBPdDlKU0psc2huZ25yQmNXWDBo?=
- =?utf-8?B?RzdhbW9YTHlxN2h6RDNweHN0Z2pkbVY0ZC9ucFMwVEhWc2pqbDM2bHFuV0lm?=
- =?utf-8?B?ZTU0cDJRR2d4WnlURFlNbkpBVSs4YkRnNEdoa3F6UVRKTWlHTFU2blZzOUow?=
- =?utf-8?B?MG52L2hZb2cvRmxUZlE0T2N2ZGs5RjI4bFpsR2UyNFBLZE9ZclRraEk0ZWli?=
- =?utf-8?B?ellqNWdHaWZGano4QUhvT0xnOUFzc3dQSmRrZjJWZS9WQTdJM3pxenlKQ0FX?=
- =?utf-8?B?N3J1b3lRU1FVU3ltQ1hyU2xwUnF2b0gya1hjWlJkZHlHUGtOdkVQQThqSENu?=
- =?utf-8?B?TTJFWk1zZW9iK3NteHg5bURoNTZLL0R3WHBRaG55NzlKSGsrY084RmY4Sm9Q?=
- =?utf-8?B?YlNPTFB0T3V3LzZ5K2kxYmNMS2xHY2JUODBoZ1h4WjdIR2YyYVJDSFc3ek53?=
- =?utf-8?B?V2F2dm1ISjdWb2hNRkp1ejBIZU5sTjlhNlZwd1FqWk04L0JyYVdWTWgyeHJX?=
- =?utf-8?B?bm1LREZvbXZlYlF1OHhUNjVvbHdSOFdBTU15MnMwaHd1cTBUR0NlRzVoK2lm?=
- =?utf-8?B?eU56d2hvaG5MdGlJc0FhR3R6aU83cENNUFJtZ2ozNFRHaU5sQzJ2K3NONDNB?=
- =?utf-8?B?TFFtWXpUcm9jRE5sOEpBMmo0Z2JXTWRYdUdsNllta2FHRkdaVVpCRGxQSXdX?=
- =?utf-8?B?RXFZd25KYXpDbS8xUG1ydVFpRHZWVXhaUThydkpuUnBKelJqMm1nT0Ywc1ky?=
- =?utf-8?B?VWQvSWlqcE8yS0lQOVhtZ0oyRHZsTHNYTjVFV2dFdmdGL2dPR0crT25GdUtK?=
- =?utf-8?B?WFZuWnFIZmpnL09hSjBKSmE5bGJvMzl3RTdiZWxaSW1NenJYak01cUtOZUxj?=
- =?utf-8?B?anNMSHc3WjZKMkFlVGdhbjZxZ1ZnR0hsTHVHV1hLTlM5ZFpGSmNjVUgzdnBZ?=
- =?utf-8?B?bys2b3dwTkVrUy8wTWVGVjQ4SEF0VC8rajF4ejhSeExKL3FwNkJjREI1WUxo?=
- =?utf-8?B?TmFHYXBTM1BYZTBXT0JCUkpuQ2l5SVNLVWYvU0xmbkQ4ZXcyRXgxS1FqMmdV?=
- =?utf-8?B?QU0vZ2xDcFQydWEwU0RlcVZyS0tKeEF3ZTB0OUNrdG1EQ0xabVZseTYwSFJI?=
- =?utf-8?B?M0h5OWhuMXYvUkxLOCtQTWhKem1SRFRpTWk3djVVMkdtbjFQYlhIK2JQZ1oy?=
- =?utf-8?B?dlM3a1JMSG93RVVuV3N2blRkUHROaWJ2NmRFNGtBT2QvTkxXcWVzRGRKTHBW?=
- =?utf-8?B?dU5QY3RtYlBSSXI5Nm1ST0F5SmMwMkZjdDVIcW52SzJZMlFIYi8veTlFLzlq?=
- =?utf-8?B?VnFjTXd6NVF4RGZoeHJrRUtiTHo5L3dHanpuOWRlekhybEpZWHpveW14eDZh?=
- =?utf-8?B?b1RQcFZpV0hQUmVOcDh3RFFicVovZlJrUUpGajBsNEZVTG9xMWorSmU4OHJm?=
- =?utf-8?B?djZSazYrSUFzVXptUC9PUEl5ODdDRDRhNGVEeG1oYnIrU0tzN0g4NzNldG9D?=
- =?utf-8?B?ekFTV045Q3J3a250WGJTUXBJdWx5VHRkMUNrQmUxNk50azZqWUJ0ZEI1cVl2?=
- =?utf-8?B?TUQ4azFXcDM1c2w0MC9rbnYwcmxFVllKY0VCd3BuejJIcklTV3JFQ1NhVHpG?=
- =?utf-8?B?NWxLVVRhdlZIUm5QbjdXbTdBZEZZeStCbWI5dzJRcHVzNXJCcWdJUT09?=
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 50c54a88-2013-479c-c0c1-08df08b18379
-X-MS-Exchange-CrossTenant-AuthSource: DS7PR12MB9474.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 02 Sep 2026 05:17:41.9130
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 4zRnXSWIT4s1wvTyvNPChZRJ+oeoYrOy7l3N2sj6ae/3F+84rnLwcgoP/6E72ZMgFDasRQHw8fqlCuGUd4PtSQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS0PR12MB7803
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v5 6/6] PCI: qcom: Enable ASPM disabling during link
+ retraining
+To: Manivannan Sadhasivam <mani@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Lorenzo Pieralisi
+ <lpieralisi@kernel.org>,
+        Rob Herring <robh@kernel.org>, Jeff Johnson <jjohnson@kernel.org>,
+        Bartosz Golaszewski <brgl@bgdev.pl>,
+        =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org, mhi@lists.linux.dev,
+        linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
+        qiang.yu@oss.qualcomm.com,
+        Krishna Chaitanya Chundru <krishnac@codeaurora.org>
+References: <20260819-bwscale-v5-0-6dea79786b37@oss.qualcomm.com>
+ <20260819-bwscale-v5-6-6dea79786b37@oss.qualcomm.com>
+ <jdch2j3vcjsr2f4u7jhiazuotwqu6pon4xlvhzuhrzpzjhmkkb@7zzy2autzbmo>
+Content-Language: en-US
+From: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+In-Reply-To: <jdch2j3vcjsr2f4u7jhiazuotwqu6pon4xlvhzuhrzpzjhmkkb@7zzy2autzbmo>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTAyMDA0NiBTYWx0ZWRfX/gL/HoAWkdCw
+ YzDkAxWfaMnhq7n1b8WihMwD0UHSwOBf+4S9BrQjOHuNEPDzvBIORt499e9s1rJKb53qJeePyhw
+ ZbdVnS06+K47R2ig48/3myf6triW7Lrq1m+WNtzFISsYXt0f9q83vX1SpGf4uZUZxHEwt6P+25u
+ Skrf8eeHZkmvZrT1t5lf9XUANJIGNOVBFlzICxFWXeMHjUtppoRuhgmPmXj6p5mCRauJwzA6hNq
+ 9K+kBZVxYAJ+wvPceb7SrSUZ6BbcOlAtP+iuhjxhVc/YYTO8ylCaie589NptAULOx9aYBvenHL8
+ CdICjeqzxa94Q6mAQVHoCqhBjH7Kqf0LlrGErRV1h5eC8QCutnL4aOLpD+rlGHTa8vQJrcJsdsC
+ EykfAM4SAhD7PBS8EQKVZVHKHkVFNwpG6+WWQmgRzLdGNkzX5HJnC5AjdFYeU3uBdG3iOOrm8c6
+ tFrZ49fbS2VQ+F6ERZw==
+X-Proofpoint-GUID: SFbzwD96xZPohpIVp5_g_Q7U11_aV2NT
+X-Proofpoint-ORIG-GUID: SFbzwD96xZPohpIVp5_g_Q7U11_aV2NT
+X-Authority-Analysis: v=2.4 cv=JpnBas4C c=1 sm=1 tr=0 ts=6a97b28f cx=c_pps
+ a=UNFcQwm+pnOIJct1K4W+Mw==:117 a=fChuTYTh2wq5r3m49p7fHw==:17
+ a=IkcTkHD0fZMA:10 a=VdqzKS8jKosA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=ZpdpYltYx_vBUK5n70dp:22
+ a=LpQP-O61AAAA:8 a=B3be4mm0s3FIsxF7KqEA:9 a=QEXdDO2ut3YA:10
+ a=uKXjsCUrEbL0IQVhDsJ9:22 a=pioyyrs4ZptJ924tMmac:22
+X-Proofpoint-Spam-Info: AW1haW4tMjYwOTAyMDA0NiBTYWx0ZWRfX3t17/gJXnK9c
+ n5KurQI7+9NJP1r4lJpJ006OB1SKdE8ir8LBir7WCECboM5PAIRY20h/Ka/qwoGBQgDjHSUOofK
+ P6k5dNkidyqxwzC0AsZXasxzP4wGt8E=
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-09-01_06,2026-09-01_03,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ clxscore=1015 malwarescore=0 suspectscore=0 phishscore=0 bulkscore=0
+ spamscore=0 adultscore=0 impostorscore=0 lowpriorityscore=0
+ priorityscore=1501 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2606150000
+ definitions=main-2609020046
 
-On 8/17/26 12:12 AM, Richard Cheng wrote:
-> Hi Srirangan,
-> 
-> I don't fully get this part. Once cxl_reset_initiate() succeeds, cxl_reset_execute()
-> can still return an erro from cxl_reset_wait_done() or from re-enabling CXL
-> caching.
-> 
-> It that case the above condition will skip PCI/HDM restoration.
-> 
-> However, cxl_pci_target_reset_done() is still called later, and the generic
-> PCI reset path subsequently calls pci_dev_restore() regardless of the reset-method
-> return value.
-> 
-> If the reset actually occurred but completion polling timeout, or if the
-> post-reset cache-enable operation failed, couldn't this restore the IOMMU and
-> PCI command state while the HDM decoder state remains cleared or otherwise
-> unknown ?
-> 
-> I am thinking maybe this path need to track whether CXL Reset was succesfully
-> initiated and then maybe save a disabled PCI state so the generic PCI restore
-> path can't reactivate the device ?
-> 
 
-Thanks, Richard. I've updated the error path.
 
-In v11, the reset path tracks whether CXL Reset was successfully 
-initiated. If completion polling or cache re-enable subsequently fails, 
-it saves a disabled PCI state before releasing the IOMMU reset block. 
-The generic PCI restore therefore cannot restore BME or MSE over unknown 
-HDM state.
+On 9/1/2026 1:38 PM, Manivannan Sadhasivam wrote:
+> On Wed, Aug 19, 2026 at 06:55:57PM +0530, Krishna Chaitanya Chundru wrote:
+>> Set the disable_aspm_for_retrain flag in qcom_pcie_host_init() to ensure
+>> ASPM is disabled during link retraining operations. This prevents potential
+>> issues with link state transitions during bandwidth scaling on Qualcomm
+>> PCIe controllers.
+>>
+> Is it really a controller requirement or a device quirk?
+yes, it is controller requirement, for the future targets there is a fix, we
+will not set this for those targets.
 
-> Btw, one small question, I'm unclear about the ownership expectation for
-> FW-programmed EP decoders. If a decoder was programmed and locked by FW, and
-> CXL Reset clears that state, is the generic PCI layer expected to replay the
-> cached configuration, or should FW or the owning device driver restore it ?
-> 
-> In particular, cxl_restore_hdm_decoder_state() removes the LOCK bit before
-> replaying the decoder state. Is it guaranteed that FW-owned locked decoders
-> retain their committed state across this reset, so this reply path is never
-> used for them ?
-> 
-> Best regards,
-> Richard Cheng.
+- Krishna Chaitanya.
+>
+>> Signed-off-by: Krishna Chaitanya Chundru <krishnac@codeaurora.org>
+> You need to use OSS email.
+>
+> - Mani
+>
 
-For locked decoders, v11 checks the live state first. If a decoder 
-remains locked and committed after reset, it is left unchanged. If reset 
-clears that state, the generic PCI path replays the cached decoder 
-programming with LOCK cleared so the registers can be restored.
-I do not assume that firmware-owned locked state is guaranteed to 
-survive CXL Reset, and the generic PCI reset path does not reassert 
-firmware ownership by setting LOCK again.
--- 
-Regards,
-Srirangan
