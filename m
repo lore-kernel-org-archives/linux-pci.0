@@ -1,63 +1,64 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 67E8335203C;
-	Wed,  2 Sep 2026 14:15:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B48D353A72;
+	Wed,  2 Sep 2026 14:19:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788358534; cv=none; b=tP1G7qda0TfwAPwwLqULL1XF8F3pqoZNvSgUVHqz5Or+FV91mWhQGrb6ck/1rlSmXq5YVPzYqbuwxq7G7oZ7hcNFCDnRgp/EDFg1yw3EU05ubOXjyb7U+ABVg7wkUCU0VmDUnwT7IPnL3AEFfaoK+rZGTz4xxOVR2QbDl5vU3co=
+	t=1788358757; cv=none; b=Cc/0XhMbYyl28wVDIgxazwim72hOdsPdDomzCpcGq0/C4wGfcM4kdRNhW3ruHCIIkbCjeI0tv5eQ+Z5yOPRBIIboD7Sa7gf2/ogSw7GVJ+ZFHa09uw70chA/qRpYvtczuN5krH/2V3+q0h2ObsBZn9LKQa9WZ9yjKXkq1zOpmF8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788358534; c=relaxed/simple;
-	bh=2KB2m+gDk/p4vhyDeC61/AYwoCwA5nATQLIcXaUUn1U=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=VeAk757v5Ub0gY3VpzI81AYtG2OBxj/MUlQbi1EJf/NGRo6t60BoIN5WzqKAgPFAkEXiu1UPjynzZrP82+2x2q3cTcKtODiOyDYtEjeBwt7C+ZUekE5FOwlGYtJUwrUZo79eIljUv3pToyQXi7UzWlqRBwCWUIGOiZK80m8ppME=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EF34A1F000E9;
-	Wed,  2 Sep 2026 14:15:26 +0000 (UTC)
-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-To: leoreis.costa@gmail.com, fra.schnyder@gmail.com, francesco@dolcini.it, 
- frank.li@nxp.com, l.stach@pengutronix.de, lpieralisi@kernel.org, 
- kwilczynski@kernel.org, mani@kernel.org, robh@kernel.org, 
- bhelgaas@google.com, s.hauer@pengutronix.de, kernel@pengutronix.de, 
- festevam@gmail.com, hongxing.zhu@oss.nxp.com
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
- imx@lists.linux.dev, linux-kernel@vger.kernel.org, 
- Richard Zhu <hongxing.zhu@nxp.com>, stable@vger.kernel.org
-In-Reply-To: <20260813095003.356062-1-hongxing.zhu@oss.nxp.com>
-References: <20260813095003.356062-1-hongxing.zhu@oss.nxp.com>
-Subject: Re: [PATCH v2] PCI: imx6: Move clock enable after core reset
- assertion
-Message-Id: <178835852653.83808.12038237867062064510.b4-ty@b4>
-Date: Wed, 02 Sep 2026 16:15:26 +0200
+	s=arc-20240116; t=1788358757; c=relaxed/simple;
+	bh=kbrKl5e4379hEsAA7E/T/AviUYyj3FZSP0ovgl5d2mk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=b8ejp6LU34F04M/PpxNFfoI9CqvpXtxuWa4LKj1eMw/mjLqpeHcekDlcoo+fSeM/gMwnoO9aLFI94pB3WySHeZNDMfnBGzM252s96O4rfVS+Nv1YyJB36cApAS+HuHHX9E47FH9m5PRRCFaMbuCEsxN3XR+9xPv+o6+gcjkFG0k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YU6eYKrS; arc=none smtp.client-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YU6eYKrS"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E540F1F000E9;
+	Wed,  2 Sep 2026 14:19:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1788358755;
+	bh=LnppV9P7b+8rqmyGwQMs+haSzCHcWfsn64aXxpq3Uq8=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=YU6eYKrSmZdtC8La7tKvTtTPAY5v9o5v1npTonUER9+FdVgzo9wxB5/l2642aLZ4k
+	 Q7y0/3jDoiNWms76E/22/spi1QuLEjDFdgqiF1qnaT8Wz/5vjZyGcMCpv5izYMIIvS
+	 d/ZlleWVATUWEJMhGlwpLFzv/wVJ1YY0uwchGk3jHxfa6DifqoYgMYuqMU+Yw9I0aP
+	 KyNijkBEU8K176f3PA5uwv7nONRQRswEOsok1N6P4rPXodxdvFVsTw4wCQO0OzvMuA
+	 kuegNJFxr3BWWI7Wmob9VmqhjC1aSj9YAJRX3tudrD5TUBEe+iPGs70PAebaLK7wBO
+	 sGtqSo7SZd1bA==
+Date: Wed, 2 Sep 2026 16:18:58 +0200
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Xincheng Zhang <zhangxincheng@ultrarisc.com>
+Cc: jingoohan1@gmail.com, lpieralisi@kernel.org, kwilczynski@kernel.org, 
+	robh@kernel.org, bhelgaas@google.com, wangjia@ultrarisc.com, 
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/2] PCI: dwc: Allow drivers to skip MEM outbound iATU
+ setup
+Message-ID: <hwd2taeispmlyz2objfmqghrjftxvjwqzsguyznfnreomjhtue@h3wrfmgfde75>
+References: <20260827055448.1818858-1-zhangxincheng@ultrarisc.com>
+ <20260827055448.1818858-2-zhangxincheng@ultrarisc.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-X-Mailer: b4 0.15.2
+In-Reply-To: <20260827055448.1818858-2-zhangxincheng@ultrarisc.com>
 
-
-On Thu, 13 Aug 2026 17:50:03 +0800, hongxing.zhu@oss.nxp.com wrote:
-> Commit 610fa91d9863 ("PCI: imx6: Assert PERST# before enabling regulators")
-> inadvertently moved clock enablement before core reset assertion, breaking
-> PCI device initialization on i.MX6Q Apalis platforms with
-> ASM1061/ASM1062 SATA controllers connected.
+On Thu, Aug 27, 2026 at 01:54:47PM +0800, Xincheng Zhang wrote:
+> Some DWC-based controllers do not require outbound iATU windows for MEM
+> transactions. For those platforms, programming outbound iATU windows for
+> host bridge MEM ranges is unnecessary and may constrain the available MEM
+> aperture.
 > 
-> NOTE: It is not 100% clear if the issue is specific to the ASM1061/ASM1062
-> device or on the specific power-up sequence (reset vs cold-power-on).
-> 
-> [...]
 
-Applied, thanks!
+Can you elaborate why the outbound iATU mapping is not required? Are they using
+ECAM or some other custom mapping scheme?
 
-[1/1] PCI: imx6: Move clock enable after core reset assertion
-      commit: 16929741a622eb345057e41c7b335d9b297890e1
+- Mani
 
-Best regards,
 -- 
 மணிவண்ணன் சதாசிவம்
-
-
