@@ -1,75 +1,63 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C73DC2BDC0E;
-	Wed,  2 Sep 2026 13:51:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0750849F109;
+	Wed,  2 Sep 2026 13:52:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788357108; cv=none; b=WrKCj+/aa/rguVA+ke5ecJ5atxqu7oHav6j0VGjaC42sw6IWEzmJ7iQWr+sP3krp88N9QLuJzCwyCtKCtBYjgJzbUBcslxl6oPL4YnEkYcWFvD7tE/y/AYAEglsGhDYNWMuwVobtPYGhdH4hIPzMqJ33QI/omGgwcVkLI6pOAgI=
+	t=1788357153; cv=none; b=deVq7Zk83F/RXG2ViEMOPQZ8EGCoQxSr/gEdkw2Y93Ato26/69pwc9EA+jv3Qww2T3sjQlHZuoZ7OinInF2VLGrGPZegqTvMXd84qZyK9MM4Dt9pYw5JfLH+FJM6dk8mUomnuE7whHbBgS0sLg9mRPqjEk9L2ApvsOHn0WiQYm0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788357108; c=relaxed/simple;
-	bh=mXMaDycfGQWc4o3RG93CUeUC9z8UjYDdgWQ3638zv3o=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=i/PElb4nkZuowMu+aFoJjGZS0MZ0Gn3uZbvMdIfOKSRR2twDca1LwZNpGatuzkJIQ3liqPVhI3B4bqiOzddjUmBfd754odDja8UwKrEdZFbU4ui2Z71sJf51pBBQGgOYIZlhCobp5+4zFncEk0m9qN4iLp8ua7uKsIJXl6cAmXk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Uk43IQ8e; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Uk43IQ8e"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7A7141F000E9;
-	Wed,  2 Sep 2026 13:51:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788357107;
-	bh=mXMaDycfGQWc4o3RG93CUeUC9z8UjYDdgWQ3638zv3o=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Uk43IQ8etjtisN9DE/UIG04l7E0m700PgKGr7myN/6meDDFP9AwlubYw2HHal0yAL
-	 s1tkrH5aJHugg7nfdy9r1lRbgA61A0aWRoeIkrAFWL4mPBH1Up4kwSi2YiwPqjuHVf
-	 p5q371011RA/FjQq1Hl1Xu+cqgKew2YG/ClYeKzQpZxIKv00w3qZWoYCBobjb1y5ro
-	 b0f/luA26gSvrBsCRBypXrrdQvaOhUvXIWe5CwgmHBVzrYsTiEDqJHcGAYENGKagJ8
-	 s7X23ydp8+cbO1fjDelXpinBu8BjB1TOxeYdW+sfdQUH7Z/gYmjIMx2fqzwXhxB/XV
-	 MuPzEJQaBxVFQ==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v20 4/9] cxl/pci: Thread port and dport through RAS
- handling helpers
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Terry Bowman" <terry.bowman@amd.com>
-Cc: linux-cxl@vger.kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260902133933.2992457-5-terry.bowman@amd.com>
-References: <20260902133933.2992457-1-terry.bowman@amd.com>
- <20260902133933.2992457-5-terry.bowman@amd.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 02 Sep 2026 13:51:47 +0000
-Message-Id: <20260902135147.7A7141F000E9@smtp.kernel.org>
+	s=arc-20240116; t=1788357153; c=relaxed/simple;
+	bh=xAmuuR6oWlCmf6ZZd9eFeL/SkNkacccKj71p0/Jm9vE=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=mjPPFT/b7gbKdoPVnosXkO/6Egy0b5NsnaQex7gMIcBNUN4Mo7XlxcpejHfYiRiBNE33HiMSLRTXiVlQhBGxqnw5G7oTgTkHBjU/NOjyR5Hy4n4yxn2taWRlxVVm/hmdqcd8F90ti1hIHGCg2pKWOxJuXGo9Ef+mKvIgJUWfa6s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 93DEA1F00A3A;
+	Wed,  2 Sep 2026 13:52:27 +0000 (UTC)
+From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+To: Vignesh Raghavendra <vigneshr@ti.com>, 
+ Siddharth Vadapalli <s-vadapalli@ti.com>, 
+ Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
+ Bjorn Helgaas <bhelgaas@google.com>, 
+ Kishon Vijay Abraham I <kishon@kernel.org>, 
+ Luca Ceresoli <luca.ceresoli@bootlin.com>, Sekhar Nori <nsekhar@ti.com>, 
+ Felix Gu <ustc.gu@gmail.com>
+Cc: linux-omap@vger.kernel.org, linux-pci@vger.kernel.org, 
+ linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+In-Reply-To: <20260822-dra7xx-v1-0-23e204d5548b@gmail.com>
+References: <20260822-dra7xx-v1-0-23e204d5548b@gmail.com>
+Subject: Re: [PATCH 0/3] PCI: dra7xx: fix resource leaks in probe error
+ paths
+Message-Id: <178835714722.82225.11480476424664369256.b4-ty@b4>
+Date: Wed, 02 Sep 2026 15:52:27 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+X-Mailer: b4 0.15.2
 
-> From: Dan Williams <djbw@kernel.org>
->=20
-> The callers of cxl_handle_ras() and cxl_handle_cor_ras() already hold
-> a struct cxl_port * and optionally a struct cxl_dport * for the device
-> being handled. Passing a generic struct device * requires is_cxl_memdev()
-> to distinguish Endpoints from Ports at trace emission time. Threading
-> Port and Downstream Port directly enables is_cxl_endpoint() and explicit
-> dport/port branching for cleaner trace dispatch.
->=20
-> Refactor cxl_handle_ras() and cxl_handle_cor_ras() to accept struct
-> cxl_port * and struct cxl_dport * directly. The CXL RAS trace event
-> emission logic is split into three branches: Endpoint events are
-> identified via is_cxl_endpoint() and emit with the memdev, dport events
-> emit with dport->dport_dev, and Upstream Port events fall back to
-> port->uport_dev. This branching is transitional: the follow-on patch
-> [ ... ]
-> device types.
->=20
-> Co-developed-by: Terry Bowman <terry.bowman@amd.com>
-> Signed-off-by: Terry Bowman <terry.bowman@amd.com>
-> Signed-off-by: Dan Williams <djbw@kernel.org>
 
-Sashiko has reviewed this patch and found no issues. It looks great!
+On Sat, 22 Aug 2026 23:07:46 +0800, Felix Gu wrote:
+> 
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260902133933.2992=
-457-1-terry.bowman@amd.com?part=3D4
+
+Applied, thanks!
+
+[1/3] PCI: dra7xx: Fix clock enable leak on probe failure
+      commit: 06c32f3b16ce892f6a64a60be630408fbae84912
+[2/3] PCI: dra7xx: Fix device link leak when devm_phy_get() fails
+      commit: 2b9a036b568c94921af376f87dd394a325da7a02
+[3/3] PCI: dra7xx: Fix device links leak when dra7xx_pcie_enable_phy() fails
+      commit: bdfdf654b4b2762b5ae48325d6dd8e0f3529cab3
+
+Best regards,
+-- 
+மணிவண்ணன் சதாசிவம்
+
 
