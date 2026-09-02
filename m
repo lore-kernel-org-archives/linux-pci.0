@@ -1,67 +1,190 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 193EA29D260;
-	Wed,  2 Sep 2026 14:31:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 54F0E4A0151;
+	Wed,  2 Sep 2026 14:33:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788359486; cv=none; b=M4RlWp5UMf0fAuk+mYSxhTo8g+U243i3pQogOi7BXfgHnP544G/bY4qgqElibcouYFlzj/y4M6eohFTEv5+nb2Zkgxv6YVqVp+gYCoqSWKctEIN4rgCKahcHvRVhDOMl6L+xEbcff+HVEwufNCy732DXqdrWiIONklghtvT8aOg=
+	t=1788359608; cv=none; b=F+WahnzMkiTZziG5GXjg9lrvMe8blAJUFMXnD4PoXf9SqN8avE6bAiY9TIbmcQj1pRov1WH4jrtsOwIA/8QKrijU6Z4iZcByCt+7/T3B8aVYDNWG3kdX+3SufA7DtkaRbTBNXkv76X+jq/AYvnaokhkNYFIsCahCGBTbZUuoYiI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788359486; c=relaxed/simple;
-	bh=3eawx3LCwdCGNmPGTF3MOpwdYRKpenv4KMSvkMrFndA=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=apcmvuf1+okRj5eF4xNK9X5+4Qi+mznN1ziNK+qhTgCsWI1fG2eB17Vkiqamuc7P4xUBByF93dLxMQmktfj/F+LVjlvaz11Pvh0itvXvcar6jHiMn+fLVvrh4bMhOluvJK4T+D4R1YQfpztrGeAgos8pPZN+xT3VMHYHGnmfax0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 26C4D1F000E9;
-	Wed,  2 Sep 2026 14:31:19 +0000 (UTC)
-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-To: Richard Zhu <hongxing.zhu@nxp.com>, 
- Lucas Stach <l.stach@pengutronix.de>, 
- Lorenzo Pieralisi <lpieralisi@kernel.org>, 
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
- Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
- Bjorn Helgaas <bhelgaas@google.com>, Frank Li <Frank.Li@nxp.com>, 
- Sascha Hauer <s.hauer@pengutronix.de>, 
- Pengutronix Kernel Team <kernel@pengutronix.de>, 
- Fabio Estevam <festevam@gmail.com>, 
- Michal Gorlas <michal.gorlas@9elements.com>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
- imx@lists.linux.dev, linux-kernel@vger.kernel.org
-In-Reply-To: <20260827-l1-conditional-imx-v2-1-40b324aa2a94@9elements.com>
-References: <20260827-l1-conditional-imx-v2-1-40b324aa2a94@9elements.com>
-Subject: Re: [PATCH RESEND v2] PCI: imx6: Enable ASPM L1 only iff CLKREQ#
- is supported
-Message-Id: <178835947957.88571.7553170178358028044.b4-ty@b4>
-Date: Wed, 02 Sep 2026 16:31:19 +0200
+	s=arc-20240116; t=1788359608; c=relaxed/simple;
+	bh=ERGuEmIIVgi4qQVISJCN0cTnnTumAYbT+jqIbYJLsrc=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=XezCHr1RYWeNh2J83CzeUyrN88IZACfixvzfs5EDtFjNC6BTIZNRIqb8j2oxfeL0z02a/9R2vhLr8CLCxx2KUKKp2ukfQtLbPitTupsveXWB+DGDbj2OK0gi69QfX+lzcm11uG6C71julrveWOfkSStc/BrJY+qAEP4ZzarD3jY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=D2jOF8ND; arc=none smtp.client-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="D2jOF8ND"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5A8621F000E9;
+	Wed,  2 Sep 2026 14:33:25 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1788359605;
+	bh=mN1GuONGMrlXkAnLdzF0gdIDI9aIqanTxmiU7C62woA=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=D2jOF8NDNu/gSIPJuUvpZwfyX0tkPomDtA+4K+YwfZ3yTsE3r7ADPAAWXHr7BmCra
+	 Q78U4S0Gbk6CESj8Fe44O9iG7a7TKq+13svhaNBUnBdcluXIlxuCvYAlWz/qznA3a+
+	 GQdvZ1LJ+bpS27+HXfxMbjcid9XLui1PmPC97Mb4hfEbzjVpp6hfViBzpJ++ULxjfP
+	 zlw0H6C9fcbUPIfUGljJWS0wxiC3r/FiltdrmWZ37CL9zIVH9mC186iGD6+vRzP+NF
+	 ozGkrJ9FJGhvtam6UN0wdJlPdg+MPKaWbNvd3TGL3CemjCkyzjWY2exkJ3KIf7G3+a
+	 GS2LR5pnKC6jg==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v6] dt-bindings: pci: tegra: Convert to json-schema
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Thierry Reding" <thierry.reding@kernel.org>
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org, robh@kernel.org, conor+dt@kernel.org
+In-Reply-To: <20260902142449.735168-1-thierry.reding@kernel.org>
+References: <20260902142449.735168-1-thierry.reding@kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 02 Sep 2026 14:33:24 +0000
+Message-Id: <20260902143325.5A8621F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-X-Mailer: b4 0.15.2
 
+Thank you for your contribution! Sashiko AI review found 4 potential issue(=
+s) to consider:
+- [Medium] Broken schema cross-reference to `pci-iommu.yaml`.
+- [Medium] Missing `power-domains` in the `required` properties for the Teg=
+ra186 variant.
+- [Medium] Missing `required` array for root port child nodes, failing to e=
+nforce `nvidia,num-lanes`.
+- [Medium] Missing conditional requirement for `phys` and `phy-names` on ro=
+ot port child nodes for Tegra124+.
+--
 
-On Thu, 27 Aug 2026 18:51:00 +0200, Michal Gorlas wrote:
-> Since commit f3ac2ff14834 ("PCI/ASPM: Enable all ClockPM and ASPM
-> states for devicetree platforms"), ASPM states are force enabled
-> on all devicetree platforms. This causes PCI devices on some i.MX SoCs
-> (for e.g. i.MX 8M Plus Kontron SMARC eval carrier) to enter L1 even
-> though CLKREQ# is not supported (and consequently supports-clkreq is
-> not set in pcie controller node of their DT), which causes the device to
-> never wake up from L1.
-> 
-> [...]
+commit 9fe702ef36ffb628e7fb46da07e21ea42a9f10b3
+Author: Thierry Reding <treding@nvidia.com>
+Subject: dt-bindings: pci: tegra: Convert to json-schema
 
-Applied, thanks!
+This commit converts the Tegra PCIe controller bindings from the
+free-form text format to json-schema. It references common PCI
+bindings and sets conditional constraints for various properties across
+Tegra generations.
 
-[1/1] PCI: imx6: Enable ASPM L1 only iff CLKREQ# is supported
-      commit: 94420d27973f567e5c10b631115ea8b9abc0172e
+> diff --git a/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.ya=
+ml b/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.yaml
+> new file mode 100644
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.yaml
 
-Best regards,
--- 
-மணிவண்ணன் சதாசிவம்
+[ ... ]
 
+> +patternProperties:
+> +  "^pci@1?[0-9a-f](,[0-7])?$":
+> +    description: Root ports are defined as subnodes of the PCIe controll=
+er
 
+[ ... ]
+
+> +      nvidia,num-lanes:
+> +        $ref: /schemas/types.yaml#/definitions/uint32
+> +        description: |
+> +          Number of lanes to use for this port. Valid combinations
+> +          are:
+> +
+> +          - Root port 0 uses 4 lanes, root port 1 is unused.
+> +          - Both root ports use 2 lanes.
+> +        enum: [ 0, 1, 2, 4 ]
+> +
+> +      phys:
+> +        description: Must contain an phandle to a PHY for each entry in
+> +          phy-names.
+> +        minItems: 1
+> +        maxItems: 4
+
+[Severity: Medium]
+The original text binding required phys and phy-names for root port
+child nodes on Tegra124, Tegra210, and Tegra186 controllers.
+
+By defining these as optional properties on the child nodes without an
+if/then conditional in the parent node to enforce them, will device trees
+for newer variants missing these PHY mappings incorrectly pass validation?
+
+> +
+> +      phy-names:
+> +        description: Must include an entry for each active lane. Note th=
+at the
+> +          number of entries does not have to (though usually will) be eq=
+ual to
+> +          the specified number of lanes in the nvidia,num-lanes property.
+> +          Entries are of the form "pcie-N", where N ranges from 0 to the=
+ value
+> +          specified in nvidia,num-lanes.
+> +        items:
+> +          enum:
+> +            - pcie-0
+> +            - pcie-1
+> +            - pcie-2
+> +            - pcie-3
+> +        minItems: 1
+> +        maxItems: 4
+> +
+> +required:
+> +  - reg
+> +  - reg-names
+
+[Severity: Medium]
+This marks the end of the child node patternProperties definition, which
+appears to omit a required block.
+
+The original text binding mandated nvidia,num-lanes, reg, and
+assigned-addresses for root port subnodes.
+
+Since the required array is entirely omitted from the child node, can device
+trees omit the hardware-specific lane configuration without triggering a
+schema validation error?
+
+[ ... ]
+
+> +unevaluatedProperties: false
+> +
+> +allOf:
+> +  - $ref: /schemas/pinctrl/pinctrl-consumer.yaml#
+> +  - $ref: /schemas/pci/pci-host-bridge.yaml#
+> +  - $ref: pci-iommu.yaml#
+
+[Severity: Medium]
+Because this is a relative reference, it resolves against the current
+file's $id directory, effectively searching for
+http://devicetree.org/schemas/pci/pci-iommu.yaml#.
+
+Since pci-iommu.yaml is actually located in the virtio directory, will this
+broken reference cause dt_binding_check to fail or skip validation for this
+binding?
+
+[ ... ]
+
+> +  - if:
+> +      properties:
+> +        compatible:
+> +          contains:
+> +            const: nvidia,tegra186-pcie
+> +    then:
+> +      properties:
+
+[ ... ]
+
+> +        vddio-pexctl-aud-supply:
+> +          description: Power supply for PCIe side band signals. Must sup=
+ply
+> +            1.8 V.
+> +
+> +      required:
+> +        - dvdd-pex-supply
+> +        - hvdd-pex-pll-supply
+> +        - hvdd-pex-supply
+> +        - vddio-pexctl-aud-supply
+
+[Severity: Medium]
+The power-domains property is defined as a capability for the Tegra186
+variant earlier in the binding.
+
+Should power-domains be included in this required array so that incomplete
+device trees for Tegra186 hardware do not incorrectly pass schema validatio=
+n?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260902142449.7351=
+68-1-thierry.reding@kernel.org?part=3D1
