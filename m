@@ -1,118 +1,222 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E342D305693;
-	Wed,  2 Sep 2026 06:39:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 49C3938D686;
+	Wed,  2 Sep 2026 06:40:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788331170; cv=none; b=PSyzKLFJzoDGqK2dDveo4PymETF0LrhQPb8PClUqBrZTbT0AN6MwsW0Vxp8pjBNWKS1eLkXbXFQIwsJQtMN2Gtq1XTmBE5wtkcHPYU9yBQdDhKY2zSh0YX+SF5a9473HspkDM4W4KgXIZ4R0ZHKGUFRZCgMRQl6gyUzWmveW5jo=
+	t=1788331233; cv=none; b=hEDmttDVNzFYAYTAH4zAhAqxy1aJADtMXRgS9TzvLguU1Vv5mWrOB+sEsKMTn3+v21avPMFrtCqAi1/w1+9Vfrxaxbe0HCocQws7Tcj0xbsi5dW8QhR0cMERwJ0H7MSxkHSUdTHvK+ZNu4wtDYIFJc30hdn5jM3Sfj0m6aeailM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788331170; c=relaxed/simple;
-	bh=QBJ3WYaewgZV08AYDHVDVdOrnKuq1wFbqh1uFv4JLZw=;
+	s=arc-20240116; t=1788331233; c=relaxed/simple;
+	bh=5r0Hfqz1r/cQkfXyVRiCnnbVEtTuOK1jGhTyRa6vowg=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=VF/N7Jwr3TXpksvLdweVM53Jkt4DMjSzPj39rDlH5ehwpMvpswmvnp/wbZfn/m45ahMn66Ete2Uj160RIE3aojMAXCSg2B0Lc5YQtUpJ76zZIVXtftPCpkvEKO4p2Xu5qT5qIkURqF/Z1s6wNusFsjsBLnw3oO2qmCol3Yu5JE8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Qn4/ZgXN; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=n8KQPZG18F5dA77dJ/KegWIBNhZb3CJU6ZVWQhSST5F0vkficxlU3qfjs4uDdfwTbOy0BNBrp6OrGgcSS3R+GA/9bEnpOwz8t3V9L0BryqgzhoxuufP9W8crYOz/wk1L4k8Q5Qw9PKqyOjllAzKzYaoG2qVEiVSf8VvwBy1m4gw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VCSo2UwH; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Qn4/ZgXN"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7864D1F00A3E;
-	Wed,  2 Sep 2026 06:39:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VCSo2UwH"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7BFDA1F000E9;
+	Wed,  2 Sep 2026 06:40:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788331168;
-	bh=vtLUvVh9oFjXzBzPDr43N4QypQVPHRUYQ8d5xtPDhug=;
+	s=k20260515; t=1788331229;
+	bh=XaZ8RKhh9AxleUR4Vju55gkgqThrBoS3YTrN5pk6xH0=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Qn4/ZgXNpzVmdSmeM0kzbmHte521LZSy9jvZc6OjKOpmJ9hpwKIWxptCWS+5GRUAH
-	 fc2Qsi29KKUPdtYAwKL5n+RW1RBzGKgZzEfZnoq4DIV5t4Xo+KJmwVb8srvz0i5etP
-	 rFRaG/sxKbfvVOdAvFQws9SXkMjUu7S/uXHpvZxlZTjAeajKe4EEa6WXQfal85wUeI
-	 hMbqxx6ZVfxUkhWjILxhVERSPeM+B3UwO76h7ZE6d6rXALvsEGc5/+vfb/ILYrWn4F
-	 BJ5/Cf2LE24tTiDcARCivoFp3QwWSAMKhsbFkNlINyQo0XjiWW0P2s7V5yyB1400Dw
-	 pxaBiv6J9WWbQ==
+	b=VCSo2UwHrqoYDVGGK7w1SgwPvEn5l3pE2v/tww/1sW/BSValVm23uIcrS+J0cZouy
+	 USebYwgJiLavsxrvKWc3Qjeku1aB3yb7pYYSWIxvNZRf3eEYxXB+9hep4yPW/DotW6
+	 UZgVsY9ZsKqs2Da5/wZ+yUydINPLlV8nZJ/fwhYgWDF7K0ioohGGAHZFHVZtK45l11
+	 AFX/sFe8waxRvEfD+XlkGVUm8q/i9+XrlqRhwtpf1esZAef0FOYIwuI66jEyIC5vGG
+	 oikaRtvsN2oU9Be2yrBD1bbeL6QQdPgexB2zq8W0MrbKDqi79Wd5sTHuvoSo1DbewS
+	 hVKa8SCgkqn9Q==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v6 03/10] dmaengine: switchtec-dma: fix channel leak on
- registration failure
+Subject: Re: [PATCH v6 10/10] dmaengine: plx_dma: fix NULL pointer deref in
+ plx_dma_isr()
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Logan Gunthorpe" <logang@deltatee.com>
-Cc: linux-pci@vger.kernel.org, vkoul@kernel.org, Frank.Li@kernel.org, dmaengine@vger.kernel.org
-In-Reply-To: <20260902062153.31048-4-logang@deltatee.com>
+Cc: Frank.Li@kernel.org, dmaengine@vger.kernel.org, linux-pci@vger.kernel.org, vkoul@kernel.org
+In-Reply-To: <20260902062153.31048-11-logang@deltatee.com>
 References: <20260902062153.31048-1-logang@deltatee.com>
- <20260902062153.31048-4-logang@deltatee.com>
+ <20260902062153.31048-11-logang@deltatee.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 02 Sep 2026 06:39:27 +0000
-Message-Id: <20260902063928.7864D1F00A3E@smtp.kernel.org>
+Date: Wed, 02 Sep 2026 06:40:28 +0000
+Message-Id: <20260902064029.7BFDA1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+Thank you for your contribution! Sashiko AI review found 5 potential issue(=
 s) to consider:
 
 Pre-existing issues:
-- [High] The channel status ISR iterates over `dma_dev->channels` before th=
-e list head is initialized, causing a NULL pointer dereference if the inter=
-rupt fires early.
+- [High] Potential deadlock in `plx_dma_process_desc()` due to missing bott=
+om-half disabling.
+- [High] `plx_dma_prep_memcpy()` acquires a spinlock and returns with it he=
+ld, breaking the DMA Engine API contract.
+- [High] Unbounded busy-wait loop spanning up to 1000ms inside an RCU read-=
+side critical section.
+- [High] Missing `dma_rmb()` in `plx_dma_process_desc()` before processing =
+completion data.
+- [Medium] Memory leak of `desc_ring` and its inner descriptor objects in t=
+he `plx_dma_alloc_chan_resources()` error path.
 --
 
-commit b0c8d064063987d7e3518dbe0fb57de31b776bde
+commit dbf39b912829e6113fcfa314a5a4384936eccf12
 Author: Logan Gunthorpe <logang@deltatee.com>
-Date:   Wed Sep 2 06:21:45 2026 +0000
+Subject: dmaengine: plx_dma: fix NULL pointer deref in plx_dma_isr()
 
-dmaengine: switchtec-dma: fix channel leak on registration failure
+plx_dma_create() registered the interrupt handler with request_irq()
+before initializing plxdev->bar. If the device raised an interrupt in
+that window, plx_dma_isr() would dereference the still-NULL bar.
+This commit moves the bar assignment before request_irq() to fix the issue.
 
-This patch addresses a memory leak during initialization failure by
-introducing a switchtec_dma_chans_free() helper. It ensures channel
-memory is cleanly freed and removes channels from the DMA device list to
-prevent the ISR from dereferencing freed memory.
+Link: https://lore.kernel.org/all/20260610112121.676561-1-jjy600901@snu.ac.=
+kr
 
-Link: https://lore.kernel.org/dmaengine/20260717223024.9BB8A1F000E9@smtp.ke=
-rnel.org
-Link: https://lore.kernel.org/dmaengine/20260727190604.397DB1F000E9@smtp.ke=
-rnel.org
+> diff --git a/drivers/dma/plx_dma.c b/drivers/dma/plx_dma.c
+> index 84941a918b01f..409898e92c320 100644
+> --- a/drivers/dma/plx_dma.c
+> +++ b/drivers/dma/plx_dma.c
+> @@ -504,17 +504,17 @@ static int plx_dma_create(struct pci_dev *pdev)
+>  	if (!plxdev)
+>  		return -ENOMEM;
+> =20
+> -	rc =3D request_irq(pci_irq_vector(pdev, 0), plx_dma_isr, 0,
+> -			 KBUILD_MODNAME, plxdev);
+> -	if (rc)
+> -		goto free_plx;
+> -
+>  	spin_lock_init(&plxdev->ring_lock);
+>  	tasklet_setup(&plxdev->desc_task, plx_dma_desc_task);
+> =20
+>  	RCU_INIT_POINTER(plxdev->pdev, pdev);
+>  	plxdev->bar =3D pcim_iomap_table(pdev)[0];
+> =20
+> +	rc =3D request_irq(pci_irq_vector(pdev, 0), plx_dma_isr, 0,
+> +			 KBUILD_MODNAME, plxdev);
+> +	if (rc)
+> +		goto free_plx;
+> +
+>  	dma =3D &plxdev->dma_dev;
+>  	INIT_LIST_HEAD(&dma->channels);
+>  	dma_cap_set(DMA_MEMCPY, dma->cap_mask);
 
-> diff --git a/drivers/dma/switchtec_dma.c b/drivers/dma/switchtec_dma.c
-> index e55fe9ff7e2c5..02d7c38363d68 100644
-> --- a/drivers/dma/switchtec_dma.c
-> +++ b/drivers/dma/switchtec_dma.c
+While reviewing this file, I noticed a few pre-existing issues in other
+functions that might need attention.
+
+> static void plx_dma_process_desc(struct plx_dma_dev *plxdev)
+> {
+[ ... ]
+> 	spin_lock(&plxdev->ring_lock);
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+[Severity: High]
+This is a pre-existing issue, but does using spin_lock() here instead of
+spin_lock_bh() create a deadlock vulnerability? plx_dma_tx_status() calls
+this function from process context. If an interrupt fires and triggers the
+plx_dma_desc_task tasklet on the same CPU, wouldn't it attempt to acquire
+this same lock, deadlocking the system?
+
+[ ... ]
+> 	while (plxdev->tail !=3D plxdev->head) {
+> 		desc =3D plx_dma_get_desc(plxdev, plxdev->tail);
+>=20
+> 		flags =3D le32_to_cpu(READ_ONCE(desc->hw->flags_and_size));
+>=20
+> 		if (flags & PLX_DESC_FLAG_VALID)
+> 			break;
+            ^^^^^
+
+[Severity: High]
+This isn't a bug introduced by this patch, but should there be a dma_rmb()
+inserted directly after this break statement? Without a read memory barrier,
+weakly-ordered CPUs might speculatively read the destination buffer before
+the status read completes, which could cause data corruption.
 
 [ ... ]
 
-> @@ -1316,6 +1322,7 @@ static int switchtec_dma_create(struct pci_dev *pde=
-v)
-> =20
->  err_chans_release_exit:
->  	switchtec_dma_chans_release(pdev, swdma_dev);
-> +	switchtec_dma_chans_free(swdma_dev);
-> =20
->  err_exit:
->  	if (swdma_dev->chan_status_irq)
+> static struct dma_async_tx_descriptor *plx_dma_prep_memcpy(struct dma_cha=
+n *c,
+> 		dma_addr_t dma_dst, dma_addr_t dma_src, size_t len,
+> 		unsigned long flags)
+> 	__acquires(plxdev->ring_lock)
+> {
+[ ... ]
+> 	spin_lock_bh(&plxdev->ring_lock);
+[ ... ]
+> 	/* return with the lock held, it will be released in tx_submit */
+>=20
+> 	return &plxdesc->txd;
 
 [Severity: High]
-This isn't a bug introduced by this patch, but since we are modifying the
-cleanup and setup paths here, could this code be vulnerable to a race=20
-condition with the interrupt handler?
+This isn't a bug introduced by this patch, but does returning with a
+spinlock held break the DMA Engine API contract? The API allows clients to
+prepare multiple descriptors before submission. If a client prepares two
+descriptors sequentially, won't the second call deadlock trying to acquire
+ring_lock? Also, if a client prepares a descriptor but aborts without
+calling submit, wouldn't the lock leak and permanently leave softirqs
+disabled on that CPU?
 
-In switchtec_dma_create(), we request and unmask the interrupt before the
-channels are enumerated:
+[ ... ]
 
-	rc =3D pci_request_irq(pdev, irq, NULL, switchtec_dma_chan_status_isr,
-			     swdma_dev, KBUILD_MODNAME);
+> static void plx_dma_stop(struct plx_dma_dev *plxdev)
+> {
+> 	rcu_read_lock();
+[ ... ]
+> 	__plx_dma_stop(plxdev);
+[ ... ]
+> }
 
-However, the dma->channels list head isn't initialized until later when=20
-switchtec_dma_chans_enumerate() is called:
+and __plx_dma_stop() does:
 
-	INIT_LIST_HEAD(&dma->channels);
+> static void __plx_dma_stop(struct plx_dma_dev *plxdev)
+> {
+> 	unsigned long timeout =3D jiffies + msecs_to_jiffies(1000);
+[ ... ]
+> 	while (!time_after(jiffies, timeout)) {
+> 		val =3D readl(plxdev->bar + PLX_REG_CTRL);
+> 		if (val & PLX_REG_CTRL_GRACEFUL_PAUSE_DONE)
+> 			break;
+>=20
+> 		cpu_relax();
+> 	}
+        ^^^^^^^^^^^
 
-If a pending interrupt triggers immediately upon registration, the ISR will
-execute and iterate over the uninitialized list:
+[Severity: High]
+This is a pre-existing issue, but this performs an unbounded delay of up to
+1000ms inside the RCU read-side critical section established by
+plx_dma_stop(). Could spinning for such a long duration block RCU grace
+periods and severely degrade system stability?
 
-	list_for_each_entry(chan, &dma_dev->channels, device_node) {
+[ ... ]
 
-Because swdma_dev was allocated with kzalloc_obj(), dma->channels.next is
-NULL at this point. Will this result in a NULL pointer dereference in the
-ISR during device probe? Should INIT_LIST_HEAD(&dma->channels) be called
-before the interrupt is requested?
+> static int plx_dma_alloc_chan_resources(struct dma_chan *chan)
+> {
+[ ... ]
+> 	rc =3D plx_dma_alloc_desc(plxdev);
+> 	if (rc)
+> 		goto out_free_hw_ring;
+>=20
+> 	rcu_read_lock();
+> 	if (!rcu_dereference(plxdev->pdev)) {
+> 		rcu_read_unlock();
+> 		rc =3D -ENODEV;
+> 		goto out_free_hw_ring;
+                ^^^^^^^^^^^^^^^^^^^^^
+
+[Severity: Medium]
+This isn't a bug introduced by this patch, but does this error path leak
+the desc_ring array and its 2048 dynamically allocated descriptor objects?
+It jumps to out_free_hw_ring, which frees hw_ring but skips the cleanup
+loop needed to destroy desc_ring.
+
+[ ... ]
+> out_free_hw_ring:
+> 	dma_free_coherent(plxdev->dma_dev.dev, ring_sz, plxdev->hw_ring,
+> 			  plxdev->hw_ring_dma);
+> 	return rc;
+> }
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260902062153.3104=
-8-1-logang@deltatee.com?part=3D3
+8-1-logang@deltatee.com?part=3D10
