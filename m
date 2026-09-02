@@ -1,190 +1,181 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qk1-f182.google.com (mail-qk1-f182.google.com [209.85.222.182])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 54F0E4A0151;
-	Wed,  2 Sep 2026 14:33:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF13B4A49A5
+	for <linux-pci@vger.kernel.org>; Wed,  2 Sep 2026 15:01:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788359608; cv=none; b=F+WahnzMkiTZziG5GXjg9lrvMe8blAJUFMXnD4PoXf9SqN8avE6bAiY9TIbmcQj1pRov1WH4jrtsOwIA/8QKrijU6Z4iZcByCt+7/T3B8aVYDNWG3kdX+3SufA7DtkaRbTBNXkv76X+jq/AYvnaokhkNYFIsCahCGBTbZUuoYiI=
+	t=1788361295; cv=none; b=Mx+q82ppMXqEW537OlMZQVOfg4k2JHsXR5AoGG8RGPLuxpmx7fxTLsYW/QQAMP3yurZM80UP4lUWvpHMZoZDBTcTd330dFVyDLoLTjGD6Idj0u7nwBAxqyJuYQj4L/nnRYVy0ashcuXcVwvrGu4y5vPFDXkvC3Gsfi1JDVTMimo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788359608; c=relaxed/simple;
-	bh=ERGuEmIIVgi4qQVISJCN0cTnnTumAYbT+jqIbYJLsrc=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=XezCHr1RYWeNh2J83CzeUyrN88IZACfixvzfs5EDtFjNC6BTIZNRIqb8j2oxfeL0z02a/9R2vhLr8CLCxx2KUKKp2ukfQtLbPitTupsveXWB+DGDbj2OK0gi69QfX+lzcm11uG6C71julrveWOfkSStc/BrJY+qAEP4ZzarD3jY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=D2jOF8ND; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788361295; c=relaxed/simple;
+	bh=vyI0+5T8UYK55sjN7c+Akwn7k1qbx8c77K/++T6sd1I=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=BkofXubTxY5MgE6lqEf22IDPHzF3Z2AVT8c/0YViEpTmGTh3O86T4DjAZcLCwJLbVJrYnC6oVMOTxUg/zawNdALw5sIJuAtslFVlLHOoFnCJX5tNDyZTILT5kHDxWcvw9+VWqd56iPAUzwub4aTwgRK0oD9dMoGHW7BPCUpWUaI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca; spf=pass smtp.mailfrom=ziepe.ca; dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b=LDYUV4yu; arc=none smtp.client-ip=209.85.222.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="D2jOF8ND"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5A8621F000E9;
-	Wed,  2 Sep 2026 14:33:25 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788359605;
-	bh=mN1GuONGMrlXkAnLdzF0gdIDI9aIqanTxmiU7C62woA=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=D2jOF8NDNu/gSIPJuUvpZwfyX0tkPomDtA+4K+YwfZ3yTsE3r7ADPAAWXHr7BmCra
-	 Q78U4S0Gbk6CESj8Fe44O9iG7a7TKq+13svhaNBUnBdcluXIlxuCvYAlWz/qznA3a+
-	 GQdvZ1LJ+bpS27+HXfxMbjcid9XLui1PmPC97Mb4hfEbzjVpp6hfViBzpJ++ULxjfP
-	 zlw0H6C9fcbUPIfUGljJWS0wxiC3r/FiltdrmWZ37CL9zIVH9mC186iGD6+vRzP+NF
-	 ozGkrJ9FJGhvtam6UN0wdJlPdg+MPKaWbNvd3TGL3CemjCkyzjWY2exkJ3KIf7G3+a
-	 GS2LR5pnKC6jg==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v6] dt-bindings: pci: tegra: Convert to json-schema
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Thierry Reding" <thierry.reding@kernel.org>
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org, robh@kernel.org, conor+dt@kernel.org
-In-Reply-To: <20260902142449.735168-1-thierry.reding@kernel.org>
-References: <20260902142449.735168-1-thierry.reding@kernel.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 02 Sep 2026 14:33:24 +0000
-Message-Id: <20260902143325.5A8621F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="LDYUV4yu"
+Received: by mail-qk1-f182.google.com with SMTP id af79cd13be357-930c0f9c1b1so127731385a.1
+        for <linux-pci@vger.kernel.org>; Wed, 02 Sep 2026 08:01:30 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ziepe.ca; s=google; t=1788361288; x=1788966088; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :content-type:mime-version:references:message-id:subject:cc:to:from
+         :date:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=giebtW14WRSNN/oAZ2HvlFksj8A4SENo3e4Bwxaljok=;
+        b=LDYUV4yuEtDJRMCMwaI/aKWDQAoVLE++IMs6T4Ss6v8LET3YKOmk9oObpVDN5ywC0N
+         bFnDxvtzFR7JXk4VH3FpfQjzj/GRd0j2ifRA5451fsLmGwCT5QPMJ70aLLCfo8Xz8sco
+         RAMT/uJiAsdLZVB65wNDYC6GSGRcDFDZ5Z9BfWkKYx3j/W4tTAm8CUORIDnBU9OQtzHv
+         86syV5D+PsKhEhZWQNRgYgj1dB/L0tzCwpZ7Zp1Evdbw49O3CBUBFxqPeHpTfDGkgGR9
+         imE2UWXu+IrdDItEydMBvTaTMMhqNy3tiitpJxT4d65m1zBiyWssT+uG22s7/pHbVpL1
+         mFFA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1788361288; x=1788966088;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :content-type:mime-version:references:message-id:subject:cc:to:from
+         :date:x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=giebtW14WRSNN/oAZ2HvlFksj8A4SENo3e4Bwxaljok=;
+        b=bBdSl9mwQba+OdKIqcvElpPtgP+0fartvnSeN2lanHg9O2H70pAmuaCl2eRnWFuCFi
+         hIeV8CUktqXINGp07nm5Aoz4Dc8EvmXB8m5brYLMhh2PxbyULuw3r1AnAcMfSRtTE+wZ
+         8pee1Vz6yYxlwxTc+Fb2cglUQ3r5LpkIZEEY119owXJRZQicG/BtZBXv3gig+7yPAcGp
+         L5ijfl2+9I+H5DJRJDTWQI95CBbo10VPm2yJLzNJijkfFoJrUiIZiOmN/SCZUXSRpCL2
+         ZwJMqS1py9p5QNpFHluyJJCQVLApI+FquaEF9ClGP6TsOk/avpcCUOQzObNAbY7fgyJj
+         mGiQ==
+X-Forwarded-Encrypted: i=1; AHgh+RofoEW8VxvoEaVNV35H0fE9K8FQccALbtLenVTmfSyU1JTc9UWaW9ZZiwL5Val/Hi1BrPo5vgwRmL8=@vger.kernel.org
+X-Gm-Message-State: AFuF++kNlDv6fb0RywOoA4lrMnz0/xDPQYTFXsWWeiH4NyrUIi7XVIsk
+	chHWvo08MEfmURd4c19V6XY279kZL/RDDBvHLpaTSPmbsE7ZFgszDqYfUeKMlI/pIPA=
+X-Gm-Gg: AR+sD12HJ8nXyK8jgrFVsIHJ/q7C9b6nicG5MpjeJE71OJvpbjOJplXed4Yls8E5fMX
+	XuYzV4hP5lHo0aTAOAXSOjuy3Te50uAD1vM0LTvxT8QajoYxq9Fo/iqj9rxoRuDwo1dFwwM+X5z
+	yKrujJznv2dJFvnAnHKbDOZL2xPNOaSsSnzgX+/EGegBEXZZX6c/eVwIUFvxThlR7wYCq1CfdQR
+	gGjZrKXtjIn81VKa8njBLuuK+MvF7qZrDRWnp/8c0lb+UxTk0qfmx6hdYRXcxYMPTHmz2QlGJ69
+	Ruo70VWBYLKTUTA2OmvTEewbzUl/SVao5b/AhC07Fb7OgohFnedbhWiNbUMAov+ZO36ZXDb4Xd/
+	jAo679KgiaVH4HZsnWywaQjiJA2CXCNKknTYKdLBBwyiqi+MzsaQMh28r3EHlCM6ort+y1VmpCH
+	R39zGK2pUASaGElNsYcIccEjnsi/8qons+Y4b8HEV9HDUpTr3WCtYr8RMnvQAobbFE/WMfnjciS
+	CnxCRgpyJGBbVleuNRwlptMh9tqpmxbPbIAHMmpxq/MBg==
+X-Received: by 2002:a05:620a:178c:b0:937:372a:b97 with SMTP id af79cd13be357-93960dd7c34mr628429685a.17.1788361287651;
+        Wed, 02 Sep 2026 08:01:27 -0700 (PDT)
+Received: from ziepe.ca (hlfxns010zw-159-2-239-150.pppoe-dynamic.high-speed.ns.bellaliant.net. [159.2.239.150])
+        by smtp.gmail.com with ESMTPSA id af79cd13be357-9395f157adesm227012985a.1.2026.09.02.08.01.26
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 02 Sep 2026 08:01:26 -0700 (PDT)
+Received: from jgg by wakko with local (Exim 4.97)
+	(envelope-from <jgg@ziepe.ca>)
+	id 1x1mSr-0000000EU0M-3Bwb;
+	Wed, 02 Sep 2026 12:01:25 -0300
+Date: Wed, 2 Sep 2026 12:01:25 -0300
+From: Jason Gunthorpe <jgg@ziepe.ca>
+To: Alexey Kardashevskiy <aik@amd.com>
+Cc: Xu Yilun <yilun.xu@linux.intel.com>, ankita@nvidia.com,
+	linux-coco@lists.linux.dev, linux-pci@vger.kernel.org,
+	driver-core@lists.linux.dev, Aaron Tomlin <atomlin@atomlin.com>,
+	Alistair Francis <alistair.francis@wdc.com>,
+	"Aneesh Kumar K.V" <aneesh.kumar@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>,
+	Daniel Gomez <da.gomez@kernel.org>,
+	Danilo Krummrich <dakr@kernel.org>,
+	Dexuan Cui <decui@microsoft.com>,
+	Donald Hunter <donald.hunter@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Jakub Kicinski <kuba@kernel.org>,
+	Luis Chamberlain <mcgrof@kernel.org>,
+	Lukas Wunner <lukas@wunner.de>, Petr Pavlu <petr.pavlu@suse.com>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Sami Tolvanen <samitolvanen@google.com>,
+	Samuel Ortiz <sameo@rivosinc.com>,
+	Saravana Kannan <saravanak@google.com>,
+	Will Deacon <will@kernel.org>,
+	"Fontenot, Nathan" <Nathan.Fontenot@amd.com>,
+	rick.p.edgecombe@intel.com, yilun.xu@intel.com,
+	Jiri Pirko <jiri@resnulli.us>, Leon Romanovsky <leon@kernel.org>
+Subject: Re: [PATCH 00/15] Device Evidence and Trust for PCI Security
+ Protocol (TDISP)
+Message-ID: <20260902150125.GD2890729@ziepe.ca>
+References: <20260705220819.2472765-1-djbw@kernel.org>
+ <4c43da3e-c598-48cf-8491-cb958e574c9c@amd.com>
+ <amk7Xzm5jmz+6SPJ@ziepe.ca>
+ <anFE7m164AmchTy/@yilunxu-OptiPlex-7050>
+ <20260805005533.GB28508@ziepe.ca>
+ <apeF/peEzdxvKeWR@yilunxu-OptiPlex-7050>
+ <2e721509-0aee-47ee-b17a-688876e02f74@amd.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <2e721509-0aee-47ee-b17a-688876e02f74@amd.com>
 
-Thank you for your contribution! Sashiko AI review found 4 potential issue(=
-s) to consider:
-- [Medium] Broken schema cross-reference to `pci-iommu.yaml`.
-- [Medium] Missing `power-domains` in the `required` properties for the Teg=
-ra186 variant.
-- [Medium] Missing `required` array for root port child nodes, failing to e=
-nforce `nvidia,num-lanes`.
-- [Medium] Missing conditional requirement for `phys` and `phy-names` on ro=
-ot port child nodes for Tegra124+.
---
+On Wed, Sep 02, 2026 at 12:20:51PM +1000, Alexey Kardashevskiy wrote:
+> On 2/9/26 12:12, Xu Yilun wrote:
+> > On Tue, Aug 04, 2026 at 09:55:33PM -0300, Jason Gunthorpe wrote:
+> > > On Tue, Aug 04, 2026 at 09:48:30AM +0800, Xu Yilun wrote:
+> > > 
+> > > > Glad to see you all here to make progress! Intel can also help on this.
+> > > > Can we have a meeting to discuss on these topics? As Alexey mentioned,
+> > > > previously we had a bi-weekly call, perhaps use that for our first
+> > > > meeting? Or what time works best for everyone?
+> > > 
+> > > I prefer we defer such community discussions till September, that
+> > > seems appropriate given some dates I've seen.
+> > 
+> > Hi Ankit & Jason,
+> > 
+> > Do we have a plan to schedule a meeting to discuss next steps?
+> > 
+> > If so, we can figure out a specific time on the Discord channel.
+> > https://discord.gg/KKqC438c
 
-commit 9fe702ef36ffb628e7fb46da07e21ea42a9f10b3
-Author: Thierry Reding <treding@nvidia.com>
-Subject: dt-bindings: pci: tegra: Convert to json-schema
+> So I've been trying to find a time slot. Say, keep it on Thursdays
+> (USA) (kinda short notice), bi-weekly, we can do:
 
-This commit converts the Tegra PCIe controller bindings from the
-free-form text format to json-schema. It references common PCI
-bindings and sets conditional constraints for various properties across
-Tegra generations.
+I've asked several people in Europe to help on parts of this series,
+and combined with China/Aus someone is going to end up left out.
 
-> diff --git a/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.ya=
-ml b/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.yaml
-> new file mode 100644
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.yaml
+I know people are anxious about their projects. In the short term I
+will volunteer to send patches (ie bug fixes!) to Linus in the CC area
+Dan was responsible for. Please email me if something needs some
+attention and we can figure it out.
 
-[ ... ]
+To fully move forward we need to establish a new TSM maintainer
+team. In my past experience a consensus has emerged off list, I
+suggest we try that here as well. Several people should be
+recruited. I will also volunteer to help train and launch a new team.
 
-> +patternProperties:
-> +  "^pci@1?[0-9a-f](,[0-7])?$":
-> +    description: Root ports are defined as subnodes of the PCIe controll=
-er
+I can say that several people from NVIDIA are working on the ideas in
+this patch series. Ankit is setting up a team to focus on upstream
+patches for all of CC inside NVIDIA. I've asked Jiri Pirko to work on
+the PCI evidence uAPI based on his deep netlink experience, and Leon
+Romanovsky to work on the binding problem/adversarial/trust level
+driver core idea. They will share their approaches for solving these
+problems as seperate proposals.
 
-[ ... ]
+> Scenario A:
+> Seattle (PDT, UTC-7)		07:00 – 08:00	Day 1
+> Atlantic Time (ADT, UTC-3)	11:00 – 12:00	Day 1
+> Berlin (CEST, UTC+2)		16:00 – 17:00	Day 1
+> India (IST, UTC+5:30)		19:30 – 20:30	Day 1
+> China (CST, UTC+8)		22:00 – 23:00	Day 1
+> Sydney (AEST, UTC+10)		00:00 – 01:00	Day 2 (I can do it once in 2 weeks)
 
-> +      nvidia,num-lanes:
-> +        $ref: /schemas/types.yaml#/definitions/uint32
-> +        description: |
-> +          Number of lanes to use for this port. Valid combinations
-> +          are:
-> +
-> +          - Root port 0 uses 4 lanes, root port 1 is unused.
-> +          - Both root ports use 2 lanes.
-> +        enum: [ 0, 1, 2, 4 ]
-> +
-> +      phys:
-> +        description: Must contain an phandle to a PHY for each entry in
-> +          phy-names.
-> +        minItems: 1
-> +        maxItems: 4
+This is the only time Europe could reasonably participate in,
+obviously it is not OK for China and Aus.
 
-[Severity: Medium]
-The original text binding required phys and phy-names for root port
-child nodes on Tegra124, Tegra210, and Tegra186 controllers.
+> Please, comment. I find these calls pretty productive syncups. So
+> far we were not having Europe in these calls.
 
-By defining these as optional properties on the child nodes without an
-if/then conditional in the parent node to enforce them, will device trees
-for newer variants missing these PHY mappings incorrectly pass validation?
+Calls are undoutably useful!
 
-> +
-> +      phy-names:
-> +        description: Must include an entry for each active lane. Note th=
-at the
-> +          number of entries does not have to (though usually will) be eq=
-ual to
-> +          the specified number of lanes in the nvidia,num-lanes property.
-> +          Entries are of the form "pcie-N", where N ranges from 0 to the=
- value
-> +          specified in nvidia,num-lanes.
-> +        items:
-> +          enum:
-> +            - pcie-0
-> +            - pcie-1
-> +            - pcie-2
-> +            - pcie-3
-> +        minItems: 1
-> +        maxItems: 4
-> +
-> +required:
-> +  - reg
-> +  - reg-names
+> Alternatively, wait until the LPC in a month but I suspect not
+> everybody is going to be there.
+ 
+LPC is not that far away, I think we should have a goal of having a
+consensus for or at LPC
 
-[Severity: Medium]
-This marks the end of the child node patternProperties definition, which
-appears to omit a required block.
-
-The original text binding mandated nvidia,num-lanes, reg, and
-assigned-addresses for root port subnodes.
-
-Since the required array is entirely omitted from the child node, can device
-trees omit the hardware-specific lane configuration without triggering a
-schema validation error?
-
-[ ... ]
-
-> +unevaluatedProperties: false
-> +
-> +allOf:
-> +  - $ref: /schemas/pinctrl/pinctrl-consumer.yaml#
-> +  - $ref: /schemas/pci/pci-host-bridge.yaml#
-> +  - $ref: pci-iommu.yaml#
-
-[Severity: Medium]
-Because this is a relative reference, it resolves against the current
-file's $id directory, effectively searching for
-http://devicetree.org/schemas/pci/pci-iommu.yaml#.
-
-Since pci-iommu.yaml is actually located in the virtio directory, will this
-broken reference cause dt_binding_check to fail or skip validation for this
-binding?
-
-[ ... ]
-
-> +  - if:
-> +      properties:
-> +        compatible:
-> +          contains:
-> +            const: nvidia,tegra186-pcie
-> +    then:
-> +      properties:
-
-[ ... ]
-
-> +        vddio-pexctl-aud-supply:
-> +          description: Power supply for PCIe side band signals. Must sup=
-ply
-> +            1.8 V.
-> +
-> +      required:
-> +        - dvdd-pex-supply
-> +        - hvdd-pex-pll-supply
-> +        - hvdd-pex-supply
-> +        - vddio-pexctl-aud-supply
-
-[Severity: Medium]
-The power-domains property is defined as a capability for the Tegra186
-variant earlier in the binding.
-
-Should power-domains be included in this required array so that incomplete
-device trees for Tegra186 hardware do not incorrectly pass schema validatio=
-n?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260902142449.7351=
-68-1-thierry.reding@kernel.org?part=3D1
+Regards,
+Jason
