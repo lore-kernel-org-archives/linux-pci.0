@@ -1,119 +1,125 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF434314D34;
-	Wed,  2 Sep 2026 06:33:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B88FA38D3F2;
+	Wed,  2 Sep 2026 06:34:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788330791; cv=none; b=aaGQDHc3M75B95du0nkpRLlIYvSKhx9c0ippa5Jbo0dywDOoURJ3/z6COyOl9zdHSuSnZFEkUD1FHXFFo0N45kF37pgXiY+Rtvhxi6fYzP07KkVGMqKPwGh13ekMRLVyeWxYRVXldlaHGBd30oZmjWRxrg4WmXrHAZyrRd2pNTI=
+	t=1788330897; cv=none; b=HYrK3x1WrEZLFb8G4hxzdmCpipbxUXDYV/i6vi6n7l85C5bQxbKurtCACO/SiJGzkrCoAjFRSipBlz/g8Gi/G3D/6h/SZXJFrftok2bTuFTiR+PRBKSsWpQ68YS/0LmAWiI6CzZixgl8K6yIH0HizXd05YNUWzGR71mvdULIO+M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788330791; c=relaxed/simple;
-	bh=OidBU9azT3V8TNtrCKK0sHS87UNn4DSnpcc/GIQKWc0=;
+	s=arc-20240116; t=1788330897; c=relaxed/simple;
+	bh=sxv+t7QEdqRawlC9WROHZUJdNTqE8Y5dkfl+46wgun4=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=ob6CNKQUobancVtF9UnyqU2xqot0mAIhbFgaT+v1Cj2tSMwAPAejL4FoLg1iWRji9xGeNamTRU6pE+KjQ4GbbNDwT1jvvC/t3t5FHKPqJBlQlDbNNqmxMdwydHDzyzH5WRVeGlux0W8WJk45epbL6CKlBjYOB1qnv8vdTBQhuXU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QojoMMGo; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=YyOwf9BkYsu8DNkxNYUS5fppxdoWC2Fkqkqnewu90Fsl3gABlSzUpYA9dbr9LnroxtelU4wG036N7IHEtWg7AoOJJv6/fhjD8AbIFaEHLXzMDMLAfqxIjZt5wUZ0nXbskWSSziLgZSZTrZ/ryPGaGFAkL8Wgi9uIB+5vppl99Hc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Rr04QbEU; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QojoMMGo"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 116BD1F000E9;
-	Wed,  2 Sep 2026 06:33:10 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Rr04QbEU"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2C11B1F000E9;
+	Wed,  2 Sep 2026 06:34:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788330790;
-	bh=WLrwLtjGrFo3EMBzOTU1pW9wsbnEnTspQ808B4NxdiU=;
+	s=k20260515; t=1788330896;
+	bh=PK3BU/9xRl8YL0nfkNQTFyIpwRw6fICW9Hk2F7X0BHM=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=QojoMMGoVXthTgGdFMD0vYZ/Ge8Z0tq0NNLXUNsOi2+bqR0WjXOxivO4MJzQ7Kd+w
-	 5migX/VJrdMZ92FAbdfOYuSavn6ZAWv5j2fMRdGSIoK3D5anlvOFuSwTBL3WGI4IDn
-	 vE1qJ4k03ZwPOGHYyOMLdqlRWSKK1rRH8eXIgurou/walAwQf7d8DMqbxCJ8epblGm
-	 JOTpHP4Y/nxvtiNqXwDCw/7QNMTfygrAkV16ha0HYh7+s9Af5lwGSi4Tw+qZGEOWzG
-	 bGIP0roEtDWiVyKLTWK30FA98fAwMGYneKrBK0sDVbchE8pDemVdrCZnBbgGhXOifl
-	 Xp2fXQlors4Xg==
+	b=Rr04QbEU5+hFQ0q9LrNxlsQG+7Gp28w0WFD5ycIxf9I6ZtCtngYPLwbQsuf8cSCdt
+	 brFpLp2HUcT3JOFDeUmUbS7Tt1ILAbA2oZ15UqRQ0q7qfuylml3bEZYYQuYr/UYmEP
+	 S2h9mXTKrXXoE7zl4CqeQfWFt3weoDGzyCKOlVyHQj7+hrgsMWtKGUv6kFBOwl3RkY
+	 rU8XZYKK20pSfdkRRNYXYmU/jmAcAyrh2n6m2KGtcs+1ViXlQLzsLCTDfrPUNNPRjm
+	 QGFI7Vq2q4s2gVz9HNhVEYhAMx40lfxeenUypTzFvBAy2HaD1Qz6SZ2zy3o9cxMei7
+	 TygPXZDvmpM3Q==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v6 08/10] dmaengine: ioat: disable relaxed ordering
- before registering the device
+Subject: Re: [PATCH v6 05/10] dmaengine: switchtec-dma: fix chan_status_irq
+ cleanup on create() error
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Logan Gunthorpe" <logang@deltatee.com>
-Cc: vkoul@kernel.org, linux-pci@vger.kernel.org, dmaengine@vger.kernel.org, Frank.Li@kernel.org
-In-Reply-To: <20260902062153.31048-9-logang@deltatee.com>
+Cc: vkoul@kernel.org, Frank.Li@kernel.org, dmaengine@vger.kernel.org, linux-pci@vger.kernel.org
+In-Reply-To: <20260902062153.31048-6-logang@deltatee.com>
 References: <20260902062153.31048-1-logang@deltatee.com>
- <20260902062153.31048-9-logang@deltatee.com>
+ <20260902062153.31048-6-logang@deltatee.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 02 Sep 2026 06:33:09 +0000
-Message-Id: <20260902063310.116BD1F000E9@smtp.kernel.org>
+Date: Wed, 02 Sep 2026 06:34:55 +0000
+Message-Id: <20260902063456.2C11B1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
 
 Pre-existing issues:
-- [High] Use-After-Free of `ioat_chan` and `ioatdma_device` structures on `=
-ioat3_dma_probe` error path.
+- [High] Missing pci_free_irq_vectors() in the error paths of switchtec_dma=
+_create() violates strict PCI subsystem guidelines.
+- [High] Missing NULL check for the result of ioremap() leads to a potentia=
+l NULL pointer dereference.
 --
 
-commit 5181bf41c6d9f7fa2de9a1b9a5e45637220e6c4f
+commit c928a877b10b083c93ce575c29fbbff0e54d5b5a
 Author: Logan Gunthorpe <logang@deltatee.com>
 
-dmaengine: ioat: disable relaxed ordering before registering the device
+dmaengine: switchtec-dma: fix chan_status_irq cleanup on create() error
 
-This patch reorders the initialization sequence in ioat3_dma_probe(). It
-moves the PCIe relaxed ordering configuration before dma_async_device_regis=
-ter()
-to prevent leaving a dangling DMA device registration on the error path.
+This commit replaces free_irq() with pci_free_irq() to correctly free MSI-X
+vectors. It also changes the default initialization of chan_status_irq to -1
+so that index 0 is not skipped during cleanup.
 
-Link: https://lore.kernel.org/dmaengine/20260707165906.249F41F000E9@smtp.ke=
+Link: https://lore.kernel.org/dmaengine/20260717223431.625EE1F000E9@smtp.ke=
 rnel.org
 
-> diff --git a/drivers/dma/ioat/init.c b/drivers/dma/ioat/init.c
-> index 737496391109e..a57024c4b066e 100644
-> --- a/drivers/dma/ioat/init.c
-> +++ b/drivers/dma/ioat/init.c
-[ ... ]
-> @@ -1194,6 +1185,15 @@ static int ioat3_dma_probe(struct ioatdma_device *=
-ioat_dma, int dca)
->  		goto err_disable_interrupts;
->  	}
+> diff --git a/drivers/dma/switchtec_dma.c b/drivers/dma/switchtec_dma.c
+> index 17bbf85bcb169..430b09fa5102e 100644
+> --- a/drivers/dma/switchtec_dma.c
+> +++ b/drivers/dma/switchtec_dma.c
+> @@ -1249,6 +1249,8 @@ static int switchtec_dma_create(struct pci_dev *pde=
+v)
+>  	if (!swdma_dev)
+>  		return -ENOMEM;
 > =20
-> +	err =3D dma_async_device_register(&ioat_dma->dma_dev);
-> +	if (err)
-> +		goto err_disable_interrupts;
+> +	swdma_dev->chan_status_irq =3D -1;
+> +
+>  	swdma_dev->bar =3D ioremap(pci_resource_start(pdev, 0),
+>  				 pci_resource_len(pdev, 0));
+> =20
 
 [Severity: High]
-This isn't a bug introduced by this patch, but could this error path lead
-to a use-after-free if a shared interrupt fires?
+This isn't a bug introduced by this patch, but does ioremap() need to be
+checked for failure?
 
-If ioat3_dma_probe() fails here, it returns the error back to
-ioat_pci_probe(), which immediately frees the device and its channels
-manually:
+If ioremap() fails and returns NULL, swdma_dev->bar is assigned NULL. A bit
+later in switchtec_dma_create(), swdma_dev->bar is dereferenced uncondition=
+ally
+when reading the IRQ vector:
 
-drivers/dma/ioat/init.c:ioat_pci_probe() {
-    ...
-    for (i =3D 0; i < IOAT_MAX_CHANS; i++)
-        kfree(device->idx[i]);
-    kfree(device);
-    ...
-}
+    irq =3D readw(swdma_dev->bar + SWITCHTEC_REG_CHAN_STS_VEC);
 
-However, the interrupts were previously registered using devm_request_irq()
-in ioat_dma_setup_interrupts():
+Could this result in a NULL pointer dereference?
 
-drivers/dma/ioat/init.c:ioat_dma_setup_interrupts() {
-    ...
-    err =3D devm_request_irq(dev, pdev->irq, ioat_dma_do_interrupt,
-                           IRQF_SHARED, "ioat-intx", ioat_dma);
-    ...
-}
+[ ... ]
 
-Because devm managed resources are not cleaned up until the callbacks run
-after the probe function returns, the IRQ handler remains active during
-this window.
+> @@ -1323,8 +1325,8 @@ static int switchtec_dma_create(struct pci_dev *pde=
+v)
+>  	switchtec_dma_chans_free(swdma_dev);
+> =20
+>  err_exit:
+> -	if (swdma_dev->chan_status_irq)
+> -		free_irq(swdma_dev->chan_status_irq, swdma_dev);
+> +	if (swdma_dev->chan_status_irq >=3D 0)
+> +		pci_free_irq(pdev, swdma_dev->chan_status_irq, swdma_dev);
+> =20
+>  	iounmap(swdma_dev->bar);
+>  	kfree(swdma_dev);
 
-If a shared interrupt or pending MSI/MSI-X fires before devres cleans up
-the IRQ, will the handler dereference the already-freed ioatdma_device and
-ioat_chan structures?
+[Severity: High]
+This is a pre-existing issue, but does this error path need to free the IRQ
+vectors?
+
+In switchtec_dma_create(), if an error occurs after pci_alloc_irq_vectors()
+succeeds, control jumps to err_exit and the function returns without calling
+pci_free_irq_vectors().
+
+Does this leak IRQ resources on error paths?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260902062153.3104=
-8-1-logang@deltatee.com?part=3D8
+8-1-logang@deltatee.com?part=3D5
