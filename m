@@ -1,42 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6242829B76C;
-	Wed,  2 Sep 2026 14:08:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68B4347D474;
+	Wed,  2 Sep 2026 14:09:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788358093; cv=none; b=bOyViJduNc1rpHqgVtSj+I+wfSXhPEuZIvMZYoHMJVvoWANJL/h+ua+VOgweSjoAyLyhAyZsVSdVz+bYuD4PO3quV2Y/V0QutmC2YmZHeegzsPHa10pPBxNYmbNW2FIFHqVkDRNvYUxSaKhj48Zk0VNptsgKwRzksgOr0XLjN0M=
+	t=1788358142; cv=none; b=laROnTv9TgefEMKCbHccmF1d1dHupVJqRN5K6N2VxqlKbDmt/h6/ADVYmIxj57TtYAouIlstR85WxC94kIzBl3+XBBHiPQdz4aHtw49IPPFd1Gp4ptsd3P5rE0BJ1Y/dZ2JsAS4mnEHOnSWTS4GKIz5HpFp4Fb+fbBsnd/YLhko=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788358093; c=relaxed/simple;
-	bh=yjRsnEX+uZHiA1Gxz2dIC1fKgK2piD9jRyx2FqhwQ9c=;
+	s=arc-20240116; t=1788358142; c=relaxed/simple;
+	bh=dVw6X77PBRRBbMXYpWK6XtetfDRq1TfILbEFrh3Pue0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=IN/9NUK+CYDL5Rjmhy1KkmKc79GCjtoQ01yxh9/gtm8PaNSjN6AcLD8lNdtDi+UkqM91A7IQhy3EFKuoP5yjxP9UMcWB0DRnAsby3Hj+hPiVZVjOzENmXnQ4FBW+1SLQc1n7Qmtx1TBn9gN2FTGp1N2DZ0ebZZccpn4/WZJ2jfY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RPvR2Oxg; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=RHTZriuVpiCY8MBGxocacbtv5X+/9Ed8FOGZwyUlZT0STvytSRKn/XdglLc+D6u43eYdOyRH5w8x0MN6FRoDTh64cA/x0uXp5C43V8DhfM7HSYk6KnVAG3kX1KOdkOKZxEX35/wbbHVUieN7i2tG3/CL2rl5vv5uErjMAnThZRU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WkMxStK3; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RPvR2Oxg"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 242571F000E9;
-	Wed,  2 Sep 2026 14:08:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WkMxStK3"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 348D71F000E9;
+	Wed,  2 Sep 2026 14:08:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788358092;
-	bh=P33uEtrze7BBLbgvM/BBtSeVTgTyPdj96VBOtX5z20Q=;
+	s=k20260515; t=1788358141;
+	bh=jvbsIa1C1CD9YEd7c6+Yhz/TnoBEzHpDFUgyLGLQ/00=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=RPvR2Oxg9p3csGJ9B4bc4xsBzT8Xdc6iTFje6xE3EVoxKznUaH2FBg5pcn+ENTjG+
-	 LoJW6SmvYh1256oaZ/0o9QsdDFpoUZ3sHU7ajhBoX/VnBV1dTMF6PGLYe/8JgihcoE
-	 P5qCSSPaqbsUAlAz7KRcUnBKXwW9KC3SHE+TsZhSzVD256OSWjj0q5i7ZQLMEGBlMF
-	 yX4wWRGrBN79zNt64as9y8JxQMFH83beLaJkKATCDpkHx36WHQATamHARd/Jvv+jnu
-	 sJwQWxx1tQm0fBxXmRz91Et5sNnKS0FWZpUZjd8BAYsxQYn1hUPgvgMDST/leAPUGw
-	 WUfu6GhbNFA3g==
-Date: Wed, 2 Sep 2026 16:07:54 +0200
+	b=WkMxStK39RW2NF0CTX2JHSZa+bNFDBPn2ilVPJkHrOOshLQjshW1LTqzFP/Izvml4
+	 EcMhGGyGqs060hezfyWXjvVc+clSMUBZfRntbL+WUUt3JXr5JANP8VBnS0kekeqFXE
+	 FDix/Cf9xU+ZpCqlJFj+HgdXRIoQB7JZmdq2DkboM8XhTqp5e4nq9osDrrXQay6oN6
+	 hOpUOcI6qegaJ0kEIsW9aG87VLvqpA6gWNq/CJljwgWoC9CsF0XGeaxWqUgHyq1tFj
+	 1NshR6nT92YqEMWaweaG/ay8/jKqxreDTbszVetTOMSrCue9j12f+MiZpsD8MI2QJl
+	 TWo9D4De3mTYQ==
+Date: Wed, 2 Sep 2026 16:08:49 +0200
 From: Manivannan Sadhasivam <mani@kernel.org>
-To: Sumit Kumar <sumit.kumar@oss.qualcomm.com>
-Cc: Jingoo Han <jingoohan1@gmail.com>, 
-	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] pci: designware: Set DMA_BYPASS bit in outbound IATU
- CTRL2 register
-Message-ID: <mivyhgl3axsebyqktjqqglqgra3ptx4q3u5a3ybudmnxigvdqy@tn5sga4z45cu>
-References: <20260826-dma_bypass-v1-1-3a53dc748ce2@oss.qualcomm.com>
+To: Abel Vesa <abel.vesa@oss.qualcomm.com>
+Cc: Bartosz Golaszewski <brgl@kernel.org>, 
+	Bjorn Helgaas <bhelgaas@google.com>, Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>, 
+	Bjorn Andersson <andersson@kernel.org>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI/pwrctrl: tc9563: Use gpiod_set_value_cansleep() for
+ RESX
+Message-ID: <v4wm3n2onavyxe2ud52hctuff7iozekwxzek3w56acqfyhjxfi@ide5zrz6b5qw>
+References: <20260825-pci-pwrctl-tc9563-use-cansleep-for-resx-v1-1-0dbe7cfd8200@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -46,19 +45,24 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260826-dma_bypass-v1-1-3a53dc748ce2@oss.qualcomm.com>
+In-Reply-To: <20260825-pci-pwrctl-tc9563-use-cansleep-for-resx-v1-1-0dbe7cfd8200@oss.qualcomm.com>
 
-On Wed, Aug 26, 2026 at 02:41:20PM +0530, Sumit Kumar wrote:
-> Outbound IATU apertures are configured with local device-side addresses.
-> When DMA engine transactions use destination addresses which fall within
-> an outbound IATU aperture range, they get unintentionally translated by
-> the IATU, causing the wrong address to be sent on the PCIe link.
-> This results in data corruption or IOMMU errors at the host if the
-> translated address is not mapped.
+On Tue, Aug 25, 2026 at 02:41:31PM +0300, Abel Vesa wrote:
+> The RESX GPIO may be provided by a sleeping GPIO controller, such as an
+> I2C or SPI I/O expander. Calling gpiod_set_value() for such a GPIO
+> triggers the following warning:
 > 
+>   WARNING: ... drivers/gpio/gpiolib.c:4030 at gpiod_set_value()
+> 
+> The TC9563 power-on and power-off callbacks already sleep while enabling
+> or disabling regulators and while waiting for oscillator stabilization.
+> Use gpiod_set_value_cansleep() for RESX so it can be driven without
+> triggering the warning.
+> 
+> Fixes: 4c9c7be47310 ("PCI: pwrctrl: Add power control driver for TC9563")
+> Signed-off-by: Abel Vesa <abel.vesa@oss.qualcomm.com>
 
-Why are you using the same device address in both DMA and iATU mapping? This
-sounds like a mapping problem that you should fix instead.
+Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 
 - Mani
 
