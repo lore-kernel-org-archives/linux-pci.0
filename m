@@ -1,46 +1,45 @@
-Received: from MW6PR02CU001.outbound.protection.outlook.com (mail-westus2azon11012064.outbound.protection.outlook.com [52.101.48.64])
+Received: from SA9PR02CU001.outbound.protection.outlook.com (mail-southcentralusazon11013024.outbound.protection.outlook.com [40.93.196.24])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EDCE9480335;
-	Wed,  2 Sep 2026 13:40:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.48.64
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E28E446C821;
+	Wed,  2 Sep 2026 13:40:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.196.24
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788356451; cv=fail; b=h0z7upCIkuk4d0TuckvgNGgEsBXam9JD/HynjjoFeiDsajpirH/bBzqAPuZszNWYdj2dNMu3CLKW2sklGzV2DvtE99gU+3P2lAplI80ShUc7C6a7MzgSpYb8RChpL8UhwqmQz25hqBuOOCJ/SYMD4ft459EIol51zd/WsS0PUL4=
+	t=1788356461; cv=fail; b=dEsoLEB5oElV10Wiy5siH6paKR2yMLY/yeYcgmKnmv73NI9Au4tAMzoxxvs8s3ZHQC9Bl2etlt21OHSuUFENHwPkomL1mQdNtT9DLXLUvdz3kozznIWSGu+JPX4qFpFVjg6yMNcN8wzayJp5ex8SIex7DsspaPMxwaJdkHu4F/w=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788356451; c=relaxed/simple;
-	bh=0E3fUgo4UILLzzBl1wzkw3wIBUlgvbSrgQTo0NdRkFY=;
+	s=arc-20240116; t=1788356461; c=relaxed/simple;
+	bh=1fvNQBNfYTLj7zhCAAcfOAKV9GR/XMVUPZ9YRjSInhM=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=m68LnD4O19bZQN58EGwCZhDI0UGJVpvmsSLZ3f6Q4+j90GqbRgnMt+hU92CzU7KOWHTRyoe9uOndBYmxNJ+7wYkRKKHpFzh3kMRO/O5PcaRkhaLxOlU5J0T1OaBryheWsS0uvix8NIcOj/q6P/LzU6a9+p/uGTy4gc/CPpVnH0Q=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=A9HAC2+M; arc=fail smtp.client-ip=52.101.48.64
+	 MIME-Version:Content-Type; b=ovx+uQ5PLdDl/WtWy/92W3Om4LSc8Znu/f1QeMA8YlKLjZIk7XmPx0t/BJ461fhTLuqPV9WNRBIuDX3qjWccCnFKCllZl2rYNI/TRPWxTBthhv+VhMSuBsMOdhTg/QnmycPRj3BBjp1QIPjIbHCfGjFaSRAAqV/SuiH9+kiQBXU=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=kwU7Ia17; arc=fail smtp.client-ip=40.93.196.24
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="A9HAC2+M"
+	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="kwU7Ia17"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=c3jnntm4K1h1DFX3tvyNt0afXnJ5bMjusFyn2TJPA8zZTy4KOpF07AGFPGYGJRi9/3nRp5O0qbZMGfeuIG1Vg6fXuzH18lZx6Z9fpf1y5EMqSP9Kddz8NdB0+nb6FOUH0HBrCw5FEfLkM11LqmhgASIuajrSW3OgPZSM37wzgbau0MqcmLOkSE35b7EXSp59WL/B/CnjtUO5UBg6HqyCSyQ4WS2d9qjly4XKZK/p42hT1RLZpEqP3AAUEj7ZjQY9vBdRGo+W6cx1z5hjc0YH0RUMc0Cql6lr667SSQ+T3IKLXMjDODhboF50JhKDYYV6HBOqgqX8rZOnPXFjR+XLsw==
+ b=M9y3r+DoeVhaY9jhxADp/hq15wyYRN1wDiGdkeIEKB1oq7RNKNAeDTBEaLp8cW/SnZ+OMPCrQH7z1fBHYE1bBnabjGDBt/z7syijwz7yxk7GylYq1fFykDIthJsIPal2hfwdSVTtDvzKWkdtMPGUevIAkti9RGsAyK2VE8RVzmUbV5PZmaJrEtYUIMW30wjRPMfTp0qlaKWkovyQtpI2oIr59qVhr2LYcYt/4bCPJiiv5BL9rUyy12Ct2a8lnXXp4EiWTiuPkPPgKOFTh+B/MYWnjxC7Ih04wi1Z75pAHvcb1a++VMbo+vEBkHkwxAvn+bq74glrv+7MCbvTR0++VA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=YeqOLmrD0A/xnMlkQaocsmiaj/1160e/IVDxcDaExaA=;
- b=Rp6MX6OmW6jB49JAsUmtu5tPhRPYVJ3lWdXuNXNrb5LUTA3ML9c4coVn40pEDKpXzBzQcDQ3FSrQzNdZCVtJZ+D4f02FzFEiBcXK6egB9cRyX5fNcn11mGDoygkntGNppHV6APP5Zz2CQcPNo6FcVpXs3W/fAlYB1F6NW46Y0r1FtnCoHzHCrIDimfOzqgGxtdtGNt7XZfUJhDxJpwvjbO+mvtYfrmBZVSl5PDIRse0cAhMVXZM3Kii9jG/CZTjBW7CnigkagEGBOUH97GptXNffXOqwO+SZzhAuGitJxFRmad43D+QkNBoOUBdHCF1oYbR7BQxwEg23zoplpbNAog==
+ bh=/U2KNM2z5N7eV55XR/rtUWnPfKVFwTjVb+V7ej/rI2Q=;
+ b=VxaPXlsDUYaYG8YTSP2SgaeeZXVS/VPQlKQleGcNpptgfIvZGqraea3lga3exsRjXHO3GDa4W2jFIrwYDAN9wK4qnctH0MSK5SzBfdf8ExxwRm4uoB7gjkNxSazLGK52YXQ5zREonj/qsYWM1lmvgr9yz+O3/8SU7rWdtPFh8W2iOEZWuPreEq1KEzeXcPdLrl/+iEJ0M3tA8OFApTlfRTWZbiBFWdSw5K5+x9XO8tHpRHcvETzSLz/0aerP7wC9V4sNlAD7lXS9PYJrrTIJj2F7BDYhVdJyTNoSTBmUocGLpdEmfuhsHlSUlcOYaHKgbk69+WcFZV23XyQ+mWWyqA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  165.204.84.17) smtp.rcpttodomain=kernel.org smtp.mailfrom=amd.com; dmarc=pass
  (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
  dkim=none (message not signed); arc=none (0)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=YeqOLmrD0A/xnMlkQaocsmiaj/1160e/IVDxcDaExaA=;
- b=A9HAC2+Mn4DTB256jAOSMfCPgGxrizbXsPZUrsC+MsW1nCkIm+v4zArRrhxnHivTHpzQW4sesS+Ls4kWmmrUwbjmPK8oxiyfLZ0NFXfH8JxFn+FR4ZBOCSoh8f8MTKzQeDpHQ39wjYE1EoFCCQI5iz0u9z+m2y/uwv+A7Ai740o=
-Received: from SJ0PR03CA0279.namprd03.prod.outlook.com (2603:10b6:a03:39e::14)
- by MN0PR12MB6198.namprd12.prod.outlook.com (2603:10b6:208:3c5::18) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.360.10; Wed, 2 Sep
- 2026 13:40:43 +0000
+ bh=/U2KNM2z5N7eV55XR/rtUWnPfKVFwTjVb+V7ej/rI2Q=;
+ b=kwU7Ia17N0TjgoRaX46z+A8NosG+oGm/5liGrnOSJlEZ0XymO0taWq+lT09Szl9hcvxdvUwgu2HP8usjloZdgR5Kv7HHbmJHcPhHqi8FHvlVmez+Ru7sWsXBzxqKhNQfZJ5DgZWExgvQG81nGzo9CwB09k0kdiFEXughOsCAry8=
+Received: from SJ0PR03CA0274.namprd03.prod.outlook.com (2603:10b6:a03:39e::9)
+ by DS0PR12MB8271.namprd12.prod.outlook.com (2603:10b6:8:fb::6) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.21.382.10; Wed, 2 Sep 2026 13:40:53 +0000
 Received: from SJ5PEPF000001C9.namprd05.prod.outlook.com
- (2603:10b6:a03:39e:cafe::e) by SJ0PR03CA0279.outlook.office365.com
- (2603:10b6:a03:39e::14) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.21.382.11 via Frontend Transport; Wed, 2
- Sep 2026 13:40:41 +0000
+ (2603:10b6:a03:39e:cafe::19) by SJ0PR03CA0274.outlook.office365.com
+ (2603:10b6:a03:39e::9) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.21.382.10 via Frontend Transport; Wed, 2
+ Sep 2026 13:40:52 +0000
 X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
  smtp.mailfrom=amd.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=amd.com;
@@ -50,11 +49,11 @@ Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
 Received: from satlexmb07.amd.com (165.204.84.17) by
  SJ5PEPF000001C9.mail.protection.outlook.com (10.167.242.37) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.382.8 via Frontend Transport; Wed, 2 Sep 2026 13:40:41 +0000
+ 15.21.382.8 via Frontend Transport; Wed, 2 Sep 2026 13:40:52 +0000
 Received: from ethanolx7ea3host.amd.com (10.180.168.240) by satlexmb07.amd.com
  (10.181.42.216) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.46; Wed, 2 Sep
- 2026 08:40:40 -0500
+ 2026 08:40:52 -0500
 From: Terry Bowman <terry.bowman@amd.com>
 To: Jonathan Cameron <jic23@kernel.org>, Dave Jiang <dave.jiang@intel.com>,
 	Alison Schofield <alison.schofield@intel.com>, Vishal Verma
@@ -71,9 +70,9 @@ CC: Tony Luck <tony.luck@intel.com>, Borislav Petkov <bp@alien8.de>, "Hanjun
  Wunner" <lukas@wunner.de>, <linux-pci@vger.kernel.org>,
 	<linux-acpi@vger.kernel.org>, <linux-doc@vger.kernel.org>,
 	<linux-kernel@vger.kernel.org>
-Subject: [PATCH v20 5/9] cxl: Update CXL Endpoint AER handler
-Date: Wed, 2 Sep 2026 08:39:29 -0500
-Message-ID: <20260902133933.2992457-6-terry.bowman@amd.com>
+Subject: [PATCH v20 6/9] PCI: Cache PCI DSN into pci_dev->dsn during probe
+Date: Wed, 2 Sep 2026 08:39:30 -0500
+Message-ID: <20260902133933.2992457-7-terry.bowman@amd.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260902133933.2992457-1-terry.bowman@amd.com>
 References: <20260902133933.2992457-1-terry.bowman@amd.com>
@@ -89,41 +88,51 @@ X-ClientProxiedBy: satlexmb07.amd.com (10.181.42.216) To satlexmb07.amd.com
  (10.181.42.216)
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: SJ5PEPF000001C9:EE_|MN0PR12MB6198:EE_
-X-MS-Office365-Filtering-Correlation-Id: 98168189-e5cf-4181-db95-08df08f7c846
+X-MS-TrafficTypeDiagnostic: SJ5PEPF000001C9:EE_|DS0PR12MB8271:EE_
+X-MS-Office365-Filtering-Correlation-Id: 81d9a686-9d85-4cd1-443f-08df08f7ced5
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|376014|36860700016|7416014|1800799024|82310400026|23010399003|921020|3023799007|6133799003|10067099003|56012099006|11063799006|18002099003|22082099003;
+	BCL:0;ARA:13230040|376014|1800799024|82310400026|23010399003|36860700016|7416014|10067099003|6133799003|18002099003|22082099003|56012099006|11063799006|921020;
 X-Microsoft-Antispam-Message-Info:
-	FLtbMEatAcCFCHxZd9kFoXlMUrq+kYcV2gTNCLwQZzM32sc5w5PaYuNZ4Yzr5nINOlYQ6JgZ//3YkkK3KbUhZCjQM2NqPbGa4HZgZpjSPmyZ4ZLgPnY25yvvUspvKMmzmZFCtgLN0reTMaKKKoRPBlZ4RmbRqeqeEjfdVz6jPFHzbbU83DC4ouzrI6FQ5MHilgTwKk+bs9LVtDKVGAnKZ3tFESp3Fis3Oxxe+q/sYjBMCI32dGqAZzXecHo/9dUkB4dEqSrklZimoPj6g8r8Y+kwEHgdWpXGXoltQZMdUTW894O/4fUiGXBjEIc6fplUN8Og3QUn3ZwlNKnN/FRMhlx1tXcm4Nneks23eOssfFJeaEpEkIIK6e6dwndXE2ut38L6uYoLSyT/lMP5cQMRz1avo/4FqnuuePCbC+9/gjA9AtWixydRSKcpG9bwsJeokp3E8wUUzELbbzKy53NNJHHyhGtmQbAX62N9BHmzkP6p/LmHLyVZ+9J5dfhmm/4yzTlSeaNKiRV7/BgKWUtSFbrIbcoHPv7+oj3k/d+OmeOpyCMlQbrp4NBltcyT16RkBoGhE+Pmp+J+nnmpQxlV+48VAOoa5b5EmCdeIxo0Ex2kQPYgByzkroNkTKTw9ztkd2ef7ntzZFxDr4JMUAwrOWblS93SRauMn/Hw9NN4T4xTwJGszwocdScAGONSRuxR8Jby+U1sbzUCMqReo82cOWdrAMze0hG4joxF7FbBW8qUeoKzkflPxnjzw4d5Rc9P
+	R5N2/jzgHBPiSAP5kceentFBXMhifUKUc2I78HwJF/o8MeZazJRox0BdffVwA+Ea9xln9K6LMgxI1TUU/Fmv1opwy0iTINwRFf8IFq3aDBgspRkR+QQ40nZOrEUl9NJxhbRNIuFVPTwozEBEG50LLxKy+r/1ifWG2PvBvCyrBiGks4wyRGUCpF8AaiRKWKFXVUtep6OUtOGvLMbVFKQBiTwHisE1LOQryL4GsAImMFCcMjBMyj6BU7ekDE9qvk5fBPnynapOs3q7c9ew2/1Imy09rAf6zJSmSkTXmkjC9T+jMPdc1Tu/JCIw1vW3yOHuwcEu/rQGMBtEDUXLegaHi5Qr6679gna7d63rriU8SsL9yjA8Pc08GrLgS4bFdn+BLbHPTOmLvXDmk7F5I3v5nKvjjYOwnwLi8Y8JAFOiT2eIVamZlDCJAoKEy2lc/QHOhB1Z+Js7xL+haiLZDcNg0z2YzV2F+DYsRsmfaiwq5aBHv10IiSkb5izoaYWtvg99TlNAU7WZuA4eN/90H3EVPQz1yVrPmcyY2Mu+6R9Wh6jj7ZjjvAYDhAMy41VfkULY048XE1iSOA/EYnmJkA5YXAK4U+7BgxQPxLCiGpU5TB6pm5Gpeww3pXLq9PjFIls0dbXP2QpfSSbac0piQEWl5KrUtuWzzRmn1MFWGbO3Byz1aFJ/6NqTOXQIPrurYQZdcmIg1Fo3oqh3OJ6+x0e9P+4/7mNwuLisbFeDHyIV6QsmlEeoRt4UqdZ48nNYtZyb
 X-Forefront-Antispam-Report:
-	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:satlexmb07.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(376014)(36860700016)(7416014)(1800799024)(82310400026)(23010399003)(921020)(3023799007)(6133799003)(10067099003)(56012099006)(11063799006)(18002099003)(22082099003);DIR:OUT;SFP:1101;
+	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:satlexmb07.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(376014)(1800799024)(82310400026)(23010399003)(36860700016)(7416014)(10067099003)(6133799003)(18002099003)(22082099003)(56012099006)(11063799006)(921020);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	QjC6tyxNVNYoP4XardnhngV/8EwVeEj43b0pWDvrGYIwukYEBataGW8TI451/NRVFF/G1ST2ulY4JsZTDNEb4F79EVemk91Bi0CSVCnHi/ImVPiT381gvYz08EuydCi1pkZhnWtH/3n73/knbPjBqppEwUevyKGLo9FI0ysmWXDvApfR+/gk99dUYg7kU3x8CJGd8pEiWYjTP1+FUwuGWXcXFmqspnqa5bBlH7ANHSBBYw8zvh85f6TXe5Y9sqV4cpRbMlSG6GXvadsB3ZktSN1oy++UUsnwSRhAzn+44XOZ/VXwyaFz7JwMcHHFAluHhjtmhZ7O7EMmPeR7G0ptAuyyOhZqFZUueTzxovOMRF+GVJqfpRSkTs7sutMjynyclPaCzWmnjdivypCdYFA958J8pzoFjlnU8eDNLG5zw/qJgFKKU/BxZy01I5UeFwMf
+	lwwzUSw2j/j8tXqOXPS4GIyjzuh0FWFx+6YWbyzvIg5AfZX3McIHaKJWOBrgtJzmmAWxbHdZjnBY3a1V1keTt5QyjmYFDnDCCkjKhr3q09xIk7AjBD4a4RPZB9ySjj0jk9m1i9mJOuz4dDgd9hZIHMZ9ZgW5iQb0KNv6nQWptPmOz1+Qy97O5+oHeuzyo71QbLebpjV/G1LkgIMyV4/D1M+DYkANweuAzlLmCy52k0Z+cKTy0Cm2sfORSC5EatngEaLy5rFwtsekKsj2zJNmQ8oFnQd6B3jZIRMOk5BmLpGyw5W/Ra3oTNJMKZBGkINBHFQHY5V6RUoevbE5pMZnJfYh55s4h47jirxu8ffnO2D2ECKA+WtWSUTBnkhCFCE5R/Qi1UBXgU6gjDzC0GigiVEAWJnkARs4wJhNl+y5zg7/FKn0s/MmjslFsEagXU7+
 X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 02 Sep 2026 13:40:41.8671
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 02 Sep 2026 13:40:52.9250
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 98168189-e5cf-4181-db95-08df08f7c846
+X-MS-Exchange-CrossTenant-Network-Message-Id: 81d9a686-9d85-4cd1-443f-08df08f7ced5
 X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[satlexmb07.amd.com]
 X-MS-Exchange-CrossTenant-AuthSource:
 	SJ5PEPF000001C9.namprd05.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN0PR12MB6198
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS0PR12MB8271
 
-Rename cxl_error_detected() to cxl_pci_error_detected() and rename the
-struct pci_error_handlers instance from cxl_error_handlers to
-cxl_pci_error_handlers for consistency with the cxl_pci_ prefix used by
-the renamed handler and the rest of the PCI-facing entry points.
+Subsequent CXL error-reporting code paths need to log the PCI Device
+Serial Number (DSN) as part of trace events emitted from interrupt or
+panic context. Computing the DSN there via pci_get_dsn() requires PCI
+configuration space reads, which are slow, can fail when the link is
+down or frozen, and may not be safe in some contexts.
 
-Document the unconditional CXL RAS read policy: on a dead link, readl()
-returns 0xFFFFFFFF which is interpreted as UCE bits set and triggers a
-panic. If RAS registers are not mapped the read is skipped and the
-frozen/perm_failure switch cases defer to AER recovery for devices
-without active CXL.mem traffic.
+Add a u64 dsn field to struct pci_dev and populate it from pci_get_dsn()
+during pci_init_capabilities() at probe time via pci_dsn_init(). Only
+write dev->dsn when the read succeeds. The zero initial value from
+pci_dev allocation already represents 'no DSN available.'
+
+Remove the now-redundant dsn member from the pciehp struct controller
+along with its kernel-doc. Drop the pci_get_slot()/pci_dev_put() pairs
+in pciehp_configure_device() and pcie_init() that existed solely to
+read the DSN into ctrl->dsn. Use pdev->dsn in pciehp_device_replaced()
+for the device-replacement comparison.
+
+pci_get_dsn() is not modified because it remains a pure config-space read
+with no side effects on pci_dev. The cache is written exclusively by
+pci_dsn_init() at probe time.
 
 Signed-off-by: Terry Bowman <terry.bowman@amd.com>
 Reviewed-by: Dave Jiang <dave.jiang@intel.com>
@@ -132,180 +141,149 @@ Reviewed-by: Alison Schofield <alison.schofield@intel.com>
 
 ---
 
-Changes in v19->v20:
-- Expand the comment block in cxl_pci_error_detected().
-- Clarify commit message's first paragraph. cxl_error_handlers is a variable
-- Clarify AER handling in cxl_pci_error_detected() block comment
+Changes in v19 -> v20:
+- Change 2 space to 1 space in comment block in pci_dsn_init
+- Add Reviewed-by from Alison Schofield
 
-Changes in v18->v19:
-- Add review-by for DaveJ and Jonathan
-- Remove reindent introduced in v18 at cxl_error_handlers definition.
+Changes in v18 -> v19:
+- Update pciehp hotplug to use cached DSN.
+- Swapped order in series with
+("cxl: Add port and dport identifiers to CXL AER trace events ")
+- Update function documentation for pci_dsn_init()
 
 Changes in v17->v18:
-- Fix cxl_pci_error_detected() to use find_cxl_port_by_uport() and port->uport_dev
-- Read CXL RAS unconditionally; panic on UCE regardless of channel state
-- Document unconditional read policy and 0xFFFFFFFF behavior in comment
-- Drop guard removal paragraph from commit message (not in this diff)
-- Drop Reviewed-by tags pending re-review after message change
-
-Changes in v16->v17:
-- Rename pci_error_handlers struct instance to cxl_pci_error_handlers for
-  cxl_pci_ naming consistency.
-- Restore scoped_guard(device) and dev->driver check around AER read.
-- NULL-check find_cxl_port_by_dev() before deref of port->uport_dev.
-- Updated commit message. (Terry)
-- Add scope cleanup for port variable in cxl_pci_error_detected() (Terry)
-- Drop cxl_uncor_aer_present(), rely on AER state
-
-Changes in v15->v16:
-- Update commit message (DaveJ)
-- s/cxl_handle_aer()/cxl_uncor_aer_present()/g (Jonathan)
-- cxl_uncor_aer_present(): Leave original result calculation based on
-  if a UCE is present and the provided state (Terry)
-- Add call to pci_print_aer(). AER fails to log because is upstream
-  link (Terry)
-
-Changes in v14->v15:
-- Update commit message and title. Added Bjorn's ack.
-- Move CE and UCE handling logic here
-
-Changes in v13->v14:
-- Add Dave Jiang's review-by
-- Update commit message & headline (Bjorn)
-- Refactor cxl_port_error_detected()/cxl_port_cor_error_detected() to
-  one line (Jonathan)
-- Remove cxl_walk_port() (Dan)
-- Remove cxl_pci_drv_bound(). Check for 'is_cxl' parent port is
-  sufficient (Dan)
-- Remove device_lock_if()
-- Combined CE and UCE here (Terry)
-
-Changes in v12->v13:
-- Move get_pci_cxl_host_dev() and cxl_handle_proto_error() to Dequeue
-  patch (Terry)
-- Remove EP case in cxl_get_ras_base(), not used. (Terry)
-- Remove check for dport->dport_dev (Dave)
-- Remove whitespace (Terry)
-
-Changes in v11->v12:
-- Add call to cxl_pci_drv_bound() in cxl_handle_proto_error() and
-  pci_to_cxl_dev()
-- Change cxl_error_detected() -> cxl_cor_error_detected()
-- Remove NULL variable assignments
-- Replace bus_find_device() with find_cxl_port_by_uport() for upstream
-  port searches.
-
-Changes in v10->v11:
-- None
+- New commit.
 ---
- drivers/cxl/core/ras.c | 25 ++++++++++++++++---------
- drivers/cxl/cxlpci.h   |  8 ++++----
- drivers/cxl/pci.c      |  6 +++---
- 3 files changed, 23 insertions(+), 16 deletions(-)
+ drivers/cxl/pci.c                |  2 +-
+ drivers/pci/hotplug/pciehp.h     |  4 ----
+ drivers/pci/hotplug/pciehp_hpc.c |  7 +------
+ drivers/pci/hotplug/pciehp_pci.c |  4 ----
+ drivers/pci/probe.c              | 17 +++++++++++++++++
+ include/linux/pci.h              |  1 +
+ 6 files changed, 20 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/cxl/core/ras.c b/drivers/cxl/core/ras.c
-index e99dcd028b738..bf479fac08565 100644
---- a/drivers/cxl/core/ras.c
-+++ b/drivers/cxl/core/ras.c
-@@ -61,7 +61,7 @@ cxl_cper_trace_uncorr_prot_err(struct cxl_memdev *cxlmd,
- 
- 	/*
- 	 * ras_cap.header_log[] holds CXL_HEADERLOG_SIZE_U32 (16) hardware
--	 * dwords.  Copy them into the front of a zero-filled
-+	 * dwords. Copy them into the front of a zero-filled
- 	 * CXL_HEADERLOG_TRACE_SIZE_U32 (128) u32 staging buffer so the trace
- 	 * event memcpy sees a full 512-byte source and the userspace ABI
- 	 * (rasdaemon) is preserved.
-@@ -320,8 +320,8 @@ bool cxl_handle_ras(struct cxl_port *port, struct cxl_dport *dport, void __iomem
- 	return true;
- }
- 
--pci_ers_result_t cxl_error_detected(struct pci_dev *pdev,
--				    pci_channel_state_t state)
-+pci_ers_result_t cxl_pci_error_detected(struct pci_dev *pdev,
-+					pci_channel_state_t state)
- {
- 	struct cxl_port *port __free(put_cxl_port) = find_cxl_port_by_uport(&pdev->dev);
- 	bool ue = false;
-@@ -341,11 +341,18 @@ pci_ers_result_t cxl_error_detected(struct pci_dev *pdev,
- 		}
- 
- 		/*
--		 * The CXL RAS read is unconditional regardless of channel
--		 * state. Any uncorrectable error bit set in the CXL RAS
--		 * status register triggers a panic below because CXL.mem
--		 * cache coherency is already lost; continuing risks silent
--		 * data corruption.
-+		 * The CXL RAS uncorrectable status is the only signal here
-+		 * that the error is a CXL internal (protocol) error. A set
-+		 * UCE bit confirms it and triggers the panic below. On a dead
-+		 * link readl() returns 0xFFFFFFFF, which sets all UCE bits and
-+		 * triggers the panic intentionally.
-+		 *
-+		 * If RAS is not mapped the read is skipped. Unlike
-+		 * cxl_do_recovery(), which is reached only after
-+		 * is_aer_internal_error() has already confirmed a CXL internal
-+		 * UCE, this path has no such confirmation, so an unmapped RAS
-+		 * block cannot attribute the error to CXL and must not panic.
-+		 * The switch cases below then handle AER recovery.
- 		 */
- 		ue = cxl_handle_ras(port, NULL, to_ras_base(port, NULL));
- 	}
-@@ -373,7 +380,7 @@ pci_ers_result_t cxl_error_detected(struct pci_dev *pdev,
- 	}
- 	return PCI_ERS_RESULT_NEED_RESET;
- }
--EXPORT_SYMBOL_NS_GPL(cxl_error_detected, "CXL");
-+EXPORT_SYMBOL_NS_GPL(cxl_pci_error_detected, "CXL");
- 
- static void cxl_handle_proto_error(struct pci_dev *pdev, struct cxl_port *port,
- 				   struct cxl_dport *dport, int severity)
-diff --git a/drivers/cxl/cxlpci.h b/drivers/cxl/cxlpci.h
-index 606fadd2476f3..7421132899fc4 100644
---- a/drivers/cxl/cxlpci.h
-+++ b/drivers/cxl/cxlpci.h
-@@ -79,13 +79,13 @@ struct cxl_dev_state;
- void read_cdat_data(struct cxl_port *port);
- 
- #ifdef CONFIG_CXL_RAS
--pci_ers_result_t cxl_error_detected(struct pci_dev *pdev,
--				    pci_channel_state_t state);
-+pci_ers_result_t cxl_pci_error_detected(struct pci_dev *pdev,
-+					pci_channel_state_t state);
- void devm_cxl_dport_rch_ras_setup(struct cxl_dport *dport);
- void devm_cxl_port_ras_setup(struct cxl_port *port);
- #else
--static inline pci_ers_result_t cxl_error_detected(struct pci_dev *pdev,
--						  pci_channel_state_t state)
-+static inline pci_ers_result_t cxl_pci_error_detected(struct pci_dev *pdev,
-+						      pci_channel_state_t state)
- {
- 	return PCI_ERS_RESULT_NONE;
- }
 diff --git a/drivers/cxl/pci.c b/drivers/cxl/pci.c
-index fe11be7fd9aab..1e7be77ded634 100644
+index 1e7be77ded634..c4cd5fa960362 100644
 --- a/drivers/cxl/pci.c
 +++ b/drivers/cxl/pci.c
-@@ -998,8 +998,8 @@ static void cxl_reset_done(struct pci_dev *pdev)
+@@ -802,7 +802,7 @@ static int cxl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	if (!dvsec)
+ 		pci_warn(pdev, "Device DVSEC not present, skip CXL.mem init\n");
+ 
+-	mds = cxl_memdev_state_create(&pdev->dev, pci_get_dsn(pdev), dvsec);
++	mds = cxl_memdev_state_create(&pdev->dev, pdev->dsn, dvsec);
+ 	if (IS_ERR(mds))
+ 		return PTR_ERR(mds);
+ 	cxlds = &mds->cxlds;
+diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
+index debc79b0adfb2..30aad3b66bab9 100644
+--- a/drivers/pci/hotplug/pciehp.h
++++ b/drivers/pci/hotplug/pciehp.h
+@@ -46,9 +46,6 @@ extern int pciehp_poll_time;
+ /**
+  * struct controller - PCIe hotplug controller
+  * @pcie: pointer to the controller's PCIe port service device
+- * @dsn: cached copy of Device Serial Number of Function 0 in the hotplug slot
+- *	(PCIe r6.2 sec 7.9.3); used to determine whether a hotplugged device
+- *	was replaced with a different one during system sleep
+  * @slot_cap: cached copy of the Slot Capabilities register
+  * @inband_presence_disabled: In-Band Presence Detect Disable supported by
+  *	controller and disabled per spec recommendation (PCIe r5.0, appendix I
+@@ -90,7 +87,6 @@ extern int pciehp_poll_time;
+  */
+ struct controller {
+ 	struct pcie_device *pcie;
+-	u64 dsn;
+ 
+ 	u32 slot_cap;				/* capabilities and quirks */
+ 	unsigned int inband_presence_disabled:1;
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index 4c62140a3cb44..5336e9c9003ae 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -587,7 +587,7 @@ bool pciehp_device_replaced(struct controller *ctrl)
+ 	     reg != (pdev->subsystem_vendor | (pdev->subsystem_device << 16))))
+ 		return true;
+ 
+-	if (pci_get_dsn(pdev) != ctrl->dsn)
++	if (pci_get_dsn(pdev) != pdev->dsn)
+ 		return true;
+ 
+ 	return false;
+@@ -1085,11 +1085,6 @@ struct controller *pcie_init(struct pcie_device *dev)
+ 		}
  	}
+ 
+-	pdev = pci_get_slot(subordinate, PCI_DEVFN(0, 0));
+-	if (pdev)
+-		ctrl->dsn = pci_get_dsn(pdev);
+-	pci_dev_put(pdev);
+-
+ 	return ctrl;
  }
  
--static const struct pci_error_handlers cxl_error_handlers = {
--	.error_detected	= cxl_error_detected,
-+static const struct pci_error_handlers cxl_pci_error_handlers = {
-+	.error_detected	= cxl_pci_error_detected,
- 	.slot_reset	= cxl_slot_reset,
- 	.resume		= cxl_error_resume,
- 	.reset_done	= cxl_reset_done,
-@@ -1009,7 +1009,7 @@ static struct pci_driver cxl_pci_driver = {
- 	.name			= KBUILD_MODNAME,
- 	.id_table		= cxl_mem_pci_tbl,
- 	.probe			= cxl_pci_probe,
--	.err_handler		= &cxl_error_handlers,
-+	.err_handler		= &cxl_pci_error_handlers,
- 	.dev_groups		= cxl_rcd_groups,
- 	.driver	= {
- 		.probe_type	= PROBE_PREFER_ASYNCHRONOUS,
+diff --git a/drivers/pci/hotplug/pciehp_pci.c b/drivers/pci/hotplug/pciehp_pci.c
+index 65e50bee1a8c0..ad12515a4a121 100644
+--- a/drivers/pci/hotplug/pciehp_pci.c
++++ b/drivers/pci/hotplug/pciehp_pci.c
+@@ -72,10 +72,6 @@ int pciehp_configure_device(struct controller *ctrl)
+ 	pci_bus_add_devices(parent);
+ 	down_read_nested(&ctrl->reset_lock, ctrl->depth);
+ 
+-	dev = pci_get_slot(parent, PCI_DEVFN(0, 0));
+-	ctrl->dsn = pci_get_dsn(dev);
+-	pci_dev_put(dev);
+-
+  out:
+ 	pci_unlock_rescan_remove();
+ 	return ret;
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 27008e2ea5afc..2f71bee732c36 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -2638,6 +2638,22 @@ void pcie_report_downtraining(struct pci_dev *dev)
+ 	__pcie_print_link_status(dev, false);
+ }
+ 
++/*
++ * Cache the Device Serial Number for use in contexts where config-space reads
++ * are unsafe (interrupt, panic). Process-context callers that need a fresh
++ * value (e.g. hotplug device replacement) call pci_get_dsn() and compare it
++ * against this cached pdev->dsn to detect a changed device. Note pdev->dsn
++ * is 0 for devices without the DSN capability, so such a comparison cannot
++ * distinguish a replacement.
++ */
++static void pci_dsn_init(struct pci_dev *dev)
++{
++	u64 dsn = pci_get_dsn(dev);
++
++	if (dsn)
++		dev->dsn = dsn;
++}
++
+ static void pci_imm_ready_init(struct pci_dev *dev)
+ {
+ 	u16 status;
+@@ -2674,6 +2690,7 @@ static void pci_init_capabilities(struct pci_dev *dev)
+ 	pci_rebar_init(dev);		/* Resizable BAR */
+ 	pci_dev3_init(dev);		/* Device 3 capabilities */
+ 	pci_ide_init(dev);		/* Link Integrity and Data Encryption */
++	pci_dsn_init(dev);		/* Serial number */
+ 
+ 	pcie_report_downtraining(dev);
+ 	pci_init_reset_methods(dev);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index d31a8d107b1ef..a7fea52c8f46e 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -390,6 +390,7 @@ struct pci_dev {
+ 	unsigned long	*dma_alias_mask;/* Mask of enabled devfn aliases */
+ 
+ 	struct pci_driver *driver;	/* Driver bound to this device */
++	u64		dsn;		/* PCI Device Serial Number */
+ 	u64		dma_mask;	/* Mask of the bits of bus address this
+ 					   device implements.  Normally this is
+ 					   0xffffffff.  You only need to change
 -- 
 2.34.1
 
