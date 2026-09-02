@@ -1,114 +1,199 @@
-Received: from mail-vs1-f53.google.com (mail-vs1-f53.google.com [209.85.217.53])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B60A47AF5F
-	for <linux-pci@vger.kernel.org>; Wed,  2 Sep 2026 11:39:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.217.53
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 114FC49C4BB;
+	Wed,  2 Sep 2026 11:59:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788349179; cv=none; b=Yr2BoPvnHTrvfOqjvlSkqducvlSwt5Ca+3JgchRntV77m1gPYMaYaQbVQTKrPMIOLgBQwtViL/R2LEYsxHOJcy/isxWmli638mxW8ygAllpxbbAK73vEm/UbBq8SABwOg/JjKsSfwWrkr1VbsLLdH1g2/IRslxA2DnJiwJOis50=
+	t=1788350372; cv=none; b=RTRE/b/Tht0BlQKeofbCq+b8i+tDT3xJyWQK6Y7bdq3suBJDBWKxbCoCxPd9p+y5OBovo+ioCsKPZt+zgfK2rhdy+LR5iF24qiEG6k/FiPC3DMgp3gg/9Ug65Mux1x0br2YlnxnKS0U26toEZrgZ4j6WXoWVTdZV5vhllwqvMPM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788349179; c=relaxed/simple;
-	bh=GrBIm0BKS+Mu7/OLWlqezUi4tFJ6U0Srqj6VjLPOZaE=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=onDrbHT9lm0AYW5zbeeBlYzkSYlkJG+ptPRxftP/sBVX2ea8ZOh+Eyea4IWcpqLzDRz17WIBw/XT/ZKHsJDezA1j9GvGji4vpyqSz7OgwQSTdRbyVUZrwh/n8dBnAx1Y5hzXVAhT/FjEzMFsmSBaI96DZgbD3kvqoRHgw3VyOas=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.217.53
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-vs1-f53.google.com with SMTP id ada2fe7eead31-7868ca1f0d2so283263137.1
-        for <linux-pci@vger.kernel.org>; Wed, 02 Sep 2026 04:39:37 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788349176; x=1788953976;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=XEAVGW99jRYpfKK+i5q1QjOfB2bMJtHxW0mUFyR7MIM=;
-        b=eZYgfPdRoXVp1mmk0n0ss5a3W+StxohmDZZQF5qBSggxe1H/2q7sK7YhRFCY571vhC
-         vUK+Y6ARLkPQzbTnk9hd3Y8F8Y812mThesi/lJYp3hIcMEPjvIY/FU7Ffer/Wo2VnsyT
-         q9+P16BHvpW7jgSBZZm7IKFReCILrst5ppoJx5sTb1ZeuOPcSnbzhBiJ1QxNHLEk3QBz
-         QdReWGtGjM1C89O7jGxuH6mDctLzoPuVixV+8wtC51e5UsVRH0LoF+NDVr42yHMyduLX
-         W84S3d1y3xuKLLY2H6NdcyW+iCvkMOiEM4+GWxw6/nKPFmBdowV+mi/BFRFBrnsnmujK
-         qUrA==
-X-Forwarded-Encrypted: i=1; AKwUvBxARu7LxdjyW7hqtRFF11fSDJfVsZNwGD6BrL50saD48+dup+zPOv+XhALoOlJgyDZwgiGOaSYUS/Y=@vger.kernel.org
-X-Gm-Message-State: AFuF++nIDZTJ6bMYbdzUrCZYCgBuSgXFPRVP2N2DqZekwM/KkJQwe6DG
-	QMYcWuvKhLhjXPgqSZZo82nVMIsJpsScw2Ea8d6hYSuUoNJL059EnRKuBy2SSQ0p
-X-Gm-Gg: AYBFou3ZQ2zh0p1A0rheK6BLrsur4Qot8HRSEW588wA7vdZ8z7nzqUJDAPU7BO0y4nZ
-	K9MvNe01iNkq3p+/pSlx9HxF9dLEoiSPi02Zmrzs4I2fqiIFXPtolESL0jSUtIvtt9r4FUq7XZ8
-	LbWdKooSgVgHv7dAMOqQ49jr1a0wTHKcpFrwZxqqljfrvDrb9YusCR7u4kUhK+eWFr1qMA5Mud6
-	9IpK8AqdU0KofwzQ0ZkJPseg04mIhbmcp+yNIAmpPbV7XUnqIQEJwzIzJ/b+uqriGOClkEkBRNz
-	ja4tUSJS5IdH45Apuls/wtj1C1o/nz/HgJlqd6+6hX+qzbBLbCNENRQtKSYCCpoU+ovrnq3TkZB
-	KtIBtrn8CbygufK7n2twy7ArZevj+kkYETNSIGX3N6KdY5uoh98BEwMxLcwz0u5oOcoCfr4X2xA
-	NCUwOIffavDDHVplXrqZjpvhURsrJRtIsQrsz4XbZAM9qOeyk3ici0/iY860sQioujavoijOhre
-	uZuepoBCDy6cbttzNJsNCQay72D5jEKVz7wBAS/nA==
-X-Received: by 2002:a05:6102:6441:b0:783:f3bf:f9aa with SMTP id ada2fe7eead31-78a1f2e063amr1150910137.8.1788349176267;
-        Wed, 02 Sep 2026 04:39:36 -0700 (PDT)
-Received: from mail-vk1-f182.google.com (mail-vk1-f182.google.com. [209.85.221.182])
-        by smtp.gmail.com with ESMTPSA id ada2fe7eead31-78a1b89ee0asm1587274137.8.2026.09.02.04.39.35
-        for <linux-pci@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 02 Sep 2026 04:39:35 -0700 (PDT)
-Received: by mail-vk1-f182.google.com with SMTP id 71dfb90a1353d-5c7c57e637eso592156e0c.2
-        for <linux-pci@vger.kernel.org>; Wed, 02 Sep 2026 04:39:35 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AKwUvBxWv33sIg/OHeb0ftkV2lCHM4ZmBa32R1zEfKOiXLUHz7T0BeCNWcQYoeHUcA/K3W4kv+XWRF8BFFg=@vger.kernel.org
-X-Received: by 2002:a05:6102:faa:b0:785:bfc7:26f5 with SMTP id
- ada2fe7eead31-78a1f33dfd3mr1197143137.12.1788349174855; Wed, 02 Sep 2026
- 04:39:34 -0700 (PDT)
+	s=arc-20240116; t=1788350372; c=relaxed/simple;
+	bh=WQgZINIb4cT81Qa+2S8JCeILW5BK0Ti2MUqMysl2vTk=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version; b=ZBUrlBfmRtR/65Y5RBfyC+mDDtPa7+BNGgneHgWd98rx+I+eVSfEKT5BLxIIeItnEnZJkUK7aJ8mMMPFMgJn1NGM8+af2CtKWzxhVBA2+uhAkusScWq19efZjSMu17SqyeaRU5g0M7E23GUIfsfhJEc7FGLB/Hhq6iFHwUANKhs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=Eil+nx/n; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="Eil+nx/n"
+Received: from sahil.mshome.net (unknown [4.213.232.23])
+	by linux.microsoft.com (Postfix) with ESMTPSA id 5637020B712D;
+	Wed,  2 Sep 2026 04:58:25 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 5637020B712D
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1788350309;
+	bh=NbTpxWy4eTngSJB5iCZ1UgAbNhWcWwhmt9T2M+RrWzM=;
+	h=From:To:Subject:Date:From;
+	b=Eil+nx/n2+lN5Bbx33eo53U4es1T8TEK/1drmpTThnGNOtqyJm0LAteUUC4THyrBG
+	 JAL8lYrM3DNkCpmFjafnydCdTurgXaVQfk9abgt4TPqMvgOLg1TinTQPZVUo0/3fcR
+	 9h5IuPHZywpcWWTUU2vjTpB5uN5aQigyvClvg54A=
+From: Sahil Chandna <sahilchandna@linux.microsoft.com>
+To: kys@microsoft.com,
+	haiyangz@microsoft.com,
+	namjain@linux.microsoft.com,
+	mhklinux@outlook.com,
+	hamzamahfooz@linux.microsoft.com,
+	wei.liu@kernel.org,
+	decui@microsoft.com,
+	longli@microsoft.com,
+	lpieralisi@kernel.org,
+	kwilczynski@kernel.org,
+	mani@kernel.org,
+	robh@kernel.org,
+	bhelgaas@google.com,
+	linux-hyperv@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v2] PCI: hv: warn when wait_for_response() waits indefinitely
+Date: Wed,  2 Sep 2026 04:58:51 -0700
+Message-ID: <20260902115854.2629164-1-sahilchandna@linux.microsoft.com>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260809200429.843212-1-marek.vasut+renesas@mailbox.org>
-In-Reply-To: <20260809200429.843212-1-marek.vasut+renesas@mailbox.org>
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Date: Wed, 2 Sep 2026 13:39:23 +0200
-X-Gmail-Original-Message-ID: <CAMuHMdUCRF_r3TXCRYZs_-AAn9WL36HUF4_VjGs4Y8Y4T2uRTA@mail.gmail.com>
-X-Gm-Features: AcwNN1XYp2AmohzI9M0wS5P-4B-ztdbPdhzMYLGxaK77VTrG86b4xj0U-T2WG1g
-Message-ID: <CAMuHMdUCRF_r3TXCRYZs_-AAn9WL36HUF4_VjGs4Y8Y4T2uRTA@mail.gmail.com>
-Subject: Re: [PATCH v5] arm64: dts: renesas: r8a779g0: Add GICv3 ITS and
- update PCIe nodes
-To: Marek Vasut <marek.vasut+renesas@mailbox.org>
-Cc: linux-arm-kernel@lists.infradead.org, 
-	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>, 
-	=?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Catalin Marinas <catalin.marinas@arm.com>, 
-	Conor Dooley <conor+dt@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
-	Lorenzo Pieralisi <lpieralisi@kernel.org>, Manivannan Sadhasivam <mani@kernel.org>, Marc Zyngier <maz@kernel.org>, 
-	Rob Herring <robh@kernel.org>, devicetree@vger.kernel.org, linux-doc@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, 
-	linux-renesas-soc@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 
-On Sun, 9 Aug 2026 at 22:04, Marek Vasut
-<marek.vasut+renesas@mailbox.org> wrote:
-> This SoC implements GIC600 with GICv3 ITS and PCIe host mode on this
-> SoC can use it. Add GIC ITS node into GIC node, update interrupt-map
-> and add msi-map into PCIe controller node.
->
-> The GIC ITS does have master interface to issue transactions to RAM.
-> The interface does support cacheable transactions, however, it does
-> not support shareable attribute, because the AXI port signals are tied
-> to inactive in this implementation. Therefore, add "dma-noncoherent"
-> DT property into the GIC ITS subnode.
->
-> The GIC redistributor does not have cacheable/shareable, therefore
-> add "dma-noncoherent" DT property into the GIC node.
->
-> Co-developed-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-> Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-> Signed-off-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
+A guest can wait indefinitely in wait_for_response() for the host to
+send either a rescind message or a packet completion. If the
+host does not send either, the guest can remain blocked with no
+diagnostic indicating a reason.
+This was observed during a guest kernel upgrade in which the
+host-side application handling the PCI channel faulted, causing the
+guest to never receive the completion request.
+Add a warning in wait_for_response() when the wait exceeds
+a timeout so that such a hang is visible in the guest's kernel log
+and can be correlated with host-side state.
 
-LGTM, so
-Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
-i.e. will queue in renesas-devel for v7.4.
+Suggested-by: Hamza Mahfooz <hamzamahfooz@linux.microsoft.com>
+Suggested-by: Naman Jain <namjain@linux.microsoft.com>
+Suggested-by: Michael Kelley <mhklinux@outlook.com>
+Signed-off-by: Sahil Chandna <sahilchandna@linux.microsoft.com>
+---
+Changes since v1:
+- Removed periodic warning to one time warning in 2 minutes
+- Include vmbus relid and stuck PCI msg.
+Link to v1: https://lore.kernel.org/all/20260825051850.2438816-1-sahilchandna@linux.microsoft.com/
+---
+ drivers/pci/controller/pci-hyperv.c | 48 +++++++++++++++++++++++------
+ 1 file changed, 38 insertions(+), 10 deletions(-)
 
-Gr{oetje,eeting}s,
+diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
+index 89816a2bd7cd..ca9d8efd748c 100644
+--- a/drivers/pci/controller/pci-hyperv.c
++++ b/drivers/pci/controller/pci-hyperv.c
+@@ -1040,19 +1040,40 @@ static void put_pcichild(struct hv_pci_dev *hpdev)
 
-                        Geert
+ /*
+  * There is no good way to get notified from vmbus_onoffer_rescind(),
+- * so let's use polling here, since this is not a hot path.
++ * so let's use polling here, since this is not a hot path. If
++ * wait_for_response() has been polling for PCI_RESPONSE_HANG_TIMEOUT_SEC
++ * without either a rescind or completion, add a warning.
+  */
++#define PCI_RESPONSE_HANG_TIMEOUT_SEC 120
++
+ static int wait_for_response(struct hv_device *hdev,
+-			     struct completion *comp)
++			     struct completion *comp,
++			     const char *msg_type)
+ {
++	unsigned long delay = secs_to_jiffies(PCI_RESPONSE_HANG_TIMEOUT_SEC);
++	u64 timeout = get_jiffies_64() + delay;
++	bool warned = false;
++
+ 	while (true) {
+ 		if (hdev->channel->rescind) {
+ 			dev_warn_once(&hdev->device, "The device is gone.\n");
+ 			return -ENODEV;
+ 		}
 
--- 
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+-		if (wait_for_completion_timeout(comp, HZ / 10))
++		if (wait_for_completion_timeout(comp, HZ / 10)) {
++			if (warned)
++				dev_warn(&hdev->device,
++					 "Late %s completion arrived.\n", msg_type);
+ 			break;
++		}
++
++		if (!warned && time_after64(get_jiffies_64(), timeout)) {
++			dev_err(&hdev->device,
++				"%s stuck waiting for response, relid = %u\n",
++				msg_type, hdev->channel->offermsg.child_relid);
++
++			warned = true;
++		}
+ 	}
 
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+ 	return 0;
+@@ -1518,7 +1539,8 @@ static int hv_read_config_block(struct pci_dev *pdev, void *buf,
+ 	if (ret)
+ 		return ret;
+
+-	ret = wait_for_response(hbus->hdev, &comp_pkt.comp_pkt.host_event);
++	ret = wait_for_response(hbus->hdev, &comp_pkt.comp_pkt.host_event,
++				"PCI_READ_BLOCK");
+ 	if (ret)
+ 		return ret;
+
+@@ -1607,7 +1629,8 @@ static int hv_write_config_block(struct pci_dev *pdev, void *buf,
+ 	if (ret)
+ 		return ret;
+
+-	ret = wait_for_response(hbus->hdev, &comp_pkt.host_event);
++	ret = wait_for_response(hbus->hdev, &comp_pkt.host_event,
++				"PCI_WRITE_BLOCK");
+ 	if (ret)
+ 		return ret;
+
+@@ -2624,7 +2647,8 @@ static struct hv_pci_dev *new_pcichild_device(struct hv_pcibus_device *hbus,
+ 	if (ret)
+ 		goto error;
+
+-	if (wait_for_response(hbus->hdev, &comp_pkt.host_event))
++	if (wait_for_response(hbus->hdev, &comp_pkt.host_event,
++			      "PCI_QUERY_RESOURCE_REQUIREMENTS"))
+ 		goto error;
+
+ 	hpdev->desc = *desc;
+@@ -3256,7 +3280,8 @@ static int hv_pci_protocol_negotiation(struct hv_device *hdev,
+ 				(unsigned long)pkt, VM_PKT_DATA_INBAND,
+ 				VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
+ 		if (!ret)
+-			ret = wait_for_response(hdev, &comp_pkt.host_event);
++			ret = wait_for_response(hdev, &comp_pkt.host_event,
++						"PCI_QUERY_PROTOCOL_VERSION");
+
+ 		if (ret) {
+ 			dev_err(&hdev->device,
+@@ -3476,7 +3501,8 @@ static int hv_pci_enter_d0(struct hv_device *hdev)
+ 			       (unsigned long)pkt, VM_PKT_DATA_INBAND,
+ 			       VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
+ 	if (!ret)
+-		ret = wait_for_response(hdev, &comp_pkt.host_event);
++		ret = wait_for_response(hdev, &comp_pkt.host_event,
++					"PCI_BUS_D0ENTRY");
+
+ 	if (ret)
+ 		goto exit;
+@@ -3553,7 +3579,8 @@ static int hv_pci_query_relations(struct hv_device *hdev)
+ 	ret = vmbus_sendpacket(hdev->channel, &message, sizeof(message),
+ 			       0, VM_PKT_DATA_INBAND, 0);
+ 	if (!ret)
+-		ret = wait_for_response(hdev, &comp);
++		ret = wait_for_response(hdev, &comp,
++					"PCI_QUERY_BUS_RELATIONS");
+
+ 	/*
+ 	 * In the case of fast device addition/removal, it's possible that
+@@ -3644,7 +3671,8 @@ static int hv_send_resources_allocated(struct hv_device *hdev)
+ 				VM_PKT_DATA_INBAND,
+ 				VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
+ 		if (!ret)
+-			ret = wait_for_response(hdev, &comp_pkt.host_event);
++			ret = wait_for_response(hdev, &comp_pkt.host_event,
++						"PCI_RESOURCE_ASSIGNED");
+ 		if (ret)
+ 			break;
+
+--
+2.53.0
