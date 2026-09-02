@@ -1,164 +1,154 @@
-Received: from mail.mindbit.ro (xs1.mindbit.ro [80.86.107.70])
+Received: from PH8PR06CU001.outbound.protection.outlook.com (mail-westus3azon11012030.outbound.protection.outlook.com [40.107.209.30])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3754F3546FA;
-	Wed,  2 Sep 2026 01:40:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.86.107.70
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788313237; cv=none; b=ZoCAANLG/bVU9Wp7GldJMlGsGHvaMZMmJwhEwrWmct2oSRjjHey3HySkJIJLd38h4lbFVGTtEpD+Y8MZr10jJ+mwUvCzx+Ml5BtyPRQuYA70kHSDRpYXuCHtVfTgtjFFQB5wOmcFNKFKUo3SNC/zIRRoOt0o0idLzWIOZ6c2WDY=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788313237; c=relaxed/simple;
-	bh=Y9Rkuy7HDhxHX8laUw6rbLAlIIFlsedfYTyx2aoNdlE=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=nmJRaZ2bFzH6iO0BxJr+sTrG1Glle8F9alcfFZ3joE0TjXXEwpcr7zVCd3RldcWIknsHcGPNcI8zOl9nSV5wt7bj3iDZPMUDrWcAN74ikJBbaABCde0ShkGuM+tWgjp5OJkjEUItQltaTO0f65tkU6sFRqe1t0maXPsnD8HF2BY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=rendec.net; spf=pass smtp.mailfrom=rendec.net; dkim=pass (2048-bit key) header.d=rendec.net header.i=@rendec.net header.b=HNqywE1q; arc=none smtp.client-ip=80.86.107.70
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=rendec.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rendec.net
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 15A3835C1AD;
+	Wed,  2 Sep 2026 01:51:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.209.30
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1788313899; cv=fail; b=pE/fiBIOgJS+7/11ZyLimssFoDQBXPZzwWtnfPp5jWhKjn9XK5rcKSZXHpPEJyK/eSqXATI4FzHzyAqdYtiwIfWSxKtlElNorn2vH9lyHZUyo7sSiwWcUhS49HiMtTigmcE7YPy1fsCH27TwMDPkSlq7U957j0Zil/chI8nN9TQ=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1788313899; c=relaxed/simple;
+	bh=zvzhD9xfCiH6rg2bbZWFBhdwRnf9SBjMwcW4iaPLE9E=;
+	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=IEKzXWbMA7Us5l+fizaL42vjz9tXJ7PSshyaJqYDpE3cMpAE0D5uK1e7Xs9wzHeVj7qFCr8NwR8b4VAbyViSdaFFFME3WlQ6Cak1wla8F7IExBk0S3bLQYkC93uCMRMUg8+4uXUuQ0KUVTgDcLH6FZZp41oqhSWXkNEyb6aSzGg=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=H0oSXWmm; arc=fail smtp.client-ip=40.107.209.30
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=rendec.net header.i=@rendec.net header.b="HNqywE1q"
-Received: from dog.kanata.rendec.net (pool-174-112-193-187.cpe.net.cable.rogers.com [174.112.193.187])
-	by mail.mindbit.ro (Postfix) with ESMTPSA id AD2EDCC9F8;
-	Wed,  2 Sep 2026 04:40:10 +0300 (EEST)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail.mindbit.ro AD2EDCC9F8
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=rendec.net;
-	s=default; t=1788313214;
-	bh=FbYcYzQbyga8iWEe6oyzYcbMpKCkV0HffyQaE8+dHbE=;
-	h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-	b=HNqywE1qV4tagWexRGCU287ejbZmWBHMZLbsYQRCssG6WvLLWFrmuffrDBW+SSRPN
-	 6zc9ebG5WZywY8j0pg38+1B8cFpXqzufJmUHsItfyUUly4CIp/Vqsm5nCOoL++uPlj
-	 J31LtBNOZYGHjrUAUi28S+aRjI/RL02KYDuTXB2eZj9sJIv1k7yMidJTnYYA2CemHO
-	 W9UaQkGEe1Ye4DGXcN2wkeKTCsR4ZPp3TWTWQoTJM8f3GreJKOD+hcX8guqrISdHCP
-	 Ro7rWrQs+FdYvs1O+aRJsD/mx/bdSI95pnyvM121i6zhMe0L1iPyhYol9doQUZBr9Z
-	 PbYqq6L/2uZXQ==
-Message-ID: <ed86629d74368c6811e9f3b8f169584c0faf71ce.camel@rendec.net>
-Subject: [BUG] Re: [PATCH 1/1] PCI: dwc: Apply ECRC workaround for
- DesignWare cores prior to 5.10A
-From: Radu Rendec <radu@rendec.net>
-To: Manikanta Maddireddy <mmaddireddy@nvidia.com>, bhelgaas@google.com, 
-	lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org,
- robh@kernel.org, 	krzk+dt@kernel.org, conor+dt@kernel.org,
- thierry.reding@gmail.com, 	jonathanh@nvidia.com, kishon@kernel.org,
- arnd@arndb.de, gregkh@linuxfoundation.org, 	Frank.Li@nxp.com,
- den@valinux.co.jp, hongxing.zhu@nxp.com, jingoohan1@gmail.com, 
-	vidyas@nvidia.com, cassel@kernel.org, 18255117159@163.com
-Cc: linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Date: Tue, 01 Sep 2026 21:40:08 -0400
-In-Reply-To: <20260410062507.657453-1-mmaddireddy@nvidia.com>
-References: <20260410062507.657453-1-mmaddireddy@nvidia.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.58.3 (3.58.3-1.fc43) 
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="H0oSXWmm"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=UnhCH6rLsq2qkh6mXnB7UzjSOPw1szocgAqoRKnduwIxnGrN/fs45s3ZGLroRYQtifPu1vmPSy29ojd5V3XJnHwTjXyqJlsxv+4FdVldJPmSuX+taBSBJqUpIfyg9L3vJN1ctbyX2idE8MW5OFCewznIYrOCWC3e8Hod2pnjOkcHZvz5exIchGepKEpfqoezJoxslsUqNFNk3RBIgkUJsbk/GxbHfapmtNW//NJ1c3emlQtAh3S4Kly0g9Bl/CyiD7bjAvmDlfPGgnfRK1eyayJpAVPaPMlsYvvdN3snA9RsUy1K9vKFEMOBv4aYMKt7y3nQlLqj0TbjQRvCM2Jx/Q==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=8zuKOLG9bs5PvmmSTPVTKbw5d7191XU9OoPffMkKdGo=;
+ b=KxWFagkTFvd4GDI6H9mAutUfTFBgWfOcUxcSs/rFqSJlmwNJ+VAemVw2q1FQovl7rpI4bdlVnPDrA8Kj+en9OXLT4sgg6CbGjG4l1Am+sGjIr5xqvdKfEZ1wMpoW3yQmmP1ONyxQMCqxVnl6N2MoMO9lW4YYa7hqOGEl163t2CNJSOLkFQwu55KXP8nhGwZiHCk2aUpvSGhXxz6xgNNNN5LQyMfmPmuyOGQg9lOGYOfFS6YBnwMPDc6UkAx6yiV3eFZ7vr7vOCpX2IkLQb/sKctGGch6AQy+ar5CwbVPFkg6Zj1mNbMbdqjSkO+L2piJ+0TQX1XgY+MgZqoYNW/f1w==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=8zuKOLG9bs5PvmmSTPVTKbw5d7191XU9OoPffMkKdGo=;
+ b=H0oSXWmmRGmHwFj0gkv635JhBZ8PtLkvh+8ukjLTxykoI1Z6tdSxGtJO4a4i8wEVRLVjE09fsOPb9rbITM8/PY+4H6v8aWRlDpYwi92xXMcMihI0oAio6rdkvF3eAc7QqbEPKlL7x3W5nmJ8fOaL1xYeWbGLkAg64vnpWI4SA8jnrzp/JHCIYfb5wzlrjVpnrT5sAr8sZle8/UkWLUn4DN2y+67WC6aV+K4oW5p4pQc/hwdCJuw97angum6g27RTkNn7O453MdQUXtsrztq2RI0zj/sJWuJgfQ+FAjVWFR6NoTAe38ik4Y9KCFtkfhlgdEva9k4zk43z61IhHNNDnA==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from DS7PR12MB9474.namprd12.prod.outlook.com (2603:10b6:8:252::17)
+ by CY8PR12MB7705.namprd12.prod.outlook.com (2603:10b6:930:84::9) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.360.13; Wed, 2 Sep
+ 2026 01:51:24 +0000
+Received: from DS7PR12MB9474.namprd12.prod.outlook.com
+ ([fe80::31ad:931:ef07:8ad7]) by DS7PR12MB9474.namprd12.prod.outlook.com
+ ([fe80::31ad:931:ef07:8ad7%4]) with mapi id 15.21.0360.008; Wed, 2 Sep 2026
+ 01:51:24 +0000
+Message-ID: <b52d5b51-313d-40cf-9324-8b1cea265c56@nvidia.com>
+Date: Tue, 1 Sep 2026 18:51:22 -0700
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v10 02/12] cxl: Pass decoder settings to HDM commit
+ helpers
+To: Dave Jiang <dave.jiang@intel.com>,
+ Alison Schofield <alison.schofield@intel.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, Davidlohr Bueso <dave@stgolabs.net>,
+ Jonathan Cameron <jic23@kernel.org>, Vishal Verma
+ <vishal.l.verma@intel.com>, linux-cxl@vger.kernel.org,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Alex Williamson <alex.williamson@redhat.com>, vsethi@nvidia.com,
+ alwilliamson@nvidia.com,
+ Sai Yashwanth Reddy Kancherla <skancherla@nvidia.com>,
+ Vishal Aslot <vaslot@nvidia.com>, Manish Honap <mhonap@nvidia.com>,
+ Jiandi An <jan@nvidia.com>, Richard Cheng <icheng@nvidia.com>,
+ linux-tegra@vger.kernel.org
+References: <20260804192958.1823952-1-smadhavan@nvidia.com>
+ <20260804192958.1823952-3-smadhavan@nvidia.com>
+ <c7a5ef2b-e107-4bbb-a1cb-fbe7625e4962@intel.com>
+Content-Language: en-US
+From: Srirangan Madhavan <smadhavan@nvidia.com>
+In-Reply-To: <c7a5ef2b-e107-4bbb-a1cb-fbe7625e4962@intel.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: SJ0PR05CA0016.namprd05.prod.outlook.com
+ (2603:10b6:a03:33b::21) To DS7PR12MB9474.namprd12.prod.outlook.com
+ (2603:10b6:8:252::17)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DS7PR12MB9474:EE_|CY8PR12MB7705:EE_
+X-MS-Office365-Filtering-Correlation-Id: 77d55081-f2fa-489c-ea91-08df0894b1ab
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|1800799024|376014|7416014|23010399003|366016|10067099003|56012099006|4143699003|22082099003|18002099003|11063799006;
+X-Microsoft-Antispam-Message-Info:
+	T9Oe7wlA++UBRJQrN7KCqc8wJZXqbvw8gwz1xBuWAwwA57ME96bGFlSXXuC5goM/9k+A/7623zLbVbV/cKaioeOFeZqOWKZoNzkPen8sSpHHQjxLxXyvRMOMKmunxSiilgczNXvcg2d+lkqLcQSDbV5+K1a30jFX+5xrvmo3QU6FmDv8oKZr3MQaEgKn0oITuQHszd2rNg4SEB7zPKGW9df0+9Xjwj4U86I8AGiLWEKmUfqiOixPvz27UrcLjFnGmU9i2pNPW9q0auUwU7Em7/R/d71vPDrgjEUvLOkDRMzYeBVVB/l8aTpVKyGZbm/YG2K42LeAd0Dadw0/IWP7zL6/xAr56BYgjqNZ8MdhX1Fa6aGrA7iXAhqusZ+4ccP8OQhna9w3mwmFFbtD/ClWkCH0OxuydGXfRMs1Z6gyz5sbEzqRvzkW38Dx0Ffo+/HEQVERx8ZKcgHjMY0rbFctm+YYN5/9Rj/FLLBGLXfwIjIkgX0juKFqKk6qK3VcexYg7hyJtZ7Q72PpiPf8DdQCDZiQDHWN6LNwQZj1FcwqvtSl/HCqqZTplJ76I13oyibX/KO4OCS0mxq1DAjAP2BRNAC9R8abmM2wVuDOi8yJz9Fdh4Dsi9xwqMT1oMi8gtpKnDyQPMpH7jUA8dQYI9+lbwpvAMt0H8xI8sEbXkXkP7M=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DS7PR12MB9474.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(376014)(7416014)(23010399003)(366016)(10067099003)(56012099006)(4143699003)(22082099003)(18002099003)(11063799006);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?SlZJa1NzOVhyTmtTUS9qVitUZ29DRHNFM1U1cG5pcXBpcWJsVDFqaDlJM0Fj?=
+ =?utf-8?B?WWNqZ05GWmJmZ1VCQ3hXSm01bk4zeXhtS3ErU1J4WmJuYmRvZE1hQzJSN3Bo?=
+ =?utf-8?B?Q2FhRkZlUFp6dnVFbDlUU2ZaODBBWHFjdEhIQnk3bE1yZnNyWUNEdU56a0Ra?=
+ =?utf-8?B?aExqRlY3V21UdTBjU2pOSm42WkhmSWwvZVE0OWVnZTJCMWFoUFYvM0w0UDZF?=
+ =?utf-8?B?cXhvZUgxNVZqVUlkTGp4cmRjSzJFMnhMbGcyZzlHUnNzcU9tOUIxYndySGlP?=
+ =?utf-8?B?dC85NDJMYlN4Yk40N2VnRW1DcVdWa29HM2l1MHBWanV0NVJ4akgvYU9PeFly?=
+ =?utf-8?B?dVo3N0doeml2bUp0N0RYNUZYV2RHa1VaZU9RSGFraXIwWVRMMHN2NHpKNDFs?=
+ =?utf-8?B?bXlobkUwSUdxR21MY3M2ZTdPYWJCSnUxemNhNjcrVXhmTkpjVTBxT3grRTlr?=
+ =?utf-8?B?d3RXSkNraE1KN0dQVXFZakJyVDdxaGpuV3hiNDhaN0w5QkxmUHNwUU0zUWg0?=
+ =?utf-8?B?bXlYU05sZVRJRVVnKzhoaEpmS1BQOXUyTlJpTjNCcWk4bms5eHdmNFNCcjZQ?=
+ =?utf-8?B?QmNVR0JDNXFzNzV5L2dveTB4eDZpUVI1YWh3SVpuU2w0NEJKOVg5UGN1WWhO?=
+ =?utf-8?B?TVVmMUtQb2ZoUkRqSy9PMWdkcjYzdDVYeDZZS0gvbEVXRnFvU2x5eXJlT3lu?=
+ =?utf-8?B?bTVvR3FCVWovT3IzTkZ5UHlJU0J2ckpaSVRvbVNGUG9mV09HMzJUWDNLTlI3?=
+ =?utf-8?B?Y2F2cXVDci9DYXdNYU5NN3NNQlFBUEZBOFRqV3ZZZ3NFaHF1OGJ5SEs3N0Zh?=
+ =?utf-8?B?TDZobTQ3OXBHNVZDNWtMMTlpb002K0w3TGhRc0hzdWlkSzVVb0M1b0t6c3Vl?=
+ =?utf-8?B?RnpiV2FBY04zRkczcVVKS1lIV01wMktsMEJzYTdOSmFCTnBGRUxoVEZsQklP?=
+ =?utf-8?B?OGhzWDEvbVgzcEk2SW9qT000c3BIN0IvRldldEJOQ3VIMjRlSk9EL2l2S1RF?=
+ =?utf-8?B?bE94b0luMFdzMkJTT3o1clJBZUp3b1hlazlrUk01REFzOHRtWmFNN1RYbmds?=
+ =?utf-8?B?RzZCNVVzRU5wSGxtc1RFMlVPZFQ5OVJ1SEpIS0tvSHUrOXliT2tobzh1THJC?=
+ =?utf-8?B?cjVQUloyMFlOREZvSjJuTkRiR3ZlaDc0ekF2aStOaDhoVWlrbzhyUkJMc3BG?=
+ =?utf-8?B?TVRQM0IrMVJoWkRLeEdnZUtNUGkrVzA0OVBKVjF1UDFZVTNUV29iTlplbll0?=
+ =?utf-8?B?YlhtMGNIbHZlQmNJZ2tINjdiWUZMcEwzaVBTdGl5ZlpROU9lS2Z5ZVdtMEF5?=
+ =?utf-8?B?YWZtam5MZ3ZCbGVUNG9EcmdNdk9VYkpxQzBBcnNsVEx1UDdaaEQ2TStTc1U2?=
+ =?utf-8?B?aXpWNTR5Y3pnekNPQ3VtRmpSOURLM1BwcDhjL0dEdzI5RVN5UldaL1BkMDlR?=
+ =?utf-8?B?TVA3ZUxwdHVBQlJIWWp1U21HbWU2bkRWOUhHc3NyNjJ2eWhOeHM3NHk0SXRH?=
+ =?utf-8?B?SElkcjVJUTBwSnM0eUJYUmVnTmJOVGhOVmJZbkxMOXViV2x4VTZnMTkrK3lJ?=
+ =?utf-8?B?cEUyQlJQMzFtK0U1RmdrR3VTbmxSTkdKeDh5Wm1qMFdrTWdVdVRvT2dLYUNv?=
+ =?utf-8?B?RkFlNHU4Y0NxalFzUzFLUm5XU1BPdVlham1YaFFmNFR6dHdyZUFQU2tIMVBq?=
+ =?utf-8?B?dUg0ZGNKVE9sSG4xeExnUDkrZXh3WXZCUWwxZnE0ekc0NXllQ1VFYkRxKzBO?=
+ =?utf-8?B?bWRlTmwwUnNHa2lWQ3gyQlhpcXFrcFMvcnhjM3piWTlhcWNsRzhHT2dtOGdp?=
+ =?utf-8?B?OURnSVZkMnUxVFZnZWNiUFhUTDQ3OGpuYThRQ3NjWGVXamFSY3QxUFJGSmNk?=
+ =?utf-8?B?a3RNN1JKY2o2NGVmeE5Wd0NWaGZsb0NQSDBYTkpTS2VnQmE0a3BaTW8velNk?=
+ =?utf-8?B?S2pTMlN4S1liQW9ZZXRPK0c3aUNaRjIxYnQvdnBYTWR6eDBPRktmbkNyTll2?=
+ =?utf-8?B?KzNibFg3WEJUR2RnU3luUXB0YWpnRHJEUC85ZWluZjRwVkZzMHVWWC94S1ZH?=
+ =?utf-8?B?eU80ZG1HR1NubWthK3dWeVNISUNkS0hHa25ZV0dmNnpLdHByb3A0YlZ3NnAx?=
+ =?utf-8?B?TitTdEFwKzBrZFB5b1g0OFBNWEVrUFF3QlFOc1pwTU00YUVMZVVvanJUa3dm?=
+ =?utf-8?B?SWlicEM5WEFSWU1hMlBMQ3lFam5OZW0wR0NJZTZzQkhGN0lSUi9nTzhJTU5T?=
+ =?utf-8?B?SVJGZUkzZTRwZkVjTUtObitVSGFwdzZEZHhwQ0NZTlpIYUtiS0VjaTM4elhs?=
+ =?utf-8?B?aFJYSkU0V0h2NUdlL0FIZklzMG93cmJQNjNRQlVwaEdtUFlkRWxDdz09?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 77d55081-f2fa-489c-ea91-08df0894b1ab
+X-MS-Exchange-CrossTenant-AuthSource: DS7PR12MB9474.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 02 Sep 2026 01:51:24.0508
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: wWm2yEJiMCRmgOwMB1jUiHJEnWcdam1RzW06rT4+8xRHAVEuJ1oDyvQxwF12l8lpwCB0KgYCyr+mBcvJ9Rok2A==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY8PR12MB7705
 
-On Fri, 2026-04-10 at 11:55 +0530, Manikanta Maddireddy wrote:
-> The ECRC (TLP digest) workaround was originally applied only for DesignWa=
-re
-> core version 4.90a. Per discussion in Synopsys case, the dependency of th=
-e
-> iATU TD bit on ECRC generation was removed in 5.10a, so apply the
-> workaround for all DWC versions below that release.
->=20
-> Replace the misleading comment that referred to raw version constants
-> with readable DesignWare release name aligned with the implementation.
->=20
-> Fixes: b210b1595606 PCI: dwc: Apply ECRC workaround to DesignWare 5.00a a=
-s well
-> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+On 8/20/26 3:21 PM, Dave Jiang wrote:
+> This function made a round trip from hdm.c to resource.c back to hdm.c between patch 1 and 2.
+> I think there's some code duplication here with this function. What do you think of something like:
+Ack. Addressed this in v11 using the cxl_decoder_snapshot() structure 
+you suggested. The switch-target helper no longer makes a round trip 
+through and the duplicated endpoint/switch setup is consolidated in the 
+snapshot helper. I retained the separately requested argument ordering 
+and target-list bounds handling.
 
-This patch breaks dw_pcie emulation in Qemu. I'm using the imx8mp-evk
-machine and a single virtio-net-pci device attached to dw_pcie.
-
-What I see is this: pci->version is 0x0, so with the patch applied,
-dw_pcie_enable_ecrc() gets called now, whereas previously it didn't
-(because the condition checked specifically for 490A and 500A).
-
-This has a ripple effect that ultimately makes the system fail to boot:
- * vp_reset() for the virtio-net-pci device spins forever in the loop
-   around vp_modern_get_status(mdev), which always returns 0xff.
- * vp_reset() is called in the context of the probe() function for the
-   virtio-net-pci device, so probe() never returns.
- * the init task gets stuck in wait_for_device_probe() before it
-   executes the real init binary (stack trace below).
-
-#0 wait_for_device_probe
-#1 prepare_namespace
-#2 kernel_init_freeable
-#3 kernel_init
-#4 ret_from_fork
-
-This is a separate problem of virtio (vp_reset() should eventually give
-up), and I will send a RFC patch shortly.
-
-Now back to the point, the obvious dumb fix is to check if pci->version
-is 0x0 but I believe there is little appetite for that because it would
-be just a workaround for the (incomplete) Qemu emulation of dw_pcie. I
-assume it would be preferable to fix it in Qemu instead, to present a
-valid version value that also happens to be >=3D 510A to avoid setting
-the PCIE_ATU_TD bit.
-
-But looking at the code, I'm not sure if it's as easy as it sounds. I
-noticed there are quite a few other things that happen differently in
-the driver if the version is >=3D 460A, so setting a correct version in
-Qemu would also flip those conditions. I don't know if that can break
-something else.
-
-If, however, the "dumb fix" doesn't sound that horrible, I'm happy to
-send a patch. Or, if you have any other suggestions, please let me
-know. Thanks!
-
-> ---
-> =C2=A0drivers/pci/controller/dwc/pcie-designware.c | 6 +++---
-> =C2=A0drivers/pci/controller/dwc/pcie-designware.h | 1 +
-> =C2=A02 files changed, 4 insertions(+), 3 deletions(-)
->=20
-> diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/c=
-ontroller/dwc/pcie-designware.c
-> index d69db0ab3b14..d0b3b93fc940 100644
-> --- a/drivers/pci/controller/dwc/pcie-designware.c
-> +++ b/drivers/pci/controller/dwc/pcie-designware.c
-> @@ -487,8 +487,8 @@ static inline void dw_pcie_writel_atu_ob(struct dw_pc=
-ie *pci, u32 index, u32 reg
-> =C2=A0static inline u32 dw_pcie_enable_ecrc(u32 val)
-> =C2=A0{
-> =C2=A0 /*
-> - * DWC versions 0x3530302a and 0x3536322a has a design issue where the '=
-TD'
-> - * bit in the Control register-1 of the ATU outbound region acts
-> + * DesignWare core versions prior to 5.10A have a design issue where the
-> + * 'TD' bit in the Control register-1 of the ATU outbound region acts
-> =C2=A0 * like an override for the ECRC setting, i.e., the presence of TLP
-> =C2=A0 * Digest (ECRC) in the outgoing TLPs is solely determined by this
-> =C2=A0 * bit. This is contrary to the PCIe spec which says that the
-> @@ -563,7 +563,7 @@ int dw_pcie_prog_outbound_atu(struct dw_pcie *pci,
-> =C2=A0 if (upper_32_bits(limit_addr) > upper_32_bits(parent_bus_addr) &&
-> =C2=A0 =C2=A0=C2=A0=C2=A0 dw_pcie_ver_is_ge(pci, 460A))
-> =C2=A0 val |=3D PCIE_ATU_INCREASE_REGION_SIZE;
-> - if (dw_pcie_ver_is(pci, 490A) || dw_pcie_ver_is(pci, 500A))
-> + if (!dw_pcie_ver_is_ge(pci, 510A))
-> =C2=A0 val =3D dw_pcie_enable_ecrc(val);
-> =C2=A0 dw_pcie_writel_atu_ob(pci, atu->index, PCIE_ATU_REGION_CTRL1, val)=
-;
-> =C2=A0
-> diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/c=
-ontroller/dwc/pcie-designware.h
-> index 82946bf78b21..739a213c27c9 100644
-> --- a/drivers/pci/controller/dwc/pcie-designware.h
-> +++ b/drivers/pci/controller/dwc/pcie-designware.h
-> @@ -35,6 +35,7 @@
-> =C2=A0#define DW_PCIE_VER_480A 0x3438302a
-> =C2=A0#define DW_PCIE_VER_490A 0x3439302a
-> =C2=A0#define DW_PCIE_VER_500A 0x3530302a
-> +#define DW_PCIE_VER_510A 0x3531302a
-> =C2=A0#define DW_PCIE_VER_520A 0x3532302a
-> =C2=A0#define DW_PCIE_VER_540A 0x3534302a
-> =C2=A0#define DW_PCIE_VER_562A 0x3536322a
-
---=20
-Best regards,
-Radu
+-- 
+Regards,
+Srirangan
