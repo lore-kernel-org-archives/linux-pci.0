@@ -1,160 +1,70 @@
-Received: from mout01.posteo.de (mout01.posteo.de [185.67.36.65])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F610407582
-	for <linux-pci@vger.kernel.org>; Wed,  2 Sep 2026 23:02:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.67.36.65
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C422133998;
+	Wed,  2 Sep 2026 23:08:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788390133; cv=none; b=Vu5OC6U2nzvl9uPaaishxQFGATk0lpsXNYK0CYer5qf5H8yj7x7LSW+nu/uDT/1CRpPD9Gyilqx/HdBN1/KraRA5d5p1PJzWscrmr2ELh7WyUgup6AzUcy6Acswk7AwCM8ej5hQyo1CBrgMKCpH59oucA6JVBSvyA4yJ5H9wQX4=
+	t=1788390523; cv=none; b=ac+uweje1t/eVxY9o4dyn1Kspt15ADw57r8gS8fj8gb9eQ5lYjHaZgGJ+5Ud+LYyJYO42htyAcHtzKP50qsupw9v7wy1AEiomHPx5Hx3gz+VF80Z+1EkRKcIx3admIkV+lXufrR/Cs9HzN06llpwsoz62euEjwq9etLstcBT+8k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788390133; c=relaxed/simple;
-	bh=7SkLQeSCrqJzmRUe8v/fTPLmBIbKJHPGhvW+Q+UyxTw=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=ecyy0UuuVVyDJwxGxNxFeF3/G80fqGBy+p0leLzRq2NkbI+tptx+pMSERQ3IUxL9jUaRa+6FISeQPYhuaB4SVJbLn8XpdI+Ggpjir5cbWKhqi0DHASwFjyDsawy0vymD+/0xkDYQM6ZtJygSh1n8oiBbiw73BiQJp4dg0GDnlRU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de; spf=pass smtp.mailfrom=posteo.de; dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b=UEdzpjt6; arc=none smtp.client-ip=185.67.36.65
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=posteo.de
+	s=arc-20240116; t=1788390523; c=relaxed/simple;
+	bh=IQMFKkLd/MFtL9pxUr1+UIMMzD+FgDoyZopjX4LbJ5I=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=tHrP8PWkyt7/jm9kN+s/JcpfU2DY+IYeTRWAZF6SxEfWrJPQWovn4zVPPoVT/dKMbqxymUvFV1yZZwfYJHS1/bmQ/CNWg4cjr2Nl/kxNQMFAYRz0RDrdobLlafZBI+0Yw3vPnicGz50UjC2P0AapepzVPDcyH0Az+7pSNtv46eU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TkSTysFs; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b="UEdzpjt6"
-Received: from submission (posteo.de [185.67.36.169]) 
-	by mout01.posteo.de (Postfix) with ESMTPS id C2D43240027
-	for <linux-pci@vger.kernel.org>; Thu,  3 Sep 2026 01:01:54 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=posteo.de;
-	s=1984.8680eb; t=1788390114;
-	bh=DS6qpgDX8qco42mjPefdLfeYY7FJeETuxBnMcp6BSmw=;
-	h=From:Date:Subject:MIME-Version:Content-Type:
-	 Content-Transfer-Encoding:Message-Id:To:Cc:Autocrypt:OpenPGP:From;
-	b=UEdzpjt6py60EOE5rxC4G4BBmbk+VSNNMKUDUbJmccorRD2HJIMZOFUBK58+RWNLu
-	 qv7Ke3JPNiAXLdU4Mu1bx5fKMzUz92iEub1aRaCyX6FN1uWOTi8SOO6j1BCJiOphU9
-	 7Dy/hu4wy6YeUDS4dvL4c/rYYBzh/rRSVXAC//5KswVc9oc62cG0om4rNVD6H2CO3R
-	 FlD2XE+PQMcgG3jKie+8/XEPXQVhTBwBSb3vKnVM0EbX47/Tie7r+zNjy4I+Xp1Ber
-	 78u5W6Uk3iD5hKsGvo3kJ5ZegsfNZ9pZXkgFpeKYlEbObo63U37F3dLK31/596bCVG
-	 vAfHSWZEA/lbA==
-Received: from customer (localhost [127.0.0.1])
-	by submission (posteo.de) with ESMTPSA id 4hZysW2PN3z6v27;
-	Thu,  3 Sep 2026 01:01:51 +0200 (CEST)
-From: Markus Probst <markus.probst@posteo.de>
-Date: Wed, 02 Sep 2026 23:01:53 +0000
-Subject: [PATCH v24 4/4] MAINTAINERS: rust: leds: Add rust abstraction
- entry
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TkSTysFs"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C734D1F000E9;
+	Wed,  2 Sep 2026 23:08:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1788390521;
+	bh=IQMFKkLd/MFtL9pxUr1+UIMMzD+FgDoyZopjX4LbJ5I=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=TkSTysFszBbT6B0fNmR0E5NCNzZPL4goW3+Izl689bJVSaK9aai28H4aBN/ko1T3U
+	 ueoZIaqnUzsf+Zewzujq74EWsIgU3ps5WDVCwnNV6wQJsC68iWQlSGOBIImqPjlAa4
+	 SRe1er+ET1mRAkfMTQ7ISHrX3nxIjcgUXhY70/L5ej8ECvcY21RiOJGsZEHPTzB8Il
+	 7+1XHf00rSZyH6MPPnQOuXaE4ku9lQr58quq5nyW81zF+n+buJCL3rnLtI8eYWh2W0
+	 vl7eXxWeP42jasJ29lLlXWPI1B5uw98jGd8Z9cUtwPM1MQ0oJSpjpZnjGEOPlkSGk3
+	 JLJILSl/YtK1w==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v24 2/4] rust: leds: add Mode trait
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Markus Probst" <markus.probst@posteo.de>
+Cc: linux-pci@vger.kernel.org, ojeda@kernel.org, linux-leds@vger.kernel.org, lee@kernel.org
+In-Reply-To: <20260903-rust_leds-v24-2-8d9e4c04db69@posteo.de>
+References: <20260903-rust_leds-v24-0-8d9e4c04db69@posteo.de>
+ <20260903-rust_leds-v24-2-8d9e4c04db69@posteo.de>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 02 Sep 2026 23:08:40 +0000
+Message-Id: <20260902230840.C734D1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20260903-rust_leds-v24-4-8d9e4c04db69@posteo.de>
-References: <20260903-rust_leds-v24-0-8d9e4c04db69@posteo.de>
-In-Reply-To: <20260903-rust_leds-v24-0-8d9e4c04db69@posteo.de>
-To: Lee Jones <lee@kernel.org>, Pavel Machek <pavel@kernel.org>, 
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
- Dave Ertman <david.m.ertman@intel.com>, Leon Romanovsky <leon@kernel.org>, 
- Miguel Ojeda <ojeda@kernel.org>, Alex Gaynor <alex.gaynor@gmail.com>, 
- Gary Guo <gary@garyguo.net>, 
- =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, 
- Benno Lossin <lossin@kernel.org>, Andreas Hindborg <a.hindborg@kernel.org>, 
- Alice Ryhl <aliceryhl@google.com>, Trevor Gross <tmgross@umich.edu>, 
- Danilo Krummrich <dakr@kernel.org>, "Rafael J. Wysocki" <rafael@kernel.org>, 
- Bjorn Helgaas <bhelgaas@google.com>, 
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
- Boqun Feng <boqun@kernel.org>, 
- Daniel Almeida <daniel.almeida@collabora.com>, 
- Tamir Duberstein <tamird@kernel.org>, 
- Alexandre Courbot <acourbot@nvidia.com>, 
- =?utf-8?q?Onur_=C3=96zkan?= <work@onurozkan.dev>, 
- Ira Weiny <iweiny@kernel.org>, Boqun Feng <boqun@kernel.org>
-Cc: rust-for-linux@vger.kernel.org, linux-leds@vger.kernel.org, 
- linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, 
- Markus Probst <markus.probst@posteo.de>
-X-Developer-Signature: v=1; a=openpgp-sha256; l=669;
- i=markus.probst@posteo.de; h=from:subject:message-id;
- bh=7SkLQeSCrqJzmRUe8v/fTPLmBIbKJHPGhvW+Q+UyxTw=;
- b=owEBiQJ2/ZANAwAIATR2H/jnrUPSAcsmYgBqmKrVFNUTKBO+qqxCHOS345xh461nuIx3G/L91
- 9odmbmAXqOJAk8EAAEIADkWIQSCdBjE9KxY53IwxHM0dh/4561D0gUCapiq1RsUgAAAAAAEAA5t
- YW51MiwyLjUrMS4xMiwyLDIACgkQNHYf+OetQ9LpJw/+JYgaAGOh/Fyz0fyHjMHC0EMxfyx2Ozq
- IsMSz8vhJWDg+2LTjNfWMQnEFGoWIY9xnJzZiD2/3qQioEAvNqVykdN2AygrntbD/7j7+VM28He
- EyphFG0KFwcpvGGkvtasdSGhzWxsz4D27Vi5nXi7068NvAz/YlNd/ytMRShOGuyFnilGHuHmtvg
- wuzrZuMsZLhVT8TQ41vK5xe+q4ACL995hkl/nItsqjChSXnhblPitUb9glrhj59ybMj19Tw+KTt
- 0bpHnlBm9X59Y2z0s23PTe9QJMfgdaqd8wMeyP/ZEayIAdBfRPYIo/qYuMqgNpvSYIiCnZ9vW5M
- YChHrFAYlVEbA5gUex+V1wyOciqnw/Sn71uos4duHRIuhP6e5Sxw15oQ5WlBY5zDH4TXjub6t2h
- ziUdls/tRB9RAZGi5coFA241/8HEdPwND3HvKj36x81lVckvGa5q7cDRl9DVSOcilLLnM+G4YJc
- co0AHGnpg7YBJA1wj2kMtsH1iqVuZh+BCJFZON/DUhpZIN7OMdye3gyGFbUzjsI4cQMl3C+ehLn
- 1GdaGz0U6S7vKosOrnKJ3lx0r0SVZIxH9maWqt+4lpERC8nndmshkPLraHkD4LkHHphBxaVSHnF
- xNXwYwvJ0JyQKyilL+O1IsiCCBmvKZn/zUYw2ijTsXf01nPBR6VA=
-X-Developer-Key: i=markus.probst@posteo.de; a=openpgp;
- fpr=827418C4F4AC58E77230C47334761FF8E7AD43D2
-Autocrypt: addr=markus.probst@posteo.de; prefer-encrypt=mutual;
-  keydata=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
-  aBeNN4ijKZchBXHPgVx+YtWRHfcm4l8=
-OpenPGP: url=https://posteo.de/keys/markus.probst@posteo.de.asc; preference=encrypt
 
-Add self as maintainer.
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [Low] The commit message description starts with a lowercase letter, whic=
+h violates the LED subsystem capitalization guidelines.
+--
 
-Signed-off-by: Markus Probst <markus.probst@posteo.de>
----
- MAINTAINERS | 8 ++++++++
- 1 file changed, 8 insertions(+)
+commit 549c02b13bc8cc96fcda86b2df1afa6c3c034eac
+Author: Markus Probst <markus.probst@posteo.de>
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 3a19da74d00c..54931e850570 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -14795,6 +14795,14 @@ F:	drivers/leds/
- F:	include/dt-bindings/leds/
- F:	include/linux/leds.h
- 
-+LED SUBSYSTEM [RUST]
-+M:	Markus Probst <markus.probst@posteo.de>
-+L:	linux-leds@vger.kernel.org
-+L:	rust-for-linux@vger.kernel.org
-+S:	Maintained
-+F:	rust/kernel/led.rs
-+F:	rust/kernel/led/
-+
- LEGO MINDSTORMS EV3
- R:	David Lechner <david@lechnology.com>
- S:	Maintained
+rust: leds: add Mode trait
 
--- 
-2.54.0
+This commit adds the led::Mode trait to allow for other types of led class
+devices in led::LedOps.
 
+> rust: leds: add Mode trait
+
+[Severity: Low]
+This isn't a bug, but the commit message description starts with a lowercase
+letter. The LED subsystem guidelines request capitalizing the description
+after the subsystem prefix.
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260903-rust_leds-=
+v24-0-8d9e4c04db69@posteo.de?part=3D2
