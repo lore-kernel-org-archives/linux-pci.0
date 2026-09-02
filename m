@@ -1,75 +1,75 @@
-Received: from SJ2PR03CU001.outbound.protection.outlook.com (mail-westusazon11012069.outbound.protection.outlook.com [52.101.43.69])
+Received: from OS0P286CU011.outbound.protection.outlook.com (mail-japanwestazon11020133.outbound.protection.outlook.com [52.101.228.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57434326928;
-	Wed,  2 Sep 2026 02:13:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.43.69
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8026E337B81;
+	Wed,  2 Sep 2026 02:14:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.228.133
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788315193; cv=fail; b=UXZfrnBKVDYXRI6R7Aogwsd84786pAaKeM+3fvXwmcO5bATcl8qaYOcyaJpxJIQkxzq41/uWU939UVz9P2R4O+JxQGq3XOpBR30mRFNSu+5FqXYxGtcKG9ccWsTR2rofmifMPnbZqW5sWdTYFXGOHiuh0OJxpSMIGPHXjfaNquY=
+	t=1788315250; cv=fail; b=Onk4MOjssKYp7/Dj2zNKPqaJMC8MERE642S6x7cs25fxUiDP2fUFmDEuAb1oW7HeZb1zScR3Q/rkoFX0aLV1dMvOP3qd/LwVfOsq5W8DAqENVUiFFEMH1l4fh4K99QVL2J1n7VuHIns4tN/ZR+jWL9nW3QF6CsN63R2gzQagG0Q=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788315193; c=relaxed/simple;
-	bh=j1Cn1/7loiKv2v7624VkdVWYTMxUBpMgijcMtE/inyE=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=V7GtY8d7V6mMeljKCwXe1h9Te/qi14R8KPljihnbSD6ePE2EjievlxadHTTMGfNPw/mCllJT5OZV1QVOo5nmhDo342Z5k/CtNxSoaRJVC+6fFcTy0jOO6Oe5M5YNmTVTqhH4/g0d/IfESru9nNz8j7KwXvLutg2ZsI1W60XCPrc=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=onwFh/Fd; arc=fail smtp.client-ip=52.101.43.69
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	s=arc-20240116; t=1788315250; c=relaxed/simple;
+	bh=1NhakVeJMSHU+dmSvOo0frI3lx9v7UU+yxXBFwek4GE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=Pl3OY3uw4ae6kTgGEK5F/60JlYcYUcI1gnAot90fecEgg10TTZXZVp76ioC1PWMWLj4e2wqSoNqwzPWOMIosKfScOhx/KL1L01VAdDzv9niIipQbH1KD6O0RBYcdgMO+5l+JBWYdKaeKHhdNkjsSo3MZA9GT9U/JHXzdD+8NVK4=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp; spf=pass smtp.mailfrom=valinux.co.jp; dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b=KhX+JLQD; arc=fail smtp.client-ip=52.101.228.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=valinux.co.jp
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="onwFh/Fd"
+	dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b="KhX+JLQD"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=pSdwWE4XGqahx98q+6nJuJP4bdc6ExWgC1F1weNKaAasHv7iK6mYg241Qnlz/rr6BpKCAf+1OtO790zvKfyVmP/NdQt7QsSqOlKVE0ZWEZeTS5bf19YomS7b2HG/qk4iislRBuZzkiDcJpg8l55hAEEpwecuRfZKoNMqsmjCa7wIURaSBm56fd8br9Y+0FKSo6jeMQXSJ1W2MA3vdjb10PY5owcH2nUgWMncid/Fw4KW5mSWWwsYZR8tVMIsCJXsuJS/nQILrK1p11MM4x0QZ/YGqEs8EmqChCmsX0ssHhPQ/a2YcRszc22LOBdkduvYbq8kyeloNkLXe/ijE4j5Wg==
+ b=NE9oiQtXK/4n8Qopjpc8xHeZeee3/uDWmdMadzxRpJZgfLOg2vVtIxmunmKxPmlwlmPyZ4ujIo3EN9a4JLmQLiisLZ92pHBrDqJOWomKgCJNrhgu9Tdjp3a1HIZWJnqXLJ31YcV7CjI2jJ3eTZ7l2/wQJv/ro9WcplRCdW2kYOUS90t9jk4M2gy+EMkHUHnvCkeOxxkyTrj2yqzEpveQZPmzTye+2QjIhJMMrFG2KCCyozZPXpaOKkghPnnDGnNavLB+MAL8VKQHR8cOcRNGaDKvEM8eLcUq5xYY4cbKIYF9b0kspdwZx6Yjf0dVrlKu9go6dF7VwPB7zq+kIV0UlQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=CH8zz3SvbZ89DOpYZLpQ2d5wQwX5Kqmky6+oUb7Wn/E=;
- b=KIX+VThcqFCMr06Gx4YaSRVQ3slKY0UlycxnWhH2kHPaJU/vNthooBsvQBXclgzAO9VT1LQcMrNT0GhaNMveIgf1XpiRMGeeRkXDoNeTsMiAqSPfNgjmSZB/eNlJTMrq5y3h5kVCS5ly8MC5P7hFgyOfbuXcaN/0JySe0Q0FOCHINJpL8Hdug1yJYAFEg8oeWEuwcDCLak7BlLaK//BQ8MovFr2JH3atynqPmgx8Ygk7l9LK53S8PMLkkvdOR+CqdBlMan1LzDe941qcnHCnvJMDbvUJoMrNmBlQiCrUod7N+hiWb+oWPChV9JO+ztk+8HbkhYHfwenyNLa2Aj5Xjw==
+ bh=yuJfd/AHXAEt+yEGlnUS3imaLMOXGbBnlCHdm9yJGhw=;
+ b=GyFQ6txMgwEYiwQKHuUerv9axyHWk3uWyuiqgbOQPEI0TDg1onf1m0asmZwgmAHk4kn3HKDL4Us3uQyyU2tbWtAOn4tPr4fSWb71B/2rlA21R2SHrQmaqczoPRb/VkiO4OzJqes5meN76eOc/Bsy8WDPLnSioQfrU3t7wO2tpPTniPsTkCvMloJzQwGf/eji77WgmiPdlF7hYIvFmOKtYPbpvVl33ZUOXGGYw92vxCu9UJKlOrSQSrkgKnlwT19OJPTdKd2YiBsUOqlvSk8Rm9tbciIMywnB9ZgPjXGZxgMA+6xNdggeQsR8DnR8/ll4r+Mii7Ca3NppiLyG0lR3xg==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
+ smtp.mailfrom=valinux.co.jp; dmarc=pass action=none
+ header.from=valinux.co.jp; dkim=pass header.d=valinux.co.jp; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=valinux.co.jp;
+ s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=CH8zz3SvbZ89DOpYZLpQ2d5wQwX5Kqmky6+oUb7Wn/E=;
- b=onwFh/Fd09lsFgxA2KEmzbdl4NTkEdqJ51M+bB7AXtAffyrKxm+0KGTy9kIPUB6MToCJPkNk5o1PnnXLjVl2U8YklyuAkavnmdD9bMYXTAx2Wz8vcvxoDJQxeg7qMbxUOMKucbk/7rt2GGUvea5JfP5cKn/Xty7HyBMzeMClcfmijcfWGXLK3uOdpFQNQew7Dr6nASik/GcjOrgrSZRmCGkn9PO4yRE9mvMIHRB29srTSVtLr2Col6b4fZlHWK/TLD7fG9IDGUTKqzV2OqhN6yNKwsvLR+FeElPzNS6Pgj7tb6dwiORKRisRQjs2TEwHFcB+zdKEebl9C73lpu6kYA==
+ bh=yuJfd/AHXAEt+yEGlnUS3imaLMOXGbBnlCHdm9yJGhw=;
+ b=KhX+JLQD/qX2/6okIci3jiN+ove5PujTqXiogQ/nf5kzf44zS9L1/aeBdDXz3T8SGlTopTbwWHOfQ0EONdiIr9miFZnINTmRnM0S2CNNtYVbuwOnwBJHtH8fjTRxz+MD8rdmVJjq3/9lOhw0xl0IoEjlK6JegB9YVgmj0AKuIG8=
 Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from DS7PR12MB9474.namprd12.prod.outlook.com (2603:10b6:8:252::17)
- by IA1PR12MB6017.namprd12.prod.outlook.com (2603:10b6:208:3d7::8) with
+ header.d=none;dmarc=none action=none header.from=valinux.co.jp;
+Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:38f::10)
+ by OS3P286MB2567.JPNP286.PROD.OUTLOOK.COM (2603:1096:604:1fa::5) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.360.13; Wed, 2 Sep
- 2026 02:13:03 +0000
-Received: from DS7PR12MB9474.namprd12.prod.outlook.com
- ([fe80::31ad:931:ef07:8ad7]) by DS7PR12MB9474.namprd12.prod.outlook.com
- ([fe80::31ad:931:ef07:8ad7%4]) with mapi id 15.21.0360.008; Wed, 2 Sep 2026
- 02:13:03 +0000
-Message-ID: <763e7cce-bae3-4d85-bf59-2c93ad559afc@nvidia.com>
-Date: Tue, 1 Sep 2026 19:13:01 -0700
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v10 04/12] cxl: Cache decoder settings on PCI devices
-To: Li Ming <ming.li@zohomail.com>,
- Alison Schofield <alison.schofield@intel.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Dave Jiang <dave.jiang@intel.com>,
- Davidlohr Bueso <dave@stgolabs.net>, Ira Weiny <ira.weiny@intel.com>,
- Jonathan Cameron <jic23@kernel.org>, Vishal Verma
- <vishal.l.verma@intel.com>, linux-cxl@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Alex Williamson <alex.williamson@redhat.com>, vsethi@nvidia.com,
- alwilliamson@nvidia.com,
- Sai Yashwanth Reddy Kancherla <skancherla@nvidia.com>,
- Vishal Aslot <vaslot@nvidia.com>, Manish Honap <mhonap@nvidia.com>,
- Jiandi An <jan@nvidia.com>, Richard Cheng <icheng@nvidia.com>,
- linux-tegra@vger.kernel.org
-References: <20260804192958.1823952-1-smadhavan@nvidia.com>
- <20260804192958.1823952-5-smadhavan@nvidia.com>
- <cd115bea-68b4-4b7c-8cad-93f5fedfb6fc@zohomail.com>
-Content-Language: en-US
-From: Srirangan Madhavan <smadhavan@nvidia.com>
-In-Reply-To: <cd115bea-68b4-4b7c-8cad-93f5fedfb6fc@zohomail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: SJ0PR05CA0092.namprd05.prod.outlook.com
- (2603:10b6:a03:334::7) To DS7PR12MB9474.namprd12.prod.outlook.com
- (2603:10b6:8:252::17)
+ 2026 02:14:02 +0000
+Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ ([fe80::2305:327c:28ec:9b32]) by TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ ([fe80::2305:327c:28ec:9b32%4]) with mapi id 15.21.0360.008; Wed, 2 Sep 2026
+ 02:14:02 +0000
+Date: Wed, 2 Sep 2026 11:14:00 +0900
+From: Koichiro Den <den@valinux.co.jp>
+To: Niklas Cassel <cassel@kernel.org>
+Cc: Manivannan Sadhasivam <mani@kernel.org>, 
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Kishon Vijay Abraham I <kishon@kernel.org>, 
+	Frank Li <Frank.Li@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Jingoo Han <jingoohan1@gmail.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	Rob Herring <robh@kernel.org>, Aksh Garg <a-garg7@ti.com>, Christoph Hellwig <hch@lst.de>, 
+	Sagi Grimberg <sagi@grimberg.me>, Chaitanya Kulkarni <kch@nvidia.com>, 
+	Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>, 
+	Allen Hubbe <allenbh@gmail.com>, Heiko Stuebner <heiko@sntech.de>, 
+	Shawn Lin <shawn.lin@rock-chips.com>, Manikanta Maddireddy <mmaddireddy@nvidia.com>, 
+	Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>, linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org, 
+	ntb@lists.linux.dev, linux-rockchip@lists.infradead.org, 
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 0/3] PCI: endpoint: Support hardware-owned MSI-X table
+ and PBA
+Message-ID: <sor2mm4jzgeprhn3fjw4jmcaowwkhhuus6exi4k5kum6frqvug@gatkk7r4qyxd>
+References: <20260830151948.3547577-1-den@valinux.co.jp>
+ <apVWd1u9JjTKQczu@ryzen>
+ <pj5vpwwd5tr5tuvhdq3bcpefnq27r6ljvwoysguz2o4tglcqx5@l7zmb6wjnhla>
+ <apXdm2I33edo8kpZ@ryzen>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <apXdm2I33edo8kpZ@ryzen>
+X-ClientProxiedBy: TY4PR01CA0125.jpnprd01.prod.outlook.com
+ (2603:1096:405:379::7) To TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ (2603:1096:405:38f::10)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -77,75 +77,203 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DS7PR12MB9474:EE_|IA1PR12MB6017:EE_
-X-MS-Office365-Filtering-Correlation-Id: 60f38fcf-a306-48b9-40fd-08df0897b808
+X-MS-TrafficTypeDiagnostic: TY7P286MB7722:EE_|OS3P286MB2567:EE_
+X-MS-Office365-Filtering-Correlation-Id: 27b115b9-873e-4d7a-6fd0-08df0897db48
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|366016|23010399003|376014|7416014|18002099003|22082099003|56012099006|4143699003|10067099003|921020|11063799006;
+	BCL:0;ARA:13230040|376014|7416014|23010399003|1800799024|10070799003|366016|6133799003|10067099003|5023799004|4143699003|56012099006|22082099003|18002099003;
 X-Microsoft-Antispam-Message-Info:
-	/3IW7M7FqZwbDkcOOMP1ODQa9Exf9G4CylGayuQ0h2uQNndyZIE1YKddUyOYUH+fyHKAjkrWzypjKmVGXHnGHJNyP+m0x0iTQ8eIMLSdI9NAr0pXFxJGqW2GtR/ypLvezATcorRsm/aLJPw/KlDhEAcciLxZgxo81ObMl6eueljlbbJN3WAMKGj+rE+sXkaiQDS4HHcjIyT0PvrHvrFERL2NyqFS8e60nvUJ7xytl6YsKgQpZlfIqQASX+xYl5VxjK+kdd52iUXPSqVLDUSeZEbzbpsM2wVadeAGKN6cUvupTrtEgbZS5ZDWCoVIxhLeGI1h6six57UbRXhmjfCcNbZYxZYtYNljkFALlJFtw+B8Pf34gUZIaRXGsbCDrGxyX+k0I4Mv1d0opkcp3Ojok6puzVS1vWPNG2JTFqQ3mUnfG81vR3jQ0yrSSBdYn/zC5IiAKmvAvFyppu+W6jCNCNpr0r9J/AtbM5BfIA+Vhp3h9rmvd2iOcXjOvf0LProk5cXoZJvGeuGXquSsbo1f44wWYCDlFaWQgNTPZxlxTHavy29QGJ90RKqWK+NxgeqcTzWEXTLhppnYyS78+brtdTVZHPJSVbGiY6dt/6KttOujf7qwVUgA1ID7j8f2oJ6rSIXz8NIB5NgPEPvLl9q/3/13KIm+hy2DwLc5dMA6G99d00JYHSjlF8ZnuCqEs7bKmd59aW8namPXtnsTfBT2CQ==
+	0HW/uwv9xu881hY6b5vuz32lI8eyot8LbqIXTuWRd+mQB6ysQQA8oGiF+viuzwloAQZnmXUB4RQfxDMXYcYE2NdlAYvqjNPTUC/hsz3ccGywJvunBv54FARAwxZCvLztQU8CRSNSuUl2TXCzF9vdM/mYM4IRi+EPJ1IftUlO2XeFnHCrCa+W5AzrUpnkNoXrOvP+TeRXh6tbOCRKubrMm5pXITGepxd8JnaZWg02QnWrMgvd7ZQOxDgtm6xtu3zLE1oBOiFXJJCw+xOJqLMxSJOj12XUR4A0NA2+SZLByb/XIPcj3DxcebnayiUTroY6ymOzlhD6ErnBg8IwtWhq2ge9mfKERv3RUMgyFyuMNcxEfwibwq1ovHgk2BOe95tU4KBrwUsmY1Vyov9V+v/KXzDYtGu6uW8GdcWl9p2RobdKeSkJfcslBz/0YFFascdl6Mo5aHMH9FqaiI6Sg1qBrwFXXLaObKAYap8x94bDBKFewjW9k9p1uRRKRJtAtBho1D+uOB4TSV1vZgJVRzPZBo4s6UgnWCKqMHRM0PoKPn9e7DTjVKkOV9kpEEnJGbYz6Lxp2abaHVY7h2ateySRYdEsa0YaQQZZT6iTvHfkvDROh+OZjml4wT8JK8PjjaKstHx+gsQSnYlYlpg1uMPs3Nnq3Z9XUmNcZrpQRlFjZuQ=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DS7PR12MB9474.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(23010399003)(376014)(7416014)(18002099003)(22082099003)(56012099006)(4143699003)(10067099003)(921020)(11063799006);DIR:OUT;SFP:1101;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(376014)(7416014)(23010399003)(1800799024)(10070799003)(366016)(6133799003)(10067099003)(5023799004)(4143699003)(56012099006)(22082099003)(18002099003);DIR:OUT;SFP:1102;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?M3hxWStoNm1MdWd4MnA3eHdIbCtHMXAzUkZyQjgzZmNFbUx4NUdOYUcxSFpi?=
- =?utf-8?B?MGJIWldrbFhPZ0VuT0NOd2ExMDVOWWhSOWhXSEFWRHBoWWZlcEpHZnRSQktY?=
- =?utf-8?B?NE1uc0MyY1RhL2tZdE1DYzdzeHZkNVdHeFBaTVA0Q3ZWOHg5cEdzY2VMeGJR?=
- =?utf-8?B?OVloazRsK3U1UmVkS042SlZ4dkRwVHNQVmVYY0F5R2EwbW1zTXAvSUpRczZv?=
- =?utf-8?B?U3NTNkxTRU9YRm9qb2gyVGN1VkdGZXRwZVNZR29ZR1ZMcjdMOWhCaG0wdW1Z?=
- =?utf-8?B?VkVWMG9UWDRzUjZRVUk4RUpSWDF4dHVGMGs5OVRLK1I2bm5TZzdXK2VtQVNm?=
- =?utf-8?B?Q1hqMWhiWHl5VFJRbWxSQnE3RU1VcUxzOEtrVVBPWEZtWU1UWG1ZRDhlY3VS?=
- =?utf-8?B?WWV3TWtQdmh2VzZ2L09DOFMyZDRHRi9QcE01T25jSXdmQytOVkVwUm5heWcz?=
- =?utf-8?B?WEdXS3FBRS9vaEVGQnRlVHBIblZ5ajFxd1ZSejREMlVTNG5SMG5Sc3hRd01V?=
- =?utf-8?B?NGNpK3I2bEE4dy9jWDRoajZpK2E2WktCMHJQWjdFUlRGRHdmQnhWM1U2R1VI?=
- =?utf-8?B?UWRVZTF5TTNwczVTOXZlK2s2UFZLVnppSm91U1FEejY3SGtwbGVYZE5pMWQy?=
- =?utf-8?B?dFlvRUVOU0pZQmRHNXhOOGxGcElTOE8vSDdGTyt0K2w4bWs0T2xnOXkzSExy?=
- =?utf-8?B?VVl2bE12QmVDSE5ueVNKRGJHVFlPUXRXemlCQ3ZlT0srWndaM0pRUEZUQVBJ?=
- =?utf-8?B?UWhpditJRkNoL00wVXdaNEZBVzVkUnJnbHAvd2tqcWROSERoQi9WcjVqYjF5?=
- =?utf-8?B?TkpqWmZpTmo1KzZpcWVsTzFDVXdzcTEyZmJFeWFOZ1BvSXZxMXdYcGdQclJC?=
- =?utf-8?B?ZnRwZGM4ZDc4Zzd6V2VXd2hiMmVuTHVraVo0bUdEMVRUNHNRYUcyRUNhYkUy?=
- =?utf-8?B?U04wODRoMTErUGJ1SnJka2poQkxyeWJPNHNPZGt6VCsvd1Njcm1xSEpGSGRt?=
- =?utf-8?B?Z3A3THFqMnQrWTd0SEFwTkVMUTBNNXlQOVBzTmFYeWRNLzFIdzlLSHU1czMr?=
- =?utf-8?B?UThMODJvVTNEUHNGYWhHT1EwQm00aVd3Y0hSNDZBWTVIREVBR3JCS3hpc2JO?=
- =?utf-8?B?M0MrR3ZBZWdXK1lRdEJlT0l3OG1SYnd4M3BDY1g1TTFHYk9JT1U2VjhLWTlt?=
- =?utf-8?B?aFoxbVlOTEdWUTltVHJ1RTBWazB3OGFCblZVRVJKRVZubzBaOG92R2FiZ1R5?=
- =?utf-8?B?RVJNYUdJUzZ5bzhQSCthUzMwY0dtUG03SjlzazZyODVRZE8rUWJiUUxYUzNL?=
- =?utf-8?B?M2hSYmQ0ZFE5ajk1SzNNc29PbS9GSE5pM2lUV3RhQjViWDkwUzhNREhOdzho?=
- =?utf-8?B?UDBpbUd3Snh0VGdETTE0cTFsL3kwQUYvTGN4cmpYeCt3eHhrdDBkS0pNVXFh?=
- =?utf-8?B?eVo1MlcvTmRPNzk2RlZiNGRXeVlqTHF3c1ZiUjZMeGVXbEkyQmxsdlZPb0s0?=
- =?utf-8?B?c0p1a0QrQ3BMdlQ3UlkwTjFTdS9sZlg4YWc2bHlhcU9YWmx5aG5yUmM3VXNI?=
- =?utf-8?B?SEdSRmZvVW1NVzdBWGp6WlJrbFY2eHlYenJrQzA1ektReWxXOVRnbyttY1lh?=
- =?utf-8?B?blRYNmhVMUs2cUtiZEg5RkNrZ1hDT0VzMnFrajlRcHhSWFBENHUrSi9QSTl3?=
- =?utf-8?B?WTdQM215YmpMVGJjeDlKRmVzMmpHcEt1VmdQbFVTSm1jaWN3Y2xBVDRhSGJ4?=
- =?utf-8?B?cXR5OGk1K1hjQk8xaGZIVXV4enU5NDZDR2JEYk5TL3c5VXVYTUo5cHdORGU5?=
- =?utf-8?B?eHlQanRMdEFIbHpDUjFyZUF2WWllZFBUcWFqandLR0VqM2tWdU1nVlpNRkVF?=
- =?utf-8?B?TE01eXRzWGdkM1dlam05UGpWTnlMWVdwenM4UUtwRS9LbVZXTDhXVnZic2Zo?=
- =?utf-8?B?NXZUK2FEcUxhQjVVeEF6SjIxWmxBeHAyWHVneEprTlJwMkh5SUwzSlpyQ1dt?=
- =?utf-8?B?dTJsK09VWHVncFJVbFVQQU5uampQQ0QwN2cwUTRrL210dlROT3hqck15RHpO?=
- =?utf-8?B?N2QrL0JwOXIzU1o2SUh0SHBMNmt1bE14MzBhVFQ5L1BJZmNvNklXLzQ2N1Y0?=
- =?utf-8?B?OFNOQ2pBTlhZRXN4MEJScWV6RmdUVnhrN3ZSZzdaUW50YVlKTWh4UEJrV2Za?=
- =?utf-8?B?dzQrazJJWmc3RlZWSkt2aldNRVE0aGc1ZHYxTENZdnpmSU9BSG1mcWYvWG1w?=
- =?utf-8?B?aFluL3ViZHdoR0JFeHZWRjRUOWY3MXNwRnIwVnUveFNIb2hCemFKM1Nja2Nx?=
- =?utf-8?B?Z0hOYjZMcHE2K0Yxc0FwWFB3b0V3emNnL1Z6T1dkWTBWZzQ0RXQ1QT09?=
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 60f38fcf-a306-48b9-40fd-08df0897b808
-X-MS-Exchange-CrossTenant-AuthSource: DS7PR12MB9474.namprd12.prod.outlook.com
+	=?us-ascii?Q?H5Df1WgN6NxNdJQMzqTrEGO76/aDUBtDum/FVnjqKVSlT4TtM0s2fYxpgakt?=
+ =?us-ascii?Q?w3SoiToprjvN6wlZQfzFBHCrbOvOegz8oX+18f8qevFpNWWATtpLvkFyBPxR?=
+ =?us-ascii?Q?lqnDuhJjtVG3sYGXGAmTM8wVIl+WH3+CoHjqYJ4ElpL8RdKyNlbDPyKZCpjB?=
+ =?us-ascii?Q?+0PKPxtpBE031kp75cydEe2aEpH0VjVd+7pm3Cbg4CZV3sM0aFtX+41HqKnS?=
+ =?us-ascii?Q?sCkBv+CwI05AaWfI4w74thdJmOvHcbNM5UVQrIn4+f7qx1OzjftV1e/vlGT7?=
+ =?us-ascii?Q?vkTW/U7W/J9sWcWl6rfFjuOhB4cPzJRL1qJNvBX9Y6i5LCqHsI6dsxamH7zt?=
+ =?us-ascii?Q?tJQJisnXEYURUZZHZoOP7KcmGqdgEbNzH8zKSlocsqDeXIHSx+i8NQRcBKhJ?=
+ =?us-ascii?Q?OZPcU1w38TTGJMycDCKbCq9c+CxO9p73MOLIaAD/pFrFyM2WIRyjfb+MRU4A?=
+ =?us-ascii?Q?zHxfDZlNZ5LzrC8YD8ZjHA1tIckZAfWhCGGvwuWxd3bA3NMLpUMR7etshd9L?=
+ =?us-ascii?Q?FZ3u98e9Zg7zdSIU5IINIP/qZdAUPLpvpLsHE5yPhu2Ru8EYGq6y0Z+mmS35?=
+ =?us-ascii?Q?euNF5y3dTd9xVBRxUWLPHQlEezr8wAnbXaXbslSyIYdWUQpnSLQYKBftmPJR?=
+ =?us-ascii?Q?4Po/2OS3IHPB2cmkAo7IlPfOkrZ6agVlWxacmroFzStdlMZXmGmGkLK2OdzM?=
+ =?us-ascii?Q?i28VAf0/xi6tK4vpssVBOT76R82/1Ivf2hI9H8mHB8uH6ShukU1lxCndjGPy?=
+ =?us-ascii?Q?47wdtHKkHTSsXpH+MGstJYAB2uOa60uv+RhlbO0EkQvm7rNKekWzGDx3JAGt?=
+ =?us-ascii?Q?3eT+7VhnvicjHo/JD2ytDPAqPhtGgSi8KNT9lpBFw/WUl2Q0DXV9IY0BQsqm?=
+ =?us-ascii?Q?8oDGqinh4qNDKmwF8jZnTf+pJHJiVM7PVwDYAaJfLYEBAXR1ppSqv21l61Kj?=
+ =?us-ascii?Q?SUJLeeaL0PFf3cVVWt/pujmaK81G9L08NFIQsJjhB5e/yqsUJM6bs9iFRNIJ?=
+ =?us-ascii?Q?qulGQ/XdcH2FPIy2BGlzssztpAQrGqnNjrKsz+1MAZ6aRYUs2+aHLkCmBIPP?=
+ =?us-ascii?Q?Me+gE9YxQNNUBwVE04WfbJXLr4cj59b1oMqENJDfFlX1cCBZDXbHWIitLFcz?=
+ =?us-ascii?Q?P/vabjfXWI7l4WRCby7tWuUVYBhpWLeUfui9i9bUW2bJRJpoVkWeAg3QuRzk?=
+ =?us-ascii?Q?WrrOjajzL0anc31KfLARMjgLzy7ncmI+Xq3DMyEm674L/WFf4pi8wn0p68tb?=
+ =?us-ascii?Q?8ZMUsPiQolvdDXHoSRoy9Q7v1Sn/bunBQlf8J0E4pT7gHOXUaj+DQzcbX/c8?=
+ =?us-ascii?Q?dGO1eO5EmN6ZE+rdq9f15ttdlLSzqMOPTAtfu72Gl/cgcgrWo9P3ugRT1KqO?=
+ =?us-ascii?Q?6uB1Q5JOeQHcWE/3EON3vX9Mr0smU942gEHARgBq7YPsczgsWOAoCIdJklkf?=
+ =?us-ascii?Q?5rJNbXlvqc3hgG3QFJ1blQKhzrsEGJcao9qKv2i3fSgXteXc5df/BSFl5B2n?=
+ =?us-ascii?Q?99GlXt8beat0WcM57PQUzK1xt3Qyyw9xKmd3oGczYgmTswGLWY28xhqmdk0t?=
+ =?us-ascii?Q?qdJHIarYjzZDU9WUHLb2phFHB4FTkxZhJje9zbIMAK9iKN1Ygk5uhilHkrRI?=
+ =?us-ascii?Q?dwSZYkaaN3h8rC5vgRcO0mcbwWD/U+XoGSbm52Nj2uzaOrLC3qvrB2zKXYFI?=
+ =?us-ascii?Q?OCyuU8x/GbkSqfjqiyLbhdWg0oCnp7HNJkHkEzs8HKbGM2n21T0nRMoCwTC9?=
+ =?us-ascii?Q?cy34X6H1FGeTLz2zTuD+bCRv75K85Q/Xq9xLafKPaFdlYEfL+GH0?=
+X-OriginatorOrg: valinux.co.jp
+X-MS-Exchange-CrossTenant-Network-Message-Id: 27b115b9-873e-4d7a-6fd0-08df0897db48
+X-MS-Exchange-CrossTenant-AuthSource: TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 02 Sep 2026 02:13:03.1696
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 02 Sep 2026 02:14:02.3209
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-Id: 7a57bee8-f73d-4c5f-a4f7-d72c91c8c111
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: a7CBpH/HCFMbtU8OAwZaQclXfmNUR/PlVL6uxx9LS+0GmPCH+RnZbt9o9JrECrDDPzF4KsWgR5y0xTqZrCdu3Q==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA1PR12MB6017
+X-MS-Exchange-CrossTenant-UserPrincipalName: USLp0emGf6a9PJE7usGvwyc2i6Yc9fDesSyErp+vtZDwo9K7zhZxuHeJHzKB4F45iNVEvN9rld56FB+Z6XZYtQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: OS3P286MB2567
 
-On 8/24/26 12:53 AM, Li Ming wrote:
->> +     bool present;
-> This 'present' is unused in this patch and used in the follow-on patch, I suggest moving this 'present' related implementation into the follow-on patch.
+On Mon, Aug 31, 2026 at 10:01:31PM +0200, Niklas Cassel wrote:
+> Hello Koichiro,
+> 
+> On Tue, Sep 01, 2026 at 01:11:09AM +0900, Koichiro Den wrote:
+> > This is not driven by a performance target, so I do not have numbers. The
+> > immediate issue is correctness. ntb_hw_epf can select MSI-X, but pci-epf-vntb
+> > currently configures and raises MSI. I want that MSI-X path to work on RK3588
+> > with the controller doorbell. I will make it clear in the next cover letter
+> > that, with this series, a doorbell sent from ntb_tool on the pci-epf-vntb side
+> > of RK3588 reaches ntb_tool on the ntb_hw_epf host side when MSI-X is selected.
+> > I believe that is the simplest E2E test showing what this series fixes.
+> 
+> Okay, if the main issue is that pci-epf-vntb does not raise MSI-X, even when
+> ntb_hw_epf host side has requested MSI-X, then I think that the first patch
+> in the series should fix this, so that the fix can easily be backported.
+> 
+> (Right now you fix this in patch 3/3, and the fix in patch 3/3 depends on
+> both patches 1/3 and 2/3.)
+> 
+> I think that pci-epf-vntb actually respecting the configured IRQ type by the
+> host is a separate logical change from adding support for HW defined layout.
 
-Ack. Fixed in v11.
+Sure. It can be a separate patch, first making pci-epf-vntb use an EPF-owned
+MSI-X Table/PBA like the other in-tree EPF drivers with MSI-X support.
 
--- 
-Regards,
-Srirangan
+> 
+> 
+> > I initially considered making the hardware-owned layout automatic for every EPF.
+> > pci-epf-ntb (not vNTB!) is the reason I did not. It currently reads
+> > host-programmed MSI-X entries through epf_bar[] backing and uses them to set up
+> > peer outbound mappings. A hardware-owned Table has no such backing, and the
+> > current EPC API has no generic way to read those entries. I suspect that
+> > supporting it there would require a broader design change. Also, I do not have
+> > hardware for the pci-epf-ntb bridge configuration.
+> > 
+> > pci-epf-test and nvmet-pci-epf should be easier to convert. However, converting
+> > only those would not remove the per-layout handling while pci-epf-ntb still uses
+> > an EPF-owned Table. I would prefer to handle those separately when they can be
+> > properly tested. This is what I meant by this part of the cover letter:
+> > 
+> >      [...]
+> > 
+> >      layouts. This avoids unnecessary changes and reduces regression risk.
+> >      They can use a hardware-owned layout later if/when needed.
+> 
+> Okay, if pci-epf-ntb is special, perhaps we should add a comment in
+> pci-epf-ntb which explains why it cannot support HW defined layout.
+> 
+> But for consistency, if we modify pci-epf-vntb, I think it would make sense
+> to also modify pci-epf-test and nvmet-pci-epf as well in the same series.
+> 
+> pci-epf-test should be easy to test, just run the pci endpoint selftest.
+> 
+> nvmet-pci-epf should be quite easy to test too, just run the normal fio based
+> testing that we usually run, and unless you see worse performance, I think we
+> are good. (If we see worse performance, that could be an indication that one
+> of the MSI-X for the different completion queues are not being correctly
+> triggered. By default, the host side nvme driver creates one completion queue
+> (and one submission queue) per host CPU.
+
+Fair enough. As an experiment, I converted nvmet-pci-epf and tries to test it. I
+could not get as far as running fio because host-side NVMe initialization timed
+out.
+
+I found that on RK3588, host writes through BAR4 to the Message Address field
+(the first 8 bytes) of entry #0 do not seem to show up in the internal iMSIX-TX
+Table RAM. The rest of entry #0 and the entries from entry #1 onward that I
+tested seem fine. The same two DWORDs can be written through direct DBI Table
+RAM access, and the doorbell for entry #0 then works.
+
+I'm not sure but one thing I wondered is whether this could be related to the
+boundary between the BAR4-mapped unrolled iATU registers and the MSI-X Table. On
+RK3588, the iATU register window starts at 0x2000 and the MSI-X Table
+immediately follows at 0x4000. If there somehow is an address decoding issue at
+that boundary, with the first part of the Table being taken as an iATU access, I
+would like to know.
+
+This still sounds really odd, and it does not obviously explain why both DWORDs
+at 0x4000 and 0x4004 are affected. I may be missing something important. If
+anything similar involving iMSIX-TX Table RAM entry #0 has been discussed
+before, please point me to the relevant thread.
+
+(Also, I can share my current WIP v3 series, which makes pci-epf-test and
+nvmet-pci-epf use the hardware-owned layout when available, while leaving
+pci-epf-ntb with its EPF-owned layout. If you have any setup where you could
+test it, please let me know.)
+
+> 
+> 
+> What I suggest that you instead do something like:
+> Patch 1/7: pci-epf-vntb: Fix to actually use MSI-X when requested.
+>            This probably includes adding the code that is inside the
+> 	   if (ret == -ENOENT) { }.
+> Patch 2/7: PCI: endpoint: Support hardware-owned MSI-X table and PBA
+> Patch 3/7: PCI: dw-rockchip: Support fixed MSI-X table and PBA on RK3588
+> Patch 4/7: pci-epf-vntb: Add code that calls pci_epc_get_hw_msix_layout()
+>            and uses that layout, if the function returned success.
+> Patch 5/7: pci-epf-test: Add code that calls pci_epc_get_hw_msix_layout()
+>            and uses that layout, if the function returned success.
+> Patch 6/7: nvmet-pci-epf: Add code that calls pci_epc_get_hw_msix_layout()
+>            and uses that layout, if the function returned success.
+> Patch 7/7: pci-epf-ntb: Add comment that explains why it cannot call
+>            pci_epc_get_hw_msix_layout() like all other EPF drivers that
+> 	   support MSI-X.
+> 
+> 
+> This way, patch 1/7 can be backported, and will help all users vNTB users,
+> even the users that do not use RK3588 as an EPC.
+
+That split makes sense. However, given the issue I described above, perhaps I
+should send patch 1/7 as a standalone fix and hold off on the rest until the
+issue is understood and resolved.
+
+Testing vNTB alone (ie. this v2 way) did not expose it because its first data
+doorbell uses MSI-X Table entry #2. I only found the issue because your
+suggestion led me to convert and test nvmet-pci-epf, thank you!
+
+> 
+> 
+> > > I understand that you introduce dw_pcie_ep_msix_layout_is_hw_owned()
+> > > because you want an EPF driver optionally use the HW defined table.
+> > > But if all EPF drivers always use the HW defined table if available, I think
+> > > you can avoid introducing this helper, and let rockchip_pcie_raise_irq()
+> > > unconditionally call dw_pcie_ep_raise_msix_irq_doorbell() for case PCI_IRQ_MSIX.
+> > 
+> > Yes, under that assumption I agree. With the current mix, however, the Rockchip
+> > callback still has to choose the helper according to the selected layout. That
+> > is why the DWC code records which layout was selected.
+> > 
+> > I will update the cover letter to state the motivation and this boundary more
+> > directly. Does keeping the layout choice with each EPF for this reason sound
+> > reasonable?
+> 
+> Yes, since pci-epf-ntb apparently is special, I can see why you need
+> both ep_func->msix_hw_owned and dw_pcie_ep_msix_layout_is_hw_owned().
+
+Sounds good.
+Thanks for taking a look!
+
+Best regards,
+Koichiro
+
+> 
+> 
+> Kind regards,
+> Niklas
