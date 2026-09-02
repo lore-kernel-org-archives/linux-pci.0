@@ -1,46 +1,46 @@
-Received: from CO1PR03CU002.outbound.protection.outlook.com (mail-westus2azon11010054.outbound.protection.outlook.com [52.101.46.54])
+Received: from DM5PR21CU001.outbound.protection.outlook.com (mail-centralusazon11011017.outbound.protection.outlook.com [52.101.62.17])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 96414481FC5;
-	Wed,  2 Sep 2026 13:41:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.46.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C9F52495051;
+	Wed,  2 Sep 2026 13:41:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.62.17
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788356478; cv=fail; b=XwffBENLMCVJY38Gxn/olNfzoeglqddXXFL+Oa6czNf+CAPglt0UEn6qcwbYUvfkR9uXf+6IV+Xb9LPWGdyd4TvX4+KiQh4uNLo7Gu0K5EIBpCSC4fZEU4lve9QyoTq5N0TG7HG0ekWUbQa8jVvuYYSy9vHhFN3ZMCAyEdERUyY=
+	t=1788356522; cv=fail; b=klobn1TnAPupp8W7oiTvELh0F2nwbQ3+6tltw8KN6fHdjHt0eA+KyVanjHCTtZP93c4C+A1edrxoUFB648nfiLPQqwwKOEXbIDOK+1/fkQIhCNlcVtbNSYXC1K7EGgK/kiRy4qZsh+C+wEsE5S36jREqhaAbq7/clY2XVQPsHkU=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788356478; c=relaxed/simple;
-	bh=GDdxPFdrKkOjQOWFZxlnUnOcpZEXoYNL/EvbbyVvpAw=;
+	s=arc-20240116; t=1788356522; c=relaxed/simple;
+	bh=Xc0go6bp3IW65nIwgZbiqkID3Ed/pSq5+unqrmHjG2U=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=S58tk9bBcLtwxCsFHhM2+thBVnvoCC6isVCFP5O89BY7PysRSsQh9csRlkQXZ1+6Rp36i6HzKKjeG/sZ1goHidArkybLK6/pKShcfQHpG0yGbCbhhUgN15BLEQTQve8+XyOsuezDXPNHX0qleXaQzD1dbysbRqhjSSwvJzRUDaU=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=2ohQj/MH; arc=fail smtp.client-ip=52.101.46.54
+	 MIME-Version:Content-Type; b=QogSAqHfOe1erjmkevaoDDzX7fkPSOB8/nV9mck5Khq135M0ciO36CJxCTyUsYL5hf/qoRBoyeMW4YOxE7wvRRa9lOSdy0On60S2cCPMkBoUyBIdrQaJjeTdcJ3cv7TSERh8mZJeMGbX8LyGdE6y5nOI31+EBf22lSOVBWn7qvg=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=kLUMl8eP; arc=fail smtp.client-ip=52.101.62.17
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="2ohQj/MH"
+	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="kLUMl8eP"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=LEwDu+RpZOIQSM4lCv+VH9HHE5qCAfCG65E94nDuOBupBU+tWqfYpYHxVfiXCMmfKyKZdtaWKUoDi4D1AJtVKyFg5quaVA4s9i3RM+4jlUiuC6BN1EFeGj/IZm02isL0eSZ8u4GT1P224FMBuCtrwfchy+0CABQGmIqTObVXnUPRhkegIzp8hgmzm3MyAcvwSc+l1ogtH+2oi0eD3bo7ZpqMvcEr7FeytCT0Bb9M9gfZjNqkbiJpMgL2MyjKeDvDETsfsNYtU5AtDRKpjmuJHxPPZnJNg6cO6UUwTcTNigmA31s3eh7KhQ84a+KFFUvpW92z+2zKaMtbjYFA5e174Q==
+ b=HH1KAL31ZiTSe7DiM+DhL1J2SQaFxim7eoJbDKlPG9fK5SkfhL3wN5mZNkiIG9EN1B8aKugZR9hCQeffqTfheJM3/rTb3PxFHr9XGr/FsWp6MQv5OWqpVhEzQGqM1hPOomdy//CAEflxoJ0p8KgiqmNsS2pd2/9qGHQCKcHn4ewcmpDoCtfhrtqpJu6E9DswdUh5qwKMQveNBC5vGd3TGnkQcv15sza6ravk+RRA+mVxNst0VUzu8d8jG8GAOqg87BI9SDSs69KbCpnLaj44MZFvCKPmXrPYz6lUtbWjZvyRoPKjTB5UmgucbU893ALnfJV+Hr8cKZF2NgZ6tUsrhQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=pmUNXkaRLD/y+ZQvI/3gp2m8wRiQMQdKq3NJSRmUDO8=;
- b=AWzYkxrl/o9TPvI4LJ7d+cm2eZYV0N4bU1D9afCBIoIFM64FgGGUcuf0O2sg+OenaEpdsb20X/kVXerciSoBFda5aseMasAnAL7WxWvqK4JO3T0jMlzlHL/qB408dsPn6QM0/PXzBkDf28rpDnCvpHeNxClP+NJ3yEnwADkAz2E0cacWZ6G61hCBmvOF2XQiF5G8yXnMSD4f0cs/T1ahKUUvsBhcd/n+KGyPl31v64DGrMHaotZU60UBTONZQgfoiV0Z3YMNlDVYq0eEGwzYUA/uvwgaGrDS7jEFFVNWKlYnxuqfQPW404i1uzDKjCiGzdvQ/Ya3t+km3BB4XDZ9rw==
+ bh=7gGV35TzI2IX8yyudghxEcHPGGRW+9KX9XzCTfjVV7Q=;
+ b=eFoKuNFPPEV3um6nrDL0LDunpMEMIoTpOL/N5b0M4vGhlGtj/02njuiaTMi3l+IsTNpfxHkGHzjvxsZ8Zf+vyn54ULsziZ3PxzeSbtNeEqkWmMQp3Bt4cmRp2EyVsgbeamWZ9r31NzddTZpTqmhoLReWDUgkhaN7WOCB7wJHUS7BddNg/sZ2q/W83j2SpMkTyCdMVJjbDeVX2IGp9SLTN6IAVOxrBe7AzivdIpaClDhlQrXOcomU4UA+/kgQaz2vJqCAtIFIQyqW98zcZR3uSdRRUU1orIaBuG8JeR2GsfsdCSgjUAyxNvF5w9odmzvDSdih9tXQidsY/zEF2n2Ceg==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  165.204.84.17) smtp.rcpttodomain=kernel.org smtp.mailfrom=amd.com; dmarc=pass
  (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
  dkim=none (message not signed); arc=none (0)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=pmUNXkaRLD/y+ZQvI/3gp2m8wRiQMQdKq3NJSRmUDO8=;
- b=2ohQj/MHVli4BPaz2wRtIuGHXYRWjlSWYrdEnOqtns/P0hXuDA7qgblgQIdYK+tUll6y/Gc0Zwn754ynAoEcP0isw8jY/BYd9YJYeDYYRnAXdA1EoSfHjo1MIDXWEpiGCereVcZ68DdAAiyEndsxRPYTgM15pDTqWXCllZQZgLU=
-Received: from SJ0PR03CA0070.namprd03.prod.outlook.com (2603:10b6:a03:331::15)
- by CH0PR12MB8462.namprd12.prod.outlook.com (2603:10b6:610:190::20) with
+ bh=7gGV35TzI2IX8yyudghxEcHPGGRW+9KX9XzCTfjVV7Q=;
+ b=kLUMl8ePXO+X/9XphMQA6UbWPWoBzARadt3WMOtmv4wJefUtHXc3SPqMzMojqad/9JW7Os5Oh5yJ+WPgZY2WcgZWY/KA/gEohb5Auo3Yj/6QxRH++8etrTBofTwbwImOrrD85CU8o7ChqYtBbNOsZEpPtL479brTZvEz/pG8MRc=
+Received: from SJ0PR03CA0271.namprd03.prod.outlook.com (2603:10b6:a03:39e::6)
+ by IA1PR12MB8309.namprd12.prod.outlook.com (2603:10b6:208:3fe::8) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.382.10; Wed, 2 Sep
- 2026 13:41:05 +0000
-Received: from SJ5PEPF000001CD.namprd05.prod.outlook.com
- (2603:10b6:a03:331:cafe::97) by SJ0PR03CA0070.outlook.office365.com
- (2603:10b6:a03:331::15) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.21.360.13 via Frontend Transport; Wed, 2
- Sep 2026 13:41:04 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.360.13; Wed, 2 Sep
+ 2026 13:41:55 +0000
+Received: from SJ5PEPF000001C9.namprd05.prod.outlook.com
+ (2603:10b6:a03:39e:cafe::80) by SJ0PR03CA0271.outlook.office365.com
+ (2603:10b6:a03:39e::6) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.21.382.11 via Frontend Transport; Wed, 2
+ Sep 2026 13:41:53 +0000
 X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
  smtp.mailfrom=amd.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=amd.com;
@@ -48,13 +48,13 @@ Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
  165.204.84.17 as permitted sender) receiver=protection.outlook.com;
  client-ip=165.204.84.17; helo=satlexmb07.amd.com; pr=C
 Received: from satlexmb07.amd.com (165.204.84.17) by
- SJ5PEPF000001CD.mail.protection.outlook.com (10.167.242.42) with Microsoft
+ SJ5PEPF000001C9.mail.protection.outlook.com (10.167.242.37) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.382.8 via Frontend Transport; Wed, 2 Sep 2026 13:41:04 +0000
+ 15.21.382.8 via Frontend Transport; Wed, 2 Sep 2026 13:41:53 +0000
 Received: from ethanolx7ea3host.amd.com (10.180.168.240) by satlexmb07.amd.com
  (10.181.42.216) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.46; Wed, 2 Sep
- 2026 08:41:03 -0500
+ 2026 08:41:26 -0500
 From: Terry Bowman <terry.bowman@amd.com>
 To: Jonathan Cameron <jic23@kernel.org>, Dave Jiang <dave.jiang@intel.com>,
 	Alison Schofield <alison.schofield@intel.com>, Vishal Verma
@@ -71,9 +71,9 @@ CC: Tony Luck <tony.luck@intel.com>, Borislav Petkov <bp@alien8.de>, "Hanjun
  Wunner" <lukas@wunner.de>, <linux-pci@vger.kernel.org>,
 	<linux-acpi@vger.kernel.org>, <linux-doc@vger.kernel.org>,
 	<linux-kernel@vger.kernel.org>
-Subject: [PATCH v20 7/9] cxl: Add port and dport identifiers to CXL AER trace events
-Date: Wed, 2 Sep 2026 08:39:31 -0500
-Message-ID: <20260902133933.2992457-8-terry.bowman@amd.com>
+Subject: [PATCH v20 9/9] Documentation: cxl: Document CXL protocol error handling
+Date: Wed, 2 Sep 2026 08:39:33 -0500
+Message-ID: <20260902133933.2992457-10-terry.bowman@amd.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260902133933.2992457-1-terry.bowman@amd.com>
 References: <20260902133933.2992457-1-terry.bowman@amd.com>
@@ -89,671 +89,541 @@ X-ClientProxiedBy: satlexmb07.amd.com (10.181.42.216) To satlexmb07.amd.com
  (10.181.42.216)
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: SJ5PEPF000001CD:EE_|CH0PR12MB8462:EE_
-X-MS-Office365-Filtering-Correlation-Id: d3909a1b-dcd2-4d43-9e0c-08df08f7d5fb
+X-MS-TrafficTypeDiagnostic: SJ5PEPF000001C9:EE_|IA1PR12MB8309:EE_
+X-MS-Office365-Filtering-Correlation-Id: a12354dc-2a31-43b9-04d6-08df08f7f32d
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|376014|1800799024|82310400026|23010399003|36860700016|7416014|10067099003|6133799003|3023799007|18002099003|22082099003|56012099006|11063799006|921020;
+	BCL:0;ARA:13230040|82310400026|36860700016|1800799024|23010399003|376014|7416014|18002099003|22082099003|56012099006|3023799007|10067099003|6133799003|921020|11063799006;
 X-Microsoft-Antispam-Message-Info:
-	T4CkLUjVSeDeBKDNt2QQQHqKisKMV4OVXzdXmKSr2RbtvWOiyrpPxe0bZgAHv+k8Utnrp1gyc+qzy2pPScMHESjewGcTI4hcZ3EUjrXOPRo4ETNNP+ZAkPtaoduVi5617hbYcaMYHPlC2b2GGRqJ2pYhP2E22nNPnvfqVhrhQKG3DgE4iyTuXdOjYriRBLT/wiXW8GEyjqNv/Ac6EmGhQ+Vl/T7RpEqKTV0ljbBGZuAMrbrJ+C86QSg1BcT9gnccJss8YyqdFGu2s3LcyHsrjSvaeI06MzZZp7gLMFpmpanaKBXgoPUKxjovZfIXV/lLCi71zCWFADFKcgjEvcb81q7RxaHsK6v0mEOW+AJJ0WtUma7WduFzRAK5pQ7lon1vZpizQdKZ38RVj7gtiyUMHRafCXxBL6o1qT82RLigfPJ8wSF8typvqxigKHONVKreN6Gdvk1iEVJkPam73ASdVIXYS8v1CbNIIoZrDA+3cidoPsg8C0D4CZTSl89M6qxeAyHkCXqkQ+AfBd9EtrsYi7PsX8Zkt+Ht79Du/gNBheNQYdAC4TCaeyUEEoPNe6MbTrCv/pRhJB11ISj7arp3YxmE1F+92g5K6/ckFHk+RdQWb5NnS4J5gQvHQuYcPW3DWYKVqlHp8LRwTr4p5Idzv5hYOIpO/D6y5d8w7ijrvuzkTxYGuGJq/LSsJTsoUsaUcHbuQ43JdfjzlrdW2Irc2GGRU9wf8uceYpEW281aPqcLGb6Flq64H5cjyR5WX9Fk
+	zxFHku2pX6yfe57MAK2c60NbUWdm6TTzbY0CcKbYzAb5LAB/VrxMmmp97gE86Tr+8Rxxn6FJLP8CgfutTCI0Tuut2vfofbjXg0E/fadE+7SWYBQ41nT8UrtTJiKvMWm7W8CRmtnxEHjnPPbjQbOhaahVai/zEe3WugnlUrnttk+VBinzGhUolzqyQUz0Bit/m4L0oIW6a0Ee5+3GcOVoj2zhK1OSbEDoASU6OVJf2BtpTGwI2bQuB/VgKxk+pfHQ5LQm98f8hIQSLOkmpAGgRWeTDdhjGeF4OH3F564HhilNS4GBtA/0oDBIurnswsKv9U74zDDPNiBK8IIN4UtH4D50ZGimtbZTQKO4/NiS0emhCAaZsq4EJqVSnMrPKm85luWH7QoL+lJSrwQ89uRttQsfWenB/Njmiau1xPWFfp+nMe48/r1r0ewbPcbyj8vV0URKMjQlNqsBWqcWnq41NpA8wRkBAZyU2OVhqZuWVXPrMbDTxM/B6DyIqeW1cGwl1jlRxFBo9ScW+E01hR70v9zesbUBkikFFFLe78lB660Zg+2Adi1YARhqRjSD9CoQjQxrI+A289S1Z4+4OGGsQmSb1ZCV6yhfJZ090njH9jL/TX3Bjc/qE7i51fkbgsc3XlGTJyuFUXOCJI+r7ArY+wuVPYmwicNBXzHP1j3QIT4ADycekCmFDl+npIqR93dlr6tnEENcv6xv9weVAIPFiV0LLh7dpSRnRN6v1Oq9+rseObtW069coIoCpVIWRowo
 X-Forefront-Antispam-Report:
-	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:satlexmb07.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(376014)(1800799024)(82310400026)(23010399003)(36860700016)(7416014)(10067099003)(6133799003)(3023799007)(18002099003)(22082099003)(56012099006)(11063799006)(921020);DIR:OUT;SFP:1101;
+	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:satlexmb07.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(82310400026)(36860700016)(1800799024)(23010399003)(376014)(7416014)(18002099003)(22082099003)(56012099006)(3023799007)(10067099003)(6133799003)(921020)(11063799006);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	iobgrCqMa49WZX3jU2LHpL2Slz+PSziXFclVNivgR8fWpe1SO0g0P9bLqFt/HuTIFeBjh+RBxROk8r7OinrxNC8tQyw//nre0AHXZxil8vC7f2q5uDEtrLs08lzYwAiO63gCzQ/vbKXyPU7fYxXiuRE1NcsnOItFu8Kd1FZ0uPSYppv47C1m0QN8n9rWgCkfRmht6ETl0RatwM34Kwz22G/s8DXNhMt/zQnecfQFVzSY7G46sUdBsTadxPYPiPZ+TxiL7QscCxcc2/t21b4TaH7y+sVdmS7A1KrIgjX059y0JSznNC0d9JO1SDqOuXfVpPzeTRTDdrfcTKFJfvpftiG9deSYtrfjaD8xCg2lnAIy5pw4w3RUgK77eaww+dKAOFpky/GXIu9tPqYStGpU0t/AMGoFKyVKtrT7EbwTiwUGMCd4aAvL9sz1B1WLiadq
+	0VYbiFQGkAbgu8I6vbw/3AuOAaNTbl1NwzBFVog38vpfmeOZh1LC1LtZHvqIsmVzdVQldRc166ip6OMkdNwuzKs1AHq+cbE5xXGEmhxuBToOgxKiqvB5NZxpQvYTii7zsHEBWcVfiuaMOoC3zNRnKmBqpoN05Koz/2p+fmtswwSB/lipo3cbf+Ht7hRv21XKiA2YMABqvQSMIfYhVWFk019HOXfFHyG5feUAtXHJwX69jwcmZixAWYPJ/NMIFhnsfrEYumI+cDOeR/n2J6lzE3fykwMngfJxX/ze8xpQ+mycreqsTfPGSVKXCDHcUxyP1INyTSPkLux39J3b18N34+LmzuBsrR07UJAMHYP9g8xa62tuLkajK2MKiUx50LBVLZ+WCAORoaCmtuTinRWVk5/oLwim1Lhci2sS4OQeOoe3mBTT/lQfcFKeuAEVycT7
 X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 02 Sep 2026 13:41:04.9188
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 02 Sep 2026 13:41:53.8415
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: d3909a1b-dcd2-4d43-9e0c-08df08f7d5fb
+X-MS-Exchange-CrossTenant-Network-Message-Id: a12354dc-2a31-43b9-04d6-08df08f7f32d
 X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[satlexmb07.amd.com]
 X-MS-Exchange-CrossTenant-AuthSource:
-	SJ5PEPF000001CD.namprd05.prod.outlook.com
+	SJ5PEPF000001C9.namprd05.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH0PR12MB8462
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA1PR12MB8309
 
-From: Dan Williams <djbw@kernel.org>
+Add Documentation/driver-api/cxl/linux/protocol-error-handling.rst
+describing the end-to-end CXL protocol error path: AER ingress, the
+AER-CXL kfifo handoff, the cxl_core consumer worker, RCD/RCH special
+cases, severity policy, trace events, and a source code map.
 
-Pass struct cxl_port * and struct cxl_dport * to the cxl_aer_* trace events
-instead of a plain struct device * derived at the caller. The trace event
-helpers then derive the right strings for Endpoints, Switch Ports, Root
-Ports, and RCH Downstream Ports consistently across the CPER and native AER
-paths.
+This documents the architecture introduced by the preceding patches in
+this series.
 
-The unified cxl_aer_* events keep "memdev" as the legacy field (Endpoint
-events populate it with the memdev name; non-Endpoint events emit
-memdev="") and add new "port" and "dport" string fields populated for all
-CXL device classes. Updated userspace can key off "port" and "dport"
-without a parallel set of events.
-
-Remove the separate cxl_port_aer_uncorrectable_error and
-cxl_port_aer_correctable_error trace events. All CXL AER events now use the
-unified cxl_aer_* events with port and dport fields.
-
-Rework cxl_cper_handle_prot_err() to use find_cxl_port_by_dev() and the
-unified trace helpers, replacing the per-port-type branching and
-bus_find_device() memdev lookup.
-
-The TP_printk format string places "port=%s dport=%s" between "memdev=%s"
-and "host=%s", changing the text-mode field order from the pre-patch output.
-This does not affect consumers such as rasdaemon that use libtraceevent to
-parse fields by name rather than by fixed text position.
-
-For non-Endpoint events (Switch Port, Root Port, RCH Dport), "memdev" is
-empty and "port"/"dport" carry the topology information.
-
-CPER: trace firmware-supplied protocol errors even when the host device is
-unbound; the record is self-contained in ras_cap and reads no MMIO. Keep
-the host lock only to serialize the dport lookup against teardown.
-
-Below are examples of the different CXL devices' error trace logs
-after this patch:
-
-     ---------------------
-     | CXL RP - 0C:00.0  |
-     ---------------------
-               |
-     ---------------------
-     | CXL USP - 0D:00.0 |
-     ---------------------
-               |
-     --------------------
-     | CXL DSP - 0E:00.0 |
-     --------------------
-               |
-     ---------------------
-     | CXL EP - 0F:00.0  |
-     ---------------------
-
-Root Port:
-cxl_aer_correctable_error: memdev= port=port1 dport=0000:0c:00.0 \
-   host=pci0000:0c serial=0: status: 'Memory Data ECC Error'
-
-cxl_aer_uncorrectable_error: memdev= port=port1 dport=0000:0c:00.0 \
-   host=pci0000:0c serial=0: status: 'Cache Address Parity Error'  \
-   first_error: 'Cache Address Parity Error'
-
-Upstream Switch Port:
-cxl_aer_correctable_error: memdev= port=port2 dport= host=0000:0d:00.0 \
-   serial=0: status: 'Memory Data ECC Error'
-
-UCE NA - Upstream Switch Port UCE's are handled in the portdrv driver's
-PCI AER callbacks that are not CXL aware.
-
-Downstream Switch Port:
-cxl_aer_correctable_error: memdev= port=port2 dport=0000:0e:00.0 \
-   host=0000:0d:00.0 serial=0: status: 'Memory Data ECC Error'
-
-cxl_aer_uncorrectable_error: memdev= port=port2 dport=0000:0e:00.0 \
-   host=0000:0d:00.0 serial=0: status: 'Cache Address Parity Error' \
-   first_error: 'Cache Address Parity Error'
-
-RCH Downstream Port (RCD attached under a host bridge, no switch):
-cxl_aer_correctable_error: memdev= port=root0 dport=pci0000:0c \
-   host=pci0000:0c serial=0: status: 'Memory Data ECC Error'
-
-cxl_aer_uncorrectable_error: memdev= port=root0 dport=pci0000:0c \
-   host=pci0000:0c serial=0: status: 'Cache Address Parity Error' \
-   first_error: 'Cache Address Parity Error'
-
-For RCH topologies, both correctable and uncorrectable protocol errors
-were previously traced against the memdev via the cxl_aer_* events with
-memdev populated. They now emit memdev="" with the RCH Downstream Port
-carried in the "dport" field (dport->dport_dev, the host bridge) and the
-host bridge in "host". Consumers that keyed RCH errors off "memdev" must
-key off "dport" instead.
-
-Endpoint:
-cxl_aer_uncorrectable_error: memdev=mem1 port=endpoint4 dport= \
-   host=0000:0f:00.0 serial=0: status: 'Cache Address Parity Error' \
-   first_error: 'Cache Address Parity Error'
-
-cxl_aer_correctable_error: memdev=mem1 port=endpoint4 dport= host=0000:0f:00.0 \
-   serial=0: status: 'Memory Data ECC Error'
-
-Co-developed-by: Terry Bowman <terry.bowman@amd.com>
+Assisted-by: Claude:claude-opus-4.8
 Signed-off-by: Terry Bowman <terry.bowman@amd.com>
-Signed-off-by: Dan Williams <djbw@kernel.org>
+Reviewed-by: Dave Jiang <dave.jiang@intel.com>
+Reviewed-by: Jonathan Cameron <jonathan.cameron@oss.qualcomm.com>
+Reviewed-by: Alison Schofield <alison.schofield@intel.com>
 
 ---
 
-Changes in v19->v20:
-- Remove host->driver gate. Not required for dev_name() call
+Changes in v19 -> v20:
+- Document the kfifo-overflow panic policy
+- Name the CXL Host Bridge device lock (port->uport_dev) in RCH case
+- Reword the cxl_do_recovery() no-UE-bits path
+- Fix CPER path description: firmware-first is trace-only, no panic
+- Diagram: EP RAS read is channel-state independent, not "unconditional"
+- Fix cxl_handle_ras() argument count in the fatal-UCE diagram
+- Clarify .error_detected skips RAS read without panic when unmapped
 
 Changes in v18->v19:
-- Drop redundant device lock in cxl_cper_handle_prot_err(); the port
-  reference already keeps the object alive and no RAS iomap is accessed.
-- Swap order in series with ("PCI: Cache PCI DSN into pci_dev->dsn during
-  probe")
-- Add review-by for DaveJ
+- Alignment fixes
+- Add RC_END/RCiEP to diagram
+- Wrap past 80 columns.
+- Update cxl_forward_error() return-value behavior
+- Add review-by for Jonathan Cameron
+- Document the CPER/firmware-first flow (GHES + ext-log producers,
+  CPER-CXL kfifo, trace-only consumer)
+- Document the fatal EP/RCD UCE flow via the .error_detected
+  (cxl_pci_error_detected) RAS path, including channel-state handling
+- Add an "AER handlers vs RAS handlers" section clarifying the two
+  handler layers and their relationship
 
 Changes in v17->v18:
-- Consolidate double find_cxl_port_by_dev() in cxl_cper_handle_prot_err()
-- Add comment noting dport is NULL for Endpoint and Upstream Port devices
-- Add cxl_trace_* helpers
-- Add CPER refactor
-
-Changes in v16->v17:
-- Replace cxlds->serial with pci_get_dsn()
-- Change 'memdev' to 'device' (Dan)
-- Updated Commit message
-
-Changes in v15->v16:
-- Add Dan's review-by
-- Incorporate Dan's comment into commit message:
-"Add the serial number at the end to preserve compatibility with
-libtraceevent parsing of the parameters."
-
-Changes in v14->v15:
-- Update commit message.
-- Moved cxl_handle_ras/cxl_handle_cor_ras() changes to future patch (terry)
-
-Changes in v13->v14:
-- Update commit headline (Bjorn)
-
-Changes in v12->v13:
-- Added Dave Jiang's review-by
-
-Changes in v11 -> v12:
-- Correct parameters to call trace_cxl_aer_correctable_error()
-- Add reviewed-by for Jonathan and Shiju
-
-Changes in v10->v11:
-- Updated CE and UCE trace routines to maintain consistent TP_Struct ABI
-and unchanged TP_printk() logging.
+- Simplify document for readability (Jonathan)
+- Drop historical context that goes stale (Jonathan)
+- Shorten ASCII flow diagram (Jonathan)
+- Drop manual backtick markup, use automarkup (Jonathan)
+- Clarify USP/DSP as single switch component (Dave)
+- Fix line wrapping to 80 chars (Jonathan)
 ---
- drivers/cxl/core/core.h    |   8 +--
- drivers/cxl/core/ras.c     | 137 +++++++++++++------------------------
- drivers/cxl/core/ras_rch.c |   3 +-
- drivers/cxl/core/trace.c   |  35 ++++++++++
- drivers/cxl/core/trace.h   |  91 +++++++-----------------
- drivers/cxl/cxlmem.h       |   7 ++
- 6 files changed, 122 insertions(+), 159 deletions(-)
+ Documentation/driver-api/cxl/index.rst        |   1 +
+ .../cxl/linux/protocol-error-handling.rst     | 441 ++++++++++++++++++
+ 2 files changed, 442 insertions(+)
+ create mode 100644 Documentation/driver-api/cxl/linux/protocol-error-handling.rst
 
-diff --git a/drivers/cxl/core/core.h b/drivers/cxl/core/core.h
-index 4f6b4702deb38..5509521a2034d 100644
---- a/drivers/cxl/core/core.h
-+++ b/drivers/cxl/core/core.h
-@@ -188,11 +188,11 @@ static inline struct device *dport_to_host(struct cxl_dport *dport)
- void cxl_ras_init(void);
- void cxl_ras_exit(void);
- bool cxl_handle_ras(struct cxl_port *port, struct cxl_dport *dport,
--		    void __iomem *ras_base);
-+		    void __iomem *ras_base, u64 serial);
- void cxl_do_recovery(struct pci_dev *pdev, struct cxl_port *port,
- 		     struct cxl_dport *dport);
- void cxl_handle_cor_ras(struct cxl_port *port, struct cxl_dport *dport,
--			void __iomem *ras_base);
-+			void __iomem *ras_base, u64 serial);
- void cxl_dport_map_rch_aer(struct cxl_dport *dport);
- void cxl_disable_rch_root_ints(struct cxl_dport *dport);
- void cxl_handle_rdport_errors(struct pci_dev *pdev);
-@@ -202,14 +202,14 @@ void devm_cxl_dport_ras_setup(struct cxl_dport *dport);
- static inline void cxl_ras_init(void) { }
- static inline void cxl_ras_exit(void) { }
- static inline bool cxl_handle_ras(struct cxl_port *port, struct cxl_dport *dport,
--				  void __iomem *ras_base)
-+				  void __iomem *ras_base, u64 serial)
- {
- 	return false;
- }
- static inline void cxl_do_recovery(struct pci_dev *pdev, struct cxl_port *port,
- 				   struct cxl_dport *dport) { }
- static inline void cxl_handle_cor_ras(struct cxl_port *port, struct cxl_dport *dport,
--				      void __iomem *ras_base) { }
-+				      void __iomem *ras_base, u64 serial) { }
- static inline void cxl_dport_map_rch_aer(struct cxl_dport *dport) { }
- static inline void cxl_disable_rch_root_ints(struct cxl_dport *dport) { }
- static inline void cxl_handle_rdport_errors(struct pci_dev *pdev) { }
-diff --git a/drivers/cxl/core/ras.c b/drivers/cxl/core/ras.c
-index bf479fac08565..fac37b6fd882f 100644
---- a/drivers/cxl/core/ras.c
-+++ b/drivers/cxl/core/ras.c
-@@ -12,69 +12,37 @@
- static_assert(CXL_HEADERLOG_TRACE_SIZE_U32 == 128,
- 	      "rasdaemon ABI requires exactly 128 u32s");
+diff --git a/Documentation/driver-api/cxl/index.rst b/Documentation/driver-api/cxl/index.rst
+index 3dfae1d310ca5..6861b2e5726a3 100644
+--- a/Documentation/driver-api/cxl/index.rst
++++ b/Documentation/driver-api/cxl/index.rst
+@@ -42,6 +42,7 @@ that have impacts on each other.  The docs here break up configurations steps.
+    linux/dax-driver
+    linux/memory-hotplug
+    linux/access-coordinates
++   linux/protocol-error-handling
  
--static void cxl_cper_trace_corr_port_prot_err(struct pci_dev *pdev,
--					      struct cxl_ras_capability_regs ras_cap)
--{
--	u32 status = ras_cap.cor_status & ~ras_cap.cor_mask;
--
--	trace_cxl_port_aer_correctable_error(&pdev->dev, status);
--}
--
--static void cxl_cper_trace_uncorr_port_prot_err(struct pci_dev *pdev,
--						struct cxl_ras_capability_regs ras_cap)
--{
--	u32 hl[CXL_HEADERLOG_TRACE_SIZE_U32] = {};
--	u32 status = ras_cap.uncor_status & ~ras_cap.uncor_mask;
--	u32 fe;
--
--	if (hweight32(status) > 1)
--		fe = BIT(FIELD_GET(CXL_RAS_CAP_CONTROL_FE_MASK,
--				   ras_cap.cap_control));
--	else
--		fe = status;
--
--	memcpy(hl, ras_cap.header_log, CXL_HEADERLOG_SIZE);
--	trace_cxl_port_aer_uncorrectable_error(&pdev->dev, status, fe, hl);
--}
--
--static void cxl_cper_trace_corr_prot_err(struct cxl_memdev *cxlmd,
--					 struct cxl_ras_capability_regs ras_cap)
--{
--	u32 status = ras_cap.cor_status & ~ras_cap.cor_mask;
--
--	trace_cxl_aer_correctable_error(cxlmd, status);
--}
--
--static void
--cxl_cper_trace_uncorr_prot_err(struct cxl_memdev *cxlmd,
--			       struct cxl_ras_capability_regs ras_cap)
-+static void cxl_cper_trace_uncorr_prot_err(struct cxl_port *port, struct cxl_dport *dport,
-+					   u64 serial, struct cxl_ras_capability_regs *ras_cap)
- {
- 	u32 hl[CXL_HEADERLOG_TRACE_SIZE_U32] = {};
--	u32 status = ras_cap.uncor_status & ~ras_cap.uncor_mask;
-+	u32 status = ras_cap->uncor_status & ~ras_cap->uncor_mask;
- 	u32 fe;
- 
- 	if (hweight32(status) > 1)
- 		fe = BIT(FIELD_GET(CXL_RAS_CAP_CONTROL_FE_MASK,
--				   ras_cap.cap_control));
-+				   ras_cap->cap_control));
- 	else
- 		fe = status;
- 
- 	/*
--	 * ras_cap.header_log[] holds CXL_HEADERLOG_SIZE_U32 (16) hardware
-+	 * ras_cap->header_log[] holds CXL_HEADERLOG_SIZE_U32 (16) hardware
- 	 * dwords. Copy them into the front of a zero-filled
- 	 * CXL_HEADERLOG_TRACE_SIZE_U32 (128) u32 staging buffer so the trace
- 	 * event memcpy sees a full 512-byte source and the userspace ABI
- 	 * (rasdaemon) is preserved.
- 	 */
--	memcpy(hl, ras_cap.header_log, CXL_HEADERLOG_SIZE);
--	trace_cxl_aer_uncorrectable_error(cxlmd, status, fe, hl);
-+	memcpy(hl, ras_cap->header_log, CXL_HEADERLOG_SIZE);
-+	trace_cxl_aer_uncorrectable_error(port, dport, status, fe,
-+					  hl, serial);
- }
- 
--static int match_memdev_by_parent(struct device *dev, const void *uport)
-+static void cxl_cper_trace_corr_prot_err(struct cxl_port *port, struct cxl_dport *dport,
-+					 u64 serial, struct cxl_ras_capability_regs *ras_cap)
- {
--	if (is_cxl_memdev(dev) && dev->parent == uport)
--		return 1;
--	return 0;
-+	u32 status = ras_cap->cor_status & ~ras_cap->cor_mask;
+ .. toctree::
+    :maxdepth: 2
+diff --git a/Documentation/driver-api/cxl/linux/protocol-error-handling.rst b/Documentation/driver-api/cxl/linux/protocol-error-handling.rst
+new file mode 100644
+index 0000000000000..1da71d0409a05
+--- /dev/null
++++ b/Documentation/driver-api/cxl/linux/protocol-error-handling.rst
+@@ -0,0 +1,441 @@
++.. SPDX-License-Identifier: GPL-2.0
 +
-+	trace_cxl_aer_correctable_error(port, dport, status, serial);
- }
- 
- /**
-@@ -108,44 +76,42 @@ static struct cxl_port *find_cxl_port_by_dev(struct device *dev, struct cxl_dpor
- 
- void cxl_cper_handle_prot_err(struct cxl_cper_prot_err_work_data *data)
- {
-+	struct cxl_dport *dport;
-+	struct device *host;
- 	unsigned int devfn = PCI_DEVFN(data->prot_err.agent_addr.device,
- 				       data->prot_err.agent_addr.function);
--	struct pci_dev *pdev __free(pci_dev_put) =
--		pci_get_domain_bus_and_slot(data->prot_err.agent_addr.segment,
--					    data->prot_err.agent_addr.bus,
--					    devfn);
--	struct cxl_memdev *cxlmd;
--	int port_type;
--
--	if (!pdev)
-+	struct pci_dev *pdev __free(pci_dev_put) = pci_get_domain_bus_and_slot(
-+		data->prot_err.agent_addr.segment, data->prot_err.agent_addr.bus, devfn);
-+	if (!pdev) {
-+		pr_err_ratelimited("Failed to find CPER device in CXL topology\n");
- 		return;
-+	}
- 
--	port_type = pci_pcie_type(pdev);
--	if (port_type == PCI_EXP_TYPE_ROOT_PORT ||
--	    port_type == PCI_EXP_TYPE_DOWNSTREAM ||
--	    port_type == PCI_EXP_TYPE_UPSTREAM) {
--		if (data->severity == AER_CORRECTABLE)
--			cxl_cper_trace_corr_port_prot_err(pdev, data->ras_cap);
--		else
--			cxl_cper_trace_uncorr_port_prot_err(pdev, data->ras_cap);
--
-+	struct cxl_port *port __free(put_cxl_port) = find_cxl_port_by_dev(&pdev->dev, NULL);
-+	if (!port) {
-+		dev_err_ratelimited(&pdev->dev,
-+				    "Failed to find parent port device in CXL topology\n");
- 		return;
- 	}
- 
--	guard(device)(&pdev->dev);
--	if (!pdev->dev.driver)
--		return;
-+	host = is_cxl_root(port) ? port->uport_dev : &port->dev;
- 
--	struct device *mem_dev __free(put_device) = bus_find_device(
--		&cxl_bus_type, NULL, pdev, match_memdev_by_parent);
--	if (!mem_dev)
--		return;
-+	/*
-+	 * Lock host to serialize the dport lookup/trace against dport teardown.
-+	 * Don't gate on host->driver as the CPER record is FW provided and needs
-+	 * no device MMIO.
-+	 */
-+	guard(device)(host);
++==============================
++CXL Protocol Error Handling
++==============================
 +
-+	/* dport is NULL for Endpoint and Upstream Port devices */
-+	dport = cxl_find_dport_by_dev(port, &pdev->dev);
- 
--	cxlmd = to_cxl_memdev(mem_dev);
- 	if (data->severity == AER_CORRECTABLE)
--		cxl_cper_trace_corr_prot_err(cxlmd, data->ras_cap);
-+		cxl_cper_trace_corr_prot_err(port, dport, pdev->dsn,
-+					     &data->ras_cap);
- 	else
--		cxl_cper_trace_uncorr_prot_err(cxlmd, data->ras_cap);
-+		cxl_cper_trace_uncorr_prot_err(port, dport, pdev->dsn,
-+					       &data->ras_cap);
- }
- EXPORT_SYMBOL_GPL(cxl_cper_handle_prot_err);
- 
-@@ -232,14 +198,15 @@ void cxl_do_recovery(struct pci_dev *pdev, struct cxl_port *port, struct cxl_dpo
- 	if (!ras_base)
- 		panic("CXL: UCE with unmapped RAS registers");
- 
--	if (cxl_handle_ras(port, dport, ras_base))
-+	if (cxl_handle_ras(port, dport, ras_base, pdev->dsn))
- 		panic("CXL cachemem error");
- 
- 	dev_dbg(&pdev->dev,
- 		"CXL UCE signaled but no CXL RAS status bits set\n");
- }
- 
--void cxl_handle_cor_ras(struct cxl_port *port, struct cxl_dport *dport, void __iomem *ras_base)
-+void cxl_handle_cor_ras(struct cxl_port *port, struct cxl_dport *dport,
-+			void __iomem *ras_base, u64 serial)
- {
- 	void __iomem *addr;
- 	u32 status;
-@@ -251,12 +218,7 @@ void cxl_handle_cor_ras(struct cxl_port *port, struct cxl_dport *dport, void __i
- 	status = readl(addr);
- 	if (status & CXL_RAS_CORRECTABLE_STATUS_MASK) {
- 		writel(status & CXL_RAS_CORRECTABLE_STATUS_MASK, addr);
--		if (is_cxl_endpoint(port))
--			trace_cxl_aer_correctable_error(to_cxl_memdev(port->uport_dev), status);
--		else if (dport)
--			trace_cxl_port_aer_correctable_error(dport->dport_dev, status);
--		else
--			trace_cxl_port_aer_correctable_error(port->uport_dev, status);
-+		trace_cxl_aer_correctable_error(port, dport, status, serial);
- 	}
- }
- 
-@@ -281,7 +243,8 @@ static void header_log_copy(void __iomem *ras_base, u32 *log)
-  * Log the state of the RAS status registers and prepare them to log the
-  * next error status. Return 1 if reset needed.
-  */
--bool cxl_handle_ras(struct cxl_port *port, struct cxl_dport *dport, void __iomem *ras_base)
-+bool cxl_handle_ras(struct cxl_port *port, struct cxl_dport *dport,
-+		    void __iomem *ras_base, u64 serial)
- {
- 	u32 hl[CXL_HEADERLOG_TRACE_SIZE_U32] = {};
- 	void __iomem *addr;
-@@ -308,12 +271,7 @@ bool cxl_handle_ras(struct cxl_port *port, struct cxl_dport *dport, void __iomem
- 	}
- 
- 	header_log_copy(ras_base, hl);
--	if (is_cxl_endpoint(port))
--		trace_cxl_aer_uncorrectable_error(to_cxl_memdev(port->uport_dev), status, fe, hl);
--	else if (dport)
--		trace_cxl_port_aer_uncorrectable_error(dport->dport_dev, status, fe, hl);
--	else
--		trace_cxl_port_aer_uncorrectable_error(port->uport_dev, status, fe, hl);
-+	trace_cxl_aer_uncorrectable_error(port, dport, status, fe, hl, serial);
- 
- 	writel(status & CXL_RAS_UNCORRECTABLE_STATUS_MASK, addr);
- 
-@@ -354,7 +312,8 @@ pci_ers_result_t cxl_pci_error_detected(struct pci_dev *pdev,
- 		 * block cannot attribute the error to CXL and must not panic.
- 		 * The switch cases below then handle AER recovery.
- 		 */
--		ue = cxl_handle_ras(port, NULL, to_ras_base(port, NULL));
-+		ue = cxl_handle_ras(port, NULL, to_ras_base(port, NULL),
-+				    pdev->dsn);
- 	}
- 
- 	/*
-@@ -386,7 +345,7 @@ static void cxl_handle_proto_error(struct pci_dev *pdev, struct cxl_port *port,
- 				   struct cxl_dport *dport, int severity)
- {
- 	if (severity == AER_CORRECTABLE)
--		cxl_handle_cor_ras(port, dport, to_ras_base(port, dport));
-+		cxl_handle_cor_ras(port, dport, to_ras_base(port, dport), pdev->dsn);
- 	else
- 		cxl_do_recovery(pdev, port, dport);
- }
-diff --git a/drivers/cxl/core/ras_rch.c b/drivers/cxl/core/ras_rch.c
-index bc6cf50fcc926..3684d1d829e1e 100644
---- a/drivers/cxl/core/ras_rch.c
-+++ b/drivers/cxl/core/ras_rch.c
-@@ -123,7 +123,8 @@ void cxl_handle_rdport_errors(struct pci_dev *pdev)
- 	 */
- 	if (aer_regs.cor_status & ~aer_regs.cor_mask) {
- 		pci_print_aer(pdev, AER_CORRECTABLE, &aer_regs);
--		cxl_handle_cor_ras(port, dport, to_ras_base(port, dport));
-+		cxl_handle_cor_ras(port, dport, to_ras_base(port, dport),
-+				   pdev->dsn);
- 	}
- 
- 	if (uncor_status) {
-diff --git a/drivers/cxl/core/trace.c b/drivers/cxl/core/trace.c
-index 7f2a9dd0d0e3f..df42d119c53dd 100644
---- a/drivers/cxl/core/trace.c
-+++ b/drivers/cxl/core/trace.c
-@@ -2,7 +2,42 @@
- /* Copyright(c) 2022 Intel Corporation. All rights reserved. */
- 
- #include <cxl.h>
-+#include <cxlmem.h>
- #include "core.h"
- 
-+const char *cxl_trace_memdev_name(struct cxl_port *port)
-+{
-+	if (is_cxl_endpoint(port)) {
-+		struct cxl_memdev *cxlmd = to_cxl_memdev(port->uport_dev);
++CXL devices report protocol-layer failures (CXL.cachemem RAS) as PCIe AER
++Internal Errors: PCI_ERR_COR_INTERNAL for correctable events and
++PCI_ERR_UNC_INTN for uncorrectable events. The actual fault information
++lives in CXL RAS capability registers, not in the PCIe AER status registers.
 +
-+		return dev_name(&cxlmd->dev);
-+	}
++The kernel routes every CXL Internal Error through a producer/consumer
++pipeline shared by all CXL device types: Root Ports, Upstream/Downstream
++Switch Ports, Endpoints, and Restricted CXL Devices (RCDs).
 +
-+	return "";
-+}
++Errors are delivered by one of two mechanisms. On native-AER platforms the
++kernel takes the AER interrupt and reads the CXL RAS registers itself. On
++firmware-first (CPER/GHES) platforms, platform firmware handles the error
++and hands the kernel a CPER record; that path is trace-only. Both converge
++on the same cxl_core RAS handlers.
 +
-+const char *cxl_trace_host_name(struct cxl_port *port)
-+{
-+	if (is_cxl_endpoint(port)) {
-+		struct cxl_memdev *cxlmd = to_cxl_memdev(port->uport_dev);
 +
-+		return dev_name(cxlmd->dev.parent);
-+	}
++Architecture
++============
 +
-+	return dev_name(port->uport_dev);
-+}
++Two error planes run side by side:
 +
-+const char *cxl_trace_port_name(struct cxl_port *port)
-+{
-+	return dev_name(&port->dev);
-+}
++* The **PCIe AER plane** handles native PCIe errors (receiver overflows,
++  malformed TLPs, completion timeouts, etc.). This includes CXL.io, which
++  is functionally PCIe and reports through native AER status registers.
++* The **CXL protocol error plane** handles CXL.cachemem (CXL.cache and
++  CXL.mem) protocol errors. These have no native AER status; they are
++  signaled as AER Internal Errors, with the fault detail held in the CXL
++  RAS capability registers. The AER core forwards them to cxl_core via a
++  dedicated kfifo; cxl_core reads the CXL RAS registers, emits trace
++  events, and applies recovery/panic policy.
 +
-+const char *cxl_trace_dport_name(struct cxl_dport *dport)
-+{
-+	if (dport)
-+		return dev_name(dport->dport_dev);
-+	return "";
-+}
++The boundary between the two planes is enforced by is_cxl_error() in
++aer_cxl_vh.c. It checks info->is_cxl, the PCIe device type (Endpoint,
++Root Port, Upstream, or Downstream), and whether the AER status word
++indicates an internal error. RC_END devices are excluded from
++is_cxl_error() because they reach the kfifo via the separate
++cxl_rch_handle_error() path instead.
 +
- #define CREATE_TRACE_POINTS
- #include "trace.h"
-diff --git a/drivers/cxl/core/trace.h b/drivers/cxl/core/trace.h
-index c379d60047fc8..9f7fad8d77a54 100644
---- a/drivers/cxl/core/trace.h
-+++ b/drivers/cxl/core/trace.h
-@@ -48,44 +48,15 @@
- 	{ CXL_RAS_UC_IDE_RX_ERR, "IDE Rx Error" }			  \
- )
- 
--TRACE_EVENT(cxl_port_aer_uncorrectable_error,
--	TP_PROTO(struct device *dev, u32 status, u32 fe, u32 *hl),
--	TP_ARGS(dev, status, fe, hl),
--	TP_STRUCT__entry(
--		__string(device, dev_name(dev))
--		__string(host, dev_name(dev->parent))
--		__field(u32, status)
--		__field(u32, first_error)
--		__array(u32, header_log, CXL_HEADERLOG_TRACE_SIZE_U32)
--	),
--	TP_fast_assign(
--		__assign_str(device);
--		__assign_str(host);
--		__entry->status = status;
--		__entry->first_error = fe;
--		/*
--		 * Embed headerlog data for user app retrieval and parsing,
--		 * but no need to print in the trace buffer. Only
--		 * CXL_HEADERLOG_SIZE_U32 (16) dwords are hardware data;
--		 * the remaining entries preserve the 512-byte ABI layout
--		 * rasdaemon depends on and are zero-filled by the caller.
--		 */
--		memcpy(__entry->header_log, hl,
--			CXL_HEADERLOG_TRACE_SIZE_U32 * sizeof(u32));
--	),
--	TP_printk("device=%s host=%s status: '%s' first_error: '%s'",
--		  __get_str(device), __get_str(host),
--		  show_uc_errs(__entry->status),
--		  show_uc_errs(__entry->first_error)
--	)
--);
--
- TRACE_EVENT(cxl_aer_uncorrectable_error,
--	TP_PROTO(const struct cxl_memdev *cxlmd, u32 status, u32 fe, u32 *hl),
--	TP_ARGS(cxlmd, status, fe, hl),
-+	TP_PROTO(struct cxl_port *port, struct cxl_dport *dport,
-+		 u32 status, u32 fe, u32 *hl, u64 serial),
-+	TP_ARGS(port, dport, status, fe, hl, serial),
- 	TP_STRUCT__entry(
--		__string(memdev, dev_name(&cxlmd->dev))
--		__string(host, dev_name(cxlmd->dev.parent))
-+		__string(memdev, cxl_trace_memdev_name(port))
-+		__string(port, cxl_trace_port_name(port))
-+		__string(dport, cxl_trace_dport_name(dport))
-+		__string(host, cxl_trace_host_name(port))
- 		__field(u64, serial)
- 		__field(u32, status)
- 		__field(u32, first_error)
-@@ -93,8 +64,10 @@ TRACE_EVENT(cxl_aer_uncorrectable_error,
- 	),
- 	TP_fast_assign(
- 		__assign_str(memdev);
-+		__assign_str(port);
-+		__assign_str(dport);
- 		__assign_str(host);
--		__entry->serial = cxlmd->cxlds->serial;
-+		__entry->serial = serial;
- 		__entry->status = status;
- 		__entry->first_error = fe;
- 		/*
-@@ -107,8 +80,9 @@ TRACE_EVENT(cxl_aer_uncorrectable_error,
- 		memcpy(__entry->header_log, hl,
- 			CXL_HEADERLOG_TRACE_SIZE_U32 * sizeof(u32));
- 	),
--	TP_printk("memdev=%s host=%s serial=%llu: status: '%s' first_error: '%s'",
--		  __get_str(memdev), __get_str(host), __entry->serial,
-+	TP_printk("memdev=%s port=%s dport=%s host=%s serial=%llu: status: '%s' first_error: '%s'",
-+		  __get_str(memdev), __get_str(port), __get_str(dport),
-+		  __get_str(host), __entry->serial,
- 		  show_uc_errs(__entry->status),
- 		  show_uc_errs(__entry->first_error)
- 	)
-@@ -132,42 +106,29 @@ TRACE_EVENT(cxl_aer_uncorrectable_error,
- 	{ CXL_RAS_CE_PHYS_LAYER_ERR, "Received Error From Physical Layer" }	\
- )
- 
--TRACE_EVENT(cxl_port_aer_correctable_error,
--	TP_PROTO(struct device *dev, u32 status),
--	TP_ARGS(dev, status),
--	TP_STRUCT__entry(
--		__string(device, dev_name(dev))
--		__string(host, dev_name(dev->parent))
--		__field(u32, status)
--	),
--	TP_fast_assign(
--		__assign_str(device);
--		__assign_str(host);
--		__entry->status = status;
--	),
--	TP_printk("device=%s host=%s status='%s'",
--		  __get_str(device), __get_str(host),
--		  show_ce_errs(__entry->status)
--	)
--);
--
- TRACE_EVENT(cxl_aer_correctable_error,
--	TP_PROTO(const struct cxl_memdev *cxlmd, u32 status),
--	TP_ARGS(cxlmd, status),
-+	TP_PROTO(struct cxl_port *port, struct cxl_dport *dport,
-+		 u32 status, u64 serial),
-+	TP_ARGS(port, dport, status, serial),
- 	TP_STRUCT__entry(
--		__string(memdev, dev_name(&cxlmd->dev))
--		__string(host, dev_name(cxlmd->dev.parent))
-+		__string(memdev, cxl_trace_memdev_name(port))
-+		__string(port, cxl_trace_port_name(port))
-+		__string(dport, cxl_trace_dport_name(dport))
-+		__string(host, cxl_trace_host_name(port))
- 		__field(u64, serial)
- 		__field(u32, status)
- 	),
- 	TP_fast_assign(
- 		__assign_str(memdev);
-+		__assign_str(port);
-+		__assign_str(dport);
- 		__assign_str(host);
--		__entry->serial = cxlmd->cxlds->serial;
-+		__entry->serial = serial;
- 		__entry->status = status;
- 	),
--	TP_printk("memdev=%s host=%s serial=%llu: status: '%s'",
--		  __get_str(memdev), __get_str(host), __entry->serial,
-+	TP_printk("memdev=%s port=%s dport=%s host=%s serial=%llu: status: '%s'",
-+		  __get_str(memdev), __get_str(port), __get_str(dport),
-+		  __get_str(host), __entry->serial,
- 		  show_ce_errs(__entry->status)
- 	)
- );
-diff --git a/drivers/cxl/cxlmem.h b/drivers/cxl/cxlmem.h
-index c401e3a1af06f..c6368ddae4a21 100644
---- a/drivers/cxl/cxlmem.h
-+++ b/drivers/cxl/cxlmem.h
-@@ -125,6 +125,13 @@ static inline int cxl_memdev_attach_region(struct cxl_memdev *cxlmd)
- #endif
- 
- struct cxl_memdev *devm_cxl_add_classdev(struct cxl_dev_state *cxlds);
++The pipeline:
 +
-+/* trace-event helpers */
-+const char *cxl_trace_memdev_name(struct cxl_port *port);
-+const char *cxl_trace_host_name(struct cxl_port *port);
-+const char *cxl_trace_port_name(struct cxl_port *port);
-+const char *cxl_trace_dport_name(struct cxl_dport *dport);
++1. **Producer** (aer_cxl_vh.c, aer_cxl_rch.c) - AER threaded handler
++   context. Classifies and enqueues a struct cxl_proto_err_work_data
++   into the kfifo.
++2. **Queue** - the AER-CXL kfifo plus a backing work_struct.
++3. **Consumer** (cxl_core/ras.c) - workqueue context. Resolves the CXL
++   port topology and dispatches to CE/UE handlers.
 +
- struct cxl_memdev *__devm_cxl_add_memdev(struct cxl_dev_state *cxlds,
- 					 const struct cxl_memdev_attach *attach);
- int devm_cxl_sanitize_setup_notifier(struct device *host,
++
++AER handlers vs RAS handlers
++============================
++
++Two distinct handler layers cooperate; keeping them separate is central to
++the design:
++
++* **AER handlers** run in PCIe AER context (aer.c, aer_cxl_vh.c,
++  aer_cxl_rch.c). They own the PCIe side: they observe the Internal Error,
++  classify it with is_cxl_error(), and act only as the *producer* - they
++  enqueue a work item into the AER-CXL kfifo. AER handlers never touch the
++  CXL RAS capability registers and, in the normal path, make no
++  recovery/panic decision. The one exception is kfifo overflow: if the
++  AER-CXL kfifo is full, cxl_forward_error() drops a correctable error but
++  panics on a non-correctable one, since a dropped uncorrectable protocol
++  error can no longer be confirmed via CXL RAS (see "Severity policy").
++
++* **RAS handlers** run in cxl_core (cxl_core/ras.c, cxl_core/ras_rch.c).
++  They are the *consumers*: they read the CXL RAS capability registers,
++  emit the CXL trace events, and apply the CE/UCE severity policy (clear
++  correctable status, or panic on an uncorrectable error). A RAS handler
++  is where the actual CXL fault information is decoded, because that
++  information lives in the RAS registers, not in the PCIe AER status word.
++
++The AER handler and the RAS handler are decoupled by the kfifo: the AER
++handler cannot acquire the sleeping port device lock, and the RAS handler
++runs in workqueue context where it can safely take port locks. The
++same RAS decode is reached through three different entry paths:
++
++* the AER-CXL kfifo consumer (native AER, VH and RCH),
++* the pci_error_handlers .error_detected callback (fatal EP/RCD UCE, where
++  no AER status is available), and
++* the CPER-CXL kfifo consumer (firmware-first CPER/GHES, trace-only).
++
++The first two paths share the same decode and severity policy (read the
++RAS registers, clear correctable status, panic on an uncorrectable error).
++They differ only when the RAS registers are unmapped: the AER kfifo path
++reaches cxl_do_recovery() only after a CXL internal error is confirmed and
++so panics on an unmapped RAS block, while the .error_detected path has no
++such prior confirmation and instead skips the read without panicking.
++The CPER path differs: it is firmware-first and trace-only - it emits the
++CXL trace events but does not call cxl_do_recovery() and never panics (see
++the "CPER / firmware-first flow" and "Severity policy" sections below).
++
++
++Topologies
++==========
++
++Virtual Hierarchy (VH)
++----------------------
++
++Standard PCIe topology: Root Port, optional switch (Upstream Port with one
++or more Downstream Ports), and Endpoints. Each component raises Internal
++Errors directly via the Root Port's AER interrupt.
++
++Producer: cxl_forward_error() in aer_cxl_vh.c.
++
++Restricted CXL Host (RCH)
++--------------------------
++
++A Root Complex Event Collector (RCEC) aggregates errors from RCDs attached
++as Root Complex Integrated Endpoints. The AER driver iterates RCDs beneath
++the RCEC via pcie_walk_rcec() and forwards each qualifying device through
++cxl_forward_error() into the same kfifo.
++
++Producer: cxl_forward_error() in aer_cxl_vh.c, called from
++cxl_rch_handle_error_iter() via pcie_walk_rcec().
++
++
++Error flow
++==========
++
++.. code-block:: text
++
++   CXL device raises AER Internal Error
++   (PCI_ERR_COR_INTERNAL or PCI_ERR_UNC_INTN)
++                   |
++                   v
++   +--------------------------------------+
++   | AER core (aer.c)                     |
++   |  aer_irq() -> aer_isr()              |
++   |  -> find_source_device()             |
++   |  -> handle_error_source(dev, info)   |
++   +--------------------------------------+
++                   |
++                   v
++   +--------------------------------------+
++   | handle_error_source() dispatch       |
++   |                                      |
++   |  1. cxl_rch_handle_error()           |
++   |     [always; filters internally.     |
++   |      RC_END enters the kfifo here    |
++   |      via pcie_walk_rcec(), NOT via   |
++   |      is_cxl_error() below]           |
++   |                                      |
++   |  2. if is_cxl_error():               |
++   |       cxl_forward_error()            |
++   |       [enqueue to kfifo; EP/RP/USP/  |
++   |        DSP only, RC_END excluded]    |
++   |                                      |
++   |  3. if cxl_pending && non-CE:        |
++   |       cxl_proto_err_wait_for_empty() |
++   |       [sync drain before recovery]   |
++   |                                      |
++   |  4. pci_aer_handle_error() [always]  |
++   +--------------------------------------+
++                   |
++          (kfifo -> workqueue)
++                   |
++                   v
++   +--------------------------------------+
++   | __cxl_proto_err_work_fn() consumer   |
++   |                                      |
++   |  if is_cxl_restricted(pdev):         |
++   |    cxl_handle_rdport_errors()        |
++   |    [RCH dport RAS first]             |
++   |                                      |
++   |  cxl_handle_proto_error()            |
++   +--------------------------------------+
++            |                |
++            v                v
++   +-----------------+  +--------------------+
++   | CE              |  | UCE                |
++   | cxl_handle_     |  | cxl_do_recovery()  |
++   |   cor_ras()     |  |  read RAS status   |
++   | trace + clear   |  |  trace + panic     |
++   +-----------------+  +--------------------+
++
++cxl_do_recovery() first checks whether the CXL RAS register block is
++mapped. If it is not (to_ras_base() returns NULL), the kernel panics
++immediately without reading any register or emitting a trace event,
++because a signaled UCE cannot be confirmed or cleared. Otherwise it
++reads the CXL RAS uncorrectable status register. If UE bits are set, it
++emits the trace event and panics. If no bits are set (e.g. RAS mapped but
++error already cleared), it logs a debug diagnostic and returns without
++action, allowing the caller to proceed with normal AER recovery.
++
++The consumer reaches cxl_handle_proto_error() only after the topology
++lookups succeed: it returns early (dropping the event) if the parent port
++is not found, if the port host device is unbound, or if the dport is not
++found for a Root Port or Downstream Port. A UCE enqueued to the kfifo can
++therefore be discarded without a panic if the topology is torn down or not
++yet registered between enqueue and consumer execution.
++
++
++Fatal UCE flow for Endpoints and RCDs
++=====================================
++
++For a fatal (AER_FATAL) uncorrectable error, aer_get_device_error_info()
++reads the AER uncorrectable status register only for Root Ports, RC Event
++Collectors, and Downstream Ports; it skips the read for Endpoints and
++Upstream Ports because their link is presumed down. With info->status left
++zero, is_cxl_error() cannot classify the event as a CXL protocol error, so
++it never enters the AER-CXL kfifo. This is a severity/device-type property,
++not an RCH-specific one: it affects every Endpoint (VH Endpoint and RCD
++alike) and every Upstream Port.
++
++Endpoints instead reach the RAS handler through the pci_error_handlers
++.error_detected callback (cxl_pci_error_detected()), which is registered by
++the CXL memdev driver and fires for both VH Endpoints and RCDs. The only
++RCD-specific step is the leading cxl_handle_rdport_errors() call, which
++processes the RCH Downstream Port's RAS registers first; the Endpoint RAS
++read and panic policy that follow are identical for VH and RCH:
++
++.. code-block:: text
++
++   Fatal UCE on Endpoint (VH Endpoint or RCD; link down, no AER status)
++                   |
++                   v
++   +--------------------------------------+
++   | PCIe core error recovery             |
++   |  pcie_do_recovery()                  |
++   |  -> report_error_detected()          |
++   |  -> cxl_pci_error_detected()         |
++   |     [pci_error_handlers callback in  |
++   |      cxl_core/ras.c; the RAS handler,|
++   |      NOT the AER kfifo path]         |
++   +--------------------------------------+
++                   |
++                   v
++   +--------------------------------------+
++   | cxl_pci_error_detected()             |
++   |                                      |
++   |  if is_cxl_restricted(pdev):         |
++   |    cxl_handle_rdport_errors()        |
++   |    [RCD-only: RCH Dport RAS first]   |
++   |                                      |
++   |  if port->dev.driver == NULL:        |
++   |    return DISCONNECT [port unbound]  |
++   |                                      |
++   |  cxl_handle_ras(port, NULL,          |
++   |                 to_ras_base(...),    |
++   |                 pdev->dsn)           |
++   |    [EP RAS read, independent of      |
++   |     channel state (not skipped for   |
++   |     io_normal); dead link            |
++   |     readl()==0xFFFFFFFF sets all UE  |
++   |     bits -> panic]                   |
++   |                                      |
++   |  if ue: panic("CXL cachemem error")  |
++   |                                      |
++   |  else switch (channel state):        |
++   |    io_normal      -> CAN_RECOVER     |
++   |    io_frozen      -> release driver, |
++   |                      NEED_RESET      |
++   |    perm_failure   -> DISCONNECT      |
++   +--------------------------------------+
++
++This path handles both severities: a non-fatal EP UCE arrives as
++pci_channel_io_normal and a fatal EP UCE as pci_channel_io_frozen. Either
++way the CXL RAS read runs first, so a real CXL.mem UCE always panics; only
++when no CXL UE bit is set (or RAS is unmapped) does the channel state drive
++ordinary AER recovery. Endpoint unbind therefore does not depend on the
++AER-status-to-RAS coupling that the kfifo path relies on.
++
++Upstream Ports bound to portdrv have no such .error_detected callback and
++fall back to standard AER recovery - this is a known limitation.
++
++
++CPER / firmware-first flow
++==========================
++
++On firmware-first platforms, CXL protocol errors are delivered by platform
++firmware as an ACPI CPER record (CPER_SEC_CXL_PROT_ERR) instead of a native
++AER interrupt. These records already contain a snapshot of the CXL RAS
++capability registers, so the RAS handler does not read hardware; it only
++emits trace events. Firmware-first is therefore trace-only and never
++panics or drives recovery - the platform owns the recovery decision.
++
++CPER protocol-error records are delivered by the GHES/APEI firmware-first
++path:
++
++* **GHES/APEI** (ghes.c) - the common firmware-first path. Its producer,
++  cxl_cper_post_prot_err(), enqueues a struct cxl_cper_prot_err_work_data
++  into a dedicated CPER-CXL kfifo (cxl_cper_prot_err_fifo, depth 8) and
++  schedules the cxl_core consumer work item.
++
++.. code-block:: text
++
++   Platform firmware CPER record (CPER_SEC_CXL_PROT_ERR)
++            |
++            v
++   +----------------------+
++   | GHES/APEI (ghes.c)   |
++   |  ghes_do_proc()      |
++   |  cxl_cper_post_      |
++   |    prot_err()        |
++   |  kfifo_put(CPER-CXL) |
++   |  schedule_work()     |
++   +----------------------+
++            |
++            v
++   +----------------------+
++   | CPER-CXL kfifo       |
++   | + work_struct        |
++   +----------------------+
++            |
++            v
++   +----------------------+
++   | cxl_cper_prot_err_   |
++   |   work_fn() consumer |
++   | (cxl_core/ras.c)     |
++   |  drain kfifo ->      |
++   +----------------------+
++            |
++            v
++   +--------------------------------+
++   | cxl_cper_handle_prot_err()     |
++   |  pci_get_domain_bus_and_slot() |
++   |  find_cxl_port_by_dev()        |
++   |  cxl_find_dport_by_dev()       |
++   |                                |
++   |  if CE: trace correctable      |
++   |  else:  trace uncorrectable    |
++   |  [trace-only; no panic,        |
++   |   no cxl_do_recovery()]        |
++   +--------------------------------+
++
++The consumer work item is registered with GHES via
++cxl_cper_register_prot_err_work() when cxl_core loads and torn down with
++cxl_cper_unregister_prot_err_work(), which cancels any pending work and
++resets the kfifo so stale records are not replayed on the next module load.
++
++
++Severity policy
++===============
++
++**CE** - cxl_handle_cor_ras() reads the CXL RAS correctable status register,
++clears set bits, and emits a cxl_aer_correctable_error trace event. No
++recovery action.
++
++**UCE (non-fatal, and fatal on Root Port/Downstream Port)** -
++cxl_do_recovery() reads the CXL RAS uncorrectable status register. If UE
++bits are set, the kernel panics. If the CXL RAS register block is not
++mapped (to_ras_base() returns NULL), cxl_do_recovery() panics before any
++register read and emits no trace event, since the UCE cannot be confirmed.
++CXL.cachemem traffic cannot be safely recovered once an uncorrectable error
++is signaled; continuing risks silent data corruption. This panic policy
++applies to the native AER path. On firmware-first (CPER/GHES) platforms the
++CPER handler emits trace events only and does not call cxl_do_recovery().
++
++**kfifo overflow** - if the AER-CXL kfifo is full when the producer
++(cxl_forward_error()) tries to enqueue, a correctable error is dropped with
++a ratelimited log message, but a non-correctable error triggers an
++immediate panic() from the AER handler itself. A dropped uncorrectable
++protocol error can no longer be confirmed or recovered via CXL RAS and may
++signal lost cache coherency over HDM memory in active use, so it is
++collapsed to the same conservative outcome as a confirmed UCE. This is the
++only case where an AER handler, rather than a RAS handler, makes the panic
++decision.
++
++**Fatal UCE on EP/USP** - A fatal event brings the link down, so the AER
++core reads no AER status and is_cxl_error() cannot enqueue the event to the
++kfifo. Endpoints and RCDs are instead handled through the
++pci_error_handlers .error_detected callback (cxl_pci_error_detected()),
++which reads the CXL RAS registers when they are mapped and panics on any UE
++bit. If the RAS registers are unmapped the read is skipped without a panic,
++because this path has no prior confirmation that the error is CXL internal.
++Upstream Ports bound to portdrv fall back to standard AER recovery - a known
++limitation. See "Fatal UCE flow for Endpoints and RCDs" above for the full
++path and channel-state handling.
++
++
++RCH special case
++================
++
++When the consumer sees is_cxl_restricted(pdev), it calls
++cxl_handle_rdport_errors() first to process the RCH Downstream Port's RAS
++registers (accessed via RCRB, not standard config space). It then
++continues to process the RCD Endpoint's own RAS registers via the common
++path. Both register blocks are checked because errors can appear in either
++independently.
++
++cxl_handle_rdport_errors() acquires the device lock on port->uport_dev (the
++CXL Host Bridge) internally. Callers must not hold it.
++
++
++Trace events
++============
++
++Two trace events cover all device types and both the native AER and
++CPER/GHES firmware-first paths:
++
++* cxl_aer_correctable_error
++* cxl_aer_uncorrectable_error
++
++Fields:
++
++* ``memdev`` - memdev name for Endpoints; empty for non-Endpoints.
++* ``port`` - CXL port device name.
++* ``dport`` - Downstream Port device name; empty when not applicable.
++* ``host`` - parent host bridge or uport device name.
++* ``serial`` - PCI Device Serial Number from pdev->dsn (cached at
++  enumeration; no config-space read in the error path).
++
++
++Interrupt masking
++=================
++
++CXL Internal Error bits (PCI_ERR_UNC_INTN and PCI_ERR_COR_INTERNAL) are
++unmasked in the AER capability only after the CXL RAS register block is
++successfully mapped. A devm teardown action restores the mask when the
++port or dport is removed, ensuring clean state after driver removal.
++
++
++Source files
++============
++
++.. list-table::
++   :header-rows: 1
++
++   * - File
++     - Role
++   * - drivers/pci/pcie/aer.c
++     - AER core; IRQ, dispatch
++   * - drivers/pci/pcie/aer_cxl_vh.c
++     - VH AER producer; AER-CXL kfifo
++   * - drivers/pci/pcie/aer_cxl_rch.c
++     - RCH AER dispatch; RCEC walk
++   * - drivers/cxl/core/ras.c
++     - RAS handlers; AER-CXL and CPER-CXL kfifo consumers;
++       .error_detected callback (cxl_pci_error_detected)
++   * - drivers/cxl/core/ras_rch.c
++     - RCH Downstream Port RAS handling
++   * - drivers/acpi/apei/ghes.c
++     - CPER/GHES producer; CPER-CXL kfifo
++   * - drivers/acpi/apei/ghes_helpers.c
++     - CPER record validation and work-data setup helpers
 -- 
 2.34.1
 
