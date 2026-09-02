@@ -1,222 +1,131 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 49C3938D686;
-	Wed,  2 Sep 2026 06:40:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5FB9C377EC2;
+	Wed,  2 Sep 2026 07:25:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788331233; cv=none; b=hEDmttDVNzFYAYTAH4zAhAqxy1aJADtMXRgS9TzvLguU1Vv5mWrOB+sEsKMTn3+v21avPMFrtCqAi1/w1+9Vfrxaxbe0HCocQws7Tcj0xbsi5dW8QhR0cMERwJ0H7MSxkHSUdTHvK+ZNu4wtDYIFJc30hdn5jM3Sfj0m6aeailM=
+	t=1788333923; cv=none; b=Eiwngob+C0gVtr2ZUTbbpTsgGZl22Yn2VF2Zr/fOnk4qqUfNuj0TjklTNTKylGC/+ESBUHWxTkFWAL9J9jM1qgbxJ0Dl8p1Pnwkr1YFg83O6TwaFSCdmMMDQ9YitfIupfDDyaK2787dqKspcdbqvwQxcJyxZFmaSxjEl0ytflc4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788331233; c=relaxed/simple;
-	bh=5r0Hfqz1r/cQkfXyVRiCnnbVEtTuOK1jGhTyRa6vowg=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=n8KQPZG18F5dA77dJ/KegWIBNhZb3CJU6ZVWQhSST5F0vkficxlU3qfjs4uDdfwTbOy0BNBrp6OrGgcSS3R+GA/9bEnpOwz8t3V9L0BryqgzhoxuufP9W8crYOz/wk1L4k8Q5Qw9PKqyOjllAzKzYaoG2qVEiVSf8VvwBy1m4gw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VCSo2UwH; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788333923; c=relaxed/simple;
+	bh=xVefhCfWOs315KhgltJ/xQPwfNGo9Mqizsdsfu2cXzs=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=s+Ro269800Uee8XrmofKrWXxwblCyPCu1TPVkrY/4ChOtEKa/XwKjuAp6US4h+tb41yXvImd0DPsHD6k5x4H33dX6cKv8vWnJ9U89eaGXlenpFAeH5RfonU2ZaW0qrOm7x5eB5thLPLYadHVpZla71aVnvdPlZyjvgHS/TAhVxs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XDj0pHfA; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VCSo2UwH"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7BFDA1F000E9;
-	Wed,  2 Sep 2026 06:40:29 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XDj0pHfA"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id ADCB81F000E9;
+	Wed,  2 Sep 2026 07:25:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788331229;
-	bh=XaZ8RKhh9AxleUR4Vju55gkgqThrBoS3YTrN5pk6xH0=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=VCSo2UwHrqoYDVGGK7w1SgwPvEn5l3pE2v/tww/1sW/BSValVm23uIcrS+J0cZouy
-	 USebYwgJiLavsxrvKWc3Qjeku1aB3yb7pYYSWIxvNZRf3eEYxXB+9hep4yPW/DotW6
-	 UZgVsY9ZsKqs2Da5/wZ+yUydINPLlV8nZJ/fwhYgWDF7K0ioohGGAHZFHVZtK45l11
-	 AFX/sFe8waxRvEfD+XlkGVUm8q/i9+XrlqRhwtpf1esZAef0FOYIwuI66jEyIC5vGG
-	 oikaRtvsN2oU9Be2yrBD1bbeL6QQdPgexB2zq8W0MrbKDqi79Wd5sTHuvoSo1DbewS
-	 hVKa8SCgkqn9Q==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v6 10/10] dmaengine: plx_dma: fix NULL pointer deref in
- plx_dma_isr()
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Logan Gunthorpe" <logang@deltatee.com>
-Cc: Frank.Li@kernel.org, dmaengine@vger.kernel.org, linux-pci@vger.kernel.org, vkoul@kernel.org
-In-Reply-To: <20260902062153.31048-11-logang@deltatee.com>
-References: <20260902062153.31048-1-logang@deltatee.com>
- <20260902062153.31048-11-logang@deltatee.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 02 Sep 2026 06:40:28 +0000
-Message-Id: <20260902064029.7BFDA1F000E9@smtp.kernel.org>
+	s=k20260515; t=1788333922;
+	bh=DlTJOIsThjiSM/dkMSfWXp9ZPGqirIyhJ6Grt5P8AUA=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=XDj0pHfAS59/KUdvAlCj+JVDqbtR0LF4LH36ZomND++PC0c/U3kb0O2eaVcXYGYZF
+	 FMoEsSlT8I2yP9jm7xm5/5lbxp8/vK2siRw3ZoX28miej3Bp8Hzv2rIlMNOBl3yUo8
+	 fiQ2iYcVEep0worPDZpDACJuVKRHrZtJMgi+VEl2xAvoCLB39rc70tZiYwgnkX1fRE
+	 pdGPdEwKvxCyc/o/yzzaA9U/uETV1LQ+tiXjeZrugtoGjYRGqII3GHYRwdloxcCcZN
+	 0HlQyAJ/AxdnGgmRbrjsClUesLhRna4dWFJSJpuEMI31aSSVi44BBjGjV+fVrRRiOF
+	 JDetf+6cvik6g==
+Date: Wed, 2 Sep 2026 09:25:13 +0200
+From: Niklas Cassel <cassel@kernel.org>
+To: Koichiro Den <den@valinux.co.jp>
+Cc: Manivannan Sadhasivam <mani@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Kishon Vijay Abraham I <kishon@kernel.org>,
+	Frank Li <Frank.Li@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Rob Herring <robh@kernel.org>, Aksh Garg <a-garg7@ti.com>,
+	Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>,
+	Chaitanya Kulkarni <kch@nvidia.com>, Jon Mason <jdmason@kudzu.us>,
+	Dave Jiang <dave.jiang@intel.com>, Allen Hubbe <allenbh@gmail.com>,
+	Heiko Stuebner <heiko@sntech.de>,
+	Shawn Lin <shawn.lin@rock-chips.com>,
+	Manikanta Maddireddy <mmaddireddy@nvidia.com>,
+	Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
+	linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
+	ntb@lists.linux.dev, linux-rockchip@lists.infradead.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 0/3] PCI: endpoint: Support hardware-owned MSI-X table
+ and PBA
+Message-ID: <apfPWc09CY2o-P5s@ryzen>
+References: <20260830151948.3547577-1-den@valinux.co.jp>
+ <apVWd1u9JjTKQczu@ryzen>
+ <pj5vpwwd5tr5tuvhdq3bcpefnq27r6ljvwoysguz2o4tglcqx5@l7zmb6wjnhla>
+ <apXdm2I33edo8kpZ@ryzen>
+ <sor2mm4jzgeprhn3fjw4jmcaowwkhhuus6exi4k5kum6frqvug@gatkk7r4qyxd>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <sor2mm4jzgeprhn3fjw4jmcaowwkhhuus6exi4k5kum6frqvug@gatkk7r4qyxd>
 
-Thank you for your contribution! Sashiko AI review found 5 potential issue(=
-s) to consider:
+On Wed, Sep 02, 2026 at 11:14:00AM +0900, Koichiro Den wrote:
+> 
+> This still sounds really odd, and it does not obviously explain why both DWORDs
+> at 0x4000 and 0x4004 are affected. I may be missing something important. If
+> anything similar involving iMSIX-TX Table RAM entry #0 has been discussed
+> before, please point me to the relevant thread.
+> 
+> (Also, I can share my current WIP v3 series, which makes pci-epf-test and
+> nvmet-pci-epf use the hardware-owned layout when available, while leaving
+> pci-epf-ntb with its EPF-owned layout. If you have any setup where you could
+> test it, please let me know.)
 
-Pre-existing issues:
-- [High] Potential deadlock in `plx_dma_process_desc()` due to missing bott=
-om-half disabling.
-- [High] `plx_dma_prep_memcpy()` acquires a spinlock and returns with it he=
-ld, breaking the DMA Engine API contract.
-- [High] Unbounded busy-wait loop spanning up to 1000ms inside an RCU read-=
-side critical section.
-- [High] Missing `dma_rmb()` in `plx_dma_process_desc()` before processing =
-completion data.
-- [Medium] Memory leak of `desc_ring` and its inner descriptor objects in t=
-he `plx_dma_alloc_chan_resources()` error path.
---
+Some time ago, I did verify that I could raise an IRQ using
+dw_pcie_ep_raise_msix_irq_doorbell(). If I remember correctly, I did so using
+pci-epf-test and not nvmet-pci-epf.
 
-commit dbf39b912829e6113fcfa314a5a4384936eccf12
-Author: Logan Gunthorpe <logang@deltatee.com>
-Subject: dmaengine: plx_dma: fix NULL pointer deref in plx_dma_isr()
+Did pci-epf-test work? (From what you explain, it seems to be related to if
+MSI-X Table entry #0 is used or not.)
 
-plx_dma_create() registered the interrupt handler with request_irq()
-before initializing plxdev->bar. If the device raised an interrupt in
-that window, plx_dma_isr() would dereference the still-NULL bar.
-This commit moves the bar assignment before request_irq() to fix the issue.
+Please share your branch. I should have time to do a quick test.
 
-Link: https://lore.kernel.org/all/20260610112121.676561-1-jjy600901@snu.ac.=
-kr
 
-> diff --git a/drivers/dma/plx_dma.c b/drivers/dma/plx_dma.c
-> index 84941a918b01f..409898e92c320 100644
-> --- a/drivers/dma/plx_dma.c
-> +++ b/drivers/dma/plx_dma.c
-> @@ -504,17 +504,17 @@ static int plx_dma_create(struct pci_dev *pdev)
->  	if (!plxdev)
->  		return -ENOMEM;
-> =20
-> -	rc =3D request_irq(pci_irq_vector(pdev, 0), plx_dma_isr, 0,
-> -			 KBUILD_MODNAME, plxdev);
-> -	if (rc)
-> -		goto free_plx;
-> -
->  	spin_lock_init(&plxdev->ring_lock);
->  	tasklet_setup(&plxdev->desc_task, plx_dma_desc_task);
-> =20
->  	RCU_INIT_POINTER(plxdev->pdev, pdev);
->  	plxdev->bar =3D pcim_iomap_table(pdev)[0];
-> =20
-> +	rc =3D request_irq(pci_irq_vector(pdev, 0), plx_dma_isr, 0,
-> +			 KBUILD_MODNAME, plxdev);
-> +	if (rc)
-> +		goto free_plx;
-> +
->  	dma =3D &plxdev->dma_dev;
->  	INIT_LIST_HEAD(&dma->channels);
->  	dma_cap_set(DMA_MEMCPY, dma->cap_mask);
+> 
+> > 
+> > 
+> > What I suggest that you instead do something like:
+> > Patch 1/7: pci-epf-vntb: Fix to actually use MSI-X when requested.
+> >            This probably includes adding the code that is inside the
+> > 	   if (ret == -ENOENT) { }.
+> > Patch 2/7: PCI: endpoint: Support hardware-owned MSI-X table and PBA
+> > Patch 3/7: PCI: dw-rockchip: Support fixed MSI-X table and PBA on RK3588
+> > Patch 4/7: pci-epf-vntb: Add code that calls pci_epc_get_hw_msix_layout()
+> >            and uses that layout, if the function returned success.
+> > Patch 5/7: pci-epf-test: Add code that calls pci_epc_get_hw_msix_layout()
+> >            and uses that layout, if the function returned success.
+> > Patch 6/7: nvmet-pci-epf: Add code that calls pci_epc_get_hw_msix_layout()
+> >            and uses that layout, if the function returned success.
+> > Patch 7/7: pci-epf-ntb: Add comment that explains why it cannot call
+> >            pci_epc_get_hw_msix_layout() like all other EPF drivers that
+> > 	   support MSI-X.
+> > 
+> > 
+> > This way, patch 1/7 can be backported, and will help all users vNTB users,
+> > even the users that do not use RK3588 as an EPC.
+> 
+> That split makes sense. However, given the issue I described above, perhaps I
+> should send patch 1/7 as a standalone fix and hold off on the rest until the
+> issue is understood and resolved.
 
-While reviewing this file, I noticed a few pre-existing issues in other
-functions that might need attention.
+Agreed, a standalone 1/7 patch could be picked up without the need to wait for
+any other changes.
 
-> static void plx_dma_process_desc(struct plx_dma_dev *plxdev)
-> {
-[ ... ]
-> 	spin_lock(&plxdev->ring_lock);
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-[Severity: High]
-This is a pre-existing issue, but does using spin_lock() here instead of
-spin_lock_bh() create a deadlock vulnerability? plx_dma_tx_status() calls
-this function from process context. If an interrupt fires and triggers the
-plx_dma_desc_task tasklet on the same CPU, wouldn't it attempt to acquire
-this same lock, deadlocking the system?
+> 
+> Testing vNTB alone (ie. this v2 way) did not expose it because its first data
+> doorbell uses MSI-X Table entry #2. I only found the issue because your
+> suggestion led me to convert and test nvmet-pci-epf, thank you!
 
-[ ... ]
-> 	while (plxdev->tail !=3D plxdev->head) {
-> 		desc =3D plx_dma_get_desc(plxdev, plxdev->tail);
->=20
-> 		flags =3D le32_to_cpu(READ_ONCE(desc->hw->flags_and_size));
->=20
-> 		if (flags & PLX_DESC_FLAG_VALID)
-> 			break;
-            ^^^^^
+I'm sorry that we have a problem.
+At least it is better to discover it now, rather than discovering it after
+the patches had been merged.
 
-[Severity: High]
-This isn't a bug introduced by this patch, but should there be a dma_rmb()
-inserted directly after this break statement? Without a read memory barrier,
-weakly-ordered CPUs might speculatively read the destination buffer before
-the status read completes, which could cause data corruption.
 
-[ ... ]
-
-> static struct dma_async_tx_descriptor *plx_dma_prep_memcpy(struct dma_cha=
-n *c,
-> 		dma_addr_t dma_dst, dma_addr_t dma_src, size_t len,
-> 		unsigned long flags)
-> 	__acquires(plxdev->ring_lock)
-> {
-[ ... ]
-> 	spin_lock_bh(&plxdev->ring_lock);
-[ ... ]
-> 	/* return with the lock held, it will be released in tx_submit */
->=20
-> 	return &plxdesc->txd;
-
-[Severity: High]
-This isn't a bug introduced by this patch, but does returning with a
-spinlock held break the DMA Engine API contract? The API allows clients to
-prepare multiple descriptors before submission. If a client prepares two
-descriptors sequentially, won't the second call deadlock trying to acquire
-ring_lock? Also, if a client prepares a descriptor but aborts without
-calling submit, wouldn't the lock leak and permanently leave softirqs
-disabled on that CPU?
-
-[ ... ]
-
-> static void plx_dma_stop(struct plx_dma_dev *plxdev)
-> {
-> 	rcu_read_lock();
-[ ... ]
-> 	__plx_dma_stop(plxdev);
-[ ... ]
-> }
-
-and __plx_dma_stop() does:
-
-> static void __plx_dma_stop(struct plx_dma_dev *plxdev)
-> {
-> 	unsigned long timeout =3D jiffies + msecs_to_jiffies(1000);
-[ ... ]
-> 	while (!time_after(jiffies, timeout)) {
-> 		val =3D readl(plxdev->bar + PLX_REG_CTRL);
-> 		if (val & PLX_REG_CTRL_GRACEFUL_PAUSE_DONE)
-> 			break;
->=20
-> 		cpu_relax();
-> 	}
-        ^^^^^^^^^^^
-
-[Severity: High]
-This is a pre-existing issue, but this performs an unbounded delay of up to
-1000ms inside the RCU read-side critical section established by
-plx_dma_stop(). Could spinning for such a long duration block RCU grace
-periods and severely degrade system stability?
-
-[ ... ]
-
-> static int plx_dma_alloc_chan_resources(struct dma_chan *chan)
-> {
-[ ... ]
-> 	rc =3D plx_dma_alloc_desc(plxdev);
-> 	if (rc)
-> 		goto out_free_hw_ring;
->=20
-> 	rcu_read_lock();
-> 	if (!rcu_dereference(plxdev->pdev)) {
-> 		rcu_read_unlock();
-> 		rc =3D -ENODEV;
-> 		goto out_free_hw_ring;
-                ^^^^^^^^^^^^^^^^^^^^^
-
-[Severity: Medium]
-This isn't a bug introduced by this patch, but does this error path leak
-the desc_ring array and its 2048 dynamically allocated descriptor objects?
-It jumps to out_free_hw_ring, which frees hw_ring but skips the cleanup
-loop needed to destroy desc_ring.
-
-[ ... ]
-> out_free_hw_ring:
-> 	dma_free_coherent(plxdev->dma_dev.dev, ring_sz, plxdev->hw_ring,
-> 			  plxdev->hw_ring_dma);
-> 	return rc;
-> }
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260902062153.3104=
-8-1-logang@deltatee.com?part=3D10
+Kind regards,
+Niklas
