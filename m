@@ -1,62 +1,127 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from smtpbguseast1.qq.com (smtpbguseast1.qq.com [54.204.34.129])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD13C45C6F8;
-	Wed,  2 Sep 2026 12:28:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 84A1148551D;
+	Wed,  2 Sep 2026 12:43:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=54.204.34.129
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788352103; cv=none; b=EoWqsdBDdCMV3nhAmckaV/5tuzqKRJ7ov1xrdcRPYpAr8cCoeKLwEyABniIGu/Dh5Mx/d/9YL/7GgfuKZlGoywHAa2vaukX2euPfptnP5tg1aF6llTIceplpsWSEc1LaueWpI8Ox0doQCQJKAEj65IlQqEFO4eHx1RsI/s44WsI=
+	t=1788353040; cv=none; b=vCjkgfybvzp4Nk1dc+j78/iMRosD7B8ncotLiPNN4y46U5RHuxmEyZ71q/WJu11ho/kZ5nX1aNtDq+aOVT0HS5GahQrYVsQCz8GcL7x7RHeKtNt1SySBoV8+gSTk7FGe/7nqgeyp+hV3J3WskQj7aNM3RZzlf0LZPVJe/HbIOdk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788352103; c=relaxed/simple;
-	bh=4TQvM/PrMYY60xczAP81RVkG7wNLlagwqrKAcSs+AY4=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=Sl7zDtxPYlljRK+HMq8sGgWHXYTL4GMc9OOZui+eG2KuuzibTYeAusf0l1DJESssseASwWuNcuQYcQJeT3+NPZZjUIb8pJ26rATJ5RDF0MSGYnkcPcyvnqnGqjfm+ju8TvOnX8k/PNJUge7QQskj9PDt9snV5+zdMaYHbI/jk10=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D53481F000E9;
-	Wed,  2 Sep 2026 12:28:18 +0000 (UTC)
-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-To: Nirmal Patel <nirmal.patel@linux.intel.com>, 
- Jonathan Derrick <jonathan.derrick@linux.dev>, 
- Lorenzo Pieralisi <lpieralisi@kernel.org>, 
- Krzysztof Wilczynski <kwilczynski@kernel.org>, 
- Bjorn Helgaas <bhelgaas@google.com>, Rickey Bartlett <subtexel@gmail.com>
-Cc: Kai-Heng Feng <kai.heng.feng@canonical.com>, 
- Keith Busch <kbusch@kernel.org>, Manivannan Sadhasivam <mani@kernel.org>, 
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-In-Reply-To: <20260825043220.9047-1-subtexel@gmail.com>
-References: <20260825043220.9047-1-subtexel@gmail.com>
-Subject: Re: [PATCH] PCI: vmd: Flush initiator posted writes before
- demuxing interrupts on Meteor Lake
-Message-Id: <178835209832.79920.2886314748680261549.b4-ty@b4>
-Date: Wed, 02 Sep 2026 14:28:18 +0200
+	s=arc-20240116; t=1788353040; c=relaxed/simple;
+	bh=KWxeaw4SqgJJYFipoOgPLMzIlFPH9Zm4+s1jmrG8vBA=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=nkOmMa05dE2IcT5V5ktSfsF+aaaOEl916iF5fz70GYCTdDclVGUMoK7ra4rMJWOKog4gnqrp16P7NdMY3lz/bJbs5oQ5PFfUNVM9FgqiHlXCXQq5eFsZopxDvX3azW7uHkSs5oNDE7AmnylIoDMouYCmxXE9mM3Eubd8r0ku1ew=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux.spacemit.com; spf=none smtp.mailfrom=linux.spacemit.com; dkim=pass (1024-bit key) header.d=linux.spacemit.com header.i=@linux.spacemit.com header.b=vriAY52l; arc=none smtp.client-ip=54.204.34.129
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux.spacemit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.spacemit.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=linux.spacemit.com header.i=@linux.spacemit.com header.b="vriAY52l"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.spacemit.com;
+	s=mxsw2412; t=1788352992;
+	bh=RIYFal+fK1qzQK9RpT8qrCUAIsMarf0Kb/q1Y0aaglQ=;
+	h=From:To:Subject:Date:Message-Id:MIME-Version;
+	b=vriAY52lqMPPMqBJ2X/FzO6uD+OdVcYijU6vTO+cSv7wGCLeoi2WH2gqrFIt8bybg
+	 GVmqA9U66uepbU38AA6isqBnc3JPvBp8L/+UAFBHxWOQfmndn06O7I2dIEqdnXkRyu
+	 pNvymAg9B5x+X9JCsivgmtOHeUH/T4p07ouTuccM=
+X-QQ-mid: esmtpsz11t1788352985tf7711f1c
+X-QQ-Originating-IP: hOX3m1P1K98ryeLZYaywOoYyspy7Wn2eDC55Gnk+wAs=
+Received: from SW-U22IC-015.dc.com ( [120.237.158.181])
+	by bizesmtp.qq.com (ESMTP) with 
+	id ; Wed, 02 Sep 2026 20:43:02 +0800 (CST)
+X-QQ-SSF: 0000000000000000000000000000000
+X-QQ-GoodBg: 0
+X-BIZMAIL-ID: 14759197496904960009
+EX-QQ-RecipientCnt: 13
+From: Peixin Xie <peixin.xie@linux.spacemit.com>
+To: rafael@kernel.org
+Cc: andriy.shevchenko@linux.intel.com,
+	hansg@kernel.org,
+	helgaas@kernel.org,
+	ilpo.jarvinen@linux.intel.com,
+	linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-pm@vger.kernel.org,
+	lukas@wunner.de,
+	mika.westerberg@linux.intel.com,
+	peixin.xie@linux.spacemit.com,
+	sakari.ailus@linux.intel.com
+Subject: Re: [PATCH v1 0/7] ACPI: scan: Address power management initialization and PCI devices handling
+Date: Wed,  2 Sep 2026 20:42:05 +0800
+Message-Id: <20260902124205.1458089-1-peixin.xie@linux.spacemit.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <3435655.aeNJFYEL58@rafael.j.wysocki>
+References: <3435655.aeNJFYEL58@rafael.j.wysocki>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-X-Mailer: b4 0.15.2
+X-QQ-SENDSIZE: 520
+Feedback-ID: esmtpsz:linux.spacemit.com:qybglogicsvrsz:qybglogicsvrsz3b-0
+X-QQ-XMAILINFO: NMGzQWUSIfvTteGTh+l0GykwvA4KWvbxHz2TrvADUloKZTGne/rEZepB
+	HECXvWkNg7+ju1S2ttnv14rfyL7PKrxQiRl8zx5MSby3hbP2+6hkEmlgymw2QNY10E2mDbL
+	RQ+j2hIc2RB0NRv6iGQlhBRRk/FZgoGTzPeLfsulzreuYddWJqavESFC65dGaNureFIOBQW
+	AmVM4S6XjQ5YvSSC8TymR8dRRru+S9siNm3FACgmK+NuG3Bk5pYG0wI55F0FVZ4T3hYGPI+
+	Rp0gsJ2a/RNC1PBBczcufdGGRpDvGjupDzgWrgNXiFvOm6taZYXIfe+DXQx9mCyOIdHutSM
+	NtykN2OPZQY7dPErqIMNjnc6Sx0938rooOlg5aQZXugZwG5riTyBFiSNEjJ9JFi0B8VSeih
+	98UyJxWqfywg15xrg90UGCAoCOkr2d53cqKXSaSzbJRjgCuRqGkdbWZX1ZxVAK6Muc5t/Uo
+	Z8GQifdImU8cuc4Cm8lt7R7twa2LckgyrKS3swj//A8/D4Klh2McnQWQtzT2jAxfJ11vYsi
+	6DMp4SpFbcaILB9aYbSvV/MF5HiGB5WfuDYnYNfO2cq/MwIpN2M7UuQYvO+sKNXUYTXINPF
+	4hDbkwT7CWuG+PSjKhUcYOgJQXwhpYTXRhS+qV7b47N37c7lxJm8Mp40E/Hi5OUtEu3sOID
+	2Z0T3D1hnenQV8EbF1fUffRQJ2DmnTjC53hTKdWDU93Tm3WcYF2qNXSRC5072a3BDMe6G7Q
+	oydgJhEn+IUGhBfqXfcvKi+kBO1KTukNVXKL6e77tRDeS7ewWpzW/DVSbppRFU2vc0XR6PU
+	7eP79FCRn6JOn9uNQaUCKEeM6nEo5bnn0oersodO8gCEOaeDT65AeyfChfURvnOzcWn8d22
+	zpJEIxMBmQKvwu1zVVmzHf6GX3X+LKM2ZCUr3mCNdMWaGWzQfVfW6LhnRudPcn0vg3bMw8x
+	KWG7H3sTF05bq902F3/9iyMM2HFRvBHMXCdwReHjcV237tKJWoDXsemfpt7YOBy/W9V92MT
+	vd6YMqaZvm9f9SrMXMnk0IuYoBS+pEhTiR7PNJ/NjZq29Xy1Hr20uMygS3oa/ikyIhPWcxu
+	wZXPD/T9KkHQh6iFLy8H3E=
+X-QQ-XMRINFO: Mp0Kj//9VHAxzExpfF+O8yhSrljjwrznVg==
+X-QQ-RECHKSPAM: 0
 
+Hi Rafael,
 
-On Mon, 24 Aug 2026 21:32:20 -0700, Rickey Bartlett wrote:
-> Meteor Lake VMD (8086:7d0b) is affected by erratum MTL016: the VMD can
-> signal its MSI before the posted writes carrying a child device's DMA
-> data have landed in memory. vmd_irq() then demuxes to the child handler
-> while the child's completion queue is not yet coherent, so the handler
-> observes no completion and returns without consuming it. The I/O is
-> only recovered when the block layer timeout expires and polls the queue:
+On Mon, Aug 31, 2026 at 06:20:42PM +0200, Rafael J. Wysocki wrote:
+> Hi All,
 > 
-> [...]
+> This series aims at addressing a few issues present in the core ACPI device
+> enumeration code, mostly related to the acpi_bus_attach() function (that
+> gets renamed in one of the patches).
+> 
+> The first one is that, on some systems, ACPI power management is initialized
+> twice for devices that have missing dependencies to start with.  An attempt
+> to address this issue had been made during the 7.3 merge window, but it had
+> to be reverted [1].  The approach used here is roughly the same as in the
+> reverted commit, but it takes PCI devices (which are a special case) into
+> account.
+> 
+> The other issues are that flags are unnecessarily cleared by acpi_bus_attach()
+> for devices with missing dependencies, the "initialized" ACPI device object
+> flag is not particularly useful, the "visited" ACPI device object flag is
+> used for two different things which is confusing at best, and that PCI
+> devices are handled by acpi_bus_attach() like any other devices which is
+> a mistake.
+> 
+> Please see the changelogs of individual patches for details.
+> 
+> I have tested this series on a couple of machines, but let's see what
+> Sashiko has to say about it.
+> 
+> Thanks!
 
-Applied, thanks!
+I tested the complete series on the SpacemiT K3 RISC-V Pico-ITX platform
+where the original duplicate ACPI PowerResource reference issue was
+observed.
 
-[1/1] PCI: vmd: Flush initiator posted writes before demuxing interrupts on Meteor Lake
-      commit: 95ac22dd4bf13373f90bb6d51bcd1fd1d8f5db54
+The power resource left on by firmware is now turned off as unused after
+the namespace scan. After the device dependency is satisfied, the power
+resource is turned on once for the device and is turned off normally
+during runtime suspend. Runtime resume also works correctly.
 
-Best regards,
+Tested-by: Peixin Xie <peixin.xie@linux.spacemit.com>
+
 -- 
-மணிவண்ணன் சதாசிவம்
-
-
+Best Regards,
+Peixin Xie
