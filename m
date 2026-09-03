@@ -1,50 +1,56 @@
-Received: from mout-p-103.mailbox.org (mout-p-103.mailbox.org [80.241.56.161])
+Received: from mout-p-201.mailbox.org (mout-p-201.mailbox.org [80.241.56.171])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ECAC93C3F4E;
-	Thu,  3 Sep 2026 20:52:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.161
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C5CB45517D;
+	Thu,  3 Sep 2026 20:52:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788468749; cv=none; b=nrJSa4x0JqEOkcydxro9/vIZtB5XWc0bYuHkuyjofck4tMTfoNEs2fdp6UJihOFx0YKu8+D/gutBYLAAmAVfGkIkmyal0XtT/wg1vK529LrObjJ5a4bfJRwL/5sSgRm+uAPQwFciRULLhC6Q9y/zgmTfdxEvzoOZE1iXvg7Q0h8=
+	t=1788468751; cv=none; b=BGlANy6uDaR6Y+/UOB8x1XpRDB0Q7arbFh8S+FbTJTfq/BAHlHZCQpUK80G9kE2W2XwzxJis7Dppb6GCUcpatohEueiSAb0IKN26XjxkZdya/Q504IMUJArY3DtJbAHPLfpBnI740ewNktquSO/RF0k8yfNx7epmAYaWPlnyrwI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788468749; c=relaxed/simple;
-	bh=ua9movh5ynHsIyj7VDtkV46uP7X2x0p5gvNYcALSGck=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=TOEKbT7TX+MdHHXmef2IfES4raIebRHQgItUsc4+0rdkugJ3JuM9JDsdbpu9t7048pxVrKeqa6qopG1anvPRi8s18l3wwfHxZM3jdN6XpV1xkHOisxjH/Y5SfVKmgEX30O02Jhaj515Qga2VWjlQSUe88dArI6cIH1vZoBXgbjI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=DPxC1yFI; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=SeYlHUMw; arc=none smtp.client-ip=80.241.56.161
+	s=arc-20240116; t=1788468751; c=relaxed/simple;
+	bh=vwOuSLvL63dOCq8FTIf3VO6iJabE/FIYcZsUkmdtKxI=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=WGtTqMJ6sSQJ4qY1c0RwQ4x8icWR8o/pVgsmOjdD95KXGR6kG9FuVpze7nsuOwHv6xqqAlhuEsB1AWlgH/o2N7IP09JogcfTCQUNfJH67+WNpiXZ5EwyWorTXzf245SdjPWCb+q6dX4hLcQ1tfTy593ZDfZc1ITfITeSpc/rarg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=JZdjWe2M; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=d+/sEAiu; arc=none smtp.client-ip=80.241.56.171
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="DPxC1yFI";
-	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="SeYlHUMw"
-Received: from smtp2.mailbox.org (smtp2.mailbox.org [10.196.197.2])
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="JZdjWe2M";
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="d+/sEAiu"
+Received: from smtp2.mailbox.org (smtp2.mailbox.org [IPv6:2001:67c:2050:b231:465::2])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mout-p-103.mailbox.org (Postfix) with ESMTPS id 4hbWxd18v5zKmcn;
-	Thu, 03 Sep 2026 22:52:21 +0200 (CEST)
+	by mout-p-201.mailbox.org (Postfix) with ESMTPS id 4hbWxj26cvzMlD5;
+	Thu, 03 Sep 2026 22:52:25 +0200 (CEST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-	t=1788468741;
+	t=1788468745;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=59PKEI7PYtuS7UFcYhxPqjo/ys07XPDANz6T91m1qQU=;
-	b=DPxC1yFIWGdwR/r7UsHGJdyNzttEpfBN9qmJbQ7X8xhLmVNPLStjSslK+1QowwiOELZ7bv
-	zlgLni0jdkMc65rtKOIZ9NzW4/PPC2todvOha/6k88brYCE5yaqHxy6Br6Zzmh8hXBR1nq
-	QkufKme0yXTTmclcdyhnAGsSVtjc0swJtoHxR4dtf11qoZ2ZtAg7ybmUSuV6uGN/MNH4F+
-	b55ujQOwnOFv+F2P0Nz97mefCn2YvAHs0m7ODLLmZeMss9mhFG69HA7bpFhW/b9veWBGLo
-	iKuL1GKUsViJBRMNJ00/tQbHGKV0qpWS0iEqiXvbrgMFn10pChI32aZRQxQKBQ==
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=9Fm+D0OcbzOy0IbyGDj4z1hQFOVoL/qLeotXIAAn7YE=;
+	b=JZdjWe2M5FbbM5MlUrt17dhLmO6geib8e46t17nk6xr0lXW4UHNeoZkfi3y4gDjWGMFgit
+	2WJ9UJr312NXLeqdJgXnTmd16PKq/GJwReC7/YTJgQuiYT8egz/NvhYzs8be5IccyQA9nq
+	RFV1jSu4+hWpb+cYiUC+bj+FiVRbsBpgVu/ADSS1YW7gTCSrSuLbeNIoSdvlqNrDXwAAxQ
+	LnXt6/2SLn84Sdc5hXd7p19IXm2rnUTGzJ/n7NZi01Az5KKqNqUxrXH+ZblhyRJZ6DHOhB
+	7jLlwIzkKnK/5DqXRE1dHDDHrxhj3Ai5+ahYjDDKjqL8YGOWLIt1Z+veSGIPMg==
+Authentication-Results: outgoing_mbo_mout;
+	dkim=pass header.d=mailbox.org header.s=mail20150812 header.b="d+/sEAiu";
+	spf=pass (outgoing_mbo_mout: domain of marek.vasut+renesas@mailbox.org designates 2001:67c:2050:b231:465::2 as permitted sender) smtp.mailfrom=marek.vasut+renesas@mailbox.org
 From: Marek Vasut <marek.vasut+renesas@mailbox.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-	t=1788468739;
+	t=1788468743;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=59PKEI7PYtuS7UFcYhxPqjo/ys07XPDANz6T91m1qQU=;
-	b=SeYlHUMwnBmZp8dRJ1oLMaSaU+JU6Vg9X1FPp8r1/5Fqzn0YFNlzxQapA91Ew71nAChNaL
-	yeWRT3DykEO9np3erqXBAPFSGS39JPONwc6e9nzQZujSgfXeDhqasRueX+I5b12tRvgXUL
-	TwvK1E0yDe0eGqeM6tqQKduGFwhjfAOnc8hvoKPxzeDkrlgwXsIIGUtrGF3e21pSgzsiMA
-	QIDNkzzvnmrYThHeeXjSPODlDW6TivJKXjb4jtA1yhjcCWhBeK8uqGXs+ZtI7ot/tlEY3i
-	i9U/aIPoU7Z63vBnIv27yuHCHUNITwcZ9X2S2D28aNNOTguhE1px2RnqBZTz0g==
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=9Fm+D0OcbzOy0IbyGDj4z1hQFOVoL/qLeotXIAAn7YE=;
+	b=d+/sEAiuveGD0FlmPArvdb/zQWZhdUOz2dVfFdsgGYnfGf+rhQWdO1282YrWbXV+WMJ5dA
+	tm2DtbF6skRyqMvYdScgcKeVNlVHGxbytH7QCdUyyQclWOzhN99E5TQ13HmHHIPxq9o9iX
+	uwqPs4894yHNY5k9IbEk14hJqncZfsFKGY7srZAVY9b89bn/+QCH/lpAa0kUFeeCBXJwpM
+	2ckyu/yevsFWteyB7SKX82Jsd9VBXloXxgHU8S84Co4XU2FADWmnMgYc5TVl4dLIFP1hVl
+	J4AmRRHvpg6mKpPhKPgzu1gnRuWSgnfTWP+dvX73uAeGBIapX+gp/tI/2Y7pDQ==
 To: linux-pci@vger.kernel.org
 Cc: Marek Vasut <marek.vasut+renesas@mailbox.org>,
 	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
@@ -61,9 +67,11 @@ Cc: Marek Vasut <marek.vasut+renesas@mailbox.org>,
 	devicetree@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	linux-renesas-soc@vger.kernel.org
-Subject: [PATCH 1/6] dt-bindings: PCI: rcar-gen4-pci-host: Document Application/Local register reset
-Date: Thu,  3 Sep 2026 22:50:52 +0200
-Message-ID: <20260903205153.283553-1-marek.vasut+renesas@mailbox.org>
+Subject: [PATCH 2/6] dt-bindings: PCI: rcar-gen4-pci-ep: Document Application/Local register reset
+Date: Thu,  3 Sep 2026 22:50:53 +0200
+Message-ID: <20260903205153.283553-2-marek.vasut+renesas@mailbox.org>
+In-Reply-To: <20260903205153.283553-1-marek.vasut+renesas@mailbox.org>
+References: <20260903205153.283553-1-marek.vasut+renesas@mailbox.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -72,8 +80,9 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-MBO-RS-META: mcbpas4ahh1pk5i66mwxi8niujnbaj48
-X-MBO-RS-ID: 617d7d59b7d1f8b8209
+X-MBO-RS-META: y8fjg86s9e6n6d6gbtcpeesq5ddkmz5g
+X-MBO-RS-ID: 32e90b4b9a684e07b26
+X-Rspamd-Queue-Id: 4hbWxj26cvzMlD5
 
 The R-Car Gen4 PCIe controller does contain core reset, which puts
 the controller back into well defined state, but it does also tear
@@ -98,14 +107,14 @@ Cc: linux-kernel@vger.kernel.org
 Cc: linux-pci@vger.kernel.org
 Cc: linux-renesas-soc@vger.kernel.org
 ---
- .../devicetree/bindings/pci/rcar-gen4-pci-host.yaml    | 10 +++++++---
+ .../devicetree/bindings/pci/rcar-gen4-pci-ep.yaml      | 10 +++++++---
  1 file changed, 7 insertions(+), 3 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/pci/rcar-gen4-pci-host.yaml b/Documentation/devicetree/bindings/pci/rcar-gen4-pci-host.yaml
-index 64f456c6a75a1..8a06a25e266b5 100644
---- a/Documentation/devicetree/bindings/pci/rcar-gen4-pci-host.yaml
-+++ b/Documentation/devicetree/bindings/pci/rcar-gen4-pci-host.yaml
-@@ -57,11 +57,15 @@ properties:
+diff --git a/Documentation/devicetree/bindings/pci/rcar-gen4-pci-ep.yaml b/Documentation/devicetree/bindings/pci/rcar-gen4-pci-ep.yaml
+index b23293314a6d0..a983aa015cd1b 100644
+--- a/Documentation/devicetree/bindings/pci/rcar-gen4-pci-ep.yaml
++++ b/Documentation/devicetree/bindings/pci/rcar-gen4-pci-ep.yaml
+@@ -56,11 +56,15 @@ properties:
      maxItems: 1
  
    resets:
@@ -122,7 +131,7 @@ index 64f456c6a75a1..8a06a25e266b5 100644
  
    max-link-speed:
      maximum: 4
-@@ -111,8 +115,8 @@ examples:
+@@ -109,8 +113,8 @@ examples:
              clocks = <&cpg CPG_MOD 624>, <&pcie0_clkref>;
              clock-names = "core", "ref";
              power-domains = <&sysc R8A779F0_PD_ALWAYS_ON>;
@@ -132,7 +141,7 @@ index 64f456c6a75a1..8a06a25e266b5 100644
 +            reset-names = "pwr", "core";
              max-link-speed = <4>;
              num-lanes = <2>;
-             #address-cells = <3>;
+             max-functions = /bits/ 8 <2>;
 -- 
 2.53.0
 
