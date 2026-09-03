@@ -1,75 +1,102 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7581F4D8DAB;
-	Thu,  3 Sep 2026 16:13:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 41A124D9901;
+	Thu,  3 Sep 2026 16:13:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788452008; cv=none; b=LcHVHYP6DsQVvksV1vc0otiYx9LhI91y0SblPLSmCvgSG4ySTwxnld4NcAkHxYzn0zpErIauzZGG4aJuOTpJVyFyw4CHbg+7/RRtEJKrstTisbX9U6Zk7zFtS8/cTcWKPGWIZJ3hJDoU7ILQOkMPPgND151NKfYUWf3MLlu0eO4=
+	t=1788452011; cv=none; b=thV+InD0nkgrRKOsEK4+0hWjk4E2+a5z9NHeB8fpU9TMCnCTz1yx2PZMwyMJd85V55FEU+C5CAsmzGmND+huHfXFG/yNvaXpX5gRs40AIIJmOYMlxQqXGYb3WaOUY3lP6ETiXEErpXOI8o1h0MwSwciEGtPveMd/h3BOxMhhDfY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788452008; c=relaxed/simple;
-	bh=GE0R8Z3pC+iCt9aRmWtxo6aXF/6WYnVerc2XHPYZAMY=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=sU8bF7Z7tI/i91BctINP8xTh38MsbLWD+Q5/nuwdwQ4VwGPaVN75Ye0o7cGIFD/wh5yTxp/2SsZRnITFBzcpxIBNxzsCSBoU0LgL5LW1fVCCLoKvDw8Mgna51CUvxmjeWock80VFuLnssZZNPdnOduEgUYhtPge7ksKlt0hDm6k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Fd6SfnsD; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788452011; c=relaxed/simple;
+	bh=PB7Iq2ssFKLaMqNGOCeNlDG2sDFWCM0kB5FjcfQ5eAg=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=qngccmUXkCYxv24VjZ7QDdzQeNc54bWloJiaxIroPq3LmADRCfR0ICjGBag8gvaxLVgqy0Oozir9P2lT0VNXrXziYt+Zn9kLKYGp9Y4tekO9LB11CKTSm+4Xu1fm584IiHkpigS+ZOGxOW6nHQuw0C+IU1bIw6ebAib+CzEVvl0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cKBqdlKQ; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Fd6SfnsD"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DD3521F000E9;
-	Thu,  3 Sep 2026 16:13:26 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cKBqdlKQ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A95D41F000E9;
+	Thu,  3 Sep 2026 16:13:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788452007;
-	bh=9X5aJMJdH11AGNV/aZh4P7AJzxCwlJt81Q8Oj9p0pTE=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Fd6SfnsDLVBE/D/Ze162aaxJo94iGPI5oojlItSHKFrMgKOG5lEEQ+roWlITjTYc6
-	 TzOIytNweIKCrxHEPl5nn1JcV/cMfvM+YczR5xG7c1RngCqg9a6ty0oiW5umkYhtlO
-	 tR36yZYEMH6ZkTzlX5vOrqxWYCNpQMrY5hLIGBrNRuXznDbMdBWMQY602zpQGxFrIC
-	 5t8XLHjUcGko550ixJl2EkSDV0Qup1DsA8WXp62n5ZQ0g1lh5Qhx1PhPMHQD8/MFEI
-	 AMVmDhGItCbrAh7dHmoCFovC9jwazd0gwRzxGOzG1cDmWnfShQxa9s35dkCHgKFVY0
-	 RyKg/Kwkg7RuQ==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v6] PCI: imx6: fix resource leaks in probe error paths
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Zhijian Han" <hanzhijian1991@gmail.com>
-Cc: linux-pci@vger.kernel.org, Frank.Li@kernel.org, imx@lists.linux.dev
-In-Reply-To: <20260903160342.3282199-1-hanzhijian1991@gmail.com>
-References: <20260903160342.3282199-1-hanzhijian1991@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 03 Sep 2026 16:13:26 +0000
-Message-Id: <20260903161326.DD3521F000E9@smtp.kernel.org>
+	s=k20260515; t=1788452010;
+	bh=0AqKXgC/ir//xnyE9Qd0oIkiDK0g4G75mrBEzb+49oc=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=cKBqdlKQNG+MgIqyCdTWZkCc552pzvkklw9sYz13LkySjin8cHqvOu/azYYZfjaOq
+	 zqjcnetKLSBKYNJ+HRDJpwmSdW9xjtp264kd0LYTg86Vz0vnNz+OZ+l/cfcGL9GyN8
+	 jQPPQdDpf/rCXDgXbNPJEggRtFDCGM0BkDwAGR249XYPoYNLy/v2TISkXfoyUDxtq5
+	 DDDioPXlFCI1c2VcAyZ4vSm4bxCI6CIebJyDc6v0weNe6252CQkk/1IvtUg4sFYiFs
+	 ouUuMKCkY90wvG+1oBcTiRdGWZS/JACKtXYCN1WWLciYf9cO2pD11zYYR6Y9Oa7K74
+	 2CginSW6x86UA==
+Date: Thu, 3 Sep 2026 09:13:28 -0700
+From: Wei Liu <wei.liu@kernel.org>
+To: Jason Gunthorpe <jgg@nvidia.com>
+Cc: Jacob Pan <jacob.pan@linux.microsoft.com>,
+	Mukesh R <mrathor@linux.microsoft.com>,
+	Alex Williamson <alex@shazbot.org>, hpa@zytor.com,
+	robin.murphy@arm.com, robh@kernel.org, wei.liu@kernel.org,
+	mhklinux@outlook.com, muislam@microsoft.com,
+	namjain@linux.microsoft.com, magnuskulke@linux.microsoft.com,
+	anbelski@linux.microsoft.com, linux-kernel@vger.kernel.org,
+	linux-hyperv@vger.kernel.org, iommu@lists.linux.dev,
+	linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
+	kys@microsoft.com, haiyangz@microsoft.com, decui@microsoft.com,
+	longli@microsoft.com, tglx@kernel.org, mingo@redhat.com,
+	bp@alien8.de, dave.hansen@linux.intel.com, x86@kernel.org,
+	joro@8bytes.org, will@kernel.org, lpieralisi@kernel.org,
+	kwilczynski@kernel.org, bhelgaas@google.com, arnd@arndb.de,
+	"Aneesh Kumar K.V" <aneesh.kumar@kernel.org>
+Subject: Re: [PATCH v5 3/9] mshv: Introduce basic mshv bridge device for VFIO
+ to build upon
+Message-ID: <20260903161328.GA3102631@liuwe-devbox-debian-v2.local>
+References: <20260731223427.2554388-1-mrathor@linux.microsoft.com>
+ <20260731223427.2554388-4-mrathor@linux.microsoft.com>
+ <20260902111905.000079d4@linux.microsoft.com>
+ <20260903144236.GK4157646@nvidia.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260903144236.GK4157646@nvidia.com>
 
-> imx_pcie_probe() leaks both pwrctrl devices and power domains on failure:
->=20
-> - imx_pcie_attach_pd() attaches the "pcie" and "pcie_phy" power domains
->   and adds device links to them, but nothing detaches the domains or
->   removes the links on probe failure or deferral, so they leak.
->=20
-> - A failure of devm_pm_runtime_set_active_enabled() returns directly
->   without destroying the pwrctrl devices.
->=20
-> - A partial failure inside imx_pcie_attach_pd() leaks the power domains
->   that were already attached.
->=20
-> Add imx_pcie_detach_pd() to remove the device links and detach the power
-> domains in reverse order of acquisition and register it with
-> devm_add_action_or_reset() so they are released automatically on probe
-> failure.
->=20
-> Reported-by: sashiko-bot@kernel.org
-> Link: https://lore.kernel.org/all/20260822013640.182C01F000E9@smtp.kernel=
-.org/
-> Fixes: 2c5768344f88 ("PCI: imx6: Move pci_pwrctrl_create_devices() to imx=
-_pcie_probe()")
-> Signed-off-by: Zhijian Han <hanzhijian1991@gmail.com>
+On Thu, Sep 03, 2026 at 11:42:36AM -0300, Jason Gunthorpe wrote:
+> On Wed, Sep 02, 2026 at 11:19:05AM -0700, Jacob Pan wrote:
+> 
+> > If we do want to support this kvm-vfio bridge semantics beyond kvm,
+> > maybe this should be abstracted as a generic VFIO "hypervisor
+> > partition" association, with hypervisor-specific get/put callbacks,
+> > rather than adding an MSHV-only copy of the KVM hook.
+> > +Alex
+> 
+> I don't like this patch at all.
+> 
+> I think we should try to harmonize all these sort of "external" cases
+> as best we can. mshv, confidential compute, xen, etc all have a very
+> similar shape.
+> 
+> I am discussing here with Aneesh an approach to use the viommu almost
+> exclusively for this.
+> 
+> https://lore.kernel.org/all/20260902235609.GG2890729@ziepe.ca/
+> 
+> Can you imagine a way to do that for your stuff?
+> 
+> In that case I imagine the iommufd vdevice create is what attaches the
+> vfio device to the partition, not a seperate ioctl over in some other
+> driver. When the viommu is created it knows what partition it is
+> affiliated with because it took in a FD that describes that partition.
+> 
+> Does mshv use KVM at all? Can a kvm fd describe the partition?
 
-Sashiko has reviewed this patch and found no issues. It looks great!
+No. MSHV doesn't use KVM. We don't have a kvm fd. We have an mshv fd to
+describe the partition. They are different virtualization solutions.
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260903160342.3282=
-199-1-hanzhijian1991@gmail.com?part=3D1
+In the ideal world, the fd should be hypervisor agnostic, not tied to
+kvm.
 
+Wei
+
+> 
+> Jason
