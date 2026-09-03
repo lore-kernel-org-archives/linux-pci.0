@@ -1,47 +1,47 @@
 Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A76C54FC8DE;
-	Thu,  3 Sep 2026 19:19:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D0794F30D4;
+	Thu,  3 Sep 2026 19:19:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788463166; cv=none; b=I5OLn864iiYhO+baIw2HH/7ZrEK5YWI7yvN/yBCXcFisg1G274PkE9ZWbmpIJFaF8vJTBfgsRXD3EoClBSATiQmRG7LYeerof491wt+PConq9gnWt7qSmc5VHyAyKOSsMQubjGtBMKQS8byMYisIyjEXQ2tbww9dih/Lre2J6ao=
+	t=1788463172; cv=none; b=Hbc/iSdoUUt6+TtffefTb0QjywAuzHA3MbtCjRYy8ykO8IcdDJ+pMiu4I7pENr/DtDfpvW+BR/A3xfbDJnICEJTiroyhNmEPFPmnCOVElX70L49b+oNqrSVhaZOVUXKDHv2J+QOiw9/ssUBq5MivoHWl8cJlqdWTh4zIxWM1ehI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788463166; c=relaxed/simple;
-	bh=3hHAyVFTGj9AqpULELJgCCjejA/iXxCu6S8jzWP2ypE=;
+	s=arc-20240116; t=1788463172; c=relaxed/simple;
+	bh=PlFzrKm+Ru+2/+E6exxz8A0VNdYsRRHqwIQg8mG5aU0=;
 	h=MIME-Version:Content-Type:Subject:From:To:Cc:In-Reply-To:
-	 References:Date:Message-Id; b=CZ0fxQWBPVTVQYR5xATfZ5z1IhqFsD3UJuyMAoycBnFfxSUt26hgOVUQqbMNB6Jhenn83uZriuGsWmuO12KTwqTdj7PU0Rubv+saPJ+4PYzuEhIlfnS2a6oooj7niXsHn+ChKSAIFLETbXSMJNK0qTHrQIwmu6ZOXtQbW4lQxtk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=N1Bw58ZL; arc=none smtp.client-ip=205.220.180.131
+	 References:Date:Message-Id; b=KzdA3yPhfzm0eqIk5zlwzSDHxcAk59mDdSax9LQzVYSFfjfkQmWqV3MDCTDaUjQgCB5VOp/eJx3qKzhsR33zPIB1f046BVRabPtR/QRPH6VnTjYdk1W2SdzUSbgWW0UNoek0M+rX/VMhbN1f6wBpV+yuzCcLY3fZv2/hZhqjbSM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=KIKohKdg; arc=none smtp.client-ip=205.220.180.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="N1Bw58ZL"
-Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 683G3r9C1091730;
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="KIKohKdg"
+Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 683G38JC927725;
 	Thu, 3 Sep 2026 19:18:37 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	hCyEkgP8KOw4p+DETdduFsvpdNWIMRHML0W3Kv9umQ4=; b=N1Bw58ZLnvOIYUG+
-	C0N+HSlgjCknaO3UiosFt3JG0G6O61SNFjt+kofwTHZLZyyn78pB1pSCc75h+yBn
-	HHEZPprIqPH8FwcZ/ua8+qt1/kcgSF0SFiEsSSmLApAMRGxvC+BYtNfOq2pQNOlb
-	Bjo44exsSlPM+E6eFnV/C4qi+jGlbLUTSJhrtCJfSIGbS8LbQSeTwl0T0kuNs2yb
-	txqa6JRoycL0f4XtB/iTeWBwL/VFE5XfLY9b3p4n3sTrXJAQaTcf5aJvMyD1AlCL
-	sJVw2Mvgp6JmoasdRSG6n3+19qyLQDY9vOwR0WffBkgP2paxglKmOPmQCWc0VujX
-	/LIeZQ==
-Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4gf4ekk5tq-1
+	ra7IVCkWuPaYE58YBy2u4tVccX4wVFTrsAKPrrP920Q=; b=KIKohKdgCpsbEAQd
+	Lj+o5+B9ZsBQdPo+6YbkYtQHxiMG/pPZEpmxi+7I0v6ZiwXOJ7xvC62iRZGmcR6d
+	xfGSOgAXjpFPxyM5wJ7d2yUr0kxuch6JAKnPc8cRB0w4yH7U98s0W7AFutMfqf7S
+	1dZs1m+DszcLoK8F6EkQKCOaV7inI316+4pBjYXyY+1AOyGCC/OinQR5JoGcCgMC
+	I7/QzS4LgOtRERikpS18xAIhaLgmSEj2Wdd0Bnqnonsi0K7JqtQkzEigoojpX4nV
+	p8ttGCMmB3RNCTX+cGZ++pWIdKMtjLUtxrOPLpaHyoXPn57AdrRa4TfxCLzf7PDQ
+	kf1Xow==
+Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4gf6tx2f6e-1
 	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
 	Thu, 03 Sep 2026 19:18:36 +0000 (GMT)
-Received: from pps.filterd (nalasppmta03.qualcomm.com [127.0.0.1])
-	by NALASPPMTA03.qualcomm.com (8.18.1.11/8.18.1.11) with ESMTP id 683JIZqF3196776;
+Received: from pps.filterd (nalasppmta05.qualcomm.com [127.0.0.1])
+	by NALASPPMTA05.qualcomm.com (8.18.1.11/8.18.1.11) with ESMTP id 683JIZTZ3214824;
 	Thu, 3 Sep 2026 19:18:35 GMT
 Received: from hu-devc-lv-u24-a.qualcomm.com (hu-jcameron-lv.qualcomm.com [10.81.84.69])
-	by NALASPPMTA03.qualcomm.com (PPS) with ESMTPS id 683JIZIL3196744
+	by NALASPPMTA05.qualcomm.com (PPS) with ESMTPS id 683JIZXM3214814
 	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
 	Thu, 03 Sep 2026 19:18:35 +0000 (GMT)
 Received: from hu-jcameron-lv.qualcomm.com (localhost [127.0.0.1])
-	by hu-devc-lv-u24-a.qualcomm.com (Postfix) with ESMTP id 5B238221B6;
+	by hu-devc-lv-u24-a.qualcomm.com (Postfix) with ESMTP id 633FE22A92;
 	Thu,  3 Sep 2026 12:18:35 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -51,8 +51,8 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH v3 01/13] iommu/arm-smmu-v3: Add
- arm_smmu_attach_release()
+Subject: Re: [PATCH v3 03/13] iommu/arm-smmu-v3: Drain in-flight fault
+ events on domain detach
 From: Jonathan Cameron <jonathan.cameron@oss.qualcomm.com>
 To: Nicolin Chen <nicolinc@nvidia.com>
 Cc: will@kernel.org, robin.murphy@arm.com, jgg@nvidia.com, joro@8bytes.org,
@@ -62,148 +62,214 @@ Cc: will@kernel.org, robin.murphy@arm.com, jgg@nvidia.com, joro@8bytes.org,
         linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
         skaestle@nvidia.com, mmarrid@nvidia.com, skolothumtho@nvidia.com,
         bbiber@nvidia.com, harsha.v@oss.qualcomm.com
-In-Reply-To: <7dcf4aaa538a6a14626f5e2854141f14268250fa.1788222485.git.nicolinc@nvidia.com>
+In-Reply-To: <8717f3329313f40308cff20006066283ebbb3a56.1788222485.git.nicolinc@nvidia.com>
 References: <cover.1788222485.git.nicolinc@nvidia.com>
- <7dcf4aaa538a6a14626f5e2854141f14268250fa.1788222485.git.nicolinc@nvidia.com>
+ <8717f3329313f40308cff20006066283ebbb3a56.1788222485.git.nicolinc@nvidia.com>
 Date: Thu, 03 Sep 2026 12:18:33 -0700
-Message-Id: <178846311316.1308030.7431615023426150106.b4-review@b4>
+Message-Id: <178846311316.1308030.6266899352044838554.b4-review@b4>
 X-Mailer: b4 0.16.0
 X-Proofpoint-Reinject: loops=2 maxloops=12
 X-QCInternal: smtphost
 X-QCInternal: smtphost
-X-Proofpoint-ORIG-GUID: YbJUb1jxGO03V7TrRPiYKGQQM-ul-niJ
-X-Proofpoint-GUID: YbJUb1jxGO03V7TrRPiYKGQQM-ul-niJ
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTAzMDE2OCBTYWx0ZWRfX3tKeZnqicjnd
- 3TdxidYv0xpRjIBVJ5xCFl4KKDHSrt9IXQYROG42Z+5MMsqoPt7ES+HCA7IzgFrXDmL/MP0N64p
- dDFa5skTxxXINAs4E5dqy5HfONqazNHFvAFHIauCAfeiw0at148pUI6FYTkkKACLMZrOKU3Q4MM
- oD3kIh5rGFm5B/AmE5bX+dKNivhG3a7q4h+G3rIIS2v1XgrtPza9ev20gFImA/5NPeltgizhsw6
- oOc0LYGyDv8qtBV9qtLMCaX5ElniCsAuRXrl2eH976Dt6iUAACDwmB2AkGt+nGSDUeEVfCxGTFp
- LxaOJyN4Nc7+26mhKIpOehMUxNSls7etpLohDFDIn6aSUWY/F6vawhOvlWlb4cVTZIArfNtGSsP
- ZigemhAyNlhAaXSQ6TkknQUJqaKOxW51KoHJEfu27PgbM+k+LGVdqv06fRD5wRh+bNmWIcdONub
- +qhrMRD6+jRyhOHor0w==
-X-Proofpoint-Spam-Info: AW1haW4tMjYwOTAzMDE2OCBTYWx0ZWRfX087hNYz9X1N7
- 5zMCDOBYzQhvkg45Lmf0AIBPakINaQDGA4uDul0VklVNefYSNgMYSKxwjMFXWEIWDqBnsPG9Egn
- SzKSVqj8+4dUYr7HdB1tYD45H+lViHY=
-X-Authority-Analysis: v=2.4 cv=PKc/P/qC c=1 sm=1 tr=0 ts=6a99c80c cx=c_pps
+X-Proofpoint-GUID: P8CdFX83cmwPHD-hm_KK9XDm2mq3yTJq
+X-Authority-Analysis: v=2.4 cv=TqjWQjXh c=1 sm=1 tr=0 ts=6a99c80c cx=c_pps
  a=ouPCqIW2jiPt+lZRy3xVPw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
  a=IkcTkHD0fZMA:10 a=VdqzKS8jKosA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=u7WPNUs3qKkmUXheDGA7:22 a=gowsoOTTUOVcmtlkKump:22 a=Ikd4Dj_1AAAA:8
- a=EUspDBNiAAAA:8 a=rRYPHyBk5bcyqWwTitIA:9 a=QEXdDO2ut3YA:10
+ a=u7WPNUs3qKkmUXheDGA7:22 a=rJkE3RaqiGZ5pbrm-msn:22 a=VwQbUJbxAAAA:8
+ a=Ikd4Dj_1AAAA:8 a=EUspDBNiAAAA:8 a=5E8cN6LfZOETjOzBigwA:9 a=QEXdDO2ut3YA:10
+X-Proofpoint-ORIG-GUID: P8CdFX83cmwPHD-hm_KK9XDm2mq3yTJq
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTAzMDE2OCBTYWx0ZWRfX/x7ObPDJp0pN
+ Av+qnrblfs97f0jRMbVhfDkHmtlf2pInT3XzjatGXW2L7YQ+PdIEO9ku+IJqawcBo2qg0INxyuP
+ qWByYrFtUXPboGEZzFzMzPC+BAf05LhPIXnHqLuxF4oApVsg4DqGAh0vyeYpMLc2zf+I2ErGfoD
+ BbVJPq3vpSwysJ2opnULWs3eYMgZPeVFcpEsClaNiiPmZfjlh0quCoOa2KbQ0/J9+v0CcFBfVvC
+ Curo4a6JJxlAmIOwdE+9PEpKr/RtOvQ2gq/GIdal6utLLS4ikNj/BYbyrr9Bt5abtx/AIfro+Nk
+ jY5ywvz3vYHSCx9g+a0DoFWWVm5nPU8y3EYO+/eCMfMad7Kw4od2Dz9grHKGyce7eJKsSfbfXS+
+ ZeJZy3JiYsG9OCb1O35jHATpWNJf2+u4rIWLzb+ZFjcWI+TeYtrDXRE84AnB/Isc8Rw7+ze11ny
+ yNiYV5thHjQh6cR+zIQ==
+X-Proofpoint-Spam-Info: AW1haW4tMjYwOTAzMDE2OCBTYWx0ZWRfX5mppCfGFpokC
+ DU6CAlWJMg8fb0uq5atRDH6smQ2YmkQYPZAGcF1sDUFilkjGN5FjJyUMjWcB/mZ9OXyIM53I9Gp
+ GJ4NdF4ZbPFBwN0eyOKvRjkcrnb4s2I=
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
  definitions=2026-09-03_05,2026-09-03_01,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- lowpriorityscore=0 adultscore=0 bulkscore=0 clxscore=1015 phishscore=0
- suspectscore=0 priorityscore=1501 spamscore=0 impostorscore=0 malwarescore=0
+ impostorscore=0 phishscore=0 suspectscore=0 lowpriorityscore=0 adultscore=0
+ clxscore=1011 malwarescore=0 spamscore=0 priorityscore=1501 bulkscore=0
  classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
  reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2609030168
 
-> The IOPF teardown is done in arm_smmu_remove_master_domain() when releasing
-> the master_domain on detach, under the global arm_smmu_asid_lock mutex. But
-> the teardown must drain any in-flight IOPF (for the old domain), before the
-> master_domain is freed via iopf_queue_flush_dev() calling flush_workqueue()
-> that can block on user-faulting page-fault handlers. Doing so while holding
-> the arm_smmu_asid_lock would stall any unrelated attachment in the system.
+> When a device is switching away from a domain, either through a detach or a
+> replace operation, in-flight stall events for the old domain might still be
+> on the SMMU's hardware event queue or on the IOMMU core's IOPF queue. Thus,
+> if the IOMMU core swaps the device's attach_handle and frees the old domain
+> before those handlers complete, the IOPF work might hit use-after-free.
 > 
-> Split the teardown out of arm_smmu_remove_master_domain(), to a new helper
-> arm_smmu_attach_release() that runs after arm_smmu_asid_lock is released.
+> Two queues need to be drained: the SMMU hardware event queue and the IOMMU
+> core IOPF software workqueue. Start with the former: add a counting-based
+> arm_smmu_drain_queue() helper, and poll the evtq on a domain detach, so a
+> pending IRQ won't let the threaded handler run after the drain and queue a
+> fault referencing the domain being freed. Its until_empty mode serves the
+> suspend and runtime PM routines that would drain the CMDQ. Any timed-out
+> drain fires a WARN_ON as well, since reaching the timeout would take some
+> stuck consumer in any realistic case.
 > 
-> Since no other device would use the old master_domain that is being freed,
-> it's safe to move out of arm_smmu_asid_lock (still under the protection of
-> iommu_group->mutex).
+> The existing queue_poll() API is not reusable for such a drain: it is the
+> atomic busy-wait for the command issuing paths, and it assumes a hardware
+> consumer making progress. A drain caller is sleepable, in contrast, while
+> the EVTQ/PRIQ consumer is a threaded IRQ handler that needs the CPU: such
+> a busy wait would starve the handler throughout an entire timeout, whenever
+> the waiter and the handler shared one CPU on a non-preemptible kernel. So,
+> this new sleeping helper is marked with a might_sleep() as well, given that
+> an atomic-context misuse would otherwise hide behind an empty queue.
+> 
+> Note that a drained event is dequeued, but not necessarily handled, since
+> queue_remove_raw() moves the MMIO CONS before the threaded IRQ handler gets
+> to push the event onto the IOPF workqueue. A subsequent change will invoke
+> synchronize_irq() and iopf_queue_flush_dev() to close that gap, and it will
+> act on the errno of a timed-out drain too.
+> 
+> The drain runs before the IOMMU core swaps the device's attach handle, so a
+> fault event generated on the new STE during this window resolves to the old
+> handle, completing with IOMMU_PAGE_RESP_INVALID that resumes the stall with
+> abort: the impact is bounded to that one failed transaction.
+> 
+> Also run the drain for every stall-capable master, even when the departing
+> attachment did not enable IOPF: such a stall event has to be aborted while
+> it still resolves to the old attach handle, otherwise the threaded handler
+> could pick it up right after the handle swap, mistakenly resuming it as if
+> it were a valid page fault against a new domain.
+>
 
-This is a lot of text if the next bit about being a refactor only
-is accurate.  Seems that not blocking attachments is the issue and
-to me that is a functional and useful change. However, is that
-in this patch?  Anyhow to me this needs a rewrite to focus on just
-what is actually changing here rather than the eventual picture.
+Useful perhaps to call out if this has been seen in real systems or
+not. I agree with the analysis but would rather hope drivers are
+well behaved in ensuring all traffic is done, adn this is hardeninging
+/ handling of naught hardware activity (all good if so!)
 
-
-> 
-> Note: this is a pure refactor; no functional change.
-> 
+> Fixes: cfea71aea921 ("iommu/arm-smmu-v3: Put iopf enablement in the domain attach path")
+> Cc: stable@vger.kernel.org # v6.16
+> Assisted-by: Claude:claude-fable-5
 > Signed-off-by: Nicolin Chen <nicolinc@nvidia.com>
 >
-> diff --git a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3-iommufd.c b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3-iommufd.c
-> index 25982bdbcbd9..fce026efa44f 100644
-> --- a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3-iommufd.c
-> +++ b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3-iommufd.c
-> @@ -194,6 +194,7 @@ static int arm_smmu_attach_dev_nested(struct iommu_domain *domain,
->  	arm_smmu_install_ste_for_dev(master, &ste);
->  	arm_smmu_attach_commit(&state);
->  	mutex_unlock(&arm_smmu_asid_lock);
-> +	arm_smmu_attach_release(&state);
->  	return 0;
->  }
->  
 > diff --git a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
-> index 5732f3ba0122..99baa59b39c9 100644
+> index e00b6c88214f..d255ff2519f9 100644
 > --- a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
 > +++ b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
-> @@ -3285,9 +3285,9 @@ arm_smmu_master_build_invs(struct arm_smmu_master *master, bool ats_enabled,
->  	return master->build_invs;
+> @@ -948,6 +948,86 @@ static int arm_smmu_cmdq_batch_submit(struct arm_smmu_device *smmu,
+>  					   cmds->num, true);
 >  }
 >  
-> -static void arm_smmu_remove_master_domain(struct arm_smmu_master *master,
-> -					  struct iommu_domain *domain,
-> -					  ioasid_t ssid)
-> +static struct arm_smmu_master_domain *
-> +arm_smmu_remove_master_domain(struct arm_smmu_master *master,
-> +			      struct iommu_domain *domain, ioasid_t ssid)
->  {
->  	struct arm_smmu_domain *smmu_domain = to_smmu_domain_devices(domain);
->  	struct arm_smmu_master_domain *master_domain;
-> @@ -3295,7 +3295,7 @@ static void arm_smmu_remove_master_domain(struct arm_smmu_master *master,
->  	unsigned long flags;
->  
->  	if (!smmu_domain)
-> -		return;
-> +		return NULL;
->  
->  	if (domain->type == IOMMU_DOMAIN_NESTED)
->  		nested_ats_flush = to_smmu_nested_domain(domain)->enable_ats;
-> @@ -3310,8 +3310,23 @@ static void arm_smmu_remove_master_domain(struct arm_smmu_master *master,
->  	}
->  	spin_unlock_irqrestore(&smmu_domain->devices_lock, flags);
->  
-> +	/* arm_smmu_attach_release() will free it */
-> +	return master_domain;
-> +}
-> +
-> +/* Release the old master_domain detached by arm_smmu_remove_master_domain() */
-> +void arm_smmu_attach_release(struct arm_smmu_attach_state *state)
+> +/**
+> + * arm_smmu_drain_queue - Drain an SMMU queue
+> + * @smmu: the SMMU device
+> + * @q: the queue to drain
+> + * @until_empty: target selection
+> + *
+> + * With @until_empty == true (for CMDQ), exit once the queue is observed empty:
+> + *
+> + *   cons0                cons                                prod
+> + *     |                   |                                   |
+> + *  ---+###################+=====================+=============+--->
+> + *                         |<--------- undrained==0? --------->|
+                                                    ^
+What is the + indicating?  Seems where prod0 that isn't relevant here
+would have been - that is a little confusing so maybe drop?
+
+> + *
+> + * With @until_empty == false (for EVTQ/PRIQ), exit once "drained" reaches its
+> + * target: "pending" (i.e. prod0 - cons0, frozen at the entry time):
+> + *
+> + *   cons0                cons                 prod0         (prod)
+> + *     |<---- drained ---->|                     |             |
+> + *  ---+###################+=====================+=============+--->
+> + *     |<--------------- pending --------------->|
+> + *
+> + * Note that a drained entry is dequeued, but not necessarily handled: the
+> + * EVTQ/PRIQ callers must follow up with a synchronize_irq() to wait for the
+> + * threaded IRQ handler to finish handling the dequeued entries.
+> + *
+> + * Context: Process context; may sleep.
+> + * Return: 0 on success or a negative errno on timeout.
+> + */
+> +static int arm_smmu_drain_queue(struct arm_smmu_device *smmu,
+> +				struct arm_smmu_queue *q, bool until_empty)
+
+That name suggests this is doing the draining rather than waiting
+for it to happen elsewhere.
+
 > +{
-> +	struct arm_smmu_master_domain *master_domain = state->old_master_domain;
-> +	struct arm_smmu_master *master = state->master;
+> +	ktime_t timeout = ktime_add_us(ktime_get(), ARM_SMMU_POLL_TIMEOUT_US);
+> +	u32 cons, prod, prev, undrained;
+> +	u32 drained = 0, pending;
+
+Pet irritation. Prefer splitting the elements that assign and those
+that don't onto seeprate lines.  Here that just means moving pending
+up one line.
+
 > +
-> +	iommu_group_mutex_assert(master->dev);
+> +	might_sleep();
 > +
-> +	if (!master_domain)
+> +	cons = readl_relaxed(q->cons_reg);
+> +	prod = readl_relaxed(q->prod_reg);
+> +	/* The exit target: the number of entries in the queue at entry */
+> +	pending = Q_POS(&q->llq, prod - cons);
 
-I guess this makes sense in later patches, but for now the local
-variable seems more confusing than anything.
+Applying a macro called Q_POS to a difference is a bit confusing to
+me given the output isn't a position of anything. Maybe just needs
+a wrapper Q_DIFF(q->llq, prod, cons)  Can use Q_POS underneath
+but avoid that naming out here well away from the macro definitions.
 
-> +		return;
+> +
+> +	while (true) {
 
-I'd add a blank line here to separate the sanity checks from bulk
-code.
+Maybe pull defintion of prev and undrained in here so it is clear
+they aren't state maintained across iternations.
 
+> +		/* Accumulate the entries consumed since the last poll */
+> +		prev = cons;
+> +		cons = readl_relaxed(q->cons_reg);
+> +		drained += Q_POS(&q->llq, cons - prev);
+> +
+> +		prod = readl_relaxed(q->prod_reg);
+> +		undrained = Q_POS(&q->llq, prod - cons);
+> +
+> +		/* Exit on an empty queue, regardless of until_empty */
+> +		if (!undrained)
 
->  	arm_smmu_disable_iopf(master, master_domain);
->  	kfree(master_domain);
-> +	state->old_master_domain = NULL;
->  }
->  
+Given you don't use undrained again (maybe in later patches, in which
+case ignore me.)
+		if (Q_DIFF(&q->llq, prod, cons) == 0)
+perhaps.  This one entirely up to you as maybe the named local does
+help with readability a little.
 
-> @@ -3784,6 +3801,7 @@ int arm_smmu_set_pasid(struct arm_smmu_master *master,
->
-This path is hit from a failure of arm_smmu_attach_prepare()
-At that point the old domain hasn't been detached.
+> +			return 0;
+> +
+> +		/* Snapshot mode: exit once the pending entries are drained */
+> +		if (!until_empty && drained >= pending)
+> +			return 0;
+> +
+> +		/*
+> +		 * A timeout means the consumer might be stuck. In theory, if it
+> +		 * moves 2 * qsize entries or more within a single poll interval
+> +		 * Q_POS() would wrap and undercount drained: that could trigger
+> +		 * a spurious warning too, if the queue was never once observed
+> +		 * empty. Yet, that much consumption in such a short interval is
+> +		 * unrealistic. WARN it only, as a stuck consumer is a real bug.
 
-Now it doesn't matter because of what is currently done in release,
-but from a code flow / what that function is documented to be for
-this seems wrong to me.  I'd separate the good and the bad
-paths in the function.
+I don't like 'unrealisitic' based defenses (even though I agree it is pretty
+unlikely).  Is there a way to bound this?  Maybe future systems will
+be much quicker.
+
+> +		 */
+> +		if (WARN_ON(ktime_compare(ktime_get(), timeout) > 0))
+
+Why WARN_ON here then a dev_warn_ratelimited() below? 
+
+> +			break;
+> +
+> +		/* The consumer might be a threaded IRQ handler. Yield to it */
+> +		usleep_range(100, 200);
+
+fsleep() perhaps then we don't get to argue why that slack.
 
 -- 
 Jonathan Cameron <jonathan.cameron@oss.qualcomm.com>
