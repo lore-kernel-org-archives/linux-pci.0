@@ -1,154 +1,161 @@
-Received: from DM1PR04CU001.outbound.protection.outlook.com (mail-centralusazon11010015.outbound.protection.outlook.com [52.101.61.15])
+Received: from out30-101.freemail.mail.aliyun.com (out30-101.freemail.mail.aliyun.com [115.124.30.101])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF48B40681A;
-	Thu,  3 Sep 2026 12:27:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.61.15
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788438430; cv=fail; b=V0r3FKyWWcilZmbsCtBbyuELC0fPTKbiXQV+dS9DQQAASTRP6c7ulDd40ZkdTtayGXjKin+LPD6HIW4IiHN6pUvRiDVnQRJgHK1+uJPofUdiTG6/c+XLL3ZaQJBpxgaJPbN2qf6GtVW0vCe0w7ooxB/PrZbUHs0rUKEOrYtPlcE=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788438430; c=relaxed/simple;
-	bh=Imr/XfhwElG9Ewl5+0wysTitlhhtSJ1MpMStdMmrFEA=;
-	h=Content-Type:Date:Message-Id:Subject:From:To:Cc:References:
-	 In-Reply-To:MIME-Version; b=RXKURzx8qumI0eY71Qt8C06hVkr29ZA3fpYMZ0IMBKOPEqBmbx7OL57gtcg7OM4mkkvlKtWhJp9YTQbFpe3X5lV065PWnJnCjrINizjOPpSDHx8IDPtayKPIvKY+a4efj+VLvqH4WzB+49+N82sO1Uvc0nLQ8oI8rxo4FBzPQVQ=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=egKtmy4C; arc=fail smtp.client-ip=52.101.61.15
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AEF44485CCA;
+	Thu,  3 Sep 2026 12:27:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.101
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1788438480; cv=none; b=kg3itz8RI1gMz440vKbzneSBn343BglzTD/FEDDWTlYPcSTblSfZD3H1IsZnXrbWNdxsDV4q4V5XK/qIoo8MHJF/iF+pfL0XS0EJoekOyJw2icWnI8xFntpcAw9PCiRS0Cn/05IimhrXqp+YjjvqZyB6nBBuaJuGEgVXFVKSwPQ=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1788438480; c=relaxed/simple;
+	bh=tPgQPqeQ8tivFoOi8T92/LAwDafbjGB3DMZys3D1d8g=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=R0ZDxHSP8T8QhpDGbO5RVyX4j54Yc8DUjvKaBVpqqvrulx0lgh9PpNraE4Thd4JPPlFfROHXcpfu542Nn3VRTc3rAbXoajOFj2Xo6FTVTn7rSB9JXkc5Fv5obDYMJl3nUqrNJlPMUJiWPxe4UIMsxdzsrHN90UTWRc21MZkjBaU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=ewng8sCF; arc=none smtp.client-ip=115.124.30.101
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="egKtmy4C"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=vIcJlSjelrjVmamkifEPYvyRZDsshD2e5jEvQ/29O87dY/KuHVesViIhA2BxTNwSYCrzGzDaiSX1RNMcV3v4irT3zBKVKGnHMXyFTFA5HeOeSwCLZmfOZ+kQln4ekYWZj3QxXqSkgFMzFeO886afzBKkfXFy+gF9DtRNzgpMs1uoRNlJoilOoUkea7CfUI407jiO6WWG/U45h0HYoN+tPFLU+I+6ASK69/9iS9nMFtu1W+5KlGhB6HDUmyiixCq1dNW/1Pw4IJJAI6uxydfWDvd1/CP7lzU6GKKAgXcvUkLzaExpDRMnoaWKpojLRfZYexTcdN27wXO9ocxoWbOvmA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=Imr/XfhwElG9Ewl5+0wysTitlhhtSJ1MpMStdMmrFEA=;
- b=S8Uq+cxigPslz2HmKmSfOwQOgClwccYhOaWBQy2rZKgO+++xDixweWybQWypHnfWpuFPwweYND//0Lv0Hk6MrKqM9icDL3b5f4mjE/VpHbCTVak5nFWs1KfF4dWTfFXaIuMcagAG3EjM9x/FUPkvXhWsCFADm6twD3wCW686zewl1M48tjlYKfTveUxI2BoY7Bq6U/GWH0cvG7ODg3VmkpCtu39JfzV71NdkGGdfK4jfC9OVa01KIVPVNhyaeNKLqa2rar7dVEoH3ssymvJbRI43vwzFwIIUVA6U2AApHuEpApgQE4pCkp0xqPJijCXNlT7KF7mXLhN5b/Mx40Cjvw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Imr/XfhwElG9Ewl5+0wysTitlhhtSJ1MpMStdMmrFEA=;
- b=egKtmy4CFMyF+A+j747teI5lYP7s1DCk6VDxjJOQZpuX2KnmPY2bzG9HW6EXQsR0dt5sJhXHHO5Ln418j5KsTwQx1az9k7xuDMvT5cLrIVQrxRPduOD4XBgMRNxQcp04GSJyezOWPrnGCqDfU6jSgjCoFYVf1OILRJlIWWibMQm1s9hfw9khiju+2chJTEdNeNNmer6rGQh2VzVqpdENrue1OuuHhWzLEfYy3qeWpkfaVo2txDhW2WjsbADoNWZdH2QLfSoQiZXp8/PalcsT0VEaUz3dgz/IMDvxgoGGMNx5GfLN798cl22bVXSwM1DCVukgOg1J6+iHupbVRLuTkQ==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from MW4PR12MB6873.namprd12.prod.outlook.com (2603:10b6:303:20c::17)
- by CY8PR12MB8194.namprd12.prod.outlook.com (2603:10b6:930:76::5) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.360.13; Thu, 3 Sep
- 2026 12:27:04 +0000
-Received: from MW4PR12MB6873.namprd12.prod.outlook.com
- ([fe80::a338:bd2c:3a38:ece1]) by MW4PR12MB6873.namprd12.prod.outlook.com
- ([fe80::a338:bd2c:3a38:ece1%5]) with mapi id 15.21.0382.007; Thu, 3 Sep 2026
- 12:27:04 +0000
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Thu, 03 Sep 2026 21:27:01 +0900
-Message-Id: <DL5OICH9XD61.2LWT081VGN3N6@nvidia.com>
-Subject: Re: [PATCH v4 10/16] rust: io: register: make register have a typed
- base
-From: "Alexandre Courbot" <acourbot@nvidia.com>
-To: "Gary Guo" <gary@garyguo.net>
-Cc: "Danilo Krummrich" <dakr@kernel.org>, "Alice Ryhl"
- <aliceryhl@google.com>, "Daniel Almeida" <daniel.almeida@collabora.com>,
- "Miguel Ojeda" <ojeda@kernel.org>, "Boqun Feng" <boqun@kernel.org>,
- =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, "Benno Lossin"
- <lossin@kernel.org>, "Andreas Hindborg" <a.hindborg@kernel.org>, "Trevor
- Gross" <tmgross@umich.edu>, "Tamir Duberstein" <tamird@kernel.org>,
- =?utf-8?q?Onur_=C3=96zkan?= <work@onurozkan.dev>, "David Airlie"
- <airlied@gmail.com>, "Simona Vetter" <simona@ffwll.ch>, "Bjorn Helgaas"
- <bhelgaas@google.com>, =?utf-8?q?Krzysztof_Wilczy=C5=84ski?=
- <kwilczynski@kernel.org>, <driver-core@lists.linux.dev>,
- <rust-for-linux@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
- <nova-gpu@lists.linux.dev>, <dri-devel@lists.freedesktop.org>,
- <linux-pci@vger.kernel.org>
-References: <20260901-typed_register-v4-0-5552b1d59525@garyguo.net>
- <20260901-typed_register-v4-10-5552b1d59525@garyguo.net>
-In-Reply-To: <20260901-typed_register-v4-10-5552b1d59525@garyguo.net>
-X-ClientProxiedBy: TY4P301CA0046.JPNP301.PROD.OUTLOOK.COM
- (2603:1096:405:36b::18) To MW4PR12MB6873.namprd12.prod.outlook.com
- (2603:10b6:303:20c::17)
+	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="ewng8sCF"
+DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=linux.alibaba.com; s=default;
+	t=1788438470; h=Message-ID:Date:MIME-Version:Subject:To:From:Content-Type;
+	bh=iSSfdL1I/sWuhejsZXnDXVfRiUf2pDJbtuLEZmLDvb8=;
+	b=ewng8sCFzw4k/iSZrIWhvFJJeaOlW/jA0VOnK5InyKGKdLoPHOX2+s6MFh0kOm+v9/InuIs64r7/+JAsKaFhgUsUmOY5V01k986TGBiXZ/lm81CYqcYzwTwQ5OUIJbjIesewXaYdilDLYWOU6ZRVydVxsOrkdqhfLzBhqeeJ2QU=
+X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R361e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam033037026112;MF=xueshuai@linux.alibaba.com;NM=1;PH=DS;RN=33;SR=0;TI=SMTPD_---0XAFvA3u_1788438466;
+Received: from 30.246.160.252(mailfrom:xueshuai@linux.alibaba.com fp:SMTPD_---0XAFvA3u_1788438466 cluster:ay36)
+          by smtp.aliyun-inc.com;
+          Thu, 03 Sep 2026 20:27:48 +0800
+Message-ID: <3dc96249-5103-4b00-8981-5d309ad9e941@linux.alibaba.com>
+Date: Thu, 3 Sep 2026 20:27:46 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: MW4PR12MB6873:EE_|CY8PR12MB8194:EE_
-X-MS-Office365-Filtering-Correlation-Id: 807af4eb-f0db-4307-070e-08df09b6a940
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|376014|7416014|23010399003|1800799024|10070799003|366016|11063799006|10067099003|4143699003|22082099003|18002099003|56012099006;
-X-Microsoft-Antispam-Message-Info:
-	qAYp1ZvlsnlG2ZFnX4RBUJsCHJF9aDY0ahlt1N305slpyuL408cU03O55AoWQqZMvseW1e9bxIyeIJi8UT3dA8yThFZnLnpXcm6j3HMo03RIhLRxSN7y2QBnAVEDxwTsX10XW8edUBkwjacALF6VKbOwigLfG4kUDQ/vRcv/boJH5YDFj62UJZna8nM4mX+urs4uOxtZIXOAKhKrJsE0TnGnKvUPDvcCqhhx3HbTk/aY6Gs5aHm4/3eUQdW7Fco9ctR3uGDogqYAyr7FpbyJYQCKDAsjWE/PeJ3NAqzYWOMNfGmFnH4OrAnPNWUiPPpHBX5XoH030Ftv0BHYZZYK7ElrD5dadLifupnkAAQ/XzpUIDPHTasrJKx3HRMTS9Ntkaor8793rj7wWtwKHHIVpx/HsiTNpR3+IM5pRLeJPo09bn8A2rZD2tJS4oBjwnH6mwjrf/EBRzLlmkk4ONYkYvGfzs2WuqPR6F9BxqFKKz8/8taO9786gX25jC+7Jx5emHBEjxMXkybGnFSXG9+3mwLHuv8i6pwSYVV/4srlWcVyYW1sNG21OZVe7ZZV3ILREtrcHvN7kv74MvOpOrm87c48Q/0B5ApuCpZCtC2X0796OUQaRh+/kOH9bnThm913w0RU48xHsK2r1j6swUh76bNTx33YmuQ+NcwSrBUGMac=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MW4PR12MB6873.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(7416014)(23010399003)(1800799024)(10070799003)(366016)(11063799006)(10067099003)(4143699003)(22082099003)(18002099003)(56012099006);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?YW5vSURDV0I0NVF0RmRoVjIxUCtCYzJ3dDNiaEVINGdGalBOYWRGQUs4Q0w5?=
- =?utf-8?B?MEY5ekdta01RR1RuQkRQc1pkRnhaVWU2dXQwclRIdXJtbjBldjQ5OEhmSlVJ?=
- =?utf-8?B?ZWI1RFRtTmFlUWROeE9xSVBhZjFFRGp4VDBEQ1Y4RE5PbW9RODBWaVJaTk9P?=
- =?utf-8?B?Uy9kUWRHUDVoNGZaRzN1QWVucXBka2E5UWtvVkY4V3h6d1BhQm02Q3dtQk52?=
- =?utf-8?B?T0NObVUzWGpoVDYwL1hXd1hsZzF1N3ZVT1R5M3J5MENjUkNTRVFZNy9iZmZ0?=
- =?utf-8?B?Sjl3M0ZRYVp1clQ5YVlwUU1JN1V4S0J1Y2wwZXBIZC8vajdrb3pmbHBUS2RI?=
- =?utf-8?B?VE8raDM0WUZMNVhrQ0t5WWpQNUNtQnJEQ00rSGVwVVpnUXZDOUhvZVA5V3FP?=
- =?utf-8?B?QzNhTXNEcmpaS2hKa3VOZUx2WVVKV0JHTVhXcC8vSUNVNkNCaXhVNzMxaTRv?=
- =?utf-8?B?WFFBbURFOXNJaFFmN1lFODZjZ0k1a3lPZGdJdXZFaU1xVkJDbFR6TjZlZDNX?=
- =?utf-8?B?U0Z4SVRpcWRaU0plbE1NdHlmT0xMWkFpd2lBTEQ1U09BV2dHMU5YNmJqeVBG?=
- =?utf-8?B?WDR5ajM0OEkwT3VTYmZiMndmVFFVZ3F3VjFVSUEyZkVsamRoUFFMak5XUFM1?=
- =?utf-8?B?YUVnWTNXWUpxQjdjdThmMmo4WFBHUUJxeHRiVW9nV21oOHpIQ21NRHhROWZQ?=
- =?utf-8?B?WHU3amhTeFNjUWMrcmVxNm1XTGU5d3V1eDhSeGVHdHROOHpSSTJ4WHR3Q2tp?=
- =?utf-8?B?dTdCRzN2ajJTTU9Wdml3ekJ3ZHhhUzZqRUd2RlFMZmdpQy9pM1MrSFRFMm5M?=
- =?utf-8?B?NWFCckZHOVhhVzl5M2ZHRHFsTHdXMURXamtqRUhnVmo1VmtmQy9wRGd0TnVJ?=
- =?utf-8?B?STFsUG94dVBBNFRrNzIwaFRDVWdwY1FJbDlGaythYTIxQ2ZabDByNUt1bGpo?=
- =?utf-8?B?MERDRlg2Nzd4dUdzdVY5OG92WlVESVM0ZUppMkY5TnUvZ2hHVStXdTYxVVk4?=
- =?utf-8?B?RDlnUktKMk9aeGY2SllkN0JkUmJLNmhLR2paZjBmRXZBeDM4cnNZQ2lHbXlC?=
- =?utf-8?B?SFFtUzQ0YXpQanM4NDk0WGlrTGxrSmdjbTFuUGRscE9RbXdiT1JNdVpET1JC?=
- =?utf-8?B?TjRMOHVlbGREYThhQ2JXd1pUclcxdWE3Z0NJNURPWGthRm54WmxMQXZTcklQ?=
- =?utf-8?B?bm1zNkxKRWtIenljMWRqQURXT2gybldVaDAwM25MWDFTKy9ER3pVR3FLL0JL?=
- =?utf-8?B?M2p2b3ROekdJV2VPREhPbEkwN1JWOE5hT3V2ODRjSGV1NTRyQ01XOG5EUFhn?=
- =?utf-8?B?VCtzYml3OWVUVTBFYThhenl3dzVjaUdMQjl2VHRvR3Z5RDZnTEZEWGp5OERG?=
- =?utf-8?B?eWNpUG5rRllFVHNQQzhpUGlOYm9Xdk5lYjBoNTNlREgvSTNacHJicHc5SGtl?=
- =?utf-8?B?VEtOUXZCeEd6RHd3bGNWbWtLeHZnTXpmMEhkbkhIUmxLQlpyR1Q0Z1hPSFVK?=
- =?utf-8?B?bGllUFRudTFEdEJmeFZNWGh5T2U5eDdwdllsTkhVc0I2cldwY0hWN1c4cHp1?=
- =?utf-8?B?TWswblZXRCs3bitEeUltUkRVcTdyZmE2eUtwWmcwQ1RhU0pVK3BvSFBndFFr?=
- =?utf-8?B?czZjc3B4M2h1STNkZFFzQ21ZSzNvQndhQkVvTGVNUytiemErbnJhb1NaODVj?=
- =?utf-8?B?REVvaGxEZ015K01uNkhEelQyRFAzN3diSk41d1VhM0V4K2toVVIrdzJ6ajBZ?=
- =?utf-8?B?am12bWd0aXJiTTc3ZmVib0hGd21sWDliaFYwQThOQzdmUDN6ZmFvcFRnTG5n?=
- =?utf-8?B?V043NnJwV3Y4U3BtYVVqNnk0T0cwMFJGTE9iSzNhUWhraEdiSUgwcHZnUkFw?=
- =?utf-8?B?bTRRaExpWEtpMXBUNGZoSUlTbWVOZ0VXZ1NmN3JVMHNlVG5haHk5TE5VYzJq?=
- =?utf-8?B?YzlmdmpwQ3lWYVhPMkhZb00xZmpWSHVVMS9pVnNFcGZqOVQ3Sy9FK3pQNlFT?=
- =?utf-8?B?QVF4OE9tUnpZa3FXNmd3SlF0WGlNcmZHMlJyM1h2bjVZTUdIUmNIM1pZZ0R4?=
- =?utf-8?B?YVJUT0ozTUNXSDZrVlhwTVJ3SVZiREZDVDJUcnlNQmZQc3QxUEV0ZmR6ZVh6?=
- =?utf-8?B?NVFFL1V4U3dma1k2Yjg0ZGR5M1M5QzVyTUdvaXdwRUMxMjVMWmJpdzdqZ2hB?=
- =?utf-8?B?Z2lFT21aSXdhQnFkNm9vUXlwQjFuOU1XZ25DZFYxMVR0cVhvSXlubW9OcHJG?=
- =?utf-8?B?bkZpYnRGRzVzcWpTbTJ0cG0wZEpSQksyN3hxajlESmE0dUpLSzN3OFNicVds?=
- =?utf-8?B?QmFKVkVkZUpDa1BHVFdUMTNxT3ZadTlaSzV5K09hNExZeHY0ZDRxL3g1cDBp?=
- =?utf-8?Q?TICzB5p1Qlsg0cgRu7+fi2gLyEIucInUjoQt4XSOO5Zx6?=
-X-MS-Exchange-AntiSpam-MessageData-1: p7h4Ak9TgFn75w==
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 807af4eb-f0db-4307-070e-08df09b6a940
-X-MS-Exchange-CrossTenant-AuthSource: MW4PR12MB6873.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 03 Sep 2026 12:27:04.0033
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 0qzGzWHH6KyMjzBlXTOF4+tBPLVxEbYZLTAzISWFGAY/txptveL2woNymC7gGokvmZSCe27SvBdGK71bmRNtDg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY8PR12MB8194
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v4 17/27] vfio/cxl: Virtualize the CXL DVSEC
+To: mhonap@nvidia.com, alex@shazbot.org, jgg@ziepe.ca, ankita@nvidia.com,
+ jic23@kernel.org, dave.jiang@intel.com, alejandro.lucero-palau@amd.com,
+ smadhavan@nvidia.com, corbet@lwn.net, skhan@linuxfoundation.org,
+ dave@stgolabs.net, alison.schofield@intel.com, vishal.l.verma@intel.com,
+ iweiny@kernel.org, ming.li@zohomail.com, yishaih@nvidia.com,
+ skolothumtho@nvidia.com, kevin.tian@intel.com, bhelgaas@google.com,
+ dmatlack@google.com, kees@kernel.org, gustavoars@kernel.org
+Cc: cjia@nvidia.com, kjaju@nvidia.com, vsethi@nvidia.com, zhiw@nvidia.com,
+ linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+ kvm@vger.kernel.org, linux-cxl@vger.kernel.org, linux-pci@vger.kernel.org,
+ linux-kselftest@vger.kernel.org, linux-hardening@vger.kernel.org
+References: <20260813093631.2288172-1-mhonap@nvidia.com>
+ <20260813093631.2288172-18-mhonap@nvidia.com>
+From: Shuai Xue <xueshuai@linux.alibaba.com>
+In-Reply-To: <20260813093631.2288172-18-mhonap@nvidia.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Wed Sep 2, 2026 at 1:50 AM JST, Gary Guo wrote:
-> Previously `register!` defined registers can be used on any untyped I/O
-> regions. With all users specifying their desired register type now,
-> propagate the specified type and restrict I/O access only when type
-> matches.
->
-> Also, add an `io_project!` example which is enabled by this change.
->
-> Signed-off-by: Gary Guo <gary@garyguo.net>
 
-Reviewed-by: Alexandre Courbot <acourbot@nvidia.com>
+
+On 8/13/26 5:36 PM, mhonap@nvidia.com wrote:
+> From: Manish Honap <mhonap@nvidia.com>
+> 
+> Serve reads of the CXL DVSEC body from the per-open shadow and keep guest
+> writes in the shadow rather than letting them reach the hardware, so a
+> guest cannot reprogram the device through the DVSEC. Accesses outside the
+> CXL DVSEC return -ENODEV and take the default DVSEC handling, so a device
+> that also exposes a vendor DVSEC is unaffected.
+> 
+> Route each shadow write through the CXL r4.0 field class rather than
+> storing it verbatim: Control stays programmable, Status is
+> write-1-to-clear, and Capability, Lock and the Range registers keep their
+> firmware snapshot. The guest can no longer set Config Lock or scribble the
+> capability and range fields.
+> 
+> Signed-off-by: Manish Honap <mhonap@nvidia.com>
+> ---
+>   drivers/vfio/pci/cxl/vfio_cxl_core.c | 88 ++++++++++++++++++++++++++++
+>   drivers/vfio/pci/vfio_pci_config.c   | 36 +++++++++++-
+>   include/linux/vfio_pci_core.h        |  5 ++
+>   include/uapi/linux/pci_regs.h        |  1 +
+>   4 files changed, 129 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/vfio/pci/cxl/vfio_cxl_core.c b/drivers/vfio/pci/cxl/vfio_cxl_core.c
+> index 2e516a0929c6..9fed909cb9d3 100644
+> --- a/drivers/vfio/pci/cxl/vfio_cxl_core.c
+> +++ b/drivers/vfio/pci/cxl/vfio_cxl_core.c
+> @@ -148,11 +148,99 @@ static void vfio_cxl_close_device(struct vfio_pci_core_device *vdev)
+>   	cxl->dvsec_shadow = NULL;
+>   }
+>   
+> +/* Read a 16-bit DVSEC field from the shadow; @off is DVSEC-relative. */
+> +static u16 vfio_cxl_dvsec16(struct vfio_cxl_state *cxl, u32 off)
+> +{
+> +	u32 dw = cxl->dvsec_shadow[off / sizeof(u32)];
+> +
+> +	return (dw >> (8 * (off % sizeof(u32)))) & 0xffff;
+> +}
+> +
+> +/*
+> + * Apply the CXL r4.0 8.1.3 write class for the 16-bit DVSEC register at @off.
+> + * Control is programmable, Status is write-1-to-clear, and Capability, Lock and
+> + * the Range registers stay fixed at their firmware snapshot.
+> + */
+> +static u16 vfio_cxl_dvsec_field(u32 off, u16 old, u16 wval, u16 wmask)
+> +{
+> +	switch (off) {
+> +	case PCI_DVSEC_CXL_CTRL:
+> +		/*
+> +		 * CXL.mem stays enabled for as long as the guest owns the device.
+> +		 * The HDM decoder maps the guest window to device memory, so a
+> +		 * store to it while CXL.mem is disabled completes on the device as
+> +		 * an error that the host fabric reports as an SError, which is
+> +		 * fatal. The spec does not pin down accesses to a decoder whose
+> +		 * CXL.mem is off and many hosts SError, so ignore a guest request
+> +		 * to clear the enable and keep the bit set.
+> +		 */
+> +		return ((old & ~wmask) | (wval & wmask)) | PCI_DVSEC_CXL_MEM_ENABLE;
+> +	case PCI_DVSEC_CXL_CTRL2:
+> +		return (old & ~wmask) | (wval & wmask);
+
+
+Control2 is routed through the r4.0 write class as plain RW,
+but both INITIATE bits are self-clearing doorbells per spec: the guest
+sets the bit, the device performs the operation and clears it, and
+completion is observed in STATUS2 (Cache_Invalid for the WBI). With the
+plain-RW class the shadow latches the bit at 1 forever, and because
+reads are served from the open-time snapshot, Cache_Invalid
+(CXL_DVSEC_STATUS2_CACHE_INVALID) never changes either.
+Both polling paths are dead ends.
+
+The interesting part is that the series already models this correctly
+for the sibling command bit -- the vfio_cxl_reset() epilogue does:
+
+	/*
+	 * The guest-facing DVSEC bookkeeping only applies while the device
+	 * is open. Initiate_CXL_Reset self-clears in hardware; mirror that
+	 * and stamp the outcome onto a fresh hardware STATUS2 read for the
+	 * polling guest.
+	 */
+
+INIT_CXL_RST is self-cleared in the shadow and the outcome is
+stamped into STATUS2 for the polling guest. Initiate_Cache_WBI just
+never gets the same treatment.
+
+The polling contract is one this series itself implements on the host
+side: cxl_reset_wait_cache_wbi() sets WBI, then polls STATUS2
+Cache_Invalid with a 100ms budget. A guest kernel running the same
+sequence would set WBI, poll the frozen snapshot, and time out before
+ever reaching INIT_CXL_RST, so whether a guest-initiated CXL reset
+succeeds depends on the open-time STATUS2 value rather than on device
+state. The stuck command bit is also directly visible to any guest
+reading CTRL2 back.
+
+Would the minimal fix be to mirror the epilogue's INIT_CXL_RST handling
+for WBI: self-clear the bit on the 0->1 write and set Cache_Invalid in
+the shadow (the host already runs the real WBI at VM power on/off via
+cxl_reset_dvsec_sequence(), and the existing W1C class on STATUS2 lets
+the guest clear Cache_Invalid before the next round)? Or is forwarding
+the WBI to hardware and keeping Cache_Invalid live the intended
+long-term model?
+
+Thanks.
+Shuai
