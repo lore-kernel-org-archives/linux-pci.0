@@ -1,170 +1,160 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f41.google.com (mail-pj1-f41.google.com [209.85.216.41])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AAB82393DC8;
-	Thu,  3 Sep 2026 05:59:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A69303C1D75
+	for <linux-pci@vger.kernel.org>; Thu,  3 Sep 2026 06:07:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788415160; cv=none; b=SPIPkqQWlVAatBJm4YrVLwkWhKfVHjg3lXDH7Ojbo+PZZXlQWv29+cVzUAl0iJm3XiXoOoq0BVOxht6c7K0BxcQKVqTqsu2vPW2kqgGWiC0swhZK+oRRv0YEgKn9zDYB7rQ5LblsPiFxrZtb2+n4EmzVBMvw8EOEJMV2hK1hDro=
+	t=1788415636; cv=none; b=tDUvMVu5gSO07P/lh06/SvauFFOxZGNsEu0AZ+IvZS+dDtVzuVbPE0Lq6DpMk7d1UkEqVeUPlAzopE5OPTzLJym5e+yGkvyDcvB4xjtH6J11BRiUPdzDiSIWNs62DuWdU3K6ZnNhEqAYaTEne+gJn8++XqlBOwcX9nZWoqIlwyQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788415160; c=relaxed/simple;
-	bh=BqY7EpA/2zO+um0W7g4AtC0Mwe1AhFXongtHJmVYN9M=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=TVsYanId6sq1uGdaEcQfJ1fkFpZQt+8JLrRhNgJTx+beiTH0RmyLhahE+XhHeWrz/k1uY5uyrbsfj6YRQF/S7VpZn3ZAAYO1Fyq9AYznBkCBKel/jcVJ6nHi4uSzW3IWz1JRs2kDyXat1XheHxsnEGhPF0ktMMtLA0mib4sTwhM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CLqlbf4g; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788415636; c=relaxed/simple;
+	bh=Qlu2kSPeQ9fQnX7dfvoM0kmKFMfGiV5UUteJMfTnJLQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Z5iJtQnGpJLYoLu+ubDr31NQhJjBYQDCgnaIYqQzLz6qpodncIyR/tm+PoBKj1qyVWTJaLXFC0Plh6dITUEK03/CTH0/whHm7SGYaC7ZPT+8UoRJdFRrTboS8WQJlcnB+xoiOpkb8DljMLo2MjYEQpUFmTMNv+7sbwT2wVtIF+o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=o0lxdCMA; arc=none smtp.client-ip=209.85.216.41
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CLqlbf4g"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 45D811F000E9;
-	Thu,  3 Sep 2026 05:59:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788415158;
-	bh=GokYarLn2do1OOdi3YtEFsV3SbdTFKOFfI6VuO3FkaQ=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date;
-	b=CLqlbf4gc1V7KqQLo6NWAGVg4DDHyF4AAeQYjUOxAJvZJJkUSAJJWe/qwB7pSqHXu
-	 syLNrM+YtPTVr0PYb7EdPpAQljIUOSHfA1YBXFU1P1rYDe8VZqzTg1lty93JsJXLd3
-	 k9jcZvQqXi3pHDIQn6RY8FOjjjx4cRkzp43rzoWT3NfuEPmI2D+ayt+X6ZtP6VUh6e
-	 dWQNtjqX+KTyOhXCYH8fln3KtNp/HiKGEx6ioX8HT6/6qkSAZIioIqvfM2w1/W2SXO
-	 Qn5xeCGeMzbMc1tjPyRpeUR0pCcZBbU7WY0DBqW9L7r8DNzyYajsF8x2vNEZ0qbVMQ
-	 tLkhygfGuBi3w==
-X-Mailer: emacs 31.1 (via feedmail 11-beta-1 I)
-From: Aneesh Kumar K.V <aneesh.kumar@kernel.org>
-To: Jason Gunthorpe <jgg@ziepe.ca>,
-	Alexey Kardashevskiy <aik@amd.com>
-Cc: Xu Yilun <yilun.xu@linux.intel.com>, ankita@nvidia.com,
-	linux-coco@lists.linux.dev, linux-pci@vger.kernel.org,
-	driver-core@lists.linux.dev,
-	Aaron Tomlin <atomlin@atomlin.com>,
-	Alistair Francis <alistair.francis@wdc.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Daniel Gomez <da.gomez@kernel.org>,
-	Danilo Krummrich <dakr@kernel.org>,
-	Dexuan Cui <decui@microsoft.com>,
-	Donald Hunter <donald.hunter@gmail.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Jakub Kicinski <kuba@kernel.org>,
-	Luis Chamberlain <mcgrof@kernel.org>,
-	Lukas Wunner <lukas@wunner.de>,
-	Petr Pavlu <petr.pavlu@suse.com>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Robin Murphy <robin.murphy@arm.com>,
-	Sami Tolvanen <samitolvanen@google.com>,
-	Samuel Ortiz <sameo@rivosinc.com>,
-	Saravana Kannan <saravanak@google.com>,
-	Will Deacon <will@kernel.org>, "Fontenot,
-	Nathan" <Nathan.Fontenot@amd.com>, rick.p.edgecombe@intel.com,
-	yilun.xu@intel.com, Jiri Pirko <jiri@resnulli.us>,
-	Leon Romanovsky <leon@kernel.org>
-Subject: Re: [PATCH 00/15] Device Evidence and Trust for PCI Security
- Protocol (TDISP)
-In-Reply-To: <20260902150125.GD2890729@ziepe.ca>
-References: <20260705220819.2472765-1-djbw@kernel.org>
- <4c43da3e-c598-48cf-8491-cb958e574c9c@amd.com> <amk7Xzm5jmz+6SPJ@ziepe.ca>
- <anFE7m164AmchTy/@yilunxu-OptiPlex-7050> <20260805005533.GB28508@ziepe.ca>
- <apeF/peEzdxvKeWR@yilunxu-OptiPlex-7050>
- <2e721509-0aee-47ee-b17a-688876e02f74@amd.com>
- <20260902150125.GD2890729@ziepe.ca>
-Date: Thu, 03 Sep 2026 11:29:04 +0530
-Message-ID: <yq5a5x0mzxhz.fsf@kernel.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="o0lxdCMA"
+Received: by mail-pj1-f41.google.com with SMTP id 98e67ed59e1d1-398b3d66515so2532052a91.0
+        for <linux-pci@vger.kernel.org>; Wed, 02 Sep 2026 23:07:14 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1788415634; x=1789020434; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=gBUuqGg91aYvqgQOgpAhdv5iVIgNNaz0N9DNOLXqnd8=;
+        b=o0lxdCMAsm3DZyC1qyrOKk46oLlc6GiOQg7hcy8lo+85FUFXW3d55nnRYo5cJbFE9m
+         OhxGQf9w4cBsru2sNe8/YFebakDo0XJhXrQBtoXey2ya0LGkOd7IgGfVp15N0D+hXhyF
+         EWmu0yCLXp5RL6VaFm1TGIc3GD2bLkqpYhWLot8s1Qnp6CTqHMW0xbnISuWq4Oc/ZPQr
+         dwHWbLhBBSFz8S9L5mGl65DRsr3btN+2keub6LQLkKqt6qiObBxgoC6UEVrUQyTmBT/3
+         knFJMmIlDtB1Uo7Tq9zyVu4zLaaIhC9Elijhwi6xKxYCZhTok/hwzdLV/nbup7EYASEK
+         30ig==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1788415634; x=1789020434;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=gBUuqGg91aYvqgQOgpAhdv5iVIgNNaz0N9DNOLXqnd8=;
+        b=feuNz7SIBuRUozLd4RXldR8DKLcI9Sg2EMvJSLSGffPQG3Kqu6tAgvnFtOAAJdp8JP
+         AlA4454tbfbDOtDF21IZVgb41p9t/RuoTOLItStVoHpRD0hlb7WO0j2TJU9Dup523WRp
+         5iM1hQUQMRo7+IGJEibrZs3na71nTn5QglKhbe9MhX0OgBrzhCtKGH99fg6R2SNFSC3j
+         FZUkuMq8ntsgcPo0o7wslWApBQoUijmaLpCzOnzlteo+QgRopVSiqamswXs/1EQzF/wo
+         uU0xem77qxj1AGJBREEGFVwhib6usH/vQQhV6J493xLTnu/1E6m6Ax1pcP55+LKJBA2L
+         k1tg==
+X-Forwarded-Encrypted: i=1; AKwUvBwJHrT+pFtA3JDYG3X/KZhqTnZaDlMglL5xh/oF1Ly/l7yawXJv9hqYJTpyYl0zbrOvVbzRaOYIa78=@vger.kernel.org
+X-Gm-Message-State: AFuF++mI6Hdy1iq/Us7hNfTnu+EEwc9NmcXxLn9m0lq29XJTd7igOkYn
+	Wkd0gB+5BAsgeH4Czc3TUmXOMaN7NOusn/Hjtzs+BiqmW1KsDa1ypLvr5gq5YeSI
+X-Gm-Gg: AYBFou14iuCfIh8w5PNFpjqqZkSFAyYXDfnhK9ogJqqtu7MIqUxMgvXtDbJDVFYFYjn
+	WrwCl74hkLe9V0tHzlRTkMNxKH+9mOyUDD5qhPDtkuhzHhR0niIZSFTLm5ykDeyf3tfvtVIx9GF
+	Zj072oQ5wNsTh1pFocBlwpGlRhabgngTZ6JJLQycs1BoDNgaAdPEDig8vaO/lcxPjHhZAivFUCL
+	qd8yuLSjaXjp9/aSnnN8aPGsh3wKsxPndyy00d7EgaF0UL3INrdN0FewH35ch117fb9YNsa894Q
+	jAYmlVRYr9qDf/V7KZrxFeFZMLljTxBgj4toFG52+R/mtIII5GdEn46rA5fdXolqc2OMy0hcjFf
+	LglRZQ9Co646j2FkdZ+OwN1QWi6eQ8zI9C9OPPSMrBZV+TYigk9XToDZPrJ8RCQ+nf5nk9vhMc7
+	9bDfMk4SIhhFNkxGZZIbdmd0dJsOCZya6Q6nYD6DLBzFESp3VmhJ72c3EdxgvaBKq50rRAqF60b
+	kQ1beY=
+X-Received: by 2002:a17:90b:4b0f:b0:38e:b400:a860 with SMTP id 98e67ed59e1d1-39aee15920cmr13300583a91.13.1788415633539;
+        Wed, 02 Sep 2026 23:07:13 -0700 (PDT)
+Received: from kernel ([45.251.35.126])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3325367238fsm3671440eec.2.2026.09.02.23.07.10
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 02 Sep 2026 23:07:12 -0700 (PDT)
+Date: Thu, 3 Sep 2026 11:37:06 +0530
+From: Mohamad Raizudeen <raizudeen.kerneldev@gmail.com>
+To: Alex Williamson <alex@shazbot.org>
+Cc: bhelgaas@google.com, skhan@linuxfoundation.org, jkoolstra@xs4all.nl,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: quirks: Fix out-of-bounds MMIO read in
+ nvme_disable_and_flr()
+Message-ID: <apkOikPtaTVYnJ1W@kernel>
+References: <20260817092448.4395-1-raizudeen.kerneldev@gmail.com>
+ <20260902115117.34a30084@shazbot.org>
+ <apjoiNcvvJLv2grA@kernel>
+ <20260902222156.393e2457@shazbot.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260902222156.393e2457@shazbot.org>
 
-Jason Gunthorpe <jgg@ziepe.ca> writes:
+On Wed, Sep 02, 2026 at 10:21:56PM -0600, Alex Williamson wrote:
+> On Thu, 3 Sep 2026 08:54:56 +0530
+> Mohamad Raizudeen <raizudeen.kerneldev@gmail.com> wrote:
+> 
+> > On Wed, Sep 02, 2026 at 11:51:17AM -0600, Alex Williamson wrote:
+> > > On Mon, 17 Aug 2026 14:54:47 +0530
+> > > Mohamad Raizudeen <raizudeen.kerneldev@gmail.com> wrote:
+> > >   
+> > > > In nvme_disable_and_flr(), the PCI bar is mapped using
+> > > > NVME_REG_CC + sizeof(cfg) which is (0x14 + 4 = 0x18 bytes)
+> > > > 
+> > > > However, the function later reads the controller status from
+> > > > NVME_REG_CSTS - offset 0x1C, which is outside the mapped 0x18 byte
+> > > > boundary and it can cause a page fault or kernel panic on architectures
+> > > > that enforce strict MMIO boundaries.  
+> > > 
+> > > What are those architectures?  The bug and fix look correct, but the
+> > > risk seems overstated.  Thanks,
+> > > 
+> > > Alex
+> > >   
+> > Hi Alex,
+> > 
+> > Arm64, risc-v do panic on out-of-bounds mmio. But you are right that the
+> > risk is overstated, since most standard servers return all ones instead
+> > of crashing.
+> 
+> Are you building with some sort of sanity or debug checking enabled?
+> 
+> While we're clearly violating the API accessing beyond the requested
+> length, it's my understanding that we're generally working with
+> PAGE_SIZE mappings at the MMU, so unless we're crossing a page, the
+> access should work regardless.  Even for the cited archs.
+> 
+> The -1 return is typically related to how the platform handles
+> master-abort when accessing unimplemented or disabled MMIO space.  This
+> out-of-bounds access shouldn't be triggering that, it's still within
+> the enabled BAR range of the device.
+> 
+> Anyway, I'd be curious to see the backtrace and whether there's a
+> config option to enable such sanity checking.  Thanks,
+> 
+> Alex
+>
+No, I am not runnning with any debug enabled, So I don't have a
+bactrace. You are completely right about the PAGE_SIZE mappings. I agree
+that I was mistaken about the panic. 
 
-> On Wed, Sep 02, 2026 at 12:20:51PM +1000, Alexey Kardashevskiy wrote:
->> On 2/9/26 12:12, Xu Yilun wrote:
->> > On Tue, Aug 04, 2026 at 09:55:33PM -0300, Jason Gunthorpe wrote:
->> > > On Tue, Aug 04, 2026 at 09:48:30AM +0800, Xu Yilun wrote:
->> > >=20
->> > > > Glad to see you all here to make progress! Intel can also help on =
-this.
->> > > > Can we have a meeting to discuss on these topics? As Alexey mentio=
-ned,
->> > > > previously we had a bi-weekly call, perhaps use that for our first
->> > > > meeting? Or what time works best for everyone?
->> > >=20
->> > > I prefer we defer such community discussions till September, that
->> > > seems appropriate given some dates I've seen.
->> >=20
->> > Hi Ankit & Jason,
->> >=20
->> > Do we have a plan to schedule a meeting to discuss next steps?
->> >=20
->> > If so, we can figure out a specific time on the Discord channel.
->> > https://discord.gg/KKqC438c
->
->> So I've been trying to find a time slot. Say, keep it on Thursdays
->> (USA) (kinda short notice), bi-weekly, we can do:
->
-> I've asked several people in Europe to help on parts of this series,
-> and combined with China/Aus someone is going to end up left out.
->
-> I know people are anxious about their projects. In the short term I
-> will volunteer to send patches (ie bug fixes!) to Linus in the CC area
-> Dan was responsible for. Please email me if something needs some
-> attention and we can figure it out.
->
-> To fully move forward we need to establish a new TSM maintainer
-> team. In my past experience a consensus has emerged off list, I
-> suggest we try that here as well. Several people should be
-> recruited. I will also volunteer to help train and launch a new team.
->
-> I can say that several people from NVIDIA are working on the ideas in
-> this patch series. Ankit is setting up a team to focus on upstream
-> patches for all of CC inside NVIDIA. I've asked Jiri Pirko to work on
-> the PCI evidence uAPI based on his deep netlink experience, and Leon
-> Romanovsky to work on the binding problem/adversarial/trust level
-> driver core idea. They will share their approaches for solving these
-> problems as seperate proposals.
->
+Also, I already sent a v2 that drops that speculation and just focuses
+on the undefined behavior of the out-of-bounds read.
 
-
-I can also help with the device trust and iommufd interfaces, as well as
-the CCA DA pieces. We need to find someone to take on dma-buf, as that is
-one area we have not yet integrated with the full TDISP flow.
-
->
->> Scenario A:
->> Seattle (PDT, UTC-7)		07:00 =E2=80=93 08:00	Day 1
->> Atlantic Time (ADT, UTC-3)	11:00 =E2=80=93 12:00	Day 1
->> Berlin (CEST, UTC+2)		16:00 =E2=80=93 17:00	Day 1
->> India (IST, UTC+5:30)		19:30 =E2=80=93 20:30	Day 1
->> China (CST, UTC+8)		22:00 =E2=80=93 23:00	Day 1
->> Sydney (AEST, UTC+10)		00:00 =E2=80=93 01:00	Day 2 (I can do it once in =
-2 weeks)
->
-> This is the only time Europe could reasonably participate in,
-> obviously it is not OK for China and Aus.
->
-
-I'm based in India, and all the proposed times work for me. Who is based
-in Europe?
-
-Jason -> Canada ?
-Yilun -> China
-Alexey -> Australia
-Ankit Agarwal -> US ?
-Aneesh -> India
-
->
->> Please, comment. I find these calls pretty productive syncups. So
->> far we were not having Europe in these calls.
->
-> Calls are undoutably useful!
->
->> Alternatively, wait until the LPC in a month but I suspect not
->> everybody is going to be there.
->=20=20
-> LPC is not that far away, I think we should have a goal of having a
-> consensus for or at LPC
->
-> Regards,
-> Jason
-
--aneesh
+Thanks, 
+Mohamad Raizudeen
+> > > > Fix this by increasing the mapping size to include NVME_REG_CSTS.
+> > > > 
+> > > > Fixes: ffb0863426eb9 ("PCI: Disable Samsung SM961/PM961 NVMe before FLR")
+> > > > Signed-off-by: Mohamad Raizudeen <raizudeen.kerneldev@gmail.com>
+> > > > ---
+> > > >  drivers/pci/quirks.c | 2 +-
+> > > >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > > > 
+> > > > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> > > > index b09f27f7846f..ed03892cc960 100644
+> > > > --- a/drivers/pci/quirks.c
+> > > > +++ b/drivers/pci/quirks.c
+> > > > @@ -4090,7 +4090,7 @@ static int nvme_disable_and_flr(struct pci_dev *dev, bool probe)
+> > > >  	if (probe)
+> > > >  		return 0;
+> > > >  
+> > > > -	bar = pci_iomap(dev, 0, NVME_REG_CC + sizeof(cfg));
+> > > > +	bar = pci_iomap(dev, 0, NVME_REG_CSTS + sizeof(cfg));
+> > > >  	if (!bar)
+> > > >  		return -ENOTTY;
+> > > >    
+> > >   
+> 
