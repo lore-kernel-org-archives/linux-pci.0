@@ -1,98 +1,139 @@
-Received: from ultrarisc.com (unknown [218.76.62.146])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 2769548CFC;
-	Thu,  3 Sep 2026 03:00:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=218.76.62.146
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E3E0283FDC
+	for <linux-pci@vger.kernel.org>; Thu,  3 Sep 2026 03:12:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788404444; cv=none; b=XALifHUeQmGJVpLpR2g9bbHe4apG9YZLqC3X05Zk3AbPXh2UY+JHZl1KHkTDI6agGFF5N9QdZpF8+R7FnndUjCfbj+sDLUUXm3sMWR4kbLJpgn8pdKV6AO7/DZZS9GbKyYHbvF/gE7XoceCxyybhBtrKC9JAuzZ1Fb/XMHtVrNY=
+	t=1788405131; cv=none; b=LrYI83XSxs7BNau1n8Eyv8BvZvau4R/au29U3mP0+2vdY/X0hxNl1/mY5N4BMnJrEA6RV2oHr8uKuhZmDdvwYpBnTDczbdH0wBL/7v9XHK626f7e2QPgK3MN4SSn+KiBD3iHGFh6yuLDG2WUyWOiyixWdvnMfmklo7yeFxtXHXQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788404444; c=relaxed/simple;
-	bh=3onRMap4Ni7w7j4UmdMQoJV3KkV9trPyDpWL3RFfHBA=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=RJte/tBvdDC0ScGrcQXHHsGBLj12zg3oUYl8hmxcYkcR4qowpmv8C8wn7DvVWpBD5ymJZZ9BFIy7XeXjuwcuBIuHbpaLFEY97rof/ifU1LCn8MV2W1mf+O9yaBr+3+gpb9C/7OOSI2zjyIZAawGpMaQwkJWL/Yoxm2SrVCI8Fyc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ultrarisc.com; spf=pass smtp.mailfrom=ultrarisc.com; dkim=pass (1024-bit key) header.d=ultrarisc.com header.i=@ultrarisc.com header.b=dKQACgv6; arc=none smtp.client-ip=218.76.62.146
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ultrarisc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ultrarisc.com
+	s=arc-20240116; t=1788405131; c=relaxed/simple;
+	bh=kh9iGFpwGfsdvCWjVJMvVcND0/NBeyufsV+n+ndl+SQ=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=NXonLgzYnMRtHMFj/kiNlUN03ue2/wrp4NxvcsaS1Ra8N/j+g7UUdbQ5waq8OdpqfhqayGTCucFZHpLc7jGAXln7xNnpT8jid7RxrQo+l6XT7q63h6GqS5iF7NTo/s6fVsnj9j7XGuKMyqPjHx/0Fe015CdNmJav+QQluBy+Tgw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TxLXN3SE; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=ultrarisc.com header.i=@ultrarisc.com header.b="dKQACgv6"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=ultrarisc.com; s=dkim; h=Received:From:To:Cc:Subject:Date:
-	Message-Id:In-Reply-To:References:MIME-Version:
-	Content-Transfer-Encoding; bh=3onRMap4Ni7w7j4UmdMQoJV3KkV9trPyDp
-	WL3RFfHBA=; b=dKQACgv6PMxyuI3Rzj4H8jhyqVkc79yAVpWoEMaDLkPymwFh5M
-	lnlUE0NgbreWdryc95BlEniBji2nkiZrX6POBnbK3AsZN4t8OYu8yImgrXfGVKZN
-	qINUoNPF1NQFY31R7UFbRaYxEaQVbUPwwTW+KCfGrlAejBWTjtBQva9K0=
-Received: from leopard.. (unknown [192.168.100.1])
-	by localhost.localdomain (Coremail) with SMTP id AQAAfwDnrwbJ4phqKzQAAA--.184S2;
-	Thu, 03 Sep 2026 11:00:26 +0800 (CST)
-From: Xincheng Zhang <zhangxincheng@ultrarisc.com>
-To: Manivannan Sadhasivam <mani@kernel.org>
-Cc: jingoohan1@gmail.com,
-	lpieralisi@kernel.org,
-	kwilczynski@kernel.org,
-	robh@kernel.org,
-	bhelgaas@google.com,
-	wangjia@ultrarisc.com,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/2] PCI: dwc: Allow drivers to skip MEM outbound iATU setup
-Date: Thu,  3 Sep 2026 11:00:14 +0800
-Message-Id: <20260903030014.999880-1-zhangxincheng@ultrarisc.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <hwd2taeispmlyz2objfmqghrjftxvjwqzsguyznfnreomjhtue@h3wrfmgfde75>
-References: <20260827055448.1818858-1-zhangxincheng@ultrarisc.com> <20260827055448.1818858-2-zhangxincheng@ultrarisc.com> <hwd2taeispmlyz2objfmqghrjftxvjwqzsguyznfnreomjhtue@h3wrfmgfde75>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TxLXN3SE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B655A1F000E9;
+	Thu,  3 Sep 2026 03:12:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1788405129;
+	bh=tnMyPUYEAD7lZm0uhL8vCdKC5BYNmogRNIPEyCFXJTo=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=TxLXN3SEElIWWYOFB7NnP2lcdc5DPTQtJyzpWPYiz4a48dbp21nUryRVtOpT7Y/kp
+	 v7lX8IVjAh38WdEx404UBWv2OdCDCoV3S3Cx3WfqoDqndregnJzwc97KFE1bI/SrDr
+	 rE7kkRGYqx8RC6LMsjnZ6shxGTDW2Dn82em/QEE6groO4Qg+JulkZjdZ5TBTTaat4/
+	 w5r1RlrKyyDqiLIwClY8f4CpYDdluVlCx5Mq47xiQX7Gm3u2BHsX3mcPCTXWB3yd8v
+	 tH6YD7R7czOBHd+N5F96Mx10QDo8Vj4Rxi1Uuvuk6Uy0zE5T+mfrPwcdAaPk/TRd8P
+	 Yn0YpXut4q0Xg==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH 1/2] PCI: dw-rockchip: Bail out if the INTx irq domain
+ creation fails
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Shawn Lin" <shawn.lin@rock-chips.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <1788403477-71491-2-git-send-email-shawn.lin@rock-chips.com>
+References: <1788403477-71491-1-git-send-email-shawn.lin@rock-chips.com>
+ <1788403477-71491-2-git-send-email-shawn.lin@rock-chips.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 03 Sep 2026 03:12:09 +0000
+Message-Id: <20260903031209.B655A1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:AQAAfwDnrwbJ4phqKzQAAA--.184S2
-X-Coremail-Antispam: 1UD129KBjvdXoWrZw18tryfZw48uF1fXF4Dtwb_yoWktwc_Ca
-	4DGay7ta1DWay09rs5KF1ayrZ7C3W7urs3Xr9rJa13G34rZr43ur92gr1ftw17Aa9xtr90
-	9ryrX3yUAry2vjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUIcSsGvfJTRUUUbIxFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
-	6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
-	A2z4x0Y4vE2Ix0cI8IcVAFwI0_Jr0_JF4l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Jr0_
-	Gr1l84ACjcxK6I8E87Iv67AKxVWUJVW8JwA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gr0_Gr
-	1UM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xII
-	jxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr
-	1lF7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7MxkF7I0En4kS14v26r1q
-	6r43MxkIecxEwVCm-wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s
-	026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_
-	Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20x
-	vEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE
-	14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Jr0_GrUvcSsGvfC2KfnxnUUI43ZEXa
-	7VUbGQ6JUUUUU==
-X-CM-SenderInfo: x2kd0wp0lquxxhqjq3powut2xlvfhudrp/1tbiAQATDGqXx6QALwAAsv
 
-Hi Mani,
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
 
-On Wed, Sep 02, 2026 at 04:18:58PM +0200, Manivannan Sadhasivam wrote:
-> Can you elaborate why the outbound iATU mapping is not required? Are they using
-> ECAM or some other custom mapping scheme?
+Pre-existing issues:
+- [High] This problem wasn't introduced by this patch, but there is a missi=
+ng IRQ domain and chained handler cleanup on initialization failure paths, =
+leading to a memory leak and potential Use-After-Free.
+- [High] This problem wasn't introduced by this patch, but there is an unpr=
+otected lockless iteration over the PCI bus devices list in the threaded IR=
+Q handler.
+--
 
-DP1000 is not using ECAM for this controller. Config space accesses still
-use the DWC own config access path, so CFG accesses continue to use the
-normal DWC outbound iATU programming for CFG0/CFG1.
+commit e7543706c2d1058d78b54feb3252321efa4a390b
+Author: Shawn Lin <shawn.lin@rock-chips.com>
 
-The bypass is only for host bridge MEM windows. The DP1000 integration has
-SoC wrapper address decode for the PCIe MEM apertures described by the
-"ranges" property. CPU physical accesses to those MEM apertures are routed
-directly as PCIe MEM transactions with the corresponding PCIe bus address,
-without consuming outbound iATU windows.
+PCI: dw-rockchip: Bail out if the INTx irq domain creation fails
 
-I/O space is also unchanged and still uses an outbound iATU window. So the
-new flag only skips generic MEM-window programming; it does not change CFG
-or I/O iATU setup.
+rockchip_pcie_init_irq_domain() can fail, e.g. when the DT node is
+missing its "legacy-interrupt-controller" child node. This commit
+propagates the error to abort probing instead of continuing with a
+NULL irq_domain, which previously caused a panic on the first INTx.
 
-This direct MEM path has been verified on DP1000 EVB and Titan with large
-BAR MMIO read/write tests.
+> diff --git a/drivers/pci/controller/dwc/pcie-dw-rockchip.c b/drivers/pci/=
+controller/dwc/pcie-dw-rockchip.c
+> index af26a07c0c9e5..50824c8b1d83e 100644
+> --- a/drivers/pci/controller/dwc/pcie-dw-rockchip.c
+> +++ b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
+> @@ -432,8 +432,10 @@ static int rockchip_pcie_host_init(struct dw_pcie_rp=
+ *pp)
+>  	pci->dbi_base2 =3D pci->dbi_base + PCIE_TYPE0_HDR_DBI2_OFFSET;
+> =20
+>  	ret =3D rockchip_pcie_init_irq_domain(rockchip);
+> -	if (ret < 0)
+> +	if (ret < 0) {
+>  		dev_err(dev, "failed to init irq domain\n");
+> +		return ret;
+> +	}
+> =20
+>  	irq_set_chained_handler_and_data(irq, rockchip_pcie_intx_handler,
+>  					 rockchip);
 
-I will make this clearer in v2 by updating the commit messages/comments to
-say that the bypass is MEM-only, not ECAM, and that CFG/I/O iATU setup is
-unchanged.
+[Severity: High]
+This is a pre-existing regression, but there is a missing IRQ
+domain and chained handler cleanup on initialization failure paths,
+which can cause a memory leak and use-after-free.
 
-Thanks,
-Xincheng
+If rockchip_pcie_host_init() succeeds but a subsequent step in
+dw_pcie_host_init() fails (e.g., link training), the probe aborts and
+devres frees the rockchip struct. Because the driver lacks a .deinit
+callback in rockchip_pcie_host_ops, the IRQ domain allocated via
+irq_domain_create_linear() is leaked.
 
+Additionally, the chained handler mapped via
+irq_set_chained_handler_and_data() is never removed. Can a subsequent
+legacy interrupt or spurious trigger invoke rockchip_pcie_intx_handler()
+with the devm-freed rockchip pointer, causing a kernel panic?
+
+Does rockchip_pcie_host_ops need a .deinit callback to properly unwind
+these resources on failure paths?
+
+
+While reviewing this file, another pre-existing regression was noticed in
+rockchip_pcie_rc_sys_irq_thread():
+
+drivers/pci/controller/dwc/pcie-dw-rockchip.c:rockchip_pcie_rc_sys_irq_thre=
+ad() {
+[ ... ]
+	if (reg & PCIE_LINK_REQ_RST_NOT_INT) {
+		dev_dbg(dev, "hot reset or link-down reset\n");
+		for_each_pci_bridge(port, pp->bridge->bus) {
+			if (pci_pcie_type(port) =3D=3D PCI_EXP_TYPE_ROOT_PORT)
+				pci_host_handle_link_down(port);
+		}
+	}
+[ ... ]
+}
+
+[Severity: High]
+This is a pre-existing regression, but there is an unprotected lockless
+iteration over the PCI bus devices list in this threaded IRQ handler.
+
+When a hot-reset or link-down event occurs, the handler traverses
+pp->bridge->bus->devices using for_each_pci_bridge(). This traversal is
+performed locklessly without acquiring the required down_read(&pci_bus_sem).
+
+If a concurrent PCI device removal operation modifies the list (e.g., via
+sysfs or hotplug), could this lockless traversal access poisoned pointers
+or freed device structures, potentially causing list corruption or a panic?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/1788403477-71491-1-=
+git-send-email-shawn.lin@rock-chips.com?part=3D1
