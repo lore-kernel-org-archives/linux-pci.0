@@ -1,158 +1,147 @@
-Received: from fhigh-a6-smtp.messagingengine.com (fhigh-a6-smtp.messagingengine.com [103.168.172.157])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C2CC3839B9;
-	Thu,  3 Sep 2026 04:22:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.157
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B79713957E
+	for <linux-pci@vger.kernel.org>; Thu,  3 Sep 2026 04:26:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788409326; cv=none; b=eK9yiUBLIYyy/IQ+2y5AuSq5N2FgUCf7Tin4eObeGT8PqBqjS92YNL5iV8c0a9aTPCuL3jD4jFn67z0YBPOKeAhjC+3RKtjdTsPWzSPkgc/Ce9riEA9kg3Lyod83XoXisOFBzEVkedP7C5Uc4Z4Mb6UKqAvJjXM//CevplEPcg4=
+	t=1788409615; cv=none; b=RGViZCfCFuNrFPJJH0FZgwWbjFilnjK4wzxivA7gjPuV7omKQOWtMcgvXJYg1dzRHWoKnjLc2H6J0gAizfZdaYg/vlMrzdKDUW82L/qsDKf8nkGqn5ApSC05CyBYf98BzuRNCTYpcq3ENFTyh/HlJGXiPiD5pj2NbrntxnqNu/Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788409326; c=relaxed/simple;
-	bh=HFOJWxqeO4wfXtvDF+H7QzAI5pZBObE2aoT6cxb6ESc=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=YGfq6gwkTZfgrfdg/rCSpt9cBEAhu31ONDZH8gsKSxq8rwA4uQSxBux0GZiJ5ou/8AVIFr5R16STmZX1ElxAgbjg/C9Im6ZnbQkYUvOorPlc8b/y1lprbOMv+z1vQFF6Nj4eE3ILnx0iYh0J2xH+CQBA8RnrWKFk04YyEGYc6UQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=EEEeg8UJ; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=M9V4n8CT; arc=none smtp.client-ip=103.168.172.157
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
+	s=arc-20240116; t=1788409615; c=relaxed/simple;
+	bh=+j48aUVjW9qje/EymFSr7Li6BEqT2TPlb7I1DLxTGUA=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=iCZXao6pKg6KBkSltEIEStiVyCNZ+amVNjqQOtGyJe4wUR4LMcMGQQHupsozGTf9cooSYonxKuRytwsLh8yKpyvGziv9eZxKYMU7373fh0HJf2JUfmo+5N7pFbOWi99VH99ZQhvLpnIco1SztBeLlSVWlw32iSvHtDAZEX3Wg+0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CEUmP2hO; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="EEEeg8UJ";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="M9V4n8CT"
-Received: from phl-compute-05.internal (phl-compute-05.internal [10.202.2.45])
-	by mailfhigh.phl.internal (Postfix) with ESMTP id 006F5140005F;
-	Thu,  3 Sep 2026 00:22:00 -0400 (EDT)
-Received: from phl-frontend-03 ([10.202.2.162])
-  by phl-compute-05.internal (MEProxy); Thu, 03 Sep 2026 00:22:00 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
-	cc:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm3; t=1788409319;
-	 x=1788495719; bh=jYUpAVkDBHkFbLkMRCk6nXlRFqs01HYTvaEqyk/J83g=; b=
-	EEEeg8UJb+5Xb+80bk1VUPkst76OT4G7p5Hp1/8g7CtpNiJIwuuPeIzEVMW7F5Ek
-	v524DL14QTAt9sHNs1NpyhwANhz/4n9yd4Ou00Kj+aH4c86EalW9bAIM7eNWPnaN
-	WDPXWa1GP2bgyiIH099z9ucyp0goYcbAZdyRxOinjbRJOTQ/GF2KLMVEIvDCNUYE
-	yYleFL8FAj8qsqU0S/DD7SyMzK3rCWqn3iSihbY8LiHU0v8ugPzYKCQsWRPfsdcl
-	GeSW3EpAX7fSNHFyug1Ek2DVfx7ICKFsFOpWWVNU/5pMYT/vhT2f5M2+KXyQNlXb
-	BLGgFuFBoYLEpl/P/lHHPQ==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=1788409319; x=
-	1788495719; bh=jYUpAVkDBHkFbLkMRCk6nXlRFqs01HYTvaEqyk/J83g=; b=M
-	9V4n8CTYWZTetrluFXQUBAeeKcJS5jRH8UgcnHIZsNx5tU2FBUQue6yX9bm7q9lp
-	h4dwXlgzLTRyL4aF//z+V0P7dM+z0Wf2LGSln/7mHNAbaQm8aha/eERD4QP+KZ6b
-	uiroQUIsFRZoDxwh4JzVRiyNHNSHpiv+2GHWj/O+W6f+o63/ED3UTHK5Yaml0hRm
-	qm9FL5zZU4kFopZ37lT1EUMdEShmzmB6zzJbfTs/YWiSt7I6xnNNO+Nd2aItlARr
-	gXOsJxhPxNW7d5h4f6lV6UgFYYcqGuR19sGAYFDLlpeU6+Q+sfFFWtA5azC3DBuR
-	8rSDJgD3oWqncT+H0LDCQ==
-X-ME-Sender: <xms:5_WYat75H6b6n0H0JIkEB5mELcC-Tl9TAJcjY_OGCgEk66d5NdoZCA>
-    <xme:5_WYarlFcuE4zafPqkS6Y3ltDtvZ1pGcr9Oob1AD22hDaK6lgOyMpqu70uIZ2SGAN
-    28zPN7pCAZRqFcL5ERLqJ3T0ezq0FaW3VYi_7_GOM4UYUzawa_HWA>
-X-ME-Received: <xmr:5_WYaiq6jKRQDzyJXmjxxeK7vVLRHq0KJ6HIpOdus2Y1-RaGymF02WUFeq7H2g>
-X-ME-Proxy-Cause: dmFkZTE4cY/bF8MbAsLk46i0QkL781zbVjCKHq08bFy87bO2lQRnjMZ9IQ6yxk6AfccKZb
-    +wL5xCrtQ1Kfxd0lcIRFMp7hm6J3JILJhEylTnKF3Xl9GSFUae14wewcTGb+4nYrk9spEv
-    Xvx1ROY4LOWu4yjAjMBgEvszhAM8HAJXYgQ8M0CPIaNLtwtFC+5m1rer2IGWG5tQb8D9E0
-    cMmKB28IsYMQyCPg4YY6KZCzJAWmumsCBSNFOUAQSPj9OOEkSzkcEQXqQDCu5xVbEjDNDl
-    ecHQHrtVSbpHw2SgLoNPzEjnXfDh9/KOzhsOmHz3XQyIKQaE5Pr5teTLAyO4TUhVEQmWhH
-    eIpR3beMuWXH4+b9vCJVi7nIWatOYFYzyaZ/6brUQSEOyt/33vsxsWDMwfpjGJvbl3tTAl
-    7ZhyfI18RSSqH3TajKAhkwCztCi7H+FC0PzsaI4iJCmn8Q76AbQ8fiv1Ie1B6d+CCvRUaL
-    rHhOndvLZBY1xVnoCJwUgCpT5deLG1iZZyb09L+3ze0h9X70n+pdOyIPCNcvpD/2192HXN
-    qCr7ohi2Kxt5jlwNhklfxVxqQ80E3MrfNffjZqGHmWPxGH4rdITIjSqOaR5lDE90snpmag
-    zUTlPQ0fjYVywAeUg3psVG2JrxC0HWvpnKnsffFvq8Wcr/9S6kYda7SAIg1w
-X-ME-Proxy: <xmx:5_WYaqtfMtx6BOu-mXC6IfrF0R_471tu-D_eTHufe5IFbP7DbhcKAQ>
-    <xmx:5_WYanG55PJTeDRheU7Rn9pnEu-F8KxssVKFjSsSFKFUeLQy-y-ivA>
-    <xmx:5_WYajZ2k2peDByZuUH8a7w3XWCNgU2MwDb8K7n9b1sBha791y9yTw>
-    <xmx:5_WYavWWUj73apujyVO9J5wHK0bOVrvZlMajLHenM71MgjUcApxKgw>
-    <xmx:5_WYagfmQFx_Yp3F_A3AiK52f7v-jpL-QLcPHXjI08blNErfhJFP6Smw>
-Feedback-ID: i03f14258:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Thu,
- 3 Sep 2026 00:21:58 -0400 (EDT)
-Date: Wed, 2 Sep 2026 22:21:56 -0600
-From: Alex Williamson <alex@shazbot.org>
-To: Mohamad Raizudeen <raizudeen.kerneldev@gmail.com>
-Cc: bhelgaas@google.com, skhan@linuxfoundation.org, jkoolstra@xs4all.nl,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, alex@shazbot.org
-Subject: Re: [PATCH] PCI: quirks: Fix out-of-bounds MMIO read in
- nvme_disable_and_flr()
-Message-ID: <20260902222156.393e2457@shazbot.org>
-In-Reply-To: <apjoiNcvvJLv2grA@kernel>
-References: <20260817092448.4395-1-raizudeen.kerneldev@gmail.com>
-	<20260902115117.34a30084@shazbot.org>
-	<apjoiNcvvJLv2grA@kernel>
-X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CEUmP2hO"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8A3791F000E9;
+	Thu,  3 Sep 2026 04:26:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1788409613;
+	bh=EF0HVvTJyELhAVuZ4bEMw1AXn2h6VdGdNGyXlq2PW7Q=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=CEUmP2hOTqouua0gZfWVm1KxE6raZkARw0KbsjelSnpbLXLtB8soPbJUzBTIQqsIF
+	 lGlt7XCDz/7onQCS5FOikdCNnL2WaZrAiuDTgk7TWs4+whbN7t97fQMWnqY0s/dOXz
+	 6PFiwQcM7bCjeI1MdAQUmLlOfEH5zPwmVbwp2CfUYvW1KzZU0Tg+yLt3oqfmAy6No0
+	 AtOFYbz3WqRTADQmHKmNnS7TCwn2KlHTO+Auy0DjeK8D/P/TfLGp98nRYPh9o45gtf
+	 rM/SUQLEyyNPMWxi5lQ3XiCvbNJnrYtzfNAO+Lz/I2MRTDqe9Bbyi49m+Y0eOY3V2Q
+	 RKMl/6uwb8cYA==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v9 4/6] PCI: Refactor disable_acs_redir and config_acs
+ param handling
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Wei Wang" <wei.w.wang@hotmail.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <SI2PR01MB439380682B8703CB5340AD59DCB62@SI2PR01MB4393.apcprd01.prod.exchangelabs.com>
+References: <SI2PR01MB4393F337A792CB3258C2E073DCB62@SI2PR01MB4393.apcprd01.prod.exchangelabs.com>
+ <SI2PR01MB439380682B8703CB5340AD59DCB62@SI2PR01MB4393.apcprd01.prod.exchangelabs.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 03 Sep 2026 04:26:53 +0000
+Message-Id: <20260903042653.8A3791F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
 
-On Thu, 3 Sep 2026 08:54:56 +0530
-Mohamad Raizudeen <raizudeen.kerneldev@gmail.com> wrote:
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
 
-> On Wed, Sep 02, 2026 at 11:51:17AM -0600, Alex Williamson wrote:
-> > On Mon, 17 Aug 2026 14:54:47 +0530
-> > Mohamad Raizudeen <raizudeen.kerneldev@gmail.com> wrote:
-> >   
-> > > In nvme_disable_and_flr(), the PCI bar is mapped using
-> > > NVME_REG_CC + sizeof(cfg) which is (0x14 + 4 = 0x18 bytes)
-> > > 
-> > > However, the function later reads the controller status from
-> > > NVME_REG_CSTS - offset 0x1C, which is outside the mapped 0x18 byte
-> > > boundary and it can cause a page fault or kernel panic on architectures
-> > > that enforce strict MMIO boundaries.  
-> > 
-> > What are those architectures?  The bug and fix look correct, but the
-> > risk seems overstated.  Thanks,
-> > 
-> > Alex
-> >   
-> Hi Alex,
-> 
-> Arm64, risc-v do panic on out-of-bounds mmio. But you are right that the
-> risk is overstated, since most standard servers return all ones instead
-> of crashing.
+Pre-existing issues:
+- [High] This problem wasn't introduced by this patch, but user-provided AC=
+S command line parameters silently wipe out standard IOMMU protections (SV,=
+ TB, UF) for unspecified bits by reverting to hardware defaults.
+--
 
-Are you building with some sort of sanity or debug checking enabled?
+commit 62951886e4f26a51d147451d4aa7384b487c2ff6
+Author: Wei Wang <wei.w.wang@hotmail.com>
 
-While we're clearly violating the API accessing beyond the requested
-length, it's my understanding that we're generally working with
-PAGE_SIZE mappings at the MMU, so unless we're crossing a page, the
-access should work regardless.  Even for the cited archs.
+PCI: Refactor disable_acs_redir and config_acs param handling
 
-The -1 return is typically related to how the platform handles
-master-abort when accessing unimplemented or disabled MMIO space.  This
-out-of-bounds access shouldn't be triggering that, it's still within
-the enabled BAR range of the device.
+This commit splits the intertwined disable_acs_redir and config_acs paramet=
+er
+handling inside __pci_config_acs() into dedicated functions. It also improv=
+es
+parameter parsing by checking for a matching device before parsing flags and
+replacing complex string parsing with cleaner loops and switch statements.
 
-Anyway, I'd be curious to see the backtrace and whether there's a
-config option to enable such sanity checking.  Thanks,
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 587c013f04db3..6cffdbba99d34 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
 
-Alex
+[ ... ]
 
-> > > Fix this by increasing the mapping size to include NVME_REG_CSTS.
-> > > 
-> > > Fixes: ffb0863426eb9 ("PCI: Disable Samsung SM961/PM961 NVMe before FLR")
-> > > Signed-off-by: Mohamad Raizudeen <raizudeen.kerneldev@gmail.com>
-> > > ---
-> > >  drivers/pci/quirks.c | 2 +-
-> > >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > > 
-> > > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> > > index b09f27f7846f..ed03892cc960 100644
-> > > --- a/drivers/pci/quirks.c
-> > > +++ b/drivers/pci/quirks.c
-> > > @@ -4090,7 +4090,7 @@ static int nvme_disable_and_flr(struct pci_dev *dev, bool probe)
-> > >  	if (probe)
-> > >  		return 0;
-> > >  
-> > > -	bar = pci_iomap(dev, 0, NVME_REG_CC + sizeof(cfg));
-> > > +	bar = pci_iomap(dev, 0, NVME_REG_CSTS + sizeof(cfg));
-> > >  	if (!bar)
-> > >  		return -ENOTTY;
-> > >    
-> >   
+> +static void pci_param_disable_acs_redir(struct pci_dev *dev,
+> +					struct pci_acs *caps)
+> +{
+> +	const u16 acs_redir_mask =3D PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_EC;
+> +
+> +	if (!disable_acs_redir_param ||
+> +	    !pci_dev_match_disable_acs_redir(dev, disable_acs_redir_param) ||
+> +	    !pci_dev_specific_disable_acs_redir(dev))
+>  		return;
+> =20
+> +	caps->ctrl =3D caps->fw_ctrl & ~acs_redir_mask;
 
+[Severity: High]
+This isn't a bug introduced by this patch, but does this overwrite silently
+discard the standard IOMMU protections (SV, TB, UF) established earlier?
+
+When an administrator uses pci=3Ddisable_acs_redir=3D..., pci_enable_acs()
+first enables OS-level protections via pci_std_enable_acs(dev, &caps).
+
+However, because this assignment bases the new control register completely =
+on
+caps->fw_ctrl, any previously configured security bits are erased. This bre=
+aks
+PCIe isolation guarantees for the affected devices.
+
+[ ... ]
+
+> +static void pci_param_config_acs(struct pci_dev *dev, struct pci_acs *ca=
+ps)
+> +{
+
+[ ... ]
+
+> +	invalid_bits =3D (enabled_bits | disabled_bits) & ~valid_ctrl;
+> +	if (invalid_bits) {
+> +		pci_dbg(dev, "Ignoring unsupported ACS bits: %#06x\n",
+> +			invalid_bits);
+> +		enabled_bits &=3D valid_ctrl;
+> +		disabled_bits &=3D valid_ctrl;
+> +	}
+> =20
+> -	pci_dbg(dev, "ACS mask  =3D %#06x\n", mask);
+> -	pci_dbg(dev, "ACS flags =3D %#06x\n", flags);
+> -	pci_dbg(dev, "ACS control =3D %#06x\n", caps->ctrl);
+> -	pci_dbg(dev, "ACS fw_ctrl =3D %#06x\n", caps->fw_ctrl);
+> +	pci_dbg(dev, "ACS enabled: %#06x, disabled: %#06x\n",
+> +		enabled_bits, disabled_bits);
+> =20
+> -	/*
+> -	 * For mask bits that are 0, copy them from the firmware setting
+> -	 * and apply flags for all the mask bits that are 1.
+> -	 */
+> -	caps->ctrl =3D (caps->fw_ctrl & ~mask) | (flags & mask);
+> +	caps->ctrl =3D (caps->fw_ctrl | enabled_bits) & ~disabled_bits;
+
+[Severity: High]
+This is a pre-existing issue, but does this assignment also inadvertently w=
+ipe
+out the IOMMU protections set up by pci_std_enable_acs()?
+
+Similar to pci_param_disable_acs_redir(), when pci=3Dconfig_acs=3D... is us=
+ed,
+all un-masked bits revert to their fw_ctrl hardware default state rather th=
+an
+persisting their pci_std_enable_acs() modifications.=20
+
+This could potentially allow DMA spoofing or unauthorized memory access on
+devices where the admin only intended to tweak specific ACS bits.
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/SI2PR01MB4393F337A7=
+92CB3258C2E073DCB62@SI2PR01MB4393.apcprd01.prod.exchangelabs.com?part=3D4
