@@ -1,67 +1,78 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 112784A8FF1;
-	Thu,  3 Sep 2026 13:47:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE96A4B2028;
+	Thu,  3 Sep 2026 13:56:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788443260; cv=none; b=Ey/q3VMahuNUqAQne4R7Tmd9Zyu6DtoQSnDiCFcIggrr2e3CFVdcMiE+axMKCSB06qRPoKlT9MSuCgBUHBe/wJw/7gLkbzCXUYGBg916nFnjxhg5j0LWaEbulzXyr15YEb5lGRBe2B4NM4ejspd6WRWl0uaETIh/CLst7C9+/jg=
+	t=1788443780; cv=none; b=nWH0kQenDzAKmZSznRzm0d/1nWEdhFORno7gmiF28kw6Ss3mkxBqbP0SJa7fuxyd9OOY3W46v2VQXLUpuDjYkQSploq/+sjcue41ni6XGjC7FTZ/ubhfvfBLaJNqZvzwVYSVtkmM/fQuIdRghU13GqpLwFnaaPurPfX/2c3laZE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788443260; c=relaxed/simple;
-	bh=fOtcCmlhybCj+7AQr2xFz8CmqmsOUn+94FPHpgWSpfs=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=iY+dANcPEQJ83RyQgIlJhu0iVvcAAFvZUhv/bg/fpHnlJJdRHY+2OFWEPYSM17viFfRAdQDNqnT7dHRJTssyooG/pv9Cx8cD5JUo/I2JEsU4nM0b7X7F1/SCmxC1QYVKnToCIzL08XpsKiVLl5JIimNTK2TiZfhUjx8Xm1TROcE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6E1B61F000E9;
-	Thu,  3 Sep 2026 13:47:19 +0000 (UTC)
-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-To: Manivannan Sadhasivam <mani@kernel.org>, 
- Lorenzo Pieralisi <lpieralisi@kernel.org>, 
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
- Bjorn Helgaas <bhelgaas@google.com>, 
- Mrinmay Sarkar <mrinmay.sarkar@oss.qualcomm.com>
-Cc: linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org, 
- linux-kernel@vger.kernel.org, 
- Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>, 
- Rama Krishna <rama.krishna@oss.qualcomm.com>, 
- Rashmi A N <ayiluri.rashmi@oss.qualcomm.com>
-In-Reply-To: <20260831-skip_suspend-v1-1-ba2d877e22b1@oss.qualcomm.com>
-References: <20260831-skip_suspend-v1-1-ba2d877e22b1@oss.qualcomm.com>
-Subject: Re: [PATCH] PCI: qcom: Skip system suspend/resume for
- firmware-managed PCIe
-Message-Id: <178844323897.126132.10981127519752342599.b4-ty@b4>
-Date: Thu, 03 Sep 2026 15:47:18 +0200
+	s=arc-20240116; t=1788443780; c=relaxed/simple;
+	bh=EDgP3RS3hiis8hB96HF69Zs5WENUMffLoVsK0zLhS4I=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=NxUvsnv8SPy4xYW8zLiyQXUKvgeihQfb4i1JNwg4fMX25ILAi71CjIkgRW2B/aNz2/4m1BAe06Hs0EhzQ15P7I+RhgmPgVYBq96DV0Hnt4RvHrD7Prpk65lIVQIrEpgkBwwmwauvHB0Rx83Jmyo8foFIeZof8SuTy6PICP8bPws=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lwneuwNL; arc=none smtp.client-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lwneuwNL"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8D0C91F00A3D;
+	Thu,  3 Sep 2026 13:55:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1788443763;
+	bh=9ZX3aaMUKIltR4y+50OFfjXSQmlC643e9GFSZoj+oGI=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=lwneuwNLWS7hbIFHfu6/IKbBCpPa5aUmLW5z4R8nPjZVVuS3Rl/iVe8kS6QH0eOjO
+	 ePI4XqbDlsFYzwBE2D3f9En5X5fwej8EOLeZWzqZ52odBhZeK7vLkjEak7zyBJWf4t
+	 /oBsvkntzYWWRDORT0tR9Q/G8uH7mxviw5lfsBCyZ1K4Xway6C+AOV6LcqakTKlPn0
+	 rzXOe/u5TSNoSRvZY50my1M5S1PzTJjpAIjVuXN0NWDs4zvJEFPoeQo4dh7eQRL8xQ
+	 o/GyI1H1OhjT5ZeaxKT6+EQwXnrLsXQCWhX10phpMJhsPV8WmVFqxNBB+TChMCl2mn
+	 GSw5+RLzG72hA==
+Date: Thu, 3 Sep 2026 15:55:43 +0200
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Lorenzo Bianconi <lorenzo.bianconi@oss.qualcomm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, 
+	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+	Conor Dooley <conor+dt@kernel.org>, Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>, 
+	Linus Walleij <linusw@kernel.org>, Bartosz Golaszewski <brgl@kernel.org>, 
+	Bjorn Andersson <andersson@kernel.org>, Konrad Dybcio <konradybcio@kernel.org>, 
+	Michael Walle <mwalle@kernel.org>, Alex Elder <elder@riscstar.com>, 
+	Daniel Thompson <daniel@riscstar.com>, linux-pci@vger.kernel.org, devicetree@vger.kernel.org, 
+	linux-gpio@vger.kernel.org, linux-arm-msm@vger.kernel.org
+Subject: Re: [PATCH v2 2/5] gpio: tc9563: add support for the embedded GPIO
+ controller
+Message-ID: <dji3nel5fuk6yjzep4agruen3zbxcousojpbjmizlk5d5fy5cg@2dfm2qmcmoxs>
+References: <20260903-pci-tc9563-aux-v2-0-34c625b542c1@oss.qualcomm.com>
+ <20260903-pci-tc9563-aux-v2-2-34c625b542c1@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-X-Mailer: b4 0.15.2
+In-Reply-To: <20260903-pci-tc9563-aux-v2-2-34c625b542c1@oss.qualcomm.com>
 
-
-On Mon, 31 Aug 2026 19:07:02 +0530, Mrinmay Sarkar wrote:
-> For firmware-managed PCIe controllers, all resources, including clocks,
-> regulators, resets, PHYs and link state, are owned and managed by
-> firmware. The host driver must not attempt to manage these resources
-> during system suspend or resume.
+On Thu, Sep 03, 2026 at 09:52:58AM +0200, Lorenzo Bianconi wrote:
+> From: Alex Elder <elder@riscstar.com>
 > 
-> Skip the suspend and resume operations for firmware-managed controllers.
-> The associated power domain transitions are handled independently by the
-> genpd framework through its own system suspend/resume callbacks, so no
-> explicit action is required by the PCIe driver.
+> Add a driver for the GPIO controller embedded in the Toshiba TC9563
+> PCIe switch (and the Qualcomm QPS615). The device implements 35
+> GPIOs using two register banks: three registers control the first 32
+> GPIOs (20 and 21 are reserved) and three more control GPIOs 32-36.
+> GPIOs 22-24, 27-28, 31, and 34 are input-only.
 > 
-> [...]
+> The driver is registered as an auxiliary device driver; the TC9563
+> power controller creates the auxiliary device and provides a regmap
+> that gives access to the GPIO registers, so the gpio-regmap helpers
+> are used to implement the GPIO chip.
+> 
+> Signed-off-by: Alex Elder <elder@riscstar.com>
 
-Applied, thanks!
+Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 
-[1/1] PCI: qcom: Skip system suspend/resume for firmware-managed PCIe
-      commit: 89d17a6331087a76aea1a3a6c03dc45a19d306f2
+- Mani
 
-Best regards,
 -- 
 மணிவண்ணன் சதாசிவம்
-
-
