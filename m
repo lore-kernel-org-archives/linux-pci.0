@@ -1,56 +1,53 @@
-Received: from mout-p-102.mailbox.org (mout-p-102.mailbox.org [80.241.56.152])
+Received: from mout-p-201.mailbox.org (mout-p-201.mailbox.org [80.241.56.171])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63B2E459ACB;
-	Thu,  3 Sep 2026 20:52:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.152
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32E3C44BCBE;
+	Thu,  3 Sep 2026 20:52:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788468757; cv=none; b=GZNTeaYDP+Aeo4kMyg4BdyOCbYvCd9xBK06dALi006O33vK0EuIceVHHKEbWE8vE6I8o/4NWtk6wCNsEe7AsLjpqJ0nlC8gGuElMrS+PJwWgHBJ44aNh3XZwizIcbnjrbyshimDs5uGByee7E39G2rnphJ9RnY6JdSlIM6fxHuw=
+	t=1788468764; cv=none; b=XbN3uxnV7H+oiUnWYCOGJU6dVaNBLb3VIOmXczLaXIsLiRLSBnSY2BWIKfRPa5W+VVQ+YytxSODPU0SVMOuLu0Z539Eel/tzz6csyZ9R4mSJlTn5GIkOc2t3uC2ZaHD2slsPYXf8BXib1MXnOU4u3v88wID8Bolfy+HIScv6CdI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788468757; c=relaxed/simple;
-	bh=bE93zUIVXRR71VFx7oDKKeIIx9ZmSGVJ97cVPNt0eWI=;
+	s=arc-20240116; t=1788468764; c=relaxed/simple;
+	bh=uFJ3vSuhkD3rQrLCp9V/U6WMJkqtQaGZhVRsA+9NDaM=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=GoBZm90ii6NsQZ/JMftuMqA0q7C247n0xqN9xyyGwKHuGIfQYRA5JqhxOKyZiDtP7jJuWC46nAFyVFrKlv+c3GfopGwP5nk+f6KWLb4l4QJVY6XHqLnWWPnzaMcd9Eb7pL/p4aBpQDqIG8Q2yoCaVagu6fmH6F7HPOCcypkyryc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=weHYT4JS; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=ByuQDWHm; arc=none smtp.client-ip=80.241.56.152
+	 MIME-Version:Content-Type; b=J2Io26VQUcV8EnncBKafLeeV/rxa+FMiQlP4zBQlPFRRvubJXozzIFlQQ17Qw9IwjjOdi2WmG/zrMLPF+7hiXHXL/WjroDrsvnvulC6ewxwo60qgaUjoUP/UQV73uQ/rr/tT/y7wR/1Y7e9oFqoXFHt5livA4vAKOsXysD8xX7U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=B1pGDqSG; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=Tf/mhqz2; arc=none smtp.client-ip=80.241.56.171
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="weHYT4JS";
-	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="ByuQDWHm"
-Received: from smtp2.mailbox.org (smtp2.mailbox.org [IPv6:2001:67c:2050:b231:465::2])
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="B1pGDqSG";
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="Tf/mhqz2"
+Received: from smtp2.mailbox.org (smtp2.mailbox.org [10.196.197.2])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mout-p-102.mailbox.org (Postfix) with ESMTPS id 4hbWxp1dLqzKmXt;
-	Thu, 03 Sep 2026 22:52:30 +0200 (CEST)
+	by mout-p-201.mailbox.org (Postfix) with ESMTPS id 4hbWxt2kcjzMlD5;
+	Thu, 03 Sep 2026 22:52:34 +0200 (CEST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-	t=1788468750;
+	t=1788468754;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=gY4jc6oJ2GgTXE3O2Y7QZQeifWB7jprimmkiTSgncIE=;
-	b=weHYT4JSOxxM+/icxSb/7MXOgVExANM5cPC2lQ6XraXx+eg0GhCXLhrGJaLp9lQdzyk9/j
-	ZWlLSt2L0pA3heuai5hmfOFM2oJf7CUX9Z71cnhqk7VB24lD6+chgaWIpVFWo07gF+Giam
-	+OJsZOtp8lxRQZ0J11JvcsqlQfe2BF6vGrXDOQA0uK+McfMLEHH24ILEpxZQvUwbXgBicn
-	OnEX6pyOfagvx1aUQ0rcSfqgVr9UFuVauluCjttZ1P2oBK3DuPZNIdgo9Ynf2wNG3Oic+x
-	IpZ+aogJLSnv315erQKwm80axrjyB8Y/VXTmsN9OxUBfa/4bgWArnfKOEQWmNg==
-Authentication-Results: outgoing_mbo_mout;
-	dkim=pass header.d=mailbox.org header.s=mail20150812 header.b=ByuQDWHm;
-	spf=pass (outgoing_mbo_mout: domain of marek.vasut+renesas@mailbox.org designates 2001:67c:2050:b231:465::2 as permitted sender) smtp.mailfrom=marek.vasut+renesas@mailbox.org
+	bh=H5ch7Wr3RuiEVXuL1nJzqa26vVBvjOkSRdK1vQB12vI=;
+	b=B1pGDqSGax6/rlcgKQaXIUxR5SeaAau5FxYtkeHI+IE8+WMzCeXR9WuXAxfDIGXfeq8GgP
+	oKekNcneO141SVx0aYEgMwQPiePCGwAd/bfY/xa51DHQBeuaZv61DUwFv/uLEzmWBvBrcD
+	zTxl+CtTHb/pSyHKF3FekLuk9NNs75+/HBqGLwpt7XH2D18nXQirDSCRs7rz3Zrx5yTr45
+	x4JAJ/BSEuJBc8DvEnASLv6mkWD+IdDNAAS/FWiVWwo6t/60uwicozkeuL0KHGlZkNAuVE
+	ejGgsczkniWPVOL1Ne/0LlOl67+HCkw+c3EfmgMQL8UDGZ02PnhYciP2IJkpcw==
 From: Marek Vasut <marek.vasut+renesas@mailbox.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-	t=1788468748;
+	t=1788468752;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=gY4jc6oJ2GgTXE3O2Y7QZQeifWB7jprimmkiTSgncIE=;
-	b=ByuQDWHmJcBYQWfxPXdJ0gO4vu6SBs70BntRL0VDGbP/MZFtJdiUyNwbX8pbd2alItar0C
-	EcT4HtwaLlIx5IugcYPV9XWBrUivVKoPkQ0VH/pDEzl1xWmnGeZ5aglsgrric8lJWd5U8W
-	5yPYOQHOR0JmsOrYRbKyNuZox8ypaQVnLcM5jhPdgpCaTgs77bqmBtfec4+VdCQsDG88h/
-	x0gxrR9q8D3CzxNjMn/AHslgFvcrDVHbximoU80eCJKFv1prUXKWIehmswvtMqNraxv18m
-	MMsXU1RpuPaVDy12cUCoOZTPapXcK+GRX7amVPsDCcwAluTaDgZfWnF/Qpu4Fg==
+	bh=H5ch7Wr3RuiEVXuL1nJzqa26vVBvjOkSRdK1vQB12vI=;
+	b=Tf/mhqz2WU9Lzj2DjT3X3NbWbZmmfDdsJmxyM7R/4WC1jsa9E78G3M5mIK4m+WcvvZwbTd
+	wssheN9fFiEwUWYo6houcEbC8imNwfcftxfvAXeIQb/9eOyMXfS668Pg7Dj22F4j9navvP
+	cwN2k9hfa16bdxLx8QSuqGOEIkS4We+9eAwzseZn9O8An5BtWL/CAkEyuqByv57geLKXA4
+	pViNcvwMAWzf9Okm1sBBYDCmSAdtfZLcuXw+zsMr+h5JSJ/KSt2y8VwSyQLIRZluW28szn
+	Dn4aAECjR42b0/FzZ/DOJwTwxVvHNd8N5wW+lSbANCJD8Ao9dIssDfRfV+gUzA==
 To: linux-pci@vger.kernel.org
 Cc: Marek Vasut <marek.vasut+renesas@mailbox.org>,
 	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
@@ -67,9 +64,9 @@ Cc: Marek Vasut <marek.vasut+renesas@mailbox.org>,
 	devicetree@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	linux-renesas-soc@vger.kernel.org
-Subject: [PATCH 3/6] PCI: rcar-gen4: Add Application/Local register reset control
-Date: Thu,  3 Sep 2026 22:50:54 +0200
-Message-ID: <20260903205153.283553-3-marek.vasut+renesas@mailbox.org>
+Subject: [PATCH 4/6] arm64: dts: renesas: r8a779f0: Add PCIe Application/Local register reset
+Date: Thu,  3 Sep 2026 22:50:55 +0200
+Message-ID: <20260903205153.283553-4-marek.vasut+renesas@mailbox.org>
 In-Reply-To: <20260903205153.283553-1-marek.vasut+renesas@mailbox.org>
 References: <20260903205153.283553-1-marek.vasut+renesas@mailbox.org>
 Precedence: bulk
@@ -80,28 +77,13 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-MBO-RS-ID: f3f55817c555d887afd
-X-MBO-RS-META: atneuysh73t8sxhx51oun3mfnadmo7sy
-X-Rspamd-Queue-Id: 4hbWxp1dLqzKmXt
+X-MBO-RS-META: wi4bt1f8ebuzha1db3dqc9hcy4bcekyu
+X-MBO-RS-ID: d62eb3bef107bfa0fa5
 
-The R-Car Gen4 PCIe controller does contain core reset, which puts
-the controller back into well defined state, but it does also tear
-down the PCIe link. This is called Application/Local register reset
-in the documentation.
-
-Deassert the core reset after the core clock have been enabled, and
-assert the core reset in case of error or when shutting down the
-controller.
-
-This also fixes reinitialization failure of the controller, where if
-the controller driver is unbind and bind again via sysfs attributes,
-the controller driver will fail to probe the second time because it
-fails to access the controller DBI, which returns all zeroes unless
-the core reset is toggled. The following commands trigger this fault
-on R-Car V4H:
-
-$ echo e65d0000.pcie > /sys/bus/platform/drivers/pcie-rcar-gen4/unbind
-$ echo e65d0000.pcie > /sys/bus/platform/drivers/pcie-rcar-gen4/bind
+Renesas R-Car S4 documentation R19UH0161EJ0140 Rev.1.40 , Jul. 31, 2026
+chapter 9A.1.1.12 Software Reset Control Register 11 (SRCR11) bits 22
+and 21 describe PCIEC ch1/ch0 Application/Local register reset. Add the
+matching reset into both RC and EP DT nodes of both PCIe controllers.
 
 Signed-off-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
 ---
@@ -121,38 +103,57 @@ Cc: linux-kernel@vger.kernel.org
 Cc: linux-pci@vger.kernel.org
 Cc: linux-renesas-soc@vger.kernel.org
 ---
- drivers/pci/controller/dwc/pcie-rcar-gen4.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ arch/arm64/boot/dts/renesas/r8a779f0.dtsi | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-rcar-gen4.c b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-index f938430644860..ceffaa2e4cf99 100644
---- a/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-+++ b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-@@ -197,6 +197,8 @@ static int rcar_gen4_pcie_common_init(struct rcar_gen4_pcie *rcar)
- 		return ret;
- 	}
- 
-+	reset_control_deassert(dw->core_rsts[DW_PCIE_CORE_RST].rstc);
-+
- 	if (!reset_control_status(dw->core_rsts[DW_PCIE_PWR_RST].rstc)) {
- 		reset_control_assert(dw->core_rsts[DW_PCIE_PWR_RST].rstc);
- 		/*
-@@ -247,6 +249,7 @@ static int rcar_gen4_pcie_common_init(struct rcar_gen4_pcie *rcar)
- 	return 0;
- 
- err_unprepare:
-+	reset_control_assert(dw->core_rsts[DW_PCIE_CORE_RST].rstc);
- 	clk_bulk_disable_unprepare(DW_PCIE_NUM_CORE_CLKS, dw->core_clks);
- 
- 	return ret;
-@@ -257,6 +260,7 @@ static void rcar_gen4_pcie_common_deinit(struct rcar_gen4_pcie *rcar)
- 	struct dw_pcie *dw = &rcar->dw;
- 
- 	reset_control_assert(dw->core_rsts[DW_PCIE_PWR_RST].rstc);
-+	reset_control_assert(dw->core_rsts[DW_PCIE_CORE_RST].rstc);
- 	clk_bulk_disable_unprepare(DW_PCIE_NUM_CORE_CLKS, dw->core_clks);
- }
- 
+diff --git a/arch/arm64/boot/dts/renesas/r8a779f0.dtsi b/arch/arm64/boot/dts/renesas/r8a779f0.dtsi
+index 69c247b7f0e28..878b1d53fa371 100644
+--- a/arch/arm64/boot/dts/renesas/r8a779f0.dtsi
++++ b/arch/arm64/boot/dts/renesas/r8a779f0.dtsi
+@@ -790,8 +790,8 @@ pciec0: pcie@e65d0000 {
+ 			clocks = <&cpg CPG_MOD 624>, <&pcie0_clkref>;
+ 			clock-names = "core", "ref";
+ 			power-domains = <&sysc R8A779F0_PD_ALWAYS_ON>;
+-			resets = <&cpg 624>;
+-			reset-names = "pwr";
++			resets = <&cpg 624>, <&cpg 1121>;
++			reset-names = "pwr", "core";
+ 			max-link-speed = <4>;
+ 			num-lanes = <2>;
+ 			#address-cells = <3>;
+@@ -827,8 +827,8 @@ pciec1: pcie@e65d8000 {
+ 			clocks = <&cpg CPG_MOD 625>, <&pcie1_clkref>;
+ 			clock-names = "core", "ref";
+ 			power-domains = <&sysc R8A779F0_PD_ALWAYS_ON>;
+-			resets = <&cpg 625>;
+-			reset-names = "pwr";
++			resets = <&cpg 625>, <&cpg 1122>;
++			reset-names = "pwr", "core";
+ 			max-link-speed = <4>;
+ 			num-lanes = <2>;
+ 			#address-cells = <3>;
+@@ -863,8 +863,8 @@ pciec0_ep: pcie-ep@e65d0000 {
+ 			clocks = <&cpg CPG_MOD 624>, <&pcie0_clkref>;
+ 			clock-names = "core", "ref";
+ 			power-domains = <&sysc R8A779F0_PD_ALWAYS_ON>;
+-			resets = <&cpg 624>;
+-			reset-names = "pwr";
++			resets = <&cpg 624>, <&cpg 1121>;
++			reset-names = "pwr", "core";
+ 			max-link-speed = <4>;
+ 			num-lanes = <2>;
+ 			max-functions = /bits/ 8 <2>;
+@@ -886,8 +886,8 @@ pciec1_ep: pcie-ep@e65d8000 {
+ 			clocks = <&cpg CPG_MOD 625>, <&pcie1_clkref>;
+ 			clock-names = "core", "ref";
+ 			power-domains = <&sysc R8A779F0_PD_ALWAYS_ON>;
+-			resets = <&cpg 625>;
+-			reset-names = "pwr";
++			resets = <&cpg 625>, <&cpg 1122>;
++			reset-names = "pwr", "core";
+ 			max-link-speed = <4>;
+ 			num-lanes = <2>;
+ 			max-functions = /bits/ 8 <2>;
 -- 
 2.53.0
 
