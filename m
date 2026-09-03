@@ -1,38 +1,38 @@
 Received: from canpmsgout02.his.huawei.com (canpmsgout02.his.huawei.com [113.46.200.217])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8DD5062809;
-	Thu,  3 Sep 2026 07:52:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB51D397AE4;
+	Thu,  3 Sep 2026 07:52:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.217
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788421977; cv=none; b=nJd+m+FyBy8a15ddLLc4QHvQsrAANeuXWnHTel01zY5Py+VHM+xV4p272lz/DiC3arQKFbCs9W39EMyHXzNtG2PT+wdERwouYE2k1iMt/eBK7O449Is2tzcD/PqSyW1sFw00u/00y7FJLy40Y1aN6Nw3qdHrU66/Jhr83CranGo=
+	t=1788421978; cv=none; b=jigOi/35qmjlAssybokRYsBscNQ0wMMiSliq2xbcboP3gyZ+pmU3tQXgZ/ykVcoQhwgWYGvSndhHGZXN/QEJh1piwbefcteWHv6ab0VMopPL8kC+RW7KhdAul0OvOV+8vTQ+WWYjNNZ4XsOb5tiaP0x6LZtERUdBfv2Xq+mbUfc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788421977; c=relaxed/simple;
-	bh=11TxVI+3RBj+EqHgRjR2LbaLhcvV0cslORERYKWeuco=;
+	s=arc-20240116; t=1788421978; c=relaxed/simple;
+	bh=szcD0O0Lfg6pYgcK/czU3XzUQZ3ONYu2wuySJYZ2NP8=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=f6d5KJtjEulCR3x2Eav5CH5avXy1zh5ezJ2b6w2IvhBu8xx5cOcdaVVhG6GfBrgcR/4EyGM1fn24KA91juC6pIjvtdAdZw7tBG8WRNUJ092XQr3WfXZo4hugiGfyaSYeuiCqECBz+/fU++YkSbglQk/zs5SHBcy5AcXRO4TSSQY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=QPcdzo9L; arc=none smtp.client-ip=113.46.200.217
+	 MIME-Version:Content-Type; b=qkCZuv777tp3+mn2bmUwCB40qj6Y2mhic5xMx0Rp+QptckirV/NJURcWd3S24NxH57aTosYNxmviBPPSmRrSV61+LRwkgfkb5iVLWTiB41zXhp4JiLl/djiwQPtCsS4w9SLzpS20Nczd03T7DUWBVoNznx1bM/ofMYjE9tzPj4o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=tgURI+w0; arc=none smtp.client-ip=113.46.200.217
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="QPcdzo9L"
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="tgURI+w0"
 dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
 	c=relaxed/relaxed; q=dns/txt;
 	h=From;
-	bh=CaouMrHf0sBpiH7oiFC52Kf32tgj7gpdzB/pLuk6TXE=;
-	b=QPcdzo9LzezfooH0eCR+FqKx6wKR0nt7K5LkOl6xwr4WTy+eevZBB22JIctC741u6HVe9vl8P
-	0BKoN+OTu9GnhlXHE8vBlbMbctmmEt6UObCKvVNwve2k+xyHTL55d7A+FecuTUHTGE6yWC8JfOU
-	SKXE/X7TQMyQm0SsEeFfWAo=
-Received: from mail.maildlp.com (unknown [172.19.162.223])
-	by canpmsgout02.his.huawei.com (SkyGuard) with ESMTPS id 4hbBPm4ZBSzcbQ9;
-	Thu,  3 Sep 2026 15:42:04 +0800 (CST)
+	bh=fQMRWjJVk821g2t06PS1R48o+Gaj+3LX6g+X1hR1mf4=;
+	b=tgURI+w0BRHAgHaFEqonxW3WaXwFvR8Nr4fP1kW36eaVjpi2Z++0O68vEaNmNsnSgSN8fDvGG
+	fFnYzTp9ffm6eJmJrDlkl/CjZlOsihUCbfi/cDDB7f588uCXwhDG9OLXsUFwmGT83BVB/tDjWgc
+	xYTUr6tI2nk1MTIu/HT/aX0=
+Received: from mail.maildlp.com (unknown [172.19.163.104])
+	by canpmsgout02.his.huawei.com (SkyGuard) with ESMTPS id 4hbBPp5zWMzcbQq;
+	Thu,  3 Sep 2026 15:42:06 +0800 (CST)
 Received: from whupemo200004.china.huawei.com (unknown [7.152.184.18])
-	by mail.maildlp.com (Postfix) with ESMTPS id EE07240575;
-	Thu,  3 Sep 2026 15:52:51 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTPS id 344A44057F;
+	Thu,  3 Sep 2026 15:52:54 +0800 (CST)
 Received: from huawei.com (10.50.163.32) by whupemo200004.china.huawei.com
  (7.152.184.18) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.45; Thu, 3 Sep
- 2026 15:52:49 +0800
+ 2026 15:52:51 +0800
 From: Sizhe Liu <liusizhe5@huawei.com>
 To: <rostedt@goodmis.org>, <mhiramat@kernel.org>,
 	<mathieu.desnoyers@efficios.com>, <corbet@lwn.net>,
@@ -48,9 +48,9 @@ CC: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
 	<linux-perf-users@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
 	<linux-doc@vger.kernel.org>, <linuxarm@huawei.com>,
 	<prime.zeng@hisilicon.com>, <liusizhe5@huawei.com>
-Subject: [PATCH v3 3/8] perf hisi-ptt: Extract the raw data printing part
-Date: Thu, 3 Sep 2026 15:52:36 +0800
-Message-ID: <20260903075241.1445338-4-liusizhe5@huawei.com>
+Subject: [PATCH v3 4/8] perf hisi-ptt: Merge 4DW and 8DW HEAD0 printing
+Date: Thu, 3 Sep 2026 15:52:37 +0800
+Message-ID: <20260903075241.1445338-5-liusizhe5@huawei.com>
 X-Mailer: git-send-email 2.33.0
 In-Reply-To: <20260903075241.1445338-1-liusizhe5@huawei.com>
 References: <20260903075241.1445338-1-liusizhe5@huawei.com>
@@ -65,79 +65,100 @@ Content-Type: text/plain
 X-ClientProxiedBy: kwepems500001.china.huawei.com (7.221.188.70) To
  whupemo200004.china.huawei.com (7.152.184.18)
 
-Extract the raw data printing part of the TLP header into
-hisi_ptt_print_raw_record() for reuse by subsequent patches that
-add field-level parsing of individual DW headers.
+Merge the printing of HEAD0 for both 4DW and 8DW TLP headers into
+hisi_ptt_print_head0(). This unifies the entry point and makes it
+easier to add HEAD1/HEAD2/HEAD3 field parsing in subsequent patches.
 
 Reviewed-by: Yushan Wang <wangyushan12@huawei.com>
 Signed-off-by: Sizhe Liu <liusizhe5@huawei.com>
 ---
- .../hisi-ptt-decoder/hisi-ptt-pkt-decoder.c   | 31 +++++++++----------
- 1 file changed, 15 insertions(+), 16 deletions(-)
+ .../hisi-ptt-decoder/hisi-ptt-pkt-decoder.c   | 56 +++++++++++--------
+ 1 file changed, 33 insertions(+), 23 deletions(-)
 
 diff --git a/tools/perf/util/hisi-ptt-decoder/hisi-ptt-pkt-decoder.c b/tools/perf/util/hisi-ptt-decoder/hisi-ptt-pkt-decoder.c
-index 766665414ad8..23ae99f33c9f 100644
+index 23ae99f33c9f..00bd9309df68 100644
 --- a/tools/perf/util/hisi-ptt-decoder/hisi-ptt-pkt-decoder.c
 +++ b/tools/perf/util/hisi-ptt-decoder/hisi-ptt-pkt-decoder.c
-@@ -79,23 +79,31 @@ static const char * const hisi_ptt_4dw_pkt_field_name[] = {
- 	[HISI_PTT_4DW_HEAD3]	= "Header DW3",
- };
- 
--static void hisi_ptt_print_pkt(struct hisi_ptt_pkt_buf *pkt_buf,
--			       const char *desc)
-+static void hisi_ptt_print_raw_record(size_t offset, uint32_t value)
- {
- 	const char *color = PERF_COLOR_BLUE;
- 	uint8_t byte;
--	uint32_t dw;
- 	int i;
- 
--	dw = get_unaligned_le32(pkt_buf->buf + pkt_buf->pos);
- 	printf(".");
--	color_fprintf(stdout, color, "  %08zx: ", pkt_buf->pos);
-+	color_fprintf(stdout, color, "  %08zx: ", offset);
- 	for (i = 0; i < HISI_PTT_FIELD_LENGTH; i++) {
--		byte = (dw >> (24 - i * 8)) & 0xFF;
-+		byte = (value >> (24 - i * 8)) & 0xFF;
- 		color_fprintf(stdout, color, "%02x ", byte);
- 	}
- 	for (i = 0; i < HISI_PTT_MAX_SPACE_LEN; i++)
- 		color_fprintf(stdout, color, "   ");
-+}
-+
-+static void hisi_ptt_print_pkt(struct hisi_ptt_pkt_buf *pkt_buf,
-+			       const char *desc)
-+{
-+	const char *color = PERF_COLOR_BLUE;
-+	uint32_t value;
-+
-+	value = get_unaligned_le32(pkt_buf->buf + pkt_buf->pos);
-+	hisi_ptt_print_raw_record(pkt_buf->pos, value);
-+
- 	color_fprintf(stdout, color, "  %s\n", desc);
+@@ -108,6 +108,33 @@ static void hisi_ptt_print_pkt(struct hisi_ptt_pkt_buf *pkt_buf,
  	pkt_buf->pos += HISI_PTT_FIELD_LENGTH;
  }
-@@ -120,19 +128,10 @@ static int hisi_ptt_8dw_pkt_desc(struct hisi_ptt_pkt_buf *pkt_buf)
- static void hisi_ptt_4dw_print_dw0(struct hisi_ptt_pkt_buf *pkt_buf)
- {
- 	const char *color = PERF_COLOR_BLUE;
--	uint8_t byte;
- 	uint32_t dw;
--	int i;
  
- 	dw = get_unaligned_le32(pkt_buf->buf + pkt_buf->pos);
--	printf(".");
--	color_fprintf(stdout, color, "  %08zx: ", pkt_buf->pos);
--	for (i = 0; i < HISI_PTT_FIELD_LENGTH; i++) {
--		byte = (dw >> (24 - i * 8)) & 0xFF;
--		color_fprintf(stdout, color, "%02x ", byte);
--	}
--	for (i = 0; i < HISI_PTT_MAX_SPACE_LEN; i++)
--		color_fprintf(stdout, color, "   ");
++static void hisi_ptt_print_head0(struct hisi_ptt_pkt_buf *pkt_buf)
++{
++	const char *color = PERF_COLOR_BLUE;
++	uint32_t dw;
++
++	dw = get_unaligned_le32(pkt_buf->buf + pkt_buf->pos);
 +	hisi_ptt_print_raw_record(pkt_buf->pos, dw);
++
++	if (pkt_buf->pkt_type == HISI_PTT_4DW_PKT)
++		color_fprintf(stdout, color,
++			      "  %s %x %s %x %s %x %s %x %s %x %s %x %s %x %s %x\n",
++			      "Format",
++			      FIELD_GET(HISI_PTT_HEAD0_4DW_FORMAT, dw),
++			      "Type", FIELD_GET(HISI_PTT_HEAD0_4DW_TYPE, dw),
++			      "T9", FIELD_GET(HISI_PTT_HEAD0_4DW_T9, dw),
++			      "T8", FIELD_GET(HISI_PTT_HEAD0_4DW_T8, dw),
++			      "TH", FIELD_GET(HISI_PTT_HEAD0_4DW_TH, dw),
++			      "SO", FIELD_GET(HISI_PTT_HEAD0_4DW_SO, dw),
++			      "Length", FIELD_GET(HISI_PTT_HEAD0_4DW_LEN, dw),
++			      "Time", FIELD_GET(HISI_PTT_HEAD0_4DW_TIME, dw));
++	else
++		color_fprintf(stdout, color, "  %s\n",
++			      hisi_ptt_8dw_pkt_field_name[HISI_PTT_8DW_HEAD0]);
++
++	pkt_buf->pos += HISI_PTT_FIELD_LENGTH;
++}
++
+ static int hisi_ptt_8dw_pkt_desc(struct hisi_ptt_pkt_buf *pkt_buf)
+ {
+ 	int i;
+@@ -119,39 +146,22 @@ static int hisi_ptt_8dw_pkt_desc(struct hisi_ptt_pkt_buf *pkt_buf)
+ 			continue;
+ 		}
  
- 	color_fprintf(stdout, color,
- 		      "  %s %x %s %x %s %x %s %x %s %x %s %x %s %x %s %x\n",
++		if (i == HISI_PTT_8DW_HEAD0) {
++			hisi_ptt_print_head0(pkt_buf);
++			continue;
++		}
++
+ 		hisi_ptt_print_pkt(pkt_buf, hisi_ptt_8dw_pkt_field_name[i]);
+ 	}
+ 
+ 	return hisi_ptt_pkt_size[HISI_PTT_8DW_PKT];
+ }
+ 
+-static void hisi_ptt_4dw_print_dw0(struct hisi_ptt_pkt_buf *pkt_buf)
+-{
+-	const char *color = PERF_COLOR_BLUE;
+-	uint32_t dw;
+-
+-	dw = get_unaligned_le32(pkt_buf->buf + pkt_buf->pos);
+-	hisi_ptt_print_raw_record(pkt_buf->pos, dw);
+-
+-	color_fprintf(stdout, color,
+-		      "  %s %x %s %x %s %x %s %x %s %x %s %x %s %x %s %x\n",
+-		      "Format", FIELD_GET(HISI_PTT_HEAD0_4DW_FORMAT, dw),
+-		      "Type", FIELD_GET(HISI_PTT_HEAD0_4DW_TYPE, dw),
+-		      "T9", FIELD_GET(HISI_PTT_HEAD0_4DW_T9, dw),
+-		      "T8", FIELD_GET(HISI_PTT_HEAD0_4DW_T8, dw),
+-		      "TH", FIELD_GET(HISI_PTT_HEAD0_4DW_TH, dw),
+-		      "SO", FIELD_GET(HISI_PTT_HEAD0_4DW_SO, dw),
+-		      "Length", FIELD_GET(HISI_PTT_HEAD0_4DW_LEN, dw),
+-		      "Time", FIELD_GET(HISI_PTT_HEAD0_4DW_TIME, dw));
+-
+-	pkt_buf->pos += HISI_PTT_FIELD_LENGTH;
+-}
+-
+ static int hisi_ptt_4dw_pkt_desc(struct hisi_ptt_pkt_buf *pkt_buf)
+ {
+ 	int i;
+ 
+-	hisi_ptt_4dw_print_dw0(pkt_buf);
++	hisi_ptt_print_head0(pkt_buf);
+ 
+ 	for (i = HISI_PTT_4DW_HEAD1; i < HISI_PTT_4DW_TYPE_MAX; i++)
+ 		hisi_ptt_print_pkt(pkt_buf, hisi_ptt_4dw_pkt_field_name[i]);
 -- 
 2.33.0
 
