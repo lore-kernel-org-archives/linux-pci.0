@@ -1,107 +1,138 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mout-p-103.mailbox.org (mout-p-103.mailbox.org [80.241.56.161])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D61B2D7DEA;
-	Thu,  3 Sep 2026 20:48:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ECAC93C3F4E;
+	Thu,  3 Sep 2026 20:52:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.161
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788468493; cv=none; b=pfViCs6+UxAxUcn+2qjuZqavbrs7AHnoW3dbPmjhQ4nUGiPiYi2fv7jYLNRoMO3WVhU0r180INZcjCq21/YrpnABdszTbSNQqrx1iNn4aNpUiX54DtbXYMeZ41ZPPCqy2VXESABLg2bxxX0Z9kbjB78a3a65qv9Q8NcEkV8ACrw=
+	t=1788468749; cv=none; b=nrJSa4x0JqEOkcydxro9/vIZtB5XWc0bYuHkuyjofck4tMTfoNEs2fdp6UJihOFx0YKu8+D/gutBYLAAmAVfGkIkmyal0XtT/wg1vK529LrObjJ5a4bfJRwL/5sSgRm+uAPQwFciRULLhC6Q9y/zgmTfdxEvzoOZE1iXvg7Q0h8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788468493; c=relaxed/simple;
-	bh=EKirA1GfKN9oAPtucJVunXWWMSW4gY0r/1/CeAdcjrc=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=nsBtRL5EMD82eTtSA/UNPSStXWuOzJTc0ofle1T3hHpaSUG6d5n+IBdAJar/Zp1SxwTdnqIkXuG0LKN85QU8Fuhn7CTloebUps5levcYrBlPqckS5sE27gYnCAE9yql2t/f6hD097RaoM6vaNj/p4qenWTHd/Gh9smuY1+YfTpg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LJfOBXaw; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788468749; c=relaxed/simple;
+	bh=ua9movh5ynHsIyj7VDtkV46uP7X2x0p5gvNYcALSGck=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=TOEKbT7TX+MdHHXmef2IfES4raIebRHQgItUsc4+0rdkugJ3JuM9JDsdbpu9t7048pxVrKeqa6qopG1anvPRi8s18l3wwfHxZM3jdN6XpV1xkHOisxjH/Y5SfVKmgEX30O02Jhaj515Qga2VWjlQSUe88dArI6cIH1vZoBXgbjI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=DPxC1yFI; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=SeYlHUMw; arc=none smtp.client-ip=80.241.56.161
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LJfOBXaw"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 06BF41F000E9;
-	Thu,  3 Sep 2026 20:48:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788468484;
-	bh=uw6M+Azz9kgXk2yJeaS4WajyqjXMKOKDk/rPU9QB5Lo=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=LJfOBXawep1Q4y00zLVyYKWDymGTOSCA+2VyHTJUPhtgb6C173/oNbToRjmglVAZ5
-	 f3fLNCkekPFZKfFrA26xtEP7u4kuZ4Cu+3ei/6gp/ukPlyenKIERVwZVuJrzJTCT/6
-	 TEATMy7vvcSfxQKkKqV3OyNLiFzu0adQ/EtRNwHiF1xCGbCYz86YbyA0xlkoyRKtcD
-	 lEIVIWTpHw7ryrcJ+EycQZL1bjDSVU+FBTSU4YkfWIeMYylIxHzWU81Ic+UZTTwFAD
-	 9e4DiXcaSk6/FdkgSCzOXcAVge5yYfU4KipR3H5KByNGIiu/ZKrEBwxA5PUz7xGjII
-	 8QCI4EyFpdnOw==
-Date: Thu, 3 Sep 2026 15:48:00 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Abel Vesa <abel.vesa@oss.qualcomm.com>
-Cc: Bartosz Golaszewski <brgl@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="DPxC1yFI";
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="SeYlHUMw"
+Received: from smtp2.mailbox.org (smtp2.mailbox.org [10.196.197.2])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mout-p-103.mailbox.org (Postfix) with ESMTPS id 4hbWxd18v5zKmcn;
+	Thu, 03 Sep 2026 22:52:21 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
+	t=1788468741;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=59PKEI7PYtuS7UFcYhxPqjo/ys07XPDANz6T91m1qQU=;
+	b=DPxC1yFIWGdwR/r7UsHGJdyNzttEpfBN9qmJbQ7X8xhLmVNPLStjSslK+1QowwiOELZ7bv
+	zlgLni0jdkMc65rtKOIZ9NzW4/PPC2todvOha/6k88brYCE5yaqHxy6Br6Zzmh8hXBR1nq
+	QkufKme0yXTTmclcdyhnAGsSVtjc0swJtoHxR4dtf11qoZ2ZtAg7ybmUSuV6uGN/MNH4F+
+	b55ujQOwnOFv+F2P0Nz97mefCn2YvAHs0m7ODLLmZeMss9mhFG69HA7bpFhW/b9veWBGLo
+	iKuL1GKUsViJBRMNJ00/tQbHGKV0qpWS0iEqiXvbrgMFn10pChI32aZRQxQKBQ==
+From: Marek Vasut <marek.vasut+renesas@mailbox.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
+	t=1788468739;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=59PKEI7PYtuS7UFcYhxPqjo/ys07XPDANz6T91m1qQU=;
+	b=SeYlHUMwnBmZp8dRJ1oLMaSaU+JU6Vg9X1FPp8r1/5Fqzn0YFNlzxQapA91Ew71nAChNaL
+	yeWRT3DykEO9np3erqXBAPFSGS39JPONwc6e9nzQZujSgfXeDhqasRueX+I5b12tRvgXUL
+	TwvK1E0yDe0eGqeM6tqQKduGFwhjfAOnc8hvoKPxzeDkrlgwXsIIGUtrGF3e21pSgzsiMA
+	QIDNkzzvnmrYThHeeXjSPODlDW6TivJKXjb4jtA1yhjcCWhBeK8uqGXs+ZtI7ot/tlEY3i
+	i9U/aIPoU7Z63vBnIv27yuHCHUNITwcZ9X2S2D28aNNOTguhE1px2RnqBZTz0g==
+To: linux-pci@vger.kernel.org
+Cc: Marek Vasut <marek.vasut+renesas@mailbox.org>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>,
-	Bjorn Andersson <andersson@kernel.org>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI/pwrctrl: tc9563: Use gpiod_set_value_cansleep() for
- RESX
-Message-ID: <20260903204800.GA2243889@bhelgaas>
+	Conor Dooley <conor+dt@kernel.org>,
+	Geert Uytterhoeven <geert+renesas@glider.be>,
+	Koichiro Den <den@valinux.co.jp>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+	devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-renesas-soc@vger.kernel.org
+Subject: [PATCH 1/6] dt-bindings: PCI: rcar-gen4-pci-host: Document Application/Local register reset
+Date: Thu,  3 Sep 2026 22:50:52 +0200
+Message-ID: <20260903205153.283553-1-marek.vasut+renesas@mailbox.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260825-pci-pwrctl-tc9563-use-cansleep-for-resx-v1-1-0dbe7cfd8200@oss.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-MBO-RS-META: mcbpas4ahh1pk5i66mwxi8niujnbaj48
+X-MBO-RS-ID: 617d7d59b7d1f8b8209
 
-On Tue, Aug 25, 2026 at 02:41:31PM +0300, Abel Vesa wrote:
-> The RESX GPIO may be provided by a sleeping GPIO controller, such as an
-> I2C or SPI I/O expander. Calling gpiod_set_value() for such a GPIO
-> triggers the following warning:
-> 
->   WARNING: ... drivers/gpio/gpiolib.c:4030 at gpiod_set_value()
-> 
-> The TC9563 power-on and power-off callbacks already sleep while enabling
-> or disabling regulators and while waiting for oscillator stabilization.
-> Use gpiod_set_value_cansleep() for RESX so it can be driven without
-> triggering the warning.
-> 
-> Fixes: 4c9c7be47310 ("PCI: pwrctrl: Add power control driver for TC9563")
-> Signed-off-by: Abel Vesa <abel.vesa@oss.qualcomm.com>
+The R-Car Gen4 PCIe controller does contain core reset, which puts
+the controller back into well defined state, but it does also tear
+down the PCIe link. This is called Application/Local register reset
+in the documentation. Document this reset.
 
-Applied to pci/pwrctrl for v7.4 with subject line:
+Signed-off-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
+---
+Cc: "Krzysztof Wilczyński" <kwilczynski@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Conor Dooley <conor+dt@kernel.org>
+Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+Cc: Koichiro Den <den@valinux.co.jp>
+Cc: Krzysztof Kozlowski <krzk+dt@kernel.org>
+Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>
+Cc: Magnus Damm <magnus.damm@gmail.com>
+Cc: Manivannan Sadhasivam <mani@kernel.org>
+Cc: Rob Herring <robh@kernel.org>
+Cc: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Cc: devicetree@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+Cc: linux-renesas-soc@vger.kernel.org
+---
+ .../devicetree/bindings/pci/rcar-gen4-pci-host.yaml    | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
 
-  PCI/pwrctrl: tc9563: Allow RESX reset assertion to sleep
+diff --git a/Documentation/devicetree/bindings/pci/rcar-gen4-pci-host.yaml b/Documentation/devicetree/bindings/pci/rcar-gen4-pci-host.yaml
+index 64f456c6a75a1..8a06a25e266b5 100644
+--- a/Documentation/devicetree/bindings/pci/rcar-gen4-pci-host.yaml
++++ b/Documentation/devicetree/bindings/pci/rcar-gen4-pci-host.yaml
+@@ -57,11 +57,15 @@ properties:
+     maxItems: 1
+ 
+   resets:
+-    maxItems: 1
++    minItems: 1
++    maxItems: 2
+ 
+   reset-names:
++    minItems: 1
++    maxItems: 2
+     items:
+       - const: pwr
++      - const: core
+ 
+   max-link-speed:
+     maximum: 4
+@@ -111,8 +115,8 @@ examples:
+             clocks = <&cpg CPG_MOD 624>, <&pcie0_clkref>;
+             clock-names = "core", "ref";
+             power-domains = <&sysc R8A779F0_PD_ALWAYS_ON>;
+-            resets = <&cpg 624>;
+-            reset-names = "pwr";
++            resets = <&cpg 624>,<&cpg 1121>;
++            reset-names = "pwr", "core";
+             max-link-speed = <4>;
+             num-lanes = <2>;
+             #address-cells = <3>;
+-- 
+2.53.0
 
-to focus on the behavioral change.  Let me know if this doesn't
-capture it correctly.
-
-> ---
->  drivers/pci/pwrctrl/pci-pwrctrl-tc9563.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/pwrctrl/pci-pwrctrl-tc9563.c b/drivers/pci/pwrctrl/pci-pwrctrl-tc9563.c
-> index fd53a7db9875..1b7718d07d15 100644
-> --- a/drivers/pci/pwrctrl/pci-pwrctrl-tc9563.c
-> +++ b/drivers/pci/pwrctrl/pci-pwrctrl-tc9563.c
-> @@ -481,7 +481,7 @@ static int tc9563_pwrctrl_power_off(struct pci_pwrctrl *pwrctrl)
->  	struct tc9563_pwrctrl *tc9563 = container_of(pwrctrl,
->  					    struct tc9563_pwrctrl, pwrctrl);
->  
-> -	gpiod_set_value(tc9563->reset_gpio, 1);
-> +	gpiod_set_value_cansleep(tc9563->reset_gpio, 1);
->  
->  	regulator_bulk_disable(ARRAY_SIZE(tc9563->supplies), tc9563->supplies);
->  
-> @@ -501,7 +501,7 @@ static int tc9563_pwrctrl_power_on(struct pci_pwrctrl *pwrctrl)
->  	if (ret < 0)
->  		return dev_err_probe(dev, ret, "cannot enable regulators\n");
->  
-> -	gpiod_set_value(tc9563->reset_gpio, 0);
-> +	gpiod_set_value_cansleep(tc9563->reset_gpio, 0);
->  
->  	fsleep(TC9563_OSC_STAB_DELAY_US);
->  
-> 
-> ---
-> base-commit: 4b18edbd8e70f7e6860d56370f13244896d0f95c
-> change-id: 20260825-pci-pwrctl-tc9563-use-cansleep-for-resx-f6e1f65547fc
-> 
-> Best regards,
-> --  
-> Abel Vesa <abel.vesa@oss.qualcomm.com>
-> 
