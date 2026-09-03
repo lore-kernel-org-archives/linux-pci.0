@@ -1,44 +1,47 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28EE234CFCA;
-	Thu,  3 Sep 2026 23:05:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8DFEB2D3727;
+	Thu,  3 Sep 2026 23:17:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788476740; cv=none; b=jPo0ANoxUb1qy1dwQou6OR14K+E6QVLsCx5Q4fho2yhHPL9bheTx6p6gtNKJPI+8aBsZlQhJAdPh6mK/eOc+cVup0GbbvrIGJkb7lixZDch5pm69yJV/mYX5Rh/azJcQSxfBGR/wAgC0I5IsOyMJmdHgsIbo3IgA+TEervcKI+s=
+	t=1788477468; cv=none; b=KiH6xMut56g49ynKJ7k1FJBSP675AAFza/FG1bs/QXog0XbGrJWeHZgWAHba4an0B+mC2O/1Wf0fL2xfj4oMKnJuU7eLU6E8rJvw86WMSJEtioDM2JsnwOwkQchXPTCe7L1GMDXckbpW9ReFvGo9VrB0Mj63UuuY9FvKbgy6/Hc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788476740; c=relaxed/simple;
-	bh=7wAJrAQK5JISKKxRnovrwP/3jxpCcFk4jzbaLrD3EyU=;
+	s=arc-20240116; t=1788477468; c=relaxed/simple;
+	bh=ZWJ/3x3w0sMhzhHInutTUJVlWfz/6mJWEh0x3bSQ4jw=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=VfWjOAPmKQ7jvebE7dg4ZFYqp0gioS9pkrcuNUepnW7AkZ0rMwNjynFkPTNYvhrGIc82QF+RdywBOOKbMCZIAzuzx3sD4J0TIUJru1eftVQLa7I6lFbJ952O89H3NJSdi72dvK20w43zRJ3/kXv2zUJ4r1lkCRMYIpGIfCmtUtY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RhbzFe9+; arc=none smtp.client-ip=100.103.45.18
+	 Content-Disposition:In-Reply-To; b=Axc5koUfe5U2PvfaZZBw+hqW3V9OI3kQVRuaUKxnwlS+wAd2fRDV26CQpGsNeW2YfQEDcdQ7t+R6R/SLX7a3xCnz7rTet8jJs7RZ7jTZk51PGnauJHG65cwrz0LXinMvQyCXT/LxmWy4hHYhZffiGS9xmngjmHoF5uJP3mWECI8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=n81RaHiK; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RhbzFe9+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A47861F000E9;
-	Thu,  3 Sep 2026 23:05:38 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="n81RaHiK"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BFBF41F000E9;
+	Thu,  3 Sep 2026 23:17:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788476738;
-	bh=R+eZylBeFLCipj4LV/kc98eg7afNWvoivAoeDLzItDA=;
+	s=k20260515; t=1788477466;
+	bh=lfMVJP15CNby6GYqMdk4jgXZ17b/0NA9rJTRDrei0gE=;
 	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=RhbzFe9+VofsnBnBsrlI2uKcJxFWNbA6X2O0NYvJoHWB5OIczyyLlkRshDMI1sxUh
-	 1JJP67iS77NDiWcBN0xt54SFSNDP2A3GFnfKvDWMoNbD/LqIIEL4U9Viwa6whtXPSD
-	 RvF/HjHJMkLv+ZEyq5KRFMjT+5LV4amfecS+TD610hHKEfL+WnhwwKIzYLfQUN/jws
-	 T3PsIabHhcbP/HOqk+nqREw0A47Gj+LV1eME83aZ/D0Wa3pONGDJ09tmkHOVaKG17W
-	 FP+1ln9raqw5EtZfYkEhpzGbUM6o6uU1HhVaJ+uoGv/1rmNaYBgRN7qB/qc4YZpruY
-	 UvDex7e77jhOg==
-Date: Thu, 3 Sep 2026 18:05:37 -0500
+	b=n81RaHiKX/N1T4V7MBRnI8STBkRiyRbfxYT5/VggpJrQ1jn33d/1/dZX5fJI/P2uI
+	 CdTxUq3noSsLyYCt79zposcbGE91xCQTX5S+0OUcmz2Q2cfQOV6rTQ9d/J5x2V67ky
+	 CqXZbMB6J6LoXzDNvz7IcHxoSY0KVqXj14AjUxXAekuYv1Ku+Jkrw1SVi2CKfOUFfn
+	 Nx5gxaH66lXbXNAUFYA894SkUdH9JZtR5YjLnjtL/sjpj1pLssAhAk7Coz9FHZNrME
+	 hr0Toa5eaHxEJ+1+L6Sw+zgIoZA1uk+KtSDkEimn5G73dn+ehW6RqK49YFpxDT/XPJ
+	 /nNTpusVeSaEg==
+Date: Thu, 3 Sep 2026 18:17:44 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Guixin Liu <kanie@linux.alibaba.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Uwe =?utf-8?Q?Kleine-K=C3=B6nig?= <u.kleine-koenig@baylibre.com>,
-	Jonathan Cameron <jic23@kernel.org>, Lukas Wunner <lukas@wunner.de>,
-	Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>,
-	Kees Cook <kees@kernel.org>, Darshit Shah <darnshah@amazon.de>,
-	Brian Norris <briannorris@chromium.org>,
-	Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>,
-	linux-pci@vger.kernel.org, stable@vger.kernel.org
-Subject: Re: [PATCH] PCI/DPC: Honor "pcie_ports=native" when enabling DPC
-Message-ID: <20260903230537.GA2273943@bhelgaas>
+To: Angel J <iamanaws@httpd.dev>, Herve Codina <herve.codina@bootlin.com>,
+	Lizhi Hou <lizhi.hou@amd.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"regressions@lists.linux.dev" <regressions@lists.linux.dev>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-rpi-kernel@lists.infradead.org" <linux-rpi-kernel@lists.infradead.org>,
+	"robh@kernel.org" <robh@kernel.org>,
+	Andrea della Porta <andrea.porta@suse.com>,
+	"florian.fainelli@broadcom.com" <florian.fainelli@broadcom.com>
+Subject: Re: [REGRESSION] PCI: Dynamic OF node creation hangs on invalid
+ bridge configuration
+Message-ID: <20260903231744.GA2281658@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -47,72 +50,121 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260901064554.2178688-1-kanie@linux.alibaba.com>
+In-Reply-To: <GXe6anuewkS4bLNwca3cYOmUxN9csc0TxLYGSBc1qNRmfrmvFlcmD62wEM23TxfzfuXAv4P3yvUv7pyraleARrL1Na-aN8w-t9uc1Igu8DA=@httpd.dev>
 
-On Tue, Sep 01, 2026 at 02:45:54PM +0800, Guixin Liu wrote:
-> Commit 97ca178c899d ("PCI/DPC: Allow DPC on all Downstream Ports when
-> OS controls AER") replaced the AER service bit with host->native_aer
-> when deciding whether to create a DPC service device.  Unlike the AER
-> service bit, host->native_aer does not reflect the "pcie_ports=native"
-> command-line override.
+[+to Herve, Lizhi for PCI dynamic OF node stuff]
+
+On Sun, Aug 23, 2026 at 02:14:25AM +0000, Angel J wrote:
+> Hello,
 > 
-> Consequently, if firmware retains AER control, "pcie_ports=native" no
-> longer enables DPC on Root Ports that advertise both AER and DPC, even
-> though the option is documented to force native DPC handling.
+> This regression was introduced in v6.17-rc1 and remains in the dynamic
+> PCI OF node code. Linux 6.18 fails very early during boot on my Dell XPS
+> 8940 when CONFIG_PCI_DYNAMIC_OF_NODES=y. The display goes black before
+> any useful console or pstore output appears, and the machine remains
+> hung.
+
+Oof, sorry, that's a terrible failure to debug.  Thanks for your
+persistence in chasing it.
+
+I don't think 49d63971f963 ("misc: rp1: RaspberryPi RP1 misc driver")
+is a likely culprit by itself because there's just nothing there that
+looks like it would relate to a Dell XPS 8940.
+
+> Disabling CONFIG_PCI_DYNAMIC_OF_NODES makes the same kernel boot normally.
+> Linux v6.19-rc5 also boots because the RP1 driver stopped selecting that
+> option, not because the dynamic PCI OF node code changed.
 > 
-> Check pcie_ports_native explicitly so both command-line overrides
-> continue to work.
+> Hardware:
 > 
-> Fixes: 97ca178c899d ("PCI/DPC: Allow DPC on all Downstream Ports when OS controls AER")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Guixin Liu <kanie@linux.alibaba.com>
-> ---
->  drivers/pci/pcie/portdrv.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+>   System: Dell XPS 8940, board 0K3CM7, BIOS 2.27.1 (2025-04-03)
+>   CPU: Intel Core i7-11700 (Rocket Lake)
+>   Triggering device: 0000:00:00.0, Intel 8086:4c43
+>   Firmware boot: UEFI, ACPI-based x86_64
 > 
-> diff --git a/drivers/pci/pcie/portdrv.c b/drivers/pci/pcie/portdrv.c
-> index a9cbfc1d2bc7..a05ee7980fb2 100644
-> --- a/drivers/pci/pcie/portdrv.c
-> +++ b/drivers/pci/pcie/portdrv.c
-> @@ -264,7 +264,7 @@ static int get_port_device_capability(struct pci_dev *dev)
->  	 */
->  	if (pci_find_ext_capability(dev, PCI_EXT_CAP_ID_DPC) &&
->  	    pci_aer_available() &&
-> -	    (pcie_ports_dpc_native || host->native_aer))
-> +	    (pcie_ports_native || pcie_ports_dpc_native || host->native_aer))
-
-Oh my goodness.  I think I completely dropped ball on this YEARS ago.
-
-It's crazy that we have "pcie_ports_native" checking littered all
-over.  I think we should instead treat host->native_* as the single
-source of truth, and pay attention to pcie_ports_native when setting
-host->native_*.
-
-Sathy did some great work to do exactly that in 2020, and I never got
-it merged.  I wish I had some great excuse, but I looked at my 2020
-calendar and couldn't find one.  I think I just blew it.
-
-So I think we should resurrect that series and update it as needed and
-solve the problem that way.  I dug out the links just for
-completeness, but we should probably just start with the most recent
-ones (v11 or v12):
-
-  # v2 https://lore.kernel.org/r/cover.1590355211.git.sathyanarayanan.kuppuswamy@linux.intel.com/
-  # v3 https://lore.kernel.org/r/cover.1590355824.git.sathyanarayanan.kuppuswamy@linux.intel.com/
-  # v4 https://lore.kernel.org/r/cover.1590534843.git.sathyanarayanan.kuppuswamy@linux.intel.com/
-  # v5 https://lore.kernel.org/r/cover.1591545462.git.sathyanarayanan.kuppuswamy@linux.intel.com/
-  # v6 https://lore.kernel.org/r/cover.1593195899.git.sathyanarayanan.kuppuswamy@linux.intel.com/
-  # v7 https://lore.kernel.org/r/cover.1595006564.git.sathyanarayanan.kuppuswamy@linux.intel.com/
-  # v8 https://lore.kernel.org/r/cover.1595649348.git.sathyanarayanan.kuppuswamy@linux.intel.com/
-  # v9 https://lore.kernel.org/r/cover.1600457297.git.sathyanarayanan.kuppuswamy@linux.intel.com/
-  # v9 https://lore.kernel.org/r/20200928011131.MI-pJpJNRQw6c35j_O6019flLWHe08C4WvKPmKEbnik@z/
-  # v10 https://lore.kernel.org/r/cover.1603738449.git.sathyanarayanan.kuppuswamy@linux.intel.com/
-  # v11 https://lore.kernel.org/r/cover.1603766889.git.sathyanarayanan.kuppuswamy@linux.intel.com/
-  # v12 https://lore.kernel.org/r/20201126011816.711106-1-helgaas@kernel.org/
-
->  		services |= PCIE_PORT_SERVICE_DPC;
->  
->  	/* Enable bandwidth control if more than one speed is supported. */
-> -- 
-> 2.43.7
+> Test results:
 > 
+>   Linux 6.12.103: good
+>   Linux v6.17-rc1: bad
+>   Linux 6.18.44, CONFIG_PCI_DYNAMIC_OF_NODES=y: bad
+>   Linux 6.18.44, CONFIG_PCI_DYNAMIC_OF_NODES=n: good
+>   Linux 6.18.44, CONFIG_PCI_DYNAMIC_OF_NODES=y, skip invalid bridge: good
+>   Linux v6.19-rc4: bad
+>   Linux v6.19-rc5: good
+>   Linux 4621c338d33f: bad
+>   Linux e55feea3a03a: good
+> 
+> The first-parent boundary between the last two tests is:
+> 
+>   e55feea3a03a ("Merge tag 'soc-fixes-6.19' ...")
+> 
+> That merge contains ce26f588c831 ("misc: rp1: drop overlay support"), which
+> removes:
+> 
+>   select PCI_DYNAMIC_OF_NODES
+> 
+> from MISC_RP1. The generated configurations differed only by:
+> 
+>   -CONFIG_PCI_DYNAMIC_OF_NODES=y
+>   +# CONFIG_PCI_DYNAMIC_OF_NODES is not set
+> 
+> CONFIG_MISC_RP1=m in both. The known-bad 4621c338d33f and Linux 6.18.44
+> both boot after disabling PCI_DYNAMIC_OF_NODES (and MISC_RP1, whose Kconfig
+> select otherwise forces it on).
+> 
+> There is no RP1 device in this machine, and its driver does not probe.
+> MISC_RP1 affects this x86 system only because its Kconfig select enables
+> PCI_DYNAMIC_OF_NODES globally.
+> 
+> I narrowed the hang to dynamic OF node creation for 0000:00:00.0
+> (8086:4c43), the Intel Rocket Lake-S integrated memory controller. On
+> this machine it reports PCI class 0604 and header type 1, but it is bound
+> to icl_uncore and is not a usable forwarding bridge:
+> 
+>   Bus: primary=ff, secondary=ff, subordinate=ff
+>   I/O and memory bridge windows: invalid/all ones
+>   kernel: bridge configuration invalid ([bus ff-ff]), reconfiguring
+> 
+> A minimal dynamic node for this device boots. Adding only
+> device_type="pci" makes it hang. Full PCI dynamic OF node generation also
+> boots when only 0000:00:00.0 is skipped.
+> 
+> I also tested a generic guard in of_pci_make_dev_node(). It reads
+> PCI_PRIMARY_BUS and skips node creation if the primary bus does not match
+> pdev->bus->number, the secondary bus is not greater than the primary bus,
+> or the secondary bus is greater than the subordinate bus. Linux 6.18.44
+> boots with CONFIG_PCI_DYNAMIC_OF_NODES=y and logs:
+> 
+>   pci 0000:00:00.0: skipping dynamic OF node for invalid bridge
+> 
+> The regression was introduced by 49d63971f963 in v6.17-rc1. Commit
+> ce26f588c831 made v6.19-rc5 boot by removing MISC_RP1's select of
+> PCI_DYNAMIC_OF_NODES. That avoids the failing path in the tested
+> configuration but does not change of_pci_make_dev_node().
+> 
+> I do not have a log from the failed boots. No output appeared with
+> earlyprintk=efi,keep, keep_bootcon, ignore_loglevel, loglevel=8,
+> initcall_debug, and EFI pstore enabled. Blacklisting both GPU drivers and
+> disabling the Intel IOMMU did not make the bad kernel boot.
+> 
+> Should of_pci_make_dev_node() reject devices with invalid bridge bus
+> configuration, or should 8086:4c43 use a device-specific quirk? I can
+> prepare and test a patch for either approach. For Linux 6.18 stable,
+> would that fix be preferable to backporting ce26f588c831 and its
+> dependencies?
+
+A quirk doesn't sound right because AFAICS there isn't any hardware
+defect with the 00:00.0 bridge.
+
+> #regzbot introduced: 49d63971f963
+> #regzbot title: PCI_DYNAMIC_OF_NODES early boot hang on ACPI x86
+> 
+> Thanks,
+> Angel J
+> 
+> 
+> 
+> 
+> 
+
+
+
