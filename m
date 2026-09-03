@@ -1,90 +1,244 @@
-Received: from mailout3.hostsharing.net (mailout3.hostsharing.net [144.76.133.104])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4849A3B2FCA;
-	Thu,  3 Sep 2026 08:43:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=144.76.133.104
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F48A42EEC9
+	for <linux-pci@vger.kernel.org>; Thu,  3 Sep 2026 08:47:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788425002; cv=none; b=Cr7DfQfjG9YFhlTPu1NHQgF/UICPQ1HdrV1j4vWHxC7ZxJ43iddImLT0of+fvsSY1ZcoAwxBMGOFBkTMRDEhOKaG8r1uKXXtjvsfQUgR9cebAQnYMRhtd9/GFpqHmwsKUvq/IQkNhMczG61pPKDbWhbUsgHfmiGQdzJkgnVN+hk=
+	t=1788425264; cv=none; b=Kip5OADXdhPCKnBWoK9/BXb1MaErQ17eyfKcpCaM6KIBsT0RXrkkawOLnVHjadb2m4ob3cWNWYL0Zr6fbuIWQvg3cM7/gMw23uHlCh1hJVElcJbZLkl7cbj5amCPg9oq9oJIO9hK3f0UKArZ/lHoKOjiOzsxAHgumsbT5+0JNU4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788425002; c=relaxed/simple;
-	bh=VGWcRq02jO61NDjb0fyieujd+ftQf6pVg1icbTXBPgY=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=l8BGIg3gyfwir4gqbt73YpSb5ve4h+E9Ln0RbbSF42kDfucJfB889N1IpleJBbdPO4gb15SlgJLXy2WL1sgm2zIcjBSBWlK1irhX3yq3jP9LehJ6Lpze0hEjXsPDM0TVW1op/EMjn+WXKqM1hxHgx3P/0DjuxZXxqRafPe1E2Ws=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=144.76.133.104
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
-Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
-	 client-signature ECDSA (secp384r1) client-digest SHA384)
-	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
-	by mailout3.hostsharing.net (Postfix) with ESMTPS id D0572CA8;
-	Thu, 03 Sep 2026 10:35:11 +0200 (CEST)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-	id 7F098600082C; Thu,  3 Sep 2026 10:35:11 +0200 (CEST)
-Date: Thu, 3 Sep 2026 10:35:11 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Terry Bowman <terry.bowman@amd.com>
-Cc: Jonathan Cameron <jic23@kernel.org>, Dave Jiang <dave.jiang@intel.com>,
-	Alison Schofield <alison.schofield@intel.com>,
-	Vishal Verma <vishal.l.verma@intel.com>,
-	Davidlohr Bueso <dave@stgolabs.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J . Wysocki" <rafael@kernel.org>,
-	Jonathan Corbet <corbet@lwn.net>, linux-cxl@vger.kernel.org,
-	Tony Luck <tony.luck@intel.com>, Borislav Petkov <bp@alien8.de>,
-	Hanjun Guo <guohanjun@huawei.com>,
-	Mauro Carvalho Chehab <mchehab@kernel.org>,
-	Shuai Xue <xueshuai@linux.alibaba.com>, Len Brown <lenb@kernel.org>,
-	Ira Weiny <iweiny@kernel.org>, Li Ming <ming.li@zohomail.com>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Ben Cheatham <Benjamin.Cheatham@amd.com>,
-	Richard Cheng <icheng@nvidia.com>,
-	Robert Richter <rrichter@amd.com>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v19 02/14] cxl/ras: Fix cxl_rch_get_aer_severity() wrong
- severity register
-Message-ID: <apkxP_fydVjpULaT@wunner.de>
-References: <20260803221810.3685703-1-terry.bowman@amd.com>
- <20260803221810.3685703-3-terry.bowman@amd.com>
- <anijY3eTVWSqHLxh@wunner.de>
+	s=arc-20240116; t=1788425264; c=relaxed/simple;
+	bh=M7J6iZ+DDWsNVdCjahCrCY47a7y+n2CcoOosL5Xp8Kk=;
+	h=From:In-Reply-To:MIME-Version:References:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=UJbEqNKaDQ1wMoBB6AsF77o4iYla01UnO3uSSo8KGk1yBbQ7ta6OMBaBHfJQNHIRV71EyO2I0LQnt7cNc9Lcvr2cWQ4cFcU72rFMJ3pxWOZW3WPxTWzFC//FRuqBsnp2usLauDJDtfDDLmdWRHb5YcnqOF2z6oSpvgAopf3HqXE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=f93pKcVN; arc=none smtp.client-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="f93pKcVN"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 03A321F00ADB
+	for <linux-pci@vger.kernel.org>; Thu,  3 Sep 2026 08:47:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1788425262;
+	bh=rUZuDzuerz9HTSNz5FjflHQQ0xAjPFwqwzxl7IPdHbU=;
+	h=From:In-Reply-To:References:Date:Subject:To:Cc;
+	b=f93pKcVN+gHTQdD+paQnjjkhRE+sHMYpzOtQjrfGYXyMpi0tEUzPKNvWKx7kEc1B4
+	 fjX6tK14zCNlCWCk5zQhxJnFTp+WHWNAQuDmw4Gm8qpYnJ8P8WSL8ka9jE4Yw8A/g8
+	 uSWv3uj43kLzE0n4Yw5M6lg/eJeAk5AvWZzg/yDP3X1euCuH6D0+/RalCO+kwToemF
+	 1TwAf2ABM+eO7iItTz0U4SR4Pcj9z0WpzcZpo0QN8zQItE3M5Elj9I5VTOAJST2VCS
+	 808B1EFd4F72tmAF7VDqTmrRhxUjODv4HsMG21FA8Mg4XRpyGNCO3bVRQNvaFpE9Kk
+	 qNFZOiFVjC1wg==
+Received: by mail-lj1-f171.google.com with SMTP id 38308e7fff4ca-39c86ce9e29so14535071fa.3
+        for <linux-pci@vger.kernel.org>; Thu, 03 Sep 2026 01:47:41 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AKwUvByrUnKfSkpUJ28gI6rxfdRwKHxBX5v4o+VpP6X7p41zpK6j9Ausds7sswWIo6CvBrYC8EVNjtLSoGk=@vger.kernel.org
+X-Gm-Message-State: AFuF++lfP1gRkkbkslRwnRa9NPbqUqewM01l2isBfpCTd2wU2gnAy0pF
+	fvLPVP0yZ1/BF67a/8jpMmELG35BLbm9ItN5xkR7imY8hYexWyksoUneroKxCVAKzmRnvC0iNIQ
+	whABLW+1jyYDy9zGpIMDcyUv/wDwOeyx+zy52+DhFTQ==
+X-Received: by 2002:a2e:a98d:0:b0:3a1:8510:cbab with SMTP id
+ 38308e7fff4ca-3a34fd3b9f5mr20178881fa.12.1788425260597; Thu, 03 Sep 2026
+ 01:47:40 -0700 (PDT)
+Received: from 969154062570 named unknown by gmailapi.google.com with
+ HTTPREST; Thu, 3 Sep 2026 01:47:39 -0700
+Received: from 969154062570 named unknown by gmailapi.google.com with
+ HTTPREST; Thu, 3 Sep 2026 01:47:39 -0700
+From: Bartosz Golaszewski <brgl@kernel.org>
+In-Reply-To: <20260903-pci-tc9563-aux-v2-3-34c625b542c1@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <anijY3eTVWSqHLxh@wunner.de>
+References: <20260903-pci-tc9563-aux-v2-0-34c625b542c1@oss.qualcomm.com> <20260903-pci-tc9563-aux-v2-3-34c625b542c1@oss.qualcomm.com>
+Date: Thu, 3 Sep 2026 01:47:39 -0700
+X-Gmail-Original-Message-ID: <CAMRc=MdpUaJ8sJczbN592wncBZvdhaUW2rcA3CjyxS8fPKAoGw@mail.gmail.com>
+X-Gm-Features: AcwNN1W4N5MlwjhagTYwb_RNFsJKpxi_ErCQwMyDXxajkEh9gtHOtruNUgarkj4
+Message-ID: <CAMRc=MdpUaJ8sJczbN592wncBZvdhaUW2rcA3CjyxS8fPKAoGw@mail.gmail.com>
+Subject: Re: [PATCH v2 3/5] PCI/pwrctrl: tc9563: add GPIO auxiliary device support
+To: Lorenzo Bianconi <lorenzo.bianconi@oss.qualcomm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	=?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
+	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
+	Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>, Linus Walleij <linusw@kernel.org>, 
+	Bartosz Golaszewski <brgl@kernel.org>, Bjorn Andersson <andersson@kernel.org>, 
+	Konrad Dybcio <konradybcio@kernel.org>, Michael Walle <mwalle@kernel.org>, 
+	Alex Elder <elder@riscstar.com>, Daniel Thompson <daniel@riscstar.com>, linux-pci@vger.kernel.org, 
+	devicetree@vger.kernel.org, linux-gpio@vger.kernel.org, 
+	linux-arm-msm@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-Hi Terry,
+On Thu, 3 Sep 2026 09:52:59 +0200, Lorenzo Bianconi
+<lorenzo.bianconi@oss.qualcomm.com> said:
+> The TC9563 embeds a GPIO controller used for per-port reset signals.
+> Create an auxiliary device for it so the gpio-tc9563 driver can
+> register the GPIO chip and enable DT-based GPIO lookups. Pass the
+> tc9563 regmap to the auxiliary device as its platform data.
+>
+> The downstream port DT parsing loop gains an of_node_is_type() filter
+> to skip non-PCI child nodes such as the GPIO controller node.
+>
+> The pwrctrl driver does not wait for the GPIO chip to be probed. The
+> per-port reset GPIO lookup, returning -EPROBE_DEFER until the chip is
+> registered, is added in the next patch.
+>
+> Select AUXILIARY_BUS and GPIO_TC9563 in Kconfig.
 
-You've submitted v20 of this series, but the following
-questions haven't been addressed yet AFAICS.  I'd be
-grateful if you could take a look:
+It's no longer true and also, it's clear from the patch so we don't have to
+have it in the commit message.
 
-On Sun, Aug 09, 2026 at 05:57:23PM +0200, Lukas Wunner wrote:
-> Am I missing something?  Is a scenario ever conceivable where the RCEC
-> receives a message with different severity than what is inferred from
-> the registers by cxl_rch_get_aer_severity()?
-[...]
-> These so-called Advisory Non-Fatal Errors set one bit in the Correctable
-> Error Status Register (Advisory Non-Fatal Error Status, bit 13) and
-> additionally one or more bits in the Uncorrectable Error Status Register
-> (see the commit for details).
-> 
-> cxl_rch_get_aer_severity() is not able to cope with such errors and
-> will incorrectly infer that the severity is AER_NONFATAL.
-> 
-> Now I *think* this is not a problem because Advisory Non-Fatal Errors
-> are masked by default and the commit only unmasks them on regular PCI
-> devices, not in the RCRB of a CXL device.  Only once bit 13 in the
-> Correctable Error Mask Register is cleared in the RCRB will
-> cxl_rch_get_aer_severity() fail.  Right?
+>
+> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@oss.qualcomm.com>
+> ---
+>  drivers/pci/pwrctrl/Kconfig              |  1 +
+>  drivers/pci/pwrctrl/pci-pwrctrl-tc9563.c | 80 ++++++++++++++++++++++++++++++--
+>  2 files changed, 78 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/pci/pwrctrl/Kconfig b/drivers/pci/pwrctrl/Kconfig
+> index 1952ab4f29b6..38aab596aa04 100644
+> --- a/drivers/pci/pwrctrl/Kconfig
+> +++ b/drivers/pci/pwrctrl/Kconfig
+> @@ -29,6 +29,7 @@ config PCI_PWRCTRL_TC9563
+>  	select PCI_PWRCTRL
+>  	default m if ARCH_QCOM
+>  	depends on I2C
+> +	depends on GPIO_TC9563
+>  	select REGMAP_I2C
+>  	help
+>  	  Say Y here to enable the PCI Power Control driver of TC9563 PCIe
+> diff --git a/drivers/pci/pwrctrl/pci-pwrctrl-tc9563.c b/drivers/pci/pwrctrl/pci-pwrctrl-tc9563.c
+> index b0d8912690a2..6df512d78b54 100644
+> --- a/drivers/pci/pwrctrl/pci-pwrctrl-tc9563.c
+> +++ b/drivers/pci/pwrctrl/pci-pwrctrl-tc9563.c
+> @@ -4,11 +4,13 @@
+>   */
+>
+>  #include <linux/array_size.h>
+> +#include <linux/auxiliary_bus.h>
+>  #include <linux/bitfield.h>
+>  #include <linux/bits.h>
+>  #include <linux/delay.h>
+>  #include <linux/device.h>
+>  #include <linux/gpio/consumer.h>
+> +#include <linux/gpio/driver.h>
+>  #include <linux/i2c.h>
+>  #include <linux/module.h>
+>  #include <linux/of.h>
+> @@ -20,12 +22,10 @@
+>  #include <linux/regulator/consumer.h>
+>  #include <linux/string.h>
+>  #include <linux/types.h>
+> +#include <linux/soc/qcom/tc9563.h>
+>
+>  #include "../pci.h"
+>
+> -#define TC9563_GPIO_CONFIG		0x801208
+> -#define TC9563_RESET_GPIO		0x801210
+> -
+>  #define TC9563_PORT_L0S_DELAY		0x82496c
+>  #define TC9563_PORT_L1_DELAY		0x824970
+>
+> @@ -393,6 +393,73 @@ static int tc9563_pwrctrl_parse_device_dt(struct device_node *node,
+>  	return 0;
+>  }
+>
+> +static void tc9563_pwrctrl_adev_release(struct device *dev)
+> +{
+> +	struct auxiliary_device *adev = to_auxiliary_dev(dev);
+> +
+> +	of_node_put(adev->dev.of_node);
+> +	kfree(adev);
+> +}
+> +
+> +static void tc9563_pwrctrl_adev_remove(void *data)
+> +{
+> +	struct auxiliary_device *adev = data;
+> +
+> +	auxiliary_device_delete(adev);
+> +	auxiliary_device_uninit(adev);
+> +}
+> +
+> +static int tc9563_pwrctrl_adev_add(struct device *dev, const char *name,
+> +				   u32 id, struct device_node *of_node,
+> +				   void *priv_data)
+> +{
+> +	struct auxiliary_device *adev;
+> +	int ret;
+> +
+> +	adev = kzalloc_obj(*adev);
+> +	if (!adev)
+> +		return -ENOMEM;
+> +
+> +	adev->id = id;
+> +	adev->name = name;
+> +	adev->dev.parent = dev;
+> +	adev->dev.platform_data = priv_data;
+> +	adev->dev.release = tc9563_pwrctrl_adev_release;
+> +	adev->dev.of_node = of_node_get(of_node);
 
-Thanks,
+Ah you're doing it because .release() will be called if auxiliary_device_add()
+fails. It's fine I guess.
 
-Lukas
+> +
+> +	ret = auxiliary_device_init(adev);
+> +	if (ret) {
+> +		of_node_put(adev->dev.of_node);
+> +		kfree(adev);
+> +		return ret;
+> +	}
+> +
+> +	ret = auxiliary_device_add(adev);
+> +	if (ret) {
+> +		auxiliary_device_uninit(adev);
+> +		return ret;
+> +	}
+> +
+> +	return devm_add_action_or_reset(dev, tc9563_pwrctrl_adev_remove, adev);
+> +}
+> +
+> +static int tc9563_pwrctrl_add_gpio_adev(struct tc9563_pwrctrl *tc9563)
+> +{
+> +	struct device *dev = tc9563->pwrctrl.dev;
+> +	struct fwnode_handle *fwnode;
+> +	int ret;
+> +
+> +	fwnode = gpiochip_node_get_first(dev);
+> +	if (!fwnode)
+> +		return 0;
+> +
+> +	ret = tc9563_pwrctrl_adev_add(dev, TC9563_GPIO_DEV_NAME, 0,
+> +				      to_of_node(fwnode), tc9563->regmap);
+> +	fwnode_handle_put(fwnode);
+> +
+> +	return ret;
+> +}
+> +
+>  static int tc9563_pwrctrl_power_off(struct pci_pwrctrl *pwrctrl)
+>  {
+>  	struct tc9563_pwrctrl *tc9563 = container_of(pwrctrl,
+> @@ -565,6 +632,9 @@ static int tc9563_pwrctrl_probe(struct platform_device *pdev)
+>  	 */
+>  	port = TC9563_USP;
+>  	for_each_child_of_node_scoped(node, child) {
+> +		if (!of_node_is_type(child, "pci"))
+> +			continue;
+> +
+>  		if (++port >= TC9563_MAX)
+>  			break;
+>
+> @@ -596,6 +666,10 @@ static int tc9563_pwrctrl_probe(struct platform_device *pdev)
+>  	tc9563->pwrctrl.power_on = tc9563_pwrctrl_power_on;
+>  	tc9563->pwrctrl.power_off = tc9563_pwrctrl_power_off;
+>
+> +	ret = tc9563_pwrctrl_add_gpio_adev(tc9563);
+> +	if (ret)
+> +		goto remove_i2c;
+> +
+>  	ret = devm_pci_pwrctrl_device_set_ready(dev, &tc9563->pwrctrl);
+>  	if (ret)
+>  		goto power_off;
+>
+> --
+> 2.55.0
+>
+>
+
+Reviewed-by: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
