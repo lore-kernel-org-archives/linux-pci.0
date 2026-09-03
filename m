@@ -1,63 +1,67 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C22B74A440A
-	for <linux-pci@vger.kernel.org>; Thu,  3 Sep 2026 13:41:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 112784A8FF1;
+	Thu,  3 Sep 2026 13:47:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788442918; cv=none; b=gojiAXRz4P2koI0JDKWxpRvDsdMYZeSYnENz27nbTuFJIs2WUkLklZ+vOz9v4Ofu54ZAoY9v7BUGBlpE657W2FU3RjUn/zNWfqjHeHNhPmA2O2AUHxL9TD18KFybHbAerwYzf3ZoBXxN4nGVvalDjwIpMvpNKNj9vDbihs4STAM=
+	t=1788443260; cv=none; b=Ey/q3VMahuNUqAQne4R7Tmd9Zyu6DtoQSnDiCFcIggrr2e3CFVdcMiE+axMKCSB06qRPoKlT9MSuCgBUHBe/wJw/7gLkbzCXUYGBg916nFnjxhg5j0LWaEbulzXyr15YEb5lGRBe2B4NM4ejspd6WRWl0uaETIh/CLst7C9+/jg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788442918; c=relaxed/simple;
-	bh=S+JqRGvdqleqxEOguJ44gl3Q6djQSIx7vr9PEYMQCnc=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=dGLSWqM4SXicvaKkW/99yLkrGerQGNlZR9wwQnfuyGWaY/JC81z6rBDKMDul7Z9VsWSRMwY0RdQ6OBeS/Lg61YGonMu++8jm7uWbBGfGEA0K1tv/sVE4jy3FgUDZ/C8/ouZ6CPkT1t53mT8nPFdubDMS+eKqsrhlvHRWBI/Od/4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bcop7bZw; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bcop7bZw"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 240D01F00A3D;
-	Thu,  3 Sep 2026 13:41:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788442913;
-	bh=S+JqRGvdqleqxEOguJ44gl3Q6djQSIx7vr9PEYMQCnc=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=bcop7bZwftqFeahDbR1cDyuS4F7JnbVSPZaSMJCBmPCZFua+TWCVlvnUZh4QOBvwB
-	 j0Co2y+axXl5WlGrLmEODX105q1NTizVxSVm2glDwprKJFlY/t3vX7LWQT08eXoXS7
-	 zQHVOGzD1EOu4I8K0anlzLJvVLiyqgYI7p1o2dApeeiQUHYrQqNHNPGW4G1v2zuNmV
-	 iFSqUD4/YHatvJy2gGtGzG90aN4PvNr5yyi+8aUQBW/cTqg1prYNWQXKP99cmPNUi5
-	 3e2k5meAWjZpi5/oXPPH4prHYiPo5WbhBE0FD97UGWuxhLtisZ9Csh4qwYlT/M4fD9
-	 ag71pCyXYusLw==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 2/2] PCI: rzg3s-host: Add support for RZ/G3L SoC
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Biju Das" <biju.das.jz@bp.renesas.com>
-Cc: linux-pci@vger.kernel.org, wsa+renesas@sang-engineering.com
-In-Reply-To: <20260903133320.144245-3-biju.das.jz@bp.renesas.com>
-References: <20260903133320.144245-1-biju.das.jz@bp.renesas.com>
- <20260903133320.144245-3-biju.das.jz@bp.renesas.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 03 Sep 2026 13:41:52 +0000
-Message-Id: <20260903134153.240D01F00A3D@smtp.kernel.org>
+	s=arc-20240116; t=1788443260; c=relaxed/simple;
+	bh=fOtcCmlhybCj+7AQr2xFz8CmqmsOUn+94FPHpgWSpfs=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=iY+dANcPEQJ83RyQgIlJhu0iVvcAAFvZUhv/bg/fpHnlJJdRHY+2OFWEPYSM17viFfRAdQDNqnT7dHRJTssyooG/pv9Cx8cD5JUo/I2JEsU4nM0b7X7F1/SCmxC1QYVKnToCIzL08XpsKiVLl5JIimNTK2TiZfhUjx8Xm1TROcE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6E1B61F000E9;
+	Thu,  3 Sep 2026 13:47:19 +0000 (UTC)
+From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+To: Manivannan Sadhasivam <mani@kernel.org>, 
+ Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ Bjorn Helgaas <bhelgaas@google.com>, 
+ Mrinmay Sarkar <mrinmay.sarkar@oss.qualcomm.com>
+Cc: linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org, 
+ linux-kernel@vger.kernel.org, 
+ Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>, 
+ Rama Krishna <rama.krishna@oss.qualcomm.com>, 
+ Rashmi A N <ayiluri.rashmi@oss.qualcomm.com>
+In-Reply-To: <20260831-skip_suspend-v1-1-ba2d877e22b1@oss.qualcomm.com>
+References: <20260831-skip_suspend-v1-1-ba2d877e22b1@oss.qualcomm.com>
+Subject: Re: [PATCH] PCI: qcom: Skip system suspend/resume for
+ firmware-managed PCIe
+Message-Id: <178844323897.126132.10981127519752342599.b4-ty@b4>
+Date: Thu, 03 Sep 2026 15:47:18 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+X-Mailer: b4 0.15.2
 
-> Add SoC-specific data for the RZ/G3L (R9A08G046) PCIe controller and
-> register its "renesas,r9a08g046-pcie" compatible string. RZ/G3L reuses
-> the RZ/G3E config init/deinit callbacks and power resets, with its own
-> L1-allow syscon offset and mask.
->=20
-> Also increase the timeout in rzg3s_pcie_set_max_link_speed() to fix
-> the "Failed to set max link speed" message seen on RZ/G3L.
->=20
-> Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
-> Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
 
-Sashiko has reviewed this patch and found no issues. It looks great!
+On Mon, 31 Aug 2026 19:07:02 +0530, Mrinmay Sarkar wrote:
+> For firmware-managed PCIe controllers, all resources, including clocks,
+> regulators, resets, PHYs and link state, are owned and managed by
+> firmware. The host driver must not attempt to manage these resources
+> during system suspend or resume.
+> 
+> Skip the suspend and resume operations for firmware-managed controllers.
+> The associated power domain transitions are handled independently by the
+> genpd framework through its own system suspend/resume callbacks, so no
+> explicit action is required by the PCIe driver.
+> 
+> [...]
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260903133320.1442=
-45-1-biju.das.jz@bp.renesas.com?part=3D2
+Applied, thanks!
+
+[1/1] PCI: qcom: Skip system suspend/resume for firmware-managed PCIe
+      commit: 89d17a6331087a76aea1a3a6c03dc45a19d306f2
+
+Best regards,
+-- 
+மணிவண்ணன் சதாசிவம்
+
 
