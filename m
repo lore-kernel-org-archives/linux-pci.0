@@ -1,119 +1,67 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 18810428470;
-	Thu,  3 Sep 2026 08:17:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1808E43230D
+	for <linux-pci@vger.kernel.org>; Thu,  3 Sep 2026 08:20:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788423423; cv=none; b=qEelhsY58CpoICOSwjHi4kJm8sLEC3tJ7uOa/7Ym+yFiIFQLM0mAdBEdfbUzBQ0iC+nRfCH4b6yPmauw87mjs9wsi99B1IeW7TgUK/S6dY5KTrSbj5FiK0fCjEwpyAuUkdSgaeF25mT9fUbfDybWW9bTZopWvr+qaVYeEPmO4zM=
+	t=1788423611; cv=none; b=E5FiaoBZcZCn5jvaAHQA6mXJKIdQw6M3J6u7gOq1EOI9Hl2yvF1S98Z7q5Z+6ZWTl/M/+1FlWleed3x7i+B90uydvY3qy5jV9WsxSEJ7z1YuGJcaqWSqP1yKP+Z66WVbZloQMsyRY3GKO5VmSksWKvgHqEMeMLE78+OP8bwkfZ4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788423423; c=relaxed/simple;
-	bh=nFgHUmXY0H0fGkq1ZSQWmQyJVVAEuW1XpraJXIMbN64=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=XuU/YcJsc0GtzdPAMunLtL3PqsPQmbnf3CggNw9RQ/ljjMP5eFIWmrJ2RW2llP8whbbM8AIvQT+M+fLbDA9SFrox/DitVmg+bTwSNpyYHWT+mR/lUucpPKYgyzA99v7myx8+peSqwYg9+6zKd2S+B85WbQLrzF8YpacD6882Jlw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hmru68w9; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788423611; c=relaxed/simple;
+	bh=0v+75UbFVa71mPXUDuDA90zV/XuPMaLrTQRlGB5LzSw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=LQYW4mB3RNAhGY955J/3pAlFD1UJdL3EeZmubqXkloHaqJ5PRiFDRRnpC4utOho2HDuL3ijHD5W9AefBXxtgHtI8N+N0EOj3bR0g6RG9dtIFZNFPNRvukqOK/z7jXJGfDZbgE8/UZafxi7yb16EHqElZTM+JYhCgkMqT1Q5+NNc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jojqdBLB; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hmru68w9"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7C2211F00A3A;
-	Thu,  3 Sep 2026 08:17:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jojqdBLB"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0897F1F000E9;
+	Thu,  3 Sep 2026 08:20:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788423421;
-	bh=gWcXeQFwAUR5SUy0OZaHIclAg5KjbV7/WpZ9VNjLN1I=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=hmru68w90RnA2Jajtar28jrPB2qzKnLYqrvFPh8co+i8C0+L64kd0u01HLid+g23a
-	 svFKgJ8uxpmYfIHC6TsOin+q2N4uQxxECJTgRKh9z/ytrABpehoHg9e3Sf+lydYMHW
-	 9QOkDUfnxfSLRQEnl1SmnVwGgeSjAGXHRVOGTUnhSFepqq8OMC7uu2CbjczBtbD6EG
-	 KB0t5jtWCbxIimaxa3suaMpJyt4hugX+8IO4L4s8CVbe2vq02qptUAJVtdUOs4b8sw
-	 DL9EIKaCUwEsbzl0iFSDCz7k93WffG0oOVd6JeW3TWrrSpTnjCY+bd9vxuYGuti08R
-	 v5CU1Zt75S01Q==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 7/8] hwtracing: hisi_ptt: Add pattern PMU config for
- trace format selection
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Sizhe Liu" <liusizhe5@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-perf-users@vger.kernel.org
-In-Reply-To: <20260903075241.1445338-8-liusizhe5@huawei.com>
-References: <20260903075241.1445338-1-liusizhe5@huawei.com>
- <20260903075241.1445338-8-liusizhe5@huawei.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 03 Sep 2026 08:17:01 +0000
-Message-Id: <20260903081701.7C2211F00A3A@smtp.kernel.org>
+	s=k20260515; t=1788423607;
+	bh=R/ILnFYwY5kyNXCGppBs9AQYzpP7GN2ZEnkx5tVKRjs=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=jojqdBLB1KO91UXlx6S2Z+ivdMkRUjlrjCm8sEkobHf08zVo8rx5XQfAPJ1FkZ7rP
+	 RUrnKsxdJ0XOJP9TfFpIMXB7yiXRwAEOzB+olh23GehiWTyf5wQjv0uuMudSdDuL+8
+	 MaBulRWW7HAyfa+aLEC06b2eNcYjJGrAeJnWN93MpdpIERcEMz83zj2arcyogLviI8
+	 ZVkC4z9VTQT3gL8igsLw+vXjeFeyt79wbMJfNB+HUkvZRZ/HuHACixn7pdSSUHDOVo
+	 OkimA+qVj+6vbmSX/RHfDTmvs5mZJlWVDStqkGM2UKFddUpu7hvxfxePSCyxfQGY+J
+	 xA9QL3F1vn3lA==
+Date: Thu, 3 Sep 2026 10:20:03 +0200
+From: Niklas Cassel <cassel@kernel.org>
+To: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	linux-rockchip@lists.infradead.org, linux-pci@vger.kernel.org,
+	Peter Geis <pgwipeout@gmail.com>
+Subject: Re: [PATCH 0/2] Two small INTx fixes for Rockchip's dwc based PCIe
+ controller driver
+Message-ID: <apktsxxgZ3yFclo0@ryzen>
+References: <1788403477-71491-1-git-send-email-shawn.lin@rock-chips.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1788403477-71491-1-git-send-email-shawn.lin@rock-chips.com>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
-- [Low] The `pattern` field in `struct hisi_ptt_trace_ctrl` is defined as a=
- 1-bit bitfield, despite being documented and parsed as a 4-bit field.
-- [Low] Typo in the newly added documentation: 'message-type-basedfield' is=
- missing a space.
---
+Hello Shawn,
 
-commit 089e32a211137f88a4d8b5c44e954565dc797fe5
-Author: Sizhe Liu <liusizhe5@huawei.com>
+On Thu, Sep 03, 2026 at 10:44:35AM +0800, Shawn Lin wrote:
+> 
+> This small series fixes two INTx related issues in the Rockchip
+> DesignWare PCIe controller driver.
+> 
+> Note that patch 2 depends on b376b3ff9cb0 which is not yet in Linus'
+> tree, so this series is based on linux-next.
 
-hwtracing: hisi_ptt: Add pattern PMU config for trace format selection
+$ git tag --contains b376b3ff9cb0
+v7.3-rc1
 
-This commit introduces a pattern PMU config field for controlling the TLP
-header format traced by the hardware. It allows selecting between a legacy
-format and a new format using a 4-bit configuration value.
+FWIW, the commit you are referencing is in Linus' tree already.
 
-> diff --git a/Documentation/trace/hisi-ptt.rst b/Documentation/trace/hisi-=
-ptt.rst
-> index f6a2655f99e57..c95eaa12f4d35 100644
-> --- a/Documentation/trace/hisi-ptt.rst
-> +++ b/Documentation/trace/hisi-ptt.rst
-[ ... ]
-> @@ -255,7 +255,28 @@ directly from the TLP header.
->       DW2 [                     Header DW2                            ]
->       DW3 [                     Header DW3                            ]
-> =20
-> -5. Memory Management
-> +5. Trace pattern
-> +-----------------
-> +
-> +You can control whether the trace is taken with the new version of the
-> +TLP header format by specifying the `pattern` parameter. The default
-> +value is 0, which means the legacy format is used for backward
-> +compatibility. The parameter value is 4 bit and bit[3:1] are currently
-> +reserved for extension. Current supported values are shown below:
-> +
-> +- 4'b0000: legacy trace format
-> +    DW2 and DW3 are printed with generic field names only, and
-> +    no message-type-basedfield decoding.
 
-[Severity: Low]
-This isn't a bug, but there is a typo here: "message-type-basedfield" is
-missing a space.
-
-[ ... ]
-> diff --git a/drivers/hwtracing/ptt/hisi_ptt.h b/drivers/hwtracing/ptt/his=
-i_ptt.h
-> index 46030aa880811..584f65ba1e320 100644
-> --- a/drivers/hwtracing/ptt/hisi_ptt.h
-> +++ b/drivers/hwtracing/ptt/hisi_ptt.h
-[ ... ]
-> @@ -139,6 +142,7 @@ struct hisi_ptt_trace_ctrl {
->  	u32 filter:16;
->  	u32 format:1;
->  	u32 type:4;
-> +	u32 pattern:1;
->  };
-
-[Severity: Low]
-Could this 1-bit bitfield inadvertently truncate the 4-bit pattern value?
-
-The documentation and hisi_ptt_pmu_init_configs() parse the pattern as a
-4-bit field, but assigning it to this 1-bit bitfield will truncate it.
-
-If future extensions utilize the reserved bits (e.g., a value of 2 or 3),
-the truncation would silently drop those bits, which could cause the
-driver to mistakenly fall back to the legacy format.
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260903075241.1445=
-338-1-liusizhe5@huawei.com?part=3D7
+Kind regards,
+Niklas
