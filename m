@@ -1,26 +1,32 @@
-Received: from mail-m3284.qiye.163.com (mail-m3284.qiye.163.com [220.197.32.84])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C44FC46A5EB
-	for <linux-pci@vger.kernel.org>; Thu,  3 Sep 2026 09:02:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.32.84
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id D724C3FCB2C;
+	Thu,  3 Sep 2026 09:25:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788426150; cv=none; b=sA99C2XIRBvDYTdRpY0AXOy7WPOT0bz1x+S6czjd9FViyYRfwN+Dx3X2RoJPbCJnnSo3vkn9ekEtmGu0YHTPkFdk7Rd8VgFc4wdLFOer1X8o+1Fi4hI74GkBMgtWgAYR81KsDr8LXVi4tX4ZAVTqiE0cqYtHDwWV+4xz8WMS638=
+	t=1788427512; cv=none; b=ls8gaTcWqJgZW0A84hXP+Nqd8QMrprA5CABzS4LK3ndYXPNb6vZgLAzmDVtixsSlrDOv6UfnOlQ/8iRiCK/IqMZ+SykoKufOrJ1IijwuUSe2J/3sylLsw0CV3dLumpaWDDHXd/t0kz70Hccqk62ScqQqbni1D/9pzUxoF8rTXkk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788426150; c=relaxed/simple;
-	bh=+xhlkyyUMGQGdG5rZCfQX+1NidOn/t+7KHSC2MKrWco=;
-	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=hgyp9zaGIMKvby/NPJqa7bx8QAhE/yUM8WApMZMuTT+hIzw1pPBnlInzJQ7P2LOgZ9plhH472TMoo/ANHME+7LvGZ/MzSpWCORAUvhQfPumy4DP/1mNuKR/d4zyMCE9Pck0juHGaV6wkhZ60K8A9Q+cs3j+mMZBe9DQbedGL3s0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=jaamjoFU; arc=none smtp.client-ip=220.197.32.84
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
+	s=arc-20240116; t=1788427512; c=relaxed/simple;
+	bh=pSMZQEwzLlPeENSeAPB4V7+S4utGa85l9qvTRPtjKpY=;
+	h=Message-ID:Date:MIME-Version:Subject:From:To:References:
+	 In-Reply-To:Content-Type; b=ZuL2qSxb9GSFyT6e6Tvj07uayd+f1X/SPW+lsAMggL/Tk50teb4CNSNXAY/tlyJQpr/epzjezG/g+Y5Z79CCLhhZ+WxHcHYjm+rAsjveCsX1azsOwQzIzZLpVd3ll5YHNzrsv9AoPFVGoZ0X9h3X4HDgOEmiryt9t6exn3ZlgZQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=Mksl4vf3; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="jaamjoFU"
-Received: from [172.16.12.48] (unknown [61.154.14.86])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 4c64fdfbf;
-	Thu, 3 Sep 2026 16:26:51 +0800 (GMT+08:00)
-Message-ID: <aa7c0d0b-7522-40e4-9249-4cf220fce3b7@rock-chips.com>
-Date: Thu, 3 Sep 2026 16:26:50 +0800
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="Mksl4vf3"
+Received: from [10.95.64.226] (unknown [4.194.122.144])
+	by linux.microsoft.com (Postfix) with ESMTPSA id 808AA20B712B;
+	Thu,  3 Sep 2026 02:24:27 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 808AA20B712B
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1788427473;
+	bh=DeRlWUY9riKKuCFbLCkMIFXTu78+dt2jtPNsWfNeI8w=;
+	h=Date:Subject:From:To:References:In-Reply-To:From;
+	b=Mksl4vf3lam2WRPtY3gE1Rv184miaJzZw7ouv9q5NAc6aZTqdRptwfYYCF21KjVgu
+	 RYMwpxOQrfzbfIp+YBW5PgZDApa+U8e27HMuRFKxeuEIlD+BostRK5Kkwr8hmlTGgt
+	 hZxNCJUxYO/zBbhAp49KHozA/hwCXL7VmUbxA5i8=
+Message-ID: <b85add4c-9492-4316-b0ee-6863d5c5d131@linux.microsoft.com>
+Date: Thu, 3 Sep 2026 14:55:01 +0530
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -28,53 +34,123 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Cc: shawn.lin@rock-chips.com, Bjorn Helgaas <bhelgaas@google.com>,
- Manivannan Sadhasivam <mani@kernel.org>, linux-rockchip@lists.infradead.org,
- linux-pci@vger.kernel.org, Peter Geis <pgwipeout@gmail.com>
-Subject: Re: [PATCH 0/2] Two small INTx fixes for Rockchip's dwc based PCIe
- controller driver
-To: Niklas Cassel <cassel@kernel.org>
-References: <1788403477-71491-1-git-send-email-shawn.lin@rock-chips.com>
- <apktsxxgZ3yFclo0@ryzen>
-From: Shawn Lin <shawn.lin@rock-chips.com>
-In-Reply-To: <apktsxxgZ3yFclo0@ryzen>
+Subject: Re: [PATCH v2] PCI: hv: warn when wait_for_response() waits
+ indefinitely
+From: Naman Jain <namjain@linux.microsoft.com>
+To: Sahil Chandna <sahilchandna@linux.microsoft.com>, kys@microsoft.com,
+ haiyangz@microsoft.com, mhklinux@outlook.com,
+ hamzamahfooz@linux.microsoft.com, wei.liu@kernel.org, decui@microsoft.com,
+ longli@microsoft.com, lpieralisi@kernel.org, kwilczynski@kernel.org,
+ mani@kernel.org, robh@kernel.org, bhelgaas@google.com,
+ linux-hyperv@vger.kernel.org, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+References: <20260902115854.2629164-1-sahilchandna@linux.microsoft.com>
+ <f3fe2dd2-51d9-42c0-8692-83976139f7a7@linux.microsoft.com>
+Content-Language: en-US
+In-Reply-To: <f3fe2dd2-51d9-42c0-8692-83976139f7a7@linux.microsoft.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-HM-Tid: 0aa06660c06b03a4kunm327acd4f9a4d1
-X-HM-MType: 1
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFITzdXWRgWCB1ZQUpXWS1ZQUlXWQ8JGhUIEh9ZQVlCSE9IVh8ZSk8fSR1OHUMYTFYVFA
-	kWGhdVEwETFhoSFyQUDg9ZV1kYEgtZQVlNSlVKTk9VSk9VQ01ZV1kWGg8SFR0UWUFZT0tIVUpLSU
-	9PT0hVSktLVUpCS0tZBg++
-DKIM-Signature: a=rsa-sha256;
-	b=jaamjoFUreTM837YI2TiFdKX4zFjHp4FDU4+iM2jOSmW2cyUwPrFsBafMj14Xg8Ym+itKEJDQEFLt6DRkmEyK1tBl4JmzlrH6Dz4GSljNajtb+JQHvy1fltoVtwBcdfvinSAIR4r7uvUCRrD+QBuHAlFLcYBVk6jsxSkOVJ/heI=; c=relaxed/relaxed; s=default; d=rock-chips.com; v=1;
-	bh=/UhlaAB1/S1eXNI2E1Gi/N3a6HvqV7vxHRIaDiB8rOw=;
-	h=date:mime-version:subject:message-id:from;
 
-在 2026/09/03 星期四 16:20, Niklas Cassel 写道:
-> Hello Shawn,
+
+
+On 9/3/2026 2:31 PM, Naman Jain wrote:
 > 
-> On Thu, Sep 03, 2026 at 10:44:35AM +0800, Shawn Lin wrote:
+> 
+> On 9/2/2026 5:28 PM, Sahil Chandna wrote:
+>> A guest can wait indefinitely in wait_for_response() for the host to
+>> send either a rescind message or a packet completion. If the
+>> host does not send either, the guest can remain blocked with no
+>> diagnostic indicating a reason.
+>> This was observed during a guest kernel upgrade in which the
+>> host-side application handling the PCI channel faulted, causing the
+>> guest to never receive the completion request.
+>> Add a warning in wait_for_response() when the wait exceeds
+>> a timeout so that such a hang is visible in the guest's kernel log
+>> and can be correlated with host-side state.
 >>
->> This small series fixes two INTx related issues in the Rockchip
->> DesignWare PCIe controller driver.
+>> Suggested-by: Hamza Mahfooz <hamzamahfooz@linux.microsoft.com>
+>> Suggested-by: Naman Jain <namjain@linux.microsoft.com>
+>> Suggested-by: Michael Kelley <mhklinux@outlook.com>
+> 
+> These two tags can be omitted IMO.
+> 
+>> Signed-off-by: Sahil Chandna <sahilchandna@linux.microsoft.com>
+>> ---
+>> Changes since v1:
+>> - Removed periodic warning to one time warning in 2 minutes
+>> - Include vmbus relid and stuck PCI msg.
+>> Link to v1: https://lore.kernel.org/all/20260825051850.2438816-1- 
+>> sahilchandna@linux.microsoft.com/
+>> ---
+>>   drivers/pci/controller/pci-hyperv.c | 48 +++++++++++++++++++++++------
+>>   1 file changed, 38 insertions(+), 10 deletions(-)
 >>
->> Note that patch 2 depends on b376b3ff9cb0 which is not yet in Linus'
->> tree, so this series is based on linux-next.
+>> diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/ 
+>> controller/pci-hyperv.c
+>> index 89816a2bd7cd..ca9d8efd748c 100644
+>> --- a/drivers/pci/controller/pci-hyperv.c
+>> +++ b/drivers/pci/controller/pci-hyperv.c
+>> @@ -1040,19 +1040,40 @@ static void put_pcichild(struct hv_pci_dev 
+>> *hpdev)
+>>
+>>   /*
+>>    * There is no good way to get notified from vmbus_onoffer_rescind(),
+>> - * so let's use polling here, since this is not a hot path.
+>> + * so let's use polling here, since this is not a hot path. If
+>> + * wait_for_response() has been polling for 
+>> PCI_RESPONSE_HANG_TIMEOUT_SEC
+>> + * without either a rescind or completion, add a warning.
+>>    */
+>> +#define PCI_RESPONSE_HANG_TIMEOUT_SEC 120
+>> +
+>>   static int wait_for_response(struct hv_device *hdev,
+>> -                 struct completion *comp)
+>> +                 struct completion *comp,
+>> +                 const char *msg_type)
+>>   {
+>> +    unsigned long delay = 
+>> secs_to_jiffies(PCI_RESPONSE_HANG_TIMEOUT_SEC);
+>> +    u64 timeout = get_jiffies_64() + delay;
+>> +    bool warned = false;
+>> +
+>>       while (true) {
+>>           if (hdev->channel->rescind) {
+>>               dev_warn_once(&hdev->device, "The device is gone.\n");
+>>               return -ENODEV;
+>>           }
+>>
+>> -        if (wait_for_completion_timeout(comp, HZ / 10))
+>> +        if (wait_for_completion_timeout(comp, HZ / 10)) {
+>> +            if (warned)
+>> +                dev_warn(&hdev->device,
+>> +                     "Late %s completion arrived.\n", msg_type);
+>>               break;
+>> +        }
+>> +
+>> +        if (!warned && time_after64(get_jiffies_64(), timeout)) {
+>> +            dev_err(&hdev->device,
+>> +                "%s stuck waiting for response, relid = %u\n",
+>> +                msg_type, hdev->channel->offermsg.child_relid);
+>> +
+>> +            warned = true;
+>> +        }
+>>       }
+>>
+>>       return 0;
+>> @@ -1518,7 +1539,8 @@ static int hv_read_config_block(struct pci_dev 
+>> *pdev, void *buf,
+>>       if (ret)
+>>           return ret;
+>>
+>> -    ret = wait_for_response(hbus->hdev, &comp_pkt.comp_pkt.host_event);
+>> +    ret = wait_for_response(hbus->hdev, &comp_pkt.comp_pkt.host_event,
+>> +                "PCI_READ_BLOCK");
 > 
-> $ git tag --contains b376b3ff9cb0
-> v7.3-rc1
-> 
-> FWIW, the commit you are referencing is in Linus' tree already.
+> Instead of hard-coding this msg type two times everywhere, would it be 
+> better to simply pass corresponding variable.message_type.type?
 
-Ah, a few days ago I didn't send out the patch in time, but now it is 
-indeed on Linus' tree.
+You can ignore this, as you may have wanted to print actual name instead 
+of enum value.
 
-Thanks.
-
-> 
-> 
-> Kind regards,
-> Niklas
-> 
-
+Regards,
+Naman
