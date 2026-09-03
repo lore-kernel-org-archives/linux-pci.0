@@ -1,64 +1,67 @@
 Received: from mail-pj1-f71.google.com (mail-pj1-f71.google.com [209.85.216.71])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A8D98357D1E
-	for <linux-pci@vger.kernel.org>; Thu,  3 Sep 2026 02:34:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57C6335CBCB
+	for <linux-pci@vger.kernel.org>; Thu,  3 Sep 2026 02:34:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.71
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788402903; cv=none; b=D5PGK6u5/g1cjPynPuPcwYP6R77MaJy7idl8ZDNaX2k4I5LCsjd89ZbXPrGnJLWh73DR8yXC4du/RzMgMBMB3v9LYkmKdhsEfx2OMohfATM87359zKJaFk0qHWtOEZgUG7ONgP/LoSjK5P8TvPlfY8TUIEd/bT1vGxGsTi8mO0U=
+	t=1788402905; cv=none; b=RVgQCX4M8hk2LLLD2u/687y0KDuR5yjmBoFOpUAN4Cp2cXOY2aIepaLQE6jjHqIWyefuGkuIl73lrXR+9UkLoRe9KaOt7GCQSRMLD2es23pcEfJ1KvpA1QR7G7oBqDZOMU/2lqSyaOBo+XZOzi8+FUv8C4gs3Z3J3B4IT5vLxkM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788402903; c=relaxed/simple;
-	bh=KttI8yN3SEE9knj1xRs/FNrG5jE/gzLZlVVCanD/Yjg=;
-	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=sokry9n9kTuEYsRkNgokL6HnKxOeNKrDU5VH/Z81f0H6IHUu27gcZnXY88IYgZf/l111Uw9ZfcnbSJ4DxDuRN1kXg3utUw+oqCaURnrWWRa1MDKh8ZQtGO3H3UX1qAN6Hu+fy0OxgTEM/kWOKB9839e2Tjt5e67xqMIgpXADN9Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--loganodell.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=JKRSKjDP; arc=none smtp.client-ip=209.85.216.71
+	s=arc-20240116; t=1788402905; c=relaxed/simple;
+	bh=/wgIjAR3Nkn0dkLJ5F4noRZR2nevYpV3/NPEpvosUDQ=;
+	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
+	 To:Cc:Content-Type; b=iGimMR3MGCKtbmcm2ltxGtu5BwaNdkjkm99aZh/Od7dF4vxPaR+TiPv9SXFjcLol4GZUzdyFG/UN9YmznvUn+L/bZlfQbdUaF9HIuITj1EYPdbLeh4aoNppMiIGCfJyW0yaIGsNQcX75DrZQ35p7RVjeHkpczN3oP7T/KSVCduU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--loganodell.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=f3lZ6ICk; arc=none smtp.client-ip=209.85.216.71
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--loganodell.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="JKRSKjDP"
-Received: by mail-pj1-f71.google.com with SMTP id 98e67ed59e1d1-38f97b3f853so3215504a91.3
-        for <linux-pci@vger.kernel.org>; Wed, 02 Sep 2026 19:34:57 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="f3lZ6ICk"
+Received: by mail-pj1-f71.google.com with SMTP id 98e67ed59e1d1-385d2703b64so551898a91.1
+        for <linux-pci@vger.kernel.org>; Wed, 02 Sep 2026 19:34:59 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1788402896; x=1789007696; darn=vger.kernel.org;
-        h=content-type:cc:to:from:subject:message-id:mime-version:date:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=Z/CUOTjDyaAxtZC1lTIYdZbcKOF2SIWxflbwVxpxItE=;
-        b=JKRSKjDPVk0FFsbYxUN8rh23atvO0BGLo2l3Ks8shrfBJHKyupH84uaTVmVhlhgbqC
-         18LH/IN4BB17i9S++NQrSkJeh9KO1YPa5D9KUQAK1/bpwfRSdiJx1MbpQ6k/L/uSr2At
-         4VILdEOzvdycnbiae+QyQaM1fYRQv74kqDgQufzjn3PnkJ8/34nk8O/sumZX0wLMYMES
-         YsNohw0fzbT0Ns4S60MeuyjFyAVFi+XdrvuMAw/xlJhvQtlN4y+0aA8p4tAVY7108Tjo
-         hUL9t8/h0MrjaL7b6p9PxycrKxAYjK0oI08YxCuv4conWs/RU7eIbr2a18cxuPWDlVtQ
-         5EPA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788402896; x=1789007696;
-        h=content-type:cc:to:from:subject:message-id:mime-version:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+        d=google.com; s=20251104; t=1788402898; x=1789007698; darn=vger.kernel.org;
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=Z/CUOTjDyaAxtZC1lTIYdZbcKOF2SIWxflbwVxpxItE=;
-        b=fgwqSLsAupnvWr0JWILRdbeq5CZAR8IiBvKVZOSbFy/t0TWbX9eFbyszkD6A+iG2aN
-         4clcruxuIDDtjUAtY6NmRx6vRS+cOD+Z3v0xpBzcuRPZc5B9scpbfxjbTZKdfv/hdlJP
-         MPgFEzxM1zhdn8WjK8iyWmXS/R3uOLaRcw8EzTjR7KkjpImq4BvbVOwVGoCHVLy3dHYN
-         gHwEAflnOuXlomdALRkyhe/CwtCMmxbii2vG2ivYz87yl/KfwFoFVZp2DAEDi88jHi/j
-         JhdGutrHOlbunVNnO1P+C2n431Q1BkL977wdFYdDKt5WGlZWfHbwtCnEBnh8xzEAVRoF
-         uHzg==
-X-Forwarded-Encrypted: i=1; AKwUvBws76ePzBx+UWI/5UokSa5m886TVFXj6Lv9GfysPxGWluC3KEgYcqlvYnOKGHP53iryRDHRPgjMk2o=@vger.kernel.org
-X-Gm-Message-State: AFuF++nH7D0/uSxYAKnHeMNAdUdTKK+05rcyZ5niKbsuuJQtDyIJmv8g
-	j5TwUHUOrNtKbaakSULWRelt8MjhkN4VpbtF7r52npztOYwrAVXqaIJ+6jVQOBGxiK2P9mkI6Ve
-	jtIwF0ABP7MHQjDMdLHmkUw==
-X-Received: from dysc26.prod.google.com ([2002:a05:7300:3b1a:b0:332:2edd:e13a])
+        bh=t1Sj3SZIoFO1IrO+MibWwCI7jpIestNZ9bFRqEQ8nhA=;
+        b=f3lZ6ICkbIJFpDxVz8UVHh9oCNeKKlpg0O7UGb/r6FHUQJ/RKpTjOxD1wu1bMtUt+T
+         jonCDqyWb0xSrgy59OkMklvqlrUGhdcjwoZUKlZLDgY6mZNIedvsM2fn82UU+w5X1/N+
+         EjWvmLxlqfUmMl6tjc51y1mmXx0POeRVSi1TX8prirOYD65FAHWEMRBMx+KmFvMSu4tE
+         Rpq0Jjx25HoQyCpC7YoI32m2caYtHzixf5Ytl2Y98AlRgwozi/+PEECuQMv7An49n45K
+         XapHRLYx02/uobXZOAUW07ETGunKzmH5sD+bodXHMI74YFcVbu2gcWHB4zEIL+g0lEBB
+         aaeA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1788402898; x=1789007698;
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=t1Sj3SZIoFO1IrO+MibWwCI7jpIestNZ9bFRqEQ8nhA=;
+        b=UUSz7gzfBRADvT4PNiBdTvSf39QilWCfgKTxTT5FHJfZIiK98pTwk+m2NmmqaSm9Rx
+         X/V4hkCsNEOjylSgen15z9VKTZJF1KXXbrALLT2aU0HTrJemY4d2EvZ4MQMUdFjXU9Yv
+         6AIQ99abS/TkGoNCNFyj9RnPs54dpeYv6gSbVLHm7zM64VhUc2upGmZT8EsXjIMjG/JY
+         QmnpNT4fPF9p8ldBUzQkq9hYvwNM/7qo6rqro7nNma5Xo0DFiUGrTHS1uxA89L7rqxfn
+         MRtUr+QDoOnV62Pju02XxyQ3ZNxXu3Kkc6w7OBQ65lPh06UQvvfyruxaContrGz20s7e
+         n0hw==
+X-Forwarded-Encrypted: i=1; AKwUvBw4wPHM6dBBd35L3TW0tx78HL7Qkkb48x+UK+18Q6hqpCahNlKbZb5WCT7OzZJs5wLbVwggv0edWY4=@vger.kernel.org
+X-Gm-Message-State: AFuF++m7OJ/3tfTjmZ7CMAUuueDZ54sz5v9gF2oeQRM2zVPA3CUoEkYg
+	Y8+RY61pltdkzEhzlhS0TpLdYWbQiiG23tftKEVHN7mLapYgGfPdJErBob6SjRNDsjJklUH6Qnm
+	Lck2XLnb+W1+Xj5dLNIpSXQ==
+X-Received: from dybdb19.prod.google.com ([2002:a05:7300:b093:b0:328:684d:3f7])
  (user=loganodell job=prod-delivery.src-stubby-dispatcher) by
- 2002:a17:90b:2d85:b0:398:9c00:29f0 with SMTP id 98e67ed59e1d1-39aee249bd7mr14082963a91.24.1788402895806;
- Wed, 02 Sep 2026 19:34:55 -0700 (PDT)
-Date: Wed,  2 Sep 2026 19:34:49 -0700
+ 2002:a17:90b:4b04:b0:396:4ce0:6400 with SMTP id 98e67ed59e1d1-39b07f33963mr3591851a91.2.1788402897557;
+ Wed, 02 Sep 2026 19:34:57 -0700 (PDT)
+Date: Wed,  2 Sep 2026 19:34:51 -0700
+In-Reply-To: <20260903023452.721732-1-loganodell@google.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
+References: <20260903023452.721732-1-loganodell@google.com>
 X-Mailer: git-send-email 2.55.0.979.g7e5102b832-goog
-Message-ID: <20260903023452.721732-1-loganodell@google.com>
-Subject: [RFC PATCH 0/3] liveupdate: Move to feature flags for LUO and memfd
- ABI compatibility
+Message-ID: <20260903023452.721732-3-loganodell@google.com>
+Subject: [RFC PATCH 2/3] luo: Export feature support to vmlinux section
 From: Logan Odell <loganodell@google.com>
 To: arnd@arndb.de, pasha.tatashin@soleen.com, rppt@kernel.org, 
 	pratyush@kernel.org, graf@amazon.com, akpm@linux-foundation.org, 
@@ -73,70 +76,152 @@ Cc: linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org,
 	Logan Odell <loganodell@google.com>
 Content-Type: text/plain; charset="UTF-8"
 
-We're including maintainers from all subsystems that currently is or
-will be expected to participate in live update to ensure alignment on
-the path forward for compatibility.
+Create a liveupdate_features section that contains the feature
+information for a given liveupdate component. Add the LUO component
+first. These can be compared between two kernels to determine live
+update compatibility. Features marked as required in the running kernel
+will need to have that feature marked as supported in the next kernel to
+be eligible for compatibility.
 
-Currently, Live Update Orchestrator (LUO) and its file handlers rely on
-monolithic compatibility strings (such as "luo-v5" and "memfd-v1") to
-validate ABI compatibility across kexec live updates. Any modification
-to serialized structures requires bumping the version string, which
-strictly breaks compatibility between adjacent kernels even when changes
-are additive, backwards-compatible, or optional.
+Suggested-by: Pratyush Yadav <pratyush@kernel.org>
+Signed-off-by: Logan Odell <loganodell@google.com>
+---
+ include/asm-generic/vmlinux.lds.h | 12 +++++++++++
+ include/linux/kho/abi/luo.h       | 34 +++++++++++++++++++++++++++++++
+ include/linux/liveupdate.h        | 12 +++++++++++
+ kernel/liveupdate/luo_core.c      | 16 +++++++++++++++
+ 4 files changed, 74 insertions(+)
 
-This RFC series transitions LUO and subsystem file handlers to use
-granular feature bitmasks instead of compatibility strings. We replace
-the compatibility string with a header structure that includes some
-reserved space to define the features that are included after the
-feature.
-
-We include 3 bits of data for each feature: supported, active, and
-required. When the supported bit is set in the next kernel, the previous
-kernel can serialize the feature and pass it to the next kernel. When
-the active bit is set, it means the previous occurred and the data for
-that feature is valid. When the required bit is set, it means that the
-next kernel must have the associated supported bit in order to be
-compatible.
-
-If a feature is required in that it cannot live update to a kernel that
-does not support the feature, it is expected that the feature not be
-active or required initially. This allows for an intermediate upgrade
-path.
-
-Overview of Changes:
-1. Define feature header and migrate luo_ser (Patch 1):
-  - Introudce the feature header with the supported, active, and
-    required bits.
-  - Replace the luo compatibility string with this new header.
-  - Validate the preserved size is at least the size of the header. This
-    breaks compatibility with the old way.
-
-2. Export feature header information to vmlinux (Patch 2):
-  - Adds a .liveupdate_features section in vmlinux containing
-  - Adds helper macros to export feature information for a given
-    subsystem
-  - Export luo's feature information
-
-3. Memfd Handler Migration (Patch 3):
-  - Migrate memfd to use the feature header instead of compatibility
-    strings
-
-Logan Odell (3):
-  luo: Move to feature flags instead of compatibility strings
-  luo: Export feature support to vmlinux section
-  luo: memfd: Move to feature flags instead of compatibility strings
-
- include/asm-generic/vmlinux.lds.h |  12 ++++
- include/linux/kho/abi/luo.h       | 114 +++++++++++++++++++++++++-----
- include/linux/kho/abi/memfd.h     |  41 +++++++----
- include/linux/liveupdate.h        |  22 ++++--
- kernel/liveupdate/luo_core.c      |  60 ++++++++++++----
- kernel/liveupdate/luo_file.c      |  28 ++++----
- kernel/liveupdate/luo_flb.c       |   2 +-
- lib/tests/liveupdate.c            |   2 +-
- mm/memfd_luo.c                    |  40 ++++++++---
- 9 files changed, 246 insertions(+), 75 deletions(-)
-
+diff --git a/include/asm-generic/vmlinux.lds.h b/include/asm-generic/vmlinux.lds.h
+index 5659f4b5a125..aed4e282a78c 100644
+--- a/include/asm-generic/vmlinux.lds.h
++++ b/include/asm-generic/vmlinux.lds.h
+@@ -359,6 +359,17 @@
+ #define THERMAL_TABLE(name)
+ #endif
+ 
++#ifdef CONFIG_LIVEUPDATE
++#define LIVEUPDATE_FEATURES						\
++	. = ALIGN(8);							\
++	.liveupdate_features : AT(ADDR(.liveupdate_features) - LOAD_OFFSET) {	\
++		KEEP(*(.liveupdate_sec_hdr))				\
++		KEEP(*(.liveupdate_features))				\
++	}
++#else
++#define LIVEUPDATE_FEATURES
++#endif
++
+ #define KERNEL_DTB()							\
+ 	STRUCT_ALIGN();							\
+ 	__dtb_start = .;						\
+@@ -554,6 +565,7 @@
+ 	RO_EXCEPTION_TABLE						\
+ 	NOTES								\
+ 	BTF								\
++	LIVEUPDATE_FEATURES						\
+ 									\
+ 	. = ALIGN((align));						\
+ 	__end_rodata = .;
+diff --git a/include/linux/kho/abi/luo.h b/include/linux/kho/abi/luo.h
+index 0a7662a0cf9a..5b25e1b48cf5 100644
+--- a/include/linux/kho/abi/luo.h
++++ b/include/linux/kho/abi/luo.h
+@@ -230,4 +230,38 @@ struct luo_flb_ser {
+ #define LIVEUPDATE_TEST_FLB_COMPATIBLE(i)	"liveupdate-test-flb-v" #i
+ #endif
+ 
++#define LIVEUPDATE_VER_HDR_MAGIC	0x4c565550 /* 'LVUP' */
++#define LIVEUPDATE_VER_HDR_VER		1
++
++/**
++ * struct liveupdate_ver_hdr - Header of vmlinux section with version lists
++ * @magic:     Magic number ('LVUP').
++ * @version:   Version of the header format.
++ *
++ * This struct is the header for the vmlinux section ".liveupdate_features". The
++ * section contains the list of feature/version entries that the kernel supports.
++ */
++struct liveupdate_ver_hdr {
++	u32 magic;
++	u32 version;
++} __packed;
++
++/**
++ * struct liveupdate_feature_entry - Live update feature/version entry
++ * @name:       Name of the subsystem or feature ("luo" for core).
++ * @feat_bytes: Number of bytes covered by supp, req, and active bitmaps (e.g. 8).
++ * @reserved:   Reserved / padding for alignment.
++ * @supp:       Bitmask of supported features.
++ * @req:        Bitmask of required features.
++ * @active:     Bitmask of active features.
++ */
++struct liveupdate_feature_entry {
++	char name[LIVEUPDATE_HNDL_COMPAT_LENGTH];
++	u32 feat_bytes;
++	u32 reserved;
++	u64 supp;
++	u64 req;
++	u64 active;
++} __packed;
++
+ #endif /* _LINUX_KHO_ABI_LUO_H */
+diff --git a/include/linux/liveupdate.h b/include/linux/liveupdate.h
+index 6051abc0612c..e058df23fed1 100644
+--- a/include/linux/liveupdate.h
++++ b/include/linux/liveupdate.h
+@@ -229,6 +229,16 @@ struct liveupdate_flb {
+ 
+ #ifdef CONFIG_LIVEUPDATE
+ 
++#define LIVEUPDATE_FEATURE_ENTRY(_id, _name, _supp, _req, _active)	\
++	static const struct liveupdate_feature_entry __lu_feat_##_id	\
++	__used __section(".liveupdate_features") __aligned(8) = {	\
++		.name       = _name,					\
++		.feat_bytes = sizeof(u64),				\
++		.supp       = (_supp),					\
++		.req        = (_req),					\
++		.active     = (_active),				\
++	}
++
+ /* Return true if live update orchestrator is enabled */
+ bool liveupdate_enabled(void);
+ 
+@@ -259,6 +269,8 @@ int liveupdate_get_token_outgoing(struct liveupdate_session *s,
+ 
+ #else /* CONFIG_LIVEUPDATE */
+ 
++#define LIVEUPDATE_FEATURE_ENTRY(_id, _name, _supp, _req, _active)
++
+ static inline bool liveupdate_enabled(void)
+ {
+ 	return false;
+diff --git a/kernel/liveupdate/luo_core.c b/kernel/liveupdate/luo_core.c
+index 6add1ecc463f..27413f895174 100644
+--- a/kernel/liveupdate/luo_core.c
++++ b/kernel/liveupdate/luo_core.c
+@@ -64,6 +64,22 @@
+ #include "kexec_handover_internal.h"
+ #include "luo_internal.h"
+ 
++/*
++ * This is the header for the ".liveupdate_features" section in vmlinux.
++ * The linker makes sure that this header precedes the entries.
++ */
++static const struct liveupdate_ver_hdr ver_hdr
++	__used __section(".liveupdate_sec_hdr") __aligned(8) = {
++	.magic   = LIVEUPDATE_VER_HDR_MAGIC,
++	.version = LIVEUPDATE_VER_HDR_VER,
++};
++
++/* Core LUO features */
++LIVEUPDATE_FEATURE_ENTRY(luo_core, "luo",
++			 LUO_CORE_FEATURES_SUPP,
++			 LUO_CORE_FEATURES_REQ,
++			 LUO_CORE_FEATURES_ACTIVE);
++
+ static struct {
+ 	bool enabled;
+ 	struct luo_ser *luo_ser_out;
 -- 
 2.55.0.979.g7e5102b832-goog
 
