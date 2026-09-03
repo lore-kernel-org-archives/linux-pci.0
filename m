@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BBE704B2CA0;
-	Thu,  3 Sep 2026 17:10:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 26A0D412C08;
+	Thu,  3 Sep 2026 17:10:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788455405; cv=none; b=XV5vbfUYBEPQfNjBGzqHiE4vNdXqyBxFwUt1TwFIWsRN7p+A79Bkgl9XqFfkYPc/cu2XQ+3Y4Zx36YVy3d6gBdgN64DfGtWBGH+h5iq/hUQLxkuJQhpAavtEPF6GGi8M14e512NFAv0RqfhYi0hDzPhqBiEN4kPUbsc54ki44nk=
+	t=1788455412; cv=none; b=bnpqvgs3gG27UswWQs4zkmEjlleFeSj/CXUZTjySWUbZsLe9Hu47RnjZYCbnoRYCR29cLnuSdXeWHYpApR86AExtXd7GhDQCcRAGgJ2edSc8iV4RQgPfbvr9e6vSncfPaar9iDj47lnNS7H9bAPyciqWxhUfvV5xFUy9YlY8qSQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788455405; c=relaxed/simple;
-	bh=dluzVSKTf65VqIkVILVo/FgxU6nMjjs7GpSnm/yY4z0=;
+	s=arc-20240116; t=1788455412; c=relaxed/simple;
+	bh=COzBV1EoknZjxFzTtzc1jdZlg09bvszVRgUdep00O4A=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ObeqOFIRosUsynryS1iQz3iXH1crERF/8YcBLw6YPQ/b2eJJmW15h9r1HH1JSArGikTDfLSs1yTrSkLnNtLkwNhPUjFFX/AS676zcxpwxQLrvdq+7kFIWZucnc1j6iiPuXbSRnR7v3CwOmYlTNvlH/qFeyx3G44ROK/HCahewqY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=I8qC0anX; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=OUy0/WWt/3QOQNdaL3X/GoVW5YyKKfvQNfIac8+mqVC5A3pdtIb/jYdxsen3pKi+7xnOrHX/edEnxdxgmluiVsksTF+09Z9K86aj64kglkcNVcuTE+Q05UIQN3GxTDuyYsOpPS9+Ramg2NZxCOKq1SsnYStMcyPZkUnWwrOX9Ek=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=g/DxO0Qt; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="I8qC0anX"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4F01E1F000E9;
-	Thu,  3 Sep 2026 17:10:00 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="g/DxO0Qt"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 13E7A1F000E9;
+	Thu,  3 Sep 2026 17:10:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788455404;
-	bh=VYL4apQp4181jFM3gLL245DiS0XmgWuuOXR8uMoXMyc=;
+	s=k20260515; t=1788455410;
+	bh=Fnj1RBbFZQ8FrwyQwy/MjRBG39IQ6JmNTjWC7Zdw3vg=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=I8qC0anXzw2LyQnYfqc4ymYucuz4lysQS8IvaJMQdfK3/Q8xQ06Oknv4Xhvh5wRpy
-	 k2qtaH5IuSS1P+TDinPPMDelVPXQwLPZ5iHYXipZctf8c/1EHle7uatHB6YvsPCzlM
-	 FYeWH19AW04+SxXwTl5SeKj0e4C0KBaNjrk7bWaQHvPl0DVQC1uP4dYeQGDyl93cmk
-	 iXWN1kqkJBqJ0lQRViX1HdwrDfbGx5YpA1s7wLElzqoFtR204dmyA/esl4Bbk6Rqhr
-	 Wd7PH3//Qglfh/e9mSIFeSFjFU5Xlrqn49os2n287ehWeImjeRQYWHim8dqlRwyCLV
-	 LwVH7ep0jWJ2Q==
+	b=g/DxO0QtNEKx8mGYAqcBjooQ4O5n2lm541EOU56FiFW52LFfWQb4WDuUjtBQwsWQB
+	 +V+m8crM8klI5K+lxRI0nMDTwEk/tyz3cL/O4aw1MRp7F0O1bPH1wJWFpeF2o9jzlI
+	 JS6Sd0Tvcv7bUUtihzrV4YN1SsyhsMHc0sTECgMUdFyC/2gu87mfP9x4kISqM/8363
+	 q/maIrABUVytk6MDEHQ+SB9tQ1ySpf8gZxECm1FfAUy+koEaEY6b6mMDd10/BtGmNu
+	 5GUuRWKpkm1c79ozvVjX1Xx1JVEEV+uNyCit0+CpWMMFxBl8mbme2OYBq6GM2WG2NV
+	 ePpnme0xWbbqg==
 From: "Rafael J. Wysocki" <rafael@kernel.org>
 To: Linux ACPI <linux-acpi@vger.kernel.org>
 Cc: Linux PM <linux-pm@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>,
@@ -37,9 +37,10 @@ Cc: Linux PM <linux-pm@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>,
  Hans de Goede <hansg@kernel.org>,
  Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 Subject:
- [PATCH v3 4/4] ACPI: scan: Combine two conditionals in acpi_bus_attach()
-Date: Thu, 03 Sep 2026 19:09:22 +0200
-Message-ID: <8746939.T7Z3S40VBb@rafael.j.wysocki>
+ [PATCH v3 3/4] ACPI: PM: Move acpi_bus_init_power() declaration to internal
+ header file
+Date: Thu, 03 Sep 2026 19:06:32 +0200
+Message-ID: <3079955.e9J7NaK4W3@rafael.j.wysocki>
 Organization: Linux Kernel Development - Intel
 In-Reply-To: <6044499.DvuYhMxLoT@rafael.j.wysocki>
 References: <6044499.DvuYhMxLoT@rafael.j.wysocki>
@@ -54,50 +55,46 @@ Content-Type: text/plain; charset="UTF-8"
 
 From: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
 
-There are two conditionals in acpi_bus_attach() that can be combined,
-which slightly reduces the overhead and makes the code a bit easier
-to follow, so do that.
+Since acpi_bus_init_power() is only used internally in the core ACPI
+device enumeration and power management code, it need not be visible
+outside, so move its declaration to an internal header file.
 
-No intentional functional impact.
+No functional impact.
 
 Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 ---
 
-v2 -> v3:
-   * Add tag from Andy
-
-v1 -> v2:
-   * Reverse checks to avoid multiple negations (Andy)
-   * Rebase on top of the new [2/6]
-
-Link to the v1:
-https://lore.kernel.org/linux-pci/2021470.taCxCBeP46@rafael.j.wysocki/
+New patch in v3.
 
 ---
- drivers/acpi/scan.c | 9 ++-------
- 1 file changed, 2 insertions(+), 7 deletions(-)
+ drivers/acpi/internal.h | 1 +
+ include/acpi/acpi_bus.h | 1 -
+ 2 files changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
-index f219a16e018a..1b8d833131a0 100644
---- a/drivers/acpi/scan.c
-+++ b/drivers/acpi/scan.c
-@@ -2391,13 +2391,8 @@ static int acpi_bus_attach(struct acpi_device *device, void *first_pass)
- 	if (ret < 0)
- 		return 0;
+diff --git a/drivers/acpi/internal.h b/drivers/acpi/internal.h
+index 40f875b265a9..011da4ed6a80 100644
+--- a/drivers/acpi/internal.h
++++ b/drivers/acpi/internal.h
+@@ -157,6 +157,7 @@ void acpi_turn_off_unused_power_resources(void);
+                               Device Power Management
+    -------------------------------------------------------------------------- */
+ int acpi_device_get_power(struct acpi_device *device, int *state);
++int acpi_bus_init_power(struct acpi_device *device);
+ int acpi_wakeup_device_init(void);
  
--	if (ret > 0 && !device->flags.enumeration_by_parent) {
--		acpi_device_set_enumerated(device);
--		goto ok;
--	}
--
--	if (device->pnp.type.platform_id || device->pnp.type.backlight ||
--	    device->flags.enumeration_by_parent)
-+	if (device->flags.enumeration_by_parent ||
-+	    (!ret && (device->pnp.type.platform_id || device->pnp.type.backlight)))
- 		acpi_default_enumeration(device);
- 	else
- 		acpi_device_set_enumerated(device);
+ /* --------------------------------------------------------------------------
+diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
+index 1a45e0d521d8..6b3f8b230eec 100644
+--- a/include/acpi/acpi_bus.h
++++ b/include/acpi/acpi_bus.h
+@@ -618,7 +618,6 @@ int acpi_bus_get_status(struct acpi_device *device);
+ int acpi_bus_set_power(acpi_handle handle, int state);
+ const char *acpi_power_state_string(int state);
+ int acpi_device_set_power(struct acpi_device *device, int state);
+-int acpi_bus_init_power(struct acpi_device *device);
+ int acpi_device_fix_up_power(struct acpi_device *device);
+ void acpi_device_fix_up_power_extended(struct acpi_device *adev);
+ void acpi_device_fix_up_power_children(struct acpi_device *adev);
 -- 
 2.51.0
 
