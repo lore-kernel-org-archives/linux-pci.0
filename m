@@ -1,149 +1,167 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.10])
+Received: from SN4PR2101CU001.outbound.protection.outlook.com (mail-southcentralusazon11012071.outbound.protection.outlook.com [40.93.195.71])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF47143636A;
-	Thu,  3 Sep 2026 11:07:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.10
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788433673; cv=none; b=Px5MkbysPK8Cbe0vxVERaz930IiBgj8s6tcsUtRfNTe3RiTCQnQjvnS6H5O+mT+KHcWxx+RjPr8WVU+/wcJdXGa4wq6izgCOi2oa8QLHjryN16vbDX7lpRd/S8aGchMGHaw7bkrh0yfG26q7pEYYTN7sgAw6BKKmW77rmI5ZI2M=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788433673; c=relaxed/simple;
-	bh=EryYC6IIO+b2JMw0cCqtaSQgy32cQJPFGPK8fCv6aYI=;
-	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=q7fse9Qrrr14TbWNlse1XZYq87mMPUix9WlJL7rsKBwrEJm7+elVb2j2aO67MVufatAiKgLHwK99iwSoKlHDsWIMAefCIM7U7rlvWFo2er4v/7u7KQFamLNG6pxeLz36rlnOg4ouuguSZ9pwBCbezUNyELmoYIA0hwkmGW/YGB4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=bBOh460S; arc=none smtp.client-ip=198.175.65.10
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9344243E48D;
+	Thu,  3 Sep 2026 11:08:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.195.71
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1788433736; cv=fail; b=SquxjOiA21V7OyZuuSxENJOhVsKM0vj8mKqBml1hYJThB/LfNKSIj90fcmxxwkfXBrvV/GY3RmHkwr/g+FSGdKYY+PeSuDPSTElay/HV/940j/7PHUbmdGLLXGd/wpauzlB4NGGRdE5CHZbJUB+70Yb/xwfgxOEO9LAdpvK3VBk=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1788433736; c=relaxed/simple;
+	bh=Mbef8quQlk0V9frRQl9JInLBLItAUme+Y9B7tdb+hPk=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=AjrawHi1+EESDct5YkPktuxwmrmXOXY5janjVsVO3ZfTxomVboCM4ROHiyha2eCUh5EHB5hLM8xSCoGMjNLIwEI1qkS6s6iWM524paz764fkZWsMKvmYb5ZETE/dWNxSAY1BdZwV7TSM2SU04xS3p4Qwqs5VecK4ROLlzeUUESk=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=f3Pnf5yd; arc=fail smtp.client-ip=40.93.195.71
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="bBOh460S"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1788433672; x=1819969672;
-  h=from:date:to:cc:subject:in-reply-to:message-id:
-   references:mime-version;
-  bh=EryYC6IIO+b2JMw0cCqtaSQgy32cQJPFGPK8fCv6aYI=;
-  b=bBOh460SlCAvtYEqTbx2zDDcwl6qg8jxi4aKEVWl9r5qRRAPS6eI0O8F
-   9rx0WFDl3l1BcTL8ld4auXYWZ9AWPP1MjRuAZ19xsdyCpuPNaYwZw1zoF
-   QnU+bznjndRG6XoutAy/TaD4FBlq6qkIggZuo7WzwigeYgV8NlIAgoPTw
-   pBXHLSW7mBiD+jL6dT8aO6LPGhlr2q+TcAh+pJoHQaEoLs0C68GVfuA8w
-   uQrhjbiCyeYgo7lz5JmtPRObCJRKacqFsRYZIerf2PQbT1Yh8WLWhgxg2
-   75he4U0ej1rFkTnK5eDXBH/Wd5yGuMskMMOws4nmDejZRtMooo3JrVsdZ
-   Q==;
-X-CSE-ConnectionGUID: DC5BLU6KQamDHWsbUntSug==
-X-CSE-MsgGUID: nU2qUyKKTkS2zwcQ2kG/xA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11894"; a="106280142"
-X-IronPort-AV: E=Sophos;i="6.25,259,1779174000"; 
-   d="scan'208";a="106280142"
-Received: from orviesa008.jf.intel.com ([10.64.159.148])
-  by orvoesa102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Sep 2026 04:07:52 -0700
-X-CSE-ConnectionGUID: ZMzv7EaGQYSHv47tp7k0Bw==
-X-CSE-MsgGUID: neGp8020TE2bmdt3A9FbxQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.25,259,1779174000"; 
-   d="scan'208";a="269159014"
-Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.244.119])
-  by orviesa008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Sep 2026 04:07:47 -0700
-From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Date: Thu, 3 Sep 2026 14:07:43 +0300 (EEST)
-To: Wei Wang <wei.w.wang@hotmail.com>
-cc: bhelgaas@google.com, jgg@nvidia.com, jic23@kernel.org, error27@gmail.com, 
-    kwilczynski@kernel.org, rdunlap@infradead.org, akpm@linux-foundation.org, 
-    bp@alien8.de, alex@shazbot.org, kevin.tian@intel.com, 
-    manivannan.sadhasivam@oss.qualcomm.com, 
-    LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v9 1/6] PCI: Validate ACS control bits against device-specific
- ACS capabilities
-In-Reply-To: <SI2PR01MB43931558B27C956BDBDCE0C6DCB62@SI2PR01MB4393.apcprd01.prod.exchangelabs.com>
-Message-ID: <7cab6f02-d557-abcf-63a8-28db43504acd@linux.intel.com>
-References: <SI2PR01MB4393F337A792CB3258C2E073DCB62@SI2PR01MB4393.apcprd01.prod.exchangelabs.com> <SI2PR01MB43931558B27C956BDBDCE0C6DCB62@SI2PR01MB4393.apcprd01.prod.exchangelabs.com>
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="f3Pnf5yd"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=FWuj6RNbYNQE8JZ9uZeGw8jMeNhnepDyuw5w0eIo1i4HcmgZjrnoK77XocjPPaE5PFg01+M6edR2qZi2uyL5Excq9gNWsV8PdyIduXPIt/kbUCid8A2vk8qcrR9rqKFNRV+9yMKmEaSOU15FEbwjekWMAum0MVMithr9tBJDVV6PkGOh4i9G8VlSEhvhizx2mrysM1Fdyby0np4ipb27UNRzsP4b0Kz4BLwRNnL1Ly3sm9AyemdRzbjbP1BzpHWQHakAM75DRFbWIk/eFeTA9LCGLC5hfM25QqlqZLipTG9yW7AjN+uAeStb1uuM+V3OmGJ067K/xBU0gCnYb6K1UA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=Mbef8quQlk0V9frRQl9JInLBLItAUme+Y9B7tdb+hPk=;
+ b=VH06xeTKtynDHPlw164Z+T/M8Vh5UlP6fRqSxANBa4atgV4mqwYVx8tkO/h27asyki5g3iAVG2wig1ahJWH+AlL9uinunmrRHnQDfnQqL5PMrJtBhY1E/BlsPTaNeWaqo80U64jpuAT/8NKckKbaPMGE+Oyd8j3ANXZZwX8yvyE027a1LTYHQXluAB9Fk8NYO948GpP/gceEUzSf6XCz3v1XVP8FSzpj+PExUTawZj9bWgtIkeLKtV1tfJuSX5pgsbOkIs2hV+iXCZ+bEWNIYNszd4WR4KNHg8ftboHBBnxz1TVkWBPYU/SNS9CVdtYg+07ZnFTqSar5aNIO0/rddw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=Mbef8quQlk0V9frRQl9JInLBLItAUme+Y9B7tdb+hPk=;
+ b=f3Pnf5ydCLYyXzxrgnBsIRvigweFDOH7VpE3h1RTiMxaQ/1HzScTsCvHpYPjHUabc2umP+ka3Oj+nRlEqbt5vXSEQ+9cYP/TAeDZRVy0FWGzyRpAO8v/AE4OpaNJlVky/mIoIZaGElXMi1UeiKKLA8NW7nlp7h5fob0sKdO5hMDtMUevMfqma/DLns5LO3n1LPb2/KmRObJ+qwsvicQz8khEcMh18zAAsY40MG/h0i2GVLKMDRizN/DdOhka3CS+RX7hoE+aV1WzUUmSEGdWph4JbBlx3WT4vveu/bKx4lQCy+CiffRi/5jXoG06fMMWIn3iHEiMP0DgXDU+XyAtqg==
+Received: from SJ0PR12MB8614.namprd12.prod.outlook.com (2603:10b6:a03:47d::17)
+ by BY5PR12MB4210.namprd12.prod.outlook.com (2603:10b6:a03:203::8) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.360.13; Thu, 3 Sep
+ 2026 11:08:51 +0000
+Received: from SJ0PR12MB8614.namprd12.prod.outlook.com
+ ([fe80::fe0a:6e6a:fe60:a43b]) by SJ0PR12MB8614.namprd12.prod.outlook.com
+ ([fe80::fe0a:6e6a:fe60:a43b%5]) with mapi id 15.21.0360.008; Thu, 3 Sep 2026
+ 11:08:50 +0000
+From: Shameer Kolothum Thodi <skolothumtho@nvidia.com>
+To: "K V P, Satyanarayana" <satyanarayana.k.v.p@intel.com>,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>, "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>
+CC: "alex@shazbot.org" <alex@shazbot.org>, "jgg@ziepe.ca" <jgg@ziepe.ca>,
+	"kevin.tian@intel.com" <kevin.tian@intel.com>, "kbusch@meta.com"
+	<kbusch@meta.com>, "michal.winiarski@intel.com" <michal.winiarski@intel.com>,
+	Sonang Patel <sonangp@nvidia.com>, Nathan Chen <nathanc@nvidia.com>, Matt
+ Ochs <mochs@nvidia.com>
+Subject: RE: [RFC PATCH 05/19] vfio/pci: Serialize config access with recovery
+Thread-Topic: [RFC PATCH 05/19] vfio/pci: Serialize config access with
+ recovery
+Thread-Index: AQHdOqQhPH0FkzkrhEuo8srcRgj/Cra8s2LA
+Date: Thu, 3 Sep 2026 11:08:50 +0000
+Message-ID:
+ <SJ0PR12MB8614B1F236C9E664A26601FAABB62@SJ0PR12MB8614.namprd12.prod.outlook.com>
+References: <20260901093217.8539-1-skolothumtho@nvidia.com>
+ <20260901093217.8539-6-skolothumtho@nvidia.com>
+ <4dfc0aa3-a08a-495f-896d-7ea7c91a12ff@intel.com>
+In-Reply-To: <4dfc0aa3-a08a-495f-896d-7ea7c91a12ff@intel.com>
+Accept-Language: en-US, en-GB
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: SJ0PR12MB8614:EE_|BY5PR12MB4210:EE_
+x-ms-office365-filtering-correlation-id: cd41d86e-e0dd-4415-b708-08df09abbc0c
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam:
+ BCL:0;ARA:13230040|23010399003|366016|376014|1800799024|38070700021|4143699003|56012099006|10067099003|11063799006|18002099003|22082099003;
+x-microsoft-antispam-message-info:
+ cQXgVWKMd8M7mnDuDH6nRmHaPzk3XJyO3PDDeyTU3m31P9rzJb+ckq0K4MD5r+koX8S8C9SVuFXyMnBCiiSRdmi8Hs4OiEZsdJNfcxB4zpZDGd+CioDtPa2mea7lH/UsOoz1Prp7WcGkaXz7q2HzmZmBPi2jZyQTQU1WFvzNVd0En8ygOg2HJwDgpEINxRqxktDchrBga/Spr84jD+0YWouO6P1epk3P2kx4jErhKS+MQW34N79aPXCGPoGF+lDpSvAyoIhsvyOeqfYEnVJoudyJ/au45UeKw+tfcBxY1Wiz19S5z6tKLNEORDOxkABk1INRAlwkDqrR7111ChntHbSv0a9tOXARbwPoex1ckg7uqruhdthFLg4Ua3eaJiZVS4K8kTd0XWjOCnXV/+BpHpP3SJdDaL3s0+iLuNB7Iz+c02sQ+UAYvgyw2/O06+wXK32ctfRZpEfeTUGg5AghNa0ZKgyuOIRoolzUNVpotNyUtAGp1Uiixn64BuryNx+a7qk2c8FoHcQ5iYpcaiFImSr1mUWFsi800bHcqrLQP5lAM5Sz/ypzY3DWc2mIVj1pZLWPwoFj8S/YUHBXZBF9R2Z2E934TFyQ14j8WU044DbQLUg0etY2lK6G3g0hlMUy4NFTZHTQPolU0QaHt7o49w8+3zlrpebtzhf8ICjAN2oL6GStw+T5P5lz0lZmMeCAPOFWmdkTxq3Y2Ki07JoJOw==
+x-forefront-antispam-report:
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SJ0PR12MB8614.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(366016)(376014)(1800799024)(38070700021)(4143699003)(56012099006)(10067099003)(11063799006)(18002099003)(22082099003);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?utf-8?B?K2s0cXFwdEVNTkZoZnEyT3M2L09Pbkd0THRuUE1yWkx3YlFoVkw1MUI3ZlR2?=
+ =?utf-8?B?YlRFWEF3dXVJN2hyQUtRRFZzMkFGYXBwNFEvaFJndjVob08vQ241VlNESDFs?=
+ =?utf-8?B?aDRUR0FHbVdnUHp2OXNkZS8xeUVEeHV3WlMxNFJucnREMWJ3MGxYak1CYUls?=
+ =?utf-8?B?YVJWVXZyTFdBenM5QkdwK2Z5WllRT2NaNWZ1QTAvdEdKa1QybFhhYlo5TXRN?=
+ =?utf-8?B?SFB1RGh3U3Q4Vmd5bGwvMGRjYjE3THZGNW9WRFY4TTQyQ0EvckI4WW8xblFR?=
+ =?utf-8?B?T0ZUUmRpNmdyRGVLTGFoMFBuR0JDYlpYODBVMjRGUk5vVFlCTFgzaUxWRjE5?=
+ =?utf-8?B?Zkh5SDV6YXlpKyt0d0U5a3dDcG0wdHdQaHNocHFLOGdhRkxNdk80ZWhDRVR1?=
+ =?utf-8?B?NHQ1bkxGMm5WNlhMa1RFNWFZbGNUdTUzcks0RWhOOU5FY1dQZHF6SERVekRV?=
+ =?utf-8?B?blFGbGo3WlZ0bDRXYnk2eG1kdENDSFJvd3JXYi9QYlFteTFoVDliWmtSL2ZG?=
+ =?utf-8?B?T2NNV3hBRWZ3aTM2U2tuODZJMU1PdURGOVZ6dFZWTVRyN2RtdHNoSW5Dc09x?=
+ =?utf-8?B?SUtXb2kwSm5leXFnVEZLdUxDN0JsK09JMGdxQWlqU3JDaXBDQkJRNFNIQlBl?=
+ =?utf-8?B?ZWx3cUZUeHV2OStINlZuaXZZVzRSMk1ISjJMNHZlbHJJN2svYTNYc2szWlFk?=
+ =?utf-8?B?TjVFWUwvSGVCTDVyR2FycTlkU2JJejQ2REo5eFQ3MmZGV2JtT1RXUTM1ZzZY?=
+ =?utf-8?B?ODlyZEtmL2QzMHVqNGswZVBZRWttNzFBTHBmSEE4RlppTWFqOElBVUY4VjZo?=
+ =?utf-8?B?S0dYTWV3c1JwRFFzQ25rOGFGclVxTWYrdEdCK2JaNDhJbVhpb0xuUE5ZRm55?=
+ =?utf-8?B?aGJDNk80YVZHSjU2ZlQ2R25XVkJqSkQwdGFmVWtrdWNoT2ZSSzBrcFlKRnN1?=
+ =?utf-8?B?eHBHM1YwVUxFYTdpQklQNllBclhPVFpjeGpFQlFUdTViNkdpalNuVHhNVHpK?=
+ =?utf-8?B?OVlZaEVGR1dOQTlidGxPU1daYm15eFhlN2hNNFc1a3h6MWJUSU1TMGFlUHov?=
+ =?utf-8?B?OFZSZVNIM290S3hVVkRlNXB1ektoNWs4UHVnNzcyRFpacVk1ejhxNFp6TVJB?=
+ =?utf-8?B?aUE5V1NUdFprU0l5S3hjUGg4WHk3VEU5YVNBVUpXN2xXVjBrdkw4WXJJWDdN?=
+ =?utf-8?B?c3NqV2RXcUxaejVJVXZZN0VPT2xhZVYwOXJaVHFEd1c4K2RPT3p6N2VsZllX?=
+ =?utf-8?B?Mlprbyt3QTdSUVljQ2trb2FLUWFYU2VUUFZoQnRvVzR5dTQ3ZDhBc2dsblZG?=
+ =?utf-8?B?ZzFlanFiTmFEYlA0M0tXUGFVTXlSbEVhSXV2Wk5nc21CblN3SGREWXJ6TzEr?=
+ =?utf-8?B?QVQ4RGNQak8zMlVHNk1kbDFlZ0gvTmJaamNjNUF0ZER5ZHJrVXg2N0RuYy9K?=
+ =?utf-8?B?bHRlUFJoY3BTbkowY1ZZL1pGUHdvQXpWSjduOHBnMmVPbU0rUXhJMWkvdWtq?=
+ =?utf-8?B?N28wSktJNWdoaFgwNVR6Q015bkVmMG1GRnp1NG1KdU1ZNTh5SmpTWHpvZTdT?=
+ =?utf-8?B?UDlIL25OcU13dlFTYnVEcTNJdmR5L3BwNUpIUEx0eVoyeUVwOEc1ampxNlp1?=
+ =?utf-8?B?MGZMaERkaVk5T0duRVdoVDJRdHFDRVo0ZzNiSFBMUFJNb0lBelRXT1k2UTNJ?=
+ =?utf-8?B?WDNkakx5UTVsa2RQWXVLSlFDRWtqaG91WktuRGVNbVphWjBpcmJ0T2hTaUJp?=
+ =?utf-8?B?VkZaeGdDeGFRRmJzWm8wVzYzK2xSSEtxenJVd2laQW1Vc0sxZ2JPZkRjVjlX?=
+ =?utf-8?B?aURidnpOdDFQWDM4akdpbVpqZkNqVUdZZ0hrMlVMU0ZlaDBkR0hSWDB0amE5?=
+ =?utf-8?B?QUtkU1NhUVFhOEh4UzNyQXhUMmpZbUVUSENYVWhBNTZMcFNXVjdqd1BYeGhm?=
+ =?utf-8?B?TGp5ZjFrRCtvVTJZTDJ5TU8xOER6bU5EbXR2K05hRDkvc2VCRXlRREQrdkhn?=
+ =?utf-8?B?M2NySEgxZFJNREVsVVd3cEpWQUswUlJCaW53emVQMzM2UEFVZ01xTGloWWQy?=
+ =?utf-8?B?RXlTeGtnZ290L3V5UmdMUE5ReFFpZlMzNUpENWliMzlVUjFuM3pIdHN6RzFR?=
+ =?utf-8?B?RVpmbUpRSmc4ZFFBMis4Y1ZrTUhwdzNCdnJqVmVybnprVWpYS1BFSlpxclJI?=
+ =?utf-8?B?dldidHVKa0N2MVREc1FSNXlMRHR0eW9NdzJyOTlhMjFQUVlNdmVkWUpRTlRi?=
+ =?utf-8?B?ZFRyaVA0REhaOHRzTXNwK2xpVExHazhxcWlTSzY5NVFVa2FqUWovZ1F4eTRk?=
+ =?utf-8?B?UHVxSyt4YmVIN1BYUzNRVlVCRHp4dnNpTmJNWm5nZmxWaHFSWW9nZz09?=
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: SJ0PR12MB8614.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: cd41d86e-e0dd-4415-b708-08df09abbc0c
+X-MS-Exchange-CrossTenant-originalarrivaltime: 03 Sep 2026 11:08:50.8266
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: OxEBYodb7emAQFJ2mRLnsvwxf/RRDOnNASfjuzPbECI4Kd/JENG0TEcP0ZN7tlGXN1plJBLG1U6p8+EZF4dugA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BY5PR12MB4210
 
-On Thu, 3 Sep 2026, Wei Wang wrote:
-
-> The ACS control validation used the kernel's full set of ACS control bits,
-> which allowed users to request ACS features that the device does not
-> support. Because hardware silently ignores these unsupported bits, users
-> have no indication that their config_acs= request was partially
-> ineffective.
-> 
-> Validate the requested ACS control bits against dev->acs_capabilities so
-> that only device-supported ACS controls are accepted. Mask the capability
-> with GENMASK_U16(6, 0) to select only the currently defined ACS control
-> bits (0-6). Higher bits in the capability structure (e.g. the egress
-> control vector size in bits 8-15) do not correspond to control bits in
-> the ACS control register. Add a debug message to report which unsupported
-> bits were ignored.
-> 
-> __pci_config_acs() is also called from disable_acs_redir_param(), which
-> passes a hardcoded acs_mask (PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_EC) that
-> does not need validation. Gate the new check on !acs_mask so it only
-> fires for the config_acs_param path, which always invokes
-> __pci_config_acs() with acs_mask == 0 and builds the actual mask from
-> user input.
-> 
-> Also move the check after the device is matched, since the ctrl bits apply
-> only to the matched device.
-> 
-> Signed-off-by: Wei Wang <wei.w.wang@hotmail.com>
-> Reviewed-by: Jason Gunthorpe <jgg@nvidia.com>
-> ---
->  drivers/pci/pci.c | 14 ++++++++------
->  1 file changed, 8 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index b2879a6be5f8..2af679111a9b 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -910,6 +910,7 @@ struct pci_acs {
->  static void __pci_config_acs(struct pci_dev *dev, struct pci_acs *caps,
->  			     const char *p, const u16 acs_mask, const u16 acs_flags)
->  {
-> +	u16 valid_ctrl = dev->acs_capabilities & GENMASK_U16(6, 0);
-
-This looks a step backwards.
-
-These bits are surely named so this mask should be a composite of those 
-define names, either done here or through another define (likely the 
-latter is better).
-
->  	u16 flags = acs_flags;
->  	u16 mask = acs_mask;
->  	char *delimit;
-> @@ -955,12 +956,6 @@ static void __pci_config_acs(struct pci_dev *dev, struct pci_acs *caps,
->  			}
->  		}
->  
-> -		if (mask & ~(PCI_ACS_SV | PCI_ACS_TB | PCI_ACS_RR | PCI_ACS_CR |
-> -			    PCI_ACS_UF | PCI_ACS_EC | PCI_ACS_DT)) {
-> -			pci_err(dev, "Invalid ACS flags specified\n");
-> -			return;
-> -		}
-> -
->  		ret = pci_dev_str_match(dev, p, &p);
->  		if (ret < 0) {
->  			pr_warn_once("PCI: Can't parse ACS command line parameter\n");
-> @@ -983,6 +978,13 @@ static void __pci_config_acs(struct pci_dev *dev, struct pci_acs *caps,
->  	if (!pci_dev_specific_disable_acs_redir(dev))
->  		return;
->  
-> +	if (!acs_mask && (mask & ~valid_ctrl)) {
-> +		pci_dbg(dev, "Ignoring unsupported ACS bits: %#06x\n",
-> +			mask & ~valid_ctrl);
-> +		mask &= valid_ctrl;
-> +		flags &= valid_ctrl;
-> +	}
-> +
->  	pci_dbg(dev, "ACS mask  = %#06x\n", mask);
->  	pci_dbg(dev, "ACS flags = %#06x\n", flags);
->  	pci_dbg(dev, "ACS control = %#06x\n", caps->ctrl);
-> 
-
--- 
- i.
-
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogSyBWIFAsIFNhdHlhbmFy
+YXlhbmEgPHNhdHlhbmFyYXlhbmEuay52LnBAaW50ZWwuY29tPg0KPiBTZW50OiAwMiBTZXB0ZW1i
+ZXIgMjAyNiAwNzoyOA0KPiBUbzogU2hhbWVlciBLb2xvdGh1bSBUaG9kaSA8c2tvbG90aHVtdGhv
+QG52aWRpYS5jb20+Ow0KPiBrdm1Admdlci5rZXJuZWwub3JnOyBsaW51eC1wY2lAdmdlci5rZXJu
+ZWwub3JnOyBsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnDQo+IENjOiBhbGV4QHNoYXpib3Qu
+b3JnOyBqZ2dAemllcGUuY2E7IGtldmluLnRpYW5AaW50ZWwuY29tOw0KPiBrYnVzY2hAbWV0YS5j
+b207IG1pY2hhbC53aW5pYXJza2lAaW50ZWwuY29tOyBTb25hbmcgUGF0ZWwNCj4gPHNvbmFuZ3BA
+bnZpZGlhLmNvbT47IE5hdGhhbiBDaGVuIDxuYXRoYW5jQG52aWRpYS5jb20+OyBNYXR0IE9jaHMN
+Cj4gPG1vY2hzQG52aWRpYS5jb20+DQo+IFN1YmplY3Q6IFJlOiBbUkZDIFBBVENIIDA1LzE5XSB2
+ZmlvL3BjaTogU2VyaWFsaXplIGNvbmZpZyBhY2Nlc3Mgd2l0aCByZWNvdmVyeQ0KPiANCg0KWy4u
+Ll0NCj4gPiAgICAgICB9IGVsc2Ugew0KPiA+IC0gICAgICAgICAgICAgaWYgKHBlcm0tPnJlYWRm
+bikgew0KPiA+ICsgICAgICAgICAgICAgYWNjZXNzX3JldCA9IHZmaW9fcGNpX2NvcmVfYWNjZXNz
+X2JlZ2luKHZkZXYpOw0KPiA+ICsgICAgICAgICAgICAgaWYgKGFjY2Vzc19yZXQpDQo+ID4gKyAg
+ICAgICAgICAgICAgICAgICAgIHJldHVybiBhY2Nlc3NfcmV0Ow0KPiA+ICsgICAgICAgICAgICAg
+aWYgKHBlcm0tPnJlYWRmbikNCj4gPiAgICAgICAgICAgICAgICAgICAgICAgcmV0ID0gcGVybS0+
+cmVhZGZuKHZkZXYsICpwcG9zLCBjb3VudCwNCj4gPiAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgIHBlcm0sIG9mZnNldCwgJnZhbCk7DQo+ID4gLSAgICAgICAgICAgICAg
+ICAgICAgIGlmIChyZXQgPCAwKQ0KPiA+IC0gICAgICAgICAgICAgICAgICAgICAgICAgICAgIHJl
+dHVybiByZXQ7DQo+ID4gLSAgICAgICAgICAgICB9DQo+ID4gKyAgICAgICAgICAgICB2ZmlvX3Bj
+aV9jb3JlX2FjY2Vzc19lbmQodmRldik7DQo+ID4gKyAgICAgICAgICAgICBpZiAocmV0IDwgMCkN
+Cj4gPiArICAgICAgICAgICAgICAgICAgICAgcmV0dXJuIHJldDsNCj4gDQo+IFRoZSBlbHNlIHt9
+IGlzIGFsbCBhYm91dCBwZXJtLT5yZWFkZm4uIENhbiB3ZSBtb3ZlDQo+IHZmaW9fcGNpX2NvcmVf
+YWNjZXNzX2JlZ2luKCkgYW5kIGVuZCgpIGluc2lkZSB0aGUgaWYgKHBlcm0tPnJlYWRmbikgPw0K
+PiANCj4gV2UgZG8gbm90IG5lZWQgdG8gYnJpbmcgaWYgKHJldCA8IDApIG91dCBvZiBpZihwZXJt
+LT5yZWFkZm4pIGluIHRoYXQgY2FzZS4NCg0KUmlnaHQuIFRoYXTigJlzIGJldHRlciwgd2lsbCBj
+aGFuZ2UgaXQuDQoNClRoYW5rcywNClNoYW1lZXINCg0K
