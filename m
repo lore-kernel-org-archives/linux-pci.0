@@ -1,162 +1,91 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 12A80332EC1;
-	Thu,  3 Sep 2026 06:52:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DAD8A34EF0C;
+	Thu,  3 Sep 2026 07:27:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788418322; cv=none; b=B4xKrAZ7wGzhfOomtmnAuEQYhpOL0SaEvWad12xtKpMdimJlsx/UVafGP2daWyyFjciyUuE5BtbK4cpNSSU4oX53qqAF9pjbGuWedVpffy5wqN72OskFa0dTeZ3aWh2bPBusntUYnVfmwH9HdaXdBeQIOcfiKshtAvfbwvHWndU=
+	t=1788420475; cv=none; b=OfJYFvFt405Ju04z2MEx4LsiaT4FFFpcPfhvhzbjE7MO2ZeieGz6FD2s9IkxZgaLbfMERCFCptflwDLUSYxLWuPhuQW5NHmg8+MH7w0GxXvNJ6BlwRoWDVwbUR66LeodsLeySpYVkSWqIWgJqXQB3CjEMTzcRCdTlP9AMZdZdkQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788418322; c=relaxed/simple;
-	bh=aZgF/Upb9K/OZiFLX1yerLvsEMo9DhiK02Fu0s3b3YU=;
+	s=arc-20240116; t=1788420475; c=relaxed/simple;
+	bh=V/voFFq9KQLX7kBDBUKWGRZA+L/ydeYxyLBn3t5+acM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=DJoQOG/be7dT1FImlc41V6YXwjZWd5WXNyBEBhmStOV35SNUttZIoUl6twwAlDEP3hEBGOcFF35Qng8k+8g/donBjrmYDskF2dI1R1c8b55OKq13ddGBu5MSZyafmnsIXSkJeREE7pP0bP05ITVP/6lYHkeGoCleu9x5PcEIMJo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YzqG5t/H; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=IiUoMkve+iZ3/GpiOJ+a6Je/fDQbxabPL21aB0fTAr6VIlFMU91AQPy+QeZ70LzFJKJa2uH7fgM1ALhAT0f7tNFOXPDWWyBJP9CUNoPYynBcDnO9VjBGgrXDT5jYtIo8MudsYoofMkj92cOSwedronOQmJFudLX0Mq8EqZ446HA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=WiRPPJw3; arc=none smtp.client-ip=192.198.163.7
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YzqG5t/H"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EE9CE1F000E9;
-	Thu,  3 Sep 2026 06:51:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788418320;
-	bh=vr5cCi0rpgJcIMNvNW0lZWsSJFLwrtXn++DANl8aBeA=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=YzqG5t/HyXg3yDjTosqFWISU0tY5fDQeVBQAh0E2rxGdEIoh+F5PgERhw1+TrNGpz
-	 Z4MguECZSlyuAWXNx/qYjyCJBqE5WvzINrYnM7uSaOk7Si6qdRSOUw0zGE/E+ZFYOV
-	 VjZWG0y//qsU+ZWOy5b84KnMBAjIj3S3gHENnWt5OycJ/mBTWerhdM5ElUCgcKHa2f
-	 vxUrnD1o3qHMhGi6klxCAguPOr0WQfosG3MGjDF9WmuqWs5mweKABcM+HX7H+BnSQZ
-	 85/VMMNe633taGP4shqTj8+zqC/l1vM67/C87AGBVi9b+uQnNiKAFUHt3c0bfTbxnY
-	 5z8hj230E0qRg==
-Date: Thu, 3 Sep 2026 09:51:56 +0300
-From: Leon Romanovsky <leon@kernel.org>
-To: "Aneesh Kumar K.V" <aneesh.kumar@kernel.org>
-Cc: Jason Gunthorpe <jgg@ziepe.ca>, Alexey Kardashevskiy <aik@amd.com>,
-	Xu Yilun <yilun.xu@linux.intel.com>, ankita@nvidia.com,
-	linux-coco@lists.linux.dev, linux-pci@vger.kernel.org,
-	driver-core@lists.linux.dev, Aaron Tomlin <atomlin@atomlin.com>,
-	Alistair Francis <alistair.francis@wdc.com>,
-	Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>,
-	Daniel Gomez <da.gomez@kernel.org>,
-	Danilo Krummrich <dakr@kernel.org>,
-	Dexuan Cui <decui@microsoft.com>,
-	Donald Hunter <donald.hunter@gmail.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Jakub Kicinski <kuba@kernel.org>,
-	Luis Chamberlain <mcgrof@kernel.org>,
-	Lukas Wunner <lukas@wunner.de>, Petr Pavlu <petr.pavlu@suse.com>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Robin Murphy <robin.murphy@arm.com>,
-	Sami Tolvanen <samitolvanen@google.com>,
-	Samuel Ortiz <sameo@rivosinc.com>,
-	Saravana Kannan <saravanak@google.com>,
-	Will Deacon <will@kernel.org>,
-	"Fontenot, Nathan" <Nathan.Fontenot@amd.com>,
-	rick.p.edgecombe@intel.com, yilun.xu@intel.com,
-	Jiri Pirko <jiri@resnulli.us>
-Subject: Re: [PATCH 00/15] Device Evidence and Trust for PCI Security
- Protocol (TDISP)
-Message-ID: <20260903065156.GX24140@unreal>
-References: <20260705220819.2472765-1-djbw@kernel.org>
- <4c43da3e-c598-48cf-8491-cb958e574c9c@amd.com>
- <amk7Xzm5jmz+6SPJ@ziepe.ca>
- <anFE7m164AmchTy/@yilunxu-OptiPlex-7050>
- <20260805005533.GB28508@ziepe.ca>
- <apeF/peEzdxvKeWR@yilunxu-OptiPlex-7050>
- <2e721509-0aee-47ee-b17a-688876e02f74@amd.com>
- <20260902150125.GD2890729@ziepe.ca>
- <yq5a5x0mzxhz.fsf@kernel.org>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="WiRPPJw3"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1788420474; x=1819956474;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=V/voFFq9KQLX7kBDBUKWGRZA+L/ydeYxyLBn3t5+acM=;
+  b=WiRPPJw3UNlu8a7EGPV7M7mR7/p1NRVG90hD9TgSRXPBOWwgSpODNObO
+   tNHR5KUEwGXLL/y8tZFE4TQb5Umzn9bOFE7lzrx7VabXB9hBinMHcSGDs
+   dp8tHx6E9VfBL73dm5Y77A3n/wg/b1byWzuktI/EgyOuyz8A1aFFrf47u
+   7Z2eRuICJ0+7/DJid+OClg3TT5OQUn2K36n2ZlemwoF1e7Kk+OIxg2tbp
+   KDTcBlzw50I4Vfqr3tlQ159BcAh7jyXc8hUAVWvi+cFI9lSe0lm2Q6t2U
+   FLsmsr89jVpCm9jwiGy2kx4trDncN410193p/p4rmcqQnW2AdfbWZOEf5
+   g==;
+X-CSE-ConnectionGUID: j2zf9v1HS8u/MI1XHuBvWQ==
+X-CSE-MsgGUID: 8D5Z8r1nTrK41ISOVH33Jw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11894"; a="114434505"
+X-IronPort-AV: E=Sophos;i="6.25,258,1779174000"; 
+   d="scan'208";a="114434505"
+Received: from fmviesa008.fm.intel.com ([10.60.135.148])
+  by fmvoesa101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Sep 2026 00:27:53 -0700
+X-CSE-ConnectionGUID: iNFgh2RaSOidy/gagV86NQ==
+X-CSE-MsgGUID: fhio3FW4Ta2y1jNVcqvh7w==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.25,258,1779174000"; 
+   d="scan'208";a="267043680"
+Received: from smoticic-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.244.28])
+  by fmviesa008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Sep 2026 00:27:50 -0700
+Date: Thu, 3 Sep 2026 10:27:48 +0300
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: "Rafael J. Wysocki" <rafael@kernel.org>
+Cc: Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM <linux-pm@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Peixin Xie <peixin.xie@linux.spacemit.com>,
+	Sakari Ailus <sakari.ailus@linux.intel.com>,
+	Lukas Wunner <lukas@wunner.de>,
+	Ilpo =?iso-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	Hans de Goede <hansg@kernel.org>
+Subject: Re: [PATCH v2 3/6] ACPI: scan: Combine two conditionals in
+ acpi_bus_attach()
+Message-ID: <apkhdHcu45NnkiNr@ashevche-desk.local>
+References: <5144065.31r3eYUQgx@rafael.j.wysocki>
+ <8743568.T7Z3S40VBb@rafael.j.wysocki>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <yq5a5x0mzxhz.fsf@kernel.org>
+In-Reply-To: <8743568.T7Z3S40VBb@rafael.j.wysocki>
+Organization: Intel Finland Oy - BIC 0357606-4 - c/o Alberga Business Park, 6
+ krs, Bertel Jungin Aukio 5, 02600 Espoo
 
-On Thu, Sep 03, 2026 at 11:29:04AM +0530, Aneesh Kumar K.V wrote:
-> Jason Gunthorpe <jgg@ziepe.ca> writes:
+On Wed, Sep 02, 2026 at 09:30:00PM +0200, Rafael J. Wysocki wrote:
+
+> There are two conditionals in acpi_bus_attach() that can be combined,
+> which slightly reduces the overhead and makes the code a bit easier
+> to follow, so do that.
 > 
-> > On Wed, Sep 02, 2026 at 12:20:51PM +1000, Alexey Kardashevskiy wrote:
-> >> On 2/9/26 12:12, Xu Yilun wrote:
-> >> > On Tue, Aug 04, 2026 at 09:55:33PM -0300, Jason Gunthorpe wrote:
-> >> > > On Tue, Aug 04, 2026 at 09:48:30AM +0800, Xu Yilun wrote:
-> >> > > 
-> >> > > > Glad to see you all here to make progress! Intel can also help on this.
-> >> > > > Can we have a meeting to discuss on these topics? As Alexey mentioned,
-> >> > > > previously we had a bi-weekly call, perhaps use that for our first
-> >> > > > meeting? Or what time works best for everyone?
-> >> > > 
-> >> > > I prefer we defer such community discussions till September, that
-> >> > > seems appropriate given some dates I've seen.
-> >> > 
-> >> > Hi Ankit & Jason,
-> >> > 
-> >> > Do we have a plan to schedule a meeting to discuss next steps?
-> >> > 
-> >> > If so, we can figure out a specific time on the Discord channel.
-> >> > https://discord.gg/KKqC438c
-> >
-> >> So I've been trying to find a time slot. Say, keep it on Thursdays
-> >> (USA) (kinda short notice), bi-weekly, we can do:
-> >
-> > I've asked several people in Europe to help on parts of this series,
-> > and combined with China/Aus someone is going to end up left out.
-> >
-> > I know people are anxious about their projects. In the short term I
-> > will volunteer to send patches (ie bug fixes!) to Linus in the CC area
-> > Dan was responsible for. Please email me if something needs some
-> > attention and we can figure it out.
-> >
-> > To fully move forward we need to establish a new TSM maintainer
-> > team. In my past experience a consensus has emerged off list, I
-> > suggest we try that here as well. Several people should be
-> > recruited. I will also volunteer to help train and launch a new team.
-> >
-> > I can say that several people from NVIDIA are working on the ideas in
-> > this patch series. Ankit is setting up a team to focus on upstream
-> > patches for all of CC inside NVIDIA. I've asked Jiri Pirko to work on
-> > the PCI evidence uAPI based on his deep netlink experience, and Leon
-> > Romanovsky to work on the binding problem/adversarial/trust level
-> > driver core idea. They will share their approaches for solving these
-> > problems as seperate proposals.
-> >
-> 
-> 
-> I can also help with the device trust and iommufd interfaces, as well as
-> the CCA DA pieces. We need to find someone to take on dma-buf, as that is
-> one area we have not yet integrated with the full TDISP flow.
+> No intentional functional impact.
 
-Given my recent involvement in dma-buf, I can try to fill that gap.
+Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 
-> 
-> >
-> >> Scenario A:
-> >> Seattle (PDT, UTC-7)		07:00 – 08:00	Day 1
-> >> Atlantic Time (ADT, UTC-3)	11:00 – 12:00	Day 1
-> >> Berlin (CEST, UTC+2)		16:00 – 17:00	Day 1
-> >> India (IST, UTC+5:30)		19:30 – 20:30	Day 1
-> >> China (CST, UTC+8)		22:00 – 23:00	Day 1
-> >> Sydney (AEST, UTC+10)		00:00 – 01:00	Day 2 (I can do it once in 2 weeks)
-> >
-> > This is the only time Europe could reasonably participate in,
-> > obviously it is not OK for China and Aus.
-> >
-> 
-> I'm based in India, and all the proposed times work for me. Who is based
-> in Europe?
+-- 
+With Best Regards,
+Andy Shevchenko
 
-Jiri and I are in the European time zone.
 
-> 
-> Jason -> Canada ?
-
-Yes
-
-> Yilun -> China
-> Alexey -> Australia
-> Ankit Agarwal -> US ?
-> Aneesh -> India
-
-Thanks
