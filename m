@@ -1,144 +1,68 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.12])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4BB1937A854
-	for <linux-pci@vger.kernel.org>; Thu,  3 Sep 2026 04:01:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B7F4233D9E
+	for <linux-pci@vger.kernel.org>; Thu,  3 Sep 2026 04:06:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788408108; cv=none; b=pMwYOOvdkIC2sFImFo2vuBAXbhPCwDrCgjdv46QI2fnEe69+f+hDBats79TsQPZnPjpgJO00vwJTAZBHST6pdT01fonzbLx8Eit1o28f210391GtUCbNGGrKnmYmXVHf22g9ed+xvVNis6QI5u2ntj9K07NtkHCkcH3yulP3vDU=
+	t=1788408374; cv=none; b=Z6Ax4OFkv1gCgg1x6LIXdbMH24l07ScdE4VJggNVx2FYxBl7VVPEFxaF9qxMe7OmQEBGJo4mdiUD6V7WqDu/sU5Q2Db1utGxBnEOkF9Opj1RHxlx8sn2Wn6uSFl3fjB2DcH/UJ8La6jHunLEFzcxwvcOm0/sQG6RM9ieu0kwAJA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788408108; c=relaxed/simple;
-	bh=juNPSaR0obCW8xYZ6J4vO4JO/NhOata5NIxcOqV7nsw=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=CfKSEbhEMOxVemJtvuhsshtacSSI1lmDOt+AA4OxF30+jvVQ9fQ4SJMZXqGc09kqKkDewenIfHVSbP3DUJaxuzdbifaCdbVz0lSl9RmsxXYeCh/UL/HSabthOSjgJTHXZ/YUGGR2wuQIa23XKkAvxJkBRblEZDa8mCpQ4Thg1Jo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=L61Z8mJk; arc=none smtp.client-ip=192.198.163.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1788408374; c=relaxed/simple;
+	bh=KovHD+4SNyES+ZK9JgtI2jAzZ/uHqoFmaM36+k3drdM=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=jxVclB7WFRrPvTdYcDq9Edz8nOTb3EGi1TCT6TlDCHPy6v3ai5/jldCxaRCu6KSYLRnLaT0nmC9VnbaQ/s16uxNsZHwiFQdR420XAJ8Vp7xJYw3J8Nf7Hph+GZFXsKAlY8qnYJvrcw6G86l8QeE14PaszFW7pGT3OaBioFpDflE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Gq2OiMwc; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="L61Z8mJk"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1788408107; x=1819944107;
-  h=date:from:to:cc:subject:message-id;
-  bh=juNPSaR0obCW8xYZ6J4vO4JO/NhOata5NIxcOqV7nsw=;
-  b=L61Z8mJkzbotVMaHa44/ML6GtPrmVEhZX6gjdtfFca1LVmziDCVkBf1h
-   JIqwqIaJky/B5FpGJ+Z29rNGUJXau4IQ5WMW4LfOmBwQByAxd0pGyqE92
-   2hL8NUOq9yNRkjNS6faAEPQQAJc6nMsYK+qvXa0vw3GCPi8ltUMUb5Le0
-   topPgykGvjwB6r2vzm/Mf0fYHH1MUrjDrV44+pyYN5aYdrWQzLdbjlREf
-   b9ZGCSu2eU+aJMGXGLVnOgkUs3r3q+yzKjLTYIfQd5+mpOZLrHYj7S5rM
-   s549aDOIQUGWnmqBpi6zEJkvqzTOOwuTSdtXvMApHOl9Uh55YGadSd5JD
-   Q==;
-X-CSE-ConnectionGUID: pYjW1NyyQq6WFMSIrB8mBA==
-X-CSE-MsgGUID: vOQPcC0aSiqwtZWzJFewPg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11894"; a="92696299"
-X-IronPort-AV: E=Sophos;i="6.25,258,1779174000"; 
-   d="scan'208";a="92696299"
-Received: from orviesa008.jf.intel.com ([10.64.159.148])
-  by fmvoesa106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Sep 2026 21:01:46 -0700
-X-CSE-ConnectionGUID: IZX5dsV4RX2sse1ylFlsQg==
-X-CSE-MsgGUID: BjTIZdYfToenNcNou86sUg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.25,258,1779174000"; 
-   d="scan'208";a="269054165"
-Received: from lkp-server01.sh.intel.com (HELO bfac249b2189) ([10.239.97.150])
-  by orviesa008.jf.intel.com with ESMTP; 02 Sep 2026 21:01:45 -0700
-Received: from kbuild by bfac249b2189 with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1x1ydy-000000003xI-3bMg;
-	Thu, 03 Sep 2026 04:01:42 +0000
-Date: Thu, 03 Sep 2026 12:00:58 +0800
-From: kernel test robot <lkp@intel.com>
-To: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Gq2OiMwc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4ADD31F000E9;
+	Thu,  3 Sep 2026 04:06:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1788408372;
+	bh=KovHD+4SNyES+ZK9JgtI2jAzZ/uHqoFmaM36+k3drdM=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=Gq2OiMwc4Qzv/zAVfz07/aKblmYAmeHZCnZcXFBV/V2e6PHvdPK9Xt1KqCoUzJ4h+
+	 1abHKY3ov8P4UQn8LJr6g0nnlXTWttnAfDIaVRE9Wx9Uh1Sieu15doMbwN6fbLt7G1
+	 r9B8W/1MEcwWOdZ51WVQvIq1hvISpD/jazh3jZK+cGeXf6uXMHhEaiwbVMyc64ViLw
+	 sZE4II2qvP6H9kKEM/zkWGMfd9qwGTFfvD3Yu3y34rnQAY4X1vxc9mPFk6yIzxpaU2
+	 8ynDez6uHEkWIeEvcbKXgmec0fWqvmtLFD8Se5J73H39roFPZIcgBEXxaHmkInR7Jg
+	 S9y8W3zpqBW/w==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v9 2/6] Documentation/kernel-parameters: Add
+ multi-device config_acs example
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Wei Wang" <wei.w.wang@hotmail.com>
 Cc: linux-pci@vger.kernel.org
-Subject: [pci:controller:dwc-qcom] BUILD SUCCESS
- 86624b718f94517b26f96c1d7beb7632e5562afd
-Message-ID: <202609031253.88sx6yia-lkp@intel.com>
-User-Agent: s-nail v14.9.25
+In-Reply-To: <SI2PR01MB439342D6BDCFD10A2B6207B9DCB62@SI2PR01MB4393.apcprd01.prod.exchangelabs.com>
+References: <SI2PR01MB4393F337A792CB3258C2E073DCB62@SI2PR01MB4393.apcprd01.prod.exchangelabs.com>
+ <SI2PR01MB439342D6BDCFD10A2B6207B9DCB62@SI2PR01MB4393.apcprd01.prod.exchangelabs.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 03 Sep 2026 04:06:11 +0000
+Message-Id: <20260903040612.4ADD31F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/dwc-qcom
-branch HEAD: 86624b718f94517b26f96c1d7beb7632e5562afd  PCI: qcom: Block accesses to downstream devices on link down
+> The config_acs parameter allows configuring ACS settings for multiple PCI
+> devices by separating entries with semicolons. The current documentation
+> only illustrates applying one configuration pattern to all devices, but
+> does not show how to specify multiple devices with different ACS settings
+> in a single parameter. Add an example demonstrating multi-device usage
+> with distinct ACS configurations.
+>=20
+> Some bootloaders interpret ';' as a command separator, which can cause
+> the parameter to be split as multiple commands. Document that the entire
+> parameter may need to be quoted to avoid bootloader parsing issues. This
+> avoids confusing bootloader errors such as "can't find command <BDF>"
+> when passing multiple device entries.
+>=20
+> Signed-off-by: Wei Wang <wei.w.wang@hotmail.com>
 
-elapsed time: 2297m
+Sashiko has reviewed this patch and found no issues. It looks great!
 
-configs tested: 67
-configs skipped: 1
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/SI2PR01MB4393F337A7=
+92CB3258C2E073DCB62@SI2PR01MB4393.apcprd01.prod.exchangelabs.com?part=3D2
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
-
-tested configs:
-alpha         allnoconfig    gcc-16.1.0
-alpha        allyesconfig    gcc-16.1.0
-arc          allmodconfig    clang-24
-arc           allnoconfig    gcc-16.1.0
-arc          allyesconfig    clang-24
-arm           allnoconfig    gcc-16.1.0
-arm          allyesconfig    clang-24
-arm64        allmodconfig    clang-24
-arm64         allnoconfig    gcc-16.1.0
-csky         allmodconfig    gcc-16.1.0
-csky          allnoconfig    gcc-16.1.0
-hexagon      allmodconfig    gcc-16.1.0
-hexagon       allnoconfig    gcc-16.1.0
-i386         allmodconfig    clang-22
-i386          allnoconfig    gcc-16.1.0
-i386         allyesconfig    clang-22
-loongarch    allmodconfig    clang-24
-loongarch     allnoconfig    gcc-16.1.0
-m68k         allmodconfig    gcc-16.1.0
-m68k          allnoconfig    gcc-16.1.0
-m68k         allyesconfig    clang-24
-microblaze    allnoconfig    gcc-16.1.0
-microblaze   allyesconfig    gcc-16.1.0
-mips         allmodconfig    gcc-16.1.0
-mips          allnoconfig    gcc-16.1.0
-mips         allyesconfig    gcc-16.1.0
-nios2        allmodconfig    clang-20
-nios2         allnoconfig    clang-24
-nios2         allnoconfig    gcc-11.5.0
-openrisc     allmodconfig    clang-20
-openrisc      allnoconfig    clang-24
-openrisc      allnoconfig    gcc-16.1.0
-parisc       allmodconfig    gcc-16.1.0
-parisc        allnoconfig    clang-24
-parisc        allnoconfig    gcc-16.1.0
-parisc       allyesconfig    clang-17
-parisc       allyesconfig    gcc-16.1.0
-powerpc      allmodconfig    gcc-16.1.0
-powerpc       allnoconfig    clang-24
-powerpc       allnoconfig    gcc-16.1.0
-riscv        allmodconfig    clang-24
-riscv         allnoconfig    clang-24
-riscv         allnoconfig    gcc-16.1.0
-riscv        allyesconfig    clang-24
-s390         allmodconfig    clang-17
-s390         allmodconfig    clang-24
-s390          allnoconfig    clang-24
-s390         allyesconfig    gcc-16.1.0
-sh           allmodconfig    gcc-16.1.0
-sh            allnoconfig    clang-24
-sh            allnoconfig    gcc-16.1.0
-sh           allyesconfig    clang-17
-sh           allyesconfig    gcc-16.1.0
-sparc         allnoconfig    clang-24
-sparc         allnoconfig    gcc-16.1.0
-sparc64      allmodconfig    clang-20
-um           allmodconfig    clang-17
-um            allnoconfig    clang-24
-um           allyesconfig    gcc-16.1.0
-x86_64       allmodconfig    clang-22
-x86_64        allnoconfig    clang-22
-x86_64        allnoconfig    clang-24
-x86_64       allyesconfig    clang-22
-x86_64      rhel-9.4-rust    clang-22
-xtensa        allnoconfig    clang-24
-xtensa        allnoconfig    gcc-16.1.0
-xtensa       allyesconfig    clang-20
-
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
