@@ -1,88 +1,140 @@
-Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id E8A283B3C0E;
-	Thu,  3 Sep 2026 18:46:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
+Received: from mout-p-103.mailbox.org (mout-p-103.mailbox.org [80.241.56.161])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 992F2384CD1;
+	Thu,  3 Sep 2026 18:51:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.161
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788461220; cv=none; b=X216jm8R2xk37i4n1LJ1YC1lV6pOtPErNu0MOSuW3280zIw5JHv4G6PJMar3bn3DlExwRXGD7LOUDlHeG5hns/xSoWhytTC0D8XnVDQ2WzUta1x1TJGF3O7hH4kYp41Gh7fvzSrEenoGqELEu0x0PwXk89BKY72XFI+Hq/4AUmU=
+	t=1788461481; cv=none; b=bdbyLnPyjaSbo+mzwJf7Hqv8cp+rl9XmWmq82Bii7jmvg3SKZmMxOThI1uzOWdOrstf2SNnD8heSev2u/gUo7zmBlxPDVzT3I0C57AlfOv9M+l3AWiKdohsbFOQfHHLGLWdD2XLtXT6/j/6pqx8nGnITvomH+lPhCbgVYZhM5cQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788461220; c=relaxed/simple;
-	bh=AAOBbTX//dnshYHVuCrRy4d3uSMcIR6W5SJrVT1ox6M=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=kCP91qtO7gNr3aOUtFAs97Ayi9mIdRGWZCkdUsO5EcWqXICwPLPUE6kTllpOBSr1vWUChTR442ZvtRNelfjvLzc3OEJi3DxtUhdkSQpOgi+yUt7z1RZ4Sjj/IcXSF5kFRvAewiE3Ut85mxai7yhCj1gu885SPI8fZf7q6gDdDY4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=GWoHdprR; arc=none smtp.client-ip=13.77.154.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
+	s=arc-20240116; t=1788461481; c=relaxed/simple;
+	bh=iHcU2RXuw3ix/FqMa08c18FL3/q2t4eEtWuf9N23UNc=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=h95VAX4kv7/y8tZdPj1ORqEwJ+kBJMegXA1uQM/9PgayVSrhhmE0WgC3dsmMrnJDbbzNDo95hpkHOvXvrIeXHKc3yq+2rNtXbd1CD0c4Mp6k+x4PB7jdUnvGNGilezloTI4nTJsEPPqDJU/JrEWl1fX4kM3TURnNU429lpzblaY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=SAxuB+QN; arc=none smtp.client-ip=80.241.56.161
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="GWoHdprR"
-Received: from localhost (unknown [20.191.74.188])
-	by linux.microsoft.com (Postfix) with ESMTPSA id 72A4D20B712B;
-	Thu,  3 Sep 2026 11:46:11 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 72A4D20B712B
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
-	s=default; t=1788461172;
-	bh=9417ftu6LLY+NWWmPrsJiSQmjQu6hJFyUo3Wc4rbzQ0=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-	b=GWoHdprR5u3g4iaUJw+ld4P0JfeaC8Zb35w8iS2kUbDkaZLOIqjnNUGhg/ccvjyZY
-	 mmtysBBIBD9xgJhoDgH5h8Z3gWvBzY61WsCRVuofFgYyI0XOB491W7t/B1v6jREMjn
-	 iCIC9tR1wosLiHfhUmIryXgNj0z5VXRKmXlv69Es=
-Date: Thu, 3 Sep 2026 11:46:47 -0700
-From: Jacob Pan <jacob.pan@linux.microsoft.com>
-To: Jason Gunthorpe <jgg@nvidia.com>
-Cc: Wei Liu <wei.liu@kernel.org>, Mukesh R <mrathor@linux.microsoft.com>,
- Alex Williamson <alex@shazbot.org>, hpa@zytor.com, robin.murphy@arm.com,
- robh@kernel.org, mhklinux@outlook.com, muislam@microsoft.com,
- namjain@linux.microsoft.com, magnuskulke@linux.microsoft.com,
- anbelski@linux.microsoft.com, linux-kernel@vger.kernel.org,
- linux-hyperv@vger.kernel.org, iommu@lists.linux.dev,
- linux-pci@vger.kernel.org, linux-arch@vger.kernel.org, kys@microsoft.com,
- haiyangz@microsoft.com, decui@microsoft.com, longli@microsoft.com,
- tglx@kernel.org, mingo@redhat.com, bp@alien8.de,
- dave.hansen@linux.intel.com, x86@kernel.org, joro@8bytes.org,
- will@kernel.org, lpieralisi@kernel.org, kwilczynski@kernel.org,
- bhelgaas@google.com, arnd@arndb.de, "Aneesh Kumar K.V"
- <aneesh.kumar@kernel.org>, jacob.pan@linux.microsoft.com
-Subject: Re: [PATCH v5 3/9] mshv: Introduce basic mshv bridge device for
- VFIO to build upon
-Message-ID: <20260903114647.00005a1f@linux.microsoft.com>
-In-Reply-To: <20260903174014.GM4157646@nvidia.com>
-References: <20260731223427.2554388-1-mrathor@linux.microsoft.com>
-	<20260731223427.2554388-4-mrathor@linux.microsoft.com>
-	<20260902111905.000079d4@linux.microsoft.com>
-	<20260903144236.GK4157646@nvidia.com>
-	<20260903161328.GA3102631@liuwe-devbox-debian-v2.local>
-	<20260903174014.GM4157646@nvidia.com>
-Organization: LSG
-X-Mailer: Claws Mail 3.21.0 (GTK+ 2.24.33; x86_64-w64-mingw32)
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="SAxuB+QN"
+Received: from smtp102.mailbox.org (smtp102.mailbox.org [10.196.197.102])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mout-p-103.mailbox.org (Postfix) with ESMTPS id 4hbTFr5LrkzKn76;
+	Thu, 03 Sep 2026 20:51:12 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
+	t=1788461472;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=ljjuDSq9jtR3ksKnCJ8xHYRcpmhBC+ZvoIAugnI2lCg=;
+	b=SAxuB+QNndnOiFRoFsMfH97VfY2vZ/iIwOTMwq6BSSm4IlOMzHXCDyWIpkVw/9e7F2FHD2
+	/MTkBoaXPpncw894963YJRSZwVhRAhhp5ilLX0hI2pr5AeeSsV2VghO888P9g3bFaMd0iq
+	WtB2JD8s0/E8nadmCxgXvSTYdeRho3pziBbln2nQdFDV0QbMK8RPL1/In1imx0wdWzR4Fv
+	Lo0QPdfbnr1+ATdEXgqUYFzr/DS8WziETs9ymf4/zs3by9dDBc6+4gZ3fvTevFckDQMJSW
+	tvNvcGx/NtVXWzG2ohyOr4ZtFuRzNpX1yt1oiSbBSeK/3S59aQM7fV+rgDwKFA==
+Message-ID: <e5b47840-6c45-4e00-8907-7766dd1d4607@mailbox.org>
+Date: Thu, 3 Sep 2026 20:51:06 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Subject: Re: [PATCH v3] PCI: rcar-gen4: Limit Max_Read_Request_Size and
+ Max_Payload_Size to 256 Bytes
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, stable@vger.kernel.org,
+ =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ Geert Uytterhoeven <geert+renesas@glider.be>,
+ Koichiro Den <den@valinux.co.jp>, Lorenzo Pieralisi <lpieralisi@kernel.org>,
+ Magnus Damm <magnus.damm@gmail.com>, Manivannan Sadhasivam
+ <mani@kernel.org>, Rob Herring <robh@kernel.org>,
+ Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+ linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
+ Ziyao Li <liziyao@uniontech.com>, Rong Zhang <i@rong.moe>,
+ Huacai Chen <chenhuacai@loongson.cn>
+References: <20260903173216.GA2145418@bhelgaas>
+Content-Language: en-US
+From: Marek Vasut <marek.vasut@mailbox.org>
+In-Reply-To: <20260903173216.GA2145418@bhelgaas>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
+X-MBO-RS-ID: da9182bb6e4e7c6071b
+X-MBO-RS-META: 18qawh44pghaq6gy9km6bho69jfg3f4c
 
-Hi Jason,
+Hello Bjorn,
 
-On Thu, 3 Sep 2026 14:40:14 -0300
-Jason Gunthorpe <jgg@nvidia.com> wrote:
-
-> On Thu, Sep 03, 2026 at 09:13:28AM -0700, Wei Liu wrote:
-> > > Does mshv use KVM at all? Can a kvm fd describe the partition?  
-> > 
-> > No. MSHV doesn't use KVM. We don't have a kvm fd. We have an mshv
-> > fd to describe the partition. They are different virtualization
-> > solutions.
-> > 
-> > In the ideal world, the fd should be hypervisor agnostic, not tied
-> > to kvm.  
+On 9/3/26 7:32 PM, Bjorn Helgaas wrote:
+> [+cc Ziyao, Rong, Huacai for similar Loongson MRRS issue]
 > 
-> There is a patch generalizing vfio to work on FDs instead of KVM
-> structures:
+> On Fri, Aug 21, 2026 at 04:05:51AM +0200, Marek Vasut wrote:
+>> R-Car Gen4 PCIe controller has a hardware limitation of 256 Bytes
+>> Max_Payload_Size (MPS). PCIe specification indicates that the MPS
+>> must not exceed minimum MPS of any element along the packet path.
+>> Force limit Max_Payload_Size to at most 256 Bytes for each device
+>> connected to this PCIe controller.
 > 
->  https://patch.msgid.link/20260903-vfio-v2-1-ef4cd4190ae7@linux.ibm.com 
-> 
-> That's probably a good step long that line.
-Yeah, ideally, it would be removing/rename device/group->kvm to
-something like group/device->vm_file?
+> IIUC the PCI core already enforces this limit, and what this patch
+> does is double-check that this limit is observed with this check,
+> right?
 
+That is correct, this was changed in V3, I missed the commit message 
+update, sorry.
+
+Would you like me to respin the patch one more time with an updated 
+commit message, or would you be willing to fix it up in tree ?
+
+>    +	WARN_ON(pcie_get_mps(dev) > 256);
+> 
+> More below.
+
+
+[...]
+
+>> +	bridge->no_inc_mrrs = 1;
+>> +	if (pcie_get_readrq(dev) > 256) {
+>> +		pci_info(dev, "Limiting MRRS to 256 bytes\n");
+>> +		pcie_set_readrq(dev, 256);
+>> +	}
+> 
+> It would be nice if all the platforms that need no_inc_mrrs could
+> apply it the same way, but I assume you saw loongson_mrrs_quirk() and
+> loongson_set_min_mrrs_quirk() in the process of finding no_inc_mrrs,
+> and chose a different implementation strategy for some reason, e.g.,
+> this way doesn't have to include device IDs for all the Root Ports?
+
+The loongson quirk won't work if the PCIe controller driver is built as 
+a module, which the R-Car Gen4 PCIe driver can be, and in fact is often 
+built as a module, because it depends on firmware which is loaded from 
+filesystem.
+
+If the controller driver is built as a module, then 
+DECLARE_PCI_FIXUP_ENABLE() is not applied, the 
+DECLARE_PCI_FIXUP_ENABLE() is applied only on boot and therefore only 
+for built-in drivers.
+
+I got burnt by DECLARE_PCI_FIXUP_ENABLE() in V1 of this patch.
+
+However, there is also another part to this -- the 
+rcar_gen4_pcie_enable_device() is called for every device on the bus and 
+applies the MRRS limitation to every device on the bus that is 
+downstream of the controller, not only the controller. This is necessary 
+on this controller variant, else hardware like PCIe SSDs with MRRS 
+higher than the controller break.
+
+> Maybe we should rework no_inc_mrrs in such a way that drivers could
+> set a max MRRS in the struct pci_host_bridge and make
+> pcie_write_mrrs() and pcie_set_readrq() pay attention to it?  That
+> might let us get rid of the FIXUP approach.
+In light of the last paragraph above, that the MRRS has to be limited 
+also on all devices downstream of this particular controller, I would 
+like to ask -- does the Loongson controller have the same limitation or 
+not ? If not, then I would argue this quirk should be isolated to this 
+controller variant ; else, I am happy to start on the core patches.
+
+[...]
+
+Thank you for your help !
