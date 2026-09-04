@@ -1,290 +1,261 @@
-Received: from mout02.posteo.de (mout02.posteo.de [185.67.36.66])
+Received: from CWXP265CU009.outbound.protection.outlook.com (mail-ukwestazon11021135.outbound.protection.outlook.com [52.101.100.135])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ECEEE356772
-	for <linux-pci@vger.kernel.org>; Fri,  4 Sep 2026 13:15:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.67.36.66
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788527750; cv=none; b=rf8wfHrKfmeoOh7B16olZn6PweNG5b9EvDS0U70WKc4s85M/PdbBUbNybEKxBmxmB9AQ7JnHwHFbacUQ7KzHKuuQ2Ykx4IjEp5/qiaPCEmcK1P9hHt0ota8Wym/qbdeLmnBDk6v2pC6fZmmVfkiuqqx2eiVdWShGjRyaye5+Ekg=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788527750; c=relaxed/simple;
-	bh=+yd2ujQF4Rxkb5XryUBuZgnM2M+Yax+7uavPjdEWkpA=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=EuNy59g9EbHkfgH38JZyBu3WG+k3oFiMWWadmwW9qdlU7QVF5dZ1XLz8bFLVLVNONicbS4OzjDsf/30EkQOMOh8effZApfYnMthXAP0VkaLZvCxT1PZfjWViu5uuRcBp78FndmTm+KE2M99tMCwDjle9+0HTFsOmLNH1CErHROs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de; spf=pass smtp.mailfrom=posteo.de; dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b=ZrP+REOS; arc=none smtp.client-ip=185.67.36.66
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=posteo.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 38621324B22;
+	Fri,  4 Sep 2026 13:32:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.100.135
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1788528745; cv=fail; b=MfvwGFc4O9fQDcl5gIZWnzF5lSCKcheAAWfo5Yy5LO19sh9NXEQwDdaBxoNIsGik8MlbYhIjMM2wbmNSSeTLrSBD6sOo8h7Q7BY5JEoKZGAm0HtGzpAeqMr/65Hy7TZeeWDyjjHdmQqfDQX2lfwf3re03iYJC2osA0uysrnWKZk=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1788528745; c=relaxed/simple;
+	bh=/JKRKeS282p3ezwfdRXwA4RNzQr/G3la9xuRnmZFqUI=;
+	h=Content-Type:Date:Message-Id:Cc:Subject:From:To:References:
+	 In-Reply-To:MIME-Version; b=DNDQj74jsopx5z1TBpDb+CQYmufy//SXaOr26DhSZkOhjnrX8nsnlAiUUM+YBrlGyLRcqLi5D59TJkjf7N3lidfgSS/ge5KAM8vgI9EYSydlFHAONc++eX/ortnX/SeYgmXvKuVL9Rbtx4/AriuWYikPGshfCnGgWGv2msrfFHM=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net; spf=pass smtp.mailfrom=garyguo.net; dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b=aLfUs14W; arc=fail smtp.client-ip=52.101.100.135
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=garyguo.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b="ZrP+REOS"
-Received: from submission (posteo.de [185.67.36.169]) 
-	by mout02.posteo.de (Postfix) with ESMTPS id 1B96B240104
-	for <linux-pci@vger.kernel.org>; Fri,  4 Sep 2026 15:15:39 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=posteo.de;
-	s=1984.8680eb; t=1788527739;
-	bh=mzw015gDpf/mVU0JJQSLVGclm1Ii2Bf9Le8LbZPWyYs=;
-	h=Message-ID:Subject:From:To:Cc:Date:Autocrypt:Content-Type:
-	 MIME-Version:OpenPGP:From;
-	b=ZrP+REOSwS9A2d5IjvPFQGj8qGngoNHJLlHRohv3ja+0prDS4qPdAK7tI6ZMvAlqS
-	 U5MgVcJTgSqf/uf+vjT5sMhy0cWaOKigGHsZagScj6+LGuDXuZRkMaM4W8tQuO/Y1u
-	 Ao9tYQBzdBF7riBKsdl3ZReKP6k9WPuS6RC0gRbGcPf8D5k2+csr0BhZPFdqSW+QTs
-	 Css/rZ16BlCnXE5LMsgUJUOfeKa8VFIS88jWzb3ScIBaM8OQ+jenmpzfXMIO/cE4um
-	 +ZG0Vb6yOKP3gdRn3t0rLp7s88sJGfh6qOEatSJZP1gsc9h6SjM3uhqFYy86AnhC/Z
-	 isyIZhb3d1fyA==
-Received: from customer (localhost [127.0.0.1])
-	by submission (posteo.de) with ESMTPSA id 4hbxm71hKhz9rxF;
-	Fri,  4 Sep 2026 15:15:35 +0200 (CEST)
-Message-ID: <612e01853459f0eb87fe78b7f5fdb73e22cd1776.camel@posteo.de>
+	dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b="aLfUs14W"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=L+zxRsRxKFPZZswGwnGsMMltzg2p+Iy2N+qDtD4Os48DVeZYMX7WGMHs74S8mz6U1v2qL40oZC7Prd3ORwSRfpszP9o70LbwrVj63z7HMH1qrcTRBL+ar3uicASPqWb9Jd3G4PZcAkU4tgC+95jWsyT7WF2iBfhSw7YU6FspC9Uif8VASgtOUnLm94Q1MeN59aXZda3rYHRpBHge6phnqQVnzH0hNK+iqxzAqdHuO4grcpTqfD5/jMmnP5+bj2t1BXWB4f1TT1r0FcIPWzaSkNr+FMOUOknpx+XKSya4rlEJRFBOAopFqgO3IcOT1tdOBPVvOxH1EHYZWp5rrJ9UOw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=UlUswDcrZP9GVD724704mizV5C30GUUNBDoDDrSl/zs=;
+ b=p08sVj7TS4vTCjJdcy7EzrtyX6z4QixZgMBj+SNkkHUSA4+Fkv/PrGf/x6PKdgUJG1Vcfe+ayvnaEQDap4vVWksvzswHyxJbVwFoEP/8VFi5ylpWk5tgRszx3wOAYTm1MkhuYic35xdDSGVi6hpy6MS3Ur8AOKqQRR5LlHhkaua36ugeowwGh5/jhQE1fPVyG5bRtpUWB8yfjsTshyYjXdcyX8oynxhE1/3GYnsTdc+yGoMioIBK9RI2K3w2QS71hbr3XMqfoIwo2PQuYKujjm6iyThf1h73o0NgkANsoamWg06gpw2XeeZPtpP9yJxby3v4bZlmjZ2Oyhfs7GtpMQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=garyguo.net; dmarc=pass action=none header.from=garyguo.net;
+ dkim=pass header.d=garyguo.net; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=garyguo.net;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=UlUswDcrZP9GVD724704mizV5C30GUUNBDoDDrSl/zs=;
+ b=aLfUs14WlEQJTJCV05tBtNEAi2mxNbcv24NH08cmBWa1L9DDwSVNRd+ITO9Zrhq8/XM7G8PjrpaE/Jp9ZkP2wwY6DcmV7IQ+S5QLoJ9JezgQGLWde9blji8uPIT5Hw9N+tenGZVlWW0dfTjNCQezKHvM/tQWsxHZ3dQkv9ieP0Q=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=garyguo.net;
+Received: from LOAP265MB8560.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:4ab::19)
+ by LO4P265MB6729.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:2f4::13) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.360.13; Fri, 4 Sep
+ 2026 13:32:18 +0000
+Received: from LOAP265MB8560.GBRP265.PROD.OUTLOOK.COM
+ ([fe80::f60b:1537:68d7:4fc1]) by LOAP265MB8560.GBRP265.PROD.OUTLOOK.COM
+ ([fe80::f60b:1537:68d7:4fc1%4]) with mapi id 15.21.0360.008; Fri, 4 Sep 2026
+ 13:32:18 +0000
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Fri, 04 Sep 2026 14:32:17 +0100
+Message-Id: <DL6KIVBHB08P.1LH0WPGN5FFVN@garyguo.net>
+Cc: <rust-for-linux@vger.kernel.org>, <linux-leds@vger.kernel.org>,
+ <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>
 Subject: Re: [PATCH v24 1/4] rust: leds: add basic led classdev abstractions
-From: Markus Probst <markus.probst@posteo.de>
-To: Gary Guo <gary@garyguo.net>, Lee Jones <lee@kernel.org>, Pavel Machek	
- <pavel@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Dave
- Ertman <david.m.ertman@intel.com>, Leon Romanovsky <leon@kernel.org>,
- Miguel Ojeda	 <ojeda@kernel.org>, Alex Gaynor <alex.gaynor@gmail.com>, 
- =?ISO-8859-1?Q?Bj=F6rn?= Roy Baron	 <bjorn3_gh@protonmail.com>, Benno
- Lossin <lossin@kernel.org>, Andreas Hindborg	 <a.hindborg@kernel.org>,
- Alice Ryhl <aliceryhl@google.com>, Trevor Gross	 <tmgross@umich.edu>,
- Danilo Krummrich <dakr@kernel.org>, "Rafael J. Wysocki"	
- <rafael@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, Krzysztof
- =?UTF-8?Q?Wilczy=C5=84ski?=	 <kwilczynski@kernel.org>, Boqun Feng
- <boqun@kernel.org>, Daniel Almeida	 <daniel.almeida@collabora.com>, Tamir
- Duberstein <tamird@kernel.org>,  Alexandre Courbot <acourbot@nvidia.com>,
- Onur =?ISO-8859-1?Q?=D6zkan?= <work@onurozkan.dev>, Ira Weiny	
- <iweiny@kernel.org>
-Cc: rust-for-linux@vger.kernel.org, linux-leds@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Date: Fri, 04 Sep 2026 13:15:37 +0000
-In-Reply-To: <DL6JWHOEG91Y.1BKBUP653Z5D@garyguo.net>
+From: "Gary Guo" <gary@garyguo.net>
+To: "Markus Probst" <markus.probst@posteo.de>, "Gary Guo"
+ <gary@garyguo.net>, "Lee Jones" <lee@kernel.org>, "Pavel Machek"
+ <pavel@kernel.org>, "Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
+ "Dave Ertman" <david.m.ertman@intel.com>, "Leon Romanovsky"
+ <leon@kernel.org>, "Miguel Ojeda" <ojeda@kernel.org>, "Alex Gaynor"
+ <alex.gaynor@gmail.com>, =?utf-8?q?Bj=C3=B6rn_Roy_Baron?=
+ <bjorn3_gh@protonmail.com>, "Benno Lossin" <lossin@kernel.org>, "Andreas
+ Hindborg" <a.hindborg@kernel.org>, "Alice Ryhl" <aliceryhl@google.com>,
+ "Trevor Gross" <tmgross@umich.edu>, "Danilo Krummrich" <dakr@kernel.org>,
+ "Rafael J. Wysocki" <rafael@kernel.org>, "Bjorn Helgaas"
+ <bhelgaas@google.com>, =?utf-8?q?Krzysztof_Wilczy=C5=84ski?=
+ <kwilczynski@kernel.org>, "Boqun Feng" <boqun@kernel.org>, "Daniel Almeida"
+ <daniel.almeida@collabora.com>, "Tamir Duberstein" <tamird@kernel.org>,
+ "Alexandre Courbot" <acourbot@nvidia.com>, =?utf-8?q?Onur_=C3=96zkan?=
+ <work@onurozkan.dev>, "Ira Weiny" <iweiny@kernel.org>
+X-Mailer: aerc 0.22.0
 References: <20260903-rust_leds-v24-0-8d9e4c04db69@posteo.de>
-	 <20260903-rust_leds-v24-1-8d9e4c04db69@posteo.de>
-	 <DL6JWHOEG91Y.1BKBUP653Z5D@garyguo.net>
-Autocrypt: addr=markus.probst@posteo.de; prefer-encrypt=mutual;
- keydata=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
- jfGillcaQOqFZ3WwVqyzG1BUfTow==
-Content-Type: multipart/signed; micalg="pgp-sha256";
-	protocol="application/pgp-signature"; boundary="=-M1r+S+196cCQmWQoF0rF"
+ <20260903-rust_leds-v24-1-8d9e4c04db69@posteo.de>
+ <DL6JWHOEG91Y.1BKBUP653Z5D@garyguo.net>
+ <612e01853459f0eb87fe78b7f5fdb73e22cd1776.camel@posteo.de>
+In-Reply-To: <612e01853459f0eb87fe78b7f5fdb73e22cd1776.camel@posteo.de>
+X-ClientProxiedBy: LO4P302CA0006.GBRP302.PROD.OUTLOOK.COM
+ (2603:10a6:600:2c2::12) To LOAP265MB8560.GBRP265.PROD.OUTLOOK.COM
+ (2603:10a6:600:4ab::19)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-OpenPGP: url=https://posteo.de/keys/markus.probst@posteo.de.asc; preference=encrypt
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: LOAP265MB8560:EE_|LO4P265MB6729:EE_
+X-MS-Office365-Filtering-Correlation-Id: 61b42a32-402a-4c83-152b-08df0a88f10a
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|1800799024|7416014|376014|10070799003|23010399003|366016|10067099003|4143699003|56012099006|5023799004|22082099003|18002099003|921020;
+X-Microsoft-Antispam-Message-Info:
+	wot5X2aa0mCSohQC4U9jdrar2qoFNTp3jdK4ieyf0yAj084cmCzrsAPhfbicoWepF43sor2NjgUSnk3yo3zxRX2vQnzzs11HT+N7UJLuFS85UF0MBY3MABeJBrwzor5DB57Dllmek4Vw4nrnCxZD3jyyzvZChDsXC+cmCd6AFTqFu3u6ZV0xk4aVZJq4NjcISLbu5u80uko56z8HX+uGowHaAbfo+vYM7nSU2QNZWPCFrbS7V2pTSbNycJPTzBcpUKKmuoMqm5pHuyr5pTLtWGahbCGIap5lzTURsC6wp0pDiGqo/Eg8WbRPwr8ZDTtokeW169gZrXv2PkLDeswN8EP5CBjzYMkeEzLUAp8VjT+A6Vi1dbF5y6KXqyJb5Q5VsZWLHWoGxm/o4JieV016bvvCmLcUrOe/ELPSpivUeH6YURoUx52wdWQVexO/jZ/J6uDAJD1elukC6t6Wyqsv+4D1iapk2drtTsQDNRkFfWgqiQimNlbXFblG7en0qpUU30zEn/mDSOjDKiCDNke1y5+mLm1vic8EJsfpeI0UHfW+Rmc35qRAj9MfNDWeIzOCWDZaBwx7FnbMqTvyfN5FhirhF+RtaZuD70DZ/7f7JP9SJYZEYUrjb8UWkfZtJWxRzLVRcDRsrFq8pED39kasTdohhnMeo7BBfCYU4RG2ojdOqQROXU6k4ja3W71Ms/g+MUL+gLdeDluYHDk3DazKNA==
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LOAP265MB8560.GBRP265.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(7416014)(376014)(10070799003)(23010399003)(366016)(10067099003)(4143699003)(56012099006)(5023799004)(22082099003)(18002099003)(921020);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?UUhHV1J0YjlFSERpRVNVK29CQWdZZTZYekdCKzNYSStFMkY0VUcyMStCd0po?=
+ =?utf-8?B?MCtWYXFWRitEZHZ1QXczOHFSRnh1ckc1N1dKRURURmlmcG10cEllbEpkUlVV?=
+ =?utf-8?B?NXMvUjB3RU0yZHlIcTdIVmt4Q29HRnlDR3pyclNsblpTZnVucGdEUmNkSWJw?=
+ =?utf-8?B?Q0N0elVKZU92cGswY2Z5YThocDVmN0FRQ2FQNG5oNDVwQkh1b1U4MDZMU3lO?=
+ =?utf-8?B?Tk1VMW9MeGJ2SmxobWRGNmdoWDkyQUJFRW9IOVVmSVBpN290UlBHTmgvUE5C?=
+ =?utf-8?B?dGgyT2RlZGNPZmJVWDB3OVArcmxOL3JUMkEwYkhSNHZwaVhMc04xZXlkQTly?=
+ =?utf-8?B?R2JNS0RicGZLL2IvU2RBZ29JZlRpWVJ3R2s2TmFpMXBMN0plRTFoaDk3SU5a?=
+ =?utf-8?B?dGN2Uk41RnZ5Q1o2WUFyMlJPUzhqRktKdFVlVWxwOWQvNTV1Y0IxM01jT0Va?=
+ =?utf-8?B?VzFOeU1iTW5hL2E3a0pmdjJyWnFiMmlJdFEvSG9XUnBGVkR2Z01vSVlHb01M?=
+ =?utf-8?B?aXlKYmQrdHRaSnpmVFUrNGxhMlAyQUVkdzdDNlFEaFVzUHBMY0VmSHNhNFQ5?=
+ =?utf-8?B?Uk03TjEzMlBSdTVHZU5iUU9EdVczQzg3Qmd2TlFsdm1wVVVCaXFabmRUVFk5?=
+ =?utf-8?B?ak1iR2R1UmVrbm95ZzlqUDE4NXM4NmlGeFpGdFRmbWhEdFZCc0Z2amcvOU15?=
+ =?utf-8?B?bzQ0V21vSkVhekdiajZSU29rZnlLQld0OVptbm9aS0ZGMVhTUVZySnpmT2tO?=
+ =?utf-8?B?aW0xVkdEMTcrWmhNdWFSVFlWVjdJckcyUTB3T3ZuOUFlTjJZUnZHcFlra1hE?=
+ =?utf-8?B?eWpZdDlaT01nTmViNElzeDM2RHVoYmhOMUJpV0ROMWxBNFlaTHAyWis5RER4?=
+ =?utf-8?B?YzdjVit0UGlyWnFFQVU4MmRXMDQ4TkNlNnJwNk9jVkM4QWNzRFpUUTFUWXlB?=
+ =?utf-8?B?ZFdLNTF5Yjg2VStaZXFyYnU5VzBoY2QzeTRVcDRvcTUybDM2T3NOOElFa3Bh?=
+ =?utf-8?B?SE1aY0VXTHhmL1BGdWFMam56djFhdk9VbTM1UW1HTDYyWmdnWkNWdmdwY09G?=
+ =?utf-8?B?RVd0NWI0Zy9uOVV2RTlYYU5kRGQyOVpwL0VMaE5TQU0vRG5MNGZVRVgrWTFj?=
+ =?utf-8?B?bW9iUFFpYk1wQlJhNDg1SXlJa0lqdkIxeXpmdlhmU2pQMnFFbUxrM0gvUHU1?=
+ =?utf-8?B?ODY5ODBNNkJtdXJhL200RmxlVk9mZnlxazZLMzlmdFJpR0dxaUJ1bXcvVG40?=
+ =?utf-8?B?d0pRMGV1a3NWSTk1aUVHeGNoMTJ1RHE4UUNpQmR5MDdkNnArOXJJRFM4VTF5?=
+ =?utf-8?B?WTZmczhCeWlQUTZWL2UrSzY4bVRxWFJqWmZuTHhlVVpJRUN1NVA2anhTNzAx?=
+ =?utf-8?B?cnZJNWtQVFNPWnJnamZsV1BISGk5N0JyRGxialBHZUpKTWVRVjhobm8zaVo1?=
+ =?utf-8?B?b3h5emdDaHVqUllxSjhtTUZMRytMQWxPWjlISnhUYWxlRFEzOTM4d2JZT0dZ?=
+ =?utf-8?B?VDUyOXNSMU1UUUJ4UEgvejJsQmk2eUJhK3c0dXdtZ1NOM3ROZnI0aXovdFRU?=
+ =?utf-8?B?WVRPYzRWNlJtbjlMY1ovQnJNbXVUL0xDaHpHQktadWNVV2NvQVRJWlRtRXBN?=
+ =?utf-8?B?T2dnYUZtSkk1Qm81UlF0QnRoWlZBZStnWUpvZXk5Q3RBMHlKVkJSNnYyQ1hB?=
+ =?utf-8?B?UVh5TXh4S3lCZDUyOWNMekpYc2RCK3RYcDYxQkJTODlHUXNSYTBVckUrNHdM?=
+ =?utf-8?B?TVJ1K2ZjNm1XKzBwYWN2elVyQUovTm44WWllZ0RGREJSSkhPMlJXRERDVU1M?=
+ =?utf-8?B?djMyNmd2dWZ6QTkwQnF2RGsxRXNaaktoTHhXYXBtWFNCVHJHYTdUZzVVZGZI?=
+ =?utf-8?B?MlppM0V4RTVCaTM5bWhRS2Q3WVgzRGU3bDh3S0Jvb1dvYWZLZ05LSDNBTzc4?=
+ =?utf-8?B?ZEtCcjFPaGw4K0d5TUhYNk4rZzBSWlFFYkpnSG5FRkN4YVR3ODlvVHF4THAz?=
+ =?utf-8?B?SlIweUVmMTRwOGNBN0xVdW9CUUQxVUdpTklEejRueXVhUldpeTdPSVI3QWs3?=
+ =?utf-8?B?RUJTdkxmbWptSXY3OWpJLzlTcEtrMGhOekRGQnowRWRXbmFUM2ZRSUhVSXNs?=
+ =?utf-8?B?dGxDUm9PZ0FLUDNSNFVjTStmYjIxc3pIZThpVERtbGxDTUVITXBkZ3UzOEcy?=
+ =?utf-8?B?VGFVeWY4MHhZWDJCVkFnemVyWXB1cDZ0SnpqVGRlZTJ5eG9IeU1Ea3REQzhC?=
+ =?utf-8?B?WDF3ZEs5TEdXYVpJbExRUFZxdERacjBwdXVtT0M1ZmluL2YxVitmdDRueVNJ?=
+ =?utf-8?B?a0JZZ2Z1S2VyUHJRTlNtOHppSTJvOTFTQ0ZoOHhQeFdqeE5tZE02Zz09?=
+X-OriginatorOrg: garyguo.net
+X-MS-Exchange-CrossTenant-Network-Message-Id: 61b42a32-402a-4c83-152b-08df0a88f10a
+X-MS-Exchange-CrossTenant-AuthSource: LOAP265MB8560.GBRP265.PROD.OUTLOOK.COM
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 04 Sep 2026 13:32:18.6733
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: bbc898ad-b10f-4e10-8552-d9377b823d45
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: p7jUU7tov2ooNizW9LLMrljNXl7Hec8d+Oy6Fk6geeDQddW0nTTX5O9ny8w5xvpaFIEa7vjS5FPt8QRrAI9jfg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: LO4P265MB6729
 
+On Fri Sep 4, 2026 at 2:15 PM BST, Markus Probst wrote:
+> On Fri, 2026-09-04 at 14:03 +0100, Gary Guo wrote:
+>> On Thu Sep 3, 2026 at 12:01 AM BST, Markus Probst wrote:
+>> > Implement the core abstractions needed for led class devices, includin=
+g:
+>> >=20
+>> > * `led::LedOps` - the trait for handling leds, including
+>> >   `brightness_set`, `brightness_get` and `blink_set`
+>> >=20
+>> > * `led::DeviceBuilder` - the builder for the led class device
+>> >=20
+>> > * `led::Device` - a safe wrapper around `led_classdev`
+>> >=20
+>> > Signed-off-by: Markus Probst <markus.probst@posteo.de>
+>> > ---
+>> >  rust/kernel/led.rs        | 288 +++++++++++++++++++++++++++++++++++++=
++++++++++
+>> >  rust/kernel/led/normal.rs | 230 ++++++++++++++++++++++++++++++++++++
+>> >  rust/kernel/lib.rs        |   1 +
+>> >  3 files changed, 519 insertions(+)
+>> >=20
+>> > [snip]
+>> >=20
+>> > +/// Trait defining the operations for a LED driver.
+>> > +///
+>> > +/// # Examples
+>> > +/// ```
+>> > +/// use kernel::{
+>> > +///      device,
+>> > +///      devres::Devres,
+>> > +///      led,
+>> > +///      macros::vtable,
+>> > +///      platform,
+>> > +///      prelude::*, //
+>> > +///  };
+>> > +///
+>> > +/// struct MyLedOps;
+>> > +///
+>> > +///
+>> > +/// #[vtable]
+>> > +/// impl led::LedOps for MyLedOps {
+>> > +///     type Bus =3D platform::Device<device::Bound>;
+>> > +///     const BLOCKING: bool =3D false;
+>> > +///     const MAX_BRIGHTNESS: u32 =3D 255;
+>> > +///
+>> > +///     fn brightness_set<'bound>(
+>> > +///         &self,
+>> > +///         _dev: &'bound platform::Device<device::Bound>,
+>> > +///         _classdev: &led::Device<'bound, Self>,
+>> > +///         _brightness: u32
+>> > +///     ) -> Result<()> {
+>> > +///         // Set the brightness for the led here
+>> > +///         Ok(())
+>> > +///     }
+>> > +/// }
+>> > +/// ```
+>> > +/// Led drivers must implement this trait in order to register and ha=
+ndle a [`Device`].
+>> > +#[vtable]
+>> > +pub trait LedOps: Send + Sync + Sized {
+>> > +    /// The bus device required by the implementation.
+>> > +    #[allow(private_bounds)]
+>> > +    type Bus: AsBusDevice<Bound>;
+>>=20
+>> Does LED class device has no private data that driver can use? This can =
+be
+>> either a private pointer or extra allocation living at the end of the cl=
+assdev
+>> struct.
+> On every callback `&self` is passed to the LedOps, which could be
+> considered the leds private data. It is currently stored in front of
+> the `led_classdev` struct.
 
---=-M1r+S+196cCQmWQoF0rF
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Right, I missed that. In that case I think you can just remove `Bus` comple=
+tely
+from the callback?
 
-On Fri, 2026-09-04 at 14:03 +0100, Gary Guo wrote:
-> On Thu Sep 3, 2026 at 12:01 AM BST, Markus Probst wrote:
-> > Implement the core abstractions needed for led class devices, including=
-:
-> >=20
-> > * `led::LedOps` - the trait for handling leds, including
-> >   `brightness_set`, `brightness_get` and `blink_set`
-> >=20
-> > * `led::DeviceBuilder` - the builder for the led class device
-> >=20
-> > * `led::Device` - a safe wrapper around `led_classdev`
-> >=20
-> > Signed-off-by: Markus Probst <markus.probst@posteo.de>
-> > ---
-> >  rust/kernel/led.rs        | 288 ++++++++++++++++++++++++++++++++++++++=
-++++++++
-> >  rust/kernel/led/normal.rs | 230 ++++++++++++++++++++++++++++++++++++
-> >  rust/kernel/lib.rs        |   1 +
-> >  3 files changed, 519 insertions(+)
-> >=20
-> > [snip]
-> >=20
-> > +/// Trait defining the operations for a LED driver.
-> > +///
-> > +/// # Examples
-> > +/// ```
-> > +/// use kernel::{
-> > +///      device,
-> > +///      devres::Devres,
-> > +///      led,
-> > +///      macros::vtable,
-> > +///      platform,
-> > +///      prelude::*, //
-> > +///  };
-> > +///
-> > +/// struct MyLedOps;
-> > +///
-> > +///
-> > +/// #[vtable]
-> > +/// impl led::LedOps for MyLedOps {
-> > +///     type Bus =3D platform::Device<device::Bound>;
-> > +///     const BLOCKING: bool =3D false;
-> > +///     const MAX_BRIGHTNESS: u32 =3D 255;
-> > +///
-> > +///     fn brightness_set<'bound>(
-> > +///         &self,
-> > +///         _dev: &'bound platform::Device<device::Bound>,
-> > +///         _classdev: &led::Device<'bound, Self>,
-> > +///         _brightness: u32
-> > +///     ) -> Result<()> {
-> > +///         // Set the brightness for the led here
-> > +///         Ok(())
-> > +///     }
-> > +/// }
-> > +/// ```
-> > +/// Led drivers must implement this trait in order to register and han=
-dle a [`Device`].
-> > +#[vtable]
-> > +pub trait LedOps: Send + Sync + Sized {
-> > +    /// The bus device required by the implementation.
-> > +    #[allow(private_bounds)]
-> > +    type Bus: AsBusDevice<Bound>;
->=20
-> Does LED class device has no private data that driver can use? This can b=
-e
-> either a private pointer or extra allocation living at the end of the cla=
-ssdev
-> struct.
-On every callback `&self` is passed to the LedOps, which could be
-considered the leds private data. It is currently stored in front of
-the `led_classdev` struct.
->=20
-> It's usually a antipattern to get the bus device directly, especially tha=
-t in
-> Rust we do not allow anything other than callbacks to access data on bus
-> devices.
->=20
-> Instead, the class device registration should provide a data initializer,=
- and
-> the callbacks would receive a pointer to the data instead. In cases that =
-a
-> device resource has to be referenced, it should be kept inside the privat=
-e data
-> by the driver themselves.
-It should be possible to store a pointer to the bus device directly on
-this data, thus I can remove it.
+Do you have a user that needs this info? BTW, it would also help to include=
+ a
+link to a potential user in the cover letter so people can see how the API =
+is
+supposed to be used. This is especially useful for API design reviews.
 
-If I think about it, I could add a `led::Device::drvdata` function, so
-it could be accessed from the drivers private data. Sync is a
-requirement anyway.
+>>=20
+>> It's usually a antipattern to get the bus device directly, especially th=
+at in
+>> Rust we do not allow anything other than callbacks to access data on bus
+>> devices.
+>>=20
+>> Instead, the class device registration should provide a data initializer=
+, and
+>> the callbacks would receive a pointer to the data instead. In cases that=
+ a
+>> device resource has to be referenced, it should be kept inside the priva=
+te data
+>> by the driver themselves.
+> It should be possible to store a pointer to the bus device directly on
+> this data, thus I can remove it.
+>
+> If I think about it, I could add a `led::Device::drvdata` function, so
+> it could be accessed from the drivers private data. Sync is a
+> requirement anyway.
 
-Thanks
-- Markus Probst
+An option is to provide `Deref`. Then you could even have
+`self: &Device<'bound, Self>` in callbacks.
 
->=20
-> Best,
-> Gary
->=20
-> > +
-> > +    /// If set true, [`LedOps::brightness_set`] and [`LedOps::blink_se=
-t`] must perform the
-> > +    /// operation immediately. If set false, they must not sleep.
-> > +    const BLOCKING: bool;
-> > +    /// The max brightness level.
-> > +    const MAX_BRIGHTNESS: u32;
-> > +
-> > +    /// Sets the brightness level.
-> > +    ///
-> > +    /// See also [`LedOps::BLOCKING`].
-> > +    fn brightness_set<'bound>(
-> > +        &self,
-> > +        dev: &'bound Self::Bus,
-> > +        classdev: &Device<'bound, Self>,
-> > +        brightness: u32,
-> > +    ) -> Result<()>;
-> > +
-> > +    /// Gets the current brightness level.
-> > +    fn brightness_get<'bound>(
-> > +        &self,
-> > +        dev: &'bound Self::Bus,
-> > +        classdev: &Device<'bound, Self>,
-> > +    ) -> Result<u32> {
-> > +        let _ =3D (dev, classdev);
-> > +        build_error!(VTABLE_DEFAULT_ERROR)
-> > +    }
-> > +
-> > +    /// Activates hardware accelerated blinking.
-> > +    ///
-> > +    /// delays are in milliseconds. If both are zero, a sensible defau=
-lt should be chosen.
-> > +    /// The caller should adjust the timings in that case and if it ca=
-n't match the values
-> > +    /// specified exactly. Setting the brightness to 0 will disable th=
-e hardware accelerated
-> > +    /// blinking.
-> > +    ///
-> > +    /// See also [`LedOps::BLOCKING`].
-> > +    fn blink_set<'bound>(
-> > +        &self,
-> > +        dev: &'bound Self::Bus,
-> > +        classdev: &Device<'bound, Self>,
-> > +        delay_on: &mut usize,
-> > +        delay_off: &mut usize,
-> > +    ) -> Result<()> {
-> > +        let _ =3D (dev, classdev, delay_on, delay_off);
-> > +        build_error!(VTABLE_DEFAULT_ERROR)
-> > +    }
-> > +}
+That said, you might want to eventually support type-erased `Device` types =
+to
+support consumer of LED class devices. So I'm unsure if we want to provide =
+data
+accessors on class devices (maybe eventually device'll be split into two ty=
+pes?)
 
---=-M1r+S+196cCQmWQoF0rF
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQJPBAABCAA5FiEEgnQYxPSsWOdyMMRzNHYf+OetQ9IFAmqaxFcbFIAAAAAABAAO
-bWFudTIsMi41KzEuMTIsMiwyAAoJEDR2H/jnrUPSjv8QAJ58emavjkwU2mAkS/Sc
-sFEBYf5+ihxHxkQEZExP3oJtbaTQgPxwCxSDvRd82xcgMOzKcqje2S01vssjcQIc
-CmBmGum7TTJyytxd5u2hHPIeqhLZrGuAQKOMBYHl/MIfQedIAkkMyDJ2vhEL6flg
-zBCHmHkmKtCR2aNEL0MNy9ay6HYFUTEnj9qRFdfXd003KsB24Aqd4T2FscYU9sgq
-WSWZr+5jQIHXxITZFBvH85f1lQqspCCMRUy16Lk1jrTzb1B8fIbTZkw1xNLJfD88
-88TIKw4aCYTEjz4kXn8/AE0DXAwCAjFylC9eVbr7qVV7K92ksKUrPDbpiDRofbVk
-/QdnEssk3LZvT6/7BBmHSpTYclFiPseIFJFe249Ca9tGQJMZAS8fluJcvxG85znW
-noCoMiED9QT1ieUXn5TanT/vvwa4nThpntoOM2u+JJEF3DLnVHS4q1OqzUQECeWg
-9lvS4mBd9LHYJgTH20GWybZyZGMaL5sFzNfeYKFFTYLqV1Jya+dxl0LbOikFz+wY
-BFEABkgNo5cjLhiGT9bWVR6q6Q3RZMb9LxPjfID2wnjV6oQn8iJVRov1svtdB3uG
-JYLO6+N/cVaFi/v49xflGKa7Y49seKGhpj+jc0wdWVoM+a+mg8mDKR7cEKhrcMfW
-zJY0QoT/QPyskzKt6xBiL4Pb
-=Dm4Y
------END PGP SIGNATURE-----
-
---=-M1r+S+196cCQmWQoF0rF--
+Best,
+Gary
