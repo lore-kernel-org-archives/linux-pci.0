@@ -1,56 +1,56 @@
-Received: from mail-pg1-f198.google.com (mail-pg1-f198.google.com [209.85.215.198])
+Received: from mail-pl1-f198.google.com (mail-pl1-f198.google.com [209.85.214.198])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 44ACA41A4FD
-	for <linux-pci@vger.kernel.org>; Fri,  4 Sep 2026 05:24:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.198
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3FAEA4195A3
+	for <linux-pci@vger.kernel.org>; Fri,  4 Sep 2026 05:24:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.198
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788499458; cv=none; b=acfYPDAheXoV+mLaKW1OYbjlqWS+GfLIbowuSAzfAkILMHBAM4pJyBbnEyEcZ4DyMX+v904GIXPAIAwHKWL+/Wb11kM9FZmG68Q7KTKjfprMgSCyrL2LNAmfC445XWVeRgduz22U3yncM/rP5FQkA21hVo6sR5f0tP4qon4c72k=
+	t=1788499459; cv=none; b=PwCeR6nrh8CnS7FJJqbKrEFh0C+MI5JIWRyMlNH82GRS28NH00tEYY/JAqE/TOZm9gqliGeRoU0d4Xkv10euAsu3uKEw17J9Q6YJ0yWcwlGh1bkQPhjz9IUJmn+8tsNBIH5l7eqeY0ee0Veb4u2AWUd1MYmLk8SOVOMHlq0Kjs8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788499458; c=relaxed/simple;
-	bh=1M3as6/JbviFnzO+sZjaXmcLIqRvpUkfQlZvAuRD3Wk=;
+	s=arc-20240116; t=1788499459; c=relaxed/simple;
+	bh=4ZavyL42xtglVBipSMRWA6ihGhpqB9JmwP1ZH/ASTvw=;
 	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=LPpBxuHc38+lIiSkg7v813n25ke5YLzFAoChqE3MJIPgS6IIp7WzQvzL2VoGt2rMlpAe/hSDy3wutb73PaAl7K2GsMkYuqKg6E/eKaP4YrDOhBUlbLAyA51TkTA0Tze6x4fojbRiFGe0RabnqD7R0Xl4ER50axljtO/8hUqIR2M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--rathodpriyank.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=NLLLMkfx; arc=none smtp.client-ip=209.85.215.198
+	 To:Cc:Content-Type; b=Y2FD15kG9CoiTyCxMUWL5PgeJj3dz/IaD06WEdrQ0FPuHhjLYJhOSGfST4lUL0C+TtfIvxciq5+VLmLTERabeK3DK9cLyCx1SI/A+9lw6C1OW0vSkpuJ0Pq/jzFfMiTnsk9uyKZTaU73EEgLZ96NnqiKnTenzvsHv4iuthOux7c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--rathodpriyank.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=rmNKUYtB; arc=none smtp.client-ip=209.85.214.198
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--rathodpriyank.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="NLLLMkfx"
-Received: by mail-pg1-f198.google.com with SMTP id 41be03b00d2f7-cbee6bb8408so896291a12.3
-        for <linux-pci@vger.kernel.org>; Thu, 03 Sep 2026 22:24:16 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="rmNKUYtB"
+Received: by mail-pl1-f198.google.com with SMTP id d9443c01a7336-2cfe48ca1efso8942135ad.0
+        for <linux-pci@vger.kernel.org>; Thu, 03 Sep 2026 22:24:15 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1788499456; x=1789104256; darn=vger.kernel.org;
+        d=google.com; s=20251104; t=1788499454; x=1789104254; darn=vger.kernel.org;
         h=content-type:cc:to:from:subject:message-id:references:mime-version
          :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=0sFYKtyudLOnvYV5nLPU7PI7+uaLgwyI8nUNXoVpPUU=;
-        b=NLLLMkfx+Ep3xytfeDGV8JA5VTBhmO0pn3V8zKnE3zqgq0G+3Uhz18EUUkakJt4OeL
-         7x/WGY0UBX6Np/zbQ/8mX9O9cp5xH8HIJvQOa1wvJv48BO5u4bTadgJInnR2nUULbNrE
-         ha7wzVZ0B1FAeBH/hW2QsyuthEAOjxvKy+9NwgwAxFHrKYkr9z8VVEGhPAzDvFa6qsXs
-         powthSo4ACZsGTzIW5rdZ7XLB1gUkxIjp1YBCi7SvhdmFir+UHcfjc8HoqRxGKfIbOzf
-         TMiHtg0K0T/7DnlmRqYGO1gnACZEwew3RSIWhhK1tKRZTTIzJ/s7F+cFMElym3rWCymE
-         bqaA==
+        bh=ZsPb5bVQxBixryBb9IXokn4XCrzoWNCx2hg/i/D0/QM=;
+        b=rmNKUYtBQBe7FPZJVAs+XTwr3qgj4RqGMHOl0hjmi1JlyqGCt6C0bbw5/wArLUbfG1
+         loJp7mrynquobo4zg4rB2+oqyAO5Z73PT+g2caOJ2VkkbexcdV6BUZK0kha3HSzQpTLB
+         0njtCUI5zM59hpzXyDyhbL13EHO/hwvrdTuxPvj9TLAZusWeFbOr3olUcKzLXMOkF7EO
+         k4tSOyMNbAlqHF7ng0wB/1rMO8sZc76y4ShQd+uATgAZKJpTDeEOFxirdH4BJnrPiVH8
+         qoobVOGr3fVjZZnzWgcGbvd7LrSBHXTZU81Zv6k9vx2Qua0YNJXRaziIfaKPyAmbRPzf
+         HQVQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788499456; x=1789104256;
+        d=1e100.net; s=20251104; t=1788499454; x=1789104254;
         h=content-type:cc:to:from:subject:message-id:references:mime-version
          :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=0sFYKtyudLOnvYV5nLPU7PI7+uaLgwyI8nUNXoVpPUU=;
-        b=YbavvNswazEQnD8uEkiyn28MWUtbYj+LFqEBnsGLphIJG4BJ/Cqfh9cLpXThvCEx99
-         cxRpKpmbzL1jVIMf/TuVq1tJvpnc5/hQyd7U945+IMlBORwS9n26PDYmKADzrLtwSqOP
-         4xK9gVoObVbMu1iDNr5X6moMnaXMCOBnyAf/6TGgs+try4Y8CpjWBq8aSbTyz+B1elsG
-         +2i9mVMO3EBpwomEDgQYRzF3EA0EXob+7dNL5v6cAOa4ogKA/6SDwZU6rLz2rc14RARw
-         9tBQKy5J7wd/tXHGQND7Dq1bYMGnf4lOWFFaRvEMf+tO3FgNxHfi9M9Fuv8g5HdaoL2l
-         QP/Q==
-X-Forwarded-Encrypted: i=1; AKwUvByQozdIIQ5LQjCWFcOFcADCKE3o7ML2qOdZ8HL0ld1d/1GXRg/JvOG4IHHHnh/Eb8shuSTK9e6MC80=@vger.kernel.org
-X-Gm-Message-State: AFuF++nU1SZviPdHE0AvG1Q+KVhGxTDh+CEIH1N3vjdIJOPteQ68G6MP
-	lw/FaJnmrNlv48jXLSCjf0O6mUwVnXd9KSCG1UlEqJuLS01mtcf2xPUiAyrcszQh8X5JgQSUnmH
-	70yVCUIaO6pOnvSOZoKHTT6cHBu/C9MZF5w==
-X-Received: from pgu38.prod.google.com ([2002:a63:1466:0:b0:cc4:3178:f534])
+        bh=ZsPb5bVQxBixryBb9IXokn4XCrzoWNCx2hg/i/D0/QM=;
+        b=BhAbCfaN2u2OWVuExRRz3LTt6r3pc7LK52ilCrjRseSUpPf3mHog1h01ZQZByuEqOB
+         7ILuH3VVd/gG8MNfl3iWAjc3FigvDjdQR+gIdwQmVenBVpbeIhEwvi1xz/PO8L2DysM9
+         hm1wyXKnNcYuQvA9Uu4lIOYLobuphlAjL8qqnAYN8tdaCxP5DDMVt2U1KJLH59eeBttv
+         u9EIEtaFtiFp7sSHo8vR+f0oUXjVVdQA7zzQBBaMTLhSc59885KPRAnnlvie63BpkEEJ
+         K2N076k7Zr/H4kEx9YVNoMZN6lJTGHHk/3QeVLTfQAZ9CqjRozx1Z5T2LKGnlH1UUtyr
+         kqSg==
+X-Forwarded-Encrypted: i=1; AKwUvBxKwJYVdowfGUZCbNndqI3zBz8kPK7casdNVVLSaUryzofxcfe9M3DTCnlnRcNI8FCdxCEOrhZ3XjI=@vger.kernel.org
+X-Gm-Message-State: AFuF++mnmoG+K8Eie70UshvqfHw0Gldx6JhU0yRUF8HFMRSasi515WDj
+	Y4zUAr6XPzceuXkMNbaeMzM7WzPPUCF7PyrahKoHCQSxyLL1IrmvjbnU4FuMIk4G7fopD1/l4SE
+	Sq4rApzLorwx3GO2MmirHeRnk4NLvVEV5ng==
+X-Received: from pltt21.prod.google.com ([2002:a17:902:d155:b0:2cf:afd2:6506])
  (user=rathodpriyank job=prod-delivery.src-stubby-dispatcher) by
- 2002:a05:6a20:7288:b0:3b2:a809:1000 with SMTP id adf61e73a8af0-3da39b437bemr4882019637.3.1788499455159;
- Thu, 03 Sep 2026 22:24:15 -0700 (PDT)
-Date: Fri, 04 Sep 2026 05:24:13 +0000
+ 2002:a17:902:f690:b0:2d8:d4ce:7e3d with SMTP id d9443c01a7336-2db126326f4mr47549945ad.18.1788499454225;
+ Thu, 03 Sep 2026 22:24:14 -0700 (PDT)
+Date: Fri, 04 Sep 2026 05:24:12 +0000
 In-Reply-To: <20260904-pcie-link-endpoints-v3-0-4b9a91bd4b35@google.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -60,9 +60,8 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
 References: <20260904-pcie-link-endpoints-v3-0-4b9a91bd4b35@google.com>
 X-Mailer: b4 0.14.3
-Message-ID: <20260904-pcie-link-endpoints-v3-2-4b9a91bd4b35@google.com>
-Subject: [PATCH v3 2/3] PCI/ASPM: Add pci_aspm_inhibit() helper for temporary
- link state suppression
+Message-ID: <20260904-pcie-link-endpoints-v3-1-4b9a91bd4b35@google.com>
+Subject: [PATCH v3 1/3] PCI: Add pcie_get_link_endpoints() helper
 From: Priyank Rathod <rathodpriyank@google.com>
 To: Bjorn Helgaas <bhelgaas@google.com>, Jonathan Corbet <corbet@lwn.net>, 
 	Shuah Khan <skhan@linuxfoundation.org>, Randy Dunlap <rdunlap@infradead.org>, 
@@ -73,215 +72,225 @@ Cc: "=?utf-8?q?Ilpo_J=C3=A4rvinen?=" <ilpo.jarvinen@linux.intel.com>, linux-pci@
 	linux-kselftest@vger.kernel.org, linux-hardening@vger.kernel.org
 Content-Type: text/plain; charset="utf-8"
 
-Currently, pci_disable_link_state() permanently disables ASPM on a PCIe
-link by setting link->aspm_disable. However, several kernel subsystems
-and driver operations require temporary ASPM inhibition without
-permanently disabling power management:
-  - PCIe Lane Margining at Receiver (LMR): receiver testing requires
-    the link to remain continuously in L0 throughout the test duration.
-  - Device firmware updates (e.g. NICs and NVMe controllers): link
-    latency or L1 transitions during firmware flashing can disrupt
-    device communication.
-  - Secondary Bus Reset and link retraining sequences: prevent
-    unexpected L1/L1SS entry during link reset and recovery.
+In PCIe topologies, physical links are point-to-point connections
+between an Upstream Component (Downstream Port, such as a Root Port
+or Switch Downstream Port) and a Downstream Component (Upstream Port,
+such as an Endpoint or Switch Upstream Port), per PCIe Base Specification
+Revision 7.0 / 6.0 sec 1.3.1.
 
-Because pci_disable_link_state() cannot be reversed by
-pci_enable_link_state() to clear link->aspm_disable, drivers previously
-attempted manual manipulations of PCI_EXP_LNKCTL (ASPMC). This
-bypasses the ASPM driver, risking race conditions and state
-desynchronization.
+Drivers across drivers/pci/ (such as Lane Margining at Receiver and AER
+recovery) coordinate operations across both ends of a PCIe link:
+  - Lane Margining at Receiver (LMR): requires resolving both link
+    endpoints to establish hierarchical locking and runtime PM pinning.
+  - AER/DPC Recovery: identifies the parent bridge to coordinate link
+    resets and recovery sequences.
 
-Introduce pci_aspm_inhibit() and pci_aspm_inhibit_locked() in the ASPM
-driver:
-  - Updates pcie_aspm_get_link() to resolve links for Root Ports, Switch
-    Downstream Ports, and Endpoints uniformly.
-  - Validates PCIe capability and resolves the link state under
-    pci_bus_sem and aspm_lock in __pci_aspm_inhibit() before inspecting
-    aspm_disabled with rate-limited logging, eliminating log floods and
-    TOCTOU races with concurrent device removal.
-  - Tracks inhibition via an aspm_inhibit_cnt reference counter on
-    struct pcie_link_state.
-  - When the first inhibitor requests suppression (aspm_inhibit_cnt == 1),
-    forces the link to L0 via pcie_config_aspm_link(link, 0), which
-    enforces spec-compliant disable sequencing (Downstream Component
-    before Upstream Component per PCIe Base Specification Revision 7.0
-    sec 7.5.3.7 & Table 7-24 "Link Control Register Description").
-  - Waits under aspm_lock on initial inhibit to guarantee concurrent
-    callers cannot access the link before the hardware transition
-    stabilizes.
-  - When all inhibitors have released (aspm_inhibit_cnt == 0), restores
-    the configured ASPM policy to hardware (Upstream Component before
-    Downstream Component per sec 7.5.3.7 & Table 7-24).
+Introduce pcie_get_link_endpoints() and pcie_put_link_endpoints() in the
+PCI core to provide a standardized, symmetric, and race-safe helper:
+  - Validates output pointer arguments and initializes them to NULL.
+  - Resolves Physical Functions for VFs via pci_physfn().
+  - For Endpoints: resolves parent Downstream Port via
+    pci_upstream_bridge().
+  - Resolves base Function 0 symmetrically on the link subordinate bus
+    for both non-ARI multi-function devices and ARI (Alternative
+    Routing-ID Interpretation) devices where all functions (0..255)
+    belong to the same logical device.
+  - Safely inspects subordinate bus and bus device lists under
+    down_read(&pci_bus_sem), verifying bridge ownership
+    (child->self == pdev) to eliminate ABA pointer identity and UAF
+    races with concurrent hot-remove.
+  - Symmetrically acquires references via pci_dev_get() on both resolved
+    endpoints on success, or returns -ENODEV if either end is unresolved.
 
+Callers release acquired references using pcie_put_link_endpoints().
+
+Reported-by: sashiko-bot@kernel.org
+Closes: https://lore.kernel.org/linux-pci/20260831214631.7CD5E1F000E9@smtp.kernel.org/
 Signed-off-by: Priyank Rathod <rathodpriyank@google.com>
 ---
- drivers/pci/pcie/aspm.c | 100 ++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/pci.h     |   6 +++
- 2 files changed, 106 insertions(+)
+ drivers/pci/pci.c   | 152 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/pci.h |   5 ++
+ 2 files changed, 157 insertions(+)
 
-diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-index 95ac34a34bd5..4a85d029708b 100644
---- a/drivers/pci/pcie/aspm.c
-+++ b/drivers/pci/pcie/aspm.c
-@@ -18,6 +18,7 @@
- #include <linux/of.h>
- #include <linux/pci.h>
- #include <linux/pci_regs.h>
-+#include <linux/delay.h>
- #include <linux/errno.h>
- #include <linux/pm.h>
- #include <linux/init.h>
-@@ -245,6 +246,9 @@ struct pcie_link_state {
- 	u32 clkpm_enabled:1;		/* Current Clock PM state */
- 	u32 clkpm_default:1;		/* Default Clock PM state by BIOS */
- 	u32 clkpm_disable:1;		/* Clock PM disabled */
-+
-+	/* Temporary ASPM Inhibit state */
-+	unsigned int aspm_inhibit_cnt;	/* Reference count for ASPM inhibition */
- };
- 
- static bool aspm_disabled, aspm_force;
-@@ -1055,6 +1059,10 @@ static void pcie_config_aspm_link(struct pcie_link_state *link, u32 state)
- 	/* Enable only the states that were not explicitly disabled */
- 	state &= (link->aspm_capable & ~link->aspm_disable);
- 
-+	/* If ASPM is temporarily inhibited, force state to 0 (L0) */
-+	if (link->aspm_inhibit_cnt)
-+		state = 0;
-+
- 	/* Can't enable any substates if L1 is not enabled */
- 	if (!(state & PCIE_LINK_STATE_L1))
- 		state &= ~PCIE_LINK_STATE_L1SS;
-@@ -1467,6 +1475,9 @@ static struct pcie_link_state *pcie_aspm_get_link(struct pci_dev *pdev)
- 	if (!pci_is_pcie(pdev))
- 		return NULL;
- 
-+	if (pcie_downstream_port(pdev))
-+		return pdev->link_state;
-+
- 	bridge = pci_upstream_bridge(pdev);
- 	if (!bridge || !pci_is_pcie(bridge))
- 		return NULL;
-@@ -1531,6 +1542,95 @@ static int __pci_disable_link_state(struct pci_dev *pdev, int state, bool locked
- 	return 0;
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index b2879a6be5f8..d1e3d6e3f5b1 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4654,6 +4654,158 @@ int pcie_retrain_link(struct pci_dev *pdev, bool use_lt)
+ 	return rc;
  }
  
 +/*
-+ * __pci_aspm_inhibit() - Inhibit or restore ASPM L0s/L1 on a PCIe link.
-+ *
-+ * PCIe Base Specification Revision 7.0 sec 7.5.3.7 & Table 7-24 ("Link
-+ * Control Register Description"):
-+ * - To disable ASPM, software on Downstream Component (Endpoint / Upstream
-+ *   Port) must disable ASPM prior to disabling ASPM on Upstream Component
-+ *   (Root Port / Downstream Port).
-+ * - To enable ASPM, software on Upstream Component (Root Port / Downstream
-+ *   Port) must enable ASPM prior to enabling ASPM on Downstream Component
-+ *   (Endpoint / Upstream Port).
++ * pcie_get_subordinate_bus_locked() - Safely obtain active subordinate bus.
++ * Validates that a child bus matching bridge @pdev is actively linked in
++ * pdev->bus->children under pci_bus_sem. Verifies bridge ownership
++ * (child->self == pdev) to prevent Use-After-Free or ABA pointer identity
++ * races during concurrent hot-remove (pci_remove_bus / pci_remove_bus_device).
 + */
-+static int __pci_aspm_inhibit(struct pci_dev *pdev, bool inhibit, bool locked)
++static struct pci_bus *pcie_get_subordinate_bus_locked(struct pci_dev *pdev)
 +{
-+	struct pcie_link_state *link;
-+	int ret = 0;
++	struct pci_bus *child;
++
++	lockdep_assert_held_read(&pci_bus_sem);
++
++	if (!pdev->subordinate)
++		return NULL;
++
++	list_for_each_entry(child, &pdev->bus->children, node) {
++		if (child->self == pdev)
++			return child;
++	}
++
++	return NULL;
++}
++
++/*
++ * pcie_find_link_upstream_func0() - Find the base Function 0 device on a link.
++ * Handles ARI (Alternative Routing-ID Interpretation) and multi-function
++ * topologies uniformly and symmetrically.
++ */
++static struct pci_dev *pcie_find_link_upstream_func0(struct pci_bus *bus,
++						     struct pci_dev *hint)
++{
++	struct pci_dev *child;
++
++	if (!bus)
++		return NULL;
++
++	if (pci_ari_enabled(bus)) {
++		/*
++		 * In ARI, all functions (0..255) on the bus belong to the same
++		 * logical device. Base Function 0 is strictly devfn == 0.
++		 */
++		list_for_each_entry(child, &bus->devices, bus_list) {
++			if (child->devfn == 0)
++				return pci_dev_get(child);
++		}
++	} else if (hint) {
++		/* Non-ARI: find Function 0 in the same device slot */
++		if (PCI_FUNC(hint->devfn) == 0)
++			return pci_dev_get(hint);
++
++		list_for_each_entry(child, &bus->devices, bus_list) {
++			if (PCI_SLOT(child->devfn) == PCI_SLOT(hint->devfn) &&
++			    PCI_FUNC(child->devfn) == 0)
++				return pci_dev_get(child);
++		}
++	} else {
++		/* Non-ARI from Downstream Port: prefer devfn 0, then any Func 0 */
++		list_for_each_entry(child, &bus->devices, bus_list) {
++			if (child->devfn == 0)
++				return pci_dev_get(child);
++		}
++		list_for_each_entry(child, &bus->devices, bus_list) {
++			if (PCI_FUNC(child->devfn) == 0)
++				return pci_dev_get(child);
++		}
++	}
++
++	/* Fall back to hint or first device on subordinate bus */
++	if (hint)
++		return pci_dev_get(hint);
++
++	child = list_first_entry_or_null(&bus->devices, struct pci_dev, bus_list);
++	return pci_dev_get(child);
++}
++
++/**
++ * pcie_get_link_endpoints - Identify Upstream and Downstream ends of a PCIe link
++ * @pdev: Any PCIe device on the link (Downstream Port or Endpoint)
++ * @downstream_port: Output pointer to Downstream Port (Upstream Component)
++ * @upstream_port: Output pointer to Upstream Port (Downstream Component)
++ *
++ * Identifies both ends of a point-to-point PCIe link. Acquires a reference
++ * (pci_dev_get()) on both discovered endpoints on success. Callers must release
++ * acquired references with pcie_put_link_endpoints() or pci_dev_put().
++ *
++ * Return: 0 on success, -EINVAL if @pdev is NULL or not PCIe, or -ENODEV if
++ * either end of the link cannot be resolved.
++ */
++int pcie_get_link_endpoints(struct pci_dev *pdev,
++			    struct pci_dev **downstream_port,
++			    struct pci_dev **upstream_port)
++{
++	struct pci_dev *down = NULL, *up = NULL;
++
++	if (!downstream_port || !upstream_port)
++		return -EINVAL;
++
++	*downstream_port = NULL;
++	*upstream_port = NULL;
 +
 +	if (!pdev || !pci_is_pcie(pdev))
 +		return -EINVAL;
 +
 +	pdev = pci_physfn(pdev);
++	if (!pdev->bus)
++		return -ENODEV;
 +
-+	if (!locked)
++	if (pcie_downstream_port(pdev)) {
++		struct pci_bus *subordinate;
++
 +		down_read(&pci_bus_sem);
-+	mutex_lock(&aspm_lock);
-+
-+	link = pcie_aspm_get_link(pdev);
-+	if (!link) {
-+		ret = -EINVAL;
-+		goto unlock;
-+	}
-+
-+	if (aspm_disabled) {
-+		pci_warn_once(pdev, "can't inhibit ASPM; OS doesn't have ASPM control\n");
-+		ret = -EPERM;
-+		goto unlock;
-+	}
-+
-+	if (inhibit) {
-+		link->aspm_inhibit_cnt++;
-+		if (link->aspm_inhibit_cnt == 1) {
-+			pcie_config_aspm_link(link, 0);
-+			usleep_range(2000, 3000);
-+		}
-+	} else {
-+		if (WARN_ON_ONCE(link->aspm_inhibit_cnt == 0)) {
-+			ret = -EINVAL;
-+			goto unlock;
-+		}
-+
-+		link->aspm_inhibit_cnt--;
-+		if (link->aspm_inhibit_cnt == 0)
-+			pcie_config_aspm_link(link, policy_to_aspm_state(link));
-+	}
-+
-+unlock:
-+	mutex_unlock(&aspm_lock);
-+	if (!locked)
++		subordinate = pcie_get_subordinate_bus_locked(pdev);
++		if (subordinate)
++			up = pcie_find_link_upstream_func0(subordinate, NULL);
 +		up_read(&pci_bus_sem);
++		down = pci_dev_get(pdev);
++	} else {
++		down = pci_dev_get(pci_upstream_bridge(pdev));
++		down_read(&pci_bus_sem);
++		up = pcie_find_link_upstream_func0(pdev->bus, pdev);
++		up_read(&pci_bus_sem);
++		if (!up)
++			up = pci_dev_get(pdev);
++	}
 +
-+	return ret;
++	if (!down || !up || !pci_is_pcie(down) || !pci_is_pcie(up)) {
++		pci_dev_put(down);
++		pci_dev_put(up);
++		return -ENODEV;
++	}
++
++	*downstream_port = down;
++	*upstream_port = up;
++
++	return 0;
 +}
-+
-+int pci_aspm_inhibit_locked(struct pci_dev *pdev, bool inhibit)
-+{
-+	lockdep_assert_held_read(&pci_bus_sem);
-+
-+	return __pci_aspm_inhibit(pdev, inhibit, true);
-+}
-+EXPORT_SYMBOL_GPL(pci_aspm_inhibit_locked);
++EXPORT_SYMBOL_GPL(pcie_get_link_endpoints);
 +
 +/**
-+ * pci_aspm_inhibit - Temporarily inhibit or restore ASPM on a PCIe link
-+ * @pdev: PCI device on the link
-+ * @inhibit: True to inhibit ASPM (transition to L0), false to release
-+ *
-+ * Increments/decrements a reference counter on the link's ASPM state. When
-+ * @inhibit is true, forces the link to L0 on the first inhibitor. When @inhibit
-+ * is false, restores the configured ASPM state once all inhibitors have
-+ * released their claims.
-+ *
-+ * Return: 0 on success, or a negative errno.
++ * pcie_put_link_endpoints - Release references acquired by pcie_get_link_endpoints
++ * @downstream_port: Downstream Port pointer
++ * @upstream_port: Upstream Port pointer
 + */
-+int pci_aspm_inhibit(struct pci_dev *pdev, bool inhibit)
++void pcie_put_link_endpoints(struct pci_dev *downstream_port,
++			     struct pci_dev *upstream_port)
 +{
-+	return __pci_aspm_inhibit(pdev, inhibit, false);
++	pci_dev_put(upstream_port);
++	pci_dev_put(downstream_port);
 +}
-+EXPORT_SYMBOL_GPL(pci_aspm_inhibit);
++EXPORT_SYMBOL_GPL(pcie_put_link_endpoints);
 +
- int pci_disable_link_state_locked(struct pci_dev *pdev, int state)
- {
- 	lockdep_assert_held_read(&pci_bus_sem);
+ /**
+  * pcie_wait_for_link_delay - Wait until link is active or inactive
+  * @pdev: Bridge device
 diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 671d8db5898e..b0ce8ee8d622 100644
+index d31a8d107b1e..671d8db5898e 100644
 --- a/include/linux/pci.h
 +++ b/include/linux/pci.h
-@@ -1956,6 +1956,8 @@ int pci_disable_link_state(struct pci_dev *pdev, int state);
- int pci_disable_link_state_locked(struct pci_dev *pdev, int state);
- int pci_enable_link_state(struct pci_dev *pdev, int state);
- int pci_enable_link_state_locked(struct pci_dev *pdev, int state);
-+int pci_aspm_inhibit(struct pci_dev *pdev, bool inhibit);
-+int pci_aspm_inhibit_locked(struct pci_dev *pdev, bool inhibit);
- void pcie_no_aspm(void);
- bool pcie_aspm_support_enabled(void);
- bool pcie_aspm_enabled(struct pci_dev *pdev);
-@@ -1968,6 +1970,10 @@ static inline int pci_enable_link_state(struct pci_dev *pdev, int state)
- { return 0; }
- static inline int pci_enable_link_state_locked(struct pci_dev *pdev, int state)
- { return 0; }
-+static inline int pci_aspm_inhibit(struct pci_dev *pdev, bool inhibit)
-+{ return 0; }
-+static inline int pci_aspm_inhibit_locked(struct pci_dev *pdev, bool inhibit)
-+{ return 0; }
- static inline void pcie_no_aspm(void) { }
- static inline bool pcie_aspm_support_enabled(void) { return false; }
- static inline bool pcie_aspm_enabled(struct pci_dev *pdev) { return false; }
+@@ -1272,6 +1272,11 @@ struct resource *pci_find_parent_resource(const struct pci_dev *dev,
+ u8 pci_swizzle_interrupt_pin(const struct pci_dev *dev, u8 pin);
+ int pci_get_interrupt_pin(struct pci_dev *dev, struct pci_dev **bridge);
+ u8 pci_common_swizzle(struct pci_dev *dev, u8 *pinp);
++int pcie_get_link_endpoints(struct pci_dev *pdev,
++			    struct pci_dev **downstream_port,
++			    struct pci_dev **upstream_port);
++void pcie_put_link_endpoints(struct pci_dev *downstream_port,
++			     struct pci_dev *upstream_port);
+ struct pci_dev *pci_dev_get(struct pci_dev *dev);
+ void pci_dev_put(struct pci_dev *dev);
+ DEFINE_FREE(pci_dev_put, struct pci_dev *, if (_T) pci_dev_put(_T))
 
 -- 
 2.55.0.1003.g10538fe699-goog
