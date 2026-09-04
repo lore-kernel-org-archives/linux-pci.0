@@ -1,63 +1,63 @@
-Received: from mail-qk1-f181.google.com (mail-qk1-f181.google.com [209.85.222.181])
+Received: from mail-qk1-f174.google.com (mail-qk1-f174.google.com [209.85.222.174])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A4D54A2A44
-	for <linux-pci@vger.kernel.org>; Fri,  4 Sep 2026 13:46:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.181
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C9304A3D20
+	for <linux-pci@vger.kernel.org>; Fri,  4 Sep 2026 13:46:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788529579; cv=none; b=Bf3WDqyzTOoxzZ2LochrsTUTsvMTDEVQNBSTXeak+fhPJLbKFEEP9EH9hUttzRlApFm6FeivGART7JT8DBXbw54Wd6qqmb9aA1reUtK5t9sPK0O0pknFcMECjJt9gC20iOm8GRSuyE3y87pBUSJW3SZWLiZWjw7yLJXFND4qQm0=
+	t=1788529590; cv=none; b=ATY/GSdqy5AS4Vv/Iawy9fPiTHQQrLj9/cLq5Cbrqual/u5RxNPnV0SCTnNp3IiP7VftJSTWgEA4bMhUQlOa9LFxGTwVfPlsDPEBGqWTfB2geqF906oLS4NDFXi1c7DKLoxrmEIIM8jlc7ZB4UV1wJ2FmhoO68yoQRHeOOnhqIg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788529579; c=relaxed/simple;
-	bh=Umf4Qux19s/oJdiljE5afHHlwKfEF4F/L07jXGmhg5M=;
+	s=arc-20240116; t=1788529590; c=relaxed/simple;
+	bh=l7HBFW2oz1K7wlz0Cw/q76k0lqFcEvUDwHaz93CkcFM=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=pJPX1RGJD6Vag+36bD8DZrnVrU5Mu9iR/o/b1GpwWnW4L5EAynrydqv7krGW/caMpsGKqMC9KoCqTT0ZL+nULKvmynxj1XQ7XvNT43iow7KMffFZ5/qgSlKubtuzs/K3plQ+H/W3wedfGslmiyi/Nsg5OwU1MF8goHU6PV68f+o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=riscstar.com; spf=pass smtp.mailfrom=riscstar.com; dkim=pass (2048-bit key) header.d=riscstar-com.20251104.gappssmtp.com header.i=@riscstar-com.20251104.gappssmtp.com header.b=od7KOlCU; arc=none smtp.client-ip=209.85.222.181
+	 MIME-Version; b=Ec/tx4JzrXfPvMvoPXJFrFY/0TyOBF5m+apZPGGPS7+NclvThXPp7Fd9AZxsH3R76SVCUH2b2VIboUhh2Hdz60fKP9qQjgMrJkC6p2X8hkNcbssZBCSp7GBZ/Rhm4HB3Fu2xJt9rSSg4XDH/TyhEMM4RLfKIMvCcjkYJb8zBWmY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=riscstar.com; spf=pass smtp.mailfrom=riscstar.com; dkim=pass (2048-bit key) header.d=riscstar-com.20251104.gappssmtp.com header.i=@riscstar-com.20251104.gappssmtp.com header.b=Z+px9OyB; arc=none smtp.client-ip=209.85.222.174
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=riscstar.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=riscstar.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=riscstar-com.20251104.gappssmtp.com header.i=@riscstar-com.20251104.gappssmtp.com header.b="od7KOlCU"
-Received: by mail-qk1-f181.google.com with SMTP id af79cd13be357-936c02e58dfso103697785a.3
-        for <linux-pci@vger.kernel.org>; Fri, 04 Sep 2026 06:46:17 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=riscstar-com.20251104.gappssmtp.com header.i=@riscstar-com.20251104.gappssmtp.com header.b="Z+px9OyB"
+Received: by mail-qk1-f174.google.com with SMTP id af79cd13be357-93903d81a82so84728985a.2
+        for <linux-pci@vger.kernel.org>; Fri, 04 Sep 2026 06:46:28 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=riscstar-com.20251104.gappssmtp.com; s=20251104; t=1788529576; x=1789134376; darn=vger.kernel.org;
+        d=riscstar-com.20251104.gappssmtp.com; s=20251104; t=1788529587; x=1789134387; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=8jU3bHZExWtt76MVfRZM8b738CbAPfC/obIJMlr2jck=;
-        b=od7KOlCUXER52aiYLdNLdCgjzgIiLaCRwI8NiMvJGVZ9oU/dBRLjg+Jvz5dqSsyKQr
-         yN5zylq0tdVfYALP5KLWiFy9FKthCXeAy7twcABhvoFEtGWuX7TW0DDFZ/D9+/sL06oK
-         d6tHTTVhMdPPJBoJ4kU/o9hFt9hqmtiIN3jKmx5VQqZeywAIXTYUd1sM7VlEuASpXUPV
-         VoneooKXEiKSz9sj1mYU0cKyD9/8H/ar91tQ/iO1I9xe0td9kCYN3RtlF0GFzfGpPP8M
-         +U8g7V0E8x0sSMi5Zag9m407UhkL2mVbFAYPn+JtgNHZm4ts4spOdVvVpHHkuhtDhpaX
-         KRgw==
+        bh=X+Bw04n0AyQYjskAQ/JcmMjfV9T3RjIpfJoearHWcfU=;
+        b=Z+px9OyB3Q3YxOWoirmFuGtw0afVJ5jCKhh9O/Vpn7Jo9GJ1E5p6TRkyfY6vA2/uAD
+         ZbJL1XoZ5Jnmmq0KzQx1LUdt7+/a6QG3kduT5vjQ8uT6IQJXs5/pb+3D79zMrQzTY235
+         EUIzd26bg64xfstUm4yaWr5zg+/Q1GxfT8VLrfYUSB057r1Rmv5kBcA1ttHllTXZUBOx
+         tcH/9mLIzyW72ZOIQavXwnqJXjKkXMenuW2i8vBSLVlhWkCmyt0YX6LE6QQxK5DQvueO
+         a271Fxrf/YntIY60FXWCc+8O45KRQr6HGDXa/tWrivlCDKQQMWVgeO3Vk51/Bz4h21K+
+         zp8A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788529576; x=1789134376;
+        d=1e100.net; s=20251104; t=1788529587; x=1789134387;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=8jU3bHZExWtt76MVfRZM8b738CbAPfC/obIJMlr2jck=;
-        b=ZwHEwE0cXKAYWMu5tSqaRzZummu6H/L7h/yi6MzhLLymf38D0XYzlWAaqYMQ2jGVJz
-         XDybmNxinJfeaymo48NYXukMV+6jBZjsr4KwoQaI3SNdKollE94C4AKu1pq+4WVBGNuL
-         GxEqjAt8L/G4lYhNhEtKomYMhvgk8GcDcOr5QzfQYLypC4EIb+ipkV8oUEtDrjdE2rSM
-         PeM840R5cU+NJf7CbWMhFJ3FM7STSvj8oED8DlzIrGlmBfeja0Aqdwt0LvurfWuaZyPt
-         FRYvGuM7l99kSkg4udxcszGa7g37q4F6tP7M2eDeJlcW5fCgLrtbctXq83dUFLD/WelP
-         awgA==
-X-Forwarded-Encrypted: i=1; AKwUvByyfZteuINzV9urasP2p1szPkVN5MnBwux3C7DJJaD4hi0CeX8ppwuuKpQkPPcfz+AY+Em/kB2sRPU=@vger.kernel.org
-X-Gm-Message-State: AFuF++n5l41TnC+vM/K0OtTmXyKTRI+pbQxi4HYYEcyeJVf9lTm+i8hg
-	PBrLHoHZzriroRuRoxd5lAh6mwoOujYehuNJ1r3YN3orkxbxquYBadUdL4vEnCfxZ2g=
-X-Gm-Gg: AYBFou3BAeYtows1eZsDa8VCjRYTtHYqvTps7spt92bHTDOLyxrqGzQAQXNDzXwdIlh
-	nnSeHauHjFoxfzt0+/5hdn+Rk5l9Mt46H4pE39qMwHhjYCfuWAH6YLkDiPeH55gztYQ345KbJCB
-	2tz9ER4P+1XaxVo0vLyu9Nss7/C3d0PVf0Va+ICZnVJW2W++Gx7p32csEwWad4+91ytkabKw0z4
-	2XnuKVQDYe2CWsN1KjEYDT6zB76IxH4XJGeZKm6ab8nTg6O+3GIcvIDseV9buY1PJw4+9vUhitm
-	VVnSFaHZYiwaKSpBCxWjQQtojUNxnaF4DGWwNDBS2VXr0IuxLnbYIkRPZQ2ce9Mn6sr6zX9mabX
-	imuiJG1FRu1yS7Fq+X12SXVaObnjanWwKRwuJMRJMNkLHTxA/jh2dOCNMddRJhFm6wTEPd24+3G
-	VmYR2vGseRL/T5xG5Xu1KOliV8VdAQWdKZpIpBHcSnNebLp7XQpRG+M9sPTCJQ0ybt
-X-Received: by 2002:a05:620a:8201:b0:936:499d:9504 with SMTP id af79cd13be357-939803443cbmr424763285a.14.1788529575649;
-        Fri, 04 Sep 2026 06:46:15 -0700 (PDT)
+        bh=X+Bw04n0AyQYjskAQ/JcmMjfV9T3RjIpfJoearHWcfU=;
+        b=BFSzzK6E7z7LfT1CAJpkEUyJXKqA2SsY84p3EVclFSSVU0QMw0U83J1xAaA7JRi8Cv
+         kgZO9TTLg3i5XnmIEio5+y4y03bOHX3S31E6z5EuLrg+/q5U/ZgT/C4CzSBCYRHGeeaj
+         zMU+l+2sUFbFJOVjHu16Q2Ljuc2+CmvwfxUDK/z/BoFFjMlesLsBseigryiPs5wnA4j2
+         E/rNdtBIn1Zzhc5DUdaXXQ5E535gqPI4osq5pGrt49ViRec20X7y2DN93Vj1IRBE3xy2
+         qVf9Lh1kJoP1G5C14gt8wfOKWnuxqgk+q5pxkTlkqoBd5uAGdTaowcuUZb5azh9da7yv
+         iwuQ==
+X-Forwarded-Encrypted: i=1; AKwUvBywLsV/RUhs6mQbguDk7CxXR2hY55zHM9JO9MH8ztYQHmFdbsWXHZFoKozmuxzrmVTefq+4p0IqzKI=@vger.kernel.org
+X-Gm-Message-State: AFuF++ksFOZzIYVNXL2eR34XDPVP9nocmt8nVV7tc0zQHgnAPArzj1dI
+	cIwPYsx48iZEeUzujYyQCQx39YWHx0s99M7CvJ+63FFPQMh5vOF/xtlyVUp00kbGrLY=
+X-Gm-Gg: AYBFou2TlpMrZLGOCf64ENg6khbAPQf90FaXU1u0+6gACyHwuzgJ4q1eCEC2b7b0e+K
+	/9eG9ZwdF8kA0cZQfEhGzb528XZxiddztbTc52RISCosK7+zdxNM3/S+HHTh7NuI2ck2AsvJ3Ot
+	9YXdYFrMvFvkoX/zIvGdZ6rFZsF+i2snGWB/ApX3UFJIcUR82o78nNmaCV1wSnL2j2Vk+0dB/NM
+	1NxiXPpg9sCk8y0+xdpfhk/LnVy3+w6X7Bi4zEiFiBglhc0840zT8o3wgIXs0GRzYOS1vxY8Xcv
+	AfUydk6VHPKfWqb00YiFv8WJU6U/I9rBtTC6J5RXJmdjRKZhk/dCvqltiwYXRvRUw7cGZRyt0cx
+	752ws7LhmCLOmrvwc9pLhGDRbpwsz4fxF5aEn340B3xC4wuDjQVfK0CeNLzRKraafM3Lj1Fgkpc
+	VcSy9bGxXooW/jsgDMiEcoEC14rRy0F/aw/aRrOrdFzO1+InPyaTRNyCpW2R0bxQNI
+X-Received: by 2002:a05:620a:a0c5:10b0:936:dbf1:f495 with SMTP id af79cd13be357-939802f6e18mr474878385a.1.1788529572210;
+        Fri, 04 Sep 2026 06:46:12 -0700 (PDT)
 Received: from zippy.localdomain ([73.62.185.64])
-        by smtp.gmail.com with ESMTPSA id af79cd13be357-9397fafc3a7sm211613885a.14.2026.09.04.06.46.14
+        by smtp.gmail.com with ESMTPSA id af79cd13be357-9397fafc3a7sm211613885a.14.2026.09.04.06.46.11
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 04 Sep 2026 06:46:15 -0700 (PDT)
+        Fri, 04 Sep 2026 06:46:11 -0700 (PDT)
 From: Alex Elder <elder@riscstar.com>
 To: bhelgaas@google.com,
 	robh@kernel.org,
@@ -68,10 +68,11 @@ Cc: herve.codina@bootlin.com,
 	lorenzo.bianconi@oss.qualcomm.com,
 	linux-pci@vger.kernel.org,
 	devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v4 4/4] PCI: of: introduce of_pci_verify_node()
-Date: Fri,  4 Sep 2026 08:46:06 -0500
-Message-ID: <20260904134607.1856121-5-elder@riscstar.com>
+	linux-kernel@vger.kernel.org,
+	Sashiko <sashiko-bot@kernel.org>
+Subject: [PATCH v4 1/4] PCI: of: avoid allocations in of_pci_prop_compatible()
+Date: Fri,  4 Sep 2026 08:46:03 -0500
+Message-ID: <20260904134607.1856121-2-elder@riscstar.com>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260904134607.1856121-1-elder@riscstar.com>
 References: <20260904134607.1856121-1-elder@riscstar.com>
@@ -83,127 +84,77 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Commit 407d1a51921e9 ("PCI: Create device tree node for bridge") linked
-the PCI enumeration process together with devicetree, creating a devicetree
-node for discovered PCI bridges.  Its successor commit ae9813db1dc5a ("PCI:
-Add quirks to generate device tree node for Xilinx Alveo U50") shows how
-to use a PCI final fixup quirk to also create a devicetree node for a
-non-bridge PCI device.  These changes allowed devicetree overlays to
-describe components downstream of a PCI device, by providing a place to
-attach the overlay.
+Three compatible strings are formatted in of_pci_prop_compatible().
+Their sizes are known in advance, and the largest is 16 bytes.
 
-Note that the dynamic devicetree node is only created if the device didn't
-already have an assigned node.
+Rather than dynamically allocating the space for those strings, just
+set aside a buffer on the stack large enough to hold all three.
 
-Later, commit aa7b4bbcb3a1d ("arm64: dts: qcom: qcs6490-rb3gen2: Add
-TC9563 PCIe switch node") *pre-defined* devicetree nodes to represent the
-PCI device nodes that would (also) be discovered via the PCI enumeration
-process.  The devicetree node in this case is created with the content
-from the DTS file.  So when a (host) bridge is done being initialized
-during PCI enumeration, no node is dynamically created (the commits
-mentioned above do not apply).
+This avoids a problem that Sashiko pointed out, where an allocation
+failure would cause subsequent crash because strlen() is called
+unconditionally in of_changeset_add_prop_string_array().
 
-Ideally, any pre-defined PCI devicetree node would contain exactly the
-same information as whatever the dynamic creation process would produce
-(though it could include more).
-
-However that is not the case for the pre-defined Qualcomm RB3gen2 nodes.
-And in particular, the endpoint (function) nodes include this property:
-
-    device_type = "pci";
-
-This is simply wrong; that property is meant only for bridge nodes.
-
-Rob Herring requested that a runtime check to be added to spot this
-specific error, only for non-bridge PCI devices.  Herve Codina further
-suggested we ensure that bridge PCI devices *do* define the device_type
-property, with value "pci".  We also accept "pciex" as the value of the
-device_type property for bridges.
-
-Reviewed-by: Herve Codina <herve.codina@bootlin.com>
+Reported-by: Sashiko <sashiko-bot@kernel.org>
+Link: https://lore.kernel.org/sashiko-reviews/a647bd56-7dc8-4fec-9d96-834622054cdf@riscstar.com
 Signed-off-by: Alex Elder <elder@riscstar.com>
 ---
-v4: - Added "pciex" as a valid bridge device_type property value
-    - Added Herve's Reviewed-by tag
+v4: - Added this fix to the beginning of the series
 
- drivers/pci/bus.c |  1 +
- drivers/pci/of.c  | 32 ++++++++++++++++++++++++++++++++
- drivers/pci/pci.h |  3 +++
- 3 files changed, 36 insertions(+)
+ drivers/pci/of_property.c | 31 ++++++++++++++++++++-----------
+ 1 file changed, 20 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index 655ed53436d3e..679afbc6d3109 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -351,6 +351,7 @@ void pci_bus_add_device(struct pci_dev *dev)
- 	 * are not assigned yet for some devices.
- 	 */
- 	pcibios_bus_add_device(dev);
-+	of_pci_verify_node(dev);
- 	pci_fixup_device(pci_fixup_final, dev);
- 	if (pci_is_bridge(dev))
- 		of_pci_make_dev_node(dev);
-diff --git a/drivers/pci/of.c b/drivers/pci/of.c
-index a51dff91b196d..5a040ed836744 100644
---- a/drivers/pci/of.c
-+++ b/drivers/pci/of.c
-@@ -1085,3 +1085,35 @@ int of_pci_get_equalization_presets(struct device *dev,
- 	return 0;
+diff --git a/drivers/pci/of_property.c b/drivers/pci/of_property.c
+index 75a358f73e694..a0632f932b5c6 100644
+--- a/drivers/pci/of_property.c
++++ b/drivers/pci/of_property.c
+@@ -324,27 +324,36 @@ static int of_pci_prop_intr_map(struct pci_dev *pdev, struct of_changeset *ocs,
+ 	return ret;
  }
- EXPORT_SYMBOL_GPL(of_pci_get_equalization_presets);
-+
-+/**
-+ * of_pci_verify_node - Sanity check some PCI device node properties
-+ * @pdev: The PCI device whose device node is checked
-+ *
-+ * PCI enumeration authoritatively discovers what we need to know about
-+ * a PCI device.  A devicetree-based platform will represent a PCI root
-+ * bridge with a node, but otherwise devicetree doesn't typically include
-+ * many PCI nodes.  Where such nodes do exist, experience has shown that
-+ * the "device_type" property is sometimes wrong, so warn about that.
-+ */
-+void of_pci_verify_node(struct pci_dev *pdev)
-+{
-+	struct device_node *np = pci_device_to_OF_node(pdev);
-+	bool device_is_bridge;
-+	bool device_type_pci;
-+
-+	/* Nothing to check if there's no pre-existing devicetree node */
-+	if (!np)
-+		return;
-+
-+	device_is_bridge = pci_is_bridge(pdev);
-+	device_type_pci = of_node_is_type(np, "pci") ||
-+			  of_node_is_type(np, "pciex");
-+
-+	/* Bridges should have device type "pci"; endpoints should not */
-+	if (device_is_bridge == device_type_pci)
-+		return;
-+
-+	dev_err(&pdev->dev, "PCI %s have \"pci\" device_type property\n",
-+		device_is_bridge ? "bridge should" : "endpoint should not");
-+}
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index ba3c3fddddc23..2e33d3bd4b0ba 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -1253,6 +1253,7 @@ bool of_pci_supply_present(struct device_node *np);
- int of_pci_get_equalization_presets(struct device *dev,
- 				    struct pci_eq_presets *presets,
- 				    int num_lanes);
-+void of_pci_verify_node(struct pci_dev *pdev);
- #else
- static inline int
- of_get_pci_domain_nr(struct device_node *node)
-@@ -1308,6 +1309,8 @@ static inline int of_pci_get_equalization_presets(struct device *dev,
  
- 	return 0;
++/* The three compatible property strings have max sizes 12+1, 15+1, and 13+1 */
++#define PROP_SIZE	16	/* Max size of each compatible string */
+ static int of_pci_prop_compatible(struct pci_dev *pdev,
+ 				  struct of_changeset *ocs,
+ 				  struct device_node *np)
+ {
+ 	const char *compat_strs[PROP_COMPAT_NUM] = { 0 };
++	char buf[PROP_COMPAT_NUM * PROP_SIZE] = { };
++	char bufp = buf;
+ 	int i, ret;
+ 
+-	compat_strs[PROP_COMPAT_PCI_VVVV_DDDD] =
+-		kasprintf(GFP_KERNEL, "pci%x,%x", pdev->vendor, pdev->device);
+-	compat_strs[PROP_COMPAT_PCICLASS_CCSSPP] =
+-		kasprintf(GFP_KERNEL, "pciclass,%06x", pdev->class);
+-	compat_strs[PROP_COMPAT_PCICLASS_CCSS] =
+-		kasprintf(GFP_KERNEL, "pciclass,%04x", pdev->class >> 8);
++	ret = snprintf(bufp, PROP_SIZE, "pci%x,%x", pdev->vendor, pdev->device);
++	if (ret >= PROP_SIZE)
++		return -EINVAL;
++	compat_strs[PROP_COMPAT_PCI_VVVV_DDDD] = bufp;
++	bufp += ret + 1;
+ 
+-	ret = of_changeset_add_prop_string_array(ocs, np, "compatible",
+-						 compat_strs, PROP_COMPAT_NUM);
+-	for (i = 0; i < PROP_COMPAT_NUM; i++)
+-		kfree(compat_strs[i]);
++	ret = snprintf(bufp, PROP_SIZE, "pciclass,%06x", pdev->class);
++	if (ret >= PROP_SIZE)
++		return -EINVAL;
++	compat_strs[PROP_COMPAT_PCICLASS_CCSSPP] = bufp;
++	bufp += ret + 1;
+ 
+-	return ret;
++	ret = snprintf(bufp, PROP_SIZE, "pciclass,%04x", pdev->class >> 8);
++	compat_strs[PROP_COMPAT_PCICLASS_CCSS] = bufp;
++
++	return of_changeset_add_prop_string_array(ocs, np, "compatible",
++						  compat_strs, PROP_COMPAT_NUM);
  }
-+
-+static inline void of_pci_verify_node(struct pci_dev *pdev) { }
- #endif /* CONFIG_OF */
++#undef PROP_SIZE
  
- struct of_changeset;
+ int of_pci_add_properties(struct pci_dev *pdev, struct of_changeset *ocs,
+ 			  struct device_node *np)
 -- 
 2.53.0
 
