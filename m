@@ -1,114 +1,126 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 344D62FD7D3
-	for <linux-pci@vger.kernel.org>; Fri,  4 Sep 2026 13:07:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F579494828
+	for <linux-pci@vger.kernel.org>; Fri,  4 Sep 2026 13:10:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788527235; cv=none; b=EiN0LDvEKSPIyA1FldienkcCwmpo97pmkJMhGvKf0u3g+KIFkjdTmvh3Oo56g7ARrqJBulaWkSaJlbpSoNKJ3+zfxSID6frfKb/KsyB3p+8xHmz9WlU5OxQE5n68c9tf1EWmtS1s2hg3xFm6msUtIUwWV0t+A+FXwNSDXpThQyQ=
+	t=1788527423; cv=none; b=nDPbwJ7eR6m/O9Lj0e962BJQwQXpdegXpUroghY+lARGb6tSn6au5+cN4Slj6J117aiXAffDkQlMMKtuxMrBlScL4U+weokb/bhktn1/pe3YTrSWBfVvkyMgdnvSmLIt4MWcSsEQsTdCJV8MjuSy0J6S2xmI/AxzgyNH8om7yNM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788527235; c=relaxed/simple;
-	bh=ZCQccJl36xewbXiUcDkYhGL6p+hMfDYd20FGy3iplO4=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=RRo10FYULnB5Owe8pWAFf6XUUjs31e6yDezRU64sb0kYtQ8wJEOZuJH+2q8FckR3Kzvrh8BzQB9pvtNEI7xJx57J4cN4H+D8ZjCO7QMrb39FKNkEzrjDIV3l7jjafjcwhlbP+660K56ka6BSuE+DXUke03PLk2RaUfMMBcOdF7w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OF7/7GuZ; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788527423; c=relaxed/simple;
+	bh=dNAxG5RJpae8U6isDe+cGScB/P1cfsuTlvTizvNXPLQ=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=p34NYKdegzdkcmUu3TJTGW9pnllChrQzxwkfX2ZZigHssyOsgFvslv36NeAfIWl+9rLEWD7+3cStcqO5HrOZCsFS/rrI9cFf3YEE3MSOhi6DQjUn4Q9YP9J2FH/ROuyts402TPOE/SsL8tagzMl+TH77AMF7QTDXK/8UmWuFPlg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZxThJ91Q; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OF7/7GuZ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4D0581F00A3D;
-	Fri,  4 Sep 2026 13:07:12 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZxThJ91Q"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6D9731F00ADE
+	for <linux-pci@vger.kernel.org>; Fri,  4 Sep 2026 13:10:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788527233;
-	bh=gGkHkZzkVW6DGI/musisUQVSQ3nO7MJaOAJUcl+rmIQ=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=OF7/7GuZqjBa3t9j0zbucx1Cp4NHp2XVzcUd0a/nqMTYPlz5ft58IO5evUwy8KtjB
-	 HuFJACgXPmH193rRZWkngSqtiE/SXtEZ4SilCZFW/M64l9TT54YNz2WIrJpLO+ParR
-	 pvS6VbH8t90JwHhXe1whCD3rGQgh9yWWIFCzlgHbwgIvcfOCxur5kcTXddPHLh0Yjr
-	 1P3GXYpK1KlGl69kWrNGqHLZMyKrWnyx7N8Rembpc2+r+rEurJWZJEtZ8TCH4lF9Dk
-	 UoH5CsXsegCw85ezo6HLXa8LSjR38oexVeIZd2nOyHCJwrnbL9+vFaFPQFX4LmCI8s
-	 W6IvIzgOKEyhA==
-Date: Fri, 4 Sep 2026 15:07:09 +0200
-From: Niklas Cassel <cassel@kernel.org>
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Manivannan Sadhasivam <mani@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-rockchip@lists.infradead.org, linux-pci@vger.kernel.org,
-	Wilfred Mallawa <wilfred.mallawa@wdc.com>
-Subject: Re: [PATCH v2 1/2] PCI: dw-rockchip: Move the INTx irq setup to
- probe and make it devm-managed
-Message-ID: <aprCfVgc1dl_h24T@ryzen>
-References: <1788484709-139123-1-git-send-email-shawn.lin@rock-chips.com>
- <1788484709-139123-2-git-send-email-shawn.lin@rock-chips.com>
+	s=k20260515; t=1788527418;
+	bh=uzlabd0Ht729u0PHQ5e0HoltWkVGvcok12nebPy3mcI=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc;
+	b=ZxThJ91QUNLYppsFFwHX3lssAndLcVBXZQYVZ/lYhnp1veDL4SLu/9AgkKb6asLKn
+	 uZ7njNtejOZa9hVzAofczEBApnyxicUYITl/ofg3ipc55FyKGEJ1+zae9ivP5g9UHc
+	 eE3j2TShV5RBt2vKJaOWV4Fs9wAyMP/AH4lvIi4FWJUfL2EQQBH/UFUFTYuxDEN/k2
+	 A0ea+grGz659SzeyFT2hZLXFS2ppOlpnqZnXogVTLT02XlYKt53SxEz+2Or/bnnMP3
+	 tJHWXQwejiR7CThfyQbuDfp9YsW3BD1BCaW2gVGjo+CdtCA8dvY0YsHnd91+q/8gB+
+	 5E3zuL43TlM6A==
+Received: by mail-lf1-f41.google.com with SMTP id 2adb3069b0e04-5b4ab4b4179so895534e87.0
+        for <linux-pci@vger.kernel.org>; Fri, 04 Sep 2026 06:10:18 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AKwUvByMW7o0cYI5Ch30lVw8T/jc4iR86VYgwnZVxGw0TCAlBiANP2ouK/hei0n80bV0/Ic5H8P0p+ZxAUg=@vger.kernel.org
+X-Gm-Message-State: AFuF++n63L5qYq5nbuahGgwDigThT0nZdHuA89UuSTaPaevwIc1zTBD6
+	Q/A5Fu0JYd/Z35f+53tl0xwosrUr6DvOo2AL6juv9pYYFpaAHXJA7MZ7VMJx8JpjHkLznSme8DN
+	XEGB1AvZr1JlSpHTD29Ymh+eZIRgWSSk=
+X-Received: by 2002:a05:6512:a356:b0:5b6:19fe:a5a9 with SMTP id
+ 2adb3069b0e04-5b619fea602mr1069728e87.26.1788527416701; Fri, 04 Sep 2026
+ 06:10:16 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1788484709-139123-2-git-send-email-shawn.lin@rock-chips.com>
+References: <20260831205533.2325747-1-mario.limonciello@amd.com> <20260831205533.2325747-3-mario.limonciello@amd.com>
+In-Reply-To: <20260831205533.2325747-3-mario.limonciello@amd.com>
+From: "Rafael J. Wysocki (Intel)" <rafael@kernel.org>
+Date: Fri, 4 Sep 2026 15:09:15 +0200
+X-Gmail-Original-Message-ID: <CAJZ5v0hgvyRrgVa2fiGMLmT0Uc7gygik8bdSoRhgS3fboQpi8g@mail.gmail.com>
+X-Gm-Features: AcwNN1UyzTWrLiZwgmKBA-GlTE12abqgFXdai1dQeipUIJWUfjAUqUXi0_m-QpE
+Message-ID: <CAJZ5v0hgvyRrgVa2fiGMLmT0Uc7gygik8bdSoRhgS3fboQpi8g@mail.gmail.com>
+Subject: Re: [PATCH v3 2/3] PCI/PM: Run bridge power up actions as part of
+ restore phase
+To: Mario Limonciello <mario.limonciello@amd.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, 
+	"open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>, 
+	"Rafael J . Wysocki" <rafael@kernel.org>, Lukas Wunner <lukas@wunner.de>, linux-pm@vger.kernel.org, 
+	"Mario Limonciello (AMD)" <superm1@kernel.org>, Eric Naim <dnaim@cachyos.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Fri, Sep 04, 2026 at 09:18:28AM +0800, Shawn Lin wrote:
-> Since commit b376b3ff9cb0 ("PCI: dw-rockchip: Implement .reset_root_port()
-> and use for link down"), .reset_root_port() re-runs the host ops
-> .init() callback to reprogram the Root Complex after a controller
-> reset. That works for the register programming, but .init() is not
-> re-entrant: it also creates the INTx irq domain and installs the
-> chained INTx handler. Every root port reset therefore ends up with a
-> second irq domain registered for the same fwnode: the previous one is
-> leaked, as it is never removed, and worse, the INTx virqs of the
-> downstream PCI devices were allocated in the previous irq domain and
-> are never re-mapped, while the chained handler now looks up virqs in
-> the new, empty domain. After a link down recovery, INTx interrupts
-> are silently lost.
-> 
-> Fix it by moving the of_irq_get_byname() lookup, the INTx irq domain
-> creation and the chained handler installation out of .init() and into
-> rockchip_pcie_configure_rc(), right after dw_pcie_host_init(). This
-> mirrors how the qcom driver requests its global IRQ, and leaves
-> .init() with nothing but idempotent register programming, so both
-> .reset_root_port() and dw_pcie_resume_noirq() can safely re-run it.
-> Re-running of_irq_get_byname() on every resume is also gone.
-> 
-> With the irq setup now living in probe, tie its lifetime to the device
-> with devres: create the irq domain with devm_irq_domain_instantiate()
-> and uninstall the chained handler through the
-> rockchip_pcie_intx_chained_release() devres action. The driver is
-> builtin and cannot be unbound (suppress_bind_attrs), so probe failure
-> is the only path that ever needs this cleanup, and devres takes care
-> of it without sprinkling it over every error path. Since the irq setup
-> is the last step of rockchip_pcie_configure_rc(), the only failure
-> point left after the chained handler is installed is
-> devm_add_action_or_reset() itself, whose failure mode runs the action,
-> so the handler can never run against the devm-freed rockchip
-> structure. devres also unwinds in reverse registration order, so the
-> handler is always uninstalled before the domain is removed. There is
-> no devm API for chained handlers, hence the small devres action
-> wrapper.
-> 
-> Fixes: b376b3ff9cb0 ("PCI: dw-rockchip: Implement .reset_root_port() and use for link down")
-> Suggested-by: Niklas Cassel <cassel@kernel.org>
-> Cc: Wilfred Mallawa <wilfred.mallawa@wdc.com>
-> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+On Mon, Aug 31, 2026 at 10:56=E2=80=AFPM Mario Limonciello
+<mario.limonciello@amd.com> wrote:
+>
+> From: "Mario Limonciello (AMD)" <superm1@kernel.org>
+>
+> pci_pm_resume_noirq() calls pci_pm_bridge_power_up_actions() when a
+> bridge is coming back from D3cold and bus PM was not skipped, so that
+> the mandatory post-power-on link training delays are observed before
+> any downstream device is accessed.
+>
+> The last patch in this series makes the hibernate poweroff_noirq path
+> put bridges with downstream devices into D3 (including D3cold),
+> mirroring what the S3 suspend path already does.  For that to be safe,
+> the hibernate image restore path has to bring those bridges back up the
+> same way suspend resume does; otherwise a downstream device may be
+> accessed before its parent bridge's link is retrained.
 
-I would have written it in two commits:
-1/3 that moves the of_irq_get_byname() lookup, the INTx irq domain creation,
-    and chained handler installation.
-2/3 that makes the irq doman device managed, to not leak the resources, as
-    flagged by Sashiko
-(3/3 that masks the INTx IRQ during .reset_root_port())
+Note though that pci_pm_restore_noirq() runs after the boot kernel has
+initialized the PCI bus, so all of the links should be retrained by
+that time.
 
+It then carries out a "freeze" transition before passing control to
+the image kernel, so "restore" doesn't really get devices in
+"pristine" states.
 
-Since fixing the resource leak seems like a separate issue.
+Moreover, BIOS code runs before "poweroff_noirq" and the boot kernel
+and it also messes up with devices in general.
 
-The commit message for this patch does seem quite long, mostly because
-it is fixing two separate issues.
+Is there a specific issue that is avoided by this change?
 
-
-Sorry that we did not detect this INTx issue when sending the
-.reset_root_port() patch. Since RK3588 does not support INTx in EP mode,
-it is unfortunately not tested when running the pci_endpoint_test selftest.
-
-
-Kind regards,
-Niklas
+> Add the same bridge power up actions to pci_pm_restore_noirq(), gated on
+> the same conditions as the resume path (bus PM not skipped and the
+> previous state being D3cold), so that hibernate restore and suspend
+> resume behave identically for bridges.
+>
+> Tested-by: Eric Naim <dnaim@cachyos.org>
+> Signed-off-by: Mario Limonciello (AMD) <superm1@kernel.org>
+> ---
+>  drivers/pci/pci-driver.c | 5 +++++
+>  1 file changed, 5 insertions(+)
+>
+> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> index e3d352c7b31d4..d15b3eb55ec53 100644
+> --- a/drivers/pci/pci-driver.c
+> +++ b/drivers/pci/pci-driver.c
+> @@ -1297,10 +1297,15 @@ static int pci_pm_restore_noirq(struct device *de=
+v)
+>  {
+>         struct pci_dev *pci_dev =3D to_pci_dev(dev);
+>         const struct dev_pm_ops *pm =3D dev->driver ? dev->driver->pm : N=
+ULL;
+> +       pci_power_t prev_state =3D pci_dev->current_state;
+> +       bool skip_bus_pm =3D pci_dev->skip_bus_pm;
+>
+>         pci_pm_default_resume_early(pci_dev);
+>         pci_fixup_device(pci_fixup_resume_early, pci_dev);
+>
+> +       if (!skip_bus_pm && prev_state =3D=3D PCI_D3cold)
+> +               pci_pm_bridge_power_up_actions(pci_dev);
+> +
+>         if (pci_has_legacy_pm_support(pci_dev))
+>                 return 0;
+>
+> --
+> 2.43.0
+>
