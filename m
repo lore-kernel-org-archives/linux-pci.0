@@ -1,146 +1,133 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f171.google.com (mail-pg1-f171.google.com [209.85.215.171])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6EAE1382F0F;
-	Fri,  4 Sep 2026 11:11:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E9885470E82
+	for <linux-pci@vger.kernel.org>; Fri,  4 Sep 2026 11:13:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788520313; cv=none; b=iRgzXVGDW04UHqcVm9b2k8YS1tjTvg8dTjnSzvMxCExh6jnHWvkS5rv+kze8dU9H7sUnjX1Bu0Qtk2qN4ikAGhUVbTL6UQL3BxggqOX2B86peyYuqmEPTD+/6wnDvt4/LvEKagUOPQAwU4UKyVTT5c9cSd2TaiA7nUrpv7euMy4=
+	t=1788520434; cv=none; b=TH8vUHoNXjava7APLOngW0q5gErRaQPZ5tRbuWUa0uE451+2kolsFSYo7034ccKOBK0RXDpy0uIccqn5K73v1dCed5khMYZsJw1Goeq+mq7mzrKYShDUWrfCrLXncqLr+TvYKgRnp7QJ8SoBgsy8vVtfH1QnY6YC6MdyPoGq/Bo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788520313; c=relaxed/simple;
-	bh=d0cVoilWRCngfR4Nuy1LBj53yM5i2PbNVP+KTFrQ4vA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=d1m7Uxzzqu/FMDKP/7eKETfG3mZNIVI9V39jZwVwBXCUdIBr9TR/gvJ+R2DfvdnBH3HwtQDTUmzY2oQwsUsfKCx33hZ4Hv/cKnWi9u3yxNpQWmhaijWDwLZMZ1PwHhcYtLX/Ky1VViVIP8HRDtHzG2XBVWWBQfttqb2TM5irlqY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oPXtzvET; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788520434; c=relaxed/simple;
+	bh=Y8T6yLy2yGEI+APB3IYjDn3KveHumya5KjHfGlJCvyA=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=JnuC59ygZQ7RjVs4EwhrARRIrXglwkr1m2NepdJGiGuLEZSqgZMbW0DPEOqU4hSa2Rw04+XSaGWQZPIOYNYog2t11Yr8khMyXUhVOPKFCRrVHvAv6ZSiSHjEb50tgh/ueJNlJf7Bnq0bkkuV3ZvsOg4rmlTJVrcDjZm0mEG1XXg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=arista.com; spf=pass smtp.mailfrom=arista.com; dkim=pass (2048-bit key) header.d=arista.com header.i=@arista.com header.b=Bf5aRlps; arc=none smtp.client-ip=209.85.215.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=arista.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=arista.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oPXtzvET"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 001881F00A3F;
-	Fri,  4 Sep 2026 11:11:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788520312;
-	bh=AZqiGs6USnmgkejTOdoFRDR8+zIbzcWv7bEqGrJVhUo=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=oPXtzvETPj01cO6iMs8bbrsd+736Zi0Whx6gKupYUtqqNGq3IDazqxVLQs1aLl9PU
-	 ZKHna5/M55a7AvkncQXkDbPOes95FiHGgDhyAj4vdSyFZmErWVk8YlPjwS98wE3Ujj
-	 LuIlyj3jzrXzt1AJd7cgWulbitV1lupvl3/Ih8SAOmA4br55qmTEw+i+bqatnkQv9k
-	 SZohAluqDMq4KoqfYZcRQEfuzFtWxfgvK3eXJCSFrEhnD2zXNJBEMZavrearjtSiRs
-	 vCcD0dWOvcWvm1QYfE5f6iaFlqSBkCN59bDzeSBt0eGJ3QLI22sL2Gv2Z6B10brgam
-	 xyIK1mNz1QJeg==
-Message-ID: <59481565-89c4-45af-9121-e514304876bf@kernel.org>
-Date: Fri, 4 Sep 2026 06:11:49 -0500
+	dkim=pass (2048-bit key) header.d=arista.com header.i=@arista.com header.b="Bf5aRlps"
+Received: by mail-pg1-f171.google.com with SMTP id 41be03b00d2f7-c9d1fff21edso771183a12.1
+        for <linux-pci@vger.kernel.org>; Fri, 04 Sep 2026 04:13:52 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=arista.com; s=google; t=1788520432; x=1789125232; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=fOtfsRW4UXMS4fgRA6s6kxtseIqwUyKdipeNtq+aXP8=;
+        b=Bf5aRlpsGP6FsVqN4x34nJ57jo3Q3NVEUZgRcbC0F4TR7my4lAvQ4qhHUxamL6SKct
+         IgWafYRfeFezh6HQDxeG3/aSCbR/yF9LeKpmHI4WYAG55t09I0yXEeiHwr0bx/vGmxyn
+         Vb8xvQ2vnqIavgt5QfULQhvKlnmG80HkW7T9nLxPcnG2p8l/FPimB4q5ZDYXVmfH1F/z
+         EBylCAbQJJ0XCLCBURghZLdj+iAC6Dz5aehneBER9VWC/Uhd6WOimmxA/oraok9JGJR7
+         bOc3k1t+kRkkU0TWNRyTte9LzsJ+d+TgDCcdgXRI+caxGQJ+W8K5qb6vDrgefRRApjYv
+         wZOQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1788520432; x=1789125232;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=fOtfsRW4UXMS4fgRA6s6kxtseIqwUyKdipeNtq+aXP8=;
+        b=L7fvqD3vfumyk4N8VHjPk6TdIwZFLnmiMVDyrpaoY1btCdBQptsZO6/utM6cdSIpS/
+         PNy8wW4148yO4cxwxAfvWWIdiBIONu09b7DsY8KqrQNVBV+/AuIqqT6Utdd2xR/Flosq
+         TneMxEiKY8qgMfiOZ1+Sl8Dg+luEJJd7jWZyqO64gnPQKkPOeLCOOSu+MkfBshCdHTKI
+         VJx0IyfK+0c8Q7uW0zedVczQkNQvU8UYAkG7ZPSkddUUJux2cgd4LchxMXdGUemtau5K
+         NfuPcGs0+WtTi+aHYEvKV04ZDZssaqNOVmMZBc2Y2TOsNRhRc3siQP/1jnwivOTQ7Wao
+         6UmQ==
+X-Gm-Message-State: AFuF++keBiDxHDGIbrEDCV74YWdy6+EkfXEwwOnuJkZUnh3LueDmx3LH
+	qFwPGqaJubYpdkqdIzUmsOo73Cyl8Kor/EaWJVL5ylgrtkJ4x2UPLb4kTp3PAOgPCA==
+X-Gm-Gg: AYBFou3aq+3iUhUeRLxmQ/WQTM7wSpllEIn4u+ODB2nbUaiIB/H3TnkkwtVxnINU455
+	3b6QTQlYWZf9ohYysVHuRx59p+y/vSB/qdD+33mvE4LBusavgVkDDsGabMsHvWdYe6bqRVoBMIc
+	sUVkUlAM6qEAp1IXp8R9SvRkbPkIpgydcQZsIRG/arkGP9T2cMpEMEXs39HqMQP+MBkbQxn/p+b
+	mHrCOwIVlKR3GltbZlr4cDzg8i2UnHRoti/5CVnruMOZ8RYrPPbHUCv3AS7Gcd6TyiieU23W038
+	Lbq7Rg2zLtIa6lMXE9HWySsbpUzsxwXFD4ffu3j9I1dFyjUPrCjRUhK77JCSiN+hys8bshb6ukf
+	wDXpURNA3Pa/pWypwrd9A6VauaiCmTllEF3LARXpGjgbZ9+b5xnfgbekcl4xlRpDqOX1gGMc4cT
+	8EJrUbJoZDjBKBOOMttZNKDmyjOSgniymeYar49JCoeTMtVGIDFAM8MP/VYYZT9PpBM671p4uma
+	QnvobZHVY+Q/WIEDNvb
+X-Received: by 2002:a17:90b:2b43:b0:38e:c7b0:84ad with SMTP id 98e67ed59e1d1-39b25ed34f3mr9646311a91.0.1788520432198;
+        Fri, 04 Sep 2026 04:13:52 -0700 (PDT)
+Received: from yurypm-home-4hjc6.sjc.aristanetworks.com ([74.123.28.10])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-143243bfbe3sm6037999c88.11.2026.09.04.04.13.50
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 04 Sep 2026 04:13:51 -0700 (PDT)
+From: Yury Murashka <yurypm@arista.com>
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Yury Murashka <yurypm@arista.com>,
+	James Sewart <jamessewart@arista.com>
+Subject: [PATCH] PCI: Stop waiting for link status after config read failure
+Date: Fri,  4 Sep 2026 11:13:18 +0000
+Message-ID: <20260904111318.1063858-1-yurypm@arista.com>
+X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 2/2] PCI: altera: Fix resource leaks on probe failure
-Content-Language: en-US
-To: Bjorn Helgaas <helgaas@kernel.org>,
- Mahesh Vaidya <mahesh.vaidya@altera.com>
-Cc: joyce.ooi@intel.com, lpieralisi@kernel.org, kwilczynski@kernel.org,
- mani@kernel.org, robh@kernel.org, bhelgaas@google.com,
- ley.foon.tan@intel.com, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, subhransu.sekhar.prusty@altera.com,
- preetam.narayan@altera.com, cheryl.bansal@altera.com, stable@vger.kernel.org
-References: <20260902175637.GA1993694@bhelgaas>
-From: Dinh Nguyen <dinguyen@kernel.org>
-In-Reply-To: <20260902175637.GA1993694@bhelgaas>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
+With a nested PCIe topology with multiple layers of hotplug, a link can go
+down near the bottom of the topology shortly before a link above it goes
+down. In that case, pcie_wait_for_link_status() can wait for the full
+timeout while every read of the link status register fails because the
+device has disappeared.
 
+Return immediately when reading the link status fails so event processing
+can continue.
 
-On 9/3/26 01:56, Bjorn Helgaas wrote:
-> On Thu, Apr 30, 2026 at 01:43:30PM -0700, Mahesh Vaidya wrote:
->> The chained IRQ handler is installed during probe but is only removed
->> from the remove path. If pci_host_probe() fails, the handler and INTx IRQ
->> domain remain installed even though the devm-managed host bridge storage
->> containing struct altera_pcie will be released, leaving the handler with
->> a stale data pointer.
->>
->> Interrupts are also enabled before pci_host_probe() is called. If probe
->> fails after that point, the controller interrupt source should be disabled
->> before the chained handler and INTx domain are removed.
->>
->> Install the chained handler only after the INTx domain has been created.
->> Disable controller interrupts during IRQ teardown, and tear the IRQ setup
->> down if pci_host_probe() fails.
->>
->> Fixes: c63aed7334c2 ("PCI: altera: Use pci_host_probe() to register host")
->> Cc: stable@vger.kernel.org
->> Reviewed-by: Subhransu S. Prusty <subhransu.sekhar.prusty@altera.com>
->> Signed-off-by: Mahesh Vaidya <mahesh.vaidya@altera.com>
->> ---
->>   drivers/pci/controller/pcie-altera.c | 35 ++++++++++++++++++++++++++--
->>   1 file changed, 33 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/pci/controller/pcie-altera.c b/drivers/pci/controller/pcie-altera.c
->> index 3d3519b8d88f..902ae2d81763 100644
->> --- a/drivers/pci/controller/pcie-altera.c
->> +++ b/drivers/pci/controller/pcie-altera.c
->> @@ -864,8 +864,23 @@ static int altera_pcie_init_irq_domain(struct altera_pcie *pcie)
->>   	return 0;
->>   }
->>   
->> +static void altera_pcie_disable_irq(struct altera_pcie *pcie)
->> +{
->> +	if (pcie->pcie_data->version == ALTERA_PCIE_V1 ||
->> +	    pcie->pcie_data->version == ALTERA_PCIE_V2) {
->> +		/* Disable all P2A interrupts */
->> +		cra_writel(pcie, 0, P2A_INT_ENABLE);
->> +	} else if (pcie->pcie_data->version == ALTERA_PCIE_V3) {
->> +		/* Disable port-level interrupts (CFG_AER, etc.) */
->> +		writel(0, pcie->hip_base +
->> +			  pcie->pcie_data->port_conf_offset +
->> +			  pcie->pcie_data->port_irq_enable_offset);
->> +	}
->> +}
->> +
->>   static void altera_pcie_irq_teardown(struct altera_pcie *pcie)
->>   {
->> +	altera_pcie_disable_irq(pcie);
->>   	irq_set_chained_handler_and_data(pcie->irq, NULL, NULL);
->>   	irq_domain_remove(pcie->irq_domain);
->>   }
-> 
-> This patch appeared in v7.2 as 7a94138caeb2 ("PCI: altera: Fix
-> resource leaks on probe failure").
-> 
-> While considering this for backporting, sashiko came up with the
-> questions below.  Can you take a look and see if they make sense?
-> 
->    This is a pre-existing issue, but does altera_pcie_irq_teardown()
->    lack synchronization with in-flight interrupts?
-> 
->    If a device interrupt fires just before altera_pcie_disable_irq()
->    masks it, could the chained ISR (altera_pcie_isr) execute
->    concurrently with altera_pcie_irq_teardown() on another CPU?
-> 
->    Because irq_set_chained_handler_and_data() unregisters the handler
->    but does not wait for currently executing ISRs on other CPUs, could
->    irq_domain_remove() free the domain while the ISR is still using it
->    to call generic_handle_domain_irq(), leading to a use-after-free and
->    a kernel panic?
-> 
->    Would adding a call to synchronize_irq() before removing the IRQ
->    domain prevent this race during driver removal or when
->    pci_host_probe() fails?
+Signed-off-by: Yury Murashka <yurypm@arista.com>
+Co-authored-by: James Sewart <jamessewart@arista.com>
+---
+ drivers/pci/pci.c | 13 ++++++++-----
+ 1 file changed, 8 insertions(+), 5 deletions(-)
 
-In this case, because the driver uses chained interrupts, 
-synchronize_irq() is not effective.
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index b2879a6be..a568d5ac1 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4565,8 +4565,9 @@ static int pci_pm_reset(struct pci_dev *dev, bool probe)
+  * @use_lt: Use the LT bit if TRUE, or the DLLLA bit if FALSE.
+  * @active: Waiting for active or inactive?
+  *
+- * Return 0 if successful, or -ETIMEDOUT if status has not changed within
+- * PCIE_LINK_RETRAIN_TIMEOUT_MS milliseconds.
++ * Return 0 if successful, -ENODEV if the link status cannot be read, or
++ * -ETIMEDOUT if status has not changed within PCIE_LINK_RETRAIN_TIMEOUT_MS
++ * milliseconds.
+  */
+ static int pcie_wait_for_link_status(struct pci_dev *pdev,
+ 				     bool use_lt, bool active)
+@@ -4580,7 +4581,8 @@ static int pcie_wait_for_link_status(struct pci_dev *pdev,
+ 
+ 	end_jiffies = jiffies + msecs_to_jiffies(PCIE_LINK_RETRAIN_TIMEOUT_MS);
+ 	do {
+-		pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnksta);
++		if (pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnksta))
++			return -ENODEV;
+ 		if ((lnksta & lnksta_mask) == lnksta_match)
+ 			return 0;
+ 		msleep(1);
+@@ -4603,8 +4605,9 @@ static int pcie_wait_for_link_status(struct pci_dev *pdev,
+  * according to @use_lt.  It is not verified whether the use of the DLLLA
+  * bit is valid.
+  *
+- * Return 0 if successful, or -ETIMEDOUT if training has not completed
+- * within PCIE_LINK_RETRAIN_TIMEOUT_MS milliseconds.
++ * Return 0 if successful, -ENODEV if the link status cannot be read, or
++ * -ETIMEDOUT if training has not completed within
++ * PCIE_LINK_RETRAIN_TIMEOUT_MS milliseconds.
+  */
+ int pcie_retrain_link(struct pci_dev *pdev, bool use_lt)
+ {
 
-Chained handlers execute directly via desc->handle_irq() and bypass the
-generic handle_irq_event() function, which means the IRQD_IRQ_INPROGRESS
-flag is never set for them. synchronize_irq() relies on this flag, so it 
-will return immediately, effectively being a no-op.
-
-A correct fix for this potential use-after-free would be to convert the 
-driver to use a normal requested IRQ instead of the chained handler. 
-I'll work on a patch for that.
-
-
-Thanks,
-Dinh
-
+base-commit: a500db7819c50db59e55f1b4fa1c3baa5a2616f3
+-- 
+2.51.0
