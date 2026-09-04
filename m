@@ -1,206 +1,148 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yw1-f173.google.com (mail-yw1-f173.google.com [209.85.128.173])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E32A051C343
-	for <linux-pci@vger.kernel.org>; Fri,  4 Sep 2026 18:32:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5BD8A51474A
+	for <linux-pci@vger.kernel.org>; Fri,  4 Sep 2026 19:06:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788546776; cv=none; b=eIpXtcQeP7SMNndT6VfJ+kLrKXB+EbE0kXi41BC0sG+s9/sXeQt60D0FsaE5nvaJ4u/AYjOebXvGTWO9k1dm1paGI3HlTqZcK7l+9435RCRYDrtbd4kdPYCPHCMLmq02oN4/+h6V/9bHHjt6RA9ZgqEAksoXm+fk2CZ64plNx0k=
+	t=1788548795; cv=none; b=E07OD+YAS+nhn5OCSDSMaX89rD9+6JOCM9FHzhUL4AK4eTeHxZ1M7l1S8qsvpgFLiWeefmH/HRj0uLf8aiqBy+SPm1UPAonlqYclHwp4GJwuPCvgms5udrUhF9EX2cXV7o6Npl2L/mBuOHY2co04anHNowC2Bz7vxwEGQKr6ppc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788546776; c=relaxed/simple;
-	bh=j+1ZOes4kWP7FAkpcojmQmiuJSCqnncwy86K3mTRxl4=;
+	s=arc-20240116; t=1788548795; c=relaxed/simple;
+	bh=21Bh4RJxpeiCW82oSWerk5Qo5AfL15/5sh5ePR1ifY8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=S7/9sBUVEcMh8hLPLTFfWsiuq7B1w0rsIEqJ/3gdoJV0OBoBYcCKAkNfWi4VsB5jbhB129v+6G3yHQ4CK4Zt0IngUb7M2ftv/nEIN/+b+9drk4sZ8wzlmgyDYWCDmibFT+6f7PyQnXsE1jTw84x6x8J2wZzJxfsbF1ZhUGakYbA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=ULmMrf4r; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=Jtb96aRE; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=Wu1QZP8MyarWp8+IAcoqodsTEMSZd11emX1kjlye1zbM0idmmYtElXgq2KZIiG+gUHMgtaHP9aU9YKV4jfYBkmhT9y2Nw9xJu/h633IUUIKIH1jVa15hyFrbOGAI8bewO8/eoEfJg1+F4LlwAJwE1k7nuVQIffXMIh4I/7a5zgw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca; spf=pass smtp.mailfrom=ziepe.ca; dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b=ODcRLImc; arc=none smtp.client-ip=209.85.128.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="ULmMrf4r";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="Jtb96aRE"
-Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 684HI0sM548618
-	for <linux-pci@vger.kernel.org>; Fri, 4 Sep 2026 18:32:53 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-type:date:from:in-reply-to:message-id:mime-version
-	:references:subject:to; s=qcppdkim1; bh=Bvne7HECiZvG5t61nBxUCDlI
-	c5mqbwFgVydcIZZ6aPE=; b=ULmMrf4rdQk4fHXC5NzSRck1gg0RthPnycO4EyKl
-	6cQm7QUB5bvsd5eNmLl8cI9W38NnaDu0UB+qwVUEQsuDhE99yzOTl+WJfXLAPqao
-	eWlZAxj6sLg1EghOi/+SJQYSYCt66uRnYrorFcW7qBl+in5m4DkMuLXAdvoEDCeZ
-	FG/qLHDW1NM0zSqXpdjyx3EotyD7vqsH2H4mTdzyf1Z4wPnYFroiIHLe+LkAVLXC
-	8xFCL/JSdtz1W+TL2z8pEcw31DNHdpZz+WB+p+cFgFSfvo7d1apP/69ZvvIX6q7a
-	Kfd5NVDbOtR+mRqubut8q0m7LiOq5b5guRFl6Xg4DAAw5w==
-Received: from mail-ua1-f70.google.com (mail-ua1-f70.google.com [209.85.222.70])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4gg0121ey5-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Fri, 04 Sep 2026 18:32:53 +0000 (GMT)
-Received: by mail-ua1-f70.google.com with SMTP id a1e0cc1a2514c-9808f4a12d5so137475241.1
-        for <linux-pci@vger.kernel.org>; Fri, 04 Sep 2026 11:32:53 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="ODcRLImc"
+Received: by mail-yw1-f173.google.com with SMTP id 00721157ae682-867a943b149so25269947b3.1
+        for <linux-pci@vger.kernel.org>; Fri, 04 Sep 2026 12:06:30 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1788546773; x=1789151573; darn=vger.kernel.org;
+        d=ziepe.ca; s=google; t=1788548787; x=1789153587; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:content-type:mime-version
          :references:message-id:subject:cc:to:from:date:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=Bvne7HECiZvG5t61nBxUCDlIc5mqbwFgVydcIZZ6aPE=;
-        b=Jtb96aREDnvVuNNiYlLd8vDhuwj+YbfxpZ8vR7ca3rkCTMLlDmKVAskPgSh95Ul0dX
-         0LYS0FkagYG5w+47yMPOZUsjXjS2xq6xNGixWyik2MRtOlzj+ZNQ+m5FI/Yu0Bxc5bSG
-         l/IWMxGmPgQTLIbNPrSUtPrJVwxGd+s6TuMaST6INzBoMECNLhPA6Vxxo2jjpYPi7tte
-         3lCiOvAkjhvoZQ2g7e5E6HdR6cQm23C9vJMtJTAI93p0T/im6+6dei4bPEfRM/uvtsw+
-         TyTkEH0+hSH5Hv9qmp3ksnl8guImNM1580PZ/lNVolCs4xqSR3PkgsfP1lB3W6Q6ZPEx
-         g7fA==
+        bh=P3rzU4rRnN7pu/GZMmTRQuFVrRv0l5idd5+55lRqVAM=;
+        b=ODcRLImcsIS5iVNl+ZahRycAduLdy9JKF4ZXLUxRp/0zaap7yPdhEQ55TLbSREotDR
+         t2D2pU4eLgK9qUdmPunJpyqByPO9UY0gCm6KqjN5ljyHH5QRjXk940z3BI6OZbumZtJA
+         8iwFPX/VNeXGrdgyIcxN+4E2w9Szh1dSdOmn3IHVWAzH+4lASnZGhj4Bp9jY/OxRq/se
+         dkpCoRlQKHxFddxqxH69HJKK1KSfw59L0IvPUY5OGUQT7Ula/prBAY6qTZfaZSURxI6m
+         z7UH4wK4/5jA7+nIIK5HYcSBdzF0eB4TvrCQJ8J+99z2ht0kLl9BKuqXXWQeetwrGUGl
+         ENmQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788546773; x=1789151573;
+        d=1e100.net; s=20251104; t=1788548787; x=1789153587;
         h=in-reply-to:content-disposition:content-type:mime-version
          :references:message-id:subject:cc:to:from:date:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=Bvne7HECiZvG5t61nBxUCDlIc5mqbwFgVydcIZZ6aPE=;
-        b=nWh2o4kVtJ6z7ygmZ1AClG37CLcrra/WmFg+0s57igVZ5UxRku1cqzr6WZ8BRS9nz/
-         8Jh/15mHaRr7soK9FZT5jDXAKa1wJxkG2DDYwwVWcBuSgdbV8aHaf0SQZ6U2+PPc4Vtp
-         rVSPU+DHiZ1SHxsA5c7q7h/wb91PYnimi3mTY8/G2vpZCCPDzUpNGfdUTONvUpr7R947
-         S49eCmOM/x7QLJ+cIvgSxeSZtDwmZ6VPotVbr9gfSuauykOCG1+9H5jqFkEgo6/TDQqb
-         rO4+QQsSEs4SeOFu7kNAux1GwFv80mP1RrrNIguf4qPg1WhUqQoX9/g4dV1Xec2opUZ9
-         WbCw==
-X-Forwarded-Encrypted: i=1; AKwUvBwj0R4ygiK+/Cd6oyrkQ5TRX4kc4GtAX76tgqRPEOGMhygzxp+1tB4UzJwJStyQIvUBMXv8h2x1hRE=@vger.kernel.org
-X-Gm-Message-State: AFuF++k8FQhtpyYChKig+jZnrYYp7gPZmKeUjv/wyEjj0qlDjaJpzf1O
-	dZQgIQx04zVDQys3m6mivUl4Ymay6ukbzxXbwWL0YplSBhF+U4Lb0ugJgdEHSlBpu8y/OEyGfuu
-	bfiK21P+lUZYmKi8OQafXaSyrwsnu/GKoVr7/3ruQ3wN0/Hy0GPizzXmDuCCNaN0=
-X-Gm-Gg: AYBFou2iQCk87z14ghhvrj9CpvUBhy03lbPGRrWU894yfKS5yWe67SvwRl4BUsolgvu
-	BN4EQgah9hDCnaA6/X00AHqKu1+VmJcNd/g+igmyAgxGBNYVLDFUkrhPe1IKb61CvPNNhiHHbwn
-	7f1VHjj3Oa0y9LwI9B4l8fafetqe9hyiOa2953JY2yH07OTV8xOc5/wtNDawo/06w7rN9HXxiy3
-	9+dF7FSDE/Hc5ZhqIuks7iLm9zcc25bBB697GN0KpjeC5FDGbX9bZftuSj935oRGH1m/18UAH6f
-	fRnMLR9VQMudFqfNwMISI3ByvhzWuntw2fArCs16Eb5HWIiBJRbLTFiGPIxwve3p2FEe/nAgT5y
-	be5Z/k7CcZ3Eh4Q==
-X-Received: by 2002:a05:6102:2907:b0:778:9033:e337 with SMTP id ada2fe7eead31-78a4a7186d7mr2482588137.7.1788546772887;
-        Fri, 04 Sep 2026 11:32:52 -0700 (PDT)
-X-Received: by 2002:a05:6102:2907:b0:778:9033:e337 with SMTP id ada2fe7eead31-78a4a7186d7mr2482567137.7.1788546772398;
-        Fri, 04 Sep 2026 11:32:52 -0700 (PDT)
-Received: from localhost ([188.216.77.92])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49ce5533ffbsm168209295e9.3.2026.09.04.11.32.49
+        bh=P3rzU4rRnN7pu/GZMmTRQuFVrRv0l5idd5+55lRqVAM=;
+        b=dbJ/Bdu3oZ+LUAzUwmepZbGxcOLImWlc434T+4FStBHsPlVFFRErn/A5wS1DPoHgvq
+         QwgmJ4q45ZUU08jdtrnrXetT8DwNyt2xBRlZz+5IuPHEvZ4I0vwqtZn7PqmKB8Y0wNsD
+         qKA2vf5Inzs1xdzRtbiGsisLDSMF0s2xo+19rTn9H10GwvP4GYrapPWUr9S2gOhzhxGf
+         gaCDmVRmsGNbumIpDQjosFK0mcgUSwb0IiZ8Qj+v/AyZb4zqY74U9LRBrGt9tAv0SUFY
+         hkgHkfSikgDwZS+u+ltHRuSjACyuJVbe0l9dyacpewUoajzsdh7ouISC+xYWzDJCUt00
+         4GcA==
+X-Forwarded-Encrypted: i=1; AKwUvByoXOzRHt7UKy43nD1OSHjcIRs2rfujVst/qEzo8iWsUFbVfboqI0obF4PrLl4ivjWezDNkSkY/lxQ=@vger.kernel.org
+X-Gm-Message-State: AFuF++kFKvDK3G9dpih/4y/cM8m2hTWc4oCSZtfSJRnHuBrsLRFi4MiX
+	Muz2bWaMhX+reTuh5Wz/ZKN+2DsLqWhuECpT1wOgSPErDL1jZb0viEFAa9KCEYEf2/w=
+X-Gm-Gg: AYBFou3GYDiVjl8Ww9xTIr0Ok2DXyqj8/RI8OqCq/1Ohnw68AsM/zbrY/f9pyC42JqD
+	UDCbGNejLW5gZzZ1EMhbiXRVoy38mwslqAaHnCt1A3qmYKfr5VVlQRxM9trm67wpO4JzlZlBzQj
+	cYplH/RhoZoQptiIQ+W4jHnbkdaJ7q7G7Yr4xyHSjWojITS9zy0PL8Zr6/gYw+8uUTUR9T6lSge
+	zpEwYlcJ4xCtlCopRF6vnUVlG4oT/52lu72agImiurF3k1MTn7SschohIL8cThCTZqrKUq5feNi
+	Y6RYSOwlS3RxMa6DCq2OdoWcvQ4LmE/fMRZVsTfxivznyewuc9laKjmKmGx+mdl0rh5+zyYSOjQ
+	En2vKU4nzWvgEUKY1++hwJelSrVsMQrNk3cKaDdx4EJYIUDNPJwGtPYI7Oo4XCt+ILW5jK1hbqS
+	dyPHG+B7iDVzWcoEA2kzKlrAGuQ0WWAP7q5dyAWTLtL8d0vF2Wy0H0T/p+GIJTV4elYBqQ+u8gK
+	rsnAw+LKDI/0oK5cEPYXHdOFSEVjiE6ZlE9aPtGB3MDMWtF+wQFfIg2OA==
+X-Received: by 2002:a05:690e:2026:b0:66f:c284:4834 with SMTP id 956f58d0204a3-66fc2844e8amr819081d50.60.1788548787246;
+        Fri, 04 Sep 2026 12:06:27 -0700 (PDT)
+Received: from ziepe.ca (hlfxns010zw-159-2-239-150.pppoe-dynamic.high-speed.ns.bellaliant.net. [159.2.239.150])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-910406481b4sm27434626d6.17.2026.09.04.12.06.26
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 04 Sep 2026 11:32:50 -0700 (PDT)
-Date: Fri, 4 Sep 2026 20:32:49 +0200
-From: Lorenzo Bianconi <lorenzo.bianconi@oss.qualcomm.com>
-To: sashiko-reviews@lists.linux.dev
-Cc: robh@kernel.org, linux-pci@vger.kernel.org, conor+dt@kernel.org,
-        devicetree@vger.kernel.org
-Subject: Re: [PATCH v3 1/5] dt-bindings: PCI: toshiba,tc9563: Document
- embedded GPIO controller
-Message-ID: <apsO0dPYIiCujiM5@lore-desk>
-References: <20260904-pci-tc9563-aux-v3-0-5b1449d62ba2@oss.qualcomm.com>
- <20260904-pci-tc9563-aux-v3-1-5b1449d62ba2@oss.qualcomm.com>
- <20260904172114.2CF8F1F00A3D@smtp.kernel.org>
+        Fri, 04 Sep 2026 12:06:26 -0700 (PDT)
+Received: from jgg by wakko with local (Exim 4.97)
+	(envelope-from <jgg@ziepe.ca>)
+	id 1x2ZF3-00000002uJq-3KUc;
+	Fri, 04 Sep 2026 16:06:25 -0300
+Date: Fri, 4 Sep 2026 16:06:25 -0300
+From: Jason Gunthorpe <jgg@ziepe.ca>
+To: Samiullah Khawaja <skhawaja@google.com>
+Cc: Nicolin Chen <nicolinc@nvidia.com>,
+	Alex Williamson <alex.williamson@nvidia.com>,
+	"Tian, Kevin" <kevin.tian@intel.com>, kvm <kvm@vger.kernel.org>,
+	Alex Williamson <alex@shazbot.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	linux-pci <linux-pci@vger.kernel.org>, iommu@lists.linux.dev
+Subject: Re: [RFC PATCH 1/5] PCI: Refuse function reset of an SR-IOV PF with
+ enabled VFs
+Message-ID: <20260904190625.GA667892@ziepe.ca>
+References: <20260812045325.2733631-2-alex.williamson@nvidia.com>
+ <an5JbIzz40svS3xe@google.com>
+ <20260814083737.66bb83fb@nvidia.com>
+ <20260817121810.GC933791@ziepe.ca>
+ <CO1PR11MB48354AC2854C4D8E9984FD8E8CA62@CO1PR11MB4835.namprd11.prod.outlook.com>
+ <20260818140304.GC5482@ziepe.ca>
+ <20260818143906.1f58aecb@nvidia.com>
+ <aod22_H66eUth9av@google.com>
+ <20260820233722.GA1110819@ziepe.ca>
+ <aoeffe1v--CgRK0a@google.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="ewcNLQpfoQlfLSzs"
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260904172114.2CF8F1F00A3D@smtp.kernel.org>
-X-Proofpoint-Spam-Info: AW1haW4tMjYwOTA0MDE2OSBTYWx0ZWRfXwNQHhana4Ztf
- tcU6UPz3c80z9AMzSnI/Q+aLaRJTdpmvgPpkqeqgRok1mN1/AoRpEGnT2E6R3RH5UuhSf+hqDGi
- palxM3OvaFbg9st1kYWeA7nnUrKKoas=
-X-Proofpoint-GUID: DUrw192neDJunl25kpazuIhdPIf7940F
-X-Authority-Analysis: v=2.4 cv=LreiDHdc c=1 sm=1 tr=0 ts=6a9b0ed5 cx=c_pps
- a=R6oCqFB+Yf/t2GF8e0/dFg==:117 a=WpTaRW6qxYHRGzLzQsVYzg==:17
- a=VdqzKS8jKosA:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=u7WPNUs3qKkmUXheDGA7:22 a=3WHJM1ZQz_JShphwDgj5:22 a=c92rfblmAAAA:8
- a=EUspDBNiAAAA:8 a=86Be0pIABdjnZPeXsFYA:9 a=wPNLvfGTeEIA:10
- a=kRZTEHTrMTxrHKFV5dYA:9 a=TD8TdBvy0hsOASGTdmB-:22 a=GvGzcOZaWPEFPQC_NcjD:22
-X-Proofpoint-ORIG-GUID: DUrw192neDJunl25kpazuIhdPIf7940F
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTA0MDE2OSBTYWx0ZWRfX7aEljz2bIjv2
- hXAvF+01j/Xxwu6mxZtrvJ1tLIz5m/PD13Er08lMMfxILS/0kORjpBuVysdcylhsj+BphuQiRkw
- 3LVw+ew6IjTc3UWDoMQvpxHQUjL/83fwZPqjrgoNiJvvrjt+j5XwpQGWHydzwJnZBqlCNvhAFsp
- 8h0ux4s/92ZSqxXyqNsZxAhPteBMZblbdacozzgmhPkC3oeviWPIWnSDXlHm49bUgcEaY9YZ5ni
- LpR+ohJp0Rw3lBueFOkLDc2GbylAgo93se82vr2jj0DJ1oSaBo2VdwE+5ocERKARWHgyHKHI3/J
- 7oce1XWR82t5Wu3Nbaas8mvO+/CdzRECVEeakhQs1C3Njf29WA9EoWNRhidOtHsOE1U3uB3SKkU
- jUf7iPFPO4zLHmAD0wUl+wU3dk3u2k8GAtHgW/bwS+vwjwaWRHYTRyNw2Imbb2OYw8HpULHcPmO
- ILX16mXiTG+RBMgZrTA==
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-09-04_05,2026-09-03_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- suspectscore=0 adultscore=0 bulkscore=0 phishscore=0 clxscore=1015
- priorityscore=1501 impostorscore=0 malwarescore=0 lowpriorityscore=0
- spamscore=0 classifier=typeunknown authscore=0 authtc= authcc= route=outbound
- adjust=0 reason=mlx scancount=1 engine=8.22.0-2606150000
- definitions=main-2609040169
+In-Reply-To: <aoeffe1v--CgRK0a@google.com>
 
---ewcNLQpfoQlfLSzs
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+On Fri, Aug 21, 2026 at 02:20:55AM +0000, Samiullah Khawaja wrote:
+> On Thu, Aug 20, 2026 at 08:37:22PM -0300, Jason Gunthorpe wrote:
+> > On Thu, Aug 20, 2026 at 10:38:07PM +0000, Samiullah Khawaja wrote:
+> > 
+> > > > The blocking domain operation looks like it might be simplest to
+> > > > implement in the IOMMU core.  We can set a flag for a default blocking
+> > > > domain on the IOMMU group when we take_dma_ownership of the group.  Then
+> > > > release_dma_ownership picks the blocking rather than default domain.
+> > > >
+> > > > This is then unwound in use_default_domain, called via dma_configure,
+> > > > attaching the device to the default domain in probe of the next driver.
+> > > > Therefore until probe by another driver, a device used by vfio would
+> > > > remain in a blocking domain even while unused and unbound.
+> > > 
+> > > The devices are expected to be attached to the default_domain even when
+> > > these are unbound and the use_default_domain assumes that, and it only
+> > > checks the ownership and doesn't switch the domain to default_domain. I
+> > > guess we should add a WARN in use_default_domain() if that is not true.
+> > > I will probably send out a patch for that separately.
+> > > 
+> > > I think we can move the device back to default_domain after reset after
+> > > unbind, maybe it can be done in pci_dma_cleanup() based on
+> > > driver_managed_dma?
+> > 
+> > This blocking domain stuff sounds very similar to what Nicolin
+> > implemented for the per-function ATS issue?
+> 
+> I see you are talking about this invalidation stuff:
+> 
+> https://lore.kernel.org/all/348c50ab6e95b5ec6d48ee3fa05d529a784a34c3.1765834788.git.nicolinc@nvidia.com/
+> 
+> But this was the case where the device is going to be reset and to
+> prevent ATS issues, we attach it to blocking domain before doing the
+> reset. But of course, with the PF reset here, it induces the same kind
+> of ATS issues on the VFs.
 
-> Thank you for your contribution! Sashiko AI review found 1 potential issu=
-e(s) to consider:
-> - [Medium] The 'gpio-controller' and '#gpio-cells' properties were added =
-to the binding to document GPIO provider capabilities, but were not added t=
-o the 'required' list.
-> --
->=20
-> commit 167159eda5a6932cbffa6730117f8dd7e23b2970
-> Author: Lorenzo Bianconi <lorenzo.bianconi@oss.qualcomm.com>
->=20
-> dt-bindings: PCI: toshiba,tc9563: Document embedded GPIO controller
->=20
-> This commit documents the embedded GPIO controller within the TC9563 PCIe
-> switch. It adds gpio-controller and #gpio-cells properties to the device
-> tree binding, along with the reset-gpios property for the downstream port.
->=20
-> > diff --git a/Documentation/devicetree/bindings/pci/toshiba,tc9563.yaml =
-b/Documentation/devicetree/bindings/pci/toshiba,tc9563.yaml
-> > index f084830c6d0cb..c4cd162cb084b 100644
-> > --- a/Documentation/devicetree/bindings/pci/toshiba,tc9563.yaml
-> > +++ b/Documentation/devicetree/bindings/pci/toshiba,tc9563.yaml
-> > @@ -31,6 +31,11 @@ properties:
-> >      description:
-> >        GPIO controlling the RESX# pin.
-> > =20
-> > +  gpio-controller: true
-> > +
-> > +  '#gpio-cells':
-> > +    const: 2
-> > +
->=20
-> [Severity: Medium]
-> Should gpio-controller and #gpio-cells be added to the required list?
->=20
-> Looking at the required list in
-> Documentation/devicetree/bindings/pci/toshiba,tc9563.yaml around line 108,
-> these newly added GPIO provider capabilities are missing:
->=20
-> required:
->   - resx-gpios
->   - vdd18-supply
->   - vdd09-supply
->   - vddc-supply
->=20
-> Without being added to the required list, device trees with incomplete
-> configurations (missing the newly added GPIO controller properties) will
-> silently pass schema validation when running dt_binding_check or dtbs_che=
-ck.
+Yes, we need to attach a blocking domain before we make the function
+unable to respond to ATC invalidation. PF or VF reset both trigger
+this condition.
 
-ack, I will fix it in v4.
+> Hmm... doing that for SRIOV also, by allowing PF reset but attaching the
+> VFs to blocking domains before the PF is reset, will only resolve the
+> ATS issues. But the software state is still out of sync with hardware
+> state.
 
-Regards,
-Lorenzo
+Sure, it doesn't fix everything, but it is something you'd need to do
+to avoid problems in the iommu driver side..
 
->=20
-> --=20
-> Sashiko AI review =B7 https://sashiko.dev/#/patchset/20260904-pci-tc9563-=
-aux-v3-0-5b1449d62ba2@oss.qualcomm.com?part=3D1
-
---ewcNLQpfoQlfLSzs
-Content-Type: application/pgp-signature; name=signature.asc
-
------BEGIN PGP SIGNATURE-----
-
-iHUEABYKAB0WIQTquNwa3Txd3rGGn7Y6cBh0uS2trAUCapsO0QAKCRA6cBh0uS2t
-rAIPAP9ldnovE+inPbu1tazRg/kLnB87xWlHIQ/I9Tf1dz1JlgEAo4dME/cIbVWt
-XSEfFwuOSDseGq//+7sOhx6dxC3CvQc=
-=7vvW
------END PGP SIGNATURE-----
-
---ewcNLQpfoQlfLSzs--
+Jason
