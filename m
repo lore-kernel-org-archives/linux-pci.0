@@ -1,81 +1,37 @@
-Received: from mail-ua1-f45.google.com (mail-ua1-f45.google.com [209.85.222.45])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D01263C0605
-	for <linux-pci@vger.kernel.org>; Fri,  4 Sep 2026 23:12:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A795431ED7C;
+	Fri,  4 Sep 2026 23:26:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788563575; cv=none; b=W+QPYYUiasJsICEMAtmWR5M1uwAiyKIx0nesk//R5agzihLP5ySjEHb/smybBAgZoeqgQ7qucJ4R63keHDWz8Nc3BcDEGP/xGa5gkCBb6mzDB3JIo/o5J9oU28GlolXYdwftUaNoJ6dvglCUt4j4ZGfl1idYaHKEX9pK9gHz39E=
+	t=1788564375; cv=none; b=Txp4pOJW43SKqpSFlEuVvBkS/NIVwS00sRL78GjHoAqsK4EDCACAeCRsrY6bLClzqw2tWLNVafbbxHAlWQnHvqH4ji3ZJrLk0BiNqBFuvpFZ/zlYlMdY42EduU8Rc1YKnsqY/M9IQ5QTYNDknnzY66XRd6fOwokHJM9F1pWT4g0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788563575; c=relaxed/simple;
-	bh=DzlHABer7agnmDFqIt5UKBGqffNOPw21BqPF+Xdn0TA=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=WrL8Py/6Krd2Kc+nelMHrAjLR8CCSiWZOdPcJ0+ugl9j6jMc+V6Gj5SZPupFaWC5Cx4eDAPLn1hGTDrrFvnCc/gKZeI4fB2FnOzDvXR0rV8+7zN+wGTaplvV9L6vIR0hNdMz5K8O4KXyJGYjxwxEgkEXOTI9/R/jgV1lpG1UvSA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=B+vWiiQn; arc=none smtp.client-ip=209.85.222.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="B+vWiiQn"
-Received: by mail-ua1-f45.google.com with SMTP id a1e0cc1a2514c-97e986f1996so477288241.0
-        for <linux-pci@vger.kernel.org>; Fri, 04 Sep 2026 16:12:50 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1788563570; x=1789168370; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=g2eDylLE3V6dYau/12iY8HPICkZuGDPWHe/ewwDQP+k=;
-        b=B+vWiiQnQAXs4FztEqpvZ+Ifg1Qu5UGl3Te8Uc3mN4zisoWC5sHBQ0/T7X5dNi0sAf
-         qOipCvW0oJbXNn4Z/WxWKa/OrEwHPv5Wt5mV6+pg71xanVLToKVraxECuHJ5PftXZyK2
-         IhIc4Mmano7s/J49UliV5taIeA6G81k10s19SHiJPGAlckkZPVUN4e/T8xyJrtr2obOi
-         7rp6e+Ty0VXkP2f7eie20D6aFg+PtxMqpa+2Z/kaRg7UxDvmz//OFv8pQ8M+jqB0CQ7F
-         H9QhfmBW99PeMcXt7OIW87vWzA7fKYeueZe9ZKTa5dGi/vV+KFPK9jHPinawnBCOIXET
-         KeAQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788563570; x=1789168370;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=g2eDylLE3V6dYau/12iY8HPICkZuGDPWHe/ewwDQP+k=;
-        b=qDn4CyFi59oaemsTAcEWWfuP+ASpxqOhBM5ZlfyXcxb7AnOhxG2kneReSZ1fffqYjk
-         rkRJ73z4g9TfC9jcMrVfvB9cxAdyXfa7dN41tIbhSSq8poC3som9cK1I9riZv4+fxeyB
-         /mY0m1O2nnQRYlYUWxs3TCbvs+ZJbrzSOYV8bb3dXjxW6apsDIa+PpRcqhZbjxbMvZQB
-         00jVKJev00juaadw7TnBzJNMSfuqKtbf/Ii/31psIWcW/ClVhLm/Aqkx9HDUJ/cNCQ2i
-         Rl0d4Wpx2SNltxUtitxnwyx9basiAtj0shWl3T2KO/rDyHM1D+2Cot8w0FsnJ2nP204O
-         rJEQ==
-X-Forwarded-Encrypted: i=1; AKwUvBwj4PBW9l0YW0SA8jWo2KAaWk8gHXf0jVI9bEnc1/+erd5zQA9JI5jC+XIEiH+slAx78y3I2rPWCXM=@vger.kernel.org
-X-Gm-Message-State: AFuF++nx5wkYQ4sBAPj37t8jlfNDOYL6ALkJNQHd/AVjEw/6JfxVEWlL
-	LkOWZqyVuaAgXnTYb4rpb0G4yYVz1CWRy/ITzuOdyZEQSTRGGibnaA6l
-X-Gm-Gg: AYBFou3xk6sUC9F8yXIJ06h9kpWleuKLUtSrSfl04X2reQQRlVE5l3KhrbAa+CxQnkJ
-	q+XF2f9XDQLzjMe50rO9GkL+zlPwqm88d5xZvSh/XpKeUzf/uLBOFVDxXihMHxv+lKX2QpcP8Sq
-	S9NbHUZ5yVuEFsYgGv6vLpy3rmo/NtSyqrJ2+CiUa9aFpLZ7VTI1hPqhRESLVhb1fGTjNvDE1Ur
-	GjBeStultVEdPYIRpYLd8ju8xCjXzHDT6EPZtCWiU+TUy0ZCZ+HnX9jRAdTKAtqZF3U9h+J6ryw
-	6Tqt1q6GVPCjYGltaXbg1ASg64m6bqGl9Q72a9vv0wh9nKSAlsODRMsn63LIN/4Syt915FR5eOe
-	2yAGDJlEoeqDpwjEKBNBfBM5+TBQoyjGfA7dHsz6B62OdXpSs+N9/NzeZjJGZhSjHoWTT9bg5KJ
-	s0fO8VxF2byl/uVE30bnkd69eTBfvCkc/RLhiNbICXy2cs6/Zf8eWPgJv3eDDKrTFPMc6AnrcMm
-	uIkw9KAZbBH8YeCXgWS/uDwc+uoVmcw
-X-Received: by 2002:a05:6102:a53:b0:789:1216:bb8d with SMTP id ada2fe7eead31-78a4a871937mr2913826137.6.1788563569404;
-        Fri, 04 Sep 2026 16:12:49 -0700 (PDT)
-Received: from Biostar-A520MT.. ([187.94.13.245])
-        by smtp.gmail.com with ESMTPSA id ada2fe7eead31-78a47b19369sm2880161137.9.2026.09.04.16.12.44
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 04 Sep 2026 16:12:48 -0700 (PDT)
-From: Breno Rodrigues Alves <breno3011alves@gmail.com>
-To: torvalds@linux-foundation.org
-Cc: linux-kernel@vger.kernel.org,
-	gregkh@linuxfoundation.org,
-	arnd@arndb.de,
-	linux-clk@vger.kernel.org,
-	linux-input@vger.kernel.org,
-	linux-media@vger.kernel.org,
+	s=arc-20240116; t=1788564375; c=relaxed/simple;
+	bh=5ug7+UgpD/+OaTxo+jWHsfeNnBoXDJgh92ozkhd4s/A=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=uzYtnKncihWC5onPi5USQ9r0MeyBXkD2N0p9eyZ4cmPOgHZHMohUa8z4Vf8r4V3kDvlBKX1XazFRe2K6d5KDLNJI+jhXN7YN/cQ5LxYT1hsOZ8McK1sltSKC2w+GdCsIHgvn20I9tdl1FFIeydSN/YN4B7syqFBA0KNEdeCLXjk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F123D1F00A3E;
+	Fri,  4 Sep 2026 23:26:12 +0000 (UTC)
+From: Dave Jiang <dave.jiang@intel.com>
+To: linux-cxl@vger.kernel.org,
 	linux-pci@vger.kernel.org,
-	linux-usb@vger.kernel.org,
-	linux-sound@vger.kernel.org,
-	linux-staging@lists.linux.dev,
-	linux-fbdev@vger.kernel.org,
-	linux-security-module@vger.kernel.org,
-	Breno Rodrigues Alves <breno3011alves@gmail.com>
-Subject: [PATCH] Kconfig: purge twenty-nine legacy ghost options
-Date: Fri,  4 Sep 2026 20:12:40 -0300
-Message-ID: <20260904231240.87106-1-breno3011alves@gmail.com>
-X-Mailer: git-send-email 2.43.0
+	linux-acpi@vger.kernel.org
+Cc: bhelgaas@google.com,
+	ilpo.jarvinen@linux.intel.com,
+	rafael@kernel.org,
+	lenb@kernel.org,
+	bp@alien8.de,
+	guohanjun@huawei.com,
+	mchehab@kernel.org,
+	xueshuai@linux.alibaba.com,
+	jic23@kernel.org,
+	terry.bowman@amd.com,
+	sashiko-bot@kernel.org
+Subject: [PATCH] PCI/AER: Map a raw AER Capability image field by field
+Date: Fri,  4 Sep 2026 16:26:09 -0700
+Message-ID: <20260904232609.1729229-1-dave.jiang@intel.com>
+X-Mailer: git-send-email 2.54.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -84,553 +40,309 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-You can keep a dead config option around for a while out of sympathy.
-After a couple of releases it stops being "transitional" and starts
-being "you are confusing every user who greps for it". These options
-select nothing, gate nothing, and -- I checked by hand, this is not a
-regex accident -- are referenced by exactly nobody in the tree.
+struct aer_capability_regs is not the hardware layout: struct
+pcie_tlp_log carries ten extra DWORDs for Flit mode plus the
+software-only header_len and flit, so it spans 60 bytes where the
+Header Log it stands in for is 16.
 
-Evidence for each removal:
-  * no CONFIG_<sym> reference outside the Kconfig definition itself
-  * no <sym> reference as an 'if'/'select'/'depends on' target
-  * no mention in any defconfig, any Documentation, or any source build
-  * the code they used to gate is gone (removed or folded into a real
-    driver that already has its own, functioning config symbol)
+extlog_print_pcie(), ghes_handle_aer() and cxl_rch_get_aer_info() work
+around that by stopping the copy at the Header Log, dropping everything
+past offset 44. Flit mode is never decoded either: the Flit bit and
+Logged TLP Size sit at offset 0x18 in all three images, but nothing
+reads them, so the Flit DWORDs at 0x38 are lost and the log prints as
+non-Flit.
 
-Headliners of the graveyard:
-  - HID_THINGM: help text literally said "will be removed soon". Well.
-    Gone now. The blink(1) driver is HJID_LED.
-  - USB_CONFIGFS_F_TCM: the real fabric always built via USB_F_TCM; the
-    "CONFIGFS" name was a leftover from when someone could not decide
-    what to call the thing.
-  - USB_EHCI_TEGRA, USB_OCTEON_OHCI, USB_OHCI_HCD_SSB: help text says
-    "driver was removed, use X instead". The other X already exists.
-  - PANEL: proudly labeled "OLD OPTION" with its own "Deprecated
-    options" section in the file. The actual parport lcd driver has
-    always been PARPORT_PANEL.
-  - COMMON_CLK_MT6765_*: seven sysclk entries with no matching object
-    in the Makefile. Zero files built, zero regrets.
-  - The usual kconfig-vandalism suspects (HAVE_PWRCTL, REGULATOR_MT6316,
-    INTERCONNECT_MTK_MT8196, CLK_SUNXI_PRCM_SUN9I, DVB_ULE_DEBUG, ...).
+Add aer_cap_regs_unpack() to map the registers individually, taking the
+TLP Log layout from the Flit bit as pcie_read_tlp_log() does natively.
+Clamp the logged length: Logged TLP Size is 5 bits wide, so an
+untrusted value reaches 31 where dw[] holds 14 entries and
+pcie_print_tlp_log() walks header_len unbounded.
 
-Validated: defconfig, olddefconfig and randconfig parse clean on both
-x86_64 and arm64; headers_install (the target that replaced the dearly
-departed headers_check, which this tree does not have) succeeds with a
-clean UAPI on both architectures. Because someone will ask: yes, I
-checked the s390/arm/riscv No, I did not delete any arch/* Kconfig, and
-no, I did not touch a single include/uapi/ file.
+Convert all three callers. cxl_rch_get_aer_info() reads the capability
+from MMIO, so also shrink its ioremap to PCIE_AER_CAP_HW_SIZE; nothing
+touches the RCRB AER block past the TLP Prefix Log.
 
-Why should you care? Because "make menuconfig" allegedly lets people
-configure the kernel, and leaving a menu full of options that do
-nothing makes them feel like they have a choice when they really are
-just being sold snake oil. Clean it up.
+Reported-by: sashiko-bot@kernel.org
+Closes: https://sashiko.dev/#/patchset/20260904172337.1409775-1-dave.jiang@intel.com?part=5
+Link: https://lore.kernel.org/linux-cxl/CAJZ5v0hDv11cPuztPZsaDd7uwD_49KznJy=tzuRO+dZc=CnAEQ@mail.gmail.com/
+Assisted-by: Claude:claude-opus-5
+Signed-off-by: Dave Jiang <dave.jiang@intel.com>
 
-Signed-off-by: Breno Rodrigues Alves <breno3011alves@gmail.com>
 ---
- drivers/auxdisplay/Kconfig            |  8 -----
- drivers/clk/mediatek/Kconfig          | 42 ------------------------
- drivers/clk/sunxi/Kconfig             |  7 ----
- drivers/hid/Kconfig                   |  9 ------
- drivers/interconnect/mediatek/Kconfig |  6 ----
- drivers/media/dvb-core/Kconfig        | 11 -------
- drivers/media/platform/Kconfig        |  6 ----
- drivers/misc/Kconfig                  |  4 ---
- drivers/pci/controller/dwc/Kconfig    | 14 --------
- drivers/pci/pwrctrl/Kconfig           |  9 ------
- drivers/regulator/Kconfig             | 12 -------
- drivers/staging/media/Kconfig         | 13 --------
- drivers/usb/gadget/Kconfig            | 14 --------
- drivers/usb/host/Kconfig              | 46 ---------------------------
- drivers/video/fbdev/core/Kconfig      |  6 ----
- security/apparmor/Kconfig             |  9 ------
- sound/soc/tegra/Kconfig               | 36 ---------------------
- 17 files changed, 252 deletions(-)
+Depends on "[PATCH v6 00/13] ACPI: APEI: GHES: Collection of fixes for
+issues reported by sashiko"; please apply after that series:
 
-diff --git a/drivers/auxdisplay/Kconfig b/drivers/auxdisplay/Kconfig
-index 1ea7c0391..24acd0d39 100644
---- a/drivers/auxdisplay/Kconfig
-+++ b/drivers/auxdisplay/Kconfig
-@@ -541,11 +541,3 @@ config ARM_CHARLCD
+- Patches 5 and 12 are build dependencies. This patch rewrites the
+  aer_info copies they add. Before them extlog_print_pcie() has a
+  struct aer_capability_regs * rather than the local struct, and
+  ghes_handle_aer() keeps aer_info as a u8 * cast at the
+  aer_recover_queue() call.
+- Patch 7 is a functional dependency: it fixes the ACPI_APEI_PCIEAER
+  guard typo, without which extlog_print_pcie() compiles out.
+
+The drivers/pci and drivers/cxl changes do not depend on that series.
+
+No Fixes: tag on purpose: this is not stable material. Patches 5 and
+12 closed the out-of-bounds reads; what is left is diagnostic
+completeness, and the fix adds a new exported helper and rewrites
+three call sites.
+
+This is the follow-up Rafael asked for in the Link: above, and also
+covers the pre-existing ras_rch.c findings reported there.
+---
+ drivers/acpi/acpi_extlog.c | 15 +-----
+ drivers/acpi/apei/ghes.c   | 16 +------
+ drivers/cxl/core/ras_rch.c | 26 ++++-------
+ drivers/pci/pcie/tlp.c     | 94 ++++++++++++++++++++++++++++++++++++++
+ include/linux/aer.h        | 10 ++++
+ 5 files changed, 116 insertions(+), 45 deletions(-)
+
+diff --git a/drivers/acpi/acpi_extlog.c b/drivers/acpi/acpi_extlog.c
+index 9e61354a807b..c83ded0ced52 100644
+--- a/drivers/acpi/acpi_extlog.c
++++ b/drivers/acpi/acpi_extlog.c
+@@ -156,19 +156,8 @@ static void extlog_print_pcie(struct cper_sec_pcie *pcie_err,
  
- endif # AUXDISPLAY
+ 	aer_severity = cper_severity_to_aer(severity);
  
--#
--# Deprecated options
--#
--config PANEL
--	tristate "Parallel port LCD/Keypad Panel support (OLD OPTION)"
--	depends on PARPORT
--	select AUXDISPLAY
--	select PARPORT_PANEL
-diff --git a/drivers/clk/mediatek/Kconfig b/drivers/clk/mediatek/Kconfig
-index b059d4457..94a8a0a6f 100644
---- a/drivers/clk/mediatek/Kconfig
-+++ b/drivers/clk/mediatek/Kconfig
-@@ -181,12 +181,6 @@ config COMMON_CLK_MT6765_CAMSYS
-        help
-          This driver supports MediaTek MT6765 camsys clocks.
+-	/*
+-	 * struct pcie_tlp_log is larger than the hardware layout, so aer_info
+-	 * only maps onto the struct up to the four Header Log DWORDs. Copy that
+-	 * much, then place the TLP Prefix Log from where the hardware keeps it.
+-	 * Everything else stays zero: nothing reads root_command, root_status or
+-	 * the error source IDs, and header_len and flit are software-only.
+-	 */
+-	memcpy(&aer_regs, pcie_err->aer_info,
+-	       offsetof(struct aer_capability_regs, header_log) +
+-	       PCIE_STD_NUM_TLP_HEADERLOG * sizeof(u32));
+-	memcpy(aer_regs.header_log.prefix,
+-	       pcie_err->aer_info + PCI_ERR_PREFIX_LOG,
+-	       sizeof(aer_regs.header_log.prefix));
++	aer_cap_regs_unpack(&aer_regs, pcie_err->aer_info,
++			    sizeof(pcie_err->aer_info));
  
--config COMMON_CLK_MT6765_GCESYS
--       tristate "Clock driver for MediaTek MT6765 gcesys"
--       depends on COMMON_CLK_MT6765
--       help
--         This driver supports MediaTek MT6765 gcesys clocks.
+ 	domain = pcie_err->device_id.segment;
+ 	bus = pcie_err->device_id.bus;
+diff --git a/drivers/acpi/apei/ghes.c b/drivers/acpi/apei/ghes.c
+index 08c985e729d6..5bba3cfdb006 100644
+--- a/drivers/acpi/apei/ghes.c
++++ b/drivers/acpi/apei/ghes.c
+@@ -668,20 +668,8 @@ static void ghes_handle_aer(struct acpi_hest_generic_data *gdata)
+ 		if (!aer_info)
+ 			return;
+ 
+-		/*
+-		 * Map aer_info onto the struct as extlog_print_pcie() does:
+-		 * copy up to the four Header Log DWORDs, then place the TLP
+-		 * Prefix Log from where the hardware keeps it. The rest stays
+-		 * zero, so firmware cannot drive the pcie_print_tlp_log() loop
+-		 * over dw[] out of bounds.
+-		 */
+-		memset(aer_info, 0, sizeof(struct aer_capability_regs));
+-		memcpy(aer_info, pcie_err->aer_info,
+-		       offsetof(struct aer_capability_regs, header_log) +
+-		       PCIE_STD_NUM_TLP_HEADERLOG * sizeof(u32));
+-		memcpy(aer_info->header_log.prefix,
+-		       pcie_err->aer_info + PCI_ERR_PREFIX_LOG,
+-		       sizeof(aer_info->header_log.prefix));
++		aer_cap_regs_unpack(aer_info, pcie_err->aer_info,
++				    sizeof(pcie_err->aer_info));
+ 
+ 		aer_recover_queue(pcie_err->device_id.segment,
+ 				  pcie_err->device_id.bus,
+diff --git a/drivers/cxl/core/ras_rch.c b/drivers/cxl/core/ras_rch.c
+index e0e01aa5eba6..bef1550f91cc 100644
+--- a/drivers/cxl/core/ras_rch.c
++++ b/drivers/cxl/core/ras_rch.c
+@@ -19,7 +19,7 @@ void cxl_dport_map_rch_aer(struct cxl_dport *dport)
+ 		aer_phys = aer_cap + dport->rcrb.base;
+ 		dport->regs.dport_aer =
+ 			devm_cxl_iomap_block(host, aer_phys,
+-					     sizeof(struct aer_capability_regs));
++					     PCIE_AER_CAP_HW_SIZE);
+ 	}
+ }
+ 
+@@ -59,30 +59,20 @@ static bool cxl_rch_get_aer_info(void __iomem *aer_base,
+ 				 struct aer_capability_regs *aer_regs)
+ {
+ 	/*
+-	 * Bound the copy to the physically-defined AER registers (header
+-	 * through the 16-byte Header Log). struct aer_capability_regs is a
+-	 * software layout whose embedded struct pcie_tlp_log is larger than
+-	 * the on-wire AER capability; copying sizeof(*aer_regs) would
+-	 * over-read the RCRB-mapped MMIO block.
++	 * A flat copy cannot fill the struct; aer_cap_regs_unpack() places
++	 * the registers and zeroes the software-only tail.
+ 	 */
+-	int read_cnt = (PCI_ERR_HEADER_LOG + 16) / sizeof(u32);
+-	u32 *aer_regs_buf = (u32 *)aer_regs;
++	u32 raw[PCIE_AER_CAP_HW_SIZE / sizeof(u32)];
+ 	int n;
+ 
+ 	if (!aer_base)
+ 		return false;
+ 
+-	/*
+-	 * Zero the destination so the software-only tail fields
+-	 * (e.g. header_log.header_len) are deterministic rather than
+-	 * left as uninitialized stack, which could drive a bogus loop
+-	 * length in pcie_print_tlp_log().
+-	 */
+-	memset(aer_regs, 0, sizeof(*aer_regs));
 -
- config COMMON_CLK_MT6765_MMSYS
-        tristate "Clock driver for MediaTek MT6765 mmsys"
-        depends on COMMON_CLK_MT6765
-@@ -205,48 +199,12 @@ config COMMON_CLK_MT6765_VCODECSYS
-        help
-          This driver supports MediaTek MT6765 vcodecsys clocks.
+ 	/* Use readl() to guarantee 32-bit accesses */
+-	for (n = 0; n < read_cnt; n++)
+-		aer_regs_buf[n] = readl(aer_base + n * sizeof(u32));
++	for (n = 0; n < ARRAY_SIZE(raw); n++)
++		raw[n] = readl(aer_base + n * sizeof(u32));
++
++	aer_cap_regs_unpack(aer_regs, raw, sizeof(raw));
  
--config COMMON_CLK_MT6765_MFGSYS
--       tristate "Clock driver for MediaTek MT6765 mfgsys"
--       depends on COMMON_CLK_MT6765
--       help
--         This driver supports MediaTek MT6765 mfgsys clocks.
--
- config COMMON_CLK_MT6765_MIPI0ASYS
-        tristate "Clock driver for MediaTek MT6765 mipi0asys"
-        depends on COMMON_CLK_MT6765
-        help
-          This driver supports MediaTek MT6765 mipi0asys clocks.
+ 	writel(aer_regs->uncor_status, aer_base + PCI_ERR_UNCOR_STATUS);
+ 	writel(aer_regs->cor_status, aer_base + PCI_ERR_COR_STATUS);
+diff --git a/drivers/pci/pcie/tlp.c b/drivers/pci/pcie/tlp.c
+index 71f8fc9ea2ed..db9a5cd5b2ad 100644
+--- a/drivers/pci/pcie/tlp.c
++++ b/drivers/pci/pcie/tlp.c
+@@ -8,6 +8,8 @@
+ #include <linux/aer.h>
+ #include <linux/array_size.h>
+ #include <linux/bitfield.h>
++#include <linux/build_bug.h>
++#include <linux/minmax.h>
+ #include <linux/pci.h>
+ #include <linux/string.h>
  
--config COMMON_CLK_MT6765_MIPI0BSYS
--       tristate "Clock driver for MediaTek MT6765 mipi0bsys"
--       depends on COMMON_CLK_MT6765
--       help
--         This driver supports MediaTek MT6765 mipi0bsys clocks.
--
--config COMMON_CLK_MT6765_MIPI1ASYS
--       tristate "Clock driver for MediaTek MT6765 mipi1asys"
--       depends on COMMON_CLK_MT6765
--       help
--         This driver supports MediaTek MT6765 mipi1asys clocks.
--
--config COMMON_CLK_MT6765_MIPI1BSYS
--       tristate "Clock driver for MediaTek MT6765 mipi1bsys"
--       depends on COMMON_CLK_MT6765
--       help
--         This driver supports MediaTek MT6765 mipi1bsys clocks.
--
--config COMMON_CLK_MT6765_MIPI2ASYS
--       tristate "Clock driver for MediaTek MT6765 mipi2asys"
--       depends on COMMON_CLK_MT6765
--      help
--         This driver supports MediaTek MT6765 mipi2asys clocks.
--
--config COMMON_CLK_MT6765_MIPI2BSYS
--       tristate "Clock driver for MediaTek MT6765 mipi2bsys"
--       depends on COMMON_CLK_MT6765
--       help
--         This driver supports MediaTek MT6765 mipi2bsys clocks.
--
- config COMMON_CLK_MT6779
- 	tristate "Clock driver for MediaTek MT6779"
- 	depends on (ARCH_MEDIATEK && ARM64) || COMPILE_TEST
-diff --git a/drivers/clk/sunxi/Kconfig b/drivers/clk/sunxi/Kconfig
-index 5e2f92bfe..3ba500b9d 100644
---- a/drivers/clk/sunxi/Kconfig
-+++ b/drivers/clk/sunxi/Kconfig
-@@ -32,11 +32,4 @@ config CLK_SUNXI_PRCM_SUN8I
- 	  Those are usually needed for the PMIC communication,
- 	  mostly.
+@@ -92,6 +94,98 @@ int pcie_read_tlp_log(struct pci_dev *dev, int where, int where2,
+ 	return 0;
+ }
  
--config CLK_SUNXI_PRCM_SUN9I
--	bool "Legacy A80 PRCM driver"
--	default ARCH_SUNXI
--	help
--	  Legacy clock driver for the A80 PRCM clocks. Those are
--	  usually needed for the PMIC communication, mostly.
--
- endif
-diff --git a/drivers/hid/Kconfig b/drivers/hid/Kconfig
-index a81bf51cb..082dc3f5c 100644
---- a/drivers/hid/Kconfig
-+++ b/drivers/hid/Kconfig
-@@ -1296,15 +1296,6 @@ config HID_TOPRE
- 	  Say Y for N-key rollover support on Topre REALFORCE R2 108/87 key and
-           Topre REALFORCE R3S 87 key keyboards.
++/* The registers ahead of the Header Log are the only ones that map 1:1. */
++static_assert(offsetof(struct aer_capability_regs, header_log) ==
++	      PCI_ERR_HEADER_LOG);
++/* The TLP Prefix Log registers carry dw[4..13] in Flit mode; cover all of it. */
++static_assert((PCI_ERR_PREFIX_LOG +
++	       (PCIE_STD_MAX_TLP_HEADERLOG - PCIE_STD_NUM_TLP_HEADERLOG) *
++	       sizeof(u32)) == PCIE_AER_CAP_HW_SIZE);
++
++/**
++ * aer_cap_regs_unpack - Convert a raw AER Capability image to the kernel layout
++ * @regs: Destination, fully initialised
++ * @raw: AER Capability register block in hardware order
++ * @raw_len: Number of bytes readable at @raw
++ *
++ * struct aer_capability_regs is not the hardware layout: struct pcie_tlp_log
++ * spans 60 bytes where the Header Log it stands in for is 16, so a flat copy
++ * misplaces every register behind it. Map them individually instead, taking
++ * the TLP Log layout from the Flit bit as pcie_read_tlp_log() does natively
++ * and clamping the firmware-supplied log length.
++ *
++ * Registers beyond @raw_len are left zero.
++ */
++void aer_cap_regs_unpack(struct aer_capability_regs *regs, const void *raw,
++			 size_t raw_len)
++{
++	unsigned int i, tlp_len;
++	bool flit;
++
++	memset(regs, 0, sizeof(*regs));
++
++	if (raw_len < PCI_ERR_HEADER_LOG)
++		return;
++	memcpy(regs, raw, PCI_ERR_HEADER_LOG);
++
++	flit = !!(regs->cap_control & PCI_ERR_CAP_TLP_LOG_FLIT);
++	if (flit) {
++		tlp_len = FIELD_GET(PCI_ERR_CAP_TLP_LOG_SIZE, regs->cap_control);
++	} else {
++		/*
++		 * Header Log plus the TLP Prefix Log, which dw[4..7] alias.
++		 * Take all four prefix registers whatever eetlp_prefix_max
++		 * says; pcie_print_tlp_log() stops at the first zero one.
++		 */
++		tlp_len = PCIE_STD_NUM_TLP_HEADERLOG + PCIE_STD_MAX_TLP_PREFIXLOG;
++	}
++
++	if (tlp_len > ARRAY_SIZE(regs->header_log.dw))
++		tlp_len = ARRAY_SIZE(regs->header_log.dw);
++
++	for (i = 0; i < tlp_len; i++) {
++		unsigned int off;
++
++		if (i < PCIE_STD_NUM_TLP_HEADERLOG)
++			off = PCI_ERR_HEADER_LOG + i * sizeof(u32);
++		else
++			off = PCI_ERR_PREFIX_LOG +
++			      (i - PCIE_STD_NUM_TLP_HEADERLOG) * sizeof(u32);
++
++		if (off + sizeof(u32) > raw_len)
++			break;
++		memcpy(&regs->header_log.dw[i], raw + off, sizeof(u32));
++	}
++
++	/*
++	 * @i is what was actually filled, short of @tlp_len if @raw_len ran
++	 * out. Non-Flit length needs the TLP parsed, so cap it at 4 as the
++	 * native path does.
++	 */
++	if (flit)
++		regs->header_log.header_len = i;
++	else
++		regs->header_log.header_len =
++			min_t(unsigned int, i, PCIE_STD_NUM_TLP_HEADERLOG);
++	regs->header_log.flit = flit;
++
++	if (raw_len >= PCI_ERR_ROOT_COMMAND + sizeof(regs->root_command))
++		memcpy(&regs->root_command, raw + PCI_ERR_ROOT_COMMAND,
++		       sizeof(regs->root_command));
++	if (raw_len >= PCI_ERR_ROOT_STATUS + sizeof(regs->root_status))
++		memcpy(&regs->root_status, raw + PCI_ERR_ROOT_STATUS,
++		       sizeof(regs->root_status));
++	if (raw_len >= PCI_ERR_ROOT_ERR_SRC + sizeof(regs->cor_err_source) +
++		       sizeof(regs->uncor_err_source)) {
++		memcpy(&regs->cor_err_source, raw + PCI_ERR_ROOT_ERR_SRC,
++		       sizeof(regs->cor_err_source));
++		memcpy(&regs->uncor_err_source,
++		       raw + PCI_ERR_ROOT_ERR_SRC + sizeof(regs->cor_err_source),
++		       sizeof(regs->uncor_err_source));
++	}
++}
++EXPORT_SYMBOL_GPL(aer_cap_regs_unpack);
++
+ #define EE_PREFIX_STR " E-E Prefixes:"
  
--config HID_THINGM
--	tristate "ThingM blink(1) USB RGB LED"
--	depends on LEDS_CLASS
--	select HID_LED
--	help
--	Support for the ThingM blink(1) USB RGB LED. This driver has been
--	merged into the generic hid led driver. Config symbol HID_THINGM
--	just selects HID_LED and will be removed soon.
--
- config HID_THRUSTMASTER
- 	tristate "ThrustMaster devices support"
- 	depends on USB_HID
-diff --git a/drivers/interconnect/mediatek/Kconfig b/drivers/interconnect/mediatek/Kconfig
-index 9fd3f2170..a7aebfa1a 100644
---- a/drivers/interconnect/mediatek/Kconfig
-+++ b/drivers/interconnect/mediatek/Kconfig
-@@ -28,9 +28,3 @@ config INTERCONNECT_MTK_MT8195
- 	  This is a driver for the MediaTek bus interconnect on MT8195-based
- 	  platforms.
+ /**
+diff --git a/include/linux/aer.h b/include/linux/aer.h
+index df0f5c382286..140a5923fe8a 100644
+--- a/include/linux/aer.h
++++ b/include/linux/aer.h
+@@ -24,6 +24,14 @@
+ #define PCIE_STD_MAX_TLP_PREFIXLOG     4
+ #define PCIE_STD_MAX_TLP_HEADERLOG	(PCIE_STD_NUM_TLP_HEADERLOG + 10)
  
--config INTERCONNECT_MTK_MT8196
--	tristate "MediaTek MT8196 interconnect driver"
--	depends on INTERCONNECT_MTK_DVFSRC_EMI
--	help
--	  This is a driver for the MediaTek bus interconnect on MT8196-based
--	  platforms.
-diff --git a/drivers/media/dvb-core/Kconfig b/drivers/media/dvb-core/Kconfig
-index 8b3f2d53c..c6a97add8 100644
---- a/drivers/media/dvb-core/Kconfig
-+++ b/drivers/media/dvb-core/Kconfig
-@@ -67,14 +67,3 @@ config DVB_DEMUX_SECTION_LOSS_LOG
++/*
++ * Size of the AER Capability register block in hardware, far enough to hold
++ * the longest TLP Log the Flit mode registers can carry. struct
++ * aer_capability_regs below is larger and differently laid out; use
++ * aer_cap_regs_unpack() to convert.
++ */
++#define PCIE_AER_CAP_HW_SIZE		96
++
+ struct pci_dev;
  
- 	  If you are unsure about this, say N here.
+ struct pcie_tlp_log {
+@@ -68,6 +76,8 @@ static inline void pci_aer_unmask_internal_errors(struct pci_dev *dev) { }
  
--config DVB_ULE_DEBUG
--	bool "Enable DVB net ULE packet debug messages"
--	depends on DVB_CORE
--	help
--	  Enable extra log messages meant to detect problems while
--	  handling DVB network ULE packet loss inside the Kernel.
--
--	  Should not be enabled on normal cases, as logs can
--	  be very verbose.
--
--	  If you are unsure about this, say N here.
-diff --git a/drivers/media/platform/Kconfig b/drivers/media/platform/Kconfig
-index 2c7699b66..dbef2275f 100644
---- a/drivers/media/platform/Kconfig
-+++ b/drivers/media/platform/Kconfig
-@@ -22,12 +22,6 @@ config SDR_PLATFORM_DRIVERS
- 	help
- 	  Say Y here to enable support for platform-specific SDR Drivers.
- 
--config DVB_PLATFORM_DRIVERS
--	bool "DVB platform devices"
--	depends on MEDIA_DIGITAL_TV_SUPPORT
--	help
--	  Say Y here to enable support for platform-specific Digital TV drivers.
--
- config V4L_MEM2MEM_DRIVERS
- 	bool "Memory-to-memory multimedia devices"
- 	depends on VIDEO_DEV
-diff --git a/drivers/misc/Kconfig b/drivers/misc/Kconfig
-index 7364931da..2e37b3e08 100644
---- a/drivers/misc/Kconfig
-+++ b/drivers/misc/Kconfig
-@@ -434,10 +434,6 @@ config XILINX_SDFEC
- 
- 	  If unsure, say N.
- 
--config MISC_RTSX
--	tristate
--	default MISC_RTSX_PCI || MISC_RTSX_USB
--
- config OPEN_DICE
- 	tristate "Open Profile for DICE driver"
- 	depends on OF_RESERVED_MEM
-diff --git a/drivers/pci/controller/dwc/Kconfig b/drivers/pci/controller/dwc/Kconfig
-index dcfbe7e22..c43b3bde5 100644
---- a/drivers/pci/controller/dwc/Kconfig
-+++ b/drivers/pci/controller/dwc/Kconfig
-@@ -121,20 +121,6 @@ config PCI_IMX6_HOST
- 	  on DesignWare hardware and therefore the driver re-uses the
- 	  DesignWare core functions to implement the driver.
- 
--config PCI_IMX6_EP
--	bool "Freescale i.MX6/7/8 PCIe controller (endpoint mode)"
--	depends on ARCH_MXC || COMPILE_TEST
--	depends on PCI_ENDPOINT
--	select PCIE_DW_EP
--	select PCI_HOST_COMMON
--	select PCI_IMX6
--	select PCI_PWRCTRL_GENERIC
--	help
--	  Enables support for the PCIe controller in the i.MX SoCs to
--	  work in endpoint mode. The PCI controller on i.MX is based
--	  on DesignWare hardware and therefore the driver re-uses the
--	  DesignWare core functions to implement the driver.
--
- config PCI_LAYERSCAPE
- 	tristate "Freescale Layerscape PCIe controller (host mode)"
- 	depends on OF && (ARM || ARCH_LAYERSCAPE || COMPILE_TEST)
-diff --git a/drivers/pci/pwrctrl/Kconfig b/drivers/pci/pwrctrl/Kconfig
-index 9eec767cd..853dd16b0 100644
---- a/drivers/pci/pwrctrl/Kconfig
-+++ b/drivers/pci/pwrctrl/Kconfig
-@@ -39,12 +39,3 @@ config PCI_PWRCTRL_TC9563
- 	  MAC is connected as endpoint device. Other two downstream ports are
- 	  supposed to connect to external device.
- 
--# deprecated
--config HAVE_PWRCTL
--	bool
--	select HAVE_PWRCTRL
--
--# deprecated
--config PCI_PWRCTL_PWRSEQ
--	tristate
--	select PCI_PWRCTRL_PWRSEQ
-diff --git a/drivers/regulator/Kconfig b/drivers/regulator/Kconfig
-index 89789ac7a..2c4d5b53e 100644
---- a/drivers/regulator/Kconfig
-+++ b/drivers/regulator/Kconfig
-@@ -22,7 +22,6 @@ menuconfig REGULATOR
- 
- 	  If unsure, say no.
- 
--
- if REGULATOR
- 
- config REGULATOR_DEBUG
-@@ -900,16 +899,6 @@ config REGULATOR_MT6315
- 	  This driver supports the control of different power rails of device
- 	  through regulator interface.
- 
--config REGULATOR_MT6316
--	tristate "MT6316 SPMI PMIC regulator driver"
--	depends on SPMI
--	select REGMAP_SPMI
--	help
--	  Say Y here to enable support for 2+2, 3+1 and 4 phase regulators
--	  found in the MediaTek MT6316 BP, CP, DP, HP, VP and TP SPMI PMICs.
--	  This driver supports the control of different power rails of device
--	  through regulator interface.
--
- config REGULATOR_MT6323
- 	tristate "MediaTek MT6323 PMIC"
- 	depends on MFD_MT6397
-@@ -1726,7 +1715,6 @@ config REGULATOR_TPS65185
- 	  so it is found in E-Book readers.
- 	  If HWWON is enabled, it also provides temperature measurement.
- 
--
- config REGULATOR_TPS65217
- 	tristate "TI TPS65217 Power regulators"
- 	depends on MFD_TPS65217
-diff --git a/drivers/staging/media/Kconfig b/drivers/staging/media/Kconfig
-index 06cbc5c54..2d3e70b49 100644
---- a/drivers/staging/media/Kconfig
-+++ b/drivers/staging/media/Kconfig
-@@ -16,7 +16,6 @@ menuconfig STAGING_MEDIA
- 
- 	  If in doubt, say N here.
- 
--
- if STAGING_MEDIA && MEDIA_SUPPORT
- 
- # Please keep them in alphabetic order
-@@ -38,16 +37,4 @@ source "drivers/staging/media/sunxi/Kconfig"
- 
- source "drivers/staging/media/tegra-video/Kconfig"
- 
--menuconfig STAGING_MEDIA_DEPRECATED
--	bool "Media staging drivers (DEPRECATED)"
--	default n
--	help
--	  This option enables deprecated media drivers that are
--	  scheduled for future removal from the kernel.
--
--	  If you wish to work on these drivers to prevent their removal,
--	  then contact the linux-media@vger.kernel.org mailing list.
--
--	  If in doubt, say N here.
--
- endif
-diff --git a/drivers/usb/gadget/Kconfig b/drivers/usb/gadget/Kconfig
-index 76521555e..f05eb1bb7 100644
---- a/drivers/usb/gadget/Kconfig
-+++ b/drivers/usb/gadget/Kconfig
-@@ -492,20 +492,6 @@ config USB_CONFIGFS_F_PRINTER
- 	  For more information, see Documentation/usb/gadget_printer.rst
- 	  which includes sample code for accessing the device file.
- 
--config USB_CONFIGFS_F_TCM
--	bool "USB Gadget Target Fabric"
--	depends on TARGET_CORE
--	depends on USB_CONFIGFS
--	select USB_LIBCOMPOSITE
--	select USB_F_TCM
--	help
--	  This fabric is a USB gadget component. Two USB protocols are
--	  supported that is BBB or BOT (Bulk Only Transport) and UAS
--	  (USB Attached SCSI). BOT is advertised on alternative
--	  interface 0 (primary) and UAS is on alternative interface 1.
--	  Both protocols can work on USB2.0 and USB3.0.
--	  UAS utilizes the USB 3.0 feature called streams support.
--
- source "drivers/usb/gadget/legacy/Kconfig"
- 
- endif # USB_GADGET
-diff --git a/drivers/usb/host/Kconfig b/drivers/usb/host/Kconfig
-index 10cff12a3..06999ba3d 100644
---- a/drivers/usb/host/Kconfig
-+++ b/drivers/usb/host/Kconfig
-@@ -281,20 +281,6 @@ config USB_EHCI_HCD_AT91
- 	  Enables support for the on-chip EHCI controller on
- 	  Atmel chips.
- 
--config USB_EHCI_TEGRA
--	tristate "NVIDIA Tegra HCD support"
--	depends on ARCH_TEGRA
--	select USB_CHIPIDEA
--	select USB_CHIPIDEA_HOST
--	select USB_CHIPIDEA_TEGRA
--	select USB_GADGET
--	help
--	  This option is deprecated now and the driver was removed, use
--	  USB_CHIPIDEA_TEGRA instead.
--
--	  Enable support for the internal USB Host Controllers
--	  found in NVIDIA Tegra SoCs. The controllers are EHCI compliant.
--
- config USB_EHCI_HCD_PPC_OF
- 	bool "EHCI support for PPC USB controller on OF platform bus"
- 	depends on PPC
-@@ -530,23 +516,6 @@ config USB_OHCI_HCD_PCI
- 	  Enables support for PCI-bus plug-in USB controller cards.
- 	  If unsure, say Y.
- 
--config USB_OHCI_HCD_SSB
--	bool "OHCI support for Broadcom SSB OHCI core (DEPRECATED)"
--	depends on (SSB = y || SSB = USB_OHCI_HCD)
--	select USB_HCD_SSB
--	select USB_OHCI_HCD_PLATFORM
--	help
--	  This option is deprecated now and the driver was removed, use
--	  USB_HCD_SSB and USB_OHCI_HCD_PLATFORM instead.
--
--	  Support for the Sonics Silicon Backplane (SSB) attached
--	  Broadcom USB OHCI core.
--
--	  This device is present in some embedded devices with
--	  Broadcom based SSB bus.
--
--	  If unsure, say N.
--
- config USB_OHCI_EXYNOS
- 	tristate "OHCI support for Samsung S5P/Exynos SoC Series"
- 	depends on ARCH_S5PV210 || ARCH_EXYNOS || COMPILE_TEST
-@@ -562,21 +531,6 @@ config USB_OHCI_HCD_PLATFORM
- 
- 	  If unsure, say N.
- 
--config USB_OCTEON_OHCI
--	bool "Octeon on-chip OHCI support (DEPRECATED)"
--	depends on CAVIUM_OCTEON_SOC
--	default USB_OCTEON_EHCI
--	select USB_OHCI_BIG_ENDIAN_MMIO if CPU_BIG_ENDIAN
--	select USB_OHCI_LITTLE_ENDIAN
--	select USB_OHCI_HCD_PLATFORM
--	help
--	  This option is deprecated now and the driver was removed, use
--	  USB_OHCI_HCD_PLATFORM instead.
--
--	  Enable support for the Octeon II SOC's on-chip OHCI
--	  controller.  It is needed for low-speed USB 1.0 device
--	  support.  All CN6XXX based chips with USB are supported.
--
- endif # USB_OHCI_HCD
- 
- config USB_UHCI_HCD
-diff --git a/drivers/video/fbdev/core/Kconfig b/drivers/video/fbdev/core/Kconfig
-index 8d1993e0b..14860a1ae 100644
---- a/drivers/video/fbdev/core/Kconfig
-+++ b/drivers/video/fbdev/core/Kconfig
-@@ -155,12 +155,6 @@ config FB_IOMEM_HELPERS
- 	select FB_CFB_IMAGEBLIT
- 	select FB_IOMEM_FOPS
- 
--config FB_IOMEM_HELPERS_DEFERRED
--	bool
--	depends on FB_CORE
--	select FB_DEFERRED_IO
--	select FB_IOMEM_HELPERS
--
- config FB_SYSMEM_HELPERS
- 	bool
- 	depends on FB_CORE
-diff --git a/security/apparmor/Kconfig b/security/apparmor/Kconfig
-index a1f3749bd..508fd7f02 100644
---- a/security/apparmor/Kconfig
-+++ b/security/apparmor/Kconfig
-@@ -35,15 +35,6 @@ config SECURITY_APPARMOR_DEBUG_ASSERTS
- 	  points. If the assert is triggered it will trigger a WARN
- 	  message.
- 
--config SECURITY_APPARMOR_DEBUG_MESSAGES
--	bool "Debug messages enabled by default"
--	depends on SECURITY_APPARMOR_DEBUG
--	default n
--	help
--	  Set the default value of the apparmor.debug kernel parameter.
--	  When enabled, various debug messages will be logged to
--	  the kernel message buffer.
--
- config SECURITY_APPARMOR_INTROSPECT_POLICY
- 	bool "Allow loaded policy to be introspected"
- 	depends on SECURITY_APPARMOR
-diff --git a/sound/soc/tegra/Kconfig b/sound/soc/tegra/Kconfig
-index fdc954028..e52f7cb9e 100644
---- a/sound/soc/tegra/Kconfig
-+++ b/sound/soc/tegra/Kconfig
-@@ -192,15 +192,6 @@ config SND_SOC_TEGRA_AUDIO_GRAPH_CARD
- config SND_SOC_TEGRA_MACHINE_DRV
- 	tristate
- 
--config SND_SOC_TEGRA_RT5631
--	tristate "SoC Audio support for Tegra boards using an RT5631 codec"
--	depends on SND_SOC_TEGRA && I2C && GPIOLIB
--	select SND_SOC_TEGRA_MACHINE_DRV
--	select SND_SOC_RT5631
--	help
--	  Say Y or M here if you want to add support for SoC audio on Tegra
--	  boards using the RT5631 codec, such as Transformer.
--
- config SND_SOC_TEGRA_RT5640
- 	tristate "SoC Audio support for Tegra boards using an RT5640 codec"
- 	depends on I2C && GPIOLIB
-@@ -276,24 +267,6 @@ config SND_SOC_TEGRA_MAX98090
- 	  Say Y or M here if you want to add support for SoC audio on Tegra
- 	  boards using the MAX98090 codec, such as Venice2.
- 
--config SND_SOC_TEGRA_MAX98088
--	tristate "SoC Audio support for Tegra boards using a MAX9808x codec"
--	depends on I2C && GPIOLIB
--	select SND_SOC_TEGRA_MACHINE_DRV
--	select SND_SOC_MAX98088
--	help
--	  Say Y or M here if you want to add support for SoC audio on Tegra
--	  boards using the MAX98088 codec, such as LG X3.
--
--config SND_SOC_TEGRA_RT5677
--	tristate "SoC Audio support for Tegra boards using a RT5677 codec"
--	depends on I2C && GPIOLIB
--	select SND_SOC_TEGRA_MACHINE_DRV
--	select SND_SOC_RT5677
--	help
--	  Say Y or M here if you want to add support for SoC audio on Tegra
--	  boards using the RT5677 codec, such as Ryu.
--
- config SND_SOC_TEGRA_SGTL5000
- 	tristate "SoC Audio support for Tegra boards using a SGTL5000 codec"
- 	depends on I2C && GPIOLIB
-@@ -304,15 +277,6 @@ config SND_SOC_TEGRA_SGTL5000
- 	  boards using the SGTL5000 codec, such as Apalis T30, Apalis TK1 or
- 	  Colibri T30.
- 
--config SND_SOC_TEGRA_CPCAP
--	tristate "SoC Audio support for Tegra boards using a CPCAP codec"
--	depends on I2C && GPIOLIB && MFD_CPCAP
--	select SND_SOC_TEGRA_MACHINE_DRV
--	select SND_SOC_CPCAP
--	help
--	  Say Y or M here if you want to add support for SoC audio on Tegra
--	  boards using the CPCAP codec, such as Motorola Atrix 4G or Droid X2.
--
- endif
- 
- endmenu
+ void pci_print_aer(struct pci_dev *dev, int aer_severity,
+ 		    struct aer_capability_regs *aer);
++void aer_cap_regs_unpack(struct aer_capability_regs *regs, const void *raw,
++			 size_t raw_len);
+ int cper_severity_to_aer(int cper_severity);
+ void aer_recover_queue(int domain, unsigned int bus, unsigned int devfn,
+ 		       int severity, struct aer_capability_regs *aer_regs);
+
+base-commit: 86adf9d0f7b074e0a1310c1bc4db66cac5c83eec
 -- 
-2.43.0
+2.54.0
 
