@@ -1,199 +1,304 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1CED132ED4E;
-	Fri,  4 Sep 2026 07:13:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 435993D9041;
+	Fri,  4 Sep 2026 07:55:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788506003; cv=none; b=sgTcP1A5dw0jJyRGGdrqP/ETbVFgJyYSPUN4TUwT8v2RjUj5YqMnmBAwF1EiKw7KFe5bBgWGltTFXwCvSjRWbG5BQ30XKFsyhwHCFCLcwfJnksg4BNUOfC5hoFM8XqMFX+lV5qskYEOkuEgu+p1HjjCsx7kackAnKaqgdtFJi7I=
+	t=1788508528; cv=none; b=NOcY5E5g351dgcCJZa7TKgMcPbqGU9eTpJs61lAR5zCv8gVxY0il4Y/PSoY2kMDFt6/B5NntxVk7spo/HP1+y+C2Ue5CyqCdInxFYKD/lk+HnbHo0nXH7aLQz7ci59fcQ+x5vV+xydWBbtUeX1v7h4OgysJEirlKSgT3fxuCjTY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788506003; c=relaxed/simple;
-	bh=c9ymn9UghUZaQmRyubZP8qaViLmCA5hpNWfQjKFSZ7s=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=eqYgdjFat/jqg+kMSPiS/Ie50YsgeKBBR9rZ8o/z40woP+ib/9fgTbcqb8Z7zy5IzwpT2RYuXVgb22j4aErdUVPb4VYw2tXEwQJIOBfO1QvK6/dMbMiLv57mDhDGjEPAlxmfCYS2c7dGqAwQ8/P+YHuJ7HaJONyr1vA4Odqi5M0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fXoATWIG; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788508528; c=relaxed/simple;
+	bh=MgsOnSPI18/lPcOqjXi5Ci1t1cSJm08d/y88hnqb4kQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=uoR3N5HS6GJJKq1iAE2YwQp1AyeMH4TSsnaD8mL+a3aCqXENYKg63ZdkaPt2ZN2OOusPrT3MA9WbRQzpMeSRw7wib/4oE6E9vzdDRvn+KpjVr3m2XQOpnnnllC/3OFDfHIELixbSkRS1cZYnXKc51F1qCANjw9f47WkfYrN/9Mw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=Y+OORXik; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fXoATWIG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 974AF1F00A3D;
-	Fri,  4 Sep 2026 07:13:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788506001;
-	bh=DcJub5dwoza7MusrFTlgHSCSwqCqbnxHMfukrj2dUVw=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=fXoATWIGUaAkwe21fskexak2nIv1HNOB8Lu1sJQP9mEj5F9eLajxW25Fa/C0owhsq
-	 BHV0IH1saoUEwNtCjasNOVTwIPBpx78uvT3Ev+3UnxYVWCGEPLRnVo6WYk+wKPRjQ6
-	 JAXQPV8V51xYsnvV3dt/sSJu1Zwc+7g6LCcvmpXHRzr58z/qTzFyIGEtCPsp8R31jO
-	 gsMW3QFYRg8zy5/hCma6pGgMhpcM9R4VMNDe3D3050a+undx/UhruQgQ/5lKtJUqbl
-	 ay77aDPFF5MY71hid/ribxcLbWj6V+TxwO9aHcnuxNUXkfs5Ow7I5TM6qb74M8N3Sb
-	 AU6UE1mlE7V8A==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] PCI: endpoint: pci-epf-vntb: Track link state from both
- sides
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Koichiro Den" <den@valinux.co.jp>
-Cc: ntb@lists.linux.dev, linux-pci@vger.kernel.org
-In-Reply-To: <20260904065335.3059625-1-den@valinux.co.jp>
-References: <20260904065335.3059625-1-den@valinux.co.jp>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Fri, 04 Sep 2026 07:13:21 +0000
-Message-Id: <20260904071321.974AF1F00A3D@smtp.kernel.org>
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="Y+OORXik"
+Received: from zhangyu-hyperv.mshome.net (unknown [167.220.233.38])
+	by linux.microsoft.com (Postfix) with ESMTPSA id 7BAEC20B712B;
+	Fri,  4 Sep 2026 00:54:44 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 7BAEC20B712B
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1788508489;
+	bh=GrkUbCx1rMvHDUBAxHwhu2yGimv7MTKuPSLdFBVCBRE=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=Y+OORXik/3mAZmW2sjSWO3iNiM3HKZsC1NbxXsbrbbRivL+bu+i3T1j42c54mfO9m
+	 g6b+90Oa4YoZZmZpDjhSvnG14S+qh9pTZOPIF+haLU22J9HbjZiQxlLbQ9XHp/f91E
+	 wyc4wpMBuYsgqVhC/v3WBW60pBwT99aEqJEa82g4=
+From: Yu Zhang <zhangyu1@linux.microsoft.com>
+To: linux-kernel@vger.kernel.org,
+	linux-hyperv@vger.kernel.org,
+	iommu@lists.linux.dev,
+	linux-pci@vger.kernel.org,
+	linux-arch@vger.kernel.org,
+	x86@kernel.org
+Cc: wei.liu@kernel.org,
+	kys@microsoft.com,
+	haiyangz@microsoft.com,
+	decui@microsoft.com,
+	longli@microsoft.com,
+	joro@8bytes.org,
+	will@kernel.org,
+	robin.murphy@arm.com,
+	bhelgaas@google.com,
+	kwilczynski@kernel.org,
+	lpieralisi@kernel.org,
+	mani@kernel.org,
+	robh@kernel.org,
+	arnd@arndb.de,
+	jgg@ziepe.ca,
+	mhklinux@outlook.com,
+	jacob.pan@linux.microsoft.com,
+	tgopinath@linux.microsoft.com,
+	easwar.hariharan@linux.microsoft.com,
+	mrathor@linux.microsoft.com,
+	baolu.lu@linux.intel.com,
+	suravee.suthikulpanit@amd.com,
+	vasant.hegde@amd.com
+Subject: [PATCH v5 1/5] hyperv: Introduce new hypercall interfaces used by Hyper-V guest IOMMU
+Date: Fri,  4 Sep 2026 15:55:08 +0800
+Message-ID: <20260904075512.174154-2-zhangyu1@linux.microsoft.com>
+X-Mailer: git-send-email 2.52.0
+In-Reply-To: <20260904075512.174154-1-zhangyu1@linux.microsoft.com>
+References: <20260904075512.174154-1-zhangyu1@linux.microsoft.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
+From: Wei Liu <wei.liu@kernel.org>
 
-New issues:
-- [High] The driver fails to mutually notify the local NTB client or HOST o=
-f effective link state changes, potentially causing clients waiting for lin=
-k events to hang.
+Hyper-V guest IOMMU is a para-virtualized IOMMU based on hypercalls.
+Introduce the hypercalls used by the child partition to interact with
+this facility.
 
-Pre-existing issues:
-- [High] Missing endianness conversions for PCIe shared memory.
---
+These hypercalls fall into below categories:
+- Detection and capability: HVCALL_GET_IOMMU_CAPABILITIES is used to
+  detect the existence and capabilities of the guest IOMMU.
 
-commit ca462c18f2f26ec109681df8452341853193267f
-Author: Koichiro Den <den@valinux.co.jp>
-PCI: endpoint: pci-epf-vntb: Track link state from both sides
+- Device management: HVCALL_GET_LOGICAL_DEVICE_PROPERTY is used to
+  check whether an endpoint device is managed by the guest IOMMU.
 
-This patch tracks the link state of both HOST and VHOST sides of a virtual
-NTB device separately. It reports the effective link as up only when both
-sides enable it and notifies the other side when this effective state chang=
-es.
+- Domain management: A set of hypercalls is provided to handle the
+  creation, configuration, and deletion of guest domains, as well as
+  the attachment/detachment of endpoint devices to/from those domains.
 
-> diff --git a/drivers/pci/endpoint/functions/pci-epf-vntb.c b/drivers/pci/=
-endpoint/functions/pci-epf-vntb.c
-> index c3caec927d748..8af3dcdd893c4 100644
-> --- a/drivers/pci/endpoint/functions/pci-epf-vntb.c
-> +++ b/drivers/pci/endpoint/functions/pci-epf-vntb.c
+- IOTLB flushing: HVCALL_FLUSH_DEVICE_DOMAIN is used to ask Hyper-V
+  for a domain-selective IOTLB flush (which in its handler may flush
+  the device TLB as well).
 
-[ ... ]
+Signed-off-by: Wei Liu <wei.liu@kernel.org>
+Co-developed-by: Easwar Hariharan <easwar.hariharan@linux.microsoft.com>
+Signed-off-by: Easwar Hariharan <easwar.hariharan@linux.microsoft.com>
+Co-developed-by: Yu Zhang <zhangyu1@linux.microsoft.com>
+Signed-off-by: Yu Zhang <zhangyu1@linux.microsoft.com>
+Reviewed-by: Jacob Pan <jacob.pan@linux.microsoft.com>
+Reviewed-by: Michael Kelley <mhklinux@outlook.com>
+---
+ drivers/hv/hv_common.c      |   1 +
+ include/hyperv/hvgdk_mini.h |   9 +++
+ include/hyperv/hvhdk_mini.h | 137 ++++++++++++++++++++++++++++++++++++
+ 3 files changed, 147 insertions(+)
 
-> @@ -178,24 +182,42 @@ static struct pci_epf_header epf_ntb_header =3D {
->  	.interrupt_pin	=3D PCI_INTERRUPT_INTA,
->  };
-> =20
-> +static void epf_ntb_update_link(struct epf_ntb *ntb)
-> +{
-> +	u16 link_status =3D READ_ONCE(ntb->reg->link_status);
+diff --git a/drivers/hv/hv_common.c b/drivers/hv/hv_common.c
+index 31256cb22b39..8896fb4809b5 100644
+--- a/drivers/hv/hv_common.c
++++ b/drivers/hv/hv_common.c
+@@ -808,6 +808,7 @@ static const struct hv_status_info hv_status_infos[] = {
+ 	_STATUS_INFO(HV_STATUS_PROCESSOR_FEATURE_NOT_SUPPORTED,	-EOPNOTSUPP),
+ 	_STATUS_INFO(HV_STATUS_INVALID_LP_INDEX,		-EINVAL),
+ 	_STATUS_INFO(HV_STATUS_INVALID_REGISTER_VALUE,		-EINVAL),
++	_STATUS_INFO(HV_STATUS_DEVICE_ALREADY_IN_DOMAIN,	-EEXIST),
+ 	_STATUS_INFO(HV_STATUS_OPERATION_FAILED,		-EIO),
+ 	_STATUS_INFO(HV_STATUS_TIME_OUT,			-EIO),
+ 	_STATUS_INFO(HV_STATUS_CALL_PENDING,			-EIO),
+diff --git a/include/hyperv/hvgdk_mini.h b/include/hyperv/hvgdk_mini.h
+index 6a4e8b9d570f..5d1338197eee 100644
+--- a/include/hyperv/hvgdk_mini.h
++++ b/include/hyperv/hvgdk_mini.h
+@@ -37,6 +37,7 @@ struct hv_u128 {
+ #define HV_STATUS_PROCESSOR_FEATURE_NOT_SUPPORTED	0x20
+ #define HV_STATUS_INVALID_LP_INDEX			0x41
+ #define HV_STATUS_INVALID_REGISTER_VALUE		0x50
++#define HV_STATUS_DEVICE_ALREADY_IN_DOMAIN		0x66
+ #define HV_STATUS_OPERATION_FAILED			0x71
+ #define HV_STATUS_INSUFFICIENT_ROOT_MEMORY		0x73
+ #define HV_STATUS_INSUFFICIENT_CONTIGUOUS_MEMORY	0x75
+@@ -486,10 +487,16 @@ union hv_vp_assist_msr_contents {	 /* HV_REGISTER_VP_ASSIST_PAGE */
+ #define HVCALL_GET_VP_INDEX_FROM_APIC_ID		0x009a
+ #define HVCALL_FLUSH_GUEST_PHYSICAL_ADDRESS_SPACE	0x00af
+ #define HVCALL_FLUSH_GUEST_PHYSICAL_ADDRESS_LIST	0x00b0
++#define HVCALL_CREATE_DEVICE_DOMAIN			0x00b1
++#define HVCALL_ATTACH_DEVICE_DOMAIN			0x00b2
+ #define HVCALL_SIGNAL_EVENT_DIRECT			0x00c0
+ #define HVCALL_POST_MESSAGE_DIRECT			0x00c1
+ #define HVCALL_DISPATCH_VP				0x00c2
++#define HVCALL_DETACH_DEVICE_DOMAIN			0x00c4
++#define HVCALL_DELETE_DEVICE_DOMAIN			0x00c5
+ #define HVCALL_GET_GPA_PAGES_ACCESS_STATES		0x00c9
++#define HVCALL_CONFIGURE_DEVICE_DOMAIN			0x00ce
++#define HVCALL_FLUSH_DEVICE_DOMAIN			0x00d0
+ #define HVCALL_ACQUIRE_SPARSE_SPA_PAGE_HOST_ACCESS	0x00d7
+ #define HVCALL_RELEASE_SPARSE_SPA_PAGE_HOST_ACCESS	0x00d8
+ #define HVCALL_MODIFY_SPARSE_GPA_PAGE_HOST_VISIBILITY	0x00db
+@@ -502,6 +509,8 @@ union hv_vp_assist_msr_contents {	 /* HV_REGISTER_VP_ASSIST_PAGE */
+ #define HVCALL_MMIO_READ				0x0106
+ #define HVCALL_MMIO_WRITE				0x0107
+ #define HVCALL_DISABLE_HYP_EX                           0x010f
++#define HVCALL_GET_IOMMU_CAPABILITIES			0x0125
++#define HVCALL_GET_LOGICAL_DEVICE_PROPERTY		0x0127
+ #define HVCALL_MAP_STATS_PAGE2				0x0131
+ 
+ /* HV_HYPERCALL_INPUT */
+diff --git a/include/hyperv/hvhdk_mini.h b/include/hyperv/hvhdk_mini.h
+index 035ba20870f7..7b9f43b320cd 100644
+--- a/include/hyperv/hvhdk_mini.h
++++ b/include/hyperv/hvhdk_mini.h
+@@ -548,4 +548,141 @@ union hv_device_id {		/* HV_DEVICE_ID */
+ 	} acpi;
+ } __packed;
+ 
++/* Device domain types */
++#define HV_DEVICE_DOMAIN_TYPE_S1	1 /* HV_DEVICE_DOMAIN_ID_TYPE_S1 */
++
++/* ID for default domain and NULL domain */
++#define HV_DEVICE_DOMAIN_ID_DEFAULT 0
++#define HV_DEVICE_DOMAIN_ID_NULL    0xFFFFFFFFULL
++
++union hv_device_domain_id {	/* HV_DEVICE_DOMAIN_ID */
++	u64 as_uint64;
++	struct {
++		u32 type: 4;
++		u32 reserved: 28;
++		u32 id;
++	} __packed;
++};
++
++struct hv_input_device_domain {	/* HV_INPUT_DEVICE_DOMAIN */
++	u64 partition_id;
++	union hv_input_vtl owner_vtl;
++	u8 padding[7];
++	union hv_device_domain_id domain_id;
++} __packed;
++
++/* HV_CREATE_DEVICE_DOMAIN_FLAGS */
++union hv_create_device_domain_flags {
++	u32 as_uint32;
++	struct {
++		u32 forward_progress_required: 1;
++		u32 inherit_owning_vtl: 1;
++		u32 reserved: 30;
++	} __packed;
++};
++
++/* HV_INPUT_CREATE_DEVICE_DOMAIN */
++struct hv_input_create_device_domain {
++	struct hv_input_device_domain device_domain;
++	union hv_create_device_domain_flags create_device_domain_flags;
++	u32 padding;
++} __packed;
++
++/* HV_INPUT_DELETE_DEVICE_DOMAIN */
++struct hv_input_delete_device_domain {
++	struct hv_input_device_domain device_domain;
++} __packed;
++
++/* HV_INPUT_ATTACH_DEVICE_DOMAIN */
++struct hv_input_attach_device_domain {
++	struct hv_input_device_domain device_domain;
++	union hv_device_id device_id;
++} __packed;
++
++/* HV_INPUT_DETACH_DEVICE_DOMAIN */
++struct hv_input_detach_device_domain {
++	u64 partition_id;
++	union hv_device_id device_id;
++} __packed;
++
++struct hv_device_domain_settings {	/* HV_DEVICE_DOMAIN_SETTINGS */
++	struct {
++		/*
++		 * Enable translations. If not enabled, all transaction bypass
++		 * S1 translations.
++		 */
++		u64 translation_enabled: 1;
++		u64 blocked: 1;
++		/*
++		 * First stage address translation paging mode:
++		 * 0: 4-level paging (default)
++		 * 1: 5-level paging
++		 */
++		u64 first_stage_paging_mode: 1;
++		u64 reserved: 61;
++	} flags;
++
++	/* Address of translation table */
++	u64 page_table_root;
++} __packed;
++
++/* HV_INPUT_CONFIGURE_DEVICE_DOMAIN */
++struct hv_input_configure_device_domain {
++	struct hv_input_device_domain device_domain;
++	struct hv_device_domain_settings settings;
++} __packed;
++
++/* HV_INPUT_GET_IOMMU_CAPABILITIES */
++struct hv_input_get_iommu_capabilities {
++	u64 partition_id;
++	u64 reserved;
++} __packed;
++
++/* HV_OUTPUT_GET_IOMMU_CAPABILITIES */
++struct hv_output_get_iommu_capabilities {
++	u32 size;
++	u16 reserved;
++	u8  max_iova_width;
++	u8  max_pasid_width;
++
++#define HV_IOMMU_CAP_PRESENT    BIT_ULL(0)
++#define HV_IOMMU_CAP_S2         BIT_ULL(1)
++#define HV_IOMMU_CAP_S1         BIT_ULL(2)
++#define HV_IOMMU_CAP_S1_5LVL    BIT_ULL(3)
++#define HV_IOMMU_CAP_PASID      BIT_ULL(4)
++#define HV_IOMMU_CAP_ATS        BIT_ULL(5)
++#define HV_IOMMU_CAP_PRI        BIT_ULL(6)
++
++	u64 iommu_cap;
++	u64 pgsize_bitmap;
++} __packed;
++
++/* HV_LOGICAL_DEVICE_PROPERTY_CODE */
++enum hv_logical_device_property_code {
++	HV_LOGICAL_DEVICE_PROPERTY_PVIOMMU = 10,
++};
++
++/* HV_INPUT_GET_LOGICAL_DEVICE_PROPERTY */
++struct hv_input_get_logical_device_property {
++	u64 partition_id;
++	u64 logical_device_id;
++	/* Takes values from enum hv_logical_device_property_code. */
++	u32 code;
++	u32 reserved;
++} __packed;
++
++/* HV_OUTPUT_GET_LOGICAL_DEVICE_PROPERTY */
++struct hv_output_get_logical_device_property {
++#define HV_DEVICE_IOMMU_ENABLED	BIT_ULL(0)
++	u64 device_iommu;
++	u64 reserved;
++} __packed;
++
++/* HV_INPUT_FLUSH_DEVICE_DOMAIN */
++struct hv_input_flush_device_domain {
++	struct hv_input_device_domain device_domain;
++	u32 flags;
++	u32 reserved;
++} __packed;
++
+ #endif /* _HV_HVHDK_MINI_H */
+-- 
+2.52.0
 
-[Severity: High]
-This isn't a bug introduced by this patch, but the patch propagates a
-pre-existing structural flaw by adding more native endian accesses to
-ntb->reg->link_status.
-
-Will this cause the endpoint function driver to read and write corrupted li=
-nk
-status over the PCIe bus on big-endian architectures? The PCIe bus is
-inherently little-endian, so it seems this needs cpu_to_le16() or
-le16_to_cpu() conversions to avoid breaking device functionality globally on
-big-endian endpoint architectures.
-
-> +
-> +	/* The link is usable only after both sides have enabled it. */
-> +	if (ntb->host_linkup && ntb->vhost_linkup)
-> +		link_status |=3D LINK_STATUS_UP;
-> +	else
-> +		link_status &=3D ~LINK_STATUS_UP;
-> +
-> +	WRITE_ONCE(ntb->reg->link_status, link_status);
-> +}
-> +
->  /**
-> - * epf_ntb_link_up() - Raise link_up interrupt to Virtual Host (VHOST)
-> + * epf_ntb_link_up() - Update the HOST link state
->   * @ntb: NTB device that facilitates communication between HOST and VHOST
-> - * @link_up: true or false indicating Link is UP or Down
-> + * @link_up: true when the HOST has enabled the link
->   *
-> - * Once NTB function in HOST invoke ntb_link_enable(),
-> - * this NTB function driver will trigger a link event to VHOST.
-> - *
-> - * Returns: Zero for success, or an error code in case of failure
-> + * Returns: Zero for success
->   */
->  static int epf_ntb_link_up(struct epf_ntb *ntb, bool link_up)
->  {
-> -	if (link_up)
-> -		ntb->reg->link_status |=3D LINK_STATUS_UP;
-> -	else
-> -		ntb->reg->link_status &=3D ~LINK_STATUS_UP;
-> +	bool notify;
-> +
-> +	scoped_guard(mutex, &ntb->link_lock) {
-> +		notify =3D ntb->host_linkup !=3D link_up && ntb->vhost_linkup;
-> +		ntb->host_linkup =3D link_up;
-> +		epf_ntb_update_link(ntb);
-> +	}
-> +
-> +	if (notify) {
-> +		/* Publish link status before completing the HOST command. */
-> +		dma_wmb();
-> +		ntb_link_event(&ntb->ntb);
-> +	}
-
-[Severity: High]
-Does this code miss raising an IRQ to notify the HOST?
-
-When the HOST changes the effective state via epf_ntb_link_up(), this notif=
-ies
-the VHOST but fails to raise an IRQ for the HOST. Could this cause NTB clie=
-nts
-waiting for a link event to hang indefinitely because the event is never
-delivered to the side that initiated the change?
-
-> =20
-> -	ntb_link_event(&ntb->ntb);
->  	return 0;
->  }
-
-[ ... ]
-
-> @@ -1455,11 +1475,34 @@ static int vntb_epf_peer_mw_get_addr(struct ntb_d=
-ev *ndev, int idx,
->  	return 0;
->  }
-> =20
-> +static int vntb_epf_set_link(struct epf_ntb *ntb, bool link_up)
-> +{
-> +	struct pci_epf *epf =3D ntb->epf;
-> +	bool notify;
-> +	int ret;
-> +
-> +	scoped_guard(mutex, &ntb->link_lock) {
-> +		notify =3D ntb->vhost_linkup !=3D link_up && ntb->host_linkup;
-> +		ntb->vhost_linkup =3D link_up;
-> +		epf_ntb_update_link(ntb);
-> +	}
-> +
-> +	if (!notify)
-> +		return 0;
-> +
-> +	ret =3D pci_epc_raise_irq(epf->epc, epf->func_no, epf->vfunc_no,
-> +				PCI_IRQ_MSI, EPF_IRQ_LINK + 1);
-
-[Severity: High]
-Does this code miss calling ntb_link_event(&ntb->ntb) to notify the local
-VHOST?
-
-When the VHOST changes the effective link state via vntb_epf_set_link(), the
-driver raises an IRQ for the HOST but fails to notify the local VHOST clien=
-ts.
-Similar to epf_ntb_link_up(), could this cause NTB clients blocking on a li=
-nk
-event to hang indefinitely?
-
-> +	if (ret)
-> +		dev_err(&epf->dev, "Failed to raise link event IRQ: %d\n", ret);
-> +
-> +	return ret;
-> +}
-> +
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260904065335.3059=
-625-1-den@valinux.co.jp?part=3D1
