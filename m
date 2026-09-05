@@ -1,57 +1,57 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.9])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.20])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1A76434E744
-	for <linux-pci@vger.kernel.org>; Sat,  5 Sep 2026 05:34:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.9
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4990A364E84
+	for <linux-pci@vger.kernel.org>; Sat,  5 Sep 2026 05:35:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.20
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788586449; cv=none; b=kOWAwyn68HKUz9Eo+1Zn0JSQ/V4IyzgUAY2RdKPRQh3p9k3/WR7fthslA1FTx8r+i1ttFCKEIkpCu/0msXkC7Zpoyfr/nLVs1BXR3Eaff+LpgfWjR+HsZ7MgEI4pI95p+N+fGG/EaPnGgj3s1ZN88uiOfLOTk4fsUJ6LiV4x5nY=
+	t=1788586510; cv=none; b=E51ayy1m7yxjj+0wdrzFZirn+28dtKnVNad3jnwLMcUBBEKqq51pFFLawNeDAHVf1At53Wqix67ZPR9t+eVESnAQ8FPbSVOUReWNJSJ8f14Jus6GYO89sSBUVCYSA9vDI8ljtA7MzGddk+EgsO/xiB/XWJOCbX1WkAGCq991Dg4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788586449; c=relaxed/simple;
-	bh=J76/SBUIV4FGdLxD289Dza25FDIVQ7To4BYJhkpw4SY=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=OpfLS5LVL9LXx19C3oqdI0cLKzb2n0foNc2UDoZ6+TG+XIuPVFS+rjMhb1n5nkQ2DTJpj1P40+s42Oh2oAvETmd/6o27WJaTEZLfePFDU81+mhI9SMs2EauIYIm6phj+IXMRtrfrtkldLWMyFkv1B8TnHgzyzlDSQlRp5vOMSoI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Xy//1StZ; arc=none smtp.client-ip=198.175.65.9
+	s=arc-20240116; t=1788586510; c=relaxed/simple;
+	bh=d+675QauUpw6xs22Rzt6jYLCHxdpm2z976zk9PhWrJk=;
+	h=Date:From:To:Cc:Subject:Message-ID; b=SqS3U6J/Zb7prMFfex3mvNpEKLOP3Gp8GxNM1de7AuoQ5WjpbEpPbQvZAsAMgH+EcPLJd4dOfS2e+iYVUUELP0L4SYQCGG6rXdqBSVvEjnEZ57246Pm8crxEoZjZ4xWSZL83xxykzop6FCrK8WWNG2CBlMjVtrEUU0NYvq9/dPM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Sc/G8d/I; arc=none smtp.client-ip=198.175.65.20
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Xy//1StZ"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Sc/G8d/I"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1788586447; x=1820122447;
+  t=1788586508; x=1820122508;
   h=date:from:to:cc:subject:message-id;
-  bh=J76/SBUIV4FGdLxD289Dza25FDIVQ7To4BYJhkpw4SY=;
-  b=Xy//1StZKwlrJ/YZKf3jejhdBCMJLZR1FIboditWHERZHaD7eHxB+GIL
-   4bxBGcWGrXX46IjMmfzaQqRed4J+nCe5V1TJYW75oN55Qb3EdRukK8qch
-   Y9nRw0jV9+Yoi9O8DJMckaybSBFGlpxZ/U0ypt4SVHtg7vB7TOOR1VhK8
-   beeQYlgWWsDJ6W0K1snUdpPPrx+urrJKz2BfOOE819DFPO6JXN34nmxtM
-   1aX21T7Yv/37AcPbfRYcH1jLHjvgO6SnAZCSObtMf3Yr8y15tPC/a0uzx
-   9xMqtn1hOGrTyGQmUzyIyFy+0rMQLaygFITuvoyQK3mrYd1j0ItM2Yx3t
-   A==;
-X-CSE-ConnectionGUID: bINIAZG9Qhu8WOXVItTaMA==
-X-CSE-MsgGUID: 29gdyCzUQ86NXHPXZ9Fxkg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11896"; a="111859112"
+  bh=d+675QauUpw6xs22Rzt6jYLCHxdpm2z976zk9PhWrJk=;
+  b=Sc/G8d/IpzLdEZ+GjxKtOyIUXNI21FhJUyKT5ffws1RgTXKxJCYCnw+8
+   rrofgCf2uZz8ZZIcbqR03kFfLL6IKM24N+byfCHoesWFTq3Ztcu6AVo6w
+   UTxT1kltcbk6nJmwN0B9Prp0y5rircqUc60YOCM75FxUerIzadCC074UL
+   sJ82a4A0Z/VhkyfE83B51QC7eRIuePP0qNQI7LhscbgI2VdP5Ie6H4H5g
+   kwrUTodD7OtnPShT7pGdxa+PD9JNraBD0h45nopWVx3kLf4IpseLGUU19
+   2j5IzrTXlbyPpaxvwVsESWpoajgWqC/IW7CZyh86/qsjcIKG8aVk6XZgE
+   Q==;
+X-CSE-ConnectionGUID: aP+Ycwk1TlyO6HxYFv4dcg==
+X-CSE-MsgGUID: g2PdzM2zTWKuEo8OQRrQRw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11896"; a="88845781"
 X-IronPort-AV: E=Sophos;i="6.25,263,1779174000"; 
-   d="scan'208";a="111859112"
-Received: from fmviesa009.fm.intel.com ([10.60.135.149])
-  by orvoesa101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Sep 2026 22:34:06 -0700
-X-CSE-ConnectionGUID: Ycia5/vFTPOyPZWhdvvVvQ==
-X-CSE-MsgGUID: WZ8Amw9nRtW0GRMdzodUHg==
+   d="scan'208";a="88845781"
+Received: from fmviesa006.fm.intel.com ([10.60.135.146])
+  by orvoesa112.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Sep 2026 22:35:08 -0700
+X-CSE-ConnectionGUID: rnQyCtVcRF+Q3Anq4uTWyA==
+X-CSE-MsgGUID: Jy8aUnesTkG+NGDT6yp4/A==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.25,263,1779174000"; 
-   d="scan'208";a="264027531"
+   d="scan'208";a="265861711"
 Received: from lkp-server01.sh.intel.com (HELO 73f3364bc37e) ([10.239.97.150])
-  by fmviesa009.fm.intel.com with ESMTP; 04 Sep 2026 22:34:05 -0700
+  by fmviesa006.fm.intel.com with ESMTP; 04 Sep 2026 22:35:06 -0700
 Received: from kbuild by 73f3364bc37e with local (Exim 4.98.2)
 	(envelope-from <lkp@intel.com>)
-	id 1x2j2P-0000000005N-0GNL;
-	Sat, 05 Sep 2026 05:34:01 +0000
-Date: Sat, 05 Sep 2026 13:33:37 +0800
+	id 1x2j3Q-0000000005b-0eMR;
+	Sat, 05 Sep 2026 05:35:04 +0000
+Date: Sat, 05 Sep 2026 13:34:09 +0800
 From: kernel test robot <lkp@intel.com>
 To: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 Cc: linux-pci@vger.kernel.org
-Subject: [pci:controller:tegra264] BUILD SUCCESS
- ed17593383fe3926950cae250842783630f32697
-Message-ID: <202609051334.qxiHT3bZ-lkp@intel.com>
+Subject: [pci:controller:dwc-imx6] BUILD SUCCESS
+ 16929741a622eb345057e41c7b335d9b297890e1
+Message-ID: <202609051304.lbTnMnma-lkp@intel.com>
 User-Agent: s-nail v14.9.25
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -59,13 +59,13 @@ List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/tegra264
-branch HEAD: ed17593383fe3926950cae250842783630f32697  PCI: tegra264: Fix Link Capabilities register offset
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/dwc-imx6
+branch HEAD: 16929741a622eb345057e41c7b335d9b297890e1  PCI: imx6: Move clock enable after core reset assertion
 
-elapsed time: 3756m
+elapsed time: 3700m
 
-configs tested: 76
-configs skipped: 3
+configs tested: 75
+configs skipped: 7
 
 The following configs have been built successfully.
 More configs may be tested in the coming days.
@@ -116,7 +116,6 @@ parisc       allmodconfig    gcc-16.1.0
 parisc        allnoconfig    clang-24
 parisc        allnoconfig    gcc-16.1.0
 parisc       allyesconfig    gcc-16.1.0
-powerpc      allmodconfig    gcc-16.1.0
 powerpc       allnoconfig    clang-24
 powerpc       allnoconfig    gcc-16.1.0
 riscv        allmodconfig    clang-24
