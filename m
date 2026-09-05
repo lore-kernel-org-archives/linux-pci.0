@@ -1,127 +1,116 @@
-Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
+Received: from mout-p-101.mailbox.org (mout-p-101.mailbox.org [80.241.56.151])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC3D31D9A5F;
-	Sat,  5 Sep 2026 20:30:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=193.142.43.55
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B192C36606B;
+	Sat,  5 Sep 2026 21:27:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.151
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788640227; cv=none; b=BMhHXuM5RrlY5bvCfCg7eeUMQTkC8lZ84AjTMFqCfLbBDZZ/XKxxm3Vrq5W42FOvDmPI1VGJNvWu3DZy9RmXkBTxETFXMD5rbPF+rmbo4XtmAm1XHy/VlTzDEPf4E3xOC79rNreTqvXIDQDd0a2WTbzE5uIQLNnEblcAWybFKto=
+	t=1788643630; cv=none; b=RRQLn1xFaKz59MQOFEGsNKg5DTwLAFuYLnIsSbsqGIVIzNwby1VuwV5+oenbci9sdnJsYcSDURAdd47sM799wyeK8xjc4ZSzmrbpLmWn2f3LV6njQNZspxOgeMFPgb0djwqQtn6k0OorkXieZAv1Lq9sHRiQA5ig90ACK2geZ8g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788640227; c=relaxed/simple;
-	bh=h3hA5p6+GQOgQGc4c3qDgrkXTHcUOqGMs+AlHscWUQA=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=OfXK+I+Ms4MgwdumtX4Ev4/+XqRv6KLSvSqTsZZfMlThiqSFx5v6VpK4JKRGRTzpDpqnyw95z3mUni99+TIFuJ82ncAMtVS6acNmnJ/LlphML/RnOMaRRZfx17P/R8pe0Z1PTq+lPbQy8EVU1qqwoL7sXU2vEzj23GXEeG40LBY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de; spf=pass smtp.mailfrom=linutronix.de; dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=skPCZuyW; dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=xClnT4gx; arc=none smtp.client-ip=193.142.43.55
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
+	s=arc-20240116; t=1788643630; c=relaxed/simple;
+	bh=1h1ZC7y0yj98CAZSWDGceajgc4khdjsqJZrksGZMV9c=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=hYMPHAmy2sBvlXuwgtUlCAd8OHBmaZiHDtwHXjBpYTQuD2SBpdB7lENNwRnK5ZcG09d0pGfwTdnfPcRPBM783B6sdYtZJQkUJ8WwLbPYBrVquCbKbhQneX4hjzqOHYxW3Gtif1H98lwgwC9qXG7w3XDtVvxcWBV565Ye2g4ZKiA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=USRxiGVq; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=mUxDMEGj; arc=none smtp.client-ip=80.241.56.151
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="skPCZuyW";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="xClnT4gx"
-From: Thomas Gleixner <tglx@linutronix.de>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020; t=1788640223;
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="USRxiGVq";
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="mUxDMEGj"
+Received: from smtp1.mailbox.org (smtp1.mailbox.org [10.196.197.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mout-p-101.mailbox.org (Postfix) with ESMTPS id 4hcmcj0HfNz8vB8;
+	Sat, 05 Sep 2026 23:27:01 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
+	t=1788643621;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=hwgSr9LF1AaQKstntdYXF4tsMbm8X5Lx15fwX+9hr5k=;
-	b=skPCZuyWro0VW6391LtWlzrr/B1W1w/re6wD9oT3npVcauGo05kkwL78ny2VUxbQ4h4nbp
-	cj5IQ+1A4obQd3tT2NMZcEwGhi0c5VkXgIW/swYV/fKuOcb60G6nAD8BMfDY97pE5EUxdz
-	N+J4pmuFMOZgRS3xtYHK/ZLzjFjp1dz85hlulDsMZKKwBjhzlReZuhzkcRzKmSkLjNUSNz
-	p/+UYHaNiWMKrbJoxMk+kuMyrENVwuJh78/3RcXtrncBlBwN8CAy2nzvj42sWOKRkXJG8U
-	2zmQrWEee/uqKDmY/58HJDUl+wCj1r8M31dMqCCj0QvWtKV3vswOf73AZpTpNA==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020e; t=1788640223;
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=byhUwPGDHTqPvdp0b0HFuOv9xgDF4NgJ1ULDOsBqB2Q=;
+	b=USRxiGVqZLV0GrotiY4BSnk5gap7zRuPAK+jYIRpahLUvsDIzq+rnlg/aQuRm/ylP3LS9V
+	HOJklucPrNt4NJEZHJvxvkiRePdCl4vl8W0/pM9nmCnoi1RfXR84/3nu36xEq9TDYkCDqj
+	F2lkdgNOV6M+l6NFSznq7pybJYFb8FneWgCHYCyRYWeAsz+kCri4NkQZu5wlZtN6Y2A/Yr
+	D+7G1ohHzsUl7bA77thHWTrbbBPYIs5VvI/h7IseAZI/mdQltCZSU3l7TzM95gceguyYxj
+	VWPohzegDFAnUe/3cgFHf060xXqbF1PGZl76X7DDIYtiTyg+lLdwChmHsO9NYQ==
+From: Marek Vasut <marek.vasut+renesas@mailbox.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
+	t=1788643619;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=hwgSr9LF1AaQKstntdYXF4tsMbm8X5Lx15fwX+9hr5k=;
-	b=xClnT4gxHr/HnwlWOjClcB0G5DjEE+jqWtE0d0pRDLr92cUPXaH+71Z+zm3v2cOwKwImZi
-	iqdeo1gS0rmQ50CQ==
-To: changfengnan <changfengnan@bytedance.com>, Luigi Rizzo <lrizzo@google.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Marc Zyngier <maz@kernel.org>,
- Luigi Rizzo <rizzo.unipi@gmail.com>, Paolo Abeni <pabeni@redhat.com>,
- linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, Bjorn Helgaas
- <bhelgaas@google.com>, netdev@vger.kernel.org,
- linux-nvme@lists.infradead.org
-Subject: Re: [PATCH v5 0/7] Global Software Interrupt Moderation (GSIM)
-In-Reply-To: <d9210bcdf73fbe1ac8b6ec132865609a3ed68688.65629680.37f4.46ab.be84.09ae39446f28@bytedance.com>
-References: <20260819124341.4185621-1-lrizzo@google.com>
- <aoaoERD5m1MNvMWd@infradead.org>
- <CAMOZA0JrLia8NU1-4JEJAe+p65C19HsRGU6VK7sLAjNFKm8G3w@mail.gmail.com>
- <d9210bcdf73fbe1ac8b6ec132865609a3ed68688.65629680.37f4.46ab.be84.09ae39446f28@bytedance.com>
-Date: Sat, 05 Sep 2026 22:30:22 +0200
-Message-ID: <878q5f5tlt.ffs@fw13>
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=byhUwPGDHTqPvdp0b0HFuOv9xgDF4NgJ1ULDOsBqB2Q=;
+	b=mUxDMEGjQ+1N76oGczIiVS1gyo4kZAHamA07bYYMipMe9EftBTpEvwjwSbY6gYzyoWLsWV
+	1aaNdMxW9vPxigp7LFoqkvzcFzRhvDfLjWfSXtitzBZmcsz8HZwsExRfgG54IY6rbK6d36
+	u32NxLES+rDOaLnfFNaN5vTdHN52zbXAPoEcAVkBNMTheEwtjNyjgvND8khKYo09sPBkRz
+	hIyBPIWNm1Gch/eCJJmRNjlWvtJtaicMWFHdOOzS+c6rYJtnCm2sebL1IPL3zun38x9v7e
+	77jPOfgi96uzKy1dSpIukWl/fFnXkI7sDPs357/scJJIrCvXluMcIV9Yh8wS9Q==
+To: linux-pci@vger.kernel.org
+Cc: Marek Vasut <marek.vasut+renesas@mailbox.org>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Geert Uytterhoeven <geert+renesas@glider.be>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+	devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-renesas-soc@vger.kernel.org
+Subject: [PATCH v4 0/6] PCI: dwc: rcar-gen4: Add support for R-Car X5H PCIe4
+Date: Sat,  5 Sep 2026 23:26:21 +0200
+Message-ID: <20260905212649.360498-1-marek.vasut+renesas@mailbox.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-MBO-RS-META: 6oq5y3ems7bejjyqx45jua56exwoy133
+X-MBO-RS-ID: ee287531a7baea1c1ea
 
-On Thu, Aug 20 2026 at 19:46, changfengnan@bytedance.com wrote:
->> From: "Luigi Rizzo"<lrizzo@google.com>
->> Date:=C2=A0 Thu, Aug 20, 2026, 15:35
->> Subject:=C2=A0 Re: [PATCH v5 0/7] Global Software Interrupt Moderation (=
-GSIM)
->> To: "Christoph Hellwig"<hch@infradead.org>
->> Cc: "Thomas Gleixner"<tglx@linutronix.de>, "Marc Zyngier"<maz@kernel.org=
->, "Luigi Rizzo"<rizzo.unipi@gmail.com>, "Paolo Abeni"<pabeni@redhat.com>, =
-<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>, "Bjorn Helgaas=
-"<bhelgaas@google.com>, <netdev@vger.kernel.org>, <linux-nvme@lists.infrade=
-ad.org>, "Fengnan Chang"<changfengnan@bytedance.com>
->> On Thu, Aug 20, 2026 at 9:09=E2=80=AFAM Christoph Hellwig <hch@infradead=
-.org> wrote:
+Add support for R8A78000 (R-Car X5H) PCIe4.
 
-Can you please fix yuur mail client so it does not copy all that
-redundant headers into your reply?
+This driver previously supported R-Car Gen4 S4/V4H/V4M. PCIe features
+of R-Car X5H PCIe4 are almost all the same, except for different PHY
+which has its own driver, slightly different initialization code and
+the DMA is no longer eDMA but HDMA.
 
->> > Also how does this interact with adaptive polling code inside drivers
->> > like NAPI or the upcoming nvme variant?
->>=C2=A0
->> GSIM acts at hardirq level (so below NAPI, and above device moderation e=
-.g.
->> the one in ethtool -C ...) and is completely orthogonal to those other
->> mechanisms.
->
-> Hi Luigi:
-> The NVMe variant that Christoph mentioned is this patch of mine.
-> https://lore.kernel.org/linux-nvme/d9210bcdf73fbe1ac8b6ec132865609a3ed686=
-88.99d43a8b.dfff.41d1.b07d.0592a12473d2@bytedance.com/T/#m561d1366119620556=
-41f331e600e719de1e7c573
-> I took a quick look at your implementation, and I wouldn't say our two
-> approaches are completely independent.
-> I=E2=80=99ve run some tests, the test methods, environment, and data are =
-detailed in
-> this document:
-> https://docs.google.com/spreadsheets/d/1p3XqVpKgx18QhqTFb0KlJfEW9giWDGSUu=
-oKqCZzdZLg/edit?gid=3D1100001004#gid=3D1100001004
->
-> it appears that GSIM is only effective in scenarios where multi disks at =
-very high
-> IOPS; in some cases, there was a noticeable performance regression.=C2=A0
-> If there=E2=80=99s something wrong with my configuration, please correct =
-me.
+Endpoint mode is currently not implemented for R-Car Gen5 PCIe4.
 
-So we have a NVME specific mechanism to tackle the same problem and a
-more generic version which is subsystem "independent".
+Marek Vasut (6):
+  dt-bindings: PCI: rcar-gen4-pci-host: Add R-Car X5H PCIe4 compatible
+  PCI: dwc: rcar-gen4: Rework rcar_gen4_pcie_drvdata
+    .additional_common_init into .init
+  PCI: dwc: rcar-gen4: Add .deinit callback
+  PCI: dwc: rcar-gen4: Split .start_link into ltssm_control and
+    speed_control
+  PCI: dwc: rcar-gen4: Handle PERST via reset subsystem
+  PCI: dwc: rcar-gen4: Add support for R-Car X5H PCIe4
 
-Can you folks please coordinate and get your act together so that we
-don't end up with two competing mechanisms which make things worse than
-they are now.
+ .../bindings/pci/rcar-gen4-pci-host.yaml      |  74 +++--
+ drivers/pci/controller/dwc/pcie-rcar-gen4.c   | 264 +++++++++++++++---
+ 2 files changed, 277 insertions(+), 61 deletions(-)
 
-TBH. I despise the NVME is special approach because it's fricking
-obvious that this is _NOT_ a NVME specific issue. But sure NVME is
-special as all other subsystems are special.
+---
+Cc: "Krzysztof Wilczyński" <kwilczynski@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Conor Dooley <conor+dt@kernel.org>
+Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+Cc: Krzysztof Kozlowski <krzk+dt@kernel.org>
+Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>
+Cc: Manivannan Sadhasivam <mani@kernel.org>
+Cc: Rob Herring <robh@kernel.org>
+Cc: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Cc: devicetree@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+Cc: linux-renesas-soc@vger.kernel.org
 
-Q: When do driver folks actually start to look beyond the brim of their
-   tea cup?
+-- 
+2.53.0
 
-A: Probably never ...
-
-Thanks,
-
-        tglx
