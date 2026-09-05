@@ -1,149 +1,151 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B212338330E
-	for <linux-pci@vger.kernel.org>; Sat,  5 Sep 2026 03:10:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A064E29B8E1
+	for <linux-pci@vger.kernel.org>; Sat,  5 Sep 2026 03:12:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788577846; cv=none; b=YTOIbgi8m+RCz5+UMNhcb9aE2olJua5QxLU9x+tTg7rgSHbu704NIbJKnn6nZyWXn66zrNXo0hgexoSrMgsvhSAiWF9Ob5rERFIxpvPnfxq0T9SnV7O+3lXORsHvOjbgI6Pu17Pud4hI7k9UuLyv5noxXfrMeosK2kKU51d6v1w=
+	t=1788577979; cv=none; b=klmeDuqN0XWyYHDFJfx8NtY+QRtozT55Pvvu7r2pcHc+lNRXNJPq6OEXpBZlzBRNkeGG20/WcNnFYcikvlojjy3JxgEax8jgh/SPIA7oi3ijr3N7uNszdev5Q9sjxxfFxuYFfdMm2V6KFwTaHEOp4RmWYA/dXBuuk8Y1CO8wyO4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788577846; c=relaxed/simple;
-	bh=Fndp5GiNVto1a4Hve+f3lF8Hwn7FDilsd/eCGnrbEbo=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=MQeuKhZCHnFqda7aPkKOWz0DT6yfcR6g4yFgpqan60PCRdrRFgmrw2WPNu8n1IOI4GoO2OB7lKMXtZhSef43x01hHrDw6z7ci9ZAxb57S66vtCWCo7mhUxfJD/62xCvzrUEDrZjJLaxmG5cUwzoZhIU9e1L3I/po34I9RtgclIw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Eg77GmcX; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788577979; c=relaxed/simple;
+	bh=dmy2Zg1sqa44UbqQqpyAAYeufToE9UY724OOl6g/wRg=;
+	h=Date:From:To:Cc:Subject:Message-ID; b=tQnm1s7237lQacKhXx8RS/N4VqDKMbumnd22UsoW1Pne9bcLiZcxy81kYZrXA4r5/cM5TvPmDQHwS1UMwlRiUl8gO2JCi1pAU5b/3O7TtUmguCy+FfJHxdKLxfTXkFPwZuG3KarG9NadqeBIfvztD9rqtvga1ed1ZtM4u6O6bPc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=BKzw5S7e; arc=none smtp.client-ip=198.175.65.14
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Eg77GmcX"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 875211F00A3D;
-	Sat,  5 Sep 2026 03:10:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788577843;
-	bh=CZVkdvEayEeBEis93LnR80FDmvkrewuCLpKoJd61hZo=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Eg77GmcXzJpt0CBXI8DIFTsBUTkdCQE48XBcmbRKcXfiJUhOYZ6hPlySOFRe7AGwM
-	 XP6tl/+4dRhtMN0i1Ep6L9dK3kdJMfR7xUDje+3l9qjoVe4srcfN8Kp680P+wxtx0K
-	 ZBbPnXWW09B2oxLGxsqi/E+Xko6zaZS7sHJ0J+BO2d1QLZXfu+vFAOx3dsgFbPND/x
-	 rHCfh1rOjNGQ3ZOv+mcKpNKUXyA3mtjr8od6VvM5AsK2x/WY6wrQipyHmGFJdhhEg2
-	 uTHpn1Pd5N7BYak5kEWpe9wTEnYpLWq4Wy49+jjOzpr3AgI+Qh+m5NKEgb/X7y69UX
-	 9ly4LUTbQnwVw==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 2/2] PCI: ultrarisc: Skip MEM outbound iATU setup on
- DP1000
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Xincheng Zhang" <zhangxincheng@ultrarisc.com>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="BKzw5S7e"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1788577977; x=1820113977;
+  h=date:from:to:cc:subject:message-id;
+  bh=dmy2Zg1sqa44UbqQqpyAAYeufToE9UY724OOl6g/wRg=;
+  b=BKzw5S7evgU7l0iYXIFqSVZtNYTOoxrhzjVKqvWelCyDxvkSwGYO27g5
+   0brYZMmuFiOb5zikjPO6jnEaq6uQpicMLXGfBv0+m48C12LLIa8dCcLpF
+   HPDkqlHNVvpFpK6yJA8WUvNt+WCUJ04iaJoyIU4i8pWpRs2CCQjVl+lCm
+   ALCugN7UH/6sdiNz4OsBMC+Bsh+uwQlFcVgx4OHsfJKhqGPEQVapY1oBI
+   tMWS3PPdjdcw8t/ooOwwFxuTXP8UI8edKjl1vTMUrY0tUF5vTapvk9TSh
+   jORI+EZaEnEOGcVB6H9s0sWrKEsgIJaujofHZ8EOWSg+wn6GjOFhwBEnL
+   w==;
+X-CSE-ConnectionGUID: yHQcT9lKQbOl8Zdq+R7fuQ==
+X-CSE-MsgGUID: d+sCnU39ST+7YTuj1/z4/A==
+X-IronPort-AV: E=McAfee;i="6800,10657,11896"; a="92947664"
+X-IronPort-AV: E=Sophos;i="6.25,263,1779174000"; 
+   d="scan'208";a="92947664"
+Received: from fmviesa006.fm.intel.com ([10.60.135.146])
+  by orvoesa106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Sep 2026 20:12:57 -0700
+X-CSE-ConnectionGUID: 3FCcQRT3S8eVwVW+C+8bAg==
+X-CSE-MsgGUID: pZD2dfCCRk6WsDYTxTTp4Q==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.25,263,1779174000"; 
+   d="scan'208";a="265843317"
+Received: from lkp-server01.sh.intel.com (HELO bfac249b2189) ([10.239.97.150])
+  by fmviesa006.fm.intel.com with ESMTP; 04 Sep 2026 20:12:53 -0700
+Received: from kbuild by bfac249b2189 with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1x2gpn-00000000Aej-2GJF;
+	Sat, 05 Sep 2026 03:12:51 +0000
+Date: Sat, 05 Sep 2026 11:12:35 +0800
+From: kernel test robot <lkp@intel.com>
+To: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260905025635.211390-3-zhangxincheng@ultrarisc.com>
-References: <20260905025635.211390-1-zhangxincheng@ultrarisc.com>
- <20260905025635.211390-3-zhangxincheng@ultrarisc.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Sat, 05 Sep 2026 03:10:43 +0000
-Message-Id: <20260905031043.875211F00A3D@smtp.kernel.org>
+Subject: [pci:controller:dwc-dra7xx] BUILD SUCCESS
+ bdfdf654b4b2762b5ae48325d6dd8e0f3529cab3
+Message-ID: <202609051132.ibIh2fgf-lkp@intel.com>
+User-Agent: s-nail v14.9.25
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
-s) to consider:
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/dwc-dra7xx
+branch HEAD: bdfdf654b4b2762b5ae48325d6dd8e0f3529cab3  PCI: dra7xx: Fix device links leak when dra7xx_pcie_enable_phy() fails
 
-Pre-existing issues:
-- [High] Missing `.remove` callback in platform driver causes memory leaks,=
- use-after-free, and unbalanced clocks on module unload.
-- [High] Ignored return value of `dw_pcie_setup_rc()` during resume leads t=
-o unconditionally accessing uninitialized hardware.
-- [High] Missing `dw_pcie_dbi_ro_wr_dis()` on the error path leaves DBI rea=
-d-only registers writable.
+elapsed time: 3620m
+
+configs tested: 74
+configs skipped: 6
+
+The following configs have been built successfully.
+More configs may be tested in the coming days.
+
+tested configs:
+alpha         allnoconfig    gcc-16.1.0
+alpha        allyesconfig    gcc-16.1.0
+arc          allmodconfig    gcc-16.1.0
+arc           allnoconfig    gcc-16.1.0
+arc          allyesconfig    clang-24
+arc          allyesconfig    gcc-16.1.0
+arm           allnoconfig    clang-17
+arm           allnoconfig    gcc-16.1.0
+arm          allyesconfig    gcc-16.1.0
+arm64        allmodconfig    clang-24
+arm64         allnoconfig    gcc-16.1.0
+csky         allmodconfig    gcc-16.1.0
+csky          allnoconfig    gcc-16.1.0
+hexagon      allmodconfig    gcc-16.1.0
+hexagon       allnoconfig    clang-24
+hexagon       allnoconfig    gcc-16.1.0
+i386         allmodconfig    clang-22
+i386          allnoconfig    gcc-14
+i386          allnoconfig    gcc-16.1.0
+i386         allyesconfig    clang-22
+loongarch    allmodconfig    clang-19
+loongarch    allmodconfig    clang-24
+loongarch     allnoconfig    clang-20
+loongarch     allnoconfig    gcc-16.1.0
+m68k         allmodconfig    gcc-16.1.0
+m68k          allnoconfig    gcc-16.1.0
+m68k         allyesconfig    gcc-16.1.0
+microblaze    allnoconfig    gcc-16.1.0
+microblaze   allyesconfig    gcc-16.1.0
+mips         allmodconfig    gcc-16.1.0
+mips          allnoconfig    gcc-16.1.0
+mips         allyesconfig    gcc-16.1.0
+nios2        allmodconfig    clang-20
+nios2        allmodconfig    gcc-11.5.0
+nios2         allnoconfig    clang-24
+nios2         allnoconfig    gcc-11.5.0
+openrisc     allmodconfig    clang-20
+openrisc     allmodconfig    gcc-16.1.0
+openrisc      allnoconfig    clang-24
+openrisc      allnoconfig    gcc-16.1.0
+parisc       allmodconfig    gcc-16.1.0
+parisc        allnoconfig    clang-24
+parisc        allnoconfig    gcc-16.1.0
+parisc       allyesconfig    gcc-16.1.0
+powerpc      allmodconfig    gcc-16.1.0
+powerpc       allnoconfig    clang-24
+powerpc       allnoconfig    gcc-16.1.0
+riscv        allmodconfig    clang-24
+riscv         allnoconfig    clang-24
+riscv         allnoconfig    gcc-16.1.0
+riscv        allyesconfig    clang-24
+s390         allmodconfig    clang-24
+s390          allnoconfig    clang-24
+s390         allyesconfig    gcc-16.1.0
+sh           allmodconfig    gcc-16.1.0
+sh            allnoconfig    clang-24
+sh            allnoconfig    gcc-16.1.0
+sh           allyesconfig    gcc-16.1.0
+sparc         allnoconfig    clang-24
+sparc         allnoconfig    gcc-16.1.0
+sparc64      allmodconfig    clang-20
+um           allmodconfig    clang-17
+um            allnoconfig    clang-17
+um            allnoconfig    clang-24
+um           allyesconfig    gcc-16.1.0
+x86_64       allmodconfig    clang-22
+x86_64        allnoconfig    clang-22
+x86_64        allnoconfig    clang-24
+x86_64       allyesconfig    clang-22
+x86_64      rhel-9.4-rust    clang-22
+xtensa        allnoconfig    clang-24
+xtensa        allnoconfig    gcc-16.1.0
+xtensa       allyesconfig    clang-20
+xtensa       allyesconfig    gcc-16.1.0
+
 --
-
-commit c554fce09754058c518d7827f376e2e64ea19f5a
-Author: Xincheng Zhang <zhangxincheng@ultrarisc.com>
-
-PCI: ultrarisc: Skip MEM outbound iATU setup on DP1000
-
-This patch sets the bypass_ob_mem_iatu flag for the DP1000 controller to
-skip generic DWC MEM outbound iATU setup. This avoids the 16-window limit
-and allows for a larger 64-bit MEM aperture.
-
-> diff --git a/drivers/pci/controller/dwc/pcie-ultrarisc.c b/drivers/pci/co=
-ntroller/dwc/pcie-ultrarisc.c
-> --- a/drivers/pci/controller/dwc/pcie-ultrarisc.c
-> +++ b/drivers/pci/controller/dwc/pcie-ultrarisc.c
-[ ... ]
->  static struct platform_driver ultrarisc_pcie_driver =3D {
->  	.driver =3D {
->  		.name	=3D "ultrarisc-pcie",
->  		.of_match_table =3D ultrarisc_pcie_of_match,
->  		.suppress_bind_attrs =3D true,
->  		.pm =3D &ultrarisc_pcie_pm_ops,
->  	},
->  	.probe =3D ultrarisc_pcie_probe,
->  };
->  module_platform_driver(ultrarisc_pcie_driver);
-
-[Severity: High]
-This isn't a bug introduced by this patch, but is it safe to leave out
-the .remove callback in the platform driver?
-
-Since dw_pcie_host_init() is not devres-managed, unloading the module=20
-triggers devres release which frees driver memory and disables clocks, but
-leaves the PCI host bridge and devices registered. Could this cause a
-use-after-free and hardware hang if those devices are accessed later?
-
-> diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/=
-pci/controller/dwc/pcie-designware-host.c
-> --- a/drivers/pci/controller/dwc/pcie-designware-host.c
-> +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-[ ... ]
->  	if (pp->bridge->child_ops =3D=3D &dw_child_pcie_ops || pp->ecam_enabled=
-) {
->  		ret =3D dw_pcie_iatu_setup(pp);
->  		if (ret)
->  			return ret;
->  	}
-> =20
->  	dw_pcie_writel_dbi(pci, PCI_BASE_ADDRESS_0, 0);
-[ ... ]
->  	dw_pcie_dbi_ro_wr_dis(pci);
-
-[Severity: High]
-This is a pre-existing issue, but does this error path bypass restoring the=
-=20
-read-only write protection?=20
-
-The function dw_pcie_setup_rc() disables read-only protection at the=20
-beginning via dw_pcie_dbi_ro_wr_en(). If dw_pcie_iatu_setup() fails, it=20
-returns immediately. Does this permanently leave critical PCI hardware=20
-configuration registers writable?
-
-[ ... ]
->  	if (pci->pp.ops->init) {
->  		ret =3D pci->pp.ops->init(&pci->pp);
->  		if (ret) {
->  			dev_err(pci->dev, "Host init failed: %d\n", ret);
->  			return ret;
->  		}
->  	}
-> =20
->  	dw_pcie_setup_rc(&pci->pp);
-> =20
->  	ret =3D dw_pcie_start_link(pci);
->  	if (ret)
->  		goto err_deinit;
-
-[Severity: High]
-This is a pre-existing issue, but what happens if dw_pcie_setup_rc() fails
-during resume?
-
-It appears the return value of dw_pcie_setup_rc() is completely ignored.=20
-If it encounters an error like an ATU enable timeout returning -EBUSY, the=
-=20
-driver proceeds to call dw_pcie_start_link() and re-enable endpoints while=
-=20
-the Root Complex hardware is incorrectly initialized. Could this lead to=20
-accessing uninitialized hardware and causing a synchronous external abort?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260905025635.2113=
-90-1-zhangxincheng@ultrarisc.com?part=3D2
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
