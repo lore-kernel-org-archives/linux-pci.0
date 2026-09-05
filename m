@@ -1,132 +1,127 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.12])
+Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F73B396561
-	for <linux-pci@vger.kernel.org>; Sat,  5 Sep 2026 19:58:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC3D31D9A5F;
+	Sat,  5 Sep 2026 20:30:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=193.142.43.55
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788638283; cv=none; b=eAbEduddT9KzrFJd3tE5YG3bvTJXcBO58ol0BSE/tQWGwsSdlGvzFWvCojVrnIFWBp+sRi18keGhe6/FWw/zdwv98qOw5FLh03n6/CHz4WEzIH1LwcYEp9YRMoabkAzSi/XpDEGUCkib9q1hSqwbdeHzQo/Hqjy64bSv+/v6dxI=
+	t=1788640227; cv=none; b=BMhHXuM5RrlY5bvCfCg7eeUMQTkC8lZ84AjTMFqCfLbBDZZ/XKxxm3Vrq5W42FOvDmPI1VGJNvWu3DZy9RmXkBTxETFXMD5rbPF+rmbo4XtmAm1XHy/VlTzDEPf4E3xOC79rNreTqvXIDQDd0a2WTbzE5uIQLNnEblcAWybFKto=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788638283; c=relaxed/simple;
-	bh=xW/sJSRtqBJqKlxzZBKGhdf0tNsm5knCKxyljWg+lU8=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=GsDCdghr9DaZaJvltns2V7ROHUaZ8VP09SUNhQps+Xwd0f+8g9Q9vlueqSPpeYxvBeM4Dq0EpNH3g1pIRmpey63zTLvxPkVHePeRQ8cBpSv7+EK06EA/TLGfFXizi7naOiCoyOJo4QgMm2e5SxlSmMgkjWAL8ZUN2+wQ45jQ1G4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=BH4oGtKM; arc=none smtp.client-ip=198.175.65.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1788640227; c=relaxed/simple;
+	bh=h3hA5p6+GQOgQGc4c3qDgrkXTHcUOqGMs+AlHscWUQA=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
+	 MIME-Version:Content-Type; b=OfXK+I+Ms4MgwdumtX4Ev4/+XqRv6KLSvSqTsZZfMlThiqSFx5v6VpK4JKRGRTzpDpqnyw95z3mUni99+TIFuJ82ncAMtVS6acNmnJ/LlphML/RnOMaRRZfx17P/R8pe0Z1PTq+lPbQy8EVU1qqwoL7sXU2vEzj23GXEeG40LBY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de; spf=pass smtp.mailfrom=linutronix.de; dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=skPCZuyW; dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=xClnT4gx; arc=none smtp.client-ip=193.142.43.55
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="BH4oGtKM"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1788638282; x=1820174282;
-  h=date:from:to:cc:subject:message-id;
-  bh=xW/sJSRtqBJqKlxzZBKGhdf0tNsm5knCKxyljWg+lU8=;
-  b=BH4oGtKMh58dctmDj0fz02HfUHrwySXeBQwOZDg3bEqTjrBVjOXF4uGF
-   7aVwwZ8u5+O5MzG9efapfza3PPYlwH3AXknpEUTg4fGBnDWF3ML+3/kCg
-   IEvdj1RsBuOkkXvJRlOEl4t6PZdkCQvWiCwVxHNjOckv68wCbiz9dlHWU
-   LwIg2QIDMqg3ZY1Sgx2mu3asK2LjuZWmCqbkzMS3n1Xwc8Lz2uJxphXrV
-   JQ6HgZ71OmB/rLZ5C4VPCdbCTp77kSa+IaPPpZOux55JXku5F+4gnwf5N
-   v6wj4KWIQST7XBSuWTr/Cj/03MsqqPLNXAqtu0zMpej4JXzt2gWlxNXLg
-   w==;
-X-CSE-ConnectionGUID: z+yP8sE4RVaRSVICcCLWXw==
-X-CSE-MsgGUID: DRbdFpyGToW8e3AyCyYevw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11897"; a="100623202"
-X-IronPort-AV: E=Sophos;i="6.25,264,1779174000"; 
-   d="scan'208";a="100623202"
-Received: from fmviesa005.fm.intel.com ([10.60.135.145])
-  by orvoesa104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Sep 2026 12:58:01 -0700
-X-CSE-ConnectionGUID: /GKtWCHIQHaieXDuwhGcZw==
-X-CSE-MsgGUID: piJXvlG6RSqUnQ69fiUFFA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.25,264,1779174000"; 
-   d="scan'208";a="275631106"
-Received: from lkp-server01.sh.intel.com (HELO 73f3364bc37e) ([10.239.97.150])
-  by fmviesa005.fm.intel.com with ESMTP; 05 Sep 2026 12:57:59 -0700
-Received: from kbuild by 73f3364bc37e with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1x2wWT-0000000012v-2Ifc;
-	Sat, 05 Sep 2026 19:57:57 +0000
-Date: Sun, 06 Sep 2026 03:57:02 +0800
-From: kernel test robot <lkp@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org
-Subject: [pci:next] BUILD SUCCESS
- 39ee38a9fa2eaeff030a6c865abb244597c091eb
-Message-ID: <202609060359.g5AwvaBQ-lkp@intel.com>
-User-Agent: s-nail v14.9.25
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="skPCZuyW";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="xClnT4gx"
+From: Thomas Gleixner <tglx@linutronix.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+	s=2020; t=1788640223;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=hwgSr9LF1AaQKstntdYXF4tsMbm8X5Lx15fwX+9hr5k=;
+	b=skPCZuyWro0VW6391LtWlzrr/B1W1w/re6wD9oT3npVcauGo05kkwL78ny2VUxbQ4h4nbp
+	cj5IQ+1A4obQd3tT2NMZcEwGhi0c5VkXgIW/swYV/fKuOcb60G6nAD8BMfDY97pE5EUxdz
+	N+J4pmuFMOZgRS3xtYHK/ZLzjFjp1dz85hlulDsMZKKwBjhzlReZuhzkcRzKmSkLjNUSNz
+	p/+UYHaNiWMKrbJoxMk+kuMyrENVwuJh78/3RcXtrncBlBwN8CAy2nzvj42sWOKRkXJG8U
+	2zmQrWEee/uqKDmY/58HJDUl+wCj1r8M31dMqCCj0QvWtKV3vswOf73AZpTpNA==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+	s=2020e; t=1788640223;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=hwgSr9LF1AaQKstntdYXF4tsMbm8X5Lx15fwX+9hr5k=;
+	b=xClnT4gxHr/HnwlWOjClcB0G5DjEE+jqWtE0d0pRDLr92cUPXaH+71Z+zm3v2cOwKwImZi
+	iqdeo1gS0rmQ50CQ==
+To: changfengnan <changfengnan@bytedance.com>, Luigi Rizzo <lrizzo@google.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Marc Zyngier <maz@kernel.org>,
+ Luigi Rizzo <rizzo.unipi@gmail.com>, Paolo Abeni <pabeni@redhat.com>,
+ linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, Bjorn Helgaas
+ <bhelgaas@google.com>, netdev@vger.kernel.org,
+ linux-nvme@lists.infradead.org
+Subject: Re: [PATCH v5 0/7] Global Software Interrupt Moderation (GSIM)
+In-Reply-To: <d9210bcdf73fbe1ac8b6ec132865609a3ed68688.65629680.37f4.46ab.be84.09ae39446f28@bytedance.com>
+References: <20260819124341.4185621-1-lrizzo@google.com>
+ <aoaoERD5m1MNvMWd@infradead.org>
+ <CAMOZA0JrLia8NU1-4JEJAe+p65C19HsRGU6VK7sLAjNFKm8G3w@mail.gmail.com>
+ <d9210bcdf73fbe1ac8b6ec132865609a3ed68688.65629680.37f4.46ab.be84.09ae39446f28@bytedance.com>
+Date: Sat, 05 Sep 2026 22:30:22 +0200
+Message-ID: <878q5f5tlt.ffs@fw13>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git next
-branch HEAD: 39ee38a9fa2eaeff030a6c865abb244597c091eb  Merge branch 'pci/controller/dwc-rcar-gen4'
+On Thu, Aug 20 2026 at 19:46, changfengnan@bytedance.com wrote:
+>> From: "Luigi Rizzo"<lrizzo@google.com>
+>> Date:=C2=A0 Thu, Aug 20, 2026, 15:35
+>> Subject:=C2=A0 Re: [PATCH v5 0/7] Global Software Interrupt Moderation (=
+GSIM)
+>> To: "Christoph Hellwig"<hch@infradead.org>
+>> Cc: "Thomas Gleixner"<tglx@linutronix.de>, "Marc Zyngier"<maz@kernel.org=
+>, "Luigi Rizzo"<rizzo.unipi@gmail.com>, "Paolo Abeni"<pabeni@redhat.com>, =
+<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>, "Bjorn Helgaas=
+"<bhelgaas@google.com>, <netdev@vger.kernel.org>, <linux-nvme@lists.infrade=
+ad.org>, "Fengnan Chang"<changfengnan@bytedance.com>
+>> On Thu, Aug 20, 2026 at 9:09=E2=80=AFAM Christoph Hellwig <hch@infradead=
+.org> wrote:
 
-elapsed time: 3010m
+Can you please fix yuur mail client so it does not copy all that
+redundant headers into your reply?
 
-configs tested: 55
-configs skipped: 0
+>> > Also how does this interact with adaptive polling code inside drivers
+>> > like NAPI or the upcoming nvme variant?
+>>=C2=A0
+>> GSIM acts at hardirq level (so below NAPI, and above device moderation e=
+.g.
+>> the one in ethtool -C ...) and is completely orthogonal to those other
+>> mechanisms.
+>
+> Hi Luigi:
+> The NVMe variant that Christoph mentioned is this patch of mine.
+> https://lore.kernel.org/linux-nvme/d9210bcdf73fbe1ac8b6ec132865609a3ed686=
+88.99d43a8b.dfff.41d1.b07d.0592a12473d2@bytedance.com/T/#m561d1366119620556=
+41f331e600e719de1e7c573
+> I took a quick look at your implementation, and I wouldn't say our two
+> approaches are completely independent.
+> I=E2=80=99ve run some tests, the test methods, environment, and data are =
+detailed in
+> this document:
+> https://docs.google.com/spreadsheets/d/1p3XqVpKgx18QhqTFb0KlJfEW9giWDGSUu=
+oKqCZzdZLg/edit?gid=3D1100001004#gid=3D1100001004
+>
+> it appears that GSIM is only effective in scenarios where multi disks at =
+very high
+> IOPS; in some cases, there was a noticeable performance regression.=C2=A0
+> If there=E2=80=99s something wrong with my configuration, please correct =
+me.
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+So we have a NVME specific mechanism to tackle the same problem and a
+more generic version which is subsystem "independent".
 
-tested configs:
-alpha         allnoconfig    gcc-16.1.0
-alpha        allyesconfig    gcc-16.1.0
-arc          allmodconfig    clang-24
-arc           allnoconfig    gcc-16.1.0
-arc          allyesconfig    clang-24
-arm           allnoconfig    gcc-16.1.0
-arm          allyesconfig    clang-24
-arm64        allmodconfig    clang-24
-arm64         allnoconfig    gcc-16.1.0
-csky         allmodconfig    gcc-16.1.0
-csky          allnoconfig    gcc-16.1.0
-hexagon      allmodconfig    gcc-16.1.0
-hexagon       allnoconfig    gcc-16.1.0
-i386         allmodconfig    clang-22
-i386          allnoconfig    gcc-16.1.0
-i386         allyesconfig    clang-22
-loongarch    allmodconfig    clang-24
-loongarch     allnoconfig    gcc-16.1.0
-m68k         allmodconfig    gcc-16.1.0
-m68k          allnoconfig    gcc-16.1.0
-m68k         allyesconfig    clang-24
-microblaze    allnoconfig    gcc-16.1.0
-microblaze   allyesconfig    gcc-16.1.0
-mips         allmodconfig    gcc-16.1.0
-mips          allnoconfig    gcc-16.1.0
-mips         allyesconfig    gcc-16.1.0
-nios2        allmodconfig    clang-20
-nios2         allnoconfig    clang-24
-openrisc     allmodconfig    clang-20
-openrisc      allnoconfig    clang-24
-parisc       allmodconfig    gcc-16.1.0
-parisc        allnoconfig    clang-24
-parisc       allyesconfig    clang-17
-powerpc      allmodconfig    gcc-16.1.0
-powerpc       allnoconfig    clang-24
-riscv        allmodconfig    clang-24
-riscv         allnoconfig    clang-24
-riscv        allyesconfig    clang-24
-s390         allmodconfig    clang-17
-s390          allnoconfig    clang-24
-s390         allyesconfig    gcc-16.1.0
-sh           allmodconfig    gcc-16.1.0
-sh            allnoconfig    clang-24
-sh           allyesconfig    clang-17
-sparc         allnoconfig    clang-24
-sparc64      allmodconfig    clang-20
-um           allmodconfig    clang-17
-um            allnoconfig    clang-24
-um           allyesconfig    gcc-16.1.0
-x86_64       allmodconfig    clang-22
-x86_64        allnoconfig    clang-24
-x86_64       allyesconfig    clang-22
-x86_64      rhel-9.4-rust    clang-22
-xtensa        allnoconfig    clang-24
-xtensa       allyesconfig    clang-20
+Can you folks please coordinate and get your act together so that we
+don't end up with two competing mechanisms which make things worse than
+they are now.
 
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+TBH. I despise the NVME is special approach because it's fricking
+obvious that this is _NOT_ a NVME specific issue. But sure NVME is
+special as all other subsystems are special.
+
+Q: When do driver folks actually start to look beyond the brim of their
+   tea cup?
+
+A: Probably never ...
+
+Thanks,
+
+        tglx
