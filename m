@@ -1,113 +1,108 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-vk1-f179.google.com (mail-vk1-f179.google.com [209.85.221.179])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC0E93812FB
-	for <linux-pci@vger.kernel.org>; Sat,  5 Sep 2026 13:53:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 229653C1D5C
+	for <linux-pci@vger.kernel.org>; Sat,  5 Sep 2026 14:01:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788616441; cv=none; b=e+MxJjujMdA88E0QPcNIWAD4Ti/n8TbCAI+kPkACMayHvBxA2Ih9EL9+k6INu6LDdN1FcaW1xX91RMKdIjWSkipvWMRLdFpG8xgBSmJ9DU4GeCePvsVR60oJtjzfd9d3Cwd4PCWBv9x2sYoDCW5T6DtXb0turot8wELQy1e2TuI=
+	t=1788616913; cv=none; b=KpLzySlS1pFcH4R5Vm11vvcAXgv71KGgaAAjceD8E5Vs928ITNoEigqO/fMW54CwkwHvX9SrIkwyUQQK17u2q90jppXr8CgIRf1hCL2+d+ziUr82HUUXTvNJHPlKn8cNnJQbb68nmBxgWkYRp1LqgDK11XPXPvW3JXkAGe8J3KM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788616441; c=relaxed/simple;
-	bh=e1nYJCXLz8r6758eTINKOhEwXYxdjGmNmbKTcJLX1mk=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=oCrEIw5ipRtTw6Y/B2VuqeYUG6uj8b9NTW3mNtDR07B3oPNAX+vdw1qY3ii0VQS7u3mKzeNhcOovbOBLEg7ibzfCPL++RLmp1zDQa110r1oozQ7k2G7A0D2IvQqEWaHvMWCQ7c4EniiCDmLkjyp24Cl7yP9oz/qNEKipSI3mhRo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bE7z/9Qt; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788616913; c=relaxed/simple;
+	bh=6f5p//qeeEhJiLT6hla2lNz47zEGEWS2WmSvXXHcHig=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=QF6HT/2qehYn19JhC2PNSW0xxk+BQxMPlsXPearROD10yYodWjBxMip5Sajgxhx+2qSi9MlWEkIVA8dqLAXpj9HqPiUWiFLnidvHxa4Xspl2MAJXlMfE1SouRt6M+Cp5/Uf0/87ugyEGydP4T4E7hrenkoXDbAXsej5vX18hF3I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=MZpV17zU; arc=none smtp.client-ip=209.85.221.179
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bE7z/9Qt"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2ECC61F00A3D;
-	Sat,  5 Sep 2026 13:53:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788616436;
-	bh=wa3wnDFq/Ci128If0Spg/OrTZS5HXnz3zzIhgB/I2KM=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=bE7z/9QtoYKTZ/fGiH7d2oikmtAkAzTmgt1ZMKcIdTEatDwOPyE9cGSH4b+T8UxZ2
-	 02pgVmKYgPGUXD1F5S1gORf9ForSDIU+uzFuS8UpFFNeOEUJCs9azKsddIQrnafAq+
-	 dKUE808IUIdX/1SRCYJTSyB9gEyQHCpHn9j/I+QgL4WA7fG57fzqeq4cngSCTqmGZt
-	 WWDGuHmttiAJWr8mYlMTkBqjhupS5MTQhNZR2TSId49EQswQTvT3/MC5+y7UY0MoZz
-	 IIz1qx2iIwke7uxQfHCvZ0FZmF+MmN24WFrKBeNXGYaBGsIAK3sfsrOilw/130n8AM
-	 jQpQ0zyS/44hA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] PCI: eswin: Publish the platform driver's OF alias
-Reply-To: sashiko-reviews@lists.linux.dev
-To: hpp.iscas <hppiscas@163.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260905134251.67210-1-hppiscas@163.com>
-References: <20260905134251.67210-1-hppiscas@163.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Sat, 05 Sep 2026 13:53:55 +0000
-Message-Id: <20260905135356.2ECC61F00A3D@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="MZpV17zU"
+Received: by mail-vk1-f179.google.com with SMTP id 71dfb90a1353d-5c7bf03c4d0so1632854e0c.0
+        for <linux-pci@vger.kernel.org>; Sat, 05 Sep 2026 07:01:30 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1788616883; x=1789221683; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=sCkeW/rlDEZbQRwhNQlqYVSLXnulFlxF+aDVtk4kLrI=;
+        b=MZpV17zU6O8ZzOYCM6mSh6Pc5bMWELB+jnQuQi5HQCi6EKwnfgmZ0AEBpaSpAQDW8S
+         16IVmCmWPcQCQ7FUoAc2mjdXI6Vun4CESOtgp7TZ/BbzPL1ysQvKYMFBk+jIWWhuCbdj
+         gBI6DgINw00GjdIA9p44lmwqHYK57/id3xwbTs5uCy8v4cZNIxLxiIv0AMx2XLjAnH3C
+         Ea+l+j6WgNoLX1w28TuRU6e+lpGdTNOmLFjggreQG9OFR3L71bhcUPSJ4VvBiNxuPuvq
+         ddKBGzFKZUmonKqMeFOYYTi1Tw6vtCRVa1cj6NAo3DraG3ex8OCKO8Q8YmVB4pM+sOEV
+         hYeg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1788616883; x=1789221683;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=sCkeW/rlDEZbQRwhNQlqYVSLXnulFlxF+aDVtk4kLrI=;
+        b=SztspTnhmu29O8kyyCcheqXhVtEMoRhiRFvXUYgwEHbMBLqiqXPcxImpCuYRzFfy0g
+         nSXntgBIwERDOAzmaZFvn7uyeKG4InHNpnOdeVlByCTPMdXegHcrR/7/B98KfH+9i5X7
+         Ty0wLwmswXHoX/gBVcMWfJpARO/sl8Ct9nP+gyfMNI5oPJnsTov9IS+Z/OhC+fgxgRBg
+         r3HN3cjX6X12t80Hut/s5B4CCjXwwGF0g27iGGVxNFXyl5tdm+I+5lciK0fSpG/NOhSD
+         95uwtaj29ePWwmsGjGKHsYf6o4IXE1I7f6mifGI/D3y9tM1dmuXdKCxGia4X18+s2+Ma
+         8uuw==
+X-Forwarded-Encrypted: i=1; AKwUvBz1lAaT0WR0YlcHC/iVo9yJkmcHD4dgIiTQmQgtlJWx2GwBURjUZ7cqUuKAMRCKeUFE39QsibxKkek=@vger.kernel.org
+X-Gm-Message-State: AFuF++luEiPSDdagZgMp3jePb8k/zJAxlkwdGGO96z60+6Ru26REoqun
+	PV8dyF8WSm/i0jxpRROnTkTR1x0DktNn3OgoT1Xj1E8/L0dP/wOVXaDI
+X-Gm-Gg: AYBFou1hpNP7YwCu3iR0xInVzJhMg9KB10xHCapjzwyeBKeMykVtLefgeRCvIQjVg02
+	6iyhsoCDxdfa1o/6HSROx//tsSWhwmFvUGO1AZfODcijPYKE8OvSb/eBPQFbBZn9jucF3sqrDrc
+	A/uCB+Zq7gG1GwHbpzr7G4PA9JJ7RiqHRZZYgj7j7lr4FSnxoOakh9UJxAs2sHs4WzPMoEBpfyX
+	ruVIu2AyzGY5No7u2z/wR5NTFw5toXUafhcVd7dVs454LrDvaIz8kIZ1Y9CB6M+dFOGCUMPwjXQ
+	UMZbL/PMjxFIwjVlEiGNIkKlygrM89UPYVkMkyx1qMGNs0KlbyV9BXUNDjHuRzppFEKUW4CZzjo
+	+SLTUris+BOD7zbPAJEDEst64PiuGA9ud/KOBYPrv5ux+jfnFxA2w710U+5O1oH1aPwyA1UdYQD
+	bS9uNePgzmJdmRph1GFKPR6LhFDA+H3Au9DXH6u4rgk135YW79Kp2jGTgQzkcC10R21q6EbiKV3
+	rHraVs2pDphSdOwmR0JwL+daVuOIhq6
+X-Received: by 2002:a05:6102:1484:b0:785:1d9c:633c with SMTP id ada2fe7eead31-78a4a8436b7mr5213627137.7.1788616882765;
+        Sat, 05 Sep 2026 07:01:22 -0700 (PDT)
+Received: from Biostar-A520MT.. ([187.94.13.245])
+        by smtp.gmail.com with ESMTPSA id a1e0cc1a2514c-9808ee4d743sm3706877241.9.2026.09.05.07.01.17
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 05 Sep 2026 07:01:20 -0700 (PDT)
+From: Breno Rodrigues Alves <breno3011alves@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: torvalds@linux-foundation.org,
+	linux-kernel@vger.kernel.org,
+	arnd@arndb.de,
+	linux-clk@vger.kernel.org,
+	linux-input@vger.kernel.org,
+	linux-media@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-usb@vger.kernel.org,
+	linux-sound@vger.kernel.org,
+	linux-staging@lists.linux.dev,
+	linux-fbdev@vger.kernel.org,
+	linux-security-module@vger.kernel.org,
+	Breno Rodrigues Alves <breno3011alves@gmail.com>
+Subject: [PATCH v11 1/3] interconnect: mediatek: fix Makefile typo for mt8196
+Date: Sat,  5 Sep 2026 11:01:11 -0300
+Message-ID: <20260905140113.21638-1-breno3011alves@gmail.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
+Correct a copy-paste typo in the MediaTek interconnect Makefile that
+mapped mt8196.o to CONFIG_INTERCONNECT_MTK_MT8195 instead of MT8196.
 
-Pre-existing issues:
-- [High] Resource leak of `perst` reset controls on the probe error path du=
-e to incorrect label ordering.
---
+Assisted-by: OpenCode AI
+Signed-off-by: Breno Rodrigues Alves <breno3011alves@gmail.com>
+---
+ drivers/interconnect/mediatek/Makefile | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-commit 086b34d1058711efceb6e05d5c137e933d166d8c
-Author: hpp.iscas <hppiscas@163.com>
+diff --git a/drivers/interconnect/mediatek/Makefile b/drivers/interconnect/mediatek/Makefile
+index 6bd656668..64170ab16 100644
+--- a/drivers/interconnect/mediatek/Makefile
++++ b/drivers/interconnect/mediatek/Makefile
+@@ -3,4 +3,4 @@
+ obj-$(CONFIG_INTERCONNECT_MTK_DVFSRC_EMI) += icc-emi.o
+ obj-$(CONFIG_INTERCONNECT_MTK_MT8183) += mt8183.o
+ obj-$(CONFIG_INTERCONNECT_MTK_MT8195) += mt8195.o
+-obj-$(CONFIG_INTERCONNECT_MTK_MT8195) += mt8196.o
++obj-$(CONFIG_INTERCONNECT_MTK_MT8196) += mt8196.o
+-- 
+2.43.0
 
-PCI: eswin: Publish the platform driver's OF alias
-
-The ESWIN PCIe host controller is a platform driver matched through
-eswin_pcie_of_match. PCIE_ESWIN is tristate, but the table is not
-published for OF module autoloading.
-
-Publish this platform-device table. Do not change the RISC-V host
-initialization sequence or PCI device matching.
-
-> diff --git a/drivers/pci/controller/dwc/pcie-eswin.c b/drivers/pci/contro=
-ller/dwc/pcie-eswin.c
-> index ce8d64f8a3957..1bb44696057e4 100644
-> --- a/drivers/pci/controller/dwc/pcie-eswin.c
-> +++ b/drivers/pci/controller/dwc/pcie-eswin.c
-> @@ -388,6 +388,7 @@ static const struct of_device_id eswin_pcie_of_match[=
-] =3D {
->  	{ .compatible =3D "eswin,eic7700-pcie", .data =3D &eswin_eic7700_data },
->  	{}
->  };
-> +MODULE_DEVICE_TABLE(of, eswin_pcie_of_match);
-
-[Severity: High]
-This isn't a bug introduced by this patch, but while reviewing this file I
-noticed a pre-existing issue in eswin_pcie_probe() regarding error handling.
-
-When dw_pcie_host_init() fails, execution jumps to err_init:
-
-	ret =3D dw_pcie_host_init(&pci->pp);
-	if (ret) {
-		dev_err(dev, "Failed to init host\n");
-		goto err_init;
-	}
-
-Because err_init is positioned after err_pm_runtime_put, it completely skips
-the loop that releases the exclusive perst reset controls:
-
-err_pm_runtime_put:
-	list_for_each_entry_safe(port, tmp, &pcie->ports, list) {
-		reset_control_put(port->perst);
-		list_del(&port->list);
-	}
-err_init:
-	pm_runtime_put(dev);
-
-Does this leak the perst reset controls?
-
-Because they are requested exclusively via of_reset_control_get_exclusive(),
-would subsequent attempts to reprobe the driver (e.g. module reload) fail to
-acquire the reset controls until a full system reboot?
-
-> =20
->  static struct platform_driver eswin_pcie_driver =3D {
->  	.probe =3D eswin_pcie_probe,
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260905134251.6721=
-0-1-hppiscas@163.com?part=3D1
