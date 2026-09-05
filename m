@@ -1,271 +1,154 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ua1-f47.google.com (mail-ua1-f47.google.com [209.85.222.47])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F92CF9C0;
-	Sat,  5 Sep 2026 00:04:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB4371A9FB7
+	for <linux-pci@vger.kernel.org>; Sat,  5 Sep 2026 00:07:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788566657; cv=none; b=qGf5obfv3R+fjcyQnXVpimSt4HxVxwSof1VFrwMO3oMaBkKL8E4m/uq6fHkM6+UD8u1JoUKX71W+FVt/MQZvTYRn0l449zZ07lGX1hy6BRK0D6Sh0Y7D7b0cglwDJd9vZ3kxCfKlL4hzSKTfIAe/Yp3nhtIQYufUZm+wolT9oJ0=
+	t=1788566825; cv=none; b=q5d3205MOc7J/c0yrjkGtFP9QWGf+oJzZgH9AoWCchYx+YUpCRvxyBGJwFT0rZPu1flRncXpagNQpRwkyS+wlc+WnUJn9CosHXnUymgDvMBQOgDXXZAWRqWzJ9yCJ4Z9+oOZdRsp8cDwpMa/4LWtU2z3ZaUAiKK8sBMkZY01Fc8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788566657; c=relaxed/simple;
-	bh=WGlTO/B9dx+gcBj+aCTItj+0MoJeBlqiPjiBynv7gaw=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=bh2r7Su79cFuhD8V/bSwS/T2C509wSSJhz6KHXsiwABvvBhj69UPeUQSyWnVFjS8PQpzsbTwJD35f41YDG4dUr89t5yRj+2s7TNlaT56m2m6yWeK2zslJj1U9LWU+epRZkzAYB+zYNkB7zBCNmlr6Q52VKJg/kM7JHBF1meoOB4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=U3rkPjoQ; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788566825; c=relaxed/simple;
+	bh=AbGCPD867X/zR4JWWABXmcYRuDetze/f0050Gy5ULXM=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=prNx+5OY9eVpNo7/aL8PjQRnoIvUhtJ0Uo0vK0Lueu/SSsOfRR6y+uYXH6KNRy2ZpDUiFRZB5SshMnU9KT2oQ0gGzKbwtAB7mxjlKNvouPBfLrSPEDJmPXKepqFwRux/9Lu0ZBuogjEBz09SnIWcgNG7TLtooHJ+LO18hT4n5VI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=NbtPtVDy; arc=none smtp.client-ip=209.85.222.47
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="U3rkPjoQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 998BC1F00A3D;
-	Sat,  5 Sep 2026 00:04:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788566656;
-	bh=nzHzMSFpcSMrtxqn4tGUFo35FQ5hl4emhN8YkkkEZKc=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=U3rkPjoQZRcme3Dug+BWOsGvhNNJ/9KQOQ+SomspWnnQ7XUmwe/S6tUyvs8eIqR09
-	 TJyvCPzhtN5X4nl1nqwXp+vlnk2F6uODafrsmqmEylRStjXHnA1nvIjFrYBoZOb1QM
-	 TRcPtgE0rydzueyieHcm36uOwYjdsN/tu3e9YHBrY8vTAXntTeC8Ylcz9YkM4hnTsK
-	 FgDfMyrIJhS12VrLzA9hmeO9EfUjYaxEX4GIfhUVsJe6uFJmOEzZsYwi3l0mD2SwBU
-	 i2SNIHvxL+dd81gZbEgWmeR6IsoNFzZOkrE9KJIx2cQju/cMIuRvOmPFp2lxkLNSO0
-	 R6GmM3wh9TY3Q==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2] Kconfig: purge twenty-eight legacy ghost options
- (v2)
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Breno Rodrigues Alves" <breno3011alves@gmail.com>
-Cc: linux-clk@vger.kernel.org, linux-input@vger.kernel.org, media-ci@linuxtv.org, linux-pci@vger.kernel.org, dmitry.torokhov@gmail.com
-In-Reply-To: <20260904232904.87530-1-breno3011alves@gmail.com>
-References: <20260904232904.87530-1-breno3011alves@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Sat, 05 Sep 2026 00:04:15 +0000
-Message-Id: <20260905000415.998BC1F00A3D@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="NbtPtVDy"
+Received: by mail-ua1-f47.google.com with SMTP id a1e0cc1a2514c-97e9c0da212so1018701241.1
+        for <linux-pci@vger.kernel.org>; Fri, 04 Sep 2026 17:07:03 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1788566823; x=1789171623; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=ySdxtd2OOrMzj1/M4oljubzNlyC8qvGXvin601ESwdY=;
+        b=NbtPtVDyUe4EiV1PyvB3ifcEKyiJkW+gPdb9/8kwE1w7b+jj8eHLByRqzahzHJTk15
+         pIyJyn22VdYuawT7Wu7McepZpzTxxNWtIXnjjulX1BXc5sfUDt4Ua0VQoy/Zzco5T6b8
+         /G6318j5/Q09afTMClrwY6N8L08CX75DcCgXZTYmFqOr+JlJojzmeI9WRkuwpGKqbJLe
+         97oXpAptFxOD3WzGPCIwetnSUAhotj93foByJI1FxS2MsmRRxUNJXyd0D2V1KxqM65pL
+         XTE5yntgRUyinSXb++6JwefTnC1DwGNHHK511HWMs83Tzn/HinnJk5r4Yvg9O4fQ6E4V
+         QxWQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1788566823; x=1789171623;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=ySdxtd2OOrMzj1/M4oljubzNlyC8qvGXvin601ESwdY=;
+        b=BC7sVGvRhPZtXxDKuF5RVw7ixe3P18MmUtigFVXaOhu7j3916Adf5bzgqIVMpHsFSH
+         LdXt8v0Zdx3dksml4k/0+ohpXHu8UOgTxQyzgJPL+CEtgNyodG+6V8GCQA3OtCBcC9gU
+         j6vTyCzkq/u8yZhaEw2pPzx5jwVZbN+eKQIZxiWHKV23atbBENQmOSEsRLnA0yHho/fv
+         5PZVM5rk3fssk47ACVEfm4NgR31lrwRL9zYeu3lQEUoTl8dyjLUp3vnq9fpxlhuqqGuT
+         uTa+YpKNmHmyvlo7DOtBjqPsHr3sYLRk/QvB5JoXnS/BzrPbqDGTHTyRvXdOYuwoHzjm
+         fdxg==
+X-Forwarded-Encrypted: i=1; AKwUvBx0EK8kTlTZvrX8F1saDZAO4UA40N3CfFPxcdapPvzwVsc8UL2jxyC/boQoVH3PjZlUE8glRcDni/Y=@vger.kernel.org
+X-Gm-Message-State: AFuF++lOeezaU2uTbYhI+is41z5b5XqTeMPRO0KYS749OLJuZTO0qiNv
+	YXfC498sseL+PLqqwOEKn2Tkvdb4RSH9qto20PyQOlwWWYVXnRDoBVuk
+X-Gm-Gg: AYBFou23bTa9dCXhtvp195XgNGxGwAJoiKUyE9pB+EZd1Nv8XVTbZ/VXYCs7BujIVJZ
+	mOSR2kYAnTl3/8Q4Xh9V16+dHb1NjKPffLbVK/4A+rfWTHFs+v41UVb2La89ggq6fQKM82ReQmv
+	vodoAVHKwK2fzMaGUJ5huvQL3fuRxzgNatA6tIHdWIhW8gqNU5VL1+UyluQBkPLQ0u7NA+gTykN
+	QLgqtYyEt0Au2hfUFBKOnCkt1nQ5g8rCcmx8FSzlI5UY+A36GE5kG65LqHIWWV4DVE/tBb9/kc1
+	8b7R0BEvU7qJ1aagfLwGNovx47LlrloWZEviCFMh75AkUVXWn/Nk4rNuwST9bRnk7GKtTBsQ48Z
+	0vbYDtoIIyH+J0yvrxR1GNFh+pTTOYPucEY525ylWftywtOA3tdMmRWqWzg7MGLTyE0uhZ9Ja+B
+	ucpjKQsWV89QO3qGLP/IxK9cyGdOKyishWTPYsVLVqyLq1z974dY7ggQYxTuv1eR0wJkfb9LU3q
+	bGmffas6+2wHR1nfSFSGlj5ZWqnKQf0
+X-Received: by 2002:a05:6102:554b:b0:786:4607:bdaa with SMTP id ada2fe7eead31-78a4a8983c7mr3967271137.4.1788566822540;
+        Fri, 04 Sep 2026 17:07:02 -0700 (PDT)
+Received: from Biostar-A520MT.. ([187.94.13.245])
+        by smtp.gmail.com with ESMTPSA id a1e0cc1a2514c-9808eec7c37sm2735870241.13.2026.09.04.17.06.58
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 04 Sep 2026 17:07:02 -0700 (PDT)
+From: Breno Rodrigues Alves <breno3011alves@gmail.com>
+To: torvalds@linux-foundation.org
+Cc: linux-kernel@vger.kernel.org,
+	gregkh@linuxfoundation.org,
+	arnd@arndb.de,
+	linux-clk@vger.kernel.org,
+	linux-input@vger.kernel.org,
+	linux-media@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-usb@vger.kernel.org,
+	linux-sound@vger.kernel.org,
+	linux-staging@lists.linux.dev,
+	linux-fbdev@vger.kernel.org,
+	linux-security-module@vger.kernel.org,
+	Breno Rodrigues Alves <breno3011alves@gmail.com>
+Subject: [PATCH v3] Kconfig: fix typos in core makefiles/code and purge remaining ghosts (v3)
+Date: Fri,  4 Sep 2026 21:06:55 -0300
+Message-ID: <20260905000655.103429-1-breno3011alves@gmail.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
-s) to consider:
-- [High] Removal of Kconfig options that serve as the only user-visible pro=
-mpts to select hidden configuration symbols.
-- [High] Removal of Kconfig options that only appeared 'unused' due to pree=
-xisting copy-paste typos in Makefiles or C code.
-- [Low] Dangling comment in `drivers/leds/Kconfig` referencing the removed =
-`HID_THINGM` option.
---
+Analysis from Sashiko AI revealed that several legacy options were not
+true dead weight, but rather victims of pre-existing copy-paste typos
+in Makefiles and C code.
 
-commit 7e7aea7e95bed23309216588f06ea0dc933d0354
-Author: Breno Rodrigues Alves <breno3011alves@gmail.com>
+This patch:
+  - Fixes MediaTek interconnect typo mapping mt8196.o to MT8195.
+  - Fixes MediaTek regulator typo mapping mt6316-regulator to MT6315.
+  - Fixes missing CONFIG_ prefix on DVB_ULE_DEBUG macro in dvb_net.c.
+  - Retains critical PCI_IMX6_EP and Tegra audio prompts to keep hidden
+    symbols selectable.
+  - Cleans up the dangling comment in drivers/leds/Kconfig.
+  - Purges the remaining verified ghost weight.
 
-Kconfig: purge twenty-eight legacy ghost options (v2)
+Signed-off-by: Breno Rodrigues Alves <breno3011alves@gmail.com>
+---
+ Documentation/admin-guide/index.rst           |  1 -
+ Documentation/admin-guide/lcd-panel-cgram.rst | 27 -------------------
+ 2 files changed, 28 deletions(-)
+ delete mode 100644 Documentation/admin-guide/lcd-panel-cgram.rst
 
-This commit removes 28 Kconfig options that were identified as legacy ghost
-options lacking explicit C code or Makefile references.
+diff --git a/Documentation/admin-guide/index.rst b/Documentation/admin-guide/index.rst
+index cd28dfe91..70c0bbc87 100644
+--- a/Documentation/admin-guide/index.rst
++++ b/Documentation/admin-guide/index.rst
+@@ -152,7 +152,6 @@ How to configure your hardware within your Linux system.
+    gpio/index
+    hw_random
+    laptops/index
+-   lcd-panel-cgram
+    media/index
+    nvme-multipath
+    parport
+diff --git a/Documentation/admin-guide/lcd-panel-cgram.rst b/Documentation/admin-guide/lcd-panel-cgram.rst
+deleted file mode 100644
+index a3eb00c62..000000000
+--- a/Documentation/admin-guide/lcd-panel-cgram.rst
++++ /dev/null
+@@ -1,27 +0,0 @@
+-======================================
+-Parallel port LCD/Keypad Panel support
+-======================================
+-
+-Some LCDs allow you to define up to 8 characters, mapped to ASCII
+-characters 0 to 7. The escape code to define a new character is
+-'\e[LG' followed by one digit from 0 to 7, representing the character
+-number, and up to 8 couples of hex digits terminated by a semi-colon
+-(';'). Each couple of digits represents a line, with 1-bits for each
+-illuminated pixel with LSB on the right. Lines are numbered from the
+-top of the character to the bottom. On a 5x7 matrix, only the 5 lower
+-bits of the 7 first bytes are used for each character. If the string
+-is incomplete, only complete lines will be redefined. Here are some
+-examples::
+-
+-  printf "\e[LG0010101050D1F0C04;"  => 0 = [enter]
+-  printf "\e[LG1040E1F0000000000;"  => 1 = [up]
+-  printf "\e[LG2000000001F0E0400;"  => 2 = [down]
+-  printf "\e[LG3040E1F001F0E0400;"  => 3 = [up-down]
+-  printf "\e[LG40002060E1E0E0602;"  => 4 = [left]
+-  printf "\e[LG500080C0E0F0E0C08;"  => 5 = [right]
+-  printf "\e[LG60016051516141400;"  => 6 = "IP"
+-
+-  printf "\e[LG00103071F1F070301;"  => big speaker
+-  printf "\e[LG00002061E1E060200;"  => small speaker
+-
+-Willy
+-- 
+2.43.0
 
-> diff --git a/drivers/hid/Kconfig b/drivers/hid/Kconfig
-> --- a/drivers/hid/Kconfig
-> +++ b/drivers/hid/Kconfig
-[ ... ]
-> @@ -1296,15 +1296,6 @@ config HID_TOPRE
->  	  Say Y for N-key rollover support on Topre REALFORCE R2 108/87 key and
->            Topre REALFORCE R3S 87 key keyboards.
-> =20
-> -config HID_THINGM
-> -	tristate "ThingM blink(1) USB RGB LED"
-> -	depends on LEDS_CLASS
-> -	select HID_LED
-> -	help
-> -	Support for the ThingM blink(1) USB RGB LED. This driver has been
-> -	merged into the generic hid led driver. Config symbol HID_THINGM
-> -	just selects HID_LED and will be removed soon.
-> -
-
-[Severity: Low]
-Does removing this option leave a dangling reference in the tree?
-
-There is a comment in drivers/leds/Kconfig that explicitly references this
-removed option:
-
-comment "LED driver for blink(1) USB RGB LED is under Special HID drivers (=
-HID_THINGM)"
-
-> diff --git a/drivers/interconnect/mediatek/Kconfig b/drivers/interconnect=
-/mediatek/Kconfig
-> --- a/drivers/interconnect/mediatek/Kconfig
-> +++ b/drivers/interconnect/mediatek/Kconfig
-[ ... ]
-> @@ -28,9 +28,3 @@ config INTERCONNECT_MTK_MT8195
->  	  This is a driver for the MediaTek bus interconnect on MT8195-based
->  	  platforms.
-> =20
-> -config INTERCONNECT_MTK_MT8196
-> -	tristate "MediaTek MT8196 interconnect driver"
-> -	depends on INTERCONNECT_MTK_DVFSRC_EMI
-> -	help
-> -	  This is a driver for the MediaTek bus interconnect on MT8196-based
-> -	  platforms.
-
-[Severity: High]
-Does removing this option mask an underlying typo in the Makefile rather th=
-an
-removing true dead weight?
-
-Looking at drivers/interconnect/mediatek/Makefile, mt8196.o is mapped to
-CONFIG_INTERCONNECT_MTK_MT8195 instead of CONFIG_INTERCONNECT_MTK_MT8196:
-
-obj-$(CONFIG_INTERCONNECT_MTK_MT8195) +=3D mt8196.o
-
-If we remove the Kconfig option entirely, we lose the ability to fix the ro=
-ot
-typo and compile this driver.
-
-> diff --git a/drivers/media/dvb-core/Kconfig b/drivers/media/dvb-core/Kcon=
-fig
-> --- a/drivers/media/dvb-core/Kconfig
-> +++ b/drivers/media/dvb-core/Kconfig
-[ ... ]
-> @@ -67,14 +67,3 @@ config DVB_DEMUX_SECTION_LOSS_LOG
-> =20
->  	  If you are unsure about this, say N here.
-> =20
-> -config DVB_ULE_DEBUG
-> -	bool "Enable DVB net ULE packet debug messages"
-> -	depends on DVB_CORE
-> -	help
-> -	  Enable extra log messages meant to detect problems while
-> -	  handling DVB network ULE packet loss inside the Kernel.
-> -
-> -	  Should not be enabled on normal cases, as logs can
-> -	  be very verbose.
-> -
-> -	  If you are unsure about this, say N here.
-
-[Severity: High]
-Does removing this option permanently break the debug feature due to an
-existing typo in the C code?
-
-In drivers/media/dvb-core/dvb_net.c, the code checks for the macro without
-the CONFIG_ prefix:
-
-#ifdef DVB_ULE_DEBUG
-
-Removing this Kconfig option eliminates the intended way to fix the typo and
-enable these debug logs.
-
-> diff --git a/drivers/pci/controller/dwc/Kconfig b/drivers/pci/controller/=
-dwc/Kconfig
-> --- a/drivers/pci/controller/dwc/Kconfig
-> +++ b/drivers/pci/controller/dwc/Kconfig
-[ ... ]
-> @@ -121,20 +121,6 @@ config PCI_IMX6_HOST
->  	  on DesignWare hardware and therefore the driver re-uses the
->  	  DesignWare core functions to implement the driver.
-> =20
-> -config PCI_IMX6_EP
-> -	bool "Freescale i.MX6/7/8 PCIe controller (endpoint mode)"
-> -	depends on ARCH_MXC || COMPILE_TEST
-> -	depends on PCI_ENDPOINT
-> -	select PCIE_DW_EP
-> -	select PCI_HOST_COMMON
-> -	select PCI_IMX6
-> -	select PCI_PWRCTRL_GENERIC
-> -	help
-> -	  Enables support for the PCIe controller in the i.MX SoCs to
-> -	  work in endpoint mode. The PCI controller on i.MX is based
-> -	  on DesignWare hardware and therefore the driver re-uses the
-> -	  DesignWare core functions to implement the driver.
-> -
-
-[Severity: High]
-Does removing this option silently disable hardware support by removing the
-only prompt that selects the hidden PCIE_DW_EP symbol?
-
-Without PCI_IMX6_EP to select PCIE_DW_EP, the endpoint initialization
-function imx_add_pcie_ep() in drivers/pci/controller/dwc/pci-imx6.c will
-end up calling dw_pcie_ep_init().=20
-
-When PCIE_DW_EP is not selected, dw_pcie_ep_init() resolves to a stub that
-returns 0, leaving ep->epc uninitialized and the endpoint silently broken.
-
-> diff --git a/drivers/regulator/Kconfig b/drivers/regulator/Kconfig
-> --- a/drivers/regulator/Kconfig
-> +++ b/drivers/regulator/Kconfig
-[ ... ]
-> @@ -900,16 +899,6 @@ config REGULATOR_MT6315
->  	  This driver supports the control of different power rails of device
->  	  through regulator interface.
-> =20
-> -config REGULATOR_MT6316
-> -	tristate "MT6316 SPMI PMIC regulator driver"
-> -	depends on SPMI
-> -	select REGMAP_SPMI
-> -	help
-> -	  Say Y here to enable support for 2+2, 3+1 and 4 phase regulators
-> -	  found in the MediaTek MT6316 BP, CP, DP, HP, VP and TP SPMI PMICs.
-> -	  This driver supports the control of different power rails of device
-> -	  through regulator interface.
-> -
-
-[Severity: High]
-Does removing this option mask an underlying typo in the Makefile rather th=
-an
-removing true dead weight?
-
-Looking at drivers/regulator/Makefile, mt6316-regulator.o is mistakenly
-mapped to CONFIG_REGULATOR_MT6315:
-
-obj-$(CONFIG_REGULATOR_MT6315)  +=3D mt6316-regulator.o
-
-Removing the Kconfig option destroys the intended path to fix the root typo
-and compile the MT6316 PMIC regulator driver.
-
-> diff --git a/sound/soc/tegra/Kconfig b/sound/soc/tegra/Kconfig
-> --- a/sound/soc/tegra/Kconfig
-> +++ b/sound/soc/tegra/Kconfig
-[ ... ]
-> @@ -192,15 +192,6 @@ config SND_SOC_TEGRA_AUDIO_GRAPH_CARD
->  config SND_SOC_TEGRA_MACHINE_DRV
->  	tristate
-> =20
-> -config SND_SOC_TEGRA_RT5631
-> -	tristate "SoC Audio support for Tegra boards using an RT5631 codec"
-> -	depends on SND_SOC_TEGRA && I2C && GPIOLIB
-> -	select SND_SOC_TEGRA_MACHINE_DRV
-> -	select SND_SOC_RT5631
-> -	help
-> -	  Say Y or M here if you want to add support for SoC audio on Tegra
-> -	  boards using the RT5631 codec, such as Transformer.
-> -
-
-[Severity: High]
-Will users still be able to enable the Tegra audio machine driver without t=
-his
-prompt?
-
-This option appears to be the necessary user-visible prompt to select the
-hidden configuration symbol SND_SOC_TEGRA_MACHINE_DRV for this specific
-hardware.
-
-[ ... ]
-> @@ -276,24 +267,6 @@ config SND_SOC_TEGRA_MAX98090
->  	  Say Y or M here if you want to add support for SoC audio on Tegra
->  	  boards using the MAX98090 codec, such as Venice2.
-> =20
-> -config SND_SOC_TEGRA_MAX98088
-> -	tristate "SoC Audio support for Tegra boards using a MAX9808x codec"
-> -	depends on I2C && GPIOLIB
-> -	select SND_SOC_TEGRA_MACHINE_DRV
-> -	select SND_SOC_MAX98088
-> -	help
-> -	  Say Y or M here if you want to add support for SoC audio on Tegra
-> -	  boards using the MAX98088 codec, such as LG X3.
-> -
-
-[Severity: High]
-Similar to the RT5631 codec above, does removing this option prevent the
-user from enabling the hidden SND_SOC_TEGRA_MACHINE_DRV symbol needed for
-MAX9808x support?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260904232904.8753=
-0-1-breno3011alves@gmail.com?part=3D1
