@@ -1,123 +1,158 @@
-Received: from mail-pg1-f178.google.com (mail-pg1-f178.google.com [209.85.215.178])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A55B82DCF57
-	for <linux-pci@vger.kernel.org>; Sat,  5 Sep 2026 14:46:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 53F71231836;
+	Sat,  5 Sep 2026 15:46:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788619608; cv=none; b=KkYA/eo5epfvLRn35srQOWmvcqibOSCXdeiQgSQkBXSM68PUGPSI7aTh6JQV0OAXhwpwMcs7ITbmliPczjUgmy+grYsNly1reecR1SDrLiNHoAPQCXf3w31oZ/a1q5kL3+2f13TbiVSmYAH9oiw6NrzjLWskq4BjUVK5F3Ku9fs=
+	t=1788623209; cv=none; b=qqIQATRwzAwFmGyYu/71oWshIqkUMPyl/Msd4J25mXbrGHg/pcOehSQXqIyH1IBoK0CV9lkz/mRoBOB9VSg1QUS3pPCUO1jzYbBJ5lRMIYhPrNYrbflJFoNTHEtxGJNtSr8ax39ko8GVVgPzj9d8rx8CY+YPTzzpDz5B2eIazAU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788619608; c=relaxed/simple;
-	bh=KhV/sExtmXB6UlADh0yOfIqRP3nAvtEhErCcazy8J5M=;
+	s=arc-20240116; t=1788623209; c=relaxed/simple;
+	bh=Wm4i3RlG+WiwpK0bIxp1LJWCbMunH4VFrRWPdQdxkJA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=RHWDgSuZmNUi6updr/0UiSvMC7GFY0OO0YsTdWNohndlUu7mfmhyCXkqmlvUjZKnL5TZojp9DKzAFpPvmXsbvgliC2Ig2WpiZIKiBpJlXLtvtE+JktZUNtKjmFheZ3ODLTdYeHxAjaeabi97vzEAW63Q0kqNIc4GjjwqBhEqQ4Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=D0RQCtVU; arc=none smtp.client-ip=209.85.215.178
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=Vr1VXdtUq0Z8pIDXNdrA/usNC/cJhdoRzD5ymFUZwqd+IWdOJasu9h3BWo5sMe1yy0TTLxB9Gz7NZ9OxFxM9L1ZnP1VG1RtHpvjw/PC2dvVKdLkuMIn0q08bxJEef5QnhEr8l9VRCbYCSWLGXocFQbeY4sL612BfLFFaPsst5rA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=c3nkgg5p; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="D0RQCtVU"
-Received: by mail-pg1-f178.google.com with SMTP id 41be03b00d2f7-cbb8b54fcf8so2398774a12.0
-        for <linux-pci@vger.kernel.org>; Sat, 05 Sep 2026 07:46:47 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1788619607; x=1789224407; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=5lIUHrxpa8LGuaDX4+74JSWWI9JDXZlTSaRdKXqmY6I=;
-        b=D0RQCtVUZ0R66JVPMRj228CAFTWiGudK/I0oI1KeMQFoBAUS6jI4/Rxuy3+I0lFn2s
-         Hr8qO+VzhMPTJm4MZEJn85XdJm/aNRgCTcUOF01hKG04cIfCul32H3jikO7oAHZ9N+RX
-         O9kfjAyOMzsKN6oR2leTLNJnJhaqccZ+lbKIXfqbgZYdKfGFZf6Hf7t4hLBJV81N5/TC
-         Ufv20jz1emh/xMdnr2k7BJl1vAHknspdZbQrDTeps1KNXO8BvkOXKnR6rY/Q5a9mUzT3
-         WjOic63jRzGXUQVUZyLYIjrOuiHGGLzgz66KlAPjaTLaGJl2+gLKJBpk097dM2pvTXsc
-         m+1g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788619607; x=1789224407;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=5lIUHrxpa8LGuaDX4+74JSWWI9JDXZlTSaRdKXqmY6I=;
-        b=D0LxT4v9IQ+QCAGOdo/ZwGrTSaVCxNny8ot3nn6kQsFtppKIKnlksXnVc3hUTseRDn
-         qlyaWad8iyltznJ8fdDycj8dL02A+GvMZ6SkXiktAYalP8sTOjTR9Os3DlrwXMD4SHi2
-         OXZFTghponqEZ9Mru/pW4Dd4EqFLVtcSwPfQ98iZj4jvKko+KuSYLr7bC7Hf1bQjVSXj
-         crcA0Y8cYNvqaPE4ry6yk3UqU1MzxJZNBVYPp92+AZKzGP+P77lMwdSm3BToP39aExwY
-         UIWQ5e+ffNNKgZzaDlLRONiB+Fk/WGvFwLjCQlsrgbXDN+BbevjTLUS1eocZ3Fff7N59
-         r21A==
-X-Forwarded-Encrypted: i=1; AKwUvBwNcnmIagArvubcFmChYTl/B6YdcKnT9SC0JJ5mZM6mfoumdpCtkCymA3lmRuiDey6+RerngHOWAgo=@vger.kernel.org
-X-Gm-Message-State: AFuF++mXOXNrVlaTZJnEnIiEqihrAXW4Y6N2Hu3mUu1UvI0BccAkXH9J
-	rb93PhEnYns/rs1qndCBuRXfgvUfmK1YEf48RukS24MxSF99Kw+ZzUcY
-X-Gm-Gg: AYBFou0ZOqehd6eyTYULCQKZaNK83opyAzGHWP7P3ZQzhnMvaokM7NtVjXLdQ7r/jjD
-	w1yinv0vh91PATsffh9mhweItNpIVDE2b1AcQn/HTz4yRsc0NEulbM1UMfRTMJOajqAQyxXQESq
-	4ZUlR6Crp9U0Jj+wI7qreX1tSAQjjMVP1siOEqtl5vVcGcsNwy2jUCcrrbH+b15Sut1w+5AkBgc
-	VcG9epiE3/VKL6/KfiphZWe84Fw6+tlat/SbcQ24VNpjNLe9WTljBv4rnqvx56hmKZPlLlKEHYY
-	MgFiV1FfGO+hc8anabbjGmHweGjhCizWZOmODcJ8uy0SsCPX4yqMfZ8PnsS2wWLgocQXP2LeAmj
-	70WGuFV2QLEVlCkc4SrRqLinzTdMlJ1M2W1vu9POo9GUCkWRxlcFX+mtS0sw/u+x34ZFAfTXKrl
-	cQtRdFhX3u9g+m/mEfMZmKWLZnrVRosrPaZFy0vtCvxyAG20QLMwYNXfmITNwPONrlaW41f+Xq8
-	sq4WbLekA4riVLTLPmoWZ3KUUZ0p7RsgmvPNa/CvDd2Jm3hNBvD5Wgu8eVO7oX2qNvLmH89zRj2
-	f7Y5568+kek=
-X-Received: by 2002:a05:6a21:487:b0:3cb:8810:631d with SMTP id adf61e73a8af0-3da39b58320mr21305071637.1.1788619606891;
-        Sat, 05 Sep 2026 07:46:46 -0700 (PDT)
-Received: from nickhuang (2001-b400-e2da-caae-e718-2aad-4c92-5b14.emome-ip6.hinet.net. [2001:b400:e2da:caae:e718:2aad:4c92:5b14])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-cc467df7beesm843306a12.7.2026.09.05.07.46.43
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 05 Sep 2026 07:46:46 -0700 (PDT)
-Date: Sat, 5 Sep 2026 14:46:41 +0000
-From: Nick Huang <sef1548@gmail.com>
-To: "hpp.iscas" <hppiscas@163.com>
-Cc: Senchuan Zhang <zhangsenchuan@eswincomputing.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-riscv@lists.infradead.org,
-	Yu Ning <ningyu@eswincomputing.com>,
-	Yanghui Ou <ouyanghui@eswincomputing.com>
-Subject: Re: [PATCH] PCI: eswin: Publish the platform driver's OF alias
-Message-ID: <apwrUYd3VybxbAm7@nickhuang>
-References: <20260905134251.67210-1-hppiscas@163.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="c3nkgg5p"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AF2311F00A3A;
+	Sat,  5 Sep 2026 15:46:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1788623207;
+	bh=EWrtaZFF+hPliejaz2Y2aRmbyfVI9skekhB6+RxymI8=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=c3nkgg5pVOSd4645yCWRUJ41AGgqSvr0H2xZ6SXJWZVZZz8xcVu5glh2+fwe86Yuv
+	 Ke9cmlwKy2rFe/caIFOZZsH4jKMR8BoI7gBQnfWxwkGQKW4FKpTHiyDwLs2KIe5ccz
+	 rE9oJK1YLeJwTLEq7CxAm4BIt0df5LT/mkfVfNomynsL1J4Jb9qQu9RXM3hMvQ8LjE
+	 CDXJz1vpHlrLxcjHmGAdzl0VBdmx2VW/mfq00chqZpQd1X5tBl7ifHASmhSmJ27DA0
+	 mz8GJtIU9dkwFMM14ngAR5W/ISWCiaMQQtBHSN0NlvOsjdf98FeXIZd1N0TQlC/uEx
+	 YM2Qidx2s8FmQ==
+Date: Sat, 5 Sep 2026 17:46:36 +0200
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Damien Le Moal <dlemoal@kernel.org>
+Cc: Niklas Cassel <cassel@kernel.org>, alistair23@gmail.com, 
+	mst@redhat.com, eperezma@redhat.com, linux-kernel@vger.kernel.org, 
+	xuanzhuo@linux.alibaba.com, jasowangio@gmail.com, linux-scsi@vger.kernel.org, mkp@kernel.org, 
+	virtualization@lists.linux.dev, James.Bottomley@hansenpartnership.com, alistair@alistair23.me, 
+	Alistair Francis <alistair.francis@wdc.com>, linux-pci@vger.kernel.org, Shunsuke Mie <mie@igel.co.jp>, 
+	Frank Li <Frank.Li@kernel.org>, Koichiro Den <den@valinux.co.jp>, 
+	Kishon Vijay Abraham I <kishon@kernel.org>
+Subject: Re: [PATCH 0/2] scsi: Initial commit of VirtIO PCIe Endpoint Driver
+Message-ID: <iwgm2faqg2ame5wqaoajcgxxdbarjpczlwthkrgznybnc2xqmd@olscuoqftvdo>
+References: <20260901014650.2728658-1-alistair.francis@wdc.com>
+ <apaOZeeDBIRlpB7b@ryzen>
+ <akvzpivrbg3b3jra6ibga6j637pwqkwnnzs6q2ymcn5ixrdym6@wniqpspkcknt>
+ <795ac93a-9377-4503-9dc4-58f21c815f71@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20260905134251.67210-1-hppiscas@163.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <795ac93a-9377-4503-9dc4-58f21c815f71@kernel.org>
 
-On Sat, Sep 05, 2026 at 09:42:51PM +0800, hpp.iscas wrote:
-> The ESWIN PCIe host controller is a platform driver matched through
-> eswin_pcie_of_match. PCIE_ESWIN is tristate, but the table is not
-> published for OF module autoloading.
+On Fri, Sep 04, 2026 at 09:12:11AM +0900, Damien Le Moal wrote:
+> On 9/3/26 20:51, Manivannan Sadhasivam wrote:
+> > On Tue, Sep 01, 2026 at 10:35:49AM +0200, Niklas Cassel wrote:
+> >> On Tue, Sep 01, 2026 at 11:46:48AM +1000, alistair23@gmail.com wrote:
+> >>> From: Alistair Francis <alistair.francis@wdc.com>
+> >>>
+> >>> This series adds a VirtIO SCSI endpoint built on top of the VirtIO PCIe
+> >>> endpoint. This is a similar approach to the NVMe PCIe Endpoint
+> >>> (drivers/nvme/target/pci-epf.c) but for SCSI.
+> >>>
+> >>> This does end up being somewhat similar to the pci-epf.c code, but
+> >>> re-written for SCSI.
+> >>>
+> >>> This approach allows a PCIe Endpoint device (tested on a
+> >>> radxa-rock5b) to setup what appears to be a SCSI device, using an
+> >>> existing SCSI backend (tested using scsi_debug).
+> >>>
+> >>> At this point a host can connect over PCIe, ensure virtio_pci and
+> >>> virtio_scsi is loaded and on PCIe rescan will see a scsi device.
+> >>>
+> >>> There are a few pain points with this approach though:
+> >>>  1. We have to use the Legacy SCSI VirtIO driver. This is because the
+> >>>     Raxda Rock5b (and AFAIK all PCIe Endpoint hardware) can't add
+> >>>     capabilities. So we can't advertise the VirtIO Common configuration
+> >>>     capability, which means we can't be a modern VirtIO SCSI device.
+> >>>
+> >>>     This is unfortunate, but there doesn't seem to be any way around
+> >>>     this, at least with the current hardware.
+> >>>
+> >>>  1.2. Legacy virtio devices only have 32 feature bits and therefore can't
+> >>>     set the VIRTIO_F_ACCESS_PLATFORM (bit 33) feature. This means the
+> >>>     vring_use_map_api() function will return false.
+> >>>
+> >>>     Currently Linux endpoint devices use the legacy virtio interface as
+> >>>     they aren't able to advertise the Common configuration capability.
+> >>>     As most PCI endpoint capable PCIe controllers do not allow modifying the
+> >>>     capability list, and thus are unable to advertise the Common configuration
+> >>>     capability. This means the device's inbound TLPs fault on the host
+> >>>     SMMU because the vring descriptors carry raw physical addresses.
+> >>>
+> >>>     This series adds a quirk that forces a subset of legacy virtio devices
+> >>>     to use the DMA Map API (vring_use_map_api() will return true),
+> >>>     which fixes this issue.
+> >>>
+> >>>     It's unideal that we have to hard code a quirk to basically just
+> >>>     advertise the VIRTIO_F_ACCESS_PLATFORM feature, but (see 1) as we
+> >>>     are stuck with legacy virtio devices there isn't much else we can do.
+> >>>
+> >>>  2. We have to pin scsit_pci_epf_poll_cfg_thread() on a CPU in order to
+> >>>     respond fast enough to the host. This means we effectivly burn a CPU
+> >>>     to read and write some values. But as there are no intterupts
+> >>>     generated on these events and we need to be very quick there isn't
+> >>>     another option.
+> >>>
+> > 
+> > Most of these pain points will go away if you use virtio-msg [1] transport
+> > instead of the virtio-pci transport. Using the virtio-pci transport on a real
+> > PCIe device without a way to trap and emulate the config space requests will
+> > always be racy.
 > 
-> Publish this platform-device table. Do not change the RISC-V host
-> initialization sequence or PCI device matching.
+> There is nothing inherently racy about the config space. It is about the fact
+> that most PCI endpoint controllers:
+> 1) Do not raise an interrupt when PCI BARs or config space is written by the
+> host RC, and
+> 2) All PCI endpoint controllers that Linux supports do not allow drivers to
+> create extended capabilities in the config space that can then be emulated in
+> the endpoint driver (enabling that would require 1 to be supported, obviously).
 > 
-> Fixes: b593c26d081a ("PCI: eswin: Add ESWIN PCIe Root Complex driver")
-> Signed-off-by: hpp.iscas <hppiscas@163.com>
-> ---
->  drivers/pci/controller/dwc/pcie-eswin.c | 1 +
->  1 file changed, 1 insertion(+)
+> (2) can be delt with quirks. Not great, but simple enough. And in this case, we
+> need it more because of the virtio-pci specs, which are not great to start with.
 > 
-> diff --git a/drivers/pci/controller/dwc/pcie-eswin.c b/drivers/pci/controller/dwc/pcie-eswin.c
-> index ce8d64f..1bb4469 100644
-> --- a/drivers/pci/controller/dwc/pcie-eswin.c
-> +++ b/drivers/pci/controller/dwc/pcie-eswin.c
-> @@ -388,6 +388,7 @@ static const struct of_device_id eswin_pcie_of_match[] = {
->  	{ .compatible = "eswin,eic7700-pcie", .data = &eswin_eic7700_data },
->  	{}
->  };
-> +MODULE_DEVICE_TABLE(of, eswin_pcie_of_match);
->  
->  static struct platform_driver eswin_pcie_driver = {
->  	.probe = eswin_pcie_probe,
->
-Hi hpp.iscas
+> And for (1), the only real problem that causes is that an endpoint driver needs
+> to poll PCI BARs/submission queues to see if the host issued commands. Again not
+> great, but that works just fine. Alistair's point about burning a CPU doing that
+> is simply so that we can reduce command latency and get good enough performance.
+> 
+> We went through all of that already with the NVMe PCI endpoint. Works well
+> enough and does what is intended, which is the same here for the virtio-scsi
+> endpoint driver: create a platform where one can emulate a SCSI device to
+> experiment with new features etc. This is all intended as a development/test
+> tool, not for production use.
+> 
 
-Since this driver uses `builtin_platform_driver(eswin_pcie_driver)`, it
-appears to be built-in only. In that case, `MODULE_DEVICE_TABLE()` seems
-unnecessary.
+The race is inherently present in the way the virtqueue setup is done. Spec
+defines many registers with side-effects. Like device_feature_select,
+device_status, queue_select, queue_reset etc... Fabricating responses for these
+registers properly would require trap-and-emulate as the endpoint cannot
+reliably generate the response, once written. It may work sometimes, but not
+always.
 
-Regards,
-Nick Huang
+> I do not know virtio-msg. First time I hear about it. And I am not sure if there
+> is a standard way of exposing a SCSI host through that.
+> 
+
+virtio-msg is a message based transport, just like virtio-pci. It has no
+knowledge of the top level Virtio protocol. Using it will eliminate all the
+shortcomings of the virtio-pci transport as the config steps between the
+driver and device is message-response based.
+
+- Mani
+
+-- 
+மணிவண்ணன் சதாசிவம்
