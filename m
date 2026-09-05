@@ -1,61 +1,63 @@
-Received: from mail-wm1-f42.google.com (mail-wm1-f42.google.com [209.85.128.42])
+Received: from mail-wr1-f47.google.com (mail-wr1-f47.google.com [209.85.221.47])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2CDDD4E66A3
-	for <linux-pci@vger.kernel.org>; Sat,  5 Sep 2026 18:39:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7CE1A4F053A
+	for <linux-pci@vger.kernel.org>; Sat,  5 Sep 2026 18:39:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788633561; cv=none; b=lqthznUgz8BHlmT67Fm8A5CaoCXA8xsMv5cO88pcDBKnBAZhe/+Xf5oiUzE4osUL6M0BNkS8xzd+pk1apyv9r8rsfobwvleAggR/OLUuwrHmZi56S1LDLSs8FZ0721Y5aBp3mqKh8uIGf6CROYrTOjxO6TJ6DcCmENAGK4i7PqU=
+	t=1788633566; cv=none; b=s8dgQP86wAESxVLhpLgedyZUU82iZG7ke9unvq+XNhgC4gqSkYpUpBBveA/ky0Q0pSiBVIQw8PNG19ReaGLIAhBsWHt7lFL+E6ZOattnjuayKH/fB2eliLwFUiEAGlB9q8OScSFLhcSUCvJpK3yjsioyA5rL0kPnJWm4sbD1nM4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788633561; c=relaxed/simple;
-	bh=Svz1IuwoQTajBVbl5c+TCPmX0LIWaT9lWEEXDkGkwK8=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=S3ER1R981rQ803OoBehls2EnDjz9XAUcu3dKH2k7XoONBZhW3VxTlBmi5HZu68sTU1iJWwZ9+ujixOZnJsh2irnD+wMdhf4pOjAvg+GL6FUp5XAy/1+9ZxjU/JgQ2YJtEEKX6xXBspc275Vk3vbz1WnSltiAviHHGyEHtn0cFpU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=U+UJFCYw; arc=none smtp.client-ip=209.85.128.42
+	s=arc-20240116; t=1788633566; c=relaxed/simple;
+	bh=2YluIy60Jfzmukqkh5yOQvfMAun1hVRGK+XOEjZhVsY=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=OWpAUB4rzEDB4jWUuYhnhZTwowjZgQVytco36zNfMUHrdwYfZTHdVa32ti+rnVa/hpJ3hwGXmj0ntGM0pHEtamI8kY9tMQwf+iefEvcy3X9IFGla5WD92FdlgtRyYJA3F9pI+tCHdcvNnBmmgYpX1cWoxk5rcgO0kU7mHD4waGs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=KLz6LIxb; arc=none smtp.client-ip=209.85.221.47
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="U+UJFCYw"
-Received: by mail-wm1-f42.google.com with SMTP id 5b1f17b1804b1-49cca4ffdcfso17225055e9.0
-        for <linux-pci@vger.kernel.org>; Sat, 05 Sep 2026 11:39:19 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="KLz6LIxb"
+Received: by mail-wr1-f47.google.com with SMTP id ffacd0b85a97d-485888b3c3dso2218051f8f.2
+        for <linux-pci@vger.kernel.org>; Sat, 05 Sep 2026 11:39:24 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1788633558; x=1789238358; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=G24wlXpv5jwJX+hVi7UVbTBsj2H8ilHw4YJYDN3z2zY=;
-        b=U+UJFCYw36Lo56mdIs7na2MRzfVdrRFa2ZTcp8I7Kcatp//OuPzkA5cjYpjYWkpkVa
-         JDg6Zp7GAzcvi6aCH2TXmkyzjVCVtUgzxlWPbpGydnjq/gKu4i58eEtv9qVwhTtEqy23
-         /zJul1Ob0khDqntIqINndNz9qyBb/+CKpYzfN637WnDZ6SbndMAQifUYnGw57/0SXLZo
-         hXBFKy575V4ohh5J8jA5grumtA258zIjF3O23kS2Yz0M2dBPtlB86fXtoM8gadxinRm/
-         3ZUvmUaZ4dngv21nDIc+VQ7vK480PZnCu0wiF2uOcEi447Fi84iJcPaQ/FcIc1/EI7N8
-         PBog==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788633558; x=1789238358;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=gmail.com; s=20251104; t=1788633563; x=1789238363; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=G24wlXpv5jwJX+hVi7UVbTBsj2H8ilHw4YJYDN3z2zY=;
-        b=fX8e98o00C8l8JDh6ZjtwnZwIU80LwU8jqXpNbg/QIJyYXxbHPddhd8ERQkW6YfL/K
-         ZcfGycA01iRJjKaYrAHUduoSkigqC4AbfQ3lXj94xuWhlTZMGiLourvhN2GIuQ4/mQN/
-         6a7UXVfZ/8RHWYobMyob7Al05dzexb8/Br9lH17Nk8WKcNoiCL+b7S0v6y77cf/yeh/k
-         TS4jxLBI+wogDGnNfLKUOb7p+lHC4sKEauqqpQ22kIAwMRzkUnggQ2MyQlcDXfc2wfpa
-         yiAIW4j7rGAOYacVIQxSI+bmNBh/ZExKj89e7EwNDBrt5OfvVl+mU+UfvELzmurfHC9q
-         MWyA==
-X-Gm-Message-State: AFuF++niVTc0lTMosRwG9quCuveY71kN/MzUxwG8WINbiPFTKQbb5EqJ
-	4hFZ8wIKiOtnYaQE5IhN/+lzDl5SmvVqNvVzmQXjspg17rSa4T1VnWXa
-X-Gm-Gg: AYBFou2GZJ51O16wRSuM1gnB9IZUxnZRk7BlLSNABWXoyYsJ8/sAkx/URxIolytIEdh
-	IDMOcT1nc7Jdp3wfV5UwfH2CmzENT/I33aHLx2y+HCtaVSvROcnqGrbOg7PdrWnhnKYybcjRO8V
-	TRFmlHDqU4jDk/l2Ti0md2zvovHEvN71HDUD5fy6k7CyajIdY1/naM7osdrekaJJ1MZD5UTzHDz
-	lidc1X1sZol7BwIJtug+hpLHXgfX2aSyUSr0JMpXw+OMXmPVdskf76VSA8NqdsmDBJv0F8373D8
-	9xSd+TduHjfJatsOJtY70pmQNpV5ohlJ/GzrrHwV05UC3DDnl9AqjLfVnNL4jT6ysenTKU1Gnue
-	oeJSSEHyDHWkQYeFxTxxcAQrl44SP6YgjRNdpOnluYObRNWwqdKzii589LFqyknkxiI0CAF3r9e
-	+MXKN5qs2lW59eeP5+S/FwfsBUFMmfbgrjeZ2ZrEMXXTNjA2boiEeCfuRCOhhOodseugaNB3PjP
+        bh=x0q/PhqzpPPYuw5I7NOI37oNV5qDMBKzDX3eeEPIj9k=;
+        b=KLz6LIxbRakntqO5V2uMN+MjCp/PT0SkGjrF/WegNNP+dwIlC5SrSc7eWmgc0ZSJ+f
+         UaLOSXLpT21iEwTw/HQcnXotfnTfIUmu4q3Bu4LhhfBqzSL3D5nGxceYn6Aw14nWlPab
+         3YdtPPdBj0VSEv5gTLuJyB+wq+xQUGWGIQk4IoQBH6HX2Gxe67zytz5WOSRg9qlZMNAE
+         q5TLzZDK9v3+XLEtfI29n/+bVHl7D+4aoOy7NYy4FrlE9y3pd+9admpi/H97DpqpyamP
+         45dAtFa/Qd6IqCRcIZP7HcB38R5nt3U7tNIMO6qDpcCMtMZfvuirIDNXV6PAP7kG6Dzx
+         u1cQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1788633563; x=1789238363;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=x0q/PhqzpPPYuw5I7NOI37oNV5qDMBKzDX3eeEPIj9k=;
+        b=LHXfmp/97D6jZQuOY0YvTUi8e/GsP6SOERvBiWilR+9GKtay8NPRyC1euNWhVtMcEj
+         hu+gUWFipZitx5pD+3p6mOGEYvIap1uycyER1EKsv14R5Fz/TsN2DzbM64jeR7Ck+tfF
+         fNGhD0inycLuRRsj+x4iMlSCZgyHhpolpRO/upQEaz+G+rQ5tefSYtutcWgSszwoa4MR
+         MRS5FVICx4SPTiBKgEf9bolfvJdazmDZnPFEkm2AuEjCYEVUJ95YjhHmp+ktpAymnMBA
+         m18+fS1NRNxjl/AB83VyaZzbn7sDuwNx4ncqpRkAj0fVj4YpDyE5GtZiX04oD2wrLheZ
+         YerA==
+X-Gm-Message-State: AFuF++nV23Pszt0LmtgEqznQzllfdNBdb4wTXFzKoo80dEUf/2PlvuiI
+	jYrBFdHwe3iKeYOJp6ib/cxpvobEtcyB/q4WalgRMmVIXyq0Ri2jfngv
+X-Gm-Gg: AYBFou1nrAEpOEfYzJDK82H+CEQJgdk2sX2zP7Uxcqwn9ur8ZnOprW4LGnv7FsqNqoc
+	coQ1zA5WsmDfeXSwN/TSxmzhyR7oySKXo45hd7y4/UsI14CIvHAYKsFH81ujySu2gaqfgmZnYh0
+	IOqj6UWGyM5VpeJ83xQLiTq6AYcRWSM5qpspLsbxNiXjgR66oZS462olujCidAfmVGdPz8UFGZX
+	baPNtiwqR08mxIGZJ0w5G0PtJUIQeZpW5r9bn02YA/mQNTDnGXTRscznhkkaEkiUWB7HfTraLGt
+	uJpWgRuGFz7boSzaMboSxV7HF6FxSrJRqAHRn1F/r1+dsZiCaqxbQ21SCPc+8VXxIg6DxEpLc4N
+	91RmDkRfX8UptckLAI42W30h/JjG2jLKfTs5OuDVcWjzmbJ7Pp736VJlpabEA044EZBMW5sXrK2
+	FhxsXEsrnBxyFfiHtNws4Aj6Ues1jWVlCHDYlUTN94F62muBAwlK7fT8So908CGHhQwnmJo4JDC
 	A==
-X-Received: by 2002:a05:600c:1d0d:b0:49d:99c:3bd9 with SMTP id 5b1f17b1804b1-49d099c3fc9mr9409175e9.33.1788633558060;
-        Sat, 05 Sep 2026 11:39:18 -0700 (PDT)
+X-Received: by 2002:adf:e19e:0:b0:485:8c16:5eef with SMTP id ffacd0b85a97d-4858c166088mr10620207f8f.41.1788633562541;
+        Sat, 05 Sep 2026 11:39:22 -0700 (PDT)
 Received: from 1c44f78ca37e.fritz.box ([2.210.128.137])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-485885bfdf6sm16333603f8f.34.2026.09.05.11.39.16
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-485885bfdf6sm16333603f8f.34.2026.09.05.11.39.21
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 05 Sep 2026 11:39:16 -0700 (PDT)
+        Sat, 05 Sep 2026 11:39:21 -0700 (PDT)
 From: Abhin Parekadan Jose <abhinjoses@gmail.com>
 To: bhelgaas@google.com,
 	lukas@wunner.de,
@@ -66,10 +68,12 @@ Cc: linux-pci@vger.kernel.org,
 	kees@kernel.org,
 	xueshuai@linux.alibaba.com,
 	Abhin Parekadan Jose <abhinjoses@gmail.com>
-Subject: [PATCH RFC 0/3] PCI: pciehp: Report surprise removal during safe removal
-Date: Sat,  5 Sep 2026 18:38:57 +0000
-Message-ID: <20260905183905.997833-1-abhinjoses@gmail.com>
+Subject: [PATCH RFC 1/3] PCI: Report surprise removal event
+Date: Sat,  5 Sep 2026 18:38:58 +0000
+Message-ID: <20260905183905.997833-2-abhinjoses@gmail.com>
 X-Mailer: git-send-email 2.51.1
+In-Reply-To: <20260905183905.997833-1-abhinjoses@gmail.com>
+References: <20260905183905.997833-1-abhinjoses@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -78,114 +82,135 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Bjorn asked for this to be pulled out of the dormant virtio thread and
-posted separately as a purely PCI series [1]. This is that repost. It
-carries one patch from Michael's RFC v5 as a dependency and drops the
-virtio side entirely.
+From: "Michael S. Tsirkin" <mst@redhat.com>
 
-The problem, as identified by Lukas [2]: if a safe removal is already in
-progress when the device is surprise removed, pciehp cannot report the
-disconnect.  The removal blocks waiting on a device interrupt or status
-read, and the IRQ thread is single-threaded and is itself executing that
-removal, so it never runs again to report the device gone. The removal
-hangs indefinitely.
+At the moment, in case of a surprise removal, the regular remove
+callback is invoked, exclusively.  This works well, because mostly,
+the cleanup would be the same.
 
-Lukas noted that pciehp_isr() does run while the IRQ thread is blocked,
-but argued this was not viable either, because pciehp_ist() must ignore
-link and presence changes caused by SBR or DPC, and telling those apart
-takes seconds which cannot be spent in hardirq.
+However, there's a race: imagine device removal was initiated by a user
+action, such as driver unbind, and it in turn initiated some cleanup
+and is now waiting for an interrupt from the device. If the device is
+now surprise-removed, that never arrives and the remove callback hangs
+forever.
 
-Patch 2 sidesteps that by not doing the work in hardirq. pciehp_isr()
-only checks PDS, and defers everything else to a work item running in
-process context, where it is free to sleep and to repeat the spurious
-link change test.
+For example, this was reported for virtio-blk:
 
-Patches:
+	1. the graceful removal is ongoing in the remove() callback,
+	    where disk deletion del_gendisk() is ongoing, which waits
+	    for the requests to complete,
 
-  1/3 Michael's "PCI: Report surprise removal event" from RFC v5,
-      unchanged apart from the fixing commit subject. Needed for
-      disconnect_work_enable and the disconnect_work.
+	2. Now few requests are yet to complete, and surprise removal
+	    started.
 
-  2/3 The pciehp change. Adds disconnect_work to struct controller,
-      scheduled from pciehp_isr() on PDC or DLLSC when
-      !pciehp_card_present().  pciehp_disconnect_work() then runs in
-      process context, where it re-tests for spurious link changes and
-      confirms the card is still absent before scheduling the driver's
-      disconnect work.
+	    At this point, virtio block driver will not get notified by
+	   the driver core layer, because it is likely serializing
+	   remove() happening by +user/driver unload and PCI hotplug
+	   driver-initiated device removal.  So vblk driver doesn't
+	   know that device is removed, block layer is waiting for
+	   requests completions to arrive which it never gets.
+	   So del_gendisk() gets stuck.
 
-  3/3 A POC driver for the QEMU edu device that blocks in remove()
-      waiting for an interrupt, standing in for del_gendisk() stuck in
-      blk_mq_freeze_queue_wait().  Not for merge -- included so the
-      hang can be reproduced.
+Drivers can artificially add timeouts to handle that, but it can be
+flaky.
 
-Testing
+Instead, let's add a way for the driver to be notified about the
+disconnect. It can then do any necessary cleanup, knowing that
+the device is inactive.
 
-Reproducing this needs QEMU changes, since neither device_del nor the
-attention button produces a true surprise removal.  A branch with both
-is here [3]:
+Since cleanups can take a long time, this takes an approach of a work
+struct that the driver initiates and enables on probe, and tears down on
+remove.
 
-  - a delayed-IRQ register on the edu device (BAR0 0x30, write N ms)
-  - a pcie_surprise_del monitor command that drops the device and
-    generates PDC=1, DLLSC=1, PDS=0
+Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+Link: https://lore.kernel.org/all/fba3d235e38c1c6fcef2a30ed083ad9e25b20fa3.1752094439.git.mst@redhat.com/
+[Abhin: adapted commit message subject]
+Signed-off-by: Abhin Parekadan Jose <abhinjoses@gmail.com>
+---
+ drivers/pci/pci.h   |  6 ++++++
+ include/linux/pci.h | 45 +++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 51 insertions(+)
 
-Test 1 (Hang in remove() on the user thread, then suprise remove):
-
-  ./qemu-system-aarch64 -machine virt,gic-version=3   -cpu cortex-a57 \
-    -m 512 -smp 2   -kernel Image  -initrd initramfs.cpio.gz  \
-    -device pcie-root-port,id=rp1,chassis=1,slot=1 \
-    -device edu,bus=rp1,id=edu0 -append "console=ttyAMA0 rdinit=/init" \
-    -nographic  -monitor unix:/tmp/qemu-mon.sock,server,nowait
-
-  guest# echo 1 > /sys/bus/pci/devices/0000:01:00.0/remove
-
-  host$  echo "pcie_surprise_del edu0" | socat - unix-connect:/tmp/qemu-mon.sock
-
-  This is the test that MST had solved.
-
-Test 2 (Hang in remove() on the IRQ thread, then suprise remove):
-
-  ./qemu-system-aarch64 -machine virt,gic-version=3   -cpu cortex-a57 \
-    -m 512 -smp 2   -kernel Image  -initrd initramfs.cpio.gz  \
-    -device pcie-root-port,id=rp1,chassis=1,slot=1 \
-    -device edu,bus=rp1,id=edu0 -append "console=ttyAMA0 rdinit=/init" \
-    -nographic  -monitor unix:/tmp/qemu-mon.sock,server,nowait
-
-  guest# echo 0 > /sys/bus/pci/slots/1/power
-
-  host$  echo "pcie_surprise_del edu0" | socat - unix-connect:/tmp/qemu-mon.sock
-
-  This is the test I am trying to solve.
-
-Without patch 2 the safe removal never returns. With it, pciehp_isr()
-schedules ctrl->disconnect_work, which walks the bus and schedules
-pdev->disconnect_work; the wait in the POC driver completes and
-remove() proceeds.
-
-Open questions
-
-  - Is this a viable approach?
-
-[1] https://lore.kernel.org/all/20260826194815.GA1552818@bhelgaas/
-[2] https://lore.kernel.org/all/aHlZE18kPuHuDtTT@wunner.de/
-[3] https://gitlab.com/abhinkop/qemu/-/commits/suprise-removal
-
-Assisted-by: LLM
-
-Abhin Parekadan Jose (2):
-  PCI: pciehp: Report surprise removal from pciehp_isr()
-  misc: Add edu_srpoc surprise removal POC driver
-
-Michael S. Tsirkin (1):
-  PCI: Report surprise removal event
-
- drivers/misc/Makefile            |   1 +
- drivers/misc/edu_srpoc.c         | 169 +++++++++++++++++++++++++++++++
- drivers/pci/hotplug/pciehp.h     |   1 +
- drivers/pci/hotplug/pciehp_hpc.c |  56 ++++++++--
- drivers/pci/pci.h                |  12 +++
- include/linux/pci.h              |  45 ++++++++
- 6 files changed, 276 insertions(+), 8 deletions(-)
- create mode 100644 drivers/misc/edu_srpoc.c
-
---
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index ba3c3fddddc2..23b1605e783a 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -805,6 +805,12 @@ static inline int pci_dev_set_disconnected(struct pci_dev *dev, void *unused)
+ 	pci_dev_set_io_state(dev, pci_channel_io_perm_failure);
+ 	pci_doe_disconnected(dev);
+ 
++	if (READ_ONCE(dev->disconnect_work_enable)) {
++		/* Make sure work is up to date. */
++		smp_rmb();
++		schedule_work(&dev->disconnect_work);
++	}
++
+ 	return 0;
+ }
+ 
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index d31a8d107b1e..06d43f57f509 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -592,6 +592,9 @@ struct pci_dev {
+ 	u8 reset_methods[PCI_NUM_RESET_METHODS]; /* In priority order */
+ 
+ 	struct gpio_desc *wake;		/* WAKE# GPIO */
++	/* Report disconnect events. 0x0 - disable, 0x1 - enable */
++	u8 disconnect_work_enable;
++	struct work_struct disconnect_work;
+ 
+ #ifdef CONFIG_PCIE_TPH
+ 	u16		tph_cap;	/* TPH capability offset */
+@@ -2123,6 +2126,48 @@ pci_release_mem_regions(struct pci_dev *pdev)
+ 			    pci_select_bars(pdev, IORESOURCE_MEM));
+ }
+ 
++/*
++ * Run this first thing after getting a disconnect work, to prevent it from
++ * running multiple times.
++ * Returns: true if disconnect was enabled, proceed. false if disabled, abort.
++ */
++static inline bool pci_test_and_clear_disconnect_enable(struct pci_dev *pdev)
++{
++	u8 enable = 0x1;
++	u8 disable = 0x0;
++
++	return try_cmpxchg(&pdev->disconnect_work_enable, &enable, disable);
++}
++
++/*
++ * Caller must initialize @pdev->disconnect_work before invoking this.
++ * The work function must run and check pci_test_and_clear_disconnect_enable.
++ * Note that device can go away right after this call.
++ */
++static inline void pci_set_disconnect_work(struct pci_dev *pdev)
++{
++	/* Make sure WQ has been initialized already */
++	smp_wmb();
++
++	WRITE_ONCE(pdev->disconnect_work_enable, 0x1);
++
++	/* check the device did not go away meanwhile. */
++	mb();
++
++	if (!pci_device_is_present(pdev))
++		schedule_work(&pdev->disconnect_work);
++}
++
++static inline void pci_clear_disconnect_work(struct pci_dev *pdev)
++{
++	WRITE_ONCE(pdev->disconnect_work_enable, 0x0);
++
++	/* Make sure to stop using work from now on. */
++	smp_wmb();
++
++	cancel_work_sync(&pdev->disconnect_work);
++}
++
+ bool pci_suspend_retains_context(struct pci_dev *pdev);
+ 
+ #else /* CONFIG_PCI is not enabled */
+-- 
 2.51.1
+
