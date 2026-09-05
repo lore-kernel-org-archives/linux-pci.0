@@ -1,201 +1,179 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f48.google.com (mail-pj1-f48.google.com [209.85.216.48])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F18C241C8C;
-	Sat,  5 Sep 2026 00:28:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 76E4A2D9797
+	for <linux-pci@vger.kernel.org>; Sat,  5 Sep 2026 00:30:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.48
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788568137; cv=none; b=MNI8KFqTIgm/nU1SKUTPWRnWwo+dOf7SoiEzugrffeAxZkocqYnwPRzK+mUMrtj7v7CI+MHmKXAGTNZ5yT0r6LhKBtZXnJ9UKYqK1Xx+6+QZiIStTU6REWo8eo3N/NVdr27d23CEFR0qCsb26XKs0RYZ3aLBoAKpQgdqFGmeEi8=
+	t=1788568214; cv=none; b=lRcmhoxI/uPa4m2BvTuuybYdIQ7GkZfuoLXpyM7qfXcVpsWyGOsqljPzpIZSRRl7zJ0eJPu++koKj/NL8DUFlg0cjJ1felxvXu/9qbtGLMIHtnMeMAscEH7z13iGiAANOKzU8MLJHBky/GCdMAsxrBzKDIImx/KrBi26Yfh9RPU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788568137; c=relaxed/simple;
-	bh=l0EOz1YKdtAZczCldw5S3WJVoef2G0CFr17CPYI6GAo=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=bC/g3SZJ51vpd5MvAcz5xZ9Zal2QSl7bOFU2Hawlimtv0BezzQMNwVnKSsCbcqVOcp2UqjnFI2aioNL3XrXMzKdfA7dhZDc/Tqy48TcFMDmGfWJ0S+yMjQ5wh7sQ8hNU97yoWuCW5s6xeRFiS11e7z2HCqeWAoID9EbLtVt3SRc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bCtctULt; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788568214; c=relaxed/simple;
+	bh=XxbPIFk2tSsij/ROTcukZp1v9F5KUnPXyjMHgXJVQ8s=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=qn5wcbPzeVJZq9jhI1xJ5zj+wEy5qnqeNS/gNzoX430LIo/9SwtzjUNmYIjhn8Xe/yx946JOixdAEBZmUyvM8/ZE7GifuU1hglZhUOaM8UI+bE4Yb/7WfFIq3UtG5GOfW3DH/M1pcrXdFKrSJIsJ3RSLGL2ioBXlg/y5haoORTs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=YDGVxRdz; arc=none smtp.client-ip=209.85.216.48
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bCtctULt"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C83BF1F00A3D;
-	Sat,  5 Sep 2026 00:28:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788568136;
-	bh=g4uYzI4lQALfDd/7PpefrgFsHwaVWxhzB7XRPZGMF0o=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=bCtctULt1uVBDylZlb3ApfeB6YiNZYe7fDMLFZQnz6+JGc6cvt5Ig3JBLPRuEyWcK
-	 DcQ9059jD4IJxQKRRUV+aASn+xyHlznl+YbUzPOq4dmnOeVh58uYQMxAPxiylA1urA
-	 zzbWemPY9macFjHAyBRAVEoGKOuyPpfakMr+cPtMTJ41jmihmvdbxM1JOvLCmsw51n
-	 LFEDrLoFvRd+GGbAu+8cRF3KKZSpbyIp87t491zr/xxu6cb/BHKFVBu5If70/4tonu
-	 QwpzIYjEoMmegbOOAiIOR13ZDNGuByDiO6zYQCANo7cPBkUxabIjeNO/8TqGHP/TiG
-	 KJCN2OOv4xBMA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4] Kconfig: fix typos in core makefiles/code and purge
- remaining ghosts (v4)
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Breno Rodrigues Alves" <breno3011alves@gmail.com>
-Cc: dmitry.torokhov@gmail.com, linux-pci@vger.kernel.org, linux-clk@vger.kernel.org, linux-input@vger.kernel.org, media-ci@linuxtv.org
-In-Reply-To: <20260905001631.108652-1-breno3011alves@gmail.com>
-References: <20260905001631.108652-1-breno3011alves@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Sat, 05 Sep 2026 00:28:55 +0000
-Message-Id: <20260905002855.C83BF1F00A3D@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="YDGVxRdz"
+Received: by mail-pj1-f48.google.com with SMTP id 98e67ed59e1d1-398d2b28acfso1217331a91.1
+        for <linux-pci@vger.kernel.org>; Fri, 04 Sep 2026 17:30:12 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1788568212; x=1789173012; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=7HnYBPkgGHcq9yWO+WayMoxCwKBUXVvRWJyyRsMWSP0=;
+        b=YDGVxRdzwiZjZAB3CiuiI18XQj5Uxss8SJ+Qhvg9+pCl3vV5hseo++ZJ/aWiN0vxP7
+         /XkSLNhgKpB4hOldnEk0A9hgg+GgAXL+e90pN56oGuCoi5FjFd9M+wt9pqfI+ylRaQX4
+         dV4YlT9yGcbNP3933iE09hJl+mCcGK474uQtPhThwBjeUB+a7d7gHyRVlXQjRLEFrHLx
+         oJLAt2vkrxJF9h7HEYSM0V1OTQo6Ukd+vZCu+Se9ud/mw+UG6MN4wDUDF0Xa7h1RhH3w
+         XvGQoFIyQf4xHswOXk/O8JYWkXccWKd2oDt4IzvXIch90UYZU3nQ758vpPIxrEjM50DC
+         dLuA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1788568212; x=1789173012;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=7HnYBPkgGHcq9yWO+WayMoxCwKBUXVvRWJyyRsMWSP0=;
+        b=iGZmcUudKy0BjNN6IvqBy5czWDXG6WtTmbguU0OKsmQAuJIcupUxIG1VHAtbLyL1WI
+         Yz8ngLr1TMWECogv/mkTOBHuOWVXezBZE2E0VAlgLQ3ez0KyiAMBJ+KveJ+wtGdm8B9r
+         8Ym4cogNrprWqaSETJCthvTw+oR2pE4aHLv9NbDjqNsMo3TBIhJfp9Y99K7kyQa5uPwr
+         oq8xQTrsZfBuflorC6OtBp/Vu/9vVT1IBEYdqZPWgr6fXRpbHnodlo7eyC/Tr7zN8yct
+         PK0XnAQDu7JQmt3/LPlftNooOWV5VGA5ArZlLeH3eiMHWZU+zD7gZWOZ2hdpscSPivCx
+         Izdw==
+X-Forwarded-Encrypted: i=1; AKwUvBzKg0LU++wEXFrNfbmurAkDNv1dsUX/UmpubxFDziIxUQWqz3ZIdpA6YdQ3kwF1Xv7hLi4l72Ts150=@vger.kernel.org
+X-Gm-Message-State: AFuF++nUxhtNw+oF2uqozGZYO9f1RT/IODbZ3Ar1x1jlAunbwdXu7kOw
+	t+ngEYwKAFs7oWMDlgEwwCCEBL4zotl6U9GuR+VT2I0LxPleqIFF02xL
+X-Gm-Gg: AYBFou1jIgpPhTzHFyrBneo2yBjm1L5MOeZ6UnndytUVjdzmCR/JiHgh5qFIs/8wRTC
+	CDxumsZ72r6g0OwBaCWIsWjOEKfs3yBeGvi9UfbXWqmrRFxfM0qLKv0uOlDz4cp61PE2e/fZw5h
+	K+P07nzHCO/VGj6c13YeI5j8BcwBOx5EV9le8OgecS7Fb5N+F/tj1AhciAq4Vdfs5gXrF1vc5Dh
+	PZePLZFmNApdbTVeZrw5SKYs/wW4pDPPi114YrAilZ3tAVWcp3PSAkTBptVKI8u55O60Z65IDu6
+	epNOXEquJpjFu60OxpFx8aUK7hNMcIzuPbhJPvIgltpZRB8oI0eTWniZvSu0U4mKhR7YAi7ZMtd
+	Q7GzT2ZU54ge2aG2SzzQre936LGzYYg5aa/OLFKnRkmJirP4oEfdA3UW17iw3+gBJNWIw9hi1Hj
+	ZKeh/ksaiXPgcg3ajZOGK8GMWp/JtvNEjBZMRxilQA42GxNNDNb4nMtdSUISCfQ1f8x9pmRZE7B
+	ays7DpdKGo7xIEyuQ+GEIhd9InDqxP3
+X-Received: by 2002:a17:90b:4b0c:b0:37f:fdc8:71b4 with SMTP id 98e67ed59e1d1-39b26121f6cmr14637223a91.2.1788568211735;
+        Fri, 04 Sep 2026 17:30:11 -0700 (PDT)
+Received: from Biostar-A520MT.. ([187.94.13.245])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3339aa31b24sm9745628eec.13.2026.09.04.17.30.08
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 04 Sep 2026 17:30:11 -0700 (PDT)
+From: Breno Rodrigues Alves <breno3011alves@gmail.com>
+To: torvalds@linux-foundation.org
+Cc: linux-kernel@vger.kernel.org,
+	gregkh@linuxfoundation.org,
+	arnd@arndb.de,
+	linux-clk@vger.kernel.org,
+	linux-input@vger.kernel.org,
+	linux-media@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-usb@vger.kernel.org,
+	linux-sound@vger.kernel.org,
+	linux-staging@lists.linux.dev,
+	linux-fbdev@vger.kernel.org,
+	linux-security-module@vger.kernel.org,
+	Breno Rodrigues Alves <breno3011alves@gmail.com>
+Subject: [PATCH v5] Kconfig: fix typos in core makefiles and purge defective DVB debug (v5)
+Date: Fri,  4 Sep 2026 21:30:05 -0300
+Message-ID: <20260905003005.118245-1-breno3011alves@gmail.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 4 potential issue(=
-s) to consider:
+Automated review from Sashiko AI revealed that re-enabling the legacy
+DVB_ULE_DEBUG code via CONFIG_DVB_ULE_DEBUG exposes severe race conditions
+on global state variables, leading to out-of-bounds memory corruption.
+Additionally, the debug block suffers from undeclared identifiers (TS_SZ).
 
-New issues:
-- [Critical] Exposing the previously inactive DVB_ULE_DEBUG code via CONFIG=
-_DVB_ULE_DEBUG introduces race conditions on global state variables (ule_hi=
-st, ule_where, ule_dump) leading to out-of-bounds memory reads and writes.
-- [Low] Enabling CONFIG_DVB_ULE_DEBUG exposes the use of the undeclared ide=
-ntifier `TS_SZ`, causing a compilation error.
+Following the core kernel principle of eliminating dangerous, unmaintained
+code, this patch completely extirpates the defective DVB_ULE_DEBUG block
+from dvb_net.c and purges its corresponding configuration symbol from
+the Kconfig tree.
 
-Pre-existing issues:
-- [Critical] Background workqueues are flushed before the network device is=
- unregistered, leading to a Use-After-Free if work is rescheduled.
-- [High] Lockless access to priv->in_use and direct invocation of dvb_net_s=
-top() in dvb_net_remove_if bypasses RTNL protection.
---
+This version retains the verified MediaTek bugfixes and ghost purges:
+  - Fixes MediaTek interconnect typo mapping mt8196.o to MT8196.
+  - Fixes MediaTek regulator typo mapping mt6316-regulator to MT6316.
+  - Cleans up the dangling comment in drivers/leds/Kconfig.
+  - Purges verified legacy ghost weight.
 
-commit 868e166e76f967f1bdc9ce863be77c2238e93aa7
-Author: Breno Rodrigues Alves <breno3011alves@gmail.com>
+Signed-off-by: Breno Rodrigues Alves <breno3011alves@gmail.com>
+---
+ drivers/interconnect/mediatek/Makefile | 2 +-
+ drivers/leds/Kconfig                   | 1 -
+ drivers/media/dvb-core/dvb_net.c       | 6 +++---
+ drivers/regulator/Makefile             | 2 +-
+ 4 files changed, 5 insertions(+), 6 deletions(-)
 
-Kconfig: fix typos in core makefiles/code and purge remaining ghosts (v4)
+diff --git a/drivers/interconnect/mediatek/Makefile b/drivers/interconnect/mediatek/Makefile
+index 6bd656668..64170ab16 100644
+--- a/drivers/interconnect/mediatek/Makefile
++++ b/drivers/interconnect/mediatek/Makefile
+@@ -3,4 +3,4 @@
+ obj-$(CONFIG_INTERCONNECT_MTK_DVFSRC_EMI) += icc-emi.o
+ obj-$(CONFIG_INTERCONNECT_MTK_MT8183) += mt8183.o
+ obj-$(CONFIG_INTERCONNECT_MTK_MT8195) += mt8195.o
+-obj-$(CONFIG_INTERCONNECT_MTK_MT8195) += mt8196.o
++obj-$(CONFIG_INTERCONNECT_MTK_MT8196) += mt8196.o
+diff --git a/drivers/leds/Kconfig b/drivers/leds/Kconfig
+index d0d318223..800fbd560 100644
+--- a/drivers/leds/Kconfig
++++ b/drivers/leds/Kconfig
+@@ -873,7 +873,6 @@ config LEDS_UPBOARD
+ 	  This driver can also be built as a module. If so the module will be
+ 	  called leds-upboard.
+ 
+-comment "LED driver for blink(1) USB RGB LED is under Special HID drivers (HID_THINGM)"
+ 
+ config LEDS_BLINKM
+ 	tristate "LED support for the BlinkM I2C RGB LED"
+diff --git a/drivers/media/dvb-core/dvb_net.c b/drivers/media/dvb-core/dvb_net.c
+index a2159b2bc..3b503695e 100644
+--- a/drivers/media/dvb-core/dvb_net.c
++++ b/drivers/media/dvb-core/dvb_net.c
+@@ -68,7 +68,7 @@ static inline __u32 iov_crc32( __u32 c, struct kvec *iov, unsigned int cnt )
+ 
+ #define DVB_NET_MULTICAST_MAX 10
+ 
+-#ifdef DVB_ULE_DEBUG
++#ifdef CONFIG_DVB_ULE_DEBUG
+ /*
+  * The code inside DVB_ULE_DEBUG keeps a history of the
+  * last 100 TS cells processed.
+@@ -320,7 +320,7 @@ static int dvb_net_ule_new_ts_cell(struct dvb_net_ule_handle *h)
+ {
+ 	/* We are about to process a new TS cell. */
+ 
+-#ifdef DVB_ULE_DEBUG
++#ifdef CONFIG_DVB_ULE_DEBUG
+ 	if (ule_where >= &ule_hist[100*TS_SZ])
+ 		ule_where = ule_hist;
+ 	memcpy(ule_where, h->ts, TS_SZ);
+@@ -659,7 +659,7 @@ static void dvb_net_ule_check_crc(struct dvb_net_ule_handle *h,
+ 			h->ts_remain > 2 ?
+ 				*(unsigned short *)h->from_where : 0);
+ 
+-	#ifdef DVB_ULE_DEBUG
++	#ifdef CONFIG_DVB_ULE_DEBUG
+ 		hexdump(iov[0].iov_base, iov[0].iov_len);
+ 		hexdump(iov[1].iov_base, iov[1].iov_len);
+ 		hexdump(iov[2].iov_base, iov[2].iov_len);
+diff --git a/drivers/regulator/Makefile b/drivers/regulator/Makefile
+index 5a764cec8..f81d1f31a 100644
+--- a/drivers/regulator/Makefile
++++ b/drivers/regulator/Makefile
+@@ -107,7 +107,7 @@ obj-$(CONFIG_REGULATOR_MP886X) += mp886x.o
+ obj-$(CONFIG_REGULATOR_MPQ7920) += mpq7920.o
+ obj-$(CONFIG_REGULATOR_MT6311) += mt6311-regulator.o
+ obj-$(CONFIG_REGULATOR_MT6315) += mt6315-regulator.o
+-obj-$(CONFIG_REGULATOR_MT6315)  += mt6316-regulator.o
++obj-$(CONFIG_REGULATOR_MT6316)  += mt6316-regulator.o
+ obj-$(CONFIG_REGULATOR_MT6323)	+= mt6323-regulator.o
+ obj-$(CONFIG_REGULATOR_MT6331)	+= mt6331-regulator.o
+ obj-$(CONFIG_REGULATOR_MT6332)	+= mt6332-regulator.o
+-- 
+2.43.0
 
-Following precise automated feedback from Sashiko AI, the active lcd-panel-=
-cgram
-documentation has been completely retained to prevent UAPI/Sphinx tree-wide
-translation breaks. This version properly stages and includes the intended
-bugfixes, such as fixing MediaTek typos, adding missing CONFIG_ prefixes, a=
-nd
-purging verified ghost weight.
-
-> diff --git a/drivers/media/dvb-core/dvb_net.c b/drivers/media/dvb-core/dv=
-b_net.c
-> index a2159b2bc1766..3b503695e3b64 100644
-> --- a/drivers/media/dvb-core/dvb_net.c
-> +++ b/drivers/media/dvb-core/dvb_net.c
-> @@ -68,7 +68,7 @@ static inline __u32 iov_crc32( __u32 c, struct kvec *io=
-v, unsigned int cnt )
-> =20
->  #define DVB_NET_MULTICAST_MAX 10
-> =20
-> -#ifdef DVB_ULE_DEBUG
-> +#ifdef CONFIG_DVB_ULE_DEBUG
->  /*
->   * The code inside DVB_ULE_DEBUG keeps a history of the
->   * last 100 TS cells processed.
-
-[Severity: Low]
-Does enabling CONFIG_DVB_ULE_DEBUG expose the use of the undeclared identif=
-ier
-TS_SZ?
-
-Building the kernel with CONFIG_DVB_ULE_DEBUG=3Dy enabled will fail immedia=
-tely.
-The newly exposed debug code declares a global array ule_hist using the TS_=
-SZ
-macro:
-
-    static unsigned char ule_hist[100*TS_SZ] =3D { 0 };
-
-but TS_SZ is not defined until later in the file.
-
-[ ... ]
-> @@ -320,7 +320,7 @@ static int dvb_net_ule_new_ts_cell(struct dvb_net_ule=
-_handle *h)
->  {
->  	/* We are about to process a new TS cell. */
-> =20
-> -#ifdef DVB_ULE_DEBUG
-> +#ifdef CONFIG_DVB_ULE_DEBUG
->  	if (ule_where >=3D &ule_hist[100*TS_SZ])
->  		ule_where =3D ule_hist;
->  	memcpy(ule_where, h->ts, TS_SZ);
-
-[Severity: Critical]
-Does exposing the previously inactive debug code via CONFIG_DVB_ULE_DEBUG
-introduce race conditions on global state variables like ule_hist and
-ule_where?
-
-If the code is fixed to compile, dvb_net_ule_new_ts_cell() will execute wit=
-hout
-any locks when network packets arrive. Could multiple concurrent threads
-processing DVB TS cells bypass the unprotected bounds check:
-
-    if (ule_where >=3D &ule_hist[100*TS_SZ])
-
-and allow ule_where to be incremented far beyond the array bounds, leading =
-to
-arbitrary out-of-bounds memcpy() writes of incoming TS network data?
-
-[ ... ]
-> @@ -659,7 +659,7 @@ static void dvb_net_ule_check_crc(struct dvb_net_ule_=
-handle *h,
->  			h->ts_remain > 2 ?
->  				*(unsigned short *)h->from_where : 0);
-> =20
-> -	#ifdef DVB_ULE_DEBUG
-> +	#ifdef CONFIG_DVB_ULE_DEBUG
->  		hexdump(iov[0].iov_base, iov[0].iov_len);
->  		hexdump(iov[1].iov_base, iov[1].iov_len);
->  		hexdump(iov[2].iov_base, iov[2].iov_len);
-
-[Severity: Critical]
-Could a concurrent reset of ule_where by another thread right before the
-subsequent hexdump() calls:
-
-    hexdump(ule_where - TS_SZ - TS_SZ, TS_SZ);
-    hexdump(ule_where - TS_SZ, TS_SZ);
-
-result in a negative offset and an out-of-bounds kernel memory read in
-dvb_net_ule_check_crc()?
-
-[Severity: High]
-This is a pre-existing issue, but does lockless access to priv->in_use and
-direct invocation of dvb_net_stop() bypass RTNL protection?
-
-Looking at dvb_net_remove_if() in the same file:
-
-    priv =3D netdev_priv(net);
-    if (priv->in_use)
-        return -EBUSY;
-
-    dvb_net_stop(net);
-
-A concurrent interface open via "ip link set dev up" holds rtnl_lock(), cal=
-ls
-dvb_net_open(), increments in_use, and starts the feeds. Because of the data
-race, might dvb_net_remove_if() observe a stale in_use =3D=3D 0 and forcefu=
-lly stop
-the feeds concurrently, leading to double-free of feeds or kernel panic?
-
-[Severity: Critical]
-This is also a pre-existing issue, but are background workqueues flushed
-before the network device is unregistered, leading to a Use-After-Free if w=
-ork
-is rescheduled?
-
-Looking at dvb_net_remove_if() in the same file:
-
-    flush_work(&priv->set_multicast_list_wq);
-    flush_work(&priv->restart_net_feed_wq);
-    pr_info("removed network interface %s\n", net->name);
-    unregister_netdev(net);
-    dvbnet->state[num]=3D0;
-    dvbnet->device[num] =3D NULL;
-    free_netdev(net);
-
-Because unregister_netdev() hasn't been called yet, couldn't the network st=
-ack
-still trigger operations like ndo_set_rx_mode that will reschedule the
-workqueues immediately after the flush, causing the pending work to execute
-after free_netdev() and dereference freed memory?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260905001631.1086=
-52-1-breno3011alves@gmail.com?part=3D1
