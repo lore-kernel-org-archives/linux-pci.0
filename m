@@ -1,180 +1,170 @@
-Received: from mout-p-201.mailbox.org (mout-p-201.mailbox.org [80.241.56.171])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7893D450F2;
-	Sun,  6 Sep 2026 17:32:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6682B3C4B93;
+	Sun,  6 Sep 2026 17:47:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788715968; cv=none; b=M+PwgxTVni38LSXwrIJuykQ1BGmysPAmfTmELGnYLZSmX26sIgfn5OAhqv95yNPvb04IB5HcFfemdkQCkPcYBNlrYXhMFmlSCOUKQM9N5oAsUqGy0KIlapesTiDnPNms4o0PUt1kwHAcK2MC4ILz0THTyK49Zd8vMJRg6oLlM98=
+	t=1788716864; cv=none; b=lj2OsAtX7kH2xpwMTO28C8SBblMGpoKNpCXkBLkJkYYFcpqVwtMdR6oa26hrQfPREpt5wJu4XSM7XjrJ7MblPi4KtK2y5SesBgJqYsM/whqasHpAHA9jN9B4wiZgBOzo5k0ayHUXLmHtge7zpeDBt106aYQxwdz8ey0+gmJUlp0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788715968; c=relaxed/simple;
-	bh=J1dMz04icOYOGAmumHJS85Ktsed4rBuh14zvQ8znmmM=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=Z32vpu0pV+Y1uqW9Qy8VSizfwPYnIGXUcy2Q6tL3Uxn7gm5Zt/mk473I8+O6tn9z7xbIaLPF9YneL0Cn75Z5okoiwLAh1cbQ4z1DXh3rysXcsNEpkR0z6etZfJzCzoWTeyZfGqw5g5HjLD5mU6jQgirTG6xBjAiJutiJcwvnPIs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=ZTJ73u2L; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=tYJWTvcg; arc=none smtp.client-ip=80.241.56.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
+	s=arc-20240116; t=1788716864; c=relaxed/simple;
+	bh=HceRLgtJr4B+FajfwPP9CnMWesgtvGPT8tTwFuIkq6w=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=io5JEy8bVwKM4sSmNUw7DmIljEticYllzdJJt6ZNzXTKiHZcgVpdXswWBmJvqwaTaSyUL6tz5+39a8SBmmRUsXf91yK672+P5k4vdrQ2qPOgT4v3giU/cTBsbWOCSw9IuerwRYydVINkw9iLoWTXq5tkQE4my8qQoY+y3sfrwck=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kutIwP4S; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="ZTJ73u2L";
-	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="tYJWTvcg"
-Received: from smtp202.mailbox.org (smtp202.mailbox.org [IPv6:2001:67c:2050:b231:465::202])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mout-p-201.mailbox.org (Postfix) with ESMTPS id 4hdHMv6v0dzMlCx;
-	Sun, 06 Sep 2026 19:32:43 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-	t=1788715964;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=UIE+4XFoDu5qq6aHf4+F7XKm5AuUKo/qoPgcCZ8gvjc=;
-	b=ZTJ73u2L7DxkAS+jaf4xMIn4+ZjQegXa6DOv21mu40gzUDHsJcdNAisT4FAn5Vz/FFqnDd
-	T5tcl2nRTWqbWbKCfBwQzzKyq+NdwVGXiLRjz+a98rD8/gbwzXE78VBRNhsx2F55yBxIM1
-	jNb3XS3isWmMhBXi0jfph3/yrDLJy+Z02ylCRxqg8xdlNAehe1MWsPjBc9pKt7oAemUptt
-	l1sjvHgkkFdEx/pXEcViC0tWklA0KCCxyb7GZChT18DpNY+SVkIyGOPfy6fXvitL2C4BtN
-	Z8acxQEsRSPs3mk851LRisqBJGEj0dMyiE/IaXM0wH6p+sCQ1TFOPo96TYp8tg==
-Authentication-Results: outgoing_mbo_mout;
-	dkim=pass header.d=mailbox.org header.s=mail20150812 header.b=tYJWTvcg;
-	spf=pass (outgoing_mbo_mout: domain of marek.vasut+renesas@mailbox.org designates 2001:67c:2050:b231:465::202 as permitted sender) smtp.mailfrom=marek.vasut+renesas@mailbox.org
-From: Marek Vasut <marek.vasut+renesas@mailbox.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-	t=1788715961;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=UIE+4XFoDu5qq6aHf4+F7XKm5AuUKo/qoPgcCZ8gvjc=;
-	b=tYJWTvcgvi2+duolqS8GmywFB5uDSzWo5qAjBCFdrEgLpEgZtSwulDIkUI7Qmp3zrIJ/dG
-	kZ+2l+JtDcPGwjmp8hhihNth0RcPWKBNj7beT2ZPVntS8nlWZju51G0BKC+6YcGEiU5g2D
-	77dK0zQ2Tib8Vos7IbA1dUv02eRHyN0elXEdO8M+nI3nLKwpGs+zBARw0q01gLdZ+obnvX
-	QtUPQvn1LZXQ9RA1Ye/s7Pfz8y9ljXvgnGHyi2gDQ3pjvSYAVVojmtzQ9FgRQpe1QSTiOM
-	3Ug0/ftEig9FLyDmZQjkWV+ofzP3PWfVt6om/aC40OdNJ7Iyfeb+lJ1qPs2DFQ==
-To: linux-pci@vger.kernel.org
-Cc: Marek Vasut <marek.vasut+renesas@mailbox.org>,
-	Geert Uytterhoeven <geert+renesas@glider.be>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Koichiro Den <den@valinux.co.jp>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Magnus Damm <magnus.damm@gmail.com>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-	devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-renesas-soc@vger.kernel.org
-Subject: [RFC][PATCH] PCI: rcar-gen4: Add missing PM ops
-Date: Sun,  6 Sep 2026 19:31:00 +0200
-Message-ID: <20260906173234.522400-1-marek.vasut+renesas@mailbox.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kutIwP4S"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B85CD1F00A3A;
+	Sun,  6 Sep 2026 17:47:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1788716863;
+	bh=atf1hxRB+nOzsHTecSDg34K85X0ewHVN6EKewz3fjVU=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=kutIwP4SBGlkPQEcFllEkNO808OyiDa6ZIxpIB56FbeRdtRXpi9rp15ZLnqJD0Kh2
+	 ZDmxOW2CP7EApiqJjq64fGrT1Fhuv2cWI9/eArsNaVOKUYWR7c99o2Ok3BrZcpWaZk
+	 TU2VG3bMAB6cY2qw/NiI+cqBuIWdswrCyaPtZsgQcD5EWrJgwNwmkmJTvXbNLttn5L
+	 fq18CHSDlFnyBnYXiaC0vZR+rt9XMss5J84TkajOTMlnhdqKNdxZCr5yJmNiVIPTbG
+	 GgniNA/vEsKDx1GVRduBy2GXiHNjP9v1L1l9LCe9MsYB5WRRfVz60w73V2m0N5R81l
+	 U6vL6pROYjWPg==
+From: sashiko-bot@kernel.org
+Subject: Re: [RFC][PATCH] PCI: rcar-gen4: Add missing PM ops
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Marek Vasut" <marek.vasut+renesas@mailbox.org>
+Cc: conor+dt@kernel.org, devicetree@vger.kernel.org, robh@kernel.org, linux-pci@vger.kernel.org, wsa+renesas@sang-engineering.com
+In-Reply-To: <20260906173234.522400-1-marek.vasut+renesas@mailbox.org>
+References: <20260906173234.522400-1-marek.vasut+renesas@mailbox.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Sun, 06 Sep 2026 17:47:42 +0000
+Message-Id: <20260906174742.B85CD1F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-MBO-RS-META: 3jqaou8uymgyayakppbpdrp9mp3z45ow
-X-MBO-RS-ID: e788f12618cacecb80a
-X-Rspamd-Queue-Id: 4hdHMv6v0dzMlCx
 
-The R-Car Gen4 PCIe controller is part of a power domain. On R-Car S4
-and V4H, this is an always-on power domain which is not shut down in
-suspend. On R-Car V4M, this is a dedicated A2PCIPHY power domain,
-which is shut down during suspend, and the controller loses state,
-which prevents the PCIe from working after resume.
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
+- [High] Unconditional calls to host-specific suspend/resume functions cras=
+h when the controller operates in Endpoint (EP) mode.
+- [High] Suspend/resume deadlock and unsafe GFP_KERNEL allocation via reque=
+st_firmware() in the resume_noirq path.
+--
 
-Fix this by adding generic suspend/resume noirq ops for the controller,
-which tear the link down on suspend, and restart it on resume. Use the
-same PM ops on all of R-Car Gen4 to gracefully suspend and resume the
-PCIe link on V4H and S4 too.
+commit 5af3966526dc17abac6d2f1a9c20afb491499031
+Author: Marek Vasut <marek.vasut+renesas@mailbox.org>
 
-Test case which demonstrates the problem on R-Car V4M:
-"
-$ hexdump -vC /sys/bus/pci/devices/0000:00:00.0/config > /tmp/pre
-$ echo s2idle > /sys/power/mem_sleep
-$ echo platform > /sys/power/pm_test
-$ echo mem > /sys/power/state
-$ hexdump -vC /sys/bus/pci/devices/0000:00:00.0/config > /tmp/post
-$ diff -Naru /tmp/pre /tmp/post
-...
--00000000  12 19 32 00 07 05 10 00  00 00 04 06 00 00 01 00
-+00000000  12 19 32 00 07 05 10 00  00 00 00 ff 00 00 80 00
-                                          ^^^^^
-                                    Class 0604->00ff
-"
+PCI: rcar-gen4: Add missing PM ops
 
-Fixes: 0d0c551011df ("PCI: rcar-gen4: Add R-Car Gen4 PCIe controller support for host mode")
-Reported-by: Geert Uytterhoeven <geert+renesas@glider.be>
-Signed-off-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
----
-Cc: "Krzysztof Wilczyński" <kwilczynski@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Conor Dooley <conor+dt@kernel.org>
-Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-Cc: Koichiro Den <den@valinux.co.jp>
-Cc: Krzysztof Kozlowski <krzk+dt@kernel.org>
-Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>
-Cc: Magnus Damm <magnus.damm@gmail.com>
-Cc: Manivannan Sadhasivam <mani@kernel.org>
-Cc: Rob Herring <robh@kernel.org>
-Cc: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Cc: devicetree@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
-Cc: linux-renesas-soc@vger.kernel.org
----
-NOTE: Depends on series
-      https://lore.kernel.org/linux-pci/20260903205153.283553-1-marek.vasut+renesas@mailbox.org/
-NOTE: I am sending this as an RFC, because I would like to get
-      a TB from Geert before this might get applied
----
- drivers/pci/controller/dwc/pcie-rcar-gen4.c | 20 ++++++++++++++++++++
- 1 file changed, 20 insertions(+)
+The commit adds suspend/resume PM ops to fix an issue where the controller
+loses state during suspend on R-Car V4M. It registers generic suspend and
+resume handlers to gracefully tear down and restart the PCIe link across
+all R-Car Gen4 platforms.
 
-diff --git a/drivers/pci/controller/dwc/pcie-rcar-gen4.c b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-index 5690dc32f47e0..3bfb2bd53fe3b 100644
---- a/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-+++ b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-@@ -909,6 +909,22 @@ static int rcar_gen4_pcie_ltssm_control(struct rcar_gen4_pcie *rcar, bool enable
- 	return 0;
- }
- 
-+static int rcar_gen4_pcie_suspend_noirq(struct device *dev)
-+{
-+	struct rcar_gen4_pcie *rcar = dev_get_drvdata(dev);
-+	struct dw_pcie *dw = &rcar->dw;
-+
-+	return dw_pcie_suspend_noirq(dw);
-+}
-+
-+static int rcar_gen4_pcie_resume_noirq(struct device *dev)
-+{
-+	struct rcar_gen4_pcie *rcar = dev_get_drvdata(dev);
-+	struct dw_pcie *dw = &rcar->dw;
-+
-+	return dw_pcie_resume_noirq(dw);
-+}
-+
- static struct rcar_gen4_pcie_drvdata drvdata_r8a779f0_pcie = {
- 	.ltssm_control = r8a779f0_pcie_ltssm_control,
- 	.mode = DW_PCIE_RC_TYPE,
-@@ -952,10 +968,14 @@ static const struct of_device_id rcar_gen4_pcie_of_match[] = {
- };
- MODULE_DEVICE_TABLE(of, rcar_gen4_pcie_of_match);
- 
-+DEFINE_NOIRQ_DEV_PM_OPS(rcar_gen4_pcie_pm_ops,
-+			rcar_gen4_pcie_suspend_noirq, rcar_gen4_pcie_resume_noirq);
-+
- static struct platform_driver rcar_gen4_pcie_driver = {
- 	.driver = {
- 		.name = "pcie-rcar-gen4",
- 		.of_match_table = rcar_gen4_pcie_of_match,
-+		.pm = &rcar_gen4_pcie_pm_ops,
- 		.probe_type = PROBE_PREFER_ASYNCHRONOUS,
- 	},
- 	.probe = rcar_gen4_pcie_probe,
--- 
-2.53.0
+> diff --git a/drivers/pci/controller/dwc/pcie-rcar-gen4.c b/drivers/pci/co=
+ntroller/dwc/pcie-rcar-gen4.c
+> index fbe465a29068f..8c3e41e9a8ba1 100644
+> --- a/drivers/pci/controller/dwc/pcie-rcar-gen4.c
+> +++ b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
+> @@ -849,6 +849,22 @@ static int rcar_gen4_pcie_ltssm_control(struct rcar_=
+gen4_pcie *rcar, bool enable
+>  	return 0;
+>  }
+> =20
+> +static int rcar_gen4_pcie_suspend_noirq(struct device *dev)
+> +{
+> +	struct rcar_gen4_pcie *rcar =3D dev_get_drvdata(dev);
+> +	struct dw_pcie *dw =3D &rcar->dw;
+> +
+> +	return dw_pcie_suspend_noirq(dw);
 
+[Severity: High]
+Does this crash when the controller operates in Endpoint mode?
+
+Since the driver registers rcar_gen4_pcie_pm_ops for all matched devices,
+including those in Endpoint mode (e.g., "renesas,rcar-gen4-pcie-ep"), this
+unconditionally routes the suspend operation to the host-specific
+dw_pcie_suspend_noirq() without verifying the controller mode.
+
+In Endpoint mode, dw_pcie_host_init() is never called, leaving the Root
+Port (pci->pp) structures uninitialized. If dw_pcie_suspend_noirq() is
+called in Endpoint mode, it will dereference pci->pp.bridge which is
+strictly NULL:
+
+drivers/pci/controller/dwc/pcie-designware-host.c:dw_pcie_suspend_noirq() {
+    ...
+	if (!pci_host_common_d3cold_possible(pci->pp.bridge, &pme_capable))
+		return 0;
+    ...
+}
+
+It will also dereference pci->pp.ops during the link-down fallback path:
+
+drivers/pci/controller/dwc/pcie-designware-host.c:dw_pcie_suspend_noirq() {
+    ...
+stop_link:
+    ...
+	if (pci->pp.ops->deinit)
+		pci->pp.ops->deinit(&pci->pp);
+    ...
+}
+
+> +}
+> +
+> +static int rcar_gen4_pcie_resume_noirq(struct device *dev)
+> +{
+> +	struct rcar_gen4_pcie *rcar =3D dev_get_drvdata(dev);
+> +	struct dw_pcie *dw =3D &rcar->dw;
+> +
+> +	return dw_pcie_resume_noirq(dw);
+
+[Severity: High]
+Can this cause a suspend/resume deadlock due to unsafe GFP_KERNEL allocatio=
+ns?
+
+When dw_pcie_resume_noirq() is called, it restarts the link which
+ultimately invokes request_firmware() in the resume_noirq phase:
+
+dw_pcie_resume_noirq()
+  dw_pcie_start_link()
+    rcar_gen4_pcie_start_link()
+      rcar_gen4_pcie_ltssm_control()
+        rcar_gen4_pcie_download_phy_firmware()
+          request_firmware(&fw, RCAR_GEN4_PCIE_FIRMWARE_NAME, dw->dev);
+
+Executing request_firmware() in a noirq phase is strictly unsafe because
+device interrupts (including those for storage controllers) are disabled.
+If the firmware is not cached, the request will hang indefinitely waiting
+for filesystem I/O that cannot complete without interrupts. Even if
+cached, request_firmware() allocates memory using GFP_KERNEL, which can
+trigger page reclaim and block on disk I/O, similarly deadlocking the
+system.
+
+> +}
+> +
+>  static struct rcar_gen4_pcie_drvdata drvdata_r8a779f0_pcie =3D {
+>  	.ltssm_control =3D r8a779f0_pcie_ltssm_control,
+>  	.mode =3D DW_PCIE_RC_TYPE,
+
+[ ... ]
+
+> @@ -892,10 +908,14 @@ static const struct of_device_id rcar_gen4_pcie_of_=
+match[] =3D {
+>  };
+>  MODULE_DEVICE_TABLE(of, rcar_gen4_pcie_of_match);
+> =20
+> +DEFINE_NOIRQ_DEV_PM_OPS(rcar_gen4_pcie_pm_ops,
+> +			rcar_gen4_pcie_suspend_noirq, rcar_gen4_pcie_resume_noirq);
+> +
+>  static struct platform_driver rcar_gen4_pcie_driver =3D {
+>  	.driver =3D {
+>  		.name =3D "pcie-rcar-gen4",
+>  		.of_match_table =3D rcar_gen4_pcie_of_match,
+> +		.pm =3D &rcar_gen4_pcie_pm_ops,
+>  		.probe_type =3D PROBE_PREFER_ASYNCHRONOUS,
+>  	},
+>  	.probe =3D rcar_gen4_pcie_probe,
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260906173234.5224=
+00-1-marek.vasut+renesas@mailbox.org?part=3D1
