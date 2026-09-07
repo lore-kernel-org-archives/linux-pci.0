@@ -1,119 +1,92 @@
-Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id E49B7282F01;
-	Mon,  7 Sep 2026 21:08:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.8])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90B711A681B;
+	Mon,  7 Sep 2026 21:34:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.8
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788815319; cv=none; b=UWRnLgBsVkb3NazS1aIo3tZYHrCnhJ7jTs+T1EPzDXh3SpsO9LSqe0H9VXMR7R/Umto+ohbLxOIL/0TaAfqSX8RK4UBPC1nWx+KyvUitKNDGxPvCUTRIC0FOtnYDwpHuGUhZ5I2POv9YkpT4DKr9n2G3gUmgUFfn1HRB+9aYV5w=
+	t=1788816875; cv=none; b=tbNsSkPJT+6BOqcpfKPcP5JzzYi5WPDi+nNKPZfSXvRlbYMY3/VnftbNGCu7uQ36r2WJ/i3yrDJMyUJeu/sY4sIdoTZiAOqUcJ/AbfT7ZWRhFnAFLWki5D1YhTuk+cVYAPBFKrNKOitOBan4iaqWjl4c1XDDVIDKDBKS0k15MwI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788815319; c=relaxed/simple;
-	bh=CRknQiozJQuLcNkSrtiRtM/kdCB8yooI2gbfGFTtfE8=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=RHlDuie9JCwnmqatpHbrvA79GkBCkjHQGSEoBigm5Jabiy1A+4NtAZp7nIdH9BCcAvp5iLVFafcTFVVk0qO2PbnDzIfjiGEsMGEhUDZ790G5m/kuPvD6NP7gT4aA+CJmxcebGX/uTg+X174UzT3w7z3nSv7D6yrARA8RmJkRoM8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=gVyv5bPu; arc=none smtp.client-ip=13.77.154.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
+	s=arc-20240116; t=1788816875; c=relaxed/simple;
+	bh=vm2McZkHqaANVqUSfuCQ1ACPPaLD7b8TIB/iVn8Q+Ls=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=DM2lR6Q4EP6UCRYiYEqHNYQNKMJYtSJPEqrkij75g6V/9JK2vKjtdGR8IOErUR5pPcu4UXGcoU6FXdS5ylB3f1RCskJYTUE9+sO4A6N+ycdMdKzFCg50WSptZr+ySdzdOiL7PvFXjKDIGXQOzlm8fgC0k/9WNFwdA7v1mOpfoZw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=kAtD7Ww7; arc=none smtp.client-ip=192.198.163.8
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="gVyv5bPu"
-Received: from [192.168.0.88] (192-184-212-33.fiber.dynamic.sonic.net [192.184.212.33])
-	by linux.microsoft.com (Postfix) with ESMTPSA id DCAD820B6F01;
-	Mon,  7 Sep 2026 14:07:56 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com DCAD820B6F01
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
-	s=default; t=1788815277;
-	bh=kY/lfW05YvJHRzh3O0sx3RlULE7OXDqOdzjhtNx8jWw=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=gVyv5bPuda4Xj5AdVX6X/uEViR9zPXkZjQ4CdjQ6i/hVtDSAsJNqWF2sMP+ELFkeo
-	 ngypYO4qT9g25FiAV/jDoEwB1yyj3jKncLHmPBucrPQUVksocReCdFW62sV4eUzsSr
-	 xW5x2ITYbMHUKS/pdh6FXQA3BluobC8AzAVN3OIU=
-Message-ID: <421b3805-5b90-dfc9-b84c-ee58969f5e36@linux.microsoft.com>
-Date: Mon, 7 Sep 2026 14:08:35 -0700
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="kAtD7Ww7"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1788816873; x=1820352873;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=vm2McZkHqaANVqUSfuCQ1ACPPaLD7b8TIB/iVn8Q+Ls=;
+  b=kAtD7Ww7zzrI1eWEzWDNN+0l3mQQVfDX1dfHoW/Zkj84zTkjdFXOqNmb
+   gvNMwNZp2ON+M7jvVjvhP/D/uUR7vnZWPoCpBoAeTrts2MWnTnilz+JNP
+   hKD50UlJLnh9MOvxQoOXWWiTKwMHAPE1tqYdgBIAyYe52euN3CYMiSEvK
+   Sje++/G2dNxfnfmKGM3LBPzsnOWu6LfkTibrzVJ1eMJuD8tou3BN2b3WB
+   EnxGuiz02qOvJ2WCo76DWnfuhQYgcdOWuTtdmoP6v00bwk7pvIjoxP6YI
+   lTWykfraV8kugz+yL52ofL6OVl9OGdcnJAWDuspXIThAi1dz2t6XFrWOV
+   g==;
+X-CSE-ConnectionGUID: exKeijBKSSW2zqSRQ80sBw==
+X-CSE-MsgGUID: wFTv1MR8TjGvTEbA1tNPjA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11899"; a="106732943"
+X-IronPort-AV: E=Sophos;i="6.25,268,1779174000"; 
+   d="scan'208";a="106732943"
+Received: from orviesa009.jf.intel.com ([10.64.159.149])
+  by fmvoesa102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Sep 2026 14:34:32 -0700
+X-CSE-ConnectionGUID: gXsGUaejTeiVdLQQWiFsfQ==
+X-CSE-MsgGUID: rQR0vMokQgKZrvUuLshzwQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.25,268,1779174000"; 
+   d="scan'208";a="271326046"
+Received: from pgcooper-mobl3.ger.corp.intel.com (HELO kekkonen.fi.intel.com) ([10.245.244.80])
+  by orviesa009-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Sep 2026 14:34:29 -0700
+Received: from kekkonen.localdomain (localhost [IPv6:::1])
+	by kekkonen.fi.intel.com (Postfix) with SMTP id 90A7611FA3A;
+	Tue, 08 Sep 2026 00:34:30 +0300 (EEST)
+Date: Tue, 8 Sep 2026 00:34:30 +0300
+Organization: Intel Finland Oy - BIC 0357606-4 - c/o Alberga Business Park, 6 krs, Bertel Jungin Aukio 5, 02600 Espoo
+From: Sakari Ailus <sakari.ailus@linux.intel.com>
+To: "Rafael J. Wysocki" <rafael@kernel.org>
+Cc: Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM <linux-pm@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Peixin Xie <peixin.xie@linux.spacemit.com>,
+	Lukas Wunner <lukas@wunner.de>,
+	Ilpo =?iso-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	Hans de Goede <hansg@kernel.org>,
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: Re: [PATCH v3 0/4] ACPI: scan: Adjust power management
+ initialization and PCI devices handling
+Message-ID: <ap8t5qhuEll-Xx4N@kekkonen.localdomain>
+References: <6044499.DvuYhMxLoT@rafael.j.wysocki>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.13.1
-Subject: Re: [PATCH v5 4/5] iommu/hyperv: Add para-virtualized IOMMU support
- for Hyper-V guest
-Content-Language: en-US
-To: Yu Zhang <zhangyu1@linux.microsoft.com>
-Cc: linux-kernel@vger.kernel.org, linux-hyperv@vger.kernel.org,
- iommu@lists.linux.dev, linux-pci@vger.kernel.org,
- linux-arch@vger.kernel.org, x86@kernel.org, wei.liu@kernel.org,
- kys@microsoft.com, haiyangz@microsoft.com, decui@microsoft.com,
- longli@microsoft.com, joro@8bytes.org, will@kernel.org,
- robin.murphy@arm.com, bhelgaas@google.com, kwilczynski@kernel.org,
- lpieralisi@kernel.org, mani@kernel.org, robh@kernel.org, arnd@arndb.de,
- jgg@ziepe.ca, mhklinux@outlook.com, jacob.pan@linux.microsoft.com,
- tgopinath@linux.microsoft.com, easwar.hariharan@linux.microsoft.com,
- baolu.lu@linux.intel.com, suravee.suthikulpanit@amd.com, vasant.hegde@amd.com
-References: <20260904075512.174154-1-zhangyu1@linux.microsoft.com>
- <20260904075512.174154-5-zhangyu1@linux.microsoft.com>
- <af047ef8-91ef-7786-c230-25e28b1c8c04@linux.microsoft.com>
- <re2lmz757bvtzbkylxtsj7zu2pjqz7ro752tcg7bpjaicuj6ml@mgsg6jnvgbyd>
-From: Mukesh R <mrathor@linux.microsoft.com>
-In-Reply-To: <re2lmz757bvtzbkylxtsj7zu2pjqz7ro752tcg7bpjaicuj6ml@mgsg6jnvgbyd>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <6044499.DvuYhMxLoT@rafael.j.wysocki>
 
-On 9/7/26 01:41, Yu Zhang wrote:
-> <snip>
+Hi Rafael,
+
+Thanks for the set.
+
+On Thu, Sep 03, 2026 at 06:57:09PM +0200, Rafael J. Wysocki wrote:
+> Hi All,
 > 
->>> +{
->>> +	u64 status;
->>> +	u32 prefix;
->>> +	unsigned long flags;
->>> +	int ret;
->>> +	struct pci_dev *pdev = to_pci_dev(dev);
->>> +	struct hv_input_get_logical_device_property *input;
->>> +	struct hv_output_get_logical_device_property *output;
->>> +
->>> +	ret = hv_pci_lookup_dev_id(pci_domain_nr(pdev->bus), &prefix);
->>> +	if (ret)
->>> +		return ret;
->>> +
->>> +	local_irq_save(flags);
->>> +
->>> +	input = *this_cpu_ptr(hyperv_pcpu_input_arg);
->>> +	output = (struct hv_output_get_logical_device_property *)(input + 1);
->>
->> Any reason for not using pcpu output arg like we do in all other places?
->> If there is a technical reason, please document it, otherwise when revisited
->> in future for re-design, anyone looking at this will be confused and
->> waste time investigating if there is anything different about this hypercall.
->>
->>
+> This is an update of
 > 
-> Thank you, Mukesh. I had also incorrectly assumed that output required
-> a separate page, which is why the RFC included a separate output-page
-> allocation patch. Michael clarified during that review [1] that input
-> and output can share a page as long as their buffers do not overlap,
-> so I dropped that patch latter.
+> https://lore.kernel.org/linux-acpi/5144065.31r3eYUQgx@rafael.j.wysocki/
 
-They can share a page, but we don't enforce the sizes combined do
-not overflow a page, and that could be an issue in future. There is
-a tool on the hyp side i believe to check that input and output struct
-sizes do not exceed page size.
+Tested-by: Sakari Ailus <sakari.ailus@linux.intel.com>
 
-Also, both the input and output pages are pre-allocated, so there is no
-extra allocation (otherwise, we'd have changed all places by now). So
-it's better to just follow the convention we've so far just to avoid
-confusion during future redesign imo. We def need to revisit this in
-near/medium future for all hypercalls.
-
-Thanks,
--Mukesh
-
-> Actually, there's nothing specific to this hypercall here - it follows
-> the existing usage. E.g., hv_pci_read_mmio() already uses such arrangement,
-> as Michael noted in [2]. pvIOMMU queries fit within the existing per-CPU
-> page, with output placed after input, avoiding an unnecessary allocation.
->                                                                           
-> [1] https://lore.kernel.org/all/SN6PR02MB4157C3EF6617A7BA4CA9E432D485A@SN6PR02MB4157.namprd02.prod.outlook.com/
-> [2] https://lore.kernel.org/all/SN6PR02MB4157BF936EBDA23AD1EC5183D480A@SN6PR02MB4157.namprd02.prod.outlook.com/
->                                                                                                                 
-> B.R.
-> Yu
-
+-- 
+Sakari Ailus
