@@ -1,190 +1,138 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yw1-f175.google.com (mail-yw1-f175.google.com [209.85.128.175])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A7F18391513
-	for <linux-pci@vger.kernel.org>; Mon,  7 Sep 2026 14:44:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F26284F7987
+	for <linux-pci@vger.kernel.org>; Mon,  7 Sep 2026 14:52:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788792250; cv=none; b=SrYRNPZ7WPxPf4IBtnH9R95lDtge8gmSji+HXbzte2GK8vJbKuM94HDPDmySvuDlTxqj4FV2N8IvMTGpvGnGZNSRLHTPQte4t/+I451WOwHDEgvuiPXYbs6g5n+p5N6naqXO48cpSPcVC3esX/OqbQrbC0kJkciysdE43kWtbKk=
+	t=1788792753; cv=none; b=EQ+R39/tiWEsaUhRhIc4EWi2dEkM6+A7x6Y/RevvskXb3jeFQ81yij8xwIRBQoP9eRz4ByP0PFru+9HVPcwMOzuVFaAOCtrQmIYlKvBSUYi+zAf7rRigKylmXvoPreakFDI7yNj32Wpx86aoITSr31w7djNzYtDB04gHxZyNAZQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788792250; c=relaxed/simple;
-	bh=DZG2O5iJOhj/4Rlx2+pQe0RTfwbjbD2Z5o6Mxqtw1t8=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=jJUN1TTZU0nnnYwIs9ncbFxZw3oRRtpIs0Ud1QOrKovsxQQC1D4IZxDCNeog5X+Q0kmJzrrXXLkaDl+QXoplVGWsKDZkqvtJKhX98CpAiYlLaca7IJgF1Y4pbxM9Ll3jeHoecGEFQ1/FwMdlpkdfJBut5TrthjVqna+PNCQ7oOQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ESOxJkSL; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788792753; c=relaxed/simple;
+	bh=/S2OeMB+pVw0IsnX1n74+dfcpu2Keflp/VCkHim9+Cc=;
+	h=Message-ID:Date:MIME-Version:Subject:References:To:From:
+	 In-Reply-To:Content-Type; b=AXHpN9D54OJ+d0dzvT0ySALizIPM+wAiAGQRLLce0lAXFCMic1yQ/JDQmM6rUTVQVq5T203NbnKSEJiw6oajOQ4ow3lRejQQxrO/TextHhHbAQvcQK6fgxnHFT+9ctxK5MNo6cmHezUMVSOew2uAOJe3eKeG1JG/5ESlQMDsGXo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=fnh5wxRU; arc=none smtp.client-ip=209.85.128.175
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ESOxJkSL"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EF06B1F00A3A;
-	Mon,  7 Sep 2026 14:44:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788792249;
-	bh=9ie6WEZcVAAK/4lDWw6Sj5KJ4r8L547k7SWr/YGj31w=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=ESOxJkSLQ6kq0wpwqAZBEupymLcLRDmhsmmL+kkzDFLherA7ZzxtB++cXZApfxcom
-	 1sCfT53sGH5FZSJqbi+6yWyOX/+7OnmH/lF2X4ZpRnE+eU9SGtK3zVlqCQlSAS8jxm
-	 YTBWWtroQobpqa9VpvIdfZ46Ds7vLu2pK1Zp6C1npZKNCV0ujRTmEkPPyOZOzYjBIa
-	 uWIp1eC9exLmxyiuU+j77sV1xH+gaycmW0pCXyWwK42rOhdLBeHw9ITMJgeMIP6EPB
-	 J/Q1bHgz07+DNBMhsFkYKXAdPjFHtS4Fk54LPi6n7hcCK9PaL6wwgwcGxCqifDj45i
-	 LK3nQehDkUDUA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] PCI: qcom: Honor IOMMU provider's #iommu-cells in
- qcom_pcie_config_sid_1_9_0()
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Manivannan Sadhasivam" <manivannan.sadhasivam@oss.qualcomm.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260907143349.317495-1-mani@kernel.org>
-References: <20260907143349.317495-1-mani@kernel.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 07 Sep 2026 14:44:08 +0000
-Message-Id: <20260907144408.EF06B1F00A3A@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="fnh5wxRU"
+Received: by mail-yw1-f175.google.com with SMTP id 00721157ae682-87ab6e5f91eso5348907b3.2
+        for <linux-pci@vger.kernel.org>; Mon, 07 Sep 2026 07:52:20 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1788792738; x=1789397538; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from:to
+         :content-language:references:subject:user-agent:mime-version:date
+         :message-id:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=anfs5eR69uR3hgprcQRCB5kZHsZd0+SXQ4tCOJCunJw=;
+        b=fnh5wxRUz3J1D8yRKvAOLlUD0kH2Dy25Nrqgl5ga0JBg+aXaMh7EtOyz1WdVRAy+IE
+         CAg4426+d/Iw1GGUDsQXC6YQzR1WPwPLVvJcHEN+uXic6ee3Gt+l2s7iQAzcUInCMyrK
+         BnNKmabG8zQkzo5H33W/w4b9tXXceBdZrMvxonOqRtS/z4za5x3U/pXB9niNSntKppNl
+         1WB6AXK28fVz7gZLtt5rQmeB5gbNxcWSYcxizngu0ab3VuQ8ePOgsAvYwtnNS/qMGo3o
+         2IP+wdyOCVTdrVYdIBRTZVzLfsT58TIl6909+qgTuEiZuAtd66ryblusT9YiZECWjlwt
+         etnA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1788792738; x=1789397538;
+        h=content-transfer-encoding:content-type:in-reply-to:from:to
+         :content-language:references:subject:user-agent:mime-version:date
+         :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=anfs5eR69uR3hgprcQRCB5kZHsZd0+SXQ4tCOJCunJw=;
+        b=kAVu29jcL1LjsKbnXzucoTdwiWPmD9nHGVKjL5mSsA4gAyRoeURjforVqwrFDvB3ft
+         JhChP1J9G7JobqIptNETvqu9qUpb6N5eVw3ziLl0bFhW8f1H2BcEWBfY3hsEJmogP3Lu
+         kFLSd+W+OV6yV+fdWegK4sNZnSFPH7vAZy7a4HDsJaMft11Uw63JEryjK3hExNbLipao
+         7tOWL9WQXxKlpRnp6BrEITLT2SpdPFSBRavLYyfhMzCS1raHs4EwtMFgVnKKmZB1xf2C
+         dXPA/riRTiQZqEglSfvIn7A7f+Y9k4Etg8tjHCQ3fu/yp5Tl7L1GMyF5Zc6o4ZuN5fWS
+         AoYQ==
+X-Forwarded-Encrypted: i=1; AKwUvBy6Pjglh6bvWlgp2VUxGBH5RzdIpguS5Ril2/qS5Kiy6UwOVIfn39XVsMbqe6GunnZBEL95ParvcIc=@vger.kernel.org
+X-Gm-Message-State: AFuF++mpa12mkOilvc5P5J3ag1OvOalfxbAiDw9b9F1VZKH0X9eoxJQO
+	cQT75B9b7P0YCafzSP4khRRseQOGxCNHTCvcSY710ZnsVO9J96J8LuCfveQ6oBi3KDoOJg==
+X-Gm-Gg: AYBFou1BGkBvqgGoA5OASSfqVHktavqPexIzvkrwucqO1wvgLEdBxL4fifpJcbbZLxq
+	KEbGXx/iuJnMdwuElhKdUfm6w42DERPxMt7oiFIBY4TzoXKiYGkW8ILeT1z6T5DsJNfBTUyGdVv
+	hTU7GQ5HFKcdqmSfHc8/Pr9kPoaQwYppkHVaD/MKeKcHjIJx5/0xlPZptBgSjs70lseFKd0LPSZ
+	kbUZmZ4pZE7cWJDglkJwMG4LDmyeMy9bbyOaSLTRhJ+Ki521fwIZ1kjGT7WlFOH+7RjoTQYJVsm
+	1gi+QUu7qXykzuhVhop3Q0Nhu63DD6N5X2wYNzDCuBKzfz7QsBYKNshX1P4t5YCH3A2y6ai/oTP
+	ttjVcPazhJ8UJN1VNrSlQCFkVXM825U6qHvYTKtq+SU7tMm36LrOtLqEghsgl6CAxjhLg2KqcYE
+	B3RCMgoHUFwYF+KmA8+1Cz16CBYlVKEkIRy72rt8606ZiDuoMfDKiJ6xwDLevDl3s4o9TLmxjyd
+	EjDUW8ZJ8eRC10Usdq6TuFtNiRY
+X-Received: by 2002:a05:690c:c00f:b0:836:ec4d:bb29 with SMTP id 00721157ae682-87128cc54d5mr72607087b3.34.1788792738337;
+        Mon, 07 Sep 2026 07:52:18 -0700 (PDT)
+Received: from ?IPV6:2806:10be:d:e8df:57b9:51e0:e022:41c0? ([2806:10be:d:e8df:57b9:51e0:e022:41c0])
+        by smtp.gmail.com with ESMTPSA id 00721157ae682-87149315162sm72634707b3.12.2026.09.07.07.52.16
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 07 Sep 2026 07:52:17 -0700 (PDT)
+Message-ID: <f9b29422-5389-4522-83e8-538e5306b3fb@gmail.com>
+Date: Mon, 7 Sep 2026 09:52:15 -0500
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v19 02/14] cxl/ras: Fix cxl_rch_get_aer_severity() wrong
+ severity register
+References: <20260803221810.3685703-1-terry.bowman@amd.com>
+ <20260803221810.3685703-3-terry.bowman@amd.com> <anijY3eTVWSqHLxh@wunner.de>
+ <apkxP_fydVjpULaT@wunner.de>
+Content-Language: en-US
+To: lukas@wunner.de, linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+ linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Terry Bowman <ktbowman@gmail.com>
+In-Reply-To: <apkxP_fydVjpULaT@wunner.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
-s) to consider:
+On 9/3/26 03:35, Lukas Wunner wrote:
+> Hi Terry,
+> 
+> You've submitted v20 of this series, but the following
+> questions haven't been addressed yet AFAICS.  I'd be
+> grateful if you could take a look:
+> 
+> On Sun, Aug 09, 2026 at 05:57:23PM +0200, Lukas Wunner wrote:
+>> Am I missing something?  Is a scenario ever conceivable where the RCEC
+>> receives a message with different severity than what is inferred from
+>> the registers by cxl_rch_get_aer_severity()?
+> [...]
+>> These so-called Advisory Non-Fatal Errors set one bit in the Correctable
+>> Error Status Register (Advisory Non-Fatal Error Status, bit 13) and
+>> additionally one or more bits in the Uncorrectable Error Status Register
+>> (see the commit for details).
+>>
+>> cxl_rch_get_aer_severity() is not able to cope with such errors and
+>> will incorrectly infer that the severity is AER_NONFATAL.
+>>
+>> Now I *think* this is not a problem because Advisory Non-Fatal Errors
+>> are masked by default and the commit only unmasks them on regular PCI
+>> devices, not in the RCRB of a CXL device.  Only once bit 13 in the
+>> Correctable Error Mask Register is cleared in the RCRB will
+>> cxl_rch_get_aer_severity() fail.  Right?
+> 
+> Thanks,
+> 
+> Lukas
 
-New issues:
-- [High] Out-of-bounds memory read when `iommu-map` property length is less=
- than 2 cells.
-- [High] Unvalidated `#iommu-cells` property causes integer overflow, leadi=
-ng to out-of-bounds memory reads or divide-by-zero undefined behavior.
+Hi Lukas,
 
-Pre-existing issues:
-- [High] Infinite loop if the number of `iommu-map` entries exceeds the fix=
-ed BDF-to-SID hardware table capacity.
---
+I’m sorry for missing your August 9 reply. Also, I am currently on PTO 
+this week and don’t have my work laptop, so I am responding from my 
+personal email account. I’ll be back in the office Wednesday.
 
-commit 5e6355134714e5a9f21664a5ac644c1347a1924b
-Author: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Thanks for pointing out the issue with CE and UCE errors reported
+simultaneously. I agree this is a problem and have addressed it in v20.
 
-PCI: qcom: Honor IOMMU provider's #iommu-cells in qcom_pcie_config_sid_1_9_=
-0()
+In v20 I remove the unused `cxl_rch_get_aer_severity()` helper, take a
+snapshot of the AER registers before calling `pci_print_aer()`, and now
+handle the CE and UCE parts in separate blocks. The UCE status is logged
+unconditionally, which prevents a fatal record from being lost under the
+advisory‑non‑fatal path. These changes directly address the scenario you
+raised for v19 and also cover any other situation where a CE and a UCE
+are co‑logged. The patch ishere: <https://lkml.org/lkml/2026/9/2/1629>
+(v20 3/9).
 
-This commit updates qcom_pcie_config_sid_1_9_0() to properly handle
-iommu-map entries where the IOMMU provider uses more than one iommu-cell.
-It dynamically calculates the per-entry stride based on the IOMMU's
-#iommu-cells property instead of assuming a fixed four-word stride.
+Please let me know if you see any remaining concerns or corner cases
+that are not yet covered. Thanks again for your review and for pointing
+out the issue.
 
-> diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/control=
-ler/dwc/pcie-qcom.c
-> index b58a607b713f5..42cbeef083caf 100644
-> --- a/drivers/pci/controller/dwc/pcie-qcom.c
-> +++ b/drivers/pci/controller/dwc/pcie-qcom.c
-[ ... ]
-> @@ -1143,50 +1143,90 @@ static void qcom_pcie_deinit_2_7_0(struct qcom_pc=
-ie *pcie)
-> =20
->  static int qcom_pcie_config_sid_1_9_0(struct qcom_pcie *pcie)
->  {
-[ ... ]
-> +	if (size % sizeof(*map)) {
-> +		dev_err(dev, "Malformed iommu-map property\n");
-> +		return -EINVAL;
-> +	}
-> +	nr_cells =3D size / sizeof(*map);
-> +
-> +	/*
-> +	 * Each iommu-map entry is: rid-base (1 cell), phandle (1 cell),
-> +	 * IOMMU specifier (#iommu-cells cells), length (1 cell). Read
-> +	 * #iommu-cells from the IOMMU provider referenced by the first
-> +	 * entry to compute the per-entry stride.
-> +	 */
-> +	phandle =3D be32_to_cpu(map[1]);
+- Terry
 
-[Severity: High]
-Can this cause an out-of-bounds read if the iommu-map property is too short?
-
-The function verifies the property size is a multiple of 4 bytes, but fails
-to verify the minimum required length (at least 2 cells) before accessing
-map[1] to extract the phandle. A malformed device tree with an iommu-map
-property of 4 bytes (1 cell) could trigger an out-of-bounds memory read
-during probe.
-
-> +	iommu_np =3D of_find_node_by_phandle(phandle);
-> +	if (!iommu_np) {
-> +		dev_err(dev, "Failed to find IOMMU node in iommu-map\n");
-> +		return -ENODEV;
-> +	}
-> +
-> +	if (of_property_read_u32(iommu_np, "#iommu-cells", &iommu_cells))
-> +		iommu_cells =3D 1;
-> +	of_node_put(iommu_np);
-> +
-> +	entry_cells =3D 3 + iommu_cells;
-
-[Severity: High]
-Does this code allow an unvalidated #iommu-cells property to cause an
-integer overflow?
-
-If a device tree specifies an excessively large value for #iommu-cells,
-such as 0xFFFFFFFE, entry_cells =3D 3 + iommu_cells will wrap around to 1.
-If the value is 0xFFFFFFFD, it wraps to 0.
-
-> +
-> +	/*
-> +	 * Retain backward compatibility with DTs that describe iommu-map
-> +	 * with 4-cell entries against an IOMMU declaring #iommu-cells =3D 2,
-> +	 * matching the fallback in drivers/of/base.c::of_check_bad_map().
-> +	 */
-> +	if (iommu_cells =3D=3D 2 && !(nr_cells % 4)) {
-[ ... ]
-> +	}
-> +
-> +	if (nr_cells % entry_cells) {
-
-[Severity: High]
-Could the above integer overflow lead to a divide-by-zero here?
-
-If entry_cells wrapped to 0 due to an overflow, this modulo operation will
-trigger undefined behavior (divide-by-zero). If it wrapped to a small
-non-zero number like 1, it could pass this check and result in
-nr_map =3D nr_cells / 1, potentially causing out-of-bounds reads in the
-subsequent loop.
-
-> +		dev_err(dev, "Malformed iommu-map property\n");
-> +		return -EINVAL;
-> +	}
-> +	nr_map =3D nr_cells / entry_cells;
-> +
->  	/* Enable BDF to SID translation by disabling bypass mode (default) */
->  	val =3D readl(pcie->parf + PARF_BDF_TO_SID_CFG);
-[ ... ]
->  	/* Look for an available entry to hold the mapping */
->  	for (i =3D 0; i < nr_map; i++) {
-> -		__be16 bdf_be =3D cpu_to_be16(map[i].bdf);
-> -		u32 val;
-> +		u32 bdf =3D be32_to_cpu(map[i * entry_cells]);
-> +		u32 sid =3D be32_to_cpu(map[i * entry_cells + 2]);
-> +		__be16 bdf_be =3D cpu_to_be16(bdf);
->  		u8 hash;
-> =20
->  		hash =3D crc8(qcom_pcie_crc8_table, (u8 *)&bdf_be, sizeof(bdf_be), 0);
-
-[Severity: High]
-This is a pre-existing issue, but can this loop cause a kernel hard lockup?
-
-Just below this in qcom_pcie_config_sid_1_9_0(), there is a linear probing
-loop to handle hash collisions:
-
-		while (val) {
-			u8 current_hash =3D hash++;
-			...
-			val =3D readl(bdf_to_sid_base + hash * sizeof(u32));
-		}
-
-The hardware table has a capacity of 256 slots (CRC8_TABLE_SIZE). If a devi=
-ce
-tree specifies more than 256 entries in iommu-map (or if hash collisions fi=
-ll
-all slots), the while (val) loop continuously increments the 8-bit hash ind=
-ex
-and reads occupied slots, wrapping indefinitely. It lacks a termination
-condition for a full translation table.
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260907143349.3174=
-95-1-mani@kernel.org?part=3D1
