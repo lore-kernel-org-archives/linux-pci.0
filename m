@@ -1,251 +1,299 @@
-Received: from mail-wm1-f46.google.com (mail-wm1-f46.google.com [209.85.128.46])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3DA154F4747
-	for <linux-pci@vger.kernel.org>; Mon,  7 Sep 2026 14:07:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.128.46
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788790030; cv=pass; b=Vtjct8b0Vi7mCdqsVyS7qIn8iDRYHX8mePHnQbk0Kk+YiQTDXauFv9vwYRYPgs+GraiQEB7UzF+UVMhex1SPZJZTdp3GJj6pRQpG+37n1HZQgnqYk2Q1RuJQUTwUfO9GczZlE4NE0+d4HcUGh/FZA16IGN+QOHClFExo2YDuKOU=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788790030; c=relaxed/simple;
-	bh=HvMD0whYP38ILXbRvW4RQd+DD6z86Cgv8Z7FhShCV6w=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=d7PbgbCG4hT/dnAdfl7FsZF2szQfLI1EIDETKwSIc2sZ1vEnle+/sUvOgUu2S0oeDSjOag+kOUI8GgD5LWwaAOjZotxTDOcJ146eXr5oMcaHGsR3boG9XomcYbb5bdpVYc6BGrWIEghkjBJwCGPh5yiPHLPOYCkwWgrXU+LQ2Lo=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=aQrlrIzN; arc=pass smtp.client-ip=209.85.128.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 175C43B0AE1
+	for <linux-pci@vger.kernel.org>; Mon,  7 Sep 2026 14:34:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1788791652; cv=none; b=FTTzDVUT23Q6rUHMMxIKgyV68ZVQ3+7mwQ9W7psr9HnfR/9igwegFKpg1aLvfmnYhjJHtUIFww0MWL2hAVzHHDDfvjguz4jee7WYnvIgqaHqs1Zsrdh+O/654b3mZtfKNs4TC8soTF4AeekIq+uMuEpQHeT2Wv67k+hR3oycGXg=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1788791652; c=relaxed/simple;
+	bh=gghkv7zdXWZ6sXY7UEWVIvU/xUzxz837euFu8M0kdhg=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=EePiopG6SYHe9yzY1jgQd8qfJ77bAk7tKANzrzfiUif8qPf7mGAvQg8SAPqGaGEu4LHtfjU5EtXPj2vmPEqRUWwMmGZzJ6UndNs8pmuFH7CNuNC/F0f7gSzbMr/kPY1y1IHf4V5xck9kOvjVR55of8Vk/wOuJJ2MnGDI80oER1Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=Orv3VFaN; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=UkTzKiZD; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="aQrlrIzN"
-Received: by mail-wm1-f46.google.com with SMTP id 5b1f17b1804b1-4998b5a63e2so43264475e9.1
-        for <linux-pci@vger.kernel.org>; Mon, 07 Sep 2026 07:07:05 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1788790024; cv=none;
-        d=google.com; s=arc-20260327;
-        b=On9InKF3t7Bs44HkADhAcgYBg8pjCZHT0KjYe6i7ZJQ6KkQWe2wxgu26iD7M5I/cw0
-         v5aUFMFZVNdTMDS+v0dGJhfPC5YIXC1r6lkrVd8fk8RBCt7Pl9cVgdlqlly8b6SIE0Yw
-         Wj4MNh3iYTggnNCZe7FpMXGt/XMMOuB53ELzGXN+f0RM+HtGI4Nd1+K1Z788DMtrkpjp
-         KNnsi+aYKh9ZLFljCKlfi/WI/YyWoPalIHvkXwkyhWiAZGIcdLXWgEAL0kha0cJmOoLQ
-         dexoz+G8UHgq/1Vkdo9fc/9trLy3QyEjAp+NnoSTZNuao2GhrUT5C272/q0OXuMYaawu
-         jn4w==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=Vg2AiEFa68ARzliVtiEYWMnugqjIY8Sb5bHhQpyrHpw=;
-        fh=FPjPJNOgC/nPflgl/uKfzlJGlQGm9AiZSef5WCaJ3FI=;
-        b=pzDcXi9Xel+nf52/i//tuQli3oz/2egV1MJrhtlwKHCheKlXP5/b2KTGAe9zNNMbPg
-         XMgs19HjqQeiwEBJhvyXO/v3Of4YePkcJsUXq6Q08FOSojwLoOI1eEpbURRLl4JobFwJ
-         nnlro9ul0BeOYcb6L6Hhm6HYTrYOjhCO59kOhntVUIK01A+JIPLonQ0AB8778zEfB4cZ
-         SyRtjEJVwg+7Y/m7M29gYdwwdeA8BE3OR0pgVV2hc2MT3usZP2jmhTMLyL4R8S8ESIDc
-         vas+2sTYWkz/QXlkOErmpQRNGsnA+LYBcTFWJTe+M65rUtxMsvb1R0PkkPyOj0co3AD+
-         co7w==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="Orv3VFaN";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="UkTzKiZD"
+Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 687DeLfC3607261
+	for <linux-pci@vger.kernel.org>; Mon, 7 Sep 2026 14:34:02 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:date:from:message-id:mime-version
+	:subject:to; s=qcppdkim1; bh=KGMEa01HAbq7RFLKvPr6n5se8AjjGKtLJcv
+	8+giMlBw=; b=Orv3VFaNxRnTs+DhkZ4HlcP+q/bdDN7ErohLIi/0KUzcdgsBovY
+	Ra6ziyXhyTNcOMn/BufIunBuDcPieYLBceuFBjjOkYJfWUZlGewkqxYUCsZZv8Ra
+	ZUzRG0S6/EF6wfJH7W2m0wPaM+dXctrWPpCoqfQvkaixf5HxPpQWU/HjVfEEUoqL
+	dSAwr+Jz+5n32FL/HsY5f67BVDirmcBITUSf4GD0Ta6RKfr0DdFwlX3Vhxb/SaLF
+	wEVambbzMPEUnso3Q69azAcUcRvxRUGYWBeoXaod9s6sbHCwqtShAWZhk6GFTFB3
+	UlBIgZgwo4re1U4zQAKuL98LlWa5mt/QMSg==
+Received: from mail-oo1-f71.google.com (mail-oo1-f71.google.com [209.85.161.71])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4ghfxku441-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Mon, 07 Sep 2026 14:34:02 +0000 (GMT)
+Received: by mail-oo1-f71.google.com with SMTP id 006d021491bc7-6b1b27d7ab2so5356108eaf.0
+        for <linux-pci@vger.kernel.org>; Mon, 07 Sep 2026 07:34:02 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1788790024; x=1789394824; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=Vg2AiEFa68ARzliVtiEYWMnugqjIY8Sb5bHhQpyrHpw=;
-        b=aQrlrIzNQyqSfh0XaP2ut8GCXtY2oAawElTBuV+LQljHX0gNJJseP0Tj8aYK3SD1UD
-         DxMjndhj5KDlpdyEjZ79evHFe2IvVI6bUG4QUExTHVt3BfH4WcZMyheKZvC4sbHcvvLy
-         0un/LJkrtmw4eV8OnJFyUXGOvuzt1Nq0bP0mxJYJNQa1rJ/gwBypWZznL9EtEsx7+ia5
-         JB7V11qwc5rDT4HVc+V8HMuvDEwdwaR8EdRawNbtRFNOCyn6VhGnT9LikoOyRyfJNPF3
-         UkypSUwLLWWjBO6uU5u0KVpC7c6gx45KQFXmtTtDxEQ3U7M2FcdxMqL+gLfg0yJ7GO4p
-         XuZw==
+        d=oss.qualcomm.com; s=google; t=1788791642; x=1789396442; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=KGMEa01HAbq7RFLKvPr6n5se8AjjGKtLJcv8+giMlBw=;
+        b=UkTzKiZDdO5cx/b/NuSfQwgQNuhjJkUPW5VLJtYDybhvi4YB8M3A3Mk2qqSqyEGyH1
+         YL/mPBHMJsf/VkZCWtDfYvfk37/L1CqemHEVSwyITJ1vjQB823UjL4i7sb9gxBA4G4Cm
+         TUYuSZnzw7Ktmu8glWiXeCOpOzXf7kE80tZkd8tHbRGoTNugdQOrvV0Kn1l2B+8LcGSk
+         SbkvaWUpdwiUN6KGphkDJjdDRf451sslbjOQCs0xUH2hU7Kis+6VzflB1seNk56+d5/I
+         dioLakwZooTcrKr5qJxn2gCVPsr3YyGSi9/XgEpQrBbPe7nLXfWP2Chu/KgjphgTSvfI
+         YOMg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788790024; x=1789394824;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=Vg2AiEFa68ARzliVtiEYWMnugqjIY8Sb5bHhQpyrHpw=;
-        b=Mp8A+yB5P6Sl8IIUoqxWb9cB0R+puAd6i8AooEbyu1BYp/BOtpMqhTfkPZnBtBUis0
-         fNqWhhPB9lq5CLNMBjkhQimx/kVEyOGalBwUD0X+Fqh/ZZvcajU7XMGn7o38Pt/bd3jg
-         I3SKjoTXeR16mSclAagyUkc5gMU9ys/16zVBo/7ae2wYvYqTKaAC9olGgi3UV39VfWOH
-         O8EZRnt3ZEblnv/Dh0NRBDpt4vN9q1OJkTAmQkKU7RWNFrmZ1tItRYw3dmT1xEZ611zh
-         Y+viaHrYu7Smv6ZOPDbfyUtzcbyRGIVh4x1g7SFxUZnBj0si2gHxNBZW+9HpyVw3Oznl
-         4jtQ==
-X-Forwarded-Encrypted: i=1; AKwUvByQLirvL7GhU9H/XIYM3g4qEOc2GaOlWkqvByIaNXcUthEpCL/DBSDXz+FPqIs2JM6rNDMi10czEVQ=@vger.kernel.org
-X-Gm-Message-State: AFuF++nqbRp/HUzos7Np/GZ5s7x7azym20GQkiSmmg7iDk1M0SZ4u7KU
-	PV+lfDYdI5P1ySlr3nYSW+wvI0KzUd/UbA/nCku+kmqrbgtWwHO2sx9IoS+LLwycWtW5PEwta3W
-	4tPxJWB1xpJSkEt56OwTjMXSX8m/1nqXzPgfUD0Fx
-X-Gm-Gg: AYBFou2e8wlpgT4mkWSKoQfYIiJF9+a31c3DnC11qnAAVG6WCAXupkKj/92iM7NkCn7
-	lzb4aMFMykvrEJtLt12FTiSPUy2qETjNF5h/xPDZX5bHmN5R4tBIfEkq7EcFWuhMcytA0Rfx0CI
-	310QuSlVvQWT8q8LhK1oH4uYEsaNpKxSYgnoDJy5F9J9CFvpDk/RrnchYY6fz/ymC7zdI6zb8yN
-	gZrHSDx++FREwKPLAIylzualchEqXLYgr/Inlhwcq7uHO1zAMXT/1L27IurqT0N/H8IWhKro+zx
-	pVrwTWRiR97uXjUAEO9lcC9TmX04+hNAljwi7cjpeV3erymJ9nTMViIyUxAy0Rszxgn3ZeEl87P
-	iN8APNw0eg5GdL68hF7jFv5Bp2mVLylQ=
-X-Received: by 2002:a05:600c:620e:b0:49c:fc6c:be19 with SMTP id
- 5b1f17b1804b1-49cff2078b8mr196871015e9.31.1788790023400; Mon, 07 Sep 2026
- 07:07:03 -0700 (PDT)
+        d=1e100.net; s=20251104; t=1788791642; x=1789396442;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=KGMEa01HAbq7RFLKvPr6n5se8AjjGKtLJcv8+giMlBw=;
+        b=MlBoxAroZU+HdYgJsLxkYBCgQaqxJ8aubTMo06gUN9VpDEPL49GyXd1JGNJGiZxJmF
+         Aooj7Chc2d54LUnduInlQ27tfeEoYIuD34/WnuhEeBwOa1I/nM8tGTru6QAbMyX+FOEA
+         WFJLOwQi5q78zC6riujkk7FYqGeGpCzXV6mKUIeA1YAUNcgAfodjb+Gfylqd0Rhkz5L5
+         3P8KuPdJKt78e2Ymttz7LTcaNipkXFSgT+2BldijXNNeapb91xE4UJC4Z1u0Rood73ta
+         yY8J7KUS47gQ88DX9bcWCxOQ7f9ckBrl//BWNqlKEYWhYtwg4FDuoG+S+BQCCNpZEiYT
+         9iEQ==
+X-Gm-Message-State: AFuF++mm65RTpqNcWJDfbO0ib83WyURhaHETvm3Vn6x/1KMjMUYvhe4T
+	/cb9v22iadk41iQQaw7GJHytSqYaP9UDtlHV3xoZmQamOAS73DqLqSnx44rAIr4GyWtttQm6+SK
+	homLom8mawiGRJL7hG6ZfAeRExbJ9L1HMwHk52dhLPSY2UYBLZF93/JacCoWqwzL4pRYw43S55g
+	==
+X-Gm-Gg: AYBFou2uBhzRAYtuF5LRUp+oHQv0FyMhuDbaAP89sUfptTzWbVBBn2zZ6LRu+T10qMo
+	AwIsVGHZpi+Jmi6bqSoDyRPdhSsg5dRZdLQ1esWei41drpnysSSw1cKmdFITp/0N/ha0HbfzCDr
+	V4+BipKSqChSp09enYg9mlS7SiCx9eeCDYIVRrl2ToI8+nvAU3bzl0N48swm/SifszPnsJm8Fi1
+	IClhEfPWypugginew2ic1CeEUM+7rhAnt8WlUAKCYCJ+5tqRyX0Y1uKrN0zMk7KJKKyDoFlDxZ0
+	E+AzZKVVbZLKt8rRQ+1ObOs42sb9WrHA4kVlCS42R6/vIirUWlQmaEey77c7vj09r7SQSjdgLZP
+	68qm0kXmYU3IRIeyG0pY=
+X-Received: by 2002:a05:6820:8108:b0:6b0:be69:d3cd with SMTP id 006d021491bc7-6b6fc9d05f6mr12790503eaf.17.1788791641735;
+        Mon, 07 Sep 2026 07:34:01 -0700 (PDT)
+X-Received: by 2002:a05:6820:8108:b0:6b0:be69:d3cd with SMTP id 006d021491bc7-6b6fc9d05f6mr12790482eaf.17.1788791641302;
+        Mon, 07 Sep 2026 07:34:01 -0700 (PDT)
+Received: from QCOM-IvKeorbwK5.na.qualcomm.com ([120.60.54.214])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-1433171a97esm25977900c88.12.2026.09.07.07.33.57
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 07 Sep 2026 07:34:00 -0700 (PDT)
+From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+X-Google-Original-From: Manivannan Sadhasivam <mani@kernel.org>
+To: mani@kernel.org, lpieralisi@kernel.org, kwilczynski@kernel.org,
+        robh@kernel.org, bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>,
+        Loic Poulain <loic.poulain@oss.qualcomm.com>
+Subject: [PATCH] PCI: qcom: Honor IOMMU provider's #iommu-cells in qcom_pcie_config_sid_1_9_0()
+Date: Mon,  7 Sep 2026 16:33:49 +0200
+Message-ID: <20260907143349.317495-1-mani@kernel.org>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260824-unique-ref-v20-0-490735672187@kernel.org>
- <20260824-unique-ref-v20-4-490735672187@kernel.org> <ao2WubjLtDuHvRzx@google.com>
- <DL894TFXM5AT.2QOXN683UKXIF@garyguo.net> <CAH5fLggAMfBcxprKJxs4JbieKadC_mKg4B0xNETOH1QUi72UGQ@mail.gmail.com>
- <8733vlxmm8.fsf@t14s.mail-host-address-is-not-set> <2dpwVpJS3VbfQ7CmE3HeY4IJSSMXTP_O9sSP3HHHUD7Z29RNEG4Hc0m8f94jKWjFlekcTXvIBA-QdGYrf8w1sw==@protonmail.internalid>
- <CAH5fLgjEfZO9DwcUxaKCWd_hFUrXU+cxiwmRg1UnM2pKD6gPvg@mail.gmail.com> <87zextw4c4.fsf@t14s.mail-host-address-is-not-set>
-In-Reply-To: <87zextw4c4.fsf@t14s.mail-host-address-is-not-set>
-From: Alice Ryhl <aliceryhl@google.com>
-Date: Mon, 7 Sep 2026 16:06:50 +0200
-X-Gm-Features: AcwNN1U77QgBa8sE7Mjd0WimH4SDjDY5r-Et6lPB5NUv3A9JgqpUTtiAXpyWSl8
-Message-ID: <CAH5fLgjYmvp1Ph3dYXnTKkAvWgNpgCAPeq_7PZhRai6pCNmVmw@mail.gmail.com>
-Subject: Re: [PATCH v20 4/8] rust: page: convert to `Ownable`'
-To: Andreas Hindborg <a.hindborg@kernel.org>
-Cc: Gary Guo <gary@garyguo.net>, Danilo Krummrich <dakr@kernel.org>, Lorenzo Stoakes <ljs@kernel.org>, 
-	Vlastimil Babka <vbabka@kernel.org>, "Liam R. Howlett" <liam@infradead.org>, 
-	Uladzislau Rezki <urezki@gmail.com>, Miguel Ojeda <ojeda@kernel.org>, Boqun Feng <boqun@kernel.org>, 
-	=?UTF-8?Q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, 
-	Benno Lossin <lossin@kernel.org>, Trevor Gross <tmgross@umich.edu>, 
-	Daniel Almeida <daniel.almeida@collabora.com>, Tamir Duberstein <tamird@kernel.org>, 
-	Alexandre Courbot <acourbot@nvidia.com>, =?UTF-8?Q?Onur_=C3=96zkan?= <work@onurozkan.dev>, 
-	Lyude Paul <lyude@redhat.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
-	=?UTF-8?B?QXJ2ZSBIasO4bm5ldsOlZw==?= <arve@android.com>, 
-	Todd Kjos <tkjos@android.com>, Christian Brauner <brauner@kernel.org>, 
-	Carlos Llamas <cmllamas@google.com>, "Rafael J. Wysocki" <rafael@kernel.org>, 
-	Dave Ertman <david.m.ertman@intel.com>, Leon Romanovsky <leon@kernel.org>, 
-	Paul Moore <paul@paul-moore.com>, Serge Hallyn <sergeh@kernel.org>, 
-	David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>, 
-	Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>, 
-	Igor Korotin <igor.korotin@linux.dev>, Viresh Kumar <vireshk@kernel.org>, Nishanth Menon <nm@ti.com>, 
-	Stephen Boyd <sboyd@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	=?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Pavel Tikhomirov <ptikhomirov@virtuozzo.com>, Michal Wilczynski <m.wilczynski@samsung.com>, 
-	Ira Weiny <iweiny@kernel.org>, Philipp Stanner <phasta@kernel.org>, rust-for-linux@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-mm@kvack.org, driver-core@lists.linux.dev, 
-	linux-block@vger.kernel.org, linux-security-module@vger.kernel.org, 
-	dri-devel@lists.freedesktop.org, linux-fsdevel@vger.kernel.org, 
-	linux-pm@vger.kernel.org, linux-pci@vger.kernel.org, 
-	linux-pwm@vger.kernel.org, linux-usb@vger.kernel.org, 
-	Asahi Lina <lina+kernel@asahilina.net>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTA3MDE2MCBTYWx0ZWRfX8CkWBvqYH7+b
+ NcDezTsDNKISz8fmN+Lr0XRpBcjII3H8sFc8cFu4AtLWlYXsZkVi9vB0Ncde6jNTl8KnubWWTSU
+ UF3BHTWaj4ZZpL0G4l0EZRHiHuuduv1IpusIIno8ZV9fyGm8y6nIYBzBtE6StQzJbEnBSOe6TPi
+ Jp5vu4XAxxYokobg4TJ/BnTBp/vr/KDyXSnnHwQvezuLG3whmDB7vqjMxnMYSawkjMZOw+sPNKr
+ lFjv9nnbqXOur5DGzgX2/cjPascRhlxowcLVDtCazYBfqJXWoUDZXIBbw3tYO5y6ni3B4aTxUO0
+ TQl5Pq9UIw2rZLMnJ8F4wTwh+6IsNTrR3eFgmnAvldow+GW+UXhmmda/hmwy1skk86j5rTA2eNW
+ 1Mw5X5jOwObrcN2nHEap9B2XnXw3TcdHcBIie1/0QO5j1XpUZ3A9MsBiXsdnKZd/BB5M88Tm6aU
+ UBGShqVxCBz6O3umQJA==
+X-Proofpoint-GUID: dEgTYfMDZDLe9g0ZqwK-DO-2bYtx6FxA
+X-Proofpoint-Spam-Info: AW1haW4tMjYwOTA3MDE2MCBTYWx0ZWRfXyANZLJy566s5
+ gJRYa326DhzydfmaL5b2QiPR6XIg9DljpZ285pIUnJayINLywxKK5JhzCUerbqIPO/A8Tmxb6oB
+ JjdlH20qhfzaF3AawkQCJRNDQ8UFEsY=
+X-Authority-Analysis: v=2.4 cv=daOwG3Xe c=1 sm=1 tr=0 ts=6a9ecb5a cx=c_pps
+ a=V4L7fE8DliODT/OoDI2WOg==:117 a=rmNCNknCB1PV+D2WvuySnA==:17
+ a=VdqzKS8jKosA:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=u7WPNUs3qKkmUXheDGA7:22 a=yx91gb_oNiZeI1HMLzn7:22 a=EUspDBNiAAAA:8
+ a=glRjDg6tCVJ14w43rIUA:9 a=WZGXeFmKUf7gPmL3hEjn:22
+X-Proofpoint-ORIG-GUID: dEgTYfMDZDLe9g0ZqwK-DO-2bYtx6FxA
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-09-07_04,2026-09-07_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ suspectscore=0 priorityscore=1501 bulkscore=0 spamscore=0 phishscore=0
+ lowpriorityscore=0 adultscore=0 malwarescore=0 impostorscore=0 clxscore=1015
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2609070160
 
-On Mon, Sep 7, 2026 at 3:58=E2=80=AFPM Andreas Hindborg <a.hindborg@kernel.=
-org> wrote:
->
-> "Alice Ryhl" <aliceryhl@google.com> writes:
->
-> > On Mon, Sep 7, 2026 at 2:38=E2=80=AFPM Andreas Hindborg <a.hindborg@ker=
-nel.org> wrote:
-> >>
-> >> Alice Ryhl <aliceryhl@google.com> writes:
-> >>
-> >> > On Sun, Sep 6, 2026 at 3:02=E2=80=AFPM Gary Guo <gary@garyguo.net> w=
-rote:
-> >> >>
-> >> >> On Tue Aug 25, 2026 at 2:20 PM BST, Alice Ryhl wrote:
-> >> >> > On Mon, Aug 24, 2026 at 01:17:56PM +0200, Andreas Hindborg wrote:
-> >> >> >> +        // SAFETY: We just successfully allocated a page, so we=
- now have ownership of the newly
-> >> >> >> +        // allocated page. We transfer that ownership to the ne=
-w `Owned<Page>` object.
-> >> >> >> +        // Since `Page` is transparent, we can cast the pointer=
- directly.
-> >> >> >> +        Ok(unsafe { Owned::from_raw(page.cast()) })
-> >> >> >
-> >> >> > This doesn't satisfy the safety requirements of Owned::from_raw()
-> >> >> > because the page may be used with vm_insert_page(), which increme=
-nts its
-> >> >> > refcount and causes it to be shared the vma system, and this occu=
-rs
-> >> >> > before Page::release() is called.
-> >> >>
-> >> >> I suppose the existing vm_insert_page() abstraction we have is alre=
-ady
-> >> >> problematic, because it uses `&Page`?
-> >> >>
-> >> >> Maybe we want to change the API to use `ARef<Page>` so it already h=
-as to be
-> >> >> shared? Conceptually it takes a reference count from a `&Page`, whi=
-ch isn't
-> >> >> possible because `Page` is not `AlwaysRefCounted`, so it needs a `&=
-ARef<Page>`
-> >> >> to be able to do that op.
-> >> >
-> >> > Honestly, the problem is the safety requirements of Owned::from_raw(=
-).
-> >> > Pages have a "special" main reference, and free_page() does more tha=
-n
-> >> > put_page(). It even does something when the refcount does not hit
-> >> > zero.
-> >> >
-> >> > The correct behavior for Page is to allow the user to hold one
-> >> > Owned<Page> whose drop calls free_page(), *plus* any number of
-> >> > ARef<Page> references that invoke put_page() on drop. This way, the
-> >> > owned page controls the special drop codepath.
-> >>
-> >> This does not mesh well with the model of `Owned` behaving like
-> >> `UniqueArc` to `ARef` behaving like an `Arc`.
-> >
-> > It's a different case, I agree.
-> >
-> >> Please help me understand; with page having a main ref and an auxiliar=
-y
-> >> refcount, if we model that with a single `Owned<Page>` and a number of
-> >> `ARef<Page>`, what would happen in the case where the main ref (`Owned=
-`)
-> >> is dropped first? Is this legal?
-> >
-> > Yes, it's legal.
-> >
-> >> My intuition here would be to follow Garry's suggestion and have
-> >> `vm_insert_page` take an `ARef<Page>`. Can you elaborate why this is n=
-ot
-> >> an option?
-> >
-> > That would be the wrong ownership semantics. The C side increments the
-> > refcount rather than take ownership of a passed-in refcount, so the
-> > correct argument type is &Page.
->
-> Or `&ARef<Page>`? Because with `Page` being `Ownable` it would not be
-> OK to increment the refcount from just a `&Page`.
+From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 
-That's just a limitation in your traits. There is no problem with
-creating a refcount from just a &Page.
+qcom_pcie_config_sid_1_9_0() reads the "iommu-map" property as an array
+of fixed four-word {rid-base, phandle, sid, rid-len} entries to program
+the BDF to SID translation table. But that layout only holds for an
+IOMMU with '#iommu-cells = <1>'. The PCIe SMMUs on these SoCs use
+'#iommu-cells = <2>' (SID and mask), so per the pci-iommu binding each
+entry is really five cells long.
 
-> > Now, for the use-case in Binder I believe we could switch to
-> > put_page(), as we don't need the extra stuff from free_page(), in
-> > which case we only want ARef<Page> and do not require Owned support.
-> > But as long as we are calling free_page(), it needs to not be
-> > clonable.
->
-> You are calling `__free_page` directly in binder? I could not find this
-> with grep except in the C binder. Is this code you are calling into from
-> Rust binder?
+This used to work only because the DTs were themselves broken. They
+described iommu-map with four-cell entries that omitted the SID mask,
+which of_map_id() tolerated via its of_check_bad_map() fallback, and the
+four-word parsing coincidentally matched that malformed shape.
 
-Via the Drop of Page, not directly of course.
+Since commit ccb2fd725d41 ("of: Respect #{iommu,msi}-cells in maps") the
+OF core parses such maps correctly, so the device trees were converted
+to proper five-cell entries, e.g. commit c41749e9554d ("arm64: dts:
+qcom: sm8250: Fix the PCIe iommu-map entries"). With five-cell entries
+the fixed four-word stride slips by one cell for each entry after the
+first, so qcom_pcie_config_sid_1_9_0() reads the endpoint mapping's RID
+from the preceding entry's length cell and its SID from the phandle cell.
+As the RID is the hash key, the endpoint's real RID is never programmed
+into the BDF to SID table. Its DMA then hashes to an unprogrammed slot,
+gets tagged with SID 0 and the SMMU faults like below on QCS8300:
 
-> From `__free_pages()` kernel-doc (`mm/page_alloc.c`):
->
-> > If the last reference to this page is speculative, it will be
-> > released by put_page() which only frees the first page of a
-> > non-compound allocation. [...] **If you want to use the page's
-> > reference count to decide when to free the allocation, you should
-> > allocate a compound page, and use put_page() instead of
-> > __free_pages().**
->
-> I guess this is what you are referring to? We could change `Page` to
-> this style as well and all would be fine I think?
->
-> At any rate, today I learned about Pfn walkers, compaction,
-> memory-failure, etc. that take transient refcounts
-> pages. With that in mind we need to reformulate the invariant of
-> `Ownable` to exclude optimistic transient references.
+  arm-smmu 15200000.iommu: Unhandled context fault: fsr=0x402, iova=0xffa00000, cbfrsynra=0x0, cb=1
 
-Yes we can switch Rust Binder to use put_page() and have Page not
-implement Ownable at all. That would be okay, because Binder's pages
-are not higher order. But this case still does highlight that
-Ownable<_> currently does not address the use-case where the
-Ownable<T> is a special reference there can only be one of, rather
-than a completely unique reference.
+To fix this, walk the map with a stride of 3 + '#iommu-cells' of the
+referenced IOMMU and take the SID from the first specifier cell, which is
+all the BDF to SID table needs. Validate the layout instead of trusting
+the array size. Also, preserve the legacy behavior of the old DTs by
+detecting the same pattern that of_check_bad_map() recognizes and
+falling back to a stride of four.
 
-For instance, the GPUVM abstraction would be another case where
-Ownable<_> could be used if we have this other model where Ownable<_>
-and ARef<_> are legal at the same time. Currently GPUVM uses a special
-UniqueRefGpuVm type to solve this problem.
+Fixes: 4c9398822106 ("PCI: qcom: Add support for configuring BDF to SID mapping for SM8250")
+Reported-by: Loic Poulain <loic.poulain@oss.qualcomm.com>
+Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+---
+ drivers/pci/controller/dwc/pcie-qcom.c | 90 ++++++++++++++++++--------
+ 1 file changed, 64 insertions(+), 26 deletions(-)
 
-Alice
+diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+index b58a607b713f..42cbeef083ca 100644
+--- a/drivers/pci/controller/dwc/pcie-qcom.c
++++ b/drivers/pci/controller/dwc/pcie-qcom.c
+@@ -1143,50 +1143,90 @@ static void qcom_pcie_deinit_2_7_0(struct qcom_pcie *pcie)
+ 
+ static int qcom_pcie_config_sid_1_9_0(struct qcom_pcie *pcie)
+ {
+-	/* iommu map structure */
+-	struct {
+-		u32 bdf;
+-		u32 phandle;
+-		u32 smmu_sid;
+-		u32 smmu_sid_len;
+-	} *map;
+ 	void __iomem *bdf_to_sid_base = pcie->parf + PARF_BDF_TO_SID_TABLE_N;
+ 	struct device *dev = pcie->pci->dev;
++	struct device_node *iommu_np;
+ 	u8 qcom_pcie_crc8_table[CRC8_TABLE_SIZE];
+-	int i, nr_map, size = 0;
+-	u32 smmu_sid_base;
++	const __be32 *map;
++	u32 iommu_cells, entry_cells, phandle, smmu_sid_base;
++	int i, nr_cells, nr_map, size = 0;
+ 	u32 val;
+ 
+-	of_get_property(dev->of_node, "iommu-map", &size);
+-	if (!size)
++	map = of_get_property(dev->of_node, "iommu-map", &size);
++	if (!map || !size)
+ 		return 0;
+ 
++	if (size % sizeof(*map)) {
++		dev_err(dev, "Malformed iommu-map property\n");
++		return -EINVAL;
++	}
++	nr_cells = size / sizeof(*map);
++
++	/*
++	 * Each iommu-map entry is: rid-base (1 cell), phandle (1 cell),
++	 * IOMMU specifier (#iommu-cells cells), length (1 cell). Read
++	 * #iommu-cells from the IOMMU provider referenced by the first
++	 * entry to compute the per-entry stride.
++	 */
++	phandle = be32_to_cpu(map[1]);
++	iommu_np = of_find_node_by_phandle(phandle);
++	if (!iommu_np) {
++		dev_err(dev, "Failed to find IOMMU node in iommu-map\n");
++		return -ENODEV;
++	}
++
++	if (of_property_read_u32(iommu_np, "#iommu-cells", &iommu_cells))
++		iommu_cells = 1;
++	of_node_put(iommu_np);
++
++	entry_cells = 3 + iommu_cells;
++
++	/*
++	 * Retain backward compatibility with DTs that describe iommu-map
++	 * with 4-cell entries against an IOMMU declaring #iommu-cells = 2,
++	 * matching the fallback in drivers/of/base.c::of_check_bad_map().
++	 */
++	if (iommu_cells == 2 && !(nr_cells % 4)) {
++		bool legacy = true;
++
++		for (i = 0; i < nr_cells; i += 4) {
++			if (be32_to_cpu(map[i + 1]) != phandle ||
++			    be32_to_cpu(map[i + 3]) != 1) {
++				legacy = false;
++				break;
++			}
++		}
++
++		if (legacy) {
++			dev_warn_once(dev, "iommu-map has 1-cell entries targeting 2-cell #iommu-cells, treating as 1-cell output\n");
++			entry_cells = 4;
++		}
++	}
++
++	if (nr_cells % entry_cells) {
++		dev_err(dev, "Malformed iommu-map property\n");
++		return -EINVAL;
++	}
++	nr_map = nr_cells / entry_cells;
++
+ 	/* Enable BDF to SID translation by disabling bypass mode (default) */
+ 	val = readl(pcie->parf + PARF_BDF_TO_SID_CFG);
+ 	val &= ~BDF_TO_SID_BYPASS;
+ 	writel(val, pcie->parf + PARF_BDF_TO_SID_CFG);
+ 
+-	map = kzalloc(size, GFP_KERNEL);
+-	if (!map)
+-		return -ENOMEM;
+-
+-	of_property_read_u32_array(dev->of_node, "iommu-map", (u32 *)map,
+-				   size / sizeof(u32));
+-
+-	nr_map = size / (sizeof(*map));
+-
+ 	crc8_populate_msb(qcom_pcie_crc8_table, QCOM_PCIE_CRC8_POLYNOMIAL);
+ 
+ 	/* Registers need to be zero out first */
+ 	memset_io(bdf_to_sid_base, 0, CRC8_TABLE_SIZE * sizeof(u32));
+ 
+ 	/* Extract the SMMU SID base from the first entry of iommu-map */
+-	smmu_sid_base = map[0].smmu_sid;
++	smmu_sid_base = be32_to_cpu(map[2]);
+ 
+ 	/* Look for an available entry to hold the mapping */
+ 	for (i = 0; i < nr_map; i++) {
+-		__be16 bdf_be = cpu_to_be16(map[i].bdf);
+-		u32 val;
++		u32 bdf = be32_to_cpu(map[i * entry_cells]);
++		u32 sid = be32_to_cpu(map[i * entry_cells + 2]);
++		__be16 bdf_be = cpu_to_be16(bdf);
+ 		u8 hash;
+ 
+ 		hash = crc8(qcom_pcie_crc8_table, (u8 *)&bdf_be, sizeof(bdf_be), 0);
+@@ -1208,12 +1248,10 @@ static int qcom_pcie_config_sid_1_9_0(struct qcom_pcie *pcie)
+ 		}
+ 
+ 		/* BDF [31:16] | SID [15:8] | NEXT [7:0] */
+-		val = map[i].bdf << 16 | (map[i].smmu_sid - smmu_sid_base) << 8 | 0;
++		val = bdf << 16 | (sid - smmu_sid_base) << 8 | 0;
+ 		writel(val, bdf_to_sid_base + hash * sizeof(u32));
+ 	}
+ 
+-	kfree(map);
+-
+ 	return 0;
+ }
+ 
+-- 
+2.43.0
+
