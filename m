@@ -1,184 +1,188 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mout-p-201.mailbox.org (mout-p-201.mailbox.org [80.241.56.171])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 74A884F7985;
-	Mon,  7 Sep 2026 16:34:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F4662264A9;
+	Mon,  7 Sep 2026 16:36:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788798895; cv=none; b=RhuwCG7V0JB0U/qAD6fIP+XuiGzDpGgXKkl2GSL7NO4VrJacnIcYBPrOYRetKiGPdYMwQhUvHOa/6HKUqE8tqZvrdo2nf0JsNJQaMvx0PhJwziDw65k1anFEvj/Nmz525EwAsd2ZdkLDQWmPdkWQp8WjPL5Tdjx0VCo3aJoQJ00=
+	t=1788798971; cv=none; b=pn7mWF7tuZ+NjMTB/+2n3/ByrItvd2kFplt9y7kf9r0//hInt8sgjUSWcuOSsHCC8BQAE1paoEs8TB1gFyl0mC8EeGeNQdyZxUfb6GB6SJnelokKaqT2Qu48g4Spp5pwkeraePRclccaaPeXCw9UEPdUZs/XbZMUU/jA4elHX4E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788798895; c=relaxed/simple;
-	bh=fj20gJDGnUllR4Ou1jl1kIWdCnAByuDtqtMbODz65Cs=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=QuH1Jr8+JOS9c/mveN4/MbwvdmotQRY2vlFJ5c/h/SVHct3cqYu9LcblLsuBtUnLXWIhJQXqjCm+PvMf4j/h2TreTSXp0Ai8Se5IO2f928s7NrFeePMUE/iFDatyfGN23bG7Izdh5zFJ5NZBz0bvMIfQ+cpfk7aTvozlh9mTQt0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=l3OKWJQK; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788798971; c=relaxed/simple;
+	bh=ptGDUYDjTMupmTnbstt2zJP4xE1vw7AsSBgYtQC72/4=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=JWVAR/rrFzWgzZxpNNU3Js0/KF+RU4tAwocjFQFGvgqxXgdpHnK0ehR3WdTtHSsS8gXncZsNiGJXYq//4VpySNx1Sxe47wWsicfEOROd6nIzzh4kBsHMqs2Ud4Tw2Nm7BmiyelI/6KKfZD5u0AjPvXbChYBOYSNUan3MVGOquIE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=NWUGR3eL; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=stIx+RjZ; arc=none smtp.client-ip=80.241.56.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="l3OKWJQK"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EBF021F00A3A;
-	Mon,  7 Sep 2026 16:34:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788798894;
-	bh=2KE0p1ANOYskMb814mDpz+QLuRe12o7f1q8RtEEwvAE=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=l3OKWJQKG0Mp9BLMNyiKZXxHGk19I9JDMXljZnLCvtxvUZf87I8bdjKmra8oPXKTw
-	 rTdT3S5GAkgxxs2/0ktOyWbVTEuJnLrrosUbGWK06sOOyoULHouUJ/SMQSC6JVAN5b
-	 3U4XJ/VQsFH3/EXlu2Y53bpwHWJYNqP2CFDYch7zF5Y5TcFHcOX5W8PDIc4JAcQAyW
-	 WHsPgVaiUvjfIQkMMYK/DFzq7Mpx2Qa8qM4BUY55qLka0yKeyx5/h+vDEVKEg8B5Lo
-	 20+qRxzW1jiczTEPiyZMviMmXu/T/Zf1kAaj3Fo76tc/kycFK/9FuDWVsCwMuuU0zl
-	 FphsgMDlWBXyA==
-Date: Mon, 7 Sep 2026 11:34:52 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sangwoo Han <sangwoo.han@nearthlab.com>
-Cc: jim2101024@gmail.com, florian.fainelli@broadcom.com,
-	lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org,
-	bhelgaas@google.com, bcm-kernel-feedback-list@broadcom.com,
-	robh@kernel.org, linux-pci@vger.kernel.org,
-	linux-rpi-kernel@lists.infradead.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	Thomas Gleixner <tglx@kernel.org>,
-	Inochi Amaoto <inochiama@gmail.com>
-Subject: Re: [PATCH] PCI: brcmstb: Reserve only the MSI vectors that are
- handed out
-Message-ID: <20260907163452.GA2526539@bhelgaas>
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="NWUGR3eL";
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="stIx+RjZ"
+Received: from smtp202.mailbox.org (smtp202.mailbox.org [10.196.197.202])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mout-p-201.mailbox.org (Postfix) with ESMTPS id 4hdt463vrczMlDZ;
+	Mon, 07 Sep 2026 18:36:06 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
+	t=1788798966;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=SGejP6nOdYl5DK/7H1L4X0NlGPSqKJjetUNljJqP5fE=;
+	b=NWUGR3eLjpMI+SO0apjn1harukArd9wIACVFRFMNKhqT9A0L7z25ciikfHAikwhxxc7DjP
+	yKBhY9riu1xJ97jFPbnWIFFN0K3PMbiRfC64XKs++fTKihHVwVY1NHusdoJwRk5DfbucDT
+	D1DgJrOrkj2V7ZLjsHsKpahz3VdZt4pskGmt7hZIjYtvdjAc0ZOQjNGxuwO/x8rxplKe3Z
+	evRJugesyLssnK82EruHf/9/tHFPY3V1/2j+Xlz99W/Lk19X1osYAER3VPa2fAOPNueu/z
+	E9jDTuNW/Me4s+z9hOKgY/yh7XGt9QayhmnHGe5Y+FIGJMFxXMfPpYvZvALTPA==
+From: Marek Vasut <marek.vasut+renesas@mailbox.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
+	t=1788798963;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=SGejP6nOdYl5DK/7H1L4X0NlGPSqKJjetUNljJqP5fE=;
+	b=stIx+RjZFzZLWOk/3yDpNvTFMDc5NkDHpDA5paJH2uRY5UCSo6XzRnDd1DJFAjEy6lvX+y
+	V4rD6aXoBNPPtmVoOMJf/dUcPz1cJBplZOz2A1wGvYeg4TuYJsuZVG9TzmCOwnvPrhxfWQ
+	haGCDPoOyQoTEhtmCEbCkWpEBwrDMs9sUpd2QoGGxVUExsp1RGv8dRuB2u6hNww0sUTmOG
+	vFEToqEcjknZgoh0r/4CSWQRP6MCDaE6qte1EaGCEzfcggQb+oKH2oj9Ug7sFSzlKTPLag
+	qOHr58i8C+HAh9fgdef1CGnIMVM2vfzv9H9vQuRLNeCRkD+p/wzsvVV2lQq3qQ==
+To: linux-pci@vger.kernel.org
+Cc: Marek Vasut <marek.vasut+renesas@mailbox.org>,
+	Geert Uytterhoeven <geert+renesas@glider.be>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Koichiro Den <den@valinux.co.jp>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+	devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-renesas-soc@vger.kernel.org
+Subject: [PATCH v3] PCI: rcar-gen4: Add missing PM ops
+Date: Mon,  7 Sep 2026 18:35:22 +0200
+Message-ID: <20260907163554.725127-1-marek.vasut+renesas@mailbox.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260730072215.2090974-1-sangwoo.han@nearthlab.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-MBO-RS-META: kz8cjdq7az9gimy5tf1tzpjbb99rf17k
+X-MBO-RS-ID: 97eeeb6b23e73cbd595
 
-[+cc Thomas, Inochi for MSI expertise]
+The R-Car Gen4 PCIe controller is part of a power domain. On R-Car S4
+and V4H, this is an always-on power domain which is not shut down in
+suspend. On R-Car V4M, this is a dedicated A2PCIPHY power domain,
+which is shut down during suspend, and the controller loses state,
+which prevents the PCIe from working after resume.
 
-On Thu, Jul 30, 2026 at 04:22:15PM +0900, Sangwoo Han wrote:
-> brcm_msi_alloc() reserves a naturally aligned power-of-two region with
-> bitmap_find_free_region(order_base_2(nr_irqs)), but the irqdomain core
-> releases the vectors of a block one at a time:
-> 
->   /* irq_domain_free_irqs_hierarchy() */
->   for (i = 0; i < nr_irqs; i++)
->           if (irq_domain_get_irq_data(domain, irq_base + i))
->                   domain->ops->free(domain, irq_base + i, 1);
-> 
-> That loop is the only caller of an irq_domain's ops->free(), so
-> brcm_irq_domain_free() always sees nr_irqs == 1 and
-> bitmap_release_region() clears exactly one bit per call. A request whose
-> vector count is not a power of two therefore reserves
-> roundup_pow_of_two(nr_irqs) bits but releases only nr_irqs of them, and
-> the difference stays set for the lifetime of the controller.
-> 
-> Multi-MSI regions are order-aligned and the controller has at most 32
-> MSIs, so the pool is quickly exhausted. Observed on a BCM2712 with a
-> 5-vector endpoint behind a 4-port PCIe switch: the switch ports take
-> hwirq 0x0-0x3 and the endpoint's block walks 0x8 -> 0x10 -> 0x18 across
-> three driver reloads until no aligned order-3 region is left.
-> pci_alloc_irq_vectors() then falls back to a single vector for the rest
-> of the boot, silently multiplexing the endpoint's four completion
-> interrupts onto one hwirq.
-> 
-> Devices that ask for a non-power-of-two vector count are not exotic:
-> wil6210 asks for 3, the MHI modems for 5 (Quectel EM1xx, Foxconn SDX55,
-> Telit FN990, MediaTek MV3x) or 7 (Qualcomm v1), ath11k WCN6750 for 28
-> and ptp_ocp for 17. MSI-X is unaffected because it allocates one
-> descriptor per vector with nvec_used == 1, so the order is always zero.
-> 
-> Reserve exactly the vectors that are handed out, at a base found with
-> bitmap_find_next_zero_area(), and clear exactly the vectors that are
-> freed. The number of reserved bits then matches the number the core
-> releases, whatever arity it uses.
-> 
-> The base still has to be aligned: PCI Local Bus Specification 3.0
-> (section 6.8.1.6) lets the endpoint encode the vector number in the low
-> order_base_2(nr_irqs) bits of the Message Data register, and in this
-> controller those bits are the hwirq itself. The alignment mask has to be
-> roundup_pow_of_two(nr_irqs) - 1 rather than nr_irqs - 1:
-> bitmap_find_next_zero_area() requires a mask of the form 2^k - 1. No
-> align_offset is needed because the bitmap index is the value the
-> endpoint ORs in, see brcm_msi_compose_msi_msg().
-> 
-> For a power-of-two nr_irqs the alignment and the region length are both
-> nr_irqs, so the base returned is the same as before and those
-> allocations are unaffected.
-> 
-> Fixes: 198acab1772f ("PCI: brcmstb: Enable Multi-MSI")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Sangwoo Han <sangwoo.han@nearthlab.com>
-> ---
-> 
-> Notes:
->     Tested on a BCM2712 (Raspberry Pi 5) with a 5-vector endpoint behind a
->     4-port PCIe switch, running 6.12.25 where brcm_msi_alloc() and
->     brcm_msi_free() are byte-identical to mainline. Without the patch the
->     endpoint's block walks 0x8 -> 0x10 -> 0x18 over three driver reloads and
->     then falls back to a single vector for the rest of the boot; with it the
->     block returns to 0x8 on all of eight reload cycles and the inner
->     domain's mapped count round-trips cleanly.
->     
->     Compile-tested on mainline for arm64 with W=1 and C=1 (sparse); no new
->     warnings.
-> 
->  drivers/pci/controller/pcie-brcmstb.c | 17 ++++++++++++++---
->  1 file changed, 14 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/pci/controller/pcie-brcmstb.c b/drivers/pci/controller/pcie-brcmstb.c
-> index 8a0c353d2a..6c5166666d 100644
-> --- a/drivers/pci/controller/pcie-brcmstb.c
-> +++ b/drivers/pci/controller/pcie-brcmstb.c
-> @@ -595,11 +595,22 @@ static struct irq_chip brcm_msi_bottom_irq_chip = {
->  
->  static int brcm_msi_alloc(struct brcm_msi *msi, unsigned int nr_irqs)
->  {
-> +	/*
-> +	 * brcm_msi_compose_msi_msg() puts hwirq in the low order bits of the
-> +	 * message data, which a Multi-MSI endpoint rewrites per vector, so a
-> +	 * block's base must be aligned to the Multiple Message Enable count.
-> +	 */
-> +	unsigned long align_mask = roundup_pow_of_two(nr_irqs) - 1;
->  	int hwirq;
->  
->  	mutex_lock(&msi->lock);
-> -	hwirq = bitmap_find_free_region(msi->used, msi->nr,
-> -					order_base_2(nr_irqs));
-> +	hwirq = bitmap_find_next_zero_area(msi->used, msi->nr, 0, nr_irqs,
-> +					   align_mask);
-> +	if (hwirq >= msi->nr) {
-> +		mutex_unlock(&msi->lock);
-> +		return -ENOSPC;
-> +	}
-> +	bitmap_set(msi->used, hwirq, nr_irqs);
->  	mutex_unlock(&msi->lock);
->  
->  	return hwirq;
-> @@ -609,7 +620,7 @@ static void brcm_msi_free(struct brcm_msi *msi, unsigned long hwirq,
->  			  unsigned int nr_irqs)
->  {
->  	mutex_lock(&msi->lock);
-> -	bitmap_release_region(msi->used, hwirq, order_base_2(nr_irqs));
-> +	bitmap_clear(msi->used, hwirq, nr_irqs);
->  	mutex_unlock(&msi->lock);
->  }
+Fix this by adding generic suspend/resume noirq ops for the controller,
+which tear the link down on suspend, and restart it on resume. Use the
+same PM ops on all of R-Car Gen4 to gracefully suspend and resume the
+PCIe link on V4H and S4 too.
 
-I want to revive this thread because I think there's a real problem
-here, and we should solve it for all the PCI controller drivers.
+Test case which demonstrates the problem on R-Car V4M:
+"
+$ hexdump -vC /sys/bus/pci/devices/0000:00:00.0/config > /tmp/pre
+$ echo s2idle > /sys/power/mem_sleep
+$ echo platform > /sys/power/pm_test
+$ echo mem > /sys/power/state
+$ hexdump -vC /sys/bus/pci/devices/0000:00:00.0/config > /tmp/post
+$ diff -Naru /tmp/pre /tmp/post
+...
+-00000000  12 19 32 00 07 05 10 00  00 00 04 06 00 00 01 00
++00000000  12 19 32 00 07 05 10 00  00 00 00 ff 00 00 80 00
+                                          ^^^^^
+                                    Class 0604->00ff
+"
 
-There's nothing brcm-specific about the bitmap alloc/free except the
-size of the msi->used bitmap, so I don't want to copy/paste this sort
-of fix in all the affected drivers.
+Fixes: 0d0c551011df ("PCI: rcar-gen4: Add R-Car Gen4 PCIe controller support for host mode")
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Tested-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Reported-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
+---
+Cc: "Krzysztof Wilczyński" <kwilczynski@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Conor Dooley <conor+dt@kernel.org>
+Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+Cc: Koichiro Den <den@valinux.co.jp>
+Cc: Krzysztof Kozlowski <krzk+dt@kernel.org>
+Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>
+Cc: Magnus Damm <magnus.damm@gmail.com>
+Cc: Manivannan Sadhasivam <mani@kernel.org>
+Cc: Rob Herring <robh@kernel.org>
+Cc: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Cc: devicetree@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+Cc: linux-renesas-soc@vger.kernel.org
+---
+V2: - Add TB from Geert for RC mode
+    - Use pm_sleep_ptr()
+    - Call HOST suspend/resume ops only in case the controller is in RC mode
+V3: - Add RB from Geert
+    - Make rcar_gen4_pcie_pm_ops() static
+    - Pull the mode from driver data
+---
+NOTE: Depends on series
+      https://lore.kernel.org/linux-pci/20260903205153.283553-1-marek.vasut+renesas@mailbox.org/
+---
+ drivers/pci/controller/dwc/pcie-rcar-gen4.c | 25 +++++++++++++++++++++
+ 1 file changed, 25 insertions(+)
 
-I'd also like to avoid the extra align_mask and
-bitmap_find_next_zero_area() followed by manual bitmap_set().
-bitmap_find_free_region() already takes care of the alignment and
-setting the allocated bits.
+diff --git a/drivers/pci/controller/dwc/pcie-rcar-gen4.c b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
+index 5690dc32f47e0..8b6a6cab1b83e 100644
+--- a/drivers/pci/controller/dwc/pcie-rcar-gen4.c
++++ b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
+@@ -909,6 +909,26 @@ static int rcar_gen4_pcie_ltssm_control(struct rcar_gen4_pcie *rcar, bool enable
+ 	return 0;
+ }
+ 
++static int rcar_gen4_pcie_suspend_noirq(struct device *dev)
++{
++	struct rcar_gen4_pcie *rcar = dev_get_drvdata(dev);
++
++	if (rcar->drvdata->mode != DW_PCIE_RC_TYPE)
++		return 0;
++
++	return dw_pcie_suspend_noirq(&rcar->dw);
++}
++
++static int rcar_gen4_pcie_resume_noirq(struct device *dev)
++{
++	struct rcar_gen4_pcie *rcar = dev_get_drvdata(dev);
++
++	if (rcar->drvdata->mode != DW_PCIE_RC_TYPE)
++		return 0;
++
++	return dw_pcie_resume_noirq(&rcar->dw);
++}
++
+ static struct rcar_gen4_pcie_drvdata drvdata_r8a779f0_pcie = {
+ 	.ltssm_control = r8a779f0_pcie_ltssm_control,
+ 	.mode = DW_PCIE_RC_TYPE,
+@@ -952,10 +972,15 @@ static const struct of_device_id rcar_gen4_pcie_of_match[] = {
+ };
+ MODULE_DEVICE_TABLE(of, rcar_gen4_pcie_of_match);
+ 
++static DEFINE_NOIRQ_DEV_PM_OPS(rcar_gen4_pcie_pm_ops,
++			       rcar_gen4_pcie_suspend_noirq,
++			       rcar_gen4_pcie_resume_noirq);
++
+ static struct platform_driver rcar_gen4_pcie_driver = {
+ 	.driver = {
+ 		.name = "pcie-rcar-gen4",
+ 		.of_match_table = rcar_gen4_pcie_of_match,
++		.pm = pm_sleep_ptr(&rcar_gen4_pcie_pm_ops),
+ 		.probe_type = PROBE_PREFER_ASYNCHRONOUS,
+ 	},
+ 	.probe = rcar_gen4_pcie_probe,
+-- 
+2.53.0
 
-The MSI Multiple Message Enable situation of enabling more vectors in
-the device than the driver wants is generic to all devices that
-advertise Multiple Message Capable, and I don't think we should have
-to deal with this in every host controller driver.
-
-If a driver requests 3 vectors, we have to enable 4 because MSI only
-supports power-of-two number of vectors.  This tells the device it is
-allowed to use all 4 vectors, and I think the PCI MSI core should
-assume they all *will* be used instead of relying on the driver's
-claim that it will only use 3.
