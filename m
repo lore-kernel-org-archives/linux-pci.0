@@ -1,70 +1,55 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D6B748EBFA
-	for <linux-pci@vger.kernel.org>; Mon,  7 Sep 2026 12:29:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+Received: from angie.orcam.me.uk (angie.orcam.me.uk [78.133.224.34])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id B60593C0625;
+	Mon,  7 Sep 2026 12:33:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=78.133.224.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788784144; cv=none; b=eX21k1R+SrdaFgn3dEEZmnoUNqEQyl8sjWn5Y9Cbo0/QZSCBPVxT43kYGKAWGXi6LKMa33ZwfIRv1wImYkWg1vpudPKkXBZosUL+UxEe8aMKdiA5u8ReohikhDMq53JiZCqmYCYsHkBA9G1Ex7vvmG+8ZLPmPAyXrHMehMD7/uI=
+	t=1788784402; cv=none; b=E4GyzEO5eQhia2n+jhKdpsOjn2bC9bYRFDzVAR3rT1KBfIHID4S0ry/o17JlvjKXbgGMzbe5VIQyRpZ25nTOGvapnvgkp2Z3sl0CmtC6EkPCsgZpyJBIK8EEOx8wDjCoRESCwG3JdC/fjrcgEEFyLD7Wi3hTVxmZq6udknWbzI0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788784144; c=relaxed/simple;
-	bh=F/7HsINp+TzLGd0n04TwNz5/E2m8/HhDQuZXxO9IJd8=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=sgkw0rwnPMriBRHX+6CNF+YEwxckY1IQJvdgLMah5+jy4kh3fd8UxfRPMDiJqs5mhmhAKLUPXQovurukXmyf6McFjCrj4TUkZPV4aelXIoAfiU9I4f1fY9TiscvHCYmhg4RldgqAHAcvW35CliyjcUIZvYbySAFNItjJbI/yA/M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FtscFC+Y; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FtscFC+Y"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 054B31F00A3E;
-	Mon,  7 Sep 2026 12:29:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788784143;
-	bh=F/7HsINp+TzLGd0n04TwNz5/E2m8/HhDQuZXxO9IJd8=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=FtscFC+YlC6kAk3d9kQKi0WuttNGroQKf2rwfLK2sD0kLMTE0gO7ktCJmDEHGQaf+
-	 cwToNPtMjO8O5IwO6SbNcDAdmHa6b1xrdo17VbdrSDnWljae9f5AKoNdXQ5Clqjbxf
-	 p4dJ/Df8/wr1B4N8SjeJ8n8EpkdFN3gapYK1PN+CwM/A7JIuqw/0NWqUFCOpy+91Ls
-	 sYeoekpL6nusEcIfL8XAjV7P1QsJaJjBtnROnq8lCQM1qh6HJsbuvN6z4NmfcqXb7b
-	 yFjBqR7W63dP4HM/Y62pJXwJ3ZGEDE7OoO5LkKGyPangFkPS87wZZ7KKyZHubM6OY4
-	 gHOTNfU1AtmAg==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] power: sequencing: pwrseq-pcie-m2: Support PCIe switch
- topologies
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Wei Deng" <wei.deng@oss.qualcomm.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260907122129.1577279-1-wei.deng@oss.qualcomm.com>
-References: <20260907122129.1577279-1-wei.deng@oss.qualcomm.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 07 Sep 2026 12:29:02 +0000
-Message-Id: <20260907122903.054B31F00A3E@smtp.kernel.org>
+	s=arc-20240116; t=1788784402; c=relaxed/simple;
+	bh=Xq5/ce3tivwpMGp2s9/KRURLmeqJnprW1NrEIHmsBNY=;
+	h=Date:From:To:cc:Subject:In-Reply-To:Message-ID:References:
+	 MIME-Version:Content-Type; b=jlOVU1lmnxKYG2BiWpxzky1YZNpXpBkWQUWyr3u1s2+bd0bkRlFA6/V2+9t+pL6twNJ3+MaM3VMZVN9c+9llvNz4nEOjNLSdMa8CmzHk/WCBc5p+tNCv4LYZDg83GNc6VuHYWBnmlbSxpRWU5+LCV03hCpNoWSDqTZMi5PgyOys=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=orcam.me.uk; spf=none smtp.mailfrom=orcam.me.uk; arc=none smtp.client-ip=78.133.224.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=orcam.me.uk
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=orcam.me.uk
+Received: by angie.orcam.me.uk (Postfix, from userid 500)
+	id C849A92009E; Mon,  7 Sep 2026 14:33:17 +0200 (CEST)
+Received: from localhost (localhost [127.0.0.1])
+	by angie.orcam.me.uk (Postfix) with ESMTP id C489792009B;
+	Mon,  7 Sep 2026 13:33:17 +0100 (BST)
+Date: Mon, 7 Sep 2026 13:33:17 +0100 (BST)
+From: "Maciej W. Rozycki" <macro@orcam.me.uk>
+To: Thorsten Leemhuis <regressions@leemhuis.info>
+cc: Bjorn Helgaas <bhelgaas@google.com>, Aoxtj <aoxiangtianji@axtjblog.cc>, 
+    linux-pci@vger.kernel.org, Andreas Wild <andiwild@gmail.com>, 
+    linux-kernel@vger.kernel.org, 
+    Linux kernel regressions list <regressions@lists.linux.dev>, 
+    restafvalendergelijke@outlook.com
+Subject: Re: [PATCH v3] PCI: Skip Target Speed quirk on clamped ports with
+ no link
+In-Reply-To: <fdbe2872-6fe3-4746-9d10-1ccef3a3e88d@leemhuis.info>
+Message-ID: <alpine.DEB.2.21.2609071332380.46717@angie.orcam.me.uk>
+References: <20260801201244.4421-1-andiwild@gmail.com> <331e97c7-e422-420d-9f3e-5d9f734464b3@axtjblog.cc> <20260808063103.10940-1-andiwild@gmail.com> <ae819bec-9c2b-47b5-be5e-3c65fea12da1@axtjblog.cc> <20260811064233.11315-1-andiwild@gmail.com>
+ <7742d556-e878-4893-8b6d-d6039ddba544@leemhuis.info> <20260825070527.8481-1-andiwild@gmail.com> <alpine.DEB.2.21.2608251117260.44766@angie.orcam.me.uk> <fdbe2872-6fe3-4746-9d10-1ccef3a3e88d@leemhuis.info>
+User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 
-> The PCI parent OF node check in pwrseq_pcie_m2_notify() and
-> pwrseq_pcie_m2_create_serdev() only looks at the immediate parent of the
-> PCI endpoint device. This fails when a PCIe switch inserts one or more
-> intermediate bridges between the root port and the endpoint.
->=20
-> For example, on lemans-evk with IFP Mezzanine board, the Toshiba TC9562
-> PCIe switch creates two bridge devices (upstream and downstream ports)
-> without OF nodes, so the WCN6855 BT device appears at depth 3 and its
-> immediate parent has of_node=3DNULL.
->=20
-> Add a helper pwrseq_pcie_m2_pci_parent_matches() that walks the PCI
-> parent chain upward until it finds a device whose OF node matches the
-> expected connector port node, or reaches a non-PCI device. Replace both
-> single-level checks with this helper to handle arbitrary PCIe switch
-> depths.
->=20
-> Signed-off-by: Wei Deng <wei.deng@oss.qualcomm.com>
+On Wed, 2 Sep 2026, Thorsten Leemhuis wrote:
 
-Sashiko has reviewed this patch and found no issues. It looks great!
+> Thx for the clarification. Would afaics be really good to get that fix
+> in to solve that problem. Bjorn, is this somewhere on your todo list?
+> >  I'd be happy to hear any results of your posted HASD check though.
+> There is another report from Mich (now CCed). Mich, can you maybe test
+> that if you haven't yet (your report is really verbose, which makes
+> things somewhat hard to follow)?
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260907122129.1577=
-279-1-wei.deng@oss.qualcomm.com?part=3D1
+ Thank you for the update.  I'm back from holiday today and will review
+the situation in detail in the coming few days.
 
+  Maciej
