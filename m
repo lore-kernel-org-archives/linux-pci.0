@@ -1,93 +1,135 @@
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EDB163AE194;
-	Mon,  7 Sep 2026 06:31:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 92BEC3F4DDD;
+	Mon,  7 Sep 2026 06:51:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788762674; cv=none; b=b9ZmUBE9IaoRp3/tve9uouRBU9D6p96VFRRlufXLcjHHuzR+8KroZdHyOMEOTJa0zcRkf1h2k9Yky5VAZmvNYtZHCgcpP8gIS1Y8ucKmOQJy1T1sehtD6df4jY8o58RJ0Ts0mvg00dLyhxZlAgemlvkLQHr//frCnOQCIwdQW5s=
+	t=1788763907; cv=none; b=EIkb8+Tnf0SRQcBkJwJXuDIkdok1/LTlRl2Grt4QNzY+XhgCv0LOyeyAEJm3GwOWtnKKsAMunwTMxzTGBpt8o143KWzXMdXiWb6zMM0h8MlC/xcMY8394Xy7gTOJEoew4zE+TcAyMcTOAGWdLinJW71e6DLA02Qzog9GqXIDYag=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788762674; c=relaxed/simple;
-	bh=oPI5dlqcbplDbVLpYxfwS1vk1MKfBLp2yvJkz6prFSw=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=tx0ZUGksADyZ8NRdgDY525zqImTBFJtP2y14NHDaPlMwWSKStS9UL+nwFCb5kOSdw9fRXqLxrVIM29girUyfmA27rbw5LsaoJkSysDi7V8JQc8bKlQvyJwcIZ6P+FWbQggXUpiLTa4D8NPWxFrB/sfLD3nLORE0SNhhRyAS02VA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=AY7UuHC5; arc=none smtp.client-ip=168.119.38.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
+	s=arc-20240116; t=1788763907; c=relaxed/simple;
+	bh=osB73+WJEfL+bitVCQcNrAGr5rrFgpOteaVjaOYKQF8=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=uuYOfeqgg261hLTKVl2tS9CmCmMuqqz3atfP7cW2pxwtb2FOvin4OF3Z99YmaCPjW5Sw5AVmhpnG7cMZYYqiC+Maot2iOaiX3dEDazNjwT8BlB2UJMBuWNkgfH5XOjkThYednvGCbbOqefMxz1blD4+dEyxKTBFV+9zQTQfI5Gk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=EfXoaIdW; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="AY7UuHC5"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=oPI5dlqcbplDbVLpYxfwS1vk1MKfBLp2yvJkz6prFSw=;
-	t=1788762670; x=1789972270; b=AY7UuHC5/asf4vI/UHKyJhKE04Zwy4dwqRBK7lFlOWR23wQ
-	eiSezzNSz3yrAKerJygKANasaMDc23TjRvG5LT8IeXsjhfwZiY520k+cogjj/RDTTdImOsNyvsig3
-	BswXP8dvmh2gb18RDIZ54/Og/mOxmbBs+2rym1q+KW/wRy+9+o6bY7BDY5tuR1q+xkdeGaLNXk33q
-	j42YiX+TCYXj+b284j9i3OgAbftLQHkWOx+EK6PPva+FgnEfqDSyoCZBU/AdSW+cdf1+XUK7knerp
-	b7FT1Nmmk8ee8OFroRMr+y+5J7/pwsv2twGQAQe4vgu7Q+ZjBjD52Lk7OhytbYkA==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
-	(Exim 4.98.2)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1x3Sse-00000004Jzo-36An;
-	Mon, 07 Sep 2026 08:31:01 +0200
-Message-ID: <60a8acf1adc0d2acc5c558c4cc791d01421f6b92.camel@sipsolutions.net>
-Subject: Re: [PATCH wireless v2 1/3] wifi: iwlwifi: pcie: don't infer CSME
- presence from a failed read
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Navon John Lukose <navonjohnlukose@gmail.com>, 
-	linux-wireless@vger.kernel.org, Miri Korenblit
-	 <miriam.rachel.korenblit@intel.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Emmanuel Grumbach	
- <emmanuel.grumbach@intel.com>, Nika Krasnova <nika@nikableh.moe>, Mark
- Pearson	 <mpearson-lenovo@squebb.ca>, linux-pci@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Date: Mon, 07 Sep 2026 08:30:59 +0200
-In-Reply-To: <20260906230022.148733-1-navonjohnlukose@gmail.com> (sfid-20260907_010041_495523_B0CD5EA1)
-References: <20260831130332.323549-1-navonjohnlukose@gmail.com>
-	 <20260831130332.323549-2-navonjohnlukose@gmail.com>
-	 <20260901154828.GA1879052@bhelgaas> <20260901161736.GA1883420@bhelgaas>
-	 <1a2c11d47b27dfd8a246300ac158d25cef5abf35.camel@sipsolutions.net>
-	 <20260906230022.148733-1-navonjohnlukose@gmail.com>
-	 (sfid-20260907_010041_495523_B0CD5EA1)
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.60.2 (3.60.2-1.fc44) 
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="EfXoaIdW"
+Received: from CPC-namja-026ON.localdomain (unknown [4.213.232.18])
+	by linux.microsoft.com (Postfix) with ESMTPSA id 5D28620B710C;
+	Sun,  6 Sep 2026 23:50:57 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 5D28620B710C
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1788763865;
+	bh=VJl1l3GK3Fqd0mALpCdqP/jq1V49Q1rEogZ8Xn0aOI0=;
+	h=From:To:Cc:Subject:Date:From;
+	b=EfXoaIdWwrHESnecekdAjvWE6nZEd58bkelcEbh3OnMQNmbWz/3HYXjj06tRMAVmb
+	 jmo5BKvkSIE4O9NBkiXgIFGRpcEpnFfJMKF5hy0YrLLd/cAEagfu6v9lFAKJntFImL
+	 6j6bIah8j/AT2Kl8xpo6mF0Zkrh2bgsDDksa4DxY=
+From: Naman Jain <namjain@linux.microsoft.com>
+To: Thomas Gleixner <tglx@kernel.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	Borislav Petkov <bp@alien8.de>,
+	Dave Hansen <dave.hansen@linux.intel.com>,
+	x86@kernel.org,
+	"H . Peter Anvin" <hpa@zytor.com>,
+	Wei Liu <wei.liu@kernel.org>,
+	"K . Y . Srinivasan" <kys@microsoft.com>,
+	Haiyang Zhang <haiyangz@microsoft.com>,
+	Dexuan Cui <decui@microsoft.com>
+Cc: Michael Kelley <mhklinux@outlook.com>,
+	Long Li <longli@microsoft.com>,
+	Nam Cao <namcao@linutronix.de>,
+	Joerg Roedel <joro@8bytes.org>,
+	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
+	Vasant Hegde <vasant.hegde@amd.com>,
+	Will Deacon <will@kernel.org>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Kees Cook <kees@kernel.org>,
+	"Rafael J . Wysocki" <rafael@kernel.org>,
+	Radu Rendec <radu@rendec.net>,
+	Sean Christopherson <seanjc@google.com>,
+	Kai Huang <kai.huang@intel.com>,
+	Dmitry Ilvokhin <d@ilvokhin.com>,
+	Shradha Gupta <shradhagupta@linux.microsoft.com>,
+	Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
+	Thierry Reding <treding@nvidia.com>,
+	Jiri Wiesner <jwiesner@suse.de>,
+	Daniel J Blueman <daniel@quora.org>,
+	linux-hyperv@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	iommu@lists.linux.dev,
+	linux-pci@vger.kernel.org
+Subject: [PATCH v3 0/3] x86/irq: Fix lost interrupts on CPU hot-unplug
+Date: Mon,  7 Sep 2026 06:51:26 +0000
+Message-ID: <20260907065129.269262-1-namjain@linux.microsoft.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
+Content-Transfer-Encoding: 8bit
 
-On Mon, 2026-09-07 at 04:30 +0530, Navon John Lukose wrote:
-> On Tue, 2026-09-01 at 19:02 +0200, Johannes Berg wrote:
-> > I believe the hardware itself never generates ~0, so yes, it probably
-> > should use that.
->=20
-> I'll switch the tests this series adds to PCI_POSSIBLE_ERROR(); drv.c and
-> trans.c already include linux/pci.h. There's no non-PCI transport to
-> worry about: Kconfig depends on PCI, and iwl_trans_ops went away in
-> 0d91a2bfc3dc.
->=20
-> I'd be more careful with the helper itself. iwl_trans_pcie_read_mem() and
-> its _no_grab variant run it over dwords they're copying out of SRAM, and
-> ~0 is a value the driver writes as data (FW_CTXT_INVALID fills unused
-> binding and quota slots). iwl_dump_ini_dbgi_sram_iter() is the sharp
-> case: it gives up on a single hit, so one all-ones dword fails a whole
-> region. I haven't seen it happen, it's just what the value means.
-> Widening the helper and taking the SRAM paths off it would work, but
-> that's more churn than belongs here. Your call.
->=20
-> Separately, the test at the top of iwl_pcie_irq_handler() (rx.c:1948)
-> looks unreachable: inta has just been masked with at most
-> CSR_INI_SET_MASK (0xBA00008F). I'd move it above the mask, unless you'd
-> rather drop it. I'll send that and the PCI_POSSIBLE_ERROR() conversions
-> separately.
->=20
+On CPU hot-unplug, fixup_irqs() re-injects interrupts that are still
+pending in the outgoing CPU's IRR via the irqchip's irq_retrigger()
+callback. The Hyper-V root partition PCI/MSI irqchip lost that callback
+when it was converted to msi_create_parent_irq_domain(), so such a
+pending interrupt is silently dropped, leading to lost interrupts, stalls
+and "No irq handler for vector" messages.
 
-I'm not your remote prompt engineer, so as far as I'm concerned this
-thread ends here.
+Patch 1 is the minimal, backportable fix (Fixes:/Cc: stable) that restores
+irq_chip_retrigger_hierarchy() on the Hyper-V root partition PCI/MSI chip.
+The equivalent guest pci-hyperv.c fix from the previous version is already
+merged, so it is dropped here.
 
-johannes
+Patch 2 then switches fixup_irqs() to have a fallback call to
+irq_chip_retrigger_hierarchy() directly, if a chip does not define
+irq_retrigger callback.
+
+Patch 3 drops the now-redundant irq_retrigger() initializations.
+This way, patch 2 and 3 do not need to be backported.
+
+Changes since v2:
+https://lore.kernel.org/all/20260810090716.2325295-1-namjain@linux.microsoft.com/
+* Add a backportable fix for Hyper-V root partition irqchip (Wei)
+* Add a check for custom irq_retrigger implementations and add direct
+  irq_chip_retrigger_hierarchy() calls as a fallback if it is not
+  defined by a chip. (Sashiko, Michael)
+* Removed local loop variable change, and continue using the irq_desc
+  accessor function (Michael)
+* Did not pick "Acked-by: Manivannan Sadhasivam" as it was on v1, and v3
+  is a functionally different to some extent, specially patch 2.
+  Requesting you to please review again.
+
+Changes since v1:
+https://lore.kernel.org/all/20260728135117.2888175-1-namjain@linux.microsoft.com/#t
+* Added Review tags
+* Adding minor clarification in commit msg of patch 2 (Shradha)
+
+Original RFC: https://lore.kernel.org/all/87y0f3jhd6.ffs@fw13/
+
+
+Naman Jain (3):
+  x86/hyperv: Set irq_retrigger for root partition PCI/MSI irqchip
+  x86/irq: Fall back to irq_chip_retrigger_hierarchy() in fixup_irqs()
+  x86/irq, iommu/amd, x86/hyperv, PCI: Drop redundant irq_retrigger
+    inits
+
+ arch/x86/kernel/apic/io_apic.c      |  2 --
+ arch/x86/kernel/apic/msi.c          |  4 +---
+ arch/x86/kernel/hpet.c              |  1 -
+ arch/x86/kernel/irq.c               | 19 +++++++++++--------
+ drivers/iommu/amd/init.c            |  1 -
+ drivers/pci/controller/pci-hyperv.c |  1 -
+ 6 files changed, 12 insertions(+), 16 deletions(-)
+
+
+base-commit: af5f12805e5cefa4fe68d6127c7e1fb78cd5535c
+-- 
+2.43.0
+
