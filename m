@@ -1,53 +1,53 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 93F3746A5FB;
-	Mon,  7 Sep 2026 10:57:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 938C4466AEF;
+	Mon,  7 Sep 2026 10:59:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788778657; cv=none; b=QPLvvtUQhKiXqxEV//HDDjWp3xlHMzD3uEbzua+/HkoNI7bvsL+nwRyBTVSxhhDG41C7y6T8PO9U3WH9D9O3a9xtxK2q8KPQl3eG7hJygSTCPSgTlx9Ym7w7Fnr+XOuC/OWbSemos8DG5RVopCAeYF4ZcCcFqTLQQOXDOsZdW+w=
+	t=1788778748; cv=none; b=KE5jeRJoHSCxLtiJMorSCRysybXAyNF2xNs83TVNLRo9GCt+CVAhl75qGnf7GybjHO/VTlSDFoPJjviW6ODGotGWB0IduczCwb/ZXs0x4JZBICilGROTjZS9JXDtQ4tgkh4XSqpSa7MXRKdbLaPpq8/GPAsxitiH3nHgDQHjMz8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788778657; c=relaxed/simple;
-	bh=8Qkqdm0pwq4JI5CAHELlBVj2Ysrh6qiYppILxVJCXF8=;
+	s=arc-20240116; t=1788778748; c=relaxed/simple;
+	bh=zQK0nozXCk5JvLwKfdzwnloni9Ljh7AhEDfaJHiy1q8=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=ChoOo+Xj3xTlWSzaY61lQc9GYnXS4a3ImGBK8J/qJ/8oxpY+X514baGNNAFMka7HREfG1uQuZTfYjwPynzoMdzjTBjWV5/136XOugrNiyEpu0kpK/lBRG62Wvt2oaEfMTnzj4/xXNtyTIMPRhSPA5702lD1jDw0LWJTkjIIB8iQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=m84s5pF5; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=h8MKNtw0cw03P9QDRtv8lGH5kjHPb4h5BrN3MsLjcoNxch/1MbKIiwbLKLJ5iynwBoNMJtUZ5MhC0j5tQSmGmfri+yBVP8g9n2of/OrvczAfDi/kjLHlXYjyfVQnGYufWFpQuIpKus4NcTRIn5kuxOmiFlQjDEwUDMlNg5SQ/HM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mVLomuva; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="m84s5pF5"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8E0F71F00A3A;
-	Mon,  7 Sep 2026 10:57:35 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mVLomuva"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DF66D1F00A3A;
+	Mon,  7 Sep 2026 10:59:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788778656;
-	bh=8Qkqdm0pwq4JI5CAHELlBVj2Ysrh6qiYppILxVJCXF8=;
+	s=k20260515; t=1788778747;
+	bh=zQK0nozXCk5JvLwKfdzwnloni9Ljh7AhEDfaJHiy1q8=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=m84s5pF5AJTah6snRyv073I7J8FZ4r0LfGSVkNkD6tgrH2Pl1g+fLXIUYHA7hbece
-	 TAcIbeofMbx3YN5mSpzEHgDbb8szYxmO3UAwH9wHbOBlpvUeCpieosxUsGcLBxlHCZ
-	 O52oiOAQeMOOgP33hx9sKLPjeJZigVMb6ubr8ouB08qWMHWmujyedAD+0SE+toXNoL
-	 5b1mCbg2E6KYbVD+cLBCUqp70/TwrT7nktQ78dV0VfoFbkGpfk2Jo6Voe2L2vztCIr
-	 3F5Y6p3d5LWgEakAOw0CV7xNJ4cmkQ6jlmrmX/MowAL/48mbAEOFj0SSGjVEJ/6TDd
-	 iFaLQNQJfT8AA==
+	b=mVLomuvaH5J4OCy/Z+pt+klV002FPmXJMSiSclOFQ2vD15tDfZJ+h3wgdhPf1ofFE
+	 NF5MQabNvzypSwuYBgXSeYJ1Xz914kc2cZa9+dxFQjlx593QnPJRx9noFIlPF9iByO
+	 cih1JCUV8zfQNHh7v6CVURUQabxg0Sqj6Nor6YDh2H9AY0UGSjeCBTHcWSm4lx3Qwe
+	 rkJSZW/n3hGxPowtFmahMSfL3NStzdssZjTZBUKF/e8cXrLUZ3E+un1Tq/VaQ06aFe
+	 k1fj2nxtc7qzItGO+CNC/8iPuM3GciWkK/BlocyzwUBwAtz3ZyRGBJFvIsGKcGCtzC
+	 mTI9+mggyKBHw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v1 2/2] dmaengine: dw-edma: IP name corrected under its
- struct
+Subject: Re: [PATCH v1 1/2] dmaengine: dw-edma: Macro order as per reg bit
+ position
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Devendra K Verma" <devverma@amd.com>
-Cc: vkoul@kernel.org, dmaengine@vger.kernel.org, Frank.Li@kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260907105453.1940646-3-devverma@amd.com>
+Cc: linux-pci@vger.kernel.org, dmaengine@vger.kernel.org, Frank.Li@kernel.org, vkoul@kernel.org
+In-Reply-To: <20260907105453.1940646-2-devverma@amd.com>
 References: <20260907105453.1940646-1-devverma@amd.com>
- <20260907105453.1940646-3-devverma@amd.com>
+ <20260907105453.1940646-2-devverma@amd.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 07 Sep 2026 10:57:34 +0000
-Message-Id: <20260907105735.8E0F71F00A3A@smtp.kernel.org>
+Date: Mon, 07 Sep 2026 10:59:06 +0000
+Message-Id: <20260907105906.DF66D1F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-> For 'xilinx_cpm6_dma_data' struct which is CPM6 IP, the comment
-> under this struct has typo and mentiones 'MDB' registers when
-> it shall be 'CPM6' regisers.
+> For a register the macros providing masks for bit ranges.
+> These macros if placed in order provide good view of the bits.
+> Placed macros in ascending order.
 >=20
 > Signed-off-by: Devendra K Verma <devverma@amd.com>
 
@@ -55,5 +55,5 @@ Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260907105453.1940=
-646-1-devverma@amd.com?part=3D2
+646-1-devverma@amd.com?part=3D1
 
