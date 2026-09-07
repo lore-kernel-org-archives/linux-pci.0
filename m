@@ -1,52 +1,51 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A25C47D441;
-	Mon,  7 Sep 2026 11:31:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B4A3647045E;
+	Mon,  7 Sep 2026 11:31:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788780664; cv=none; b=OuVk4BRtH0ihsEwzXiQCoM3m+8eOty5Z4WSHQkj2ntxp91rtb+JV/76Z9xhAmkeLpVE8a6ah7gkTDJ+zSz+QfYaNSoOP78MV1QWADOhMNkxw/BbLWxT8lYMTyVNFr7yrkceiMvxs6pazbPyN53De/t/79COcw70lEzMvruoozMw=
+	t=1788780706; cv=none; b=JlH7q1xL37pHbaENkKEapr8lcGYQ35C1YUMGKj6xkjNKSrk1Ly6DLg5/b1TcUiy3BR1OuyUqWzPmed5s7TsN6Fk5oMYHlXc0Zl8HARHm21nCvWked/Ut7oI9E5wzssKsW0XhgWzytZ5GTM0wiQH0/LKQyIwnnEd56lwu5+t8Hf0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788780664; c=relaxed/simple;
-	bh=/BYKYcikgor5SSTHOWrqFHRAYUpGOcDhnBnyacCSMlM=;
+	s=arc-20240116; t=1788780706; c=relaxed/simple;
+	bh=h+q39KQ38n1uisRnaMCaXjuKwGgshFmVGcWms2lavHo=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=LLUYvxUp+eEPDz8MI6rp+9/dmRcfxVkBxXVufNtz6Ivb7RimICM02pAoPbDqncUpzvadeIuC52v2QzdLzQoHNb7HYBO/q0HreFBCIVMd0jqM902mgEs/Jyb/bcVC7G53g9p1CAAmRoLhYaqWU6p9wsoroinpr72YhQpJs1R18bg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eSkGQ2fE; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=i10rjhKfeVoowKhyCRQzMw3cvD+qzJQrReF5qHx1QJR1UuLdwFYLN9+d6HvZByRry97OuHEj5r66U5HqBjGDFwQTAIRcuRp6z760Yusxbpj+7opJTvGUnrNsmtIVpIkIl5ESRc8yZL8R2A2zHWIPP4c2N7XN0cXrrcsEmBHPqbk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LMwLA/oe; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eSkGQ2fE"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 75A751F00A3A;
-	Mon,  7 Sep 2026 11:31:02 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LMwLA/oe"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9542C1F00A3D;
+	Mon,  7 Sep 2026 11:31:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788780662;
-	bh=/BYKYcikgor5SSTHOWrqFHRAYUpGOcDhnBnyacCSMlM=;
+	s=k20260515; t=1788780703;
+	bh=h+q39KQ38n1uisRnaMCaXjuKwGgshFmVGcWms2lavHo=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=eSkGQ2fE2HvKcrO48C/RgtmhAvdHfZ6qWxRh8dFcMpkOFaFrB0HKDJ5Eho/EVwyA1
-	 nLhbQ6TiLN/WhkSrEE82V5lFfLBXU58bmYj+NyrAlNhJR3yrkHbHMacUHsQb6K+d4N
-	 ScmhioKW6agPH7Y6u93hVpfQpHwXvzohuDSkPHjZhUp4q6gz83/9VX+LV84NqdQC3m
-	 rlhHXF3mz8TNqMwQhoAvGEngffoaBeH/VQXU43fulV+yi9r+I3d+ElGqd/xrPjg2Cz
-	 dxkqptkw26VAaVNl+E9uCC/kbPWYHqLFKn/pTbdbY9Jp2NgTskyHo8rYFntkoa8etZ
-	 MFpWnVB3Y+OHw==
+	b=LMwLA/oek406ih7MFr2B7nERFSsg9f4ExSpiGDHk6ggBDBmmGcU4zEPgLXoyBpbxe
+	 IFNtxG5B6XrhQDXM084Gg2MvobyiAzlCL90Yob6zlrTMC9xCzCqj337UpQyeNJVNVV
+	 TrfD5+8dYpug1FAWPYicC2eZb8k+wqKk17GGa58FuySCgGQrQMo/LB3DiguYj+8+8Z
+	 rvJ25tATtu5IIATi0JmXldodtaUfPh4zEfzoABw3GEGzTAyBc5IOP9vDw0o62FhwK6
+	 7zkREZDcm7CEb5aAhf0DDfSUGN0LQgu165Epe47Xq7deiA7TQxC7brc+AbZ98ygsNj
+	 Ad8JUJa4A5Snw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5 1/6] PCI: spacemit-k1: Add device data support
+Subject: Re: [PATCH v5 3/6] PCI: spacemit-k1: Add device id update helper
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Inochi Amaoto" <inochiama@gmail.com>
-Cc: conor+dt@kernel.org, linux-pci@vger.kernel.org, devicetree@vger.kernel.org, robh@kernel.org
-In-Reply-To: <20260907112606.465778-2-inochiama@gmail.com>
+Cc: linux-pci@vger.kernel.org, conor+dt@kernel.org, robh@kernel.org, devicetree@vger.kernel.org
+In-Reply-To: <20260907112606.465778-4-inochiama@gmail.com>
 References: <20260907112606.465778-1-inochiama@gmail.com>
- <20260907112606.465778-2-inochiama@gmail.com>
+ <20260907112606.465778-4-inochiama@gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 07 Sep 2026 11:31:01 +0000
-Message-Id: <20260907113102.75A751F00A3A@smtp.kernel.org>
+Date: Mon, 07 Sep 2026 11:31:43 +0000
+Message-Id: <20260907113143.9542C1F00A3D@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-> To reuse the K1 PCIe driver logic for K3 PCIe controller, add device
-> data to handle the K1 specific logic and make room for the incoming
-> logic for K3.
+> Both K1 and K3 need to set vendor id and device id, add a helper function
+> to simplify this.
 >=20
 > Signed-off-by: Inochi Amaoto <inochiama@gmail.com>
 
@@ -54,5 +53,5 @@ Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260907112606.4657=
-78-1-inochiama@gmail.com?part=3D1
+78-1-inochiama@gmail.com?part=3D3
 
