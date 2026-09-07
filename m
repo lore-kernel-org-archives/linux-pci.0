@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 276C63B9D86;
-	Mon,  7 Sep 2026 11:37:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 25437472539;
+	Mon,  7 Sep 2026 11:38:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788781071; cv=none; b=A6ZPf+TInEybX8uI/DSXEuJr3ab8Bl7+UULgiTI0nGH8GxJlJp/Q174xh2fRyHGkiHagcTPddNvvmz5zv3l9dRY+F5+LEuRw5qY7XfOdk81Kq4ppJDl07hRD4VsU2Yp3upYl3uU7+dPRSz+qCndFawBSUc1RxmJMFGg92HGsdzc=
+	t=1788781088; cv=none; b=TCK5ywhkl+tbHKAX6x+Q1VKunw74OccmGoeC7jfokYqbR8qAbDYM5hRRgj7jsQXqI8gDBsgsYW+WJaNVIncVvUdKFqv4ubIwu4oYCvo1IVZdFnHdCAxxZMD8nb1MZ69N+SidwSD4VHqMCGMEkCD8T7DbX6iLT4wwnPXM70uazeQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788781071; c=relaxed/simple;
-	bh=9XcI2/WSm4+Q3talcLMaiCFxx5qqY+J7YaU7hpmURUs=;
+	s=arc-20240116; t=1788781088; c=relaxed/simple;
+	bh=kqva3rYFwEfBC/Srwt8NyVyATDE5/p8C9Ihef6Wh+Ws=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=EK+P4MTZpKQsa+vOzcEsoaRqcxWcwNzYaouQsBk7JUskxyjI+XV2O9BijYJN68SRxWsTuX7Di11Abc4bNay7FYCUl67Ms6dEBdU7ANfdVwfweirT+fo7GWV6uRAlDy32OQZnYv12tfU9VT735GZTKIMLFEFUOPrTTU/pNTVNHyI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Z/aPLAM4; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=YeqqeIfdD1dlW5jNB6rX9Pb+iq7nKrWCTcBAL5XJEYAVQjsKLO5Afxdcn/DMXJj+NY4lES3XTjH8kyZ9fzCmfrvMauFR0HDy/CI+CZNmaNF0JMeoN0i8StNL5xQneo7qwbfm8fHBZtzJICx+B73ClOD0g0Tu0XSE46wB44WKkIk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XhhI+EUv; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Z/aPLAM4"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9E5B11F00A3A;
-	Mon,  7 Sep 2026 11:37:49 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XhhI+EUv"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 55DB31F00A3A;
+	Mon,  7 Sep 2026 11:38:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788781070;
-	bh=vE2QTNxpnhUGZftPf1sKyRFWxmupQxadpZCwptgnVCk=;
+	s=k20260515; t=1788781086;
+	bh=s6ahpzfDAlhvUb6HUbVjlgBRhGo59IwJgBU3EuSBPUA=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Z/aPLAM4BPujd8HlPsOf5WrMm0Al0ZBk/H6v9PkabYCWkEA0haGibJlPZJcMZ28VR
-	 /O63+IqWFghCDhynggfSQ931gM3QmO95XK2GOzjCTtc4cNWzFKaztVuPok9NPYFics
-	 OxV7xoZhnntganrb5FNhSAgWLNjJHAsviu0ghLUhvtzZa6atMBCl/o6meWbvgZmCeo
-	 VaJp3ZlHuZU2e9hei2YnsQjIVbwkZd4ECzzFdPewIuyS3Iw04xVAwyBj4wW7s8UcfU
-	 oKY6V/9f5ZRxysk5b8sNqT8HCvZZH2Iwfyz0B48K+AAxH47yzDDBPINESbAKYzIVsz
-	 0mkZOWyry1NDg==
+	b=XhhI+EUvlvQ1oYmHDyIo0CgSoS9Guo63toYBMxjXdd/KREO43dHMmh24/AFMn3j55
+	 u/hsB5fAl44x5SMcc7MI9F+3N810xt00/LBb4k420HwGycqvW+9RkNYzg6cH5DUOiN
+	 uccPQUjyLKMzjHkt5v/e786b9Yg3ylYakJhsFbWc/MNL3IcOHcM/80hYuqicSu4CWp
+	 8YEArlLvS5/8O36w6V90ICVd0387QvtHhfYsfvPkAhjUdWc8pv8CaImJfywdk7bBVQ
+	 pYV3WFls4LXM4Pv0WcnFoMDkPynh7klJ+SBfcG0nQhq8/YTlYIwH0YncdpreCXp+3F
+	 /SQY63L+Qqang==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5 2/6] PCI: spacemit-k1: Add multiple PHY handles
- support
+Subject: Re: [PATCH v5 5/6] dt-bindings: PCI: spacemit: Introduce Spacemit
+ K3 PCIe host controller
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Inochi Amaoto" <inochiama@gmail.com>
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org, robh@kernel.org, conor+dt@kernel.org
-In-Reply-To: <20260907112606.465778-3-inochiama@gmail.com>
+Cc: devicetree@vger.kernel.org, robh@kernel.org, conor+dt@kernel.org, linux-pci@vger.kernel.org
+In-Reply-To: <20260907112606.465778-6-inochiama@gmail.com>
 References: <20260907112606.465778-1-inochiama@gmail.com>
- <20260907112606.465778-3-inochiama@gmail.com>
+ <20260907112606.465778-6-inochiama@gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 07 Sep 2026 11:37:49 +0000
-Message-Id: <20260907113749.9E5B11F00A3A@smtp.kernel.org>
+Date: Mon, 07 Sep 2026 11:38:05 +0000
+Message-Id: <20260907113806.55DB31F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -47,115 +47,60 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [Low] The patch uses non-existent PHY bulk APIs (`struct phy_bulk_data`, =
-`devm_of_phy_bulk_get_all`, `phy_bulk_init`, `phy_bulk_exit`), which will c=
-ause an immediate build failure.
+- [Medium] The `spacemit,k3-pcie` compatible string lacks a requirement for=
+ any interrupt mechanism, allowing incomplete device tree nodes to silently=
+ pass schema validation.
 --
 
-commit fe08b64098d53a53f4787c86d1612302f802dee7
+commit 92cb9c20a16a6dc1a934eea83a6f78a972ade969
 Author: Inochi Amaoto <inochiama@gmail.com>
 
-PCI: spacemit-k1: Add multiple PHY handles support
+dt-bindings: PCI: spacemit: Introduce Spacemit K3 PCIe host controller
 
-This commit extends the Spacemit K1 PCIe controller driver to support
-multiple PHY handles by introducing bulk PHY API calls. It replaces single
-PHY operations with bulk operations throughout the driver's initialization
-and cleanup paths.
+This commit adds device tree binding support for the SpacemiT K3 PCIe
+controller, modifying the existing K1 binding. It splits register
+constraints and interrupt requirements between the two hardware generations.
 
-> diff --git a/drivers/pci/controller/dwc/pcie-spacemit-k1.c b/drivers/pci/=
-controller/dwc/pcie-spacemit-k1.c
-> index 9512556d45390..1049391beee83 100644
-> --- a/drivers/pci/controller/dwc/pcie-spacemit-k1.c
-> +++ b/drivers/pci/controller/dwc/pcie-spacemit-k1.c
-> @@ -51,12 +51,14 @@ struct k1_pcie_device_data {
->  	const struct dw_pcie_host_ops *host_ops;
->  	const struct dw_pcie_ops *ops;
->  	int (*parse_port)(struct k1_pcie *k1);
-> +	unsigned int max_phy_count;
->  };
-> =20
->  struct k1_pcie {
->  	struct dw_pcie pci;
->  	const struct k1_pcie_device_data *data;
-> -	struct phy *phy;
-> +	struct phy_bulk_data *phys;
-
-[Severity: Low]
-Does struct phy_bulk_data exist in the kernel? It appears this type is
-undefined, which will cause a build failure here in k1_pcie.
-
-> +	unsigned int phy_count;
->  	void __iomem *link;
->  	struct regmap *pmu;	/* Errors ignored; MMIO-backed regmap */
-
+> diff --git a/Documentation/devicetree/bindings/pci/spacemit,k1-pcie-host.=
+yaml b/Documentation/devicetree/bindings/pci/spacemit,k1-pcie-host.yaml
+> index c4c00b5fcdc0c..54817d6fd9afe 100644
+> --- a/Documentation/devicetree/bindings/pci/spacemit,k1-pcie-host.yaml
+> +++ b/Documentation/devicetree/bindings/pci/spacemit,k1-pcie-host.yaml
 [ ... ]
-
-> @@ -115,6 +117,23 @@ static void k1_pcie_disable_resources(struct k1_pcie=
- *k1)
->  	clk_bulk_disable_unprepare(ARRAY_SIZE(pci->app_clks), pci->app_clks);
->  }
-> =20
-> +static int k1_pcie_get_phy_handle(struct k1_pcie *k1, struct device_node=
- *node)
-> +{
-> +	const struct k1_pcie_device_data *data =3D k1->data;
-> +	struct device *dev =3D k1->pci.dev;
-> +	int count;
-> +
-> +	count =3D devm_of_phy_bulk_get_all(dev, node, &k1->phys);
-
-[Severity: Low]
-Is devm_of_phy_bulk_get_all() an upstream API? I'm unable to find this
-function, and calling an undefined function will break the build during
-k1_pcie_get_phy_handle().
-
-> +	if (count < 0)
-> +		return count;
-> +	if (count =3D=3D 0 || count > data->max_phy_count)
-> +		return -EINVAL;
-> +
-> +	k1->phy_count =3D count;
-> +
-> +	return 0;
-> +}
-> +
->  /* FIXME: Disable ASPM L1 to avoid errors reported on some NVMe drives */
->  static void k1_pcie_disable_aspm_l1(struct k1_pcie *k1)
-
+> +allOf:
+> +  - $ref: /schemas/pci/snps,dw-pcie.yaml#
+> +  - if:
+> +      properties:
+> +        compatible:
+> +          contains:
+> +            const: spacemit,k1-pcie
+> +    then:
 [ ... ]
+> +      required:
+> +        - interrupts
+> +        - interrupt-names
+> +    else:
+> +      properties:
+> +        reg:
+> +          minItems: 5
+> +
+> +        reg-names:
+> +          minItems: 5
 
-> @@ -170,7 +189,7 @@ static int k1_pcie_init(struct dw_pcie_rp *pp)
->  	 */
->  	regmap_set_bits(k1->pmu, reset_ctrl, DEVICE_TYPE_RC | PCIE_AUX_PWR_DET);
-> =20
-> -	ret =3D phy_init(k1->phy);
-> +	ret =3D phy_bulk_init(k1->phy_count, k1->phys);
+[Severity: Medium]
+Does the spacemit,k3-pcie compatible lack a requirement for an interrupt
+mechanism here?
 
-[Severity: Low]
-Is phy_bulk_init() defined? Similar to the other bulk APIs used in this pat=
-ch,
-this appears to be an undefined function and will fail compilation in
-k1_pcie_init().
+Because this patch removes interrupts and interrupt-names from the global
+required list (moved to the then block above), a device tree node for
+spacemit,k3-pcie that completely lacks interrupt or MSI routing properties
+like msi-parent will silently pass schema validation.
 
->  	if (ret) {
->  		k1_pcie_disable_resources(k1);
-> =20
-> @@ -195,7 +214,7 @@ static void k1_pcie_deinit(struct dw_pcie_rp *pp)
->  	regmap_set_bits(k1->pmu, k1->pmu_off + PCIE_CLK_RESET_CONTROL,
->  			PCIE_RC_PERST);
-> =20
-> -	phy_exit(k1->phy);
-> +	phy_bulk_exit(k1->phy_count, k1->phys);
-
-[Severity: Low]
-Does phy_bulk_exit() exist? Like the initialization function, this seems to=
- be
-undefined and will cause compilation to fail during k1_pcie_deinit().
-
-> =20
->  	k1_pcie_disable_resources(k1);
->  }
+However, the system will fail at runtime because the PCIe host controller
+requires an interrupt mechanism. Should a required list including msi-parent
+be added to this else block to ensure incomplete device tree nodes are
+caught during validation?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260907112606.4657=
-78-1-inochiama@gmail.com?part=3D2
+78-1-inochiama@gmail.com?part=3D5
