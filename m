@@ -1,36 +1,34 @@
 Received: from angie.orcam.me.uk (angie.orcam.me.uk [78.133.224.34])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id B60593C0625;
-	Mon,  7 Sep 2026 12:33:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 6AA0149DB8E
+	for <linux-pci@vger.kernel.org>; Mon,  7 Sep 2026 12:38:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=78.133.224.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788784402; cv=none; b=E4GyzEO5eQhia2n+jhKdpsOjn2bC9bYRFDzVAR3rT1KBfIHID4S0ry/o17JlvjKXbgGMzbe5VIQyRpZ25nTOGvapnvgkp2Z3sl0CmtC6EkPCsgZpyJBIK8EEOx8wDjCoRESCwG3JdC/fjrcgEEFyLD7Wi3hTVxmZq6udknWbzI0=
+	t=1788784683; cv=none; b=E8GxOls37cv4EgtSAWIS4hcRL1rpv2ZUHWwqeOe3VPd3lB/syTH2kYefGn6yGbfgaBA+DPDsu0RgyqoScXaLgghJrCeHA6jfhmdwKJDbJlPFFP6hE3YoHwcK2W/iZv+SFRKAPYO/8NCmuUbvgr0Ne0XqJVq/VCvrVy51og0Q5Bg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788784402; c=relaxed/simple;
-	bh=Xq5/ce3tivwpMGp2s9/KRURLmeqJnprW1NrEIHmsBNY=;
+	s=arc-20240116; t=1788784683; c=relaxed/simple;
+	bh=Yipk1ORgpEK4lWUygccfKdYuUNAF9+2GBATDL2SJsz8=;
 	h=Date:From:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=jlOVU1lmnxKYG2BiWpxzky1YZNpXpBkWQUWyr3u1s2+bd0bkRlFA6/V2+9t+pL6twNJ3+MaM3VMZVN9c+9llvNz4nEOjNLSdMa8CmzHk/WCBc5p+tNCv4LYZDg83GNc6VuHYWBnmlbSxpRWU5+LCV03hCpNoWSDqTZMi5PgyOys=
+	 MIME-Version:Content-Type; b=pNRF2LM2eid4y/OBaSBDRnHnG5evKL101jkl6Nb9iwgaNhwxx5ZzM9uZb/Dkm65YMCW2A6o/eC667bawawfGfVXiatL1YiXnBZBVBTex0OJpIcUuQuC8AXij2Lk4/Jvdy9ZndbiNiJ9JAqEboP9A98dIUoiKLs2g1gwM6KcJc1U=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=orcam.me.uk; spf=none smtp.mailfrom=orcam.me.uk; arc=none smtp.client-ip=78.133.224.34
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=orcam.me.uk
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=orcam.me.uk
 Received: by angie.orcam.me.uk (Postfix, from userid 500)
-	id C849A92009E; Mon,  7 Sep 2026 14:33:17 +0200 (CEST)
+	id DDD3092009C; Mon,  7 Sep 2026 14:31:56 +0200 (CEST)
 Received: from localhost (localhost [127.0.0.1])
-	by angie.orcam.me.uk (Postfix) with ESMTP id C489792009B;
-	Mon,  7 Sep 2026 13:33:17 +0100 (BST)
-Date: Mon, 7 Sep 2026 13:33:17 +0100 (BST)
+	by angie.orcam.me.uk (Postfix) with ESMTP id D83FF92009B;
+	Mon,  7 Sep 2026 13:31:56 +0100 (BST)
+Date: Mon, 7 Sep 2026 13:31:56 +0100 (BST)
 From: "Maciej W. Rozycki" <macro@orcam.me.uk>
-To: Thorsten Leemhuis <regressions@leemhuis.info>
-cc: Bjorn Helgaas <bhelgaas@google.com>, Aoxtj <aoxiangtianji@axtjblog.cc>, 
-    linux-pci@vger.kernel.org, Andreas Wild <andiwild@gmail.com>, 
-    linux-kernel@vger.kernel.org, 
-    Linux kernel regressions list <regressions@lists.linux.dev>, 
-    restafvalendergelijke@outlook.com
-Subject: Re: [PATCH v3] PCI: Skip Target Speed quirk on clamped ports with
- no link
-In-Reply-To: <fdbe2872-6fe3-4746-9d10-1ccef3a3e88d@leemhuis.info>
-Message-ID: <alpine.DEB.2.21.2609071332380.46717@angie.orcam.me.uk>
-References: <20260801201244.4421-1-andiwild@gmail.com> <331e97c7-e422-420d-9f3e-5d9f734464b3@axtjblog.cc> <20260808063103.10940-1-andiwild@gmail.com> <ae819bec-9c2b-47b5-be5e-3c65fea12da1@axtjblog.cc> <20260811064233.11315-1-andiwild@gmail.com>
- <7742d556-e878-4893-8b6d-d6039ddba544@leemhuis.info> <20260825070527.8481-1-andiwild@gmail.com> <alpine.DEB.2.21.2608251117260.44766@angie.orcam.me.uk> <fdbe2872-6fe3-4746-9d10-1ccef3a3e88d@leemhuis.info>
+To: M M <restafvalendergelijke@outlook.com>
+cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, 
+    "andiwild@gmail.com" <andiwild@gmail.com>, 
+    "bhelgaas@google.com" <bhelgaas@google.com>, 
+    "ilpo.jarvinen@linux.intel.com" <ilpo.jarvinen@linux.intel.com>
+Subject: Re: [PATCH v3] PCI: Bail out of failed link retraining when the
+ Target Link Speed is already clamped
+In-Reply-To: <DU2PPFBE35756D1899C6C3A534F909D7840ABA82@DU2PPFBE35756D1.EURP189.PROD.OUTLOOK.COM>
+Message-ID: <alpine.DEB.2.21.2609071331100.46717@angie.orcam.me.uk>
+References: <DU2PPFBE35756D1899C6C3A534F909D7840ABA82@DU2PPFBE35756D1.EURP189.PROD.OUTLOOK.COM>
 User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -40,16 +38,12 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 
-On Wed, 2 Sep 2026, Thorsten Leemhuis wrote:
+On Tue, 1 Sep 2026, M M wrote:
 
-> Thx for the clarification. Would afaics be really good to get that fix
-> in to solve that problem. Bjorn, is this somewhere on your todo list?
-> >  I'd be happy to hear any results of your posted HASD check though.
-> There is another report from Mich (now CCed). Mich, can you maybe test
-> that if you haven't yet (your report is really verbose, which makes
-> things somewhat hard to follow)?
+> I'm reporting field data on this issue from two production machines, in case
+> it's useful for the patch.
 
- Thank you for the update.  I'm back from holiday today and will review
+ Thank you for the report.  I'm back from holiday today and will review 
 the situation in detail in the coming few days.
 
   Maciej
