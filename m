@@ -1,76 +1,68 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 42D3149AA28;
-	Tue,  8 Sep 2026 21:39:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3EA4749AA5A;
+	Tue,  8 Sep 2026 21:40:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788903579; cv=none; b=jQu5b7EXFpIqDxDNVwqa5O7PZfEPh1oV5UpfKHqQj5X22RXMhRCGx2hLYhnDr3v2TyG1XoA1MuxcamedRkE3zCWQhklUSUG4qI+TO9kbkwXLqB/o8Jo0CCENbzJEAST3O2Q1cdXhj5GWSO9cUhoannPLH8oPh5YF5X31qOFv4ms=
+	t=1788903650; cv=none; b=f+V6GABuUO3j3xw/RC2xaeP+bI9XJu409x+gYX/rKhmBWWj+GH8/cEQoQHhy7lA/oVR7/SS3aEnGYXK9X+ssel/f3MoGqlFapBhihMnbzln/xwJRCQr6DY8ALCdofiTTkuDpHTPE8Y7pKRnWIyL9FtEXNRmfbWDIXdhDPUp0D8c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788903579; c=relaxed/simple;
-	bh=PwWhbnSlJEjguxLVJLTvUZunX8TksPLLkEpSEvSMJaE=;
+	s=arc-20240116; t=1788903650; c=relaxed/simple;
+	bh=qhZR2fbr8yD1EuU1wQUTTWjOWsRSD/QOEfA8yGlGtaA=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=uv0z2FtiQ4OqL5JkFe7BiqB4RqSoGdPYLZKJQl4paeoZkBVHyp7IBfYI5Obiag6hv0FpVR0k0+NsJpSSn2f9+PqAwhVkV/htEr9RghJPewyqGHKEw4BJV2BwrgASyzwipVvMWofxOjnuVN/bwN+ZUnkiPMDNBoaGmForN0A6NAE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=F0YU6lNT; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=Bex/v6ha/q56tkGfCPuuGCjd7geamVRa7GOwIzp1yjfqiyQEbNCR1qEnMrwH7NdfQm/qluGdLkaR6jqENjHLZXwsDPrvP2Buwv0jiW0k8M4wNz/b8MBBHqqOAwmsE30VEabtFymmYps/ExMP5q2BKOge6xY4v9FfuFkO6ohCzPE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oRWYFNqD; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="F0YU6lNT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A9C301F00A3A;
-	Tue,  8 Sep 2026 21:39:37 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oRWYFNqD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0CB251F00A3A;
+	Tue,  8 Sep 2026 21:40:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788903578;
-	bh=Ld+e61O4cJNQkWBRF41aoQzL0pvjBNBwNnhY46wBcfY=;
+	s=k20260515; t=1788903647;
+	bh=qhZR2fbr8yD1EuU1wQUTTWjOWsRSD/QOEfA8yGlGtaA=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=F0YU6lNT6DECc7/cAkb4TcAA7c2umH8satejpc+yb5ik3HZ3CD82RKEuLyQNaufVv
-	 7EUaUjjLDlzQWpCQr0p70EXDEctLQ0bnTse59IyfZp7U5pwhpnHxaXXLTd69+rB3We
-	 wtxtxFyCAWEYzwcGZ/NHgeTP4nKzYWthOPmR3+qVJ5jL2l57elui5024QcA8/A83up
-	 tddnHVRU41nrF82W1lOnc1kAmxfTqFuA+EeqaivwpfZp1XU6YfYGrz6k88+6CL675M
-	 kiebA0O0o2F7WdoOORtIxCdkeySOQdWkUUytvmDIBlA7fbr7975+Jy74JeyaMVfBhR
-	 xzXrkfvld68/A==
+	b=oRWYFNqDj6ctSFCfmjit4geUIdgW5Yee9RdwbgPwzKr5qhCTwcbidLxcBGiAxWarg
+	 Wfh1KLMj0LlXnBqNgcyzUrO0zYEhB5JfAKQiq2YpnRrsNskIgNrASanAYikvdsYRkT
+	 4ItLIJWesUOz6vAwTgwAau9XGzPwiOVDIye/ungwpbFbhl6bjQuCaYTa/zUXSqsvkx
+	 T1toaNQwYLqhfkuITNIFf5ChUmrZAijMbWw6moFa7Nkqye3CXbHW6o/fUohNzmKa/e
+	 hMUWP48zUONvSTMtuAN9BzqnwkIKOFJP29YisCyxw9SEgaco9DLOQ1Mlwj813MvE/l
+	 0f0SAq1PyExyg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5 4/4] PCI: of: introduce of_pci_verify_node()
+Subject: Re: [PATCH v5 1/4] PCI: of: avoid allocations in
+ of_pci_prop_compatible()
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Alex Elder" <elder@riscstar.com>
-Cc: devicetree@vger.kernel.org, robh@kernel.org, linux-pci@vger.kernel.org, conor+dt@kernel.org
-In-Reply-To: <20260908213459.2519059-5-elder@riscstar.com>
+Cc: conor+dt@kernel.org, robh@kernel.org, linux-pci@vger.kernel.org, devicetree@vger.kernel.org
+In-Reply-To: <20260908213459.2519059-2-elder@riscstar.com>
 References: <20260908213459.2519059-1-elder@riscstar.com>
- <20260908213459.2519059-5-elder@riscstar.com>
+ <20260908213459.2519059-2-elder@riscstar.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 08 Sep 2026 21:39:37 +0000
-Message-Id: <20260908213937.A9C301F00A3A@smtp.kernel.org>
+Date: Tue, 08 Sep 2026 21:40:46 +0000
+Message-Id: <20260908214047.0CB251F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-> Commit 407d1a51921e9 ("PCI: Create device tree node for bridge") linked
-> the PCI enumeration process together with devicetree, creating a devicetr=
-ee
-> node for discovered PCI bridges.  Its successor commit ae9813db1dc5a ("PC=
-I:
-> Add quirks to generate device tree node for Xilinx Alveo U50") shows how
-> to use a PCI final fixup quirk to also create a devicetree node for a
-> non-bridge PCI device.  These changes allowed devicetree overlays to
-> describe components downstream of a PCI device, by providing a place to
-> attach the overlay.
+> Three compatible strings are formatted in of_pci_prop_compatible().
+> Their sizes are known in advance, and the largest is 16 bytes.
 >=20
-> Note that the dynamic devicetree node is only created if the device didn't
-> already have an assigned node.
+> Rather than dynamically allocating the space for those strings, just
+> set aside a buffer on the stack large enough to hold all three.
 >=20
-> Later, commit aa7b4bbcb3a1d ("arm64: dts: qcom: qcs6490-rb3gen2: Add
-> TC9563 PCIe switch node") *pre-defined* devicetree nodes to represent the
-> PCI device nodes that would (also) be discovered via the PCI enumeration
-> [ ... ]
-> property, with value "pci".  We also accept "pciex" as the value of the
-> device_type property for bridges.
+> This avoids a problem that Sashiko pointed out, where an allocation
+> failure would cause subsequent crash because strlen() is called
+> unconditionally in of_changeset_add_prop_string_array().
 >=20
-> Reviewed-by: Herve Codina <herve.codina@bootlin.com>
+> Reported-by: Sashiko <sashiko-bot@kernel.org>
+> Link: https://lore.kernel.org/sashiko-reviews/a647bd56-7dc8-4fec-9d96-834=
+622054cdf@riscstar.com
 > Signed-off-by: Alex Elder <elder@riscstar.com>
 
 Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260908213459.2519=
-059-1-elder@riscstar.com?part=3D4
+059-1-elder@riscstar.com?part=3D1
 
