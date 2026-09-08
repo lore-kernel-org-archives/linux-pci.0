@@ -1,116 +1,108 @@
-Received: from mout-p-101.mailbox.org (mout-p-101.mailbox.org [80.241.56.151])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 941784A0EFB;
-	Tue,  8 Sep 2026 21:41:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.151
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 19E2652FE4D;
+	Tue,  8 Sep 2026 21:46:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788903721; cv=none; b=huYY3oVWOTO0IgNJBzpRg9XREfpzCvfPAjhZX1IP+6OJnfCa1QN7tgxQGuJd44bD2XVhebAUPppIzYf7kpuvNb7EnsVFj/gfsUfPFNMFSpgLn76WYvor3L2AVQ8v6NzlxVoBfVNqBOOfhNDCXipbOYvzqVqJx4BrpoNeIcm3bV0=
+	t=1788903963; cv=none; b=g+heL2BGUpR9wxH9yKJxeN38vG/2M5o0K0SaT1ovo7zq+5UFzKKTg9Z/CdzdbxJwsdahWx+22s6/Q0wh4EfnA80vdQdZCY1uA2U0VQLBDgXYnJOqv8mYPVOAu5HXh4kEZgmxoWgH73LLpDAplZP3rGPOVKRxkYzIyCeT98yNR7A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788903721; c=relaxed/simple;
-	bh=4dNan55tob2LOF4ICRiPwaJKoCoLQny5O3PU+Yv8Qvg=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=l8i1pnP+xF1ehMqn1tLkGscV4pRj+SbpYpJErmNr4ESE9//1Zc7j7hVFtGPd5Ct4uRRtlDUxL5gnVEevCi/EuAx3Z62nZPqz1OkwIhQaObKeQNtm6CmIXmQq5JQL9up4c9azN4/6g5egX1TRufFbLaNbAtYBzfM8xrlSc2C4dAA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=c8hh8DVj; arc=none smtp.client-ip=80.241.56.151
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
+	s=arc-20240116; t=1788903963; c=relaxed/simple;
+	bh=UIa8mbHyUivu0F/3h54gGhDXvwSzyeaU3A5Rx/2tRWA=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=b5O5bRiLpkzKx6m6tqvgF5O54zWrDwSYGCW0DqGve6sojBal8X5TFfuur75e83cipNLUFdLZJ9lIo6J2+Rsu1y+R4V2L9dY+Fi8xNeGwOjMVc1+nlV7gcFsIkKbJCKZ0qNX4hkEn0Q5DTP1B9sklEBe3iKABD1kcIUBvnreI0hQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bqXTxJIB; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="c8hh8DVj"
-Received: from smtp202.mailbox.org (smtp202.mailbox.org [IPv6:2001:67c:2050:b231:465::202])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mout-p-101.mailbox.org (Postfix) with ESMTPS id 4hfcfk28JFz8tb0;
-	Tue, 08 Sep 2026 23:35:10 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-	t=1788903310;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=yPRewbRjUY6AxemfQFvb3JMr40Wk83tULzwCS3eA65Y=;
-	b=c8hh8DVjXTUksj1nzMqKlJitW8Q1dBKDcSsIw3R0irgSq55BYQ+2/NVplJe53H+4zS+e+/
-	Oahmeq3IunayEHEOJHIbOmrOYyfgYlrn41FLU66Bm5ZZXEw1PUUuLEax2JmrdBq1HJC+ZI
-	I0NdMYWuScdFyllvRDoAVahns4l4uVmGb7QfUk3upZNSNS0+q36ziaTEVBkXkn9YPUE0fH
-	dpY7fRfXx4synD74tDIiMe497sPOyagpgjYwhcGgjAx17D4F4PxVMtVPJRIkd3GfocW2Tf
-	7HaKb0LoVQrFtMoXBdUEXKobqB+fA99DHsFA9Zca3eU0U0nNkhMv4usfp+wusQ==
-Message-ID: <de8e26a0-cd05-4448-8392-0fb3953e7d3f@mailbox.org>
-Date: Tue, 8 Sep 2026 18:29:24 +0200
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bqXTxJIB"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7716D1F00A3A;
+	Tue,  8 Sep 2026 21:46:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1788903961;
+	bh=lorCGV5jaTN1EMy6qq1N5o2tpQM08Rcf7TwI8v8NQ7k=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=bqXTxJIB8cp/PBlkc5AHy9w4FVNhJNZ6F7mlPA8gbXhh0/kIL9oI0lXR5netUS0In
+	 oXI6T4ojOyd2VHmZi0aGpzb5IhGCc/uaj7upmqaZNNU80Cl8yU3Q6gbQz43kWzhGD/
+	 vjTtZipFz98y667TracDB7CC1KWnDiY9lR6vVtQjRMeuUFwMfcr0OxtW7lKyAryyaO
+	 UeOkuFUXm0rPHu8EkvvE/Ry1ocEGfPPNZDN0XJEY6eHgyks/aa6E+g5PNhQa7Ww3nt
+	 i8zd1qou7P59S8In2oJJzLjLC9K5nmLJUvdp9VmyrsL9Lc76D023TPAP1Va4oyJk+I
+	 7Yh/Jcqs5SMyw==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v5 2/4] PCI: of: drop the reg_num argument to
+ of_pci_set_address()
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Alex Elder" <elder@riscstar.com>
+Cc: robh@kernel.org, linux-pci@vger.kernel.org, conor+dt@kernel.org, devicetree@vger.kernel.org
+In-Reply-To: <20260908213459.2519059-3-elder@riscstar.com>
+References: <20260908213459.2519059-1-elder@riscstar.com>
+ <20260908213459.2519059-3-elder@riscstar.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Tue, 08 Sep 2026 21:46:01 +0000
+Message-Id: <20260908214601.7716D1F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Subject: Re: [PATCH v3] PCI: rcar-gen4: Add missing PM ops
-To: Koichiro Den <den@valinux.co.jp>
-Cc: linux-pci@vger.kernel.org, Geert Uytterhoeven <geert+renesas@glider.be>,
- =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Conor Dooley <conor+dt@kernel.org>,
- Krzysztof Kozlowski <krzk+dt@kernel.org>,
- Lorenzo Pieralisi <lpieralisi@kernel.org>,
- Magnus Damm <magnus.damm@gmail.com>, Manivannan Sadhasivam
- <mani@kernel.org>, Rob Herring <robh@kernel.org>,
- Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
- devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-renesas-soc@vger.kernel.org
-References: <20260907163554.725127-1-marek.vasut+renesas@mailbox.org>
- <74il3j2dzfdt4xhqrfjkifhnpnmgqtplon2mtzfjzkbszwegi7@vou6a5rshcvr>
-Content-Language: en-US
-From: Marek Vasut <marek.vasut@mailbox.org>
-In-Reply-To: <74il3j2dzfdt4xhqrfjkifhnpnmgqtplon2mtzfjzkbszwegi7@vou6a5rshcvr>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-MBO-RS-META: br9gyjqousy31kxahj56zaqan7ipmphb
-X-MBO-RS-ID: 8d8dffee87eec16168b
 
-Hello Den-san,
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
 
-On 9/8/26 3:05 AM, Koichiro Den wrote:
-> On Mon, Sep 07, 2026 at 06:35:22PM +0200, Marek Vasut wrote:
->> The R-Car Gen4 PCIe controller is part of a power domain. On R-Car S4
->> and V4H, this is an always-on power domain which is not shut down in
->> suspend. On R-Car V4M, this is a dedicated A2PCIPHY power domain,
->> which is shut down during suspend, and the controller loses state,
->> which prevents the PCIe from working after resume.
->>
->> Fix this by adding generic suspend/resume noirq ops for the controller,
->> which tear the link down on suspend, and restart it on resume. Use the
->> same PM ops on all of R-Car Gen4 to gracefully suspend and resume the
->> PCIe link on V4H and S4 too.
->>
->> Test case which demonstrates the problem on R-Car V4M:
->> "
->> $ hexdump -vC /sys/bus/pci/devices/0000:00:00.0/config > /tmp/pre
->> $ echo s2idle > /sys/power/mem_sleep
->> $ echo platform > /sys/power/pm_test
->> $ echo mem > /sys/power/state
->> $ hexdump -vC /sys/bus/pci/devices/0000:00:00.0/config > /tmp/post
->> $ diff -Naru /tmp/pre /tmp/post
->> ...
->> -00000000  12 19 32 00 07 05 10 00  00 00 04 06 00 00 01 00
->> +00000000  12 19 32 00 07 05 10 00  00 00 00 ff 00 00 80 00
->>                                            ^^^^^
->>                                      Class 0604->00ff
->> "
->>
->> Fixes: 0d0c551011df ("PCI: rcar-gen4: Add R-Car Gen4 PCIe controller support for host mode")
->> Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
->> Tested-by: Geert Uytterhoeven <geert+renesas@glider.be>
->> Reported-by: Geert Uytterhoeven <geert+renesas@glider.be>
->> Signed-off-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
->> ---
-> 
-> The s2idle test with pm_test=platform now passes in EP mode on S4 Spider even
-> with CONFIG_PCIE_DW_HOST=y. Thanks! Feel free to use the tag for it if it helps.
-> 
-> Tested-by: Koichiro Den <den@valinux.co.jp>
-Thank you for your test. I would like to ask -- is the EP side of PCIe 
-link behaving correctly during suspend/resume cycle on your S4 setup ? 
-Does the EP require any special handling during suspend/resume ?
+Pre-existing issues:
+- [High] Leaked OF node reference counts in of_pci_prop_intr_map()
+--
 
-Thank you for your help !
+commit b3af32f45eed6da355a4a96246bdedb364fe0855
+Author: Alex Elder <elder@riscstar.com>
 
--- 
-Best regards,
-Marek Vasut
+PCI: of: drop the reg_num argument to of_pci_set_address()
+
+The reg_num argument passed to of_pci_set_address() is always zero,
+so get rid of it.
+
+Reviewed-by: Herve Codina <herve.codina@bootlin.com>
+Signed-off-by: Alex Elder <elder@riscstar.com>
+
+> diff --git a/drivers/pci/of_property.c b/drivers/pci/of_property.c
+> index d66c702218081..1caabbd4c18b5 100644
+> --- a/drivers/pci/of_property.c
+> +++ b/drivers/pci/of_property.c
+
+[ ... ]
+
+[Severity: High]
+This is a pre-existing issue, but does this code leak device node reference
+counts in of_pci_prop_intr_map()?
+
+When of_irq_parse_raw() successfully parses an interrupt, it acquires a
+device node reference and stores it in out_irq[i].np:
+
+drivers/pci/of_property.c:of_pci_prop_intr_map() {
+    ...
+		ret =3D of_irq_parse_raw(laddr, &out_irq[i]);
+		if (ret) {
+			out_irq[i].np =3D NULL;
+			pci_dbg(pdev, "parse irq %d failed, ret %d", pin, ret);
+			continue;
+		}
+    ...
+
+However, the function returns without calling of_node_put() on the
+successfully parsed nodes in the out_irq array. This leak occurs on all
+return paths, such as when map_sz is zero or when kcalloc() fails:
+
+    ...
+	if (!map_sz)
+		return 0;
+
+	int_map =3D kcalloc(map_sz, sizeof(u32), GFP_KERNEL);
+	if (!int_map)
+		return -ENOMEM;
+    ...
+
+Are we missing calls to of_node_put() for these references before
+returning?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260908213459.2519=
+059-1-elder@riscstar.com?part=3D2
