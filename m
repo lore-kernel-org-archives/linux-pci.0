@@ -1,171 +1,76 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.11])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BCE835540B2;
-	Tue,  8 Sep 2026 14:15:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DBD955540B9;
+	Tue,  8 Sep 2026 14:16:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788876957; cv=none; b=dE92e8YAXkogkYwkP02tSNHiwhcYKN37qED3jvdUrwOoHNfhxeaBT1V8c+oS6UOYrQ3m8RQqEw/6IpMRerKtJf31h4HjLjpa7aMJDXpDSkTNIL7nIRpZMTv3xBa1nLDkt03wkx8yqSwyJ8GTfBp/Fv6ptteFUFY3eaI0ECqTE5E=
+	t=1788877017; cv=none; b=u6Y+7mLdQAitdRR7lBi1OLxBrv+uZT3Sp7fAoBam80TlxCxLq6d0rBfr8uPB13NmZP8ZCb/cR0UcIog40TnISfX2/nczXVn+L4xhnvHMK7KfYu7+Zu4z9AxakEg1ctZIPy1RAXlY5i12ZMBsquOWX6NJ/P4FXymJP8RvTrHMywQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788876957; c=relaxed/simple;
-	bh=UmzRLg9YuP0UokhozXud47y5dFbrbDDKOh1IQcffn44=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=pOdP/tbSIjJxCjlE+x4RCZCkHx+tfPz7RvSsG7krXDJJlf9PWYiVryNAuGOzi0hctoTXFdKOX9q4lDIwqWQh86csckTpvBqcw0gCV4BU1x0OWdYHQdU757quKSzbrYHITmIwEf/4j8/INesLFe6aEyu2gIu3VwMSHiRCPcZh0l4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=eIPQ2AJ/; arc=none smtp.client-ip=192.198.163.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1788877017; c=relaxed/simple;
+	bh=oeWcf3DxUbbdwZiGXUGnM4pMNJuOWS920c+uCfSYaSM=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=nngt0ye/co9ckWkNQX+bXgz7GpdD/V/H+aVX6s2Lze1vny3xsObuuw5VQDpQT2/v0icNMUvQJe/iG7/EVdwVTA3fo+F3vkcM3V25GAlMN9SAUKm1fglT15AnbDZlG2jJycPr5Z8etNUm5sXAQ7GsaFF8mzilDqityOd3I38TgJA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jr/33qF5; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="eIPQ2AJ/"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1788876948; x=1820412948;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=UmzRLg9YuP0UokhozXud47y5dFbrbDDKOh1IQcffn44=;
-  b=eIPQ2AJ/BzhsFcRCDKfgw1lxIHIoJtcdBYs0Aq0tsTWoSwp6S//vk4Rm
-   gACQOYyEwEmn/yrhswj6wgDFSfnFsZ6lvb3fAHOGWCUj6j4p8iQTJiFEv
-   HS4ejgnWwdWLApRrsYvQ1UenaMnzVq5tbgVnW5wVMB8TOTbWUSOiUYS5L
-   LmUvEZKbD9p8q2to6NSKStRGQobYCLEZRQkkuNJAXr5XwabmDEuZ4t9UE
-   Tb5hhX28+aVLw81FFs6ByLHyL4E0/60ASIZOwiyUe9nOxMmPA9eIt+JCc
-   PY+ZR3q1FcB9zuvX/q4s++OTz8ZnTjU/xlaraKBYb4QTGlYkIDReOiwfU
-   Q==;
-X-CSE-ConnectionGUID: rk42PQCxTd6sxZnCxKEW3Q==
-X-CSE-MsgGUID: qrQJ6EFoRHWHmHsjpzYD6g==
-X-IronPort-AV: E=McAfee;i="6800,10657,11899"; a="99873122"
-X-IronPort-AV: E=Sophos;i="6.25,269,1779174000"; 
-   d="scan'208";a="99873122"
-Received: from fmviesa006.fm.intel.com ([10.60.135.146])
-  by fmvoesa105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Sep 2026 07:15:40 -0700
-X-CSE-ConnectionGUID: arCvz7q5RtuSE/ZzRlFGVg==
-X-CSE-MsgGUID: Zoxde7IOQ8GMxKUOPxv2sw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.25,269,1779174000"; 
-   d="scan'208";a="266692854"
-Received: from igk-lkp-server01.igk.intel.com (HELO cc074f2a4298) ([10.211.93.152])
-  by fmviesa006.fm.intel.com with ESMTP; 08 Sep 2026 07:15:38 -0700
-Received: from kbuild by cc074f2a4298 with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1x3wbo-000000000jO-2VeK;
-	Tue, 08 Sep 2026 14:15:36 +0000
-Date: Tue, 8 Sep 2026 16:15:04 +0200
-From: kernel test robot <lkp@intel.com>
-To: Alex Elder <elder@riscstar.com>, bhelgaas@google.com, robh@kernel.org,
-	saravanak@kernel.org
-Cc: oe-kbuild-all@lists.linux.dev, herve.codina@bootlin.com,
-	daniel@riscstar.com, mohd.anwar@oss.qualcomm.com,
-	lorenzo.bianconi@oss.qualcomm.com, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v4 4/4] PCI: of: introduce of_pci_verify_node()
-Message-ID: <202609081616.N6meYz4f-lkp@intel.com>
-References: <20260904134607.1856121-5-elder@riscstar.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jr/33qF5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 87A4E1F00A3D;
+	Tue,  8 Sep 2026 14:16:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1788877005;
+	bh=IrEhf5FSgYDb9LzSRS4d8b0I6BEc9gLPPdm8Ooj1h+o=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=jr/33qF5gVsdhHl2QtNI1Xkx0qTz0nVdBZiXEPgNnz3jkI1G86/IMEa28mJgkrVa0
+	 kwUwxT63eT3/09r/EAeNYVHTAEmRrOpoiufAi7BuMPX4psX8pabw3Y7uR9NCg4Bbl0
+	 G3ueM/L3hnc2pyGvcM+WixQzYhncYw72V3JUu665JGW42Qf+/eaTmMIRH4v53xDwKq
+	 yTioPZ+7iU4ORWwOeu5SFc3Je60OZ7Dx95VFzNQQ0uPnK6W+nm8voi2PWLwWGmPOZ1
+	 FZtguUTnaUIjKlAJ7GRAu6V2qcmI+UPECFtTDHIO8d2XezHC+FhH6lM3GB+Fg77DtT
+	 Fu/38gKGuYWhQ==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v4 5/8] perf hisi-ptt: Add parsing of supported message
+ types and proto length
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Sizhe Liu" <liusizhe5@huawei.com>
+Cc: linux-pci@vger.kernel.org, linux-perf-users@vger.kernel.org
+In-Reply-To: <20260908140509.2485649-6-liusizhe5@huawei.com>
+References: <20260908140509.2485649-1-liusizhe5@huawei.com>
+ <20260908140509.2485649-6-liusizhe5@huawei.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Tue, 08 Sep 2026 14:16:45 +0000
+Message-Id: <20260908141645.87A4E1F00A3D@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260904134607.1856121-5-elder@riscstar.com>
 
-Hi Alex,
+> Classify TLP messages by Header DW0 Format field and Type field for
+> both 4DW and 8DW formats, according to PCIe r6.4 sec 2.2.1.1 & 2.2.1.2.
+>=20
+> Parsing packets into:
+> - MRd  (Non-posted Memory Read request)
+> - MWr  (Posted Memory Write request)
+> - DMWr (Posted Deferrable Memory write request)
+> - Msg  (Posted Message request)
+> - Atom (Non-Posted AtomicOP request)
+> - IO   (Non-Posted IO request)
+> - CFG  (Non-Posted Configuration request)
+> - CPL  (Completion request)
+>=20
+> The parsed message type is stored in pkt_buf->pkt_msg_type and will
+> be used by subsequent patches to select the correct field layout for
+> DW1, DW2 and DW3 printing.
+>=20
+> Classify protocol defined header length by Format field, according to PCIe
+> r6.4 sec 2.2.1.1.
+>=20
+> Reviewed-by: Yushan Wang <wangyushan12@huawei.com>
+> Signed-off-by: Sizhe Liu <liusizhe5@huawei.com>
 
-kernel test robot noticed the following build errors:
+Sashiko has reviewed this patch and found no issues. It looks great!
 
-[auto build test ERROR on cee9395acd8043be0644b25c34bfa86623f2b935]
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260908140509.2485=
+649-1-liusizhe5@huawei.com?part=3D5
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Alex-Elder/PCI-of-avoid-allocations-in-of_pci_prop_compatible/20260904-084603
-base:   cee9395acd8043be0644b25c34bfa86623f2b935
-patch link:    https://lore.kernel.org/r/20260904134607.1856121-5-elder%40riscstar.com
-patch subject: [PATCH v4 4/4] PCI: of: introduce of_pci_verify_node()
-config: loongarch-allyesconfig (https://download.01.org/0day-ci/archive/20260908/202609081616.N6meYz4f-lkp@intel.com/config)
-compiler: clang version 22.1.8 (https://github.com/llvm/llvm-project ca7933e47d3a3451d81e72ac174dcb5aa28b59d1)
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260908/202609081616.N6meYz4f-lkp@intel.com/reproduce)
-
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202609081616.N6meYz4f-lkp@intel.com/
-
-All errors (new ones prefixed by >>):
-
->> drivers/pci/of_property.c:335:7: error: incompatible pointer to integer conversion initializing 'char' with an expression of type 'char[48]' [-Wint-conversion]
-     335 |         char bufp = buf;
-         |              ^      ~~~
->> drivers/pci/of_property.c:338:17: error: incompatible integer to pointer conversion passing 'char' to parameter of type 'char *'; take the address with & [-Wint-conversion]
-     338 |         ret = snprintf(bufp, PROP_SIZE, "pci%x,%x", pdev->vendor, pdev->device);
-         |                        ^~~~
-         |                        &
-   include/linux/sprintf.h:13:35: note: passing argument to parameter 'buf' here
-      13 | __printf(3, 4) int snprintf(char *buf, size_t size, const char *fmt, ...);
-         |                                   ^
->> drivers/pci/of_property.c:341:41: error: incompatible integer to pointer conversion assigning to 'const char *' from 'char'; take the address with & [-Wint-conversion]
-     341 |         compat_strs[PROP_COMPAT_PCI_VVVV_DDDD] = bufp;
-         |                                                ^ ~~~~
-         |                                                  &
-   drivers/pci/of_property.c:344:17: error: incompatible integer to pointer conversion passing 'char' to parameter of type 'char *'; take the address with & [-Wint-conversion]
-     344 |         ret = snprintf(bufp, PROP_SIZE, "pciclass,%06x", pdev->class);
-         |                        ^~~~
-         |                        &
-   include/linux/sprintf.h:13:35: note: passing argument to parameter 'buf' here
-      13 | __printf(3, 4) int snprintf(char *buf, size_t size, const char *fmt, ...);
-         |                                   ^
-   drivers/pci/of_property.c:347:43: error: incompatible integer to pointer conversion assigning to 'const char *' from 'char'; take the address with & [-Wint-conversion]
-     347 |         compat_strs[PROP_COMPAT_PCICLASS_CCSSPP] = bufp;
-         |                                                  ^ ~~~~
-         |                                                    &
-   drivers/pci/of_property.c:350:17: error: incompatible integer to pointer conversion passing 'char' to parameter of type 'char *'; take the address with & [-Wint-conversion]
-     350 |         ret = snprintf(bufp, PROP_SIZE, "pciclass,%04x", pdev->class >> 8);
-         |                        ^~~~
-         |                        &
-   include/linux/sprintf.h:13:35: note: passing argument to parameter 'buf' here
-      13 | __printf(3, 4) int snprintf(char *buf, size_t size, const char *fmt, ...);
-         |                                   ^
-   drivers/pci/of_property.c:351:41: error: incompatible integer to pointer conversion assigning to 'const char *' from 'char'; take the address with & [-Wint-conversion]
-     351 |         compat_strs[PROP_COMPAT_PCICLASS_CCSS] = bufp;
-         |                                                ^ ~~~~
-         |                                                  &
-   drivers/pci/of_property.c:336:6: warning: unused variable 'i' [-Wunused-variable]
-     336 |         int i, ret;
-         |             ^
-   1 warning and 7 errors generated.
-
-
-vim +335 drivers/pci/of_property.c
-
-   326	
-   327	/* The three compatible property strings have max sizes 12+1, 15+1, and 13+1 */
-   328	#define PROP_SIZE	16	/* Max size of each compatible string */
-   329	static int of_pci_prop_compatible(struct pci_dev *pdev,
-   330					  struct of_changeset *ocs,
-   331					  struct device_node *np)
-   332	{
-   333		const char *compat_strs[PROP_COMPAT_NUM] = { 0 };
-   334		char buf[PROP_COMPAT_NUM * PROP_SIZE] = { };
- > 335		char bufp = buf;
-   336		int i, ret;
-   337	
- > 338		ret = snprintf(bufp, PROP_SIZE, "pci%x,%x", pdev->vendor, pdev->device);
-   339		if (ret >= PROP_SIZE)
-   340			return -EINVAL;
- > 341		compat_strs[PROP_COMPAT_PCI_VVVV_DDDD] = bufp;
-   342		bufp += ret + 1;
-   343	
-   344		ret = snprintf(bufp, PROP_SIZE, "pciclass,%06x", pdev->class);
-   345		if (ret >= PROP_SIZE)
-   346			return -EINVAL;
-   347		compat_strs[PROP_COMPAT_PCICLASS_CCSSPP] = bufp;
-   348		bufp += ret + 1;
-   349	
-   350		ret = snprintf(bufp, PROP_SIZE, "pciclass,%04x", pdev->class >> 8);
-   351		compat_strs[PROP_COMPAT_PCICLASS_CCSS] = bufp;
-   352	
-   353		return of_changeset_add_prop_string_array(ocs, np, "compatible",
-   354							  compat_strs, PROP_COMPAT_NUM);
-   355	}
-   356	#undef PROP_SIZE
-   357	
-
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
