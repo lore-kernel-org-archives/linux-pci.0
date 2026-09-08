@@ -1,93 +1,132 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E332253A88D;
-	Tue,  8 Sep 2026 15:34:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9635548552;
+	Tue,  8 Sep 2026 15:34:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788881679; cv=none; b=UE0tqUDblzpOTnKSSCu3X0K24GkeyEyYDcVz6F7dsB885oc/9eZa2mIsG46t/WqS54dGB8mWE6jm4KqoQYGMHPqP8kILx7BzvQfgGdh+tBbxQ3ysF/MIEWNtOKb6wzKdjiSWdcn1pKbBwxkB8ejW1Tfxo1x5X2vxkDpVF0u1bOI=
+	t=1788881688; cv=none; b=BiHv4jP8tqQqeWluC3FVIS5wdSnEiDMas2rV9C+QFVXLHHs6ODKAlvNmypDgzf8m1+ggGIDNtFZ20ZJOfi8j9LzFehM4ZtAk+K/emXk1bWxGq5L5ES1FS2TTqBg7KB2RR+su9AZEHdlJ0s45R1dTWEzYaDTVtQ2whqRSlUr0ph0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788881679; c=relaxed/simple;
-	bh=crZk0K9G9y+Hv5CV7VCvUe9/180iqcKz2cQsBplxnYg=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=s5dPITxjoNhUqmOWGXwD5fv6dbXqqAOVnrGXvS6EzPQeBUga6uhYiqde59EQBIctQYWf9XnhjgPM1jImGNyX2duDl70+NslxnhVBG5L8I6jIGfAqiTOjCZn+UJ39jCr8aUDSzWNNTy71f55GPxjpneYwY2FiYQwRb9aeZLVfTLI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F3BD21F00A3D;
-	Tue,  8 Sep 2026 15:34:29 +0000 (UTC)
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 1/5] dt-bindings: PCI: toshiba,tc9563: Document
- embedded GPIO controller
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Lorenzo Bianconi" <lorenzo.bianconi@oss.qualcomm.com>
-Cc: devicetree@vger.kernel.org, conor+dt@kernel.org, linux-pci@vger.kernel.org, robh@kernel.org
-In-Reply-To: <20260908-pci-tc9563-aux-v4-1-c7fc7778292b@oss.qualcomm.com>
-References: <20260908-pci-tc9563-aux-v4-0-c7fc7778292b@oss.qualcomm.com>
- <20260908-pci-tc9563-aux-v4-1-c7fc7778292b@oss.qualcomm.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 08 Sep 2026 15:34:28 +0000
-Message-Id: <20260908153429.F3BD21F00A3D@smtp.kernel.org>
+	s=arc-20240116; t=1788881688; c=relaxed/simple;
+	bh=2xdZ+I35O5wMzCJuFztU21SdXhO0KTe6CqKTPCSHmFo=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=J/9AVwprOejM4oE3Ve1X+534Z+PfR9S8Kwjs1ikES1eC86BJnfA5sprLc50XJZt1yMVNjRZB0xQ/Nylj/q2XgU7UCRanA1N0VJlPV0kBMJmXZ6ZGjeLvr2YlQHXjZiIjfp1V2kf6JRpLr5KTMu64wgMY8sHY9L7ej/641J7/dfU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OBCoJrEg; arc=none smtp.client-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OBCoJrEg"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 654811F00A3A;
+	Tue,  8 Sep 2026 15:34:27 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1788881679;
+	bh=2xdZ+I35O5wMzCJuFztU21SdXhO0KTe6CqKTPCSHmFo=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=OBCoJrEgKyTIogjTC/andPa6J0fJ1vFRHhoBRsIEo6UKgKKpa/UE9KjPF+prT18B6
+	 +WU/mwHOifa5Vb3wnHcP1QKhgfPzJTG3QFZn3oU1n8nTn09O4NY9KcMRLwd72CLBOq
+	 WcC+5KRMiI+BLF0jeV0TNM6ukmdxL1YkiDt0ykTh4FzcPaBpInMJuRzL56Y7YyPrBk
+	 9CjpQGx2c0/yHP+IEP+94P46/Og36DHw9BvOpAcA40cfSStyY3HAwEDtUGKRnsduzU
+	 tSv50jVo+Ac7sXDU/zwy9lKX1QZUxOczMJvb42m3GZ1+Ja6tAkwTz9Q3vkVDJsWNyx
+	 1PBqPdZbzC2gg==
+Date: Tue, 8 Sep 2026 16:34:24 +0100
+From: Mark Brown <broonie@kernel.org>
+To: Arnd Bergmann <arnd@kernel.org>
+Cc: Krzysztof Kozlowski <krzk@kernel.org>,
+	Alexandre Belloni <alexandre.belloni@bootlin.com>,
+	Linus Walleij <linusw@kernel.org>,
+	Russell King <linux@armlinux.org.uk>,
+	Drew Fustini <fustini@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
+	Rob Herring <robh@kernel.org>, Conor Dooley <conor+dt@kernel.org>,
+	Liviu Dudau <liviu.dudau@arm.com>,
+	Sudeep Holla <sudeep.holla@kernel.org>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Frank Li <Frank.Li@nxp.com>, Sascha Hauer <s.hauer@pengutronix.de>,
+	Pengutronix Kernel Team <kernel@pengutronix.de>,
+	Fabio Estevam <festevam@gmail.com>,
+	Vladimir Zapolskiy <vz@mleia.com>, Stefan Agner <stefan@agner.ch>,
+	Maxime Coquelin <mcoquelin.stm32@gmail.com>,
+	Alexandre Torgue <alexandre.torgue@foss.st.com>,
+	Aaro Koskinen <aaro.koskinen@iki.fi>,
+	Andreas Kemnade <andreas@kemnade.info>,
+	Kevin Hilman <khilman@baylibre.com>,
+	Roger Quadros <rogerq@kernel.org>, Tony Lindgren <tony@atomide.com>,
+	Nicolas Ferre <nicolas.ferre@microchip.com>,
+	Claudiu Beznea <claudiu.beznea@tuxon.dev>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+	Gregory Clement <gregory.clement@bootlin.com>,
+	Robert Jarzmik <robert.jarzmik@free.fr>,
+	Kristoffer Ericson <kristoffer.ericson@gmail.com>,
+	Ethan Nelson-Moore <enelsonmoore@gmail.com>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	Alexander Sverdlin <alexander.sverdlin@siemens.com>,
+	Shawn Guo <shawnguo@kernel.org>,
+	Karl Mehltretter <kmehltretter@gmail.com>,
+	"David Hildenbrand (Arm)" <david@kernel.org>,
+	Nicolas Pitre <npitre@baylibre.com>, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	devicetree@vger.kernel.org, imx@lists.linux.dev,
+	linux-stm32@st-md-mailman.stormreply.com,
+	linux-omap@vger.kernel.org, Alexander Clouter <alex@digriz.org.uk>,
+	"Jeremy J. Peper" <jeremy@jeremypeper.com>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>, Ulf Hansson <ulfh@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, Vinod Koul <vkoul@kernel.org>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Daniel Lezcano <daniel.lezcano@kernel.org>,
+	Guenter Roeck <linux@roeck-us.net>,
+	Bartosz Golaszewski <brgl@kernel.org>,
+	Thomas Weissschuh <thomas.weissschuh@linutronix.de>,
+	linux-ide@vger.kernel.org, linux-mmc@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-phy@lists.infradead.org,
+	linux-rtc@vger.kernel.org, linux-pm@vger.kernel.org,
+	linux-watchdog@vger.kernel.org, linux-sound@vger.kernel.org,
+	linux-gpio@vger.kernel.org
+Subject: Re: [PATCH 05/13] ARM: orion/dove/mv78xx0: remove all board files
+Message-ID: <c38b1d3e-fcb7-419d-b62d-200eb552df52@sirena.org.uk>
+References: <20260908152808.3928630-1-arnd@kernel.org>
+ <20260908152808.3928630-6-arnd@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="Io5kq1JWW/hrTr1x"
+Content-Disposition: inline
+In-Reply-To: <20260908152808.3928630-6-arnd@kernel.org>
+X-Cookie: The world is not octal despite DEC.
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [Medium] The newly added GPIO provider capabilities 'gpio-controller' and=
- '#gpio-cells' are missing from the schema's 'required' list.
---
 
-commit 6d6cb30a1eb86b847e98eea66d5ba6cc77a091a7
-Author: Lorenzo Bianconi <lorenzo.bianconi@oss.qualcomm.com>
+--Io5kq1JWW/hrTr1x
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-dt-bindings: PCI: toshiba,tc9563: Document embedded GPIO controller
+On Tue, Sep 08, 2026 at 05:27:55PM +0200, Arnd Bergmann wrote:
+> From: Arnd Bergmann <arnd@arndb.de>
+>=20
+> The 'orion' platform is the predecessor to what linux now calls the
+> 'mvebu' line of Marvell SoCs, and originally covered orion5x,
+> mv78xx0, kirkwood, dove and a few others that do not have any
+> upstream support at the moment.
 
-The TC9563 PCIe switch embeds a GPIO controller providing 37 GPIO
-lines. Describe the switch node itself as the embedded GPIO controller
-and document the per-port reset-gpios property.
+Acked-by: Mark Brown <broonie@kernel.org>
 
-> diff --git a/Documentation/devicetree/bindings/pci/toshiba,tc9563.yaml b/=
-Documentation/devicetree/bindings/pci/toshiba,tc9563.yaml
-> index f084830c6d0cb..2f03e4e45114d 100644
-> --- a/Documentation/devicetree/bindings/pci/toshiba,tc9563.yaml
-> +++ b/Documentation/devicetree/bindings/pci/toshiba,tc9563.yaml
-> @@ -31,6 +31,11 @@ properties:
->      description:
->        GPIO controlling the RESX# pin.
-> =20
-> +  gpio-controller: true
-> +
-> +  '#gpio-cells':
-> +    const: 2
-> +
+--Io5kq1JWW/hrTr1x
+Content-Type: application/pgp-signature; name="signature.asc"
 
-[Severity: Medium]
-Should these newly added GPIO provider capabilities be included in the
-schema's required properties list?
+-----BEGIN PGP SIGNATURE-----
 
-Looking at the required list in
-Documentation/devicetree/bindings/pci/toshiba,tc9563.yaml:
+iQEzBAABCgAdFiEEreZoqmdXGLWf4p/qJNaLcl1Uh9AFAmqgKwAACgkQJNaLcl1U
+h9DsUAgAhTBN3De8z6XWQRAaxTKXnxOI2ZAZ09YuAC1G51g140wYOj1XcTcrgluM
+7wjICW1rmG/S2w60M9udCHUfMPlo9rW6GIGO2B1qfb0m4qgWkKLQATvB5YsJ2zfW
+L99pWEuasrdzP7KGhnrxKZNOdQCFpTgvdUjqnrbSnWylQvyy6wvJ0mk9b3x8Cg60
+MEJcm4MwHcaLV1P15o/WmXRf66ZBs3I0qbjeg/jQFAAqYtR525BYiKvMuPc/ASW/
+/wP2S0zxYLYrFdPFpCGcfbozjD/XENGuCLe3va+eSiqYc2zPA7sSRG5+j5CJNRV+
+v0dE8G7KZ/6VC0eWNsgkbHlxV41eIg==
+=fCpR
+-----END PGP SIGNATURE-----
 
-required:
-  - resx-gpios
-  - vdd18-supply
-  - vdd09-supply
-  - vddc-supply
-  - vddio1-supply
-  - vddio2-supply
-  - vddio18-supply
-  - i2c-parent
-
-If the new capabilities are omitted from this list, device tree nodes missi=
-ng
-gpio-controller and #gpio-cells will silently pass schema validation,
-allowing incomplete configurations to enter the device tree.
-
-At runtime, dependent nodes (such as the downstream ports attempting to use
-reset-gpios) could fail when the provider is misconfigured.
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260908-pci-tc9563=
--aux-v4-0-c7fc7778292b@oss.qualcomm.com?part=3D1
+--Io5kq1JWW/hrTr1x--
