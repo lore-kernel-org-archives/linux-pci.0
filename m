@@ -1,46 +1,46 @@
-Received: from DM5PR21CU001.outbound.protection.outlook.com (mail-centralusazon11011019.outbound.protection.outlook.com [52.101.62.19])
+Received: from SA9PR02CU001.outbound.protection.outlook.com (mail-southcentralusazon11013021.outbound.protection.outlook.com [40.93.196.21])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2638B5A5157;
-	Tue,  8 Sep 2026 19:06:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.62.19
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 81EED5A5159;
+	Tue,  8 Sep 2026 19:06:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.196.21
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788894386; cv=fail; b=DK7xGccdvpsAlGkmYFL/sksTcQ0j2sYxUveBE3byF2tspjSF5+RcEttkM5X0yBXbLG96lhR/fGdJg6Ox9uDr4bmoSGig83SUB8k4SZ3ppUTOnkzn4PO1RUPiDPkW+7FyJ4iSxkxnBKonzzVN/eLMqVFdtWCDaTuy7Xz2kIzGebs=
+	t=1788894387; cv=fail; b=jBm/V60uT7kpOBfQiHPCLA0EM/MBnGxeOT0UmK/PyoqD2N7mggCmFEwaKJ+fphlFC5jU8KMrzGuWnDZy8IGnSTI7R2MsoZ/E+syN+1e/ONo1zewmwHkOfJZmNeE1dkzXm/Xm+OsLmh0tbkV2gSDNlQ8U3N1xa39lIBcoPDrC1ok=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788894386; c=relaxed/simple;
-	bh=Q98o0adbXPokq1rKjxAV/rg45bWFMO8wfauUhkmWsSU=;
+	s=arc-20240116; t=1788894387; c=relaxed/simple;
+	bh=UAx/uvkRrmZ3phQyzdZ2Le3CMFGFmxjYXOwu88K6RW0=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=pBIpWEc/9M6GYxNqrP3RX2+d8ltAzWxJz+S4zWU6N3VErDSc9efpbLidOC5L8Dzr3roA8HzjyzJn0x1wCr9LCzbGtq07yGJ5/6wXGWBLd+r+PIbyuUqyJ8ze3ujD2qvehA9DtV0h4j7G3jskCKzTVhF6B5Of9HIlgbgnZCpwvjg=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=NAJV48B3; arc=fail smtp.client-ip=52.101.62.19
+	 MIME-Version:Content-Type; b=HogTAGmYjj71NOyXnRKYNQrYRzcH3XD0pJ48JS++PWSr36YX2XecklHdTcXbiX83gNYmwV5xNM/xkx4vVeGSXGKdeue635gQOLuFCOimk42vUT4Px28HOusofFJcSrO2tf/fhspAU4i5L/GyE3QjvphYWSx/bbO8/nYJ2PIweVw=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=NkHn2TxA; arc=fail smtp.client-ip=40.93.196.21
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="NAJV48B3"
+	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="NkHn2TxA"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=j6/fxVjt35GmadIESGLF2tvUTWXC+I5Um52pT5DXMwMjzmr4H5EJg7Yg7QloULfrWrCh8wlooeLps+9Z5KCoYBUiluPt0qZ5S+nK2+iydg25AajHt6HWlTPyJpIxoWngH/Rap/ESPaFJ0aaw+A/q5A11CcinZ4Lew6o5VYEvbqKVst6k63jOAqQfNUyCCaLPCCxQknypH1kvSkprBnoI+Sz2S9aCU3FJB+cbWS2LuruF2jyt2VyU2Cxf7aAHyqTFGj6H6UXwA8g/VputynCY0gHyfDVxK66OHM3Q5+UJBs0+UO4OWYvKjnte1iEMxtQ/qlqx6s9/0NxhQjCRCk2D0g==
+ b=uzTSUacTPjur3hN6VBMH8yT6R3pN866um1bA+KLpH4ftfwfESb9ClZ2K921MtX2si7PKJTwQ+3aoHVwJsd/o71JmoaFb0WyBMuZdVwjSXPpI1R5Vm6FXbYr2rNxfq/CuMEZr6mV8m9P4TeWvSziSkPkJH2Lt2ByTqqEGu5eKZkRn8SX9ka8kUaT3LGJSWjmI4fRUFoX2nBh2Jy+Wx0SabTlmIMjyvU3cpL5/rvNi3dZfKUmChxYODTep8NlWrJBinnQQWq88KWXXbnE3W4OM5qhQdFAfMnxiNk+xIsztV2G4s4zuTkeHlpWAkXWJ4A/lpr0JD0Iul3l7QXDYJ4UEeg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=9Spuflq0O4jjhln7uxocfQd4Ngrsv1Y5px6bDxZeZpE=;
- b=j7WsuRNG02pamDvV50PKPT0LkPhjkH/ufqa5hnowtAjQ1hm3NN5ZHbuXLUBJsPqn1dzifU7C2olaviyT8B5Y2uxRj/fZwxru//dhDTk071RyskWfi/gYdes2kFMh8ZGPq6KB+u1tY675A8uFZ/um6opBjZO+dj7D1H3RlHQvscfBnyhB/RwwbPjsYC0lnXYZkW5q8m2oLgWE9SYEDCQwtRgo4FG9mUAuvdIBlsW6SKFkg32tQNXt4olcEFFiNXBpoVjikPKHq42fnIj35N/Uu4utTpt4GGdxesoUKt8AkbsCdjNHg8+h/6qry9f/NP0hmTDA/r88wPmrO/p27mfOpw==
+ bh=R/RTpl2mPAQEB/tr+A4BbNG+LIodcvV/r645uNWbnRQ=;
+ b=cw0NC4Q0hs4RVYfYK0MNf6xqU3U2dFXb4alxR7xy72Fo3UO9MhiAQOzipmUTkwYSqGd6vIUPFFjJxO1NMvHwVUmxJwPd/QQ0gxSS/o5e5yDfjkmFa4lKBir7BC34KdmxT4odIzdkQ/eOGSF1DvRxhx7GXoIAl9mW8sIrsW5GiIQWDk1kKOV9Clirdub2LeDr9pyy/yOVmM2l6ewFafS4NGQtWESSfP5va8d1cFM9GDw4bI9b04wu4MpwaN0KL/I1jKcu3EjwXmKQVE4Bpdl6FM9EBXf7eJG2zvUzH5KUp0GwMAUdljJNYoEKlWJv4SKd86QV3G9kqbad4/1/+3+6IQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  165.204.84.17) smtp.rcpttodomain=google.com smtp.mailfrom=amd.com; dmarc=pass
  (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
  dkim=none (message not signed); arc=none (0)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=9Spuflq0O4jjhln7uxocfQd4Ngrsv1Y5px6bDxZeZpE=;
- b=NAJV48B3aTpkkkCwqZUejsMp76A3j517Jq8NbkbTg6QPEqOD95Hglx6Mi3eowHQWq3NS93Q9neY04mYiycAZVlvmufW4aWAK8MXoRTdIjsfB/SqoXin/T9ndatlZfyen0nvP1uKGldja5RuC2Juf7RGhcnrIul+93H2bfL803tg=
-Received: from BLAP220CA0009.NAMP220.PROD.OUTLOOK.COM (2603:10b6:208:32c::14)
- by BN5PR12MB9511.namprd12.prod.outlook.com (2603:10b6:408:2a9::14) with
+ bh=R/RTpl2mPAQEB/tr+A4BbNG+LIodcvV/r645uNWbnRQ=;
+ b=NkHn2TxAOT92q/xYYoh63BEEBU6TcJzRBsTyorQXdIdzAn3UbmmTc0sCuKS6yFJJTPV5pYA5l4K6oz3+aJlyuMVaAJmJzXfO6crultisLsSd+f0bLvgrZ2IlgGf/BhlwVEA/o++qc+askc29MPAw+oK8A/T7tHRtcG1JV+ygJuI=
+Received: from BL1PR13CA0269.namprd13.prod.outlook.com (2603:10b6:208:2ba::34)
+ by IA1PR12MB6483.namprd12.prod.outlook.com (2603:10b6:208:3a8::14) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.406.7; Tue, 8 Sep 2026
- 19:06:21 +0000
-Received: from BN2PEPF000044A8.namprd04.prod.outlook.com
- (2603:10b6:208:32c:cafe::85) by BLAP220CA0009.outlook.office365.com
- (2603:10b6:208:32c::14) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.21.382.15 via Frontend Transport; Tue, 8
- Sep 2026 19:06:20 +0000
+ 19:06:18 +0000
+Received: from BN2PEPF000044A7.namprd04.prod.outlook.com
+ (2603:10b6:208:2ba:cafe::35) by BL1PR13CA0269.outlook.office365.com
+ (2603:10b6:208:2ba::34) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.21.406.7 via Frontend Transport; Tue, 8
+ Sep 2026 19:06:18 +0000
 X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
  smtp.mailfrom=amd.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=amd.com;
@@ -48,17 +48,17 @@ Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
  165.204.84.17 as permitted sender) receiver=protection.outlook.com;
  client-ip=165.204.84.17; helo=satlexmb08.amd.com; pr=C
 Received: from satlexmb08.amd.com (165.204.84.17) by
- BN2PEPF000044A8.mail.protection.outlook.com (10.167.243.102) with Microsoft
+ BN2PEPF000044A7.mail.protection.outlook.com (10.167.243.101) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.406.5 via Frontend Transport; Tue, 8 Sep 2026 19:06:20 +0000
+ 15.21.406.5 via Frontend Transport; Tue, 8 Sep 2026 19:06:18 +0000
 Received: from Satlexmb09.amd.com (10.181.42.218) by satlexmb08.amd.com
  (10.181.42.217) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.46; Tue, 8 Sep
- 2026 14:06:19 -0500
+ 2026 14:06:18 -0500
 Received: from aus0006770c4n-lx01.amd.com (10.180.168.240) by
  satlexmb09.amd.com (10.181.42.218) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.46; Tue, 8 Sep 2026 14:06:18 -0500
+ 15.2.2562.46; Tue, 8 Sep 2026 14:06:16 -0500
 From: Mario Limonciello <mario.limonciello@amd.com>
 To: Bjorn Helgaas <bhelgaas@google.com>, Damien Le Moal <dlemoal@kernel.org>,
 	Niklas Cassel <cassel@kernel.org>
@@ -69,10 +69,14 @@ CC: Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>,
 	<linux-pci@vger.kernel.org>, "open list:X86 ARCHITECTURE (32-BIT AND 64-BIT)"
 	<linux-kernel@vger.kernel.org>, "open list:LIBATA SUBSYSTEM (Serial and
  Parallel ATA drivers)" <linux-ide@vger.kernel.org>, Mario Limonciello
-	<mario.limonciello@amd.com>, Arthur Husband <artmoty@gmail.com>
-Subject: [PATCH v2 2/2] Revert "ata: ahci: force 32-bit DMA for JMicron JMB582/JMB585"
-Date: Tue, 8 Sep 2026 14:06:00 -0500
-Message-ID: <20260908190600.226485-3-mario.limonciello@amd.com>
+	<mario.limonciello@amd.com>, <david.laight.linux@gmail.com>, John Smith
+	<imjohnsmith4000@gmail.com>, Lennert Buytenhek <kernel@wantstofly.org>,
+	Roland Waltersson <roland.waltersson@netinsight.net>, Mikael Etienne
+	<mikael1022bzh@gmail.com>, Arthur Husband <artmoty@gmail.com>, Alvin Lim
+	<alvinwylim@gmail.com>
+Subject: [PATCH v2 1/2] x86/PCI: Disable enhanced atomics on some AMD PCIe ports
+Date: Tue, 8 Sep 2026 14:05:59 -0500
+Message-ID: <20260908190600.226485-2-mario.limonciello@amd.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20260908190600.226485-1-mario.limonciello@amd.com>
 References: <20260908190600.226485-1-mario.limonciello@amd.com>
@@ -88,87 +92,171 @@ X-ClientProxiedBy: satlexmb08.amd.com (10.181.42.217) To satlexmb09.amd.com
  (10.181.42.218)
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BN2PEPF000044A8:EE_|BN5PR12MB9511:EE_
-X-MS-Office365-Filtering-Correlation-Id: 9bc1e3e3-3c25-4f00-03da-08df0ddc445a
+X-MS-TrafficTypeDiagnostic: BN2PEPF000044A7:EE_|IA1PR12MB6483:EE_
+X-MS-Office365-Filtering-Correlation-Id: 358b2e8a-f584-4dfd-5418-08df0ddc4391
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|23010399003|1800799024|36860700016|82310400026|376014|7416014|10067099003|6133799003|18002099003|22082099003|11063799006|56012099006;
+	BCL:0;ARA:13230040|36860700016|7416014|376014|23010399003|1800799024|82310400026|11063799006|56012099006|10067099003|13003099007|18002099003|22082099003;
 X-Microsoft-Antispam-Message-Info:
-	kml4ibQX6P0eZH0aY+iZdRTsRJ/AdLsChnVobg1WU6SAH/Q4IYqYD2bY3JKknxQQ2k2cCTvWFZx866sI0faOXW1SE2IZE126gTSKjfYR1XwyFk7Ghp3molMlTmlfqqI75V47trb60s3AAqsCD4szTmd/J93ifDUKpPW9VLb+QGEi7bp/V7e2H3y+ufReBcX98FfZxWqjp0+nY5DAt54Lq1Oci5+t9DZ/ySIBqSERI8qHHwaPIhQOYOBy8YIa9TT75F4Ojq9ijbf3/YBTYB35uqb+hesfvgWGHc5xZ15qacEIPcQeUX0qw1KvchNymwNHWL1+C608uu531xmjWK9qqDUedgGBrptpXeHzkEm+xGi1iRDQnZZaMUc69C2+PNaqgZdFkbg9capzgvJJN8VM1BIrWBY1/xBNAHcFOk/z5mr5z0d1Dac0d+IkzTsOWo0iRUwgVUB1acT+HLE9EMx3dT8QMdda5WyU3xncGjAI+zeZuMI3XugLt5dJ6k9LU9QvKFXQ21ehcLvkvVCBq0jLKy82Fh+xMWJ0FkLjdR4bK9rbE1I/DCcuDvRHlTOjnnfnbk8tp7NXjcv3HT2KZ+saXuymvOebmaxvkvlOlC0Bkm6JMBKlIlnzv1zIsqjnEG+hahAkzbin4mgEZpKL+FGxbpM6yeU+09Sc6yB1RUtRmGw1j86QwK/YuWK5j2cN5Use7iyxJ9awbVB9PckxYHKCbw==
+	fAGnB1WI3QT7356DZUqK7KFS5j5vMaPLzG6hGVUMtcR1Y5TwHwvCp6C11jNRlXCfn/PnLCKSNbTf6i5cCkFRHpNrJFKUPEPaYDTCoyIm+fMwvHsMExY9Nh4D0s/A+Bbp37rsgPVNfaFiVT2DH5OqLSGiAsZ0kJgBIYTCWFR+XsOO/QjMWUDgbRtWAPZW3BlRdshBlvbUutvUX581fXdjt3bTIg86FOqwloQxjqg+S79eWSroZlnS9xrUlp7Mm04jIJ1bAxvrbdPXV4PWPKxXB4a6gTbFkg6Zr15ZWXIdVC/c9wC6E6MhCNWrpyr0DvaKpdQjL5xrCkAbScF6qSYvhcLUDVaaJlpSRflIVTt9zXJq6WuogSW4pgbgzYFr4FVL6IPTPji4Kf8Oi3IE6J8tozNz1CtTf6v3MKhhrw0x8l4ven8HN8naz46w54B7SzWtWbViu5ihHopjbOfgzCuqcK5ap0JgmBK+e8jTERLpikzFTCbTLyL5+sekRQFv/c6iEkRo5ywtEGdQlMxsLQ41s2QarBzr6w0g3ZPb/W+0C3nuEGqE0XMx1cw3WTPQ3K/Erf7sbiF9cco8I4QsnVlmiLld5vv1UokmExjq40NrZy0rrrVot/oK21VuguCyBQoCKV4Yp++eDvrMak70m8ZWvU6asf+k5VhH2yCgyQEgBMu8vgdhTcW0Ic08muHXx48Mo92IqtJyqI83sojZBpJR4w==
 X-Forefront-Antispam-Report:
-	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:satlexmb08.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(23010399003)(1800799024)(36860700016)(82310400026)(376014)(7416014)(10067099003)(6133799003)(18002099003)(22082099003)(11063799006)(56012099006);DIR:OUT;SFP:1101;
+	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:satlexmb08.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(36860700016)(7416014)(376014)(23010399003)(1800799024)(82310400026)(11063799006)(56012099006)(10067099003)(13003099007)(18002099003)(22082099003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	WO9fkycmxmVLby0aKEt3tyYx6uD54fIxWgRpqminV2TPkdUkeQzvDdgZ1t3hGVGke8wLIZyR0pplVn+nWSrse1weOF2qw/5GrBJ6jzXYGT4X7Pf46joT3ZiKlsrj0g782bvCnK6UFCK0FKG12g70PQXUflNm/KH/PK/d53E8Vv2iLKmFZBtfyQtOdhSm0r3+TUPoxjVcqYawYSrSU1fJ1J89aFtF9Hp4u965sE2COdmF3ONf0QdpYKva0maendpcaDqsmwuV2ZkOpN92TpCeAR9Bu4RtU0qhk5s4TS8aNpbwan/Jm2k1EHn/NJcf5Y/+rBvhJ6V56ZG59f6UsIX9xN8G0JmsNcMkHhfouermopXDCJOSmEam5C6dAWQWwSQXDr+7GCSQ0sBg1Y4IkRrP3lMo4xcdMxznK1igP6+Lm14xeN3AZuuiKjS1H8YYQ+Vg
+	4bOOIAh3JJG5EJvhmhQMolF0CAO+DK3Y9t0M+kDvQQST1L068iZo/ZdFekh8O4IW9OasJVweI3D524cGQEFtdmBNS9sJgyHQ0lM327NtkXPz0ijLjv2ZHP61MA7GdbZXY/iSdHV5v3AS94z5n1Pm5isaIFyxHvuEYsRRmUYTBDKkvTGGE6Fr5xfg//Wy8jwLoUUT/N/PR32KKjVxfrC8Bj1268YyYpy07lg2n7qmc/DlqHzIQr98FfCaKhUzV2tpZCHomLerQmLhwN17enlZRTou2jyYOLOEM6g2/0tiaUfCeO0oyVPhKpnADwQXKG/k0nT7JpEW2sjfN9PfPh81vNW7zdzGfoVdotyOh9dmbdpr58BK9Q46fVBOKXWopg37+QQpsoIqGVEfD3J/Qwt1zidwBbTlfcJJX2thc/NaCuKM+7FV1MF9mNS1k4s6vwfC
 X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 08 Sep 2026 19:06:20.0181
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 08 Sep 2026 19:06:18.7042
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 9bc1e3e3-3c25-4f00-03da-08df0ddc445a
+X-MS-Exchange-CrossTenant-Network-Message-Id: 358b2e8a-f584-4dfd-5418-08df0ddc4391
 X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[satlexmb08.amd.com]
 X-MS-Exchange-CrossTenant-AuthSource:
-	BN2PEPF000044A8.namprd04.prod.outlook.com
+	BN2PEPF000044A7.namprd04.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN5PR12MB9511
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA1PR12MB6483
 
-This reverts commit 105c42566a550e2d05fc14f763216a8765ee5d0e.
+There have been multiple reports of data corruption that can occur
+with 64-bit DMA when the IOMMU is enabled. This occurs due to some
+BIOSes enabling enhanced atomic operations on PCIe ports.
 
-The issue is actually a problem with BIOS configuaration of PCIe
-root ports, enabling a feature that causes problems with 64-bit
-DMA.  It is fixed by adjusting the kernel adjusting the
-configuration of those root ports.
+When enhanced atomic operations are enabled on PCIe ports for some
+models, data corruption occurs when the 32-bit IOVA space is exhausted.
+The problem is reported on storage devices, but can affect any device
+that uses 64 bit DMA.
 
-Cc: Arthur Husband <artmoty@gmail.com>
+Disable enhanced atomics using SMN for NBIO 7.7 and 7.11 based models.
+
+Cc: david.laight.linux@gmail.com
+Cc: John Smith <imjohnsmith4000@gmail.com>
+Cc: Lennert Buytenhek <kernel@wantstofly.org>
+Cc: Niklas Cassel <cassel@kernel.org>
+Cc: Roland Waltersson <roland.waltersson@netinsight.net>
+Reported-by: Mikael Etienne <mikael1022bzh@gmail.com>
+Closes: https://lore.kernel.org/all/178789300872.392066.15963676631650361573@gmail.com/
+Reported-by: Arthur Husband <artmoty@gmail.com>
+Closes: https://lore.kernel.org/linux-ide/20260406222335.379935-1-artmoty@gmail.com/
+Reported-by: Alvin Lim <alvinwylim@gmail.com>
+Closes: https://lore.kernel.org/linux-ide/20260621100844.1224301-1-alvinwylim@gmail.com/
 Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
 ---
- drivers/ata/ahci.c | 18 ------------------
- 1 file changed, 18 deletions(-)
+v2:
+ * Apply to suspend/resume as well.
+---
+ arch/x86/pci/fixup.c | 99 ++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 99 insertions(+)
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 9b8c0935001cb..bffe50a109b88 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -68,7 +68,6 @@ enum board_ids {
- 	/* board IDs for specific chipsets in alphabetical order */
- 	board_ahci_al,
- 	board_ahci_avn,
--	board_ahci_jmb585,
- 	board_ahci_mcp65,
- 	board_ahci_mcp77,
- 	board_ahci_mcp89,
-@@ -213,15 +212,6 @@ static const struct ata_port_info ahci_port_info[] = {
- 		.udma_mask	= ATA_UDMA6,
- 		.port_ops	= &ahci_avn_ops,
- 	},
--	/* JMicron JMB582/585: 64-bit DMA is broken, force 32-bit */
--	[board_ahci_jmb585] = {
--		AHCI_HFLAGS	(AHCI_HFLAG_IGN_IRQ_IF_ERR |
--				 AHCI_HFLAG_32BIT_ONLY),
--		.flags		= AHCI_FLAG_COMMON,
--		.pio_mask	= ATA_PIO4,
--		.udma_mask	= ATA_UDMA6,
--		.port_ops	= &ahci_ops,
--	},
- 	[board_ahci_mcp65] = {
- 		AHCI_HFLAGS	(AHCI_HFLAG_NO_FPDMA_AA | AHCI_HFLAG_NO_PMP |
- 				 AHCI_HFLAG_YES_NCQ),
-@@ -954,14 +944,6 @@ static const struct pci_device_id ahci_pci_tbl[] = {
- 		/* Elkhart Lake AHCI */
- 		PCI_VDEVICE(INTEL, 0x4b63),
- 		.driver_data = board_ahci_pcs_quirk,
--	}, {
--		/* JMicron JMB582/585: force 32-bit DMA (broken 64-bit implementation) */
--		PCI_VDEVICE(JMICRON, 0x0582),
--		.driver_data = board_ahci_jmb585,
--
--	}, {
--		PCI_VDEVICE(JMICRON, 0x0585),
--		.driver_data = board_ahci_jmb585,
- 	}, {
- 		/* JMicron 360/1/3/5/6, match class to avoid IDE function */
- 		PCI_DEVICE(PCI_VENDOR_ID_JMICRON, PCI_ANY_ID),
+diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
+index b301c6c8df753..79e4338e4b876 100644
+--- a/arch/x86/pci/fixup.c
++++ b/arch/x86/pci/fixup.c
+@@ -886,6 +886,105 @@ static void quirk_clear_strap_no_soft_reset_dev2_f0(struct pci_dev *dev)
+ 	}
+ }
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, 0x15b8, quirk_clear_strap_no_soft_reset_dev2_f0);
++
++/*
++ * Enhanced atomic operations can cause corruption with 64-bit IOVA
++ * on these devices.
++ */
++#define RX_ENH_ATOMIC_EN		BIT(8)
++
++static const u32 nbio_7_7_pcie_smn_addrs[] = {
++	0x111401d0,
++	0x111411d0,
++	0x111421d0,
++	0x111431d0,
++	0x111441d0,
++	0x112401d0,
++	0x112411d0,
++	0x112421d0,
++	0x112431d0,
++	0x112441d0,
++	0x112451d0,
++	0x113401d0,
++	0x114401d0,
++};
++
++static const u32 nbio_7_11_pcie_smn_addrs[] = {
++	0x112401d0,
++	0x112411d0,
++	0x112421d0,
++	0x112431d0,
++	0x112441d0,
++	0x112451d0,
++	0x113401d0,
++	0x113411d0,
++	0x113421d0,
++	0x113431d0,
++	0x113441d0,
++	0x113451d0,
++};
++
++static void quirk_amd_nbio_enhanced_atomic(struct pci_dev *host_bridge,
++					   const u32 *smn_addrs,
++					   size_t nr_smn_addrs)
++{
++	bool changed = false;
++	size_t i;
++	u32 data;
++	int ret;
++
++	for (i = 0; i < nr_smn_addrs; i++) {
++		ret = amd_smn_read(0, smn_addrs[i], &data);
++		if (ret)
++			continue;
++		if (!(data & RX_ENH_ATOMIC_EN))
++			continue;
++		data = data & ~RX_ENH_ATOMIC_EN;
++		ret = amd_smn_write(0, smn_addrs[i], data);
++		if (ret)
++			continue;
++		if (changed)
++			continue;
++		ret = amd_smn_read(0, smn_addrs[i], &data);
++		if (ret)
++			continue;
++		if (data & RX_ENH_ATOMIC_EN)
++			continue;
++		changed = true;
++	}
++
++	if (changed)
++		pci_info(host_bridge, "enhanced atomics disabled\n");
++}
++
++static void quirk_amd_nbio_7_7_disable_enhanced_atomic(struct pci_dev *dev)
++{
++	quirk_amd_nbio_enhanced_atomic(dev, nbio_7_7_pcie_smn_addrs,
++				       ARRAY_SIZE(nbio_7_7_pcie_smn_addrs));
++}
++
++static void quirk_amd_nbio_7_11_disable_enhanced_atomic(struct pci_dev *dev)
++{
++	quirk_amd_nbio_enhanced_atomic(dev, nbio_7_11_pcie_smn_addrs,
++				       ARRAY_SIZE(nbio_7_11_pcie_smn_addrs));
++}
++
++/* Phoenix, Hawk Point (NBIO 7.7) */
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, 0x14E8,
++			quirk_amd_nbio_7_7_disable_enhanced_atomic);
++DECLARE_PCI_FIXUP_RESUME(PCI_VENDOR_ID_AMD, 0x14E8,
++			quirk_amd_nbio_7_7_disable_enhanced_atomic);
++
++/* Strix, Krackan, Strix Halo (NBIO 7.11) */
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, 0x1507,
++			quirk_amd_nbio_7_11_disable_enhanced_atomic);
++DECLARE_PCI_FIXUP_RESUME(PCI_VENDOR_ID_AMD, 0x1507,
++			quirk_amd_nbio_7_11_disable_enhanced_atomic);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, 0x1122,
++			quirk_amd_nbio_7_11_disable_enhanced_atomic);
++DECLARE_PCI_FIXUP_RESUME(PCI_VENDOR_ID_AMD, 0x1122,
++			quirk_amd_nbio_7_11_disable_enhanced_atomic);
++
+ #endif
+ 
+ /*
 -- 
 2.43.0
 
