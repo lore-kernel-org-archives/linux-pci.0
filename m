@@ -1,77 +1,109 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1EC6533E367
-	for <linux-pci@vger.kernel.org>; Tue,  8 Sep 2026 06:25:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 50FFD378D8E;
+	Tue,  8 Sep 2026 06:25:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=193.142.43.55
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788848742; cv=none; b=g1UQ3tUYetDtfr3K6S+PcJd2TJQlwfKmjhH0WD/vwTUbmwUdpIEwDOKED/YdMeIrq04xj1tCqyPto+Ze/UazqWuIShztW97aN6yHkizI+fXfGKMOLcybpbO2SN7gyvyMk9Xidn8jstaqlK+rIT/cgztZjuozn/4Dh/Lvh2TgQNQ=
+	t=1788848745; cv=none; b=M5xsHNDMd/PHvXtze6crYaLEcHhcXWEiCtj8T2ZxBYJCp5qgOD+Oxxune7g88jpbU6cxESjmmftoAyujZFFku8fJZewSjJyXrgmg8EPRP0AnPbdhIrURCChZbaQrknMav5uU+nEI42lhPqRpMU80wcnNgOcSIiAR3nokBTt/50g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788848742; c=relaxed/simple;
-	bh=u8vTQBBDKI9QDM3bfM4fcJTC2oUv0buHBN0sDbg880w=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=splUKFLDQOU0T4TE7o8qPSqeh4sq7B7oCKsqnMhEycRcgyESP34T9KRL/FXq7Ic6gjCr7J+SLAdtHluIcnIqF2ytEjutkTjD8IuRJ8fz3/rmSr/qw2hoUjR7M4ZR9omXT9jqLVfX837SILsSArrOO5D2MQwTD0ArQt8wOYPvhOk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EdP6jHe0; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788848745; c=relaxed/simple;
+	bh=2sxfpQYYOS6TP3cfrhMZ6nCZCTbUGyW9bNvf6BpMRXE=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
+	 MIME-Version:Content-Type; b=A6BWgadenU9MZJeoxl4Kazc7Uri1sBy+NUFd9rQLqur+yiODzv2CY4HjQ1IJc/mMq3MNBCeTygeclW8zVYWG69+t6PhjI8gHQkxDPK/cPQNIn98X9523vs+GKrd9a8INGDCvqNG5m/1FkWyMpUkrJaCzm4XXDNcSgo3hYkwyAdg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de; spf=pass smtp.mailfrom=linutronix.de; dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=VNbUyBrI; dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=CfWfj56D; arc=none smtp.client-ip=193.142.43.55
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EdP6jHe0"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 81E381F00A3D;
-	Tue,  8 Sep 2026 06:25:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788848740;
-	bh=u8vTQBBDKI9QDM3bfM4fcJTC2oUv0buHBN0sDbg880w=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=EdP6jHe043IPIsKsHdSiGj0CxZTikcx7KgL+jMsUwWCwyoFvGP2AkmjvlFnskmDKi
-	 wWHOJGXryhQY80ig92uR3KzgvI8AaLyFyjZ7zBuAQDBmwzV48H+8AZUXp0Ulm3xBfy
-	 iJ+/fgkFo9TmTkL6QbBU0MHolaYLB8gZU85XUgJA++oV2E+ngJEM1cJuWeGSemyRW1
-	 nP1cZ27lOt1HlFa5SgCcapA/0zIkg6UIDhOmefE76WjcA6oi0miQX5brBg4xRv5Tsh
-	 QfGMuudNP0msn63sptghdO8cGTe/jKdKYp+dgkbJT/AVbv7kAcyqvUnv58pL7GhuV4
-	 3TUO8/ur/btSg==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2] pci: designware: Set DMA_BYPASS bit in outbound IATU
- CTRL2 register
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Sumit Kumar" <sumit.kumar@oss.qualcomm.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260908-dma_bypass-v2-1-c3c81d408c0c@oss.qualcomm.com>
-References: <20260908-dma_bypass-v2-1-c3c81d408c0c@oss.qualcomm.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 08 Sep 2026 06:25:40 +0000
-Message-Id: <20260908062540.81E381F00A3D@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="VNbUyBrI";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="CfWfj56D"
+From: Nam Cao <namcao@linutronix.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+	s=2020; t=1788848740;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=BIK4BsJWq/dgs8gEc/V728RzzJCD16AWxqBdxMbaD94=;
+	b=VNbUyBrIqfAckWEUsY8s1C0hoeg/vS1jMJkmRg3XfCDH9x8ifCV9lV1BhP2BXWWfO4IfwO
+	zLoKKyO3Ag5x2oDUZOBQpBje6UI0LVwmyWG0Y8CVlQlfJNOsNDgikJw4VoM5LETRBkdha+
+	i4H6sfLMQVeUOV2FxxeS08nM5RdqHAP/JvjFNo8j1SBqA9+0BbcQZlgCqv3gE4dE1EJnqv
+	Op4lvUUjWstuNZo0DN9G7zBT4/DzAB8n0xgaZT4Frfvu4BsEoiQlOs9JZM7Zen2vipl+gI
+	0NjDJu2vt52wbDVfL44zWpvXQeSMeORRJKZcJfK1fF0ojvvDQ4in94LHaWe3zw==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+	s=2020e; t=1788848740;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=BIK4BsJWq/dgs8gEc/V728RzzJCD16AWxqBdxMbaD94=;
+	b=CfWfj56DuYNhG6ULpszpbz2nxZH0hVNyrQdOp1yP4r7img7WbaXWWt0i9Pk0TjsebYwpy5
+	8S38D6lzNJMYuWAQ==
+To: Michael Kelley <mhklinux@outlook.com>, Naman Jain
+ <namjain@linux.microsoft.com>, Thomas Gleixner <tglx@kernel.org>, Ingo
+ Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>, Dave Hansen
+ <dave.hansen@linux.intel.com>, "x86@kernel.org" <x86@kernel.org>, "H .
+ Peter Anvin" <hpa@zytor.com>, Wei Liu <wei.liu@kernel.org>, "K . Y .
+ Srinivasan" <kys@microsoft.com>, Haiyang Zhang <haiyangz@microsoft.com>,
+ Dexuan Cui <decui@microsoft.com>
+Cc: Michael Kelley <mhklinux@outlook.com>, Long Li <longli@microsoft.com>,
+ Joerg Roedel <joro@8bytes.org>, Suravee
+ Suthikulpanit <suravee.suthikulpanit@amd.com>, Vasant Hegde
+ <vasant.hegde@amd.com>, Will Deacon <will@kernel.org>, Robin Murphy
+ <robin.murphy@arm.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>,
+ Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Manivannan
+ Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, Bjorn Helgaas
+ <bhelgaas@google.com>, Kees Cook <kees@kernel.org>, "Rafael J . Wysocki"
+ <rafael@kernel.org>, Radu Rendec <radu@rendec.net>, Sean Christopherson
+ <seanjc@google.com>, Kai Huang <kai.huang@intel.com>, Dmitry Ilvokhin
+ <d@ilvokhin.com>, Shradha Gupta <shradhagupta@linux.microsoft.com>,
+ Christophe JAILLET <christophe.jaillet@wanadoo.fr>, Thierry Reding
+ <treding@nvidia.com>, Jiri Wiesner <jwiesner@suse.de>, Daniel J Blueman
+ <daniel@quora.org>, "linux-hyperv@vger.kernel.org"
+ <linux-hyperv@vger.kernel.org>, "linux-kernel@vger.kernel.org"
+ <linux-kernel@vger.kernel.org>, "iommu@lists.linux.dev"
+ <iommu@lists.linux.dev>, "linux-pci@vger.kernel.org"
+ <linux-pci@vger.kernel.org>
+Subject: RE: [PATCH v3 1/3] x86/hyperv: Set irq_retrigger for root partition
+ PCI/MSI irqchip
+In-Reply-To: <SN6PR02MB41570E8F17B6A78AD607F91CD4B22@SN6PR02MB4157.namprd02.prod.outlook.com>
+References: <20260907065129.269262-1-namjain@linux.microsoft.com>
+ <20260907065129.269262-2-namjain@linux.microsoft.com>
+ <SN6PR02MB41570E8F17B6A78AD607F91CD4B22@SN6PR02MB4157.namprd02.prod.outlook.com>
+Date: Tue, 08 Sep 2026 08:25:39 +0200
+Message-ID: <87bja88djw.fsf@yellow.woof>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain
 
-> An outbound iATU region matches any local (AXI/application-side)
-> address that falls within its Base/Limit window and rewrites it to
-> the PCIe-side address programmed in that region's Target Address
-> Registers before the transaction goes out on the link. This matching
-> does not distinguish CPU-initiated transactions from ones issued by
-> the internal DMA engine (eDMA/HDMA).
->=20
-> Example: outbound region 0 is programmed with Base/Limit covering
-> local addresses 0x8000_0000-0x8000_0FFF and Target 0x1_0000_0000, for
-> CPU-initiated accesses. The DMA engine is later given a descriptor
-> whose destination is the host address 0x8000_0080, which happens to
-> fall inside region 0's Base/Limit range. The iATU matches the DMA
-> transaction against region 0 too and rewrites it to 0x1_0000_0080
-> instead of passing 0x8000_0080 through unchanged. The transaction
-> then lands on the wrong host address, causing data corruption or an
-> IOMMU fault when the rewritten address has no valid mapping.
->=20
-> Set the DMA_BYPASS bit (bit 27) in PCIE_ATU_REGION_CTRL2 when
-> programming outbound iATU regions so only CPU/AXI-initiated
-> transactions are matched against the region; DMA engine transactions
-> bypass the translation and go out on the PCIe link with their
-> original address.
->=20
-> Signed-off-by: Sumit Kumar <sumit.kumar@oss.qualcomm.com>
+Michael Kelley <mhklinux@outlook.com> writes:
+> From: Naman Jain <namjain@linux.microsoft.com> Sent: Sunday, September 6, 2026 11:51 PM
+>> diff --git a/arch/x86/hyperv/irqdomain.c b/arch/x86/hyperv/irqdomain.c
+>> index b3ad50a874dca..1e273d7d6c5b3 100644
+>> --- a/arch/x86/hyperv/irqdomain.c
+>> +++ b/arch/x86/hyperv/irqdomain.c
+>> @@ -304,6 +304,7 @@ static struct irq_chip hv_pci_msi_controller = {
+>>  	.irq_ack		= irq_chip_ack_parent,
+>>  	.irq_compose_msi_msg	= hv_irq_compose_msi_msg,
+>>  	.irq_set_affinity	= irq_chip_set_affinity_parent,
+>> +	.irq_retrigger		= irq_chip_retrigger_hierarchy,
+>>  };
+>
+> There's a slight discrepancy compared with the guest pci-hyperv.c driver,
+> where setting the .irq_retrigger function is done dynamically in
+> hv_pcie_init_dev_msi_info() instead of statically.  The parallel here would
+> be to set it in hv_init_dev_msi_info(). But given that Patch 3 of series
+> removes setting .irq_retrigger in both cases, the discrepancy shouldn't
+> really matter.
+>
+> If there's a reason to prefer one approach vs. the other, I don't know
+> what that reason is.
 
-Sashiko has reviewed this patch and found no issues. It looks great!
+hv_pcie_init_dev_msi_info() is for the MSI device's interrupt domain,
+while this patch is setting it for the parent's interrupt domain.
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260908-dma_bypass=
--v2-1-c3c81d408c0c@oss.qualcomm.com?part=3D1
+The former is what we need.
 
+Nam
