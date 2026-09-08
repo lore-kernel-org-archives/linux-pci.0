@@ -1,121 +1,157 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.10])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C3F6C55D878
-	for <linux-pci@vger.kernel.org>; Tue,  8 Sep 2026 15:23:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40C975540BD;
+	Tue,  8 Sep 2026 15:28:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.10
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788880999; cv=none; b=nS9AI28M9lrZXGfURXHFhyIo5l5Yec0YNgDuIE7s2JeG9ZrSGw1DB1VtPvVANIixlbyTfBoyBqbn3/goc+gdpxa00wlIBgE7dFPVLHoMgQ5SiuN5PI0uUAsj2HOEB3V4Z0+MNffme265TXiYyytA7lqS4uM4FXyyzutmgybg6eQ=
+	t=1788881292; cv=none; b=eprihgnZcv1xx1sJ+4+ZrsYyqMBYzVSz14I1mYH5DVSY3FcHqEObP9QbpAIFqd9tG4J4QDG6TGonV5fWoxfdBSscVLWx/qthy5w2ZN6KfIGlsqjeFPDLfO1ZspmR5Sc3gX6mw2MjbbPgeJ/PSwGCmybd2iooSHI8zPO53Kl/I20=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788880999; c=relaxed/simple;
-	bh=xrziD/Q7pcO1vVMt7Sfa0tx3JBuey//bBdJFGxI+bhA=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=oe33c5MiOzkykG1+D3BNZtRoIXrx5sc0l9VlKJA6V1fs8cInnvqItKVPutj02UP7Yh55hGzBhC+LG4QKcMcMFp7TiM0ZorEEN3uNXO+WAW9jC2M3zv5i4t8zG5oJtEvUUjFfV6ZGk2o60VLb9U3WQji8ORUOWv++yQamXLYS1E4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EIMXX/16; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788881292; c=relaxed/simple;
+	bh=2Pf4PkZDzmSCOfuNpjDKK6J4/gWo2OsDAMD6+QijGuw=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=i4tFhhjbxJRj+2qScuDafYzfAnu5IX/KyKNwjX9wozDNz3t10bXw9NY60NINYiTUejWl5xobJBcx6K2q3R2v9GC0Zk1U2RsSCbLOL/j8coX/W+FPLj6zCWJqAS6pIhv+TLIuOeGIklJ5VsmWsPdGvg0w+DxL/R0KlUyeghzyPZ8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=TS5AbTzD; arc=none smtp.client-ip=192.198.163.10
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EIMXX/16"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 614621F00A3D;
-	Tue,  8 Sep 2026 15:23:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788880988;
-	bh=s+ghLg0CfYFaZz+vIST+85atEEDEVoGEm+RtStAkozs=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=EIMXX/16OEH04TL9bpAUL+uVctEjWigWE38vF+sydbci8KFbhQ39tV/oHsh045NR2
-	 hiE2J6Kg2OcBXHiq/g1FMqCyVRKqe0HarpEo1nCEIXjHJpQiqZ3ZuJ7CLIUn42ULGO
-	 inlsAZh/Km0Lu/SzP1/lkmM7TvdfilNwVqse+RR5dOzK0NDJeT49b2NsKAqwMDWHjM
-	 /LI7k29jpBDZ32YLYyl35ueTQTkzw7Bhr9y8t9xh06bVPZUQFYbURqSDavJBKfs+Yv
-	 QqcmprPFdC51VZA9Ud9H1Kiza1LbNO5g0OSRRo13O98cTk6lJeu2bbFYKLtf4YbNsh
-	 +cJlqX22aSUdw==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v6 04/10] PCI: dw-rockchip: Add helper function for
- enhanced LTSSM control mode
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Sebastian Reichel" <sebastian.reichel@collabora.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260908-rockchip-pcie-system-suspend-v6-4-fbabcca9921b@collabora.com>
-References: <20260908-rockchip-pcie-system-suspend-v6-0-fbabcca9921b@collabora.com>
- <20260908-rockchip-pcie-system-suspend-v6-4-fbabcca9921b@collabora.com>
-Content-Type: text/plain; charset=utf-8
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="TS5AbTzD"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1788881288; x=1820417288;
+  h=message-id:subject:from:to:cc:date:in-reply-to:
+   references:content-transfer-encoding:mime-version;
+  bh=2Pf4PkZDzmSCOfuNpjDKK6J4/gWo2OsDAMD6+QijGuw=;
+  b=TS5AbTzDUZbJmrvDG7R9be2zQVHUf7Jhcc4Hm3nVwYpCR79qbTKUF+5z
+   lGtzLhpXbxXsrE4HXWjLGhSIxhWahZNrfl8Xcd9tWHKlEnRvo2nv0a9UU
+   D9kmUcJpBM2TDB1If7PyLWp7MeWeLHDnO8gy7rcwa4/axmu3OGheAun2P
+   ia49Oi9SleYJMSW9lhHoawWeL/4kd/7SFQg1cuzI2utswpXEyyD9D4Vom
+   jLoWxvQ3cTCY1kJAjZ0dwd1l74zejMw7WOS6dFmT7/3AW+OUv/fJLi23t
+   CO+S3xLtxKTQTG8WHc1BL1oCn1WnOs9VpP7OSEVrWNP2JDw8o6oNZ/UPA
+   A==;
+X-CSE-ConnectionGUID: j/QaeMsVRy2aLWKyQq7sGg==
+X-CSE-MsgGUID: qiWDC0idSOK7l83D11VlJw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11899"; a="100641852"
+X-IronPort-AV: E=Sophos;i="6.25,269,1779174000"; 
+   d="scan'208";a="100641852"
+Received: from fmviesa005.fm.intel.com ([10.60.135.145])
+  by fmvoesa104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Sep 2026 08:28:04 -0700
+X-CSE-ConnectionGUID: oCVwWjKVTuufgpdk3XigTQ==
+X-CSE-MsgGUID: za2ZcT1hS4GQoadUYRMbuA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.25,269,1779174000"; 
+   d="scan'208";a="276270451"
+Received: from jkrzyszt-mobl2.ger.corp.intel.com ([10.245.246.101])
+  by fmviesa005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Sep 2026 08:28:01 -0700
+Message-ID: <c3f23838e78de7c6300bc4c82088ff738167027b.camel@linux.intel.com>
+Subject: Re: [PATCH v2] PCI: Disable not supported reset methods on DG1
+ 0x4905
+From: Janusz Krzysztofik <janusz.krzysztofik@linux.intel.com>
+To: Ville =?ISO-8859-1?Q?Syrj=E4l=E4?= <ville.syrjala@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, 
+	intel-gfx@lists.freedesktop.org, Joonas Lahtinen	
+ <joonas.lahtinen@linux.intel.com>, Andi Shyti <andi.shyti@linux.intel.com>,
+  Krzysztof Karas <krzysztof.karas@intel.com>, Sebastian Brzezinka
+ <sebastian.brzezinka@intel.com>, Krzysztof Niemiec
+ <krzysztof.niemiec@intel.com>, linux-kernel@vger.kernel.org, Daniele
+ Ceraolo Spurio	 <daniele.ceraolospurio@intel.com>
+Date: Tue, 08 Sep 2026 17:27:59 +0200
+In-Reply-To: <ap_nbJWGXWTI8ARq@intel.com>
+References: <20260907090249.1348552-2-janusz.krzysztofik@linux.intel.com>
+	 <ap_nbJWGXWTI8ARq@intel.com>
+Organization: Intel Technology Poland sp. z o.o. - ul. Slowackiego 173,
+ 80-298 Gdansk - KRS 101882 - NIP 957-07-52-316
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 08 Sep 2026 15:23:07 +0000
-Message-Id: <20260908152308.614621F00A3D@smtp.kernel.org>
+User-Agent: Evolution 3.60.2 
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
+On Tue, 2026-09-08 at 13:46 +0300, Ville Syrj=C3=A4l=C3=A4 wrote:
+> On Mon, Sep 07, 2026 at 10:59:18AM +0200, Janusz Krzysztofik wrote:
+> > DRM CI consistently reports failing device reset attempts on Intel DG1
+> > discrete graphics adapters.  Manual reproduction attempts allowed to
+> > narrow down the scope of that problem to a specific revision of that
+> > hardware, SKU 8086:4905.  It has been confirmed that both reset methods
+> > claimed by the device, i.e., flr and bus, suffer from that issue.
+>=20
+> IIRC the documented workaround for the issue is some kind of magic
+> register write after the FLR to unblock some internal state machine,
+> but the CPU isn't allowed to do that write and instead it has to be
+> performed by the GuC. That means we'd somehow have to reinitialize
+> the GuC very early after the FLR, which sounds rather difficult.
+>=20
 
-New issues:
-- [Medium] Variable parameter passed to FIELD_PREP_WM16() causes build fail=
-ures and contains a latent logic bug.
+Hmm, maybe i915 initialization order could be re-arranged to apply that=C2=
+=A0
+workaround via GuC before touching the blocked hardware.  If that was=C2=A0
+possible then maybe we only needed to use a PCI quirk to block consecutive=
+=C2=A0
+FLRs before the workaround is applied in order to prevent a hardware=C2=A0
+freeze.
 
-Pre-existing issues:
-- [Low] Incomplete refactoring of enhanced LTSSM control mode setup.
---
+I'm adding Daniele to the loop.
 
-commit 754de1ab627f784507a4b699acc006187c6a91fb
-Author: Sebastian Reichel <sebastian.reichel@collabora.com>
+Thanks,
+Janusz
 
-PCI: dw-rockchip: Add helper function for enhanced LTSSM control mode
-
-Remove code duplication and improve readability by introducing a new
-function to setup the enhanced LTSSM mode.
-
-> diff --git a/drivers/pci/controller/dwc/pcie-dw-rockchip.c b/drivers/pci/=
-controller/dwc/pcie-dw-rockchip.c
-> index 7472ec78b4738..6f84b07406d49 100644
-> --- a/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-> +++ b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-> @@ -696,6 +696,18 @@ static irqreturn_t rockchip_pcie_ep_sys_irq_thread(i=
-nt irq, void *arg)
->  	return IRQ_HANDLED;
->  }
-> =20
-> +static void rockchip_pcie_enable_enhanced_ltssm_control_mode(struct rock=
-chip_pcie *rockchip,
-> +							     u32 flags)
-> +{
-> +	u32 val;
-> +
-> +	/* Enable the enhanced control mode of signal app_ltssm_enable */
-> +	val =3D FIELD_PREP_WM16(PCIE_LTSSM_ENABLE_ENHANCE, 1);
-> +	if (flags)
-> +		val |=3D FIELD_PREP_WM16(flags, 1);
-
-[Severity: Medium]
-Does passing the variable flags to FIELD_PREP_WM16() violate the macro's
-requirement for a compile-time constant mask?
-
-If rockchip_pcie_enable_enhanced_ltssm_control_mode() is outlined, will this
-trigger a BUILD_BUG_ON_MSG(!__builtin_constant_p) build failure?
-
-Also, if a future caller passes a multi-bit mask to flags (e.g. BIT(1) |
-BIT(3)), would the macro evaluate to (1 << 1) & mask, setting only BIT(1)
-and writing 0 to BIT(3), despite enabling both in the upper 16 bits?
-
-> +	rockchip_pcie_writel_apb(rockchip, val, PCIE_CLIENT_HOT_RESET_CTRL);
-> +}
-
-[Severity: Low]
-This is a pre-existing issue, but since the goal of this helper is to remove
-code duplication for setting up enhanced LTSSM mode, should the exact same
-duplicate sequence in rockchip_pcie_rc_reset_root_port() also be replaced
-with rockchip_pcie_enable_enhanced_ltssm_control_mode(rockchip, 0)?
-
-drivers/pci/controller/dwc/pcie-dw-rockchip.c:rockchip_pcie_rc_reset_root_p=
-ort() {
-    ...
-    /* LTSSM enable control mode */
-    val =3D FIELD_PREP_WM16(PCIE_LTSSM_ENABLE_ENHANCE, 1);
-    rockchip_pcie_writel_apb(rockchip, val, PCIE_CLIENT_HOT_RESET_CTRL);
-    ...
-}
-
-[ ... ]
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260908-rockchip-p=
-cie-system-suspend-v6-0-fbabcca9921b@collabora.com?part=3D4
+> >=20
+> > Since consecutively failing device resets may lead to system hangs,
+> > disable both useless reset methods.  A respective CI test will then be
+> > skipped instead of aborting whole CI jobs.
+> >=20
+> > Suggested-by: Joonas Lahtinen <joonas.lahtinen@linux.intel.com>
+> > Closes: https://gitlab.freedesktop.org/drm/i915/kernel/-/work_items/118=
+14
+> > Reviewed-by: Andi Shyti <andi.shyti@linux.intel.com>
+> > Reviewed-by: Krzysztof Karas <krzysztof.karas@intel.com>
+> > Signed-off-by: Janusz Krzysztofik <janusz.krzysztofik@linux.intel.com>
+> > ---
+> > v2: Fix commit description wording (Andi)
+> >   - add Suggested-by: tag missing from v1,
+> >   - add collected Reviewed-by: tags.
+> >=20
+> >  drivers/pci/quirks.c | 5 +++++
+> >  1 file changed, 5 insertions(+)
+> >=20
+> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> > index de9bbccda21fd..e55475374c6fd 100644
+> > --- a/drivers/pci/quirks.c
+> > +++ b/drivers/pci/quirks.c
+> > @@ -3811,6 +3811,9 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_TI, 0xb005=
+, quirk_no_bus_reset);
+> >   */
+> >  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ASMEDIA, 0x1164, quirk_no_bus_r=
+eset);
+> > =20
+> > +/* Intel DG1 0x4905 may not recover from bus reset */
+> > +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x4905, quirk_no_bus_res=
+et);
+> > +
+> >  static void quirk_no_pm_reset(struct pci_dev *dev)
+> >  {
+> >  	/*
+> > @@ -5597,6 +5600,7 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x44=
+3, quirk_intel_qat_vf_cap);
+> >   * AMD Neural Processing Unit 0x1502 0x17f0
+> >   * Intel 82579LM Gigabit Ethernet Controller 0x1502
+> >   * Intel 82579V Gigabit Ethernet Controller 0x1503
+> > + * Intel DG1 Discrete Graphics Adapter 0x4905
+> >   * Mediatek MT7922 802.11ax PCI Express Wireless Network Adapter
+> >   * Mediatek MT7925 802.11be PCI Express Wireless Network Adapter
+> >   */
+> > @@ -5612,6 +5616,7 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x1502=
+, quirk_no_flr);
+> >  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x17f0, quirk_no_flr);
+> >  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1502, quirk_no_flr);
+> >  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1503, quirk_no_flr);
+> > +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x4905, quirk_no_flr);
+> >  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_MEDIATEK, 0x0616, quirk_no_flr);
+> >  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_MEDIATEK, 0x7925, quirk_no_flr);
+> > =20
+> > --=20
+> > 2.54.0
