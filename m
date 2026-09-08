@@ -1,94 +1,114 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D68AA554094;
-	Tue,  8 Sep 2026 15:09:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 42CAB54EED1
+	for <linux-pci@vger.kernel.org>; Tue,  8 Sep 2026 15:10:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788880154; cv=none; b=pkJw4hMkzlBVSjcNS+DqiclUE+fKoUgv0UAn/dDLNPz34ke+TOqm2wDZGmzJgIVroT1FzJN0DlREb99k8UxowWCJRlmp2JzkQAVc9gDU5V50EbOey/i9U68iAFoKPK9KICztsNkpTbnA/tta2nhABzm2M6VVT1XFLDQYYzdATq4=
+	t=1788880206; cv=none; b=pemlMf112fjNGoT/Pc53C/0wau8a4wZHIvfUtLhuYROI+BaZDKEntUHBCjglur3zrMaWW/YoZ5yOupZSUcF+frSqPij9IB9iCUItTQLz5WoYBsb0+H6mos4XrUYBtsfVz52INap4fsIUacgzqQUrngvdHOz/ouR29gwvFzckoXk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788880154; c=relaxed/simple;
-	bh=wgQLt6qlxvkQmEgQD4Lrmvi5LfGbFuUxZCiYQDWqx40=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Hj+M53O1htOo/uSxGRXC6o3ngaLAK5C26juKvkYulJ2JzN9kLZGDDv8iXoAA7jn8JkXE1SLeX1yHb7r3j6qD+kN9nx1PJcsSMCQuQSwJBk2TptvoahlsLhaGFrCKg/sAAJII1tVLfDFIJTQ05Lt9jKh9USoyx8soPJ/5XuNNt1w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3508D1F00A3A;
-	Tue,  8 Sep 2026 15:08:59 +0000 (UTC)
-Date: Tue, 8 Sep 2026 17:08:26 +0200
-From: Niklas Cassel <cassel@kernel.org>
-To: Sumit Kumar <sumit.kumar@oss.qualcomm.com>
-Cc: Jingoo Han <jingoohan1@gmail.com>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] pci: designware: Set DMA_BYPASS bit in outbound IATU
- CTRL2 register
-Message-ID: <aqAk6nXECt239c2g@ryzen>
-References: <20260908-dma_bypass-v2-1-c3c81d408c0c@oss.qualcomm.com>
+	s=arc-20240116; t=1788880206; c=relaxed/simple;
+	bh=5Yc2sfjgYGsaGxjV4BUmh5b4X/TKwaYongXsKu/4b94=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=KAl8JmYW4uFk6OKX8VrvA848oFTjolkER67VBTWoqtH0IwDbD78APWR2/UErvpJJFpNMNiqyQZmE6kmMqXJzGrSzo5bktHm8Q6FpdG6PEIehrya22dO1XL5Qb7O6EqlNG2/Oou+q2kmLa02vyq3rXiEHHMcgsEWGiUoAndNhx+4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ESfYl/bz; arc=none smtp.client-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ESfYl/bz"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 337E81F00A3D;
+	Tue,  8 Sep 2026 15:09:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1788880198;
+	bh=Q62rKSlLRSWxRlm78SMRyuJTDOdkNgXlrAmWgPf4NXY=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=ESfYl/bzFB1XZeXnua5L2crbuSA0GGibtVBJOz2rOBPYiuBwKaFG4XkWSRHs5GH75
+	 c6VDjMaylaG7hUTMYNrERoUqpnlTpfrBQoxTORt+d1H5/5Ug6h28++FicJ9NYf8Mah
+	 7mWJ+ypbS6jjb796ycpAjwcBgcseeYMh7NqqD8Pw0b7HE5xiYap9jAi19tzH+cYsoU
+	 YjwAD9MTnngOEZCKr4Bm5dsIve35d0YFaZ9jPYO3e//VS/eIL9Y8tzY2uY91LgqFgZ
+	 wZkYZqmHlyCRH+XahVkNzECcCSISRuJmm6HmPZcczJ2Dkt16rX0f4FMLEtXqfpv29r
+	 lmPCCtsBpK+Zg==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v6 07/10] PCI: dw-rockchip: Add pme_turn_off support
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Sebastian Reichel" <sebastian.reichel@collabora.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260908-rockchip-pcie-system-suspend-v6-7-fbabcca9921b@collabora.com>
+References: <20260908-rockchip-pcie-system-suspend-v6-0-fbabcca9921b@collabora.com>
+ <20260908-rockchip-pcie-system-suspend-v6-7-fbabcca9921b@collabora.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Tue, 08 Sep 2026 15:09:57 +0000
+Message-Id: <20260908150958.337E81F00A3D@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260908-dma_bypass-v2-1-c3c81d408c0c@oss.qualcomm.com>
 
-Hello Sumit,
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
+- [Medium] Incorrect use of FIELD_PREP_WM16() on a Write-1-to-Clear (W1C) i=
+nterrupt status register, causing unintended clearing of bit 25.
+- [Low] Redundant macro definition for the Power Management Control Registe=
+r.
+--
 
-On Tue, Sep 08, 2026 at 11:48:22AM +0530, Sumit Kumar wrote:
-> An outbound iATU region matches any local (AXI/application-side)
-> address that falls within its Base/Limit window and rewrites it to
-> the PCIe-side address programmed in that region's Target Address
-> Registers before the transaction goes out on the link. This matching
-> does not distinguish CPU-initiated transactions from ones issued by
-> the internal DMA engine (eDMA/HDMA).
-> 
-> Example: outbound region 0 is programmed with Base/Limit covering
-> local addresses 0x8000_0000-0x8000_0FFF and Target 0x1_0000_0000, for
-> CPU-initiated accesses. The DMA engine is later given a descriptor
-> whose destination is the host address 0x8000_0080, which happens to
-> fall inside region 0's Base/Limit range. The iATU matches the DMA
-> transaction against region 0 too and rewrites it to 0x1_0000_0080
-> instead of passing 0x8000_0080 through unchanged. The transaction
-> then lands on the wrong host address, causing data corruption or an
-> IOMMU fault when the rewritten address has no valid mapping.
-> 
-> Set the DMA_BYPASS bit (bit 27) in PCIE_ATU_REGION_CTRL2 when
-> programming outbound iATU regions so only CPU/AXI-initiated
-> transactions are matched against the region; DMA engine transactions
-> bypass the translation and go out on the PCIe link with their
-> original address.
-> 
-> Signed-off-by: Sumit Kumar <sumit.kumar@oss.qualcomm.com>
+commit 10a270e398b67f78bf174b063ed14cff0ce4e43b
+Author: Sebastian Reichel <sebastian.reichel@collabora.com>
 
-If you look at e.g.
-drivers/pci/endpoint/functions/pci-epf-test.c:pci_epf_test_read()
+    PCI: dw-rockchip: Add pme_turn_off support
 
-you can see that it does call pci_epc_mem_map(), which will end up
-as a call to dw_pcie_prog_outbound_atu() to setup an iATU mapping
-on DWC based PCIe controllers.
+This commit prepares the Rockchip PCIe controller for system suspend support
+by adding the PME turn off operation.
 
+> --- a/drivers/pci/controller/dwc/pcie-dw-rockchip.c
+> +++ b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
+[ ... ]
+> @@ -64,6 +65,11 @@
+> =20
+>  /* Interrupt Mask Register Related to Miscellaneous Operation */
+>  #define PCIE_CLIENT_INTR_MASK_MISC	0x24
+> +#define PCIE_CLIENT_POWER		0x2c
 
-If you configure DWC based controllers to bypass the iATU, this
-call to pci_epc_mem_map() is completely useless.
+[Severity: Low]
+Does this code introduce a redundant macro definition? It appears that
+PCIE_CLIENT_POWER_CON is already defined as 0x2c immediately below
+this addition.
 
+> +#define PCIE_CLIENT_MSG_GEN		0x34
+> +#define PME_READY_ENTER_L23		BIT(3)
+> +#define PME_TURN_OFF			FIELD_PREP_WM16(BIT(4), 1)
+> +#define PME_TO_ACK			FIELD_PREP_WM16(BIT(9), 1)
+> =20
+>  /* Power Management Control Register */
+>  #define PCIE_CLIENT_POWER_CON		0x2c
+[ ... ]
+> @@ -452,8 +458,46 @@ static int rockchip_pcie_host_init(struct dw_pcie_rp=
+ *pp)
+>  	return 0;
+>  }
+> =20
+> +static void rockchip_pcie_pme_turn_off(struct dw_pcie_rp *pp)
+> +{
+[ ... ]
+> +	/* 3. Clear PME_TO_Ack and Wait for ready to enter L23 message */
+> +	rockchip_pcie_writel_apb(rockchip, PME_TO_ACK, PCIE_CLIENT_INTR_STATUS_=
+MSG_RX);
 
-Perhaps the DWC driver can set a DMA_SLAVE_SKIP_MEM_MAP flag
-or similar when registering the eDMA, which pci-epf-test then could check,
-and not call pci_epc_mem_map() if DMA_SLAVE_SKIP_MEM_MAP is set.
+[Severity: Medium]
+Since PME_TO_ACK uses FIELD_PREP_WM16(), it sets the write mask in the
+upper 16 bits (asserting bit 25). If PCIE_CLIENT_INTR_STATUS_MSG_RX is
+a Write-1-to-Clear interrupt status register, will writing this WM16
+formatted value unintentionally clear the interrupt status for bit 25?
+If bit 25 corresponds to an active interrupt, it could be silently lost.
 
+> +	ret =3D readl_poll_timeout(rockchip->apb_base + PCIE_CLIENT_POWER,
+> +				 status, status & PME_READY_ENTER_L23,
+> +				 PCIE_PME_TO_L2_TIMEOUT_US / 10,
+> +				 PCIE_PME_TO_L2_TIMEOUT_US);
+> +	if (ret)
+> +		dev_err(dev, "Failed to get ready to enter L23 message\n");
+> +}
 
-Because, while I can read in the databook that this is not needed
-for DWC based controllers, I have no idea if the pci_epc_mem_map()
-is still needed for e.g.:
-drivers/pci/controller/cadence/pcie-cadence-ep.c
-drivers/pci/controller/pcie-rcar-ep.c
-drivers/pci/controller/pcie-rockchip-ep.c
-
-
-Kind regards,
-Niklas
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260908-rockchip-p=
+cie-system-suspend-v6-0-fbabcca9921b@collabora.com?part=3D7
