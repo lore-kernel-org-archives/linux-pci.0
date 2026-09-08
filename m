@@ -1,114 +1,208 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 42CAB54EED1
-	for <linux-pci@vger.kernel.org>; Tue,  8 Sep 2026 15:10:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 48B19559301
+	for <linux-pci@vger.kernel.org>; Tue,  8 Sep 2026 15:12:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788880206; cv=none; b=pemlMf112fjNGoT/Pc53C/0wau8a4wZHIvfUtLhuYROI+BaZDKEntUHBCjglur3zrMaWW/YoZ5yOupZSUcF+frSqPij9IB9iCUItTQLz5WoYBsb0+H6mos4XrUYBtsfVz52INap4fsIUacgzqQUrngvdHOz/ouR29gwvFzckoXk=
+	t=1788880340; cv=none; b=Tx8fJw+cbrtSsD69KjKZPvrrpHkLrMlQ6NEEaGYfTL0YNr5DALDIQv+5r7A+SmFatYnWXzeWn3mUBCp6jVIBnD0UnykUk3jhXhA+TN9OrK5eaJkq4kAqYcQybzeDZYbtdXy3re5cVdqHDA6pH5OpoB0QvkDoRkqJU++QznlsqWg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788880206; c=relaxed/simple;
-	bh=5Yc2sfjgYGsaGxjV4BUmh5b4X/TKwaYongXsKu/4b94=;
+	s=arc-20240116; t=1788880340; c=relaxed/simple;
+	bh=/WhRq8/oPTHVcQ2r/CZvn8UNfx+hI8RDR4dC1MubwKg=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=KAl8JmYW4uFk6OKX8VrvA848oFTjolkER67VBTWoqtH0IwDbD78APWR2/UErvpJJFpNMNiqyQZmE6kmMqXJzGrSzo5bktHm8Q6FpdG6PEIehrya22dO1XL5Qb7O6EqlNG2/Oou+q2kmLa02vyq3rXiEHHMcgsEWGiUoAndNhx+4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ESfYl/bz; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ESfYl/bz"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 337E81F00A3D;
-	Tue,  8 Sep 2026 15:09:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788880198;
-	bh=Q62rKSlLRSWxRlm78SMRyuJTDOdkNgXlrAmWgPf4NXY=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=ESfYl/bzFB1XZeXnua5L2crbuSA0GGibtVBJOz2rOBPYiuBwKaFG4XkWSRHs5GH75
-	 c6VDjMaylaG7hUTMYNrERoUqpnlTpfrBQoxTORt+d1H5/5Ug6h28++FicJ9NYf8Mah
-	 7mWJ+ypbS6jjb796ycpAjwcBgcseeYMh7NqqD8Pw0b7HE5xiYap9jAi19tzH+cYsoU
-	 YjwAD9MTnngOEZCKr4Bm5dsIve35d0YFaZ9jPYO3e//VS/eIL9Y8tzY2uY91LgqFgZ
-	 wZkYZqmHlyCRH+XahVkNzECcCSISRuJmm6HmPZcczJ2Dkt16rX0f4FMLEtXqfpv29r
-	 lmPCCtsBpK+Zg==
+	 Message-Id; b=nGjvrdovp/cMox2vzBSxl+25Fym4hjpGSdTaX0+MymGpQuX+4cmNK2OARDE2uA1SVE8VMhlW9zMNUV2PetkGCOqQVbg+ByGejpAQqWiXSWjv1og242aOzp1XiOH63v1RJoVB5p4PleatZfBGlmSBIMYQUcuASpnKXIWtSWfIg6U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 08E201F00A3A;
+	Tue,  8 Sep 2026 15:12:12 +0000 (UTC)
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v6 07/10] PCI: dw-rockchip: Add pme_turn_off support
+Subject: Re: [PATCH v6 09/10] PCI: dw-rockchip: Add system PM support
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Sebastian Reichel" <sebastian.reichel@collabora.com>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260908-rockchip-pcie-system-suspend-v6-7-fbabcca9921b@collabora.com>
+In-Reply-To: <20260908-rockchip-pcie-system-suspend-v6-9-fbabcca9921b@collabora.com>
 References: <20260908-rockchip-pcie-system-suspend-v6-0-fbabcca9921b@collabora.com>
- <20260908-rockchip-pcie-system-suspend-v6-7-fbabcca9921b@collabora.com>
+ <20260908-rockchip-pcie-system-suspend-v6-9-fbabcca9921b@collabora.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 08 Sep 2026 15:09:57 +0000
-Message-Id: <20260908150958.337E81F00A3D@smtp.kernel.org>
+Date: Tue, 08 Sep 2026 15:12:11 +0000
+Message-Id: <20260908151212.08E201F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 5 potential issue(=
 s) to consider:
-- [Medium] Incorrect use of FIELD_PREP_WM16() on a Write-1-to-Clear (W1C) i=
-nterrupt status register, causing unintended clearing of bit 25.
-- [Low] Redundant macro definition for the Power Management Control Registe=
-r.
+- [High] System resume unconditionally re-initializes the host, leaking the=
+ existing IRQ domain and breaking legacy INTx interrupts while executing in=
+valid GFP_KERNEL allocations in an atomic context.
+- [High] The PM operations `rockchip_pcie_suspend` and `rockchip_pcie_resum=
+e` are registered as `noirq` callbacks but call functions that can sleep.
+- [High] Missing check for the return value of reset_control_deassert() in =
+rockchip_pcie_resume().
+- [Medium] Missing `reset_control_assert` in the error handling path of `ro=
+ckchip_pcie_resume`.
+- [Medium] The order of initializing and tearing down the regulator, PHY, a=
+nd clocks in system PM callbacks contradicts the proven sequence used durin=
+g driver probe.
 --
 
-commit 10a270e398b67f78bf174b063ed14cff0ce4e43b
+commit 8a8b70dde70e09797d6c8a3b9234fe5f8265aec7
 Author: Sebastian Reichel <sebastian.reichel@collabora.com>
 
-    PCI: dw-rockchip: Add pme_turn_off support
+PCI: dw-rockchip: Add system PM support
 
-This commit prepares the Rockchip PCIe controller for system suspend support
-by adding the PME turn off operation.
+Add system PM support for Rockchip PCIe Designware Controllers.
 
+> diff --git a/drivers/pci/controller/dwc/pcie-dw-rockchip.c b/drivers/pci/=
+controller/dwc/pcie-dw-rockchip.c
+> index 47d9cab909bce..e675918ba1848 100644
 > --- a/drivers/pci/controller/dwc/pcie-dw-rockchip.c
 > +++ b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-[ ... ]
-> @@ -64,6 +65,11 @@
-> =20
->  /* Interrupt Mask Register Related to Miscellaneous Operation */
->  #define PCIE_CLIENT_INTR_MASK_MISC	0x24
-> +#define PCIE_CLIENT_POWER		0x2c
 
-[Severity: Low]
-Does this code introduce a redundant macro definition? It appears that
-PCIE_CLIENT_POWER_CON is already defined as 0x2c immediately below
-this addition.
-
-> +#define PCIE_CLIENT_MSG_GEN		0x34
-> +#define PME_READY_ENTER_L23		BIT(3)
-> +#define PME_TURN_OFF			FIELD_PREP_WM16(BIT(4), 1)
-> +#define PME_TO_ACK			FIELD_PREP_WM16(BIT(9), 1)
-> =20
->  /* Power Management Control Register */
->  #define PCIE_CLIENT_POWER_CON		0x2c
 [ ... ]
-> @@ -452,8 +458,46 @@ static int rockchip_pcie_host_init(struct dw_pcie_rp=
- *pp)
->  	return 0;
->  }
-> =20
-> +static void rockchip_pcie_pme_turn_off(struct dw_pcie_rp *pp)
+
+> +static int rockchip_pcie_suspend(struct device *dev)
 > +{
+
 [ ... ]
-> +	/* 3. Clear PME_TO_Ack and Wait for ready to enter L23 message */
-> +	rockchip_pcie_writel_apb(rockchip, PME_TO_ACK, PCIE_CLIENT_INTR_STATUS_=
-MSG_RX);
+
+> +	ret =3D dw_pcie_suspend_noirq(pci);
+> +	if (ret)
+> +		return ret;
+> +
+> +	gpiod_set_value_cansleep(rockchip->rst_gpio, 0);
+
+[Severity: High]
+Since rockchip_pcie_suspend() is registered via NOIRQ_SYSTEM_SLEEP_PM_OPS(),
+it executes as a noirq callback where local interrupts are disabled.
+
+Is it safe to call sleepable functions in this atomic context? Functions li=
+ke
+gpiod_set_value_cansleep() and clk_bulk_disable_unprepare() (which takes a
+mutex) might trigger might_sleep splats or deadlocks.
+
+> +	rockchip_pcie_phy_deinit(rockchip);
+> +	clk_bulk_disable_unprepare(rockchip->clk_cnt, rockchip->clks);
+> +	reset_control_assert(rockchip->rst);
+> +	if (rockchip->vpcie3v3)
+> +		regulator_disable(rockchip->vpcie3v3);
+> +
+> +	return 0;
+> +}
+> +
+> +static int rockchip_pcie_resume(struct device *dev)
+> +{
+
+[ ... ]
+
+> +	ret =3D clk_bulk_prepare_enable(rockchip->clk_cnt, rockchip->clks);
 
 [Severity: Medium]
-Since PME_TO_ACK uses FIELD_PREP_WM16(), it sets the write mask in the
-upper 16 bits (asserting bit 25). If PCIE_CLIENT_INTR_STATUS_MSG_RX is
-a Write-1-to-Clear interrupt status register, will writing this WM16
-formatted value unintentionally clear the interrupt status for bit 25?
-If bit 25 corresponds to an active interrupt, it could be silently lost.
+Does this sequence invert the hardware initialization dependencies used dur=
+ing
+driver probe?
 
-> +	ret =3D readl_poll_timeout(rockchip->apb_base + PCIE_CLIENT_POWER,
-> +				 status, status & PME_READY_ENTER_L23,
-> +				 PCIE_PME_TO_L2_TIMEOUT_US / 10,
-> +				 PCIE_PME_TO_L2_TIMEOUT_US);
-> +	if (ret)
-> +		dev_err(dev, "Failed to get ready to enter L23 message\n");
+During probe, the driver enables the regulator, initializes the PHY, deasse=
+rts
+reset, and then enables the clocks. Here in rockchip_pcie_resume(), the clo=
+cks
+are enabled first, followed by the regulator and PHY. Could this inverted
+order cause link-training bugs or PHY lockups?
+
+> +	if (ret) {
+> +		dev_err(dev, "clock init failed: %d\n", ret);
+> +		return ret;
+> +	}
+> +
+> +	if (rockchip->vpcie3v3) {
+> +		ret =3D regulator_enable(rockchip->vpcie3v3);
+> +		if (ret)
+> +			goto err_disable_clk;
+> +	}
+> +
+> +	ret =3D rockchip_pcie_phy_init(rockchip);
+> +	if (ret) {
+> +		dev_err(dev, "phy init failed: %d\n", ret);
+> +		goto err_disable_regulator;
+> +	}
+> +
+> +	reset_control_deassert(rockchip->rst);
+
+[Severity: High]
+Does this code handle reset_control_deassert() failures?
+
+If reset_control_deassert() fails, the driver immediately proceeds to write=
+ to
+the IP block's APB registers. If the hardware reset was not actually releas=
+ed,
+accessing these registers could trigger a synchronous external abort and ke=
+rnel
+panic.
+
+> +
+> +	rockchip_pcie_writel_apb(rockchip, FIELD_PREP_WM16(0xffff, rockchip->in=
+tx),
+> +				 PCIE_CLIENT_INTR_MASK_LEGACY);
+> +
+> +	rockchip_pcie_enable_enhanced_ltssm_control_mode(rockchip, 0);
+> +	rockchip_pcie_set_controller_mode(rockchip, PCIE_CLIENT_MODE_RC);
+> +	rockchip_pcie_unmask_dll_indicator(rockchip);
+> +
+> +	gpiod_set_value_cansleep(rockchip->rst_gpio, 1);
+> +
+> +	ret =3D dw_pcie_resume_noirq(pci);
+
+[Severity: High]
+Does system resume unconditionally re-initialize the host, leaking the exis=
+ting
+IRQ domain and breaking legacy INTx interrupts?
+
+When dw_pcie_resume_noirq() is called, it invokes the host initialization
+callback rockchip_pcie_host_init(), which then calls
+rockchip_pcie_init_irq_domain():
+
+rockchip_pcie_host_init()
+  rockchip_pcie_init_irq_domain()
+    rockchip->irq_domain =3D irq_domain_create_linear(of_fwnode_handle(intc=
+),
+                                                    PCI_NUM_INTX,
+                                                    &intx_domain_ops,
+                                                    rockchip);
+
+This executes an invalid GFP_KERNEL allocation inside the atomic noirq phas=
+e,
+overwrites the existing irq_domain pointer (leaking the old domain), and dr=
+ops
+existing INTx mappings.
+
+> +	if (ret) {
+> +		dev_err(dev, "failed to resume: %d\n", ret);
+
+[ ... ]
+
+> +err_deinit_phy:
+> +	gpiod_set_value_cansleep(rockchip->rst_gpio, 0);
+> +	rockchip_pcie_phy_deinit(rockchip);
+> +err_disable_regulator:
+
+[Severity: Medium]
+Does this error path leave the hardware controller in an inconsistent,
+permanently deasserted state?
+
+If dw_pcie_resume_noirq() fails, the error handling block tears down the PH=
+Y,
+clocks, and regulator, but it seems to miss calling
+reset_control_assert(rockchip->rst).
+
+> +	if (rockchip->vpcie3v3)
+> +		regulator_disable(rockchip->vpcie3v3);
+> +err_disable_clk:
+> +	clk_bulk_disable_unprepare(rockchip->clk_cnt, rockchip->clks);
+> +	return ret;
 > +}
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260908-rockchip-p=
-cie-system-suspend-v6-0-fbabcca9921b@collabora.com?part=3D7
+cie-system-suspend-v6-0-fbabcca9921b@collabora.com?part=3D9
