@@ -1,44 +1,43 @@
 Received: from bali.collaboradmins.com (bali.collaboradmins.com [148.251.105.195])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C7EB9554083;
-	Tue,  8 Sep 2026 14:52:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A3A9754A7C9;
+	Tue,  8 Sep 2026 14:52:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.251.105.195
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788879134; cv=none; b=pTmi9KrHkE56D8PjOMIGLDZtkity89y0IZSh95D1zbY5Gr63nrm2d5ZNQaVxNkIcZQ74biIxEDwp78ge/45A3eHYBS00QZJFQuOrGcU7IevbIqJ3JiKU2XbQe7fjJ1JbJYuomWkOR7RTokksZYfQGuXE7YfOWG9OFjo7ECjdZbE=
+	t=1788879137; cv=none; b=IAoWkZiDeaEAA11yQ4iHpd1dAfS9AeXmoTzvBUuRILLKH6ByrrRO0gOXsVcCi5S0M9o6N4mts+pIYAr/mLjxXBN1iWYiNOHbeIt+YSxdSRiZPT18e8+mG2+2LDYkMMIkBxJH2dfDLVvl8v98gxknE4PK516VwSeDUx3G9XxG6w4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788879134; c=relaxed/simple;
-	bh=pQ075WLFf2brXAVxwHCIqRV7MiZ2UQ9bz57J6cuXjls=;
+	s=arc-20240116; t=1788879137; c=relaxed/simple;
+	bh=ZfxhLkyDar7QOwr+Kdk2fm5x7d8U5zVs/P2O97TfAjw=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=fo3MhqUyd0zPsDK7poM6ZQuYmrpFxesdZ3pi+Ih+jENAWcIX6v+K1372FmqUJGCz/bMWsZAStsJTcwaM+g/cTxWwOBWLqVSzv2VY8hy/MRUXx2ghPt2AinczPPDBDGoGl7X1ze7KqPn8tAn/xJyS6p9me4okz1t4qQmQ0/V2/B8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b=Tlr2ZA8x; arc=none smtp.client-ip=148.251.105.195
+	 In-Reply-To:To:Cc; b=SFLWoK/bgE4DfO3Desq/Q6KyUdxhtzprbSzxw+Cj92tjRbEi2PzVaOe7n9MAqYkeeuhaLu1qy76kz12c7+NQyS8IagX4OmMsOcu3bO+FbvOuruXOjtC/Tfdb4BdAVa6VIXma46I0WWNl4o+8+XVQ0k7VT+VFcOMRNN8Jrc08XkE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b=I8lYyIa0; arc=none smtp.client-ip=148.251.105.195
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b="Tlr2ZA8x"
+	dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b="I8lYyIa0"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=collabora.com;
 	s=mail; t=1788879101;
-	bh=pQ075WLFf2brXAVxwHCIqRV7MiZ2UQ9bz57J6cuXjls=;
+	bh=ZfxhLkyDar7QOwr+Kdk2fm5x7d8U5zVs/P2O97TfAjw=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=Tlr2ZA8xG8wupPbHFg9adiM37IzUpaw5DIVzYbhDijv9DA17+mrqZFRk65xYfRwiR
-	 8a0CRf1mx3QWt1+636B/HbF0n9eXQUQBE4jNvB3EBL3AVrOvTz+uCxM2mWjcdefVvL
-	 u0zGkbOPIlU6dRNLpONP4FMOD0QHhxq4RmOYobKVV1Nz4Tv4it8soBwKhwd0t6Y10m
-	 8Ty+TkI+AIkKsfsdLD37uucyxpSiN7hwLYfWpTZ9OzXEKtF64l3Ltzp6dFk1LW+Nms
-	 5yLvLBOtESuEsTRQFdrkamDPibFzYFDvceuUYurdPAkcarG9jhxI4YIkdEQESEH+nq
-	 33sfrsABq5cLA==
+	b=I8lYyIa0jegdk6hb0a5KgEp36jQFVuep5w5QMNSwxJSwbbvei3voypD/SjpgVV+PQ
+	 FekQYpH+Nb2V0PUaYtfiKJL5uUbr5ZxEFI2yPogmJQ/+ybmyhZgttpRBF65Mtq+JDl
+	 1IQIYwO5yvqjeuudSOFROf93L6sQGo70nSSUHUl+frTsZ20741C2lln9Whfuf5Dv5r
+	 dSaVkLevPHWJQFlV8oeEN9x0TDsdmnkq1G8W4icmNBRq2gsiSYXiCU3imNjn9lDffd
+	 8C6liZz8vnix6mm5Nuj4R7qt47IuuYOPyDe+LFK8f6QFYpmqPcqXB3VM97m4MxtUyf
+	 xekszrCj8uPfA==
 Received: from jupiter.universe (unknown [100.64.1.62])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange x25519)
 	(No client certificate requested)
 	(Authenticated sender: sre)
-	by bali.collaboradmins.com (Postfix) with ESMTPSA id 35DD017E0D7F;
+	by bali.collaboradmins.com (Postfix) with ESMTPSA id 3D84D17E0EB0;
 	Tue, 08 Sep 2026 16:51:41 +0200 (CEST)
 Received: by jupiter.universe (Postfix, from userid 1000)
-	id 95DE1480038; Tue, 08 Sep 2026 16:51:40 +0200 (CEST)
+	id 9949E48003D; Tue, 08 Sep 2026 16:51:40 +0200 (CEST)
 From: Sebastian Reichel <sebastian.reichel@collabora.com>
-Date: Tue, 08 Sep 2026 16:51:24 +0200
-Subject: [PATCH v6 06/10] PCI: dw-rockchip: Add helper function for DDL
- indicator
+Date: Tue, 08 Sep 2026 16:51:26 +0200
+Subject: [PATCH v6 08/10] PCI: dw-rockchip: Set broken L1SS resume flag
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -47,7 +46,7 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260908-rockchip-pcie-system-suspend-v6-6-fbabcca9921b@collabora.com>
+Message-Id: <20260908-rockchip-pcie-system-suspend-v6-8-fbabcca9921b@collabora.com>
 References: <20260908-rockchip-pcie-system-suspend-v6-0-fbabcca9921b@collabora.com>
 In-Reply-To: <20260908-rockchip-pcie-system-suspend-v6-0-fbabcca9921b@collabora.com>
 To: Lorenzo Pieralisi <lpieralisi@kernel.org>, 
@@ -64,73 +63,67 @@ Cc: Alexey Charkov <alchark@flipper.net>, linux-pci@vger.kernel.org,
  linux-kernel@vger.kernel.org, kernel@collabora.com, 
  Sebastian Reichel <sebastian.reichel@collabora.com>
 X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1947;
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1793;
  i=sebastian.reichel@collabora.com; h=from:subject:message-id;
- bh=pQ075WLFf2brXAVxwHCIqRV7MiZ2UQ9bz57J6cuXjls=;
- b=owJ4nAFtApL9kA0DAAoB2O7X88g7+poByyZiAGqgIPxanYSFeNaTKI80U9Qk5pMvLkD/tATIm
- bJl2oJDZLST14kCMwQAAQoAHRYhBO9mDQdGP4tyanlUE9ju1/PIO/qaBQJqoCD8AAoJENju1/PI
- O/qaIeQP/2bqoeDyDW7+kPK44HOhBltY6S7QNU3cZa+i6Q8PIxcsQXUjVfb8OoBsWSKB8YvIrqJ
- x2GzmmRTwNlvzcdaq3wZ6a9za/lmATJoLnM4gv+yC5Wfnq6+qcu2kDMrtLx/D3+Wih7WGF5cTyS
- jOAg4gzcf3HYU03/cpcp/xJsmdW+h3DPCrkp7Imf+6aOC6R1j+0PU3zC8IoJi0CdNC7SsIxncuZ
- seMM/55ddl9jWkM7TYyZGqjwYiKxP2QnAfLPhSXjAUHChHgGcOfZlSH4M/Odd81zwpTEiXNLhyt
- GsxLUxsgrV/SUSSqruNMuDhGdbOP6OTY2LIVHn4YSY24I7HKWZCFNofs5t9X7E6T8ntbMQkjfWx
- KO6sMZUfzbGdqKvlutq2Yv6Z78iTRLGvNZKdC9F0AVsRtadNIfOiV1N2WMqYHHXpYM96/icyLtj
- Shj0rNBUBWF9K+1SSFvGvzhcBEuFPghLKLE9VzxbZrURkfizsPdyLR9kqQDEbpZertOyAev1M85
- 9maIGOXdasRs/KO18Lr2C6uP3q8fJSO3NRqjOFoMihM2+BTq6gKOnBejTEUx4dooDlTrghWq9GB
- FH2ZrblBWvvtF5HMubmv0DEvRxDAfs9ROGVY2RxT8FvVgt4xH20w9M6tA1vy70BRjhIKxPnkpxN
- TQYkvtHyh9gunyGptVQo3mw==
+ bh=ZfxhLkyDar7QOwr+Kdk2fm5x7d8U5zVs/P2O97TfAjw=;
+ b=owJ4nAFtApL9kA0DAAoB2O7X88g7+poByyZiAGqgIPxJGUR4srONtxKLTKD8iRMLzHqyacXSU
+ urMkN+gYiF/WIkCMwQAAQoAHRYhBO9mDQdGP4tyanlUE9ju1/PIO/qaBQJqoCD8AAoJENju1/PI
+ O/qa4bQP/RAVyzs6Q5cmYt9KdhW4mRITRHknDz3whcxrHmHfBVHR8lxrZjeVOY8kKCeKoKdCBlP
+ Q8+d+B9u8hBwrsaUfYbUzR64z3LvmYtzFkaGCWXEjS2RSIK3xHtkaOP2dsZLzgzkU7ETC7etRmN
+ KdV6I/rtKWN3wCLRWHs8HZvn9FoXv6as4FKnqBKiMIhNjWJY5fBKKrFoPrSxJMlUIkwYU6/skbJ
+ lnFBE5aJt7IO0YXXfI7yJox46FidoKltTKj8rxURAeDkVORKcxzVMTOpLiBIytq5SykfP44Ax2o
+ 61se21x8mhC0PQ2owE3FcF44GUDxyLqK//1Bgv9VNiNJ00Agz2TNWH/RtQwsP+VflY/ypb+kJ1L
+ nki861JQYSP0sTvTmIu5yc8DvI7xJXGfOxmkaKC16+Gq1LHQhMnH95OgrHXOa++KTKxLgn7ySuV
+ nXSPPqLkKEgX7lbuiacIfQkaAvEEsgDL5OmRzipsB9XmGUsIMp0gaa25zqdgRMa/NQQviC3V5G+
+ v1nreo7Tt+na2cI3goYJGb9uGCKiqnOhlSxjYW0llTJeqegXj7J3yzLPo9BV2DYA8IW6bjALz4E
+ cDhgCbUUD42jX0GaYCRvdcICEEpmiL/OYtc8mo34hXWdYI/AchN+++U1xKsOve9grVeUVS9XmyR
+ /teDWU0A0DDvas9bAQSArTQ==
 X-Developer-Key: i=sebastian.reichel@collabora.com; a=openpgp;
  fpr=EF660D07463F8B726A795413D8EED7F3C83BFA9A
 
-Remove code duplication and improve readability by introducing a new
-function to setup the DLL indicator.
+Setup the broken_l1ss_resume flag, so that pci_suspend_retains_context()
+returns false on the Rockchip platform allowing PCIe peripheral device
+drivers to act upon.
 
 Signed-off-by: Sebastian Reichel <sebastian.reichel@collabora.com>
 ---
- drivers/pci/controller/dwc/pcie-dw-rockchip.c | 16 +++++++++++-----
- 1 file changed, 11 insertions(+), 5 deletions(-)
+ drivers/pci/controller/dwc/pcie-dw-rockchip.c | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
 
 diff --git a/drivers/pci/controller/dwc/pcie-dw-rockchip.c b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-index 211776bbcb99..1e48099e36e4 100644
+index 17530507e41b..47d9cab909bc 100644
 --- a/drivers/pci/controller/dwc/pcie-dw-rockchip.c
 +++ b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-@@ -713,6 +713,16 @@ static void rockchip_pcie_set_controller_mode(struct rockchip_pcie *rockchip, u3
- 	rockchip_pcie_writel_apb(rockchip, PCIE_CLIENT_SET_MODE(mode), PCIE_CLIENT_GENERAL_CON);
+@@ -458,6 +458,21 @@ static int rockchip_pcie_host_init(struct dw_pcie_rp *pp)
+ 	return 0;
  }
  
-+static void rockchip_pcie_unmask_dll_indicator(struct rockchip_pcie *rockchip)
++static void rockchip_pcie_host_post_init(struct dw_pcie_rp *pp)
 +{
-+	u32 val;
-+
-+	/* unmask DLL up/down indicator and hot reset/link-down reset */
-+	val = FIELD_PREP_WM16(PCIE_RDLH_LINK_UP_CHGED, 0) |
-+	      FIELD_PREP_WM16(PCIE_LINK_REQ_RST_NOT_INT, 0);
-+	rockchip_pcie_writel_apb(rockchip, val, PCIE_CLIENT_INTR_MASK_MISC);
++	/*
++	 * During system suspend, the Rockchip RC driver effectively powers off
++	 * the controller. If the link is in L1SS and the endpoint asserts
++	 * CLKREQ# to exit L1SS, the time required to wake the system and
++	 * restore the PHY/REFCLK may exceed the L1SS exit timing
++	 * (L10_REFCLK_ON + T_COMMONMODE), resulting in Link Down (LDn) and a
++	 * reset of the endpoint. Set this flag to indicate this limitation to
++	 * client drivers so that they can avoid relying on device state being
++	 * preserved during system suspend.
++	 */
++	pp->bridge->broken_l1ss_resume = true;
 +}
 +
- static int rockchip_pcie_configure_rc(struct platform_device *pdev,
- 				      struct rockchip_pcie *rockchip)
+ static void rockchip_pcie_pme_turn_off(struct dw_pcie_rp *pp)
  {
-@@ -760,7 +770,6 @@ static int rockchip_pcie_configure_ep(struct platform_device *pdev,
- {
- 	struct device *dev = &pdev->dev;
- 	int irq, ret;
--	u32 val;
+ 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+@@ -497,6 +512,7 @@ static void rockchip_pcie_pme_turn_off(struct dw_pcie_rp *pp)
  
- 	if (!IS_ENABLED(CONFIG_PCIE_ROCKCHIP_DW_EP))
- 		return -ENODEV;
-@@ -800,10 +809,7 @@ static int rockchip_pcie_configure_ep(struct platform_device *pdev,
+ static const struct dw_pcie_host_ops rockchip_pcie_host_ops = {
+ 	.init = rockchip_pcie_host_init,
++	.post_init = rockchip_pcie_host_post_init,
+ 	.pme_turn_off = rockchip_pcie_pme_turn_off,
+ };
  
- 	pci_epc_init_notify(rockchip->pci.ep.epc);
- 
--	/* unmask DLL up/down indicator and hot reset/link-down reset */
--	val = FIELD_PREP_WM16(PCIE_RDLH_LINK_UP_CHGED, 0) |
--	      FIELD_PREP_WM16(PCIE_LINK_REQ_RST_NOT_INT, 0);
--	rockchip_pcie_writel_apb(rockchip, val, PCIE_CLIENT_INTR_MASK_MISC);
-+	rockchip_pcie_unmask_dll_indicator(rockchip);
- 
- 	return ret;
- }
 
 -- 
 2.53.0
