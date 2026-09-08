@@ -1,151 +1,187 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E979D492E28
-	for <linux-pci@vger.kernel.org>; Tue,  8 Sep 2026 23:13:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D4365221D9;
+	Tue,  8 Sep 2026 23:21:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788909231; cv=none; b=arcanmYbO8B7CS0+IWBbPOPLK2ZiUn+83WSTninLm0dZlvl5aujg9wEwv1eU748ysSxQC0q6mFvTuQJ17IZnCqt3cgXPs1KugjwwbDxDTZiNMoyGyRX2OXiy0lKUBOOG92dCCG+CI+cPsk9pqT5+VmTCiDHdfU6JGb0M5CsPcKE=
+	t=1788909715; cv=none; b=XlJcqsSoE1k4o1t+qsB7Wc8dCpp+vTVFGqvnnOsOi25+xse9MUpjwXIqd/QW4C1PdL7SXHhnLD6lTMSOAwr8EzvTKfdEqgQDcKhAWYkRY6kwBjVnjjk029uirQ2khlusoCYaWrntn72k0enjw+YkB7QAM4UG49R2LmdcRns4IZs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788909231; c=relaxed/simple;
-	bh=78e91oN67zU1jyFMwrNMUpv3/C8d1ZVGcTJGYFuTPA0=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=UnxJNzibHBE4vTrxJ26dHrMFfyxgwkMUAJhufanOn5TQ1wABuhR+ZJJa/fTMNklcUFGkamSDevjsSJDclphR5HO6S/0hl+mPc4Yxl9fyjVy59jvKkBcZBAybNvwQ6EL0jJKnjFTn+3gC0KBpv/TwCkE43fM4owmvczwBydiY/c0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=l7RCshke; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788909715; c=relaxed/simple;
+	bh=yQy3C20jHoJxnOr0MiUkNqcxgp3fW/JsyluhuzjAQCY=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=SKeVgbimFqc6/knJRW3eaL1IK6x+qy+V1QzqowtYMx/k/MehgxwzHqezhkwtfHgiAo7B4g1egIur8azUE/6Dr4lMKzHaY4Sx1fi3yFXguSywGGu+uzdfnTTcMKL4Kvdoem+5Ph39g3ajfyYSf+ZCDJD7/I7/W1KYhnK+drJzy88=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UDFbIPNJ; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="l7RCshke"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 682101F00A3A;
-	Tue,  8 Sep 2026 23:13:49 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UDFbIPNJ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4B9D11F00A3D;
+	Tue,  8 Sep 2026 23:21:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788909229;
-	bh=DxLRI577wFA2Ug7GM4yuDNC/CH33CulzAsn7HA29nzg=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=l7RCshkeT93cXo6NcsPsKcO6C7Fzb5m7i1J6hsTQpfrV0KtCz9VLp8UV4xggRZXYR
-	 SfWA1Y/KK/AJnixCMLusejaJ3Y4s3mTmSKetOj9++gagmmLWCn4AxL8YJ4a/gPhWSa
-	 P/0Z1HKzLzlCtGwGetw77UWyDNBX5JbJnENPY0IYEJDc1Drj377hJyi/Ykg8U9dg5q
-	 5+ayfNX3ZdegyQUCX9oGcjady+WDlsmNghHBXNrCbWd/KrO5UfrCQlbahpvPGBamwm
-	 H3t8GOUTQyApB6azBLVNRcpZuRxsNGVFpxo1eM76EXuvZVO/LsNE2KjGmpx5rO62mt
-	 X98bzDuTGoFbw==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5] PCI: Fix BAR resize for devices on a root bus
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Liz Fong-Jones" <lizf@honeycomb.io>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260908-pci-rebar-root-bus-v5-1-a210f405ea81@honeycomb.io>
-References: <20260908-pci-rebar-root-bus-v5-1-a210f405ea81@honeycomb.io>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 08 Sep 2026 23:13:48 +0000
-Message-Id: <20260908231349.682101F00A3A@smtp.kernel.org>
+	s=k20260515; t=1788909708;
+	bh=NLvH9u4KzvhJ0LMUBoEDzEmZPA+sdK1nFAVbS9YzTTw=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References;
+	b=UDFbIPNJTkuujIyYJ35I07fgmj6iilC3ms1rPcsRaEtxVwo3lTQEmQW+j+WGKfyX6
+	 YGS4KR9mRLrP6RgJ/TkGujy3TWYChrCM/RvPWDS0ndaeCdYior8wsDaDw+ovruBvXT
+	 59dfkIHk70YepneWjz/RgCI8yMjP2jmO2jjBBF1BTPzC6QsawE1OShdeM3YcL/qRyU
+	 +UNaRBw1UROEKuoWfg6a0/fTDclMqSHqMWrzi//wzzIzoai7a1c9ltG3k+j+njVcg7
+	 uuYzsGAla7lcaY71FrSrnrE6VjU7/m1LML0fQf7r/Ibohz3iLY0RyzIewXAbIsFp66
+	 0Y/2lNzG33k4g==
+Date: Wed, 9 Sep 2026 00:21:42 +0100
+From: Jonathan Cameron <jic23@kernel.org>
+To: alistair23@gmail.com
+Cc: linux-pci@vger.kernel.org, Jonathan.Cameron@huawei.com, djbw@kernel.org,
+ rust-for-linux@vger.kernel.org, lukas@wunner.de, alistair@alistair23.me,
+ linux-cxl@vger.kernel.org, bhelgaas@google.com, akpm@linux-foundation.org,
+ linux-kernel@vger.kernel.org, gary@garyguo.net, ojeda@kernel.org,
+ benno.lossin@proton.me, a.hindborg@kernel.org, wilfred.mallawa@wdc.com,
+ tmgross@umich.edu, boqun.feng@gmail.com, bjorn3_gh@protonmail.com,
+ alex.gaynor@gmail.com, aliceryhl@google.com, Alistair Francis
+ <alistair.francis@wdc.com>
+Subject: Re: [PATCH v3 12/21] PCI/CMA: Add a PCI TSM CMA driver using SPDM
+Message-ID: <20260909002142.2d863d2a@jic23-huawei>
+In-Reply-To: <20260901010347.2614656-13-alistair.francis@wdc.com>
+References: <20260901010347.2614656-1-alistair.francis@wdc.com>
+	<20260901010347.2614656-13-alistair.francis@wdc.com>
+X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
+On Tue,  1 Sep 2026 11:03:38 +1000
+alistair23@gmail.com wrote:
 
-New issues:
-- [High] Stricter resource assignment check on root bus fails BAR resize if=
- optional resources (like ROM BARs) cannot be assigned.
+> From: Alistair Francis <alistair.francis@wdc.com>
+> 
+> Component Measurement and Authentication (CMA, PCIe r6.2 sec 6.31)
+> allows for measurement and authentication of PCIe devices.  It is
+> based on the Security Protocol and Data Model specification (SPDM,
+> https://www.dmtf.org/dsp/DSP0274).
+> 
+> CMA-SPDM in turn forms the basis for Integrity and Data Encryption
+> (IDE, PCIe r6.2 sec 6.33) because the key material used by IDE is
+> transmitted over a CMA-SPDM session.
+> 
+> As a first step, add support for authentication via a CMA TSM driver.
+> 
+> This was previously discusd here:
+> http://lore.kernel.org/69976d7d39c60_2f4a1009@dwillia2-mobl4.notmuch
+> 
+> By utilising a TSM driver we get a lot of the TSM driver probe policies
+> "for free". Currently there is no mechanism to provide evidence to
+> userspace, as the TSM system doesn't support that at the moment. That
+> can be added later when support by TSM.
+> 
+> Credits: Jonathan wrote the original proof-of-concept for a CMA implementation.
+> Lukas reworked that for upstream. Wilfred contributed fixes for issues
+> discovered during testing. Alistair reworked it as a TSM driver.
+> 
+> Signed-off-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+> Co-developed-by: Wilfred Mallawa <wilfred.mallawa@wdc.com>
+> Signed-off-by: Wilfred Mallawa <wilfred.mallawa@wdc.com>
+> Co-developed-by: Lukas Wunner <lukas@wunner.de>
+> Signed-off-by: Lukas Wunner <lukas@wunner.de>
+> Signed-off-by: Alistair Francis <alistair.francis@wdc.com>
 
-Pre-existing issues:
-- [High] Space stolen by other devices during resource assignment breaks th=
-e rollback in the `restore` path.
---
+A few things inline.  I have no idea if I'm poking holes in 
+my own code or if none of that is left :)
 
-commit 72e60fcada94a7186e28648f6c748fdfeb09e254
-Author: Liz Fong-Jones <lizf@honeycomb.io>
+>  
+> diff --git a/drivers/pci/cma.c b/drivers/pci/cma.c
+> new file mode 100644
+> index 000000000000..9f2cc0b2ec8a
+> --- /dev/null
+> +++ b/drivers/pci/cma.c
 
-PCI: Fix BAR resize for devices on a root bus
+...
 
-pci_do_resource_release_and_resize() releases the device BARs that share a
-bridge window with the BAR being resized, but when the device sits directly=
- on
-a root bus it skips resource assignment and leaves the BARs unassigned.
-When there is no upstream bridge, this patch calls pci_bus_assign_resources=
-()
-on the root bus to place the released BARs. A stricter validation is then u=
-sed
-to fail if any unplaced resources remain.
 
-Link: https://bugs.launchpad.net/ubuntu/+source/linux-hwe-7.0/+bug/2159596
 
-> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-> index e8c94aa1d3c12..ed16ef7c26fa7 100644
-> --- a/drivers/pci/setup-bus.c
-> +++ b/drivers/pci/setup-bus.c
+> +static int pci_cma_tsm_connect(struct pci_dev *pdev)
+> +{
+> +	struct pci_cma_tsm *cma = cma_tsm_from_tsm(pdev->tsm);
+> +	int rc;
+> +
+> +	/*
+> +	 * The DOE mailbox lives in the device's config space, so the
+> +	 * device must be runtime-resumed for the duration of the SPDM
+> +	 * exchange.
 
-[ ... ]
+Oddly short wrap. Comments go to 80
+	/*
+	 * The DOE mailbox lives in the device's config space, so the device
+	 * must be runtime-resumed for the duration of the SPDM exchange.
 
-> @@ -2415,13 +2418,21 @@ int pci_do_resource_release_and_resize(struct pci=
-_dev *pdev, int resno, int size
-> =20
->  	pci_resize_resource_set_size(pdev, resno, size);
-> =20
-> -	if (!bus->self)
-> -		goto out;
-> +	if (bridge) {
-> +		ret =3D pbus_reassign_bridge_resources(bus, res, &saved);
-> +		if (ret)
-> +			goto restore;
-> +	} else {
-> +		/* No bridge window to adjust; let the core reassign the bus. */
-> +		pci_bus_assign_resources(bus);
-> =20
-> -	down_read(&pci_bus_sem);
-> -	ret =3D pbus_reassign_bridge_resources(bus, res, &saved);
-> -	if (ret)
-> -		goto restore;
-> +		list_for_each_entry(dev_res, &saved, list) {
-> +			if (!resource_assigned(dev_res->res)) {
-> +				ret =3D -ENOSPC;
-> +				goto restore;
-                                ^^^^^^^^^^^^
+> +	 */
+> +	rc = pm_runtime_get_sync(&pdev->dev);
+	rc = pm_runtime_resume_and_get(&pdev->dev)
+	if (rc < 0)
+		return rc;
 
-[Severity: High]
-This isn't a bug introduced by this patch, but does jumping to the restore
-path risk leaving the device unassigned if the original resource space was
-stolen?
+See comments in docs for pm_runtime_get_sync() for info on this.
+Basically it doesn't mess up reference counting so you don't need
+to fix it in the error path.
 
-If another device on the same bus is assigned into the space just freed by =
-the
-target device during pci_bus_assign_resources(), the restore path in
-pci_do_resource_release_and_resize() will fail to claim it back:
+Mind you, I haven't looked ahead but we have ACQUIRE macros for
+runtime PM that might apply nicely here and remove need to release anything
+at all.
 
-	list_for_each_entry(dev_res, &saved, list) {
-		...
-		if (pci_claim_resource(dev, i))
-			continue;
-		...
-	}
+	PM_RUNTIME_ACQUIRE(&pdev->dev, pm);
+	if (PM_RUNTIME_ACQUIRE_ERR(&pm))
+		return -ENXIO;
 
-Since pci_claim_resource() fails when the space is occupied, could the devi=
-ce
-be left with unassigned BARs and completely broken?
+	
 
-> +			}
-
-[Severity: High]
-Does this stricter check unintentionally fail the BAR resize if an optional
-resource (like a ROM BAR) could not be assigned?
-
-If a driver requests a BAR resize and pci_bus_assign_resources() succeeds f=
-or
-the resized BAR but leaves an optional ROM BAR unassigned, the check for
-!resource_assigned(dev_res->res) will trigger a rollback with -ENOSPC.
-
-Could this functionally break valid BAR resizes on root buses just because =
-an
-optional resource was unassigned?
-
-> +		}
+> +	if (rc < 0) {
+> +		pm_runtime_put_noidle(&pdev->dev);
+> +		return rc;
 > +	}
-> =20
->  out:
->  	up_read(&pci_bus_sem);
+> +
+> +	rc = spdm_authenticate(cma->spdm);
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260908-pci-rebar-=
-root-bus-v5-1-a210f405ea81@honeycomb.io?part=3D1
+If you can use ACQUIRE stuff
+	return spdm_authenticate(cma->spdm);
+
+> +
+> +	pm_runtime_put_sync(&pdev->dev);
+> +	return rc;
+> +}
+
+> +
+> +static const struct pci_tsm_ops pci_cma_tsm_ops = {
+> +	.link_ops = {
+> +		.probe		= pci_cma_tsm_probe,
+> +		.remove		= pci_cma_tsm_remove,
+> +		.connect	= pci_cma_tsm_connect,
+> +		.disconnect	= pci_cma_tsm_disconnect,
+> +		.bind		= pci_cma_tsm_bind,
+> +		.unbind		= pci_cma_tsm_unbind,
+> +		.guest_req	= pci_cma_tsm_guest_req,
+> +	},
+> +};
+> +
+> +static struct tsm_dev *pci_cma_tsm_dev;
+> +
+> +static int __init pci_cma_tsm_init(void)
+> +{
+> +	struct tsm_dev *tsm_dev;
+> +
+> +	tsm_dev = tsm_register(NULL, (struct pci_tsm_ops *)&pci_cma_tsm_ops);
+
+So this is casting away the const.   Why does tsm_register not take a const?
+Can we change that as seems unlikely it will actually modify it?
+If there is any chance of a modification in future then we need to drop
+the const marking on the structure above.
+
+
+> +	if (IS_ERR(tsm_dev))
+> +		return PTR_ERR(tsm_dev);
+> +
+> +	pci_cma_tsm_dev = tsm_dev;
+> +	return 0;
+> +}
+> +late_initcall(pci_cma_tsm_init);
