@@ -1,142 +1,100 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF8B159573C
-	for <linux-pci@vger.kernel.org>; Tue,  8 Sep 2026 17:33:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 10617599A46;
+	Tue,  8 Sep 2026 17:47:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788888826; cv=none; b=MnQ82U6cVbrtR3Kh8lHZaT3l2+NgiAzCiY8ZIPZCKDbZ7q+iGYgp+YsFsOp9ulPmBFettL49JbWCS71hCm1XQYWcv+LU/D6NcVFhO6x3tbhMFxufzrVGgEyMYbTA/nsM+KwCQEpiZfZvHJqzjXcbi0CWgAZ+jCg44KbCR/6Evv0=
+	t=1788889647; cv=none; b=QvKMgnSk1GBubPfvhAlmc5zlkbm3xlLr9Y7JcI1z+MaXt0YKQXiMqWQOlVB/Qan0nIAKWbzKJjpZHFolowa7z1+/s0h6GmJYGRGZFndhBj0obWyIx5TzXFYxsK+yK1ffAtsTvlYcR0wpKhNIx/6/Rvm++iEgjMa7syk2EzZWWQs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788888826; c=relaxed/simple;
-	bh=gmIGR0/AjmJLqjqIA+b+biNqhfd5J7r7shYDGeksk7M=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=Py4dfJtQ9+xfu17s6TGb/2sJRlaUniI0xvJ9jVoQ5PpuvemQLirTwRfCQVKBivlnl4qxx8LefdTw1Al2c19Awi8y+y06RHlDKGb7Jn5IfYjYIAB0mIj9Z4OSExcoVcaSK0OiWbNDHc3YstzzzA7xb8mr3xfePbQ3YuqWCo+OvRg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oYUkJxyp; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788889647; c=relaxed/simple;
+	bh=nygTdh8fjI6CsKh6M1+ORwA70aR0m6XMje96txRY9JE=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=O7vSPSYKj5E66Ul+ECFCxIEksihRFkdKXxtZqEygkRFRpNUMn8Tw+BF7uL2/V3gHar+ccmbi57LwPV8rcoF3X2VhnvgYKh3ui3yxZ8qrUwQdefdqubHqrDF4TiQNAqZEvQKVdbLa5V1ncnr3s3D4rF36C5pu9GoPz0qPPhUtazw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Z3f4f3xx; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oYUkJxyp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1B3D91F00ADB
-	for <linux-pci@vger.kernel.org>; Tue,  8 Sep 2026 17:33:43 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Z3f4f3xx"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4648E1F00A3A;
+	Tue,  8 Sep 2026 17:47:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788888823;
-	bh=gmIGR0/AjmJLqjqIA+b+biNqhfd5J7r7shYDGeksk7M=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc;
-	b=oYUkJxypWqLI8uJLzQPHxhQ71Ks/IyFSnoobdkhybHg/VFrZcScUaUzcU5iGJu3Yg
-	 SVr1zNYq9lzWcvDiEUcX1atpf0jaVT6xPToEVsGnnnsYQD5x0GXAUtiUe+VTGJC6+U
-	 lVLE5LREy7a0wkg5nqv6jsrAjqnRn4VO+GvC4P1WC1OuR3Y0iPEm0L25Nk/xBf6b9z
-	 uj+EZWNfmBY9zPHxZZzMY+PZaGLcUap6z6HgDOpRkikwj/4SgkOIg8RzL7eKjY5zR2
-	 8qBXig3e3zoeZ5+dV8aYrX3pQiy5jGox/+C0yb3jT+lcAU0xZn8D99wJLkp8fHxUtM
-	 u1lhsOfW8IKpA==
-Received: by mail-lf1-f53.google.com with SMTP id 2adb3069b0e04-5b6036e9c70so3774730e87.1
-        for <linux-pci@vger.kernel.org>; Tue, 08 Sep 2026 10:33:42 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AKwUvBynBcN1RqPn8b12mtPzzeDCELynS4kfEpWP8ziKMbMC6XXXMEcimZlei9LL9aOlh6WLwhM7Gxo1MCU=@vger.kernel.org
-X-Gm-Message-State: AFuF++nKf9m7Z8UWDHGUCxG3VBqkb4MVh5NQWR75+nlz+PX12xbo9pbm
-	VobIqRCx/5nYHhjKMqfluL7fpHz7ivqhBakVfLq7P5/aIDky6liEXbQe1nqyttzlrevOUj7A1wA
-	w8cVe6JHSZlH979YHg21cD8nMz7NOtXk=
-X-Received: by 2002:a05:6512:2241:b0:5b5:fae5:b241 with SMTP id
- 2adb3069b0e04-5b616f22e66mr5771186e87.14.1788888821627; Tue, 08 Sep 2026
- 10:33:41 -0700 (PDT)
+	s=k20260515; t=1788889645;
+	bh=qE44r8Wpvb2pGMbm3TYiV2/ToCaVSkA0bQ2RFs6wnI0=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References;
+	b=Z3f4f3xxYCQMcl1Hdk7nUEctePMOcq9JS++N3Nt/Ryh86AQqAlYIKGvzqGObYje0R
+	 IL+Muz7ldanJo4IY/Es6GAhVOTbO6x33Nmh5MyN9ofQ50hc9IIt24+ih4Q0j6hkRUv
+	 DC854zV53VOv0nuw0deVaZWSypIoEHWuy9SB7Zu5fxmTHnoEeSqtdjRepoqZnYFCyQ
+	 3xRs/8rSFn5R2g6Q5u1HZ9kNrFgrpATLxpEtWlGHxheezJNJaFnoHTogrM0z6L+Hwb
+	 ygKS/k/aNDttzRBZPky29GFafkQqEsqLA251WqEfQpP8rX4hpgyRyPMUZltLEtwIN+
+	 Ej8ssbEwQ/ucA==
+Date: Tue, 8 Sep 2026 18:47:20 +0100
+From: Jonathan Cameron <jic23@kernel.org>
+To: Terry Bowman <terry.bowman@amd.com>
+Cc: Dave Jiang <dave.jiang@intel.com>, Alison Schofield
+ <alison.schofield@intel.com>, Vishal Verma <vishal.l.verma@intel.com>,
+ Davidlohr Bueso <dave@stgolabs.net>, "Bjorn Helgaas" <bhelgaas@google.com>,
+ Dan Williams <djbw@kernel.org>, "Rafael J . Wysocki" <rafael@kernel.org>,
+ Jonathan Corbet <corbet@lwn.net>, <linux-cxl@vger.kernel.org>, Tony Luck
+ <tony.luck@intel.com>, Borislav Petkov <bp@alien8.de>, "Hanjun Guo"
+ <guohanjun@huawei.com>, Mauro Carvalho Chehab <mchehab@kernel.org>, "Shuai
+ Xue" <xueshuai@linux.alibaba.com>, Len Brown <lenb@kernel.org>, Ira Weiny
+ <iweiny@kernel.org>, Li Ming <ming.li@zohomail.com>, Shuah Khan
+ <skhan@linuxfoundation.org>, Ben Cheatham <Benjamin.Cheatham@amd.com>,
+ Richard Cheng <icheng@nvidia.com>, Robert Richter <rrichter@amd.com>,
+ "Lukas Wunner" <lukas@wunner.de>, <linux-pci@vger.kernel.org>,
+ <linux-acpi@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+ <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v20 4/9] cxl/pci: Thread port and dport through RAS
+ handling helpers
+Message-ID: <20260908184720.1d2e99cb@jic23-huawei>
+In-Reply-To: <20260902133933.2992457-5-terry.bowman@amd.com>
+References: <20260902133933.2992457-1-terry.bowman@amd.com>
+	<20260902133933.2992457-5-terry.bowman@amd.com>
+X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260908152808.3928630-1-arnd@kernel.org> <20260908152808.3928630-6-arnd@kernel.org>
-In-Reply-To: <20260908152808.3928630-6-arnd@kernel.org>
-From: Linus Walleij <linusw@kernel.org>
-Date: Tue, 8 Sep 2026 19:33:29 +0200
-X-Gmail-Original-Message-ID: <CAD++jLka1EcE_pgbQ+k-==7ZBy4t=UzMRoSpftToUvqSWikfOA@mail.gmail.com>
-X-Gm-Features: AcwNN1W4V_RHIjZXrzOUvAHXUKzBi-tBnO9Xu5bnMkKM7BxKaEWn60o-CzXXb5s
-Message-ID: <CAD++jLka1EcE_pgbQ+k-==7ZBy4t=UzMRoSpftToUvqSWikfOA@mail.gmail.com>
-Subject: Re: [PATCH 05/13] ARM: orion/dove/mv78xx0: remove all board files
-To: Arnd Bergmann <arnd@kernel.org>
-Cc: Krzysztof Kozlowski <krzk@kernel.org>, Alexandre Belloni <alexandre.belloni@bootlin.com>, 
-	Russell King <linux@armlinux.org.uk>, Drew Fustini <fustini@kernel.org>, 
-	Arnd Bergmann <arnd@arndb.de>, Rob Herring <robh@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
-	Liviu Dudau <liviu.dudau@arm.com>, Sudeep Holla <sudeep.holla@kernel.org>, 
-	Lorenzo Pieralisi <lpieralisi@kernel.org>, Frank Li <Frank.Li@nxp.com>, 
-	Sascha Hauer <s.hauer@pengutronix.de>, Pengutronix Kernel Team <kernel@pengutronix.de>, 
-	Fabio Estevam <festevam@gmail.com>, Vladimir Zapolskiy <vz@mleia.com>, Stefan Agner <stefan@agner.ch>, 
-	Maxime Coquelin <mcoquelin.stm32@gmail.com>, Alexandre Torgue <alexandre.torgue@foss.st.com>, 
-	Aaro Koskinen <aaro.koskinen@iki.fi>, Andreas Kemnade <andreas@kemnade.info>, 
-	Kevin Hilman <khilman@baylibre.com>, Roger Quadros <rogerq@kernel.org>, 
-	Tony Lindgren <tony@atomide.com>, Nicolas Ferre <nicolas.ferre@microchip.com>, 
-	Claudiu Beznea <claudiu.beznea@tuxon.dev>, Andrew Lunn <andrew@lunn.ch>, 
-	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, 
-	Gregory Clement <gregory.clement@bootlin.com>, Robert Jarzmik <robert.jarzmik@free.fr>, 
-	Kristoffer Ericson <kristoffer.ericson@gmail.com>, Ethan Nelson-Moore <enelsonmoore@gmail.com>, 
-	Geert Uytterhoeven <geert@linux-m68k.org>, Alexander Sverdlin <alexander.sverdlin@siemens.com>, 
-	Shawn Guo <shawnguo@kernel.org>, Karl Mehltretter <kmehltretter@gmail.com>, 
-	"David Hildenbrand (Arm)" <david@kernel.org>, Nicolas Pitre <npitre@baylibre.com>, linux-doc@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
-	devicetree@vger.kernel.org, imx@lists.linux.dev, 
-	linux-stm32@st-md-mailman.stormreply.com, linux-omap@vger.kernel.org, 
-	Alexander Clouter <alex@digriz.org.uk>, "Jeremy J. Peper" <jeremy@jeremypeper.com>, 
-	Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>, Ulf Hansson <ulfh@kernel.org>, 
-	=?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Manivannan Sadhasivam <mani@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, Vinod Koul <vkoul@kernel.org>, 
-	"Rafael J. Wysocki" <rafael@kernel.org>, Daniel Lezcano <daniel.lezcano@kernel.org>, 
-	Guenter Roeck <linux@roeck-us.net>, Mark Brown <broonie@kernel.org>, 
-	Bartosz Golaszewski <brgl@kernel.org>, Thomas Weissschuh <thomas.weissschuh@linutronix.de>, 
-	linux-ide@vger.kernel.org, linux-mmc@vger.kernel.org, 
-	linux-pci@vger.kernel.org, linux-phy@lists.infradead.org, 
-	linux-rtc@vger.kernel.org, linux-pm@vger.kernel.org, 
-	linux-watchdog@vger.kernel.org, linux-sound@vger.kernel.org, 
-	linux-gpio@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-On Tue, Sep 8, 2026 at 5:29=E2=80=AFPM Arnd Bergmann <arnd@kernel.org> wrot=
-e:
+On Wed, 2 Sep 2026 08:39:28 -0500
+Terry Bowman <terry.bowman@amd.com> wrote:
 
-> From: Arnd Bergmann <arnd@arndb.de>
->
-> The 'orion' platform is the predecessor to what linux now calls the
-> 'mvebu' line of Marvell SoCs, and originally covered orion5x,
-> mv78xx0, kirkwood, dove and a few others that do not have any
-> upstream support at the moment.
->
-> Only a few board files remain here, these are the ones left
-> in 2022 board file purge because they had some level of support
-> in Debian or OpenWRT, mostly for commercial NAS or router boxes.
-> This distro support is now gone, and nobody has converted the
-> board files to devicetree, though the orion5x and dove platforms
-> also come with devicetree support for some other machines.
->
-> Cc: Andrew Lunn <andrew@lunn.ch>
-> Cc: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
-> Cc: Gregory Clement <gregory.clement@bootlin.com>
-> Cc: Alexander Clouter <alex@digriz.org.uk>
-> Cc: Jeremy J. Peper <jeremy@jeremypeper.com>
-> Cc: Damien Le Moal <dlemoal@kernel.org>
-> Cc: Niklas Cassel <cassel@kernel.org>
-> Cc: Ulf Hansson <ulfh@kernel.org>
-> Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>
-> Cc: "Krzysztof Wilczy=C5=84ski" <kwilczynski@kernel.org>
-> Cc: Manivannan Sadhasivam <mani@kernel.org>
-> Cc: Rob Herring <robh@kernel.org>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Vinod Koul <vkoul@kernel.org>
-> Cc: Alexandre Belloni <alexandre.belloni@bootlin.com>
-> Cc: "Rafael J. Wysocki" <rafael@kernel.org>
-> Cc: Daniel Lezcano <daniel.lezcano@kernel.org>
-> Cc: Guenter Roeck <linux@roeck-us.net>
-> Cc: Mark Brown <broonie@kernel.org>
-> Cc: Linus Walleij <linusw@kernel.org>
-> Cc: Bartosz Golaszewski <brgl@kernel.org>
-> Cc: Thomas Weissschuh <thomas.weissschuh@linutronix.de>
-> Cc: linux-ide@vger.kernel.org
-> Cc: linux-mmc@vger.kernel.org
-> Cc: linux-pci@vger.kernel.org
-> Cc: linux-phy@lists.infradead.org
-> Cc: linux-rtc@vger.kernel.org
-> Cc: linux-pm@vger.kernel.org
-> Cc: linux-watchdog@vger.kernel.org
-> Cc: linux-sound@vger.kernel.org
-> Cc: linux-gpio@vger.kernel.org
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> From: Dan Williams <djbw@kernel.org>
+> 
+> The callers of cxl_handle_ras() and cxl_handle_cor_ras() already hold
+> a struct cxl_port * and optionally a struct cxl_dport * for the device
+> being handled. Passing a generic struct device * requires is_cxl_memdev()
+> to distinguish Endpoints from Ports at trace emission time. Threading
+> Port and Downstream Port directly enables is_cxl_endpoint() and explicit
+> dport/port branching for cleaner trace dispatch.
+> 
+> Refactor cxl_handle_ras() and cxl_handle_cor_ras() to accept struct
+> cxl_port * and struct cxl_dport * directly. The CXL RAS trace event
+> emission logic is split into three branches: Endpoint events are
+> identified via is_cxl_endpoint() and emit with the memdev, dport events
+> emit with dport->dport_dev, and Upstream Port events fall back to
+> port->uport_dev. This branching is transitional: the follow-on patch
+> ("cxl: Add port and dport identifiers to CXL AER trace events") unifies
+> the trace events on port/dport and removes it.
+> 
+> Update cxl_handle_rdport_errors() and cxl_handle_proto_error() to pass
+> Port and Downstream Port to the refactored functions.
+> 
+> RCH Downstream Port correctable trace events now report the dport device
+> (dport->dport_dev) as a consequence of threading Port and Downstream
+> Port through the RAS helpers. The following trace event rework ("cxl: Add
+> port and dport identifiers to CXL AER trace events") adds explicit memdev,
+> Port, Downstream Port, and host fields that provide full context for all
+> device types.
+> 
+> Co-developed-by: Terry Bowman <terry.bowman@amd.com>
+> Signed-off-by: Terry Bowman <terry.bowman@amd.com>
+> Signed-off-by: Dan Williams <djbw@kernel.org>
+> Reviewed-by: Dave Jiang <dave.jiang@intel.com>
+> Reviewed-by: Alison Schofield <alison.schofield@intel.com>
+Subject to Ben's question getting a reasonable answer,
+Reviewed-by: Jonathan Cameron <jonathan.cameron@oss.qualcomm.com>
 
-Acked-by: Linus Walleij <linusw@kernel.org>
-
-Yours,
-Linus Walleij
