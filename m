@@ -1,187 +1,94 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from o1.ptr9745.em.honeycomb.io (o1.ptr9745.em.honeycomb.io [149.72.141.136])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D4365221D9;
-	Tue,  8 Sep 2026 23:21:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 589A056510E
+	for <linux-pci@vger.kernel.org>; Tue,  8 Sep 2026 23:25:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=149.72.141.136
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788909715; cv=none; b=XlJcqsSoE1k4o1t+qsB7Wc8dCpp+vTVFGqvnnOsOi25+xse9MUpjwXIqd/QW4C1PdL7SXHhnLD6lTMSOAwr8EzvTKfdEqgQDcKhAWYkRY6kwBjVnjjk029uirQ2khlusoCYaWrntn72k0enjw+YkB7QAM4UG49R2LmdcRns4IZs=
+	t=1788909940; cv=none; b=muaEM5A/qplNLUSCVtXUrdzExSNYy09NGIq/B09P01g2d+UYB5OR9CPFdA1m/kGB9Kr73XIYL7EAvPt5ACPZrwvp0Ccz9MAE7RtrzImTljx0wvO/Mg6HiaxOmejQbXZSf9F8jVKMzOeeMPp2oUuoZ2NLcDancug8U3WJ0PkQnY0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788909715; c=relaxed/simple;
-	bh=yQy3C20jHoJxnOr0MiUkNqcxgp3fW/JsyluhuzjAQCY=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=SKeVgbimFqc6/knJRW3eaL1IK6x+qy+V1QzqowtYMx/k/MehgxwzHqezhkwtfHgiAo7B4g1egIur8azUE/6Dr4lMKzHaY4Sx1fi3yFXguSywGGu+uzdfnTTcMKL4Kvdoem+5Ph39g3ajfyYSf+ZCDJD7/I7/W1KYhnK+drJzy88=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UDFbIPNJ; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788909940; c=relaxed/simple;
+	bh=IpRRbmraEQdRvYU+gOwK0kySHffEqkNVDWp175KjZQU=;
+	h=From:Subject:Date:Message-ID:In-Reply-To:References:MIME-Version:
+	 To:Cc:Content-Type; b=lfkZM/7gu3vv20RbsaCLfqQqJooPze32p3QWv3WzScpoePdUSTQ2EY0vCGg+5HRjyZ4Uphz2d3bDyRdNgAVcamK0s6reJQJV+NMazguqgUg0Ed5TcVFiPizkjE87ZuMTJ2+oYUFjE+TEKE54XMpopx3VqqQpAdQW22RdoZMPQew=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=honeycomb.io; spf=pass smtp.mailfrom=em.honeycomb.io; dkim=pass (2048-bit key) header.d=honeycomb.io header.i=@honeycomb.io header.b=aL8NPyt9; arc=none smtp.client-ip=149.72.141.136
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=honeycomb.io
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=em.honeycomb.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UDFbIPNJ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4B9D11F00A3D;
-	Tue,  8 Sep 2026 23:21:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788909708;
-	bh=NLvH9u4KzvhJ0LMUBoEDzEmZPA+sdK1nFAVbS9YzTTw=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=UDFbIPNJTkuujIyYJ35I07fgmj6iilC3ms1rPcsRaEtxVwo3lTQEmQW+j+WGKfyX6
-	 YGS4KR9mRLrP6RgJ/TkGujy3TWYChrCM/RvPWDS0ndaeCdYior8wsDaDw+ovruBvXT
-	 59dfkIHk70YepneWjz/RgCI8yMjP2jmO2jjBBF1BTPzC6QsawE1OShdeM3YcL/qRyU
-	 +UNaRBw1UROEKuoWfg6a0/fTDclMqSHqMWrzi//wzzIzoai7a1c9ltG3k+j+njVcg7
-	 uuYzsGAla7lcaY71FrSrnrE6VjU7/m1LML0fQf7r/Ibohz3iLY0RyzIewXAbIsFp66
-	 0Y/2lNzG33k4g==
-Date: Wed, 9 Sep 2026 00:21:42 +0100
-From: Jonathan Cameron <jic23@kernel.org>
-To: alistair23@gmail.com
-Cc: linux-pci@vger.kernel.org, Jonathan.Cameron@huawei.com, djbw@kernel.org,
- rust-for-linux@vger.kernel.org, lukas@wunner.de, alistair@alistair23.me,
- linux-cxl@vger.kernel.org, bhelgaas@google.com, akpm@linux-foundation.org,
- linux-kernel@vger.kernel.org, gary@garyguo.net, ojeda@kernel.org,
- benno.lossin@proton.me, a.hindborg@kernel.org, wilfred.mallawa@wdc.com,
- tmgross@umich.edu, boqun.feng@gmail.com, bjorn3_gh@protonmail.com,
- alex.gaynor@gmail.com, aliceryhl@google.com, Alistair Francis
- <alistair.francis@wdc.com>
-Subject: Re: [PATCH v3 12/21] PCI/CMA: Add a PCI TSM CMA driver using SPDM
-Message-ID: <20260909002142.2d863d2a@jic23-huawei>
-In-Reply-To: <20260901010347.2614656-13-alistair.francis@wdc.com>
-References: <20260901010347.2614656-1-alistair.francis@wdc.com>
-	<20260901010347.2614656-13-alistair.francis@wdc.com>
-X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
+	dkim=pass (2048-bit key) header.d=honeycomb.io header.i=@honeycomb.io header.b="aL8NPyt9"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=honeycomb.io;
+	h=from:subject:date:in-reply-to:references:mime-version:to:cc:
+	content-transfer-encoding:content-type:cc:content-type:date:from:subject:to;
+	s=s1; t=1788909938;
+	bh=+cqP2z/XRk+D/XjM5uu7L4wIVdn+LO6xQ4ZwBaRcgNQ=;
+	b=aL8NPyt9nOYEzQuV2WnCkoOszajRz6gsRuNTpo850LYcPnYYitNnzFITVIX5vNGQQtZb
+	HnyvYRmPteSZ+GhUeANWllHZzi6CmYvlUFkNEz1jR6YWGjRD4kngsMCKH6BVdDhbg+utpF
+	hPM5ZlwyiEtx+Tf8H1uZPaz2nSMAkoLY26OctoJCQd4V78NXx0TDQHK7AY17sHWLRWQc3U
+	olPQHRx8grAhGcxNDpZRzXvUk2alul0m4VUEkgzbLXjT0SkzvhFT4CQKXJMG+m7JsUW8yR
+	zW1irbH9BAt271Mcg2dk2Lvx8DF3KO07jwaiEGsr6S2xRVNZgWjzZ00wQhHGBb5A==
+Received: by recvd-5c6d7fbdd5-l2fc6 with SMTP id recvd-5c6d7fbdd5-l2fc6-1-6AA09972-3C
+	2026-09-08 23:25:38.34628099 +0000 UTC m=+511381.869181742
+Received: from daisy.dens.ffj.family (unknown)
+	by geopod-ismtpd-16 (SG)
+	with ESMTP
+	id -M_K5BBjQs23qTbHcrNBTQ
+	Tue, 08 Sep 2026 23:25:38.281 +0000 (UTC)
+From: Liz Fong-Jones <lizf@honeycomb.io>
+Subject: Re: [PATCH v5] PCI: Fix BAR resize for devices on a root bus
+Date: Tue, 08 Sep 2026 23:25:38 +0000 (UTC)
+Message-ID: <20260908232537.64461-1-lizf@honeycomb.io>
+X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20260908231349.682101F00A3A@smtp.kernel.org>
+References: <20260908231349.682101F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+X-SG-EID: 
+ =?us-ascii?Q?u001=2ECuH7N2XAoeMR1zrzr=2F6NZrhli2vbKPOHff5fJuZuba6ZIE8QPyIf9mn4Y?=
+ =?us-ascii?Q?ezqeFFjUkh=2FeROy4LtnO7KN9jZmeSexUlkeuf81?=
+ =?us-ascii?Q?gWnfLpBOWbKd5gENM0vuDG1ojsEgaQqWFUTyYLE?=
+ =?us-ascii?Q?dJf8oZJuNjmdWXsRO0cfRh+gdK7Ffn5rTg6H9mL?=
+ =?us-ascii?Q?OD4lrFKjZiWNavnvTYpz8myV94n99trA0ggw8=2FJ?=
+ =?us-ascii?Q?cRRSJQ2Og+z0S6U72EO8pb5TIBJfiE7hw5WRAKx?= =?us-ascii?Q?dnt+?=
+To: sashiko-reviews@lists.linux.dev
+Cc: sashiko-bot@kernel.org, linux-pci@vger.kernel.org, lizf@honeycomb.io
+X-Entity-ID: u001.GRlkmHQ+Ka/CKxmoC/CxTw==
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 
-On Tue,  1 Sep 2026 11:03:38 +1000
-alistair23@gmail.com wrote:
+On Sashiko (Gemini 3.1 pro preview) wrote:
+> Finding 1: Optional Resource Assignment Failure
+> Severity: High
+>
+> Location: drivers/pci/setup-bus.c, lines 2429-2433
+>
+> Issue: The stricter validation incorrectly treats optional resources
+> (ROM BARs) as required. If pci_bus_assign_resources() succeeds for
+> the target BAR but leaves an optional resource unassigned, the
+> function aborts with -ENOSPC, breaking valid BAR resizes.
 
-> From: Alistair Francis <alistair.francis@wdc.com>
-> 
-> Component Measurement and Authentication (CMA, PCIe r6.2 sec 6.31)
-> allows for measurement and authentication of PCIe devices.  It is
-> based on the Security Protocol and Data Model specification (SPDM,
-> https://www.dmtf.org/dsp/DSP0274).
-> 
-> CMA-SPDM in turn forms the basis for Integrity and Data Encryption
-> (IDE, PCIe r6.2 sec 6.33) because the key material used by IDE is
-> transmitted over a CMA-SPDM session.
-> 
-> As a first step, add support for authentication via a CMA TSM driver.
-> 
-> This was previously discusd here:
-> http://lore.kernel.org/69976d7d39c60_2f4a1009@dwillia2-mobl4.notmuch
-> 
-> By utilising a TSM driver we get a lot of the TSM driver probe policies
-> "for free". Currently there is no mechanism to provide evidence to
-> userspace, as the TSM system doesn't support that at the moment. That
-> can be added later when support by TSM.
-> 
-> Credits: Jonathan wrote the original proof-of-concept for a CMA implementation.
-> Lukas reworked that for upstream. Wilfred contributed fixes for issues
-> discovered during testing. Alistair reworked it as a TSM driver.
-> 
-> Signed-off-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
-> Co-developed-by: Wilfred Mallawa <wilfred.mallawa@wdc.com>
-> Signed-off-by: Wilfred Mallawa <wilfred.mallawa@wdc.com>
-> Co-developed-by: Lukas Wunner <lukas@wunner.de>
-> Signed-off-by: Lukas Wunner <lukas@wunner.de>
-> Signed-off-by: Alistair Francis <alistair.francis@wdc.com>
+This is a known, deliberate tradeoff, not an oversight -- it's
+disclosed directly in the v5 commit message:
 
-A few things inline.  I have no idea if I'm poking holes in 
-my own code or if none of that is left :)
+  "Unlike the bridged path, this treats failure to place any released
+  resource -- including optional ones, e.g. an unclaimed expansion
+  ROM -- as fatal, rather than checking only required resources.
+  That's the more conservative choice: on a root bus everything
+  released here tends to share one window, and failing loudly seemed
+  better than leaving something silently unassigned."
 
->  
-> diff --git a/drivers/pci/cma.c b/drivers/pci/cma.c
-> new file mode 100644
-> index 000000000000..9f2cc0b2ec8a
-> --- /dev/null
-> +++ b/drivers/pci/cma.c
+Concretely, for the bug this patch fixes it doesn't apply at all: the
+device's ROM shares a different resource window than the released
+BARs (confirmed against the actual hardware log -- only BAR0 and BAR2
+are ever released, no ROM), so it's never in the "saved" list this
+check walks. The scenario in the finding is theoretical for other
+root-bus devices whose optional resources do share the same window
+as the target BAR, not something this bug's hardware or reported
+failure exercises.
 
-...
+Marking this a false positive rather than a code defect. Finding 2
+("Preexisting") is correctly scoped and not disputed.
 
-
-
-> +static int pci_cma_tsm_connect(struct pci_dev *pdev)
-> +{
-> +	struct pci_cma_tsm *cma = cma_tsm_from_tsm(pdev->tsm);
-> +	int rc;
-> +
-> +	/*
-> +	 * The DOE mailbox lives in the device's config space, so the
-> +	 * device must be runtime-resumed for the duration of the SPDM
-> +	 * exchange.
-
-Oddly short wrap. Comments go to 80
-	/*
-	 * The DOE mailbox lives in the device's config space, so the device
-	 * must be runtime-resumed for the duration of the SPDM exchange.
-
-> +	 */
-> +	rc = pm_runtime_get_sync(&pdev->dev);
-	rc = pm_runtime_resume_and_get(&pdev->dev)
-	if (rc < 0)
-		return rc;
-
-See comments in docs for pm_runtime_get_sync() for info on this.
-Basically it doesn't mess up reference counting so you don't need
-to fix it in the error path.
-
-Mind you, I haven't looked ahead but we have ACQUIRE macros for
-runtime PM that might apply nicely here and remove need to release anything
-at all.
-
-	PM_RUNTIME_ACQUIRE(&pdev->dev, pm);
-	if (PM_RUNTIME_ACQUIRE_ERR(&pm))
-		return -ENXIO;
-
-	
-
-> +	if (rc < 0) {
-> +		pm_runtime_put_noidle(&pdev->dev);
-> +		return rc;
-> +	}
-> +
-> +	rc = spdm_authenticate(cma->spdm);
-
-If you can use ACQUIRE stuff
-	return spdm_authenticate(cma->spdm);
-
-> +
-> +	pm_runtime_put_sync(&pdev->dev);
-> +	return rc;
-> +}
-
-> +
-> +static const struct pci_tsm_ops pci_cma_tsm_ops = {
-> +	.link_ops = {
-> +		.probe		= pci_cma_tsm_probe,
-> +		.remove		= pci_cma_tsm_remove,
-> +		.connect	= pci_cma_tsm_connect,
-> +		.disconnect	= pci_cma_tsm_disconnect,
-> +		.bind		= pci_cma_tsm_bind,
-> +		.unbind		= pci_cma_tsm_unbind,
-> +		.guest_req	= pci_cma_tsm_guest_req,
-> +	},
-> +};
-> +
-> +static struct tsm_dev *pci_cma_tsm_dev;
-> +
-> +static int __init pci_cma_tsm_init(void)
-> +{
-> +	struct tsm_dev *tsm_dev;
-> +
-> +	tsm_dev = tsm_register(NULL, (struct pci_tsm_ops *)&pci_cma_tsm_ops);
-
-So this is casting away the const.   Why does tsm_register not take a const?
-Can we change that as seems unlikely it will actually modify it?
-If there is any chance of a modification in future then we need to drop
-the const marking on the structure above.
-
-
-> +	if (IS_ERR(tsm_dev))
-> +		return PTR_ERR(tsm_dev);
-> +
-> +	pci_cma_tsm_dev = tsm_dev;
-> +	return 0;
-> +}
-> +late_initcall(pci_cma_tsm_init);
