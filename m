@@ -1,60 +1,81 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mailout3.hostsharing.net (mailout3.hostsharing.net [144.76.133.104])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 849A4320393;
-	Wed,  9 Sep 2026 08:13:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 24B7E37AA70;
+	Wed,  9 Sep 2026 08:14:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=144.76.133.104
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788941584; cv=none; b=opSB6ByW6wlHeFUTsZxTUMyb8IehNcryGYAZozUTKz5OTsbRO7QaZ8EjACO006njCDgTBqnHacz0vemwUOzJKRJp8fwpvDWErZu4OHFEuqUQXzXUiOMCUjFAgGkdSjwe7PkiYaxkwVlApzCvj+13JEVX8EuHxxZgnji6qNx5VXk=
+	t=1788941652; cv=none; b=ipLOt617Qst8t0uMCiTDxXEkJd07ZLKx99X3IjiAcjXkkSRyBSnYuLRHV+Nrt5A5iutnvQfYPJEltea62IagH4Em4+//Bm618M+hzScfismByJPx3/PWp4BGGBFhmkije+aQ8i3MfNjWb032VTtn7vA6kLnH2JRDiaMGnLQqtsU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788941584; c=relaxed/simple;
-	bh=8TxQiF63MoqvZVi67XkJtZIfLLwq4xkjg6TAB0Sl9ng=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=FWDZa16jF2EU5V/udX71H1QD6deTZry77w2a71KxnPWb/2aPOu/hhPIoRbmZCQhFbm9ylfzVYtH95+8vMqAskWhjHhR+k/o7xNw2rf6oTqI0jxmezLzhss2KkmXk6Nc6HctKv/42Iv/B7VMRmBUTfwsdMMlPf+Utx7wxQaTczT4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=J7caqjno; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="J7caqjno"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DF9701F00A3A;
-	Wed,  9 Sep 2026 08:13:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788941583;
-	bh=8TxQiF63MoqvZVi67XkJtZIfLLwq4xkjg6TAB0Sl9ng=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=J7caqjnoXISJlDB04CWtVtGhKOlRuR0dNbG+w1uAZZywe9atObn5EFLOghL2HYEJG
-	 7JlIvsKHuAuJtC+uVZ+GEdmV1pzBlAz1P8wFcP/Ass8Xl6gDEU9xPAw7vZpu+sVgT3
-	 p61wSZEVQ6tu1B6lzM7/lXd8tIwgpd5aZb/uHHaAZ4x2ovLuomi1c4IQ2bySJgSYCF
-	 f1e6Yhdex6BJtnLTBqRLhVHaqfhQ1/lTN0luzlEJp/zyU2bRwEd21tSe7fdb7efI5b
-	 j0wV60oHdN5WkVkOcxbuvmlbUAmWlgfXems6WgEIteeEDnxGV1E1gwyKqANXTJsiS+
-	 ywe2Jrp4ZxQ5A==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v11 06/10] PCI: of: Use fw_devlink_set_device()
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Herve Codina" <herve.codina@bootlin.com>
-Cc: linux-cxl@vger.kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260909080114.591938-7-herve.codina@bootlin.com>
-References: <20260909080114.591938-1-herve.codina@bootlin.com>
- <20260909080114.591938-7-herve.codina@bootlin.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 09 Sep 2026 08:13:02 +0000
-Message-Id: <20260909081302.DF9701F00A3A@smtp.kernel.org>
+	s=arc-20240116; t=1788941652; c=relaxed/simple;
+	bh=ihZOp4oyeZS4Z2ZWTgGV2B7VCxDptNH5JQRKp4U+Ysw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=s+vBe68o3c7Tle8LoZ/pLgKl445T3iltpT34l2aeJYdov3D3+nuxFG/DqJbFzyMrqEVxyFh66EfgDsl3k4kpY4L1nplUNXdegUU3WBg1SxGCSYTXjnLDS4PR2Nsixcbhb3ajbmrXfu9YLyyhhndtadTOH0Ylhhr6i5Da+4NIk5I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=144.76.133.104
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
+Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
+	 client-signature ECDSA (secp384r1) client-digest SHA384)
+	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
+	by mailout3.hostsharing.net (Postfix) with ESMTPS id EAC9018D3;
+	Wed, 09 Sep 2026 10:14:06 +0200 (CEST)
+Received: by h08.hostsharing.net (Postfix, from userid 100393)
+	id 94F4A627236D; Wed,  9 Sep 2026 10:14:06 +0200 (CEST)
+Date: Wed, 9 Sep 2026 10:14:06 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Terry Bowman <terry.bowman@amd.com>
+Cc: dave@stgolabs.net, jic23@kernel.org, dave.jiang@intel.com,
+	alison.schofield@intel.com, bhelgaas@google.com,
+	shiju.jose@huawei.com, ming.li@zohomail.com,
+	Smita.KoralahalliChannabasappa@amd.com, rrichter@amd.com,
+	PradeepVineshReddy.Kodamati@amd.com, Benjamin.Cheatham@amd.com,
+	sathyanarayanan.kuppuswamy@linux.intel.com,
+	linux-cxl@vger.kernel.org, vishal.l.verma@intel.com,
+	alucerop@amd.com, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v14 10/34] PCI/AER: Update is_internal_error() to be
+ non-static is_aer_internal_error()
+Message-ID: <aqEVTjjAtLYX19Rk@wunner.de>
+References: <20260114182055.46029-1-terry.bowman@amd.com>
+ <20260114182055.46029-11-terry.bowman@amd.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260114182055.46029-11-terry.bowman@amd.com>
 
-> The code set directly fwnode.dev field.
->=20
-> Use the dedicated fw_devlink_set_device() helper to perform this
-> operation.
->=20
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Herve Codina <herve.codina@bootlin.com>
+On Wed, Jan 14, 2026 at 12:20:31PM -0600, Terry Bowman wrote:
+> +++ b/drivers/pci/pcie/portdrv.h
+> @@ -123,4 +123,13 @@ static inline void pcie_pme_interrupt_enable(struct pci_dev *dev, bool en) {}
+>  #endif /* !CONFIG_PCIE_PME */
+>  
+>  struct device *pcie_port_find_device(struct pci_dev *dev, u32 service);
+> +
+> +struct aer_err_info;
+> +
+> +#ifdef CONFIG_PCIEAER_CXL
+> +bool is_aer_internal_error(struct aer_err_info *info);
+> +#else
+> +static inline bool is_aer_internal_error(struct aer_err_info *info) { return false; }
+> +#endif /* CONFIG_PCIEAER_CXL */
+> +
+>  #endif /* _PORTDRV_H_ */
 
-Sashiko has reviewed this patch and found no issues. It looks great!
+This has no relation to portdrv and so it's unclear and confusing
+why it was placed in portdrv.h.
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260909080114.5919=
-38-1-herve.codina@bootlin.com?part=3D6
+In your pending CXL AER v20 series, you're adding more declarations here.
 
+We keep declarations that are internal to the PCI core in
+drivers/pci/pci.h.  However since this is just an interface
+between aer.c and aer_cxl_rch.c, maybe drivers/pci/pcie/aer_cxl.h
+would make sense.
+
+Thanks,
+
+Lukas
