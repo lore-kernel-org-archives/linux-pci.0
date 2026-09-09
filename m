@@ -1,58 +1,59 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 145B35437CD
-	for <linux-pci@vger.kernel.org>; Wed,  9 Sep 2026 11:27:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0ADA254857F
+	for <linux-pci@vger.kernel.org>; Wed,  9 Sep 2026 11:31:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788953276; cv=none; b=igx8k3ceK27B/MIkO4aFRKGv0WZ2xun1KwSzzu9W5sdSQGM3mxaPcvLymgUHUxZQpBegimsBd5HTGh7QFXF0LFy7QO8FRwrB2+OUF7r728oMnFF1dZjvbruZea+VFgWIvy2EKBxwRBzGUUQ8Fcmdfjj30G71NwhfWsxAwfDMmnc=
+	t=1788953486; cv=none; b=Vh+zNBJOY9JPlbMR/kF4QILSs2f4NLQW/eBdlK+9k0Vu7PcVjgCald0TROadwcC5RNqDShjg2EyQAacJl1Bls4v2U0MLt1E2Tq8bpP/qp3NLXf6PdNcf8EaAYtaPsy5hYwLFnqmx98cquMKFiublJRceS8BQfslKFiX/0rJfzj8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788953276; c=relaxed/simple;
-	bh=JJBgofp2pe9RCsL65EmLQklp4DEK1h2O8rEip2QGCW4=;
+	s=arc-20240116; t=1788953486; c=relaxed/simple;
+	bh=o2WzF/t6msWU5RqpBykSw0CS3QVZFDpT8yngxr1mCgg=;
 	h=From:In-Reply-To:MIME-Version:References:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=HvOULQEzUlNn2kLDxFa3p5VYGz2wpwL32wcpmxJDDSQNmpbMh7fOTC/3pF1UgYRRA1czm9E1mtl0MvSCEN1Y6n5WU9rPMNXWl5p3JlBN4sAy6KpabU5Bi+lJF1R0FkwcMAHiD9+1PgiFYm11JxnoLzuVg/LrHHnVfyHUC6VMcEY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fjiZ8XBd; arc=none smtp.client-ip=100.103.45.18
+	 To:Cc:Content-Type; b=UiTbZ801w0WniDQTzNWbPl74mwU9BA0IJC7ZfdBwhCRpBqzrqw4epi5eJCk+axsA71yCn/+x87kTjkzqKvompIV5eCwQVMTl8WWyr7tqZqHZZlH8oP/34o69LqYP2WzxkGjic9AXNsnESgzGfQl49S+FrLSeT10Zu0e32B61Slo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PsmHXN/1; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fjiZ8XBd"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AC0371F01571
-	for <linux-pci@vger.kernel.org>; Wed,  9 Sep 2026 11:27:53 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PsmHXN/1"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A59A91F0156D
+	for <linux-pci@vger.kernel.org>; Wed,  9 Sep 2026 11:31:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788953273;
-	bh=3jiQyn42rIxemPjlFRLmdJmNQuLfss1eu61probES9o=;
+	s=k20260515; t=1788953482;
+	bh=FmBocDloVqnt9fxeDtFrylQPpruprCsSKsABIgX1uUA=;
 	h=From:In-Reply-To:References:Date:Subject:To:Cc;
-	b=fjiZ8XBdNPsN183InFRv0uIGqWcQgVMgWYF8Nz1i3uO8x3JtYZ027bGAYG6OmYwHS
-	 B34buxTmhnZs5QLlUGSuvQETka0bRRRQv1m3KwCA8AWUTmrPJ8skJDaxUfIMvGKZFE
-	 nisCHiXVdzZ3WopzUcXJ6LKJ04IuduKPvjfXxRXGS1T0OpbPIynxC/1IcjgUFquYPc
-	 9xWVH6oC6JVqyoYTgb1B6b2EBuWsioHAOP6Sc/C7+BpJqMhysnGtpfgiRtCCovCaDz
-	 51P2TvYfiwAP0lpTJT/MK/tMFl0mr181rUwldfJvyj2QkhLa6b4mTnX3VjPFFLH+IB
-	 30j4Slq3fgQSg==
-Received: by mail-lf1-f52.google.com with SMTP id 2adb3069b0e04-5b808456308so325367e87.0
-        for <linux-pci@vger.kernel.org>; Wed, 09 Sep 2026 04:27:53 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AKwUvBwvjs1t+2y5U9QphYIw/7VHVamZWxDvbbAJzpmk/sEmN/4zZqyWTuOxLSvSCl1f6CEgL8U+s2EXHbs=@vger.kernel.org
-X-Gm-Message-State: AFuF++kb4jr3qwwKPj5p/BDJPb7vH6qfjKigsz6Nw1nGreG90Qp7n6wr
-	9y1BDjPjyKltkvgYsVyH2tWH1EhsH0aF/9QFuAvirCrt+TY/1fafAa/UuexIcKPwQrYL5gdGFUm
-	0nacqENRQCLORCwMhJDxIWKzuNaqOg5wcBVzkcyyxjg==
-X-Received: by 2002:a05:6512:3a8d:b0:5b4:a836:13f3 with SMTP id
- 2adb3069b0e04-5b6170525c5mr5848674e87.19.1788953272225; Wed, 09 Sep 2026
- 04:27:52 -0700 (PDT)
+	b=PsmHXN/1LmSL5vjfxnfPlVVh5V675dSmFSqIG6JW/RYPOTF5y8DKg6bl7BhyFSak9
+	 6fvpPc3M1/2396QwFRzzIvx0vQ0D6Xjr2KNQ1X1uLmCiy6+VXSQwSuZP3V30CJvSmF
+	 6VbHRzrZ9h/7nXFLXQMwv2pxcDph4ncKNcQfLLBMRsN3+RyUWRfkbSMa5so4kn8Bhv
+	 NpQpyqbhLnd3QgrVQU73eg6Mz/KcuLL/fMVavoknnLupa152kuE+zgjgkYPZXRxHjE
+	 sTYD/aOidLVBRLe2eM2xE3wIobz2ug0NJCNoVNX558avRipg6y64ppo2pd0eWtLNR0
+	 WCgZwInf3Tdqw==
+Received: by mail-lj1-f176.google.com with SMTP id 38308e7fff4ca-3a49d2b18d5so3969351fa.3
+        for <linux-pci@vger.kernel.org>; Wed, 09 Sep 2026 04:31:22 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AKwUvBxF0ZmIJrt0PscSOmtP6UcOx86ZwJXDg9llJy4+/Ymjhjtos1X9gPSdv1NtDVmicgD+/pq6aOz7UDs=@vger.kernel.org
+X-Gm-Message-State: AFuF++nep76GyVJ0cApArZ8xeBA5RAU2OhgB69WEk5okrizYKbhkau9J
+	Bu4t89QQoWyrtb+7IhiLbKdAC8IvdcsdXZltzTDAI70pDcWYzBAMOXCk5Tq2mSVd2UFq1R6D2Aq
+	w9YUaFWJ/hxYhZktZoRdH6ROgJwl0sdp1SoZ4aaT7Qw==
+X-Received: by 2002:a05:6512:250d:b0:5b6:1a7c:59d4 with SMTP id
+ 2adb3069b0e04-5b61a7c5a90mr5183400e87.46.1788953481262; Wed, 09 Sep 2026
+ 04:31:21 -0700 (PDT)
 Received: from 969154062570 named unknown by gmailapi.google.com with
- HTTPREST; Wed, 9 Sep 2026 04:27:50 -0700
+ HTTPREST; Wed, 9 Sep 2026 04:31:19 -0700
 Received: from 969154062570 named unknown by gmailapi.google.com with
- HTTPREST; Wed, 9 Sep 2026 04:27:49 -0700
+ HTTPREST; Wed, 9 Sep 2026 04:31:19 -0700
 From: Bartosz Golaszewski <brgl@kernel.org>
-In-Reply-To: <20260909080114.591938-7-herve.codina@bootlin.com>
+In-Reply-To: <20260909080114.591938-8-herve.codina@bootlin.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260909080114.591938-1-herve.codina@bootlin.com> <20260909080114.591938-7-herve.codina@bootlin.com>
-Date: Wed, 9 Sep 2026 04:27:49 -0700
-X-Gmail-Original-Message-ID: <CAMRc=MeUtCK1SnOk7aAQrnpmZrSxQ1kK-hrw97TH5TBwFR04MQ@mail.gmail.com>
-X-Gm-Features: AcwNN1XgkJRIkWr-Q-vmNlBTGGna2wUXbTKL0GfXX3gNNSE-nKv4XSkZWRFV2s4
-Message-ID: <CAMRc=MeUtCK1SnOk7aAQrnpmZrSxQ1kK-hrw97TH5TBwFR04MQ@mail.gmail.com>
-Subject: Re: [PATCH v11 06/10] PCI: of: Use fw_devlink_set_device()
+References: <20260909080114.591938-1-herve.codina@bootlin.com> <20260909080114.591938-8-herve.codina@bootlin.com>
+Date: Wed, 9 Sep 2026 04:31:19 -0700
+X-Gmail-Original-Message-ID: <CAMRc=MeF1+1L1qO3NkHgK-nA8T-LmY3qJ=yA2tsT7_nDEmpTOQ@mail.gmail.com>
+X-Gm-Features: AcwNN1X-SYpdTDZqvUUX2vYKitA7KsBPnLzmy5HJ0ZvOyOzbEwFGKRa35FuLPsw
+Message-ID: <CAMRc=MeF1+1L1qO3NkHgK-nA8T-LmY3qJ=yA2tsT7_nDEmpTOQ@mail.gmail.com>
+Subject: Re: [PATCH v11 07/10] PCI: of: Clear fwnode->dev during root bridge
+ node removal and error path
 To: Herve Codina <herve.codina@bootlin.com>
 Cc: driver-core@lists.linux.dev, linux-kernel@vger.kernel.org, 
 	linux-pci@vger.kernel.org, linux-sound@vger.kernel.org, 
@@ -77,40 +78,42 @@ Cc: driver-core@lists.linux.dev, linux-kernel@vger.kernel.org,
 	Ira Weiny <iweiny@kernel.org>, Li Ming <ming.li@zohomail.com>, Lizhi Hou <lizhi.hou@amd.com>
 Content-Type: text/plain; charset="UTF-8"
 
-On Wed, 9 Sep 2026 10:01:05 +0200, Herve Codina <herve.codina@bootlin.com> said:
-> The code set directly fwnode.dev field.
+On Wed, 9 Sep 2026 10:01:06 +0200, Herve Codina <herve.codina@bootlin.com> said:
+> During the of_pci_make_host_bridge_node() call, an OF node is created
+> dynamically and its fwnode device (fwnode->dev) is set to the PCI root
+> bridge device using the fw_devlink_set_device(&np->fwnode, &bridge->dev)
+> call.
 >
-> Use the dedicated fw_devlink_set_device() helper to perform this
-> operation.
+> On removal, of_pci_remove_host_bridge_node() is called and calls
+> device_remove_of_node() which in turn set to NULL the related
+> dev->fwnode.
 >
+> Later in the removal sequence, device_del() is called and runs its
+> cleanup logic:
+>
+>     if (dev->fwnode && dev->fwnode->dev == dev)
+>         fw_devlink_set_device(dev->fwnode, NULL);
+>
+> Because dev->fwnode has been cleared earlier, fw_devlink_set_device()
+> is not called and leaves fwnode->dev unchanged. This fwnode device
+> (fwnode->dev) becomes an dangling pointer.
+>
+> If any reference to the OF node is held after this removal, the pointer
+> is still accessible using the OF node (np->fwnode.dev) but points to a
+> freed area.
+>
+> The exact same issue is present in the of_pci_make_host_bridge_node()
+> error path leading to the exact same dangling fwnode->dev.
+>
+> Avoid this dangling fwnode->dev pointer by clearing it in
+> of_pci_remove_host_bridge_node() and in of_pci_make_host_bridge_node()
+> error path.
+>
+> Fixes: 1f340724419e ("PCI: of: Create device tree PCI host bridge node")
 > Cc: stable@vger.kernel.org
 > Signed-off-by: Herve Codina <herve.codina@bootlin.com>
-> Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 > Reviewed-by: Richard Cheng <icheng@nvidia.com>
 > Acked-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 > ---
-> Cc stable because used by other patches with Fixes + Cc stable
-> ---
->  drivers/pci/of.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/pci/of.c b/drivers/pci/of.c
-> index a51dff91b196..0f45c5b72458 100644
-> --- a/drivers/pci/of.c
-> +++ b/drivers/pci/of.c
-> @@ -882,7 +882,7 @@ void of_pci_make_host_bridge_node(struct pci_host_bridge *bridge)
->  	 * bus. Avoid any new device creation.
->  	 */
->  	of_node_set_flag(np, OF_POPULATED);
-> -	np->fwnode.dev = &bridge->dev;
-> +	fw_devlink_set_device(&np->fwnode, &bridge->dev);
->  	fwnode_dev_initialized(&np->fwnode, true);
->
->  	ret = of_changeset_apply(cset);
-> --
-> 2.55.0
->
->
 
 Reviewed-by: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
