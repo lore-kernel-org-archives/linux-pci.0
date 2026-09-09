@@ -1,93 +1,109 @@
-Received: from mail-wm2-f12.google.com (mail-wm2-f12.google.com [74.125.225.140])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF07C584949
-	for <linux-pci@vger.kernel.org>; Wed,  9 Sep 2026 14:58:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.140
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 88A50581254;
+	Wed,  9 Sep 2026 15:04:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788965921; cv=none; b=S/p0uy+DLqdtWgnP0tD8Pf8HqM21wdtGR1VPI6jXPmJwczLUmtqdEpbLuWDa8FKz80KAjKrbSBIVqil+B/Jk6mBxlhETLDX3lydI/nZ266/QRb6vIAMxWRxVRwBfm7wYGIKlEpXCf93FE/ZH39vyV2pSLr2oY/+awde4Rmg8DFA=
+	t=1788966245; cv=none; b=KSbG7RacUFY7r8hAa+S59cCYRxulgpHJBdCfeG6K3FgjIZ7EM4DnuHAB8QQO6jsFt9UIcoItGmP/CdFZXJmWr/PiwDJht313Ga4F12sRMmgU4bhEAz//1cYolihXGIAgoFGAFt8MYg5Y1QR8efq0heptakqceitIW0FFysnhj84=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788965921; c=relaxed/simple;
-	bh=OG8rM47+wQa5telCcXnv0ivoaCzuHrNel/g8JAXQwo0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Upu1MT1gVI2Bu2lTbCZwnqAIQ8FtX+Rm51uNqjLUBi1WnQdScasiLr9XT7BvwQuASgbJ9aOqSxWxXOYKHNd6+wDXSRA7RPYo4Mtfh3CP67gA4AovpnPdmxVSYTqHjCKIMms8Iu1NSYoD/L/P3Y+g3Xka18rDSgf7u2tXAyZHuwA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=gcrX/Osr; arc=none smtp.client-ip=74.125.225.140
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1788966245; c=relaxed/simple;
+	bh=2MdT73wBYQ5aWH6GiQDkiljtBumUdwQvf14tdmmF+qc=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=lBWX6UVNVpHdj7uI/wlD/SVagO7gEl/SYI6SIBm17ScyaxHAlNhHsfy8aU5AHdncxRPNSSQu5L0nJemZTmkHBTK53IfA6VoiBO1pteMrFQui+V/AMXP/UqM13Pf+oCMYCCGC2zBjbaBQN3ldTzKZar4G4KR8WjUe5fpUVQ9MYqA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AfGxj2UL; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="gcrX/Osr"
-Received: by mail-wm2-f12.google.com with SMTP id 5b1f17b1804b1-49cd38e0e5dso4168905e9.2
-        for <linux-pci@vger.kernel.org>; Wed, 09 Sep 2026 07:58:38 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1788965917; x=1789570717; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=OG8rM47+wQa5telCcXnv0ivoaCzuHrNel/g8JAXQwo0=;
-        b=gcrX/Osr7jULvPpbVsiR/YE9EUyFW21uf4qekP/mL8NCiWrT1G2PD6OTMxmnXIrSka
-         zqfBu5VH68FGtu7lDQVTDlvArzM+4iBhQ5nocWDOLp7d4KKrDA67U+PjVqCsFPgU+7DZ
-         ZKE0IKelzKPx5DmCzVdVlSMBGfvaT2ywShlnxBvYgzaZiNssuHexjXI5QPVZDugjDpac
-         hYRskKl/Htp256c7oZMUlEvnNlloEPSRqZbz0N7Ja+UgV7SxwsaK9XS9g/kRKaacRT5h
-         nJmuTTSDM15tsAc2Yk+K1Vy8KAtovzExAWL1uYxt4Vms3KMrckO0QgYfPM4ni+OzpLVc
-         8VNA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788965917; x=1789570717;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=OG8rM47+wQa5telCcXnv0ivoaCzuHrNel/g8JAXQwo0=;
-        b=gyhScUhM2sXfOvIwtoD9aO3lN8SZ7pyzYJNhqG+eETWgRjIDCob6UFjmY0AnL0NkKl
-         9J0wfW72FNOwv9wLPjpKh7vd41PMmtwRLZ3igLbFoSUxDLW1xeb5gxGxazQqBLQ3ZQQC
-         XT/xhWSba1X7wK1vdOQqKELrs29YZa11R03ITO0+Ak/Up4CorKdUIKn95vq76bLmKQba
-         bY4BFMTq40Duddt4OWGr4Vy80r74LIXU2Wzq7nAIGBDmIaUqw6+3qxbBVcZLyLjl3lQp
-         3w/5KvjfEWRNOQULqN/iZDuSmqWmSQjuZe37xD2UUQ3W0L2DTRxDoxOZS2wQyCvHHI9w
-         lU/A==
-X-Forwarded-Encrypted: i=1; AKwUvByLFAkK8q+b/0MZwcKcikt8mcBvh3ZPzzRi8kg7TbmObtzx80QFL79/eWPy4dpxGIB4+x/yKGt4PGs=@vger.kernel.org
-X-Gm-Message-State: AFuF++n16BD6paeldk90rUE3yEJi6FsS0H8ZzTjV7KHakG98VUQsen/I
-	pP3s5uc8ejGSq025LSscCe0FT6qfD59/Dc4i+dvXVcrNd4S8jRsX9/2N
-X-Gm-Gg: AYBFou3c4NThQceQ0vUjjhmFcE553EQ/gQ/wj18a+Yd7PnTaQFVClw8Ljb6rVljNj5p
-	0EOOeAGlAP3X5Xc66rlJy+dy6HPTswoy9hclHfPdEEUwwMHhryOG84tX4FUwFx4ntT6FI4OIGcQ
-	5ea/4U9IymD7Ou4KANE0r+Xqd5PHlfa79hw6jr5IiAf09PKWv2oSXug3b/piUxFjVqpE24pjZLZ
-	i2++zMUGnBdVtkyIyaQkUe0NVg/SMt7oYWLVrDsIopndZKChJKeTzQT9jfnhTkI1BUktD40VTUB
-	aW6Fg5fWeaKR5E5Qt6M7beE9LKMdacz8E5IS8w4vjLfszvWQSE92cFcmnXYnmT8jWyC4PJ57qqn
-	P0HDmPBMWc9AWYJsUKjfbVvx5oiDXZnQwjdYZIiVtyfyO6xi7vZtK0YAvWWXODo7uoelhIGruBL
-	uCuiDCJs67pxzTAgGEWNLSphkHhD8WsNFNYMo8NO00H81xBHGTRGMZXDWYM3U+1nRfl4tSiItYV
-	coAnw==
-X-Received: by 2002:a05:600c:8b88:b0:49c:f512:2361 with SMTP id 5b1f17b1804b1-49d2593842emr34218375e9.14.1788965916931;
-        Wed, 09 Sep 2026 07:58:36 -0700 (PDT)
-Received: from localhost ([2c0f:3d00:6be:8900:ce5e:9212:ea4b:f30])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49d00a5b19dsm423987255e9.2.2026.09.09.07.58.35
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 09 Sep 2026 07:58:36 -0700 (PDT)
-Date: Wed, 9 Sep 2026 17:58:32 +0300
-From: Dan Carpenter <error27@gmail.com>
-To: Breno Rodrigues Alves <breno3011alves@gmail.com>
-Cc: gregkh@linuxfoundation.org, torvalds@linux-foundation.org,
-	linux-kernel@vger.kernel.org, arnd@arndb.de,
-	linux-clk@vger.kernel.org, linux-input@vger.kernel.org,
-	linux-media@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-usb@vger.kernel.org, linux-sound@vger.kernel.org,
-	linux-staging@lists.linux.dev, linux-fbdev@vger.kernel.org,
-	linux-security-module@vger.kernel.org
-Subject: Re: [PATCH v9 1/3] interconnect: mediatek: fix Makefile typo for
- mt8196
-Message-ID: <aqF0GLDB5a-P-uvq@stanley.mountain>
-References: <20260905130925.7115-1-breno3011alves@gmail.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AfGxj2UL"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A5C511F00A3A;
+	Wed,  9 Sep 2026 15:04:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1788966243;
+	bh=hAWisZvYjjfSPgo/JC7Keaq0zB23MCYXUy0DsQS86bQ=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=AfGxj2UL3bT9uqwD/nNTxJ/0giIjGbdOj3SBiQhZK7bMWm/2WjcPqYP+HHK4RGela
+	 dPM0nVOU3J02xhTEUTWTj4KJXKn0ketXcczQ4rzgdyxEWazocmTluAPSqV+0zsXkP3
+	 HNmCZv1c7siUCQGqhwJFMOFNdl8LDrUmXUccZGwX9yArPUUqnhhF6Qb+nu6qXkGLWr
+	 elsdbFAqKtqt/UO9Qv1SFXYwQAJRaixiBUxqQL9LsNT6z2aDz78yU92KXbZsB8+lhF
+	 1wgv8GWSRPv5zmVTXICrP7BIt9pU87ImoqYP513jY2RmuoZdz6S2Crt96elKBKjVJr
+	 ildKWHAniTzDw==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v5 1/5] dt-bindings: PCI: toshiba,tc9563: Document
+ embedded GPIO controller
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Lorenzo Bianconi" <lorenzo.bianconi@oss.qualcomm.com>
+Cc: linux-pci@vger.kernel.org, robh@kernel.org, devicetree@vger.kernel.org, conor+dt@kernel.org
+In-Reply-To: <20260909-pci-tc9563-aux-v5-1-c9b33f56c8d3@oss.qualcomm.com>
+References: <20260909-pci-tc9563-aux-v5-0-c9b33f56c8d3@oss.qualcomm.com>
+ <20260909-pci-tc9563-aux-v5-1-c9b33f56c8d3@oss.qualcomm.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 09 Sep 2026 15:04:03 +0000
+Message-Id: <20260909150403.A5C511F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260905130925.7115-1-breno3011alves@gmail.com>
 
-What changed between versions?
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [Medium] Missing Required Properties for new GPIO provider capabilities
+--
 
-staticthinking.wordpress.com/2022/07/27/how-to-send-a-v2-patch/
+commit 384b355928f0212bcff0ab6c4447b15d28dc4109
+Author: Lorenzo Bianconi <lorenzo.bianconi@oss.qualcomm.com>
 
-regards,
-dan carpenter
+dt-bindings: PCI: toshiba,tc9563: Document embedded GPIO controller
 
+This commit documents the embedded GPIO controller within the TC9563 PCIe
+switch. It exposes the controller by adding the gpio-controller and
+#gpio-cells properties to the switch node, and updates the example to
+demonstrate downstream ports utilizing these lines.
+
+> diff --git a/Documentation/devicetree/bindings/pci/toshiba,tc9563.yaml b/=
+Documentation/devicetree/bindings/pci/toshiba,tc9563.yaml
+> index f084830c6d0cb..c4ebb99f50c37 100644
+> --- a/Documentation/devicetree/bindings/pci/toshiba,tc9563.yaml
+> +++ b/Documentation/devicetree/bindings/pci/toshiba,tc9563.yaml
+> @@ -31,6 +31,11 @@ properties:
+>      description:
+>        GPIO controlling the RESX# pin.
+> =20
+> +  gpio-controller: true
+> +
+> +  '#gpio-cells':
+> +    const: 2
+> +
+>    vdd18-supply: true
+> =20
+>    vdd09-supply: true
+
+[Severity: Medium]
+Does this binding need to include the newly added GPIO provider capabilities
+in the required properties list?
+
+When hardware gains new provider capabilities, the subsystem guidelines
+stipulate that the corresponding standard properties (gpio-controller and
+#gpio-cells) must be added to the required properties list.
+
+Looking at the required properties block further down in this file:
+
+Documentation/devicetree/bindings/pci/toshiba,tc9563.yaml:
+required:
+  - resx-gpios
+  - vdd18-supply
+  - vdd09-supply
+  - vddc-supply
+  - vddio1-supply
+  - vddio2-supply
+  - vddio18-supply
+  - i2c-parent
+
+If gpio-controller and #gpio-cells are omitted from this list, device trees
+created with the pci1179,0623 compatible string but lacking these properties
+could silently pass dt_binding_check validation but fail at runtime when
+dependent subsystems attempt to use the GPIO functionality.
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260909-pci-tc9563=
+-aux-v5-0-c9b33f56c8d3@oss.qualcomm.com?part=3D1
