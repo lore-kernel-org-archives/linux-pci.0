@@ -1,208 +1,195 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 208BC5476DE;
-	Wed,  9 Sep 2026 16:37:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6163735C6A3;
+	Wed,  9 Sep 2026 16:45:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788971850; cv=none; b=p9nVmMMJ6ZbXGEp8gnTM4gqamzFMFlhsmrtusKhV+sve3O1QGFqXuvwQCis5aKLlvlNzDtK3mMYEqneT0HeNiT+jHj13tcCpv4km1dMwQeEFxvXCIujiCHNGiyQ390dx5+AKB54/ZiGzXfOI9hpdJ0egTFpBDv/fvk5npP6mKmQ=
+	t=1788972341; cv=none; b=qm539BYr0gliQW5WLE9EkdGwy8glbW5T1MKOO2Zfi3ms1N7epUP6LLLZaMDTyHBNMXmvNPVtSBeHlQAoz4dUJ9th08H3byf9DrEZ/oGpvC29nM9+YbJUl6vM6fTGD8EYzzJk6PTocpUD9YfDg8HYRfSocv3iwd4rpZQB/+UClSs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788971850; c=relaxed/simple;
-	bh=N/hD3iOvqRwNXu2nhLNrbx6yX4nWYBeXwpJfjKZWovE=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=sl1GMLh5m/78h9sdVvMHECgHm0MeM1Ik2wADiqLR74nPvDuF4P1JYKl3+Wzc9+sNDVsbsBU9zn9ubLis6/f763ZRvmV4vdiMQrxO24ExDdKA0P/YmLWHLvudHPJRfjXxLWflP1IJTPsN4kcJKpjN6OwGDyZnVULa2+WVplJ/N2s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JeLmg2ez; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788972341; c=relaxed/simple;
+	bh=S+pvEOae1w9EY3/cY6pdjqNU25WCyd3zuhV+ssnJGs0=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=eLuWUn97+IDBMfUIEy0t+aIGxAV4zfifyPUIXL1NVOjvadICTpZ2+QsajbQuxv9UuUMjMe+wB8ImDK68k6XxHeZkytC9QIDtL5Ep2h2zxYYtbgpMevN1e57o+SDX7jegkr/7vuaB7xx0tc+bEC7IwMliYreufr5JRhfiJnH9i0I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MNEJU8kY; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JeLmg2ez"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8570C1F000FF;
-	Wed,  9 Sep 2026 16:37:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MNEJU8kY"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CE6F41F000FF;
+	Wed,  9 Sep 2026 16:45:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788971848;
-	bh=gnVa7gIkOilsSBkk9SQFHfHhrxiUZ2Bys5czQEdLfeU=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=JeLmg2ez+475CGd6yw266s23h9YJ/r7PbdpjdkEgxjQSW8gzAM6GatVpHGNoSmLjZ
-	 kahmX7VjaTQEPtaI/B1laQVFwc/HRIIpzlLQSsjjLiKw+Po+UVIh8ymj6D7evvhwn7
-	 UYl1ImDv4MyVv3pkDg4pKzNcfuY0+gUFlNgrnW6jS1tzg/0xYiP0bBmA6EjyxSOdQB
-	 EawRY11FJeF3iugsxJZacS9Hji0gwZAOXygNVrJAE46b6HraeOtwMS4OjZRgHN36n8
-	 TZd0cenwWRYqCq/0w+QR0nIIVpmV4C3D6XPlJTAX4mc7iAG+WREoS8TC9MnuqdcI6T
-	 BJlIwlLncKF0Q==
-Date: Wed, 9 Sep 2026 11:37:27 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Alex Elder <elder@riscstar.com>
-Cc: bhelgaas@google.com, robh@kernel.org, saravanak@kernel.org,
-	herve.codina@bootlin.com, daniel@riscstar.com,
-	mohd.anwar@oss.qualcomm.com, lorenzo.bianconi@oss.qualcomm.com,
-	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v5 4/4] PCI: of: introduce of_pci_verify_node()
-Message-ID: <20260909163727.GA230382@bhelgaas>
+	s=k20260515; t=1788972340;
+	bh=A/jniKq40jPlDXnhdNOINrXDBhOnEzAaf3qgB1VQ8V8=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=MNEJU8kYYPJM5p1KzrlKYUIAWlIS/JfrDZoULQIVBTRB1eAU8qddnQk6M/sJalOe+
+	 zZvHlAmUX+B/HNloNOb32DG79bafS8zz2mQlvAGl2SG6vzKDVR48SfMr6juzafTNQr
+	 3jJjkcnxyIjjcRgTWBtEtgJVvdo/6TpbDpLwJotgEhFdl9Ga/1s34xS+WDxGlJav8t
+	 8/fkMErq/irb/tDHZ0ucIuz7Fa85cBT06ed2s70xOry57YIxIUq0DcAHiJNuMDKBZz
+	 7QZjqqt8qolULnwYXxtyMtnR3ML9r9S2OLNhIbg1mn2ItotzKc+gz6w/JJvZjWLq8f
+	 OC/7gdvzlTqMQ==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v2] PCI/AER: Map a raw AER Capability image field by
+ field
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Dave Jiang" <dave.jiang@intel.com>
+Cc: linux-cxl@vger.kernel.org, linux-pci@vger.kernel.org
+In-Reply-To: <20260909163140.2723395-1-dave.jiang@intel.com>
+References: <20260909163140.2723395-1-dave.jiang@intel.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 09 Sep 2026 16:45:39 +0000
+Message-Id: <20260909164539.CE6F41F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260908213459.2519059-5-elder@riscstar.com>
 
-On Tue, Sep 08, 2026 at 04:34:58PM -0500, Alex Elder wrote:
-> Commit 407d1a51921e9 ("PCI: Create device tree node for bridge") linked
-> the PCI enumeration process together with devicetree, creating a devicetree
-> node for discovered PCI bridges.  Its successor commit ae9813db1dc5a ("PCI:
-> Add quirks to generate device tree node for Xilinx Alveo U50") shows how
-> to use a PCI final fixup quirk to also create a devicetree node for a
-> non-bridge PCI device.  These changes allowed devicetree overlays to
-> describe components downstream of a PCI device, by providing a place to
-> attach the overlay.
-> 
-> Note that the dynamic devicetree node is only created if the device didn't
-> already have an assigned node.
-> 
-> Later, commit aa7b4bbcb3a1d ("arm64: dts: qcom: qcs6490-rb3gen2: Add
-> TC9563 PCIe switch node") *pre-defined* devicetree nodes to represent the
-> PCI device nodes that would (also) be discovered via the PCI enumeration
-> process.  The devicetree node in this case is created with the content
-> from the DTS file.  So when a (host) bridge is done being initialized
-> during PCI enumeration, no node is dynamically created (the commits
-> mentioned above do not apply).
-> 
-> Ideally, any pre-defined PCI devicetree node would contain exactly the
-> same information as whatever the dynamic creation process would produce
-> (though it could include more).
-> 
-> However that is not the case for the pre-defined Qualcomm RB3gen2 nodes.
-> And in particular, the endpoint (function) nodes include this property:
-> 
->     device_type = "pci";
-> 
-> This is simply wrong; that property is meant only for bridge nodes.
-> 
-> Rob Herring requested that a runtime check to be added to spot this
-> specific error, only for non-bridge PCI devices.  Herve Codina further
-> suggested we ensure that bridge PCI devices *do* define the device_type
-> property, with value "pci".  We also accept "pciex" as the value of the
-> device_type property for bridges.
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
 
-IIUC this patch basically adds a warning for ill-formed DTs but
-doesn't otherwise change any behavior.  Obviously a developer could
-fix the DT, but what would a user do in response to the warning?  
+New issues:
+- [High] aer_cap_regs_unpack() causes data corruption and mis-parsing of AE=
+R registers on big-endian architectures due to mixed endianness inputs and =
+improper byte-offset access.
 
-Is there something that doesn't work when this warning is emitted, and
-fixing the DT would make it work?  If so, is there any hint that could
-be included in the warning?  E.g., "DT device_type is missing; can't
-support X"?
+Pre-existing issues:
+- [High] Memory allocated for `aer_info` from `ghes_estatus_pool` is perman=
+ently leaked when `aer_recover_queue()` fails to enqueue the error due to r=
+ing buffer overflow.
+--
 
-The commit log doesn't actually say directly what the patch does.  I
-asked gemini to work on it, and it produced this, which is
-straightforward but omits a lot of detail you might want:
+commit 5fdf5d4c5bbdafcab0279ec4f99b6ca67a1876af
+Author: Dave Jiang <dave.jiang@intel.com>
 
-  PCI: of: Verify "device_type" property for PCI device nodes
+PCI/AER: Map a raw AER Capability image field by field
 
-  According to the Open Firmware PCI Bus Supplement and Devicetree
-  Specification, the `device_type` property is reserved strictly for
-  PCI bridge nodes (with value "pci" or "pciex"). Non-bridge PCI
-  endpoint nodes must not include a `device_type` property.
+This commit introduces aer_cap_regs_unpack() to map raw AER capability
+registers field-by-field into the kernel's struct aer_capability_regs layou=
+t.
+It updates ACPI GHES, ACPI extlog, and CXL RCH error handling to use this
+unpacking routine instead of flat memory copies.
 
-  Pre-defined Device Tree nodes representing PCI devices sometimes
-  violate this requirement—such as endpoint nodes incorrectly
-  specifying `device_type = "pci"`, or bridge nodes omitting
-  `device_type` altogether.
+Link: https://lore.kernel.org/linux-cxl/CAJZ5v0hDv11cPuztPZsaDd7uwD_49KznJy=
+=3DtzuRO+dZc=3DCnAEQ@mail.gmail.com/
+Link: https://sashiko.dev/#/patchset/20260904172337.1409775-1-dave.jiang@in=
+tel.com?part=3D5
 
-  Introduce of_pci_verify_node() to sanity-check pre-defined Device
-  Tree nodes assigned to PCI devices as they are registered in
-  pci_bus_add_device():
+> diff --git a/drivers/acpi/apei/ghes.c b/drivers/acpi/apei/ghes.c
+> index 08c985e729d6c..ade1cc8c9f8d1 100644
+> --- a/drivers/acpi/apei/ghes.c
+> +++ b/drivers/acpi/apei/ghes.c
+[ ... ]
+> @@ -668,20 +668,7 @@ static void ghes_handle_aer(struct acpi_hest_generic=
+_data *gdata)
+>  		if (!aer_info)
+>  			return;
+> =20
+[ ... ]
+> +		aer_cap_regs_unpack(aer_info, pcie_err->aer_info, sizeof(pcie_err->aer=
+_info));
 
-    - Warn if a PCI bridge node lacks a "pci" or "pciex" `device_type`
-      property.
+[Severity: High]
+Will this corrupt the AER registers on big-endian architectures?
 
-    - Warn if a non-bridge PCI endpoint node contains a `device_type`
-      property.
+The pcie_err->aer_info buffer contains a strictly little-endian CPER payloa=
+d.
+However, aer_cap_regs_unpack() receives this raw byte stream and populates
+native u32 fields with it, which can lead to mis-parsing.
 
-I'd like to get Rob's Reviewed-by since I'm not really a DT expert.
+> =20
+>  		aer_recover_queue(pcie_err->device_id.segment,
+>  				  pcie_err->device_id.bus,
 
-> Reviewed-by: Herve Codina <herve.codina@bootlin.com>
-> Signed-off-by: Alex Elder <elder@riscstar.com>
-> ---
->  drivers/pci/bus.c |  1 +
->  drivers/pci/of.c  | 32 ++++++++++++++++++++++++++++++++
->  drivers/pci/pci.h |  3 +++
->  3 files changed, 36 insertions(+)
-> 
-> diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-> index 655ed53436d3e..679afbc6d3109 100644
-> --- a/drivers/pci/bus.c
-> +++ b/drivers/pci/bus.c
-> @@ -351,6 +351,7 @@ void pci_bus_add_device(struct pci_dev *dev)
->  	 * are not assigned yet for some devices.
->  	 */
->  	pcibios_bus_add_device(dev);
-> +	of_pci_verify_node(dev);
->  	pci_fixup_device(pci_fixup_final, dev);
->  	if (pci_is_bridge(dev))
->  		of_pci_make_dev_node(dev);
-> diff --git a/drivers/pci/of.c b/drivers/pci/of.c
-> index a51dff91b196d..5a040ed836744 100644
-> --- a/drivers/pci/of.c
-> +++ b/drivers/pci/of.c
-> @@ -1085,3 +1085,35 @@ int of_pci_get_equalization_presets(struct device *dev,
->  	return 0;
->  }
->  EXPORT_SYMBOL_GPL(of_pci_get_equalization_presets);
+[Severity: High]
+This is a pre-existing issue, but does aer_recover_queue() permanently leak
+the aer_info allocation if the ring buffer overflows?
+
+The aer_info is allocated from the fixed-size ghes_estatus_pool via
+gen_pool_alloc() earlier in this function. When passed to
+aer_recover_queue(), memory ownership is dropped without freeing it if
+the queue operation fails:
+
+drivers/pci/pcie/aer.c:aer_recover_queue() {
+    if (kfifo_in_spinlocked(&aer_recover_ring, &entry, 1,
+                            &aer_recover_ring_lock))
+        schedule_work(&aer_recover_work);
+    else
+        pr_err("buffer overflow in recovery...");
+        /* aer_regs pointer dropped here */
+}
+
+Since this pool is small and fixed-size, could an error storm that overflows
+the queue permanently deplete the pool and disable further ACPI GHES error
+reporting?
+
+> diff --git a/drivers/cxl/core/ras_rch.c b/drivers/cxl/core/ras_rch.c
+> index e0e01aa5eba6c..4005344dda55f 100644
+> --- a/drivers/cxl/core/ras_rch.c
+> +++ b/drivers/cxl/core/ras_rch.c
+[ ... ]
+> @@ -58,31 +58,17 @@ void cxl_disable_rch_root_ints(struct cxl_dport *dpor=
+t)
+>  static bool cxl_rch_get_aer_info(void __iomem *aer_base,
+>  				 struct aer_capability_regs *aer_regs)
+>  {
+[ ... ]
+> -	/* Use readl() to guarantee 32-bit accesses */
+> -	for (n =3D 0; n < read_cnt; n++)
+> -		aer_regs_buf[n] =3D readl(aer_base + n * sizeof(u32));
+> +	for (int n =3D 0; n < ARRAY_SIZE(raw); n++)
+> +		raw[n] =3D readl(aer_base + n * sizeof(u32));
 > +
-> +/**
-> + * of_pci_verify_node - Sanity check some PCI device node properties
-> + * @pdev: The PCI device whose device node is checked
-> + *
-> + * PCI enumeration authoritatively discovers what we need to know about
-> + * a PCI device.  A devicetree-based platform will represent a PCI root
-> + * bridge with a node, but otherwise devicetree doesn't typically include
-> + * many PCI nodes.  Where such nodes do exist, experience has shown that
-> + * the "device_type" property is sometimes wrong, so warn about that.
-> + */
-> +void of_pci_verify_node(struct pci_dev *pdev)
+> +	aer_cap_regs_unpack(aer_regs, raw, sizeof(raw));
+
+[Severity: High]
+Could populating the raw array using readl() cause data corruption on
+big-endian systems?
+
+By using readl(), the raw array is filled with host-endian values. When
+aer_cap_regs_unpack() later extracts byte-offsets via memcpy(), this will
+read from the wrong half of the u32 on big-endian architectures, swapping
+fields like the correctable and uncorrectable error sources.
+
+> diff --git a/drivers/pci/pcie/tlp.c b/drivers/pci/pcie/tlp.c
+> index 71f8fc9ea2edc..bba80c3803587 100644
+> --- a/drivers/pci/pcie/tlp.c
+> +++ b/drivers/pci/pcie/tlp.c
+[ ... ]
+> +void aer_cap_regs_unpack(struct aer_capability_regs *regs, const void *r=
+aw,
+> +			 size_t raw_len)
 > +{
-> +	struct device_node *np = pci_device_to_OF_node(pdev);
-> +	bool device_is_bridge;
-> +	bool device_type_pci;
-> +
-> +	/* Nothing to check if there's no pre-existing devicetree node */
-> +	if (!np)
+[ ... ]
+> +	if (raw_len < PCI_ERR_HEADER_LOG)
 > +		return;
+> +	memcpy(regs, raw, PCI_ERR_HEADER_LOG);
 > +
-> +	device_is_bridge = pci_is_bridge(pdev);
-> +	device_type_pci = of_node_is_type(np, "pci") ||
-> +			  of_node_is_type(np, "pciex");
-> +
-> +	/* Bridges should have device type "pci"; endpoints should not */
-> +	if (device_is_bridge == device_type_pci)
-> +		return;
-> +
-> +	dev_err(&pdev->dev, "PCI %s have \"pci\" device_type property\n",
-> +		device_is_bridge ? "bridge should" : "endpoint should not");
-> +}
-> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> index ba3c3fddddc23..2e33d3bd4b0ba 100644
-> --- a/drivers/pci/pci.h
-> +++ b/drivers/pci/pci.h
-> @@ -1253,6 +1253,7 @@ bool of_pci_supply_present(struct device_node *np);
->  int of_pci_get_equalization_presets(struct device *dev,
->  				    struct pci_eq_presets *presets,
->  				    int num_lanes);
-> +void of_pci_verify_node(struct pci_dev *pdev);
->  #else
->  static inline int
->  of_get_pci_domain_nr(struct device_node *node)
-> @@ -1308,6 +1309,8 @@ static inline int of_pci_get_equalization_presets(struct device *dev,
->  
->  	return 0;
->  }
-> +
-> +static inline void of_pci_verify_node(struct pci_dev *pdev) { }
->  #endif /* CONFIG_OF */
->  
->  struct of_changeset;
-> -- 
-> 2.53.0
-> 
+> +	flit =3D FIELD_GET(PCI_ERR_CAP_TLP_LOG_FLIT, regs->cap_control);
+
+[Severity: High]
+Will this extract the wrong bits on big-endian systems when processing
+little-endian CPER streams?
+
+If raw comes from ACPI GHES (where it is little-endian), the memcpy() just
+above populates regs->cap_control with little-endian bytes. On a big-endian
+system, this results in a byte-swapped integer, causing FIELD_GET() to read
+incorrect bits for the FLIT status and TLP log size.
+
+[ ... ]
+> +	if (raw_len >=3D PCI_ERR_ROOT_ERR_SRC + sizeof(regs->cor_err_source) +
+> +		       sizeof(regs->uncor_err_source)) {
+> +		memcpy(&regs->cor_err_source, raw + PCI_ERR_ROOT_ERR_SRC,
+> +		       sizeof(regs->cor_err_source));
+
+[Severity: High]
+Does this byte-level copy extract the wrong half of the register on
+big-endian systems?
+
+When raw is populated as a host-endian u32 array (as is done in
+cxl_rch_get_aer_info), copying 2 bytes from the PCI_ERR_ROOT_ERR_SRC offset
+will extract the upper 16 bits instead of the lower 16 bits on big-endian
+machines. This swaps the correctable and uncorrectable error source fields.
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260909163140.2723=
+395-1-dave.jiang@intel.com?part=3D1
