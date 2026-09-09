@@ -1,155 +1,158 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lf1-f50.google.com (mail-lf1-f50.google.com [209.85.167.50])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6DD7F5592FD
-	for <linux-pci@vger.kernel.org>; Wed,  9 Sep 2026 12:55:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65878559CA7
+	for <linux-pci@vger.kernel.org>; Wed,  9 Sep 2026 13:02:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788958517; cv=none; b=BQb4RDprXA4zBObgqU+rM8YS6/GD7BMnACBRf7CpXrgvs28xxIFPkF6rkCBB0pFRnWf5IVkAsJymLP0mabFo6TKL/qgUavkvax5odTYfvdGfBS1Lv+ZlRD65cZdKQm4HjJQ7w/1S5MfBjVFXj6dRyhpj7z9i4Z7eDUD/8P0LZtQ=
+	t=1788958943; cv=none; b=F7rqiqkB7sl3MTjqkq8bpdK440lCbQpbgFzjxGhEwISfreRcEWW+PCCw0A1295/E5xJ1Larsi6ymbukRUfhuVNOt1p6Zt4P46teo1wLa0qn3kXROdxjL1mjuR2sb1dNB46+IocWgQCsS5Vp+ofbUBBsVnnj/myffghownDzyJYY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788958517; c=relaxed/simple;
-	bh=7TBSuHy5oRrJQVVuqdv6lsELHPKVcaY4yxj5xAtDUds=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=acHaGq3tXaDcYFjWD73LZf9ET4Yp+vzun3Ja7lMhpjCV8lYDi+X1PYdKy0VhdfkNC7suoi/nc0B0kK73F8NYx1JtLDVDljDujqdMSc0wgEKq0fjf8qQLpFxj/5mkn2p/bluBnZjP4D1TW4/hClyK6g0G0SEPM4a0EAF1Tm4SKoo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=XWF2Q6pF; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=XXU3gHTV; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1788958943; c=relaxed/simple;
+	bh=j9Pi+ZLX4OZ+1G9Ee1d8lNIg/X9OdRMm+shG3FZAY0c=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=g1fDGmedqfmvuWjHKrgJzyRM7k+U9enJL34tK2JhXm7i81fH01FDGyV216hOc0powAPIKbeogazlZHqqwxYTvD5A1Sy0rYFjuuHy0wtlelWaGiNWtGBfZVoY/nBN+cvST35ikfN+3GKzoafU5ddcTAD3I/8Yhiwxq9QMVB40Sh0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=riscstar.com; spf=pass smtp.mailfrom=riscstar.com; dkim=pass (2048-bit key) header.d=riscstar-com.20251104.gappssmtp.com header.i=@riscstar-com.20251104.gappssmtp.com header.b=TteGEv3r; arc=none smtp.client-ip=209.85.167.50
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=riscstar.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=riscstar.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="XWF2Q6pF";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="XXU3gHTV"
-Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 689BU1xB1809999
-	for <linux-pci@vger.kernel.org>; Wed, 9 Sep 2026 12:55:14 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	Xp0l+FccINUxiHaMdx+4yzVfFMtmM60z+5A5uiSZ3jM=; b=XWF2Q6pFiI8nVG/b
-	zSHzCWhm2p7A0JOkmKiYSs/ozFkb2G8Y3EWVn3DbKxhL57A+J/QLKXTZ0qWwsaD1
-	PFZa7b1p8Iqo9agHznTq3UzrGIuDMFGRtdtCB8JPeVCgqhahWJ+ZknLGguAU4lOD
-	cTrbgXHj57W8BuT2hMhyO6gHaEBsdKcjcnzQTv+8OxJ1ba9fBYLqEaBwGiQL6W5v
-	Oai3mhzJDli9cV9nyAxepgEkEZDY+m9bpOxOxtd3v/XSnyt7I5yUwBSdcFZNhdz7
-	i6yUJaHvvyYpM0RiyVEeUCiH7Ag8FqRFNbRLrV4ID0cTfpf47s6mGzU5iBAcO1Bn
-	1QS2nw==
-Received: from mail-ua1-f70.google.com (mail-ua1-f70.google.com [209.85.222.70])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4gk4xj0q8j-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Wed, 09 Sep 2026 12:55:13 +0000 (GMT)
-Received: by mail-ua1-f70.google.com with SMTP id a1e0cc1a2514c-98087b0c5deso3766948241.2
-        for <linux-pci@vger.kernel.org>; Wed, 09 Sep 2026 05:55:13 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=riscstar-com.20251104.gappssmtp.com header.i=@riscstar-com.20251104.gappssmtp.com header.b="TteGEv3r"
+Received: by mail-lf1-f50.google.com with SMTP id 2adb3069b0e04-5b5e907853eso6057011e87.2
+        for <linux-pci@vger.kernel.org>; Wed, 09 Sep 2026 06:02:21 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1788958513; x=1789563313; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:mime-version:references
-         :in-reply-to:message-id:date:subject:cc:to:from:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=Xp0l+FccINUxiHaMdx+4yzVfFMtmM60z+5A5uiSZ3jM=;
-        b=XXU3gHTVicE2VP1Qv6AeXzbayoN9zca3/X3TZoqLWzV1eq6rVYvRLzjAGfpDE46AyU
-         YfYlFY+gLEyd4Qbq99UXozK6es6o9MketAgt2ZQtbRKyKlK4qIyquvayV6QpG1ZfZwWP
-         imrvUFd7dAHO0s3EfmoBL8FoVkT+d3YoxnuQ1Gaqfy0M2QkWNXXHbkXZSC60FLB6P2Yf
-         7FjCx4GvziuuyNXbAvWn+Of4th5DMwg5lohEeCNUdJJ7a28TOsrdWNBn91jqUkZD3wG3
-         WZfN0Up6O3Z5j3AOb51qOGCXVOcHynVM5xEhklQJU0K7CDHIUP6DMWElSIcxtAJEwFws
-         1fxA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788958513; x=1789563313;
-        h=content-transfer-encoding:content-type:mime-version:references
-         :in-reply-to:message-id:date:subject:cc:to:from:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+        d=riscstar-com.20251104.gappssmtp.com; s=20251104; t=1788958939; x=1789563739; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=Xp0l+FccINUxiHaMdx+4yzVfFMtmM60z+5A5uiSZ3jM=;
-        b=RD6jNyKEnSAE06lVyuYOZ4wNM9zPUsRbEBf2G6F0iLJkhcSlzU1U380R6qv+zKYe+u
-         kcXPQ7Qvqy8QIN/AF93IT/lbtsbT2mjzBySobcj71Gn14Dw5kQVMX4GdfU917fWjgGQA
-         g3WH5M2dZbId5eUVtSGW/ibnn0irCHCdLtx8csoCJ4XdnF4WSkt9MiQkTh6ymAtYeLjp
-         AO9KtaWWwc6njkdCXPNP3EiFF9iLhpx7ajTiuDQPEeaN8R0sdCUTo3EJPmMvIPjxA+Lv
-         6+Q+MDvgMOOQ1Zj8KJMJ035Cr3S4C3OmXF8cRv1U8jIyuQWD/2yH24LTxBRVqtP6xGgl
-         la6Q==
-X-Forwarded-Encrypted: i=1; AKwUvByWA01r8qU+4Aaz8J0iM71MJZW1O+yJyudenfS6zaXXkTIjQuU3pMZEMB+YJ0PEPt4361gZJirW8yo=@vger.kernel.org
-X-Gm-Message-State: AFuF++lWtpwKAiulnJdxL+Ld2rrxXfm6o2WG+b31DxUMjEVIGCLuch/0
-	Ld+n1KDFE12omrWjWZlgh842ppLjVl/bOvVTC6xOky5ORMsDoJ+8bcJQu/EyueDapZFlcm2B3aU
-	HuiNbNquPC/FubTArgzXRoyVTNaqH/7Uq0+c9eXdDlLLMqIDGTkpEHD/lmM0byDs=
-X-Gm-Gg: AYBFou1F9O/yjMfCzdYWZgfYX/V4u68JSq7vGPaRokcwnNyz/hUaea0CE/Dvp/uzg7x
-	mQHidV52/190OeQ0Xg3yUX9Xa/Mp9egfRsNoYwDZ7EdJhzwQITN7UNhkuXi7qn5EUPn+Rt3WLAS
-	aYjsaY97k8gBikJCM8713Q+9ZTNZgLCqRyvGugVAvJu5l7WWHxbabLpxI1JFnGRIWimQJFxZplF
-	za6uOujd4p3YtQIKRNawq2+PypI3L4/q9DrmkIQWfFrWamNrWvXmclN1NEEfCXrchss6OHmUiun
-	TuySWs3pyyevZjxXa+5XzMVLcb2R5ULbnUBZMG91HtVdHSvkQHUGtOSP+h3K2/zo+05VWBvM7T2
-	Q8E/DyWud9S40gwZM3kO4yUXRo7Q=
-X-Received: by 2002:a05:6102:5e91:b0:784:b882:9567 with SMTP id ada2fe7eead31-78a4a9d9306mr17098748137.6.1788958513386;
-        Wed, 09 Sep 2026 05:55:13 -0700 (PDT)
-X-Received: by 2002:a05:6102:5e91:b0:784:b882:9567 with SMTP id ada2fe7eead31-78a4a9d9306mr17098714137.6.1788958512927;
-        Wed, 09 Sep 2026 05:55:12 -0700 (PDT)
-Received: from brgl-qcom.home ([2a01:cb1d:dc:7e00:de8b:7fd5:2738:cc2a])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-485883a9234sm43616140f8f.14.2026.09.09.05.55.11
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 09 Sep 2026 05:55:12 -0700 (PDT)
-From: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
-To: Manivannan Sadhasivam <mani@kernel.org>,
-        Bartosz Golaszewski <brgl@kernel.org>,
-        Wei Deng <wei.deng@oss.qualcomm.com>
-Cc: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>,
-        linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
-        linux-kernel@vger.kernel.org, quic_chezhou@quicinc.com,
-        cheng.jiang@oss.qualcomm.com, shuai.zhang@oss.qualcomm.com,
-        jinwang.li@oss.qualcomm.com, xiuzhuo.shang@oss.qualcomm.com,
-        mengshi.wu@oss.qualcomm.com
-Subject: Re: [PATCH] power: sequencing: pwrseq-pcie-m2: Support PCIe switch topologies
-Date: Wed,  9 Sep 2026 14:55:09 +0200
-Message-ID: <178895850666.30743.6753366946500476857.b4-ty@oss.qualcomm.com>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20260907122129.1577279-1-wei.deng@oss.qualcomm.com>
-References: <20260907122129.1577279-1-wei.deng@oss.qualcomm.com>
+        bh=EUgF/CrYctElW8HYQdRdPRn47TT9mqidw6R7aTL1YFk=;
+        b=TteGEv3rw5PRh3xCi7RSZmo/XfTpdNoLKT3o7Fox3/2GC4IHNB2ykOR0AM75XfsnlN
+         46dFl78auB0XQtZup01uxByqtQ7sSuSS6ec3O7ekCli/4CLYgSCTSYfLF1coBs9CQCpp
+         p2OWw9XgjF3oDIFNe4l04YyTOijfe5GIJqxfKMU9zdMJPuVeC9b9HWPDnrhRrjmuX9P2
+         6uQfctIbZR1dGp3kJ75cHE2qr5ydQvEtm9rJqfS2dIJMTN7a/6uienhtR6TxUcTVHL0F
+         QvDbTMHMtVOIIWM9COzpy3bJThgzkHzEjV9jX47Xovlai/hdpszrhdZi4zzTAN1cvi/a
+         Q6wg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1788958939; x=1789563739;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=EUgF/CrYctElW8HYQdRdPRn47TT9mqidw6R7aTL1YFk=;
+        b=h+q8YgBkmyOVVIzHkSJRQ+e0ht9OylFlLqN+0jU+jS05LxopiGWAN02lfbvofF3E2H
+         paAEivIhlW/KyHKfRJljJLeC4mpek4KpQx3H/f7zhtH99iyQY5F8bIdnvWxdnU0JPt+Z
+         AMynNbK1aDDLkKnIi1k7WvFS0v3gJ991Y6DcgJcaM+EiLLO8LczlA0BIVt7DvXVh7Noj
+         oJu/YbGoL2ifLggVLaQ/zNWXgcTiWu2Y6d5tmInmmNeaPx7QyYav94wVtCHpZMOPlafc
+         bELfRF7sMaRRYV0k4JX+A1A8ytorL871BSfEf5WCalKP1szTVDxOpIR3m8TYN+qwJoZT
+         /nBg==
+X-Forwarded-Encrypted: i=1; AKwUvBwbHhzS++jViRJqqF8x60LEkUe278ug/eqjaHXCU2cHp4O184V5VU/yOfay771kYat2MVaUSzsUH7A=@vger.kernel.org
+X-Gm-Message-State: AFuF++m/NvG9xcSgXPQ/44srz4OyTvXZzPCAgfu13KUs44q4d5ZZR860
+	58tKl4yoN/o/8YdzTcAPKfdrnsGjMf8vg7qTOOV8Wq5xCEw7Z/TFP4fpaeu9yC1N+IU=
+X-Gm-Gg: AYBFou2QgjUhVJS0K2XChzok64/m95ArjcfoprEIX1PEWyeJ6CZlcGfv3LnEDcvJAKT
+	CH1rmsZdD3LA7ogpEjlPGoDGnQZ52h8cD/QUAuSuyU92aHHPBbw2h638iZ/nqU1FKhZRK4rGQ4E
+	ZGJH1C1zZ2ja1PWpI8BkRo4QTgtQChPFJ4BcAnjz5FnXSjB6V3ZMXUjqkYCVHfdBBcBvpx3AI6Z
+	2rKMzzo6PwoEbP1C3HJ1P5yC2mHS/yNBM8J0GmgotxKIu5ncj8mKrtQBRuya7B8Kmj526nLNLpb
+	7DMas947BEiN/cctlWO3k53jPOLKcDJWBwEfWB7oHf4BWT7Nu3oAE/8HADOtkJuiZ+5MVf4De6n
+	87mWrkSsoNIHC9XOr+OKCqA8iPZqu4YnEv3avfRFOPOkR5ILf1Z7yXehjoVBE7aGiNmXKs/ZjUb
+	CLcns2v0p4pL6aDKUq9f5cLFrmGbtJr6Q3XbgM2jYFHZetAR8j/mTDa9SZgVSHe1Xerl3xKFI=
+X-Received: by 2002:a05:6512:3f16:b0:5b6:1a7c:59e6 with SMTP id 2adb3069b0e04-5b61a7c5b4amr5179834e87.64.1788958938948;
+        Wed, 09 Sep 2026 06:02:18 -0700 (PDT)
+Received: from [172.22.22.28] ([73.62.185.64])
+        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-5b6166f6ca3sm3792717e87.32.2026.09.09.06.02.15
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 09 Sep 2026 06:02:17 -0700 (PDT)
+Message-ID: <9131cd8e-240d-4991-a248-a497f490474f@riscstar.com>
+Date: Wed, 9 Sep 2026 08:02:13 -0500
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-Spam-Info: AW1haW4tMjYwOTA5MDE0NCBTYWx0ZWRfX0h7F5XDg/oI6
- /YTycFXORQLedU+M38lhmMqWhG7aKynGehPQ0c+oJ0OPvO97VGAivUBRXglXjc6M9y71F6PpoXC
- cU3j+9/o/Rn/mvqJteZwq/Wvn/b0V0o=
-X-Authority-Analysis: v=2.4 cv=J52aKgnS c=1 sm=1 tr=0 ts=6aa15732 cx=c_pps
- a=R6oCqFB+Yf/t2GF8e0/dFg==:117 a=xqWC_Br6kY4A:10 a=IkcTkHD0fZMA:10
- a=VdqzKS8jKosA:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=u7WPNUs3qKkmUXheDGA7:22 a=rJkE3RaqiGZ5pbrm-msn:22 a=VwQbUJbxAAAA:8
- a=EUspDBNiAAAA:8 a=iDry_tSsOD4vq6Ch1OYA:9 a=QEXdDO2ut3YA:10
- a=TD8TdBvy0hsOASGTdmB-:22
-X-Proofpoint-ORIG-GUID: kTQv_No9EXWRJqPyMz1wbMZG-so-5EY5
-X-Proofpoint-GUID: kTQv_No9EXWRJqPyMz1wbMZG-so-5EY5
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTA5MDE0NCBTYWx0ZWRfX3f5c1Au6BTVi
- xODdvf/o7kQXWM7te5P45c49494CVkljDB2FHRPxtnPaR7aW1ZXjIZMffb/OEOXi0+epM0kfNBT
- ehXRoB3M+23joYkGl6rIp9NRphIUxGQ7Vp7CYrdiAi1amd4c59sgcrPkjX5DUq9xTQ8t2u5v1r2
- P0M5Pf/IA23rJpIeFm9ETLFsuXgCoasskMlte+ZXECUzgGBRkkci9/Z7Ig3aE69zyxyeMWfI/QZ
- /h3HlnOLej9id1bMMUwsx/tcCBteqvrz6tf/rAgX4QWIFkA2yXgMTI5wMFfBU2hKztD3LpIzAqv
- o0atvNQ9uBgUqBGMA3C8CKM+JcEVWXwkTXe53ob61xIfJtg1yid61w2JtC/bCSsoxiwasajgokN
- yHUNiRIrOpdfaOAMNTA9BlFODsIxTi7q/wRpgm0LDJphMHy7/Kl8Jb370PILu3IMG1mdpFN8MZP
- MCRbjE1aj+aBvDMusaA==
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-09-08_03,2026-09-09_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- lowpriorityscore=0 priorityscore=1501 spamscore=0 adultscore=0 malwarescore=0
- suspectscore=0 impostorscore=0 bulkscore=0 clxscore=1015 phishscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2609090144
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v5 2/4] PCI: of: drop the reg_num argument to
+ of_pci_set_address()
+To: sashiko-reviews@lists.linux.dev
+Cc: robh@kernel.org, linux-pci@vger.kernel.org, conor+dt@kernel.org,
+ devicetree@vger.kernel.org
+References: <20260908213459.2519059-1-elder@riscstar.com>
+ <20260908213459.2519059-3-elder@riscstar.com>
+ <20260908214601.7716D1F00A3A@smtp.kernel.org>
+Content-Language: en-US
+From: Alex Elder <elder@riscstar.com>
+In-Reply-To: <20260908214601.7716D1F00A3A@smtp.kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-
-On Mon, 07 Sep 2026 17:51:29 +0530, Wei Deng wrote:
-> The PCI parent OF node check in pwrseq_pcie_m2_notify() and
-> pwrseq_pcie_m2_create_serdev() only looks at the immediate parent of the
-> PCI endpoint device. This fails when a PCIe switch inserts one or more
-> intermediate bridges between the root port and the endpoint.
+On 9/8/26 4:46 PM, sashiko-bot@kernel.org wrote:
+> Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
 > 
-> For example, on lemans-evk with IFP Mezzanine board, the Toshiba TC9562
-> PCIe switch creates two bridge devices (upstream and downstream ports)
-> without OF nodes, so the WCN6855 BT device appears at depth 3 and its
-> immediate parent has of_node=NULL.
+> Pre-existing issues:
+> - [High] Leaked OF node reference counts in of_pci_prop_intr_map()
+> --
 > 
-> [...]
+> commit b3af32f45eed6da355a4a96246bdedb364fe0855
+> Author: Alex Elder <elder@riscstar.com>
+> 
+> PCI: of: drop the reg_num argument to of_pci_set_address()
+> 
+> The reg_num argument passed to of_pci_set_address() is always zero,
+> so get rid of it.
+> 
+> Reviewed-by: Herve Codina <herve.codina@bootlin.com>
+> Signed-off-by: Alex Elder <elder@riscstar.com>
+> 
+>> diff --git a/drivers/pci/of_property.c b/drivers/pci/of_property.c
+>> index d66c702218081..1caabbd4c18b5 100644
+>> --- a/drivers/pci/of_property.c
+>> +++ b/drivers/pci/of_property.c
+> 
+> [ ... ]
+> 
+> [Severity: High]
+> This is a pre-existing issue, but does this code leak device node reference
+> counts in of_pci_prop_intr_map()?
 
-Applied, thanks!
+Given of_pci_add_properties() is the only caller, it makes sense
+that this would be found (again).
 
-[1/1] power: sequencing: pwrseq-pcie-m2: Support PCIe switch topologies
-      https://git.kernel.org/brgl/c/935ecc5c86c5ae2693b2fbff83fc1bd086a9c915
+This was reported last month, and at that time I said I would
+investigate and fix this.
 
-Best regards,
--- 
-Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
+https://lore.kernel.org/sashiko-reviews/a647bd56-7dc8-4fec-9d96-834622054cdf@riscstar.com/
+
+I fixed the other problem reported there (possible null pointer
+dereference).
+
+I still intend to fix this, and will attempt to get to it soon.
+
+					-Alex
+  > When of_irq_parse_raw() successfully parses an interrupt, it acquires a
+> device node reference and stores it in out_irq[i].np:
+> 
+> drivers/pci/of_property.c:of_pci_prop_intr_map() {
+>      ...
+> 		ret = of_irq_parse_raw(laddr, &out_irq[i]);
+> 		if (ret) {
+> 			out_irq[i].np = NULL;
+> 			pci_dbg(pdev, "parse irq %d failed, ret %d", pin, ret);
+> 			continue;
+> 		}
+>      ...
+> 
+> However, the function returns without calling of_node_put() on the
+> successfully parsed nodes in the out_irq array. This leak occurs on all
+> return paths, such as when map_sz is zero or when kcalloc() fails:
+> 
+>      ...
+> 	if (!map_sz)
+> 		return 0;
+> 
+> 	int_map = kcalloc(map_sz, sizeof(u32), GFP_KERNEL);
+> 	if (!int_map)
+> 		return -ENOMEM;
+>      ...
+> 
+> Are we missing calls to of_node_put() for these references before
+> returning?
+> 
+
