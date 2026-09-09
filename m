@@ -1,129 +1,131 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mail-m16023652195.xmail.ntesmail.com (mail-m16023652195.xmail.ntesmail.com [160.236.52.195])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DBBB03C465;
-	Wed,  9 Sep 2026 00:36:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68ADA492E5D;
+	Wed,  9 Sep 2026 00:44:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=160.236.52.195
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788914182; cv=none; b=h81y4TzLV25PhnIjrOqFggsI/vmwDWfAX6knU8inVm3wyy08qgtj9rbwifGXZFCvxRMYyGpUUTM7DqRYVmSu/R8/iBun8Drdm2REpmh1n9thqN03Ypvc62wLsQ8Zxyo1MuwO4b8cQEuJB8HjKch50sQbvYKwu8o3RKG0i3khB1k=
+	t=1788914702; cv=none; b=KOCbSPzNNH4wYOdBJ3ChbWBIBsH0wxnbJdYWvUxVBX+8osd9a2cpUPsyx73RRYZj6xbq5Ia66EbFgoL9nY0grA8kFYO9AxlD3bI7GP+4e+UISFEqO0pLRVoZp1WqrsMKeWhPXnv8yGQn9hLdZGBrmb2LxqVyfa64NKf2IwgN2uE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788914182; c=relaxed/simple;
-	bh=7wkmoXyRy7w+oxwuVE1sWBi73BwaC7QBYD868rpUAGg=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=F+z7pr/YODtthlnvbRBINK/8ecTYnMzFz2NcyJS/tfLLQHQJN8VxHZVSRPDSlparjiyZw/p565ixZUDosKkn5qz5OBo+6loIWRr+bsXBiqLKg0TE0KMOzMwZPIIVOGOnhV1+iWz7ufGexAac/9LhhLZ/aYAMOYV3cFwiLY9bSq4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eQp3hthE; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788914702; c=relaxed/simple;
+	bh=sH4FKnF2NxYQnc2Zi/kCH5M1QzxGotg9J4RDP9ViLaE=;
+	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=QPEFasuRrb1CaN8DKrWmWhjsbSgiolquel4eKRTaHF9MjuZ3paDYhwVd63lUifcRCTxsFEsfGnptbHjZV+tIUZycGRBwPy8NLN/YH+MFohO9rxmlVS3D05dMh39+/HfyIPJ8cp1eO966FQLAj3TmZMvcjDwepA40/jRGX+La+xM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=e9NTEEIW; arc=none smtp.client-ip=160.236.52.195
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eQp3hthE"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 675761F00A3A;
-	Wed,  9 Sep 2026 00:36:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788914180;
-	bh=kHxVevvDuQ0pQtzGFb8Vsde6OZxErbsVBfZEdqemaes=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=eQp3hthEZC/C9zUUTfRS9L9VQN7296QlufrHkMzkv2FK6jQg+2atlo+wTmCLZt2iK
-	 LT/dLQjvp+y0LNUE+pYDvK4yjrMBAPF8uao6w9OOiGXcB7RqNcsqEmiA1Zu0rZCYBl
-	 GZBb2tGZ3zKiUSKXTU5/N0oC4G7obfsEEeyJRGDQPT5FOpJTEzMlysbcNxyiDYbrfw
-	 eL1zwwL7btYb8xoCv6E/vbZjln9WCfa6YrGubWfvX4OqlTwHFPWcVxFunuAF/vEhra
-	 hOjixsJbMq3Nl5Ad29Th2mVZv4NABBRjaXGSgYHJ9W2d6PRSMZVshzJsBeFaZQAIH6
-	 DFF1vu6rA4cOg==
-Date: Wed, 9 Sep 2026 01:36:16 +0100
-From: Jonathan Cameron <jic23@kernel.org>
-To: sashiko-bot@kernel.org
-Cc: sashiko-reviews@lists.linux.dev, alistair23@gmail.com,
- linux-pci@vger.kernel.org, ojeda@kernel.org, linux-cxl@vger.kernel.org
-Subject: Re: [PATCH v3 17/21] lib: rspdm: Support SPDM get_digests
-Message-ID: <20260909013616.13993627@jic23-huawei>
-In-Reply-To: <20260901012040.554EE1F000E9@smtp.kernel.org>
-References: <20260901010347.2614656-1-alistair.francis@wdc.com>
-	<20260901010347.2614656-18-alistair.francis@wdc.com>
-	<20260901012040.554EE1F000E9@smtp.kernel.org>
-X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
+	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="e9NTEEIW"
+Received: from [172.16.12.48] (unknown [61.154.14.86])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 4d08c1d9d;
+	Wed, 9 Sep 2026 08:44:48 +0800 (GMT+08:00)
+Message-ID: <4d441232-6ab5-4865-a70c-f868e8128f7e@rock-chips.com>
+Date: Wed, 9 Sep 2026 08:44:45 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+User-Agent: Mozilla Thunderbird
+Cc: shawn.lin@rock-chips.com, Alexey Charkov <alchark@flipper.net>,
+ linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ linux-rockchip@lists.infradead.org, linux-kernel@vger.kernel.org,
+ kernel@collabora.com
+Subject: Re: [PATCH v6 02/10] PCI: dw-rockchip: Restore vpcie3v3 regulator
+ handle
+To: Sebastian Reichel <sebastian.reichel@collabora.com>,
+ Lorenzo Pieralisi <lpieralisi@kernel.org>,
+ =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+ Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Heiko Stuebner <heiko@sntech.de>,
+ Philipp Zabel <p.zabel@pengutronix.de>, Jingoo Han <jingoohan1@gmail.com>,
+ Liam Girdwood <lgirdwood@gmail.com>, Mark Brown <broonie@kernel.org>,
+ "Yury Norov (NVIDIA)" <yury.norov@gmail.com>,
+ Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
+References: <20260908-rockchip-pcie-system-suspend-v6-0-fbabcca9921b@collabora.com>
+ <20260908-rockchip-pcie-system-suspend-v6-2-fbabcca9921b@collabora.com>
+From: Shawn Lin <shawn.lin@rock-chips.com>
+In-Reply-To: <20260908-rockchip-pcie-system-suspend-v6-2-fbabcca9921b@collabora.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-HM-Tid: 0aa0839fe00403a4kunm50f3116743e785
+X-HM-MType: 1
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFITzdXWRgWCB1ZQUpXWS1ZQUlXWQ8JGhUIEh9ZQVlCH0IdVk9MGkseSUJOQ01JTFYVFA
+	kWGhdVEwETFhoSFyQUDg9ZV1kYEgtZQVlNSlVKTk9VSk9VQ01ZV1kWGg8SFR0UWUFZT0tIVUpLSU
+	9PT0hVSktLVUpCS0tZBg++
+DKIM-Signature: a=rsa-sha256;
+	b=e9NTEEIWqkh7Z68AwWcaKw2n1Tx+hNYucPDaLw/joe2dmc0eusuvJC9uTUS6/osiyrEz/1iXmbi+GcbCQzY84/xyRH5OnH7Tt91mMMAwTo4iuryxRApYrm6MvmZOQZqAOV2qJg2ROIsA16acFLY3yXJ/KzvONULKiDLcOGWCgEw=; c=relaxed/relaxed; s=default; d=rock-chips.com; v=1;
+	bh=8BHp18JK7JZ2Mrw0ZrUESo0RJu+yED+tqkK5PcwM6KM=;
+	h=date:mime-version:subject:message-id:from;
 
-On Tue, 01 Sep 2026 01:20:39 +0000
-sashiko-bot@kernel.org wrote:
+在 2026/09/08 星期二 22:51, Sebastian Reichel 写道:
+> This reverts commit c930b10f17c0 ("PCI: dw-rockchip: Simplify regulator
+> setup with devm_regulator_get_enable_optional()"), which nicely cleaned
+> up the code.
+> 
+> The vpcie3v3 regulator handle is needed to disable the regulator during
+> system suspend (to be added in its own patch).
+> 
 
-> Thank you for your contribution! Sashiko AI review found 3 potential issue(s) to consider:
-> - [High] Buffer under-allocation for SPDM 1.3+ GET_DIGESTS responses leading to transport failure, transcript truncation, and EIO crashes.
-> - [Medium] The GET_DIGESTS implementation validates the payload length but completely discards the returned certificate digests.
-> - [Low] An undersized/truncated GET_DIGESTS response incorrectly logs an 'Overflow' error.
-> --
-> 
-> commit 7b16689f564246befd0f0c43fa0d4515876746e6
-> Author: Alistair Francis <alistair@alistair23.me>
-> 
-> lib: rspdm: Support SPDM get_digests
-> 
-> This commit adds support for the GET_DIGESTS SPDM command.
-> 
-> > diff --git a/lib/rspdm/state.rs b/lib/rspdm/state.rs
-> > index b78086c753702..131c22319b262 100644
-> > --- a/lib/rspdm/state.rs
-> > +++ b/lib/rspdm/state.rs  
-> [ ... ]
-> > @@ -612,4 +630,64 @@ pub(crate) fn negotiate_algs(&mut self) -> Result<(), Error> {
-> >  
-> >          Ok(())
-> >      }
-> > +
-> > +    pub(crate) fn get_digests(&mut self) -> Result<(), Error> {
-> > +        let mut request = GetDigestsReq::default();
-> > +        request.version = self.version;
-> > +
-> > +        let req_sz = core::mem::size_of::<GetDigestsReq>();
-> > +        let rsp_sz = core::mem::size_of::<GetDigestsRsp>() + SPDM_SLOTS * self.hash_len;  
-> 
-> [Severity: High]
-> Does this calculation fail to account for SPDM 1.3+ fields like KeyPairID,
-> CertificateInfo, and KeyUsageMask?
-> 
-> For SPDM 1.3+ compliant responders, up to 32 bytes of additional fields
-> can be returned. Because param2 is a bitmask of provisioned slots rather
-> than a count, any device using slots >= 4 will produce a response size far
-> larger than the allocated buffer, which could trigger an EIO crash.
-> 
-> Even for lower slots, this calculation omits the 1.3 fields from the
-> transcript, which could cause a permanent signature verification failure
-> in challenge authentication due to transcript desynchronization.
+Reviewed-by: Shawn Lin <shawn.lin@rock-chips.com>
 
-Nope. Feature turned off by requester not asking for it (yet!)
-
+> Signed-off-by: Sebastian Reichel <sebastian.reichel@collabora.com>
+> ---
+>   drivers/pci/controller/dwc/pcie-dw-rockchip.c | 23 +++++++++++++++++------
+>   1 file changed, 17 insertions(+), 6 deletions(-)
 > 
-> > +
-> > +        // SAFETY: `request` is repr(C) and packed, so we can convert it to a slice
-> > +        let request_buf = unsafe { from_raw_parts_mut(&mut request as *mut _ as *mut u8, req_sz) };
-> > +
-> > +        let mut response_vec: KVec<u8> = KVec::from_elem(0u8, rsp_sz, GFP_KERNEL)?;
-> > +
-> > +        let len = self.spdm_exchange(request_buf, response_vec.as_mut_slice())? as usize;
-> > +
-> > +        // The transport must report a length within the buffer we provided.
-> > +        if len > response_vec.len() {
-> > +            pr_err!("Overflowed digests response\n");
-> > +            return Err(EIO);
-> > +        }
-> > +        response_vec.truncate(len);
-> > +
-> > +        let response: &GetDigestsRsp = Untrusted::new(response_vec.as_slice()).validate()?;  
+> diff --git a/drivers/pci/controller/dwc/pcie-dw-rockchip.c b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
+> index dc85564e5001..f67ad3c31c35 100644
+> --- a/drivers/pci/controller/dwc/pcie-dw-rockchip.c
+> +++ b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
+> @@ -112,6 +112,7 @@ struct rockchip_pcie {
+>   	unsigned int clk_cnt;
+>   	struct reset_control *rst;
+>   	struct gpio_desc *rst_gpio;
+> +	struct regulator *vpcie3v3;
+>   	struct irq_domain *irq_domain;
+>   	const struct rockchip_pcie_of_data *data;
+>   	bool supports_clkreq;
+> @@ -844,15 +845,22 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
+>   		return ret;
+>   
+>   	/* DON'T MOVE ME: must be enable before PHY init */
+> -	ret = devm_regulator_get_enable_optional(dev, "vpcie3v3");
+> -	if (ret < 0 && ret != -ENODEV)
+> -		return dev_err_probe(dev, ret,
+> -				     "failed to enable vpcie3v3 regulator\n");
+> +	rockchip->vpcie3v3 = devm_regulator_get_optional(dev, "vpcie3v3");
+> +	if (IS_ERR(rockchip->vpcie3v3)) {
+> +		if (PTR_ERR(rockchip->vpcie3v3) != -ENODEV)
+> +			return dev_err_probe(dev, PTR_ERR(rockchip->vpcie3v3),
+> +					"failed to get vpcie3v3 regulator\n");
+> +		rockchip->vpcie3v3 = NULL;
+> +	} else {
+> +		ret = regulator_enable(rockchip->vpcie3v3);
+> +		if (ret)
+> +			return dev_err_probe(dev, ret,
+> +					     "failed to enable vpcie3v3 regulator\n");
+> +	}
+>   
+>   	ret = rockchip_pcie_phy_init(rockchip);
+>   	if (ret)
+> -		return dev_err_probe(dev, ret,
+> -				     "failed to initialize the phy\n");
+> +		goto disable_regulator;
+>   
+>   	ret = reset_control_deassert(rockchip->rst);
+>   	if (ret)
+> @@ -885,6 +893,9 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
+>   	clk_bulk_disable_unprepare(rockchip->clk_cnt, rockchip->clks);
+>   deinit_phy:
+>   	rockchip_pcie_phy_deinit(rockchip);
+> +disable_regulator:
+> +	if (rockchip->vpcie3v3)
+> +		regulator_disable(rockchip->vpcie3v3);
+>   
+>   	return ret;
+>   }
 > 
-> [Severity: Medium]
-> Does this completely discard the returned certificate digests?
-> 
-> The SPDM specification mandates that requesters compare the hash of the
-> certificate chain with the digest returned in get_digests. There doesn't
-> seem to be any storage for these digests in SpdmState, meaning this
-> cryptographic binding between the get_digests response and the certificate
-> chain downloaded in get_certificate might never be verified.
-
-This one is curious. I can't find a reference to the spec requiring that.
-Digests are a short cut, I think you can always ignore them and just use the certs
-themselves.  I couldn't find any text requiring the certs if we ignore the digests
-but maybe it is hiding in there somewhere.
 
