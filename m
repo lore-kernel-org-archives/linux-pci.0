@@ -1,64 +1,64 @@
-Received: from mail-oi1-f169.google.com (mail-oi1-f169.google.com [209.85.167.169])
+Received: from mail-oi1-f174.google.com (mail-oi1-f174.google.com [209.85.167.174])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 191FA322C88
-	for <linux-pci@vger.kernel.org>; Wed,  9 Sep 2026 02:23:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.169
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 80E8530C37A
+	for <linux-pci@vger.kernel.org>; Wed,  9 Sep 2026 02:23:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788920582; cv=none; b=kHQg6BZcvvBvT+bhYimOxGbwllhb9Fx+6Cii5qT8aHtQCXCQZN9AdUakEo986aQVlxVdHrSZXiQJH2sSb3W0yTN6pQVVP2APB6iPJj6+SMkX0erLGbXe4a6Y4FJ3Okb5n+8uO4Y51NsDw7k5P5I0Vxg/C46X26m7s4waHfxMPmo=
+	t=1788920585; cv=none; b=TXFuvenoP9rDEwSRaOpKIobC3zq7iLMcMooPNG0IHwkCGFThRD45vNqHpb6I3Uw8Sivvyt03KX8sR8s376jQm+H4a/0fDCDWrkUpV5ZeYg+9J71Vb8BvGc3xDQb8znRsDGUQLPsjgmkQKsAyViZpstS5iSiPnNGgWZTo57CefRU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788920582; c=relaxed/simple;
-	bh=kahNmhGL8r0OStd+UDk1yegSCb1Wry94V4qhk0XcnPY=;
+	s=arc-20240116; t=1788920585; c=relaxed/simple;
+	bh=BTT1HRR8Y8bxVmGOAFwMGT6IKlZ+/KjvH1QKz8C93JM=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Fid35R8lNRDSbVi/AI9mSmR1oB59SrbDBN91HvRDkocaYCLVS7uM71HvpdsQ0iogTuEp09ga5OStNc+HusTtwqbYOhs2mP2KAMhnbWCY081VeduLiLxjDptWgltrIbnck8Sv9dRhHe+lAYT2lJ4sfJALmSVVIDIifCKO5G6e/cI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=mCAVcNKZ; arc=none smtp.client-ip=209.85.167.169
+	 MIME-Version; b=jwUzHwvtaWJD4ZVzns+pUlN7CZRMvkwfGWSyqfXyA77A7X/mLv3RASEnvliiZ1tnbyfkmuDu3sJzQsvdi8GpC7kbdFw3P7rDnUvLyc+y+NhVUEP+ibW/RR3RwouwWWz//IyC21AwZiplbgYptXUHmyeaXAcr/I/y/GkRH4iGbKc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=QcrmIwTM; arc=none smtp.client-ip=209.85.167.174
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="mCAVcNKZ"
-Received: by mail-oi1-f169.google.com with SMTP id 5614622812f47-4ab8cb2a6e4so3778421b6e.0
-        for <linux-pci@vger.kernel.org>; Tue, 08 Sep 2026 19:23:00 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QcrmIwTM"
+Received: by mail-oi1-f174.google.com with SMTP id 5614622812f47-4b396d2fb9bso2238928b6e.0
+        for <linux-pci@vger.kernel.org>; Tue, 08 Sep 2026 19:23:04 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1788920580; x=1789525380; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1788920583; x=1789525383; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=VZMyQef+oIqclLbtgPWrdXN2+jow9YDnTQ19wlR5TNs=;
-        b=mCAVcNKZc+1JZK03AAOp/VBYhRQz5oNSv+yRNRsJaiIS8pgfXyv9YidJsykTBKvOZo
-         wE++7BTif5mnAUIDmu7E0wzbRmRgkue57KBXN2dhNNgrWIZHmxn9mfdHoqvYykCEc4JY
-         MQ/gEcC0SO5s0apmeXNO+Y0sjGdcwM00xWkywPOdNpNnlEal606DZSp3rN9JGNGstzRG
-         HLZoMEmfyvIc/LuDuSKO0WBtQUKR0x1NxdrVRYnFNiRdFWF5Uiv/UK9oysohp6T+HKxl
-         JySH6s8IBnGbuKe6tYDz/ZMkigyaSD1GaUHqmn5BygLemjf/1gpx+1P9maJmM5dG+4Ps
-         FQ5A==
+        bh=qNFbGC6vHD9KVYO70GmfNmbHZwcxJjLkcoNakQKwQ9g=;
+        b=QcrmIwTMX7ky7AoAC6elp3gRVmIjTk+AsAjWU3H8f7X/tEiyty5ljwnsNTrMz2g7vd
+         WES0bygsOrO5Sj6kR6EDCIxKocwQ8+WcBw2pwdWiLHhiOPrOmg/angsHwyRSUZdWxjtd
+         um8wZaCZ+nldd01m9Z4Jud7GqiF9I36FdvhEXtMWA2A5ioa6WiriAKqdR3OleMSJM4OT
+         vy2oGNuopEvOwcSbi6vQQShlHSplJLbNAh1k6b+I+1BQlT1u2cu7WhQmBRhD/aol+Yzb
+         IS9hBUBd7wV/YSSsrjXZNT0VJqCtSGnWblz/6xur4ENT0M+tvfG9yiJGVYcb/glCy2hE
+         3LBw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788920580; x=1789525380;
+        d=1e100.net; s=20251104; t=1788920583; x=1789525383;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=VZMyQef+oIqclLbtgPWrdXN2+jow9YDnTQ19wlR5TNs=;
-        b=bSB8D8MftIeZM26vW655EFK7UoyRfHbsg8SZqSROx6zoruDt70sza4v2qkqt6pm3gE
-         KmCnQ0E+UaKV+qP2JykIoRqCQDWr9FaW3dgOgwSCCmw/Hf+JWHvi0mmBFaS6QVo9nvjW
-         nR2s073Un3XZgTLaYmQUuJqqJWcSm5lBblx1GuibP2ov9bb14voIhTAv3mlHcPBvj9oe
-         DjzFpq0qMnS4eBRX4LAlad2VHlQuYaoBOUof3/J9+L7iUgsHj4B29M/pIVxXpjlvyLwE
-         VOLuCPnxq4PkZv8S18ywVCgwF2QHf9Q6GpUZo9RodXZ2qwOZijoPfLL6u9wxzU46iaC6
-         X2CQ==
-X-Forwarded-Encrypted: i=1; AKwUvBzKOy5BysAIPmuKiE+ELpXbjoG2+OXJe2m4Y97BI3VFWFkaGOOhUIO5x3obljui13Pz1BoFOS2F+EA=@vger.kernel.org
-X-Gm-Message-State: AFuF++kraz7VPH7e4YyjQgm3FpjNPUYCYUd5o3/IrZCBE8qx8dmHKmpv
-	aD9/ODisoqQzUBQDSsViAgpBrFTtfXJjT0+3cp1i4fo2wp8vL1/oh9kG
-X-Gm-Gg: AYBFou027iLR4s6mQ6EZd8AYcMhPd+KE0fbrMX8oMK8KC6GaVQqURGctWSxjCwsdPl8
-	iMLoYUmxLk4teP7DeyTpzfCTv96z9dAHk5e5CdYYI3OVAGHu0gCDHerTQXf0J47vlhu6jFJh6Ee
-	FfLzk79efkV1VILgVg3HciZv55lxAt7WpwzE2y8BM2dt+DUa/0yr2VhfXgTjJib2JubhX+gHhza
-	Vi/bPxfHkXQ5NI27CiGUu/FI+UaXwK+wWemFfBhaNlYnD7URSdhaeNN+iGCm+r8Wr1g05QwC6oQ
-	mnGsLHOOBQKVx5FYk5Vcw5+/d/D3vZb2UNkPj4YH7hIpZR3fAj/l/lxZlZhVJgZWUBI1Ox8RgHI
-	n46SlIJJuss7ddJeQO0lg91wNW/GEKr9/xAx0iGi9KzXdlbE1XAkmt14rqRRjAK5sKXfL6TnEd2
-	avHnIbixzKAjhFpVWWsbUvQ3jPPvbcptPXlfRjYgHdX/R2TYDNtOW4AYFcTho5ADgZJvMzDIYCI
-	IqMfsZRRYGx90GTCL0ylX7HvQ==
-X-Received: by 2002:a05:6808:1783:b0:4b1:b83a:5878 with SMTP id 5614622812f47-4b961a7b906mr20611009b6e.14.1788920579975;
-        Tue, 08 Sep 2026 19:22:59 -0700 (PDT)
+        bh=qNFbGC6vHD9KVYO70GmfNmbHZwcxJjLkcoNakQKwQ9g=;
+        b=ESk6Jelxs66kyXgmFi4k15oYewKLe8iBq4A8kVuOIoG0bx2Po7JQa4eFNyiEJHPR9j
+         AW+FpmmBulUQaeLoiwlbx1jxfiMApKjeEkxjhumifKVJvrAiShW6jFyx2pfaNt4VEtMV
+         jPfR2RYlIMs4nE6/+MTt6qkscoWCRUVsOycdxud5aOR4JVhf7D1dFR71hlblDUwz1Nke
+         XDMIcMLWkVPT4aGpIhDBk4+414RK5rFNDi7SJ1Z5I0ETqyakTfG8scfFqDNXc8eNqtt4
+         pnu+wy2EU5LC95Wom8x4fNAaMCNCm0lIZaBXQflWTrzp+e/G25k2WTsZzAoJvRM1brJU
+         cRQg==
+X-Forwarded-Encrypted: i=1; AKwUvBy11EgEAGzTB2V4fdC31m0DsJKliYbLTae5wFM+8vuvBGNTg+u35bGrenLLAkrAzgjahKsEjxfrwYc=@vger.kernel.org
+X-Gm-Message-State: AFuF++kr7DBGJInoHtz+uKYMsfeosBW8FMlG4SfOgyypMn2XeNk18h4r
+	ImZTsmDletxxTr3pCVY3Qn5FHMak0bUB9himeomOBEeuydK6NgFXvr4O
+X-Gm-Gg: AYBFou20wCujTwG3W36/9JbfrWJak2z1fquL9o3OJ8nxso3WaD8LG1+nlBpGidKOYbz
+	bd7U4PUJNhozH4QL/IJ5Zr0zb0Qncw47IDy5PTA5dtKB6hf9S9UYrKQvuFI+5XhSHWvi5x+uABC
+	OrAjHP/V1nibtUIFD9rwaiL9p77C7v6ZPC/tZRsy05KMuGzqiK2tKXfhIDGhCjsAC2aj6FF22JD
+	z3Fdg/Opcy+h98/hr+XKjEYJrQdFwQAGuME6Zy3d3BRxUbMuZIboMnAVRV7jkboC5OwVIVeaUD0
+	ooPQIYOTHjfT7Ljc+XATuIY5kq0gdUovjNgWrpW9Ha1bVZ984UAgLH5rfDHB/KsUAD7iUpSeS7s
+	0xvANG8A2OYFhjSPONtKdPA4tMjnYyKBYSym+bA7AIGVqiqGjlWSqZXKV4BgT3h5zLLeQcc8tqw
+	4m4oLWSL4AQuKJy0H56TbU16NlHMOJ7oHDwM/DgbpNtdG7sqkqize4RM7mnCd4IwYqiYgwXugPg
+	FQwewb3nP9R4REksa0MhjY5jQ==
+X-Received: by 2002:a05:6808:1b23:b0:4b9:a88b:8885 with SMTP id 5614622812f47-4b9a88b903emr16330362b6e.27.1788920583238;
+        Tue, 08 Sep 2026 19:23:03 -0700 (PDT)
 Received: from david-hassan-Inspiron-15-3567 ([69.162.230.54])
-        by smtp.gmail.com with ESMTPSA id 5614622812f47-4b971aa12cesm15580584b6e.16.2026.09.08.19.22.56
+        by smtp.gmail.com with ESMTPSA id 5614622812f47-4b971aa12cesm15580584b6e.16.2026.09.08.19.23.00
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 08 Sep 2026 19:22:57 -0700 (PDT)
+        Tue, 08 Sep 2026 19:23:01 -0700 (PDT)
 From: Fahmy Hassan <fahmymohammed@gmail.com>
 To: helgaas@kernel.org,
 	bhelgaas@google.com,
@@ -67,9 +67,9 @@ Cc: fahmymohammed@gmail.com,
 	kees@kernel.org,
 	linux-kernel@vger.kernel.org,
 	linux-pci@vger.kernel.org
-Subject: [PATCH v2 1/5] PCI: cpqphp: Check pci_hp_add_bridge() return value
-Date: Tue,  8 Sep 2026 20:22:22 -0600
-Message-ID: <20260909022227.620217-2-fahmymohammed@gmail.com>
+Subject: [PATCH v2 2/5] PCI: cpcihp: Check pci_hp_add_bridge() return value
+Date: Tue,  8 Sep 2026 20:22:23 -0600
+Message-ID: <20260909022227.620217-3-fahmymohammed@gmail.com>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260909022227.620217-1-fahmymohammed@gmail.com>
 References: <20260909014143.GA123333@bhelgaas>
@@ -82,12 +82,13 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-cpqhp_configure_device() calls pci_hp_add_bridge() without checking
-its return value. pci_hp_add_bridge() already logs an error for one
-failure path (no bus number available for the hot-added bridge), but
-returns silently if the bridge's subordinate bus isn't created after
-scanning -- that path goes completely unreported, and either way the
-caller currently has no way to notice or react to the failure.
+cpci_configure_slot() calls pci_hp_add_bridge() for each bridge on the
+newly added slot without checking its return value. pci_hp_add_bridge()
+already logs an error for one failure path (no bus number available
+for the hot-added bridge), but returns silently if the bridge's
+subordinate bus isn't created after scanning -- that path goes
+completely unreported, and either way the caller currently has no way
+to notice or react to the failure.
 
 Log an error via the driver's existing err() macro when
 pci_hp_add_bridge() fails, identifying the device involved, and
@@ -95,38 +96,40 @@ remove the now-resolved TODO entry.
 
 Signed-off-by: Fahmy Hassan <fahmymohammed@gmail.com>
 ---
- drivers/pci/hotplug/TODO         | 2 --
- drivers/pci/hotplug/cpqphp_pci.c | 4 +++-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/pci/hotplug/TODO               | 4 ----
+ drivers/pci/hotplug/cpci_hotplug_pci.c | 5 +++--
+ 2 files changed, 3 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/pci/hotplug/TODO b/drivers/pci/hotplug/TODO
-index 7397374af171..215ab36df11d 100644
+index 215ab36df11d..0a8e23546e5e 100644
 --- a/drivers/pci/hotplug/TODO
 +++ b/drivers/pci/hotplug/TODO
-@@ -14,8 +14,6 @@ cpqphp:
- * A large portion of cpqphp_ctrl.c and cpqphp_pci.c concerns resource
-   management.  Doesn't this duplicate functionality in the core?
+@@ -1,9 +1,5 @@
+ Contributions are solicited in particular to remedy the following issues:
  
+-cpcihp:
+-
 -* Returned code from pci_hp_add_bridge() is not checked.
 -
- ibmphp:
+ cpqphp:
  
- * Implementations of hotplug_slot_ops callbacks such as get_adapter_present()
-diff --git a/drivers/pci/hotplug/cpqphp_pci.c b/drivers/pci/hotplug/cpqphp_pci.c
-index 81c58b1ec200..34803f36ba65 100644
---- a/drivers/pci/hotplug/cpqphp_pci.c
-+++ b/drivers/pci/hotplug/cpqphp_pci.c
-@@ -100,7 +100,9 @@ int cpqhp_configure_device(struct controller *ctrl, struct pci_func *func)
+ * The driver spawns a kthread cpqhp_event_thread() which is woken by the
+diff --git a/drivers/pci/hotplug/cpci_hotplug_pci.c b/drivers/pci/hotplug/cpci_hotplug_pci.c
+index 6c48066acb44..3deeec8dd206 100644
+--- a/drivers/pci/hotplug/cpci_hotplug_pci.c
++++ b/drivers/pci/hotplug/cpci_hotplug_pci.c
+@@ -269,8 +269,9 @@ int cpci_configure_slot(struct slot *slot)
+ 	parent = slot->dev->bus;
+ 
+ 	for_each_pci_bridge(dev, parent) {
+-		if (PCI_SLOT(dev->devfn) == PCI_SLOT(slot->devfn))
+-			pci_hp_add_bridge(dev);
++		if (PCI_SLOT(dev->devfn) == PCI_SLOT(slot->devfn) &&
++		    pci_hp_add_bridge(dev))
++			err("pci_hp_add_bridge(%s) failed", pci_name(dev));
  	}
  
- 	if (func->pci_dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
--		pci_hp_add_bridge(func->pci_dev);
-+		if (pci_hp_add_bridge(func->pci_dev))
-+			err("bus/device/function %x/%x/%x: pci_hp_add_bridge() failed\n",
-+			    func->bus, func->device, func->function);
- 		child = func->pci_dev->subordinate;
- 		if (child)
- 			pci_bus_add_devices(child);
+ 	pci_assign_unassigned_bridge_resources(parent->self);
 -- 
 2.53.0
 
