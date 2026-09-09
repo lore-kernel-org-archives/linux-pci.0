@@ -1,75 +1,145 @@
-Received: from mailout1.hostsharing.net (mailout1.hostsharing.net [83.223.95.204])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4126B3845B7;
-	Wed,  9 Sep 2026 06:42:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.223.95.204
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 5C68E2F691D;
+	Wed,  9 Sep 2026 06:45:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788936169; cv=none; b=iQEVmqrmM4m/RMXYrBzEPSS0dErQH0mdpdVkjYsHG+tA1lpFIsT6oJ04q1etxVC3FtIyQL3v496MGRt32CZEM40qv67MmGmGEwzBpiFE/QQ1mfMv61htZlQO/p0SfdELYh9iYnhf3vdqP6Ru/p2VbJ5azsIcIrY1be5tOrzrOqo=
+	t=1788936311; cv=none; b=UFNEzp46+e+71jpzSlxf0V4cG+KD26XtVtpA//6/niBfpN6Qk86h1F/jUSCUD6NcZEkx98zaD/Y2UbmsxbpFHQQmtkAGuOA7ek+/mvyEmXCQKrkzVGsu+2feUIpiIOYZpwPH0axH3eM4pvJTB4sUK54GDs+lPxuZAHiL6ktyqZ0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788936169; c=relaxed/simple;
-	bh=0zHnaPVgYAIlDcasohtjxnsml0RJUyCb/n5Azd+cpCc=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=pHNwIsyJHJxOzV8wCatrlkwtqIViH6S026YyxxNW1xDV/QGAhbzBoJhSo5bOVJeERIWF9VYK5ECloM/JBDIVg3XA8c/7yv6zHoE3FPkBSC+DBzPCXuabaQowC5JEPbys3oK2E+7R5CFExpN8jq6Ogl4fRzpCT7U+Mj/8GAsNF/g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=83.223.95.204
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
-Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
-	 client-signature ECDSA (secp384r1) client-digest SHA384)
-	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
-	by mailout1.hostsharing.net (Postfix) with ESMTPS id 7345CF4E;
-	Wed, 09 Sep 2026 08:42:37 +0200 (CEST)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-	id 4B7AF627236C; Wed,  9 Sep 2026 08:42:37 +0200 (CEST)
-Date: Wed, 9 Sep 2026 08:42:37 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Fahmy Hassan <fahmymohammed@gmail.com>
-Cc: helgaas@kernel.org, bhelgaas@google.com, scott@spiteful.org,
-	kees@kernel.org, linux-kernel@vger.kernel.org,
+	s=arc-20240116; t=1788936311; c=relaxed/simple;
+	bh=fudgSko1uyn6b/jzQYCBTsav8YTLi0nmj5z9Zc9yCZg=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=DAFc6usDyd9qXUZtGGW6lugOBpVUe6NLTd7F6sbIgJc/WRmRxOs/Lt9TNLg3igo1rokmsMa1OlO9/dkEFs/Ymh8EuOMM4E2FHOphK6OlWLzwQ4X9dqgyFgoMXqjCszC47bZNy6YDf4qhX+Ei0kbiHeupJv7zwGvTOeoICVgLykQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=qYGdzgUd; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="qYGdzgUd"
+Received: from CPC-namja-026ON.localdomain (unknown [4.213.232.16])
+	by linux.microsoft.com (Postfix) with ESMTPSA id 580E620B7128;
+	Tue,  8 Sep 2026 23:44:13 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 580E620B7128
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1788936261;
+	bh=D2jMSvJ0QumxAlxtQi3sXRQT3/KmY5yZSB1ZodcX/0w=;
+	h=From:To:Cc:Subject:Date:From;
+	b=qYGdzgUd3mkOz5Uakq9RbP3Ib5HK/OGgHQbrlZEjTQIDnVSMJ+rumckpAq1SlGSey
+	 ZcBeOJ7P8qEHDxo/3+2iRyBLsXPWDjmKCWr/IOY7ICt/Xo6vpy6ugiToU1h/nU7cEA
+	 vEEjKffDoDVs1k5vV7XVY7nuqel90+zF0uqA2GCY=
+From: Naman Jain <namjain@linux.microsoft.com>
+To: Thomas Gleixner <tglx@kernel.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	Borislav Petkov <bp@alien8.de>,
+	Dave Hansen <dave.hansen@linux.intel.com>,
+	x86@kernel.org,
+	"H . Peter Anvin" <hpa@zytor.com>,
+	Wei Liu <wei.liu@kernel.org>,
+	"K . Y . Srinivasan" <kys@microsoft.com>,
+	Haiyang Zhang <haiyangz@microsoft.com>,
+	Dexuan Cui <decui@microsoft.com>
+Cc: Michael Kelley <mhklinux@outlook.com>,
+	Long Li <longli@microsoft.com>,
+	Nam Cao <namcao@linutronix.de>,
+	Joerg Roedel <joro@8bytes.org>,
+	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
+	Vasant Hegde <vasant.hegde@amd.com>,
+	Will Deacon <will@kernel.org>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Kees Cook <kees@kernel.org>,
+	"Rafael J . Wysocki" <rafael@kernel.org>,
+	Radu Rendec <radu@rendec.net>,
+	Sean Christopherson <seanjc@google.com>,
+	Kai Huang <kai.huang@intel.com>,
+	Dmitry Ilvokhin <d@ilvokhin.com>,
+	Shradha Gupta <shradhagupta@linux.microsoft.com>,
+	Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
+	Thierry Reding <treding@nvidia.com>,
+	Jiri Wiesner <jwiesner@suse.de>,
+	Daniel J Blueman <daniel@quora.org>,
+	linux-hyperv@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	iommu@lists.linux.dev,
 	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 4/5] PCI: pciehp: Check pci_hp_add_bridge() return
- value
-Message-ID: <aqD_3ULr3ls4S9IN@wunner.de>
-References: <20260909014143.GA123333@bhelgaas>
- <20260909022227.620217-1-fahmymohammed@gmail.com>
- <20260909022227.620217-5-fahmymohammed@gmail.com>
+Subject: [PATCH v4 0/4] x86/irq: Fix lost interrupts on CPU hot-unplug
+Date: Wed,  9 Sep 2026 06:44:44 +0000
+Message-ID: <20260909064448.1004-1-namjain@linux.microsoft.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260909022227.620217-5-fahmymohammed@gmail.com>
+Content-Transfer-Encoding: 8bit
 
-On Tue, Sep 08, 2026 at 08:22:25PM -0600, Fahmy Hassan wrote:
-> pciehp_configure_device() calls pci_hp_add_bridge() for each bridge on
-> the newly added slot without checking its return value.
-> pci_hp_add_bridge() already logs an error for one failure path (no
-> bus number available for the hot-added bridge), but returns silently
-> if the bridge's subordinate bus isn't created after scanning -- that
-> path goes completely unreported, and either way the caller currently
-> has no way to notice or react to the failure.
-> 
-> Log an error via the driver's existing ctrl_err() macro when
-> pci_hp_add_bridge() fails, identifying the device involved.
+On CPU hot-unplug, fixup_irqs() re-injects interrupts that are still
+pending in the outgoing CPU's IRR via the irqchip's irq_retrigger()
+callback. The Hyper-V root partition PCI/MSI irqchip lost that callback
+when it was converted to msi_create_parent_irq_domain(), so such a
+pending interrupt is silently dropped, leading to lost interrupts, stalls
+and "No irq handler for vector" messages.
 
-The only change here is to log something on error.  That can be done
-in pci_hp_add_bridge() itself without having to amend every caller.
+Patch 1 is the minimal, backportable fix (Fixes:/Cc: stable) that restores
+irq_chip_retrigger_hierarchy() on the Hyper-V root partition PCI/MSI chip.
+The equivalent guest pci-hyperv.c fix from the previous version is already
+merged, so it is dropped here.
 
-However pci_hp_add_bridge() already logs an error for the one failure
-case that merits an error message.
+Patch 2 then switches fixup_irqs() to have a fallback call to
+irq_chip_retrigger_hierarchy() directly, if a chip does not define
+irq_retrigger callback.
 
-The return value is normally evaluated to do something, such as
-bailing out or unwinding some earlier actions.  But in this case,
-I'm not seeing a need to do that.
+Patch 3 makes a similar change in msi_set_affinity()
 
-So I believe this change isn't necessary, at least as far as pciehp
-is concerned.
+Patch 4 then drops the now-redundant irq_retrigger() initializations.
+This way, patch 2-4 do not need to be backported.
 
-Thanks,
+Changes since v3:
+https://lore.kernel.org/all/20260907065129.269262-1-namjain@linux.microsoft.com/
+* Move irq_retrigger setting to hv_init_dev_msi_info() in patch 1
+  (Michael, Nam) 
+* Add if-else fallback check in msi_set_affinity() in patch 3 (Michael)
+* Break patch 3 into two separate patches, while *keeping review tags*.
 
-Lukas
+Changes since v2:
+https://lore.kernel.org/all/20260810090716.2325295-1-namjain@linux.microsoft.com/
+* Add a backportable fix for Hyper-V root partition irqchip (Wei)
+* Add a check for custom irq_retrigger implementations and add direct
+  irq_chip_retrigger_hierarchy() calls as a fallback if it is not
+  defined by a chip. (Sashiko, Michael)
+* Removed local loop variable change, and continue using the irq_desc
+  accessor function (Michael)
+* Did not pick "Acked-by: Manivannan Sadhasivam" as it was on v1, and v3
+  is a functionally different to some extent, specially patch 2.
+  Requesting you to please review again.
+
+Changes since v1:
+https://lore.kernel.org/all/20260728135117.2888175-1-namjain@linux.microsoft.com/#t
+* Added Review tags
+* Adding minor clarification in commit msg of patch 2 (Shradha)
+
+Original RFC: https://lore.kernel.org/all/87y0f3jhd6.ffs@fw13/
+
+Naman Jain (4):
+  x86/hyperv: Set irq_retrigger for root partition PCI/MSI irqchip
+  x86/irq: Fall back to irq_chip_retrigger_hierarchy() in fixup_irqs()
+  x86/irq: Fall back to irq_chip_retrigger_hierarchy() in
+    msi_set_affinity()
+  x86/irq, iommu/amd, x86/hyperv, PCI: Drop redundant irq_retrigger
+    inits
+
+ arch/x86/kernel/apic/io_apic.c      |  2 --
+ arch/x86/kernel/apic/msi.c          | 12 ++++++++----
+ arch/x86/kernel/hpet.c              |  1 -
+ arch/x86/kernel/irq.c               | 19 +++++++++++--------
+ drivers/iommu/amd/init.c            |  1 -
+ drivers/pci/controller/pci-hyperv.c |  1 -
+ 6 files changed, 19 insertions(+), 17 deletions(-)
+
+
+base-commit: 944a035ecca915ae947905dcfb03f2b9dc6d032c
+-- 
+2.43.0
+
