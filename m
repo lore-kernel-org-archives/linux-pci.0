@@ -1,125 +1,76 @@
-Received: from mail-m155115.qiye.163.com (mail-m155115.qiye.163.com [101.71.155.115])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9077C1D4606;
-	Wed,  9 Sep 2026 02:12:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=101.71.155.115
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC629248F57;
+	Wed,  9 Sep 2026 02:16:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788919954; cv=none; b=FajIq414nHd1LMCrvl6DOb2YLZ1h5yWYBgZmvp1EVfhKguHmoA0HUs6D7xT8Ag9oDH3Hg8/3uKzBF6Tw3YtJpGYGd47MmJcyFMJLX6HqWQ0XkrXdalqOZrRQL6y64ANgdtCFuGkOR2A6Nmm//M6coV/LvDzGRBwwW1QW06ZSM/w=
+	t=1788920166; cv=none; b=hab1Oy9WlyDX4eBJysEs6UNMD+QmP4e3Dj8b12TAKKBrpUB7Gs7M3ns1LNFm58wBXiTURlTlUaCoJuLAn5EtiUDPSLcVEZxf2V7ML2m0s9GwAAFTEORBS3egqmCTwZXV+aN91o7CISacVcGQhkev1dPPoTxfeaqO5rykAu0FtHs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788919954; c=relaxed/simple;
-	bh=s4Er3CcgxMh8NZ3RtDzUBec2wo9/lN8HlEU7UoDE2LE=;
-	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=oO60bKQmobasYy/5pmSMtfob7ZY+3dmwlTi3CgqH3W1O332pboSIWxjaeZ36iHnDOQIuv+IaZzzpfheITAIx+SM1g39izsMitCRO+TRpz05F0YFSylpL97sIyvedisBwiocMQViiyNhIiqYaHKTn/tG6YoTnn7HTT8iu/za2qjg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=M85xuT2J; arc=none smtp.client-ip=101.71.155.115
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
+	s=arc-20240116; t=1788920166; c=relaxed/simple;
+	bh=lUFrlgGfrmBslO74eUZpRflTrmPFslKsHsfBJt9X56A=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=knaaSukKxnENx1OMFt9AFcFwxeIPJ2GSw9UubJfBnGfH4VIk6zKCnhQGXAIxptwUQS+ton8v5Jiz2ffihjcYxzgWXmdrQY1LqBVYimrL0RACADVX2dfx7doA5nx2YG51CRcLlOBR0UE/N4ipmEae7t4Gc8hSr/31HfIbzf+96e0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ouq7r6qK; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="M85xuT2J"
-Received: from [172.16.12.48] (unknown [58.22.7.114])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 4d0922f42;
-	Wed, 9 Sep 2026 08:56:45 +0800 (GMT+08:00)
-Message-ID: <f26552c9-0950-4206-8d39-b615e3737651@rock-chips.com>
-Date: Wed, 9 Sep 2026 08:56:44 +0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ouq7r6qK"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2E3D61F00A3A;
+	Wed,  9 Sep 2026 02:16:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1788920165;
+	bh=8m9T0NBkpuEteUBrfyjLaTedu451cNX3Eh8hcZA5qSw=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=ouq7r6qK3Z+2UYOyZTc4drccPC2te8bMopgDkApqA4gBGKLhLT14c46gGWdB6oweL
+	 yx9/cC7/703WbE7AftZHsv8EbK8NVJJah6jF10Ji+3K/XTuAu+8m6fEK23O6PY4Qi5
+	 Ri5wIVj7wkbdKC7XRDEjcQVo9xcDLcYRWwPaQEmIS1aR1EWvFsoepgqIlUMbsTFXit
+	 3PZpASboUmFsrZ7bHNWgxXLNwwvVGq1adEbirVf2VUZgtIp1a8RABgeNX9nqlCkSkV
+	 LGPA5NGIMfeG4OudP++a3ZYOnI2LsNLAUBFQOH1d+h398V5dr9/bT8O7J+A+NqqN98
+	 zI9U65d+fQQSw==
+Date: Tue, 8 Sep 2026 21:16:03 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Leon Romanovsky <leon@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Logan Gunthorpe <logang@deltatee.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Jens Axboe <axboe@kernel.dk>, Chaitanya Kulkarni <kch@nvidia.com>,
+	Jason Gunthorpe <jgg@ziepe.ca>, Ankit Agrawal <ankita@nvidia.com>,
+	Alex Williamson <alex@shazbot.org>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Tushar Dave <tdave@nvidia.com>,
+	Matt Evans <matt@ozlabs.org>
+Subject: Re: [PATCH 0/5] Batch of PCI peer-to-peer fixes
+Message-ID: <20260909021603.GA155620@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Cc: shawn.lin@rock-chips.com, Alexey Charkov <alchark@flipper.net>,
- linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- linux-rockchip@lists.infradead.org, linux-kernel@vger.kernel.org,
- kernel@collabora.com
-Subject: Re: [PATCH v6 04/10] PCI: dw-rockchip: Add helper function for
- enhanced LTSSM control mode
-To: Sebastian Reichel <sebastian.reichel@collabora.com>,
- Lorenzo Pieralisi <lpieralisi@kernel.org>,
- =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
- Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Heiko Stuebner <heiko@sntech.de>,
- Philipp Zabel <p.zabel@pengutronix.de>, Jingoo Han <jingoohan1@gmail.com>,
- Liam Girdwood <lgirdwood@gmail.com>, Mark Brown <broonie@kernel.org>,
- "Yury Norov (NVIDIA)" <yury.norov@gmail.com>,
- Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
-References: <20260908-rockchip-pcie-system-suspend-v6-0-fbabcca9921b@collabora.com>
- <20260908-rockchip-pcie-system-suspend-v6-4-fbabcca9921b@collabora.com>
-From: Shawn Lin <shawn.lin@rock-chips.com>
-In-Reply-To: <20260908-rockchip-pcie-system-suspend-v6-4-fbabcca9921b@collabora.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-HM-Tid: 0aa083aad1c203a4kunm88587246440179
-X-HM-MType: 1
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFDSUNOT01LS0k3V1kYFggdWUFKV1ktWUFJV1kPCRoVCBIfWUFZGkhJGlYfHh4aTk9KHR
-	pJQk1WFRQJFhoXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0
-	tIVUpLSU9PT0hVSktLVUpCS0tZBg++
-DKIM-Signature: a=rsa-sha256;
-	b=M85xuT2JXX3DURsJ++iD9e9zee9YmU6/UQ/FVBMxz6V/w1u5rksNrh9mykBTETEjSIMOoPHrMaRbvXqsDmjzKzaYQeIXyCT9Nv/6OvTBPVkWib9HHNbW/eRMhpG//5nsZt2obyb/gGPfRX8AFyEG4JdqlOqZIV+QCTDB/TdGEBc=; c=relaxed/relaxed; s=default; d=rock-chips.com; v=1;
-	bh=7MYZRtAVw85vCznj5/QFIWvq8+/sZ52tn4n6V859Sc4=;
-	h=date:mime-version:subject:message-id:from;
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260830-batch-p2p-fixes-v1-0-5044e8dfbe2e@nvidia.com>
 
-在 2026/09/08 星期二 22:51, Sebastian Reichel 写道:
-> Remove code duplication and improve readability by introducing a new
-> function to setup the enhanced LTSSM mode.
+On Sun, Aug 30, 2026 at 02:16:18PM +0300, Leon Romanovsky wrote:
+> Hi Bjorn,
 > 
-
-Reviewed-by: Shawn Lin <shawn.lin@rock-chips.com>
-
-> Signed-off-by: Sebastian Reichel <sebastian.reichel@collabora.com>
+> These fixes come from my larger series that aligns the code with the PCI
+> specification regarding the handling of ACS bits [1].
+> 
+> This series has already been reviewed by Logan and Jason.
+> 
+> Thanks,
+> 
+> [1] https://lore.kernel.org/all/20260821-fix-p2p-acs-v4-0-v4-0-94426b96de73@nvidia.com/
+> 
+> Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
 > ---
->   drivers/pci/controller/dwc/pcie-dw-rockchip.c | 24 ++++++++++++++----------
->   1 file changed, 14 insertions(+), 10 deletions(-)
+> Leon Romanovsky (5):
+>       PCI/P2PDMA: Do not tear down the allocate attribute on registration failure
+>       PCI/P2PDMA: Wait for RCU readers before freeing state
+>       PCI/P2PDMA: Restrict the p2pmem search to pool backed providers
+>       PCI/P2PDMA: Safely terminate ACS redirect lists
+>       PCI/P2PDMA: Gate the host bridge whitelist warning on verbose
 > 
-> diff --git a/drivers/pci/controller/dwc/pcie-dw-rockchip.c b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-> index 7472ec78b473..6f84b07406d4 100644
-> --- a/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-> +++ b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-> @@ -696,6 +696,18 @@ static irqreturn_t rockchip_pcie_ep_sys_irq_thread(int irq, void *arg)
->   	return IRQ_HANDLED;
->   }
->   
-> +static void rockchip_pcie_enable_enhanced_ltssm_control_mode(struct rockchip_pcie *rockchip,
-> +							     u32 flags)
-> +{
-> +	u32 val;
-> +
-> +	/* Enable the enhanced control mode of signal app_ltssm_enable */
-> +	val = FIELD_PREP_WM16(PCIE_LTSSM_ENABLE_ENHANCE, 1);
-> +	if (flags)
-> +		val |= FIELD_PREP_WM16(flags, 1);
-> +	rockchip_pcie_writel_apb(rockchip, val, PCIE_CLIENT_HOT_RESET_CTRL);
-> +}
-> +
->   static int rockchip_pcie_configure_rc(struct platform_device *pdev,
->   				      struct rockchip_pcie *rockchip)
->   {
-> @@ -719,9 +731,7 @@ static int rockchip_pcie_configure_rc(struct platform_device *pdev,
->   		return ret;
->   	}
->   
-> -	/* LTSSM enable control mode */
-> -	val = FIELD_PREP_WM16(PCIE_LTSSM_ENABLE_ENHANCE, 1);
-> -	rockchip_pcie_writel_apb(rockchip, val, PCIE_CLIENT_HOT_RESET_CTRL);
-> +	rockchip_pcie_enable_enhanced_ltssm_control_mode(rockchip, 0);
->   
->   	rockchip_pcie_writel_apb(rockchip,
->   				 PCIE_CLIENT_SET_MODE(PCIE_CLIENT_MODE_RC),
-> @@ -765,13 +775,7 @@ static int rockchip_pcie_configure_ep(struct platform_device *pdev,
->   		return ret;
->   	}
->   
-> -	/*
-> -	 * LTSSM enable control mode, and automatically delay link training on
-> -	 * hot reset/link-down reset.
-> -	 */
-> -	val = FIELD_PREP_WM16(PCIE_LTSSM_ENABLE_ENHANCE, 1) |
-> -	      FIELD_PREP_WM16(PCIE_LTSSM_APP_DLY2_EN, 1);
-> -	rockchip_pcie_writel_apb(rockchip, val, PCIE_CLIENT_HOT_RESET_CTRL);
-> +	rockchip_pcie_enable_enhanced_ltssm_control_mode(rockchip, PCIE_LTSSM_APP_DLY2_EN);
->   
->   	rockchip_pcie_writel_apb(rockchip,
->   				 PCIE_CLIENT_SET_MODE(PCIE_CLIENT_MODE_EP),
-> 
+>  drivers/pci/p2pdma.c | 30 ++++++++++++++++++------------
+>  1 file changed, 18 insertions(+), 12 deletions(-)
 
+Applied to pci/p2pdma for v7.4, thanks!
