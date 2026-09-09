@@ -1,91 +1,55 @@
-Received: from fout-a3-smtp.messagingengine.com (fout-a3-smtp.messagingengine.com [103.168.172.146])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D6C67592204;
-	Wed,  9 Sep 2026 21:13:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.146
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5241F46E01A;
+	Wed,  9 Sep 2026 22:02:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788988400; cv=none; b=hksJLRVMiH40fst48hlEMPuBmJzMa1mbBtMIW7iwJ/l3lzB3o02yIS8HmIi4Gz3gE/tnlTNQijAw2HsYraHlGcnWAaYRyN4BLfnqaK6EUntbrWKBKX9UNs1aOma0rznQaNXPOHGg+JFu6ggCw5zdTLEs+L35Dj7NHxditUgBQKo=
+	t=1788991364; cv=none; b=jw64Vmx4A3DnCATtUYgf1cNqTXSXkWgzerNbBZiEwzEMGfccI8Ct+9qpDzahNlUU0RFZxb+3uolW0kKmsZxnzUByP/ww82SyeeNSfUF6eE5fRat8NXatygDkpQtz9Vy64gnWDe6mR+6J9usOpyfeAEuwIPOyO6XZnlHQn7Krg8w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788988400; c=relaxed/simple;
-	bh=TLYWA2OlV0T2+Gnczo58khoYa/604KOFHHj3zSahl9M=;
+	s=arc-20240116; t=1788991364; c=relaxed/simple;
+	bh=sCM1UdrVbNRGe8PfPQDVzs0vs8uirXfGfgF4fMvEDRQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=F//IC3UaaR4B0HClL3v8LNxXsV+H65hbfHeOJSJpqmMWJV1O3Wzrm5cLGL8//XIPQmMg/DTqbLMRkS2P9WWwLhl+MR/Htj11bW6Np6LV7p+p72LtEacvFmjGvDLvXAg0MBM9Ab4RgLjcjK/145Q57+8u+SZ2miQSe3LUq6lrd6c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=YaEGx24A; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=m0hRUm0y; arc=none smtp.client-ip=103.168.172.146
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
+	 MIME-Version:Content-Type; b=P5W+3tT7qMiIDLk5CQwqcrZhjWFNOQdwx9mf85D9i0Vc43Sg0fAnuF4cnlYXYDkcuvXb96M7/k41k7tLbNndeKTeZU3n6hhPCwqYTuEdi8rZMkGkMDEWUzSU0o5QXYHs07Mosw64omsxNL2gopfnt7jUeELlXZIrZ2PXseiPqOA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HArNKGdr; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="YaEGx24A";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="m0hRUm0y"
-Received: from phl-compute-08.internal (phl-compute-08.internal [10.202.2.48])
-	by mailfout.phl.internal (Postfix) with ESMTP id 55BB1EC02F2;
-	Wed,  9 Sep 2026 17:13:14 -0400 (EDT)
-Received: from phl-frontend-03 ([10.202.2.162])
-  by phl-compute-08.internal (MEProxy); Wed, 09 Sep 2026 17:13:14 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
-	cc:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm3; t=1788988394;
-	 x=1789074794; bh=+krEGKyWZdbiLQJfkC7cSwjUZ4IQ8N9QB2a2oZdlosI=; b=
-	YaEGx24AahtjTweL32VR0Jo+9ytT1tgPpDaikRiS/UkBjU2618DQk+DWeOjxij5f
-	7Oqmhwyu8rj993bLY2avCvE8qlMdsn8BGhrkEfW+CnkQKHX7rvbi8kJg3oG51HrC
-	IlQCeKlLppp8107sTlLucMepCDE6vymPmAmNNy9VmU4BuXzvl4nT//NJR9I8Mn6T
-	cUvqAWbpJFJ5g66tcyOhgd7ScK9VRXTsbh6eVhH34jDABQ/6l0z9r56S3w8ZwHQv
-	eYQmwM8G8WsIB403b68TNXarUhY69L4mBCVtja0QxHHz7RfdviX4NX5Xplttnv/0
-	anp2j8WdXjs3M0mYRoBzRg==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=1788988394; x=
-	1789074794; bh=+krEGKyWZdbiLQJfkC7cSwjUZ4IQ8N9QB2a2oZdlosI=; b=m
-	0hRUm0yCAbamufTEfmUDWwExDGadA55VCATcbr7R5Mps9RJIKS2Qr31Et3SbFrHY
-	KqRBsbTI0ZHh0/YiTa4HuLpOvb5cFePadvrKN1kvWSje4CcwtqJQcD5je6SsbK4Z
-	Oe1yE6hvgbtEc5tTpOMYGOEK5fElB+fMQqpl+TCVz3VRbLbbKGlfHMwN5eZxxUWc
-	In8HjNDlg//jlJ7FY+CYzgemKmt3SZqMeWh12/8dmLTP38TlUTdAZAqr0WroRnRl
-	jSw9o0XjwqI2zij92zEe9a4E0AzHR3ZezJXnAP8lzRuEy+MboyUUsTGUT27puaCo
-	e562BeNfrAwz7jjoy2Hug==
-X-ME-Sender: <xms:6cuhav7G-98xMbE2qhFqJsTch5xY1Q6kST97hiaQInuWrJCxPII1YQ>
-    <xme:6cuhagw9JyX1ZcphJQAMXiF4IEcl6gYvGjzfh0K87CSCUaFgToPatSRN5GTBtbx9C
-    wFwUjKCGvmLYp86cLSetqk_ShAABEcQgy-HWy5E_QLGZZb9uv01S3I>
-X-ME-Received: <xmr:6cuhah-tsco0drQ3plpn1hn0nT67h22TRc2WYKmig8GjfmI1WukgSEdWrXHaWw>
-X-ME-Proxy-Cause: dmFkZTGWd2BOMV5duOy6hPXvUROs555RX8IHn+vyLCMNze+rE+pMT4sc0lKhuNwnW/Z63/
-    AUPOl4EJDwi+nX6n6cHPkY39XJ3o+R+ICZ3qtTHxpBWDnSG51p4EOcjOlfz2NzZkhDD/9e
-    V+N44n83k37mAry6e4kxyoncDSnofANIXE/27MZJ+3+a0m38tJQlKG0VYvJPVsXeYWFO7E
-    LwuoqXTRdUgOcFuRvuH91HFMMfSmGZb3l39tRdNx0uhCNGn50e5vEYasnp1sjFOPCCub4S
-    i/WWNZWxErDP85++ljYdsJWzFxDmDKrifQ7IQQGLqBl1vjeniuvSGU7812V8NVvXnTrqk2
-    Ha/qZe70iV5XHR0C6C1r7sCkA/8B0ysggm0efNuKzjZBao5yQ7O8mbdx0SitM1IJIi6Hki
-    mgRYh/Uj3N/Z6PfbNk8fO9h67CNK6StArV7j2sknCfgLO8oZgKzr9/cn5QWEOCYRXYve8g
-    ts+2zpdiLaRNWUIZf8aFO2xIMlOAm/lsedxR1HQvCrYk9g3XGrORdvx/wyaaHV0ZH8NnfG
-    4yA+Kczi4byEYpAQ9URD6bIIEQLC+m9tc25bmedeKy2qmOXh7wO3oOczm5ypAGcTt41JN3
-    MtDw0jdtjJ/UrL+Vu+rH1jGZeNB01oDaL8Ocz0XGx9fciEwYqKvXYhBW208w
-X-ME-Proxy: <xmx:6cuhakF6N731n4BPnkQW5Ug03p20r1sXsWY9K37O96NcHwlD40abFA>
-    <xmx:6cuharAszfWHpVt1upRs8LoSzOqI-StQghwUAU_Pq0QtEKrxYCu4fA>
-    <xmx:6cuhaom9HZEFwL0HtbB6HMPHrPAdFdn_g-ZYMku8WNUhJHyFKRBRYA>
-    <xmx:6cuhauTqCBRwmuRs6Y_9fGHk2azgOChXAMYvnUXiQwG6OmgE1yasjg>
-    <xmx:6suhav6S8MigK0zqQWks3msnSjBzT1UG9xdlbdQuokug8JH1YTEYPmrZ>
-Feedback-ID: i03f14258:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Wed,
- 9 Sep 2026 17:13:12 -0400 (EDT)
-Date: Wed, 9 Sep 2026 15:13:09 -0600
-From: Alex Williamson <alex@shazbot.org>
-To: Srirangan Madhavan <smadhavan@nvidia.com>
-Cc: alex@shazbot.org, Alison Schofield <alison.schofield@intel.com>, Bjorn
- Helgaas <bhelgaas@google.com>, Dave Jiang <dave.jiang@intel.com>, Davidlohr
- Bueso <dave@stgolabs.net>, Ira Weiny <ira.weiny@intel.com>, Jonathan
- Cameron <jic23@kernel.org>, Vishal Verma <vishal.l.verma@intel.com>,
- linux-cxl@vger.kernel.org, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, Alex Williamson <alex.williamson@redhat.com>,
- vsethi@nvidia.com, Sai Yashwanth Reddy Kancherla <skancherla@nvidia.com>,
- Vishal Aslot <vaslot@nvidia.com>, Manish Honap <mhonap@nvidia.com>, Jiandi
- An <jan@nvidia.com>, Richard Cheng <icheng@nvidia.com>,
- linux-tegra@vger.kernel.org
-Subject: Re: [PATCH v11 00/12] PCI/CXL: Add CXL reset support for Type 2
- devices
-Message-ID: <20260909151309.7e1883b9@shazbot.org>
-In-Reply-To: <20260902072804.665639-1-smadhavan@nvidia.com>
-References: <20260902072804.665639-1-smadhavan@nvidia.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HArNKGdr"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1FC6D1F000FF;
+	Wed,  9 Sep 2026 22:02:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1788991360;
+	bh=9Ns5qdS5KhAWIJwYEOIj/g7aHm6L5VzVzSnr8ej2zKI=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References;
+	b=HArNKGdr1uF3nbg+gpRdcxPmNGb1HGPtwPsB3n2jhymOBQU5JEQQcW+/gHw2pKT4t
+	 d2XsCG1NQFg9zXISmjnX6ZuV7ULxczpP3aTaHr8/2midh2wtm9QIgg16N55CeCxUW5
+	 hkFKSaSvMNCP5PA9y0Q8shu+/jD4KcNc+ObuVXHv2D2f4VgD//9Ew0u/wnVjF+Rbeh
+	 F71QLHoYalJHVZOBBK4If8e1ja0doLdAvw5YujhGwBh/G2KwQxvt5xgshWqQx42ZKP
+	 O+L26dwvF8qg/HraokPwEKwDueXboPPkoCPf37Vf/kmqSbwCIpffkm1Vh7B4+3W+Vl
+	 IocfQKWP9mTSw==
+Date: Wed, 9 Sep 2026 23:02:31 +0100
+From: Jonathan Cameron <jic23@kernel.org>
+To: "Bowman, Terry" <terry.bowman@amd.com>
+Cc: Dave Jiang <dave.jiang@intel.com>, Alison Schofield
+ <alison.schofield@intel.com>, Vishal Verma <vishal.l.verma@intel.com>,
+ Davidlohr Bueso <dave@stgolabs.net>, Bjorn Helgaas <bhelgaas@google.com>,
+ Dan Williams <djbw@kernel.org>, "Rafael J . Wysocki" <rafael@kernel.org>,
+ Jonathan Corbet <corbet@lwn.net>, linux-cxl@vger.kernel.org, Tony Luck
+ <tony.luck@intel.com>, Borislav Petkov <bp@alien8.de>, Hanjun Guo
+ <guohanjun@huawei.com>, Mauro Carvalho Chehab <mchehab@kernel.org>, Shuai
+ Xue <xueshuai@linux.alibaba.com>, Len Brown <lenb@kernel.org>, Ira Weiny
+ <iweiny@kernel.org>, Li Ming <ming.li@zohomail.com>, Shuah Khan
+ <skhan@linuxfoundation.org>, Ben Cheatham <Benjamin.Cheatham@amd.com>,
+ Richard Cheng <icheng@nvidia.com>, Robert Richter <rrichter@amd.com>, Lukas
+ Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
+ linux-acpi@vger.kernel.org, linux-doc@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v20 1/9] PCI/AER: Introduce AER-CXL protocol error kfifo
+Message-ID: <20260909230231.3fe72037@jic23-hlaptop>
+In-Reply-To: <bb5a6b0a-c30b-4475-8be6-f3e3686c93be@amd.com>
+References: <20260902133933.2992457-1-terry.bowman@amd.com>
+	<20260902133933.2992457-2-terry.bowman@amd.com>
+	<20260908015144.62ee9c1c@jic23-huawei>
+	<bb5a6b0a-c30b-4475-8be6-f3e3686c93be@amd.com>
 X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -96,33 +60,28 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 
-On Wed,  2 Sep 2026 07:27:52 +0000
-Srirangan Madhavan <smadhavan@nvidia.com> wrote:
+Hi Terry,
 
-> Hi folks!
+> >>
+> >> A subsequent patch wires cxl_forward_error() into handle_error_source().
+> >>
+> >> Add MAINTAINERS entries for aer_cxl_vh.c and aer_cxl_rch.c under the CXL
+> >> entry.  
+> > 
+> > I couldn't immediately find any discussion about switching away from panic
+> > on a kfifo overflow.  Was there a reply to an earlier version with a
+> > discussion of that?  I'm not against the change but a 'why' 
+> > here would be good to have.
+> >   
 > 
-> This series adds CXL Reset support for CXL Type 2 devices through the
-> existing PCI reset_method ABI. The reset sequence follows the CXL 4.0
-> specification [1], including CXL.cache disable, optional cache
-> writeback, CXL Reset initiation, ResetComplete polling, and ResetError
-> reporting.
+> The driver panics on kfifo full error during UCE enqueue. This was recommended by you and
+> Richard. Changes are at the link below in cxl_forward_error():
+> https://lore.kernel.org/linux-cxl/20260902133933.2992457-2-terry.bowman@amd.com/
 > 
-> The userspace ABI is the existing PCI reset interface:
-> 
->     /sys/bus/pci/devices/.../reset_method
->     /sys/bus/pci/devices/.../reset
-> 
-> Userspace can select "cxl_reset" in reset_method and then trigger reset
-> through the existing reset attribute.
-> 
-> CXL Reset is exposed conservatively. The target must be a
-> single-function CXL Type 2 device with CXL.cache and CXL.mem enabled,
-> and the kernel must have cached HDM state sufficient to validate affected
-> ranges and restore decoder programming. The reset preserves device
-> memory; it does not request CXL Reset Memory Clear.
+Panic on UCE is a given and correct. I ran the not panic on correctable via some
+of our folk and they were fine with it (at least so far!).  I just saw that
+you'd stopped panic on this as part of the change log and wondered why.
 
-How does this provide multi-tenancy then?  vfio-pci considers the
-device to be scrubbed of tenant data after a pci_reset_function() and
-I don't think Manish's series alters that.  Thanks,
+Not a problem, just following the breadcrumbs!
 
-Alex
+Jonathan
