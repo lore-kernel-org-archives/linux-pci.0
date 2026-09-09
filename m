@@ -1,26 +1,26 @@
-Received: from mail-m32104.qiye.163.com (mail-m32104.qiye.163.com [220.197.32.104])
+Received: from mail-m3292.qiye.163.com (mail-m3292.qiye.163.com [220.197.32.92])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92AF42BE639;
-	Wed,  9 Sep 2026 01:13:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.32.104
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35FEF175A74;
+	Wed,  9 Sep 2026 01:14:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.32.92
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788916415; cv=none; b=KaYGFbFwIZAcU/37a/5Wu+aPPX3F1VZyUXKiesDMvXDnkp/OJ7TbJKtyHY5YZak37wiN8VMbFG3ma3epgm6jd2TCh7d2NgSQ0ryFmfCygey3/CAELzcheEFIsRZWyqaXPL/KRPghqM5zACvBd+GxKiJHJ0OHVnXhIUowTXyant0=
+	t=1788916458; cv=none; b=Mk8HLhXkrZ0gWmmCad8S05aa97qXfubcHea2rXORZfCX8dNk54KAeRcm+f+uyJsXZgIVIh1IiV0bfJl5pXxg8+p51eh26iYZB1StRlC/SDrxDQiwwmj/uuQeB2p4aBobZiCLVT6eKitIycdDX6ZhqqrkHV0d4q1Ab2w5g9E/xiw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788916415; c=relaxed/simple;
-	bh=i8EsaTbGQ9BCSgEZrwzQiYR9ShSuPzYQznKQ2zTPRGA=;
+	s=arc-20240116; t=1788916458; c=relaxed/simple;
+	bh=9RQ1tMhIgnwhEwwl64SwkkxCu8uE334f+T7vhReNGjI=;
 	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=iP3EjgS/le3BDvYazk5GMJ+WTay685rq4ei8n70LVGrakIP41MpFYzsBZEm6Va2Zc9Ow/UXlqeV0fLZ8CG7smD3G+wf45FtsZwAIXwLR1pM5Tb+udknR6tVhmoGTL0LOO7986yzi4NdWK6jc2o9esE/r5DI8bR2jako7IVapKlI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=XP6iTy/d; arc=none smtp.client-ip=220.197.32.104
+	 In-Reply-To:Content-Type; b=sEtkJpQjaDMyyUin1ugIYP9NNmG3/85ca+nMNcdTfRRzsEo2WCxHLaOynDdaqZSi1R5ttBDnLmdJOLYv6Rw0S7Aoa5znbkcMCl8FJEs1EKuh/8pOflBEw/nufWYpIz0Pv8yA+LZ7swJsKeBcRqBqKOuKhXIh2rL7Kk85sUBsKrw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=D5qtsHD+; arc=none smtp.client-ip=220.197.32.92
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="XP6iTy/d"
+	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="D5qtsHD+"
 Received: from [172.16.12.48] (unknown [58.22.7.114])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 4d0923065;
-	Wed, 9 Sep 2026 08:58:02 +0800 (GMT+08:00)
-Message-ID: <d3a665e6-e9f6-41c7-9684-9db1cb811039@rock-chips.com>
-Date: Wed, 9 Sep 2026 08:58:01 +0800
+	by smtp.qiye.163.com (Hmail) with ESMTP id 4d0923156;
+	Wed, 9 Sep 2026 08:58:50 +0800 (GMT+08:00)
+Message-ID: <30d56a27-febb-48e8-909e-b87cad782514@rock-chips.com>
+Date: Wed, 9 Sep 2026 08:58:50 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -32,8 +32,8 @@ Cc: shawn.lin@rock-chips.com, Alexey Charkov <alchark@flipper.net>,
  linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
  linux-rockchip@lists.infradead.org, linux-kernel@vger.kernel.org,
  kernel@collabora.com
-Subject: Re: [PATCH v6 05/10] PCI: dw-rockchip: Add helper function for
- controller mode
+Subject: Re: [PATCH v6 06/10] PCI: dw-rockchip: Add helper function for DDL
+ indicator
 To: Sebastian Reichel <sebastian.reichel@collabora.com>,
  Lorenzo Pieralisi <lpieralisi@kernel.org>,
  =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
@@ -44,73 +44,74 @@ To: Sebastian Reichel <sebastian.reichel@collabora.com>,
  "Yury Norov (NVIDIA)" <yury.norov@gmail.com>,
  Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
 References: <20260908-rockchip-pcie-system-suspend-v6-0-fbabcca9921b@collabora.com>
- <20260908-rockchip-pcie-system-suspend-v6-5-fbabcca9921b@collabora.com>
+ <20260908-rockchip-pcie-system-suspend-v6-6-fbabcca9921b@collabora.com>
 From: Shawn Lin <shawn.lin@rock-chips.com>
-In-Reply-To: <20260908-rockchip-pcie-system-suspend-v6-5-fbabcca9921b@collabora.com>
+In-Reply-To: <20260908-rockchip-pcie-system-suspend-v6-6-fbabcca9921b@collabora.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-HM-Tid: 0aa083abfd6103a4kunm2a53221b44044d
+X-HM-Tid: 0aa083acbac003a4kunmccc4e748440649
 X-HM-MType: 1
 X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFDSUNOT01LS0k3V1kYFggdWUFKV1ktWUFJV1kPCRoVCBIfWUFZGUsaQ1ZOHkkaHRpKTx
-	lDTUpWFRQJFhoXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0
+	tZV1koWUFDSUNOT01LS0k3V1kYFggdWUFKV1ktWUFJV1kPCRoVCBIfWUFZGU1ITFYeGU8YGUkYSR
+	0YTEtWFRQJFhoXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0
 	tIVUpLSU9PT0hVSktLVUpCS0tZBg++
 DKIM-Signature: a=rsa-sha256;
-	b=XP6iTy/dSQmg7/bZJLR97rvOuhsfxw6x8i0uhjmb2gdTTOdgfWlxIeApYFv0KpIJqWYYHez9/FNcaTS292GFeo4cwZc6yAYNx07JiqMAmK/Yat8cqoPIhoBX7W+sDWd7FW/mrLb31KcbQoQJJiWxyLlSQl/jTlGJoGRG/PQJK8g=; c=relaxed/relaxed; s=default; d=rock-chips.com; v=1;
-	bh=bsT5whRXIWPhoZ883AZa0XgzOkBvLWYJ556g8quXo00=;
+	b=D5qtsHD+yE9+RhcFUcRNxx9x9OPX0uCGrqLL6K0SPt3qcRxRp/MwneUjdBzakPLQiOqngJQCdQpKLR6zjnHM3bhTLjOHvN8HBQ6ccJ9liFJHTcN3yHA0GeMi2+T5/dKzs0qx3ubQTfQaRd2braoFZ5BnxWJ3vGXHWxkSuHnMBMU=; c=relaxed/relaxed; s=default; d=rock-chips.com; v=1;
+	bh=oy6H8lueAeqMs8djnjAqPYI7ZqjdcUMC2b/zRPRWG8k=;
 	h=date:mime-version:subject:message-id:from;
 
 在 2026/09/08 星期二 22:51, Sebastian Reichel 写道:
 > Remove code duplication and improve readability by introducing a new
-> function to setup the controller mode.
+> function to setup the DLL indicator.
 > 
 
 Reviewed-by: Shawn Lin <shawn.lin@rock-chips.com>
 
 > Signed-off-by: Sebastian Reichel <sebastian.reichel@collabora.com>
 > ---
->   drivers/pci/controller/dwc/pcie-dw-rockchip.c | 15 +++++++--------
->   1 file changed, 7 insertions(+), 8 deletions(-)
+>   drivers/pci/controller/dwc/pcie-dw-rockchip.c | 16 +++++++++++-----
+>   1 file changed, 11 insertions(+), 5 deletions(-)
 > 
 > diff --git a/drivers/pci/controller/dwc/pcie-dw-rockchip.c b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-> index 6f84b07406d4..211776bbcb99 100644
+> index 211776bbcb99..1e48099e36e4 100644
 > --- a/drivers/pci/controller/dwc/pcie-dw-rockchip.c
 > +++ b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-> @@ -708,6 +708,11 @@ static void rockchip_pcie_enable_enhanced_ltssm_control_mode(struct rockchip_pci
->   	rockchip_pcie_writel_apb(rockchip, val, PCIE_CLIENT_HOT_RESET_CTRL);
+> @@ -713,6 +713,16 @@ static void rockchip_pcie_set_controller_mode(struct rockchip_pcie *rockchip, u3
+>   	rockchip_pcie_writel_apb(rockchip, PCIE_CLIENT_SET_MODE(mode), PCIE_CLIENT_GENERAL_CON);
 >   }
 >   
-> +static void rockchip_pcie_set_controller_mode(struct rockchip_pcie *rockchip, u32 mode)
+> +static void rockchip_pcie_unmask_dll_indicator(struct rockchip_pcie *rockchip)
 > +{
-> +	rockchip_pcie_writel_apb(rockchip, PCIE_CLIENT_SET_MODE(mode), PCIE_CLIENT_GENERAL_CON);
+> +	u32 val;
+> +
+> +	/* unmask DLL up/down indicator and hot reset/link-down reset */
+> +	val = FIELD_PREP_WM16(PCIE_RDLH_LINK_UP_CHGED, 0) |
+> +	      FIELD_PREP_WM16(PCIE_LINK_REQ_RST_NOT_INT, 0);
+> +	rockchip_pcie_writel_apb(rockchip, val, PCIE_CLIENT_INTR_MASK_MISC);
 > +}
 > +
 >   static int rockchip_pcie_configure_rc(struct platform_device *pdev,
 >   				      struct rockchip_pcie *rockchip)
 >   {
-> @@ -732,10 +737,7 @@ static int rockchip_pcie_configure_rc(struct platform_device *pdev,
->   	}
+> @@ -760,7 +770,6 @@ static int rockchip_pcie_configure_ep(struct platform_device *pdev,
+>   {
+>   	struct device *dev = &pdev->dev;
+>   	int irq, ret;
+> -	u32 val;
 >   
->   	rockchip_pcie_enable_enhanced_ltssm_control_mode(rockchip, 0);
-> -
-> -	rockchip_pcie_writel_apb(rockchip,
-> -				 PCIE_CLIENT_SET_MODE(PCIE_CLIENT_MODE_RC),
-> -				 PCIE_CLIENT_GENERAL_CON);
-> +	rockchip_pcie_set_controller_mode(rockchip, PCIE_CLIENT_MODE_RC);
+>   	if (!IS_ENABLED(CONFIG_PCIE_ROCKCHIP_DW_EP))
+>   		return -ENODEV;
+> @@ -800,10 +809,7 @@ static int rockchip_pcie_configure_ep(struct platform_device *pdev,
 >   
->   	pp = &rockchip->pci.pp;
->   	pp->ops = &rockchip_pcie_host_ops;
-> @@ -776,10 +778,7 @@ static int rockchip_pcie_configure_ep(struct platform_device *pdev,
->   	}
+>   	pci_epc_init_notify(rockchip->pci.ep.epc);
 >   
->   	rockchip_pcie_enable_enhanced_ltssm_control_mode(rockchip, PCIE_LTSSM_APP_DLY2_EN);
-> -
-> -	rockchip_pcie_writel_apb(rockchip,
-> -				 PCIE_CLIENT_SET_MODE(PCIE_CLIENT_MODE_EP),
-> -				 PCIE_CLIENT_GENERAL_CON);
-> +	rockchip_pcie_set_controller_mode(rockchip, PCIE_CLIENT_MODE_EP);
+> -	/* unmask DLL up/down indicator and hot reset/link-down reset */
+> -	val = FIELD_PREP_WM16(PCIE_RDLH_LINK_UP_CHGED, 0) |
+> -	      FIELD_PREP_WM16(PCIE_LINK_REQ_RST_NOT_INT, 0);
+> -	rockchip_pcie_writel_apb(rockchip, val, PCIE_CLIENT_INTR_MASK_MISC);
+> +	rockchip_pcie_unmask_dll_indicator(rockchip);
 >   
->   	rockchip->pci.ep.ops = &rockchip_pcie_ep_ops;
->   	rockchip->pci.ep.page_size = SZ_64K;
+>   	return ret;
+>   }
 > 
 
