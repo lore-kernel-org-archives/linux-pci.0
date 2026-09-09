@@ -1,150 +1,103 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from va-1-114.ptr.blmpb.com (va-1-114.ptr.blmpb.com [209.127.230.114])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0CD921ABD7;
-	Wed,  9 Sep 2026 08:17:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8122F44C4FE
+	for <linux-pci@vger.kernel.org>; Wed,  9 Sep 2026 08:52:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.230.114
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788941877; cv=none; b=KvbT8fDWZocbvN9TfjmwZ3i2OGAzF8HrXEB7pGuQiuqM9ZsSFKfYHEvBnjj15/MHVw7B47GySz/bFOf5UoIb0F0XAGOxe32D/5yncQJAuXGoTAL4vNx/NsUpFP5Ryxrori70XLxdzOGZ9arJEyY0/WRpVf0z8C5Q4ute+TX2TPM=
+	t=1788943979; cv=none; b=gE9a+3cWq6EBqfYkYPDpBULBxVUdlzL4ZVcOQQx3YyfgHWkAnkMMOG2uinMDoXNbT2FRaE4sCxof9KTEYgLzwRebdgOPjb0YtOnEh9RZGVRegJ7C4nykVyD74Iikuwke7on2WbzqS1bio5mu+Cc7Feo6AIEHFOws7zhsXNX3Z90=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788941877; c=relaxed/simple;
-	bh=OsIFQr4zAu5DAIm2yWuwKKj8MCQUHmn01bgfauVqAnk=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Uwc5bGCZh9Cn8EXQadLYn5EZ52L4X9bYXjr8j0isUZSmly2pDJL8960qzTEcopggwmqzaAkMGI9AFXm9hriPgUVc1A+3fkFSBie8bO5PSq6VTXiQatc/8v/8TwDFYiOxfT5Copt2E79hhPn4eKt0+tP0sUvqA3l8/wle+0ULgf0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VRDKdi0g; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788943979; c=relaxed/simple;
+	bh=cq7Ae+f3RmWaAVZ5M2GZcg5KWymPTZkW1haOlMIWGyU=;
+	h=To:Content-Type:Mime-Version:Date:Message-Id:Subject:In-Reply-To:
+	 Cc:From:References; b=ewNnf3wi3Djn0ImOtn5A94yAthgOQ4qUOvbiJ4UuQZQ+ZJiHQCPKxPq1VEJ1gk581bjsMz6bey76TDscoeKHwYomjqWXgRZet+QmB594gRXnGOG+gtq6z5cLVsR54QeCTJZRHiyZOKAi3YUXaP5osa/bKOGfoWh89nwmWhm8Jsc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com; spf=pass smtp.mailfrom=bytedance.com; dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b=Va+nyMI1; arc=none smtp.client-ip=209.127.230.114
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bytedance.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VRDKdi0g"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 444E91F00A3A;
-	Wed,  9 Sep 2026 08:17:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788941875;
-	bh=znI3mxLmYJ4Zn/MS6hx/rXnP0YQkcYfi5GUOixdw6A8=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=VRDKdi0g7cLLjIwK3DAg9glB7BGgNs7hFL/94ccDC7642LNs53hXqBAPa2FbBWfQ4
-	 W3Hwth1IdE33LHdopflJxRWdaSDbpnhl2M0U+A8PhKibxe+PHzQMv0ebYxtVOzb3uO
-	 cIspYUtlvXc2Ms/aOWU+d41/DVuau7lAegWPelm2GN+tbZCBcl/FQ/NJRfsIgeI9P5
-	 YmKc51ECOD5EfkWFaZZF3aru06tU2LX1W1yJUDhk8ExN9sD+f87ajHi74b7KVK2j8a
-	 UBDf3GHLUH8vwwJSiDSMnUEbNaqLbE4/xTUVQWV+Pe4dFjBOrunWzdv1oPHi/+dtOQ
-	 E7XnP6I/gesIg==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v11 10/10] PCI: of: Avoid np->data usage for the node
- changeset
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Herve Codina" <herve.codina@bootlin.com>
-Cc: linux-cxl@vger.kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260909080114.591938-11-herve.codina@bootlin.com>
-References: <20260909080114.591938-1-herve.codina@bootlin.com>
- <20260909080114.591938-11-herve.codina@bootlin.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 09 Sep 2026 08:17:54 +0000
-Message-Id: <20260909081755.444E91F00A3A@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b="Va+nyMI1"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+ s=2212171451; d=bytedance.com; t=1788943968; h=from:subject:
+ mime-version:from:date:message-id:subject:to:cc:reply-to:content-type:
+ mime-version:in-reply-to:message-id;
+ bh=42eTvA3+zf7J2g0oBhjdgayHhzy7hkEc9NIuW1rhfg8=;
+ b=Va+nyMI1D+4ByyiJbOWpl2gpoaHAQ8ujhtZsJK1xUQugG0og0ecc4ZRTLwRXABcFx6qbix
+ XW5CGjEYW6thywI31Y8NeTIbKv3v6Jv83k6CykBU66TPxuEzVGPrQk+dFHyeFK77p5GPDv
+ cI0Ny+gp1xJqRt5lb0FVZ4CcCvkvF1GyFxQs1X3o6eCowGIjVk1en80FyBRW5FeB15Moee
+ vKQRrhYUCqsS2qgixj89w1nyDWscaIvXdE0R1nPYpJZeAj0zIhhawUoDYuz6MkgyPFlHzf
+ gWCI3zzY+3/DuJUgHCvvbLr1Vb81+U1vjyW/RVzFRrFcm3OHbQ2p7CAs2cHRQA==
+To: "Luigi Rizzo" <lrizzo@google.com>, 
+	"Christoph Hellwig" <hch@infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+Mime-Version: 1.0
+X-Lms-Return-Path: <lba+26aa11e5e+7facaf+vger.kernel.org+changfengnan@bytedance.com>
+Date: Wed, 9 Sep 2026 16:52:27 +0800
+Message-Id: <8e816cdc-a714-49d8-943f-677617682352@bytedance.com>
+Subject: Re: [PATCH v5 0/7] Global Software Interrupt Moderation (GSIM)
+In-Reply-To: <CAMOZA0Lt99A1H45Hp0Snq4aSEw-Xr_Mh4xA--Cx0Qh_6vsQvOQ@mail.gmail.com>
+Content-Transfer-Encoding: quoted-printable
+Cc: "Thomas Gleixner" <tglx@linutronix.de>, "Marc Zyngier" <maz@kernel.org>, 
+	"Luigi Rizzo" <rizzo.unipi@gmail.com>, "Paolo Abeni" <pabeni@redhat.com>, 
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>, 
+	"Bjorn Helgaas" <bhelgaas@google.com>, <netdev@vger.kernel.org>, 
+	<linux-nvme@lists.infradead.org>, "Guzebing" <guzebing@bytedance.com>, 
+	"Keith Busch" <kbusch@kernel.org>
+From: "Fengnan" <changfengnan@bytedance.com>
+References: <878q5f5tlt.ffs@fw13> <aqD7FDvDhiEF_u0N@infradead.org> <CAMOZA0Lt99A1H45Hp0Snq4aSEw-Xr_Mh4xA--Cx0Qh_6vsQvOQ@mail.gmail.com>
+X-Original-From: Fengnan <changfengnan@bytedance.com>
+User-Agent: Mozilla Thunderbird
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
-- [High] Missing NULL check on `np` in `of_pci_remove_node` and `of_pci_rem=
-ove_host_bridge_node` leading to kernel panic.
-- [High] Dangling pointer in `pdev->cset` and `bridge->cset` after freeing,=
- leading to potential use-after-free or double-free.
---
+=E5=9C=A8 2026/9/9 16:06, Luigi Rizzo =E5=86=99=E9=81=93:
+> On Wed, Sep 9, 2026 at 8:25=E2=80=AFAM Christoph Hellwig <hch@infradead.o=
+rg> wrote:
+>> On Sat, Sep 05, 2026 at 10:30:22PM +0200, Thomas Gleixner wrote:
+>>>> it appears that GSIM is only effective in scenarios where multi disks =
+at very high
+>>>> IOPS; in some cases, there was a noticeable performance regression.
+>>>> If there=E2=80=99s something wrong with my configuration, please corre=
+ct me.
+>>> So we have a NVME specific mechanism to tackle the same problem and a
+>>> more generic version which is subsystem "independent".
+>> I'm not sure they tackle the entirely same problem, although they are
+>> very related.
+> There is overlap but it is accidental.
+> The difference between the two mechanism is the following:
+>
+> - GSIM addresses hardware limitations (SoCs that create huge PCIe
+>    backpressure on each MSIx interrupt, eventually reducing the available
+>    bandwidth too much, regardless of how many CPUs can process interrupts=
+).
+>    The goal here is to throttle the total MSIx rate, blocking them at
+>    the source (PCIe device) rather than later in the interrupt controller=
+.
+>
+> - the NVME mechanism (and NAPI) aim to amortize interrupt processing
+>    overhead. It does so by recreating some fine grained single-source
+>    interrupt moderation (something that NICs do in hardware, but NVME
+>    does not, with 100us being way too coarse for modern SSDs) and an
+>    adaptive scheme to adjust the delay and decide when to kick in.
+That's a great summary.
 
-commit 506858ef76ab83f59a005bd51f3fde0f4d73a6a2
-Author: Herve Codina <herve.codina@bootlin.com>
+As for generic solutions, I've tried several approaches before, but none=20
+of them
+could achieve the same or close results as NVMe adaptive interrupt polling.
+I'm still experimenting with different options.
 
-PCI: of: Avoid np->data usage for the node changeset
 
-This patch modifies how OF changeset references are stored during PCI node
-creation. Instead of using np->data, which can be altered by platform code,
-it stores the changeset in pdev->cset or bridge->cset. This ensures the
-correct changeset is reverted and destroyed during node removal.
-
-> diff --git a/drivers/pci/of.c b/drivers/pci/of.c
-> index 0a5797652e183..cd87128c71ddc 100644
-> --- a/drivers/pci/of.c
-> +++ b/drivers/pci/of.c
-> @@ -732,15 +732,16 @@ void of_pci_remove_node(struct pci_dev *pdev)
->  {
->  	struct device_node *np;
-> =20
-> -	np =3D pci_device_to_OF_node(pdev);
-> -	if (!np || !of_node_check_flag(np, OF_DYNAMIC))
-> +	if (!pdev->cset)
->  		return;
-> =20
-> +	np =3D pci_device_to_OF_node(pdev);
->  	fw_devlink_set_device(&np->fwnode, NULL);
-
-[Severity: High]
-Will this result in an invalid pointer dereference if np is NULL?
-
-The previous implementation had a NULL check for np, but the new code compu=
-tes
-&np->fwnode unconditionally. If pdev->dev.of_node is cleared prior to remov=
-al,
-pci_device_to_OF_node() will return NULL, causing fw_devlink_set_device() to
-dereference an offset address.
-
->  	device_remove_of_node(&pdev->dev);
-> -	of_changeset_revert(np->data);
-> -	of_changeset_destroy(np->data);
-> +	of_changeset_revert(pdev->cset);
-> +	of_changeset_destroy(pdev->cset);
->  	of_node_put(np);
-> +	kfree(pdev->cset);
-
-[Severity: High]
-Is it possible for of_pci_remove_node() to be called twice for the same dev=
-ice?
-
-If so, leaving pdev->cset as a dangling pointer could lead to a double-free.
-Should pdev->cset be set to NULL after kfree() so that the earlier
-if (!pdev->cset) check can prevent a second execution?
-
-[ ... ]
-
-> @@ -828,16 +828,17 @@ void of_pci_remove_host_bridge_node(struct pci_host=
-_bridge *bridge)
->  {
->  	struct device_node *np;
-> =20
-> -	np =3D pci_bus_to_OF_node(bridge->bus);
-> -	if (!np || !of_node_check_flag(np, OF_DYNAMIC))
-> +	if (!bridge->cset)
->  		return;
-> =20
-> +	np =3D pci_bus_to_OF_node(bridge->bus);
->  	fw_devlink_set_device(&np->fwnode, NULL);
-
-[Severity: High]
-Can np evaluate to NULL here?
-
-Similar to the issue in of_pci_remove_node(), if pci_bus_to_OF_node() retur=
-ns
-NULL, the missing NULL check will cause a crash during the &np->fwnode poin=
-ter
-arithmetic.
-
->  	device_remove_of_node(&bridge->bus->dev);
->  	device_remove_of_node(&bridge->dev);
-> -	of_changeset_revert(np->data);
-> -	of_changeset_destroy(np->data);
-> +	of_changeset_revert(bridge->cset);
-> +	of_changeset_destroy(bridge->cset);
->  	of_node_put(np);
-> +	kfree(bridge->cset);
-
-[Severity: High]
-Could this lead to a use-after-free or double-free on bridge->cset?
-
-If a removal API like pci_stop_root_bus() is invoked multiple times, the
-dangling pointer bypasses the if (!bridge->cset) check at the start of the
-function, resulting in a double-free on the changeset.
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260909080114.5919=
-38-1-herve.codina@bootlin.com?part=3D10
+>
+> I think there is a reason for both.
+>
+> GSIM because it is more general and addresses an issue the others cannot =
+handle
+> the subsystem-specific scheme because they can be more efficient
+> (eg they can hook into existing helpers like the threaded irq handler,
+> call directly the handler without going through the full irq chain,
+> use more targeted heuristics to decide when to kick in).
+>
+> cheers
+> luigi
