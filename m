@@ -1,167 +1,112 @@
-Received: from smtpout-02.galae.net (smtpout-02.galae.net [185.246.84.56])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68F1F4915A7
-	for <linux-pci@vger.kernel.org>; Wed,  9 Sep 2026 09:06:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.246.84.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0917449E5D2
+	for <linux-pci@vger.kernel.org>; Wed,  9 Sep 2026 09:06:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788944790; cv=none; b=gCDyUrdNkXQa+H4eQj3bQ4DpT5+PWAly98vXkucEWZ8c07hrBdR1zNLV7rbACm++yBHIRBnN//T1uyB9xhlmy73b3IqsoSBlyIWauL0/FW/EjgxaTF03MdS9Nq7DqsNs5j4fs+2G/SgGXFKOkckxEgrX0qanPEqcwv8AIDtRfrk=
+	t=1788944793; cv=none; b=apzGLkrAjKB9tE68cMB6xxxMw1VG+s6/fkyij4nsRBHXodopi6h+Nxojz1S5yq/kPaGogIURT/DHvPPS3ROCZZotN9ZzLIsH7uS4ZCeIgvAHUpXUY15L2RF1mP5hV8C58fZcF567Y58q4R/Pw7Hd3SxN1zUIjgCdkllJHxMq5RA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788944790; c=relaxed/simple;
-	bh=RsOWaow4xyNlxb9t6QDZxsEQgmNVortCcZlQT/kSFj0=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=LWIRkwCC1WJkgLVqh09xzQHStgqhErIcjNqlrAEZ24RNfBrO6aVPXK0vmmYLAXH5mtEy7u4djh/CxpbHWwopmzyv8z9knbBsvF5qiFt4UNVMhYVICLewLKSvpoJXr2gGJn3owpu5MIVWosws8W1OGf9AUsL2ED4GK8nIQXnGQvc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=wqRBnZ4m; arc=none smtp.client-ip=185.246.84.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
+	s=arc-20240116; t=1788944793; c=relaxed/simple;
+	bh=MDBBmeOGt1jJA2QyqYyZpKdJgVhokM9Hyvk+N6kJG7Y=;
+	h=From:In-Reply-To:MIME-Version:References:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=pW9YKB0zAtQNKrSV9JQdMFRDQsBRyUr6eNP5R/jYxGpoE3u7AkS6DsaYycGbnYPEgsAI4ZwXfRwBfXbwppddgvh1ly+9d0alYN3rdAlOSZaU/rgJJjTP80McrvNcmJVDsajpkRxz57GYiryeTJpxRQbLqAFsteGplcq3Z5FUT8w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=m1Dgu4B2; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="wqRBnZ4m"
-Received: from smtpout-01.galae.net (smtpout-01.galae.net [212.83.139.233])
-	by smtpout-02.galae.net (Postfix) with ESMTPS id E3A891A1A78;
-	Wed,  9 Sep 2026 09:06:26 +0000 (UTC)
-Received: from mail.galae.net (mail.galae.net [212.83.136.155])
-	by smtpout-01.galae.net (Postfix) with ESMTPS id B086360448;
-	Wed,  9 Sep 2026 09:06:26 +0000 (UTC)
-Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id BC93811C7AF78;
-	Wed,  9 Sep 2026 11:06:24 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=dkim;
-	t=1788944786; h=from:subject:date:message-id:to:cc:mime-version:content-type:
-	 content-transfer-encoding:in-reply-to:references;
-	bh=IgFCdDS5B2dqwxNnNpEegsmxei6KgD7xlNl1LOYi9Vw=;
-	b=wqRBnZ4mXP4WxLqyY5K+wOz4VrHlag6Kovw2eHJVqR13eAdMwvCWcxjErWWIptY9w5Nqhg
-	ifCwW8m/jWTmEvWMndQjLyyqQHkmeG6A/YJ/gVk9NTxyjF4RZWRTKAwFnRLU2fpDlSjK7+
-	Wk6V51Q9pME60PvF76BO4J9DjPrF9U50mCRt5iKBXEyeFkYlBaPNN7tFYE+6ys5jSeSCAq
-	hfawKVtMdqRHtAW3z0UclDDah+olc3m4M8fVqcnqRSRr8fx+dIdp4b6IvT/gT8qhcm4G3E
-	Biyn0xQ7aKf62wCfv8FrZT5sRf0qPTRRkuBeVkSSApvmuKEeuWlrybm5e8ZjMA==
-Date: Wed, 9 Sep 2026 11:06:23 +0200
-From: Herve Codina <herve.codina@bootlin.com>
-To: sashiko-bot@kernel.org
-Cc: sashiko-reviews@lists.linux.dev, linux-cxl@vger.kernel.org,
- linux-pci@vger.kernel.org
-Subject: Re: [PATCH v11 10/10] PCI: of: Avoid np->data usage for the node
- changeset
-Message-ID: <20260909110623.2e6bbc89@bootlin.com>
-In-Reply-To: <20260909081755.444E91F00A3A@smtp.kernel.org>
-References: <20260909080114.591938-1-herve.codina@bootlin.com>
-	<20260909080114.591938-11-herve.codina@bootlin.com>
-	<20260909081755.444E91F00A3A@smtp.kernel.org>
-Organization: Bootlin
-X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-redhat-linux-gnu)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="m1Dgu4B2"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BA70E1F0155B
+	for <linux-pci@vger.kernel.org>; Wed,  9 Sep 2026 09:06:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1788944791;
+	bh=osuKNlWwkgDC1U1icT/Qoh45Es9k9O509Xjy31GoFe8=;
+	h=From:In-Reply-To:References:Date:Subject:To:Cc;
+	b=m1Dgu4B2XCYkK9uqtTe9U9zEXs0+QrbFPh/q2c/n8LAZhnNC57aXu7oDMWH25YFrp
+	 9M2uoKoGR0DUSNTkL3g/H7OsUoXwQwe3tockNtuif2v6KCgmiZhBLiZfpFCiHmtePp
+	 Ba0GX/O8QSZZ2e1PFYofcm1ZihQj+A4SwJ0IR1I9Z6n3NuDtUxi+qnbBBYRVakRThB
+	 YXRpuC/R0xLvXvgN8OC5C5P2hHsyLiPrcv/x3z8mk/Adi17+SZdQwgIpCpfpwHlzP0
+	 TZTIQSliDRZSrY2WY7ooZWDbOWX076STbMR2HTqAlqJCusNUgpsOdOCmSq9L96ms35
+	 SuQ/zVSZCkVoQ==
+Received: by mail-lj1-f172.google.com with SMTP id 38308e7fff4ca-3a151eda82dso47232521fa.1
+        for <linux-pci@vger.kernel.org>; Wed, 09 Sep 2026 02:06:31 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AKwUvBx0Gj+mgCfhZ9CKruBiuoYulZKcSNOy8gCi0NlqGYzgeQPFKzqSCCxLuvLbkWqDtIUPEQO6ECORoWQ=@vger.kernel.org
+X-Gm-Message-State: AFuF++lFiduFT0brU2gMOodlSlLX360ldxT4omGCp8U2tXp4o1R7zR7r
+	B/K/jHVUIzRgzfQePKx/8+bQNryC88YIne4jUiS2fJBXaFwN9ccvlLGKcYYgc5Gj/aPPIIOwGZQ
+	CGyCSaTEm24PNizCGZbUb8uQ9+mGOk67t87RGh65u9Q==
+X-Received: by 2002:a2e:bc13:0:b0:39c:624d:82b9 with SMTP id
+ 38308e7fff4ca-3a371b5785bmr81319681fa.4.1788944790433; Wed, 09 Sep 2026
+ 02:06:30 -0700 (PDT)
+Received: from 969154062570 named unknown by gmailapi.google.com with
+ HTTPREST; Wed, 9 Sep 2026 02:06:29 -0700
+Received: from 969154062570 named unknown by gmailapi.google.com with
+ HTTPREST; Wed, 9 Sep 2026 02:06:29 -0700
+From: Bartosz Golaszewski <brgl@kernel.org>
+In-Reply-To: <20260909080114.591938-6-herve.codina@bootlin.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 8bit
-X-Last-TLS-Session-Version: TLSv1.3
+References: <20260909080114.591938-1-herve.codina@bootlin.com> <20260909080114.591938-6-herve.codina@bootlin.com>
+Date: Wed, 9 Sep 2026 02:06:29 -0700
+X-Gmail-Original-Message-ID: <CAMRc=MfMvXWLHMb1w7km_JCsZvE9_HmhiAWgoMi9mjxXL3_8EQ@mail.gmail.com>
+X-Gm-Features: AcwNN1UAL1h56FAgIlDt7ND-Ag45pHEciGYFt6Y1QX_NiTCc2meGcA2HgU6LiJg
+Message-ID: <CAMRc=MfMvXWLHMb1w7km_JCsZvE9_HmhiAWgoMi9mjxXL3_8EQ@mail.gmail.com>
+Subject: Re: [PATCH v11 05/10] cxl/test: Use fw_devlink_set_device()
+To: Herve Codina <herve.codina@bootlin.com>
+Cc: driver-core@lists.linux.dev, linux-kernel@vger.kernel.org, 
+	linux-pci@vger.kernel.org, linux-sound@vger.kernel.org, 
+	patches@opensource.cirrus.com, linux-gpio@vger.kernel.org, 
+	linux-acpi@vger.kernel.org, linux-cxl@vger.kernel.org, 
+	Allan Nielsen <allan.nielsen@microchip.com>, Horatiu Vultur <horatiu.vultur@microchip.com>, 
+	Daniel Machon <daniel.machon@microchip.com>, Steen Hegelund <steen.hegelund@microchip.com>, 
+	Luca Ceresoli <luca.ceresoli@bootlin.com>, Thomas Petazzoni <thomas.petazzoni@bootlin.com>, 
+	Jonathan Cameron <jonathan.cameron@huawei.com>, Richard Cheng <icheng@nvidia.com>, 
+	Andrew Lunn <andrew@lunn.ch>, Rob Herring <robh@kernel.org>, Saravana Kannan <saravanak@kernel.org>, 
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>, 
+	Danilo Krummrich <dakr@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Charles Keepax <ckeepax@opensource.cirrus.com>, 
+	Richard Fitzgerald <rf@opensource.cirrus.com>, David Rhodes <david.rhodes@cirrus.com>, 
+	Linus Walleij <linusw@kernel.org>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>, 
+	Daniel Scally <djrscally@gmail.com>, Heikki Krogerus <heikki.krogerus@linux.intel.com>, 
+	Sakari Ailus <sakari.ailus@linux.intel.com>, Bartosz Golaszewski <brgl@kernel.org>, 
+	Len Brown <lenb@kernel.org>, Davidlohr Bueso <dave@stgolabs.net>, Jonathan Cameron <jic23@kernel.org>, 
+	Dave Jiang <dave.jiang@intel.com>, Alison Schofield <alison.schofield@intel.com>, 
+	Vishal Verma <vishal.l.verma@intel.com>, Dan Williams <djbw@kernel.org>, 
+	Ira Weiny <iweiny@kernel.org>, Li Ming <ming.li@zohomail.com>, Lizhi Hou <lizhi.hou@amd.com>
+Content-Type: text/plain; charset="UTF-8"
 
-On Wed, 09 Sep 2026 08:17:54 +0000
-sashiko-bot@kernel.org wrote:
-
-> Thank you for your contribution! Sashiko AI review found 2 potential issue(s) to consider:
-> - [High] Missing NULL check on `np` in `of_pci_remove_node` and `of_pci_remove_host_bridge_node` leading to kernel panic.
-> - [High] Dangling pointer in `pdev->cset` and `bridge->cset` after freeing, leading to potential use-after-free or double-free.
+On Wed, 9 Sep 2026 10:01:04 +0200, Herve Codina <herve.codina@bootlin.com> said:
+> The code set directly fwnode.dev field.
+>
+> Use the dedicated fw_devlink_set_device() helper to perform this
+> operation.
+>
+> Signed-off-by: Herve Codina <herve.codina@bootlin.com>
+> Reviewed-by: Dave Jiang <dave.jiang@intel.com>
+> Reviewed-by: Jonathan Cameron <jonathan.cameron@huawei.com>
+> Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+> Reviewed-by: Richard Cheng <icheng@nvidia.com>
+> ---
+>  tools/testing/cxl/test/cxl.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/tools/testing/cxl/test/cxl.c b/tools/testing/cxl/test/cxl.c
+> index 547ebc97bf59..e21e45fe1572 100644
+> --- a/tools/testing/cxl/test/cxl.c
+> +++ b/tools/testing/cxl/test/cxl.c
+> @@ -1678,7 +1678,7 @@ static void mock_companion(struct acpi_device *adev, struct device *dev)
+>  	device_initialize(&adev->dev);
+>  	fwnode_init(&adev->fwnode, NULL);
+>  	device_set_node(dev, &adev->fwnode);
+> -	adev->fwnode.dev = dev;
+> +	fw_devlink_set_device(&adev->fwnode, dev);
+>  }
+>
+>  #ifndef SZ_64G
 > --
-> 
-> commit 506858ef76ab83f59a005bd51f3fde0f4d73a6a2
-> Author: Herve Codina <herve.codina@bootlin.com>
-> 
-> PCI: of: Avoid np->data usage for the node changeset
-> 
-> This patch modifies how OF changeset references are stored during PCI node
-> creation. Instead of using np->data, which can be altered by platform code,
-> it stores the changeset in pdev->cset or bridge->cset. This ensures the
-> correct changeset is reverted and destroyed during node removal.
-> 
-> > diff --git a/drivers/pci/of.c b/drivers/pci/of.c
-> > index 0a5797652e183..cd87128c71ddc 100644
-> > --- a/drivers/pci/of.c
-> > +++ b/drivers/pci/of.c
-> > @@ -732,15 +732,16 @@ void of_pci_remove_node(struct pci_dev *pdev)
-> >  {
-> >  	struct device_node *np;
-> >  
-> > -	np = pci_device_to_OF_node(pdev);
-> > -	if (!np || !of_node_check_flag(np, OF_DYNAMIC))
-> > +	if (!pdev->cset)
-> >  		return;
-> >  
-> > +	np = pci_device_to_OF_node(pdev);
-> >  	fw_devlink_set_device(&np->fwnode, NULL);  
-> 
-> [Severity: High]
-> Will this result in an invalid pointer dereference if np is NULL?
-> 
-> The previous implementation had a NULL check for np, but the new code computes
-> &np->fwnode unconditionally. If pdev->dev.of_node is cleared prior to removal,
-> pci_device_to_OF_node() will return NULL, causing fw_devlink_set_device() to
-> dereference an offset address.
+> 2.55.0
+>
+>
 
-How np could be NULL with pdev->cset non-NULL ?
-
-I don't think this can happen.
-
-> 
-> >  	device_remove_of_node(&pdev->dev);
-> > -	of_changeset_revert(np->data);
-> > -	of_changeset_destroy(np->data);
-> > +	of_changeset_revert(pdev->cset);
-> > +	of_changeset_destroy(pdev->cset);
-> >  	of_node_put(np);
-> > +	kfree(pdev->cset);  
-> 
-> [Severity: High]
-> Is it possible for of_pci_remove_node() to be called twice for the same device?
-> 
-> If so, leaving pdev->cset as a dangling pointer could lead to a double-free.
-> Should pdev->cset be set to NULL after kfree() so that the earlier
-> if (!pdev->cset) check can prevent a second execution?
-
-I don't think that of_pci_remove_node() can be called twice.
-
-> 
-> [ ... ]
-> 
-> > @@ -828,16 +828,17 @@ void of_pci_remove_host_bridge_node(struct pci_host_bridge *bridge)
-> >  {
-> >  	struct device_node *np;
-> >  
-> > -	np = pci_bus_to_OF_node(bridge->bus);
-> > -	if (!np || !of_node_check_flag(np, OF_DYNAMIC))
-> > +	if (!bridge->cset)
-> >  		return;
-> >  
-> > +	np = pci_bus_to_OF_node(bridge->bus);
-> >  	fw_devlink_set_device(&np->fwnode, NULL);  
-> 
-> [Severity: High]
-> Can np evaluate to NULL here?
-> 
-> Similar to the issue in of_pci_remove_node(), if pci_bus_to_OF_node() returns
-> NULL, the missing NULL check will cause a crash during the &np->fwnode pointer
-> arithmetic.
-
-bridge->cset protects agains a NULL np.
-
-> 
-> >  	device_remove_of_node(&bridge->bus->dev);
-> >  	device_remove_of_node(&bridge->dev);
-> > -	of_changeset_revert(np->data);
-> > -	of_changeset_destroy(np->data);
-> > +	of_changeset_revert(bridge->cset);
-> > +	of_changeset_destroy(bridge->cset);
-> >  	of_node_put(np);
-> > +	kfree(bridge->cset);  
-> 
-> [Severity: High]
-> Could this lead to a use-after-free or double-free on bridge->cset?
-> 
-> If a removal API like pci_stop_root_bus() is invoked multiple times, the
-> dangling pointer bypasses the if (!bridge->cset) check at the start of the
-> function, resulting in a double-free on the changeset.
-> 
-
-I don't think that pci_stop_root_bus() can be called twice.
-
+Reviewed-by: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
