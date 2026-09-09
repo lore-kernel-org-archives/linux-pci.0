@@ -1,112 +1,107 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 95FB03D5C2C
-	for <linux-pci@vger.kernel.org>; Wed,  9 Sep 2026 09:23:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id B743A3E40E7;
+	Wed,  9 Sep 2026 09:31:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788945793; cv=none; b=JahUfmWVX+xQcRknODp0tzOTWNOxXTelpCExXReMjjIAUreGLyFF1X6Zt7EPIzqAFBnbw8icOi6DlHgHohXEi12NUjI/39NLfInZDBHy82H+c+n8ItCjo0oOzP650n8OgkHtzu45p21Y5euucOynDE+s+im4+nCzyQcc0+nzv44=
+	t=1788946308; cv=none; b=lTv6R91iPFmofYG/6dUxkoGFjUxEeTYCJGKbvJu0oZ0D6goXgOJTzvsFZwA8tGQZGuJoE5QzReDCfp0+WHeBXc8R/jdOKiOvn9oUWu2IIUSXZiamgZc92fy70g4dUfzhfmnRVdYhTlc2TiIYYPBZTz2rnwwXitBdoNvqiPNfCNk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788945793; c=relaxed/simple;
-	bh=MDBBmeOGt1jJA2QyqYyZpKdJgVhokM9Hyvk+N6kJG7Y=;
-	h=From:In-Reply-To:MIME-Version:References:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=AjE8O50QPl04hOTJvYFqZoG1eRTpVLVuCnVyxAGuFRLbLF7gtkr8dPiW7JxLkIcJX5uBNkk8FW5q2YwPkxMmduNMr875wqyMF3/7m4/nn3hPB3Z/Xm8JdJofrv+WUVwte1NUNTUzfmCXcDVlDTEdvOib2OmAUmrI/8UNrvMxi/Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Xv8ei3Eh; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788946308; c=relaxed/simple;
+	bh=U/TSjfiyoy1kR4oMlsX6WetGoZU/9+forBtwTZDVlgA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=e+yKCF0UDiBs2fMXvTpCloOKrtDCJuZLA9v1pCVTHJwKRhHzfK4YUNpBfJmoCT2eW3VQtSBeEvEpjxrbIGccSI8Mpo4Qsoj1jxhCcdWdSXrr92hw45DUxvz8x15cYeguHr6W5VdF3a5ZTivX3J9cknbJaZY2dL2cbw8pYvZESbE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=YCsca2mo; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Xv8ei3Eh"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AB3AF1F00AC4
-	for <linux-pci@vger.kernel.org>; Wed,  9 Sep 2026 09:23:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788945789;
-	bh=osuKNlWwkgDC1U1icT/Qoh45Es9k9O509Xjy31GoFe8=;
-	h=From:In-Reply-To:References:Date:Subject:To:Cc;
-	b=Xv8ei3EhJ4HgzbOdGsjteUPopCkw4XU2rkVeC9+Yfe1nKnNiNuCsJxA2oGOVTwAin
-	 saUDbUkbRvVy4G8RMb+sD2xLpnoZ+wb5cFTZpHBb/r3XXd7BgseV4AD9YSzORRN1Qo
-	 P6+hM6WkOb7MTC6McLuApcRQCfbbCx9L9oRk3VjEbTuhLzsp4hXtg3FOsuAsAody6o
-	 OwWw9b+uJ7KWWbwXq3MgiXGRa4JZiV1mxJaSS7zepZzVlygSaortBcOxlQoHcOw9Zp
-	 P8pkZZRMSUTymuvBe/OaVF0AQH8Bu8SUO6au2gniraylnozvssr9Ux9ggfAylFPJnU
-	 VMchAFHffC2ew==
-Received: by mail-lf1-f45.google.com with SMTP id 2adb3069b0e04-5b5f21afe8cso7370482e87.1
-        for <linux-pci@vger.kernel.org>; Wed, 09 Sep 2026 02:23:09 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AKwUvBxWnd1AXuTsLn8Tt5ZA16hlhuI6lfLSj1ltMETYym9PeOL/d1ISo3YviKp8505le6gpDHRQea+XkfI=@vger.kernel.org
-X-Gm-Message-State: AFuF++kEc+K3sjO7Is4RPQnU3Uni/KVgXlFsHzHIBvzJ2gxGN8g1EuJh
-	Jc/McM2ZvloXFYeXpCuGfq0We1OFX1yRD+Uvztwvee8Sf4C4rqcjQPmXNpNPPtB5vHwykmZqr/I
-	tMPWeKapsQNpnPwEksSLsWhO4tL+dMhAuXiKj7g0bsA==
-X-Received: by 2002:a05:6512:1286:b0:5b7:668a:e8cb with SMTP id
- 2adb3069b0e04-5b7668aeb82mr414082e87.31.1788945788232; Wed, 09 Sep 2026
- 02:23:08 -0700 (PDT)
-Received: from 969154062570 named unknown by gmailapi.google.com with
- HTTPREST; Wed, 9 Sep 2026 02:23:07 -0700
-Received: from 969154062570 named unknown by gmailapi.google.com with
- HTTPREST; Wed, 9 Sep 2026 02:23:06 -0700
-From: Bartosz Golaszewski <brgl@kernel.org>
-In-Reply-To: <20260909080114.591938-6-herve.codina@bootlin.com>
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="YCsca2mo"
+Received: from [192.168.1.70] (unknown [4.194.122.170])
+	by linux.microsoft.com (Postfix) with ESMTPSA id 0727520B7128;
+	Wed,  9 Sep 2026 02:30:43 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 0727520B7128
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1788946247;
+	bh=UImAoP06X/mSbbiARCqbMx2kej7THt6I1rcHgFKHVsA=;
+	h=Date:Subject:To:References:From:In-Reply-To:From;
+	b=YCsca2moKVD3MxWmfxPcMRv6pDUwe32Sh3Cyho5rDJO/Yudx8HO+sUplPtjGR1L12
+	 avqJ3MoVDUnwvD5ikRTmViIDxxETtRKGoWVB1MGnAC1ePW6qQXUYw/AhYQ7YJu0Vr2
+	 zYgISlgxEUtyMCC+MftQD9JIAYDm2DcPkYzyIYs0=
+Message-ID: <c8b6e10f-dd52-4c74-8d16-268563d8bc1f@linux.microsoft.com>
+Date: Wed, 9 Sep 2026 15:01:22 +0530
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260909080114.591938-1-herve.codina@bootlin.com> <20260909080114.591938-6-herve.codina@bootlin.com>
-Date: Wed, 9 Sep 2026 02:23:06 -0700
-X-Gmail-Original-Message-ID: <CAMRc=MfqbjoARAQQ65fpwn8Y8SMXt7BAfvhtfzOj6iQUEYnAPQ@mail.gmail.com>
-X-Gm-Features: AcwNN1WZ09Q1SV1ODjBdPMqkfOrJoPMMt-CtgzyA6h5c6HSsWVZpQuvsCQtR_OE
-Message-ID: <CAMRc=MfqbjoARAQQ65fpwn8Y8SMXt7BAfvhtfzOj6iQUEYnAPQ@mail.gmail.com>
-Subject: Re: [PATCH v11 05/10] cxl/test: Use fw_devlink_set_device()
-To: Herve Codina <herve.codina@bootlin.com>
-Cc: driver-core@lists.linux.dev, linux-kernel@vger.kernel.org, 
-	linux-pci@vger.kernel.org, linux-sound@vger.kernel.org, 
-	patches@opensource.cirrus.com, linux-gpio@vger.kernel.org, 
-	linux-acpi@vger.kernel.org, linux-cxl@vger.kernel.org, 
-	Allan Nielsen <allan.nielsen@microchip.com>, Horatiu Vultur <horatiu.vultur@microchip.com>, 
-	Daniel Machon <daniel.machon@microchip.com>, Steen Hegelund <steen.hegelund@microchip.com>, 
-	Luca Ceresoli <luca.ceresoli@bootlin.com>, Thomas Petazzoni <thomas.petazzoni@bootlin.com>, 
-	Jonathan Cameron <jonathan.cameron@huawei.com>, Richard Cheng <icheng@nvidia.com>, 
-	Andrew Lunn <andrew@lunn.ch>, Rob Herring <robh@kernel.org>, Saravana Kannan <saravanak@kernel.org>, 
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>, 
-	Danilo Krummrich <dakr@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Charles Keepax <ckeepax@opensource.cirrus.com>, 
-	Richard Fitzgerald <rf@opensource.cirrus.com>, David Rhodes <david.rhodes@cirrus.com>, 
-	Linus Walleij <linusw@kernel.org>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>, 
-	Daniel Scally <djrscally@gmail.com>, Heikki Krogerus <heikki.krogerus@linux.intel.com>, 
-	Sakari Ailus <sakari.ailus@linux.intel.com>, Bartosz Golaszewski <brgl@kernel.org>, 
-	Len Brown <lenb@kernel.org>, Davidlohr Bueso <dave@stgolabs.net>, Jonathan Cameron <jic23@kernel.org>, 
-	Dave Jiang <dave.jiang@intel.com>, Alison Schofield <alison.schofield@intel.com>, 
-	Vishal Verma <vishal.l.verma@intel.com>, Dan Williams <djbw@kernel.org>, 
-	Ira Weiny <iweiny@kernel.org>, Li Ming <ming.li@zohomail.com>, Lizhi Hou <lizhi.hou@amd.com>
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3] PCI: hv: Warn when wait_for_response() waits
+ indefinitely
+To: Sahil Chandna <sahilchandna@linux.microsoft.com>, kys@microsoft.com,
+ haiyangz@microsoft.com, wei.liu@kernel.org, decui@microsoft.com,
+ longli@microsoft.com, lpieralisi@kernel.org, kwilczynski@kernel.org,
+ mani@kernel.org, robh@kernel.org, bhelgaas@google.com,
+ linux-hyperv@vger.kernel.org, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, mhklinux@outlook.com
+References: <20260908113009.3005964-1-sahilchandna@linux.microsoft.com>
+Content-Language: en-US
+From: Naman Jain <namjain@linux.microsoft.com>
+In-Reply-To: <20260908113009.3005964-1-sahilchandna@linux.microsoft.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Wed, 9 Sep 2026 10:01:04 +0200, Herve Codina <herve.codina@bootlin.com> said:
-> The code set directly fwnode.dev field.
->
-> Use the dedicated fw_devlink_set_device() helper to perform this
-> operation.
->
-> Signed-off-by: Herve Codina <herve.codina@bootlin.com>
-> Reviewed-by: Dave Jiang <dave.jiang@intel.com>
-> Reviewed-by: Jonathan Cameron <jonathan.cameron@huawei.com>
-> Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-> Reviewed-by: Richard Cheng <icheng@nvidia.com>
+
+
+On 9/8/2026 5:00 PM, Sahil Chandna wrote:
+> A guest can wait indefinitely in wait_for_response() for the host to
+> send either a rescind message or a packet completion. If the
+> host does not send either, the guest can remain blocked with no
+> diagnostic indicating a reason.
+> This was observed during a guest kernel upgrade in which the
+> host-side application handling the PCI channel faulted, causing the
+> guest to never receive the completion request.
+> Add a warning in wait_for_response() when the wait exceeds
+> a timeout so that such a hang is visible in the guest's kernel log
+> and can be correlated with host-side state.
+> 
+> Suggested-by: Michael Kelley <mhklinux@outlook.com>
+> Signed-off-by: Sahil Chandna <sahilchandna@linux.microsoft.com>
 > ---
->  tools/testing/cxl/test/cxl.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/tools/testing/cxl/test/cxl.c b/tools/testing/cxl/test/cxl.c
-> index 547ebc97bf59..e21e45fe1572 100644
-> --- a/tools/testing/cxl/test/cxl.c
-> +++ b/tools/testing/cxl/test/cxl.c
-> @@ -1678,7 +1678,7 @@ static void mock_companion(struct acpi_device *adev, struct device *dev)
->  	device_initialize(&adev->dev);
->  	fwnode_init(&adev->fwnode, NULL);
->  	device_set_node(dev, &adev->fwnode);
-> -	adev->fwnode.dev = dev;
-> +	fw_devlink_set_device(&adev->fwnode, dev);
->  }
->
->  #ifndef SZ_64G
-> --
-> 2.55.0
->
->
+> Changes since v2:
+> - Add counter based timeout instead of introducing another timer
+> Link to v2: https://lore.kernel.org/all/20260902115854.2629164-1-sahilchandna@linux.microsoft.com/
+> 
+> Changes since v1:
+> - Removed periodic warning to one time warning in 2 minutes
+> - Include vmbus relid and stuck PCI msg.
+> Link to v1: https://lore.kernel.org/all/20260825051850.2438816-1-sahilchandna@linux.microsoft.com/
+>   drivers/pci/controller/pci-hyperv.c | 46 ++++++++++++++++++++++-------
+>   1 file changed, 36 insertions(+), 10 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
+> index 89816a2bd7cd..bd07402c47ed 100644
+> --- a/drivers/pci/controller/pci-hyperv.c
+> +++ b/drivers/pci/controller/pci-hyperv.c
+> @@ -1040,19 +1040,38 @@ static void put_pcichild(struct hv_pci_dev *hpdev)
+> 
+>   /*
+>    * There is no good way to get notified from vmbus_onoffer_rescind(),
+> - * so let's use polling here, since this is not a hot path.
+> + * so let's use polling here, since this is not a hot path. If
+> + * wait_for_response() has been polling for 2 minutes
+> + * without either a rescind or completion, add a warning.
+>    */
+> +#define PCI_RESPONSE_HANG_TICKS 1200
+> +
 
-Reviewed-by: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
+Nit, I think this variable name could be misleading, as this represents 
+a loop counter for a retry logic, but not exactly *ticks* from kernel 
+terminology.
+
+I would have preferred something like: PCI_RESPONSE_WARN_POLL_COUNT.
+
+Rest LGTM.
+
+Reviewed-by: Naman Jain <namjain@linux.microsoft.com>
+
+Regards,
+Naman Jain
