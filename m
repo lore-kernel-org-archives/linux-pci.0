@@ -1,197 +1,339 @@
-Received: from SJ2PR03CU001.outbound.protection.outlook.com (mail-westusazon11012070.outbound.protection.outlook.com [52.101.43.70])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 91739569F04;
-	Wed,  9 Sep 2026 16:13:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.43.70
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788970393; cv=fail; b=B8FaxVwsA+CaweGcZUoeF1yGIzWv+yXhwWf7Hio58uZ/3XgPJvwttp/mAlW3KvrUOZJvJG3ZHf4ugZml74tsb5hy08WVxPFRt5pj/B2Gky13ksLd2SWYfndhb1vnpAAvHA3OnKaQMYdJhzfbo1Z8uahTlmV98Mooj7mo0uVCRTw=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788970393; c=relaxed/simple;
-	bh=MKF6oLkrg55x3VNnCv5krselPsDC32vqFWgdnQZOqgc=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=DlddX7VAwDTiW1z5U4oM5NEOXLwnz2WY7b1uYMQPMmBtPBlFtJYYpmsI8CMrRUwQXD+G+VRInIU4YuDs1pPfIqjOtEKJsbUpgx6r2xwQmi7wVur8cbgSBVh2CAP/Cqt2d8CZ3OSqrAl4W3YVMqEtpiMVmcdL/Jopq/wuTnVRdgg=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=AwReehV0; arc=fail smtp.client-ip=52.101.43.70
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="AwReehV0"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=lGYk4mASqg0vNDoP7jm7BY9TMZAD9tQCiNJ66F/nq4LRxZ6sfnV2VY2kp1LZYyqIm5gaXXFI8U8n5akW0kFJSwz++eMH6mUGPwSPpUDbEwMdpKIcNjfhpMLRix9DohuVe5BnkBXC6GHrJPKVOpYP0dCpeCTT2QQ+RHzQvRuvfuj25DhuhxuiNAL3NbnTPlTlCfjn0p1Qe5aoQGUgD3Gn7tIlOCtvfTxa5rr9o7zagAgs4GxI1neeqzG2VZpVTZoE/pxbdlyNV19DoqLRTJ8MnLpLIshazARiQ1jKE2Ey/wIh4KIP7ItIWXWAkgqWiue6Eu+TUsRnQ35bP+QCJn1/Zg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=1+ZKiS59+qvntzMHNx0qsVpnw8+bl9g/K/VSvBRPm9k=;
- b=x0gsC/DbVogZBFw0CtVFMT1y+9gTDdD4ox3bEb6jOuPMOoVBVMSSgSj+BSKHew9w2dmIhadJHJ3V3uT5kj507ckjCUdQkU+9auFuz2W0YjGe7fsX4AYKN6At9YZgK/yuDd1D1VPnqN4LT/qi581oWg1P+XPgpvRXZdcjHAOH97T83d99INmlA0hPpat12toK9CYmv37N0SvAFbuYxboT8g8b8DxAPsOWDVTMcAoGuQnzH07w9JC6OUCG4WLQSyVHA7zSncyDvtVRPsFjY61aa3RKwVVpWM7tYFrEr7yvqrHWpBHxSQgvfAx9vHbFXPJNHRMcgTz+JI+Q/k/AcnAHig==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
- header.d=amd.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=1+ZKiS59+qvntzMHNx0qsVpnw8+bl9g/K/VSvBRPm9k=;
- b=AwReehV0sYIuP3Do3+IhgLNfw2ZhrwlDG0zH816XUfa82/NUMjDcqjpG1p2U9eINvcFs0A+fZDyfcKif4nO9028/qf05mT4XfD+bwkaGBzxrH1rsUteXSJGeoDFIDLkRoPzeiuSe3k5xReGdxDyEsjLgwKenk/SK0zEC3I6uZEA=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=amd.com;
-Received: from CH8PR12MB9766.namprd12.prod.outlook.com (2603:10b6:610:2b6::10)
- by DS1PR12MB999188.namprd12.prod.outlook.com (2603:10b6:8:495::12) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.360.13; Wed, 9 Sep
- 2026 16:13:09 +0000
-Received: from CH8PR12MB9766.namprd12.prod.outlook.com
- ([fe80::be0f:431f:5f27:96d9]) by CH8PR12MB9766.namprd12.prod.outlook.com
- ([fe80::be0f:431f:5f27:96d9%5]) with mapi id 15.21.0406.007; Wed, 9 Sep 2026
- 16:13:09 +0000
-Message-ID: <66451f43-5180-4832-931b-f96de6dd65e2@amd.com>
-Date: Wed, 9 Sep 2026 11:13:05 -0500
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v19 02/14] cxl/ras: Fix cxl_rch_get_aer_severity() wrong
- severity register
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Jonathan Cameron <jic23@kernel.org>, Dave Jiang <dave.jiang@intel.com>,
- Alison Schofield <alison.schofield@intel.com>,
- Vishal Verma <vishal.l.verma@intel.com>, Davidlohr Bueso
- <dave@stgolabs.net>, Bjorn Helgaas <bhelgaas@google.com>,
- "Rafael J . Wysocki" <rafael@kernel.org>, Jonathan Corbet <corbet@lwn.net>,
- linux-cxl@vger.kernel.org, Tony Luck <tony.luck@intel.com>,
- Borislav Petkov <bp@alien8.de>, Hanjun Guo <guohanjun@huawei.com>,
- Mauro Carvalho Chehab <mchehab@kernel.org>,
- Shuai Xue <xueshuai@linux.alibaba.com>, Len Brown <lenb@kernel.org>,
- Ira Weiny <iweiny@kernel.org>, Li Ming <ming.li@zohomail.com>,
- Shuah Khan <skhan@linuxfoundation.org>,
- Ben Cheatham <Benjamin.Cheatham@amd.com>, Richard Cheng <icheng@nvidia.com>,
- Robert Richter <rrichter@amd.com>, linux-pci@vger.kernel.org,
- linux-acpi@vger.kernel.org, linux-doc@vger.kernel.org,
- linux-kernel@vger.kernel.org
-References: <20260803221810.3685703-1-terry.bowman@amd.com>
- <20260803221810.3685703-3-terry.bowman@amd.com> <anijY3eTVWSqHLxh@wunner.de>
- <apkxP_fydVjpULaT@wunner.de>
-Content-Language: en-US
-From: "Bowman, Terry" <terry.bowman@amd.com>
-In-Reply-To: <apkxP_fydVjpULaT@wunner.de>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: PH0PR07CA0084.namprd07.prod.outlook.com
- (2603:10b6:510:f::29) To CH8PR12MB9766.namprd12.prod.outlook.com
- (2603:10b6:610:2b6::10)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B7A8A559CA7;
+	Wed,  9 Sep 2026 16:31:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1788971506; cv=none; b=k7bKjcCZeKaRUritsJ3MMA3ZFI3O0D6E5uRZyLKe4OBLQMKXQk0C7/7BiYCPrsQchXcsOsLlhvasPmWuN4pNQeZMB3mPyu9qvE37JRadEWEDMgvBiipRbYYNbpRdepgS5SGmhWC0P80af2uUC080U5K/F2AMKO6yR2xvnrJpA50=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1788971506; c=relaxed/simple;
+	bh=UhUb594ysF9NVW5xZ3Kg4cm9A4di3yvtA4rizWU6ISk=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Mr699936Ex7hAVC3xYku3MeEm2P8fg/XyXqAan0DR8mL+ajg4FpSUCosXHGY6O93+6U0B3Pvhtn7ujhMsguE8FHoHoxUnruR0QWMXuRJnF+Wq5igQ7/DNu4u1zJiCwIM6gogOWeQauWITIyD65d4oIzQ+UDcOeGvW0yf2OsMwXM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5567F1F000FF;
+	Wed,  9 Sep 2026 16:31:44 +0000 (UTC)
+From: Dave Jiang <dave.jiang@intel.com>
+To: linux-cxl@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Cc: bhelgaas@google.com,
+	ilpo.jarvinen@linux.intel.com,
+	rafael@kernel.org,
+	lenb@kernel.org,
+	bp@alien8.de,
+	guohanjun@huawei.com,
+	mchehab@kernel.org,
+	xueshuai@linux.alibaba.com,
+	jic23@kernel.org,
+	terry.bowman@amd.com,
+	sashiko-bot@kernel.org
+Subject: [PATCH v2] PCI/AER: Map a raw AER Capability image field by field
+Date: Wed,  9 Sep 2026 09:31:40 -0700
+Message-ID: <20260909163140.2723395-1-dave.jiang@intel.com>
+X-Mailer: git-send-email 2.54.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CH8PR12MB9766:EE_|DS1PR12MB999188:EE_
-X-MS-Office365-Filtering-Correlation-Id: 7f5b12ed-13e7-465f-c4f9-08df0e8d3d89
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|23010399003|7416014|376014|366016|10067099003|5023799004|11063799006|4143699003|56012099006|22082099003|18002099003;
-X-Microsoft-Antispam-Message-Info:
-	2E66sf12XBr++rXpsxY/p1vpTC8NmX5dClBGutQXatOu2UXqprInbDNLymYeWOCFcxtE0HL+3yS9i8hboCUWD2HvaUNPI4vkp5rL/iTy8IUN3r+5halhqxvKhrUHdlP+R1xYNK2yPZ/Nwx+BefL2jqSNy6dbVzmuZjUubBWShgCNo3sEEGIrbNOGzkADY19Wjwzmf0x8tP4AHMgFck6MG04ftHu68xjgKlJKZmFJ4aIDvaznKjP5SLGLO5Q/4LHi2mlpOBxxfu7vW4u+RJ9w364+wT7i5kDsPUjuM+WSWY1vrKKTsxgEjrrKIhl45cZ9jl9Wf2gqfig7lv4KmseJlseI97M9JFz86zbwHZ/Xzpf3RPIM/OHI9gdrf5tw/oz1tZD1tcmpFygtxjfQsC6qsjFXdPGyjCcdUdyRzQHGCw0s6e4qy8ECmfeavDu6Q9lI5WU0Pp3RID+6ZCTDeNo6gbADZszM2TQzFa0Ll3+M7fm5SfkYEdHk9ILPqcpZ3M5kNPI6X7xhAPCYVMFCOik4CO847DquMxEbWLzIBf0+3hIpDbMBH/9yewLlu1V9VSQxYiz8+1eOdna4JlHQiHcageAFuE/g5CCF50IFwz9jMoN/x6Yi46Z9CWCV2SF0cgRGN5wYJ0Z2Yolyl/eHpjyMTBQponXZc2WwaZinYqVfQdQ=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH8PR12MB9766.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(23010399003)(7416014)(376014)(366016)(10067099003)(5023799004)(11063799006)(4143699003)(56012099006)(22082099003)(18002099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?M1BRRGdsZjVFR3N3ZDRsUGQyUGVaL2dNRWlYQmxsMnAzb1VyQWMwMSttY0pp?=
- =?utf-8?B?NEdtSlJ2REQxVElsZG9FbnZDdllvckR2d0JKZEpTM3FhbWxkeFF6dG9FdGt4?=
- =?utf-8?B?UmhQUGZiM0hYZ2NGODVjWlB1cmQ1dVBBY01nQ0hXclFVWW9sU3ZMZit6ZDJV?=
- =?utf-8?B?WmF6Wi82YU54QmptU3MyQlZHQ2pjOWp2bFZreXVyQzdUTGswMmlrQWR2cUlG?=
- =?utf-8?B?RlNFbFdSbFhyS041TU4xcmI0VTAvTFMrWHlpeDVrdzczaW9USGVFOWR3YWxX?=
- =?utf-8?B?R1dyazFmQ2xmZE9oQnlLQVhWSVBpSWtrK1BMaWdkUXUrMFI2dHNWOEVsNEtI?=
- =?utf-8?B?UndUUmpnbUZPNzdvM0VDQ3BBaWpZbSt5OFByTHdZZkhPaXpaUDJ6bThHWTVS?=
- =?utf-8?B?Ulk2blJicWNkWFE2RENsVDl1MXpMeWVuNXhKUmFmNFBIWkRJTFBQemEveW8r?=
- =?utf-8?B?R1Rmd0c4dlJkcUxlVHRJeWxNOWg2UnQvQ3RKQlJBbDdKZUlXc2p5Slc1ZDZv?=
- =?utf-8?B?TGZRNk8rLytKNDZaU2plNlE1ZGFCUS9uSFd2MXAxVlJDaW45SUJUUUZWdkg4?=
- =?utf-8?B?T1RCRVZJeEowb2x5MldJdk9kNlBmZTlldHZtTkZoMnpXcTdkNEZoQXdyUCtu?=
- =?utf-8?B?WStCRE81ZWM5cnN3dmpnckY3ZkMyd2hxdnQxQmcvdE9KOU9IdVpqOGpGSTJQ?=
- =?utf-8?B?NE5NZ2tUWVo1VXJhYlFISXYzTUJSOXZOU2NicTFlYkNqSmNFNFNSWk50SGx1?=
- =?utf-8?B?YmwyOFpHVU43QkR6M0hFaWEydEFJM1VVRzJJYlFFZmI3elNwb091SGxXNUt3?=
- =?utf-8?B?UU91aTc3SU5Ba1hCZXVBWVYwS0tBaGh1d2tyY0pvMGpST1lRbWlhM1pWeHdD?=
- =?utf-8?B?MCtVYUNzZjVqVmVWTFhwMU9XN3JzVmErbzR3VHRSVGZXVEZNS1lQUWNmMVkz?=
- =?utf-8?B?WGZiN01BM0w2VXhlR0Jqa1JXbEttZlNOaVFVYi9ScWxnYXZlOTlwSUdUY1N0?=
- =?utf-8?B?RHFkTGhCekc1cDJRNCs3SE10UG1IZlBhMDRwUGhZaDZpTzdRZWM4U05OSkgv?=
- =?utf-8?B?bnhTbzlKb3dpanlGV01mSmQrVGx3VWFHUFlaM3lNc1FIcytpUWJWdUpCdFdF?=
- =?utf-8?B?U1ZkRlZpNGxuajNEWkJUd2gzSUVVZjZwUGlmQWpBKytYa2hEYlZyWCtkT29W?=
- =?utf-8?B?QmR5LzhIWE5SVnl6VkhqSm1CNVZVOURQMC9rcW9EamR0UDFKaCtqMFNqdVY4?=
- =?utf-8?B?UWpyVFEzTG8vWStaNDdDQ1dUUXg4SWJSSXFsTEU2MkpPUkFsNjZrL1BNVGZy?=
- =?utf-8?B?TWtXSjJxWmw0TTFBcE83c3JJVFhEOEprbW1mbm9BUyt3cGsra0k4ZFZOTXUz?=
- =?utf-8?B?d3pUNmZRcXVmN2MzSmJsL0lNWHJJc2llVzVqR2lJdmNOaXdFaTI2RnpWd3Vq?=
- =?utf-8?B?VmExV0hZTm1MNjI2dlV1d0prM09Sb2k5UTBIVGZCaUFYUURMdXlHN1dERStW?=
- =?utf-8?B?UWFvSk9wWCtTVGNDTUtYL3NncDlMUmR6L1JmUG1pVFB4eWRxVWdMRTBNU0NO?=
- =?utf-8?B?Z0FvWUxkS0FWRERHdVhRdlRvSW13RGRmMElJaTdyV2MzenhjTEExMy9MUlFO?=
- =?utf-8?B?V2wxU3pBZWI4T2lIdDUzT2pabTk5RFhtamJoSzVob0lkbG93NFZEckhhVWpl?=
- =?utf-8?B?WWg1TGduOTYwcnkvVnd0REhsYmlsT2VTSVpiV3c0eFpaWEVGTTllQlVFZXhk?=
- =?utf-8?B?Slpmakl6M3lWVnhEcFJGOS8vZHl4MHlOVFBocG56T01EMk1sWEtFcHRCcldx?=
- =?utf-8?B?SWFFbldQRHEzejU5Zzh5dHJUV0tOU3MzOHhQc0htTmQ1VUZGTUxSeXlieG4x?=
- =?utf-8?B?K2VlQnZ1KzV0K2lZbUl3aWQxRU9QRVRQTlhncWJwQlJkUG9uMFA5R1lHTkc0?=
- =?utf-8?B?czhCVHlrUlpTRktOMmpYUENLeVVWVDJZMzRrc0ZWWVJkWWlmN1BZR2syMStp?=
- =?utf-8?B?USs5dk40K1k5MjN2SFpmbkwxR3RsZFQ1cG82NVlBZ2YvNHR2NnZPMlEzMDBO?=
- =?utf-8?B?MjVjanREa1Zmc3Vob3NUOXJqMWwyRHU4ZytmTndLU2xXYlM3QmEvMUpnaG9p?=
- =?utf-8?B?T29QZlRNeGl0NVROdmlmMTlFeUVYSkFmUDNrODFFUlovcDFBWDFRNUFpUDU3?=
- =?utf-8?B?VkRDUVU3N2ExRE9Lemo3RGkxMlpEbmQ2L25VYytNNFJBWlR2SXhybVBEcFc2?=
- =?utf-8?B?MU5iN3F6bWFta3hYa3AyZ0xEM1JNdVh6ZUJjclF2UUdiajBYU293U3U2aXU2?=
- =?utf-8?Q?yL+xSvnMr6IG1gCfvw?=
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 7f5b12ed-13e7-465f-c4f9-08df0e8d3d89
-X-MS-Exchange-CrossTenant-AuthSource: CH8PR12MB9766.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Sep 2026 16:13:09.6848
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: TEulHIHuKyqg1HQbo5Uhm06gSKjgron0q4wyp3OZ4/p2pXvbWbeZsLbagCo8RtBaWm24GHqe2jhJt8gxfme6VA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS1PR12MB999188
+Content-Transfer-Encoding: 8bit
 
-On 9/3/2026 3:35 AM, Lukas Wunner wrote:
-> Hi Terry,
-> 
-> You've submitted v20 of this series, but the following
-> questions haven't been addressed yet AFAICS.  I'd be
-> grateful if you could take a look:
-> 
-> On Sun, Aug 09, 2026 at 05:57:23PM +0200, Lukas Wunner wrote:
->> Am I missing something?  Is a scenario ever conceivable where the RCEC
->> receives a message with different severity than what is inferred from
->> the registers by cxl_rch_get_aer_severity()?
-> [...]
->> These so-called Advisory Non-Fatal Errors set one bit in the Correctable
->> Error Status Register (Advisory Non-Fatal Error Status, bit 13) and
->> additionally one or more bits in the Uncorrectable Error Status Register
->> (see the commit for details).
->>
->> cxl_rch_get_aer_severity() is not able to cope with such errors and
->> will incorrectly infer that the severity is AER_NONFATAL.
->>
->> Now I *think* this is not a problem because Advisory Non-Fatal Errors
->> are masked by default and the commit only unmasks them on regular PCI
->> devices, not in the RCRB of a CXL device.  Only once bit 13 in the
->> Correctable Error Mask Register is cleared in the RCRB will
->> cxl_rch_get_aer_severity() fail.  Right?
-> 
-> Thanks,
-> 
-> Lukas
+struct aer_capability_regs is not the hardware layout: the embedded
+struct pcie_tlp_log spans 60 bytes where the Header Log it stands in for
+is 16, so a flat copy misplaces everything behind it.
 
-Hi Lukas,
+extlog_print_pcie(), ghes_handle_aer() and cxl_rch_get_aer_info() work
+around that by stopping at the Header Log, dropping everything past
+offset 44. Flit mode is never decoded either: the Flit bit and Logged
+TLP Size sit at offset 0x18 in all three images, but nothing reads them,
+so the Flit DWORDs at 0x38 are lost and the log prints as non-Flit.
 
-I’m sorry for missing your August 9 reply.
+Add aer_cap_regs_unpack() to map the registers individually, taking the
+TLP Log layout from the Flit bit as pcie_read_tlp_log() does. Clamp the
+logged length: Logged TLP Size is 5 bits wide, so an untrusted value
+reaches 31 where dw[] holds 14 and pcie_print_tlp_log() walks
+header_len unbounded.
 
-Thanks for pointing out the issue with CE and UCE errors reported
-simultaneously. I agree this is a problem and have addressed it in v20.
+Convert all three callers. cxl_rch_get_aer_info() now reads the whole
+MMIO block, so size its ioremap by the hardware registers (96 bytes)
+rather than by sizeof(struct aer_capability_regs) (100). No functional
+change there: only the first 44 bytes were ever read.
 
-In v20 I remove the unused `cxl_rch_get_aer_severity()` helper, take a
-snapshot of the AER registers before calling `pci_print_aer()`, and now
-handle the CE and UCE parts in separate blocks. The UCE status is logged
-unconditionally, which prevents a fatal record from being lost under the
-advisory‑non‑fatal path. These changes directly address the scenario you
-raised for v19 and also cover any other situation where a CE and a UCE
-are co‑logged. The patch is here: <https://lkml.org/lkml/2026/9/2/1629>
-(v20 3/9).
+Reported-by: sashiko-bot@kernel.org
+Closes: https://sashiko.dev/#/patchset/20260904172337.1409775-1-dave.jiang@intel.com?part=5
+Link: https://lore.kernel.org/linux-cxl/CAJZ5v0hDv11cPuztPZsaDd7uwD_49KznJy=tzuRO+dZc=CnAEQ@mail.gmail.com/
+Assisted-by: LLM
+Signed-off-by: Dave Jiang <dave.jiang@intel.com>
 
-Jonathan added a comment looking for your feedback on if the issue should 
-be solved by changing pci_print_aer() to be non-destructive instead. It 
-is here:
-https://lore.kernel.org/linux-cxl/20260908020608.56e8c443@jic23-huawei/
+---
+v2, all from Jonathan's review:
+- Assisted-by: LLM, per Documentation/process/coding-assistants.rst
+- Fold the aer_cap_regs_unpack() calls onto one line
+- Say why cxl_dport_map_rch_aer()'s ioremap size changes
+- Declare the readl() loop counter in the loop
+- FIELD_GET() for the Flit bit; min() for both clamps
+- Note in the kernel-doc why @raw_len is bounded
 
-- Terry
+Depends on "[PATCH v6 00/13] ACPI: APEI: GHES: Collection of fixes for
+issues reported by sashiko", now picked up by Rafael; please apply after
+it. Patches 5 and 12 are build dependencies - this patch rewrites the
+aer_info copies they add - and patch 7 is functional: without its
+ACPI_APEI_PCIEAER guard fix, extlog_print_pcie() compiles out. The
+drivers/pci and drivers/cxl changes are independent of that series.
+
+No Fixes: tag on purpose. Patches 5 and 12 closed the out-of-bounds
+reads; what is left is diagnostic completeness, and this adds an
+exported helper and rewrites three call sites.
+
+This is the follow-up Rafael asked for in the Link: above, and also
+covers the pre-existing ras_rch.c findings reported there.
+---
+ drivers/acpi/acpi_extlog.c | 14 +-----
+ drivers/acpi/apei/ghes.c   | 15 +------
+ drivers/cxl/core/ras_rch.c | 28 +++---------
+ drivers/pci/pcie/tlp.c     | 88 ++++++++++++++++++++++++++++++++++++++
+ include/linux/aer.h        |  9 ++++
+ 5 files changed, 106 insertions(+), 48 deletions(-)
+
+diff --git a/drivers/acpi/acpi_extlog.c b/drivers/acpi/acpi_extlog.c
+index 9e61354a807b..bf5f7b1a9aea 100644
+--- a/drivers/acpi/acpi_extlog.c
++++ b/drivers/acpi/acpi_extlog.c
+@@ -156,19 +156,7 @@ static void extlog_print_pcie(struct cper_sec_pcie *pcie_err,
+ 
+ 	aer_severity = cper_severity_to_aer(severity);
+ 
+-	/*
+-	 * struct pcie_tlp_log is larger than the hardware layout, so aer_info
+-	 * only maps onto the struct up to the four Header Log DWORDs. Copy that
+-	 * much, then place the TLP Prefix Log from where the hardware keeps it.
+-	 * Everything else stays zero: nothing reads root_command, root_status or
+-	 * the error source IDs, and header_len and flit are software-only.
+-	 */
+-	memcpy(&aer_regs, pcie_err->aer_info,
+-	       offsetof(struct aer_capability_regs, header_log) +
+-	       PCIE_STD_NUM_TLP_HEADERLOG * sizeof(u32));
+-	memcpy(aer_regs.header_log.prefix,
+-	       pcie_err->aer_info + PCI_ERR_PREFIX_LOG,
+-	       sizeof(aer_regs.header_log.prefix));
++	aer_cap_regs_unpack(&aer_regs, pcie_err->aer_info, sizeof(pcie_err->aer_info));
+ 
+ 	domain = pcie_err->device_id.segment;
+ 	bus = pcie_err->device_id.bus;
+diff --git a/drivers/acpi/apei/ghes.c b/drivers/acpi/apei/ghes.c
+index 08c985e729d6..ade1cc8c9f8d 100644
+--- a/drivers/acpi/apei/ghes.c
++++ b/drivers/acpi/apei/ghes.c
+@@ -668,20 +668,7 @@ static void ghes_handle_aer(struct acpi_hest_generic_data *gdata)
+ 		if (!aer_info)
+ 			return;
+ 
+-		/*
+-		 * Map aer_info onto the struct as extlog_print_pcie() does:
+-		 * copy up to the four Header Log DWORDs, then place the TLP
+-		 * Prefix Log from where the hardware keeps it. The rest stays
+-		 * zero, so firmware cannot drive the pcie_print_tlp_log() loop
+-		 * over dw[] out of bounds.
+-		 */
+-		memset(aer_info, 0, sizeof(struct aer_capability_regs));
+-		memcpy(aer_info, pcie_err->aer_info,
+-		       offsetof(struct aer_capability_regs, header_log) +
+-		       PCIE_STD_NUM_TLP_HEADERLOG * sizeof(u32));
+-		memcpy(aer_info->header_log.prefix,
+-		       pcie_err->aer_info + PCI_ERR_PREFIX_LOG,
+-		       sizeof(aer_info->header_log.prefix));
++		aer_cap_regs_unpack(aer_info, pcie_err->aer_info, sizeof(pcie_err->aer_info));
+ 
+ 		aer_recover_queue(pcie_err->device_id.segment,
+ 				  pcie_err->device_id.bus,
+diff --git a/drivers/cxl/core/ras_rch.c b/drivers/cxl/core/ras_rch.c
+index e0e01aa5eba6..4005344dda55 100644
+--- a/drivers/cxl/core/ras_rch.c
++++ b/drivers/cxl/core/ras_rch.c
+@@ -19,7 +19,7 @@ void cxl_dport_map_rch_aer(struct cxl_dport *dport)
+ 		aer_phys = aer_cap + dport->rcrb.base;
+ 		dport->regs.dport_aer =
+ 			devm_cxl_iomap_block(host, aer_phys,
+-					     sizeof(struct aer_capability_regs));
++					     PCIE_AER_CAP_HW_SIZE);
+ 	}
+ }
+ 
+@@ -58,31 +58,17 @@ void cxl_disable_rch_root_ints(struct cxl_dport *dport)
+ static bool cxl_rch_get_aer_info(void __iomem *aer_base,
+ 				 struct aer_capability_regs *aer_regs)
+ {
+-	/*
+-	 * Bound the copy to the physically-defined AER registers (header
+-	 * through the 16-byte Header Log). struct aer_capability_regs is a
+-	 * software layout whose embedded struct pcie_tlp_log is larger than
+-	 * the on-wire AER capability; copying sizeof(*aer_regs) would
+-	 * over-read the RCRB-mapped MMIO block.
+-	 */
+-	int read_cnt = (PCI_ERR_HEADER_LOG + 16) / sizeof(u32);
+-	u32 *aer_regs_buf = (u32 *)aer_regs;
+-	int n;
++	/* A flat copy cannot fill the struct; aer_cap_regs_unpack() places it. */
++	u32 raw[PCIE_AER_CAP_HW_SIZE / sizeof(u32)];
+ 
+ 	if (!aer_base)
+ 		return false;
+ 
+-	/*
+-	 * Zero the destination so the software-only tail fields
+-	 * (e.g. header_log.header_len) are deterministic rather than
+-	 * left as uninitialized stack, which could drive a bogus loop
+-	 * length in pcie_print_tlp_log().
+-	 */
+-	memset(aer_regs, 0, sizeof(*aer_regs));
+-
+ 	/* Use readl() to guarantee 32-bit accesses */
+-	for (n = 0; n < read_cnt; n++)
+-		aer_regs_buf[n] = readl(aer_base + n * sizeof(u32));
++	for (int n = 0; n < ARRAY_SIZE(raw); n++)
++		raw[n] = readl(aer_base + n * sizeof(u32));
++
++	aer_cap_regs_unpack(aer_regs, raw, sizeof(raw));
+ 
+ 	writel(aer_regs->uncor_status, aer_base + PCI_ERR_UNCOR_STATUS);
+ 	writel(aer_regs->cor_status, aer_base + PCI_ERR_COR_STATUS);
+diff --git a/drivers/pci/pcie/tlp.c b/drivers/pci/pcie/tlp.c
+index 71f8fc9ea2ed..bba80c380358 100644
+--- a/drivers/pci/pcie/tlp.c
++++ b/drivers/pci/pcie/tlp.c
+@@ -8,6 +8,8 @@
+ #include <linux/aer.h>
+ #include <linux/array_size.h>
+ #include <linux/bitfield.h>
++#include <linux/build_bug.h>
++#include <linux/minmax.h>
+ #include <linux/pci.h>
+ #include <linux/string.h>
+ 
+@@ -92,6 +94,92 @@ int pcie_read_tlp_log(struct pci_dev *dev, int where, int where2,
+ 	return 0;
+ }
+ 
++/* Only the registers ahead of the Header Log map 1:1. */
++static_assert(offsetof(struct aer_capability_regs, header_log) ==
++	      PCI_ERR_HEADER_LOG);
++/* The Prefix Log registers hold dw[4..13] in Flit mode. */
++static_assert((PCI_ERR_PREFIX_LOG +
++	       (PCIE_STD_MAX_TLP_HEADERLOG - PCIE_STD_NUM_TLP_HEADERLOG) *
++	       sizeof(u32)) == PCIE_AER_CAP_HW_SIZE);
++
++/**
++ * aer_cap_regs_unpack - Convert a raw AER Capability image to the kernel layout
++ * @regs: Destination, fully initialised
++ * @raw: AER Capability register block in hardware order
++ * @raw_len: Bytes readable at @raw
++ *
++ * struct aer_capability_regs is not the hardware layout: struct pcie_tlp_log
++ * spans 60 bytes where the Header Log it stands in for is 16, so a flat copy
++ * misplaces everything behind it. Map the registers one by one instead,
++ * taking the TLP Log layout from the Flit bit as pcie_read_tlp_log() does.
++ *
++ * Registers past @raw_len are left zero, so a short image cannot be read
++ * past.
++ */
++void aer_cap_regs_unpack(struct aer_capability_regs *regs, const void *raw,
++			 size_t raw_len)
++{
++	unsigned int i, tlp_len;
++	bool flit;
++
++	memset(regs, 0, sizeof(*regs));
++
++	if (raw_len < PCI_ERR_HEADER_LOG)
++		return;
++	memcpy(regs, raw, PCI_ERR_HEADER_LOG);
++
++	flit = FIELD_GET(PCI_ERR_CAP_TLP_LOG_FLIT, regs->cap_control);
++	if (flit) {
++		tlp_len = FIELD_GET(PCI_ERR_CAP_TLP_LOG_SIZE, regs->cap_control);
++	} else {
++		/*
++		 * dw[4..7] alias the Prefix Log. Take all four whatever
++		 * eetlp_prefix_max says; pcie_print_tlp_log() stops at the
++		 * first zero one.
++		 */
++		tlp_len = PCIE_STD_NUM_TLP_HEADERLOG + PCIE_STD_MAX_TLP_PREFIXLOG;
++	}
++
++	tlp_len = min(tlp_len, ARRAY_SIZE(regs->header_log.dw));
++
++	for (i = 0; i < tlp_len; i++) {
++		unsigned int off;
++
++		if (i < PCIE_STD_NUM_TLP_HEADERLOG)
++			off = PCI_ERR_HEADER_LOG + i * sizeof(u32);
++		else
++			off = PCI_ERR_PREFIX_LOG +
++			      (i - PCIE_STD_NUM_TLP_HEADERLOG) * sizeof(u32);
++
++		if (off + sizeof(u32) > raw_len)
++			break;
++		memcpy(&regs->header_log.dw[i], raw + off, sizeof(u32));
++	}
++
++	/*
++	 * @i is what got filled. Non-Flit length needs the TLP parsed, so cap
++	 * it at 4 as the native path does.
++	 */
++	regs->header_log.header_len = flit ? i : min(i, PCIE_STD_NUM_TLP_HEADERLOG);
++	regs->header_log.flit = flit;
++
++	if (raw_len >= PCI_ERR_ROOT_COMMAND + sizeof(regs->root_command))
++		memcpy(&regs->root_command, raw + PCI_ERR_ROOT_COMMAND,
++		       sizeof(regs->root_command));
++	if (raw_len >= PCI_ERR_ROOT_STATUS + sizeof(regs->root_status))
++		memcpy(&regs->root_status, raw + PCI_ERR_ROOT_STATUS,
++		       sizeof(regs->root_status));
++	if (raw_len >= PCI_ERR_ROOT_ERR_SRC + sizeof(regs->cor_err_source) +
++		       sizeof(regs->uncor_err_source)) {
++		memcpy(&regs->cor_err_source, raw + PCI_ERR_ROOT_ERR_SRC,
++		       sizeof(regs->cor_err_source));
++		memcpy(&regs->uncor_err_source,
++		       raw + PCI_ERR_ROOT_ERR_SRC + sizeof(regs->cor_err_source),
++		       sizeof(regs->uncor_err_source));
++	}
++}
++EXPORT_SYMBOL_GPL(aer_cap_regs_unpack);
++
+ #define EE_PREFIX_STR " E-E Prefixes:"
+ 
+ /**
+diff --git a/include/linux/aer.h b/include/linux/aer.h
+index df0f5c382286..043ee76b6f53 100644
+--- a/include/linux/aer.h
++++ b/include/linux/aer.h
+@@ -24,6 +24,13 @@
+ #define PCIE_STD_MAX_TLP_PREFIXLOG     4
+ #define PCIE_STD_MAX_TLP_HEADERLOG	(PCIE_STD_NUM_TLP_HEADERLOG + 10)
+ 
++/*
++ * Size of the AER Capability register block in hardware, long enough for the
++ * longest Flit mode TLP Log. struct aer_capability_regs below is larger and
++ * laid out differently; use aer_cap_regs_unpack() to convert.
++ */
++#define PCIE_AER_CAP_HW_SIZE		96
++
+ struct pci_dev;
+ 
+ struct pcie_tlp_log {
+@@ -68,6 +75,8 @@ static inline void pci_aer_unmask_internal_errors(struct pci_dev *dev) { }
+ 
+ void pci_print_aer(struct pci_dev *dev, int aer_severity,
+ 		    struct aer_capability_regs *aer);
++void aer_cap_regs_unpack(struct aer_capability_regs *regs, const void *raw,
++			 size_t raw_len);
+ int cper_severity_to_aer(int cper_severity);
+ void aer_recover_queue(int domain, unsigned int bus, unsigned int devfn,
+ 		       int severity, struct aer_capability_regs *aer_regs);
+
+base-commit: 86adf9d0f7b074e0a1310c1bc4db66cac5c83eec
+-- 
+2.54.0
+
