@@ -1,100 +1,72 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D89C33BBAF;
-	Thu, 10 Sep 2026 07:26:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A26C72D3A7C;
+	Thu, 10 Sep 2026 07:25:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789025164; cv=none; b=Dnnxi1dQdrIUqLLxzSs1K4dp3KUsOScFkEBvVi1ws3YNb4vsRsKGeWiefuE3MOfqPAZUSNynOnuiQBPhGJLCiRuVJn+N+Ra+g46DiQFQ9VI/P61tS8TjCzr4tqTSShMoEV76wlZqQGkekh6JvDgNWvOXjYTzLiKAtiKqpMlMZAs=
+	t=1789025165; cv=none; b=pymQDZhgdKxvc2TbZsd3aXSCOvfYjvY4YVXTItCIBJRsFpgH1+IRo7p5dsv6Cz7XaL3PBWK3rJ+47WPNHbbVmDygJ0C32CJX0cgcjepM2fmEgDJsF9SM4acRfuzicJq3QWNg0nNTIJR8KuxXHmySIX1xlsijig0cs35FAQ6eJhM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789025164; c=relaxed/simple;
-	bh=QpW2vwuRXEqkzwxOGoPAAO/fFSy7uTz8SsrrxaEpe0c=;
+	s=arc-20240116; t=1789025165; c=relaxed/simple;
+	bh=I9h+ZMFLdyw3o+nBehWg8qNA9wrV4mAd7TBHkzV2zbo=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Mbh5d98YuV3iNvj3SzvHdaQUC5pE8xjFx9ruBwnKecjQeEycWROMbvByGLRigjd+zzFHCTL+E5k52jxquXrTp66+czvzkw0aCWzf1Iz84a873N7LnzPmIMIj7zChLVyzA5gwtjxfItH4o655PBQbSggGibv1+4yf+ABzogZThJQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hfJNOrMH; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=faLS37NiPmTvnlWv0Z5ygD1Ef7td7d4iQeVmxgEzfp+LJRfLRnc/v33TfSU1ZNODP86s0Db2Lg1jfllxrx87ZwhliMxtxXBg+aP4yVB/AXkGCpaAFLjIhaIbyfd8Lrk973sQOXiM8gK1h3IA6tczL0mVksPL8FJ2Db8e9+qyTOY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=diASGq9X; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hfJNOrMH"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9C0391F00893;
-	Thu, 10 Sep 2026 07:25:58 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="diASGq9X"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E0FDC1F000FF;
+	Thu, 10 Sep 2026 07:25:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789025158;
-	bh=QnJ2x9KJjFnrBVdcMLNOudCwhner1XHDbeZIr5YDsRA=;
+	s=k20260515; t=1789025153;
+	bh=I9h+ZMFLdyw3o+nBehWg8qNA9wrV4mAd7TBHkzV2zbo=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=hfJNOrMHEV4kbkriYN1YcWYFLsHe9p/NVGpgbi3cYiz0qbruCJJsDgLjKP1rdCj1w
-	 SI80TqJe7T1TtIUhbFG+yajybIaEKCVK27drRSoAJB4tB0kY+kqJAlgWKymWGwTjeZ
-	 10lvgn07xcuEaoDOTbRUI29ZaMGBELG76iTW5e0GrVjD+48hSVywz2mfdXDhWJGT73
-	 uAIC5NNWvibfqOg17AS6dG5O9MO1Z+xUlvlZoy+0daJutQKyfZAyAs9f+OckFhjYb+
-	 BEYEuygYgX5k847HKvd6UJZrdtaPdRPyDelKaAdcTUfVPuNHCpP4D/yj/6Q7781ylX
-	 p8V8/j0YJc/wg==
+	b=diASGq9Xj3PtRMTN7ntztDgkAqjVlgyUyBwB3357rIRRErTKZxsWPwEJ7lnVd56fN
+	 LQHsH0WSBzORr6ZGmHLalN1LSwfCByfZCbcGmtzHpNIg4Wvc+cEPnDWvwy1gk8v5KS
+	 bqBWvCA7dS5+lvNa2UC9TBAd6/TWOkLdtuzCdyBz0C2snkwsP9fJnl7OFGTJeEa/Ew
+	 gSQ2hN6vvQKgwHyvrGNQI0ubpQbMln4uOaj1lyS+7efLsTs1Dml9po7N5R+XmiQth3
+	 G6FzsDKVl7Qk70u3BI/X6Mdx0H+jEkCjTCxS4Fthqtmcnb3cYXqdQGxdiF1a7IBaHJ
+	 2q4XKDz80rMhA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v12 02/12] cxl: Make HDM commit helpers available to
- reset code
+Subject: Re: [PATCH v12 05/12] cxl: Cache endpoint decoder settings during
+ PCI enumeration
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Srirangan Madhavan" <smadhavan@nvidia.com>
-Cc: linux-cxl@vger.kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260910070808.1444264-3-smadhavan@nvidia.com>
+Cc: linux-pci@vger.kernel.org, linux-cxl@vger.kernel.org
+In-Reply-To: <20260910070808.1444264-6-smadhavan@nvidia.com>
 References: <20260910070808.1444264-1-smadhavan@nvidia.com>
- <20260910070808.1444264-3-smadhavan@nvidia.com>
+ <20260910070808.1444264-6-smadhavan@nvidia.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 10 Sep 2026 07:25:58 +0000
-Message-Id: <20260910072558.9C0391F00893@smtp.kernel.org>
+Date: Thu, 10 Sep 2026 07:25:52 +0000
+Message-Id: <20260910072552.E0FDC1F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [Low] Adding `config CXL_RESET` inside the `if CXL_BUS` block causes a Kc=
-onfig unmet direct dependency warning when `CXL_BUS=3Dm`.
---
+> Populate pci_dev->hdm for CXL.mem functions from pci_bus_add_device(),
+> after final PCI fixups and state save but before driver binding. This
+> gives driver-free reset paths an early HDM snapshot while avoiding the
+> pre-resource-assignment window in PCI capability initialization.
+>=20
+> Use the CXL Register Locator BAR Indicator to find the component register
+> BAR, reject unassigned, disabled, or zero memory BAR resources before
+> temporarily enabling Memory Space, and restore the original PCI_COMMAND
+> value before returning. Cache the CXL Device DVSEC control register with
+> the HDM state for reset recovery before a driver can alter it.
+>=20
+> CXL core refreshes the cache as decoders are committed or reset, and keeps
+> the cached DVSEC control synchronized when CXL.mem is enabled or disabled.
+> Move the register helpers into the built-in CONFIG_CXL_RESET set so the
+> early cache path is available without cxl_core, and keep the cxl-test mock
+> core from building a duplicate regs.o.
+>=20
+> Signed-off-by: Srirangan Madhavan <smadhavan@nvidia.com>
 
-commit 8c6d2d2149249d98c40c726d32df18f750f68999
-Author: Srirangan Madhavan <smadhavan@nvidia.com>
-
-cxl: Make HDM commit helpers available to reset code
-
-This commit builds generic HDM resource helpers under CONFIG_CXL_RESET so
-PCI reset paths can use them when cxl_core is modular. It exports the
-necessary lock and commit entry points consumed by cxl_core.
-
-> diff --git a/drivers/cxl/Kconfig b/drivers/cxl/Kconfig
-> index 80aeb0d556bd7..9e6fb2290fed1 100644
-> --- a/drivers/cxl/Kconfig
-> +++ b/drivers/cxl/Kconfig
-> @@ -6,6 +6,7 @@ menuconfig CXL_BUS
->  	select FW_UPLOAD
->  	select PCI_DOE
->  	select FIRMWARE_TABLE
-> +	select CXL_RESET
->  	select NUMA_KEEP_MEMINFO if NUMA_MEMBLKS
->  	select FWCTL if CXL_FEATURES
->  	help
-
-[ ... ]
-
-> @@ -243,4 +244,7 @@ config CXL_ATL
->  	depends on CXL_REGION
->  	depends on ACPI_PRMT && AMD_NB
-> =20
-> +config CXL_RESET
-> +	bool
-> +
->  endif
-
-[Severity: Low]
-Will defining config CXL_RESET inside the if CXL_BUS block cause an unmet
-direct dependency warning during build when CONFIG_CXL_BUS=3Dm?
-
-Because CXL_BUS uses select CXL_RESET, but CXL_RESET inherently inherits
-the if CXL_BUS direct dependency, configuring CONFIG_CXL_BUS=3Dm forces the
-boolean target CXL_RESET to y while its direct dependency evaluates to m.
-
-Could this be resolved by moving config CXL_RESET outside the if CXL_BUS
-block?
+Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260910070808.1444=
-264-1-smadhavan@nvidia.com?part=3D2
+264-1-smadhavan@nvidia.com?part=3D5
+
