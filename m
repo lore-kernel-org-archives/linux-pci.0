@@ -1,212 +1,231 @@
-Received: from mail-pj1-f70.google.com (mail-pj1-f70.google.com [209.85.216.70])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from MRWPR03CU001.outbound.protection.outlook.com (mail-francesouthazon11011036.outbound.protection.outlook.com [40.107.130.36])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B1E3466B57
-	for <linux-pci@vger.kernel.org>; Thu, 10 Sep 2026 15:35:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.70
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789054557; cv=none; b=aFlq9JTl+GazL0yOod8bxzYblQZ5w+kLOsh6J4o9AY+L6kqzowwD7fTwQz1gmgtHVYVBsLFkQdIHGCPEyiH5wiYbR46t6Vo3nX/mWj8aO47sJDP7BjV1M3lqUuBqZlDLPlEXdJuGncuBp+csUtogFQ5cbQGZckKMUPbWjwlFFRw=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789054557; c=relaxed/simple;
-	bh=Xgcjqjf3P4MGGbQztdNdBHKpAHb0Y3bYS7ovsxn2/ek=;
-	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=onPJretQhsmo7JQ3I+8EFNF1sagPZyoNXMPFlAXdH6LcesHwmWdW1+E3+Y4HqejW/CpxLRjDiJOkJ+jrsY001OlsyFQlw6SXswJmEH3RL1O3P/to92a9SDPiAEU2aaGYwuOJfsW7+2H1gm5h0VrYJtRw75VX1voEqIBXJ40z41U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--seanjc.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=BghkDUfH; arc=none smtp.client-ip=209.85.216.70
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--seanjc.bounces.google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A3504AA577;
+	Thu, 10 Sep 2026 15:48:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.130.36
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1789055336; cv=fail; b=GgzwNQSinKMdsRrwUNkQipUHj6YyWbWlh3/PKtzJf0Rwnj+qkKjYtLjRm/GbrNOeQetJF277w4oUe5FcmX7u9M+75HGAnPzFBuQn5sRN/8DLA2fHMeDH9+w8Ln9vfiRZLz4Yx+GuJfztGQNW1jeFYOhfSHxgmSJC18Be27mz/Q4=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1789055336; c=relaxed/simple;
+	bh=fDQb9pxa3awaWLxpUINOC1kp290NvXPZR3m8TGW+6Xg=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=KTqq1gpNfvKvj6BilSiP2p69Z1KE2/FcOsUvqPInoanp9v3fJDpWEjfUcnbhVF1CZojIIV7U8kz6/6eogCVo1twExtCEdzeV7IcgLPcvxF8vsb0KLzl+hGryaGUkA7voIuz918LoAuXGiRtogB9UME9/iQ+5ZEc0AJqvykEZDJY=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com; spf=pass smtp.mailfrom=oss.nxp.com; dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b=gb6pMQlC; arc=fail smtp.client-ip=40.107.130.36
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="BghkDUfH"
-Received: by mail-pj1-f70.google.com with SMTP id 98e67ed59e1d1-38f57e31b6eso4367430a91.1
-        for <linux-pci@vger.kernel.org>; Thu, 10 Sep 2026 08:35:55 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1789054555; x=1789659355; darn=vger.kernel.org;
-        h=content-type:cc:to:from:subject:message-id:references:mime-version
-         :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=2+MOwVd/hSplAvFbBk52yvKLS3w7cDWTRO3ieRL0csc=;
-        b=BghkDUfHl35Zy5Aj9pM+NUXZSvy4UZzmsejvbWmcOeeGxldnNvhElVIQniPQpEr4Co
-         JgRDcA1Gnu74gu97lzzZPSZ6V/9kxdf1zzGqXe0+5nB/L4necGvDv5W+nqyPM4Z+6YQg
-         RkKLWKpatoYGrBQcIFvfE7SgpCy27kyC26F//CaMDm9CC3Tdy2gAVD3pa8AoBLwEP4ju
-         ohtw5hItC160oQjP1zUv4rPmneaAQ7Dnoz/b0jMnjdAtaAJ7+zNep5IMPdj+FJQ8o3xU
-         Nu9Qjx3TgpDqhR9VihGRXKB2GlVTYGcUFqribcc6QRGDn7LiP0jJdHQhgh7bEo8CuLAj
-         Xm6g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1789054555; x=1789659355;
-        h=content-type:cc:to:from:subject:message-id:references:mime-version
-         :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=2+MOwVd/hSplAvFbBk52yvKLS3w7cDWTRO3ieRL0csc=;
-        b=gReybM2lw7WiJPmzHzAPR2Hc/dIAmYCGzAneEjmhsaARDHnaTDr2fthZj5F1X2sTNG
-         A2QfRg9KNiJ7+EK3VG8c0JQZ3TBCu5pY/oO82ZEMrZcEJnj1iF+uMgOx3Jz7K84NcHEW
-         EshWBUhKzp8H8oybBfxXdBQqDK5+5DrYcCSyjLbrFMIXlTGWoxQ9661JTfpyswB6/zK4
-         +C5TEO0zuPiLWL2dge0WwhSO7MitHtYHl7r8/bFwVFTlOSPpgRiYahdqHlprw2ozg9xW
-         iwGRKAqMTad2PjbKSBpnJWC3LEuKJoXTqCjwGa1E0Q51NAWx7o9DoN1Owff9eN5wrQrC
-         K54w==
-X-Forwarded-Encrypted: i=1; AKwUvBxa2ytY4SAD+dGMHOF+wo80TZCD55PwHO8J0QO54DXpfxiPxIUwj3frjg4E5GIZ1jj3SJBvBWGYGP8=@vger.kernel.org
-X-Gm-Message-State: AFuF++nNKfTWFyh7U76Dva5aDmG0hFnX/znnyaVVYybTjR57iZTGgSZm
-	vmoQDZ2BjXOaG2PPWn6Iv1tooslsMA0Tg9gjW+lNxzPxDSjtjea+cm+x6e1Heh3ngVmgSqB8VNU
-	wxkfotg==
-X-Received: from pjbdt17.prod.google.com ([2002:a17:90a:fa51:b0:39d:8f18:feb5])
- (user=seanjc job=prod-delivery.src-stubby-dispatcher) by 2002:a17:90a:6081:b0:39b:51cc:4586
- with SMTP id 98e67ed59e1d1-39b51cc65admr27199424a91.19.1789054554982; Thu, 10
- Sep 2026 08:35:54 -0700 (PDT)
-Date: Thu, 10 Sep 2026 08:35:54 -0700
-In-Reply-To: <20260910143448.GD3968357@nvidia.com>
+	dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b="gb6pMQlC"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=wFQpStIxHc6JCGOIzPlveIam2y4t6LzCQpAW4EsRKJqaqyA9uEu+sQA/qyiURoPZxoN+JS0rVxG9/kJWRn/yxAfx0S3sx6Hu2K6veqvlVaZ6LsLcSKIMZTFHuztv+c3BS7qkgFU28kMLncMcHi0lA/jPRQt4k2bmLqkorY9EH5EfiLxL0pADapv3PZwLOXgQKRgDCZI8WNd8wQNMYWE7A6Bz8Tb8x6tCD7F/s2LJiBizgFhTKkx5199jnxrIdP77Q3QS/4fkIiKubY/idXc7JCdZ0HSZ8eby54P5nWGRFZ2JSMLGLfBDEq4EmGxuyjef9vXXCXJQtoZ5QwCePuWBIQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=qIpYEvehT1CEM0D38twvoOSM7txdCWPLHwkaegpEhpM=;
+ b=Mz4fP6CAH0OXuYU2JFGhefGuAMKY2cFHh/iqJ+aZqPMru277Vsgo1+mRFmv0Vyxo9jhAHA7Hsy+OYSgJEW+ZJPsGv4n7hn0blaLndRXEFR7SDZS1wd+D7bO+Lk7OXzM7MWTbKBRaijC75jJAYBLeFlycbJdTrj/KtnV2Q8cQQ0c3EpXN7qYiStJjEMBPJhZp3yYC6WwSYHHjlQWonqKUWwkoU2sqVduuH61bwaiga9jKw8luhjQlP+E3haEuJQ2j6qwGbrXRGCqWt1+zsUNSXa56nxjuTWPPzB35Q7W8A4Pux6GGhx8wdo4KTq/iGvvWVFzFKPUOjGQpVpLywn+adQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oss.nxp.com; dmarc=pass action=none header.from=oss.nxp.com;
+ dkim=pass header.d=oss.nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=NXP1.onmicrosoft.com;
+ s=selector1-NXP1-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=qIpYEvehT1CEM0D38twvoOSM7txdCWPLHwkaegpEhpM=;
+ b=gb6pMQlC67H/YaaWeXJ4PVzq1lvGMZQQjCjwethdvuLZqn0zZ5D9PHbk6l5XSnd0AekxmAstCGUIYf+ufB8HnNDQ+fOMoceZQ4CcHnckeGYZpwJXW7D/OCUciJ/oRiaivNpkoM/AhtNDFStdUtbRBExG+095eRm6OqyRrnlrXlXVwvM9sT0MtfU+/eJMTf5yFsLBAhiUu0EfV5hekV6pxNoSLanFHnn/LBE7MLBaxgxsi5HsrwD5g0IC/jPNvyNZLFgLB7FwTNXCTKLDpbSUW+wD7TPUNpuYIJ6VsV96sr4AGTCIvTwPdprktF2hq0rAiY1ASqKN+ZJ3JYPvZxR93w==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=oss.nxp.com;
+Received: from GV2PR04MB11799.eurprd04.prod.outlook.com (2603:10a6:150:2cf::9)
+ by GV1PR04MB11526.eurprd04.prod.outlook.com (2603:10a6:150:282::9) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.406.9; Thu, 10 Sep
+ 2026 15:48:45 +0000
+Received: from GV2PR04MB11799.eurprd04.prod.outlook.com
+ ([fe80::2146:83a2:5329:b7c]) by GV2PR04MB11799.eurprd04.prod.outlook.com
+ ([fe80::2146:83a2:5329:b7c%7]) with mapi id 15.21.0406.005; Thu, 10 Sep 2026
+ 15:48:45 +0000
+Date: Thu, 10 Sep 2026 10:48:34 -0500
+From: Frank Li <Frank.li@oss.nxp.com>
+To: Manivannan Sadhasivam <mani@kernel.org>
+Cc: hongxing.zhu@oss.nxp.com, frank.li@nxp.com, l.stach@pengutronix.de,
+	lpieralisi@kernel.org, kwilczynski@kernel.org, robh@kernel.org,
+	bhelgaas@google.com, s.hauer@pengutronix.de, kernel@pengutronix.de,
+	festevam@gmail.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, imx@lists.linux.dev,
+	linux-kernel@vger.kernel.org, Richard Zhu <hongxing.zhu@nxp.com>
+Subject: Re: [PATCH v5] PCI: imx6: Update MPLLB bandwidth to improve i.MX95
+ Gen3 PCIe stability
+Message-ID: <aqLRUlosjuQPUJ5J@SMW015318>
+References: <20260803034319.992323-1-hongxing.zhu@oss.nxp.com>
+ <ojbp5v6txcdvrs2hcrknai7kkb4bu6cnp6fometzkrf2mdzvv4@cepxzg4r7jvd>
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <ojbp5v6txcdvrs2hcrknai7kkb4bu6cnp6fometzkrf2mdzvv4@cepxzg4r7jvd>
+X-ClientProxiedBy: CY8PR02CA0004.namprd02.prod.outlook.com
+ (2603:10b6:930:4d::21) To GV2PR04MB11799.eurprd04.prod.outlook.com
+ (2603:10a6:150:2cf::9)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-References: <20260903023452.721732-1-loganodell@google.com>
- <20260904160009.GV4157646@nvidia.com> <aptFFYqcSiBdMLE8@google.com>
- <20260905012403.GX4157646@nvidia.com> <aqIAtOoew-_6jw29@google.com> <20260910143448.GD3968357@nvidia.com>
-Message-ID: <aqLOWkuVKccR-I7W@google.com>
-Subject: Re: [RFC PATCH 0/3] liveupdate: Move to feature flags for LUO and
- memfd ABI compatibility
-From: Sean Christopherson <seanjc@google.com>
-To: Jason Gunthorpe <jgg@nvidia.com>
-Cc: David Matlack <dmatlack@google.com>, Logan Odell <loganodell@google.com>, arnd@arndb.de, 
-	pasha.tatashin@soleen.com, rppt@kernel.org, pratyush@kernel.org, 
-	graf@amazon.com, akpm@linux-foundation.org, pbonzini@redhat.com, 
-	maz@kernel.org, oupton@kernel.org, bhelgaas@google.com, alex@shazbot.org, 
-	kevin.tian@intel.com, dwmw2@infradead.org, baolu.lu@linux.intel.com, 
-	joro@8bytes.org, will@kernel.org, robin.murphy@arm.com, 
-	linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	kexec@lists.infradead.org, linux-mm@kvack.org, kvm@vger.kernel.org, 
-	linux-arm-kernel@lists.infradead.org, kvmarm@lists.linux.dev, 
-	linux-pci@vger.kernel.org, iommu@lists.linux.dev
-Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: GV2PR04MB11799:EE_|GV1PR04MB11526:EE_
+X-MS-Office365-Filtering-Correlation-Id: 236889c9-961d-4e89-a3c7-08df0f52feca
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|366016|1800799024|23010399003|376014|7416014|19092799006|4143699003|10067099003|3023799007|18002099003|22082099003|56012099006|11063799006;
+X-Microsoft-Antispam-Message-Info:
+	1+SIickxKvfBh0w1eH07VIG7E+yEQmdgTJqah4jpefBAiLwM6t0UKCjnm8z8EpCUoyyp1SR+4Mk+nZ2fTWo+CGUEMl05e2SjZfXrjpOeiBeyAKkMYVlYfRiv0t3/4x2HfHsmNzSsUrcPRNVvERZSKZVKGAfVYZugOpkbzPxipUg9GUvmVpxnpeUQOn1oqVrNDFhlYjMKwzzwCbaxEN+DD1JLoaBR+LfYeAGl7yc8J5AE9pBPjuOR0/wvYxn1aSph9b4HT/6+4B7JKxNXj3v0chgTybOQY4Ow5fKMgqYso8794Zn4peJn8o6OtIzEpBmMt0S6NvK8X3orM5hq9WOOUtfYJ68WR0WKI/3Wy+DHMol7GlhFcWqF6ci9xPe9On6amUzv4fAD7K8jYIfUvB4rKLjADR+c46g+ldi2oZyFdNwB06JLsGiR36X67EhCOqIjdXmWx6fqkYZceBPb/wk3Wqz9Z8kyBMwyj5GQDMKVUaKNDmOZcv0PtHKXnD9w08AUm2FpSXolU6nn7Imx6KiicmMadeb5PUHHCUnSq7Ub7SUITW+HeCWPQEW+2fASTBXUv4Vi6x1cfV2kmWMfWrZ3H1dP0idYi7jcZ6Z4cCE2QYWNv/BBj8DKNTu2POZpdWkhvh0RQ3QgqOLbID8pLpkQBLNvLXE2sJz0CO5ZfdaIY7M=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:GV2PR04MB11799.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(23010399003)(376014)(7416014)(19092799006)(4143699003)(10067099003)(3023799007)(18002099003)(22082099003)(56012099006)(11063799006);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?SWIrQlVtYjc1NDBiaGZyeCs0VDFFS0wybjF1WHNCK0VHZk9CODhjZzVYRnNu?=
+ =?utf-8?B?OWoxUjcwMk93RGJ4M2Y4aS9KSmpsVE85YTVaZ3hTT0J1aHhMeTYyRUc3ZHJX?=
+ =?utf-8?B?YmxtVDVGMlNLQVA1eGl3WHpONHJBQ1VJZGFaQ0l3cVlUOU9jK0UxVVpWWlF1?=
+ =?utf-8?B?cy9VQXAybFpvLzBIckpEM0taZVN5cXhqL0hpbWVOd3VNbmFCUE5TblM1YW9P?=
+ =?utf-8?B?dGFuT0NsdkVCZm56YjJ2ZDZmaG5sYWliTm5xVElvSUptN20vYi8rK09IQzM4?=
+ =?utf-8?B?bmdhUWlWTm4yTHppd1NEczFSdU5aNWx1SW1jd2JVTE0zRGNkMEIzZkNoOWV2?=
+ =?utf-8?B?VlBWVEVJU0dUWVVDSVc4RlFUSE9iRzVkekJiaXYzQmRoYzZHU200L0RzVG1p?=
+ =?utf-8?B?LzNTS0tjemZmSVN0US9pTmJ6dGZqc2FFejZvUitxYWRSMWQvYk9Wcy9kL0xi?=
+ =?utf-8?B?cThWYk4vZFY1OEVUYW1YM1hhUmhIc0FvT2JPQUN1ZC93MXhxc1Z0cmx3Rnh0?=
+ =?utf-8?B?bVFYZ1Jya2Q5cVZ1dXpkNStHYTZrNGFiSzdVdjNrZmRnSXZJNHlURFhTcGlT?=
+ =?utf-8?B?Y3NUaWFsYzJQY0ZLZERLUlBGWjFwK1piTmtuMjYwWWJjVUdYQlN6MXI1Q01r?=
+ =?utf-8?B?eTk4L201T1hlTHhkMWsyazdTS2FMVk1NT21jTnZNcFNvOHU3TVQrRHpoR0dh?=
+ =?utf-8?B?R1ZCM1lnT2FMOGNFSktWQW9tU1VsdUVSYUlKb1pyckhuaDNZTm11dzg2LzBL?=
+ =?utf-8?B?RjV4am03dXAvdjA1QWI0RDEyVGR2SUdkanprREkzM3hZTG15YldZYnpKTlBG?=
+ =?utf-8?B?WWlGbERyWC9udGNnbDI0UExBL1dpMTRvOEQxREZPVkpqMUJkUE9sQ3Fja0Ex?=
+ =?utf-8?B?eUczeE5tbUpGU01yVmNmb003Z21QV2JLNENEUFRnbUhPZHlwb0tqM3lPd3ly?=
+ =?utf-8?B?YlpBc0g3MFd4RlNOc2FEZXYzV1RXbXRtVkpvSGQ2TXZ6Qk1aNThiUWVNVFgv?=
+ =?utf-8?B?RHNqaS92eDRUdmlIakhQY2xMclh3NHNXUGx6dUFGUC83TjVDMmZjell3YUFO?=
+ =?utf-8?B?YjFncm9rbFpwdGd5YzhkQjcxV2llbm1TcFRDN0c5aWZzVFVMS0pjRG5ZN2lF?=
+ =?utf-8?B?VnFMS1ZjQmNEZmNCOUgvQlpaQmZwbzdyVk56OE1hb3ZJck1TbkYyejdDUC9h?=
+ =?utf-8?B?YjFwdlBOVmNSd2k4VXFVL2RLUlFKL3ZYNzcvZFU3V2xqekdvamhiM3JveEVF?=
+ =?utf-8?B?Szk2Tnpnc3pqa3FweE1kVFhPN2c4aEdoTXI0WllNNE8vaXB2RXNCaUdKcWFC?=
+ =?utf-8?B?YWpLRUJtbjZSUWsrMlVJbWxIZjU3TFcwWHcyMFlwK09DaElQSElQRVU1UWtm?=
+ =?utf-8?B?SzlrZE41cXFtM3ZKakl4M0ZPMmlpMklYYzFwZEQwcXlNc0dkb3VEdTd6ZU9G?=
+ =?utf-8?B?MlNzaUx2U1gwMysyTjVydGhTV2pXUC9zV2loTk42SHNLOGNuTHNsNUpQVmZh?=
+ =?utf-8?B?STFBcExxcG9SbERzM0dnS0xYeUk3QzhyZWxoTDVEK25VQzVma0NLNFllUXYy?=
+ =?utf-8?B?RmZNaEJmVWJBVnFqelllVytqSFVQZFNQdXp3NGxwekJTY3djeWNzQ2FROGZR?=
+ =?utf-8?B?eXZrR3dLNFYya3U1eGdydHFTQ3JzcGc4aUJsUVE1dGRSUk5qNWtrYklRcFJi?=
+ =?utf-8?B?US9tZ1JzZ0dObXVhMVBUSVdUL2VubFRJT2daWUtYUDUrZXpGbmVpQXVXT05Y?=
+ =?utf-8?B?TUhVdzlhTEM2c09tZnVsMjFuck1IU0hrdUxhS3ZOaFE1NTFlaGkwR0Z4RlF5?=
+ =?utf-8?B?QkdNN2ZmR3kxTTFobDkwYUpXRFF5QzQ5aUlsRWhPT29Na3F1bEwySVd4cktR?=
+ =?utf-8?B?ZDFVZTZGalZRMWRzUFN5NkhoVFB0ckwrT2xPVEZ1b1h4Q2M0Z0RHaGVjWSta?=
+ =?utf-8?B?UkZKTEdzV1ZOQmk4V3JpWnk5d25LcjU2dUtQeDFTWUVVeEVmbXczbHBBWnp3?=
+ =?utf-8?B?R1VqWEJISUZ4ak56T1NOQWhzV1c0N3NPVVZKakkzTUdNTm92djYwN0doazRa?=
+ =?utf-8?B?dUlRU09sc1A3SEt3dmlqMFErZllqZW1zZ3gwTFJuUzVVMW1aeDNFRU90eWpH?=
+ =?utf-8?B?UjdrYUluaWtJd3laQUR1M3p4dzZxczFBRm1NYU52NU5vcjFibVFWVDFhZjNX?=
+ =?utf-8?B?VGpMSVpVUDhVMytuZWwwUWhBcWpDbDUralloOVp2dUVmMW1EbWg3dXYxcWw0?=
+ =?utf-8?B?QWRIZmpvUTQ1dlZySHlvRG03TkRYV2VSR25MVXRNTXBvOVlUaTJpdVdyZ1RR?=
+ =?utf-8?B?a21XRDdYVGdyOVF4MUdTMEtqNDkzZlBqcDZZM0FjRlJSS3ZmTEZ3bGgzcGt6?=
+ =?utf-8?Q?G9pQzHEWoCDMmdSwrgR4pyTi5mXqfjdNqcPie?=
+X-OriginatorOrg: oss.nxp.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 236889c9-961d-4e89-a3c7-08df0f52feca
+X-MS-Exchange-CrossTenant-AuthSource: GV2PR04MB11799.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 10 Sep 2026 15:48:44.9544
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 4YxOmxIUxMJF/qas5c8iQKQNAsGLWrm4dOjaBUNJ1KVVgj3583tWTdbJUjkr4H7ptt9NE7NkVIqlAOUvqEzy7RxEEcFce4rhiVw2CLdZGZI3Z9qnnSozcz81P1TCpNLA
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: GV1PR04MB11526
 
-On Thu, Sep 10, 2026, Jason Gunthorpe wrote:
-> On Wed, Sep 09, 2026 at 05:58:28PM -0700, Sean Christopherson wrote:
-> > On Fri, Sep 04, 2026, Jason Gunthorpe wrote:
-> > > On Fri, Sep 04, 2026 at 10:24:21PM +0000, David Matlack wrote:
-> > > 
-> > > > The proposal here (which is inspired by the KVM UAPI) is to ensure every
-> > > > LUO ABI struct has 2 properties:
-> > > > 
-> > > >  1. A field to encode options/features (e.g. u64 flags).
-> > > >  2. A way way to grow without breaking backward compatibility (e.g. so
-> > > >     we can add new fields).
-> > > > 
-> > > > Each flag can mean whatever it needs to. e.g. It can indicate the
-> > > > precence of one or more fields (i.e. new fields in the struct), or it
-> > > > can mean a field now has a different meaning (i.e. union in the struct).
-> > > > 
-> > > > This would enable adding support for new features without breaking
-> > > > backward compatibility. Downstream users would have to ensure their
-> > > > kernel does not start using a new feature while it can still rollback to
-> > > > a version that does not support the new feature.
-> > > 
-> > > This was never the biggest problem. The main issue was the functional
-> > > behaviors of the kernel that cannot be represented simply as data in a
-> > > struct with some flag bits.
-> > > 
-> > > Like for instance kernel A supports memfd folio sizes far larger than
-> > > kernel B because we fixed MAX_ORDER. You can't fix that just with
-> > > simplistic flags.
-> > 
-> > Can you elaborate on why the folio sizes matter?  Honest question, because I don't
-> > understand why the serialization format wouldn't express things as "N contiguous
-> > pages starting at PFN X".  Then the implementation would rebuild its folios as
-> > appropriate.
-> 
-> That's an idyllic view, yes, but my point is (IIRC) we didn't do
-> exactly that for memfd.
-
-Well, y'all screwed up then.  I don't see why past mistakes should force other
-subsystems to support a flawed implementation.  Learn from the mistakes, add v2
-of serialization for memfd, and move on.
-
-> Sometimes you can do more and more work to try and be more and more
-> general but this is *alot* of work and even then eventually hits
-> problematic limits. Like what do you do with the sealing flags? That's
-> ABI breaking if the successor does not support them, and downgrades
-> make exactly that possible.
+On Thu, Sep 10, 2026 at 12:46:43PM +0200, Manivannan Sadhasivam wrote:
+> On Mon, Aug 03, 2026 at 11:43:19AM +0800, hongxing.zhu@oss.nxp.com wrote:
+> > From: Richard Zhu <hongxing.zhu@nxp.com>
+> >
+> > We observed poor bandwidth margins during i.MX95 Gen3 PCIe tests with
+> > the default MPLLB_BANDWIDTH value (120). The margins worsened across
+> > voltage and temperature (VT) variations and different test matrices,
+> > potentially causing link stability issues.
+> >
+> > Testing with MPLLB_BANDWIDTH value of 140 (0x8c) shows significant
+> > improvement in bandwidth margins across all VT conditions and test
+> > scenarios.
+> >
+> > Implement PHY register write helper function and configure:
+> > - MPLLB_BW_OVRD_IN = 140 (0x8c) for improved bandwidth margin
+> > - MPLLB_BW_OVRD_EN to enable the override
+> >
+> > This ensures robust PCIe Gen3 performance across all operating
+> > conditions.
+> >
+> > Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
+> > Reviewed-by: Frank Li <Frank.Li@nxp.com>
+> > ---
+> > Changes in v5:
+> > Update the commit log refer to Bjorn's suggestions.
+> >
+> > Changes in v4:
+> > Move the delay to imx95_pcie_init_phy() with a comment added.
+> >
+> > Changes in v3:
+> > Regarding Frank's comments, refine naming consistency and clarity.
+> >
+> > Changes in v2:
+> > Update the register name and bit definitions.
+> > Don't move IMX95_PCIE_PHY_CR_PARA_SEL settings.
+> > ---
+> >  drivers/pci/controller/dwc/pci-imx6.c | 32 +++++++++++++++++++++++++++
+> >  1 file changed, 32 insertions(+)
+> >
+> > diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
+> > index 39790e66b98dc..3bc52c4781903 100644
+> > --- a/drivers/pci/controller/dwc/pci-imx6.c
+> > +++ b/drivers/pci/controller/dwc/pci-imx6.c
+> > @@ -80,6 +80,17 @@
+> >  #define IMX95_SID_MASK				GENMASK(5, 0)
+> >  #define IMX95_MAX_LUT				32
+> >
+> > +#define IMX95_PCIE_PHY_REG_ADDR			0x3008
+> > +#define IMX95_PCIE_PHY_REG_EN			BIT(31)
+> > +#define IMX95_PCIE_PHY_REG_ADDR_MASK		GENMASK(15, 0)
+> > +#define IMX95_PCIE_PHY_REG_DATA			0x300c
+> > +#define IMX95_PCIE_PHY_MPLLB_OVRD_IN		0x2004
+> > +/* BIT(10): Override enable for mpllb_bandwidth[15:0] */
+> > +#define IMX95_PCIE_PHY_MPLLB_OVRD_BW_EN		BIT(10)
+> > +/* Register offset: Override value for mpllb_bandwidth[15:0] */
+> > +#define IMX95_PCIE_PHY_MPLLB_BW_IN		0x2005
+> > +#define IMX95_PCIE_PHY_MPLLB_BW_VAL		0x8c
+> > +
+> >  #define IMX95_PCIE_RST_CTRL			0x3010
+> >  #define IMX95_PCIE_COLD_RST			BIT(0)
+> >
+> > @@ -270,6 +281,15 @@ static int imx95_pcie_select_ref_clk_src(struct imx_pcie *imx_pcie)
+> >  	return 0;
+> >  }
+> >
+> > +static void imx95_pcie_phy_write(struct imx_pcie *imx_pcie, int addr, u16 data)
+> > +{
+> > +	regmap_update_bits(imx_pcie->iomuxc_gpr, IMX95_PCIE_PHY_REG_ADDR,
+> > +			   IMX95_PCIE_PHY_REG_EN, IMX95_PCIE_PHY_REG_EN);
+> > +	regmap_update_bits(imx_pcie->iomuxc_gpr, IMX95_PCIE_PHY_REG_ADDR,
+> > +			   IMX95_PCIE_PHY_REG_ADDR_MASK, addr);
+> > +	regmap_write(imx_pcie->iomuxc_gpr, IMX95_PCIE_PHY_REG_DATA, data);
+> > +}
+> > +
+> >  static int imx95_pcie_init_phy(struct imx_pcie *imx_pcie)
+> >  {
+> >  	/*
+> > @@ -290,6 +310,18 @@ static int imx95_pcie_init_phy(struct imx_pcie *imx_pcie)
+> >  			IMX95_PCIE_PHY_CR_PARA_SEL,
+> >  			IMX95_PCIE_PHY_CR_PARA_SEL);
+> >
 >
-> A CSPish user can do things like patch the new sealing flag into their
-> current kernel (while preventing userspace from using it), ensure
-> everything is updated to that, then jump ahead to a newer kernel and
-> enjoy the new flag with full downgrade support. There is so much more
-> control on their part that makes the problem far more managably simple
-> that upstream does not get to have.
+> I've added regmap_read() to flush the IMX95_PCIE_PHY_CR_PARA_SEL update before
+> below delay, while applying.
 
-I guess maybe we have a different definition of ABI? 
+Thanks
 
-I'm not saying that upstream has to be 100% forwards and backwards compatible.
-I'm saying the serialization payload itself should communicate what features are
-effectively required.  I.e. *if* there are incompatibilities, they should be
-naturally expressed in the serialization format, not communicated out-of-band
-through magic numbers.
+Frank
 
-The scenario you describe fits exactly with what I am proposing.  Until something
-actually starts using the new sealing flag, the CSP can downgrade to older kernels
-at will.  And if the user cares about downgrading, then they need to prevent the
-flag from being used until the new kernel is rollback-safe and deployed to enough
-hosts to prevent stockout.
-
-> This is why I think the very idea we can support any version pair is
-> too much to ask for. We should focus on supporting a small set of
-> version pairs and not making it too invasive or hard in the kernel or
-> on the maintainers.
 >
-> Thus live update within a stable branch only is my proposal for
-> upstream support.
-> 
-> If it really succeeds at that and it becomes very popular, then let's
-> discuss upstreaming doing additional version combinations.
-
-Why on earth would we have version numbers in the first place?  IMO, monotically
-increasing version numbers are flat out the worst way to communicate features.
-
-I am completely against supporting any scheme that relies on magic version numbers.
-It creates problems where none need exist, and checking for compatibility can't be
-sanely done in a programmatic way, because by definition it relies on magic numbers.
-
-E.g. if the ABI for a given component hasn't changed, why should anyone care if
-the overall "version" of the kernel is ahead or behind by N kernels?
-
-> > I could see things like HugeTLB not working if someone booted the kernel with
-> > support for only 1GiB pages and then tried to feed it payload with sub-1GiB ranges.
-> > But to me, those sorts of things fall into the "well yeah, don't do that" category.
-> 
-> Okay, how about worse, todays kernel has hugetlbfs and there are
-> patches around to luo serialize that. Lots and lots of talks about a
-> post-hugetlbfs world out there.
-
-And?  Adding a compatibility layer to a future kernel so that it understands an
-incoming HugeTLBFS payload should be trivial.  I can totally see not wanting to
-support serializing a post-HugeTBLFS kernel's memory representation into the "old"
-format, though even that probably wouldn't be all that difficult.
-
-> Do we want to constrain what is possible to ensure we accomodate this
-> hugetlbfs serialization? I vote no.
-
-In what way is providing strong ABI guarantees for individual components
-constraining HugeTBLFS serialization?
-
-> Do we want to reject the hugetlbfs serialization until we have a year
-> of debate outlining every possible ABI scenario? I also vote no.
-
-That's a bit of a strawman argument.  Is designing a forward-looking ABI easy?
-No, but IMO "a year" is a massive exaggeration of the effort required to come up
-with a scheme that can survive a variety of plausible upgrade/downgrade scenarios.
-
-And again, I'm not saying we have to support infinite compatibility.  If some
-future kernel drops HugeTLBFS, and we decide not to provide a shim to support
-downgrading (which IMO is totally reasonable), then it's on the user to understand
-that moving to that new kernel is a one-way street.  Given that dropping something
-like HugeTLBFS would require significant changes in the software stack, I think
-it's perfectly fine to put the burden of understanding the implications on the end
-user (though realistically, there would be a copious amount of documentation and
-deprecation warnings).
-
-> Should we make a downgrade round trip a downstream problem? I think
-> so!
-
-Hard NAK.  There will inevitably be boundaries that cannot be crossed, but I am
-not at all ok punting on downgrades.  To me, that's basically saying "we want to
-add just enough support upstream so that it's not too painful to carry full support
-out-of-tree".  That completely goes against the spirit of open source and upstream
-Linux, and I want no part of it.
+> - Mani
+>
+> --
+> மணிவண்ணன் சதாசிவம்
+>
