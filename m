@@ -1,130 +1,116 @@
-Received: from sender6-op-o12.zoho.com (sender6-op-o12.zoho.com [165.173.180.12])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DBFC34825CB;
-	Thu, 10 Sep 2026 12:17:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=165.173.180.12
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789042647; cv=pass; b=mTLruf3mN+XRUzJLheSpdvI7pgGna6g74MuXJ3EWknA4Yoq1wXZpoJ4F4tKCayey+XdwOEg8WqZCEd+ooQ7CHK0f12uiWU8oWmvbQGeevxuh9GbfWEw99xCNGSgNPy4y7jjbN+7HPw3Nyjp/ohuPB6MG7iFoDPgiuDaRb1kKv1o=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789042647; c=relaxed/simple;
-	bh=XqfBBi0ToHqfQuSFWAUDnRXWEzzIcqz+Wi0omWRavS0=;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29041484246
+	for <linux-pci@vger.kernel.org>; Thu, 10 Sep 2026 12:20:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1789042829; cv=none; b=pf7yf3UzmveoeDmXp0L1yUO76lV9SZJYIrhvYHt7mA8qPatp9ecuJkvPM+gDC68xGATM2vLDprUkderodH+bM3lsZ0CkpAGhTHuO9i9fzIycZ4Td/Mj8nf9s9TsW6dJljVg+dd4w0Pah9f4o6QCTCZB8tdwHpxniPgD+daOvQXs=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1789042829; c=relaxed/simple;
+	bh=Xb9DTr9CLDy+JQ7Xuo+3MVAIbjjNef1X14qqUKHzVsg=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=cY/qfTRHh/bw5Vw4ZmPF1MYELOc6IdBdi9u1eFb/H6k6Bsz3xWq6V4juTn8XlBoXIdeMcV3a6lMoIsHqnSB6kfr0RcDJd9mEtMNXrVvInOVcFHcDBgJ28F4ztOPETR1Y068V1tbB3U0U4jeJ5WmowqTG3r6RAyD+mvZOaZpE+vw=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ziyao.cc; spf=pass smtp.mailfrom=ziyao.cc; dkim=pass (1024-bit key) header.d=ziyao.cc header.i=me@ziyao.cc header.b=E5SFTABp; arc=pass smtp.client-ip=165.173.180.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ziyao.cc
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziyao.cc
+	 Content-Type:Content-Disposition:In-Reply-To; b=WH2kNbelFVJWoLGwoNL3dvOzJ/AHN1gyFENux91rWVf0LZxAN0fg1YNeCW3GZ98YAdLwBgJCdlOGOlDaNH3bTDSjHehIpb/ZU3x9/g8trjoPfFRejeCYhFDUwFWp3W4MXUNoYgEOSRyNMoMZfW/xi+GXZ1DYMP2u7RgcGUq5XVo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MZe1fBxy; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=ziyao.cc header.i=me@ziyao.cc header.b="E5SFTABp"
-ARC-Seal: i=1; a=rsa-sha256; t=1789042561; cv=none; 
-	d=zohomail.com; s=zohoarc; 
-	b=eiFmGZSkzZnvdcn2Yd4jasR4zJjj/F3mE8Zk084P5wgyf1KLSWejb1wGED5LCfCSESZbB583Lflwg6+lsAz2UzTS4PO6OGjOHhbvaVaJEA0QdyhZSXPnhhEPpFPypsWsWdhQ2eKWvP0FGXktp8yyX5xy3Fxzbn85nUmNfsZlZjo=
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
-	t=1789042561; h=Content-Type:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:Subject:Subject:To:To:Message-Id:Reply-To; 
-	bh=0rFMiU8kFEuo55R90X9kb89jBCP9eUdAYLBLr3iWUq0=; 
-	b=Zj3b8x0gzciX6Vq74QXuL7uFWmnaqeU+KkQZTAorb0IjLhPyKLqJMVP+A+/7HsX3vBRKrvE+GEA4LKqd63QBUkRodwcEwhvWc3nMtgM9Hi7xw85EDdV2LnT60KaPQrb6AzJyrHh4fcnl0S3d5ABpY/xQEHlMANrgHzxdx4IGESM=
-ARC-Authentication-Results: i=1; mx.zohomail.com;
-	dkim=pass  header.i=ziyao.cc;
-	spf=pass  smtp.mailfrom=me@ziyao.cc;
-	dmarc=pass header.from=<me@ziyao.cc>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1789042561;
-	s=zmail; d=ziyao.cc; i=me@ziyao.cc;
-	h=Date:Date:From:From:To:To:Cc:Cc:Subject:Subject:Message-ID:MIME-Version:Content-Type:In-Reply-To:Message-Id:Reply-To;
-	bh=0rFMiU8kFEuo55R90X9kb89jBCP9eUdAYLBLr3iWUq0=;
-	b=E5SFTABpWoUMa04sEEBesqi8SptYqwobUdF1WVfyP+/hd3zcf6yjL/2JAi2leF0z
-	lNnSIk3c91rFkUWNH83saTh5TqyDrQjstRV7Pmw4cprofqm1RreJzX77NhmKmst8rcI
-	khTHOC+QkyQoSpPGqXHaKWXl+mV2IcIvxICBSxyM=
-Received: by mx.zohomail.com with SMTPS id 1789042559214896.8848926233107;
-	Thu, 10 Sep 2026 05:15:59 -0700 (PDT)
-Date: Thu, 10 Sep 2026 12:15:39 +0000
-From: Yao Zi <me@ziyao.cc>
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	Yao Zi <me@ziyao.cc>
-Cc: Inochi Amaoto <inochiama@gmail.com>, Jingoo Han <jingoohan1@gmail.com>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>, Yixun Lan <dlan@kernel.org>,
-	Paul Walmsley <pjw@kernel.org>, Palmer Dabbelt <palmer@dabbelt.com>,
-	Albert Ou <aou@eecs.berkeley.edu>, Alexandre Ghiti <alex@ghiti.fr>,
-	Frank Li <Frank.Li@nxp.com>, Niklas Cassel <cassel@kernel.org>,
-	Sherry Sun <sherry.sun@nxp.com>, Arnd Bergmann <arnd@arndb.de>,
-	Christian Bruel <christian.bruel@foss.st.com>,
-	Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>,
-	Senchuan Zhang <zhangsenchuan@eswincomputing.com>,
-	Alex Elder <elder@riscstar.com>,
-	Xincheng Zhang <zhangxincheng@ultrarisc.com>,
-	Randolph Lin <randolph@andestech.com>,
-	Siddharth Vadapalli <s-vadapalli@ti.com>,
-	Vidya Sagar <vidyas@nvidia.com>,
-	Neil Armstrong <neil.armstrong@linaro.org>,
-	Danilo Krummrich <dakr@kernel.org>,
-	Uwe =?iso-8859-1?Q?Kleine-K=F6nig_=28The_Capable_Hub=29?= <u.kleine-koenig@baylibre.com>,
-	Pengpeng Hou <pengpeng@iscas.ac.cn>,
-	Anirudh Srinivasan <asrinivasan@oss.tenstorrent.com>,
-	Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-riscv@lists.infradead.org,
-	spacemit@lists.linux.dev, Yixun Lan <dlan@gentoo.org>,
-	Longbin Li <looong.bin@gmail.com>
-Subject: Re: [PATCH v5 1/6] PCI: spacemit-k1: Add device data support
-Message-ID: <aqKfa8KAh2JJwivA@pie>
-References: <20260907112606.465778-1-inochiama@gmail.com>
- <20260907112606.465778-2-inochiama@gmail.com>
- <ap_i5Pw4nVB4LZ-7@ashevche-desk.local>
- <aqESGs3_BxOd4PYg@inochi.infowork>
- <aqJDvogeo3avWWQ3@pie>
- <aqJRbzZhROtXncZu@ashevche-desk.local>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MZe1fBxy"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 518711F000FF;
+	Thu, 10 Sep 2026 12:20:25 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1789042828;
+	bh=eaW8xUp+8z+6T5aZeIWMNSul/RKkiKjVtZ7DYCwqBOE=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=MZe1fBxyYih0wyjbZELCXfqFBNJ3zcQaaprp9AEGZc1KMHFkPBpp7xMB62jDIVtfp
+	 hKF5dPq8ecx1ragJb7W6hYJZIm6+1/Js7QGoq4nro6ldY1hTWwSaO2qnEKkpzae6o+
+	 wKNvdf6bdARLFfBHbCbV3pnThuGXZYOPf6QhRzJOIoDB7wRJO5NDJ/zv2LCg/Nsk2L
+	 rdIHYXLzxtH4MWGxaDhRYLPKppkjdfw9qjrtjyYr7xR+sRkp5Z3z0uLd59MvzQV6ck
+	 8WQGz4XHl5QgLKJwLEm7RlUPnafzwRrJJYr1ygc+r23FXsPWx81povapB9ZFDlJEds
+	 BnDoyqxrlPtxg==
+Date: Thu, 10 Sep 2026 14:20:21 +0200
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, 
+	"Derek J. Clark" <derekjohn.clark@gmail.com>, Matthew Schwartz <matthew.schwartz@linux.dev>, 
+	"Pierre-Loup A. Griffais" <pgriffais@valvesoftware.com>, linux-pci@vger.kernel.org, x86@kernel.org
+Subject: Re: [PATCH] PCI: Add quirk for ID mutation of MSI Claw A8 cardreader
+Message-ID: <ojta2igag7ecwdp5qbd7xi3cuju62jmzduuksljq25m3my6k3k@e5beqrrk4gmm>
+References: <36578f6e0829bbcdf68659ffad27b65715a97768.1786698126.git.lukas@wunner.de>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <aqJRbzZhROtXncZu@ashevche-desk.local>
-X-Zoho-Virus-Status: 1
-X-Zoho-AV-Stamp: zmail-av-0.2.13.1.5.4/289.29.40
-X-ZohoMailClient: External
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <36578f6e0829bbcdf68659ffad27b65715a97768.1786698126.git.lukas@wunner.de>
 
-On Thu, Sep 10, 2026 at 09:42:55AM +0300, Andy Shevchenko wrote:
-> On Thu, Sep 10, 2026 at 05:44:50AM +0000, Yao Zi wrote:
-> > On Wed, Sep 09, 2026 at 04:00:33PM +0800, Inochi Amaoto wrote:
-> > > On Tue, Sep 08, 2026 at 01:26:44PM +0300, Andy Shevchenko wrote:
-> > > > On Mon, Sep 07, 2026 at 07:26:00PM +0800, Inochi Amaoto wrote:
+On Fri, Aug 14, 2026 at 11:06:50AM +0200, Lukas Wunner wrote:
+> Derek reports a lockup on resume of the MSI Claw A8 if a card is inserted
+> into the onboard Realtek RTS525A cardreader.  He has root-caused it to a
+> mutation of the cardreader's Subsystem Vendor and Device ID:  Firmware
+> sets an MSI-specific ID on boot, but neglects to reset it on resume.
+> The ID thus changes to the generic Realtek Vendor and Device ID.
 > 
-> ...
+> The firmware also incorrectly sets the Hot-Plug Capable bit on the Root
+> Port and the PCIe hotplug driver interprets the ID mutation as removal of
+> the cardreader during system sleep (see pciehp_device_replaced()).
 > 
-> > > > > +	data = device_get_match_data(dev);
-> > > > > +	if (!data)
-> > > > > +		return -ENODEV;
-> > > > 
-> > > > It's better to use -ENODATA which will help to distinguish from other ENODEV
-> > > > cases (which are more often to happen).
-> > > 
-> > > OK, thanks
-> > 
-> > Honestly, I don't think this should even happen, since every compatible
-> > supported by the driver carries its own of_match_data, and failing to
-> > do so is obviously a driver bug, so I think this branch could be
-> > dropped.
+> The lockup is caused by the block layer being unaware of the hot-removal
+> and waiting indefinitely in sync_filesystem().  That is fixed with a
+> separate commit for the cardreader driver.  However despite that other
+> commit, the cardreader is still hot-removed and re-enumerated the first
+> time the system is put to sleep.  This is undesirable because it prevents
+> using an MMC card as root filesystem.
 > 
-> Does this driver do not support driver_override? How comes?
+> Avoid hot-removal of the cardreader by mutating the cached copy of the
+> Subsystem Vendor and Device ID.  This needs to be done before going to
+> sleep, not afterwards, because pci_pm_resume_noirq() is executed top-down
+> across the hierarchy and hence a pci_fixup_resume_early quirk of the
+> cardreader would run after hot-removal at its parent Root Port.
+> 
+> In the unlikely event that a fixed firmware becomes available, the quirk
+> can either be reverted or constrained to specific BIOS versions by way of
+> a dmi_get_date() conditional.
+> 
+> Reported-by: Derek J. Clark <derekjohn.clark@gmail.com>
+> Tested-by: Derek J. Clark <derekjohn.clark@gmail.com>
+> Closes: https://lore.kernel.org/r/20260806214808.1202819-1-derekjohn.clark@gmail.com/
+> Link: https://github.com/ValveSoftware/SteamOS/issues/2473
+> Signed-off-by: Lukas Wunner <lukas@wunner.de>
+> Cc: stable@vger.kernel.org
+> Cc: Matthew Schwartz <matthew.schwartz@linux.dev>
+> ---
+>  arch/x86/pci/fixup.c | 16 ++++++++++++++++
+>  1 file changed, 16 insertions(+)
+> 
+> diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
+> index b301c6c..9da7ae0 100644
+> --- a/arch/x86/pci/fixup.c
+> +++ b/arch/x86/pci/fixup.c
+> @@ -1080,4 +1080,20 @@ static void quirk_tuxeo_rp_d3(struct pci_dev *pdev)
+>  	}
+>  }
+>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, 0x1502, quirk_tuxeo_rp_d3);
+> +
+> +/*
+> + * MSI Claw A8 firmware initializes the onboard Realtek RTS525A cardreader
+> + * with an MSI-specific Subsystem Vendor and Device ID on boot, but neglects
+> + * to re-initialize it on resume.  Avoid hot-removal of the cardreader due to
+> + * the spurious ID change.
+> + */
+> +static void quirk_msi_claw_cardreader(struct pci_dev *pdev)
+> +{
+> +	if (pdev->subsystem_vendor == 0x1462 &&
+> +	    pdev->subsystem_device == 0x14af) {
+> +		pdev->subsystem_vendor = pdev->vendor;
+> +		pdev->subsystem_device = pdev->device;
+> +	}
 
-Oops, it's my fault not to come up with this case. Sorry for the noise.
+Don't you need DMI check to limit this quirk to MSI hosts?
 
-> (Note, Sashiko is full of the issues of not checking for NULL the matching data
->  and hence it describes a scenario in which this leads to NULL pointer
->  dereference.)
-> 
-> -- 
-> With Best Regards,
-> Andy Shevchenko
-> 
-> 
+- Mani
 
-Thanks,
-Yao Zi
+-- 
+மணிவண்ணன் சதாசிவம்
