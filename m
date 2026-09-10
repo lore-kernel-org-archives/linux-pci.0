@@ -1,172 +1,171 @@
-Received: from mail-qk2-f12.google.com (mail-qk2-f12.google.com [74.125.230.204])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from CY3PR05CU001.outbound.protection.outlook.com (mail-westcentralusazon11013015.outbound.protection.outlook.com [40.93.201.15])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8705B49B5D0
-	for <linux-pci@vger.kernel.org>; Thu, 10 Sep 2026 22:17:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.230.204
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789078660; cv=none; b=fnDmPQzog5hb9sDWyiu9v/7F07hyrnD69fjpAnZb0o8gDG0Jsxq0SYj4APr32RXJTRYoGsuyw3FW/W+jF5K09gTRCta270WP6mzermTormSDCTuxQtoNtBq/Pgo8QS8QZUjr6cYqMC/koRnlRF2X3uv5JZoJT5Wrv63+0RupiSA=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789078660; c=relaxed/simple;
-	bh=dD2MbE8iWzrOQjOcB9Fc+ItDw8U6u6JrMfm3i3wPru4=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=OrHVIJE1xH7TuwblFiNpQbukEqNKisKby9nCv6VTVEU7MSKEyR89gIe08V+xEFCIDqdKDLp192XH1Ft8GeLnIJsqrI6cjbz6b+qTiuaRUv7b76knYOqkaHpWpJU+2dkdLTesndqzHa2g3/yMr1lBQNNTQOcN1Euorx+aiOdmZe8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=gq4KVn9I; arc=none smtp.client-ip=74.125.230.204
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 26ACB3A7F52;
+	Thu, 10 Sep 2026 22:18:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.201.15
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1789078724; cv=fail; b=U+LplhwpsdoPr2uOyTkgYvY1J1doM7BEbOBChpy83BgMjpwASOOrhBeFUX9ez/LkN+EwYCD0/fz9lO8x4qNZ/eF6Gms6Zw/DFw8lNZZsSo0oua4EqHtqlbDP+NUOi+8w1uNRs32Pa1OwaiD+spOvBXME62Z/BPJA7qg+JjWW8XI=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1789078724; c=relaxed/simple;
+	bh=skSZMJCxx5hkdKhii/CR8+Hb56esOFV3bhF6MfbbNWk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=K0zASmrymfNtX9KCCOSDRvoWg/yH3XGdxvMfMjozUDdt5OODGe1imavjTkUACYXZo9V0nei0XZFxo6eLQdgFm3BZV6B6LnWHgQ/CO16xCRoRq4R1+xQ011PxG18YkUEB+3sEc56/qYEq91nacM9GNEuVePowoNmnjSshQJFNRl4=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=uQVXA4ZP; arc=fail smtp.client-ip=40.93.201.15
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="gq4KVn9I"
-Received: by mail-qk2-f12.google.com with SMTP id af79cd13be357-939da4e517fso9006985a.1
-        for <linux-pci@vger.kernel.org>; Thu, 10 Sep 2026 15:17:38 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1789078657; x=1789683457; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=phZqrumo434IM6M4R3cvUgGvziwdgVdo1+7d/hsBRIU=;
-        b=gq4KVn9Ilm1wljKBeVQy592L/SpDUiJN2XnPgfvdH+47cShKSxeXua/19r30MF801E
-         jCAanBo1QVEAbUuFfp1kvwJ33U6wY6p3lJsftZEG5iRF6omFv2corCxi7ye5NDXXiPko
-         NW8gZGvvRINCJ6qngKybtvs7anG+f7n1Wht9Kds3FmTfTQNZc9PoWrEVl3aT/ufYifEb
-         11oeC6vAyv8QQyR0z2bfR4dji0OtNkQDiwFOr/MOJSZhAfyFxhR9BL8BDL11Fzj1D1Fw
-         jkAx1/NeRQ5oo6w/KzWQZ4rVwzf173N1i4MIgYVVuo0vHdAFtrK6WueOSqSv5ObAJ0KG
-         8smA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1789078657; x=1789683457;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=phZqrumo434IM6M4R3cvUgGvziwdgVdo1+7d/hsBRIU=;
-        b=gwag1ewP63nNm5kfuimOD/0FCu4YZQ7jL+L1t31GnJefes0wUKweTrw9WCNIIYkVvQ
-         iKn1JaM4a7WjRN1NsyhtAZ0N4XT1KshX3L43TPfY1fnryLqIXYU0yP/1gmTteUO/T/IG
-         8VCuriYNEqSAqmAFUjSpvOkms3+AYMj1yseEQ4bpZ+6vR7t87v11Ws/fi+1z3BsHUZzL
-         h82xIGbW9qeUT9uSufYJa7RpLe/HhE50iLcyOjO+Yhod304bpKm9BkDN3OGbe0ibWtpT
-         hEho1+orxJUNcXAocqYPM+P5OKQqV9ghnHRbSP1TQNROpiRTdNNkb7KRFPVYDpJ3iSEN
-         mqAA==
-X-Gm-Message-State: AFuF++njzSc9RSmnIBpGNW1XfYTCrJwB7nqdU1umYeN6CC0S3efFgQgm
-	cY3yqoyUxptbc2c1kfmMmdjaBxyvdGLKbUsIdjp3mhecS3UicjQOV2D3lDIBMWc=
-X-Gm-Gg: AYBFou1X0OSyLtf2HtE1A//BRaxgxiCYXkuYuhxID6TdEXvelGJmQ7AHw+8hOhuMQD4
-	D/VKw4yu28WttnI411cn0Dbdj2hLwCpMl4IjIZmQzzTv/u6hHCqXvWntVVN6thdXO7sfLKMxFAO
-	YwzcWhuAYuAQmPi4pWxCkYIK3ETeDfKph7XfxoIKhbgdVAHJDAzIRkmgBjXJgyK+FMXcQW7S/ri
-	7LwgAB0UA7XepE+KasUb8cWe35ltjUyJd9e1pT7Q1dFlGF8kkfoCWI9ugDV278BQvkxFN4lwegf
-	UrPKZtvMUZBqGqOi4KcIHITWv6FaB0f5yUGSgYtj7nJWcXIjWjdyN7g8imf+mC+vJLIQWOzynrp
-	Rhz2DM3hxijckXwcbSMn1B4uzbtgGGEM4qbeHq2UJFDEsiCkHMdqiMtZvaljM3IA4qhNKMDBS6K
-	RZqwTnNbRyykEMGDIW/UAfKVgfGwPKy2sOvmAa2QHEPcD8mFWIRNDPdK+utnwQxjQSvDqyJ1Ajz
-	3VDeAbkEVRzslfsBqi3qzh7TynJo4hVbCbxsBgKAvIVtI9Uw8m8bg/tVgSrvSqncOeiqmf4h4kY
-	dDtiOLD0iqNHJNvXjqAB8YBaTcwdOeAq3w==
-X-Received: by 2002:a05:620a:2604:b0:939:a9de:83ea with SMTP id af79cd13be357-939e8b1c875mr207985085a.10.1789078655448;
-        Thu, 10 Sep 2026 15:17:35 -0700 (PDT)
-Received: from localhost.localdomain ([104.39.73.78])
-        by smtp.gmail.com with ESMTPSA id af79cd13be357-939e80d453esm87548985a.38.2026.09.10.15.17.33
-        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Thu, 10 Sep 2026 15:17:34 -0700 (PDT)
-From: Myeonghun Pak <mhun512@gmail.com>
-To: linux-pci@vger.kernel.org
-Cc: thomas.petazzoni@bootlin.com,
-	pali@kernel.org,
-	lpieralisi@kernel.org,
-	kwilczynski@kernel.org,
-	mani@kernel.org,
-	robh@kernel.org,
-	bhelgaas@google.com,
-	linux-arm-kernel@lists.infradead.org,
-	linux-kernel@vger.kernel.org,
-	Myeonghun Pak <mhun512@gmail.com>,
-	Ijae Kim <ae878000@gmail.com>
-Subject: [PATCH] PCI: aardvark: Disable PHY on probe failures
-Date: Thu, 10 Sep 2026 18:17:25 -0400
-Message-ID: <20260910221725.91980-1-mhun512@gmail.com>
-X-Mailer: git-send-email 2.50.1
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="uQVXA4ZP"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=wHrARG1sxBtLue13PauEtIp4t1lYqz19P2FbbuiJbKcWeFYPvxkPQDHmGH7dN050Z6OHI5xhn7J0KT86X+hxcq0uE0XjHWWFPH55jFUi8WXcIyGj9Q7p3Yp+nDRqo2aMKonMTKg8sOC4s2SX5lw/zaJfoCqf+SCYPJH7+CRiehpCGkmXWgjuUUTQUXWO/R7F8CU2BONeHYThkWz66QH5xk0VPpVFpfdseLXTrybr9nYO2+am0w5ZbZbrStLfWiHgiWTVCvkH3Ti81tk8VuQ1PZHja4u4kGS3ZsNlh3lNFP2me2Yu+XlR/qFTx8j0yYtQVzbhVGQ6q0ADCEOqOgxuww==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=skSZMJCxx5hkdKhii/CR8+Hb56esOFV3bhF6MfbbNWk=;
+ b=Cvtdvgv+4JvHx5+DgwUv+0AbQ03VB16pgcjq7dVJhqkhGBiqSIG4XFDBudj28y9TTIwtmUZR+WYqAFe/43Rkx9ijHTiEnPQD1K6OTGG6sQmd+rjjmuFH3sQgda0FnyKh2Eq5e/S2TM6lO9XzHinx7KSGBeJL+kDMViq5LEKjnYKDQq7CypGKTDz1+cdKAGq0kQTUKWXbcqeMzxCWtlai2ihBsw6HS1iz7cLNBibyfwvsZsEK272UM61PuTnA5hUG6jbZ1F9fzIPDT/MOe6JKG6zkv787zHBxwLNQcHtrKeTCWgRk5/vCHfDzsOwAiPSJpqKupQ6EKClurVAzyQNI0w==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=skSZMJCxx5hkdKhii/CR8+Hb56esOFV3bhF6MfbbNWk=;
+ b=uQVXA4ZPv1GD/4HvsVpUy2HEyMvmowkDxhAdyjam+XINl5GibTrTCPBBiT+BVw9tZ+oTDDAnp8qCjkqmctCHBBS/sScz3tlG52fNBvJ05VCKRg+EDLIwzBN4DqwTEyYuRjbZXO7kHhBHnUuXG9hYVkSSHewfGDXAfMisZRtx7pW/8QhUxRmXkCzS/iIXaWNsFTHxaXPyVKvb6eXa8ZJBTw4Ud/TQt5pgT8f8pQSohTjKiRWvLIykzyJsyt5fhwRh5UG8Fbu9sd1zOW3IcdFGEnSPhvP6IZ/g0sjeE6FpomKgOJaVv/VLgIjBmyXAfJE05GMrNi5MvsWIm6J+6FB2rA==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from CHBPR12MB731189.namprd12.prod.outlook.com
+ (2603:10b6:610:33d::12) by CY5PR12MB6600.namprd12.prod.outlook.com
+ (2603:10b6:930:40::13) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.406.7; Thu, 10 Sep
+ 2026 22:18:33 +0000
+Received: from CHBPR12MB731189.namprd12.prod.outlook.com
+ ([fe80::b0e5:123d:fe06:e10d]) by CHBPR12MB731189.namprd12.prod.outlook.com
+ ([fe80::b0e5:123d:fe06:e10d%6]) with mapi id 15.21.0406.007; Thu, 10 Sep 2026
+ 22:18:33 +0000
+Date: Thu, 10 Sep 2026 19:18:32 -0300
+From: Jason Gunthorpe <jgg@nvidia.com>
+To: David Matlack <dmatlack@google.com>
+Cc: Sean Christopherson <seanjc@google.com>,
+	Logan Odell <loganodell@google.com>, arnd@arndb.de,
+	pasha.tatashin@soleen.com, rppt@kernel.org, pratyush@kernel.org,
+	graf@amazon.com, akpm@linux-foundation.org, pbonzini@redhat.com,
+	maz@kernel.org, oupton@kernel.org, bhelgaas@google.com,
+	alex@shazbot.org, kevin.tian@intel.com, dwmw2@infradead.org,
+	baolu.lu@linux.intel.com, joro@8bytes.org, will@kernel.org,
+	robin.murphy@arm.com, linux-arch@vger.kernel.org,
+	linux-kernel@vger.kernel.org, kexec@lists.infradead.org,
+	linux-mm@kvack.org, kvm@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, kvmarm@lists.linux.dev,
+	linux-pci@vger.kernel.org, iommu@lists.linux.dev
+Subject: Re: [RFC PATCH 0/3] liveupdate: Move to feature flags for LUO and
+ memfd ABI compatibility
+Message-ID: <20260910221832.GH3968357@nvidia.com>
+References: <20260903023452.721732-1-loganodell@google.com>
+ <20260904160009.GV4157646@nvidia.com>
+ <aptFFYqcSiBdMLE8@google.com>
+ <20260905012403.GX4157646@nvidia.com>
+ <aqIAtOoew-_6jw29@google.com>
+ <20260910143448.GD3968357@nvidia.com>
+ <aqLOWkuVKccR-I7W@google.com>
+ <20260910171210.GF3968357@nvidia.com>
+ <aqMgjXfTJ8u3n7Kj@google.com>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <aqMgjXfTJ8u3n7Kj@google.com>
+X-ClientProxiedBy: YT4PR01CA0436.CANPRD01.PROD.OUTLOOK.COM
+ (2603:10b6:b01:10d::8) To CHBPR12MB731189.namprd12.prod.outlook.com
+ (2603:10b6:610:33d::12)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: CHBPR12MB731189:EE_|CY5PR12MB6600:EE_
+X-MS-Office365-Filtering-Correlation-Id: a15d49df-9717-4f83-750c-08df0f897359
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|366016|23010399003|1800799024|7416014|376014|6133799003|22082099003|18002099003|4143699003|56012099006|11063799006|10067099003;
+X-Microsoft-Antispam-Message-Info:
+	1MrG7hkEr3/b3LgVUbr3162uj/00KXpgrem1FS0xbTzLzM3PogRZ6ft/V8vIiKXJ8OVtbi8DxkFKxmamRPOP1w6Fn11gb+rXacwmsSNNjmV4uPfLWIkPPTgyGyWvnRqHiyS6Uq2oagzDuU0sdraG+aYdtLYfQS/MUop0XfL5UXF24KveLIiOMxnOnnew2Ld8F8mww4OGPrqAOIGVi1A63zX4HXmE4CRpg+JGsp9KYXvYreTHuUyeBZZ7qHttNIqwgnFOAjmX0gwDzKNha+KwrLEapgcYx3On8gjDmS6D5Paceyzov5QAIwWosma0dZbfzi473LfDrgIlQS3t2QSkMAYi6X52XKYi26SZp+SBo7SN9IrORW8zbVgxTpr4opfnq+U00wxEG8mNKkOhUr3HQ6YpZKrBAPTuAl8m4eQvoKcvGGWO6R6CAhw+vK9bIHdAYQHOSLKI+q63cG4YxysIOUwbtMb2uGzG+M8hESfeEa6dfI3ywOMIIUV3idfV1GmtrRRhvKUu2o5XkmOHN6C13Hnw62pVS0fkEbO/9BvACzmd2Aajrf4UkwJs+1iVJ6PvSyWXiPMBsD1YmrP0yY3R552muNiaaxkcxGeXYSeK7KGXhZZr9E/Ahy40Nfh39DFzC1j9T5eciGxPqzmdz5FPoc1BRAXkuQ49f0/oh42TpJ4=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CHBPR12MB731189.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(23010399003)(1800799024)(7416014)(376014)(6133799003)(22082099003)(18002099003)(4143699003)(56012099006)(11063799006)(10067099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?DDe9Xc7gGk3KAGlAubroCNFNm8Bxdjzpg13Pguni19iU70Qbi5dn10yABek7?=
+ =?us-ascii?Q?+BbPvjPhOkMMWVPW4ZATvYezSPIri5b1bMC0hkGPf8h+WGU7HXfoNQxpuTtL?=
+ =?us-ascii?Q?v6jo90Cgt+p/9c95391WcvrsWRT9cKvgBP7UgNm83M17W1S9gyJEC5cnf4nK?=
+ =?us-ascii?Q?giVW2PkEkYA8gwcSBPrNjI0yMN5kvvJwOC73Prt63j+qPnqSkXwvhIf0XG0l?=
+ =?us-ascii?Q?rOvHNTF2KSVZMTpp31V2oEWOpy9hTNTgDPtXgkSu0wd0E7M6A3U4hhGtxkxV?=
+ =?us-ascii?Q?W4RLjl2WTGQjCe+wEBEF3KkBVbSt4oPITguHm9V1Qr1VzcCfWcsXZrKDmCV9?=
+ =?us-ascii?Q?bUp13/PyjWNpWh9MxpElG+BExyyiNOJdUA89xBYH+TYCkPRrb0IB66RwWFIZ?=
+ =?us-ascii?Q?PIBrstGRpT2i6K5Eq5sQWNhpqVtImaoig8Noc/wouZqb07XpdC/9M+XU/3vo?=
+ =?us-ascii?Q?XrGyYeUth4pM775w8j94D9z2PA2bczU+GF1dSsklciTEkPmOzGz2pplgVHl2?=
+ =?us-ascii?Q?lctyduI7G81zuOIJFcej/OoV1VS+a7CYPRL8F4NQW1mkyaeh/7iaTjBUFF2J?=
+ =?us-ascii?Q?W0ba4k+kkkEQxfWz4K37Ht+eN6H23hsKNfSaL8FaqV6qV9E94kqmgyOBzLZH?=
+ =?us-ascii?Q?NUJer5Z2h7b+HAcr3XmwYqvNIUqKHiY+l8jxicwcIH/6WNcdNKedqLQuW8ND?=
+ =?us-ascii?Q?FGzaPt0V4kKXdUO7pUzZDAKQ9PUX+oVrr6S4b539Cs4eiVklioZZd4BgRmBH?=
+ =?us-ascii?Q?ehaX2PKmQoS6a1Nw6bGlp5o4OGwslD4GuOtk6LiFtA6St3KLZb0UFtUczR9L?=
+ =?us-ascii?Q?0jCLTMbZYtniOqDvRf7HR3KJkxNepSGS1VcNgi5/Ia5CSnKbOrpEAL2kBPGG?=
+ =?us-ascii?Q?MbVGtbt12vuPRmSERGI+O/SIwydjWDnOLkrRJyaN3HjoeKb7PFnLX8as2GEF?=
+ =?us-ascii?Q?N5504hHIsB2foJ/XgyvYTjlmWFQQLkBoUAbsOxi6OGIJh6++uLJ2UN8sYJSv?=
+ =?us-ascii?Q?fZjS1gUPe/PWiGwXnhKsuWAFhnakOZz82LkBQU/0RtIipjJ0UZI6WCG2TqER?=
+ =?us-ascii?Q?NnG0CH7Bk5w2/6Ju5CRi+dnwG4ZjjWJVm9NHp0+nvfdY+29YY0a99LJ1U1uv?=
+ =?us-ascii?Q?G1ZmDpBNZSz60SHyCgtA8Osum/ORpMVzoqGWQcc/UET12xV4Tvyx0cxNVgTM?=
+ =?us-ascii?Q?G1ATxp++dwtYMBQ74GCi0BltsFUg2hpkEGBB70uFuFZJFTYIQiL2R73gIEF4?=
+ =?us-ascii?Q?OLxojJrXfZ9/cUJ1PWMA+JlY76t5DkxqIAg111fZRHciNTMWdWhIviT/WDvr?=
+ =?us-ascii?Q?zpgnKnaJBP2Eu+MVC1iOTjMN6JUDWO5lSdj2+p4Z3FT1JHQj+SstEmesPhdt?=
+ =?us-ascii?Q?CAv2TJhvRTdeTOv7wnTFMjj2BPRh6AbZ2uo5Rn83Krwppf3XGYy8hqz7gykH?=
+ =?us-ascii?Q?KJk4AStKO7CPyunikXj5Iu1R9eXnLLMaKffBtvZqXG1yEWsrsJV3VzuGBCbt?=
+ =?us-ascii?Q?CvIOec1brUcK6y+VMfbI0skRfx+3RuJ1hu1Faft45fFurHsjNuolQcuHK47F?=
+ =?us-ascii?Q?9yNnfLrCiyX0aSE0OrMV0CR+0NDO+c1nzV/9WuwwXvUFQ53fe9jdvzEmgft2?=
+ =?us-ascii?Q?YpUZ9XdERVYz27Df/ctIDIdt/5wRvZeXvZEYIO/mJF2vyqjUMVfcVmOZcZgO?=
+ =?us-ascii?Q?EUu0IlYo3vyULrlddYZWuDKOBc2pvvHJJNlblcOX8O6NWJv0?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: a15d49df-9717-4f83-750c-08df0f897359
+X-MS-Exchange-CrossTenant-AuthSource: CHBPR12MB731189.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 10 Sep 2026 22:18:33.0913
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: tOcwI9WOc7rme2P/95uDNbTYQSUUGV512F92iOcPIekgiYmCZsrw0oFwfPO86YQY
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY5PR12MB6600
 
-advk_pcie_setup_phy() initializes and powers on the PHY before the
-emulated bridge and IRQ domains are created.  If any of those later
-initialization steps or pci_host_probe() fails, probe returns without
-powering off or exiting the PHY.
+On Thu, Sep 10, 2026 at 09:27:58PM +0000, David Matlack wrote:
+> Each ABI is now extensible with a set of structured featured flags that
+> are exposed to userspace. Userspace can inspect the flags that the
+> kernel supports and confirm the next kernel also supports them.
 
-Replace the direct returns with staged cleanup labels.  Remove IRQ
-domains in reverse order, release the emulated bridge allocation only
-after successful initialization, and disable the PHY on every failure
-after advk_pcie_setup_phy() succeeds.  A setup_phy() failure still
-returns directly, so its partial internal cleanup is not repeated.
+I'm fine with that bit, it is really just a different way to encode an
+ABI ID #. If ABI 5 is spelled b11111 instead it doesn't materially
+change how things work.
 
-Fixes: 366697018c9a ("PCI: aardvark: Add PHY support")
-Co-developed-by: Ijae Kim <ae878000@gmail.com>
-Signed-off-by: Ijae Kim <ae878000@gmail.com>
-Signed-off-by: Myeonghun Pak <mhun512@gmail.com>
----
- drivers/pci/controller/pci-aardvark.c | 31 ++++++++++++++++++-------------
- 1 file changed, 18 insertions(+), 13 deletions(-)
+It was always the case you can use the same struct extension techinque
+with a version number. A version can't handle 'holes' in the feature
+mask, but I haven't thought that was a meaningful use case.
 
-diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
-index ecb81ac73019..2bbdb73cfb45 100644
---- a/drivers/pci/controller/pci-aardvark.c
-+++ b/drivers/pci/controller/pci-aardvark.c
-@@ -1864,28 +1864,25 @@ static int advk_pcie_probe(struct platform_device *pdev)
- 	ret = advk_sw_pci_bridge_init(pcie);
- 	if (ret) {
- 		dev_err(dev, "Failed to register emulated root PCI bridge\n");
--		return ret;
-+		goto err_disable_phy;
- 	}
- 
- 	ret = advk_pcie_init_irq_domain(pcie);
- 	if (ret) {
- 		dev_err(dev, "Failed to initialize irq\n");
--		return ret;
-+		goto err_cleanup_bridge;
- 	}
- 
- 	ret = advk_pcie_init_msi_irq_domain(pcie);
- 	if (ret) {
- 		dev_err(dev, "Failed to initialize irq\n");
--		advk_pcie_remove_irq_domain(pcie);
--		return ret;
-+		goto err_remove_irq_domain;
- 	}
- 
- 	ret = advk_pcie_init_rp_irq_domain(pcie);
- 	if (ret) {
- 		dev_err(dev, "Failed to initialize irq\n");
--		advk_pcie_remove_msi_irq_domain(pcie);
--		advk_pcie_remove_irq_domain(pcie);
--		return ret;
-+		goto err_remove_msi_irq_domain;
- 	}
- 
- 	bridge->sysdata = pcie;
-@@ -1893,14 +1890,22 @@ static int advk_pcie_probe(struct platform_device *pdev)
- 	bridge->map_irq = advk_pcie_map_irq;
- 
- 	ret = pci_host_probe(bridge);
--	if (ret < 0) {
--		advk_pcie_remove_rp_irq_domain(pcie);
--		advk_pcie_remove_msi_irq_domain(pcie);
--		advk_pcie_remove_irq_domain(pcie);
--		return ret;
--	}
-+	if (ret < 0)
-+		goto err_remove_rp_irq_domain;
- 
- 	return 0;
-+
-+err_remove_rp_irq_domain:
-+	advk_pcie_remove_rp_irq_domain(pcie);
-+err_remove_msi_irq_domain:
-+	advk_pcie_remove_msi_irq_domain(pcie);
-+err_remove_irq_domain:
-+	advk_pcie_remove_irq_domain(pcie);
-+err_cleanup_bridge:
-+	pci_bridge_emul_cleanup(&pcie->bridge);
-+err_disable_phy:
-+	advk_pcie_disable_phy(pcie);
-+	return ret;
- }
- 
- static void advk_pcie_remove(struct platform_device *pdev)
+"if (id > 10)" instead "if (id & FEAT)" isn't a big coding difference.
 
--- 
-2.50.1
+My concern is the implied position that the kernel must make full use
+of this to maximize compatability or bust. That's what has always
+concerned me about all these proposals since the start.
+
+I do not want to have arguments upstream about not changing things
+because we didn't do a perfect job preserving luo compatability with
+upgrade and downgrade for arbitary kernel versions. That has always
+been my position and worry.
+
+So, change the simple version to a u64 features[] tuple (be sure to
+use an array, we will need alot of them!!) and I'm fine. But I'm not
+going to promise that every upstream kernel will strictly only have an
+increasing string of 1's. You are going to get some that look like
+b1110000 and still wont work with old kernels.
+
+Sean's initial email was asking for strict never-break ABI
+compatability rules on top, and that is what I've been reacting to.
+
+Jason
