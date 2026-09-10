@@ -1,64 +1,68 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C3BD8470EB4;
-	Thu, 10 Sep 2026 11:26:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E78D5356A12;
+	Thu, 10 Sep 2026 11:31:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789039579; cv=none; b=BcA/BUXVB7dN7YZmL8ej+0GwMXkUslIfEOtNntZtTJPNllY3hA5d9M/i7dnV2TjzGJSfUItO3hs6heaK6BuVu5Ku39BdAspiYZKg1BXv7D6p4A6mM+ZbDRShSkscn6g0bK3zs7iM6tc5PYa/yLjLqkk7CEvG2zHUxnnblVJu2Zg=
+	t=1789039884; cv=none; b=B3fG9OGYHEA7us5lyNTkwDesaHUsu7zWEWBq9tAkALKuA9pPK8wNcS3MTbTU3guB01HVklyk6AFCxdDRNCenu3VJgnBCgGeEopHB2+w1nOWH+A3irwlodoO/qPQajeKbNJrUR7vZULf0TtImO3yVmLiZQZO1C4Vbqbcpt9Jkr4E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789039579; c=relaxed/simple;
-	bh=o/1LAWRxa09euD4JhAGlShgWf0U05ylH8DPZ7jhktCQ=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=FOeyfLoXkJB4ErigWJkTVe0/ITspY0poPFtp2vIp991KwIPLOoYAfBQfHwQPZ6m7qbMCFFQQlLpTqzczVobDiJl1kMDUlXKwIUVc7TEQKN1uBcO+84kuBwjMPOSe/9u5gT5SolMUn/pN8+RBToBTyyVWgtTqWG4w2wxBI7u1M8Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2633C1F000FF;
-	Thu, 10 Sep 2026 11:26:14 +0000 (UTC)
-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-To: linux-pci@vger.kernel.org, Vladimir Oltean <vladimir.oltean@nxp.com>
-Cc: linux-kernel@vger.kernel.org, linux-omap@vger.kernel.org, 
- linux-arm-kernel@lists.infradead.org, linux-rockchip@lists.infradead.org, 
- linux-arm-msm@vger.kernel.org, linux-riscv@lists.infradead.org, 
- spacemit@lists.linux.dev, linux-tegra@vger.kernel.org
-In-Reply-To: <20260810124315.433448-1-vladimir.oltean@nxp.com>
-References: <20260810124315.433448-1-vladimir.oltean@nxp.com>
-Subject: Re: [PATCH v9 0/3] PCI prerequisites for PHY consumer/provider
- split
-Message-Id: <178903957471.12380.4841684625788511364.b4-ty@b4>
-Date: Thu, 10 Sep 2026 13:26:14 +0200
+	s=arc-20240116; t=1789039884; c=relaxed/simple;
+	bh=zU3vzRxNIUcnktzrPzbJWxvzmBDjHsD2XrBZqp7kI6c=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Qm5lFmzmso4hUr9zBPJVwascBtVv3etOJOlePlGpPef83CST51aYSthKPcHmm5YYDPKwJiS5rXRfDX9jBRJk4ROIiayt4Zo5XSfodaoHQdbfp23H/FBjZGqB0fiQ7rpHkQ3y3lNNfWIphpVHoBUDvx7ooJ4td+HOAVyXEf/f7A4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BWJWaPd1; arc=none smtp.client-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BWJWaPd1"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0F7711F000FF;
+	Thu, 10 Sep 2026 11:31:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1789039882;
+	bh=sp+g2kf4DjcHYNr0fZESaZatEX+25HJxulaJdt99lS8=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=BWJWaPd1d+Zc7JDdTCN9K2rRGLgVrvGxMtotAH/+SmbALwSZp/ZRim4cTj7UolVIP
+	 cI5hNqZIXZYV8DrjrK7uSMpS31fcFp/74rpUDEQXh+GsJqkRiys9CwcFff7WdUBghU
+	 kn7Xq1rXNzg4AH0thQm3BoFKKY3/V1A5lzGu/b4wTseWQPgZpKMvxA9hUYWH9QS5Oz
+	 j2GWXBUsxbcbxM9yteMHkAIFoqnUob0PMfhr0ckrJPyNehFKc5sKCpWZQVzEM1e8eC
+	 pADtLQrCDtEWtqM5fgs5d71LN/6qZuVrsMC9AIQ4po+6kY0yweYIffVQbyytB/Ul1w
+	 MG5UAOdnUwMrg==
+Date: Thu, 10 Sep 2026 13:31:13 +0200
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Deepanshu Kartikey <kartikey406@gmail.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, syzbot+7134530b25073b4ef373@syzkaller.appspotmail.com
+Subject: Re: [PATCH] PCI: sysfs: Reject unaligned resource I/O port accesses
+Message-ID: <wmlvf7r5xd6ibcc6kimlqylfkvzgim44n364wmqugrj4tntlrm@mld5ilctx6wa>
+References: <20260809045946.15638-1-kartikey406@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-X-Mailer: b4 0.15.2
+In-Reply-To: <20260809045946.15638-1-kartikey406@gmail.com>
 
-
-On Mon, 10 Aug 2026 15:43:12 +0300, Vladimir Oltean wrote:
-> "[PATCH v8 phy-next 00/31] Split Generic PHY consumer and provider API"
-> https://lore.kernel.org/linux-phy/20260505100523.1922388-1-vladimir.oltean@nxp.com/
-> became unmanageably large for a single patch series and needs to be
-> split per subsystem.
+On Sun, Aug 09, 2026 at 10:29:46AM +0530, Deepanshu Kartikey wrote:
+> pci_resource_io() validates that off+count stays within the BAR's
+> range but never checks that the resulting port is aligned to the
+> access size. A pwrite64()/pread64() on a resourceN file with an odd
+> offset and count=2 or count=4 reaches outw()/outl() with a misaligned
+> address. On arm64 this becomes a store/load to a Device-memory
+> mapping (PCI_IOBASE + port), which architecturally requires natural
+> alignment, causing an alignment fault and kernel oops.
 > 
-> Here are the patches pertaining to PCI extracted out of the larger
-> series.
+> Reject misaligned accesses before they reach the low-level accessor.
 > 
-> [...]
+> Reported-by: syzbot+7134530b25073b4ef373@syzkaller.appspotmail.com
+> Closes: https://syzkaller.appspot.com/bug?extid=7134530b25073b4ef373
+> Signed-off-by: Deepanshu Kartikey <kartikey406@gmail.com>
 
-Applied, thanks!
+Acked-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 
-[1/3] PCI: cadence: Preserve all error codes in cdns_plat_pcie_probe()
-      commit: da0cec0d8f08bf419aa76bce49a69c10c31ac4a9
-[2/3] PCI: Add missing headers transitively included by <linux/phy/phy.h>
-      commit: 81ace3d75c2fca477e95035c99d826efafb2ad9f
-[3/3] PCI: Remove device links to PHY
-      commit: 9a9d18547ddc97a73d5d90cff4d5aef90bd8c15d
+- Mani
 
-Best regards,
 -- 
 மணிவண்ணன் சதாசிவம்
-
-
