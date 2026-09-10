@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28A79399036
-	for <linux-pci@vger.kernel.org>; Thu, 10 Sep 2026 23:35:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C989D3A872B
+	for <linux-pci@vger.kernel.org>; Thu, 10 Sep 2026 23:36:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789083360; cv=none; b=UsJqzdXx+gQjLbCQnpLQmkTTGk4IX9ldm1nXsbg1HWUM++Rk9q3RJ3T9viiNP+eWQa9wjvnLBoRNGTIwjGtfu0KzOVyX+jzqc+ZCtMlTa3Y9StwelyVXf9ueMiVvaA5XeBqxL7P3fBKjUHYRkse5xKxT6Z33tLXuRpyzKwjOOKc=
+	t=1789083378; cv=none; b=WGXfc1s9wFxHJQzwcijGa5M+jmaJ0ij7Mjc+VIIfS6D90BBwP0oPvXeIOHauVVg1OT3z3Z56LzYxdIdX4j6ONsK8IKJQ67/RJoTiRE1XzEe9kvZskrYocqiuPHn4dDk2bdFLLlT7IMlh1D8QlMPITM7WX+Xf0u4xDn0qdhKacvI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789083360; c=relaxed/simple;
-	bh=x2YBQUhJE5SYnuXJDyx1k5YrcNn3s0ZSz7nrDtiJMDU=;
+	s=arc-20240116; t=1789083378; c=relaxed/simple;
+	bh=DN9HO3uItxDKA+khe0dzzzeKdhpa77I7NWsjRm6DF4k=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=AFTy23Fj4WrTzRy40/vc0rsDCJQtT8v8fhG2l65uJ+KIJTAFYzBTNAxjRw36uBjyP8vGGP7eVoDBIus32i6fLlEbuwOlW8ibaKTwp/1/lVWjC0nUkDTj85mDp8iWooENeFTqHRB5OqcD0xzzgmKwR8eA6d5v3PpM/3qii4pBurM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DyXQtBkp; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=XtJplmOYDW8zkq5HaNweR8/33uQBJ0eRNW1Qxk1MeMqFwHLX2G46Vs+KqSwc5Teba6BAAhQlioLo7aW3KFXR15vYae5edEb48k6EedlGBAfWV4fAJ93hU3p2X4ZRzJx/Wb/pzYN8xRrS2IxktS9IdoOXoApEtYr1j8eoM2NYYy8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=A1tzkPne; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DyXQtBkp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A6CF41F000FF;
-	Thu, 10 Sep 2026 23:35:58 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="A1tzkPne"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 76F7B1F000FF;
+	Thu, 10 Sep 2026 23:36:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789083358;
-	bh=o1GU8dNxKh0krn0UUbUin2lHafQ642VItWwVlezz+Tk=;
+	s=k20260515; t=1789083374;
+	bh=hem2MoSxGchpcPbPASzx7+ZOZC5M3zFjTbesmPs69LE=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=DyXQtBkpmdSbpGTGVXT3zXfyy7ye0/DKqjXFwf6LGDDkneuTLymapIpwQzwpD93mb
-	 d6Qd9BAosaxDDGJJwO/2mzNYokd+52sYJPyyRby1a1BkSi9wHRyrNt1U2gCZUL8a2k
-	 CAaC5iNY7Z8cugcQ+wRRuRxRfOKYyNEgjkLvK9WxkACs5hLz+lcy5uzDMxZUxlwZVe
-	 PUvR67CcJtqnBKEygrFN85EHqAdNOGdzEFj3Q5U7kNuImlibZZ8a4FvoeAledU02qA
-	 ccnszp1MWTnurT1LQL5PeyFZZDO1GPqaBFr+A7LpIvhqgpU3tblxeABcK79pkOup/S
-	 w5xc7IOhO76Ew==
+	b=A1tzkPnehGvZYgYxrjozm+1nBQ8icunZv4o1/K4+4SqNNDsZylfWDF0z/+/ZmDsfM
+	 Fwa3ZToY7DETlw8RKjzYSksylZgIJyQ4ByKrkLVnLWmbBMSMdGM9AQYY5JHjslSMBW
+	 WBIMmwf6WHevCfbOJwO61v1QdkJE1LSU/itZ45VgVxBwdxf+tlhre4hYuQfVAl7uH7
+	 pbHiES1PGf1CoT+fss41k/iMpVQHYXPtclq8P0MGykJz9/KI5VUTlodeJjUYLkk1OR
+	 I9NqCgpLwrAiLuH5capDP+3Mbu2z0D+hR4yvD5gVshT+ujTUrG3nC+SwSSF5ZZW9xk
+	 WhX4TfQ5TDMrg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 10/15] iommu/arm-smmu-v3: Support PRI Page Request in
- arm_smmu_handle_ppr()
+Subject: Re: [PATCH v4 07/15] iommu/arm-smmu-v3: Submit CMDQ_OP_PRI_RESP for
+ IOPF event
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Nicolin Chen" <nicolinc@nvidia.com>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <cbe6e6f578af848f4efdd8d1050181032effae37.1789081084.git.nicolinc@nvidia.com>
+In-Reply-To: <ad96e41dec59e583822912f29d8bc7b443103519.1789081084.git.nicolinc@nvidia.com>
 References: <cover.1789081084.git.nicolinc@nvidia.com>
- <cbe6e6f578af848f4efdd8d1050181032effae37.1789081084.git.nicolinc@nvidia.com>
+ <ad96e41dec59e583822912f29d8bc7b443103519.1789081084.git.nicolinc@nvidia.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 10 Sep 2026 23:35:58 +0000
-Message-Id: <20260910233558.A6CF41F000FF@smtp.kernel.org>
+Date: Thu, 10 Sep 2026 23:36:13 +0000
+Message-Id: <20260910233614.76F7B1F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -49,74 +49,85 @@ Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
 
 Pre-existing issues:
-- [High] Missing `cond_resched()` in the PRI queue polling loop, potentiall=
-y causing soft lockups.
+- [High] arm_smmu_page_response() incorrectly hardcodes streams[0].id, caus=
+ing RESUME and PRI_RESP commands to target the wrong SID for multi-stream d=
+evices during error fallback paths, leading to permanent hardware stalls.
 --
 
-commit 3323ab058351966ce0deb549fa5694bcbf787b2e
-Author: Nicolin Chen <nicolinc@nvidia.com>
+commit 7f733f885611e1969870b8cc107b40c240d5c27d
+Author: Malak Marrid <mmarrid@nvidia.com>
 
-iommu/arm-smmu-v3: Support PRI Page Request in arm_smmu_handle_ppr()
-
-This commit converts PRIQ entries into iopf_faults for PRI-enabled masters
-and reports them. It also discards PASID Stop Markers prior to fault
-reporting and keeps the LAST-page DENY path for unknown StreamIDs.
+iommu/arm-smmu-v3: Submit CMDQ_OP_PRI_RESP for IOPF event
+   =20
+This patch updates arm_smmu_page_response() to issue a CMDQ_OP_PRI_RESP for
+IOMMU_FAULT_PAGE_REQ events from the PRI queue. It also extends
+arm_smmu_enable_iopf() to allow PRI-enabled masters to attach fault-capable
+domains.
 
 > diff --git a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c b/drivers/iommu/=
 arm/arm-smmu-v3/arm-smmu-v3.c
-> index 43a6029cef430..c631c6344685d 100644
+> index 8b7d88d469198..815847c2d7b43 100644
 > --- a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
 > +++ b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
+
 [ ... ]
-> @@ -2380,9 +2381,47 @@ static void arm_smmu_handle_ppr(struct arm_smmu_de=
-vice *smmu, u64 *evt)
->  	last =3D FIELD_GET(PRIQ_0_PRG_LAST, evt[0]);
->  	grpid =3D FIELD_GET(PRIQ_1_PRG_IDX, evt[1]);
+
+> -static void arm_smmu_page_response(struct device *dev, struct iopf_fault=
+ *unused,
+> +static void arm_smmu_page_response(struct device *dev, struct iopf_fault=
+ *evt,
+>  				   struct iommu_page_response *resp)
+>  {
+>  	struct arm_smmu_master *master =3D dev_iommu_priv_get(dev);
+> -	u8 resume_resp;
+> +	struct arm_smmu_cmd cmd;
+> +	int sid;
 > =20
-> -	dev_info(smmu->dev, "unexpected PRI request received:\n");
-> -	dev_info(smmu->dev,
-> -		 "\tsid 0x%08x.0x%05x: [%u%s] %sprivileged %s%s%s access at iova 0x%01=
-6llx\n",
-> +	/*
-> +	 * A PASID Stop Marker (LRW =3D 0b100) does not expect a response and
-> +	 * must be discarded before fault reporting: see the documentation
-> +	 * at iommu_report_device_fault().
-> +	 */
-> +	if (last && !(evt[0] & (PRIQ_0_PERM_READ | PRIQ_0_PERM_WRITE)))
-> +		return;
-> +
-> +	mutex_lock(&smmu->streams_mutex);
-[ ... ]
+> -	if (WARN_ON(!master->stall_enabled))
+> +	if (WARN_ON_ONCE(evt->fault.type !=3D IOMMU_FAULT_PAGE_REQ))
+>  		return;
+> =20
+> -	switch (resp->code) {
+> -	case IOMMU_PAGE_RESP_INVALID:
+> -	case IOMMU_PAGE_RESP_FAILURE:
+> -		resume_resp =3D CMDQ_RESUME_0_RESP_ABORT;
+> -		break;
+> -	case IOMMU_PAGE_RESP_SUCCESS:
+> -		resume_resp =3D CMDQ_RESUME_0_RESP_RETRY;
+> -		break;
+> -	default:
+> -		resume_resp =3D CMDQ_RESUME_0_RESP_TERM;
+> -		break;
+> +	/* IOPF is gated to num_streams =3D=3D 1 in arm_smmu_enable_iopf() */
+> +	sid =3D master->streams[0].id;
 
 [Severity: High]
-This is a pre-existing issue, but missing a cond_resched() inside the queue
-draining loop could potentially cause soft lockups:
+This is a pre-existing issue, but does hardcoding streams[0].id here cause a
+permanent hardware stall for multi-stream devices during error fallback pat=
+hs?
 
-drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c:arm_smmu_priq_thread() {
-	...
-	do {
-		while (!queue_remove_raw(q, evt))
-			arm_smmu_handle_ppr(smmu, evt);
+Even though arm_smmu_enable_iopf() rejects enabling IOPF for devices with
+num_streams !=3D 1, a multi-stream device with dma-can-stall can still gene=
+rate
+a stall event (EVTQ).
 
-		if (queue_sync_prod_in(q) =3D=3D -EOVERFLOW)
-			dev_err(smmu->dev, "PRIQ overflow detected -- requests lost\n");
-	} while (!queue_empty(llq));
-	...
-}
+When this happens, arm_smmu_handle_event() converts it to a fault and calls
+iommu_report_device_fault(). Since there is no IOPF handler, the fallback
+iopf_error_response() will call arm_smmu_page_response() with
+IOMMU_PAGE_RESP_INVALID.
 
-Could a faulty or malicious PCI device flood the PRI queue with requests
-faster than the CPU can consume them?=20
+Because streams[0].id is unconditionally used here, the RESUME command will
+target the wrong SID if the fault originated from a different stream on the
+master. The stalled transaction will never receive the RESUME command, leav=
+ing
+the hardware permanently stalled.
 
-If the outer loop continuously polls the hardware producer index via
-queue_sync_prod_in(), preventing queue_empty() from returning true, would
-the host CPU get stuck in an infinite loop inside the IRQ thread?
+While PRI is disabled for multi-stream devices elsewhere, the STALL path
+remains fully vulnerable, and this newly added comment propagates the false
+assumption that IOPF gating prevents this scenario.
 
-Since arm_smmu_priq_thread() runs as a threaded IRQ handler, wouldn't this
-starve other normal tasks on the CPU and lead to a soft lockup or RCU stall?
-
-Does it make sense to include cond_resched() in this loop, similar to what
-is done in arm_smmu_evtq_thread()?
+[ ... ]
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/cover.1789081084.gi=
-t.nicolinc@nvidia.com?part=3D10
+t.nicolinc@nvidia.com?part=3D7
