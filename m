@@ -1,78 +1,78 @@
-Received: from CY3PR05CU001.outbound.protection.outlook.com (mail-westcentralusazon11013020.outbound.protection.outlook.com [40.93.201.20])
+Received: from SJ2PR03CU001.outbound.protection.outlook.com (mail-westusazon11012046.outbound.protection.outlook.com [52.101.43.46])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 192F74B4892;
-	Thu, 10 Sep 2026 16:55:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.201.20
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC0DC544894;
+	Thu, 10 Sep 2026 17:12:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.43.46
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789059337; cv=fail; b=t9vYp8y5t2pjhHQxHhmKKepd0ZaNFlpy51rzt1GcXYV+mwHU5GY4LddlbJfWYs6bwxuFb7jbJQJIvXcSbtj2WM63Y1uSNZs4xME+L2MqTmIs6NIOB2BD4cpuAt4rnbnvyealIQjs6nMZT2bLXZMULRMi2d9MOG06VSQk9yXxrac=
+	t=1789060354; cv=fail; b=ndvD0LcMOoMkbkAGLR6BvxNOPhLOsY4BJ0Gusqt7SsI4nMvTx/U6VyaW1OSQ2KaJoPg3Cb6XomwLoi+l1xoxVe5KXdWPdUT6ei+raypC+TBUZhCHHjDVCOifoKNvC8WwuvD4Ayv4WMA3vtUffehrduuz36qlpTrcgq/8M65LyUM=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789059337; c=relaxed/simple;
-	bh=xT8v7Zla/zU/cmmlWNNd6nZHDVSivBolR60kg/eQ+z0=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=fQfpHqTfLeJkYWBrXTN8Zxg2rSFCCZ8df4i2BegMKBy98PQ5EoIcDZ3Il4tJSruTDOz5E9ITkOQDFabHMkPzugCvlPtgbYX8xu6PVygJJf/OPGK54bTUFTLMKwNI1CqXBSAO5xSELOPXNxgmnA0UJ6ttL/D6UlUggbV7xJI/JHM=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=LGzfE6dd; arc=fail smtp.client-ip=40.93.201.20
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
+	s=arc-20240116; t=1789060354; c=relaxed/simple;
+	bh=mOkj8KfjzFNhpZfTh0Mg2iH3bMwNHqF28slsrW2Pqx8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=HMlPPVAiEUURclUrr2l3b62ZbrkrATuR0RsPSryS8W2BbACpvFkoHwNHYp1Y4tHOp0SHweIBXw8QegmVUmyoNxF9EvdfYXqe+mUpCvwbFxcm7ao5rirUeAQuoQaEqykYEAvHKc3eNRMCZaBCS6L9EVi0oIepwcS+E8aLu7k+T/Y=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=RcGWYLNs; arc=fail smtp.client-ip=52.101.43.46
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="LGzfE6dd"
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="RcGWYLNs"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=gf3G8BHu68P6QSbzXMoRPYPlNp+pWt4fVv6JtL2FgyZx0z+hIZERnfyq5sXTP4CSWr1sReImsSz9dazqhIS4GKAdNbLE8ZU+AXfLCg2YUWKN9YHM1p9aSyHDcI/uASLaVyGguqshgAQapbd2auZesWjYIBb0jIQl1cjRtKxVGG+AJAzgJQoarRY9dKNXZpWIdy00kvhnBszmU/McblPzHgERB5X6CryYfJeQnfwCe8cYLmsd4frso2QAGBkWtj+hap64ajdatPl5P368nycEPhqQxJAbwU3+jaaJuS8d7hpHnG8Imu+Exoj7KrNouzlxT9kKp+VNGT+tQNikfiPw9A==
+ b=V7WvY/hQLeK1mELkx1Ir/mI1yoolyBz9LoS8kEqxCxNyhvLMTWHTmCZsSZBMPHPiznex37osU6tsd7skZtfXgpiRwMaJEhx/wbWSmATVBHE/9GeYYPgjf9pPfleehyK9CniIPxOKJIND8+xs0dcjRVdFS5XOkjJZP1A6DyZbiWkFGdg0l34GqR9hvWoxG6ShJBXhl15y2zsnjfDlUctebjWzmuMRDPuzvxp9a8W0wTE3Q4djKI1ZPjO6Nl8EGweZMkBStnsq1eY3BnshaQO4GyH9Uy+4oY5+IZtPUkve22LdWZoM33LbHy2tSvYFmrtL71bMHKGzbtpQ1J8VNkS3bg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=/ywRwTT4PsKJKKqeOBaSA8/1H4gM7RNZ5ERTbFB6V+g=;
- b=geQZ3erZGE3U8EmHfv0ttcuJT+h6NI3ahcZlvH2nOC4L7E9gxzrDelT8SdpSD5B58AoT1QkXPZ4POWrXa6Tqil3LZgtAnROEo+MJqoW2r9qMo+X8Tdm1ONddgKhkEe569weu/swc8tnJ6kK9Pn4m4xTRiJ6qZsEh6yflvZ+Wsha64OvtdLAgnPZcqjhwCN7jRNvAelE4N6OY6kx5JC2ebbQrmlRJyBUcAJmtC7tW85ntRHYbt1Ap+q+L9WTDh5kxDdwGXmUNBgxPEyUJhJEpD3BbRwJrDjOa97bPHhsKz7FPx7t2+upMZIB43tJVlaxgVuC7Z1ruP8HUxVWoGEhpqA==
+ bh=P7tMA52PfXUUwFSViKt8NC1NiassUU0VI3kSP2XbenY=;
+ b=cTBMqnhdQmcQtZy3jUwNv3OM/RxiBPI9yasfI6Bk1Uxq7gWn94LMdlGIBMIaObonWVouXl3pkNWkmYIfBY9sm9KxyKlzAMqvKYiO/NVa2xGrF5/ZYU7iZQUXHQmJKCP8eeabKOAISE8un7euMNqUexWiZhZfPGsLMvFZIX0Ov6LA2WAjOM7MguLY0ZGcHdVjvVNWJpD3s4s99GDqs2b/QUfFeUZ9d9KfeQxPUWfrlcSQ0XOk29O0Gg22Y0voavJBosErfbjZ98SqfcZ3ZuKCCU7QENMBx4PwSRAxT9XH77xRsX63UnC1Y5wXzNd6uZDb0GQp8VHG7bn4kua50vDfFw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
- header.d=amd.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=/ywRwTT4PsKJKKqeOBaSA8/1H4gM7RNZ5ERTbFB6V+g=;
- b=LGzfE6ddSWHZQ5ftfxte8L+gUTDdFldE++peczKNJwA1NUTcirIZxym2weQPoa6XGibeiZWD/fNkJwYnGMgK26kOLbF2M0yhWTLwu6S0+rAfADXQw8qfiuHiXNdzfVtkHa3saYnLIwbGKIid7ZnA3Xdd77ozXTUnseOy4Eamqqc=
+ bh=P7tMA52PfXUUwFSViKt8NC1NiassUU0VI3kSP2XbenY=;
+ b=RcGWYLNs1X7GvJmf1+PAHtmFIHz9OBDpwzMtHpErV3C0LOSruwewEmAyy3q0rdHYf7u11TyYr5wFSXbVKQRP9iz4RzUNVlpKM0w23EV0PbvmYeC2jLGoKM1lBNdWhlpdfWOU6+4W+YPvk0ROILJ7lhDtkS+b5Dc56aHTj+7u/5FDzsJ/Vv9RkWJSTD+16K/SPmBVLIpAtJxKZ3J2IApCEsrFvzEFYj6jRq/oR3IvtvIsi2EI35ZfbqYwdD8RP1zlIORSLdkeuWPRC5A8KXwTMjgTEVASNKE7f3vGMI7JmlT3wOFALujzMCrUTTx3qcObNNhlGcvx1RG1NxPxHd7gjg==
 Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=amd.com;
-Received: from CH8PR12MB9766.namprd12.prod.outlook.com (2603:10b6:610:2b6::10)
- by CH3PR12MB7570.namprd12.prod.outlook.com (2603:10b6:610:149::17) with
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from LV8PR12MB9620.namprd12.prod.outlook.com (2603:10b6:408:2a1::19)
+ by IA1PR12MB6435.namprd12.prod.outlook.com (2603:10b6:208:3ad::10) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.406.9; Thu, 10 Sep
- 2026 16:55:30 +0000
-Received: from CH8PR12MB9766.namprd12.prod.outlook.com
- ([fe80::be0f:431f:5f27:96d9]) by CH8PR12MB9766.namprd12.prod.outlook.com
- ([fe80::be0f:431f:5f27:96d9%5]) with mapi id 15.21.0406.007; Thu, 10 Sep 2026
- 16:55:30 +0000
-Message-ID: <90b550f6-bca9-4bb5-b38d-b4577b03ba1d@amd.com>
-Date: Thu, 10 Sep 2026 11:55:26 -0500
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v20 2/9] PCI: Establish common CXL Port protocol error
- flow
-To: "Cheatham, Benjamin" <benjamin.cheatham@amd.com>,
- Jonathan Cameron <jic23@kernel.org>, Dave Jiang <dave.jiang@intel.com>,
- Alison Schofield <alison.schofield@intel.com>,
- Vishal Verma <vishal.l.verma@intel.com>, Davidlohr Bueso
- <dave@stgolabs.net>, Bjorn Helgaas <bhelgaas@google.com>,
- Dan Williams <djbw@kernel.org>, "Rafael J . Wysocki" <rafael@kernel.org>,
- Jonathan Corbet <corbet@lwn.net>, linux-cxl@vger.kernel.org
-Cc: Tony Luck <tony.luck@intel.com>, Borislav Petkov <bp@alien8.de>,
- Hanjun Guo <guohanjun@huawei.com>, Mauro Carvalho Chehab
- <mchehab@kernel.org>, Shuai Xue <xueshuai@linux.alibaba.com>,
- Len Brown <lenb@kernel.org>, Ira Weiny <iweiny@kernel.org>,
- Li Ming <ming.li@zohomail.com>, Shuah Khan <skhan@linuxfoundation.org>,
- Richard Cheng <icheng@nvidia.com>, Robert Richter <rrichter@amd.com>,
- Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
- linux-acpi@vger.kernel.org, linux-doc@vger.kernel.org,
- linux-kernel@vger.kernel.org
-References: <20260902133933.2992457-1-terry.bowman@amd.com>
- <20260902133933.2992457-3-terry.bowman@amd.com>
- <a8ea024b-a608-4eea-bbdc-cba37b2bf2af@amd.com>
-Content-Language: en-US
-From: "Bowman, Terry" <terry.bowman@amd.com>
-In-Reply-To: <a8ea024b-a608-4eea-bbdc-cba37b2bf2af@amd.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: SA0PR11CA0034.namprd11.prod.outlook.com
- (2603:10b6:806:d0::9) To CH8PR12MB9766.namprd12.prod.outlook.com
- (2603:10b6:610:2b6::10)
+ 2026 17:12:12 +0000
+Received: from LV8PR12MB9620.namprd12.prod.outlook.com
+ ([fe80::299d:f5e0:3550:1528]) by LV8PR12MB9620.namprd12.prod.outlook.com
+ ([fe80::299d:f5e0:3550:1528%4]) with mapi id 15.21.0406.007; Thu, 10 Sep 2026
+ 17:12:12 +0000
+Date: Thu, 10 Sep 2026 14:12:10 -0300
+From: Jason Gunthorpe <jgg@nvidia.com>
+To: Sean Christopherson <seanjc@google.com>
+Cc: David Matlack <dmatlack@google.com>,
+	Logan Odell <loganodell@google.com>, arnd@arndb.de,
+	pasha.tatashin@soleen.com, rppt@kernel.org, pratyush@kernel.org,
+	graf@amazon.com, akpm@linux-foundation.org, pbonzini@redhat.com,
+	maz@kernel.org, oupton@kernel.org, bhelgaas@google.com,
+	alex@shazbot.org, kevin.tian@intel.com, dwmw2@infradead.org,
+	baolu.lu@linux.intel.com, joro@8bytes.org, will@kernel.org,
+	robin.murphy@arm.com, linux-arch@vger.kernel.org,
+	linux-kernel@vger.kernel.org, kexec@lists.infradead.org,
+	linux-mm@kvack.org, kvm@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, kvmarm@lists.linux.dev,
+	linux-pci@vger.kernel.org, iommu@lists.linux.dev
+Subject: Re: [RFC PATCH 0/3] liveupdate: Move to feature flags for LUO and
+ memfd ABI compatibility
+Message-ID: <20260910171210.GF3968357@nvidia.com>
+References: <20260903023452.721732-1-loganodell@google.com>
+ <20260904160009.GV4157646@nvidia.com>
+ <aptFFYqcSiBdMLE8@google.com>
+ <20260905012403.GX4157646@nvidia.com>
+ <aqIAtOoew-_6jw29@google.com>
+ <20260910143448.GD3968357@nvidia.com>
+ <aqLOWkuVKccR-I7W@google.com>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <aqLOWkuVKccR-I7W@google.com>
+X-ClientProxiedBy: CH0PR03CA0304.namprd03.prod.outlook.com
+ (2603:10b6:610:118::28) To LV8PR12MB9620.namprd12.prod.outlook.com
+ (2603:10b6:408:2a1::19)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -80,199 +80,204 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CH8PR12MB9766:EE_|CH3PR12MB7570:EE_
-X-MS-Office365-Filtering-Correlation-Id: cd70682b-88f3-4827-097d-08df0f5c5216
+X-MS-TrafficTypeDiagnostic: LV8PR12MB9620:EE_|IA1PR12MB6435:EE_
+X-MS-Office365-Filtering-Correlation-Id: 7d6e78ae-31bc-4215-ed82-08df0f5ea73f
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|7416014|23010399003|376014|366016|6133799003|18002099003|22082099003|3023799007|10067099003|921020|56012099006|11063799006|4143699003;
+	BCL:0;ARA:13230040|23010399003|376014|7416014|366016|1800799024|10067099003|6133799003|18002099003|22082099003|56012099006|4143699003|11063799006;
 X-Microsoft-Antispam-Message-Info:
-	o0hzWeSzqcKr+9mS9KE7rMzFKkguvm5fOoIhyjEtN+4usJ3seZwrKTJCoQbMHaLrmAHCMDEnWN0y4sbKbFqRIisppeyZjAK2vQvLFuzQZwi4C6Xx9jKlIEaQYi4x7fHurIPlppVD2a5NFfg19EG9hOYlu6mIi+qkCR0i68TGC+SSbYesbjX0XEYqObv6aSTk64hqd5WuDOvZp2hUOxQ+auMUbFGPCED0JO/4Qfgp+VqAj8eF/ubuB7Iezzht0M5NXjcgoUNydQfTzISeJcjpY9KG1nBYAQkOKuEzClBTnw38gdzlyKPcZ4064dq7CuHJOI+jcXlqYJTqYSSZ9Xd7jj2jHPVaGyW7nFEp03+S7E3aZ8dNJ4QNIjl51cXbVfIPwht0KclXiFFNBJ3qIw6oKa7YJTlm9cXzLEZjl7UN0ISKFGjQXp3Jrfmdb8zg653w1lx01YEEFXFOvK6IbFOVL6XXiIodW2qbOF5ItHCnN3gLPSu8lk6zjDPLphWOh5BJVYvM/rhyNBy/a1wL3Ty67a1cq0Lf5CzWriwDQOVgCaBN+3Zmc88fmezOrjE67r1FxIRwcF5lPB0Ppu1W/aBe/CkXB7LsYsaLOlKLwwEOromOS22O+DqmtS6wkKvJILPpah6diUEEQ3ecrrxgV1moYumfh5loUPNZ5dHhrXdWrc8qv0kQGiQQOYQx6Bbhkr6omeNjvXfeGvMmS8FbHlh6uw==
+	GKQccKKe63WIeMQodEr1ChpdjstsQwwo3mgXmpgJ8KCe2Dh34FxJytuK5U5IlFyNR6UQQ+7sZvfDIDX8+I4g4myAMUJnHBa12AbufDNiqVf6v5GYXt5eBypXBMUuNLCL/LXXxTHmSKJO3jSad+C3La54HE92szCQgXjSiiTAKQLv3weE34zTwgiQ2s1Dn6866+Y+LGOps4aHe16nStsGYBHlSBBXI7LCMAGxyOqnhjxsI8YkNFGeofkwJL9VNGx87eXMplMdvH6TLa5KD9YqodmPoavfwBs8waT2PK5Uh42nCqXZpresxfhmJVFX7NQBDhiozjsecdOYfp6g0ZC0lzoea42JFgJK3/9/UUm5ZcaoxibtN1D6+DJgJphxQ9de4CxYYdtV38NS3mPhUqX04i2h9Q3uQCu0TIHaguNuuThaKIp3v6jkAs+J5PAW8Vc3jIWvwTl6TVmqVlbJshpkDzauEcNdZFJODAwd25gRJq2gQvs7HjfQy8eTFz0GTDd8XsOJgqx5HJh99MW+K2lwbz8ro0T6bWvaHfMAt9c8e9lecSm4Vv0B2lmG0bQStISVuMdL0aDRroF5G7qfcKUu6A4WNpAzEm+DGPogUL22mVQ0o1tGeVQ9168GGPjV5QxcKFOkvT6cR9Zqf8DF2qHSzaTQx0Twh4IDxgiCQNh/m1U=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH8PR12MB9766.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(7416014)(23010399003)(376014)(366016)(6133799003)(18002099003)(22082099003)(3023799007)(10067099003)(921020)(56012099006)(11063799006)(4143699003);DIR:OUT;SFP:1101;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LV8PR12MB9620.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(376014)(7416014)(366016)(1800799024)(10067099003)(6133799003)(18002099003)(22082099003)(56012099006)(4143699003)(11063799006);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?QUlyc2RJWkJXNzZUY3A2REFuZTdXanEzdzA5emJVOE1sYjlpNWlkZ2t0QU9W?=
- =?utf-8?B?bkVRTHRJbHNSQWdoaEVnbks1QmNQTWJnQlhESkZRSnYwOVNZMFFTUXppNkpO?=
- =?utf-8?B?SWR6bjFMN2JPdms5NzRVWHVoR0VlcW1leFkwVnlEbGdiUXhVY2pmNzZLRlFC?=
- =?utf-8?B?YmxHMWxLTEp3ZDA4M1E3VjYvZjVMS09PUWNZRjFBMjVRVURDa0tjNFNkRHYz?=
- =?utf-8?B?R1RVd2dJQnVadnltcW1MMUhKOHdYTWZESjNQcUNRem9CdjFqYzlab1VLSnRI?=
- =?utf-8?B?MVVYRk5jeCtFNWMyZXJ6UmNOb3lPTWZXZTluRkxLdjVWM3NjZUY3bnI0eW5G?=
- =?utf-8?B?eTkrSy9NZEg3MVhUcXc3Q092OUZVWjNBSllLQ0oxbWlLUDIyK2xNSnkwdUNv?=
- =?utf-8?B?dTVTNXp1NHZOdXlPNy82UWUxMGNqOTVYbEhOSytDSzhsQXQ0T28yN1RXWTBN?=
- =?utf-8?B?V0tHcTBWcE05c25VODZ4OXE1QzRMZ3gyR1BxNDM5blNGL2FZandRNU9qS1M2?=
- =?utf-8?B?Y3BlVnhrQmZ5a3IrcGRQTlNnVWFKRW1EZVFRS0VONWZOdjF2RVRZZGVmaXRm?=
- =?utf-8?B?UUhod1hQb29CVllCdlEvVWZqdUFtdUUwQ21hM3ZPbkNBU0M4NGpsRzh3YWdK?=
- =?utf-8?B?SlBTUlNLWEh5OTliZnJQL01FcFFsbCtJZnM0OU51akg2ak1BWUk3MHhBemJr?=
- =?utf-8?B?bEI2T3lyZXZOTnlzTjFTcXdZeWdva3UyYnBRMEp6dUNGMm5NYkY5dzVhQjkx?=
- =?utf-8?B?L0ZHRzZBcU13TXBWM0xvQTcrSXo2bFNDYWtuSW8zcmp5MFJzTk1DRENYT25y?=
- =?utf-8?B?Tzl3WmJXKzl4cUh3Ny85NS9ZUjdUVzJpcDRlK1lrc3BpZmJmRkxydGNtUlZm?=
- =?utf-8?B?L052Z0s0OGZSaXFrd01xT1NvNmRWdXFqbjRkM2xtc3RMQUxUSWtsU3dod0hB?=
- =?utf-8?B?YzVKMFoyQ2FGV0tyVHM0UzJPdjdnSWpmRHQ4ak4vam02ZC9qZ0NHbDdFSzcr?=
- =?utf-8?B?SzdtcWhPbjVOaitSQ1BwYkVSM0RpUmpsK0FSZmFwNlNMbXllVkhhTVQwbmhR?=
- =?utf-8?B?cUVLUkUrc2x5VGdNRWxLWGxvVmlVcFlGM2x4QkZPT2lnQ0J1SnNKSCtzWk11?=
- =?utf-8?B?QjNVS2p6UFZmbzZ0d1hoU3lLemZyUW03cmlMZTdCS3dkTm1lTVM1NW4xNGJm?=
- =?utf-8?B?ajFsU2YxOFArTjU4M2dJVlF2Zmh1U3BtTzhTRElSWHQyWGNnbkFYazBnVDA3?=
- =?utf-8?B?NU5LM25OTEZENVdFOVhaUFZRcEZFaXVHVTBYMG53WThMZm41eVM4Zjc5QkFD?=
- =?utf-8?B?cHNLYU9hTk8vSVQxSDVGNk1Zb0lpY2xwL0RZcmthQzMzZHh2dlppeFVwbWE4?=
- =?utf-8?B?Z0xmcmMxWDhVNmJkMGpPUkRYYUJRT2tyRzd5ZS91YWFtdzJ3a1pMZXNsb0Rp?=
- =?utf-8?B?NGV1R2V4ZThQcXNKckx4Mm13dld4L3pZZ3NGSG5mNGlFZDhyVVUxT21JS21j?=
- =?utf-8?B?S2JJQ1ZBS0pqMzFnS0NZaTJZVFo1MU4wb3JBNzRVeUcvaDRPNEI5Q3d5VmNh?=
- =?utf-8?B?d2R5ZERjV3RLeGNNRmdKY1JDeDlTTzQrY21KQkJCWGdtcEpLZzBvNENsU3BH?=
- =?utf-8?B?dlU0Z0FubkpqSkhoMnpIWnBmaVF5eEYrakM0WGZWdGRqYjNoa3g4Mk1hNFk0?=
- =?utf-8?B?NjZXTkx1eUpHNU1BTXZSYzRjRmRiVm5Yejh5M0dYRnZBai8rdzJtcUFRSHJh?=
- =?utf-8?B?aEpxdTY3MmJneThLVG5LNkFDMks5TCtkMk50SGVsVC9xV3lWb09uMEl0Z0xZ?=
- =?utf-8?B?OW14aTRWN3NVY0U2MmlrSnhDRE92a09OUWo5M3J6WkhQU1hrZnpPS2VSUGZr?=
- =?utf-8?B?aFJ2TklGbWVqRC9oRE5Cd3hxbFZ6b3lkYzY2Zk9NaXBnSDJCa1NWejJKZEt5?=
- =?utf-8?B?TzV0bkFueFA4UUFpSzNoVWxQM3NqNnA4aHVCOWxvQTBLUGhBc3IzK1ZFSUdC?=
- =?utf-8?B?dFRTVEJiK1FJOWw4Z1JtanJ6NUpiT0FVMUF1M2VvNmJpNzBTSytQT082RXU0?=
- =?utf-8?B?cUpZdnE4MGxKMU5BRjNibCtQTG9zVjV1aXBNN0pwVnNibWZ3ZzlwUE1EMnZk?=
- =?utf-8?B?ZGJKcDYxeDg4UXNJY1pYaVBPT0syVk9RV1VIaW03aEh6VGpTT3BWQlFkZ2NM?=
- =?utf-8?B?Z0xBakNldU9Eclorc3AyUWVWUU9GeWVueEpZTGFTZTZvbm93RHhBV2VPd3Nu?=
- =?utf-8?B?UUMxYU42bC9RRVNHNzlTbEJMZXd3M2tGcUtKME9zM0taN0dnL1U1V0FSdVI3?=
- =?utf-8?Q?p4+PjLICO3veUnLeJV?=
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: cd70682b-88f3-4827-097d-08df0f5c5216
-X-MS-Exchange-CrossTenant-AuthSource: CH8PR12MB9766.namprd12.prod.outlook.com
+	=?us-ascii?Q?//bM3Afhm6tWeD55iMTwEtIEjrtpn7/llKkHijhqXiadIPQjebLiuJw9Afmb?=
+ =?us-ascii?Q?WUdAKtnetQactYlUsRoGw8chgfVhmEzvaLP0UemehCwR1cK4GTqCRMwZmPy1?=
+ =?us-ascii?Q?0KBPeYazOMMnApnIKlgDta0wkvh9J0FB2YY/Lmap7y4aTG8wB2KS3L9XqTaN?=
+ =?us-ascii?Q?b7sH8hzHuhCL/is9SZzmXcZO1KvcU76vCOw97M3kRZSj7BzFuAs1X6WTqqm1?=
+ =?us-ascii?Q?F4GManZNSo79KK8ri3+E1PQHNbHTQ3iy9JUIYAGiFw3NBt9PSKZFuMBzAoYk?=
+ =?us-ascii?Q?MzXAXt9QxXjh2swZuz2U6vP5JGmwbLKuO03qEJFDclrU6cjKTwSc77mc4M3l?=
+ =?us-ascii?Q?RDin4Zrk6AFgWqH13tCGq6n1wWq3Rt5AsJpK60vNeBvPSer0AsT8k90ufKJ6?=
+ =?us-ascii?Q?MfkZp9CGgN697Z3ShkmPAUNKWxeq5wiyBzW2I5SLZ9DwRw4nxe123yZdMceM?=
+ =?us-ascii?Q?QlcQEZOKN2a0AGXWx9z1Ws8xQ8jpayCKBL5V3m2ez0VS5PPgS1lPURKGYYhF?=
+ =?us-ascii?Q?SzsiWJBUaz0bMkCP9yp8DvR+q8atAwmUS8D+0pat1HsP7yVJo4jeGVdrJYIy?=
+ =?us-ascii?Q?KeD6QxDwJEutcdz1fOiy5D+yBj7IaV09piGVmJvWh1n94+EdlEyo5pRol4HX?=
+ =?us-ascii?Q?c2YevB9sXKtHLh4smWTb/DYf2ztk7KCo/s7DM/NBIYTimN7hGAA4msPik9Bs?=
+ =?us-ascii?Q?mUGXpUd6ZEDk2FOwLJzia3RR7SJF5LXMDDfRGjLL6PMU0p0bS2gIfvHOCOFV?=
+ =?us-ascii?Q?0h5ZmCvFZAw+0YeqXxj6YN3S6U9EWLALS3Tcl81bRA1GaRSArYx6lXxt+uD7?=
+ =?us-ascii?Q?0/mORqkUc/SXECmyAwUwZLne0lvRxbaQJpVTFYFSlbFOp0Mj+80BBqn0K5CN?=
+ =?us-ascii?Q?pW6SrlSXUHPoN8pOcaofDcdt/t67+GzMl4/7+gGX7fpSu3bKH2gkGlpnloVN?=
+ =?us-ascii?Q?fgqjdbvPbaz7mV5SSAGmYOWCDCnM/TMSlrMgbip+BdNC6H5iAlByoV0RrK/+?=
+ =?us-ascii?Q?Zq3BnY1L3J4gxA1edHD/U+PZK5FB4Y7PTqFUIUyPA+Woj+y+7nc0TkP9mGoJ?=
+ =?us-ascii?Q?/FbvRltJ1soaM/IbMyYXvkUnESap7C/MBcz633GDs986DMxnDKdF6X1d9AXA?=
+ =?us-ascii?Q?qIG/m2AK52yWvPuLl2OIO+ieC42j5LOPWcS5GI0b2sAbW+sOIgVZTtzz1Cwa?=
+ =?us-ascii?Q?1utBxWtAJZECS0stXVVfYq0lUgm5XAlBiCcefIUu/+CPB3TgOOynBp5es+3S?=
+ =?us-ascii?Q?EB1ho8YIwot0lD9DSlwg34okMT8rzD78KHyzJCBaf1kVSnj5ObWfd4SCj3cS?=
+ =?us-ascii?Q?1SPkTSnqHHSxWMxL97Q32MuJqF3Z8ZboFHvoF6X+sz69x/DrutVHdGWfHpx/?=
+ =?us-ascii?Q?qwqKFT8WK5kj3ivxRFYAQkB7zQZSQLWq/NrObaE8TyoC4J1rF3Fy3O2/AZuW?=
+ =?us-ascii?Q?hBxjcpVb0otBLcoc4FVO26pEpg3xKXP3ZCpYtdHsc6G+qg4NBv7q1XjNBjyV?=
+ =?us-ascii?Q?Knhj++8Oy7yhJi2OC/HXNADRWKv4w0z5DbxWsyTC6YG98eUzIiMvEqB0E8CE?=
+ =?us-ascii?Q?B60BlR9Ed8l+sbT7m5oQGAipBB1kKullYIYMTWU8fqH5sejOy4US3qXWu48m?=
+ =?us-ascii?Q?yitxaJ7DNKj2TJucpjTI/zvdwg+6ggSFd41Jctf0tmLVVikoq7SNp8X3wlwn?=
+ =?us-ascii?Q?im9Lkg4odRhvFhRMse7c416Hlpq/6ruOKVL4YOqb4b8j+EII?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 7d6e78ae-31bc-4215-ed82-08df0f5ea73f
+X-MS-Exchange-CrossTenant-AuthSource: LV8PR12MB9620.namprd12.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 10 Sep 2026 16:55:29.9483
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 10 Sep 2026 17:12:11.9421
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: EZiEuZ3ZkL+3v89CODu8lXOa6bMsMExuye3Gl4FGm8kaCRLxEkiIbvrBfsKQwpkOg6STorFPP+5ITBDLBpLxEQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH3PR12MB7570
+X-MS-Exchange-CrossTenant-UserPrincipalName: Jy2mFyLKp5VkZYd66lrkn8GJLcfymEeIAcdGzDgsO7SncAeXDFDy/hGzq6ek9uTV
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA1PR12MB6435
 
-On 9/2/2026 3:57 PM, Cheatham, Benjamin wrote:
-> On 9/2/2026 8:39 AM, Terry Bowman wrote:
->> Establish a single CXL protocol error path shared by CXL Virtual
->> Hierarchy (VH) and Restricted CXL Host (RCH) topologies. AER dispatch in
->> handle_error_source() routes CXL protocol errors, gated by
->> is_cxl_error(), through the AER-CXL kfifo to a cxl_core consumer for
->> logging and recovery. Producer and consumer go live together so no CXL
->> error is silently dropped across a bisect.
->>
->> is_cxl_error() expands from Endpoint-only to also cover Root Port,
->> Upstream Port, and Downstream Port. RCDs report on behalf of an upstream
->> RCH Downstream Port and instead reach the kfifo via
->> cxl_rch_handle_error().
->>
->> For uncorrectable errors, cxl_proto_err_wait_for_empty() drains the CXL
->> plane (RAS read, panic policy, state clear) before pci_aer_handle_error()
->> drives PCIe recovery, so recovery does not tear down RAS iomaps while the
->> consumer is still reading them. Correctable errors run asynchronously.
->>
->> Panic policy: cxl_do_recovery() panics on a confirmed UCE, and also when
->> the RAS registers cannot be mapped -- an unconfirmable UCE is treated
->> conservatively as fatal since CXL.mem coherency may be lost. A
->> mapped-but-clear status is logged as spurious with no panic.
->>
->> to_ras_base() centralizes RAS base lookup (dport->regs.ras for
->> Root/Downstream Ports, port->regs.ras otherwise) and provides an
->> injection point for RAS status simulation during testing. The
->> cxl_cor_error_detected() AER callback is removed; correctable Endpoint
->> errors now route through the kfifo like every other CXL protocol error.
->>
->> Update cxl_handle_rdport_errors() with locking to prevent dport from
->> being freed and RAS from being unmapped.
->>
->> At this step cxl_handle_rdport_errors() still dispatches a single
->> severity per pass (matching the pre-series baseline). The following
->> patch, "cxl/ras: Handle RCH correctable and uncorrectable errors in one
->> pass", processes a simultaneously signalled CE and UCE together.
->>
->> Co-developed-by: Dan Williams <djbw@kernel.org>
->> Signed-off-by: Dan Williams <djbw@kernel.org>
->> Signed-off-by: Terry Bowman <terry.bowman@amd.com>
->>
->> ---
->>
+On Thu, Sep 10, 2026 at 08:35:54AM -0700, Sean Christopherson wrote:
+
+> I guess maybe we have a different definition of ABI? 
 > 
-> One small nit, but otherwise LGTM:
-> Reviewed-by: Ben Cheatham <benjamin.cheatham@amd.com>
+> I'm not saying that upstream has to be 100% forwards and backwards compatible.
+> I'm saying the serialization payload itself should communicate what features are
+> effectively required.  I.e. *if* there are incompatibilities, they should be
+> naturally expressed in the serialization format, not communicated out-of-band
+> through magic numbers.
+
+The ABI strings were introduced specifically because extension makes
+the actual compatibility indeterminate by userspace. 
+
+Keep in mind the actual goal here. Someone has kernel A and they need
+to blind kexec into kernel B and NOT have the machine explode, or all
+the VMs sitting on it lost.
+
+Meaning you must have a way to determine before the kexec if kernel A
+is producing something B will *accept*. Accept is not "parse and fail
+with EOPNOTSUPP" like most uapi schems. Aceept means bring in and
+actually fully support and use.
+
+So how do you solve this problem? You MUST declare in some kind of
+manifest exactly what ABIs are supported, in some way.
+
+> The scenario you describe fits exactly with what I am proposing.  
+
+It does not. What is really wanted here is to tell kernel A to only
+support ABI 1 for memfd and so kernel A will fail to serialize if it
+cannot do it because a newer seal flag was used.
+
+We do not want to succeed to serialize then fail to accept after
+kexec and have a dead machine.
+
+This is not anything like a normal uapi compatability problem.
+
+> actually starts using the new sealing flag, the CSP can downgrade to
+> older kernels at will.  And if the user cares about downgrading,
+> then they need to prevent the flag from being used until the new
+> kernel is rollback-safe and deployed to enough hosts to prevent
+> stockout.
+
+Yeah, CSP broadly has to do exactly this across a wide range of
+topics. It is a further reason why this feature is not exactly usable
+by a "mainstream" user :\
+
+> > This is why I think the very idea we can support any version pair is
+> > too much to ask for. We should focus on supporting a small set of
+> > version pairs and not making it too invasive or hard in the kernel or
+> > on the maintainers.
+> >
+> > Thus live update within a stable branch only is my proposal for
+> > upstream support.
+> > 
+> > If it really succeeds at that and it becomes very popular, then let's
+> > discuss upstreaming doing additional version combinations.
+>
+> Why on earth would we have version numbers in the first place?  IMO, monotically
+> increasing version numbers are flat out the worst way to communicate
+> features.
+
+As above, discoverablility is a key requirement.
+
+Each version number is a very specific upstream defined ABI, in the
+sense if kernel A emits version X and kernel B accepts version X then
+kexec *must* work.
+
+You can make some manifest in other more complicated ways, but I'm
+deeply skeptical that is really going to bring any value. It feels
+like it is just increasing the testing matrix :\
+ 
+> > > I could see things like HugeTLB not working if someone booted the kernel with
+> > > support for only 1GiB pages and then tried to feed it payload with sub-1GiB ranges.
+> > > But to me, those sorts of things fall into the "well yeah, don't do that" category.
+> > 
+> > Okay, how about worse, todays kernel has hugetlbfs and there are
+> > patches around to luo serialize that. Lots and lots of talks about a
+> > post-hugetlbfs world out there.
 > 
-> ...
+> And?  Adding a compatibility layer to a future kernel so that it
+> understands an incoming HugeTLBFS payload should be trivial.
+
+From my experience that's optimistic :(
+
+> > Do we want to constrain what is possible to ensure we accomodate this
+> > hugetlbfs serialization? I vote no.
 > 
->>  pci_ers_result_t cxl_error_detected(struct pci_dev *pdev,
->>  				    pci_channel_state_t state)
->>  {
->> -	struct cxl_dev_state *cxlds = pci_get_drvdata(pdev);
->> -	struct cxl_memdev *cxlmd = cxlds->cxlmd;
->> -	struct device *dev = &cxlmd->dev;
->> -	bool ue;
->> +	struct cxl_port *port __free(put_cxl_port) = find_cxl_port_by_uport(&pdev->dev);
->> +	bool ue = false;
->> +
->> +	if (!port)
->> +		return PCI_ERS_RESULT_DISCONNECT;
->> +
->> +	if (is_cxl_restricted(pdev))
->> +		cxl_handle_rdport_errors(pdev);
->>  
->> -	scoped_guard(device, dev) {
->> -		if (!dev->driver) {
->> +	scoped_guard(device, &port->dev) {
->> +		if (!port->dev.driver) {
->>  			dev_warn(&pdev->dev,
->> -				 "%s: memdev disabled, abort error handling\n",
->> -				 dev_name(dev));
->> +				 "%s: port disabled, abort error handling\n",
->> +				 dev_name(&port->dev));
->>  			return PCI_ERS_RESULT_DISCONNECT;
->>  		}
->>  
->> -		if (cxlds->rcd)
->> -			cxl_handle_rdport_errors(cxlds);
->>  		/*
->> -		 * A frozen channel indicates an impending reset which is fatal to
->> -		 * CXL.mem operation, and will likely crash the system. On the off
->> -		 * chance the situation is recoverable dump the status of the RAS
->> -		 * capability registers and bounce the active state of the memdev.
->> +		 * The CXL RAS read is unconditional regardless of channel
->> +		 * state. Any uncorrectable error bit set in the CXL RAS
->> +		 * status register triggers a panic below because CXL.mem
->> +		 * cache coherency is already lost; continuing risks silent
->> +		 * data corruption.
->>  		 */
->> -		ue = cxl_handle_ras(&cxlds->cxlmd->dev, cxlmd->endpoint->regs.ras);
->> +		ue = cxl_handle_ras(port->uport_dev, to_ras_base(port, NULL));
->>  	}
->>  
->> +	/*
->> +	 * CXL.mem UCE means cache coherency is lost. Continuing risks
->> +	 * silent data corruption.
->> +	 */
+> In what way is providing strong ABI guarantees for individual components
+> constraining HugeTBLFS serialization?
+
+I bet it will. Other things we've looked at seemed to be like that.
+Even the above about "yall screwed up" with memfd has the problem
+already. I don't believe we can ever do this so right that it won't be
+constraining to the kernel internals.
+
+> > Do we want to reject the hugetlbfs serialization until we have a year
+> > of debate outlining every possible ABI scenario? I also vote no.
 > 
-> Don't need this comment and the last sentence in the comment above.
+> That's a bit of a strawman argument.  Is designing a forward-looking ABI easy?
+> No, but IMO "a year" is a massive exaggeration of the effort required to come up
+> with a scheme that can survive a variety of plausible upgrade/downgrade scenarios.
 
-I'll keep the panic-site comment (it's the "why" at the point of consequence) and will 
-remove the duplicated coherency/corruption sentence from the block comment above (done 
-in 2/9) so there's no duplication at any point in the series.
+Have you tried to get anything merged into the kernel lately? I've got
+lots of uncontroversial stuff pushed out past 4 months already. Some
+luo patches are close to a year already and don't even have any
+controversy.
 
--Terry
+> And again, I'm not saying we have to support infinite compatibility.  
 
->> +	if (ue)
->> +		panic("CXL cachemem error");
->> +
->>  	switch (state) {
->>  	case pci_channel_io_normal:
->> -		if (ue) {
->> -			device_release_driver(dev);
->> -			return PCI_ERS_RESULT_NEED_RESET;
->> -		}
->>  		return PCI_ERS_RESULT_CAN_RECOVER;
->>  	case pci_channel_io_frozen:
->>  		dev_warn(&pdev->dev,
->>  			 "%s: frozen state error detected, disable CXL.mem\n",
->> -			 dev_name(dev));
->> -		device_release_driver(dev);
->> +			 dev_name(port->uport_dev));
->> +		device_release_driver(port->uport_dev);
->>  		return PCI_ERS_RESULT_NEED_RESET;
->>  	case pci_channel_io_perm_failure:
->>  		dev_warn(&pdev->dev,
->> @@ -335,3 +371,82 @@ pci_ers_result_t cxl_error_detected(struct pci_dev *pdev,
->>  	return PCI_ERS_RESULT_NEED_RESET;
->>  }
->>  EXPORT_SYMBOL_NS_GPL(cxl_error_detected, "CXL");
+Okay, I said same stable branch only, do you have some wider
+limitation in mind?
 
+> > Should we make a downgrade round trip a downstream problem? I think
+> > so!
+> 
+> Hard NAK.  There will inevitably be boundaries that cannot be crossed, but I am
+> not at all ok punting on downgrades.  To me, that's basically saying "we want to
+> add just enough support upstream so that it's not too painful to carry full support
+> out-of-tree".  That completely goes against the spirit of open source and upstream
+> Linux, and I want no part of it.
+
+I generally agree with you sentiment, but I think this is a unique
+case. I've asked around a fair bit, this is sufficiently complicated,
+requires alot of userspace that the CSPs are not open sourcing so has
+a very minimal usage foot print out side their world. I found one
+other possible user that might be more open source oriented..
+
+So, if I was feeling unreasonable I'd say stay out of the upstream
+kernel entirely.
+
+Though, I think this could grow and maybe some open source ecosystem
+will develop around it. I don't know. I'm willing to give it a
+chance.
+
+HOWEVER upstream is not some kind of free outsourcing for the CSP's
+proprietary forks! Do not ask maintainers to do significant and
+burdensome work that only a CSP is ever going to consume and can only
+really work in a closed proprietary environment. There is no "spirit
+of open source" in that kind of demand. I will be NAKing anything like
+that in my subsystems, I am not signing up to do live update stable
+ABI so the CSPs alone can have a better proprietary product.
+
+This is how I come to my conclusion that upstream should support same
+stable branch only at this point. It minimizes the burden, it is a
+decent trail of the technology, and if things go well with a quality
+open ecosystem then sure, upstream can change its mind.
+
+Jason
