@@ -1,184 +1,168 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj2-f12.google.com (mail-pj2-f12.google.com [74.125.227.140])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8727631195B
-	for <linux-pci@vger.kernel.org>; Thu, 10 Sep 2026 12:29:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 15EFC48EC96
+	for <linux-pci@vger.kernel.org>; Thu, 10 Sep 2026 13:47:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.227.140
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789043394; cv=none; b=fzKrUIvGcLDaQySjBvS8RWoe+swIjZUZBvTBYVjHeRGG2+1AGrv2TpRHZk3oR3j1s49n67twxKxw3ceItCbj5URF+W7NgKTP5kA4n+dgEc1vhIgVp9LxjuGTwSrIx5gJopIl0T4SKpB9AXDgHWfqVLOXZzz4s1C+b/7recQn17I=
+	t=1789048043; cv=none; b=H7dYBUYSC+oOPtGUqOW4Ot6Xy5X0KTI4OUDv+cG8mbdqvEfSQ+3OHEelN+VuzY8EdE7Eyi/7MDBWbS/Q+2thOhIOLwS/gz7lCYTmhObFaWZ3q95Qoar+AmAsI57qrFYYFX7We5N+/E1Yf7HM89pEZu0KuzrI5y4uLCziI4Lnp8w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789043394; c=relaxed/simple;
-	bh=HP3n0+fQsuSx5NOdZwydXBEGRhP3jZCeZ9qDRXY/yUU=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=ROP0SltqXX+E5T8oiQd77c/c167sWwl6DY1NlMH7jSxcYVaYwCPD0DoOn8oKJHwAa9qEIgUxKPQ5cJUf8bh8cHLYVm+mK0V5v90CPu3LeHzfvuILH4gcUcBdZ8SR73TeRmDajkvy27YfNU0oUiII9TedatCMbOs+gB1K4G+Z4w4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=maYcEami; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789048043; c=relaxed/simple;
+	bh=EAupyPyuOf7QDpZYE61msvaSyoWYmzVXc55xqZ5Wf/g=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=HelbvsdfLAT2UJZ5nySCU0L+eUdaG3S6wRDtdI8QKG5JVLy8iPb8NK1gfiS/F0R0YJGjYSCokNASRGHG8HqWXL9zGyjT1PKmP7ZCCjK7XqTcSBUDwEtXg/9+44FS/KGmuBqUfodsvI+176LOhO4lDGhe+RNtrVQGLTSkjGzSFTY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=j9l6kO6+; arc=none smtp.client-ip=74.125.227.140
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="maYcEami"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F22181F000FF;
-	Thu, 10 Sep 2026 12:29:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789043393;
-	bh=buZPg/e3Ur+FJhalJYfLpA8KBsI/H6sJqmdaH+EHx7o=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=maYcEamiy+5K6EbkdrSHzUofp0+4DsOw5/qtp9wUVHWUZiW+a0lYAy+d4gfD+HuxV
-	 A6Xo8vyUbAnf28L2rP0gk73NFwHoTpifIjnEu+gqLsbgHVAJQacz3Ws3Pc8Vr4zt1J
-	 36ddAU7Q+xTSenluoMxxzqVgnLMshKS6tCjUIeG0c6RJpJ51/1dTuqjfANrynu0AfS
-	 hBpID+7aV6qgSsSXezHrNynp7PF3scwseo9aT8tOx02izHuB6B/ccV9t5vtX5LJ/fs
-	 In0A227td1A+hrdmR+Njgsu5DkggebDe4U0WqqOhdOHJBGKH4krum4NVXUP2wd7E+6
-	 l/tFiV9Z7WztA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] PCI: rpaphp: report first slot registration error
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Adriano Cordova" <adrianox@gmail.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260910121330.339150-1-adrianox@gmail.com>
-References: <20260910121330.339150-1-adrianox@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 10 Sep 2026 12:29:52 +0000
-Message-Id: <20260910122952.F22181F000FF@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="j9l6kO6+"
+Received: by mail-pj2-f12.google.com with SMTP id d9443c01a7336-2d6ff3aca07so74165ad.1
+        for <linux-pci@vger.kernel.org>; Thu, 10 Sep 2026 06:47:21 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1789048041; x=1789652841; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=4Er/jDsnNRoh+QmJEZXA5qaI6MvfZ+ynzviSkzMrOHk=;
+        b=j9l6kO6+L+iQAPhxFveNuolq4A8YLIACWkXBoQYERG+zilDQzlFZ4ox3m8o1+ynozK
+         g38rPhlQrPJhl4K6Tr4+LDXV0YzPLq5tzKtfIpjLH4ARl8TdIWR0GgtSlLm2HDN2sOqv
+         R5ynpe1jJVnXpeRNXEIReTrO2KQL+SGF9XRv7/1dgfiwrouNQthIS7k5unVYRjduj8Gu
+         jtSwcAtazV0yrSEt0bE8Y8iRkkLqBw0iI0mJ9vsZU7B7U/Cd+VxRpQQiqHCjPLOcIw+N
+         SVsnP6d60IoMisfhQ6WFCCF4VZiyHNf4Tbcn9jqSjsIxXqC3DEgEOq2n9KayQaQuVSMD
+         M4VA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1789048041; x=1789652841;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=4Er/jDsnNRoh+QmJEZXA5qaI6MvfZ+ynzviSkzMrOHk=;
+        b=GusJya+D7i6Cq0OPqUf1chBsC/picG1BBzjgZak7+AjKsiOJFn4F+hAwkmHOoQu//a
+         U8TaCnfpg085CDm96wa26UT/k6VgnW/ns/dgQuNIQ3aUGaZQmYtUAXVRbV1MVokjMQAY
+         /ZybBV0EtRfsliU2xB8QDLpAQZrbOtWCtJCe4gKCVNnrACUlEeo8RPRiXNd+W3gsrkvP
+         SamXB7EIMf4RUddHaQ3iXxpimbhulwq1MODTS064rXejhvhLLkYW0gP/peBq5n9pFliE
+         JZDGRleoHW5zo84Ko6nLlIaxqbNbAeXNPF0jjAfdvEiLRHwoD1K9NWNudOO/Z5FdXGLm
+         uP7A==
+X-Forwarded-Encrypted: i=1; AKwUvBxNtTX3nOJldNWyNcto9GBFvwtrg8fD/jX4xqZwSXdoLtj4tn/xBFAyaZSzNam6qUgqvrpAINndY5s=@vger.kernel.org
+X-Gm-Message-State: AFuF++mMwWvwhDJyyDWjL1IKk9S4LCZ/sY7PdDzOpXlbW5ptAUFUQEis
+	fY2Lzbk1qPYF6xbIm/dF5r8+fIw4UXQfJPZxaaLJ+SkFEODVY1EnUVAstDxiO5fPaw==
+X-Gm-Gg: AYBFou1eLhePDqEzDCRXqJQfCiZESE/rzLKM1Vr1MdXVx+nSVE0dQ3/jIWY4EK2fHhK
+	qRo8qPB1nNL9L7h2LmFfh6JF3cYIVZT376Y+sepvuLLjfDYuD5hYMD1BiESIowLDv9/UWIXD67C
+	fr73QktTvBfLKXUKzlAU5LYPkRbR9mns1XqYVnFjoWaJwmUZFZF88cwYCKMjXupySlnDjtjpQ+m
+	diOsq9f/BgDqVA3uwil7j3QepuSmT9jPQFYqBJUYbKCMMKrhxCqHzF9QbuyAHEX6YoUQcZ6YJbm
+	pqWWI/bFxi43QL0IbtW2PkOYDLKB7NIvyE5LUro/WKzxMHoroIKdCYXzQUtkRpOo1pASe4r615a
+	OfRJ9WcrVd0vPtVWrZ/aupeTdxjfYcLhXVBOY/PqTPIb8VhnOO7bd6rPdAmR5TIVsj9RXyobxmj
+	soLU7XgxRuhaU49LiQcQ4YDGXytd8ak9sykbSklrKIVL4qSJ7i+DkvbBjvgJWoEdhCoVpMkpSGi
+	Hly3CpQyQICbqKI+I92KGFkJH3f1X3CHcYofKUExjFKw1Q=
+X-Received: by 2002:a17:903:4b46:b0:2d3:153d:acae with SMTP id d9443c01a7336-2dd109d9e59mr7015225ad.0.1789048040913;
+        Thu, 10 Sep 2026 06:47:20 -0700 (PDT)
+Received: from google.com (164.210.142.34.bc.googleusercontent.com. [34.142.210.164])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2db1483ea94sm89902865ad.9.2026.09.10.06.47.18
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 10 Sep 2026 06:47:20 -0700 (PDT)
+Date: Thu, 10 Sep 2026 13:47:14 +0000
+From: Pranjal Shrivastava <praan@google.com>
+To: Vasant Hegde <vasant.hegde@amd.com>
+Cc: Jason Gunthorpe <jgg@nvidia.com>, iommu@lists.linux.dev,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Joerg Roedel <joro@8bytes.org>,
+	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
+	Ankit Soni <ankit.soni@amd.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Samiullah Khawaja <skhawaja@google.com>, sashiko-bot@kernel.org
+Subject: Re: [PATCH v3 2/5] iommu/amd: Fix DTE clearing and rename
+ iommu_ignore_device()
+Message-ID: <aqK04hq575iwY5BR@google.com>
+References: <ao3RF0w_AXo5EXxv@google.com>
+ <20260825175315.GD3325090@nvidia.com>
+ <ao3oHn8HiXIx5Wrl@google.com>
+ <50ffc453-f918-47f8-9556-9813308690a9@amd.com>
+ <20260826122147.GA3666382@nvidia.com>
+ <bfb7be5b-2da3-4bd3-8146-9bd079011a75@amd.com>
+ <20260828115331.GC3922654@nvidia.com>
+ <399db967-050d-48dc-afb5-5c77ee9cce65@amd.com>
+ <20260904142547.GU4157646@nvidia.com>
+ <9be08ef1-7ae0-483a-938e-17e606b5d214@amd.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <9be08ef1-7ae0-483a-938e-17e606b5d214@amd.com>
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
-s) to consider:
+On Thu, Sep 10, 2026 at 05:25:25PM +0530, Vasant Hegde wrote:
+> 
+> 
+> On 9/4/2026 7:55 PM, Jason Gunthorpe wrote:
+> > On Fri, Sep 04, 2026 at 03:43:01PM +0530, Vasant Hegde wrote:
+> >> Jason,
+> >>
+> >>
+> >> On 8/28/2026 5:23 PM, Jason Gunthorpe wrote:
+> >>> On Fri, Aug 28, 2026 at 10:46:48AM +0530, Vasant Hegde wrote:
+> >>>>> Having the driver boot up with all DTEs programmed to identity (eg
+> >>>>> 0'd) and then try to fix them to blocking after the iommu probes
+> >>>>> devices is security backwards.
+> >>>>
+> >>>> During boot, it only sets dte.v bit.
+> >>>
+> >>> First it clears it to fully 0, what does 0 do in HW?
+> >>
+> >> IF DTE is fully zero, then all requests are blocked for that devid.
+> >>
+> >>>
+> >>> It doesn't make sense that you'd pass over the DTEs after
+> >>> probing if the original 0'd DTE was actually blocking?
+> >>
+> >> During boot, it sets certain default values includ dte.v. It doesn't
+> >> clear everything.
+> > 
+> > ?? It starts out with a 0 DTE table? There is no inherited DTE table
+> > except for kdump.
+> > 
+> >> May be we should just remove ignore_device() completely? as
+> >>   - normal boot, its not yet configured, so no DMA is allowed
+> >>   - kdump boot, old DTE is still valid and let it continue?
+> > 
+> > Yes, that makes alot more sense to me.
+> 
+> Ack. @Pranjal, Can you fixup and send v4?
+> 
 
-New issues:
-- [High] Changing the return value to track `first_error` without adding ro=
-llback logic causes callers to fatally abort on partial successes, actively=
- leaking successfully registered slots and major resources.
+Ack. I'll remove ignore_device entirely and drop patch 3 for v4.
 
-Pre-existing issues:
-- [High] DLPAR remove only deregisters the first hotplug slot for a device =
-node, leaking any remaining slots and risking a use-after-free.
-- [High] Missing pci_lock_rescan_remove() when adding PCI devices during lo=
-ckless slot enablement.
---
+> > 
+> > But this comment is also wrong:
+> 
+> Yeah. One of the cleanup patch missed to update below comment.
+> 
+> > 
+> >         /*
+> >          * Order is important here to make sure any unity map requirements are
+> >          * fulfilled. The unity mappings are created and written to the device
+> >          * table during the iommu_init_pci() call.
+> >          *
+> >          * After that we call init_device_table_dma() to make sure any
+> >          * uninitialized DTE will block DMA, and in the end we flush the caches
+> >          * of all IOMMUs to make sure the changes to the device table are
+> >          * active.
+> >          */
+> >         for_each_pci_segment(pci_seg)
+> >                 init_device_table_dma(pci_seg);
+> > 
+> > The DTE starts out with blocking because it starts out as 0. This
+> > isn't making the DTE blocking, it is doing something else. And it is
+> > very suspicious and racey looking to me.
+> 
+> IIRC there were some requirement to keep V bit ON. Otherwise I don't see why we
+> should set and flush the dte here. Let me dig the details.
+> 
 
-commit 5c0fcbf749d55b7d5f494a28af745273bc4f6af3
-Author: Adriano Cordova <adrianox@gmail.com>
+Should I also update the comment in this series? (It seems less relevant
+to the ATS stuff)
 
-    PCI: rpaphp: report first slot registration error
-   =20
-    rpaphp_drc_add_slot() overwrites retval on every loop iteration, so a
-    failure to register a slot is lost if a later slot registers
-    successfully and the function returns success.
-   =20
-    Track the first error and return it, while still attempting to register
-    the remaining slots.
-
-> diff --git a/drivers/pci/hotplug/rpaphp_core.c b/drivers/pci/hotplug/rpap=
-hp_core.c
-> index 2316de0fd1982..af7241d526cf4 100644
-> --- a/drivers/pci/hotplug/rpaphp_core.c
-> +++ b/drivers/pci/hotplug/rpaphp_core.c
-> @@ -376,6 +376,7 @@ static int rpaphp_drc_add_slot(struct device_node *dn)
->  {
->  	struct slot *slot;
->  	int retval =3D 0;
-> +	int first_error =3D 0;
->  	int i;
->  	const __be32 *indexes, *names, *types, *power_domains;
->  	char *name, *type;
-
-[Severity: High]
-This is a pre-existing issue, but does dlpar_remove_pci_slot() incorrectly
-assume a 1:1 mapping between device nodes and slots?
-
-The loop in rpaphp_drc_add_slot() can register multiple hotplug slots point=
-ing
-to the same device node. During a DLPAR remove operation,
-dlpar_remove_pci_slot() in drivers/pci/hotplug/rpadlpar_core.c calls
-find_php_slot(dn), which returns only the first matching slot:
-
-drivers/pci/hotplug/rpadlpar_core.c:dlpar_remove_pci_slot() {
-    ...
-    slot =3D find_php_slot(dn);
-    if (slot) {
-        pr_debug("PCI: Removing hotplug slot for %04x:%02x...\n",
-                 pci_domain_nr(bus), bus->number);
-
-        if (rpaphp_deregister_slot(slot)) {
-    ...
-}
-
-Does this mean deregistering only the first slot will leave the remaining
-slots permanently leaked, risking a use-after-free when they later try to
-dereference a freed slot->bus?
-
-[ ... ]
-
-> @@ -407,16 +408,18 @@ static int rpaphp_drc_add_slot(struct device_node *=
-dn)
->  		if (!retval)
->  			retval =3D rpaphp_register_slot(slot);
-
-[Severity: High]
-This is a pre-existing issue, but does calling rpaphp_enable_slot() just
-before this registration modify the PCI bus devices list without holding the
-required locks?
-
-rpaphp_enable_slot() eventually calls pci_hp_add_devices(bus) locklessly,
-but PCI rules require holding the pci_lock_rescan_remove() mutex when
-modifying PCI bus structures:
-
-drivers/pci/hotplug/rpaphp_pci.c:rpaphp_enable_slot() {
-    ...
-        if (list_empty(&bus->devices)) {
-            pseries_eeh_init_edev_recursive(PCI_DN(slot->dn));
-            pci_hp_add_devices(bus);
-        }
-    ...
-}
-
-Can this data race lead to list corruption or a use-after-free if it races
-with a standard PCI sysfs rescan?
-
-> -		if (retval)
-> +		if (retval) {
-> +			if (!first_error)
-> +				first_error =3D retval;
->  			dealloc_slot_struct(slot);
-> +		}
-> =20
->  		name +=3D strlen(name) + 1;
->  		type +=3D strlen(type) + 1;
->  	}
-> -	dbg("%s - Exit: rc[%d]\n", __func__, retval);
-> +	dbg("%s - Exit: rc[%d]\n", __func__, first_error);
-> =20
-> -	/* XXX FIXME: reports a failure only if last entry in loop failed */
-> -	return retval;
-> +	return first_error;
->  }
-
-[Severity: High]
-Does returning first_error instead of 0 here cause callers to leak resource=
-s?
-
-Because callers like dlpar_add_pci_slot() in
-drivers/pci/hotplug/rpadlpar_core.c treat any error as a fatal failure and
-immediately abort without rolling back prior allocations:
-
-drivers/pci/hotplug/rpadlpar_core.c:dlpar_add_pci_slot() {
-    ...
-	if (rpaphp_add_slot(dn)) {
-		printk(KERN_ERR "%s: unable to add hotplug slot %s\n",
-			__func__, drc_name);
-		return -EIO;
-	}
-    ...
-}
-
-If an early slot in a multi-slot device node fails to register here but a
-later slot succeeds, does returning an error instead of 0 convert a previou=
-sly
-resilient partial success into a fatal abort that permanently leaks the
-successfully registered slots and prior PHB structures?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260910121330.3391=
-50-1-adrianox@gmail.com?part=3D1
+Thanks,
+Praan
