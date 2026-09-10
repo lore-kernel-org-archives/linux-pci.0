@@ -1,68 +1,198 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E78D5356A12;
-	Thu, 10 Sep 2026 11:31:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC775473C8D;
+	Thu, 10 Sep 2026 11:32:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789039884; cv=none; b=B3fG9OGYHEA7us5lyNTkwDesaHUsu7zWEWBq9tAkALKuA9pPK8wNcS3MTbTU3guB01HVklyk6AFCxdDRNCenu3VJgnBCgGeEopHB2+w1nOWH+A3irwlodoO/qPQajeKbNJrUR7vZULf0TtImO3yVmLiZQZO1C4Vbqbcpt9Jkr4E=
+	t=1789039944; cv=none; b=nf/6NRGyO9Kx+ViN5Wum8pZ8rAeF/3nqMwXBLDQROjJcp3kIgDqb2IS4v1y9vMAK+XVmLeQccEVHgDZa4pmw13Kc2PQJ561JpTxOly2Mxl8euHUOE1+JjDZtYz2HRatieyVcjmbqT0LcTUt7oRuQfTiBZ3RONTn8W39WGjXKGyo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789039884; c=relaxed/simple;
-	bh=zU3vzRxNIUcnktzrPzbJWxvzmBDjHsD2XrBZqp7kI6c=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Qm5lFmzmso4hUr9zBPJVwascBtVv3etOJOlePlGpPef83CST51aYSthKPcHmm5YYDPKwJiS5rXRfDX9jBRJk4ROIiayt4Zo5XSfodaoHQdbfp23H/FBjZGqB0fiQ7rpHkQ3y3lNNfWIphpVHoBUDvx7ooJ4td+HOAVyXEf/f7A4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BWJWaPd1; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789039944; c=relaxed/simple;
+	bh=guuQ7wwKZUwLx7UiZZC1ZQd84JB6TuOKX2Pp/HhqaJo=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=uzxhkavNdf5UGVmuuZ00S888geWViyioliPA911phmkyXCYZrjUkJHZWWa50cJST5vUCpYOg4JZ6ue6q+/XJ1cHahky/oynGdex3umiHYDMQnbacaJ6vgfW+GplahpfIUO8ChMnB3qYjcB/P0uEfixfgx7ur/nzkZHy7+H5tFvQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Do01+mJx; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BWJWaPd1"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0F7711F000FF;
-	Thu, 10 Sep 2026 11:31:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Do01+mJx"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BDDA91F000FF;
+	Thu, 10 Sep 2026 11:32:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789039882;
-	bh=sp+g2kf4DjcHYNr0fZESaZatEX+25HJxulaJdt99lS8=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=BWJWaPd1d+Zc7JDdTCN9K2rRGLgVrvGxMtotAH/+SmbALwSZp/ZRim4cTj7UolVIP
-	 cI5hNqZIXZYV8DrjrK7uSMpS31fcFp/74rpUDEQXh+GsJqkRiys9CwcFff7WdUBghU
-	 kn7Xq1rXNzg4AH0thQm3BoFKKY3/V1A5lzGu/b4wTseWQPgZpKMvxA9hUYWH9QS5Oz
-	 j2GWXBUsxbcbxM9yteMHkAIFoqnUob0PMfhr0ckrJPyNehFKc5sKCpWZQVzEM1e8eC
-	 pADtLQrCDtEWtqM5fgs5d71LN/6qZuVrsMC9AIQ4po+6kY0yweYIffVQbyytB/Ul1w
-	 MG5UAOdnUwMrg==
-Date: Thu, 10 Sep 2026 13:31:13 +0200
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Deepanshu Kartikey <kartikey406@gmail.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, syzbot+7134530b25073b4ef373@syzkaller.appspotmail.com
-Subject: Re: [PATCH] PCI: sysfs: Reject unaligned resource I/O port accesses
-Message-ID: <wmlvf7r5xd6ibcc6kimlqylfkvzgim44n364wmqugrj4tntlrm@mld5ilctx6wa>
-References: <20260809045946.15638-1-kartikey406@gmail.com>
+	s=k20260515; t=1789039940;
+	bh=/5lV9MjZaztRFYg3vjhl4EG1VZR677irc2LZYKqH59o=;
+	h=From:To:Cc:Subject:Date;
+	b=Do01+mJxQK7jBMq7wXc+aGa3oVXgUc/D8bf5MwNfGyp6PIDB8UuEpWjggru5ypmtf
+	 nBaCMotsiYv0Eg5mC7xqgenQiTBsuBWLuW0QO9ZuJusO543nVsWxQJR6/zWL5u+WSn
+	 ndS9CKhoq2TttJuRAWbhq2P3ql/6GVzemrnkc2YLksyoEW6vsSLnKnpwiT3X3F3sVe
+	 vHsVOp0UrX5Y7Y/eh1lcnifR+HsBzGBubdxs1eoqT2QLyeW5jq6NhZKhr/amlQgyDa
+	 eumkFL9s6PUQTAgaCXaVF7L8IK9eIzIkfRzTgmbmcmBBg7Q5tz5DuzuulLFw4Vmva5
+	 m0eqXfQCr/Wig==
+From: Leon Romanovsky <leon@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Logan Gunthorpe <logang@deltatee.com>,
+	Chaitanya Kulkarni <kch@nvidia.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Jens Axboe <axboe@kernel.dk>,
+	Alex Williamson <alex@shazbot.org>,
+	Leon Romanovsky <leon@kernel.org>,
+	Ankit Agrawal <ankita@nvidia.com>,
+	Jason Gunthorpe <jgg@ziepe.ca>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	"Joerg Roedel (AMD)" <joro@8bytes.org>,
+	Will Deacon <will@kernel.org>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Sumit Semwal <sumit.semwal@linaro.org>,
+	=?utf-8?q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>
+Cc: linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-doc@vger.kernel.org,
+	iommu@lists.linux.dev,
+	Tushar Dave <tdave@nvidia.com>,
+	linux-media@vger.kernel.org,
+	dri-devel@lists.freedesktop.org,
+	linaro-mm-sig@lists.linaro.org,
+	linux-rdma@vger.kernel.org,
+	kvm@vger.kernel.org,
+	Matt Evans <matt@ozlabs.org>
+Subject: [PATCH v5 00/18] PCI/P2PDMA: Route peer-to-peer DMA by TLP class
+Date: Thu, 10 Sep 2026 14:31:55 +0300
+Message-ID: <20260910-fix-p2p-acs-v4-0-v5-0-856087f63c0d@nvidia.com>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+Content-Type: text/plain; charset="utf-8"
+X-Change-ID: 20260821-fix-p2p-acs-v4-0-e72455e3a261
+X-Mailer: b4 0.15-dev-18f8f
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260809045946.15638-1-kartikey406@gmail.com>
 
-On Sun, Aug 09, 2026 at 10:29:46AM +0530, Deepanshu Kartikey wrote:
-> pci_resource_io() validates that off+count stays within the BAR's
-> range but never checks that the resulting port is aligned to the
-> access size. A pwrite64()/pread64() on a resourceN file with an odd
-> offset and count=2 or count=4 reaches outw()/outl() with a misaligned
-> address. On arm64 this becomes a store/load to a Device-memory
-> mapping (PCI_IOBASE + port), which architecturally requires natural
-> alignment, causing an alignment fault and kernel oops.
-> 
-> Reject misaligned accesses before they reach the low-level accessor.
-> 
-> Reported-by: syzbot+7134530b25073b4ef373@syzkaller.appspotmail.com
-> Closes: https://syzkaller.appspot.com/bug?extid=7134530b25073b4ef373
-> Signed-off-by: Deepanshu Kartikey <kartikey406@gmail.com>
+PCI P2PDMA applies Request and Completion Redirect throughout both paths.
+This misclassifies asymmetric and nested switches, and reports one answer
+for every kind of TLP.
 
-Acked-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Three ACS controls act on TLP attributes the client chooses rather than
+on the topology: Translation Blocking and Direct Translated P2P act on
+a Request's Address Type, and Completion Redirect skips Completions carrying
+Relaxed Ordering.
 
-- Mani
+Evaluate each direction at the path divergence, decide every class from the
+one walk, expose the provider to dma-buf importers, and let mlx5 ask rather
+than assume.
 
--- 
-மணிவண்ணன் சதாசிவம்
+Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
+---
+Changes in v5:
+- Rebase on the posted fixes.
+- Dropped tags from changed patches.
+- Remove Egress Control Vector interpretation and coverage.
+- Keep enabled Egress Control conservative as a Request redirect.
+- Use pci_dbg()/dev_dbg() for diagnostics and drop the "debug" prefix.
+- Removed code comments from "Document the pdev->p2pdma lifetime and RCU
+  rules" patch and reduced description to actual lifetime explanation.
+- Added note that Linux assumes that TLPs are in strict-ordering and
+  untranslated.
+- Added code to calculate p2p paths per-TLP type.
+- Converted mlx5 to use that new proposed API.
+- Link to https://patch.msgid.link/20260821-fix-p2p-acs-v4-0-v4-0-94426b96de73@nvidia.com
+
+Changes in v4:
+- Reject ACS Violations and unreadable routing state instead of treating
+  them as host-bridge redirects
+- Added Tested-by tags from Tushar Dave
+- Added support to asymmetric ACS routing
+- Limited redirect checks to the two ports at the path divergence
+- Added standalone ACS routing diagnostics for hardware retesting
+- Dropped " PCI: Account for Direct Translated P2P in ACS isolation checks" patch
+- Link to v3: https://patch.msgid.link/20260811-fix-p2p-acs-v3-0-efc488ee7c03@nvidia.com
+
+Changes in v3:
+- Fixed pci_p2pdma_add_resource() error unwinding
+- Made pdev->p2pdma teardown wait unconditionally for RCU readers
+- Restricted pci_p2pmem_find_many() to pool-backed providers
+- Documented the pdev->p2pdma lifetime and RCU rules
+- Fixed calc_map_type_and_dist() handling of the verbose argument
+- Required the ACS port and target to share a bus before indexing the
+  Egress Control Vector
+- Gave pci_acs_enabled() and pci_acs_path_enabled() a scope, so the ACS
+  Direct Translated P2P rule no longer stops pci_enable_pasid() from
+  enabling PASID
+- Dropped "Report ACS ports when the paths share no upstream bridge":
+  the mapping type cannot change without a shared upstream bridge, so
+  the pci=disable_acs_redir= hint was not actionable there and the ACS
+  walk only cost config space reads
+- Folded the Request Redirect rule into pci_acs_rr_ineffective(), so
+  pci_acs_flags_enabled() and the Intel SPT PCH quirk share one copy
+- Renamed pci_acs_egress_ctrl_set() to pci_acs_egress_ctrl_is_set(), it
+  reads the bit rather than setting it
+- Reworded the blocked-path warning: ACS may also leave the direct route
+  indeterminate rather than blocked
+- Added KUnit coverage for the shared-bus guard, a device with no ACS
+  capability and an unreadable ACS Control register
+- Added the missing Fixes: tags, a second one on the
+  pci_p2pdma_add_resource() unwinding fix (the dangling devres action
+  dates to f58ef9d1d135) and one on the Egress Control isolation change
+- Link to v2: https://patch.msgid.link/20260806-fix-p2p-acs-v2-0-0cec14812965@nvidia.com
+
+Changes in v2:
+- Added Logan's ROB tags
+- Added commas in Documentation patch
+- Link to v1: https://patch.msgid.link/20260802-fix-p2p-acs-v1-0-a7c5eb64fff6@nvidia.com
+
+---
+Leon Romanovsky (18):
+      PCI/P2PDMA: Document pdev->p2pdma lifetime rules
+      PCI/P2PDMA: Document the TLP attribute assumptions
+      PCI/P2PDMA: Derive routing from directional ACS controls
+      PCI: Reject unreadable ACS controls in isolation checks
+      PCI/P2PDMA: Evaluate ACS controls at the path divergence
+      PCI/P2PDMA: Document directional ACS routing
+      PCI/P2PDMA: Collect the path's ACS controls before deciding
+      PCI/P2PDMA: Answer routing per TLP class
+      PCI/P2PDMA: Route Relaxed Ordering Completions directly
+      PCI/P2PDMA: Reject Translated Requests blocked by Translation Blocking
+      PCI/P2PDMA: Route Translated Requests under Direct Translated P2P
+      PCI/P2PDMA: Log detailed ACS routing diagnostics
+      PCI/P2PDMA: Add KUnit tests for the ACS routing decisions
+      PCI/P2PDMA: Test the ACS P2P routing walk
+      PCI: Add KUnit coverage for ACS isolation checks
+      PCI/P2PDMA: Document TLP-class routing
+      dma-buf: Let importers ask how peer-to-peer traffic is routed
+      RDMA/mlx5: Ask P2PDMA whether ATS takes a direct peer-to-peer route
+
+ Documentation/admin-guide/kernel-parameters.txt   |   9 +-
+ Documentation/driver-api/pci/p2pdma.rst           |  69 +++
+ drivers/dma-buf/dma-buf-mapping.c                 |  41 +-
+ drivers/dma-buf/dma-buf.c                         |   1 +
+ drivers/infiniband/core/uverbs.h                  |   1 -
+ drivers/infiniband/core/uverbs_std_types_dmabuf.c |   7 +-
+ drivers/infiniband/hw/mlx5/mlx5_ib.h              |  36 +-
+ drivers/infiniband/hw/mlx5/mr.c                   |  40 ++
+ drivers/pci/Kconfig                               |  15 +
+ drivers/pci/Makefile                              |   1 +
+ drivers/pci/p2pdma.c                              | 637 +++++++++++++++++++---
+ drivers/pci/pci.c                                 |   7 +-
+ drivers/pci/pci.h                                 |  26 +
+ drivers/pci/pci_acs_test.c                        | 609 +++++++++++++++++++++
+ drivers/pci/quirks.c                              |   6 +-
+ drivers/vfio/pci/vfio_pci_dmabuf.c                |   8 +-
+ include/linux/dma-buf-mapping.h                   |   4 +-
+ include/linux/dma-buf.h                           |   5 +
+ include/linux/pci-p2pdma.h                        |  57 +-
+ 19 files changed, 1440 insertions(+), 139 deletions(-)
+---
+base-commit: 08dbfad3f5040f5bdb6c529da20d6d4e81fefd72
+change-id: 20260821-fix-p2p-acs-v4-0-e72455e3a261
+prerequisite-message-id: <20260830-batch-p2p-fixes-v1-0-5044e8dfbe2e@nvidia.com>
+prerequisite-patch-id: 6b25c7fcf164cdfc14e9fac5b908d97fcf6509d7
+prerequisite-patch-id: 0d083c281001365aae4b35544cf28891a6ab9a96
+prerequisite-patch-id: bfd9dabf271f3cc9a3a61f46387d20c20311363d
+prerequisite-patch-id: fad0275efc722830fc591509506c0a5e4f581073
+prerequisite-patch-id: 0c83bee688fec1f6d1564654df7c630fa6a4a978
+
+Best regards,
+--  
+Leon Romanovsky <leonro@nvidia.com>
+
