@@ -1,191 +1,161 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qk2-f12.google.com (mail-qk2-f12.google.com [74.125.230.204])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD0B64A1DFB;
-	Thu, 10 Sep 2026 14:27:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 425CD493D45
+	for <linux-pci@vger.kernel.org>; Thu, 10 Sep 2026 14:29:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.230.204
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789050437; cv=none; b=P2ix58T4rfiJlXd5y8qzHdrgesJ5xn3TxWEZ/ssvisn2XelHov7jGsmY5rob5/Cbs6uTV7qfwJ0E5KZtuBE/5KpL0W08CpuXEdm3cRdRDTuZ7fxba+o+erX3E/AJD68Wc/BX1Pru6HH4r3hMSDAvI8r758gA1nqKFqIljkM99Mk=
+	t=1789050546; cv=none; b=nA7f7cpSql88zSS4fXxQdSI4nmJJeYs6aNCWa50i2EGMpdrR2jTbYcrHIvk/zeQjmQKTuRv4NYjZP0BzT8fEg2i9CYZk3C08wyK7wqpkjnRnqiBtn7yL/KDnr7lyczc9BvrU5hG2xhiCN8bBVEY/i93AE2s7GJ6dUkVZ8VCxQEU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789050437; c=relaxed/simple;
-	bh=1uZ4ZGna+PhskcuJmNzd/28vPy7Uw3Ree2Foa3UydOg=;
+	s=arc-20240116; t=1789050546; c=relaxed/simple;
+	bh=lyspu3aOKLbIRf5XENbtCVfMBm8FA06IHpc+MnfQ5hI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=X7GkWJEXLJc8zb6eppH+rLTweMig+h4SzhAGcOtFmWEzyhOhE/WUY6z8l48zTiEvN6OhZOlHV2+4bCZTtTQSVJSDaHc4RIeAE5wpsAxlkXyldji50ahq0F6HxzGwLOPfQjzl+XUTkSq87+92S7xKvj81o5rRfA+GidF4sTqwVdc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ftTz6hzn; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=Qb66w7eZdIPzgYNiysWlUft6fFtJQ6QX/hvhOPOlH0+uwwW13YEZ7FpuCbUUZ712PztzZ2RvoLwrG9wVJV1n+caPEvosfqT5APz3X9Y2MsN6RoN6TqiVEvWtnHgUHhvBkDa8tni5JCbfWMnq1FISqF7DValZKztE0usnQWuWeAg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=qc3FFWC1; arc=none smtp.client-ip=74.125.230.204
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ftTz6hzn"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A3E8C1F000FF;
-	Thu, 10 Sep 2026 14:27:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789050435;
-	bh=fjmjeL0fo+qZvcOSZUel0KmILfsMo70LzvFm90HVMgY=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=ftTz6hznc8SUZalHQpTx+KZ7om6BFyqwfgpRU/G0qsVbxJFzDmYGK26ur2OE0Jvhv
-	 4RwJgwDGFzlGY3HEr4cFqJbMWGfhv/uEFqvlQoo+O2nQciUt3UacNDOq0/GpPeJPoC
-	 AEZybWEmuYAn0wtO6KIyjFlPhOQLlUh+DhwvJWTGcinEhb+dyp1717vj+j2zjknY6H
-	 Y9Gb1VsKkJdsXRvZk86ndn8YNqG57uz0jahBuzAogFYCxKEwecsySvw2TCWy9EgLdh
-	 iL2AuGpdUp/nTJBvlF8wSzUdRq/NPZsQATCGue8GDWreZBdTJ1JNK6Bj5nvOIjhx+0
-	 tE2G3hh7kVkww==
-Date: Thu, 10 Sep 2026 16:27:06 +0200
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Claudiu Beznea <claudiu.beznea+renesas@tuxon.dev>
-Cc: lpieralisi@kernel.org, kwilczynski@kernel.org, robh@kernel.org, 
-	bhelgaas@google.com, p.zabel@pengutronix.de, claudiu.beznea@tuxon.dev, 
-	linux-pci@vger.kernel.org, linux-renesas-soc@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>, stable@vger.kernel.org
-Subject: Re: [PATCH v3 2/7] PCI: rzg3s-host: Fix runtime PM handling in the
- NOIRQ suspend/resume phase
-Message-ID: <rv4yjo55edby5dkinwoz32rdnsnjffjhhwbhs7wvrtvvtz7nkw@gpffv2q3i4kq>
-References: <20260814141312.2947972-1-claudiu.beznea+renesas@tuxon.dev>
- <20260814141312.2947972-3-claudiu.beznea+renesas@tuxon.dev>
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="qc3FFWC1"
+Received: by mail-qk2-f12.google.com with SMTP id d75a77b69052e-53012819c04so230281cf.0
+        for <linux-pci@vger.kernel.org>; Thu, 10 Sep 2026 07:29:05 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1789050544; x=1789655344; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=U4B0H2819dU8lEDJ1XLSE6/+8p+h2NlR6cCuK8RNsxY=;
+        b=qc3FFWC1HUyyNzEFobjj3oObW2yalxpGDLwSNwVqvxnC+LCUUB5Jxgz4YtcUGtFup+
+         TdHK9PVo4tC/e3RRo55grkhz4e90w6I6u1c0NYheGeJbhpf3U0ed6HjIQiacYLZICGtH
+         XCan3FkoqktWHhkJqMebIhxGthTtZZnf8IxvzqqBdYT1y5ccky/gIDBzqmR9EX0XKOZB
+         n40tbkHmdfcc7PX1vYgrwxEbUCZo8jBrvrVLDG0WOGiMt7W49w6mVaISePsQRM81/Wkr
+         rtVTl/69Q8aYD/t+OcJUpyjp8UELv+wA1xsT97i709w3/TFOJ1YZkGth6/hrnJLUE6nX
+         xZQA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1789050544; x=1789655344;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=U4B0H2819dU8lEDJ1XLSE6/+8p+h2NlR6cCuK8RNsxY=;
+        b=Jq+wkaOkEETGx/4UVJcNOi0HpzBIQugP+Le617ilx3Cu2xu1nHXHOSSTBIX5RUFYNL
+         NUoCPi12PJ/n6dh07hUc3lRGKV6/8LE9KqSH22eja0UBh0rd3/zv2zhN9vBZLqzCBWEt
+         zF06yTe5LjM6fgLo3CHQX8OWYKRHAVoTF/25/Qnhq1rGD68/zJgd6t60KMR5/WSvWXPV
+         /QcMRbRgooOHoxTWYa0mrxiweFsYqY76Kuaxf8JyBHx3XoXXyjTY56Isuo4QESVp3wR+
+         NDtNIvkSyt8pgudWxuVKSykTvitd5mC+Su8UYCkh6/CtuxVyZB8aLlw6T4h3JTKpL+bJ
+         B3ug==
+X-Forwarded-Encrypted: i=1; AKwUvBz7xjBtn1DibPUVHqUZI6Senzewh0xESDeewuMnNdUX3ZJMfnKULm1UT1ewypAA8/Oxk9An2P0TqGg=@vger.kernel.org
+X-Gm-Message-State: AFuF++k1+sgLXuR+8m7pM0TfF1DU0mc5yNObL3xehN6kTELKHHjAMSX8
+	wpM5uwbPgwByAUZYh+BX13WiPdB2Ma+uo90hX6BvsZ/slDcW5AwtBarN0cIvRtFIpg==
+X-Gm-Gg: AYBFou3cog9smz14RljgQ6IbXS+Lhgjn+OsoRhu5xA/NWR2wWPtqotaFi/1Vf/mpayx
+	Clo8iBFZq7AaBCf9NWgLwXsPp7P7ClL68RexeGSGqsvf6flB78z65LKW1mdb2Zv//hqEjsGMcKs
+	7SFE8B1NIIOSFrcTdIuHejPKq3VDtK3btMXgnSKB83Idd6T8qeLX/JgtwKEPnL1aIRoDzwrZ5SZ
+	dpRnRYI9NUD+QIhLf2XJAWxOJ4vkE7Ki0FMSHtrYVlx24HlTbhcR7VmL0srTL2M7ZU2gBZUGYJp
+	z87TKpzpeIiJmxa/HYQQxm/K3DxF7syjFw4hTO3u2se0v925gErde4KGJ9VHvfXHUZQm1COks30
+	hcPdwITk0czvIYl7JFA78yJ0H7ZLkX0JiOWLJdnJN0QRvzvvHOqJUs6WQ40vX56ri9fyyVUXPf9
+	A2aA43re8cMBJNTAm/6H5tI0kg02gb+w5QOADMBgDAW3OuAfEv6p4q0bfe3cIdO6riDGQZodUzL
+	XispZDQIU5Wmoo5GH12goczx3wk34H/CdWxorVfc1oOVBk=
+X-Received: by 2002:ac8:5cd6:0:b0:530:2f98:cebb with SMTP id d75a77b69052e-530b62fb6a3mr16703951cf.11.1789050543398;
+        Thu, 10 Sep 2026 07:29:03 -0700 (PDT)
+Received: from google.com (164.210.142.34.bc.googleusercontent.com. [34.142.210.164])
+        by smtp.gmail.com with ESMTPSA id 006d021491bc7-6bebe8d3f3fsm3196267eaf.10.2026.09.10.07.29.00
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 10 Sep 2026 07:29:03 -0700 (PDT)
+Date: Thu, 10 Sep 2026 14:28:57 +0000
+From: Pranjal Shrivastava <praan@google.com>
+To: Vasant Hegde <vasant.hegde@amd.com>
+Cc: Jason Gunthorpe <jgg@nvidia.com>, iommu@lists.linux.dev,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Joerg Roedel <joro@8bytes.org>,
+	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
+	Ankit Soni <ankit.soni@amd.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Samiullah Khawaja <skhawaja@google.com>, sashiko-bot@kernel.org
+Subject: Re: [PATCH v3 2/5] iommu/amd: Fix DTE clearing and rename
+ iommu_ignore_device()
+Message-ID: <aqK-qfJ0x8-RLMgT@google.com>
+References: <ao3oHn8HiXIx5Wrl@google.com>
+ <50ffc453-f918-47f8-9556-9813308690a9@amd.com>
+ <20260826122147.GA3666382@nvidia.com>
+ <bfb7be5b-2da3-4bd3-8146-9bd079011a75@amd.com>
+ <20260828115331.GC3922654@nvidia.com>
+ <399db967-050d-48dc-afb5-5c77ee9cce65@amd.com>
+ <20260904142547.GU4157646@nvidia.com>
+ <9be08ef1-7ae0-483a-938e-17e606b5d214@amd.com>
+ <aqK04hq575iwY5BR@google.com>
+ <cb98a268-c709-4489-981a-07d662a1f4da@amd.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260814141312.2947972-3-claudiu.beznea+renesas@tuxon.dev>
+In-Reply-To: <cb98a268-c709-4489-981a-07d662a1f4da@amd.com>
 
-On Fri, Aug 14, 2026 at 05:13:07PM +0300, Claudiu Beznea wrote:
-> From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+On Thu, Sep 10, 2026 at 07:45:01PM +0530, Vasant Hegde wrote:
 > 
-> The runtime PM documentation states the following:
-> - During system suspend, pm_runtime_get_noresume() is called for every
->   device right before executing the subsystem-level .prepare() callback
->   (in device_prepare()). In addition, the PM core disables runtime PM for
->   every device right before executing the subsystem-level .suspend_late()
->   callback (in device_suspend_late()).
-> - During system resume, pm_runtime_enable() is called for every device
->   right after executing the subsystem-level .resume_early() callback (in
->   device_resume_early()), and pm_runtime_put() is called right after
->   executing the subsystem-level .complete() callback (in
->   device_complete()).
 > 
-> The driver's .suspend_noirq() callback is invoked after .suspend_late(),
-> while .resume_noirq() is invoked before .resume_early().
-> 
-> If:
-> - the device is not part of the wake-up path, and
-> - its runtime PM status is not RPM_SUSPENDED,
-> the generic power domain .suspend_noirq()/.resume_noirq() callbacks
-> (genpd_suspend_noirq()/genpd_resume_noirq()) invoke the driver's
-> .suspend_noirq()/.resume_noirq() callbacks and call
-> genpd_stop_dev()/genpd_start_dev() before and after them, respectively.
-> 
-> Calling genpd_stop_dev()/genpd_start_dev() allows devices whose power is
-> controlled by generic power domains to be powered off and on during
-> system suspend and resume, even though their runtime PM usage count does
-> not reach zero.
-> 
-> Since the runtime PM usage count is incremented in device_prepare() and
-> decremented in device_complete(), runtime PM operations performed from
-> the driver's .suspend_noirq()/.resume_noirq() callbacks are no-ops. The
-> actual power transitions are handled by the generic power domain
-> .suspend_noirq()/.resume_noirq() callbacks.
-> 
-> Moreover, attempting to runtime resume a device while runtime PM is
-> disabled may return -EACCES. This may cause system resume to fail when
-> resuming after a failed Root Port reset, as described in a subsequent
-> patch adding hot-plug support.
-> 
-> Remove the runtime PM calls from the driver's
-> .suspend_noirq()/.resume_noirq() callbacks and rely on the generic power
-> domain callbacks to power the device off and on.
-> 
-> Fixes: 7ef502fb35b2 ("PCI: Add Renesas RZ/G3S host controller driver")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
-> ---
-> 
-> Changes in v3:
-> - none, this patch is new
-> 
->  drivers/pci/controller/pcie-rzg3s-host.c | 50 ++++++++++++++++++------
->  1 file changed, 38 insertions(+), 12 deletions(-)
-> 
-> diff --git a/drivers/pci/controller/pcie-rzg3s-host.c b/drivers/pci/controller/pcie-rzg3s-host.c
-> index 830cd7c76699..bbc5bcec03f1 100644
-> --- a/drivers/pci/controller/pcie-rzg3s-host.c
-> +++ b/drivers/pci/controller/pcie-rzg3s-host.c
-> @@ -1961,19 +1961,32 @@ static int rzg3s_pcie_suspend_noirq(struct device *dev)
->  	if (ret)
->  		goto config_reinit;
->  
-> -	ret = pm_runtime_put_sync(dev);
-> -	if (ret)
-> -		goto power_resets_restore;
-> +	/*
-> +	 * Since:
-> +	 * - the runtime PM usage count was incremented by
-> +	 *   pm_runtime_get_noresume() in the system suspend/resume code before
-> +	 *   executing the subsystem-level .prepare() callback
-> +	 *   (in device_prepare()),
-> +	 * - runtime PM has been disabled by the system suspend/resume code
-> +	 *   before executing the subsystem-level .suspend_late() callback
-> +	 *   (in device_suspend_late()), and
-> +	 * - the PCIe driver's runtime PM state remains RPM_ACTIVE (it was
-> +	 *   runtime resumed in probe()),
-> +	 *
-> +	 * any runtime PM operation becomes a no-op and may lead to unexpected
-> +	 * failures.
-> +	 *
-> +	 * Let the power domain's genpd_suspend_noirq() callback disable the
-> +	 * clocks, as it already does.
-> +	 */
+> On 9/10/2026 7:17 PM, Pranjal Shrivastava wrote:
+> > On Thu, Sep 10, 2026 at 05:25:25PM +0530, Vasant Hegde wrote:
+> >>
+> >>
+> >> On 9/4/2026 7:55 PM, Jason Gunthorpe wrote:
+> >>> On Fri, Sep 04, 2026 at 03:43:01PM +0530, Vasant Hegde wrote:
+> >>>> Jason,
+> >>>>
+> >>>>
 
-I believe you can shorten the comment. Like:
+[...]
 
-	/*
-	 * Since the power domain's genpd_suspend_noirq() will disable clocks,
-	 * there is no need to manually invoke runtime PM API here.
-	 */
+> >>>>
+> >>>> During boot, it sets certain default values includ dte.v. It doesn't
+> >>>> clear everything.
+> >>>
+> >>> ?? It starts out with a 0 DTE table? There is no inherited DTE table
+> >>> except for kdump.
+> >>>
+> >>>> May be we should just remove ignore_device() completely? as
+> >>>>   - normal boot, its not yet configured, so no DMA is allowed
+> >>>>   - kdump boot, old DTE is still valid and let it continue?
+> >>>
+> >>> Yes, that makes alot more sense to me.
+> >>
+> >> Ack. @Pranjal, Can you fixup and send v4?
 
->  
->  	ret = rzg3s_sysc_config_func(sysc, RZG3S_SYSC_FUNC_ID_RST_RSM_B, 0);
->  	if (ret)
-> -		goto rpm_resume;
-> +		goto power_resets_restore;
->  
->  	return 0;
->  
->  	/* Restore the previous state if any error happens */
-> -rpm_resume:
-> -	pm_runtime_resume_and_get(dev);
->  power_resets_restore:
->  	reset_control_bulk_deassert(data->num_power_resets,
->  				    host->power_resets);
-> @@ -2011,13 +2024,28 @@ static int rzg3s_pcie_resume_noirq(struct device *dev)
->  			goto assert_rst_rsm_b;
->  	}
->  
-> -	ret = pm_runtime_resume_and_get(dev);
-> -	if (ret)
-> -		goto assert_rst_rsm_b;
-> +	/*
-> +	 * Since:
-> +	 * - the runtime PM usage count was incremented by
-> +	 *   pm_runtime_get_noresume() in the system suspend/resume code before
-> +	 *   executing the subsystem-level .prepare() callback
-> +	 *   (in device_prepare()),
-> +	 * - runtime PM has been disabled by the system suspend/resume code
-> +	 *   before executing the subsystem-level .suspend_late() callback
-> +	 *   (in device_suspend_late()),
-> +	 * - on resume pm_runtime_enable() is called after executing the
-> +	 *   subsystem-level .resume_early() (in device_resume_early())
-> +	 *
-> +	 * any runtime PM operation becomes a no-op and may lead to unexpected
-> +	 * failures.
-> +	 *
-> +	 * Let the power domain's genpd_resume_noirq() callback enable the
-> +	 * clocks, as it already does.
-> +	 */
+[...]
 
-Same as above.
+> >>
+> >> Yeah. One of the cleanup patch missed to update below comment.
+> >>
+> >>>
+> >>>         /*
+> >>>          * Order is important here to make sure any unity map requirements are
+> >>>          * fulfilled. The unity mappings are created and written to the device
+> >>>          * table during the iommu_init_pci() call.
+> >>>          *
+> >>>          * After that we call init_device_table_dma() to make sure any
+> >>>          * uninitialized DTE will block DMA, and in the end we flush the caches
+> >>>          * of all IOMMUs to make sure the changes to the device table are
+> >>>          * active.
+> >>>          */
+> >>>         for_each_pci_segment(pci_seg)
+> >>>                 init_device_table_dma(pci_seg);
+> >>>
+> >>> The DTE starts out with blocking because it starts out as 0. This
+> >>> isn't making the DTE blocking, it is doing something else. And it is
+> >>> very suspicious and racey looking to me.
+> >>
+> >> IIRC there were some requirement to keep V bit ON. Otherwise I don't see why we
+> >> should set and flush the dte here. Let me dig the details.
+> >>
+> > 
+> > Should I also update the comment in this series? (It seems less relevant
+> > to the ATS stuff)
+> 
+> I'd say lets do that as separate patch. For now lets get this series finalized.
 
-- Mani
+Ack. Sent out: https://lore.kernel.org/all/20260910142655.3281464-1-praan@google.com/
 
--- 
-மணிவண்ணன் சதாசிவம்
+Thanks,
+Praan
