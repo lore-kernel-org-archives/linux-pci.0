@@ -1,121 +1,191 @@
-Received: from mail-pl1-f200.google.com (mail-pl1-f200.google.com [209.85.214.200])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3E98C49BD62
-	for <linux-pci@vger.kernel.org>; Thu, 10 Sep 2026 14:27:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.200
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD0B64A1DFB;
+	Thu, 10 Sep 2026 14:27:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789050433; cv=none; b=aa+hA2OjTxF2rsYJYq9oGCumXOpvMMWlVigchXXupYcpWuTA7FuHImmvskzzDkdFFmXC6VW2VMnGUjJ6puCSsqpGFFPC8OgycfOqrjJgxcSKxQPfDRB98WNJDHKUakEI+u0HfniRG7fYkYllwDJNtlImY43ppC54Ok/jw5QAVIM=
+	t=1789050437; cv=none; b=P2ix58T4rfiJlXd5y8qzHdrgesJ5xn3TxWEZ/ssvisn2XelHov7jGsmY5rob5/Cbs6uTV7qfwJ0E5KZtuBE/5KpL0W08CpuXEdm3cRdRDTuZ7fxba+o+erX3E/AJD68Wc/BX1Pru6HH4r3hMSDAvI8r758gA1nqKFqIljkM99Mk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789050433; c=relaxed/simple;
-	bh=0zK3NdZdAEIF+fY7bnFJa022HywxKyfReyEg/39UFm0=;
-	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=hKsSPOVzXN9WtrSwmzKPdXVLC74QoUEH2RPX/Yuaijf1FhZFojrcIjf4acWDXMrENfEkkpWf+8jlqu6q86o6YoxyjwCb0YfKHx4jp60Y+qmi9r50VQthOAV+vS+03ShDHxocnEVutS50WDQVLpLmzmF33Lfr/bN6QC1SVprt2hs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--praan.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=LTu+r/PZ; arc=none smtp.client-ip=209.85.214.200
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--praan.bounces.google.com
+	s=arc-20240116; t=1789050437; c=relaxed/simple;
+	bh=1uZ4ZGna+PhskcuJmNzd/28vPy7Uw3Ree2Foa3UydOg=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=X7GkWJEXLJc8zb6eppH+rLTweMig+h4SzhAGcOtFmWEzyhOhE/WUY6z8l48zTiEvN6OhZOlHV2+4bCZTtTQSVJSDaHc4RIeAE5wpsAxlkXyldji50ahq0F6HxzGwLOPfQjzl+XUTkSq87+92S7xKvj81o5rRfA+GidF4sTqwVdc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ftTz6hzn; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="LTu+r/PZ"
-Received: by mail-pl1-f200.google.com with SMTP id d9443c01a7336-2d7443e0f0bso115740585ad.1
-        for <linux-pci@vger.kernel.org>; Thu, 10 Sep 2026 07:27:11 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1789050430; x=1789655230; darn=vger.kernel.org;
-        h=content-type:cc:to:from:subject:message-id:references:mime-version
-         :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=6VbiO+0ZZ336AV1ci1nySmnPdcf0jBOH8n5u+L52730=;
-        b=LTu+r/PZwX8VG7iB3g9kR8vc4+IugjkneVG+1FxDEQ37E/A5gJM3q5tg5UxNIAhlgd
-         IQy31sf48+FfjEAQ+zsSUqHgKFY+PekSpYd+hUnX0PQAJfo+AVJhGUoDl+/XDmfdYQZN
-         3RRqyWoI64h4JfpVhU5MeFkCzgTnEcUoQZeJNSzthfhp9EvaqdkfRgnO+8bGjgAll5TE
-         s1r3W4gXqitYR8AzPXjRXJ9Vkk9F0Yi6iCuxY7NWCirxwCxEsKhdm+ZbswLwblkquYKb
-         pGTbiQf6mFtPi0ZTZFJW4wkX/QOQOh+npZ4KVjFc3x5qT9MLDCKYVQCGUAR0sWZegS2D
-         wBHw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1789050430; x=1789655230;
-        h=content-type:cc:to:from:subject:message-id:references:mime-version
-         :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=6VbiO+0ZZ336AV1ci1nySmnPdcf0jBOH8n5u+L52730=;
-        b=lvNdV7R7R4CrEr2qXoWSzl5IJ0Tp30R7Hl6B+J1DpFq0qaVw0BRR1FupUWoeY0SsCy
-         fcnv6m48+so+Xp6oY8YeZXAbR85uu0tNr99Dv1+++6wFfTiAXs+t5cIR6SKKZUCKozRS
-         FuUSzF9EnxyA/1QQUZhG8gPA9wA2yIqvprwfrV8mpxgDN0TkPH6kJ9tkvrktNyijO5rj
-         kwR/jc5lEgdJZvEWs4r3UblaiKTgEG/zRZuo1KA5VapfrDFBb59X4IfAuBcwEZZ0wlNQ
-         b1hsVCekNPPUFUWHkxplFesh24RbORBE7YtsMnCtwSMPoBGTPwdi0TDc1cnKdpZBN1O2
-         JArw==
-X-Forwarded-Encrypted: i=1; AKwUvBwxYUrQiKdhP2jrjgmyJ7i+ARkk8p5fZZArDZj/ilvZeAJRq3It2ULLx+2bvgYUX/HOaQvlEASgKzA=@vger.kernel.org
-X-Gm-Message-State: AFuF++mDrgnjkUhfggRlgcoeZaM5MR7W6+xatdwMwtFo+kJ/4HADzLA5
-	+mJbwfmG7QIgt7wKuIxVtMEGqC6EQs0sqMpIs76kdjgWMnJ969hihmsPH+6d0mNRPqywCgEXNU6
-	+Ew==
-X-Received: from plkq16.prod.google.com ([2002:a17:902:edd0:b0:2db:49e4:272])
- (user=praan job=prod-delivery.src-stubby-dispatcher) by 2002:a17:902:e548:b0:2d9:2fc9:5706
- with SMTP id d9443c01a7336-2dd077e0c3amr105542405ad.2.1789050430169; Thu, 10
- Sep 2026 07:27:10 -0700 (PDT)
-Date: Thu, 10 Sep 2026 14:26:55 +0000
-In-Reply-To: <20260910142655.3281464-1-praan@google.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ftTz6hzn"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A3E8C1F000FF;
+	Thu, 10 Sep 2026 14:27:10 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1789050435;
+	bh=fjmjeL0fo+qZvcOSZUel0KmILfsMo70LzvFm90HVMgY=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=ftTz6hznc8SUZalHQpTx+KZ7om6BFyqwfgpRU/G0qsVbxJFzDmYGK26ur2OE0Jvhv
+	 4RwJgwDGFzlGY3HEr4cFqJbMWGfhv/uEFqvlQoo+O2nQciUt3UacNDOq0/GpPeJPoC
+	 AEZybWEmuYAn0wtO6KIyjFlPhOQLlUh+DhwvJWTGcinEhb+dyp1717vj+j2zjknY6H
+	 Y9Gb1VsKkJdsXRvZk86ndn8YNqG57uz0jahBuzAogFYCxKEwecsySvw2TCWy9EgLdh
+	 iL2AuGpdUp/nTJBvlF8wSzUdRq/NPZsQATCGue8GDWreZBdTJ1JNK6Bj5nvOIjhx+0
+	 tE2G3hh7kVkww==
+Date: Thu, 10 Sep 2026 16:27:06 +0200
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Claudiu Beznea <claudiu.beznea+renesas@tuxon.dev>
+Cc: lpieralisi@kernel.org, kwilczynski@kernel.org, robh@kernel.org, 
+	bhelgaas@google.com, p.zabel@pengutronix.de, claudiu.beznea@tuxon.dev, 
+	linux-pci@vger.kernel.org, linux-renesas-soc@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>, stable@vger.kernel.org
+Subject: Re: [PATCH v3 2/7] PCI: rzg3s-host: Fix runtime PM handling in the
+ NOIRQ suspend/resume phase
+Message-ID: <rv4yjo55edby5dkinwoz32rdnsnjffjhhwbhs7wvrtvvtz7nkw@gpffv2q3i4kq>
+References: <20260814141312.2947972-1-claudiu.beznea+renesas@tuxon.dev>
+ <20260814141312.2947972-3-claudiu.beznea+renesas@tuxon.dev>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-References: <20260910142655.3281464-1-praan@google.com>
-X-Mailer: git-send-email 2.55.0.1003.g10538fe699-goog
-Message-ID: <20260910142655.3281464-5-praan@google.com>
-Subject: [PATCH v4 4/4] PCI/ATS: Mandate checking pci_ats_supported() before pci_prepare_ats()
-From: Pranjal Shrivastava <praan@google.com>
-To: iommu@lists.linux.dev, linux-pci@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Cc: Joerg Roedel <joro@8bytes.org>, Will Deacon <will@kernel.org>, 
-	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>, Vasant Hegde <vasant.hegde@amd.com>, 
-	Ankit Soni <ankit.soni@amd.com>, Jason Gunthorpe <jgg@nvidia.com>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Samiullah Khawaja <skhawaja@google.com>, Pranjal Shrivastava <praan@google.com>, 
-	Baolu Lu <baolu.lu@linux.intel.com>, Nicolin Chen <nicolinc@nvidia.com>
-Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260814141312.2947972-3-claudiu.beznea+renesas@tuxon.dev>
 
-Currently, pci_prepare_ats() internally calls pci_ats_supported() and
-returns -EINVAL if the device does not support ATS. While this provides
-a silent safety check, it conflates support detection with configuration.
+On Fri, Aug 14, 2026 at 05:13:07PM +0300, Claudiu Beznea wrote:
+> From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+> 
+> The runtime PM documentation states the following:
+> - During system suspend, pm_runtime_get_noresume() is called for every
+>   device right before executing the subsystem-level .prepare() callback
+>   (in device_prepare()). In addition, the PM core disables runtime PM for
+>   every device right before executing the subsystem-level .suspend_late()
+>   callback (in device_suspend_late()).
+> - During system resume, pm_runtime_enable() is called for every device
+>   right after executing the subsystem-level .resume_early() callback (in
+>   device_resume_early()), and pm_runtime_put() is called right after
+>   executing the subsystem-level .complete() callback (in
+>   device_complete()).
+> 
+> The driver's .suspend_noirq() callback is invoked after .suspend_late(),
+> while .resume_noirq() is invoked before .resume_early().
+> 
+> If:
+> - the device is not part of the wake-up path, and
+> - its runtime PM status is not RPM_SUSPENDED,
+> the generic power domain .suspend_noirq()/.resume_noirq() callbacks
+> (genpd_suspend_noirq()/genpd_resume_noirq()) invoke the driver's
+> .suspend_noirq()/.resume_noirq() callbacks and call
+> genpd_stop_dev()/genpd_start_dev() before and after them, respectively.
+> 
+> Calling genpd_stop_dev()/genpd_start_dev() allows devices whose power is
+> controlled by generic power domains to be powered off and on during
+> system suspend and resume, even though their runtime PM usage count does
+> not reach zero.
+> 
+> Since the runtime PM usage count is incremented in device_prepare() and
+> decremented in device_complete(), runtime PM operations performed from
+> the driver's .suspend_noirq()/.resume_noirq() callbacks are no-ops. The
+> actual power transitions are handled by the generic power domain
+> .suspend_noirq()/.resume_noirq() callbacks.
+> 
+> Moreover, attempting to runtime resume a device while runtime PM is
+> disabled may return -EACCES. This may cause system resume to fail when
+> resuming after a failed Root Port reset, as described in a subsequent
+> patch adding hot-plug support.
+> 
+> Remove the runtime PM calls from the driver's
+> .suspend_noirq()/.resume_noirq() callbacks and rely on the generic power
+> domain callbacks to power the device off and on.
+> 
+> Fixes: 7ef502fb35b2 ("PCI: Add Renesas RZ/G3S host controller driver")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+> ---
+> 
+> Changes in v3:
+> - none, this patch is new
+> 
+>  drivers/pci/controller/pcie-rzg3s-host.c | 50 ++++++++++++++++++------
+>  1 file changed, 38 insertions(+), 12 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/pcie-rzg3s-host.c b/drivers/pci/controller/pcie-rzg3s-host.c
+> index 830cd7c76699..bbc5bcec03f1 100644
+> --- a/drivers/pci/controller/pcie-rzg3s-host.c
+> +++ b/drivers/pci/controller/pcie-rzg3s-host.c
+> @@ -1961,19 +1961,32 @@ static int rzg3s_pcie_suspend_noirq(struct device *dev)
+>  	if (ret)
+>  		goto config_reinit;
+>  
+> -	ret = pm_runtime_put_sync(dev);
+> -	if (ret)
+> -		goto power_resets_restore;
+> +	/*
+> +	 * Since:
+> +	 * - the runtime PM usage count was incremented by
+> +	 *   pm_runtime_get_noresume() in the system suspend/resume code before
+> +	 *   executing the subsystem-level .prepare() callback
+> +	 *   (in device_prepare()),
+> +	 * - runtime PM has been disabled by the system suspend/resume code
+> +	 *   before executing the subsystem-level .suspend_late() callback
+> +	 *   (in device_suspend_late()), and
+> +	 * - the PCIe driver's runtime PM state remains RPM_ACTIVE (it was
+> +	 *   runtime resumed in probe()),
+> +	 *
+> +	 * any runtime PM operation becomes a no-op and may lead to unexpected
+> +	 * failures.
+> +	 *
+> +	 * Let the power domain's genpd_suspend_noirq() callback disable the
+> +	 * clocks, as it already does.
+> +	 */
 
-Update pci_prepare_ats() to wrap the internal pci_ats_supported check in
-a WARN_ON(). This mandates all callers to call pci_prepare_ats() only if
-the function supports ATS.
+I believe you can shorten the comment. Like:
 
-Update the function documentation to mention that callers must verify
-ATS support (via pci_ats_supported()) before calling pci_prepare_ats().
+	/*
+	 * Since the power domain's genpd_suspend_noirq() will disable clocks,
+	 * there is no need to manually invoke runtime PM API here.
+	 */
 
-Reviewed-by: Vasant Hegde <vasant.hegde@amd.com>
-Suggested-by: Baolu Lu <baolu.lu@linux.intel.com>
-Reviewed-by: Nicolin Chen <nicolinc@nvidia.com>
-Reviewed-by: Jason Gunthorpe <jgg@nvidia.com>
-Signed-off-by: Pranjal Shrivastava <praan@google.com>
----
- drivers/pci/ats.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+>  
+>  	ret = rzg3s_sysc_config_func(sysc, RZG3S_SYSC_FUNC_ID_RST_RSM_B, 0);
+>  	if (ret)
+> -		goto rpm_resume;
+> +		goto power_resets_restore;
+>  
+>  	return 0;
+>  
+>  	/* Restore the previous state if any error happens */
+> -rpm_resume:
+> -	pm_runtime_resume_and_get(dev);
+>  power_resets_restore:
+>  	reset_control_bulk_deassert(data->num_power_resets,
+>  				    host->power_resets);
+> @@ -2011,13 +2024,28 @@ static int rzg3s_pcie_resume_noirq(struct device *dev)
+>  			goto assert_rst_rsm_b;
+>  	}
+>  
+> -	ret = pm_runtime_resume_and_get(dev);
+> -	if (ret)
+> -		goto assert_rst_rsm_b;
+> +	/*
+> +	 * Since:
+> +	 * - the runtime PM usage count was incremented by
+> +	 *   pm_runtime_get_noresume() in the system suspend/resume code before
+> +	 *   executing the subsystem-level .prepare() callback
+> +	 *   (in device_prepare()),
+> +	 * - runtime PM has been disabled by the system suspend/resume code
+> +	 *   before executing the subsystem-level .suspend_late() callback
+> +	 *   (in device_suspend_late()),
+> +	 * - on resume pm_runtime_enable() is called after executing the
+> +	 *   subsystem-level .resume_early() (in device_resume_early())
+> +	 *
+> +	 * any runtime PM operation becomes a no-op and may lead to unexpected
+> +	 * failures.
+> +	 *
+> +	 * Let the power domain's genpd_resume_noirq() callback enable the
+> +	 * clocks, as it already does.
+> +	 */
 
-diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
-index 9cb23780093d..f1434f86ac40 100644
---- a/drivers/pci/ats.c
-+++ b/drivers/pci/ats.c
-@@ -56,7 +56,9 @@ EXPORT_SYMBOL_GPL(pci_ats_supported);
-  * @ps: the IOMMU page shift
-  *
-  * This must be done by the IOMMU driver on the PF before any VFs are created to
-- * ensure that the VF can have ATS enabled.
-+ * ensure that the VF can have ATS enabled. Callers must verify that ATS is
-+ * supported by the device (e.g. via pci_ats_supported()) before calling this
-+ * function.
-  *
-  * Returns 0 on success, or negative on failure.
-  */
-@@ -64,7 +66,7 @@ int pci_prepare_ats(struct pci_dev *dev, int ps)
- {
- 	u16 ctrl;
- 
--	if (!pci_ats_supported(dev))
-+	if (WARN_ON(!pci_ats_supported(dev)))
- 		return -EINVAL;
- 
- 	if (WARN_ON(dev->ats_enabled))
+Same as above.
+
+- Mani
+
 -- 
-2.55.0.1003.g10538fe699-goog
-
+மணிவண்ணன் சதாசிவம்
