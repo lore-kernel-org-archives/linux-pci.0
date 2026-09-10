@@ -1,78 +1,67 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A3FCC2F6931
-	for <linux-pci@vger.kernel.org>; Thu, 10 Sep 2026 23:28:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C4652F6931
+	for <linux-pci@vger.kernel.org>; Thu, 10 Sep 2026 23:28:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789082918; cv=none; b=uv4BW+rsHNTdiPTQ27lgcqmATKAz4gLZjZ95KlptAv5dKlYkYKt6WIXAZRmZRb4FR2NYigFsrykvq/TnusmFC+IELrCJg8TYt66LCeOExFon7eia0/SYn4gCU4pdWwYxz3xnKqKi7WncXkzfX9f5bkKeJSaP5U2cdoEuv5BNHCg=
+	t=1789082929; cv=none; b=ZbsDHoboke24rn+Sm8ohiuGUvRxl/nkgkXYvJCogfLSr90cvmyw+5b1RUjP44ltpWFe84aBG65+K9vw0nD3xG3mlvcLSxC8Ww9R29Pt6FDyGFtzHVvN78MwTkWFyFVrvTihlLHu0X1myDGuSzQGB98v2Yi8yCqqKc03V+a7o+6Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789082918; c=relaxed/simple;
-	bh=artqFvkWKo5uErbk/ogd+8ev4ytKACPCNzpOwBF3XMA=;
+	s=arc-20240116; t=1789082929; c=relaxed/simple;
+	bh=+vTR1pLIr+s8Q4WIBZg4ayhJrVdC2sNqpCkfBqlGpUY=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=XO3TJWq+fsCW3zZBufeI8aMf6cPxCjgN/EAcCQqJT40xxmwre+yNDm6yuECLD8ksFuqrGzJyRjtFmiotCS4EI7LobMG4018qP5uSiVyf6zuYN9ejSfm0xPlEz9vn+g5gbmYOSgYdWdFR1zuZSWTf77Of3o80uYf2bCHPXAFTGQI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ICxvc/WQ; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=Fbx0KPk26f6wGBxepPKppDNDFxitTXEe4XTtd8ritHiOsSgc2Bp9RG9XIVXlkEw7ZyjumXA117bHamnrzMpETiLQt2IjxFKYj3jD029gF59YIPil25vOqc1dlFD8CxsGYekMIrR6z9xKVZTJONRmLlMb02+qLSMoPs4H1JvcZ/0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BTj3qDFv; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ICxvc/WQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6A7111F00893;
-	Thu, 10 Sep 2026 23:28:37 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BTj3qDFv"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 135D91F000FF;
+	Thu, 10 Sep 2026 23:28:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789082917;
-	bh=artqFvkWKo5uErbk/ogd+8ev4ytKACPCNzpOwBF3XMA=;
+	s=k20260515; t=1789082928;
+	bh=+vTR1pLIr+s8Q4WIBZg4ayhJrVdC2sNqpCkfBqlGpUY=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=ICxvc/WQbD9Q5UItnHwAZfw6coIU15iI4zVG6BKH3+AsGLKv12TphavLskJFwmJIC
-	 ZiAgKDIXJr5DGcPOvy2tyhXdtgA1/3pG1TZVR/kt1Wjqb8APCSGdEJiXjrp+8mlDPB
-	 iApgBjs12lZCSOHzUyA6z69JWDptdSvuDqXkDgEvgiqttar+1u2P7/U+sRWLQYr4Hx
-	 MSIFMsnk+lMVBL4rnOpxw0m/OSrpXtozQl4NxRUTQ6aPGaY6XZBMOn7mz+Ze55NQt6
-	 MsmuVLFRBOSzIakqVPKy5oXv0jsgTnqiYgjpoORemta9vSniReMnWr0P11KYBnPah0
-	 MHCw5Z4JK7oLw==
+	b=BTj3qDFvyd8CZl2AnVrnBgMQwJCY52tZJ0wf8ST9KThx8TghqQ6eEQ3bKuxLPHGSP
+	 I0ymhwOSxtHwbV/DBbzd5aIILkeX0F5+dz8PA/Y8JVF7olDJV4ytsy4IEKeHmZrxxA
+	 S7FIhM06WDaOToG5Nfpbq8wvO8mj4LzR2bRhN1zmxk7AWaVGasqjFS6+LTiJwI/Bmu
+	 F/5mIinxmV+sI5wEpTDpDnHtLVB7hKrVKXiQ22jSvlVe19YXgMCHXjz+8yXXCVM1W2
+	 FabESuyaxr3CxUZz2R4EQPiJrBV8Ms9Z0U57LrwPT6/QWllhc0yVzgll6NnOtkFqkC
+	 8gWSRKt7uEOLQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 06/15] iommu/arm-smmu-v3: Allocate IOPF queue without
- FEAT_SVA
+Subject: Re: [PATCH v4 14/15] PCI/ATS: Export pci_enable_pri() and
+ pci_reset_pri()
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Nicolin Chen" <nicolinc@nvidia.com>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <7decce0b49f85da5df0f842862deb1af44093046.1789081084.git.nicolinc@nvidia.com>
+In-Reply-To: <49ce62ed61bd2c0626bde44aca33c515bc8acaeb.1789081084.git.nicolinc@nvidia.com>
 References: <cover.1789081084.git.nicolinc@nvidia.com>
- <7decce0b49f85da5df0f842862deb1af44093046.1789081084.git.nicolinc@nvidia.com>
+ <49ce62ed61bd2c0626bde44aca33c515bc8acaeb.1789081084.git.nicolinc@nvidia.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 10 Sep 2026 23:28:37 +0000
-Message-Id: <20260910232837.6A7111F00893@smtp.kernel.org>
+Date: Thu, 10 Sep 2026 23:28:47 +0000
+Message-Id: <20260910232848.135D91F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-> arm_smmu_init_queues() allocates the IOPF queue only for FEAT_SVA together
-> with FEAT_STALLS. This queue has no SVA dependency, and FEAT_STALLS alone
-> can produce events that need IOPF.
+> From: Jean-Philippe Brucker <jean-philippe@linaro.org>
 >=20
-> On HW with FEAT_STALLS but no FEAT_SVA, a master with the "dma-can-stall"
-> device-tree property has master->stall_enabled set at probe. Then also wi=
-th
-> CONFIG_ARM_SMMU_V3_SVA=3Dy, arm_smmu_enable_iopf() sees stall_enabled, ca=
-lls
-> iopf_queue_add_device(NULL, ...) at fault-handling domain attach, which c=
-an
-> oops on mutex_lock(&queue->lock).
+> Export pci_enable_pri() and pci_reset_pri() so the SMMUv3 driver, which is
+> tristate, can use them from its probe path when built as a module.
 >=20
-> Allocate the queue whenever FEAT_STALLS is present. Also select IOMMU_IOPF
-> so iopf_queue_alloc() is always available without CONFIG_ARM_SMMU_V3_SVA.
-> Since IOPF does not depend on SVA, drop the SVA guards from its enable and
-> disable paths.
->=20
-> Fixes: 395ad89d11fd9 ("iommu/arm-smmu-v3: Add stall support for platform =
-devices")
-> Cc: stable@vger.kernel.org # v5.14
-> Assisted-by: Claude:claude-opus-4-8
-> Reviewed-by: Jonathan Cameron <jonathan.cameron@oss.qualcomm.com>
+> Link: https://lore.kernel.org/iommu/20201112125519.3987595-9-jean-philipp=
+e@linaro.org/
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+> Reviewed-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux=
+.intel.com>
+> Signed-off-by: Jean-Philippe Brucker <jean-philippe@linaro.org>
+> [nicolinc: drop stale or already-exported APIs]
 > Signed-off-by: Nicolin Chen <nicolinc@nvidia.com>
 
 Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/cover.1789081084.gi=
-t.nicolinc@nvidia.com?part=3D6
+t.nicolinc@nvidia.com?part=3D14
 
