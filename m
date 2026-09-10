@@ -1,65 +1,65 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E185449E130
-	for <linux-pci@vger.kernel.org>; Thu, 10 Sep 2026 23:32:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 21DA93A782D
+	for <linux-pci@vger.kernel.org>; Thu, 10 Sep 2026 23:33:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789083127; cv=none; b=Hqk3qp/sK80vVDAk0CyGWjN8d8KCWj1CCj2/ZEovscOI18DBkUxVMpCyt3wXuUiUWlg/9cxH8Mq5dr6R3t30t5M/zYilhDTsABxrZX869fxntSWaAUypENeVENtJ0+y9CxCpIe/OpwAkyRdYKwTj8ysltQPm7INOb+tO3Qy90qI=
+	t=1789083223; cv=none; b=sOOLmBC1tUIIcDJxJvY0BSKPy14QYflMyR8AEmsdbBP1IwTvW7rMnTVzCXMVzc6NUDBnn8YZuF1NRXqdycJXtd0Gv4BMP7GCjgJ12kkW7mQVKQobI3NIt/iE1N2ezzjZUjeVQUf1hsrDW3eunKpYUqG8QUGXjkHOZKpdZKPfrHg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789083127; c=relaxed/simple;
-	bh=uikVSOznQycPoBtowQZ98ZzxXzmswNtgjUpM6scH0qM=;
+	s=arc-20240116; t=1789083223; c=relaxed/simple;
+	bh=W8dtAkMqEv0cmAODGwxHMkT20xlkTvMg4v4+NPfKcpE=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=KwQiVOq8/liBt+GvFYNhK+nzif1XsU7ZUYQOOOHPqxWlgJtzOULpzO3H8CYqCS7idWJPBi/d6XqvoZC/SjTUiKy/JlJT17q9J0B+UBxv6Nqwidy64H1vVEyLtQAEl3QXwu1sgrR752wWAhGuKZuhwjjkBneR0pcF9TIm1Fggpxo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WP6ppwNY; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=UBAGyMnBxq5t+mnvKzzobuGDzoTMcMP8ldPXtBXnvhNWz3JVuW8O4HSV9ldxPaPacmAIYspv4R/F4YeRI7TVgUfq9p+riLhAFYUTXvaV5s/LMvvWlci40vdNNHnU3VGcFsuaG25IErBbWgA4pNmnbUd7cX5kOvub0euESXL42yo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=L53KZxCx; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WP6ppwNY"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3D7FD1F000FF;
-	Thu, 10 Sep 2026 23:32:05 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="L53KZxCx"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8F8BA1F0089E;
+	Thu, 10 Sep 2026 23:33:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789083125;
-	bh=uikVSOznQycPoBtowQZ98ZzxXzmswNtgjUpM6scH0qM=;
+	s=k20260515; t=1789083221;
+	bh=W8dtAkMqEv0cmAODGwxHMkT20xlkTvMg4v4+NPfKcpE=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=WP6ppwNYrFvyoxK/uHGTdQycRpbwZdJTVM8ptA4PLoJ0zvZOZuWATE8Wcvxt20Ewa
-	 +ZxyDtECQOlSrT3clkMicSQ5e3NjiveGxGjE+ZBu0Gaq9pVcOqe6odEJGzo6YLZBsZ
-	 TxFYBUAEcx0Gl7da17KiXXlRv9i0Cb9RmWHIz6tgSyfjOhbQZn/JInD5/z5twofXJ9
-	 U9aeNCXqGF1fmVHf8VBg/hPnCtdO8NE955QMBgUFlwx3vNZGPdpxIWEwAGpvEFxlPn
-	 AtE7ITZwn5XXFQ2CJN5Eo40rh62JTe8pJ0AynfXHNp89BJAM/XsyLpCF44L9B8y1z4
-	 NkDiqIRrXJnHw==
+	b=L53KZxCx6Y5YE93PzoCGwN2cDgGHtOE8LbErDimFlw9ExKY70DiVW0EaacDZkG3go
+	 1YadvDLHIBG4zHkHcmFIZBAI96mNZMhOrsmpUlx6aLTsWkm52ZDBpdEsHM0Kik9M6m
+	 0cZhvorwiSUXpgiSTPBlwnq3tLvG7zhv/aZlGv4p2b2q+cpnn2T1fOAfmAeT6JU0ad
+	 mrZtMRn7/f4uUSY3Jy01IEbTejTkpKyp+C98J4CjCMEPsggke0pd6RH86g8xoHsNAz
+	 GD39orU7EyJO3181gnRQChP6Q31ZtG4w8sOspWtKhy8glZqewD6QSc/CdgcFI60SiQ
+	 4azpXdldXwPUw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 01/15] iommu/arm-smmu-v3: Disable the impl before
- disabling the SMMU on shutdown
+Subject: Re: [PATCH v4 11/15] iommu/arm-smmu-v3: Discard partial PRI faults
+ on PRIQ overflow
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Nicolin Chen" <nicolinc@nvidia.com>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <61536b87c45164b1f581ee4358574ee7822e212d.1789081084.git.nicolinc@nvidia.com>
+In-Reply-To: <1c274d8836e59c549130170d5794d22e9b8c7d7a.1789081084.git.nicolinc@nvidia.com>
 References: <cover.1789081084.git.nicolinc@nvidia.com>
- <61536b87c45164b1f581ee4358574ee7822e212d.1789081084.git.nicolinc@nvidia.com>
+ <1c274d8836e59c549130170d5794d22e9b8c7d7a.1789081084.git.nicolinc@nvidia.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 10 Sep 2026 23:32:04 +0000
-Message-Id: <20260910233205.3D7FD1F000FF@smtp.kernel.org>
+Date: Thu, 10 Sep 2026 23:33:41 +0000
+Message-Id: <20260910233341.8F8BA1F0089E@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-> arm_smmu_device_shutdown() only calls arm_smmu_device_disable(), and never
-> the impl_ops->device_disable() hook. On tegra241-cmdqv, that hook quiesces
-> every VINTF through tegra241_vintf_hw_deinit(), which issues a CMD_SYNC on
-> the shared CMDQ while it is still enabled.
+> On PRIQ overflow, partial requests stored via report_partial_fault() whose
+> LAST-page entry was lost stay in iopf_param->partial. Drop them by calling
+> iopf_queue_discard_partial(), matching intel-iommu's handling.
 >=20
-> arm_smmu_disable_action() already runs this hook before disabling the SMM=
-U,
-> to cover an unbind or a probe failure, and no devres release ever follows=
- a
-> reboot or a kexec to run it again. Have arm_smmu_device_shutdown() call it
-> directly, instead of reimplementing part of what it already does.
+> Do it only after the queue is fully drained, since the visible entries all
+> precede the loss point: a group whose LAST-page entry is still in the que=
+ue
+> gets assembled before the discard, rather than losing its stored partials
+> to it.
 >=20
-> Fixes: 9ff145a25c5c ("iommu/tegra241-cmdqv: Fix CMD_SYNC use-after-free o=
-n teardown")
-> Cc: stable@vger.kernel.org
+> Nothing can arrive in between, as an active overflow inhibits new entries
+> from being written to the PRI queue until a final CONS write acknowledges
+> it (IHI0070 8.1).
+>=20
+> Suggested-by: Harsha Vardhan V <harsha.v@oss.qualcomm.com>
 > Assisted-by: Claude:claude-sonnet-5
 > Signed-off-by: Nicolin Chen <nicolinc@nvidia.com>
 
@@ -67,5 +67,5 @@ Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/cover.1789081084.gi=
-t.nicolinc@nvidia.com?part=3D1
+t.nicolinc@nvidia.com?part=3D11
 
