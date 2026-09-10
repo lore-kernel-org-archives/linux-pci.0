@@ -1,63 +1,68 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 999FE1A3A80
-	for <linux-pci@vger.kernel.org>; Thu, 10 Sep 2026 09:08:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE2663AAF6E
+	for <linux-pci@vger.kernel.org>; Thu, 10 Sep 2026 09:09:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789031297; cv=none; b=lZfF205eshlFniXUorH6QSikXZ4Z+9JVcQI4tiq8loTQvzZ7qfMhRFpiYWyUgVdoEUCuPm6RDNPSM8775EvDtQz+scjzO6k+u53dETPK4EyvT6uz3N/1r9cwixIQcc9ZOeSrSYd7WXTGU+6VsoIzmYuipRH94dAS/OX/wYVV2OI=
+	t=1789031342; cv=none; b=Zq7Cw50LrtORMf4T30GxsKDR96jdOkC3kQ7URFR1Mt/G4QBuf4g5F00pOLC/EBKpSRh4/xQMfmoKKDmnqv+hwh2cegOIRGvxeVwjIC+4j92iO+k/0ifzhntGJTF3eLTQQIEgurf3NOg9OaGYOUOO2Fg2ZxavLx4+X8ju2A4qKHE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789031297; c=relaxed/simple;
-	bh=L0XS7NLfJCOacJULPOxAmXcuhZuRx9g5eebZR+Y1oro=;
+	s=arc-20240116; t=1789031342; c=relaxed/simple;
+	bh=1Baq5mHMTA+/ottL2WThUSBqVslSUW91OpUWvqqRnX4=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=bezVNjn59XVgcTucO2qRi6VbIF/umSxOJJh/NxGCvxQimWDhqk20KCnWyEpLd714bH/tdZCs1hJByVMWDGq705XaZ7IQA+lnNvn+E21ueULkNt3OzDYg5QccuOx1uUqP5cr2vkDMAxp+qtnl/JJ5TgUboiyAyJKenMB2MSUn42c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=I+8gmVZ1; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=lDkzqSOMm1b4ZWcN9TVlNldhL9cd0EYN3X0+l04BUIoIzTV3B21F9h3JNt2mEIi20KK6xRvXMReceHvgmDRgAPtmhufXvvDlp3kwFhotYBLWHaCZdoulidcNntH/nOW6pK41huuJtCL53FxX23ZVUkdLYP6WsGEhLWbBZkNecF8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HEiCSHan; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="I+8gmVZ1"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E77E71F000FF;
-	Thu, 10 Sep 2026 09:08:15 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HEiCSHan"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5D8FB1F00893;
+	Thu, 10 Sep 2026 09:09:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789031296;
-	bh=L0XS7NLfJCOacJULPOxAmXcuhZuRx9g5eebZR+Y1oro=;
+	s=k20260515; t=1789031341;
+	bh=K3F5RPI7/4eWgoEf8qym76NP2+0waJEFemnp8bspcpA=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=I+8gmVZ1B1nV3IPvpIjXB5U1tP8oc4lRY6hJFyEbw6hdTYqr4mCAH20sYHFWkOXba
-	 8N8SuhQ4ZaoB5IsgWBxHsIcq6e1eWbXyFtrIrPl8w+i6EsOLt3yOumSuwor29Qgxrd
-	 ceWxLX8y1WtLX2viKXfv6VdZ2g9uQlQ1/nZlKizR2Wp7xncWTDtkQeOcFkQd6+ZPhz
-	 HOTWQrafeb4EhZhATthV0gngn0Ww1CDvX7OK2OcUvtIVdaj/4PmSbKoWwXUAGOKrMk
-	 +3V3R3YcuY3u7dPkC7NY5vByk67tC173ns6GUoSXkQXMQb1p7j6oMluj93dtoH74wt
-	 FJatZ9B5HLMeg==
+	b=HEiCSHan3exsBq74a/OFH1REnfs+8NiO/R9lYvHWDOq4Cb3nYP6DIxSsxMe3hQPo4
+	 /8dmCdwdaFDmbsatE7oLQNea7lF+43oSBC3agiTygFCfnPxxz3XOk8eORo4vP//jpi
+	 NWCnQwAAuHL1BVBStmAhi2oBkn2WS5gMQdhPeyNyyCm9TqWHEPHFiobaZvTgN209MX
+	 016EaxnombVt9SWBux+VRdYn0h0YoX2JAmFPRryD5HeYgHEWp3bLE8f4KBniF2ucja
+	 IswSb2YVx2DDwxoaYH3ISgt0o8+1oTd9siXtC9hRZ4L98m2+9F3hSxzJiwHwZ39JXr
+	 FrwFPiCFbaLAg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v21 3/9] rust: implement `ForeignOwnable` for `Owned`
+Subject: Re: [PATCH v21 6/9] rust: Add `OwnableRefCounted`
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Andreas Hindborg" <a.hindborg@kernel.org>
-Cc: ojeda@kernel.org, gary@garyguo.net, dri-devel@lists.freedesktop.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260910-unique-ref-v21-3-e83257373062@kernel.org>
+Cc: dri-devel@lists.freedesktop.org, linux-pci@vger.kernel.org, gary@garyguo.net, ojeda@kernel.org
+In-Reply-To: <20260910-unique-ref-v21-6-e83257373062@kernel.org>
 References: <20260910-unique-ref-v21-0-e83257373062@kernel.org>
- <20260910-unique-ref-v21-3-e83257373062@kernel.org>
+ <20260910-unique-ref-v21-6-e83257373062@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 10 Sep 2026 09:08:15 +0000
-Message-Id: <20260910090815.E77E71F000FF@smtp.kernel.org>
+Date: Thu, 10 Sep 2026 09:09:00 +0000
+Message-Id: <20260910090901.5D8FB1F00893@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-> Implement `ForeignOwnable` for `Owned<T>`. This allows use of `Owned<T>` =
-in
-> places such as the `XArray`.
+> From: Oliver Mangold <oliver.mangold@pm.me>
 >=20
-> Note that `T` does not need to implement `ForeignOwnable` for `Owned<T>` =
-to
-> implement `ForeignOwnable`.
+> Types implementing one of these traits can safely convert between an
+> `ARef<T>` and an `Owned<T>`.
 >=20
+> This is useful for types which generally are accessed through an `ARef`
+> but have methods which can only safely be called when the reference is
+> unique, like e.g. `block::mq::Request::end_ok()`.
+>=20
+> Signed-off-by: Oliver Mangold <oliver.mangold@pm.me>
+> [ Andreas: Fix formatting, update documentation, fix error handling in
+>   examples. ]
 > Assisted-by: LLM
+> Co-developed-by: Andreas Hindborg <a.hindborg@kernel.org>
 > Signed-off-by: Andreas Hindborg <a.hindborg@kernel.org>
 
 Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260910-unique-ref=
--v21-0-e83257373062@kernel.org?part=3D3
+-v21-0-e83257373062@kernel.org?part=3D6
 
