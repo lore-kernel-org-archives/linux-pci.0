@@ -1,159 +1,211 @@
-Received: from mail-wm1-f71.google.com (mail-wm1-f71.google.com [209.85.128.71])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from CY7PR03CU001.outbound.protection.outlook.com (mail-westcentralusazon11010022.outbound.protection.outlook.com [40.93.198.22])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A4ECA48E0CB
-	for <linux-pci@vger.kernel.org>; Thu, 10 Sep 2026 14:34:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.71
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789050901; cv=none; b=Y7rOWk7V/zM6KHz44fln8WYUz5Qb2hN+F1+fDtHNjQx1elMhZyzMrq39FD1ta4RfeX28qUgmKbHyqGiB8Yn10kvzcJJbCYm37XC/6y3ceQMrM0aIlqmBCUm7uTmvfxhGD4d36tKZtS0LRRT4ZrvX3KL3LZzq7qg4LPar+WeQnNg=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789050901; c=relaxed/simple;
-	bh=ha/G3dQOHNOkYRKWPJia3wRwrtSelDlCsigpRGS/33A=;
-	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=rT7jnvOKjj57bd3yZ82JTRyuM3HoFYkIdPbINSmZc/p9s4MkQ/MOY7/TffDueYkgs+hK7fJgivtp1QktzYJRBOWIj9SN+K2fJ68muS2FNUcHP6E0pyv68YxEkQ/E/VVPo42AooJvOezP0oxXfV8FwuSP1rnfwsse1U+TT/2B0Kk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--ardb.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=l+/SInvH; arc=none smtp.client-ip=209.85.128.71
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--ardb.bounces.google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B672484235;
+	Thu, 10 Sep 2026 14:35:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.198.22
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1789050919; cv=fail; b=Tj9Snp/jjFzKjn+4ejWs8Q3fghLpzBbs6j1IGJc+7zj11B5iUEQLQBX8ApuN9nb3JU5TIIvt+6HjqK9pdVck7f98GU7/yLTAVX7gsVYaO09IMsRNsynT3h5lpOqqojXdtw56K5bQn+lxjCoJ7aQClMhxkroJF1z70RhjJByxJAs=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1789050919; c=relaxed/simple;
+	bh=kjcrgnB/gaLCvNcFN+vkDu1BRe4ecmW6WUtgaZhNDmc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=LxIQ376TG78Bd4L+tgtdi2ZtMSFjc+MT//ts8JwdSbYzvBxD1cFYk3PTB5yDelez+rTQjLBpfS84t8UDEvTftjs7PdUwHVV8bnOnkNL4quJU86SmUn1Xlmwd4eBcS8qZfRRmmn+/QclmRLRDMlJk2EgXCSPMZhxB/3/E3i1VB0o=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=f2OwnqIu; arc=fail smtp.client-ip=40.93.198.22
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="l+/SInvH"
-Received: by mail-wm1-f71.google.com with SMTP id 5b1f17b1804b1-4994d67d0e3so51888475e9.2
-        for <linux-pci@vger.kernel.org>; Thu, 10 Sep 2026 07:34:59 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1789050898; x=1789655698; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:from:subject
-         :message-id:mime-version:date:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=vLdGOSaZKVRiQ2yqyODIPDHphzpEsgnt6OvmN+p7ZKI=;
-        b=l+/SInvHlpM8SQ3WZf+NFDSYvChYdilqkq6ZZD7O4TaX2NQs9zmTg6te3gb1vkvIuF
-         4SWGWitDRfviYg03mEZca4vpq3SNLK0LtMX5URss/eYrMdijOmq3/2QQkuArzF4Avi7B
-         27TU/9YRr5jCSVkQwLYDTVC7259oSxBZR5Y5VQ/xrSKFA6LUGyFM4aGSi7+/6tO0AAfQ
-         vFtt1y//3syVDUIYj4iwF16XNNVgJgFAWT8nrdrg+sMZoJuS0t9/1fdOOSaMZevTTEuW
-         ugmCbQ365gBnsrN4hWxONO843uOESSjTBy9BErOrxGEECwjamP1k7JFpLbqQzU3zCf2h
-         n+2A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1789050898; x=1789655698;
-        h=content-transfer-encoding:content-type:cc:to:from:subject
-         :message-id:mime-version:date:x-gm-message-state:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=vLdGOSaZKVRiQ2yqyODIPDHphzpEsgnt6OvmN+p7ZKI=;
-        b=jI6pq0cUIr4C38d6+IhVTxKnKYPQB7/MA3hp+d77xsDKjNZIHUAX2oUkGLHmsGjEPy
-         SQVXcTLk1y4lmmtiiPgJ/i1NjG9z6pov3vboru++mds5HRhDKSoEOG0PuDTPloFZ3dLQ
-         QwvPuEadWbXEGvLw3TaL95LMPDvcweOu5tSA85EiFYROJ3qq4B/BA2ovkzrFzQpBkBTN
-         IK/yUjoslZqV+Y5AorhzaRkUc8qnkKY2X9IhXVaHeDBuRLEYZxYLY1W4MdBzrWcGW9ew
-         mMeg+m8JGxH+1FWfMKxCkZP+NUqQd6lS9TrIDKgfkyYHMg9kLhbl1wolWfsGL+51bqUA
-         ygug==
-X-Gm-Message-State: AFuF++mONu9FSbo6NJHzznfzEim74cf4nn7L/Sf/qj9C43xxMVhJ/6g9
-	4MUXz23BCP6Lpq1NmE67oCAquptd5yRBZTG5EDtpkWy/yCrPCuktwkCj0+E2hIVx0kVeatJYwr1
-	XSDfJ2TBaMpanRGQmYJI/eGQ2XGgTa867X77j+z1KxLcxejW/qhJZPix3us2EprOmNM0AbbRDdq
-	dypVnbUakd27Vu9l0JJVL8K3FLB4Mbgg==
-X-Received: from wrck19.prod.google.com ([2002:a5d:5253:0:b0:481:42c1:a3f])
- (user=ardb job=prod-delivery.src-stubby-dispatcher) by 2002:a05:6000:4804:b0:482:e451:6810
- with SMTP id ffacd0b85a97d-4858703f65cmr46225743f8f.1.1789050897441; Thu, 10
- Sep 2026 07:34:57 -0700 (PDT)
-Date: Thu, 10 Sep 2026 16:34:39 +0200
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="f2OwnqIu"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=Zjxtkdl8dYBTOYC0Z5F+08YPlVpRsXNrcCJPggS4lq+DcX5Upum93jGqBcyCYYHQbr9AsF9G6HH0mUQTFNNc1ypQrc5G8ZlGfeWWYvUuQFIrqPufOTyrc9gORiAvne4jIWzhdFxnH3f02sWsD9056k0YB2Ihd1jvg8tXM6hMgx2kB4zpuba8pWeqgvUcVnUjHZZTB0Bf8d2h2F1/dVvomaHoT3ngR/XZb8x87fXWkmFFMQjxK6xabtm1pYcwUrAVNhqVeqUoIq4HrbLCuN8J2+BqnVN51vE3b6JhDX72N/6j55nzy5tFEkv2rt4fwxO/K1p3F7A3KENrRhyq9YcHWw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=yGaDNeCAQw6LA8Ce6lgx49Gtju8XahkrrOV+TIgPgFg=;
+ b=L16RLmjn5uvgFGRdyv3uFRkn8Y7mrMmypzjy2NxB70jX7I6b+77ZaA5iqEmkOQ4Qvx31VwC/kCjuwApTWc2C5I+Qi228eeCJMcWm7cqlOHTtvZuVxbhUHS+I3sYjM72KSCBXCOgK6kgmIN6vZEVA1cfG8Xu2+KHVpDfTdaBR/ZnwrH2Gi7st0Ku+zA3pvdkXv4ragy7PfjkDBy+JuPtdkHvJRJiR4fsbDATnvVmDdPWLb/xN1Y9nXKnyDmkumVhFD8kZM7+fYLjD/x8B5emVzAe/6a36mIaeMyOGFdPAlvNGwQwJ94RAaqud4drM1aLH5vUzb3olN0N3BcJIaZCjqA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=yGaDNeCAQw6LA8Ce6lgx49Gtju8XahkrrOV+TIgPgFg=;
+ b=f2OwnqIup0agPSiuaOnj2H/Rsx+cgcZjn+ZI+yT0dTapY9bTv2dkS8JLEFlkXZE2hGORK1XU4QzRjptQQeHHpLTib0atyT9fG4n7YI5bM3Ai/HLUfQkAveFLYU+RuHAfZV8yGVg6tQPkkkI/iiDmvlDbaqfjW1s329yP9nmUULnAjLptG4BiKn7fhyM7hFM5nFHHci76O5WKrm1tQcjJ7x5mSIxrIY9nlgyZFldPhuJnm1hoXtJ1/YtOGc4Yv1okfY50ZvW2c86srbk2lR2OGRrHjPIOoX+wM0qCw6ZSzYPe0OCh5zIIyhGmAzWr/WXXbiixd+Ta6/CuARasGvcX4g==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from LV8PR12MB9620.namprd12.prod.outlook.com (2603:10b6:408:2a1::19)
+ by CH3PR12MB7548.namprd12.prod.outlook.com (2603:10b6:610:144::12) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.406.9; Thu, 10 Sep
+ 2026 14:34:50 +0000
+Received: from LV8PR12MB9620.namprd12.prod.outlook.com
+ ([fe80::299d:f5e0:3550:1528]) by LV8PR12MB9620.namprd12.prod.outlook.com
+ ([fe80::299d:f5e0:3550:1528%4]) with mapi id 15.21.0406.007; Thu, 10 Sep 2026
+ 14:34:49 +0000
+Date: Thu, 10 Sep 2026 11:34:48 -0300
+From: Jason Gunthorpe <jgg@nvidia.com>
+To: Sean Christopherson <seanjc@google.com>
+Cc: David Matlack <dmatlack@google.com>,
+	Logan Odell <loganodell@google.com>, arnd@arndb.de,
+	pasha.tatashin@soleen.com, rppt@kernel.org, pratyush@kernel.org,
+	graf@amazon.com, akpm@linux-foundation.org, pbonzini@redhat.com,
+	maz@kernel.org, oupton@kernel.org, bhelgaas@google.com,
+	alex@shazbot.org, kevin.tian@intel.com, dwmw2@infradead.org,
+	baolu.lu@linux.intel.com, joro@8bytes.org, will@kernel.org,
+	robin.murphy@arm.com, linux-arch@vger.kernel.org,
+	linux-kernel@vger.kernel.org, kexec@lists.infradead.org,
+	linux-mm@kvack.org, kvm@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, kvmarm@lists.linux.dev,
+	linux-pci@vger.kernel.org, iommu@lists.linux.dev
+Subject: Re: [RFC PATCH 0/3] liveupdate: Move to feature flags for LUO and
+ memfd ABI compatibility
+Message-ID: <20260910143448.GD3968357@nvidia.com>
+References: <20260903023452.721732-1-loganodell@google.com>
+ <20260904160009.GV4157646@nvidia.com>
+ <aptFFYqcSiBdMLE8@google.com>
+ <20260905012403.GX4157646@nvidia.com>
+ <aqIAtOoew-_6jw29@google.com>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <aqIAtOoew-_6jw29@google.com>
+X-ClientProxiedBy: YT4PR01CA0382.CANPRD01.PROD.OUTLOOK.COM
+ (2603:10b6:b01:fd::19) To LV8PR12MB9620.namprd12.prod.outlook.com
+ (2603:10b6:408:2a1::19)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-X-Developer-Key: i=ardb@kernel.org; a=openpgp; fpr=F43D03328115A198C90016883D200E9CA6329909
-X-Developer-Signature: v=1; a=openpgp-sha256; l=3113; i=ardb@kernel.org;
- h=from:subject; bh=d0ouAXSJJKlPEcoAofimBWCt5MeyJAw1y1ceFAVT0fQ=;
- b=kA0DAAoWMG4JVi59LVwByyZiAGqiwAGg7JiMNdgBxG/csgtc6YaVRLSrODPmBtIV+lbgDCIQG
- 4h1BAAWCgAdFiEEEJv97rnLkRp9Q5odMG4JVi59LVwFAmqiwAEACgkQMG4JVi59LVxY3gD/RAOg
- XhLaWgkX74KmgFPKBOAtUuXpKmxVQAfcGk2+3NUA/0LzFhVedW97oukbC3wii5l9fXuBCkUWCX9 mERYBPBMG
-X-Mailer: git-send-email 2.55.0.1003.g10538fe699-goog
-Message-ID: <20260910143440.3865663-2-ardb+git@google.com>
-Subject: [RFC PATCH] PCI: Tolerate non-prefetchable 64-bit BARs in
- prefetchable windows
-From: Ard Biesheuvel <ardb+git@google.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Ard Biesheuvel <ardb@kernel.org>, 
-	Bjorn Helgaas <bhelgaas@google.com>, 
-	"=?UTF-8?q?Ilpo=20J=C3=A4rvinen?=" <ilpo.jarvinen@linux.intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: LV8PR12MB9620:EE_|CH3PR12MB7548:EE_
+X-MS-Office365-Filtering-Correlation-Id: dd4d5558-fb52-4dc7-24fd-08df0f48ab01
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|366016|376014|7416014|1800799024|23010399003|56012099006|4143699003|10067099003|11063799006|18002099003|22082099003;
+X-Microsoft-Antispam-Message-Info:
+	W7fL3tR5Qv8XL0OnHzoPpp/xUPIdIJWtgtdh/PlG5QxJLUXiWqzzHcZzx3EvP1kjUMBwkHozof7b7gUKbd6i7yB7K/guW9mbLPeyrJGyC4l+gQoI6cpugJtgpNbmYr0gxAYluCtbpYe3Hllo6JED9MMu+xBRY46esjSKCAjQ/hYvYGBsO+sRbYksweQuHIIrgboxSkGWwG7OZ1rgiJhkNXsa0yLUMruhwLDUHwGWbwfuVoEq3M2boBelIhoZVfygtXiE7gCZVl2a4hYhh7uACEJajQitEED13ow9XPXDeX4YJkpWDRsCaNLoWB49Jy3Mihq9/lsLNm8vfzxypGYNjL1dax+se/vwWJeJ937uxJzPNGBFis7/jFoMc1Zo3kxX9ncEYXaiTCxvkvtVDkCp+jpZSPz56OCqatNX1PqNx7HWOLdh+5AX1P2hhRdn/aVH+gS1EI3xwYHmILXqMzl2mkCYNdmVtLbjZ/u9dGX4u3kJNCHolChEghGZDRoIaNPJ+tlkn7krYO0kUYjVAkyjkUnPx7Q55YUkiqnx1AoL9YSJAWRmlExQWXGF5Fgv3+2aohBrv1KH/afW3UaigKwE+5emk94kmrAuJqrC087ohxlLGgw1EzLfkfvylQJ3L52uXQBELSAunFOjFm0rPdwbwfTN5ccRRNCKhp0OR1eU+Uo=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LV8PR12MB9620.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(376014)(7416014)(1800799024)(23010399003)(56012099006)(4143699003)(10067099003)(11063799006)(18002099003)(22082099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?BxUJYm/AyTtdf7nczxhFfvxNLJvX7diqQcOL/vzoaP5GqS8IFQko4pKWMEXr?=
+ =?us-ascii?Q?Ue35tIN8XMV6uCTq12XPgbnqF5lONYa5EAEN6/AffHScg8Oz/6QmKffp8mgU?=
+ =?us-ascii?Q?nGHH566LkPbREQau9pJvNxjFDz02RoLKQtBjqhMCVPudbwdum5AQiniww5yR?=
+ =?us-ascii?Q?Gr1UQAM1MliXApgR8qc+gM6D4JWOg0pvFkJAsVYVvZRbp5XGKPuqYCuKj+5c?=
+ =?us-ascii?Q?GIGq/yULbXW3SNuMGuUiZWyoL1+EP5yhHaOb/gjyCRojXSGKA2u4yIMgYQLP?=
+ =?us-ascii?Q?Tirc6yX5G5jjPhJaNs8K0PgnoP4TxPulwBcI6IDCd5cPIT2zMKsKhkZX76fB?=
+ =?us-ascii?Q?H0iJMr/KOMPsFdh0BNBtajCH6cq5giuHj2ST3+u5REgbQLMIDGJksP2PykoS?=
+ =?us-ascii?Q?Zhgr5aPExVlPhkHohs4p47IAz0eYO/KrPBl/R7/+ODDCxwAdMBX7kRzl719D?=
+ =?us-ascii?Q?PRpmtGd0oQNn6Fqr2K7MuI6KjwegOtecEIftF16Q/1oI6UdShvfiPbNP8s90?=
+ =?us-ascii?Q?yifS+Bmt7nIo4Hn0owEP7KZEwkA40Sqaz85h12Fg8QUKOSg3c6ct/pz1uSHs?=
+ =?us-ascii?Q?p+BxnQ+KtliecNRUD2YEKuFkLc51pmitqFpGW3dEbdNICRbKCeqU5L+SCh5o?=
+ =?us-ascii?Q?bmh4vT8byQk0FGiHaEWZbvkvl+zcP7TfLJt9/O/E8rPGe8akq9g6lLkiTqDW?=
+ =?us-ascii?Q?bTVYe4eQ03zpPzKaxAXSDnrpCuhABUZ8E0bamwiKyBVU7hstNFkXCfn/rUiY?=
+ =?us-ascii?Q?GQP6S4owjIrZeOs2cH9lSAqDxpXCCV6pR/EmGKPjQr8KZK+38+ZVa2GXanVp?=
+ =?us-ascii?Q?caZB4Xd2ZCzRQ8F4o+UEnt+5cN5CW1aEXmRGzScYdEjm1xT1wDy69srjw2ae?=
+ =?us-ascii?Q?aHe2iQJUpAUnCDghZ53Bv3xF6TS8RI/GUW7q+tuhXZNlz/2J+PEA0uc3UmFo?=
+ =?us-ascii?Q?8aC6I2hMP7baVdr7dngiHKg1xbLljrVsfgCZLvRK1CUfVuqOFVrHm7t3O4kU?=
+ =?us-ascii?Q?0yRhMJLb/1MJCiHBJA5fK/LlH7tnfR6z43/8U/AHcNxb0IqEyuBSoSpe5SXq?=
+ =?us-ascii?Q?8frwLewvQ9+STYb2HlnXY8QrSvmw7LuhXfAwkGpsm07D1nBzCagrpXpV89U2?=
+ =?us-ascii?Q?xywDyyN3HSgK15q//5iz22wiEHnx2+3QKtrsdsAZRXnhdtxMg7Jpc8GCPrTk?=
+ =?us-ascii?Q?eXW956Vmz4DdTtpmoPM0Hn7EbSzBMQA+y7ltUUzskVgMSeMwqmYd5U6S+J18?=
+ =?us-ascii?Q?BlJzF3/ljYILJJtQBqJAEjTDftDJeI6fz+tKDTCnqafajK2OhBcOwWd5vdPK?=
+ =?us-ascii?Q?gEikV4AC+8gvkO6HBMdPH5NCU4WuQWIaG76u+giwXAKRiK3Pba02cWLVrtK0?=
+ =?us-ascii?Q?hEHCl/icuut9GthhlZ4Ifps6r1hHelgPnsky45IM5waFyIDP/USLzoEtQMjY?=
+ =?us-ascii?Q?wCVaCNAUAwPA9lDWHI6e4P9AXHPi2wiejSt5LD01opWojWsGs4VhE39gUXj/?=
+ =?us-ascii?Q?rKzGzy27HQ5sIRoSQSbyIraikdF1uW3wqYpdyyc8B/6HRCcP+Pt9ItO4tECi?=
+ =?us-ascii?Q?R4LhM2+yxBFevidDjza1zWVkzEzm8BMCC5IUUoobw9FTsg6F0gvfMWqFWtnh?=
+ =?us-ascii?Q?w02t1Dsu9OCa+xDOeQgJjDaC171gDzok+E7GGmFe8jR1Qj00T6P3Iq7Lmpye?=
+ =?us-ascii?Q?eOSP/bKCudZX8to88/Zjsri66kVICplZYdX1mJZ9gNQrC1Hh?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: dd4d5558-fb52-4dc7-24fd-08df0f48ab01
+X-MS-Exchange-CrossTenant-AuthSource: LV8PR12MB9620.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 10 Sep 2026 14:34:49.2519
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: pYgWT/OJjholglhzIrpqy/VSfI610wP/Y5/Igt5bs4YpyBamFV68piYlehfnEUhz
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH3PR12MB7548
 
-From: Ard Biesheuvel <ardb@kernel.org>
+On Wed, Sep 09, 2026 at 05:58:28PM -0700, Sean Christopherson wrote:
+> On Fri, Sep 04, 2026, Jason Gunthorpe wrote:
+> > On Fri, Sep 04, 2026 at 10:24:21PM +0000, David Matlack wrote:
+> > 
+> > > The proposal here (which is inspired by the KVM UAPI) is to ensure every
+> > > LUO ABI struct has 2 properties:
+> > > 
+> > >  1. A field to encode options/features (e.g. u64 flags).
+> > >  2. A way way to grow without breaking backward compatibility (e.g. so
+> > >     we can add new fields).
+> > > 
+> > > Each flag can mean whatever it needs to. e.g. It can indicate the
+> > > precence of one or more fields (i.e. new fields in the struct), or it
+> > > can mean a field now has a different meaning (i.e. union in the struct).
+> > > 
+> > > This would enable adding support for new features without breaking
+> > > backward compatibility. Downstream users would have to ensure their
+> > > kernel does not start using a new feature while it can still rollback to
+> > > a version that does not support the new feature.
+> > 
+> > This was never the biggest problem. The main issue was the functional
+> > behaviors of the kernel that cannot be represented simply as data in a
+> > struct with some flag bits.
+> > 
+> > Like for instance kernel A supports memfd folio sizes far larger than
+> > kernel B because we fixed MAX_ORDER. You can't fix that just with
+> > simplistic flags.
+> 
+> Can you elaborate on why the folio sizes matter?  Honest question, because I don't
+> understand why the serialization format wouldn't express things as "N contiguous
+> pages starting at PFN X".  Then the implementation would rebuild its folios as
+> appropriate.
 
-The prefetchable vs. non-prefetchable distinction is a relic of
-conventional PCI, to denote from which regions PCI-PCI bridges were
-permitted to perform speculative readahead.
+That's an idyllic view, yes, but my point is (IIRC) we didn't do
+exactly that for memfd.
 
-For software compatibility reasons, PCI Express inherited the Type 1
-header and models PCIe root ports as PCI-PCI bridges. However, this
-readahead behavior does not exist in PCIe, and so this distinction has
-mostly become meaningless on the bridge level.
+Sometimes you can do more and more work to try and be more and more
+general but this is *alot* of work and even then eventually hits
+problematic limits. Like what do you do with the sealing flags? That's
+ABI breaking if the successor does not support them, and downgrades
+make exactly that possible.
 
-As per the PCIe r6.3 ECN "Removing Prefetchable Terminology", the
-'prefetchable' designation has been removed from the specification
-entirely, on the basis that it is obsolete, and is being abused to
-inform memory mapping attributes and other device/BAR level properties
-that it was never intended for.
+A CSPish user can do things like patch the new sealing flag into their
+current kernel (while preventing userspace from using it), ensure
+everything is updated to that, then jump ahead to a newer kernel and
+enjoy the new flag with full downgrade support. There is so much more
+control on their part that makes the problem far more managably simple
+that upstream does not get to have.
 
-Given the limited range for non-prefetchable windows in the Type 1
-header, and the fact that the distinction no longer exists for PCIe,
-resource allocation performed by firmware may result in non-prefetchable
-64-bit BARs being allocated inside prefetchable bridge windows.
+This is why I think the very idea we can support any version pair is
+too much to ask for. We should focus on supporting a small set of
+version pairs and not making it too invasive or hard in the kernel or
+on the maintainers.
 
-Linux rejects such allocations ("can't claim; no compatible bridge
-window") when it encounters them, but will usually fail to produce an
-alternative allocation, given that firmware wouldn't have placed them
-there in the first place if there was sufficient space in the
-non-prefetchable window.
+Thus live update within a stable branch only is my proposal for
+upstream support.
 
-So at the very least, let's not reject such allocations when they were
-made by the firmware.
+If it really succeeds at that and it becomes very popular, then let's
+discuss upstreaming doing additional version combinations.
 
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "Ilpo J=C3=A4rvinen" <ilpo.jarvinen@linux.intel.com>
-Signed-off-by: Ard Biesheuvel <ardb@kernel.org>
----
-Link: https://github.com/tianocore/edk2/issues/13104
+> I could see things like HugeTLB not working if someone booted the kernel with
+> support for only 1GiB pages and then tried to feed it payload with sub-1GiB ranges.
+> But to me, those sorts of things fall into the "well yeah, don't do that" category.
 
- drivers/pci/pci.c   | 3 ++-
- include/linux/pci.h | 4 ++--
- 2 files changed, 4 insertions(+), 3 deletions(-)
+Okay, how about worse, todays kernel has hugetlbfs and there are
+patches around to luo serialize that. Lots and lots of talks about a
+post-hugetlbfs world out there.
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index b2879a6be5f8..e33eb9f3a139 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -761,7 +761,8 @@ struct resource *pci_find_parent_resource(const struct =
-pci_dev *dev,
- 			 * not, the allocator made a mistake.
- 			 */
- 			if (r->flags & IORESOURCE_PREFETCH &&
--			    !(res->flags & IORESOURCE_PREFETCH))
-+			    !(res->flags & IORESOURCE_PREFETCH) &&
-+			    !pci_is_pcie(dev))
- 				return NULL;
-=20
- 			/*
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index d31a8d107b1e..1cbb4b6c02c3 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -2684,7 +2684,7 @@ static inline void pci_vf_drivers_autoprobe(struct pc=
-i_dev *dev, bool probe) { }
-  * need to calculate PCIe capability offset from raw device for some
-  * reasons, please use pci_find_capability() instead.
-  */
--static inline int pci_pcie_cap(struct pci_dev *dev)
-+static inline int pci_pcie_cap(const struct pci_dev *dev)
- {
- 	return dev->pcie_cap;
- }
-@@ -2695,7 +2695,7 @@ static inline int pci_pcie_cap(struct pci_dev *dev)
-  *
-  * Returns: true if the PCI device is PCI Express capable, false otherwise=
-.
-  */
--static inline bool pci_is_pcie(struct pci_dev *dev)
-+static inline bool pci_is_pcie(const struct pci_dev *dev)
- {
- 	return pci_pcie_cap(dev);
- }
---=20
-2.55.0.1003.g10538fe699-goog
+Do we want to constrain what is possible to ensure we accomodate this
+hugetlbfs serialization? I vote no. 
 
+Do we want to reject the hugetlbfs serialization until we have a year
+of debate outlining every possible ABI scenario? I also vote no.
+
+Should we make a downgrade round trip a downstream problem? I think
+so!
+
+Jason
