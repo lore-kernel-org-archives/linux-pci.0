@@ -1,148 +1,126 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9BEF93C3F7C;
-	Thu, 10 Sep 2026 07:20:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2BC72371899;
+	Thu, 10 Sep 2026 07:21:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789024848; cv=none; b=hYTk7G9s9di7dvaboq57vnLZfRX4pjSpIxeTFVaDNLeesRI2QAyRg7UeJM80joYmwQjyiCm8ViC3eYbAzH8B9g5knPGSs8IAQ14/F1KQ1BTRGWVuitSGvc1f2DeZxUL29I+zP824lI4We8JU5SxoVe7Xd1epnrnqWY9O+Id7sIA=
+	t=1789024870; cv=none; b=KGivpQZ0YjNgFIVFuWFqa3GW7SVEL2USXA1MFnwSG4ka0ALmppjeO/x5yw1gwaX4wXhD+PfrZjsbdTwOsAj/xamRZSCVwdZloMxZcnvJZ8I3rlIExneDywdy+29CQkrXPStvr68ljQu+L9tX8rkbSEHMNK3H63V9QyuwbRdfkg0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789024848; c=relaxed/simple;
-	bh=9pb6lvxSE4716Mh3bYWSNhob+reX+AQ4b92rjVDH1xA=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=LdxMrPZxN2zLivnop4AxofXZNmKbn9dd+Nn8UL2tTnixGcSKO0EOmP9tKIdhY3jQ7agJt+O/tFuIc8ln5ShwwQnSm/w8h8W99j/S2dLgUJISVXeArLBRczrjahArwMReFIuW4M152SG4OTujmCS95AH00471nC3id0+EHj5lgdw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AtkB/uCb; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789024870; c=relaxed/simple;
+	bh=q4L0q0OfnPuvtFAGnEBOkYmRezNqJwmRDFb+02NRgZ8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=EN3ykjY6mLHOWfHryUgXUPiZ/M694aWPH+wFZ5AF86zHctjdHJVay/+DGW92JatA9otSNFmBes0qN/BkZq+76GWgyr/07yntDLef1CpgyQoi3kVQAxRm8h5IBnQ2lV+lkubdUbZzsSRbd7z8z9/+HNzBHYPJwjQMKyVfxW6zRII=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gKcSsOZT; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AtkB/uCb"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 85C621F00893;
-	Thu, 10 Sep 2026 07:20:46 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gKcSsOZT"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 282A51F000FF;
+	Thu, 10 Sep 2026 07:21:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789024847;
-	bh=AYaoo468GvdHguY+ngEYS5l2A5zCVheJqeq3Zj7vZtg=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=AtkB/uCbyRilSYg/HZKtacnbJUoB8cA0CIgUTg5ZUnRk/PbSUgpatPK9AzjdUW7W2
-	 aYlGkYkAAggOIoEf/1KkjORfYkfjMCpewdz/wq1+V+yopnHEF3BITWQ6OsqyxEbbRY
-	 dS4VlXOqBVwd92nX4RbyIAdXyZVy2GOy22YriUXT2Fn/ZENF1ALF6ssibMfVUu7rNB
-	 G/7ra/l1QWLnyD+WD+18Uu+2KAG7ry6/pDSSoN+XDCiwfPEz1tkcpV4MgYtTpgaQFj
-	 PGIxmKT+IAxUgglommO4tvj7NqobHEQ9CQQIgaDIslQ+KMtjxqE3RkbWBotz9VnCxV
-	 S/vtoN4IEhWFA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v12 06/12] cxl: Add CXL Device Reset helper
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Srirangan Madhavan" <smadhavan@nvidia.com>
-Cc: linux-pci@vger.kernel.org, linux-cxl@vger.kernel.org
-In-Reply-To: <20260910070808.1444264-7-smadhavan@nvidia.com>
-References: <20260910070808.1444264-1-smadhavan@nvidia.com>
- <20260910070808.1444264-7-smadhavan@nvidia.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 10 Sep 2026 07:20:46 +0000
-Message-Id: <20260910072046.85C621F00893@smtp.kernel.org>
+	s=k20260515; t=1789024868;
+	bh=fs2GO2ucfvQef/WDQaTt63tsX174+5+4LFAzvYnckFI=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=gKcSsOZTJUbET1+Lf+1r4mnFr7Udi36wc/aS4qJHWG6aRDYzmeXtWGX1+5Em1ryHy
+	 73tHbBAzUjbjXoZN62Bty+lGl46Xa3IG7AqrNoi9IX0C4s1WVYcoAYPuiFh1prt3N8
+	 xMrUFojnqUehLsb54NSlOElTAgqXC73wFisC6nMFTyMxUkbX4Etbqat0kSKZa7sRf3
+	 7JVGZo9SXlKnL/rotWcDtfceLir80hZirovQ8Sz0mpn3OUWumQeEHEzF30BIxJDsuu
+	 ifeBWGjqM9auzbIK8QtkCf+2Uv3Bbx0LNSwb40g0HQOl0oalks5gWKGn1fe9XpUM8+
+	 C3i4w6MWTuWOw==
+Date: Thu, 10 Sep 2026 09:20:58 +0200
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+Cc: Vinod Koul <vkoul@kernel.org>, 
+	Neil Armstrong <neil.armstrong@linaro.org>, Rob Herring <robh@kernel.org>, 
+	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
+	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Bjorn Helgaas <bhelgaas@google.com>, Bjorn Andersson <andersson@kernel.org>, 
+	Maxime Chevallier <maxime.chevallier@bootlin.com>, Philipp Zabel <p.zabel@pengutronix.de>, 
+	linux-arm-msm@vger.kernel.org, linux-phy@lists.infradead.org, devicetree@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, shengchao.guo@oss.qualcomm.com, 
+	Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
+Subject: Re: [PATCH v3 3/5] PCI: qcom: Add CGC disable workaround for Nord
+ PCIe
+Message-ID: <smgyk5ray7laj2ltwnmx3r7cfiouj4hyn7tyfmx7rpsrhu7kin@p5pr7wdoprjn>
+References: <20260909-nord-v3-0-b0a82721c547@oss.qualcomm.com>
+ <20260909-nord-v3-3-b0a82721c547@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260909-nord-v3-3-b0a82721c547@oss.qualcomm.com>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
-- [High] The PCI_DVSEC_CXL_RST_MEM_CLR_EN bit is not cleared on error paths=
-, causing subsequent resets to inadvertently perform a full Memory Clear.
-- [Medium] Missing final status check after timeout in cache WBI polling ca=
-n cause a false timeout.
---
+On Wed, Sep 09, 2026 at 05:18:18PM +0530, Krishna Chaitanya Chundru wrote:
+> Nord requires a workaround to address a timing convergence issue in the
+> PCIe power domain. To avoid the issue, set the CORE_CLK_CGC_DIS and
+> AUX_PWR_DET bits in PARF_SYS_CTRL after controller initialization.
+> 
 
-commit e65504bb1432889a2f2835801327341b00b21dfc
-Author: Srirangan Madhavan <smadhavan@nvidia.com>
+Both the subject and commit message sounds like this patch is only adding the
+CGC workaround (you need to expand CGC btw), but this patch is adding Nord PCIe
+controller support. So that should be the subject and CGC, l0s, no_snoop should
+be documented in the commit message.
 
-cxl: Add CXL Device Reset helper
+> The SLV_ACLK_CGC_DIS bit is already configured by hardware reset. This
+> change adds the remaining required settings as documented in
+> QCTDD11972446.
 
-Add an internal CXL Device Reset helper for Type 2 functions that
-advertise CXL Reset and CXL Reset Memory Clear in the CXL Device DVSEC.
-The helper disables CXL.cache, performs cache writeback when supported,
-initiates reset with Memory Clear enabled, waits for completion, and
-re-enables CXL.cache on exit.
+Mention that this erratum is private and not available publicly.
 
-> diff --git a/drivers/cxl/core/resource.c b/drivers/cxl/core/resource.c
-> index 6d9f8fe14b16e..9c1aa0800521b 100644
-> --- a/drivers/cxl/core/resource.c
-> +++ b/drivers/cxl/core/resource.c
+> 
+> Reviewed-by: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
+> Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+> ---
+>  drivers/pci/controller/dwc/pcie-qcom.c | 16 ++++++++++++++++
+>  1 file changed, 16 insertions(+)
+> 
+> diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+> index b58a607b713f..b97e40fb7ec8 100644
+> --- a/drivers/pci/controller/dwc/pcie-qcom.c
+> +++ b/drivers/pci/controller/dwc/pcie-qcom.c
+> @@ -281,6 +281,7 @@ struct qcom_pcie_cfg {
+>  	bool override_no_snoop;
+>  	bool firmware_managed;
+>  	bool no_l0s;
+> +	bool cgc_dis_workaround;
 
-[ ... ]
+'disable_cgc'
 
-> +#define CXL_RESET_CTRL2_CMD_MASK \
-> +	(PCI_DVSEC_CXL_INIT_CACHE_WBI | PCI_DVSEC_CXL_INIT_CXL_RST)
+>  };
+>  
+>  struct qcom_pcie_perst {
+> @@ -1097,11 +1098,18 @@ static int qcom_pcie_init_2_7_0(struct qcom_pcie *pcie)
+>  static int qcom_pcie_post_init_2_7_0(struct qcom_pcie *pcie)
+>  {
+>  	const struct qcom_pcie_cfg *pcie_cfg = pcie->cfg;
+> +	u32 val;
+>  
+>  	if (pcie_cfg->override_no_snoop)
+>  		writel(WR_NO_SNOOP_OVERRIDE_EN | RD_NO_SNOOP_OVERRIDE_EN,
+>  				pcie->parf + PARF_NO_SNOOP_OVERRIDE);
+>  
+> +	if (pcie_cfg->cgc_dis_workaround) {
+> +		val = readl(pcie->parf + PARF_SYS_CTRL);
+> +		val |= CORE_CLK_CGC_DIS | AUX_PWR_DET;
+> +		writel(val, pcie->parf + PARF_SYS_CTRL);
+> +	}
 > +
-> +static int cxl_reset_read_ctrl2(struct pci_dev *pdev, int dvsec, u16 *ct=
-rl2)
-> +{
-> +	int rc;
-> +
-> +	rc =3D pci_read_config_word(pdev, dvsec + PCI_DVSEC_CXL_CTRL2, ctrl2);
-> +	if (rc)
-> +		return pcibios_err_to_errno(rc);
-> +
-> +	*ctrl2 &=3D ~CXL_RESET_CTRL2_CMD_MASK;
+>  	qcom_pcie_set_slot_cap(pcie->pci);
+>  
+>  	return 0;
+> @@ -1630,6 +1638,13 @@ static const struct qcom_pcie_cfg cfg_2_9_0 = {
+>  	.ops = &ops_2_9_0,
+>  };
+>  
+> +static const struct qcom_pcie_cfg cfg_nord = {
 
-[Severity: High]
-Does this mask inadvertently exclude the memory clear enable bit, preservin=
-g it
-on error paths?
+Can you use DWC IP version instead of SoC name?
 
-If cxl_reset_initiate() sets PCI_DVSEC_CXL_RST_MEM_CLR_EN and the reset
-subsequently fails, the error path calls cxl_reset_enable_cache(). That cal=
-ls
-cxl_reset_modify_ctrl2(), which relies on cxl_reset_read_ctrl2() to fetch t=
-he
-current register state.
+- Mani
 
-Because CXL_RESET_CTRL2_CMD_MASK does not include PCI_DVSEC_CXL_RST_MEM_CLR=
-_EN,
-the stale bit is read, preserved, and written back. Could this cause subseq=
-uent
-resets to inadvertently perform a full Memory Clear?
-
-[ ... ]
-
-> +static int cxl_reset_wait_cache_wbi(struct pci_dev *pdev, int dvsec)
-> +{
-> +	unsigned long deadline;
-> +	u16 status2;
-> +	int rc;
-> +
-> +	rc =3D cxl_reset_modify_ctrl2(pdev, dvsec,
-> +				    PCI_DVSEC_CXL_INIT_CACHE_WBI, 0);
-> +	if (rc)
-> +		return rc;
-> +
-> +	deadline =3D jiffies + usecs_to_jiffies(CXL_CACHE_WBI_TIMEOUT_US);
-> +	do {
-> +		usleep_range(CXL_CACHE_WBI_POLL_US, CXL_CACHE_WBI_POLL_US + 1);
-> +
-> +		rc =3D pci_read_config_word(pdev, dvsec + PCI_DVSEC_CXL_STATUS2,
-> +					  &status2);
-> +		if (rc)
-> +			return pcibios_err_to_errno(rc);
-> +		if (status2 !=3D U16_MAX && (status2 & PCI_DVSEC_CXL_CACHE_INV))
-> +			return 0;
-> +	} while (time_before(jiffies, deadline));
-> +
-> +	return -ETIMEDOUT;
-
-[Severity: Medium]
-Does this loop miss a final status check after the timeout expires?
-
-If the thread is preempted or delayed between the register read and the time
-check, time_before(jiffies, deadline) can fail even if the cache invalidati=
-on
-succeeded just as the timeout expired.
-
-Standard kernel polling macros (like readx_poll_timeout) avoid false timeou=
-ts
-by evaluating the status one final time after the timeout expires.
-
-> +}
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260910070808.1444=
-264-1-smadhavan@nvidia.com?part=3D6
+-- 
+மணிவண்ணன் சதாசிவம்
