@@ -1,157 +1,241 @@
-Received: from BN8PR05CU002.outbound.protection.outlook.com (mail-eastus2azon11011046.outbound.protection.outlook.com [52.101.57.46])
+Received: from mail-m3277.qiye.163.com (mail-m3277.qiye.163.com [220.197.32.77])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B0E5321445;
-	Thu, 10 Sep 2026 01:01:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.57.46
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789002087; cv=fail; b=Zkn02lQGWTlxFr8r7Zulv1y8nPaYSfDUCV2yNR5XYfG94sa0kCRD+q6vbfkHYmkSTIXrY79y8mpIcIio/hbsG35ZUmZHS6YXrqyIz9xCReirOdxvbcvcJ7Y63CymoyDBaygEddGXbbsvCJpLKgtTs3M6q0PD5z5PoByasCGhvOU=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789002087; c=relaxed/simple;
-	bh=ZSCXHf5CIcb9cXpHspi8f/OKKWdn9CVoknOxbXCIXGQ=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=KtAKbO8XInsuS6aUgNba+OSNZTcJ0J8Muh1GDtppz3fATb1WHjLa/O9pzunSVfYhb0gMSuNyO0G9/YzFr7Wx8VZUHq9Z/g534I/nNwJ1DBDQeTCTzexLYAr4UBL5XOxTPF345pHF0fP9PWyrT54jsneUMH5AMGI9bVOPrsr/Tj8=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=kWMUk2Mz; arc=fail smtp.client-ip=52.101.57.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 41F10339375;
+	Thu, 10 Sep 2026 01:57:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.32.77
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1789005444; cv=none; b=dtzJGcGxndpkx6v7YhZMAOjKYWTZPfv/HVEXfYecYFGiZNLGutdTjE6lztGU5934dIDdShntxjNIFDUEBbGDIkvKeSSzYyGmAe3B2fMAxaRTgyudgbt1k7eQXygGi0BThZrQ2aEo7FiSelzWHTwubiR5o1Eetu0jv8K5RbFXSg4=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1789005444; c=relaxed/simple;
+	bh=8P6RFvNRM7aVavOKJDcdcE1GFLkxo7Qq05iPs3SN7Uk=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=QcsNC32JYOEtN9pcfzzwiKZu1tyD1eXlUaxa/11aSwe8uYRmZbQl3DMZSyx3NBNpuKceID6BzvWb7RJY4fbIwHX0+Bq5CuhZ7l/5yBaKQBTalhiRmNMePJ3iTHCCMhSz0dhSjq3eY7ZayZHcMjw8/VggWX3rtIpr80U5B36g9BU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=hj-micro.com; spf=pass smtp.mailfrom=hj-micro.com; dkim=pass (1024-bit key) header.d=hj-micro.com header.i=@hj-micro.com header.b=ckg4bEvP; arc=none smtp.client-ip=220.197.32.77
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=hj-micro.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=hj-micro.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="kWMUk2Mz"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=K+0Yq/SEzbnJjupU6p0dErKKQd6KHXQ/varI/oLhDv2aFRGzBhG9p2VkZmj3bgnFUckTePO0aJx3+lhKbBK6ZpE9BYQowYu3MHZbXm39Y8n4msJyrIjxEWzIPYO/Z2Nxhs31si0+0ZhSgV6YEd0QcU1uRmn06etqjQ4EwTQLVZxemGfu+UIdDBU503BnEn0PZtKgOeoIQuqvbFFnZt0IFh8tYJ3YQDlgkVpgyIgJXXt60HZ5WFUn40T7KX+9dRosiOdYxW4eT+xDCQFoiXs/QEGCZLiaPoCgmWeAqWSxPK8YzDumhE/WChWR+nW3V7YhIEsFX25ytRvR/HxZPcoeuw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=HRPhpA0KJrvsw6RW1vxC4s/1Zk4vtDVnn7asRViuLMM=;
- b=f4SU4Yw+Kh/kfSnF0daS4WSPJ5OUMxOmfAB8YkC8biIrTrFnVzIiIh3j4cJHMN3vh8vR6Sp7tBiSB5L5p74M4ryyZFrX3Lx2BSQxa93tjle9tiPUAtp0hUZyUkklmOdtVnNPOxbZcls2/R4pKc0x0FyHbIdHgSzMEUbYIp/fBQER5+Nfki3lyPZqPsg1/nuqaIt22V+b1ZaJkxfWpwxwOKRx7+QFYVfySyqkl4znWFTwHSflxDq0n9mY94G29hsRO2GHeD+mpAKf2d7MMZjFxP8bUzC0ahyjsd2z17qAwEF+tPDGqO4ChzBvDOUvgJPUfQd1ZXXr+1bzAcHwknU+mQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=HRPhpA0KJrvsw6RW1vxC4s/1Zk4vtDVnn7asRViuLMM=;
- b=kWMUk2MzAQ4npCNBbDs87gOxcmZ8swe5gNA5TTYghFYpeo6lEcMc0kZZWUZN7WHJ3DqqoMiW7k5ZHoZuSSdkENzm7YTx01L7Pe9VISavBy9CUqDFoCBt5LOOLEMCqhItyQ5F3wmDhywgj4goE19udXIrlEO+r5akWhVCiMQ3i2wVpHc5nY76AIGriwC9xyJVbAsFX+JxfFZs4XnMDpWfBp2ycgpBLof9Qr+w4BhxUfUBlparQ5Fmm+EnA0Opu4IsNKJhcbcfD0Ei3DtdKcz94tA0PQKFShhKWFflG/tUODykFtATCKX2jVZI8iSd7mAYAcljSmdIb6Jm6f8ewJJSXw==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from DS7PR12MB9474.namprd12.prod.outlook.com (2603:10b6:8:252::17)
- by PH7PR12MB5618.namprd12.prod.outlook.com (2603:10b6:510:134::14) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.406.7; Thu, 10 Sep
- 2026 01:01:19 +0000
-Received: from DS7PR12MB9474.namprd12.prod.outlook.com
- ([fe80::31ad:931:ef07:8ad7]) by DS7PR12MB9474.namprd12.prod.outlook.com
- ([fe80::31ad:931:ef07:8ad7%4]) with mapi id 15.21.0406.007; Thu, 10 Sep 2026
- 01:01:16 +0000
-Message-ID: <b2297a6e-72e4-41e9-93f2-98a962e5461c@nvidia.com>
-Date: Wed, 9 Sep 2026 18:01:14 -0700
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v11 00/12] PCI/CXL: Add CXL reset support for Type 2
- devices
-To: Alex Williamson <alex@shazbot.org>
-Cc: Alison Schofield <alison.schofield@intel.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Dave Jiang <dave.jiang@intel.com>,
- Davidlohr Bueso <dave@stgolabs.net>, Ira Weiny <ira.weiny@intel.com>,
- Jonathan Cameron <jic23@kernel.org>, Vishal Verma
- <vishal.l.verma@intel.com>, linux-cxl@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- Alex Williamson <alex.williamson@redhat.com>, vsethi@nvidia.com,
- Sai Yashwanth Reddy Kancherla <skancherla@nvidia.com>,
- Vishal Aslot <vaslot@nvidia.com>, Manish Honap <mhonap@nvidia.com>,
- Jiandi An <jan@nvidia.com>, Richard Cheng <icheng@nvidia.com>,
- linux-tegra@vger.kernel.org
-References: <20260902072804.665639-1-smadhavan@nvidia.com>
- <20260909151309.7e1883b9@shazbot.org>
-Content-Language: en-US
-From: Srirangan Madhavan <smadhavan@nvidia.com>
-In-Reply-To: <20260909151309.7e1883b9@shazbot.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: SJ0PR03CA0231.namprd03.prod.outlook.com
- (2603:10b6:a03:39f::26) To DS7PR12MB9474.namprd12.prod.outlook.com
- (2603:10b6:8:252::17)
+	dkim=pass (1024-bit key) header.d=hj-micro.com header.i=@hj-micro.com header.b="ckg4bEvP"
+Received: from localhost.localdomain (unknown [122.224.147.158])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 4d333b606;
+	Thu, 10 Sep 2026 09:51:58 +0800 (GMT+08:00)
+From: Hongbo Yao <andy.xu@hj-micro.com>
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	peter.du@hj-micro.com,
+	jemma.zhang@hj-micro.com,
+	rick.yan@hj-micro.com,
+	Hongbo Yao <andy.xu@hj-micro.com>
+Subject: [RFC PATCH] PCI: pciehp: Allow more time for link activation after slot power-on
+Date: Thu, 10 Sep 2026 09:51:51 +0800
+Message-ID: <20260910015151.1876630-1-andy.xu@hj-micro.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DS7PR12MB9474:EE_|PH7PR12MB5618:EE_
-X-MS-Office365-Filtering-Correlation-Id: 0f29390d-b65d-45a0-b9ba-08df0ed70489
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|23010399003|376014|366016|7416014|10067099003|4143699003|11063799006|56012099006|22082099003|18002099003;
-X-Microsoft-Antispam-Message-Info:
-	DPfvmk3ikrjjJbHSH6PieeI32QL3x8mBvTPhQrROlV74OAskiHmAoSXY/uKJzbsOva32Itclw/F07jH64Y+2eNBRZ4MX7z3dKqe1Rqdrx+C/XPmjLAnpt0QwEbowZDZi7Pliek4xfoMbC2jk2ykDQplFMu8bUoFlK72Wp9B5a7uFzXK1/sk/Rb8Scelh6ltjpbnKIuP8Eo5cSrdvvtyxf1waNOc/WAQTEGXSb2/qd8S+KkkejGrb9MtI9/InaeYLacrb8EfKp1iePuHWaNeG1QjVUJVkJtsugkEZl60ml3fRhIKjtmf4BrlnbDx1B5TX35Dk9dpdK3p3N265fxqumm+uL8iRoqSLYv+RPxWjP6xHAMuOs5murD0Gz6MHaU9BtMzCjk6CMqu6m1yWVpZPqiptOsktbdqHwW7QdBS/1Pc1R/L4WefKTMtI0LKyZhPvshnPHjHJohl+7E/sFD52aVA4Tbh6TCfAucs1mH8oIAU/PSN2adhByW7xCJVNH2fYs3IsFLS6niMxXoe67OboFmFtk1qZ8qtDa4w5D+ww8X6Yg/Pu5RzVSLH/TvSLJv5FeWTtti31685YKYoGgl+xoJvbGvUvSUNH7PmKi3KqBGf7sp1eJDIivIJ+NV5DbsOgMbDMw97uw0SsFNo570hE+w==
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DS7PR12MB9474.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(23010399003)(376014)(366016)(7416014)(10067099003)(4143699003)(11063799006)(56012099006)(22082099003)(18002099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?NFhodmZzR3kybXkwRzc4NHRscmVXR0JkNGlsVjI0WHVhdzM1ZHk3QjdhRnlL?=
- =?utf-8?B?RE84YWtuOTBLT0p4bURGbWt1OXpJaWMxSURnbnR4Z2RHRmYxVTJXV1BRRGlv?=
- =?utf-8?B?ZUVZd2NpVlg3elNFN2M4TW55ckJxRXdLeWhaY3orTC9kaHRuc3hrajRsNXM5?=
- =?utf-8?B?ZkdBOGo0UGZNQjhZekJLUFkzci9xMHIvZjNaZEltR3FrMDdJdkRGZWNvUXQy?=
- =?utf-8?B?RHRyVVpkaWpJODk2V3RYMmg3K0w4YWl4TlIybGpJV3RtT1JmdFZ3YjIySnRB?=
- =?utf-8?B?NDV5MDBkNitLUlgxZmUwZDJ0TEpzak0yVVpaNzFjU3RqeDdZeXVWT1JINFZt?=
- =?utf-8?B?RTZ0Y1FOR3Y2dGFuVkQ0QWJUY0hYTkZQT2c2c0Z6QVlMMWhBMFBkZ014MlVx?=
- =?utf-8?B?YkU5YkZxdE1mYkcxcyttczBRY0hXUmNhalRZbUVZcWpDcG5CZThaWGV5MDgw?=
- =?utf-8?B?YkpGaURtMTAyOWEwTHM5Y0dVeVMvSGQ4ay82bzE1bkdPYXRPeTJTZ0J6alpq?=
- =?utf-8?B?dEtHTjkyeGE5RmN3OU1aTlNPbmdnc3pwYXc2Y2RSZDZ5UVRTZzYrZ05mVER6?=
- =?utf-8?B?b01JaDhFUkhpdXdtY0twUGxmS3I3MTZvMFVXNTd6WWtMYXBhd2JSY2V3K3dF?=
- =?utf-8?B?cDFzSkdaSnVIMENFZ3JJQ0Roc3FxK2pWSjd1dmdJU3NlSFExbTN1eXJTZFFL?=
- =?utf-8?B?TmUybVNOTGhCYnhyK2VRMTRqQjhTWGZZbEpSd0tUdE9uODk5ZGNmcS93d2dC?=
- =?utf-8?B?SEVpQWovUDhQODlqRHUzWW5TbUlzM3FXTnRXV1lRdXM2aGptTU5KUkJpZHhW?=
- =?utf-8?B?ZFVxYkN5K3JQejd3cE9BS3RmRHlxUnVwS1lUbVRKckgvVTlnUUVuVnJ2OXdr?=
- =?utf-8?B?UmVKckJjUkZuLzl0dE53MGd6L0R1RisrZmIxV3Njd2hlMzlBd043K3UrTUhH?=
- =?utf-8?B?UFRFbVI0RGYyajM3NFFXNllQbTdkenNBV2FaMFE1aWgwbDdNdTRSTWtwcmlW?=
- =?utf-8?B?bnFJYSsrMFJRcmNCTisyYUJHREtYWHJabkxKN0VqWmpEZUM1Vk9icGY3K0Iw?=
- =?utf-8?B?ZDh5U3JHN215Sk9UNkRHV09IL05kTHZYeDlxbzh3NnlDampnT0RjMXlhZ2Ny?=
- =?utf-8?B?ZmQweFRrNE9QVTZ5TnRObWtXM3JWRDhRYmg2QUpIdDY3ZEVzQ291K29QdzM4?=
- =?utf-8?B?ejNYcXNVWXVjM3JHOEFnb3c4SVU1TmFLVGtWTG5LVlNmQVBqSU01THJlYVpi?=
- =?utf-8?B?TndUVkx5QlZrcXZ0NUQwRjRuM3RxNjg1QXF5NkpXYjMrc2MrUFBIYXljRVc4?=
- =?utf-8?B?c1hrdTlLNDNsbzgybS8xUlFVWEFlYnJCNkU4eVVhZlFlM3l1RzRjaExuM1U3?=
- =?utf-8?B?blFlUEI1OGVQbWY3UzU3ZWVqZ3Y5cFZCUC9rbDQycW4zbVVjNlNXVFpWWWFY?=
- =?utf-8?B?azR5eGFlMlNWZTVDdE11ZEg0RXp5MVhYTzZyZGt6WUlmMkRiZGxEczkrVEkr?=
- =?utf-8?B?V3BxYTRacWhDbGtRT2ZKRWd2a1JxL1BiSUFQMkhncGpqSjAzUk1NTmdyek5x?=
- =?utf-8?B?dzdKUUlEcmoyR2c1QmxZVDlBOVNZMkI0UnFadXpsUi9uaGNUV3c1YWFmYWV4?=
- =?utf-8?B?ME9mRHNyakFWVXJQM3NBa0h6SlAxcDQzdDdqNnd4RndhdnlNTUwzV3hUYUE0?=
- =?utf-8?B?cjlsdnJ0N25DRzdCNlIvNWZmZStEZnFtU1E4VlB5TTc2bTlHMjZhcTAyOWg2?=
- =?utf-8?B?MytGb25Hb2NoN05BTVlBNkZSalhYeUN3NUFzZFlxTXg4VXIvMGZCdlZidGpE?=
- =?utf-8?B?amN0aFVtaDBwTHBiMmFZMDJEWWNkbE0xbFd4YVF1OTJ5MGR4cGc0bUdCZWM2?=
- =?utf-8?B?c0p5Q0hmQW1hMUZ0UVNJUTczemM2U0FXQWVaWFRvZWgvWmFXSFh1TTZXOC8x?=
- =?utf-8?B?aUYzMXMyRlZaN2lYV3ZjcEZXMDY1VGJrR3V2NGhLWE40U3I4SFdYbzViOVJz?=
- =?utf-8?B?S2VlMzNEeVNidnM3cnZrRTJzNlp0QWdYUnJsKzEzR3JVSVg0akpRbmpMQnlK?=
- =?utf-8?B?OS8yWDRLc2NWWHRGT3FzWTRaeXBVQzFydkIyVVoxVDlRUUZYcytSNG8vU0w0?=
- =?utf-8?B?QUJYRFF6aFp1WkgvWFQ3QmFYYk9vUGVpYkJCZC9JakdZclJxVGlLTDh5aUFV?=
- =?utf-8?B?TU4rNmE1R3dUSGYvL2Q2djhIUW11THR4eUV0VXlOZFowRG5jS1NkNjZOTjIr?=
- =?utf-8?B?aHBVZ1pQcWIwcy9GNVEydXE3ZzZSZW42WXMrOVdiMm5EQzBDcUZ5MllaQmhj?=
- =?utf-8?B?eTBNcEY2THpGa25FMm1XOUcxcVMvdFdQNGRaV25qemdRa2ZXc1Z3QT09?=
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 0f29390d-b65d-45a0-b9ba-08df0ed70489
-X-MS-Exchange-CrossTenant-AuthSource: DS7PR12MB9474.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 10 Sep 2026 01:01:16.8673
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 1hQALYMJ0IQ1c830qs2Go+MJBAgnZJvz1dvqJbhhTUfEPbgmwLWGUgyQpEKuFqGGf57oNtOcOcWD7y3PK3o/ZQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH7PR12MB5618
+Content-Transfer-Encoding: 8bit
+X-HM-Tid: 0aa08903bba203aekunmb2e45c464cd740
+X-HM-MType: 1
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFITzdXWRgWCB1ZQUpXWS1ZQUlXWQ8JGhUIEh9ZQVlCQxgfVh1NGUxLSE5LQkgYS1YVFA
+	kWGhdVEwETFhoSFyQUDg9ZV1kYEgtZQVlKSUlVSUlPVUpPTFVKTkNZV1kWGg8SFR0UWUFZT0tIVU
+	pLSEpKQk1VSktLVUpCWQY+
+DKIM-Signature: a=rsa-sha256;
+	b=ckg4bEvP7UuyUdW8JQUEYtxnBDcnNYrwDUqI5Ec+SF4AAWQpdJwLrLi7SHOXOSlnuVdjrkm/2blYzz3vNobmTN61L54/1354ksv0rMi3YnMchaAIa/ezgzQQGkKs2Rm1r2Lqj71smfDyy8f5JCkyjjX8Xl3awPP7nDNr2qxc2jo=; c=relaxed/relaxed; s=default; d=hj-micro.com; v=1;
+	bh=GL/D1ac2I1bLVT/3wNdeeRjnwkgUx/3HUYxNALzM58M=;
+	h=date:mime-version:subject:message-id:from;
 
-On 9/9/26 2:13 PM, Alex Williamson wrote:
-> How does this provide multi-tenancy then?  vfio-pci considers the
-> device to be scrubbed of tenant data after a pci_reset_function() and
-> I don't think Manish's series alters that.  Thanks,
-> 
-> Alex
-Hi Alex!
+The OCP NIC 3.0 Specification, version 1.6.0, Figure 132 [1], requires
+an interval greater than one second between Main Power Valid and PERST#
+deassertion.  The diagram labels this interval T_PVPERL.  PCIe link
+activation requires additional time after PERST# is deasserted.
 
-I missed considering this.
-In V12 I'm exposing cxl_reset when the device advertises CXL Reset 
-Memory Clear capability and sets RST_MEM_CLR_EN when initiating reset.
-I added the gate to prevent exposing a non-scrubbing reset to VFIO.
+In the reported scenario, the adapter is already installed in a
+powered-off slot.  Pressing the Attention Button generates the event
+that causes pciehp to enable slot power and then check the link.
+The one-second DLLLA polling timeout does not account for the above
+reset hold interval when that interval overlaps the link wait, so it
+can report failure before the adapter can activate the link.
 
+This is observed with an OCP ConnectX-7 (MT2910 family) adapter.  On the
+affected platform, power-on to PERST# deassertion takes about 1.2 seconds,
+followed by a few hundred milliseconds for link activation, exceeding
+the existing polling budget.
+
+Add pcie_wait_for_link_timeout() to allow a caller-supplied initial
+polling timeout.  Keep the existing pcie_wait_for_link() and
+pcie_wait_for_link_delay() interfaces and their default timeout.
+Use a three-second polling budget in pciehp for slots advertising
+power control.  Other slots and link retraining retain one second.
+
+Three seconds is a proposed allowance for the reported sequence, not a
+timing requirement derived from the specification.
+
+[1] OCP NIC 3.0 Specification, version 1.6.0, Figure 132,
+    "Power-Up Sequencing - Normal Operation".
+
+Link: https://www.opencompute.org/wiki/Server/NIC
+
+Signed-off-by: Hongbo Yao <andy.xu@hj-micro.com>
+---
+ drivers/pci/hotplug/pciehp_hpc.c |  9 +++++++-
+ drivers/pci/pci.c                | 38 ++++++++++++++++++++++----------
+ drivers/pci/pci.h                |  2 ++
+ 3 files changed, 36 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index 4c62140a3cb4..14b82b9b03a2 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -28,6 +28,8 @@
+ #include "../pci.h"
+ #include "pciehp.h"
+ 
++#define PCIEHP_LINK_UP_TIMEOUT_MS	3000
++
+ static const struct dmi_system_id inband_presence_disabled_dmi_table[] = {
+ 	/*
+ 	 * Match all Dell systems, as some Dell systems have inband
+@@ -291,10 +293,15 @@ static void pcie_wait_for_presence(struct pci_dev *pdev)
+ int pciehp_check_link_status(struct controller *ctrl)
+ {
+ 	struct pci_dev *pdev = ctrl_dev(ctrl);
++	unsigned int timeout_ms = PCIE_LINK_RETRAIN_TIMEOUT_MS;
+ 	bool found;
+ 	u16 lnk_status, linksta2;
+ 
+-	if (!pcie_wait_for_link(pdev, true)) {
++	/* Account for power sequencing and reset hold time when enabling a slot. */
++	if (POWER_CTRL(ctrl))
++		timeout_ms = PCIEHP_LINK_UP_TIMEOUT_MS;
++
++	if (!pcie_wait_for_link_timeout(pdev, true, 100, timeout_ms)) {
+ 		ctrl_info(ctrl, "Slot(%s): No link\n", slot_name(ctrl));
+ 		return -1;
+ 	}
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index a73d1a3a8939..772d4c8abfcf 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4553,12 +4553,14 @@ static int pci_pm_reset(struct pci_dev *dev, bool probe)
+  * @pdev: Device whose link to wait for.
+  * @use_lt: Use the LT bit if TRUE, or the DLLLA bit if FALSE.
+  * @active: Waiting for active or inactive?
++ * @timeout_ms: Link status polling timeout in milliseconds
+  *
+  * Return 0 if successful, or -ETIMEDOUT if status has not changed within
+- * PCIE_LINK_RETRAIN_TIMEOUT_MS milliseconds.
++ * @timeout_ms milliseconds.
+  */
+ static int pcie_wait_for_link_status(struct pci_dev *pdev,
+-				     bool use_lt, bool active)
++				     bool use_lt, bool active,
++				     unsigned int timeout_ms)
+ {
+ 	u16 lnksta_mask, lnksta_match;
+ 	unsigned long end_jiffies;
+@@ -4567,7 +4569,7 @@ static int pcie_wait_for_link_status(struct pci_dev *pdev,
+ 	lnksta_mask = use_lt ? PCI_EXP_LNKSTA_LT : PCI_EXP_LNKSTA_DLLLA;
+ 	lnksta_match = active ? lnksta_mask : 0;
+ 
+-	end_jiffies = jiffies + msecs_to_jiffies(PCIE_LINK_RETRAIN_TIMEOUT_MS);
++	end_jiffies = jiffies + msecs_to_jiffies(timeout_ms);
+ 	do {
+ 		pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnksta);
+ 		if ((lnksta & lnksta_mask) == lnksta_match)
+@@ -4606,7 +4608,8 @@ int pcie_retrain_link(struct pci_dev *pdev, bool use_lt)
+ 	 * avoid LTSSM race as recommended in Implementation Note at the end
+ 	 * of PCIe r6.1 sec 7.5.3.7.
+ 	 */
+-	rc = pcie_wait_for_link_status(pdev, true, false);
++	rc = pcie_wait_for_link_status(pdev, true, false,
++				       PCIE_LINK_RETRAIN_TIMEOUT_MS);
+ 	if (rc)
+ 		return rc;
+ 
+@@ -4620,7 +4623,8 @@ int pcie_retrain_link(struct pci_dev *pdev, bool use_lt)
+ 		pcie_capability_clear_word(pdev, PCI_EXP_LNKCTL, PCI_EXP_LNKCTL_RL);
+ 	}
+ 
+-	rc = pcie_wait_for_link_status(pdev, use_lt, !use_lt);
++	rc = pcie_wait_for_link_status(pdev, use_lt, !use_lt,
++				       PCIE_LINK_RETRAIN_TIMEOUT_MS);
+ 
+ 	/*
+ 	 * Clear LBMS after a manual retrain so that the bit can be used
+@@ -4644,24 +4648,27 @@ int pcie_retrain_link(struct pci_dev *pdev, bool use_lt)
+ }
+ 
+ /**
+- * pcie_wait_for_link_delay - Wait until link is active or inactive
++ * pcie_wait_for_link_timeout - Wait for link with a specified polling timeout
+  * @pdev: Bridge device
+  * @active: waiting for active or inactive?
+  * @delay: Delay to wait after link has become active (in ms)
++ * @timeout_ms: Link status polling timeout in milliseconds
+  *
+- * Use this to wait till link becomes active or inactive.
++ * The timeout covers initial link status polling, not the additional delays
++ * or failed-link recovery.  Without link active reporting, wait for timeout_ms
++ * plus delay instead of polling.
+  */
+-static bool pcie_wait_for_link_delay(struct pci_dev *pdev, bool active,
+-				     int delay)
++bool pcie_wait_for_link_timeout(struct pci_dev *pdev, bool active, int delay,
++			       unsigned int timeout_ms)
+ {
+ 	int rc;
+ 
+ 	/*
+ 	 * Some controllers might not implement link active reporting. In this
+-	 * case, we wait for 1000 ms + any delay requested by the caller.
++	 * case, wait for timeout_ms plus any delay requested by the caller.
+ 	 */
+ 	if (!pdev->link_active_reporting) {
+-		msleep(PCIE_LINK_RETRAIN_TIMEOUT_MS + delay);
++		msleep(timeout_ms + delay);
+ 		return true;
+ 	}
+ 
+@@ -4676,7 +4683,7 @@ static bool pcie_wait_for_link_delay(struct pci_dev *pdev, bool active,
+ 	 */
+ 	if (active)
+ 		msleep(20);
+-	rc = pcie_wait_for_link_status(pdev, false, active);
++	rc = pcie_wait_for_link_status(pdev, false, active, timeout_ms);
+ 	if (active) {
+ 		if (rc)
+ 			rc = pcie_failed_link_retrain(pdev);
+@@ -4693,6 +4700,13 @@ static bool pcie_wait_for_link_delay(struct pci_dev *pdev, bool active,
+ 	return true;
+ }
+ 
++static bool pcie_wait_for_link_delay(struct pci_dev *pdev, bool active,
++				     int delay)
++{
++	return pcie_wait_for_link_timeout(pdev, active, delay,
++					  PCIE_LINK_RETRAIN_TIMEOUT_MS);
++}
++
+ /**
+  * pcie_wait_for_link - Wait until link is active or inactive
+  * @pdev: Bridge device
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 4469e1a77f3c..1984e4c1891c 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -1078,6 +1078,8 @@ pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
+ 		pci_ers_result_t (*reset_subordinates)(struct pci_dev *pdev));
+ 
+ bool pcie_wait_for_link(struct pci_dev *pdev, bool active);
++bool pcie_wait_for_link_timeout(struct pci_dev *pdev, bool active, int delay,
++			       unsigned int timeout_ms);
+ int pcie_retrain_link(struct pci_dev *pdev, bool use_lt);
+ 
+ /* ASPM-related functionality we need even without CONFIG_PCIEASPM */
 -- 
-Regards,
-Srirangan
+2.43.0
+
