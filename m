@@ -1,63 +1,155 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C98649E130
-	for <linux-pci@vger.kernel.org>; Thu, 10 Sep 2026 23:31:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A1CE49E130
+	for <linux-pci@vger.kernel.org>; Thu, 10 Sep 2026 23:31:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789083100; cv=none; b=hT/1rQrFvccJeIw8ifmJV3KVZufcEWKhY3ATdt0PVipzqqG/ctbOsgnfl8K+gWiq63+dmCcoHCD2w/eCHBIZq+U2BtYI/Sp39IlCzjadVp6uGi4vcl2jjhgEOg48DAJPe1VmJDJ5/GQf0QhRLYflnyvPOwkObCN84ivYMy0ISXs=
+	t=1789083116; cv=none; b=akLjZIAKS17/0m2F9r5dLU2HphT/lAQ9g+zGM97BGKBHvKt800DeT8iX533QgRUOmpBU8Si8XtZ83a6/2eb7mlyovNHm6d4/GRUyCaBQFDwXnzUV/6oRpxqO697nJBaOQJeYbp2rNMNni5AktqPClH4v3wGcBr75yKRtK1YcXw0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789083100; c=relaxed/simple;
-	bh=SUC1Shwe0th2gtUZWOFv60Bdal5lDswBPy8a95OoZMg=;
+	s=arc-20240116; t=1789083116; c=relaxed/simple;
+	bh=bjBoBwoiFMFFdpFX+/sWub7hbE5ZlF+GoKjThGAbv/k=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=D86wcY/0912eOIg0+iaUsFA0cp5S+hK7Xc9ubHpy9wmGcktRkAD/C0kcDHGNUGhJr5AGFzqPHk9F6YJ/9C8ttlMF8YtRA7yz4wy6OMcyYou4dZVniJPOgyUt45OWZ9HVBnWxEvUY9Be3KvFsaUJDJBUPzmUxmiKc4aqMr5Dk0Fw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bktDqSlY; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=CITAgdMBIGKixYgLbOu6DeTH7CAzlr3DRrMymVoHOVKGiBjn5r5edcwrIeBQdoXf5sCAv3I9zJQs07q9a6YKsLLHWcENyxW1egffnr9Yd1p7Olkjmh++GqdFuWacI+IavqzvrjfZgJXPQmQ8L50maiLTQY8kSmpdvTZjS1f3mng=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TtSpAl71; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bktDqSlY"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DD14F1F000FF;
-	Thu, 10 Sep 2026 23:31:38 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TtSpAl71"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9318A1F000FF;
+	Thu, 10 Sep 2026 23:31:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789083099;
-	bh=SUC1Shwe0th2gtUZWOFv60Bdal5lDswBPy8a95OoZMg=;
+	s=k20260515; t=1789083114;
+	bh=ECHLqvBgG1NF6vnimbHD9NPvJUUGV8Rh6mVQjgpuXoM=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=bktDqSlYDhGmhGZLINJacKbBUbfS1xyP6883HmfeYKDwYQTsjkWdiTMtNH8Bdgjo2
-	 mj8u+mSC3AHkRJfaVsyhiBmV8Qvnuzqm4UlBlokMNkegWEfmsOily5M0FvXZ7FjoO0
-	 hSKQIwOUhyFGieHI87NPUFzwMborY+PzoW2+hsnNxWZ4Q1Pk8bQPujdcXaeA+j9s1X
-	 +hR6+LGZgfoR6U4hYldDPHmgSMmZ3Fy+QE6/D61AoBdKeLiQQqacoM0Nh7xeeAWyvz
-	 /7RgO4dIsut04wIW/0KEeR0QWGPBOpAMMToQTXwTc9Oxz56NB0FzuYAht6Fguk4h/R
-	 +28M1XG37WZOw==
+	b=TtSpAl71hJEKKr3LkW0gHHFd9H7YVFO8gpNXaCTV/QI1uruC8KWs8pRuZ9yifPzA1
+	 7fLTI9O7cwrjPFUWRv0lradeMnJCUKObjVxoZW2Lzv7CuVGSeyFoDeTizhDGLoBzVE
+	 Ex2v0KvHPxcQHJWLz3ItK2MSMH+XVEo+nOiJOPqP8uvFf1acQDRshCuBTDH48vLqw/
+	 K1vViLUnZGp/J9yvEdGYNM5k5qEXsBr0qw05I5CHOecOZfonrHx2n2Kq9fy5BNtPQN
+	 GZGlpFAXLGM4oAUSQ69X9FvvS7wVkCEe4AHQAwpu/pKwjj2AI5+ENThuLEIn+dT3cv
+	 jTAqQ0gSsJatw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 12/15] iommu/arm-smmu-v3: Allocate IOPF queue for
- ARM_SMMU_FEAT_PRI
+Subject: Re: [PATCH v4 04/15] iommu/arm-smmu-v3: Drain in-flight fault
+ events on domain detach
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Nicolin Chen" <nicolinc@nvidia.com>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <c277db2589bf38ef5f251a58dcc87a22c751336e.1789081084.git.nicolinc@nvidia.com>
+In-Reply-To: <e98a3f1b8964c9f4785ec6dd6c001b7aba4f1cdd.1789081084.git.nicolinc@nvidia.com>
 References: <cover.1789081084.git.nicolinc@nvidia.com>
- <c277db2589bf38ef5f251a58dcc87a22c751336e.1789081084.git.nicolinc@nvidia.com>
+ <e98a3f1b8964c9f4785ec6dd6c001b7aba4f1cdd.1789081084.git.nicolinc@nvidia.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 10 Sep 2026 23:31:38 +0000
-Message-Id: <20260910233138.DD14F1F000FF@smtp.kernel.org>
+Date: Thu, 10 Sep 2026 23:31:54 +0000
+Message-Id: <20260910233154.9318A1F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-> After the previous change drops the FEAT_SVA gate, arm_smmu_init_queues()
-> allocates smmu->evtq.iopf when the SMMU advertises FEAT_STALLS. PRI suppo=
-rt
-> is being added on top of the IOPF infrastructure, so extend the allocation
-> condition to cover SMMUs that advertise FEAT_PRI without FEAT_STALLS.
->=20
-> Reviewed-by: Jonathan Cameron <jonathan.cameron@oss.qualcomm.com>
-> Assisted-by: Claude:claude-opus-4-8
-> Signed-off-by: Nicolin Chen <nicolinc@nvidia.com>
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [Medium] Missing final condition check after timeout evaluation in `arm_s=
+mmu_wait_for_queue_drained` causes false timeouts.
+--
 
-Sashiko has reviewed this patch and found no issues. It looks great!
+commit 69f47c0ae54518e91f78d4c86bc275dd8b087d48
+Author: Nicolin Chen <nicolinc@nvidia.com>
+
+iommu/arm-smmu-v3: Drain in-flight fault events on domain detach
+
+When a device leaves a domain, fault events for the old domain may remain
+in the SMMU event queue or the IOPF workqueue. If the IOMMU core frees that
+domain before those events are handled, the work may use freed memory.
+This commit starts with the hardware queue by using
+arm_smmu_wait_for_queue_drained() to poll the EVTQ when an IOPF-enabled
+attachment ends.
+
+> diff --git a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c b/drivers/iommu/=
+arm/arm-smmu-v3/arm-smmu-v3.c
+> index b908a8af31442..ef1fddad7868e 100644
+> --- a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
+> +++ b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
+> @@ -948,6 +948,89 @@ static int arm_smmu_cmdq_batch_submit(struct arm_smm=
+u_device *smmu,
+[ ... ]
+> +static int arm_smmu_wait_for_queue_drained(struct arm_smmu_device *smmu,
+> +					   struct arm_smmu_queue *q,
+> +					   bool until_empty)
+> +{
+> +	ktime_t timeout =3D ktime_add_us(ktime_get(), ARM_SMMU_POLL_TIMEOUT_US);
+> +	u32 cons, prod, pending;
+> +	u32 drained =3D 0;
+> +
+> +	might_sleep();
+> +
+> +	cons =3D readl_relaxed(q->cons_reg);
+> +	prod =3D readl_relaxed(q->prod_reg);
+> +	/* The exit target: the number of entries in the queue at entry */
+> +	pending =3D Q_DIFF(&q->llq, cons, prod);
+> +
+> +	while (true) {
+> +		u32 prev, undrained;
+> +
+> +		/* Accumulate the entries consumed since the last poll */
+> +		prev =3D cons;
+> +		cons =3D readl_relaxed(q->cons_reg);
+> +		drained +=3D Q_DIFF(&q->llq, prev, cons);
+> +
+> +		prod =3D readl_relaxed(q->prod_reg);
+> +		undrained =3D Q_DIFF(&q->llq, cons, prod);
+> +
+> +		/* Exit on an empty queue, regardless of until_empty */
+> +		if (!undrained)
+> +			return 0;
+> +
+> +		/* Snapshot mode: exit once the pending entries are drained */
+> +		if (!until_empty && drained >=3D pending)
+> +			return 0;
+> +
+> +		/*
+> +		 * A timeout means the consumer might be stuck. In theory, if it
+> +		 * moves 2 * qsize entries or more within a single poll interval
+> +		 * Q_DIFF() will wrap and undercount drained: that could trigger
+> +		 * a spurious warning too, if the queue was never once observed
+> +		 * empty. Yet, that much consumption in such a short interval is
+> +		 * unrealistic.
+> +		 */
+> +		if (ktime_compare(ktime_get(), timeout) > 0)
+> +			break;
+
+[Severity: Medium]
+Could this result in a false timeout if the task is preempted or delayed ju=
+st
+before the timeout check?
+
+If execution is interrupted for a duration exceeding the timeout *after*
+reading the hardware registers and evaluating the exit conditions, but
+*before* checking the timeout:
+
+1. The hardware might successfully drain the queue while the task is
+   preempted.
+2. When the task resumes, ktime_compare() returns true, and the loop breaks.
+3. The function returns -ETIMEDOUT unconditionally without re-evaluating the
+   hardware state.
+
+Standard kernel polling macros (like read_poll_timeout) typically perform a
+final re-evaluation of the exit conditions upon timeout to handle such
+scheduling delays.
+
+A false timeout here would lead to skipping the teardown and leaking the
+domain to prevent a Use-After-Free, as handled in a subsequent commit
+("iommu/arm-smmu-v3: Flush in-flight fault work on domain detach").
+
+> +
+> +		/* The consumer might be a threaded IRQ handler. Yield to it */
+> +		fsleep(100);
+> +	}
+> +
+> +	dev_warn_ratelimited(smmu->dev,
+> +			     "queue drain timed out at prod=3D0x%x cons=3D0x%x\n",
+> +			     prod, cons);
+> +	return -ETIMEDOUT;
+> +}
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/cover.1789081084.gi=
-t.nicolinc@nvidia.com?part=3D12
-
+t.nicolinc@nvidia.com?part=3D4
