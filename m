@@ -1,129 +1,128 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 15630346A04;
-	Thu, 10 Sep 2026 06:08:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2AB4B38BF81;
+	Thu, 10 Sep 2026 06:43:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789020502; cv=none; b=bjs/25K4c5Q5qBiKUzbg16SDpMSEP/wfIt6snPN+fOL9zz1VCLXiF2hp2RblkzZ4wPLw3l0ZAJBgNL94YKyGwXWbA5Gd4oFuPWzSvPtHxryRv0U5pppGiGyMKtf1z2cK/t/Mq1hnerlUuF26P9mlq7byWwk/7djF1qKlE6zoUMA=
+	t=1789022588; cv=none; b=a70CUz/iksNrw7Pa7lkjTPHKE+nKp0ZtRiHSvdN9xrKWXEBKkPx1xOTx/GHGDlsTSkU8rDgwMjrEkHcLBsYv6g9Zw04hYLpFd1tAMgkzydjanhWmaZOopXpYOu/BiW97pHM3bSSdCmU+hsJO7/kE1Neu/U4+DpNh8FjLV6EZ10Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789020502; c=relaxed/simple;
-	bh=K2E8HJKKwmixZBGMikxuRE6av/5UwFtViroEDqpWL7k=;
+	s=arc-20240116; t=1789022588; c=relaxed/simple;
+	bh=PnSdyt8IKSG7Cusf+et3nfCE6GN+a6K2xDtnxZ+Uwgk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=IhHLTeTpb5OTjdd4wQNHy3xnTD65R7m/ov79+7XLwXCesLRQUeMKep9XKVgzl7tdbW2I7+A6oNfR66dMQLAM5Tcs0NKcC/cVI3TpbBXuQQVM83PIsFW8QQoLa2q+k2hzGD5QxCI4bTJiIoWkLC1mSb/lwrGhk1Bg8LVjvYCbSgE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=X9gWFHds; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=usu23/HqtSJHSy3XTI0Mh8/vErM6gY3ixKGe1f0cOMin+JUT66z8bsl76MCxu/bOtspgMTr2SnXrog606XDDmSLPh/qWW6/kRpgtd/RQg+JQul4eewn6VmZDu70hiZ4uWLBwzVYJO86EV2Kn11ky0aro0+s1E+AVvfsgHUZ/gfs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=nEGUocWT; arc=none smtp.client-ip=198.175.65.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="X9gWFHds"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5B64A1F00893;
-	Thu, 10 Sep 2026 06:08:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789020500;
-	bh=yFkpzRTGUxAa/gcYZ+xpuv+1HVYwbL6IIJ/xeFkQyRE=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=X9gWFHdsNieV0H8nFH56LOOdari/6PCxjiNUid9zuK64ipvL7/msC0CE6j6Xe5FsH
-	 mcU064QBh7Bf0a0wKmuePmXOvVMPHOLPZkzOnjrKXfYGZHP8O1k97hJM5ONvGa/1XW
-	 5YyWd8JW1oBoH7LDzyX2REN17DaNMqmKWczf/P1yXzOrFz3FnTH66c9CIWZRG1gZj1
-	 y2bkFdJqdWoVYWweb6Unl+Suz1cj1Ncql5F6FRL6DUgcrgmS2gU0hwnNqoS4btrfQq
-	 unVw3JANRQWQmhuu9YJYgMZ5WxiPa94g4yYj8CIVIPyPxSUsEijbY7ZaL487cGyOSY
-	 aqsCx8Lek1tiw==
-Date: Thu, 10 Sep 2026 08:08:10 +0200
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Koichiro Den <den@valinux.co.jp>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Frank Li <Frank.Li@nxp.com>, 
-	Niklas Cassel <cassel@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Kishon Vijay Abraham I <kishon@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>, 
-	Allen Hubbe <allenbh@gmail.com>, linux-pci@vger.kernel.org, ntb@lists.linux.dev, 
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/3] PCI: endpoint: pci-epf-vntb: Pass PF/VF number when
- BAR programming
-Message-ID: <b4mtzimdzlk6r3yihye7f3gkdqbk7gi64ymdrhf5twmn35zej7@s3n7bqe4g6vq>
-References: <rmso2szdpfjy4qoqalhhpf3zxzn2te25m573qmwmpmoilk5jz2@arvvr4hdzbbj>
- <20260909160949.GA216221@bhelgaas>
- <sbmyv6wgmdtow7rg4m7vkfpn42ts2xobqwvzjdh7japgyremyb@p5zmzskzcdvc>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="nEGUocWT"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1789022587; x=1820558587;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=PnSdyt8IKSG7Cusf+et3nfCE6GN+a6K2xDtnxZ+Uwgk=;
+  b=nEGUocWTzP0VqouPLnX+yoarTyWW14EGLl4QS/KOS2unNvPLw2i/Q7wM
+   m4C8oMJ9jf+5axPkLfGBRcC9d3wazWUXVgnq1tVHEEr3Mh8G6rfG6nKJH
+   OmvSyp7gJbQpiKbOurQIn8F5fAOx4dRBTgwMhS51pDhJSeBJBQXWIWBfg
+   BDtPnBub22nlOQrjMxIgLONyPFWjP5bJAg3x5aaIEbbkQTKE3P0rS5J4W
+   AG4KQdD7Xv5nLKAk4U0yXtkZ7e6AUlwNapcfxKGFR0n+++4tLS/ZtSlyf
+   H1j74oKQZFn3DySSI7Au/OOtg4mDKmrWU1hhZjqW9V7XK9UjWXEuFqlHN
+   g==;
+X-CSE-ConnectionGUID: PCOrR5gCT5eM+o8oY+X24w==
+X-CSE-MsgGUID: GWN/RBvyTFizN7+7mEzcNw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11900"; a="99792614"
+X-IronPort-AV: E=Sophos;i="6.25,271,1779174000"; 
+   d="scan'208";a="99792614"
+Received: from orviesa003.jf.intel.com ([10.64.159.143])
+  by orvoesa103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Sep 2026 23:43:06 -0700
+X-CSE-ConnectionGUID: qMrwe2q5S86Ch2Xiv4qJ6A==
+X-CSE-MsgGUID: vOjSCGXARA64SzNa76+uMQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.25,271,1779174000"; 
+   d="scan'208";a="275058100"
+Received: from ncintean-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.177])
+  by ORVIESA003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Sep 2026 23:42:58 -0700
+Date: Thu, 10 Sep 2026 09:42:55 +0300
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Yao Zi <me@ziyao.cc>
+Cc: Inochi Amaoto <inochiama@gmail.com>, Jingoo Han <jingoohan1@gmail.com>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>, Yixun Lan <dlan@kernel.org>,
+	Paul Walmsley <pjw@kernel.org>, Palmer Dabbelt <palmer@dabbelt.com>,
+	Albert Ou <aou@eecs.berkeley.edu>, Alexandre Ghiti <alex@ghiti.fr>,
+	Frank Li <Frank.Li@nxp.com>, Niklas Cassel <cassel@kernel.org>,
+	Sherry Sun <sherry.sun@nxp.com>, Arnd Bergmann <arnd@arndb.de>,
+	Christian Bruel <christian.bruel@foss.st.com>,
+	Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>,
+	Senchuan Zhang <zhangsenchuan@eswincomputing.com>,
+	Alex Elder <elder@riscstar.com>,
+	Xincheng Zhang <zhangxincheng@ultrarisc.com>,
+	Randolph Lin <randolph@andestech.com>,
+	Siddharth Vadapalli <s-vadapalli@ti.com>,
+	Vidya Sagar <vidyas@nvidia.com>,
+	Neil Armstrong <neil.armstrong@linaro.org>,
+	Danilo Krummrich <dakr@kernel.org>,
+	Uwe =?iso-8859-1?Q?Kleine-K=F6nig_=28The_Capable_Hub=29?= <u.kleine-koenig@baylibre.com>,
+	Pengpeng Hou <pengpeng@iscas.ac.cn>,
+	Anirudh Srinivasan <asrinivasan@oss.tenstorrent.com>,
+	Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-riscv@lists.infradead.org,
+	spacemit@lists.linux.dev, Yixun Lan <dlan@gentoo.org>,
+	Longbin Li <looong.bin@gmail.com>
+Subject: Re: [PATCH v5 1/6] PCI: spacemit-k1: Add device data support
+Message-ID: <aqJRbzZhROtXncZu@ashevche-desk.local>
+References: <20260907112606.465778-1-inochiama@gmail.com>
+ <20260907112606.465778-2-inochiama@gmail.com>
+ <ap_i5Pw4nVB4LZ-7@ashevche-desk.local>
+ <aqESGs3_BxOd4PYg@inochi.infowork>
+ <aqJDvogeo3avWWQ3@pie>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <sbmyv6wgmdtow7rg4m7vkfpn42ts2xobqwvzjdh7japgyremyb@p5zmzskzcdvc>
+In-Reply-To: <aqJDvogeo3avWWQ3@pie>
+Organization: Intel Finland Oy - BIC 0357606-4 - c/o Alberga Business Park, 6
+ krs, Bertel Jungin Aukio 5, 02600 Espoo
 
-On Thu, Sep 10, 2026 at 01:56:53PM +0900, Koichiro Den wrote:
-> On Wed, Sep 09, 2026 at 11:09:49AM -0500, Bjorn Helgaas wrote:
-> > On Wed, Sep 09, 2026 at 01:53:53PM +0900, Koichiro Den wrote:
-> > > On Tue, Sep 08, 2026 at 09:23:11PM -0500, Bjorn Helgaas wrote:
-> > > > On Wed, Sep 09, 2026 at 11:01:48AM +0900, Koichiro Den wrote:
-> > > > > On Tue, Sep 08, 2026 at 11:53:15AM -0500, Bjorn Helgaas wrote:
-> > > > > > On Wed, Jul 29, 2026 at 02:23:04AM +0900, Koichiro Den wrote:
-> > > > > > > vntb_epf_mw_set_trans() programs the memory-window BAR through
-> > > > > > > pci_epc_set_bar() with hardcoded function numbers (0, 0), so the BAR
-> > > > > > > lands on the wrong function whenever the vNTB EPF is bound to anything
-> > > > > > > but PF0. The other BAR programming sites in the vNTB driver already pass
-> > > > > > > the EPF's own numbers.
-> > > > > > > 
-> > > > > > > Pass the EPF's own func_no/vfunc_no here as well.
-> > > > > > 
-> > > > > > We're referring to these as "PF" and "VF" in the subject and "physical
-> > > > > > endpoint function" and "virtual endpoint function" in the
-> > > > > > pci_epc_set_bar() kernel-doc, but I don't think these have anything to
-> > > > > > do with the SR-IOV PF and VF concepts, do they?
-> > > > > 
-> > > > > Not in the specific case that motivated this series. But AFAICT, the EPC API
-> > > > > uses the same (func_no, vfunc_no) pair to cover both ordinary functions and
-> > > > > SR-IOV PFs/VFs scenarios. With vfunc_no == 0, func_no can identify either an
-> > > > > ordinary function or an SR-IOV PF. A non-zero vfunc_no identifies a VF
-> > > > > associated with the PF selected by func_no.
-> > > > 
-> > > > Now I'm even more confused :)
-> > > > 
-> > > > Are you saying that a non-zero vfunc_no always identifies an SR-IOV
-> > > > VF?  And there's some dependency on that?  I don't any mention of
-> > > > "iov" in drivers/pci/endpoint/.
+On Thu, Sep 10, 2026 at 05:44:50AM +0000, Yao Zi wrote:
+> On Wed, Sep 09, 2026 at 04:00:33PM +0800, Inochi Amaoto wrote:
+> > On Tue, Sep 08, 2026 at 01:26:44PM +0300, Andy Shevchenko wrote:
+> > > On Mon, Sep 07, 2026 at 07:26:00PM +0800, Inochi Amaoto wrote:
+
+...
+
+> > > > +	data = device_get_match_data(dev);
+> > > > +	if (!data)
+> > > > +		return -ENODEV;
 > > > 
-> > > Yes, that is my understanding of the current in-tree implementation. You're
-> > > right that drivers/pci/endpoint/ itself contains no explicit reference to
-> > > SR-IOV. E.g. pci_epf_add_vepf() just calls it a "virtual EP function".
-> > > So my saying was kind of assumptive, but I still think the same because:
-> > > 
-> > > - The support was introduced for SR-IOV:
-> > >   https://lore.kernel.org/r/20210819123343.1951-1-kishon@ti.com/
-> > > 
-> > > - The core rejects a non-zero vfunc_no unless the EPC provides max_vfs, and
-> > >   Cadence is the only in-tree EPC driver I found that does so. For example,
-> > >   cdns_pcie_ep_set_bar() calls cdns_pcie_get_fn_from_vfn(), which uses the
-> > >   SR-IOV First VF Offset and VF Stride for a non-zero vfn.
+> > > It's better to use -ENODATA which will help to distinguish from other ENODEV
+> > > cases (which are more often to happen).
 > > 
-
-Your understanding is correct.
-
-> > Thanks, that's helpful.  I still have to work hard to change my point
-> > of view from host-side drivers to endpoint drivers operating on the
-> > other end of the link.  The fact that there are several interfaces
-> > that need (func_no, vfunc_no) suggests that callers really do need to
-> > understand what's going on, and maybe we should try to connect the
-> > kernel-doc and abbreviations more closely with PCIe spec terms.
-> > 
-> > E.g., if "physical EP function" and "virtual EP function" refer to
-> > SR-IOV PF and VF, maybe we should word them as "endpoint PF" or
-> > "endpoint VF" (or "EP PF", "EP VF" for short).  If
+> > OK, thanks
 > 
-> I personally agree. That sounds reasonable and would help clarify things.
-> 
-> > "pci_epf_add_vepf()" adds an SR-IOV VF, maybe "pci_epf_add_vf()" would
-> > be descriptive enough.  We already know we're on the endpoint because
-> > of "epf", so we probably don't need another hint in "vepf", which
-> > includes a "pf" that doesn't mean SR-IOV PF.
-> 
-> True. But I'd also like to hear what the PCI EP maintainers think about this.
-> 
+> Honestly, I don't think this should even happen, since every compatible
+> supported by the driver carries its own of_match_data, and failing to
+> do so is obviously a driver bug, so I think this branch could be
+> dropped.
 
-Fine with me.
+Does this driver do not support driver_override? How comes?
 
-- Mani
+(Note, Sashiko is full of the issues of not checking for NULL the matching data
+ and hence it describes a scenario in which this leads to NULL pointer
+ dereference.)
 
 -- 
-மணிவண்ணன் சதாசிவம்
+With Best Regards,
+Andy Shevchenko
+
+
