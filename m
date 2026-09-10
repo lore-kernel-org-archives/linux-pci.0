@@ -1,161 +1,159 @@
-Received: from mail-qk2-f12.google.com (mail-qk2-f12.google.com [74.125.230.204])
+Received: from mail-wm1-f71.google.com (mail-wm1-f71.google.com [209.85.128.71])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 425CD493D45
-	for <linux-pci@vger.kernel.org>; Thu, 10 Sep 2026 14:29:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.230.204
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A4ECA48E0CB
+	for <linux-pci@vger.kernel.org>; Thu, 10 Sep 2026 14:34:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.71
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789050546; cv=none; b=nA7f7cpSql88zSS4fXxQdSI4nmJJeYs6aNCWa50i2EGMpdrR2jTbYcrHIvk/zeQjmQKTuRv4NYjZP0BzT8fEg2i9CYZk3C08wyK7wqpkjnRnqiBtn7yL/KDnr7lyczc9BvrU5hG2xhiCN8bBVEY/i93AE2s7GJ6dUkVZ8VCxQEU=
+	t=1789050901; cv=none; b=Y7rOWk7V/zM6KHz44fln8WYUz5Qb2hN+F1+fDtHNjQx1elMhZyzMrq39FD1ta4RfeX28qUgmKbHyqGiB8Yn10kvzcJJbCYm37XC/6y3ceQMrM0aIlqmBCUm7uTmvfxhGD4d36tKZtS0LRRT4ZrvX3KL3LZzq7qg4LPar+WeQnNg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789050546; c=relaxed/simple;
-	bh=lyspu3aOKLbIRf5XENbtCVfMBm8FA06IHpc+MnfQ5hI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Qb66w7eZdIPzgYNiysWlUft6fFtJQ6QX/hvhOPOlH0+uwwW13YEZ7FpuCbUUZ712PztzZ2RvoLwrG9wVJV1n+caPEvosfqT5APz3X9Y2MsN6RoN6TqiVEvWtnHgUHhvBkDa8tni5JCbfWMnq1FISqF7DValZKztE0usnQWuWeAg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=qc3FFWC1; arc=none smtp.client-ip=74.125.230.204
+	s=arc-20240116; t=1789050901; c=relaxed/simple;
+	bh=ha/G3dQOHNOkYRKWPJia3wRwrtSelDlCsigpRGS/33A=;
+	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=rT7jnvOKjj57bd3yZ82JTRyuM3HoFYkIdPbINSmZc/p9s4MkQ/MOY7/TffDueYkgs+hK7fJgivtp1QktzYJRBOWIj9SN+K2fJ68muS2FNUcHP6E0pyv68YxEkQ/E/VVPo42AooJvOezP0oxXfV8FwuSP1rnfwsse1U+TT/2B0Kk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--ardb.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=l+/SInvH; arc=none smtp.client-ip=209.85.128.71
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--ardb.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="qc3FFWC1"
-Received: by mail-qk2-f12.google.com with SMTP id d75a77b69052e-53012819c04so230281cf.0
-        for <linux-pci@vger.kernel.org>; Thu, 10 Sep 2026 07:29:05 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="l+/SInvH"
+Received: by mail-wm1-f71.google.com with SMTP id 5b1f17b1804b1-4994d67d0e3so51888475e9.2
+        for <linux-pci@vger.kernel.org>; Thu, 10 Sep 2026 07:34:59 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1789050544; x=1789655344; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=U4B0H2819dU8lEDJ1XLSE6/+8p+h2NlR6cCuK8RNsxY=;
-        b=qc3FFWC1HUyyNzEFobjj3oObW2yalxpGDLwSNwVqvxnC+LCUUB5Jxgz4YtcUGtFup+
-         TdHK9PVo4tC/e3RRo55grkhz4e90w6I6u1c0NYheGeJbhpf3U0ed6HjIQiacYLZICGtH
-         XCan3FkoqktWHhkJqMebIhxGthTtZZnf8IxvzqqBdYT1y5ccky/gIDBzqmR9EX0XKOZB
-         n40tbkHmdfcc7PX1vYgrwxEbUCZo8jBrvrVLDG0WOGiMt7W49w6mVaISePsQRM81/Wkr
-         rtVTl/69Q8aYD/t+OcJUpyjp8UELv+wA1xsT97i709w3/TFOJ1YZkGth6/hrnJLUE6nX
-         xZQA==
+        d=google.com; s=20251104; t=1789050898; x=1789655698; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:from:subject
+         :message-id:mime-version:date:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=vLdGOSaZKVRiQ2yqyODIPDHphzpEsgnt6OvmN+p7ZKI=;
+        b=l+/SInvHlpM8SQ3WZf+NFDSYvChYdilqkq6ZZD7O4TaX2NQs9zmTg6te3gb1vkvIuF
+         4SWGWitDRfviYg03mEZca4vpq3SNLK0LtMX5URss/eYrMdijOmq3/2QQkuArzF4Avi7B
+         27TU/9YRr5jCSVkQwLYDTVC7259oSxBZR5Y5VQ/xrSKFA6LUGyFM4aGSi7+/6tO0AAfQ
+         vFtt1y//3syVDUIYj4iwF16XNNVgJgFAWT8nrdrg+sMZoJuS0t9/1fdOOSaMZevTTEuW
+         ugmCbQ365gBnsrN4hWxONO843uOESSjTBy9BErOrxGEECwjamP1k7JFpLbqQzU3zCf2h
+         n+2A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1789050544; x=1789655344;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=U4B0H2819dU8lEDJ1XLSE6/+8p+h2NlR6cCuK8RNsxY=;
-        b=Jq+wkaOkEETGx/4UVJcNOi0HpzBIQugP+Le617ilx3Cu2xu1nHXHOSSTBIX5RUFYNL
-         NUoCPi12PJ/n6dh07hUc3lRGKV6/8LE9KqSH22eja0UBh0rd3/zv2zhN9vBZLqzCBWEt
-         zF06yTe5LjM6fgLo3CHQX8OWYKRHAVoTF/25/Qnhq1rGD68/zJgd6t60KMR5/WSvWXPV
-         /QcMRbRgooOHoxTWYa0mrxiweFsYqY76Kuaxf8JyBHx3XoXXyjTY56Isuo4QESVp3wR+
-         NDtNIvkSyt8pgudWxuVKSykTvitd5mC+Su8UYCkh6/CtuxVyZB8aLlw6T4h3JTKpL+bJ
-         B3ug==
-X-Forwarded-Encrypted: i=1; AKwUvBz7xjBtn1DibPUVHqUZI6Senzewh0xESDeewuMnNdUX3ZJMfnKULm1UT1ewypAA8/Oxk9An2P0TqGg=@vger.kernel.org
-X-Gm-Message-State: AFuF++k1+sgLXuR+8m7pM0TfF1DU0mc5yNObL3xehN6kTELKHHjAMSX8
-	wpM5uwbPgwByAUZYh+BX13WiPdB2Ma+uo90hX6BvsZ/slDcW5AwtBarN0cIvRtFIpg==
-X-Gm-Gg: AYBFou3cog9smz14RljgQ6IbXS+Lhgjn+OsoRhu5xA/NWR2wWPtqotaFi/1Vf/mpayx
-	Clo8iBFZq7AaBCf9NWgLwXsPp7P7ClL68RexeGSGqsvf6flB78z65LKW1mdb2Zv//hqEjsGMcKs
-	7SFE8B1NIIOSFrcTdIuHejPKq3VDtK3btMXgnSKB83Idd6T8qeLX/JgtwKEPnL1aIRoDzwrZ5SZ
-	dpRnRYI9NUD+QIhLf2XJAWxOJ4vkE7Ki0FMSHtrYVlx24HlTbhcR7VmL0srTL2M7ZU2gBZUGYJp
-	z87TKpzpeIiJmxa/HYQQxm/K3DxF7syjFw4hTO3u2se0v925gErde4KGJ9VHvfXHUZQm1COks30
-	hcPdwITk0czvIYl7JFA78yJ0H7ZLkX0JiOWLJdnJN0QRvzvvHOqJUs6WQ40vX56ri9fyyVUXPf9
-	A2aA43re8cMBJNTAm/6H5tI0kg02gb+w5QOADMBgDAW3OuAfEv6p4q0bfe3cIdO6riDGQZodUzL
-	XispZDQIU5Wmoo5GH12goczx3wk34H/CdWxorVfc1oOVBk=
-X-Received: by 2002:ac8:5cd6:0:b0:530:2f98:cebb with SMTP id d75a77b69052e-530b62fb6a3mr16703951cf.11.1789050543398;
-        Thu, 10 Sep 2026 07:29:03 -0700 (PDT)
-Received: from google.com (164.210.142.34.bc.googleusercontent.com. [34.142.210.164])
-        by smtp.gmail.com with ESMTPSA id 006d021491bc7-6bebe8d3f3fsm3196267eaf.10.2026.09.10.07.29.00
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 10 Sep 2026 07:29:03 -0700 (PDT)
-Date: Thu, 10 Sep 2026 14:28:57 +0000
-From: Pranjal Shrivastava <praan@google.com>
-To: Vasant Hegde <vasant.hegde@amd.com>
-Cc: Jason Gunthorpe <jgg@nvidia.com>, iommu@lists.linux.dev,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Joerg Roedel <joro@8bytes.org>,
-	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
-	Ankit Soni <ankit.soni@amd.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Samiullah Khawaja <skhawaja@google.com>, sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 2/5] iommu/amd: Fix DTE clearing and rename
- iommu_ignore_device()
-Message-ID: <aqK-qfJ0x8-RLMgT@google.com>
-References: <ao3oHn8HiXIx5Wrl@google.com>
- <50ffc453-f918-47f8-9556-9813308690a9@amd.com>
- <20260826122147.GA3666382@nvidia.com>
- <bfb7be5b-2da3-4bd3-8146-9bd079011a75@amd.com>
- <20260828115331.GC3922654@nvidia.com>
- <399db967-050d-48dc-afb5-5c77ee9cce65@amd.com>
- <20260904142547.GU4157646@nvidia.com>
- <9be08ef1-7ae0-483a-938e-17e606b5d214@amd.com>
- <aqK04hq575iwY5BR@google.com>
- <cb98a268-c709-4489-981a-07d662a1f4da@amd.com>
+        d=1e100.net; s=20251104; t=1789050898; x=1789655698;
+        h=content-transfer-encoding:content-type:cc:to:from:subject
+         :message-id:mime-version:date:x-gm-message-state:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=vLdGOSaZKVRiQ2yqyODIPDHphzpEsgnt6OvmN+p7ZKI=;
+        b=jI6pq0cUIr4C38d6+IhVTxKnKYPQB7/MA3hp+d77xsDKjNZIHUAX2oUkGLHmsGjEPy
+         SQVXcTLk1y4lmmtiiPgJ/i1NjG9z6pov3vboru++mds5HRhDKSoEOG0PuDTPloFZ3dLQ
+         QwvPuEadWbXEGvLw3TaL95LMPDvcweOu5tSA85EiFYROJ3qq4B/BA2ovkzrFzQpBkBTN
+         IK/yUjoslZqV+Y5AorhzaRkUc8qnkKY2X9IhXVaHeDBuRLEYZxYLY1W4MdBzrWcGW9ew
+         mMeg+m8JGxH+1FWfMKxCkZP+NUqQd6lS9TrIDKgfkyYHMg9kLhbl1wolWfsGL+51bqUA
+         ygug==
+X-Gm-Message-State: AFuF++mONu9FSbo6NJHzznfzEim74cf4nn7L/Sf/qj9C43xxMVhJ/6g9
+	4MUXz23BCP6Lpq1NmE67oCAquptd5yRBZTG5EDtpkWy/yCrPCuktwkCj0+E2hIVx0kVeatJYwr1
+	XSDfJ2TBaMpanRGQmYJI/eGQ2XGgTa867X77j+z1KxLcxejW/qhJZPix3us2EprOmNM0AbbRDdq
+	dypVnbUakd27Vu9l0JJVL8K3FLB4Mbgg==
+X-Received: from wrck19.prod.google.com ([2002:a5d:5253:0:b0:481:42c1:a3f])
+ (user=ardb job=prod-delivery.src-stubby-dispatcher) by 2002:a05:6000:4804:b0:482:e451:6810
+ with SMTP id ffacd0b85a97d-4858703f65cmr46225743f8f.1.1789050897441; Thu, 10
+ Sep 2026 07:34:57 -0700 (PDT)
+Date: Thu, 10 Sep 2026 16:34:39 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <cb98a268-c709-4489-981a-07d662a1f4da@amd.com>
+Mime-Version: 1.0
+X-Developer-Key: i=ardb@kernel.org; a=openpgp; fpr=F43D03328115A198C90016883D200E9CA6329909
+X-Developer-Signature: v=1; a=openpgp-sha256; l=3113; i=ardb@kernel.org;
+ h=from:subject; bh=d0ouAXSJJKlPEcoAofimBWCt5MeyJAw1y1ceFAVT0fQ=;
+ b=kA0DAAoWMG4JVi59LVwByyZiAGqiwAGg7JiMNdgBxG/csgtc6YaVRLSrODPmBtIV+lbgDCIQG
+ 4h1BAAWCgAdFiEEEJv97rnLkRp9Q5odMG4JVi59LVwFAmqiwAEACgkQMG4JVi59LVxY3gD/RAOg
+ XhLaWgkX74KmgFPKBOAtUuXpKmxVQAfcGk2+3NUA/0LzFhVedW97oukbC3wii5l9fXuBCkUWCX9 mERYBPBMG
+X-Mailer: git-send-email 2.55.0.1003.g10538fe699-goog
+Message-ID: <20260910143440.3865663-2-ardb+git@google.com>
+Subject: [RFC PATCH] PCI: Tolerate non-prefetchable 64-bit BARs in
+ prefetchable windows
+From: Ard Biesheuvel <ardb+git@google.com>
+To: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Ard Biesheuvel <ardb@kernel.org>, 
+	Bjorn Helgaas <bhelgaas@google.com>, 
+	"=?UTF-8?q?Ilpo=20J=C3=A4rvinen?=" <ilpo.jarvinen@linux.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Thu, Sep 10, 2026 at 07:45:01PM +0530, Vasant Hegde wrote:
-> 
-> 
-> On 9/10/2026 7:17 PM, Pranjal Shrivastava wrote:
-> > On Thu, Sep 10, 2026 at 05:25:25PM +0530, Vasant Hegde wrote:
-> >>
-> >>
-> >> On 9/4/2026 7:55 PM, Jason Gunthorpe wrote:
-> >>> On Fri, Sep 04, 2026 at 03:43:01PM +0530, Vasant Hegde wrote:
-> >>>> Jason,
-> >>>>
-> >>>>
+From: Ard Biesheuvel <ardb@kernel.org>
 
-[...]
+The prefetchable vs. non-prefetchable distinction is a relic of
+conventional PCI, to denote from which regions PCI-PCI bridges were
+permitted to perform speculative readahead.
 
-> >>>>
-> >>>> During boot, it sets certain default values includ dte.v. It doesn't
-> >>>> clear everything.
-> >>>
-> >>> ?? It starts out with a 0 DTE table? There is no inherited DTE table
-> >>> except for kdump.
-> >>>
-> >>>> May be we should just remove ignore_device() completely? as
-> >>>>   - normal boot, its not yet configured, so no DMA is allowed
-> >>>>   - kdump boot, old DTE is still valid and let it continue?
-> >>>
-> >>> Yes, that makes alot more sense to me.
-> >>
-> >> Ack. @Pranjal, Can you fixup and send v4?
+For software compatibility reasons, PCI Express inherited the Type 1
+header and models PCIe root ports as PCI-PCI bridges. However, this
+readahead behavior does not exist in PCIe, and so this distinction has
+mostly become meaningless on the bridge level.
 
-[...]
+As per the PCIe r6.3 ECN "Removing Prefetchable Terminology", the
+'prefetchable' designation has been removed from the specification
+entirely, on the basis that it is obsolete, and is being abused to
+inform memory mapping attributes and other device/BAR level properties
+that it was never intended for.
 
-> >>
-> >> Yeah. One of the cleanup patch missed to update below comment.
-> >>
-> >>>
-> >>>         /*
-> >>>          * Order is important here to make sure any unity map requirements are
-> >>>          * fulfilled. The unity mappings are created and written to the device
-> >>>          * table during the iommu_init_pci() call.
-> >>>          *
-> >>>          * After that we call init_device_table_dma() to make sure any
-> >>>          * uninitialized DTE will block DMA, and in the end we flush the caches
-> >>>          * of all IOMMUs to make sure the changes to the device table are
-> >>>          * active.
-> >>>          */
-> >>>         for_each_pci_segment(pci_seg)
-> >>>                 init_device_table_dma(pci_seg);
-> >>>
-> >>> The DTE starts out with blocking because it starts out as 0. This
-> >>> isn't making the DTE blocking, it is doing something else. And it is
-> >>> very suspicious and racey looking to me.
-> >>
-> >> IIRC there were some requirement to keep V bit ON. Otherwise I don't see why we
-> >> should set and flush the dte here. Let me dig the details.
-> >>
-> > 
-> > Should I also update the comment in this series? (It seems less relevant
-> > to the ATS stuff)
-> 
-> I'd say lets do that as separate patch. For now lets get this series finalized.
+Given the limited range for non-prefetchable windows in the Type 1
+header, and the fact that the distinction no longer exists for PCIe,
+resource allocation performed by firmware may result in non-prefetchable
+64-bit BARs being allocated inside prefetchable bridge windows.
 
-Ack. Sent out: https://lore.kernel.org/all/20260910142655.3281464-1-praan@google.com/
+Linux rejects such allocations ("can't claim; no compatible bridge
+window") when it encounters them, but will usually fail to produce an
+alternative allocation, given that firmware wouldn't have placed them
+there in the first place if there was sufficient space in the
+non-prefetchable window.
 
-Thanks,
-Praan
+So at the very least, let's not reject such allocations when they were
+made by the firmware.
+
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "Ilpo J=C3=A4rvinen" <ilpo.jarvinen@linux.intel.com>
+Signed-off-by: Ard Biesheuvel <ardb@kernel.org>
+---
+Link: https://github.com/tianocore/edk2/issues/13104
+
+ drivers/pci/pci.c   | 3 ++-
+ include/linux/pci.h | 4 ++--
+ 2 files changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index b2879a6be5f8..e33eb9f3a139 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -761,7 +761,8 @@ struct resource *pci_find_parent_resource(const struct =
+pci_dev *dev,
+ 			 * not, the allocator made a mistake.
+ 			 */
+ 			if (r->flags & IORESOURCE_PREFETCH &&
+-			    !(res->flags & IORESOURCE_PREFETCH))
++			    !(res->flags & IORESOURCE_PREFETCH) &&
++			    !pci_is_pcie(dev))
+ 				return NULL;
+=20
+ 			/*
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index d31a8d107b1e..1cbb4b6c02c3 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -2684,7 +2684,7 @@ static inline void pci_vf_drivers_autoprobe(struct pc=
+i_dev *dev, bool probe) { }
+  * need to calculate PCIe capability offset from raw device for some
+  * reasons, please use pci_find_capability() instead.
+  */
+-static inline int pci_pcie_cap(struct pci_dev *dev)
++static inline int pci_pcie_cap(const struct pci_dev *dev)
+ {
+ 	return dev->pcie_cap;
+ }
+@@ -2695,7 +2695,7 @@ static inline int pci_pcie_cap(struct pci_dev *dev)
+  *
+  * Returns: true if the PCI device is PCI Express capable, false otherwise=
+.
+  */
+-static inline bool pci_is_pcie(struct pci_dev *dev)
++static inline bool pci_is_pcie(const struct pci_dev *dev)
+ {
+ 	return pci_pcie_cap(dev);
+ }
+--=20
+2.55.0.1003.g10538fe699-goog
+
