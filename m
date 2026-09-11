@@ -1,291 +1,174 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.11])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 020E9348896
-	for <linux-pci@vger.kernel.org>; Fri, 11 Sep 2026 18:43:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C17B3442384;
+	Fri, 11 Sep 2026 19:14:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789152235; cv=none; b=DLO1Ay8dquyg1DBNcFndnUw2mUi7jAKidvloUnaSow2EXPF5nkN5De1Tad9/d3ZUzye4vsvbNTeN/Co1aDiY3MN/WNntFSz24EePI2Lom7z5Nm6YSPTtPXIZHm7DeT4eZS1ALO/ktE2dcqvYuwemv/HLZPwdusCN/Ad/FZQaAw0=
+	t=1789154085; cv=none; b=CH5nbEWNFfZl2wQkyqmuAwtwtsPUy6s5lcZQbxFUj9yTf7jnDR6YHUaigRB8ifxcI3IktXwawEqGZwGEFDOeOeGcQp441jZ5uUzGp3sXcEnDmBUXm/xjSyPM+kr99gsbWBbYNeQg2buFUxb1cnXRh5EH75WBShi9L1sqvhCh3UI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789152235; c=relaxed/simple;
-	bh=7RPPJMxNVt5Mr+wZTvDLtx1m8fte/l7rHbQoSRiGG/o=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=erAIxdky05JcUlWJ2nTvOKpjprUZ8ghvCwQMKL0YD5xcDfN01/k+303Zb9ihAOn8fD3QgFNeQV6bVCrT5o1H09pURMM1zThJ3Hbz4JN/4VZBnFG1+uMHEKubjfk1a5w+IDYUDG3KK0fIu+YiZ6UXQxdHqCKPvZ5PTnLTeJVqcjs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=iK6hG0pS; arc=none smtp.client-ip=198.175.65.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1789154085; c=relaxed/simple;
+	bh=dpc7anxfP2ZPPTeVcg35RlsGI7X0Ls2XyqXjTybPouY=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=uJrjWtqzWViyLqSiMklWvdSyFk93Z9wLdGc7wuMpuCpg4oiN8vdV9LkTplUNrWTt42cLqMhMhHh4LBYLxblaUM9s3AnXDeTAAfUgQF0kDfJcRVilJa8IKUcL8Izm/qUuZQ3+bky7qmToq1igewAAklRXxukELk2W+U/z01qfylU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KEalvI/2; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="iK6hG0pS"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1789152231; x=1820688231;
-  h=date:from:to:cc:subject:message-id;
-  bh=7RPPJMxNVt5Mr+wZTvDLtx1m8fte/l7rHbQoSRiGG/o=;
-  b=iK6hG0pSSVh82dEPNk7p9VWayUUuuukT5IP7sa1QeeS34gG3nl5cXlsK
-   AmqeAdxYBe15GIZ7gwiiwh66yZ6whJpHGcyWkmslGkC/Axe+VOZsSjutA
-   bX9vh2Nvgn9AASVIEoo/RUepijqmGKaUy45gbp0iWAp5GrwUZfHCwKp71
-   Bo4Y4oF+8DUD1LFxtPTpwfmaetoBJAezsyqtHmCVwLIkksMRmyB02Fcth
-   m8JOb1O54/oD370PkzHjgP6rXJziDvFydnaV92nJodO8lmXG/Tus1LDiv
-   fp5CfmORpNXzHtEtCqSid4p3L9EiKlSdt+lfIUDbhcfjez/tQbdFajJMq
-   Q==;
-X-CSE-ConnectionGUID: aX7eDyAuRv6O5blnEVOXpA==
-X-CSE-MsgGUID: DdtJmTx0T72c/s9v5ZfG5g==
-X-IronPort-AV: E=McAfee;i="6800,10657,11902"; a="99949473"
-X-IronPort-AV: E=Sophos;i="6.27,97,1787036400"; 
-   d="scan'208";a="99949473"
-Received: from fmviesa013.fm.intel.com ([10.60.135.153])
-  by orvoesa103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Sep 2026 11:43:47 -0700
-X-CSE-ConnectionGUID: V23pez0gRriPtmBynuUdoQ==
-X-CSE-MsgGUID: D9SSAiehQnO2EpbqQx1oFQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.27,97,1787036400"; 
-   d="scan'208";a="375983"
-Received: from lkp-server02.sh.intel.com (HELO 0a3643a6ed9d) ([10.239.97.151])
-  by fmviesa013.fm.intel.com with ESMTP; 11 Sep 2026 11:43:45 -0700
-Received: from kbuild by 0a3643a6ed9d with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1x56Di-000000001wl-38xS;
-	Fri, 11 Sep 2026 18:43:35 +0000
-Date: Sat, 12 Sep 2026 02:38:50 +0800
-From: kernel test robot <lkp@intel.com>
-To: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-Cc: linux-pci@vger.kernel.org
-Subject: [pci:endpoint] BUILD SUCCESS
- e26ff299ac09405fbe3a2525b060d32988fad17c
-Message-ID: <202609120247.S2iv6rSj-lkp@intel.com>
-User-Agent: s-nail v14.9.25
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KEalvI/2"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BC5731F000FF;
+	Fri, 11 Sep 2026 19:14:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1789154070;
+	bh=6dBTiX4xAO3JV4ryYMi2B6agwtg8EoTxOEevYmBg6jY=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=KEalvI/2bEBdkDuKN4fDoYIKLX7rAzEfZt8bke8EBvHnfyzM7P2NknWBSV2RDem7Q
+	 nhaUbLczJcFxoJ2dWu9IENtTm3GibRW0LJjdgS+08etBmUihh9/mu3OrOuss+dmBk8
+	 5ywqAybM2Oes8BjZDd5OendLHvt7KVyTiPdnapbIF1HjYXhC8LMf/lmyuJx3wKgJSz
+	 94NeaGgX75Ry5f+8KjxF/nthw1h2JoGfRDyarbp7DU2eXY4rvxW+Ai+7oVxL22fjW2
+	 zbE261wRJJnNpV/wDW8to41BavEmjVlRTfgeYlESIwNN6TDpN/5HpdiHXEyQVKoou6
+	 8bRA/EtABB+QA==
+Date: Fri, 11 Sep 2026 14:14:29 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Semih Baskan <strst.gs@gmail.com>,
+	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org,
+	robh@kernel.org, bhelgaas@google.com, rjui@broadcom.com,
+	sbranden@broadcom.com, bcm-kernel-feedback-list@broadcom.com,
+	rafal@milecki.pl, florian.fainelli@broadcom.com, arnd@arndb.de,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org, rosenp@gmail.com, rani.hod@gmail.com
+Subject: Re: [PATCH v3] PCI: iproc: Use the EROM outbound window on BCMA
+Message-ID: <20260911191429.GA549927@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260807160526.379-1-strst.gs@gmail.com>
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git endpoint
-branch HEAD: e26ff299ac09405fbe3a2525b060d32988fad17c  PCI: endpoint: pci-epf-vntb: Manage virtual NTB and PCI bus lifetime
+[+to Rafał; probably same as rafal@milecki.pl, but MAINTAINERS lists
+zajec5@gmail.com for BCMA]
 
-elapsed time: 1573m
+On Fri, Aug 07, 2026 at 07:05:26PM +0300, Semih Baskan wrote:
+> The PCIe outbound window base on Northstar depends on the PCIe Gen2 core
+> revision. Revision 0x01 uses 0x08000000, 0x40000000 and 0x48000000 for
+> controllers 0 to 2, while revision 0x07 (NS-B0) uses 0x08000000,
+> 0x20000000 and 0x28000000. Broadcom's own driver branches on the core
+> revision for exactly this reason.
+> 
+> bcm-ns.dtsi is shared by every Northstar SoC, so it cannot carry a value
+> that is correct on both. Commit 767012397976 ("ARM: dts: BCM5301X:
+> Describe PCIe controllers fully") gave the controllers a ranges property.
+> The commit shipped in v7.1.
+> 
+> With that property present, two things go wrong with this driver:
+> 
+>  - devm_pci_alloc_host_bridge() parses those ranges and requests them,
+>    then this driver adds its own window and requests the whole list a
+>    second time, so every controller fails to probe with -EBUSY.
+> 
+>  - The DT window itself is only correct on core revision 0x07. On
+>    revision 0x01 it points at an address the hardware does not decode,
+>    and the first MMIO access to a BAR takes an imprecise external
+>    abort.
+> 
+> The enumeration ROM reports the correct base for the revision actually
+> present, and bcma already provides it as addr_s[0]. Drop any memory
+> window that came from the device tree and use that instead, requesting
+> only the window this driver owns. This makes the driver correct whether
+> or not the DT describes a window.
+> 
+> When a dropped window does not match what the EROM reports, print a
+> warning naming both. The mismatch means the devicetree describes a
+> window the hardware does not decode, and that should be fixed in the
+> dts rather than ignored silently.
+> 
+> The same commit also added compatible = "brcm,iproc-pcie", so these
+> nodes now match pcie-iproc-platform. With CONFIG_PCIE_IPROC_PLATFORM
+> enabled, which is the default on ARCH_BCM_IPROC, that driver binds them
+> first and this driver's probe fails inside devm_pci_alloc_host_bridge().
+> This patch fixes the configurations where the BCMA driver is the one in
+> use; OpenWrt builds that way, with PCIE_IPROC_PLATFORM disabled. The
+> platform path takes the DT window as-is and has the same wrong address
+> on core revision 0x01, so that side needs a devicetree fix either way.
+> 
+> Tested on an ASUS RT-N18U (BCM47081) and a Linksys EA9200 (BCM4709),
+> both core revision 0x01.
+> 
+> Fixes: 767012397976 ("ARM: dts: BCM5301X: Describe PCIe controllers fully")
+> Tested-by: Rani Hod <rani.hod@gmail.com>
+> Cc: stable@vger.kernel.org # v7.1+
+> Signed-off-by: Semih Baskan <strst.gs@gmail.com>
+> ---
+> v2 -> v3: format the two problem descriptions as bullet points.
+> Requested by Bjorn Helgaas.
+> 
+> v1 -> v2: print a warning for every devicetree memory window that does
+> not match the EROM window. Requested by Arnd Bergmann:
+> https://lore.kernel.org/all/d05ffeca-f289-42dd-b454-5a7c7741c6d5@app.fastmail.com/
+> 
+> v2: https://lore.kernel.org/all/20260807035726.387-1-strst.gs@gmail.com/
+> v1: https://lore.kernel.org/all/20260727140939.389-1-strst.gs@gmail.com/
+> 
+>  drivers/pci/controller/pcie-iproc-bcma.c | 17 ++++++++++++++++-
+>  1 file changed, 16 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/controller/pcie-iproc-bcma.c b/drivers/pci/controller/pcie-iproc-bcma.c
+> index 593418c2b..06a471f4a 100644
+> --- a/drivers/pci/controller/pcie-iproc-bcma.c
+> +++ b/drivers/pci/controller/pcie-iproc-bcma.c
+> @@ -36,6 +36,7 @@ static int iproc_bcma_pcie_probe(struct bcma_device *bdev)
+>  	struct device *dev = &bdev->dev;
+>  	struct iproc_pcie *pcie;
+>  	struct pci_host_bridge *bridge;
+> +	struct resource_entry *win, *tmp;
+>  	int ret;
+>  
+>  	bridge = devm_pci_alloc_host_bridge(dev, sizeof(*pcie));
+> @@ -59,8 +60,22 @@ static int iproc_bcma_pcie_probe(struct bcma_device *bdev)
+>  	pcie->mem.end = bdev->addr_s[0] + SZ_128M - 1;
+>  	pcie->mem.name = "PCIe MEM space";
+>  	pcie->mem.flags = IORESOURCE_MEM;
+> +
+> +	resource_list_for_each_entry_safe(win, tmp, &bridge->windows) {
+> +		if (resource_type(win->res) != IORESOURCE_MEM)
+> +			continue;
+> +
+> +		if (win->res->start != pcie->mem.start ||
+> +		    win->res->end != pcie->mem.end)
+> +			dev_warn(dev, "DT window %pR does not match EROM window %pR, using EROM\n",
+> +				 win->res, &pcie->mem);
+> +
+> +		devm_release_resource(dev, win->res);
+> +		resource_list_destroy_entry(win);
+> +	}
+> +
+>  	pci_add_resource(&bridge->windows, &pcie->mem);
+> -	ret = devm_request_pci_bus_resources(dev, &bridge->windows);
+> +	ret = devm_request_resource(dev, &iomem_resource, &pcie->mem);
 
-configs tested: 214
-configs skipped: 11
+If the EROM supplies the information the driver needs, why does this
+BCMA driver use DT at all?
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+AFAICS, pcie-iproc-bcma.c doesn't use any of the information from DT.
+devm_pci_alloc_host_bridge() *looks* in DT, parses it, and fills in
+bridge->windows, and requests those windows, but I don't think
+iproc-bcma ever uses them.
 
-tested configs:
-alpha                             allnoconfig    gcc-16.1.0
-alpha                            allyesconfig    gcc-16.1.0
-alpha                               defconfig    gcc-16.1.0
-arc                              allmodconfig    clang-24
-arc                               allnoconfig    gcc-16.1.0
-arc                              allyesconfig    clang-24
-arc                          axs103_defconfig    gcc-16.1.0
-arc                                 defconfig    gcc-16.1.0
-arc                   randconfig-001-20260911    clang-24
-arc                   randconfig-002-20260911    clang-24
-arm                               allnoconfig    gcc-16.1.0
-arm                              allyesconfig    clang-24
-arm                       aspeed_g5_defconfig    gcc-16.1.0
-arm                        clps711x_defconfig    gcc-16.1.0
-arm                                 defconfig    gcc-16.1.0
-arm                          pxa3xx_defconfig    gcc-16.1.0
-arm                   randconfig-001-20260911    clang-24
-arm                   randconfig-002-20260911    clang-24
-arm                   randconfig-003-20260911    clang-24
-arm                   randconfig-004-20260911    clang-24
-arm                           sama5_defconfig    gcc-16.1.0
-arm                           sama7_defconfig    gcc-16.1.0
-arm64                            allmodconfig    clang-24
-arm64                             allnoconfig    gcc-16.1.0
-arm64                               defconfig    gcc-16.1.0
-arm64                 randconfig-001-20260911    gcc-16.1.0
-arm64                 randconfig-002-20260911    gcc-16.1.0
-arm64                 randconfig-003-20260911    gcc-16.1.0
-arm64                 randconfig-004-20260911    gcc-16.1.0
-csky                             allmodconfig    gcc-16.1.0
-csky                              allnoconfig    gcc-16.1.0
-csky                                defconfig    gcc-16.1.0
-csky                  randconfig-001-20260911    gcc-16.1.0
-csky                  randconfig-002-20260911    gcc-16.1.0
-hexagon                          allmodconfig    gcc-16.1.0
-hexagon                           allnoconfig    gcc-16.1.0
-hexagon                             defconfig    gcc-16.1.0
-hexagon               randconfig-001-20260911    gcc-12.5.0
-hexagon               randconfig-001-20260912    clang-24
-hexagon               randconfig-002-20260911    gcc-12.5.0
-hexagon               randconfig-002-20260912    clang-24
-i386                             allmodconfig    clang-22
-i386                              allnoconfig    gcc-16.1.0
-i386                             allyesconfig    clang-22
-i386        buildonly-randconfig-001-20260911    clang-22
-i386        buildonly-randconfig-002-20260911    clang-22
-i386        buildonly-randconfig-003-20260911    clang-22
-i386        buildonly-randconfig-004-20260911    clang-22
-i386        buildonly-randconfig-005-20260911    clang-22
-i386        buildonly-randconfig-006-20260911    clang-22
-i386                                defconfig    gcc-16.1.0
-i386                  randconfig-001-20260911    clang-22
-i386                  randconfig-002-20260911    clang-22
-i386                  randconfig-003-20260911    clang-22
-i386                  randconfig-004-20260911    clang-22
-i386                  randconfig-005-20260911    clang-22
-i386                  randconfig-006-20260911    clang-22
-i386                  randconfig-007-20260911    clang-22
-i386                  randconfig-011-20260911    clang-22
-i386                  randconfig-012-20260911    clang-22
-i386                  randconfig-013-20260911    clang-22
-i386                  randconfig-014-20260911    clang-22
-i386                  randconfig-015-20260911    clang-22
-i386                  randconfig-016-20260911    clang-22
-i386                  randconfig-017-20260911    clang-22
-loongarch                        allmodconfig    clang-24
-loongarch                         allnoconfig    gcc-16.1.0
-loongarch                           defconfig    clang-24
-loongarch             randconfig-001-20260911    gcc-12.5.0
-loongarch             randconfig-001-20260912    clang-24
-loongarch             randconfig-002-20260911    gcc-12.5.0
-loongarch             randconfig-002-20260912    clang-24
-m68k                             allmodconfig    gcc-16.1.0
-m68k                              allnoconfig    gcc-16.1.0
-m68k                             allyesconfig    clang-24
-m68k                                defconfig    clang-24
-m68k                       m5249evb_defconfig    gcc-16.1.0
-m68k                       m5275evb_defconfig    gcc-16.1.0
-microblaze                        allnoconfig    gcc-16.1.0
-microblaze                       allyesconfig    gcc-16.1.0
-microblaze                          defconfig    clang-24
-microblaze                      mmu_defconfig    clang-24
-mips                             allmodconfig    gcc-16.1.0
-mips                              allnoconfig    gcc-16.1.0
-mips                             allyesconfig    gcc-16.1.0
-mips                     decstation_defconfig    clang-24
-mips                           gcw0_defconfig    clang-24
-mips                           jazz_defconfig    clang-24
-mips                      loongson1_defconfig    gcc-16.1.0
-mips                      loongson3_defconfig    gcc-16.1.0
-mips                       rbtx49xx_defconfig    gcc-16.1.0
-nios2                            allmodconfig    clang-20
-nios2                             allnoconfig    clang-24
-nios2                             allnoconfig    gcc-11.5.0
-nios2                               defconfig    clang-24
-nios2                 randconfig-001-20260911    gcc-12.5.0
-nios2                 randconfig-001-20260912    clang-24
-nios2                 randconfig-002-20260911    gcc-12.5.0
-nios2                 randconfig-002-20260912    clang-24
-openrisc                         allmodconfig    clang-20
-openrisc                          allnoconfig    clang-24
-openrisc                          allnoconfig    gcc-16.1.0
-openrisc                            defconfig    gcc-16.1.0
-parisc                           allmodconfig    gcc-16.1.0
-parisc                            allnoconfig    clang-24
-parisc                            allnoconfig    gcc-16.1.0
-parisc                           allyesconfig    clang-17
-parisc                           allyesconfig    gcc-16.1.0
-parisc                              defconfig    gcc-16.1.0
-parisc                randconfig-001-20260911    gcc-8.5.0
-parisc                randconfig-002-20260911    gcc-8.5.0
-parisc64                            defconfig    clang-24
-powerpc                          allmodconfig    gcc-16.1.0
-powerpc                           allnoconfig    clang-24
-powerpc                           allnoconfig    gcc-16.1.0
-powerpc                        icon_defconfig    clang-24
-powerpc                     mpc5200_defconfig    clang-24
-powerpc                     rainier_defconfig    clang-24
-powerpc               randconfig-001-20260911    gcc-8.5.0
-powerpc               randconfig-002-20260911    gcc-8.5.0
-powerpc                      tqm8xx_defconfig    gcc-16.1.0
-powerpc64             randconfig-001-20260911    gcc-8.5.0
-powerpc64             randconfig-002-20260911    gcc-8.5.0
-riscv                            allmodconfig    clang-24
-riscv                             allnoconfig    clang-24
-riscv                             allnoconfig    gcc-16.1.0
-riscv                            allyesconfig    clang-24
-riscv                               defconfig    gcc-16.1.0
-riscv                    nommu_k210_defconfig    gcc-16.1.0
-riscv                 randconfig-001-20260911    gcc-16.1.0
-riscv                 randconfig-002-20260911    gcc-16.1.0
-s390                             allmodconfig    clang-17
-s390                              allnoconfig    clang-24
-s390                             allyesconfig    gcc-16.1.0
-s390                          debug_defconfig    gcc-16.1.0
-s390                                defconfig    gcc-16.1.0
-s390                  randconfig-001-20260911    gcc-16.1.0
-s390                  randconfig-002-20260911    gcc-16.1.0
-sh                               allmodconfig    gcc-16.1.0
-sh                                allnoconfig    clang-24
-sh                                allnoconfig    gcc-16.1.0
-sh                               allyesconfig    clang-17
-sh                               allyesconfig    gcc-16.1.0
-sh                        apsh4ad0a_defconfig    gcc-16.1.0
-sh                                  defconfig    gcc-14
-sh                    randconfig-001-20260911    gcc-16.1.0
-sh                    randconfig-002-20260911    gcc-16.1.0
-sh                      rts7751r2d1_defconfig    gcc-16.1.0
-sh                   rts7751r2dplus_defconfig    gcc-16.1.0
-sh                           se7619_defconfig    gcc-16.1.0
-sh                           se7722_defconfig    gcc-16.1.0
-sh                   sh7770_generic_defconfig    gcc-16.1.0
-sh                             shx3_defconfig    gcc-16.1.0
-sparc                             allnoconfig    clang-24
-sparc                             allnoconfig    gcc-16.1.0
-sparc                               defconfig    gcc-16.1.0
-sparc                 randconfig-001-20260911    gcc-13.4.0
-sparc                 randconfig-002-20260911    gcc-13.4.0
-sparc64                          allmodconfig    clang-20
-sparc64                             defconfig    gcc-14
-sparc64               randconfig-001-20260911    gcc-13.4.0
-sparc64               randconfig-002-20260911    gcc-13.4.0
-um                               allmodconfig    clang-17
-um                                allnoconfig    clang-17
-um                                allnoconfig    clang-24
-um                               allyesconfig    gcc-16.1.0
-um                                  defconfig    gcc-14
-um                             i386_defconfig    gcc-14
-um                    randconfig-001-20260911    gcc-13.4.0
-um                    randconfig-002-20260911    gcc-13.4.0
-um                           x86_64_defconfig    gcc-14
-x86_64                           allmodconfig    clang-22
-x86_64                            allnoconfig    clang-22
-x86_64                            allnoconfig    clang-24
-x86_64                           allyesconfig    clang-22
-x86_64      buildonly-randconfig-001-20260911    gcc-14
-x86_64      buildonly-randconfig-002-20260911    gcc-14
-x86_64      buildonly-randconfig-003-20260911    gcc-14
-x86_64      buildonly-randconfig-004-20260911    gcc-14
-x86_64      buildonly-randconfig-005-20260911    gcc-14
-x86_64      buildonly-randconfig-006-20260911    gcc-14
-x86_64                              defconfig    gcc-14
-x86_64                                  kexec    clang-22
-x86_64                randconfig-001-20260911    clang-22
-x86_64                randconfig-002-20260911    clang-22
-x86_64                randconfig-003-20260911    clang-22
-x86_64                randconfig-004-20260911    clang-22
-x86_64                randconfig-005-20260911    clang-22
-x86_64                randconfig-006-20260911    clang-22
-x86_64                randconfig-011-20260911    gcc-14
-x86_64                randconfig-012-20260911    gcc-14
-x86_64                randconfig-013-20260911    gcc-14
-x86_64                randconfig-014-20260911    gcc-14
-x86_64                randconfig-015-20260911    gcc-14
-x86_64                randconfig-016-20260911    gcc-14
-x86_64                randconfig-071-20260911    gcc-14
-x86_64                randconfig-072-20260911    gcc-14
-x86_64                randconfig-073-20260911    gcc-14
-x86_64                randconfig-074-20260911    gcc-14
-x86_64                randconfig-075-20260911    gcc-14
-x86_64                randconfig-076-20260911    gcc-14
-x86_64                               rhel-9.4    clang-22
-x86_64                           rhel-9.4-bpf    gcc-14
-x86_64                          rhel-9.4-func    clang-22
-x86_64                    rhel-9.4-kselftests    clang-22
-x86_64                         rhel-9.4-kunit    gcc-14
-x86_64                           rhel-9.4-ltp    gcc-14
-x86_64                          rhel-9.4-rust    clang-22
-xtensa                            allnoconfig    clang-24
-xtensa                            allnoconfig    gcc-16.1.0
-xtensa                           allyesconfig    clang-20
-xtensa                generic_kc705_defconfig    gcc-16.1.0
-xtensa                randconfig-001-20260911    gcc-13.4.0
-xtensa                randconfig-002-20260911    gcc-13.4.0
+iproc_bcma_pcie_probe() passes &bridge->windows to iproc_pcie_setup(),
+where I think it's ignored because pcie->need_ob_cfg is never set for
+iproc_bcma.
 
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+It looks like iproc_bcma_pcie_probe() should just call
+pci_alloc_host_bridge() directly and skip devm_pci_alloc_host_bridge()
+and the DT things it does.
+
+>  	if (ret)
+>  		return ret;
+>  
+> -- 
+> 2.43.0
+> 
