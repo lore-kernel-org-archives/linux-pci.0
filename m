@@ -1,372 +1,194 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mail-07.mail-europe.com (mail-07.mail-europe.com [37.187.220.204])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C8CF43713C;
-	Fri, 11 Sep 2026 22:12:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC03F22D4DC;
+	Fri, 11 Sep 2026 23:01:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=37.187.220.204
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789164733; cv=none; b=ew4ce9SXPPjJQS+0XRxs4Hvn9w8zJ3GiUPkoADgHh9lOGDG9dvDh9AI4I8mW8HtZF2JbD3CBU6mrXALUsqPbILOkCRjt8h6QAoIYNhayBRkd7a7Pi+nnIDQD23pCUUvSKpJ9e5bA747pPzs2hDFVm5xj8z29XigVbU9WyY/Yldc=
+	t=1789167723; cv=none; b=nRK1LJSzMGU7oOZzCuc87c7deXMpV0b8nVK5hLjXxxiulnFcViLMK/WGIpwxyaglEft2urad61nczVbyi8bqHVc5CosGZoidrQ9jLyQnf/+v+v+lAwRO0Wh8UZHBR5/ttVdyWhk7+mUuww0ia4p/6/gzibPUmCfehxDuWagoebw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789164733; c=relaxed/simple;
-	bh=7SacOg1IENiLKpqU81RPB0pY6bRjEI9ald8g9YA+/JA=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=ZzbqqbE74canXHyXIHMJKKET/hV7ctskd86qoUbjs5IntBYVeFCAr3q7psIQJrYs0CM3p9QpPlcgfdvS09Yt9YLfpLcWNA/Y113kt+nRMr2DAo9W1oNHMlYiIPHVsjaZ04TGboO3kua6GqwJAMTopDVuMCgUhxId1c9BGCeMG+4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fpZSM3z6; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789167723; c=relaxed/simple;
+	bh=GDWpdlWBvWQt3dhuKeKibH1Tjl0SGYwcHArgbQuxBAs=;
+	h=Date:To:From:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=A2oYnPQHEt99FL+kE2V6AVbyk5MJSfGcAzxEtNQwmGRw+GLrOsT9ejK9+WQBNy1y/SgQb/eEA6As4MaykQkGcPpWJ8OYnEzASF1pgkBM75WftZRIfrzDDGsNwwCO5vJcumMWlWYTyiQB183CQfaQs4uJEvIYcJiFd+Eu/fxYMtw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=httpd.dev; spf=pass smtp.mailfrom=httpd.dev; dkim=pass (2048-bit key) header.d=httpd.dev header.i=@httpd.dev header.b=r/1NWGdP; arc=none smtp.client-ip=37.187.220.204
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=httpd.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=httpd.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fpZSM3z6"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CD6811F000FF;
-	Fri, 11 Sep 2026 22:12:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789164731;
-	bh=zcSpC8B/zBe1QBiSP3SsQ8IbOXdwAlEg8XGj9L10bq8=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=fpZSM3z6PJ9swFzsvH+djv6QNuc3r3Jbh6fc5fg1plDIs1WScdIHvAlLBKslHFOpC
-	 VUlgeo0f4KrBy7cqz2x9XD+Eh3NSgeWTi4XevOllxU7aRx6le8EGCRlOn+NRS1y7ZT
-	 GYBZJbc5xO7X6hzpn+Zvxucqhh1evUkZ/RnAsEuHLV1vwBDcR/+mcWL3e5UX0jetdV
-	 yVMQfWSmiYNtJBa+MBKplM6FwGvkAsIabg7ccf5NsRaHmsVooL7N1AKbaAWG/Rv2bV
-	 0AwWtnXJG/bkaR0cMvSqKCps8HWA3DXqOgv3MqLk2Vx/pAe1cBKiOZbR7fWWy90N/G
-	 b2VIe389tv9qg==
-Date: Fri, 11 Sep 2026 17:12:09 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Vladimir Oltean <vladimir.oltean@nxp.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-rockchip@lists.infradead.org, linux-arm-msm@vger.kernel.org,
-	linux-riscv@lists.infradead.org, spacemit@lists.linux.dev,
-	linux-tegra@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Vignesh Raghavendra <vigneshr@ti.com>,
-	Siddharth Vadapalli <s-vadapalli@ti.com>,
-	Felix Gu <ustc.gu@gmail.com>
-Subject: Re: [PATCH v9 3/3] PCI: Remove device links to PHY
-Message-ID: <20260911221209.GA587622@bhelgaas>
+	dkim=pass (2048-bit key) header.d=httpd.dev header.i=@httpd.dev header.b="r/1NWGdP"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=httpd.dev;
+	s=protonmail3; t=1789167701; x=1789426901;
+	bh=svNifJx/ssGLp8arNI7ZY0FJrahK16lXJGPKGD+vP4w=;
+	h=Date:To:From:Cc:Subject:Message-ID:In-Reply-To:References:
+	 Feedback-ID:From:To:Cc:Date:Subject:Reply-To:Feedback-ID:
+	 Message-ID:BIMI-Selector;
+	b=r/1NWGdPchEZbBl26e4NC9V6mD2SZDu0PFIJ9f+Aah6f0Mgt5PMT+8uMniIdkI5Td
+	 +hEOdsLGiP1pODfTr4CMXGObRDzb/zMcc9cNSQaYf6afWhHsV/R6/tooGJ6/HARNTP
+	 l+KQMlqUAaCz2Yc/b3YtHfacM34jMgvUcCCM3R1z+u5zr9QXcm2+vR+aJ8kRDQunAJ
+	 DEZdu+rdPTceCxW10Qi/wx7cKo4V0vrPvC8Qu+XqbOVxQQWxKb2pgWsPjEU605GqfW
+	 Jw6if3Z+G8Z2XWk0AnF7nG+ok/JcTzAtSBaSBoJt0uXHZvXImVTPbztF5tV0W3+bYy
+	 3rHknZxRCgbkA==
+Date: Fri, 11 Sep 2026 23:01:38 +0000
+To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+From: Angel J <iamanaws@httpd.dev>
+Cc: "regressions@lists.linux.dev" <regressions@lists.linux.dev>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-rpi-kernel@lists.infradead.org" <linux-rpi-kernel@lists.infradead.org>, "helgaas@kernel.org" <helgaas@kernel.org>, "robh@kernel.org" <robh@kernel.org>, "andrea.porta@suse.com" <andrea.porta@suse.com>, "florian.fainelli@broadcom.com" <florian.fainelli@broadcom.com>
+Subject: Re: [REGRESSION] PCI: Dynamic OF node creation hangs on invalid bridge configuration
+Message-ID: <cFJoUZ6c5g5YbFCrwUnx6RlitHRl-0cS2fadDSFJNf9SgLreKutrmZj1r56hFh8ZUAbzvuCqBG4w9ZYAE8xAWP9HnLwbjMOBzac-iMnMMZc=@httpd.dev>
+In-Reply-To: <GXe6anuewkS4bLNwca3cYOmUxN9csc0TxLYGSBc1qNRmfrmvFlcmD62wEM23TxfzfuXAv4P3yvUv7pyraleARrL1Na-aN8w-t9uc1Igu8DA=@httpd.dev>
+References: <GXe6anuewkS4bLNwca3cYOmUxN9csc0TxLYGSBc1qNRmfrmvFlcmD62wEM23TxfzfuXAv4P3yvUv7pyraleARrL1Na-aN8w-t9uc1Igu8DA=@httpd.dev>
+Feedback-ID: 163474212:user:proton
+X-Pm-Message-ID: a0b45507d5eac067fa00aa047aa0fedcad9d25b7
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260810124315.433448-4-vladimir.oltean@nxp.com>
+Content-Type: multipart/signed; protocol="application/pgp-signature"; micalg=pgp-sha512; boundary="------584d05c12d919d8b9959a7be2db6ff9738f85cff09fbdb5a0c245caa7bd7149b"; charset=utf-8
 
-[+cc Felix, author of device link leak fixes]
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--------584d05c12d919d8b9959a7be2db6ff9738f85cff09fbdb5a0c245caa7bd7149b
+Content-Type: multipart/mixed;boundary=---------------------5847a96ded5969a4c792075b9c3489f2
 
-On Mon, Aug 10, 2026 at 03:43:15PM +0300, Vladimir Oltean wrote:
-> This is practically a full revert of commit
-> 7a4db656a635 ("PCI: dra7xx: Create functional dependency between PCIe and PHY")
-> and a partial revert of the device link pieces from commits
-> dfb80534692d ("PCI: cadence: Add generic PHY support to host and EP drivers")
-> 49229238ab47 ("PCI: keystone: Cleanup PHY handling")
+-----------------------5847a96ded5969a4c792075b9c3489f2
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain;charset=utf-8
 
-Can we split this into three commits (dra7xx, cadence, keystone)?
-This combined commit is applied on the pci/controller/misc branch, and
-then we have conflicts between that branch and
-pci/controller/dwc-dra7xx.
+Hi Andrea, Herv=C3=A9, Bjorn, Thorsten,
 
-I think if we split this into three separate commits, we can apply the
-dra7xx one on pci/controller/dwc-dra7xx and drop Felix's device link
-leak fixes below so we don't clutter the git history with conflict
-resolutions or irrelevant commits:
+Thanks for the guidance, it was very useful. I went back through the tests
+and got some more insight into the hang.
 
-  https://git.kernel.org/cgit/linux/kernel/git/pci/pci.git/commit/?id=2b9a036b568c ("PCI: dra7xx: Fix device link leak when devm_phy_get() fails")
+Andrea wrote:
+> Angel, could you please provide the following output:
+>
+> lspci -nn
+> setpci -s 00:00.0 HEADER_TYPE
+>
+> from a running (i.e. with CONFIG_PCI_DYNAMIC_OF_NODES=3Dn) system?
 
-  https://git.kernel.org/cgit/linux/kernel/git/pci/pci.git/commit/?id=bdfdf654b4b2 ("PCI: dra7xx: Fix device links leak when dra7xx_pcie_enable_phy() fails")
+On Linux 6.12.109, with CONFIG_PCI_DYNAMIC_OF_NODES disabled, the relevant
+output is:
 
-> The trouble with these commits is that they dereference fields inside
-> struct phy from a consumer driver, which will become no longer possible.
-> 
-> Since commit 987351e1ea77 ("phy: core: Add consumer device link
-> support") from 2019, the PHY core also adds a device link to order PHY
-> provider and consumer suspend/resume operations. All reverted commits
-> are from 2017-2018, and what they do should actually be redundant now.
-> 
-> Signed-off-by: Vladimir Oltean <vladimir.oltean@nxp.com>
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-> Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
-> ---
-> Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>
-> Cc: "Krzysztof Wilczyński" <kwilczynski@kernel.org>
-> Cc: Manivannan Sadhasivam <mani@kernel.org>
-> Cc: Rob Herring <robh@kernel.org>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Vignesh Raghavendra <vigneshr@ti.com>
-> Cc: Siddharth Vadapalli <s-vadapalli@ti.com>
-> 
-> v8->v9: none
-> v7->v8: only context change - "return 0" became "return ret" for
->         cdns_plat_pcie_probe()
-> v6->v7: none
-> v5->v6: collect tag from Manivannan Sadhasivam
-> v3->v5: none
-> v2->v3:
-> - remove dangling set but unused phy_count local variable in
->   cdns_plat_pcie_probe()
-> v1->v2:
-> - fully remove struct device link **link from struct cdns_pcie and from
->   cdns_plat_pcie_probe() error path
-> - collect tag from Bjorn Helgaas
-> - adjust commit title
-> ---
->  .../controller/cadence/pcie-cadence-plat.c    |  4 ---
->  drivers/pci/controller/cadence/pcie-cadence.c | 16 +---------
->  drivers/pci/controller/cadence/pcie-cadence.h |  2 --
->  drivers/pci/controller/dwc/pci-dra7xx.c       | 16 ----------
->  drivers/pci/controller/dwc/pci-keystone.c     | 31 +++----------------
->  5 files changed, 5 insertions(+), 64 deletions(-)
-> 
-> diff --git a/drivers/pci/controller/cadence/pcie-cadence-plat.c b/drivers/pci/controller/cadence/pcie-cadence-plat.c
-> index 8aed8b4c3e11..13edc6be21f5 100644
-> --- a/drivers/pci/controller/cadence/pcie-cadence-plat.c
-> +++ b/drivers/pci/controller/cadence/pcie-cadence-plat.c
-> @@ -41,7 +41,6 @@ static int cdns_plat_pcie_probe(struct platform_device *pdev)
->  	struct pci_host_bridge *bridge;
->  	struct cdns_pcie_ep *ep;
->  	struct cdns_pcie_rc *rc;
-> -	int phy_count;
->  	bool is_rc;
->  	int ret;
->  
-> @@ -122,9 +121,6 @@ static int cdns_plat_pcie_probe(struct platform_device *pdev)
->  	pm_runtime_put_sync(dev);
->  	pm_runtime_disable(dev);
->  	cdns_pcie_disable_phy(cdns_plat_pcie->pcie);
-> -	phy_count = cdns_plat_pcie->pcie->phy_count;
-> -	while (phy_count--)
-> -		device_link_del(cdns_plat_pcie->pcie->link[phy_count]);
->  
->  	return ret;
->  }
-> diff --git a/drivers/pci/controller/cadence/pcie-cadence.c b/drivers/pci/controller/cadence/pcie-cadence.c
-> index a1eada56edba..0ac980249941 100644
-> --- a/drivers/pci/controller/cadence/pcie-cadence.c
-> +++ b/drivers/pci/controller/cadence/pcie-cadence.c
-> @@ -222,7 +222,6 @@ int cdns_pcie_init_phy(struct device *dev, struct cdns_pcie *pcie)
->  	struct device_node *np = dev->of_node;
->  	int phy_count;
->  	struct phy **phy;
-> -	struct device_link **link;
->  	int i;
->  	int ret;
->  	const char *name;
-> @@ -238,10 +237,6 @@ int cdns_pcie_init_phy(struct device *dev, struct cdns_pcie *pcie)
->  	if (!phy)
->  		return -ENOMEM;
->  
-> -	link = devm_kcalloc(dev, phy_count, sizeof(*link), GFP_KERNEL);
-> -	if (!link)
-> -		return -ENOMEM;
-> -
->  	for (i = 0; i < phy_count; i++) {
->  		of_property_read_string_index(np, "phy-names", i, &name);
->  		phy[i] = devm_phy_get(dev, name);
-> @@ -249,17 +244,10 @@ int cdns_pcie_init_phy(struct device *dev, struct cdns_pcie *pcie)
->  			ret = PTR_ERR(phy[i]);
->  			goto err_phy;
->  		}
-> -		link[i] = device_link_add(dev, &phy[i]->dev, DL_FLAG_STATELESS);
-> -		if (!link[i]) {
-> -			devm_phy_put(dev, phy[i]);
-> -			ret = -EINVAL;
-> -			goto err_phy;
-> -		}
->  	}
->  
->  	pcie->phy_count = phy_count;
->  	pcie->phy = phy;
-> -	pcie->link = link;
->  
->  	ret =  cdns_pcie_enable_phy(pcie);
->  	if (ret)
-> @@ -268,10 +256,8 @@ int cdns_pcie_init_phy(struct device *dev, struct cdns_pcie *pcie)
->  	return 0;
->  
->  err_phy:
-> -	while (--i >= 0) {
-> -		device_link_del(link[i]);
-> +	while (--i >= 0)
->  		devm_phy_put(dev, phy[i]);
-> -	}
->  
->  	return ret;
->  }
-> diff --git a/drivers/pci/controller/cadence/pcie-cadence.h b/drivers/pci/controller/cadence/pcie-cadence.h
-> index b4d51adefea5..4a96e1869e53 100644
-> --- a/drivers/pci/controller/cadence/pcie-cadence.h
-> +++ b/drivers/pci/controller/cadence/pcie-cadence.h
-> @@ -260,7 +260,6 @@ struct cdns_plat_pcie_of_data {
->   * @is_hpa: indicates if the architecture is HPA
->   * @phy_count: number of supported PHY devices
->   * @phy: list of pointers to specific PHY control blocks
-> - * @link: list of pointers to corresponding device link representations
->   * @ops: Platform-specific ops to control various inputs from Cadence PCIe
->   *       wrapper
->   * @cdns_pcie_reg_offsets: Register bank offsets for different SoC
-> @@ -276,7 +275,6 @@ struct cdns_pcie {
->  	bool				     is_hpa;
->  	int			             phy_count;
->  	struct phy		             **phy;
-> -	struct device_link	             **link;
->  	const  struct cdns_pcie_ops          *ops;
->  	const  struct cdns_plat_pcie_of_data *cdns_pcie_reg_offsets;
->  	int				     max_link_speed;
-> diff --git a/drivers/pci/controller/dwc/pci-dra7xx.c b/drivers/pci/controller/dwc/pci-dra7xx.c
-> index 3fc889944f02..bf6c5b86bb27 100644
-> --- a/drivers/pci/controller/dwc/pci-dra7xx.c
-> +++ b/drivers/pci/controller/dwc/pci-dra7xx.c
-> @@ -9,7 +9,6 @@
->  
->  #include <linux/clk.h>
->  #include <linux/delay.h>
-> -#include <linux/device.h>
->  #include <linux/err.h>
->  #include <linux/interrupt.h>
->  #include <linux/irq.h>
-> @@ -678,7 +677,6 @@ static int dra7xx_pcie_probe(struct platform_device *pdev)
->  	int i;
->  	int phy_count;
->  	struct phy **phy;
-> -	struct device_link **link;
->  	void __iomem *base;
->  	struct dw_pcie *pci;
->  	struct dra7xx_pcie *dra7xx;
-> @@ -726,10 +724,6 @@ static int dra7xx_pcie_probe(struct platform_device *pdev)
->  	if (!phy)
->  		return -ENOMEM;
->  
-> -	link = devm_kcalloc(dev, phy_count, sizeof(*link), GFP_KERNEL);
-> -	if (!link)
-> -		return -ENOMEM;
-> -
->  	dra7xx->clk = devm_clk_get_optional(dev, NULL);
->  	if (IS_ERR(dra7xx->clk))
->  		return dev_err_probe(dev, PTR_ERR(dra7xx->clk),
-> @@ -744,12 +738,6 @@ static int dra7xx_pcie_probe(struct platform_device *pdev)
->  		phy[i] = devm_phy_get(dev, name);
->  		if (IS_ERR(phy[i]))
->  			return PTR_ERR(phy[i]);
-> -
-> -		link[i] = device_link_add(dev, &phy[i]->dev, DL_FLAG_STATELESS);
-> -		if (!link[i]) {
-> -			ret = -EINVAL;
-> -			goto err_link;
-> -		}
->  	}
->  
->  	dra7xx->base = base;
-> @@ -851,10 +839,6 @@ static int dra7xx_pcie_probe(struct platform_device *pdev)
->  	pm_runtime_disable(dev);
->  	dra7xx_pcie_disable_phy(dra7xx);
->  
-> -err_link:
-> -	while (--i >= 0)
-> -		device_link_del(link[i]);
-> -
->  	return ret;
->  }
->  
-> diff --git a/drivers/pci/controller/dwc/pci-keystone.c b/drivers/pci/controller/dwc/pci-keystone.c
-> index e9b012a5ea9a..8085c4f61403 100644
-> --- a/drivers/pci/controller/dwc/pci-keystone.c
-> +++ b/drivers/pci/controller/dwc/pci-keystone.c
-> @@ -130,7 +130,6 @@ struct keystone_pcie {
->  	int			num_lanes;
->  	u32			num_viewport;
->  	struct phy		**phy;
-> -	struct device_link	**link;
->  	struct			device_node *msi_intc_np;
->  	struct irq_domain	*intx_irq_domain;
->  	struct device_node	*np;
-> @@ -1130,7 +1129,6 @@ static int ks_pcie_probe(struct platform_device *pdev)
->  	enum dw_pcie_device_mode mode;
->  	struct dw_pcie *pci;
->  	struct keystone_pcie *ks_pcie;
-> -	struct device_link **link;
->  	struct gpio_desc *gpiod;
->  	struct resource *res;
->  	void __iomem *base;
-> @@ -1201,31 +1199,17 @@ static int ks_pcie_probe(struct platform_device *pdev)
->  	if (!phy)
->  		return -ENOMEM;
->  
-> -	link = devm_kcalloc(dev, num_lanes, sizeof(*link), GFP_KERNEL);
-> -	if (!link)
-> -		return -ENOMEM;
-> -
->  	for (i = 0; i < num_lanes; i++) {
->  		snprintf(name, sizeof(name), "pcie-phy%d", i);
->  		phy[i] = devm_phy_optional_get(dev, name);
->  		if (IS_ERR(phy[i])) {
->  			ret = PTR_ERR(phy[i]);
-> -			goto err_link;
-> -		}
-> -
-> -		if (!phy[i])
-> -			continue;
-> -
-> -		link[i] = device_link_add(dev, &phy[i]->dev, DL_FLAG_STATELESS);
-> -		if (!link[i]) {
-> -			ret = -EINVAL;
-> -			goto err_link;
-> +			goto err;
->  		}
->  	}
->  
->  	ks_pcie->np = np;
->  	ks_pcie->pci = pci;
-> -	ks_pcie->link = link;
->  	ks_pcie->num_lanes = num_lanes;
->  	ks_pcie->phy = phy;
->  
-> @@ -1235,7 +1219,7 @@ static int ks_pcie_probe(struct platform_device *pdev)
->  		ret = PTR_ERR(gpiod);
->  		if (ret != -EPROBE_DEFER)
->  			dev_err(dev, "Failed to get reset GPIO\n");
-> -		goto err_link;
-> +		goto err;
->  	}
->  
->  	/* Obtain references to the PHYs */
-> @@ -1250,7 +1234,7 @@ static int ks_pcie_probe(struct platform_device *pdev)
->  
->  	if (ret) {
->  		dev_err(dev, "failed to enable phy\n");
-> -		goto err_link;
-> +		goto err;
->  	}
->  
->  	platform_set_drvdata(pdev, ks_pcie);
-> @@ -1337,25 +1321,18 @@ static int ks_pcie_probe(struct platform_device *pdev)
->  	pm_runtime_disable(dev);
->  	ks_pcie_disable_phy(ks_pcie);
->  
-> -err_link:
-> -	while (--i >= 0 && link[i])
-> -		device_link_del(link[i]);
-> -
-> +err:
->  	return ret;
->  }
->  
->  static void ks_pcie_remove(struct platform_device *pdev)
->  {
->  	struct keystone_pcie *ks_pcie = platform_get_drvdata(pdev);
-> -	struct device_link **link = ks_pcie->link;
-> -	int num_lanes = ks_pcie->num_lanes;
->  	struct device *dev = &pdev->dev;
->  
->  	pm_runtime_put(dev);
->  	pm_runtime_disable(dev);
->  	ks_pcie_disable_phy(ks_pcie);
-> -	while (num_lanes--)
-> -		device_link_del(link[num_lanes]);
->  }
->  
->  static struct platform_driver ks_pcie_driver = {
-> -- 
-> 2.34.1
-> 
+  $ lspci -nn
+  00:00.0 PCI bridge [0604]: Intel Corporation Device [8086:4c43] (rev 01)
+
+  $ setpci -s 00:00.0 HEADER_TYPE
+  01
+
+  $ setpci -s 00:00.0 PRIMARY_BUS SECONDARY_BUS SUBORDINATE_BUS
+  ff
+  ff
+  ff
+
+The device is bound to icl_uncore. I get the same values on the patched
+kernel with CONFIG_PCI_DYNAMIC_OF_NODES=3Dy.
+
+Herv=C3=A9 wrote:
+> Is this PCI logs reported with PCI_DYNAMIC_OF_NODES=3Dy or PCI_DYNAMIC_O=
+F_NODES=3Dn
+> or always whatever the PCI_DYNAMIC_OF_NODES Kconfig value ?
+
+The messages appear on successful boots with either setting:
+
+  pci 0000:00:00.0: [8086:4c43] type 01 class 0x060400 conventional PCI br=
+idge
+  pci 0000:00:00.0: bridge configuration invalid ([bus ff-ff]), reconfigur=
+ing
+
+I confirmed this on 6.12.107 with the option disabled and 6.12.108 with it
+enabled. They also appear on the patched 6.18.44 kernel.
+
+Bjorn wrote:
+> I don't think 49d63971f963 ("misc: rp1: RaspberryPi RP1 misc driver")
+> is a likely culprit by itself because there's just nothing there that
+> looks like it would relate to a Dell XPS 8940.
+
+That change exposed the problem by enabling PCI_DYNAMIC_OF_NODES in my
+configuration. I bisected again with the option enabled throughout and
+found an earlier boundary:
+
+  3dc8adeeefa0  PCI: of_property: Constify parameter in of_pci_get_addr_fl=
+ags()
+  1f340724419e  PCI: of: Create device tree PCI host bridge node
+
+The first is the direct parent of the second. I boot-tested both without
+any guard, changing only the source commit; their generated kernel
+configurations are identical.
+
+All of these tests have CONFIG_PCI_DYNAMIC_OF_NODES=3Dy:
+
+  Source         Change             Result
+  3dc8adeeefa0    None               Boots
+  1f340724419e    None               Hangs
+  1f340724419e    Subordinate guard  Boots
+  6.18.44        None               Hangs
+  6.18.44        Subordinate guard  Boots
+
+Herv=C3=A9 wrote:
+> Maybe the test done at [1] should be improved to detect those wrong brid=
+ges.
+> and skip the of_pci_make_dev_node() call when a wrong bridge is detected=
+.
+
+I added logging to the first bad commit to check the bridge scan. It shows
+that 00:00.0 has no subordinate bus after either pass, despite satisfying
+pci_is_bridge():
+
+  pci 0000:00:00.0: PCI OF debug: scan pass 0, buses ff/ff/ff
+  pci 0000:00:00.0: PCI OF debug: scan pass 0 done, subordinate bus absent
+  pci 0000:00:00.0: PCI OF debug: scan pass 1, buses ff/ff/ff
+  pci 0000:00:00.0: PCI OF debug: scan pass 1 done, subordinate bus absent
+
+of_pci_prop_bus_range() dereferences pdev->subordinate without checking it=
+.
+of_pci_prop_intr_map() also uses that pointer. Before 1f340724419e,
+of_pci_make_dev_node() returns because the parent OF node is missing on
+this ACPI system. That commit creates the parent node, allowing property
+generation to reach the unchecked access.
+
+My earlier report overstated the device_type=3D"pci" result. The minimal-n=
+ode
+test that hung added device_type, bus-range and interrupt-map together;
+I haven't confirmed a hang with device_type alone.
+
+I tested this guard in of_pci_make_dev_node(), before node creation:
+
+  if (pci_is_bridge(pdev) && !pdev->subordinate)
+          return;
+
+Both the first bad commit and 6.18.44 boot with it. The 6.18.44 test uses
+only the guard, without diagnostic logging. The host OF node and the nodes
+for bridges 00:01.0 and 00:1c.0 are still created; 00:00.0 is skipped.
+
+This points to the NULL subordinate pointer as the cause of the hang,
+although I still don't have a crash trace from an unguarded boot. I'll
+send the patch as a reply to this email. Is of_pci_make_dev_node() the
+right place for this check?
+
+#regzbot introduced: 1f340724419eda8ab07a20edcaf5ec8f70134231
+
+Thanks,
+Angel J
+
+-----------------------5847a96ded5969a4c792075b9c3489f2--
+
+--------584d05c12d919d8b9959a7be2db6ff9738f85cff09fbdb5a0c245caa7bd7149b
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: ProtonMail
+
+wrsEARYKAG0FgmqkiEMJEBoBbwppzUxnRRQAAAAAABwAIHNhbHRAbm90YXRp
+b25zLm9wZW5wZ3Bqcy5vcmegSr5JAKTKbLgmkCFNkhGukr6dbSbs2YiqV+yU
+jqBBgBYhBEAFf9htFyVnqZzmVhoBbwppzUxnAACUBAEA+Vrv4qecaflgoNqE
+krZ5Pt2A+D2ZHLPlXo7tpk7HjFQA/Am4TUPLoTW5RVSeYbATvytA/Gnbz89i
+DW2hzZv5IxwL
+=it4L
+-----END PGP SIGNATURE-----
+
+
+--------584d05c12d919d8b9959a7be2db6ff9738f85cff09fbdb5a0c245caa7bd7149b--
+
