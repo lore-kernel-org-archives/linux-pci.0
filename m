@@ -1,132 +1,106 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.5])
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.2])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9515C4908BD;
-	Fri, 11 Sep 2026 13:23:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 379D348423C;
+	Fri, 11 Sep 2026 13:25:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.2
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789132985; cv=none; b=JZC/wOs1tYuZaffUPPXzWkjIUTfUSHB/x/blx0G5+/bUW8KmgBUfSsrqZNQUXevrPI0mbRAf4nTzhCXvy1J93nLeN5hfMwELcUVVj1dA/xA6mUrna/AhjTUz/1/z3/C4vDnTXiPOdywrjAfGwJx8EmwIjV6KASr/P4jnsp/5OE8=
+	t=1789133126; cv=none; b=Ypt8IypBXrus4jKLsnyzGR0SuEIQ2flSSdsvLc6RFxLfPRnN3d9bb7VGcGB3FEAm4k2vWAtY8J0Rg6V6kpaMaEPoC+0XFOF1Hwm2Tpk3MKRkMXu5S2hAo3dssefz4WZxvTCq5sCC2W3gLzERsY3n9GLasrYb1qLf6NAsx0gfZO4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789132985; c=relaxed/simple;
-	bh=dnjU1hTCfDHlykP3Paur3xNq12npdatLt+IQGPslZPE=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=gjBRBXweLaWBmod1QRAihltRbM+xZ+WzjvTjEHf+akSfzmS5q6HIYClJu+6kaKIZKSVVxee3S6UXuQSaR8VUKmsoCLRRg3YTWZQdWv14HQ6iTLpm0B8cOEA1Sy9APQGYP6DUmFgHA5DKJm/vgje+YRV5MwNDScWNYYHk679RfUs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=StNdYO1C; arc=none smtp.client-ip=220.197.31.5
+	s=arc-20240116; t=1789133126; c=relaxed/simple;
+	bh=Foyo/WbRI9GTL0ov1byfGqJSsLs3Cyh9aGVQtghA2U8=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=rlkr1BdyjW9Ty4919XGQ8L3K8XcC0MUxFfK1XcCSJG751RZovm6vqLu3ky+sd/GL++UMI+cQVeHBVUCfqOLJN/yHDOB908mk2NwndSdnjavH0XhCrDcgBIy0TVdrI1sTF+HF1Om7g/e/7PoUoeFmdXVnkrtxHT0HR7e5QethHFw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=nlVqxUcD; arc=none smtp.client-ip=220.197.31.2
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="StNdYO1C"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="nlVqxUcD"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=tV
-	nKxjEqjL5K9MQsTn8DQ/hXl6/AJIPEzzM3B7nx2sM=; b=StNdYO1CVQDdyUpXBZ
-	cc7FLd0UxaTVrpzO2tWV9G0Kbpcn40nJAv6rbS4GW9/3cl4PAt//+NAcjkq5+WJr
-	qSE+YZ2vg2GMi4zIXNk5N0GYbwhTzcsac0vH65Y5unt7LxuhrxQ2qvG2zSyUFB7K
-	OznMTxnssA8Fz7XboP3SyHP74=
-Received: from zhb.. (unknown [])
-	by gzsmtp4 (Coremail) with SMTP id PygvCgAHqBJmAKRqYh6mRA--.52761S3;
-	Fri, 11 Sep 2026 21:21:46 +0800 (CST)
-From: Hans Zhang <18255117159@163.com>
-To: lpieralisi@kernel.org,
-	kwilczynski@kernel.org,
-	bhelgaas@google.com,
-	helgaas@kernel.org,
-	heiko@sntech.de,
-	mani@kernel.org,
-	yue.wang@Amlogic.com
-Cc: pali@kernel.org,
-	neil.armstrong@linaro.org,
-	robh@kernel.org,
-	jingoohan1@gmail.com,
-	khilman@baylibre.com,
-	jbrunet@baylibre.com,
-	martin.blumenstingl@googlemail.com,
-	cassel@kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-amlogic@lists.infradead.org,
-	linux-rockchip@lists.infradead.org,
-	Hans Zhang <18255117159@163.com>,
-	Mahesh Vaidya <mahesh.vaidya@altera.com>,
-	Ricardo Pardini <ricardo@pardini.net>,
-	Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH v8 1/2] PCI: Configure Root Port MPS during host probing
-Date: Fri, 11 Sep 2026 21:21:44 +0800
-Message-Id: <20260911132145.211380-2-18255117159@163.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20260911132145.211380-1-18255117159@163.com>
-References: <20260911132145.211380-1-18255117159@163.com>
+	s=s110527; h=Message-ID:Date:MIME-Version:Subject:To:From:
+	Content-Type; bh=Qkw3B5gs6z18dUvZ2oYot6I2aIm8IxFFKnSjUST1Lxk=;
+	b=nlVqxUcDubEzUK6+rn4a6b7LGNfc3QZhSzXYSeDk0t9jVv/tA3wTQGjclt169B
+	oGUudJNEN5PG6twf3tN9FrWtmNnOyCg6itQGVfBrZqRBpCo0xNmObIfpTeR3OGBL
+	tjivroSFiY+kGJtI8/C3swp/EGCbXKKkUuf9Mx2ZgfMzY=
+Received: from [IPV6:240e:b8f:91b3:d000:8f8f:b76e:3756:1454] (unknown [])
+	by gzga-smtp-mtada-g1-2 (Coremail) with SMTP id _____wD3f7QgAaRqAxtLAA--.22907S2;
+	Fri, 11 Sep 2026 21:24:48 +0800 (CST)
+Message-ID: <a170c630-6dc7-4f22-a655-e5fd3d6a6e67@163.com>
+Date: Fri, 11 Sep 2026 21:24:53 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:PygvCgAHqBJmAKRqYh6mRA--.52761S3
-X-Coremail-Antispam: 1Uf129KBjvJXoW7WF1DCr43Xr1rAr4DKFy7Awb_yoW5JFWxpa
-	yUWanYyFs7GF4fZFsrZ3WFvFyYqF93ZrW3GrZYv34qvan8AryDJrW5ta95Jw1kGrZ29Fya
-	vFn8tryxu3ZIvFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0piGNtfUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbCxArdgWqkAGrXVAAA31
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] PCI/VPD: Add Realtek 8126 to VPD blacklist
+To: Manivannan Sadhasivam <mani@kernel.org>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+References: <20260522114135.2104890-1-18255117159@163.com>
+ <lfml4kmr4r3l44hcx7vfrcks2z355ri5emr5umynnzoncyopjl@5to6f3e67owz>
+Content-Language: en-US
+From: Hans Zhang <18255117159@163.com>
+In-Reply-To: <lfml4kmr4r3l44hcx7vfrcks2z355ri5emr5umynnzoncyopjl@5to6f3e67owz>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-CM-TRANSID:_____wD3f7QgAaRqAxtLAA--.22907S2
+X-Coremail-Antispam: 1Uf129KBjvJXoW7WF43JFy5tr13uFWUWF4fuFg_yoW8Wr4Upr
+	s8Ga18CF4rXr18WF4qgws0kas8Za4ktFy0krySgwnF9an5Gr1UAr9FkF9Y9F1Dt398Xr17
+	Xwn0v348Wan0qF7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0ziLZ2DUUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbC6wAMr2qkASBz3wAA3L
 
-Current PCIe initialization logic may leave Root Ports operating with
-non-optimal Maximum Payload Size (MPS) settings. The existing code in
-pci_configure_mps() returns early for devices without an upstream bridge
-which includes Root Ports, so their MPS values remain at firmware
-defaults. This fails to utilize the controller's full capabilities,
-leading to suboptimal data transfer efficiency across the PCIe hierarchy.
 
-With this patch, during the host controller probing phase:
-- When PCIe bus tuning is enabled (not PCIE_BUS_TUNE_OFF) and not
-  PCIE_BUS_PEER2PEER (which requires the default 128 bytes for optimal
-  peer-to-peer operation), and
-- The device is a Root Port, the Root Port's MPS is set to its maximum
-  supported value.
 
-Note that this initial maximum MPS setting may be reduced later, during
-downstream device enumeration, if any downstream device does not support
-the Root Port's maximum MPS.
+On 7/15/26 21:44, Manivannan Sadhasivam wrote:
+> On Fri, May 22, 2026 at 07:41:34PM +0800, Hans Zhang wrote:
+>> The Realtek 8126 Ethernet controller advertises VPD capability but
+>> returns invalid data when VPD is read, leading to kernel messages
+>> like:
+>>
+>>    r8169 ... invalid VPD tag 0x00 (size 0) at offset 0; assume
+>>    missing optional EEPROM
+>>
+>> and pcilib reporting "sysfs_read_vpd: read failed: No such device".
+>>
+>> Add the device to the VPD blacklist to suppress these errors.
+>>
+>> Signed-off-by: Hans Zhang <18255117159@163.com>
+> 
+> Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
+> 
 
-This change ensures Root Ports are initialized to their maximum MPS before
-downstream devices negotiate MPS, while maintaining backward compatibility
-via the PCIE_BUS_TUNE_OFF check and not interfering with the
-PCIE_BUS_PEER2PEER strategy.
+Hello,
 
-Suggested-by: Niklas Cassel <cassel@kernel.org>
-Suggested-by: Manivannan Sadhasivam <mani@kernel.org>
-Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
-Signed-off-by: Hans Zhang <18255117159@163.com>
-Tested-by: Mahesh Vaidya <mahesh.vaidya@altera.com>
-Tested-by: Ricardo Pardini <ricardo@pardini.net> # on Odroid-HC4 
-Tested-by: Shawn Lin <shawn.lin@rock-chips.com>
----
- drivers/pci/probe.c | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+Gentle ping.
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 27008e2ea5af..dc4747858918 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2229,6 +2229,18 @@ static void pci_configure_mps(struct pci_dev *dev)
- 		return;
- 	}
- 
-+	/*
-+	 * Unless MPS strategy is PCIE_BUS_TUNE_OFF (don't touch MPS at all) or
-+	 * PCIE_BUS_PEER2PEER (use minimum MPS for peer-to-peer), set Root Ports'
-+	 * MPS to their maximum supported value. Depending on the MPS strategy
-+	 * and MPSS of downstream devices, a Root Port's MPS may be reduced
-+	 * later during device enumeration.
-+	 */
-+	if (pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT &&
-+	    pcie_bus_config != PCIE_BUS_TUNE_OFF &&
-+	    pcie_bus_config != PCIE_BUS_PEER2PEER)
-+		pcie_set_mps(dev, 128 << dev->pcie_mpss);
-+
- 	if (!bridge || !pci_is_pcie(bridge))
- 		return;
- 
--- 
-2.34.1
+Best regards,
+Hans
+
+
+> - Mani
+> 
+>> ---
+>>   drivers/pci/vpd.c | 1 +
+>>   1 file changed, 1 insertion(+)
+>>
+>> diff --git a/drivers/pci/vpd.c b/drivers/pci/vpd.c
+>> index 153394a652d3..fbc34cd842ac 100644
+>> --- a/drivers/pci/vpd.c
+>> +++ b/drivers/pci/vpd.c
+>> @@ -590,6 +590,7 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_LSI_LOGIC, 0x002f, quirk_blacklist_vpd);
+>>   DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_LSI_LOGIC, 0x005d, quirk_blacklist_vpd);
+>>   DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_LSI_LOGIC, 0x005f, quirk_blacklist_vpd);
+>>   DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATTANSIC, PCI_ANY_ID, quirk_blacklist_vpd);
+>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_REALTEK, 0x8126, quirk_blacklist_vpd);
+>>   /*
+>>    * The Amazon Annapurna Labs 0x0031 device id is reused for other non Root Port
+>>    * device types, so the quirk is registered for the PCI_CLASS_BRIDGE_PCI class.
+>> -- 
+>> 2.43.0
+>>
+>>
+> 
 
