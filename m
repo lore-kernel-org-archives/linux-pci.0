@@ -1,37 +1,37 @@
 Received: from mail.ozlabs.org (gandalf.ozlabs.org [150.107.74.76])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F15E4A4F03;
-	Fri, 11 Sep 2026 21:42:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ACF754A4EE3;
+	Fri, 11 Sep 2026 21:42:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=150.107.74.76
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789162947; cv=none; b=PBPz0dyy3il966NpW/k5+pqXZbnZ3mXIzgKXnjWqsrnYCr4Y1sdivDBmdBP4XazFPwdxi5XZwa31eFeyKuDaPH72hEflWHujTVGJNqYuhc8qLNNTz4LdK8dUhNTPn+p2nrlcF5QPAuMx6V8wJe0gSmMpS3+lV00zDjrlhtaE0gU=
+	t=1789162952; cv=none; b=ilbKU50kB1bzGVRgzPSE8+lfUXe8ixu65Umuk7i5qeAtD+237yOuXzv0cfmAVYZjArvOgK1Kba6kbJ4vv0oC1/F6TVNArcs5JQ3QqnOx6k2pg4hpbw5BACIcanZUHyNZCmxSgp3w+wf7T8zUtjfpEc3+dVDZOwGy3vZFqTI3Tds=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789162947; c=relaxed/simple;
-	bh=R2UWHT2AmBYbruPPGh+hkGB/c2Go+/OblliY6sgZlJk=;
+	s=arc-20240116; t=1789162952; c=relaxed/simple;
+	bh=5RdCZNMgNLfr29PauX5gyRyLvmezJI9ZfbsCenjulE0=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=FIiaWAqa5MdjjSblB/mSwd7cN1gdz1PBGBENw7yirm439rnDH4sGKgCxCgpJF6tZojijtvyselREbp5fdgSkhzyVv8+m/tbIMVu79jv7FEQCIShf+4/4U7ovEZNVIPAzi4t0lnF/lcZkl/ZVRaktRXcpK1GGeE5Gcg/lzHNRKXE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ozlabs.org; spf=pass smtp.mailfrom=ozlabs.org; dkim=pass (2048-bit key) header.d=ozlabs.org header.i=@ozlabs.org header.b=ujctMAmN; arc=none smtp.client-ip=150.107.74.76
+	 MIME-Version; b=uHuurLaPXYuw54sFYohLi8Caekb4uEfTviDt9ssvhcGRoqWpWmdkG/8fLb9Qs6dznehbeaCUN2GUzfGOpvCu5pRK3rPLEl1C84M1S88AXzq9VjllCssBJIU38EiUlQZPhtGG9HBb5Ji8q2BWzrb4mP/2lPhBMdtbxPlLUScyTxY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ozlabs.org; spf=pass smtp.mailfrom=ozlabs.org; dkim=pass (2048-bit key) header.d=ozlabs.org header.i=@ozlabs.org header.b=lwuYwEPq; arc=none smtp.client-ip=150.107.74.76
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ozlabs.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ozlabs.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ozlabs.org header.i=@ozlabs.org header.b="ujctMAmN"
+	dkim=pass (2048-bit key) header.d=ozlabs.org header.i=@ozlabs.org header.b="lwuYwEPq"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ozlabs.org;
-	s=201707; t=1789162925;
-	bh=Lr3kewTfrmfiLXTCI9lakM51iVijcvbY8Za/fGU9JK0=;
+	s=201707; t=1789162935;
+	bh=5xcnpoD35EmZCq5dKKq2f9x4jElF9sti9rbyWs0IsIw=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=ujctMAmNnPydIH6hwhy02Nr4iAQK/l+PeteOgrs0pCuRGCFgloXFobzKBEqaFqfZy
-	 Ag35lKmN3qPwHay33dze1P/doKc7F+otnvNO9mAigeLiRPM2LbmI2/UPVYIl0Zh/JS
-	 T3ihVVgEZUxAZUf9wCrgLEE1Eibit13xYue3ebaLq+PVPzBh86oC7GEgx7mmQStCxZ
-	 Xn+LXnJB3trcfTI3mZNFL4jV/ICVZKJkxLpHdrN8OTyAjYm+9zLfdwqthLT+FzD7BU
-	 DAM6zIEWmm3fn4gO6ZmrcTdQd3iLLw9ImmfG4Z98nFJe2U/vW17yVO+6VUigEmS0CL
-	 mZzznCtksbZ5Q==
+	b=lwuYwEPqv19Pwy6bNYoMfy5/6A76BjqcJ+5RPM9dK0OY4mzZ7ZJpkR7/ANowRW+SW
+	 J8CEkuPHtummX3ZvxQnKWNvrcTQuUw97ShxcYxhJT2V/OWKJo0VJVAvq4nQC+LRVXN
+	 wsMhlYvP3pJa+dCAHsgJWqaMiK5SYBp7e3mzTIWKtHfV2oSb+C2uXmKCKMM7CF2ldQ
+	 WXcpt3Mw8sq7VQDtOHpa7zZYbJZggZNGH1hFCz1BUqRCrmFDNb+xrNOFQCW2ADRHzF
+	 8YfFhCv3yi12ZSRDsQA6qZgLCpCmWZ9GY4252AOGDoG7NrLhpiU9tADQuDodFKvnoL
+	 rA/WGqjqYUFDw==
 Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(Client did not present a certificate)
-	by mail.ozlabs.org (Postfix) with ESMTPSA id 4hhSgK03cRz4wbn;
-	Sat, 12 Sep 2026 07:42:04 +1000 (AEST)
+	by mail.ozlabs.org (Postfix) with ESMTPSA id 4hhSgV6hGgz4wDJ;
+	Sat, 12 Sep 2026 07:42:14 +1000 (AEST)
 From: Matt Evans <matt@ozlabs.org>
 To: Alex Williamson <alex@shazbot.org>,
 	Leon Romanovsky <leon@kernel.org>,
@@ -56,9 +56,9 @@ Cc: Mahmoud Adam <mngyadam@amazon.de>,
 	linaro-mm-sig@lists.linaro.org,
 	kvm@vger.kernel.org,
 	linux-pci@vger.kernel.org
-Subject: [PATCH v6 1/9] vfio/pci: Remove DMABUF export dependency on vdev->memory_lock
-Date: Fri, 11 Sep 2026 22:41:49 +0100
-Message-ID: <20260911214200.33793-2-matt@ozlabs.org>
+Subject: [PATCH v6 3/9] dma-buf: Export dma_buf_set_name()
+Date: Fri, 11 Sep 2026 22:41:51 +0100
+Message-ID: <20260911214200.33793-4-matt@ozlabs.org>
 X-Mailer: git-send-email 2.50.1
 In-Reply-To: <20260911214200.33793-1-matt@ozlabs.org>
 References: <20260911214200.33793-1-matt@ozlabs.org>
@@ -70,152 +70,128 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The VFIO_DEVICE_FEATURE_DMA_BUF export previously used
-vdev->memory_lock to protect VFIO's list of exported DMABUFs
-(vdev->dmabufs) and their revocation status.  When adding a new
-export, memory_lock was taken for write.
+dma_buf_set_name() originally took a __user string to duplicate for
+the buffer name.  Make this function a generic set-name helper, taking
+a kernel-allocated string.
 
-A future commit will refactor DMABUF export into a function used from
-mmap(), which would create a new mmap_lock -> memory_lock dependency.
-
-In preparation, this commit introduces a vdev->dmabuf_lock that
-protects the dmabufs list, per-DMABUF revocation state, and a new
-bars_revoked flag.  The flag tracks the device-wide BAR revocation
-state set via vfio_pci_dma_buf_move() under dmabuf_lock, removing the
-test of __vfio_pci_memory_enabled() and dependency on
-vdev->memory_lock.
-
-This is a cleanup currently, but allows the future export path to
-avoid holding memory_lock under mmap_lock and a deadlock scenario (a
-fault handler attempting to take mmap_lock in a vfio-pci variant
-driver thread that holds memory_lock).
+Wrap this by a new dma_buf_set_name_user() to support the existing
+ioctl path for a user-provided string.
 
 Signed-off-by: Matt Evans <matt@ozlabs.org>
 ---
- drivers/vfio/pci/vfio_pci_core.c   |  2 ++
- drivers/vfio/pci/vfio_pci_dmabuf.c | 30 +++++++++++++++++++++++++-----
- include/linux/vfio_pci_core.h      |  2 ++
- 3 files changed, 29 insertions(+), 5 deletions(-)
+ drivers/dma-buf/dma-buf.c | 58 ++++++++++++++++++++++++++++++---------
+ include/linux/dma-buf.h   |  2 ++
+ 2 files changed, 47 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
-index 3f11a9624b9c..7d090be8c9c1 100644
---- a/drivers/vfio/pci/vfio_pci_core.c
-+++ b/drivers/vfio/pci/vfio_pci_core.c
-@@ -659,6 +659,7 @@ int vfio_pci_core_enable(struct vfio_pci_core_device *vdev)
- 		vdev->has_vga = true;
+diff --git a/drivers/dma-buf/dma-buf.c b/drivers/dma-buf/dma-buf.c
+index d504c636dc29..8129ea11ff58 100644
+--- a/drivers/dma-buf/dma-buf.c
++++ b/drivers/dma-buf/dma-buf.c
+@@ -405,31 +405,29 @@ static __poll_t dma_buf_poll(struct file *file, poll_table *poll)
+ }
  
- 	vfio_pci_core_map_bars(vdev);
-+	vdev->bars_revoked = false;
+ /**
+- * dma_buf_set_name - Set a name to a specific dma_buf to track the usage.
+- * It could support changing the name of the dma-buf if the same
+- * piece of memory is used for multiple purpose between different devices.
++ * dma_buf_set_name_user - Set a dma_buf's name from a user string
++ *
++ * The string is up to DMA_BUF_NAME_LEN long, including the terminator.
+  *
+  * @dmabuf: [in]     dmabuf buffer that will be renamed.
+  * @buf:    [in]     A piece of userspace memory that contains the name of
+  *                   the dma-buf.
+  *
+- * Returns 0 on success. If the dma-buf buffer is already attached to
+- * devices, return -EBUSY.
+- *
++ * Returns 0 on success, and any previously-set name is freed.
+  */
+-static long dma_buf_set_name(struct dma_buf *dmabuf, const char __user *buf)
++static long dma_buf_set_name_user(struct dma_buf *dmabuf, const char __user *buf)
+ {
+ 	char *name = strndup_user(buf, DMA_BUF_NAME_LEN);
++	int ret;
  
- 	return 0;
+ 	if (IS_ERR(name))
+ 		return PTR_ERR(name);
  
-@@ -2195,6 +2196,7 @@ int vfio_pci_core_init_dev(struct vfio_device *core_vdev)
- 		return ret;
- 	INIT_LIST_HEAD(&vdev->dmabufs);
- 	init_rwsem(&vdev->memory_lock);
-+	init_rwsem(&vdev->dmabuf_lock);
- 	xa_init(&vdev->ctx);
+-	spin_lock(&dmabuf->name_lock);
+-	kfree(dmabuf->name);
+-	dmabuf->name = name;
+-	spin_unlock(&dmabuf->name_lock);
++	ret = dma_buf_set_name(dmabuf, name);
++	if (ret)
++		kfree(name);
  
- 	return 0;
-diff --git a/drivers/vfio/pci/vfio_pci_dmabuf.c b/drivers/vfio/pci/vfio_pci_dmabuf.c
-index c16f460c01d6..847ee5cc78e7 100644
---- a/drivers/vfio/pci/vfio_pci_dmabuf.c
-+++ b/drivers/vfio/pci/vfio_pci_dmabuf.c
-@@ -90,9 +90,9 @@ static void vfio_pci_dma_buf_release(struct dma_buf *dmabuf)
- 	 * The refcount prevents both.
- 	 */
- 	if (priv->vdev) {
--		down_write(&priv->vdev->memory_lock);
-+		down_write(&priv->vdev->dmabuf_lock);
- 		list_del_init(&priv->dmabufs_elm);
--		up_write(&priv->vdev->memory_lock);
-+		up_write(&priv->vdev->dmabuf_lock);
- 		vfio_device_put_registration(&priv->vdev->vdev);
- 	}
- 	kfree(priv->phys_vec);
-@@ -305,12 +305,27 @@ int vfio_pci_core_feature_dma_buf(struct vfio_pci_core_device *vdev, u32 flags,
+-	return 0;
++	return ret;
+ }
  
- 	/* dma_buf_put() now frees priv */
- 	INIT_LIST_HEAD(&priv->dmabufs_elm);
--	down_write(&vdev->memory_lock);
+ #if IS_ENABLED(CONFIG_SYNC_FILE)
+@@ -578,7 +576,7 @@ static long dma_buf_ioctl(struct file *file,
+ 
+ 	case DMA_BUF_SET_NAME_A:
+ 	case DMA_BUF_SET_NAME_B:
+-		return dma_buf_set_name(dmabuf, (const char __user *)arg);
++		return dma_buf_set_name_user(dmabuf, (const char __user *)arg);
+ 
+ #if IS_ENABLED(CONFIG_SYNC_FILE)
+ 	case DMA_BUF_IOCTL_EXPORT_SYNC_FILE:
+@@ -854,6 +852,40 @@ void dma_buf_put(struct dma_buf *dmabuf)
+ }
+ EXPORT_SYMBOL_NS_GPL(dma_buf_put, "DMA_BUF");
+ 
++/**
++ * dma_buf_set_name - Set a dma_buf's name
++ * It could support changing the name of the dma-buf if the same piece
++ * of memory is used for multiple purpose between different devices.
++ *
++ * @dmabuf: [in]     dmabuf buffer that will be renamed.
++ * @name:   [in]     The name of the dma-buf, allocated with kmalloc() or
++ *                   similar.  This takes ownership of the allocation
++ *                   on success, which will be kfree()d when the
++ *                   dmabuf is released or a new name assigned.
++ *
++ * Returns 0 on success, -EINVAL if the name is NULL, or -E2BIG if the
++ * name exceeds DMA_BUF_NAME_LEN.
++ */
++int dma_buf_set_name(struct dma_buf *dmabuf, char *name)
++{
++	if (!name)
++		return -EINVAL;
 +
-+	/*
-+	 * dmabuf_lock synchronises access (R) or updates (W) to the
-+	 * vdev->dmabufs list and to bars_revoked (see below).  The
-+	 * revocation state of DMABUF elements in the list is written
-+	 * holding both dmabuf_lock(W) and resv, and tested with
-+	 * either.
-+	 *
-+	 * dmabuf_lock -> resv
-+	 *
-+	 * vdev->bars_revoked tracks the BAR revocation status updated
-+	 * via vfio_pci_dma_buf_move(), so the initial DMABUF state
-+	 * follows the same criteria that later update the DMABUF
-+	 * state (BAR zap, etc.).
++	/* dmabuffs_dname() won't use the string if the length
++	 * (including terminator) exceeds DMA_BUF_NAME_LEN:
 +	 */
-+	down_write(&vdev->dmabuf_lock);
- 	dma_resv_lock(priv->dmabuf->resv, NULL);
--	priv->revoked = !__vfio_pci_memory_enabled(vdev);
-+	priv->revoked = vdev->bars_revoked;
- 	list_add_tail(&priv->dmabufs_elm, &vdev->dmabufs);
- 	dma_resv_unlock(priv->dmabuf->resv);
--	up_write(&vdev->memory_lock);
-+	up_write(&vdev->dmabuf_lock);
++	if (strlen(name) >= DMA_BUF_NAME_LEN)
++		return -E2BIG;
++
++	spin_lock(&dmabuf->name_lock);
++	kfree(dmabuf->name);
++	dmabuf->name = name;
++	spin_unlock(&dmabuf->name_lock);
++
++	return 0;
++}
++EXPORT_SYMBOL_NS_GPL(dma_buf_set_name, "DMA_BUF");
++
+ static int dma_buf_wrap_sg_table(struct sg_table **sg_table)
+ {
+ 	struct scatterlist *to_sg, *from_sg;
+diff --git a/include/linux/dma-buf.h b/include/linux/dma-buf.h
+index d1203da56fc5..14d3950b63c8 100644
+--- a/include/linux/dma-buf.h
++++ b/include/linux/dma-buf.h
+@@ -570,6 +570,8 @@ int dma_buf_fd(struct dma_buf *dmabuf, int flags);
+ struct dma_buf *dma_buf_get(int fd);
+ void dma_buf_put(struct dma_buf *dmabuf);
  
- 	/*
- 	 * dma_buf_fd() consumes the reference, when the file closes the dmabuf
-@@ -340,6 +355,8 @@ void vfio_pci_dma_buf_move(struct vfio_pci_core_device *vdev, bool revoked)
- 
- 	lockdep_assert_held_write(&vdev->memory_lock);
- 
-+	down_write(&vdev->dmabuf_lock);
-+	vdev->bars_revoked = revoked;
- 	list_for_each_entry_safe(priv, tmp, &vdev->dmabufs, dmabufs_elm) {
- 		if (!get_file_active(&priv->dmabuf->file))
- 			continue;
-@@ -375,6 +392,7 @@ void vfio_pci_dma_buf_move(struct vfio_pci_core_device *vdev, bool revoked)
- 		}
- 		fput(priv->dmabuf->file);
- 	}
-+	up_write(&vdev->dmabuf_lock);
- }
- 
- void vfio_pci_dma_buf_cleanup(struct vfio_pci_core_device *vdev)
-@@ -393,6 +411,7 @@ void vfio_pci_dma_buf_cleanup(struct vfio_pci_core_device *vdev)
- 	 */
- 	vfio_pci_dma_buf_move(vdev, true);
- 
-+	down_write(&vdev->dmabuf_lock);
- 	list_for_each_entry_safe(priv, tmp, &vdev->dmabufs, dmabufs_elm) {
- 		if (!get_file_active(&priv->dmabuf->file))
- 			continue;
-@@ -402,5 +421,6 @@ void vfio_pci_dma_buf_cleanup(struct vfio_pci_core_device *vdev)
- 		vfio_device_put_registration(&vdev->vdev);
- 		fput(priv->dmabuf->file);
- 	}
-+	up_write(&vdev->dmabuf_lock);
- 	up_write(&vdev->memory_lock);
- }
-diff --git a/include/linux/vfio_pci_core.h b/include/linux/vfio_pci_core.h
-index 9a1674c152aa..f99b152edcca 100644
---- a/include/linux/vfio_pci_core.h
-+++ b/include/linux/vfio_pci_core.h
-@@ -134,6 +134,7 @@ struct vfio_pci_core_device {
- 	bool			pm_intx_masked;
- 	bool			pm_runtime_engaged;
- 	bool			sriov_active;
-+	bool			bars_revoked;
- 	struct pci_saved_state	*pci_saved_state;
- 	struct pci_saved_state	*pm_save;
- 	int			ioeventfds_nr;
-@@ -148,6 +149,7 @@ struct vfio_pci_core_device {
- 	struct vfio_pci_core_device	*sriov_pf_core_dev;
- 	struct notifier_block	nb;
- 	struct rw_semaphore	memory_lock;
-+	struct rw_semaphore	dmabuf_lock;
- 	struct list_head	dmabufs;
- };
- 
++int dma_buf_set_name(struct dma_buf *dmabuf, char *name);
++
+ struct sg_table *dma_buf_map_attachment(struct dma_buf_attachment *,
+ 					enum dma_data_direction);
+ void dma_buf_unmap_attachment(struct dma_buf_attachment *, struct sg_table *,
 -- 
 2.50.1 (Apple Git-155)
 
