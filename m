@@ -1,76 +1,76 @@
 Received: from mail-pl1-f226.google.com (mail-pl1-f226.google.com [209.85.214.226])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A003C4483A0
-	for <linux-pci@vger.kernel.org>; Fri, 11 Sep 2026 23:36:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 47F93457E49
+	for <linux-pci@vger.kernel.org>; Fri, 11 Sep 2026 23:36:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.226
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789169772; cv=none; b=Z9exD0dMOzth0IQA2JNhcShfjSC8ifGx9gMmQ9MbKXaptD43T9W1Kau5PEeXxqS+PZVaiE+JGf3sO3RPwlzLqg5Qd8oLnZ3ZtMtv1HiOnFUTdoY6bmARX6TN/XEAM3Y1tTK6PqkxPqrehwjRQabvtvh9x4VkwlZ2MK6w9aI4gP4=
+	t=1789169772; cv=none; b=ZL3HqotB7CQuTG50WNuE5fARb9AZ4P9r1drhMw5h+no7AbK/zIU09J0/vh2kj4MscN08CsWxmNHQvG7NH4H71pF3yFQTj+WelXTb4H+hOBaTw5CtNQR01gBdhJUWHWIm+i71ERtGUmjpdquZbg20rJyyUxqiWB6bCj+ScVHYdSc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1789169772; c=relaxed/simple;
-	bh=y3ZY0wBGgYCXfXkqzJYf85Uba7WDXKBwdPkshMcU+T4=;
+	bh=/C4vMYtbzaj6mPGipL5NL0m0Xfkke1JQhHrl2SUMM+I=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=TGy051bGndm0rviskoxUlwX0KZynRULatp/89Ykv36vsBrz0qfZAZeehCe7OypSyK0Hq7kLytukhTaVhM3xXI9dq9RV0VZiGQaKqHBjGB1vwHN1227nwFLtarHfjFirGRty0ay0YmzK/TV+dF0Gfj30r6DBOxAbO7cfNbUFSot8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=KJ+uh4Tl; arc=none smtp.client-ip=209.85.214.226
+	 MIME-Version; b=GqWghrRm0/1pd3UtizfRGkcNA9zpyGd5EwD5rOAutLVSz46IcPjJDTEqAeRDQ2JGDrSmLTpN3r1eGuwFDnmzsYbtCE8p8lBQAYbABvL7NVO9yNL4IOMqBoTFjVidf6HbMUDTLxXC9mAkE153oHO1WAPHK5EnMoStzYaLnEZNENs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=bfPgcSf/; arc=none smtp.client-ip=209.85.214.226
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="KJ+uh4Tl"
-Received: by mail-pl1-f226.google.com with SMTP id d9443c01a7336-2d560775ca2so10827605ad.1
-        for <linux-pci@vger.kernel.org>; Fri, 11 Sep 2026 16:36:10 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="bfPgcSf/"
+Received: by mail-pl1-f226.google.com with SMTP id d9443c01a7336-2d9201076b3so6720145ad.0
+        for <linux-pci@vger.kernel.org>; Fri, 11 Sep 2026 16:36:11 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1789169770; x=1789774570;
+        d=1e100.net; s=20251104; t=1789169771; x=1789774571;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:dkim-signature:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=XvxeiUifxpfQFpLPlhrwkJPg9MEHvf8vpcauDPPob84=;
-        b=eFuQ7n0OnmKIRn0QXT5usChwfyOWbkzfkFkPKoNapHkdm8Kov6RtKn5XeKKCTpCCdm
-         2cYaBIKapRnMDp2Sd1LCs+Yismybsk3UfhXjzWs6+fYgMWHvGvzmRtpcZayJ1EaNOke7
-         +yLss1rs6Tm1VvTRHxvYMlH877CYBEorYDE1WIzrY4hUsUPsvCKiz4YvIjyhCwnVVB/Q
-         ym6zJuZNb7QkonU/y0Rj0kEa9JSib3g9wlG6fraG5qkW9baXmMUWePvwuw3BIYAhSO7a
-         VTV2pSDLQmNRL1uzC7sr0wnD4Zcq7uKk+hpyWFUMuddFcU8qowyxtDRtCjXPkSKoUjNB
-         H9yw==
-X-Gm-Message-State: AFuF++lNG5jLM0pwvVAts5HAtXqvUslCv/sCabwJlB/8AUVDbdGi9PV1
-	7HgZ0xz9+eQKKTPFVIKZR+psHWb9QKFjAgkC5FqXnbFBvIcUrNhEyZUn0vBO5r0trqv1aC7oLbb
-	IuCgW/JWDANTaDfP/8BaYVJADyYyr9CnqQQ+LMuYMq/n0aOi8idc0rBS13HHyICSoEtf/STL6R4
-	vJLEI0bEq4YjHVNB8577hxWklOwYB7OLj7j7yhqlQLgOnM8bJPAJX3Z8qRFJ8w3d5fyl5TpEJ+V
-	9AJimnD38g+WFY2
-X-Gm-Gg: AYBFou3BL6vOI8nGXxyv+7iBVHGFuQzLIbDOitfFqun+UWYL4zB237hf9gFormuthdl
-	LDAcnUN9Q5qumNlWZ8ayvYNDlPwlatXcFyx1CsJKtevsNylJvHiKkoISX1A+asU9QZ4XNJX9MEg
-	0gjXoWydfEYSc4TsoV/iN+/jy88hJnpsU8VHyK1meUjbhMrKOgtbOa81s3Wg6noGqDMGNJa7GM2
-	XmwiWqvhAEo74q8x2SMekfvsJgKdKRtMpO0jGCczRELbyDA77ortXxUUfGr37aVgmaxWiWmI6FO
-	Gk3AChNaU9I5svwiqzkCEW18/wcNnB6w8orXJHNGsDNS8TD1insW7RR9tcctBJ3UTl5AWznT3oh
-	NaI8ZfZ65bymx4MSvJleb0t9Y9sBDsbP2rKhCy9vSndsVuU9z+m4L9pkebfPP4LKe/kBtjC7/pR
-	q0c6LOS5dw3bpqjg9A1iDng0KuGqZ2a244iIwcyp0=
-X-Received: by 2002:a17:903:283:b0:2c0:a555:80d6 with SMTP id d9443c01a7336-2dd4bc32e5bmr6870855ad.2.1789169769936;
-        Fri, 11 Sep 2026 16:36:09 -0700 (PDT)
+        bh=rsR21IG9GkhkXFxkByd8Q5sMNxfEXtOVC73TP3sSjXM=;
+        b=REWYtc8CHKYgJRB25wwVe6dBBMGcpy0tH8odrqJ+vRd53jnPxi9gEmX4PkFo7JGPDP
+         /6SBPCe7DKqsGh4GuayboG1yNfTC9VbeRka9AsbgxkQh+tnHT5DmhuVQDG1y0I08LfPE
+         sNiCgwvF6FqoUpkWKMIz4A6wxHPcbB+l1tZdl8/Ey5rRrq40bkB5SiS7veRf0I5Rax3K
+         cdMLuQSyUoRel/MUdGW3HpAH5/P2QIWIPTilZ3hAjxkPXjqyFfPzWDmhCN4ElFb+iRJ3
+         unhSF9klFjf69v+zcto+CQ1E+CqwkwI+zjSgkOXgTNtiVZXWyRuRPTsnRqdDqE08+ubL
+         DWlQ==
+X-Gm-Message-State: AFuF++n4jaFLQ8TWAZGdKMDFNPzJT0MIUU9GChsElVmVr1aMuZJNH2w1
+	7BnJPja7jpuBAOIeeCj/foAnpunZV2f59vTZn/E+5QMryipoY3C3NLo6r6Urm53s2d2d8y58+FY
+	UK50YibRrCEq4utgRFHiytqUC8xSnPStXfKadd7wakD2IYCPH45lWUs810XlO6PePuYdCat6zg7
+	7/A4Ocn+n2Ozk0bQGXZombOlftSTih0EHugFz2p2A8DZAkfYuqNUTWrxdJ107EAUWVfryotP9rF
+	C28JSwJHhYnlr0r
+X-Gm-Gg: AYBFou3hSz+t4pnl1QmFU0nI1DHniahd5xTP3a22sNiJHWjsPnBfduAqR2stjo1Px8T
+	npAeiUt4BI+DizwRyYS5Irf3VlTlBIpexBh70Tri2/9PI+3O91OEwjZLcLLvP/ntVWRKTBx6+5g
+	qJygyBW8c3Krf8+5ziSyPX2aWik2vyl3/47yhghLEhxy4CsXsdeMiyd39df/3cdzpFf2Bgodntb
+	fR1t2xYSJkXd5z6LCJ/Zd65m52FzjRZOAWadxE1NlU0NUjKHxyFaPJKTyBeYpvNQKG0vM1PsJTP
+	Q5Hcv+fs3qIzvDw69S6nhy1s4XbnKiznRP4VjvNRnUaUDRaOEtsvpHLUM3MWb0OU8FIgxZWI+Oj
+	wOiFlBsqJN3vtstzbP7eUH9WQIiqh0F2DNJbkfcP6Ifx4MANQ+Y1VIHi/80y0BSl82OjIRHAMnE
+	J5SvPRiwv6qaLqCpdacE2ABtsEqtXNjoHd6OK+iQE=
+X-Received: by 2002:a17:90b:274b:b0:381:a766:efcb with SMTP id 98e67ed59e1d1-39d9bc6767cmr10369553a91.4.1789169770610;
+        Fri, 11 Sep 2026 16:36:10 -0700 (PDT)
 Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-125.dlp.protect.broadcom.com. [144.49.247.125])
-        by smtp-relay.gmail.com with ESMTPS id d9443c01a7336-2dd2cfcb276sm1864665ad.10.2026.09.11.16.36.08
+        by smtp-relay.gmail.com with ESMTPS id 98e67ed59e1d1-39d94b3e7e0sm2296070a91.0.2026.09.11.16.36.10
         for <linux-pci@vger.kernel.org>
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 11 Sep 2026 16:36:09 -0700 (PDT)
+        Fri, 11 Sep 2026 16:36:10 -0700 (PDT)
 X-Relaying-Domain: broadcom.com
 X-CFilter-Loop: Reflected
-Received: by mail-qv1-f71.google.com with SMTP id 6a1803df08f44-90ce21f2cc9so34371376d6.2
-        for <linux-pci@vger.kernel.org>; Fri, 11 Sep 2026 16:36:07 -0700 (PDT)
+Received: by mail-qv1-f70.google.com with SMTP id 6a1803df08f44-90e869793d3so26616066d6.0
+        for <linux-pci@vger.kernel.org>; Fri, 11 Sep 2026 16:36:09 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1789169767; x=1789774567; darn=vger.kernel.org;
+        d=broadcom.com; s=google; t=1789169769; x=1789774569; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=XvxeiUifxpfQFpLPlhrwkJPg9MEHvf8vpcauDPPob84=;
-        b=KJ+uh4TleJqcxBCsI5bN1iATObbkBcLwaNNHwgKiiF8cca5x1+Q8+EVlrZqRaJ08kp
-         XFYNpTZL3MGp4ejjcbXV1HcdIttvGEGKBZL5W7dVZRky74TX3oLR3/nmYzB05iVDVsLk
-         opkOKXAjUd7Yfdkanckwqbs0fIAtjTMsiGqfI=
-X-Received: by 2002:a05:6214:3d08:b0:910:3453:505e with SMTP id 6a1803df08f44-9121dae180fmr10666506d6.32.1789169767495;
-        Fri, 11 Sep 2026 16:36:07 -0700 (PDT)
-X-Received: by 2002:a05:6214:3d08:b0:910:3453:505e with SMTP id 6a1803df08f44-9121dae180fmr10665916d6.32.1789169767016;
-        Fri, 11 Sep 2026 16:36:07 -0700 (PDT)
+        bh=rsR21IG9GkhkXFxkByd8Q5sMNxfEXtOVC73TP3sSjXM=;
+        b=bfPgcSf/HyB41Fqy+8s7nc3roKN1NuxWVdktuLfM2An9WY04LZ7Rp6vqlL1EZLs+BQ
+         P1mzgKuVCa8Np6GfTRmdvkwpcVziwxiy336zCqv2YzcD3aqcBAPH7P8Qhj+M4lGT82EB
+         ZOLicq08KclBFmRDYzeBQZllKa3O43+KynJN8=
+X-Received: by 2002:a05:6214:daa:b0:910:321e:2ebb with SMTP id 6a1803df08f44-91212086571mr95943266d6.8.1789169769124;
+        Fri, 11 Sep 2026 16:36:09 -0700 (PDT)
+X-Received: by 2002:a05:6214:daa:b0:910:321e:2ebb with SMTP id 6a1803df08f44-91212086571mr95942566d6.8.1789169768577;
+        Fri, 11 Sep 2026 16:36:08 -0700 (PDT)
 Received: from stband-bld-1.and.broadcom.net ([192.19.144.250])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-9120f45ab71sm31717326d6.12.2026.09.11.16.36.05
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-9120f45ab71sm31717326d6.12.2026.09.11.16.36.07
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 11 Sep 2026 16:36:06 -0700 (PDT)
+        Fri, 11 Sep 2026 16:36:08 -0700 (PDT)
 From: Jim Quinlan <james.quinlan@broadcom.com>
 To: linux-pci@vger.kernel.org,
 	Nicolas Saenz Julienne <nsaenz@kernel.org>,
@@ -87,9 +87,9 @@ Cc: Florian Fainelli <florian.fainelli@broadcom.com>,
 	linux-rpi-kernel@lists.infradead.org (moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE),
 	linux-arm-kernel@lists.infradead.org (moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE),
 	linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH 11/13] PCI: brcmstb: Put max_burst_size setting in cfg_data
-Date: Fri, 11 Sep 2026 19:35:36 -0400
-Message-Id: <20260911233541.1650895-12-james.quinlan@broadcom.com>
+Subject: [PATCH 12/13] PCI: brcmstb: Use order-0 indexing for inbound BAR window array
+Date: Fri, 11 Sep 2026 19:35:37 -0400
+Message-Id: <20260911233541.1650895-13-james.quinlan@broadcom.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260911233541.1650895-1-james.quinlan@broadcom.com>
 References: <20260911233541.1650895-1-james.quinlan@broadcom.com>
@@ -102,144 +102,139 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
 
-Rather than ascertaining the max_burst_size setting by comparing different
-SoC IDs, specify the setting in the config_data structure for each SoC.
-Also add a comment on each SoC's encoding of this field.
+The register names for the inbound BAR registers use order-1 indexing,
+e.g. the first is BAR1.  The code followed this nomenclature by not using
+the 0th element of the inbound array.
 
-Note: Previously, the max burst setting used for the 4908 Soc was 2.
-However, it appears that the setting of 2 is illegal for this chip.  Set it
-to 0 as (a) this is the safest (smallest) choice and (b) the 2 was probably
-interpreted by the HW as a 0 anyway.
+Undo this approach and use order-0 indexing.  Also use a struct pointer
+variable in two functions instead of array indexing.
 
 Signed-off-by: Jim Quinlan <james.quinlan@broadcom.com>
 ---
- drivers/pci/controller/pcie-brcmstb.c | 29 ++++++++++++---------------
- 1 file changed, 13 insertions(+), 16 deletions(-)
+ drivers/pci/controller/pcie-brcmstb.c | 49 ++++++++++++---------------
+ 1 file changed, 21 insertions(+), 28 deletions(-)
 
 diff --git a/drivers/pci/controller/pcie-brcmstb.c b/drivers/pci/controller/pcie-brcmstb.c
-index 047783e33ae4..8bca98e6f5fa 100644
+index 8bca98e6f5fa..53984cfa2c96 100644
 --- a/drivers/pci/controller/pcie-brcmstb.c
 +++ b/drivers/pci/controller/pcie-brcmstb.c
-@@ -317,6 +317,7 @@ struct pcie_cfg_data {
- 	u32 flags;
- 	u32 quirks;
- 	u8 num_inbound_wins;
-+	u8 burst_setting;
- 	int (*perst_set)(struct brcm_pcie *pcie, u32 val);
- 	int (*bridge_sw_init_set)(struct brcm_pcie *pcie, u32 val);
- 	int (*post_setup)(struct brcm_pcie *pcie);
-@@ -1153,7 +1154,7 @@ static int brcm_pcie_setup(struct brcm_pcie *pcie)
- 	void __iomem *base = pcie->base;
- 	struct pci_host_bridge *bridge;
- 	struct resource_entry *entry;
--	u32 tmp, burst, num_lanes, num_lanes_cap;
-+	u32 tmp, num_lanes, num_lanes_cap;
- 	u8 num_out_wins = 0;
- 	int num_inbound_wins = 0;
- 	int memc, ret;
-@@ -1188,20 +1189,6 @@ static int brcm_pcie_setup(struct brcm_pcie *pcie)
- 	/* Wait for SerDes to be stable */
- 	usleep_range(100, 200);
+@@ -954,8 +954,8 @@ static void add_inbound_win(struct inbound_win *b, u8 *count, u64 size,
+ 	(*count)++;
+ }
+ 
+-static int brcm_pcie_get_inbound_wins(struct brcm_pcie *pcie,
+-				      struct inbound_win inbound_wins[])
++static int brcm_pcie_get_ib_wins(struct brcm_pcie *pcie,
++				 struct inbound_win *ib_win)
+ {
+ 	struct pci_host_bridge *bridge = pci_host_bridge_from_priv(pcie);
+ 	u64 pci_offset, cpu_addr, size = 0, tot_size = 0;
+@@ -965,13 +965,6 @@ static int brcm_pcie_get_inbound_wins(struct brcm_pcie *pcie,
+ 	int ret, i = 0;
+ 	u8 n = 0;
  
 -	/*
--	 * SCB_MAX_BURST_SIZE is a two bit field.  For GENERIC chips it
--	 * is encoded as 0=128, 1=256, 2=512, 3=Rsvd, for BCM7278 it
--	 * is encoded as 0=Rsvd, 1=128, 2=256, 3=512.
+-	 * The HW registers (and PCIe) use order-1 numbering for BARs.  As such,
+-	 * we have inbound_wins[0] unused and BAR1 starts at inbound_wins[1].
 -	 */
--	if (BFLAG(pcie, IS_BMIPS))
--		burst = 0x1; /* 256 bytes */
--	else if (pcie->cfg->soc_base == BCM2711)
--		burst = 0x0; /* 128 bytes */
--	else if (pcie->cfg->soc_base == BCM7278)
--		burst = 0x3; /* 512 bytes */
--	else
--		burst = 0x2; /* 512 bytes */
+-	struct inbound_win *b_begin = &inbound_wins[1];
+-	struct inbound_win *b = b_begin;
 -
  	/*
- 	 * Set SCB_MAX_BURST_SIZE, CFG_READ_UR_MODE, SCB_ACCESS_EN,
- 	 * RCB_MPS_MODE, RCB_64B_MODE
-@@ -1209,7 +1196,8 @@ static int brcm_pcie_setup(struct brcm_pcie *pcie)
- 	tmp = readl(base + PCIE_MISC_MISC_CTRL);
- 	u32p_replace_bits(&tmp, 1, PCIE_MISC_MISC_CTRL_SCB_ACCESS_EN_MASK);
- 	u32p_replace_bits(&tmp, 1, PCIE_MISC_MISC_CTRL_CFG_READ_UR_MODE_MASK);
--	u32p_replace_bits(&tmp, burst, PCIE_MISC_MISC_CTRL_MAX_BURST_SIZE_MASK);
-+	u32p_replace_bits(&tmp, pcie->cfg->burst_setting,
-+			  PCIE_MISC_MISC_CTRL_MAX_BURST_SIZE_MASK);
- 	u32p_replace_bits(&tmp, 1, PCIE_MISC_MISC_CTRL_PCIE_RCB_MPS_MODE_MASK);
+ 	 * STB chips beside 7712 disable the first inbound window default.
+ 	 * Rather being mapped to system memory it is mapped to the
+@@ -980,7 +973,7 @@ static int brcm_pcie_get_inbound_wins(struct brcm_pcie *pcie,
+ 	 * SoCs.
+ 	 */
+ 	if (pcie->cfg->soc_base != BCM7712)
+-		add_inbound_win(b++, &n, 0, 0, 0);
++		add_inbound_win(ib_win++, &n, 0, 0, 0);
+ 
+ 	resource_list_for_each_entry(entry, &bridge->dma_ranges) {
+ 		u64 pcie_start = entry->res->start - entry->offset;
+@@ -997,7 +990,7 @@ static int brcm_pcie_get_inbound_wins(struct brcm_pcie *pcie,
+ 		 * two.
+ 		 */
+ 		if (pcie->cfg->soc_base == BCM7712)
+-			add_inbound_win(b++, &n, size, cpu_start, pcie_start);
++			add_inbound_win(ib_win++, &n, size, cpu_start, pcie_start);
+ 
+ 		if (n > pcie->cfg->num_inbound_wins)
+ 			break;
+@@ -1081,44 +1074,44 @@ static int brcm_pcie_get_inbound_wins(struct brcm_pcie *pcie,
+ 	}
+ 
+ 	/* Enable inbound window 2, the main inbound window for STB chips */
+-	add_inbound_win(b++, &n, size, cpu_addr, pci_offset);
++	add_inbound_win(ib_win++, &n, size, cpu_addr, pci_offset);
+ 
+ 	/*
+ 	 * Disable inbound window 3.  On some chips presents the same
+ 	 * window as #2 but the data appears in a settable endianness.
+ 	 */
+-	add_inbound_win(b++, &n, 0, 0, 0);
++	add_inbound_win(ib_win++, &n, 0, 0, 0);
+ 
+ 	return n;
+ }
+ 
+ static u32 brcm_bar_reg_offset(int bar)
+ {
+-	if (bar <= 3)
+-		return PCIE_MISC_RC_BAR1_CONFIG_LO + 8 * (bar - 1);
++	if (bar <= 2)
++		return PCIE_MISC_RC_BAR1_CONFIG_LO + 8 * bar;
+ 	else
+-		return PCIE_MISC_RC_BAR4_CONFIG_LO + 8 * (bar - 4);
++		return PCIE_MISC_RC_BAR4_CONFIG_LO + 8 * (bar - 3);
+ }
+ 
+ static u32 brcm_ubus_reg_offset(int bar)
+ {
+-	if (bar <= 3)
+-		return PCIE_MISC_UBUS_BAR1_CONFIG_REMAP + 8 * (bar - 1);
++	if (bar <= 2)
++		return PCIE_MISC_UBUS_BAR1_CONFIG_REMAP + 8 * bar;
+ 	else
+-		return PCIE_MISC_UBUS_BAR4_CONFIG_REMAP + 8 * (bar - 4);
++		return PCIE_MISC_UBUS_BAR4_CONFIG_REMAP + 8 * (bar - 3);
+ }
+ 
+-static void set_inbound_win_registers(struct brcm_pcie *pcie,
+-				      const struct inbound_win *inbound_wins,
+-				      u8 num_inbound_wins)
++static void brcm_pcie_set_ib_win_registers(struct brcm_pcie *pcie,
++					   const struct inbound_win *ib_win,
++					   u8 num_inbound_wins)
+ {
+ 	void __iomem *base = pcie->base;
+ 	int i;
+ 
+-	for (i = 1; i <= num_inbound_wins; i++) {
+-		u64 pci_offset = inbound_wins[i].pci_offset;
+-		u64 cpu_addr = inbound_wins[i].cpu_addr;
+-		u64 size = inbound_wins[i].size;
++	for (i = 0; i < num_inbound_wins; i++, ib_win++) {
++		u64 pci_offset = ib_win->pci_offset;
++		u64 cpu_addr = ib_win->cpu_addr;
++		u64 size = ib_win->size;
+ 		u32 reg_offset = brcm_bar_reg_offset(i);
+ 		u32 tmp = lower_32_bits(pci_offset);
+ 
+@@ -1202,11 +1195,11 @@ static int brcm_pcie_setup(struct brcm_pcie *pcie)
  	u32p_replace_bits(&tmp, 1, PCIE_MISC_MISC_CTRL_PCIE_RCB_64B_MODE_MASK);
  	writel(tmp, base + PCIE_MISC_MISC_CTRL);
-@@ -1961,6 +1949,7 @@ static const struct pcie_cfg_data generic_cfg = {
- 	.perst_set	= brcm_pcie_perst_set_generic,
- 	.bridge_sw_init_set = brcm_pcie_bridge_sw_init_set_generic,
- 	.num_inbound_wins = 3,
-+	.burst_setting	= 0x2, /* 0=128B, 1=256B, 2=512B, 3=Rsvd */
- };
  
- static const struct pcie_cfg_data bcm2711_cfg = {
-@@ -1970,6 +1959,7 @@ static const struct pcie_cfg_data bcm2711_cfg = {
- 	.bridge_sw_init_set = brcm_pcie_bridge_sw_init_set_generic,
- 	.num_inbound_wins = 3,
- 	.quirks		= CFG_QUIRK_EARLY_PERST_ASSERT,
-+	.burst_setting	= 0x0, /* 0=128B, 1=256B, 2=512B, 3=Rsvd */
- };
+-	num_inbound_wins = brcm_pcie_get_inbound_wins(pcie, inbound_wins);
++	num_inbound_wins = brcm_pcie_get_ib_wins(pcie, inbound_wins);
+ 	if (num_inbound_wins < 0)
+ 		return num_inbound_wins;
  
- static const struct pcie_cfg_data bcm2712_cfg = {
-@@ -1981,6 +1971,7 @@ static const struct pcie_cfg_data bcm2712_cfg = {
- 	.quirks		= CFG_QUIRK_AVOID_BRIDGE_SHUTDOWN |
- 		CFG_QUIRK_NO_RGR1_TIMER,
- 	.num_inbound_wins = 10,
-+	.burst_setting	= 0x2, /* 0=64B, 1=128B, 2=256B, 3=Rsvd */
- };
+-	set_inbound_win_registers(pcie, inbound_wins, num_inbound_wins);
++	brcm_pcie_set_ib_win_registers(pcie, inbound_wins, num_inbound_wins);
  
- static const struct pcie_cfg_data bcm4908_cfg = {
-@@ -1990,6 +1981,7 @@ static const struct pcie_cfg_data bcm4908_cfg = {
- 	.bridge_sw_init_set = brcm_pcie_bridge_sw_init_set_generic,
- 	.num_inbound_wins = 3,
- 	.quirks		= CFG_QUIRK_PERST_PCIE_REV_CUTOFF,
-+	.burst_setting	= 0x0, /* 0=64B, 1=128B, 2=Rsvd, 3=Rsvd */
- };
- 
- static const struct pcie_cfg_data bcm7278_cfg = {
-@@ -1998,6 +1990,7 @@ static const struct pcie_cfg_data bcm7278_cfg = {
- 	.perst_set	= brcm_pcie_perst_set_7278,
- 	.bridge_sw_init_set = brcm_pcie_bridge_sw_init_set_7278,
- 	.num_inbound_wins = 3,
-+	.burst_setting	= 0x3, /* 0=Resv, 1=128B, 2=256B, 3=512B */
- };
- 
- static const struct pcie_cfg_data bcm7425_cfg = {
-@@ -2009,6 +2002,7 @@ static const struct pcie_cfg_data bcm7425_cfg = {
- 	.quirks		= CFG_QUIRK_OB_WIN_32BIT_ADDR
- 		| CFG_QUIRK_OB_WIN_MAXSZ_128MB | CFG_QUIRK_32BIT_PCI_OPS,
- 	.flags		= CFG_FLG_IS_BMIPS,
-+	.burst_setting = 1, /* 0=128B, 1=256B, 2=Rsvd, 3=Rsvd */
- };
- 
- static const struct pcie_cfg_data bcm7435_cfg = {
-@@ -2020,6 +2014,7 @@ static const struct pcie_cfg_data bcm7435_cfg = {
- 	.quirks		= CFG_QUIRK_OB_WIN_32BIT_ADDR
- 		| CFG_QUIRK_OB_WIN_MAXSZ_128MB,
- 	.flags		= CFG_FLG_IS_BMIPS,
-+	.burst_setting = 1, /* 0=128B, 1=256B, 2=Rsvd, 3=Rsvd */
- };
- 
- static const struct pcie_cfg_data bcm7216_cfg = {
-@@ -2029,6 +2024,7 @@ static const struct pcie_cfg_data bcm7216_cfg = {
- 	.bridge_sw_init_set = brcm_pcie_bridge_sw_init_set_7278,
- 	.flags		= CFG_FLG_HAS_PHY | CFG_FLG_HAS_ERR_REPORT,
- 	.num_inbound_wins = 3,
-+	.burst_setting	= 0x3, /* 0=Resv, 1=128B, 2=256B, 3=512B */
- };
- 
- static const struct pcie_cfg_data bcm7712_cfg = {
-@@ -2038,6 +2034,7 @@ static const struct pcie_cfg_data bcm7712_cfg = {
- 	.soc_base	= BCM7712,
- 	.num_inbound_wins = 10,
- 	.quirks		= CFG_QUIRK_NO_RGR1_TIMER,
-+	.burst_setting	= 0x2, /* 0=64B, 1=128B, 2=256B, 3=Resv */
- };
- 
- static const struct of_device_id brcm_pcie_match[] = {
+ 	if (!brcm_pcie_rc_mode(pcie)) {
+ 		dev_err(pcie->dev, "PCIe RC controller misconfigured as Endpoint\n");
 -- 
 2.34.1
 
