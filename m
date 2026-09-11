@@ -1,75 +1,76 @@
-Received: from mail-pf1-f177.google.com (mail-pf1-f177.google.com [209.85.210.177])
+Received: from mail-pj2-f13.google.com (mail-pj2-f13.google.com [74.125.227.141])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5CCF4570D1
-	for <linux-pci@vger.kernel.org>; Fri, 11 Sep 2026 21:37:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BFC05486431
+	for <linux-pci@vger.kernel.org>; Fri, 11 Sep 2026 21:40:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.227.141
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789162647; cv=none; b=MWqSvPBs/ecChVYp109OXMvzVurd1j6IOiD2aIComDXw/13Ub2Ui/Rmo50rodLHr6KPVjY3IMw65fQll3P4oCllMzBtzrp55So4WiD4gJhEOxOrS3MfY1Jh748yPbqCpzgM/zA9pbJRbJHHCaUfhIA5BoCvmccGy9xI+dYbl+uQ=
+	t=1789162808; cv=none; b=UGSEaECJuLqqgOoU3DR5CaVidFYS8f66N3rSsduvGnhxi4VcFPBHuS41//wcxZiyJY/oictaT0HovplsQszPJaJoZdGPguIZ9PUPIZUkM8qQpv04z17dIIsh7XoLc/X56BRiNcqmMcF9I/b9cCvLqNGEkGlefkBCpa06MtmOybk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789162647; c=relaxed/simple;
-	bh=6gfZK/r3jRpcJkDtpDfh8FHtMgfEXUaVAq/Po63FKik=;
+	s=arc-20240116; t=1789162808; c=relaxed/simple;
+	bh=wUUTuEwrfC89Bk6zRIwGjO7vwt3E9SQDT/CGRnS191s=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=H23D76ICuyMOkxhreAqiagn+DsNGZbIEk9KdqaENM0wS2tFcm9ZQXxIRciXhmioeqKSkmVTZmvXblrnidIAgY0WeJBgDW5lr3hD4BNCQEGXdgKCbWPtBmL+V6rgSHN+xdGclzNd9HekBI4iMsi8MfRjr34VSCtb6TEEcIbwcrRI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=roeck-us.net; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=gJvJVwxk; arc=none smtp.client-ip=209.85.210.177
+	 Content-Type:Content-Disposition:In-Reply-To; b=h7KOmzaECSk98cu6/L3fpy79BcHmZJZVWSx8nO3nn5PcBBCwzyx9ai61l26KEYJpwioz5jiYG188OKp9bbMQy96xdB0MVJpmKf6UnEU6ZwzTVNEV7TnPhJ/ikFOUN+olGJ0AxrZPN6NqtsB6qz7cDcLwLygoDQWQw9P4v560Y/s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=roeck-us.net; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=OtQh8mlK; arc=none smtp.client-ip=74.125.227.141
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=roeck-us.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="gJvJVwxk"
-Received: by mail-pf1-f177.google.com with SMTP id d2e1a72fcca58-86959a6f7f6so1187767b3a.2
-        for <linux-pci@vger.kernel.org>; Fri, 11 Sep 2026 14:37:25 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="OtQh8mlK"
+Received: by mail-pj2-f13.google.com with SMTP id 98e67ed59e1d1-396ccb65437so21984a91.3
+        for <linux-pci@vger.kernel.org>; Fri, 11 Sep 2026 14:40:06 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1789162645; x=1789767445; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1789162806; x=1789767606; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:content-type:mime-version
          :references:message-id:subject:cc:to:from:date:sender:from:to:cc
          :subject:date:message-id:reply-to:content-type;
-        bh=9sK4Nf/d2+ZKbGxGlDotG105Mai4PaehwRMmBT9ZKz8=;
-        b=gJvJVwxk5eneGVCROQ5B+LqrBjnvWTG4xm9vgKRs2eQzY8gDD9/krEaWpdjQIWlErV
-         6RCz0vWEzT6J+HK1gOABROUZkBUDRDS0do5lxxeeHn+CyDnE17pkS6zAvIFQNOWA4UyB
-         cPyGl6lvfICQze8MnGJeh/84y4sX5sk3xkI94OAkg+T/6o2y+JXkRCdjpeEQUCCF1DGu
-         0Q7VZ6A+0fGIWwz5bKaWfVLNcPXabsI4hk6ctRU6v1CF6U5skW4AlSbJDUevov6DM2BG
-         /Y0y9D8TXwWmAOEI1GB7gvkkcKxa5IwL6Gr/qumWYf1D7SFdrfgikt6h/tjY/+vjA59r
-         dZYw==
+        bh=CeQ7vx0KvkM9NOKTbl9EpM89WcQPA8FtwRV02R2rPEU=;
+        b=OtQh8mlKggldb+caUR8zOiecvOeowoQwazFVClbnwmltHISn64SZyHI9k3iEeKJCQH
+         ipbiZqU8MOJdmhpmXeYnGHT1FdG7D+64BblsEu5lSKXonvWJPmROcvYmo5K7ZCPEtF9l
+         nUxFDDt2wss+ejXQjwFTd0+T1K0gzXIlYCeoER6rAgHCU9eZztiCfNrSkPrjtdkNkx8k
+         c2kfEu9C2j0rGkJrY0aj8DFr7v7SmqB4gSy473ofJh2xYVCADPji9cF8ZV6mGOdEro3g
+         MHI8meSNUA4ZcfdG6zivYx0gZcz/PUPqGSqgLd6OqyOAcMoU9vH/oReXI4R96YTWn+ja
+         jJRQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1789162645; x=1789767445;
+        d=1e100.net; s=20251104; t=1789162806; x=1789767606;
         h=in-reply-to:content-disposition:content-type:mime-version
          :references:message-id:subject:cc:to:from:date:sender:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=9sK4Nf/d2+ZKbGxGlDotG105Mai4PaehwRMmBT9ZKz8=;
-        b=hmkPf1RvvDoJcXyVhngBNEsw5shOyTtHkRY3APsjZvkyrt1GLBZ9MCwLO/Nf1oT45Q
-         Zp5BMGADmi0XEowOto+8L6EaYjux+aEiIZ6ACFQFJvrrhkXwx5y3ztH77/nYSYyLWll5
-         NxhZumq+v2eEhAM7PkH5PqihC10qh82ATt6YApxEsVo2ehcpzkv4KwwzaT0JvHspTWXd
-         VT1unYtTtBy0VWSQqe2Kgdjy9hceRq/r4lVbrODG9cET0pxzfGr9SCgNm0VIHUyHB/Jg
-         opS9GFCb8IZAhyhO9GKZm8b2qzCM8OfRYDfuifP2FP5J9QMweOH7zvalVYGx5Z2kToAJ
-         ZU9w==
-X-Forwarded-Encrypted: i=1; AKwUvBzYfIBGR/7gxRY2h5/wXovPuQ+F0rNpIJPa5t/NZbesv5lm9d108W++ks0dB/iuq5w0OWh09jPngwY=@vger.kernel.org
-X-Gm-Message-State: AFuF++mq29Wz51bquy1I3ABIzOWtTF7d/ji2Mo8Uoe3uLqXJuJpxX0C1
-	WCwInswcznPcIk7gZLGX0R3q8Cz51gJtbUV/hCrbHJaGPHtGoodWxQTy
-X-Gm-Gg: AYBFou2RjdnklrHm7NKE5tXSTgx/UIwIOGMUHAIAr5Fn2KXOgikZeMFKusp/5cJaJTD
-	3YCzZqPjho+wc/yAFOFNjbkBMaOeDcdk/ghn654rkI7yIWa5lMsmtPMx+Wmc/xSHE0o3N8i/+6J
-	ZeJ5WxUvFbNoHLHn5vuARK6uH6yi9dja8An15gbfe0dYoFlTbF/lxjUCMPAF6DzuaDPBy2mp6DY
-	iqtcoGAcDg298/KdquGHqjetiymfnQkG/+LLH1rKSXLs0tDkczpXd3bmcgq13PUy3WR83kipxji
-	yIRCoWpZpamDD2CK4kVel5miTFsCXAXPRKgBzLhioL7Inigsc0qpwJF6OMtrjo//k3G47h/59fj
-	fHibtxrI8Q8TZNCPKJCc8+jZ2gzyxCQvtvgggSo29VQ2OgJ+KELxyICIR1Y9FRQeqZHaLog1ZQM
-	beudLqK3mUKLl8UNGZ7AYJ/69O7qYKjsjrOEd3Ilysr4CcgzjOb/JYBoDxQHiM9Z+fqRv+b7EdR
-	V7Xwx/qnFKPcMCjEnZvzzk=
-X-Received: by 2002:a05:6a00:18a9:b0:862:bb07:2b97 with SMTP id d2e1a72fcca58-86b2fb17ef7mr8478943b3a.13.1789162644855;
-        Fri, 11 Sep 2026 14:37:24 -0700 (PDT)
+        bh=CeQ7vx0KvkM9NOKTbl9EpM89WcQPA8FtwRV02R2rPEU=;
+        b=S9YhOzYzeJ0GKPGsEcnSEJPZbpkaQ+XlrSY0KclnbwJqXefjYzii9znG2RwLBh37lJ
+         8a3CDoCbQTq5SJHlyHEXAaAF2FAPZZ+LifSzCPPGb5rnOcO5RQ1x1ki1ewJRcFC/sfJ9
+         CDKYs5R+Jtsm2Jh79qvhPeU7MZq8t3hDtAAZYGsLdjSrKtDhfEeU8wJv1BJUkTKZhV0+
+         3iW7fjK0Z7KV34IkKKQaox1etK8KW17VbTiATPPpL6dTbGSkcLFT58VqdhS2feqmDiAg
+         8EecCheruAfuz8/MNi2SaqyP3smNqiQO7DCU53aRFRYNwtl0xpei/IgxpxeJkZtlraYp
+         cQXQ==
+X-Forwarded-Encrypted: i=1; AKwUvBxARArkiRtxNIQ1NFTUU4gflM2SkwI69zw85NB7IUg0WHg4xRvSnoJS6gowOuazyb+h8bDvxIQktGc=@vger.kernel.org
+X-Gm-Message-State: AFuF++kNPip/Vlk7G1GjQwfed6q4Teh2vh3rry6Nc8iaYb1B81hEfcoq
+	FJ4cXdYsoogTePRfWMgxKSXOwsU1gW1nBozmBP553wNA93sPFM4E1BRyJIAkag==
+X-Gm-Gg: AYBFou2bp+bVea530QWq4JJLKmD+IlXn5xx7KHT7C4mDhEMlcbtDxp5gib2cudzYQ1w
+	GVqQc/UmWQqXQZjobYoKEyRWHraz/RAkfs42FMfWDdHs9orjh1BqRAW/ulK26EEtFijtat94o8m
+	TmmfrjG5UkxbAo/8whf5qfTqpmgl59NA3L7g0LbEyPl8MP/UnX360OqVwDK3s0zZvV2qJ15E49e
+	jWg1Qfp/ktZTeUrhhU4/QLe4cj1OKWeXlQ5LbBMa46GrWLNFC5giSZm1tVBPs84Z844f+8ASbzf
+	Fa7c0myoo1+XXfgy7OdhbRAwqCM+9ha34j9lSbx+k81J9RH0rD2UhJccP9xVntqk7gqw4pl0rdL
+	2y5L+YMiWM0mSSiqNl3QGpz/fSaN8CTCLrQe4n2b5UmwOIMR/RsbvgjIDaTGw8QqPxFoQ3o5vKV
+	nSgW3JnIcbK/ttlEy7LsoUCvPGlt8RkSRNKjI4TbrBLSlb/5+Mg5FcNXN2ukv4Jw7bcmZ/cQDPt
+	vaTyrKqOnUM
+X-Received: by 2002:a17:90b:280e:b0:381:cef1:11ac with SMTP id 98e67ed59e1d1-39dbc0c3fa6mr241945a91.10.1789162805971;
+        Fri, 11 Sep 2026 14:40:05 -0700 (PDT)
 Received: from server.roeck-us.net ([2600:1700:e321:62f0:da43:aeff:fecc:bfd5])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-86b6139e3bfsm1486203b3a.50.2026.09.11.14.37.24
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-39d98e5c630sm7301184a91.6.2026.09.11.14.40.04
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 11 Sep 2026 14:37:24 -0700 (PDT)
+        Fri, 11 Sep 2026 14:40:05 -0700 (PDT)
 Sender: Guenter Roeck <groeck7@gmail.com>
-Date: Fri, 11 Sep 2026 14:37:23 -0700
+Date: Fri, 11 Sep 2026 14:40:04 -0700
 From: Guenter Roeck <linux@roeck-us.net>
 To: Mario Limonciello <mario.limonciello@amd.com>
 Cc: bhelgaas@google.com, clemens@ladisch.de, linux-hwmon@vger.kernel.org,
 	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 1/2] hwmon: (k10temp): Add support for 1ah/80h
-Message-ID: <6d216040-a03b-4606-b1c0-7c9b780cd6d1@roeck-us.net>
+Subject: Re: [PATCH v2 2/2] hwmon: (k10temp): Define unshared PCI device IDs
+ locally
+Message-ID: <8167c38d-5b9e-4889-821d-d05c7461def6@roeck-us.net>
 References: <20260911191803.1522358-1-mario.limonciello@amd.com>
- <20260911191803.1522358-2-mario.limonciello@amd.com>
+ <20260911191803.1522358-3-mario.limonciello@amd.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -78,42 +79,108 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260911191803.1522358-2-mario.limonciello@amd.com>
+In-Reply-To: <20260911191803.1522358-3-mario.limonciello@amd.com>
 
-On Fri, Sep 11, 2026 at 02:17:13PM -0500, Mario Limonciello wrote:
-> 1ah/80h uses same base as other programs.  It only supports Tctl.
+On Fri, Sep 11, 2026 at 02:17:14PM -0500, Mario Limonciello wrote:
+> Headers (now) only used by k10temp should not be declared in
+> global headers.
 > 
 > Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
 
-Applied.
+I'll need an Ack from a PCI maintainer to apply this patch.
 
 Thanks,
 Guenter
 
 > ---
 > v2:
->  * Move header to k10temp.c
+>  * New patch
 > ---
->  drivers/hwmon/k10temp.c | 2 ++
->  1 file changed, 2 insertions(+)
+>  drivers/hwmon/k10temp.c | 30 +++++++++++++++++++++---------
+>  include/linux/pci_ids.h | 20 --------------------
+>  2 files changed, 21 insertions(+), 29 deletions(-)
 > 
 > diff --git a/drivers/hwmon/k10temp.c b/drivers/hwmon/k10temp.c
-> index 3e7e63edc6a30..5414b7841864b 100644
+> index 5414b7841864b..49a62d7349ca7 100644
 > --- a/drivers/hwmon/k10temp.c
 > +++ b/drivers/hwmon/k10temp.c
-> @@ -94,6 +94,7 @@ MODULE_PARM_DESC(force, "force loading on processors with erratum 319");
->   * Defining locally as IDs are not shared.
+> @@ -83,17 +83,29 @@ MODULE_PARM_DESC(force, "force loading on processors with erratum 319");
 >   */
+>  #define AMD_I3255_STR				"3255"
+>  
+> -/*
+> - * PCI Device IDs for AMD's Family 17h-based SOCs.
+> - * Defining locally as IDs are not shared.
+> - */
+> +/* PCI Device IDs. Defining locally as IDs are not shared. */
+> +#define PCI_DEVICE_ID_AMD_11H_NB_MISC		0x1303
+> +#define PCI_DEVICE_ID_AMD_CNB17H_F3		0x1703
+> +#define PCI_DEVICE_ID_AMD_17H_DF_F3		0x1463
+> +#define PCI_DEVICE_ID_AMD_17H_M10H_DF_F3	0x15eb
+> +#define PCI_DEVICE_ID_AMD_17H_M30H_DF_F3	0x1493
+> +#define PCI_DEVICE_ID_AMD_17H_M40H_DF_F3	0x13f3
+> +#define PCI_DEVICE_ID_AMD_17H_M60H_DF_F3	0x144b
+> +#define PCI_DEVICE_ID_AMD_17H_M70H_DF_F3	0x1443
+>  #define PCI_DEVICE_ID_AMD_17H_M90H_DF_F3	0x1663
+> -
+> -/*
+> - * PCI Device IDs for AMD's Family 1Ah-based SOCs.
+> - * Defining locally as IDs are not shared.
+> - */
+> +#define PCI_DEVICE_ID_AMD_17H_MA0H_DF_F3	0x1727
+> +#define PCI_DEVICE_ID_AMD_19H_DF_F3		0x1653
+> +#define PCI_DEVICE_ID_AMD_19H_M10H_DF_F3	0x14b0
+> +#define PCI_DEVICE_ID_AMD_19H_M40H_DF_F3	0x167c
+> +#define PCI_DEVICE_ID_AMD_19H_M50H_DF_F3	0x166d
+> +#define PCI_DEVICE_ID_AMD_19H_M60H_DF_F3	0x14e3
+> +#define PCI_DEVICE_ID_AMD_19H_M70H_DF_F3	0x14f3
+> +#define PCI_DEVICE_ID_AMD_19H_M78H_DF_F3	0x12fb
+> +#define PCI_DEVICE_ID_AMD_1AH_M00H_DF_F3	0x12c3
+> +#define PCI_DEVICE_ID_AMD_1AH_M20H_DF_F3	0x16fb
 >  #define PCI_DEVICE_ID_AMD_1AH_M50H_DF_F3	0x12cb
-> +#define PCI_DEVICE_ID_AMD_1AH_M80H_DF_F3	0x1243
+> +#define PCI_DEVICE_ID_AMD_1AH_M60H_DF_F3	0x124b
+> +#define PCI_DEVICE_ID_AMD_1AH_M70H_DF_F3	0x12bb
+>  #define PCI_DEVICE_ID_AMD_1AH_M80H_DF_F3	0x1243
 >  #define PCI_DEVICE_ID_AMD_1AH_M90H_DF_F3	0x127b
 >  
->  struct k10temp_data {
-> @@ -582,6 +583,7 @@ static const struct pci_device_id k10temp_id_table[] = {
->  	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_1AH_M50H_DF_F3) },
->  	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_1AH_M60H_DF_F3) },
->  	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_1AH_M70H_DF_F3) },
-> +	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_1AH_M80H_DF_F3) },
->  	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_1AH_M90H_DF_F3) },
->  	{ PCI_VDEVICE(HYGON, PCI_DEVICE_ID_AMD_17H_DF_F3) },
->  	{}
+> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+> index 63774ae2bf71d..7f2ce86695de4 100644
+> --- a/include/linux/pci_ids.h
+> +++ b/include/linux/pci_ids.h
+> @@ -550,7 +550,6 @@
+>  #define PCI_DEVICE_ID_AMD_11H_NB_HT	0x1300
+>  #define PCI_DEVICE_ID_AMD_11H_NB_MAP	0x1301
+>  #define PCI_DEVICE_ID_AMD_11H_NB_DRAM	0x1302
+> -#define PCI_DEVICE_ID_AMD_11H_NB_MISC	0x1303
+>  #define PCI_DEVICE_ID_AMD_11H_NB_LINK	0x1304
+>  #define PCI_DEVICE_ID_AMD_15H_M10H_F3	0x1403
+>  #define PCI_DEVICE_ID_AMD_15H_M30H_NB_F3 0x141d
+> @@ -567,28 +566,9 @@
+>  #define PCI_DEVICE_ID_AMD_16H_NB_F4	0x1534
+>  #define PCI_DEVICE_ID_AMD_16H_M30H_NB_F3 0x1583
+>  #define PCI_DEVICE_ID_AMD_16H_M30H_NB_F4 0x1584
+> -#define PCI_DEVICE_ID_AMD_17H_DF_F3	0x1463
+> -#define PCI_DEVICE_ID_AMD_17H_M10H_DF_F3 0x15eb
+> -#define PCI_DEVICE_ID_AMD_17H_M30H_DF_F3 0x1493
+> -#define PCI_DEVICE_ID_AMD_17H_M40H_DF_F3 0x13f3
+> -#define PCI_DEVICE_ID_AMD_17H_M60H_DF_F3 0x144b
+> -#define PCI_DEVICE_ID_AMD_17H_M70H_DF_F3 0x1443
+> -#define PCI_DEVICE_ID_AMD_17H_MA0H_DF_F3 0x1727
+> -#define PCI_DEVICE_ID_AMD_19H_DF_F3	0x1653
+> -#define PCI_DEVICE_ID_AMD_19H_M10H_DF_F3 0x14b0
+> -#define PCI_DEVICE_ID_AMD_19H_M40H_DF_F3 0x167c
+> -#define PCI_DEVICE_ID_AMD_19H_M50H_DF_F3 0x166d
+> -#define PCI_DEVICE_ID_AMD_19H_M60H_DF_F3 0x14e3
+> -#define PCI_DEVICE_ID_AMD_19H_M70H_DF_F3 0x14f3
+> -#define PCI_DEVICE_ID_AMD_19H_M78H_DF_F3 0x12fb
+> -#define PCI_DEVICE_ID_AMD_1AH_M00H_DF_F3 0x12c3
+> -#define PCI_DEVICE_ID_AMD_1AH_M20H_DF_F3 0x16fb
+> -#define PCI_DEVICE_ID_AMD_1AH_M60H_DF_F3 0x124b
+> -#define PCI_DEVICE_ID_AMD_1AH_M70H_DF_F3 0x12bb
+>  #define PCI_DEVICE_ID_AMD_MI200_DF_F3	0x14d3
+>  #define PCI_DEVICE_ID_AMD_MI300_DF_F3	0x152b
+>  #define PCI_DEVICE_ID_AMD_VANGOGH_USB	0x163a
+> -#define PCI_DEVICE_ID_AMD_CNB17H_F3	0x1703
+>  #define PCI_DEVICE_ID_AMD_LANCE		0x2000
+>  #define PCI_DEVICE_ID_AMD_LANCE_HOME	0x2001
+>  #define PCI_DEVICE_ID_AMD_SCSI		0x2020
