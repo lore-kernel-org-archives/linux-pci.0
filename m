@@ -1,138 +1,117 @@
-Received: from fout-b5-smtp.messagingengine.com (fout-b5-smtp.messagingengine.com [202.12.124.148])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B86920ED;
-	Fri, 11 Sep 2026 05:01:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.148
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8DDC01F1534;
+	Fri, 11 Sep 2026 06:00:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789102871; cv=none; b=mwG3DnmnkLGLjYfK00gfUbsoRvJ7IY4mm2VSbccGFgBcRJc3UUo5JSTv9qmGc+hTRI3mIvUykXufhjsF3aV7u7tSHkCwFddmi54/LcnT5Uyyc8gP81VluyoJrbegOm7omtspCY6hepHPxyofnSdA091wT8+UJUXeBX5hn8Cjic8=
+	t=1789106425; cv=none; b=LlPYxlaG/fr7tzTsJ8z+z8pp7SBS065HaRJIsxNbAExTpINjDI8kxtyQW/WN/AGEHoNH+fEuECxsWfCI0yCZSmQrcFqtFTS7Oq1ype09pBV7BNZOpdrvpVVPEJI1yLVAJX91nIgBbiOGPdQ1/qsuj81kUic63ll8jS6QKxE55RE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789102871; c=relaxed/simple;
-	bh=EWCFZyqZRFXrUzy1urkQlPkhhfvHVAN1sWXFOm/cKPo=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=noy9Xy9n4IcWygA46mwAktrZpP4Jdpj8OVsA+OZKbBNk7lwEtfysqxussTGVAgXHDIK1flQ6Av25kGbR1ca3ilwBqUVD+rcy1XXQqlneuXQDCp8qgknv/p3CNSr6a4XM6Brb3dJm0JrQ6jktVgTNKEIwREIGPL3c0VKzDbPo/LY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=alistair23.me; spf=pass smtp.mailfrom=alistair23.me; dkim=pass (2048-bit key) header.d=alistair23.me header.i=@alistair23.me header.b=lrmF4eHq; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=fLeVGZ7E; arc=none smtp.client-ip=202.12.124.148
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=alistair23.me
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=alistair23.me
+	s=arc-20240116; t=1789106425; c=relaxed/simple;
+	bh=7bFF2tHiAeMNPHKVwAStjSnkWUszOlX5Ivpemv+2XZ0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=qbj2CLbQ9qBrXT97ZWztDEc5JIfjEJDRKNcj9SW+kA7tTlMg9l6DmRtmjjM5uoQueYU0nFGJjXG8B1IaNopYhXDBuOAQ7fLqylT8AiONc1aVwfUIYNAPAV/LuHwpTgw1oBGj1u7gXy5bQcRII48T2neJ/yWOPQCenDPEPSVj/qo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Yzi0Uml1; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=alistair23.me header.i=@alistair23.me header.b="lrmF4eHq";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="fLeVGZ7E"
-Received: from phl-compute-04.internal (phl-compute-04.internal [10.202.2.44])
-	by mailfout.stl.internal (Postfix) with ESMTP id 567061D000E5;
-	Fri, 11 Sep 2026 01:01:08 -0400 (EDT)
-Received: from phl-frontend-03 ([10.202.2.162])
-  by phl-compute-04.internal (MEProxy); Fri, 11 Sep 2026 01:01:08 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=alistair23.me;
-	 h=cc:cc:content-transfer-encoding:content-type:content-type
-	:date:date:from:from:in-reply-to:in-reply-to:message-id
-	:mime-version:references:reply-to:subject:subject:to:to; s=fm1;
-	 t=1789102868; x=1789189268; bh=EWCFZyqZRFXrUzy1urkQlPkhhfvHVAN1
-	sWXFOm/cKPo=; b=lrmF4eHqJNzq9TcQUvTdjD+CcRZTCe1g0EKd4t6p4L0lhn5l
-	V5+jGNIfk+3xdjW6yvW2ICaQJsKR2Ec1LYZD5k6ce+qiHI71ldEOvtYoF6az5AI5
-	L42SrHFcc9/c0zoMdLldHMjYMEH2rMi1qzkbvCjR7Z3S4H5TpfjK2Z11p7dEiAJv
-	Su9U9zdBrFpsXLqTq8GhgJgZFJNL6uQMKcbfaUNsfGkRUdpn9CuJZnFlAhBm5IJi
-	Blo9naMm2SHlGx8e4MjtUzXIz8LBVAyDSx0JH+C4FLZDff2N/Ygv3xD9EIYYJKwN
-	JjOSdCglAEiECVjnsHmWyAvchPOf4MEJ5tmrzw==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=1789102868; x=
-	1789189268; bh=EWCFZyqZRFXrUzy1urkQlPkhhfvHVAN1sWXFOm/cKPo=; b=f
-	LeVGZ7EKU/jNThi422s2VFpRtRWSgciZs/mdGPB4wRbrjcvp1rk4GxUJxmH5/Pr4
-	j+zX1NLAwBmUa83tA+CGmTmrPcAEoPNBguW3ItvVLhSjHoEsspyLmj8cwVyTrwZS
-	ej7sr0ETXhqPyxa363cBWT6NS0TugWgJSDCyBeIV6RKaCkrQYmQ5Vor/2GAkgsVi
-	vd/7ecP+/QtBSMwZOU47lIYCmVEF1+OM7gZ0QJSox7ydkcmbb+sjnAjmVEzxCGg1
-	rq0JgE0vfZMAfuSEThhY2jCiTQbIUdabqEuXgTQqQj3wgFOEv54Uw6IxpjtrvUgq
-	ClcOQp+x+ZRipoWH3rMiA==
-X-ME-Sender: <xms:E4ujavIWgcR_lllY5svcvTmFQ6Yc_BLGHifHcKCSFJSDVh2okE2B5g>
-    <xme:E4ujajjlunK63SMeAZxWnKcEsY3hujXg0SCx-F6cEmnB8H7UmzxBdsH7r23sR37uy
-    _tlKC8U3pWp4-FUKFeGBXcSzfVawsL5bg5dNQluoUBkchxCTikhdOfy>
-X-ME-Received: <xmr:E4ujao323SEXyL9whwrjKf1WKe1h0YJgUvZKBClYqeoKrROFHyHr-Cys4Hn7RaeqTNFSwq9TnEZRXfy9W4YaIc3WOxE>
-X-ME-Proxy-Cause: dmFkZTF7hgcu7GHxYYmGlxiI8fB69kQzj15ESgtg0KpvjpId2fB0RPjCxNjA/ebMyR7dep
-    GzE+QzUZ4XMLNdHGLHa/y+x0O5hxU3UotjKqi+zis/7KeVFho2+TOtbIpPAEYANhrwUgsd
-    RRftb7kSu8TJJ66ePZmi42okx4iNJGXHvJy2W+rVBvDknwJITQYWS/47UPn1tRa3StH0o3
-    riEXqgBWIp5rDhNW59xvSgmGsb+h+apy89nBJPxLZTCP2lPdaCjSyJtqALMlCvlfDybKV0
-    cj/yl0BeLAb8m8B/H6unSOdPNH5aR0p9MAJIwNw/kc5hZV8Ja6xuxP4TLTY4bZf544ZpC+
-    Z+1LMlYa3tuU/sBivs8WeFSTiG1vnSBkU/t6D0LVOuOhxe/WWtZxB0Ga1mCwDL6f8PdkdL
-    6h7/fgXB9w0Cj5TOHvOMvltUAfctgs99AWnZhlcarq4LbcGFBt7K+8O4dz1TNlWgWXsHZk
-    6endl5nIBj5JjM6+l6MgZjUk0c5C8AfaIu1QaFs32lB+XRpjANSWWiOaB6uSEZnGF2N4kE
-    Oz6eO7IUqfYsTmem44FLWYGZicV+PjoYiKsay1YI+jx6kiuhVMNtox4X7PAfoZmxXFPuDv
-    gc/y/qAjEUE7oie/NSTHFaKf8WBnHp/KE58i57ZXvGAE0MgeauuqU1MEn+sA
-X-ME-Proxy: <xmx:E4ujakZZ0gSNIBDhTTv1eBAZmtzksIoQFas7Rz5HCfMCVabI8rNHFQ>
-    <xmx:E4ujaljre6U1cGQqAFyRqdqYrJ69ojtB3C79cFwTDaWP85_iX2G2rg>
-    <xmx:E4ujakjsD7urDD1KEmGkwscEm7sX2g7UxbPc4Arno9f76_7v3_4VMg>
-    <xmx:E4ujaiDolXyPCjQ8YtLsLctzU0OJq9KJ6DAhuvTNJIPDgGEXewpeEg>
-    <xmx:FIujaoI1qyHxwhgq88ZWnU7WIuOUxC7XimjncSiuHdcuVrcGdGYQdw1S>
-Feedback-ID: ifd214418:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Fri,
- 11 Sep 2026 01:01:01 -0400 (EDT)
-Message-ID: <f9b1c0410e622f7ac1e6feacaa3eae98951bcd79.camel@alistair23.me>
-Subject: Re: [PATCH v3 10/21] PCI/TSM: Rename pf0 to host
-From: Alistair <alistair@alistair23.me>
-To: Jonathan Cameron <jic23@kernel.org>, alistair23@gmail.com
-Cc: linux-pci@vger.kernel.org, Jonathan.Cameron@huawei.com, djbw@kernel.org,
- 	rust-for-linux@vger.kernel.org, lukas@wunner.de,
- linux-cxl@vger.kernel.org, 	bhelgaas@google.com, akpm@linux-foundation.org,
- linux-kernel@vger.kernel.org, 	gary@garyguo.net, ojeda@kernel.org,
- benno.lossin@proton.me, a.hindborg@kernel.org, 	wilfred.mallawa@wdc.com,
- tmgross@umich.edu, boqun.feng@gmail.com, 	bjorn3_gh@protonmail.com,
- alex.gaynor@gmail.com, aliceryhl@google.com
-Date: Fri, 11 Sep 2026 15:00:59 +1000
-In-Reply-To: <20260909000158.78ffa790@jic23-huawei>
-References: <20260901010347.2614656-1-alistair.francis@wdc.com>
-		<20260901010347.2614656-11-alistair.francis@wdc.com>
-	 <20260909000158.78ffa790@jic23-huawei>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.60.2 (by Flathub.org) 
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Yzi0Uml1"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D0B271F00893;
+	Fri, 11 Sep 2026 06:00:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1789106424;
+	bh=FNCveqZIi0FMQ2QV3D/aKhv09wwaP7IlMp+gG2SrKdE=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=Yzi0Uml1oKkL4iVMXPl+FPTm64v3S6V5cNhnHqutNYdEex/oJwkYQxKAOwP4TbQmz
+	 pBv5Bi0oJLBnypsYS2oCn3rBbUqOe//sW7kCFv1NqwumJiNmUbmCYihUnev/ukYZHD
+	 WLSAfnHI1YHKJRhqism2hkBPJBJE+cIcKtGRAs+lvamECyF7I+F8KNLVbFtPJrSwzh
+	 9/j53i5YEtY4C9SXSMUq27AMhsq0FHSH138JdLNGhOcfJpkS03NQ7nY5VMoLFaIPb4
+	 hh9S3LvN0XbJBV42C+eRyR7dVEg0863VA19frbNeT4FU7XtkE/uu7H7ptia4F1uRA/
+	 x2aDEWEbrgNUQ==
+Date: Fri, 11 Sep 2026 08:00:16 +0200
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+Cc: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>, 
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org, 
+	Lorenzo Pieralisi <lpieralisi@kernel.org>, Jingoo Han <jingoohan1@gmail.com>, 
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Rob Herring <robh@kernel.org>, 
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH v6 3/3] PCI: qcom: Implement shutdown() callback
+Message-ID: <tvtjjnysk6cluqrwoseyssjpp6fla3qjvkndxbsw3wqqed6e34@74tuwpzgss7j>
+References: <20260909-shutdown-v6-0-62b7bd123236@oss.qualcomm.com>
+ <20260909-shutdown-v6-3-62b7bd123236@oss.qualcomm.com>
+ <562fd574-a798-4b57-98fd-dc8e7c09f7f0@oss.qualcomm.com>
+ <468f4ca4-e52e-48b3-bd60-20cadf7f311e@oss.qualcomm.com>
+ <80f626f9-8a0d-49cb-a592-14195900e997@oss.qualcomm.com>
+ <8293c4b5-948c-4859-b63e-835ec35ea90d@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <8293c4b5-948c-4859-b63e-835ec35ea90d@oss.qualcomm.com>
 
-On Wed, 2026-09-09 at 00:01 +0100, Jonathan Cameron wrote:
-> On Tue,=C2=A0 1 Sep 2026 11:03:36 +1000
-> alistair23@gmail.com=C2=A0wrote:
->=20
-> > From: Alistair Francis <alistair.francis@wdc.com>
-> >=20
-> > Rename pci_tsm_pf0 to pci_tsm_host (and rename variables and
-> > function
-> > names from pf0 to host) as part of converting pci_tsm_host
-> > to be any device that knows how to speak any of CMA, IDE, or
-> > TDISP.
->=20
-> I'm not against the change, but I would like at least one example of
-> 'what' other type of device you plan to use this for.
->=20
-> vf or something else?
+On Thu, Sep 10, 2026 at 08:56:38AM +0530, Krishna Chaitanya Chundru wrote:
+> 
+> 
+> On 9/9/2026 6:48 PM, Konrad Dybcio wrote:
+> > On 9/9/26 2:40 PM, Krishna Chaitanya Chundru wrote:
+> >>
+> >> On 9/9/2026 6:06 PM, Konrad Dybcio wrote:
+> >>> On 9/9/26 2:24 PM, Krishna Chaitanya Chundru wrote:
+> >>>> From: Manivannan Sadhasivam <mani@kernel.org>
+> >>>>
+> >>>> PCIe host controllers should bring the link down cleanly before system
+> >>>> shutdown/reboot proceeds to remove power/clocks from the controller.
+> >>>> Without this, the link may still be up and endpoints still have
+> >>>> transactions in flight when power/clocks are cut, which can trip SMMU
+> >>>> translation faults or NoC protocol errors.
+> >>>>
+> >>>> Reuse dw_pcie_suspend_noirq() in the shutdown path to force the link
+> >>>> into L2, putting it into D3cold.
+> >>>>
+> >>>> device_shutdown() runs with interrupts enabled, unlike suspend_noirq().
+> >>>> Mask the chained MSI IRQ(s) and the Global IRQ before tearing down the
+> >>>> link and clocks/PHY, since a late/spurious interrupt could otherwise
+> >>>> reach a handler that touches now-unclocked PARF/DBI registers.
+> >>>>
+> >>>> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+> >>>> Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+> >>>> ---
+> >>> [...]
+> >>>
+> >>>> +static void qcom_pcie_shutdown(struct platform_device *pdev)
+> >>>> +{
+> >>>> +	const struct qcom_pcie_cfg *pcie_cfg = of_device_get_match_data(&pdev->dev);
+> >>>> +	struct qcom_pcie *pcie;
+> >>>> +	struct dw_pcie *pci;
+> >>>> +
+> >>>> +	if (pcie_cfg && pcie_cfg->firmware_managed) {
+> >>>> +		/*
+> >>>> +		 * Firmware owns the link teardown and clock/PHY shutdown in
+> >>>> +		 * this mode; Linux only owns the chained MSI IRQ(s), which
+> >>>> +		 * still need to be masked off before shutdown proceeds.
+> >>>> +		 */
+> >>>> +		pci = platform_get_drvdata(pdev);
+> >>>> +	} else {
+> >>>> +		pcie = platform_get_drvdata(pdev);
+> >>> This is no less than an intriguing choice.. please store the same
+> >>> element in both cases so we don't have to do this
+> >> for firmware_managed solutions struct qcom_pcie *pcie is not being
+> >> used/allocated at all. it will waste of memory if we allocate memory for just
+> >> this use case. - Krishna Chaitanya.
+> > Should we move it to a separate file/driver then, perhaps?
+> > We could share the ECAM ops in e.g. pcie-qcom-common.c
+> I will let Mani to comment on this.
+> 
 
-It's based on the reply here: https://lkml.org/lkml/2026/6/18/1741
+pcie-qcom-common.c is only for sharing common code between RC and EP controller
+drivers. So it doesn't make sense to move ECAM ops which is just RC specific to
+the common driver.
 
-I don't know PCIe that well, so honestly I'm not sure.
+- Mani
 
-My use case is a root complex integrated endpoint
-
-Alistair
-
->=20
-> >=20
-> > This commit just renames the functions and provides no functional
-> > change. That will happen in the next commit.
-> >=20
-> > Signed-off-by: Alistair Francis <alistair.francis@wdc.com>
-> > ---
-> > =C2=A0drivers/crypto/ccp/sev-dev-tio.h |=C2=A0 4 +-
-> > =C2=A0drivers/crypto/ccp/sev-dev-tsm.c | 12 ++---
-> > =C2=A0drivers/pci/tsm.c=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 | 84 ++++++++++++++++-----------=
--
-> > ----
-> > =C2=A0include/linux/pci-tsm.h=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0 | 18 ++++---
-> > =C2=A04 files changed, 61 insertions(+), 57 deletions(-)
-> >=20
+-- 
+மணிவண்ணன் சதாசிவம்
