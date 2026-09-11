@@ -1,143 +1,594 @@
-Received: from BN8PR05CU002.outbound.protection.outlook.com (mail-eastus2azon11011015.outbound.protection.outlook.com [52.101.57.15])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E37FB31618B;
-	Fri, 11 Sep 2026 23:18:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.57.15
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789168697; cv=fail; b=RahZvh7XXDfZ8ie25iwqs8Y7jOrpOLZooCiyzXuiCg0B2/bIOpIp9WaLDtXXukBL3aYgJoHbLpyOAXqoCNE8sTikYVoXR6fXT/MaqPsivZy6Q5LG1pW6p9/JmFyGQ+msib4PwUbL/NwKULeYcwLUf7mOOQuUHZj1BD4MD0kagB8=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789168697; c=relaxed/simple;
-	bh=VnrJ5867AhGcVnHL7ddKQcxpeh1fVUnBiUo2dD2gsNw=;
-	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=CUrGvCkoPvB+AM05MmQgOOhdBJ+4PL3USUi9iKEQmRSWcWpH62jdZOZKR9/XRB6Qlb94s6wMhAHYz0ZFOR0aaZTv1faIZF3xxO/YYoiwHgk2EHSN/1CiaZvMBNH8lW4F74lDvQKqwutTnIYK0tkU3c5jp+iNL46COfxQW17PqZU=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=HE5xJbpH; arc=fail smtp.client-ip=52.101.57.15
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E3D13E4C6B;
+	Fri, 11 Sep 2026 23:31:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1789169465; cv=none; b=uCZBACcqydNVoeqYNFdZV96Z/L4j9Xn4gX70I7uEEI/3mhOoRqrp+bX7YgaG/4C0cO2kLHxvuH0fe8f2LL1BMcagx2SMioRMppzEq7LdS9RlqzKtGu1pLg+QDKkQlYU1f8yegaet9TS1fcMQSG/jCzWxxD7Rm0/dd5dRpYfJU9M=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1789169465; c=relaxed/simple;
+	bh=h8As0UFLjOQTu/3xtSV55nPGckng/olhZc5Iq5hZcXc=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=UWfT3mmdKgNhFiqSR6X9zkd9Ub7CFIcyMc4n+nB9La3vHKCeHHLtsHV7FFEW4QCngB3m6OBOmQ8Iv9a3adiMaKhNdn393r3DGSlSq1HHQkSTv3AomO/IPvF4D5depN9u+Jq4iE0odwuRCdREziylE4CDY3uWrz3Ftzi/q56YKBE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TO53MoXF; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="HE5xJbpH"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=Eiec9MeKRi6cI9bVEf30Br16/u/AKR8FsogL9QdpD1orZUxMGMqEKpTnqVe1IbUwO12z8EypQ+FfDAgqqZsrfivwgyoGeFLG9n2BW83qiF3SoBbmSTc9x6peSQni70FU7vnbSQwy/mjisA6DoFJdCZjzw85pnQobEVUubdQZk/619YzDK5E9El5zruufDY8VCMcLzh6SyMnggF2GpNsB+cDsYzLkbvPUC2wHLMnapca9OCpQ6jojsbetA+hdrthV7u5CuenmjWxmYd12TUipnOeiVF0EE+J5pQ9WGN7Vl25VifAywEMUy3yOXlOVA66WrXOoc+Cszmp+WNXHksAXxw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=BU/y+MUuWPTsUuV6tYKsgqkqe+UgymgcJ/v7TeAL+qw=;
- b=DpGfsxaAHlgxUzSt915ZW4BcfkqihmztC5fYq16ieNFnNUXZ4u5ksNYQXUo7T618R1bZyT969KgK6V8rnvtlkxti4byhBdUqtu4neeW7VUnsGBPUQqEf2IyXi0jP62JPEaE+tuLw47VR6BWMTrxcCUC5z/YdhcrZFL87xFh3mFjqESLZ9vpZTugLm41deJJs3gZhFi9bsQnboMqjiaP6BJKz7Cws4NB6xsKdU7xESSTsSbzqm9dMZw9ATB9imahD7TBBavwpqm84LesfAGwVlasdURln1GP1KRyb646W0uz9+Zkyvjbpu6dUqUrQ3/lGaksJPyEWSFyZojB07v13Fw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 216.228.117.161) smtp.rcpttodomain=oss.qualcomm.com smtp.mailfrom=nvidia.com;
- dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
- dkim=none (message not signed); arc=none (0)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=BU/y+MUuWPTsUuV6tYKsgqkqe+UgymgcJ/v7TeAL+qw=;
- b=HE5xJbpHdAMkDBunh0SC3H2d5zJ05kRFsiY1+/+zAhE/mSG4IzCHFWfBM59lhL6kYnftYoY5O27bB+ThWsKBI2qKeH/Wl2W5+gqLWdA7jDrtZ8Gf3ToW9oinFqqZv2CABKP2k5GgxtT4F9HJgey8xuhZbKCNOmYE/2EmiWvmaVjQ4u2kl/KEyRyLF2wWw9TzYtzrbanabSjeMe+e9WJO1AH/D1jwyfPwgtV9/BXWrtizGTmvAKtttDgz+dDVeB1/q7tilN3JrNVPJ5sRaNRZUuCusQX3GO9nBvizoLwL6516o0yb+NW+t3EWcTKhRQpU7bRnFN5vJoPN2nNQdbJaDg==
-Received: from SJ0PR03CA0062.namprd03.prod.outlook.com (2603:10b6:a03:331::7)
- by IA0PR12MB8376.namprd12.prod.outlook.com (2603:10b6:208:40b::9) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.406.10; Fri, 11 Sep
- 2026 23:18:11 +0000
-Received: from SJ1PEPF00002311.namprd03.prod.outlook.com
- (2603:10b6:a03:331:cafe::9a) by SJ0PR03CA0062.outlook.office365.com
- (2603:10b6:a03:331::7) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.21.406.9 via Frontend Transport; Fri, 11
- Sep 2026 23:18:10 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.117.161)
- smtp.mailfrom=nvidia.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=nvidia.com;
-Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
- 216.228.117.161 as permitted sender) receiver=protection.outlook.com;
- client-ip=216.228.117.161; helo=mail.nvidia.com; pr=C
-Received: from mail.nvidia.com (216.228.117.161) by
- SJ1PEPF00002311.mail.protection.outlook.com (10.167.242.165) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.406.5 via Frontend Transport; Fri, 11 Sep 2026 23:18:10 +0000
-Received: from rnnvmail203.nvidia.com (10.129.68.9) by mail.nvidia.com
- (10.129.200.67) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.46; Fri, 11 Sep
- 2026 16:17:50 -0700
-Received: from rnnvmail205.nvidia.com (10.129.68.10) by rnnvmail203.nvidia.com
- (10.129.68.9) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.46; Fri, 11 Sep
- 2026 16:17:50 -0700
-Received: from nvidia.com (10.127.8.13) by mail.nvidia.com (10.129.68.10) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.46 via Frontend
- Transport; Fri, 11 Sep 2026 16:17:46 -0700
-Date: Fri, 11 Sep 2026 16:17:44 -0700
-From: Nicolin Chen <nicolinc@nvidia.com>
-To: Jonathan Cameron <jonathan.cameron@oss.qualcomm.com>
-CC: <will@kernel.org>, <robin.murphy@arm.com>, <jgg@nvidia.com>,
-	<joro@8bytes.org>, <bhelgaas@google.com>, <praan@google.com>,
-	<kevin.tian@intel.com>, <kees@kernel.org>, <smostafa@google.com>,
-	<baolu.lu@linux.intel.com>, Jean-Philippe Brucker <jpb@kernel.org>, "Eric
- Auger" <eric.auger@redhat.com>, <linux-arm-kernel@lists.infradead.org>,
-	<iommu@lists.linux.dev>, <linux-kernel@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <skaestle@nvidia.com>, <mmarrid@nvidia.com>,
-	<skolothumtho@nvidia.com>, <bbiber@nvidia.com>, <harsha.v@oss.qualcomm.com>
-Subject: Re: [PATCH v4 01/15] iommu/arm-smmu-v3: Disable the impl before
- disabling the SMMU on shutdown
-Message-ID: <aqSMGCr/9DLFyE+b@nvidia.com>
-References: <cover.1789081084.git.nicolinc@nvidia.com>
- <61536b87c45164b1f581ee4358574ee7822e212d.1789081084.git.nicolinc@nvidia.com>
- <178908564506.2841562.10082006196933269469.b4-review@b4>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TO53MoXF"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 82CE71F000FF;
+	Fri, 11 Sep 2026 23:31:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1789169463;
+	bh=R8lNAqwWalBoaD+CK+ec3PxldoV2QLpznejgdKB/0Hk=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References;
+	b=TO53MoXFD366DLHUd52B/Q+byLuiZLc6oD27JFvdjAMnPhfKmxCAXDYqZqmIU8pL9
+	 BBSd/9Cxoztx65abg4oM/+wqebARbUmdOOq95ZIJDbYk3ZKXJVBc9Ax1DsfXArN0c3
+	 Q92+eg+pafMdkz7SK860EyojspJF3Sq2NyO+r2KAVyH0wHE/43z1NpkyukEF8L0NCl
+	 SK19q/Tl5bb0/E+0d59ElkNMXI9YBZj+bqIIRZKWQsBaQfn2lAG9nrJnxks4HA0q+4
+	 reIglsuAfQ3RdNYnnd5ezYKLd/pNDz3LajFnN+RfyRQQ79gf5dn0OzXrxdE40mNlzy
+	 QZ/fdnjm7CIdQ==
+Date: Sat, 12 Sep 2026 00:30:57 +0100
+From: Jonathan Cameron <jic23@kernel.org>
+To: Srirangan Madhavan <smadhavan@nvidia.com>
+Cc: Alison Schofield <alison.schofield@intel.com>, Bjorn Helgaas
+ <bhelgaas@google.com>, Dave Jiang <dave.jiang@intel.com>, Davidlohr Bueso
+ <dave@stgolabs.net>, Ira Weiny <ira.weiny@intel.com>, Vishal Verma
+ <vishal.l.verma@intel.com>, linux-cxl@vger.kernel.org,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, Alex Williamson
+ <alex.williamson@redhat.com>, vsethi@nvidia.com, alwilliamson@nvidia.com,
+ Sai Yashwanth Reddy Kancherla <skancherla@nvidia.com>, Vishal Aslot
+ <vaslot@nvidia.com>, Manish Honap <mhonap@nvidia.com>, Jiandi An
+ <jan@nvidia.com>, Richard Cheng <icheng@nvidia.com>,
+ linux-tegra@vger.kernel.org
+Subject: Re: [PATCH v12 01/12] cxl: Move HDM decoder programming helpers
+Message-ID: <20260912003057.3db9335c@jic23-hlaptop>
+In-Reply-To: <20260910070808.1444264-2-smadhavan@nvidia.com>
+References: <20260910070808.1444264-1-smadhavan@nvidia.com>
+ <20260910070808.1444264-2-smadhavan@nvidia.com>
+X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Disposition: inline
-In-Reply-To: <178908564506.2841562.10082006196933269469.b4-review@b4>
-X-NV-OnPremToCloud: ExternallySecured
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: SJ1PEPF00002311:EE_|IA0PR12MB8376:EE_
-X-MS-Office365-Filtering-Correlation-Id: 7fa3d6ee-229b-4404-9bab-08df105af238
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|36860700016|23010399003|7416014|376014|1800799024|82310400026|10067099003|4143699003|11063799006|56012099006|18002099003|22082099003;
-X-Microsoft-Antispam-Message-Info:
-	vPgPZ25KHWnlGMWa6eMe9F6pBwHFUBnAg52Is+cqCEDpbTaSVSCwsZTZhLf1yd/DIEIP9qp3HM19gl7pGqPLZkjZoWt+4S9KVheX5y/iBf/dvmujtUMLEjGiB4VRYNDZE+5jL4hzhND8Lq52/kbqGO1srByxxUGRtiC5OOrBvzSQ4ntgWIFEoJ1jkc3/9bz2z0CLiJEH4FQBy0Pn4vUhkso4D0r2lVtKkSivzbrdh0j1CGHxGg6nVASBQ7hvcv1l+PlKdmH/QIgWV8RE+ktQtBWOSJ7jNpKBS66zll6WmaznYEn2dpV1jxUPOkdXysrGU+juK+PUuTLa9B7cY3GpitNVr1aH7uhNvCMs2TfZJTrxsbyAqMSz9KKsCLWSrUJNYpqS72MLixXe97zb660Ktndw4dyTupkqacPfn8I3N1APnf6zFuGltKF/BMtsf4Z0srDmKW2SWtjGcsa9GcwbPq64/YjYzG+VOuYreZ7pXFmgB0m42z0ziaHDjfvbeO3BOPkELAWcPKUqPGHY9BqkUVhSjmRqTCRjqSJbg1OFmXnSr8a3eITGqU1wcpRSdagZ+CCYaUB6mGE6ZrGfEvid+GrySmBA2RYfzObAcSVUJrmCSPjaeGjEPbCJPjqjptRmZFhHpmbJcCtfsaFSZ9xr/sHFYcJcN8NdX4QiPdhl1kKUfm+NbSnykivGMONWDCDtdODOe7HHV6Qf/W1qIF8eEA==
-X-Forefront-Antispam-Report:
-	CIP:216.228.117.161;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge2.nvidia.com;CAT:NONE;SFS:(13230040)(36860700016)(23010399003)(7416014)(376014)(1800799024)(82310400026)(10067099003)(4143699003)(11063799006)(56012099006)(18002099003)(22082099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	EEhiuKsZHsjH5I5RYDrW6q25YvjcGVqXM85PkbgPOFMNfwOEktCYxSD3iL/rRkksBJfm1CS9rMX3ScELrantbgpq0u4jX5w+GnccI3a954EsTWGTwXrsr47kGzA4+gi/uqQGjFHTCiZAl7zcnOBGTGj0DtZDALpq1VNc2JdgfJLxUBHG+xyyCSwCNh2yi4HUcxoEo1N2TSmF7umE2MFER9V4ELToq0EBacsC6jAkZJASd+rvbesr85+TYcZj3sURxXa49c+KzIl8j/VSP2KSVY0sluNrkvc7Q05UdpvIEoO4/V0CSmbGl6lDuKzCdfQdvRd76CwLM+NeI8vpayE7fYDOblf97WAIJhqfn/FZdr+xtljdaCoITl6Bnd33xy7kotDDn6EshM2VgzPhS4We6vpXivbkPOYF0HthqSuB70yCfb72ZQtb8LubzCZ4CY0T
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 Sep 2026 23:18:10.5420
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 7fa3d6ee-229b-4404-9bab-08df105af238
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.161];Helo=[mail.nvidia.com]
-X-MS-Exchange-CrossTenant-AuthSource:
-	SJ1PEPF00002311.namprd03.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA0PR12MB8376
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-On Thu, Sep 10, 2026 at 05:14:05PM -0700, Jonathan Cameron wrote:
-> > arm_smmu_device_shutdown() only calls arm_smmu_device_disable(), and never
-> > the impl_ops->device_disable() hook. On tegra241-cmdqv, that hook quiesces
-> > every VINTF through tegra241_vintf_hw_deinit(), which issues a CMD_SYNC on
-> > the shared CMDQ while it is still enabled.
-> > 
-> > arm_smmu_disable_action() already runs this hook before disabling the SMMU,
-> > to cover an unbind or a probe failure, and no devres release ever follows a
-> > reboot or a kexec to run it again. Have arm_smmu_device_shutdown() call it
-> > directly, instead of reimplementing part of what it already does.
-> > 
-> > Fixes: 9ff145a25c5c ("iommu/tegra241-cmdqv: Fix CMD_SYNC use-after-free on teardown")
-> > Cc: stable@vger.kernel.org
-> > Assisted-by: Claude:claude-sonnet-5
-> Assisted-by: LLM
+On Thu, 10 Sep 2026 07:07:57 +0000
+Srirangan Madhavan <smadhavan@nvidia.com> wrote:
+
+> Introduce struct cxl_decoder_settings as a snapshot of HDM decoder
+> programming state. Collect endpoint skip and switch target-list state in
+> hdm.c while holding the DPA lock, then pass the snapshot to generic commit
+> helpers.
 > 
-> See Documetation/process changes around this. Personally I don't care
-> either way.
+> Move the low-level settings-based register programming into resource.c so
+> later reset restore code can reuse it without depending on private decoder
+> types.
 
-Ah, it looks like they changed that recently. I've been following
-the old format now. Since we need a respin, I can fix all the tags.
+This feels like two things in one patch. How much of this could be done by
+code movement in a precursor patch then real changes in a follow up?
 
-Nicolin
+I'd like it to be a lot more obvious what has changed. 
+Or failing that, introduce changes and then move the code in a follow
+up patch.  Would still be easier to review than this combined patch.
+
+Hopefully doing move and changes separately will also stop git diff
+randomly interleaving old and new functions that are unrelated.
+
+I've commented on some things but the diff is nasty enough I'll
+wait for a split version to take a closer look at the bulk of this.
+
+Jonathan
+
+
+> 
+> Signed-off-by: Srirangan Madhavan <smadhavan@nvidia.com>
+> ---
+>  drivers/cxl/core/Makefile   |   1 +
+>  drivers/cxl/core/core.h     |   3 +
+>  drivers/cxl/core/hdm.c      | 159 +++++++++++-------------------------
+>  drivers/cxl/core/resource.c | 112 +++++++++++++++++++++++++
+>  drivers/cxl/cxl.h           |  41 ----------
+>  include/cxl/cxl.h           |  65 ++++++++++++++-
+>  tools/testing/cxl/Kbuild    |   1 +
+>  7 files changed, 227 insertions(+), 155 deletions(-)
+>  create mode 100644 drivers/cxl/core/resource.c
+> 
+> diff --git a/drivers/cxl/core/Makefile b/drivers/cxl/core/Makefile
+> index ce7213818d3c..57995777af0d 100644
+> --- a/drivers/cxl/core/Makefile
+> +++ b/drivers/cxl/core/Makefile
+> @@ -6,6 +6,7 @@ ccflags-y += -I$(srctree)/drivers/cxl
+>  CFLAGS_trace.o = -DTRACE_INCLUDE_PATH=. -I$(src)
+>  
+>  cxl_core-y := port.o
+> +cxl_core-y += resource.o
+>  cxl_core-y += pmem.o
+>  cxl_core-y += regs.o
+>  cxl_core-y += memdev.o
+> diff --git a/drivers/cxl/core/core.h b/drivers/cxl/core/core.h
+> index 35eaf636adc9..48fbc635975a 100644
+> --- a/drivers/cxl/core/core.h
+> +++ b/drivers/cxl/core/core.h
+> @@ -210,8 +210,11 @@ static inline void devm_cxl_dport_ras_setup(struct cxl_dport *dport) { }
+>  int cxl_gpf_port_setup(struct cxl_dport *dport);
+>  
+>  struct cxl_hdm;
+> +struct cxl_decoder_settings;
+>  int cxl_hdm_decode_init(struct cxl_dev_state *cxlds, struct cxl_hdm *cxlhdm,
+>  			struct cxl_endpoint_dvsec_info *info);
+> +int cxl_commit_start(void __iomem *hdm, struct cxl_decoder_settings *settings);
+> +int cxl_commit_wait(void __iomem *hdm, struct cxl_decoder_settings *settings);
+>  int cxl_port_get_possible_dports(struct cxl_port *port);
+>  
+>  #ifdef CONFIG_CXL_FEATURES
+> diff --git a/drivers/cxl/core/hdm.c b/drivers/cxl/core/hdm.c
+> index 0c80b76a5f9b..70ffebd3e213 100644
+> --- a/drivers/cxl/core/hdm.c
+> +++ b/drivers/cxl/core/hdm.c
+> @@ -16,11 +16,6 @@
+>   * for enumerating these registers and capabilities.
+>   */
+>  
+> -struct cxl_rwsem cxl_rwsem = {
+> -	.region = __RWSEM_INITIALIZER(cxl_rwsem.region),
+> -	.dpa = __RWSEM_INITIALIZER(cxl_rwsem.dpa),
+> -};
+> -
+>  static int add_hdm_decoder(struct cxl_port *port, struct cxl_decoder *cxld)
+>  {
+>  	int rc;
+> @@ -679,122 +674,52 @@ int cxl_dpa_alloc(struct cxl_endpoint_decoder *cxled, u64 size)
+>  	return devm_add_action_or_reset(&port->dev, cxl_dpa_release, cxled);
+>  }
+>  
+> -static void cxld_set_interleave(struct cxl_decoder *cxld, u32 *ctrl)
+> +static u64 cxl_switch_get_target_list(struct cxl_switch_decoder *cxlsd)
+>  {
+> -	u16 eig;
+> -	u8 eiw;
+> -
+> -	/*
+> -	 * Input validation ensures these warns never fire, but otherwise
+> -	 * suppress unititalized variable usage warnings.
+> -	 */
+> -	if (WARN_ONCE(ways_to_eiw(cxld->interleave_ways, &eiw),
+> -		      "invalid interleave_ways: %d\n", cxld->interleave_ways))
+> -		return;
+> -	if (WARN_ONCE(granularity_to_eig(cxld->interleave_granularity, &eig),
+> -		      "invalid interleave_granularity: %d\n",
+> -		      cxld->interleave_granularity))
+> -		return;
+> -
+> -	u32p_replace_bits(ctrl, eig, CXL_HDM_DECODER0_CTRL_IG_MASK);
+> -	u32p_replace_bits(ctrl, eiw, CXL_HDM_DECODER0_CTRL_IW_MASK);
+> -	*ctrl |= CXL_HDM_DECODER0_CTRL_COMMIT;
+> -}
+> -
+> -static void cxld_set_type(struct cxl_decoder *cxld, u32 *ctrl)
+> -{
+> -	u32p_replace_bits(ctrl,
+> -			  !!(cxld->target_type == CXL_DECODER_HOSTONLYMEM),
+> -			  CXL_HDM_DECODER0_CTRL_HOSTONLY);
+> -}
+> +	struct cxl_decoder *cxld = &cxlsd->cxld;
+> +	u64 targets = 0;
+> +	int ways = min(cxld->interleave_ways, cxlsd->nr_targets);
+>  
+> -static void cxlsd_set_targets(struct cxl_switch_decoder *cxlsd, u64 *tgt)
+> -{
+> -	struct cxl_dport **t = &cxlsd->target[0];
+> -	int ways = cxlsd->cxld.interleave_ways;
+> -
+> -	*tgt = FIELD_PREP(GENMASK(7, 0), t[0]->port_id);
+> -	if (ways > 1)
+> -		*tgt |= FIELD_PREP(GENMASK(15, 8), t[1]->port_id);
+> -	if (ways > 2)
+> -		*tgt |= FIELD_PREP(GENMASK(23, 16), t[2]->port_id);
+> -	if (ways > 3)
+> -		*tgt |= FIELD_PREP(GENMASK(31, 24), t[3]->port_id);
+> -	if (ways > 4)
+> -		*tgt |= FIELD_PREP(GENMASK_ULL(39, 32), t[4]->port_id);
+> -	if (ways > 5)
+> -		*tgt |= FIELD_PREP(GENMASK_ULL(47, 40), t[5]->port_id);
+> -	if (ways > 6)
+> -		*tgt |= FIELD_PREP(GENMASK_ULL(55, 48), t[6]->port_id);
+> -	if (ways > 7)
+> -		*tgt |= FIELD_PREP(GENMASK_ULL(63, 56), t[7]->port_id);
+> -}
+> +	/* target_map[] holds the raw list before target[] is resolved. */
+> +	for (int i = 0; i < ways && i < 8; i++) {
+> +		u8 port_id;
+>  
+> -/*
+> - * Per CXL 2.0 8.2.5.12.20 Committing Decoder Programming, hardware must set
+> - * committed or error within 10ms, but just be generous with 20ms to account for
+> - * clock skew and other marginal behavior
+> - */
+> -#define COMMIT_TIMEOUT_MS 20
+> -static int cxld_await_commit(void __iomem *hdm, int id)
+> -{
+> -	u32 ctrl;
+> -	int i;
+> +		if (cxlsd->target[i])
+> +			port_id = cxlsd->target[i]->port_id;
+> +		else
+> +			port_id = cxld->target_map[i];
+>  
+> -	for (i = 0; i < COMMIT_TIMEOUT_MS; i++) {
+> -		ctrl = readl(hdm + CXL_HDM_DECODER0_CTRL_OFFSET(id));
+> -		if (FIELD_GET(CXL_HDM_DECODER0_CTRL_COMMIT_ERROR, ctrl)) {
+> -			ctrl &= ~CXL_HDM_DECODER0_CTRL_COMMIT;
+> -			writel(ctrl, hdm + CXL_HDM_DECODER0_CTRL_OFFSET(id));
+> -			return -EIO;
+> -		}
+> -		if (FIELD_GET(CXL_HDM_DECODER0_CTRL_COMMITTED, ctrl))
+> -			return 0;
+> -		fsleep(1000);
+> +		targets |= (u64)port_id << (i * 8);
+>  	}
+>  
+> -	return -ETIMEDOUT;
+> +	return targets;
+>  }
+>  
+> -static void setup_hw_decoder(struct cxl_decoder *cxld, void __iomem *hdm)
+> +static void cxl_decoder_snapshot(struct cxl_decoder *cxld,
+> +				 struct cxl_decoder_settings *settings)
+>  {
+> -	int id = cxld->id;
+> -	u64 base, size;
+> -	u32 ctrl;
+> +	lockdep_assert_held(&cxl_rwsem.dpa);
+
+This messed up diff is an example of why moves and code changes should not
+be in the same patch.  Hopefully if it's just moves we won't get this mess.
+
+>  
+> -	/* common decoder settings */
+> -	ctrl = readl(hdm + CXL_HDM_DECODER0_CTRL_OFFSET(cxld->id));
+> -	cxld_set_interleave(cxld, &ctrl);
+> -	cxld_set_type(cxld, &ctrl);
+> -	base = cxld->hpa_range.start;
+> -	size = range_len(&cxld->hpa_range);
+> +	*settings = (struct cxl_decoder_settings) {
+> +		.id = cxld->id,
+> +		.hpa_range = cxld->hpa_range,
+> +		.interleave_ways = cxld->interleave_ways,
+> +		.interleave_granularity = cxld->interleave_granularity,
+> +		.target_type = cxld->target_type,
+> +		.flags = cxld->flags,
+> +	};
+>  
+> -	writel(upper_32_bits(base), hdm + CXL_HDM_DECODER0_BASE_HIGH_OFFSET(id));
+> -	writel(lower_32_bits(base), hdm + CXL_HDM_DECODER0_BASE_LOW_OFFSET(id));
+> -	writel(upper_32_bits(size), hdm + CXL_HDM_DECODER0_SIZE_HIGH_OFFSET(id));
+> -	writel(lower_32_bits(size), hdm + CXL_HDM_DECODER0_SIZE_LOW_OFFSET(id));
+> +	if (is_endpoint_decoder(&cxld->dev)) {
+> +		struct cxl_endpoint_decoder *cxled =
+> +			to_cxl_endpoint_decoder(&cxld->dev);
+>  
+> -	if (is_switch_decoder(&cxld->dev)) {
+> +		settings->target_or_skip = cxled->skip;
+> +	} else if (is_switch_decoder(&cxld->dev)) {
+>  		struct cxl_switch_decoder *cxlsd =
+>  			to_cxl_switch_decoder(&cxld->dev);
+> -		void __iomem *tl_hi = hdm + CXL_HDM_DECODER0_TL_HIGH(id);
+> -		void __iomem *tl_lo = hdm + CXL_HDM_DECODER0_TL_LOW(id);
+> -		u64 targets;
+>  
+> -		cxlsd_set_targets(cxlsd, &targets);
+> -		writel(upper_32_bits(targets), tl_hi);
+> -		writel(lower_32_bits(targets), tl_lo);
+> -	} else {
+> -		struct cxl_endpoint_decoder *cxled =
+> -			to_cxl_endpoint_decoder(&cxld->dev);
+> -		void __iomem *sk_hi = hdm + CXL_HDM_DECODER0_SKIP_HIGH(id);
+> -		void __iomem *sk_lo = hdm + CXL_HDM_DECODER0_SKIP_LOW(id);
+> -
+> -		writel(upper_32_bits(cxled->skip), sk_hi);
+> -		writel(lower_32_bits(cxled->skip), sk_lo);
+> +		settings->target_or_skip = cxl_switch_get_target_list(cxlsd);
+>  	}
+> -
+> -	writel(ctrl, hdm + CXL_HDM_DECODER0_CTRL_OFFSET(id));
+>  }
+>  
+>  static int cxl_decoder_commit(struct cxl_decoder *cxld)
+> @@ -802,7 +727,8 @@ static int cxl_decoder_commit(struct cxl_decoder *cxld)
+>  	struct cxl_port *port = to_cxl_port(cxld->dev.parent);
+>  	struct cxl_hdm *cxlhdm = dev_get_drvdata(&port->dev);
+>  	void __iomem *hdm = cxlhdm->regs.hdm_decoder;
+> -	int id = cxld->id, rc;
+> +	struct cxl_decoder_settings settings;
+> +	int id = cxld->id, rc = 0;
+
+I guess this rc = 0 is for compilers who can't tell always enter
+scoped_guard().
+
+Wasn't that problem fixed by:
+https://lore.kernel.org/all/20241018113823.171256-1-przemyslaw.kitszel@intel.com/
+?
+
+>  
+>  	if (cxld->flags & CXL_DECODER_F_ENABLE)
+>  		return 0;
+> @@ -815,10 +741,6 @@ static int cxl_decoder_commit(struct cxl_decoder *cxld)
+>  		return -EBUSY;
+>  	}
+>  
+> -	/*
+> -	 * For endpoint decoders hosted on CXL memory devices that
+> -	 * support the sanitize operation, make sure sanitize is not in-flight.
+> -	 */
+>  	if (is_endpoint_decoder(&cxld->dev)) {
+>  		struct cxl_endpoint_decoder *cxled =
+>  			to_cxl_endpoint_decoder(&cxld->dev);
+> @@ -826,6 +748,10 @@ static int cxl_decoder_commit(struct cxl_decoder *cxld)
+>  		struct cxl_memdev_state *mds =
+>  			to_cxl_memdev_state(cxlmd->cxlds);
+>  
+> +		/*
+> +		 * For endpoint decoders hosted on CXL memory devices that
+> +		 * support the sanitize operation, make sure sanitize is not in-flight.
+
+Odd line wrapping and I'm not sure why the move is here as you aren't
+touching the relevant code.  If it makes sense for other reasons pull
+it out as a precursor patch.
+
+> +		 */
+>  		if (mds && mds->security.sanitize_active) {
+>  			dev_dbg(&cxlmd->dev,
+>  				"attempted to commit %s during sanitize\n",
+> @@ -834,10 +760,17 @@ static int cxl_decoder_commit(struct cxl_decoder *cxld)
+>  		}
+>  	}
+>  
+> -	scoped_guard(rwsem_read, &cxl_rwsem.dpa)
+> -		setup_hw_decoder(cxld, hdm);
+> +	scoped_guard(rwsem_read, &cxl_rwsem.dpa) {
+> +		cxl_decoder_snapshot(cxld, &settings);
+> +		rc = cxl_commit_start(hdm, &settings);
+
+Given this never returns anything not 0, make that void and
+skip the error checks that follows.  We can bring it back
+if that changes after this series.
+
+> +	}
+> +	if (rc) {
+> +		dev_dbg(&port->dev, "%s: error %d committing decoder\n",
+> +			dev_name(&cxld->dev), rc);
+> +		return rc;
+> +	}
+>  
+> -	rc = cxld_await_commit(hdm, cxld->id);
+> +	rc = cxl_commit_wait(hdm, &settings);
+>  	if (rc) {
+>  		dev_dbg(&port->dev, "%s: error %d committing decoder\n",
+>  			dev_name(&cxld->dev), rc);
+> diff --git a/drivers/cxl/core/resource.c b/drivers/cxl/core/resource.c
+> new file mode 100644
+> index 000000000000..64e63114cfbf
+> --- /dev/null
+> +++ b/drivers/cxl/core/resource.c
+> @@ -0,0 +1,112 @@
+> +// SPDX-License-Identifier: GPL-2.0-only
+> +/* Copyright (c) 2026 NVIDIA Corporation & Affiliates */
+> +#include <linux/delay.h>
+> +#include <linux/bug.h>
+> +#include <linux/errno.h>
+> +#include <linux/export.h>
+> +#include <linux/kernel.h>
+> +
+> +#include "cxl.h"
+> +#include "core.h"
+> +
+> +struct cxl_rwsem cxl_rwsem = {
+> +	.region = __RWSEM_INITIALIZER(cxl_rwsem.region),
+> +	.dpa = __RWSEM_INITIALIZER(cxl_rwsem.dpa),
+> +};
+> +
+> +static void cxld_set_interleave(struct cxl_decoder_settings *settings, u32 *ctrl)
+> +{
+> +	u16 eig;
+> +	u8 eiw;
+> +
+> +	/*
+> +	 * Input validation ensures these warns never fire, but otherwise
+> +	 * suppress uninitialized variable usage warnings.
+> +	 */
+> +	if (WARN_ONCE(ways_to_eiw(settings->interleave_ways, &eiw),
+> +		      "invalid interleave_ways: %d\n",
+> +		      settings->interleave_ways))
+
+Keep old wrapping. It's fine to go over 80 chars and in this case the reason
+is to make it easier to see no actual change in the code movement.
+
+> +		return;
+> +	if (WARN_ONCE(granularity_to_eig(settings->interleave_granularity, &eig),
+> +		      "invalid interleave_granularity: %d\n",
+> +		      settings->interleave_granularity))
+> +		return;
+> +
+> +	u32p_replace_bits(ctrl, eig, CXL_HDM_DECODER0_CTRL_IG_MASK);
+> +	u32p_replace_bits(ctrl, eiw, CXL_HDM_DECODER0_CTRL_IW_MASK);
+> +	*ctrl |= CXL_HDM_DECODER0_CTRL_COMMIT;
+> +}
+> +
+> +static void cxld_set_type(struct cxl_decoder_settings *settings, u32 *ctrl)
+> +{
+> +	u32p_replace_bits(ctrl,
+> +			  !!(settings->target_type == CXL_DECODER_HOSTONLYMEM),
+> +			  CXL_HDM_DECODER0_CTRL_HOSTONLY);
+> +}
+> +
+> +/*
+> + * Per CXL 2.0 8.2.5.12.20 Committing Decoder Programming, hardware must set
+> + * committed or error within 10ms, but just be generous with 20ms to account for
+> + * clock skew and other marginal behavior.
+> + */
+> +#define COMMIT_TIMEOUT_MS 20
+> +static int cxld_await_commit(void __iomem *hdm, int id)
+> +{
+> +	u32 ctrl;
+> +	int i;
+> +
+> +	for (i = 0; i < COMMIT_TIMEOUT_MS; i++) {
+
+	for (unsigned int i; i <...
+
+Mind you if this were just code movement leaving it alone better
+and maybe chasing with a tidy up patch at somepoint.
+
+
+> +		ctrl = readl(hdm + CXL_HDM_DECODER0_CTRL_OFFSET(id));
+> +		if (FIELD_GET(CXL_HDM_DECODER0_CTRL_COMMIT_ERROR, ctrl)) {
+> +			ctrl &= ~CXL_HDM_DECODER0_CTRL_COMMIT;
+> +			writel(ctrl, hdm + CXL_HDM_DECODER0_CTRL_OFFSET(id));
+> +			return -EIO;
+> +		}
+> +		if (FIELD_GET(CXL_HDM_DECODER0_CTRL_COMMITTED, ctrl))
+> +			return 0;
+> +		fsleep(1000);
+> +	}
+> +
+> +	return -ETIMEDOUT;
+> +}
+> +
+> +static int setup_hw_decoder(void __iomem *hdm,
+> +			    struct cxl_decoder_settings *settings)
+> +{
+> +	int id = settings->id;
+> +	u64 target_or_skip;
+> +	u64 base, size;
+> +	u32 ctrl;
+> +
+> +	ctrl = readl(hdm + CXL_HDM_DECODER0_CTRL_OFFSET(id));
+> +	cxld_set_interleave(settings, &ctrl);
+> +	cxld_set_type(settings, &ctrl);
+> +	base = settings->hpa_range.start;
+> +	size = range_len(&settings->hpa_range);
+> +	target_or_skip = settings->target_or_skip;
+> +
+> +	writel(upper_32_bits(base), hdm + CXL_HDM_DECODER0_BASE_HIGH_OFFSET(id));
+> +	writel(lower_32_bits(base), hdm + CXL_HDM_DECODER0_BASE_LOW_OFFSET(id));
+> +	writel(upper_32_bits(size), hdm + CXL_HDM_DECODER0_SIZE_HIGH_OFFSET(id));
+> +	writel(lower_32_bits(size), hdm + CXL_HDM_DECODER0_SIZE_LOW_OFFSET(id));
+> +	/* Target-list and endpoint-skip registers alias the same slot. */
+> +	writel(upper_32_bits(target_or_skip),
+> +	       hdm + CXL_HDM_DECODER0_TL_HIGH(id));
+> +	writel(lower_32_bits(target_or_skip),
+> +	       hdm + CXL_HDM_DECODER0_TL_LOW(id));
+
+I'd not worry about going one or two chars over 80. Just put these on one line
+each.
+
+> +
+> +	writel(ctrl, hdm + CXL_HDM_DECODER0_CTRL_OFFSET(id));
+> +
+> +	return 0;
+
+Does this function ever return non zero? I couldn't spot it in
+later patches in this series. If not, void and that might propagate
+to the callers - I haven't checked.
+
+> +}
+
+> diff --git a/include/cxl/cxl.h b/include/cxl/cxl.h
+> index 802b143de83d..c09492af8fbd 100644
+> --- a/include/cxl/cxl.h
+> +++ b/include/cxl/cxl.h
+> @@ -5,8 +5,10 @@
+>  #ifndef __CXL_CXL_H__
+>  #define __CXL_CXL_H__
+>  
+> +#include <linux/device.h>
+>  #include <linux/node.h>
+>  #include <linux/ioport.h>
+> +#include <linux/range.h>
+>  #include <cxl/mailbox.h>
+>  
+>  /**
+> @@ -23,7 +25,68 @@ enum cxl_devtype {
+>  	CXL_DEVTYPE_CLASSMEM,
+>  };
+>  
+> -struct device;
+> +struct cxl_region;
+> +
+> +enum cxl_decoder_type {
+> +	CXL_DECODER_DEVMEM = 2,
+> +	CXL_DECODER_HOSTONLYMEM = 3,
+> +};
+> +
+> +/**
+> + * struct cxl_decoder_settings - CXL HDM decoder programming snapshot
+> + * @id: decoder id
+> + * @hpa_range: Host physical address range mapped by this decoder
+> + * @target_or_skip: switch target list or endpoint skip register value
+> + * @interleave_ways: number of cxl_dports in this decode
+> + * @interleave_granularity: data stride per dport
+> + * @target_type: accelerator vs expander (type2 vs type3) selector
+> + * @flags: memory type capabilities and locking
+> + */
+> +struct cxl_decoder_settings {
+> +	int id;
+> +	struct range hpa_range;
+> +	u64 target_or_skip;
+> +	int interleave_ways;
+> +	int interleave_granularity;
+> +	enum cxl_decoder_type target_type;
+> +	unsigned long flags;
+> +};
+> +
+> +/*
+> + * Current specification goes up to 8, double that seems a reasonable
+> + * software max for the foreseeable future
+> + */
+
+That comment has been wrong for a while (for EPs at least).
+Would you mind adding a precursor patch to just delete it, ideally with a spec
+reference to say when it changed.  Anyhow definitely don't want to move it!
+*cough* It's almost like whoever wrote that comment knew that the spec was
+changing to increase this 16 :)
+
+> +#define CXL_DECODER_MAX_INTERLEAVE 16
+> +
+> +/**
+> + * struct cxl_decoder - Common CXL HDM Decoder Attributes
+> + * @dev: this decoder's device
+> + * @id: kernel device name id
+> + * @hpa_range: Host physical address range mapped by this decoder
+> + * @interleave_ways: number of cxl_dports in this decode
+> + * @interleave_granularity: data stride per dport
+> + * @target_type: accelerator vs expander (type2 vs type3) selector
+> + * @flags: memory type capabilities and locking
+> + * @region: currently assigned region for this decoder
+> + * @target_map: cached copy of hardware port-id list, available at init
+> + *              before all @dport objects have been instantiated. While
+> + *              dport id is 8bit, CFMWS interleave targets are 32bits.
+> + * @commit: device/decoder-type specific callback to commit settings to hw
+> + * @reset: device/decoder-type specific callback to reset hw settings
+> + */
+> +struct cxl_decoder {
+> +	struct device dev;
+> +	int id;
+> +	struct range hpa_range;
+> +	int interleave_ways;
+> +	int interleave_granularity;
+> +	enum cxl_decoder_type target_type;
+> +	unsigned long flags;
+> +	struct cxl_region *region;
+
+This reorders fields from where it came from. If that makes sense, separate
+patch with an explanation of why.  For a code move patch
+we want absolutely no unnecessary changes.
+
+> +	u32 target_map[CXL_DECODER_MAX_INTERLEAVE];
+> +	int (*commit)(struct cxl_decoder *cxld);
+> +	void (*reset)(struct cxl_decoder *cxld);
+> +};
+>  
+
+
