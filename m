@@ -1,122 +1,143 @@
-Received: from mail-pj2-f12.google.com (mail-pj2-f12.google.com [74.125.227.140])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from pdx-out-001.esa.us-west-2.outbound.mail-perimeter.amazon.com (pdx-out-001.esa.us-west-2.outbound.mail-perimeter.amazon.com [44.245.243.92])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9E2447D94D
-	for <linux-pci@vger.kernel.org>; Fri, 11 Sep 2026 12:57:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.227.140
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9CE8A47F3B6;
+	Fri, 11 Sep 2026 12:58:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=44.245.243.92
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789131441; cv=none; b=qfwBwNE74AQrj6rvUxBrG+KRU1POBK/vLpUgQ8qj/TAudAzw0qgRnSz1n54XeIzU5bOYAX7xoZE6KbXMmLhv0n6yYjpGx7XwTNBnCjwd9jtl/Ju+XMYeiEARmjhJNDG88ehPq6w5BlxGVdyYlH6OwsGsGeWRv321QTwPqvmojMY=
+	t=1789131540; cv=none; b=J/MqqD2V4flsKJqxO+1FBm+s4huerY/QQjb9rZRma9DRmUdLejgJqmBSJuUBzu6cKjtiZ6sm5Z2y3YyON0+mIHpfNiwtv/o8ypAKTovz702Q+TQ5uSwFbO7ntkJeYy6HV7BPA8LTDg3a678H8gK848kqt4PDtAWjnbK3k7rgsrg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789131441; c=relaxed/simple;
-	bh=e3H047kzZPUPF30kyCAWQHM10KFTgYtPCq5VJwN9Kug=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=erwRZCcchQXiTFZp9ZYcNusTtMzXBQN6fFNx4gl1lhaHv3OPWnEb+cCkfZXXtgvEkP+pFAaCaD1ZCeJTFg1C1rEfjPiAW3Hu4NYiEhnU7Ida2I+JLkLwk/Jc80ZOnBlb/H8a4YimPNFV/X1s2Awwrhjkl58dwY08oGtd82wXB4s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=Qrv2kN5i; arc=none smtp.client-ip=74.125.227.140
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	s=arc-20240116; t=1789131540; c=relaxed/simple;
+	bh=CuyMTV2toefKFBu22fflUqCz/Qh7DGVjuBXqnSnFCQU=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=sXHWKgIGsZUk1VA60Xs9oxaWKznw7d3hvT1UbFJ7ueYPvWr5+05tePA679TfufGIEnSFRIP1V1uK1rgjZogb8JYtKTJ/J57PzKiairIQaodpDsDe2UcP+rlM9ErriofCKJZwKjDk10VGurI+HETfS8KrXwL/TpdF9znjj45FarQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.de; spf=pass smtp.mailfrom=amazon.de; dkim=pass (2048-bit key) header.d=amazon.de header.i=@amazon.de header.b=ATaV1XzW; arc=none smtp.client-ip=44.245.243.92
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=amazon.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="Qrv2kN5i"
-Received: by mail-pj2-f12.google.com with SMTP id d9443c01a7336-2db425c9050so91055ad.0
-        for <linux-pci@vger.kernel.org>; Fri, 11 Sep 2026 05:57:13 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=amazon.de header.i=@amazon.de header.b="ATaV1XzW"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1789131428; x=1789736228; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=sosg5uQD+znETrHmJcgaZWMkG/+x7W8shGk8HBCGWmk=;
-        b=Qrv2kN5iQb/H4GJLXohxWSq/Y8IVw41su4WaVm/U5ZeYP6tQ8KmZUjelZ8z40vQEnK
-         0+0NxNEINL2+kPrpmuOwE4RJCuqIM3XpsT47GtfNtHPpQFPtvo1dVwBTQrxX7RYbTt55
-         jn/hLRJLxbtC6vafjhiZQQ3sdJSrgRo2yN6KW7MLygc6Dc/xQK++c+lB73wcxdmV3xae
-         W8GDekai++p4jjeOL5aqWo2QHjIqvTpm01nyMQwSsY/FpM6UCH78lQUuh8UKTwHSrafI
-         4mWDC7iPErfSp/CeNNlEwdmKKwI7jihTsmyuE1Xpo0c5H3VJlbr0zalTn/Xw0cBHiEpY
-         tH7g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1789131428; x=1789736228;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=sosg5uQD+znETrHmJcgaZWMkG/+x7W8shGk8HBCGWmk=;
-        b=moIQaaSRnyUy9Xn3NNoHvDW5fT6ueBCEbl7wJH11orZeHhuS5cEpekVtkOsWNkQb0f
-         mi7zWaVtiBjRiSyiCmWvgtArO85Kv3nYvhjFl3ASzgBacgJRQaJpMikLYQjx0ztXJ2q2
-         htjwJFMKDtxFv+2ZL17Cnq553EDQN9Mu1ew9RA5lFFLljNTnge/k4eIYKyM72pP46elH
-         BqQh2VPcHybPu5HKZKv7vURy3Ixhaeqr8r8Q5awG311V9SK41NBnpbsrvoV279FJix2F
-         uxRGh/rF9jDUOmBgMWHlAvBqtxXHwAt1+temCY1FkBBmCeWOf8Vei2TFHMkbZE+odW32
-         aHow==
-X-Forwarded-Encrypted: i=1; AKwUvBzrn6bLZ5q+ngXhCHR6//jcg/iuxTifDSAJ02QTkvcmEIcXMhX4Ay3Ngwximv/XTsJEOjwtxvTp550=@vger.kernel.org
-X-Gm-Message-State: AFuF++n8wXnt525wGWr5hskB0NMwNaKBRp+sdbqQ1Df+c7GhHserlY44
-	WKi3pur639ak59LKzZgG0bEWZSQMxP/B2vGyuoPqn34gBt/WGQLvXFjazQLIHU73jg==
-X-Gm-Gg: AYBFou0LKQAAn+7EUS/ptgUEMEPCUYMRU0lfGc80B58U2lGywOLmJlGnbN7wcxWXAtz
-	L5Rl5J6QqGd6O7O2ZAfTW1mSUTclqQ4QAe4yRJNIVfpPTcGhumlapJrQTe2pIq56qXO14LrTf4r
-	ZANkWEckSUc1gGQ75zsM6InBVgcjmp/9Ihln7cmfauMX/JUTW1zz4lIM5QHivGUxrVNGo8pTxh0
-	PWqfsvi8AGWUkOKrJjlrRz4Ch69Y2Cg65Yx+LjBj3hEycrv7xJacR5wIazNXDRQ7pJxk+6g/qjv
-	4UMohETGpiXjS+uVPqAoeWYUJGqdDlYnwTgHxhthPDHf3pXkBzynLJY8WAxEjlXtSjnskZymMe3
-	Q4OKoiw6kte/6UEMWipSbXWAPE5aF9+qrWyl76lUTy+1v7DG9J7SPyAF/O7QQOmxV3nmODq57cZ
-	ad5oevfe+ETAOjxE0XokbUZ8n8ih3+6XfVeQHFR/s2FefoHcPE2oFhfEkDF9SpBvU+WRixsqR1n
-	LMY6T0b8ASt1WRpThlBaePv8gfQ9kC6KlNb
-X-Received: by 2002:a17:902:ce02:b0:2c9:bd54:cf with SMTP id d9443c01a7336-2dd2c93436amr7077235ad.4.1789131428042;
-        Fri, 11 Sep 2026 05:57:08 -0700 (PDT)
-Received: from google.com (164.210.142.34.bc.googleusercontent.com. [34.142.210.164])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-39d994cf9a6sm4819382a91.10.2026.09.11.05.57.04
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 11 Sep 2026 05:57:07 -0700 (PDT)
-Date: Fri, 11 Sep 2026 12:57:00 +0000
-From: Pranjal Shrivastava <praan@google.com>
-To: linux-nfs@vger.kernel.org, Trond Myklebust <trondmy@kernel.org>,
-	Anna Schumaker <anna@kernel.org>
-Cc: Chuck Lever <cel@kernel.org>, Jeff Layton <jlayton@kernel.org>,
-	linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
-	Logan Gunthorpe <logang@deltatee.com>,
-	Jason Gunthorpe <jgg@ziepe.ca>, linux-pci@vger.kernel.org,
-	linux-rdma@vger.kernel.org, Shivaji Kant <shivajikant@google.com>
-Subject: Re: [PATCH v6 0/5] nfs: modernize direct I/O path
-Message-ID: <aqP6nM7OSX087UCs@google.com>
-References: <20260814143255.861084-1-praan@google.com>
+  d=amazon.de; i=@amazon.de; q=dns/txt; s=amazoncorp2;
+  t=1789131524; x=1820667524;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=zyLeE2j4JM9qN3t73F4gnb9yLZClmnJFub7Nlabs4hs=;
+  b=ATaV1XzWI6dKXkWwEUXf7WlhCXwlhiZxI3NkPqBujvteVD3zlMusna0o
+   4GV6pY6zdxmgXUehEwyeiHZIS8bvCXcsQ8EFw2Z73/fLyFTs6z2NUOlbg
+   HWvXqHeS5nA9pDwMsPuS0syPwayoktn7uS/DQcgHXacJZ95mlSKX9Ay0c
+   Wf3k0HhOROqMNS/S5Ip/mcU6WicYnspE4bs5r8XtLWWtf7mu7W1HzWVhw
+   GqMfq7mk4sninnAEiXal7ziV5xs25S0x6f8xMpgQiSBBIhFYIF6A4wZwZ
+   eEHQq82CrYA8RKGaY3HG3A7c0PeXzTnnU2PH+7Q81QFmK8UadPKUXVb2F
+   Q==;
+X-CSE-ConnectionGUID: Bo5p7fyHTp2YUvV/ByIykA==
+X-CSE-MsgGUID: xQfQhnVIQpO07KtGrIrJtw==
+X-IronPort-AV: E=Sophos;i="6.27,97,1787011200"; 
+   d="scan'208";a="27926022"
+Received: from ip-10-5-0-115.us-west-2.compute.internal (HELO smtpout.naws.us-west-2.prod.farcaster.email.amazon.dev) ([10.5.0.115])
+  by internal-pdx-out-001.esa.us-west-2.outbound.mail-perimeter.amazon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Sep 2026 12:58:38 +0000
+Received: from EX19MTAUWC002.ant.amazon.com [205.251.233.51:15362]
+ by smtpin.naws.us-west-2.prod.farcaster.email.amazon.dev [10.0.43.236:2525] with esmtp (Farcaster)
+ id 9bdc87fd-5149-4492-992c-52ea92ac8b52; Fri, 11 Sep 2026 12:58:38 +0000 (UTC)
+X-Farcaster-Flow-ID: 9bdc87fd-5149-4492-992c-52ea92ac8b52
+Received: from EX19D001UWA001.ant.amazon.com (10.13.138.214) by
+ EX19MTAUWC002.ant.amazon.com (10.250.64.143) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.45;
+ Fri, 11 Sep 2026 12:58:37 +0000
+Received: from dev-dsk-sakacpav-1a-480d1124.eu-west-1.amazon.com
+ (172.19.96.155) by EX19D001UWA001.ant.amazon.com (10.13.138.214) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.46; Fri, 11 Sep 2026
+ 12:58:36 +0000
+From: Pavol Sakac <sakacpav@amazon.de>
+To: Joerg Roedel <joro@8bytes.org>, Will Deacon <will@kernel.org>
+CC: Robin Murphy <robin.murphy@arm.com>, <iommu@lists.linux.dev>,
+	<linux-kernel@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-pci@vger.kernel.org>, <nh-open-source@amazon.com>
+Subject: [RFC PATCH 0/3] iommu: Reduce iommu_probe_device_lock contention
+Date: Fri, 11 Sep 2026 14:58:31 +0200
+Message-ID: <20260911-vfopt-s2-v1-0-fff3db7e01c2@amazon.de>
+X-Mailer: git-send-email 2.47.3
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260814143255.861084-1-praan@google.com>
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: EX19D031UWC002.ant.amazon.com (10.13.139.212) To
+ EX19D001UWA001.ant.amazon.com (10.13.138.214)
 
-On Fri, Aug 14, 2026 at 02:32:50PM +0000, Pranjal Shrivastava wrote:
-> Modernize the NFS Direct I/O path as a preparatory step to enable PCI
-> Peer-to-Peer DMA (P2PDMA) support. Following feedback on the initial
-> RFC [1], the modernization and architectural changes are split into
-> different series. Additionally, based on the discussion in the v2 [2]
-> of this series, the migration of NFS Direct I/O to folios would be
-> handled in a separate follow-up series.
-> 
-> Currently, NFS O_DIRECT relies on the legacy iov_iter_get_pages_alloc2()
-> API which does not support the pinning requirements for P2P memory.
-> The implementation moves NFS to the modern iov_iter_extract_pages() API.
-> 
+iommu_probe_device_lock is a file-scope mutex held across
+__iommu_probe_device(): every device's IOMMU probe serializes against
+every other. With "PCI/IOV: Initialize virtual functions in
+parallel" [1] fanning an SR-IOV enable across CPUs, it collects 94.7%
+of all lock wait. Patch 1 gathers per-member sysfs publication into one
+all-or-nothing helper (no functional change); patches 2-3 move that
+publication and first-device default-domain setup into per-group
+finalisation after the global unlock, under group->mutex, mirroring the
+removal path and bus_iommu_probe().
 
-Gentle ping on this series. 
-(I realized that I sent it close to the merge window, Apologies).
+Lock statistics and SR-IOV init time for 4x PF (NVMe, 255 VFs each), on
+the reproducer from the parallel VF initialization cover letter [1]:
 
-Please let me know if anything else needs to be done for this..
+  lock_stat:
+  Lock                     wait: Before     After   contentions: Before   After
+  iommu_probe_device_lock      25507 ms  10471 ms                  1143     841
+  &root->kernfs_rwsem            942 ms   1834 ms                 93208  116316
+  &vfio.group_lock               425 ms   3614 ms                   497     736
 
-[...]
+  avg wait per acquisition  6.3 ms -> 2.6 ms (4080 acq., both arms)
 
-> 
-> [v6]
->  - Fixed double unpin bugs pointed out by Sashiko:
->    https://sashiko.dev/#/patchset/20260810195040.2877784-1-praan%40google.com
->  - Added R-bs from Christoph (due since v4)
-> 
-> [v5]
->  - https://lore.kernel.org/all/20260810195040.2877784-1-praan@google.com/
->  - Fixed an iov_iter_revert oops in nfs_direct_extract_pages().
->  - Fixed a refcount underflow in nfs_direct_release_pages() during
->    swap-over-NFS by ensuring we do not call put_page() on unpinned memory.
->  - Rebased on fs-next
-> 
+  Stage                 SR-IOV init time:
+  S0 (baseline)         3027 ms
+  S1                     999 ms
+  S2 (this series)       995 ms
 
-[...]
+Reproducer disclaimer:
+I lean primarily on lock_stat numbers to defend the improvements. In
+the reproducer, this lock's residual hold dominates the window and
+masks the later series' wall-time gains, more in [1].
 
-Thanks,
-Praan
+This is relief, not removal: the lock still has the highest wait
+time in the profile after this series. Wait per acquisition drops
+from 6.3 ms to 2.6 ms, which is what makes the smaller
+serialization points behind it measurable for the later series.
+
+RFC on the direction: The comment in __iommu_probe_device() expects
+the lock to narrow to device_lock() once the ACPI/OF replay calls
+are cleaned up. I could not make that work for the whole section:
+group formation in ops->device_group() is a cross-device decision a
+per-device lock cannot order. This series instead moves the work
+that needs no global ordering out of the section. Is that an
+acceptable step, or is there a scoping or removal plan this should
+wait for?
+
+A second question: I have measured where 90% of the residual hold goes:
+get_pci_alias_group() walks every PCI device in the system to find
+same-bus DMA aliases. It runs once per device probed, so once per VF,
+under this lock, and the VFs keep growing the list it walks. A prototype
+that skips the walk when no device has a dma_alias_mask and this device
+has no pci_real_dma_dev() override cuts this lock's hold time by about
+90%, for the same acquisitions and the same groups. I am not proposing
+it here, as I do not have the time to get it right this cycle. How can
+we optimize this preferably in O(1) time?
+
+The lock_stat and timing figures come from the public reproducer. The
+full series has also been tested on current datacenter server hardware
+with thousands of VFs.
+
+[1] https://lore.kernel.org/r/20260911-vfopt-s1-v1-0-693271dc0226@amazon.de
+
+Pavol Sakac (3):
+  iommu: split sysfs link publication out of iommu_group_alloc_device()
+  iommu: create device sysfs links outside iommu_probe_device_lock
+  iommu: set up the default domain outside iommu_probe_device_lock
+
+ drivers/iommu/iommu.c | 197 ++++++++++++++++++++++++++++++++++--------
+ 1 file changed, 160 insertions(+), 37 deletions(-)
+
+
+base-commit: cee9395acd8043be0644b25c34bfa86623f2b935
+-- 
+2.47.3
+
