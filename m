@@ -1,124 +1,135 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C66852F531B
-	for <linux-pci@vger.kernel.org>; Fri, 11 Sep 2026 23:47:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A11573246ED
+	for <linux-pci@vger.kernel.org>; Fri, 11 Sep 2026 23:49:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789170461; cv=none; b=UrgJuLmdWeRM5RZqCUmHlZQsvgXHzslid4GF8MaJV6/8jjLs+NEQyiDn10H6k6zqbilIo/+Ac+JsRtoyRcuumPYtyAZuriAjqRwXlUA4qWR3UsqA7eoUo5RoBpF3rVEf3NJwRN2+FklFRZVGQ7tZJbWJHUvXXNP8MBQHYTo/jrs=
+	t=1789170556; cv=none; b=lXXrWFUAZSq9r2NQI+rmIZmfushOcVTBM7A464YaToDIO51UdF4bdj0SIJgJ5kKxanYzavG7KPtkOgTj9l7Ng7jGYy+LIbs6LVZCS/H3+IoLXwQ48gkxcs77KKP8nSsrL2ekrjZmIzuDf1FHr4SH/abIGpdLhEXLa7Z2Tk3A2HE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789170461; c=relaxed/simple;
-	bh=7jduGPasPjNZA7MYMMs1/1uI0BXVZYCz0mvZm4SQDqc=;
+	s=arc-20240116; t=1789170556; c=relaxed/simple;
+	bh=AvZ6UyLSFfHfkmoLGegnpCXszZhEmNaipq9RBJ1rrqA=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=YI0cG6iItCXcmAWc58WEMUnwp42F1erVw102lEASDTU/AAh0+tYbS2AovestNBb+jGSVtQgQgVESJciuif5j0qstluJwD5mjDi+9uoUmJF6l4R+GfNe+Om3d6X1Y/2WBqaGbpq+qydEu7aUPyRCV/2QaKlknIEvaEwxJVkcfFy0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WCdZB0hr; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=vDWMWTP+9uVWB6K5yklp6gj7YND88wjJrSH0njddcjRHo0ULwMS+5bR3cztG6o4cJZt9fpME31kUOY62M0vckayd6KjR5eYFjkwIF5kz4ACw2pQ3Id/3wtqtK3y0bmylXNLWM1sOTwfjhOc5BuPeZslrwZbjbRwPHKb+sTr99J0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ohJQP70Y; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WCdZB0hr"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 89C1E1F000FF;
-	Fri, 11 Sep 2026 23:47:36 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ohJQP70Y"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 470DE1F000FF;
+	Fri, 11 Sep 2026 23:49:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789170456;
-	bh=+dKBx72eZvm1Szss9jXHyUAtj/R4H+OfRfUj3q3B4g0=;
+	s=k20260515; t=1789170553;
+	bh=XAFg63GnJruRW424Ehah0iIRFskovavZSah4iZs+iDU=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=WCdZB0hrNWt1kZK5FM1Y2AoEh/CyhNV4emTTgRiiLHlUfR/au+d07ARGDafsIC0Rw
-	 J0fkF7prBq1XKxq+gSi3NNpbkhMxASdAuQXSy9ebEjozj2G2XXpblxqERKzp+zaqTC
-	 RByUXJXd1IP9u6DiDx0TmEym/tvw8GiWNoSbMvZIF9JBRjDHXBZ5AifwGT3EzE4+58
-	 CIw3vR266hsGbjnCV9tyRgKk4EOPJY66d5CgNIcW3aNw7JTI9RicrLb/MY7YQNFT3R
-	 Zn14DU8xtsKI8/f66lfgQ5hrazyvPLTPU03IfjLVJTqTYpIhhJv1Ysuh9XDpUSnGsG
-	 U+41DZ97fKVAw==
+	b=ohJQP70Y9PpEgJ2Yd26idqXgLtHxE7ZsvN7Pdns5z5eUtdPNIEUxeDoQOsu/AbwyI
+	 n2ZB8lzI8TDmK3jFa/RjAO9eJdR72EUFGUCLJVzUqu35QBPHryPItoJbRdsdibvFnT
+	 q9hT/Vwnm3xg5CiNLsBYiIL0G6ZO49+W55yDHVS4gqYdsF7yoxRJBPLNiIBUD9sxT2
+	 qqGFy7ctxKJWu8uXClz5D97aIWEz8uR6dcHbvPvHiGESM+MtRRB9yytfz2MEKE5AYa
+	 grG4v1aKblZybaX1GQLFn4aCGyKhPmmzIomcrvYq0XRPbYGN8KdfrAVvN3cu4cN3KA
+	 HhcZokI4e3jSg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 05/13] PCI: brcmstb: Declare and assign quirk
- OB_WIN_MAXSZ_128MB
+Subject: Re: [PATCH 10/13] PCI: brcmstb: Declare and assign quirk
+ PERST_PCIE_REV_CUTOFF
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Jim Quinlan" <james.quinlan@broadcom.com>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260911233541.1650895-6-james.quinlan@broadcom.com>
+In-Reply-To: <20260911233541.1650895-11-james.quinlan@broadcom.com>
 References: <20260911233541.1650895-1-james.quinlan@broadcom.com>
- <20260911233541.1650895-6-james.quinlan@broadcom.com>
+ <20260911233541.1650895-11-james.quinlan@broadcom.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 11 Sep 2026 23:47:36 +0000
-Message-Id: <20260911234736.89C1E1F000FF@smtp.kernel.org>
+Date: Fri, 11 Sep 2026 23:49:12 +0000
+Message-Id: <20260911234913.470DE1F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
 
 Pre-existing issues:
-- [High] The OB_WIN_MAXSZ_128MB quirk handler silently truncates outbound m=
-emory resources and completely ignores subsequent memory windows due to an =
-unconditional early exit.
+- [High] Use-After-Free / NULL pointer dereference in error path when pci_h=
+ost_probe() fails.
+- [High] Use of uninitialized spinlock `pcie->bridge_lock`.
 --
 
-commit 6fb01c14c0bdf317322f341660866644991a983a
+commit 8a2eb9e850a817eb0d5eb7cbe7b4bf1dbe6785e6
 Author: Jim Quinlan <james.quinlan@broadcom.com>
 
-PCI: brcmstb: Declare and assign quirk OB_WIN_MAXSZ_128MB
-   =20
-Even though only BMIPs chips have this quirk, it is more uniform and
-readable to define this specific quirk where each outbound window is must
-be <=3D SZ_128M.
+PCI: brcmstb: Declare and assign quirk PERST_PCIE_REV_CUTOFF
+
+This commit declares a new quirk for SoCs where the SW behavior for asserti=
+ng
+PERST# only works up to a specific PCIe HW version, and assigns it to the
+bcm4908 configuration.
 
 > diff --git a/drivers/pci/controller/pcie-brcmstb.c b/drivers/pci/controll=
 er/pcie-brcmstb.c
-> index 71ddd8a760af9..401898d04d521 100644
+> index dfd7035710918..047783e33ae42 100644
 > --- a/drivers/pci/controller/pcie-brcmstb.c
 > +++ b/drivers/pci/controller/pcie-brcmstb.c
 
 [ ... ]
 
-> @@ -1294,11 +1296,11 @@ static int brcm_pcie_setup(struct brcm_pcie *pcie)
->  			return -EINVAL;
->  		}
+> @@ -2168,7 +2171,7 @@ static int brcm_pcie_probe(struct platform_device *=
+pdev)
+>  		goto fail;
 > =20
-> -		if (is_bmips(pcie)) {
-> +		if (BQUIRK(pcie, OB_WIN_MAXSZ_128MB)) {
->  			u64 start =3D res->start;
->  			unsigned int j, nwins =3D resource_size(res) / SZ_128M;
-> =20
-> -			/* bmips PCIe outbound windows have a 128MB max size */
-> +			/* PCIe outbound windows have a 128MB max size */
->  			if (nwins > BRCM_NUM_PCIE_OUT_WINS)
->  				nwins =3D BRCM_NUM_PCIE_OUT_WINS;
+>  	pcie->hw_rev =3D readl(pcie->base + PCIE_MISC_REVISION);
+> -	if (pcie->cfg->soc_base =3D=3D BCM4908 &&
+> +	if (BQUIRK(pcie, PERST_PCIE_REV_CUTOFF) &&
+>  	    pcie->hw_rev >=3D BRCM_PCIE_HW_REV_3_20) {
+>  		dev_err(pcie->dev, "hardware revision with unsupported PERST# setup\n"=
+);
+>  		ret =3D -ENODEV;
 
 [Severity: High]
-This is a pre-existing issue, but does this logic leave resources smaller t=
-han
-128MB unmapped due to integer division dropping the remainder?
+This is a pre-existing issue, but looking at the error path later in
+brcm_pcie_probe(), is it safe to call brcm_pcie_remove() when
+pci_host_probe() fails?
 
-Also, instead of returning an error like the non-quirk path does when the
-window count is exceeded, oversized resources seem to be silently capped he=
-re.
+If pci_host_probe(bridge) fails (for example, due to a memory allocation
+failure inside pci_alloc_bus()), the bridge's bus structure might be freed
+or remain NULL.
 
-Could this lead to leaving some required memory regions unmapped?
+brcm_pcie_probe() {
+    ...
+    ret =3D pci_host_probe(bridge);
+    if (ret) {
+        brcm_pcie_remove(pdev);
+        return ret;
+    }
+}
 
->  			for (j =3D 0; j < nwins; j++, start +=3D SZ_128M)
+brcm_pcie_remove() {
+    ...
+    pci_stop_root_bus(bridge->bus);
+}
+
+Could this pci_stop_root_bus() call dereference a dangling or NULL
+bridge->bus pointer, causing a crash instead of a graceful failure? Should
+this path jump to the fail label instead to clean up local resources?
 
 [Severity: High]
-This is also a pre-existing issue inherited from the earlier is_bmips()
-implementation, but looking at brcm_pcie_setup() just past this loop:
+This is also a pre-existing issue, but does brcm_pcie_probe() use
+pcie->bridge_lock before it is initialized?
 
-			for (j =3D 0; j < nwins; j++, start +=3D SZ_128M)
-				brcm_pcie_set_outbound_win(pcie, j, start,
-							   start - entry->offset,
-							   SZ_128M);
-			break;
+Early in brcm_pcie_probe(), brcm_pcie_bridge_sw_init_set(pcie, 0) is called.
+If the controller config has the HAS_ERR_REPORT flag set, this acquires
+pcie->bridge_lock:
 
-Does this unconditional break force an early exit from the resource iterati=
-on
-loop over bridge->windows?
+brcm_pcie_bridge_sw_init_set() {
+    if (BFLAG(pcie, HAS_ERR_REPORT))
+        spin_lock_irqsave(&pcie->bridge_lock, flags);
+}
 
-If platforms define multiple memory regions in their device tree (such as t=
-he
-four 128MB PCIe memory regions in bcm7425.dtsi), wouldn't this break cause =
-the
-handler to map only the first resource and ignore the subsequent memory win=
-dows?
+However, spin_lock_init(&pcie->bridge_lock) is not called until the very end
+of brcm_pcie_probe(), right before it returns success.
+
+Can this lead to an uninitialized spinlock usage on platforms with
+HAS_ERR_REPORT enabled?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260911233541.1650=
-895-1-james.quinlan@broadcom.com?part=3D5
+895-1-james.quinlan@broadcom.com?part=3D10
