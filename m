@@ -1,160 +1,142 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f199.google.com (mail-pg1-f199.google.com [209.85.215.199])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5EAF44749C9
-	for <linux-pci@vger.kernel.org>; Fri, 11 Sep 2026 13:15:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 67F84485955
+	for <linux-pci@vger.kernel.org>; Fri, 11 Sep 2026 13:22:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.199
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789132522; cv=none; b=MbvyAFGaOtSF8FAgBc1SYOrM2IN5CQjDTsQ6OEv1RIybTohhSmDvH+MeAWB4P2Ci14IKvaTNWH6WqI2zcAT/f98KQL1wMxBV2EvtA5fu1gg32P3qcpCIr4mg2PwvmWTIIsSDiDplLwpqyjAltn8DQYsW7UNQEuuRx1eLMiAyN6g=
+	t=1789132968; cv=none; b=LC+NO+gKan9VyAvbMuH8jPa23cUWBuTQSxOKwFdj+1NsasB5gTbdGYJ3Ma0SCLYG8qkEB4trmYz3luDfDRGyyBUZGPm4P0cMxip3095Xg1gRpYr/nNw+WLXpOOZGB9VoYAQSZqjRsBOuMN92rsiZkimoGrEoWjjVHwThGnDOPFA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789132522; c=relaxed/simple;
-	bh=eWRuRkFbOMBJ3z5WzNHBimXlqZ5VSjHeVrK9+7P3zlY=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=SmzJ+BNaCpivmOcQRBoVHhw4HpPOPhljc+xZLI+YI5RAnR6KuiG9ljp4ERy9WX1eW6rwL/DqQis3S+LX4mPeeXOmRBkLHEGHHh9n84bynPmryIBIsXjkcGMklke3OSib0p/+1IFOjHcTXLEQkQqw9T+ZNgNXsCeQJGHbBCl2xAo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HvQ8BLf6; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789132968; c=relaxed/simple;
+	bh=T/e2vgzi/yX3haBVonSYMOMOZ1YJ8sxvxQcGMOKmPKs=;
+	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
+	 To:Cc:Content-Type; b=bjy/TQl7Inu4D+lkTvNVUi8CPrKK3kUBFnP/MPHlp/cFdmHFfz9+Ovz4zlnUgwy2QER1RBlxcOIj04DfeX7aU0j1J4ebJwFGTox1+lFHB7eq7Jh6vv0wDkc4M1YH7sZVP0s6+P/vKawxMiKI+Pk1yDiJIDAzXBzeJgwgU93EtRI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--seanjc.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=RLwvSvK3; arc=none smtp.client-ip=209.85.215.199
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--seanjc.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HvQ8BLf6"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9BD6C1F000FF;
-	Fri, 11 Sep 2026 13:15:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789132519;
-	bh=82k+1lQ+KS2c+I1tXl3+x3BsDlqBb2LDinYoOo0TnIc=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=HvQ8BLf6WN0D4Azk31PyDDXBlhwW+u8N7aHtauolRb50UncBGUYDUkI75v1h94qLQ
-	 krpDfnGdBYev12PjR3t30eyPjsYfuNs6IVaAZVSd0l4QhztooKyOkL5ihJ3+bK3HPV
-	 OQU9QMK86tj23+vj4O9TdBkY3qe/U77xIHWtdgalTxH94BFE66eTog0gtV9V1jYFNV
-	 7NhrFrC6wz6Uj3J7/VUROg1t6Bq7HcPiHlsXQN7NtbHHrk97N9yjrNMOYjMw5w8LwN
-	 BQifRN5EhZs8O1ePriER8BuQbiviig+7EhgKCkRYLYnJ8Qj4jsmSv5kEiiBuZGq26y
-	 dmGynP9c7fGPg==
-From: sashiko-bot@kernel.org
-Subject: Re: [RFC PATCH 3/3] iommu: set up the default domain outside
- iommu_probe_device_lock
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Pavol Sakac" <sakacpav@amazon.de>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260911125907.67105-3-sakacpav@amazon.de>
-References: <20260911-vfopt-s2-v1-0-fff3db7e01c2@amazon.de>
- <20260911125907.67105-3-sakacpav@amazon.de>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Fri, 11 Sep 2026 13:15:19 +0000
-Message-Id: <20260911131519.9BD6C1F000FF@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="RLwvSvK3"
+Received: by mail-pg1-f199.google.com with SMTP id 41be03b00d2f7-cc1ca15334cso1278795a12.1
+        for <linux-pci@vger.kernel.org>; Fri, 11 Sep 2026 06:22:43 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1789132963; x=1789737763; darn=vger.kernel.org;
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=kqAHaS5fsv9ERkHKe2Kmet0fUHotC014bD2kFqqX4to=;
+        b=RLwvSvK31Nx6W5e5cWd1Zwn3GrqgUoi6AhS072W/uylcwVwZ3gpe+kx6GEa9rIFlk0
+         FYF4erl5BDuLlexOocQCSN41l6ccwOOPma6v34CdMIG5khIVZqkDirlCdqv964QjHzjX
+         wPzKEn407qRm3Embbs+yCBCiSEJTY3Js8tzzleFdo1mBTOxt2yTNnE2xosV20WkoMQvM
+         wIayUAwD/BVN9hgLYwfzEr+DeuhSbiV33KL8FX8Bmqy/2DX9ttcVZLG7uRr6EAwczGFk
+         ZiDQLDEUQiAQ8XVcZzOaCJECezVH/N/QfYRIjvdt+E3bJGSQdWRG09uKOPUwfNDqFGFJ
+         twjA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1789132963; x=1789737763;
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=kqAHaS5fsv9ERkHKe2Kmet0fUHotC014bD2kFqqX4to=;
+        b=T6Ss8aVbyhKKQbnp9d7Isg7lv8gOI1JsSCdNQ3lua0aK7dNvbf5BfIN0uISDsxPLRj
+         qigBT8eMxz/ln/eY8LX7gMfVOCLv+Oo8h3b3Wyjfgz3U9t0nXY9XxxvOk+Gi64OCYQ8+
+         u2/LWDbUtBGbFEfAcg0f0GFsg6X5ywERc7bZLPV+ZvMt5+p/YiK6Ae/g/94p3rgwMnr+
+         uv949ZzVVsrQJRskjowno57Z3FozOpgF1n5icGO/JnIwNpuJkOst3Ynxi8IcPxHbUkhe
+         uHswgVpM9fhTda45jJpd2pAT+Qj04vAt/HaqHEizrz28v6dJLHNt064Q4fBxjGz1qERD
+         3zDg==
+X-Forwarded-Encrypted: i=1; AKwUvBwCR6EHPxCV9un1n296RBjWAiabSP+BAd3VngfUrCiqgAFJjojfWiFFfRH3++Ziq1HvruWSnGhS3k8=@vger.kernel.org
+X-Gm-Message-State: AFuF++n2PKhu5rEB2onMCMSUXsWHW7xICYWKzvpxme8BgyubKGlMpclb
+	J4iESWbugCEL3XsCOAAngrfvLl/6xpfLLz63iE3y540bGqrUVUtYOV++4w5n5exKnnyZoBtuqhj
+	HBDwImg==
+X-Received: from pjbmv13.prod.google.com ([2002:a17:90b:198d:b0:39d:8dae:7e6d])
+ (user=seanjc job=prod-delivery.src-stubby-dispatcher) by 2002:a17:90b:3c89:b0:398:e46e:ade3
+ with SMTP id 98e67ed59e1d1-39d9c39625dmr7169956a91.23.1789132962606; Fri, 11
+ Sep 2026 06:22:42 -0700 (PDT)
+Date: Fri, 11 Sep 2026 06:22:41 -0700
+In-Reply-To: <20260911074530.3140830-13-jgross@suse.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+Mime-Version: 1.0
+References: <20260911074530.3140830-1-jgross@suse.com> <20260911074530.3140830-13-jgross@suse.com>
+Message-ID: <aqQAodJCAEZyeQ1k@google.com>
+Subject: Re: [PATCH v3 12/13] treewide: convert rdmsrq() from a macro to an
+ inline function
+From: Sean Christopherson <seanjc@google.com>
+To: Juergen Gross <jgross@suse.com>
+Cc: linux-kernel@vger.kernel.org, x86@kernel.org, 
+	linux-perf-users@vger.kernel.org, linux-hyperv@vger.kernel.org, 
+	kvm@vger.kernel.org, virtualization@lists.linux.dev, 
+	linux-edac@vger.kernel.org, linux-pci@vger.kernel.org, 
+	linux-pm@vger.kernel.org, linux-coco@lists.linux.dev, 
+	linux-acpi@vger.kernel.org, linux-ide@vger.kernel.org, 
+	dri-devel@lists.freedesktop.org, linux-crypto@vger.kernel.org, 
+	linux-gpio@vger.kernel.org, linux-hwmon@vger.kernel.org, 
+	linux-mtd@lists.infradead.org, platform-driver-x86@vger.kernel.org, 
+	linux-fbdev@vger.kernel.org, Thomas Gleixner <tglx@kernel.org>, 
+	Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>, 
+	Dave Hansen <dave.hansen@linux.intel.com>, "H. Peter Anvin" <hpa@zytor.com>, 
+	Peter Zijlstra <peterz@infradead.org>, Arnaldo Carvalho de Melo <acme@kernel.org>, 
+	Namhyung Kim <namhyung@kernel.org>, Mark Rutland <mark.rutland@arm.com>, 
+	Alexander Shishkin <alexander.shishkin@linux.intel.com>, Jiri Olsa <jolsa@kernel.org>, 
+	Ian Rogers <irogers@google.com>, Adrian Hunter <adrian.hunter@intel.com>, 
+	James Clark <james.clark@linaro.org>, "K. Y. Srinivasan" <kys@microsoft.com>, 
+	Haiyang Zhang <haiyangz@microsoft.com>, Wei Liu <wei.liu@kernel.org>, 
+	Dexuan Cui <decui@microsoft.com>, Long Li <longli@microsoft.com>, 
+	Paolo Bonzini <pbonzini@redhat.com>, Ajay Kaher <ajay.kaher@broadcom.com>, 
+	Alexey Makhalov <alexey.makhalov@broadcom.com>, 
+	Broadcom internal kernel review list <bcm-kernel-feedback-list@broadcom.com>, 
+	Josh Poimboeuf <jpoimboe@kernel.org>, Pawan Gupta <pawan.kumar.gupta@linux.intel.com>, 
+	Pu Wen <puwen@hygon.cn>, Tony Luck <tony.luck@intel.com>, 
+	Reinette Chatre <reinette.chatre@intel.com>, Dave Martin <Dave.Martin@arm.com>, 
+	James Morse <james.morse@arm.com>, Babu Moger <babu.moger@amd.com>, 
+	Tony W Wang-oc <TonyWWang-oc@zhaoxin.com>, Vitaly Kuznetsov <vkuznets@redhat.com>, 
+	Andy Lutomirski <luto@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+	"Rafael J. Wysocki" <rafael@kernel.org>, Pavel Machek <pavel@kernel.org>, Kiryl Shutsemau <kas@kernel.org>, 
+	Rick Edgecombe <rick.p.edgecombe@intel.com>, Boris Ostrovsky <boris.ostrovsky@oracle.com>, 
+	Len Brown <lenb@kernel.org>, Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>, 
+	David Airlie <airlied@redhat.com>, Olivia Mackall <olivia@selenic.com>, 
+	Herbert Xu <herbert@gondor.apana.org.au>, Viresh Kumar <viresh.kumar@linaro.org>, 
+	Huang Rui <ray.huang@amd.com>, Mario Limonciello <mario.limonciello@amd.com>, 
+	Perry Yuan <perry.yuan@amd.com>, K Prateek Nayak <kprateek.nayak@amd.com>, 
+	Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>, Yazen Ghannam <yazen.ghannam@amd.com>, 
+	Linus Walleij <linusw@kernel.org>, Bartosz Golaszewski <brgl@kernel.org>, Guenter Roeck <linux@roeck-us.net>, 
+	Artem Bityutskiy <artem.bityutskiy@linux.intel.com>, Artem Bityutskiy <dedekind1@gmail.com>, 
+	Arnd Bergmann <arnd@arndb.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+	Miquel Raynal <miquel.raynal@bootlin.com>, Richard Weinberger <richard@nod.at>, 
+	Vignesh Raghavendra <vigneshr@ti.com>, Ashok Raj <ashok.raj.linux@gmail.com>, 
+	Hans de Goede <hansg@kernel.org>, 
+	"Ilpo =?utf-8?B?SsOkcnZpbmVu?=" <ilpo.jarvinen@linux.intel.com>, 
+	Rajneesh Bhardwaj <irenic.rajneesh@gmail.com>, Xi Pardee <xi.pardee@linux.intel.com>, 
+	Daniel Lezcano <daniel.lezcano@kernel.org>, Zhang Rui <rui.zhang@intel.com>, 
+	Lukasz Luba <lukasz.luba@arm.com>, Helge Deller <deller@gmx.de>, xen-devel@lists.xenproject.org, 
+	linux-geode@lists.infradead.org, Michael Kelley <mhklinux@outlook.com>
+Content-Type: text/plain; charset="us-ascii"
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
+On Fri, Sep 11, 2026, Juergen Gross wrote:
+> Today rdmsrq() is a macro using its second parameter as the target for
+> storing the read MSR value.
+> 
+> Convert rdmsrq() to an inline function returning the MSR value.
+> 
+> The users have been converted using the following semantic patch:
+> 
+>   // Options: --include-headers
+> 
+>   virtual patch
+>   virtual report
+> 
+>   @@
+>   expression msr, val;
+>   @@
+>   (
+>   - rdmsrq(msr,val)
+>   + val = rdmsrq(msr)
+>   )
+> 
+> Signed-off-by: Juergen Gross <jgross@suse.com>
+> Acked-by: Damien Le Moal <dlemoal@kernel.org>      # ATA
+> Reviewed-by: Michael Kelley <mhklinux@outlook.com> # Hyper-V
+> ---
 
-New issues:
-- [High] A sysfs linkage failure for one device causes the innocent initiat=
-ing device to be removed from the IOMMU group and fail its probe.
-
-Pre-existing issues:
-- [High] Concurrent device hot-unplug can trigger a Use-After-Free during `=
-bus_iommu_probe` list traversal.
---
-
-commit bbc77bf7c83c2e939356c6c9d4fe1de6d5066ed7
-Author: Pavol Sakac <sakacpav@amazon.de>
-Subject: iommu: set up the default domain outside iommu_probe_device_lock
-
-This commit defers the default domain setup in iommu_probe_device() until
-after the iommu_probe_device_lock is released. It moves the setup under
-group->mutex and uses a group_list for deferred initialization, similar to
-bus_iommu_probe(). It also updates error handling and rechecks for default
-domain setup to prevent races.
-
-> diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
-> index a5e3327aeacaf..48fe22bbd1bc2 100644
-> --- a/drivers/iommu/iommu.c
-> +++ b/drivers/iommu/iommu.c
-[ ... ]
-> @@ -735,6 +728,9 @@ int iommu_probe_device(struct device *dev)
->  		return ret;
-> =20
->  	mutex_lock(&group->mutex);
-> +	/* Only the caller that queued the entry may unlink it. */
-> +	if (!list_empty(&group_list))
-> +		list_del_init(&group->entry);
->  	/* iommu_group_link_device() is all-or-nothing. */
->  	for_each_group_device(group, gdev) {
->  		if (gdev->linked)
->  			continue;
->  		ret =3D iommu_group_link_device(group, gdev);
->  		if (ret)
->  			goto err_remove_device;
->  	}
-
-[Severity: High]
-Does this loop abort the entire group setup and fail the innocent initiating
-device if a different device's sysfs linkage fails?
-
-If another device in the group has a sysfs linking failure, this loop will
-abort and jump to err_remove_device.
-
-[ ... ]
-> @@ -765,8 +775,15 @@ int iommu_probe_device(struct device *dev)
->  	if (own) {
->  		list_del(&own->list);
->  		__iommu_group_free_device(group, own);
-> -		iommu_deinit_device(dev);
->  	}
-
-[Severity: High]
-Down here in the error handler, it unlinks and frees the innocent initiating
-device (own) instead of handling the broken device that failed to link abov=
-e.
-
-Can this create a permanent cross-device failure state where one broken dev=
-ice
-prevents other devices in the same group from probing successfully?
-
-> +	/* Members left behind stay attached; give them the DMA ops owed. */
-> +	if (group->default_domain)
-> +		for_each_group_device(group, gdev)
-> +			if (dev_has_iommu(gdev->dev))
-> +				iommu_setup_dma_ops(gdev->dev,
-> +						    group->default_domain);
-> +	if (own)
-> +		iommu_deinit_device(dev);
->  	mutex_unlock(&group->mutex);
->  	if (own)
->  		iommu_group_put(group);	/* iommu_init_device()'s reference */
-[ ... ]
-> @@ -2077,7 +2094,10 @@ static int bus_iommu_probe(const struct bus_type *=
-bus)
->  		 * that the cross-group default domain type and the setup of the
->  		 * IOMMU_RESV_DIRECT will work correctly in non-hotpug scenarios.
->  		 */
-> -		ret =3D iommu_setup_default_domain(group, 0);
-> +		ret =3D 0;
-> +		/* A hotplug probe may have finalised this group meanwhile. */
-> +		if (!group->default_domain)
-> +			ret =3D iommu_setup_default_domain(group, 0);
-
-[Severity: High]
-This is a pre-existing issue, but can concurrent device hot-unplug trigger a
-use-after-free during the list traversal in bus_iommu_probe()?
-
-Earlier in this function, bus_for_each_dev() populates group_list with
-group->entry without incrementing the group's reference count. If the last
-device in a group is concurrently hot-unplugged after bus_for_each_dev()
-completes but before the group is processed in the list_for_each_entry_safe=
-()
-loop above this block, the group's reference count drops to zero and the
-group is freed.
-
-The subsequent list_for_each_entry_safe() traversal then reads from the fre=
-ed
-group (e.g., group->entry.next) and attempts to take its mutex.
-
->  		if (ret) {
->  			mutex_unlock(&group->mutex);
->  			return ret;
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260911-vfopt-s2-v=
-1-0-fff3db7e01c2@amazon.de?part=3D3
+Acked-by: Sean Christopherson <seanjc@google.com>
