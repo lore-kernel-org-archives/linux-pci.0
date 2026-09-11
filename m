@@ -1,76 +1,76 @@
 Received: from mail-pl1-f227.google.com (mail-pl1-f227.google.com [209.85.214.227])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 59B0C310645
-	for <linux-pci@vger.kernel.org>; Fri, 11 Sep 2026 23:35:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9C2C3D9DCD
+	for <linux-pci@vger.kernel.org>; Fri, 11 Sep 2026 23:35:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.227
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789169753; cv=none; b=KUcSRRxx+/H/G9M20hGMdNBQ22a4z+VxV+5ehC9mpFx37fzVOSQIjL2ETjcJyN9F3orfNPafRJ9TnN8D3rWulWvzQM0a/8dvqRUqm4CrcA/heZiv0ZZqJ5Y/ugvFZELeUiRNNIR/4Esmn8Qh2V5xkGUdd+lzgtXgLDgS83isDxQ=
+	t=1789169755; cv=none; b=G6ldsTp4yvX9E559aYmjm3fQggMurRylWRGHC/FXg16LQaT8qnkKibO8xYVNWyRRAiXljItnkiwae2qtNNGoln7tkqdmjIUnikt2HZ1UOPs/ipKdB6bEc3xODwBJBaF62qHPQaEmzx0a0aRv3Mgp8TRRLRJRPNrMrJ6C+lBF3fM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789169753; c=relaxed/simple;
-	bh=//3ALQS3wymbFPv6KJPwmFP6Ogw6mcd5PsWWglFfL6w=;
+	s=arc-20240116; t=1789169755; c=relaxed/simple;
+	bh=13qbqAzryTLcOBJ/NrIGKEz5d3AP9UnaGQRUX5OGeo0=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=iGCAoC8jGsg1MHAVA9+TIe0a5ybaJHJbc4mmenGU7/DAFTdc00L2dw5uX+sqMcyWt1azOpdlzwUD8QJ3EGKNek8z+YfGMEujcWBcxxxcCGEC0InVeyE4DNSKdutOnNtjbPs0o/N3UeuI3SmhGd1ZR6i0YDW3VIwsvuChUTX/qKw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=WPMO/+ms; arc=none smtp.client-ip=209.85.214.227
+	 MIME-Version; b=CK3TkH1TfiQTNFdFWbvYrbs6yN+3p14uno0qoqwOrZactvHr4vj4+aGaGfj+XfTJCm9LvAt+RyY3my//Fg9KurGuXwf+8M570tUMZJW4dyke3AIfcmDJmo+1tNhFhn2nwS4T8oksdiTKm1+2g5Arr2GZLpqZzSAJ/r4llqekm7k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=cZmxDJLz; arc=none smtp.client-ip=209.85.214.227
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="WPMO/+ms"
-Received: by mail-pl1-f227.google.com with SMTP id d9443c01a7336-2db710396ffso23218135ad.1
-        for <linux-pci@vger.kernel.org>; Fri, 11 Sep 2026 16:35:52 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="cZmxDJLz"
+Received: by mail-pl1-f227.google.com with SMTP id d9443c01a7336-2d032846c95so4466995ad.1
+        for <linux-pci@vger.kernel.org>; Fri, 11 Sep 2026 16:35:53 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1789169752; x=1789774552;
+        d=1e100.net; s=20251104; t=1789169753; x=1789774553;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:dkim-signature:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=dY9ozb5KV1VBJo3Z3p+RlJyXkFICluMij+wCeI97mXA=;
-        b=ZjACmJLPltkMNfebia4oOPXWxfUQjtVyxtdjkOQHu97x3hT2pJ/lVl2bJekI0zF2TU
-         KSMyjZiawiRHO0cknkRrXD0Qp20a5LSc6/AlgXQJu5dxbBnsO2dUxoY+pMmx3fM+PnFT
-         uK1cr07cv0h41Deol5PleMjossszSCfkMGX4IUAK0vDuTL/L+eMTRDHCWiagck3G7Bn+
-         nnwpVH7UVWcEZjEljxdXliEChE6+/q5ojb9RaYSfsWtVesKO5XNH43LVoLnC7nkUz5nn
-         x2/y/ohRBsY4omTf7SP+2NUDiJ3xTlHUztMe7LpDJ/lXnkZNBlWmMi60TqbTUwj5DDHr
-         n6gg==
-X-Gm-Message-State: AFuF++lkoW8HrQeT8XL0vD+1GNIZSZuBfWdIZ0UfqbY/GHxFSc1AfgpO
-	EYLjgxQYQxLHN02nTiJEMMEG4dQrWIDrvEB9mrIgO7Hk+EI/38awfFQRpeI0kSKXA7eWDnMxfb+
-	CmgkLJ1tTuY94XpA2uR+u6YFf2HsEoyQ4fjNwaBokZkYkwAixQzNYpqeGCdjQ4BFqZEyUF2QVLh
-	qvWi5bqOQ1DrMnDMKZ33gSDnVNx7mKBvDjEKMQp9W8SsFce5XNf6n1XWX5YNonpwWbwDTELyPC7
-	hmWPoS9u57q04Vu
-X-Gm-Gg: AYBFou1mn9IHEbveliOZadh9sFV9otrhlPx3DXMSASKhcY0JW2bNpRUzMMJXLIUJfgt
-	o0SJif3h1to4sOGfuswyt+dDsqrfUfvEnlQEefukCejtPZduoI6JqN+C5c9ISWMHlP/J7udYPjw
-	P/JUZir5yEiWvkAgBi6p2CK3jjl2S2lmtK6i+kIP47vPyzlLnWWrPNosixpR2Xu3ETe/HPv092i
-	yewkJvHk0E4muPf5L3Wpoz4qmSTTtEnDQ7Mk6of2+jchKPV9Eo8YrDZ13ewSHJOt61fSuRs0QEy
-	/ZYxcL8WnWw92APK5GRLnK3iNTU4TFxhv4dB9InqBGoIDFnt0pjZ7MKGdeu0iAp9y0g12SxcIEr
-	pXJMzFTe5vkE4+qGVZ1guj4fw+H9hfwzwApAEoA+rhAw5hBuxHYwcHsweK+ho3CncMyxWydrqed
-	NFW8n0dvBTEWR02C6dINbGblWlqXKJV2F+hTWs
-X-Received: by 2002:a17:90b:4d0d:b0:38e:6d55:b1a6 with SMTP id 98e67ed59e1d1-39d97ea0248mr5615347a91.3.1789169751481;
-        Fri, 11 Sep 2026 16:35:51 -0700 (PDT)
-Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-25.dlp.protect.broadcom.com. [144.49.247.25])
-        by smtp-relay.gmail.com with ESMTPS id 98e67ed59e1d1-39d9606f4afsm2258676a91.7.2026.09.11.16.35.50
+        bh=ArH91frdffOdQcxWygxWviJhRnyFFFtxyckVO+/C0bo=;
+        b=ZRGI3XKZ5TKdneJqPYIyEZaJRqO0f6+uokg3CwjDVBYYYtJFONcv9t7xyCbs1n/a+4
+         +3aCXO9tnG7ZKiMVWIXys7zEppjKcifkW2ez1Q4ZRxKaEIuPWyvwoXUluiaV9YX4gpVB
+         2xZVfEYoETqV7EkOsEsASuBEmYTfSfy/wmkIe2HQBZKfOrwDgzBlR+nGW0WxJjtjgPH3
+         w3X45TCZHHwt21k++jFSNgvMF/QjsDMA3qGzjrHA9I48bkVfIl2n/cpU8xHv3hifVJBB
+         /T9Lx0ch19b+ZX3FxNjGKmHrhqU23iuYkXVKV5u0SCnWXOCaDDDVCIPTonTvotoTp05P
+         HmRA==
+X-Gm-Message-State: AFuF++n2tpAocsxalk0fwEpOstX8XeLGJG30JQPlVNxtlx7pkA0G6Bpa
+	+TTjE9tudgaQBxWtrkhTe2IDBr35v4rAJA9Gs9EoDa0cOXZn34iu28XRXmIgA6I6Kd1DHoVlfow
+	JHLMOEvfspYzvriu1U6umz5jHRk0NbcUBdnyXqc3itM42/dfHNNGAQkdUrT21HeT8LxGeO+1ARV
+	bwL5iLvsQVMZbhHyxB1Du8xSv2Rd/xCum/sm/FJmMn8fGu+z/leiOKda7wg/eVcLFjLHxZvnja+
+	lv1PqR2zVgkFrh1
+X-Gm-Gg: AYBFou2hICortIsU7tsdoNndicUTpvvRdIf1SrP/ud1pJupkyiUiN2nr4LUej3j9QMl
+	9iYK6VIo+jLbumjwBTufzGJzu+rMQ4LZyfbGVc7yBFxPd9hBtibKv/60JwtcI26Wt0ATR7vGPp5
+	7kGPxMtEl3EW1bhVu8CGNcKJRFZwKWTSTIoDxn7yEtuLR3Wp1m+o0f92iCxLr5QfoSs5sviLr9s
+	f9Rtf9M+gHg+9QWLmZl+lyCjPjDM4O3eaXNCYVM0NaBwRpuXOGx5H0axsZhpGCOE+foCQfHHB/q
+	BuwkkkiEEsM+a9wiBZqAUiYUGapqJCE6wAuX5O+tFgpcCkY26KeDdytvIvQyMzWUVmpcLiU7ois
+	2OP3nNt4HN5wHy2Ai/v4U2BakhktgZxUubVkBBrB5IUMER++4f4MtSi96ndJRASrt0k1OAk6kGr
+	JP++vx45zpDLpdRdjUpTygXocT73wNIZpTpNQxYZ4=
+X-Received: by 2002:a17:902:f691:b0:2dd:4168:7bd3 with SMTP id d9443c01a7336-2dd41687cc9mr45262675ad.12.1789169752984;
+        Fri, 11 Sep 2026 16:35:52 -0700 (PDT)
+Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-125.dlp.protect.broadcom.com. [144.49.247.125])
+        by smtp-relay.gmail.com with ESMTPS id d9443c01a7336-2dd2d0243a6sm1957145ad.39.2026.09.11.16.35.52
         for <linux-pci@vger.kernel.org>
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 11 Sep 2026 16:35:51 -0700 (PDT)
+        Fri, 11 Sep 2026 16:35:52 -0700 (PDT)
 X-Relaying-Domain: broadcom.com
 X-CFilter-Loop: Reflected
-Received: by mail-qv1-f69.google.com with SMTP id 6a1803df08f44-9105be46009so31512646d6.1
-        for <linux-pci@vger.kernel.org>; Fri, 11 Sep 2026 16:35:50 -0700 (PDT)
+Received: by mail-qt1-f198.google.com with SMTP id d75a77b69052e-530e39c5625so8216371cf.1
+        for <linux-pci@vger.kernel.org>; Fri, 11 Sep 2026 16:35:52 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1789169750; x=1789774550; darn=vger.kernel.org;
+        d=broadcom.com; s=google; t=1789169751; x=1789774551; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=dY9ozb5KV1VBJo3Z3p+RlJyXkFICluMij+wCeI97mXA=;
-        b=WPMO/+ms+I+7rbiJZOfRQ8IyMJPpdiGcJccvrfGEqXa5ERsKR9tNTr34MmSY50gm0d
-         61PgVL/BitWRlY9Pu2HGtMTN7sI+4dbN+8A0J5jUyN7+PaIVJFm7HAAPYFx0m9/qNLUi
-         /bJvbSOOf35K5lNV9thX0LVeaYFaClixglyXc=
-X-Received: by 2002:ad4:5965:0:b0:910:42f3:958e with SMTP id 6a1803df08f44-912029a2a01mr144987466d6.27.1789169750050;
-        Fri, 11 Sep 2026 16:35:50 -0700 (PDT)
-X-Received: by 2002:ad4:5965:0:b0:910:42f3:958e with SMTP id 6a1803df08f44-912029a2a01mr144987016d6.27.1789169749543;
-        Fri, 11 Sep 2026 16:35:49 -0700 (PDT)
+        bh=ArH91frdffOdQcxWygxWviJhRnyFFFtxyckVO+/C0bo=;
+        b=cZmxDJLz8MyaGqj4dnDFYQZzTmYD6G7tz4UL48J/V8iKWBFD253cl6ci0AHeb/fClW
+         dclKPRnbUx/FRt5VCO+5KO3JZz5iHki7DXmnEkBhTV0zO1EmBoXskZBVEqwXJnwdcfym
+         ZsuFIfZxlsYLgXkVa4fJHFOG9osHrHWs8wNTU=
+X-Received: by 2002:a05:622a:164b:b0:530:b2e2:9038 with SMTP id d75a77b69052e-530c87b2e6amr91263121cf.56.1789169751638;
+        Fri, 11 Sep 2026 16:35:51 -0700 (PDT)
+X-Received: by 2002:a05:622a:164b:b0:530:b2e2:9038 with SMTP id d75a77b69052e-530c87b2e6amr91262541cf.56.1789169751039;
+        Fri, 11 Sep 2026 16:35:51 -0700 (PDT)
 Received: from stband-bld-1.and.broadcom.net ([192.19.144.250])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-9120f45ab71sm31717326d6.12.2026.09.11.16.35.48
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-9120f45ab71sm31717326d6.12.2026.09.11.16.35.49
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 11 Sep 2026 16:35:49 -0700 (PDT)
+        Fri, 11 Sep 2026 16:35:50 -0700 (PDT)
 From: Jim Quinlan <james.quinlan@broadcom.com>
 To: linux-pci@vger.kernel.org,
 	Nicolas Saenz Julienne <nsaenz@kernel.org>,
@@ -87,9 +87,9 @@ Cc: Florian Fainelli <florian.fainelli@broadcom.com>,
 	linux-rpi-kernel@lists.infradead.org (moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE),
 	linux-arm-kernel@lists.infradead.org (moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE),
 	linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH 02/13] PCI: brcmstb: Use flags u32 instead of bools
-Date: Fri, 11 Sep 2026 19:35:27 -0400
-Message-Id: <20260911233541.1650895-3-james.quinlan@broadcom.com>
+Subject: [PATCH 03/13] PCI: brcmstb: Add Broadcom quirks macro
+Date: Fri, 11 Sep 2026 19:35:28 -0400
+Message-Id: <20260911233541.1650895-4-james.quinlan@broadcom.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260911233541.1650895-1-james.quinlan@broadcom.com>
 References: <20260911233541.1650895-1-james.quinlan@broadcom.com>
@@ -102,112 +102,37 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
 
-Instead of having separate 'bool' fields for each SoC configuration, use a
-small bitvector (u32).  Doing this uses less memory and provides a uniform
-method to assign flags for a specific SoC.  The expectation is that more
-flags will be added as we replace conditions like "if (chipA || chipB)"
-with "if (behavior_X)".
-
-A helper macro "BFLAG()" is used to shorten the determination of the flag
-value.
+Introduce a 'BQUIRK()' macro to shorten the calculation of a specific
+quirk's value.
 
 Signed-off-by: Jim Quinlan <james.quinlan@broadcom.com>
 ---
- drivers/pci/controller/pcie-brcmstb.c | 27 +++++++++++++++++----------
- 1 file changed, 17 insertions(+), 10 deletions(-)
+ drivers/pci/controller/pcie-brcmstb.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/pci/controller/pcie-brcmstb.c b/drivers/pci/controller/pcie-brcmstb.c
-index 89aaa19d508a..47862569937e 100644
+index 47862569937e..bf002bcf6bd5 100644
 --- a/drivers/pci/controller/pcie-brcmstb.c
 +++ b/drivers/pci/controller/pcie-brcmstb.c
-@@ -286,16 +286,24 @@ struct inbound_win {
-  */
- #define CFG_QUIRK_AVOID_BRIDGE_SHUTDOWN		BIT(0)
- 
-+/* FLAGS */
-+#define BFLAG(pcie, flag)			((pcie)->cfg->flags & CFG_FLG_ ## flag)
-+
-+/* The PCIe HW registers have phy control of a "RESCAL" reset block */
-+#define CFG_FLG_HAS_PHY				BIT(0)
-+/* The SoC PCIe HW can dump to the console PCIe error info */
-+#define CFG_FLG_HAS_ERR_REPORT			BIT(1)
-+
-+
- struct pcie_cfg_data {
- 	const int *offsets;
- 	enum pcie_soc_base soc_base;
--	bool has_phy;
-+	u32 flags;
- 	u32 quirks;
- 	u8 num_inbound_wins;
- 	int (*perst_set)(struct brcm_pcie *pcie, u32 val);
- 	int (*bridge_sw_init_set)(struct brcm_pcie *pcie, u32 val);
- 	int (*post_setup)(struct brcm_pcie *pcie);
--	bool has_err_report;
+@@ -277,6 +277,9 @@ struct inbound_win {
+ 	u64 cpu_addr;
  };
  
- struct subdev_regulators {
-@@ -356,14 +364,14 @@ static int brcm_pcie_bridge_sw_init_set(struct brcm_pcie *pcie, u32 val)
- 	unsigned long flags;
- 	int ret;
++/* QUIRKS */
++#define BQUIRK(pcie, quirk)			((pcie)->cfg->quirks & CFG_QUIRK_ ## quirk)
++
+ /*
+  * The RESCAL block is tied to PCIe controller #1, regardless of the number of
+  * controllers, and turning off PCIe controller #1 prevents access to the RESCAL
+@@ -1627,7 +1630,7 @@ static int brcm_pcie_turn_off(struct brcm_pcie *pcie)
+ 	u32p_replace_bits(&tmp, 1, PCIE_MISC_HARD_PCIE_HARD_DEBUG_SERDES_IDDQ_MASK);
+ 	writel(tmp, base + HARD_DEBUG(pcie));
  
--	if (pcie->cfg->has_err_report)
-+	if (BFLAG(pcie, HAS_ERR_REPORT))
- 		spin_lock_irqsave(&pcie->bridge_lock, flags);
+-	if (!(pcie->cfg->quirks & CFG_QUIRK_AVOID_BRIDGE_SHUTDOWN))
++	if (!(BQUIRK(pcie, AVOID_BRIDGE_SHUTDOWN)))
+ 		/* Shutdown PCIe bridge */
+ 		ret = brcm_pcie_bridge_sw_init_set(pcie, 1);
  
- 	ret = pcie->cfg->bridge_sw_init_set(pcie, val);
- 	/* If we fail, assume the bridge is in reset (off) */
- 	pcie->bridge_in_reset = ret ? true : val;
- 
--	if (pcie->cfg->has_err_report)
-+	if (BFLAG(pcie, HAS_ERR_REPORT))
- 		spin_unlock_irqrestore(&pcie->bridge_lock, flags);
- 
- 	return ret;
-@@ -1589,12 +1597,12 @@ static int brcm_phy_cntl(struct brcm_pcie *pcie, const int start)
- 
- static inline int brcm_phy_start(struct brcm_pcie *pcie)
- {
--	return pcie->cfg->has_phy ? brcm_phy_cntl(pcie, 1) : 0;
-+	return BFLAG(pcie, HAS_PHY) ? brcm_phy_cntl(pcie, 1) : 0;
- }
- 
- static inline int brcm_phy_stop(struct brcm_pcie *pcie)
- {
--	return pcie->cfg->has_phy ? brcm_phy_cntl(pcie, 0) : 0;
-+	return BFLAG(pcie, HAS_PHY) ? brcm_phy_cntl(pcie, 0) : 0;
- }
- 
- static int brcm_pcie_turn_off(struct brcm_pcie *pcie)
-@@ -1898,7 +1906,7 @@ static void brcm_pcie_remove(struct platform_device *pdev)
- 	pci_stop_root_bus(bridge->bus);
- 	pci_remove_root_bus(bridge->bus);
- 	pci_unlock_rescan_remove();
--	if (pcie->cfg->has_err_report)
-+	if (BFLAG(pcie, HAS_ERR_REPORT))
- 		brcm_unregister_die_notifiers(pcie);
- 
- 	__brcm_pcie_remove(pcie);
-@@ -1999,9 +2007,8 @@ static const struct pcie_cfg_data bcm7216_cfg = {
- 	.soc_base	= BCM7278,
- 	.perst_set	= brcm_pcie_perst_set_7278,
- 	.bridge_sw_init_set = brcm_pcie_bridge_sw_init_set_7278,
--	.has_phy	= true,
-+	.flags		= CFG_FLG_HAS_PHY | CFG_FLG_HAS_ERR_REPORT,
- 	.num_inbound_wins = 3,
--	.has_err_report = true,
- };
- 
- static const struct pcie_cfg_data bcm7712_cfg = {
-@@ -2179,7 +2186,7 @@ static int brcm_pcie_probe(struct platform_device *pdev)
- 		return ret;
- 	}
- 
--	if (pcie->cfg->has_err_report) {
-+	if (BFLAG(pcie, HAS_ERR_REPORT)) {
- 		spin_lock_init(&pcie->bridge_lock);
- 		brcm_register_die_notifiers(pcie);
- 	}
 -- 
 2.34.1
 
