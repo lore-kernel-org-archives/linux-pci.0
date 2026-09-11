@@ -1,221 +1,163 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.20])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f42.google.com (mail-wr1-f42.google.com [209.85.221.42])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D55D946AF10;
-	Fri, 11 Sep 2026 09:08:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.20
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789117687; cv=none; b=a4E4C127jvqLRfjimNfCzS3KrkAC3dCmGTI5R5CgGHI2YjopscId+83yTpdr0jdfmmzHMoN38G21zwW0Z481vlKe636fTLhLCJZhv812MbtQu/ctWqkoHBeKT4CsfG3Fe4cOl8Pilp5hdfxVhHJiylXLLzMun021OTa5uCeCLNI=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789117687; c=relaxed/simple;
-	bh=Nq+0XxKCrXn5WLqfuWpGxYMd0O5Yj5XT9x3UG5j3PVo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ir6cVtGG0VvwqhFwCzIzBDfWvIvfFW1X9b/vP51E/tUD+U7cnX38UlqZ86XpAsZ6jDcE9slPwxi1JSmoIEO15Y3soG14rQ0Lk8J9eu1LHhN/mIAI9uV9am0g0SpVmFS60BBoE0SZGUJhdIRnkbTf1yEIwWbODi1pkqupRl/A2bE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=HPoGY0OR; arc=none smtp.client-ip=198.175.65.20
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4FA8446AA7B
+	for <linux-pci@vger.kernel.org>; Fri, 11 Sep 2026 09:08:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.221.42
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1789117715; cv=pass; b=fJIp/USmZiX4YcxpTqjX0R672a1shbz8opoPmjlPivcjRI0UUQxKVEeemyf4+puXqJB7KVNLmxbQNU8ekuAHJM0RNm0PNE5ybbf6cwBGEc5okyGBqLRikT8jTJwZ9bgb8/fgglZKzsqxbkC6ocmp9T+y/ACgC8sKTKAXHBKbUcI=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1789117715; c=relaxed/simple;
+	bh=9AitBb1GHyxUD8itXAfWQrOndn4vr+DMbiE1kW67HMc=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=ibKZDplQCe13cibloq9Vuz8KjIw4/54fgsFqnsXCphj6LgfRaAGvHBIWhSTcbiPbYUsHNoVIAqZUpg2Nz6oIGbSEqK1UfzRgbJ9KFtKiuJkcRF2S8eUGaOATQ1k912SMJp4oIaVWaV3v15zIuS0oV4mnYnRFL+CaYFXVtcSNFL0=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=Ntc0+0D2; arc=pass smtp.client-ip=209.85.221.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="HPoGY0OR"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1789117684; x=1820653684;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:content-transfer-encoding:in-reply-to;
-  bh=Nq+0XxKCrXn5WLqfuWpGxYMd0O5Yj5XT9x3UG5j3PVo=;
-  b=HPoGY0ORKYSz/nx+YiXllW2VVCslYFPe0aBKwLoNxZoTI/jpDJncf9at
-   6j0YLHKXWS1uBnnifMZaCWMX/R7FW5KQrR5ks9QiehYHVVrwlEf39wSWa
-   dV/rrwkFOKzzBETrTqMck81HpItOb+r/JV3F49j1fHFyfH8vfCZSVaDHE
-   /f8+UMID6JAtUg3dsZpVq6lqxvjXiyx1rwJrr9ZEP7cvJGyUeC54EM/V8
-   mLCnLGNG0+b4uvADI+57O79XU/N4QOUhseZ+Ee7NVIPfM6cmWO3AxRlm4
-   KgdumAZpwY6Arr09BL1geSyB1MREgjVxX55yWLNVucd+MrMU36WDmWSVL
-   w==;
-X-CSE-ConnectionGUID: OSaVkWBCQ56TiHQlc2Cwrg==
-X-CSE-MsgGUID: AEPfirj1SX6r/t31SetAYw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11901"; a="89343762"
-X-IronPort-AV: E=Sophos;i="6.27,97,1787036400"; 
-   d="scan'208";a="89343762"
-Received: from orviesa003.jf.intel.com ([10.64.159.143])
-  by orvoesa112.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Sep 2026 02:08:04 -0700
-X-CSE-ConnectionGUID: BE6AxQUvQFmN9VptZTb/Jg==
-X-CSE-MsgGUID: 2FljSvmARM6m36WFBP2LWw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.27,97,1787036400"; 
-   d="scan'208";a="275392685"
-Received: from black.igk.intel.com ([10.91.253.5])
-  by orviesa003.jf.intel.com with ESMTP; 11 Sep 2026 02:08:02 -0700
-Received: by black.igk.intel.com (Postfix, from userid 1001)
-	id 4CA1399; Fri, 11 Sep 2026 11:08:00 +0200 (CEST)
-Date: Fri, 11 Sep 2026 11:08:00 +0200
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: =?utf-8?B?6bOl5LqV5Y6f6IyC?= <monogokoro2026@gmail.com>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
-	ilpo.jarvinen@linux.intel.com, linux-usb@vger.kernel.org,
-	westeri@kernel.org, andreas.noever@gmail.com, YehezkelShB@gmail.com
-Subject: Re: PCI: Resizable BAR never considered for Thunderbolt/USB4
- hotplugged eGPUs
-Message-ID: <20260911090800.GZ106095@black.igk.intel.com>
-References: <CAFpUU0sqt2VzdGGUcx3fkLyyDSynOhNgAraT7-gL53oBq1aMfw@mail.gmail.com>
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="Ntc0+0D2"
+Received: by mail-wr1-f42.google.com with SMTP id ffacd0b85a97d-4843e397f74so406028f8f.1
+        for <linux-pci@vger.kernel.org>; Fri, 11 Sep 2026 02:08:33 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1789117711; cv=none;
+        d=google.com; s=arc-20260327;
+        b=Hk5OMaEGa9rr7QMlzqpe2BzdLHzZvPXuw0RbMK+UKdFaxhqbBq53nXBF387rOqYf3v
+         Zm3X6zJJoZaqYDN17MXLuCvpbKQrB9O8/BgEDjnCa98M4RhpFGfq+itzzaAt3zPc2+1J
+         pD84zMnUtP6Nwr6ZrFknrMw4+7vn0w1KEvZ+Hosoez9PYA4tWANuARAkUOvGthwsRNyM
+         S/jurbjaeFqZgxEJZe2bk+qSAZ85PZbM+gq5ERPtAhe0n1imiHaOKWrlr/OAiwKskVEy
+         tlkfbo2DyvjnEH3WY+EsqMv43rJEHlwiaOKIcLki9GXKhg8V0tbJtnNZsD/1GQcbc4ov
+         Nsnw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=8V6E7xJ2vtTyuoasuWVTwqEDTbAd7Nywgb6H8W3xPYA=;
+        fh=YorTMqWiFP3ga9hzdkl4Hzhn/oDXVAkZdEbqDnFrkT8=;
+        b=bwYQfqtoW2wUKGnlDhun9Oy6vN7rWq4tTTz3dRfFLJIWD+iPskIUEJR4BPd4q2c6Qr
+         usEtagT2CQt4Ax73XVDGX9vJ02KoASySb7z4bNp8AUl6BRlJ6QSigCArRF4nJQZI9kzN
+         qF9MG78gPzfDH7ZZvrBk1/fjFvMh1MnkR4cv5elQafjkvjhPgjWakNCPfBwByc0ZUjxL
+         PiKdvFHBIsSehytoCUcD5i9JHE8nkFC0WHZeIkORu/C/7Nlo8bSc9oF+VuAHkJRLytmk
+         /F2uRFi6v3bNnu1uFSaUXnt0Frt9svHcY8Kt5BtanMZbpOmpdyuOsI3GPxcyMgk8qCjY
+         JJGg==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1789117711; x=1789722511; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=8V6E7xJ2vtTyuoasuWVTwqEDTbAd7Nywgb6H8W3xPYA=;
+        b=Ntc0+0D23+YujkzMEy4eJ6nXRpHFOnm4AtVkxEhi5vnpCexhU7KW4PmGmKyNMt+kZa
+         TPGlSB3IBPA9MiD4PQN6ttGdFWT2WqMR0/+bikrH32dyf3RHlyaDpdo24c0XMpHO5GJU
+         lDTJahlTxAMonEnDUsydvsqrYYCX0kfnhBDCQrNCn+atyDFTDkDtjvAsv2M6xPLh4eMe
+         a/AWqeYbYlOAESo9Wgc1GsNr33dNbudqVttD6Sl4VuL4rsbQ/aL6gINrZx4FRE2ZMT3U
+         4K5dculSYJThgW463pZtuOMCZuRhxZHA32PPtyLFovJ2VLCOKrv7CixBauixl/iB/3rB
+         IKCQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1789117711; x=1789722511;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=8V6E7xJ2vtTyuoasuWVTwqEDTbAd7Nywgb6H8W3xPYA=;
+        b=HdiAbVs4dzQKJnAzXyh384aWoJJybK+B2vrZ786CGiOeJOxcOjgJJ1chO02PscPlmY
+         5vGZOy7SYoULKuGVLyiy4k42eNMIEnqSSGlVXUL1PBwSgJuOr97ob4tahRmr/5yUm5lR
+         gwsqN2Y6gLWQxIvgl1eBYBmxLtLi8fhmrpdOi094f8fdG8cQaC5bcWSKXneM+0/KfDQs
+         C17cZm0Qtc9RBi8Dw7M1yRBEB2YGivdUcMXpL5FjARIf7xZj8ve7STUSc2LOh9wVtDX8
+         wUFQgRiXxUfoUqqyuS2LqInrhc50uVP21bPrYzj0r8uQv3m4cx6oFvwkNC9vUkXwxo4E
+         Qp9A==
+X-Forwarded-Encrypted: i=1; AKwUvBy3HibxgBChuzlf+xo51O2U5ZKyUVDUSUcGi8KyU4NjGrsx8bwpVpPbC7CmIzYO8vBROojlA3x6jjI=@vger.kernel.org
+X-Gm-Message-State: AFuF++n5U3HcMxd80ya6TkNd69+3Cv4PeK/r3kbKhJl7kO420MC2qjJW
+	Ky/n+blElGe4AUi0iImWHFNXWN115ugiryCe/83sN6RrcC6ovtJMok5TNpRvn2/KVSJpD86BfML
+	k/tmp3friOWi1OYgTrKKids+OEhxgoN6TiE1zkXoK
+X-Gm-Gg: AYBFou3JVobBiQTpMzRVMft1siZPykKk4AcaAFup4yAkoyIsK0xZUrMiZOSO61yC4Jy
+	Ov4JdJCX1lPQ6dfUTxjIpMomgexOybjr9g700BgAdL/x51MU5MTh/hcJ73/UzxL4OG/JOntSYb/
+	ZoIDvDZyRolWfZv0eLsnNIU9yVICQ/wekrAYNuK5bEU+5sS70nmMZlfzPtItdOly94VonT5M+ed
+	4WK1S1/RnkL39uxpVj7R3r2sFuPR273YEzAI8OFCoB1O7NWAvIvTUfwwYA3kg/fOoEUA5CCVHA2
+	Sq3yR98Pi/caoEbPI3+eGOzCUdB9BmwNeziAqA1D+OmMDFkoODYriS1+DjjFggkv01zE+QFORQU
+	HtpwLoVlE0LfdIDUnf40CQE9FIluvQH+k+sIsbqUJ9AYbKfE4c+/u55HbyCZB/mHu
+X-Received: by 2002:a05:6000:46d0:b0:485:8226:c691 with SMTP id
+ ffacd0b85a97d-486e0f6ce92mr8157059f8f.16.1789117710377; Fri, 11 Sep 2026
+ 02:08:30 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAFpUU0sqt2VzdGGUcx3fkLyyDSynOhNgAraT7-gL53oBq1aMfw@mail.gmail.com>
+References: <20260910-unique-ref-v21-0-e83257373062@kernel.org> <20260910-unique-ref-v21-4-e83257373062@kernel.org>
+In-Reply-To: <20260910-unique-ref-v21-4-e83257373062@kernel.org>
+From: Alice Ryhl <aliceryhl@google.com>
+Date: Fri, 11 Sep 2026 11:08:18 +0200
+X-Gm-Features: AcwNN1Wcpw91RcC64bgI4fLKPGdY59qIT8O1U-qjeWGvrNCV-tRUtkCYbazUk4w
+Message-ID: <CAH5fLghUQW5urTfLCCDT4BhuqoFVoLUAG46TS-SxaS37bJcgWQ@mail.gmail.com>
+Subject: Re: [PATCH v21 4/9] rust: rename `AlwaysRefCounted` to `RefCounted`.
+To: Andreas Hindborg <a.hindborg@kernel.org>
+Cc: Danilo Krummrich <dakr@kernel.org>, Lorenzo Stoakes <ljs@kernel.org>, Vlastimil Babka <vbabka@kernel.org>, 
+	"Liam R. Howlett" <liam@infradead.org>, Uladzislau Rezki <urezki@gmail.com>, Miguel Ojeda <ojeda@kernel.org>, 
+	Boqun Feng <boqun@kernel.org>, Gary Guo <gary@garyguo.net>, 
+	=?UTF-8?Q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, 
+	Benno Lossin <lossin@kernel.org>, Trevor Gross <tmgross@umich.edu>, 
+	Daniel Almeida <daniel.almeida@collabora.com>, Tamir Duberstein <tamird@kernel.org>, 
+	Alexandre Courbot <acourbot@nvidia.com>, =?UTF-8?Q?Onur_=C3=96zkan?= <work@onurozkan.dev>, 
+	Lyude Paul <lyude@redhat.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+	=?UTF-8?B?QXJ2ZSBIasO4bm5ldsOlZw==?= <arve@android.com>, 
+	Todd Kjos <tkjos@android.com>, Christian Brauner <brauner@kernel.org>, 
+	Carlos Llamas <cmllamas@google.com>, "Rafael J. Wysocki" <rafael@kernel.org>, 
+	Dave Ertman <david.m.ertman@intel.com>, Leon Romanovsky <leon@kernel.org>, 
+	Paul Moore <paul@paul-moore.com>, Serge Hallyn <sergeh@kernel.org>, 
+	David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>, 
+	Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>, 
+	Igor Korotin <igor.korotin@linux.dev>, Viresh Kumar <vireshk@kernel.org>, Nishanth Menon <nm@ti.com>, 
+	Stephen Boyd <sboyd@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+	=?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Pavel Tikhomirov <ptikhomirov@virtuozzo.com>, Michal Wilczynski <m.wilczynski@samsung.com>, 
+	Ira Weiny <iweiny@kernel.org>, Matthew Brost <matthew.brost@intel.com>, 
+	=?UTF-8?Q?Thomas_Hellstr=C3=B6m?= <thomas.hellstrom@linux.intel.com>, 
+	Philipp Stanner <phasta@kernel.org>, rust-for-linux@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-mm@kvack.org, driver-core@lists.linux.dev, 
+	linux-block@vger.kernel.org, linux-security-module@vger.kernel.org, 
+	dri-devel@lists.freedesktop.org, linux-fsdevel@vger.kernel.org, 
+	linux-pm@vger.kernel.org, linux-pci@vger.kernel.org, 
+	linux-pwm@vger.kernel.org, linux-usb@vger.kernel.org, 
+	Oliver Mangold <oliver.mangold@pm.me>, Viresh Kumar <viresh.kumar@linaro.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Hi,
+On Thu, Sep 10, 2026 at 11:01=E2=80=AFAM Andreas Hindborg <a.hindborg@kerne=
+l.org> wrote:
+>
+> From: Oliver Mangold <oliver.mangold@pm.me>
+>
+> There are types where it may both be reference counted in some cases and
+> owned in others. In such cases, obtaining `ARef<T>` from `&T` would be
+> unsound as it allows creation of `ARef<T>` copy from `&Owned<T>`.
+>
+> Therefore, we split `AlwaysRefCounted` into `RefCounted` (which `ARef<T>`
+> would require) and a marker trait to indicate that the type is always
+> reference counted (and not `Ownable`) so the `&T` -> `ARef<T>` conversion
+> is possible.
+>
+> - Rename `AlwaysRefCounted` to `RefCounted`.
+> - Add a new unsafe trait `AlwaysRefCounted`.
+> - Implement the new trait `AlwaysRefCounted` for the newly renamed
+>   `RefCounted` implementations. This leaves functionality of existing
+>   implementers of `AlwaysRefCounted` intact.
+>
+> Suggested-by: Alice Ryhl <aliceryhl@google.com>
+> Reviewed-by: Daniel Almeida <daniel.almeida@collabora.com>
+> Signed-off-by: Oliver Mangold <oliver.mangold@pm.me>
+> [ Andreas: Updated commit message and rebase on rust-next (7.2) ]
+> Acked-by: Igor Korotin <igor.korotin.linux@gmail.com>
+> Acked-by: Danilo Krummrich <dakr@kernel.org>
+> Acked-by: Viresh Kumar <viresh.kumar@linaro.org>
+> Reviewed-by: Gary Guo <gary@garyguo.net>
+> Assisted-by: LLM
+> Co-developed-by: Andreas Hindborg <a.hindborg@kernel.org>
+> Signed-off-by: Andreas Hindborg <a.hindborg@kernel.org>
 
-On Fri, Sep 11, 2026 at 05:58:26PM +0900, 鳥井原茂 wrote:
-> Hi,
-> 
-> I am reporting a case where a Thunderbolt/USB4-attached eGPU is
-> enumerated and links
-> correctly but can never be used for compute, because its BAR stays at
-> the power-on
-> default of 256MB and the Resizable BAR capability is never exercised.
-> 
-> I am not sure whether this is considered a known limitation or a bug
-> worth fixing, and
-> I would like to ask before assuming either. I have the hardware and am
-> happy to test
-> patches.
-> 
-> Environment
-> -----------
->   Host:      ThinkPad X1 Carbon Gen 13 (21NS0000JP), Lunar Lake
->              BIOS N4BET77W (1.47), 2026-06-30
+This has a lot of safety comments of the form "This does not implement
+Ownable, *therefore* it can implement AlwaysRefcounted". But I think
+the safety comment should instead explain that it's okay to create an
+ARef<_> from an &_ for this type. The fact that Ownable is not
+implemented is not sufficient argument.
 
-I don't know if we support REBAR or how well in PCIe side, Ilpo probably
-knows that. Typically there is just certain amount of resources allocated
-for each PCIe root port that gets tunneled so the way to do this is to
-increase that in the BIOS. Having said that most of the vendors don't
-actually allow it to be changed.
-
->   Kernel:    7.0.0-31 (Ubuntu 26.04.1)
->   Enclosure: AOOSTAR AG03, connected over USB4 (not OCuLink)
->   GPU:       Intel Arc B580 (Battlemage, 12GB), driver xe
-> 
-> What happens
-> ------------
-> The card enumerates, binds to xe, and its edge connector trains at
-> 16GT/s x4, which is
-> the expected ceiling for a USB4 PCIe tunnel. The link is healthy.
-> 
-> BAR2 stays at 256 MiB. The card advertises Resizable BAR support for
-> 256MB..16GB:
-> 
->   # cat /sys/bus/pci/devices/0000:24:00.0/resource2_resize
->   0000000000007f00
-> 
-> Level Zero (intel-compute-runtime 26.31.39395.13) prints
-> 
->   WARNING: Resizable BAR not detected for device 0000:24:00.0
-> 
-> and then drops the device from enumeration entirely, so it never
-> appears to any compute
-> API. The integrated Arc 140V is enumerated normally.
-> 
-> Why the BAR cannot be grown after the fact
-> ------------------------------------------
-> Attempting the resize by hand fails for every size down to 512MB:
-> 
->   # echo 0000:24:00.0 > /sys/bus/pci/drivers/xe/unbind
->   # echo 14 > /sys/bus/pci/devices/0000:24:00.0/resource2_resize   #
-> 16GB -> fails
->   # echo 9  > /sys/bus/pci/devices/0000:24:00.0/resource2_resize   #
-> 512MB -> fails
-> 
-> BAR2 is placed at 0x2010000000, which is only 256MB-aligned, so a
-> larger size cannot be
-> aligned to the bridge base. The prefetchable window of the Thunderbolt root port
-> (0000:00:07.0) is only a few hundred MB and comes from firmware:
-> 
->   PCI: Using host bridge windows from ACPI; if necessary, use
-> "pci=nocrs" and report a bug
-> 
-> I measured 711 MiB and 448 MiB for that window across two boots.
-> 
-> Things that do not help
-> -----------------------
->   pci=realloc                  no effect on already-populated bridges
-> 
->   pci=hpmmioprefsize=32G       makes it worse: the Thunderbolt
-> downstream port the GPU
->                                sits behind gets no window at all, and
-> the whole card
->                                disappears from the bus:
-> 
->     pci 0000:22:00.0: BAR 0 [mem 0x00800000-0x00ffffff 64bit pref]: assigned
->     pcieport 0000:21:00.0: bridge window [mem 0x00800000-0x00ffffff 64bit pref]:
->         can't claim; no compatible bridge window
-> 
->   pci=nocrs                    the machine does not boot: the NVMe
-> holding the rootfs
->                                fails to get resources and probe returns -ENOMEM
->     nvme 0000:04:00.0: probe with driver nvme failed with error -12
-> 
->   thunderbolt.host_reset=0     no effect here, and I believe the
-> reason is that the
->                                firmware never enumerates the tunnel at
-> POST. The eGPU
->                                first appears 63 seconds after kernel
-> boot (16:05:11 boot,
->                                16:06:14 first sighting of the card),
-> i.e. purely as an
->                                OS-side hotplug event. There is nothing
-> from POST to
->                                preserve.
-> 
-> The BIOS has no relevant setup option: under Config > Thunderbolt 4
-> there is only
-> "PCIe Tunneling" (on/off). No Resizable BAR, no Above 4G Decoding, no
-> BIOS Assist Mode.
-> I have filed a separate request with the vendor about that.
-
-BIOS assist mode is a workaround for early Windows systems that did not
-support native PCIe hotplug. It should not be used in any modern systems
-and I doubt it's not even capable of what you are doing.
-
-> What I think the underlying issue is
-> ------------------------------------
-> On hotplug, the PCI core reads the BAR at its power-on size, sizes the
-> bridge windows to
-> match and assigns addresses, all before any driver binds -- and the
-> ReBAR capability is
-> not consulted at any point in that path. By the time a driver could
-> ask for a larger BAR,
-> the surrounding windows are already committed and too small to grow into.
-> 
-> This looks like exactly what "PCI: Allow BAR movement during boot and hotplug"
-> (Sergei Miroshnichenko, v9, Dec 2020, 26 patches) was written to solve
-> -- the cover letter
-> explicitly lists Resizable BARs as a use case. As far as I can tell it
-> never landed:
-> 
->   # grep -c -e rescan_prepare -e rescan_done -e bar_fixed -e
-> movable_bars /proc/kallsyms
->   0
-> 
-> Questions
-> ---------
-> 1. Is ReBAR-over-Thunderbolt-hotplug considered a known limitation, or
-> is this worth
->    treating as a bug?
-
-I would say here that it's not even related to the underlying transport,
-could be something else than TB too, as long as PCIe goes inside.
-
-> 2. Is there any current plan to consult the ReBAR capability during
-> hotplug resource
->    assignment?
-> 3. What is the status of the movable-BARs series? Is it abandoned,
-> superseded, or waiting
->    on something?
-> 4. Is there a kernel parameter or sysfs path I have missed that would
-> let the BAR grow
->    after enumeration?
-> 
-> Thanks, s-tory.
+Alice
