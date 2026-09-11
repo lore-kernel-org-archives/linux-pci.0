@@ -1,320 +1,264 @@
-Received: from foss.arm.com (foss.arm.com [217.140.110.172])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id E075B3264E0;
-	Fri, 11 Sep 2026 17:45:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.140.110.172
+Received: from pdx-out-013.esa.us-west-2.outbound.mail-perimeter.amazon.com (pdx-out-013.esa.us-west-2.outbound.mail-perimeter.amazon.com [34.218.115.239])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B06DF4A68A0;
+	Fri, 11 Sep 2026 17:46:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=34.218.115.239
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789148760; cv=none; b=UB/8w3/q/B6icdDnuYHdGhjHZXBHm4ww6r4dERKI0RPlNdUhpFQEULFhtUVd/tnmBLtp6t9mAVLzz/iWpJtVkxF5nVQPLBI8XN1+wPWoLhCZDjg5twoRqoDhbzmhPSDOSSknu5VofDw7UjToypdfFOp4j0VewLGn2gp/jpuRsRo=
+	t=1789148764; cv=none; b=gw6//7GdwHzF9OK426ew6B+hUga4vrGaERwYVfcKZxfWr6ZLEwcGQRlmnKZ9gphvCj8BmzG4mjfWHu2dnnXuf+CnjL7nxFn6FANak8ZKiwQK2+5GIc7p5RAhBPNb555G9lGA5mLTTN0mMvfnbxkjZzemIrAsak0E66tTWIH8xeI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789148760; c=relaxed/simple;
-	bh=vqNXLstQ6G+A9gRpKcQ/FaWOMhaFZmotqLSI45wThoI=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=L7bQUnhfcS98XXF4QoqrtqSIR5z2YXVvYEA5JJuR3QUCVCKWWHalLnm8FsVjc/pXT7w0QNRBLLkjToarcsg92T3mxZc8WQKcQfpFPFDNLhjzy5d6uubR2mM5mCDE9wXRFP7ndzAAlbe20zvK0Opy781WlSPJJCIrYHP8J6dn5UY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arm.com; spf=pass smtp.mailfrom=arm.com; dkim=pass (1024-bit key) header.d=arm.com header.i=@arm.com header.b=pJMm1oNc; arc=none smtp.client-ip=217.140.110.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=arm.com
+	s=arc-20240116; t=1789148764; c=relaxed/simple;
+	bh=6Jm+/yA08ADWx8YuefYsn7Jfo5CbJtNY4gBhQGkg/n8=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=FAQ37zvqHiTZMebBNUNPaZvPyFhcbDUa8CTOMklx7T4U4U44VW3/LkCcSg8dQNhdHNbt+RwGpYigwr9YbKeX8FWWBNmOWDHwa1SNNRecbceN4bkD60yVykqMxaxNL+4IEVM+MXKRxiQVI2/QMme7p0iurIZY/rDtsQwmVSSy/JQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.de; spf=pass smtp.mailfrom=amazon.de; dkim=pass (2048-bit key) header.d=amazon.de header.i=@amazon.de header.b=sMtp+Vln; arc=none smtp.client-ip=34.218.115.239
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=amazon.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=arm.com header.i=@arm.com header.b="pJMm1oNc"
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-	by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 6480C16F2;
-	Fri, 11 Sep 2026 10:45:46 -0700 (PDT)
-Received: from [10.2.212.23] (e121345-lin.cambridge.arm.com [10.2.212.23])
-	by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 1C8A33F8C6;
-	Fri, 11 Sep 2026 10:45:41 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=arm.com; s=foss;
-	t=1789148750; bh=vqNXLstQ6G+A9gRpKcQ/FaWOMhaFZmotqLSI45wThoI=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=pJMm1oNcdYKueu9D95IWWioliFwd6SXi9fhAyOnY6niH5LkpKAyBF4t3YZaJzMTCO
-	 9ydzebNZ2ZfRCLTfyifsBjaCV9dabFWStUcgmAyVVpNAeysxrg4x+aJaeUq6AMnoq6
-	 hRdklboGrqiwEwID3cGK+Xmq9bqjnJG+2W7lUED0=
-Message-ID: <1785d4ce-03f5-4226-9987-d267a10a360d@arm.com>
-Date: Fri, 11 Sep 2026 18:45:40 +0100
+	dkim=pass (2048-bit key) header.d=amazon.de header.i=@amazon.de header.b="sMtp+Vln"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+  d=amazon.de; i=@amazon.de; q=dns/txt; s=amazoncorp2;
+  t=1789148762; x=1820684762;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=uG/E/cyk03CM0gEHgOG/UKkzaznPxEh34D8eww4v9Bk=;
+  b=sMtp+VlnB6z205i3Ecl3rpTJbfomut7os2MWVyQe63f89r7MTM+rVdHH
+   BhJK9cgUDyu3It5pzqERidA0WMMQrHxGSGCoU/JVmMLSzBTk9XkK+GNnQ
+   w1KhsjhPPhyIiQyMCLsSAnw1VSXPiR7E+xtAT15gPYwfQXh6PfsEyiJbr
+   3pKGHwg/99uLAsA35yvGYBg017kIiV2KrRJ+Z1jM/fhxqXqsQOnLzAg9V
+   vqrJklBqlq3IWKCW2OTJ9dZv549xgj5sgsFriIAlboFmLdORc/moXzxTU
+   iM1RnxSjiOsXpUx2Aptn698O8RqvlP8xsvGXLwiSkME6MMuj2Z/O3p+Ol
+   w==;
+X-CSE-ConnectionGUID: jKIpnsKwRmC2bq01T329Vw==
+X-CSE-MsgGUID: 3bWMuIMSTQSq3/49ZGqnNA==
+X-IronPort-AV: E=Sophos;i="6.27,97,1787011200"; 
+   d="scan'208";a="28234943"
+Received: from ip-10-5-12-219.us-west-2.compute.internal (HELO smtpout.naws.us-west-2.prod.farcaster.email.amazon.dev) ([10.5.12.219])
+  by internal-pdx-out-013.esa.us-west-2.outbound.mail-perimeter.amazon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Sep 2026 17:46:00 +0000
+Received: from EX19MTAUWC001.ant.amazon.com [205.251.233.105:21540]
+ by smtpin.naws.us-west-2.prod.farcaster.email.amazon.dev [10.0.43.236:2525] with esmtp (Farcaster)
+ id 24028455-f724-4a4f-9274-2dc7c3f15751; Fri, 11 Sep 2026 17:46:00 +0000 (UTC)
+X-Farcaster-Flow-ID: 24028455-f724-4a4f-9274-2dc7c3f15751
+Received: from EX19D001UWA001.ant.amazon.com (10.13.138.214) by
+ EX19MTAUWC001.ant.amazon.com (10.250.64.174) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.45;
+ Fri, 11 Sep 2026 17:46:00 +0000
+Received: from dev-dsk-sakacpav-1a-480d1124.eu-west-1.amazon.com
+ (172.19.96.155) by EX19D001UWA001.ant.amazon.com (10.13.138.214) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.46; Fri, 11 Sep 2026
+ 17:45:57 +0000
+From: Pavol Sakac <sakacpav@amazon.de>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Tejun Heo
+	<tj@kernel.org>, "Rafael J . Wysocki" <rafael@kernel.org>, Danilo Krummrich
+	<dakr@kernel.org>
+CC: <driver-core@lists.linux.dev>, <linux-kernel@vger.kernel.org>, "Andy
+ Shevchenko" <andriy.shevchenko@linux.intel.com>, Xu Yang <xu.yang_2@nxp.com>,
+	Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>, Bjorn Helgaas
+	<bhelgaas@google.com>, <linux-pci@vger.kernel.org>, Alex Williamson
+	<alex@shazbot.org>, <kvm@vger.kernel.org>, <nh-open-source@amazon.com>
+Subject: [RFC PATCH 4/8] driver core: Register opted-in devices through the staged sysfs path
+Date: Fri, 11 Sep 2026 19:43:36 +0200
+Message-ID: <20260911174414.97060-4-sakacpav@amazon.de>
+X-Mailer: git-send-email 2.47.3
+In-Reply-To: <20260911-vfopt-s5-v1-0-fa4cacdb6ca8@amazon.de>
+References: <20260911-vfopt-s5-v1-0-fa4cacdb6ca8@amazon.de>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [RFC PATCH 0/3] iommu: Reduce iommu_probe_device_lock contention
-To: Pavol Sakac <sakacpav@amazon.de>, Joerg Roedel <joro@8bytes.org>,
- Will Deacon <will@kernel.org>
-Cc: iommu@lists.linux.dev, linux-kernel@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
- nh-open-source@amazon.com
-References: <20260911-vfopt-s2-v1-0-fff3db7e01c2@amazon.de>
-From: Robin Murphy <robin.murphy@arm.com>
-Content-Language: en-GB
-In-Reply-To: <20260911-vfopt-s2-v1-0-fff3db7e01c2@amazon.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: EX19D036UWB001.ant.amazon.com (10.13.139.133) To
+ EX19D001UWA001.ant.amazon.com (10.13.138.214)
 
-On 11/09/2026 1:58 pm, Pavol Sakac wrote:
-> iommu_probe_device_lock is a file-scope mutex held across
-> __iommu_probe_device(): every device's IOMMU probe serializes against
-> every other. With "PCI/IOV: Initialize virtual functions in
-> parallel" [1] fanning an SR-IOV enable across CPUs, it collects 94.7%
-> of all lock wait. Patch 1 gathers per-member sysfs publication into one
-> all-or-nothing helper (no functional change); patches 2-3 move that
-> publication and first-device default-domain setup into per-group
-> finalisation after the global unlock, under group->mutex, mirroring the
-> removal path and bus_iommu_probe().
-> 
-> Lock statistics and SR-IOV init time for 4x PF (NVMe, 255 VFs each), on
-> the reproducer from the parallel VF initialization cover letter [1]:
-> 
->    lock_stat:
->    Lock                     wait: Before     After   contentions: Before   After
->    iommu_probe_device_lock      25507 ms  10471 ms                  1143     841
->    &root->kernfs_rwsem            942 ms   1834 ms                 93208  116316
->    &vfio.group_lock               425 ms   3614 ms                   497     736
-> 
->    avg wait per acquisition  6.3 ms -> 2.6 ms (4080 acq., both arms)
-> 
->    Stage                 SR-IOV init time:
->    S0 (baseline)         3027 ms
->    S1                     999 ms
->    S2 (this series)       995 ms
-> 
-> Reproducer disclaimer:
-> I lean primarily on lock_stat numbers to defend the improvements. In
-> the reproducer, this lock's residual hold dominates the window and
-> masks the later series' wall-time gains, more in [1].
-> 
-> This is relief, not removal: the lock still has the highest wait
-> time in the profile after this series. Wait per acquisition drops
-> from 6.3 ms to 2.6 ms, which is what makes the smaller
-> serialization points behind it measurable for the later series.
-> 
-> RFC on the direction: The comment in __iommu_probe_device() expects
-> the lock to narrow to device_lock() once the ACPI/OF replay calls
-> are cleaned up. I could not make that work for the whole section:
-> group formation in ops->device_group() is a cross-device decision a
-> per-device lock cannot order. This series instead moves the work
-> that needs no global ordering out of the section. Is that an
-> acceptable step, or is there a scoping or removal plan this should
-> wait for?
+dev_set_sysfs_staged() opts a device in to staged registration before
+device_add(). struct device gains one flag, DEV_FLAG_SYSFS_STAGED, in
+the existing flags bitmap, so the struct does not grow.
 
-The point of probe_device_lock is to prevent multiple threads trying to
-probe the *same* device concurrently; it protects the per-device state
-of dev->iommu and dev->iommu_group until the latter is assigned or the
-former is cleaned up (depending on how the probe goes). The replay calls
-are mostly gone, but the main reason device_lock() still won't work is
-that the same problem exists for driver-model-based IOMMU drivers
-themselves, since we don't have a good way to avoid bus_iommu_probe()
-deadlocking on IOMMU devices that are in the middle of registering
-during their own driver bind (not least the caller itself).
+device_add() stays a single code path with a staged bracket: it arms
+staged creation once the parent kobject is resolved, everything it builds
+in between lands in the staged subtree through unchanged code, and after
+device_pm_add() sysfs_publish_dir() makes the whole subtree visible in
+one step, before anything announces the device. bus_add_device() defers
+its bus-klist insertion until just after publication, because
+driver_attach() walks that klist and must not see a not-yet-published
+device.
 
-> A second question: I have measured where 90% of the residual hold goes:
-> get_pci_alias_group() walks every PCI device in the system to find
-> same-bus DMA aliases. It runs once per device probed, so once per VF,
-> under this lock, and the VFs keep growing the list it walks. A prototype
-> that skips the walk when no device has a dma_alias_mask and this device
-> has no pci_real_dma_dev() override cuts this lock's hold time by about
-> 90%, for the same acquisitions and the same groups. I am not proposing
-> it here, as I do not have the time to get it right this cycle. How can
-> we optimize this preferably in O(1) time?
+A class device with no parent lands under a class glue directory and
+needs no special casing: cleanup_glue_dir() cannot see a staged child
+through kobject_has_children(), but since commit ac43432cb1f5 ("driver
+core: Fix use-after-free and double free on glue directory") that gate
+also requires the caller's reference to be the last one, and a staged
+device holds two.
 
-TBH that makes it sound like optimising pci_device_group() is the better
-thing to do. We were never really meant to have a global lock here - it
-was just an acceptable compromise for simplicity at the time - so I'm
-still not keen on adding yet more complexity to the probe flow to work
-around it as if global serialisation was necessary when it isn't.
+Two transients are new and bounded. A symlink pointing at this device
+from an already-published directory resolves -ENOENT until publication,
+and an eager device_add() nested under the still-staged device fires its
+KOBJ_ADD before its own path resolves. Neither opt-in reaches that
+second case; code the opt-in caller does not control can, through the
+two wakeup-source routes named in the uevent-deferral patch. Both close
+at publication, before the ancestor's own KOBJ_ADD. The symlink
+transient announces nothing; the nested child's KOBJ_ADD does announce
+a path that does not yet resolve, and a later commit defers and replays
+exactly these events. Opt-in is therefore appropriate for devices
+whose nested children, if any, tolerate being fully registered,
+enumerable and bindable, while their sysfs tree is not yet visible.
 
-Heck, even if you do just want a quick bodge to ease contention then I'd
-still lean more towards something more self-contained like this
-hometime-on-a-Friday fun I couldn't resist sketching out...
+Publish-side code reads the kobject's sd_staged snapshot rather than this
+flag, which is free to change once device_add() has sampled it.
 
-Thanks,
-Robin.
-
------>8-----
-
-From: Robin Murphy <robin.murphy@arm.com>
-Subject: [PATCH] UNTESTED: iommu: Reduce iommu_probe_device_lock contention
-
-The purpose of iommu_probe_device_lock was to prevent multiple threads
-trying to probe the same device concurrently, it's only global for the
-sake of simplicity, as there are still reasons why we can't use
-device_lock(), and adding a whole other lock to struct device itself
-just for this would be unreasonable.
-
-However, we're now getting sufficiently large systems with enough
-devices to start seeing significant contention on this lock, so let's
-scale it to a lock table to reduce contention between unrelated devices.
-
-Signed-off-by: Robin Murphy <robin.murphy@arm.com>
+Assisted-by: LLM
+Signed-off-by: Pavol Sakac <sakacpav@amazon.de>
 ---
-  drivers/acpi/scan.c      |  6 +++---
-  drivers/iommu/iommu.c    | 37 +++++++++++++++++++++++++------------
-  drivers/iommu/of_iommu.c |  6 +++---
-  include/linux/iommu.h    |  2 +-
-  4 files changed, 32 insertions(+), 19 deletions(-)
+ drivers/base/base.h    |  1 +
+ drivers/base/bus.c     | 29 ++++++++++++++++++++++++++++-
+ drivers/base/core.c    | 27 +++++++++++++++++++++++++++
+ include/linux/device.h | 11 +++++++++++
+ 4 files changed, 67 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
-index f48715ed827c..33d6a758042a 100644
---- a/drivers/acpi/scan.c
-+++ b/drivers/acpi/scan.c
-@@ -1620,10 +1620,10 @@ static int acpi_iommu_configure_id(struct device *dev, const u32 *id_in)
-  	int err;
-  
-  	/* Serialise to make dev->iommu stable under our potential fwspec */
--	mutex_lock(&iommu_probe_device_lock);
-+	mutex_lock(iommu_probe_device_lock(dev));
-  	/* If we already translated the fwspec there is nothing left to do */
-  	if (dev_iommu_fwspec_get(dev)) {
--		mutex_unlock(&iommu_probe_device_lock);
-+		mutex_unlock(iommu_probe_device_lock(dev));
-  		return 0;
-  	}
-  
-@@ -1633,7 +1633,7 @@ static int acpi_iommu_configure_id(struct device *dev, const u32 *id_in)
-  	if (err && err != -EPROBE_DEFER)
-  		err = viot_iommu_configure(dev);
-  
--	mutex_unlock(&iommu_probe_device_lock);
-+	mutex_unlock(iommu_probe_device_lock(dev));
-  
-  	return err;
-  }
-diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
-index cd1bca7ede9a..11519e195aaf 100644
---- a/drivers/iommu/iommu.c
-+++ b/drivers/iommu/iommu.c
-@@ -381,9 +381,9 @@ int iommu_mock_device_add(struct device *dev, struct iommu_device *iommu)
-  {
-  	int rc;
-  
--	mutex_lock(&iommu_probe_device_lock);
-+	mutex_lock(iommu_probe_device_lock(dev));
-  	rc = iommu_fwspec_init(dev, iommu->fwnode);
--	mutex_unlock(&iommu_probe_device_lock);
-+	mutex_unlock(iommu_probe_device_lock(dev));
-  
-  	if (rc)
-  		return rc;
-@@ -400,7 +400,7 @@ static struct dev_iommu *dev_iommu_get(struct device *dev)
-  {
-  	struct dev_iommu *param = dev->iommu;
-  
--	lockdep_assert_held(&iommu_probe_device_lock);
-+	lockdep_assert_held(iommu_probe_device_lock(dev));
-  
-  	if (param)
-  		return param;
-@@ -457,7 +457,7 @@ void dev_iommu_priv_set(struct device *dev, void *priv)
-  {
-  	/* FSL_PAMU does something weird */
-  	if (!IS_ENABLED(CONFIG_FSL_PAMU))
--		lockdep_assert_held(&iommu_probe_device_lock);
-+		lockdep_assert_held(iommu_probe_device_lock(dev));
-  	dev->iommu->priv = priv;
-  }
-  EXPORT_SYMBOL_GPL(dev_iommu_priv_set);
-@@ -483,9 +483,9 @@ static int iommu_init_device(struct device *dev)
-  	 * found no IOMMU to wait for, so there's no point calling it again.
-  	 */
-  	if (!dev->iommu->fwspec && !dev->driver && dev->bus->dma_configure) {
--		mutex_unlock(&iommu_probe_device_lock);
-+		mutex_unlock(iommu_probe_device_lock(dev));
-  		dev->bus->dma_configure(dev);
--		mutex_lock(&iommu_probe_device_lock);
-+		mutex_lock(iommu_probe_device_lock(dev));
-  		/* If another instance finished the job for us, skip it */
-  		if (!dev->iommu || dev->iommu_group)
-  			return -ENODEV;
-@@ -622,7 +622,20 @@ static struct iommu_domain *pasid_array_entry_to_domain(void *entry)
-  	return ((struct iommu_attach_handle *)xa_untag_pointer(entry))->domain;
-  }
-  
--DEFINE_MUTEX(iommu_probe_device_lock);
-+static struct mutex __iommu_probe_device_lock[4] = {
-+	__MUTEX_INITIALIZER(iommu_probe_device_lock),
-+	__MUTEX_INITIALIZER(iommu_probe_device_lock),
-+	__MUTEX_INITIALIZER(iommu_probe_device_lock),
-+	__MUTEX_INITIALIZER(iommu_probe_device_lock),
-+};
-+
-+struct mutex *iommu_probe_device_lock(const struct device *dev)
+diff --git a/drivers/base/base.h b/drivers/base/base.h
+index f5d608f4aaa5..5c8266dad7f8 100644
+--- a/drivers/base/base.h
++++ b/drivers/base/base.h
+@@ -157,6 +157,7 @@ static inline void auxiliary_bus_init(void) { }
+ struct kobject *virtual_device_parent(void);
+ 
+ int bus_add_device(struct device *dev);
++void bus_add_device_publish(struct device *dev);
+ void bus_probe_device(struct device *dev);
+ void bus_remove_device(struct device *dev);
+ void bus_notify(struct device *dev, enum bus_notifier_event value);
+diff --git a/drivers/base/bus.c b/drivers/base/bus.c
+index d17bd91490ee..f5af3b1e2ee3 100644
+--- a/drivers/base/bus.c
++++ b/drivers/base/bus.c
+@@ -588,7 +588,16 @@ int bus_add_device(struct device *dev)
+ 	if (error)
+ 		goto out_subsys;
+ 
+-	klist_add_tail(&dev->p->knode_bus, &sp->klist_devices);
++	/*
++	 * A staged device must not appear on the bus klist (walked by
++	 * driver_attach()) until it has been published, or a driver could bind
++	 * to a not-yet-visible device.  Defer the insertion to
++	 * bus_add_device_publish().  The sp reference taken above is held until
++	 * device removal in both cases, and bus_remove_device() already
++	 * tolerates a never-inserted knode_bus via klist_node_attached().
++	 */
++	if (!kobject_sd_staged(&dev->kobj))
++		klist_add_tail(&dev->p->knode_bus, &sp->klist_devices);
+ 	return 0;
+ 
+ out_subsys:
+@@ -603,6 +612,24 @@ int bus_add_device(struct device *dev)
+ 	return error;
+ }
+ 
++/**
++ * bus_add_device_publish - finish bus registration deferred past publication
++ * @dev: the now-published staged device
++ *
++ * Performs the bus klist insertion bus_add_device() deferred for a staged
++ * device; see the comment there.
++ */
++void bus_add_device_publish(struct device *dev)
 +{
-+	int hash = ((uintptr_t)dev / roundup_pow_of_two(sizeof(*dev))) %
-+		    ARRAY_SIZE(__iommu_probe_device_lock);
++	struct subsys_private *sp = bus_to_subsys(dev->bus);
 +
-+	return __iommu_probe_device_lock + hash;
++	if (!sp)
++		return;
++
++	klist_add_tail(&dev->p->knode_bus, &sp->klist_devices);
++	subsys_put(sp);
 +}
-  
-  static int __iommu_probe_device(struct device *dev, struct list_head *group_list)
-  {
-@@ -637,7 +650,7 @@ static int __iommu_probe_device(struct device *dev, struct list_head *group_list
-  	 * probably be able to use device_lock() here to minimise the scope,
-  	 * but for now enforcing a simple global ordering is fine.
-  	 */
--	lockdep_assert_held(&iommu_probe_device_lock);
-+	lockdep_assert_held(iommu_probe_device_lock(dev));
-  
-  	/* Device is probed already if in a group */
-  	if (dev->iommu_group)
-@@ -711,9 +724,9 @@ int iommu_probe_device(struct device *dev)
-  	const struct iommu_ops *ops;
-  	int ret;
-  
--	mutex_lock(&iommu_probe_device_lock);
-+	mutex_lock(iommu_probe_device_lock(dev));
-  	ret = __iommu_probe_device(dev, NULL);
--	mutex_unlock(&iommu_probe_device_lock);
-+	mutex_unlock(iommu_probe_device_lock(dev));
-  	if (ret)
-  		return ret;
-  
-@@ -1803,9 +1816,9 @@ static int probe_iommu_group(struct device *dev, void *data)
-  	struct list_head *group_list = data;
-  	int ret;
-  
--	mutex_lock(&iommu_probe_device_lock);
-+	mutex_lock(iommu_probe_device_lock(dev));
-  	ret = __iommu_probe_device(dev, group_list);
--	mutex_unlock(&iommu_probe_device_lock);
-+	mutex_unlock(iommu_probe_device_lock(dev));
-  	if (ret == -ENODEV)
-  		ret = 0;
-  
-diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
-index a18bb60f6f3d..b5e3a425ca2d 100644
---- a/drivers/iommu/of_iommu.c
-+++ b/drivers/iommu/of_iommu.c
-@@ -121,9 +121,9 @@ int of_iommu_configure(struct device *dev, struct device_node *master_np,
-  		return -ENODEV;
-  
-  	/* Serialise to make dev->iommu stable under our potential fwspec */
--	mutex_lock(&iommu_probe_device_lock);
-+	mutex_lock(iommu_probe_device_lock(dev));
-  	if (dev_iommu_fwspec_get(dev)) {
--		mutex_unlock(&iommu_probe_device_lock);
-+		mutex_unlock(iommu_probe_device_lock(dev));
-  		return 0;
-  	}
-  	dev_iommu_present = dev->iommu;
-@@ -151,7 +151,7 @@ int of_iommu_configure(struct device *dev, struct device_node *master_np,
-  		iommu_fwspec_free(dev);
-  	else if (err && dev->iommu)
-  		dev_iommu_free(dev);
--	mutex_unlock(&iommu_probe_device_lock);
-+	mutex_unlock(iommu_probe_device_lock(dev));
-  
-  	/*
-  	 * If we're not on the iommu_probe_device() path (as indicated by the
-diff --git a/include/linux/iommu.h b/include/linux/iommu.h
-index ac43b8b93f14..3b876cb285e0 100644
---- a/include/linux/iommu.h
-+++ b/include/linux/iommu.h
-@@ -1201,7 +1201,7 @@ static inline void *dev_iommu_priv_get(struct device *dev)
-  
-  void dev_iommu_priv_set(struct device *dev, void *priv);
-  
--extern struct mutex iommu_probe_device_lock;
-+struct mutex *iommu_probe_device_lock(const struct device *dev);
-  int iommu_probe_device(struct device *dev);
-  
-  int iommu_device_use_default_domain(struct device *dev);
++
+ /**
+  * bus_probe_device - probe drivers for a new device
+  * @dev: device to probe
+diff --git a/drivers/base/core.c b/drivers/base/core.c
+index 5dea641cbdb6..caba5610a04d 100644
+--- a/drivers/base/core.c
++++ b/drivers/base/core.c
+@@ -3740,6 +3740,14 @@ int device_add(struct device *dev)
+ 	if (kobj)
+ 		dev->kobj.parent = kobj;
+ 
++	/*
++	 * Glue-dir parents are safe: cleanup_glue_dir() only reaps a glue
++	 * dir whose kref is 1, and this device holds a glue-dir reference
++	 * from get_device_parent() for the whole staged window.  Assigned
++	 * unconditionally so a reused kobject cannot carry a stale bit.
++	 */
++	kobject_set_sd_staged(&dev->kobj, dev_sysfs_staged(dev));
++
+ 	/* use parent numa_node */
+ 	if (parent && (dev_to_node(dev) == NUMA_NO_NODE))
+ 		set_dev_node(dev, dev_to_node(parent));
+@@ -3773,6 +3781,25 @@ int device_add(struct device *dev)
+ 		goto DPMError;
+ 	device_pm_add(dev);
+ 
++	/*
++	 * Publish the staged directory before anything makes the device
++	 * observable: the /sys/dev entry, the devtmpfs node,
++	 * BUS_NOTIFY_ADD_DEVICE, the KOBJ_ADD uevent and driver probing all
++	 * follow.  Once published, the deferred bus klist insertion puts the
++	 * device where driver_attach() can see it.  (The outside-in symlinks
++	 * whose target is this device -- class/bus/ACPI -- are created earlier
++	 * and resolve only at publication.)  Children added by notify hooks
++	 * inside the staged window were created staged-interior and are
++	 * published together with this device; their uevents may precede
++	 * their sysfs visibility.
++	 */
++	if (kobject_sd_staged(&dev->kobj)) {
++		error = sysfs_publish_dir(&dev->kobj);
++		if (error)
++			goto DevAttrError;
++		bus_add_device_publish(dev);
++	}
++
+ 	if (MAJOR(dev->devt)) {
+ 		error = device_create_file(dev, &dev_attr_dev);
+ 		if (error)
+diff --git a/include/linux/device.h b/include/linux/device.h
+index aee79fd6b32b..74701a8aa9d2 100644
+--- a/include/linux/device.h
++++ b/include/linux/device.h
+@@ -599,6 +599,15 @@ struct device_physical_location {
+  *		ancestor device.
+  * @DEV_FLAG_OFFLINE_DISABLED: If set, the device is permanently online.
+  * @DEV_FLAG_OFFLINE: Set after successful invocation of bus type's .offline().
++ * @DEV_FLAG_SYSFS_STAGED: Opt in to staged sysfs registration.  device_add()
++ *		then builds the device's sysfs directory and all content added
++ *		before the publication point invisibly and off the sysfs root
++ *		lock, and publishes it in one step before the device becomes
++ *		observable to userspace or to drivers.  The per-device
++ *		sysfs-root lock cost stops scaling with the number of nodes in
++ *		the directory, which matters when many devices (for example
++ *		SR-IOV virtual functions) are registered in parallel.
++ *		Must be set before device_add().
+  * @DEV_FLAG_COUNT: Number of defined struct_device_flags.
+  */
+ enum struct_device_flags {
+@@ -612,6 +621,7 @@ enum struct_device_flags {
+ 	DEV_FLAG_OF_NODE_REUSED = 7,
+ 	DEV_FLAG_OFFLINE_DISABLED = 8,
+ 	DEV_FLAG_OFFLINE = 9,
++	DEV_FLAG_SYSFS_STAGED = 10,
+ 
+ 	DEV_FLAG_COUNT
+ };
+@@ -829,6 +839,7 @@ __create_dev_flag_accessors(dma_coherent, DEV_FLAG_DMA_COHERENT);
+ __create_dev_flag_accessors(of_node_reused, DEV_FLAG_OF_NODE_REUSED);
+ __create_dev_flag_accessors(offline_disabled, DEV_FLAG_OFFLINE_DISABLED);
+ __create_dev_flag_accessors(offline, DEV_FLAG_OFFLINE);
++__create_dev_flag_accessors(sysfs_staged, DEV_FLAG_SYSFS_STAGED);
+ 
+ #undef __create_dev_flag_accessors
+ 
 -- 
-2.54.0.dirty
+2.47.3
 
