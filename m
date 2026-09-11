@@ -1,153 +1,128 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AAE0C4908A1
-	for <linux-pci@vger.kernel.org>; Fri, 11 Sep 2026 17:16:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 07AE14A99CF;
+	Fri, 11 Sep 2026 17:18:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789147010; cv=none; b=YR1QzPBfXVPo8/FVr9pTpbWXbpZUNgRj1bzMa/LDsw3N4b+7IOu/DLD4tWYYW8McY57FxHs0U/2zibXFjL+efo8LcyM3marnt9kFxq01Ix+jC6Q63G06py1Ug2JboJ4aQPiVCd5hvY88l9SLyiR6gELqEjojll31hJH5nuJUR8w=
+	t=1789147090; cv=none; b=e8IKbmYgRItt1qsYwM8mic4o7dJc9xdAjNxRQkMiddNesGEv9ygO/OO4HoLFtJjtXrEIQerNspefLnIitYgGn2EzrCiC0UBeSqoEz/G1HOtofYcOwJn9VBOpT9v10s5K0Ki1/lkczfHtTrYu/7UJFbIY+6jlz718FpYBBkX00RI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789147010; c=relaxed/simple;
-	bh=GMwpKaQo+b1xj3kxl72UkiN0737lUQVYesuUiulsvUs=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Dzu6aUO4zY9+sbOidjmtdTIDal4bsXsAl2etAQ2uFL+bE4zea9PcJ4cKMJ1jseNxB60gMdv3vIGlonbm2Z7SJFEk1G41HbWET/KAfSE/ldLEjI1r2i5Ae3FGC1HYTFZQ8k9SJ+HH/uKma8SGFaevFk3J8wniCv4OwwYgTtsfOWM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Jegzyb6w; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1789147090; c=relaxed/simple;
+	bh=zKUMKrASgkid4sZE4XHGazly8P6BIiP8uvoqbldK8q8=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=dO1RlR2tuhyuyM9ZvLBhhxh5XBid6nbhWsAx60eZ07HPbVI8lQW5YaxGEVPZygSkDVj4/OU/+sQUj/HbosUeWtkr8P52asOualdhwdyfoTbvWL2DwjAsSLa6cHKm28X1JKh/uocXw80HWTLLCEDxuLN+gIO5AlICWHqn5Mmn6SY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EOctJEUN; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Jegzyb6w"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1789147005;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
-	bh=2gLJ161dkwsq964nEcXmxhgBhqu8XXJwXX0byV6GR0o=;
-	b=Jegzyb6w1GOcwCA2AdjYkBa4u/Wnuzmo6D8KOb7fTvyDaBRKIKoF5h4LbjhGpVp/p0cvxa
-	SAVkRzJS90PIeF/4T12HWT/rCvgaWWjhResUmsYuSXsyMs7WZkTMELhTa0RZTcS9/4sAQI
-	DCYPX4LssLJdhMmBGisTXWb6M11k1NY=
-Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-648-Rj-cvUwGMAyGPQnZAnD2Fw-1; Fri,
- 11 Sep 2026 13:16:39 -0400
-X-MC-Unique: Rj-cvUwGMAyGPQnZAnD2Fw-1
-X-Mimecast-MFC-AGG-ID: Rj-cvUwGMAyGPQnZAnD2Fw_1789146996
-Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 3F1851801366;
-	Fri, 11 Sep 2026 17:16:35 +0000 (UTC)
-Received: from [100.90.56.12] (headnet05.pony-001.prod.iad2.dc.redhat.com [10.2.32.117])
-	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 21D561956095;
-	Fri, 11 Sep 2026 17:16:26 +0000 (UTC)
-Message-ID: <a3c2d0f6-a7b5-4344-b837-434aeac5dbc0@redhat.com>
-Date: Fri, 11 Sep 2026 19:16:23 +0200
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EOctJEUN"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5C2021F000FF;
+	Fri, 11 Sep 2026 17:18:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1789147088;
+	bh=BiMS/bzN218uVxMjPWQUVYFg4XO3qw5jGV0pgdNd/6A=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=EOctJEUNrMyP6akxzbwkzsqcM66c8tMEa6G49mp7eF2KRpiE78EVu+zVbRjqcN6Xw
+	 CB9evm6Z0nbjVK8ZsaBlg5dDILWoIlR5wY9fJeZw3FJWUfJ46yN9qTSJHr+eUmWQ5y
+	 9xVh5Kq/wMY+YSWLiWq+8wU6jcMnuyDXw4R8QGL4XY8zjmznOQx9ru/8mnbEczTBmS
+	 UT1tYaJHaSDgNXOGUTS18zzaYhp2dU8KvWQbJieDNZPCqF0GyWFELyoDFGpuZIq6WX
+	 KApp42Hg8Vs9pxcJKRjPYw+ZZXFbN6M7pqewJ0MitfmgSeD5NeqUKaHuBYcC01aTt8
+	 cpDgzXZd9aLig==
+Date: Fri, 11 Sep 2026 12:18:07 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Manivannan Sadhasivam <mani@kernel.org>
+Cc: Qiang Yu <qiang.yu@oss.qualcomm.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>,
+	linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] PCI: qcom: Block accesses to downstream devices on
+ link down
+Message-ID: <20260911171807.GA402207@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [RFC PATCH 0/3] liveupdate: Move to feature flags for LUO and
- memfd ABI compatibility
-To: Jason Gunthorpe <jgg@nvidia.com>, Sean Christopherson <seanjc@google.com>
-Cc: David Matlack <dmatlack@google.com>, Logan Odell <loganodell@google.com>,
- arnd@arndb.de, pasha.tatashin@soleen.com, rppt@kernel.org,
- pratyush@kernel.org, graf@amazon.com, akpm@linux-foundation.org,
- maz@kernel.org, oupton@kernel.org, bhelgaas@google.com, alex@shazbot.org,
- kevin.tian@intel.com, dwmw2@infradead.org, baolu.lu@linux.intel.com,
- joro@8bytes.org, will@kernel.org, robin.murphy@arm.com,
- linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org,
- kexec@lists.infradead.org, linux-mm@kvack.org, kvm@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org, kvmarm@lists.linux.dev,
- linux-pci@vger.kernel.org, iommu@lists.linux.dev
-References: <20260903023452.721732-1-loganodell@google.com>
- <20260904160009.GV4157646@nvidia.com> <aptFFYqcSiBdMLE8@google.com>
- <20260905012403.GX4157646@nvidia.com> <aqIAtOoew-_6jw29@google.com>
- <20260910143448.GD3968357@nvidia.com> <aqLOWkuVKccR-I7W@google.com>
- <20260910171210.GF3968357@nvidia.com>
-From: Paolo Bonzini <pbonzini@redhat.com>
-Content-Language: en-US
-Autocrypt: addr=pbonzini@redhat.com; keydata=
- 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
-In-Reply-To: <20260910171210.GF3968357@nvidia.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ienbx5wjdzhgtdtbmuqcc76ovzy5d4wid7x4nhq5e4bco6u4il@264db3obw2qq>
 
-On 9/10/26 19:12, Jason Gunthorpe wrote:
-> Keep in mind the actual goal here. Someone has kernel A and they need
-> to blind kexec into kernel B and NOT have the machine explode, or all
-> the VMs sitting on it lost.
+On Fri, Sep 11, 2026 at 08:17:29AM +0200, Manivannan Sadhasivam wrote:
+> On Tue, Sep 08, 2026 at 06:00:30PM -0500, Bjorn Helgaas wrote:
+> > On Wed, Aug 19, 2026 at 11:36:54PM -0700, Qiang Yu wrote:
+> > > After a PCIe link goes down, software may still access the BAR
+> > > (MMIO) space or configuration space of devices behind that link
+> > > before recovery has run. As the link is down, these accesses
+> > > never complete, resulting in a storm of Completion Timeout AERs.
+> > 
+> > What is special about qcom here?  It seems like the Completion
+> > Timeouts and AER interrupts should happen with every PCIe
+> > controller.
 > 
-> Meaning you must have a way to determine before the kexec if kernel A
-> is producing something B will *accept*. Accept is not "parse and fail
-> with EOPNOTSUPP" like most uapi schems. Aceept means bring in and
-> actually fully support and use.
->
-> So how do you solve this problem? You MUST declare in some kind of
-> manifest exactly what ABIs are supported, in some way.
+> The special behavior which is common across many (not all) ARM SoCs
+> is that they don't synthesize all-one response for completion
+> timeouts, unlike RCs in x86 machines. Rather, they return AXI error
+> response, resulting in CPU treating them as SError, in-addition to
+> AER storm.
+> 
+> Commit message missed mentioning SError though.
 
-You still have to pass out of band what B will accept.  Passing a string 
-or a bitvector doesn't change much.
+I don't know how SError works, but this sounds like a pretty big open
+issue with respect to RAS.  I don't think we want a kernel panic
+because a device failed to respond to a config or MMIO access, e.g.,
+if a card or Thunderbolt cable got unplugged.
 
-The problem, again is that memfd is the easy case.  KVM would bump the 
-version number on every other release, as even a new serialized MSR will 
-be an incompatibility.
+> > Is this mitigating an issue that will still happen on other
+> > controllers and should be solved elsewhere, e.g., by changing the
+> > software that accesses the BAR to look for the error responses it
+> > gets when the Completion Timeout happens?
+> 
+> That would be too late as we don't get a proper error response.
+> That's why this patch is used.
+> 
+> > The patch refers to the ECAM blocker (which I assume affects
+> > config accesses) and doesn't mention MMIO.  Is the SLV_AXI stuff
+> > for MMIO?
+> 
+> ECAM blocker is a Qcom's custom implementation which prevents the
+> config access to go out of the link and terminate the request
+> properly. And yes, it doesn't affect MMIO like BAR.
 
-Rather, forwards kexec *must* work (again, that's nothing but a variant 
-of "we don't break userspace") and for backwards kexec, well, you must 
-know what you're doing.  QEMU has been doing backwards live migration 
-forever, and QEMU is a gnarly C program that has grown by accretion as 
-we were learning all this stuff, so it's not impossible at all.
+The commit log implies that the patch blocks both config and MMIO
+accesses: "software may access MMIO or config space ... Use ECAM
+blocker to drop these accesses."  If the ECAM blocker only affects
+config accesses, we need to reword that description.
 
-> Yeah, CSP broadly has to do exactly this across a wide range of
-> topics. It is a further reason why this feature is not exactly usable
-> by a "mainstream" user :\
-It's not easy, but you aren't even trying to do it right in the kernel. 
-You are starting from *a* solution and saying that it makes the feature 
-hard to use.
+If this patch doesn't affect MMIO accesses, I assume they will still
+fail and lead to SError?  I'm a little dubious about the utility of
+this because I assume most runtime driver accesses will be to MMIO
+space, not config space.
 
-And I'm not saying to dismiss your work or ability, quite the contrary 
-in fact!  It's just that you're solving for the wrong complexity, and 
-only partially so because (if I'm not wrong) there's still the question 
-of how to bring the manifest of kernel B into kernel A.
+I assume this is also racy: any config access that happens in the
+window between the link going down and the ECAM blocker being enabled
+will still fail and result in SError, right?
 
-Paolo
+> > Assume the root port leads to a switch, and the switch has two
+> > links to downstream devices.  If one of the switch downstream
+> > links goes down, is this going to kill the device on the other
+> > link that is still up?
+> 
+> ECAM blocker is only enabled when the PCIe link to the Root Port
+> goes down. We don't get LDn interrupt when the switch downstream
+> link goes down. In that case, the switch should synthesize the error
+> response if the CPU tries to access the unavailable device.
 
+For config or MMIO reads targeting a device below a switch, if the
+link to the device is down, I think the switch will return an
+Unsupported Request completion without data (PCIe r7.0, sec 2.3.1.1).
+
+The PCIe spec doesn't prescribe whether RC synthesizes data to
+complete the read, but x86 RCs typically synthesize ~0 data.  I guess
+some arm64 RCs assert SError instead of completing the read.
+
+IIUC, if the link from the RP goes down, we'll take the LDn interrupt,
+enable ECAM blocker, and future config reads would return ~0.  But if
+a link below a switch goes down, there's no LDn interrupt and it
+sounds like future config reads would result in a UR Cpl and SError.
