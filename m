@@ -1,146 +1,244 @@
-Received: from canpmsgout04.his.huawei.com (canpmsgout04.his.huawei.com [113.46.200.219])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.10])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1BD7943B6DA;
-	Fri, 11 Sep 2026 06:42:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.219
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 443E33F6619
+	for <linux-pci@vger.kernel.org>; Fri, 11 Sep 2026 06:44:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.10
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789108932; cv=none; b=TuSmJBMJf6Zk02iKozF7iAQnX1ycPTgeOm1emZB7fwHG6tuzn2J9OjOe6miR0S3ocrpk84taNWQhdXXW9un6T9rpm/iMiM5XzE4o8q+H0kj8vtCnM+MEuhObyUYwZVMSGv7cbDPtK82q9qW4QlDBCrp7rUyZWhTYOk9j0k4So7s=
+	t=1789109056; cv=none; b=OC4xPaPv2jtPf51yFRSKB6JBxjNLhOBtCNUXtN73R6oe6mj5dRfwEHUm7uRv8v0bbA9LKpim/tIn9tNB9Is6JIQcMHIbkysWdE51wZqYr01HgRnbnnRoOuPsuP6AVD6Q2rE6jHzqHAblNM7LbToYsNrvVnT0zd+up1ES4HkgqGo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789108932; c=relaxed/simple;
-	bh=457f5cRwPoXHuVT5tY7qO1+iTVrHBYEEa5+bQdA01u0=;
-	h=Message-ID:Date:MIME-Version:Subject:CC:References:From:To:
-	 In-Reply-To:Content-Type; b=GP93KOZdwnhW25PPHGySJEfUIur0VKBM3HXM3j1ZzOodAiL4VCQ66QH6TjdJPNva9q3p0zHYqJ1ku/ZupXNqK2LKdUOzmoNAk/QPyX+5cLVuQqtUnxALy6Sft8eXext+wbp9drLiK5MPjkSeLVlO1wOe0ZMtMul4gmh7O4zPv/8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=GIIMTrkX; arc=none smtp.client-ip=113.46.200.219
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+	s=arc-20240116; t=1789109056; c=relaxed/simple;
+	bh=mQ3/N72jFGQljc2812AqEp8YLdo8fE8k4ksB9OsW6lo=;
+	h=Date:From:To:Cc:Subject:Message-ID; b=Q/fac8nB4nJmhBgwPbRpz5INwBxiFDhiYrta9djPDjKmzszekB0s7UopulMPkYF164d3A5dWn2UJK+eJRcvR2z1pXqZkbdQzqisMV957eCEHhAOV5JegSQPjowiE7QB+mAlCVlilQdjTQKdUO05lkDRyzhvEqhhp0qarZuEYdqo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Sl90+gsT; arc=none smtp.client-ip=198.175.65.10
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="GIIMTrkX"
-dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=From;
-	bh=bIPghYDjldaQhWAAAGEJ/xvZF4ExUts68Xdqztjk628=;
-	b=GIIMTrkXpqOqobIhcZXPy2aapSwvv1ajs9SmI2b4KVEHN2OH174sPwQ5kyIdAFR8KzyW793Hk
-	35P4G8ADMp0dxlidnCJ9WqB82klTzW32sH/2Kj0/YpwEEQ+Q7LB7vtrChIFEqnWucFlouvDVAUp
-	6rybl2B2o7iGh2R+eYM5ZlA=
-Received: from mail.maildlp.com (unknown [172.19.162.223])
-	by canpmsgout04.his.huawei.com (SkyGuard) with ESMTPS id 4hh4Rz4CYxz1prKW;
-	Fri, 11 Sep 2026 14:30:55 +0800 (CST)
-Received: from whupemo200004.china.huawei.com (unknown [7.152.184.18])
-	by mail.maildlp.com (Postfix) with ESMTPS id 8F41A40575;
-	Fri, 11 Sep 2026 14:41:52 +0800 (CST)
-Received: from [10.67.120.233] (10.67.120.233) by
- whupemo200004.china.huawei.com (7.152.184.18) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.45; Fri, 11 Sep 2026 14:41:49 +0800
-Message-ID: <4019452b-b25f-4c17-bc5c-570a28782bf1@huawei.com>
-Date: Fri, 11 Sep 2026 14:41:48 +0800
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Sl90+gsT"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1789109046; x=1820645046;
+  h=date:from:to:cc:subject:message-id;
+  bh=mQ3/N72jFGQljc2812AqEp8YLdo8fE8k4ksB9OsW6lo=;
+  b=Sl90+gsT2YOJsiMSOiX2TeKzLTW1io7S4MOCWpx71gJpJIgx8TLcp+Ur
+   vUwLCu9JUmL/OfcTQis0PPjuu+tCuyxsypuS01MxgVrLGIxUYZsrSZNJN
+   GjoC1xkeILlzXY49gzFEI088Hzwls58qwjzwf7ee4vTHVvt2e402ao4JF
+   dfQllemm11Tv03oiZMS5P8BG7eoI94zu3/kfjqAWSM7Q0A3aE3bBqluoL
+   sc2ajf9GoXLc6Qf5ugcd3HrBR7T0NY12mVXRIyb4rcAOCBVDNyNw02WxR
+   fBBb5sbJcz2cfCmf7QOM0zn+glBghma7JkmMFgTyEHuJermMhtuyNDZBl
+   g==;
+X-CSE-ConnectionGUID: 8nmAm/AKSoKng2p+cGy/Pg==
+X-CSE-MsgGUID: lNXVoxcnRbCZ1WyghZNh7A==
+X-IronPort-AV: E=McAfee;i="6800,10657,11901"; a="106938679"
+X-IronPort-AV: E=Sophos;i="6.27,96,1787036400"; 
+   d="scan'208";a="106938679"
+Received: from orviesa003.jf.intel.com ([10.64.159.143])
+  by orvoesa102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Sep 2026 23:44:02 -0700
+X-CSE-ConnectionGUID: dCc7pT0VTMq2OqYHIpSgIA==
+X-CSE-MsgGUID: 6IsfvhsfQxmXn3nGQPSMqA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,96,1787036400"; 
+   d="scan'208";a="275360601"
+Received: from lkp-server02.sh.intel.com (HELO 0a3643a6ed9d) ([10.239.97.151])
+  by orviesa003.jf.intel.com with ESMTP; 10 Sep 2026 23:44:01 -0700
+Received: from kbuild by 0a3643a6ed9d with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1x4uzB-000000001Aw-1H4h;
+	Fri, 11 Sep 2026 06:43:50 +0000
+Date: Fri, 11 Sep 2026 14:43:34 +0800
+From: kernel test robot <lkp@intel.com>
+To: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Cc: linux-pci@vger.kernel.org
+Subject: [pci:controller:mediatek] BUILD SUCCESS
+ 52cbf88730b743745404b3fa5a3fc8b480768276
+Message-ID: <202609111431.dVfytyzS-lkp@intel.com>
+User-Agent: s-nail v14.9.25
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 0/8] Enhance TLP packet decoder with field-level
- parsing and versioning
-CC: <rostedt@goodmis.org>, <mhiramat@kernel.org>,
-	<mathieu.desnoyers@efficios.com>, <corbet@lwn.net>,
-	<skhan@linuxfoundation.org>, <bhelgaas@google.com>, <yangyccccc@gmail.com>,
-	<jic23@kernel.org>, <john.g.garry@oracle.com>, <will@kernel.org>,
-	<james.clark@linaro.org>, <mike.leach@arm.com>, <leo.yan@linux.dev>,
-	<peterz@infradead.org>, <mingo@redhat.com>, <namhyung@kernel.org>,
-	<mark.rutland@arm.com>, <alexander.shishkin@linux.intel.com>,
-	<jolsa@kernel.org>, <irogers@google.com>, <adrian.hunter@intel.com>,
-	<wangyushan12@huawei.com>, <wuzongyu1@huawei.com>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-perf-users@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
-	<linux-doc@vger.kernel.org>, <linuxarm@huawei.com>,
-	<prime.zeng@hisilicon.com>, Arnaldo Carvalho de Melo <acme@kernel.org>
-References: <20260908140509.2485649-1-liusizhe5@huawei.com>
- <aqB37YCMUYKodo3N@x2>
-From: Sizhe Liu <liusizhe5@huawei.com>
-To: Suzuki K Poulose <suzuki.poulose@arm.com>
-In-Reply-To: <aqB37YCMUYKodo3N@x2>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: kwepems100001.china.huawei.com (7.221.188.238) To
- whupemo200004.china.huawei.com (7.152.184.18)
 
-On 2026/9/9 5:02, Arnaldo Carvalho de Melo wrote:
-> On Tue, Sep 08, 2026 at 10:05:01PM +0800, Sizhe Liu wrote:
->> The original hisi-ptt-decoder only prints raw hex values with
->> generic field names for DW0/DW1/DW2/DW3, without classifying TLP
->> types or decoding DW0/DW1/DW2/DW3 fields according to the hardware-
->> defined packet format.
->> 
->> This series enhances the HiSilicon PTT (PCIe Trace and Tuning) packet
->> decoder in perf tool to provide detailed field-level parsing of TLP
->> headers based on message type, and adds a versioning mechanism for
->> backward compatibility both in hisi_ptt driver and perf tool.
-> 
-> Series is sashiko clean by now, has a Reviewed-by, but it touches both
-> kernel and tools, I wouldn't have a problem if it was processed by whoever
-> maintains the kernel part.
-> 
-> - Arnaldo
-> 
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/mediatek
+branch HEAD: 52cbf88730b743745404b3fa5a3fc8b480768276  PCI: mediatek: Find INTx controller by property
 
-Hi Suzuki,
+elapsed time: 1111m
 
-The series is now Sashiko-clean and has Reviewed-by tags. It touches both
-driver and tools. Arnaldo is fine with the tools part. Would you mind
-reviewing the driver part and picking it up through your tree if it looks good?
+configs tested: 167
+configs skipped: 3
 
-If there are any changes needed, please let me know.
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
-Link: https://lore.kernel.org/all/20260908140509.2485649-1-liusizhe5@huawei.com/
+tested configs:
+alpha                             allnoconfig    gcc-16.1.0
+alpha                            allyesconfig    gcc-16.1.0
+alpha                               defconfig    gcc-16.1.0
+arc                              allmodconfig    clang-24
+arc                               allnoconfig    gcc-16.1.0
+arc                              allyesconfig    clang-24
+arc                                 defconfig    gcc-16.1.0
+arc                   randconfig-001-20260911    clang-24
+arc                   randconfig-002-20260911    clang-24
+arm                               allnoconfig    gcc-16.1.0
+arm                              allyesconfig    clang-24
+arm                       aspeed_g5_defconfig    clang-20
+arm                         assabet_defconfig    clang-20
+arm                                 defconfig    gcc-16.1.0
+arm                          exynos_defconfig    clang-20
+arm                   randconfig-001-20260911    clang-24
+arm                   randconfig-002-20260911    clang-24
+arm                   randconfig-003-20260911    clang-24
+arm                   randconfig-004-20260911    clang-24
+arm                           sama5_defconfig    gcc-16.1.0
+arm64                            allmodconfig    clang-24
+arm64                             allnoconfig    gcc-16.1.0
+arm64                               defconfig    gcc-16.1.0
+arm64                 randconfig-001-20260911    gcc-16.1.0
+arm64                 randconfig-002-20260911    gcc-16.1.0
+arm64                 randconfig-003-20260911    gcc-16.1.0
+arm64                 randconfig-004-20260911    gcc-16.1.0
+csky                             allmodconfig    gcc-16.1.0
+csky                              allnoconfig    gcc-16.1.0
+csky                                defconfig    gcc-16.1.0
+csky                  randconfig-001-20260911    gcc-16.1.0
+csky                  randconfig-002-20260911    gcc-16.1.0
+hexagon                          allmodconfig    gcc-16.1.0
+hexagon                           allnoconfig    clang-24
+hexagon                           allnoconfig    gcc-16.1.0
+hexagon                             defconfig    gcc-16.1.0
+i386                             allmodconfig    clang-22
+i386                              allnoconfig    gcc-14
+i386                              allnoconfig    gcc-16.1.0
+i386                             allyesconfig    clang-22
+i386        buildonly-randconfig-001-20260911    clang-22
+i386        buildonly-randconfig-002-20260911    clang-22
+i386        buildonly-randconfig-003-20260911    clang-22
+i386        buildonly-randconfig-004-20260911    clang-22
+i386        buildonly-randconfig-005-20260911    clang-22
+i386        buildonly-randconfig-006-20260911    clang-22
+i386                                defconfig    gcc-16.1.0
+i386                  randconfig-001-20260911    clang-22
+i386                  randconfig-002-20260911    clang-22
+i386                  randconfig-003-20260911    clang-22
+i386                  randconfig-004-20260911    clang-22
+i386                  randconfig-005-20260911    clang-22
+i386                  randconfig-006-20260911    clang-22
+i386                  randconfig-007-20260911    clang-22
+loongarch                        allmodconfig    clang-24
+loongarch                         allnoconfig    clang-20
+loongarch                         allnoconfig    gcc-16.1.0
+loongarch                           defconfig    clang-24
+m68k                             allmodconfig    gcc-16.1.0
+m68k                              allnoconfig    gcc-16.1.0
+m68k                             allyesconfig    clang-24
+m68k                                defconfig    clang-24
+m68k                       m5249evb_defconfig    gcc-16.1.0
+m68k                       m5275evb_defconfig    gcc-16.1.0
+microblaze                        allnoconfig    gcc-16.1.0
+microblaze                       allyesconfig    gcc-16.1.0
+microblaze                          defconfig    clang-24
+mips                             allmodconfig    gcc-16.1.0
+mips                              allnoconfig    gcc-16.1.0
+mips                             allyesconfig    gcc-16.1.0
+mips                        vocore2_defconfig    clang-20
+nios2                            allmodconfig    clang-20
+nios2                             allnoconfig    clang-24
+nios2                               defconfig    clang-24
+openrisc                         allmodconfig    clang-20
+openrisc                          allnoconfig    clang-24
+openrisc                            defconfig    gcc-16.1.0
+parisc                           alldefconfig    clang-20
+parisc                           allmodconfig    gcc-16.1.0
+parisc                            allnoconfig    clang-24
+parisc                           allyesconfig    gcc-16.1.0
+parisc                              defconfig    gcc-16.1.0
+parisc                randconfig-001-20260911    gcc-8.5.0
+parisc                randconfig-002-20260911    gcc-8.5.0
+parisc64                            defconfig    clang-24
+powerpc                          allmodconfig    gcc-16.1.0
+powerpc                           allnoconfig    clang-24
+powerpc                 mpc836x_rdk_defconfig    clang-20
+powerpc               randconfig-001-20260911    gcc-8.5.0
+powerpc               randconfig-002-20260911    gcc-8.5.0
+powerpc64             randconfig-001-20260911    gcc-8.5.0
+powerpc64             randconfig-002-20260911    gcc-8.5.0
+riscv                            allmodconfig    clang-24
+riscv                             allnoconfig    clang-24
+riscv                            allyesconfig    clang-24
+riscv                               defconfig    gcc-16.1.0
+riscv                    nommu_k210_defconfig    gcc-16.1.0
+riscv                 randconfig-001-20260911    gcc-16.1.0
+riscv                 randconfig-002-20260911    gcc-16.1.0
+s390                             allmodconfig    clang-24
+s390                              allnoconfig    clang-24
+s390                             allyesconfig    gcc-16.1.0
+s390                                defconfig    gcc-16.1.0
+s390                  randconfig-001-20260911    gcc-16.1.0
+s390                  randconfig-002-20260911    gcc-16.1.0
+sh                               allmodconfig    gcc-16.1.0
+sh                                allnoconfig    clang-24
+sh                               allyesconfig    gcc-16.1.0
+sh                        apsh4ad0a_defconfig    gcc-16.1.0
+sh                                  defconfig    gcc-14
+sh                    randconfig-001-20260911    gcc-16.1.0
+sh                    randconfig-002-20260911    gcc-16.1.0
+sh                           se7619_defconfig    gcc-16.1.0
+sh                   sh7770_generic_defconfig    gcc-16.1.0
+sh                            shmin_defconfig    clang-20
+sh                          urquell_defconfig    clang-20
+sparc                             allnoconfig    clang-24
+sparc                               defconfig    gcc-16.1.0
+sparc                 randconfig-001-20260911    gcc-13.4.0
+sparc                 randconfig-002-20260911    gcc-13.4.0
+sparc64                          allmodconfig    clang-20
+sparc64                             defconfig    gcc-14
+sparc64               randconfig-001-20260911    gcc-13.4.0
+sparc64               randconfig-002-20260911    gcc-13.4.0
+um                               allmodconfig    clang-17
+um                                allnoconfig    clang-24
+um                               allyesconfig    gcc-16.1.0
+um                                  defconfig    gcc-14
+um                             i386_defconfig    gcc-14
+um                    randconfig-001-20260911    gcc-13.4.0
+um                    randconfig-002-20260911    gcc-13.4.0
+um                           x86_64_defconfig    gcc-14
+x86_64                           allmodconfig    clang-22
+x86_64                            allnoconfig    clang-24
+x86_64                           allyesconfig    clang-22
+x86_64      buildonly-randconfig-001-20260911    gcc-14
+x86_64      buildonly-randconfig-002-20260911    gcc-14
+x86_64      buildonly-randconfig-003-20260911    gcc-14
+x86_64      buildonly-randconfig-004-20260911    gcc-14
+x86_64      buildonly-randconfig-005-20260911    gcc-14
+x86_64      buildonly-randconfig-006-20260911    gcc-14
+x86_64                              defconfig    gcc-14
+x86_64                                  kexec    clang-22
+x86_64                randconfig-001-20260911    clang-22
+x86_64                randconfig-002-20260911    clang-22
+x86_64                randconfig-003-20260911    clang-22
+x86_64                randconfig-004-20260911    clang-22
+x86_64                randconfig-005-20260911    clang-22
+x86_64                randconfig-006-20260911    clang-22
+x86_64                randconfig-071-20260911    gcc-14
+x86_64                randconfig-072-20260911    gcc-14
+x86_64                randconfig-073-20260911    gcc-14
+x86_64                randconfig-074-20260911    gcc-14
+x86_64                randconfig-075-20260911    gcc-14
+x86_64                randconfig-076-20260911    gcc-14
+x86_64                               rhel-9.4    clang-22
+x86_64                           rhel-9.4-bpf    gcc-14
+x86_64                          rhel-9.4-func    clang-22
+x86_64                    rhel-9.4-kselftests    clang-22
+x86_64                         rhel-9.4-kunit    gcc-14
+x86_64                           rhel-9.4-ltp    gcc-14
+x86_64                          rhel-9.4-rust    clang-22
+xtensa                            allnoconfig    clang-24
+xtensa                           allyesconfig    clang-20
+xtensa                generic_kc705_defconfig    gcc-16.1.0
+xtensa                randconfig-001-20260911    gcc-13.4.0
+xtensa                randconfig-002-20260911    gcc-13.4.0
 
-Thanks for your time!
-Sizhe
-
->> --- Changes in v4: - Add missing space in hisi-ptt.rst (Sashiko). -
->> Widen the pattern bit field in struct hisi_ptt_trace_ctrl (Sashiko). 
->> - Add protocol defined TLP header length parsing in patch 05/08. -
->> Add MRd and DMRr message types parsing in patch 05/08. - Add comment
->> for enum hisi_ptt_pkt_msg_type in patch 05/08. - Add DW0 and DW1
->> fields analysing in patch 06/08. - Refine bit-fields parsing of DW0/
->> DW1/DW2/DW3 based on different requests in patch 06/08. - Refine the
->> description of pattern=1 in the document in patch 07/08. - Extract
->> the bit-field printing of v1 version into functions in patch 08/08. -
->> Link to v3: https://lore.kernel.org/linux-
->> pci/20260903075241.1445338-1-liusizhe5@huawei.com/
->> 
->> Changes in v3: - Add explicit inclusion of <stdbool.h> (Sashiko). -
->> Make patch 07/08 apply cleanly to mainline (Yushan). - Pick up the
->> reviewed-by tag (Yushan). - Link to v2: https://lore.kernel.org/
->> linux-pci/20260827140442.2031128-1-liusizhe5@huawei.com/
->> 
->> Changes in v2: - Split patch 01/10 and patch 02/10 from series v1
->> into independent patch series for backporting (Bjorn). - Use bitwise
->> operations instead of C bitfields for cross-platform cases (Sashiko).
->> - Add `pattern` parameter in hisi_ptt driver for layout
->> compatibility. - Link to v1: https://lore.kernel.org/linux-
->> pci/20260604075005.2219785-1-liusizhe5@huawei.com/
->> 
->> --- Sizhe Liu (8): perf hisi-ptt: Abstract trace data buf and offset 
->> perf hisi-ptt: Complete the field names for 4DW and 8DW packets perf
->> hisi-ptt: Extract the raw data printing part perf hisi-ptt: Merge
->> 4DW and 8DW HEAD0 printing perf hisi-ptt: Add parsing of supported
->> message types and proto length perf hisi-ptt: Add field-level
->> parsing for header DW0/DW1/DW2/DW3 hwtracing: hisi_ptt: Add pattern
->> PMU config for trace format selection perf hisi-ptt: Pass pattern
->> version to decoder for compatibility
->> 
->> Documentation/trace/hisi-ptt.rst              |  26 +- drivers/
->> hwtracing/ptt/hisi_ptt.c              |  25 +- drivers/hwtracing/ptt/
->> hisi_ptt.h              |   4 + tools/perf/arch/arm64/util/hisi-
->> ptt.c         |  18 + .../hisi-ptt-decoder/hisi-ptt-pkt-decoder.c
->> | 593 ++++++++++++++++-- .../hisi-ptt-decoder/hisi-ptt-pkt-
->> decoder.h   | 241 ++++++- tools/perf/util/hisi-
->> ptt.c                    |  51 +- tools/perf/util/hisi-
->> ptt.h                    |   9 +- 8 files changed, 872
->> insertions(+), 95 deletions(-)
->> 
->> -- 2.33.0
-
+--
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
