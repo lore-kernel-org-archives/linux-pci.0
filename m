@@ -1,106 +1,177 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.2])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 379D348423C;
-	Fri, 11 Sep 2026 13:25:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.2
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 451DD39022A;
+	Fri, 11 Sep 2026 13:25:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789133126; cv=none; b=Ypt8IypBXrus4jKLsnyzGR0SuEIQ2flSSdsvLc6RFxLfPRnN3d9bb7VGcGB3FEAm4k2vWAtY8J0Rg6V6kpaMaEPoC+0XFOF1Hwm2Tpk3MKRkMXu5S2hAo3dssefz4WZxvTCq5sCC2W3gLzERsY3n9GLasrYb1qLf6NAsx0gfZO4=
+	t=1789133161; cv=none; b=mQXd5tHqC+2DaCWiT7UoXiF37PWZF4EDMK7E82RIarYGywgLbtJtfEeg6HJO2qojAWaM99zF0kchPcxtikodkckEEGM3/PY/bqjEGX/LuWiaM4JSdluc6kAkscS3sl1W9nRMvpTWQmGBuwiDOXjkMBii2WTq/bIBiqve+SKO6sQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789133126; c=relaxed/simple;
-	bh=Foyo/WbRI9GTL0ov1byfGqJSsLs3Cyh9aGVQtghA2U8=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=rlkr1BdyjW9Ty4919XGQ8L3K8XcC0MUxFfK1XcCSJG751RZovm6vqLu3ky+sd/GL++UMI+cQVeHBVUCfqOLJN/yHDOB908mk2NwndSdnjavH0XhCrDcgBIy0TVdrI1sTF+HF1Om7g/e/7PoUoeFmdXVnkrtxHT0HR7e5QethHFw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=nlVqxUcD; arc=none smtp.client-ip=220.197.31.2
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	s=arc-20240116; t=1789133161; c=relaxed/simple;
+	bh=zFyyWzdhfFZMVM5stqf613uCaXnIeVSxmc31g5HKUZA=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
+	 MIME-Version:Content-Type; b=ldRG3ptfGA+efkj+hq8IbutQrj6EoFKmZYy4TUQPd3CbJaINrnr0X1GUejTi4MkQ8kVJAqaeshedy37fE2dJ0A3GtB74pNrR9SPJwAunrvBKkEcbhKjz9yuk6m38UgVgPU/ZuduFa35nQv5zZK8UnZro6CkKN63rK+wvVDmMi3Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VXtn1fiY; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="nlVqxUcD"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=Message-ID:Date:MIME-Version:Subject:To:From:
-	Content-Type; bh=Qkw3B5gs6z18dUvZ2oYot6I2aIm8IxFFKnSjUST1Lxk=;
-	b=nlVqxUcDubEzUK6+rn4a6b7LGNfc3QZhSzXYSeDk0t9jVv/tA3wTQGjclt169B
-	oGUudJNEN5PG6twf3tN9FrWtmNnOyCg6itQGVfBrZqRBpCo0xNmObIfpTeR3OGBL
-	tjivroSFiY+kGJtI8/C3swp/EGCbXKKkUuf9Mx2ZgfMzY=
-Received: from [IPV6:240e:b8f:91b3:d000:8f8f:b76e:3756:1454] (unknown [])
-	by gzga-smtp-mtada-g1-2 (Coremail) with SMTP id _____wD3f7QgAaRqAxtLAA--.22907S2;
-	Fri, 11 Sep 2026 21:24:48 +0800 (CST)
-Message-ID: <a170c630-6dc7-4f22-a655-e5fd3d6a6e67@163.com>
-Date: Fri, 11 Sep 2026 21:24:53 +0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VXtn1fiY"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 34FF51F00898;
+	Fri, 11 Sep 2026 13:25:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1789133159;
+	bh=b8hBkIDR5gbaIa/OcVZo7VYHM8DXFaO8ihp5gcV65Tc=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date;
+	b=VXtn1fiY2o5DXMdoNaf8ZzLgSZsGCdT7ZwNY6FB4pdySVmjeQIqo+jTZLfm3/q33+
+	 LnCbzK/A0d6W3mHy5MlGsh+dOBxN4T+7UuC7if51SC4Y4WOsawT4loI6z4f/cPPsPb
+	 LEHZm4NM/UiYfaaDB2e8nAEDA/bUbIeD89ffVwAWP5YoZyzbml/CvceH29+Tq6pfbc
+	 5OiH8ODldkyB5xaiz0JQc+5SkYuDaxk8ZB5CaqnQ1olk+xod9sHadlEIgKFs0bPhqk
+	 mpWXADE1ONaJWHe+tK1DyeoOXHAnAcaBRnsz8NpG1Ysw760kl3cXOV1DCzOlIhHu25
+	 jY4cewUPGE/7g==
+From: Andreas Hindborg <a.hindborg@kernel.org>
+To: Alice Ryhl <aliceryhl@google.com>
+Cc: Danilo Krummrich <dakr@kernel.org>, Lorenzo Stoakes <ljs@kernel.org>,
+ Vlastimil Babka <vbabka@kernel.org>, "Liam R. Howlett"
+ <liam@infradead.org>, Uladzislau Rezki <urezki@gmail.com>, Miguel Ojeda
+ <ojeda@kernel.org>, Boqun Feng <boqun@kernel.org>, Gary Guo
+ <gary@garyguo.net>, =?utf-8?Q?Bj=C3=B6rn?= Roy Baron
+ <bjorn3_gh@protonmail.com>, Benno
+ Lossin <lossin@kernel.org>, Trevor
+ Gross <tmgross@umich.edu>, Daniel Almeida <daniel.almeida@collabora.com>,
+ Tamir Duberstein <tamird@kernel.org>, Alexandre Courbot
+ <acourbot@nvidia.com>, Onur =?utf-8?Q?=C3=96zkan?= <work@onurozkan.dev>,
+ Lyude Paul
+ <lyude@redhat.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Arve
+ =?utf-8?B?SGrDuG5uZXbDpWc=?= <arve@android.com>, Todd Kjos
+ <tkjos@android.com>, Christian
+ Brauner <brauner@kernel.org>, Carlos Llamas <cmllamas@google.com>, "Rafael
+ J.
+ Wysocki" <rafael@kernel.org>, Dave Ertman <david.m.ertman@intel.com>, Leon
+ Romanovsky <leon@kernel.org>, Paul Moore <paul@paul-moore.com>, Serge
+ Hallyn <sergeh@kernel.org>, David Airlie <airlied@gmail.com>, Simona
+ Vetter <simona@ffwll.ch>, Alexander Viro <viro@zeniv.linux.org.uk>, Jan
+ Kara <jack@suse.cz>, Igor Korotin <igor.korotin@linux.dev>, Viresh Kumar
+ <vireshk@kernel.org>, Nishanth
+ Menon <nm@ti.com>, Stephen Boyd <sboyd@kernel.org>, Bjorn Helgaas
+ <bhelgaas@google.com>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?=
+ <kwilczynski@kernel.org>,
+ Pavel Tikhomirov <ptikhomirov@virtuozzo.com>, Michal Wilczynski
+ <m.wilczynski@samsung.com>, Ira Weiny <iweiny@kernel.org>, Matthew Brost
+ <matthew.brost@intel.com>, Thomas =?utf-8?Q?Hellstr=C3=B6m?=
+ <thomas.hellstrom@linux.intel.com>, Philipp Stanner <phasta@kernel.org>,
+ rust-for-linux@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-mm@kvack.org, driver-core@lists.linux.dev,
+ linux-block@vger.kernel.org, linux-security-module@vger.kernel.org,
+ dri-devel@lists.freedesktop.org, linux-fsdevel@vger.kernel.org,
+ linux-pm@vger.kernel.org, linux-pci@vger.kernel.org,
+ linux-pwm@vger.kernel.org, linux-usb@vger.kernel.org, Oliver Mangold
+ <oliver.mangold@pm.me>
+Subject: Re: [PATCH v21 6/9] rust: Add `OwnableRefCounted`
+In-Reply-To: <aqPHvi1xFnMXvYLW@google.com>
+References: <20260910-unique-ref-v21-0-e83257373062@kernel.org>
+ <20260910-unique-ref-v21-6-e83257373062@kernel.org>
+ <or1Yx6egJPyUT07SJzH5J4d8aI6S2qOc1sfl70J55bvsy-l2H0DHJHa-MeXQIv40mrfFILbhL0uB2G0aHIYUlA==@protonmail.internalid>
+ <aqPHvi1xFnMXvYLW@google.com>
+Date: Fri, 11 Sep 2026 15:25:43 +0200
+Message-ID: <87se3fvs14.fsf@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] PCI/VPD: Add Realtek 8126 to VPD blacklist
-To: Manivannan Sadhasivam <mani@kernel.org>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org
-References: <20260522114135.2104890-1-18255117159@163.com>
- <lfml4kmr4r3l44hcx7vfrcks2z355ri5emr5umynnzoncyopjl@5to6f3e67owz>
-Content-Language: en-US
-From: Hans Zhang <18255117159@163.com>
-In-Reply-To: <lfml4kmr4r3l44hcx7vfrcks2z355ri5emr5umynnzoncyopjl@5to6f3e67owz>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-CM-TRANSID:_____wD3f7QgAaRqAxtLAA--.22907S2
-X-Coremail-Antispam: 1Uf129KBjvJXoW7WF43JFy5tr13uFWUWF4fuFg_yoW8Wr4Upr
-	s8Ga18CF4rXr18WF4qgws0kas8Za4ktFy0krySgwnF9an5Gr1UAr9FkF9Y9F1Dt398Xr17
-	Xwn0v348Wan0qF7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0ziLZ2DUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbC6wAMr2qkASBz3wAA3L
+Content-Type: text/plain
 
+"Alice Ryhl" <aliceryhl@google.com> writes:
 
-
-On 7/15/26 21:44, Manivannan Sadhasivam wrote:
-> On Fri, May 22, 2026 at 07:41:34PM +0800, Hans Zhang wrote:
->> The Realtek 8126 Ethernet controller advertises VPD capability but
->> returns invalid data when VPD is read, leading to kernel messages
->> like:
+> On Thu, Sep 10, 2026 at 11:00:10AM +0200, Andreas Hindborg wrote:
+>> From: Oliver Mangold <oliver.mangold@pm.me>
 >>
->>    r8169 ... invalid VPD tag 0x00 (size 0) at offset 0; assume
->>    missing optional EEPROM
+>> Types implementing one of these traits can safely convert between an
+>> `ARef<T>` and an `Owned<T>`.
 >>
->> and pcilib reporting "sysfs_read_vpd: read failed: No such device".
+>> This is useful for types which generally are accessed through an `ARef`
+>> but have methods which can only safely be called when the reference is
+>> unique, like e.g. `block::mq::Request::end_ok()`.
 >>
->> Add the device to the VPD blacklist to suppress these errors.
->>
->> Signed-off-by: Hans Zhang <18255117159@163.com>
-> 
-> Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
-> 
+>> Signed-off-by: Oliver Mangold <oliver.mangold@pm.me>
+>> [ Andreas: Fix formatting, update documentation, fix error handling in
+>>   examples. ]
+>> Assisted-by: LLM
+>> Co-developed-by: Andreas Hindborg <a.hindborg@kernel.org>
+>> Signed-off-by: Andreas Hindborg <a.hindborg@kernel.org>
+>
+>>  /// Types that specify their own way of performing allocation and destruction. Typically, this trait
+>>  /// is implemented on types from the C side.
+>>  ///
+>> -/// Implementing this trait allows types to be referenced via the [`Owned<Self>`] pointer type. This
+>> -/// is useful when it is desirable to tie the lifetime of the reference to an owned object, rather
+>> -/// than pass around a bare reference. [`Ownable`] types can define custom drop logic that is
+>> -/// executed when the owned reference [`Owned<Self>`] pointing to the object is dropped.
+>> +/// Implementing this trait allows types to be referenced via the [`Owned<Self>`] pointer type.
+>> +///  - This is useful when it is desirable to tie the lifetime of an object reference to an owned
+>> +///    object, rather than pass around a bare reference.
+>> +///  - [`Ownable`] types can define custom drop logic that is executed when the owned reference
+>> +///    of type [`Owned<_>`] pointing to the object is dropped.
+>
+> This diff looks like it should be in the patch introducing Ownable.
 
-Hello,
+Yes, wrong target commit for the edit.
 
-Gentle ping.
+>
+>> +/// # #![expect(clippy::disallowed_names)]
+>> +/// # use core::ptr::NonNull;
+>> +/// # use kernel::alloc::{flags, kbox::KBox, AllocError};
+>> +/// # use kernel::sync::aref::{ARef, RefCounted};
+>> +/// # use kernel::sync::atomic::Acquire;
+>> +/// # use kernel::sync::Refcount;
+>> +/// # use kernel::types::{Owned, Ownable, OwnableRefCounted};
+>> +///
+>
+> This newline will appear weirdly in generated docs because no content is
+> shown above it. Consider not hiding the imports.
+
+Will remove.
+
+>
+>> +pub trait OwnableRefCounted: RefCounted + Ownable + Sized {
+>> +    /// Checks if the [`ARef`] is unique and converts it to an [`Owned`] if that is the case.
+>> +    /// Otherwise it returns again an [`ARef`] to the same underlying object.
+>> +    fn try_from_shared(this: ARef<Self>) -> Result<Owned<Self>, ARef<Self>>;
+>> +
+>> +    /// Converts the [`Owned`] into an [`ARef`].
+>> +    fn into_shared(this: Owned<Self>) -> ARef<Self>;
+>> +}
+>
+> This trait provides two methods that have very different conditions for
+> existing, IMO.
+>
+> The into_shared() method is so likely to exist, that I would almost
+> consider placing it on the Ownable trait.
+>
+> pub trait Ownable {
+>     unsafe fn release(this: NonNull<Self>);
+>
+>     fn into_shared(this: Owned<Self>) -> ARef<Self>
+>     where
+>     	Self: Refcounted;
+> }
+>
+> On the other hand, I think try_from_shared() is more likely to be a
+> tricky operation you cannot necessarily implement, and as such it can be
+> on its own separate trait like you have here.
+
+Ownable does not require RefCounted, so this method is not always
+implementable.
+
+>
+> At the very least, I can easily imagine that some types can never become
+> unique again after having been shared.
+
+It could make sense to split the capability in a separate trait. But
+perhaps we should wait with that till we need it and not introduce
+premature complexity?
 
 Best regards,
-Hans
+Andreas Hindborg
 
 
-> - Mani
-> 
->> ---
->>   drivers/pci/vpd.c | 1 +
->>   1 file changed, 1 insertion(+)
->>
->> diff --git a/drivers/pci/vpd.c b/drivers/pci/vpd.c
->> index 153394a652d3..fbc34cd842ac 100644
->> --- a/drivers/pci/vpd.c
->> +++ b/drivers/pci/vpd.c
->> @@ -590,6 +590,7 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_LSI_LOGIC, 0x002f, quirk_blacklist_vpd);
->>   DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_LSI_LOGIC, 0x005d, quirk_blacklist_vpd);
->>   DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_LSI_LOGIC, 0x005f, quirk_blacklist_vpd);
->>   DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATTANSIC, PCI_ANY_ID, quirk_blacklist_vpd);
->> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_REALTEK, 0x8126, quirk_blacklist_vpd);
->>   /*
->>    * The Amazon Annapurna Labs 0x0031 device id is reused for other non Root Port
->>    * device types, so the quirk is registered for the PCI_CLASS_BRIDGE_PCI class.
->> -- 
->> 2.43.0
->>
->>
-> 
 
