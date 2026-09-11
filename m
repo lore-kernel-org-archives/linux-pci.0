@@ -1,134 +1,159 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 78AD1476CEA
-	for <linux-pci@vger.kernel.org>; Fri, 11 Sep 2026 13:33:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB5AB475354
+	for <linux-pci@vger.kernel.org>; Fri, 11 Sep 2026 13:34:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789133619; cv=none; b=E0wp0lzUQOwdfosoakCh2MVEl3T7cs2Pd4/MWmSCtwynSLAAq2ke8PEHfTJBtSoAa4tgkonUnshiOLcvVSD94QQs7ISkBXb3pCWK6jpvSgMWvrMf8TCfK1QHa62hmm6v5p1614dELz25svcFHjbCqQ1WifkVCzIN2a/9cS3Kfz8=
+	t=1789133655; cv=none; b=ZcFpGF2Gb5tMIpbJ9/M/NPiD0GcNh4kxHuyTjrvi65dJKW1KPGP8uX5sh4SAC/CHjfOdzDanDc24j1D84AuGmFZwHMtanUJu13y2Gajz4nyeTT9ivbmM9YCwoZl1dLsxSTaECiGA6q66EpIVWbBURm0IanEypG/lfRU7wvN5fcQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789133619; c=relaxed/simple;
-	bh=Me1XkcExeZxwe0Ws9NE2aslaJrLe2+AFfHPL/h1zz4A=;
+	s=arc-20240116; t=1789133655; c=relaxed/simple;
+	bh=WNkbjzo+zMKJmsfhER0kpg15VoV8rtelxt33beomdYk=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=QkeairoGmiBXZIsga4a7AjFhOxeW60WCvYI+JrBQi6sSj+1VeQwAYTD6RSjaHmb+Rsd0QX3OjZtrydF92QbWIONQrishYkE+sRdMLTJOnjKCytNe5+DV3KvIWaFH12Y4bo+583pzhAvOGYpHCNxuc4zSyL9zRbTwDg4gCRpJnng=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DMAQ5KRG; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=SIpxFcIEV4r1VEtvFmB+I7Xc5RzWoB/jQj/oG/xDoyDYlR1q9MjdBnrJsyIUYRpZYJG2z3wdP/QYfvfdo2/CjuxQoWitW1dydB773Lpod3e2sA3zoLEKmU0cRdibejFhoTpwGW3rMyG994Fw/AWYANiZZ9YGGJekmxqNAaB9OQ8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PmghyJo0; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DMAQ5KRG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 647411F000FF;
-	Fri, 11 Sep 2026 13:33:35 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PmghyJo0"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3B4521F00893;
+	Fri, 11 Sep 2026 13:34:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789133615;
-	bh=UQmLf39egxouHqGaoPY1W2b4Ke71vmpsB1o38cIZnUc=;
+	s=k20260515; t=1789133651;
+	bh=AXJnD8SqAd+lgdllVDPl41ewp9+1MSyYX93crRy87Tg=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=DMAQ5KRGVCC+1MMFeLnPAyCNuAYz/hxYmepO6VeZS5zCUVkAL6XvtneJZb8gdEJDI
-	 RYVZUOz6ajsZT445z02/dzhVfTAagJ9G4IcRHDO0kIODPiWHdpTChOhd0W0BqJkmDy
-	 FdVp+bPlKAL2NQ0geE6kZaMw8fsJ4YN3Pj0G7VnZpRFH37okgBqdWk1h4bEB0gfWcw
-	 6Quy1lT6pcYsM+9WwWdP0nTyyh/pogvRgEd5YUH+mHn7F9vrtOhP0AYYbBmty4gEmG
-	 UFy7duMFi8EQ1jq9RdCJ7amTdJ32o6RWEGtfgMQfF+9iEtCoxgpR1R4oJK32364o8j
-	 Lh7tgcyahz4jg==
+	b=PmghyJo0eW0cJTaF84qlDFeARkAZTw8y8k2mtd2MJnMgc5TqB6pbZOVQbbzNReMO5
+	 CNTQQVQ2PTtlVX5QGpY7rO/XSSAmsM1ozVv+FVga2yMJUMe7G8tTYXehHrX16tRJ+d
+	 llKaSiO4xx+vvAXr6fA9bl2faktVS1ND40pd8+77wMSn54xOKsB5qC1MTtsNEqFQnW
+	 CTH9w1lNl/lPNmQccvrz8jmJOz/8tZAG3Vs0DDfgdsZbubHqOxgITzFRW7kRrq1u51
+	 gy/G3bARp0TvmHveRcEGRMB1OQIDcvO48squqxhqygJJDFH82JcDpweUl3sU+kPVpx
+	 Biw2h29OJ0hOg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v8 1/2] PCI: Configure Root Port MPS during host probing
+Subject: Re: [PATCH v8 2/2] PCI: dwc: Remove redundant MPS configuration
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Hans Zhang" <18255117159@163.com>
 Cc: neil.armstrong@linaro.org, linux-amlogic@lists.infradead.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260911132145.211380-2-18255117159@163.com>
+In-Reply-To: <20260911132145.211380-3-18255117159@163.com>
 References: <20260911132145.211380-1-18255117159@163.com>
- <20260911132145.211380-2-18255117159@163.com>
+ <20260911132145.211380-3-18255117159@163.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 11 Sep 2026 13:33:34 +0000
-Message-Id: <20260911133335.647411F000FF@smtp.kernel.org>
+Date: Fri, 11 Sep 2026 13:34:10 +0000
+Message-Id: <20260911133411.3B4521F00893@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
 s) to consider:
-- [High] Logic Error / PCIe MPS Mismatch. Unconditionally configuring the R=
-oot Port MPS to its maximum supported value breaks devices connected via PC=
-Ie switches under the default MPS strategy (PCIE_BUS_DEFAULT).
-- [Medium] Missing Error Handling: The return value of `pcie_set_mps()` is =
-silently ignored when configuring the Root Port MPS.
+
+New issues:
+- [Low] Unused macros PCIE_CAP_MAX_PAYLOAD_SIZE and MAX_PAYLOAD_SIZE left b=
+ehind after removing the MPS configuration function.
+- [Low] Misleading function name and warning message for MRRS calculation a=
+fter removing MPS configuration.
+
+Pre-existing issues:
+- [High] 32-bit read-modify-write of PCI_EXP_DEVCTL inadvertently clears W1=
+C error bits in PCI_EXP_DEVSTA.
 --
 
-commit 13816df0ca2fe3070f644d4bbf35fd712be22285
+commit 3ff79063d97cb0f265efaab65bab69ff2c512a3d
 Author: Hans Zhang <18255117159@163.com>
 
-PCI: Configure Root Port MPS during host probing
+PCI: dwc: Remove redundant MPS configuration
 
-Current PCIe initialization logic may leave Root Ports operating with
-non-optimal Maximum Payload Size (MPS) settings. This change ensures
-Root Ports are initialized to their maximum MPS before downstream devices
-negotiate MPS, while not interfering with the PCIE_BUS_PEER2PEER strategy.
+The Meson PCIe controller driver manually configures maximum payload
+size (MPS) through meson_set_max_payload, duplicating functionality now
+centralized in the PCI core.  Deprecating redundant code simplifies the
+driver and aligns it with the consolidated MPS management strategy,
+improving long-term maintainability.
 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 27008e2ea5afc..dc47478589182 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -2229,6 +2229,18 @@ static void pci_configure_mps(struct pci_dev *dev)
->  		return;
->  	}
+> diff --git a/drivers/pci/controller/dwc/pci-meson.c b/drivers/pci/control=
+ler/dwc/pci-meson.c
+> index 8559d132dcde8..8c176f78953e9 100644
+> --- a/drivers/pci/controller/dwc/pci-meson.c
+> +++ b/drivers/pci/controller/dwc/pci-meson.c
+> @@ -273,22 +273,6 @@ static int meson_size_to_payload(struct meson_pcie *=
+mp, int size)
+>  	return fls(size) - 8;
+>  }
+
+[Severity: Low]
+With the removal of the payload configuration function, this helper is now
+exclusively called by meson_set_max_rd_req_size() to calculate the Max Read
+Request Size (MRRS).
+
+Does this function name and its internal log message:
+
+	dev_warn(dev, "payload size %d, set to default 256\n", size);
+
+need to be updated to reflect that it is calculating MRRS? Leaving it as-is
+might cause confusion for future maintainers.
+
 > =20
-> +	/*
-> +	 * Unless MPS strategy is PCIE_BUS_TUNE_OFF (don't touch MPS at all) or
-> +	 * PCIE_BUS_PEER2PEER (use minimum MPS for peer-to-peer), set Root Port=
-s'
-> +	 * MPS to their maximum supported value. Depending on the MPS strategy
-> +	 * and MPSS of downstream devices, a Root Port's MPS may be reduced
-> +	 * later during device enumeration.
-> +	 */
-> +	if (pci_pcie_type(dev) =3D=3D PCI_EXP_TYPE_ROOT_PORT &&
-> +	    pcie_bus_config !=3D PCIE_BUS_TUNE_OFF &&
-> +	    pcie_bus_config !=3D PCIE_BUS_PEER2PEER)
-> +		pcie_set_mps(dev, 128 << dev->pcie_mpss);
+> -static void meson_set_max_payload(struct meson_pcie *mp, int size)
+> -{
+> -	struct dw_pcie *pci =3D &mp->pci;
+> -	u32 val;
+> -	u16 offset =3D dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
+> -	int max_payload_size =3D meson_size_to_payload(mp, size);
+> -
+> -	val =3D dw_pcie_readl_dbi(pci, offset + PCI_EXP_DEVCTL);
+> -	val &=3D ~PCI_EXP_DEVCTL_PAYLOAD;
+> -	dw_pcie_writel_dbi(pci, offset + PCI_EXP_DEVCTL, val);
+> -
+> -	val =3D dw_pcie_readl_dbi(pci, offset + PCI_EXP_DEVCTL);
+> -	val |=3D PCIE_CAP_MAX_PAYLOAD_SIZE(max_payload_size);
+
+[Severity: Low]
+Should the definition of PCIE_CAP_MAX_PAYLOAD_SIZE be removed as well? Since
+it is no longer used after removing this function, it appears to be dead
+code now.
+
+> -	dw_pcie_writel_dbi(pci, offset + PCI_EXP_DEVCTL, val);
+> -}
+> -
+>  static void meson_set_max_rd_req_size(struct meson_pcie *mp, int size)
+>  {
+>  	struct dw_pcie *pci =3D &mp->pci;
 
 [Severity: High]
-Does unconditionally setting the Root Port MPS to maximum break devices
-connected via PCIe switches under the default MPS strategy (PCIE_BUS_DEFAUL=
-T)?
+This is a pre-existing issue, but does meson_set_max_rd_req_size()
+inadvertently clear W1C error bits in PCI_EXP_DEVSTA?
 
-If a system has a PCIe switch and the Root Port supports a larger MPS
-(e.g., 256B) than the endpoint behind the switch (e.g., 128B), it appears t=
-his
-would cause a mismatch.
+This function performs a 32-bit read-modify-write on PCI_EXP_DEVCTL:
 
-During top-down enumeration, this new code unconditionally sets the Root Po=
-rt
-MPS to max (256B), and the switch ports inherit 256B. When the endpoint is
-later enumerated in pci_configure_mps(), it hits this pre-existing logic
-further down in the function:
+	val =3D dw_pcie_readl_dbi(pci, offset + PCI_EXP_DEVCTL);
+	val &=3D ~PCI_EXP_DEVCTL_READRQ;
+	dw_pcie_writel_dbi(pci, offset + PCI_EXP_DEVCTL, val);
 
-    mpss =3D 128 << dev->pcie_mpss;
-    if (mpss < p_mps && pci_pcie_type(bridge) =3D=3D PCI_EXP_TYPE_ROOT_PORT=
-) {
-        pcie_set_mps(bridge, mpss);
+Because this 32-bit access covers both the 16-bit PCI_EXP_DEVCTL and the
+adjacent 16-bit PCI_EXP_DEVSTA, it fetches both. PCI_EXP_DEVSTA contains
+multiple Write-1-to-Clear (W1C) error flags. Writing the entire 32-bit value
+back means any W1C bit in DEVSTA read as '1' is written as '1', inadvertent=
+ly
+clearing the error status and masking hardware faults.
 
-Because the upstream bridge is a Switch Downstream Port and not a Root Port,
-the condition pci_pcie_type(bridge) =3D=3D PCI_EXP_TYPE_ROOT_PORT evaluates=
- to
-false.
+Should this be updated to use dw_pcie_readw_dbi() and dw_pcie_writew_dbi()
+instead?
 
-Since the MPS reduction strictly limits itself to Root Ports, the MPS of the
-switch is not reduced, leaving it at 256B. The endpoint then fails to set i=
-ts
-MPS to 256B, returning -EINVAL and permanently leaving a mismatch which cou=
-ld
-lead to dropped packets as Malformed TLPs.
+[ ... ]
 
-[Severity: Medium]
-Are we missing an error check here?
+> @@ -363,7 +347,6 @@ static int meson_pcie_host_init(struct dw_pcie_rp *pp)
+> =20
+>  	pp->bridge->ops =3D &meson_pci_ops;
+> =20
+> -	meson_set_max_payload(mp, MAX_PAYLOAD_SIZE);
 
-If the configuration write fails due to hardware quirks or an invalid value,
-the return value of pcie_set_mps() is silently ignored, unlike similar calls
-in pci_configure_mps() which log a warning or handle the failure.
+[Severity: Low]
+Should the MAX_PAYLOAD_SIZE macro be removed as well? Since its usage is
+removed here, leaving the macro behind leaves dead code.
 
-> +
->  	if (!bridge || !pci_is_pcie(bridge))
->  		return;
->
+>  	meson_set_max_rd_req_size(mp, MAX_READ_REQ_SIZE);
+> =20
+>  	return 0;
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260911132145.2113=
-80-1-18255117159@163.com?part=3D1
+80-1-18255117159@163.com?part=3D2
