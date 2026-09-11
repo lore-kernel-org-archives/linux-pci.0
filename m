@@ -1,168 +1,190 @@
-Received: from mail-wm1-f70.google.com (mail-wm1-f70.google.com [209.85.128.70])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.17])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68711472094
-	for <linux-pci@vger.kernel.org>; Fri, 11 Sep 2026 09:20:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.70
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2CD4240F8D8;
+	Fri, 11 Sep 2026 09:27:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.17
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789118404; cv=none; b=ZBbELver9aXTb9TUVq9pJQWMkC5PKasLU4hvodPCoulRfGewVVycJZnb0GI+yxvHdi52yRDYoJKCrA92BMZrMKhHEEfEFdO0WlOjvOImjw+yBUk24lz6jVe36wJklmWnYf+DSDshvVaai0HPyMfcsDmUcgRMjANE3u4wL78YpYc=
+	t=1789118853; cv=none; b=FMRkTmWn1D7I+b9F0N4659ATauppwFRRviEfFKBlTi2HV4jGjsveCQNxQ5dRfj0E7YhjI2DNQH4gJa1VkWlVKOQjDsI8/WYMPGKlDcXDUj/JvdpODZ9lcpfLPWay1hBvJ3PJcLOvwyhaxgjKPy16DoWJnnXbMYQmXpQexb5OCEw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789118404; c=relaxed/simple;
-	bh=LQHKUmm2L3VPczAzSrySIOYelc6UVvj0GiEVXj92Iww=;
-	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=nuH/ICWDcKaS4DkQqL+Hq6Kv8zebQuVLIJm1Kq/2cJJE4ZeQrMuInXWAFqHDMBmc9cPAnBh80slsAYX3fELDDaP9fbJE6bF3ovMMskTYJftsIkMNkjV57XeeUcdYzbSVJonyO2DhS/kvNDDEoI4SRwkxv2ffiCWly5AA6Vgb1oU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--aliceryhl.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=WdF9tVpS; arc=none smtp.client-ip=209.85.128.70
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--aliceryhl.bounces.google.com
+	s=arc-20240116; t=1789118853; c=relaxed/simple;
+	bh=8K+BGYFG3ud53t1n0NdJiEzeFfQGaZzpWgnI21xdFbw=;
+	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
+	 MIME-Version:Content-Type; b=ra/pfQ8KT7d2oRrKWsGOtFpz/0DB6NoxRe9W/UMigCutkHyY3JZbYDoQRV6yd85mld7mLyrkvPnSy1iqPQA8C5s0OR2AdMhQEjNvVsKLr+DfY3ZqPmAsRniYD+pjCOoMjL6gu1zjhSNlc7EjTde9q/fm/pchEvKD/7IFDqng46w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=jswi0aed; arc=none smtp.client-ip=192.198.163.17
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="WdF9tVpS"
-Received: by mail-wm1-f70.google.com with SMTP id 5b1f17b1804b1-490a767b782so6132615e9.2
-        for <linux-pci@vger.kernel.org>; Fri, 11 Sep 2026 02:20:02 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1789118400; x=1789723200; darn=vger.kernel.org;
-        h=content-type:cc:to:from:subject:message-id:references:mime-version
-         :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=NZtTwWLqkTlApSCCjwtFSfuFmwluELYL36xqCuH39yY=;
-        b=WdF9tVpSSXYvnlrzGgh+P+QcLj5u0AX4p8filA66XSzd5O8vBXYmPSBizgExj6oxwL
-         +PmBeHz4t6HSK7AV7IgXCxiDARpO9PyLesXeDRV74ILIaJiw8pgjUKDWW99gqaSTg9PR
-         mypblrub7AceAOqE4EVBGXzbeqINNAIlUOhB6RTkioOFhpNWHZWVFRYw2MFH6eoBVSqn
-         omL+h/BD6+gLLshheuEdkv1T7XJHsKCulUf7JaARnJbYBE4a2oLTZas0g4C+aduyAhZd
-         u2zFNt+Tr5E5wlpz1iwT5lvMsDx57TFBz7QmSnYzDX6HPEh73EvRU/eyhaLMvqmIYSsr
-         GkDQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1789118400; x=1789723200;
-        h=content-type:cc:to:from:subject:message-id:references:mime-version
-         :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=NZtTwWLqkTlApSCCjwtFSfuFmwluELYL36xqCuH39yY=;
-        b=qd3l9/bCQHKDw4HLzFCCmizIAL5ZTASCBpKBYe/XSUKZIIUAlk7FsROYZ9LbhqJQGX
-         tbfgVxBsMdLB1Bl/0jN6EnXBYLXh8WixIKZs5Wg0KDodoCMtOvnHBbg1mK5Qdt5D0ONn
-         spfYWrldwuW95GEHJgEg+Gc+hj45/5OOX7vg5K6a6rE7s6J6sCOYOlMZKFvTRXgpZmLD
-         bVsiqdIt3s+NtVrz6tstzCYHJEyRitr+o2s7EGwPsyRbDTl++4P/h53lsrTlwYiBBiUu
-         35FcQR++HNJd36wgt8PPHZndc0Lr3dEoS/09JMN5OQ7zy3DFNCvwy6u4i4qK7AGEoT85
-         X5Ow==
-X-Forwarded-Encrypted: i=1; AKwUvBxQUoVH8CzCiFvJrRFWK1BpcBnO4+mL3cjBJyK9tO+zVxBvrMk9CoybRC9jV9b3kL9zku9Vym3QK9c=@vger.kernel.org
-X-Gm-Message-State: AFuF++m9HqPk4wp0nC0YeNPNWSyI5gG+aQKx6wvuPk1kpt9obepBFbI1
-	oEpOb/dOO8VxbjpQ3TyHM6V38LahsUHtN489nr8y/5/jyO9+sfFMkBIES5A3xTiwbv9KNZm2/3z
-	Pldhp9+jCsGPR6g10fA==
-X-Received: from wmga6.prod.google.com ([2002:a05:600c:2d46:b0:499:b8f0:3186])
- (user=aliceryhl job=prod-delivery.src-stubby-dispatcher) by
- 2002:a05:600d:8490:20b0:49d:e0c:e560 with SMTP id 5b1f17b1804b1-49e61983771mr27226365e9.4.1789118400242;
- Fri, 11 Sep 2026 02:20:00 -0700 (PDT)
-Date: Fri, 11 Sep 2026 09:19:58 +0000
-In-Reply-To: <20260910-unique-ref-v21-6-e83257373062@kernel.org>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="jswi0aed"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1789118851; x=1820654851;
+  h=from:date:to:cc:subject:in-reply-to:message-id:
+   references:mime-version:content-id;
+  bh=8K+BGYFG3ud53t1n0NdJiEzeFfQGaZzpWgnI21xdFbw=;
+  b=jswi0aedPL/hK+v67gmVd9++XjfK7RhjJjoi8KfSA42SfQ/tF+O7f2SY
+   Zyto3MBCoDRY5nDG9r0btYKW8HidHAFN0lSw6B7oVsvpqaRAzjOhSD3aQ
+   yPzXjXweKGw96t78CXFiTa8WpoTPypKapQMbJEWLEZVhu4V17ZwauBCN7
+   1Caxn2RWoDUFfLKefs5gocL4KYXCZh5BYsfi+Cg2fDvtvcVeBZifjQlTr
+   ctbYLVnIXcDIcLhH2T6iVNcTfK9awge/p06InyP+DW5E+8n9B65ZEnWV5
+   dG3cJQXvtOwUixU6dhUHKz/5Ydc677iLzSDBYVEdDvzYdW2fqlwrGwfKk
+   A==;
+X-CSE-ConnectionGUID: DOWkKBBlQb+/l0roAyBLKQ==
+X-CSE-MsgGUID: GI9Z/6MdTmKSPXRyhMlzfg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11901"; a="89451615"
+X-IronPort-AV: E=Sophos;i="6.27,97,1787036400"; 
+   d="scan'208";a="89451615"
+Received: from fmviesa013.fm.intel.com ([10.60.135.153])
+  by fmvoesa111.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Sep 2026 02:27:30 -0700
+X-CSE-ConnectionGUID: eWtNITrFSMqsqxzBMWwPrQ==
+X-CSE-MsgGUID: JhxQOYJBQMmet6UAxYoZXg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,97,1787036400"; 
+   d="scan'208";a="240221"
+Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.244.158])
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Sep 2026 02:27:28 -0700
+From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Date: Fri, 11 Sep 2026 12:27:25 +0300 (EEST)
+To: Ard Biesheuvel <ardb@kernel.org>
+cc: Ard Biesheuvel <ardb+git@google.com>, linux-pci@vger.kernel.org, 
+    LKML <linux-kernel@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [RFC PATCH] PCI: Tolerate non-prefetchable 64-bit BARs in
+ prefetchable windows
+In-Reply-To: <41345c53-fea4-4f98-8569-b3dc4e84cdcb@app.fastmail.com>
+Message-ID: <2e392b1b-3cbe-5cf8-e190-b1c82d69562f@linux.intel.com>
+References: <20260910143440.3865663-2-ardb+git@google.com> <aa0e034d-fc68-69d6-8d27-8f30d138b9be@linux.intel.com> <41345c53-fea4-4f98-8569-b3dc4e84cdcb@app.fastmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-References: <20260910-unique-ref-v21-0-e83257373062@kernel.org> <20260910-unique-ref-v21-6-e83257373062@kernel.org>
-Message-ID: <aqPHvi1xFnMXvYLW@google.com>
-Subject: Re: [PATCH v21 6/9] rust: Add `OwnableRefCounted`
-From: Alice Ryhl <aliceryhl@google.com>
-To: Andreas Hindborg <a.hindborg@kernel.org>
-Cc: Danilo Krummrich <dakr@kernel.org>, Lorenzo Stoakes <ljs@kernel.org>, Vlastimil Babka <vbabka@kernel.org>, 
-	"Liam R. Howlett" <liam@infradead.org>, Uladzislau Rezki <urezki@gmail.com>, Miguel Ojeda <ojeda@kernel.org>, 
-	Boqun Feng <boqun@kernel.org>, Gary Guo <gary@garyguo.net>, 
-	"=?utf-8?B?QmrDtnJu?= Roy Baron" <bjorn3_gh@protonmail.com>, Benno Lossin <lossin@kernel.org>, 
-	Trevor Gross <tmgross@umich.edu>, Daniel Almeida <daniel.almeida@collabora.com>, 
-	Tamir Duberstein <tamird@kernel.org>, Alexandre Courbot <acourbot@nvidia.com>, 
-	"Onur =?utf-8?B?w5Z6a2Fu?=" <work@onurozkan.dev>, Lyude Paul <lyude@redhat.com>, 
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
-	"Arve =?utf-8?B?SGrDuG5uZXbDpWc=?=" <arve@android.com>, Todd Kjos <tkjos@android.com>, 
-	Christian Brauner <brauner@kernel.org>, Carlos Llamas <cmllamas@google.com>, 
-	"Rafael J. Wysocki" <rafael@kernel.org>, Dave Ertman <david.m.ertman@intel.com>, 
-	Leon Romanovsky <leon@kernel.org>, Paul Moore <paul@paul-moore.com>, Serge Hallyn <sergeh@kernel.org>, 
-	David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>, 
-	Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>, 
-	Igor Korotin <igor.korotin@linux.dev>, Viresh Kumar <vireshk@kernel.org>, Nishanth Menon <nm@ti.com>, 
-	Stephen Boyd <sboyd@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	"Krzysztof =?utf-8?Q?Wilczy=C5=84ski?=" <kwilczynski@kernel.org>, Pavel Tikhomirov <ptikhomirov@virtuozzo.com>, 
-	Michal Wilczynski <m.wilczynski@samsung.com>, Ira Weiny <iweiny@kernel.org>, 
-	Matthew Brost <matthew.brost@intel.com>, 
-	"Thomas =?utf-8?Q?Hellstr=C3=B6m?=" <thomas.hellstrom@linux.intel.com>, Philipp Stanner <phasta@kernel.org>, 
-	rust-for-linux@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-mm@kvack.org, driver-core@lists.linux.dev, linux-block@vger.kernel.org, 
-	linux-security-module@vger.kernel.org, dri-devel@lists.freedesktop.org, 
-	linux-fsdevel@vger.kernel.org, linux-pm@vger.kernel.org, 
-	linux-pci@vger.kernel.org, linux-pwm@vger.kernel.org, 
-	linux-usb@vger.kernel.org, Oliver Mangold <oliver.mangold@pm.me>
-Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Type: multipart/mixed; BOUNDARY="8323328-30872173-1789117895=:1171"
+Content-ID: <d5585a69-a9f9-cc9b-2706-c74342859f3b@linux.intel.com>
 
-On Thu, Sep 10, 2026 at 11:00:10AM +0200, Andreas Hindborg wrote:
-> From: Oliver Mangold <oliver.mangold@pm.me>
-> 
-> Types implementing one of these traits can safely convert between an
-> `ARef<T>` and an `Owned<T>`.
-> 
-> This is useful for types which generally are accessed through an `ARef`
-> but have methods which can only safely be called when the reference is
-> unique, like e.g. `block::mq::Request::end_ok()`.
-> 
-> Signed-off-by: Oliver Mangold <oliver.mangold@pm.me>
-> [ Andreas: Fix formatting, update documentation, fix error handling in
->   examples. ]
-> Assisted-by: LLM
-> Co-developed-by: Andreas Hindborg <a.hindborg@kernel.org>
-> Signed-off-by: Andreas Hindborg <a.hindborg@kernel.org>
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
->  /// Types that specify their own way of performing allocation and destruction. Typically, this trait
->  /// is implemented on types from the C side.
->  ///
-> -/// Implementing this trait allows types to be referenced via the [`Owned<Self>`] pointer type. This
-> -/// is useful when it is desirable to tie the lifetime of the reference to an owned object, rather
-> -/// than pass around a bare reference. [`Ownable`] types can define custom drop logic that is
-> -/// executed when the owned reference [`Owned<Self>`] pointing to the object is dropped.
-> +/// Implementing this trait allows types to be referenced via the [`Owned<Self>`] pointer type.
-> +///  - This is useful when it is desirable to tie the lifetime of an object reference to an owned
-> +///    object, rather than pass around a bare reference.
-> +///  - [`Ownable`] types can define custom drop logic that is executed when the owned reference
-> +///    of type [`Owned<_>`] pointing to the object is dropped.
+--8323328-30872173-1789117895=:1171
+Content-Type: text/plain; CHARSET=ISO-8859-15
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-ID: <662fec2e-5c55-858c-09ec-f9a543d6de19@linux.intel.com>
 
-This diff looks like it should be in the patch introducing Ownable.
+On Thu, 10 Sep 2026, Ard Biesheuvel wrote:
 
-> +/// # #![expect(clippy::disallowed_names)]
-> +/// # use core::ptr::NonNull;
-> +/// # use kernel::alloc::{flags, kbox::KBox, AllocError};
-> +/// # use kernel::sync::aref::{ARef, RefCounted};
-> +/// # use kernel::sync::atomic::Acquire;
-> +/// # use kernel::sync::Refcount;
-> +/// # use kernel::types::{Owned, Ownable, OwnableRefCounted};
-> +///
+>=20
+> On Thu, 10 Sep 2026, at 19:31, Ilpo J=E4rvinen wrote:
+> > On Thu, 10 Sep 2026, Ard Biesheuvel wrote:
+> >
+> >> From: Ard Biesheuvel <ardb@kernel.org>
+> >>=20
+> >> The prefetchable vs. non-prefetchable distinction is a relic of
+> >> conventional PCI, to denote from which regions PCI-PCI bridges were
+> >> permitted to perform speculative readahead.
+> >>=20
+> >> For software compatibility reasons, PCI Express inherited the Type 1
+> >> header and models PCIe root ports as PCI-PCI bridges. However, this
+> >> readahead behavior does not exist in PCIe, and so this distinction has
+> >> mostly become meaningless on the bridge level.
+> >>=20
+> >> As per the PCIe r6.3 ECN "Removing Prefetchable Terminology", the
+> >> 'prefetchable' designation has been removed from the specification
+> >> entirely, on the basis that it is obsolete, and is being abused to
+> >> inform memory mapping attributes and other device/BAR level properties
+> >> that it was never intended for.
+> >>=20
+> >> Given the limited range for non-prefetchable windows in the Type 1
+> >> header, and the fact that the distinction no longer exists for PCIe,
+> >> resource allocation performed by firmware may result in non-prefetchab=
+le
+> >> 64-bit BARs being allocated inside prefetchable bridge windows.
+> >>=20
+> >> Linux rejects such allocations ("can't claim; no compatible bridge
+> >> window") when it encounters them, but will usually fail to produce an
+> >> alternative allocation, given that firmware wouldn't have placed them
+> >> there in the first place if there was sufficient space in the
+> >> non-prefetchable window.
+> >>=20
+> >> So at the very least, let's not reject such allocations when they were
+> >> made by the firmware.
+> >>=20
+> >> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> >> Cc: "Ilpo J=E4rvinen" <ilpo.jarvinen@linux.intel.com>
+> >> Signed-off-by: Ard Biesheuvel <ardb@kernel.org>
+> >> ---
+> >> Link: https://github.com/tianocore/edk2/issues/13104
+> >>=20
+> >>  drivers/pci/pci.c   | 3 ++-
+> >>  include/linux/pci.h | 4 ++--
+> >>  2 files changed, 4 insertions(+), 3 deletions(-)
+> >>=20
+> >> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> >> index b2879a6be5f8..e33eb9f3a139 100644
+> >> --- a/drivers/pci/pci.c
+> >> +++ b/drivers/pci/pci.c
+> >> @@ -761,7 +761,8 @@ struct resource *pci_find_parent_resource(const st=
+ruct pci_dev *dev,
+> >>  =09=09=09 * not, the allocator made a mistake.
+> >>  =09=09=09 */
+> >>  =09=09=09if (r->flags & IORESOURCE_PREFETCH &&
+> >> -=09=09=09    !(res->flags & IORESOURCE_PREFETCH))
+> >> +=09=09=09    !(res->flags & IORESOURCE_PREFETCH) &&
+> >> +=09=09=09    !pci_is_pcie(dev))
+> >>  =09=09=09=09return NULL;
+> >> =20
+> >>  =09=09=09/*
+> >
+> > I was more thinking along the lines of always setting IORESOURCE_PREFET=
+CH=20
+> > for 64-bit BARs on PCIe devices but I've not had time to look at that/t=
+est=20
+> > how many things would break as a result. ...It would seem much simpler=
+=20
+> > solution to differentiate PCI from PCIe while keeping the existing logi=
+c=20
+> > without adding similar pci_is_pcie() checks everywhere.
+> >
+>=20
+> I agree that the code changes would be much simpler.
+>=20
+> However, would this impact the PCI metadata observed by all consumers,
+> including userspace,
 
-This newline will appear weirdly in generated docs because no content is
-shown above it. Consider not hiding the imports.
+Yes, it will impact userspace. But quoting you from above:
 
-> +pub trait OwnableRefCounted: RefCounted + Ownable + Sized {
-> +    /// Checks if the [`ARef`] is unique and converts it to an [`Owned`] if that is the case.
-> +    /// Otherwise it returns again an [`ARef`] to the same underlying object.
-> +    fn try_from_shared(this: ARef<Self>) -> Result<Owned<Self>, ARef<Self>>;
-> +
-> +    /// Converts the [`Owned`] into an [`ARef`].
-> +    fn into_shared(this: Owned<Self>) -> ARef<Self>;
-> +}
+"is being abused to inform memory mapping attributes and other device/BAR=
+=20
+level properties that it was never intended for."
 
-This trait provides two methods that have very different conditions for
-existing, IMO.
+What does the userspace then do with the information? Does it qualify=20
+under "it was never intended for"?
 
-The into_shared() method is so likely to exist, that I would almost
-consider placing it on the Ownable trait.
+> and drivers that may expect a certain BAR layout,
 
-pub trait Ownable {
-    unsafe fn release(this: NonNull<Self>);
+??? Would that even be spec compliant??
 
-    fn into_shared(this: Owned<Self>) -> ARef<Self>
-    where
-    	Self: Refcounted;
-}
+> and/or base decisions about memory attributes on this?
 
-On the other hand, I think try_from_shared() is more likely to be a
-tricky operation you cannot necessarily implement, and as such it can be
-on its own separate trait like you have here.
+The point is to consider them 64-bit window eligible so yes, kernel would=
+=20
+definitely be basing decision on that but that's intentional.
 
-At the very least, I can easily imagine that some types can never become
-unique again after having been shared.
+> In particular, I am concerned about non-prefetchable BARs that actually
+> have side effects on read, being mapped with WC (or Normal-NC on arm64)
+> semantics, where the interconnect may widen, combine or reorder accesses.
 
-Alice
+So on a more concrete terms, you're referring to the check in=20
+proc_bus_pci_mmap()? And the one in __pci_resource_attr_is_visible() +=20
+pci_dev_resource_wc_is_visible()? I suppose that wouldn't work then.
+
+So if just setting IORESOURCE_PREFETCH is not workable, how about adding a=
+=20
+getter for res->flags which adds IORESOURCE_PREFETCH into the returned=20
+flags if it's PCIe device and (in the end) use the raw value only in those=
+=20
+places that actually care about wc distinction. What I don't want to see=20
+us adding that pci_is_pcie() everywhere.
+
+--=20
+ i.
+--8323328-30872173-1789117895=:1171--
