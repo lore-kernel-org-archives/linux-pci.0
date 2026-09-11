@@ -1,122 +1,178 @@
-Received: from mail-pg1-f197.google.com (mail-pg1-f197.google.com [209.85.215.197])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.4])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B237D48822B
-	for <linux-pci@vger.kernel.org>; Fri, 11 Sep 2026 13:44:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.197
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A61547DFB0
+	for <linux-pci@vger.kernel.org>; Fri, 11 Sep 2026 13:48:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.4
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789134299; cv=none; b=GFouBQHAVOAAfpviXsDwB3p1h8IONhnK9X191015HW+6qe1ovHAng/BF/vuRoYmEr7/rRRkNNbTv8DfvA9/puizMeNIIdOeAW5VIRHpCfV6o+A6snw9GOCKwTt1crLDjAvZ3W0sbO4ZL6XkxxKas+VXw19Ojf9YNdj8X/a/mjfE=
+	t=1789134532; cv=none; b=T6mI1pELiB6YjqmlORZOiE4PpvUvNxPGnsgGPXQxRfLILopQx2ZpfY4Pp3gLq1YrUlibDK9kAVQlXWfjQ+N9MpQasGB4eTyrXinn0JLa4CttNrZJKW+zTxpR9LsWtq4iaPOcWTa0jgX3ldNJFCcP0CxZLDfgrrviyr6HzV9sVAk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789134299; c=relaxed/simple;
-	bh=z1IBBN+1WUfDf5cT8bAka5f8p45OV+l+sxZzQy3xMvk=;
-	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=lBXUhCHKlKbyMytlKYaU78oe7PC9CGDGEHOcg1uZCOil0q+ymOTPQhpKAdZEfZ+tgvYQyx07APXZ6864BqlYTIosjJmXwbU71zTIoUvOnltWvVvN+tKp9TFxQ5caHnpQA61l5QVWFN7McGK0f9gyz3cPbGdwocL2l5x69mkqgng=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--seanjc.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=PJxXdm+a; arc=none smtp.client-ip=209.85.215.197
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--seanjc.bounces.google.com
+	s=arc-20240116; t=1789134532; c=relaxed/simple;
+	bh=9apFp5UnuDXB3ohJr9fcXLx8hbtak23J3iGAHP8ZFeA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=ChsD9nLgTRsxWntSy/QJ+wKKrJpIMSYmUfpqiAt/JAlZ88RUOwWIiNksBJbq79umeebXNae7tsRhhol7ZzB+PzIesBsvDORR/qedCZ0Z5OSa02MfU/fEmqMfQhjTYlMFqw3rafhmnp08mHmq0ln+SfryI8oX9V1Hv7wDP/A5zFQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=FUfCq0Cu; arc=none smtp.client-ip=117.135.210.4
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="PJxXdm+a"
-Received: by mail-pg1-f197.google.com with SMTP id 41be03b00d2f7-c85798977dcso1506329a12.0
-        for <linux-pci@vger.kernel.org>; Fri, 11 Sep 2026 06:44:52 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1789134291; x=1789739091; darn=vger.kernel.org;
-        h=content-type:cc:to:from:subject:message-id:references:mime-version
-         :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=35qTFGciq12kEJU+EMJ4woELZzEj6I4YMtoPAd4aNAQ=;
-        b=PJxXdm+a+euQUyQZMaj+1xNum8ZW6CpqOCX567sqtcKG76RNivO5/ngMhvgSK08Ljm
-         J+tnQGPEU6Zqh+X9i8fCKegkiG+g24cFjyry4l1+Sg/rJkymCKLxCavFK+B5p5UVggpt
-         bz1UiQfHa58So2MfZgi8VqAjc1NSH0Z9S2noWjY+bnpsv0Ixkax2xy9qYh4gicLzODB5
-         rB6X326hXNCSZTSklfDlQnqEJ0XjbqiwewmXPw44IVEgkvOl75gxoVGey3TMqhJ26krr
-         yXHlQNz4p3K64BQnpKrsNuAMNM2ISyge59NUZ/8FJbZeN1NT64bmlSilrEYfi1KK+umI
-         Glig==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1789134291; x=1789739091;
-        h=content-type:cc:to:from:subject:message-id:references:mime-version
-         :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=35qTFGciq12kEJU+EMJ4woELZzEj6I4YMtoPAd4aNAQ=;
-        b=kz4PlEFPydsHrWJ8K/8H34ol2OPCrx8wbS2kA3G87AbBZntjFHDnoASDzFG9BxjVKZ
-         krOlePDdzHh+aCfVbe03oQLygD0ZbJwSl8NK0MDH4NWSI7QSBFfH0KpbbxvQOD9d+DwV
-         uav4XRT4bKwsVdOcGJuvcPoeXtUF2NwKA8JON0aZteXsUGom7GMBuwH7U/pv05vQonyu
-         SspVpf+eAAiWhkj2T8IBWQScSTMVuH1TGM8c0J6IE3EsVtKIYdhdu48VtENdnJDnNZXw
-         vGg7qVAvntdfxKliP0QOLZgM6vDS2ECz43+lnbq1+1natNtXVFHcByorG9AgJTul0pD1
-         i6cw==
-X-Forwarded-Encrypted: i=1; AKwUvBxHmuYfac13GiZX0tJ5SDD/bvJeh6NVAZo/xcyuvH4Nt22ciALuRSPOfs9SkwEl42HcINi8oDB2UP0=@vger.kernel.org
-X-Gm-Message-State: AFuF++lukUx/v0M3118Y9BhwvHIejpl3VnQMAwryp4vR0QivSBomrstJ
-	HrhqsQXDtPv5MB8OJVng7O5QtMh53PZGl3v7g49qGkBD4WHhE89uecP2uy1FvpfhNbm+91omh58
-	IDvRFAw==
-X-Received: from pgjj10.prod.google.com ([2002:a63:230a:0:b0:cc4:5907:21e9])
- (user=seanjc job=prod-delivery.src-stubby-dispatcher) by 2002:a05:6a20:b08d:b0:3c6:61b9:917c
- with SMTP id adf61e73a8af0-3daed1fd3cfmr8633653637.11.1789134291123; Fri, 11
- Sep 2026 06:44:51 -0700 (PDT)
-Date: Fri, 11 Sep 2026 06:44:50 -0700
-In-Reply-To: <20260910225728.GB857650@nvidia.com>
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="FUfCq0Cu"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=Message-ID:Date:MIME-Version:Subject:To:From:
+	Content-Type; bh=zsdqYu79SdDj0gicUYOLPKVlZ/Oun8ugKeMddZdiBng=;
+	b=FUfCq0Cu2gKEeCD74R2bFW4nf+9fGbuprY3qvjN3rwdMfw9qCojAJGIy8Vfanv
+	DjHLlXjMQvUo+rSyVm2qxYu52Aw/u1JXhannF5Ep0vzhMcCkOE8ngDjErkFgrRY3
+	vO3pbsmRE5qsAAHrjzvquSO7LKVeLROExuYtdMbFhTCVE=
+Received: from [IPV6:240e:b8f:91b3:d000:8f8f:b76e:3756:1454] (unknown [])
+	by gzga-smtp-mtada-g0-0 (Coremail) with SMTP id _____wD3J+WQBqRqWFdKAA--.50611S2;
+	Fri, 11 Sep 2026 21:48:01 +0800 (CST)
+Message-ID: <e6600201-9743-44a4-aa1c-f03fc11c09de@163.com>
+Date: Fri, 11 Sep 2026 21:48:00 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-References: <aptFFYqcSiBdMLE8@google.com> <20260905012403.GX4157646@nvidia.com>
- <aqIAtOoew-_6jw29@google.com> <20260910143448.GD3968357@nvidia.com>
- <aqLOWkuVKccR-I7W@google.com> <20260910171210.GF3968357@nvidia.com>
- <aqMgjXfTJ8u3n7Kj@google.com> <20260910221832.GH3968357@nvidia.com>
- <aqMyXE-fD-UN6w5L@google.com> <20260910225728.GB857650@nvidia.com>
-Message-ID: <aqQF0gz3Q2weDyEd@google.com>
-Subject: Re: [RFC PATCH 0/3] liveupdate: Move to feature flags for LUO and
- memfd ABI compatibility
-From: Sean Christopherson <seanjc@google.com>
-To: Jason Gunthorpe <jgg@nvidia.com>
-Cc: David Matlack <dmatlack@google.com>, Logan Odell <loganodell@google.com>, arnd@arndb.de, 
-	pasha.tatashin@soleen.com, rppt@kernel.org, pratyush@kernel.org, 
-	graf@amazon.com, akpm@linux-foundation.org, pbonzini@redhat.com, 
-	maz@kernel.org, oupton@kernel.org, bhelgaas@google.com, alex@shazbot.org, 
-	kevin.tian@intel.com, dwmw2@infradead.org, baolu.lu@linux.intel.com, 
-	joro@8bytes.org, will@kernel.org, robin.murphy@arm.com, 
-	linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	kexec@lists.infradead.org, linux-mm@kvack.org, kvm@vger.kernel.org, 
-	linux-arm-kernel@lists.infradead.org, kvmarm@lists.linux.dev, 
-	linux-pci@vger.kernel.org, iommu@lists.linux.dev
-Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v8 2/2] PCI: dwc: Remove redundant MPS configuration
+To: sashiko-reviews@lists.linux.dev
+Cc: neil.armstrong@linaro.org, linux-amlogic@lists.infradead.org,
+ linux-pci@vger.kernel.org
+References: <20260911132145.211380-1-18255117159@163.com>
+ <20260911132145.211380-3-18255117159@163.com>
+ <20260911133411.3B4521F00893@smtp.kernel.org>
+Content-Language: en-US
+From: Hans Zhang <18255117159@163.com>
+In-Reply-To: <20260911133411.3B4521F00893@smtp.kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-CM-TRANSID:_____wD3J+WQBqRqWFdKAA--.50611S2
+X-Coremail-Antispam: 1Uf129KBjvJXoWxurWUWw4fuw43Zry5Kw1Dtrb_yoWrCw4DpF
+	W5XF45CF45Jr45Wr1qkan5CFWxta93CF13JFnxG3ySvasIyFnrXa42yay5CayxXr4DK3Wv
+	vrWDKryFv3WYyrJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0ziWlkfUUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbC6xFpDWqkBpH40wAA3s
 
-On Thu, Sep 10, 2026, Jason Gunthorpe wrote:
-> On Thu, Sep 10, 2026 at 03:42:36PM -0700, Sean Christopherson wrote:
-> > On Thu, Sep 10, 2026, Jason Gunthorpe wrote:
-> > > Sean's initial email was asking for strict never-break ABI compatability
-> > > rules on top, and that is what I've been reacting to.
-> > 
-> > No, I was never asking for that.  I think we just have a different interpretation
-> > of ABI, or rather are talking about different pieces of ABI.
-> > 
-> > I am still asking for never-break serialization format compatibility, i.e. the
-> > more literal save/restore ABI.  I'm not asking for full backwards/forwards
-> > compatibility across all kernels version, i.e. the higher level "kernel" ABI.
-> > 
-> > To phrase things differently: I am a-ok if kernels are inherently incompatible
-> > because they fundamentally operate differently and/or support different features.
-> > I am not ok if we end up with incompatible kernels because the save/restore
-> > interfaces and payloads are poorly designed, lack abstraction, etc.  
-> 
-> I can more agree with this, it is mostly what I thought we'd end up
-> doing anyhow with version numbers and growing the structs not
-> replacing them.
-> 
-> So you still end up with a version label (string I guess?) because we
-> can break it from time to time, 
-   
-Why bother with a label/string?  I don't understand what it buys us; I see only
-pain.  Make the features discoverable and punt on all of the "is this pile of
-insanity my company has created compatible with this other pile of insanity?" to
-layers above the kernel.
 
-IMO, trying to capture compatibility in a version string is doomed to fail.  To
-be useful, the version would have to be extremely sensitive to changes, otherwise
-userspace will have to do its own compatibility analysis/checks anyways.  And at
-that point, a verson string will be too restrictive, e.g. will mismatch due to
-changes in features the deployment isn't using.
 
-> just the version should have the feature mechanism layered under it? I'm fine
-> with that
+On 9/11/26 21:34, sashiko-bot@kernel.org wrote:
+> Thank you for your contribution! Sashiko AI review found 3 potential issue(s) to consider:
 > 
-> Jason
+> New issues:
+> - [Low] Unused macros PCIE_CAP_MAX_PAYLOAD_SIZE and MAX_PAYLOAD_SIZE left behind after removing the MPS configuration function.
+> - [Low] Misleading function name and warning message for MRRS calculation after removing MPS configuration.
+> 
+> Pre-existing issues:
+> - [High] 32-bit read-modify-write of PCI_EXP_DEVCTL inadvertently clears W1C error bits in PCI_EXP_DEVSTA.
+> --
+> 
+> commit 3ff79063d97cb0f265efaab65bab69ff2c512a3d
+> Author: Hans Zhang <18255117159@163.com>
+> 
+> PCI: dwc: Remove redundant MPS configuration
+> 
+> The Meson PCIe controller driver manually configures maximum payload
+> size (MPS) through meson_set_max_payload, duplicating functionality now
+> centralized in the PCI core.  Deprecating redundant code simplifies the
+> driver and aligns it with the consolidated MPS management strategy,
+> improving long-term maintainability.
+> 
+>> diff --git a/drivers/pci/controller/dwc/pci-meson.c b/drivers/pci/controller/dwc/pci-meson.c
+>> index 8559d132dcde8..8c176f78953e9 100644
+>> --- a/drivers/pci/controller/dwc/pci-meson.c
+>> +++ b/drivers/pci/controller/dwc/pci-meson.c
+>> @@ -273,22 +273,6 @@ static int meson_size_to_payload(struct meson_pcie *mp, int size)
+>>   	return fls(size) - 8;
+>>   }
+> 
+> [Severity: Low]
+> With the removal of the payload configuration function, this helper is now
+> exclusively called by meson_set_max_rd_req_size() to calculate the Max Read
+> Request Size (MRRS).
+
+Hi,
+
+Will add 0003 patch to rename function name.
+s/meson_size_to_payload/meson_size_to_mrrs/
+
+> 
+> Does this function name and its internal log message:
+> 
+> 	dev_warn(dev, "payload size %d, set to default 256\n", size);
+> 
+> need to be updated to reflect that it is calculating MRRS? Leaving it as-is
+> might cause confusion for future maintainers.
+> 
+>>   
+>> -static void meson_set_max_payload(struct meson_pcie *mp, int size)
+>> -{
+>> -	struct dw_pcie *pci = &mp->pci;
+>> -	u32 val;
+>> -	u16 offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
+>> -	int max_payload_size = meson_size_to_payload(mp, size);
+>> -
+>> -	val = dw_pcie_readl_dbi(pci, offset + PCI_EXP_DEVCTL);
+>> -	val &= ~PCI_EXP_DEVCTL_PAYLOAD;
+>> -	dw_pcie_writel_dbi(pci, offset + PCI_EXP_DEVCTL, val);
+>> -
+>> -	val = dw_pcie_readl_dbi(pci, offset + PCI_EXP_DEVCTL);
+>> -	val |= PCIE_CAP_MAX_PAYLOAD_SIZE(max_payload_size);
+> 
+> [Severity: Low]
+> Should the definition of PCIE_CAP_MAX_PAYLOAD_SIZE be removed as well? Since
+> it is no longer used after removing this function, it appears to be dead
+> code now.
+
+The next version will remove:
+
+#define PCIE_CAP_MAX_PAYLOAD_SIZE(x)	((x) << 5)
+#define MAX_PAYLOAD_SIZE		256
+
+
+Best regards,
+Hans
+
+> 
+>> -	dw_pcie_writel_dbi(pci, offset + PCI_EXP_DEVCTL, val);
+>> -}
+>> -
+>>   static void meson_set_max_rd_req_size(struct meson_pcie *mp, int size)
+>>   {
+>>   	struct dw_pcie *pci = &mp->pci;
+> 
+> [Severity: High]
+> This is a pre-existing issue, but does meson_set_max_rd_req_size()
+> inadvertently clear W1C error bits in PCI_EXP_DEVSTA?
+> 
+> This function performs a 32-bit read-modify-write on PCI_EXP_DEVCTL:
+> 
+> 	val = dw_pcie_readl_dbi(pci, offset + PCI_EXP_DEVCTL);
+> 	val &= ~PCI_EXP_DEVCTL_READRQ;
+> 	dw_pcie_writel_dbi(pci, offset + PCI_EXP_DEVCTL, val);
+> 
+> Because this 32-bit access covers both the 16-bit PCI_EXP_DEVCTL and the
+> adjacent 16-bit PCI_EXP_DEVSTA, it fetches both. PCI_EXP_DEVSTA contains
+> multiple Write-1-to-Clear (W1C) error flags. Writing the entire 32-bit value
+> back means any W1C bit in DEVSTA read as '1' is written as '1', inadvertently
+> clearing the error status and masking hardware faults.
+> 
+> Should this be updated to use dw_pcie_readw_dbi() and dw_pcie_writew_dbi()
+> instead?
+> 
+> [ ... ]
+> 
+>> @@ -363,7 +347,6 @@ static int meson_pcie_host_init(struct dw_pcie_rp *pp)
+>>   
+>>   	pp->bridge->ops = &meson_pci_ops;
+>>   
+>> -	meson_set_max_payload(mp, MAX_PAYLOAD_SIZE);
+> 
+> [Severity: Low]
+> Should the MAX_PAYLOAD_SIZE macro be removed as well? Since its usage is
+> removed here, leaving the macro behind leaves dead code.
+> 
+>>   	meson_set_max_rd_req_size(mp, MAX_READ_REQ_SIZE);
+>>   
+>>   	return 0;
+> 
+
