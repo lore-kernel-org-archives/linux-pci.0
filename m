@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35A912C15AB
-	for <linux-pci@vger.kernel.org>; Fri, 11 Sep 2026 23:47:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C66852F531B
+	for <linux-pci@vger.kernel.org>; Fri, 11 Sep 2026 23:47:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789170454; cv=none; b=IRz4MRpJW+7sDIzrUu7PH1LSNNJkFkn7IDs1GjEZF1cVFR2A928vgPCSZIfcOGNbEDvkyzwDHpt3b586iulTGFiIQkRv5wob6nD/qDFERsUNNHwXL/piGpyeVqYvFUibo3NSpF48I8nUcsR3Ae7aNYZvPrwBlpbDKEA/5h0asbk=
+	t=1789170461; cv=none; b=UrgJuLmdWeRM5RZqCUmHlZQsvgXHzslid4GF8MaJV6/8jjLs+NEQyiDn10H6k6zqbilIo/+Ac+JsRtoyRcuumPYtyAZuriAjqRwXlUA4qWR3UsqA7eoUo5RoBpF3rVEf3NJwRN2+FklFRZVGQ7tZJbWJHUvXXNP8MBQHYTo/jrs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789170454; c=relaxed/simple;
-	bh=ym2an1QYIKEblaMQwyxWe/C8SQ+U4aJ+Nfj3jtSSjpQ=;
+	s=arc-20240116; t=1789170461; c=relaxed/simple;
+	bh=7jduGPasPjNZA7MYMMs1/1uI0BXVZYCz0mvZm4SQDqc=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Ef9s2KM64quT0glq84WL1zYST/EuoQDw7uKU2ro/42Aa1FB8t/tiE9FY905spKpC7SSSqyGEsQn4WHd5eCwkV6lDKuq33VNkXVvQRM1LPVvMDH6RPDi+c2WvRPZmxa1Ip3//+3cW8q2PhE6ouIrjhrWYWTPVErgvyi8sJc0dVGI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QGD1V8u0; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=YI0cG6iItCXcmAWc58WEMUnwp42F1erVw102lEASDTU/AAh0+tYbS2AovestNBb+jGSVtQgQgVESJciuif5j0qstluJwD5mjDi+9uoUmJF6l4R+GfNe+Om3d6X1Y/2WBqaGbpq+qydEu7aUPyRCV/2QaKlknIEvaEwxJVkcfFy0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WCdZB0hr; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QGD1V8u0"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C5EDB1F000FF;
-	Fri, 11 Sep 2026 23:47:30 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WCdZB0hr"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 89C1E1F000FF;
+	Fri, 11 Sep 2026 23:47:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789170451;
-	bh=H0ZENjC9ivaNI8dr1NwBnbklYypNMP1pZxB8pBOWUNA=;
+	s=k20260515; t=1789170456;
+	bh=+dKBx72eZvm1Szss9jXHyUAtj/R4H+OfRfUj3q3B4g0=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=QGD1V8u0uppiUxgTv0Jxh0w7LgHaJ9LDpNx59aNfXzyVECIOoH1Za54PwKY+kV9dq
-	 wCqM34IihHO+3gwdWK0KZa72SXDet76oYuQppuxxE96EFun5sdX++21UOou1NnWWdu
-	 D4SPm1QhQkUY7YRXp87n+r/gY5QAvAER19ux/NvwgqwKSneczCjlyeMTFFYXZgqThH
-	 DvLu0GvfeP7FOX54jDnBQiOAtVCDUD+eTft2vpSqGuq0B/L0jY/5IylCaOaT5vBj1J
-	 xgbWjOErrWz8MOAMvtDUklsGOMnHEVXqKoLmh7CgH+KiuDd3bdOHVuHqTihv0DGBWb
-	 oI2YaxiETvpDw==
+	b=WCdZB0hrNWt1kZK5FM1Y2AoEh/CyhNV4emTTgRiiLHlUfR/au+d07ARGDafsIC0Rw
+	 J0fkF7prBq1XKxq+gSi3NNpbkhMxASdAuQXSy9ebEjozj2G2XXpblxqERKzp+zaqTC
+	 RByUXJXd1IP9u6DiDx0TmEym/tvw8GiWNoSbMvZIF9JBRjDHXBZ5AifwGT3EzE4+58
+	 CIw3vR266hsGbjnCV9tyRgKk4EOPJY66d5CgNIcW3aNw7JTI9RicrLb/MY7YQNFT3R
+	 Zn14DU8xtsKI8/f66lfgQ5hrazyvPLTPU03IfjLVJTqTYpIhhJv1Ysuh9XDpUSnGsG
+	 U+41DZ97fKVAw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 12/13] PCI: brcmstb: Use order-0 indexing for inbound
- BAR window array
+Subject: Re: [PATCH 05/13] PCI: brcmstb: Declare and assign quirk
+ OB_WIN_MAXSZ_128MB
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Jim Quinlan" <james.quinlan@broadcom.com>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260911233541.1650895-13-james.quinlan@broadcom.com>
+In-Reply-To: <20260911233541.1650895-6-james.quinlan@broadcom.com>
 References: <20260911233541.1650895-1-james.quinlan@broadcom.com>
- <20260911233541.1650895-13-james.quinlan@broadcom.com>
+ <20260911233541.1650895-6-james.quinlan@broadcom.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 11 Sep 2026 23:47:30 +0000
-Message-Id: <20260911234730.C5EDB1F000FF@smtp.kernel.org>
+Date: Fri, 11 Sep 2026 23:47:36 +0000
+Message-Id: <20260911234736.89C1E1F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -47,71 +47,78 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] The shift from 1-based to 0-based array indexing for `inbound_wins=
-` broke the MSI target address calculation. `brcm_pcie_setup()` was not upd=
-ated and continues to evaluate the hardcoded index 2, which now points to a=
- 0-sized disabled window (or uninitialized memory), forcing an incorrect MS=
-I target address.
+
+Pre-existing issues:
+- [High] The OB_WIN_MAXSZ_128MB quirk handler silently truncates outbound m=
+emory resources and completely ignores subsequent memory windows due to an =
+unconditional early exit.
 --
 
-commit cc21218055610569186c9058228a2b11645c3501
+commit 6fb01c14c0bdf317322f341660866644991a983a
 Author: Jim Quinlan <james.quinlan@broadcom.com>
 
-PCI: brcmstb: Use order-0 indexing for inbound BAR window array
-
-The register names for the inbound BAR registers use order-1 indexing,
-e.g. the first is BAR1. The code followed this nomenclature by not using
-the 0th element of the inbound array. This commit undoes this approach
-and uses order-0 indexing.
+PCI: brcmstb: Declare and assign quirk OB_WIN_MAXSZ_128MB
+   =20
+Even though only BMIPs chips have this quirk, it is more uniform and
+readable to define this specific quirk where each outbound window is must
+be <=3D SZ_128M.
 
 > diff --git a/drivers/pci/controller/pcie-brcmstb.c b/drivers/pci/controll=
 er/pcie-brcmstb.c
-> index 8bca98e6f5fa4..53984cfa2c96f 100644
+> index 71ddd8a760af9..401898d04d521 100644
 > --- a/drivers/pci/controller/pcie-brcmstb.c
 > +++ b/drivers/pci/controller/pcie-brcmstb.c
+
 [ ... ]
-> @@ -1202,11 +1195,11 @@ static int brcm_pcie_setup(struct brcm_pcie *pcie)
->  	u32p_replace_bits(&tmp, 1, PCIE_MISC_MISC_CTRL_PCIE_RCB_64B_MODE_MASK);
->  	writel(tmp, base + PCIE_MISC_MISC_CTRL);
+
+> @@ -1294,11 +1296,11 @@ static int brcm_pcie_setup(struct brcm_pcie *pcie)
+>  			return -EINVAL;
+>  		}
 > =20
-> -	num_inbound_wins =3D brcm_pcie_get_inbound_wins(pcie, inbound_wins);
-> +	num_inbound_wins =3D brcm_pcie_get_ib_wins(pcie, inbound_wins);
+> -		if (is_bmips(pcie)) {
+> +		if (BQUIRK(pcie, OB_WIN_MAXSZ_128MB)) {
+>  			u64 start =3D res->start;
+>  			unsigned int j, nwins =3D resource_size(res) / SZ_128M;
+> =20
+> -			/* bmips PCIe outbound windows have a 128MB max size */
+> +			/* PCIe outbound windows have a 128MB max size */
+>  			if (nwins > BRCM_NUM_PCIE_OUT_WINS)
+>  				nwins =3D BRCM_NUM_PCIE_OUT_WINS;
 
 [Severity: High]
-By changing the inbound_wins array indexing from 1-based to 0-based, the ma=
-in
-inbound window for non-7712 chips has shifted from index 2 to index 1.
+This is a pre-existing issue, but does this logic leave resources smaller t=
+han
+128MB unmapped due to integer division dropping the remainder?
 
-Does this break the MSI target address configuration further down in
-brcm_pcie_setup()?
+Also, instead of returning an error like the non-quirk path does when the
+window count is exceeded, oversized resources seem to be silently capped he=
+re.
 
-Later in brcm_pcie_setup(), the code still unconditionally evaluates index =
-2:
+Could this lead to leaving some required memory regions unmapped?
 
-	if (inbound_wins[2].pci_offset >=3D SZ_4G ||
-	    (inbound_wins[2].size + inbound_wins[2].pci_offset) < SZ_4G)
-		pcie->msi_target_addr =3D BRCM_MSI_TARGET_ADDR_LT_4GB;
-	else
-		pcie->msi_target_addr =3D BRCM_MSI_TARGET_ADDR_GT_4GB;
+>  			for (j =3D 0; j < nwins; j++, start +=3D SZ_128M)
 
-For non-7712 chips, inbound_wins[2] will now point to the disabled zero-size
-window, forcing the condition to always evaluate to true. This incorrectly
-forces BRCM_MSI_TARGET_ADDR_LT_4GB and breaks >4GB MSI allocation.
+[Severity: High]
+This is also a pre-existing issue inherited from the earlier is_bmips()
+implementation, but looking at brcm_pcie_setup() just past this loop:
 
-Additionally, for BCM7712 chips with fewer than three dma-ranges,
-inbound_wins[2] is never initialized and will result in an uninitialized st=
-ack
-memory read. This issue remains unfixed in subsequent patches of the series.
+			for (j =3D 0; j < nwins; j++, start +=3D SZ_128M)
+				brcm_pcie_set_outbound_win(pcie, j, start,
+							   start - entry->offset,
+							   SZ_128M);
+			break;
 
->  	if (num_inbound_wins < 0)
->  		return num_inbound_wins;
-> =20
-> -	set_inbound_win_registers(pcie, inbound_wins, num_inbound_wins);
-> +	brcm_pcie_set_ib_win_registers(pcie, inbound_wins, num_inbound_wins);
-> =20
->  	if (!brcm_pcie_rc_mode(pcie)) {
->  		dev_err(pcie->dev, "PCIe RC controller misconfigured as Endpoint\n");
+Does this unconditional break force an early exit from the resource iterati=
+on
+loop over bridge->windows?
+
+If platforms define multiple memory regions in their device tree (such as t=
+he
+four 128MB PCIe memory regions in bcm7425.dtsi), wouldn't this break cause =
+the
+handler to map only the first resource and ignore the subsequent memory win=
+dows?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260911233541.1650=
-895-1-james.quinlan@broadcom.com?part=3D12
+895-1-james.quinlan@broadcom.com?part=3D5
