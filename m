@@ -1,136 +1,122 @@
-Received: from BN8PR05CU002.outbound.protection.outlook.com (mail-eastus2azon11011062.outbound.protection.outlook.com [52.101.57.62])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f197.google.com (mail-pg1-f197.google.com [209.85.215.197])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C14F839061C;
-	Fri, 11 Sep 2026 13:43:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.57.62
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789134225; cv=fail; b=jmWxUexvRg87MZI66t+ILyIyivYoN+qtBT/+8B3Jbh1DsSG+/oUOdrQE+xzykIXp/qELKz72E4pHv14QLxm2m0D/LKAJxcYkzhoGmRtxdvOSdaFHfPVpR2dPAZF4O8uJEilYH4N8w9SBv145B4P9ebyC24Pq/mfFKKlhROvWweI=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789134225; c=relaxed/simple;
-	bh=181lRSRPOEEZ9LfkQcJi9FfAd8GSh/UT/Sou0Q5OwUQ=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=hFgW9ZMFH4IYGtq0k3LkaIplTu883Na4/yIj2YZvH705OgpYBaUGCGGalRSCudgmqzcr39nH1KuxDeooVVpgvrBdpiaBC+q62cSFgjaBzpWncyfnLhWWywgUFkK5oSUO8dbVHdOmnzurei/5VQ29yILqH7OMB8k0X95IFEAwgyY=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=ynRHlTI9; arc=fail smtp.client-ip=52.101.57.62
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B237D48822B
+	for <linux-pci@vger.kernel.org>; Fri, 11 Sep 2026 13:44:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.197
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1789134299; cv=none; b=GFouBQHAVOAAfpviXsDwB3p1h8IONhnK9X191015HW+6qe1ovHAng/BF/vuRoYmEr7/rRRkNNbTv8DfvA9/puizMeNIIdOeAW5VIRHpCfV6o+A6snw9GOCKwTt1crLDjAvZ3W0sbO4ZL6XkxxKas+VXw19Ojf9YNdj8X/a/mjfE=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1789134299; c=relaxed/simple;
+	bh=z1IBBN+1WUfDf5cT8bAka5f8p45OV+l+sxZzQy3xMvk=;
+	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
+	 To:Cc:Content-Type; b=lBXUhCHKlKbyMytlKYaU78oe7PC9CGDGEHOcg1uZCOil0q+ymOTPQhpKAdZEfZ+tgvYQyx07APXZ6864BqlYTIosjJmXwbU71zTIoUvOnltWvVvN+tKp9TFxQ5caHnpQA61l5QVWFN7McGK0f9gyz3cPbGdwocL2l5x69mkqgng=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--seanjc.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=PJxXdm+a; arc=none smtp.client-ip=209.85.215.197
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--seanjc.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="ynRHlTI9"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=eCrgzokGmv7ox3wY/jlkCnwhScMMW9ubCP1SK6str8tmLMyL0sPWKmOy1YNRV9+aeFrNhenplAoSV2aMYjy7Jl9H7ttsXS5jh1janhwpjIg6i+PWcMDrgNcek2kiPa+1ywhtFE7vhWGyHbCt7Rcn9mU1RI4CCH7Fm9bsdSQ+ZctAxQaspPYiNOj2xpDruVxrGBW0Ltw3Ov3HQLjyJkIfDOtOQqAHnyoyy1jjzjaI5HEOHew25wz/wDPE1XpTygWwtuVHQuY78kv5GzYUwgjQV8rEy/SHpkincoTs5vP/WQeGXAKtA1BIeje8/DU4K6Iyy1bPpJPf9L48IVV4OIL95Q==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=bu7K2GfHORaPJ8HDjWChODhYH/SqZTvndoFyh9MnFbg=;
- b=liIK2I/TzGiCLg7NW/X2k9OeJArONCig5O8ai+MdiZMeJ2w/IpHrJNNplzeQmvcFXR4haAvG14jd+C/OsQfMcJUZVkTvhJ7Nk8Fh6J/L4m7AWcuXs3hsX6lZ0Va48V+cR0+5cyltrABn9vdUaXtneduJRGm6v25ynF0gUZtF8/K8AdcgMP/Yj1SRn2wGYt8tx0AmH59U6Nxt9u6Bzhi0BA4Hhh1b5LX8uxVmMsJTa37oyK3y48VirP5Enmk2Vopn7G92vPPmDkL8iy3WY1n4Fhxizi1oB5CA+eCV2ZicvADLPCPe0yXohoxCLNZg87/Yau8RLtk9swvwO86+1rBhIw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 165.204.84.17) smtp.rcpttodomain=ladisch.de smtp.mailfrom=amd.com; dmarc=pass
- (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
- dkim=none (message not signed); arc=none (0)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=bu7K2GfHORaPJ8HDjWChODhYH/SqZTvndoFyh9MnFbg=;
- b=ynRHlTI96sr3NbJ+1W6C7ylVGbM95Me0u6xpSfWuWO6/MgGrHbpiIx4pbcM86FF/XCW4pxZZ3Nk1lw4Gf02WhrxgzY9FgeQDzxRvR1ZJb+WBSFKeHvanC2vP/j5uK0FWmCEjT18SDiEh3SgLo0GTatpMj0FGpmClvIkRL4ts0YU=
-Received: from DS1P220CA0017.NAMP220.PROD.OUTLOOK.COM (2603:10b6:8:44c::10) by
- PH7PR12MB7137.namprd12.prod.outlook.com (2603:10b6:510:1ed::12) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.406.9; Fri, 11 Sep
- 2026 13:43:36 +0000
-Received: from DS2PEPF000061C8.namprd02.prod.outlook.com
- (2603:10b6:8:44c:cafe::36) by DS1P220CA0017.outlook.office365.com
- (2603:10b6:8:44c::10) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.21.406.10 via Frontend Transport; Fri,
- 11 Sep 2026 13:43:35 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
- smtp.mailfrom=amd.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=amd.com;
-Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
- 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
- client-ip=165.204.84.17; helo=satlexmb07.amd.com; pr=C
-Received: from satlexmb07.amd.com (165.204.84.17) by
- DS2PEPF000061C8.mail.protection.outlook.com (10.167.23.75) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.406.5 via Frontend Transport; Fri, 11 Sep 2026 13:43:35 +0000
-Received: from ausmlimonci-lx1.amd.com (10.180.168.240) by satlexmb07.amd.com
- (10.181.42.216) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.49; Fri, 11 Sep
- 2026 08:43:34 -0500
-From: Mario Limonciello <mario.limonciello@amd.com>
-To: <clemens@ladisch.de>, <linux@roeck-us.net>, <bhelgaas@google.com>
-CC: Mario Limonciello <mario.limonciello@amd.com>,
-	<linux-hwmon@vger.kernel.org>, <linux-pci@vger.kernel.org>
-Subject: [PATCH] hwmon: (k10temp): Add PCI IDs for 1ah/80h
-Date: Fri, 11 Sep 2026 08:43:00 -0500
-Message-ID: <20260911134304.226286-1-mario.limonciello@amd.com>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="PJxXdm+a"
+Received: by mail-pg1-f197.google.com with SMTP id 41be03b00d2f7-c85798977dcso1506329a12.0
+        for <linux-pci@vger.kernel.org>; Fri, 11 Sep 2026 06:44:52 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1789134291; x=1789739091; darn=vger.kernel.org;
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=35qTFGciq12kEJU+EMJ4woELZzEj6I4YMtoPAd4aNAQ=;
+        b=PJxXdm+a+euQUyQZMaj+1xNum8ZW6CpqOCX567sqtcKG76RNivO5/ngMhvgSK08Ljm
+         J+tnQGPEU6Zqh+X9i8fCKegkiG+g24cFjyry4l1+Sg/rJkymCKLxCavFK+B5p5UVggpt
+         bz1UiQfHa58So2MfZgi8VqAjc1NSH0Z9S2noWjY+bnpsv0Ixkax2xy9qYh4gicLzODB5
+         rB6X326hXNCSZTSklfDlQnqEJ0XjbqiwewmXPw44IVEgkvOl75gxoVGey3TMqhJ26krr
+         yXHlQNz4p3K64BQnpKrsNuAMNM2ISyge59NUZ/8FJbZeN1NT64bmlSilrEYfi1KK+umI
+         Glig==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1789134291; x=1789739091;
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=35qTFGciq12kEJU+EMJ4woELZzEj6I4YMtoPAd4aNAQ=;
+        b=kz4PlEFPydsHrWJ8K/8H34ol2OPCrx8wbS2kA3G87AbBZntjFHDnoASDzFG9BxjVKZ
+         krOlePDdzHh+aCfVbe03oQLygD0ZbJwSl8NK0MDH4NWSI7QSBFfH0KpbbxvQOD9d+DwV
+         uav4XRT4bKwsVdOcGJuvcPoeXtUF2NwKA8JON0aZteXsUGom7GMBuwH7U/pv05vQonyu
+         SspVpf+eAAiWhkj2T8IBWQScSTMVuH1TGM8c0J6IE3EsVtKIYdhdu48VtENdnJDnNZXw
+         vGg7qVAvntdfxKliP0QOLZgM6vDS2ECz43+lnbq1+1natNtXVFHcByorG9AgJTul0pD1
+         i6cw==
+X-Forwarded-Encrypted: i=1; AKwUvBxHmuYfac13GiZX0tJ5SDD/bvJeh6NVAZo/xcyuvH4Nt22ciALuRSPOfs9SkwEl42HcINi8oDB2UP0=@vger.kernel.org
+X-Gm-Message-State: AFuF++lukUx/v0M3118Y9BhwvHIejpl3VnQMAwryp4vR0QivSBomrstJ
+	HrhqsQXDtPv5MB8OJVng7O5QtMh53PZGl3v7g49qGkBD4WHhE89uecP2uy1FvpfhNbm+91omh58
+	IDvRFAw==
+X-Received: from pgjj10.prod.google.com ([2002:a63:230a:0:b0:cc4:5907:21e9])
+ (user=seanjc job=prod-delivery.src-stubby-dispatcher) by 2002:a05:6a20:b08d:b0:3c6:61b9:917c
+ with SMTP id adf61e73a8af0-3daed1fd3cfmr8633653637.11.1789134291123; Fri, 11
+ Sep 2026 06:44:51 -0700 (PDT)
+Date: Fri, 11 Sep 2026 06:44:50 -0700
+In-Reply-To: <20260910225728.GB857650@nvidia.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: satlexmb07.amd.com (10.181.42.216) To satlexmb07.amd.com
- (10.181.42.216)
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DS2PEPF000061C8:EE_|PH7PR12MB7137:EE_
-X-MS-Office365-Filtering-Correlation-Id: e1048a0e-bb41-4515-e07b-08df100aad7c
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|376014|36860700016|82310400026|23010399003|1800799024|10067099003|18002099003|11063799006|56012099006;
-X-Microsoft-Antispam-Message-Info:
-	nWUSi0GWhb8bgg94C6JZ6wCzpf13tqzMLenhqYEJxcHqjuvCuj1Cab52KWQk9hf3WQ56O53A53D/9Tc9wsFnQXJHRZsFBVe2cPUe69qxUcQM71+Yt411APwJCSDQPmE135Q1ac7BAEj1v1WXRQmILYjaMRqLtoWoz87xk+43PwQvN29iRnP9twceKf0gni16pdxnjev7W/LRhO7CDYp/LGatomzd4QXfT+/WnxLyd7H2NmHFaKA0Fi5mb9YRELu4PL4FioGXwWifZX8Wnp2Z19KG2hOTG6e44Guh/2amaH2Qr4fIjY3wd/l5iLfr+Bvstknyfwxz2YzKkFmZQOzDBOEXURN2Wzmd6WXGts+NDV2I3IGX/vSv5ZzBl9uO/4L9wzZQ+fV9K8jMWAsMvDg4Q4z6HSSRqZgxV16oNyOH6r6Ze5CGBLss6d5GkHVqz7b+FO714EQEB/89g/higWySdNgC3a2Eh4WNcEWtT1t+K5a7D1Ksq4bzykidZqUEhiXxET391GXdecmACd6Oi1dJ4UPWV+gqfLjdjAFcW0OgSG+2MARerQR7G4F2V7l0LkIbXvMsV9yaaocOgSC94JIFW2u6unMV4pZebVOPzit3CaCYb/pqMJJhjBuf7VvM1b516O7YI/PLajfn4ibdxJzhQerhhFCZ+ofBrvk3NHDTl7Ua9Uoe3qm6n+0x/ufYClH778FK4q8zrmFxeyaa0y5mdQ==
-X-Forefront-Antispam-Report:
-	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:satlexmb07.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(376014)(36860700016)(82310400026)(23010399003)(1800799024)(10067099003)(18002099003)(11063799006)(56012099006);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	1O7JZSoi+HCy9piRTwj96Ebz6CpL08a2oGqUFWEUYwr4S/IjofW6514vgx35DaDo+RWoyVTq46ATES44qzM7bC+ZQIj97IBCp+/ER2ipoa4iBc5dSPFv9vwn7cLvpsuQMILIbretLDSGqoX7TW8qI437jCVx/3jGVTqus7AcHSQIC4xeNSPNEZdxvUpOwEKH2SLbqDKAk51l75W9VU0Nj+lzp0jIIKkrEMIG9SV2SagHhImm6eieNaQ3yt4DlGDYuFcGHK2i8Q1d4gJYrqSxyMel1i/bMsevEXUSW05ic3ymEnjPvkygdrRr9A7mHxlL5AOaIyf2f0HI9sdWbV2OlYHR38psCbJz4kiSO5VdSJuGVKq6fUvJusVPmI+MR7iOIRsipQ86KIJ2r4thU9qIW5HvV8TRQFW/YrTPdG6lnUvviJq3M0tDO4chnGroVZSP
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 Sep 2026 13:43:35.5518
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: e1048a0e-bb41-4515-e07b-08df100aad7c
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[satlexmb07.amd.com]
-X-MS-Exchange-CrossTenant-AuthSource:
-	DS2PEPF000061C8.namprd02.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH7PR12MB7137
+Mime-Version: 1.0
+References: <aptFFYqcSiBdMLE8@google.com> <20260905012403.GX4157646@nvidia.com>
+ <aqIAtOoew-_6jw29@google.com> <20260910143448.GD3968357@nvidia.com>
+ <aqLOWkuVKccR-I7W@google.com> <20260910171210.GF3968357@nvidia.com>
+ <aqMgjXfTJ8u3n7Kj@google.com> <20260910221832.GH3968357@nvidia.com>
+ <aqMyXE-fD-UN6w5L@google.com> <20260910225728.GB857650@nvidia.com>
+Message-ID: <aqQF0gz3Q2weDyEd@google.com>
+Subject: Re: [RFC PATCH 0/3] liveupdate: Move to feature flags for LUO and
+ memfd ABI compatibility
+From: Sean Christopherson <seanjc@google.com>
+To: Jason Gunthorpe <jgg@nvidia.com>
+Cc: David Matlack <dmatlack@google.com>, Logan Odell <loganodell@google.com>, arnd@arndb.de, 
+	pasha.tatashin@soleen.com, rppt@kernel.org, pratyush@kernel.org, 
+	graf@amazon.com, akpm@linux-foundation.org, pbonzini@redhat.com, 
+	maz@kernel.org, oupton@kernel.org, bhelgaas@google.com, alex@shazbot.org, 
+	kevin.tian@intel.com, dwmw2@infradead.org, baolu.lu@linux.intel.com, 
+	joro@8bytes.org, will@kernel.org, robin.murphy@arm.com, 
+	linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	kexec@lists.infradead.org, linux-mm@kvack.org, kvm@vger.kernel.org, 
+	linux-arm-kernel@lists.infradead.org, kvmarm@lists.linux.dev, 
+	linux-pci@vger.kernel.org, iommu@lists.linux.dev
+Content-Type: text/plain; charset="us-ascii"
 
-1ah/80h uses same base as other programs.  It only supports Tctl.
+On Thu, Sep 10, 2026, Jason Gunthorpe wrote:
+> On Thu, Sep 10, 2026 at 03:42:36PM -0700, Sean Christopherson wrote:
+> > On Thu, Sep 10, 2026, Jason Gunthorpe wrote:
+> > > Sean's initial email was asking for strict never-break ABI compatability
+> > > rules on top, and that is what I've been reacting to.
+> > 
+> > No, I was never asking for that.  I think we just have a different interpretation
+> > of ABI, or rather are talking about different pieces of ABI.
+> > 
+> > I am still asking for never-break serialization format compatibility, i.e. the
+> > more literal save/restore ABI.  I'm not asking for full backwards/forwards
+> > compatibility across all kernels version, i.e. the higher level "kernel" ABI.
+> > 
+> > To phrase things differently: I am a-ok if kernels are inherently incompatible
+> > because they fundamentally operate differently and/or support different features.
+> > I am not ok if we end up with incompatible kernels because the save/restore
+> > interfaces and payloads are poorly designed, lack abstraction, etc.  
+> 
+> I can more agree with this, it is mostly what I thought we'd end up
+> doing anyhow with version numbers and growing the structs not
+> replacing them.
+> 
+> So you still end up with a version label (string I guess?) because we
+> can break it from time to time, 
+   
+Why bother with a label/string?  I don't understand what it buys us; I see only
+pain.  Make the features discoverable and punt on all of the "is this pile of
+insanity my company has created compatible with this other pile of insanity?" to
+layers above the kernel.
 
-Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
----
- drivers/hwmon/k10temp.c | 1 +
- include/linux/pci_ids.h | 1 +
- 2 files changed, 2 insertions(+)
+IMO, trying to capture compatibility in a version string is doomed to fail.  To
+be useful, the version would have to be extremely sensitive to changes, otherwise
+userspace will have to do its own compatibility analysis/checks anyways.  And at
+that point, a verson string will be too restrictive, e.g. will mismatch due to
+changes in features the deployment isn't using.
 
-diff --git a/drivers/hwmon/k10temp.c b/drivers/hwmon/k10temp.c
-index 3e7e63edc6a30..b00081deb2e86 100644
---- a/drivers/hwmon/k10temp.c
-+++ b/drivers/hwmon/k10temp.c
-@@ -582,6 +582,7 @@ static const struct pci_device_id k10temp_id_table[] = {
- 	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_1AH_M50H_DF_F3) },
- 	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_1AH_M60H_DF_F3) },
- 	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_1AH_M70H_DF_F3) },
-+	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_1AH_M80H_DF_F3) },
- 	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_1AH_M90H_DF_F3) },
- 	{ PCI_VDEVICE(HYGON, PCI_DEVICE_ID_AMD_17H_DF_F3) },
- 	{}
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index 63774ae2bf71d..57a4ad9984798 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -585,6 +585,7 @@
- #define PCI_DEVICE_ID_AMD_1AH_M20H_DF_F3 0x16fb
- #define PCI_DEVICE_ID_AMD_1AH_M60H_DF_F3 0x124b
- #define PCI_DEVICE_ID_AMD_1AH_M70H_DF_F3 0x12bb
-+#define PCI_DEVICE_ID_AMD_1AH_M80H_DF_F3 0x1243
- #define PCI_DEVICE_ID_AMD_MI200_DF_F3	0x14d3
- #define PCI_DEVICE_ID_AMD_MI300_DF_F3	0x152b
- #define PCI_DEVICE_ID_AMD_VANGOGH_USB	0x163a
--- 
-2.43.0
-
+> just the version should have the feature mechanism layered under it? I'm fine
+> with that
+> 
+> Jason
