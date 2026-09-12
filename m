@@ -1,271 +1,159 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from PA4PR04CU001.outbound.protection.outlook.com (mail-francecentralazon11013012.outbound.protection.outlook.com [40.107.162.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BFF85368D47
-	for <linux-pci@vger.kernel.org>; Sat, 12 Sep 2026 15:57:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789228669; cv=none; b=hqzN+wQ+4WoYVbmSKijd8DVtA3jil+Qyj6zKY8Ai0BFLrM+fdIiVBEp0T3e9rAv4iTc0K33t2M5gXDpAW6EPRvB7+yNa6UnFOCQ3rRj718Vi/foSd1u3OxpjhUgDH/6vAibD1MmH3O5AC6BKkjVCrLyZgWVnRu1HL96luBKlDyc=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789228669; c=relaxed/simple;
-	bh=DDdwMavose+L44nqqW3Jbf/GzHVrxplojO2qv8SdCQU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=mr3KFmb3A2fgqAf/fX25Br0WUtjN6+YHsjUZVRqDDfLyuIL7TPIrSOzN6gZcumy85wqtfVr0nqGoVyfaY5XEoOmIa//wxF8zteMusrpd9NYgR5lLDLgAPaluDNYZBNKmgSyBQ2tm1X5NlHUge3SOOuPdZW/ZPxd87sa4gSm4fRY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=dNMo1iQC; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=fzUeq5w7; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB0AE429CC6;
+	Sat, 12 Sep 2026 16:16:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.162.12
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1789229787; cv=fail; b=Ysq1Umi9pR+nVAE1KasfEcoAiEw8M6QG7bPw1ujK16EweNomIkGAOUKeV1H7oPVcQDsYK8pKYhE2u4LcvB8Us8XdO4rztIcum5UIkIQWgGER9BsQwItzVLYYy/T6E5OPxyQZGSqDLPQwiinGXykH6tRT5NWEht74FygGo+IZuKU=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1789229787; c=relaxed/simple;
+	bh=OIwC8MsdPt8N1EqPWDs1GTqtgYgCdu2dHUUA7CbZySE=;
+	h=From:To:Cc:Subject:Date:Message-ID:Content-Type:MIME-Version; b=rCokCw902hCMFnGO8zsYo7PDszGeFWwtjKHmc0QJnAborb26dfczxDI4eXeO4dWzSaKdsTX+D6/SZYuPoHloD1r5eoZ/o3Rc61n6fKG7jzIYhkbwCOEdbWpXT9Rzog5PrROgSh13yQSwWhOfvD5LggXzOT2spYNTHwruN/G1Y3Y=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=N1sbYd15; arc=fail smtp.client-ip=40.107.162.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="dNMo1iQC";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="fzUeq5w7"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1789228666;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=+Suz8unb1e4b6bNiUz2gPySCHFTJdV6OXkzqI95eyBY=;
-	b=dNMo1iQC8jDNhrWXOIsYVMk4ySNegC5krtYVnurhWaNalXth2wklw4UUu7go76/Oi/gOqH
-	YL1GImRQzpnNb8Z/L3Wlq33buUXZfo7dFA6wwrFfQqtiNF+xwgJl/Tb33qClCmbzL7zkke
-	120IotcacR4reG/E9zY5YyL78z9iA84=
-Received: from mail-wm1-f69.google.com (mail-wm1-f69.google.com
- [209.85.128.69]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-338-0ZlWeZxUOKSnYGZdUzFUHg-1; Sat, 12 Sep 2026 11:57:44 -0400
-X-MC-Unique: 0ZlWeZxUOKSnYGZdUzFUHg-1
-X-Mimecast-MFC-AGG-ID: 0ZlWeZxUOKSnYGZdUzFUHg_1789228663
-Received: by mail-wm1-f69.google.com with SMTP id 5b1f17b1804b1-49e6422198fso12172515e9.1
-        for <linux-pci@vger.kernel.org>; Sat, 12 Sep 2026 08:57:44 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1789228663; x=1789833463; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=+Suz8unb1e4b6bNiUz2gPySCHFTJdV6OXkzqI95eyBY=;
-        b=fzUeq5w74iXyUs3gLLBun0HKebgLfUd8slh2zUlnlTeEQl2RRBGI/N2PaBD5MpRYKw
-         g76Rbj8lUZrSRX1eRDwmCG+ZsuVozeTkoVHBNNx3Zx8FYZq6qFC8/+b5wNl3iE59ut4l
-         12grK3+9Gw1/rfXO/vi6wNWT4WzuAXOmdtPOk4K6RDSBHIB3CF3sc1B0WN3eQYijJsio
-         SPOz0OB32loCbv6jD7zSgUzuBO/ytyq1W7NIHZIJi29O/9lzMVsW8p209hQB77HSZdGV
-         Cy49lrseSsRYZe8r6f/R56wQW3K0kMoESdxwKnQgC87Ts0Nq8bOHqLgNdwxe99Z3FJje
-         5v/A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1789228663; x=1789833463;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=+Suz8unb1e4b6bNiUz2gPySCHFTJdV6OXkzqI95eyBY=;
-        b=OQGqiCtpki20CCwc5JOjJrg82YBQ/XjTezhcRkY3KqN+y6MQ8h/1CVmnc7RC2whyKT
-         yMqn1P1n7HFijGNySURgcFCWO8MS3jKL8Tx0HITOuj4Ug1ADyYuXbdm+6NWhAeXrbd1R
-         308bImgjLtHlnwCO5qwqNugkhdKNF/H0DArYrGdlxxsweMfwmWbeX6+F1i/HnFye9mSx
-         ibHl5xV6STl+zvTpkNAWq2z80YDZ5XxGECalgvi1dmBlJPHednip+wfh92OJe4CoRr04
-         M9kyuaDqDKFYa455wbH2i0qyqJmxmLyVHOj4NpKf1H5NjxZ7xEuZAG8ayrA26NCvEdWe
-         DwAw==
-X-Forwarded-Encrypted: i=1; AKwUvBwFgfeVwWTkBB1a0Hs7MCk4oS7ZMcLAoKRYH1HBa2+maLbIX8zDyJdsHNlkJRIoxu5aCDpEFM+AkBk=@vger.kernel.org
-X-Gm-Message-State: AFuF++mjhGoGs/3ucmyyNEZ+h6kJkFgHe1sCed7MdP+anNqym4jW6JYs
-	5lH2BVch4Yiopw9wf+qMFvx8pGeY/LWPItNrkvt7O+wuNNlBsodRLRZjzQSS1FkKunY7KiggIgY
-	Du7vzp8kdUez1yzXf1mkPWF4w40YocYHu0n8XqABFeGHKvSZh4tniI/tAInAZMg==
-X-Gm-Gg: AYBFou2eBwnk6HpnHPVnarLdYHRaBNV4Q7oi+aImAFR22JoBV5TO4C5DTRZbvD0Jfna
-	Fl56QrInBl36v2OM7A4LNXzPBO0IMGAb7LHHZnrN/BaHZ8fcdGiTkAyVJ/+1TBm4aMWGYXG/hzd
-	tCLR9+GHAji+F0yuMZKWUCb49zE1I5qPd2C+ADpY+0MJvd8dMTq/oeucP+kZwRGOJQAkK3DweTm
-	yVPQI/hgd4NAom2xcLmqTbCFc/6ivOIuDRxZNSTMA0JCgpYqJK8TTAXakZ1tYpwnYF3WpRI2e+y
-	uMl+FeTRwAdGCpLaKJLKirYhkw3k5QyeKFLAdQ9TvBkUMpSXe3ZLmuZfFp/GUD/ClLM=
-X-Received: by 2002:a05:600c:4e0c:b0:49c:ed94:cdd8 with SMTP id 5b1f17b1804b1-49e6198734emr251758185e9.6.1789228663081;
-        Sat, 12 Sep 2026 08:57:43 -0700 (PDT)
-X-Received: by 2002:a05:600c:4e0c:b0:49c:ed94:cdd8 with SMTP id 5b1f17b1804b1-49e6198734emr251757665e9.6.1789228662551;
-        Sat, 12 Sep 2026 08:57:42 -0700 (PDT)
-Received: from redhat.com ([147.235.223.59])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49db038401fsm269738175e9.13.2026.09.12.08.57.40
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 12 Sep 2026 08:57:41 -0700 (PDT)
-Date: Sat, 12 Sep 2026 11:57:38 -0400
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: Abhin Parekadan Jose <abhinjoses@gmail.com>
-Cc: bhelgaas@google.com, lukas@wunner.de, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, ilpo.jarvinen@linux.intel.com,
-	kees@kernel.org, xueshuai@linux.alibaba.com
-Subject: Re: [PATCH RFC 2/3] PCI: pciehp: Report surprise removal from
- pciehp_isr()
-Message-ID: <20260912115420-mutt-send-email-mst@kernel.org>
-References: <20260905183905.997833-1-abhinjoses@gmail.com>
- <20260905183905.997833-3-abhinjoses@gmail.com>
+	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="N1sbYd15"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=ruGGTyirlMjFDm+yMcw761zJFxTCKusXoDiOKi4TG4na4JGQMvtOI3VNQaM479kl24UG3fEpEZNsvjqofAHuwVBfH6CCdmR0Ay6x4jFM8k7s6HjzjKnknlEeJO2TsTt2Pfarc2xPcdMqFleedFPbL+qMwyTgwinvHNs+Hq/gmJN60mUd4oUcV8C/UOT86GRe1cIbgzzDJeJibq2Im9gQIxhU/T807nmjLeJ88IJ99Gh6k6VdM1ZRMEgo15SpQQYgWlPDtu8n2o9M7Sd8wa05nINC/6f9YbBG3nWWJX3ksmem9UsLSRL5cb1IB9pIZqUiqEkiAGBtxRCIppzXMMJJHA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=sigBdbNoyhNMgqo4KhXtWcQSEXq7xG2EEhlfflBb5+I=;
+ b=daIp2m5FF+ULz/4khuFXw5DJ2mTb5stC9a8RrUA0Zsi6i9i//PJ7uLbLte46Xsv9sCsr290E0N2mIrboTYJg3/Ol1T+3VCLdW7PLfAlXGerrCA8Z8snLmFlQdyXpT1Je8DqQjwx8eYsKlZUOePGFbRcQ41iPx9U6awPStctIRE5thNQrRiVVoUfnaPpFVpUFd9ilC3nRsZ0VxGK4ArS1ssZ9fUa99sGO+J1AUOh4tM87IwEPUjGnEZvQKTG8EN3YwGD3IKaXnnYSGIWDXXVRGplfb60lv+s+RqrOeXpgDIuxFD5TQCNsqxVr7i0AUTv44F3Wf0CnPwFlsD6WscECSg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
+ header.d=nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=sigBdbNoyhNMgqo4KhXtWcQSEXq7xG2EEhlfflBb5+I=;
+ b=N1sbYd15mQR171j4D3mBIEOy4A2aFP79LwQAeD8IoNZM0xlxxT+//N+E/o03Xw3zRzuSRvy1mM1q3PDDXqsiTlBvJy+jkHi9si69ZN3cs7VUDsI6hk58SWu8xP38RftwM1SqT7pNKTaLT2wKErMhFW2QrJ1SUIAJKn3fpYDEk3+qBrvz0gs5K8h/tN96WBf7j5I71Oi5Sucx0j3VNcmMsllsDrLJ5R0+m5kQXxZFqzdDtlv8pp+IqgvoJ32M5+xg5LUcul1AC7CmZHr/d2QDCCxjhvnrn4P5nX1evjhREuwkuMEooRG4tX9gNeMnYBAHeEOVtIqqmyV7nIk/JbiK8A==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nxp.com;
+Received: from AM0PR04MB6900.eurprd04.prod.outlook.com (2603:10a6:208:17d::10)
+ by DU2PR04MB8871.eurprd04.prod.outlook.com (2603:10a6:10:2e2::11) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.406.10; Sat, 12 Sep
+ 2026 16:16:19 +0000
+Received: from AM0PR04MB6900.eurprd04.prod.outlook.com
+ ([fe80::7fda:8431:ca1b:b023]) by AM0PR04MB6900.eurprd04.prod.outlook.com
+ ([fe80::7fda:8431:ca1b:b023%4]) with mapi id 15.21.0406.007; Sat, 12 Sep 2026
+ 16:16:19 +0000
+From: vladimir.oltean@nxp.com
+To: linux-pci@vger.kernel.org
+Cc: Aksh Garg <a-garg7@ti.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Vignesh Raghavendra <vigneshr@ti.com>,
+	Siddharth Vadapalli <s-vadapalli@ti.com>,
+	Manikandan K Pillai <mpillai@cadence.com>,
+	Felix Gu <ustc.gu@gmail.com>,
+	linux-kernel@vger.kernel.org,
+	linux-omap@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: [PATCH 0/3] PCI: Remove device links to Generic PHY
+Date: Sat, 12 Sep 2026 19:14:37 +0300
+Message-ID: <20260912161440.1032188-1-vladimir.oltean@nxp.com>
+X-Mailer: git-send-email 2.43.0
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: BE0P281CA0012.DEUP281.PROD.OUTLOOK.COM
+ (2603:10a6:b10:a::22) To AM0PR04MB6900.eurprd04.prod.outlook.com
+ (2603:10a6:208:17d::10)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260905183905.997833-3-abhinjoses@gmail.com>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: AM0PR04MB6900:EE_|DU2PR04MB8871:EE_
+X-MS-Office365-Filtering-Correlation-Id: 6c44006f-fbd1-4442-f6ba-08df10e92ddc
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|10070799003|19092799006|366016|23010399003|376014|1800799024|7416014|56012099006|11063799006|10067099003|18002099003|3023799007;
+X-Microsoft-Antispam-Message-Info:
+	I1RlPiHP9ptThc0ajI+v7bPi1FjSVy6MQifNMMj4Aq7cYfEdH+3H/rAw1WF18CMp7teZclRl8A0+WtKmPhXdSsTwRgUvOIiJAtKwJKy+9/NlJrxzieC4JgAGZAn50wRoLyMcO44pl/pNoVVq+ipgVBv/AVNhgvhp2a13bJHnHSvQeY40q9iL9e9n0uXE35jUNSM9TnoHtPSovp7sPT2Wi6zgpYNDG2fgDt5bO4e0y3RcBRIVLOdj19o0bfYkyBF1ZznM5efPBXZJU3XY6qOUNMCZAGNdsD4xmQk2hDgy0HpnTITcV7zU5js2sAnyHQbFgjGhAxkbpFK5j1O5deHHDZ8TKXcBVryiHJdvdZCwiQyNUwoiMFb54GxG+4He7yGUqKaNM4d11LUVBaBjafapvcyVsY8UCr/pWHI8gHuWh6QMTnkelAHY/PkPD0s5MX4t2rn30eGPn07wnKrQyF1PeehSixR1zJOZ2sq3ekWetuY9ML1w/0DBYvrXZcMhy1QoAce9GAs10Jh/vmdl8MRSohv8qBlcQhE+YSuwqHF5OLO5wT0az+VzFJpM7tTDuY3Nhs2YR4yz78WnmIO+o5IMaNGld5SaOM78dNIm0Hc00aYSX/e6XkNOhLan8KyrhRuFNBD7U2YwqiShz0XHSmkEUkTAM+yJQFSP/fl7epdYfq8=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM0PR04MB6900.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(10070799003)(19092799006)(366016)(23010399003)(376014)(1800799024)(7416014)(56012099006)(11063799006)(10067099003)(18002099003)(3023799007);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?hknxGsSpr3OCdg8uaIO85CTPdLGGlztYonG2HQVjXjZsKMtw4BmGomfbNNjR?=
+ =?us-ascii?Q?Ro80CSYKRVn+JWtf22yr5fubbSnL+8/UXifDSSA0I7pt3XSs7tSf1F3OTADJ?=
+ =?us-ascii?Q?Bp8uvA+q/JXSletcNrKPI0UI5unmJvm7yDkguLMA7jDvm+tifoK1j7ZXJT4X?=
+ =?us-ascii?Q?iFgv6SWKnjlNNtzzayEwFPtPkAkijWJD3U8I8FUOtFX+5kJb/VHfOkqIl50o?=
+ =?us-ascii?Q?iMJmweBuvakelue1zSooONIzR6O47Rt0L6nmK8hayyzexL+z2+tLcMNtWRSD?=
+ =?us-ascii?Q?5aRWMvCp3g19tHwut1TnEbA5XUrZMi6+tx0ZQDUxM0913uGS+0+g3lr5yYP8?=
+ =?us-ascii?Q?x15BCr+xWygCybGM/FkHnsiWLTVa3ZKH8IiPfjLxPAGAd6VVZ20p4pHyxS2p?=
+ =?us-ascii?Q?lQ7IA3HBrgA2to4iHqQWRBgcoX340MQbi7676QL4sFz1AjbSg/zUPtwaWRxD?=
+ =?us-ascii?Q?Jz47xEKEq1U1tzwAhpPVZsuoyHKdgj2c/VlFnZWPzpxcGKJ7DkYv1VEg9cPg?=
+ =?us-ascii?Q?f7nf0xxQJAiTBfVw4OOnxSqse/0m78Y9MJfXIFVGoHABhxEYTze4VGpZqMe/?=
+ =?us-ascii?Q?Shnsz/JRfwvPhVwtl3aNLX8+jZIGKPxKoSD/MXfNgLjdPu8792tl85arl23y?=
+ =?us-ascii?Q?QCxp2qCqK5xN5b8otbAw4+cpzAG8ggLRiB7TsWdRlumuKslKZlgdLcJpAmtq?=
+ =?us-ascii?Q?Xr/9bn1JB5DJiQaU1t0LbUyw05xhj/x8omFlYsxwUu1gxIcjSRBPXJs1wzB7?=
+ =?us-ascii?Q?vOIyJfgPLck+cmQ3+4GEBFnNIf5cHMhUp7KCoEemr1NpOndDsHTivwpD/k42?=
+ =?us-ascii?Q?P/vM0xFMBBcj9VH0TXUJW6MZC0plLL7G46E0yroZ7J1589Km3bK3pcoljXKy?=
+ =?us-ascii?Q?z9GGqae+er3ditzY/QTrEvRmmyayKJzwXHLEiWcf8v8/GE+h/FaXg2r3u1nb?=
+ =?us-ascii?Q?nTM/7Cy6+1KHJqkySnDNjuqyzfYquxuD4m6gFN3psKFuytFO61Xq5c+3mnC2?=
+ =?us-ascii?Q?+R8ZL2eLVV6otSynnI2+GLhK2uU5T22WEFADt2IgtgoCcHMweeotmfXmsBbP?=
+ =?us-ascii?Q?UTSb96wU84L4Ps7z90p2qbXl0H5nHZDzCrZC4FkYAau9Pu3Lvd1Z34qiHhMJ?=
+ =?us-ascii?Q?cELCGC/fS/GXXdw8TPqHURAZdAA3HuBbBs6X+/tclVaoQJLF/PoUWmNytyrd?=
+ =?us-ascii?Q?PJHvb5HwyWFxL19mCJy6BqmiIVJ9Kjkjpnu86AoOw5PMiNLOaLskCc2doM8M?=
+ =?us-ascii?Q?ruWVh/6Jha5Uf+LdSrdHH3L9xseYbN60WhR49Xy45KgHmS1I8KwBejmwqAF6?=
+ =?us-ascii?Q?iVdjNMCUDiBPwYpwkgcAoJsMhQr3FVX7hIH2ekfuPxm5VMoqvAF11fGmIsv4?=
+ =?us-ascii?Q?yvJYiZQPZrVYqwqEj24Mg9AdaQiuaIphusHOqIWHeME3fo+5Per5Pm5VSz41?=
+ =?us-ascii?Q?iLoRfAWaWP5pyRGO9aGA1CShChbYy/I9YakxjBlMZUHokN91EGXP8TnnDgeN?=
+ =?us-ascii?Q?SrHrLGPLV+VZ8zk+PmygEoO5QKa2CphnT9IRxhIBt9L9mFkLSIOQe5USN1QR?=
+ =?us-ascii?Q?b+pvtqlzLgvn/6bWIwAYZI/R89/4zuNFkZaOyTJlmVMU1F8SrHqH1RreLN6R?=
+ =?us-ascii?Q?vLblYBne3Jm8FqhC8NGvFM/dFDxUHoTv6pubU+ZS3wnyetMLLznJ1v9vl7UO?=
+ =?us-ascii?Q?H823/3VwUWjkD/whVY3swZwPVg0P7oAeQtURyqEf/udbsJWZ74TYx9ndYef+?=
+ =?us-ascii?Q?uwhQKfTMOaAuF3jECPRsInEHogTcWIh4RrgslMbmDabtsIAoZizXXMymRXWo?=
+X-MS-Exchange-AntiSpam-MessageData-1: 6ZtcEwg3yNyko3tRzgZ6Xz80LmWF2rZwKzw=
+X-OriginatorOrg: nxp.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 6c44006f-fbd1-4442-f6ba-08df10e92ddc
+X-MS-Exchange-CrossTenant-AuthSource: AM0PR04MB6900.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 Sep 2026 16:16:19.4156
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: VjeNcKE/6gyh3qK84C+Gzf/96HqvazVnENiKwrh7ofjW/0jhIQTCqlRFD4PDYUxZ6ugiEJ87T+VgEqmge9ir+Q==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DU2PR04MB8871
 
-On Sat, Sep 05, 2026 at 06:38:59PM +0000, Abhin Parekadan Jose wrote:
-> A surprise removal during a safe removal cannot be reported: the
-> removal blocks waiting on a device interrupt or status read, and the
-> single-threaded IRQ thread is itself executing that removal, so it
-> cannot report that the device is gone. The removal hangs.
-> 
-> The hardirq handler pciehp_isr() still runs while the IRQ thread is
-> blocked, so it can report the disconnect. However, pciehp_ist()
-> deliberately ignores link and presence changes caused by a Secondary
-> Bus Reset or Downstream Port Containment, where the device is only
-> temporarily inaccessible. Distinguishing those normally requires
-> waiting for the SBR or DPC to conclude, which takes seconds and is not
-> possible in hardirq context.
-> 
-> Schedule a work item from pciehp_isr() when a PDC or DLLSC event
-> arrives and PDS indicates if the device is connected/disconnected.
-> This provides us a pathway to wait/block/sleep as we will not be
-> in pciehp_isr().
-> 
-> Move the scheduling of the driver's disconnect notification out of
-> pci_dev_set_disconnected() into schedule_notification_work() so it can
-> be invoked from the new work item. Factor the spurious link change
-> test out of pciehp_ist() into pciehp_is_spurious_link_change() so both
-> pciehp_ist() and pciehp_disconnect_work() can use it.
-> 
-> Link: https://lore.kernel.org/all/aHlZE18kPuHuDtTT@wunner.de/
-> Signed-off-by: Abhin Parekadan Jose <abhinjoses@gmail.com>
-> ---
->  drivers/pci/hotplug/pciehp.h     |  1 +
->  drivers/pci/hotplug/pciehp_hpc.c | 56 +++++++++++++++++++++++++++-----
->  drivers/pci/pci.h                |  6 ++++
->  3 files changed, 55 insertions(+), 8 deletions(-)
-> 
-> diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
-> index debc79b0adfb..c8ceb9320e2e 100644
-> --- a/drivers/pci/hotplug/pciehp.h
-> +++ b/drivers/pci/hotplug/pciehp.h
-> @@ -116,6 +116,7 @@ struct controller {
->  	unsigned int ist_running;
->  	int request_result;
->  	wait_queue_head_t requester;
-> +	struct work_struct disconnect_work;
->  };
->  
->  /**
-> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-> index 4c62140a3cb4..235ca8a176f1 100644
-> --- a/drivers/pci/hotplug/pciehp_hpc.c
-> +++ b/drivers/pci/hotplug/pciehp_hpc.c
-> @@ -620,6 +620,45 @@ static void pciehp_ignore_link_change(struct controller *ctrl,
->  	up_read(&ctrl->reset_lock);
->  }
->  
-> +/*
-> + * Link Down/Up events caused by Downstream Port Containment if recovery
-> + * succeeded, or caused by Secondary Bus Reset, suspend to D3cold, firmware
-> + * update, FPGA reconfiguration, etc. are spurious and should be ignored.
-> + */
-> +static bool pciehp_is_spurious_link_change(struct controller *ctrl,
-> +						  struct pci_dev *pdev,
-> +						  u32 events)
-> +{
-> +	return (events & (PCI_EXP_SLTSTA_PDC | PCI_EXP_SLTSTA_DLLSC)) &&
-> +		(pci_dpc_recovered(pdev) || pci_hp_spurious_link_change(pdev)) &&
-> +		ctrl->state == ON_STATE;
-> +}
-> +
-> +/*
-> + * Workaround to not wait in the isr.
-> + */
-> +static void pciehp_disconnect_work(struct work_struct *work)
-> +{
-> +	struct pci_bus *bus;
-> +	struct controller *ctrl = container_of(work, struct controller,
-> +					       disconnect_work);
-> +	struct pci_dev *pdev = ctrl_dev(ctrl);
-> +	u32 events;
-> +
-> +	events = atomic_read(&ctrl->pending_events);
-> +
-> +	if (pciehp_is_spurious_link_change(ctrl, pdev, events))
-> +		return;
-> +
-> +	bus = ctrl->pcie->port->subordinate;
-> +
-> +	/* The card may have returned */
-> +	if (!bus || pciehp_card_present(ctrl) != 0)
-> +		return;
-> +
-> +	pci_walk_bus(bus, schedule_notification_work, NULL);
-> +}
-> +
->  static irqreturn_t pciehp_isr(int irq, void *dev_id)
->  {
->  	struct controller *ctrl = (struct controller *)dev_id;
-> @@ -722,6 +761,12 @@ static irqreturn_t pciehp_isr(int irq, void *dev_id)
->  
->  	/* Save pending events for consumption by IRQ thread. */
->  	atomic_or(events, &ctrl->pending_events);
-> +
-> +	/* presence change events */
-> +	if ((events & (PCI_EXP_SLTSTA_PDC | PCI_EXP_SLTSTA_DLLSC)) &&
-> +	    !pciehp_card_present(ctrl))
-> +		schedule_work(&ctrl->disconnect_work);
-> +
->  	return IRQ_WAKE_THREAD;
->  }
->  
-> @@ -761,14 +806,7 @@ static irqreturn_t pciehp_ist(int irq, void *dev_id)
->  				      PCI_EXP_SLTCTL_ATTN_IND_ON);
->  	}
->  
-> -	/*
-> -	 * Ignore Link Down/Up events caused by Downstream Port Containment
-> -	 * if recovery succeeded, or caused by Secondary Bus Reset,
-> -	 * suspend to D3cold, firmware update, FPGA reconfiguration, etc.
-> -	 */
-> -	if ((events & (PCI_EXP_SLTSTA_PDC | PCI_EXP_SLTSTA_DLLSC)) &&
-> -	    (pci_dpc_recovered(pdev) || pci_hp_spurious_link_change(pdev)) &&
-> -	    ctrl->state == ON_STATE) {
-> +	if (pciehp_is_spurious_link_change(ctrl, pdev, events)) {
->  		u16 ignored_events = PCI_EXP_SLTSTA_DLLSC;
->  
->  		if (!ctrl->inband_presence_disabled)
-> @@ -1036,6 +1074,7 @@ struct controller *pcie_init(struct pcie_device *dev)
->  	init_waitqueue_head(&ctrl->requester);
->  	init_waitqueue_head(&ctrl->queue);
->  	INIT_DELAYED_WORK(&ctrl->button_work, pciehp_queue_pushbutton_work);
-> +	INIT_WORK(&ctrl->disconnect_work, pciehp_disconnect_work);
->  	dbg_ctrl(ctrl);
->  
->  	down_read(&pci_bus_sem);
-> @@ -1096,6 +1135,7 @@ struct controller *pcie_init(struct pcie_device *dev)
->  void pciehp_release_ctrl(struct controller *ctrl)
->  {
->  	cancel_delayed_work_sync(&ctrl->button_work);
-> +	cancel_work_sync(&ctrl->disconnect_work);
->  	kfree(ctrl);
->  }
->  
-> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> index 23b1605e783a..4e17878edeab 100644
-> --- a/drivers/pci/pci.h
-> +++ b/drivers/pci/pci.h
-> @@ -805,6 +805,12 @@ static inline int pci_dev_set_disconnected(struct pci_dev *dev, void *unused)
->  	pci_dev_set_io_state(dev, pci_channel_io_perm_failure);
->  	pci_doe_disconnected(dev);
->  
-> +	return 0;
-> +}
-> +
-> +static inline int schedule_notification_work(struct pci_dev *dev, void *unused)
-> +{
-> +	pci_dev_set_disconnected(dev, NULL);
+This is a request from Bjorn Helgaas to replace commit 9a9d18547ddc
+("PCI: Remove device links to PHY") from the pci/next branch with 3
+distinct changes, per PCI controller, to handle conflicts with bug fixes
+in the same area on dra7xx in a better way:
+https://lore.kernel.org/linux-pci/20260911221209.GA587622@bhelgaas/
 
+The patches are formatted against the v7.3-rc1 tag. They do *not* apply
+to the current pci/next, as the change is already present there.
 
-Does this not break what patch 1 was trying to do,
-for everyone who does not call schedule_notification_work,
-that is, everyone except pciehp?
+Previous submission was:
+https://lore.kernel.org/linux-pci/20260810124315.433448-1-vladimir.oltean@nxp.com/
 
-I'd say do the reverse: make schedule_notification_work
-schedule the work, and have both pcieh and 
-pci_dev_set_disconnected call that.
+There is no other change than splitting up into individual commits and
+adjusting each one's commit message. All review/ack tags were dropped in
+that process.
 
+Vladimir Oltean (3):
+  PCI: cadence: Remove device links to PHY
+  PCI: dra7xx: Remove device links to PHY
+  PCI: keystone: Remove device links to PHY
 
->  	if (READ_ONCE(dev->disconnect_work_enable)) {
->  		/* Make sure work is up to date. */
->  		smp_rmb();
-> -- 
-> 2.51.1
-> 
+ .../controller/cadence/pcie-cadence-plat.c    |  4 ---
+ drivers/pci/controller/cadence/pcie-cadence.c | 16 +---------
+ drivers/pci/controller/cadence/pcie-cadence.h |  2 --
+ drivers/pci/controller/dwc/pci-dra7xx.c       | 16 ----------
+ drivers/pci/controller/dwc/pci-keystone.c     | 31 +++----------------
+ 5 files changed, 5 insertions(+), 64 deletions(-)
+
+-- 
+2.43.0
 
