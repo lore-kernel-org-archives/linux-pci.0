@@ -1,113 +1,135 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-oa1-f67.google.com (mail-oa1-f67.google.com [209.85.160.67])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E93E3C07A;
-	Sat, 12 Sep 2026 19:06:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B645C382292
+	for <linux-pci@vger.kernel.org>; Sat, 12 Sep 2026 21:44:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.67
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789239990; cv=none; b=fVnlpBcOGKMPRskEQcv8Xfg25+ExmN82+M5zY4D6nGYh3hDTg+LiAdBKnQ1P7ks7CCMivhinMWAnjX9BChhJx27aGHXKGoGsclA8oBqGQRXx+MQFw4qg5jHJdfseoJAlj9iGEgyjLtz9G+mJkapt4yHKkIKOkTB/6jo1xbX+0TY=
+	t=1789249494; cv=none; b=a3+4K8xUyaUz1A24VWOuH+HMqIVTo91eIdrMNKsg/rzuaBm0qSFKovrv9y8pOsMW2rWMKbnRqn3REbJMp9qOi0IvAGkvbdPAM7+NcEUJCMJDLyWoFmaS1v93HVSP+gsVbNpnbE/bJZbU1YXNpSbLrywbF9l58sFXBaQd7ewLIk4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789239990; c=relaxed/simple;
-	bh=zeTe4tKiIB/QhKaXz3hjBqg2wYQfACSCbBkKYDJvGs4=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=Ljpvji+MVnX65kLL9JBZ2ohDnwVV5ivpspnuSyBwZ9gmLi9u5VunB7cgeYwq0m9GTxkByBPTWRTwxlFIb+fUc9p6DR7IU7h5/bx+zBqSARA22qqwl73CbWlC+MNDh5iiS9VIbRijcyTC3i92hegOhdxVB9zcKe39xSi+eAIJ4fg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VxJ4R2b7; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789249494; c=relaxed/simple;
+	bh=kecUb0pDwLA3hY9/mqgnFWz1AIwI3Kabqzm0uxvNC3g=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=WAgUemQhdONtIVkbsx83tAy8DWJqVgldR557CfirNguueMN++2V3bQHvpxr9o+pajjxQvokhEZgSDg1YwOnXGUYS1Fil972lJEgwqDkAPbemIBzJGF39yiwheqIKMT6MOE/L292ibwP+Pc4Lnh5G8oqV4D22aV6EtDBrJRY8nYs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=UT/ehlUK; arc=none smtp.client-ip=209.85.160.67
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VxJ4R2b7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BC45C1F00893;
-	Sat, 12 Sep 2026 19:06:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789239987;
-	bh=NQBwv5tJstjSwHUw8j5kbWZiXw1sWfFyu3zL0el12n0=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date;
-	b=VxJ4R2b7ZN/1Sn6us9EL5b0R1P+YBW+VSt/sHm0rCA1uItcvcB3SsAxRuBO02Lkkm
-	 yvgxyYQE7HCRtayTY8DDilSkzG0/7mjex0Zvi8MdoDGAH6Usd8Dm09zlqg8F589XzB
-	 XdYV7tkDEaCMr5oIYsfes88eLZFJQzWG3+l+YQwx7fOpnjmclSYFTNQi09Wqvmv11I
-	 1po58fFdiQkJa+GdBkCVfQk/Tos5tdazEgwp0HCeYYgp21EMOy/uoYFWk/IGogMF3L
-	 34qzlfxC/M1nkxOsqdqVfYZi5a6H4NAXhQQnzsQA8MZ3sm8Cz29U3c4B8MXXN3BIiD
-	 EfDDPOkiigdJw==
-From: Thomas Gleixner <tglx@kernel.org>
-To: Michael Kelley <mhklinux@outlook.com>, Naman Jain
- <namjain@linux.microsoft.com>, Ingo Molnar <mingo@redhat.com>, Borislav
- Petkov <bp@alien8.de>, Dave Hansen <dave.hansen@linux.intel.com>,
- "x86@kernel.org" <x86@kernel.org>, "Joerg Roedel (AMD)" <joro@8bytes.org>,
- Will Deacon <will@kernel.org>, "K. Y. Srinivasan" <kys@microsoft.com>,
- Haiyang Zhang <haiyangz@microsoft.com>, Wei Liu <wei.liu@kernel.org>,
- Dexuan
- Cui <decui@microsoft.com>, Long Li <longli@microsoft.com>, Lorenzo
- Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?=
- <kwilczynski@kernel.org>, Manivannan Sadhasivam <mani@kernel.org>, Bjorn
- Helgaas <bhelgaas@google.com>, "namcao@linutronix.de"
- <namcao@linutronix.de>
-Cc: "H. Peter Anvin" <hpa@zytor.com>, Suravee Suthikulpanit
- <suravee.suthikulpanit@amd.com>, Vasant Hegde <vasant.hegde@amd.com>,
- Robin
- Murphy <robin.murphy@arm.com>, Rob Herring <robh@kernel.org>, Shradha Gupta
- <shradhagupta@linux.microsoft.com>, Aditya Garg
- <gargaditya@linux.microsoft.com>, "iommu@lists.linux.dev"
- <iommu@lists.linux.dev>, "linux-hyperv@vger.kernel.org"
- <linux-hyperv@vger.kernel.org>, "linux-pci@vger.kernel.org"
- <linux-pci@vger.kernel.org>, "linux-kernel@vger.kernel.org"
- <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH v2 3/3] x86/irq, iommu/amd, PCI: Drop redundant
- irq_retrigger inits
-In-Reply-To: <SN6PR02MB4157B093E09517D408FD58DAD4BE2@SN6PR02MB4157.namprd02.prod.outlook.com>
-References: <20260810090716.2325295-1-namjain@linux.microsoft.com>
- <20260810090716.2325295-4-namjain@linux.microsoft.com>
- <875x0e204j.ffs@fw13>
- <SN6PR02MB4157F453542D6003038CAC3DD4BF2@SN6PR02MB4157.namprd02.prod.outlook.com>
- <87mrtoyzoy.ffs@fw13>
- <SN6PR02MB4157B093E09517D408FD58DAD4BE2@SN6PR02MB4157.namprd02.prod.outlook.com>
-Date: Sat, 12 Sep 2026 21:06:24 +0200
-Message-ID: <87y0d6xpan.ffs@fw13>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UT/ehlUK"
+Received: by mail-oa1-f67.google.com with SMTP id 586e51a60fabf-46ac530b9ebso1602509fac.0
+        for <linux-pci@vger.kernel.org>; Sat, 12 Sep 2026 14:44:52 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1789249491; x=1789854291; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=HhWhTVqsOkpUdCAWPzbi+pVqLfh+oq55gUD464xfMJg=;
+        b=UT/ehlUKiXKL0Z1mhtYHh9tv3SrIK488nAFPWA4XusbWDpLxUAqAu62tLcKcAP4sjM
+         rfJNefj7Lh49C3Tk9HWCm+fHL3rJMfU8sPY+FMlKx8Zjg1YX7f4Jz4JDKoWa5v/UoVeV
+         P5luHM4ER618xOSMHGDWqEDzzFaXlq7k459EE/Q9ZgEsGZyaDN4KH89g8/MqaMuZP5si
+         lGLfV8p8pvX+Qxyc8QZf4hnH41Darn8ogmTalIjdLmdPr3smcOr2uFw53wUQP3iuRsQa
+         48jWCAsgXMWgnMWKl7QNZNdz+D6Q92y3RyjWNFhi0d83ECDYxbyTGZCp3JofxDkWs8tb
+         ZE2w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1789249491; x=1789854291;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=HhWhTVqsOkpUdCAWPzbi+pVqLfh+oq55gUD464xfMJg=;
+        b=KOOH6LGqBDKOHpXo0JYllOSgQT4flcqfhSRsg3eY/m1ap4dos75A820UDUH1mhOn84
+         FECEqrrcmpUjfNpFDEcK/bdGSsvnOFJtHpfNKPsjweswkxm1j89coDoQS2IUdMZgULnT
+         MrqkgASQd/39e74eV2HjY6L9HYR/KY13xOA69IUsoetarH2N1m/hcoNnp2fXZSAAPkPs
+         S2ifxrVREJFNXqlzaoaMIZBf32Vtt8j0CbNPjacYTwD+RX2y29cvyG9vqH7cNhzdrcED
+         wMYGovL3/jaPMIdjGa51LQBJcaUijfiPiLSvIIhF3ZxTHYSUfLF9A2m9Wzd5EN1zIf4A
+         TXIg==
+X-Forwarded-Encrypted: i=1; AKwUvByBHG+CqAwXd7eULwhO3v1qgCAWKB1ozPskSnMEwr8qsU9QD65V48edgC28O4yKwZc9FX24tRjEXNs=@vger.kernel.org
+X-Gm-Message-State: AFuF++mcpTzZGAwUydTLAdQxrT8YT1l9JuuwnCTmtXnGbRLsoEG2/+bJ
+	eCYankHfLGU52LMOzdrF0lYf7t61EX0qwGA7YOoOw/867d4oqXXJAxlT
+X-Gm-Gg: AYBFou0gj53jejKubh15mWB7yaWerzUsRzrE4kY4216+czcEacsqkw7SJTvSqVbR+e2
+	zcR9NmSTYwe8GEGJGzIvQcVbQhC8IornnKzA0MZe/OsLDCojeUxMCq9e9JkVfVWSgeEAbEfO9jZ
+	7jbQDEmc1Gr52oOPIAaZL6Wdn9umnH3+DLdRRj3F9O0WfjDIWBpkrpdrN/0vLYbh44p0GJDPuLX
+	MEFx1gn4zPfs2D2ft587JyOK9KqdDKB0Ou3gTGboa7BmP1RW1f1fsq7ViGZrAuqzR0HOTMGIcYn
+	/B4GqDUVE1oYTrUI2QCxLwMs2E3Io9budwdsSiYNuqb2/5hN5PkdB6L/sBkFA3LdQNMVPAE0dh5
+	lvGnHeQRZWkFtNeixSTdld1t1b6INhHe/pTQcfdAOAV5oWLAGR403ZgMVhhq1FGQOH+neQGM87Z
+	YTsrRoy7zgfwEMaxgJghUmhTQmYvKu8ICbDHL6y6JQXybXiF+fn0Eb9cZ7TIBjcBcskDzVK3s4f
+	SWHYYuC0G/NMTLS5CmqKQR9h+E=
+X-Received: by 2002:a05:6870:e89:b0:469:fb8a:b5b0 with SMTP id 586e51a60fabf-47c978e0ae3mr8164063fac.9.1789249491570;
+        Sat, 12 Sep 2026 14:44:51 -0700 (PDT)
+Received: from ?IPV6:2600:8804:5716:d800::c389? ([2600:8804:5716:d800::c389])
+        by smtp.gmail.com with ESMTPSA id 586e51a60fabf-47df42b4699sm6246514fac.0.2026.09.12.14.44.48
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sat, 12 Sep 2026 14:44:50 -0700 (PDT)
+Message-ID: <688b15d1-a85b-492e-ba1e-b4da548ebd06@gmail.com>
+Date: Sat, 12 Sep 2026 16:44:48 -0500
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2] pci: Add broken-GPE quirk for Lenovo Legion 16APH8 and
+ 16AHP9 Nvidia GPUs
+To: Lyude Paul <lyude@redhat.com>, dri-devel@lists.freedesktop.org,
+ nouveau@lists.freedesktop.org, linux-kernel@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Cc: Mark Pearson <mpearson-lenovo@squebb.ca>, Timur Tabi <ttabi@nvidia.com>,
+ John Hubbard <jhubbard@nvidia.com>, stable@vger.kernel.org
+References: <20260821200607.621341-1-lyude@redhat.com>
+Content-Language: en-US
+From: Ryan Brue <ryanbrue.dev@gmail.com>
+In-Reply-To: <20260821200607.621341-1-lyude@redhat.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Fri, Sep 11 2026 at 16:32, Michael Kelley wrote:
-> From: Thomas Gleixner <tglx@kernel.org> Sent: Friday, September 11, 2026 1:12 AM
-> As for the future, you may remember my RFC patch set from a couple
-> years ago for the Synthetic Interrupt Controller (SynIC) that Hyper-V
-> provides to guests. The SynIC currently has special case nodes under
-> /sys/bus/vmbus to manage CPU affinity. As a better approach, the patch
-> set modelled the SynIC as an irqchip so standard Linux mechanisms could
-> manage affinity. You and I corresponded about per-cpu flow handler
-> tweaks to make it all work. The RFC patch set didn't get traction with
-> the Microsoft folks and I didn't push it. But it had a stand-alone IRQ
-> domain not parented to VECTOR because Hyper-V interrupts are hard
-> coded to HYPERVISOR_CALLBACK_VECTOR. As a stand-alone domain,
-> a .irq_retrigger function might have been useful in fixup_irqs(). That's
-> all speculative, but it was in the back of my head when I suggested to
-> Naman that the outermost chip .irq_retrigger function should be
-> checked. I'm fine with not doing that check now, and if a future case
-> like the Hyper-V SynIC arises, the check can be added.
-
-It doesn't because that domain is not parented by the vector domain, so
-interrupts in that domain cannot have a descriptor in the descriptor
-array and neither will end up in msi_set_affinity().
-
-These interrupts are handled in the generic cpuhotplug mechanism.
-
-fixup_irqs() is really only about the vector domain to handle the case
-where an interrupt was raised on the old vector on the outgoing CPU
-before the generic hotplug affinity change took effect.
-
->> Devices might have a way to retrigger at the device level, but that's
->> not reachable from the interrupt chip.
->> 
->> So both places fixup_irq() and msi_set_affinity() can use retrigger
->> hierarchy safely without the conditional checking the outermost domain
->> chip.
+On 8/21/26 3:04 PM, Lyude Paul wrote:
+> On the Lenovo Legion Slim 5 16APH8 and 16AHP9, the firmware appears to enjoy
+> firing a GPE on the parent PCIe port of the nvidia GPU very shortly after the
+> GPU enters D3Cold. This means that every time the GPU is runtime suspended,
+> ACPI firmware immediately wakes up its parent PCIe port, which then wakes up
+> the GPU. Once it falls asleep again, the cycle repeats.
 >
-> And setting .irq_retrigger in x86_init_dev_msi_info() becomes
-> superfluous, right?
+> See: https://github.com/NVIDIA/open-gpu-kernel-modules/issues/905
+>
+> Note, this bug doesn't require Nvidia's driver. It happens on nouveau and
+> nova as well, and it even seems possible for this to happen without any
+> driver loaded.
+>
+> This seems to simply be a bug. Luckily, there is nothing that we actually
+> need ACPI wakeup events for on the GPU. Events such as display connector
+> hotplug events in D3Cold come through as ACPI_VIDEO events which aren't
+> affected by this quirk.
+>
+> Reported-by: Ryan Brue <ryanbrue.dev@gmail.com>
+> Co-authored-by: Ryan Brue <ryanbrue.dev@gmail.com>
+> Signed-off-by: Lyude Paul <lyude@redhat.com>
+> Cc: stable@vger.kernel.org
+> Fixes: https://github.com/NVIDIA/open-gpu-kernel-modules/issues/905
+>
+> ---
+> V2:
+> * Don't forget to actually use parent_adev with acpi_remove_pm_notifier()
+> * Check if parent_adev is NULL (could happen if booted with acpi=off), just
+>    consider it a no-op if it is.
+> * Base the patch off Linux master instead, I based it off drm-misc-next by
+>    mistake because I'm too used to working on DRM drivers :).
+>
+>   drivers/pci/quirks.c | 79 ++++++++++++++++++++++++++++++++++++++++++++
+>   1 file changed, 79 insertions(+)
+FWIW, this has been tested by me, with positive results, on my Lenovo 
+Legion Slim 5 16APH8. Not sure if this warrants a Tested-by trailer 
+since I'm a co-author, but just in case.
 
-Yes.
+In the thread [1], we have had another user report positive results on 
+their 16AHP9 (note that Lenovo seems to have switched the P and the H 
+around for the laptop one generation up for some reason). Said user 
+tested on both OpenRM and nouveau on top of kernel 7.1.10.
 
-Thanks,
+This means we have tested 16APH8 on nouveau, and 16AHP9 on both OpenRM 
+and nouveau.
 
-        tglx
+[1] 
+https://github.com/NVIDIA/open-gpu-kernel-modules/issues/905#issuecomment-5444071160 
+
