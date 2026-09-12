@@ -1,99 +1,129 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from AM0PR02CU008.outbound.protection.outlook.com (mail-westeuropeazon11013016.outbound.protection.outlook.com [52.101.72.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C25504BEE43
-	for <linux-pci@vger.kernel.org>; Sat, 12 Sep 2026 16:25:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789230339; cv=none; b=SdwcYDUDTnKfgRCR3y2I/yTM8ugssJ8txfOIDXkyYuGTIbpvyu1XquyW37EbL5mxKFM9iSsiBAIKfjoT0w2flJ7f7YH8m7Bucwcu1xzQdFhwfALgo82PkXHVvHBfwz+FZEcWXF9a1bZEYPBkiB9nrhb5D38lSLG98nGyUrglLg8=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789230339; c=relaxed/simple;
-	bh=9NcMv3NTL5wVIVDyIHWRD/mes8Qtg5YQC23Is3evEEk=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=uNg+6X5NIT/+PAhqKtpsWebLyho+BkjhY7GR84ohfdV+PioCv+2So0V1IprQyTkmmnMEDcsZgFTsVygxc+tW79alG8MxpMINrFg7LNSuuHkpHSEA5rYaqrJxasUv04so1VcdLrRtCccNwlALvLVzornFzzeX6ZntDrOde6K0cn0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ST2wCDEc; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7651142885F
+	for <linux-pci@vger.kernel.org>; Sat, 12 Sep 2026 16:27:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.72.16
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1789230453; cv=fail; b=nG0EbPFH9DjIwraZwiCNPM8c2oV8GjPmx88WFFukZKjLFFIt7dgtXnOwu1f5BfGCd5RwskXY5xvvPWoQyDVZaUeduD2E4/HhyKjWv0mOTIR+r+ubjpmN5s7PAfH2ujyJ79o5f3A7TG/NPmAiIGES6cMKJSUMm3qGyVyONKlAXqE=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1789230453; c=relaxed/simple;
+	bh=xlDukrc96LXvM3QECam5dFJD/FS7UyUpZ7vuOb4MdSA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=Ux0RJhPVWa4KI8cjLA2oTREvXXBzypEzKZ8soVl2bCRJwVN8jILqlSi+vML3XB1axCNADewMgfVK6V+O3Q0HhAfu4gjqLfIhJBAQsY1r2giaxWumfgf46teay4OeNQW4mvmhw85+PuJ7tiblvrw5NHmiBYM+FYR7547fYamZU0I=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=jsup5tgX; arc=fail smtp.client-ip=52.101.72.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ST2wCDEc"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6EBB51F00893;
-	Sat, 12 Sep 2026 16:25:38 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789230338;
-	bh=nijLYZ6JlR9VCwhiK1cJLJ34r/XXo1XrBnBACEn9nME=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=ST2wCDEc65ZR2ZV9O3dM82cwoBkcPGMI6ISDL/Ze2SgrlOe8ucFndj88/aS2A8LJ1
-	 FVoLcJrJEGAH7VRZKwdDs5N50qePymNT+KOTNhVxTMHiOlfn5K3txQetTfxXj+4I0X
-	 GfECS7XV2weNxPOcWih1Kyb9l+xVZfI6a0UO9F7IAuJGzTBCbNpzY7D+gCBjLkGIFm
-	 ZqfBkGZaaJCcDqWgJGdZXqTO1kuNrw5OqMbJ0kFcJavdnpcXPKhRn5kGRsnCOnugXE
-	 0q3PTVorX7tyebejzkodpPWJgdvp8RW4uDDpQ0G9SBhmGGVmdi02S/WDUBv5COh6x2
-	 Xda9mwNf3oJsA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 2/3] PCI: dra7xx: Remove device links to PHY
-Reply-To: sashiko-reviews@lists.linux.dev
-To: vladimir.oltean@nxp.com
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260912161440.1032188-3-vladimir.oltean@nxp.com>
+	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="jsup5tgX"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=WjGAFG3Gc5+GlbstW9DILiw2uuBaetkcSZKLE2NcIpiRTU0DlhBKVX9qQp0X1yYuGqrUK0aKDi3NMqj9mLQAe39sNNC+p0luCiq1L8vs7CgZJLST2IxFYShEiaNGPYbOOXfr07NzaeBbUAgei2qZqfOxSlBxEafz5vqIuUdW0vt9rqGCykj7JZIzH4O8i8xzQQm50i1t1w/9+vb9sIyXjEpffKef9KTxlByYLcwuBJ2Oz0B2qC8npQf5piJg/tmvnSRvuFrRsjROu8hPB9XjOba2BlRktCMqcaK9qnZEuSXnqkMfcc45mIHOy8VYxDMSkdb81QlrAcZGWVSv/ptWsA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=jE2/kHRlQ/ds426zRh1GIgLf/Ne32qmPHYI7oACx9Kk=;
+ b=Wu6iYPEXub2SNPZ8ZMNHoQFjyak9RuH8r+O5avlZGrpuQViEuQVh7QSnZYyZSS42rYMSg/qKnmMczfKS/wm+fokhY9NWWKcYddn63ET7dESxntTBrYnxjU1AMeKvNL4lgqUdjbBkFZAPVR9iFeiqCu7Br8yf2nN8Da6T9XX2dgRjCCA5s0u8fTSODXTaiArpKW30qPUzIYLGZOzpLnCib9UwMOOF822dy1u3z1IqOi/L8IwiuBnZ/K2Uneg/5yK0AGGcBHHW960hquXjKI9eGONgDzBxEIE9RxCxFgCz4h/nz9EhOl1bK9xTbbhY+SbK3CeTi17p0cdA/41otCFzZw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
+ header.d=nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=jE2/kHRlQ/ds426zRh1GIgLf/Ne32qmPHYI7oACx9Kk=;
+ b=jsup5tgXLK2X/6LohwE8/07Tf37WXsDx2gBR4kgbUYUyy3Ndx7wIy9Sr9mxUeoT445iW5VYKuCMi5/4Xh3VHXRDnJoQbgqAoBUpJKs6Ils8Zy0bRhDe5309aMwLMrLgEJY5hmuxThVYjs4hdDFnmh3tahJzim66lkQuRPtTxpRBdFqrD5MYySSAzF1ZA5o0+5GR2JOjmSbt7J0kLppBWv2STcAvAC0Fjdeusce1stFm7StfIBfKavp0J07oPN6IEKxST4iG9zwT64x5alyHZBbQgKBhEOcM7u+YsYU93pPZlkZWntNKz8e9XsTm33mZozSSulPkKNSqs+mE22ryVAA==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nxp.com;
+Received: from AM0PR04MB6900.eurprd04.prod.outlook.com (2603:10a6:208:17d::10)
+ by DBBPR04MB7657.eurprd04.prod.outlook.com (2603:10a6:10:1f5::21) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.406.11; Sat, 12 Sep
+ 2026 16:27:26 +0000
+Received: from AM0PR04MB6900.eurprd04.prod.outlook.com
+ ([fe80::7fda:8431:ca1b:b023]) by AM0PR04MB6900.eurprd04.prod.outlook.com
+ ([fe80::7fda:8431:ca1b:b023%4]) with mapi id 15.21.0406.007; Sat, 12 Sep 2026
+ 16:27:26 +0000
+Date: Sat, 12 Sep 2026 19:27:23 +0300
+From: Vladimir Oltean <vladimir.oltean@nxp.com>
+To: sashiko-reviews@lists.linux.dev
+Cc: linux-pci@vger.kernel.org, helgaas@kernel.org
+Subject: Re: [PATCH 1/3] PCI: cadence: Remove device links to PHY
+Message-ID: <20260912162723.xyiey4v2shv2k2w4@skbuf>
 References: <20260912161440.1032188-1-vladimir.oltean@nxp.com>
- <20260912161440.1032188-3-vladimir.oltean@nxp.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Sat, 12 Sep 2026 16:25:38 +0000
-Message-Id: <20260912162538.6EBB51F00893@smtp.kernel.org>
+ <20260912161440.1032188-2-vladimir.oltean@nxp.com>
+ <20260912162452.AC66C1F00898@smtp.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260912162452.AC66C1F00898@smtp.kernel.org>
+X-ClientProxiedBy: WA2PEPF000008BE.POLP291.PROD.OUTLOOK.COM
+ (2603:10a6:1d8::691) To AM0PR04MB6900.eurprd04.prod.outlook.com
+ (2603:10a6:208:17d::10)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: AM0PR04MB6900:EE_|DBBPR04MB7657:EE_
+X-MS-Office365-Filtering-Correlation-Id: 23593988-ab8b-4999-9838-08df10eabb53
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|10070799003|366016|376014|23010399003|19092799006|1800799024|11063799006|56012099006|4143699003|10067099003|22082099003|18002099003|6133799003;
+X-Microsoft-Antispam-Message-Info:
+	FJJrm3PeJpcBDjVsaqqbhCg6q11VLSmv0lGHjn1caH9Fgfa4mbNWq/9m9V3f3S4PkHYbN5lK0/O9FJSZJuSbf8pOFA9HSilX5n1vm3WkGRG9JoIowMeZT7NLOzuQtgzkIMJbbSbnP5WnCU4BK24uEae2opoj5l/nbJ+oBHMBsG7gmoHrdX4OPZpf7PY1C1qUu1Ehz3Hu+W+bcpAtjlWs5qjH8j//09TUwhTSFLmrLn2Z1QptQBDSONgAkqHNd7EW9m0tpJcv77EOpgIf2cj8ZXELBFxfLZUL4lexs5eyEbQp0vDvrRvFt7X/yZFCb54WoAeXUs2zm15R6g7/Fkd0fpEOJtKQLTBC3YxsHLG99S5z3H9EFUq27OAyPL76YYb9f5mJqiCyG3SoOR6DgOwVKbQso/2/sR/2FU8uC6lRfajhO8DKFoW+eKt8AHJMvH9U+qniR4K/yU/K+P6+QfSlQM0uOkmsmuNzq/wa1dsJCqGf8XCaFf1yOgbldU7VrYllcWSzOtd5MrM3Xa2r5EmPUvm4w+BBIEEcps5MJGchS341BgnSR29i1lDHowpBYUm1spPZxmVYDtzfUHyTwFx5v2mvAigedcs4PLwj9h+j/5jqY87SAFEfLi7SU0t6sbLlmUMx/ScdR3af+vWjw8Tt9K1cKQdMt9U5AkzCqXl314I=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM0PR04MB6900.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(10070799003)(366016)(376014)(23010399003)(19092799006)(1800799024)(11063799006)(56012099006)(4143699003)(10067099003)(22082099003)(18002099003)(6133799003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?jvDKqFKigrnHRZScueM43HdjfYb3NCQRi4AEN1WOioTUY/GCF0Gt8v9KdZaB?=
+ =?us-ascii?Q?INa2JvGM4XMBAK8Y5Mg4JVLnFZS5RY0tdod/HchPaIuZ91mgRbqdGFQ8q0q0?=
+ =?us-ascii?Q?nWGoryDLhDyrCUXN9uN3aT0iQWKRjMurU5f3U3KYPAUM8yL0pommaFG9MWUV?=
+ =?us-ascii?Q?ww5wVIhM6P+SxNtBueFnKj2pifnh8b5VQB2pNpucI20LaheL/0BSgHwjwnbR?=
+ =?us-ascii?Q?L22LIwFrQqKFTuBDLwZdy9LWYoD9CVBX4+98jL/zpgTq/zbZC6AXzqOGCdWL?=
+ =?us-ascii?Q?d1TPl+ViSMtMxr3VuIEOVu8E4JUvui/zBZFpoJQuexXvoS8OcwaGSOV8+zgU?=
+ =?us-ascii?Q?AIm53vl35Fexe8p03j3kzcSI7AXp1J0W9v2rqfIVL9JNX9/a04tzJdM2iIzn?=
+ =?us-ascii?Q?ZOHK4JzlsT8sAMrPBTZH2D1YwVkXBsFUfRIusOesQkTvaUWiVZfv+YdqJ4gA?=
+ =?us-ascii?Q?4XdzkWq8O9yIHnZk4PiExraqLDjZ8i7IC0WwmDNnUcyL77ejfB3tnYbn8b6b?=
+ =?us-ascii?Q?b5NTGt6D1r+dyCpYsMgrSEOho+nyThYzYHcrhm1qnnt5QmOGXzRJ7u4y0uyL?=
+ =?us-ascii?Q?OSJJPTbQbzK8C1PYaP7/kUFZ2MbnmIqJ2fDl/sZeR7YGzxXyEZ+3sSDYer2y?=
+ =?us-ascii?Q?i4edpuOkyXhDdL1GYV+idokcC7UoNfczvzXTMwR5vELjYzdO2EIQ0xfI4ccf?=
+ =?us-ascii?Q?dvsA3J5kLzh7f1q5u56dj2WWbT3sLVj9E9/iTBOpq24w/ad6f6rLa8MuLmBn?=
+ =?us-ascii?Q?yrA1741Ac+kpE+LLTJ8tfLG0GbQ9N+0jkzzbn/ntehYbso0NrlfrIXi9TVfC?=
+ =?us-ascii?Q?tGFtXl0Oasdi295zZWjQeNr1D9JPHECebwmorYbSbJ+MuBM7xGkffNLL5wEj?=
+ =?us-ascii?Q?/wr54rOY5JjpUV5Qku/iJ6AXfHQKcyJe5yOoVrFGtJo3+QaTXH6zl56SI5zW?=
+ =?us-ascii?Q?EVZDmzyTlKdAZbgQF1PyzmIP/luPe9VZYE4jTIq2v+yZou8+cu8nQXOdhk7V?=
+ =?us-ascii?Q?XuK1/M+M7zNy91mHCAe4yu4QTm8GqsIudH+V1GPmIR8Av2HkH4ndHuCAflQM?=
+ =?us-ascii?Q?wcqpzrADGAlqI3CNqMu0FKtOTl085Rye/c7rBUwQLThHC1DHfvTcDLPwAvlL?=
+ =?us-ascii?Q?E+7Kr629DOXiFcI1ae76TFizbSJAx5cVUWRJjBIeJsCE5Mu8v+RYFJGI5kD5?=
+ =?us-ascii?Q?lzGlX9KJGxdTeDnLiVHZDssB9t149X1/NgDWH1WHYf0/IRIoFBvdmdeGhsWx?=
+ =?us-ascii?Q?FU423JQJrcN6yG8GcJ987NdzsdgzDhjh5u+k30YleJE65HJ2ujcnNo+M10Uo?=
+ =?us-ascii?Q?iVysv+OE8NROgFY6BX714LJZXF75hj0aR+es6aa0eVWkx9s9ZFN5wGdLYnEZ?=
+ =?us-ascii?Q?efrIgTIipnjUtVeUdWI78O7wD68UfXHCciqitYLCYKH63pcrXcn5hdrpdFHh?=
+ =?us-ascii?Q?WXvtMTozKaUs5QpUVSaBVt48zxK5Xyuxz32ER5rtxn6CehqbEQzAAmr/1JiF?=
+ =?us-ascii?Q?FmYEmr8bKCO6oU/EUuzNaUSLcglx8o10ibHDmSBFuhR2eZqcoX5xGZSfdSib?=
+ =?us-ascii?Q?lMhlVMkZ1IgUBv8cUZATZUn2e/2+OxRT1jlBLVeBB8vQDVqcaZMb5BHH6GAN?=
+ =?us-ascii?Q?yjkTJBbhau6f0vegxDIRmqux3TK+2SKultfDQSJ7VlNjK11VrH5rDv9sIknc?=
+ =?us-ascii?Q?EFfakxSElKdQBaQdBJiunxgmcnnPKmAmN7j58nZLSywWtcnhB5PaRK5m9D8h?=
+ =?us-ascii?Q?ETBy8Eu8mAEquJDXdorBZylxTbRq4s2MhAa7+qcZxgRjcRO7QVufEwYfF7Jp?=
+X-MS-Exchange-AntiSpam-MessageData-1: sKNEqo55B4pX2uQ1XeCN+nCqw/D5GZy8ZhU=
+X-OriginatorOrg: nxp.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 23593988-ab8b-4999-9838-08df10eabb53
+X-MS-Exchange-CrossTenant-AuthSource: AM0PR04MB6900.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 Sep 2026 16:27:26.1865
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: OyJr2aJSXMG58qqdlTF9l1OUFV58c4GDvPiirtZq7crl2x+OTWS36RpK7D/hjZi9t74Gt5KNr+gOKZVCKk1Rsg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DBBPR04MB7657
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
+On Sat, Sep 12, 2026 at 04:24:52PM +0000, sashiko-bot@kernel.org wrote:
+> Thank you for your contribution! Sashiko AI review found 2 potential issue(s) to consider:
+> 
+> Pre-existing issues:
+> - [High] The probe function `cdns_plat_pcie_probe` unconditionally returns 0 on failure paths, masking initialization errors from the driver core.
+> - [High] Shutdown and PM callbacks erroneously cast `struct cdns_plat_pcie *` to `struct cdns_pcie *`, causing severe out-of-bounds memory accesses.
+> --
 
-Pre-existing issues:
-- [High] Shared IRQ handler accesses hardware registers without checking if=
- the device is runtime active.
---
-
-commit 5052482ced4c68a6a0a92320a0f14365dce06957
-Author: vladimir.oltean@nxp.com <vladimir.oltean@nxp.com>
-
-PCI: dra7xx: Remove device links to PHY
-
-This is a full revert of commit 7a4db656a635 ("PCI: dra7xx: Create
-functional dependency between PCIe and PHY"). The reverted functionality
-is redundant since the PHY core now adds a device link to order PHY
-provider and consumer suspend/resume operations.
-
-> diff --git a/drivers/pci/controller/dwc/pci-dra7xx.c b/drivers/pci/contro=
-ller/dwc/pci-dra7xx.c
-> index 6ae5b27e27b32..6c9e881776002 100644
-> --- a/drivers/pci/controller/dwc/pci-dra7xx.c
-> +++ b/drivers/pci/controller/dwc/pci-dra7xx.c
-
-[ ... ]
-
-[Severity: High]
-This is a pre-existing issue, but does the shared IRQ handler access hardwa=
-re
-registers without checking if the device is runtime active?
-
-If another device sharing the same IRQ line triggers an interrupt during or
-after shutdown, the handler unconditionally accesses the powered-off regist=
-ers:
-
-drivers/pci/controller/dwc/pci-dra7xx.c:dra7xx_pcie_irq_handler() {
-	...
-	reg =3D dra7xx_pcie_readl(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MAIN);
-	...
-}
-
-In the driver's shutdown callback, the device is powered off
-(pm_runtime_put_sync, clk_disable_unprepare) but the devm-managed IRQ is ne=
-ver
-freed.
-
-Could this lead to a kernel panic (precise data abort on ARM) due to reading
-from unclocked hardware registers, or spurious interrupt storms? Should the
-handler use pm_runtime_get_if_active() before accessing registers?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260912161440.1032=
-188-1-vladimir.oltean@nxp.com?part=3D2
+There is no way I'm touching the pre-existing issues, sorry.
