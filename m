@@ -1,148 +1,371 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B2B304028E2
-	for <linux-pci@vger.kernel.org>; Fri, 11 Sep 2026 23:54:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E027B17B418;
+	Sat, 12 Sep 2026 00:07:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789170859; cv=none; b=bJFVYAAVsSGrLOv4oyozxKftyJIEoh/NJU0e3GjGqneXwJXFYml/f79GXACADv+uTEPN1vjYbWE+Bp/8rALBSbR3olNEnxxkfEdyG7VVun/DvWQc3HM3C7qHkHEnc8Ip5KBuCZB22H5GaW53X2htDi7w+5ZzcrUeNx3yyIYwGDs=
+	t=1789171632; cv=none; b=h1Oq9Z2wz79fHiwFdtLLTq3anY5LBwir0zm2nvuDkyIzpyJdewNcrPSLAxOsCsuiPPlI8pyJ14fg7mGnjmNyo1d6HBi10Bk0XdE9xjlJrWI6nzCYVkkTf14slsFQhjaQWPwTQY4BpOOv/GMKgY79rxSozMKJsCtsCTu6YiM1PAc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789170859; c=relaxed/simple;
-	bh=iKR1EOlLpV9KyrT4T2sIZa60Qa0hysBbvhhYyeQMTPI=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=vAquqRMlkrqIqMTkZ7no4GFt7kV4ZhCKIHIBYdIVOunO2PUh6/3pHNSoGz3FRSr7nvYXGu9BUW5I+dgFRGuIEkkyhVr9sAZrt3GAlaLt9JLVfKWyeCkGqyPLt1sG5NrcuWVL5lHiXvrjdogfT0RmKVzWl3wGtbSK7oYcCoJplQs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BE7O+rL6; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789171632; c=relaxed/simple;
+	bh=5F/PDBa/xfp2HSqWv7kHA9kmxnoKSYmXpQ0mDwabj2U=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=M8OMhmN35RmvqfQdk7T50pnzw1YMPFMuxUKG+RIYpPz3TWW9dkZpHGNC9F1hZ1xB68EQGqLQ3sY3b5NMUWUorI2pEk5G9cPkfZi3mjVl1DFMG/LWEDR74QA3QHLrIu5FJkxpMZNVyE5dPmJM/oAp3apjQXi4szQudmrv+uJ6jKc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oVL0p+ka; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BE7O+rL6"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1E1A01F00893;
-	Fri, 11 Sep 2026 23:54:16 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oVL0p+ka"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 416F81F000FF;
+	Sat, 12 Sep 2026 00:07:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789170856;
-	bh=ofQ/GXjxd8ixMR8n9NMZ+sMH/e2+kIbtueY9aWOLsBA=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=BE7O+rL6Y/6wtkpcsg34pxdfCzkKRrM7xv6xZP9JKI+EV5HfILvs3CFxP8UqbD+Uv
-	 +SjzHc1l6CnYsZ8W4P7B8ZcLzDQkBJ3XdKd4+QVGhO5MOj2d/nIbysscAMJ6bFLYTh
-	 HFhXk04pd9YkMedhBa0tSFsZz8eP2/xFC+EDOZE+slNpPzuVdeCsdNEwbM+fS0C99t
-	 dr2VNnTIpq1NHMRSiw10mRuzH2HffoF4Jxr6DmlXtRPZgtbyyJd6DSPren9wJiAaDN
-	 oEdtWpCnYCty/7Kv9DFhJHltB/+HuG+mX7zmojis4RVgvRVg+kQ2PQtAXyt1LZ0Fbn
-	 2DV+rUyNPJMWA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 13/13] PCI: brcmstb: Split up complicated function into
- two variants
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Jim Quinlan" <james.quinlan@broadcom.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260911233541.1650895-14-james.quinlan@broadcom.com>
-References: <20260911233541.1650895-1-james.quinlan@broadcom.com>
- <20260911233541.1650895-14-james.quinlan@broadcom.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Fri, 11 Sep 2026 23:54:15 +0000
-Message-Id: <20260911235416.1E1A01F00893@smtp.kernel.org>
+	s=k20260515; t=1789171627;
+	bh=coCWbsam9/JgvkfNHdvGpfZVCPda9ULr326XZ/IDe3c=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References;
+	b=oVL0p+kaqytKD/CheyEskfDnhONbqw5+feRcYkOFLmaIgLs8Q4BHLxVNsWiHPhyU/
+	 iqcN4m6pYT5ivViGurpS2w3xr8NZO6HXL3OYtojNzdeYuzhzOaot1PdaMB8ez429KN
+	 x/GrVZ/tgFc/SbkTOsgNjWBxM3URYBQ9cyvCdzKuAxcn7OycSNHlw4tRl31EvKDONn
+	 dJy63Di0D0NIM6UghLW1qPZHZooxQ1mNhNbzYfncVDLAs4zspvcYgpvP8ytXPzD74b
+	 E/SJyFHzVR1SQhY5Yfu8m0CWEQOvBgL2MjY+ILzaa0aO7qSLaaYowQBqEyQ6McGw0C
+	 lF5oI79akdlOw==
+Date: Sat, 12 Sep 2026 01:07:00 +0100
+From: Jonathan Cameron <jic23@kernel.org>
+To: Srirangan Madhavan <smadhavan@nvidia.com>
+Cc: Alison Schofield <alison.schofield@intel.com>, Bjorn Helgaas
+ <bhelgaas@google.com>, Dave Jiang <dave.jiang@intel.com>, Davidlohr Bueso
+ <dave@stgolabs.net>, Ira Weiny <ira.weiny@intel.com>, Vishal Verma
+ <vishal.l.verma@intel.com>, linux-cxl@vger.kernel.org,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, Alex Williamson
+ <alex.williamson@redhat.com>, vsethi@nvidia.com, alwilliamson@nvidia.com,
+ Sai Yashwanth Reddy Kancherla <skancherla@nvidia.com>, Vishal Aslot
+ <vaslot@nvidia.com>, Manish Honap <mhonap@nvidia.com>, Jiandi An
+ <jan@nvidia.com>, Richard Cheng <icheng@nvidia.com>,
+ linux-tegra@vger.kernel.org, Fenghua Yu <fenghua.yu@intel.com>
+Subject: Re: [PATCH v12 03/12] cxl: Share HDM decoder decode logic
+Message-ID: <20260912010700.43844d3b@jic23-hlaptop>
+In-Reply-To: <20260910070808.1444264-4-smadhavan@nvidia.com>
+References: <20260910070808.1444264-1-smadhavan@nvidia.com>
+	<20260910070808.1444264-4-smadhavan@nvidia.com>
+X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
+On Thu, 10 Sep 2026 07:07:59 +0000
+Srirangan Madhavan <smadhavan@nvidia.com> wrote:
 
-Pre-existing issues:
-- [High] An off-by-one error in the inbound window limit check allows one m=
-ore window than supported by hardware to be processed, leading to out-of-bo=
-unds register writes.
-- [High] The MSI target address calculation incorrectly hardcodes the array=
- index `inbound_wins[2]`, evaluating either a disabled zero-sized window or=
- uninitialized stack memory instead of the main inbound window.
---
+> Move HDM decoder register decoding into a helper shared by normal CXL
+> core enumeration and early PCI HDM cache setup. This keeps validation of
+> base, range overflow, interleave, target type, and enable state in one
+> place before adding another HDM parser.
+> 
+Hi Srirangan,
 
-commit 2fa82ffee79e487108d802c77822d346d0a063c9
-Author: Jim Quinlan <james.quinlan@broadcom.com>
 
-PCI: brcmstb: Split up complicated function into two variants
+> Keep caller-owned policy out of the decode helper. A committed zero-size
+> decoder now decodes successfully, while init_hdm_decoder() retains its
 
-This patch refactors brcm_pcie_get_inbound_wins into two variants: one for
-newer chips and one for older chips. It updates the configuration data
-structures to assign the appropriate function pointer to get_ib_wins.
+I'd not use decodes for that second bit given it's a decoder.  Choose
+another word - it definitely isn't doing any decoding.
 
-> diff --git a/drivers/pci/controller/pcie-brcmstb.c b/drivers/pci/controll=
-er/pcie-brcmstb.c
-> index 53984cfa2c96f..45e8a9e030d4a 100644
-> --- a/drivers/pci/controller/pcie-brcmstb.c
-> +++ b/drivers/pci/controller/pcie-brcmstb.c
-[ ... ]
-> @@ -954,8 +957,58 @@ static void add_inbound_win(struct inbound_win *b, u=
-8 *count, u64 size,
->  	(*count)++;
->  }
-> =20
-> +/*
-> + * This is used by newer SoCs. It configures the inbound mapping windows
-> + * in accordance to the values of the dma-ranges properties.
-> + */
->  static int brcm_pcie_get_ib_wins(struct brcm_pcie *pcie,
->  				 struct inbound_win *ib_win)
+> existing zero-size rejection.
+> 
+> Preserve endpoint DPA state ownership by using the decoded skip value as
+> a local input to devm_cxl_dpa_reserve(). The reservation helper updates
+> cxled->skip under cxl_rwsem.dpa.
+> 
+> Reported-by: Fenghua Yu <fenghua.yu@intel.com>
+
+Add a of Closes tag for the report so we can see exactly what it is
+referring to. I'm guessing the zero length decoders?
+
+> Signed-off-by: Srirangan Madhavan <smadhavan@nvidia.com>
+
+Quite a bit of feedback on how this is done.  Maybe I'll get
+convinced in later patches but as it stands this is making the
+code less readable.  If it is useable in the cxl_decoder
+and we can lose the local structure than it becomes more
+convincing.
+
+> diff --git a/drivers/cxl/core/hdm.c b/drivers/cxl/core/hdm.c
+> index 70ffebd3e213..d621d827f59f 100644
+> --- a/drivers/cxl/core/hdm.c
+> +++ b/drivers/cxl/core/hdm.c
+> @@ -907,14 +907,11 @@ static int init_hdm_decoder(struct cxl_port *port, struct cxl_decoder *cxld,
+>  {
+>  	struct cxl_endpoint_decoder *cxled = NULL;
+>  	u64 size, base, skip, dpa_size, lo, hi;
+> +	struct cxl_decoder_settings settings;
+>  	bool committed;
+>  	u32 remainder;
+>  	int i, rc;
+> -	u32 ctrl;
+> -	union {
+> -		u64 value;
+> -		unsigned char target_id[8];
+> -	} target_list;
+> +	u32 ctrl, tl_low, tl_high;
+>  
+>  	if (should_emulate_decoders(info))
+>  		return cxl_setup_hdm_decoder_from_dvsec(port, cxld, dpa_base,
+> @@ -927,35 +924,33 @@ static int init_hdm_decoder(struct cxl_port *port, struct cxl_decoder *cxld,
+>  	lo = readl(hdm + CXL_HDM_DECODER0_SIZE_LOW_OFFSET(which));
+>  	hi = readl(hdm + CXL_HDM_DECODER0_SIZE_HIGH_OFFSET(which));
+>  	size = (hi << 32) + lo;
+> -	committed = !!(ctrl & CXL_HDM_DECODER0_CTRL_COMMITTED);
+> +	tl_low = readl(hdm + CXL_HDM_DECODER0_TL_LOW(which));
+> +	tl_high = readl(hdm + CXL_HDM_DECODER0_TL_HIGH(which));
+
+Be consistent on either combining these into local variables or not. Right now
+this is the only one handled in the parameters for the next call.
+
+> +	rc = cxl_hdm_decode_decoder(&settings, which, ctrl, base, size,
+> +				    ((u64)tl_high << 32) | tl_low, &committed);
+> +	if (rc) {
+> +		dev_warn(&port->dev,
+> +			 "decoder%d.%d: Invalid decoder configuration (ctrl: %#x): %d\n",
+> +			 port->id, cxld->id, ctrl, rc);
+> +		return rc;
+> +	}
+> +
+>  	cxld->commit = cxl_decoder_commit;
+>  	cxld->reset = cxl_decoder_reset;
+> -
+> -	if (!committed)
+> -		size = 0;
+> -	if (base == U64_MAX || size == U64_MAX) {
+> -		dev_warn(&port->dev, "decoder%d.%d: Invalid resource range\n",
+> -			 port->id, cxld->id);
+> -		return -ENXIO;
+> -	}
+> +	cxld->hpa_range = settings.hpa_range;
+> +	cxld->interleave_ways = settings.interleave_ways;
+> +	cxld->interleave_granularity = settings.interleave_granularity;
+> +	cxld->target_type = settings.target_type;
+> +	cxld->flags = settings.flags;
+> +	size = range_len(&cxld->hpa_range);
+
+If this settings field matches cxld fields so well, why not embed one in
+there and write to that directly?  Without that I'm seeing little benefit
+in using the settings structure in here.  It is complicating the
+code and the only deduplication is a tiny number of checks.
+
+
+>  
+>  	if (info)
+>  		cxled = to_cxl_endpoint_decoder(&cxld->dev);
+> -	cxld->hpa_range = (struct range) {
+> -		.start = base,
+> -		.end = base + size - 1,
+> -	};
+> +	if (!cxled && cxld->interleave_ways > 8)
+> +		return -ENXIO;
+>  
+>  	/* decoders are enabled if committed */
+>  	if (committed) {
+> -		cxld->flags |= CXL_DECODER_F_ENABLE;
+> -		if (ctrl & CXL_HDM_DECODER0_CTRL_LOCK)
+> -			cxld->flags |= CXL_DECODER_F_LOCK;
+> -		if (FIELD_GET(CXL_HDM_DECODER0_CTRL_HOSTONLY, ctrl))
+> -			cxld->target_type = CXL_DECODER_HOSTONLYMEM;
+> -		else
+> -			cxld->target_type = CXL_DECODER_DEVMEM;
+> -
+>  		guard(rwsem_write)(&cxl_rwsem.region);
+>  		if (cxld->id != cxl_num_decoders_committed(port)) {
+>  			dev_warn(&port->dev,
+> @@ -995,33 +990,15 @@ static int init_hdm_decoder(struct cxl_port *port, struct cxl_decoder *cxld,
+>  			writel(ctrl, hdm + CXL_HDM_DECODER0_CTRL_OFFSET(which));
+>  		}
+>  	}
+> -	rc = eiw_to_ways(FIELD_GET(CXL_HDM_DECODER0_CTRL_IW_MASK, ctrl),
+> -			  &cxld->interleave_ways);
+> -	if (rc) {
+> -		dev_warn(&port->dev,
+> -			 "decoder%d.%d: Invalid interleave ways (ctrl: %#x)\n",
+> -			 port->id, cxld->id, ctrl);
+> -		return rc;
+> -	}
+> -	rc = eig_to_granularity(FIELD_GET(CXL_HDM_DECODER0_CTRL_IG_MASK, ctrl),
+> -				 &cxld->interleave_granularity);
+> -	if (rc) {
+> -		dev_warn(&port->dev,
+> -			 "decoder%d.%d: Invalid interleave granularity (ctrl: %#x)\n",
+> -			 port->id, cxld->id, ctrl);
+> -		return rc;
+> -	}
+> -
+>  	dev_dbg(&port->dev, "decoder%d.%d: range: %#llx-%#llx iw: %d ig: %d\n",
+>  		port->id, cxld->id, cxld->hpa_range.start, cxld->hpa_range.end,
+>  		cxld->interleave_ways, cxld->interleave_granularity);
+>  
+>  	if (!cxled) {
+> -		lo = readl(hdm + CXL_HDM_DECODER0_TL_LOW(which));
+> -		hi = readl(hdm + CXL_HDM_DECODER0_TL_HIGH(which));
+> -		target_list.value = (hi << 32) + lo;
+>  		for (i = 0; i < cxld->interleave_ways; i++)
+> -			cxld->target_map[i] = target_list.target_id[i];
+> +			cxld->target_map[i] = i < 4 ?
+> +				(tl_low >> (i * 8)) & 0xff :
+> +				(tl_high >> ((i - 4) * 8)) & 0xff;
+
+Can't we keep the type punning and readability it brings?
+Also why is the one thing that is still using the non settings path
+to get to values?  I'm not that convinced it makes sense to do any
+of this with your new settings structure but it needs to be consistent
+at least (like skip is below).
+
+
+>  
+>  		return 0;
+>  	}
+> @@ -1036,9 +1013,7 @@ static int init_hdm_decoder(struct cxl_port *port, struct cxl_decoder *cxld,
+>  			port->id, cxld->id, size, cxld->interleave_ways);
+>  		return -ENXIO;
+>  	}
+> -	lo = readl(hdm + CXL_HDM_DECODER0_SKIP_LOW(which));
+> -	hi = readl(hdm + CXL_HDM_DECODER0_SKIP_HIGH(which));
+> -	skip = (hi << 32) + lo;
+> +	skip = settings.target_or_skip;
+>  	rc = devm_cxl_dpa_reserve(cxled, *dpa_base + skip, dpa_size, skip);
+>  	if (rc) {
+>  		dev_err(&port->dev,
+> diff --git a/drivers/cxl/core/port.c b/drivers/cxl/core/port.c
+> index 625e4aa427db..5085574521c6 100644
+> --- a/drivers/cxl/core/port.c
+> +++ b/drivers/cxl/core/port.c
+> @@ -34,6 +34,25 @@
+>  static DEFINE_IDA(cxl_port_ida);
+>  static DEFINE_XARRAY(cxl_root_buses);
+>  
+> +struct pci_dev *cxl_port_get_uport_pci_dev(struct cxl_port *port)
 > +{
-> +	struct pci_host_bridge *bridge =3D pci_host_bridge_from_priv(pcie);
-> +	struct resource_entry *entry;
-> +	u64 size;
-> +	u8 n =3D 0;
+> +	struct device *uport = port->uport_dev;
+> +	struct device *host;
 > +
-> +	resource_list_for_each_entry(entry, &bridge->dma_ranges) {
-> +		u64 pcie_start =3D entry->res->start - entry->offset;
-> +		u64 cpu_start =3D entry->res->start;
+> +	if (is_cxl_memdev(uport)) {
+> +		struct cxl_memdev *cxlmd = to_cxl_memdev(uport);
 > +
-> +		size =3D resource_size(entry->res);
-> +		add_inbound_win(ib_win++, &n, size, cpu_start, pcie_start);
-> +		if (n > pcie->cfg->num_inbound_wins)
-> +			break;
+> +		host = cxlmd->dev.parent;
+> +	} else {
+> +		host = uport;
+> +	}
+> +
+> +	if (!host || !dev_is_pci(host))
+> +		return NULL;
+> +
+> +	return pci_dev_get(to_pci_dev(host));
 
-[Severity: High]
-This is a pre-existing issue, but does this off-by-one check allow n to
-exceed the maximum hardware window count?
+Very nearly same code in read_cdata_data()
 
-Because add_inbound_win() post-increments n, if a device tree provides more
-dma-ranges than the maximum supported hardware windows, n can exceed
-num_inbound_wins before the break occurs. The function will then return
-this oversized window count.
+If you want this helper here, then introduce if first refactoring that code
+to show the helper is useful then use it here as well.  So basically
+put that as a precursor with a note that it will get reuse in this patch.
 
-If this happens, when brcm_pcie_set_ib_win_registers() subsequently iterates
-over the returned count, could it fetch an out-of-bounds register offset
-and overwrite unrelated hardware configuration space?
 
-[ ... ]
-> @@ -1195,7 +1217,7 @@ static int brcm_pcie_setup(struct brcm_pcie *pcie)
->  	u32p_replace_bits(&tmp, 1, PCIE_MISC_MISC_CTRL_PCIE_RCB_64B_MODE_MASK);
->  	writel(tmp, base + PCIE_MISC_MISC_CTRL);
-> =20
-> -	num_inbound_wins =3D brcm_pcie_get_ib_wins(pcie, inbound_wins);
-> +	num_inbound_wins =3D pcie->cfg->get_ib_wins(pcie, inbound_wins);
->  	if (num_inbound_wins < 0)
->  		return num_inbound_wins;
+> +}
+> +
+>  /*
+>   * The terminal device in PCI is NULL and @platform_bus
+>   * for platform devices (for cxl_test)
+> diff --git a/drivers/cxl/core/resource.c b/drivers/cxl/core/resource.c
+> index 8d3f43640199..e6aa55079c76 100644
+> --- a/drivers/cxl/core/resource.c
+> +++ b/drivers/cxl/core/resource.c
+> @@ -113,3 +113,46 @@ int cxl_commit_wait(void __iomem *hdm, struct cxl_decoder_settings *settings)
+>  	return cxld_await_commit(hdm, settings->id);
+>  }
+>  EXPORT_SYMBOL_FOR_MODULES(cxl_commit_wait, "cxl_core");
+> +
+> +int cxl_hdm_decode_decoder(struct cxl_decoder_settings *settings, int id,
 
-[Severity: High]
-This is a pre-existing issue, but does the setup logic later in this
-function rely on inbound_wins[2] being initialized and valid?
+As in the description, this is too many decode given unrelated things
+they are talking about.  cxl_hdm_parse_decoder() maybe or cxl_hdm_unpack_decoder()
+or cxl_hdm_decoder_fill_settings() though then you'd need to put committed in there.
 
-In brcm_pcie_setup(), the inbound_wins array is allocated on the stack.
-Later in the function, it calculates the MSI target address like this:
 
-    if (inbound_wins[2].pci_offset >=3D SZ_4G ||
-        (inbound_wins[2].size + inbound_wins[2].pci_offset) < SZ_4G)
-            pcie->msi_target_addr =3D BRCM_MSI_TARGET_ADDR_LT_4GB;
-    else
-            pcie->msi_target_addr =3D BRCM_MSI_TARGET_ADDR_GT_4GB;
 
-For newer SoCs using brcm_pcie_get_ib_wins(), if the device tree provides
-fewer than 3 dma-ranges entries, could this logic read uninitialized stack
-memory?
+> +			   u32 ctrl, u64 base, u64 size, u64 target_or_skip,
+> +			   bool *committed)
+> +{
+> +	bool enabled = FIELD_GET(CXL_HDM_DECODER0_CTRL_COMMITTED, ctrl);
+> +	int rc;
+> +
+> +	*settings = (struct cxl_decoder_settings) {
+> +		.id = id,
+> +		.target_or_skip = target_or_skip,
+> +		.target_type = FIELD_GET(CXL_HDM_DECODER0_CTRL_HOSTONLY, ctrl) ?
+> +			       CXL_DECODER_HOSTONLYMEM : CXL_DECODER_DEVMEM,
 
-For older SoCs using brcm_pcie_get_ib_wins_internal_map(), inbound_wins[2]
-is deliberately populated as a zero-sized, disabled window. Does evaluating
-this zeroed window result in misconfiguring the MSI target address,
-potentially causing PCIe device interrupts to fail?
+Do we have paths where an early exit needs the partly filled in structure?
+I'm assuming not. In which case I'd shunt this down a bit to where you can fill
+in more in one go.
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260911233541.1650=
-895-1-james.quinlan@broadcom.com?part=3D13
+
+> +	};
+> +
+> +	if (committed)
+> +		*committed = enabled;
+
+I'm not sure why committed is special and doesn't go in the settings.
+
+> +	if (!enabled)
+> +		size = 0;
+> +	if (base == U64_MAX || size == U64_MAX ||
+> +	    (size && base > U64_MAX - (size - 1)))
+> +		return -ENXIO;
+> +
+> +	settings->hpa_range = (struct range) {
+> +		.start = base,
+> +		.end = base + size - 1,
+> +	};
+
+With a bit of reorg, this can be filled in along with the stuff above
+reducing the zeroing then overwriting that is going on currently.
+
+> +	if (enabled) {
+> +		settings->flags = CXL_DECODER_F_ENABLE;
+> +		if (ctrl & CXL_HDM_DECODER0_CTRL_LOCK)
+> +			settings->flags |= CXL_DECODER_F_LOCK;
+> +	}
+If you used a local for building flags, this could also be rolled
+in.
+> +
+> +	rc = eiw_to_ways(FIELD_GET(CXL_HDM_DECODER0_CTRL_IW_MASK, ctrl),
+> +			 &settings->interleave_ways);
+> +	if (rc)
+> +		return rc;
+> +
+> +	return eig_to_granularity(FIELD_GET(CXL_HDM_DECODER0_CTRL_IG_MASK,
+> +				    ctrl),
+Go long for readability.
+
+> +				  &settings->interleave_granularity);
+Locals for these as well and it becomes
+... 
+	rc = eig_to_granularity(FIELD_GET(CXL_HDM_DECODER0_CTRL_IG_MASK, ctrl),	&ig);
+	if (rc)
+		return rc;
+
+	*settings = (struct cxl_decoder_settings) {
+		.id = id,
+		.hpa_range = {
+			.start = base,
+			.end = base + size - 1,
+		},
+		.target_or_skip = target_or_skip,
+		.interleave_ways = iw,
+		.interleave_granularity = ig,
+		.target_type = FIELD_GET(CXL_HDM_DECODER0_CTRL_HOSTONLY, ctrl) ?
+			       CXL_DECODER_HOSTONLYMEM : CXL_DECODER_DEVMEM,
+
+		.flags = flags,
+	};
+
+	return 0;
+}
+> +EXPORT_SYMBOL_FOR_MODULES(cxl_hdm_decode_decoder, "cxl_core");
+
