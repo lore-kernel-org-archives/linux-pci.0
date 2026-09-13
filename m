@@ -1,135 +1,125 @@
-Received: from mail-oa1-f67.google.com (mail-oa1-f67.google.com [209.85.160.67])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B645C382292
-	for <linux-pci@vger.kernel.org>; Sat, 12 Sep 2026 21:44:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.67
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C59D023FC5A;
+	Sun, 13 Sep 2026 03:11:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789249494; cv=none; b=a3+4K8xUyaUz1A24VWOuH+HMqIVTo91eIdrMNKsg/rzuaBm0qSFKovrv9y8pOsMW2rWMKbnRqn3REbJMp9qOi0IvAGkvbdPAM7+NcEUJCMJDLyWoFmaS1v93HVSP+gsVbNpnbE/bJZbU1YXNpSbLrywbF9l58sFXBaQd7ewLIk4=
+	t=1789269116; cv=none; b=CAbULuQvPezH/8Jow7BnzhsmP8oXEor9ju67+Gv2rOVhRZdlAYxjBauksivnVcwZPFTtaB/PQ4f5/watVdrEgjU+gcIYuW9gpzcRAnB/AVXiTVDouQlxubUaOLMtgFfcuAh9U3ReWKXnVEa4w1pWgnTNKYK/VBRS12hPXxvDURs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789249494; c=relaxed/simple;
-	bh=kecUb0pDwLA3hY9/mqgnFWz1AIwI3Kabqzm0uxvNC3g=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=WAgUemQhdONtIVkbsx83tAy8DWJqVgldR557CfirNguueMN++2V3bQHvpxr9o+pajjxQvokhEZgSDg1YwOnXGUYS1Fil972lJEgwqDkAPbemIBzJGF39yiwheqIKMT6MOE/L292ibwP+Pc4Lnh5G8oqV4D22aV6EtDBrJRY8nYs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=UT/ehlUK; arc=none smtp.client-ip=209.85.160.67
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1789269116; c=relaxed/simple;
+	bh=lG6My4wnTEsn31dKI0mnQFtd2gAifBlGSMfIxgn83vo=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=NC4AWstuiyar9KXut7nHJfE7lDBW4Wbo6pgmw/ijqU+31Tak9sOhpv4EvsYQSwMcOY9S6u4FigKqxKJkdvsBnTscNyRqAxb9aFXi0RKUWjRUhhdvw16npBaN+Va/HjEvj/ri/jiNCAD6tP/Q6+K7ARXQ1DhlbIc8+GEzCMBNECw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=pass smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=CCR8M2oB; arc=none smtp.client-ip=90.155.50.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UT/ehlUK"
-Received: by mail-oa1-f67.google.com with SMTP id 586e51a60fabf-46ac530b9ebso1602509fac.0
-        for <linux-pci@vger.kernel.org>; Sat, 12 Sep 2026 14:44:52 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1789249491; x=1789854291; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=HhWhTVqsOkpUdCAWPzbi+pVqLfh+oq55gUD464xfMJg=;
-        b=UT/ehlUKiXKL0Z1mhtYHh9tv3SrIK488nAFPWA4XusbWDpLxUAqAu62tLcKcAP4sjM
-         rfJNefj7Lh49C3Tk9HWCm+fHL3rJMfU8sPY+FMlKx8Zjg1YX7f4Jz4JDKoWa5v/UoVeV
-         P5luHM4ER618xOSMHGDWqEDzzFaXlq7k459EE/Q9ZgEsGZyaDN4KH89g8/MqaMuZP5si
-         lGLfV8p8pvX+Qxyc8QZf4hnH41Darn8ogmTalIjdLmdPr3smcOr2uFw53wUQP3iuRsQa
-         48jWCAsgXMWgnMWKl7QNZNdz+D6Q92y3RyjWNFhi0d83ECDYxbyTGZCp3JofxDkWs8tb
-         ZE2w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1789249491; x=1789854291;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=HhWhTVqsOkpUdCAWPzbi+pVqLfh+oq55gUD464xfMJg=;
-        b=KOOH6LGqBDKOHpXo0JYllOSgQT4flcqfhSRsg3eY/m1ap4dos75A820UDUH1mhOn84
-         FECEqrrcmpUjfNpFDEcK/bdGSsvnOFJtHpfNKPsjweswkxm1j89coDoQS2IUdMZgULnT
-         MrqkgASQd/39e74eV2HjY6L9HYR/KY13xOA69IUsoetarH2N1m/hcoNnp2fXZSAAPkPs
-         S2ifxrVREJFNXqlzaoaMIZBf32Vtt8j0CbNPjacYTwD+RX2y29cvyG9vqH7cNhzdrcED
-         wMYGovL3/jaPMIdjGa51LQBJcaUijfiPiLSvIIhF3ZxTHYSUfLF9A2m9Wzd5EN1zIf4A
-         TXIg==
-X-Forwarded-Encrypted: i=1; AKwUvByBHG+CqAwXd7eULwhO3v1qgCAWKB1ozPskSnMEwr8qsU9QD65V48edgC28O4yKwZc9FX24tRjEXNs=@vger.kernel.org
-X-Gm-Message-State: AFuF++mcpTzZGAwUydTLAdQxrT8YT1l9JuuwnCTmtXnGbRLsoEG2/+bJ
-	eCYankHfLGU52LMOzdrF0lYf7t61EX0qwGA7YOoOw/867d4oqXXJAxlT
-X-Gm-Gg: AYBFou0gj53jejKubh15mWB7yaWerzUsRzrE4kY4216+czcEacsqkw7SJTvSqVbR+e2
-	zcR9NmSTYwe8GEGJGzIvQcVbQhC8IornnKzA0MZe/OsLDCojeUxMCq9e9JkVfVWSgeEAbEfO9jZ
-	7jbQDEmc1Gr52oOPIAaZL6Wdn9umnH3+DLdRRj3F9O0WfjDIWBpkrpdrN/0vLYbh44p0GJDPuLX
-	MEFx1gn4zPfs2D2ft587JyOK9KqdDKB0Ou3gTGboa7BmP1RW1f1fsq7ViGZrAuqzR0HOTMGIcYn
-	/B4GqDUVE1oYTrUI2QCxLwMs2E3Io9budwdsSiYNuqb2/5hN5PkdB6L/sBkFA3LdQNMVPAE0dh5
-	lvGnHeQRZWkFtNeixSTdld1t1b6INhHe/pTQcfdAOAV5oWLAGR403ZgMVhhq1FGQOH+neQGM87Z
-	YTsrRoy7zgfwEMaxgJghUmhTQmYvKu8ICbDHL6y6JQXybXiF+fn0Eb9cZ7TIBjcBcskDzVK3s4f
-	SWHYYuC0G/NMTLS5CmqKQR9h+E=
-X-Received: by 2002:a05:6870:e89:b0:469:fb8a:b5b0 with SMTP id 586e51a60fabf-47c978e0ae3mr8164063fac.9.1789249491570;
-        Sat, 12 Sep 2026 14:44:51 -0700 (PDT)
-Received: from ?IPV6:2600:8804:5716:d800::c389? ([2600:8804:5716:d800::c389])
-        by smtp.gmail.com with ESMTPSA id 586e51a60fabf-47df42b4699sm6246514fac.0.2026.09.12.14.44.48
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 12 Sep 2026 14:44:50 -0700 (PDT)
-Message-ID: <688b15d1-a85b-492e-ba1e-b4da548ebd06@gmail.com>
-Date: Sat, 12 Sep 2026 16:44:48 -0500
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="CCR8M2oB"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=ssrb0XY/cPSH8ZAUVROdvAzpy0zzHhYV7tpvfy8CQwA=; b=CCR8M2oB4m+y0ftzq1hl5Cd7Sp
+	Eq4utnfvBFq8gG0OogYzPZnaQmzmOp5fGRpwLZZxXeWo5U93OC/Wz+xi6QYk98IdczgUTQT2qoCKU
+	KRd5XLKE1z55BO0DvoKqhe880rWuFdw1oBGkG7StPD4m+68dPIwtGr3HiGHt0EP5J31zAOnhXrkq6
+	H9YfQ8GzUvx+lR7ad3e/FRHlzs3qPoF6bfrnkWMKjURpXqLuM58MWTSM8LvGJrlpAd2Zzgd3Kprn7
+	9QWHr0RTjUAtUGxCv0xeRJ5uWFR4OjKHcnWu/4GD7GYpMcua8HluIaf9wWQfAzw2c47qK2YYb1024
+	17XaQfSw==;
+Received: from willy by casper.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
+	id 1x5acl-00000003JyY-1RDO;
+	Sun, 13 Sep 2026 03:11:23 +0000
+Date: Sun, 13 Sep 2026 04:11:23 +0100
+From: Matthew Wilcox <willy@infradead.org>
+To: Andreas Hindborg <a.hindborg@kernel.org>
+Cc: Danilo Krummrich <dakr@kernel.org>, Lorenzo Stoakes <ljs@kernel.org>,
+	Vlastimil Babka <vbabka@kernel.org>,
+	"Liam R. Howlett" <liam@infradead.org>,
+	Uladzislau Rezki <urezki@gmail.com>,
+	Miguel Ojeda <ojeda@kernel.org>, Boqun Feng <boqun@kernel.org>,
+	Gary Guo <gary@garyguo.net>,
+	=?iso-8859-1?Q?Bj=F6rn?= Roy Baron <bjorn3_gh@protonmail.com>,
+	Benno Lossin <lossin@kernel.org>, Alice Ryhl <aliceryhl@google.com>,
+	Trevor Gross <tmgross@umich.edu>,
+	Daniel Almeida <daniel.almeida@collabora.com>,
+	Tamir Duberstein <tamird@kernel.org>,
+	Alexandre Courbot <acourbot@nvidia.com>,
+	Onur =?iso-8859-1?Q?=D6zkan?= <work@onurozkan.dev>,
+	Lyude Paul <lyude@redhat.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Arve =?iso-8859-1?B?SGr4bm5lduVn?= <arve@android.com>,
+	Todd Kjos <tkjos@android.com>,
+	Christian Brauner <brauner@kernel.org>,
+	Carlos Llamas <cmllamas@google.com>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Dave Ertman <david.m.ertman@intel.com>,
+	Leon Romanovsky <leon@kernel.org>, Paul Moore <paul@paul-moore.com>,
+	Serge Hallyn <sergeh@kernel.org>, David Airlie <airlied@gmail.com>,
+	Simona Vetter <simona@ffwll.ch>,
+	Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>,
+	Igor Korotin <igor.korotin@linux.dev>,
+	Viresh Kumar <vireshk@kernel.org>, Nishanth Menon <nm@ti.com>,
+	Stephen Boyd <sboyd@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Pavel Tikhomirov <ptikhomirov@virtuozzo.com>,
+	Michal Wilczynski <m.wilczynski@samsung.com>,
+	Ira Weiny <iweiny@kernel.org>,
+	Matthew Brost <matthew.brost@intel.com>,
+	Thomas =?iso-8859-1?Q?Hellstr=F6m?= <thomas.hellstrom@linux.intel.com>,
+	Philipp Stanner <phasta@kernel.org>, rust-for-linux@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-mm@kvack.org,
+	driver-core@lists.linux.dev, linux-block@vger.kernel.org,
+	linux-security-module@vger.kernel.org,
+	dri-devel@lists.freedesktop.org, linux-fsdevel@vger.kernel.org,
+	linux-pm@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-pwm@vger.kernel.org, linux-usb@vger.kernel.org
+Subject: Re: [PATCH v21 9/9] rust: page: add `ExclusivePage` for race-free
+ page access
+Message-ID: <aqYUWzRSade_Ww67@casper.infradead.org>
+References: <20260910-unique-ref-v21-0-e83257373062@kernel.org>
+ <20260910-unique-ref-v21-9-e83257373062@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2] pci: Add broken-GPE quirk for Lenovo Legion 16APH8 and
- 16AHP9 Nvidia GPUs
-To: Lyude Paul <lyude@redhat.com>, dri-devel@lists.freedesktop.org,
- nouveau@lists.freedesktop.org, linux-kernel@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Cc: Mark Pearson <mpearson-lenovo@squebb.ca>, Timur Tabi <ttabi@nvidia.com>,
- John Hubbard <jhubbard@nvidia.com>, stable@vger.kernel.org
-References: <20260821200607.621341-1-lyude@redhat.com>
-Content-Language: en-US
-From: Ryan Brue <ryanbrue.dev@gmail.com>
-In-Reply-To: <20260821200607.621341-1-lyude@redhat.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260910-unique-ref-v21-9-e83257373062@kernel.org>
 
-On 8/21/26 3:04 PM, Lyude Paul wrote:
-> On the Lenovo Legion Slim 5 16APH8 and 16AHP9, the firmware appears to enjoy
-> firing a GPE on the parent PCIe port of the nvidia GPU very shortly after the
-> GPU enters D3Cold. This means that every time the GPU is runtime suspended,
-> ACPI firmware immediately wakes up its parent PCIe port, which then wakes up
-> the GPU. Once it falls asleep again, the cycle repeats.
->
-> See: https://github.com/NVIDIA/open-gpu-kernel-modules/issues/905
->
-> Note, this bug doesn't require Nvidia's driver. It happens on nouveau and
-> nova as well, and it even seems possible for this to happen without any
-> driver loaded.
->
-> This seems to simply be a bug. Luckily, there is nothing that we actually
-> need ACPI wakeup events for on the GPU. Events such as display connector
-> hotplug events in D3Cold come through as ACPI_VIDEO events which aren't
-> affected by this quirk.
->
-> Reported-by: Ryan Brue <ryanbrue.dev@gmail.com>
-> Co-authored-by: Ryan Brue <ryanbrue.dev@gmail.com>
-> Signed-off-by: Lyude Paul <lyude@redhat.com>
-> Cc: stable@vger.kernel.org
-> Fixes: https://github.com/NVIDIA/open-gpu-kernel-modules/issues/905
->
-> ---
-> V2:
-> * Don't forget to actually use parent_adev with acpi_remove_pm_notifier()
-> * Check if parent_adev is NULL (could happen if booted with acpi=off), just
->    consider it a no-op if it is.
-> * Base the patch off Linux master instead, I based it off drm-misc-next by
->    mistake because I'm too used to working on DRM drivers :).
->
->   drivers/pci/quirks.c | 79 ++++++++++++++++++++++++++++++++++++++++++++
->   1 file changed, 79 insertions(+)
-FWIW, this has been tested by me, with positive results, on my Lenovo 
-Legion Slim 5 16APH8. Not sure if this warrants a Tested-by trailer 
-since I'm a co-author, but just in case.
+On Thu, Sep 10, 2026 at 11:00:13AM +0200, Andreas Hindborg wrote:
+> `ExclusivePage` wraps a regular page but adds an invariant that the
+> page data area does not incur data races. This means `ExclusivePage`
+> cannot be mapped to user space or shared with devices, and it
+> becomes simpler to directly reference the contents of the page.
+> 
+> Since `Page` implements `AlwaysRefCounted`, handing out a `&Page`
+> from an `ExclusivePage` would allow safe code to obtain an
+> `ARef<Page>` to the page and break the aliasing invariant of
+> `ExclusivePage`. Thus, do not implement `Deref<Target = Page>` for
+> `ExclusivePage`.
 
-In the thread [1], we have had another user report positive results on 
-their 16AHP9 (note that Lenovo seems to have switched the P and the H 
-around for the laptop one generation up for some reason). Said user 
-tested on both OpenRM and nouveau on top of kernel 7.1.10.
+Given this description, I wonder if this shouldn't be implemented by
+alloc_frozen_pages() / free_frozen_pages().  We'ree certainly trying
+to move the C parts of the kernel away from thinking that pages have a
+refcount (folios have a refcount; otheer memdescs may or may not have
+a refcount).  Do your intended users of this actually have a need for a
+refcount?
 
-This means we have tested 16APH8 on nouveau, and 16AHP9 on both OpenRM 
-and nouveau.
+> +++ b/rust/kernel/page.rs
+> @@ -17,7 +17,11 @@
+>          AlwaysRefCounted,
+>          RefCounted, //
+>      },
+> -    types::Opaque,
+> +    types::{
+> +        Opaque,
+> +        Ownable,
+> +        Owned, //
+> +    },
 
-[1] 
-https://github.com/NVIDIA/open-gpu-kernel-modules/issues/905#issuecomment-5444071160 
+While I'm asking stupid questions, what's the significance of the //
+after Owned?  I see it after RefCounted too.
 
