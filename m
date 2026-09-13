@@ -1,102 +1,117 @@
-Received: from mailout2.hostsharing.net (mailout2.hostsharing.net [83.223.78.233])
+Received: from mail-m155101.qiye.163.com (mail-m155101.qiye.163.com [101.71.155.101])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EEC5E3E3C4D;
-	Sun, 13 Sep 2026 12:24:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.223.78.233
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F05FD285CAA;
+	Sun, 13 Sep 2026 12:51:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=101.71.155.101
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789302275; cv=none; b=STZD1KSgjUJ8rsEHsV/SAu4MKLrKD9/I8eTuhT8tKP82NSPt+SvfW0sqlaAUi6faXxmd74OABw1ngKuRd+nBKqslckfoBhcEOaEH0W/Rp3x8C5GCuRSIz4XSomvMczZ3dhHzl2gYEhTX6hrDOjsCXh5xC8wImUHWEsFhp7kPz+w=
+	t=1789303890; cv=none; b=fj0LAJUX1xCnb3XA2NBC4anfZ4xTBGL17XqcEw/WRbuI9+Def2gfDN5P+o4ueSM+1dopPUgdwW29AvdujcpkmR68XZVT3NMGjYR1zieD4Qxv/wlbXx4URUOLYXSBzgIeKp+UyWj5x8nFaPI2ZTfElBqXqw8WDwJlG+rI6lkuAuM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789302275; c=relaxed/simple;
-	bh=k+RsmAfCfv/FYsBY3zwcwryj7UemjM+L3mT6TXL3EPU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=WA6h7UnOwMnLyH2uRD9YbBx6oaM6I8n+cSXqWFB0ge52jyUcsI+3cLTyZcldE0e95ebv42Iiyny2btbM0TzgYP/CXFfNifg9UCoUflAuT2nmgiF91TsrAdI3IQP+52WbCR3+7d3Wz/qg7VYxLBLijw7hiMSIm1ar0NGtBjrob8o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=83.223.78.233
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
-Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
-	 client-signature ECDSA (secp384r1) client-digest SHA384)
-	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
-	by mailout2.hostsharing.net (Postfix) with ESMTPS id 87B2410DC4;
-	Sun, 13 Sep 2026 14:24:21 +0200 (CEST)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-	id 54B8061BE888; Sun, 13 Sep 2026 14:24:21 +0200 (CEST)
-Date: Sun, 13 Sep 2026 14:24:21 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Hongbo Yao <andy.xu@hj-micro.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, peter.du@hj-micro.com,
-	jemma.zhang@hj-micro.com, rick.yan@hj-micro.com
-Subject: Re: [RFC PATCH] PCI: pciehp: Allow more time for link activation
- after slot power-on
-Message-ID: <aqaV9TeD6iw-bY4w@wunner.de>
-References: <20260910015151.1876630-1-andy.xu@hj-micro.com>
+	s=arc-20240116; t=1789303890; c=relaxed/simple;
+	bh=QoeSvN471UQuqwSz41GXF8Jl6uqntZOC8xyYuURbM5o=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=NAnwtK8qg7x8NvXXa1Q74miy05X1gqsqWQb8lZCm+7stiqR6se9oJRlBli76mmNmBAeraomzrpRmzPJOEPdGDEomcJQJKyPnIbpXCPeZ7nxXuzkNbxrJJ//SUStaPr1IOHgMEwc55VPIoOi3a+zu8udrXdm7ymqjTBG/+c4zw5k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=seu.edu.cn; spf=pass smtp.mailfrom=seu.edu.cn; dkim=pass (1024-bit key) header.d=seu.edu.cn header.i=@seu.edu.cn header.b=luRA9Qp5; arc=none smtp.client-ip=101.71.155.101
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=seu.edu.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=seu.edu.cn
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=seu.edu.cn header.i=@seu.edu.cn header.b="luRA9Qp5"
+Received: from seu.edu.cn (unknown [58.241.16.34])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 4d907a3cc;
+	Sun, 13 Sep 2026 20:51:21 +0800 (GMT+08:00)
+From: Slavin Liu <bolin.liu@seu.edu.cn>
+To: bhelgaas@google.com
+Cc: sthotton@marvell.com,
+	vattunuru@marvell.com,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	bolin.liu@seu.edu.cn
+Subject: [PATCH] PCI: octep: handle an unsuccessful hotplug scan
+Date: Sun, 13 Sep 2026 20:51:18 +0800
+Message-Id: <20260913125118.109777-1-bolin.liu@seu.edu.cn>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260910015151.1876630-1-andy.xu@hj-micro.com>
+Content-Transfer-Encoding: 8bit
+X-HM-Tid: 0aa09ad27a1503a1kunmadf12168251132
+X-HM-MType: 10
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFITzdXWRgWCB1ZQUpXWS1ZQUlXWQ8JGhUIEh9ZQVlCSxhDVhkYGEIYQklDQ0wZSlYeHw
+	5VEwETFhoSFyQUDg9ZV1kYEgtZQVlOQ1VJT0pVSk1VSE9ZV1kWGg8SFR0UWUFZT0tIVUpLSUhOQ0
+	NVSktLVUtZBg++
+DKIM-Signature: a=rsa-sha256;
+	b=luRA9Qp5l+uwuLJ6ymUQDFprGT01CNnzKe2pHUPBzph5j9B08jnAr5FgNQ8RSVl4sLQHi3cfwpR1PD6WGfLrm+kEYOSzCHN1Z2zhrycAS6VPFnnwUK3NTgQxQ4GD+yhdFQHeh3r6XvjXoDUeMdux/4hy/0L+AQ8RzSkjjTAkPck=; c=relaxed/relaxed; s=default; d=seu.edu.cn; v=1;
+	bh=yhhdRDxPvVEh20H2ygRtbzTLlKXYk2l8ayO9t4VIsRo=;
+	h=date:mime-version:subject:message-id:from;
 
-On Thu, Sep 10, 2026 at 09:51:51AM +0800, Hongbo Yao wrote:
-> The OCP NIC 3.0 Specification, version 1.6.0, Figure 132 [1], requires
-> an interval greater than one second between Main Power Valid and PERST#
-> deassertion.  The diagram labels this interval T_PVPERL.  PCIe link
-> activation requires additional time after PERST# is deasserted.
+pci_scan_single_device() can return NULL if no device is found or
+allocation fails. octep_hp_enable_pdev() passes that pointer to
+pci_bus_add_device() and then dereferences it for a debug message.
 
-The 1 sec delay implemented by:
+Return -ENODEV when the scan fails and propagate it through the hotplug
+enable_slot callback. This leaves the slot disabled and allows a later
+retry without reporting a successful enable to userspace. Log the
+failure for callers that cannot return an error to userspace. The
+scoped mutex guard releases the slot lock on each return path.
 
-  board_added()
-    pciehp_power_on_slot()          # turn on the power
-    pciehp_check_link_status()
-      pcie_wait_for_link()
-        pcie_wait_for_link_delay()  # wait 1 sec for DLLLA,
-				    # then wait another 100 msec
+Detected by static analysis and reviewed with AI-assisted source auditing.
 
-... is specified by PCIe r7.0 sec 6.7.3.3, which is referenced by
-sec 6.7.1.8 ("Power Controller").
+Fixes: e434e54d3ffc ("PCI: hotplug: Add OCTEON PCI hotplug controller driver")
+Assisted-by: LLM
+Signed-off-by: Slavin Liu <bolin.liu@seu.edu.cn>
+---
+ drivers/pci/hotplug/octep_hp.c | 16 +++++++++++-----
+ 1 file changed, 11 insertions(+), 5 deletions(-)
 
-In particular, sec 6.7.3.3 says:
-
- "The Data Link Layer State Changed event must occur within 1 second
-  of the event that initiates the hot-insertion. If a power controller
-  is supported, the time out interval is measured from when software
-  initiated a write to the Slot Control register to turn on the power.
-  [...] Software is allowed to time out on a hot add operation if the
-  Data Link Layer State Changed event does not occur within 1 second."
-
-So I think the delays observed by pciehp are conforming to the spec.
-
-The PCIe CEM Spec r6.0.1 sec 2.11.2 specifies Tpvperl as "min 100 ms".
-
-I don't know why the OCP NIC Spec says "> 1s" instead, but that number
-isn't what the PCIe CEM Spec says and that's the authoritative document.
-
-So I'm inclined to say the number in the OCP NIC Spec is wrong and
-needs to be fixed.
-
-> This is observed with an OCP ConnectX-7 (MT2910 family) adapter.  On the
-> affected platform, power-on to PERST# deassertion takes about 1.2 seconds,
-> followed by a few hundred milliseconds for link activation, exceeding
-> the existing polling budget.
-
-Which platform are we talking about?  A chassis from HJ Micro?
-Has this already been shipped to customers or is it still in
-internal validation?  If it's still in validation, please fix
-the hardware to shorten the delays in accordance with the PCIe
-Base and CEM Spec, ignoring the bogus value in the OCP NIC spec.
-
-If it's already in customers' hands, can you fix this through
-a firmware update or something like that?
-
-I'd like to avoid lengthening the delays in pciehp beyond what
-the spec prescribes, only to work around non-conforming platforms.
-
-Thanks,
-
-Lukas
+diff --git a/drivers/pci/hotplug/octep_hp.c b/drivers/pci/hotplug/octep_hp.c
+index a0a7f9ccb8fa..a57969185022 100644
+--- a/drivers/pci/hotplug/octep_hp.c
++++ b/drivers/pci/hotplug/octep_hp.c
+@@ -66,24 +66,31 @@ struct octep_hp_controller {
+ 	spinlock_t hp_cmd_lock; /* Protects hp_cmd_list */
+ };
+ 
+-static void octep_hp_enable_pdev(struct octep_hp_controller *hp_ctrl,
+-				 struct octep_hp_slot *hp_slot)
++static int octep_hp_enable_pdev(struct octep_hp_controller *hp_ctrl,
++				struct octep_hp_slot *hp_slot)
+ {
+ 	guard(mutex)(&hp_ctrl->slot_lock);
+ 	if (hp_slot->hp_pdev) {
+ 		pci_dbg(hp_slot->hp_pdev, "Slot %s is already enabled\n",
+ 			hotplug_slot_name(&hp_slot->slot));
+-		return;
++		return 0;
+ 	}
+ 
+ 	/* Scan the device and add it to the bus */
+ 	hp_slot->hp_pdev = pci_scan_single_device(hp_ctrl->pdev->bus,
+ 						  hp_slot->hp_devfn);
++	if (!hp_slot->hp_pdev) {
++		pci_err(hp_ctrl->pdev, "Failed to scan slot %s\n",
++			hotplug_slot_name(&hp_slot->slot));
++		return -ENODEV;
++	}
+ 	pci_bus_assign_resources(hp_ctrl->pdev->bus);
+ 	pci_bus_add_device(hp_slot->hp_pdev);
+ 
+ 	dev_dbg(&hp_slot->hp_pdev->dev, "Enabled slot %s\n",
+ 		hotplug_slot_name(&hp_slot->slot));
++
++	return 0;
+ }
+ 
+ static void octep_hp_disable_pdev(struct octep_hp_controller *hp_ctrl,
+@@ -109,8 +116,7 @@ static int octep_hp_enable_slot(struct hotplug_slot *slot)
+ 	struct octep_hp_slot *hp_slot =
+ 		container_of(slot, struct octep_hp_slot, slot);
+ 
+-	octep_hp_enable_pdev(hp_slot->ctrl, hp_slot);
+-	return 0;
++	return octep_hp_enable_pdev(hp_slot->ctrl, hp_slot);
+ }
+ 
+ static int octep_hp_disable_slot(struct hotplug_slot *slot)
