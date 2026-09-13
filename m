@@ -1,65 +1,65 @@
-Received: from mail-pj2-f12.google.com (mail-pj2-f12.google.com [74.125.227.140])
+Received: from mail-pj2-f13.google.com (mail-pj2-f13.google.com [74.125.227.141])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9FE50389111
-	for <linux-pci@vger.kernel.org>; Sun, 13 Sep 2026 21:14:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.227.140
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6CCF138D404
+	for <linux-pci@vger.kernel.org>; Sun, 13 Sep 2026 21:14:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.227.141
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789334090; cv=none; b=sXvYrkxYwm5nfi7tZZLyoHwgyMdC8NMzORh7rGyPC2CkbnI6EqoTWJSGlBqoVfKZY+xDvo1vlfcNagcJmeFUAM79B5lY5zcRbeiNxPkMhNrNt8WuXSWYjD7n+smaDZjdrhu1wZ3wdhmkK9sXoyl9TGWY4xk/Jh8pAyqGt/2DWSQ=
+	t=1789334095; cv=none; b=seE3sqi5eHMH8RM08hp/4YPWSKHYBX9KRQoBaUmSZkwVpZQ4i80nCrMr6tU7yPUuiU/KM1VnNw1w2YbpsSHz2vYYIzjqKQLiN4a19HMPSx1k8RRCdl3N1PvknC1P3HUtjCeum/94yaYiLjiluHA0WMY3RLMlcpfS428XO2bpZf4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789334090; c=relaxed/simple;
-	bh=pPoaZ6WN/4rsL54zfkdxxVZNYOjgO9uDq+DyE0P6oAc=;
+	s=arc-20240116; t=1789334095; c=relaxed/simple;
+	bh=6QTSFu+QYOXAVxnu/+LpbdSsP3vJnCO72sARPcer6a0=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=IkLtlXID9+Myp8dtOaIqkYb4Hp33gdBpOCsnagSMA4UtkvOYH4jNvDI+uVDpii0+mi7l/dWbcZNYrPctfguRRzpmZ+D55JHp0J5JRLL/Eb1vZwlFYYtr15Tr7q7DzYkf2EqT4smlfnZbozfLQqYxUtr3ovmPhHY0jrxm4sHneTc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=GK6yGtT8; arc=none smtp.client-ip=74.125.227.140
+	 MIME-Version; b=sG0lgsm8rJzVzqsB5KVlTReYoBHxoMGIzfJZcBBoIJNL4G2oJIa4Qu7P+bTLeg67wL0Kf4Zu8sksE8capHPhDOp0C5gWajBLrJrfQ9UMP2MuYiN3f2aVNdPTzSu3z24DCkbrBart+2N/C9X86cisf2/wNVOHszS9WU3EmvvzYdg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=FlFyf5pM; arc=none smtp.client-ip=74.125.227.141
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="GK6yGtT8"
-Received: by mail-pj2-f12.google.com with SMTP id d9443c01a7336-2d6ff3936easo1757785ad.2
-        for <linux-pci@vger.kernel.org>; Sun, 13 Sep 2026 14:14:48 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FlFyf5pM"
+Received: by mail-pj2-f13.google.com with SMTP id d9443c01a7336-2dd4be7a5e3so1754445ad.0
+        for <linux-pci@vger.kernel.org>; Sun, 13 Sep 2026 14:14:53 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1789334088; x=1789938888; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1789334093; x=1789938893; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=ZpCRHMmToydeaRFWtETHuU4TdBo7QJCJ2jk+hcXVaYc=;
-        b=GK6yGtT8sT4fQuA6JTb+gE6Xl172A4Diy+aaJ9NhF+95yuSg+7mGWJ8S9luluzzO7a
-         0FPRhEFaF8hT1dbNrOUA1S0WULjtkhjojPLgBKE9a9UmdIyka9p1HOsU1KS2jcgxm0Ga
-         ruj1PnESJFaQwzeSTTLeraH7tSo5b5HbhQwkEu1jyksOSul6cPmhq/MMTWW17UvCh8Va
-         Ioa8pXcibG2UnlY0lxvVOd2BISrvGdlxZp5MGkk5ELLTZTMjYNaVsL2FzSFBVDpJylmr
-         GA6xNfGhOIWEm0PS+a9V0gPLGud+u1DmQTiiNr9dFRR/YG9AQ2O5f85SXdM/kt1G38ao
-         tDQQ==
+        bh=FAwWGoInaiibNI+PkowbPr1zLMnMrJfky1hPSvm8w8c=;
+        b=FlFyf5pM3GAYs+p80ct4FtxkI7VJKlxyKL40ziyCnozRwlo7z7NDVd/8l7j99srd50
+         R2reYFKpF/w5fROIsmB5++KmacplBm5+Pv/RMIDZ2EhWGB2OpJLSIOdiNfsRYh8XPVy1
+         +KWhz+SikqZnPFlHW3Muchys0TjeK9BbFHhZ2FBuVZkBnSts9dTWLEN7cTzacP/1VSE7
+         9g9LnMo9J9f42Ms4UjjFtYMuB7zwgKbrQfuI6EU0JmT5QMEXP2fLJ5xjdek3EQ0Rp2F1
+         cid3JtjAQCdi9CG7Zq5sIIedUZmG4gDHq7b/PRfWD358gPpSoXMkm1QtzsdDNQWQ1wrO
+         v5uQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1789334088; x=1789938888;
+        d=1e100.net; s=20251104; t=1789334093; x=1789938893;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=ZpCRHMmToydeaRFWtETHuU4TdBo7QJCJ2jk+hcXVaYc=;
-        b=kX5iHGSt23oVvDUGcqnqVtpcMnYeCbML9Dw9nsQ3514GHYEGixH2V3HxrjTryygWCH
-         gzTjDI5kMuL2yAdYvA41BZsHPiu70snECSv+o0PaFRlDpzOtnGbNyuSURGvLP0YXVVN8
-         e4XivTYK/c/55ml+vAwMc+RfCGRQdAUtNMx2nmQNI6uB5ItWo6rIBuAb15gUnRMyWtGl
-         ofT7xvhfwNI2+6aJRjJWx0yTSFsVxj8VZu16S76QKCxc+F0wKH+cKhn7o6JqJMG0D4nz
-         rdsoW4/3PRAVq8/3skIHQR1+sNbWGanHc/AdBOpbzI5tZbB7JfDXNLw+v72eAp5+fhjb
-         CMRQ==
-X-Forwarded-Encrypted: i=1; AKwUvBxTDKSWU56InJ0wexAxmmG699jvXWYAJ7a4oEKtFFIzaNDkMB7yQlMp1EUNCZWA/BMbp79T2X7KUNQ=@vger.kernel.org
-X-Gm-Message-State: AFuF++nHBlI4jJi4kIyOkhJHg2O5F/YwlXqG7TM5KZxlEexJJk1Qq4md
-	Pl+VZpvBml9B9DmCdx3lMTlTZmrXY0lix2rlzig8621rkolfmLb8/me/DcBj602kC4s=
-X-Gm-Gg: AYBFou1yPL9dfAHurojM9sXmj+W9ak5xT382qAzGlGHZ8AoIyC4UB7fVZ+0wm0ijCKd
-	ZhpzAcybOgdBRAcWl+xP3qsaRUbyaU1SWam94C+SFAmUv9pceiY7Dz2O6lYdeOT0JubqHJReVwh
-	ZTU5ElKJPO8TgnDOcNKWvEJ0icT78mNNnuGU/0x/A5eUyvd82mbXqlxJCVEtH67ZSVhV5xo4XYV
-	VZ8A448EFU+271BDIHMqDMrS4MtWcdfq5RfjEaJ4UEr85ei+4ilb5dFRG2mK7d9z7SOvFuz+rx6
-	Iios9jQwpwfRVJojxUTTwlfdn6PhIXjNEV5Vhht5kGlDGJIZ/x1Aq/FHPGTQLVB6oUN+/h7xtbA
-	DjFzdwI36KquHui77PAH4wgTOGG3mTi3PPt1+kmSypv2xYJVvWjflKVpndlV95wkj3kG/vU8UZJ
-	FP7CoQDl5Eam7F5gO0PE1BdrzLaW6Ij0579maly7/WOLhiyHyFgVcWsZHfXvFSyu7MyugkzHEyq
-	IMEXz24XjH2VGQCPecZk9hiq0jpkKBz6/Btn14f0pVr+wbF7wV1som9dKKWK5uFMTNAc7SMGYjm
-	/Yxna3y5ZxbMRj3R6VQMI90JW4qyuK8=
-X-Received: by 2002:a17:90b:5147:b0:398:a2e4:c784 with SMTP id 98e67ed59e1d1-39d9bbc25d1mr15745452a91.1.1789334087817;
-        Sun, 13 Sep 2026 14:14:47 -0700 (PDT)
+        bh=FAwWGoInaiibNI+PkowbPr1zLMnMrJfky1hPSvm8w8c=;
+        b=MqwB8f3RKOWWtv4hoWm0uTuJ5H4zUHx6oUdgOZYfRAqFFV4cCcREhZoXBDBEta5mQE
+         ixtuWsfJPMdYzC1zDdr2+2VpVVnIE8Y0t2KkaMzJl4tu45biCLCvzlViY+mMK33ViKyg
+         zHIm0VnYojfhxJ7kUZmdrfBKk9OX+7bJdGA7DTuxnK0GJD76u3pL+isb5WqL6Bw/6wVL
+         zf72AE423RZwb20OWA3XGN2S2JCRB1tMS766GPJoFlxgoL5atHeuChJfaQB1hkTiGDqs
+         w5et9wrER4aQvboeIiiNgAh1DkwNgczok+zLpOegLVVbkbFzKD3AHZy1PehGws2qJfEU
+         2IwQ==
+X-Forwarded-Encrypted: i=1; AKwUvBxrDOflf6UdcyzqivKZCmPHzemi1TfrL6ySog2YH/61gmr65EH3EOh6g8bACcpsWMZX8+IifnANoYY=@vger.kernel.org
+X-Gm-Message-State: AFuF++nqke2dYLiGtn1Z/CcYYAUb/BduVU7AKb5DdTryfMn5xJjDgUml
+	mBz4xWk9/uLcs0kDbHtse8HHMSLI7EOwsWS7UFgbVJwtg/9qfCp6hv4/
+X-Gm-Gg: AYBFou3xPr6YXdXpKA0aeWeVYfPOs4JGS5nRI/wE1IB6f0osO/t73kk2mFHVdcLF7Kp
+	PVnRmk6sg1jz/PYm+07n8cv2ypHTcT3RO473F+Zq7g9TsHtASPQ5nVAIrI5cA9aodlS5is+fC2o
+	roIEe+LWjtICcqHCeGrD2GjBHXWgkotTKQdXIV/rPMuoR2Osr1xbn/f4v1m5nzmJV84BUT3KvgQ
+	wrfGbgzQQtys2fV/2Xwqgx83tOvO97BXuRzHusHYHFUDiKF78chrvEvimaMmCTxuCDA9n0aYmGs
+	U3Nv/X1uYjaMphxECgT7cYETpmKb0zlUtqHyiAeLr2niL0Ekvdy7Wh8jsKCRHXPUIQRMXM0iV9R
+	jbSlqF9hONZGuS2P4WhLj9U8+R3GRB51hl0Sdr23juyoGBM4+vUKX/LtSZ8cV6lgAECxq7We5/3
+	L7m7JoMk9ww04QokiDsXgwO94rUb0ej4zqXywshRPmHRFru93+5nH+qU9VIGw2H3P+RwGY1ebgq
+	MAdcQOQBZViR+hF+N08LJvnC48aZWovtx6JFbuL8OREfYUSHUBHm35EuQjbb86TuQA2MkM6APfC
+	ZzZ2HxBjPLlhGqzYfmI8
+X-Received: by 2002:a17:90b:3808:b0:38e:76f8:fcbb with SMTP id 98e67ed59e1d1-39d9c2249c2mr15929475a91.4.1789334092888;
+        Sun, 13 Sep 2026 14:14:52 -0700 (PDT)
 Received: from cachyos-aura ([45.112.148.109])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-14365b348cbsm21382925c88.3.2026.09.13.14.14.42
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-14365b348cbsm21382925c88.3.2026.09.13.14.14.48
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 13 Sep 2026 14:14:47 -0700 (PDT)
+        Sun, 13 Sep 2026 14:14:52 -0700 (PDT)
 From: Navon John Lukose <navonjohnlukose@gmail.com>
 To: miriam.rachel.korenblit@intel.com,
 	linux-wireless@vger.kernel.org
@@ -73,9 +73,9 @@ Cc: johannes@sipsolutions.net,
 	linux-kernel@vger.kernel.org,
 	Navon John Lukose <navonjohnlukose@gmail.com>,
 	stable@vger.kernel.org
-Subject: [PATCH wireless v3 2/4] wifi: iwlwifi: pcie: don't infer CSME presence from a failed read
-Date: Mon, 14 Sep 2026 02:44:26 +0530
-Message-ID: <dba458f8bff1159de447653b03a9f39fb60e9549.1789333511.git.navonjohnlukose@gmail.com>
+Subject: [PATCH wireless v3 3/4] wifi: iwlwifi: pcie: deselect the product reset mode at probe
+Date: Mon, 14 Sep 2026 02:44:27 +0530
+Message-ID: <c370900547aa57b4397e5ea9b7b456b82256ddea.1789333511.git.navonjohnlukose@gmail.com>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <cover.1789333511.git.navonjohnlukose@gmail.com>
 References: <cover.1789333511.git.navonjohnlukose@gmail.com>
@@ -87,55 +87,35 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-iwl_read_prph() returns 0x5a5a5a5a when it cannot grab NIC access, which
-reads as "no CSME"; an all-ones CSR_HW_IF_CONFIG_REG reads as "CSME
-present". me_present is never recomputed and gates the reset ladder, so one
-bad read skews it for good. Reject both values. This does
-downgrade a product reset that a poisoned read used to permit.
+The product reset mode lives in the platform's ACPI namespace, so it
+outlives the trans that set it. _RST branches on it and does not clear it,
+and the deselect in iwl_trans_pcie_removal_wk() is a DSM that fails once
+the device is off the bus, so a later request for a function level reset
+can get a full product reset instead, with Bluetooth still bound. Deselect
+it at probe.
 
 Cc: stable@vger.kernel.org
-Fixes: 41fff83fe6cd ("wifi: iwlwifi: pcie: check for WiAMT/CSME presence")
+Fixes: 9673c35486d4 ("wifi: iwlwifi: implement product reset for TOP errors")
 Signed-off-by: Navon John Lukose <navonjohnlukose@gmail.com>
 ---
-Applies as-is to 6.18.y and 7.2.y.
+Patch 4 depends on this, not the other way round. By the time a recovery
+reset runs, the disarm in .resume has already failed, so the probe deselect
+after the rescan is what clears the mode. This one therefore stands alone
+as a fix and is tagged for stable while patch 4 is not.
 
- .../net/wireless/intel/iwlwifi/pcie/gen1_2/trans.c  | 13 +++++++++----
- 1 file changed, 9 insertions(+), 4 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/trans.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
 diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/trans.c
-index a30854d..e5edcc2 100644
+index e5edcc2..d93d8f9 100644
 --- a/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/trans.c
 +++ b/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/trans.c
-@@ -4194,7 +4194,8 @@ static void iwl_pcie_recheck_me_status(struct work_struct *wk)
- 	u32 val;
+@@ -4256,6 +4256,8 @@ int iwl_pci_gen1_2_probe(struct pci_dev *pdev,
  
- 	val = iwl_read32(trans_pcie->trans, CSR_HW_IF_CONFIG_REG);
--	trans_pcie->me_present = !!(val & CSR_HW_IF_CONFIG_REG_IAMT_UP);
-+	if (!PCI_POSSIBLE_ERROR(val))
-+		trans_pcie->me_present = !!(val & CSR_HW_IF_CONFIG_REG_IAMT_UP);
- }
+ 	iwl_trans_pcie_check_product_reset_status(pdev);
+ 	iwl_trans_pcie_check_product_reset_mode(pdev);
++	/* a previous trans may have left the mode selected */
++	iwl_trans_pcie_set_product_reset(pdev, false, mac_cfg->integrated);
  
- static void iwl_pcie_check_me_status(struct iwl_trans *trans)
-@@ -4212,15 +4213,19 @@ static void iwl_pcie_check_me_status(struct iwl_trans *trans)
- 		return;
- 
- 	val = iwl_read_prph(trans, CNVI_SCU_REG_FOR_ECO_1);
--	if (val & CNVI_SCU_REG_FOR_ECO_1_WIAMT_KNOWN) {
-+	/* iwl_read_prph() returns 0x5a5a5a5a if it never reached the NIC, and
-+	 * that value has WIAMT_KNOWN set and WIAMT_PRESENT clear
-+	 */
-+	if (!PCI_POSSIBLE_ERROR(val) && !iwl_trans_is_hw_error_value(val) &&
-+	    (val & CNVI_SCU_REG_FOR_ECO_1_WIAMT_KNOWN)) {
- 		trans_pcie->me_present =
- 			!!(val & CNVI_SCU_REG_FOR_ECO_1_WIAMT_PRESENT);
- 		return;
- 	}
- 
- 	val = iwl_read32(trans, CSR_HW_IF_CONFIG_REG);
--	if (val & (CSR_HW_IF_CONFIG_REG_ME_OWN |
--		   CSR_HW_IF_CONFIG_REG_IAMT_UP)) {
-+	if (!PCI_POSSIBLE_ERROR(val) && (val & (CSR_HW_IF_CONFIG_REG_ME_OWN |
-+					       CSR_HW_IF_CONFIG_REG_IAMT_UP))) {
- 		trans_pcie->me_present = 1;
- 		return;
- 	}
+ 	/* set the things we know so far for the grab NIC access */
+ 	iwl_trans_set_info(iwl_trans, &info);
