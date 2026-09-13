@@ -1,248 +1,189 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D18FA286D4D;
-	Sun, 13 Sep 2026 16:28:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 05EAB323417;
+	Sun, 13 Sep 2026 16:31:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789316935; cv=none; b=UA0VymlAmGmzxQw1muZDENAdNlxMpOuvobBbHA2AOlpoN6wJz/Vui1F5z5lo+9IVmnFTTaVRITU4GQnzikZsu/iQCPq5AGVUMs8PP5W7JPE3CUYyjXnbQnOpj1TGkvWz1Nq3zrwKdWQ3wwlPfflCVGj0+ZZXVrGLzxroF+h6ooQ=
+	t=1789317115; cv=none; b=cHYGVPWrF7m5Ko19HYEfP5LCsdDLKr7YCm127JdhKWv+XxUPjySBZY+0Uoc4jnrI7gBRJH0xhl6Siirs9YbthxWJyVcRjZbgJ0cnVxnWGGWpOTuu4G7tv4fKt7Iw8iyS1a1NydhyLAB6Wbf2BUagh7KXTuXEq0+pGGdSchRJYqM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789316935; c=relaxed/simple;
-	bh=T1YcelWT5Vv1zMQ2NDgqnBgLUx65xEQZc59KCBfz3RY=;
+	s=arc-20240116; t=1789317115; c=relaxed/simple;
+	bh=JOIAdIH+KnEzpU316WsJdjxcEcmXPxFAPmEGIUdvyVg=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=HUWPNBQpE3tcLbLK4NEy2+KkEXtEMQI6ek7kID2spnSdRfz3Bf5T47fAfWkua6Qqe7sj/BVz5EkJ+vHQwFqBCC8fzcQXhhJhdgDoSiEMbQO6dfitR976Qq1ld4EK/3eH3dBs9y8hmPmlC9dlWbcGAYPBaYEMEkaWzA+zSP9aexY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KIWCj1Ko; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=eEGK00j3nle0Mhniopf0jrwgttUK5Sqz0SqC//zTDPp5S8tM2Jieq9436jV+kiIWqaqks8Ey35MfUsdmDZ3Vy7X6s0oAwIazqTJ5oTlnsQUAtQG6APZduQQZ9axDnFiaNP0Sj3ZN8CwE39N2P7dlM09vwIBF0z1zf+OeMh+B8aY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iHSaGVNy; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KIWCj1Ko"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D45611F000FF;
-	Sun, 13 Sep 2026 16:28:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iHSaGVNy"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 358B71F000FF;
+	Sun, 13 Sep 2026 16:31:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789316932;
-	bh=L1VkvFm61iXDBj06KON6ADdXlElLjmpT1YGD+Wz+0K8=;
+	s=k20260515; t=1789317113;
+	bh=4Wy5WyPUrFpqKP8uzx+t/K7bR9qrcM8abhdN+JHbVNg=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=KIWCj1KoadeGfoIeQ0drag6+qa5/q9J1JSEGBYKXL7hQy7J4tQ2U6agLf7gkoPRRF
-	 Dyz8s8NcgPxEGXkph5pKZhKBO5Y48lPdOWbLSJTWSwaeszTxczRv9TYBQMhC1R4R5b
-	 j8riF4npXEldRZv6551w8flAbA7oj76Se/VgKpsvhJNxrZ9b++awsUwxLA0Ee8OqZv
-	 4cB+Z3kiTgZJ9H49eqjfZxgf9qHZuYoiyIECr/ORvG4YZ89WVwD8rQVIFVPEde4UHH
-	 OmoZ9Wp7MorfijqJ8TXy1mvXVW+fUMGGQr1CBChWCzeWRgeWfZhko4l+KQGZhh1Wgq
-	 WyOMB4YEDRajA==
+	b=iHSaGVNyZ7iPEOQTDAKPA/1/pJrhsJAKZNbgjwmdqjNzd3vT271767BsPVhdUgsal
+	 O3cxYBId8jgOWXE43LaYx0S7xE2az4vnnk/pBCBeuPJzkXpNpdHJwozO4LlIJc1CLo
+	 IC7bQi0jDv3wYbqRrOqZHPJeNbCHIf/wt/WQp1dfRCgxM+K3OonZZWhd9QgiwqA/OU
+	 jnXFcbuv2okDmxNvcf2PjWZjhigQyTSBeplo65PMXcrDGb+FhyIgVVbeNfMGsRbqTO
+	 nyaqK5UZsVXSZGreoatjozb2gKV7aWhxfEgdb0Io78XV973NEall8Ny0dKFv4E5pUF
+	 keCV0uFnaPfkA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v25 1/4] rust: leds: add basic led classdev abstractions
+Subject: Re: [PATCH v25 3/4] rust: leds: add multicolor classdev
+ abstractions
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Markus Probst" <markus.probst@posteo.de>
-Cc: gary@garyguo.net, linux-leds@vger.kernel.org, lee@kernel.org, linux-pci@vger.kernel.org, ojeda@kernel.org
-In-Reply-To: <20260913-rust_leds-v25-1-1a10371d78c3@posteo.de>
+Cc: lee@kernel.org, ojeda@kernel.org, linux-pci@vger.kernel.org, gary@garyguo.net, linux-leds@vger.kernel.org
+In-Reply-To: <20260913-rust_leds-v25-3-1a10371d78c3@posteo.de>
 References: <20260913-rust_leds-v25-0-1a10371d78c3@posteo.de>
- <20260913-rust_leds-v25-1-1a10371d78c3@posteo.de>
+ <20260913-rust_leds-v25-3-1a10371d78c3@posteo.de>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Sun, 13 Sep 2026 16:28:51 +0000
-Message-Id: <20260913162851.D45611F000FF@smtp.kernel.org>
+Date: Sun, 13 Sep 2026 16:31:52 +0000
+Message-Id: <20260913163153.358B71F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 6 potential issue(=
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
 s) to consider:
-- [High] `blink_set_callback` creates exclusive `&mut usize` references fro=
-m concurrently accessible pointers, causing Undefined Behavior.
-- [High] Incorrect lifetime bounds and raw pointer coercion in `DeviceBuild=
-er::build` allow the registered `Device` to outlive borrowed C strings, lea=
-ding to a Use-After-Free.
-- [High] Reconstructing `ARef<FwNode>` from the C `struct device` in `Pinne=
-dDrop` is unsound and causes reference count underflows if the fwnode is as=
-signed by the C subsystem.
-- [High] Using unmanaged `led_classdev_register_ext` combined with `PinnedD=
-rop` breaks devres cleanup ordering, leading to a race condition and use-af=
-ter-free on device removal.
-- [Low] Commit message description is not capitalized.
-- [Low] Small forwarding functions in the abstraction lack the `#[inline]` =
-attribute, violating Rust subsystem guidelines.
+- [High] Safe methods `brightness()` and `intensity()` in `MultiColorSubLed=
+` perform non-atomic plain reads that race with C subsystem writes, causing=
+ Undefined Behavior.
+- [High] The `MultiColorDevice` struct fails to capture the `'init` lifetim=
+e constraint from `DeviceBuilder`, allowing the device name `CStr` to be dr=
+opped prematurely and leaving a dangling pointer in the C framework.
+- [Medium] Logic in `build_multicolor` permanently leaks `fwnode` refcounts=
+ when a custom device name is provided.
 --
 
-commit 7ba1dd17b1d18204d9b691fb84bcc75aeb22eaca
+commit 7485bc19e8ccc2afa9099cb7107096ea73b39fe0
 Author: Markus Probst <markus.probst@posteo.de>
 
-rust: leds: add basic led classdev abstractions
+rust: leds: add multicolor classdev abstractions
 
-This commit implements the core abstractions needed for LED class devices in
-Rust. It introduces the LedOps trait for handling LEDs, along with a
-DeviceBuilder and a safe Device wrapper around led_classdev.
+This commit implements the abstractions needed for multicolor led class dev=
+ices.
+It introduces MultiColor, MultiColorSubLed, and MultiColorDevice, along with
+a DeviceBuilder function to register a new multicolor led class device.
 
-> rust: leds: add basic led classdev abstractions
-
-[Severity: Low]
-This isn't a bug, but does this violate the subsystem formatting rules?
-The LED subsystem guidelines state that the description after the subsystem
-prefix should always be capitalized for MFD, LED, and Backlight subsystems.
-Should "add" be capitalized here?
-
-> diff --git a/rust/kernel/led.rs b/rust/kernel/led.rs
-> index 0000000000000..deda8cc548a8c
+> diff --git a/rust/kernel/led/multicolor.rs b/rust/kernel/led/multicolor.rs
+> new file mode 100644
+> index 0000000000000..309487bdf38aa
 > --- /dev/null
-> +++ b/rust/kernel/led.rs
-
+> +++ b/rust/kernel/led/multicolor.rs
 [ ... ]
-
-> @@ -249,6 +249,7 @@ impl TryFrom<u32> for Color {
->      type Error =3D Error;
-> =20
->      fn try_from(value: u32) -> core::result::Result<Self, Self::Error> {
-
-[Severity: Low]
-This isn't a bug, but could this small forwarding function be missing the
-#[inline] attribute? According to the Rust subsystem guidelines, small
-functions or those forwarding to C bindings in abstractions should be
-annotated with #[inline].
-
-> diff --git a/rust/kernel/led/normal.rs b/rust/kernel/led/normal.rs
-> index 0000000000000..a22c29cfd2628
-> --- /dev/null
-> +++ b/rust/kernel/led/normal.rs
-
-[ ... ]
-
-> @@ -23,6 +23,7 @@ impl<'init, S: DeviceBuilderState> DeviceBuilder<'init,=
- S> {
->      pub fn build<'bound: 'init, T: LedOps + 'bound>(
->          self,
->          parent: &'bound device::Device<Bound>,
->          ops: impl PinInit<T, Error> + 'init,
->      ) -> impl PinInit<Device<'bound, T>, Error> + 'init {
+> +    /// The intensity of the sub led.
+> +    #[inline]
+> +    pub const fn intensity(&self) -> u32 {
+> +        // SAFETY:
+> +        // - `self.intensity.get()` is a valid pointer to `u32`.
+> +        // - We don't have exclusive or immutable access to `self.intens=
+ity`,
+> +        //   but the alignment should prevent "load tearing".
+> +        unsafe { *self.intensity.get() }
+> +    }
+> +
+> +    /// The brightness of the sub led.
+> +    #[inline]
+> +    pub const fn brightness(&self) -> u32 {
+> +        // SAFETY:
+> +        // - `self.brightness.get()` is a valid pointer to `u32`.
+> +        // - We don't have exclusive or immutable access to `self.bright=
+ness`,
+> +        //   but the alignment should prevent "load tearing".
+> +        unsafe { *self.brightness.get() }
+> +    }
 
 [Severity: High]
-Does this inverted lifetime constraint '<'bound: 'init>' allow the returned
-Device to outlive the borrowed C strings? The DeviceBuilder holds string
-references tied to the 'init lifetime. This signature means 'bound can
-outlive 'init.
+Does this plain read trigger undefined behavior due to a data race?
+
+Since MultiColorSubLed implements Sync, references can be shared safely
+across threads. The underlying C subsystem mutates these exact fields
+concurrently. For example, multi_intensity_store() in led-class-multicolor.c
+modifies intensity from sysfs, and led_mc_calc_color_components() modifies
+brightness in softirq context.
+
+In the Rust memory model, a data race on a non-atomic memory access is stri=
+ct
+undefined behavior, regardless of architecture-level load tearing.
 
 [ ... ]
-
-> @@ -43,6 +43,7 @@ impl<'init, S: DeviceBuilderState> DeviceBuilder<'init,=
- S> {
->                          max_brightness: T::MAX_BRIGHTNESS,
->                          brightness: self.initial_brightness,
->                          color: self.color as u32,
->                          name: self.name.map_or(core::ptr::null(), CStrEx=
-t::as_char_ptr),
->                          ..bindings::led_classdev::default()
+> +#[pin_data(PinnedDrop)]
+> +pub struct MultiColorDevice<'bound, T: 'bound =3D ()> {
+> +    #[pin]
+> +    ops: T,
+> +    #[pin]
+> +    classdev: Opaque<bindings::led_classdev_mc>,
+> +    _p: PhantomData<&'bound ()>,
+> +}
+> +
+> +impl<'init, S: DeviceBuilderState> DeviceBuilder<'init, S> {
+> +    /// Registers a new [`MulticolorDevice`].
+> +    pub fn build_multicolor<'bound: 'init, T: LedOps<Mode =3D MultiColor=
+> + 'bound>(
+> +        self,
+> +        parent: &'bound device::Device<Bound>,
+> +        ops: impl PinInit<T, Error> + 'init,
+> +        subleds: &'init [MultiColorSubLed],
+> +    ) -> impl PinInit<MultiColorDevice<'bound, T>, Error> + 'init {
+[ ... ]
+> +                unsafe {
+> +                    ptr.write(bindings::led_classdev_mc {
+> +                        led_cdev: bindings::led_classdev {
+[ ... ]
+> +                            name: self.name.map_or(core::ptr::null(), CS=
+trExt::as_char_ptr),
 
 [Severity: High]
-Could this raw pointer coercion lead to a use-after-free? This strips the
-'init lifetime, storing a potentially short-lived pointer into the long-liv=
-ed
-C struct. A caller could pass a local CString, and since the returned
-Device<'bound, T> lacks the 'init lifetime parameter, the C LED subsystem
-might retain these raw pointers for sysfs and logging after the string is
-dropped. Should the constraint be 'init: 'bound instead?
+Could this result in a dangling pointer in the C framework?
+
+DeviceBuilder accepts an &'init CStr for the device name. In build_multicol=
+or,
+this bounded reference is converted to a raw pointer and written into the n=
+ame
+field of the C struct bindings::led_classdev_mc.
+
+Because the instantiated MultiColorDevice type does not include the 'init
+lifetime parameter, the lifetime is erased. Can this allow safe Rust code to
+dynamically allocate a CString, pass a reference to name(), initialize the
+device, and then safely drop the CString while the device remains alive and
+the C struct still holds the name pointer?
 
 [ ... ]
+> +                to_result(unsafe {
+> +                    bindings::led_classdev_multicolor_register_ext(
+> +                        parent.as_ref().as_raw(),
+> +                        ptr,
+> +                        if self.name.is_none() {
+> +                            &raw mut init_data
+> +                        } else {
+> +                            core::ptr::null_mut()
+> +                        },
+> +                    )
+> +                })?;
+> +
+> +                subled_guard.dismiss();
+> +
+> +                core::mem::forget(self.fwnode); // keep the reference co=
+unt incremented
 
-> @@ -66,13 +66,9 @@ impl<'init, S: DeviceBuilderState> DeviceBuilder<'init=
-, S> {
->                  // SAFETY:
->                  // - `parent.as_raw()` is guaranteed to be a pointer to =
-a valid `device`.
->                  // - `ptr` is guaranteed to be a pointer to an initializ=
-ed `led_classdev`.
->                  to_result(unsafe {
->                      bindings::led_classdev_register_ext(
->                          parent.as_raw(),
->                          ptr,
->                          if self.name.is_none() {
->                              &raw mut init_data
->                          } else {
->                              core::ptr::null_mut()
->                          },
->                      )
->                  })?;
+[Severity: Medium]
+Does this logic permanently leak the fwnode reference count when a custom
+device name is provided?
 
-[Severity: High]
-Does using the unmanaged led_classdev_register_ext combined with PinnedDrop
-break devres cleanup ordering? In Rust, driver data structs embedding
-led::Device are allocated early in probe() using devm. Subsequent devm
-allocations register their cleanup actions after the struct's drop action.
+When self.name is Some, core::ptr::null_mut() is passed instead of init_dat=
+a.
+This bypasses init_data, meaning the LED subsystem never associates the fwn=
+ode
+with the created device (dev->fwnode remains unset).
 
-Since this unmanaged C API relies entirely on the struct's PinnedDrop to ca=
-ll
-led_classdev_unregister, devres will execute cleanup in reverse order on
-device removal, freeing IRQs and I/O memory before PinnedDrop unregisters
-the LED.
-
-Can a concurrent write to brightness_set access already-freed I/O memory
-during this window?
-
-[ ... ]
-
-> @@ -103,6 +103,7 @@ impl<'bound, T: LedOps + 'bound> Deref for Device<'bo=
-und, T> {
->      type Target =3D T;
-> =20
->      fn deref(&self) -> &Self::Target {
->          &self.ops
->      }
-
-[Severity: Low]
-This isn't a bug, but could this small forwarding function be missing the
-#[inline] attribute? The Rust subsystem guidelines suggest adding it for
-small functions in abstractions.
-
-[ ... ]
-
-> @@ -182,10 +182,10 @@ impl<T: LedOps> Adapter<T> {
->              let classdev =3D unsafe { Device::<T>::from_raw(led_cdev) };
-> =20
->              classdev.blink_set(
->                  // SAFETY: The function's contract guarantees that `dela=
-y_on` points to a `usize`
->                  // and is exclusive for the period of this function.
->                  unsafe { &mut *delay_on },
->                  // SAFETY: The function's contract guarantees that `dela=
-y_off` points to a `usize`
->                  // and is exclusive for the period of this function.
->                  unsafe { &mut *delay_off },
->              )?;
-
-[Severity: High]
-Does unconditionally creating exclusive &mut usize references here trigger
-Undefined Behavior?
-
-The LED subsystem in C calls led_blink_set directly from sysfs store
-handlers without holding locks. Multiple threads can concurrently write to
-sysfs and invoke blink_set_callback with pointers to the shared
-led_cdev->blink_delay_on and blink_delay_off fields.
-
-Having multiple concurrent &mut references to the same memory location
-violates Rust's aliasing rules.
-
-[ ... ]
-
-> @@ -203,9 +203,6 @@ impl<'bound, T: 'bound> PinnedDrop for Device<'bound,=
- T> {
->          let dev: &device::Device =3D unsafe { device::Device::from_raw((=
-*raw).dev) };
-> =20
->          let _fwnode =3D dev
->              .fwnode()
->              // SAFETY: the reference count of `fwnode` has previously be=
-en
->              // incremented in `led::DeviceBuilder::build`.
->              .map(|fwnode| unsafe { ARef::from_raw(NonNull::from(fwnode))=
- });
-
-[Severity: High]
-Is recovering the ARef<FwNode> from the C struct device in PinnedDrop sound?
-
-If self.fwnode in the builder was None, no reference was leaked. However,
-during registration, the driver core or subsystem may automatically assign a
-fwnode to the device.
-
-In this case, dev.fwnode() would return Some, and the Rust drop logic would
-blindly steal ownership of an unowned fwnode. Could this decrement its
-reference count and cause an underflow and use-after-free?
+Despite this, core::mem::forget(self.fwnode) is called unconditionally.
+During teardown in PinnedDrop, dev.fwnode() will correctly return None since
+the C core never set it. As a result, the ARef is never reconstructed and t=
+he
+reference count is permanently leaked.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260913-rust_leds-=
-v25-0-1a10371d78c3@posteo.de?part=3D1
+v25-0-1a10371d78c3@posteo.de?part=3D3
