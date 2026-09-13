@@ -1,117 +1,167 @@
-Received: from mail-m155101.qiye.163.com (mail-m155101.qiye.163.com [101.71.155.101])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F05FD285CAA;
-	Sun, 13 Sep 2026 12:51:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=101.71.155.101
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2DBFB2F28FC
+	for <linux-pci@vger.kernel.org>; Sun, 13 Sep 2026 13:06:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789303890; cv=none; b=fj0LAJUX1xCnb3XA2NBC4anfZ4xTBGL17XqcEw/WRbuI9+Def2gfDN5P+o4ueSM+1dopPUgdwW29AvdujcpkmR68XZVT3NMGjYR1zieD4Qxv/wlbXx4URUOLYXSBzgIeKp+UyWj5x8nFaPI2ZTfElBqXqw8WDwJlG+rI6lkuAuM=
+	t=1789304791; cv=none; b=MGIXGTk2bI/0FgE94GaqQ5HHjEthZ6CzG21tJl4UIAaowdTzOhxp2Y/VIwLQKvpKwoskcN8mzBKYU0O1fZFnSDqr83ZW6d5VV2Wz1hV4iR5S/Rh1d+2BkUFr6avbCY5C53mrRcIXf9ztaKWzn+re14sWixKzMcpjTqEm9UUpRaQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789303890; c=relaxed/simple;
-	bh=QoeSvN471UQuqwSz41GXF8Jl6uqntZOC8xyYuURbM5o=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=NAnwtK8qg7x8NvXXa1Q74miy05X1gqsqWQb8lZCm+7stiqR6se9oJRlBli76mmNmBAeraomzrpRmzPJOEPdGDEomcJQJKyPnIbpXCPeZ7nxXuzkNbxrJJ//SUStaPr1IOHgMEwc55VPIoOi3a+zu8udrXdm7ymqjTBG/+c4zw5k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=seu.edu.cn; spf=pass smtp.mailfrom=seu.edu.cn; dkim=pass (1024-bit key) header.d=seu.edu.cn header.i=@seu.edu.cn header.b=luRA9Qp5; arc=none smtp.client-ip=101.71.155.101
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=seu.edu.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=seu.edu.cn
+	s=arc-20240116; t=1789304791; c=relaxed/simple;
+	bh=NOws7CIqFiafzhvDH94KLRqyU1x+Xv3JBUmGA4xg4FA=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=jH1oNfRumKaAzLRKhBcyf3cuFXbDCPAWQ5VOATU2WZIZg0cQcKtgUl4/cA1pOcsSnssv8Jemxkoi9C5PmZxZTd8UPkHOvGgsZhlVBWWlAqGd8SYfbvMoM+zckA+G+javc2TIZMSLEguwC+eHPrVEnB6DwtCv6CienekhREgGbzk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ody8Gqfz; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=seu.edu.cn header.i=@seu.edu.cn header.b="luRA9Qp5"
-Received: from seu.edu.cn (unknown [58.241.16.34])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 4d907a3cc;
-	Sun, 13 Sep 2026 20:51:21 +0800 (GMT+08:00)
-From: Slavin Liu <bolin.liu@seu.edu.cn>
-To: bhelgaas@google.com
-Cc: sthotton@marvell.com,
-	vattunuru@marvell.com,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	bolin.liu@seu.edu.cn
-Subject: [PATCH] PCI: octep: handle an unsuccessful hotplug scan
-Date: Sun, 13 Sep 2026 20:51:18 +0800
-Message-Id: <20260913125118.109777-1-bolin.liu@seu.edu.cn>
-X-Mailer: git-send-email 2.34.1
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ody8Gqfz"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id ABDDA1F000FF;
+	Sun, 13 Sep 2026 13:06:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1789304789;
+	bh=EUiEPpe2Jtuy5GahLPNEmo8+hLgpRNYKm+YbsR5TZxY=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=ody8GqfziOzsYa9DZPQMQER1Rz4dEHe0be+zQfSgA9GtbddyIuN4JTW86xgM3lTXd
+	 50jv1AvQYj8x0sf88NfNlf00P0hqV3cENg6KUpHNDMOKYCRPK+w94UloTfbutM6bRo
+	 qcPdzUTlFNsDEELrGee+Mq3vuN/FSShqfnB3t+NXU2rlFzBsGISNE5nVS1OMvszgY1
+	 n9/CCZnkx5e1Cfgk3zoKhuSdVTAWd796bvAnMXOgruFhEny8mcpKGAYfsOVj9p+Qd1
+	 3WTKgNP1IwOD8wg3RZ5H6JRd+C/MshT6aE+3JONlkxJZrH+xHrbhLqoh2HYiAgL+fG
+	 emI0q599tsDsA==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] PCI: octep: handle an unsuccessful hotplug scan
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Slavin Liu" <bolin.liu@seu.edu.cn>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260913125118.109777-1-bolin.liu@seu.edu.cn>
+References: <20260913125118.109777-1-bolin.liu@seu.edu.cn>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Sun, 13 Sep 2026 13:06:29 +0000
+Message-Id: <20260913130629.ABDDA1F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-HM-Tid: 0aa09ad27a1503a1kunmadf12168251132
-X-HM-MType: 10
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFITzdXWRgWCB1ZQUpXWS1ZQUlXWQ8JGhUIEh9ZQVlCSxhDVhkYGEIYQklDQ0wZSlYeHw
-	5VEwETFhoSFyQUDg9ZV1kYEgtZQVlOQ1VJT0pVSk1VSE9ZV1kWGg8SFR0UWUFZT0tIVUpLSUhOQ0
-	NVSktLVUtZBg++
-DKIM-Signature: a=rsa-sha256;
-	b=luRA9Qp5l+uwuLJ6ymUQDFprGT01CNnzKe2pHUPBzph5j9B08jnAr5FgNQ8RSVl4sLQHi3cfwpR1PD6WGfLrm+kEYOSzCHN1Z2zhrycAS6VPFnnwUK3NTgQxQ4GD+yhdFQHeh3r6XvjXoDUeMdux/4hy/0L+AQ8RzSkjjTAkPck=; c=relaxed/relaxed; s=default; d=seu.edu.cn; v=1;
-	bh=yhhdRDxPvVEh20H2ygRtbzTLlKXYk2l8ayO9t4VIsRo=;
-	h=date:mime-version:subject:message-id:from;
+
+Thank you for your contribution! Sashiko AI review found 4 potential issue(=
+s) to consider:
+
+Pre-existing issues:
+- [High] Calling hotplug_slot_name() after deregistering the slot causes a =
+NULL pointer dereference.
+- [High] PCI bus topology changes in octep_hp_enable_pdev are made without =
+holding the global pci_lock_rescan_remove().
+- [High] Lockless modification and traversal of hp_ctrl->slot_list leads to=
+ Data Race and Use-After-Free.
+- [High] Iterating over pdev->bus->devices during probe is performed withou=
+t holding pci_bus_sem.
+--
+
+commit 4181e29e1dc190e4bfd9a170a79184523f6d175e
+Author: Slavin Liu <bolin.liu@seu.edu.cn>
+
+PCI: octep: handle an unsuccessful hotplug scan
 
 pci_scan_single_device() can return NULL if no device is found or
-allocation fails. octep_hp_enable_pdev() passes that pointer to
-pci_bus_add_device() and then dereferences it for a debug message.
+allocation fails. Return -ENODEV when the scan fails and propagate
+it through the hotplug enable_slot callback. The scoped mutex guard
+releases the slot lock on each return path.
 
-Return -ENODEV when the scan fails and propagate it through the hotplug
-enable_slot callback. This leaves the slot disabled and allows a later
-retry without reporting a successful enable to userspace. Log the
-failure for callers that cannot return an error to userspace. The
-scoped mutex guard releases the slot lock on each return path.
+> diff --git a/drivers/pci/hotplug/octep_hp.c b/drivers/pci/hotplug/octep_h=
+p.c
+> index a0a7f9ccb8fa3..a57969185022c 100644
+> --- a/drivers/pci/hotplug/octep_hp.c
+> +++ b/drivers/pci/hotplug/octep_hp.c
+> @@ -66,24 +66,31 @@ struct octep_hp_controller {
+[ ... ]
+>  	/* Scan the device and add it to the bus */
+>  	hp_slot->hp_pdev =3D pci_scan_single_device(hp_ctrl->pdev->bus,
+>  						  hp_slot->hp_devfn);
+> +	if (!hp_slot->hp_pdev) {
+> +		pci_err(hp_ctrl->pdev, "Failed to scan slot %s\n",
+> +			hotplug_slot_name(&hp_slot->slot));
 
-Detected by static analysis and reviewed with AI-assisted source auditing.
+[Severity: High]
+This is a pre-existing issue, but this newly added error logging expands the
+bug by triggering a NULL pointer dereference if the scan fails during
+deregistration.
 
-Fixes: e434e54d3ffc ("PCI: hotplug: Add OCTEON PCI hotplug controller driver")
-Assisted-by: LLM
-Signed-off-by: Slavin Liu <bolin.liu@seu.edu.cn>
----
- drivers/pci/hotplug/octep_hp.c | 16 +++++++++++-----
- 1 file changed, 11 insertions(+), 5 deletions(-)
+When devm executes octep_hp_deregister_slot() during driver unbind or probe
+failure, it calls pci_hp_deregister(&hp_slot->slot), which sets
+slot->pci_slot to NULL.
 
-diff --git a/drivers/pci/hotplug/octep_hp.c b/drivers/pci/hotplug/octep_hp.c
-index a0a7f9ccb8fa..a57969185022 100644
---- a/drivers/pci/hotplug/octep_hp.c
-+++ b/drivers/pci/hotplug/octep_hp.c
-@@ -66,24 +66,31 @@ struct octep_hp_controller {
- 	spinlock_t hp_cmd_lock; /* Protects hp_cmd_list */
- };
- 
--static void octep_hp_enable_pdev(struct octep_hp_controller *hp_ctrl,
--				 struct octep_hp_slot *hp_slot)
-+static int octep_hp_enable_pdev(struct octep_hp_controller *hp_ctrl,
-+				struct octep_hp_slot *hp_slot)
- {
- 	guard(mutex)(&hp_ctrl->slot_lock);
- 	if (hp_slot->hp_pdev) {
- 		pci_dbg(hp_slot->hp_pdev, "Slot %s is already enabled\n",
- 			hotplug_slot_name(&hp_slot->slot));
--		return;
-+		return 0;
- 	}
- 
- 	/* Scan the device and add it to the bus */
- 	hp_slot->hp_pdev = pci_scan_single_device(hp_ctrl->pdev->bus,
- 						  hp_slot->hp_devfn);
-+	if (!hp_slot->hp_pdev) {
-+		pci_err(hp_ctrl->pdev, "Failed to scan slot %s\n",
-+			hotplug_slot_name(&hp_slot->slot));
-+		return -ENODEV;
-+	}
- 	pci_bus_assign_resources(hp_ctrl->pdev->bus);
- 	pci_bus_add_device(hp_slot->hp_pdev);
- 
- 	dev_dbg(&hp_slot->hp_pdev->dev, "Enabled slot %s\n",
- 		hotplug_slot_name(&hp_slot->slot));
-+
-+	return 0;
- }
- 
- static void octep_hp_disable_pdev(struct octep_hp_controller *hp_ctrl,
-@@ -109,8 +116,7 @@ static int octep_hp_enable_slot(struct hotplug_slot *slot)
- 	struct octep_hp_slot *hp_slot =
- 		container_of(slot, struct octep_hp_slot, slot);
- 
--	octep_hp_enable_pdev(hp_slot->ctrl, hp_slot);
--	return 0;
-+	return octep_hp_enable_pdev(hp_slot->ctrl, hp_slot);
- }
- 
- static int octep_hp_disable_slot(struct hotplug_slot *slot)
+Immediately after, it calls octep_hp_enable_pdev(). If the scan fails,
+hotplug_slot_name(&hp_slot->slot) is called, which dereferences the now-NULL
+slot->pci_slot pointer, causing a kernel oops. Can we avoid using
+hotplug_slot_name() here or ensure it is safe to call?
+
+> +		return -ENODEV;
+> +	}
+>  	pci_bus_assign_resources(hp_ctrl->pdev->bus);
+>  	pci_bus_add_device(hp_slot->hp_pdev);
+
+[Severity: High]
+This isn't a bug introduced by this patch, but does this function modify
+global PCI bus topology without holding pci_lock_rescan_remove()?
+
+When octep_hp_enable_pdev() calls pci_scan_single_device(),
+pci_bus_assign_resources(), and pci_bus_add_device(), it modifies global
+PCI lists and structures. The PCI core requires callers to serialize such
+changes using pci_lock_rescan_remove().
+
+If this lock isn't held, can concurrent PCI operations like sysfs remove or
+other hotplug events corrupt the PCI structures?
+
+[ ... ]
+
+[Severity: High]
+This is a pre-existing issue, but does lockless modification and traversal
+of hp_ctrl->slot_list lead to a use-after-free or data race?
+
+In octep_hp_deregister_slot(), the list is modified without a lock:
+
+drivers/pci/hotplug/octep_hp.c:octep_hp_deregister_slot() {
+    ...
+	pci_hp_deregister(&hp_slot->slot);
+	octep_hp_enable_pdev(hp_ctrl, hp_slot);
+	list_del(&hp_slot->list);
+	kfree(hp_slot);
+}
+
+Concurrently, the workqueue iterates this list locklessly:
+
+drivers/pci/hotplug/octep_hp.c:octep_hp_cmd_handler() {
+    ...
+	list_for_each_entry(hp_slot, &hp_ctrl->slot_list, list) {
+    ...
+}
+
+Because devres executes cleanup actions in LIFO order,
+octep_hp_deregister_slot() runs during driver unbind before
+octep_hp_irq_cleanup() has disabled interrupts and flushed the workqueue.
+If a hotplug interrupt fires during unbind, could the workqueue traverse
+a freed hp_slot?
+
+[Severity: High]
+This is a pre-existing issue, but does iterating over pdev->bus->devices
+during probe require holding the read/write lock?
+
+In octep_hp_pci_probe():
+
+drivers/pci/hotplug/octep_hp.c:octep_hp_pci_probe() {
+    ...
+	list_for_each_entry_safe(tmp_pdev, next, &pdev->bus->devices, bus_list) {
+		if (tmp_pdev =3D=3D pdev)
+			continue;
+    ...
+}
+
+Although probe is serialized by the driver core for this specific device,
+the bus itself is globally shared. A concurrent sysfs removal or hotplug
+event for a sibling device on the same bus could remove an entry from
+bus->devices while the loop is iterating. Should this be protected with
+down_read(&pci_bus_sem)?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260913125118.1097=
+77-1-bolin.liu@seu.edu.cn?part=3D1
