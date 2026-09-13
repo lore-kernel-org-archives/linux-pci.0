@@ -1,46 +1,79 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj2-f13.google.com (mail-pj2-f13.google.com [74.125.227.141])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E491E2F746D;
-	Sun, 13 Sep 2026 17:16:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 590D03BD22F
+	for <linux-pci@vger.kernel.org>; Sun, 13 Sep 2026 19:07:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.227.141
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789319820; cv=none; b=iV/H2h+/GpNljeaWeldq4K8lhx2FOmbD+fhMDCnKeKjWxSp3C8b8hcZEKIr55uRsE0UgkURMudwOYXwksOmemjb9mG3/zqlCFkvxfWoQR8N7H4Y8zIQ4GQhsm/VzA01t7OXWAnXkePlbFEVYB+2sPobk7itCf0ji20CTA7RPN/s=
+	t=1789326468; cv=none; b=glC3G7Q8guvqLd2Me2qV0fw6H4quCpFbVywIHkAloSBL9Mhb7RLVVLDjKmUIicVqroMTDRe7ONY44QQISNkJufFeyCgy/a6gWQfC7ToiZYln3Sgm3Ju+DE55j04rkXFi4NKOUqPNRJqy0U/SLrEFiLYOUR4Njra3uRKQN9H1nj8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789319820; c=relaxed/simple;
-	bh=RlkRuX0iWTlT0/Hh++ZLAUZHy6/57lUQLkN/g+EuVmE=;
+	s=arc-20240116; t=1789326468; c=relaxed/simple;
+	bh=FJuNyLY/pzbcykVKwcXUGco3PIus266cOgV5iuyaxpQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=n362AsQRkELVpVHvwEVSgd0Q8UxTXxNT8fM2XSX7/9Enx6gbwS5wGMygDSv98/X1yzHzXSuPknfW9AFvQcgZ+S7UgCQKEURYoqVQNMj8cotgTSs9Oh3lzJDgQNq+Qw+FwrbKVqLFMTWqJxsGY2uFdQIuXrrnFG4HNrbPOk/wO+o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RtDgYcRE; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=obpM7OfiBPGbJoDIcjBCf9wmelQ6/Zhmb+4kVQ67YIXL8GJB3o5oNOYxjd5t3hcbAParutaacRHzQXYuVvrp219YxpohFS6k6/eAgiFu2cKHWoyJNR1evgE1BwMzMse0Bddb1hYpPsG8PeyeKSRpRQiUNff8ja5m35Qv0laCq04=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=UpFx2Y5g; arc=none smtp.client-ip=74.125.227.141
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RtDgYcRE"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DDDAB1F000FF;
-	Sun, 13 Sep 2026 17:16:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789319818;
-	bh=uLU+TPgaFJtgy5u+UiiV3NyJIpHl0GhqPLTMlsqfHd4=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=RtDgYcREYZcA0H67A0lgJfALQqJRqg9SR74vAp1gR91Mrm92YrA7erxA94oWDLGbH
-	 huyRAg5UAnA6rC/T6940EiV1ss78YiM7I0W/zkGlpII5SjOwhHl9Ucbu6N0SMClWMS
-	 2xuPqFa0HA1V2VA7/LOHcEkdkXmPQz46yiqutyi//LfT3vQSQRPQ1cwC5LGbmGGy/w
-	 0Yc71Uarv47p/u2DLlmJPESYveAhm/2wLOFoOnjuTsUrCAKd6gYb2jq7MMBhW0w4NR
-	 G+efx8utDxbpxS047dsjgyFnpHQ2YS6K/HoJtMKtMEPVPEby3eVO4pdvqTDq0w+Lkx
-	 XuHLv/AMEphgQ==
-Date: Sun, 13 Sep 2026 19:16:52 +0200
-From: Niklas Cassel <cassel@kernel.org>
-To: Manivannan Sadhasivam <mani@kernel.org>
-Cc: Sumit Kumar <sumit.kumar@oss.qualcomm.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] pci: designware: Set DMA_BYPASS bit in outbound IATU
- CTRL2 register
-Message-ID: <aqbahGslz11TWIRo@fedora>
-References: <20260908-dma_bypass-v2-1-c3c81d408c0c@oss.qualcomm.com>
- <aqAk6nXECt239c2g@ryzen>
- <4nxyshx26bl5r7jjjnghsyz7k63lah6zx77cuea37mziww7kb4@iij5g3om67ub>
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="UpFx2Y5g"
+Received: by mail-pj2-f13.google.com with SMTP id d9443c01a7336-2dd4b917769so57605ad.1
+        for <linux-pci@vger.kernel.org>; Sun, 13 Sep 2026 12:07:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1789326467; x=1789931267; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=wLKsYyHDEIG+EScQ7Yc5Jy2hjjtWSDf1s+mRpjU6xek=;
+        b=UpFx2Y5gAkORqOCg0ondjxyMYemkeXHMcY/8BA0HDzEXWssbfiuUknCX9RUbtgUcyk
+         Allx2sc6EJn5jRlmTFx1R4v0pAhRJEfSjglepLf2uT4JpzBRc/kNyugJssNbOjNYaQXS
+         S+oBM5nrfWDdXsdqWLfGxvgBxrS8899Fv1fKllPUUTJP6TN1z6kZKUw9dVc5pwn8D+1X
+         JocU9DUkWM5cvFhaWiDLJnQt/gZehtTjhc4mIrApW1fGC/uDoCEVN4IE6IkQy1OwGk1e
+         fEcPynMhQzqX21IGpWKsOuaZguGQgDf8P0oUkrxP5uwIq2HwcLVDiVSAAzXsKPSC1D3v
+         UGIg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1789326467; x=1789931267;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=wLKsYyHDEIG+EScQ7Yc5Jy2hjjtWSDf1s+mRpjU6xek=;
+        b=YPTf9ajPcg1qIM23gVqDZe94PROveUCJZIHyoM+60Ep1i0iQkasT9LdAd5rVsy99pE
+         RJ5nbw2i5kNWEW3Sm+nC2lRtrbo4iTVh7F2Vb7Mu+EqcPKJ1yUaXFB6I+epFrsLR3p7f
+         iy1xVPTKnzc56HAyMAqyU9srI+bzzjsbsn2K1SpK6O9SgItteU5Vqps+sjZX7NiAe3JA
+         I59RrYWOFvbh7JnTtzC7xIvSmAVGVS4MhD1mwlNQdQ0ImvfmPS+2Ci/O9wqiaUn5uLik
+         N4ZlcV0/9vo0wik9030EzVXXTokbN3tIDEYt9jnbXysE4FfS83magKKbr2H0mLj0q3/+
+         QWaQ==
+X-Forwarded-Encrypted: i=1; AKwUvBy3A2J0WIS3f+wMy0eMwFwnf0sQSJPkfrtvj+pW4RiPutPln9uE4qx9TgxVXMT6pNU0wlkHd0rMAJw=@vger.kernel.org
+X-Gm-Message-State: AFuF++m7R5THZoLfJj96arBqbq04/e8D99fR1YEDogqJurN+TbsT6a05
+	kNWc/t40K5EpvzVvwEICBVy2cdmDolUcfCYqFPSF2QIJjxlhf9Xge4uL1rOoqV87qA==
+X-Gm-Gg: AYBFou0JkFM7cR7Z3On3MbcZmUzXB0yJJEoHJjU2DIcwkl1dQzNvxwU/DfWK1aPXmwG
+	UEIMFOKLP5YfksikDqrBWkWlCe7dHtggNwMsTYCyAHmmdMnp0AAeC9E/XNeLefkZK5L96QfAevO
+	FOsDKVWyhwQrbAq8r/7Df5SJNjaHuceyPFl8JH0tAMnt7IEr1feKPD2e/boN7J5TxG+Gtly0I4X
+	8enfx9B1MIFeYQ7V7D9tg/ZTxbIBLN/ihMzUe8L02X2unBglTXnBKK82q0n7kyMLAzmk7RCCYoe
+	xtiHOkkKD7BPL/77CvtuVgMFodSvjrQbNZJg+NgocAJxFt8fYGbFUOmiLanT3qstA7+NElbgZTh
+	XL498Updc9KW2RHNfr8z4sWqxj0CZuGP3t6e5GCdefDjjaTPWqnWbYuCvWEQiEkhcwPf7yny+gZ
+	t/aHBVTHTJkCPBTPLLxcd/AW/NF6lQbyy369CsxH043K83z8OdD6lfwDC4hZekmuDvyug2bLSsQ
+	K116JwAmgOGPi3bcVqQiw3iinvfxEQQjVaQRFkJIiFGGPs=
+X-Received: by 2002:a17:902:ce8a:b0:2ce:b436:272a with SMTP id d9443c01a7336-2dd5e385cb3mr1616295ad.3.1789326466028;
+        Sun, 13 Sep 2026 12:07:46 -0700 (PDT)
+Received: from google.com (164.210.142.34.bc.googleusercontent.com. [34.142.210.164])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2dd561e2af6sm14996025ad.70.2026.09.13.12.07.42
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 13 Sep 2026 12:07:45 -0700 (PDT)
+Date: Sun, 13 Sep 2026 19:07:38 +0000
+From: Pranjal Shrivastava <praan@google.com>
+To: Anna Schumaker <anna@kernel.org>
+Cc: linux-nfs@vger.kernel.org, Trond Myklebust <trondmy@kernel.org>,
+	Chuck Lever <cel@kernel.org>, Jeff Layton <jlayton@kernel.org>,
+	linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
+	Logan Gunthorpe <logang@deltatee.com>,
+	Jason Gunthorpe <jgg@ziepe.ca>, linux-pci@vger.kernel.org,
+	linux-rdma@vger.kernel.org, Shivaji Kant <shivajikant@google.com>
+Subject: Re: [PATCH v6 0/5] nfs: modernize direct I/O path
+Message-ID: <aqb0ejwzD8citck6@google.com>
+References: <20260814143255.861084-1-praan@google.com>
+ <aqP6nM7OSX087UCs@google.com>
+ <0b3d8f13-e691-411a-a507-d3e6bd1608c6@app.fastmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -49,50 +82,39 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <4nxyshx26bl5r7jjjnghsyz7k63lah6zx77cuea37mziww7kb4@iij5g3om67ub>
+In-Reply-To: <0b3d8f13-e691-411a-a507-d3e6bd1608c6@app.fastmail.com>
 
-On Sun, Sep 13, 2026 at 11:35:59AM +0200, Manivannan Sadhasivam wrote:
+On Fri, Sep 11, 2026 at 10:41:57AM -0400, Anna Schumaker wrote:
+> Hi Pranjal,
 > 
-> pci_epc_mem_map() is already useless in the eDMA path today. So this patch
-> doesn't change that.
+> On Fri, Sep 11, 2026, at 8:57 AM, Pranjal Shrivastava wrote:
+> > On Fri, Aug 14, 2026 at 02:32:50PM +0000, Pranjal Shrivastava wrote:
+> >> Modernize the NFS Direct I/O path as a preparatory step to enable PCI
+> >> Peer-to-Peer DMA (P2PDMA) support. Following feedback on the initial
+> >> RFC [1], the modernization and architectural changes are split into
+> >> different series. Additionally, based on the discussion in the v2 [2]
+> >> of this series, the migration of NFS Direct I/O to folios would be
+> >> handled in a separate follow-up series.
+> >> 
+> >> Currently, NFS O_DIRECT relies on the legacy iov_iter_get_pages_alloc2()
+> >> API which does not support the pinning requirements for P2P memory.
+> >> The implementation moves NFS to the modern iov_iter_extract_pages() API.
+> >> 
+> >
+> > Gentle ping on this series. 
+> > (I realized that I sent it close to the merge window, Apologies).
+> >
+> > Please let me know if anything else needs to be done for this..
+> 
+> Thanks for the ping! The plan right now is to send it along as part of
+> the 7.4 merge window. I haven't pushed out a public linux-next branch
+> yet, but when I do these patches will be included.
+> 
+> I hope this helps!
+> Anna
+> 
 
-I'm not sure if useless is the proper word here.
-Redundant is perhaps a better word.
+Thanks a lot for responding, quite helpful! :)
 
-
-Let me explain using pci-epf-test.c:pci_epf_test_read() as an example:
-
-Without the patch in $subject, on a DWC based platform:
-
-pci_epc_mem_map() will setup an iATU entry, and the eDMA transaction will then
-be translated using that iATU entry, before being sent out on the PCIe bus.
-
-So the iATU entry is actually being used.
-
-
-After the patch in $subject, on a DWC based platform:
-
-pci_epc_mem_map() will setup an iATU entry, however, because of the DMA_BYPASS
-bit, that iATU entry will not be used, and the transaction will be send out on
-the PCIe bus untranslated.
-
-
-So I would argue that it is only after this patch that pci_epc_mem_map() will
-setup an iATU entry that will then never be used.
-
-Yes, I think I understand that you are trying to say that, for DWC based
-drivers, we could theoretically skip the pci_epc_mem_map() call, and send the
-transaction untranslated.
-
-My point is that it feels silly to set the DMA_BYPASS bit without also making
-sure that the pci_epc_mem_map() calls are either removed or (at least for DWC
-based platforms) modified to not set up an iATU entry in the DMA path in the
-first place.
-
-I am happy that this is getting cleaned up, I just don't like a half cleanup
-where we, after this commit, will setup+teardown iATU entries that will then
-never be used for the actual transaction.
-
-
-Kind regards,
-Niklas
+Best,
+Praan
