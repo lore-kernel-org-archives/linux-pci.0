@@ -1,81 +1,132 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mout02.posteo.de (mout02.posteo.de [185.67.36.66])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2748032B13F;
-	Sun, 13 Sep 2026 16:21:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D10529D260
+	for <linux-pci@vger.kernel.org>; Sun, 13 Sep 2026 16:24:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.67.36.66
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789316520; cv=none; b=nZWyE4l3XUJVyYsxRRZ9OK5foXF00lm5gJ1sPlEAU96Ks5YmvKu4je53hf8Ncq3+2uKLnVjfEtNc5dEHHhoWfGawz/OHB9ysxh0huitcFatCJsU50Yi33FM2yi9JIHWD+Z/LyXNWIPfqQnWhpXVMMnLWkSqSB1KI5zcaJHskhLQ=
+	t=1789316655; cv=none; b=bMBbvrkB838knk6ROZjOgwJ80c7HsoK4a6b9hmXehaBd1+VksLf3HHJ5luUKTuDVuGNJhUSfh515YV5ufDoOyQBbol/2KlTxaIgxXcJTENkax5dXh6FHH1Y5bos769yaz0YO29KQJGuYipq+lRmjfMwtV94ZuS0IoFt09iGNcYg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789316520; c=relaxed/simple;
-	bh=uDYWarSjkmQIeXTUfmv2ZTfx6+NuARYFNNm1vRhQnP0=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=VbjPZAbd6ou+LIndz8DAqkdD7UW6c/yWmQN8icdsQOXnfAJDbZ4dFyTejSOoGyb/usmfZn2nuJ1/n34SZH3gONEzOjeqzTptDWse13VW10Ichscy3IfPGDQ+JOuSzCJBUwPYYVFfcLgTfZrgY/un2VibBn9A+N+QFQRU+zYm7zE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=V4LCaINw; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789316655; c=relaxed/simple;
+	bh=yymUnlFMbFRaI+zM6TZ1QhF7FtNy1mLIdFau2Q5EO9Q=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=M5jpH/LlU2cwKXlg85P1TlKTlQMnqoKH0xnUdiZ7o79HjuJZYEU7jXgG5wf7N+g2SJFi5usRcxxOsdPscYu+CC3Piz1PdLmiz4QrFWrY/Y3nMa16L3nytDIwxPyEHLfly1B2yYKXC2NpV0OBiQ+L/V0yjB767y7c3uLPuRM77GI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de; spf=pass smtp.mailfrom=posteo.de; dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b=CmeI1HTQ; arc=none smtp.client-ip=185.67.36.66
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=posteo.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="V4LCaINw"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 14FB71F000FF;
-	Sun, 13 Sep 2026 16:21:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789316518;
-	bh=/CZbOVsGkzRLa7fhYQvQsSHw4ByQTxdKv0EzRhQpTRU=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=V4LCaINw/VDINEuZut01BhlLfe+AL5eFkfVuUeZ9WpFh9syAKq/nnGvLwvAgh/A26
-	 InyjNt1Qgk5v328MAQkg3Jw142tISwo2zgBNaFPPckFYyfmWMvxvzkfdvJi7V3fHat
-	 wH1mBO/LeD+zLjGdPgvUXBOBiLaTtZ6jW1bIZ6HiIC2kJ0SMIWeaq3W7uk389uO8P7
-	 OqribasqwaNnEhehfllS+M9lpM966tjevr+EADTwRSgJvKxz7O2lxd7oTotpM2qclz
-	 GJKGYJzvkC76ELNgb5xzftNp92xylKDMIRimRCBeBAfXO9ekuupOR9In5e1a5pOrrn
-	 9Io+vCdVYCDQw==
-From: sashiko-bot@kernel.org
+	dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b="CmeI1HTQ"
+Received: from submission (posteo.de [185.67.36.169]) 
+	by mout02.posteo.de (Postfix) with ESMTPS id 0A864240101
+	for <linux-pci@vger.kernel.org>; Sun, 13 Sep 2026 18:24:09 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=posteo.de;
+	s=1984.8680eb; t=1789316649;
+	bh=BR/kOTPy8WlHRCwmQBBq1dgGLlhcCxn5wBHj3AWf0ds=;
+	h=Message-ID:Subject:From:To:Cc:Date:Autocrypt:Content-Type:
+	 MIME-Version:OpenPGP:From;
+	b=CmeI1HTQXWsoeMbKl3FUmjpTMxqn6piWiDlnd9yKalMXWdhPOwQE9nN058QRnUCIh
+	 nAC4yhrx1O1h5N+slqlPSIMF3wN+v+sBeoc1vQta4I6VFaP0AzpLhNuVfL+mZOtKlv
+	 DYvfubdeWf9lnzc5+FqG60n3/EVbq/WODnhYJC4pImEkZ+DFYpBhOdIUrguJhyflWI
+	 rmfdZ6vJpARiQU2HyuxFsgrwYeovhVvGZf12UVKmvWbPQT8wBhCbzHTaVqk6lznFKz
+	 +xYmPfkUwRynQI4bcF4dNt3ltWsHEEMBuMfEjbM89xpdt1/GNINcmQO7sJUEklOzBO
+	 ZEjEvOtaeSJrw==
+Received: from customer (localhost [127.0.0.1])
+	by submission (posteo.de) with ESMTPSA id 4hjYWT2yTJz9rxK;
+	Sun, 13 Sep 2026 18:24:05 +0200 (CEST)
+Message-ID: <bd1aeb53bb12077d1406e724b66bc78ff17fbbc2.camel@posteo.de>
 Subject: Re: [PATCH v25 2/4] rust: leds: add Mode trait
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Markus Probst" <markus.probst@posteo.de>
-Cc: linux-leds@vger.kernel.org, lee@kernel.org, gary@garyguo.net, linux-pci@vger.kernel.org, ojeda@kernel.org
+From: Markus Probst <markus.probst@posteo.de>
+To: Lee Jones <lee@kernel.org>, Pavel Machek <pavel@kernel.org>, Greg
+ Kroah-Hartman <gregkh@linuxfoundation.org>, Dave Ertman
+ <david.m.ertman@intel.com>, Leon Romanovsky	 <leon@kernel.org>, Miguel
+ Ojeda <ojeda@kernel.org>, Alex Gaynor	 <alex.gaynor@gmail.com>, Gary Guo
+ <gary@garyguo.net>,  =?ISO-8859-1?Q?Bj=F6rn?= Roy Baron	
+ <bjorn3_gh@protonmail.com>, Benno Lossin <lossin@kernel.org>, Andreas
+ Hindborg	 <a.hindborg@kernel.org>, Alice Ryhl <aliceryhl@google.com>,
+ Trevor Gross	 <tmgross@umich.edu>, Danilo Krummrich <dakr@kernel.org>,
+ "Rafael J. Wysocki"	 <rafael@kernel.org>, Bjorn Helgaas
+ <bhelgaas@google.com>, Krzysztof =?UTF-8?Q?Wilczy=C5=84ski?=	
+ <kwilczynski@kernel.org>, Boqun Feng <boqun@kernel.org>, Daniel Almeida	
+ <daniel.almeida@collabora.com>, Tamir Duberstein <tamird@kernel.org>, 
+ Alexandre Courbot <acourbot@nvidia.com>, Onur =?ISO-8859-1?Q?=D6zkan?=
+ <work@onurozkan.dev>, Ira Weiny	 <iweiny@kernel.org>
+Cc: rust-for-linux@vger.kernel.org, linux-leds@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Date: Sun, 13 Sep 2026 16:24:07 +0000
 In-Reply-To: <20260913-rust_leds-v25-2-1a10371d78c3@posteo.de>
 References: <20260913-rust_leds-v25-0-1a10371d78c3@posteo.de>
- <20260913-rust_leds-v25-2-1a10371d78c3@posteo.de>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Sun, 13 Sep 2026 16:21:57 +0000
-Message-Id: <20260913162158.14FB71F000FF@smtp.kernel.org>
+	 <20260913-rust_leds-v25-2-1a10371d78c3@posteo.de>
+Autocrypt: addr=markus.probst@posteo.de; prefer-encrypt=mutual;
+ keydata=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
+ jfGillcaQOqFZ3WwVqyzG1BUfTow==
+Content-Type: multipart/signed; micalg="pgp-sha256";
+	protocol="application/pgp-signature"; boundary="=-OaxUqTEkTo+BhzyBoF/J"
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+OpenPGP: url=https://posteo.de/keys/markus.probst@posteo.de.asc; preference=encrypt
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
-- [Low] The `core` import uses horizontal formatting instead of the require=
-d vertical format.
-- [Low] The commit message description is not capitalized, violating the LE=
-D subsystem guidelines.
---
 
-commit fc494e48581e40fa3f62db639a08746b74e239f2
-Author: Markus Probst <markus.probst@posteo.de>
+--=-OaxUqTEkTo+BhzyBoF/J
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-rust: leds: add Mode trait
-
-This commit adds the Mode trait to allow for other types of led class
-devices in LedOps.
-
-> rust: leds: add Mode trait
-
-[Severity: Low]
-This isn't a bug, but the commit message description is not capitalized,
-violating the LED subsystem guidelines.
-
-The global review guidelines for the LED subsystem mandate that the
-description following the commit message prefix must be capitalized.
-
-Should the description start with a capital letter, as in "rust: leds: Add
-Mode trait"?
-
-[ ... ]
-
+On Sun, 2026-09-13 at 16:15 +0000, Markus Probst wrote:
+> Add the `led::Mode` trait to allow for other types of led class devices
+> in `led::LedOps`.
+>=20
+> Signed-off-by: Markus Probst <markus.probst@posteo.de>
+> ---
+>  rust/kernel/led.rs        | 37 ++++++++++++++++++++++++++-----------
+>  rust/kernel/led/normal.rs | 12 ++++++++++--
+>  2 files changed, 36 insertions(+), 13 deletions(-)
+>=20
 > diff --git a/rust/kernel/led.rs b/rust/kernel/led.rs
-> index deda8cc548a8c..7cd8f0504649a 100644
+> index deda8cc548a8..7cd8f0504649 100644
 > --- a/rust/kernel/led.rs
 > +++ b/rust/kernel/led.rs
 > @@ -4,11 +4,7 @@
@@ -89,17 +140,31 @@ Mode trait"?
 > -};
 > +use core::{marker::PhantomData, mem::transmute, ops::Deref, ptr::NonNull=
 };
+supposed to be vertical.
 
-[Severity: Low]
-This isn't a bug, but does this import for the core crate use horizontal
-formatting instead of the required vertical format?
+Thanks
+- Markus Probst
 
-The kernel Rust coding guidelines explicitly require using the vertical
-import style for non-vendored crates. The commit replaces a multi-line
-vertical import block with a single-line horizontal block.
+--=-OaxUqTEkTo+BhzyBoF/J
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-Should this be changed back to the vertical format?
+-----BEGIN PGP SIGNATURE-----
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260913-rust_leds-=
-v25-0-1a10371d78c3@posteo.de?part=3D2
+iQJPBAABCAA5FiEEgnQYxPSsWOdyMMRzNHYf+OetQ9IFAmqmziQbFIAAAAAABAAO
+bWFudTIsMi41KzEuMTIsMiwyAAoJEDR2H/jnrUPSGAsQAJKm37JDmgYQ7+ndKdPv
+Jjf+780GMAfSCqHfM8Y1bEZZBXfUBlQvN6Pnx50NBlK9xDlDOBrdq1ji7u1gxSUu
+j+crXgluVMYgAcgOkRovg5a2qTer6/xDDyuEkk49ps4jaCuupDKw2rjSMc8x+AQ4
+Kr/wrN7uqy4oZijv06lMGu3pih6l+SYy+BTjX1ptzE9/8tSPozbn46Ho8TbtkcHW
+s6fgsSSFyXauW0otO4dfJpn6X/OIo1utIsxsQN9m//aQ5OdxUmhd7z2uO2WgjrTL
++lbhWTUNl1tyIgd7pV6xDQcdGNwCyBJA+E34YeflcNxs1vQfsqwIcBn0pye++mjp
+PFPad08ClzgDQ4Fi307a3Ja+L63UZbtJdJSHdIrFpAlbnRPhhTE3NiLeV+tnNlvT
+VEtY4EKm/90ZbWHQ9nNspCNR21ILHnDYqM1ZAvAqJVBjsFla6tHvTiqPGXj2PcY8
+tfu1Wg+QkOKYi0xnXOjBPtEkM3UVAfIR2Nth4b4NE5o6ldNvMmO5YRUptZVVU0fS
+oE3iq9UDstB346JlK72QL1uy30il/BO2NaQxdnEFOyUMJQZnQdxsUfxwC3NVtUIG
+WNfMigdBpnW1fLuouhtRkZcmPkEbLD6H5jvfV92OBZqvOIVN/kEyGgucAvCuK09x
+bJT1hzRNamyhVVe6B7EMQqVc
+=pH62
+-----END PGP SIGNATURE-----
+
+--=-OaxUqTEkTo+BhzyBoF/J--
