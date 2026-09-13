@@ -1,141 +1,83 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B2111A6816;
-	Sun, 13 Sep 2026 09:49:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F8FF38E8DC;
+	Sun, 13 Sep 2026 10:56:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789292969; cv=none; b=GExvjF2FS6EeXrEs0CgDO4m0/mAwR3iGvMMtG+bcTMWWRuqNz6Oz+sTf7zoxoqIkFNxU8cYFGfvnEUdmfdyCU6AiLJYs5BPdw0AcrNZqjyTGPL/YRwX7EXjUeJ5dga8TtMfkg+c9IZWEsHfjbyE2xYGSKaXhP9J1ww3Lp0E1N4Y=
+	t=1789296988; cv=none; b=Qyly4BlXUHP6ZiD4pp7HfxxCtR9S85c7zS52W0FpDaI6t0xHiUVNhI3GHCZeZnIhM/5nvHnu4St+MOipbdS2QTByhOr0oehJbjt7wxFT48YD7POyIp7NzIa4Y3ATiwTTUL9pab8Zi2MwpRRc537DoZ+8k6N9WqU9zFfxegvB5kw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789292969; c=relaxed/simple;
-	bh=mGAg4rKunkIul1QDQuUassVbQndYIl+aQxGofMURzUU=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=j1e5p6dHcuhzvGG3zBN5qpb7Syoo4ew9znIajUKqZavGbH5IOrAT6bSYOdasCqrTpVgVS17Lwle6H370aL1VSlW/kHfAYbLrmMPooG20oR0c3qsWEH7EwhXg1dP+jBHeruJlPWBd0XFkky/wgYgky197VPX1Tox9FjpsOaNO/Vo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PfBvxpKE; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789296988; c=relaxed/simple;
+	bh=DkYudfRAWYULI4l2ud6apHWGyNTThqZZabQlOBJNcI0=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=D5BgALuKO+/1+9V5sR3wo9UB4PBG3BMROM7mIEHX8JV2+tksWFlLf2MrCWtzCg8YV5GsDfdV6dXfiqfUGU9aHp9olx5st5p7ssUhVX/wtPIeZqYYq9gV1lmcg1mYvHoRUYKvhDx5YuD+V/SmleK9F2YbeY5mcOfFjBmn8hlYvlE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fjMB8AUd; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PfBvxpKE"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F1DC51F000FF;
-	Sun, 13 Sep 2026 09:49:16 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fjMB8AUd"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6A7D61F000FF;
+	Sun, 13 Sep 2026 10:56:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789292967;
-	bh=Tg5IU0+H9KMkSOpIVEYusfjm6bIb4fQEllwynyz0EVc=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date;
-	b=PfBvxpKEvpJ5VLvXhFNDyHaYXB+ow/oOmmQUHohuPRTQ5OidCuKr72NVna21Lhj74
-	 r5JNth+EicGcrCC7nWRPU3KP7VvVO3pSw3SMgGmOSz4IhFnNf6O4Pe/2yjIehooC1j
-	 V5gfQBN3V7CSTiFObippk57pdzCBTAaYjhpBs8h86PcRmrAVE5mHCe8CBXR8sdZ9lI
-	 hOiIl8GhtQRUZJhWmq4v0gpGo2yCDfi4JJ5+JCDbKJMzUMLQpHEY7eL23wcPEXXOYK
-	 YUZArZv4sXfKDhvHqKab4q5jTSS5LAjaBXREtzk2jtVz45lYaQ3li0P61UqlG1ww9i
-	 AGBthjzkxuVUQ==
-From: Andreas Hindborg <a.hindborg@kernel.org>
-To: Gary Guo <gary@garyguo.net>, Alice Ryhl <aliceryhl@google.com>
-Cc: Danilo Krummrich <dakr@kernel.org>, Lorenzo Stoakes <ljs@kernel.org>,
- Vlastimil Babka <vbabka@kernel.org>, "Liam R. Howlett"
- <liam@infradead.org>, Uladzislau Rezki <urezki@gmail.com>, Miguel Ojeda
- <ojeda@kernel.org>, Boqun Feng <boqun@kernel.org>, Gary Guo
- <gary@garyguo.net>, =?utf-8?Q?Bj=C3=B6rn?= Roy Baron
- <bjorn3_gh@protonmail.com>, Benno
- Lossin <lossin@kernel.org>, Trevor
- Gross <tmgross@umich.edu>, Daniel Almeida <daniel.almeida@collabora.com>,
- Tamir Duberstein <tamird@kernel.org>, Alexandre Courbot
- <acourbot@nvidia.com>, Onur =?utf-8?Q?=C3=96zkan?= <work@onurozkan.dev>,
- Lyude Paul
- <lyude@redhat.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Arve
- =?utf-8?B?SGrDuG5uZXbDpWc=?= <arve@android.com>, Todd Kjos
- <tkjos@android.com>, Christian
- Brauner <brauner@kernel.org>, Carlos Llamas <cmllamas@google.com>, "Rafael
- J.
- Wysocki" <rafael@kernel.org>, Dave Ertman <david.m.ertman@intel.com>, Leon
- Romanovsky <leon@kernel.org>, Paul Moore <paul@paul-moore.com>, Serge
- Hallyn <sergeh@kernel.org>, David Airlie <airlied@gmail.com>, Simona
- Vetter <simona@ffwll.ch>, Alexander Viro <viro@zeniv.linux.org.uk>, Jan
- Kara <jack@suse.cz>, Igor Korotin <igor.korotin@linux.dev>, Viresh Kumar
- <vireshk@kernel.org>, Nishanth
- Menon <nm@ti.com>, Stephen Boyd <sboyd@kernel.org>, Bjorn Helgaas
- <bhelgaas@google.com>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?=
- <kwilczynski@kernel.org>,
- Pavel Tikhomirov <ptikhomirov@virtuozzo.com>, Michal Wilczynski
- <m.wilczynski@samsung.com>, Ira Weiny <iweiny@kernel.org>, Matthew Brost
- <matthew.brost@intel.com>, Thomas =?utf-8?Q?Hellstr=C3=B6m?=
- <thomas.hellstrom@linux.intel.com>, Philipp Stanner <phasta@kernel.org>,
- rust-for-linux@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-mm@kvack.org, driver-core@lists.linux.dev,
- linux-block@vger.kernel.org, linux-security-module@vger.kernel.org,
- dri-devel@lists.freedesktop.org, linux-fsdevel@vger.kernel.org,
- linux-pm@vger.kernel.org, linux-pci@vger.kernel.org,
- linux-pwm@vger.kernel.org, linux-usb@vger.kernel.org, Oliver Mangold
- <oliver.mangold@pm.me>, Viresh Kumar <viresh.kumar@linaro.org>
-Subject: Re: [PATCH v21 4/9] rust: rename `AlwaysRefCounted` to `RefCounted`.
-In-Reply-To: <DLCHKYBQ3WF1.B8YPUTAKNM7@garyguo.net>
-References: <20260910-unique-ref-v21-0-e83257373062@kernel.org>
- <20260910-unique-ref-v21-4-e83257373062@kernel.org>
- <CAH5fLghUQW5urTfLCCDT4BhuqoFVoLUAG46TS-SxaS37bJcgWQ@mail.gmail.com>
- <DLCHKYBQ3WF1.B8YPUTAKNM7@garyguo.net>
-Date: Sun, 13 Sep 2026 11:49:12 +0200
-Message-ID: <875x09v5uv.fsf@kernel.org>
+	s=k20260515; t=1789296986;
+	bh=LR2A0Swu9+UzeDAUKc/L2DdjU8RKz9nn4+AWjlmEqkA=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Date;
+	b=fjMB8AUdSITAF7nA00nrqb7Ty6ZtwllLb6boF66Hj5HGG/ChDxWlFrf+KNz04LBVS
+	 r3BKs+CUTY8kO4ZwSPTARfJghGQ/zGwI3jaPLlc+RachUlBF7YxirxP47uEBElTJMN
+	 cvMJR5uIFfZmOFDv7a8rN1Av/GaD/KHYO32q7KrVA2sZC7rFBpYGAjnzCqmCSzhbnJ
+	 Q3CGLYaa+F4vBrYVK6mMEaUk2wXap6yWeBnP4tqreF1JkmOemj5q2AwtenePglyCyE
+	 tWQwVbvGeEYPlJ4fMBob8vmnYnmqK6fNfxa/4eq67P4Io43xE0QxAxUjuGNNetLASE
+	 nXnJBU8JAepyQ==
+From: Vinod Koul <vkoul@kernel.org>
+To: Neil Armstrong <neil.armstrong@linaro.org>, 
+ Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+ Conor Dooley <conor+dt@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+ Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ Manivannan Sadhasivam <mani@kernel.org>, 
+ Bjorn Andersson <andersson@kernel.org>, 
+ Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>, 
+ Bartosz Golaszewski <brgl@kernel.org>, 
+ Konrad Dybcio <konradybcio@kernel.org>, 
+ Sushrut Shree Trivedi <sushrut.trivedi@oss.qualcomm.com>
+Cc: linux-arm-msm@vger.kernel.org, linux-phy@lists.infradead.org, 
+ devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ linux-pci@vger.kernel.org
+In-Reply-To: <20260831-shikra-upstream-v2-0-406661d75afa@oss.qualcomm.com>
+References: <20260831-shikra-upstream-v2-0-406661d75afa@oss.qualcomm.com>
+Subject: Re: (subset) [PATCH v2 0/5] PCI: qcom: Add PCIe support for Shikra
+ SoC
+Message-Id: <178929698100.215437.3521119233132524977.b4-ty@kernel.org>
+Date: Sun, 13 Sep 2026 16:26:21 +0530
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.14.3
 
-"Gary Guo" <gary@garyguo.net> writes:
 
-> On Fri Sep 11, 2026 at 10:08 AM BST, Alice Ryhl wrote:
->> On Thu, Sep 10, 2026 at 11:01=E2=80=AFAM Andreas Hindborg <a.hindborg@ke=
-rnel.org> wrote:
->>>
->>> From: Oliver Mangold <oliver.mangold@pm.me>
->>>
->>> There are types where it may both be reference counted in some cases and
->>> owned in others. In such cases, obtaining `ARef<T>` from `&T` would be
->>> unsound as it allows creation of `ARef<T>` copy from `&Owned<T>`.
->>>
->>> Therefore, we split `AlwaysRefCounted` into `RefCounted` (which `ARef<T=
->`
->>> would require) and a marker trait to indicate that the type is always
->>> reference counted (and not `Ownable`) so the `&T` -> `ARef<T>` conversi=
-on
->>> is possible.
->>>
->>> - Rename `AlwaysRefCounted` to `RefCounted`.
->>> - Add a new unsafe trait `AlwaysRefCounted`.
->>> - Implement the new trait `AlwaysRefCounted` for the newly renamed
->>>   `RefCounted` implementations. This leaves functionality of existing
->>>   implementers of `AlwaysRefCounted` intact.
->>>
->>> Suggested-by: Alice Ryhl <aliceryhl@google.com>
->>> Reviewed-by: Daniel Almeida <daniel.almeida@collabora.com>
->>> Signed-off-by: Oliver Mangold <oliver.mangold@pm.me>
->>> [ Andreas: Updated commit message and rebase on rust-next (7.2) ]
->>> Acked-by: Igor Korotin <igor.korotin.linux@gmail.com>
->>> Acked-by: Danilo Krummrich <dakr@kernel.org>
->>> Acked-by: Viresh Kumar <viresh.kumar@linaro.org>
->>> Reviewed-by: Gary Guo <gary@garyguo.net>
->>> Assisted-by: LLM
->>> Co-developed-by: Andreas Hindborg <a.hindborg@kernel.org>
->>> Signed-off-by: Andreas Hindborg <a.hindborg@kernel.org>
->>
->> This has a lot of safety comments of the form "This does not implement
->> Ownable, *therefore* it can implement AlwaysRefcounted". But I think
->> the safety comment should instead explain that it's okay to create an
->> ARef<_> from an &_ for this type. The fact that Ownable is not
->> implemented is not sufficient argument.
->>
->> Alice
->
-> Yeah, I think for types that currently implement `AlwaysRefCounted` and d=
-oes not
-> have a new `Ownable` form, it should keep saying that "this is always ref=
-erence
-> counted".
+On Mon, 31 Aug 2026 12:56:00 +0530, Sushrut Shree Trivedi wrote:
+> Add PCIe support for Shikra target, by adding dt-bindings for phy,
+> controller and corresponding phy & controller drivers/device-tree
+> changes.
+> 
+> Shikra RC is connected to TC9563 PCIe switch on all three
+> EVK variants: CQS, CQM and IQS. The individual downstream ports
+> of TC9563 connect like below:
+> 
+> [...]
 
-Makes sense, I will fix them.
+Applied, thanks!
+
+[1/5] dt-bindings: phy: sc8280xp-qmp-pcie: Document Shikra PCIe phy
+      commit: 0f654af456b5e347dd69d58c2fc6d7e17c36a6d1
+[4/5] phy: qcom: qmp-pcie: Add QMP PCIe PHY support for Shikra
+      commit: 3518d967d8b64485f9dbf90bfeba1f341ef4c131
 
 Best regards,
-Andreas Hindborg
-
+-- 
+~Vinod
 
 
