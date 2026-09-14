@@ -1,116 +1,134 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qv2-f12.google.com (mail-qv2-f12.google.com [74.125.230.140])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 26817271464;
-	Sun, 13 Sep 2026 23:34:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 521B51A9FB7
+	for <linux-pci@vger.kernel.org>; Mon, 14 Sep 2026 01:24:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.230.140
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789342493; cv=none; b=F874NPqEk/yMzSLlFOhjSPi5AjISYp0Zp0+WvQzlbDuhed3LLRBNvSotYjSd5dVGnafi1Qh3k3BFnrJmS3AgMvgqBO5ztwYosFpcrHekfHZ3MTlGNCaoi/QrFL+s6xOdrRXQ65XKdCfQWEA6dLhd/9ozyDCUjYPG8VsCTLbk6ps=
+	t=1789349091; cv=none; b=V1o8DzC2oU8c+7RJg1eRB3ec08iX75eWLNJcRrs+UtaLTufGKYh+eRUYXczfiWDT6iQjRixTfTHugGfU2ARYtDe6HPeeBaZz0LH/4/b56psgFiWEklWb7g3+6dXLNIlk+X/80UDKXQNIQ6fV7/SPOACjJyLMx7SRq8baSnEmhhI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789342493; c=relaxed/simple;
-	bh=YZE4BwU4qtMAogi/3Dlpj3U9IsDoADjsg16MrNRuDco=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=SrMcmpa9fPTSGw+4+Ezj+Lvzyl49Myzmuw8eF+bmv9vo3QIPY/35JHlWnssKDdZqxSrMnzSvkpZVMKm49ZECh428Y6rSpaPnu+WiYS+/nqTonF5UycpsUlLsRkKT3Ik/h7cAcZAT8RPqsUHLHfl0M/m+XFk+J2oo3j9GAIRlFTE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=m2aI7UY1; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789349091; c=relaxed/simple;
+	bh=EVl1dseH/hcQ6vvbH95CZ40hP0Pvxu+bkOOT1iVUm+k=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=jwaws0GJmaU4B2J+ny+mfFpNjCjDbV2L7IXNGfa3b0dT1LH1+L6dVabm6pzDJLHHlBiFDkgDn3XFuMSK2fGjcCAj2T5UBiXnx5NNVHaKS12/bzBgBVSTfoPIvVj/WGGcGTK4C24bZMemtPkwva6M1feoBPnGaYIpJQh0ZtKb+/s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=HctuGOHF; arc=none smtp.client-ip=74.125.230.140
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="m2aI7UY1"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 95D691F000FF;
-	Sun, 13 Sep 2026 23:34:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789342491;
-	bh=DXK3aFyXFtNdiAF1Cgs5lDGN4nEnz+MRU2y6MDtyg4U=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=m2aI7UY1fV3sGg9PT+CQjalBjs5GJVImo4Mbj7ASq22GBcP3Nl/HZEEbI8ErDgw5s
-	 qmsSNQmHDSEoG7xdy4nlv58jRAmC4pz6VrnIy35cdqrNk49l92YBusppkbsJTCOtvd
-	 ExL7SSEXggflVtIg8DbG1I9Jr0Hhc0oYnzViRn1acBj3dl1cUqvlQin66L9USIHR7H
-	 33mPyQpTjJNfxieF3PK6+0apex6pNg6qK980gjMgLr7iC6MdNn6KdPe07T0lfSMcoI
-	 ODhAlTjPGdVmeeZWVDYxcwSap6lfQKQWq5y9J0lHrNDQ0yGASkfF2JEYOUlApZ47zt
-	 viyKkhCJ884ng==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2] PCI: hv: hardwire PCI_INTERRUPT_PIN to 0
-Reply-To: sashiko-reviews@lists.linux.dev
-To: wei.liu@kernel.org
-Cc: linux-pci@vger.kernel.org, linux-hyperv@vger.kernel.org
-In-Reply-To: <20260913232255.2801797-1-wei.liu@kernel.org>
-References: <20260913232255.2801797-1-wei.liu@kernel.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Sun, 13 Sep 2026 23:34:51 +0000
-Message-Id: <20260913233451.95D691F000FF@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="HctuGOHF"
+Received: by mail-qv2-f12.google.com with SMTP id 6a1803df08f44-91058dd77a2so25854196d6.3
+        for <linux-pci@vger.kernel.org>; Sun, 13 Sep 2026 18:24:50 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1789349089; x=1789953889; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=qJIMkfpIudRGMH24Z8qD5n1KKI9enVz4TS3USZ/AkDA=;
+        b=HctuGOHFrYU7DFaNZeCAd5DZGOIoCTDiAX8OwbEAllzjSHFd4vft41PTef3XY8VT2R
+         9bBap0BESMwhIdvMpzsiTxi7xIkxxxkJNIp+hkNUmeuO8sqZakTysNm/s3frPIet/tIo
+         GbzxZPYDg372QGKGu7Dq8AOhVOd6Gtvx2d6ev0Y7yXujoSi/63C6oOeKVIw5q5f/Kvo2
+         Dmtrc51TkngQmmfu+Fn6/e9yCSHKlqoXbucY6SrpWffU9DU65w4+JDQtgcv/jFbElJSo
+         13BE/k2BW6JQTm0D0PJcqQC6SABNFVibUi/Nu+LEkfq0v3BFELEegGHam3R3vxBe5xBt
+         AQlA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1789349089; x=1789953889;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=qJIMkfpIudRGMH24Z8qD5n1KKI9enVz4TS3USZ/AkDA=;
+        b=UZ+3pw5pivYqHThk9AsQ1AesrplWGBjJM5zw3o19WD2rcgyFwebizG8soGUeGoV0HW
+         zcRhBZqPiPUhi448kp1MnSrKGjG819LBcQubKKeSTWkTeR97chHaqSMHErusn8U+Oy0t
+         0vd5gJHl6FcSJSVYPnRC//zYZeKIcWmvtSg7SHLhwjROc/fOBOoU+SvZgjJ8/H3IHqhC
+         6Af+5y0b8N0pst6r71Goj+IqLpwl/OP0U9LE251AavVoc2WQ8JB0dUCONZdzLwe0yRW9
+         exB2ur8lmZV3QbWDaFzVmlAnjDK9NBc37zNF9knUVsosZhsX0vM6FNHcM0CM5LH5/zo0
+         cjFw==
+X-Gm-Message-State: AFuF++lBxiSDL8Ldj7lArE0YONJO+PBXGNsCCgsNSoNw7jBkRj6nmhR1
+	Oq+++HiORv9BS3OgLmLq3flZDdRXmnwYTpBfdS9ugukOkHGiykpbAVY=
+X-Gm-Gg: AYBFou1M/OFueC+NO5qpBgmJA6o+QctyY4aYRRQFYkdaQZn4lOAdv+SmJeGcYDmhs7V
+	SZAfuG2qKMypQ1IM4h7NNQ1rj5KT58i3k6fkVVrJzg5vks0kInqWunNyA26Tj9e2wlFi92AuPgx
+	85sSVLE7fIYkUWyUntwszBJlhnM1AzxncihuacVuO1nd0ei4pq2pVmAlzRSJbp5Dt2EHQ+cif6A
+	HiskUfMPxSc482o3nVPFhNKKwYTS47UeS5vnRaHf4qh8/sZRcbOrmW5zS8aP1A6UyLqKg7UqITG
+	H12e8MFLivRbaZVYVYcZN5yBIFn2CtqtgY8qX/9cfmc/JfQ8kx9jY1yJ6GbHc7axGauiRbDj/7O
+	ehbzPoT2lB+qpJ+kUPFn8kUokiiZIy+C5nZYrtoYi9jdkmzKkMt+84PwpUXliIUgIv3D1G3LuKT
+	yuw6sqC9GNWZW2jYXmj+ceEMiGzc/DegPLzlvYX131/6bR3M2GExb2lC4XqeqfLwl7LioCxvywe
+	EgL8pv2RzmMn/yp2K1aB5N7Y0XDo0da0YACGe6EoYjrhUTq5jwtFmQU2zrkUYTzrPb3FErV70fr
+	zgmFK3aAC2CirYWaoDtqFxww/oF1jcTlHQ==
+X-Received: by 2002:a05:620a:4885:b0:939:5f4d:67b0 with SMTP id af79cd13be357-93a29766649mr86078085a.8.1789349089174;
+        Sun, 13 Sep 2026 18:24:49 -0700 (PDT)
+Received: from localhost.localdomain ([104.39.73.78])
+        by smtp.gmail.com with ESMTPSA id af79cd13be357-939e809fd0bsm850352585a.33.2026.09.13.18.24.47
+        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
+        Sun, 13 Sep 2026 18:24:48 -0700 (PDT)
+From: Myeonghun Pak <mhun512@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Ijae Kim <ae878000@gmail.com>
+Subject: [PATCH 1/2] PCI: shpchp: Release MSI and MMIO resources on init failure
+Date: Sun, 13 Sep 2026 21:24:33 -0400
+Message-ID: <20260914012434.47010-1-mhun512@gmail.com>
+X-Mailer: git-send-email 2.47.1
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
-- [High] Directly modifying a u32 buffer via a char pointer cast assumes Li=
-ttle Endian memory layout, clearing the wrong byte and corrupting adjacent =
-registers on Big Endian architectures.
-- [Medium] The patch hardwires PCI_INTERRUPT_PIN to 0 for 16/32-bit reads b=
-ut completely ignores PCI_INTERRUPT_LINE, creating an inconsistent configur=
-ation space state.
---
+If request_irq() fails after enabling MSI, shpc_init() unmaps the
+registers but leaves MSI enabled and the MMIO region reserved.
 
-commit badaaf9419fe573b12895ca135de8cb0ded77d3e
-Author: Mukesh R <mrathor@linux.microsoft.com>
+Disable MSI before unmapping and release the reserved region on the
+failure path. Reuse the region cleanup for an ioremap() failure.
+pci_disable_msi() also handles the INTx fallback where MSI was not enabled.
 
-PCI: hv: hardwire PCI_INTERRUPT_PIN to 0
+These omissions are already present in the initial Git import.
 
-Hyper-V DDA does not support legacy interrupts, so the driver intercepts
-8-bit configuration reads to hardwire PCI_INTERRUPT_PIN to 0. This commit
-attempts to also hardwire the pin for 16-bit and 32-bit reads, which
-previously bypassed the emulation and leaked host hardware values.
+This issue was identified during our ongoing static-analysis research
+while reviewing kernel code.
 
-> diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller=
-/pci-hyperv.c
-> index 89816a2bd7cd3..bb4e6ca4ac1ce 100644
-> --- a/drivers/pci/controller/pci-hyperv.c
-> +++ b/drivers/pci/controller/pci-hyperv.c
-> @@ -1240,6 +1240,16 @@ static void _hv_pcifront_read_config(struct hv_pci=
-_dev *hpdev, int where,
->  			mb();
->  		}
->  		spin_unlock_irqrestore(&hbus->config_lock, flags);
-> +
-> +		/*
-> +		 * Make sure PCI_INTERRUPT_PIN is hard-wired to 0, since it
-> +		 * may be read using a 32bit read, which is skipped by the
-> +		 * above emulation.
-> +		 */
-> +		if (where <=3D PCI_INTERRUPT_PIN &&
-> +		    PCI_INTERRUPT_PIN < (where + size))
+Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
+Co-developed-by: Ijae Kim <ae878000@gmail.com>
+Signed-off-by: Ijae Kim <ae878000@gmail.com>
+Signed-off-by: Myeonghun Pak <mhun512@gmail.com>
+Assisted-by: OpenAI:GPT-5.6
+---
+Validated with an ARM64 W=1 object build and strict checkpatch.
+No hardware runtime, IRQ-failure injection or hotplug testing was done.
 
-[Severity: Medium]
-Will this leave PCI_INTERRUPT_LINE leaking host hardware state on 16-bit
-and 32-bit reads?
-
-The original code correctly hardwires both PCI_INTERRUPT_LINE and
-PCI_INTERRUPT_PIN to 0 for 8-bit reads. By only checking and clearing
-PCI_INTERRUPT_PIN here, a 16-bit or 32-bit read starting at
-PCI_INTERRUPT_LINE will bypass the emulation and return the raw host
-hardware legacy configuration to the guest.
-
-> +			*((char *)val + PCI_INTERRUPT_PIN - where) =3D 0;
-
-[Severity: High]
-Could this corrupt adjacent configuration registers on big-endian
-architectures?
-
-This pointer cast directly modifies the memory backing the u32 val buffer.
-Because a u32 is stored in CPU native endianness, treating it as a char
-array assumes a little-endian layout.
-
-On a big-endian guest, the computed byte offset will point to the wrong byte
-in the u32, such as clearing PCI_MIN_GNT instead of PCI_INTERRUPT_PIN. This
-would leave the intended pin unmodified while corrupting another register.
-
-> +
->  	} else {
->  		dev_err(dev, "Attempt to read beyond a function's config space.\n");
->  	}
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260913232255.2801=
-797-1-wei.liu@kernel.org?part=3D1
+diff --git a/drivers/pci/hotplug/shpchp_hpc.c b/drivers/pci/hotplug/shpchp_hpc.c
+index 183bf43..4492c7d 100644
+--- a/drivers/pci/hotplug/shpchp_hpc.c
++++ b/drivers/pci/hotplug/shpchp_hpc.c
+@@ -943,9 +943,8 @@ int shpc_init(struct controller *ctrl, struct pci_dev *pdev)
+ 	if (!ctrl->creg) {
+ 		ctrl_err(ctrl, "Cannot remap MMIO region %lx @ %lx\n",
+ 			 ctrl->mmio_size, ctrl->mmio_base);
+-		release_mem_region(ctrl->mmio_base, ctrl->mmio_size);
+ 		rc = -1;
+-		goto abort;
++		goto abort_release_region;
+ 	}
+ 	ctrl_dbg(ctrl, "ctrl->creg %p\n", ctrl->creg);
+ 
+@@ -1008,7 +1007,7 @@ int shpc_init(struct controller *ctrl, struct pci_dev *pdev)
+ 		if (rc) {
+ 			ctrl_err(ctrl, "Can't get irq %d for the hotplug controller\n",
+ 				 ctrl->pci_dev->irq);
+-			goto abort_iounmap;
++			goto abort_disable_msi;
+ 		}
+ 	}
+ 	ctrl_dbg(ctrl, "HPC at %s irq=%x\n", pci_name(pdev), pdev->irq);
+@@ -1041,8 +1040,11 @@ int shpc_init(struct controller *ctrl, struct pci_dev *pdev)
+ 	return 0;
+ 
+ 	/* We end up here for the many possible ways to fail this API.  */
+-abort_iounmap:
++abort_disable_msi:
++	pci_disable_msi(pdev);
+ 	iounmap(ctrl->creg);
++abort_release_region:
++	release_mem_region(ctrl->mmio_base, ctrl->mmio_size);
+ abort:
+ 	return rc;
+ }
