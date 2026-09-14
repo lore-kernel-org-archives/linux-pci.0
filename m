@@ -1,150 +1,123 @@
-Received: from mail-qv1-f50.google.com (mail-qv1-f50.google.com [209.85.219.50])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mail-4396.protonmail.ch (mail-4396.protonmail.ch [185.70.43.96])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B951451981
-	for <linux-pci@vger.kernel.org>; Mon, 14 Sep 2026 22:10:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 88BD82BEFE8;
+	Mon, 14 Sep 2026 23:28:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.70.43.96
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789423830; cv=none; b=jOJtlMEyM8WvnL4fgSHh1ma0kh66z0jeO6FcFEUVceTmIK4c1wiPiGjFGV0YWy2TwR8vvpEwoHLTEUuT0aIozwG+jx/cGTXPOLnjXhHJDDPzX89CiB34XI2Wtp8bDml2Wpu4oHCkH5dpbbG51e1jRE2Ga5zxVMJxUpG+bfvckxI=
+	t=1789428535; cv=none; b=mO8LalUHGKN6tc8imHk9jYqhbqyvs3LIcec9HyCzlEp/WF0byubhifcl87gErR9mlXC3qbpC5sgFc0R/aoIT0tq0y0Wurt386mrZs26jn9zDYBzi79ArL8wAujRIwkpaULADDWxGvHh40gPnrwVOAANHmpwh750xlzZujf+MRpU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789423830; c=relaxed/simple;
-	bh=gLzjztUBh8eUXFB5ZGRmFKOT+KaN6m6lVeXdcVVl7OY=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=TPRwnPO/chCb21Qxw6FmrNO2vZl9QXIJcmRZKth1jcHSZGyANVaiRcOpBLl54+iKQ6sIJiYyCjZpPUcfSxeCq4LppggkzBlWYH+aXdmUJ92WOLejuhB4bTlHQIMlyzQ5RP7D7r6awuoX1eBL6sZ67RoHEy/Oec6s6imAXwJWR5Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca; spf=pass smtp.mailfrom=ziepe.ca; dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b=MrNn2ABe; arc=none smtp.client-ip=209.85.219.50
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
+	s=arc-20240116; t=1789428535; c=relaxed/simple;
+	bh=so6+kpWSPAr+SaQAzS8bXa6DUJTn4TrJn7YN0EqL8rI=;
+	h=Date:To:From:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=A+1KcUP+m9fqNYriBy7m68XkMM6KkQhbK8ILqFhkI1YjsfiHTnFjrjkq11SeAyOtuG524lmyPx5G6L08Iy14kl26IJadA4DYTmXuDP85xId5qLpV74KvwGTgnlhf+qYk90YduS9HZMIvZ89NLImm4viuAaKL8OX0WrV1pUAGERQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=httpd.dev; spf=pass smtp.mailfrom=httpd.dev; dkim=pass (2048-bit key) header.d=httpd.dev header.i=@httpd.dev header.b=m262tNUn; arc=none smtp.client-ip=185.70.43.96
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=httpd.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=httpd.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="MrNn2ABe"
-Received: by mail-qv1-f50.google.com with SMTP id 6a1803df08f44-910316a2fc9so54110656d6.2
-        for <linux-pci@vger.kernel.org>; Mon, 14 Sep 2026 15:10:28 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ziepe.ca; s=google; t=1789423827; x=1790028627; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :content-type:mime-version:references:message-id:subject:cc:to:from
-         :date:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=J3XZNUGEs58um27ogp+l/DHH3zgdwh/5Gz7nOI7x+eE=;
-        b=MrNn2ABeVBBLD/psDiK3m8CL12AHXAedKA09BStuiTLavMSh2zkru9FcuKOt20Zbjd
-         MPuKWICMDaDu/HrKe+osLXQuiOHKgIz3nULbZlBumSaVQJhTLkdnV6i9qHniuVqW7zyW
-         VUq1B9Bp84J9Rmxq5H3BEM/2OYugq9xo+DVbdYSYrhWZIL6yPubVIh9tyoadKkW6MJcV
-         wsph/3jwQHxIFMT19YoinBg6KV86GUOZkG3sd6wCFOt9ngTtwh4QitLZn8CBgXRZnGDj
-         Uy/1BXjUOwpbZcfnryQr4uQtx5ZAYZ3K1fuuA9VhOBVPQzJQz323ALZB/IaHz9C4sT0n
-         44LA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1789423827; x=1790028627;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :content-type:mime-version:references:message-id:subject:cc:to:from
-         :date:x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=J3XZNUGEs58um27ogp+l/DHH3zgdwh/5Gz7nOI7x+eE=;
-        b=L8sMmUwIrJMvXXvWgG0bL317A+7G7lLaFvHX9FVPoMbOiLfqtY8ZDt2JbFbI/rUiK9
-         IuPkvw2d8AAMOsx1eeyhM6RSymw3uMkV2WoLYsT/Xgu72F44DzjDrH4+lg1u3v6uSH4U
-         RZ+wnlFLvit4+UNSAF4+7gJizsrvKoDSd820htIVsHaAUM/1wo0zIDknhiOzfNlFcCGh
-         UfhNmT7SmR2YEi6zMEBnA8s4Mt2J32yT/7hwM+pSbIlFJN4HNWnYe3qPDkPpDNtBYDvg
-         6bfbolDCRVE44GdLjp/ZIgmucI/50T5wHDVQD/z28fuubAN5eh8vFg+7j3hHTCNF4ntY
-         calw==
-X-Forwarded-Encrypted: i=1; AKwUvBzi9SLc+ppIMFjX1pg01jEe1a3/l6FD3leiXT1ckb/xqKiJ3Ce1off7jxg+YgljW2hVsCdaBxj9LY8=@vger.kernel.org
-X-Gm-Message-State: AFuF++kgiRFSqu62G3PopZDhUuUMhpRuQr1200JzGkV8aqpSd8Ry8K5R
-	ATnQVBslhMH+dEixR+uSsD0Ad6D9zySIUVo6F/80mblx3hJQgGophGJ/H/6umihY5bs=
-X-Gm-Gg: AYBFou2oR4urns7FAFGW6+YRa4keEJ4EEbAd2bOge/E5+hWoJBRa6bckrJ7OO4BRVGC
-	LHW1xP1Q5JMfEjveFTUFXOyfTzbdmVv1eojEPMRUn7mAtYzyd9lqPKFTcx2a9PUCzQBkn4HCpRe
-	duIdmauRbfM6x9zqDzgfRziCluCyKIiw9X3o8mNLBqaRocBBrM3srozkqXSzZ2fld1+5dt6llMB
-	3z5A5Xa8Wb8YPNTpL3zcQNk4YB5TFMeIy8t26nvZp3kAPw6vjhd1/PcGmtDitHBCX+afP9A43Et
-	3rpgQPICCLP1toVeWRb1K2UmU5/ZYV7sQfKikiKX3XlVAVQ5qzrlaFOpM23fPSLdYF+CUbBB21s
-	kEdzhMeVUyXL+oc7wPMur2Ay+R1qnFNhadWW/9WK7K7tlsAGACztNlOWCz7P6A0pdzJ7lpM0i4o
-	39xrmI0i8Zt5ONT235D0agz9UeuuoxWd+EYenUfxr1q4JWncGr/XqZbnFUOyK+TxK+C1vcQu25m
-	NC+IlWycFOcGrjvePhq32aSDS4AgB8omcGXiE8OMwEwlJOJ3zBLV0pnRqvLYfXrI4A=
-X-Received: by 2002:a05:6214:2243:b0:90e:9ac5:bfc6 with SMTP id 6a1803df08f44-9122e52dcdamr78819906d6.24.1789423827222;
-        Mon, 14 Sep 2026 15:10:27 -0700 (PDT)
-Received: from ziepe.ca (hlfxns010zw-159-2-239-150.pppoe-dynamic.high-speed.ns.bellaliant.net. [159.2.239.150])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-9120f45ab7csm105588756d6.15.2026.09.14.15.10.26
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 14 Sep 2026 15:10:26 -0700 (PDT)
-Received: from jgg by wakko with local (Exim 4.97)
-	(envelope-from <jgg@ziepe.ca>)
-	id 1x6Esb-00000002Idd-3vnk;
-	Mon, 14 Sep 2026 19:10:25 -0300
-Date: Mon, 14 Sep 2026 19:10:25 -0300
-From: Jason Gunthorpe <jgg@ziepe.ca>
-To: Christian =?utf-8?B?S8O2bmln?= <christian.koenig@amd.com>
-Cc: Leon Romanovsky <leon@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Logan Gunthorpe <logang@deltatee.com>,
-	Chaitanya Kulkarni <kch@nvidia.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Jens Axboe <axboe@kernel.dk>, Alex Williamson <alex@shazbot.org>,
-	Ankit Agrawal <ankita@nvidia.com>, Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	"Joerg Roedel (AMD)" <joro@8bytes.org>,
-	Will Deacon <will@kernel.org>, Robin Murphy <robin.murphy@arm.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Sumit Semwal <sumit.semwal@linaro.org>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org,
-	iommu@lists.linux.dev, Tushar Dave <tdave@nvidia.com>,
-	linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org,
-	linaro-mm-sig@lists.linaro.org, linux-rdma@vger.kernel.org,
-	kvm@vger.kernel.org
-Subject: Re: [PATCH v6 17/18] dma-buf: Let importers ask how peer-to-peer
- traffic is routed
-Message-ID: <20260914221025.GA3196566@ziepe.ca>
-References: <20260914-fix-p2p-acs-v4-0-v6-0-5ef07ec9ef06@nvidia.com>
- <20260914-fix-p2p-acs-v4-0-v6-17-5ef07ec9ef06@nvidia.com>
- <d3fb7ea0-019f-4311-bf0f-00d25bdebda0@amd.com>
+	dkim=pass (2048-bit key) header.d=httpd.dev header.i=@httpd.dev header.b="m262tNUn"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=httpd.dev;
+	s=protonmail3; t=1789428529; x=1789687729;
+	bh=yxoj++wFvVAwzImdOHquYq/PvmSP6Nwb1m+Fxi9E1PA=;
+	h=Date:To:From:Cc:Subject:Message-ID:In-Reply-To:References:
+	 Feedback-ID:From:To:Cc:Date:Subject:Reply-To:Feedback-ID:
+	 Message-ID:BIMI-Selector;
+	b=m262tNUn0qggQ6BzAr6L7CTMNd/qcn7PFIcSzWLEgQf6UWVQ5Rwi8wcNhMUddA0GJ
+	 o21obADMQC6PjFbfGNy/Qt1MxIz+0r0lUCjX5jC+NA2f+ddY9vkdxqPNatH4e07E9T
+	 UMDRj73N6reiM7ZmItw/MudS9bYjLfug+QW/i2oCRD4KGN5WUUkKs6I8Xg87j07s9F
+	 P3VkZgItjLu9PdklKh035FJBOMK94QTqbEtPmUfCGnEP+jgTEFDZxT1Q2AcJ0HNdWN
+	 hF4LeDW+lXOxWIWiEPJ46bhiT1DMdUOSLb1oMno7/fx7O/j1VX64JA3vkO8dKxZL/Y
+	 Y6zybbh5jNVrA==
+Date: Mon, 14 Sep 2026 23:28:45 +0000
+To: Andrea della Porta <andrea.porta@suse.com>
+From: Angel J <iamanaws@httpd.dev>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "regressions@lists.linux.dev" <regressions@lists.linux.dev>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-rpi-kernel@lists.infradead.org" <linux-rpi-kernel@lists.infradead.org>, "helgaas@kernel.org" <helgaas@kernel.org>, "robh@kernel.org" <robh@kernel.org>, "florian.fainelli@broadcom.com" <florian.fainelli@broadcom.com>
+Subject: Re: [REGRESSION] PCI: Dynamic OF node creation hangs on invalid bridge configuration
+Message-ID: <VaPKN3QbW3sGj8wePAvI_xD3twp_MQE4-4xeSbvgoQPVUnKDWKz0EWT_JiLehpmc6WOsCAoFOPs412Xhtthes_ZtvrgsKB4QB6QPz-XvRb4=@httpd.dev>
+In-Reply-To: <B6jXhRRiVu4TfgjwfVOLgxbh1xIciImKFVMmjkMRoDt5SO7WpM2M3gBqsjtnh3VhYobWdcNfqFrmlCdhqZBqUakSNkTeVNZYJnXLTx55kRI=@httpd.dev>
+References: <GXe6anuewkS4bLNwca3cYOmUxN9csc0TxLYGSBc1qNRmfrmvFlcmD62wEM23TxfzfuXAv4P3yvUv7pyraleARrL1Na-aN8w-t9uc1Igu8DA=@httpd.dev> <cFJoUZ6c5g5YbFCrwUnx6RlitHRl-0cS2fadDSFJNf9SgLreKutrmZj1r56hFh8ZUAbzvuCqBG4w9ZYAE8xAWP9HnLwbjMOBzac-iMnMMZc=@httpd.dev> <aqfgUUkZYZg6ZABF@apocalypse> <B6jXhRRiVu4TfgjwfVOLgxbh1xIciImKFVMmjkMRoDt5SO7WpM2M3gBqsjtnh3VhYobWdcNfqFrmlCdhqZBqUakSNkTeVNZYJnXLTx55kRI=@httpd.dev>
+Feedback-ID: 163474212:user:proton
+X-Pm-Message-ID: d2ba4b13e36e34d8135a55ca2599efddc5d2a885
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <d3fb7ea0-019f-4311-bf0f-00d25bdebda0@amd.com>
+Content-Type: multipart/signed; protocol="application/pgp-signature"; micalg=pgp-sha512; boundary="------19abcaf36a79a582b2fcee0af394648d3ca185f375b08afc4f8b0c2cc5776182"; charset=utf-8
 
-On Mon, Sep 14, 2026 at 04:27:00PM +0200, Christian König wrote:
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--------19abcaf36a79a582b2fcee0af394648d3ca185f375b08afc4f8b0c2cc5776182
+Content-Type: multipart/mixed;boundary=---------------------7de5e8224e3f8cd20eea8e5ae1dd0491
 
-> > +enum pci_p2pdma_map_type
-> > +dma_buf_p2pdma_map_type(struct dma_buf_attachment *attach,
-> > +			unsigned int tlp_flags)
-> > +{
-> > +	struct dma_buf *dmabuf = attach->dmabuf;
-> > +	struct p2pdma_provider *provider;
-> > +
-> > +	if (!dmabuf->ops->p2pdma_provider)
-> > +		return PCI_P2PDMA_MAP_NONE;
-> > +
-> > +	provider = dmabuf->ops->p2pdma_provider(dmabuf);
-> > +	if (!provider)
-> > +		return PCI_P2PDMA_MAP_NONE;
-> > +
-> > +	return pci_p2pdma_map_type_tlp(provider, attach->dev, tlp_flags);
-> 
-> Calling PCI subsystem functions from dma-buf is a hard NO-GO.
+-----------------------7de5e8224e3f8cd20eea8e5ae1dd0491
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain;charset=utf-8
 
-This is why I had the mapping type arrangement able to know if a PCI
-path was involved so it could activate PCI support for that path. In
-an extendable way so other interconnects could also provide their
-unique knowledge too.
+Ok, here it is...
 
-> I shouldn't have allowed the mapping functions to be added to
-> DMA-buf in the first place, all of this belongs either into the DMA
-> layer or the exporter.
+I tested this quirk on Linux 6.18.44 with CONFIG_PCI_DYNAMIC_OF_NODES=3Dy,
+and it boots without either OF fix. The diff below omits the test logging.
 
-DMA layer is not the place to form dmabuf's corrupted
-scatterlist. This must only be done in dmabuf.
+PCI_FIXUP_HEADER runs after the resources have been parsed using the
+original header type, and changing hdr_type also affects configuration
+restore. I don't know enough about this part of PCI to judge whether
+that's safe, so I'll wait for your advice before submitting it as a patch.
 
-We don't want to open code this common logic in every exporter, it
-needs a helper. If you have a better place where to put the thing that
-makes the dmabuf unique broken scatterlist, then I'm open :) HCH isn't
-going to accept anything like that outside stuff hard wired to dmabuf.
+Thanks,
+Angel J
 
-> We should probably have a single callback the exporter provides to
-> fill in a structure with PCI specific information for a mapping.
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index de9bbccda..57df88a38 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -291,6 +291,22 @@ static int __init pci_apply_final_quirks(void)
+ }
+ fs_initcall_sync(pci_apply_final_quirks);
+ =
 
-Yeah, that is where I was going.
 
-I'm really sorry I haven't been able to come back to that mapping type
-series. Were you feeling positive about that? Maybe Leon or someone
-can pick it up from me. I was optimistic about scaling back to just
-the maping type negotiation as a first step
++/*
++ * On the Dell XPS 8940, 8086:4c43 reports a PCI-to-PCI bridge but has no
++ * downstream bus. Use host-bridge class and a normal header so that
++ * pci_is_bridge() does not send it through bridge scanning.
++ */
++static void quirk_intel_4c43_host_bridge(struct pci_dev *dev)
++{
++	if ((dev->class >> 8) !=3D PCI_CLASS_BRIDGE_PCI ||
++	    dev->hdr_type !=3D PCI_HEADER_TYPE_BRIDGE)
++		return;
++
++	dev->class =3D (PCI_CLASS_BRIDGE_HOST << 8) | (dev->class & 0xff);
++	dev->hdr_type =3D PCI_HEADER_TYPE_NORMAL;
++}
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x4c43, quirk_intel_4c43_ho=
+st_bridge);
++
+ /*
+  * Decoding should be disabled for a PCI device during BAR sizing to avoi=
+d
+  * conflict. But doing so may cause problems on host bridge and perhaps o=
+ther
 
-Jason
+-----------------------7de5e8224e3f8cd20eea8e5ae1dd0491--
+
+--------19abcaf36a79a582b2fcee0af394648d3ca185f375b08afc4f8b0c2cc5776182
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: ProtonMail
+
+wrsEARYKAG0Fgmqogx0JEBoBbwppzUxnRRQAAAAAABwAIHNhbHRAbm90YXRp
+b25zLm9wZW5wZ3Bqcy5vcmes3p/1OSpN6LMhObrgEYZy+8qMUO+52BFBVbvV
+KvCQQRYhBEAFf9htFyVnqZzmVhoBbwppzUxnAACY0wD/SFb48faYSk4S81Rn
+a+nMZZ6WbytcUHJBks8/2VhxtfcA/jdk2n5GJvzeuyWgZAPW5fl9UDEyWQuO
+Mti2YQDwnA4D
+=zn2q
+-----END PGP SIGNATURE-----
+
+
+--------19abcaf36a79a582b2fcee0af394648d3ca185f375b08afc4f8b0c2cc5776182--
+
