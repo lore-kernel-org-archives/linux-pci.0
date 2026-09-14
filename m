@@ -1,104 +1,88 @@
-Received: from mail-vs2-f43.google.com (mail-vs2-f43.google.com [74.125.227.43])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3EEBE44C652
-	for <linux-pci@vger.kernel.org>; Mon, 14 Sep 2026 12:38:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.227.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1BF60470EB4
+	for <linux-pci@vger.kernel.org>; Mon, 14 Sep 2026 12:46:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789389539; cv=none; b=lViAEyKqNtYoRxwBAY9asEXIqwjhG5GYoZSbvwkEqCi/mDLtsJWvkK4m6FSymR2nMAwyuUpvTHef0M8ycbBr7umtGfr8wdYY1QwC+uisQ0HfFk1YwgrqSNKCHZHiq3E7rd08ms+nUcoas8aKTg0V6aLdNmpy/0rWDAebPFCvP+I=
+	t=1789390021; cv=none; b=WRTUjo5hjiAk5KtomJM8CD8GGyb0EMkcr8nyu15qj6Eglc8P/yopvDpqA8h4Bb6TURL2S0LU5IznD+0XNEi3TDZRskp0yEG4EpLKj9YGMnobOk44xiEtp5V1laHoKZQwgoMs4bxCsh0CpCs0zco6W48PWIeDGEa9InEhKouK2yI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789389539; c=relaxed/simple;
-	bh=alCv2i4afikLPEBE/ZSB/QPy8e/IVs00EB1s3dQO9nU=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=JUJ9yNchFNMme+yxay+J+u9UUI1cfIjDJC27kneV/kmgvnIFdTJLKxkmHubJ9HAC1NLoMKaXiaAsZ/4NE/E8rIz4kUIK5rGPlsc501q8Qc4osUsBCYoEDpbSt/QzbW35Ttz2zzFU5PJ4keKRkdtFVMop4truwtU3JU8pcbtMd8I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=74.125.227.43
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-vs2-f43.google.com with SMTP id ada2fe7eead31-785643199baso584325137.0
-        for <linux-pci@vger.kernel.org>; Mon, 14 Sep 2026 05:38:56 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1789389536; x=1789994336;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=OYAVE9OAvj5W369HdyvqFVzrTYEbVyLELurCOBH65i0=;
-        b=ipf3gj5WzaQPc7oExwOKvAYjWR3y30CvrKC+ofeJWOvzec2vivI3GpTgeI+aX6Jt9v
-         y0xty4+6V9SdunWwDgWW0VoO9Rnu72X8Ugh58fLIlXlMuF9US+DDnDhCLzpHvuq1OlPo
-         CToD4XvJXVg8meSz/KDxuS2mIlsvTkpOrZskQlQ/fet/XR7UtXW4hrOb1GhYklyBixtI
-         k/fszGujs5ZG/+uPTjEVqPnldBXVoLvnNHOJZuM07XTBPoeRnKF4UQC5HeO6kQIXlZxv
-         0T8umurwZaqLESvFd610kxBljOwfrSkend1L3BgE3lL9uZaHuBzRDkCg2i+MtNH7Z/vP
-         vw6A==
-X-Gm-Message-State: AFuF++nR5d0zhHYUkfg6Gyr8ufyDhQiXxULuClCb+fwCLEQY+skaOMoe
-	Vvm2AsNo4CInni2YkilR8D0Z0sDOH/faHRgmL8K61yFvbTzrcrstLyyXxOS0UIGz
-X-Gm-Gg: AYBFou3cdzeuy3v1IzimGY4cmbpz04R+J2lOuR8PP5O9uOAlmX9TOj8xHb402IyCZdQ
-	WAYJLMhTAPhq4Iv/WhR4PaFUiG6Ype5GrrYoTUPb97pyV2kECS+HSuIbwT0t1xRSmWqEv95WOVN
-	BRZ4x0miLg1n/HbK6sHdTJfwAyuDc+0eo2cChvpWTlrUssFd5j/T4jS7pkGMHya0fIxhUVXk7sh
-	gBL/3IWtWpl/hzXzHT4bYRVSPT1t6R+kadjA6x9zLCIx7+lLMt/1ul36qo5y7l7xXk1EdOmUOxt
-	ksVuUIetXDfXfRKeKre4uS3eCXOlydCAMzr5hcm6KFElZ471YVH0N2K/9gZjaH3jS1kLf+GXmWr
-	TF55zLi9axqS/NFaNZ1WSIqITZBoSvwQVOMmQyAGK1iWebKoGCEdBv4ouioNUK80WSnftteBZKJ
-	jsihslqhGDu3z+qb9/uEANHXItoEmK0twL5HyPZwHT6q+NPSreCrED6hidJqcIfqoAdO/K+/nRB
-	Z9pscCz/QKVdDKy+9belUy6gfvD+iFraQ2TYg==
-X-Received: by 2002:a05:6102:b13:b0:785:35cb:e64a with SMTP id ada2fe7eead31-79b56aec238mr1106343137.3.1789389535736;
-        Mon, 14 Sep 2026 05:38:55 -0700 (PDT)
-Received: from mail-vs2-f12.google.com (mail-vs2-f12.google.com. [74.125.227.12])
-        by smtp.gmail.com with ESMTPSA id ada2fe7eead31-7927cbdf149sm10186629137.4.2026.09.14.05.38.55
-        for <linux-pci@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 14 Sep 2026 05:38:55 -0700 (PDT)
-Received: by mail-vs2-f12.google.com with SMTP id ada2fe7eead31-78564319a92so430690137.1
-        for <linux-pci@vger.kernel.org>; Mon, 14 Sep 2026 05:38:55 -0700 (PDT)
-X-Received: by 2002:a05:6102:54a9:b0:789:5f54:2367 with SMTP id
- ada2fe7eead31-79b579b0d38mr1196005137.4.1789389535416; Mon, 14 Sep 2026
- 05:38:55 -0700 (PDT)
+	s=arc-20240116; t=1789390021; c=relaxed/simple;
+	bh=xMSmm+qEwdaTOP0e0g3GRGSXbkVVOBn+6DVhN+VKS/g=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=emlr3EpFs1UIvPjKywY3mn62D1Jn4FlH+u2wOJLwSCVM1WsAnQG1qAvBDbf/sxt3vPiYCrPAaHoilW1TJMYGtGBChpOwoMzQwaQ+GzYa1uNdJBFMwfEZZfDuqGq1V7X3ImaLRew2EPjkxxjdqd+fV2O6HEZKKv9+0Bt42+tYQLk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=fR8y0CsG; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="fR8y0CsG"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1789390018;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=xMSmm+qEwdaTOP0e0g3GRGSXbkVVOBn+6DVhN+VKS/g=;
+	b=fR8y0CsGSYnsyR1iR2aCA92cm/URNBpeDHAqH6N2D32vHCB3AJ/2TPp/kivKX555nVVjZz
+	ku+epD8rzQmv5RzhebqZpONw2PNwN3Cyz5OW5Ah/Eatf3byymnhlex51hKftNs4AfPonTZ
+	FPUHAdFTRA4VAy4Oo0RyXpvxIUdE5yA=
+Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-378-NSkAlAn2OcyIQLPrhwE7pA-1; Mon,
+ 14 Sep 2026 08:46:53 -0400
+X-MC-Unique: NSkAlAn2OcyIQLPrhwE7pA-1
+X-Mimecast-MFC-AGG-ID: NSkAlAn2OcyIQLPrhwE7pA_1789390011
+Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 96069180ACD2;
+	Mon, 14 Sep 2026 12:46:51 +0000 (UTC)
+Received: from fedora.redhat.corp (headnet05.pony-001.prod.iad2.dc.redhat.com [10.2.32.117])
+	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 8F1271956041;
+	Mon, 14 Sep 2026 12:46:48 +0000 (UTC)
+From: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+To: bhelgaas@google.com,
+	mani@kernel.org
+Cc: alex@shazbot.org,
+	ath11k@lists.infradead.org,
+	ath12k@lists.infradead.org,
+	jjohnson@kernel.org,
+	jtornosm@redhat.com,
+	linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	mhi@lists.linux.dev
+Subject: Re: [PATCH v13] PCI: Add device-specific reset for Qualcomm devices
+Date: Mon, 14 Sep 2026 14:46:47 +0200
+Message-ID: <20260914124647.25054-1-jtornosm@redhat.com>
+In-Reply-To: <y5wemns4rjjfhaykkgghuyjiqqygx2is3bcyflrclrirp3lqh6@aiwdkaycpvuv>
+References: <y5wemns4rjjfhaykkgghuyjiqqygx2is3bcyflrclrirp3lqh6@aiwdkaycpvuv>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260909175922.161658-1-marek.vasut+renesas@mailbox.org>
-In-Reply-To: <20260909175922.161658-1-marek.vasut+renesas@mailbox.org>
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Date: Mon, 14 Sep 2026 14:38:43 +0200
-X-Gmail-Original-Message-ID: <CAMuHMdX=gEiN37Su3hhVS+kdTiw2j8WXDtjy=bQy0M8drBa_kQ@mail.gmail.com>
-X-Gm-Features: AcwNN1URkRSQsxTlCS1AkYCaZYHp_UGH2AcjGLEgcywIPONdLTrdjIQPHpbJFxk
-Message-ID: <CAMuHMdX=gEiN37Su3hhVS+kdTiw2j8WXDtjy=bQy0M8drBa_kQ@mail.gmail.com>
-Subject: Re: [RFC][PATCH] arm64: dts: renesas: r8a779f0: Add GICv3 ITS and
- update PCIe nodes
-To: Marek Vasut <marek.vasut+renesas@mailbox.org>
-Cc: linux-pci@vger.kernel.org, Conor Dooley <conor+dt@kernel.org>, 
-	Koichiro Den <den@valinux.co.jp>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
-	Magnus Damm <magnus.damm@gmail.com>, Rob Herring <robh@kernel.org>, devicetree@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
 
-On Wed, 9 Sept 2026 at 19:59, Marek Vasut
-<marek.vasut+renesas@mailbox.org> wrote:
-> This SoC implements GIC600 with GICv3 ITS and PCIe host mode on this
-> SoC can use it. Add GIC ITS node into GIC node, update interrupt-map
-> and add msi-map into PCIe controller node.
->
-> The GIC ITS does have master interface to issue transactions to RAM.
-> The interface does support cacheable transactions, however, it does
-> not support shareable attribute, because the AXI port signals are tied
-> to inactive in this implementation. Therefore, add "dma-noncoherent"
-> DT property into the GIC ITS subnode.
->
-> The GIC redistributor does not have cacheable/shareable, therefore
-> add "dma-noncoherent" DT property into the GIC node.
->
-> Signed-off-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
+Hi Bjorn,
 
-Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
-i.e. will queue in renesas-devel for v7.4.
+Friendly ping on this patch, now almost two months old.
+It has Mani's Reviewed-by and has been tested over 100+ VM crash/reset
+cycles.
 
-Gr{oetje,eeting}s,
+The approach was developed following Alex's and Mani's guidance through
+the series, using device-specific hardware reset registers.
 
-                        Geert
+Without this, Qualcomm WLAN and modem devices cannot be reused after unclean
+VM termination in VFIO passthrough.
 
--- 
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+Could you help me to know if there is anything blocking this in order to
+move forward?
 
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+Thanks
+Jose Ignacio
+
