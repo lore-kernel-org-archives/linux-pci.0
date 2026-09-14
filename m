@@ -1,592 +1,173 @@
-Received: from relay.yourmailgateway.de (relay.yourmailgateway.de [188.68.63.166])
+Received: from DU2PR03CU002.outbound.protection.outlook.com (mail-northeuropeazon11011008.outbound.protection.outlook.com [52.101.65.8])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C073D480353
-	for <linux-pci@vger.kernel.org>; Mon, 14 Sep 2026 14:30:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=188.68.63.166
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789396262; cv=none; b=OZeZgWrDRs3ud2TRkSL+i2vBboevxwxhm1B5dBAoM2ZQkONafm2wtHCFoTW9JG0nVBjCIvRPxLrP8lJBBWajrWpqet0dS/SRRv4ntBk596hSFDN1Fk/GS40yxQJUkq/c2ibHpuZq1yqRQ81ym8Snkg76UqXf2CR7G7Ijr4U1UHU=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789396262; c=relaxed/simple;
-	bh=FcziOCCsytCcib3oM9S/q9gH2GMgiWKKT0G6/MmLl5Q=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=sU005lw9e6Ac2PCV2BinY5OaHzYVpSqicTbbeew7IvEjXEnRafzZp0WlSowt+MQhZ6ChTZuerwsc3X6mP0U0KeXLQU86pbygjqp0h5UtHW8vcJ7mqCuaBDdaE8Fkqfdc4Dv8UocFbHKst8Wq7VqU85ZWhGqRk5y1szLBncmUuIk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=leemhuis.info; spf=pass smtp.mailfrom=leemhuis.info; dkim=pass (2048-bit key) header.d=leemhuis.info header.i=@leemhuis.info header.b=jJU2mYMN; arc=none smtp.client-ip=188.68.63.166
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=leemhuis.info
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=leemhuis.info
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B89B84749FA;
+	Mon, 14 Sep 2026 15:42:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.65.8
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1789400547; cv=fail; b=imfGJG5j0/tbQGogl2AVvDcfAG4B4pY/MxVx+YvPXiinJafw8/YB2d03j8/HBXmi4LaRbnUayxtHeIH4OqURuuMTQ2xSAI5NgcWOjdxJs/gqdqdflA69fXTGO83uTIclQyziYgepWYnPrxn9MEpWYJM3JlD4jtFrmZlNshW4nug=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1789400547; c=relaxed/simple;
+	bh=ughnMlFCDzaRARnthYSF9qYwG/2g50WUYqnvWnWsZWc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=C22SxWdBD0zHEqGK4t4+dVtnwu0PhZS2VAwWqGtPd01juUIx4xNeIfX+PPNPGzOZL0arcZv+3kov2RQTv7hy9+hHmqHQVTAN2V/VdhxcInwDl3TjFJi/tFVZsivzMyefhBHfAma9Bk3T3ag0L8gH4ABKLg6788beX1EHHFb/1as=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com; spf=pass smtp.mailfrom=oss.nxp.com; dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b=mOtIANWl; arc=fail smtp.client-ip=52.101.65.8
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=leemhuis.info header.i=@leemhuis.info header.b="jJU2mYMN"
-Received: from mors-relay-8202.netcup.net (localhost [127.0.0.1])
-	by mors-relay-8202.netcup.net (Postfix) with ESMTPS id 4hk6yL4M2pz44sD;
-	Mon, 14 Sep 2026 16:30:50 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=leemhuis.info;
-	s=key2; t=1789396250;
-	bh=FcziOCCsytCcib3oM9S/q9gH2GMgiWKKT0G6/MmLl5Q=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=jJU2mYMNysSTPazrYTE4tRT0dgNoXJAcR16SD9ePKtLCnfzPoCEQxSTOTpVy/plhA
-	 av+IrFliwOtrvcLea07dCdYuxlG52CrPtgDszFM2SZlHlixiaRaDY8dlTSD1jSn+D1
-	 35S8IDBK2S2agzM3iv3xkLvp7c4rovkZLtRtnCnwPl05YKusuYPuzKAaYeu2NoOsCn
-	 BVGIYDPmRRkXvzDu3gO4Hnvo/Hwo3SlwYOepQA6xxioNHzMUkj6Xm6MmlfHIE7iVjd
-	 +mlQwOnzEGkQj+f5LIZ4IlLAyDF+1NKaT7ik47kBI247ozyjgvfPY6HIZniR1ZQxLX
-	 Iui0uWd11epTA==
-Received: from policy01-mors.netcup.net (unknown [46.38.225.35])
-	by mors-relay-8202.netcup.net (Postfix) with ESMTPS id 4hk6yL3bxrz42Wm;
-	Mon, 14 Sep 2026 16:30:50 +0200 (CEST)
-X-Virus-Scanned: Debian amavisd-new at policy01-mors.netcup.net
-X-Spam-Flag: NO
-X-Spam-Score: -2.898
-X-Spam-Level: 
-Received: from mxe9fb.netcup.net (unknown [10.243.12.53])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by policy01-mors.netcup.net (Postfix) with ESMTPS id 4hk6yG3tP6z8tdf;
-	Mon, 14 Sep 2026 16:30:46 +0200 (CEST)
-Received: from [IPV6:2a02:8108:8984:1d00:a0cf:1912:4be:477f] (unknown [IPv6:2a02:8108:8984:1d00:a0cf:1912:4be:477f])
-	by mxe9fb.netcup.net (Postfix) with ESMTPSA id EDD525FAA9;
-	Mon, 14 Sep 2026 16:30:37 +0200 (CEST)
-Authentication-Results: mxe9fb;
-        spf=pass (sender IP is 2a02:8108:8984:1d00:a0cf:1912:4be:477f) smtp.mailfrom=regressions@leemhuis.info smtp.helo=[IPV6:2a02:8108:8984:1d00:a0cf:1912:4be:477f]
-Received-SPF: pass (mxe9fb: connection is authenticated)
-Message-ID: <012b3ebc-62f0-402e-afa9-02712e67e72a@leemhuis.info>
-Date: Mon, 14 Sep 2026 16:30:36 +0200
+	dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b="mOtIANWl"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=lC5tyIDUCsWOInwTXueKyU9K8/LOpUp9Tznz0Q1MScHF8NJKXxPJ0zhUG78Q2S1AfkRP/KiepwcvVcGTgSsbrxEQD/kaQMSKcQQ1IrpCD9XDAYWha2JhbA6dfmf9g5EXIYAhUn1Yw/oxHrWWj45m+p8m4x/d5IcW/CCiF6IF7klWnMy7BedNzoqaw5e6fD0YAk3x3gl7YHO3gOTFa+fdj051hUAbsN9H48xcbPuMKSi+Ip/MV6vyyjnFhKsfWX9E4oIqHeQWmoDjo/0XV2HA7ORc3giF8pcORexdMEBiH9IX28fzjCu2gO/M/kBkRB0X2L3dn84bZJ0L6KQQ7uwpCg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=vhpHElnyuVn+gzaCkMPHC69Sx1Tqfy+H5/z2A6+mefM=;
+ b=QU5mkuMyAXEI8rW7p1TLvxW6sTm5b5eVIc742/088arg9Ku/dx5hX235PVz2wq5ajDoWXsr+zgnGB9v0Lb+fg7ULhY/CEtjwKAx/NDzAr2OFd1u1AMQSH98GQ+wNjmjnhmAkA/4hRmQc1O2OQ6pJYkgYkf0JWnp5Hl4uYpBz/HZNEM6WylhQrEtTQHJFT66Eo8oL7fJ9j2cglH7tx0PwS51akFBjVw2cX8UwluRvU8BxmRu+gibOKSsklVgFy4gPwyiZK+MCz4bAzzR+0vvXjhcj5v8el8BlWD1xt77/tzBq/6fIqYfITbKw4oBvIYUb9OLeC+aos1nB4XhuV9tDCQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oss.nxp.com; dmarc=pass action=none header.from=oss.nxp.com;
+ dkim=pass header.d=oss.nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=NXP1.onmicrosoft.com;
+ s=selector1-NXP1-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=vhpHElnyuVn+gzaCkMPHC69Sx1Tqfy+H5/z2A6+mefM=;
+ b=mOtIANWljNK16GBYivOuKvq23zgjpv/qm1qj+dX2DxGi+KmvymJafevnNb8Js6G8X7Xne7B1tesJdASB1TJPQeoQrQhJfyDNprjez2qyTmN6j3H7f3NGJSsMY5Wx5TTdZsbLJG8R2dKW44vPkOtxRz4f6AOga6b/CiaKO+c4oj2qqzPiPqOrS/TdAqiLgE26n7G60Ro02loW8MCwvHvvuX+99yIwf9Rk8siJcUmZ8Kt23dppO6ADkLMo5HzCwPvKyaPytmXszN4Q82RakcIzhmuQuhiXO8A4tyBMoRr/imxD0T7AMt+XRABT4GW8esDATuOeT+0qQ38Ts6h7lifisg==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=oss.nxp.com;
+Received: from GV2PR04MB11799.eurprd04.prod.outlook.com (2603:10a6:150:2cf::9)
+ by PA1PR04MB10225.eurprd04.prod.outlook.com (2603:10a6:102:467::14) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.406.12; Mon, 14 Sep
+ 2026 15:42:22 +0000
+Received: from GV2PR04MB11799.eurprd04.prod.outlook.com
+ ([fe80::2146:83a2:5329:b7c]) by GV2PR04MB11799.eurprd04.prod.outlook.com
+ ([fe80::2146:83a2:5329:b7c%7]) with mapi id 15.21.0406.007; Mon, 14 Sep 2026
+ 15:42:22 +0000
+Date: Mon, 14 Sep 2026 10:42:12 -0500
+From: Frank Li <Frank.li@oss.nxp.com>
+To: Koichiro Den <den@valinux.co.jp>
+Cc: Manivannan Sadhasivam <mani@kernel.org>, Frank Li <Frank.Li@kernel.org>,
+	Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
+	Allen Hubbe <allenbh@gmail.com>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Kishon Vijay Abraham I <kishon@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, ntb@lists.linux.dev,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v6 1/2] PCI: endpoint: pci-epf-vntb: Serialize virtual
+ PCI bus scan
+Message-ID: <aqgV1OZY2fd0_fgx@SMW015318>
+References: <20260901063238.631166-1-den@valinux.co.jp>
+ <20260901063238.631166-2-den@valinux.co.jp>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260901063238.631166-2-den@valinux.co.jp>
+X-ClientProxiedBy: CY5PR15CA0173.namprd15.prod.outlook.com
+ (2603:10b6:930:81::18) To GV2PR04MB11799.eurprd04.prod.outlook.com
+ (2603:10a6:150:2cf::9)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [REGRESSION] PCI BAR allocation/D3cold failure: NVIDIA MX250
- inaccessible since Kernel 6.x on Acer Swift 3 (SF314-56G)
-To: lxuser <dittrich.m@gmx.net>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
- regressions@lists.linux.dev, =?UTF-8?Q?Ilpo_J=C3=A4rvinen?=
- <ilpo.jarvinen@linux.intel.com>, Bjorn Helgaas <helgaas@kernel.org>
-References: <20260501165542.GA491695@bhelgaas>
- <561131dd-0e42-437a-9724-a036238a9bb4@gmx.net>
- <5f716613-d996-46db-96ec-6c0251219922@gmx.net>
- <449c834d-d115-4242-aa5a-43daa085f178@leemhuis.info>
- <81ac70ae-c51e-4960-8dd3-bed47ceafafb@gmx.net>
-From: Thorsten Leemhuis <regressions@leemhuis.info>
-Content-Language: de-DE, en-US
-In-Reply-To: <81ac70ae-c51e-4960-8dd3-bed47ceafafb@gmx.net>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-PPP-Message-ID: <178939623830.3044871.3318525723028977191@mxe9fb.netcup.net>
-X-NC-CID: 4lZ9Jka4kHAB8Z3Kf0cGKN/GcN12YEJtihW5pU3kM/iil8zoXZ4=
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: GV2PR04MB11799:EE_|PA1PR04MB10225:EE_
+X-MS-Office365-Filtering-Correlation-Id: 678f22f3-718e-4b63-1cc3-08df1276c440
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|366016|7416014|376014|23010399003|1800799024|19092799006|11063799006|56012099006|4143699003|10067099003|18002099003|22082099003|6133799003;
+X-Microsoft-Antispam-Message-Info:
+	YTdMYrvr0oaFdVCFHe3eRZ6YOmqkR7c6PMwusgXmVirxQo82D3885ZvwSz3VqS6hY0GotGlhOvwka0cAD53zujdw2lKA/RRQ5YDajJ91kyUCGEUAsD49zy2agxr4yJNzMK7CMFt0dOTsJ/7yZvwF/E5ciAEJVg2RahtELH+aQpTH/rF25Vp6q5p89D+251RbKB1RgXQdzC7PjdCIcgz63iOni1hE1H1na2+cFIQpMghRgZ70x0aaouFhKeOGE1ZZUpB5DcieCUu4DJNMJWkxsoHXFAP9WDLaroXN8l3BHT8fyDH4XzmqX2ahUvPJwfASmtuiVPjeDIycSbu7ja/qwLwatbckhDT25QbpVUTQm5DHJ+8Tq3V9qErviGtlhGzmDtO+hD26gheFZ1tZOwjRWYq4GLFIxDb6W+fA4ottnPS7+0VyE4N7zJNPybUKXoqlkTyaqNd9IhZG9w4ZTbu+hP8a+MJ5loARYEBry5AqINmS7C3w3dvVu0gbSplH9Vg4AJI4ViqbcFI8TkKLtqb+X3gSxXTXcDxs+LofNvw7bJEnRZ63SkBoEMQRgeyXhMVZcws+N5hf1pbAoMWYiSpsjypZxQg+RYNBAtTXYLBJ0tzXpqER25QEpkoKXAGtK0Z8NvVkm09NbrssUN4EnVUbQfjPIngShVTPJaYgWKjcrUE=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:GV2PR04MB11799.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(7416014)(376014)(23010399003)(1800799024)(19092799006)(11063799006)(56012099006)(4143699003)(10067099003)(18002099003)(22082099003)(6133799003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?KlJewPUZXrDKi2n/dFmNITLzC9jST5KyH7UUa1bRu6ESmYyZlK2c60VLlEBf?=
+ =?us-ascii?Q?Xdyn5nDaPooa2MRGwalIzNqcNY68+FMZun1JbukZecbaAz/xPP31Df+wYiOX?=
+ =?us-ascii?Q?nLEymf6FyOjCeEa13T7i3eiRVHz0Lk2v3SO2zwKI2t1CcxWch2LyBFITNrlh?=
+ =?us-ascii?Q?VP3w9i+W2mIOFnRX25pUymcMPs7Iwpv2jJwr27DOXepRx5n3zJM9ajHOfF9m?=
+ =?us-ascii?Q?S7YDXnDbW1HQi7RZZZxPg3OQt+zAbfazKQtD3cJAy/V1Jqj40vbx/umBabKd?=
+ =?us-ascii?Q?qTmVVbL5T2GQQJV6jWHmwQZ2wy0KnfqwYvvN/B2t+hEww1Q8k7i0xMAZpcrw?=
+ =?us-ascii?Q?WfyyNO8dDAshw0ajPIN/FkH+WVAwr6hJdObAzPIAp8TvdQ+u52jO2HdyDnYC?=
+ =?us-ascii?Q?/6NXRt+R3YgdIHmrm/mXOUAA/N5uUozJroXLe2TxhGBPOih2uxX/zwR7vg0R?=
+ =?us-ascii?Q?r6JBczsjn7+7OHUktCwEf6iCjtIQxUpRnQWy/0W+H3twbstPbM4nb+lgZWya?=
+ =?us-ascii?Q?XHBPIN8uWtGwVj2bN5pbzzjNtpD7xELaIAVqMC84jtcgAyAhyGhMfJk1khAU?=
+ =?us-ascii?Q?UcSy1p6LOW4V4x9CzpC3OPSMY9zLhBwEZZ9Tuy2LQ+Asw2VP6sJbTNEmGJZL?=
+ =?us-ascii?Q?pQepWPbbvYPDYXa+OdQAwP3Fr3B5ILYcrmopWyydbE26fdQiS5KvfeeFOdxf?=
+ =?us-ascii?Q?JBvZpXuQk3XDFNBZr5LChMWndaJcG3JlN+HgELA6E0P5IWSdKTwd72fDVENu?=
+ =?us-ascii?Q?I+dNNPVGxzrg7aKPK3aqPH8/wTFgSf9CBA8lghJPFFK59AkHkthgqst/6C47?=
+ =?us-ascii?Q?hEp7pGajYc+7tVi4f62t/w2sqo3mo1SpYc9AOfULrFU/IxUL68fLXxbP/LgQ?=
+ =?us-ascii?Q?5bbm9clrX+VAgJvDzPdEM0B9WhJhezYLGSEinktnPL8qi0hH+jWuY0dnNbY7?=
+ =?us-ascii?Q?eg5OdzmOaxR2JiBzaQJ9pIyxY90oaTi/bHgR4480xyToMN1jTPReysQxxwGl?=
+ =?us-ascii?Q?GDNZZVzphB/Dr/PMPNRiwYEC2+9iZqh2GaiphEcekTRy83zWlWNW4NCFv+1e?=
+ =?us-ascii?Q?tWCqaqg1y09GKcURZgfbvTv2rq0LQReSmBWu1wJo5/csH7/XS2CHeqTPi2gl?=
+ =?us-ascii?Q?z/x5UwS6xZlvMgoI3XV5OTRNuQf8ojb8efX63MAHD80m6AKGk/4lZjy0vr1C?=
+ =?us-ascii?Q?rSVUHYYOMUqAq8phaL/Zv8e/rivms4xsP8FC1E25JCZs3VnS+AvsNyTw3agx?=
+ =?us-ascii?Q?DYRba0Ee25/oKSRA8Lc7kBdCUdrmIMSqag/Zq2w7xUlmvq0yLhOqkqFnGbuk?=
+ =?us-ascii?Q?wyTAnWUs9mXco0qdars5z6a7NwiLaV7g4S4ConbB87bwjF0Bb8ziMeoqt1MS?=
+ =?us-ascii?Q?TpeC1iZL73mOwmcR6+CAZelsMWOYk7kvSMUpjZQPfLdL8rvhCpjeWk0hMs7R?=
+ =?us-ascii?Q?ZuIa7BmG47i5hs04nzL+CDVO8rxD3TlmMBbgh/EGotku+hMLDqVrz6J+DaRH?=
+ =?us-ascii?Q?FUaUSpJeGEenmgQFHVsX6tj6GsAfj9Lv55i439ivOrLpfhzY02S6mBnwaZuW?=
+ =?us-ascii?Q?elJyyOrsdHZe3MLbq8jgTKnDen+h33PLVGdaZSUUtj+dMh3aGaWmxAhBGvDV?=
+ =?us-ascii?Q?IL8mtBTzS73k+62PQf70v/HoinQFaQ/0Shh5uE4Lrqe+YjBU5iUQpYeoLIyZ?=
+ =?us-ascii?Q?XGUhOit7E1NAXBzFzB/Lhq5h7o/g+PYAx22fwPBs8zpzgQ1WIhOMnF2PMnLu?=
+ =?us-ascii?Q?8OEq5Bj3bBSNjqt3WcsuSllOHnjYZaUpvoZ0bMia2QAu8bJdY+wB?=
+X-OriginatorOrg: oss.nxp.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 678f22f3-718e-4b63-1cc3-08df1276c440
+X-MS-Exchange-CrossTenant-AuthSource: GV2PR04MB11799.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 14 Sep 2026 15:42:22.0943
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: BPGWMaPS8uvS8eOBKHqFnHBTKB2K2pp0FVQJaFJzjzlJVTO7jzO21gV8ws/rJBmTmiB6YzObd/FICt1FC7ztfEjPVHW9zoCGSIlO7w7WaXD1RbKQJ4MFVf3bV5G4HitF
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PA1PR04MB10225
 
-On 9/7/26 13:11, lxuser wrote:
-> Dear Kernel Team,
-> 
-> I tested everything again with the result, that the regression is still
-> in the current kernel. This time I found the bug report from THUNDEROBOT
-> ZERO (https://bugzilla.kernel.org/show_bug.cgi?id=221087).
-> 
-> I tested the same patch from THUNDEROBOT ZERO  but changed the model to
-> my laptop:
-> +            DMI_MATCH(DMI_SYS_VENDOR, "Acer"),
-> +            DMI_MATCH(DMI_PRODUCT_NAME, "Swift SF314-56G"),
-> (from dmidecode -s system-product-name and dmidecode -s system-manufacturer)
-> 
-> As an result everything works perfect. Please find the kernel patch
-> attached (acer-swift3-quirk-final.patch).
+On Tue, Sep 01, 2026 at 03:32:37PM +0900, Koichiro Den wrote:
+> The virtual PCI bus is scanned without holding the PCI rescan/remove
+> lock. This can race with other PCI topology changes.
+>
+> Hold the lock across the bus scan and device addition.
+>
+> Fixes: e35f56bb0330 ("PCI: endpoint: Support NTB transfer between RC and EP")
+> Suggested-by: Manivannan Sadhasivam <mani@kernel.org>
+> Link: https://lore.kernel.org/r/3tgrcel5fl55ulf3zjya4fkz4t2ms7iwwjif5rnzn2rafsydd6@i4e5etm7uqvz/
+> Signed-off-by: Koichiro Den <den@valinux.co.jp>
+> ---
 
-Please submit this properly in a new thread, referencing this one via a
-Link: tag, as it likely needs to go through the ACPI code, just like
-cd7ef20ba8c6e9 ("ACPI: PM: Add unused power resource quirk for
-THUNDEROBOT ZERO") (aka
-https://lore.kernel.org/all/d0785a7c-7e4c-434b-af31-4ec6f690ed89@126.com/
-) did -- so with similar To and CC values (and not as html!).
+Reviewed-by: Frank Li <Frank.Li@nxp.com>
 
-And this looks odd, as this is both you, isn't it?
-
-  Signed-off-by: dittrich.m@gmx.net
-  Signed-off-by: lxuser <lxuser@local>
-
-> Tested with Kernel 7.2.3-1-cachyos.
-
-Even if its "just" a quick, test with vanilla next time please.
-
-Ciao, Thorsten
-
-> For further information I added
-> the log from sudo dmesg | grep -i "nvidia\|acpi.*power\|D3cold\|64-bit\|
-> BAR" from the original kernel and the patched kernel.
-
-
-
-> Am 16.05.26 um 16:29 schrieb Thorsten Leemhuis:
->> On 5/16/26 12:16, Matthias Dittrich wrote:
->>> I completed the bisect test between kernel 5.15 und 5.16 and found the
->>> commit and now have reproducible revert-test results. I used the
->>> bisect.sh (attached ) for automation. Testing criteria was status rev ff
->>> (bad) or rev a1 (good).  As it was the first indicator for me on Ubuntu.
->>> I also used olddefconfig as I know this config worked before.
->>>
->>> The identified commit (see final-bisect-log.txt) is:
->>> # first bad commit: [a1224f34d72a103829d6953935d6c6621f135b83] ACPI: PM:
->>> Check states of power resources during initialization
->> Thx for the bisection. Not my area of expertise, so the following might
->> send everyone in the wrong direction, nevertheless FWIW:
->>
->> That commit caused trouble on two other machines and DMI quirks were
->> added to make them work again; see 9b04d99788cf47 ("ACPI: PM: Do not
->> turn of unused power resources on the Toshiba Click Mini") [v6.4-rc1]
->> and cd7ef20ba8c6e9 ("ACPI: PM: Add unused power resource quirk for
->> THUNDEROBOT ZERO") [v7.0-rc1] for details. Wonder if the problem on your
->> machine is similar.
->>
->> Ciao, Thorsten
->>
->>> Additionally testing (see Abschlusstest.txt):
->>>
->>>   * Verification with Parent commit test: git checkout
->>>     a1224f34d72a103829d6953935d6c6621f135b83~1
->>>       o lspci reports `rev a1` and  `nvidia-smi` works correctly
->>>   * Revert test on 5.16 with git revert --no-commit
->>>     a1224f34d72a103829d6953935d6c6621f135b83
->>>       o     lspci reports `rev a1` and  `nvidia-smi` works correctly
->>>   * Revert test on 6.1 with git revert --no-commit
->>>     a1224f34d72a103829d6953935d6c6621f135b83
->>>       o lspci reports `rev a1` and  `nvidia-smi` works correctly
->>>
->>> With kernels like 6.2 and newer "git revert" result in an error and
->>> stops (transleted to english):
->>>
->>> git revert --no-commit a1224f34d72a103829d6953935d6c6621f135b83 Auto-
->>> merging drivers/acpi/power.c CONFLICT (content): Merge conflict in
->>> drivers/acpi/power.c error: could not revert a1224f34d72a... (ACPI: PM:
->>> Check states of power resources during initialization) Hint: After
->>> resolving the conflicts, mark the corrected paths with: Hint: 'git add
->>> <paths>' or 'git rm <paths>'
->>>
->>> All tests have been done with Ubuntu 22.04. 
->>>
->>> Let me know if I can test anything further.
->>>
->>>
->>> Test summary Ubuntu:
->>>
->>> Test Case
->>>
->>> 	
->>>
->>> Kernel / Commit
->>>
->>> 	
->>>
->>> Modification
->>>
->>> 	
->>>
->>> PCI State
->>>
->>> 	
->>>
->>> |Nvidia-smi/
->>> NVIDIA Driver|
->>>
->>> 	
->>>
->>> Result
->>>
->>> Baseline good
->>> Ubuntu 22.04
->>>
->>> 	
->>>
->>> Linux 5.15
->>>
->>> 	
->>>
->>> none
->>>
->>> 	
->>>
->>> |rev a1|
->>>
->>> 	
->>>
->>> works
->>>
->>> 	
->>>
->>> GOOD
->>>
->>> Baseline bad
->>>
->>> 	
->>>
->>> Linux 5.16
->>>
->>> 	
->>>
->>> none
->>>
->>> 	
->>>
->>> |rev ff|
->>>
->>> 	
->>>
->>> fails
->>>
->>> 	
->>>
->>> BAD
->>>
->>> Bisect parent
->>>
->>> 	
->>>
->>> |a1224f34...~1|
->>>
->>> 	
->>>
->>> none
->>>
->>> 	
->>>
->>> |rev a1|
->>>
->>> 	
->>>
->>> works
->>>
->>> 	
->>>
->>> GOOD
->>>
->>> First bad commit
->>>
->>> 	
->>>
->>> |a1224f34...|
->>>
->>> 	
->>>
->>> none
->>>
->>> 	
->>>
->>> |rev ff|
->>>
->>> 	
->>>
->>> fails
->>>
->>> 	
->>>
->>> BAD
->>>
->>> Revert verification
->>>
->>> 	
->>>
->>> |a1224f34...|
->>>
->>> 	
->>>
->>> reverted
->>>
->>> 	
->>>
->>> |rev a1|
->>>
->>> 	
->>>
->>> works
->>>
->>> 	
->>>
->>> GOOD
->>>
->>> Forward revert test
->>>
->>> 	
->>>
->>> Linux 6.1
->>>
->>> 	
->>>
->>> reverted
->>>
->>> 	
->>>
->>> |rev a1|
->>>
->>> 	
->>>
->>> works
->>>
->>> 	
->>>
->>> GOOD
->>>
->>> Ubuntu 22.04 (standard)
->>>
->>> 	
->>>
->>> Linux 6.8
->>>
->>> 	
->>>
->>> none
->>>
->>> 	
->>>
->>> |rev ff|
->>>
->>> 	
->>>
->>> fails
->>>
->>> 	
->>>
->>> BAD
->>>
->>> Modern revert attempt
->>>
->>> 	
->>>
->>> Linux 6.2
->>>
->>> 	
->>>
->>> revert attempted
->>>
->>> 	
->>>
->>> conflict in |drivers/acpi/power.c|
->>>
->>> 	
->>>
->>> n/a
->>>
->>> 	
->>>
->>> not testable
->>>
->>> *Linux 5.15 is the standard in Ubuntu 20.04 but also available as
->>> downgrade in Ubuntu 22.04
->>>
->>> Test summary CachyOS:
->>>
->>> Test Case
->>>
->>> 	
->>>
->>> Kernel / Commit
->>>
->>> 	
->>>
->>> Modification
->>>
->>> 	
->>>
->>> PCI State
->>>
->>> 	
->>>
->>> |Nvidia-smi/
->>> NVIDIA Driver|
->>>
->>> 	
->>>
->>> Result
->>>
->>> Standard
->>>
->>> 	
->>>
->>> Linux 7.0.2
->>>
->>> 	
->>>
->>> none
->>>
->>> 	
->>>
->>> |rev a1|
->>>
->>> 	
->>>
->>> fails
->>>
->>> 	
->>>
->>> BAD
->>>
->>> LTS
->>>
->>> 	
->>>
->>> Linux 6.18
->>>
->>> 	
->>>
->>> none
->>>
->>> 	
->>>
->>> |rev a1|
->>>
->>> 	
->>>
->>> fails
->>>
->>> 	
->>>
->>> BAD
->>>
->>> Start parameter
->>>
->>> 	
->>>
->>> |Linux ||7.0.2|
->>>
->>> 	
->>>
->>> start parameter
->>>
->>> 	
->>>
->>> |-|
->>>
->>> 	
->>>
->>> fails
->>>
->>> 	
->>>
->>> BAD
->>>
->>> git
->>>
->>> 	
->>>
->>> |Linux ||5.15|
->>>
->>> 	
->>>
->>> none
->>>
->>> 	
->>>
->>>
->>> 	
->>>
->>>
->>> 	
->>>
->>> not testable system freeze
->>>
->>> git
->>>
->>> 	
->>>
->>> |Linux ||7.0.2|
->>>
->>> 	
->>>
->>> revert attempted
->>>
->>> 	
->>>
->>>
->>> 	
->>>
->>>
->>> 	
->>>
->>> not testable
->>>
->>>
->>> Kind regards,
->>> Matthias
->>>
->>> Am 11.05.2026 um 11:34 schrieb Matthias Dittrich:
->>>> Dear Bjorn,
->>>>
->>>> Thank you for the quick response. For transparency, I used the AI tool
->>>> Gemini during the bug-fixing and testing process. I am not an IT
->>>> specialist and therefore cannot fully verify all of the AI’s
->>>> conclusions in my last mail.
->>>>
->>>> All kernels were tested manually by installing the OS and kernel. The
->>>> recommended boot parameters were also tested manually. The logs sent
->>>> previously and in this mail are raw terminal outputs generated from
->>>> the commands listed in the "Skript" file.
->>>>
->>>>
->>>> The dmesg and |lspci|output from the newest CachyOS kernel is
->>>> attached. Additionally, the following commands were also run for the
->>>> Ubuntu 5.15 kernel for comparison:
->>>>
->>>> dmesg
->>>> sudo lspci -vv > lspci-vv-ubuntu2205-K515-good.txt
->>>> sudo lspci -vvv > lspci-vvv-ubuntu2205-K515-good.txt
->>>> sudo lspci -vvxxxx > lspci-vvxxxx-ubuntu2205-K515-good.txt
->>>> sudo lspci -s 02:00.0 -vvxxxx > lspci_gpu_$(uname -r).txt
->>>> sudo lspci -t > lspci_tree_$(uname -r).txt
->>>>
->>>>
->>>> Gemini recommended performing a git bisect with optimized parameters
->>>> to reduce compilation time.
->>>>
->>>>   * Before starting the bisect tests, I tested different kernel
->>>>     revisions. The "git" kernel 5.15 (with localmodconfig) appears to
->>>>     work just like the newer Ubuntu 5.15 kernel, as the graphics card
->>>>     status is shown as |(rev a1)|. The earliest kernel revision where
->>>>     the status changes to |(rev ff)|starts with kernel 5.16 (tested
->>>>     with localmodconfig). However, the NVIDIA driver itself could not
->>>>     be tested.
->>>>   * The bisect between 5.15 and 5.16 result in|
->>>>      [342a67f0884293639bd17ea44df754ead799e669]|| NFS: Label the
->>>>     dentry with a verifier in nfs_link(), nfs_symlink()|, which seems
->>>>     incorrect, as the verification using |git checkout
->>>>     342a67f0884293639bd17ea44df754ead799e669~1|also failed.
->>>>   * An automated bisect was attempted without localmodconfig, but
->>>>     there were technical issues and I have not yet been able to
->>>>     complete the testing.
->>>>
->>>> I also noticed that the |lspci|results differ between CachyOS and Ubuntu:
->>>>
->>>> 02:00.0 3D controller: NVIDIA Corporation GP108M [GeForce MX250] (rev a1)
->>>>
->>>>   * |(rev a1)|— Ubuntu 22.04 Kernel 5.15 (works), CachyOS Kernel 6.1
->>>>     LTS and Kernel 7, but NVIDIA MX150 does not work
->>>>   * |(rev ff)|— Ubuntu 22.04 Kernel 5.16 and newer (localmodconfig)
->>>>     and Kernel 6.8 and NVIDIA MX150 does not work
->>>>
->>>> Kind regards,
->>>> Matthias
->>>>
->>>>
->>>>
->>>> Am 01.05.2026 um 18:55 schrieb Bjorn Helgaas:
->>>>> [+cc Ilpo]
->>>>>
->>>>> On Fri, May 01, 2026 at 10:13:41AM +0200, Matthias Dittrich wrote:
->>>>>> Dear Kernel Developers,
->>>>>>
->>>>>> I found a regression and did my best to identify the issue and find a
->>>>>> workaround, but I am not a developer. I also published the regression in the
->>>>>> NVIDIA Linux Developer Forum, but it appears to be a kernel regression and
->>>>>> not a driver issue, as the latest drivers work on older kernels (e.g., 5.15)
->>>>>> but fail on anything 6.x+. I did not perform a git bisect as compiling on
->>>>>> this i5-8265U - because of its low performance I can only compile one kernel
->>>>>> over night.
->>>>>>
->>>>>> **Description:**
->>>>>> The NVIDIA MX250 GPU on Acer Swift 3 (SF314-56G / BIOS 1.14) is inaccessible
->>>>>> on any Linux distribution using Kernel 6.x or 7.x. The device fails to
->>>>>> initialize during the driver probe routine.
->>>>> Thanks for the report.  With the newest kernel available to you, can
->>>>> you please capture the complete dmesg and output of "sudo lspci -vv"?
->>>>> Don't filter out things that don't seem relevant; we can easily do
->>>>> that.
->>>>>
->>>>> Bjorn
-
+> Changes in v6:
+>   - New patch based on Mani's review of v5 patch 4.
+>
+>  drivers/pci/endpoint/functions/pci-epf-vntb.c | 5 +++++
+>  1 file changed, 5 insertions(+)
+>
+> diff --git a/drivers/pci/endpoint/functions/pci-epf-vntb.c b/drivers/pci/endpoint/functions/pci-epf-vntb.c
+> index c3caec927d74..412e8cc6fb1d 100644
+> --- a/drivers/pci/endpoint/functions/pci-epf-vntb.c
+> +++ b/drivers/pci/endpoint/functions/pci-epf-vntb.c
+> @@ -1332,14 +1332,19 @@ static int vpci_scan_bus(void *sysdata)
+>  	struct pci_bus *vpci_bus;
+>  	struct epf_ntb *ndev = sysdata;
+>
+> +	pci_lock_rescan_remove();
+> +
+>  	vpci_bus = pci_scan_bus(ndev->vbus_number, &vpci_ops, sysdata);
+>  	if (!vpci_bus) {
+>  		pr_err("create pci bus failed\n");
+> +		pci_unlock_rescan_remove();
+>  		return -EINVAL;
+>  	}
+>
+>  	pci_bus_add_devices(vpci_bus);
+>
+> +	pci_unlock_rescan_remove();
+> +
+>  	return 0;
+>  }
+>
+> --
+> 2.51.0
+>
