@@ -1,448 +1,325 @@
-Received: from mx0a-00082601.pphosted.com (mx0a-00082601.pphosted.com [67.231.145.42])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pz2-f12.google.com (mail-pz2-f12.google.com [74.125.228.12])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F26EB35F61E
-	for <linux-pci@vger.kernel.org>; Mon, 14 Sep 2026 16:45:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=67.231.145.42
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789404316; cv=fail; b=Pz9PSf6D37iQjrbhKv55BXEU0Bs1Vv0SkFZIrKmDUjqfEqd7UTDKTmRDrZvXzuW7UqHOvYTMcnI2eg08Jcua8Z6pnCwcMAulUfGFACkmODE4ah45zoqGG3oxK9+4rPIkZbsEDkaNM8K6+eEXzZ+udDCU/8g44PREEtFq6dozst0=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789404316; c=relaxed/simple;
-	bh=muo+Cd/9iEcLFMulfa6tLlUn7T2ati3NRjXSK8W/PXQ=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=RqdMXlok+RntzT0pBjSzNy5EmfPK8loZkqwlKecIYXO9wijvT2+GHxnBC3O7500rguYjSEmKfRbCsNFf7t2K803TRfiW7D5RRO7/TNpycsBKJVLtVTMf+xsJEkF77y7AQYf2LbEnssZElwrqT9qXsS6dy52WQi+Hbc1Gigd60Y0=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=DRplc9mq; arc=fail smtp.client-ip=67.231.145.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meta.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E27AA371068
+	for <linux-pci@vger.kernel.org>; Mon, 14 Sep 2026 16:46:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.228.12
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1789404366; cv=none; b=ctgk/yOrejjT+RSPU5Y7NyFwEAKcPv9WLPbM5kWxVBhB+B1b1/tFH3Fqq+XGI0fx5dbqY8S/J9jVbNN9a1zkodot/KCJwHVY5p6Rr4dhyFdSFl0Gxi4jCJ3tR80CUuGqWDhon2cS6AZiEKExEU27h2PABEJfg2LjMeiG30EVQgY=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1789404366; c=relaxed/simple;
+	bh=AbWZZSRMSxWU4lPtaJRbw3aXLmhhfKL9PttGs9UHNEQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=ppSKTcrxShKuSfdBMHkpc4JSwXweRoeeS2ljziElLWl9QQXyUoaJH/JeclUIEDmWfG1HITTULbE09hzsnMv799GAyCN05wQyyGEa7/YakZjxVUKLd7XmYS07lPmttKASWsrYahKiie9g4evnt8bcPOnPyYooj4WmdaXq2oE84Zk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=HZtBxv6A; arc=none smtp.client-ip=74.125.228.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="DRplc9mq"
-Received: from pps.filterd (m0109333.ppops.net [127.0.0.1])
-	by mx0a-00082601.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 68EDVw8g1606919
-	for <linux-pci@vger.kernel.org>; Mon, 14 Sep 2026 09:45:12 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=meta.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=
-	pps82601-s2048-2026-q3; bh=Xe1oImVY8GpyEEihZx3CRbXAHQfXQa43WV0lt
-	V1F1qo=; b=DRplc9mqL4hnzwGqbTVzHeRcgqwkNieFDA8xQ28u/bMvZuwjEN+7t
-	6Hj3j8OQwypYp2Y2YiiGOSkzi1mPKorAmwTJPEUF/IPe9cpWt7CxfmIX6bWtAPU+
-	Sd5656jISpInYWLzrP8AcLSXupfLLFClEKmY1iKuuHFjNZA7l//+IYV8bBUEmQ5I
-	S7vhKGNeier4AqLSbGr5Nghj7l0CgM673wV3Y8fEhbXoi6Ks09XO8fzS9c6/Kg8P
-	a2KNZsjYWQrkqEwmeWeRwTReNOc8EWsfmHkdhiI/er7saSKkqAezfhwCop2VJ8tV
-	YTOLmaSjGRJz2T/XRzAwRsLxSpj4hKxLQ==
-Received: from mail-ot1-f70.google.com (mail-ot1-f70.google.com [209.85.210.70])
-	by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 4gn2s1cbxq-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Mon, 14 Sep 2026 09:45:12 -0700 (PDT)
-Received: by mail-ot1-f70.google.com with SMTP id 46e09a7af769-80668533f9fso3431394a34.0
-        for <linux-pci@vger.kernel.org>; Mon, 14 Sep 2026 09:45:11 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1789404311; cv=none;
-        d=google.com; s=arc-20260327;
-        b=pkNBNaGmdc0ekZXQyAHb1Pn2l5VaImRGtKQ2X7WZLvEXR/7mAQJ6HTsXuATPP/MsSu
-         YLQ49wPXfXPhr2y2Chm1WFtiaTbdpgzD2EZbA/lVdCFnd0Vw932xcE2zDChIStZSLHpn
-         XMoMNZi6g+P1olRBa2YmkIA63+gudCIuva7Bh8ZvNr8dXkhrVU/4x67eNegGNwzGElOQ
-         BXowNh2TbzRJiJ4WO1ELikPbZiof/qf5In/5TyJ8LcB3D4TYoU9CDlZk1VCofse3/php
-         Q5xL+t5kg1UD76EBQaavMvhshrLv4KTym/TSM/MQCuKD2qnUnljahfuW/H+RjdqUc5iC
-         2Mng==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version;
-        bh=W/IfzmZpAk7B09Cty+ZUz8VvpecEGW2xEWJ+5rLbuiA=;
-        fh=ScP7Nqsz6jgShK/yAf5bJVrgR+88U8edAyYtO0jQ2Co=;
-        b=n3qB1U3aHOuCOQtITp++e6Y6jqy39kFZFFKE0KDm5aJ/7f8WzA16yYtsFk6BwR/yD4
-         N3/jnGQNO+Fw+An+4MWfRfJBbKoPuTbLezyzWpac2M1AqbGlmeJ6mVDlh09eyZnGv1xZ
-         QPNhEQTvQbjRzEVIBIkhb9ReMJX+g5S/DJ66sTM5wqP3H0atuF30GyQz7zo6h21PaqaI
-         jCU2d3bM5QOQMZhNo0yuKWTmRBK9v8XiBjOQkTWs2xn0+0S7sz4lxZurL+IOKENdM7aj
-         J9txxKiJ3AVxS9ZCUuiPvOj6yKJBc/y1P9wjUlxCcJ0tUqkWnUKmdGK1V5KKLRxrLKxm
-         6zOA==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="HZtBxv6A"
+Received: by mail-pz2-f12.google.com with SMTP id d2e1a72fcca58-86868f7707dso798598b3a.2
+        for <linux-pci@vger.kernel.org>; Mon, 14 Sep 2026 09:46:04 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1789404364; x=1790009164; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=vaEn4gJaLG6//UlaQV046R50HUoC/N5LfAqjMif4QV0=;
+        b=HZtBxv6AQhpZhM2bzd3LC6nI0HmDWWrfo94WoN+4IiWrbFLRUj6mcGvyGM2zWsEs/p
+         UcAaN0gwGQlnOUuIwrLgriIVtXN1oK3X0x5OfR9/g54iJnAv2lsXUzRSsFnMktLx+Dfm
+         PtA6hvFdFQkhAnNXTa52P/V+mVSAIxJpz3GUWcbBuNHTzbmecyxJtilSbJJ5FiPweyiC
+         res3g+8cFm5a+w8OdrY8VcBAH/16QBLPSoW/4DSzfgMrORabVB8zfa21N5Xi8HS50Rd+
+         R94hFys6pXsnm+FWAUyUE7Gro/1hfUck0VWa+Scelz8DVA025pcvjjXoNLeBDjP/KbM8
+         bR0w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1789404311; x=1790009111;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
+        d=1e100.net; s=20251104; t=1789404364; x=1790009164;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=W/IfzmZpAk7B09Cty+ZUz8VvpecEGW2xEWJ+5rLbuiA=;
-        b=T7EsebctPVU4DpN/YHpwJj9CK/SsX89f2F0CtPfkNO42FFvi3kGmx3lA7VQiVIMPBm
-         TRmD8YkQ1PlrzGDgM53IcvIMKSUnHCagc6yg0+QN4Psf2fgp9xvZW85nA+QzUJmpEAti
-         ESYETHj88R9OjSfKmwuJnldwprEMnnk9ulFwIqIQCLF60fMjTAl6qBOwfYKL68f2Qgcw
-         6EzQbcaHsa3Sflp3ta5g+DFyEP5+jgiUmr3bzJ0/ercmYb/597rE7bqj9mfEdD3koluR
-         FqJQU3nGU1iar3X+bswCnK+CrPK/nMCNx2wOBc8un+niTCk6DnwA/csN63xNs/QdY5GN
-         ghPg==
-X-Forwarded-Encrypted: i=1; AKwUvByHl0QclC1NWscvt4arK3llA7QqOn1Jxib2AIwyCBWX3H+j/HM5FDiMFhx1ECDFKdF2/ZF3aKENVe4=@vger.kernel.org
-X-Gm-Message-State: AFuF++numgszwQh1PxybIPKDhoH3ALkzfA0Z2j8D9W2i9vrm/vzxMPjs
-	clcJHsc8Sx/7davOb4EMofWAudEIf31BpcTVYG1eEAL9VkY8yD1v21kpuSm+QW2SDTupmFu9XPC
-	u0KKO4SQUv55vMAZy7S+V/78a/WA1/KJCsGAvvWbrwHPNTlnYWW5VlsZE65sP2cEl971PgBEqNq
-	wT8eu96xkhRpbpCeMkVEshmyeDEaH2bnb1FWs=
-X-Gm-Gg: AYBFou25UGtY8z366gB7DF3/ps1bcvV1WBazBbzJ1CQt7foVeL3/LaZ25ywFrfw5y32
-	fnGGfn1X0CqNmDLHGxZM7ALcv4KIcd9FWeI9HuG4N7Gm5Yxz/GnqkqoESKMjDVHsiwQlcxtuuWu
-	7inhb8SflUxzqr7qltsucx5ndl8kjP3hMemdGBwzf/Hn9nJWqHGkPWFs/Flb3ItNLIag5mwfIZ
-X-Received: by 2002:a05:6830:4c18:b0:804:bb22:6d42 with SMTP id 46e09a7af769-80899165940mr2442798a34.17.1789404311006;
-        Mon, 14 Sep 2026 09:45:11 -0700 (PDT)
-X-Received: by 2002:a05:6830:4c18:b0:804:bb22:6d42 with SMTP id
- 46e09a7af769-80899165940mr2442701a34.17.1789404309350; Mon, 14 Sep 2026
- 09:45:09 -0700 (PDT)
+        bh=vaEn4gJaLG6//UlaQV046R50HUoC/N5LfAqjMif4QV0=;
+        b=XTPEabs1RnHQ+y4jiHy1WeGcnQEAEZjkvsMOnijO6xTUsMduS+wp1uDH4aBAifd/ga
+         ooxkEqiOBtmd0aqdRvwkUlZ37mZbgv8uWB1tmHphYvvVF3SBgeBvomkEPyIB2lTyCv1L
+         GnOctkfBCNylP317EpYBoAj+8OMgLnwBKx6gdejGyArlH4SM2yLpr0EHc0cYrQEbFra7
+         PqmvijWcAWxKluvQ7R+x2qR08FW9zlvK8v8sAUXnf+eSUofsd+iSXCyWS6ADQZtKHnPa
+         UYFOSvlmij/4T/36jNcIX0p3V9vi6laOXCe9GgAZ9l8lBb1IsuhDZdxYGn2XuB7qXsNj
+         ex+g==
+X-Forwarded-Encrypted: i=1; AKwUvBwIIUsrKfNdg0XvrUKksffDohVZs+prWigPGGC/jYFdn18aca8eULZX1q9j0phmfdaz2OGUmGJj4nA=@vger.kernel.org
+X-Gm-Message-State: AFuF++lMCyr2on/o7I+Cp/5avbY47r7bP3/86aPTPw5B2iQdhkJYLrP+
+	vrwkQ4fl6IAUaR+fW8DMj1vMye3aX0PAiE90ifjPFh0w1pWwpL6muK2t/r/xOdNg9w==
+X-Gm-Gg: AYBFou3B7ry2kMXzZ3iqW4JTFSXOZ1wMSku/cHFmZgbpoXWN5Zo59xK47SdSbeSixQy
+	/WJad/gcG0x6SjLbABZoiC2U91iBnbVQLd8amUlnl4iqshTPXdFAPTbmTYWY3ekVyC5g1ZFSGkw
+	GP/AiumjHYO9U6K913O3+ZR5jJdTziJ+a4wLKnlIGs9uusitjDHdM//UN/b0AkWw24FsKvn5khQ
+	miUVUHqvW8bNrI6e7yqlD6hW9WD0IZcsHdWPxfrf63Pr7yuLKVASurfIqJLR95PTgNCy0vfQLtI
+	LKulJb/uNd/a9IvqwmLcO2hNq40RKEjLsmckd0OEicjvvAzFI4G/34FmQpLaVDeYZgQl3BBZqVB
+	JO5fPv3aP6fuJGdMejGY5OyjA66rv3WM+wstswLOPgIsDfjUKy2CiSz5+e3zR7s7UCli08YTLh0
+	t2pSB5F8E6UDsxGNu2Wp9KfNd+ioitwQrj6bvAdQ1RcNuW3ETgKw83tDNc4M5vJMsVFLReezJCm
+	sL59iuBV/kLygtO4C3N3+71uwMupzZDuac0s8XR
+X-Received: by 2002:a05:6a00:2992:b0:857:7337:5db9 with SMTP id d2e1a72fcca58-86f860d2bdfmr7633241b3a.23.1789404363216;
+        Mon, 14 Sep 2026 09:46:03 -0700 (PDT)
+Received: from google.com (132.200.185.35.bc.googleusercontent.com. [35.185.200.132])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-86b21f0597dsm4930607b3a.0.2026.09.14.09.46.02
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 14 Sep 2026 09:46:02 -0700 (PDT)
+Date: Mon, 14 Sep 2026 16:45:58 +0000
+From: David Matlack <dmatlack@google.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: kexec@lists.infradead.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-mm@kvack.org,
+	linux-pci@vger.kernel.org,
+	Adithya Jayachandran <ajayachandra@nvidia.com>,
+	Alexander Graf <graf@amazon.com>,
+	Alex Williamson <alex@shazbot.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, Chris Li <chrisl@kernel.org>,
+	David Rientjes <rientjes@google.com>,
+	Jacob Pan <jacob.pan@linux.microsoft.com>,
+	Jason Gunthorpe <jgg@nvidia.com>, Jonathan Corbet <corbet@lwn.net>,
+	Josh Hilke <jrhilke@google.com>,
+	Leon Romanovsky <leonro@nvidia.com>, Lukas Wunner <lukas@wunner.de>,
+	Mike Rapoport <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>,
+	Pasha Tatashin <pasha.tatashin@soleen.com>,
+	Pranjal Shrivastava <praan@google.com>,
+	Pratyush Yadav <pratyush@kernel.org>,
+	Saeed Mahameed <saeedm@nvidia.com>,
+	Samiullah Khawaja <skhawaja@google.com>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Vipin Sharma <vipinsh@google.com>, William Tu <witu@nvidia.com>,
+	Yi Liu <yi.l.liu@intel.com>
+Subject: Re: [PATCH v8 08/12] PCI: liveupdate: Adopt ACS controls in incoming
+ preserved devices
+Message-ID: <aqgkxmXlhfqsdfAa@google.com>
+References: <20260728221007.2098560-9-dmatlack@google.com>
+ <20260910235149.GA364189@bhelgaas>
+ <aqRJF8OME7hn7CJr@google.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260731211601.3033906-1-zhipingz@meta.com> <CAH3zFs0vQidHOWif_LmS0=65S9iiCo7yGibqLvFT5jadjj8wVA@mail.gmail.com>
- <CAH3zFs2XnH6gT0fO4=WLi4x1SL2+Y0S=Jo45SWkR=unPegQ8Hw@mail.gmail.com>
- <CAH3zFs2X8=x-XMXhwC7_aUZivCCPQOSuyXMy-ryKqxLEFY9u-Q@mail.gmail.com> <c0c8dea4-1571-482e-be33-f965c7c357d2@amd.com>
-In-Reply-To: <c0c8dea4-1571-482e-be33-f965c7c357d2@amd.com>
-From: Zhiping Zhang <zhipingz@meta.com>
-Date: Mon, 14 Sep 2026 09:44:57 -0700
-X-Gm-Features: AcwNN1V7qhKXhTeUGI34ctmmAmZsJQy-TojG1H3GIQpXD2MuySir3gvz-U-HjyU
-Message-ID: <CAH3zFs3=t3rNDDjUsCAekfhEGOJPyx-YXKta7NdHy3kBKU_RHQ@mail.gmail.com>
-Subject: Re: [PATCH v13 0/5] vfio/dma-buf: add TPH support for peer-to-peer
- access - ping
-To: =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>,
-        Alex Williamson <alex@shazbot.org>, Jason Gunthorpe <jgg@ziepe.ca>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: kvm@vger.kernel.org, linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org,
-        dri-devel@lists.freedesktop.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTE0MDIzOCBTYWx0ZWRfXzNCsuy0qSM6L
- jbmfYrGGBnD1At8cyJk9WC8Xct2QJoPWEMVz/ou+H6HQkxIVowls7ZJf3jxoRjKGgbDahfnECHT
- 5F8h56J2DWevI3iTPAegyBbbdKGSQWcxGWONkHFlPuggQ9nv8TCV18x+Kbid2TR1T3+GmL7dQUC
- HpkhsMfbBffb7DNonw/uqzpF1kpIAmaTTZSF80hc1UULjjeJNgOoDdxwu70DjFBdMlmFwdjLVuV
- 1yZLP2oMP+k1E2pyAhOiZKW+sgn/ICMm3mQrWJcjCPhSI9xGdjDJtQWX1MAbRvXkS7aelVLtZjE
- /PPkroPieNBwC86XmFoP4becc5E0vSBkpjJ973F7R4J4p+E7UdKBOZLNHO1Vhi4aBU3qlolJFLK
- o/NYmcL7OUO6Zy5lpKeO0tKvhaDK+oHh+lJzbvvoq0ZgnSiXxYIHRY0NoI9aztntlJY5wku34X7
- 7ENnHvmf5jSTN9xB7ug==
-X-Authority-Analysis: v=2.4 cv=C4V8WgP+ c=1 sm=1 tr=0 ts=6aa82498 cx=c_pps
- a=7uPEO8VhqeOX8vTJ3z8K6Q==:117 a=IkcTkHD0fZMA:10 a=VdqzKS8jKosA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=7x6HtfJdh03M6CCDgxCd:22 a=tpM8CJlwf7uhpglF1g9U:22
- a=VwQbUJbxAAAA:8 a=VabnemYjAAAA:8 a=zd2uoN0lAAAA:8 a=Yozcj6nN4JbTgJmO7zcA:9
- a=QEXdDO2ut3YA:10 a=EXS-LbY8YePsIyqnH6vw:22 a=gKebqoRLp9LExxC7YDUY:22
-X-Proofpoint-GUID: msVAdBfV45qVepujXHYSHwP3cn4JU_f7
-X-Proofpoint-ORIG-GUID: msVAdBfV45qVepujXHYSHwP3cn4JU_f7
-X-Proofpoint-Spam-Info: AW1haW4tMjYwOTE0MDIzOCBTYWx0ZWRfX1ohL87I59qVr
- CC/tXcwkWcufrFkVC3B1PKm8peZBDuVtoHRhjDyQHrovZf8AXhQ1rSTjqS5/folxvh4hoCpg4qq
- aU+F5Qrf1C4cydLr1XG08NqFH1EzAuw=
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-09-14_03,2026-09-14_01,2025-10-01_01
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <aqRJF8OME7hn7CJr@google.com>
 
-Thanks Christian -- no worries on the bandwidth, I'll add the Acked-by
-to patch 3.
+On 2026-09-11 06:31 PM, David Matlack wrote:
+> On 2026-09-10 06:51 PM, Bjorn Helgaas wrote:
+> 
+> > > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> > > index 77b17b13ee61..22001bdf4c97 100644
+> > > --- a/drivers/pci/pci.c
+> > > +++ b/drivers/pci/pci.c
+> > > @@ -34,6 +34,8 @@
+> > >  #include <linux/aer.h>
+> > >  #include <linux/bitfield.h>
+> > >  #include <linux/suspend.h>
+> > > +
+> > > +#include "liveupdate.h"
+> > >  #include "pci.h"
+> > >  
+> > >  DEFINE_MUTEX(pci_slot_mutex);
+> > > @@ -1008,6 +1010,9 @@ void pci_enable_acs(struct pci_dev *dev)
+> > >  	bool enable_acs = false;
+> > >  	int pos;
+> > >  
+> > > +	if (!pci_liveupdate_enable_adopted_acs_controls(dev))
+> > > +		return;
+> > 
+> > Ugh.  The asymmetry between pci_save_state(), which does nothing
+> > ACS-related, and pci_restore_state(), which enables it, is sort of
+> > sketchy to begin with.
+> > 
+> > The command-line parsing in this path feels like kind of a wart (not
+> > that you're touching it).
+> > 
+> > It just seems like this path is already hard to analyze, and
+> > liveupdate is making it harder.
+> > 
+> > If we could save/restore the ACS state around the reset, wouldn't that
+> > solve this without any liveupdate specials here?
+> 
+> Yeah that would simplify the liveupdate support greatly. Let me work on
+> that for v9.
 
-Hi Alex, Jason, Bjorn,
+Here's the patch I have prepped for v9 to save/restore ACS controls
+around reset:
 
-Could you help with reviews on patch 4 (vfio/pci) and patch 5
-(RDMA/mlx5), plus acks on patches 1-2 (PCI TPH core) so the set can
-travel whole if it goes through the VFIO tree, which is the route
-Christian suggests?
+From 0c69424454de0c569aca67bc69f496db915a9bcf Mon Sep 17 00:00:00 2001
+From: David Matlack <dmatlack@google.com>
+Date: Fri, 11 Sep 2026 20:05:04 +0000
+Subject: [PATCH] PCI: Save and restore the ACS Control register
 
-I've also rebased the set onto 7.3 (base 5225b8eec4c9) and retested on
-hardware -- PCIe analyzer captures confirming the requested ST and PH
-on outbound TLPs, no splats.
+Save the ACS Control register in pci_save_state() and write it back
+in pci_restore_state(), instead of recomputing the ACS controls from
+scratch with pci_enable_acs().
 
-One thing to decide: upstream took 13 for
-VFIO_DEVICE_FEATURE_ZPCI_ERROR after v13 went out, so
-VFIO_DEVICE_FEATURE_DMA_BUF_TPH becomes 14 in the respin -- let me
-know if you'd rather it be something else.
+This makes ACS symmetric with the rest of a device's saved state. Today
+pci_save_state() ignores ACS entirely and pci_restore_state() re-enables
+the ACS controls from the kernel's current ACS policy. As a result, a
+device can come out of a reset with different ACS controls than it went
+in with, e.g. any controls programmed outside of pci_enable_acs() are
+silently dropped.
 
-I'll post v14 after I hear from you. Delta from v13 is the rebase,
-that feature-number move, and nothing else functional.
+pci_enable_acs() runs when a driver binds to a device
+(pci_dma_configure()), i.e. after pci_bus_add_device() has already saved
+the device's state. Refresh the saved ACS Control register there as
+well, otherwise a subsequent reset would revert ACS back to the
+configuration left behind by firmware.
 
-Thanks,
-Zhiping
+Devices that rely on device-specific quirks to enable an ACS equivalent
+keep that configuration outside of the ACS Control register, so keep
+configuring ACS from scratch for them. Do the same for devices that have
+no saved ACS state at all.
 
-On Fri, Sep 11, 2026 at 12:58=E2=80=AFAM Christian K=C3=B6nig
-<christian.koenig@amd.com> wrote:
->
-> >
-> Hi Zhiping,
->
-> sorry I'm completely underwater at the moment and don't have time to take=
- another look at the full set.
->
-> But IIRC you already fixed my documentation requirements and skimming ove=
-r the patch once more I can't see anything wrong of hand.
->
-> So feel free to add Acked-by: Christian K=C3=B6nig <christian.koenig@amd.=
-com> to patch "dma-buf: add optional get_pci_tph() callback" and push it up=
-stream through the VFIO channels.
->
-> Regards,
-> Christian.
->
-> On 9/10/26 23:46, Zhiping Zhang wrote:
-> > Hi Christian,
-> >
-> > Third ping on this series. The only patch still without review is 3/5,
-> > which adds an optional get_pci_tph() callback to dma_buf_ops:
-> >
-> > https://lore.kernel.org/kvm/20260731211601.3033906-4-zhipingz@meta.com/
-> >
-> > It lets an exporter report the PCIe TPH steering tag for a
-> > peer-to-peer mapping. The callback is optional -- exporters that don't
-> > implement it behave exactly as today -- and nothing else in dma-buf
-> > changes.
-> >
-> > The rest of the series is settled: Chengwen acked patch 2, the
-> > automated review is clean, and there are no open comments from v12.
-> > Alex is holding his ack until the dma-buf side has been looked at, so
-> > this one callback is gating the whole series.
-> >
-> > If you have concerns about the API shape or the locking, I'll respin.
-> > If someone else should review the dma-buf side, tell me who and I'll
-> > take it there. Otherwise I'll check with Alex and Jason next week on
-> > how to proceed, since 7.3 is in rc and the next window is about a
-> > month out.
-> >
-> > Thanks,
-> > Zhiping
-> >
-> > On Wed, Sep 2, 2026 at 1:53=E2=80=AFPM Zhiping Zhang <zhipingz@meta.com=
-> wrote:
-> >>
-> >> Hi Christian,
-> >>
-> >> Another ping on this series for your attention. Pls see below for more=
- details.
-> >>
-> >> Thanks,
-> >> Zhiping
-> >>
-> >> On Fri, Aug 14, 2026 at 11:08=E2=80=AFAM Zhiping Zhang <zhipingz@meta.=
-com> wrote:
-> >>>
-> >>>  Hi Christian,
-> >>>
-> >>> A gentle ping on this series, especially patch 3, which adds the
-> >>> optional dma-buf get_pci_tph() callback. Could you please review this
-> >>> when you have a chance?
-> >>>
-> >>> https://lore.kernel.org/linux-pci/20260731211601.3033906-4-zhipingz@m=
-eta.com/
-> >>>
-> >>> Thanks,
-> >>> Zhiping
-> >>>
-> >>>
-> >>> On Fri, Jul 31, 2026 at 2:22=E2=80=AFPM Zhiping Zhang <zhipingz@meta.=
-com> wrote:
-> >>>>
-> >>>> This series adds TLP Processing Hints (TPH) support to the VFIO dma-=
-buf
-> >>>> export path, allowing importing drivers (e.g. mlx5) to use the
-> >>>> exporter's steering tag when performing peer-to-peer DMA into a
-> >>>> VFIO-owned device.
-> >>>>
-> >>>> There is no separate in-tree vendor kernel driver for the target dev=
-ice:
-> >>>> vfio-pci is the in-tree driver and the targeted device is managed
-> >>>> from userspace via VFIO passthrough. That is why the ST has to flow
-> >>>> through a uAPI: userspace owns the device and its ST table, so it is=
- the
-> >>>> entity that can configure a meaningful value for a given dma-buf. The
-> >>>> kernel-visible participants are still in-tree: vfio-pci exports the
-> >>>> dma-buf and mlx5 imports it.
-> >>>>
-> >>>> On the effect: the endpoint's PCIe ingress block uses the ST as
-> >>>> an in-band instruction for the incoming P2P TLP -- selecting a target
-> >>>> cache partition and, on writes, an in-flight operation on the data
-> >>>> before it lands. The dma-buf callback keeps this opaque to the
-> >>>> framework -- only the producer (userspace owner of the VFIO device)
-> >>>> and the consumer (endpoint block) need to interpret the value. The
-> >>>> dma-buf get_pci_tph callback itself is optional, but workloads that
-> >>>> depend on the endpoint's in-flight operation need it because fallback
-> >>>> does not produce the same result.
-> >>>>
-> >>>> The dma-buf hook is intentionally generic and discoverable rather th=
-an
-> >>>> a private side channel. The exporter owns the completing address
-> >>>> space for the dma-buf and decides whether it can provide a meaningful
-> >>>> ST/PH tuple for that completer; the dma-buf core keeps the tuple opa=
-que,
-> >>>> and importers merely request the namespace they support and place the
-> >>>> returned value on generated TLPs. Exporters that cannot derive a
-> >>>> meaningful tuple simply return -EOPNOTSUPP.
-> >>>>
-> >>>> TPH is advisory: a steering tag that is not honored on the path (for
-> >>>> example an intermediate routing element that does not forward the TPH
-> >>>> prefix) is ignored and the request completes as an ordinary,
-> >>>> non-TPH transaction (PCIe Base 6.4 sec 2.2.7.1). This series therefo=
-re
-> >>>> targets the same-Root-Port / common-switch topology, where the ST
-> >>>> reaches the completer; cross-Root-Port P2P is best-effort and is not
-> >>>> gated in the uAPI, since supplying an unused ST is harmless and there
-> >>>> is no discoverable "TPH routing" capability to test against.
-> >>>>
-> >>>> Patch 1 folds the reserved 0b10 "TPH Completer Supported" encoding i=
-nto
-> >>>> "not supported" in get_rp_completer_type(), so only architected valu=
-es
-> >>>> can reach the TPH Requester Enable field. It was previously posted
-> >>>> standalone to linux-pci; per Alex Williamson's v12 review it now tra=
-vels
-> >>>> with the series, which removes the cross-tree ordering dependency and
-> >>>> lets review tooling apply the series as posted.
-> >>>> Patch 2 adds small PCI/TPH type helpers so drivers can query the ena=
-bled
-> >>>> TPH requester mode and the device's TPH Completer Supported field
-> >>>> without reaching into pci_dev internals (and so callers in
-> >>>> CONFIG_PCIE_TPH=3Dn builds get a clean fallback). pcie_tph_completer=
-_type()
-> >>>> applies the same reserved-encoding fold as get_rp_completer_type(),
-> >>>> inlined locally so the helper is self-contained.
-> >>>> Patch 3 adds the optional dma_buf_ops::get_pci_tph callback plus the
-> >>>> dma_buf_get_pci_tph() importer wrapper so importers can fetch TPH
-> >>>> metadata from an exporter under dmabuf->resv.
-> >>>> Patch 4 implements get_pci_tph in vfio-pci and adds the new uAPI
-> >>>> (VFIO_DEVICE_FEATURE_DMA_BUF_TPH) for userspace to attach the metada=
-ta.
-> >>>> Patch 5 wires up the mlx5 RDMA driver as a consumer. It also enforce=
-s the
-> >>>> dma_buf_get_pci_tph() steering-tag lifetime: the tag is only valid f=
-or the
-> >>>> mapping it was queried against, and the mkey's TPH fields cannot be
-> >>>> reprogrammed in place. mlx5 therefore records the registration-time =
-tuple
-> >>>> and re-queries after each dma-buf mapping is established under
-> >>>> dmabuf->resv; unchanged tuples continue with the existing mkey, while
-> >>>> changed or missing tuples fail the remap rather than continue with a
-> >>>> stale hint. For vfio-pci BAR dma-bufs this is expected to be a no-op
-> >>>> because invalidation is revoke/quiesce, not movement to a new backing
-> >>>> placement, and the userspace-provided tuple is not changed by the
-> >>>> revoke/un-revoke path.
-> >>>>
-> >>>> Build-tested with both CONFIG_PCIE_TPH=3Dy and CONFIG_PCIE_TPH=3Dn.
-> >>>> Functional validation on the target topology: PCIe analyzer captures
-> >>>> on the P2P TLPs confirm the ST emitted by mlx5 matches the value
-> >>>> configured through VFIO_DEVICE_FEATURE_DMA_BUF_TPH, and the end-to-e=
-nd
-> >>>> P2P workload only produces results consistent with the endpoint's
-> >>>> ST-selected in-flight operation. For example, with userspace
-> >>>> configuring 8-bit ST=3D0xf0 and PH=3D2, an analyzer capture of a pee=
-r-to-
-> >>>> peer MWr64 shows "STP MWr64 TC=3D0 OHC=3D2 ..." followed by "OHC-B
-> >>>> ST=3DF0h PH=3D2 HV=3D1":
-> >>>> (TLP Captures)
-> >>>> 08000260 -> STP MWr64 TC=3D0 OHC=3D2 TS=3D0 Attr=3D0 L=3D8
-> >>>> F0000004 -> RID=3D4h:0h.0h EP- Tag=3DF0h
-> >>>> E0200000 -> AddrH=3D000020E0h
-> >>>> 00080006 -> AddrL=3D06000800h
-> >>>> 90F00000 -> OHC-B ST=3DF0h PH=3D2 HV=3D1 AMA=3D0 AV-
-> >>>>
-> >>>> The dma-buf get_pci_tph interface has also been exercised by a secon=
-d,
-> >>>> independent importer: a different vendor's NIC whose driver is not y=
-et
-> >>>> upstream, locally taught to call dma_buf_get_pci_tph(). A PCIe analy=
-zer
-> >>>> confirmed the ST it placed on outbound P2P TLPs matches the value
-> >>>> configured through VFIO_DEVICE_FEATURE_DMA_BUF_TPH, the same result =
-as
-> >>>> with mlx5. Two unrelated importer drivers exercising the callback
-> >>>> end-to-end shows the interface is not tied to a single consumer. That
-> >>>> importer change is out-of-tree and not part of this series. For that
-> >>>> second importer, with userspace configuring 8-bit ST=3D0xe0 and PH=
-=3D0,
-> >>>> an analyzer capture shows:
-> >>>> (TLP Captures)
-> >>>> 08200260 -> STP MWr64 TC=3D0 OHC=3D2 TS=3D1 Attr=3D0 L=3D8
-> >>>> 4E00004C -> RID=3D4Ch:0h.0h EP- Tag=3D4Eh
-> >>>> 00170000 -> AddrH=3D00001700h
-> >>>> 00200006 -> AddrL=3D06002000h
-> >>>> 10E00000 -> OHC-B ST=3DE0h PH=3D0 HV=3D1 AMA=3D0 AV-
-> >>>>
-> >>>> Changes since v12:
-> >>>>   Patch 1 (PCI/TPH, new to the series): the reserved-encoding fold,
-> >>>>   previously posted standalone to linux-pci [1], is now the first pa=
-tch
-> >>>>   here (Alex Williamson). Sashiko could not apply v12 because of that
-> >>>>   external dependency; with the fold in-series and the mlx5 leak fix=
- in
-> >>>>   linux-next, v13 has none. The code is unchanged from the standalone
-> >>>>   v3; the Fixes: tag is dropped, since no code path can reach the
-> >>>>   reserved encoding today and the patch is hardening rather than a f=
-ix
-> >>>>   for observed silicon.
-> >>>>
-> >>>>   Patch 2 (PCI/TPH): inline the reserved-encoding fold in
-> >>>>   pcie_tph_completer_type() rather than calling the helper that earl=
-ier
-> >>>>   folding revisions added; that helper was dropped in folding v3 per
-> >>>>   Bjorn Helgaas and Wei Huang.
-> >>>>
-> >>>>   Patch 3 (dma-buf): no functional change.
-> >>>>
-> >>>>   Patch 4 (vfio/pci): also gate the DMA_BUF_TPH feature on
-> >>>>   vdev->pci_ops->get_dmabuf_phys, matching
-> >>>>   vfio_pci_core_feature_dma_buf(). Without it PROBE reported the fea=
-ture
-> >>>>   as supported on a device that advertises TPH Completer support but
-> >>>>   cannot export a vfio dma-buf at all, so nothing could ever carry t=
-he
-> >>>>   metadata (Alex Williamson, who raised this to uAPI-affecting
-> >>>>   severity).
-> >>>>
-> >>>>   Patch 5 (mlx5): keep the !dev->st early-out in mlx5_st_alloc_index=
-()
-> >>>>   ahead of the pcie_tph_get_cpu_st() call, so splitting out
-> >>>>   mlx5_st_alloc_index_by_tag() neither adds an ACPI _DSM invocation =
-on
-> >>>>   devices without ST support nor changes the errno userspace sees wh=
-en
-> >>>>   the _DSM lookup fails (Alex Williamson). The commit message now
-> >>>>   describes this rather than presenting the split as a pure extracti=
-on.
-> >>>>
-> >>>> Previous link:
-> >>>> v12: https://lore.kernel.org/linux-pci/20260715204008.3911275-1-zhip=
-ingz@meta.com/
-> >>>> v11: https://lore.kernel.org/linux-pci/20260702181025.2694961-1-zhip=
-ingz@meta.com/
-> >>>> v10: https://lore.kernel.org/linux-pci/20260630224328.3218796-1-zhip=
-ingz@meta.com/
-> >>>> v9: https://lore.kernel.org/dri-devel/20260622184211.2229399-1-zhipi=
-ngz@meta.com/
-> >>>> v8: https://lore.kernel.org/dri-devel/20260615065912.2177918-1-zhipi=
-ngz@meta.com/
-> >>>> v7: https://lore.kernel.org/dri-devel/20260611161546.4075580-1-zhipi=
-ngz@meta.com/
-> >>>> v6: https://lore.kernel.org/dri-devel/20260608185646.4085127-1-zhipi=
-ngz@meta.com/
-> >>>> v5: https://lore.kernel.org/dri-devel/20260526144401.1485788-1-zhipi=
-ngz@meta.com/
-> >>>> v4: https://lore.kernel.org/linux-pci/20260519201401.1558410-1-zhipi=
-ngz@meta.com/
-> >>>> v3: https://lore.kernel.org/linux-pci/20260512184755.4137227-1-zhipi=
-ngz@meta.com/
-> >>>> v2: https://lore.kernel.org/linux-pci/20260430200704.352228-1-zhipin=
-gz@meta.com/
-> >>>>
-> >>>> Zhiping Zhang (5):
-> >>>>   PCI/TPH: treat reserved 0b10 completer encoding as unsupported
-> >>>>   PCI/TPH: Add requester/completer type helpers
-> >>>>   dma-buf: add optional get_pci_tph() callback
-> >>>>   vfio/pci: implement get_pci_tph and DMA_BUF_TPH feature
-> >>>>   RDMA/mlx5: get tph for p2p access when registering dma-buf mr
-> >>>>
-> >>>>  drivers/dma-buf/dma-buf.c                     |  32 ++++
-> >>>>  drivers/infiniband/hw/mlx5/main.c             |   1 +
-> >>>>  drivers/infiniband/hw/mlx5/mlx5_ib.h          |  11 ++
-> >>>>  drivers/infiniband/hw/mlx5/mr.c               | 151 +++++++++++++++=
-++-
-> >>>>  drivers/infiniband/hw/mlx5/odp.c              |   7 +
-> >>>>  .../net/ethernet/mellanox/mlx5/core/lib/st.c  |  52 +++++-
-> >>>>  drivers/pci/tph.c                             |  55 ++++++-
-> >>>>  drivers/vfio/pci/vfio_pci_core.c              |   3 +
-> >>>>  drivers/vfio/pci/vfio_pci_dmabuf.c            | 120 +++++++++++++-
-> >>>>  drivers/vfio/pci/vfio_pci_priv.h              |  13 ++
-> >>>>  include/linux/dma-buf.h                       |  25 +++
-> >>>>  include/linux/mlx5/driver.h                   |  15 ++
-> >>>>  include/linux/pci-tph.h                       |   8 +
-> >>>>  include/uapi/linux/vfio.h                     |  43 +++++
-> >>>>  14 files changed, 517 insertions(+), 19 deletions(-)
-> >>>>
-> >>>> --
-> >>>> 2.53.0-Meta
-> >>>>
->
+Assisted-by: Claude:claude-opus-5
+Signed-off-by: David Matlack <dmatlack@google.com>
+---
+ drivers/pci/pci.c    | 66 +++++++++++++++++++++++++++++++++++++++++++-
+ drivers/pci/pci.h    |  5 ++++
+ drivers/pci/quirks.c |  7 +++++
+ 3 files changed, 77 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index b2879a6be5f8..dd25c01736b4 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -1021,6 +1021,55 @@ static void pci_std_enable_acs(struct pci_dev *dev, struct pci_acs *caps)
+ 		caps->ctrl |= (dev->acs_capabilities & PCI_ACS_TB);
+ }
+ 
++/**
++ * pci_save_acs_state - save the ACS Control register
++ * @dev: the PCI device
++ *
++ * Record the ACS controls currently programmed in hardware so that
++ * pci_restore_acs_state() can reapply them after a reset.
++ */
++static void pci_save_acs_state(struct pci_dev *dev)
++{
++	struct pci_cap_saved_state *save_state;
++
++	if (!dev->acs_cap)
++		return;
++
++	save_state = pci_find_saved_ext_cap(dev, PCI_EXT_CAP_ID_ACS);
++	if (!save_state)
++		return;
++
++	pci_read_config_word(dev, dev->acs_cap + PCI_ACS_CTRL,
++			     (u16 *)&save_state->cap.data[0]);
++}
++
++/**
++ * pci_restore_acs_state - restore the ACS Control register
++ * @dev: the PCI device
++ */
++static void pci_restore_acs_state(struct pci_dev *dev)
++{
++	struct pci_cap_saved_state *save_state = NULL;
++
++	if (dev->acs_cap && !pci_need_dev_specific_enable_acs(dev))
++		save_state = pci_find_saved_ext_cap(dev, PCI_EXT_CAP_ID_ACS);
++
++	/*
++	 * Devices that rely on device-specific quirks to enable an ACS
++	 * equivalent keep that configuration outside of the ACS Control
++	 * register, so there is nothing useful to restore for them. Configure
++	 * ACS from scratch instead, which also covers devices that have no
++	 * saved ACS state at all.
++	 */
++	if (!save_state) {
++		pci_enable_acs(dev);
++		return;
++	}
++
++	pci_write_config_word(dev, dev->acs_cap + PCI_ACS_CTRL,
++			      *(u16 *)&save_state->cap.data[0]);
++}
++
+ /**
+  * pci_enable_acs - enable ACS if hardware support it
+  * @dev: the PCI device
+@@ -1057,6 +1106,15 @@ void pci_enable_acs(struct pci_dev *dev)
+ 	__pci_config_acs(dev, &caps, config_acs_param, 0, 0);
+ 
+ 	pci_write_config_word(dev, pos + PCI_ACS_CTRL, caps.ctrl);
++
++	/*
++	 * pci_enable_acs() runs when a driver binds to the device, i.e. after
++	 * pci_bus_add_device() has already saved the device's state. Refresh
++	 * the saved ACS Control register so that a subsequent reset restores
++	 * the controls programmed here rather than the ones left behind by
++	 * firmware.
++	 */
++	pci_save_acs_state(dev);
+ }
+ 
+ /**
+@@ -1800,6 +1858,7 @@ int pci_save_state(struct pci_dev *dev)
+ 	pci_save_aer_state(dev);
+ 	pci_save_ptm_state(dev);
+ 	pci_save_tph_state(dev);
++	pci_save_acs_state(dev);
+ 	return pci_save_vc_state(dev);
+ }
+ EXPORT_SYMBOL(pci_save_state);
+@@ -1877,7 +1936,7 @@ void pci_restore_state(struct pci_dev *dev)
+ 	pci_restore_msi_state(dev);
+ 
+ 	/* Restore ACS and IOV configuration state */
+-	pci_enable_acs(dev);
++	pci_restore_acs_state(dev);
+ 	pci_restore_iov_state(dev);
+ 
+ 	dev->state_saved = false;
+@@ -3532,6 +3591,11 @@ void pci_allocate_cap_save_buffers(struct pci_dev *dev)
+ 	if (error)
+ 		pci_err(dev, "unable to allocate suspend buffer for LTR\n");
+ 
++	error = pci_add_ext_cap_save_buffer(dev, PCI_EXT_CAP_ID_ACS,
++					    sizeof(u16));
++	if (error)
++		pci_err(dev, "unable to allocate suspend buffer for ACS\n");
++
+ 	pci_allocate_vc_save_buffers(dev);
+ }
+ 
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index ba3c3fddddc2..037c1674f164 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -1095,6 +1095,7 @@ void pci_acs_init(struct pci_dev *dev);
+ void pci_enable_acs(struct pci_dev *dev);
+ #ifdef CONFIG_PCI_QUIRKS
+ int pci_dev_specific_acs_enabled(struct pci_dev *dev, u16 acs_flags);
++bool pci_need_dev_specific_enable_acs(struct pci_dev *dev);
+ int pci_dev_specific_enable_acs(struct pci_dev *dev);
+ int pci_dev_specific_disable_acs_redir(struct pci_dev *dev);
+ void pci_disable_broken_acs_cap(struct pci_dev *pdev);
+@@ -1105,6 +1106,10 @@ static inline int pci_dev_specific_acs_enabled(struct pci_dev *dev,
+ {
+ 	return -ENOTTY;
+ }
++static inline bool pci_need_dev_specific_enable_acs(struct pci_dev *dev)
++{
++	return false;
++}
+ static inline int pci_dev_specific_enable_acs(struct pci_dev *dev)
+ {
+ 	return -ENOTTY;
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 7aee30734303..e500c202d2ec 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -5476,6 +5476,13 @@ static const struct pci_dev_acs_ops *pci_dev_acs_ops_get(struct pci_dev *dev)
+ 	return NULL;
+ }
+ 
++bool pci_need_dev_specific_enable_acs(struct pci_dev *dev)
++{
++	const struct pci_dev_acs_ops *p = pci_dev_acs_ops_get(dev);
++
++	return p && p->enable_acs;
++}
++
+ int pci_dev_specific_enable_acs(struct pci_dev *dev)
+ {
+ 	const struct pci_dev_acs_ops *p = pci_dev_acs_ops_get(dev);
