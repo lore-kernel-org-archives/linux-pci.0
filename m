@@ -1,289 +1,224 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.12])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej2-f12.google.com (mail-ej2-f12.google.com [74.125.228.140])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 005B52D7DC8;
-	Mon, 14 Sep 2026 11:38:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3AEAF44604F
+	for <linux-pci@vger.kernel.org>; Mon, 14 Sep 2026 11:50:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.228.140
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789385901; cv=none; b=ra4lpdiGNO9KimusCXMDV8snAw6KexCEqShoVV3v3VBZeCTLE52E8HpauinWTrNHg/3ED9NP2GNug3irGnibjzJZuyhqPBVYKE5qWYBgaT43HaQ2XAIr+acZcyZkCxPlLwYVhcaZHzCfoOs8gDaH3ls2J9phy+Swm4hFXp7aIQU=
+	t=1789386618; cv=none; b=GKkSPPwxu5L1RNFQaaZqppogHgBGPSlQ3IreYi4e2CS4CiV5ddnk1LqNuqT6Q5LETuTXpFpWqqMIWYqqObEZ508KwNz18xCUcNed9ox4X/oPSoGpipkLisMuzsflFiRO0lE/FJMzYJErpQdSvoPkE2EKpsB05T7GtGppCzadBGE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789385901; c=relaxed/simple;
-	bh=hrCvZVfCyV1nyywTmaouy6LCKOqYrLAXczO+EyRBcwU=;
-	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=fNrA8O94FemticJ47rfW8ejWbhB3Ci5gtUpEWXso3NwEI/QWiBvIwGf+le5SAwoqauTivtWhFjo/FgMU9/7uo4sRFmScKcNWpcyV1BJaiRkUpe7rJV1QxbrY1zi7quWjtQpm4Cpm1MuL9F0IRMh6yFBKsZBkRlpPK5qH4ZWUuVs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Q/phvZvA; arc=none smtp.client-ip=192.198.163.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1789386618; c=relaxed/simple;
+	bh=Q8ksi+xZgxIagv9+QQVvkuR0wfKZoHt0nu/3YJrwAf8=;
+	h=From:Date:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=BBrp3oxZ1MJYkqea0iV5UA+A7LJ8M7sUcboi7S2iSmfR1tIlN2+aRSqpxP9bA9PZP2kqIBlGHsM0iB3C5N9V+PppIapPZ6ElstyiBx5MKpfZ+b/w73CM1ENDmRV+mKxmHVMJ+loN5rkhtP9BB7yylSIwHvuwMhiHisSqMndwonI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=X3W0IJr9; arc=none smtp.client-ip=74.125.228.140
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Q/phvZvA"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1789385900; x=1820921900;
-  h=from:date:to:cc:subject:in-reply-to:message-id:
-   references:mime-version:content-id;
-  bh=hrCvZVfCyV1nyywTmaouy6LCKOqYrLAXczO+EyRBcwU=;
-  b=Q/phvZvA163GMJ7c8gAam1C+BMkSTSNl3KQg0R3KmGSkmRa4hdQhJ4Jn
-   WYVQoL7L1mgrW8GfKgKtmFS/cVe8d9cuGCQKiikavoAxNlaCBQiR8Xki9
-   CaUlHBLox9xWZN1WgPW+GU0PQhOZBcMJG5OB3WcZTSYqngGculcGlaANV
-   1r7TLccWr2AtiVYJ0HlzuzCL4NJZaspDr+rBNugou+U9RwVC1QTHsxaTy
-   ej2YrZt6Tinu/YmcUHOyCtDa8GS/MDWidtVYP3aFKJq/m9EisqzYS4KgV
-   wSDZQ8vveZxT3kJnM+lrlf5jpCqBPVo0jv39WNWMmtv7D9hx5nbQ3x/yr
-   g==;
-X-CSE-ConnectionGUID: 3IcaQvC0QWqBEaUrmEiYjQ==
-X-CSE-MsgGUID: 43rsAGfeR0OHZYUE41JAAQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11904"; a="93560320"
-X-IronPort-AV: E=Sophos;i="6.27,102,1787036400"; 
-   d="scan'208";a="93560320"
-Received: from orviesa008.jf.intel.com ([10.64.159.148])
-  by fmvoesa106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Sep 2026 04:38:19 -0700
-X-CSE-ConnectionGUID: RPRUl3hBQsujMOvZ+8QwrA==
-X-CSE-MsgGUID: XTbV4ZRfT5iQ+SFkkkT45g==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.27,102,1787036400"; 
-   d="scan'208";a="272115260"
-Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.70])
-  by orviesa008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Sep 2026 04:38:16 -0700
-From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Date: Mon, 14 Sep 2026 14:38:11 +0300 (EEST)
-To: Ard Biesheuvel <ardb@kernel.org>, 
-    Lorenzo Pieralisi <lpieralisi@kernel.org>
-cc: Ard Biesheuvel <ardb+git@google.com>, linux-pci@vger.kernel.org, 
-    LKML <linux-kernel@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [RFC PATCH] PCI: Tolerate non-prefetchable 64-bit BARs in
- prefetchable windows
-In-Reply-To: <48bb0fb6-10dc-46a7-84f6-3464d7c7bdfe@app.fastmail.com>
-Message-ID: <d2a561a9-e175-e102-3fa2-0be02342774a@linux.intel.com>
-References: <20260910143440.3865663-2-ardb+git@google.com> <aa0e034d-fc68-69d6-8d27-8f30d138b9be@linux.intel.com> <41345c53-fea4-4f98-8569-b3dc4e84cdcb@app.fastmail.com> <2e392b1b-3cbe-5cf8-e190-b1c82d69562f@linux.intel.com>
- <48bb0fb6-10dc-46a7-84f6-3464d7c7bdfe@app.fastmail.com>
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="X3W0IJr9"
+Received: by mail-ej2-f12.google.com with SMTP id a640c23a62f3a-c254fa663c1so250841766b.0
+        for <linux-pci@vger.kernel.org>; Mon, 14 Sep 2026 04:50:16 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=suse.com; s=google; t=1789386614; x=1789991414; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :content-type:mime-version:references:message-id:subject:cc:to:date
+         :from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=b3d/NyVwn33xRXNwAVXKr9GMiiFtUoOWjxTC/8TNYXw=;
+        b=X3W0IJr9hBeZ4qGivj24+Ul+Des8dIPbzdBUI0Q3HKkT75wJXHtgj54KOm+hxQ/KqR
+         fyqkuVBubWlibJlw9IbMg8vMBwpNfU1BdYlbUEMzUXJw6nZR+Sl8LKghIo/Czi2oglzR
+         ko059MNsVA6Xug/DpswvQdsMreHPygok49yraiBKD/RtX0mgU3wy6ojGiWrnGqbjlr3Z
+         207qdc90W5EDJdfiZBlD699pqxU/usdleueoL8FGYku2aewzCsDD8BhgaSGfwh5VL47f
+         Ze2PqngAgaDxwJPk8wxa/ZSZpp9OA2IxHIXunHn0hqsPx4fc+K2h/IbT3Westz4XGr8t
+         oMHA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1789386614; x=1789991414;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :content-type:mime-version:references:message-id:subject:cc:to:date
+         :from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=b3d/NyVwn33xRXNwAVXKr9GMiiFtUoOWjxTC/8TNYXw=;
+        b=Mg4eyB+yZPzFkD5e0kuekdlTg5ucJq8AHADVlxJntoxwHtM292ur7sjUMOyRJ0ZXNk
+         iAYG17pHRGKNzOrsMDM9LcNkroXEP4ShgYQERubGPoRUE9yaE16Q1XQ/3FFAmui0alyz
+         kGO2qe8zF1332huAG7nJ43q6HcukQNmSVMXnSMKG6AbQSM7lfIenNnjQAC3AFpVv/ZOJ
+         a3UfXL17YeIrRLzA4WM6cRy8JJBuUcd1fVSTnGu7M9tSlnnVvNr97es9R3Fk8x6xPBlT
+         pRY1w10Dj0PC+ZN2vfaWmGlcJl8YcS8cY+p8z62AqcQzvhcWHvz3MuJjahGA017EjqWD
+         DETA==
+X-Gm-Message-State: AFuF++nEFOxM5QMRmHdJ/yil8Dyhult0Y87WuwKdTaTFKyG/5RvN0C+V
+	5kh5tb0+p4vnHJkQigbZHX1gNERRqH9pP2rlPWb4+iezt7Xvng/OtmyyCG+UbE6qrS8=
+X-Gm-Gg: AYBFou2ImkpERGW2xu6Umk0NbNUvYDi9XGTj2AYkznonw0EvsVbeX5lFXGBxvHspXgv
+	rustDyxPR0OI0Z8md2RVvrsIwg9ClTYTYTFb8vE6cEFp1HrBGSWA8zNUoBFVGQI3hAGUyf5drKV
+	Gn6G0ygF75DTScbtjCq1gNJq5OXMSG//sQ/NzOtPFtJpDun6bp6B+QZqUarv47UeD1qLPCKht9q
+	YHg40ZfqmVUKk8rbiJxEokZmwz3dZ7xm2MqcY5Dv+V1aeCZvrNhF14rwu0wE43hLrVLTH0JMFOD
+	U70w1JJTea1qUggyaQ31Jo49g2mrlD0x49Z61ZXRhD9rPt/nWHEXtRYwBtmoUt4nOhzgwNt8q6/
+	BCn7lX1ur3c6Ru2MhnU6HU6RKMqbkPgMUoDy3T3zSVGWEU6P5X0NpzKZkzFx1wTKFnKwehb8cpg
+	vydq2Xi9tXWugbjBYPy4P98rnZoJd9FHwFVjxhwTQtrHrgHXPM+ZDpk3I1nDmvOENuGL4=
+X-Received: by 2002:a17:907:3e07:b0:c25:8c05:902f with SMTP id a640c23a62f3a-c29b86b7559mr277818766b.13.1789386614302;
+        Mon, 14 Sep 2026 04:50:14 -0700 (PDT)
+Received: from localhost ([82.145.119.8])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-c2965c4dfc7sm415116366b.4.2026.09.14.04.50.13
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 14 Sep 2026 04:50:13 -0700 (PDT)
+From: Andrea della Porta <andrea.porta@suse.com>
+X-Google-Original-From: Andrea della Porta <aporta@suse.de>
+Date: Mon, 14 Sep 2026 13:53:53 +0200
+To: Angel J <iamanaws@httpd.dev>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"regressions@lists.linux.dev" <regressions@lists.linux.dev>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-rpi-kernel@lists.infradead.org" <linux-rpi-kernel@lists.infradead.org>,
+	"helgaas@kernel.org" <helgaas@kernel.org>,
+	"robh@kernel.org" <robh@kernel.org>,
+	"andrea.porta@suse.com" <andrea.porta@suse.com>,
+	"florian.fainelli@broadcom.com" <florian.fainelli@broadcom.com>
+Subject: Re: [REGRESSION] PCI: Dynamic OF node creation hangs on invalid
+ bridge configuration
+Message-ID: <aqfgUUkZYZg6ZABF@apocalypse>
+References: <GXe6anuewkS4bLNwca3cYOmUxN9csc0TxLYGSBc1qNRmfrmvFlcmD62wEM23TxfzfuXAv4P3yvUv7pyraleARrL1Na-aN8w-t9uc1Igu8DA=@httpd.dev>
+ <cFJoUZ6c5g5YbFCrwUnx6RlitHRl-0cS2fadDSFJNf9SgLreKutrmZj1r56hFh8ZUAbzvuCqBG4w9ZYAE8xAWP9HnLwbjMOBzac-iMnMMZc=@httpd.dev>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; BOUNDARY="8323328-1906753989-1789380576=:1193"
-Content-ID: <fd4710f3-eced-1eba-c0c3-1c69a4914aa7@linux.intel.com>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <cFJoUZ6c5g5YbFCrwUnx6RlitHRl-0cS2fadDSFJNf9SgLreKutrmZj1r56hFh8ZUAbzvuCqBG4w9ZYAE8xAWP9HnLwbjMOBzac-iMnMMZc=@httpd.dev>
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+Hi Angel,
 
---8323328-1906753989-1789380576=:1193
-Content-Type: text/plain; CHARSET=ISO-8859-15
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Content-ID: <d1ecb2b1-10f4-285a-9a64-1f4ee4b584e1@linux.intel.com>
-
-On Fri, 11 Sep 2026, Ard Biesheuvel wrote:
-> On Fri, 11 Sep 2026, at 11:27, Ilpo J=E4rvinen wrote:
-> > On Thu, 10 Sep 2026, Ard Biesheuvel wrote:
-> >> On Thu, 10 Sep 2026, at 19:31, Ilpo J=E4rvinen wrote:
-> >> > On Thu, 10 Sep 2026, Ard Biesheuvel wrote:
-> >> >
-> >> >> From: Ard Biesheuvel <ardb@kernel.org>
-> >> >>=20
-> >> >> The prefetchable vs. non-prefetchable distinction is a relic of
-> >> >> conventional PCI, to denote from which regions PCI-PCI bridges were
-> >> >> permitted to perform speculative readahead.
-> >> >>=20
-> >> >> For software compatibility reasons, PCI Express inherited the Type =
-1
-> >> >> header and models PCIe root ports as PCI-PCI bridges. However, this
-> >> >> readahead behavior does not exist in PCIe, and so this distinction =
-has
-> >> >> mostly become meaningless on the bridge level.
-> >> >>=20
-> >> >> As per the PCIe r6.3 ECN "Removing Prefetchable Terminology", the
-> >> >> 'prefetchable' designation has been removed from the specification
-> >> >> entirely, on the basis that it is obsolete, and is being abused to
-> >> >> inform memory mapping attributes and other device/BAR level propert=
-ies
-> >> >> that it was never intended for.
-> >> >>=20
-> >> >> Given the limited range for non-prefetchable windows in the Type 1
-> >> >> header, and the fact that the distinction no longer exists for PCIe=
-,
-> >> >> resource allocation performed by firmware may result in non-prefetc=
-hable
-> >> >> 64-bit BARs being allocated inside prefetchable bridge windows.
-> >> >>=20
-> >> >> Linux rejects such allocations ("can't claim; no compatible bridge
-> >> >> window") when it encounters them, but will usually fail to produce =
-an
-> >> >> alternative allocation, given that firmware wouldn't have placed th=
-em
-> >> >> there in the first place if there was sufficient space in the
-> >> >> non-prefetchable window.
-> >> >>=20
-> >> >> So at the very least, let's not reject such allocations when they w=
-ere
-> >> >> made by the firmware.
-> >> >>=20
-> >> >> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> >> >> Cc: "Ilpo J=E4rvinen" <ilpo.jarvinen@linux.intel.com>
-> >> >> Signed-off-by: Ard Biesheuvel <ardb@kernel.org>
-> >> >> ---
-> >> >> Link: https://github.com/tianocore/edk2/issues/13104
-> >> >>=20
-> >> >>  drivers/pci/pci.c   | 3 ++-
-> >> >>  include/linux/pci.h | 4 ++--
-> >> >>  2 files changed, 4 insertions(+), 3 deletions(-)
-> >> >>=20
-> >> >> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> >> >> index b2879a6be5f8..e33eb9f3a139 100644
-> >> >> --- a/drivers/pci/pci.c
-> >> >> +++ b/drivers/pci/pci.c
-> >> >> @@ -761,7 +761,8 @@ struct resource *pci_find_parent_resource(const=
- struct pci_dev *dev,
-> >> >>  =09=09=09 * not, the allocator made a mistake.
-> >> >>  =09=09=09 */
-> >> >>  =09=09=09if (r->flags & IORESOURCE_PREFETCH &&
-> >> >> -=09=09=09    !(res->flags & IORESOURCE_PREFETCH))
-> >> >> +=09=09=09    !(res->flags & IORESOURCE_PREFETCH) &&
-> >> >> +=09=09=09    !pci_is_pcie(dev))
-> >> >>  =09=09=09=09return NULL;
-> >> >> =20
-> >> >>  =09=09=09/*
-> >> >
-> >> > I was more thinking along the lines of always setting IORESOURCE_PRE=
-FETCH=20
-> >> > for 64-bit BARs on PCIe devices but I've not had time to look at tha=
-t/test=20
-> >> > how many things would break as a result. ...It would seem much simpl=
-er=20
-> >> > solution to differentiate PCI from PCIe while keeping the existing l=
-ogic=20
-> >> > without adding similar pci_is_pcie() checks everywhere.
-> >> >
-> >>=20
-> >> I agree that the code changes would be much simpler.
-> >>=20
-> >> However, would this impact the PCI metadata observed by all consumers,
-> >> including userspace,
+On 23:01 Fri 11 Sep     , Angel J wrote:
+> Hi Andrea, Hervé, Bjorn, Thorsten,
+> 
+> Thanks for the guidance, it was very useful. I went back through the tests
+> and got some more insight into the hang.
+> 
+> Andrea wrote:
+> > Angel, could you please provide the following output:
 > >
-> > Yes, it will impact userspace. But quoting you from above:
+> > lspci -nn
+> > setpci -s 00:00.0 HEADER_TYPE
 > >
-> > "is being abused to inform memory mapping attributes and other device/B=
-AR=20
-> > level properties that it was never intended for."
-> >
-> > What does the userspace then do with the information? Does it qualify=
-=20
-> > under "it was never intended for"?
-> >
->=20
-> Perhaps, but that does not mean we are allowed to break it now.
->=20
-> More specifically, would the output of 'lspci' change as a result?
+> > from a running (i.e. with CONFIG_PCI_DYNAMIC_OF_NODES=n) system?
+> 
+> On Linux 6.12.109, with CONFIG_PCI_DYNAMIC_OF_NODES disabled, the relevant
+> output is:
+> 
+>   $ lspci -nn
+>   00:00.0 PCI bridge [0604]: Intel Corporation Device [8086:4c43] (rev 01)
+> 
+>   $ setpci -s 00:00.0 HEADER_TYPE
+>   01
+> 
+>   $ setpci -s 00:00.0 PRIMARY_BUS SECONDARY_BUS SUBORDINATE_BUS
+>   ff
+>   ff
+>   ff
 
-I'm not sure and I'm under impression there are multiple ways lspci can=20
-derive its information.
+So it seems that a device which is reported as a PCI bridge does not manage any
+bus underneath.
 
-> >> and drivers that may expect a certain BAR layout,
-> >
-> > ??? Would that even be spec compliant??
->=20
-> Again, maybe not, but if something that works fine today stops
-> working because the PCI subsystem started lying to the driver about
-> how the PCIe device describes itself, we'll be on the hook to fix it.
+> 
+> The device is bound to icl_uncore. I get the same values on the patched
+> kernel with CONFIG_PCI_DYNAMIC_OF_NODES=y.
+> 
+> Hervé wrote:
+> > Is this PCI logs reported with PCI_DYNAMIC_OF_NODES=y or PCI_DYNAMIC_OF_NODES=n
+> > or always whatever the PCI_DYNAMIC_OF_NODES Kconfig value ?
+> 
+> The messages appear on successful boots with either setting:
+> 
+>   pci 0000:00:00.0: [8086:4c43] type 01 class 0x060400 conventional PCI bridge
+>   pci 0000:00:00.0: bridge configuration invalid ([bus ff-ff]), reconfiguring
+> 
+> I confirmed this on 6.12.107 with the option disabled and 6.12.108 with it
+> enabled. They also appear on the patched 6.18.44 kernel.
+> 
+> Bjorn wrote:
+> > I don't think 49d63971f963 ("misc: rp1: RaspberryPi RP1 misc driver")
+> > is a likely culprit by itself because there's just nothing there that
+> > looks like it would relate to a Dell XPS 8940.
+> 
+> That change exposed the problem by enabling PCI_DYNAMIC_OF_NODES in my
+> configuration. I bisected again with the option enabled throughout and
+> found an earlier boundary:
+> 
+>   3dc8adeeefa0  PCI: of_property: Constify parameter in of_pci_get_addr_flags()
+>   1f340724419e  PCI: of: Create device tree PCI host bridge node
+> 
+> The first is the direct parent of the second. I boot-tested both without
+> any guard, changing only the source commit; their generated kernel
+> configurations are identical.
+> 
+> All of these tests have CONFIG_PCI_DYNAMIC_OF_NODES=y:
+> 
+>   Source         Change             Result
+>   3dc8adeeefa0    None               Boots
+>   1f340724419e    None               Hangs
+>   1f340724419e    Subordinate guard  Boots
+>   6.18.44        None               Hangs
+>   6.18.44        Subordinate guard  Boots
+> 
+> Hervé wrote:
+> > Maybe the test done at [1] should be improved to detect those wrong bridges.
+> > and skip the of_pci_make_dev_node() call when a wrong bridge is detected.
+> 
+> I added logging to the first bad commit to check the bridge scan. It shows
+> that 00:00.0 has no subordinate bus after either pass, despite satisfying
+> pci_is_bridge():
+> 
+>   pci 0000:00:00.0: PCI OF debug: scan pass 0, buses ff/ff/ff
+>   pci 0000:00:00.0: PCI OF debug: scan pass 0 done, subordinate bus absent
+>   pci 0000:00:00.0: PCI OF debug: scan pass 1, buses ff/ff/ff
+>   pci 0000:00:00.0: PCI OF debug: scan pass 1 done, subordinate bus absent
 
-Understood.
+This is confirmed by the BIOS/fw not filling the bus range and by the kernel
+failing to reallocate the bus since the range registers are probably read-only.
+Apparently this is not a bridge, it should be at most a host controller.
 
-So I suppose you're not wanting to do this for the actual placement=20
-algorithm then because of the same risk but only cover the case where FW=20
-placed 64-bit non-pref BAR into prefetchable window like this patch=20
-currently does?
+> 
+> of_pci_prop_bus_range() dereferences pdev->subordinate without checking it.
+> of_pci_prop_intr_map() also uses that pointer. Before 1f340724419e,
+> of_pci_make_dev_node() returns because the parent OF node is missing on
+> this ACPI system. That commit creates the parent node, allowing property
+> generation to reach the unchecked access.
+> 
+> My earlier report overstated the device_type="pci" result. The minimal-node
+> test that hung added device_type, bus-range and interrupt-map together;
+> I haven't confirmed a hang with device_type alone.
+> 
+> I tested this guard in of_pci_make_dev_node(), before node creation:
+> 
+>   if (pci_is_bridge(pdev) && !pdev->subordinate)
+>           return;
 
-=2E..And limiting to that case only likely implies remove + rescan cycle ma=
-y=20
-fail because resources can no longer be placed into the same windows=20
-which will surprise user (arguably, not the most common use case but=20
-definitely surprising for the user if the kernel cannot place the=20
-resources the same way they were after boot =3D> another way to get problem=
-=20
-reports).
+Not sure, maybe can it be considered a hw bug? If this is the case, we can maybe
+add a quirk for this device. Could you please test adding a quirk as PCI_FIXUP_HEADER
+in which you downgrade the class from 0604 to 0600 and see it works even without
+your proposed check in of_pci_make_dev_node()?
 
-(Unrelated to this change, I'm going to open that BAR placement can of=20
-worms myself in a week or two because of resource placement changes I'm=20
-preparing. And I already hit one such problem where a particular BAR=20
-address results in probe failure I'll probably have to quirk around. And=20
-I didn't even have to move things into another window to trigger that.)
+If this works, maybe we can just turn the body of your conditional into just an error
+log plus fast exit, because a bridge must have valid subordinate.
 
-> >> and/or base decisions about memory attributes on this?
-> >
-> > The point is to consider them 64-bit window eligible so yes, kernel wou=
-ld=20
-> > definitely be basing decision on that but that's intentional.
->=20
-> That would mean that a driver may decide to use ioremap_wc() rather than
-> ioremap() to map a non-prefetchable BAR that we decided to misrepresent
-> as a prefetchable one. Even if the (pseudo-)PCI-PCI bridge will not do
-> any readahead, the CPU or interconnect may behave very differently as a
-> result, and touch BAR regions that the driver never accessed explicitly.
->=20
-> >> In particular, I am concerned about non-prefetchable BARs that actuall=
-y
-> >> have side effects on read, being mapped with WC (or Normal-NC on arm64=
-)
-> >> semantics, where the interconnect may widen, combine or reorder access=
-es.
-> >
-> > So on a more concrete terms, you're referring to the check in=20
-> > proc_bus_pci_mmap()? And the one in __pci_resource_attr_is_visible() +=
-=20
-> > pci_dev_resource_wc_is_visible()? I suppose that wouldn't work then.
->=20
-> No, I am referring to the hundreds of ioremap() and ioremap_wc() calls
-> under drivers. Maybe none of them are affected but who knows.
+Many thanks,
+Andrea
 
-I'm left to wonder how many of those are based on a IORESOURCE_PREFETCH=20
-check, I strongly suspect none. Somehow I feel I'm the only one running=20
-git grep and I fail to locate any examples of the problem you mention. No=
-=20
-offense meant, I just feel we're dicussion code that is hypothetical and=20
-doesn't exist for real, and definitely not on large scale.
-
-That being said, I don't have problem in accepting adding=20
-IORESOURCE_PREFETCH to all PCIe resources was not a good idea so there's=20
-no point in continuing discussion towards this direction.
-
-> > So if just setting IORESOURCE_PREFETCH is not workable, how about addin=
-g a=20
-> > getter for res->flags which adds IORESOURCE_PREFETCH into the returned=
-=20
-> > flags if it's PCIe device and (in the end) use the raw value only in th=
-ose=20
-> > places that actually care about wc distinction. What I don't want to se=
-e=20
-> > us adding that pci_is_pcie() everywhere.
->=20
-> Maybe add another IORESOURCE_PREFETCH_xxx flag that indicates that the
-> resource may be placed in a prefetchable bridge window? We'd only have
-> to set it in a single place (when probing the BAR), and we can add
-> support for it piecemeal in the validation and allocation logic.
-
-Unfortunately, I've earlier discovered there's no "single place" unless=20
-we add some gross res->flags fixup hack into PCI core. See e.g., the=20
-commit bdb32359eab9 ("sparc/PCI: Correct 64-bit non-pref -> pref BAR=20
-resources"), which we could hopefully revert after your change! So I'm=20
-afraid if you go to the new flag approach, besides drivers/pci/ you'd have=
-=20
-to hunt down these from under arch/, and likely miss a few in the process.
-
-Also, res->flags is currently full (for 32-bit) so you'd need to make the=
-=20
-field (and therefore struct resource) larger.
-
-So I still suggest having a flags getter for this purpose would be better.
-In the complete solution covering also resource fitting and assignment=20
-algorithm, the main complication with that approach comes from the few=20
-cases that don't have the struct pci_dev readily available. Some can=20
-easily be handled by passing it as a param but there might be cases that=20
-are given pci_bus as parameter that could be somewhat trickier if there is=
-=20
-no resource nor pci_dev (in case of a root bus), but I'm not immediately=20
-sure if there are actually any cases for real that fall into the latter=20
-category.
+> Both the first bad commit and 6.18.44 boot with it. The 6.18.44 test uses
+> only the guard, without diagnostic logging. The host OF node and the nodes
+> for bridges 00:01.0 and 00:1c.0 are still created; 00:00.0 is skipped.
+> 
+> This points to the NULL subordinate pointer as the cause of the hang,
+> although I still don't have a crash trace from an unguarded boot. I'll
+> send the patch as a reply to this email. Is of_pci_make_dev_node() the
+> right place for this check?
+> 
+> #regzbot introduced: 1f340724419eda8ab07a20edcaf5ec8f70134231
+> 
+> Thanks,
+> Angel J
 
 
---=20
- i.
---8323328-1906753989-1789380576=:1193--
+
