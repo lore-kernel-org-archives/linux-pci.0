@@ -1,57 +1,57 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.21])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.9])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8231329E44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF142471431
 	for <linux-pci@vger.kernel.org>; Mon, 14 Sep 2026 17:45:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.21
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.9
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789407928; cv=none; b=j/sufIQZRn1vaS+EA/uwMukTBco4CEYMAy5D6RCP0HiHbV1loUeZicNdwiMHxCGESRPZxuyjCCzcIuvLcMswEmj7rklqBUL1eOcSKwuGuPvqy4sm3EtHrR2A4DM6QYMtjh5KsmfFQFE0tpju4qZ6kJc/bIl6vG8gi1FjW72MUyY=
+	t=1789407929; cv=none; b=b9NF7ZWCZ7YLol121TwdA7FqUvL9O/M3gHmmHemk2BXb2+enNVzMIOnnebV1cjxWYEt8x/x4LSNCNOuMe7fL3aW4iRBfgPfdTs6umq9YqEfDZ8gGob0iK6qHIMII7T2XPIwPYIqNYBuGy55lWvvEEiE4+3m8MFXez2jw3RX3sVw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789407928; c=relaxed/simple;
-	bh=hs5xZUeyw82WLUxXTVBKYLYzTMdSdU5t0qF3MfbE37A=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=UfcvsP/GvpCSFVYMFa410PsYH/hv4ESEB8Y23sTXsBf+Uy8Rf58yyXVHn17wwQUAWklRvsgkiXxutqb/0yUXfxMpEmgu0UAXylLswSaBiVy4+A29b03/rTrJp+PaWWw9DPSWMosj6wWfjQEJdtMbCT0jYv66SOtwcfHYjDXFbwk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=YwKyNkHg; arc=none smtp.client-ip=198.175.65.21
+	s=arc-20240116; t=1789407929; c=relaxed/simple;
+	bh=147hyW+IILabQ46mT5v4TV2dO8JRAv17LglA0SNwATw=;
+	h=Date:From:To:Cc:Subject:Message-ID; b=GoOqvGt/DtpXmfS6iA5ga9icjVAAGByvbFli2EJk+O9pjT3aHJJTBTdKnNFWJZapFm4UAi5vbxEF07jVhHrWrRPQfpY3VPgiDhlP4/VEmlKLka5QUoYCxSQ3yhI8y64kcXQkPyf3ZoVPD0cCSFQdK+9EC2dhTf6DIA/JfU/dP5A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=MAaJC4uN; arc=none smtp.client-ip=198.175.65.9
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="YwKyNkHg"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="MAaJC4uN"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1789407927; x=1820943927;
+  t=1789407926; x=1820943926;
   h=date:from:to:cc:subject:message-id;
-  bh=hs5xZUeyw82WLUxXTVBKYLYzTMdSdU5t0qF3MfbE37A=;
-  b=YwKyNkHgliHNuQlmMKVijBi0Yppb9AYT4aAjKY0AI7hKJbbzgNIXiJwF
-   l6M0E1AppoHdXympt8VYU5ZyLll9PE0dwH1pXeJvmJstCC8Db5pVbaWN9
-   STuBIxLPWql3+dCar08H0fxT6NGWdyiDEYvDUC9avvGfOx41AhnqhhCgF
-   05juAjv2eaWfQGdrD17/YDzBoRNa8spvFE0bdzCPRvY1O13GMsdxAMjL7
-   ta3NgkeWc0NHA+gzPmFyOkht89lr+kFTGghDVireuK8qzAjgwqnGkiBti
-   /6wbnw8T+DEcXzKiZ9MOMn2ZLeFRxDBSSy5+o8g8hoUbQI8apLZiI9uvx
-   g==;
-X-CSE-ConnectionGUID: KPTtCTbqRmujwako4P8xCg==
-X-CSE-MsgGUID: 1DIKq4WZT8a19RjP+pmfLw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11905"; a="89606985"
+  bh=147hyW+IILabQ46mT5v4TV2dO8JRAv17LglA0SNwATw=;
+  b=MAaJC4uN2K0JvojtCwgBxmd8Y0ewYYX9jR+UJeq9zJUd4DPtkgHk5HIv
+   deTm3allY3fCzPdz9fvi8trqCg/CavnyLkUgeOb2M3/mB7H95YcGOf6/e
+   ATU2cTd73QD59TyxJE9eSWwn6BupOZOESJJmFEnabHZTpn78o40qE07bN
+   OizG7Kfhp+/q3hWy+F3M4LMZrosEuL1PV0iVD3epWZt0pnFT+YGUmMWIj
+   hRZtxKP8AD/xyeAdja2z0jMVtVGHm+BxUgSFLGsJJoxpv7fYyGFkHkvGP
+   PiOtBqIxURcwrn65Lw8fED9+ciLajVUROWojOBFN336WDUPTJYlFKCC1w
+   Q==;
+X-CSE-ConnectionGUID: 4XpGr2dKQZqsr24ZNv5yRQ==
+X-CSE-MsgGUID: aj1E6N5cS72TpVi0OgPy9w==
+X-IronPort-AV: E=McAfee;i="6800,10657,11905"; a="112535222"
 X-IronPort-AV: E=Sophos;i="6.27,103,1787036400"; 
-   d="scan'208";a="89606985"
-Received: from orviesa005.jf.intel.com ([10.64.159.145])
-  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Sep 2026 10:45:26 -0700
-X-CSE-ConnectionGUID: 6CtfHdlgRZKM2oFNgcaQ5w==
-X-CSE-MsgGUID: fhW2oL8xRHaer5VPOvRszQ==
+   d="scan'208";a="112535222"
+Received: from fmviesa009.fm.intel.com ([10.60.135.149])
+  by orvoesa101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Sep 2026 10:45:25 -0700
+X-CSE-ConnectionGUID: KjHcRwdtR6m1AvjkHTgYaw==
+X-CSE-MsgGUID: AW1/AJrORsmCO5crAkrVAw==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.27,103,1787036400"; 
-   d="scan'208";a="276844633"
+   d="scan'208";a="266497250"
 Received: from lkp-server01.sh.intel.com (HELO 462990a40a85) ([10.239.97.150])
-  by orviesa005.jf.intel.com with ESMTP; 14 Sep 2026 10:45:24 -0700
+  by fmviesa009.fm.intel.com with ESMTP; 14 Sep 2026 10:45:24 -0700
 Received: from kbuild by 462990a40a85 with local (Exim 4.98.2)
 	(envelope-from <lkp@intel.com>)
-	id 1x6Ak5-000000003Ey-2fGA;
+	id 1x6Ak5-000000003F3-38TV;
 	Mon, 14 Sep 2026 17:45:21 +0000
-Date: Tue, 15 Sep 2026 01:44:48 +0800
+Date: Tue, 15 Sep 2026 01:45:16 +0800
 From: kernel test robot <lkp@intel.com>
 To: Bjorn Helgaas <helgaas@kernel.org>
 Cc: linux-pci@vger.kernel.org
-Subject: [pci:controller:dwc-imx6] BUILD SUCCESS
- 1fefdcbe1697cf25a7f7b307078742d9757fff46
-Message-ID: <202609150145.NtgE6haH-lkp@intel.com>
+Subject: [pci:endpoint] BUILD SUCCESS
+ 5cdbd6d3a3a147fa9975e35f2602cbec9a72a932
+Message-ID: <202609150113.78hy2JjH-lkp@intel.com>
 User-Agent: s-nail v14.9.25
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -59,8 +59,8 @@ List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/dwc-imx6
-branch HEAD: 1fefdcbe1697cf25a7f7b307078742d9757fff46  PCI: imx6: Update MPLLB bandwidth to improve i.MX95 Gen3 PCIe stability
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git endpoint
+branch HEAD: 5cdbd6d3a3a147fa9975e35f2602cbec9a72a932  PCI: endpoint: pci-epf-vntb: Manage virtual NTB and PCI bus lifetime
 
 elapsed time: 2607m
 
