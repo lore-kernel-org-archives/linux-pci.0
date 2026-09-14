@@ -1,88 +1,120 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1BF60470EB4
-	for <linux-pci@vger.kernel.org>; Mon, 14 Sep 2026 12:46:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CBB8248094D;
+	Mon, 14 Sep 2026 12:49:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789390021; cv=none; b=WRTUjo5hjiAk5KtomJM8CD8GGyb0EMkcr8nyu15qj6Eglc8P/yopvDpqA8h4Bb6TURL2S0LU5IznD+0XNEi3TDZRskp0yEG4EpLKj9YGMnobOk44xiEtp5V1laHoKZQwgoMs4bxCsh0CpCs0zco6W48PWIeDGEa9InEhKouK2yI=
+	t=1789390146; cv=none; b=WwfFaFij3n8WrJ4pCz4vUAV6ErR3I4EkWLspakoolcdZXeOrfRtEdCgylddOODLqhZto8/9ElJLjYZPxdDRll078bVhiRWg26T0F5rtRV5dGgPl6d025LuHXQ3txW44p291JL1BbyK9xw4ZiFdM+QVYHNbiKWf6HGbZZnPiXJII=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789390021; c=relaxed/simple;
-	bh=xMSmm+qEwdaTOP0e0g3GRGSXbkVVOBn+6DVhN+VKS/g=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=emlr3EpFs1UIvPjKywY3mn62D1Jn4FlH+u2wOJLwSCVM1WsAnQG1qAvBDbf/sxt3vPiYCrPAaHoilW1TJMYGtGBChpOwoMzQwaQ+GzYa1uNdJBFMwfEZZfDuqGq1V7X3ImaLRew2EPjkxxjdqd+fV2O6HEZKKv9+0Bt42+tYQLk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=fR8y0CsG; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1789390146; c=relaxed/simple;
+	bh=Vq6OODz2BCg/vn3bK26Ax+waxkjSGIIpxbW2p2ETn6E=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=crV2TJLi+pYkRR74Dr7Q78qDIo76zMTy4pn4qYq1kyHqGakIyuAz4/LjHqW2CIE6pAHsmLWpKehmcM/FnYlKjq08BJJMmYe3TZ96Xkk5w6ufnnYwCTXrWr7ypB4R+wFUPEbxDF2BU7nIza5njAe7VFttxJ+SF6EPaGxD1C38rps=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=irz8mPe3; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="fR8y0CsG"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1789390018;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=xMSmm+qEwdaTOP0e0g3GRGSXbkVVOBn+6DVhN+VKS/g=;
-	b=fR8y0CsGSYnsyR1iR2aCA92cm/URNBpeDHAqH6N2D32vHCB3AJ/2TPp/kivKX555nVVjZz
-	ku+epD8rzQmv5RzhebqZpONw2PNwN3Cyz5OW5Ah/Eatf3byymnhlex51hKftNs4AfPonTZ
-	FPUHAdFTRA4VAy4Oo0RyXpvxIUdE5yA=
-Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-378-NSkAlAn2OcyIQLPrhwE7pA-1; Mon,
- 14 Sep 2026 08:46:53 -0400
-X-MC-Unique: NSkAlAn2OcyIQLPrhwE7pA-1
-X-Mimecast-MFC-AGG-ID: NSkAlAn2OcyIQLPrhwE7pA_1789390011
-Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 96069180ACD2;
-	Mon, 14 Sep 2026 12:46:51 +0000 (UTC)
-Received: from fedora.redhat.corp (headnet05.pony-001.prod.iad2.dc.redhat.com [10.2.32.117])
-	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 8F1271956041;
-	Mon, 14 Sep 2026 12:46:48 +0000 (UTC)
-From: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-To: bhelgaas@google.com,
-	mani@kernel.org
-Cc: alex@shazbot.org,
-	ath11k@lists.infradead.org,
-	ath12k@lists.infradead.org,
-	jjohnson@kernel.org,
-	jtornosm@redhat.com,
-	linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	mhi@lists.linux.dev
-Subject: Re: [PATCH v13] PCI: Add device-specific reset for Qualcomm devices
-Date: Mon, 14 Sep 2026 14:46:47 +0200
-Message-ID: <20260914124647.25054-1-jtornosm@redhat.com>
-In-Reply-To: <y5wemns4rjjfhaykkgghuyjiqqygx2is3bcyflrclrirp3lqh6@aiwdkaycpvuv>
-References: <y5wemns4rjjfhaykkgghuyjiqqygx2is3bcyflrclrirp3lqh6@aiwdkaycpvuv>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="irz8mPe3"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1F9CC1F00893;
+	Mon, 14 Sep 2026 12:49:04 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1789390144;
+	bh=cO8MfQgzbstSs3OjNMCZUD++0K4thea2LVqxZPsF3s0=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=irz8mPe39YkjJkgZJJhdNXZ6hHsoE3XCcsbJuCtHZaA5/nU2BUthj39fjq7WuVcG3
+	 1rXkeD6UDBqmRIubwn2R1nRnzMrjbyOqKHm0T0fdoLZ8G7HLcMC9OxR2EgOL4RKeG0
+	 daAvyBcfSJLoyBFPMIlPqvEYn4vIcOObxXh/xOP4VzyGA/egmjdi/TiR+tydv+KgIa
+	 ED8nHvjhmreM9NSiSxnG0l+pfvqJN/769RAo3po0yNpRV5XvrWitzfoX0MYw3IHdcE
+	 khLQFYIDMEfOrK235deWBSxkt/Y4+J+uCnPhDSeRbhbzvWr9ziZQo+CLDt3nvDfRD6
+	 u/YvkCX0Pv1gw==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v2] PCI: imx6: Avoid dereferencing a NULL clock name
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Rudi Heitbaum" <rudi@heitbaum.com>
+Cc: linux-pci@vger.kernel.org, Frank.Li@kernel.org, imx@lists.linux.dev
+In-Reply-To: <aqfqE4OLhnN4a1lW@b65e9c1eb12f>
+References: <aqfqE4OLhnN4a1lW@b65e9c1eb12f>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Mon, 14 Sep 2026 12:49:03 +0000
+Message-Id: <20260914124904.1F9CC1F00893@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
 
-Hi Bjorn,
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
 
-Friendly ping on this patch, now almost two months old.
-It has Mani's Reviewed-by and has been tested over 100+ VM crash/reset
-cycles.
+Pre-existing issues:
+- [High] The return value of imx_pcie_host_init() is completely ignored in =
+imx_add_pcie_ep().
+--
 
-The approach was developed following Alex's and Mani's guidance through
-the series, using device-specific hardware reset registers.
+commit 628ea0e01756defcb86187cc3b9ad1e2b8354965
+Author: Rudi Heitbaum <rudi@heitbaum.com>
 
-Without this, Qualcomm WLAN and modem devices cannot be reused after unclean
-VM termination in VFIO passthrough.
+PCI: imx6: Avoid dereferencing a NULL clock name
 
-Could you help me to know if there is anything blocking this in order to
-move forward?
+This commit prevents a NULL pointer dereference when accessing clock IDs by
+checking that clk_bulk_data::id is not NULL before using it in strncmp().
+This fixes a probe crash caused by unpopulated clock names.
 
-Thanks
-Jose Ignacio
+Link: https://lore.kernel.org/all/am8iBwJSEhYhWTqk@6cfee64030a6/
 
+> diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controll=
+er/dwc/pci-imx6.c
+> index 39790e66b98dc..f8dd83a88ddf7 100644
+> --- a/drivers/pci/controller/dwc/pci-imx6.c
+> +++ b/drivers/pci/controller/dwc/pci-imx6.c
+> @@ -542,7 +542,7 @@ static int imx_setup_phy_mpll(struct imx_pcie *imx_pc=
+ie)
+>  		return 0;
+> =20
+>  	for (i =3D 0; i < imx_pcie->num_clks; i++)
+> -		if (strncmp(clks[i].id, "pcie_phy", 8) =3D=3D 0)
+> +		if (clks[i].id && strncmp(clks[i].id, "pcie_phy", 8) =3D=3D 0)
+>  			phy_rate =3D clk_get_rate(clks[i].clk);
+> =20
+>  	switch (phy_rate) {
+
+[ ... ]
+
+> @@ -1836,7 +1836,8 @@ static int imx_pcie_probe(struct platform_device *p=
+dev)
+>  		return dev_err_probe(dev, imx_pcie->num_clks,
+>  				     "failed to get clocks\n");
+>  	for (i =3D 0; i < imx_pcie->num_clks; i++)
+> -		if (strncmp(imx_pcie->clks[i].id, "extref", 6) =3D=3D 0)
+> +		if (imx_pcie->clks[i].id &&
+> +		    strncmp(imx_pcie->clks[i].id, "extref", 6) =3D=3D 0)
+>  			imx_pcie->enable_ext_refclk =3D true;
+> =20
+>  	if (imx_check_flag(imx_pcie, IMX_PCIE_FLAG_HAS_PHYDRV)) {
+
+[Severity: High]
+This isn't a bug introduced by this patch, but I noticed a potential problem
+with error handling in imx_add_pcie_ep() within this file:
+
+drivers/pci/controller/dwc/pci-imx6.c:imx_add_pcie_ep() {
+    ...
+	imx_pcie_host_init(pp);
+	ep =3D &pci->ep;
+    ...
+	ret =3D dw_pcie_ep_init(ep);
+	if (ret) {
+    ...
+}
+
+The return value of imx_pcie_host_init() is completely ignored. If hardware
+initialization steps in imx_pcie_host_init() fail (e.g., regulator_enable or
+clk_enable returning an error), it returns a negative error code.
+
+Does ignoring this return value allow execution to proceed and initialize t=
+he
+endpoint on unpowered or unclocked hardware, triggering a system crash upon
+register access in dw_pcie_ep_init()?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/aqfqE4OLhnN4a1lW@b6=
+5e9c1eb12f?part=3D1
