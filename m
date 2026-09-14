@@ -1,325 +1,297 @@
-Received: from mail-pz2-f12.google.com (mail-pz2-f12.google.com [74.125.228.12])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from CY7PR03CU001.outbound.protection.outlook.com (mail-westcentralusazon11010059.outbound.protection.outlook.com [40.93.198.59])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E27AA371068
-	for <linux-pci@vger.kernel.org>; Mon, 14 Sep 2026 16:46:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.228.12
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789404366; cv=none; b=ctgk/yOrejjT+RSPU5Y7NyFwEAKcPv9WLPbM5kWxVBhB+B1b1/tFH3Fqq+XGI0fx5dbqY8S/J9jVbNN9a1zkodot/KCJwHVY5p6Rr4dhyFdSFl0Gxi4jCJ3tR80CUuGqWDhon2cS6AZiEKExEU27h2PABEJfg2LjMeiG30EVQgY=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789404366; c=relaxed/simple;
-	bh=AbWZZSRMSxWU4lPtaJRbw3aXLmhhfKL9PttGs9UHNEQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ppSKTcrxShKuSfdBMHkpc4JSwXweRoeeS2ljziElLWl9QQXyUoaJH/JeclUIEDmWfG1HITTULbE09hzsnMv799GAyCN05wQyyGEa7/YakZjxVUKLd7XmYS07lPmttKASWsrYahKiie9g4evnt8bcPOnPyYooj4WmdaXq2oE84Zk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=HZtBxv6A; arc=none smtp.client-ip=74.125.228.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC66848A2C7;
+	Mon, 14 Sep 2026 16:57:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.198.59
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1789405070; cv=fail; b=bocPX0z2wv0bqV/y3RFXzvMRjK1WlhDvykpWAOr2WxSET2IkRQ4uqYuEZbomi/38rgd8KlT6x4YI+lrZpAcHLvcMk/pY2RXrt5zCexniv2H+Entagyjt6OD4yVKM8CvWe2Lu12xHfnVZLvVSpQmaCfMLcIm/Qb73jG+wI4wHM9M=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1789405070; c=relaxed/simple;
+	bh=JrqSHO0xUKexVXbQ4S09M4hgBYT4EatfndZu9/crdTg=;
+	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=njwhQz0WW3OKtZlwGBWzSr06kKxjXZuc5k8v3A43JsahaBgKesKuebuAEZ1WIHWgs+ALthHiuXv3JT7yHTfrKuNGVORVjxXkRhhQvPNdnyZraUKlzxGvhFG0pcOJa1KMqgEZGamV6fuKXuPmIDNK1Zj8p/x7P94MPyUplElB86k=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=b9NKWwv5; arc=fail smtp.client-ip=40.93.198.59
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="HZtBxv6A"
-Received: by mail-pz2-f12.google.com with SMTP id d2e1a72fcca58-86868f7707dso798598b3a.2
-        for <linux-pci@vger.kernel.org>; Mon, 14 Sep 2026 09:46:04 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1789404364; x=1790009164; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=vaEn4gJaLG6//UlaQV046R50HUoC/N5LfAqjMif4QV0=;
-        b=HZtBxv6AQhpZhM2bzd3LC6nI0HmDWWrfo94WoN+4IiWrbFLRUj6mcGvyGM2zWsEs/p
-         UcAaN0gwGQlnOUuIwrLgriIVtXN1oK3X0x5OfR9/g54iJnAv2lsXUzRSsFnMktLx+Dfm
-         PtA6hvFdFQkhAnNXTa52P/V+mVSAIxJpz3GUWcbBuNHTzbmecyxJtilSbJJ5FiPweyiC
-         res3g+8cFm5a+w8OdrY8VcBAH/16QBLPSoW/4DSzfgMrORabVB8zfa21N5Xi8HS50Rd+
-         R94hFys6pXsnm+FWAUyUE7Gro/1hfUck0VWa+Scelz8DVA025pcvjjXoNLeBDjP/KbM8
-         bR0w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1789404364; x=1790009164;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=vaEn4gJaLG6//UlaQV046R50HUoC/N5LfAqjMif4QV0=;
-        b=XTPEabs1RnHQ+y4jiHy1WeGcnQEAEZjkvsMOnijO6xTUsMduS+wp1uDH4aBAifd/ga
-         ooxkEqiOBtmd0aqdRvwkUlZ37mZbgv8uWB1tmHphYvvVF3SBgeBvomkEPyIB2lTyCv1L
-         GnOctkfBCNylP317EpYBoAj+8OMgLnwBKx6gdejGyArlH4SM2yLpr0EHc0cYrQEbFra7
-         PqmvijWcAWxKluvQ7R+x2qR08FW9zlvK8v8sAUXnf+eSUofsd+iSXCyWS6ADQZtKHnPa
-         UYFOSvlmij/4T/36jNcIX0p3V9vi6laOXCe9GgAZ9l8lBb1IsuhDZdxYGn2XuB7qXsNj
-         ex+g==
-X-Forwarded-Encrypted: i=1; AKwUvBwIIUsrKfNdg0XvrUKksffDohVZs+prWigPGGC/jYFdn18aca8eULZX1q9j0phmfdaz2OGUmGJj4nA=@vger.kernel.org
-X-Gm-Message-State: AFuF++lMCyr2on/o7I+Cp/5avbY47r7bP3/86aPTPw5B2iQdhkJYLrP+
-	vrwkQ4fl6IAUaR+fW8DMj1vMye3aX0PAiE90ifjPFh0w1pWwpL6muK2t/r/xOdNg9w==
-X-Gm-Gg: AYBFou3B7ry2kMXzZ3iqW4JTFSXOZ1wMSku/cHFmZgbpoXWN5Zo59xK47SdSbeSixQy
-	/WJad/gcG0x6SjLbABZoiC2U91iBnbVQLd8amUlnl4iqshTPXdFAPTbmTYWY3ekVyC5g1ZFSGkw
-	GP/AiumjHYO9U6K913O3+ZR5jJdTziJ+a4wLKnlIGs9uusitjDHdM//UN/b0AkWw24FsKvn5khQ
-	miUVUHqvW8bNrI6e7yqlD6hW9WD0IZcsHdWPxfrf63Pr7yuLKVASurfIqJLR95PTgNCy0vfQLtI
-	LKulJb/uNd/a9IvqwmLcO2hNq40RKEjLsmckd0OEicjvvAzFI4G/34FmQpLaVDeYZgQl3BBZqVB
-	JO5fPv3aP6fuJGdMejGY5OyjA66rv3WM+wstswLOPgIsDfjUKy2CiSz5+e3zR7s7UCli08YTLh0
-	t2pSB5F8E6UDsxGNu2Wp9KfNd+ioitwQrj6bvAdQ1RcNuW3ETgKw83tDNc4M5vJMsVFLReezJCm
-	sL59iuBV/kLygtO4C3N3+71uwMupzZDuac0s8XR
-X-Received: by 2002:a05:6a00:2992:b0:857:7337:5db9 with SMTP id d2e1a72fcca58-86f860d2bdfmr7633241b3a.23.1789404363216;
-        Mon, 14 Sep 2026 09:46:03 -0700 (PDT)
-Received: from google.com (132.200.185.35.bc.googleusercontent.com. [35.185.200.132])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-86b21f0597dsm4930607b3a.0.2026.09.14.09.46.02
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 14 Sep 2026 09:46:02 -0700 (PDT)
-Date: Mon, 14 Sep 2026 16:45:58 +0000
-From: David Matlack <dmatlack@google.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: kexec@lists.infradead.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-mm@kvack.org,
-	linux-pci@vger.kernel.org,
-	Adithya Jayachandran <ajayachandra@nvidia.com>,
-	Alexander Graf <graf@amazon.com>,
-	Alex Williamson <alex@shazbot.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, Chris Li <chrisl@kernel.org>,
-	David Rientjes <rientjes@google.com>,
-	Jacob Pan <jacob.pan@linux.microsoft.com>,
-	Jason Gunthorpe <jgg@nvidia.com>, Jonathan Corbet <corbet@lwn.net>,
-	Josh Hilke <jrhilke@google.com>,
-	Leon Romanovsky <leonro@nvidia.com>, Lukas Wunner <lukas@wunner.de>,
-	Mike Rapoport <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>,
-	Pasha Tatashin <pasha.tatashin@soleen.com>,
-	Pranjal Shrivastava <praan@google.com>,
-	Pratyush Yadav <pratyush@kernel.org>,
-	Saeed Mahameed <saeedm@nvidia.com>,
-	Samiullah Khawaja <skhawaja@google.com>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Vipin Sharma <vipinsh@google.com>, William Tu <witu@nvidia.com>,
-	Yi Liu <yi.l.liu@intel.com>
-Subject: Re: [PATCH v8 08/12] PCI: liveupdate: Adopt ACS controls in incoming
- preserved devices
-Message-ID: <aqgkxmXlhfqsdfAa@google.com>
-References: <20260728221007.2098560-9-dmatlack@google.com>
- <20260910235149.GA364189@bhelgaas>
- <aqRJF8OME7hn7CJr@google.com>
+	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="b9NKWwv5"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=Mr2Jg+oXPt67rxYfbuFgxvAPXt7nCBVchLmxUSg60RXvf7uxH75NKBmcwebkw1hxJpGt44qzOW2eSMXEAMsj5yWtxBQI+qA+pcmLS55nQplxySrax2tpKWLR23uXDxe9pmHYFrxJBLm2vFuyMRehOVlhPrU5kF2CIDW/U2W0Sw8Tz1FOM+UQgAxIIAcjfcd5P4xnRrbUuihcpP18c1qdHcCjjiznGjB59aVpTwjEc6RErySZlW/u6QptHm7ZB5B5HMcEco7v9OHiJQ0PPDs5KNbhexr09g2pg2yo/24zdqRTLm/7KGPz0bfT2oTAjk5I62c3+aDcvCd/r96lLTQMLA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=iIHa/wngUCF4SRdH6ItVECTpIqfHjMUknvAvNhsUmRg=;
+ b=qsAYtpu5QxjZAp1a1OwmP7jfLBGA6tnuXXpH/67wlfyW3bwnA58T/9SNNr+uTrxFfC1OHXwEr8zx+f0Tyk2LlFDK/kD5fKF1HO3eOovUCd1i+XLa7KwQGIgffhrcJcrprOmagBI6yj1MxqQRtBbP7CT6iS/Iw0ASg+C+zBzCEUC9siCfekaKCNVT7rF6VKvHFgH/qkdF1rzeLHhAHx7n0FlVAq4L75Nd6e3ZGigQZWebRfMOPvc5BqkF15V7bl0fWpgrb5UnxD2KikpjXGBONG/oGuFaz3F+CCMAVnq57tQqmilYlIYbRUXjd1N9yA7wtqaSWCqZEv4X4bEc0gCvxA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
+ header.d=amd.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=iIHa/wngUCF4SRdH6ItVECTpIqfHjMUknvAvNhsUmRg=;
+ b=b9NKWwv5yJqv2zQoRDrVX1QQd4E/sJBUPhe/Oz/LlmIETNLrpUSC3PShn074tggMshO2FW8M2BfI+0sEFcxFosHowNa6lD3VN9KgN72eDbfRR3JT42XTTYDboCs63DkP9I0elsooin683tzNwZjF++gMhrE+fvB2yPs0zR20uyM=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=amd.com;
+Received: from PH8PR12MB6914.namprd12.prod.outlook.com (2603:10b6:510:1cb::21)
+ by SN7PR12MB7980.namprd12.prod.outlook.com (2603:10b6:806:341::22) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.406.12; Mon, 14 Sep
+ 2026 16:57:43 +0000
+Received: from PH8PR12MB6914.namprd12.prod.outlook.com
+ ([fe80::2893:177a:72b0:6000]) by PH8PR12MB6914.namprd12.prod.outlook.com
+ ([fe80::2893:177a:72b0:6000%7]) with mapi id 15.21.0406.007; Mon, 14 Sep 2026
+ 16:57:43 +0000
+Message-ID: <ed334568-d741-4374-b953-29a97a82963c@amd.com>
+Date: Mon, 14 Sep 2026 11:57:40 -0500
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 1/2] x86/PCI: Disable enhanced atomics on some AMD PCIe
+ ports
+Content-Language: en-US
+To: Bjorn Helgaas <bhelgaas@google.com>, Damien Le Moal <dlemoal@kernel.org>,
+ Niklas Cassel <cassel@kernel.org>
+Cc: Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>,
+ Borislav Petkov <bp@alien8.de>, Dave Hansen <dave.hansen@linux.intel.com>,
+ "maintainer:X86 ARCHITECTURE (32-BIT AND 64-BIT)" <x86@kernel.org>,
+ "H . Peter Anvin" <hpa@zytor.com>,
+ "open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>,
+ "open list:X86 ARCHITECTURE (32-BIT AND 64-BIT)"
+ <linux-kernel@vger.kernel.org>,
+ "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)"
+ <linux-ide@vger.kernel.org>, david.laight.linux@gmail.com,
+ John Smith <imjohnsmith4000@gmail.com>,
+ Lennert Buytenhek <kernel@wantstofly.org>,
+ Roland Waltersson <roland.waltersson@netinsight.net>,
+ Mikael Etienne <mikael1022bzh@gmail.com>, Arthur Husband
+ <artmoty@gmail.com>, Alvin Lim <alvinwylim@gmail.com>
+References: <20260908190600.226485-1-mario.limonciello@amd.com>
+ <20260908190600.226485-2-mario.limonciello@amd.com>
+From: Mario Limonciello <mario.limonciello@amd.com>
+In-Reply-To: <20260908190600.226485-2-mario.limonciello@amd.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: SA9PR13CA0129.namprd13.prod.outlook.com
+ (2603:10b6:806:27::14) To PH8PR12MB6914.namprd12.prod.outlook.com
+ (2603:10b6:510:1cb::21)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <aqRJF8OME7hn7CJr@google.com>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: PH8PR12MB6914:EE_|SN7PR12MB7980:EE_
+X-MS-Office365-Filtering-Correlation-Id: 16de88f4-a87b-46e6-dc45-08df12814b3a
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|7416014|376014|23010399003|366016|1800799024|4143699003|10067099003|11063799006|56012099006|18002099003|22082099003;
+X-Microsoft-Antispam-Message-Info:
+	go3YHhRLz0OmkdbJJpzeJtPe3dVD6qErRBm3/8pT4C/wsKwZUABlVqmoEQdhGV2ePBtaNqxc78YKLKkfEw7DGNdS/2e7x98Hwurd9BE4PlkGEaqBBwdz90zDT2uXvYCGfICS66t4YaMwV0dDWps5DBSo/jueiOJkk7iiyAO9IVmKe7JjfrozAddI4VUfdC1V20tVsqrx774TS3pOKoz2suQjV4On0UpBrLEZDz9uzYvdK3cwMwsOKkxUo87bM3mfLmdP3JcbNe2Fr6Ha6DgUnWX2GgTlpJer0XoJcOeaXq4NypO9NE7cFkVaK6maLp+8VC1rmClpvWwKLxot0U4Bb1x2AIxd4xdtuttKppuLUyU0lBwtSPkl9V3di+6fz7LRmekgOST8BCaVlzayWPS3rb8eh+anFKwWEZFYHFCfqNCXVDo6+eYR2dCyuFgRKc+epsYNCI8tjc70PwDbCuKoVDZW8djElgiNofjVHMSpfxhhLmhUJYQDVeZ+rAw/qBJdQNdFtsu0soOdJWwNRrYmDCeY/uwQyP9WsynEtOzjaEaeN93+Fy9Pl4aluMecE0cxAuy9SPyYSLDzYnZAfym97sNidUNC7zFKz/aJXxUaOAVO7WsTjLx2Fst7wncScAizY5vG/H0oQBvP+dbdbQ0HgbEY8qSuQOXy9GhNVYgbJIg=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH8PR12MB6914.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(376014)(23010399003)(366016)(1800799024)(4143699003)(10067099003)(11063799006)(56012099006)(18002099003)(22082099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?VjZqM1JZaE1ldjRQVXc3QWFXUUpLb3hVa0ROMWpHYTQyd1pEWXRsTk5Edy9t?=
+ =?utf-8?B?KzgzU01CclhJQnQ1U1pBSnBKSlV1elh2M1U5bFZJVnZaSnNTZzRTdE9Wd0Nm?=
+ =?utf-8?B?ZXdWYkIyYVNjcXdnTFJybllvWWFTN2JqVjIvRGhPSVVSR3JOT3dESTU3UXFi?=
+ =?utf-8?B?eWVyMno3QXg1SXk5OEEyZkFQR0VOc05yU09GSnVRd0RhQ3VuYm5rbFdhRWNE?=
+ =?utf-8?B?YXRXWjlUOHpuQzZGM3JrMUhiVjRoZkV3cXBYQmVSbFB3Z1ZUbnNROWNnQVRB?=
+ =?utf-8?B?TmVSV1RnenlCN3hSSzFGUUM3THJLQUkvbytwaDlTdTBlRFEzSVhIa0t2VUJr?=
+ =?utf-8?B?Zjh6K0VGKys4OVlwMzR5QkN3VWxUNkR0SEhCTlVTbjg5WFl1SFZmekVJMFNK?=
+ =?utf-8?B?TFJiSnk3MmJBS1pVM1V5NS9meElURlc3cEpGY0NDVU1TNW9FYW1jQWFqMHMy?=
+ =?utf-8?B?VGQ5NWZsdWlKajFKOERSNC9jaHphM2x0M0l3d1lFMjJ6V0RmcGppdTZ3cFYy?=
+ =?utf-8?B?OFA2VkF2THBQUXlNVWdTOUJHaFI0TUd5T3ZGYjRlMkpiaWNFV2tVSW1YWXYr?=
+ =?utf-8?B?bVQ2SkRKMG1ySkVYTUJWOVVoUlhZL1lRSjBSVzRLTXRsY2F0a3lPR1ZXZFBn?=
+ =?utf-8?B?T085bDVhRGZkYk5DZ0RjY1BDZmM5WHZ1a2JRSUNFQTM4cElGR040RVk2b0dH?=
+ =?utf-8?B?bUpYOWtLNjMyWi9LMC9XOVRWREV2TFpCQVc1dDVyS3NwdzUrNmYvemtiY1Ar?=
+ =?utf-8?B?aHBNSytwcUdiWWNMaEJjYXl2Z1hPU0tBWXpFUTFORG9peEdaYkFuL0V6YUlq?=
+ =?utf-8?B?K2FMaGhBM1lMZEFhaVRiVmxlcHM1RU1NNGczb00xL09ESXg1OFZ6QjVPV1g1?=
+ =?utf-8?B?bFpiRUhPRFpVYjdWbHorVUJqaXRSUGZSR3NJOWRMcm5OZ2JwS2play80WE00?=
+ =?utf-8?B?YXVST2xORm5uQ1pWTFZ4T2drb1hEemZKTk5zYU9VNFFkTXNXQW5tQkhEWHdN?=
+ =?utf-8?B?bWVDM1c5VjhDL0tlNm4wU2FVRUxaMWNDbmErbkRqZnlNdGdhRHVPQ1NtNnln?=
+ =?utf-8?B?c05IWXF4V2kwRlBsQ0VmWUMrNkszd2djYmZBdCtNVnpDNGM0bUc3NnpQQzRT?=
+ =?utf-8?B?dXFKcGtWVkllU3lwMVdkNTlqbHZxNXdkR05vMmR3UEIxUXdmdTR2UWU3OHI2?=
+ =?utf-8?B?MXo3ZnFSZW5objZ0UVhVRGc5dUVtU2taUGhiN2c4SDkrQ3NrTVRIVzJsUG9u?=
+ =?utf-8?B?aklMSjM5cGVUNGlYejhEZ3hBdytNa0pjUExCZlhmbEFHc216bzZwR0NCSnJT?=
+ =?utf-8?B?ODJxUHhwVlNnaC9reWpyM3JQV0RLSERtb0dWc0NmN1lPbStKZVlmckhCeDQy?=
+ =?utf-8?B?WElnOFJKZVRJYmhrYzN4Y1BhSmhvbUdmYmZSemlrZHJ4UmFkY0RQakFib1Mw?=
+ =?utf-8?B?ZUEzRzhWRU56OEVZS3Jhb2RkMXRIUXFrRkJOdnhHYXJ4UUhJaVprU1NZYi8z?=
+ =?utf-8?B?RTE3eTh0OWs3TGJIWENGdUpLNVVwN1dYTVBlWnZnaXhneVFuS3dsbk14cnps?=
+ =?utf-8?B?WEZ0NzFKTlE0ckVUelhqQlRiakhjdnFqV0FmZFVPei9NWjl1eFh2YnpVZkJ3?=
+ =?utf-8?B?azFsWENRRzFmWEVYditsSzFZZlE4czFkRUx1SnhjT2NodHVFUlhEcXEwNnZz?=
+ =?utf-8?B?QVNMNVRQWEhuWFo1N3FYOFliSXRHU3NidnJnckpGVEw0K1hocktMbnZpRTV2?=
+ =?utf-8?B?clBLeE9aL000Yy9Ha2I5am9zb3hmZHo1djZneGd0TTNFa2doUlp2bm0rdjJ2?=
+ =?utf-8?B?V1lRMGV2b0VHdTlmdU1DQlYwNDd1K3dyci9hZXFkYkRFemczNk9EWGp0YnJD?=
+ =?utf-8?B?R1ZvOVdjK1NQTkh4cDB5WmRid25uc2pERHdYcnk2TnVDRUFjUWVZb2h1U3Yr?=
+ =?utf-8?B?YkJJYmFCQzBsSXpFS3NnSmd6Z21CWG02eUVzMldOQjlHVkhRUGtJdkcwM2Yr?=
+ =?utf-8?B?SGhnRXpZQ0VkZEFGQm1ib0s3MytqUkxkNnUxUDNxZStOK2xiZTdObW5IamFN?=
+ =?utf-8?B?YkQrRDdURk9rcGhHM2ZURlRYYU5YUVQ3WEh3UkZFbGdFNEgwRERTVEQ3dkVK?=
+ =?utf-8?B?OGk2eUphOHBMd0ZFZjdsVHQ2VmtZT1pHeGcxd1ZCOWl6c1gxVisrOGcvdE9J?=
+ =?utf-8?B?bnNieTIyRzhmanBsTE5qVjd4ZEEzbEZzRWs0YWNqN0w4M0Vjb3BSbXp5dE9z?=
+ =?utf-8?B?aVpqZ2pzSkZ6L1ZrT21vSUtWcFFYVjAxMFVZelVPa0xyMVRwOGdmSk55QmtU?=
+ =?utf-8?B?Z2xvM1RSVnk4MTlMRlhQOVNCZVcvUTl1ZHk4RU9CSXFpcU9mUzNIUT09?=
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 16de88f4-a87b-46e6-dc45-08df12814b3a
+X-MS-Exchange-CrossTenant-AuthSource: PH8PR12MB6914.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 14 Sep 2026 16:57:43.3517
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: l0iQtYxZpVnEzG2g6WicGpIOEgMQ3LRZ2eKqlX8hgI7e/lkeX0CLJKF8+H/q9MA3oe4O0cEtLSLHxD8kXRDRvg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN7PR12MB7980
 
-On 2026-09-11 06:31 PM, David Matlack wrote:
-> On 2026-09-10 06:51 PM, Bjorn Helgaas wrote:
+
+
+On 9/8/26 14:05, Mario Limonciello wrote:
+> There have been multiple reports of data corruption that can occur
+> with 64-bit DMA when the IOMMU is enabled. This occurs due to some
+> BIOSes enabling enhanced atomic operations on PCIe ports.
 > 
-> > > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> > > index 77b17b13ee61..22001bdf4c97 100644
-> > > --- a/drivers/pci/pci.c
-> > > +++ b/drivers/pci/pci.c
-> > > @@ -34,6 +34,8 @@
-> > >  #include <linux/aer.h>
-> > >  #include <linux/bitfield.h>
-> > >  #include <linux/suspend.h>
-> > > +
-> > > +#include "liveupdate.h"
-> > >  #include "pci.h"
-> > >  
-> > >  DEFINE_MUTEX(pci_slot_mutex);
-> > > @@ -1008,6 +1010,9 @@ void pci_enable_acs(struct pci_dev *dev)
-> > >  	bool enable_acs = false;
-> > >  	int pos;
-> > >  
-> > > +	if (!pci_liveupdate_enable_adopted_acs_controls(dev))
-> > > +		return;
-> > 
-> > Ugh.  The asymmetry between pci_save_state(), which does nothing
-> > ACS-related, and pci_restore_state(), which enables it, is sort of
-> > sketchy to begin with.
-> > 
-> > The command-line parsing in this path feels like kind of a wart (not
-> > that you're touching it).
-> > 
-> > It just seems like this path is already hard to analyze, and
-> > liveupdate is making it harder.
-> > 
-> > If we could save/restore the ACS state around the reset, wouldn't that
-> > solve this without any liveupdate specials here?
+> When enhanced atomic operations are enabled on PCIe ports for some
+> models, data corruption occurs when the 32-bit IOVA space is exhausted.
+> The problem is reported on storage devices, but can affect any device
+> that uses 64 bit DMA.
 > 
-> Yeah that would simplify the liveupdate support greatly. Let me work on
-> that for v9.
+> Disable enhanced atomics using SMN for NBIO 7.7 and 7.11 based models.
+> 
+> Cc: david.laight.linux@gmail.com
+> Cc: John Smith <imjohnsmith4000@gmail.com>
+> Cc: Lennert Buytenhek <kernel@wantstofly.org>
+> Cc: Niklas Cassel <cassel@kernel.org>
+> Cc: Roland Waltersson <roland.waltersson@netinsight.net>
+> Reported-by: Mikael Etienne <mikael1022bzh@gmail.com>
+> Closes: https://lore.kernel.org/all/178789300872.392066.15963676631650361573@gmail.com/
+> Reported-by: Arthur Husband <artmoty@gmail.com>
+> Closes: https://lore.kernel.org/linux-ide/20260406222335.379935-1-artmoty@gmail.com/
+> Reported-by: Alvin Lim <alvinwylim@gmail.com>
+> Closes: https://lore.kernel.org/linux-ide/20260621100844.1224301-1-alvinwylim@gmail.com/
+> Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
+> ---
 
-Here's the patch I have prepped for v9 to save/restore ACS controls
-around reset:
+There was a contingent of eager responders on the original issue added 
+to CC.
 
-From 0c69424454de0c569aca67bc69f496db915a9bcf Mon Sep 17 00:00:00 2001
-From: David Matlack <dmatlack@google.com>
-Date: Fri, 11 Sep 2026 20:05:04 +0000
-Subject: [PATCH] PCI: Save and restore the ACS Control register
+Those of you on CC - any progress with testing this?  Does it help you?
 
-Save the ACS Control register in pci_save_state() and write it back
-in pci_restore_state(), instead of recomputing the ACS controls from
-scratch with pci_enable_acs().
+Internal AMD team did come up with a reproducer workload that we have 
+confirmed it helps.
 
-This makes ACS symmetric with the rest of a device's saved state. Today
-pci_save_state() ignores ACS entirely and pci_restore_state() re-enables
-the ACS controls from the kernel's current ACS policy. As a result, a
-device can come out of a reset with different ACS controls than it went
-in with, e.g. any controls programmed outside of pci_enable_acs() are
-silently dropped.
+> v2:
+>   * Apply to suspend/resume as well.
+> ---
+>   arch/x86/pci/fixup.c | 99 ++++++++++++++++++++++++++++++++++++++++++++
+>   1 file changed, 99 insertions(+)
+> 
+> diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
+> index b301c6c8df753..79e4338e4b876 100644
+> --- a/arch/x86/pci/fixup.c
+> +++ b/arch/x86/pci/fixup.c
+> @@ -886,6 +886,105 @@ static void quirk_clear_strap_no_soft_reset_dev2_f0(struct pci_dev *dev)
+>   	}
+>   }
+>   DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, 0x15b8, quirk_clear_strap_no_soft_reset_dev2_f0);
+> +
+> +/*
+> + * Enhanced atomic operations can cause corruption with 64-bit IOVA
+> + * on these devices.
+> + */
+> +#define RX_ENH_ATOMIC_EN		BIT(8)
+> +
+> +static const u32 nbio_7_7_pcie_smn_addrs[] = {
+> +	0x111401d0,
+> +	0x111411d0,
+> +	0x111421d0,
+> +	0x111431d0,
+> +	0x111441d0,
+> +	0x112401d0,
+> +	0x112411d0,
+> +	0x112421d0,
+> +	0x112431d0,
+> +	0x112441d0,
+> +	0x112451d0,
+> +	0x113401d0,
+> +	0x114401d0,
+> +};
+> +
+> +static const u32 nbio_7_11_pcie_smn_addrs[] = {
+> +	0x112401d0,
+> +	0x112411d0,
+> +	0x112421d0,
+> +	0x112431d0,
+> +	0x112441d0,
+> +	0x112451d0,
+> +	0x113401d0,
+> +	0x113411d0,
+> +	0x113421d0,
+> +	0x113431d0,
+> +	0x113441d0,
+> +	0x113451d0,
+> +};
+> +
+> +static void quirk_amd_nbio_enhanced_atomic(struct pci_dev *host_bridge,
+> +					   const u32 *smn_addrs,
+> +					   size_t nr_smn_addrs)
+> +{
+> +	bool changed = false;
+> +	size_t i;
+> +	u32 data;
+> +	int ret;
+> +
+> +	for (i = 0; i < nr_smn_addrs; i++) {
+> +		ret = amd_smn_read(0, smn_addrs[i], &data);
+> +		if (ret)
+> +			continue;
+> +		if (!(data & RX_ENH_ATOMIC_EN))
+> +			continue;
+> +		data = data & ~RX_ENH_ATOMIC_EN;
+> +		ret = amd_smn_write(0, smn_addrs[i], data);
+> +		if (ret)
+> +			continue;
+> +		if (changed)
+> +			continue;
+> +		ret = amd_smn_read(0, smn_addrs[i], &data);
+> +		if (ret)
+> +			continue;
+> +		if (data & RX_ENH_ATOMIC_EN)
+> +			continue;
+> +		changed = true;
+> +	}
+> +
+> +	if (changed)
+> +		pci_info(host_bridge, "enhanced atomics disabled\n");
+> +}
+> +
+> +static void quirk_amd_nbio_7_7_disable_enhanced_atomic(struct pci_dev *dev)
+> +{
+> +	quirk_amd_nbio_enhanced_atomic(dev, nbio_7_7_pcie_smn_addrs,
+> +				       ARRAY_SIZE(nbio_7_7_pcie_smn_addrs));
+> +}
+> +
+> +static void quirk_amd_nbio_7_11_disable_enhanced_atomic(struct pci_dev *dev)
+> +{
+> +	quirk_amd_nbio_enhanced_atomic(dev, nbio_7_11_pcie_smn_addrs,
+> +				       ARRAY_SIZE(nbio_7_11_pcie_smn_addrs));
+> +}
+> +
+> +/* Phoenix, Hawk Point (NBIO 7.7) */
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, 0x14E8,
+> +			quirk_amd_nbio_7_7_disable_enhanced_atomic);
+> +DECLARE_PCI_FIXUP_RESUME(PCI_VENDOR_ID_AMD, 0x14E8,
+> +			quirk_amd_nbio_7_7_disable_enhanced_atomic);
+> +
+> +/* Strix, Krackan, Strix Halo (NBIO 7.11) */
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, 0x1507,
+> +			quirk_amd_nbio_7_11_disable_enhanced_atomic);
+> +DECLARE_PCI_FIXUP_RESUME(PCI_VENDOR_ID_AMD, 0x1507,
+> +			quirk_amd_nbio_7_11_disable_enhanced_atomic);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, 0x1122,
+> +			quirk_amd_nbio_7_11_disable_enhanced_atomic);
+> +DECLARE_PCI_FIXUP_RESUME(PCI_VENDOR_ID_AMD, 0x1122,
+> +			quirk_amd_nbio_7_11_disable_enhanced_atomic);
+> +
+>   #endif
+>   
+>   /*
 
-pci_enable_acs() runs when a driver binds to a device
-(pci_dma_configure()), i.e. after pci_bus_add_device() has already saved
-the device's state. Refresh the saved ACS Control register there as
-well, otherwise a subsequent reset would revert ACS back to the
-configuration left behind by firmware.
-
-Devices that rely on device-specific quirks to enable an ACS equivalent
-keep that configuration outside of the ACS Control register, so keep
-configuring ACS from scratch for them. Do the same for devices that have
-no saved ACS state at all.
-
-Assisted-by: Claude:claude-opus-5
-Signed-off-by: David Matlack <dmatlack@google.com>
----
- drivers/pci/pci.c    | 66 +++++++++++++++++++++++++++++++++++++++++++-
- drivers/pci/pci.h    |  5 ++++
- drivers/pci/quirks.c |  7 +++++
- 3 files changed, 77 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index b2879a6be5f8..dd25c01736b4 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -1021,6 +1021,55 @@ static void pci_std_enable_acs(struct pci_dev *dev, struct pci_acs *caps)
- 		caps->ctrl |= (dev->acs_capabilities & PCI_ACS_TB);
- }
- 
-+/**
-+ * pci_save_acs_state - save the ACS Control register
-+ * @dev: the PCI device
-+ *
-+ * Record the ACS controls currently programmed in hardware so that
-+ * pci_restore_acs_state() can reapply them after a reset.
-+ */
-+static void pci_save_acs_state(struct pci_dev *dev)
-+{
-+	struct pci_cap_saved_state *save_state;
-+
-+	if (!dev->acs_cap)
-+		return;
-+
-+	save_state = pci_find_saved_ext_cap(dev, PCI_EXT_CAP_ID_ACS);
-+	if (!save_state)
-+		return;
-+
-+	pci_read_config_word(dev, dev->acs_cap + PCI_ACS_CTRL,
-+			     (u16 *)&save_state->cap.data[0]);
-+}
-+
-+/**
-+ * pci_restore_acs_state - restore the ACS Control register
-+ * @dev: the PCI device
-+ */
-+static void pci_restore_acs_state(struct pci_dev *dev)
-+{
-+	struct pci_cap_saved_state *save_state = NULL;
-+
-+	if (dev->acs_cap && !pci_need_dev_specific_enable_acs(dev))
-+		save_state = pci_find_saved_ext_cap(dev, PCI_EXT_CAP_ID_ACS);
-+
-+	/*
-+	 * Devices that rely on device-specific quirks to enable an ACS
-+	 * equivalent keep that configuration outside of the ACS Control
-+	 * register, so there is nothing useful to restore for them. Configure
-+	 * ACS from scratch instead, which also covers devices that have no
-+	 * saved ACS state at all.
-+	 */
-+	if (!save_state) {
-+		pci_enable_acs(dev);
-+		return;
-+	}
-+
-+	pci_write_config_word(dev, dev->acs_cap + PCI_ACS_CTRL,
-+			      *(u16 *)&save_state->cap.data[0]);
-+}
-+
- /**
-  * pci_enable_acs - enable ACS if hardware support it
-  * @dev: the PCI device
-@@ -1057,6 +1106,15 @@ void pci_enable_acs(struct pci_dev *dev)
- 	__pci_config_acs(dev, &caps, config_acs_param, 0, 0);
- 
- 	pci_write_config_word(dev, pos + PCI_ACS_CTRL, caps.ctrl);
-+
-+	/*
-+	 * pci_enable_acs() runs when a driver binds to the device, i.e. after
-+	 * pci_bus_add_device() has already saved the device's state. Refresh
-+	 * the saved ACS Control register so that a subsequent reset restores
-+	 * the controls programmed here rather than the ones left behind by
-+	 * firmware.
-+	 */
-+	pci_save_acs_state(dev);
- }
- 
- /**
-@@ -1800,6 +1858,7 @@ int pci_save_state(struct pci_dev *dev)
- 	pci_save_aer_state(dev);
- 	pci_save_ptm_state(dev);
- 	pci_save_tph_state(dev);
-+	pci_save_acs_state(dev);
- 	return pci_save_vc_state(dev);
- }
- EXPORT_SYMBOL(pci_save_state);
-@@ -1877,7 +1936,7 @@ void pci_restore_state(struct pci_dev *dev)
- 	pci_restore_msi_state(dev);
- 
- 	/* Restore ACS and IOV configuration state */
--	pci_enable_acs(dev);
-+	pci_restore_acs_state(dev);
- 	pci_restore_iov_state(dev);
- 
- 	dev->state_saved = false;
-@@ -3532,6 +3591,11 @@ void pci_allocate_cap_save_buffers(struct pci_dev *dev)
- 	if (error)
- 		pci_err(dev, "unable to allocate suspend buffer for LTR\n");
- 
-+	error = pci_add_ext_cap_save_buffer(dev, PCI_EXT_CAP_ID_ACS,
-+					    sizeof(u16));
-+	if (error)
-+		pci_err(dev, "unable to allocate suspend buffer for ACS\n");
-+
- 	pci_allocate_vc_save_buffers(dev);
- }
- 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index ba3c3fddddc2..037c1674f164 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -1095,6 +1095,7 @@ void pci_acs_init(struct pci_dev *dev);
- void pci_enable_acs(struct pci_dev *dev);
- #ifdef CONFIG_PCI_QUIRKS
- int pci_dev_specific_acs_enabled(struct pci_dev *dev, u16 acs_flags);
-+bool pci_need_dev_specific_enable_acs(struct pci_dev *dev);
- int pci_dev_specific_enable_acs(struct pci_dev *dev);
- int pci_dev_specific_disable_acs_redir(struct pci_dev *dev);
- void pci_disable_broken_acs_cap(struct pci_dev *pdev);
-@@ -1105,6 +1106,10 @@ static inline int pci_dev_specific_acs_enabled(struct pci_dev *dev,
- {
- 	return -ENOTTY;
- }
-+static inline bool pci_need_dev_specific_enable_acs(struct pci_dev *dev)
-+{
-+	return false;
-+}
- static inline int pci_dev_specific_enable_acs(struct pci_dev *dev)
- {
- 	return -ENOTTY;
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 7aee30734303..e500c202d2ec 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -5476,6 +5476,13 @@ static const struct pci_dev_acs_ops *pci_dev_acs_ops_get(struct pci_dev *dev)
- 	return NULL;
- }
- 
-+bool pci_need_dev_specific_enable_acs(struct pci_dev *dev)
-+{
-+	const struct pci_dev_acs_ops *p = pci_dev_acs_ops_get(dev);
-+
-+	return p && p->enable_acs;
-+}
-+
- int pci_dev_specific_enable_acs(struct pci_dev *dev)
- {
- 	const struct pci_dev_acs_ops *p = pci_dev_acs_ops_get(dev);
