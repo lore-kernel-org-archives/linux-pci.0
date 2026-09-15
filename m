@@ -1,177 +1,106 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mail.ozlabs.org (gandalf.ozlabs.org [150.107.74.76])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D53F3B5314;
-	Tue, 15 Sep 2026 14:24:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 977843C0A0E;
+	Tue, 15 Sep 2026 14:30:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=150.107.74.76
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789482262; cv=none; b=tg4+ofXhF6mzMYAkNx2tmwSukk0OlOF0zW9y17dFwu+/2e4BNDbca+pDQrf9tNgW0JQqvfcYWHS9bx3Y6zgsuBTqIcuKnxrsfc3eX9+fTkURosFqCGq1qckWHVArsXPxLyMJanQlpeiX6wafm6sG72MWzokXQsrgKbcY1Xep8jg=
+	t=1789482646; cv=none; b=BBTxgRKztbTWlHURd02oIRhymb2XZwcxyxIgWsUMtojflipx6CHuZBPdjbkZnIHQKiQTuuOQZ6QRblzIOH64dGqtda+CCnRRSNkZyN/StLP9XWIEqfzrni1XaOcMKbJm5k9zJzYERxO5HJEtBPR92j7O00psKYtq1lIR42rKKtI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789482262; c=relaxed/simple;
-	bh=ebDqYY4U9FVWlZxckUTVJvTup8qiCi+YooN49jm+VUQ=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=VcvfryLtSKKI8EuQ44Rg3l6X3mkCHmlj5sHkHXgaFMjHjaw5hT6gvQVkj7fKhIvuz5fRoSF+DtuiGn4OVrhJRI2xnamljT8IvNGs6c8fkxRA4R9FQJYdw9j53Ms+FHBwQPI1lJ6ar7GNPmUX9DViZwMLTEQg5c5zUv0Dn3CxArc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LoSxpRDj; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1789482646; c=relaxed/simple;
+	bh=twc0fIx68+kEF+cShbyc3RFtm6NSYj1UGSjcKRuPYUU=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=F67wG8K4e7Okf12j75h4josJW18VBi4XRAi0L0xU7nb0AqCoIgf62WuSlIBExq9a99NOuGQHhnLoO0w/NrSpVsZtRswNlSc/NqiYWcxR/P6kT05tZj+ySc2YSrfyJGEl+p0G94aTQ06JrzG2mdmBejgm2O/XWI75cXE5wj/gnLo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ozlabs.org; spf=pass smtp.mailfrom=ozlabs.org; dkim=pass (2048-bit key) header.d=ozlabs.org header.i=@ozlabs.org header.b=HW2jWuBP; arc=none smtp.client-ip=150.107.74.76
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ozlabs.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ozlabs.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LoSxpRDj"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 4C6E5C2BD05;
-	Tue, 15 Sep 2026 14:24:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1789482262;
-	bh=ebDqYY4U9FVWlZxckUTVJvTup8qiCi+YooN49jm+VUQ=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=LoSxpRDjYddJV0ZD7sucgELhV123tPEU5jN9AkoLM2hnytdslTz0U6V5UiPyzzWMF
-	 4HJz7ZEfPdJaQblN97CgRlzwz/S11BsK4lISXrGSl0tPDvKQOHkE28tcJtaUHRhr/0
-	 mSMHOkud4EW/BncTi19wmxFx9MUn1S99OEsSD+sLFpDSH4nFqeu73lJsk6aFhLxBCg
-	 2zFR+GebFLUcMWjHfT9Nh05kFyNQjdwrk/1z+VIVLQhufXREqMkNEkeboHNldxCGoc
-	 j4mQIejUOF8P3vyeYJVJRqgW1bROvFbd1+40MEu0TvFtz6jW+3oVAf8BU9aeaI5NNd
-	 pnlQudZX3XEJA==
-Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A4A9C982C4;
-	Tue, 15 Sep 2026 14:24:22 +0000 (UTC)
-From: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>
-Date: Tue, 15 Sep 2026 16:24:06 +0200
-Subject: [PATCH 5/5] Bluetooth: btnxpuart: Drop serdev based M.2 power
- sequencing code
+	dkim=pass (2048-bit key) header.d=ozlabs.org header.i=@ozlabs.org header.b="HW2jWuBP"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ozlabs.org;
+	s=201707; t=1789482627;
+	bh=5x9PVSs1pegITND9ej196jOTL1wg1+lrDdeCERTcAHc=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=HW2jWuBPYllN+POQQWsl9SXygg0v21ChZrs/LiJUyRXjiHTCByo+VsqV60ZoXKldG
+	 41ptofyOkN6OVSCyTCHR1WdrTkrEsJKjSkPQlI5Wa8FHPCkNND6LisEhHlWUAj+7sG
+	 hkMOgFOh1R0i3F96CpuT5OBkKjiv4ltHfiB3h1SVGuIPXLzKURaSl6QI0Gp8mRSgC+
+	 3H1F//DVOQSEQpXu4fmWDq+E8cGaV+JG1rdwfJLGt7FW96YUuatkZBB41ZOlAL5bBe
+	 i6BMmYH83fCJ51UmvwtyS/Z5dmcwwO/zQXESU2QH7hNId0BzSxx71viz2QtOnjk9sj
+	 rwR69zCQL/Qxw==
+Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519)
+	(Client did not present a certificate)
+	by mail.ozlabs.org (Postfix) with ESMTPSA id 4hkkvH33lkz4wBB;
+	Wed, 16 Sep 2026 00:30:19 +1000 (AEST)
+Message-ID: <9ebcebb9-94a5-40b4-8764-5d70ea465f9c@ozlabs.org>
+Date: Tue, 15 Sep 2026 15:30:32 +0100
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v6 9/9] vfio/pci: Permanently revoke a DMABUF on request
+Content-Language: en-GB
+To: Jason Gunthorpe <jgg@nvidia.com>
+Cc: Leon Romanovsky <leon@kernel.org>, Alex Williamson <alex@shazbot.org>,
+ Alex Mastro <amastro@fb.com>, =?UTF-8?Q?Christian_K=C3=B6nig?=
+ <christian.koenig@amd.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Logan Gunthorpe <logang@deltatee.com>, Kevin Tian <kevin.tian@intel.com>,
+ Pranjal Shrivastava <praan@google.com>, Longfang Liu
+ <liulongfang@huawei.com>, Mahmoud Adam <mngyadam@amazon.de>,
+ David Matlack <dmatlack@google.com>, =?UTF-8?B?QmrDtnJuIFTDtnBlbA==?=
+ <bjorn@kernel.org>, Sumit Semwal <sumit.semwal@linaro.org>,
+ Ankit Agrawal <ankita@nvidia.com>, Alistair Popple <apopple@nvidia.com>,
+ Vivek Kasireddy <vivek.kasireddy@intel.com>, linux-kernel@vger.kernel.org,
+ linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org,
+ linaro-mm-sig@lists.linaro.org, kvm@vger.kernel.org,
+ linux-pci@vger.kernel.org
+References: <20260911214200.33793-1-matt@ozlabs.org>
+ <20260911214200.33793-10-matt@ozlabs.org> <20260913165244.GW13683@unreal>
+ <20260914113647.GL3968357@nvidia.com> <20260914115456.GY13683@unreal>
+ <f21c409d-5675-4c87-8b16-850bcb9474df@ozlabs.org>
+ <20260915123517.GS3968357@nvidia.com>
+From: Matt Evans <matt@ozlabs.org>
+In-Reply-To: <20260915123517.GS3968357@nvidia.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260915-pci-m2-bt-rework-v1-5-3c7d9cf9c010@oss.qualcomm.com>
-References: <20260915-pci-m2-bt-rework-v1-0-3c7d9cf9c010@oss.qualcomm.com>
-In-Reply-To: <20260915-pci-m2-bt-rework-v1-0-3c7d9cf9c010@oss.qualcomm.com>
-To: Marcel Holtmann <marcel@holtmann.org>, 
- Luiz Augusto von Dentz <luiz.dentz@gmail.com>, 
- Bartosz Golaszewski <brgl@kernel.org>, 
- Manivannan Sadhasivam <mani@kernel.org>, 
- Amitkumar Karwar <amitkumar.karwar@nxp.com>, 
- Neeraj Kale <neeraj.sanjaykale@nxp.com>, 
- Philipp Zabel <p.zabel@pengutronix.de>
-Cc: linux-kernel@vger.kernel.org, linux-bluetooth@vger.kernel.org, 
- linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org, 
- linux-pm@vger.kernel.org, Rahul Samana <rahul.samana@oss.qualcomm.com>, 
- Wei Deng <wei.deng@oss.qualcomm.com>, 
- Loic Poulain <loic.poulain@oss.qualcomm.com>, 
- Andy Shevchenko <andriy.shevchenko@linux.intel.com>, 
- Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=openpgp-sha256; l=3237;
- i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
- bh=+YzVex5t/UFDNNH6FtEmazomhrj+PormXoK6KhBhZYo=;
- b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBqqVUTH7YYitnfHOUyQSnpkRPlZLBO68tqUNH23
- AuTotDAoamJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCaqlVEwAKCRBVnxHm/pHO
- 9QuzCACee6+MFgwP7AqcyjVGPJ49iNhWnNA/QQBP5XWHvZIRUwkSM9nGmJOKCNtA6/Rt5EbBtJS
- QjXcjGxZZGH+a/wVnKK3hj/HYljm3l32CScy14+i8qa6htukWCXBA/F215lEJ/IjrTYEp7X7+RJ
- TJGqOFj1oDtT44KMkBhXxcnxlucOpaXC/9rg9pvFIpaehY6LwshJdkFRHd1wHMXl1vzjtQ6hcj8
- 6NxYgrSMZFhX+cIkd5tusO4VcLBJsyZrxLuiY5Q+8oievV4bU5OzMSLOiZbt/gaOrxxT9TA6IQZ
- 5KoARp+qth/nE6Gd3c4jr4S9I6cYoIa5UIJKbm3A4dnTKq7v
-X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
- fpr=C668AEC3C3188E4C611465E7488550E901166008
-X-Endpoint-Received: by B4 Relay for
- manivannan.sadhasivam@oss.qualcomm.com/default with auth_id=461
-X-Original-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-Reply-To: manivannan.sadhasivam@oss.qualcomm.com
 
-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Hi Jason,
 
-Bluetooth interface in M.2 modules is now enumerated using an auxiliary
-device instead of serdev. The power sequencing driver now allocates an
-auxiliary device for the Bluetooth interface whenever a compatible
-M.2 module shows up over PCIe. And the auxiliary device gets bind to this
-btnxpuart driver using the existing auxiliary driver matching logic.
+On 15/09/2026 13:35, Jason Gunthorpe wrote:
+> On Mon, Sep 14, 2026 at 01:13:36PM +0100, Matt Evans wrote:
+>> "This is useful for lifecycle management, to reclaim VFIO PCI BAR
+>> ranges previously delegated to a subordinate client process: by
+>> revoking, the driver process can ensure that the loaned resources are
+>> made inaccessible when the client is deemed "done".  The original
+>> DMABUF is defunct, and BAR resources can then be safely re-exported
+>> for use by new clients."
+> 
+> This makes the point clear, you want a way to permanently revoke a
+> specific dmabuf fd and render it forever unable to access any
+> underlying memory.
+> 
+> You want to do this so the vendor can fence the vendee without
+> requiring its co-operation.
 
-Earlier the same modules were brought up by fabricating a bluetooth
-node under the UART controller, so that the serdev bus matched this
-driver, and nxp_serdev_probe grabbed the "uart" sequencer when the M.2
-connector was reachable over the OF graph. That node is no longer
-created, so the serdev driver never binds for an M.2 module.
+Exactly!  (I'll reword this commit message still, re other requests in
+this thread, but you got the concept.)
 
-Hence, remove the connector helper and the serdev power sequencing code.
+> "temporary revoke" ie what VFIO already does around reset is a
+> different thing.
 
-Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
----
- drivers/bluetooth/btnxpuart.c | 48 +------------------------------------------
- 1 file changed, 1 insertion(+), 47 deletions(-)
+Yes, right.  From the DMABUF importer (and now mmap) perspective the
+mechanism is unchanged.  priv->revoked was always "temporary"/transient
+(OK, splitting hairs, but at VFIO shutdown an exported DMABUF becomes
+permanently inaccessible).
 
-diff --git a/drivers/bluetooth/btnxpuart.c b/drivers/bluetooth/btnxpuart.c
-index 2672e481ef15..eaa82cc6444f 100644
---- a/drivers/bluetooth/btnxpuart.c
-+++ b/drivers/bluetooth/btnxpuart.c
-@@ -10,7 +10,6 @@
- #include <linux/auxiliary_bus.h>
- #include <linux/serdev.h>
- #include <linux/of.h>
--#include <linux/of_graph.h>
- #include <linux/pwrseq/consumer.h>
- #include <linux/pwrseq/pcie-m2-bt.h>
- #include <linux/skbuff.h>
-@@ -1820,28 +1819,6 @@ static void nxp_coredump_notify(struct hci_dev *hdev, int state)
- 	kobject_uevent_env(&serdev->dev.kobj, KOBJ_CHANGE, envp);
- }
- 
--/*
-- * Check if the remote M.2 connector device linked via OF graph is present
-- * and available. This is used to determine whether the pwrseq path should
-- * be taken. When the remote connector node is disabled (e.g., by a DT
-- * overlay switching from PCIe WiFi to SDIO WiFi), the pwrseq path is
-- * skipped, allowing the BT driver to use a direct bluetooth child node
-- * instead.
-- */
--static bool nxp_m2_connector_is_available(struct device *dev)
--{
--	struct device_node *ep __free(device_node) =
--		of_graph_get_next_endpoint(dev_of_node(dev), NULL);
--
--	if (!ep)
--		return false;
--
--	struct device_node *remote __free(device_node) =
--		of_graph_get_remote_port_parent(ep);
--
--	return remote && of_device_is_available(remote);
--}
--
- static int nxp_register_dev(struct btnxpuart_dev *nxpdev)
- {
- 	struct serdev_device *serdev = nxpdev->serdev;
-@@ -1962,30 +1939,7 @@ static int nxp_serdev_probe(struct serdev_device *serdev)
- 		return err;
- 	}
- 
--	if (nxp_m2_connector_is_available(&serdev->ctrl->dev)) {
--		struct pwrseq_desc *pwrseq;
--
--		pwrseq = pwrseq_get(&serdev->ctrl->dev, "uart");
--		if (IS_ERR(pwrseq))
--			return dev_err_probe(&serdev->dev, PTR_ERR(pwrseq),
--					     "failed to get pwrseq\n");
--
--		nxpdev->pwrseq = pwrseq;
--		err = pwrseq_enable(pwrseq);
--		if (err)
--			goto err_pwrseq_put;
--	}
--
--	err = nxp_register_dev(nxpdev);
--	if (err)
--		goto err_pwrseq_put;
--
--	return 0;
--
--err_pwrseq_put:
--	if (nxpdev->pwrseq)
--		pwrseq_put(nxpdev->pwrseq);
--	return err;
-+	return nxp_register_dev(nxpdev);
- }
- 
- static void __nxp_remove(struct btnxpuart_dev *nxpdev)
+Here the only change is adding another cause of becoming inaccessible
+(direct request from userspace) and the length of time (it can never be
+re-attached, for the reasons you mentioned).
 
--- 
-2.43.0
+Cheers,
 
 
+Matt
