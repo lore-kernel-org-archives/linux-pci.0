@@ -1,178 +1,375 @@
-Received: from mail.ozlabs.org (gandalf.ozlabs.org [150.107.74.76])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 13B12353A9E;
-	Tue, 15 Sep 2026 14:22:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=150.107.74.76
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6CB7E3B38B1;
+	Tue, 15 Sep 2026 14:24:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789482152; cv=none; b=ay5i00VD+uI6V+WPmuizLCmgZgMZrB3+aNOx3nFJ9Y526lh1yLgJabDKviq9EnB7KtEfp45jm208hsUlDnT6WgrcJ+ppRzCEUZEWPkHMLRM/5zlGI4PUKHIVaOmiHPvPwrjeDctHh/P2MAhJ/GwAa0t+JWwitmBbHosDOlAVHH4=
+	t=1789482262; cv=none; b=fCJmp3q+8yIr4XQS3BmmK406Gz/USic5pJt8Ueh8XCHORg2GaVv3FfR3b0eez2Jsad3tEhip7PRod4dVRJRW1RFQwWvEXnZj6kR35AR73//4cpzEK942bbX1wBXCEGMRyrtf4tKMFHs9XnVH/Lw/4z3ggPNCkDHlqT0RLnXu3iA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789482152; c=relaxed/simple;
-	bh=50Y72TPeowVtAS93/+EgvbkaawHnyaQmBAfcNUWNtTQ=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=mhFL5P6UVt7O7Om97Na74g+kZK+1lOGYrE7xgVPrA+i2Rj1tGN4v9KhG57J+AnSXBKCQHMrjqcw7Z/u5jUEJCKaN59wO8Emb2qDS81tDmXBnq+w1bu3OPqjMJNFAsBJOfzSQABSHBFjOFVQooZwN5XVXcRm4SFbuOErk5kkburs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ozlabs.org; spf=pass smtp.mailfrom=ozlabs.org; dkim=pass (2048-bit key) header.d=ozlabs.org header.i=@ozlabs.org header.b=J/EKm1ot; arc=none smtp.client-ip=150.107.74.76
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ozlabs.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ozlabs.org
+	s=arc-20240116; t=1789482262; c=relaxed/simple;
+	bh=Hnopdr7WA9U8EE7N/nJoCFi8vbeDzNHxhN6zZO8yiBg=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=ohBGSDpkOIs7akGLHBRgqUJHlr+5Uu1cZwhJ9aP41D8c8FXMBT4UgRc3ujDjGuSkbfTaPMXuVVGfKrWGfa7D9htF5S/fPidhks3TYhnnqK29WXTsMKOtGGLJ8yWPzvpg6abspEWss3RS7HlebYklDAvI3AQU6Y2Yi+HmhLWLWxc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Y/8ta70r; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ozlabs.org header.i=@ozlabs.org header.b="J/EKm1ot"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ozlabs.org;
-	s=201707; t=1789482131;
-	bh=JcYucMj7YIbG7YaZWu+7otPfMtUjjyXpiltn2C04Tx0=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=J/EKm1otMfFKpLh1PMEA5saa7JQdSg4AJVshyxdLAEnaGKCexNlkLev4zNTxsg8Sb
-	 JPwQWgSRB41i2QlSjocGmOuLYbG3D4Ii0QeNP9g3bk0MpyHRHUoHlP8orPF2g35Nsj
-	 gfCsz8XV3vEZrmklDGVJR2fRf32OWFCFZPcQZnCQkWVkSKGOp7DRGUzzG7AnpbW+dZ
-	 D3KvumOsoVAH1lbqKLeTbZLvrMV9u23RY0yA4z6H/n8Y9yuCSNvwQFSXUrs4OXmU09
-	 hRpdmORwQMFPhDENDw33JvIOiXCNqNyFDnqaiNq2rYl527WkycAv5bk2nJGLoSOrvT
-	 b3ugaKI7D85tA==
-Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(Client did not present a certificate)
-	by mail.ozlabs.org (Postfix) with ESMTPSA id 4hkkjl53dyz4wV0;
-	Wed, 16 Sep 2026 00:22:03 +1000 (AEST)
-Message-ID: <db61e755-73ce-4dd8-94fc-e7287db963d3@ozlabs.org>
-Date: Tue, 15 Sep 2026 15:22:16 +0100
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Y/8ta70r"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 2D946C2BCFC;
+	Tue, 15 Sep 2026 14:24:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1789482262;
+	bh=Hnopdr7WA9U8EE7N/nJoCFi8vbeDzNHxhN6zZO8yiBg=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
+	b=Y/8ta70rcaO6avZlbT9MuJYT5Ejjg0NwfsrKXOB7zZQud8lBvoEHKyj5PdhD+nVHb
+	 wklF9T+4rpiezAC5m8mVbCm+Wxmdv6jzYkK2cvPcCQfBZSCBgDC71CjAG3IFUIBgQC
+	 B9QgIlr0D/o7QVIkWGCt09AwHTXG2Z3PBlDnQHhJgY9xF0NsymcQbwg/d8z51GPcw7
+	 WsMA3oW8/wTDPKkMZBmGs9x7jG/upNnVZJjP1K2NWWnI99q2PXNFrYha1JRU/amRQk
+	 3v9dq7oXCOxUGBdJ+ISpbj76SgvK3VCrgcB2qqK11b/MWwHGCLLtrs0A2rfwlieCgh
+	 mCQk9fLM1wPVg==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B527C88E53;
+	Tue, 15 Sep 2026 14:24:22 +0000 (UTC)
+From: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>
+Date: Tue, 15 Sep 2026 16:24:04 +0200
+Subject: [PATCH 3/5] power: sequencing: pcie-m2: Create auxiliary device
+ for the M.2 BT interface
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v6 9/9] vfio/pci: Permanently revoke a DMABUF on request
-Content-Language: en-GB
-To: =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>,
- Leon Romanovsky <leon@kernel.org>
-Cc: Jason Gunthorpe <jgg@nvidia.com>, Alex Williamson <alex@shazbot.org>,
- Alex Mastro <amastro@fb.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Logan Gunthorpe <logang@deltatee.com>, Kevin Tian <kevin.tian@intel.com>,
- Pranjal Shrivastava <praan@google.com>, Longfang Liu
- <liulongfang@huawei.com>, Mahmoud Adam <mngyadam@amazon.de>,
- David Matlack <dmatlack@google.com>, =?UTF-8?B?QmrDtnJuIFTDtnBlbA==?=
- <bjorn@kernel.org>, Sumit Semwal <sumit.semwal@linaro.org>,
- Ankit Agrawal <ankita@nvidia.com>, Alistair Popple <apopple@nvidia.com>,
- Vivek Kasireddy <vivek.kasireddy@intel.com>, linux-kernel@vger.kernel.org,
- linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org,
- linaro-mm-sig@lists.linaro.org, kvm@vger.kernel.org,
- linux-pci@vger.kernel.org
-References: <20260911214200.33793-1-matt@ozlabs.org>
- <20260911214200.33793-10-matt@ozlabs.org> <20260913165244.GW13683@unreal>
- <20260914113647.GL3968357@nvidia.com> <20260914115456.GY13683@unreal>
- <f21c409d-5675-4c87-8b16-850bcb9474df@ozlabs.org>
- <20260915072002.GD13683@unreal>
- <cebfef6a-88c6-4753-a0a4-87445a72f885@amd.com>
-From: Matt Evans <matt@ozlabs.org>
-In-Reply-To: <cebfef6a-88c6-4753-a0a4-87445a72f885@amd.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20260915-pci-m2-bt-rework-v1-3-3c7d9cf9c010@oss.qualcomm.com>
+References: <20260915-pci-m2-bt-rework-v1-0-3c7d9cf9c010@oss.qualcomm.com>
+In-Reply-To: <20260915-pci-m2-bt-rework-v1-0-3c7d9cf9c010@oss.qualcomm.com>
+To: Marcel Holtmann <marcel@holtmann.org>, 
+ Luiz Augusto von Dentz <luiz.dentz@gmail.com>, 
+ Bartosz Golaszewski <brgl@kernel.org>, 
+ Manivannan Sadhasivam <mani@kernel.org>, 
+ Amitkumar Karwar <amitkumar.karwar@nxp.com>, 
+ Neeraj Kale <neeraj.sanjaykale@nxp.com>, 
+ Philipp Zabel <p.zabel@pengutronix.de>
+Cc: linux-kernel@vger.kernel.org, linux-bluetooth@vger.kernel.org, 
+ linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org, 
+ linux-pm@vger.kernel.org, Rahul Samana <rahul.samana@oss.qualcomm.com>, 
+ Wei Deng <wei.deng@oss.qualcomm.com>, 
+ Loic Poulain <loic.poulain@oss.qualcomm.com>, 
+ Andy Shevchenko <andriy.shevchenko@linux.intel.com>, 
+ Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+X-Mailer: b4 0.15.2
+X-Developer-Signature: v=1; a=openpgp-sha256; l=9879;
+ i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
+ bh=ysdYQzQTS6vV5RimaY4+yjdKUGeSc5gOn2WXxQ/9ltg=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBqqVUSc4FVnWW9dvtIIVeOclToM1k8bzAypjESU
+ i2EyBGGkQ6JATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCaqlVEgAKCRBVnxHm/pHO
+ 9Q5GB/wNCfs5K5guix1U95aAVoWht4Lu1gHZBDY3WjE5+zxFf9nOqf578hPwLgJtKGy0BjYTi3b
+ Jmfg8Kcx8nzV7E0GZdbTvynVtw/PQtv9lTyzWYNBT0zPtg3+SDRYmy6GgPn/Zee90SX04SaJYRr
+ MGrEtN1q7oYKLQ8O7nW5mphnUcyEet5/KXygAQYVOQUtJukxtIw9bYpoq+P/WUnXmoCp9FHe2yf
+ SPI16DfUgHVosjZeF6OVH8sZoYpBKvrJxB6Zd/VAdM1mrbVqAqZt1S/Sv4jpgsgnBpX13nDXWTT
+ MubVjkOVSatWDHA8Fi3wLNPn8wUI59WH36EQy5BPgS8x0tej
+X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
+ fpr=C668AEC3C3188E4C611465E7488550E901166008
+X-Endpoint-Received: by B4 Relay for
+ manivannan.sadhasivam@oss.qualcomm.com/default with auth_id=461
+X-Original-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Reply-To: manivannan.sadhasivam@oss.qualcomm.com
 
-Hi Christian,
+From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 
-On 15/09/2026 12:13, Christian König wrote:
-> On 9/15/26 09:20, Leon Romanovsky wrote:
->> On Mon, Sep 14, 2026 at 01:13:36PM +0100, Matt Evans wrote:
->>> Hi Leon,
->>>
->>> On 14/09/2026 12:54, Leon Romanovsky wrote:
->>>> On Mon, Sep 14, 2026 at 08:36:47AM -0300, Jason Gunthorpe wrote:
->>>>> On Sun, Sep 13, 2026 at 07:52:44PM +0300, Leon Romanovsky wrote:
->>>>>> On Fri, Sep 11, 2026 at 10:41:57PM +0100, Matt Evans wrote:
->>>>>>> Expand the VFIO DMABUF revocation state to three states:
->>>>>>> Not revoked, temporarily revoked, and permanently revoked.
->>>>>>
->>>>>> The thing is that "temporarily revoked" is actually the standard
->>>>>> invalidate_mappings/move_notify mechanism of DMABUF, which wasn't good
->>>>>> for VFIO.
->>>>>
->>>>> I think temporarily revokes here means it is revoked from a dmabuf
->>>>> perspective
->>>>
->>>> My guess is that this is more of a "change owner" operation than a
->>>> revoke operation.
->>>>
->>>> The main issue here is that we have to guess the semantics instead of
->>>> having a properly named and documented operation.
->>>
->>> Apologies if the cover letter for the series and patch commit message (which
->>> cover this) are unclear about the motivations and semantics.  On the commit
->>> message, can you suggest clarifications:
->>>
->>> "This is useful for lifecycle management, to reclaim VFIO PCI BAR
->>> ranges previously delegated to a subordinate client process: by
->>> revoking, the driver process can ensure that the loaned resources are
->>> made inaccessible when the client is deemed "done".  The original
->>> DMABUF is defunct, and BAR resources can then be safely re-exported
->>> for use by new clients."
->>>
->>> Given what I'll explain below, do give suggestions please.  There is more
->>> context in the cover letter (the volume of which I didn't think appropriate
->>> for the commit message).
->>
->> 1. Do not mix "driver" and "client" in the same description. For a
->> non-native English speaker, "driver" has a very specific meaning in the
->> context of the Linux kernel.
-> 
-> In the context of DMA-buf it has also proven vital to clearly use the terms importer and exporter to describe the different roles a driver can have.
-> 
-> I can't count how often there was confusion because people (me included) just used "driver" and it wasn't clear which role was meant.
+Currently, the driver instantiates the BT interface of the WCN6855 and
+WCN7850 combo modules by creating a devicetree node at runtime using an
+of_changeset, with the compatible passed through the PCI ID table. But this
+method of creating a devicetree node just for matching with the driver is
+not recommended.
 
-:)  I see where the quote can be clearer.  FWIW the "driver process" was
-referring to a userspace driver (which is a legitimate use of the D-word
-with VFIO, but still).  I'll clarify that, and will indicate this
-mechanism is used by userspace to influence the VFIO _exporter_ behaviour.
+So create an auxiliary device for the BT interface instead. The serdev
+transport is still allocated here and handed over to the Bluetooth driver
+through the auxiliary device, along with the power sequencing target used
+to power up the controller. Also extend the provider match so that the
+auxiliary device created for this connector is matched as its power
+sequencing consumer.
 
->> 2. Explain the lifecycle in the commit message, and why "revoke", which
->> is effectively what the importer does, is not sufficient.
->>
->> 3. The more you put in the cover letter, the less likely people are to
->> read it.
->>
->> 4. Commit messages should describe the patches themselves, since they
->> are what remains visible in the git log, unlike the cover letter.
->>
->> 5. I would call what you describe as "temporarily revoke" is actually "reclaim".
-> 
-> +1
+Since the runtime node creation is now gone, select AUXILIARY_BUS in
+place of OF_DYNAMIC.
 
-I don't follow here, sorry.  Would you please elaborate?
+Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+---
+ drivers/power/sequencing/Kconfig          |   2 +-
+ drivers/power/sequencing/pwrseq-pcie-m2.c | 137 ++++++++++++++++--------------
+ 2 files changed, 75 insertions(+), 64 deletions(-)
 
-Currently VFIO uses the priv->revoked flag to track whether
-it-the-exporter had previously done dma_buf_invalidate_mappings() on a
-buffer and is now causing all .attach requests to fail.  Do you mean
-that (even without this series) you want to call that concept
-priv->reclaimed instead?
+diff --git a/drivers/power/sequencing/Kconfig b/drivers/power/sequencing/Kconfig
+index 1c5f5820f5b7..2943af5db135 100644
+--- a/drivers/power/sequencing/Kconfig
++++ b/drivers/power/sequencing/Kconfig
+@@ -40,7 +40,7 @@ config POWER_SEQUENCING_PCIE_M2
+ 	depends on OF
+ 	depends on PCI
+ 	depends on SERIAL_DEV_BUS
+-	select OF_DYNAMIC
++	select AUXILIARY_BUS
+ 	help
+ 	  Say Y here to enable the power sequencing driver for PCIe M.2
+ 	  connectors. This driver handles the power sequencing for the M.2
+diff --git a/drivers/power/sequencing/pwrseq-pcie-m2.c b/drivers/power/sequencing/pwrseq-pcie-m2.c
+index bee1aa0e077d..9e485641695c 100644
+--- a/drivers/power/sequencing/pwrseq-pcie-m2.c
++++ b/drivers/power/sequencing/pwrseq-pcie-m2.c
+@@ -4,16 +4,18 @@
+  * Author: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+  */
+ 
++#include <linux/auxiliary_bus.h>
+ #include <linux/device.h>
+ #include <linux/delay.h>
+ #include <linux/gpio/consumer.h>
++#include <linux/idr.h>
+ #include <linux/list.h>
+ #include <linux/module.h>
+ #include <linux/of.h>
+ #include <linux/of_graph.h>
+-#include <linux/of_platform.h>
+ #include <linux/pci.h>
+ #include <linux/platform_device.h>
++#include <linux/pwrseq/pcie-m2-bt.h>
+ #include <linux/pwrseq/provider.h>
+ #include <linux/regulator/consumer.h>
+ #include <linux/serdev.h>
+@@ -21,7 +23,7 @@
+ 
+ struct pwrseq_pci_dev {
+ 	struct serdev_device *serdev;
+-	struct of_changeset *ocs;
++	struct pcie_m2_bt_auxdev *bt;
+ 	struct pci_dev *pdev;
+ 	struct list_head list;
+ };
+@@ -196,6 +198,14 @@ static int pwrseq_pcie_m2_match(struct pwrseq_device *pwrseq,
+ 	struct pwrseq_pcie_m2_ctx *ctx = pwrseq_device_get_drvdata(pwrseq);
+ 	struct device_node *endpoint __free(device_node) = NULL;
+ 
++	/*
++	 * The Bluetooth function is represented by an auxiliary device created
++	 * by this driver. It has no OF node, so match it by verifying that it
++	 * is a child of this connector.
++	 */
++	if (dev_is_auxiliary(dev) && dev->parent == ctx->dev)
++		return PWRSEQ_MATCH_OK;
++
+ 	/*
+ 	 * Traverse the 'remote-endpoint' nodes and check if the remote node's
+ 	 * parent matches the OF node of 'dev'.
+@@ -210,78 +220,86 @@ static int pwrseq_pcie_m2_match(struct pwrseq_device *pwrseq,
+ 	return PWRSEQ_NO_MATCH;
+ }
+ 
++/*
++ * The Bluetooth interface of a supported module is exposed as an auxiliary
++ * device. Its name (combined with this driver's module name) is matched by
++ * the Bluetooth driver. Store that name as the PCI ID driver data.
++ */
+ static const struct pci_device_id pwrseq_m2_pci_ids[] = {
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_MARVELL_EXT, 0x2b43),
+-	  .driver_data = (kernel_ulong_t)"nxp,88w8987-bt" },
++	  .driver_data = (kernel_ulong_t)"88w8987-bt" },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_PHILIPS, 0x3003),
+-	  .driver_data = (kernel_ulong_t)"nxp,88w8987-bt" },
++	  .driver_data = (kernel_ulong_t)"88w8987-bt" },
+ 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_QCOM, 0x1103, PCI_VENDOR_ID_QCOM, 0x0108),
+-	  .driver_data = (kernel_ulong_t)"qcom,qca2066-bt" },
++	  .driver_data = (kernel_ulong_t)"qca2066-bt" },
+ 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_QCOM, 0x1103, PCI_VENDOR_ID_FOXCONN, 0xe105),
+-	  .driver_data = (kernel_ulong_t)"qcom,wcn6855-bt" },
++	  .driver_data = (kernel_ulong_t)"wcn6855-bt" },
+ 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_QCOM, 0x1103, PCI_VENDOR_ID_QCOM, 0x337e),
+-	  .driver_data = (kernel_ulong_t)"qcom,wcn6855-bt" },
++	  .driver_data = (kernel_ulong_t)"wcn6855-bt" },
+ 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_QCOM, 0x1107, PCI_VENDOR_ID_QCOM, 0x337c),
+-	  .driver_data = (kernel_ulong_t)"qcom,wcn7850-bt" },
++	  .driver_data = (kernel_ulong_t)"wcn7850-bt" },
+ 	{ } /* Sentinel */
+ };
+ 
+-static int pwrseq_pcie_m2_create_bt_node(struct pwrseq_pcie_m2_ctx *ctx,
++static DEFINE_IDA(pwrseq_pcie_m2_bt_ida);
++
++static void pwrseq_pcie_m2_bt_release(struct device *dev)
++{
++	struct pcie_m2_bt_auxdev *bt =
++		to_pcie_m2_bt_auxdev(to_auxiliary_dev(dev));
++
++	ida_free(&pwrseq_pcie_m2_bt_ida, bt->adev.id);
++	kfree(bt);
++}
++
++static int pwrseq_pcie_m2_create_bt_aux(struct pwrseq_pcie_m2_ctx *ctx,
+ 					struct pwrseq_pci_dev *pci_dev,
+-					struct device_node *parent,
+ 					struct pci_dev *pdev)
+ {
+ 	const struct pci_device_id *id;
+ 	struct device *dev = ctx->dev;
+-	const char *compatible;
+-	struct device_node *np;
++	struct pcie_m2_bt_auxdev *bt;
+ 	int ret;
+ 
+ 	id = pci_match_id(pwrseq_m2_pci_ids, pdev);
+ 	if (WARN_ON_ONCE(!id)) /* Shouldn't happen */
+ 		return -ENODEV;
+ 
+-	compatible = (const char *)id->driver_data;
+-
+-	pci_dev->ocs = kzalloc_obj(*pci_dev->ocs);
+-	if (!pci_dev->ocs)
++	bt = kzalloc_obj(*bt);
++	if (!bt)
+ 		return -ENOMEM;
+ 
+-	of_changeset_init(pci_dev->ocs);
++	ret = ida_alloc(&pwrseq_pcie_m2_bt_ida, GFP_KERNEL);
++	if (ret < 0)
++		goto err_free_bt;
+ 
+-	np = of_changeset_create_node(pci_dev->ocs, parent, "bluetooth");
+-	if (!np) {
+-		dev_err(dev, "Failed to create bluetooth node\n");
+-		ret = -ENODEV;
+-		goto err_destroy_changeset;
+-	}
++	bt->serdev = pci_dev->serdev;
++	bt->pwrseq_target = "uart";
++	bt->adev.id = ret;
++	bt->adev.name = (const char *)id->driver_data;
++	bt->adev.dev.parent = dev;
++	bt->adev.dev.release = pwrseq_pcie_m2_bt_release;
+ 
+-	ret = of_changeset_add_prop_string(pci_dev->ocs, np, "compatible", compatible);
+-	if (ret) {
+-		dev_err(dev, "Failed to add bluetooth compatible: %d\n", ret);
+-		goto err_destroy_changeset;
+-	}
++	ret = auxiliary_device_init(&bt->adev);
++	if (ret)
++		goto err_free_ida;
+ 
+-	ret = of_changeset_apply(pci_dev->ocs);
++	ret = auxiliary_device_add(&bt->adev);
+ 	if (ret) {
+-		dev_err(dev, "Failed to apply changeset: %d\n", ret);
+-		goto err_destroy_changeset;
++		dev_err(dev, "Failed to add bluetooth auxiliary device: %d\n",
++			ret);
++		auxiliary_device_uninit(&bt->adev);
++		return ret;
+ 	}
+ 
+-	ret = device_add_of_node(&pci_dev->serdev->dev, np);
+-	if (ret) {
+-		dev_err(dev, "Failed to add OF node: %d\n", ret);
+-		goto err_revert_changeset;
+-	}
++	pci_dev->bt = bt;
+ 
+ 	return 0;
+ 
+-err_revert_changeset:
+-	of_changeset_revert(pci_dev->ocs);
+-err_destroy_changeset:
+-	of_changeset_destroy(pci_dev->ocs);
+-	kfree(pci_dev->ocs);
+-	pci_dev->ocs = NULL;
++err_free_ida:
++	ida_free(&pwrseq_pcie_m2_bt_ida, bt->adev.id);
++err_free_bt:
++	kfree(bt);
+ 
+ 	return ret;
+ }
+@@ -329,17 +347,17 @@ static int pwrseq_pcie_m2_create_serdev_one(struct pwrseq_pcie_m2_ctx *ctx,
+ 		goto err_free_pci_dev;
+ 	}
+ 
+-	ret = pwrseq_pcie_m2_create_bt_node(ctx, pci_dev, serdev_parent, pdev);
+-	if (ret)
+-		goto err_free_serdev;
+-
+ 	ret = serdev_device_add(pci_dev->serdev);
+ 	if (ret) {
+ 		dev_err(dev, "Failed to add serdev for PCI device (%s): %d\n",
+ 			pci_name(pdev), ret);
+-		goto err_free_dt_node;
++		goto err_free_serdev;
+ 	}
+ 
++	ret = pwrseq_pcie_m2_create_bt_aux(ctx, pci_dev, pdev);
++	if (ret)
++		goto err_remove_serdev;
++
+ 	serdev_controller_put(serdev_ctrl);
+ 
+ 	pci_dev->pdev = pci_dev_get(pdev);
+@@ -350,15 +368,11 @@ static int pwrseq_pcie_m2_create_serdev_one(struct pwrseq_pcie_m2_ctx *ctx,
+ 
+ 	return 0;
+ 
+-err_free_dt_node:
+-	device_remove_of_node(&pci_dev->serdev->dev);
+-	of_changeset_revert(pci_dev->ocs);
+-	of_changeset_destroy(pci_dev->ocs);
+-	kfree(pci_dev->ocs);
+-	pci_dev->ocs = NULL;
++err_remove_serdev:
++	serdev_device_remove(pci_dev->serdev);
++	goto err_free_pci_dev;
+ err_free_serdev:
+ 	serdev_device_put(pci_dev->serdev);
+-	pci_dev->serdev = NULL;
+ err_free_pci_dev:
+ 	kfree(pci_dev);
+ err_put_ctrl:
+@@ -370,16 +384,13 @@ static int pwrseq_pcie_m2_create_serdev_one(struct pwrseq_pcie_m2_ctx *ctx,
+ static void __pwrseq_pcie_m2_remove_serdev(struct pwrseq_pcie_m2_ctx *ctx,
+ 					   struct pwrseq_pci_dev *pci_dev)
+ {
+-	if (pci_dev->serdev) {
+-		device_remove_of_node(&pci_dev->serdev->dev);
+-		serdev_device_remove(pci_dev->serdev);
++	if (pci_dev->bt) {
++		auxiliary_device_delete(&pci_dev->bt->adev);
++		auxiliary_device_uninit(&pci_dev->bt->adev);
+ 	}
+ 
+-	if (pci_dev->ocs) {
+-		of_changeset_revert(pci_dev->ocs);
+-		of_changeset_destroy(pci_dev->ocs);
+-		kfree(pci_dev->ocs);
+-	}
++	if (pci_dev->serdev)
++		serdev_device_remove(pci_dev->serdev);
+ 
+ 	pci_dev_put(pci_dev->pdev);
+ 	list_del(&pci_dev->list);
+@@ -526,6 +537,7 @@ static int pwrseq_pcie_m2_probe(struct platform_device *pdev)
+ 		return -ENOMEM;
+ 
+ 	platform_set_drvdata(pdev, ctx);
++	ctx->dev = dev;
+ 	ctx->of_node = dev_of_node(dev);
+ 	ctx->pdata = device_get_match_data(dev);
+ 	if (!ctx->pdata)
+@@ -573,7 +585,6 @@ static int pwrseq_pcie_m2_probe(struct platform_device *pdev)
+ 
+ 	mutex_init(&ctx->list_lock);
+ 	INIT_LIST_HEAD(&ctx->pci_devices);
+-	ctx->dev = dev;
+ 
+ 	/* Create serdev for available PCI devices (if required) */
+ 	ret = pwrseq_pcie_m2_create_serdev(ctx);
 
-Or do you mean that you don't like the words "temporary"/"permanent" and
-are looking for another name for a temporarily unavailable buffer?  (If
-so, I find "not revoked", "reclaimed", "revoked" much less clear than
-not/temp/perm revoked, as such names give no hint as to what to expect.
-But I may have misunderstood what you're getting at.)
-
-From the importer side, there is no change from this patch: they might
-observe an invalidate_mappings() and find attach() of a given buffer now
-fails, same as before this patch.  This is only about guaranteeing the
-impossibility of an importer ever being able to re-attach in future.
-
-
-Thanks,
-
-
-Matt
-
-
-PS:  A hypothetical alternative way of doing what this patch is doing is
-instead to have:
-
- - existing priv->revoked
- - new 	    priv->revoked_flag_is_immutable
-
-Then, the ioctl triggers an invalidate_mappings() for a targeted DMABUF,
-sets revoked = true, and revoked_flag_is_immutable = true.  The new flag
-prevents a future vfio_pci_dma_buf_move(false) from clearing revoked.
-For example, a reset doing `move(true); reset; move(false);` can make
-all DMABUFs available to attach again, except for those marked
-immutably-revoked.  (That is equivalent to this new "permanent" state.)
+-- 
+2.43.0
 
 
