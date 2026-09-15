@@ -1,91 +1,153 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7773F3B6BF4;
-	Tue, 15 Sep 2026 13:37:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 272CE3B9D9D
+	for <linux-pci@vger.kernel.org>; Tue, 15 Sep 2026 13:51:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789479455; cv=none; b=JlJi/c+O1vAm6Py/xrLSdcdUT+kWV41AiE7S5AR2cI7MpQ7PmQA251csl4pi2+uFnP6msv8aO8E5Fu60C1XIiWzpB/zZu1Erd4T25tSXSibFXpF8r6lyz/eBgXf/046IImP8qDZtLsQc2bbvjKUDAaS2jw/waPuzCw0rtsuhpGU=
+	t=1789480269; cv=none; b=t+L7AjQDuQKlgwCd2+VDD9ujaCWR9fBrxBIjQ/+R2nhDr6hk832rZRZXwQ46TdvQICcf5g4k60Hav5LFoKh5eis5L8SPinHokh2u/vT5WW0vRDkhgkC+7H+CXm5s2tuo/r4BJV91Smm5Ebpt/gCkMpYtrPvqjZYE+Zy6cCvD5pA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789479455; c=relaxed/simple;
-	bh=XbkzJmU+ohpQZw6QRlajImSOTkSJ3D6nxxEIRSVEvsQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=P19/y94E4lbIlz2odaPrqumPSepBSozZOFbxoUaNoK5LoT4wzfXItSJWYQgWn74agV1j6t1brDSaL+HOzf4Q35bq0WIyz+huMo8DFM/xJdodKnCDhmcPFcXwE5SQ2DAA9n6dJ8up/AeD8Sy//n4zkW50R8TkBchKTR0lAw7seic=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RvFjMZIS; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789480269; c=relaxed/simple;
+	bh=yMBphWdTCIPuWfqOpsbMpbNW/NAeRhoedZCbXkbt1I8=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=t8sLS+RSaPqLYzqMIy+aPgMG6Cafcnf6312xqHIljsmkFpsEmDSh+6R1ao+icyIo5sg+ImNZWxOavTmUlr2dr72QLLGDhbkSXfLirdkYL/KJ5FA6IA3S4CnFXYDfYO1EaRdbiKeBxWXsv+dOMW+z3wQt0DgYC5p0+xy9oMIqSKw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lLBPSkxm; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RvFjMZIS"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 439941F00893;
-	Tue, 15 Sep 2026 13:37:32 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lLBPSkxm"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 504561F000FF;
+	Tue, 15 Sep 2026 13:51:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789479453;
-	bh=BM51LqCTQKkxQjHuUWYfXlc+A3jyZ7CPDkL+FFiZnQU=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=RvFjMZISrAofoxatI3txRLvKezud9CwyRisHK6u/f7qV4yUT2+fhG50Licn4tOFTn
-	 aUpbIemAcM0nYY73vFMmlmR1G3bd+rt/EKqZZnRrCEtiulHGzVYlo1mfwJKw5wEt1L
-	 veYt//N/IyOSrGXAkw1MeTdTZ2AM54UXpTGiPVffI88yWhxPkdAceI85FeCNds2r4u
-	 sMz8bBUFz776GaC6PwE+AI/nJ0iZQZZSS6dOKyITBPk7GK5hUpSLwFzs/e94djAAI5
-	 B1VOzp9xLYXS5P36Ut/yF0LzCU8F2BPhT15C5ehGRRkZgEiLj+ihYaoD/RGFGUzvdG
-	 Nl076XXX2qyeQ==
-Date: Tue, 15 Sep 2026 16:37:29 +0300
-From: Leon Romanovsky <leon@kernel.org>
-To: Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>
-Cc: Zhiping Zhang <zhipingz@meta.com>, kvm@vger.kernel.org,
-	linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org,
-	dri-devel@lists.freedesktop.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Alex Williamson <alex@shazbot.org>, Jason Gunthorpe <jgg@ziepe.ca>
-Subject: Re: [PATCH v13 0/5] vfio/dma-buf: add TPH support for peer-to-peer
- access - ping
-Message-ID: <20260915133729.GO13683@unreal>
-References: <20260731211601.3033906-1-zhipingz@meta.com>
- <CAH3zFs0vQidHOWif_LmS0=65S9iiCo7yGibqLvFT5jadjj8wVA@mail.gmail.com>
- <CAH3zFs2XnH6gT0fO4=WLi4x1SL2+Y0S=Jo45SWkR=unPegQ8Hw@mail.gmail.com>
- <CAH3zFs2X8=x-XMXhwC7_aUZivCCPQOSuyXMy-ryKqxLEFY9u-Q@mail.gmail.com>
- <c0c8dea4-1571-482e-be33-f965c7c357d2@amd.com>
- <20260915113752.GK13683@unreal>
- <92950084-ddd1-4868-a81a-bfe214184122@amd.com>
+	s=k20260515; t=1789480267;
+	bh=aKurW0dj2pTtHgP+1BjvT3NxfRqVtJzBwX7pQ9ZDYR8=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=lLBPSkxmUHFmTBEwZ14LFdB535ORgYUQlevXnxITvpuOg/0DqqmaWe5w3q5G2Rp5B
+	 lcfUWohGUY2lKnVzUmhh7rrwlwnsVgykBiE3nT9Grn3B/MQ9LL3NZrVLwaAMoEubdn
+	 1+j0vQtDrhWdlVZ9sCir9EDtL9ZH8weU/MSMFqXA9ZxKfzXYbnxiOcmse9ZTX27RL7
+	 9XTauJNzWfj+zA6FDCmKYk3Mc4uqUwBrmxhiYWi95s3LLHXPMhwX+K4wYJvqASq9dC
+	 uFvvatJqNAatfrLRryabYHfo0wKg997IsRe6/ORe0GZk3s97xRYaX7SEcHPMxmYDJw
+	 yrTeMNUAty+VQ==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] PCI: Fix order of device disablement on reset
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Lukas Wunner" <lukas@wunner.de>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <4c908eaab127d82ecfdc1e9948964b2e641d41d8.1789478646.git.lukas@wunner.de>
+References: <4c908eaab127d82ecfdc1e9948964b2e641d41d8.1789478646.git.lukas@wunner.de>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Tue, 15 Sep 2026 13:51:06 +0000
+Message-Id: <20260915135107.504561F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <92950084-ddd1-4868-a81a-bfe214184122@amd.com>
 
-On Tue, Sep 15, 2026 at 02:59:43PM +0200, Christian König wrote:
-> On 9/15/26 13:37, Leon Romanovsky wrote:
-> > On Fri, Sep 11, 2026 at 09:58:28AM +0200, Christian König wrote:
-> >> Hi Zhiping,
-> >>
-> >> sorry I'm completely underwater at the moment and don't have time to take another look at the full set.
-> >>
-> >> But IIRC you already fixed my documentation requirements and skimming over the patch once more I can't see anything wrong of hand.
-> >>
-> >> So feel free to add Acked-by: Christian König <christian.koenig@amd.com> to patch "dma-buf: add optional get_pci_tph() callback" and push it upstream through the VFIO channels.
-> > 
-> > Christian,
-> > 
-> > I'm slightly confused here. In the other thread, you expressed concerns
-> > about having PCI details common to every device in the P2P world in the
-> > dma-buf code, but here you seem fine with adding a niche P2P feature.
-> 
-> That one is only using u16 and u8 types and has no dependency on the PCI subsystem whatsoever.
-> 
-> Giving those adjacent information sounds perfectly fine to me, we just can't have any hard dependency on PCI subsystem types or functions.
-> 
-> DMA-buf itself is massively used with vendor specific P2P interconnects, PCI P2P is just a special case of that.
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
+- [High] pci: bottom-up save and disable fails if parent bridge is in D3hot
+- [Low] pci: stale documentation for save_and_disable_locked traversal
+--
 
-You are looking at it from the DRM perspective. Outside the DRM world, PCI is
-THE interconnect, everything else is a special case :).
+commit 0c082dfc1a7a6d8233dea3dd350ae1d9557bf0fb
+Author: Lukas Wunner <lukas@wunner.de>
+PCI: Fix order of device disablement on reset
 
-Thanks
+This commit reverses the device disablement traversal order in
+pci_bus_save_and_disable_locked() and pci_slot_save_and_disable_locked() to
+recurse before disabling. This bottom-up approach is intended to avoid AER
+splats caused by disabling access to the Switch Upstream Port before stoppi=
+ng
+access to MMIO space on subordinate devices.
 
-> 
-> Regards,
-> Christian.
-> 
-> > 
-> > Thanks,
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index b2879a6be5f80..ce9f74d659206 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -5508,9 +5508,9 @@ static void pci_bus_save_and_disable_locked(struct =
+pci_bus *bus)
+>  	struct pci_dev *dev;
+> =20
+>  	list_for_each_entry(dev, &bus->devices, bus_list) {
+> -		pci_dev_save_and_disable(dev);
+>  		if (dev->subordinate)
+>  			pci_bus_save_and_disable_locked(dev->subordinate);
+> +		pci_dev_save_and_disable(dev);
+
+[Severity: High]
+Does this bottom-up reordering cause a regression if the parent bridge is i=
+n a
+low-power state?
+
+If the reset is triggered via the sysfs reset_subordinate attribute while t=
+he
+parent bridge (e.g., Switch Upstream Port) is in a state like D3hot (via
+runtime PM), the parent bridge is not woken up by the sysfs handler.
+
+By calling pci_dev_save_and_disable() for the child first, the code will
+attempt to access the child's Configuration Space before the parent bridge
+is woken up:
+
+pci_dev_save_and_disable() {
+    ...
+    pci_set_power_state(dev, PCI_D0);
+
+    if (!pci_dev_config_accessible(dev, "save state"))
+        return;
+
+    pci_save_state(dev);
+    ...
+}
+
+Since the parent bridge is still suspended, its secondary bus is inaccessib=
+le.
+Could this cause the child's Configuration Space accesses to silently fail,
+resulting in the child's saved state being corrupted?
+
+If the state is corrupted, when pci_bus_restore_locked() later restores it,
+will it permanently break the downstream devices until a cold reboot?
+
+The original top-down traversal worked because it woke up the parent bridge
+first, making the secondary bus accessible for the child's Configuration Sp=
+ace
+accesses.
+
+[Severity: Low]
+Is the comment block above this function now inaccurate? It states:
+
+/*
+ * Save and disable devices from the top of the tree down while holding
+ * the @dev mutex lock for the entire tree.
+ */
+
+Should this be updated to reflect the new bottom-up traversal?
+
+>  	}
+>  }
+> =20
+> @@ -5543,9 +5543,9 @@ static void pci_slot_save_and_disable_locked(struct=
+ pci_slot *slot)
+>  	list_for_each_entry(dev, &slot->bus->devices, bus_list) {
+>  		if (!dev->slot || dev->slot !=3D slot)
+>  			continue;
+> -		pci_dev_save_and_disable(dev);
+>  		if (dev->subordinate)
+>  			pci_bus_save_and_disable_locked(dev->subordinate);
+> +		pci_dev_save_and_disable(dev);
+
+[Severity: High]
+Does the same problematic bottom-up reordering apply here for slot resets,
+potentially corrupting the child's saved state if the parent bridge is
+suspended?
+
+[Severity: Low]
+Does the documentation block for pci_slot_save_and_disable_locked() also ne=
+ed
+to be updated to reflect the new bottom-up traversal?
+
+>  	}
+>  }
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/4c908eaab127d82ecfd=
+c1e9948964b2e641d41d8.1789478646.git.lukas@wunner.de?part=3D1
