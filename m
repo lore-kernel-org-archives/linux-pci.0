@@ -1,112 +1,75 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA0944BB26F
-	for <linux-pci@vger.kernel.org>; Tue, 15 Sep 2026 16:57:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F0DA74B5CC9
+	for <linux-pci@vger.kernel.org>; Tue, 15 Sep 2026 16:59:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789491472; cv=none; b=YppRdafaQ+RCpgvhly3GUHqdz4nUFcgPiTsPaF/FJ+fNO9AwhtxHZsWiBHzPqx9O8cDCY+JiyUHm8/A1qOy5KFgRF0+cBp5d9Do+MHxcDQprYU/szNQLoDumHsNpjFZ2q/BjNvGfatZgcjKQQfAl+YY+7LdQdWnrfem1NnbQaOo=
+	t=1789491581; cv=none; b=odL7oryDuYl8hVIG8pzQmQGXR4H7h3YCrJ6y3QB2i9SnCKA2pVeq/AAMqwr1ZvcoWisPCEHmJijOfDiK+7OXvzgNwkoPHZyCqR+Au+PUiOo3LbtP4wjmTF/RwAQ+igIHi70uNSMc6dqj28RPjlGRuNAE28BDzP3sMDeFxUiV5OY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789491472; c=relaxed/simple;
-	bh=l+FW1mRMycGxqPyZqi/omJzwtvXfJJU+euOL2/rObkM=;
+	s=arc-20240116; t=1789491581; c=relaxed/simple;
+	bh=BEEQ4p1vTy/vWO+q4kDzTO2dEPO8Lr1nb8wlFV5hjHw=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=esxtkoLQDz9VA1NA1LHvYsA6uPsOCxeRecSl6pRpsgG0k0JT5U0mhTOnF+9M/NledwTBV/207el080IJk1+2gY7ck0b0ao7aIFlAbXA02FA1SZFjsAv+Z1/vBlTiayfJrV18iZbuIQDu/cjz9MVbZtke1bPUEfxAxlAy7Oj8tOw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Fo+uwrdm; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=XgpL58rycqwErRvnXpn+7yOjQmlWkMaGpTnX1bcPMwVMQ6/EOcVROFTh0926jw6L5Ef6g9gzF+gYaZ/dbHmt+yjianCDHsmE/6amjIgZaQ6InitVJNyV0Wp9p+PIXI0qxvRakj/gkvnuPxliNsPe1reWsD7XR9JlcwmG6mkcPXU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MgwQgcmG; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Fo+uwrdm"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DE72C1F000FF;
-	Tue, 15 Sep 2026 16:57:38 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MgwQgcmG"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B37A61F000FF;
+	Tue, 15 Sep 2026 16:59:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789491459;
-	bh=NC7jFieYBnh57n69QR08hLcwj9LsfhAz3dkXEB/Ot1s=;
+	s=k20260515; t=1789491579;
+	bh=BEEQ4p1vTy/vWO+q4kDzTO2dEPO8Lr1nb8wlFV5hjHw=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Fo+uwrdmVWr1bEFj3XO5MUAkza4glAKtAa3lfPWPjHcgU69aPufdZZwCsVYmjYVvG
-	 u8XXLuAUWFSlrS6boTP208CyTTT2f4k3TyXrM1SKfUidW7In89U1hFu0zvpcSXB0uz
-	 s+rShushk6U0q/Q7c/lKGo3cGkctpdf+uKptlGBn+bUA8jz8U4H1Ek/Be8NUS8la1B
-	 JYqvL/SMG1YYA0ZINwB6MAuY8b3wpsrk1Epk2r7z7kJZt1DUT33+gbmfIsxck4tJAr
-	 QDYfG6nC0Mo1Fl3qXkyLm3ZRTSbxIl3tJWD4iTjD9MdZ+xGBlNEjIfTt2m2CeqMi6w
-	 Tp0NEneJklFtg==
+	b=MgwQgcmGFFXR4pTfHm+jd61bDSWgNN1eME/gpBgWHlmGRdhN4aIDQF12uaLLQoUab
+	 THYWlsPBh7QgaQSOBAaHuZkJBA27goxavd/r/zcRZwsgNjMzK8bMzMq5A/lfuDjW+Q
+	 Nscx4bG+DMLLihxepxSGpC+z5kHpFFwhv1blUa+ifvQCDwHELFegcIQ6TNC44sVNXa
+	 3gFEMU6X2zd0LNG4m8+KRSsagsbn/BANmyQ3+8SNXm+g6k0YjlNZHOWZ+86EYW6kpY
+	 DuF67Dhc+5UtWABgV6r1zUh+Eh3otVfXHRDc25bq0GNa8e9fAoMFmF+mdBInnCADGN
+	 4E1pwyCeUs0dA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5 05/15] iommu/arm-smmu-v3: Flush in-flight fault work
- on domain detach
+Subject: Re: [PATCH v5 15/15] iommu/arm-smmu-v3: Enable PRI for PCI device
+ in arm_smmu_probe_device()
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Nicolin Chen" <nicolinc@nvidia.com>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <9692efc467c4dff1de7ad58bfce087ad0d263bd9.1789446520.git.nicolinc@nvidia.com>
+In-Reply-To: <14fe7844fd493be5edac1846e99fa7f289ed7536.1789446520.git.nicolinc@nvidia.com>
 References: <cover.1789446520.git.nicolinc@nvidia.com>
- <9692efc467c4dff1de7ad58bfce087ad0d263bd9.1789446520.git.nicolinc@nvidia.com>
+ <14fe7844fd493be5edac1846e99fa7f289ed7536.1789446520.git.nicolinc@nvidia.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 15 Sep 2026 16:57:38 +0000
-Message-Id: <20260915165738.DE72C1F000FF@smtp.kernel.org>
+Date: Tue, 15 Sep 2026 16:59:39 +0000
+Message-Id: <20260915165939.B37A61F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [Medium] iommu/arm-smmu-v3: memory leak of master_domain on timeout path
---
+> PRI handling is now ready. Enable PRI when probing a PCI device, and drain
+> the PRIQ with the EVTQ when an IOPF-enabled attachment ends. Queued fault
+> work may still refer to the old domain when the detach call returns.
+>=20
+> Note that PRI is enabled at the probe time, while ATS gets toggled by the
+> attach/detach routines, so a master could have PRI enabled when its ATS is
+> disabled. PCIe (Base 6.3, Table 10-14) sets no ATS precondition on the PRI
+> Enable bit. Its only ordering rule is that the interface must have gotten
+> successfully Stopped prior to an enabling, which pci_enable_pri() already
+> checks using PCI_PRI_STATUS_STOPPED. Also, a PRI-enabled device would not
+> issue a page request until it starts to use ATS.
+>=20
+> Set the per-device outstanding request budget to the full priq depth, same
+> as intel-iommu's per-device PRQ_DEPTH choice. A fixed per-device cap won't
+> prevent multiple PRI-capable devices from potentially exceeding the priq's
+> [ ... ]
+> StreamID and get a PRI_RESP_DENY issued against streams[0] by the driver's
+> error-response path.
+>=20
+> Reviewed-by: Jonathan Cameron <jonathan.cameron@oss.qualcomm.com>
+> Signed-off-by: Nicolin Chen <nicolinc@nvidia.com>
 
-commit 93bfbb1f6ed056db517f551ddf8e2b1b26915570
-Author: Nicolin Chen <nicolinc@nvidia.com>
-
-iommu/arm-smmu-v3: Flush in-flight fault work on domain detach
-
-This commit flushes in-flight fault work on domain detach and skips IOPF
-teardown if the hardware queue drain times out. This aims to prevent a
-use-after-free by intentionally leaking the master_domain and iopf refcount
-on timeout.
-
-> If arm_smmu_wait_for_queue_drained() times out, fault work may still be in
-> flight, and iopf_queue_remove_device() would free iopf groups that the wo=
-rk
-> also references. Skip the iopf teardown and leak the master_domain, rather
-> than risk a use-after-free.
-
-[Severity: Medium]
-The commit message states the intent to leak master_domain to avoid a
-use-after-free. Is this description accurate?
-
-The risk appears to apply exclusively to the iopf_group structures that
-would be freed by the skipped iopf_queue_remove_device() call. The
-master_domain structure is entirely driver-internal, has already been
-unlinked from the smmu_domain->devices list in
-arm_smmu_remove_master_domain(), and is not referenced by in-flight IOPF
-works or any other background threads.
-
-> diff --git a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c b/drivers/iommu/=
-arm/arm-smmu-v3/arm-smmu-v3.c
-> index 9e657d075f387..c8fb1c38090d1 100644
-> --- a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
-> +++ b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
-[ ... ]
-> @@ -3422,8 +3423,38 @@ void arm_smmu_attach_release(struct arm_smmu_attac=
-h_state *state)
-[ ... ]
-> +	/* Lastly, flush the fault work that the drained events queued */
-> +	if (master_domain->using_iopf) {
-> +		iopf_queue_flush_dev(master->dev);
-> +
-> +		/*
-> +		 * A timed-out drain may leave fault work in flight, and
-> +		 * iopf_queue_remove_device() would free iopf groups that
-> +		 * such work still references. Skip the iopf teardown and
-> +		 * leak master_domain, rather than risk a UAF.
-> +		 */
-> +		if (WARN_ON(timed_out)) {
-> +			state->old_master_domain =3D NULL;
-> +			return;
-> +		}
-
-[Severity: Medium]
-Does this early return leak master_domain unnecessarily?
-
-Since kfree(master_domain) appears safe to call here even if the drain
-times out, could we free it before returning to avoid leaking master_domain?
+Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/cover.1789446520.gi=
-t.nicolinc@nvidia.com?part=3D5
+t.nicolinc@nvidia.com?part=3D15
+
