@@ -1,174 +1,164 @@
-Received: from mail-qk2-f13.google.com (mail-qk2-f13.google.com [74.125.230.205])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from PH7PR06CU001.outbound.protection.outlook.com (mail-westus3azon11010045.outbound.protection.outlook.com [52.101.201.45])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B50EE3CB8FC
-	for <linux-pci@vger.kernel.org>; Tue, 15 Sep 2026 12:49:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.230.205
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789476570; cv=none; b=UHP8KKHdd1DeyxoWqLSA1OZHju205gei4SL7Hwvd+TfN1qMpz9jbzd+C/ZvkroUIMXGUr766Gi1PqtMnu0/CnxN3/BHFfc7Kdn6A7NfCL1hbPTQY8doj/yMfL/cvXz0inaN0qMBlYM3+FRE+tPYSJ1SsyGr+3YxhjlcimFht6rU=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789476570; c=relaxed/simple;
-	bh=oP8ZBzl+K7e7S5kXo+GJljW1HAPBrtpilh/wSXvwTUA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=mRH7zbwtP5xXWkiqNWIaEXLynlTOGOajXUnvtlaxN49k3WPOuKW2M0N0WZuISmffoE8oA6e82AbdZNEi0qwOKhc1t/ZMm5jnfQ6Y+Pq+hX6bb5bQ300hON2YRB7klMklwyOG9EHU92fS6enATFvvMy4nvv+CokhZ9M6cNWFLMvs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=riscstar.com; spf=pass smtp.mailfrom=riscstar.com; dkim=pass (2048-bit key) header.d=riscstar-com.20251104.gappssmtp.com header.i=@riscstar-com.20251104.gappssmtp.com header.b=vIbuqQRq; arc=none smtp.client-ip=74.125.230.205
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=riscstar.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=riscstar.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 30CAD3B71B0;
+	Tue, 15 Sep 2026 13:01:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.201.45
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1789477298; cv=fail; b=f3E5sC27bpUPuHy6i7OrTaE08FbEr4jpHZ5PNL/5rmkguoQ+yjhX/182Ey/Ejl+7TVkWhUyShI84O3UT5jKJDfVT1iR35MBW1JC2n/O7AmB/UrY758oM1BFKdQpeb8gZYd6+zktruqLlKWlJMbA0+BHd+cGw/2M5nfMb5tprlVI=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1789477298; c=relaxed/simple;
+	bh=TRD/79/3sp/CuwL/PmxjM3Q+qrUuYxiX79OHqSHMq7Q=;
+	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=jj5DtdVmNMT21Zk7J2xI64XDf1zMt3C1VNXZ95CMXpwxE3461h0ZQXsHspyAM9Y7+vcBLf13nG7LErzzxiQJ7EePO6iH6EoVOgBc/ofTQbQB6F01rTrsz3vxc6JJt5RmbbrVVJZ9mes+YFK0h7UpfEH4qM8a9jM2NfMNU/EuVl8=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=v/RIkfQX; arc=fail smtp.client-ip=52.101.201.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=riscstar-com.20251104.gappssmtp.com header.i=@riscstar-com.20251104.gappssmtp.com header.b="vIbuqQRq"
-Received: by mail-qk2-f13.google.com with SMTP id af79cd13be357-939109fafd7so311672485a.2
-        for <linux-pci@vger.kernel.org>; Tue, 15 Sep 2026 05:49:28 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=riscstar-com.20251104.gappssmtp.com; s=20251104; t=1789476567; x=1790081367; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=J/MVO12tLI/QkQzG/oUBp0JuONjh3E/nA2a8Kxx1dMI=;
-        b=vIbuqQRqpczXd6NhVuGycMPthtPcbvsNNtZO4uQ6kmfDxSxiBtE85DQvhsM1jkNhyj
-         hZqBTAmn5frkW+KCbKHPEz5j1L34RHguU0+v1pERN5apapGWUUh79HFVsKbX+zdTKZ0O
-         /kGgEaqsYDQNs3zU6Gir+NOVX4fRCwfothrfui+ugAMzSZFKxuENL+rmgNVW0vY7yjYu
-         9fYT+iujkEfUbJtmVXs0KGQrcgyU9TBacZb0dcighZ36rv61GU7sp6CzQnkGZ61RTivA
-         4MHdKMZcGnwDsTjl92bt393t0vvjoy7JSmIXzJj15iomJ3Ts5yr5CVmmB4EfJCeWDFnI
-         5a0A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1789476567; x=1790081367;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=J/MVO12tLI/QkQzG/oUBp0JuONjh3E/nA2a8Kxx1dMI=;
-        b=zBgPtp9j/HfYI6uJxkttZn5IaeKM6twCxCNh4B7/M1Z2FqS70Qph+VhI76PZH5haeD
-         6S4yxsqgzaJCVNU1//udYRcYdfZ3pOfdjNZvKv/goqf9DuFS9V+M3LGohCcoL9ivZ2kl
-         My9B4hf3qorOWaLlu5ta55/dmO9P2ScS01iN5FJIU4pKmme1CLNUld1zfXpalNrReYJ3
-         QMtR2N+T24OqH21XzovJu7palIgC9IcHGy5TAtpwHAYM3koXbPwG05W5N6ZDWJCaimXg
-         0lwQPzmA26KeBTd6DPly12Jxf/hpAAZiTYNZ+jkPTdANDT7JRMx6S4yiQhUPn8gzYUT7
-         7i/A==
-X-Forwarded-Encrypted: i=1; AKwUvBwReMEGjEy6Elyk8yUAzfOrTENwG3WmweJCPOKaubqbz4Cg0Bsceo/U1OjDv4SY3Wo9XVgCTmEzZ8o=@vger.kernel.org
-X-Gm-Message-State: AFuF++nWoaAs4zD82Q6hjexK7bbTFkPh0CTy2hrPf9rtJIEh/HhOyQkU
-	3iJrXuh1seWWtj80nwny9w+pPwj6H33umS74mJdKidD4x7NuTSC51yufQgM9QbFkCA4=
-X-Gm-Gg: AYBFou2R1U/WoxrNst9cOLuXvyZy3tNJCRwfn32pSZgx21UAZfUzeeRh1qECZUgQTn3
-	Wj1ag4mN9yZMlpjBWZfeap68VYdtRZWm3DSIyiyFXWXxs4fz8DnjHiNeLDFDR8w8G5yHH8LMEv5
-	06vSS/83MX/Mzv2EChzMjo1EWP+2Txj16kDDMjZwc+HvtcqttNLDU3bn3Yp+C9EkyQy3PwXgHwJ
-	1kr3mCPqzIKz4CpmI9jWarUk7Uwop8AV0+qMbHW4vLiWpBuIrVkkaWsj8+MCfzExLYKNKAgSnc1
-	6Nz/bseh3Q5VtoFumQ/erVbnDw6BEz0VOJePie5lYQBTVdsEjlieuHBMaDnzta1mqgZxIO2M3XL
-	I9CofZdhg6ECNUZUuMrnIoOgdzBym7VTD2E3bgplfIn32dBUxnkkOZdwBcfpxSSO7L64DUpOTPH
-	+i1vhsJXQk8MCmSHQeRaEzexiwLJP8CT51Nu7D/Fa/3g8drHFXR9YqO0djUknz33nE3tCNI4c=
-X-Received: by 2002:a05:620a:1a29:b0:939:6ec8:6928 with SMTP id af79cd13be357-93a2985d5c8mr1045812685a.16.1789476562792;
-        Tue, 15 Sep 2026 05:49:22 -0700 (PDT)
-Received: from [172.22.22.28] ([73.62.185.64])
-        by smtp.gmail.com with ESMTPSA id af79cd13be357-93a382ab7b3sm169560185a.19.2026.09.15.05.49.21
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 15 Sep 2026 05:49:22 -0700 (PDT)
-Message-ID: <7b85bdf3-d3d3-4e06-964a-3e5e969691da@riscstar.com>
-Date: Tue, 15 Sep 2026 07:49:21 -0500
+	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="v/RIkfQX"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=M+zhfPNiAz7Tbv+Mv/kgDj2n4QV3IlTqU1b3+UMwZp//lhKBqVUEKrVqrerGtj+gqhMKGlIvPQ3ew22e7ir44sy16K77cfhTh++wj87wGAlH+ItqQWo308EeKI9t2JJNfWxwYQNo/ykNMj7S2AWrxZQ0bJv88QxyscLutbu5WuvETO0SWW4X37UfucODItvSUH83JydGY9kOm0N2l9j4hw5ygA4SO/hI+15/bB6zmu1Qw7+xn6vamp76xuSmBqP2VHFulq80DvhVqAsB8YgZYgJXm6KPwAyNmITgcE+yBH+VP+S9p9vTdwgQ1Kuf80jdxUXa4Yv2oRBqfFDPoMKFLA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=sZJ48K8oA+68hHT3CzLF5VhHobGmz9qEpyFGcmmqp7I=;
+ b=tQqsyT4HJD8IXd31n2wiIZ6t3Q4LQnIqgvlqtbZ21C0dExqRoWw1C0/lU8uKDFLglEbl/Cgr465mYLfsBsTTNzYg7yk4Via3Cb6hLJB9fgwajqZKeR2H4rH4C9NCaPRnWDpqg4k4eQDGqIRsoO9lYRtFBuOqR4EDX3/yclQiIYAUH26tSIsK8wc2I5LPjoFiZW8dTOADLvMcekbOMp0Ykq5eL4VdyRO71DxwQRaNXapQsgxkg7id7Oce04STXQqA+vPPvEqbeIKO2bUTANkigs2os3y9MAGJzA2Ggv0C8bw0oA/nVlRsgATubxgrxv8ruYx9LX8ctO6pkdTKInn4oA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
+ header.d=amd.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=sZJ48K8oA+68hHT3CzLF5VhHobGmz9qEpyFGcmmqp7I=;
+ b=v/RIkfQXPt6ewDSDR/1thJkfiFjICW6tbNqfiqFUNLbNDhnriFKBuLgeUP4iyCVJ/P8s3BFXe2pB+xSs3AI2RXGNuivDH9JMg7AF6R0PnufmlJVImS1/Ib5xat+ccSgul0dcPOp1c74vzThhYCCcUoSxOnEKxQpAGnXIIm8etIs=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=amd.com;
+Received: from PH7PR12MB5685.namprd12.prod.outlook.com (2603:10b6:510:13c::22)
+ by PH0PR12MB999089.namprd12.prod.outlook.com (2603:10b6:510:38e::17) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.406.12; Tue, 15 Sep
+ 2026 12:59:49 +0000
+Received: from PH7PR12MB5685.namprd12.prod.outlook.com
+ ([fe80::ce69:cfae:774d:a65c]) by PH7PR12MB5685.namprd12.prod.outlook.com
+ ([fe80::ce69:cfae:774d:a65c%3]) with mapi id 15.21.0428.008; Tue, 15 Sep 2026
+ 12:59:48 +0000
+Message-ID: <92950084-ddd1-4868-a81a-bfe214184122@amd.com>
+Date: Tue, 15 Sep 2026 14:59:43 +0200
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v13 0/5] vfio/dma-buf: add TPH support for peer-to-peer
+ access - ping
+To: Leon Romanovsky <leon@kernel.org>
+Cc: Zhiping Zhang <zhipingz@meta.com>, kvm@vger.kernel.org,
+ linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org,
+ dri-devel@lists.freedesktop.org, Bjorn Helgaas <bhelgaas@google.com>,
+ Alex Williamson <alex@shazbot.org>, Jason Gunthorpe <jgg@ziepe.ca>
+References: <20260731211601.3033906-1-zhipingz@meta.com>
+ <CAH3zFs0vQidHOWif_LmS0=65S9iiCo7yGibqLvFT5jadjj8wVA@mail.gmail.com>
+ <CAH3zFs2XnH6gT0fO4=WLi4x1SL2+Y0S=Jo45SWkR=unPegQ8Hw@mail.gmail.com>
+ <CAH3zFs2X8=x-XMXhwC7_aUZivCCPQOSuyXMy-ryKqxLEFY9u-Q@mail.gmail.com>
+ <c0c8dea4-1571-482e-be33-f965c7c357d2@amd.com>
+ <20260915113752.GK13683@unreal>
+Content-Language: en-US
+From: =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>
+In-Reply-To: <20260915113752.GK13683@unreal>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: BLAPR05CA0048.namprd05.prod.outlook.com
+ (2603:10b6:208:335::29) To PH7PR12MB5685.namprd12.prod.outlook.com
+ (2603:10b6:510:13c::22)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 2/3] misc: tc9564: introduce base PCI driver
-To: sashiko-reviews@lists.linux.dev
-Cc: robh@kernel.org, conor+dt@kernel.org, linux-pci@vger.kernel.org,
- devicetree@vger.kernel.org
-References: <20260915031038.1087264-1-elder@riscstar.com>
- <20260915031038.1087264-3-elder@riscstar.com>
- <20260915032059.60CC61F000FF@smtp.kernel.org>
-Content-Language: en-US
-From: Alex Elder <elder@riscstar.com>
-In-Reply-To: <20260915032059.60CC61F000FF@smtp.kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: PH7PR12MB5685:EE_|PH0PR12MB999089:EE_
+X-MS-Office365-Filtering-Correlation-Id: f6f4fb8b-83f5-4e83-7307-08df13293920
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|366016|376014|23010399003|1800799024|6133799003|18002099003|22082099003|4143699003|10067099003|56012099006|11063799006;
+X-Microsoft-Antispam-Message-Info:
+	zaIlRtkgcyIuSbg/5xpDV7dmGYtwnkGZHVFTOobj0Pq4wWePt9sC8JPv1MYAVjcXnaukhygCaojIICto6d1qSDt5VzLfGltV2ZqGNVLwfXwI7n5fdHsd/Spso9K/V8rXiKOgeMSAgKeQHay38qV5Ck0G0AoAbwG0ogV2Z7nRmlWB3o5FJ8V9ZY3C+HzIIg1ZTyNYdCf9ovnaBcsbXSXDXpIOK9Nzz23qkPhsbbMeZfRUztD/0lccuqNOABR6rDZ6Y3SQK06SGXBj6/498i3PiKOz9+8Ag26MR5jY2NFOE85o1ABWSdbQzQuAptiGZg+9b3ADNKWJ3at730+UiyS1KGixQN1d9/Pa6Ltg+meOztz9Zo0v3H4wZfdxLUtp1rbFOdnUOLx7BH/8ZFHgy+RPpy/20DxlTIxnCfb872IhsY4gPaw2R4tVzK2mAHHCZtWfrSZ6VTdn5RGfhbWZlJ2Cg4A/Ulh50reW/bVQd8/CYac/j+zLbFMZZegBenehh2n4TlS+XAMXps+oD0bqvstWFo9xDFCnPHIWhcLAwVoOWINmEGf4K4JOKPiHWOdrqyIgHeQBjKAYjbCh039r4MmyAQYI3ScrEbnFgYPx/K+63vfQTB4uIGWdUbBB+GDgEhS67mSPWmm+s6Wue4yrFpUpUwTzLd2hthVsMrnq+xChGQc=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH7PR12MB5685.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(376014)(23010399003)(1800799024)(6133799003)(18002099003)(22082099003)(4143699003)(10067099003)(56012099006)(11063799006);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?eEhROWU4NlFOaHNseHB6OS9GWmZmdUpPU0pFeWFBajlCRVR5WmJJY250NmZN?=
+ =?utf-8?B?Yi8rRllYVW5WSTRlbXFRd1ZJNGpqN1NQZmlXVysxYmdNQU1KdllmcG9rT203?=
+ =?utf-8?B?L2psL0Y0aktOcWhjU01iL2ZVNmZpMzdsUTdPeWZmL2xzRGZ2cEN1d1lKaFkz?=
+ =?utf-8?B?U0FpdTRkZmJUclkweWx0enFxQ1l1WGpMcnJLNjEySlFTbVpOL0pXRGs3TUN6?=
+ =?utf-8?B?UC9FWjh4N29GSnRoUHoxRFFJVGVkMmN5UXBvdWRFWGQ3dUdFQWg0V2xueWJt?=
+ =?utf-8?B?WUM3bUZldDNZUGxVLy9oL2RQbmt5VHhvRHB3UE5vMXpTSXpIdm9JZXhSc2JK?=
+ =?utf-8?B?a2NwTTIxZ0dRQnkxZDFLbkd6enNMSGRFaEhpcmdhOHliRFZCSzJBTFlZMTFH?=
+ =?utf-8?B?ajZCTmI1c2tia1hTVEZRN2lUYVdDd0crNEZvMUdsUklsNTU0RGdRTE90czNY?=
+ =?utf-8?B?bzZvZlRNVjBFaU1SWWhyMnJCS3JBcjNoOU5Teno0TzdzT0dNNlhxdlNWUkVW?=
+ =?utf-8?B?bXRGWXg0c3QyMXUwbVRoT3kzbnRwZ1pNOHZ3ZUcwM1VtcFFtUVFGU1NVRldX?=
+ =?utf-8?B?YzBwS1p1R2VTdk9HaDVRZjVkYkJtNDFOTEFiU3UwcitZY2NLZ0F3ZnNuNHRQ?=
+ =?utf-8?B?TExKcnBoRFRKbHNGNWZBSTd6c3gxOU40bXF6RnE0WFZ3eGI1SVpKODIxZXQ1?=
+ =?utf-8?B?YjZpclhpeHVEeWxBakp2RVpaVW92Nld0d3h4aVVzbUZIRmpVSnoxMElTdWRa?=
+ =?utf-8?B?eGhXdEpiT1R1TUlEZU5YTmNxQmNwOGRkczJvdEJJOHpPaXEwUmtFbFg1MjVX?=
+ =?utf-8?B?MC8zK0xVbW8rM3pZeFZJbkkwdUhVdmUzMUVGRHM4cFFDQlpodlJRVS9TaFJM?=
+ =?utf-8?B?RllRK1Q2OGVOODkxYmtvckxIdUV2V2h2L1hrZElEclVlMWo2QnBYZEwxUmhv?=
+ =?utf-8?B?bmNtTklEcjl4czVTQ0xPcm1WNWFrQ3JnTWF2RlZXZ1EybGtSd0pXNVBOaGZz?=
+ =?utf-8?B?WFZQTVEzWW9mc3JGMnJESk5PY0hBVnBwMDFRNDlkZ2RVbVRWOWxSMTB2d3ZW?=
+ =?utf-8?B?MGJZRXc1MGVkS3MzdjI5MTJjc05XRHBVODZlN25UWnFuTzNrT3V1N01EQmJW?=
+ =?utf-8?B?Ky9uZTA2K2FJVEJMQlRpVFpIZkpFdHV0WWozakU4d1JTRGVxTlJvM3dRL3c0?=
+ =?utf-8?B?TUVJN1ZQaDRwUmZKYWlSbXlSZG5tMmlKRkF3R2JYbENWTVRNbHQ3dWNTWVJv?=
+ =?utf-8?B?ZStrand0eXRjTzVreW40MXptVmxjVmZmQ3Y0QkU0TitwdDlqRGxsMlFtNVI5?=
+ =?utf-8?B?MVRmSGFwRE1nTUVpTWxmTzhKTmdnelV6bGp2Y2hGUitLTFlmWGsyejQwRGFF?=
+ =?utf-8?B?SjNZUlZMZWgyeXg2Rm5nOTMyS0JlYjMzRVh0ZHhET01jSnBIWUdlU0FvSUVL?=
+ =?utf-8?B?K3d1bWpQaXRQR1lrUHA2WEVQMjFwRzd3aG1BM1NxVm5wd05vRmhoRlNHRStu?=
+ =?utf-8?B?cDhhWWoyMnc4RG5uVE85eDFLdTVRcjZveXJtS2prZm9XWmVQZXM5TDRZVW5Y?=
+ =?utf-8?B?ZGdWd2pMZWFmbG83YXQrL05VSTh3UGM2THpkRGdmS21KNHgxclh1cUUvS0lE?=
+ =?utf-8?B?dWZzN1R2SXFBYlJOcEg1YndUN2RjSmtLQU9aTkg2MUZQZzNCOWdxK05KdVR2?=
+ =?utf-8?B?MTYvUGpqVEFWY283blhubldXS1diQTV4bGczalZpV0NIWXlhbDMwOUhERS95?=
+ =?utf-8?B?S2hxWm1HWXkxelpteGd5eDRKYzl2bTNUS1c4VmYwdUtyL2dhUWZDa2FjcW9Z?=
+ =?utf-8?B?NUxxRm5rUFUwdWVxSERGREdkNzhoUUs2MmdOMkZCR1RaZWJSR3dPNDNRSU9t?=
+ =?utf-8?B?Si9sQVkraWJFd1huTlVHVW5uaEh0cEhMbFk0VnV1OXRJOWgzL01nL0VETkpk?=
+ =?utf-8?B?ZkowTHo2V1JxcnlHdGZCblRCcG5hRnU4TzdOQXkvVW1SY1g4TVJJY3VPNURr?=
+ =?utf-8?B?c3J3NE9KRkdzWjRBaEo0RmdwVkd4M29rSEREM1lnTk5MK2tzNU50enJaMkpY?=
+ =?utf-8?B?eklaZUlNLzkwNmJxZ2U3UnVTOWxKaUpmdVNoMjBrck54R1ZzVkZER1RrZDhi?=
+ =?utf-8?B?ZDg5UTRmdS9pWDgvWHd6dFJQTDJ2RE9CUFkzektXTFdIZjltbDJBUjFyaE5Y?=
+ =?utf-8?B?NDJNQmN4TTM5Y2xJT3FDYktBc21qTEY2ajZMYzJMWkh6b25QNTVGUVlZcGNH?=
+ =?utf-8?B?T2l3UzBqdURnbHJWN1E3SFhudGZwcnllMVlQbG1VZ25ubzB2VW9HTkNHT0py?=
+ =?utf-8?Q?CnOGdQXYs/NTkVCZ5V?=
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: f6f4fb8b-83f5-4e83-7307-08df13293920
+X-MS-Exchange-CrossTenant-AuthSource: PH7PR12MB5685.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 Sep 2026 12:59:48.4785
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: cv+SyezcLniHRkXkzwCbOd6ObhQdTEMr8MkzKYaq6I1SQymMWsfowaT3V57exdIx
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR12MB999089
 
-On 9/14/26 10:20 PM, sashiko-bot@kernel.org wrote:
-> Thank you for your contribution! Sashiko AI review found 2 potential issue(s) to consider:
-> - [High] misc: missing of_platform_depopulate() on probe error path
-> - [Low] kconfig: unused REGMAP_MMIO selection in TC9564_PCI
-> --
+On 9/15/26 13:37, Leon Romanovsky wrote:
+> On Fri, Sep 11, 2026 at 09:58:28AM +0200, Christian König wrote:
+>> Hi Zhiping,
+>>
+>> sorry I'm completely underwater at the moment and don't have time to take another look at the full set.
+>>
+>> But IIRC you already fixed my documentation requirements and skimming over the patch once more I can't see anything wrong of hand.
+>>
+>> So feel free to add Acked-by: Christian König <christian.koenig@amd.com> to patch "dma-buf: add optional get_pci_tph() callback" and push it upstream through the VFIO channels.
 > 
-> commit 526cbf40d582cb34a1f4613745e5ca7890f929d2
-> Author: Alex Elder <elder@riscstar.com>
+> Christian,
 > 
-> misc: tc9564: introduce base PCI driver
-> 
-> This commit introduces a base PCI driver for the Toshiba TC9564 SoC, which
-> implements a PCIe switch and Ethernet AVB/TSN bridge. It performs basic PCI
-> initialization and uses of_platform_default_populate() to scan and probe
-> child devices defined in the devicetree.
-> 
->> diff --git a/drivers/misc/Kconfig b/drivers/misc/Kconfig
->> index 7364931dad3a1..91950d2928f07 100644
->> --- a/drivers/misc/Kconfig
->> +++ b/drivers/misc/Kconfig
->> @@ -568,6 +568,16 @@ config MCHP_LAN966X_PCI
->>   	    - lan966x-miim (MDIO_MSCC_MIIM)
->>   	    - lan966x-switch (LAN966X_SWITCH)
->>   
->> +config TC9564_PCI
->> +	tristate "Toshiba TC9564 PCI function support"
->> +	depends on PCI
->> +	select REGMAP_MMIO
-> 
-> [Severity: Low]
-> Is the REGMAP_MMIO selection required for this driver?
-> 
-> Looking at drivers/misc/tc9564-pci.c, it does not seem to include
-> linux/regmap.h or use any regmap APIs. Could this lead to unnecessary
-> kernel bloat if the regmap infrastructure isn't selected by other
-> configurations?
+> I'm slightly confused here. In the other thread, you expressed concerns
+> about having PCI details common to every device in the P2P world in the
+> dma-buf code, but here you seem fine with adding a niche P2P feature.
 
-This was an oversight when making the conversion to the endpoint
-bus.  This driver no longer uses regmap, so that dependency will
-be removed when version 3 is posted.
+That one is only using u16 and u8 types and has no dependency on the PCI subsystem whatsoever.
 
-> 
-> [ ... ]
->> diff --git a/drivers/misc/tc9564-pci.c b/drivers/misc/tc9564-pci.c
->> new file mode 100644
->> index 0000000000000..d7ebbd90d1584
->> --- /dev/null
->> +++ b/drivers/misc/tc9564-pci.c
-> [ ... ]
->> +static int
->> +tc9564_function_probe(struct pci_dev *pdev, const struct pci_device_id *id)
->> +{
-> [ ... ]
->> +	/* Scan for pci-ep-bus nodes and probe their sub-devices */
->> +	ret = of_platform_default_populate(np, NULL, dev);
->> +	if (ret)
->> +		goto err_clear_master;
->> +
->> +	return 0;
->> +
->> +err_clear_master:
->> +	pci_clear_master(pdev);
->> +
->> +	return dev_err_probe(dev, ret, "failed to populate platform bus\n");
->> +}
-> 
-> [Severity: High]
-> Does this error path need to call of_platform_depopulate() before returning?
+Giving those adjacent information sounds perfectly fine to me, we just can't have any hard dependency on PCI subsystem types or functions.
 
-It looks like it does.  I now recognize that of_platform_populate()
-(called by of_platform_default_populate()) does not unwind and clean
-up its mess in the event of an error, so doing that is the caller's
-responsibility.
+DMA-buf itself is massively used with vendor specific P2P interconnects, PCI P2P is just a special case of that.
 
-I will fix this in version 3.
-
-					-Alex
+Regards,
+Christian.
 
 > 
-> When of_platform_default_populate() fails midway, it leaves any successfully
-> created child platform devices registered and sets the OF_POPULATED_BUS flag.
-> If we only call pci_clear_master() and return an error here, devres will
-> subsequently disable the PCI device completely via pcim_disable_device().
-> 
-> Since the orphaned child devices remain bound to their drivers, any later
-> attempt by those drivers to perform MMIO accesses on the disabled PCI
-> device could result in PCIe Unsupported Requests (UR), which can trigger a
-> fatal SError/MCE on many architectures.
-> 
-
+> Thanks,
