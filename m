@@ -1,28 +1,28 @@
-Received: from CY7PR03CU001.outbound.protection.outlook.com (mail-westcentralusazon11010064.outbound.protection.outlook.com [40.93.198.64])
+Received: from SN4PR2101CU001.outbound.protection.outlook.com (mail-southcentralusazon11012066.outbound.protection.outlook.com [40.93.195.66])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF32D4B0CAA;
-	Tue, 15 Sep 2026 16:39:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.198.64
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 052774BA1C0;
+	Tue, 15 Sep 2026 16:39:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.195.66
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789490369; cv=fail; b=GWZ760/cl4P1xf0JQh2G6nmnt1NAMVyP7JBrQJvipLSWTkM/UPxeIDsa8KOl0GEJ9CO14Krds5by4fQZ/+TM2EZhFk/S5FtFUD9vHx/Ty9EWOy+W/YeraWkNG5OyO0VgVlP1qHWwwjfFsgTgvCfH8R26dPcZvfzty+X4/7FOC3E=
+	t=1789490373; cv=fail; b=CftJq2O7lwoRKJHWlprYFQVocmN8+J8+COm3n3j3ax7LpFOeiBVI0xB3hXNOVNguLIGhlPASdUrB6M+BaO0iGdcfBsijmzNZZLWYWxqjqt/zod/Lg4DZhLHmwydf+UYG3hBG6xynHLS7N9zYjSJ6c47MLl3aGQpmgWYxhk8fY70=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789490369; c=relaxed/simple;
-	bh=ZRr03RfiAwb764LZfmHgEtWZGnnsV179Gux5lbwjtUM=;
+	s=arc-20240116; t=1789490373; c=relaxed/simple;
+	bh=yUl41YnlGfqAp/RiDAA42ck00GVoqdCVjzS+GtGTmg0=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=kutolIK35SeK0drDPD6/oFlz/EyTFytyfj1AfiNR9beFGs8rMvByYPuTsvIPpJ1lmlUELKtk7b6WoNemGgJfazUAGMo29xLFSvIWwr9w5z6NU5FX4JLzMblmtUqMVrA/bKm26i80nYRjULxhQ11LX8aV4n/o7FEsqyT7Q0PV4XE=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=tQ8drb0i; arc=fail smtp.client-ip=40.93.198.64
+	 MIME-Version:Content-Type; b=MmGNZrdVWlnUXnXZ0vxa/KtoARAOCEbMpBCxNnJI63Cz+wu0T9AAuqzC0B9cK3wdArSyCZFWlvPhbINwieCDwFV3ER9eyjX7HEr2zIFiJfbTpVzOf9qMTldTP6Y3tK+e5KVJp5QcFoi7so6gLMQcSni2U9GTh0g5vrnvKQ7ekyE=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=Nlo4ntbR; arc=fail smtp.client-ip=40.93.195.66
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="tQ8drb0i"
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="Nlo4ntbR"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=WtMHa2m5W1tSwFcctu5B/YQGaYmVsDBhyRxu1wzJofsqdS6mqpo2tC/NpNTQtf0C6Bnr2Ulck7RuGn04+W0l1SmVMKZbnI3Za1WUUsuldH8v2fx9TMXEtIuB70GCJnpQ1OfYCxW6qZT4ckwJQqaR6JZS697SvDpjEc868+1It/a7ZJTKDWUHiZkc1Z0KC9wUMIhxUaTa8+CWns7gBnxGWaCpXSIco6F3BHzE0Mm0meP3NGEuCZiLsKjguZTNvY82hV5gY63j7k/PHtVoB8OCRoHMIvh70WfadX6CQgb/n6hrEthak68Nsz7/GZAb0sLn+wgvsUJlU9z3/bI9vOu56g==
+ b=Z8sXm5WG0ewdtwVkFv3IXtlTREWNhvS4ZCfJW0sEW729wj8NoLcqzfDkMAiHArZ3zYoX4WnQRk15o8AZ7MMznVU8QO8IRrLgJlVnN44fJR7ZbQd5EtYHRygne6ha4SY4IWAq74FFvegsyBmDCNjcsX723+pJjmc02JyTxkg+XQp594/1AkpdMa8vSqc3XZFYftcuqhDkYBzhLM5egvmhvIy+XxjWa6UtG4n7D0khg/+MFQYnp8Ql7etG1wab75V1A5B7kOKrjnL45QucqXpjACg23aWvI+As8czL+qM6wVWUDvCcc2c60T2JS0S3LHVu/zWxKL4u9PQknRjR15HmIg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=1/8riQGvNoIk7J+8yNFEoRoDFDdElsMLDmJSyFsoJe0=;
- b=MYpBMoxaQQXOOwtZ6Rs2NBzIrxyeWjCOjpnOmfZ9sfSfC3quoJPCxDne8iRb5LZAmbVZP4fzeiH6pYpR06PlF64TvpOszEw4fF3tSBw1idt6x+tZZ4LJlxl+L5gxN6XaPTWKFNHaMx/dfmkYGNrp/JRZ6YAzFL4gtp2/FSt99IwXpBozNgwqPaKjxPyjFlAf1Mv74EdSoLC9LtNO8X3XAMhQh+RhCWe8C+ZGuErrBiRl4yJbiUcYpzPn/BQJr+YzX+TqiOzrCzuzmpwRLiY7jwavVmsRTqC2Hp/0MbuI5Hp0LqYbsjBgwPAOk92kYfCRfWA+WZyLd201FapzKu/FcQ==
+ bh=0bragBSKKHgCpw7Rzzz0Fnfn5fAWRkUNFRfmCuucCH0=;
+ b=XKhzgM/qDqM36NamNfb2fERx3t3l384CIX3QYkQVhd2Uk0knIZATArV0P6t/t6Tdy6KSNS5XJfqxEb3cR6CbWa1STJD2nJQhtPRNp3Qc1Hs1gev24l9CNaII55T8TKHh72gZtUDBPiK5UaG8LCb2u2ngTi/Uof7sr/+ZvIKgnp/347YLLwD2vKpaQBZ63Uke+FS6PNFhPXOl67kiHaiRoFS2d6YOs83J5TzGKZi2qULDhXZEPiDSbsZtbN32VrR0/wSznOBlbGRr2fHu9SbJs6MTMNFblmhO1uMT5uip/wiKZc4ZlP4p0IbW9/DY902zU/93Gm33MvIuUN9fDTEzkQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  216.228.118.232) smtp.rcpttodomain=kernel.org smtp.mailfrom=nvidia.com;
  dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
@@ -30,18 +30,18 @@ ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=1/8riQGvNoIk7J+8yNFEoRoDFDdElsMLDmJSyFsoJe0=;
- b=tQ8drb0ir4WBM6whpu5/x2whXrJ+R/jg3L6ed5cxFszJG4CxQ++4wHjOsqrImP2e22kHvW6EtC8dObQ22iWyK7R88ZYHyd2yD5MSCiqqkwfEySfGf35cZyBtAZ8TjDcdeGu1GsxyQYmo+NqwV3qlSFk6PnkJ7oPO+aMJTrGCjvcsOyTTwBqKuoO21at3mdch8m740bYvWpXPqFYRMkTr4159fD01J9HwF0yl/+I66LXbegaxlm5sfkAnUuDKihHakjXhzIkeHqGSkl6Nf67mq66G1wi4mxxb9AvL+vyNjqamBqM6ZGlZOFa7lkDvrlXD4+BN55oKW8LO5pRiv4nOKA==
-Received: from MN2PR07CA0006.namprd07.prod.outlook.com (2603:10b6:208:1a0::16)
- by DS7PR12MB6190.namprd12.prod.outlook.com (2603:10b6:8:99::22) with
+ bh=0bragBSKKHgCpw7Rzzz0Fnfn5fAWRkUNFRfmCuucCH0=;
+ b=Nlo4ntbRzqu6vhAE955Dc8/frSGo03K02X7auK7IQFsbY0ScWxceYpScbDPL+0t8gFA8l1o5wDM+eHUjkGugkbcHgt3i2/S9rxhvMEm2W9lLEZmZ6r+NM76FQGhOXpOXwLevF2MlOKNAVmAvGHxTslKv2O7NyoR9K21asSipU6yeyK/2aXhHbm65B3D/9liELlyYCuCqwsCqMs9pNCveCwhHXQVnUQJXkZlTsPppjjld66Nbav57zlXmYDL5v1hV5MnSx+CmwvS3TJ2IfaBe09gmRoYt1MZcm4QlSP2/ydErMoKLxOjerZ9UZNbnT2ic5vyHHDRZ8sRgBbjVqkkn8Q==
+Received: from LV3P220CA0011.NAMP220.PROD.OUTLOOK.COM (2603:10b6:408:234::12)
+ by CYXPR12MB9441.namprd12.prod.outlook.com (2603:10b6:930:dc::6) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.428.9; Tue, 15 Sep
- 2026 16:39:13 +0000
-Received: from BN1PEPF00018074.namprd04.prod.outlook.com
- (2603:10b6:208:1a0:cafe::1c) by MN2PR07CA0006.outlook.office365.com
- (2603:10b6:208:1a0::16) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.21.360.13 via Frontend Transport; Tue,
- 15 Sep 2026 16:39:11 +0000
+ 2026 16:39:15 +0000
+Received: from BN1PEPF00018075.namprd04.prod.outlook.com
+ (2603:10b6:408:234:cafe::2d) by LV3P220CA0011.outlook.office365.com
+ (2603:10b6:408:234::12) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.21.406.12 via Frontend Transport; Tue,
+ 15 Sep 2026 16:39:14 +0000
 X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.118.232)
  smtp.mailfrom=nvidia.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=nvidia.com;
@@ -49,20 +49,20 @@ Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
  216.228.118.232 as permitted sender) receiver=protection.outlook.com;
  client-ip=216.228.118.232; helo=mail.nvidia.com; pr=C
 Received: from mail.nvidia.com (216.228.118.232) by
- BN1PEPF00018074.mail.protection.outlook.com (10.167.245.202) with Microsoft
+ BN1PEPF00018075.mail.protection.outlook.com (10.167.245.203) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.428.7 via Frontend Transport; Tue, 15 Sep 2026 16:39:11 +0000
+ 15.21.428.7 via Frontend Transport; Tue, 15 Sep 2026 16:39:14 +0000
 Received: from drhqmail203.nvidia.com (10.126.190.182) by mail.nvidia.com
  (10.127.129.5) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.49; Tue, 15 Sep
- 2026 09:38:43 -0700
+ 2026 09:38:45 -0700
 Received: from drhqmail201.nvidia.com (10.126.190.180) by
  drhqmail203.nvidia.com (10.126.190.182) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.46; Tue, 15 Sep 2026 09:38:43 -0700
+ 15.2.2562.46; Tue, 15 Sep 2026 09:38:45 -0700
 Received: from Asurada-Nvidia.nvidia.com (10.127.8.11) by mail.nvidia.com
  (10.126.190.180) with Microsoft SMTP Server id 15.2.2562.49 via Frontend
- Transport; Tue, 15 Sep 2026 09:38:42 -0700
+ Transport; Tue, 15 Sep 2026 09:38:44 -0700
 From: Nicolin Chen <nicolinc@nvidia.com>
 To: <will@kernel.org>, <robin.murphy@arm.com>, <jgg@nvidia.com>, "Jonathan
  Cameron" <jonathan.cameron@oss.qualcomm.com>
@@ -73,9 +73,9 @@ CC: <joro@8bytes.org>, <bhelgaas@google.com>, <praan@google.com>,
 	<iommu@lists.linux.dev>, <linux-kernel@vger.kernel.org>,
 	<linux-pci@vger.kernel.org>, <skaestle@nvidia.com>, <mmarrid@nvidia.com>,
 	<skolothumtho@nvidia.com>, <bbiber@nvidia.com>, <harsha.v@oss.qualcomm.com>
-Subject: [PATCH v5 08/15] iommu/arm-smmu-v3: Disable the queue IRQs before disabling the SMMU
-Date: Tue, 15 Sep 2026 09:38:20 -0700
-Message-ID: <0ca69e93a9370e4e172e4335104859648b8755c2.1789446520.git.nicolinc@nvidia.com>
+Subject: [PATCH v5 10/15] iommu/arm-smmu-v3: Support PRI Page Request in arm_smmu_handle_ppr()
+Date: Tue, 15 Sep 2026 09:38:22 -0700
+Message-ID: <dd1ee0afb947b5f7c229c21b7fcff5d18f9bc326.1789446520.git.nicolinc@nvidia.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <cover.1789446520.git.nicolinc@nvidia.com>
 References: <cover.1789446520.git.nicolinc@nvidia.com>
@@ -90,155 +90,127 @@ Content-Type: text/plain
 X-NV-OnPremToCloud: ExternallySecured
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BN1PEPF00018074:EE_|DS7PR12MB6190:EE_
-X-MS-Office365-Filtering-Correlation-Id: cda51bcf-5cf0-4eef-b16a-08df1347df2c
+X-MS-TrafficTypeDiagnostic: BN1PEPF00018075:EE_|CYXPR12MB9441:EE_
+X-MS-Office365-Filtering-Correlation-Id: 427742b6-187a-4a6f-8724-08df1347e0e9
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|82310400026|7416014|376014|1800799024|36860700016|23010399003|18002099003|22082099003|3023799007|10067099003|56012099006|5023799004|11063799006;
+	BCL:0;ARA:13230040|7416014|376014|82310400026|36860700016|23010399003|1800799024|10067099003|56012099006|18002099003|22082099003|11063799006;
 X-Microsoft-Antispam-Message-Info:
-	aqXsvX3jPhkqUO40LK3P+iIIks91ag/j4ic/VNY/limc/U75SgHi9st06+o2VHXlM8yJURzNm7YFN5V+jF1iKcpGZncQehV67PkeUVgl7q7ko/NDscnxceo7aUktXyl6hMfHJ1ihc7sbqk2dVq/b6nR3Rw6+6pTDtNeyMRv5eeLKqsYxUmmtry4sIMhyFrPalqLthCYKW2mxLFJ8X8wKB2xsrgcMF7V78Ehr3UziSULKZFTf9DussyQ0ZJIzkrMA8E5rhnA1TrozTkV+kkizChisQ+b5b6a/QxUnv8gDNo9P3cFG0se+oLqE2x3eDRCii7F4OYa0i/QNJFdA1yrWltTO23Kv6LXLVjnrDPAqaVbbDUQWZLz90P2+LGTJB3FZESyKHMiQsIlk+qfxbXvMgQ/MDlJAgTduKYKW51Dho76qTf6WxzwI0hxL4ZbH7oAckyloRaeCJ3cICOniI31Sh4PnJWivsLab6nmGkFmePtaSS0JVKBrRF3QNE4np5GmT8i4MCHN7iKjZpxU1YbVvkkQ656Q2eF+wYSNAH7nGzwHk+Zyg3sT9cqES1iDRCcDnOBdxmVOJZU9kh2nQyvoBc1DLPuAsqdDaIoIJ3FL0tza7ieJg45kmBWMSmeix21uu+iR6UZuavuI9C5/XFD+DcbxuaQB+ylDKK9wEtMSmGjT3IZfrhAXCjl8Opj8CpeWwfsiC0bzJPCsRmfZ9rZaK/Q==
+	gbYnTlaMp3QjA+d2w6WnoE/eSh54cqTbc6IQlo4sUwlJGlPOtNZ+gS9KnLpfySB8zafhCOkJxR80kXhr59rnBlOcFj64kNsiB6UmaTcfKeL/CiKeysUxY2mX4HH/ObllDkhPcAX4doNF0maj9XJfi1pZ8qg3nTLAb50rb4X5gVQ+O54S4Tp8EIMFrdaqVyUYKm/wEgefizHKYM8FOTu3XP3isD4POWPzzTtJ1MlzJk5Y1yYfkkrWeouh8TDV20kI9pGf5fVVWoYml1Au25+Pa957Vr+2MU9TP8FC2fddy/SOPwWcxxkurpgw1m9gKoflD3+E14gmmpcFB7XALTPOF/QBSHUhyNzrxwYAzX8K7uyXXuiK+iNstnTgiptjkp78R0nGIUyOZvl5GytuAawKJmGrhlEYPGjWV+6HgJkzKJJPVv7JvxrVG5QUplQuYsrLNm2oE9GjxlNfcGsz9FRRLMsSMu0JctLHI6QERJfkSlPnT+uCEj9JdAfd9nlph+ltGwgt24P6z6VPP7bWKF1ncbOAoOBUXW5MDK3/aLotvaGGpLTbZ5nnSU9OJoYRmxdiv6JohETdqciKjcOM9BTU5aHBmJ/t0uZKrOudC5ZlN4ZOQuJPEZnkua7zmi+is0DSj+jbqrqc21/cpGwhscK4IYqTaclrn+AG5NwHdq9OMZFk1ZcqB2hjwYFn6x38hfkqsIV8LQidioIrb0T/vkvxVA==
 X-Forefront-Antispam-Report:
-	CIP:216.228.118.232;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc7edge1.nvidia.com;CAT:NONE;SFS:(13230040)(82310400026)(7416014)(376014)(1800799024)(36860700016)(23010399003)(18002099003)(22082099003)(3023799007)(10067099003)(56012099006)(5023799004)(11063799006);DIR:OUT;SFP:1101;
+	CIP:216.228.118.232;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc7edge1.nvidia.com;CAT:NONE;SFS:(13230040)(7416014)(376014)(82310400026)(36860700016)(23010399003)(1800799024)(10067099003)(56012099006)(18002099003)(22082099003)(11063799006);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	YXNos66D5pxDaxyVfiGbrmgcGhMOQLCcK21nT+0zCCUTyqw5L48xzo0xK39TC4PFzsdzX+4RylAX/+muZHF7iqnH/jrHpCRQ99McOrCWKpMgbWFLv6QeIQ90KvhGLU8DfsztAWYqD9qlv6radNaxYCM0BI8ZTuhbJceQPOs+h/pfhXBSS5zHCbodO7wambuZ75/nx0eAXZfJGHo/aZzHJIEaClHHpdIztKlmY5xu32NO5felrqkHDe74MXyvmg1zPWvLZy0DJwCJGrsKuGwytoJ2DzHEhuZVy7PFQdruWbjcvXvy/vNlpiW8E7w5Gv4fN4Fgq7vJJz9/l/Le+YgBGvgpWGx5kOTiwqrus/m9tqbHq7ktAK/sT7a5yS41QXuFQ039cqAUiHzE01hW+vQjHiYtcbNlAoTXTooxmYPEXLmO0l6sW4tRu7hvgsctwyIZ
+	8fUWCbLt5s9nCKAof9+jMVuzjXLlq/woI+w+CGKrs8xysJQUtOELA9cEBeL3RilwO+N3GWX8OdBoANg+HKVQp+4R3heweJGpTwQk1Ykem2I/zTXfLyvae8t6NICnF4oYgAMNg8LlH037Onn/QPHU/H0zGrtvqO7JJ5GTHYzQdoingn5ssEpmYLUYCyJ0jdFjBFOsA8iFerLoJIxWMw+K+kV07Qg1fdAqQjYu3TX10oDZN3Sk/NKg8YeoGtWaxqL95fan5Q7bOJC7n3Uo/+z+/RdJxC6e2tQqNlx6Z2ZA0oOGa1nxRtQUenlpt+6VrwVeE9x6NyIE7nUCeOqn7EZDTLf4MaCyRPlEv94/2jigF9aubmW0WxsRKMNtLa65RuIJCZPyT2aHNxxCgCWnJdZG8hyRJWvk/e4IX/73ovyHCjScbH9Im4mdf+cCYUWjxFdH
 X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 Sep 2026 16:39:11.5729
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 Sep 2026 16:39:14.5113
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: cda51bcf-5cf0-4eef-b16a-08df1347df2c
+X-MS-Exchange-CrossTenant-Network-Message-Id: 427742b6-187a-4a6f-8724-08df1347e0e9
 X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.118.232];Helo=[mail.nvidia.com]
 X-MS-Exchange-CrossTenant-AuthSource:
-	BN1PEPF00018074.namprd04.prod.outlook.com
+	BN1PEPF00018075.namprd04.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS7PR12MB6190
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CYXPR12MB9441
 
-The EVTQ, PRIQ and combined IRQ handlers are threaded and issue commands of
-their own, e.g. a CMDQ_OP_PRI_RESP for a page request. Disabling the SMMU
-while one is in flight hands that command to a queue consuming nothing, so
-its poll waits out a full timeout.
+For a PRI-enabled master, convert every PRIQ entry into an iopf_fault and
+report it through iommu_report_device_fault().
 
-Two paths disable the SMMU while those IRQs are still requested: a failing
-arm_smmu_device_reset() returns to a probe that disables the device itself,
-and arm_smmu_disable_action() covers an unbind or any later probe failure.
-Both can run after arm_smmu_setup_irqs() requested the IRQs.
+For an unknown StreamID or a master without PRI enabled, keep the existing
+LAST-page DENY path. Merge its two messages into one ratelimited line so a
+faulty device cannot flood the kernel log.
 
-Disable those IRQs first in both paths, so that no handler is left running
-once the SMMU goes down. arm_smmu_device_shutdown() needs no change of its
-own here, since it already just calls arm_smmu_disable_action().
+Discard any PASID Stop Marker (LRW = 0b100) prior to the fault report and
+the DENY fallback both, because a Stop Marker does not expect a response.
+The IOPF infrastructure requires the driver to discard it, as per the doc
+at iommu_report_device_fault(). This also matches the intel-iommu code.
 
-Also clear an IRQ number when its request fails or is skipped for a missing
-ARM_SMMU_FEAT_PRI, keeping disable_irq() to the IRQs that this driver truly
-owns.
+When SSV is clear, the same LRW encoding is a PRI Page Request that expects
+a response, so let it fall through.
 
-Note that the IOPF queue needs no such care of its own, as devres frees the
-IRQs before running the release action of that queue, which came earlier in
-arm_smmu_init_queues().
+Note that master->pri_enabled will only be set by a later change, once all
+the PRI paths are ready.
 
-Assisted-by: LLM
+Co-developed-by: Barak Biber <bbiber@nvidia.com>
+Signed-off-by: Barak Biber <bbiber@nvidia.com>
+Co-developed-by: Stefan Kaestle <skaestle@nvidia.com>
+Signed-off-by: Stefan Kaestle <skaestle@nvidia.com>
+Signed-off-by: Malak Marrid <mmarrid@nvidia.com>
 Signed-off-by: Nicolin Chen <nicolinc@nvidia.com>
 ---
- drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c | 36 ++++++++++++++++++---
- 1 file changed, 31 insertions(+), 5 deletions(-)
+ drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c | 50 +++++++++++++++++++--
+ 1 file changed, 47 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
-index 9ebf3123e19d7..d2a6dc756c783 100644
+index 40ea5bd382d89..17ca3fcd1b9c0 100644
 --- a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
 +++ b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
-@@ -4914,8 +4914,10 @@ static void arm_smmu_setup_unique_irqs(struct arm_smmu_device *smmu)
- 						arm_smmu_evtq_thread,
- 						IRQF_ONESHOT,
- 						"arm-smmu-v3-evtq", smmu);
--		if (ret < 0)
-+		if (ret < 0) {
- 			dev_warn(smmu->dev, "failed to enable evtq irq\n");
-+			smmu->evtq.q.irq = 0;
-+		}
- 	} else {
- 		dev_warn(smmu->dev, "no evtq irq - events will not be reported!\n");
- 	}
-@@ -4938,12 +4940,17 @@ static void arm_smmu_setup_unique_irqs(struct arm_smmu_device *smmu)
- 							IRQF_ONESHOT,
- 							"arm-smmu-v3-priq",
- 							smmu);
--			if (ret < 0)
-+			if (ret < 0) {
- 				dev_warn(smmu->dev,
- 					 "failed to enable priq irq\n");
-+				smmu->priq.q.irq = 0;
-+			}
- 		} else {
- 			dev_warn(smmu->dev, "no priq irq - PRI will be broken\n");
- 		}
-+	} else {
-+		/* An unrequested IRQ (e.g. set by DT) must not be disabled */
-+		smmu->priq.q.irq = 0;
- 	}
- }
+@@ -2378,6 +2378,7 @@ static irqreturn_t arm_smmu_evtq_thread(int irq, void *dev)
  
-@@ -4971,8 +4978,10 @@ static int arm_smmu_setup_irqs(struct arm_smmu_device *smmu)
- 					arm_smmu_combined_irq_thread,
- 					IRQF_ONESHOT,
- 					"arm-smmu-v3-combined-irq", smmu);
--		if (ret < 0)
-+		if (ret < 0) {
- 			dev_warn(smmu->dev, "failed to enable combined irq\n");
-+			smmu->combined_irq = 0;
-+		}
- 	} else
- 		arm_smmu_setup_unique_irqs(smmu);
- 
-@@ -4999,10 +5008,22 @@ static int arm_smmu_device_disable(struct arm_smmu_device *smmu)
- 	return ret;
- }
- 
-+/* Quiesce the queue IRQ threads, e.g. before disabling the SMMU */
-+static void arm_smmu_disable_irqs(struct arm_smmu_device *smmu)
-+{
-+	if (smmu->combined_irq)
-+		disable_irq(smmu->combined_irq);
-+	if (smmu->evtq.q.irq)
-+		disable_irq(smmu->evtq.q.irq);
-+	if (smmu->priq.q.irq)
-+		disable_irq(smmu->priq.q.irq);
-+}
-+
- static void arm_smmu_disable_action(void *data)
+ static void arm_smmu_handle_ppr(struct arm_smmu_device *smmu, u64 *evt)
  {
- 	struct arm_smmu_device *smmu = data;
++	struct arm_smmu_master *master;
+ 	u32 sid, ssid;
+ 	u16 grpid;
+ 	bool ssv, last;
+@@ -2388,9 +2389,52 @@ static void arm_smmu_handle_ppr(struct arm_smmu_device *smmu, u64 *evt)
+ 	last = FIELD_GET(PRIQ_0_PRG_LAST, evt[0]);
+ 	grpid = FIELD_GET(PRIQ_1_PRG_IDX, evt[1]);
  
-+	arm_smmu_disable_irqs(smmu);
- 	if (smmu->impl_ops && smmu->impl_ops->device_disable)
- 		smmu->impl_ops->device_disable(smmu);
- 	arm_smmu_device_disable(smmu);
-@@ -5149,18 +5170,23 @@ static int arm_smmu_device_reset(struct arm_smmu_device *smmu)
- 				      ARM_SMMU_CR0ACK);
- 	if (ret) {
- 		dev_err(smmu->dev, "failed to enable SMMU interface\n");
--		return ret;
-+		goto err_disable_irqs;
- 	}
- 
- 	if (smmu->impl_ops && smmu->impl_ops->device_reset) {
- 		ret = smmu->impl_ops->device_reset(smmu);
- 		if (ret) {
- 			dev_err(smmu->dev, "failed to reset impl\n");
--			return ret;
-+			goto err_disable_irqs;
- 		}
- 	}
- 
- 	return 0;
+-	dev_info(smmu->dev, "unexpected PRI request received:\n");
+-	dev_info(smmu->dev,
+-		 "\tsid 0x%08x.0x%05x: [%u%s] %sprivileged %s%s%s access at iova 0x%016llx\n",
++	/*
++	 * A PASID Stop Marker (LRW = 0b100) does not expect a response and
++	 * must be discarded before fault reporting: see the documentation
++	 * at iommu_report_device_fault().
++	 *
++	 * Gate it on SSV, as without a PASID that same encoding is a PRI Page
++	 * Request and it does expect a response. So let it fall through and be
++	 * answered with a PRI_RESP_FAIL, since iommu_sva_handle_mm() rejects a
++	 * PASID-less fault, or by the PRI_RESP_DENY issued below.
++	 */
++	if (last && ssv && !(evt[0] & (PRIQ_0_PERM_READ | PRIQ_0_PERM_WRITE)))
++		return;
 +
-+err_disable_irqs:
-+	/* The probe error path cannot tell if the IRQs were requested */
-+	arm_smmu_disable_irqs(smmu);
-+	return ret;
- }
- 
- #define IIDR_IMPLEMENTER_ARM		0x43b
++	mutex_lock(&smmu->streams_mutex);
++	master = arm_smmu_find_master(smmu, sid);
++	if (master && master->pri_enabled) {
++		struct iopf_fault iopf_fault = {};
++		struct iommu_fault *fault = &iopf_fault.fault;
++
++		fault->type = IOMMU_FAULT_PAGE_REQ;
++		if (last)
++			fault->prm.flags |= IOMMU_FAULT_PAGE_REQUEST_LAST_PAGE;
++		if (ssv) {
++			fault->prm.flags |=
++				IOMMU_FAULT_PAGE_REQUEST_PASID_VALID;
++			fault->prm.pasid = ssid;
++		}
++		fault->prm.grpid = grpid;
++		if (evt[0] & PRIQ_0_PERM_READ)
++			fault->prm.perm |= IOMMU_FAULT_PERM_READ;
++		if (evt[0] & PRIQ_0_PERM_WRITE)
++			fault->prm.perm |= IOMMU_FAULT_PERM_WRITE;
++		if (evt[0] & PRIQ_0_PERM_EXEC)
++			fault->prm.perm |= IOMMU_FAULT_PERM_EXEC;
++		if (evt[0] & PRIQ_0_PERM_PRIV)
++			fault->prm.perm |= IOMMU_FAULT_PERM_PRIV;
++		fault->prm.addr = FIELD_GET(PRIQ_1_ADDR_MASK, evt[1]) << 12;
++
++		iommu_report_device_fault(master->dev, &iopf_fault);
++		mutex_unlock(&smmu->streams_mutex);
++		return;
++	}
++	mutex_unlock(&smmu->streams_mutex);
++
++	dev_info_ratelimited(smmu->dev,
++		 "unexpected PRI request: sid 0x%08x.0x%05x: [%u%s] %sprivileged %s%s%s access at iova 0x%016llx\n",
+ 		 sid, ssid, grpid, last ? "L" : "",
+ 		 evt[0] & PRIQ_0_PERM_PRIV ? "" : "un",
+ 		 evt[0] & PRIQ_0_PERM_READ ? "R" : "",
 -- 
 2.43.0
 
