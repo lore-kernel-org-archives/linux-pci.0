@@ -1,165 +1,107 @@
-Received: from mail-qt1-f180.google.com (mail-qt1-f180.google.com [209.85.160.180])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6CD37400E0A
-	for <linux-pci@vger.kernel.org>; Tue, 15 Sep 2026 03:10:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 067AA3C13E5
+	for <linux-pci@vger.kernel.org>; Tue, 15 Sep 2026 03:11:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789441849; cv=none; b=MxjZW0gGq7iAMOfLSSi3dunJBJJYiie24eKOA4OIa2ovSM4gjrUn3APzrgsJns7SX38WpQJM8+E//b0/C6Y30yCN3lWflTXewlWiJVGF2x9qfw+ww8IbyDhYbyhRoFF4q+rye4Erk+XDfiYNGMo4C+aw8p86dmGa0qigraJ0P0s=
+	t=1789441876; cv=none; b=dNw+GgK5WP0uEnhRRcIUptu28bv1OxWnr388qeLN++Xdi1d3wIrnQZ9/IoeqEV4WxSl6B2uF9kQ2oaitqOzZn4CcEio4jjtXpkOnvBDsjJuQ5A50B1jmIhRPP87GYmTFQvwKVfhb3imkQx5fG5LI1hCW8+pHtrLBpZpI7HULcLk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789441849; c=relaxed/simple;
-	bh=Tqm8mGXvI2nKoUm+9pLtaJ+uyO5KFGl5Yiy7z7wtnBs=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=FLAEVnOANhnj/z3i0vNVhkCEKMrdbFBnoJCV6/N45rI1n69EaNYMPzNaBQYMtxXXaTRK3MACzvz8Yf5cl+E2y3oIvZyd5FiUjw1OGsSskxV+2U/zJ23XcoPF3ODwfFHW6M6X5vvOfOMVVUVUK/RXOtqDiFOfS9kAQQUa4uxrqsA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=riscstar.com; spf=pass smtp.mailfrom=riscstar.com; dkim=pass (2048-bit key) header.d=riscstar-com.20251104.gappssmtp.com header.i=@riscstar-com.20251104.gappssmtp.com header.b=tGa9frY1; arc=none smtp.client-ip=209.85.160.180
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=riscstar.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=riscstar.com
+	s=arc-20240116; t=1789441876; c=relaxed/simple;
+	bh=NDfoMeNfiyVSwdcn32cnBtErNw0H5ObRsK6l64h3cfU=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=h+N2W5/5veZzYKzITi+8YKoSW1xL/LrWDuWTHPYwVisJPZj9Gux7A0UYVkhLFqQMarVucMJilq6bWes4xp148FeS8Mi7flU6HKempWvXNwTp28KppS6SaTC/XLiQrde9icI/9hG4rh2YkbsO8zqEfT+Pjt3gSbmSc1Ahqca3Cis=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RxMhQV5J; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=riscstar-com.20251104.gappssmtp.com header.i=@riscstar-com.20251104.gappssmtp.com header.b="tGa9frY1"
-Received: by mail-qt1-f180.google.com with SMTP id d75a77b69052e-530e1b6a689so22406901cf.3
-        for <linux-pci@vger.kernel.org>; Mon, 14 Sep 2026 20:10:47 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=riscstar-com.20251104.gappssmtp.com; s=20251104; t=1789441846; x=1790046646; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=xSNWHoyvKJfGdDxylfGmEXIoCFeqbapyGd1fgWyygV0=;
-        b=tGa9frY1CyWiXP3Ve/Nl+X1cwDGI7vW6LYKcX9kUlCsoo4gg68RRZ+F/+XxLR/DHYF
-         CkLjUkEygXTmYTxln3LzeYTwCKvxP4X+yVSwkM5F8Kf2vw5Igc0TKGUuqNo6Q1Gdj1pW
-         SA7LVU441bJ+u3ZGtlQ+M1R+maw50Lnt54uTtBVAZFKaTjKjqJ0ztKK6MgzGD4E3LUGm
-         I/Bwc5AW1Y+kwEra3LdsxTfeQjiz53Bo4o6RsnortHXK5t8YA07Xw6rOHse9DpGtmxHw
-         R1UhP4r3Xa/+9fAChpR3zLNO72vFy6RMHcJ7RBy2mc+1MoMbfJlKmZCdMCmTyJ99bO/H
-         SEXg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1789441846; x=1790046646;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=xSNWHoyvKJfGdDxylfGmEXIoCFeqbapyGd1fgWyygV0=;
-        b=rvQ7+qynZmfJPrtVVNQ8ysdKTQav1RqIGWm4joOl2VcR82L5njCL4cCF5cFd3q0jOp
-         3ajZI31mOu77zBHEt0jE9bX7+mkM5Hawp0zBVfffKXcAtjcsjvSxz3dxfzhMoFBvcHQz
-         /ZnrvojPKz8icqrKgljRPA2hUUg6T4Tow6Mfxl9FTc3Vc2CXMi4Xj95UKf7hNmBAJU+L
-         1LAncN65fravwpE15bfrn6DbuMBk/Lu8NNojZXNn8724mA+N8c3JROnAPH3PMQicpKpK
-         t8gjCMLzPow78zm0K6YbP/xYkiuVdkNxRQn9FVUDqaKXz1yFFwhIc8eIHNY/PZnAU5Fu
-         A32Q==
-X-Forwarded-Encrypted: i=1; AKwUvBzB0PNBelQg/3T1xHv1Nrb6IUv+D1ndd4NaoKSHkYBVv6pcNoP4VAF8ESFzT7ZfEPEiZGcJGEVgZVM=@vger.kernel.org
-X-Gm-Message-State: AFuF++mK6llVx5I79/4JM1iqksC+38nJtqo8Xo8EFEPn5S3F0uoIazUQ
-	3UhpoEiqK3G80iPiQjFVSFZvJjUe6CIwjwJozUbB+j49jqcdTE+nbXmpho9rZC86RdA=
-X-Gm-Gg: AYBFou34Ykc+98BJc0Yy6vPWhzrl+vvBcHpf+96Fw/4dmlmbIofMOvP001ApB6AQoQD
-	tDT3OpvLQ5vFRejiL2VZyTVJqvFb0CxZWnqPez9RPDIRFPbi6en2XL4HKzNY4RR1XNdMtWis4I9
-	0bCrA0tvBLx1GTa6IST3VwQ0yojrWc3DV1hxJ7+qzfQPxDXxLjRbaOrIVPoVVw88il23A3VMKCZ
-	LGN9gPX6EVfBf5oN48VIzpJTd2p/IXemikrhzcqXPP0Wx1h7zd0jrFm01aBpwwXgCdgGrLwOhrU
-	5klTQDRVD85qwHzuXYPPOosce6X5Vgw6J4wX+9xp2axLskYkYUc5CkxGnng3lIhIsm8LGs9jlHG
-	/aY3T+uD/tnUd3NkszfnWduPXscUTdneOnELeqAaXl14sKEzGE/esL2TUhDPn/jLhX6Ti5rX9w3
-	INNi9dmW1eI8iRIpPAE+bohsbnEgUPOI/37CXyKZJMDAvbVFxVXzQlwaNiUhb5eI/PHlvnNxyaw
-	dQ=
-X-Received: by 2002:a05:622a:1919:b0:530:efea:7a55 with SMTP id d75a77b69052e-5310cef6b70mr77015881cf.4.1789441846176;
-        Mon, 14 Sep 2026 20:10:46 -0700 (PDT)
-Received: from zippy.localdomain ([73.62.185.64])
-        by smtp.gmail.com with ESMTPSA id d75a77b69052e-530ce4ec298sm118563841cf.16.2026.09.14.20.10.44
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 14 Sep 2026 20:10:45 -0700 (PDT)
-From: Alex Elder <elder@riscstar.com>
-To: robh@kernel.org,
-	krzk+dt@kernel.org,
-	conor+dt@kernel.org,
-	arnd@arndb.de,
-	gregkh@linuxfoundation.org,
-	bhelgaas@google.com,
-	andersson@kernel.org,
-	konradybcio@kernel.org,
-	abelvesa@kernel.org
-Cc: daniel@riscstar.com,
-	mohdayaa@qti.qualcomm.com,
-	lbiancon@qti.qualcomm.com,
-	devicetree@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-arm-msm@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v2 3/3] arm64: dts: qcom: qcs6490-rb3gen2: add endpoint buses
-Date: Mon, 14 Sep 2026 22:10:37 -0500
-Message-ID: <20260915031038.1087264-4-elder@riscstar.com>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260915031038.1087264-1-elder@riscstar.com>
-References: <20260915031038.1087264-1-elder@riscstar.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RxMhQV5J"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A49921F000FF;
+	Tue, 15 Sep 2026 03:11:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1789441874;
+	bh=SGvad4aNbgnIv3y1BVpxzChZUwLNzX4omfUOYF9fhNY=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=RxMhQV5J5vRVWGuldBxivewc7B1J0LbmXQliV770Yzw2z4/2fttFuaAtP2Ih8xLsN
+	 /zsR3yULQ5cC8WQlMZ5K6SqygiN7TNEkv2DkIJsfl8ybrxBRHgnwG+5lYtOXd0zP1R
+	 +9698RCejHz+7FgzAzr4aoBPO1Lh7MerfK/7SQmrB4mLTLNvdDuKGAaXc+ANnf8K5o
+	 8hIoWMa2JUyFH/kgjb97r29HVcUiHYXAJ4v+W9BJntQPpJbSPrsp/vniIFvvmwR3Ic
+	 2Kg/LjcITi/1jgMmBhU+KO0DwIfCsPZBBiy8irkLD+57CPQejuAF2MRF1r7w8DWw1P
+	 8iOEahCnChwwA==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] PCI: cadence: Store the core controller in platform
+ drvdata
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Linmao Li" <lilinmao@kylinos.cn>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260915030044.4019259-1-lilinmao@kylinos.cn>
+References: <20260915030044.4019259-1-lilinmao@kylinos.cn>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Tue, 15 Sep 2026 03:11:14 +0000
+Message-Id: <20260915031114.A49921F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-The TC9564 SoC incorporates a PCIe switch, which is connected via
-the second PCI segment (0001) on the RB3gen2 platform.  The third
-downstream port of that switch (pcie@3,0) has an embedded PCIe
-endpoint that implements two PCIe functions.
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [Low] pci: redundant devm_kzalloc of cdns_plat_pcie
+--
 
-The SoC implements other peripherals, and they will be accessed via
-PCI endpoint bus.  Define the devicetree nodes representing these
-buses, including the mapping of each BAR's address range to its
-local address space.
+commit 39b7fc87ca3505b497481f44dd0a65579dc50f60
+Author: Linmao Li <lilinmao@kylinos.cn>
 
-The endpoint's ranges property must be defined, but it will be
-updated dynamically to include all BARs.  As a result of this update,
-the parent address portion of each range will reflect the specific
-address assigned to the BAR.
+PCI: cadence: Store the core controller in platform drvdata
 
-Co-developed-by: Daniel Thompson <daniel@riscstar.com>
-Signed-off-by: Daniel Thompson <daniel@riscstar.com>
-Signed-off-by: Alex Elder <elder@riscstar.com>
----
-v2: - Added this patch to the series
+This commit updates cdns_plat_pcie_probe() to store the wrapped
+struct cdns_pcie pointer directly in the platform drvdata. This prevents
+suspend/resume callbacks from incorrectly casting the pointer and
+reading beyond the wrapper structure.
 
- arch/arm64/boot/dts/qcom/qcs6490-rb3gen2.dts | 30 ++++++++++++++++++++
- 1 file changed, 30 insertions(+)
+> diff --git a/drivers/pci/controller/cadence/pcie-cadence-plat.c b/drivers=
+/pci/controller/cadence/pcie-cadence-plat.c
+> index 13edc6be21f59..7fef237cdbb74 100644
+> --- a/drivers/pci/controller/cadence/pcie-cadence-plat.c
+> +++ b/drivers/pci/controller/cadence/pcie-cadence-plat.c
+> @@ -55,7 +55,6 @@ static int cdns_plat_pcie_probe(struct platform_device =
+*pdev)
+>  	if (!cdns_plat_pcie)
+>  		return -ENOMEM;
 
-diff --git a/arch/arm64/boot/dts/qcom/qcs6490-rb3gen2.dts b/arch/arm64/boot/dts/qcom/qcs6490-rb3gen2.dts
-index 3bb5fca8e2b13..59fbb0444d9b7 100644
---- a/arch/arm64/boot/dts/qcom/qcs6490-rb3gen2.dts
-+++ b/arch/arm64/boot/dts/qcom/qcs6490-rb3gen2.dts
-@@ -955,11 +955,41 @@ pcie@3,0 {
- 			bus-range = <0x5 0xff>;
- 
- 			dev@0,0 {
-+				compatible = "pci1179,0220";
- 				reg = <0x50000 0x0 0x0 0x0 0x0>;
-+				#address-cells = <3>;
-+				#size-cells = <2>;
-+				/* Ranges will be updated dynamically */
-+				ranges = <0x0 0x0 0x0  0x83050000 0x0 0x0 0x0 0x4000>,
-+					 <0x2 0x0 0x0  0x83050000 0x0 0x0 0x0 0x80000>,
-+					 <0x4 0x0 0x0  0x83050000 0x0 0x0 0x0 0x200000>;
-+
-+				pci-ep-bus@4 {
-+					compatible = "simple-bus";
-+					#address-cells = <1>;
-+					#size-cells = <1>;
-+					/* Map 0x0-0x1fffff to BAR 4 */
-+					ranges = <0x0  0x4 0x0 0x0  0x200000>;
-+				};
- 			};
- 
- 			dev@0,1 {
-+				compatible = "pci1179,0220";
- 				reg = <0x50100 0x0 0x0 0x0 0x0>;
-+				#address-cells = <3>;
-+				#size-cells = <2>;
-+				/* Ranges will be updated dynamically */
-+				ranges = <0x0 0x0 0x0  0x83050100 0x0 0x0 0x0 0x4000>,
-+					 <0x2 0x0 0x0  0x83050100 0x0 0x0 0x0 0x80000>,
-+					 <0x4 0x0 0x0  0x83050100 0x0 0x0 0x0 0x200000>;
-+
-+				pci-ep-bus@4 {
-+					compatible = "simple-bus";
-+					#address-cells = <1>;
-+					#size-cells = <1>;
-+					/* Map 0x0-0x1fffff to BAR 4 */
-+					ranges = <0x0  0x4 0x0 0x0  0x200000>;
-+				};
- 			};
- 		};
- 	};
--- 
-2.53.0
+[Severity: Low]
+Does this code leave behind a completely redundant memory allocation?
 
+Since the patch changes the driver to store the inner pcie pointer directly
+instead of the cdns_plat_pcie wrapper, the prior allocation of
+struct cdns_plat_pcie appears to be completely unnecessary now.
+
+> -	platform_set_drvdata(pdev, cdns_plat_pcie);
+>  	if (is_rc) {
+>  		if (!IS_ENABLED(CONFIG_PCIE_CADENCE_PLAT_HOST))
+>  			return -ENODEV;
+
+[ ... ]
+
+> @@ -114,6 +113,8 @@ static int cdns_plat_pcie_probe(struct platform_devic=
+e *pdev)
+>  			goto err_init;
+>  	}
+> =20
+> +	platform_set_drvdata(pdev, cdns_plat_pcie->pcie);
+> +
+
+[Severity: Low]
+Because only the internal pointer is saved here, does this permanently
+orphan the allocated container structure from external access?
+
+The cdns_plat_pcie structure is no longer exposed outside of the local
+scope of cdns_plat_pcie_probe(), rendering the structure as dead code.
+
+>  	return 0;
+> =20
+>   err_init:
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260915030044.4019=
+259-1-lilinmao@kylinos.cn?part=3D1
