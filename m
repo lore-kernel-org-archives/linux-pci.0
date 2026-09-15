@@ -1,43 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 067AA3C13E5
-	for <linux-pci@vger.kernel.org>; Tue, 15 Sep 2026 03:11:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C7A6B35DA6D;
+	Tue, 15 Sep 2026 03:15:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789441876; cv=none; b=dNw+GgK5WP0uEnhRRcIUptu28bv1OxWnr388qeLN++Xdi1d3wIrnQZ9/IoeqEV4WxSl6B2uF9kQ2oaitqOzZn4CcEio4jjtXpkOnvBDsjJuQ5A50B1jmIhRPP87GYmTFQvwKVfhb3imkQx5fG5LI1hCW8+pHtrLBpZpI7HULcLk=
+	t=1789442153; cv=none; b=Tv45VRygeSI4L6RHm12zwfCcUX61UZUriuB0MaHGjT3ElqaiuO74TX2/DcNPzsdv7qyu4JYZUJM9gwzco6rfBmG/y+U2mXPIm+5peKmTSASzDMpjZuoUTISt4yBZYKVyCSfSltA+J8Jx175bWM9WYH/54ZTiLny0okcaJxiPk8g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789441876; c=relaxed/simple;
-	bh=NDfoMeNfiyVSwdcn32cnBtErNw0H5ObRsK6l64h3cfU=;
+	s=arc-20240116; t=1789442153; c=relaxed/simple;
+	bh=N4pArJNJp+xXYm8hQb+Jtidwbsdb6Xo5FYqL2FJR9lw=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=h+N2W5/5veZzYKzITi+8YKoSW1xL/LrWDuWTHPYwVisJPZj9Gux7A0UYVkhLFqQMarVucMJilq6bWes4xp148FeS8Mi7flU6HKempWvXNwTp28KppS6SaTC/XLiQrde9icI/9hG4rh2YkbsO8zqEfT+Pjt3gSbmSc1Ahqca3Cis=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RxMhQV5J; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=ZwBf3NNJv77t4cTIVefN+9vh6RdZ5KI1lP5Lb4HsHFPf3/3/TDH21h2SX4mczdgU6u8Cv7RX+RhrD8guqtHlHXPYwFkJI8N0Jxl3O1R8XrP3u9NFlq2h3bTjRE4sD4n8ufsQlKW+HT3x+VEiKWHVrlE3KYFIWGxe3uZm/9SzJYQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZeH55Ot0; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RxMhQV5J"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A49921F000FF;
-	Tue, 15 Sep 2026 03:11:14 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZeH55Ot0"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 179121F000FF;
+	Tue, 15 Sep 2026 03:15:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789441874;
-	bh=SGvad4aNbgnIv3y1BVpxzChZUwLNzX4omfUOYF9fhNY=;
+	s=k20260515; t=1789442152;
+	bh=IEM3JJms0G5xtEIT8UGUtvbS0HoqoxO+SGfyADnCcuE=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=RxMhQV5J5vRVWGuldBxivewc7B1J0LbmXQliV770Yzw2z4/2fttFuaAtP2Ih8xLsN
-	 /zsR3yULQ5cC8WQlMZ5K6SqygiN7TNEkv2DkIJsfl8ybrxBRHgnwG+5lYtOXd0zP1R
-	 +9698RCejHz+7FgzAzr4aoBPO1Lh7MerfK/7SQmrB4mLTLNvdDuKGAaXc+ANnf8K5o
-	 8hIoWMa2JUyFH/kgjb97r29HVcUiHYXAJ4v+W9BJntQPpJbSPrsp/vniIFvvmwR3Ic
-	 2Kg/LjcITi/1jgMmBhU+KO0DwIfCsPZBBiy8irkLD+57CPQejuAF2MRF1r7w8DWw1P
-	 8iOEahCnChwwA==
+	b=ZeH55Ot0NxGITkJSG7w3prGCkLQI54Yf1NNzum18ngLFAV6uVE6r0a3jgulLOWkSe
+	 Gj91/GPmJn1VpBD2UBmgppRuftlZzTANqifGqOIsWghEva5HyT6h9r9Big9CWHl10t
+	 qb2OTJYwksJRbjvLuoqrMCX6Hl1LGPRElZulsP+6nEV6R9KL/XgO31psxt5zG38yOW
+	 rPaiMBM803dzEJaROqM16HGLVoTNLHNKOwaZeok+XH2crYH7y3rMU4UPOGOe1V3avu
+	 AB2NjN25dq4/KDxAwATE+BYun6ZejXP8DzpHeQ+VBKQaBhraNY2cUdnJnZvnX9B5lM
+	 Ffj5HTAd+6R7g==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] PCI: cadence: Store the core controller in platform
- drvdata
+Subject: Re: [PATCH v2 1/3] dt-bindings: misc: introduce pci1179,0220.yaml
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "Linmao Li" <lilinmao@kylinos.cn>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260915030044.4019259-1-lilinmao@kylinos.cn>
-References: <20260915030044.4019259-1-lilinmao@kylinos.cn>
+To: "Alex Elder" <elder@riscstar.com>
+Cc: robh@kernel.org, linux-pci@vger.kernel.org, conor+dt@kernel.org, devicetree@vger.kernel.org
+In-Reply-To: <20260915031038.1087264-2-elder@riscstar.com>
+References: <20260915031038.1087264-1-elder@riscstar.com>
+ <20260915031038.1087264-2-elder@riscstar.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 15 Sep 2026 03:11:14 +0000
-Message-Id: <20260915031114.A49921F000FF@smtp.kernel.org>
+Date: Tue, 15 Sep 2026 03:15:51 +0000
+Message-Id: <20260915031552.179121F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -46,62 +46,39 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [Low] pci: redundant devm_kzalloc of cdns_plat_pcie
+- [Low] dt-bindings: typo in compatible comment (TC9654 vs TC9564)
 --
 
-commit 39b7fc87ca3505b497481f44dd0a65579dc50f60
-Author: Linmao Li <lilinmao@kylinos.cn>
+commit 8118db85b05b7b5ac32fd5abc0d4c0b807fa8de2
+Author: Alex Elder <elder@riscstar.com>
 
-PCI: cadence: Store the core controller in platform drvdata
+dt-bindings: misc: introduce pci1179,0220.yaml
 
-This commit updates cdns_plat_pcie_probe() to store the wrapped
-struct cdns_pcie pointer directly in the platform drvdata. This prevents
-suspend/resume callbacks from incorrectly casting the pointer and
-reading beyond the wrapper structure.
+This commit introduces a new devicetree binding for the Toshiba TC9564
+internal PCI endpoint function device. It uses the pci-ep-bus model to
+represent sub-devices accessed via the function's BARs.
 
-> diff --git a/drivers/pci/controller/cadence/pcie-cadence-plat.c b/drivers=
-/pci/controller/cadence/pcie-cadence-plat.c
-> index 13edc6be21f59..7fef237cdbb74 100644
-> --- a/drivers/pci/controller/cadence/pcie-cadence-plat.c
-> +++ b/drivers/pci/controller/cadence/pcie-cadence-plat.c
-> @@ -55,7 +55,6 @@ static int cdns_plat_pcie_probe(struct platform_device =
-*pdev)
->  	if (!cdns_plat_pcie)
->  		return -ENOMEM;
-
-[Severity: Low]
-Does this code leave behind a completely redundant memory allocation?
-
-Since the patch changes the driver to store the inner pcie pointer directly
-instead of the cdns_plat_pcie wrapper, the prior allocation of
-struct cdns_plat_pcie appears to be completely unnecessary now.
-
-> -	platform_set_drvdata(pdev, cdns_plat_pcie);
->  	if (is_rc) {
->  		if (!IS_ENABLED(CONFIG_PCIE_CADENCE_PLAT_HOST))
->  			return -ENODEV;
+> diff --git a/Documentation/devicetree/bindings/misc/pci1179,0220.yaml b/D=
+ocumentation/devicetree/bindings/misc/pci1179,0220.yaml
+> new file mode 100644
+> index 0000000000000..fca3d331097de
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/misc/pci1179,0220.yaml
 
 [ ... ]
 
-> @@ -114,6 +113,8 @@ static int cdns_plat_pcie_probe(struct platform_devic=
-e *pdev)
->  			goto err_init;
->  	}
-> =20
-> +	platform_set_drvdata(pdev, cdns_plat_pcie->pcie);
+> +allOf:
+> +  - $ref: /schemas/pci/pci-ep-bus.yaml
 > +
+> +properties:
+> +  compatible:
+> +    const: pci1179,0220         # Toshiba TC9654 (a.k.a. Qualcomm QPS615)
 
 [Severity: Low]
-Because only the internal pointer is saved here, does this permanently
-orphan the allocated container structure from external access?
-
-The cdns_plat_pcie structure is no longer exposed outside of the local
-scope of cdns_plat_pcie_probe(), rendering the structure as dead code.
-
->  	return 0;
-> =20
->   err_init:
+Is TC9654 a typo in this properties.compatible comment? The device is
+referred to as TC9564 in the commit message, the file title, and the
+MAINTAINERS file.
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260915030044.4019=
-259-1-lilinmao@kylinos.cn?part=3D1
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260915031038.1087=
+264-1-elder@riscstar.com?part=3D1
