@@ -1,167 +1,215 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from mx0b-00082601.pphosted.com (mx0b-00082601.pphosted.com [67.231.153.30])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 71119488DAF
-	for <linux-pci@vger.kernel.org>; Tue, 15 Sep 2026 23:22:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789514531; cv=none; b=GELVnw29TIe29nW4JrPQJsN5p0ZXiJML88WugmxC2Sap0dOzkUuPwx0EProT/Ke5FMoTD0sTp9rIzYo4OwZ6PM8NFPALgw1RW77rXDz4Ei70N3zo+yoXQ5xhMo6HDbWqFWy2Em/99E2C22x8FDKK+EVNkUWD5CqKL7+Va8zh5nI=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789514531; c=relaxed/simple;
-	bh=dTEsVObgRqUWdZPvIxWySL+6nkWC6Ia7ISiB0iANJgE=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=unRo2QzhTCFJj2SySUvEaxzgzNsWJkATkmbRPbxTWHLhX12iG4OT4EgefNiIBTVVRWbfZ/x0CLphU7CBcAS5Zm75wjV6C103RUWOk0dLcPc26YCVhD/EwvBptLvIPuIunqLBJXH+AU8CI9ob0OfmWl8nEelnVJJMEgTOSzt4iJU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=c1C0ls2r; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=NGxsXIMB; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 34A414756A3
+	for <linux-pci@vger.kernel.org>; Tue, 15 Sep 2026 23:27:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=67.231.153.30
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1789514870; cv=fail; b=mkZioPFV3aqbpqCZbeLqR206LxdL+PeCULSw+qLx1Hvl7ztYyLAn8U9pNx1ouu/vrA7qrY/Sv+8hN6XoENLBPApZmRuRgJDLi6e8EMI79+UePbNVNCxlzEPddDG73YU6D4NjVcwrvVqBq5X1arv/TxNebWfZW8iZtRJMOCmKgTY=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1789514870; c=relaxed/simple;
+	bh=660xTiVCFMGhryydhz3t8ZyEjYsku0AbA68go+LIyfs=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=glEKlXCmPz0Xpb0tZAr52Wyf8/gTGGxdRCorYfMHsXyGUVh5lJEhOjXKdDbSO1QiY6+TjUWidFtC7pQIOB7TlEv5bPhFl7MSjlEmpjH/ZZDTtFlbq/lnSlls02Ubc9mEc4x8OWVlyUlyE5/d89BDsatswJzN3ARfzByEY38BKOE=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=P7LdrCN5; arc=fail smtp.client-ip=67.231.153.30
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meta.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="c1C0ls2r";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="NGxsXIMB"
-Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 68FLZ0DR079868
-	for <linux-pci@vger.kernel.org>; Tue, 15 Sep 2026 23:22:09 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	oXdEkFs+2jBbAlp34VMYxKpRmZ4A7s9s9pc8ZFfcFQM=; b=c1C0ls2rJ6H7oNea
-	dYoIXwjesL5h2aMoSihGD7oBDL3G+/FU4H0OjwUDFfMUkKJQK2HpJbexUb+QHrk6
-	ZsmDdI6h8XLVUcYR0PDLCFFdh57RprE+LnqaxMjjUQm/QRfGBv1bLHVxasx/XYjY
-	UobEYpxjy3G8HmwDazQnArrvtm26NFDYlmm9G27XtZ0DnioZcqaBus4sMWoM6TbU
-	h8QyR5TOWAwWpi3/UH5DgSMgejaozBCzOXj54Y9hPFFUAfKAc7UPvMARkXcXZ+ca
-	Poj4zo7G64BcOP6MnJQzZ3+rsQ1wBLfTTT6UtgGuxi7b8kXOEsRneyvLoHJkL+Mz
-	6VgWxQ==
-Received: from mail-pg1-f197.google.com (mail-pg1-f197.google.com [209.85.215.197])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4gqagehc08-1
+	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="P7LdrCN5"
+Received: from pps.filterd (m0109331.ppops.net [127.0.0.1])
+	by mx0a-00082601.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 68FMOVnh1502664
+	for <linux-pci@vger.kernel.org>; Tue, 15 Sep 2026 16:27:47 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=meta.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=
+	pps82601-s2048-2026-q3; bh=puTYzaznhw4+fIfX1uaMmGMJC1CZW9OyuJIqa
+	VoOjFA=; b=P7LdrCN5RlHrQAwR3lh1Sw42HEUBPv6LyCl+r8hwB62t5uwriMQbD
+	rm3NHwvD0PaefgR6OLHyroy5wHF4NVm+G4W63yP3NyZYHZWKoV3mbJ6JwD/WzgDa
+	RCeXKORnF3xngXyoH0nHuBfJCW8zHXhDCn33h+JKiHawytHEapppS8dI22J6V2E6
+	w+wP3sWCpYGwv46N0moEuenEzZJXV3cz3DJ4nWBpzrkR/rAXp/InbRpHQnm4a4Mq
+	Krw1zm+PNYoHvCoper3L8ztW3x3PaHAyJrFmTd5OAYW7ZeVhs4ef8tPXRuwdBjYQ
+	kousKyfTwk1c3s9n+5u7EB3H7XOriOxrw==
+Received: from mail-ot1-f72.google.com (mail-ot1-f72.google.com [209.85.210.72])
+	by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 4gqbx8hnta-1
 	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Tue, 15 Sep 2026 23:22:09 +0000 (GMT)
-Received: by mail-pg1-f197.google.com with SMTP id 41be03b00d2f7-cbb20f82a0eso3952069a12.0
-        for <linux-pci@vger.kernel.org>; Tue, 15 Sep 2026 16:22:09 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1789514528; x=1790119328; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:mime-version:organization
-         :references:in-reply-to:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to:content-type;
-        bh=oXdEkFs+2jBbAlp34VMYxKpRmZ4A7s9s9pc8ZFfcFQM=;
-        b=NGxsXIMB1Dhj86MwuqCMlD4VIO7LQj17L4xIEIE9CjM1PGJ3pjhsaHf5cuTwk0Lxac
-         koP6Tnesul0lx/Po+0csx2WWPzJbDxbn8IGZzz/yISZ2DkwF3fG2kc6vgNtXWMDgE8ns
-         /GbqBP89cCAzjyQ+VclGK2TFiMX15GHe3EW0ZgmB5EHYpQffXwMa2bzewT6wSfpwb8Dv
-         75on+hPF/EGQHqWYgHyIF1Swe8Un+e3/tRzOX52LFWzV+YnTQ2XFKGOsIvbQGhxrJsNc
-         rtfFXO9Hg1QkPh3ilKzgxRAdzwePNHPWxHMuV5bPi6AtVkTOfvkEc1moXgapfP1mHR4z
-         Znhg==
+	for <linux-pci@vger.kernel.org>; Tue, 15 Sep 2026 16:27:47 -0700 (PDT)
+Received: by mail-ot1-f72.google.com with SMTP id 46e09a7af769-80621874eb7so4772296a34.0
+        for <linux-pci@vger.kernel.org>; Tue, 15 Sep 2026 16:27:46 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1789514866; cv=none;
+        d=google.com; s=arc-20260327;
+        b=GUcMeti7r2cmOODG8jO15FPYLOBA633J4EhZaH4v7Zo+utyhyPM6ZHAx5D5uTCgtfC
+         Om/saiUnUCvFrTnH82fOBvPQRQpuD1xiMdxNoNKL157tc/G48l7AJks10ocaAX3aSqgx
+         NK4a5f/cIjry5ZDVnkxpSlwKQHwfrNbaOTmcQfGypfRMZytKXNM+jxKOU45w9Fc3YeMs
+         l6HR4kvLtiaWDp5JZdFWAsT2dTOO5OjdVJp6fQByKbrGS+W/lKelaOF2hKA0sQDttKXr
+         5yh6NTXw62ZQF+DFpeavp1biZesc/r9Ld5cK2ilLHdly6uqHPvEvADM1GkxboPad6KkM
+         Ia4Q==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version;
+        bh=SJKC0cK2PwsxosA12SybEYsbNkrOGaDMLHL+9hzWLps=;
+        fh=Fdg1/zjA1XiCizpa3Jd86oa4aukZpjlvYiQ7XoYDW3Q=;
+        b=YCzBEFXagSoj1psX8EvuwV2vlQVxgF4rFJTRhPJD3MNs04zGnyQVKDf2jKUr1yedEd
+         J2Spgd1z0H3/9TjkHNPTs3sPCHQPwafajQLk1OubwPcd5o0fN/13qGJXlGuWsihH+k4X
+         3CDGu+7Z0qDw4q+n9QzGWrv9NiJSs28CrV/qRAhmefQ4y+N4exX7ahchy2mJQQFgbx3m
+         pKQDfsPVQVlp0NvYPygJqoEZWWrXNvG45JKbFk/u+4zcVfpNzs7Zfrugz7KEDMMTIg9K
+         S0VpA8P1qoyAVXyDQmv4m+8mDYUyRnKr/+gkWytnDai6whks82j8NY0YDqqTkKMfJGXK
+         9/yQ==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1789514528; x=1790119328;
-        h=content-transfer-encoding:content-type:mime-version:organization
-         :references:in-reply-to:message-id:subject:cc:to:from:date:x-gm-gg
+        d=1e100.net; s=20260707; t=1789514866; x=1790119666;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=oXdEkFs+2jBbAlp34VMYxKpRmZ4A7s9s9pc8ZFfcFQM=;
-        b=CKEP95LY3eMtcCoMH4kgN5VJ0r9YdMEGGRkIjht4dM4I3xtdiryzPCE90V2z5Z3lKJ
-         ZIZkPcLKLu6/yuv/pQwz1pAJOzLc7o+YIsMWVXjzIlj4iURfKjMk2xpifcozeuyDiMfm
-         XQOmMImcNenrXRR9t8dprIj+3xtmVYNEkPLGMMSI8KHH6h4MqhanNcdlPwq2gT5WgnhA
-         69M8b80e99b/YE+5TmpPOtH+uWquE6xHkeqlUMaOmaMisQ1LwmU5et0n96fS/X4cYItx
-         xrr2u1ezfCQkEcPrePRM0YPmoVpR8xG3gWjYwitQfslHUM3cbTlcyEbqGSxlB9o+V0Uc
-         Ajiw==
-X-Forwarded-Encrypted: i=1; AKwUvByxS8ioiisxJHj4SBiuMbjxdyCxXLmV4EAwdLFyHMgdddDIQS7K2qjaQH7jd1TqE94+SpD5wyhImMs=@vger.kernel.org
-X-Gm-Message-State: AFuF++mMsLXIHNhThNSOkkODxHSyovQrWr6jPgb3lbuW/cK1tifM9PbC
-	RjCvIyfZS0oHxs4NiRka1vH1xH9dQI+maPy4pem/Hs4aIQUQCMWyORqk/D1934jXH8daQrf2fFn
-	kzEPaIF5thsdVwG3CxPXivGqCueS9V1EEGoKZENz5wAlJ+HlO1LZstPW3XSZcMbs=
-X-Gm-Gg: AYBFou1PQjhUkuStc2exnYTabu/zRgXttuYL2SCDLCVLwgWciGSazt2y3UninaZQEPR
-	pWHwKX/A3zNNOL5pf0UpABff8X5lJE/nWVJEBQ7+Ru3Lv9A/h4lIZXSROoy8WSdUl1bsOjvkiR1
-	Rwb/qYeR4NnzTVDdYX61vXC8rBqrMGOFo/5xqlsL9pVpkzyfAsmaSCQRKs+Nw8FGzqPZLVXrP60
-	Z3kKy2I8rPN06iHXpVcAIiSw6RW04QPwXAkc2utjWA/mV4QtgMp5rNQP8KU8fJdUxuZmF5o7Cuk
-	6dqo3yHCXdnwlLXqyoek4CzEfMtabOq+qPLwiuHZQp5MEyL/ZJw1giOYgJSSJeOom2HN7uVmH09
-	NghNpPqcvXc/L8YQkWEoxv3MBQAs=
-X-Received: by 2002:a05:6a21:9090:b0:3d0:e034:a26f with SMTP id adf61e73a8af0-3dd5f5d8672mr1167663637.17.1789514528282;
-        Tue, 15 Sep 2026 16:22:08 -0700 (PDT)
-X-Received: by 2002:a05:6a21:9090:b0:3d0:e034:a26f with SMTP id adf61e73a8af0-3dd5f5d8672mr1167615637.17.1789514527903;
-        Tue, 15 Sep 2026 16:22:07 -0700 (PDT)
-Received: from localhost ([50.35.44.179])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-33bf5b0520asm2203060eec.27.2026.09.15.16.22.06
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 15 Sep 2026 16:22:07 -0700 (PDT)
-Date: Tue, 15 Sep 2026 16:22:04 -0700
-From: Jonathan Cameron <jonathan.cameron@oss.qualcomm.com>
-To: Nicolin Chen <nicolinc@nvidia.com>
-Cc: <will@kernel.org>, <robin.murphy@arm.com>, <jgg@nvidia.com>,
-        <joro@8bytes.org>, <bhelgaas@google.com>, <praan@google.com>,
-        <kevin.tian@intel.com>, <kees@kernel.org>, <smostafa@google.com>,
-        <baolu.lu@linux.intel.com>, Jean-Philippe Brucker <jpb@kernel.org>,
-        "Eric
- Auger" <eric.auger@redhat.com>,
-        <linux-arm-kernel@lists.infradead.org>, <iommu@lists.linux.dev>,
-        <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <skaestle@nvidia.com>, <mmarrid@nvidia.com>, <skolothumtho@nvidia.com>,
-        <bbiber@nvidia.com>, <harsha.v@oss.qualcomm.com>
-Subject: Re: [PATCH v5 10/15] iommu/arm-smmu-v3: Support PRI Page Request in
- arm_smmu_handle_ppr()
-Message-ID: <20260915162204.000054b9@oss.qualcomm.com>
-In-Reply-To: <dd1ee0afb947b5f7c229c21b7fcff5d18f9bc326.1789446520.git.nicolinc@nvidia.com>
-References: <cover.1789446520.git.nicolinc@nvidia.com>
-	<dd1ee0afb947b5f7c229c21b7fcff5d18f9bc326.1789446520.git.nicolinc@nvidia.com>
-Organization: Qualcomm
-X-Mailer: Claws Mail 4.4.0 (GTK 3.24.51; x86_64-w64-mingw32)
+        bh=SJKC0cK2PwsxosA12SybEYsbNkrOGaDMLHL+9hzWLps=;
+        b=EW58/TeYFDiwpcwvC//W+kFj9PNpkgkj4elilpPUGURXSH7VZtKiyZaMSTBwP98XqW
+         YBN15U49P0ufppo1b4AL4Zs8QdZrx3aPHIdVjj+rfEuL7ousjIGf95hEt/uKv6dyVe2h
+         nk8vtzt7/Gxp/Os6xcwl6F+x3B8Bn1+ejwJKymNzc71vLaFtsMXSqRCp6B03zcgSnh0K
+         qlDgQekiJZM06RUETnz9Zl1vbiM87zGAazcvYrmgja+DOA3hP6LsMumBRrZ8BqE5ftB/
+         P3VMpPXNLYkUZcDN5KV/iobxHFiGTEEe1xGow/5Jlx6KV6t0y0AbafFvlqJheQqbgtab
+         ZecA==
+X-Forwarded-Encrypted: i=1; AKwUvBxqi2IlhSl2C21+c6gC9JoKaPphqlfmz4YCgOjlWqon+eF7iTp3QBwAPC4Y3nsGK9eg2OCvMGPlXZE=@vger.kernel.org
+X-Gm-Message-State: AFuF++n2c+uR2JyjSdvzcpiDh4WZaP9xTNUhrd4xzrsZvt5daWDk1+3x
+	X7R0svYQ5v0gygB0HWrwxHhLEYeiCdBVBY98OVsLzEgC+fm0tAm/aXcE0K/4cbffNPGJ+lLmc+5
+	hwYig1Clc9WBQ1hnRbN5et5e5sSUd11UcIBEtueHrTzc1Y4qYu/xs4QmsRl1+RJCPcusnhWzX78
+	IysC6ih7nZklqFod8ssr/f7jFP8nNIE6bX/Cc=
+X-Gm-Gg: AYBFou1qyMe5nHAMKdsjl+lEGmN/O8SIp57DvcoVCxQsd3YQJm6+ksSK1YMkf2VygrK
+	QstpiicOK/NqgBSn/ON4rTWknQvZrd1XrXTdP5Cs6+u+pmA/lStExnpfKEvn+eFS/ms7oly4Y0i
+	C+8j2VrsCYs2/YdEk8UxFpaqys/V57CKtpnoNxiJuNCX+2iZwCgOK+NQE68U3c2pyLG3XEfg7h
+X-Received: by 2002:a05:6830:6602:b0:806:75db:bb32 with SMTP id 46e09a7af769-80b2df3d962mr1439118a34.9.1789514866366;
+        Tue, 15 Sep 2026 16:27:46 -0700 (PDT)
+X-Received: by 2002:a05:6830:6602:b0:806:75db:bb32 with SMTP id
+ 46e09a7af769-80b2df3d962mr1439055a34.9.1789514865867; Tue, 15 Sep 2026
+ 16:27:45 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-Spam-Info: AW1haW4tMjYwOTE1MDM0MSBTYWx0ZWRfX0zOub/BD1F5M
- CHgHqjPYBq7rIh7kTQFnlJEAOAxr6tjJl1sHY/3Z+V9iKZWfSja3qwXhUg+ARgCPi5H2C1IP8r5
- taRaloVBvUq/ftZVD7uqwg/Le4paBPQ=
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTE1MDM0MSBTYWx0ZWRfX7N7b0Qt8hjEG
- vXKQm21LtyboaPO10KUVJidR3cbcvnZYjlGceV/cgzWQlPspfZDzHmOhU5GXF8PEWoWfWZ2FBCT
- mhn5dCGaFiRbeDD1VyuLsaOr+XPZvNluroDI5uoZYRY9MW/cl/z+3snY+UR8RjUzc3j+vU4Pd/l
- k588orPjlE7VXAa+rC/MI/xFEdA6BvHOfn10LojI5UTuwkMYqsZLNuYowZdBklsnZX1avk7q07S
- +/BjpDwphZGOyEkZ/mkkDIKA9PSzWrnX2kH6Nt0aSsQRvC65ro24Tb6LTjLPcohvumGuOziw20t
- ZZm9ENtxsSmDuIILo582VehjXdosoKnATGfcjtCa4GxQMRc4KMHSoLIGYYMy4MbgoVxLJS1s9Q0
- nS5wNRApNzya+FB9RQBkbx0iT2VqBP2NpmI5ZRDNEd5HhMOlRkeVXS2qHeYa1oDdwsVONcGZ47y
- TvwEzHGdzn6y2ToqQTA==
-X-Proofpoint-GUID: PDpAh_kfE5S_KpKtJXBqLssH0RTlsfB4
-X-Proofpoint-ORIG-GUID: PDpAh_kfE5S_KpKtJXBqLssH0RTlsfB4
-X-Authority-Analysis: v=2.4 cv=PcZqFShd c=1 sm=1 tr=0 ts=6aa9d321 cx=c_pps
- a=rz3CxIlbcmazkYymdCej/Q==:117 a=aNnz9XPx1a4JIXSYt2cE/A==:17
- a=kj9zAlcOel0A:10 a=VdqzKS8jKosA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=yx91gb_oNiZeI1HMLzn7:22
- a=Ikd4Dj_1AAAA:8 a=EUspDBNiAAAA:8 a=h35TsNJSbmzmzvWWgmEA:9 a=CjuIK1q_8ugA:10
- a=bFCP_H2QrGi7Okbo017w:22
+References: <20260731211601.3033906-3-zhipingz@meta.com> <20260915222303.GA877199@bhelgaas>
+In-Reply-To: <20260915222303.GA877199@bhelgaas>
+From: Zhiping Zhang <zhipingz@meta.com>
+Date: Tue, 15 Sep 2026 16:27:34 -0700
+X-Gm-Features: AcwNN1Ur2HGTwLfzS3v5GCfBM43O6loZu_h11eJ9ffO6Ol-LlJuiRokJ9Mq3XW4
+Message-ID: <CAH3zFs1hpotRvvTziNhSSNR1fLiFekSAMCA7oKsNJbobgeckRw@mail.gmail.com>
+Subject: Re: [PATCH v13 2/5] PCI/TPH: Add requester/completer type helpers
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>,
+        Michael Guralnik <michaelgur@nvidia.com>,
+        Sumit Semwal <sumit.semwal@linaro.org>,
+        Christian Konig <christian.koenig@amd.com>,
+        Alex Williamson <alex@shazbot.org>,
+        Bjorn Helgaas <bhelgaas@google.com>, kvm@vger.kernel.org,
+        linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org,
+        dri-devel@lists.freedesktop.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Proofpoint-GUID: 7265tVzqXWDOvvoxEokjfis_l_NeNL5j
+X-Authority-Analysis: v=2.4 cv=NKlAaE6g c=1 sm=1 tr=0 ts=6aa9d473 cx=c_pps
+ a=+3WqYijBVYhDct2f5Fivkw==:117 a=IkcTkHD0fZMA:10 a=VdqzKS8jKosA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=7x6HtfJdh03M6CCDgxCd:22 a=wpfVPzegXHpEFt3DAXn9:22
+ a=VwQbUJbxAAAA:8 a=VabnemYjAAAA:8 a=1XWaLZrsAAAA:8 a=B6l6obb3YNMg1WPjzLYA:9
+ a=QEXdDO2ut3YA:10 a=eYe2g0i6gJ5uXG_o6N4q:22 a=gKebqoRLp9LExxC7YDUY:22
+X-Proofpoint-Spam-Info: AW1haW4tMjYwOTE1MDM0MyBTYWx0ZWRfXz/IErNtcxDFr
+ KrvE3DrdwG6XGw2CMqAGsruVu0BF1ZPBZRd5ZfRzzo8IlifPlOnAfuVuiDsHoduAfsrmHkicSQt
+ 4zASDd3KdZv7cJFBQOeJ66Yqim26AEo=
+X-Proofpoint-ORIG-GUID: 7265tVzqXWDOvvoxEokjfis_l_NeNL5j
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTE1MDM0MyBTYWx0ZWRfX4ntzxRLuX+wV
+ uIlm8Vj5xQohR3pIJrQs9jCVT3RGT2VEVP35Y/aBYrFv/rmbVOAHLVWg7YrQo8M1er+shHf8NQy
+ ppCZ//qqseLnJyBItwzTTUVGlzqTU1CJSF0f9kHZ8xOXZi2qH/pfPZkiUWKJO3LmK2YQhUVf7+Y
+ 8yCQ7UuTb1mlwRkSAoXMZQIoYvuOJSUX84KdkdfCKGQ9T62RancSbd9QkwUiyLvId4cQtILSo92
+ vbVMdquYhD5siFAUzo3QlvodzL5cQhTc38wLHG36pid1v6+JlAjKZ545Y+8ITO0CtdWN8OJEW7G
+ s7qO5/bmKmZto4z9P1A+UmFII1L7yyw031kz0kYVpVTxzT1G9LTZxGbn0kI//0+/Xyt/hwESrFw
+ yYw2oLDbXhprTjsuL0Ps8d9ShxMekWNN1A7X705uBsEOY4Fj2zGNP/9q37Ae9AMhOntRopzvYAa
+ PL1BaODzpZJqHtn1vHw==
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
  definitions=2026-09-15_05,2026-09-15_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- spamscore=0 phishscore=0 suspectscore=0 malwarescore=0 impostorscore=0
- clxscore=1015 lowpriorityscore=0 priorityscore=1501 adultscore=0 bulkscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2609040000 definitions=main-2609150341
 
-On Tue, 15 Sep 2026 09:38:22 -0700
-Nicolin Chen <nicolinc@nvidia.com> wrote:
+On Tue, Sep 15, 2026 at 3:23=E2=80=AFPM Bjorn Helgaas <helgaas@kernel.org> =
+wrote:
+>
+> >
+> On Fri, Jul 31, 2026 at 02:15:49PM -0700, Zhiping Zhang wrote:
+> > Add pcie_tph_enabled_req_type() so drivers can query the enabled TPH
+> > requester mode without reaching into pci_dev internals.
+> >
+> > Add pcie_tph_completer_type() so drivers that publish TPH metadata for a
+> > device acting as a completer can gate on the "TPH Completer Supported"
+> > field of Device Capabilities 2 (bits 13:12, PCI_EXP_DEVCAP2_TPH_COMP_MA=
+SK)
+> > rather than reusing requester-side state. It applies the same reserved-
+> > encoding fold as get_rp_completer_type(), inlined, so the reserved 0b10
+> > value never reaches callers.
+> >
+> > This keeps pci_dev::tph_req_type and the completer-capability decode
+> > inside the PCI/TPH code and provides !CONFIG_PCIE_TPH stubs for callers.
+> >
+> > Signed-off-by: Zhiping Zhang <zhipingz@meta.com>
+>
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+>
+> > ---
+> >  drivers/pci/tph.c       | 44 +++++++++++++++++++++++++++++++++++++++++
+> >  include/linux/pci-tph.h |  8 ++++++++
+> >  2 files changed, 52 insertions(+)
+> >
+> > diff --git a/drivers/pci/tph.c b/drivers/pci/tph.c
+> > index 5cbb381e2a02..d0202ff7a1b2 100644
+> > --- a/drivers/pci/tph.c
+> > +++ b/drivers/pci/tph.c
+> > @@ -223,6 +223,50 @@ static u8 get_rp_completer_type(struct pci_dev *pd=
+ev)
+> >       return PCI_EXP_DEVCAP2_TPH_COMP_NONE;
+> >  }
+> >
+> > +/**
+> > + * pcie_tph_enabled_req_type - Return the device's enabled TPH request=
+er type
+> > + * @pdev: PCI device to query
+> > + *
+> > + * Return: PCI_TPH_REQ_DISABLE, PCI_TPH_REQ_TPH_ONLY or PCI_TPH_REQ_EX=
+T_TPH.
+> > + */
+> > +u8 pcie_tph_enabled_req_type(struct pci_dev *pdev)
+> > +{
+> > +     return pdev->tph_req_type;
+> > +}
+> > +EXPORT_SYMBOL(pcie_tph_enabled_req_type);
+> > +
+> > +/**
+> > + * pcie_tph_completer_type - Return the device's TPH Completer support
+> > + * @pdev: PCI device to query
+> > + *
+> > + * Reads the "TPH Completer Supported" field (bits 13:12) of Device
+>
+> s/Reads/Read/ to match other doc ("Return ... type" above, "Write tag" be=
+low)
+>
+> > + * Capabilities 2. The reserved 0b10 encoding is folded into
+> > + * "not supported" so callers only need to compare against the three
+> > + * defined values.
+>
+> s/The reserved 0b10 encoding is folded/Fold reserved 0b10 encoding/
+>
 
-> For a PRI-enabled master, convert every PRIQ entry into an iopf_fault and
-> report it through iommu_report_device_fault().
-> 
-> For an unknown StreamID or a master without PRI enabled, keep the existing
-> LAST-page DENY path. Merge its two messages into one ratelimited line so a
-> faulty device cannot flood the kernel log.
-> 
-> Discard any PASID Stop Marker (LRW = 0b100) prior to the fault report and
-> the DENY fallback both, because a Stop Marker does not expect a response.
-> The IOPF infrastructure requires the driver to discard it, as per the doc
-> at iommu_report_device_fault(). This also matches the intel-iommu code.
-> 
-> When SSV is clear, the same LRW encoding is a PRI Page Request that expects
-> a response, so let it fall through.
-> 
-> Note that master->pri_enabled will only be set by a later change, once all
-> the PRI paths are ready.
-> 
-> Co-developed-by: Barak Biber <bbiber@nvidia.com>
-> Signed-off-by: Barak Biber <bbiber@nvidia.com>
-> Co-developed-by: Stefan Kaestle <skaestle@nvidia.com>
-> Signed-off-by: Stefan Kaestle <skaestle@nvidia.com>
-> Signed-off-by: Malak Marrid <mmarrid@nvidia.com>
-> Signed-off-by: Nicolin Chen <nicolinc@nvidia.com>
+Thanks Bjorn for the ack. I'll incorporate both wording fixes in v14.
+The kernel-doc becomes:
 
-Reviewed-by: Jonathan Cameron <jonathan.cameron@oss.qualcomm.com>
+/**
+ * pcie_tph_completer_type - Return the device's TPH Completer support
+ * @pdev: PCI device to query
+ *
+ * Read the "TPH Completer Supported" field (bits 13:12) of Device
+ * Capabilities 2. Fold reserved 0b10 encoding into "not supported" so
+ * callers only need to compare against the three defined values.
+ *
+ * Return: one of %PCI_EXP_DEVCAP2_TPH_COMP_NONE,
+ *         %PCI_EXP_DEVCAP2_TPH_COMP_TPH_ONLY or
+ *         %PCI_EXP_DEVCAP2_TPH_COMP_EXT_TPH.
+ */
+
+  Thanks,
+  Zhiping
