@@ -1,121 +1,165 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD70C43F8CB;
-	Tue, 15 Sep 2026 07:20:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E8E53515F1;
+	Tue, 15 Sep 2026 08:28:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789456808; cv=none; b=qYbKXaeGOxcnElQXfBhX1CBY5/gUMElq1btmKuiQEsIZd1n9CYMSZSe10pU2Dp7355GSI71tD3n0h/S43K4E/ho9SQzfEZF8AChMN6hNPEmdvYh3Ta4dd+Gsrs1Gq2jP0p2Fy0rNI8XnI+T3vcNM3hQFmzISOx5jiZwjAtxrI4o=
+	t=1789460927; cv=none; b=CqEU/lzPJczOE07b51L93/ejYM5ZZSr50qS7Adluyv6zi09eL3hh2EvBMn7d2wKWytJe7C9LVe7QUCqP8J795c28A94LTWtLkhOGUpIvVvvdMw5eeujoISFFFeODPaYefswj2gPueLyPIUYkad307FJET2rK/s++ClqcMjuN2pU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789456808; c=relaxed/simple;
-	bh=6dLLS/48TQzNkBsXhLwY0+7SCrAogCpk6ieRqvn1zyg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Lj4Eh1iOqsLBF468LZKYrsl/jfIq7+BQPEg1aRRbF7/u7fuNlqU2/NqhlUiLSiRozYKYNVe/7+KiGVlzLDZQskrmxK2QsG3mfUN+g2F4KQXw6ERdmPBTb6Ly3O33PFL9cIUMjqRZ8OPAyliSqrkHMb0TWa2VBZpl0HXxeYX4jG4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nJiy3DqL; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nJiy3DqL"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 007891F00893;
-	Tue, 15 Sep 2026 07:20:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789456806;
-	bh=FyM/uDm+tnR187tEWbfUP/Wv8cyeaRWJrXszC+FigbU=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=nJiy3DqLOR9LIWKPRLB9D9eWUn97WaZOJ8op7wFd99Yjcl4KFfO8U5JOCrXrXYAL1
-	 aWChcdtMGUmMM9FrbK4CHXb+jZe9+G0ao4v5+j7o3ov8uimqC8EycWedLkLC+pAEmK
-	 vQMAj18D9bZI1Uqld3M+rnJEx386vPjzNyPMyxSTTkRI9BTOncHKEaLQ/KKdhFKdy4
-	 ieLssqmLe7eKnp9YcAU6xWR/RsIiMgRLEhHsorUmNOmRoATOW7KnYBLHxZtUGGkk0F
-	 8tjXhSk03syKMpeTz1SohHhI9gy+gC03RtGmc05DpZ6y6LPecYCab15k2u7h5kKcMx
-	 Rdfe7jZW0zBVw==
-Date: Tue, 15 Sep 2026 10:20:02 +0300
-From: Leon Romanovsky <leon@kernel.org>
-To: Matt Evans <matt@ozlabs.org>
-Cc: Jason Gunthorpe <jgg@nvidia.com>, Alex Williamson <alex@shazbot.org>,
-	Alex Mastro <amastro@fb.com>,
-	Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Logan Gunthorpe <logang@deltatee.com>,
-	Kevin Tian <kevin.tian@intel.com>,
-	Pranjal Shrivastava <praan@google.com>,
-	Longfang Liu <liulongfang@huawei.com>,
-	Mahmoud Adam <mngyadam@amazon.de>,
-	David Matlack <dmatlack@google.com>,
-	=?iso-8859-1?Q?Bj=F6rn_T=F6pel?= <bjorn@kernel.org>,
-	Sumit Semwal <sumit.semwal@linaro.org>,
-	Ankit Agrawal <ankita@nvidia.com>,
-	Alistair Popple <apopple@nvidia.com>,
-	Vivek Kasireddy <vivek.kasireddy@intel.com>,
-	linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
-	dri-devel@lists.freedesktop.org, linaro-mm-sig@lists.linaro.org,
-	kvm@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v6 9/9] vfio/pci: Permanently revoke a DMABUF on request
-Message-ID: <20260915072002.GD13683@unreal>
-References: <20260911214200.33793-1-matt@ozlabs.org>
- <20260911214200.33793-10-matt@ozlabs.org>
- <20260913165244.GW13683@unreal>
- <20260914113647.GL3968357@nvidia.com>
- <20260914115456.GY13683@unreal>
- <f21c409d-5675-4c87-8b16-850bcb9474df@ozlabs.org>
+	s=arc-20240116; t=1789460927; c=relaxed/simple;
+	bh=6DFX5EHsc3kZbkxlD3BSWbEya4idlWUBiU3+3hZIVN4=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=fdOyjsc1av+AUjoCLMjcYZVVWkFs1OuXJknYBAF/T1qZxcJee6+libFoe+pEtGcqNpLtS7sp9jX7fgqjsSbCwieARgNOwTeyG1mdJPZ57E+OLvI7CXHgw8AVSknpLT6q2Rz9N6jP52tNf8OZ1Q7Gi5EteqKX3LDVA2xub2nobFk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
+X-UUID: 71ca4c80b0df11f19a56ed5b684f684d-20260915
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.19,REQID:2bf64f99-0be0-4f1f-b4d8-6db001d4099b,IP:0,U
+	RL:0,TC:0,Content:-25,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
+	N:release,TS:-25
+X-CID-META: VersionHash:7db8b62,CLOUDID:6c4b5a1387fed50d946b92379747ef9d,BulkI
+	D:nil,BulkQuantity:0,SF:102|850|865|898,TC:nil,Content:0|15|50|99,EDM:-3,I
+	P:nil,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0
+	,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 2,SSN|SDN
+X-CID-BAS: 2,SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: 71ca4c80b0df11f19a56ed5b684f684d-20260915
+X-User: lilinmao@kylinos.cn
+Received: from localhost.localdomain [(10.44.16.150)] by mailgw.kylinos.cn
+	(envelope-from <lilinmao@kylinos.cn>)
+	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
+	with ESMTP id 1606268940; Tue, 15 Sep 2026 16:28:35 +0800
+From: Linmao Li <lilinmao@kylinos.cn>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>
+Cc: Rob Herring <robh@kernel.org>,
+	Aksh Garg <a-garg7@ti.com>,
+	Tom Joseph <tjoseph@cadence.com>,
+	Vladimir Oltean <vladimir.oltean@nxp.com>,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Linmao Li <lilinmao@kylinos.cn>
+Subject: [PATCH v2] PCI: cadence: Store the core controller in platform drvdata
+Date: Tue, 15 Sep 2026 16:28:26 +0800
+Message-Id: <20260915082826.4135665-1-lilinmao@kylinos.cn>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <f21c409d-5675-4c87-8b16-850bcb9474df@ozlabs.org>
+Content-Transfer-Encoding: 8bit
 
-On Mon, Sep 14, 2026 at 01:13:36PM +0100, Matt Evans wrote:
-> Hi Leon,
-> 
-> On 14/09/2026 12:54, Leon Romanovsky wrote:
-> > On Mon, Sep 14, 2026 at 08:36:47AM -0300, Jason Gunthorpe wrote:
-> > > On Sun, Sep 13, 2026 at 07:52:44PM +0300, Leon Romanovsky wrote:
-> > > > On Fri, Sep 11, 2026 at 10:41:57PM +0100, Matt Evans wrote:
-> > > > > Expand the VFIO DMABUF revocation state to three states:
-> > > > > Not revoked, temporarily revoked, and permanently revoked.
-> > > > 
-> > > > The thing is that "temporarily revoked" is actually the standard
-> > > > invalidate_mappings/move_notify mechanism of DMABUF, which wasn't good
-> > > > for VFIO.
-> > > 
-> > > I think temporarily revokes here means it is revoked from a dmabuf
-> > > perspective
-> > 
-> > My guess is that this is more of a "change owner" operation than a
-> > revoke operation.
-> > 
-> > The main issue here is that we have to guess the semantics instead of
-> > having a properly named and documented operation.
-> 
-> Apologies if the cover letter for the series and patch commit message (which
-> cover this) are unclear about the motivations and semantics.  On the commit
-> message, can you suggest clarifications:
-> 
-> "This is useful for lifecycle management, to reclaim VFIO PCI BAR
-> ranges previously delegated to a subordinate client process: by
-> revoking, the driver process can ensure that the loaned resources are
-> made inaccessible when the client is deemed "done".  The original
-> DMABUF is defunct, and BAR resources can then be safely re-exported
-> for use by new clients."
-> 
-> Given what I'll explain below, do give suggestions please.  There is more
-> context in the cover letter (the volume of which I didn't think appropriate
-> for the commit message).
+cdns_plat_pcie_probe() stores a struct cdns_plat_pcie pointer with
+platform_set_drvdata(). cdns_plat_pcie_shutdown() and the callbacks in
+cdns_pcie_pm_ops retrieve the same pointer with dev_get_drvdata() and
+use it as a struct cdns_pcie pointer. This makes them read phy_count
+and phy beyond the wrapper.
 
-1. Do not mix "driver" and "client" in the same description. For a
-non-native English speaker, "driver" has a very specific meaning in the
-context of the Linux kernel.
+struct cdns_plat_pcie only contains a pointer to struct cdns_pcie. Drop
+the redundant wrapper and store the struct cdns_pcie pointer directly.
 
-2. Explain the lifecycle in the commit message, and why "revoke", which
-is effectively what the importer does, is not sufficient.
+Fixes: bd22885aa188 ("PCI: cadence: Refactor driver to use as a core library")
+Suggested-by: Aksh Garg <a-garg7@ti.com>
+Signed-off-by: Linmao Li <lilinmao@kylinos.cn>
+---
+Changes in v2:
+- Drop the redundant struct cdns_plat_pcie wrapper (Aksh Garg).
+---
+ .../controller/cadence/pcie-cadence-plat.c    | 27 ++++++-------------
+ 1 file changed, 8 insertions(+), 19 deletions(-)
 
-3. The more you put in the cover letter, the less likely people are to
-read it.
+diff --git a/drivers/pci/controller/cadence/pcie-cadence-plat.c b/drivers/pci/controller/cadence/pcie-cadence-plat.c
+index 13edc6be21f5..4a24302cc5b2 100644
+--- a/drivers/pci/controller/cadence/pcie-cadence-plat.c
++++ b/drivers/pci/controller/cadence/pcie-cadence-plat.c
+@@ -14,14 +14,6 @@
+ 
+ #define CDNS_PLAT_CPU_TO_BUS_ADDR	0x0FFFFFFF
+ 
+-/**
+- * struct cdns_plat_pcie - private data for this PCIe platform driver
+- * @pcie: Cadence PCIe controller
+- */
+-struct cdns_plat_pcie {
+-	struct cdns_pcie        *pcie;
+-};
+-
+ static const struct of_device_id cdns_plat_pcie_of_match[];
+ 
+ static u64 cdns_plat_cpu_addr_fixup(struct cdns_pcie *pcie, u64 cpu_addr)
+@@ -36,9 +28,9 @@ static const struct cdns_pcie_ops cdns_plat_ops = {
+ static int cdns_plat_pcie_probe(struct platform_device *pdev)
+ {
+ 	const struct cdns_plat_pcie_of_data *data;
+-	struct cdns_plat_pcie *cdns_plat_pcie;
+ 	struct device *dev = &pdev->dev;
+ 	struct pci_host_bridge *bridge;
++	struct cdns_pcie *pcie;
+ 	struct cdns_pcie_ep *ep;
+ 	struct cdns_pcie_rc *rc;
+ 	bool is_rc;
+@@ -51,11 +43,6 @@ static int cdns_plat_pcie_probe(struct platform_device *pdev)
+ 	is_rc = data->is_rc;
+ 
+ 	pr_debug(" Started %s with is_rc: %d\n", __func__, is_rc);
+-	cdns_plat_pcie = devm_kzalloc(dev, sizeof(*cdns_plat_pcie), GFP_KERNEL);
+-	if (!cdns_plat_pcie)
+-		return -ENOMEM;
+-
+-	platform_set_drvdata(pdev, cdns_plat_pcie);
+ 	if (is_rc) {
+ 		if (!IS_ENABLED(CONFIG_PCIE_CADENCE_PLAT_HOST))
+ 			return -ENODEV;
+@@ -67,9 +54,9 @@ static int cdns_plat_pcie_probe(struct platform_device *pdev)
+ 		rc = pci_host_bridge_priv(bridge);
+ 		rc->pcie.dev = dev;
+ 		rc->pcie.ops = &cdns_plat_ops;
+-		cdns_plat_pcie->pcie = &rc->pcie;
++		pcie = &rc->pcie;
+ 
+-		ret = cdns_pcie_init_phy(dev, cdns_plat_pcie->pcie);
++		ret = cdns_pcie_init_phy(dev, pcie);
+ 		if (ret) {
+ 			dev_err(dev, "failed to init phy\n");
+ 			return ret;
+@@ -94,9 +81,9 @@ static int cdns_plat_pcie_probe(struct platform_device *pdev)
+ 
+ 		ep->pcie.dev = dev;
+ 		ep->pcie.ops = &cdns_plat_ops;
+-		cdns_plat_pcie->pcie = &ep->pcie;
++		pcie = &ep->pcie;
+ 
+-		ret = cdns_pcie_init_phy(dev, cdns_plat_pcie->pcie);
++		ret = cdns_pcie_init_phy(dev, pcie);
+ 		if (ret) {
+ 			dev_err(dev, "failed to init phy\n");
+ 			return ret;
+@@ -114,13 +101,15 @@ static int cdns_plat_pcie_probe(struct platform_device *pdev)
+ 			goto err_init;
+ 	}
+ 
++	platform_set_drvdata(pdev, pcie);
++
+ 	return 0;
+ 
+  err_init:
+  err_get_sync:
+ 	pm_runtime_put_sync(dev);
+ 	pm_runtime_disable(dev);
+-	cdns_pcie_disable_phy(cdns_plat_pcie->pcie);
++	cdns_pcie_disable_phy(pcie);
+ 
+ 	return ret;
+ }
 
-4. Commit messages should describe the patches themselves, since they
-are what remains visible in the git log, unlike the cover letter.
+base-commit: 9a9d18547ddc97a73d5d90cff4d5aef90bd8c15d
+-- 
+2.25.1
 
-5. I would call what you describe as "temporarily revoke" is actually "reclaim".
-
-Thanks
