@@ -1,123 +1,98 @@
-Received: from mail-4396.protonmail.ch (mail-4396.protonmail.ch [185.70.43.96])
+Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 88BD82BEFE8;
-	Mon, 14 Sep 2026 23:28:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.70.43.96
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 452B33BFAE2;
+	Tue, 15 Sep 2026 03:01:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789428535; cv=none; b=mO8LalUHGKN6tc8imHk9jYqhbqyvs3LIcec9HyCzlEp/WF0byubhifcl87gErR9mlXC3qbpC5sgFc0R/aoIT0tq0y0Wurt386mrZs26jn9zDYBzi79ArL8wAujRIwkpaULADDWxGvHh40gPnrwVOAANHmpwh750xlzZujf+MRpU=
+	t=1789441265; cv=none; b=oWy2NCDPlGB4og+uzQTK2gQC3T5FEfFyhHJsoySpFaO2Onm4giICo/oLBQyNfsGo9JOwatTim+Jb1mAaMArHDCmtDmbjdvSH9SdfKtfOc4Zl3iSHzCmdQRNWyCvoCVqvLqsf0yAUD1AAxmuT8bQQYwPQptb8gamzHwj+9F78DRA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789428535; c=relaxed/simple;
-	bh=so6+kpWSPAr+SaQAzS8bXa6DUJTn4TrJn7YN0EqL8rI=;
-	h=Date:To:From:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=A+1KcUP+m9fqNYriBy7m68XkMM6KkQhbK8ILqFhkI1YjsfiHTnFjrjkq11SeAyOtuG524lmyPx5G6L08Iy14kl26IJadA4DYTmXuDP85xId5qLpV74KvwGTgnlhf+qYk90YduS9HZMIvZ89NLImm4viuAaKL8OX0WrV1pUAGERQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=httpd.dev; spf=pass smtp.mailfrom=httpd.dev; dkim=pass (2048-bit key) header.d=httpd.dev header.i=@httpd.dev header.b=m262tNUn; arc=none smtp.client-ip=185.70.43.96
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=httpd.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=httpd.dev
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=httpd.dev header.i=@httpd.dev header.b="m262tNUn"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=httpd.dev;
-	s=protonmail3; t=1789428529; x=1789687729;
-	bh=yxoj++wFvVAwzImdOHquYq/PvmSP6Nwb1m+Fxi9E1PA=;
-	h=Date:To:From:Cc:Subject:Message-ID:In-Reply-To:References:
-	 Feedback-ID:From:To:Cc:Date:Subject:Reply-To:Feedback-ID:
-	 Message-ID:BIMI-Selector;
-	b=m262tNUn0qggQ6BzAr6L7CTMNd/qcn7PFIcSzWLEgQf6UWVQ5Rwi8wcNhMUddA0GJ
-	 o21obADMQC6PjFbfGNy/Qt1MxIz+0r0lUCjX5jC+NA2f+ddY9vkdxqPNatH4e07E9T
-	 UMDRj73N6reiM7ZmItw/MudS9bYjLfug+QW/i2oCRD4KGN5WUUkKs6I8Xg87j07s9F
-	 P3VkZgItjLu9PdklKh035FJBOMK94QTqbEtPmUfCGnEP+jgTEFDZxT1Q2AcJ0HNdWN
-	 hF4LeDW+lXOxWIWiEPJ46bhiT1DMdUOSLb1oMno7/fx7O/j1VX64JA3vkO8dKxZL/Y
-	 Y6zybbh5jNVrA==
-Date: Mon, 14 Sep 2026 23:28:45 +0000
-To: Andrea della Porta <andrea.porta@suse.com>
-From: Angel J <iamanaws@httpd.dev>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "regressions@lists.linux.dev" <regressions@lists.linux.dev>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-rpi-kernel@lists.infradead.org" <linux-rpi-kernel@lists.infradead.org>, "helgaas@kernel.org" <helgaas@kernel.org>, "robh@kernel.org" <robh@kernel.org>, "florian.fainelli@broadcom.com" <florian.fainelli@broadcom.com>
-Subject: Re: [REGRESSION] PCI: Dynamic OF node creation hangs on invalid bridge configuration
-Message-ID: <VaPKN3QbW3sGj8wePAvI_xD3twp_MQE4-4xeSbvgoQPVUnKDWKz0EWT_JiLehpmc6WOsCAoFOPs412Xhtthes_ZtvrgsKB4QB6QPz-XvRb4=@httpd.dev>
-In-Reply-To: <B6jXhRRiVu4TfgjwfVOLgxbh1xIciImKFVMmjkMRoDt5SO7WpM2M3gBqsjtnh3VhYobWdcNfqFrmlCdhqZBqUakSNkTeVNZYJnXLTx55kRI=@httpd.dev>
-References: <GXe6anuewkS4bLNwca3cYOmUxN9csc0TxLYGSBc1qNRmfrmvFlcmD62wEM23TxfzfuXAv4P3yvUv7pyraleARrL1Na-aN8w-t9uc1Igu8DA=@httpd.dev> <cFJoUZ6c5g5YbFCrwUnx6RlitHRl-0cS2fadDSFJNf9SgLreKutrmZj1r56hFh8ZUAbzvuCqBG4w9ZYAE8xAWP9HnLwbjMOBzac-iMnMMZc=@httpd.dev> <aqfgUUkZYZg6ZABF@apocalypse> <B6jXhRRiVu4TfgjwfVOLgxbh1xIciImKFVMmjkMRoDt5SO7WpM2M3gBqsjtnh3VhYobWdcNfqFrmlCdhqZBqUakSNkTeVNZYJnXLTx55kRI=@httpd.dev>
-Feedback-ID: 163474212:user:proton
-X-Pm-Message-ID: d2ba4b13e36e34d8135a55ca2599efddc5d2a885
+	s=arc-20240116; t=1789441265; c=relaxed/simple;
+	bh=22isUK75nn2g8V+Xx7QUG5p1IQhA79RN8XVPSAhVT08=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=WbeMu/XsBFRU35I0iri0YRAWbD+x0u7WZAzNJQQMt2dI4mSB6RXcd9WkTroXlUqoy4CTHKkdov8B9csXN5GmdBl+xjz8+W3zf6grWj+dgIi8GHlmRi4AiEkE1cvX1jfY5ySe7f7AWNcnfn0egx6HEDnHClk5TdYEXDo+xLdZ/oc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
+X-UUID: aac1c41ab0b111f19a56ed5b684f684d-20260915
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.19,REQID:9d5113f5-765c-4239-a4bb-2f7a9c31919e,IP:0,U
+	RL:0,TC:0,Content:-25,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
+	N:release,TS:-25
+X-CID-META: VersionHash:7db8b62,CLOUDID:b7ed3df321596c1d112fe4776ccf676b,BulkI
+	D:nil,BulkQuantity:0,SF:102|850|865|898,TC:nil,Content:0|15|50|99,EDM:-3,I
+	P:nil,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0
+	,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 2,SSN|SDN
+X-CID-BAS: 2,SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: aac1c41ab0b111f19a56ed5b684f684d-20260915
+X-User: lilinmao@kylinos.cn
+Received: from localhost.localdomain [(10.44.16.150)] by mailgw.kylinos.cn
+	(envelope-from <lilinmao@kylinos.cn>)
+	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
+	with ESMTP id 671556128; Tue, 15 Sep 2026 11:00:54 +0800
+From: Linmao Li <lilinmao@kylinos.cn>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>
+Cc: Rob Herring <robh@kernel.org>,
+	Aksh Garg <a-garg7@ti.com>,
+	Tom Joseph <tjoseph@cadence.com>,
+	Vladimir Oltean <vladimir.oltean@nxp.com>,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Linmao Li <lilinmao@kylinos.cn>
+Subject: [PATCH] PCI: cadence: Store the core controller in platform drvdata
+Date: Tue, 15 Sep 2026 11:00:44 +0800
+Message-Id: <20260915030044.4019259-1-lilinmao@kylinos.cn>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pgp-signature"; micalg=pgp-sha512; boundary="------19abcaf36a79a582b2fcee0af394648d3ca185f375b08afc4f8b0c2cc5776182"; charset=utf-8
+Content-Transfer-Encoding: 8bit
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---------19abcaf36a79a582b2fcee0af394648d3ca185f375b08afc4f8b0c2cc5776182
-Content-Type: multipart/mixed;boundary=---------------------7de5e8224e3f8cd20eea8e5ae1dd0491
+cdns_plat_pcie_probe() stores a struct cdns_plat_pcie pointer with
+platform_set_drvdata(). cdns_plat_pcie_shutdown() and the callbacks in
+cdns_pcie_pm_ops retrieve the same pointer with dev_get_drvdata() and
+use it as a struct cdns_pcie pointer. This makes them read phy_count
+and phy beyond the wrapper.
 
------------------------7de5e8224e3f8cd20eea8e5ae1dd0491
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain;charset=utf-8
+Store the wrapped struct cdns_pcie pointer instead.
 
-Ok, here it is...
+Fixes: bd22885aa188 ("PCI: cadence: Refactor driver to use as a core library")
+Signed-off-by: Linmao Li <lilinmao@kylinos.cn>
+---
+ drivers/pci/controller/cadence/pcie-cadence-plat.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-I tested this quirk on Linux 6.18.44 with CONFIG_PCI_DYNAMIC_OF_NODES=3Dy,
-and it boots without either OF fix. The diff below omits the test logging.
-
-PCI_FIXUP_HEADER runs after the resources have been parsed using the
-original header type, and changing hdr_type also affects configuration
-restore. I don't know enough about this part of PCI to judge whether
-that's safe, so I'll wait for your advice before submitting it as a patch.
-
-Thanks,
-Angel J
-
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index de9bbccda..57df88a38 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -291,6 +291,22 @@ static int __init pci_apply_final_quirks(void)
- }
- fs_initcall_sync(pci_apply_final_quirks);
- =
-
-
-+/*
-+ * On the Dell XPS 8940, 8086:4c43 reports a PCI-to-PCI bridge but has no
-+ * downstream bus. Use host-bridge class and a normal header so that
-+ * pci_is_bridge() does not send it through bridge scanning.
-+ */
-+static void quirk_intel_4c43_host_bridge(struct pci_dev *dev)
-+{
-+	if ((dev->class >> 8) !=3D PCI_CLASS_BRIDGE_PCI ||
-+	    dev->hdr_type !=3D PCI_HEADER_TYPE_BRIDGE)
-+		return;
+diff --git a/drivers/pci/controller/cadence/pcie-cadence-plat.c b/drivers/pci/controller/cadence/pcie-cadence-plat.c
+index 13edc6be21f5..7fef237cdbb7 100644
+--- a/drivers/pci/controller/cadence/pcie-cadence-plat.c
++++ b/drivers/pci/controller/cadence/pcie-cadence-plat.c
+@@ -55,7 +55,6 @@ static int cdns_plat_pcie_probe(struct platform_device *pdev)
+ 	if (!cdns_plat_pcie)
+ 		return -ENOMEM;
+ 
+-	platform_set_drvdata(pdev, cdns_plat_pcie);
+ 	if (is_rc) {
+ 		if (!IS_ENABLED(CONFIG_PCIE_CADENCE_PLAT_HOST))
+ 			return -ENODEV;
+@@ -114,6 +113,8 @@ static int cdns_plat_pcie_probe(struct platform_device *pdev)
+ 			goto err_init;
+ 	}
+ 
++	platform_set_drvdata(pdev, cdns_plat_pcie->pcie);
 +
-+	dev->class =3D (PCI_CLASS_BRIDGE_HOST << 8) | (dev->class & 0xff);
-+	dev->hdr_type =3D PCI_HEADER_TYPE_NORMAL;
-+}
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x4c43, quirk_intel_4c43_ho=
-st_bridge);
-+
- /*
-  * Decoding should be disabled for a PCI device during BAR sizing to avoi=
-d
-  * conflict. But doing so may cause problems on host bridge and perhaps o=
-ther
+ 	return 0;
+ 
+  err_init:
 
------------------------7de5e8224e3f8cd20eea8e5ae1dd0491--
-
---------19abcaf36a79a582b2fcee0af394648d3ca185f375b08afc4f8b0c2cc5776182
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: ProtonMail
-
-wrsEARYKAG0Fgmqogx0JEBoBbwppzUxnRRQAAAAAABwAIHNhbHRAbm90YXRp
-b25zLm9wZW5wZ3Bqcy5vcmes3p/1OSpN6LMhObrgEYZy+8qMUO+52BFBVbvV
-KvCQQRYhBEAFf9htFyVnqZzmVhoBbwppzUxnAACY0wD/SFb48faYSk4S81Rn
-a+nMZZ6WbytcUHJBks8/2VhxtfcA/jdk2n5GJvzeuyWgZAPW5fl9UDEyWQuO
-Mti2YQDwnA4D
-=zn2q
------END PGP SIGNATURE-----
-
-
---------19abcaf36a79a582b2fcee0af394648d3ca185f375b08afc4f8b0c2cc5776182--
+base-commit: 9a9d18547ddc97a73d5d90cff4d5aef90bd8c15d
+-- 
+2.25.1
 
