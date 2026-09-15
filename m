@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6AA383B27FF;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 777213B42D1;
 	Tue, 15 Sep 2026 14:24:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789482262; cv=none; b=Ef2fsLMRaBi4djSFLRd96D15RUFxBnwhMrxOtpdZ8kf7+vwVgFDxzNZsWqDtP7SpvxW1AMJQbmGlLgDUU831O13svj1fqE3m+m/ycb186fxGrvH7X3q0wrBXRRQgUb7dNAiWvMo7qNwd3Hit4AbxXy+WBSTFjMRKpdxOP+MR5eY=
+	t=1789482262; cv=none; b=s93WK+Y3IuVgF0aBWInpJyP7V7sr+c7qc0PVNI+N7x7W0IR/HLbpDPurMaQyy9eChFOLwaCZfAuiLOti7qGTL9rZmNaAbT5bBiSDIt06G1NBjLpMhKQaRn2ccqufoNDRglOWK+ZAnaVQBJDiXYRT4faLRh0eruXcfoBKE88JgCU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1789482262; c=relaxed/simple;
-	bh=EzEipVhfzm1eKNikYmDIvFcSrVs4H5/sTMHoZJa+42U=;
-	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=FFFHVgOKM40vqmzW7KIAKADsHONAQg9EK8YnmUYBQjIr/zgFlAfNNL3Q3BNa/Eyd5rpOHv5GcVLT6WLDHfBg+S3+OMJyL6KiRrdvxrjvpR3mpQF2egsRsgRnI6+08wBnqi3wvDe2bfoTbYjYhIxN61v7mEwUWI76I0APKSJkmI4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IbmVFMdv; arc=none smtp.client-ip=10.30.226.201
+	bh=+R5FG39SnHg6KZDOCqgXHNXuEhhxnh8leOY9t30V47w=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=cRGiGLpQn335YB6IjFX24uca9DkMJl4keYNa5A8FHi0WqYI0OyStabOgNU6e1XlCVGuNYw51Q5C9t/4a3XeuWhPTVRKlVAXkWDJViTcmWwPdc6czIU9Ez0sgWyXvgtKjSV50woI/fzYeFyVnGcHN2Ca4I+LySfcCwzwKI9MeDCs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CULVrXyl; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IbmVFMdv"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id F1A04C2BCB9;
-	Tue, 15 Sep 2026 14:24:21 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CULVrXyl"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 42293C2BCFD;
+	Tue, 15 Sep 2026 14:24:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1789482262;
-	bh=EzEipVhfzm1eKNikYmDIvFcSrVs4H5/sTMHoZJa+42U=;
-	h=From:Subject:Date:To:Cc:Reply-To:From;
-	b=IbmVFMdvqU2wQbYl13IKSSaUnwHOaXC/KBf+O5idG8m0eXF57nSwU21zXj8NWKEd3
-	 m5X474MLRQn2GirsCJ+r5r94new6qaEn+ECmtstz7H4cRNX4vFPCpO5+U0HD6h2jmq
-	 tHFafVdq7MDw55VceBhJl5BSLrRMg0b9MwBnq9CUZAiXzB9pE8HROUF2ft8wgWxwdk
-	 PRSl0t7P4hgbmk6fcgSonRhvgWaYErzuLjfwnbWq6rwQcDxBZWEI1L3z4JqM7xmy1G
-	 6Oy+g97ToM/o0YAsds/9zgBSm+AhkJxLLxYiRsLJDQQDcgI/9CSv+n0BAZp27t5oup
-	 uaV+yDZ0QSrwg==
+	bh=+R5FG39SnHg6KZDOCqgXHNXuEhhxnh8leOY9t30V47w=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
+	b=CULVrXylUvPqH2F+BxTIYpIOvTptIftYRurNXLXtqVGSgzNOqFyOWcJ4HuPS8MsaM
+	 TCf9UP838Zo4vgix1uMKLIq2RpLAQ3SfVPcOZuFDnim6KJzkY0A7xZPNUXqzWYCQLw
+	 beIRro/KrpXE05q+Xhqfj6rEdD+9h9iHa/AnpapeX9wKYtg1AU+/MNCcibjk1W/kCT
+	 Orrz3P/ihh8UpYIm1MdpGuHbJxPQpAXujXcIr8L0GfkqFxi/EEx3QUMtVMRHDXC3vd
+	 ej1WRvQcFOprq4+0RZYky673ybju2CzOVoqg51ljwsENxUPI1KXAlPKfEWSYi5LTug
+	 jhIheGKt2s8Yg==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA1F2C88E7B;
-	Tue, 15 Sep 2026 14:24:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B4ACC982C3;
+	Tue, 15 Sep 2026 14:24:22 +0000 (UTC)
 From: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>
-Subject: [PATCH 0/5] Rework M.2 Bluetooth instantiation using the auxiliary
- bus
-Date: Tue, 15 Sep 2026 16:24:01 +0200
-Message-Id: <20260915-pci-m2-bt-rework-v1-0-3c7d9cf9c010@oss.qualcomm.com>
+Date: Tue, 15 Sep 2026 16:24:05 +0200
+Subject: [PATCH 4/5] Bluetooth: hci_qca: Drop serdev based M.2 power
+ sequencing code
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -40,12 +40,10 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-X-B4-Tracking: v=1; b=H4sIAAJVqWoC/y2NyxKCMAxFf6XTtWFqQURW/ofDorRBq5ZCw8OR8
- d8t6CYzJ7k5d+GEwSLxki084GTJ+jbCfse4vqn2imBNZC6FzEUhcui0BSehHiDg7MMDjoXRUp9
- k3gjB41sXsLGvTXmpfkxjfUc9rJ5/ImA/xq7hF+MOidTWVbKt6SQycL59K5htwGc8w5SDAFPog
- 8hknWJjzp4o6Uf11N65JI7VXStCWBd2KNl0TFIIes+rz+cLdgSQaeoAAAA=
-X-Change-ID: 20260806-pci-m2-bt-rework-78dc2c926f00
+Content-Transfer-Encoding: 7bit
+Message-Id: <20260915-pci-m2-bt-rework-v1-4-3c7d9cf9c010@oss.qualcomm.com>
+References: <20260915-pci-m2-bt-rework-v1-0-3c7d9cf9c010@oss.qualcomm.com>
+In-Reply-To: <20260915-pci-m2-bt-rework-v1-0-3c7d9cf9c010@oss.qualcomm.com>
 To: Marcel Holtmann <marcel@holtmann.org>, 
  Luiz Augusto von Dentz <luiz.dentz@gmail.com>, 
  Bartosz Golaszewski <brgl@kernel.org>, 
@@ -61,16 +59,16 @@ Cc: linux-kernel@vger.kernel.org, linux-bluetooth@vger.kernel.org,
  Andy Shevchenko <andriy.shevchenko@linux.intel.com>, 
  Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=openpgp-sha256; l=3270;
+X-Developer-Signature: v=1; a=openpgp-sha256; l=3169;
  i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
- bh=EzEipVhfzm1eKNikYmDIvFcSrVs4H5/sTMHoZJa+42U=;
- b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBqqVURPnvp+NVOzzUOhYTE7PYDvNyZ8d6FiMJHq
- Cxi+0zYGm+JATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCaqlVEQAKCRBVnxHm/pHO
- 9Q7xCACaUoZfOItFE+qGdxY6A0KW2E50cIXF16Z1DnTqX0GAY3sUD63UVop5Z1l5IVoUO/RtW6D
- pwEsGGzNPx36w/iX8PZUg66bxzAS03dMJHV9PPsslkOFlo/oKFlMGXWrJTXzW8UEG00XjQNtvKC
- wzWYrG4rp9Y2oOyTzGokc/u4HwlJkELH6Dxa+VVgUD0pxaHbJ9FSmYDSpPxT7LT+MxrtuvXzIDR
- ytjVTroWxgrzA/FMfLFPuUpJWKKeVHGg/MPicsp3JkS5nbNKmKq57QTpDlWq7oQa9TJlPbnF6zl
- Esap6akr1qO7C3gtDbZLQAoyogv0RNr59I5BJ9IIJwL/DCgY
+ bh=/fJwYLZay9p/+8hufmw3DfTVYzGPwzb16kQvam8A42M=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBqqVUTtZ7RZSsKXdDqzaK7jO9pzNTf8LCLVIz5F
+ nkkNJaC+JGJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCaqlVEwAKCRBVnxHm/pHO
+ 9fdpB/9rTOAZq0xBDkNYCJ0LlmndHPbMZKMOfVyx+tex1e181mCFYrUNoHkz0G2eNZXoaQEQdqK
+ Ssz/T9RxMt/DGALf7xE1ovoDcIZoAeesXw7nmwwEJNjb1vIDVbZ2xhX9tLD6Nq8WSDC19AZuLuj
+ uHcJbXwYS54NunvDxeTZtFxJmc3krM4m9ltNLSemmowAXeLMzZhqOXX+vNWKSwzc+WPfHQbGxS1
+ K23L7/UQwmJaTMb3vN3mz35bEpNF3Qa5BrPumgZzOfGTufyVZ8u/p/3jvxBLEA44T5tuE+x7UPN
+ OIOQMOsFjbiNW/GpXpSrj1fkbZhhtMvEpv9AtUGChwSfQ1c7
 X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
  fpr=C668AEC3C3188E4C611465E7488550E901166008
 X-Endpoint-Received: by B4 Relay for
@@ -78,69 +76,98 @@ X-Endpoint-Received: by B4 Relay for
 X-Original-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 Reply-To: manivannan.sadhasivam@oss.qualcomm.com
 
-Hi,
+From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 
-This series reworks the PCIe M.2 Bluetooth instantiation using the auxiliary
-bus.
+Bluetooth interface in M.2 modules is now enumerated using an auxiliary
+device instead of serdev. The power sequencing driver now allocates an
+auxiliary device for the Bluetooth interface whenever a compatible
+M.2 module shows up over PCIe. And the auxiliary device gets bind to this
+hci_qca driver using the existing auxiliary driver matching logic.
 
-The Bluetooth interface of the QCA2066, WCN6855, WCN7850 and NXP 88W8987
-M.2 modules is accessed over UART, but the modules show up at runtime over
-PCIe and are not described in firmware like devicetree. To make the serdev
-bus match the Bluetooth driver, the power sequencing driver was creating a
-devicetree node at runtime using an of_changeset. But, creating a node just for
-driver matching is not recommended as per Krzysztof [1].
+Earlier the same modules were brought up by fabricating a bluetooth
+node under the UART controller, so that the serdev bus matched this
+driver, and qca_serdev_probe grabbed the "uart" sequencer when the M.2
+connector was reachable over the OF graph. That node is no longer
+created, so the serdev driver never binds for an M.2 module.
 
-So this series reworks the instantiation to use the auxiliary bus instead. The
-power sequencing driver still allocates the UART serdev, but now hands it over
-through an auxiliary device along with the power sequencing target. So this
-series adds auxiliary driver support to hci_qca and btnxpuart drivers binding to
-this device and brings up the controller over the existing UART transport.
-Finally, it drops the serdev based M.2 code from both BT drivers.
-
-Dependency
-==========
-
-This series depends on Monza series from Loic [2] and reuses its
-pwrseq_is_controllable() API.
-
-[1] https://lore.kernel.org/linux-pci/768142f0-2638-41f3-a34f-dc80bb99eb7f@kernel.org
-[2] https://lore.kernel.org/all/20260904-monza-wireless-v6-0-d8c5042b3efd@oss.qualcomm.com
+Hence, remove the serdev based M.2 power sequencing code.
 
 Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 ---
-Manivannan Sadhasivam (5):
-      Bluetooth: hci_qca: Add auxiliary driver for PCIe M.2 modules
-      Bluetooth: btnxpuart: Add auxiliary driver for PCIe M.2 modules
-      power: sequencing: pcie-m2: Create auxiliary device for the M.2 BT interface
-      Bluetooth: hci_qca: Drop serdev based M.2 power sequencing code
-      Bluetooth: btnxpuart: Drop serdev based M.2 power sequencing code
+ drivers/bluetooth/hci_qca.c | 37 -------------------------------------
+ 1 file changed, 37 deletions(-)
 
- MAINTAINERS                               |   1 +
- drivers/bluetooth/Kconfig                 |   2 +
- drivers/bluetooth/btnxpuart.c             | 193 +++++++++++++++++++-----------
- drivers/bluetooth/hci_qca.c               | 138 +++++++++++++++------
- drivers/power/sequencing/Kconfig          |   2 +-
- drivers/power/sequencing/pwrseq-pcie-m2.c | 137 +++++++++++----------
- include/linux/pwrseq/pcie-m2-bt.h         |  38 ++++++
- 7 files changed, 343 insertions(+), 168 deletions(-)
----
-base-commit: e5e04726cdd043e309677071ab1b65a4b18f422b
-change-id: 20260806-pci-m2-bt-rework-78dc2c926f00
-prerequisite-message-id: 20260904-monza-wireless-v6-0-d8c5042b3efd@oss.qualcomm.com
-prerequisite-patch-id: c4e777757ca9358cc4dd35e23738cd7dc1ead1a0
-prerequisite-patch-id: 09600595c2e80b12eda3aae39af192847d0f03d0
-prerequisite-patch-id: afe88432c4d459e9094c0e6dd31ebeab6c9f2f08
-prerequisite-patch-id: 60fd7b13447ccad7546fa8e5b5609d8f133f788f
-prerequisite-patch-id: 61dcbe55fdb6f33a3229c197f16a678785aa16d8
-prerequisite-patch-id: 14099e5c573d7c41b899c3f9bb9126aa23f1553e
-prerequisite-patch-id: 647ee15b77671054b4bb012afa9ba8694b6c86c5
-prerequisite-patch-id: c3a774cae81a6fad287731a38f1b76c7e8babc4c
-prerequisite-patch-id: 18b0fa62060a1a2c96e76051944d692699035572
-prerequisite-patch-id: df02ab167976ac1f0d5a38c78e559a7372b16c1f
-prerequisite-patch-id: 3f2dddd108677252a539cdb1eb661912836289ca
+diff --git a/drivers/bluetooth/hci_qca.c b/drivers/bluetooth/hci_qca.c
+index 15cc6cca9057..3a348f4153e7 100644
+--- a/drivers/bluetooth/hci_qca.c
++++ b/drivers/bluetooth/hci_qca.c
+@@ -26,7 +26,6 @@
+ #include <linux/gpio/consumer.h>
+ #include <linux/module.h>
+ #include <linux/of.h>
+-#include <linux/of_graph.h>
+ #include <linux/acpi.h>
+ #include <linux/platform_device.h>
+ #include <linux/pwrseq/consumer.h>
+@@ -2384,34 +2383,6 @@ static int qca_init_regulators(struct qca_serdev *qcadev,
+ 	return 0;
+ }
+ 
+-static void qca_serdev_put_pwrseq(void *data)
+-{
+-	pwrseq_put(data);
+-}
+-
+-static int qca_serdev_get_m2_pwrseq(struct qca_serdev *qcadev)
+-{
+-	struct serdev_device *serdev = qcadev->serdev_hu.serdev;
+-	struct pwrseq_desc *pwrseq;
+-
+-	if (!of_graph_is_present(dev_of_node(&serdev->ctrl->dev)))
+-		return 0;
+-
+-	/* The pwrseq is looked up on the serdev controller (which holds the
+-	 * OF graph to the M.2 connector), but its lifetime must follow this
+-	 * serdev consumer device, not the controller. So acquire it with the
+-	 * non-devres pwrseq_get() and release it via a devres action bound to
+-	 * &serdev->dev instead of using devm_pwrseq_get(&serdev->ctrl->dev).
+-	 */
+-	pwrseq = pwrseq_get(&serdev->ctrl->dev, "uart");
+-	if (IS_ERR(pwrseq))
+-		return PTR_ERR(pwrseq);
+-
+-	qcadev->pwrseq = pwrseq;
+-
+-	return devm_add_action_or_reset(&serdev->dev, qca_serdev_put_pwrseq, pwrseq);
+-}
+-
+ static int qca_serdev_probe(struct serdev_device *serdev)
+ {
+ 	struct qca_serdev *qcadev;
+@@ -2442,10 +2413,6 @@ static int qca_serdev_probe(struct serdev_device *serdev)
+ 	else
+ 		qcadev->btsoc_type = QCA_ROME;
+ 
+-	err = qca_serdev_get_m2_pwrseq(qcadev);
+-	if (err)
+-		return err;
+-
+ 	switch (qcadev->btsoc_type) {
+ 	case QCA_WCN3950:
+ 	case QCA_WCN3988:
+@@ -2455,10 +2422,6 @@ static int qca_serdev_probe(struct serdev_device *serdev)
+ 	case QCA_WCN6750:
+ 	case QCA_WCN6855:
+ 	case QCA_WCN7850:
+-		/* M.2 connector modules are powered by the pwrseq acquired above. */
+-		if (qcadev->pwrseq)
+-			break;
+-
+ 		if (!device_property_present(&serdev->dev, "enable-gpios")) {
+ 			/*
+ 			 * Backward compatibility with old DT sources. If the
 
-Best regards,
---  
-மணிவண்ணன் சதாசிவம்
+-- 
+2.43.0
 
 
