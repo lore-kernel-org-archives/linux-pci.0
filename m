@@ -1,53 +1,83 @@
-Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qk2-f13.google.com (mail-qk2-f13.google.com [74.125.230.205])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 452B33BFAE2;
-	Tue, 15 Sep 2026 03:01:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C0FB213254
+	for <linux-pci@vger.kernel.org>; Tue, 15 Sep 2026 03:10:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.230.205
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789441265; cv=none; b=oWy2NCDPlGB4og+uzQTK2gQC3T5FEfFyhHJsoySpFaO2Onm4giICo/oLBQyNfsGo9JOwatTim+Jb1mAaMArHDCmtDmbjdvSH9SdfKtfOc4Zl3iSHzCmdQRNWyCvoCVqvLqsf0yAUD1AAxmuT8bQQYwPQptb8gamzHwj+9F78DRA=
+	t=1789441846; cv=none; b=rYt++ZIy/QkCYt6Eb1+4BRL3ZDKibvdFzk/I4Mf/E9Bka6A8e81U7X7Rr77GiP0E/srzl8bkkeVp2mItSVNzer/08NhBSCBu6bt50fb8wVDwPNjHncRsoTieoDDdjCWlWl16DNaioZHBYdyYo2xo4STH+ILXIYZ8f3D67Wygiho=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789441265; c=relaxed/simple;
-	bh=22isUK75nn2g8V+Xx7QUG5p1IQhA79RN8XVPSAhVT08=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=WbeMu/XsBFRU35I0iri0YRAWbD+x0u7WZAzNJQQMt2dI4mSB6RXcd9WkTroXlUqoy4CTHKkdov8B9csXN5GmdBl+xjz8+W3zf6grWj+dgIi8GHlmRi4AiEkE1cvX1jfY5ySe7f7AWNcnfn0egx6HEDnHClk5TdYEXDo+xLdZ/oc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
-X-UUID: aac1c41ab0b111f19a56ed5b684f684d-20260915
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.19,REQID:9d5113f5-765c-4239-a4bb-2f7a9c31919e,IP:0,U
-	RL:0,TC:0,Content:-25,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
-	N:release,TS:-25
-X-CID-META: VersionHash:7db8b62,CLOUDID:b7ed3df321596c1d112fe4776ccf676b,BulkI
-	D:nil,BulkQuantity:0,SF:102|850|865|898,TC:nil,Content:0|15|50|99,EDM:-3,I
-	P:nil,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0
-	,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: aac1c41ab0b111f19a56ed5b684f684d-20260915
-X-User: lilinmao@kylinos.cn
-Received: from localhost.localdomain [(10.44.16.150)] by mailgw.kylinos.cn
-	(envelope-from <lilinmao@kylinos.cn>)
-	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
-	with ESMTP id 671556128; Tue, 15 Sep 2026 11:00:54 +0800
-From: Linmao Li <lilinmao@kylinos.cn>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>
-Cc: Rob Herring <robh@kernel.org>,
-	Aksh Garg <a-garg7@ti.com>,
-	Tom Joseph <tjoseph@cadence.com>,
-	Vladimir Oltean <vladimir.oltean@nxp.com>,
+	s=arc-20240116; t=1789441846; c=relaxed/simple;
+	bh=f7Iqm23CyhCZNlQSgebFwaEFnlASpLDGTdD+2Mkgv+w=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Hv9xqxUWKsIiKu42Ftw63lJqFjuRLe1nke4tpa1pGw2oV8j/hzQ9v3HSLmJ0f3uOg89bjRrI0yjiLb91UHUnARZDrt10kb1oC+OmDHHIB8pTseDiVOREI5HQvBZkX3K2pTr1pd0h+83n7Q03Tfth5QVD9stTvuVC1YHp4iWmOJE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=riscstar.com; spf=pass smtp.mailfrom=riscstar.com; dkim=pass (2048-bit key) header.d=riscstar-com.20251104.gappssmtp.com header.i=@riscstar-com.20251104.gappssmtp.com header.b=Aqct1f6s; arc=none smtp.client-ip=74.125.230.205
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=riscstar.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=riscstar.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=riscstar-com.20251104.gappssmtp.com header.i=@riscstar-com.20251104.gappssmtp.com header.b="Aqct1f6s"
+Received: by mail-qk2-f13.google.com with SMTP id d75a77b69052e-52fb76c9df1so35856271cf.3
+        for <linux-pci@vger.kernel.org>; Mon, 14 Sep 2026 20:10:42 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=riscstar-com.20251104.gappssmtp.com; s=20251104; t=1789441842; x=1790046642; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=YKF9FJ3sfZcV6ZcqIr7QU8JMz0GcZ7UOcl6ndWiktF8=;
+        b=Aqct1f6sH9d1/GpE3gqjmQYrRSIij4gsXYiEUWF4QZIYa8YmmUWqqw0zFKn3q1E5Ns
+         hHff7zcaWFDTNzq3vmlxax6FJu0JebP7XQDRzcbmafCHdxEGiGfp7AMp4jWt8P8VNJF3
+         JeLbodxr1j7nKoNS75lbXaXb2WCApj1gBb6JMEMUjNsdO64PyZQoQ70Q017qHrEhQUw1
+         +c8eKQ03JWKMOo1PB0CmMs6HPin0fVrJGEi+Z7MYm7Fhz+GY7AC8RaLspwMsj/P27D0p
+         W6YLSfQaj58riIqnqQlM3YCJYz/lgsMjrTazIUFjUYbetBLJ/hidhwRgVaDd03qMGD4O
+         bxRQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1789441842; x=1790046642;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=YKF9FJ3sfZcV6ZcqIr7QU8JMz0GcZ7UOcl6ndWiktF8=;
+        b=yxx5GYJnyimuXhjuZhYWwIP9J7EvcDc2Crzf7Ov8Ndz3kl1j68PCXmgSLYRRxWqDID
+         b4PwCQYmL4HAoPn7a6tC93392G1ExpBZZNUGeuCuzuiCTewBYOeryAbqA67e2115UOvG
+         egtvc8/9LVaVexZerJIimVlKk2azhBWmR4Za8LRtjZiTFyPdk2bRU+79Oow3fxcyDz2A
+         LaH6WTBp3mdgVc2716P9DWarUvnHis3TNQ/32C90xZnH+oNltf1ei4waDpB2tNNd57n2
+         s5vB/CeCp20RuD44y8tJ0655hkPlVcwykuvVi3qv7TOFPEGXHhtr0aGRUSf4h/w45/Uo
+         ocsw==
+X-Forwarded-Encrypted: i=1; AKwUvBzUfnDT0LtnV5+rPn79/nic5BzosqvZLU6WZMxf3Kn632z/opbcIBhvjxrZXBPctjxhLVZdyUP0C9Q=@vger.kernel.org
+X-Gm-Message-State: AFuF++mqRqdsQU491d2fURq+ZP+osLEUiLzgeUhwfFEPkiQWzHbTQado
+	e/9DBBflx+f+ecY+lCdjPjCJZKcoyUXAnhzo+7QdTscGBC3qSavXbY5u/vrb89r64rM=
+X-Gm-Gg: AYBFou1nDzosRadmAfeFQkkhIuJQA48UKkzgdUiTnMgjd7OrVBO7mBkN5WDlqGdWEsT
+	uO8XqE671+ec/D8/x10eJHPYMp3HbS0/wYF2C42tKRWpq+cHlf2BBIe8LiRtI4/45y23ZFHtHhS
+	QCK9sjEUbrKpWgMaZl2OVUFynr1BvPabaa1WIMC0lTMxtuimJdAly7Cdr1dif4eyN7Ld4apyC8e
+	PESMRR3wMljgEPoSpp4qd+M7sF2RgfUj4ejrzQ3GzNjH5bw1T44I9EqutIXTeBcBW9LdguDNyhc
+	oWvXUwBRIHFEpkhggQMX/EBUqt3Y2IL6P1HbQhz8lh02+UTYoQrWu369RZR+crVbH62r9qZW3He
+	YPVOWHdg86MZ8wYK7GPN8AGnwPd2nhwOiC8+OPX9+ZlQ9oF/W3L6D0gKFpXqXUUEtNirq9Mhtxz
+	xXLO0ix3VuwhGenlzmRZzwOQHexOW4ErTAHVT7UmOQTqJTt3IFX3xlfvP13Iead31MwnCW6EHlh
+	JU=
+X-Received: by 2002:a05:622a:2285:b0:530:fe26:50c8 with SMTP id d75a77b69052e-5310d0308c1mr80574991cf.39.1789441842008;
+        Mon, 14 Sep 2026 20:10:42 -0700 (PDT)
+Received: from zippy.localdomain ([73.62.185.64])
+        by smtp.gmail.com with ESMTPSA id d75a77b69052e-530ce4ec298sm118563841cf.16.2026.09.14.20.10.40
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 14 Sep 2026 20:10:41 -0700 (PDT)
+From: Alex Elder <elder@riscstar.com>
+To: robh@kernel.org,
+	krzk+dt@kernel.org,
+	conor+dt@kernel.org,
+	arnd@arndb.de,
+	gregkh@linuxfoundation.org,
+	bhelgaas@google.com,
+	andersson@kernel.org,
+	konradybcio@kernel.org,
+	abelvesa@kernel.org
+Cc: daniel@riscstar.com,
+	mohdayaa@qti.qualcomm.com,
+	lbiancon@qti.qualcomm.com,
+	devicetree@vger.kernel.org,
 	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Linmao Li <lilinmao@kylinos.cn>
-Subject: [PATCH] PCI: cadence: Store the core controller in platform drvdata
-Date: Tue, 15 Sep 2026 11:00:44 +0800
-Message-Id: <20260915030044.4019259-1-lilinmao@kylinos.cn>
-X-Mailer: git-send-email 2.25.1
+	linux-arm-msm@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v2 0/3] PCI: introduce TC9564 misc driver
+Date: Mon, 14 Sep 2026 22:10:34 -0500
+Message-ID: <20260915031038.1087264-1-elder@riscstar.com>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -56,43 +86,56 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-cdns_plat_pcie_probe() stores a struct cdns_plat_pcie pointer with
-platform_set_drvdata(). cdns_plat_pcie_shutdown() and the callbacks in
-cdns_pcie_pm_ops retrieve the same pointer with dev_get_drvdata() and
-use it as a struct cdns_pcie pointer. This makes them read phy_count
-and phy beyond the wrapper.
+The Toshiba TC9564 is specialized SoC that implements a PCIe switch as
+well as an Ethernet AVB/TSN bridge.  It also implements other functions,
+including a reset and clock controller, an address translation unit, and
+a few other devices.  PCIe BARs provide access to registers that manage
+these IP blocks, and the SoC is modeled using a PCI endpoint bus in
+devicetree.  This allows the IP blocks to be bound to platform drivers
+using MMIO through the PCI BARs.
 
-Store the wrapped struct cdns_pcie pointer instead.
+This series introduces the simple PCI driver necessary to implement the
+PCI endpoint bus.  It enables the device, enables master access, and
+then scans the devicetree subnodes to discover any devices defined
+within the endpoint buses.
 
-Fixes: bd22885aa188 ("PCI: cadence: Refactor driver to use as a core library")
-Signed-off-by: Linmao Li <lilinmao@kylinos.cn>
----
- drivers/pci/controller/cadence/pcie-cadence-plat.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+The driver is placed in the "misc" directory, following the practice
+of other PCI endpoint bus drivers.
 
-diff --git a/drivers/pci/controller/cadence/pcie-cadence-plat.c b/drivers/pci/controller/cadence/pcie-cadence-plat.c
-index 13edc6be21f5..7fef237cdbb7 100644
---- a/drivers/pci/controller/cadence/pcie-cadence-plat.c
-+++ b/drivers/pci/controller/cadence/pcie-cadence-plat.c
-@@ -55,7 +55,6 @@ static int cdns_plat_pcie_probe(struct platform_device *pdev)
- 	if (!cdns_plat_pcie)
- 		return -ENOMEM;
- 
--	platform_set_drvdata(pdev, cdns_plat_pcie);
- 	if (is_rc) {
- 		if (!IS_ENABLED(CONFIG_PCIE_CADENCE_PLAT_HOST))
- 			return -ENODEV;
-@@ -114,6 +113,8 @@ static int cdns_plat_pcie_probe(struct platform_device *pdev)
- 			goto err_init;
- 	}
- 
-+	platform_set_drvdata(pdev, cdns_plat_pcie->pcie);
-+
- 	return 0;
- 
-  err_init:
+					-Alex
 
-base-commit: 9a9d18547ddc97a73d5d90cff4d5aef90bd8c15d
+Note: to work correctly, this series depends on this:
+  https://lore.kernel.org/lkml/20260910021919.3421449-1-elder@riscstar.com/
+
+Between version 1 and version 2:
+- Updated the block diagram in the binding to include BAR2 and SRAM
+- Use KBUILD_MODNAME for the driver name
+- Removed bogus initialization of pci_driver->driver field
+- Added the third patch, which defines pci-ep-bus DTS information.
+- Now based on the Qualcomm for-next branch
+
+Version 1 is available here:
+  https://lore.kernel.org/lkml/20260813222943.1655453-1-elder@riscstar.com/
+
+
+Alex Elder (3):
+  dt-bindings: misc: introduce pci1179,0220.yaml
+  misc: tc9564: introduce base PCI driver
+  arm64: dts: qcom: qcs6490-rb3gen2: add endpoint buses
+
+ .../bindings/misc/pci1179,0220.yaml           | 154 ++++++++++++++++++
+ MAINTAINERS                                   |   7 +
+ arch/arm64/boot/dts/qcom/qcs6490-rb3gen2.dts  |  30 ++++
+ drivers/misc/Kconfig                          |  10 ++
+ drivers/misc/Makefile                         |   1 +
+ drivers/misc/tc9564-pci.c                     |  83 ++++++++++
+ drivers/pci/quirks.c                          |   1 +
+ 7 files changed, 286 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/misc/pci1179,0220.yaml
+ create mode 100644 drivers/misc/tc9564-pci.c
+
+
+base-commit: 27b3028b7d65cbc44fc5b60d2e977ce55cf186f1
 -- 
-2.25.1
+2.53.0
 
