@@ -1,159 +1,162 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qv2-f12.google.com (mail-qv2-f12.google.com [74.125.230.140])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29DE23D411D;
-	Tue, 15 Sep 2026 18:25:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 04F524C4F52
+	for <linux-pci@vger.kernel.org>; Tue, 15 Sep 2026 18:42:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.230.140
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789496722; cv=none; b=hemyV3CPlZb4/BSZbRB2vDUyTOA8yATRIUS+2u8gb6l3zG2XEyY/UCEcNGAeieFpJ3h6OrwRmSuKw1w4iKVIIPYV4W299HRzgC9abnNoT7pw5zvQ/V5NThMc/IYg3SfayejA4w0I6tv6x6GC1ZIPukNQnBcgeJpyX02D8pWHgME=
+	t=1789497743; cv=none; b=REzJMC9mOSaHo3qMK3rAh7Rq8wT8JNB8POiQMV5JknMOpiBwmq6R5LI0XK5FwND68LUMOH85hyn/DGWK+OAMGXnOJx4s8KbJP34OQ+1IOFwatF57geFBd5KEHKuxAfW84RW9meMAk4f8sV8A43zwPFfbWouFF52f583QfHmgp7Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789496722; c=relaxed/simple;
-	bh=4KygqcfVrs2hdSsGjknH09RUdw6BIAr10wrgaE+eipY=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=dHT7ImG8Mm/yUvBKNDLsbdnCMdptXpQWfLbIk8VrV3NJIft/sib5MQX+TacA9KSayW/RfRr6vLbbnGDaV5scUZjFEbGc2CVnL7cq7bmAcW7hlZnBtgq72BPp9L6+lgVSe3KfJGZ7AO7TvPfDbeyZcs/mJrmClM08wRPreQf7pP4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=es5cTpx+; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789497743; c=relaxed/simple;
+	bh=CnLgCa/Xd5S3wMdf/P9+9GT4r29J78Vb6SjfqEB8nTE=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=TZWGphbaliyrJ6VPbsCZy8+GD9gsYzNJu+vpvOZbSIeR+cfpkpbzW2NvevUBxSYJGf4BFdhchhocIZLIpdZO4Ccf1yHcpq7ut/DLVupanl8NcD3QYr4XRyeCwo6EsRetJ3SYbWkADNSBEY7/s3Mp2zrIa/P0e6SM0z+o+XMnC2Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=riscstar.com; spf=pass smtp.mailfrom=riscstar.com; dkim=pass (2048-bit key) header.d=riscstar-com.20251104.gappssmtp.com header.i=@riscstar-com.20251104.gappssmtp.com header.b=dLI2BKeU; arc=none smtp.client-ip=74.125.230.140
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=riscstar.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=riscstar.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="es5cTpx+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 977DF1F000FF;
-	Tue, 15 Sep 2026 18:25:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789496719;
-	bh=25t3ulDEvIYf7ztVGIG1zbQ3ckY6FOYVO9s2I06Fqbg=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=es5cTpx+f/VG4/QxCoK4L1GxL6M9qANcHAOdE3h9BJvUhPuIox/6JmvT9+WoxnGRv
-	 VMz//UE7uS7NOMA/YzfWW4G43z9Aa6xv0WeRi/yUAc94T+AAHiD/TuXJxeCT8s4tjm
-	 ZXu/yf83c4yDO7o4S738IJwUamNpdqvWSfz+doVNpGsFLPObJ4Xk+yE+nYdvzuR3px
-	 iEkkIZeuNFf1HN8mGXYxeWSTDhYp6DX50YbT5bnjRq1SKEeosAm5/OswkBh9QdjtUv
-	 V+Y4RfHlVbDQfTwAxUv/ZsE6/PdPeMHM2KARRlIhLp5L7hSmC4cx1kKCbIB9FTgZ/l
-	 SoPyPBXotymkg==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 3/3] arm64: dts: qcom: qcs6490-rb3gen2: add endpoint
- buses
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Alex Elder" <elder@riscstar.com>
-Cc: robh@kernel.org, conor+dt@kernel.org, devicetree@vger.kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260915181003.1633543-4-elder@riscstar.com>
-References: <20260915181003.1633543-1-elder@riscstar.com>
- <20260915181003.1633543-4-elder@riscstar.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 15 Sep 2026 18:25:18 +0000
-Message-Id: <20260915182519.977DF1F000FF@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=riscstar-com.20251104.gappssmtp.com header.i=@riscstar-com.20251104.gappssmtp.com header.b="dLI2BKeU"
+Received: by mail-qv2-f12.google.com with SMTP id 6a1803df08f44-90cdfc9b6ebso859916d6.2
+        for <linux-pci@vger.kernel.org>; Tue, 15 Sep 2026 11:42:21 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=riscstar-com.20251104.gappssmtp.com; s=20251104; t=1789497741; x=1790102541; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=EDC4r0VHOK5n3tc4+Odi0PfXGfsyQf0AidjB47fhMwU=;
+        b=dLI2BKeUr+zOKdFTIYxUVfpsFlhfiHkqSTL+vVpeIUasZWeBrKKqAf6JbPrQ+8P5sM
+         1Ure5nn1lIpC7nhfqjSwgGBtU5NdxC+LUz2rxi63c8V2UNtKreHhui+RyBipUBZRQVPu
+         QCI6HVon5gXYUqY01kkK+6NNFvUBCCpcSRsqsKNqhTrzh2OyxVTyTuRBauOnycamLsCG
+         hABkJYtrNsfqB+uTAzXsb5bARARCPv7YVNR70RTqNHuYRQMc/99smPy+KSRJXgmT1/nS
+         kBPhjNKZ7zdpMUtOgxjQvpYv7HuqaTfGvMBp0uRiVRJMWaIPklBBd+UtCScg1HsjbpHc
+         a+eg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1789497741; x=1790102541;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=EDC4r0VHOK5n3tc4+Odi0PfXGfsyQf0AidjB47fhMwU=;
+        b=hVJkO1nGgtY3ghr8umnmpk33eRR6+3LjkLs3DFchkRLn8sLdHObyFjeD5TCFD8pnl9
+         Db/6xvLE3IDz0uf6KAi8bQCk2TlB6R4K0JBCcLxcJMYTYhhsKWzyR0gf6wagtGPWu/rJ
+         TcnN/GK4ZSBMWcpmUDwIPEZo3hZSmo9qUHL5XgIWUJ1TwdNYV7W22TZ8JUKplaFoKrXf
+         uU2PKfrghPF4zsLRl5S8cupiiL9be5wb70QxkhwuXI1ZLH4wGsW7jNXRUpBl9e+uXORb
+         XoHWN5dHkAEVtCe4SJ36h9IcrOrjrTh+lHveKCX06SW6AyVfVJu9jNtik5Q66BBj4/Wl
+         TWuA==
+X-Gm-Message-State: AFuF++lDGw7QZ6BXzU5OHph7nS3tCLznGN2ql4lAmMiUYyoCqr/6EuvT
+	lJ6knK8yCBIs4FWlZb45EVz6Lgsk5z2cc/NoxV1akBkyevMnPk33cCDMVFjnrTHo6h8=
+X-Gm-Gg: AYBFou1phlUjpSNsj6SlrGlW6xAxRkPZvTyrNnDPq4wrcx7kckkJoS9xuUzKo9WozsD
+	KRC8qr3hU6Py98Jr+zldRg+Qq8k4bhcHmAxuXhoA8Es/OsSNoBXKGIcdMjrDhDWe4U4GeLASNuv
+	uu2kG/rr4VDCFtyN0zxggd7QeKvp36rWrRE8bXPlkAozYKXeowfItslJMoPgSiXQDHnRh5w542Z
+	AR/fqxLtPxNC7sOd1aDfANkq5iNXikowPgpuQCcxaKP8nzQCazM3AIaCPwJgCgexAZgzB5apSbf
+	rOOZ2Fp+ViOiBQm51JrLgQO9zplltGQ6I/rkMwUQ+TU9hPXihojeuUlUNZTXFhbw0Nga0mBMoh5
+	GAe3VT4FLRHKBoGDIBEH3xS2iVt7QtLLYNadi370ffG31QjDmgVR9GdecKPYz/UJb1gJgp8LOm6
+	kYp6WZYINQFnbdCqqgMqubCxDofSf9tgbi/PRZeCADu6/YADeTyMKs+/teISEGpF//Lc7i+gE=
+X-Received: by 2002:a05:6214:29ca:b0:912:1a8a:31cf with SMTP id 6a1803df08f44-9122e55ceb9mr136951946d6.22.1789497740684;
+        Tue, 15 Sep 2026 11:42:20 -0700 (PDT)
+Received: from [172.22.22.28] ([73.62.185.64])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-9123be7c43bsm5457256d6.23.2026.09.15.11.42.19
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 15 Sep 2026 11:42:20 -0700 (PDT)
+Message-ID: <54d53803-507d-42a5-a680-36cc0f0f062d@riscstar.com>
+Date: Tue, 15 Sep 2026 13:42:19 -0500
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 2/3] misc: tc9564: introduce base PCI driver
+To: sashiko-reviews@lists.linux.dev
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org, robh@kernel.org,
+ conor+dt@kernel.org
+References: <20260915181003.1633543-1-elder@riscstar.com>
+ <20260915181003.1633543-3-elder@riscstar.com>
+ <20260915182227.A53281F000FF@smtp.kernel.org>
+Content-Language: en-US
+From: Alex Elder <elder@riscstar.com>
+In-Reply-To: <20260915182227.A53281F000FF@smtp.kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
-- [High] PCI endpoint dynamic ranges update fails due to static node defini=
-tion
-- [Low] dtc warning: pci-ep-bus@4 unit-address lacks reg property
---
+On 9/15/26 1:22 PM, sashiko-bot@kernel.org wrote:
+> Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
+> - [Medium] tc9564: missing Kconfig dependencies on OF and PCI_DYNAMIC_OF_NODES
+> --
+> 
+> commit e821d4f3b3a6f26cf2df684fa3788ceb3794a058
+> Author: Alex Elder <elder@riscstar.com>
+> Subject: misc: tc9564: introduce base PCI driver
+> 
+> This commit introduces a base PCI driver for the Toshiba TC9564 SoC. It binds
+> with embedded PCIe endpoint functions within the chip to perform basic PCI
+> initialization. The driver then uses Open Firmware APIs to populate and probe
+> endpoint bus children.
+> 
+>> diff --git a/drivers/misc/Kconfig b/drivers/misc/Kconfig
+>> --- a/drivers/misc/Kconfig
+>> +++ b/drivers/misc/Kconfig
+>> @@ -568,6 +568,15 @@ config MCHP_LAN966X_PCI
+>>   	    - lan966x-miim (MDIO_MSCC_MIIM)
+>>   	    - lan966x-switch (LAN966X_SWITCH)
+>>   
+>> +config TC9564_PCI
+>> +	tristate "Toshiba TC9564 PCI function support"
+>> +	depends on PCI
+> 
+> [Severity: Medium]
+> Should this configuration also depend on OF and PCI_DYNAMIC_OF_NODES?
 
-commit 8f41aa3c7aef831e8b83dd47d6e93a9ac9228f4f
-Author: Alex Elder <elder@riscstar.com>
+I thought about this but intentionally omitted it, because
+*this* driver doesn't depend on PCI_DYNAMIC_OF_NODES (at
+least, not at compile time).
+> Because the driver relies entirely on Open Firmware to function, compiling
+> it without CONFIG_OF or CONFIG_PCI_DYNAMIC_OF_NODES will result in a
+> successful build but an unconditional runtime probe failure.
 
-arm64: dts: qcom: qcs6490-rb3gen2: add endpoint buses
+I don't mind adding the dependency.  Even if not having
+it is technically OK, for the driver to actually function
+as desired those things must be defined.
 
-The TC9564 SoC incorporates a PCIe switch, which is connected via the second
-PCI segment (0001) on the RB3gen2 platform. The downstream port has an
-embedded PCIe endpoint that implements two PCIe functions, and this patch
-adds the devicetree nodes representing these buses.
+If anyone feels strongly that adding "depends on OF" and
+"depends on PCI_DYNAMIC_OF_NODES" to the TC9564_PCI Kconfig
+option should *not* be there, please say so.
 
-> diff --git a/arch/arm64/boot/dts/qcom/qcs6490-rb3gen2.dts b/arch/arm64/bo=
-ot/dts/qcom/qcs6490-rb3gen2.dts
-> index 3bb5fca8e2b13..5b7f5292a8864 100644
-> --- a/arch/arm64/boot/dts/qcom/qcs6490-rb3gen2.dts
-> +++ b/arch/arm64/boot/dts/qcom/qcs6490-rb3gen2.dts
-> @@ -955,11 +955,41 @@ pcie@3,0 {
->  			bus-range =3D <0x5 0xff>;
-> =20
->  			dev@0,0 {
-> +				compatible =3D "pci1179,0220";
->  				reg =3D <0x50000 0x0 0x0 0x0 0x0>;
-> +				#address-cells =3D <3>;
-> +				#size-cells =3D <2>;
-> +				/* Ranges will be updated dynamically */
-> +				ranges =3D <0x0 0x0 0x0  0x83050000 0x0 0x0  0x0 0x4000>,
-> +					 <0x2 0x0 0x0  0x83050000 0x0 0x4000  0x0 0x80000>,
-> +					 <0x4 0x0 0x0  0x83050000 0x0 0x84000  0x0 0x200000>;
+I'm not going to post a new version of this series for
+at least a few days, but without objection I'll add
+these changes when I do.
 
-[Severity: High]
-Will these ranges actually be updated dynamically during boot?
+					-Alex
 
-The commit message states the ranges property will be updated dynamically.
-However, the PCI quirk calls of_pci_make_dev_node() which has an early retu=
-rn
-if the device node is already statically defined in the device tree:
+> [ ... ]
+> 
+>> diff --git a/drivers/misc/tc9564-pci.c b/drivers/misc/tc9564-pci.c
+>> --- /dev/null
+>> +++ b/drivers/misc/tc9564-pci.c
+>> @@ -0,0 +1,84 @@
+> [ ... ]
+>> +static int
+>> +tc9564_function_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+>> +{
+>> +	struct device *dev = &pdev->dev;
+>> +	struct device_node *np;
+>> +	int ret;
+>> +
+>> +	/* Despite being a PCI device, we require devicetree */
+>> +	np = dev_of_node(dev);
+>> +	if (!np)
+>> +		return dev_err_probe(dev, -EINVAL, "no devicetree node\n");
+> 
+> [Severity: Medium]
+> Will this probe fail unconditionally if the required dependencies are missing?
+> 
+> If CONFIG_OF is disabled, dev_of_node() will always return NULL, causing
+> dev_err_probe() to trigger here.>
+> Similarly, this commit relies on of_pci_make_dev_node() via a PCI quirk to
+> dynamically create the devicetree node for the PCIe function. If
+> CONFIG_PCI_DYNAMIC_OF_NODES is disabled, of_pci_make_dev_node() compiles
+> to an empty stub, meaning the node is never created.
+> 
 
-    if (pci_device_to_OF_node(pdev))
-        return;
-
-Since dev@0,0 is defined here in the devicetree, it seems they are linked
-during initial PCI enumeration, causing the update to be skipped entirely.
-Furthermore, even if the early return was bypassed, the update uses
-__of_add_property(), which rejects existing properties with -EEXIST.
-
-Could this leave devices on the pci-ep-bus with invalid MMIO addresses mapp=
-ed
-to unassigned PCI regions?
-
-> +
-> +				pci-ep-bus@4 {
-> +					compatible =3D "simple-bus";
-> +					#address-cells =3D <1>;
-> +					#size-cells =3D <1>;
-> +					/* Map 0x0-0x1fffff to BAR 4 */
-> +					ranges =3D <0x0  0x4 0x0 0x0  0x200000>;
-> +				};
-
-[Severity: Low]
-Does this unit address trigger a devicetree compiler warning?
-
-The pci-ep-bus@4 node is assigned a unit address of @4, but it lacks a
-matching reg property. According to the Devicetree specification, if a node
-uses a unit address, it must have a matching reg property.
-
-For simple buses without a reg property, the unit address must match the
-first child address in the ranges property, which is 0x0 here, rather than =
-4.
-
->  			};
-> =20
->  			dev@0,1 {
-> +				compatible =3D "pci1179,0220";
->  				reg =3D <0x50100 0x0 0x0 0x0 0x0>;
-> +				#address-cells =3D <3>;
-> +				#size-cells =3D <2>;
-> +				/* Ranges will be updated dynamically */
-> +				ranges =3D <0x0 0x0 0x0  0x83050100 0x0 0x0  0x0 0x4000>,
-> +					 <0x2 0x0 0x0  0x83050100 0x0 0x4000  0x0 0x80000>,
-> +					 <0x4 0x0 0x0  0x83050100 0x0 0x84000  0x0 0x200000>;
-
-[Severity: High]
-As with dev@0,0 above, it appears this node might also be skipped by
-of_pci_make_dev_node() because it is statically defined. Will this prevent
-the ranges property from being dynamically updated for this second endpoint?
-
-> +
-> +				pci-ep-bus@4 {
-> +					compatible =3D "simple-bus";
-> +					#address-cells =3D <1>;
-> +					#size-cells =3D <1>;
-> +					/* Map 0x0-0x1fffff to BAR 4 */
-> +					ranges =3D <0x0  0x4 0x0 0x0  0x200000>;
-> +				};
-
-[Severity: Low]
-Does this second pci-ep-bus@4 node also trigger a compiler warning for
-missing a reg property while having a unit address?
-
->  			};
->  		};
->  	};
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260915181003.1633=
-543-1-elder@riscstar.com?part=3D3
