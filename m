@@ -1,196 +1,127 @@
-Received: from mail-qv2-f12.google.com (mail-qv2-f12.google.com [74.125.230.140])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from ms.lwn.net (ms.lwn.net [45.79.88.28])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 84B864C4F69
-	for <linux-pci@vger.kernel.org>; Tue, 15 Sep 2026 18:42:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.230.140
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C0C02F83B5;
+	Tue, 15 Sep 2026 19:24:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.79.88.28
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789497745; cv=none; b=Y2Nu31F/UkT/rfc5ZcZkCkjVNs9DP4+Jp6DIBFWnbwaNTDcJf8+AKJGjWPLiQgxEX4VRoqW2AVwtvOir6TIXT30F0msgTaCm/MrZ9k3Mb1kuY4iZ46BPeM2s1QKQkSjjuOITySI8eD/MHnissMqlnh8Zk+bKvclAtaWBG1U9dR8=
+	t=1789500272; cv=none; b=DSR5lecAsI0fHGsgD7aXn24r8ftm2n4uRD+ciq4/FXzAynTUh7CIXz5c6tHzj1ZHCaOksWEFwaDNHCtF/ZbG+rlxdm5VVsF3IXLAJKhymL5q23rMBto/874y5VdJGgZYGpkkwW9jIXwoVfX0wFgWk/GU3Zf8IOzB3hFSRZEQVIE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789497745; c=relaxed/simple;
-	bh=gUwUYd2us7GvljMhB1XTsLMxWz1EJay6or7KfXuK9ug=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=MiYjufCdNQNgmiC81x/kzvU8873Ik/LIeTjIjrstTlSOOMkqdm3EhIA/ufrbNkolDqlTjTeU5fve/s7s+qoxx4zMNuGhteUMMLBRziDtfV7mJtUnjKgxhZS3FjbapTw6ZVWOh5gYA9hb33bPiqsMHiSfSP+8Jf/8AkIr2mV+cm0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=riscstar.com; spf=pass smtp.mailfrom=riscstar.com; dkim=pass (2048-bit key) header.d=riscstar-com.20251104.gappssmtp.com header.i=@riscstar-com.20251104.gappssmtp.com header.b=xjuOHKVm; arc=none smtp.client-ip=74.125.230.140
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=riscstar.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=riscstar.com
+	s=arc-20240116; t=1789500272; c=relaxed/simple;
+	bh=ryg6nKUTx68Fy1dXWgSE+1SwKBJ00iCeTFDkDWlbsGc=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
+	 MIME-Version:Content-Type; b=fl3mPd8DaDPtkokLjGCWOFiD/WAWkPLGYgnHNtUZRYY+De7PJd0xmCqVuy2HGFxxPbYYYQS5+fo9cLjaH4BXG9Ts9xEcTd8QKiUxzyhKyRnGoUSK22LTFBf7sIEBdpsH+GBvQ+cKzscjRhs9ByXTyzXOVlTDfVArGt+8/51uCVE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lwn.net; spf=pass smtp.mailfrom=lwn.net; dkim=pass (2048-bit key) header.d=lwn.net header.i=@lwn.net header.b=SjgS7EqU; arc=none smtp.client-ip=45.79.88.28
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lwn.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lwn.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=riscstar-com.20251104.gappssmtp.com header.i=@riscstar-com.20251104.gappssmtp.com header.b="xjuOHKVm"
-Received: by mail-qv2-f12.google.com with SMTP id 6a1803df08f44-9123599f5e3so1176236d6.0
-        for <linux-pci@vger.kernel.org>; Tue, 15 Sep 2026 11:42:23 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=riscstar-com.20251104.gappssmtp.com; s=20251104; t=1789497742; x=1790102542; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=JTAYgCJGuASxrvQJ9EUFo5qexb7raGjEZ25I5YC6StY=;
-        b=xjuOHKVmqBnCsPg7TxLGLSIEQSuO6cVSou9zoG0wJba+akSaN/e7tU4uV/v56idFCF
-         mHJ56z2aGDbkafvDcdQQBzuwwggwpIXfxMKi0qdiTr1zSCxL/swDHgnKuExX8BUZFw/7
-         14WwqJvGwHuD3AqEFVAM6J3Wp6mk/Ek4ZU/l1aN79v95D081Q9TX+y3LEt2uyxe7Gq6X
-         hdTtIOBf/D82zH4UmTjeSMI8hke58FDZHZ643vHGoUodzoz8io659HzQij7Vcp+pSVYM
-         CSni8qaF0Be3IAcV4el5QtMoNC6qCgVKXnxekDbk1RSg3GK0ow2HzDbuif5Crn8JgFJc
-         dTKg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1789497742; x=1790102542;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=JTAYgCJGuASxrvQJ9EUFo5qexb7raGjEZ25I5YC6StY=;
-        b=FFk/MCeEPzJLWtHhIC2bAa+DilU5J2zZfncG1ZyiXBM78MjQ1buNe30SVYxtKMNgLL
-         BEqquJOWtdL5JF1NUAyLi1ONsO1UuMTSg/U6Q9pF/YSuHz7y3U0RAT/Sd3BV/SxYgXNX
-         9THUpBKlLksGfwi3uqQuu9pqehbdEx8nLbCdB80NVeBx6x5UMoYwE/U6fuL2wE4FFUA+
-         jv9ZpFDjcxXj99rdhBiItdWqQi7ILgXyFhlGrOS5znLN7datsoWFfDvmeFYZ0IAuL/ph
-         LYgOy3HXhpcmjBlENX6ZbG3TdZrHLGueS7FRcII2r7JYDGYouySL3XB7lZCdEhBvw5MK
-         mTNg==
-X-Forwarded-Encrypted: i=1; AKwUvBzHaglquT4LVpOW0mN51vFU1RZ+YPeU/frTLckrl149/Wt9gJq8jUIJrMujrC7nrH5t57vlZtuFP7E=@vger.kernel.org
-X-Gm-Message-State: AFuF++kIr8e5FoFgK7vpSprBR5BI5vvRRiestbEvJ53eZJBVvBPvQcRS
-	8uhw8bmVQP4HH+GUxuX8smo8C4l4Kuo++lVHs4KoONqOqtE3FsKW34wVHMDFTIS3v14=
-X-Gm-Gg: AYBFou2bATKGWGvFlNJWqxy+3N1Wu+kkYb+QH+B4R0LISQ5bKk83TrbUp/OXNiPgjhg
-	QBl3bcC1cBK2J//4oRoG4c5qxi59Hpys56RqiQVyplsqE9LTuyvMmwRV0/3l4UV4d1kDlUnzTPY
-	VdKU1NzoaXMZDiMNgYjAa7AeOg7otJMd1Q3d5YxXmi6jft3tu0bR4j4c/bY+4pFXc/lErs1Zz+4
-	uLxW1+4oWl8qU0/TtjBU/X4bOVocpZ6B19Ypbls3WsXr3XTm3SuDtbfc4O4ncKATGL0fJDRC1ko
-	jKrrvDeLOzNB4aGVlju1pCOG4BcX3D9+VSFs8E61qCfJPyTexcSj9jngJ5Lov75tkpgzPAjF62I
-	nriC0bjSy/f7WFiwxyEYXiiW3MP2gwY4L7VmAEqqhJVnNLHPAUh0DdChtqb31xQddwNh8ju7N5q
-	mluXKOxw0IC2pqp6UxgHAoQOdtflj0MLkyi4CZTszRFzSIQ5/LwIwQBauFR7aFO/o+m+PTL13e
-X-Received: by 2002:a05:6214:3d0c:b0:912:2c2e:8f4d with SMTP id 6a1803df08f44-9122e4cc3bamr128277756d6.6.1789497742244;
-        Tue, 15 Sep 2026 11:42:22 -0700 (PDT)
-Received: from [172.22.22.28] ([73.62.185.64])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-9123be7c43bsm5457256d6.23.2026.09.15.11.42.21
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 15 Sep 2026 11:42:21 -0700 (PDT)
-Message-ID: <f4af35d7-1380-43ce-b8f6-8a24efe3ddb2@riscstar.com>
-Date: Tue, 15 Sep 2026 13:42:21 -0500
+	dkim=pass (2048-bit key) header.d=lwn.net header.i=@lwn.net header.b="SjgS7EqU"
+DKIM-Filter: OpenDKIM Filter v2.11.0 ms.lwn.net A67FE408B4
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=lwn.net; s=20201203;
+	t=1789500270; bh=XeBqOYrRmdMVCcJUy+mieps24xpx7J1+H++2XiHOYfw=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
+	b=SjgS7EqUiA0XnNYKrm0TM3g1+MJlKS7/WeYv+9+XqRIRzPrUrDNpDad0LSBXOjoSP
+	 2ch7CTHosjos9JTPzeWb4W+o/lpooNW3iHrzniKxPROYddY185J/h8NI1tf/foJomG
+	 8rSC3GgEaLyOPQOt4Un1xurephTnah76trFTWbqZMoVVcBXOHw9rbm9ErG4CfYZXEL
+	 cR2OUZTcx5KKY4BX1LuozWzoWC40YKjV7TsPHzi18kl/yQ7BNnv555/5vNjYaKKZuh
+	 FYc4+Um3dYockbKbDSft9TRnHoW6JcOcU7kYd6l+3peU5euHLonU2F9KIV4a/nh4Kn
+	 J5+J2H4mZIT7g==
+Received: from localhost (unknown [IPv6:2601:280:4600:814::1fe])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (prime256v1) server-signature ECDSA (prime256v1) server-digest SHA256)
+	(No client certificate requested)
+	by ms.lwn.net (Postfix) with ESMTPSA id A67FE408B4;
+	Tue, 15 Sep 2026 19:24:30 +0000 (UTC)
+From: Jonathan Corbet <corbet@lwn.net>
+To: Karl Mehltretter <kmehltretter@gmail.com>
+Cc: Karl Mehltretter <kmehltretter@gmail.com>, Uwe =?utf-8?Q?Kleine-K?=
+ =?utf-8?Q?=C3=B6nig?=
+ <u.kleine-koenig@baylibre.com>, Randy Dunlap <rdunlap@infradead.org>,
+ Shuah Khan <skhan@linuxfoundation.org>, Bjorn Helgaas
+ <bhelgaas@google.com>, Alexander Usyskin <alexander.usyskin@intel.com>,
+ Dominik Brodowski <linux@dominikbrodowski.net>, Bjorn Andersson
+ <andersson@kernel.org>, Mathieu Poirier <mathieu.poirier@linaro.org>, Alex
+ Shi <alexs@kernel.org>, Yanteng Si <si.yanteng@linux.dev>, Dongliang Mu
+ <dzm91@hust.edu.cn>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+ Danilo Krummrich <dakr@kernel.org>, Takashi Sakamoto
+ <o-takashi@sakamocchi.jp>, Geert Uytterhoeven <geert@linux-m68k.org>,
+ linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-remoteproc@vger.kernel.org
+Subject: Re: [PATCH v3] Documentation: Update after split of
+ <linux/mod_devicetable.h>
+In-Reply-To: <20260908070031.32833-1-kmehltretter@gmail.com>
+References: <20260908070031.32833-1-kmehltretter@gmail.com>
+Date: Tue, 15 Sep 2026 13:24:29 -0600
+Message-ID: <87h5jq8gia.fsf@trenco.lwn.net>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 3/3] arm64: dts: qcom: qcs6490-rb3gen2: add endpoint
- buses
-To: sashiko-reviews@lists.linux.dev
-Cc: robh@kernel.org, conor+dt@kernel.org, devicetree@vger.kernel.org,
- linux-pci@vger.kernel.org
-References: <20260915181003.1633543-1-elder@riscstar.com>
- <20260915181003.1633543-4-elder@riscstar.com>
- <20260915182519.977DF1F000FF@smtp.kernel.org>
-Content-Language: en-US
-From: Alex Elder <elder@riscstar.com>
-In-Reply-To: <20260915182519.977DF1F000FF@smtp.kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-On 9/15/26 1:25 PM, sashiko-bot@kernel.org wrote:
-> Thank you for your contribution! Sashiko AI review found 2 potential issue(s) to consider:
-> - [High] PCI endpoint dynamic ranges update fails due to static node definition
-> - [Low] dtc warning: pci-ep-bus@4 unit-address lacks reg property
-> --
-> 
-> commit 8f41aa3c7aef831e8b83dd47d6e93a9ac9228f4f
-> Author: Alex Elder <elder@riscstar.com>
-> 
-> arm64: dts: qcom: qcs6490-rb3gen2: add endpoint buses
+Karl Mehltretter <kmehltretter@gmail.com> writes:
 
-This Sashiko report mentions only things that were explicitly
-ignored on the previous version, so I will take no action.
+> From: Uwe Kleine-K=C3=B6nig (The Capable Hub) <u.kleine-koenig@baylibre.c=
+om>
+>
+> Most structs that were defined in <linux/mod_devicetable.h> before were
+> moved to a bus specific header. Follow the movement to get the struct's
+> documentation back.
+>
+> For the list of device ids in basics.rst use an explicit list of all the
+> headers that have kernel-doc annotations and that are not described
+> elsewhere (i.e. pci and mei_cl). <linux/device-id/acpi.h> is left out on
+> purpose, ACPI_DEVICE_CLASS() is not a device id struct.
+>
+> Also repair the referencing in the zh_CN translation of pci.rst and
+> don't duplicate `struct mei_cl_device_id`.
+>
+> Fixes: ad428f5811bd ("mod_devicetable.h: Split into per subsystem headers=
+")
+> Signed-off-by: Uwe Kleine-K=C3=B6nig (The Capable Hub) <u.kleine-koenig@b=
+aylibre.com>
+> Reviewed-by: Randy Dunlap <rdunlap@infradead.org>
+> Tested-by: Randy Dunlap <rdunlap@infradead.org>
+> [Karl Mehltretter: use the :file: role in pcmcia/driver.rst, say why
+>  acpi.h is left out]
+> Assisted-by: LLM
+> Signed-off-by: Karl Mehltretter <kmehltretter@gmail.com>
+> ---
+> Changes since v2
+>   https://lore.kernel.org/r/ede7ce64f20e10660ebf6bc1b41836dad750ae3b.1783=
+349758.git.ukleinek@kernel.org/
+> - use the :file: role for the header path in pcmcia/driver.rst (Randy)
+> - say in the commit message that <linux/device-id/acpi.h> is left out on
+>   purpose (question raised by the Sashiko review)
+> - carried Randy's Reviewed-by and Tested-by from v2, the diff changed in
+>   one line of markup only
+> - Uwe asked me to take over the patch:
+>   https://lore.kernel.org/r/apv6yQ1U-HhNglyV@monoceros/
+>   It supersedes my PCI-only patch
+>   https://lore.kernel.org/r/20260905084916.40196-1-kmehltretter@gmail.com/
+>
+> Randy's suggestion to add kernel-doc comments to <linux/mei_cl_bus.h> for
+> struct mei_cl_driver and include those instead of the duplicated struct is
+> left for a separate patch, it touches a header outside Documentation/.
+>
+>  Documentation/PCI/pci.rst                     |  2 +-
+>  Documentation/driver-api/basics.rst           | 31 +++++++++++++++++--
+>  .../driver-api/mei/mei-client-bus.rst         | 12 ++-----
+>  Documentation/pcmcia/driver.rst               |  2 +-
+>  Documentation/staging/rpmsg.rst               |  2 +-
+>  Documentation/translations/zh_CN/PCI/pci.rst  |  8 ++---
+>  6 files changed, 39 insertions(+), 18 deletions(-)
 
-					-Alex
+This one adds some new build warnings:
 
-> 
-> The TC9564 SoC incorporates a PCIe switch, which is connected via the second
-> PCI segment (0001) on the RB3gen2 platform. The downstream port has an
-> embedded PCIe endpoint that implements two PCIe functions, and this patch
-> adds the devicetree nodes representing these buses.
-> 
->> diff --git a/arch/arm64/boot/dts/qcom/qcs6490-rb3gen2.dts b/arch/arm64/boot/dts/qcom/qcs6490-rb3gen2.dts
->> index 3bb5fca8e2b13..5b7f5292a8864 100644
->> --- a/arch/arm64/boot/dts/qcom/qcs6490-rb3gen2.dts
->> +++ b/arch/arm64/boot/dts/qcom/qcs6490-rb3gen2.dts
->> @@ -955,11 +955,41 @@ pcie@3,0 {
->>   			bus-range = <0x5 0xff>;
->>   
->>   			dev@0,0 {
->> +				compatible = "pci1179,0220";
->>   				reg = <0x50000 0x0 0x0 0x0 0x0>;
->> +				#address-cells = <3>;
->> +				#size-cells = <2>;
->> +				/* Ranges will be updated dynamically */
->> +				ranges = <0x0 0x0 0x0  0x83050000 0x0 0x0  0x0 0x4000>,
->> +					 <0x2 0x0 0x0  0x83050000 0x0 0x4000  0x0 0x80000>,
->> +					 <0x4 0x0 0x0  0x83050000 0x0 0x84000  0x0 0x200000>;
-> 
-> [Severity: High]
-> Will these ranges actually be updated dynamically during boot?
-> 
-> The commit message states the ranges property will be updated dynamically.
-> However, the PCI quirk calls of_pci_make_dev_node() which has an early return
-> if the device node is already statically defined in the device tree:
-> 
->      if (pci_device_to_OF_node(pdev))
->          return;
-> 
-> Since dev@0,0 is defined here in the devicetree, it seems they are linked
-> during initial PCI enumeration, causing the update to be skipped entirely.
-> Furthermore, even if the early return was bypassed, the update uses
-> __of_add_property(), which rejects existing properties with -EEXIST.
-> 
-> Could this leave devices on the pci-ep-bus with invalid MMIO addresses mapped
-> to unassigned PCI regions?
-> 
->> +
->> +				pci-ep-bus@4 {
->> +					compatible = "simple-bus";
->> +					#address-cells = <1>;
->> +					#size-cells = <1>;
->> +					/* Map 0x0-0x1fffff to BAR 4 */
->> +					ranges = <0x0  0x4 0x0 0x0  0x200000>;
->> +				};
-> 
-> [Severity: Low]
-> Does this unit address trigger a devicetree compiler warning?
-> 
-> The pci-ep-bus@4 node is assigned a unit address of @4, but it lacks a
-> matching reg property. According to the Devicetree specification, if a node
-> uses a unit address, it must have a matching reg property.
-> 
-> For simple buses without a reg property, the unit address must match the
-> first child address in the ranges property, which is 0x0 here, rather than 4.
-> 
->>   			};
->>   
->>   			dev@0,1 {
->> +				compatible = "pci1179,0220";
->>   				reg = <0x50100 0x0 0x0 0x0 0x0>;
->> +				#address-cells = <3>;
->> +				#size-cells = <2>;
->> +				/* Ranges will be updated dynamically */
->> +				ranges = <0x0 0x0 0x0  0x83050100 0x0 0x0  0x0 0x4000>,
->> +					 <0x2 0x0 0x0  0x83050100 0x0 0x4000  0x0 0x80000>,
->> +					 <0x4 0x0 0x0  0x83050100 0x0 0x84000  0x0 0x200000>;
-> 
-> [Severity: High]
-> As with dev@0,0 above, it appears this node might also be skipped by
-> of_pci_make_dev_node() because it is statically defined. Will this prevent
-> the ranges property from being dynamically updated for this second endpoint?
-> 
->> +
->> +				pci-ep-bus@4 {
->> +					compatible = "simple-bus";
->> +					#address-cells = <1>;
->> +					#size-cells = <1>;
->> +					/* Map 0x0-0x1fffff to BAR 4 */
->> +					ranges = <0x0  0x4 0x0 0x0  0x200000>;
->> +				};
-> 
-> [Severity: Low]
-> Does this second pci-ep-bus@4 node also trigger a compiler warning for
-> missing a reg property while having a unit address?
-> 
->>   			};
->>   		};
->>   	};
-> 
+  Documentation/translations/zh_CN/PCI/pci:98: ./include/linux/pci.h:3: WAR=
+NING: Duplicate C declaration, also defined at PCI/pci:3.
+  Declaration is '.. c:struct:: pci_driver'. [duplicate_declaration.c]
+  kernel/Documentation/translations/zh_CN/PCI/pci:106: ./include/linux/devi=
+ce-id/pci.h:3: WARNING: Duplicate C declaration, also defined at PCI/pci:3.
+  Declaration is '.. c:struct:: pci_device_id'. [duplicate_declaration.c]
 
+jon
