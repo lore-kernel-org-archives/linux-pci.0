@@ -1,178 +1,201 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CBEA04EA36F
-	for <linux-pci@vger.kernel.org>; Wed, 16 Sep 2026 13:37:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D04CB503BCA
+	for <linux-pci@vger.kernel.org>; Wed, 16 Sep 2026 13:51:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789565894; cv=none; b=OyVH+O9EmByswu9sBLNUBb2ZHVtQu81JBPn9tgheHLK1ljS5TEANbYPBe9su+ChbkdEjuwTBtIbuoC1Gj/upnZvSK1VdZ7Mne6+++phJ47EGM3Ebmve4WVdFfbDsWE7Mcnr7Kj+jvtETnZu79Y3G8AHboNGyA53F1pSxQjMnKAo=
+	t=1789566674; cv=none; b=UCg1o20zSFYmnPPCCA54/yNjnRagSKBTe+DvuHLhpovgB7GkXtt5rqEFvZ138rhh7cdgwqfe5yJ5MwblpHGfudhAQ0l9XHbEq+U+nce8CTSnEK46NPCehn25+LeAMDIlN3ZAXfTE4ClZI7lI5iqawpxyIvCSaodq2tp+PziiFQg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789565894; c=relaxed/simple;
-	bh=dli4thVl0/lxjrbuWQYG1n75DsupJDZPWr0t/4D8kHg=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=oyb7Y68qFyfo9oO7Ibe+oAeA41v+WBMepTNEqRhI052nehAiz6BadqYQjuLEWxJCI2LA7HzpOJ3waOqBuvEDPEACXZHGKOkSn1smWQ+tHJ8ZCgN/UbCA/HlXIhRJ4NaXGEEY+L8Gn/K896M3S4+qV5czE/rmgyuLIqg+fBv+cGg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=dNlAvkQW; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=KIhfP3rP; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1789566674; c=relaxed/simple;
+	bh=d0fNw7I7yFDopuJWtzYWjixrWoj6HGW9S6RdWVGAagM=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=nOe2U71kG1xaNQcjOjYR4b7T4VnMQmlBBW5pAG0h0usc+1YgPI1A8CGbH//uXORUMqmH3SdCrgO3BOToXqSyM/yXoqQwoGYHSGeYybvKuNmLIPtOXthwXZSMA2rcOYDQ5vEZu7Xaph7aeAS31uuP2Bss/APZI7UIaeYgegSUj4o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iGrFBkee; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="dNlAvkQW";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="KIhfP3rP"
-Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 68GDJls52283870
-	for <linux-pci@vger.kernel.org>; Wed, 16 Sep 2026 13:37:51 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	t+yROzQlRt7LgNDY92+8DzprGrYcUOrZaiKl227u+Jc=; b=dNlAvkQWB40U0DnK
-	N06gp19Onp4iXOxLmBey8HgViZ33AnXPvyh+y+CI0xQndwQcRE6GKx4KtqoJzK9V
-	EldxvBcEbEiLoqBLRZ+NXDFH1I64391HQouqFLm4xabFFt3kA1J1y6nDtKmmDU8q
-	FdeFx3MgdwVr3xtv5f14i5U2U4zXcB20m6lxVime6wdc1CZuHt2w5IonvjxlTSNp
-	lkbG9pbLjLViKr4qj4Eupm45YbUfQPiZO+/mmaEdBc0bV7x84zSlXrRDgGLadnQL
-	vi39DLxo4rmTsudhQ+zlG7XCHwWpgOgwJPBItawy+KX9w6VRwaFjfnewF3/9ymEr
-	zntgGQ==
-Received: from mail-pl1-f199.google.com (mail-pl1-f199.google.com [209.85.214.199])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4gquwb028s-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Wed, 16 Sep 2026 13:37:51 +0000 (GMT)
-Received: by mail-pl1-f199.google.com with SMTP id d9443c01a7336-2cc73f47bdcso75630085ad.3
-        for <linux-pci@vger.kernel.org>; Wed, 16 Sep 2026 06:37:51 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1789565871; x=1790170671; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=t+yROzQlRt7LgNDY92+8DzprGrYcUOrZaiKl227u+Jc=;
-        b=KIhfP3rPRFKh3UX6/GnHZa9snqrt1q/zjOuSfA7u9x4JSng7Y74aKmyHWAOHUYpsRa
-         oXSMiNKsGuZD09Ie/UNRqzhcvo7E2yNE9/MUTvPyAg4iFgWbqFRO1eo/wXtyyTHQOaqD
-         UASXzvGPQO1c/5IZqs4tCajeHy0E/6IGPdDNUsgiEBhV0NfWC/V8jkCSsl0x8siyc5CA
-         lQAdtw1Ut1JfGTHInLZVRkEfkvqP24T0RKZfiV/I5hP+RGrVR0Wvbqb1M6Gh63QBGhJ2
-         oWmqdKJEZ6tFuNnkAHXYBBsfjbbc0H/0UqgFIi6QPP+y/Y9cjN0/ts7qeQLWBtJyaK8s
-         4z/Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1789565871; x=1790170671;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=t+yROzQlRt7LgNDY92+8DzprGrYcUOrZaiKl227u+Jc=;
-        b=zaPe+bUS5OCqn4UEJ8k0+6Q7rPTBnPeO+xiAXEMmt918wynemN5J/+AHujNC3+yCm5
-         q2GnK+QwJwNXVJbcdGMeJc7mfrA914bc0EZMhCW4Hp2Afodqr98dNOuT4OWbMfi1/GGg
-         P8ZHP8MqsCKVe5l6fgRZWUADnXzAX5N1p9hZcWnXJCakThBs88D6aHjefZwMFYk0Dtj8
-         RoQ5sSZ4lvpyHE9XVnpivWg9PN8p2jcn2/qwkmWS7ucMIFSizlHOQBSF6//+VSxJtx7h
-         PU0ep8wxM2AJcESDTAmpBgePTIg47yZlqhFAQ44wvwEgiJWAk051Qv1pA/TX9SkI8ym0
-         pUcg==
-X-Forwarded-Encrypted: i=1; AKwUvBxZ0tdb4igjoyY/sCt76rXKh7SY0nPIwL5FNa2CfQDVDLY6Xd/OEmSi/oF5z7fY/LJhwgYPfUTQsTs=@vger.kernel.org
-X-Gm-Message-State: AFuF++lhIPGlDawePju0lgKnTOaB5I9yosEoiBFGAoa1tqKkLZLOVo0l
-	qkCKCnVM/PAPr2fna9SR+TFBAl5DAtG4Vh2zQomQOgF4haJZ0qnHudz+BHIbBYvYcvxtQ9gxtmM
-	KgODaP4A1hlgqzRbBAl0ZuvYQCmGa5C/qjn43z8G5+h/Jw2T4b0sP08i0MDfq/mk=
-X-Gm-Gg: AYBFou2hs3T0o/xc3dnpqqL09vafTkh3av2D5QROkhqbFddJrHzJcfOViUH6U4wlJ8J
-	8ZQrGDLUEgiBhn5zoR+WzKhIAztM94xDAWeXISUgrZrt+DRP07Lt+vPMW6DnYH2X14LV/IWQzwt
-	bXuqgYll8ngVE61dIebNUBUnHVQ3YwdVeFxcZ1ZClH9BO9PYELzjHxMeYG3vEmTUKotBKmxTzvS
-	yTAaNFFnNmdAjKr/ZEjswCm4KXFyD1hnu/b+hgULgQ1riuCItshRYlG6CQtDme6Ir4cK1cJa86P
-	X9Spj+5cR3j+RY5//mVxo1PiUqayABDF9VJTaVNxg51YLmVuVdf2VNPgfzZqOxdbGyz+6KaHYEn
-	ZNPE/kF2/9VamfzZFk7Vu8JwJFgwc8njt
-X-Received: by 2002:a17:902:ec81:b0:2cf:8131:75e8 with SMTP id d9443c01a7336-2dd8e400f70mr59986375ad.13.1789565870672;
-        Wed, 16 Sep 2026 06:37:50 -0700 (PDT)
-X-Received: by 2002:a17:902:ec81:b0:2cf:8131:75e8 with SMTP id d9443c01a7336-2dd8e400f70mr59985535ad.13.1789565870074;
-        Wed, 16 Sep 2026 06:37:50 -0700 (PDT)
-Received: from [10.92.206.34] ([202.46.23.19])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2dd89d905f8sm12020575ad.2.2026.09.16.06.37.45
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 16 Sep 2026 06:37:48 -0700 (PDT)
-Message-ID: <88b7e836-4dcd-4e69-950a-c844e88ae7ec@oss.qualcomm.com>
-Date: Wed, 16 Sep 2026 19:07:43 +0530
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iGrFBkee"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7897E1F0089D
+	for <linux-pci@vger.kernel.org>; Wed, 16 Sep 2026 13:51:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1789566669;
+	bh=EcwfPW4QP5Xml74DanZs2iwT1Yn8MF2fALNKcDOscV8=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc;
+	b=iGrFBkeeNA4UPiv5QNna8P4/oEhNLw43BKpT+7hH+Nz3uL0K/tJ2kElyiz/dYRfte
+	 qaSHOLD2cSUQoh7SOxOlUMjQ8xhoSaqR0SqzPTwiW2T4FqrMXd1Rg47BQEMwGgepC+
+	 Po4cJ5lzyV/Y0JtUmYh/runOnv9koMKz7KqOVFJDQ/wofHZ+ows9O6u5Gw9uRzOJpv
+	 jo0bg3v73nwlk0t0l5P6fipJu/kaAVDd0eorUm8drgiCO6BGEW4PomXd37WUCHuaPy
+	 kIrBQlzZCdI5wmunsG8dApzXwgpRZqza2RLlQprL6yhVp8ONtN/55wlVX832ZYFHmc
+	 8xDpi5Im3A/5Q==
+Received: by mail-lf2-f13.google.com with SMTP id 2adb3069b0e04-5b76668f4ddso395024e87.1
+        for <linux-pci@vger.kernel.org>; Wed, 16 Sep 2026 06:51:09 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AKwUvBwAVeT6xmiQS5X+AMT3r+T0GOa+Nt/I9LVKt2T2+g9mCvKt1a83Haypz5wPnMjmeHvQBPsbmh4jfI0=@vger.kernel.org
+X-Gm-Message-State: AFuF++lJ677LuQWB7ZnRo8C9F7nOLkO7Q6iqWNsDj49DeScXa9q0cEzI
+	+37SZQnpNndFPHfrmIiTSxxAHdAwgMsLZef7uMbtUA/j/csWuK9OkB9xh7kHVbGou8a05jQZuIi
+	2LgXLraR0kB0rhsrkX7mbJR9U31fUMOA=
+X-Received: by 2002:a05:6512:3da1:b0:5b4:ab3a:8305 with SMTP id
+ 2adb3069b0e04-5b8b63de08cmr671011e87.11.1789566667769; Wed, 16 Sep 2026
+ 06:51:07 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] PCI: qcom: Ignore -ENODEV after Root Port reset
-To: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-        Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-References: <20260916-topic-pcie_portrec_enodev-v1-1-5dc7bde39552@oss.qualcomm.com>
-Content-Language: en-US
-From: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-In-Reply-To: <20260916-topic-pcie_portrec_enodev-v1-1-5dc7bde39552@oss.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-Authority-Analysis: v=2.4 cv=H4JOUOYi c=1 sm=1 tr=0 ts=6aaa9baf cx=c_pps
- a=JL+w9abYAAE89/QcEU+0QA==:117 a=j4ogTh8yFefVWWEFDRgCtg==:17
- a=IkcTkHD0fZMA:10 a=VdqzKS8jKosA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=_K5XuSEh1TEqbUxoQ0s3:22
- a=EUspDBNiAAAA:8 a=U-vv52QimnA-Lxqxps4A:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
- a=324X-CrmTo6CU4MGRt3R:22
-X-Proofpoint-GUID: nJ-afAx2xP8lxdoJnuPJ0Nn0NUlByBxJ
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTE2MDE4MiBTYWx0ZWRfX8w90Ay9yUknk
- 0G2lCrU2K7/tUv8hNicALG37ljLxXLncWpTsIIZZUC+Zu0yztzgkxsUOBfHiMDvtYqH2DFQJsr4
- ILB+ppJuLUBecYdEdQ9Z+3XuEQPMEHyK4g2alOkeCDabe3CPv847mknvJiyPICoqaeGLj3JsTJZ
- J3qP8+d4+3HycZ7PMqInTLogIcwGSqofBrxGO8zKNlkXJaS6lE5mgX09ZfuXBesQAhNq8tNsz/f
- iqf9jjWYn8ECN4ZN/G8iyT2hl5n7hZ9l2RiJiDUKHhurgiXKHdvJbxDb74lP/NUSS6HtVEDuBVF
- z6eTLcLXF+mHKRRZ1DSEJSIv4R6gfI8gBPvVjbRXhK/Vxogc2vVzm9GDOnWH/5t3B1aqqlxUzqb
- XgSR7evBYaACI9dZd8kQ+D98q01RPW6x6ZpFPC9FH7phQenJoij9MGTMlZ8s6fBuPgHKELy38S7
- +dwjGx4uPr7iB4F1UdQ==
-X-Proofpoint-Spam-Info: AW1haW4tMjYwOTE2MDE4MiBTYWx0ZWRfXwFHkkmOYr0C5
- V3plwpWrB+TCx1bF7yCM8CncPntVqxFr1Zr/ehCGEk7ZzeOsZN2byM5OI0SX5+YSD5oyL/ok/aG
- jLLJCL+rRrFL4fMwJyZbGXet8rWURqQ=
-X-Proofpoint-ORIG-GUID: nJ-afAx2xP8lxdoJnuPJ0Nn0NUlByBxJ
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-09-16_02,2026-09-15_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- clxscore=1015 malwarescore=0 spamscore=0 priorityscore=1501 impostorscore=0
- phishscore=0 adultscore=0 lowpriorityscore=0 suspectscore=0 bulkscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2609040000 definitions=main-2609160182
+References: <20260916051034.180226-1-mario.limonciello@amd.com> <20260916051034.180226-2-mario.limonciello@amd.com>
+In-Reply-To: <20260916051034.180226-2-mario.limonciello@amd.com>
+From: "Rafael J. Wysocki (Intel)" <rafael@kernel.org>
+Date: Wed, 16 Sep 2026 15:49:46 +0200
+X-Gmail-Original-Message-ID: <CAJZ5v0g4sBVBOnJJV3tnq_z8P8QEzwTCL+3gmws2uoRhy_gFVg@mail.gmail.com>
+X-Gm-Features: AcwNN1UfjPKEn2vX1e_V6wm29RAqdEFLzqinUNOeIY2SM4G4LjkXRrSYKHB4KQI
+Message-ID: <CAJZ5v0g4sBVBOnJJV3tnq_z8P8QEzwTCL+3gmws2uoRhy_gFVg@mail.gmail.com>
+Subject: Re: [PATCH v4 1/2] PCI/PM: Split out code from pci_pm_suspend_noirq()
+ into helper
+To: Mario Limonciello <mario.limonciello@amd.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, 
+	"open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>, 
+	"Rafael J . Wysocki" <rafael@kernel.org>, Lukas Wunner <lukas@wunner.de>, linux-pm@vger.kernel.org, 
+	"Mario Limonciello (AMD)" <superm1@kernel.org>, Eric Naim <dnaim@cachyos.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-
-
-On 9/16/2026 6:07 PM, Konrad Dybcio wrote:
-> Root Port recovery may race with a device hot-unplug. In that case,
-> dw_pcie_wait_for_link() returns -ENODEV because no device is detected
-> after the controller has been successfully reset.
+On Wed, Sep 16, 2026 at 7:10=E2=80=AFAM Mario Limonciello
+<mario.limonciello@amd.com> wrote:
 >
-> This is a valid outcome and should not cause Root Port recovery to
-> fail. Ignore -ENODEV while continuing to propagate other link-training
-> errors.
+> From: "Mario Limonciello (AMD)" <superm1@kernel.org>
 >
-> Assisted-by: LLM
-> Fixes: 4d88cb82a6d9 ("PCI: qcom: Implement .reset_root_port() and use for link down")
-> Signed-off-by: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
+> In order to unify suspend and hibernate codepaths without code duplicatio=
+n
+> the common code should be in common helpers.  Move it from
+> pci_pm_suspend_noirq() into a helper.  No intended functional changes.
+>
+> Tested-by: Eric Naim <dnaim@cachyos.org>
+> Signed-off-by: Mario Limonciello (AMD) <superm1@kernel.org>
 
-Reviewed-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-
-- Krishna Chaitanya.
+Reviewed-by: Rafael J. Wysocki (Intel) <rafael@kernel.org>
 
 > ---
->  drivers/pci/controller/dwc/pcie-qcom.c | 3 +++
->  1 file changed, 3 insertions(+)
->
-> diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-> index ee63a6ec99de4d07c16b8d6cb68df0d92f822cd8..3d3be9bf798b7c247d69969d6570385b8648123f 100644
-> --- a/drivers/pci/controller/dwc/pcie-qcom.c
-> +++ b/drivers/pci/controller/dwc/pcie-qcom.c
-> @@ -1880,6 +1880,9 @@ static int qcom_pcie_reset_root_port(struct pci_host_bridge *bridge,
->  	qcom_pcie_start_link(pci);
->  
->  	ret = dw_pcie_wait_for_link(pci);
-> +	/* This linkdown might have been a hot-unplug */
-> +	if (ret == -ENODEV)
-> +		ret = 0;
->  	if (ret)
->  		return ret;
->  
->
+> v4:
+>  * Make pci_pm_suspend_noirq_common() bool instead (Rafael)
 > ---
-> base-commit: e6e35979777d646fe3c7c94dca7dd32fb25d45f4
-> change-id: 20260916-topic-pcie_portrec_enodev-cc576ea927f9
+>  drivers/pci/pci-driver.c | 77 +++++++++++++++++++++++++---------------
+>  1 file changed, 49 insertions(+), 28 deletions(-)
 >
-> Best regards,
-
+> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> index e16aa59dd7ac8..8334214f8c1ed 100644
+> --- a/drivers/pci/pci-driver.c
+> +++ b/drivers/pci/pci-driver.c
+> @@ -818,6 +818,52 @@ static void pci_pm_complete(struct device *dev)
+>
+>  #endif /* !CONFIG_PM_SLEEP */
+>
+> +#if defined(CONFIG_SUSPEND)
+> +/**
+> + * pci_pm_suspend_noirq_common - prepare a device to enter a low-power s=
+tate
+> + * @pci_dev: pci device
+> + *
+> + * Save the device state and decide whether bus-level power management s=
+hould
+> + * skipped. Returns true if bus-level power management should be skipped=
+,
+> + * false otherwise.
+> + */
+> +static bool pci_pm_suspend_noirq_common(struct pci_dev *pci_dev)
+> +{
+> +       if (!pci_dev->state_saved) {
+> +               pci_save_state(pci_dev);
+> +
+> +               /*
+> +                * If the device is a bridge with a child in D0 below it,
+> +                * it needs to stay in D0, so check skip_bus_pm to avoid
+> +                * putting it into a low-power state in that case.
+> +                */
+> +               if (!pci_dev->skip_bus_pm && pci_power_manageable(pci_dev=
+))
+> +                       pci_prepare_to_sleep(pci_dev);
+> +       }
+> +
+> +       pci_dbg(pci_dev, "PCI PM: Sleep power state: %s\n",
+> +               pci_power_name(pci_dev->current_state));
+> +
+> +       if (pci_dev->current_state =3D=3D PCI_D0) {
+> +               pci_dev->skip_bus_pm =3D true;
+> +               /*
+> +                * Per PCI PM r1.2, table 6-1, a bridge must be in D0 if =
+any
+> +                * downstream device is in D0, so avoid changing the powe=
+r state
+> +                * of the parent bridge by setting the skip_bus_pm flag f=
+or it.
+> +                */
+> +               if (pci_dev->bus->self)
+> +                       pci_dev->bus->self->skip_bus_pm =3D true;
+> +       }
+> +
+> +       if (pci_dev->skip_bus_pm && pm_suspend_no_platform()) {
+> +               pci_dbg(pci_dev, "PCI PM: Skipped\n");
+> +               return true;
+> +       }
+> +
+> +       return false;
+> +}
+> +#endif /* CONFIG_SUSPEND */
+> +
+>  #ifdef CONFIG_SUSPEND
+>  static void pcie_pme_root_status_cleanup(struct pci_dev *pci_dev)
+>  {
+> @@ -907,6 +953,7 @@ static int pci_pm_suspend_noirq(struct device *dev)
+>  {
+>         struct pci_dev *pci_dev =3D to_pci_dev(dev);
+>         const struct dev_pm_ops *pm =3D dev->driver ? dev->driver->pm : N=
+ULL;
+> +       bool skip_bus_pm;
+>
+>         if (dev_pm_skip_suspend(dev))
+>                 return 0;
+> @@ -937,36 +984,10 @@ static int pci_pm_suspend_noirq(struct device *dev)
+>                 }
+>         }
+>
+> -       if (!pci_dev->state_saved) {
+> -               pci_save_state(pci_dev);
+> -
+> -               /*
+> -                * If the device is a bridge with a child in D0 below it,
+> -                * it needs to stay in D0, so check skip_bus_pm to avoid
+> -                * putting it into a low-power state in that case.
+> -                */
+> -               if (!pci_dev->skip_bus_pm && pci_power_manageable(pci_dev=
+))
+> -                       pci_prepare_to_sleep(pci_dev);
+> -       }
+> +       skip_bus_pm =3D pci_pm_suspend_noirq_common(pci_dev);
+>
+> -       pci_dbg(pci_dev, "PCI PM: Suspend power state: %s\n",
+> -               pci_power_name(pci_dev->current_state));
+> -
+> -       if (pci_dev->current_state =3D=3D PCI_D0) {
+> -               pci_dev->skip_bus_pm =3D true;
+> -               /*
+> -                * Per PCI PM r1.2, table 6-1, a bridge must be in D0 if =
+any
+> -                * downstream device is in D0, so avoid changing the powe=
+r state
+> -                * of the parent bridge by setting the skip_bus_pm flag f=
+or it.
+> -                */
+> -               if (pci_dev->bus->self)
+> -                       pci_dev->bus->self->skip_bus_pm =3D true;
+> -       }
+> -
+> -       if (pci_dev->skip_bus_pm && pm_suspend_no_platform()) {
+> -               pci_dbg(pci_dev, "PCI PM: Skipped\n");
+> +       if (skip_bus_pm)
+>                 goto Fixup;
+> -       }
+>
+>  set_unknown:
+>         pci_pm_set_unknown_state(pci_dev);
+> --
+> 2.43.0
+>
