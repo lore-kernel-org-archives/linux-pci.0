@@ -1,126 +1,143 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej2-f12.google.com (mail-ej2-f12.google.com [74.125.228.140])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8392F2C0F8C;
-	Wed, 16 Sep 2026 14:50:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789570248; cv=none; b=fPKgJjWnW7fDZIRBFrH9RX0OYnc1RXeOi6gcPa7AV93Bm1LPFMiB2q/M6wvDfVWOr84f3WjI0Tfl5D8m2Zq7HQPXtJxiFhvCRKG9+pvMIpT3L92wShmIuHMK2gh3N0iOM7IDihl+6gmVPsrZ5dSv7QDHku48+xWH+srabBGyAYQ=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789570248; c=relaxed/simple;
-	bh=RhVLTWzVaJaLgfP7/phIIe+ekkV4rdTVEVwEjVESCC4=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=P+G5T9UQ3Y8mJtXc17ulgqFABx1XtRQj6yXL47ETdUIjAbFJ/gx1lxtAC9xGxDFHgwJgFTnbcIf8H5UrFLM38rT1Wxpae55wjKVJmNTMESSg1hHXfHPWgv8Dic9z6nXd8tyFisbT4CVKvJVNp1x1FeIKq0VBTOALwV6Nynwc0jo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=j1Jr2asw; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C764C378D8A
+	for <linux-pci@vger.kernel.org>; Wed, 16 Sep 2026 14:58:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.228.140
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1789570735; cv=pass; b=bVKJc89ce659UYZ31YxNSsJ4Itl/Xcp4fUEteG5Z2mLRN2ZBdjZSGkwjgg//xh6eNG6LsDpAKRrQpFsuLPjumiRHxI+0j6n8WDKB4r5Mom91CUWGNJdo942io0EOUYrep2NG2YBYNxZ0p8NrFndOihn+lCzG5le8FAVIZHj3vuM=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1789570735; c=relaxed/simple;
+	bh=AtQrPMl91+yYtI9BLCPBjsG0Yu7Rz7PLsn3mJ6H0/pA=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=fMVgxP02UqDx8gDoZB6QnWpbwPtrHRio75dSfSY5JnBts3Kju8aot9XqP6ik0QpP0TO9uImpMwsThHLQAgM2hjD3jJA3+koZKsWbGjo+dpWUKw18qYinwM5smzGWjCDbg3dvOmIDLtSvatA5J0TsXsR9CCYd9ubk36wUf8psS6c=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=tC9vtssF; arc=pass smtp.client-ip=74.125.228.140
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="j1Jr2asw"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D2AC21F000FF;
-	Wed, 16 Sep 2026 14:50:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789570247;
-	bh=9n9CTHcuaXijNoFZR6DZmPgiz11kru6+rNJJzvGm2JI=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=j1Jr2aswkdTNWl5sS0SE0HNk/mgydrHOcEq9xTtwwmAXXzqKwaZTRXHUrYQKHsZFC
-	 kOXVjd9yGc5jFlTpqRmBHCDwtaUEm16fp2vgWSDGOkFsyDHnf902ox63Ux44efukZa
-	 9vFQ5OHtX4eS6OxvnuBrjc7J8CJgt8Y6RSPWI9Y2qVBLXziCoJGbowm8Zad4whnO81
-	 sHJwD2BVnzwwNFOlZeMjKoPDl2Klztbn+HZg5LvA1ILP0bG3bxcFYhkTSY4/WPIlYY
-	 4OodtnTuVnCicd0cL2oYHcJRggjwqkXKwhyqJQl/02B2RCo2BatJR/IxdP09YRIL0s
-	 uFhFO1pcB01Ow==
-Date: Wed, 16 Sep 2026 09:50:45 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Angel J <iamanaws@httpd.dev>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com, robh@kernel.org,
-	herve.codina@bootlin.com, lizhi.hou@amd.com, andrea.porta@suse.com,
-	florian.fainelli@broadcom.com, devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org, regressions@lists.linux.dev,
-	stable@vger.kernel.org, linux-rpi-kernel@lists.infradead.org
-Subject: Re: [PATCH v2] PCI: of_property: Omit bus properties without a
- subordinate bus
-Message-ID: <20260916145045.GA922158@bhelgaas>
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="tC9vtssF"
+Received: by mail-ej2-f12.google.com with SMTP id a640c23a62f3a-c293c683202so161085166b.3
+        for <linux-pci@vger.kernel.org>; Wed, 16 Sep 2026 07:58:53 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1789570732; cv=none;
+        d=google.com; s=arc-20260327;
+        b=bdnt9EV/Eqbkcx6hNXP0Jk8Nn475pIxviRH9win16lAfsk3glb0h5ny7endMIeo9J6
+         QSMHXtpngLZVa1lkgO1m00oSK+kPma3pGSyeBCChe3hGMQeZXZA9FMzTdb5mywlTSlEc
+         Oo5WQNPArjXL3V3aJNw+o3cYYJeAplpu//efEDtvxIA+E3a+r2K1ZZybPYNakKH37R3R
+         ud/e32h4R9KhUsnuYuG8Bwj4psR+s3LF1tdvl1y0uBrb/5MWgpbpEEYcRuVHKWYqUsEg
+         RCPUVZ8MpWKAytFQ0nd5mwAI7KZPfkZNWsW3CXzVYaqTDlKxcfCglje0c6ws0QBS+wa+
+         gPSg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=7B8AGM6usS6/DkOynGbVPS6pps2aTMeSLXoc/PLBLeU=;
+        fh=kfykNxOR8eoNWw3Nvlziwn2SW1uoWbkcUrV/SS3yHJE=;
+        b=KEFTIRC6LNlh5a7U5X/gmb//RTV1a30HlRav7lRJubo97wUNfDet4WyTUp9RWljTbT
+         E8urHEL4RuIESQl2Txl15KqLGfBx47QoU8ZvKtukZpNk942+/s308fZ2SVFbUUBGfqUU
+         w0O+K4vda6bzwufhB8CUeWMvJXk/WGKb7T62BXcBSI8W+oYKDFQnY8Tsw0sUpy04ZJgm
+         FQhJ2cDNmA3B4wrUvLN7I+tCbuGjjsm+03gGRi85XYr7l8FkOTJc5jut+20hBr3e7Z28
+         qGkUIvUNbuF1dCmbHNkQUquhCYXIp/+9RLZ4listNamkywVU/+uTlj20bjtpvFYDtqjQ
+         Lucw==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1789570732; x=1790175532; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=7B8AGM6usS6/DkOynGbVPS6pps2aTMeSLXoc/PLBLeU=;
+        b=tC9vtssFRHP7YED+FiQg6pv4DT0aIDonO37ZnVDyqUCZ4dDzQxv+1bkP0tBwBwz9jQ
+         cxBqDzXFyUOHth5/D5GyZH2n4VowYr+UEMZAiQLADVITanuFCLAHypEsyNrmuCIW91Vp
+         eB4V6JFk06jQsBZRm6hKm53FuYMf8BuPCD/jSFAw489qhtRtDOVL8w4kRcWtVBAbZh92
+         UiZwp39dec7eDR/ccqOp4u6GWLVGou//a8negWu75Iy57yVz1WhRHakEqjnbw2R6DpPp
+         L/vgXxGtmn4DDPDiW2UUaCPaOrtIJYiuNM9l85x36q3GS4BTJXp6DfIDMxt4OVcbUFnG
+         2eFA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1789570732; x=1790175532;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=7B8AGM6usS6/DkOynGbVPS6pps2aTMeSLXoc/PLBLeU=;
+        b=D4qPBWDfjgp2JkHta/VNJDNx5CEB6M8KKDtqDb4+znW9bc0Rzl1mrdUi1Y1bvJ375l
+         mJN/3vsRLIiV+vfx7Zu7pr0t8ZPGWKLPO1v3BFsCurLHe9TLePPo/Wn4UgWJ3kJunPdu
+         Szt5THLhA2itcHfHgc6mgJ6/20CYy1aryGspN4y4WHj27exMI139TVJVStjticPYCn3H
+         khJzl+N4i3xMNg4Gzy3jEpYP/APMEMOGrzuLcWI07lmJbBelK5TSL/ioH6KAGFfVlEWg
+         IYGh1u94txUmF9o6UcRqkzuGWtPP563LgwacV5NJno41VeS8YQe1joIsVWIckhHG+Jkc
+         /qfg==
+X-Forwarded-Encrypted: i=1; AKwUvBzT07ZzjByLY1flCuLtdod2CqeQHTAhmpjABY0LvMyv4BxcY3+xPNX2BE/iNAe5dkEmW6ddQ4A2Es8=@vger.kernel.org
+X-Gm-Message-State: AFuF++m6hpbzTwXE+EJYTaVoIeIVKrt9QubqBEwxMIX1esPi2kACRZPY
+	u14Pn85i8QVi4LsrOyXeLyZkTUvaOaA/miVHAlfEdg5qzJZtXu3NyQi+8K14wjznipikDZFJsEy
+	k+ylZ7NepIEaE5nTIX1Hm1MYnPVQeAzlsA7pvcaHv
+X-Gm-Gg: AYBFou2E3d0Kk/T4OO6KT925FDcESs2QU3yxTWwpUcXkJYiZ45B4imL7ykr97O9zI+z
+	MEWNkbTTrj6uDl6/lvwtjZ9V6rFzjPNu/oA7OPAzdIi/uaHSzVDdkynRCjcTl2wPZ88cUPWGSDg
+	o8QcjZCUdIJhtnFGCVG+/mV1zB/RwROG49ZIVAVhbVAA3hpmNj/ppMu9fmzjCdSaKJ7ogPK/DP9
+	3TuZR1ENcevGu7GxugybX2Kt/GXRFP3wL5oOkczSoP3jE3KONNjTxOuWhdYirJQBc4b06kPCjh0
+	O94FWuwcMoHB2mMsL/ZLpSSq0wAUibvUD53vxtrluaeSOLEM8HMxXhM=
+X-Received: by 2002:a17:907:c49a:b0:c28:fb3f:fe20 with SMTP id
+ a640c23a62f3a-c29e52c71e0mr199279166b.30.1789570731516; Wed, 16 Sep 2026
+ 07:58:51 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260912043106.10715-1-iamanaws@httpd.dev>
+References: <20260728221007.2098560-1-dmatlack@google.com> <20260728221007.2098560-3-dmatlack@google.com>
+ <9211b2b6-9fca-4ef7-a141-84636d56e67e@linux.dev>
+In-Reply-To: <9211b2b6-9fca-4ef7-a141-84636d56e67e@linux.dev>
+From: David Matlack <dmatlack@google.com>
+Date: Wed, 16 Sep 2026 07:58:23 -0700
+X-Gm-Features: AcwNN1V694h9Klbei55CjXCXrLccfSPzJ9ZF9qWXraB-n35v9TC4KupB_2aeuGo
+Message-ID: <CALzav=dJUiZe+Hxck9X+kKVXoRn-Ks2WxV7B5i0RHRFGy7-Mpw@mail.gmail.com>
+Subject: Re: [PATCH v8 02/12] PCI: liveupdate: Track outgoing preserved PCI devices
+To: Zhu Yanjun <yanjun.zhu@linux.dev>
+Cc: kexec@lists.infradead.org, linux-doc@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-pci@vger.kernel.org, 
+	Adithya Jayachandran <ajayachandra@nvidia.com>, Alexander Graf <graf@amazon.com>, 
+	Alex Williamson <alex@shazbot.org>, Bjorn Helgaas <bhelgaas@google.com>, Chris Li <chrisl@kernel.org>, 
+	David Rientjes <rientjes@google.com>, Jacob Pan <jacob.pan@linux.microsoft.com>, 
+	Jason Gunthorpe <jgg@nvidia.com>, Jonathan Corbet <corbet@lwn.net>, Josh Hilke <jrhilke@google.com>, 
+	Leon Romanovsky <leonro@nvidia.com>, Lukas Wunner <lukas@wunner.de>, Mike Rapoport <rppt@kernel.org>, 
+	Parav Pandit <parav@nvidia.com>, Pasha Tatashin <pasha.tatashin@soleen.com>, 
+	Pranjal Shrivastava <praan@google.com>, Pratyush Yadav <pratyush@kernel.org>, 
+	Saeed Mahameed <saeedm@nvidia.com>, Samiullah Khawaja <skhawaja@google.com>, 
+	Shuah Khan <skhan@linuxfoundation.org>, Vipin Sharma <vipinsh@google.com>, 
+	William Tu <witu@nvidia.com>, Yi Liu <yi.l.liu@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Fri, Sep 11, 2026 at 09:31:06PM -0700, Angel J wrote:
-> A device can satisfy pci_is_bridge() without having a subordinate bus.
-> The dynamic OF helpers for bus-range and interrupt-map dereference
-> pdev->subordinate without checking it.
-> 
-> On a Dell XPS 8940, device 0000:00:00.0 [8086:4c43] has no subordinate
-> bus, and enabling CONFIG_PCI_DYNAMIC_OF_NODES causes an early boot hang.
-> 
-> Generate bus-range and interrupt-map only when a subordinate bus exists.
-> Keep the node and its remaining properties for bridges without one.
-> 
-> Boot-tested on Linux 6.18.44 with CONFIG_PCI_DYNAMIC_OF_NODES=y. The
-> system boots and the node for 00:00.0 retains device_type, reg and
-> compatible. The other bridges retain their nodes and bus ranges.
+On Tue, Sep 15, 2026 at 8:10=E2=80=AFPM Zhu Yanjun <yanjun.zhu@linux.dev> w=
+rote:
+>
+> =E5=9C=A8 2026/7/28 15:09, David Matlack =E5=86=99=E9=81=93:
+> > Add APIs to allow drivers to notify the PCI core of which devices are
+> > being preserved across a Live Update for the next kernel, i.e.
+> > "outgoing" devices.
+> >
+> > Drivers must notify the PCI core when devices are preserved so that the
+> > PCI core can update its FLB data (struct pci_ser) and track the list of
+> > outgoing devices. pci_liveupdate_preserve() notifies the PCI core that =
+a
+> > device must be preserved across Live Update. pci_liveupdate_unpreserve(=
+)
+> > reverses this (cancels the preservation of the device).
+>
+> Hi David,
+>
+> I have a question about the pci_liveupdate_preserve() and
+> pci_liveupdate_unpreserve() APIs.
+>
+> Is it supported to call these APIs multiple times for the same PCI
+> device? For example, a driver could do:
+>
+> pci_liveupdate_preserve(pdev) -- > pci_liveupdate_unpreserve(pdev) -- >
+> perform some operations -- > pci_liveupdate_preserve(pdev) again, before
+> the actual Live Update starts.
+>
+>  From the implementation, it looks like an unpreserved pci_dev_ser entry
+> can be reused, so I wanted to confirm whether this preserve -- >
+> unpreserve -- > preserve sequence is an intended and supported usage.
 
-I think this is the right approach, with something like this included
-in the commit log:
-
-  A bridge (a device with a Type 1 header) may not have a secondary
-  bus allocated (pdev->subordinate), e.g., if there are no available
-  bus numbers or the bridge secondary/subordinate bus numbers are not
-  writable.
-
-I don't think it's necessary to connect this with [8086:4c43] because
-I think this situation is very common, and I don't want to leave the
-impression that it's related to a Dell system or to that specific
-device.  It's just a bug to assume that pci_is_bridge() implies
-pdev->subordinate is valid.
-
-> Fixes: 407d1a51921e ("PCI: Create device tree node for bridge")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Angel J <iamanaws@httpd.dev>
-> ---
-> Changes in v2:
-> - Keep the dynamic OF node and skip only bus-range and interrupt-map
->   when no subordinate bus exists, following review of v1.
-> - Tested on Linux 6.18.44 with the v1 guard removed.
-> 
->  drivers/pci/of_property.c | 14 ++++++++------
->  1 file changed, 8 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/pci/of_property.c b/drivers/pci/of_property.c
-> index 75a358f73..acd2e0f70 100644
-> --- a/drivers/pci/of_property.c
-> +++ b/drivers/pci/of_property.c
-> @@ -361,13 +361,15 @@ int of_pci_add_properties(struct pci_dev *pdev, struct of_changeset *ocs,
->  		if (ret)
->  			return ret;
->  
-> -		ret = of_pci_prop_bus_range(pdev, ocs, np);
-> -		if (ret)
-> -			return ret;
-> +		if (pdev->subordinate) {
-> +			ret = of_pci_prop_bus_range(pdev, ocs, np);
-> +			if (ret)
-> +				return ret;
->  
-> -		ret = of_pci_prop_intr_map(pdev, ocs, np);
-> -		if (ret)
-> -			return ret;
-> +			ret = of_pci_prop_intr_map(pdev, ocs, np);
-> +			if (ret)
-> +				return ret;
-
-I think this is the best solution, but I do think it would be a little
-cleaner to check for pdev->subordinate inside of_pci_prop_bus_range()
-and of_pci_prop_intr_map() instead of assuming things here about the
-internals of those functions.  We could just make them return
-immediately without doing anything.
-
-> +		}
->  	} else {
->  		ret = of_pci_prop_intr_ctrl(pdev, ocs, np);
->  		if (ret)
-> -- 
-> 2.54.0
-> 
+Yes that is a completely supported use-case. A device can be preserved
+and unpreserved any number of times up until pci_device_shutdown(),
+where the preservation status of the device is frozen (see patch 10).
