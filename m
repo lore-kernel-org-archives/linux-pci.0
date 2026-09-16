@@ -1,80 +1,83 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3EF0744C510
-	for <linux-pci@vger.kernel.org>; Wed, 16 Sep 2026 13:14:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 48E6A4F55B2
+	for <linux-pci@vger.kernel.org>; Wed, 16 Sep 2026 13:15:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789564444; cv=none; b=lKda8ROEElTaIA/G6dvdf9mvL+YJ7e6xtO3W0OuWYiV1LaJltN82dJ4F166k7lZ1qO65D8qpQhdutoqNNlZ+hqNgM1JU8WgOPqmDgGIL3bTCmdlgOb/A0xX3sAxKBE32bbstVCoSkTl06fA73EYa2MSX29gOweQ47qYOC68Ppu8=
+	t=1789564506; cv=none; b=HPUARMbDk7hNcSNadzEFZTShGBikokgQLoYS+oMRPP0cxnohpUYxOlzp6JsflzmtvzTN+LqQTxJgCo7KLPvnCAUPCwHqJNCri0vWjQiStHlhU3mRpCYU8VGA+wm97V3FeUU1MQaMTVLx0XELc/lheP5KE5KY6pj+985kR2k5Qbk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789564444; c=relaxed/simple;
-	bh=pihBz4gn+5eleCo7xhCNM4+VAMRmVbSp72bOE4FVM2U=;
+	s=arc-20240116; t=1789564506; c=relaxed/simple;
+	bh=oNYnZX2UBCSp/tvXl18XeMRCJO6e6jfLpgd4ZUSJ7jk=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=OSDULnKrJ+3+ldIDYGnqEVHTdK9ZCvlpZRB+3XQC0q5h9lGc+djHh1MAiXttvSxsCrRGaZtzp++ghuGb76rnphHACdwTovNhPELKH9jqWEiM6Ycg3aSCH0pYB7+QAiZ0EQQvN8kz/7a9HoL9iysm9y976UiQz0nTUdjoJbFmU+U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MKaGm4Xk; arc=none smtp.client-ip=100.103.45.18
+	 To:Cc:Content-Type; b=ROqZpioPbhLb/Ir6AsFz/PvbUqE8r535Uoi8mnfuNbr/DA3nWt5D9q0j6T2rAPR8r0e3qejwKi1EAnXMDvS2uF1DxqkYap3S6T+FeocRsHxO5WyxmRICGwMb98d6QxAMMg221Ts8pxH/ceYzK1CPsdU6UUBsZpyHVvJ5swa0PBU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=G6PL8XKO; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MKaGm4Xk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F357F1F008A4
-	for <linux-pci@vger.kernel.org>; Wed, 16 Sep 2026 13:14:02 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="G6PL8XKO"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DCF5E1F008BC
+	for <linux-pci@vger.kernel.org>; Wed, 16 Sep 2026 13:15:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789564443;
-	bh=pihBz4gn+5eleCo7xhCNM4+VAMRmVbSp72bOE4FVM2U=;
+	s=k20260515; t=1789564504;
+	bh=oNYnZX2UBCSp/tvXl18XeMRCJO6e6jfLpgd4ZUSJ7jk=;
 	h=References:In-Reply-To:From:Date:Subject:To:Cc;
-	b=MKaGm4XkzhjIvGy3MsoJBhYi+Q9WmpIC4kMKncgXqmyRHFPCccRYigQ9nf0W9gFBV
-	 frVlX9zYqHtJOG7B2Vr1RiJwZLjBmGyo4ct/2UBzU+GfWylOICqGPotqd0XCLsGjg1
-	 lsfjZIDmIdAJHSppF0cXKoOt4hk7X4sLKalUqSWMsg7q8ZkdUXehwzyuPOJcpLjuQF
-	 TLZtpHzxcwZjrozHHSoIbOp9A1GoV6v+K5zYPay4yXJuFUYcsXNy7bh/A3LS+7rPK5
-	 UEhTvVmHSeUj3ZZmd7r1LrzGf0ccEgus3Yaf1VyUjlOW3xSypRw88UG4g8b20DKLxi
-	 KLI5geUJFBySg==
-Received: by mail-lf2-f13.google.com with SMTP id 2adb3069b0e04-5b5e4f16c81so895768e87.2
-        for <linux-pci@vger.kernel.org>; Wed, 16 Sep 2026 06:14:02 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AKwUvBx2IR5l54JvdV/tf5ALk3KuaUi8dM18dtNc0ZGbuUskwwpo66qzaCeOYTsoUe4HTZRFPRYpWnHYy0w=@vger.kernel.org
-X-Gm-Message-State: AFuF++nDBuvtwKalg4QYV/J5r7WPFwPtQuVe2adUYTa6jF+533wz87h6
-	iy0g+Im9+V71Gra4nJkHlSJ1Zmr7CuUF8Rl6xl/aUJ0HR2V1gV1CP0npi6bicIzpzCB8Sm1XK/u
-	IFZCqarovzQn0JvdG2wsbXLDtZJaBFUQ=
-X-Received: by 2002:a05:6512:3e07:b0:5b7:651b:1cc0 with SMTP id
- 2adb3069b0e04-5b8b660c2bfmr761601e87.4.1789564441313; Wed, 16 Sep 2026
- 06:14:01 -0700 (PDT)
+	b=G6PL8XKOrkIn03t8JqQWPJ2NAC39e0Trk2zATbJOoc9TFl6FPoHhuQL4i3yCn4qqo
+	 WgTt7FB712Ztn/32IukjjAUOkuYQTVDgdP6Rwbu++RbkdZtUj37WzBa7msnJxPdaOq
+	 BYt0nVrPYUo0temYhkYJ07JRD8KbZ2W+FzRYcTe2rBb7OZM1iae9Wa6tJYp5QgINdI
+	 buYQlE5FOc/CezkIvqCbymEQ8bqwPaeTTgLKINYVjm8Biulxx1r9VgQ6v3D/TGjzpu
+	 VlXPZWdQRYY4YkRmfPRNi5VHuO+IapyNuWWGv4g/MmbAssdB6mP8tFtNrh5FseFNPm
+	 oWt1eKkIKCk0Q==
+Received: by mail-lf2-f12.google.com with SMTP id 2adb3069b0e04-5b5e4f16c81so896914e87.2
+        for <linux-pci@vger.kernel.org>; Wed, 16 Sep 2026 06:15:04 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AKwUvBy1T94UwBs0fBFlA+fM0cNNQJIaQL3+C5ydmxtRQPfC2a90mexFP4N42BnY3pjWpxOMq6bEqXnLaBc=@vger.kernel.org
+X-Gm-Message-State: AFuF++mGB6kfvoc0z4A3kH0beV8nF/AwHVs1Yr44K1JxxEGCJFGisQI0
+	7ZKH9gFUUUErK3lI1YV7TEps6OJJGfjcdJo5cTlvwz8jRxFLxBAJ+QLkKhAIGs818iwtn7biA2D
+	8e4yRzUp8LWDk1krXxlonBlegTb+rD3I=
+X-Received: by 2002:a05:6512:6c8:b0:5b6:1a7c:fd7c with SMTP id
+ 2adb3069b0e04-5b8b66528fbmr794684e87.34.1789564503565; Wed, 16 Sep 2026
+ 06:15:03 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260901-q8b-dts-v1-0-7de0b6a73d08@radxa.com> <20260901-q8b-dts-v1-5-7de0b6a73d08@radxa.com>
-In-Reply-To: <20260901-q8b-dts-v1-5-7de0b6a73d08@radxa.com>
+References: <20260903-pci-tc9563-aux-v2-0-34c625b542c1@oss.qualcomm.com> <20260903-pci-tc9563-aux-v2-5-34c625b542c1@oss.qualcomm.com>
+In-Reply-To: <20260903-pci-tc9563-aux-v2-5-34c625b542c1@oss.qualcomm.com>
 From: Linus Walleij <linusw@kernel.org>
-Date: Wed, 16 Sep 2026 15:13:46 +0200
-X-Gmail-Original-Message-ID: <CAD++jLnuNCcaY+GW5Qzv1caSZfi0CGx_3Hx33x8MVpR6iS0wtg@mail.gmail.com>
-X-Gm-Features: AcwNN1Vw67ZSGXweqRIWzw8TAfqqxjv5DWNR5PtBCdGSa2CfcBJrR47asGFCEnY
-Message-ID: <CAD++jLnuNCcaY+GW5Qzv1caSZfi0CGx_3Hx33x8MVpR6iS0wtg@mail.gmail.com>
-Subject: Re: [PATCH 5/6] dt-bindings: pinctrl: qcom,sc8280xp-tlmm: allow gpio-line-names
-To: Xilin Wu <sophon@radxa.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Andrzej Hajda <andrzej.hajda@intel.com>, 
-	Neil Armstrong <neil.armstrong@linaro.org>, Robert Foss <rfoss@kernel.org>, 
-	Laurent Pinchart <Laurent.pinchart@ideasonboard.com>, Jonas Karlman <jonas@kwiboo.se>, 
-	Jernej Skrabec <jernej.skrabec@gmail.com>, Luca Ceresoli <luca.ceresoli@bootlin.com>, 
-	David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>, 
-	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, Maxime Ripard <mripard@kernel.org>, 
-	Thomas Zimmermann <tzimmermann@suse.de>, Rob Herring <robh@kernel.org>, 
+Date: Wed, 16 Sep 2026 15:14:51 +0200
+X-Gmail-Original-Message-ID: <CAD++jL=bNxOwFVkGjcv+Ux7LbUDD7EwqeMbp1Pvb_p9G4e5XcQ@mail.gmail.com>
+X-Gm-Features: AcwNN1XhOMGQi9DQBoWhea-391wB_SiJ6zDiVvp77goi9CMg6KcYgTlkBlAoV8M
+Message-ID: <CAD++jL=bNxOwFVkGjcv+Ux7LbUDD7EwqeMbp1Pvb_p9G4e5XcQ@mail.gmail.com>
+Subject: Re: [PATCH v2 5/5] arm64: dts: qcom: qcs6490-rb3gen2: enable TC9563
+ embedded GPIO controller
+To: Lorenzo Bianconi <lorenzo.bianconi@oss.qualcomm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	=?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
 	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
+	Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>, Bartosz Golaszewski <brgl@kernel.org>, 
 	Bjorn Andersson <andersson@kernel.org>, Konrad Dybcio <konradybcio@kernel.org>, 
-	Bartosz Golaszewski <brgl@kernel.org>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	dri-devel@lists.freedesktop.org, devicetree@vger.kernel.org, 
-	linux-arm-msm@vger.kernel.org, linux-gpio@vger.kernel.org, 
-	Stephen Chen <stephen@radxa.com>, Junhao Xie <bigfoot@radxa.com>
+	Michael Walle <mwalle@kernel.org>, Alex Elder <elder@riscstar.com>, 
+	Daniel Thompson <daniel@riscstar.com>, linux-pci@vger.kernel.org, devicetree@vger.kernel.org, 
+	linux-gpio@vger.kernel.org, linux-arm-msm@vger.kernel.org, 
+	Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, Sep 1, 2026 at 10:48=E2=80=AFAM Xilin Wu <sophon@radxa.com> wrote:
+On Thu, Sep 3, 2026 at 9:53=E2=80=AFAM Lorenzo Bianconi
+<lorenzo.bianconi@oss.qualcomm.com> wrote:
 
-> The SC8280XP TLMM GPIO controller exposes 230 GPIO lines. Allow boards to
-> provide descriptive names for these lines and constrain the list to the
-> number of GPIOs exposed by the controller.
+> The Toshiba TC9563 PCIe switch embeds a GPIO controller providing 37 GPIO
+> lines.
+> The controller is registered as an auxiliary device by the TC9563 power
+> controller and accessed through the same i2c device.
+> Describe the controller as a "gpio" child node of the switch and use it
+> to control the PERST# reset lines of the two external downstream ports
+> (pcie@1,0 and pcie@2,0), as expected by the TC9563 power controller after
+> switching to the GPIO descriptor API for per-port resets.
 >
-> Signed-off-by: Xilin Wu <sophon@radxa.com>
-
-Sophon, right I got that reference ;)
+> Reviewed-by: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
+> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@oss.qualcomm.com>
 
 Reviewed-by: Linus Walleij <linusw@kernel.org>
 
