@@ -1,46 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C921250AC27;
-	Wed, 16 Sep 2026 14:42:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8392F2C0F8C;
+	Wed, 16 Sep 2026 14:50:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789569770; cv=none; b=ZjSWyxKc7X0944oJDdDLtd9ksIEOvZQhMfOs9AQGdd2agHpTLf+MsC0U96C8zv/zV5MC9PiOuJw4hAOrI2876YglVk0rZ2iTnZ/tAbvDdMEYLvmmLnYpGYJtNOEFfjPquFSOiFJ/CRaLHvbakCg+Ox6Rv7XlP4KmCjWfMhJ7ZFk=
+	t=1789570248; cv=none; b=fPKgJjWnW7fDZIRBFrH9RX0OYnc1RXeOi6gcPa7AV93Bm1LPFMiB2q/M6wvDfVWOr84f3WjI0Tfl5D8m2Zq7HQPXtJxiFhvCRKG9+pvMIpT3L92wShmIuHMK2gh3N0iOM7IDihl+6gmVPsrZ5dSv7QDHku48+xWH+srabBGyAYQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789569770; c=relaxed/simple;
-	bh=y9cL+bWw17AHMHxfB2jXBHEFAqLUnaBApDnIfvis9AM=;
+	s=arc-20240116; t=1789570248; c=relaxed/simple;
+	bh=RhVLTWzVaJaLgfP7/phIIe+ekkV4rdTVEVwEjVESCC4=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=g5jMhbzPXLCmpT+s1RdAFzDOu+E4h37HeS6LZvuC4LQPdMoZrvayqCa6aXXFIBDLyePb9jbBxaVUoPTnhnCaLFWWjFsB23DPROxn8dMfX+3CikrnkZeDcMMQ8ovZ2Ccbn5pSTDNlI5d4rnB1vcoTWmS97/X6oh/f3pgeu2R7B0U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=k+KLzS9z; arc=none smtp.client-ip=100.103.45.18
+	 Content-Disposition:In-Reply-To; b=P+G5T9UQ3Y8mJtXc17ulgqFABx1XtRQj6yXL47ETdUIjAbFJ/gx1lxtAC9xGxDFHgwJgFTnbcIf8H5UrFLM38rT1Wxpae55wjKVJmNTMESSg1hHXfHPWgv8Dic9z6nXd8tyFisbT4CVKvJVNp1x1FeIKq0VBTOALwV6Nynwc0jo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=j1Jr2asw; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="k+KLzS9z"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D089A1F000FF;
-	Wed, 16 Sep 2026 14:42:47 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="j1Jr2asw"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D2AC21F000FF;
+	Wed, 16 Sep 2026 14:50:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789569768;
-	bh=FwvS5UItrcHkrDAwHzE/UOVRGSXseRvyP1Un30H9BwI=;
+	s=k20260515; t=1789570247;
+	bh=9n9CTHcuaXijNoFZR6DZmPgiz11kru6+rNJJzvGm2JI=;
 	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=k+KLzS9zTk864hpz365FRpXfY9iaqSvKrxQge6vTXejwJTW3Wtb1o/LiAEPboialQ
-	 D9uvZcZc/21ENKvBBBiE6VfVFFvgKy2jNZ4IxwGBA8vMcEQQzPJm6sYFLd9509FheH
-	 y0eew0WGi1MJgeqsyxXwuDIwEk3CjLt5QjDsUYy1kEhIWI6Bwjp8gC+GyN0t4wu+7U
-	 uocjuqu/cwXcBEDJOJ0cO/9DxMd8lWvgsQO8ncIdbUaFeiAdHmcpsrv3WFbSJlzIBr
-	 Sefi+SGqL4YVVyKf1LDkQD1TE898XzKHYwfZtHyCC2xomXxln88LTHgaR9/T+zvzVb
-	 iyTnyfNt3i4uA==
-Date: Wed, 16 Sep 2026 09:42:46 -0500
+	b=j1Jr2aswkdTNWl5sS0SE0HNk/mgydrHOcEq9xTtwwmAXXzqKwaZTRXHUrYQKHsZFC
+	 kOXVjd9yGc5jFlTpqRmBHCDwtaUEm16fp2vgWSDGOkFsyDHnf902ox63Ux44efukZa
+	 9vFQ5OHtX4eS6OxvnuBrjc7J8CJgt8Y6RSPWI9Y2qVBLXziCoJGbowm8Zad4whnO81
+	 sHJwD2BVnzwwNFOlZeMjKoPDl2Klztbn+HZg5LvA1ILP0bG3bxcFYhkTSY4/WPIlYY
+	 4OodtnTuVnCicd0cL2oYHcJRggjwqkXKwhyqJQl/02B2RCo2BatJR/IxdP09YRIL0s
+	 uFhFO1pcB01Ow==
+Date: Wed, 16 Sep 2026 09:50:45 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
 To: Angel J <iamanaws@httpd.dev>
-Cc: Andrea della Porta <andrea.porta@suse.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"regressions@lists.linux.dev" <regressions@lists.linux.dev>,
-	"stable@vger.kernel.org" <stable@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-rpi-kernel@lists.infradead.org" <linux-rpi-kernel@lists.infradead.org>,
-	"robh@kernel.org" <robh@kernel.org>,
-	"florian.fainelli@broadcom.com" <florian.fainelli@broadcom.com>
-Subject: Re: [REGRESSION] PCI: Dynamic OF node creation hangs on invalid
- bridge configuration
-Message-ID: <20260916144246.GA921594@bhelgaas>
+Cc: linux-pci@vger.kernel.org, bhelgaas@google.com, robh@kernel.org,
+	herve.codina@bootlin.com, lizhi.hou@amd.com, andrea.porta@suse.com,
+	florian.fainelli@broadcom.com, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org, regressions@lists.linux.dev,
+	stable@vger.kernel.org, linux-rpi-kernel@lists.infradead.org
+Subject: Re: [PATCH v2] PCI: of_property: Omit bus properties without a
+ subordinate bus
+Message-ID: <20260916145045.GA922158@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -49,78 +45,82 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Tav3crct3HpgoRPBGOe-bfkBEORVT1RkvRbP8B7IXhRvEbUTAi-G6RiSnynkgV2rJ1dOIbCxm-mHUcm1e0MyQG52qswzpxURe4KFJoddhGg=@httpd.dev>
+In-Reply-To: <20260912043106.10715-1-iamanaws@httpd.dev>
 
-On Wed, Sep 16, 2026 at 11:14:25AM +0000, Angel J wrote:
-> Hi Bjorn, Andrea,
+On Fri, Sep 11, 2026 at 09:31:06PM -0700, Angel J wrote:
+> A device can satisfy pci_is_bridge() without having a subordinate bus.
+> The dynamic OF helpers for bus-range and interrupt-map dereference
+> pdev->subordinate without checking it.
 > 
-> Thanks, that clears it up. I agree the of_property fix is simpler. If a
-> Type 1 device can legitimately have no bus below it, I don't see a reason
-> to change its class or header just to avoid that case.
-
-Yes.  And I suspect this affects more than just the [8086:4c43]
-device, so I think it will be easier if we don't have to list
-individual devices for a quirk.  I think it's very common to have this
-kind of bridge for Intel uncore at bridge 0xff or 0x7f.
-
-> On Tuesday, September 15th, 2026 at 18:21, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On a Dell XPS 8940, device 0000:00:00.0 [8086:4c43] has no subordinate
+> bus, and enabling CONFIG_PCI_DYNAMIC_OF_NODES causes an early boot hang.
 > 
-> > On Mon, Sep 14, 2026 at 11:28:45PM +0000, Angel J wrote:
-> > > Ok, here it is...
-> > >
-> > > I tested this quirk on Linux 6.18.44 with CONFIG_PCI_DYNAMIC_OF_NODES=y,
-> > > and it boots without either OF fix. The diff below omits the test logging.
-> > >
-> > > PCI_FIXUP_HEADER runs after the resources have been parsed using the
-> > > original header type, and changing hdr_type also affects configuration
-> > > restore. I don't know enough about this part of PCI to judge whether
-> > > that's safe, so I'll wait for your advice before submitting it as a patch.
-> > >
-> > > Thanks,
-> > > Angel J
-> > >
-> > > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> > > index de9bbccda..57df88a38 100644
-> > > --- a/drivers/pci/quirks.c
-> > > +++ b/drivers/pci/quirks.c
-> > > @@ -291,6 +291,22 @@ static int __init pci_apply_final_quirks(void)
-> > >  }
-> > >  fs_initcall_sync(pci_apply_final_quirks);
-> > >
-> > >
-> > > +/*
-> > > + * On the Dell XPS 8940, 8086:4c43 reports a PCI-to-PCI bridge but has no
-> > > + * downstream bus. Use host-bridge class and a normal header so that
-> > > + * pci_is_bridge() does not send it through bridge scanning.
-> > > + */
-> > > +static void quirk_intel_4c43_host_bridge(struct pci_dev *dev)
-> > > +{
-> > > +	if ((dev->class >> 8) != PCI_CLASS_BRIDGE_PCI ||
-> > > +	    dev->hdr_type != PCI_HEADER_TYPE_BRIDGE)
-> > > +		return;
-> > > +
-> > > +	dev->class = (PCI_CLASS_BRIDGE_HOST << 8) | (dev->class & 0xff);
-> > > +	dev->hdr_type = PCI_HEADER_TYPE_NORMAL;
-> > > +}
-> > > +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x4c43, quirk_intel_4c43_host_bridge);
-> > 
+> Generate bus-range and interrupt-map only when a subordinate bus exists.
+> Keep the node and its remaining properties for bridges without one.
 > 
-> > I think your of_property patch is better because it removes some
-> > assumptions made in the of_pci_make_dev_node() path about what things
-> > in the pci_dev are valid.  It's quite legal for a device to have a
-> > Type 1 header (so pci_is_bridge() is true), but have no pci_bus below
-> > it, e.g., a bridge on bus 0 with Secondary Bus Number also being 0.
-> > 
+> Boot-tested on Linux 6.18.44 with CONFIG_PCI_DYNAMIC_OF_NODES=y. The
+> system boots and the node for 00:00.0 retains device_type, reg and
+> compatible. The other bridges retain their nodes and bus ranges.
+
+I think this is the right approach, with something like this included
+in the commit log:
+
+  A bridge (a device with a Type 1 header) may not have a secondary
+  bus allocated (pdev->subordinate), e.g., if there are no available
+  bus numbers or the bridge secondary/subordinate bus numbers are not
+  writable.
+
+I don't think it's necessary to connect this with [8086:4c43] because
+I think this situation is very common, and I don't want to leave the
+impression that it's related to a Dell system or to that specific
+device.  It's just a bug to assume that pci_is_bridge() implies
+pdev->subordinate is valid.
+
+> Fixes: 407d1a51921e ("PCI: Create device tree node for bridge")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Angel J <iamanaws@httpd.dev>
+> ---
+> Changes in v2:
+> - Keep the dynamic OF node and skip only bus-range and interrupt-map
+>   when no subordinate bus exists, following review of v1.
+> - Tested on Linux 6.18.44 with the v1 guard removed.
 > 
-> > I don't know what happened in this particular case, whether the
-> > Secondary Bus Number and Subordinate Bus Numbers are hard-wired to
-> > 0xff or what (per spec, both should be read/write).  Maybe the system
-> > "lspci -vv" and/or complete dmesg log would have a clue.
-> > 
+>  drivers/pci/of_property.c | 14 ++++++++------
+>  1 file changed, 8 insertions(+), 6 deletions(-)
 > 
-> > But I do think it's better if we don't assume that every pci_dev with
-> > a Type 1 header has a pci_bus allocated.
-> > 
+> diff --git a/drivers/pci/of_property.c b/drivers/pci/of_property.c
+> index 75a358f73..acd2e0f70 100644
+> --- a/drivers/pci/of_property.c
+> +++ b/drivers/pci/of_property.c
+> @@ -361,13 +361,15 @@ int of_pci_add_properties(struct pci_dev *pdev, struct of_changeset *ocs,
+>  		if (ret)
+>  			return ret;
+>  
+> -		ret = of_pci_prop_bus_range(pdev, ocs, np);
+> -		if (ret)
+> -			return ret;
+> +		if (pdev->subordinate) {
+> +			ret = of_pci_prop_bus_range(pdev, ocs, np);
+> +			if (ret)
+> +				return ret;
+>  
+> -		ret = of_pci_prop_intr_map(pdev, ocs, np);
+> -		if (ret)
+> -			return ret;
+> +			ret = of_pci_prop_intr_map(pdev, ocs, np);
+> +			if (ret)
+> +				return ret;
 
+I think this is the best solution, but I do think it would be a little
+cleaner to check for pdev->subordinate inside of_pci_prop_bus_range()
+and of_pci_prop_intr_map() instead of assuming things here about the
+internals of those functions.  We could just make them return
+immediately without doing anything.
 
-
+> +		}
+>  	} else {
+>  		ret = of_pci_prop_intr_ctrl(pdev, ocs, np);
+>  		if (ret)
+> -- 
+> 2.54.0
+> 
