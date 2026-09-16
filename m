@@ -1,131 +1,72 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 93825388E7E;
-	Wed, 16 Sep 2026 08:03:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC913449B3D
+	for <linux-pci@vger.kernel.org>; Wed, 16 Sep 2026 08:09:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789545823; cv=none; b=ta0j0xTcsYKsae5Q/ezKt9j+cv3mc6TvQ0JxrfhbAXTBxytLsjex/zHzpggwilBWEjsTI4xFnO1OXugc0XTknCOM+3ziaqWd75iDA6KIW0o3nzPT07f+Lt1pg+R+XuAm2vNYTcLbeSeficUtn++zR7zyOavCMIAdvqqfBJNNSVw=
+	t=1789546170; cv=none; b=JuQbVnYhXdf+ksRURgxNQ3Wr0D1ea2aTbkE+0UhnICKdJBoRM+z9RnBc1qnlNeql79UkgkPHC/DlXMDR4txhq38Pemrh97dQ7qhbeuIHTmA74vVO3ZAV1ZXFDkFQ2WSJyepq+/eHN0JnLHzpyDUjFOfYB1PQRO/wC+SzgH52o+0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789545823; c=relaxed/simple;
-	bh=KyLeZDs65SJigKA9uBYEoUpTW2XH2SOgKl2BHTpojYY=;
-	h=Date:Message-ID:From:To:Cc:Subject:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=TBCSAiYOI6XTCs7eijlK9rfBmCXa79haoUlN8ADnEyPlB5VdvNmK5yIKZ8vRry4xOnldK2Ds948QPPW6XJ/yX4843vM7Xge7Bk923UdOt4DCCd8P8LJA5E8BopLxSe1VF2JvhP3efSHsBkW0Dwgf3Eo/jhWKhWhNUFdxXRpeM0k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SMVra4ZE; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789546170; c=relaxed/simple;
+	bh=24QgA5wCY6OAX4hC/N7VXZvx4ugE1NVCDxIExAP+Hsw=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=UGMa38w6vVZqh56Blu0TTuWGaoMm+BqFB2YtHv4K4d7wYMuCiGcMrOHrxUtix4EHbb0OFwEALnTndgZccJAGM1erE4EKxkz1wsc6ms6kGP3irO8e0tKpY3dvNPUZRQe8SyFAmmMw6VeKC135lNvhfMG811aqpUnNM5WMLt7f1/4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=f1kfErnx; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SMVra4ZE"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 03BAA1F000FF;
-	Wed, 16 Sep 2026 08:03:29 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="f1kfErnx"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0C88C1F000FF;
+	Wed, 16 Sep 2026 08:09:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789545809;
-	bh=XIBzlK2j0riyQGL55D1titlOQJB9O6G+ICsOTOSNMtM=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=SMVra4ZERH4PoKOds3r0DQlp0tyeT4BzWfkiz8NejsvdN5aBCI8A6ezKj773wen9n
-	 iJiuuO+KUak6rbmCV5ZNZqc9XNTK8+Z+hBIUq+53/vbzMUE0La20b0UVp3DY9eMkyj
-	 vRmDvBvFG4GAQix8vDBvdC19oJpdAYU/dM2ajLz3+sZaE9ZDROYfjpVYsHNzNo0dAH
-	 y8XkCdg1htRfB+arjQW88RAejYQh/CVe0656eEpicN474lNoR5SNJHVWJ1Z8T2jI2E
-	 qzA9NZtOVtRipNvZnMqppv2ME8s63t12l9YkqFH52l6IBany/n1eEl2/V3BYP4JYRA
-	 Q9REjNywDnKUg==
-Received: from sofa.misterjones.org ([185.219.108.64] helo=goblin-girl.misterjones.org)
-	by disco-boy.misterjones.org with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-	(Exim 4.98.2)
-	(envelope-from <maz@kernel.org>)
-	id 1x6kc2-00000009VAE-3lNw;
-	Wed, 16 Sep 2026 08:03:26 +0000
-Date: Wed, 16 Sep 2026 09:03:26 +0100
-Message-ID: <86jyol62sx.wl-maz@kernel.org>
-From: Marc Zyngier <maz@kernel.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Manivannan Sadhasivam <mani@kernel.org>,	Qiang Yu
- <qiang.yu@oss.qualcomm.com>,	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?UTF-8?B?V2lsY3p5xYRza2k=?= <kwilczynski@kernel.org>,	Rob
- Herring <robh@kernel.org>,	Bjorn Helgaas <bhelgaas@google.com>,	Konrad
- Dybcio <konrad.dybcio@oss.qualcomm.com>,	linux-pci@vger.kernel.org,
-	linux-arm-msm@vger.kernel.org,	linux-kernel@vger.kernel.org,	James Morse
- <james.morse@arm.com>,	Andrew Scull <ascull@google.com>
-Subject: Re: [PATCH v2] PCI: qcom: Block accesses to downstream devices on link down
-In-Reply-To: <20260915231421.GA881410@bhelgaas>
-References: <2ibficaitalz4lacqffsrp4kuqzanxnxr2bwd6x5yti4mmfabf@h3y63kuz7fjh>
-	<20260915231421.GA881410@bhelgaas>
-User-Agent: Wanderlust/2.15.9 (Almost Unreal) SEMI-EPG/1.14.7 (Harue)
- FLIM-LB/1.14.9 (=?UTF-8?B?R29qxY0=?=) APEL-LB/10.8 EasyPG/1.0.0 Emacs/30.1
- (aarch64-unknown-linux-gnu) MULE/6.0 (HANACHIRUSATO)
+	s=k20260515; t=1789546152;
+	bh=24QgA5wCY6OAX4hC/N7VXZvx4ugE1NVCDxIExAP+Hsw=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=f1kfErnxXQWtyhNGr4ob80m4El17fvnMxzhMcexXzEcxJhqXgAroLlMxg4/pvfgU0
+	 +WIteB2MweIA3wI1R3LnnS9JjjP+P+lQmNb3ZzLwQgKktTP6AxfM+qWDa1kumxjQaV
+	 lsK4zr/VguImePuZeDYC0xWUAIiLAIcjRI4WShptnXa15vIbnKgpDNnp55/zNkvAwv
+	 5ODKFsxk6ZsMWGZNti2MQ11IQnIcAdiOwutEFpgbnQD/iJrETMnn1AkaPGy51wdIvy
+	 jFTeTzWHpqjbtkmuc48tXyWrde0rEvwwYH2j7RA4ptdPTFtsojkcsnNRb90M/kTJwk
+	 XDaSoRmzKFCog==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] PCI: keystone: deinitialize endpoint on remove
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Guangshuo Li" <lgs201920130244@gmail.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260916080030.2960608-1-lgs201920130244@gmail.com>
+References: <20260916080030.2960608-1-lgs201920130244@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 16 Sep 2026 08:09:11 +0000
+Message-Id: <20260916080912.0C88C1F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0 (generated by SEMI-EPG 1.14.7 - "Harue")
-Content-Type: text/plain; charset=US-ASCII
-X-SA-Exim-Connect-IP: 185.219.108.64
-X-SA-Exim-Rcpt-To: helgaas@kernel.org, mani@kernel.org, qiang.yu@oss.qualcomm.com, lpieralisi@kernel.org, kwilczynski@kernel.org, robh@kernel.org, bhelgaas@google.com, konrad.dybcio@oss.qualcomm.com, linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org, james.morse@arm.com, ascull@google.com
-X-SA-Exim-Mail-From: maz@kernel.org
-X-SA-Exim-Scanned: No (on disco-boy.misterjones.org); SAEximRunCond expanded to false
 
-On Wed, 16 Sep 2026 00:14:21 +0100,
-Bjorn Helgaas <helgaas@kernel.org> wrote:
-> 
-> [+cc James, Andrew, Marc for guidance on generic arm64 PCIe error
-> recovery; beginning of thread:
-> https://lore.kernel.org/all/20260819-ecam_blocker-v2-1-e7a8fdc1c5cb@oss.qualcomm.com]
-> 
-> On Tue, Sep 15, 2026 at 07:16:11PM +0200, Manivannan Sadhasivam wrote:
-> > On Fri, Sep 11, 2026 at 12:18:07PM -0500, Bjorn Helgaas wrote:
-> > > On Fri, Sep 11, 2026 at 08:17:29AM +0200, Manivannan Sadhasivam wrote:
-> > > > On Tue, Sep 08, 2026 at 06:00:30PM -0500, Bjorn Helgaas wrote:
-> > > > > On Wed, Aug 19, 2026 at 11:36:54PM -0700, Qiang Yu wrote:
-> > > > > > After a PCIe link goes down, software may still access the
-> > > > > > BAR (MMIO) space or configuration space of devices behind
-> > > > > > that link before recovery has run. As the link is down,
-> > > > > > these accesses never complete, resulting in a storm of
-> > > > > > Completion Timeout AERs.
-> > > > > 
-> > > > > What is special about qcom here?  It seems like the Completion
-> > > > > Timeouts and AER interrupts should happen with every PCIe
-> > > > > controller.
-> > > > 
-> > > > The special behavior which is common across many (not all) ARM
-> > > > SoCs is that they don't synthesize all-one response for
-> > > > completion timeouts, unlike RCs in x86 machines. Rather, they
-> > > > return AXI error response, resulting in CPU treating them as
-> > > > SError, in-addition to AER storm.
-> > > > 
-> > > > Commit message missed mentioning SError though.
-> > > 
-> > > I don't know how SError works, but this sounds like a pretty big
-> > > open issue with respect to RAS.  I don't think we want a kernel
-> > > panic because a device failed to respond to a config or MMIO
-> > > access, e.g., if a card or Thunderbolt cable got unplugged.
-> 
-> I still don't know anything about arm64 or SError, but I see these KVM
-> commits about using ESB to manage SError in some cases:
-> 
->   0e5b9c085dce ("KVM: arm64: Consume pending SError as early as possible")
->   472fc011ccd3 ("KVM: arm64: nVHE: Don't consume host SErrors with ESB")
-> 
-> I assume it's not possible or practical to use ESB in the native host
-> case to deal with issues like this in a generic way instead of the
-> vendor-specific feature Qcom is using here?
+> ks_pcie_probe() initializes the DesignWare PCIe endpoint with
+> dw_pcie_ep_init(). The probe failure path calls dw_pcie_ep_deinit()
+> when endpoint register initialization fails, but the remove path does
+> not perform the corresponding endpoint teardown after a successful
+> probe.
+>=20
+> The successful endpoint initialization also calls pci_epc_init_notify().
+> Without the matching teardown on removal, the EPC initialization state
+> and resources allocated by the DesignWare endpoint core are left
+> active after the driver is removed.
+>=20
+> Notify the endpoint framework about deinitialization and call
+> dw_pcie_ep_deinit() before disabling runtime PM and the PHYs.
+>=20
+> This issue was found by manual code inspection.
+>=20
+> Fixes: 23284ad677a9 ("PCI: keystone: Add support for PCIe EP in AM654x Pl=
+atforms")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Guangshuo Li <lgs201920130244@gmail.com>
 
-In general, an SError is fatal. No ifs, no buts. It is asynchronous,
-and has no syndrome information. Once you find out about it, you're
-already dead.
+Sashiko has reviewed this patch and found no issues. It looks great!
 
-ESB is a way to paper over this sorry state of affair by making sure
-that the error is observed at a known point. You can think of it as a
-barrier synchronising potential errors for transactions in flight. KVM
-uses that to attribute SErrors triggered by a guest, on an exception
-boundary.
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260916080030.2960=
+608-1-lgs201920130244@gmail.com?part=3D1
 
-That's not applicable to the kernel itself, unless you want to place
-an ESB after each and every load/store in the kernel (/s).
-
-Modern versions of the architecture allow these errors to be reported
-as *synchronous* exceptions, with all the syndrome information you
-want. I guess this HW doesn't implement it, which is a pretty big
-mistake for systems that allow surprise removal of devices...
-
-	M.
-
--- 
-Without deviation from the norm, progress is not possible.
