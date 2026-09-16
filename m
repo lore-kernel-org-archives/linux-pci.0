@@ -1,317 +1,289 @@
-Received: from mail-qv2-f12.google.com (mail-qv2-f12.google.com [74.125.230.140])
+Received: from mail-pj1-f98.google.com (mail-pj1-f98.google.com [209.85.216.98])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B79174E50AE
-	for <linux-pci@vger.kernel.org>; Wed, 16 Sep 2026 19:33:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.230.140
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D92748FF78
+	for <linux-pci@vger.kernel.org>; Wed, 16 Sep 2026 19:35:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.98
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789587224; cv=none; b=W1hi84oXZgFU5g56gA8oGg1nn+p7A0vgynGrB8G1w7mIRRxtq29TK3DUrODeRZakRvEO7a5S1T4vHdFN7WD3YJ++g1mRWXbywZTa9lno7NvLOx+Md1otJ2y0buoVwczfIdyyhJ9bK4FhSQBdVIn3KKAuTnMcJuDjU1fVb1W8qXg=
+	t=1789587367; cv=none; b=EsPgTAC/reNOvdh+3EkHSIKNuXVgSqZ/XpgTM8V37oIGE3VVo8SdHnF5iAiAlnB5asBSJr8gc3OeON2+agE2IXbiNS4DF9k82O1KJyoaQIXvaoTHNzRvTdKR3hmLz8ufxOmIPFHVmYH9/n19yVF84L199g/yiZaU20SEzArm6e8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789587224; c=relaxed/simple;
-	bh=Kpo0OyWi0CO746t44DDgn1hn3lqL6Qj9kQMB/VsQdtI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=gXkVAmr6GEyjoAopWaR2twvzolI3r9uru7gXT6fvd36cqJnUfvUz7B6DA8Y3WBkiCzySlIMS0ksZVyAha0VQk9gW6X9Q9ITcz29BeZa52JfbKF1cc5KKLxjzNxjbhXNh2YkKB8mxxXWbBDvUt3P1K/6KEdorvLH+j6fnS6wbGPQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=gourry.net; spf=pass smtp.mailfrom=gourry.net; dkim=pass (2048-bit key) header.d=gourry.net header.i=@gourry.net header.b=RSzzeEYp; arc=none smtp.client-ip=74.125.230.140
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=gourry.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gourry.net
+	s=arc-20240116; t=1789587367; c=relaxed/simple;
+	bh=SpqyfsIMboKovQvyEmgTBkFBdOkAePFWbObtr6w3Evc=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=H/q2kZuk66gprG6kLG6zRHfn9uyndGOKT5om24w24B34XfrbPJ2j5gcTf7Xwl5Z+JVwjPgsmL3vYsMerkiiMS6bInojBNov0xka/aaJOy/NdFtriQYD7j+x91DYWCmyTfbmtVCFi4SG3UfZp9ulV6mroaUt++iklwhbUXU7+qFs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=C4AC/nv+; arc=none smtp.client-ip=209.85.216.98
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gourry.net header.i=@gourry.net header.b="RSzzeEYp"
-Received: by mail-qv2-f12.google.com with SMTP id 6a1803df08f44-910531ea7feso213066d6.0
-        for <linux-pci@vger.kernel.org>; Wed, 16 Sep 2026 12:33:33 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gourry.net; s=google; t=1789587211; x=1790192011; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=eJtIecQvwkVEDPm/6dNtwM/FqSFHvdTn3Czip8ta20A=;
-        b=RSzzeEYp51xyMflEt24hgwFSPgHtW1nrLj3gzOsux+BYrVHqPq+MBJDHkgcBE0IrmV
-         qZGteJmf5nvplXr5hPFVIldhBVKQVujfnj1U+9iQEXbzQvvKfa4YBK6oEUEWTiH2t+W6
-         c0spJB+mCL0Giv46yabqNPKEWMxFk5LvvEq44AGVjebZ4mTj7r36ODIyJXG3EMKmT4aK
-         YYCCH8K4Vsj/dUt0IRddDyX02VS6nqKoGr/BxN2yWilB+Qpc408H15zR3BkT/QREp6lV
-         bqYdUZLDY16rbNFi1KO33uo7l4wDajjwgmsZo1cjyrrMI2hzEUy7UIx5CVAeFz3zIxY3
-         qE5g==
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="C4AC/nv+"
+Received: by mail-pj1-f98.google.com with SMTP id 98e67ed59e1d1-38dfe910e9dso22337a91.3
+        for <linux-pci@vger.kernel.org>; Wed, 16 Sep 2026 12:35:54 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1789587211; x=1790192011;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+        d=1e100.net; s=20260707; t=1789587353; x=1790192153;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:dkim-signature:x-gm-gg:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=IdnfVfvh6qWaJ4IGSur7MAJI2cpqMQzWlfz5GBhLUo8=;
+        b=IJsmy1mHq7DOYfRAoYEBQ8uGdvaP2oB6+WwOofHii6p2oy9HxcOidUzqjxYcZxW/eD
+         Nfvj7+4ZPddbZoQ3yjla6mm2f26aYerxYQi6XCxCuMS8jSplhRK+KQCrCR/WOkrh8/Qy
+         gIRwg5HldPPtavEj2wyZ/tPFvaZgKVCiTOAjQPuDWYszQ6r447y+KsokXyLBqzknwzMH
+         CQyVL/NinWB+nLtfsgbRVRomoqEEM3+cJxAyKM9WyXz2tZtdfZFc1hHF0lRxfBT3dyXJ
+         amRYJbHao15t80pjFd0MBdhfL0puhqDbET5HKy2mov9S2+reCOqOiuzpDH9rik25akgv
+         50Jw==
+X-Gm-Message-State: AFuF++m8wlIy3+0nGkHLyl23Lz4C6DlGrA5j8l187f3oN3XHIDUMobrf
+	2ao6YcUdlsWg9tJDTgTafGMweVoMVGImXj2SJeaR7h4RvrM1m4xiPW6WS8pA0qPF/dJBG0M9DJA
+	SyWru4Rggahteaf2Zznorb/8j9UBBEvKGkhK0YTuQQeZsZPqjrABie3uAvdjf/ngdXCRPXMTaG8
+	r727v/yXu5njd2le1j75TEyoGI3d9XakoLM58wzFfy3iOtzETTB5yhJ79D2yrDS9sDz/LMuhC+a
+	Ixm5OMGs+UozpgM
+X-Gm-Gg: AYBFou1g60n6/wntG/5PXbkIl0yCoKOElJnxf294w+47/W4kT1vtOMKifeHxtAmPJ9E
+	RTub43zPyy0slNQGfrNMn8bd48ekfB6qvflna7OVC8K6P35Ctr8zsnqw4m+3wfFvt9AaGx0dKFM
+	BRvIcQfwvqCpiMXR+NdhHns9BC9r4jcr4+LVTjvnPGnudog/3cipPdGtDqvBMzgMEwN9TcvPP5R
+	yVFSZocTGJxrWO1uvLq7/GzH47XzVye0mQPYJ+wxXiwyvnSsKPZ0zwVHF51PXfHmaqPmID1HFR9
+	y2QmCbBaU+QEgEoDrwbwUwgBNHOMFUG+LiEVLZWj5XAoBC91QZ6sOVL1M9QILpc9yZVj6U4jI5f
+	V0pQZrisrYmTgNgQbuuUf7nFJfS0h2lsSUicrBA9WpNvj3f8UDPAR1WRFqkkgGp4bD8GZka7smN
+	jAe2yZyEQxlf9s2jDis4PWgHgkrxQFFLR/HcRF
+X-Received: by 2002:a17:90b:390f:b0:39e:1c4e:5473 with SMTP id 98e67ed59e1d1-39e1e47ab6dmr9850555a91.16.1789587352508;
+        Wed, 16 Sep 2026 12:35:52 -0700 (PDT)
+Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-98.dlp.protect.broadcom.com. [144.49.247.98])
+        by smtp-relay.gmail.com with ESMTPS id 98e67ed59e1d1-39e35b621e8sm281410a91.0.2026.09.16.12.35.51
+        for <linux-pci@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Wed, 16 Sep 2026 12:35:52 -0700 (PDT)
+X-Relaying-Domain: broadcom.com
+X-CFilter-Loop: Reflected
+Received: by mail-ej1-f69.google.com with SMTP id a640c23a62f3a-c295b027ee0so11199566b.0
+        for <linux-pci@vger.kernel.org>; Wed, 16 Sep 2026 12:35:51 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google; t=1789587350; x=1790192150; darn=vger.kernel.org;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=eJtIecQvwkVEDPm/6dNtwM/FqSFHvdTn3Czip8ta20A=;
-        b=Hx2nn7N5P6+vkFiW8znMVcUq2h78mxkAJHvaFCpGAMdGSYn166sCjBVTwztGU17sMY
-         hERdws7pzFbfEX45ZD2YLFJNujf6jgdm9+EO3F/i/wzFMddYh1zyPfybV11WwNLcIdcQ
-         KDR9PNcNnow1h04B9ZJenq73wlRu23hUxdGgVIu6GM84bO3ap/or+3JE9pLMZzghEFZB
-         +SftSECbr0mzwAiH+0kmZ8q/IObA5qVDUp+sjsAXLtYzRufUHOrkUEjMU6ZzLznVpRTa
-         XBmgwfUtDRPKRNcu8YmOGwcKmQiAZ6SSP6y54f/6QHm1EFb4WsHP8DD+gX+tnSWFIQ8b
-         EwHQ==
-X-Forwarded-Encrypted: i=1; AKwUvBz0agmc9wA/ZVO/VkUF0Ti5v6fKb9TWEX929tc4MhzVM7NKS33cZj+MK7z2xhJZYVFsmNwwbgA0q9I=@vger.kernel.org
-X-Gm-Message-State: AFuF++kCIsqoRX6+wggc1KXRwWGDpdXIeMEavtUTLVG31utV6cEz3cwb
-	e0kShKNrnPrK/u2HTS7WWq4Twca+bl582eLgXKipw01Ku93H/vu9VjOaeJIBdNX5yyg=
-X-Gm-Gg: AYBFou0kUi92f8z25KUeC+MBXk3SsrS2atCmgDMHedwJvTOPkG34nUCFrA8jf0M0xoa
-	xqrm7EgYsctK4DTxBAvV3P6D+E+TjqMAJZUijeqGb8o8d/KNrDuw4VxaWt7vtXAY2a2TMIHfiUx
-	GkYL3Iv1TEzTMB0HrdK5Qik36bkJwq94TBlJR/g1m62d2ZYkpeFEpdGTNJXxKlOAauE+nTna6sq
-	TMfRLHzbkWZK8xX2ET9PV6d9LOiXicjxyo0DGipG0eVQKlrAXm3p87IVrZDz3qhx7i+MZOFmm7I
-	Tc+W/DRIR250KDRV0p88/aJ1OSjlvaZUIlqtwiSL2GbxhKZioOIpnLuJm3FwrbrMG/AU7Voyq6L
-	fCqr6UQEsPw0XmXPPb659Natcf03l8+CCdOefTb3QnN/CuaTt8ezAn8WZV4Hok0Ern/fTzUz8gF
-	eJYNUIPQeEhxZZ726RQtlmfa8o+iXIUQh3/mklekYCdDzlp9fby9SlqCRO5ZeXx63kANKsBK3vI
-	y2dEQNAsoDUxEhyMZUadJVrNk/s56l9ykx8s0YW9HCEaQzs4a0YfkA=
-X-Received: by 2002:a05:6214:448b:b0:910:31f7:3bd7 with SMTP id 6a1803df08f44-9123d7d57f2mr72582036d6.29.1789587210868;
-        Wed, 16 Sep 2026 12:33:30 -0700 (PDT)
-Received: from gourry-fedora-PF4VCD3F (pool-173-79-60-52.washdc.fios.verizon.net. [173.79.60.52])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-91246979f17sm6900666d6.34.2026.09.16.12.33.29
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 16 Sep 2026 12:33:30 -0700 (PDT)
-Date: Wed, 16 Sep 2026 15:33:28 -0400
-From: Gregory Price <gourry@gourry.net>
-To: mhonap@nvidia.com
-Cc: alex@shazbot.org, jgg@ziepe.ca, ankita@nvidia.com, jic23@kernel.org, 
-	dave.jiang@intel.com, alejandro.lucero-palau@amd.com, smadhavan@nvidia.com, 
-	corbet@lwn.net, skhan@linuxfoundation.org, dave@stgolabs.net, 
-	alison.schofield@intel.com, vishal.l.verma@intel.com, iweiny@kernel.org, 
-	ming.li@zohomail.com, yishaih@nvidia.com, skolothumtho@nvidia.com, 
-	kevin.tian@intel.com, bhelgaas@google.com, dmatlack@google.com, kees@kernel.org, 
-	gustavoars@kernel.org, cjia@nvidia.com, kjaju@nvidia.com, vsethi@nvidia.com, 
-	zhiw@nvidia.com, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	kvm@vger.kernel.org, linux-cxl@vger.kernel.org, linux-pci@vger.kernel.org, 
-	linux-kselftest@vger.kernel.org, linux-hardening@vger.kernel.org
-Subject: Re: [PATCH v5 26/27] Documentation: vfio-pci: Document CXL Type-2
- device passthrough
-Message-ID: <aqrl_FyWEBOZundU@gourry-fedora-PF4VCD3F>
-References: <20260916183540.3813685-1-mhonap@nvidia.com>
- <20260916183540.3813685-27-mhonap@nvidia.com>
+        bh=IdnfVfvh6qWaJ4IGSur7MAJI2cpqMQzWlfz5GBhLUo8=;
+        b=C4AC/nv+MndgIlSByDduPW+vsB5YolJfJBDH4XU2BL6FDGde98Vq0qH+veP6yqtS8s
+         shejAqe835LnuQxgD2Tw0YWQJeLMZ5JfqxVRZE/OKHK0MTNPHiXwy5ahuGumEu41J/Hf
+         mEL4gd5GKn0qnNKKgxV8ytZnn5vXuqv9OWcWA=
+X-Received: by 2002:a17:906:f584:b0:c25:47a4:fedc with SMTP id a640c23a62f3a-c29e520df9amr385443066b.2.1789587350271;
+        Wed, 16 Sep 2026 12:35:50 -0700 (PDT)
+X-Received: by 2002:a17:906:f584:b0:c25:47a4:fedc with SMTP id
+ a640c23a62f3a-c29e520df9amr385441966b.2.1789587349713; Wed, 16 Sep 2026
+ 12:35:49 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260916183540.3813685-27-mhonap@nvidia.com>
+References: <20260911233541.1650895-1-james.quinlan@broadcom.com>
+ <20260911233541.1650895-6-james.quinlan@broadcom.com> <20260911234736.89C1E1F000FF@smtp.kernel.org>
+In-Reply-To: <20260911234736.89C1E1F000FF@smtp.kernel.org>
+From: Jim Quinlan <james.quinlan@broadcom.com>
+Date: Wed, 16 Sep 2026 15:35:37 -0400
+X-Gm-Features: AcwNN1VORf5BnkmRvPPewx8bGctWH7cSbaDRqMXARhQmWajAiAYglFNb_MuxrFg
+Message-ID: <CA+-6iNzfwvP78M8gaDJ4Ub5+n+Lan3W-ePwT6ryjScJ5q93JaQ@mail.gmail.com>
+Subject: Re: [PATCH 05/13] PCI: brcmstb: Declare and assign quirk OB_WIN_MAXSZ_128MB
+To: sashiko-reviews@lists.linux.dev
+Cc: linux-pci@vger.kernel.org
+X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
+Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
+	boundary="000000000000544ece065b9ec639"
 
-On Thu, Sep 17, 2026 at 12:05:39AM +0530, mhonap@nvidia.com wrote:
-> From: Manish Honap <mhonap@nvidia.com>
-> 
+--000000000000544ece065b9ec639
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-1) Thank you so much for writing documentation, i truly appreciate this.
+On Fri, Sep 11, 2026 at 7:48=E2=80=AFPM <sashiko-bot@kernel.org> wrote:
+>
+> Thank you for your contribution! Sashiko AI review found 1 potential issu=
+e(s) to consider:
+>
+> Pre-existing issues:
+> - [High] The OB_WIN_MAXSZ_128MB quirk handler silently truncates outbound=
+ memory resources and completely ignores subsequent memory windows due to a=
+n unconditional early exit.
+> --
+>
+> commit 6fb01c14c0bdf317322f341660866644991a983a
+> Author: Jim Quinlan <james.quinlan@broadcom.com>
+>
+> PCI: brcmstb: Declare and assign quirk OB_WIN_MAXSZ_128MB
+>
+> Even though only BMIPs chips have this quirk, it is more uniform and
+> readable to define this specific quirk where each outbound window is must
+> be <=3D SZ_128M.
+>
+> > diff --git a/drivers/pci/controller/pcie-brcmstb.c b/drivers/pci/contro=
+ller/pcie-brcmstb.c
+> > index 71ddd8a760af9..401898d04d521 100644
+> > --- a/drivers/pci/controller/pcie-brcmstb.c
+> > +++ b/drivers/pci/controller/pcie-brcmstb.c
+>
+> [ ... ]
+>
+> > @@ -1294,11 +1296,11 @@ static int brcm_pcie_setup(struct brcm_pcie *pc=
+ie)
+> >                       return -EINVAL;
+> >               }
+> >
+> > -             if (is_bmips(pcie)) {
+> > +             if (BQUIRK(pcie, OB_WIN_MAXSZ_128MB)) {
+> >                       u64 start =3D res->start;
+> >                       unsigned int j, nwins =3D resource_size(res) / SZ=
+_128M;
+> >
+> > -                     /* bmips PCIe outbound windows have a 128MB max s=
+ize */
+> > +                     /* PCIe outbound windows have a 128MB max size */
+> >                       if (nwins > BRCM_NUM_PCIE_OUT_WINS)
+> >                               nwins =3D BRCM_NUM_PCIE_OUT_WINS;
+>
+> [Severity: High]
+> This is a pre-existing issue, but does this logic leave resources smaller=
+ than
+> 128MB unmapped due to integer division dropping the remainder?
 
-2) I apologize in advance for my terseness, I know writing is hard,
-   please do not interpret this as disliking your writing or series.
+Ack
+>
+> Also, instead of returning an error like the non-quirk path does when the
+> window count is exceeded, oversized resources seem to be silently capped =
+here.
+>
+> Could this lead to leaving some required memory regions unmapped?
+>
+> >                       for (j =3D 0; j < nwins; j++, start +=3D SZ_128M)
+>
+> [Severity: High]
+> This is also a pre-existing issue inherited from the earlier is_bmips()
+> implementation, but looking at brcm_pcie_setup() just past this loop:
 
-> +Address model
-> +=============
-> +
-> +The HDM memory is a coherent host physical range (HPA). The host kernel
-> +resolves that range before the guest sees the device, and owns it for the
-> +bind lifetime. The guest only chooses where the memory appears in its own
-> +physical address space (GPA), by programming a virtual endpoint HDM
-> +decoder. The guest never reprograms the physical decoder.
-> +
-> +The kernel holds the HPA and does not see the GPA. The guest programs a
-> +GPA and does not see the HPA. The VMM holds the device fd, reads the
-> +committed base from the decoder-register region described below, and maps
-> +the HPA-backed HDM region at the GPA the guest committed. The base the
-> +guest reads back is the GPA, not the HPA.
-> +
+Ack.  Both issues will be addressed in an additional commit.
 
-I think this must be slightly inaccurate / imprecise wording.
+Jim Quinlan
+Broadcom CM/STB
 
-The host *must* provide some form of physical memory window to the guest
-at initialization time, otherwise the guest has no way to know - at boot
-time - that there's even a window of memory it can use.
+>
+>                         for (j =3D 0; j < nwins; j++, start +=3D SZ_128M)
+>                                 brcm_pcie_set_outbound_win(pcie, j, start=
+,
+>                                                            start - entry-=
+>offset,
+>                                                            SZ_128M);
+>                         break;
+>
+> Does this unconditional break force an early exit from the resource itera=
+tion
+> loop over bridge->windows?
+>
+> If platforms define multiple memory regions in their device tree (such as=
+ the
+> four 128MB PCIe memory regions in bcm7425.dtsi), wouldn't this break caus=
+e the
+> handler to map only the first resource and ignore the subsequent memory w=
+indows?
+>
+> --
+> Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260911233541.16=
+50895-1-james.quinlan@broadcom.com?part=3D5
 
-That's what the CFMWS is.  This is initialized by the hypervisor - which
-is controlled by the host.
+--000000000000544ece065b9ec639
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
 
-So the host (at least the VMM) must know, for the region the entire
-device *could* inhabit, what that GPA is - because it's the one that makes
-the CFMWS for the guest.
-
-If this is not the case, then something is missing from this
-documentation to explain why.
-
-
-If you're actually trying to say is that the GPA's programmed into the
-virtual decoders are largely symbolic - this at best feels a bit
-inaccurate and simply an implementation detail.
-
-The host's virtio device could enforce ....:
-
-Host Range:
-   CFMWS HPA - [0x10000, 0x20000]
-                   |         |
-Guest Range:       |         |
-   CFMWS GPA - [0x50000, 0x60000]
-
-In that case, you'd get the following translation...
-   vdecoder0.0 - [0x58000, 0x60000]
-   CFMWS GPA   - [0x58000, 0x60000]
-   CFMWS HPA   - [0x18000, 0x20000]
-
-Or the virtio device could not enforce that and let the host page-fault
-just hand it a random page from the actual CXL device.
-
-   vdecoder0.0 - [0x58000, 0x60000]
-   CFMWS GPA   - [0x58000, 0x60000]
-                         |
-              No discrete host mapping
-
-
-The former makes sense if the device (accelerator) requires exact
-physical placement to do its accelerator nonsense.
-
-The latter makes sense if the device (accelerator) doesn't care
-about placement (compressed memory).
-
-This is not saying we need support both out of the box, but we shouldn't
-lock ourselves into the former unless there's some reason why the latter
-is not reasonable.
-
-Can you please help document what the actual expected behavior is with
-examples in the Address model section so it's easier to understand the
-intent?  That will help quite a bit.
-
-> +Guest decoder and commit
-> +========================
-> +
-> +The guest programs its virtual endpoint decoder through the trapped
-> +region: it writes a base (a GPA), a size, and then the COMMIT bit. The
-> +host already resolved and committed the physical placement before the
-> +guest ran,
-
-So the host does know GPA, just not exact placement.
-
-> so a live read of the decoder always shows COMMITTED and the
-> +guest's commit poll completes. The physical decoder is never rewritten;
-> +the guest's writes are absorbed.
-> +
-
-Rather clunky, round-about way to say "The guest decoders are
-virtualized".   If possible, it would be nice to formalize this concept
-into "Virtual Decoders" - since that's what this is.
-
-With that concept i think you can probably generate some nice diagrams
-that show how the guest vdecoder's interact with the host drivers.
-
-> +The VMM observes the commit, reads the committed base, and maps the HDM
-> +region at that GPA.
-> +
-
-So the host does know the GPA.
-
-> +CXL Device DVSEC
-> +================
-> +
-> +The kernel virtualizes the CXL Device DVSEC body through the config-space
-> +permission hooks. Reads and writes inside the DVSEC body use a per-open
-> +shadow; a guest write stays in the shadow and does not reach hardware.
-> +Accesses outside the DVSEC body go to the device as usual.
-> +
-
-"The kernel" - what part? vfio-pci ? the vmm ?
-
-
-> +DMA and iommufd
-> +===============
-> +
-> +A Type-2 accelerator issues ATS-translated DMA to addresses inside its own
-> +HDM window, so that range must be present in the guest IOAS that backs the
-> +nested stage-2 translation.
-
-Type-2, ATS, DMA, HDM window, guest IOAS, stage-2 translation
-
-I think the only thing i don't know in this sentence is "guest IOAS" and
-it's still hurting my brain to read.
-
-Are all accelerators expect to have this particular interaction, or just
-yours?
-
-> The HDM range is struct-page-less coherent
-> +memory, which a userspace-VA ``IOMMU_IOAS_MAP`` cannot pin.
-> +
-
-The hardest part about writing about virtualization is keeping a
-consistent mental model from section to section.
-
-which userspace? guest? host?  (i presume guest here)
-
-`struct-page-less coherent memory`
-   e.g. the host never hotplugs this, it hands the entire region
-   directly to the VFIO device, right?
-
-   I think this would be nice to spell out somewhere.
-
-> +The HDM memory region is therefore exportable as a dma-buf:
-> +``VFIO_DEVICE_FEATURE_DMA_BUF`` on that region returns an fd that iommufd
-> +maps with ``IOMMU_IOAS_MAP_FILE``, mapping the physical range without a VA
-> +or a page pin. The dma-buf is revoked whenever the mapping is torn down
-> +(reset, power transition, teardown), so a stale stage-2 mapping cannot
-> +outlive the HDM window.
-> +
-
-For the sake of readers, I think either a little bit more information
-on this "stage-2 mapping" concept is needed to make sense of what's
-going on here and why it mustn't outlive the HDM window.
-
-> +Reset
-> +=====
-> +
-> +A CXL Type-2 function must not take a Function Level Reset: an FLR resets
-> +the coherent CXL.mem state and the HDM decoder. The PCI core reflects this
-> +by preferring the CXL reset over FLR, so a function reset of a CXL device
-> +runs the CXL DVSEC reset sequence, which resets the function and then
-> +restores the HDM decoder and the PCI config state.
-> +
-
-I think what you're trying to say is that FLRs are never passed to the
-device because it can cause physical device effects that defeat the
-purpose of the virtualization, yes?
-
-So we virtualize FLRs...
-
-> +A guest requests a reset by writing Initiate CXL Reset in the DVSEC. That
-> +write only stamps completion in the shadow. The real reset runs at the vfio
-> +reset points (the reset ioctl and a virtualized FLR through config space):
-
-As you describe here.
-
-So it's not that an accelerator "must not take an FLR" - it's that FLRs
-are virtualized to prevent deleterious effects on the host / hardware.
-
-Am I misunderstanding this?
-
-> +the kernel zaps the HDM mapping and revokes the dma-buf, then runs the CXL
-> +reset, which always clears the device memory, and restores and re-samples
-> +the decoder afterwards. A CXL port masks Secondary Bus Reset by default, so a
-> +``VFIO_DEVICE_PCI_HOT_RESET`` does not reach the endpoint and the HDM
-> +state is untouched. If the port has SBR unmasked the reset can decommit
-> +the decoder without restoring it, so the reset_done handler gates HDM
-> +access; a ``VFIO_DEVICE_RESET`` then runs the CXL reset sequence and
-> +restores it.
-> +
-> +The decoder register region is served by live reads of the hardware
-> +decoder with guest writes absorbed: the decoder is committed and locked by
-> +the host, so a guest can neither decommit nor reprogram it, and the kernel
-> +keeps no shadow of the decoder state.
-
-This is basically what I said at the beginning - it must either be that
-the host provides locked auto-decoders at boot, or it must provide
-proper virtualization so that the decoders settings are fully
-virtualized.
-
-Seems it's the former, and that makes sense.  Please correct me if i'm
-misunderstanding.
-
-> After a reset the kernel restores and
-> +re-samples the firmware-committed decoder, so the geometry the guest reads
-> +back is unchanged. A VMM that dropped its HDM mapping, for example across a
-> +reset or a D3hot->D0 transition, must rescan the decoder and rebuild its
-> +stage-2 mapping before it resumes HDM access.
-> +
-
-Yeah i think we need a bit more information about this stage-2 mapping
-rebuild to make sense of this.  Maybe I'm just not read-up enough on
-this particular setup - is there another part of the docs you can link
-to that talk about this, or are you able to share some details as to
-what this rebuild process looks like?
-
-~Gregory
+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
+P6nIShznyqOL2EoCa0IXujxvXUo0pANFYsDhrCVF5JOVPeEL3Y2m+4flRtOI+YlRQoepb+TEVdkY
+/g1rlWG7GIYrtHxrFFRvn2/Iqqpv/x5kzJgoTYFOyTTGlXIqGkKTqCWFrN09kJWzhhmxhxtJprJs
+KveDLF8yhHSbqmXfKTkT+CIrynXXDro+80qXEXC8CM9W9d+2lDDM+hWTlC6Pt/ikMYf/ZB4K2Nr8
+VFruDYGZfAHhh9/lqK3SpS2Z/8cB88K62U+Eb1yNAgMBAAGjggHeMIIB2jAOBgNVHQ8BAf8EBAMC
+BaAwDAYDVR0TAQH/BAIwADCBkwYIKwYBBQUHAQEEgYYwgYMwRgYIKwYBBQUHMAKGOmh0dHA6Ly9z
+ZWN1cmUuZ2xvYmFsc2lnbi5jb20vY2FjZXJ0L2dzZ2NjcjZzbWltZWNhMjAyMy5jcnQwOQYIKwYB
+BQUHMAGGLWh0dHA6Ly9vY3NwLmdsb2JhbHNpZ24uY29tL2dzZ2NjcjZzbWltZWNhMjAyMzBlBgNV
+HSAEXjBcMAkGB2eBDAEFAwMwCwYJKwYBBAGgMgEoMEIGCisGAQQBoDIKAwIwNDAyBggrBgEFBQcC
+ARYmaHR0cHM6Ly93d3cuZ2xvYmFsc2lnbi5jb20vcmVwb3NpdG9yeS8wQQYDVR0fBDowODA2oDSg
+MoYwaHR0cDovL2NybC5nbG9iYWxzaWduLmNvbS9nc2djY3I2c21pbWVjYTIwMjMuY3JsMCUGA1Ud
+EQQeMByBGmphbWVzLnF1aW5sYW5AYnJvYWRjb20uY29tMBMGA1UdJQQMMAoGCCsGAQUFBwMEMB8G
+A1UdIwQYMBaAFAApNp5ceroPry1QLdugI4UYsKCSMB0GA1UdDgQWBBQiuRLoBkhIaas+1j3yf23P
+ffVFcjANBgkqhkiG9w0BAQsFAAOCAgEAp1y0fznw9Uo7UzExANVpYjj+OG1c3C7MhWOvAd7LvfPX
+BSFisMaabop5Pyfc/sWzb/jCNfVkkDW5Ij2mzpUsUca2qpILoFhOUT9b0d+nc48MCZ4/Wj6vX5QJ
+i9VdYeuv3DYASZsQdH8iYnV5X5YCYo1AO/pyW+M4gG022Nsji9+3A9zkx8JRPDIXkPaDLrzcGD9L
+rEVIYnnSK9b/4VHzITVgEmSsUTAIzOD6M6TzgrSoJZFmKNMXlAqo+m1nlNyJkM4OyOvaDx5y+2hA
+mp4tzD9gJNU9TzQpQRZFz53+c8BkCpzvcHqT8lMluRlCrIYWqaSOUDHX9HPYvzbtO4iYV+irMdGN
+2PBz6Wtfaoi1xTfFSKK9ON1mvxACK+E4B5gycSoZcOBADTbGXLDMqiygl7Wz0oooAPqZpUnaD1nc
+x/pX7N8Ff6YK+iN3vVah34vLkE1CMFyDQMtyTCzQPW+7XCTxCL9ML3LBAF+eNAtKpPOsrGIdRHy5
+6oQr+2ZquSMvWj447q4v3sk1LHs7ata+sP8/kmcPKn3WPXQ/4xMevqFVyv2VIFrBK9ZnOZ//fz8R
+7SjJ7t2kOITvbWcMkizMc33S9hfmYiXaVTjIi89NiO3EXCJouYShpptgGNG6mpYHcddnfdKiILOS
+06KlKNuHO4IpRmaGrzcDjsUQQSn8amMxggJXMIICUwIBATBiMFIxCzAJBgNVBAYTAkJFMRkwFwYD
+VQQKExBHbG9iYWxTaWduIG52LXNhMSgwJgYDVQQDEx9HbG9iYWxTaWduIEdDQyBSNiBTTUlNRSBD
+QSAyMDIzAgwHM7pH5w7o7Qb7yXUwDQYJYIZIAWUDBAIBBQCggccwLwYJKoZIhvcNAQkEMSIEIAwh
+3hj/+KrxkcxerWGlXZZ1D2kqoM8441drr6pA/kuUMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEw
+HAYJKoZIhvcNAQkFMQ8XDTI2MDkxNjE5MzU1MFowXAYJKoZIhvcNAQkPMU8wTTALBglghkgBZQME
+ASowCwYJYIZIAWUDBAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQcwCwYJ
+YIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBAHwCnMiy+J+I9i8B16GMDxNxa27fN95kCejZQeir
+08R5NVMj6tVl80K/paISHDNJB6NgAoMWsDHjaMHCcLiGFmXMuTDKTyXZCvDVn72dFvHBrCgpTE8W
+2tP5TJdanMU3rnpe68b7OvDmVdKaiuKt27WZMmkR46FujN2urW91F1IsHqm3C6bWG+bWhtb089X3
+0EK5LKVSBHlF9NP/ukF2zwAJftKQTn82rKCOGpO/o37N5om8Mz4Hm3Q9GoV4bEl6NvA7M6csGWZh
+MGK4YIY4UGUnFY6KHOe3tP2KoK9hKlVRV6s0GCzODyf1nm+shqJ/FpSCF9TNk/cBAvk1Z3RaDcE=
+--000000000000544ece065b9ec639--
