@@ -1,135 +1,66 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.4])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 457EA5AA673;
-	Wed, 16 Sep 2026 15:40:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.4
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 823543BB10C
+	for <linux-pci@vger.kernel.org>; Wed, 16 Sep 2026 15:44:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789573219; cv=none; b=kz3efg3ZdSQ5IsOlG5zSTaZlqvpbNvXYRk5vbVLIhc+xMOV0oOsow8ErXvw3pyMi+lIQLU1elFq9mbmN3/RGgjPcNju1uHZtqrNxR9WQOSmHZbdJSVgzLoFw0Ex3dvnKJxbeA0KyY4N0jUtFZD8E4zxvLfsPDKBmpxb9ClxDV0w=
+	t=1789573492; cv=none; b=PwFrnNFWbcZiiaQYIz/tXFMQ0M3p9IfMxCiFNpTKmQ/xR4CYLyIJQOoNJaA3oaux08RECvWZd0A4GWQLO1klqn5FDVOEeSAxOW/fj6TXsoO9jZ2Ir9rbTlH9cMooJypQ9IZGG6v5djXNNzaoJJjr1U/7UV8fz+1xqEJMEv/5PPA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789573219; c=relaxed/simple;
-	bh=9cNtCcBxaNM9ENDzMLMHnnKX7k7LHPcYLhmV6DXJm3Q=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=a4ma2wwwcSNS5D6n+8Pp7s9yUMSljuhEOIrD1NWqeER8+vA+XlHcDPdbF/ixv7902J9vrWs/5WsLl04edfEyCG0GzOEZQ4EBoxE3zHHz9M58CGYx50AoXYGZ4+rVqofcQ6qIu5fczEjFwxtsszW5A8MXXxMF9GWAWLt4HIWHQmQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=R4mSVdX0; arc=none smtp.client-ip=220.197.31.4
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	s=arc-20240116; t=1789573492; c=relaxed/simple;
+	bh=ZzDTk4KetVQ05ngQLxJBeLoycgo3t7O3ckygopKcw1E=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=sYc2mpUI+6wkRwUA7gfxtO68bwOio9VNqNqYmqzN/JMjoXMxN04aSkQZ7dloyfcTkfBYiiXpAkKRIVxl9+/mYGUmmV2dnsuO9d3cSmJabItynGbJqP0zya9yh9HBo1AQtab0r1wo534ZcvcJLWNIXEZAbn3vPHiHugoFu1QHMoI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nhQkwQJW; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="R4mSVdX0"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=tX
-	XLyITMJT1yST+MFquna26ESmZnA30Nae1jXyWuEoU=; b=R4mSVdX04i829VBmYT
-	cmXwOwWC7FEurPwMRCcJeY0lIReA6OQdYVbBFjfxBeKwNXP0pHKRfK+uFKw4qmlf
-	tMVnF5VOgpVzljpaGoGx40wnuzRu0CmRZsTGDVEdLTDEuPuwhtOlNVPAgC53Bgbt
-	C1DZTQj8Sl3frPxwHVVqYEhco=
-Received: from zhb.. (unknown [])
-	by gzga-smtp-mtada-g1-1 (Coremail) with SMTP id _____wDnbxQduKpqGzAlBA--.54876S4;
-	Wed, 16 Sep 2026 23:39:12 +0800 (CST)
-From: Hans Zhang <18255117159@163.com>
-To: lpieralisi@kernel.org,
-	kwilczynski@kernel.org,
-	bhelgaas@google.com,
-	helgaas@kernel.org,
-	heiko@sntech.de,
-	mani@kernel.org,
-	yue.wang@Amlogic.com
-Cc: pali@kernel.org,
-	neil.armstrong@linaro.org,
-	robh@kernel.org,
-	jingoohan1@gmail.com,
-	khilman@baylibre.com,
-	jbrunet@baylibre.com,
-	martin.blumenstingl@googlemail.com,
-	cassel@kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-amlogic@lists.infradead.org,
-	linux-rockchip@lists.infradead.org,
-	Hans Zhang <18255117159@163.com>,
-	Mahesh Vaidya <mahesh.vaidya@altera.com>,
-	Ricardo Pardini <ricardo@pardini.net>,
-	Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH v9 2/3] PCI: Configure Root Port MPS during host probing
-Date: Wed, 16 Sep 2026 23:39:06 +0800
-Message-Id: <20260916153907.60344-3-18255117159@163.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20260916153907.60344-1-18255117159@163.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nhQkwQJW"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8F0F41F00893;
+	Wed, 16 Sep 2026 15:44:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1789573486;
+	bh=BPzk9NwliEa9sfFgpXlFtEI0oR9PWk91X6hIlRRihWk=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=nhQkwQJWCl7BDbtksWRDD3ugdXIkVIzh4q/yMnyCW8fVqtzANxjMneO9keERPveh7
+	 2hYLp3fx8mxaD4P+u3yY3rU0iWbdPkJEeG7oyHU4WXFJvkujxUolOcik7r61OEZli/
+	 IeiTUWrW1s4yiizAxQ3z4WGcMK+WK1zaggHpDw6gFSkrnPM/GGNMYxzcylcsmyBTGn
+	 jXKN0MTlk9ahKtYHyOvS0Vbn4T93EcXK3R3H9xn/4f6jcF0yIoSWtJE6Ux6xHWhdO6
+	 j9xJbOkD4gLF7wLdR7zmlZPty3c5McwLZGOeYIqYfJZAJJgZUx/VYBxffaDXi6pRJO
+	 r3S25f00rQj/A==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v9 3/3] PCI: dwc: Remove redundant MPS configuration
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Hans Zhang" <18255117159@163.com>
+Cc: neil.armstrong@linaro.org, linux-amlogic@lists.infradead.org, linux-pci@vger.kernel.org
+In-Reply-To: <20260916153907.60344-4-18255117159@163.com>
 References: <20260916153907.60344-1-18255117159@163.com>
+ <20260916153907.60344-4-18255117159@163.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 16 Sep 2026 15:44:46 +0000
+Message-Id: <20260916154446.8F0F41F00893@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wDnbxQduKpqGzAlBA--.54876S4
-X-Coremail-Antispam: 1Uf129KBjvJXoWxJF4fJF15AF47uFWUuw4UArb_yoW5GrWkpa
-	yUWanYyFs7GF4fZFsrZ3WFvFyYqF93Zry3GrZ3Z3s0van8Zr9rJrWaya95Jw1kGrZ7KFya
-	vFn8try8u3ZIvFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0pEVyIbUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbCxAB7H2qquCBtpwAA3y
 
-Current PCIe initialization logic may leave Root Ports operating with
-non-optimal Maximum Payload Size (MPS) settings. The existing code in
-pci_configure_mps() returns early for devices without an upstream bridge
-which includes Root Ports, so their MPS values remain at firmware
-defaults. This fails to utilize the controller's full capabilities,
-leading to suboptimal data transfer efficiency across the PCIe hierarchy.
+> The Meson PCIe controller driver manually configures maximum payload
+> size (MPS) through meson_set_max_payload, duplicating functionality now
+> centralized in the PCI core.  Deprecating redundant code simplifies the
+> driver and aligns it with the consolidated MPS management strategy,
+> improving long-term maintainability.
+>=20
+> With meson_set_max_payload() gone, meson_size_to_payload() is only used
+> for MRRS.  Rename it to meson_size_to_mrrs(), update the warning message,
+> and drop the now-unused PCIE_CAP_MAX_PAYLOAD_SIZE and MAX_PAYLOAD_SIZE
+> macros.
+>=20
+> Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
+> Signed-off-by: Hans Zhang <18255117159@163.com>
 
-With this patch, during the host controller probing phase:
-- When PCIe bus tuning is enabled (not PCIE_BUS_TUNE_OFF) and not
-  PCIE_BUS_PEER2PEER (which requires the default 128 bytes for optimal
-  peer-to-peer operation), and
-- The device is a Root Port, the Root Port's MPS is set to its maximum
-  supported value.
+Sashiko has reviewed this patch and found no issues. It looks great!
 
-Note that this initial maximum MPS setting may be reduced later, during
-downstream device enumeration, if any downstream device does not support
-the Root Port's maximum MPS.
-
-This change ensures Root Ports are initialized to their maximum MPS before
-downstream devices negotiate MPS, while maintaining backward compatibility
-via the PCIE_BUS_TUNE_OFF check and not interfering with the
-PCIE_BUS_PEER2PEER strategy.
-
-Suggested-by: Niklas Cassel <cassel@kernel.org>
-Suggested-by: Manivannan Sadhasivam <mani@kernel.org>
-Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
-Signed-off-by: Hans Zhang <18255117159@163.com>
-Tested-by: Mahesh Vaidya <mahesh.vaidya@altera.com>
-Tested-by: Ricardo Pardini <ricardo@pardini.net> # on Odroid-HC4
-Tested-by: Shawn Lin <shawn.lin@rock-chips.com>
----
- drivers/pci/probe.c | 15 +++++++++++++++
- 1 file changed, 15 insertions(+)
-
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 232bce2819f0..08af75aa7366 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2248,6 +2248,21 @@ static void pci_configure_mps(struct pci_dev *dev)
- 		return;
- 	}
- 
-+	/*
-+	 * Unless MPS strategy is PCIE_BUS_TUNE_OFF (don't touch MPS at all) or
-+	 * PCIE_BUS_PEER2PEER (use minimum MPS for peer-to-peer), set Root Ports'
-+	 * MPS to their maximum supported value. Depending on the MPS strategy
-+	 * and MPSS of downstream devices, a Root Port's MPS may be reduced
-+	 * later during device enumeration.
-+	 */
-+	if (pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT &&
-+	    pcie_bus_config != PCIE_BUS_TUNE_OFF &&
-+	    pcie_bus_config != PCIE_BUS_PEER2PEER) {
-+		rc = pcie_set_mps(dev, 128 << dev->pcie_mpss);
-+		if (rc)
-+			dev_warn(&dev->dev, "failed to set root port MPS\n");
-+	}
-+
- 	if (!bridge || !pci_is_pcie(bridge))
- 		return;
- 
--- 
-2.34.1
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260916153907.6034=
+4-1-18255117159@163.com?part=3D3
 
