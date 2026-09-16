@@ -1,87 +1,50 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.6])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A5C55013D4
-	for <linux-pci@vger.kernel.org>; Wed, 16 Sep 2026 16:13:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B34BA39E180;
+	Wed, 16 Sep 2026 16:19:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.6
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789575219; cv=none; b=q6tt9VI0QSfZ1RKjB1Wr1lgV4OmMlSUDbZnSluxl2v6zOedCccql8XXbBCerDrPJ18P80AOIPHcBKhl0IXeKM2atG4CeVPqPDF9E+fVJvsO+Uk0pTpGiNd8u6sbtoCStXIs2cQFwm5I9e/FWQfH+78SpxYMkd770e9+sAjLV5AY=
+	t=1789575571; cv=none; b=lSpeS8FS1dBpo1YhbbcdjfKzd490YbxNrLdarc0Niyf9MptdFXDziecKSr/pQ38StgYXQNaSQZnyWLZM5Aif5EiHm3jLLckf5c3z2z+AZjW1P4kmBuOoMQqkdc4uL0e05DPkEcneDIdGUeCIJWByQH36Z41ZAwjlhI1D3Ku/BRA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789575219; c=relaxed/simple;
-	bh=bvzruHOER+tqBVKqHVqUWmL8gkxbGAQ2vbFxKDXxPC8=;
+	s=arc-20240116; t=1789575571; c=relaxed/simple;
+	bh=SHxc9qJsOLXK/tljvtNmHhBOpMOEE2bT0FUViBGPFg4=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=hRa7D/4bRfoGmjq5L97kWcgVWObsJhdMfVccQGLCeBJzKybuz6Z5AHqGpuD7keCnGgVzn3nTikB8644KJYonASElbBAg8qzcP1olUbI6tY3z0rKo1AjDIIFfouicczuvIcBOVeDftMmY1F6TKZ/bNc4izm3krXosf5U/CEuo43k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=DHv39bTn; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=XX0y1Bi1; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	 In-Reply-To:Content-Type; b=JxhLdpyKbx8oDqu7QI7LmpndlFnmcyOOItkS69hDAQvxPoM/kmAogKrKxfifCAQltoMa3Bm8Nyf7+uK4oRF9n+uyZjVGTtzW4911CLXL/0t4vqLQNP0xeiogavuR/fHI3pcqhw7QW3Cla8ioySvY2Zq6O3WsnZHcx/+48OSVTaI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=X9pgAJ8e; arc=none smtp.client-ip=192.198.163.6
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="DHv39bTn";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="XX0y1Bi1"
-Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 68GFfOeM2602245
-	for <linux-pci@vger.kernel.org>; Wed, 16 Sep 2026 16:13:36 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	7D4/ywcwxqoIaD2knicVl0ONbCnWnKh8GAaiP1pjZEw=; b=DHv39bTnzaHvBHmd
-	ShUgZGfYOYR9RcSKsUy5DG0vfhX3rIv7tn8p+Wp0CQtTZMPofacDOghO0xmw9WH3
-	XMF5pghRjTbOXG2TuClcGj7Gwce8bsqX8vZ2yT3kVkePGGIbxM8hTpMlNJHUnO47
-	O161PPoDd//+rcxVg9mUWcIfKNLyQHYTzWoF1A2DuBeM+OSYXgzbSlBgwsJWegeR
-	KhRorZ1KV+F4MHkeMX7VHnGU6NsvqlJXVZKC9SSO0Ap4W4cnXnTOaWD6/alxLI66
-	uQtkLns62xgSuIAajS1pOhpd+B6IPNHLTK4sk4rocYdyJkqINTBaVrBR1CPMBL31
-	6FpqGA==
-Received: from mail-qk1-f199.google.com (mail-qk1-f199.google.com [209.85.222.199])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4gquwb0rvn-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Wed, 16 Sep 2026 16:13:36 +0000 (GMT)
-Received: by mail-qk1-f199.google.com with SMTP id af79cd13be357-930a312222dso80215785a.2
-        for <linux-pci@vger.kernel.org>; Wed, 16 Sep 2026 09:13:36 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1789575215; x=1790180015; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=7D4/ywcwxqoIaD2knicVl0ONbCnWnKh8GAaiP1pjZEw=;
-        b=XX0y1Bi1m0T9UAbOKXu6dJadeUEZfAA5qxn30bW2/PHNBXKDnUV23qsG3GZIIqs9zy
-         uS6m+cfYVWsG9xZv50tPcoL4d/QhfV4ataS7qJxkB+p8BThPXBFyi9awkmBPC1d1DT2X
-         bZGU0f4mej4CCjUjsM+gvrP878prI+7/Hl0VSm/Z9CdHjeOyleI9Fhqa0Wtj93pSIhS4
-         DX7Bg+Mh/nUgMah3Wk9dQ2+9nsRjh2x9eLdyUJ1OetmRJiHCup4nE7Ereu+oLUQFy4TZ
-         VWsYXmZ92Kkvc4LX0V79R+Nm698dNqbb+GJwkpTIoUdPMchjjh8WP1p3dIgfJYGbjkFo
-         2dlQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1789575215; x=1790180015;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=7D4/ywcwxqoIaD2knicVl0ONbCnWnKh8GAaiP1pjZEw=;
-        b=cIrvy/8Ma4LqrMHf0jHBHiqLMENppgeTKsFBdQM77dsyoPSM8kvjxmVHBgbs7d9YCT
-         RK+D+eemBVIzX9thz9jlnOptiy3MbVpckdKhVtG50nKxtZmXrTGCUk+FkCmdsDy5MuE4
-         Kx2nd2pIbt269Pm8KzLixdYEWXOrOV7CxE4TGxq2SMBkCAXBRxUh72CZgMqpy7jl0vST
-         q/6RnxuWq8YfRmzIHReNJ0lqJtC7tILBbuBW43bECHZtMkBi3jA2sZlm0SDXkjkAKfhc
-         ut+vzioEUyJibFuVVVCI5QecltoRE4GwW0HyJ6LHphqCCP8kN1jkGvxoIDUHY69iF0RN
-         cT7Q==
-X-Forwarded-Encrypted: i=1; AKwUvBz8MGt8QbaqOSlIEMyNP4G2CwCZGUTMKcLgZQBJkqPq933tie6tl6U6saWWCzMYv6H51hW1QgEm2BA=@vger.kernel.org
-X-Gm-Message-State: AFuF++mT2MdCn/50VLwdywQk6vYY0AlcE5dZEKV2IyR7KwaDgj/atzjO
-	B95fUMVFJ6U6hgOnFAvXkIPEYZxCiPSGs3ufO5UsUX5OaRnBB+g6hzo7MYCcdIsxtlcK7jwF4dw
-	48NYlUwQIL5rPXhV9kv2vgDe69FrXdXlrWFx7yX7FyE6/snRhSdMkyCQHy3F3Fw8=
-X-Gm-Gg: AYBFou1Jv8REcZQSBaIOgiHi7hWVf5jbuagr0U1wCK1cORu7rNjR0+QyZ84RW6oZtZk
-	c/uzjdeFWCTpTIJqVBBGYFkJWQEghmzd7swS+U4mFigS0UzYzMXibR5k4LtS93rk4rwu6iyHF5N
-	k90oVaFLd0j+25Kyck62x+EmIezXPfr0oRSy8OBXrr6AvnnifH7a8gwWpXGBBJeYWEYvvOA7PE4
-	XFvjK/YFp/VeHz0R5mMzHAHUBJJTfwSvutCv7RmdiDuLgdYx3VClH+kd2W3wM4mQziDXIpBe4lR
-	665sI7/Kd5bYSwPyNYJcEIeUTAeVJXYb32d9kq7DXF9rIF103l/lUPC6h6mxBW6Cktg9S0Hs4fm
-	cJrrhFoggsfPms+2elBSuYg==
-X-Received: by 2002:a05:620a:19a0:b0:939:c8b8:4639 with SMTP id af79cd13be357-93bb7963962mr456734885a.4.1789575215399;
-        Wed, 16 Sep 2026 09:13:35 -0700 (PDT)
-X-Received: by 2002:a05:620a:19a0:b0:939:c8b8:4639 with SMTP id af79cd13be357-93bb7963962mr456729485a.4.1789575214958;
-        Wed, 16 Sep 2026 09:13:34 -0700 (PDT)
-Received: from [192.168.202.12] ([178.235.128.140])
-        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-5b8b57c3600sm1021028e87.24.2026.09.16.09.13.30
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 16 Sep 2026 09:13:32 -0700 (PDT)
-Message-ID: <a4436f33-db21-489b-80b2-bf4793925cb5@oss.qualcomm.com>
-Date: Wed, 16 Sep 2026 18:13:29 +0200
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="X9pgAJ8e"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1789575568; x=1821111568;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=SHxc9qJsOLXK/tljvtNmHhBOpMOEE2bT0FUViBGPFg4=;
+  b=X9pgAJ8el9U80GM4fHmnPyyeavdRyLpYMCXLWMaMIoxXBHLRWd7X/r5T
+   3b9e3nTlqgELkjES8Ak/pSqCyNC7juUY8vJdH1zpZ8Ys18Hglefrx474/
+   5gPvAzYVH7o+wmCZwfUY2akhqjTBy2nuGCB4fbvYw11O0WNGuVq4/5yqY
+   6df2hEaMPAAEIDHaBqaGEjO3Wnanu7LQEGhefUkh/P0+M+jq5IzKeHOIs
+   7S4uhIcuTQnk4co3ssqQFc829X0guqoRI44Ye251q6AEZzi1sIiaYl26Y
+   th0QUggS+ndVCG/Q5+kd47F34mza2Zi+uYW92Ok+0aucRoUJmiZWFJStk
+   w==;
+X-CSE-ConnectionGUID: fIWfddTcTTWl0VHcXOL2Bw==
+X-CSE-MsgGUID: fbMJD9xKToWIwxm33Md12A==
+X-IronPort-AV: E=McAfee;i="6800,10657,11905"; a="462951"
+X-IronPort-AV: E=Sophos;i="6.27,103,1787036400"; 
+   d="scan'208";a="462951"
+Received: from orviesa004.jf.intel.com ([10.64.159.144])
+  by fmvoesa116.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Sep 2026 09:19:28 -0700
+X-CSE-ConnectionGUID: z7QIQ+ouSpuJT1hwi4KfyQ==
+X-CSE-MsgGUID: 1scNkbsjTMe/xuN1zcrTLA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,103,1787036400"; 
+   d="scan'208";a="277126507"
+Received: from soc-pf446t5c.clients.intel.com (HELO [10.24.80.90]) ([10.24.80.90])
+  by orviesa004-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Sep 2026 09:19:27 -0700
+Message-ID: <2a8de957-74fc-4b70-be9e-c404fc49220d@linux.intel.com>
+Date: Wed, 16 Sep 2026 09:19:27 -0700
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -89,95 +52,113 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] PCI: qcom: Ignore -ENODEV after Root Port reset
-To: Niklas Cassel <cassel@kernel.org>
-Cc: Manivannan Sadhasivam <mani@kernel.org>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-        Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-        Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>,
-        linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-References: <20260916-topic-pcie_portrec_enodev-v1-1-5dc7bde39552@oss.qualcomm.com>
- <aqq7j9L76coy65lC@ryzen>
+Subject: Re: [PATCH] PCI/DPC: Honor "pcie_ports=native" when enabling DPC
+To: Guixin Liu <kanie@linux.alibaba.com>, Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+ =?UTF-8?Q?Uwe_Kleine-K=C3=B6nig?= <u.kleine-koenig@baylibre.com>,
+ Jonathan Cameron <jic23@kernel.org>, Lukas Wunner <lukas@wunner.de>,
+ =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+ Kees Cook <kees@kernel.org>, Darshit Shah <darnshah@amazon.de>,
+ Brian Norris <briannorris@chromium.org>, linux-pci@vger.kernel.org,
+ stable@vger.kernel.org
+References: <20260903230537.GA2273943@bhelgaas>
+ <58ea18fe-6e7d-49ab-b6cf-992db4aae732@linux.alibaba.com>
+ <44256f8c-5087-4550-a522-34a828c40c1c@linux.alibaba.com>
 Content-Language: en-US
-From: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
-In-Reply-To: <aqq7j9L76coy65lC@ryzen>
+From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+In-Reply-To: <44256f8c-5087-4550-a522-34a828c40c1c@linux.alibaba.com>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-Authority-Analysis: v=2.4 cv=H4JOUOYi c=1 sm=1 tr=0 ts=6aaac030 cx=c_pps
- a=HLyN3IcIa5EE8TELMZ618Q==:117 a=PRfkaYvzSr8QmIIGAkY2Sg==:17
- a=IkcTkHD0fZMA:10 a=VdqzKS8jKosA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=_K5XuSEh1TEqbUxoQ0s3:22
- a=VwQbUJbxAAAA:8 a=EUspDBNiAAAA:8 a=rHa_6ZUMNKMLsCsp4AwA:9 a=QEXdDO2ut3YA:10
- a=bTQJ7kPSJx9SKPbeHEYW:22
-X-Proofpoint-GUID: 6tCjGLPZtWi95CexpoAhzDaiw2bUDLhp
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTE2MDIyMCBTYWx0ZWRfX1Hlta1MpvDzE
- 6FFQSufjjsQAERBe3DbBaPFETyxLuO3UotvAwHDheJwVgOXufcu3RVzR5IZqs6TGEAPMcIKb+qg
- QtkLawRo64NWCxV236VDTX41yfifFmjmNLEQ4NmOiB7iyTuOnSC/LSZLat9XBTRIGfWt5RyBisC
- q9eB7eDuJ582Uxf5FM2HpouJhTRtpY71PAqm//YsLDLGMbRusMaOWeQSeW6xNKcKUPJ5vBNkFQ5
- rQjz6aNJmO81fbDvIC/pKwNQQIvtFpuSYpyKv3heX2WPvavM2MitQ2KBOLZbXH2HNRzLks5aGmF
- AhTTQwgAhC523cKSwe/9zJQ+WSk4yRpkVfAb76azrn4HixSOFoix/njYzN4faFbTLPiit/ywHAC
- +9m0SB6/CPQPuuTIZ56NOW80Ob7XGYIefnHzwvOZYpYClcLDNKX/AH54kDpBazeuRvsWfjViyFu
- Kop1tgIq46BgJHsDjrg==
-X-Proofpoint-Spam-Info: AW1haW4tMjYwOTE2MDIyMCBTYWx0ZWRfX06HmiDd3Fa2q
- t4Y63RKjbL5AY6S0vvfnxYbzjpnzPAMewgT8/UDjWuzo76zE2ZlG8adFHWGjOsfKjtdH65pOO/l
- p/SX3lyeXSBtW3QCl9DOUw92mNtOjsI=
-X-Proofpoint-ORIG-GUID: 6tCjGLPZtWi95CexpoAhzDaiw2bUDLhp
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-09-16_03,2026-09-16_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- clxscore=1015 malwarescore=0 spamscore=0 priorityscore=1501 impostorscore=0
- phishscore=0 adultscore=0 lowpriorityscore=0 suspectscore=0 bulkscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2609040000 definitions=main-2609160220
+Content-Transfer-Encoding: 8bit
 
-On 9/16/26 5:53 PM, Niklas Cassel wrote:
-> Hello Konrad,
+Hi Liu,
+
+On 9/14/2026 4:01 AM, Guixin Liu wrote:
 > 
-> On Wed, Sep 16, 2026 at 02:37:49PM +0200, Konrad Dybcio wrote:
->> Root Port recovery may race with a device hot-unplug. In that case,
->> dw_pcie_wait_for_link() returns -ENODEV because no device is detected
->> after the controller has been successfully reset.
+> 
+> 在 2026/9/4 10:34, Guixin Liu 写道:
 >>
->> This is a valid outcome and should not cause Root Port recovery to
->> fail. Ignore -ENODEV while continuing to propagate other link-training
->> errors.
 >>
->> Assisted-by: LLM
->> Fixes: 4d88cb82a6d9 ("PCI: qcom: Implement .reset_root_port() and use for link down")
->> Signed-off-by: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
->> ---
->>  drivers/pci/controller/dwc/pcie-qcom.c | 3 +++
->>  1 file changed, 3 insertions(+)
+>> 在 2026/9/4 07:05, Bjorn Helgaas 写道:
+>>> On Tue, Sep 01, 2026 at 02:45:54PM +0800, Guixin Liu wrote:
+>>>> Commit 97ca178c899d ("PCI/DPC: Allow DPC on all Downstream Ports when
+>>>> OS controls AER") replaced the AER service bit with host->native_aer
+>>>> when deciding whether to create a DPC service device. Unlike the AER
+>>>> service bit, host->native_aer does not reflect the "pcie_ports=native"
+>>>> command-line override.
+>>>>
+>>>> Consequently, if firmware retains AER control, "pcie_ports=native" no
+>>>> longer enables DPC on Root Ports that advertise both AER and DPC, even
+>>>> though the option is documented to force native DPC handling.
+>>>>
+>>>> Check pcie_ports_native explicitly so both command-line overrides
+>>>> continue to work.
+>>>>
+>>>> Fixes: 97ca178c899d ("PCI/DPC: Allow DPC on all Downstream Ports when OS controls AER")
+>>>> Cc: stable@vger.kernel.org
+>>>> Signed-off-by: Guixin Liu <kanie@linux.alibaba.com>
+>>>> ---
+>>>>   drivers/pci/pcie/portdrv.c | 2 +-
+>>>>   1 file changed, 1 insertion(+), 1 deletion(-)
+>>>>
+>>>> diff --git a/drivers/pci/pcie/portdrv.c b/drivers/pci/pcie/portdrv.c
+>>>> index a9cbfc1d2bc7..a05ee7980fb2 100644
+>>>> --- a/drivers/pci/pcie/portdrv.c
+>>>> +++ b/drivers/pci/pcie/portdrv.c
+>>>> @@ -264,7 +264,7 @@ static int get_port_device_capability(struct pci_dev *dev)
+>>>>        */
+>>>>       if (pci_find_ext_capability(dev, PCI_EXT_CAP_ID_DPC) &&
+>>>>           pci_aer_available() &&
+>>>> -        (pcie_ports_dpc_native || host->native_aer))
+>>>> +        (pcie_ports_native || pcie_ports_dpc_native || host->native_aer))
+>>> Oh my goodness.  I think I completely dropped ball on this YEARS ago.
+>>>
+>>> It's crazy that we have "pcie_ports_native" checking littered all
+>>> over.  I think we should instead treat host->native_* as the single
+>>> source of truth, and pay attention to pcie_ports_native when setting
+>>> host->native_*.
+>>>
+>>> Sathy did some great work to do exactly that in 2020, and I never got
+>>> it merged.  I wish I had some great excuse, but I looked at my 2020
+>>> calendar and couldn't find one.  I think I just blew it.
+>>>
+>>> So I think we should resurrect that series and update it as needed and
+>>> solve the problem that way.  I dug out the links just for
+>>> completeness, but we should probably just start with the most recent
+>>> ones (v11 or v12):
+>>>
+>>>    # v2 https://lore.kernel.org/r/cover.1590355211.git.sathyanarayanan.kuppuswamy@linux.intel.com/
+>>>    # v3 https://lore.kernel.org/r/cover.1590355824.git.sathyanarayanan.kuppuswamy@linux.intel.com/
+>>>    # v4 https://lore.kernel.org/r/cover.1590534843.git.sathyanarayanan.kuppuswamy@linux.intel.com/
+>>>    # v5 https://lore.kernel.org/r/cover.1591545462.git.sathyanarayanan.kuppuswamy@linux.intel.com/
+>>>    # v6 https://lore.kernel.org/r/cover.1593195899.git.sathyanarayanan.kuppuswamy@linux.intel.com/
+>>>    # v7 https://lore.kernel.org/r/cover.1595006564.git.sathyanarayanan.kuppuswamy@linux.intel.com/
+>>>    # v8 https://lore.kernel.org/r/cover.1595649348.git.sathyanarayanan.kuppuswamy@linux.intel.com/
+>>>    # v9 https://lore.kernel.org/r/cover.1600457297.git.sathyanarayanan.kuppuswamy@linux.intel.com/
+>>>    # v9 https://lore.kernel.org/r/20200928011131.MI-pJpJNRQw6c35j_O6019flLWHe08C4WvKPmKEbnik@z/
+>>>    # v10 https://lore.kernel.org/r/cover.1603738449.git.sathyanarayanan.kuppuswamy@linux.intel.com/
+>>>    # v11 https://lore.kernel.org/r/cover.1603766889.git.sathyanarayanan.kuppuswamy@linux.intel.com/
+>>>    # v12 https://lore.kernel.org/r/20201126011816.711106-1-helgaas@kernel.org/
+> Hi Bjorn, still not see you resurrect this series.
+
+I am working on this. I will post the rebased version soon.
+
+> 
+> Best Regards,
+> Guixin Liu
+>> Yeah, this series is better than mine, wait for your to recover them.
 >>
->> diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
->> index ee63a6ec99de4d07c16b8d6cb68df0d92f822cd8..3d3be9bf798b7c247d69969d6570385b8648123f 100644
->> --- a/drivers/pci/controller/dwc/pcie-qcom.c
->> +++ b/drivers/pci/controller/dwc/pcie-qcom.c
->> @@ -1880,6 +1880,9 @@ static int qcom_pcie_reset_root_port(struct pci_host_bridge *bridge,
->>  	qcom_pcie_start_link(pci);
->>  
->>  	ret = dw_pcie_wait_for_link(pci);
->> +	/* This linkdown might have been a hot-unplug */
->> +	if (ret == -ENODEV)
->> +		ret = 0;
->>  	if (ret)
->>  		return ret;
+>> In addition, we should add "Fixes: 97ca178c899d ("PCI/DPC: Allow DPC on all Downstream Ports when OS controls AER")" also.
+>>
+>> Best Regards,
+>> Guixin Liu
+>>>> services |= PCIE_PORT_SERVICE_DPC;
+>>>>         /* Enable bandwidth control if more than one speed is supported. */
+>>>> -- 
+>>>> 2.43.7
+>>>>
 > 
-> 
-> I did not know that pcie-qcom supported hotplug.
-> 
-> Last when I was discussing this with Mani, I'm quite sure that he said that
-> it doesn't, see:
-> https://lore.kernel.org/all/20251222064207.3246632-8-cassel@kernel.org/
 
-I don't know if native ports still don't, but the ones used for USB4
-tunneling certainly do
+-- 
+Sathyanarayanan Kuppuswamy
+Linux Kernel Developer
 
-see e.g.:
-65ccb2203ef8 ("PCI: qcom: Clear Attention Button Present in Slot Capabilities")
-
-Konrad
