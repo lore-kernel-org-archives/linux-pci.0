@@ -1,74 +1,75 @@
-Received: from mail-pz2-f42.google.com (mail-pz2-f42.google.com [74.125.228.42])
+Received: from mail-pj2-f12.google.com (mail-pj2-f12.google.com [74.125.227.140])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B1173B8124
-	for <linux-pci@vger.kernel.org>; Wed, 16 Sep 2026 05:04:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.228.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5CF6F35DA41
+	for <linux-pci@vger.kernel.org>; Wed, 16 Sep 2026 05:10:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.227.140
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789535085; cv=none; b=bScfGrl9ssusT74kIj085tLCfRQpZnEklBjpfaB8i4hgEMPEgzQLADn8CKopvd2wmUpapiRyvHybArfPk7MzLv2uApDIEJSZ3LbK9BS5KEBUJ2UA+Q4E/d5b1JqkJ5myzk2vS6NwNi5Jb1sDevf+gVbAoUZYuyWNlx/EdSmG3No=
+	t=1789535416; cv=none; b=akZybB0fjnBcU/NMlaq+qNmBpY99Y2NFtQEXcN7VRmLGbw/UnbUQ6rXG2R16JE839y5IWkPZv9+rkd+9ZJA+ibiisdZ9Zd+5L/rMTgZgmIziagiOtg0AnTgexLrp/QkINqw/j4N3RRp2sLA698jIWYXpqc/BgGdrLvK1zKMFCbo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789535085; c=relaxed/simple;
-	bh=rn/8q9InG+VhLfH0A/e3sk2fAb7dfuGR1Rw5Zadp070=;
+	s=arc-20240116; t=1789535416; c=relaxed/simple;
+	bh=qluvmwuV83emM/3nJsE43LICI3P8DdmTIbeH+hWLj3o=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=t2cLL2bFixdVQIQ9lAgX1gfU3qsb1xIMsY3e/1a2IXl8PbVsr0cYy1ahBZnVa1eRhonazSkOXTamEr3+U+TN9iphx/8CyqZtFQUiuJ/Mt/qVXtHIn5NBCoTcTStEIh3m0/hrEtMoeXEJiMs/nVQ2Gf4ivkhf5tw0RYkhA0yRWMs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Ho4yOlQl; arc=none smtp.client-ip=74.125.228.42
+	 Content-Type:Content-Disposition:In-Reply-To; b=NF8JVCPH2PawtiJMiYcGmBACfIkbm6WwTmNyhR+RgRzw/kb+ySCdOz6i3ZuBPAtxAGlX6jDZN51gBhnEAMXr31n965MHWuTy4bP6wQ+N/t7/BHEsZvHppPOHFY6/spmQRy6+nk1FcODbDpFCX2k4MCRvYL4nZWI8FJ6OAzftiIo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Lk71uPjA; arc=none smtp.client-ip=74.125.227.140
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Ho4yOlQl"
-Received: by mail-pz2-f42.google.com with SMTP id 41be03b00d2f7-cc4cacd3409so533861a12.2
-        for <linux-pci@vger.kernel.org>; Tue, 15 Sep 2026 22:04:43 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Lk71uPjA"
+Received: by mail-pj2-f12.google.com with SMTP id 98e67ed59e1d1-39d654f02baso413052a91.3
+        for <linux-pci@vger.kernel.org>; Tue, 15 Sep 2026 22:10:15 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1789535083; x=1790139883; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1789535415; x=1790140215; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:content-type:mime-version
          :references:message-id:subject:cc:to:from:date:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=GDJS5DFeVTVtny+nVZ5eyJn66Zw4xkQyysEKwAXUmnY=;
-        b=Ho4yOlQleEVK5FoQ9EAIVbIiUIWcSTzxXymBLmR9AXGlmT3dX2RTww59oDM3hkBPYo
-         BMsgdORX1EjplV+XUU124ICHRK1ah7NAsuynTgXBX2zhuWOSWbowIgC9VmvkbY4RVJc/
-         lqiRmgWuVuGee+YEA7BXSq49Fc8CEZWWp3LZ4rwwJrFUTifu7wTCMWSNjqAe2Xv+Wo+R
-         79GUpLKJQoUXozM9e/9pH42uSKLHhASLksX7JlFnj2W0jT/rlxfi60LkfPWbjkyHup1m
-         /ojJYCr63TtlYKOmy4z+Vh9re2DlYco6PphmzulIeiCqzfakvXD3tPAqBzm/33Ddc+nI
-         9ccA==
+        bh=JCSj073xDjVE5V/nmEXAKgguDBgTKgJjsaGKUYFcD28=;
+        b=Lk71uPjA748GMNOBRwwx7CzDUrHhAUVte9H+V3pTb03yMvIDCdmLL4VrZrRAxA0fpk
+         oMMFvav4mhFoot/vwf4CJLVc215JirItwK3F4V89Lau1epmam9E4AM5NWESVvUStv2ut
+         Yd4+xeiZsGYdRXAJam3CqqYpvA+ILsLZKpuzxwTWRjpM8PIA6h9WwcTCftyA6LyR8pQ0
+         RvsGo6G+jIwIF7EioRJj3r+oOubY0ceNZtZSoulifdtIvAmPQ41GYo34p6wHhGuCjIT7
+         HYLhl6cmK1vwd4bGiQ2mC7H8UeLfJ+U8dzsWEYrChJcudLlGvEXzfiQQhXKHR+TL8zyt
+         VDXw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1789535083; x=1790139883;
+        d=1e100.net; s=20260707; t=1789535415; x=1790140215;
         h=in-reply-to:content-disposition:content-type:mime-version
          :references:message-id:subject:cc:to:from:date:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=GDJS5DFeVTVtny+nVZ5eyJn66Zw4xkQyysEKwAXUmnY=;
-        b=kqQnm+NHqM+VtHx64P6Mf++bWiWCI0tlLZ2hwYZVFEaaIibuOS5HpqYOIRie9UgTMg
-         6jmJQaq9ruwUYT/it5A0lzihXu8ehIgSjIGP/5+mc/Cf1JsyYVBrTebi6/JV03JpCmeI
-         RGbTt/BTlP3AENPnbTpb+3ZMBpnQmB/N1WNy25/gvQALEnmbVzDvcVoimUQMB2D6ei//
-         N1UlMqvmPigtsyAqJTFN1CFSKc8HzeMvCAhTLjoQ9O7B9O/c7C/roLzILi3ooK+4e5NN
-         a5oLWB5LrcKcNXJvvP6Xi0PNR6i6gHuBE86OZCr39SADBkrZrnsYtnCmIyGHNajcdJLz
-         DS9w==
-X-Forwarded-Encrypted: i=1; AKwUvBx1O/A8kS/pJbJAD/1WqUrOW1/k65nxSop82JiZaY3r2XWMayHdwUfTlqVPwg/no7Qfx2++ml11bqA=@vger.kernel.org
-X-Gm-Message-State: AFuF++n86QjZqiQPFzoeGJ0KY6UOsbSReQGSqmhc0Tlg1NdYZye3Vsxi
-	7+SZc+RJ7438YBjSCWchfO/Unm6exzkHBn1KgDAgSg59bwbmmQUdg0snNiqOE3sv
-X-Gm-Gg: AYBFou3ORyRg1V/ieJ0z835bz7KXwNC3u4uGZORH8DZSwAKKFmGF/0e6ZsZO3Zvwzp6
-	BXHZ1lgf812bA+G75kV7zZ6cFU0oVsmRE9k7+gS2J7P1E32LXIq73YJEFX/StC7SfvUhBMxBfWs
-	afc6iKi95duGC87f5vugYnjPdxHtxlyYn0D8GN9x0jTPA/UOvB/Z6RBeARLC/uwlOMqSsz3x2NT
-	MXsHCeirYVoUII7w9Iho2RfcV0IxKJTu5CrRigOA7cBIPZEhMk1hBvXoscepHjFKwWNNYC9ZpsO
-	keIjcWffVBH+k04gwNUuaOIk2kV2u841NmqMq3mz+eekUjHYbd9zn59NeqMiY3eNdo2T3E5xZQ+
-	M99dBWH8x6E3uOrgKJ3IWsK9A3VDxY6UeL19TOnjskUfxdbctSnMR7EHedHZYxi5tHJpHlJf5uA
-	4CjTGCLMf5bhDAaGRNK/i1QvZTtlZqhX18u5iMdqAFW4b+goUY5OJeEwFoF0ntxQLhl45viSoWo
-	RcJ1adyM4qNbnU6VtcF0Ziq6at5
-X-Received: by 2002:a05:6a21:6da4:b0:3da:e50c:5039 with SMTP id adf61e73a8af0-3dd5f732f0emr2967834637.15.1789535083045;
-        Tue, 15 Sep 2026 22:04:43 -0700 (PDT)
+        bh=JCSj073xDjVE5V/nmEXAKgguDBgTKgJjsaGKUYFcD28=;
+        b=arcsHr6Z9+8hvNxGUQIeRFPBA42jH5k/2/UzUPbcfiZ5E4zNs9hzVQKQqhObbW9Zyg
+         zm4KRU7oJlpscptJX18QCak/2zbQM9emyWCKoXsFuSkPsT6O2VkgegBG/N/8U4SElqpr
+         K+TOhx/SaD6zWWL14nvwG5VQxpRJhf6pLawHKDH9GAvNeYAAs1o9YSRYXDq5SNH7zCAA
+         itS7bkbX7GxxXO996QK2mf9BeZm6G60dCMxqMKXA88lrLdtr2QMrwOK15BFBtnHsX51Q
+         JEJA29s/hv06F3wkGJGb/rtI/EFJ32YxkeZAl71P+UKYGSRrlVr6JnnmUWQtsFfTNpNM
+         hFug==
+X-Forwarded-Encrypted: i=1; AKwUvBz8Wbsq24MYzfXZxPeHsVqXWS9u7vr+SbNvQ5NOKZPrYin+VSR+EgW2qmldzVieJSTstsSEQtuRFG4=@vger.kernel.org
+X-Gm-Message-State: AFuF++kXOcBI86o8cWq4Of2KL6BAdOtdOQjutapjZycbympnpHE+9z/Y
+	iXDOSVMDy0KiSAiUK4KUEyMpko+G02Wetx41AkDKU1ayrBM3gkwt85x/
+X-Gm-Gg: AYBFou2VG7TEGsyHo7Fo2ageDTWHDbqPM3VcJBB89RCiK/bD1gPIEVAjywyscd3Lpvu
+	VH6eAaykDWbQLFYvEoYH9TsmgvppQ7GvS04fCbNgpAyzVspRVOFQ/C6oNCyx26hF1OPTDhQ/kdh
+	jWzDHQeTgix2WEnGyG2Kc2FJD+4G5OvSlPUywZX+WOpZtnpDOUQWOrayGN21VXZYiP3yGYbs5FO
+	ip6SRABkXyMSd3ezTYyV5QGARvHlDkS4b6z0zQUte8BE8X1CKboTGsFe/mBd54ox4s5B9vtSB4y
+	1sKUi3Uq1soSij9bqn4znSqArarh6sRQHXTT7/q4WMQ0kp9rQh5MDWNunB5CPHlZ8c/s00laTSx
+	ItVOG9QdIlo29KGAVCPlvmwFZRqdwrnW2DuaxINOuwuUBpSL9bzbAj/Oqx1jgjJL58qQLwcDs0O
+	SMRD99hv9bbHqPMzGRPGsjFzWr9QHJT5Y2EaVizKo/Ak7zeTTwTUuoZsKuD97WOOBxmfUenvhtR
+	ecPRVSkmTxqFqOx5g==
+X-Received: by 2002:a17:90b:1f84:b0:39d:f064:3a76 with SMTP id 98e67ed59e1d1-39e1e45e49amr3002570a91.15.1789535414426;
+        Tue, 15 Sep 2026 22:10:14 -0700 (PDT)
 Received: from kernel ([45.251.35.123])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-33bf5af6593sm3823746eec.25.2026.09.15.22.04.39
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-33bf5ac978esm3932878eec.18.2026.09.15.22.10.10
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 15 Sep 2026 22:04:42 -0700 (PDT)
-Date: Wed, 16 Sep 2026 10:34:36 +0530
+        Tue, 15 Sep 2026 22:10:13 -0700 (PDT)
+Date: Wed, 16 Sep 2026 10:40:07 +0530
 From: Mohamad Raizudeen <raizudeen.kerneldev@gmail.com>
 To: bhelgaas@google.com
-Cc: robh@kernel.org, gregkh@linuxfoundation.org, skhan@linuxfoundation.org,
-	jkoolstra@xs4all.nl, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: Fix unmasked value in pci_generic_config_write32()
-Message-ID: <aqojZEJDp3wHIW6e@kernel>
-References: <20260727080643.4949-1-raizudeen.kerneldev@gmail.com>
+Cc: skhan@linuxfoundation.org, jkoolstra@xs4all.nl,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	gregkh@linuxfoundation.org, yinghai@kernel.org
+Subject: Re: [PATCH] PCI: probe: Fix 64-bit limit truncation in prefetchable
+ window
+Message-ID: <aqokrxTEO1BVAyK7@kernel>
+References: <20260814164652.43501-1-raizudeen.kerneldev@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -77,41 +78,47 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260727080643.4949-1-raizudeen.kerneldev@gmail.com>
+In-Reply-To: <20260814164652.43501-1-raizudeen.kerneldev@gmail.com>
 
-On Mon, Jul 27, 2026 at 01:36:43PM +0530, Mohamad Raizudeen wrote:
-> When writing less than 4 bytes, pci_generic_config_write32() uses a
-> read-modify-write sequence to protect adjacent bytes. The code comment
-> states the goal is to "merge in the <size> bits we intend to write".
+On Fri, Aug 14, 2026 at 10:16:52PM +0530, Mohamad Raizudeen wrote:
+> In pci_read_bridge_mmio_pref(), the code checks if the 64 bit base
+> address is truncated on 32 bit pci_bus_addr_t. However, it misses this
+> same check for the limit address.
 > 
-> However the code does not mask the incoming 'val' before shifting it.
-> Since the function 'pci_generic_config_write32()' accepts a 'u32', a
-> caller could pass a value with extra bits set outside the intended write
-> size, those extra bits will shift into the adjacent bytes and corrupt them.
+> If firmware sets a window that starts below 4GB but ends above 4GB, the
+> base check passes. But the 64 bit limit is silently cut down to 32 bits
+> and wraps around to zero. This makes the base larger than the limit,
+> causing the kernel to silently disable the memory window instead of
+> printing an error.
 > 
-> Fix this my masking 'val' before the shift so only the target bytes are
-> written. This makes the code do what the comment says and matches the
-> read function, pci_generic_config_read32().
+> Fix this by checking if the limit was truncated, just like the base.
+> Also, update the error message to print both the base and limit
+> addresses to make debugging easier.
 > 
-> Fixes: 1f94a94f67e10 ("PCI: Add generic config accessors")
+> Fixes: 7fc986d8a9727 ("PCI: Support 64-bit bridge windows if we have 64-bit dma_addr_t")
 > Signed-off-by: Mohamad Raizudeen <raizudeen.kerneldev@gmail.com>
 > ---
->  drivers/pci/access.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+>  drivers/pci/probe.c | 7 ++++---
+>  1 file changed, 4 insertions(+), 3 deletions(-)
 > 
-> diff --git a/drivers/pci/access.c b/drivers/pci/access.c
-> index b123da16b63b..47b38d01694c 100644
-> --- a/drivers/pci/access.c
-> +++ b/drivers/pci/access.c
-> @@ -176,7 +176,7 @@ int pci_generic_config_write32(struct pci_bus *bus, unsigned int devfn,
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index dd0abbc63e18..0cf2d1d35146 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -479,9 +479,10 @@ static void pci_read_bridge_mmio_pref(struct pci_dev *dev, struct resource *res,
+>  	base = (pci_bus_addr_t) base64;
+>  	limit = (pci_bus_addr_t) limit64;
 >  
->  	mask = ~(((1 << (size * 8)) - 1) << ((where & 0x3) * 8));
->  	tmp = readl(addr) & mask;
-> -	tmp |= val << ((where & 0x3) * 8);
-> +	tmp |= (val & ((1 << (size * 8)) - 1)) << ((where & 0x3) * 8);
->  	writel(tmp, addr);
+> -	if (base != base64) {
+> -		pci_err(dev, "can't handle bridge window above 4GB (bus address %#010llx)\n",
+> -			(unsigned long long) base64);
+> +	if (base != base64 || limit != limit64) {
+> +		pci_err(dev, "can't handle bridge window above 4GB (bus address %#010llx-%#010llx)\n",
+> +			(unsigned long long) base64,
+> +			(unsigned long long) limit64);
+>  		return;
+>  	}
 >  
->  	return PCIBIOS_SUCCESSFUL;
 > -- 
 > 2.53.0
 >
@@ -122,3 +129,4 @@ feedback or if further changes are needed.
 
 Thanks,
 Mohamad Raizudeen
+
