@@ -1,188 +1,150 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qv1-f97.google.com (mail-qv1-f97.google.com [209.85.219.97])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 78E7658FD29;
-	Wed, 16 Sep 2026 23:54:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 882C7418363
+	for <linux-pci@vger.kernel.org>; Wed, 16 Sep 2026 23:59:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.97
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789602878; cv=none; b=RDNCnye6JCj1alkCMcrNsUZC/Tv4bu8w88lzfgOkHTF7TCyPUdU9bh8lnWutI5m8kf9oKSvL0cDZpVICKw7/iJJmG2vOgCwfLFHwAGb5kQIgudM10bEQOeq7BHjIFZbDak/dBIiUiyDE7RyBmETrooPTCyxZGVGpQWJ97kLkPMk=
+	t=1789603176; cv=none; b=B3MzNaO7YYhIQG5PBXr64yn7QdZnxKrzk2kPVUXI0w+4gs8ilfrZUnHASyKvSI8TVTJjLoXUB/lVhTKHIk/iitvPjG7nX6yUPa6w6L+kS+5hyDq7RoGG4NLESkp2stUiFes7WxwYwAz5Spa7l0uLyo23zjD/0mmagUUfJCDqaa4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789602878; c=relaxed/simple;
-	bh=jBYj/ikwk92P695e21QyiKCOHBe+EbH8ccn0oLPTNUc=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=HClEGrST1XxRsZjVpVOlNboUT7ZXTBgQsA9U33NzstiRE38FnOSsIZqlU+qAO7+TKnw/U3WZI6aqrbHOH41HHY0JoKMJe9hiIXZNFnqNRNaSmv6ysFOVSD333evWXwPHhXpS3+IfFYgCbR8ncpIEyLbcfbHitu0sT/qWZeVGh6w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RYc8Cui1; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789603176; c=relaxed/simple;
+	bh=iZDTSEutdlzrNt+HsK0gMg7KCjGzgbTctzIAFcA3ZWQ=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=B5NpJLSSFptXbWFTxfz5Ba3ZDwcCcStcyp5hQHnj9pfA4zPNpPq59/PlH3oVAbDwZdW0vWrt8pZSBcfcPQt1ZLjR0JjHD8bF3Pso2U3YPbGUCwt0OZrNtayFOf9KZRpEilAs8+kFiK1pBlJin87HHYbmf7pD7XhxstqxDG8dWFk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=LEYFL6rs; arc=none smtp.client-ip=209.85.219.97
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RYc8Cui1"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7C1981F00893;
-	Wed, 16 Sep 2026 23:54:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789602873;
-	bh=wgoX0NFNrnLOccx1kwVwT9i8vW+4UjtWT+bTNhxa1JQ=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=RYc8Cui14PqHJGYd2OA4w//4W/q+vKpT9752cZehXytimpFfD8DdnJqfm6nox2RHc
-	 iQQsK4TBBleeaWmaW1texNzMvSu1FYdqDEj3dGhP+6tNJUu+aFuB6cNmkwEqmyXyNe
-	 ThdDm0PA87ErxznKkitA2GRnCrjKO038Y/efClSt40jtmT0AjIALjPknHaQHTdYTJ8
-	 PuNo4hVCuIOwkiLYuw1lx+h10AMaIohr8rHPa5PBQdkWIZdvO3krGkjQxT9zYtmBx6
-	 awTw+7Q3iewdwm8pVHMKqfNiyGmFEGT/mJRu8cYyeh2pRZjCunC1/ZsBMUNN+QlMsK
-	 Ccfl8goJC1ExA==
-Date: Wed, 16 Sep 2026 18:54:32 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: David Matlack <dmatlack@google.com>
-Cc: kexec@lists.infradead.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-mm@kvack.org,
-	linux-pci@vger.kernel.org,
-	Adithya Jayachandran <ajayachandra@nvidia.com>,
-	Alexander Graf <graf@amazon.com>,
-	Alex Williamson <alex@shazbot.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, Chris Li <chrisl@kernel.org>,
-	David Rientjes <rientjes@google.com>,
-	Jacob Pan <jacob.pan@linux.microsoft.com>,
-	Jason Gunthorpe <jgg@nvidia.com>, Jonathan Corbet <corbet@lwn.net>,
-	Josh Hilke <jrhilke@google.com>,
-	Leon Romanovsky <leonro@nvidia.com>, Lukas Wunner <lukas@wunner.de>,
-	Mike Rapoport <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>,
-	Pasha Tatashin <pasha.tatashin@soleen.com>,
-	Pranjal Shrivastava <praan@google.com>,
-	Pratyush Yadav <pratyush@kernel.org>,
-	Saeed Mahameed <saeedm@nvidia.com>,
-	Samiullah Khawaja <skhawaja@google.com>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Vipin Sharma <vipinsh@google.com>, William Tu <witu@nvidia.com>,
-	Yi Liu <yi.l.liu@intel.com>
-Subject: Re: [PATCH v8 05/12] PCI: liveupdate: Preserve bus numbers during
- Live Update
-Message-ID: <20260916235432.GA991837@bhelgaas>
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="LEYFL6rs"
+Received: by mail-qv1-f97.google.com with SMTP id 6a1803df08f44-910316a2fc9so742346d6.2
+        for <linux-pci@vger.kernel.org>; Wed, 16 Sep 2026 16:59:35 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1789603174; x=1790207974;
+        h=content-transfer-encoding:content-type:in-reply-to:autocrypt:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:dkim-signature:x-gm-gg:x-gm-message-state:from:to
+         :cc:subject:date:message-id:reply-to:content-type;
+        bh=V0OARD0PLF4mIwzcACpuZC6ushW9KkulR8L/wcLq6TE=;
+        b=oHS56v5Mo0t3aSKf4PgOhM2KFvlpx98qe15Npp2cbU8uxuIKq4MZRrwVPy2VeH2y6U
+         We2VrJsVHDcaYjdyWLy7GNOhSkfAfIvBBklKJhIB0MKbU6iDo7eRFqOf1XCy74B64yeh
+         bhtxHFDlKPRx8yVezMajLcrc7Vq1A8Aqol9xWFGbIgwN+P+o+Z7/XybhI2HTuXUSP68w
+         HZplulYuS2ZLq0A+0Rq9fKx5CIRWaNWhSeX/vcEU2dVjmWkZWaRHa+LmrNSfJ1rENHBZ
+         9+oS6rcAAM5oDrfz0CpEAlYYxdX0ci4+aTP6BZraGSwVZElyKZO6vIQKQSsrWG2yNXaX
+         pdEw==
+X-Forwarded-Encrypted: i=1; AKwUvBxiBlVYP5hJbHZMCqbXDNEQwVJWXNEZE3HCZiTdR/G0Jc+zeUur8b6eQEryd9naze/NIIlc8TxXZAA=@vger.kernel.org
+X-Gm-Message-State: AFuF++maaW0A9Ezb0uiq8GTa1JrrwXa/6WpE3esCV7ce7mpoGD73aMr+
+	g+7h0Bh8OqxhKqTuBFkLfIgyvdiJ2PGK9UctoldWFk0gySJMhLMyhzIXyfgqofgP/Vfo4PnPvaj
+	9WEhUpPeVdtNmkenkYsBm2rUrXV1RFoqrILUe78XBq9l04JDa6f+zg+zwbcWtsP5goTbzEmYeha
+	Gh3n0alPtgBrp0pFDPQbdEJnmBsTeTBDH8doDXKXSij65jBO2a4/zLV4gyHmGg4bKLPUEBabSsZ
+	wATKw2h9Xst/PB8TJ0W
+X-Gm-Gg: AYBFou2KCq4kkM8ZqHftThpFu7mqPsmzbEDXJnkFqCHDoxLmJ17CtyDpQOzyxuq265A
+	mLn0taxOZH1ttF0b9idzqlzkzLmDloAMo+jghG1a3lnNY+7ivKXWZom4Zfm/x1l2wfncNZ+k55G
+	EWw0jxHNBFIN4YiyP+yBU6FAmjQkswNBI6+f43sjlUCpoFHbDZY8LJe6Y/0vCl6odLKnwIND84X
+	9NkpVJ1pV5cT1eUW/kbDSOm5aZuE8HQIZ3WMG0Eu5BkD3LmK8cxY2YG5kO2ebxKAJvbhsDx24pz
+	++7DEDEAGigu9t/m9llsRPz1gnzxGvF4ry+dSjdMAu9+paeID7JjAlYT7JJY7WvPEZxaYsdkcx2
+	9pnXQOHz6H1zPOIEhvCn3A3xc3UhlfvwBmEYt1QuM/kqkOKFTYpXPVF5ePwbYr1bbDnchHcq/aU
+	j+YhLhdb29ZGToyena4tiJJZ5um/8LY7pwEAoU24bhP2g=
+X-Received: by 2002:a05:6214:29c5:b0:912:32fa:399c with SMTP id 6a1803df08f44-9123d751f91mr82191326d6.12.1789603174189;
+        Wed, 16 Sep 2026 16:59:34 -0700 (PDT)
+Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-125.dlp.protect.broadcom.com. [144.49.247.125])
+        by smtp-relay.gmail.com with ESMTPS id 6a1803df08f44-9123be59af7sm862356d6.10.2026.09.16.16.59.33
+        for <linux-pci@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Wed, 16 Sep 2026 16:59:34 -0700 (PDT)
+X-Relaying-Domain: broadcom.com
+X-CFilter-Loop: Reflected
+Received: by mail-pg1-f200.google.com with SMTP id 41be03b00d2f7-cc1bbd7d6e6so226384a12.3
+        for <linux-pci@vger.kernel.org>; Wed, 16 Sep 2026 16:59:33 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google; t=1789603173; x=1790207973; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:autocrypt:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=V0OARD0PLF4mIwzcACpuZC6ushW9KkulR8L/wcLq6TE=;
+        b=LEYFL6rsQkD1A3c7ONFpHBihET+pNZcB87/twudVGqsDB0slzUmKc61lGKQJbRqFdp
+         G/jqFjY26fhX5YJgin6V30Q+9GABBtFFWPDWltD7aze0Rv/h+JWCv/6Z5kaRp/XcwgPj
+         vmL++FjuuB26s6N5eGBAGwcHwoC4tmwsxDU8o=
+X-Forwarded-Encrypted: i=1; AKwUvBwpiuugII+jXTSsPWvqN6Heifry9zFcsc4LMqBU+g5MjD2uKxin1Vn/xHMnYb7o/BQ2Mty/ZR5jYWU=@vger.kernel.org
+X-Received: by 2002:a05:6a20:e212:b0:3cd:7ba2:e669 with SMTP id adf61e73a8af0-3dd5f45d85bmr11067013637.10.1789603172968;
+        Wed, 16 Sep 2026 16:59:32 -0700 (PDT)
+X-Received: by 2002:a05:6a20:e212:b0:3cd:7ba2:e669 with SMTP id adf61e73a8af0-3dd5f45d85bmr11066949637.10.1789603172424;
+        Wed, 16 Sep 2026 16:59:32 -0700 (PDT)
+Received: from [10.67.48.245] ([192.19.223.252])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-33bf5a6a175sm11074324eec.9.2026.09.16.16.59.31
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 16 Sep 2026 16:59:31 -0700 (PDT)
+Message-ID: <9a741390-503b-403d-a34d-d4919edf1d8c@broadcom.com>
+Date: Wed, 16 Sep 2026 16:59:30 -0700
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <aqWMjrea2MMMZHxr@google.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 01/13] PCI: brcmstb: Remove redundant const specifier for
+ struct fields
+To: Jim Quinlan <james.quinlan@broadcom.com>, linux-pci@vger.kernel.org,
+ Nicolas Saenz Julienne <nsaenz@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ bcm-kernel-feedback-list@broadcom.com, jim2101024@gmail.com
+Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>,
+ =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+ Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
+ "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE"
+ <linux-rpi-kernel@lists.infradead.org>,
+ "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE"
+ <linux-arm-kernel@lists.infradead.org>,
+ open list <linux-kernel@vger.kernel.org>
+References: <20260911233541.1650895-1-james.quinlan@broadcom.com>
+ <20260911233541.1650895-2-james.quinlan@broadcom.com>
+Content-Language: en-US, fr-FR
+From: Florian Fainelli <florian.fainelli@broadcom.com>
+Autocrypt: addr=florian.fainelli@broadcom.com; keydata=
+ xsBNBFPAG8ABCAC3EO02urEwipgbUNJ1r6oI2Vr/+uE389lSEShN2PmL3MVnzhViSAtrYxeT
+ M0Txqn1tOWoIc4QUl6Ggqf5KP6FoRkCrgMMTnUAINsINYXK+3OLe7HjP10h2jDRX4Ajs4Ghs
+ JrZOBru6rH0YrgAhr6O5gG7NE1jhly+EsOa2MpwOiXO4DE/YKZGuVe6Bh87WqmILs9KvnNrQ
+ PcycQnYKTVpqE95d4M824M5cuRB6D1GrYovCsjA9uxo22kPdOoQRAu5gBBn3AdtALFyQj9DQ
+ KQuc39/i/Kt6XLZ/RsBc6qLs+p+JnEuPJngTSfWvzGjpx0nkwCMi4yBb+xk7Hki4kEslABEB
+ AAHNMEZsb3JpYW4gRmFpbmVsbGkgPGZsb3JpYW4uZmFpbmVsbGlAYnJvYWRjb20uY29tPsLB
+ IQQQAQgAywUCZWl41AUJI+Jo+hcKAAG/SMv+fS3xUQWa0NryPuoRGjsA3SAUAAAAAAAWAAFr
+ ZXktdXNhZ2UtbWFza0BwZ3AuY29tjDAUgAAAAAAgAAdwcmVmZXJyZWQtZW1haWwtZW5jb2Rp
+ bmdAcGdwLmNvbXBncG1pbWUICwkIBwMCAQoFF4AAAAAZGGxkYXA6Ly9rZXlzLmJyb2FkY29t
+ Lm5ldAUbAwAAAAMWAgEFHgEAAAAEFQgJChYhBNXZKpfnkVze1+R8aIExtcQpvGagAAoJEIEx
+ tcQpvGagWPEH/2l0DNr9QkTwJUxOoP9wgHfmVhqc0ZlDsBFv91I3BbhGKI5UATbipKNqG13Z
+ TsBrJHcrnCqnTRS+8n9/myOF0ng2A4YT0EJnayzHugXm+hrkO5O9UEPJ8a+0553VqyoFhHqA
+ zjxj8fUu1px5cbb4R9G4UAySqyeLLeqnYLCKb4+GklGSBGsLMYvLmIDNYlkhMdnnzsSUAS61
+ WJYW6jjnzMwuKJ0ZHv7xZvSHyhIsFRiYiEs44kiYjbUUMcXor/uLEuTIazGrE3MahuGdjpT2
+ IOjoMiTsbMc0yfhHp6G/2E769oDXMVxCCbMVpA+LUtVIQEA+8Zr6mX0Yk4nDS7OiBlvOwE0E
+ U8AbwQEIAKxr71oqe+0+MYCc7WafWEcpQHFUwvYLcdBoOnmJPxDwDRpvU5LhqSPvk/yJdh9k
+ 4xUDQu3rm1qIW2I9Puk5n/Jz/lZsqGw8T13DKyu8eMcvaA/irm9lX9El27DPHy/0qsxmxVmU
+ pu9y9S+BmaMb2CM9IuyxMWEl9ruWFS2jAWh/R8CrdnL6+zLk60R7XGzmSJqF09vYNlJ6Bdbs
+ MWDXkYWWP5Ub1ZJGNJQ4qT7g8IN0qXxzLQsmz6tbgLMEHYBGx80bBF8AkdThd6SLhreCN7Uh
+ IR/5NXGqotAZao2xlDpJLuOMQtoH9WVNuuxQQZHVd8if+yp6yRJ5DAmIUt5CCPcAEQEAAcLB
+ gQQYAQIBKwUCU8AbwgUbDAAAAMBdIAQZAQgABgUCU8AbwQAKCRCTYAaomC8PVQ0VCACWk3n+
+ obFABEp5Rg6Qvspi9kWXcwCcfZV41OIYWhXMoc57ssjCand5noZi8bKg0bxw4qsg+9cNgZ3P
+ N/DFWcNKcAT3Z2/4fTnJqdJS//YcEhlr8uGs+ZWFcqAPbteFCM4dGDRruo69IrHfyyQGx16s
+ CcFlrN8vD066RKevFepb/ml7eYEdN5SRALyEdQMKeCSf3mectdoECEqdF/MWpfWIYQ1hEfdm
+ C2Kztm+h3Nkt9ZQLqc3wsPJZmbD9T0c9Rphfypgw/SfTf2/CHoYVkKqwUIzI59itl5Lze+R5
+ wDByhWHx2Ud2R7SudmT9XK1e0x7W7a5z11Q6vrzuED5nQvkhAAoJEIExtcQpvGagugcIAJd5
+ EYe6KM6Y6RvI6TvHp+QgbU5dxvjqSiSvam0Ms3QrLidCtantcGT2Wz/2PlbZqkoJxMQc40rb
+ fXa4xQSvJYj0GWpadrDJUvUu3LEsunDCxdWrmbmwGRKqZraV2oG7YEddmDqOe0Xm/NxeSobc
+ MIlnaE6V0U8f5zNHB7Y46yJjjYT/Ds1TJo3pvwevDWPvv6rdBeV07D9s43frUS6xYd1uFxHC
+ 7dZYWJjZmyUf5evr1W1gCgwLXG0PEi9n3qmz1lelQ8lSocmvxBKtMbX/OKhAfuP/iIwnTsww
+ 95A2SaPiQZA51NywV8OFgsN0ITl2PlZ4Tp9hHERDe6nQCsNI/Us=
+In-Reply-To: <20260911233541.1650895-2-james.quinlan@broadcom.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
 
-On Sat, Sep 12, 2026 at 05:31:58PM +0000, David Matlack wrote:
-> On 2026-09-11 06:30 PM, David Matlack wrote:
-> > On 2026-09-10 06:51 PM, Bjorn Helgaas wrote:
-> > > On Tue, Jul 28, 2026 at 10:09:59PM +0000, David Matlack wrote:
+On 9/11/26 16:35, Jim Quinlan wrote:
+> All of the variables using this particular structure are declared as const.
+> There is no reason to declare its individual fields as being const.
 > 
-> > > > +bool pci_liveupdate_preserve_bus_numbers(struct pci_bus *bus, struct pci_dev *dev)
-> > > > +{
-> > > > +	struct pci_dev *parent = bus->self;
-> > > > +
-> > > > +	if (dev->liveupdate.preserve_bus_numbers)
-> > > > +		return true;
-> > > > +
-> > > > +	if (parent && parent->liveupdate.preserve_bus_numbers) {
-> > > > +		/*
-> > > > +		 * Preserve bus numbers if the parent bridge is required to
-> > > > +		 * preserve bus numbers. Otherwise the PCI core could expand
-> > > > +		 * this bridge's reservation beyond its parent (which cannot
-> > > > +		 * expand).
-> > > > +		 */
-> > > > +		dev->liveupdate.preserve_bus_numbers = true;
-> > > > +	} else {
-> > > > +		/*
-> > > > +		 * Otherwise preserve bus numbers if there are any incoming
-> > > > +		 * preserved devices. This ensures that the PCI core does not
-> > > > +		 * allocate a bus number to a non-preserved device that
-> > > > +		 * conflicts with the bus number already assigned to a preserved
-> > > > +		 * device.
-> > > > +		 *
-> > > > +		 * This is slightly more restrictive than it needs to be. For
-> > > > +		 * example, each host bridges have their own range of bus
-> > > > +		 * numbers that won't conflict with other host bridges. But the
-> > > > +		 * previous kernel should have assigned a sane bus topology and
-> > > > +		 * it is simpler to just adopt that entire topology.
-> > > > +		 */
-> > > > +		dev->liveupdate.preserve_bus_numbers =
-> > > > +			pci_has_incoming_preserved_devices();
-> > > > +	}
-> > > > +
-> > > > +	return dev->liveupdate.preserve_bus_numbers;
-> > > 
-> > > I'm not sure why you don't just return
-> > > pci_has_incoming_preserved_devices() in all cases, which is what the
-> > > commit log suggests this patch does.  What's gained by all the logic
-> > > here?  It's not like devices will be hot-added during the kexec.
-> > 
-> > To protect against pci_has_incoming_preserved_devices() flipping from
-> > true to false while the PCI core is in the middle of a scan. It is not
-> > likely to ever happen given most host bridge scanning should happen
-> > during early boot, but theoretically possible with the way the PCI core
-> > code is structured. I did not see way to structurally ensure these 2
-> > things cannot race. A lot of the host bridge scanning happens without
-> > taking the rescan lock, for example.
-> 
-> After working on this more, I do see a way to simplify the logic in
-> pci_liveupdate_preserve_bus_numbers().
-> 
-> pci_liveupdate_preserve_bus_numbers() is used in 2 places during
-> scanning. First to decide if the PCI core should preserve bus numbers or
-> is free to allocate new ones, and second to decide if the PCI core is
-> allowed to assign bus numbers to bridges that are missing bus numbers.
-> 
-> The latter case should never happen during initial scanning unless a
-> bridge was somehow reset during the kexec, but could legitimately happen
-> if a bridge is later hot-plugged and I did not want Live Update to
-> unnecessarily break that scenario. But then that creates this problem
-> where pci_has_incoming_preserved_devices() can suddenly flip from true
-> to false at any time and I needed all the complex logic to keep it
-> consistent for a given scan.
-> 
-> Instead we can split the handling of these cases:
-> 
->  1. When the PCI core needs to decide if it should preserve bus numbers
->     due to Live Update, pci_liveupdate_preserve_bus_numbers() can return
->     true forever if any device was preserved by the previous kernel,
->     which simplifies the logic.
-> 
->  2. Then to handle the case of a bridge is enumerated that does not have
->     bus numbers assigned, we can handle that separately. If we reorder this
->     with the next commit so the PCI core knows exactly which bridges have
->     preserved downstream endpoints, then it is possible to determine if it
->     is safe for the PCI core to allow bus numbers to be assigned to an
->     unconfigured bridge.
-> 
-> After re-ordering, we can end up with something like this:
-> 
->   bool pci_liveupdate_preserve_bus_numbers(void)
->   {
->   	return pci_liveupdate.had_incoming;
->   }
-> 
->   bool pci_liveupdate_refuse_bus_numbers(struct pci_bus *bus, struct pci_dev *dev)
->   {
->   	struct pci_dev *bridge;
-> 
->   	for_each_pci_bridge(bridge, bus) {
->   		if (!bridge->liveupdate.was_incoming || bridge->subordinate)
->   			continue;
-> 
->   		pci_err(dev, "Not assigning bus numbers, preserved bridge %s lost its bus number configuration\n",
->   			pci_name(bridge));
->   		return true;
->   	}
-> 
->   	return false;
->   }
-> 
-> The net effect on pci_scan_bridge_extend() is:
-> 
->   bool preserve_bus_numbers = !pcibios_assign_all_busses() ||
->   			    pci_liveupdate_preserve_bus_numbers();
->   ...
->   	if (pci_liveupdate_refuse_bus_numbers(bus, dev))
->   		goto out;
-> 
-> We could further scope pci_liveupdate_preserve_bus_numbers() to only
-> return true for host bridges with preserved endpoints downstream, but
-> that doesn't seem worth the extra complexity. It also seems nice to keep
-> the pci_liveupdate_preserve_bus_numbers() policy global to match how the
-> existing pcibios_assign_all_busses() policy is global.
-> 
-> Does that look reasonable?
+> Signed-off-by: Jim Quinlan <james.quinlan@broadcom.com>
 
-Yep, sounds good to me.
+Reviewed-by: Florian Fainelli <florian.fainelli@broadcom.com>
+-- 
+Florian
