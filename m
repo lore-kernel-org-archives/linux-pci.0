@@ -1,120 +1,162 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9381E4AB3B8
-	for <linux-pci@vger.kernel.org>; Wed, 16 Sep 2026 15:51:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BBFE54D794B
+	for <linux-pci@vger.kernel.org>; Wed, 16 Sep 2026 15:52:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789573905; cv=none; b=l9ZNzGPKcINLyExJoeot3jXRpGv4iByXKf+CtxkKfNcy6vvHkWDVrbezRjZq5Drs9t4Z1tJI+XmEA8NN02nEnCPoBHoTNhWiDdPOP1jJ8ChAFKpdxv04+FRdlYE9csy/gFQapyvmV5b7Pj+yG09hSllJDjybrJr54O7chHloodk=
+	t=1789573961; cv=none; b=EE4kJeJlxPgJF7iEsaqZ/J3KEKI+tCZ4trMYvHoCpGI+y8X9fUlfdhW2v6tQT7+eyouINp1Ckdhv3K1WuVR2WUeHku0oBtDLxrYNLAoQ5/ZgyxKafmBAEvtfoB2Csc8dSXMbGOJaEVBb/y1ay73PsIGu6TiwUTThNtyMnxat+Yg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789573905; c=relaxed/simple;
-	bh=0VKIpwuQ3AwL+JjrP4+jxN6vHpcGkh6g/hy9NL+yw8I=;
+	s=arc-20240116; t=1789573961; c=relaxed/simple;
+	bh=fOAspE1CTdKey+KPov10VSHTd4hdQHWIHpj/EbyfoNE=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=VQ7hsDcxf2Vp2D8biIsZhW2sOzfX6vMzxq8ltbEEOxWRRrcEOtRF+AhFvQCimd1J7zNba7wYsEToTwhneKIA1hO4LAILD3yK2uSJ0m3/eRsXPNjonbXh/zuKRatu05/RzVeisMd2bv3CCwC18OCtWHrg33kR1drtylNPeXlYKow=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Cyc8dCCj; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=oKOLKMfGuEb1Zb66GvlyYEU2xnlviwouyTD5iXUjUU1G+JrMFbABuTq+SBSBCUUl5GTDDA3LRs+VwGM7Iuf3FcYXPR2qQ07n4YhKN++rmAr7o6eFqfpe1JdEyEozlpRnjhhyvRYkvyfhlSeNABg/ChLHllX/ulZOv6LUr9gd9Qc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VjWFbOQu; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Cyc8dCCj"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2E31B1F000FF;
-	Wed, 16 Sep 2026 15:51:43 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VjWFbOQu"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 06ECC1F000FF;
+	Wed, 16 Sep 2026 15:52:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789573903;
-	bh=b4FyhyhfUaP4sm+2kO3ESyfPhYqENbC0gRUrFsvBwDw=;
+	s=k20260515; t=1789573959;
+	bh=p6JLHCg3/+VxrjTUSCA53JBCA/2IquWEQoLTEkkv7vA=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Cyc8dCCjdSa7wYQIO9oGvuHuzVkvuIFljExONEsG5S7HHwgMh/Gjafi0EjiGDe627
-	 63eAvnd/D0j67wKhf9Y+PbTSRa9qetnGH6W1bFR+XiH5+tZYiC/BVuJGODT/9Ek3Ke
-	 8F37pQO5bLVIzEom9ps9rbcmJDoQGQrINpNxmMG+WBR0J1RdkjSObPVgVKVjTdZIxc
-	 MU/vT3PTeHZxbBEu/H27wUAklNu8GnlL1QOp309SQLL8JPrCnaeQP9UGqprumaRYs8
-	 dlFizNV39CVljBRNmeDEc3j7Vmh+PAHsZOK+QCLqtWKq4yeX8GKdZyaC4TSmcYoMNb
-	 d+SuU2nQcjqEw==
+	b=VjWFbOQu4Ujr6dkRXTZP1aqZm0HFYfDQDIeRBiAfesCFxhxJ58QbnMl+uUcGquaFQ
+	 CDHKqXa640HNzv6jphuzXDqJU+TrB1PpDIpqQRhxqd0P434uEWRa02WQLRPFvq8IL/
+	 15xKPzn1s1oq7wLmAJtiasd26OQW1at5MmPSE8vUCJOE6EL/UV8itoIx4aYBFSALsc
+	 mbTYLNcLfUf9Pk3x6eU+v7jc1tWmoulM1vnrYWGpEBcf4NmXaBDu8sNFwODBKRuD4p
+	 swZjPSOY6Qe16C9wo6pgcm+eOvwz+zKigkU7O8hZD1ckXGogqtEHOZd7sj4K1bMhLJ
+	 6DCTkXwXsS/ZQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v9 2/3] PCI: Configure Root Port MPS during host probing
+Subject: Re: [PATCH v9 1/3] PCI: Match the hierarchy's MPS to a device's
+ MPSS as necessary
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Hans Zhang" <18255117159@163.com>
-Cc: linux-amlogic@lists.infradead.org, neil.armstrong@linaro.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260916153907.60344-3-18255117159@163.com>
+Cc: neil.armstrong@linaro.org, linux-amlogic@lists.infradead.org, linux-pci@vger.kernel.org
+In-Reply-To: <20260916153907.60344-2-18255117159@163.com>
 References: <20260916153907.60344-1-18255117159@163.com>
- <20260916153907.60344-3-18255117159@163.com>
+ <20260916153907.60344-2-18255117159@163.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 16 Sep 2026 15:51:42 +0000
-Message-Id: <20260916155143.2E31B1F000FF@smtp.kernel.org>
+Date: Wed, 16 Sep 2026 15:52:38 +0000
+Message-Id: <20260916155239.06ECC1F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
 s) to consider:
-- [High] pci: dangerous dynamic MPS reduction under PCIE_BUS_DEFAULT
+- [Critical] pci: pci_walk_bus() modifies MPS of active devices causing Mal=
+formed TLPs
+- [High] pci: dynamically modified MPS in pcie_set_mps() is lost on system =
+resume
+- [High] pci: unlocked RMW of PCI_EXP_DEVCTL in pcie_set_mps() causes data =
+races
 --
 
-commit 32945143b32b8b42f1dd3e1f419414a5bf8f9acf
+commit 5af1f52d57f95fe2335fa9124a2d504949bbc917
 Author: Hans Zhang <18255117159@163.com>
 
-PCI: Configure Root Port MPS during host probing
+PCI: Match the hierarchy's MPS to a device's MPSS as necessary
 
-This commit updates the PCIe initialization logic to set a Root Port's Maxi=
-mum
-Payload Size (MPS) to its maximum supported value during host controller
-probing. It does this as long as the MPS strategy is not PCIE_BUS_TUNE_OFF =
-or
-PCIE_BUS_PEER2PEER, meaning it applies under the default PCIE_BUS_DEFAULT
-strategy.
+When a device's MPSS is too small to match the upstream bridge,=20
+pci_configure_mps() now walks the hierarchy from the Root Port down
+and reduces every device that is above the new value to avoid
+Malformed TLPs on Switch egress ports.
 
 > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 232bce2819f06..08af75aa7366b 100644
+> index 27008e2ea5afc..232bce2819f06 100644
 > --- a/drivers/pci/probe.c
 > +++ b/drivers/pci/probe.c
-> @@ -2248,6 +2248,21 @@ static void pci_configure_mps(struct pci_dev *dev)
->  		return;
->  	}
+> @@ -2200,9 +2200,28 @@ int pci_setup_device(struct pci_dev *dev)
+>  	return 0;
+>  }
 > =20
-> +	/*
-> +	 * Unless MPS strategy is PCIE_BUS_TUNE_OFF (don't touch MPS at all) or
-> +	 * PCIE_BUS_PEER2PEER (use minimum MPS for peer-to-peer), set Root Port=
-s'
-> +	 * MPS to their maximum supported value. Depending on the MPS strategy
-> +	 * and MPSS of downstream devices, a Root Port's MPS may be reduced
-> +	 * later during device enumeration.
-> +	 */
-> +	if (pci_pcie_type(dev) =3D=3D PCI_EXP_TYPE_ROOT_PORT &&
-> +	    pcie_bus_config !=3D PCIE_BUS_TUNE_OFF &&
-> +	    pcie_bus_config !=3D PCIE_BUS_PEER2PEER) {
-> +		rc =3D pcie_set_mps(dev, 128 << dev->pcie_mpss);
+> +static int pcie_reduce_mps(struct pci_dev *dev, void *data)
+> +{
+> +	int mps =3D *(int *)data;
+> +	int ret;
+> +
+> +	/* MPS is of type 'RsvdP' for VFs */
+> +	if (!pci_is_pcie(dev) || dev->is_virtfn)
+> +		return 0;
+> +
+> +	if (pcie_get_mps(dev) > mps) {
+> +		ret =3D pcie_set_mps(dev, mps);
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[Severity: High]
+Does bypassing the PM software save state here cause the dynamically modifi=
+ed
+MPS to be lost on system resume?
+
+If the sibling driver previously called pci_save_state() during its probe,
+dev->state_saved becomes true. During the next suspend, the PM core skips
+saving the new hardware state. On resume, the old, larger MPS would be
+restored, potentially desynchronizing the hierarchy.
 
 [Severity: High]
-Does this code introduce a regression where active downstream topologies are
-exposed to dangerous dynamic MPS reductions under the default PCIE_BUS_DEFA=
-ULT
-strategy?
+Also, does modifying the hardware MPS of active third-party endpoints using
+an unlocked Read-Modify-Write of PCI_EXP_DEVCTL cause data races?
 
-By forcing the Root Port MPS to its maximum supported value here, it overri=
-des
-safe firmware settings. If a device with a smaller MPSS is subsequently
-enumerated or hotplugged, pci_configure_mps() will detect that the downstre=
-am
-MPSS is smaller than the Root Port's MPS, triggering pcie_reduce_mps() on t=
-he
-entire hierarchy.
+pcie_set_mps() performs an unlocked RMW of PCI_EXP_DEVCTL. If the sibling
+driver or userspace (via VFIO) modifies the same register concurrently
+(e.g., via pcie_set_readrq()), could it corrupt the configuration state of
+active endpoints?
 
-Because pcie_reduce_mps() modifies the Root Port first and sequentially wal=
-ks
-downstream without quiescing active devices, this creates a dangerous windo=
-w.
-
-If an existing downstream device (such as an active NIC or early
-firmware-driven display controller) is actively performing DMA, could it
-transmit a payload exceeding the newly reduced MPS of the Root Port,
-potentially leading to Malformed TLP Fatal Errors and a system crash?
-
-> +		if (rc)
-> +			dev_warn(&dev->dev, "failed to set root port MPS\n");
+> +		if (ret)
+> +			dev_warn(&dev->dev, "failed to set MPS\n");
 > +	}
 > +
->  	if (!bridge || !pci_is_pcie(bridge))
+> +	return 0;
+> +}
+> +
+>  static void pci_configure_mps(struct pci_dev *dev)
+>  {
+>  	struct pci_dev *bridge =3D pci_upstream_bridge(dev);
+
+[ ... ]
+
+> @@ -2252,10 +2271,21 @@ static void pci_configure_mps(struct pci_dev *dev)
 >  		return;
+> =20
+>  	mpss =3D 128 << dev->pcie_mpss;
+> -	if (mpss < p_mps && pci_pcie_type(bridge) =3D=3D PCI_EXP_TYPE_ROOT_PORT=
+) {
+> -		pcie_set_mps(bridge, mpss);
+> -		pci_info(dev, "Upstream bridge's Max Payload Size set to %d (was %d, m=
+ax %d)\n",
+> -			 mpss, p_mps, 128 << bridge->pcie_mpss);
+> +	rp =3D pcie_find_root_port(bridge);
+> +	if (mpss < p_mps && rp) {
+> +		/*
+> +		 * dev cannot be programmed to the MPS already in use above
+> +		 * it, so reduce the hierarchy to what dev supports.  A Switch
+> +		 * may not repackage TLPs, so reducing only the upstream
+> +		 * bridge is not enough: every port up to the Root Port has to
+> +		 * come down as well, and so do the devices already programmed
+> +		 * below that Root Port, which would otherwise be left sending
+> +		 * TLPs too large for their egress port.
+> +		 */
+> +		pcie_reduce_mps(rp, &mpss);
+> +		pci_walk_bus(rp->subordinate, pcie_reduce_mps, &mpss);
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[Severity: Critical]
+Does unconditionally walking the bus and dynamically reducing the MPS of ac=
+tive
+siblings cause Malformed TLPs?
+
+PCIe specifications prohibit changing MPS while a device is active. Active
+devices will continue generating TLPs based on their driver's internal state
+(or previously negotiated packet sizes). When these larger TLPs hit the
+dynamically reduced upstream bridge, won't they be dropped as Malformed
+TLPs, potentially leading to a system crash or bus reset?
+
+> +		pci_info(dev, "Max Payload Size of %s hierarchy set to %d (was %d)\n",
+> +			 pci_name(rp), mpss, p_mps);
+>  		p_mps =3D pcie_get_mps(bridge);
+>  	}
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260916153907.6034=
-4-1-18255117159@163.com?part=3D2
+4-1-18255117159@163.com?part=3D1
