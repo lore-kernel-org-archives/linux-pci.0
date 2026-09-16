@@ -1,182 +1,134 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj2-f42.google.com (mail-pj2-f42.google.com [74.125.227.170])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C65A3CBE7C
-	for <linux-pci@vger.kernel.org>; Wed, 16 Sep 2026 06:17:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5EDD747729B
+	for <linux-pci@vger.kernel.org>; Wed, 16 Sep 2026 08:00:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.227.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789539425; cv=none; b=KRU/MzgIOO4D/FWcJDyC+tnIeTx4xZiP3EM+PGsk20r54Pl0qPPwpyR+mbir4orN+yv+ZQbk0I9UYb0B0tltcoQ/Ht5koYrmCfyNx/Ga3PIZZGfEvSbH5DiKbZ4PpEFXttujc78r9hAXoBH97X8mHWqeDkkGedG75WIQBNmHAZ0=
+	t=1789545652; cv=none; b=smfLq7Be3XC/z9PemGjIYklManQ8ntxwkSEnvo4nJ+B80OQX4Es+g32iGeF9TMcsKC4PEP72Ur9FhBszH3d9o4BsezoKqGHe/gVIa1Acm9SWx6kvuTCcEHTtTWmtCmiuaHG4YdXL2hZNWoiVzEIdTf0iildVSceUsEPrF9Qhm4g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789539425; c=relaxed/simple;
-	bh=EzlN4mRHijKBMn2ktzQ/aax0nldjxNN36Bvs2XAUN1E=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=NbAumfqalVL4FVIX6JPqRzpKid5dBet8H1jrkjsSH+IYu3vZsq9nLB0CxejqU8LeEaMRNJ268KY+tfl40dyIUf+v6PTlohVDQsXy0JEABkfzQTpSejxtAh2MDhkUO44LztXtPVT8guLUs/nEwj0blHluS2C/xbOLWduPM+wSHic=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WMHWlkYJ; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789545652; c=relaxed/simple;
+	bh=7WdeUDfNtz3w/kOVanMS/2G8C33ZGTEc6MZvYgIdotc=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Va3nqun5II6DJhkPpL/LkSYVLbsuMJ0yMcw3HWWqkUCK5auh5pvoPqockaIMPU1Lx+eTW3H2didI8IiAAF6J5IubT3xeUt8jjMleG2/Z3N7DGbptH4roP8WZQ6XdUNGQhJqG/b6whgd7XeaWJE9BlDX0lPlmmzRWE//M+g3yinM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Rc2IrysV; arc=none smtp.client-ip=74.125.227.170
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WMHWlkYJ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5F02C1F000FF;
-	Wed, 16 Sep 2026 06:17:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789539423;
-	bh=lYUL43qC1fa3U1LOOBs0pqpAXFYLD6HLTTr9i50HNws=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=WMHWlkYJENdJ1pss0rtlpdQtU3icvWkVQYL3fugjfTf58N6RUMGT+Mrtv/B9QEXzc
-	 3XhyjgPmqFQKaWZu0PSPKzBq4pATyk77lkqS8hOTIROV911Rhef1wyxKBkoTQbHKPB
-	 dmsqCptC/qOPVzoYVYSc1Sz+CDuCL7FwHXyMVwxqEnsnHaiGL4XmoJ6GFa2LB/gCOV
-	 mj5ru5E0SK7M+9FpVHU2x/NHWULw5kQUT50jHBz/s5W79lo5LLr9X9tVnEt5LA5GG3
-	 mwHr3xm2kfzujsPdRvfk0biq2RJ9uV2M+6iAC0rNt2agjP4R52RGR2j3hQsO27dxNT
-	 mHc5XV4u6MfjQ==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 4/4] phy: qcom-qmp-pcie: Split phy_ops into
- init/exit/reset/power_on
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Qiang Yu" <qiang.yu@oss.qualcomm.com>
-Cc: olteanv@gmail.com, vkoul@kernel.org, linux-pci@vger.kernel.org, linux-phy@lists.infradead.org, neil.armstrong@linaro.org
-In-Reply-To: <20260915-align_pcie_init_sequence_0916-v1-4-0b2195836f30@oss.qualcomm.com>
-References: <20260915-align_pcie_init_sequence_0916-v1-0-0b2195836f30@oss.qualcomm.com>
- <20260915-align_pcie_init_sequence_0916-v1-4-0b2195836f30@oss.qualcomm.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 16 Sep 2026 06:17:02 +0000
-Message-Id: <20260916061703.5F02C1F000FF@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Rc2IrysV"
+Received: by mail-pj2-f42.google.com with SMTP id 98e67ed59e1d1-396ccb65437so440056a91.3
+        for <linux-pci@vger.kernel.org>; Wed, 16 Sep 2026 01:00:45 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1789545644; x=1790150444; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=1EPm1x0mUz5Pn3Ms5F/txa8My4xRSy/NJkkZxCzQIKM=;
+        b=Rc2IrysVTWRJemrkQFAJ+8O3jN9JCMqD1N9yqqquQyj6TlRv9kewSW8gyY2qHtfAsi
+         3MoemnLsawnXPlNQiZdT9WQ/j2fgFuQs6GGjXr67ea7pup3AfnO+slXc0gL9CVTkAjjC
+         7JkrglkkWb5GahF7TW2iJWoJBXli/RlDOVCn62og3FwBMqa9G84h7RuY5WaODWrmvvcm
+         7zkPKeD98W1JnTy7ahY3MeNIHKiqQPi5bAdt0pgcqq+3PRGLR8PyRA4ZkOTHllPZ6bh7
+         U8G2vE0RJXj7fg10MWPUPX2tKsGrOaMhvNIGgiIjVUn2W9hSIXRlPehPRwmKoQnTWaaj
+         LztA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1789545644; x=1790150444;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=1EPm1x0mUz5Pn3Ms5F/txa8My4xRSy/NJkkZxCzQIKM=;
+        b=u/4DecVNwPhbm6Q1Ndb+3ozlb0gzQa6Adx7S94HrhQpN+22QZ1GP7KalPPM7/Y/mYW
+         QvMwJDtk3MnOajTl51Pt0iS0pXoqhThyxUzNL/dqlY+PCViPyUcX7O3ya397W6L/aigq
+         0IRwfuh4nk7nuV+NXsMkgI9w2x5TV5RRTtiTJH/gxE0YFmmLvC7YCzv175Xy444bgnCN
+         9d0LT/pmcsDvKtsVJ4wli63ui2iz1pU3LTIQngEc74sO8jZMSdQzsNiqHmLsPmA/UfO7
+         LlHo5b2bgPhCRn5xIM2ygGgagmgdZjY6veHisU82b09OdHxqgMk7k56Ecp4jTShpdQwi
+         rj5w==
+X-Forwarded-Encrypted: i=1; AKwUvBzRaj7NJORzLhvZU3LsuwveXqtzIVs/PKkkS7IIvHsb9ALcxOF4me29IPqQEOVLpWzCoZQwCqbmNPo=@vger.kernel.org
+X-Gm-Message-State: AFuF++nnPesAa5BmVEkdq45G5QRzfItPn2s225hBUS16aPO7blvxyfOc
+	hmK/OZ07TcU6b5eRPFLDvStoX9R1Yj8FtNkRqEuJ4rL15hzsi5jM5Cu86ra0Vg==
+X-Gm-Gg: AYBFou3hvMT40+u5iDbF9iGGiOh3KnoCHa9VHSRGn1O0EgQri19/GBjyddBhp8E8kxD
+	X566WV1mTpSM9qrsDsiPbyWnDCqsawKwmUYQwYfh7ZkBDhuFBJr28smU21Se6Viz0yrq3Z91mCM
+	9uW/8S84aBrr8GjvncHBaJXm1P2Pcj5u2fbmT6oC9iOVA7WF6YdMPN4Xhk1DBROGTcQlm+HQpzY
+	kP9vuRkogMnT8wt/J0wIGf7PmS52RbQz3w+Up6PstTYVq7ZSn1F9Dev/kcBtXDlmNYGYR+80hxM
+	ZCRTXwEHgqUxPhjnPAMNzk+L+lBQLOHnShLMTGsyj5xf0eoRtiO98H3/WTlq+QMRaIwIySkDdc3
+	fCW3t3iR3KEqpFk+pzMciAc9Gllc1sKA1dpDFH6WK7mLVN93EWAqS9HdY/FdczgLzjyYg0XWdBI
+	Y3g36k6xQpy/9+O0BLwTt1Nzta4hAfO0n/q4UzdBa7xB8l4Ns2Ig08Gw==
+X-Received: by 2002:a17:90b:2681:b0:39e:1a00:bec4 with SMTP id 98e67ed59e1d1-39e1e2e1d8amr4275979a91.6.1789545644489;
+        Wed, 16 Sep 2026 01:00:44 -0700 (PDT)
+Received: from lgs.. ([2001:250:5800:1002::de93])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-39e19fd8ecasm995716a91.1.2026.09.16.01.00.37
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 16 Sep 2026 01:00:43 -0700 (PDT)
+From: Guangshuo Li <lgs201920130244@gmail.com>
+To: Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Siddharth Vadapalli <s-vadapalli@ti.com>,
+	Frank Li <Frank.Li@nxp.com>,
+	Niklas Cassel <cassel@kernel.org>,
+	Marek Vasut <marek.vasut+renesas@mailbox.org>,
+	Guangshuo Li <lgs201920130244@gmail.com>,
+	Yuho Choi <dbgh9129@gmail.com>,
+	Kishon Vijay Abraham I <kishon@kernel.org>,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: stable@vger.kernel.org
+Subject: [PATCH] PCI: keystone: deinitialize endpoint on remove
+Date: Wed, 16 Sep 2026 16:00:30 +0800
+Message-ID: <20260916080030.2960608-1-lgs201920130244@gmail.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [High] phy: qcom-qmp-pcie: nocsr_reset left asserted when skip_init is fa=
-lse
---
+ks_pcie_probe() initializes the DesignWare PCIe endpoint with
+dw_pcie_ep_init(). The probe failure path calls dw_pcie_ep_deinit()
+when endpoint register initialization fails, but the remove path does
+not perform the corresponding endpoint teardown after a successful
+probe.
 
-commit 09fee607f4ad44d50cee755a3e356ff08d5879e2
-Author: Qiang Yu <qiang.yu@oss.qualcomm.com>
+The successful endpoint initialization also calls pci_epc_init_notify().
+Without the matching teardown on removal, the EPC initialization state
+and resources allocated by the DesignWare endpoint core are left
+active after the driver is removed.
 
-phy: qcom-qmp-pcie: Split phy_ops into init/exit/reset/power_on
+Notify the endpoint framework about deinitialization and call
+dw_pcie_ep_deinit() before disabling runtime PM and the PHYs.
 
-This commit splits the combined power_on and power_off operations into
-separate init, exit, reset, and power_on functions. It reorders regulator,
-clock, and reset toggling to align with HPG requirements. It also introduces
-a skip_reset field to share the initialization state between functions.
+This issue was found by manual code inspection.
 
-> diff --git a/drivers/phy/qualcomm/phy-qcom-qmp-pcie.c b/drivers/phy/qualc=
-omm/phy-qcom-qmp-pcie.c
-> index d30194c6ed17f..2b6741a4120c5 100644
-> --- a/drivers/phy/qualcomm/phy-qcom-qmp-pcie.c
-> +++ b/drivers/phy/qualcomm/phy-qcom-qmp-pcie.c
+Fixes: 23284ad677a9 ("PCI: keystone: Add support for PCIe EP in AM654x Platforms")
+Cc: stable@vger.kernel.org
+Signed-off-by: Guangshuo Li <lgs201920130244@gmail.com>
+---
+ drivers/pci/controller/dwc/pci-keystone.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-[ ... ]
+diff --git a/drivers/pci/controller/dwc/pci-keystone.c b/drivers/pci/controller/dwc/pci-keystone.c
+index 602516239a57..35787e727c5c 100644
+--- a/drivers/pci/controller/dwc/pci-keystone.c
++++ b/drivers/pci/controller/dwc/pci-keystone.c
+@@ -1349,9 +1349,17 @@ static void ks_pcie_remove(struct platform_device *pdev)
+ {
+ 	struct keystone_pcie *ks_pcie = platform_get_drvdata(pdev);
+ 	struct device_link **link = ks_pcie->link;
++	struct dw_pcie *pci = ks_pcie->pci;
++	const struct ks_pcie_of_data *data;
+ 	int num_lanes = ks_pcie->num_lanes;
+ 	struct device *dev = &pdev->dev;
+ 
++	data = of_device_get_match_data(dev);
++	if (data->mode == DW_PCIE_EP_TYPE) {
++		pci_epc_deinit_notify(pci->ep.epc);
++		dw_pcie_ep_deinit(&pci->ep);
++	}
++
+ 	pm_runtime_put(dev);
+ 	pm_runtime_disable(dev);
+ 	ks_pcie_disable_phy(ks_pcie);
+-- 
+2.43.0
 
-> @@ -5833,12 +5809,62 @@ static int qmp_pcie_exit(struct phy *phy)
->  		reset_control_bulk_assert(cfg->num_resets, qmp->resets);
-> =20
->  	clk_bulk_disable_unprepare(ARRAY_SIZE(qmp_pciephy_clk_l), qmp->clks);
-> +	clk_bulk_disable_unprepare(qmp->num_pipe_clks, qmp->pipe_clks);
-> =20
->  	regulator_bulk_disable(cfg->num_vregs, qmp->vregs);
-> =20
->  	return 0;
->  }
-> =20
-> +static int qmp_pcie_reset(struct phy *phy)
-> +{
-> +	struct qmp_pcie *qmp =3D phy_get_drvdata(phy);
-> +	const struct qmp_phy_cfg *cfg =3D qmp->cfg;
-> +	int ret;
-> +
-> +	if (qmp->skip_reset)
-> +		return 0;
-> +
-> +	if (qmp->skip_init) {
-> +		ret =3D reset_control_assert(qmp->nocsr_reset);
-> +		if (ret) {
-> +			dev_err(qmp->dev, "no-csr reset assert failed\n");
-> +			return ret;
-> +		}
-> +
-> +		usleep_range(200, 300);
-> +
-> +		ret =3D reset_control_deassert(qmp->nocsr_reset);
-> +		if (ret) {
-> +			dev_err(qmp->dev, "no-csr reset deassert failed\n");
-> +			return ret;
-> +		}
-> +
-> +		return 0;
-> +	}
-> +
-> +	/*
-> +	 * Toggle BCR reset for PHY that doesn't support no_csr reset or has not
-> +	 * been initialized.
-> +	 */
-> +	ret =3D reset_control_bulk_assert(cfg->num_resets, qmp->resets);
-[Severity: High]
-Does this fallback path in qmp_pcie_reset() fail to deassert nocsr_reset
-when skip_init evaluates to false?
-
-Since qmp_pcie_exit() explicitly asserts nocsr_reset on exit, if skip_init
-is false on the next initialization (for example, after a system suspend or
-resume where power loss clears PHY CSRs like QPHY_START_CTRL), wouldn't this
-execution path only toggle the bulk resets and leave nocsr_reset stuck in
-the asserted state?
-
-> +	if (ret) {
-> +		dev_err(qmp->dev, "reset assert failed\n");
-> +		return ret;
-> +	}
-> +
-> +	usleep_range(200, 300);
-> +
-> +	ret =3D reset_control_bulk_deassert(cfg->num_resets, qmp->resets);
-> +	if (ret) {
-> +		dev_err(qmp->dev, "reset deassert failed\n");
-> +		reset_control_bulk_assert(cfg->num_resets, qmp->resets);
-> +		return ret;
-> +	}
-> +
-> +	return 0;
-> +}
-> +
->  static int qmp_pcie_power_on(struct phy *phy)
->  {
->  	struct qmp_pcie *qmp =3D phy_get_drvdata(phy);
-
-[ ... ]
-
-> @@ -5870,22 +5893,6 @@ static int qmp_pcie_power_on(struct phy *phy)
->  	qmp_pcie_init_registers(qmp, &cfg->tbls);
->  	qmp_pcie_init_registers(qmp, mode_tbls);
-> =20
-> -skip_tbls_init:
-> -	ret =3D clk_bulk_prepare_enable(qmp->num_pipe_clks, qmp->pipe_clks);
-> -	if (ret)
-> -		return ret;
-> -
-> -	if (!skip_reset) {
-> -		ret =3D reset_control_deassert(qmp->nocsr_reset);
-> -		if (ret) {
-> -			dev_err(qmp->dev, "no-csr reset deassert failed\n");
-> -			goto err_disable_pipe_clk;
-> -		}
-> -	}
-> -
-> -	if (qmp->skip_init)
-> -		goto skip_serdes_start;
-> -
->  	/* Pull PHY out of reset state */
->  	qphy_clrbits(pcs, cfg->regs[QPHY_SW_RESET], SW_RESET);
-[Severity: High]
-With the explicit nocsr_reset deassertion removed from qmp_pcie_power_on(),
-does the code now rely entirely on qmp_pcie_reset() to deassert it?
-
-Since qmp_pcie_reset() doesn't seem to deassert nocsr_reset when skip_init
-is false, this appears to set the PHY up to silently fail or time out on
-initialization.
-
->
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260915-align_pcie=
-_init_sequence_0916-v1-0-0b2195836f30@oss.qualcomm.com?part=3D4
