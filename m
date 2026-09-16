@@ -1,200 +1,188 @@
-Received: from CH5PR02CU005.outbound.protection.outlook.com (mail-northcentralusazon11012028.outbound.protection.outlook.com [40.107.200.28])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B07B53BBFC2
-	for <linux-pci@vger.kernel.org>; Wed, 16 Sep 2026 05:36:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.200.28
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789536994; cv=fail; b=YfP1WRFXNJcOfP3oK1F3eKtZYLjkiEfsodi53H9fVfWXQB0+9HCAHtQrsnCyPhgyicsyQia2Dx/zkNAN+QpOq7f7hk4vsLYotZziaTIK5Os0iVP8Jm7dH9d8HH8kwdLx8/qfF5fKQPD+3xEtxOJziVIu0P/fpHQFkZeGQxbKRJk=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789536994; c=relaxed/simple;
-	bh=LUCO8urux1EZHHB3jLnRj3RJG4EQxaay/20kk24eS98=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=XpoSNbwp3RuptBRJVwALh1Ma/kCchiuUJKZRJa4HWvkOIPdEFScTOtbO2NyIZ7iFUa2NGWVQeXiKCjCihRl3TAgzbIRmRBe6HkYrYWFG3yX8DPqJwgaUwlI0aYl4e37JKhjfaqIpsMAdL+Wwuh1icuQLVjF7HHYDD2Qpc1AlJUg=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=yiwdKFFS; arc=fail smtp.client-ip=40.107.200.28
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C93F3D75C9
+	for <linux-pci@vger.kernel.org>; Wed, 16 Sep 2026 06:04:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1789538672; cv=none; b=LXVKq6mldIAmr3fzPh91tyB1QaAc/H1sxVx6NWVMq/K7qOCAkO8FpLhhgtdVJZckSBy/SroeFigL/cGEMgBYKo+5FnboxR3qUxQjPl2Un30bkz1hJX+qip9Tvf+uVbgBJH/vk0IM+7uh5zY3zqYpjFXuckSJmLNzvBWq9MRimjM=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1789538672; c=relaxed/simple;
+	bh=Q85aXDMwvbpzbdqQZSLnN+pKhKHeKEyGsGA98e+i4Hg=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=n7k90J0Hrkpwkin/F1QAeESrRyDU2Xb9271ZktCEU2g+M0Zsr+pzOBhvKStGGQJvLFhkBJDk/Wj98qusQqLMRIgkxgFhNUoo2cR5Ps9n4BH4Rz04npY31BUj++KI9DRMTxj+TZ9jN+iXXlu+kIvHe94Jl8ok59WtSvvbj4qNSv0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=UFPzLsee; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=Bh9G9aWM; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="yiwdKFFS"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=RQtS0vLiS4yJr6D7/6qZo/sSqqcYpmVGV7AWwfTzdJh6kxiL4CIeYXaSLt9vUhZZvBgQI2bf3lNhrPg7aUxh3TWigBqc42hWCPBZ+R1K0BeuoDfnXG2ts5ZRaoxGQh1uuxjTD3XVGAUIB3NBgZr2FJmrz3tVQlSulwI9zU9jk2NHI/Bam1PsJeX7Bbo+VYax0LZreY6RIOjpeLODUGo6AUer/F+2f2/BkhEE0o+ZC7HGG2cPL1FrRiT5k+ZyAZDlBrgBguwU75PHHoSTjYAsR2iwPknJ8I26V+EtHZvJXNjp/bkP3LJmaNZGnJfyher5ve0zKCZxsQWmyK04zvZJcw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=uPVfzRsgoeekKfWx/GszvkFF9B06egbHGJtkVqbQ95M=;
- b=k7f6zjNaMazl91RwEh8Mmdf2OEwTDURBZb2fXwUN0s++V9KcEvV/TQVrhggwDu5X30HPxZlernPmJyisXvmnyvdAx/1JBaK31eeNp/xSfxWQU3KovNj2nNEYWZEgfP1Mq0wilTiEsPcfzvi9VwS4+NzvIqJbOjblZmnTqj5ruYNBaOWk3GA3em5MSsFQFo+R05e7S+kgHeu2tP8ff9+I1nbFZcdtAFqp9uCrG9f2QcYjcpB44F9dxAJzD6408We5TUCM840WmVbeEyB3WFolciwBDPUmkhFi7LIfmgJgZioHYM3xtx8XumLYl6i306QyfLQYq1Xi/aRdAcrhxnpH5A==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
- header.d=amd.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=uPVfzRsgoeekKfWx/GszvkFF9B06egbHGJtkVqbQ95M=;
- b=yiwdKFFSZoFpHkNH3N9baQhccP3qldwU+gsK+0THpwTTkpVnNgJSQdQlZ51YAE5DXEkd/1Ul01x5BSnlcxGwBgIjxiJR/cNCcnRgjc147LzaCANcm3NpwjiYN5ttR42lvhmdQsroUqO69QgplGAfswV3lU9EuXUUk+Wm/qed24w=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=amd.com;
-Received: from PH8PR12MB6914.namprd12.prod.outlook.com (2603:10b6:510:1cb::21)
- by CY5PR12MB6479.namprd12.prod.outlook.com (2603:10b6:930:34::17) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.428.9; Wed, 16 Sep
- 2026 05:36:30 +0000
-Received: from PH8PR12MB6914.namprd12.prod.outlook.com
- ([fe80::2893:177a:72b0:6000]) by PH8PR12MB6914.namprd12.prod.outlook.com
- ([fe80::2893:177a:72b0:6000%7]) with mapi id 15.21.0428.008; Wed, 16 Sep 2026
- 05:36:29 +0000
-Message-ID: <269ba359-9246-44ba-b68b-68334db9ad4a@amd.com>
-Date: Wed, 16 Sep 2026 00:36:27 -0500
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 2/2] PCI: Put PCIe bridges with downstream devices into
- D3 at hibernate
-Content-Language: en-US
-To: sashiko-reviews@lists.linux.dev
-Cc: linux-pci@vger.kernel.org
-References: <20260916051034.180226-1-mario.limonciello@amd.com>
- <20260916051034.180226-3-mario.limonciello@amd.com>
- <20260916052319.EC3E81F000FF@smtp.kernel.org>
-From: Mario Limonciello <mario.limonciello@amd.com>
-In-Reply-To: <20260916052319.EC3E81F000FF@smtp.kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: DS7PR03CA0044.namprd03.prod.outlook.com
- (2603:10b6:5:3b5::19) To PH8PR12MB6914.namprd12.prod.outlook.com
- (2603:10b6:510:1cb::21)
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="UFPzLsee";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="Bh9G9aWM"
+Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 68G4BCPl1470747
+	for <linux-pci@vger.kernel.org>; Wed, 16 Sep 2026 06:04:29 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:message-id
+	:mime-version:subject:to; s=qcppdkim1; bh=i6NubhOqBeR4m4IZ+gOEWa
+	U7x0g1qp2eT/RMv5Jw9Y4=; b=UFPzLseeIOAJq+Vja9kHL9KYBg6mDP98pw+Z5L
+	FVD3SChuuaVEomK1FoYjLsxZn2qfB+DOjjJPeJx9cB6cKASft7IVjqyWTnWXDay0
+	gFzvn3khV+e81OxXp4p0OLRujQLJ/4HgYZa7kF5HKa3jNrTaWzSt8ACq9NA9Uvm1
+	udpmV5H+AzJHFx9/7AWc2upWv4K5zvB9XwibfMTLGc7kQ6L0GDQ+8Z42P0wJZf1/
+	GVEFdWqe7xhmMZEivKPIVseZZvdqTs9P28J0GFWXtu0U2ZwGKySW1XQ90G3QkXm3
+	xWSkEVZX9mMIbq1RGW/xTopm5WcrcElQCnQkCwtsDzYp9fQQ==
+Received: from mail-pj1-f71.google.com (mail-pj1-f71.google.com [209.85.216.71])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4gqkv7gdgp-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Wed, 16 Sep 2026 06:04:27 +0000 (GMT)
+Received: by mail-pj1-f71.google.com with SMTP id 98e67ed59e1d1-39d8646b10eso5542164a91.1
+        for <linux-pci@vger.kernel.org>; Tue, 15 Sep 2026 23:04:27 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1789538667; x=1790143467; darn=vger.kernel.org;
+        h=cc:to:content-transfer-encoding:content-type:mime-version
+         :message-id:date:subject:from:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=i6NubhOqBeR4m4IZ+gOEWaU7x0g1qp2eT/RMv5Jw9Y4=;
+        b=Bh9G9aWMIpaZq9s4xddkURfXeeiAgAou7AmT7fhkQ3aexhzYhhLIFUMGwvFIegt7r4
+         gl5NA2K7dJHYj0/nfodVJFAhgmzMuzC9G/PLYoTMk8dwuSzLugSgURnAk22XBwqjwNn8
+         tUTiSfedwQPtvbva9D8WzmVmnvBCluHbm9S6Bl117xsP8VrtgT6STFqB5MD4GtTly3vi
+         bQXnDqIhs+6jxVouWCbpr78lE4pN/EjruBsmtB4cUdXAZCXwQa6g/iU/RGPnVQg3NGLj
+         ZcITdg5P9OpnsWk22SN7WAwKbCRrpk4dnZKFnbU2PVUst2xh1UD6MvSeq44BechxnyFl
+         omSA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1789538667; x=1790143467;
+        h=cc:to:content-transfer-encoding:content-type:mime-version
+         :message-id:date:subject:from:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=i6NubhOqBeR4m4IZ+gOEWaU7x0g1qp2eT/RMv5Jw9Y4=;
+        b=ZahCF8y78zICzAZ5H87ZqkLRMBnuP4+AmO8XYIrs4VtwfontRbxs3TRK4aJEaMdQK/
+         xfLt4wE/1OImZWfXekhucNrGfwQ4kMUCo5m1iVw64jYgK834eNFRlAf2mRl9btg3TSma
+         fZ0OPM6a2o4JIrOYBpfJ0dBuuS8CSIGlRBAB8BEgLfB2tCH3FEKrF9B+sj0lhXqWsdhQ
+         kpONTy7lOZBfC5kCynNGcVhb2ahHQF4D/nOrnTnyzM2kIEp3LspR+TQr80Yu2zImHiOB
+         4FL2QDA7Cc2wzssMLvRiE00yg+hj+LbLgvN/PPF7CzFTcWDUP5GtHoxrgeXjYhvJiN3k
+         lhdw==
+X-Forwarded-Encrypted: i=1; AKwUvBzBZG1x4LjvAzGfn32YhlG0t/ROB41PYItWdfgWlRQv4LDgarVaQUr28lAoQ3iQ1Q7Zf/p2FHpXoso=@vger.kernel.org
+X-Gm-Message-State: AFuF++n5BUB0Sf6J87RZJOeSr8mc//ElEX0MDG2epahCa18jcuWiuOQI
+	uftUAB6Aqx1Alxupsy1s+H7fsFzAXPJkNnyUDSE0kd08kNq+SIlKwZxHwxpqhsHJsO0RqjkahxC
+	sJTWMsyLYwJYRT2+aoTKU0m4UHiksIyENYx4CWpkU/XIOmWdSs0SAfVF35yR6AjE=
+X-Gm-Gg: AYBFou0MOf6nkvmB9DxZ3TVTJbNXCBscCiSL/orS6vFu7f1LmlzlJcUtkCkr0uKWf/j
+	J9B4RnVZAEWe0ldUPnt57WJIlGEDjNL41UCWlal1wq1djogQbhTHnW/2rGbW7W8uAoQeIWsPMY0
+	rjWTzGOrhAvUwyO6MXjvBIhiRhGr+d5HbnF66r2nbr9xIxqFSvTgqCHpKAr3TrEETfH7lbTC/D4
+	Q7v8uUD+s03miXSavcpmYrKwIvwnlLLARA+L/Lk8H4lO42SPjUfl1z+pfaT6GhT6Abwt48XSpq+
+	6zfF8J7XLjep37IOpLD6JoTi+83xJwXuxbvgx6wkg0nWfPxBrjLi9jwpao3M93+LKdF33bigy2z
+	O5A16meubrWcdKda7cTmDeq98UJgEsTQZcu3Qar+SyGf9Cj4=
+X-Received: by 2002:a17:90b:2f0c:b0:39d:f08e:e6e7 with SMTP id 98e67ed59e1d1-39e1e308bddmr3723941a91.9.1789538666614;
+        Tue, 15 Sep 2026 23:04:26 -0700 (PDT)
+X-Received: by 2002:a17:90b:2f0c:b0:39d:f08e:e6e7 with SMTP id 98e67ed59e1d1-39e1e308bddmr3723876a91.9.1789538666197;
+        Tue, 15 Sep 2026 23:04:26 -0700 (PDT)
+Received: from hu-qianyu-lv.qualcomm.com (Global_NAT1.qualcomm.com. [129.46.96.20])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-33bfb19f8cesm4740083eec.2.2026.09.15.23.04.25
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 15 Sep 2026 23:04:25 -0700 (PDT)
+From: Qiang Yu <qiang.yu@oss.qualcomm.com>
+Subject: [PATCH 0/4] PCI: qcom: Align PHY init sequence with HPG
+Date: Tue, 15 Sep 2026 23:04:20 -0700
+Message-Id: <20260915-align_pcie_init_sequence_0916-v1-0-0b2195836f30@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: PH8PR12MB6914:EE_|CY5PR12MB6479:EE_
-X-MS-Office365-Filtering-Correlation-Id: 8718af9a-f61f-4f07-2f06-08df13b47589
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|366016|23010399003|376014|1800799024|56012099006|11063799006|5023799004|4143699003|10067099003|22082099003|18002099003|6133799003|3023799007;
-X-Microsoft-Antispam-Message-Info:
-	pKBZpnplNaNpiJoO9tqSwyOIb8XSgkR1TtAHJCcWD/RJOjGGbu1L2Qm7bCXQwmyfrlTObz3PyYhwGmm1jXXsbfNIm5kWln6p6+Wts1XDgkSUjvP+SYPmhTqRAZHhEoGug9VEtZ9aJJ8QX6iaUhq2zcguYZnd8zoNyB69g1f5uwKOopYNC0/+emiVShB/2e3cKXmGEqkDBPxjaOBRgtH6cj4JPG+axk7Kt8DhVFbnXOxySIM7663wyLGUtbrC7tpN+oMA+uZS6NTLBtxPYzdoLMmIPEOCTnHotoYJHMQUW//UWH9ujKIMVwfR5EisW+PJVdHmDzaAmw0Hlk4CJityuuRTKcLdcglPAcf7LRN2V3yU3U9cIHZ6JnblyiwFNC48OIvuemXku2mVvkuq4S5BxzDnTV/c2aWCTQS8fqqh/qO0g0tphBx8iw/FczVqEyhjpPKQy2RkZfa5u8cX3IerP3RmuBg3JNuAsakdESFbrxCmfvFH3BWvlfhNswamHoy4JCmJQ77uAPtqb9+st+8Q1DHuGvAh2WrGBSa2881DbNghVyp8EhS7r3No8S8eZ1VEyCsN/IAA0rzwmUwKzEMLQRZjKJqDN1axdYtlpAtpvhPLJPp+YWH2Q+N8To3a1ymn5r41g3ljQ1BsTV+KZrzrCF2S0/7dKOtzIaa45T4TLhg=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH8PR12MB6914.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(23010399003)(376014)(1800799024)(56012099006)(11063799006)(5023799004)(4143699003)(10067099003)(22082099003)(18002099003)(6133799003)(3023799007);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?WS80YXRxNEt3c1EydjZ3Qll5aDdJZ2xrRGcreTVybHM0NllKWTFkTE5yTGVs?=
- =?utf-8?B?NzlSYnprWmpnK3BrWjFxNENhREtzMFJxRDE5aUdOcndUREtLR2Q5M1lOaTZ4?=
- =?utf-8?B?SnM2cVBvOEt3Rmh2WVBHRDhVMkhVUlpWSUNWV3VTVTg1ZThCVy9IYVB2eDJG?=
- =?utf-8?B?N1dvdXNNWFZsT0M4MGxXbm5nQzBzaENBKzNBL0V5c0pxcER5YWVreEVCNkNy?=
- =?utf-8?B?VExNNnV5cDU5Y2FoTHdtNGtkUjVzSllVQXpSSkUrcW4vZW83L1A3cklzOEFI?=
- =?utf-8?B?aUkvWWNmWUMwa0QybDNoOTJxZnE2cXRxTjdGU0c1cjZjQVZQUFFMU1V3U3FN?=
- =?utf-8?B?MjFiY040akV0eUFlYlVYWGQ2aGp4cVczakxoampBWkgwbDdsUkg4aklsQzZn?=
- =?utf-8?B?QjI4R3lxakdkeURRa3VkRVV2UmVSZ0JCMU82NHVGV3F4RjlFYnFGNG94ODEr?=
- =?utf-8?B?ZzFDYXVDWUlEalBJRE9CckM4cjhZNkppS0N1U1Rlc1ZPVW85TVFKcnlybUpE?=
- =?utf-8?B?OHBPMmVZaHE1Q3FvN2o3LzFYbU0rZTBucUxqS2ZLcDNzcFZHdlpqM2g4YW5i?=
- =?utf-8?B?cUg1cmZUcjZsVWxIVFRNUjcxTmpvcVVia1U3U0FVeXlCRzBrL3ZqZWlTS1c5?=
- =?utf-8?B?SnhXdXlkOVJ0QU5YdStBQVFiM2hCNTNiVHlmZXRyTzlLd3N4M0R4Z0h2S0pu?=
- =?utf-8?B?dlFiODNUMG1qMDUwcG1rQkhBUlRuRzFEclAvL3ZZL1FtdHVHb0ZHajlFOUZq?=
- =?utf-8?B?czhGb01Fc2dDeHJQcGxneHN0Nndrb25qQkNMRnJqMm5PS0FweTR2MXlnejYw?=
- =?utf-8?B?eXlhRi9HbndycGRseXRBbE5NMFJvZTdEeTZCR1FqZ1N0TTBJTEhGdTYyb2s3?=
- =?utf-8?B?MTRKaHU2d1N0NFNlQ0ZiNG1zUTJxdUoxSmFIQzlUZ2IrMnB6UXNQR0tIVXJI?=
- =?utf-8?B?TFZBU0ZBbitReWYxWVU5RzU0U2t4bXBrVHVwSXpFdGJPQmI2V250S0Jtcmpl?=
- =?utf-8?B?ZjZPdjNJUnMvVFBieG13bnpCUHBaeVk0dEUveEJSMGg2QjFnTXZ6d2l2bXJO?=
- =?utf-8?B?STRQV1MxMGRGVFRUdGN6OEhidVI4TUwrMGYvc1U2QzhDT1lJM3AzdXZNLzVV?=
- =?utf-8?B?OFExYTM4cTBFQ0hyc08vSEdBYmcwSW5pSUZsdjZNdE9CNEJZYndQTzdFdmFy?=
- =?utf-8?B?QXJxQ3BOTVBhRVlQV3EzWFhPUFdqQ3dvZ3htZzJpTkNPNHd4UnZ1WURSZmNK?=
- =?utf-8?B?aWxYRGdKU1g1MXVqK2Erb1pOTzhTM3hFSE56d05hay9wdEt3WWx5aGtsNmN4?=
- =?utf-8?B?cGZuSWFqOEdaWGQra3Q2M3YwWVFrenYyQXJLQnFiYkdtYWpTT1l3cHo4dzB0?=
- =?utf-8?B?ZUpqMDlscUFyN1lyYnJjbTBVc2FjRUdiM2RuNThONUFKRXlwQmZrUzNzaXdi?=
- =?utf-8?B?WW9lRnNWTEZ2YlNuemI1OWxUODFVRmRESmROcktVSGdnSUFrUUp1ckl6RndU?=
- =?utf-8?B?ZVM1alp1WndpRUl6cmtOek5YWktWSEpJLzNKN2ZXRWVxWUNYSXVsOGtlV2p0?=
- =?utf-8?B?dWtWZW56YnVSbXJIWTdZVE5lT3VLZlJpMXJ0dHloNENtcDF4blRrNTF5d1g2?=
- =?utf-8?B?d3dXWGVYK2JvbmtEajhqbHJoa09JbHB6V2pGYzBXMnN2d08xUW5hZjhoMXlj?=
- =?utf-8?B?QzZRSmdFMG1XL0FiQTR1bW1WRTNXNFFScG0rdXJOaDdWaWh6QTA3eGd6a25R?=
- =?utf-8?B?VXEwM2l1YW1GVUd6M09PTG5QVlBOK24rQnh5K1RyWi9oVERvM1NnNmxoQ0Yx?=
- =?utf-8?B?SjZjb3NQN3dTa1ViL0VhRmFJOERIYlIyT1JZUEdXUHNEMldMRllXRXZPWE1i?=
- =?utf-8?B?aDV6OUt5RVdDWnJ2QVpkWXFrZGdqM29sdStvSGFQc2tPRzNOajczem5SOFZJ?=
- =?utf-8?B?MzQ0cnp2TkxPbFI1L0xXWW8vRkMyT2RFQ2lDVXl6MDdJd1VYbVJWZ3BPbW1Y?=
- =?utf-8?B?UGNOLzc0RUtqS0FwZzBJaDNRMldZdHBCVUJoUVp0dFp3WGlxb0hDdXYvdjJR?=
- =?utf-8?B?YTNDNEIraFlhZUpJU2ZrZU45WVhHcTJXeWxiTmpmZGJwdXFiOEVmblVZZDhq?=
- =?utf-8?B?ZkRRVU4zaHo3bGRYdCtZQnZ2TGR3MVdob0VXOVIxb0RGRjZKS2FsTGNpRnZx?=
- =?utf-8?B?YkxoaVNDOXY5cDFDSGdrdE95T2xFdG9BcStTaFhIcEUwS2FWMkJ5eHVPZk9w?=
- =?utf-8?B?aC9jNXA0b015VkJoTXFDWEhCWldKV0ZNVFk4dld5MXB6dHptNFZvV2JNbkdz?=
- =?utf-8?B?YmdRYWduKzkwZ0xZUnhRNkVBQ2M5VmM1WVhIYjZuVU0yNUlmUm5EQT09?=
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 8718af9a-f61f-4f07-2f06-08df13b47589
-X-MS-Exchange-CrossTenant-AuthSource: PH8PR12MB6914.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 Sep 2026 05:36:29.8439
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 8YqoEPxZSuIoc7MsryiB6VGuwm8tkPkKodz/PCBwnGZdkLfoVa/gBGgGMmhgqb8nWqs7nJGO5OGJ6mp2CWR4Cg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY5PR12MB6479
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIAGQxqmoC/yXMUQrCMBBF0a2U+TaQFBKpWxEJafqsIzLWTCtC6
+ d4b9fNw4a6kKAylU7NSwZuVn1LhDg3lW5IRhodqam0bbOe8SQ8eJU6ZEVl4jorXAsmItQbjj85
+ 1NvVIPlB9TAVX/vz+58vfuvR35Pk7pW3bAQe4xpuBAAAA
+X-Change-ID: 20260915-align_pcie_init_sequence_0916-571190abea56
+To: Manivannan Sadhasivam <mani@kernel.org>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+        Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+        Vinod Koul <vkoul@kernel.org>,
+        Neil Armstrong <neil.armstrong@linaro.org>,
+        Philipp Zabel <p.zabel@pengutronix.de>
+Cc: linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-phy@lists.infradead.org,
+        Qiang Yu <qiang.yu@oss.qualcomm.com>
+X-Mailer: b4 0.15.2
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1789538665; l=2301;
+ i=qiang.yu@oss.qualcomm.com; s=20250513; h=from:subject:message-id;
+ bh=Q85aXDMwvbpzbdqQZSLnN+pKhKHeKEyGsGA98e+i4Hg=;
+ b=VanMV8I3b6x/UKi8Pi0uPylqTjCwhgLHtLLspbcP88b+CZT1gM9u0udCt6lZrEVLqwiiDCt3u
+ OIkB+RytzmiAGVjxv/dp8txVevQMPr4OSRhvgqLg1w87iUb4GxONhWv
+X-Developer-Key: i=qiang.yu@oss.qualcomm.com; a=ed25519;
+ pk=Rr94t+fykoieF1ngg/bXxEfr5KoQxeXPtYxM8fBQTAI=
+X-Proofpoint-ORIG-GUID: DtpeYibeSMSy66PaYMrpAT4j4AQ19DX8
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTE2MDA3NiBTYWx0ZWRfXwpFk4dMvQloZ
+ it5t2GMijMYswp2uY7LNV8ZZw1x3cec6vJKlVbepJKq8F0PpQJDMi5RSUYFRSDCDXbK8fwK623l
+ QU3M+DQdmE6gOttl8GX8d2/hJhs1Znu3eOegrN/bCYfPxf2kUnbqp+I0i+ylfEfFPeWMCE/WGAg
+ d4Wbr3vZBy1d7n+X2e9ucfdls4bgK/bQTqPOijyonX41xX8l+VFt3pLQh0q1EYD4fTtANaMzrEU
+ QC9bUU+lMTVd54h7WGIbtWbgpRE9w3b//KC4Pek1ktypSi7oRKsQOX9s6TmjKs77xxI8ltZPPMV
+ vy2P7Ltv+N5sne1NnD1qyNA7RX3uqTHz1HYM14phGx9R9k2CjKxgfZILMgbCb2KsDWNoGA34ykv
+ FW6x5sv53KQKNIGXwU45hk2t/f5y8xpykK73EUPpdIFnVXBfR94xs6oIS3a3XwiYlKHK9oWdUIe
+ WSxZFD1GeIHkeykS6BA==
+X-Authority-Analysis: v=2.4 cv=eKmGH3p1 c=1 sm=1 tr=0 ts=6aaa316b cx=c_pps
+ a=UNFcQwm+pnOIJct1K4W+Mw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
+ a=IkcTkHD0fZMA:10 a=VdqzKS8jKosA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=ZpdpYltYx_vBUK5n70dp:22
+ a=EUspDBNiAAAA:8 a=Riq-LXKwlQ56QxmQOhoA:9 a=QEXdDO2ut3YA:10
+ a=uKXjsCUrEbL0IQVhDsJ9:22
+X-Proofpoint-Spam-Info: AW1haW4tMjYwOTE2MDA3NiBTYWx0ZWRfX57NqIuJY5GiL
+ 68wMFE9DqH+mNa5YqE3C9QQQCp+pR+nzT2LSw2MgrGO1V1PoWmKVeMWJ7l2baxWTa2/rEwacjRT
+ SUgR8UZ/y/XCOkjakBanR3JaRqoj5hI=
+X-Proofpoint-GUID: DtpeYibeSMSy66PaYMrpAT4j4AQ19DX8
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-09-15_05,2026-09-15_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ impostorscore=0 lowpriorityscore=0 adultscore=0 bulkscore=0 clxscore=1015
+ phishscore=0 spamscore=0 priorityscore=1501 malwarescore=0 suspectscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2609040000 definitions=main-2609160076
 
+HPG requires the controller/PHY GDSCs to be powered up and all
+clocks enabled, then the controller's reset and the PHY's reset
+toggled together as one group, with PARF_DEVICE_TYPE set right
+after. This series adds the callbacks needed on both sides to
+realize that sequence: a phy_reset() call the controller makes as
+part of its own reset, and matching phy_ops::init/phy_ops::reset on
+the PHY side.
 
+Patches 1-2 move phy_init()/phy_exit() into the RC and EP
+controllers' own init/deinit paths, add a phy_reset() call grouped
+with each controller's own reset, and move the PARF_DEVICE_TYPE
+write to right after that reset group.
 
-On 9/16/26 00:23, sashiko-bot@kernel.org wrote:
-> Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
-> - [High] pci: config space corruption on hibernation abort due to missing D3 guard
-> --
-> 
-> commit 99f9dafa720163cc3dfac6ce20da883f888fb896
-> Author: Mario Limonciello (AMD) <superm1@kernel.org>
-> 
-> PCI: Put PCIe bridges with downstream devices into D3 at hibernate
-> 
-> During S3 suspend, pci_pm_suspend_noirq() puts PCIe bridges with
-> downstream devices into a low-power state. This commit aligns the
-> hibernate poweroff_noirq flow to use pci_pm_suspend_noirq_common(),
-> ensuring bridges with active children are also put into D3.
-> 
->> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
->> --- a/drivers/pci/pci-driver.c
->> +++ b/drivers/pci/pci-driver.c
-> [ ... ]
->> @@ -1280,8 +1283,9 @@ static int pci_pm_poweroff_noirq(struct device *dev)
->>   			return error;
->>   	}
->>   
->> -	if (!pci_dev->state_saved && !pci_has_subordinate(pci_dev))
->> -		pci_prepare_to_sleep(pci_dev);
->> +	skip_bus_pm = pci_pm_suspend_noirq_common(pci_dev);
-> 
-> [Severity: High]
-> Could this lead to configuration space corruption if a hibernation aborts?
-> 
-> If a driver's poweroff_noirq callback puts the device into a low-power
-> state (like D3) but fails to save its state, calling
-> pci_pm_suspend_noirq_common() here will unconditionally invoke
-> pci_save_state().
+Patches 3-4 update the two PHY drivers these controllers can use
+(phy-qcom-qmp-pcie[-multiphy].c) to implement phy_ops::init/reset,
+matching phy_ops::power_on to what's left once
+phy_ops::init/phy_ops::reset are pulled out.
 
-That seems wrong.  It's gated by if (!pci_dev->state_saved) in the helper..
+phy_init()/phy_reset() are no-ops against a phy_ops without
+phy_ops::init/phy_ops::reset, so patches 1-2 don't change behavior
+on any platform by themselves; patches 3-4 are what actually change
+the sequence for the platforms using those two PHY drivers. Other
+PHY drivers this series doesn't touch (phy-qcom-qmp-pcie-msm8996.c,
+phy-qcom-uniphy-pcie-28lp.c, phy-qcom-pcie2.c) are either unaffected
+(no phy_ops::init/phy_ops::reset) or only see their
+phy_init()/phy_exit() call site moved without a sequence change.
 
-> 
-> Because the device is already in D3, reading the configuration registers
-> in pci_save_state() will populate saved_config_space with 0xFFFFFFFF
-> garbage.
+Signed-off-by: Qiang Yu <qiang.yu@oss.qualcomm.com>
+---
+Qiang Yu (4):
+      PCI: qcom: Move PHY init and add PHY reset call to align with HPG
+      PCI: qcom-ep: Move PHY init and drive PHY reset to align with HPG
+      phy: qcom-qmp-pcie-multiphy: Split phy_ops into init/exit/reset/power_on
+      phy: qcom-qmp-pcie: Split phy_ops into init/exit/reset/power_on
 
-I think this is true; but only for D3cold, not D3hot.
+ drivers/pci/controller/dwc/pcie-qcom-ep.c         |  26 +--
+ drivers/pci/controller/dwc/pcie-qcom.c            | 165 ++++++++++++++-----
+ drivers/phy/qualcomm/phy-qcom-qmp-pcie-multiphy.c |  94 ++++-------
+ drivers/phy/qualcomm/phy-qcom-qmp-pcie.c          | 184 ++++++++++------------
+ 4 files changed, 257 insertions(+), 212 deletions(-)
+---
+base-commit: e6e35979777d646fe3c7c94dca7dd32fb25d45f4
+change-id: 20260915-align_pcie_init_sequence_0916-571190abea56
 
-I'm not sure how exactly this state could actually happen.
+Best regards,
+--  
+Qiang Yu <qiang.yu@oss.qualcomm.com>
 
-> 
-> If the hibernation process subsequently aborts, the PM core executes
-> pci_pm_restore_noirq(), which will blindly write this 0xFFFFFFFF garbage
-> back to the device's configuration registers (BARs, command registers, etc).
-> This will likely cause a system crash upon subsequent memory-mapped I/O
-> access.
-> 
-
-I guess this is reasonable (pci_pm_default_resume_early() -> 
-pci_restore_state()).
-
-I suppose I didn't really consider a poweroff abort, which is what would 
-be relevant in this case.
-
-> Does pci_pm_poweroff_noirq() need the same explicit D3 safety guard that
-> the S3 suspend_noirq path uses to prevent reading config space from a
-> powered-down device?
-> 
-
-This does sound reasonable at least for the 3rd case.  I'm still not 
-sold on the other two that Sashiko called out.
