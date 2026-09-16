@@ -1,134 +1,131 @@
-Received: from mail-pj2-f42.google.com (mail-pj2-f42.google.com [74.125.227.170])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5EDD747729B
-	for <linux-pci@vger.kernel.org>; Wed, 16 Sep 2026 08:00:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.227.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 93825388E7E;
+	Wed, 16 Sep 2026 08:03:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789545652; cv=none; b=smfLq7Be3XC/z9PemGjIYklManQ8ntxwkSEnvo4nJ+B80OQX4Es+g32iGeF9TMcsKC4PEP72Ur9FhBszH3d9o4BsezoKqGHe/gVIa1Acm9SWx6kvuTCcEHTtTWmtCmiuaHG4YdXL2hZNWoiVzEIdTf0iildVSceUsEPrF9Qhm4g=
+	t=1789545823; cv=none; b=ta0j0xTcsYKsae5Q/ezKt9j+cv3mc6TvQ0JxrfhbAXTBxytLsjex/zHzpggwilBWEjsTI4xFnO1OXugc0XTknCOM+3ziaqWd75iDA6KIW0o3nzPT07f+Lt1pg+R+XuAm2vNYTcLbeSeficUtn++zR7zyOavCMIAdvqqfBJNNSVw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789545652; c=relaxed/simple;
-	bh=7WdeUDfNtz3w/kOVanMS/2G8C33ZGTEc6MZvYgIdotc=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Va3nqun5II6DJhkPpL/LkSYVLbsuMJ0yMcw3HWWqkUCK5auh5pvoPqockaIMPU1Lx+eTW3H2didI8IiAAF6J5IubT3xeUt8jjMleG2/Z3N7DGbptH4roP8WZQ6XdUNGQhJqG/b6whgd7XeaWJE9BlDX0lPlmmzRWE//M+g3yinM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Rc2IrysV; arc=none smtp.client-ip=74.125.227.170
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1789545823; c=relaxed/simple;
+	bh=KyLeZDs65SJigKA9uBYEoUpTW2XH2SOgKl2BHTpojYY=;
+	h=Date:Message-ID:From:To:Cc:Subject:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=TBCSAiYOI6XTCs7eijlK9rfBmCXa79haoUlN8ADnEyPlB5VdvNmK5yIKZ8vRry4xOnldK2Ds948QPPW6XJ/yX4843vM7Xge7Bk923UdOt4DCCd8P8LJA5E8BopLxSe1VF2JvhP3efSHsBkW0Dwgf3Eo/jhWKhWhNUFdxXRpeM0k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SMVra4ZE; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Rc2IrysV"
-Received: by mail-pj2-f42.google.com with SMTP id 98e67ed59e1d1-396ccb65437so440056a91.3
-        for <linux-pci@vger.kernel.org>; Wed, 16 Sep 2026 01:00:45 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1789545644; x=1790150444; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=1EPm1x0mUz5Pn3Ms5F/txa8My4xRSy/NJkkZxCzQIKM=;
-        b=Rc2IrysVTWRJemrkQFAJ+8O3jN9JCMqD1N9yqqquQyj6TlRv9kewSW8gyY2qHtfAsi
-         3MoemnLsawnXPlNQiZdT9WQ/j2fgFuQs6GGjXr67ea7pup3AfnO+slXc0gL9CVTkAjjC
-         7JkrglkkWb5GahF7TW2iJWoJBXli/RlDOVCn62og3FwBMqa9G84h7RuY5WaODWrmvvcm
-         7zkPKeD98W1JnTy7ahY3MeNIHKiqQPi5bAdt0pgcqq+3PRGLR8PyRA4ZkOTHllPZ6bh7
-         U8G2vE0RJXj7fg10MWPUPX2tKsGrOaMhvNIGgiIjVUn2W9hSIXRlPehPRwmKoQnTWaaj
-         LztA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1789545644; x=1790150444;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=1EPm1x0mUz5Pn3Ms5F/txa8My4xRSy/NJkkZxCzQIKM=;
-        b=u/4DecVNwPhbm6Q1Ndb+3ozlb0gzQa6Adx7S94HrhQpN+22QZ1GP7KalPPM7/Y/mYW
-         QvMwJDtk3MnOajTl51Pt0iS0pXoqhThyxUzNL/dqlY+PCViPyUcX7O3ya397W6L/aigq
-         0IRwfuh4nk7nuV+NXsMkgI9w2x5TV5RRTtiTJH/gxE0YFmmLvC7YCzv175Xy444bgnCN
-         9d0LT/pmcsDvKtsVJ4wli63ui2iz1pU3LTIQngEc74sO8jZMSdQzsNiqHmLsPmA/UfO7
-         LlHo5b2bgPhCRn5xIM2ygGgagmgdZjY6veHisU82b09OdHxqgMk7k56Ecp4jTShpdQwi
-         rj5w==
-X-Forwarded-Encrypted: i=1; AKwUvBzRaj7NJORzLhvZU3LsuwveXqtzIVs/PKkkS7IIvHsb9ALcxOF4me29IPqQEOVLpWzCoZQwCqbmNPo=@vger.kernel.org
-X-Gm-Message-State: AFuF++nnPesAa5BmVEkdq45G5QRzfItPn2s225hBUS16aPO7blvxyfOc
-	hmK/OZ07TcU6b5eRPFLDvStoX9R1Yj8FtNkRqEuJ4rL15hzsi5jM5Cu86ra0Vg==
-X-Gm-Gg: AYBFou3hvMT40+u5iDbF9iGGiOh3KnoCHa9VHSRGn1O0EgQri19/GBjyddBhp8E8kxD
-	X566WV1mTpSM9qrsDsiPbyWnDCqsawKwmUYQwYfh7ZkBDhuFBJr28smU21Se6Viz0yrq3Z91mCM
-	9uW/8S84aBrr8GjvncHBaJXm1P2Pcj5u2fbmT6oC9iOVA7WF6YdMPN4Xhk1DBROGTcQlm+HQpzY
-	kP9vuRkogMnT8wt/J0wIGf7PmS52RbQz3w+Up6PstTYVq7ZSn1F9Dev/kcBtXDlmNYGYR+80hxM
-	ZCRTXwEHgqUxPhjnPAMNzk+L+lBQLOHnShLMTGsyj5xf0eoRtiO98H3/WTlq+QMRaIwIySkDdc3
-	fCW3t3iR3KEqpFk+pzMciAc9Gllc1sKA1dpDFH6WK7mLVN93EWAqS9HdY/FdczgLzjyYg0XWdBI
-	Y3g36k6xQpy/9+O0BLwTt1Nzta4hAfO0n/q4UzdBa7xB8l4Ns2Ig08Gw==
-X-Received: by 2002:a17:90b:2681:b0:39e:1a00:bec4 with SMTP id 98e67ed59e1d1-39e1e2e1d8amr4275979a91.6.1789545644489;
-        Wed, 16 Sep 2026 01:00:44 -0700 (PDT)
-Received: from lgs.. ([2001:250:5800:1002::de93])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-39e19fd8ecasm995716a91.1.2026.09.16.01.00.37
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 16 Sep 2026 01:00:43 -0700 (PDT)
-From: Guangshuo Li <lgs201920130244@gmail.com>
-To: Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Siddharth Vadapalli <s-vadapalli@ti.com>,
-	Frank Li <Frank.Li@nxp.com>,
-	Niklas Cassel <cassel@kernel.org>,
-	Marek Vasut <marek.vasut+renesas@mailbox.org>,
-	Guangshuo Li <lgs201920130244@gmail.com>,
-	Yuho Choi <dbgh9129@gmail.com>,
-	Kishon Vijay Abraham I <kishon@kernel.org>,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: stable@vger.kernel.org
-Subject: [PATCH] PCI: keystone: deinitialize endpoint on remove
-Date: Wed, 16 Sep 2026 16:00:30 +0800
-Message-ID: <20260916080030.2960608-1-lgs201920130244@gmail.com>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SMVra4ZE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 03BAA1F000FF;
+	Wed, 16 Sep 2026 08:03:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1789545809;
+	bh=XIBzlK2j0riyQGL55D1titlOQJB9O6G+ICsOTOSNMtM=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References;
+	b=SMVra4ZERH4PoKOds3r0DQlp0tyeT4BzWfkiz8NejsvdN5aBCI8A6ezKj773wen9n
+	 iJiuuO+KUak6rbmCV5ZNZqc9XNTK8+Z+hBIUq+53/vbzMUE0La20b0UVp3DY9eMkyj
+	 vRmDvBvFG4GAQix8vDBvdC19oJpdAYU/dM2ajLz3+sZaE9ZDROYfjpVYsHNzNo0dAH
+	 y8XkCdg1htRfB+arjQW88RAejYQh/CVe0656eEpicN474lNoR5SNJHVWJ1Z8T2jI2E
+	 qzA9NZtOVtRipNvZnMqppv2ME8s63t12l9YkqFH52l6IBany/n1eEl2/V3BYP4JYRA
+	 Q9REjNywDnKUg==
+Received: from sofa.misterjones.org ([185.219.108.64] helo=goblin-girl.misterjones.org)
+	by disco-boy.misterjones.org with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+	(Exim 4.98.2)
+	(envelope-from <maz@kernel.org>)
+	id 1x6kc2-00000009VAE-3lNw;
+	Wed, 16 Sep 2026 08:03:26 +0000
+Date: Wed, 16 Sep 2026 09:03:26 +0100
+Message-ID: <86jyol62sx.wl-maz@kernel.org>
+From: Marc Zyngier <maz@kernel.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Manivannan Sadhasivam <mani@kernel.org>,	Qiang Yu
+ <qiang.yu@oss.qualcomm.com>,	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?UTF-8?B?V2lsY3p5xYRza2k=?= <kwilczynski@kernel.org>,	Rob
+ Herring <robh@kernel.org>,	Bjorn Helgaas <bhelgaas@google.com>,	Konrad
+ Dybcio <konrad.dybcio@oss.qualcomm.com>,	linux-pci@vger.kernel.org,
+	linux-arm-msm@vger.kernel.org,	linux-kernel@vger.kernel.org,	James Morse
+ <james.morse@arm.com>,	Andrew Scull <ascull@google.com>
+Subject: Re: [PATCH v2] PCI: qcom: Block accesses to downstream devices on link down
+In-Reply-To: <20260915231421.GA881410@bhelgaas>
+References: <2ibficaitalz4lacqffsrp4kuqzanxnxr2bwd6x5yti4mmfabf@h3y63kuz7fjh>
+	<20260915231421.GA881410@bhelgaas>
+User-Agent: Wanderlust/2.15.9 (Almost Unreal) SEMI-EPG/1.14.7 (Harue)
+ FLIM-LB/1.14.9 (=?UTF-8?B?R29qxY0=?=) APEL-LB/10.8 EasyPG/1.0.0 Emacs/30.1
+ (aarch64-unknown-linux-gnu) MULE/6.0 (HANACHIRUSATO)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+MIME-Version: 1.0 (generated by SEMI-EPG 1.14.7 - "Harue")
+Content-Type: text/plain; charset=US-ASCII
+X-SA-Exim-Connect-IP: 185.219.108.64
+X-SA-Exim-Rcpt-To: helgaas@kernel.org, mani@kernel.org, qiang.yu@oss.qualcomm.com, lpieralisi@kernel.org, kwilczynski@kernel.org, robh@kernel.org, bhelgaas@google.com, konrad.dybcio@oss.qualcomm.com, linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org, james.morse@arm.com, ascull@google.com
+X-SA-Exim-Mail-From: maz@kernel.org
+X-SA-Exim-Scanned: No (on disco-boy.misterjones.org); SAEximRunCond expanded to false
 
-ks_pcie_probe() initializes the DesignWare PCIe endpoint with
-dw_pcie_ep_init(). The probe failure path calls dw_pcie_ep_deinit()
-when endpoint register initialization fails, but the remove path does
-not perform the corresponding endpoint teardown after a successful
-probe.
+On Wed, 16 Sep 2026 00:14:21 +0100,
+Bjorn Helgaas <helgaas@kernel.org> wrote:
+> 
+> [+cc James, Andrew, Marc for guidance on generic arm64 PCIe error
+> recovery; beginning of thread:
+> https://lore.kernel.org/all/20260819-ecam_blocker-v2-1-e7a8fdc1c5cb@oss.qualcomm.com]
+> 
+> On Tue, Sep 15, 2026 at 07:16:11PM +0200, Manivannan Sadhasivam wrote:
+> > On Fri, Sep 11, 2026 at 12:18:07PM -0500, Bjorn Helgaas wrote:
+> > > On Fri, Sep 11, 2026 at 08:17:29AM +0200, Manivannan Sadhasivam wrote:
+> > > > On Tue, Sep 08, 2026 at 06:00:30PM -0500, Bjorn Helgaas wrote:
+> > > > > On Wed, Aug 19, 2026 at 11:36:54PM -0700, Qiang Yu wrote:
+> > > > > > After a PCIe link goes down, software may still access the
+> > > > > > BAR (MMIO) space or configuration space of devices behind
+> > > > > > that link before recovery has run. As the link is down,
+> > > > > > these accesses never complete, resulting in a storm of
+> > > > > > Completion Timeout AERs.
+> > > > > 
+> > > > > What is special about qcom here?  It seems like the Completion
+> > > > > Timeouts and AER interrupts should happen with every PCIe
+> > > > > controller.
+> > > > 
+> > > > The special behavior which is common across many (not all) ARM
+> > > > SoCs is that they don't synthesize all-one response for
+> > > > completion timeouts, unlike RCs in x86 machines. Rather, they
+> > > > return AXI error response, resulting in CPU treating them as
+> > > > SError, in-addition to AER storm.
+> > > > 
+> > > > Commit message missed mentioning SError though.
+> > > 
+> > > I don't know how SError works, but this sounds like a pretty big
+> > > open issue with respect to RAS.  I don't think we want a kernel
+> > > panic because a device failed to respond to a config or MMIO
+> > > access, e.g., if a card or Thunderbolt cable got unplugged.
+> 
+> I still don't know anything about arm64 or SError, but I see these KVM
+> commits about using ESB to manage SError in some cases:
+> 
+>   0e5b9c085dce ("KVM: arm64: Consume pending SError as early as possible")
+>   472fc011ccd3 ("KVM: arm64: nVHE: Don't consume host SErrors with ESB")
+> 
+> I assume it's not possible or practical to use ESB in the native host
+> case to deal with issues like this in a generic way instead of the
+> vendor-specific feature Qcom is using here?
 
-The successful endpoint initialization also calls pci_epc_init_notify().
-Without the matching teardown on removal, the EPC initialization state
-and resources allocated by the DesignWare endpoint core are left
-active after the driver is removed.
+In general, an SError is fatal. No ifs, no buts. It is asynchronous,
+and has no syndrome information. Once you find out about it, you're
+already dead.
 
-Notify the endpoint framework about deinitialization and call
-dw_pcie_ep_deinit() before disabling runtime PM and the PHYs.
+ESB is a way to paper over this sorry state of affair by making sure
+that the error is observed at a known point. You can think of it as a
+barrier synchronising potential errors for transactions in flight. KVM
+uses that to attribute SErrors triggered by a guest, on an exception
+boundary.
 
-This issue was found by manual code inspection.
+That's not applicable to the kernel itself, unless you want to place
+an ESB after each and every load/store in the kernel (/s).
 
-Fixes: 23284ad677a9 ("PCI: keystone: Add support for PCIe EP in AM654x Platforms")
-Cc: stable@vger.kernel.org
-Signed-off-by: Guangshuo Li <lgs201920130244@gmail.com>
----
- drivers/pci/controller/dwc/pci-keystone.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+Modern versions of the architecture allow these errors to be reported
+as *synchronous* exceptions, with all the syndrome information you
+want. I guess this HW doesn't implement it, which is a pretty big
+mistake for systems that allow surprise removal of devices...
 
-diff --git a/drivers/pci/controller/dwc/pci-keystone.c b/drivers/pci/controller/dwc/pci-keystone.c
-index 602516239a57..35787e727c5c 100644
---- a/drivers/pci/controller/dwc/pci-keystone.c
-+++ b/drivers/pci/controller/dwc/pci-keystone.c
-@@ -1349,9 +1349,17 @@ static void ks_pcie_remove(struct platform_device *pdev)
- {
- 	struct keystone_pcie *ks_pcie = platform_get_drvdata(pdev);
- 	struct device_link **link = ks_pcie->link;
-+	struct dw_pcie *pci = ks_pcie->pci;
-+	const struct ks_pcie_of_data *data;
- 	int num_lanes = ks_pcie->num_lanes;
- 	struct device *dev = &pdev->dev;
- 
-+	data = of_device_get_match_data(dev);
-+	if (data->mode == DW_PCIE_EP_TYPE) {
-+		pci_epc_deinit_notify(pci->ep.epc);
-+		dw_pcie_ep_deinit(&pci->ep);
-+	}
-+
- 	pm_runtime_put(dev);
- 	pm_runtime_disable(dev);
- 	ks_pcie_disable_phy(ks_pcie);
+	M.
+
 -- 
-2.43.0
-
+Without deviation from the norm, progress is not possible.
