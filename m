@@ -1,47 +1,45 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E1E7B4A9D6F;
-	Thu, 17 Sep 2026 21:58:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9EFF4A7C82;
+	Thu, 17 Sep 2026 22:21:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789682285; cv=none; b=DnMZllclaZzw9Ha3QRogUOHJqDO/mBXOEGjhdUTKNL0kXkez+4xEstgxjtW44TSWNawyVTreQmh+xrtDpji/qwqEiLSYyJCvA2U7L54gSN/H8uGtyA/s2RKHi6Cm86n1rCPgCcpqjPx4OskpIYF0RZKZKGjS0SHv5Bgc9ww7kuU=
+	t=1789683714; cv=none; b=i4kh41PvLYE0/+lcIiYcnBsplygBXhbDrS6XMhGbrBibFothTW/MezpRxyf5O7ftrHYP/6ywymtLCjM8HMZe3PLzxHUnSkwmfEA8hsE2hSKZAj9YP5GM3XajkiITptcqKTdoGWWvgv8i/T9iXFuyrU8VTFeZggqlAHt4vVxQE20=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789682285; c=relaxed/simple;
-	bh=K01OWSwrQhLZ1I4m5H6/VZez8MW387RtFv6BpX2DCqw=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=sFcIxFHANUSahWJbr/SjATTvdf8WQqbgzaWtdxjGslJzO2xkb/A0domwMQJpZBjrJCd0qHKyjzziwqN22lGQRzf2sh9T25xZi5x3+kD+i3VnxZUFo7oY0k5y90EFJfoQA8MVdJ07ybqGeoSpQekJyw0wza3gili/1yU7+vv2T7w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CMs0O2Bc; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789683714; c=relaxed/simple;
+	bh=J4FC4khpeauWm78bJssX85LNLNuSo8lIcvo7zpH9wM0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=ADlJH2QqORLDDBv8quA4UCdXJ71iP8TDacnnDjPj9oO6CZQPqFl03yJvQjmZI8YJyt7vc7GDh+8gzZNFOMFPQGXxd6AXTZQP29XRORcsjq3a5hSlzs2Fc98A43P8qUVFbs3uy9LI5rzNi3LKM6vdE5n+9fV5YOUtjE61vmSyspQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eO6zGBV8; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CMs0O2Bc"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7769B1F000FF;
-	Thu, 17 Sep 2026 21:58:03 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eO6zGBV8"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 055BE1F000FF;
+	Thu, 17 Sep 2026 22:21:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789682283;
-	bh=OP3JYLBXOqOHgXrUVwmby9CoOJ787szehasQI38rGyQ=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=CMs0O2Bc4ICSa1T8bJvuWgzlf1kyPiBEEAF8YyNkZlKYj7AxxFwuNZMf3kUkq6Spa
-	 2qeDwdnLti+1xiaJ9UVSm+RmoHRrX3uzf2/IH2yZFTVvppENKWnC0ZpTieYrfRdFxR
-	 CSNdnYwPeuvBZBm3nKeHhvWK+Q4iUClTWxeQ0Oawmp32DyR1beYSUW/qKkJZ7GvprH
-	 GqeZzJlKBlIJ1lXFBksRX5HROuSwupFZSnbecaWuaYZeecNNWl9Nc+lEaSKRZjTJ3k
-	 JUckV5Lra7ixgKiCSl9YKGOc8KE0Jk+DOq5/1uERCzIaTyfo5f752rKdDTL+lqMFs1
-	 k4YU98t7DQ4FA==
-Date: Thu, 17 Sep 2026 16:58:02 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Thorsten Leemhuis <regressions@leemhuis.info>
-Cc: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>,
-	leoreis.costa@gmail.com, fra.schnyder@gmail.com,
-	francesco@dolcini.it, frank.li@nxp.com, l.stach@pengutronix.de,
-	lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org,
-	robh@kernel.org, bhelgaas@google.com, s.hauer@pengutronix.de,
-	kernel@pengutronix.de, festevam@gmail.com, hongxing.zhu@oss.nxp.com,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	imx@lists.linux.dev, linux-kernel@vger.kernel.org,
-	Richard Zhu <hongxing.zhu@nxp.com>, stable@vger.kernel.org,
-	Linux kernel regressions list <regressions@lists.linux.dev>
-Subject: Re: [PATCH v2] PCI: imx6: Move clock enable after core reset
- assertion
-Message-ID: <20260917215802.GA1056201@bhelgaas>
+	s=k20260515; t=1789683712;
+	bh=kv24bXbWsAIcA8t1uQLZ3qdBM15Z4Ui+R4ZrwqfmtgA=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=eO6zGBV8OH2sh+6SoNrW82MS8trZVYCcqbtX0w9WIAxuhO6SmGSW21LqQqQ6zlwOS
+	 zfmTALyq8xRqpdLIbWiW0As3yN4KxsToZpCzPgvSvHEeJAio4E4EOPmezf0UURkzLD
+	 UGw/QMqP9udz7vmkqJLepjNAu6jescjbSduu7rZ12YM7GAUxKuo7OouA5T0mnZr3Et
+	 A0/lR8+afPUcWhWrkNRVOMhVRxekQH/2OFjlhchEq1pm8kItZhsWupGbkede7Bqbpv
+	 JVpSN33zEtu9F1iqTpl9cgnOPfzOeMByIds6HYCd9WPPXTuRGiRqr/mGIhEYcrhjk4
+	 TbcpOafrXFU+A==
+Date: Thu, 17 Sep 2026 17:21:50 -0500
+From: "Rob Herring (Arm)" <robh@kernel.org>
+To: Thierry Reding <thierry.reding@kernel.org>
+Cc: linux-pci@vger.kernel.org, Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Anand Moon <linux.amoon@gmail.com>, linux-tegra@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+	Jonathan Hunter <jonathanh@nvidia.com>, devicetree@vger.kernel.org,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>
+Subject: Re: [PATCH v6] dt-bindings: pci: tegra: Convert to json-schema
+Message-ID: <178968370961.4071859.17924970660402899315.robh@kernel.org>
+References: <20260902142449.735168-1-thierry.reding@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -50,37 +48,45 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <7ed9e4de-2e57-4c15-875c-16512f00163f@leemhuis.info>
+In-Reply-To: <20260902142449.735168-1-thierry.reding@kernel.org>
 
-On Thu, Sep 17, 2026 at 01:08:03PM +0200, Thorsten Leemhuis wrote:
-> On 9/2/26 16:15, Manivannan Sadhasivam wrote:
-> > On Thu, 13 Aug 2026 17:50:03 +0800, hongxing.zhu@oss.nxp.com wrote:
-> >> Commit 610fa91d9863 ("PCI: imx6: Assert PERST# before enabling regulators")
-> >> inadvertently moved clock enablement before core reset assertion, breaking
-> >> PCI device initialization on i.MX6Q Apalis platforms with
-> >> ASM1061/ASM1062 SATA controllers connected.
-> >>
-> >> NOTE: It is not 100% clear if the issue is specific to the ASM1061/ASM1062
-> >> device or on the specific power-up sequence (reset vs cold-power-on).
-> >>
-> >> [...]
-> > 
-> > Applied, thanks!
-> > 
-> > [1/1] PCI: imx6: Move clock enable after core reset assertion
-> >       commit: 16929741a622eb345057e41c7b335d9b297890e1
-> Thx Mani.
+
+On Wed, 02 Sep 2026 16:24:49 +0200, Thierry Reding wrote:
+> From: Thierry Reding <treding@nvidia.com>
 > 
-> Mani, Bjorn, what's the status of this patch? Is it heading to mainline
-> any time soon? This (unless I got confused, which is possible!) afaics
-> fixes a 7.2 regression that annoyed quite a few people -- which is why
-> it was even briefly considered to revert about a Dozent changes shortly
-> before the 7.2 final:
-> https://lore.kernel.org/all/20260811214900.GA763236@bhelgaas/
+> Convert the Tegra PCIe controller bindings from the free-form text
+> format to json-schema.
 > 
-> Didn't come to this, but it afaics would be good to finally resolve
-> this. Or am I missing/confused something?
+> Signed-off-by: Thierry Reding <treding@nvidia.com>
+> ---
+> Changes in v6:
+> - add additional constraints for num-lanes and phys properties
+> - reference pci-host-bridge.yaml and drop duplicate properties
+> - reference pci-pci-bridge.yaml and drop duplicate properties
+> - drop Tegra30, Tegra124 and Tegra186 examples
+> - remove unneeded properties from examples
+> - reduce number of ifs
+> 
+> Changes in v5:
+> - drop unneeded quotes
+> 
+> Changes in v4:
+> - remove path references
+> - use dual licensing
+> 
+> Changes in v3:
+> - fixup reference in MAINTAINERS
+> 
+> Changes in v2:
+> - drop description properties where they don't add information
+> - drop redundant $ref properties
+> 
+>  .../bindings/pci/nvidia,tegra20-pcie.txt      | 670 ------------------
+>  .../bindings/pci/nvidia,tegra20-pcie.yaml     | 532 ++++++++++++++
+>  2 files changed, 532 insertions(+), 670 deletions(-)
+>  delete mode 100644 Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
+>  create mode 100644 Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.yaml
+> 
 
-It's in pci/next, but probably should be in for-linus.
+Reviewed-by: Rob Herring (Arm) <robh@kernel.org>
 
-I moved it to pci/for-linus for v7.3, thanks for the heads-up.
