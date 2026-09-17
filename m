@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 51F2A3A4505;
-	Thu, 17 Sep 2026 19:47:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A083349739D;
+	Thu, 17 Sep 2026 20:17:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789674430; cv=none; b=L7MDdOHUF8sj/iMf3+0e6vLLf8GGolOOyIZ9VxeywpJOWPRgTj5qNrnUou4XkMq4TYUJNgJF2OpBTYhUMkEXa1cn4Lbm35Okjr31D79S+QejejoZHuT14osP003StzykNGdcUSgkpIq06/3Af3jP9BP/Owhf+ZZF6HZjU6Pt6Ac=
+	t=1789676267; cv=none; b=tBW8pgz5CMsiGHWEZlVNz2NIEL/GA3S7PiPWImjPCAap5eclo2/k3VPtqG5/Bv0SFFGoLhV2gUC7ks0u8lDjleDpo6bfSVzGLuQR9EgLFs9xa4+4uIU4hbLxS/UwC+9euK//XZbxS6OwHvXItK5FGM7JE71adOlECvb/51NG+ns=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789674430; c=relaxed/simple;
-	bh=dUUo335Ajl+0VlABfhi9E5I4j2kVX2QAdrgctqfQZZ8=;
+	s=arc-20240116; t=1789676267; c=relaxed/simple;
+	bh=pSHrLFOLdJhOymuWsycPX3NAKxxuihciLly/eexYdlQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=S0nrkjCuyOuOsWDCWTCmog3yjGkrKSK5L6koM9e+9XlaMwrC70tIcuY/S86FqSq58L+LBYwQxOCezxoFhWg/2qMTb1Qli91Y4TlKdkwVoXV5WAoCFXhdX2sINPgUPBOmuf78gZKN9m+s3vfBPfoEhaNmaySAO1+3NtNipoRhMTM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ITACFmTu; arc=none smtp.client-ip=100.103.45.18
+	 Content-Disposition:In-Reply-To; b=Zeol2HD1K8ILBYFKSE6rH5kdQCETBRdwuw2EFzJvFndavv5STSarX3Rzzp98E8O3/hN1Pa1qmt+6hnqaDSocKMoYyaCdJt31yFmE2svcJk1JfUPp7UenYQPE7Xck+RNE5zhnrl5qNoKdeitr+x54qEdZXABbfENn6IgYymsqNew=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Cifno/se; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ITACFmTu"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E96EC1F000FF;
-	Thu, 17 Sep 2026 19:47:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Cifno/se"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 67BD01F000FF;
+	Thu, 17 Sep 2026 20:17:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789674429;
-	bh=FIVFF1Gz0qTcL6D0qsjU7Wz5A7oH5Uxjc4mt3x0Rb8M=;
+	s=k20260515; t=1789676258;
+	bh=rAg/Yg/DqWx7Pxj9VVqEz4+jt8Yppr1YHw8Z6DY3rWg=;
 	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=ITACFmTuRMNQBN70r1LnmUlyRzCHXOzNKwQta9Q3q8IXvtIZGGZC0HnDjiuVGz78R
-	 EI93ZUJBBCPLeovbDy0Ya2s+Jizc+FiJeJ9wBZfFKMjqoaH52DlK4Xoo4X2+aED1PO
-	 11Tu3BmmyNrTrknb2wJyGvUs8xJD893qs2vSLN/6pGC4pfbcMZAsUQQ6hTvbLLsDxB
-	 A1Un69fr/uNRVwYmEKSRf/2s2tCjcBCliZfkAx5MkL96mrCZXc6aA42BYjNJjlyYri
-	 wmyHxC0nRKKJiVpWROfJSOnMgC3KzaifYv19mCGGyI3yp1TqpS9tRfTJ6cXz8tNlc5
-	 QykvFjSC7e2Uw==
-Date: Thu, 17 Sep 2026 14:47:07 -0500
+	b=Cifno/seyID/kYnwEs9+FDv8lDl1iWkhIbTZOCPYv/Zl3U125NOEahqqxlcPptx84
+	 Lp+WwS5UwXz/cE4pxyhTPmDq18IuA97tb6+2/EXTfb40xf7gXew560HWki//BNg5Md
+	 H7BSt20m8+K0EtOHWRWg13d3vTanCYcfD/ZnAmCnqUvBVdF93rIQGxmXbUx+PpnZDU
+	 crxNVg/ZxechdqZsl3il8cA/fsemgpg3ig+1w7IAHO7YmVWbOnOqiGbOl8yoGm3Ihh
+	 Tqqfwyso+aUaiAND0Smu6s+0pb3Z1KrGeXCrJ14Q2T0e5PjzzsNNugJznZbfYTAcPi
+	 Mpe8P3u+jQcjQ==
+Date: Thu, 17 Sep 2026 15:17:37 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
 To: David Matlack <dmatlack@google.com>
 Cc: kexec@lists.infradead.org, linux-doc@vger.kernel.org,
@@ -50,9 +50,9 @@ Cc: kexec@lists.infradead.org, linux-doc@vger.kernel.org,
 	Shuah Khan <skhan@linuxfoundation.org>,
 	Vipin Sharma <vipinsh@google.com>, William Tu <witu@nvidia.com>,
 	Yi Liu <yi.l.liu@intel.com>
-Subject: Re: [PATCH v8 09/12] PCI: liveupdate: Adopt ARI Forwarding Enable on
- preserved bridges
-Message-ID: <20260917194707.GA1047156@bhelgaas>
+Subject: Re: [PATCH v8 10/12] PCI: liveupdate: Freeze preservation status
+ during shutdown
+Message-ID: <20260917201737.GA1047708@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -61,122 +61,149 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260728221007.2098560-10-dmatlack@google.com>
+In-Reply-To: <20260728221007.2098560-11-dmatlack@google.com>
 
-On Tue, Jul 28, 2026 at 10:10:03PM +0000, David Matlack wrote:
-> Adopt the ARI Forwarding Enable bit on preserved bridges and update
-> pci_dev->ari_enabled accordingly during a Live Update. This ensures that
-> the preserved devices on the bridge's secondary bus can be identified
-> with the same expanded 8-bit function number after a Live Update.
+On Tue, Jul 28, 2026 at 10:10:04PM +0000, David Matlack wrote:
+> Freeze a device's outgoing preservation status (preserved or not
+> preserved) during shutdown. This enables the PCI core and drivers to
+> safely make decisions based on the device's preservation status during
+> shutdown.
 > 
+> Note that pci_liveupdate_freeze() is triggered by the PCI core rather
+> than from drivers participating in Live Update so that all devices can
+> have their status frozen (i.e. prevent non-preserved devices from
+> getting preserved late).
+
+This calls pci_liveupdate_freeze() from pci_device_shutdown(), the
+pci_bus_type .shutdown() method, which I think is only called from
+device_shutdown() in the kexec or restart paths.
+
+Since there's no error exit after we get as far as device_shutdown(),
+and this applies to all devices and dev->liveupdate.frozen is never
+set to false (at least at this point in the series), is there benefit
+to tracking this per-device?
+
+> Reviewed-by: Pranjal Shrivastava <praan@google.com>
+> Reviewed-by: Pasha Tatashin <pasha.tatashin@soleen.com>
 > Signed-off-by: David Matlack <dmatlack@google.com>
 
 Reviewed-by: Bjorn Helgaas <bhelgaas@google.com>
 
 > ---
->  drivers/pci/liveupdate.c | 30 ++++++++++++++++++++++++++++++
->  drivers/pci/liveupdate.h |  6 ++++++
->  drivers/pci/pci.c        |  8 +++++++-
->  3 files changed, 43 insertions(+), 1 deletion(-)
+>  drivers/pci/liveupdate.c       | 16 ++++++++++++++++
+>  drivers/pci/liveupdate.h       |  4 ++++
+>  drivers/pci/pci-driver.c       |  2 ++
+>  include/linux/pci_liveupdate.h |  3 +++
+>  4 files changed, 25 insertions(+)
 > 
 > diff --git a/drivers/pci/liveupdate.c b/drivers/pci/liveupdate.c
-> index fb602dd3933e..744513ee11ed 100644
+> index 744513ee11ed..65bcecb1b64e 100644
 > --- a/drivers/pci/liveupdate.c
 > +++ b/drivers/pci/liveupdate.c
-> @@ -128,6 +128,10 @@
->   *    way after Live Update and ensures that IOMMU groups do not change. Note
->   *    that a device will use its adopted ACS controls for the lifetime of its
->   *    struct pci_dev (i.e. even after pci_liveupdate_finish()).
-> + *
-> + *  * The PCI core adopts ARI Forwarding Enable on all bridges with downstream
-> + *    preserved devices to ensure that all preserved devices on the bridge's
-> + *    secondary bus are addressable after the Live Update.
->   */
+> @@ -394,6 +394,11 @@ static int pci_liveupdate_unpreserve_device(struct pci_flb_outgoing *outgoing,
+>  {
+>  	struct pci_dev_ser *dev_ser = dev->liveupdate.outgoing;
 >  
->  #define pr_fmt(fmt) "PCI: liveupdate: " fmt
-> @@ -833,6 +837,32 @@ int pci_liveupdate_enable_adopted_acs_controls(struct pci_dev *dev)
->  	return 0;
+> +	if (dev->liveupdate.frozen) {
+> +		pci_warn(dev, "Cannot unpreserve device after it is frozen!\n");
+> +		return -EINVAL;
+> +	}
+> +
+>  	if (!dev_ser) {
+>  		pci_warn(dev, "Cannot unpreserve device that is not preserved\n");
+>  		return -EINVAL;
+> @@ -447,6 +452,11 @@ static int pci_liveupdate_preserve_device(struct pci_flb_outgoing *outgoing,
+>  		return -EINVAL;
+>  	}
+>  
+> +	if (dev->liveupdate.frozen) {
+> +		pci_warn(dev, "Cannot preserve device after it is frozen!\n");
+> +		return -EINVAL;
+> +	}
+> +
+>  	if (dev->liveupdate.outgoing) {
+>  		if (!dev->liveupdate.outgoing->refcount) {
+>  			pci_WARN(dev, 1, "Preserved device with 0 refcount!\n");
+> @@ -718,6 +728,12 @@ void pci_liveupdate_cleanup_device(struct pci_dev *dev)
+>  		pci_WARN(dev, 1, "Destroying incoming-preserved device!\n");
 >  }
 >  
-> +/**
-> + * pci_liveupdate_adopt_ari() - Adopt ARI configuration
-> + * @dev: The PCI device to adopt ARI configuration for
-> + *
-> + * For devices preserved across a Live Update, read the ARI state from
-> + * hardware and adopt it. This ensures the device continues to use the ARI
-> + * configuration established by the previous kernel.
-> + *
-> + * Return: 0 on success, or -EINVAL if the device was not preserved.
-> + */
-> +int pci_liveupdate_adopt_ari(struct pci_dev *dev)
+> +void pci_liveupdate_freeze(struct pci_dev *dev)
 > +{
-> +	u16 val;
-> +
-> +	guard(rwsem_read)(&pci_liveupdate.rwsem);
-> +
-> +	if (!dev->liveupdate.incoming)
-> +		return -EINVAL;
-> +
-> +	pcie_capability_read_word(dev, PCI_EXP_DEVCTL2, &val);
-> +
-> +	/* Safe to modify dev->ari_enabled bitfield during enumeration. */
-> +	dev->ari_enabled = !!(val & PCI_EXP_DEVCTL2_ARI);
-> +	return 0;
+> +	guard(rwsem_write)(&pci_liveupdate.rwsem);
+> +	dev->liveupdate.frozen = 1;
+
+Nit, the series assigns "true" to other booleans
+(preserve_bus_numbers, was_preserved).
+
 > +}
 > +
->  /**
->   * pci_liveupdate_is_incoming() - Check if a device is incoming-preserved
->   * @dev: The PCI device to check
+>  static int pci_liveupdate_finish_device(struct pci_ser *ser, struct pci_dev *dev)
+>  {
+>  	if (!dev->liveupdate.incoming) {
 > diff --git a/drivers/pci/liveupdate.h b/drivers/pci/liveupdate.h
-> index ac5b8bf2edf5..ccc23031e99d 100644
+> index ccc23031e99d..49d07fd02132 100644
 > --- a/drivers/pci/liveupdate.h
 > +++ b/drivers/pci/liveupdate.h
-> @@ -18,6 +18,7 @@ bool pci_liveupdate_preserve_bus_numbers(struct pci_bus *bus,
+> @@ -13,6 +13,7 @@
+>  #ifdef CONFIG_PCI_LIVEUPDATE
+>  void pci_liveupdate_setup_device(struct pci_dev *dev);
+>  void pci_liveupdate_cleanup_device(struct pci_dev *dev);
+> +void pci_liveupdate_freeze(struct pci_dev *dev);
+>  bool pci_liveupdate_preserve_bus_numbers(struct pci_bus *bus,
+>  					 struct pci_dev *dev);
 >  void pci_liveupdate_scan_bridge_end(struct pci_dev *dev);
->  void pci_liveupdate_cache_adopted_acs_controls(struct pci_dev *dev);
->  int pci_liveupdate_enable_adopted_acs_controls(struct pci_dev *dev);
-> +int pci_liveupdate_adopt_ari(struct pci_dev *dev);
->  #else
->  static inline void pci_liveupdate_setup_device(struct pci_dev *dev)
+> @@ -28,6 +29,9 @@ static inline void pci_liveupdate_cleanup_device(struct pci_dev *dev)
 >  {
-> @@ -45,6 +46,11 @@ static inline int pci_liveupdate_enable_adopted_acs_controls(struct pci_dev *dev
->  {
->  	return -EINVAL;
 >  }
-> +
-> +static inline int pci_liveupdate_adopt_ari(struct pci_dev *dev)
+>  
+> +static inline void pci_liveupdate_freeze(struct pci_dev *dev)
 > +{
-> +	return -EINVAL;
 > +}
->  #endif
+>  static inline bool pci_liveupdate_preserve_bus_numbers(struct pci_bus *bus,
+>  						       struct pci_dev *dev)
+>  {
+> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> index f36778e62ac1..51616e4327d3 100644
+> --- a/drivers/pci/pci-driver.c
+> +++ b/drivers/pci/pci-driver.c
+> @@ -21,6 +21,7 @@
+>  #include <linux/acpi.h>
+>  #include <linux/dma-map-ops.h>
+>  #include <linux/iommu.h>
+> +#include "liveupdate.h"
+>  #include "pci.h"
+>  #include "pcie/portdrv.h"
 >  
->  #endif /* DRIVERS_PCI_LIVEUPDATE_H */
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 22001bdf4c97..6922f361a89e 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -3528,7 +3528,7 @@ void pci_configure_ari(struct pci_dev *dev)
->  	u32 cap;
->  	struct pci_dev *bridge;
+> @@ -536,6 +537,7 @@ static void pci_device_shutdown(struct device *dev)
+>  	struct pci_dev *pci_dev = to_pci_dev(dev);
+>  	struct pci_driver *drv = pci_dev->driver;
 >  
-> -	if (pcie_ari_disabled || !pci_is_pcie(dev) || dev->devfn)
-> +	if (!pci_is_pcie(dev) || dev->devfn)
->  		return;
+> +	pci_liveupdate_freeze(pci_dev);
+>  	pm_runtime_resume(dev);
 >  
->  	bridge = dev->bus->self;
-> @@ -3539,6 +3539,12 @@ void pci_configure_ari(struct pci_dev *dev)
->  	if (!(cap & PCI_EXP_DEVCAP2_ARI))
->  		return;
+>  	if (drv && drv->shutdown)
+> diff --git a/include/linux/pci_liveupdate.h b/include/linux/pci_liveupdate.h
+> index 04a2b2a3102a..31898685a406 100644
+> --- a/include/linux/pci_liveupdate.h
+> +++ b/include/linux/pci_liveupdate.h
+> @@ -24,6 +24,8 @@
+>   * @was_preserved: True if this struct pci_dev was preserved by the previous
+>   *                 kernel. Unlike @incoming, this field is not cleared after
+>   *                 the device is finished participating in Live Update.
+> + * @frozen: True if the outgoing preservation status of this device is frozen
+> + *          and thus cannot be changed.
+>   */
+>  struct pci_liveupdate {
+>  	struct pci_dev_ser *outgoing;
+> @@ -31,6 +33,7 @@ struct pci_liveupdate {
+>  	u16 acs_ctrl;
+>  	bool preserve_bus_numbers;
+>  	bool was_preserved;
+> +	bool frozen;
+>  };
 >  
-> +	if (!pci_liveupdate_adopt_ari(bridge))
-> +		return;
-> +
-> +	if (pcie_ari_disabled)
-> +		return;
-> +
->  	if (pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ARI)) {
->  		pcie_capability_set_word(bridge, PCI_EXP_DEVCTL2,
->  					 PCI_EXP_DEVCTL2_ARI);
+>  struct pci_dev;
 > -- 
 > 2.55.0.487.gaf234c4eb3-goog
 > 
