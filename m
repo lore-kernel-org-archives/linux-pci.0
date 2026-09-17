@@ -1,40 +1,32 @@
-Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E647A38F65B;
-	Thu, 17 Sep 2026 03:25:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 71F953BD64A;
+	Thu, 17 Sep 2026 04:17:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789615557; cv=none; b=RkqEuECwufv7CR8E2neoQmQqwO8wEvq8Oym5NKADRlRo2FNYMaqsaXxlK+Y12W5N5+XWisWB2sglA/Q+0WCDjLAu3b+40LsVhM5mHBs7YiNKTSRZO/uIt02GjI4JSlNchaRdx9k00WzUaiFyl1IlYBprWm5PtFzlEoU9y4kQCIY=
+	t=1789618682; cv=none; b=abdfrVG2XMg8Pc2gdrRZpNYFsKiTmbYwX+flfJqt4IbfLCfz2h2Z4n3FXxnFvvdTDYhsRmrMuXQh0XyemC7vppTGmpAY9TzKq+gkszd8nuNQQAtKWzW12C9yPD3QN/3SVoaulzU7lyPeXIw4lUyo2+5oydlNKwmEQlG56gNu6fM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789615557; c=relaxed/simple;
-	bh=JEOoVifFVQMutCzbtfWI8jC/mZ+9cwj85H663L5mpD8=;
+	s=arc-20240116; t=1789618682; c=relaxed/simple;
+	bh=26GnqgYxtB9JdP+RDaDXJjF+NXvLunCYGnwedQjCFS8=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=k1QY5NWz3ZZ9xz3sqmk45s8ve6zFvlAPo9c9C4UkbY2afzjrA3xabNqnAb2zrzy0vuMEgQLCdUzrDxEGiTLGUuA3uel7y95Wp3cOivlS6vVqAvF4RWGLbH9BdSo2OWS1XOdHbBwZY52dGzqZBd2Y+Q8mLbTquDociA8lCTX1ijE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
-X-UUID: 79cf1424b24711f19a56ed5b684f684d-20260917
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.19,REQID:207d48ca-5de2-4f92-816c-75fd6229f8cb,IP:0,U
-	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
-	release,TS:0
-X-CID-META: VersionHash:7db8b62,CLOUDID:d1ef7e50752c1ad0c3c8568be5f83d39,BulkI
-	D:nil,BulkQuantity:0,SF:80|81|82|83|102|865|898,TC:nil,Content:0|15|52|99,
-	EDM:-3,IP:nil,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OS
-	A:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 79cf1424b24711f19a56ed5b684f684d-20260917
-X-User: lilinmao@kylinos.cn
-Received: from [10.0.2.15] [(10.44.16.150)] by mailgw.kylinos.cn
-	(envelope-from <lilinmao@kylinos.cn>)
-	(Generic MTA with TLSv1.3 TLS_AES_128_GCM_SHA256 128/128)
-	with ESMTP id 244453343; Thu, 17 Sep 2026 11:25:48 +0800
-Message-ID: <80bbc457-671f-4374-bc87-6671e4930a7e@kylinos.cn>
-Date: Thu, 17 Sep 2026 11:25:44 +0800
+	 In-Reply-To:Content-Type; b=F9rF7+sZhK+K3MheOeHqq23NTk6ZNpIVSrhuh+Wiu28Q5FDra1yboa3PCpZUG0nYjWHNUNIeDRy7VShWr+JzBNMRbidgeDOUY/Y5SxEg1yqNa/1H5lYlqk5MJ+N/zl/nM6/i41uLbh2+n4M6rJuluyFgRll/drfNbvGyXr7WQpU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=dKW0rFh+; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="dKW0rFh+"
+Received: from [10.95.64.142] (unknown [4.194.122.136])
+	by linux.microsoft.com (Postfix) with ESMTPSA id 68FD320B7166;
+	Wed, 16 Sep 2026 21:17:07 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 68FD320B7166
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1789618628;
+	bh=EWkJaPCGnadf9C319Yf1I683reFcIoPIjbK3zxDokJM=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=dKW0rFh+GSoaiomIVQO6ibYNYDFtq6bv3eaaW/28BE4tzPdBucxVMSFbAgEmGAQ8h
+	 QQe7xs73adXtG/q/dIDlMYk7GdN6dgGOOUBd+u2993MhZkmY3QI9O/r7+OezsyeocE
+	 jRJMEuAbAV6ueNx/sfoCk+KSpwJaQPS4slnROwzc=
+Message-ID: <933f9e42-9f35-4513-ab69-93aef2284da5@linux.microsoft.com>
+Date: Thu, 17 Sep 2026 09:47:49 +0530
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -42,142 +34,141 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2] PCI: cadence: Store the core controller in platform
- drvdata
-To: Aksh Garg <a-garg7@ti.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Lorenzo Pieralisi <lpieralisi@kernel.org>,
- =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
- Manivannan Sadhasivam <mani@kernel.org>
-Cc: Rob Herring <robh@kernel.org>, Tom Joseph <tjoseph@cadence.com>,
- Vladimir Oltean <vladimir.oltean@nxp.com>, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org
-References: <20260915082826.4135665-1-lilinmao@kylinos.cn>
- <1789614322740341.344.seg@mailgw.kylinos.cn>
-From: Linmao Li <lilinmao@kylinos.cn>
-In-Reply-To: <1789614322740341.344.seg@mailgw.kylinos.cn>
+Subject: Re: [PATCH] PCI: hv: Probe vPCI buses asynchronously
+To: sashiko-reviews@lists.linux.dev
+Cc: linux-pci@vger.kernel.org, linux-hyperv@vger.kernel.org
+References: <20260907054742.235389-1-namjain@linux.microsoft.com>
+ <20260907060205.2B97C1F00A3A@smtp.kernel.org>
+Content-Language: en-US
+From: Naman Jain <namjain@linux.microsoft.com>
+In-Reply-To: <20260907060205.2B97C1F00A3A@smtp.kernel.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 
 
-在 2026/9/16 18:38, Aksh Garg 写道:
->
->
-> On 15/09/26 13:58, Linmao Li wrote:
->> cdns_plat_pcie_probe() stores a struct cdns_plat_pcie pointer with
->> platform_set_drvdata(). cdns_plat_pcie_shutdown() and the callbacks in
->> cdns_pcie_pm_ops retrieve the same pointer with dev_get_drvdata() and
->> use it as a struct cdns_pcie pointer. This makes them read phy_count
->> and phy beyond the wrapper.
->>
->> struct cdns_plat_pcie only contains a pointer to struct cdns_pcie. Drop
->> the redundant wrapper and store the struct cdns_pcie pointer directly.
->>
->> Fixes: bd22885aa188 ("PCI: cadence: Refactor driver to use as a core 
->> library")
->> Suggested-by: Aksh Garg <a-garg7@ti.com>
->> Signed-off-by: Linmao Li <lilinmao@kylinos.cn>
->> ---
->
-> Suggested-by tag can be dropped IMO as the suggestion was not the core 
-> insight of the patch (to store the struct cdns_pcie pointer directly).
->
-> Reviewed-by: Aksh Garg <a-garg7@ti.com>
->
-> Regards,
-> Aksh Garg
 
-Agreed, please drop the Suggested-by tag when applying. Happy to resend 
-a v3 with it removed if that's preferred.
+On 9/7/2026 11:32 AM, sashiko-bot@kernel.org wrote:
+> Thank you for your contribution! Sashiko AI review found 3 potential issue(s) to consider:
+> 
+> Pre-existing issues:
+> - [Critical] VMBus transaction mappings are not removed when wait_for_response() aborts early, leading to stack or heap Use-After-Free (UAF) upon delayed host completion.
+> - [High] Memory leak of child PCI devices (struct hv_pci_dev / hpdev) on the error paths of hv_pci_probe().
+> - [High] Workqueue leaked on hv_pci_remove() if hv_pci_resume() previously failed.
+> --
+> 
 
-Thanks,
-Linmao
+All of the issues reported by Sashiko are pre-existing and unrelated to 
+my patch. No action required.
 
->
->> Changes in v2:
->> - Drop the redundant struct cdns_plat_pcie wrapper (Aksh Garg).
->> ---
->>   .../controller/cadence/pcie-cadence-plat.c    | 27 ++++++-------------
->>   1 file changed, 8 insertions(+), 19 deletions(-)
->>
->> diff --git a/drivers/pci/controller/cadence/pcie-cadence-plat.c 
->> b/drivers/pci/controller/cadence/pcie-cadence-plat.c
->> index 13edc6be21f5..4a24302cc5b2 100644
->> --- a/drivers/pci/controller/cadence/pcie-cadence-plat.c
->> +++ b/drivers/pci/controller/cadence/pcie-cadence-plat.c
->> @@ -14,14 +14,6 @@
->>     #define CDNS_PLAT_CPU_TO_BUS_ADDR    0x0FFFFFFF
->>   -/**
->> - * struct cdns_plat_pcie - private data for this PCIe platform driver
->> - * @pcie: Cadence PCIe controller
->> - */
->> -struct cdns_plat_pcie {
->> -    struct cdns_pcie        *pcie;
->> -};
->> -
->>   static const struct of_device_id cdns_plat_pcie_of_match[];
->>     static u64 cdns_plat_cpu_addr_fixup(struct cdns_pcie *pcie, u64 
->> cpu_addr)
->> @@ -36,9 +28,9 @@ static const struct cdns_pcie_ops cdns_plat_ops = {
->>   static int cdns_plat_pcie_probe(struct platform_device *pdev)
->>   {
->>       const struct cdns_plat_pcie_of_data *data;
->> -    struct cdns_plat_pcie *cdns_plat_pcie;
->>       struct device *dev = &pdev->dev;
->>       struct pci_host_bridge *bridge;
->> +    struct cdns_pcie *pcie;
->>       struct cdns_pcie_ep *ep;
->>       struct cdns_pcie_rc *rc;
->>       bool is_rc;
->> @@ -51,11 +43,6 @@ static int cdns_plat_pcie_probe(struct 
->> platform_device *pdev)
->>       is_rc = data->is_rc;
->>         pr_debug(" Started %s with is_rc: %d\n", __func__, is_rc);
->> -    cdns_plat_pcie = devm_kzalloc(dev, sizeof(*cdns_plat_pcie), 
->> GFP_KERNEL);
->> -    if (!cdns_plat_pcie)
->> -        return -ENOMEM;
->> -
->> -    platform_set_drvdata(pdev, cdns_plat_pcie);
->>       if (is_rc) {
->>           if (!IS_ENABLED(CONFIG_PCIE_CADENCE_PLAT_HOST))
->>               return -ENODEV;
->> @@ -67,9 +54,9 @@ static int cdns_plat_pcie_probe(struct 
->> platform_device *pdev)
->>           rc = pci_host_bridge_priv(bridge);
->>           rc->pcie.dev = dev;
->>           rc->pcie.ops = &cdns_plat_ops;
->> -        cdns_plat_pcie->pcie = &rc->pcie;
->> +        pcie = &rc->pcie;
->>   -        ret = cdns_pcie_init_phy(dev, cdns_plat_pcie->pcie);
->> +        ret = cdns_pcie_init_phy(dev, pcie);
->>           if (ret) {
->>               dev_err(dev, "failed to init phy\n");
->>               return ret;
->> @@ -94,9 +81,9 @@ static int cdns_plat_pcie_probe(struct 
->> platform_device *pdev)
->>             ep->pcie.dev = dev;
->>           ep->pcie.ops = &cdns_plat_ops;
->> -        cdns_plat_pcie->pcie = &ep->pcie;
->> +        pcie = &ep->pcie;
->>   -        ret = cdns_pcie_init_phy(dev, cdns_plat_pcie->pcie);
->> +        ret = cdns_pcie_init_phy(dev, pcie);
->>           if (ret) {
->>               dev_err(dev, "failed to init phy\n");
->>               return ret;
->> @@ -114,13 +101,15 @@ static int cdns_plat_pcie_probe(struct 
->> platform_device *pdev)
->>               goto err_init;
->>       }
->>   +    platform_set_drvdata(pdev, pcie);
->> +
->>       return 0;
->>      err_init:
->>    err_get_sync:
->>       pm_runtime_put_sync(dev);
->>       pm_runtime_disable(dev);
->> -    cdns_pcie_disable_phy(cdns_plat_pcie->pcie);
->> +    cdns_pcie_disable_phy(pcie);
->>         return ret;
->>   }
->>
->> base-commit: 9a9d18547ddc97a73d5d90cff4d5aef90bd8c15d
+Regards,
+Naman
+
+> commit acbe68fb0b4a7fd692c44acd0bc27c2e48b030db
+> Author: Naman Jain <namjain@linux.microsoft.com>
+> 
+> PCI: hv: Probe vPCI buses asynchronously
+>      
+> On Hyper-V guests each virtual PCI bus is enumerated by its own
+> hv_pci_probe() call. The probe performs several synchronous host
+> request/response exchanges while negotiating the protocol, querying bus
+> relations, entering D0, and reporting allocated resources.
+> 
+>> diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
+>> index 89816a2bd7cd3..056d379b3cee4 100644
+>> --- a/drivers/pci/controller/pci-hyperv.c
+>> +++ b/drivers/pci/controller/pci-hyperv.c
+>> @@ -4155,6 +4155,9 @@ static struct hv_driver hv_pci_drv = {
+>>   	.remove		= hv_pci_remove,
+>>   	.suspend	= hv_pci_suspend,
+>>   	.resume		= hv_pci_resume,
+>> +	.driver = {
+>> +		.probe_type = PROBE_PREFER_ASYNCHRONOUS,
+>> +	},
+>>   };
+> 
+> [Severity: High]
+> This is a pre-existing issue, but I noticed a potential memory leak of child
+> PCI device structures (struct hv_pci_dev) in the error paths of
+> hv_pci_probe() in drivers/pci/controller/pci-hyperv.c.
+> 
+> If hv_pci_enter_d0() fails, the error path jumps directly to
+> release_state_lock:
+> 
+>      ret = hv_pci_enter_d0(hdev);
+>      if (ret)
+>          goto release_state_lock;
+> 
+> This completely skips hv_pci_bus_exit(), which is responsible for unlinking
+> and freeing the children.
+> 
+> Additionally, if an error occurs earlier and it jumps to exit_d0, it calls
+> hv_pci_bus_exit() but skips freeing the devices:
+> 
+> exit_d0:
+>      (void) hv_pci_bus_exit(hdev, true);
+> release_state_lock:
+>      mutex_unlock(&hbus->state_lock);
+> 
+> The keep_devs=true argument explicitly skips freeing the children.
+> 
+> In both situations, the hbus structure is subsequently freed, leaving the
+> previously populated hbus->children list permanently leaked. Could these
+> error paths be adjusted to ensure child devices are properly freed?
+> 
+> [Severity: High]
+> This is a pre-existing issue, but could a workqueue be leaked in
+> hv_pci_remove() if hv_pci_resume() had previously failed?
+> 
+> In drivers/pci/controller/pci-hyperv.c:hv_pci_resume(), hbus->state is
+> initially set to hv_pcibus_init. If a subsequent operation fails, the
+> function returns an error without restoring the state.
+> 
+> Later, when the device is removed, hv_pci_remove() checks the state before
+> destroying the workqueue:
+> 
+>      if (hbus->state == hv_pcibus_installed) {
+>          tasklet_disable(&hdev->channel->callback_event);
+>          hbus->state = hv_pcibus_removing;
+>          tasklet_enable(&hdev->channel->callback_event);
+>          destroy_workqueue(hbus->wq);
+>          hbus->wq = NULL;
+>          ...
+> 
+> Since the state was left as hv_pcibus_init, this block is bypassed, and
+> the workqueue is leaked when hbus is later freed. Does this state check need
+> to be modified to ensure the workqueue is always destroyed on removal?
+> 
+> [Severity: Critical]
+> This is a pre-existing issue, but can VMBus transaction mappings be left
+> dangling when wait_for_response() aborts early, leading to a Use-After-Free
+> upon delayed host completion?
+> 
+> In drivers/pci/controller/pci-hyperv.c, several functions allocate a
+> struct pci_packet on the stack or heap, pass it to the VMBus requestor,
+> and then wait for a response. For example, in new_pcichild_device():
+> 
+>      if (wait_for_response(hbus->hdev, &comp_pkt.host_event))
+>          goto error;
+> 
+> Or in hv_pci_enter_d0():
+> 
+>      ret = wait_for_response(hdev, &comp_pkt.host_event);
+>      if (ret)
+>          goto exit;
+> 
+> Similar early returns occur in hv_read_config_block() and
+> hv_write_config_block().
+> 
+> If wait_for_response() aborts immediately (e.g. returning -ENODEV due to a
+> channel rescind), the caller returns and destroys its stack frame or frees
+> the heap allocation.
+> 
+> However, the transaction ID mapping remains in the VMBus requestor. If the
+> host sends a completion packet just after this, the hv_pci_onchannelcallback()
+> tasklet will retrieve the dangling pointer and execute its completion_func,
+> corrupting the stack or heap.
+> 
+> Should these functions use vmbus_request_addr_match() to remove the mapping
+> on failure, similar to how hv_pci_bus_exit() handles it?
+> 
+
