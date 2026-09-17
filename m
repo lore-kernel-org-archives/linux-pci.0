@@ -1,81 +1,81 @@
-Received: from mail-qv1-f97.google.com (mail-qv1-f97.google.com [209.85.219.97])
+Received: from mail-pj1-f98.google.com (mail-pj1-f98.google.com [209.85.216.98])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 882C7418363
-	for <linux-pci@vger.kernel.org>; Wed, 16 Sep 2026 23:59:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.97
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C83BF1FF5E3
+	for <linux-pci@vger.kernel.org>; Thu, 17 Sep 2026 00:00:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.98
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789603176; cv=none; b=B3MzNaO7YYhIQG5PBXr64yn7QdZnxKrzk2kPVUXI0w+4gs8ilfrZUnHASyKvSI8TVTJjLoXUB/lVhTKHIk/iitvPjG7nX6yUPa6w6L+kS+5hyDq7RoGG4NLESkp2stUiFes7WxwYwAz5Spa7l0uLyo23zjD/0mmagUUfJCDqaa4=
+	t=1789603250; cv=none; b=qsODGwwRTZIBenjN+6ax3hbATeOky0so8ico63HzEUVrZB+FYLRz69frpb9rxmkrsazzEFm4ePwldSMKO4GqBpOgd0itUif8uY6+irGU9GHa1Q6MXoS++oM3AVTwiyxMlxn6jLIj1MrkmdHskDdbKludkzVEIZipEn/+GLyCXLw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789603176; c=relaxed/simple;
-	bh=iZDTSEutdlzrNt+HsK0gMg7KCjGzgbTctzIAFcA3ZWQ=;
+	s=arc-20240116; t=1789603250; c=relaxed/simple;
+	bh=oiZ6XktFqna/JhScVbDnl8dP8MMvhZCdpQNkz5Hg1pE=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=B5NpJLSSFptXbWFTxfz5Ba3ZDwcCcStcyp5hQHnj9pfA4zPNpPq59/PlH3oVAbDwZdW0vWrt8pZSBcfcPQt1ZLjR0JjHD8bF3Pso2U3YPbGUCwt0OZrNtayFOf9KZRpEilAs8+kFiK1pBlJin87HHYbmf7pD7XhxstqxDG8dWFk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=LEYFL6rs; arc=none smtp.client-ip=209.85.219.97
+	 In-Reply-To:Content-Type; b=BoE8Mm6sL6Wam3pyt053pq1EDx40lWPdXb6RYIn2byEO5MWaDEbrpuMnNVyRGCz5gsF/1fnzujib40+PqizbMUy7D5bzQLDoTBBZJhTLVpnt1z3aeobpFILR2y2Fe8rE0LcOWP0RyYsvQZrkQIuam0NqnYX+EM0ArKEEn/rp50g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=FmmTRUgI; arc=none smtp.client-ip=209.85.216.98
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="LEYFL6rs"
-Received: by mail-qv1-f97.google.com with SMTP id 6a1803df08f44-910316a2fc9so742346d6.2
-        for <linux-pci@vger.kernel.org>; Wed, 16 Sep 2026 16:59:35 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="FmmTRUgI"
+Received: by mail-pj1-f98.google.com with SMTP id 98e67ed59e1d1-38ec1402b05so90075a91.2
+        for <linux-pci@vger.kernel.org>; Wed, 16 Sep 2026 17:00:48 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1789603174; x=1790207974;
+        d=1e100.net; s=20260707; t=1789603248; x=1790208048;
         h=content-transfer-encoding:content-type:in-reply-to:autocrypt:from
          :content-language:references:cc:to:subject:user-agent:mime-version
          :date:message-id:dkim-signature:x-gm-gg:x-gm-message-state:from:to
          :cc:subject:date:message-id:reply-to:content-type;
-        bh=V0OARD0PLF4mIwzcACpuZC6ushW9KkulR8L/wcLq6TE=;
-        b=oHS56v5Mo0t3aSKf4PgOhM2KFvlpx98qe15Npp2cbU8uxuIKq4MZRrwVPy2VeH2y6U
-         We2VrJsVHDcaYjdyWLy7GNOhSkfAfIvBBklKJhIB0MKbU6iDo7eRFqOf1XCy74B64yeh
-         bhtxHFDlKPRx8yVezMajLcrc7Vq1A8Aqol9xWFGbIgwN+P+o+Z7/XybhI2HTuXUSP68w
-         HZplulYuS2ZLq0A+0Rq9fKx5CIRWaNWhSeX/vcEU2dVjmWkZWaRHa+LmrNSfJ1rENHBZ
-         9+oS6rcAAM5oDrfz0CpEAlYYxdX0ci4+aTP6BZraGSwVZElyKZO6vIQKQSsrWG2yNXaX
-         pdEw==
-X-Forwarded-Encrypted: i=1; AKwUvBxiBlVYP5hJbHZMCqbXDNEQwVJWXNEZE3HCZiTdR/G0Jc+zeUur8b6eQEryd9naze/NIIlc8TxXZAA=@vger.kernel.org
-X-Gm-Message-State: AFuF++maaW0A9Ezb0uiq8GTa1JrrwXa/6WpE3esCV7ce7mpoGD73aMr+
-	g+7h0Bh8OqxhKqTuBFkLfIgyvdiJ2PGK9UctoldWFk0gySJMhLMyhzIXyfgqofgP/Vfo4PnPvaj
-	9WEhUpPeVdtNmkenkYsBm2rUrXV1RFoqrILUe78XBq9l04JDa6f+zg+zwbcWtsP5goTbzEmYeha
-	Gh3n0alPtgBrp0pFDPQbdEJnmBsTeTBDH8doDXKXSij65jBO2a4/zLV4gyHmGg4bKLPUEBabSsZ
-	wATKw2h9Xst/PB8TJ0W
-X-Gm-Gg: AYBFou2KCq4kkM8ZqHftThpFu7mqPsmzbEDXJnkFqCHDoxLmJ17CtyDpQOzyxuq265A
-	mLn0taxOZH1ttF0b9idzqlzkzLmDloAMo+jghG1a3lnNY+7ivKXWZom4Zfm/x1l2wfncNZ+k55G
-	EWw0jxHNBFIN4YiyP+yBU6FAmjQkswNBI6+f43sjlUCpoFHbDZY8LJe6Y/0vCl6odLKnwIND84X
-	9NkpVJ1pV5cT1eUW/kbDSOm5aZuE8HQIZ3WMG0Eu5BkD3LmK8cxY2YG5kO2ebxKAJvbhsDx24pz
-	++7DEDEAGigu9t/m9llsRPz1gnzxGvF4ry+dSjdMAu9+paeID7JjAlYT7JJY7WvPEZxaYsdkcx2
-	9pnXQOHz6H1zPOIEhvCn3A3xc3UhlfvwBmEYt1QuM/kqkOKFTYpXPVF5ePwbYr1bbDnchHcq/aU
-	j+YhLhdb29ZGToyena4tiJJZ5um/8LY7pwEAoU24bhP2g=
-X-Received: by 2002:a05:6214:29c5:b0:912:32fa:399c with SMTP id 6a1803df08f44-9123d751f91mr82191326d6.12.1789603174189;
-        Wed, 16 Sep 2026 16:59:34 -0700 (PDT)
+        bh=J4imMswxUbVr42K3g5BOsJ0pmPAyLAHU01ncoNcfWeU=;
+        b=O1oRZU2V9gHUuWMGlobZqcVEQeINJkzGpbN/v6Qh37Se/vG1IlY0u3j/0UD5KIHD6s
+         8l8WCuCXQeBjEM3NyiiMnjjvunbc1hm71uOFu/mtuhjINTYF93mxBsVPfJkiBKixYLn/
+         eGxbCsyIQ8K0MrhqlYuE4NzaP2ZSxGojiNNVgcCbit7pX/RR5hUcRp3p1CoqnGN8U9Ge
+         vhtPUOWrJLYKrU/JgbxmYuzmzSuDK95t9BQbR7PxOUVgIpxv0THhOny4OX0QpM7SKDYm
+         aFC0tMDBR7ECTFUg/tEklyyblJRDt+udhUkwAsm4qmcTlFTzA1NDX90p2Xt3gL1ScSoW
+         HlhQ==
+X-Forwarded-Encrypted: i=1; AKwUvBzQ8Ho1rjmjwywUK91EHdNytkpA3SdCNBggdlw6X7OwiUvumvSe8SE/truhmU11eU0bcZ8l+iCPjWk=@vger.kernel.org
+X-Gm-Message-State: AFuF++n0tjYyKKudUval8UAQHrMotKKzcsomoBPOgCbaAVfVck/swAUe
+	TM5c1miBxtFvYrZLeYbBeOeD8Z6SoI4wo1EadxoCvhXuh2R2079BXRFlTrlz3TIcum42OyI08ac
+	+4Pkp53OhMqeda/m67W4411c1eFdnMoIUHPOkR2ioyzCJIOz5bC2EyoJqreCbCk0fNFX2D52sZ3
+	FB7YV5jmy5cuned0eqnL1o7aW88o2X3Xz/t04JKXAPLvvdz6b+Dj6M+trLO29mJyRv+DGzbmfs2
+	da7TzGLriskuv4X+5Ca
+X-Gm-Gg: AYBFou2n+7EYZVN4v6f9UebMQic6zY2nRC42wf0batclOJzolCCdx5momHFpKNrBEio
+	bPtgMCm1ielhOEiDhUREaoKraLfMyv3OKDiiTkH3F0GqgflwaS8TDFyv89kr2kjeBkqkZ5HWtdg
+	1ZOdRwek3Z86KTFCojJhq4AcXTyq4IPkVCs1WKHjSNbTAyoq7on55lnOH9dGT/Jyu6bfw3776hO
+	tTnnW0jUzODKE8ZEiJYQngXJWBB4n6Ci1mOKcD8ihuNXVS38tcQtm3lehR1vbcB6U+YlryVH3X6
+	sr02DNywm9WWbhTz6/ro89I5dYjPfOMive1sl1kGo6hFFe7jRtXFZ56akoO3yoogbjxZQeXKK1r
+	KrWBhemIpccH67tZRxwedKOoExpC9JWWDWxh+qDP69768mUJQYiN/TBk6DN68y8tx6v41UguNat
+	PhyvKeclyFdgNC/XRBnIEVAhyvdNrYFQ5aNVnOjPx8Bvw=
+X-Received: by 2002:a17:90b:440c:b0:39d:fea0:c17 with SMTP id 98e67ed59e1d1-39e1e309c21mr9846589a91.8.1789603239758;
+        Wed, 16 Sep 2026 17:00:39 -0700 (PDT)
 Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-125.dlp.protect.broadcom.com. [144.49.247.125])
-        by smtp-relay.gmail.com with ESMTPS id 6a1803df08f44-9123be59af7sm862356d6.10.2026.09.16.16.59.33
+        by smtp-relay.gmail.com with ESMTPS id 98e67ed59e1d1-39e361470b3sm545389a91.3.2026.09.16.17.00.38
         for <linux-pci@vger.kernel.org>
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 16 Sep 2026 16:59:34 -0700 (PDT)
+        Wed, 16 Sep 2026 17:00:39 -0700 (PDT)
 X-Relaying-Domain: broadcom.com
 X-CFilter-Loop: Reflected
-Received: by mail-pg1-f200.google.com with SMTP id 41be03b00d2f7-cc1bbd7d6e6so226384a12.3
-        for <linux-pci@vger.kernel.org>; Wed, 16 Sep 2026 16:59:33 -0700 (PDT)
+Received: by mail-pf1-f200.google.com with SMTP id d2e1a72fcca58-8699b293a80so265972b3a.0
+        for <linux-pci@vger.kernel.org>; Wed, 16 Sep 2026 17:00:37 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1789603173; x=1790207973; darn=vger.kernel.org;
+        d=broadcom.com; s=google; t=1789603237; x=1790208037; darn=vger.kernel.org;
         h=content-transfer-encoding:content-type:in-reply-to:autocrypt:from
          :content-language:references:cc:to:subject:user-agent:mime-version
          :date:message-id:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=V0OARD0PLF4mIwzcACpuZC6ushW9KkulR8L/wcLq6TE=;
-        b=LEYFL6rsQkD1A3c7ONFpHBihET+pNZcB87/twudVGqsDB0slzUmKc61lGKQJbRqFdp
-         G/jqFjY26fhX5YJgin6V30Q+9GABBtFFWPDWltD7aze0Rv/h+JWCv/6Z5kaRp/XcwgPj
-         vmL++FjuuB26s6N5eGBAGwcHwoC4tmwsxDU8o=
-X-Forwarded-Encrypted: i=1; AKwUvBwpiuugII+jXTSsPWvqN6Heifry9zFcsc4LMqBU+g5MjD2uKxin1Vn/xHMnYb7o/BQ2Mty/ZR5jYWU=@vger.kernel.org
-X-Received: by 2002:a05:6a20:e212:b0:3cd:7ba2:e669 with SMTP id adf61e73a8af0-3dd5f45d85bmr11067013637.10.1789603172968;
-        Wed, 16 Sep 2026 16:59:32 -0700 (PDT)
-X-Received: by 2002:a05:6a20:e212:b0:3cd:7ba2:e669 with SMTP id adf61e73a8af0-3dd5f45d85bmr11066949637.10.1789603172424;
-        Wed, 16 Sep 2026 16:59:32 -0700 (PDT)
+        bh=J4imMswxUbVr42K3g5BOsJ0pmPAyLAHU01ncoNcfWeU=;
+        b=FmmTRUgIvtL8EKDjsmP3yGspxuRPd8lkQGO2AUALzq8CTUoSmUeT8BT1K3e/a/DSzT
+         1O+P7VST1oAtLFBHh6sKmZk+p++vOU28kgxdtd5AhLp6QHfG9q17EGEJ+yTFgR7tEupf
+         xCiTgz7neYl7gPbz5Q/ufy7BACEFHCLGfW1pc=
+X-Forwarded-Encrypted: i=1; AKwUvBxxgHx5OM2T1f1ZZBh2M6MyBXjDpOgnDLmCjgTWiyaHyxr/eLGkAKpPp63dxv/0KRs3MCSL42ZjnfY=@vger.kernel.org
+X-Received: by 2002:a05:6a00:300c:b0:864:cbc5:b8c1 with SMTP id d2e1a72fcca58-872372c3f26mr10397837b3a.2.1789603233644;
+        Wed, 16 Sep 2026 17:00:33 -0700 (PDT)
+X-Received: by 2002:a05:6a00:300c:b0:864:cbc5:b8c1 with SMTP id d2e1a72fcca58-872372c3f26mr10397425b3a.2.1789603231228;
+        Wed, 16 Sep 2026 17:00:31 -0700 (PDT)
 Received: from [10.67.48.245] ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-33bf5a6a175sm11074324eec.9.2026.09.16.16.59.31
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-871febde2e1sm1973248b3a.7.2026.09.16.17.00.29
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 16 Sep 2026 16:59:31 -0700 (PDT)
-Message-ID: <9a741390-503b-403d-a34d-d4919edf1d8c@broadcom.com>
-Date: Wed, 16 Sep 2026 16:59:30 -0700
+        Wed, 16 Sep 2026 17:00:30 -0700 (PDT)
+Message-ID: <5ecf4562-3333-4b6b-9a19-bedc56750022@broadcom.com>
+Date: Wed, 16 Sep 2026 17:00:28 -0700
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -83,8 +83,7 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 01/13] PCI: brcmstb: Remove redundant const specifier for
- struct fields
+Subject: Re: [PATCH 02/13] PCI: brcmstb: Use flags u32 instead of bools
 To: Jim Quinlan <james.quinlan@broadcom.com>, linux-pci@vger.kernel.org,
  Nicolas Saenz Julienne <nsaenz@kernel.org>,
  Bjorn Helgaas <bhelgaas@google.com>,
@@ -99,7 +98,7 @@ Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>,
  <linux-arm-kernel@lists.infradead.org>,
  open list <linux-kernel@vger.kernel.org>
 References: <20260911233541.1650895-1-james.quinlan@broadcom.com>
- <20260911233541.1650895-2-james.quinlan@broadcom.com>
+ <20260911233541.1650895-3-james.quinlan@broadcom.com>
 Content-Language: en-US, fr-FR
 From: Florian Fainelli <florian.fainelli@broadcom.com>
 Autocrypt: addr=florian.fainelli@broadcom.com; keydata=
@@ -134,14 +133,20 @@ Autocrypt: addr=florian.fainelli@broadcom.com; keydata=
  MIlnaE6V0U8f5zNHB7Y46yJjjYT/Ds1TJo3pvwevDWPvv6rdBeV07D9s43frUS6xYd1uFxHC
  7dZYWJjZmyUf5evr1W1gCgwLXG0PEi9n3qmz1lelQ8lSocmvxBKtMbX/OKhAfuP/iIwnTsww
  95A2SaPiQZA51NywV8OFgsN0ITl2PlZ4Tp9hHERDe6nQCsNI/Us=
-In-Reply-To: <20260911233541.1650895-2-james.quinlan@broadcom.com>
+In-Reply-To: <20260911233541.1650895-3-james.quinlan@broadcom.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
 
 On 9/11/26 16:35, Jim Quinlan wrote:
-> All of the variables using this particular structure are declared as const.
-> There is no reason to declare its individual fields as being const.
+> Instead of having separate 'bool' fields for each SoC configuration, use a
+> small bitvector (u32).  Doing this uses less memory and provides a uniform
+> method to assign flags for a specific SoC.  The expectation is that more
+> flags will be added as we replace conditions like "if (chipA || chipB)"
+> with "if (behavior_X)".
+> 
+> A helper macro "BFLAG()" is used to shorten the determination of the flag
+> value.
 > 
 > Signed-off-by: Jim Quinlan <james.quinlan@broadcom.com>
 
