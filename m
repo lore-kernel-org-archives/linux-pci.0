@@ -1,211 +1,183 @@
-Received: from MW6PR02CU001.outbound.protection.outlook.com (mail-westus2azon11012069.outbound.protection.outlook.com [52.101.48.69])
+Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2EF50390214;
-	Thu, 17 Sep 2026 02:29:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.48.69
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789612194; cv=fail; b=VvYot5ou9Abtw/oaVIG/htF8tBUP4+sO7iOE2+jNkrTq5htkZldzqkJmMZU39c4rru/NANeKJADq40Xk9zsIw9rxXq2b51gsXdeQKAlMU25cG5Trinw9p/wbmEn1rd3wWcwgFZuOm2PyXgMxOgtYMoWD8qjfL6OOpt88K//woIw=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789612194; c=relaxed/simple;
-	bh=Dl9xukujFB2OvoxC2eIRWmQVzpJHGmwH76GWE/nI5gY=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=RalZiJjGXbceznpiVuyvymoiwKfcR/c1b+YaFxIRt6IyjPbk+6xBKb/j5GXWDEVsvKpThJBEh/la14KnY9AE3j3Wp9tKkSQxSwiRn+J39g/utDX6BiBDZLLG3eD0qILZfTVgRRaJZ3WU+t5h27FZFssAuLx/KGbM0ZddUjZ+al8=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=ChHaTJWz; arc=fail smtp.client-ip=52.101.48.69
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="ChHaTJWz"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=aU5atneVhycdmMhtLSwfg54zKU3yGrUYjvprNXNstXA6CZ2sIEs9AK1SdM+nPwa/q8huXKd8M97yd/JlaAbJ6lseyYr2G4qrpEdECyIPSTk5E9m2LwcJ5rAfGCJG1R/11dJBFbmQiZBwXtxfgcScinUMMQ5h3q4EVQ+d8O8Vo50z3pk/EGsPDgVUri4pg7Y8jE+/vlkZSa7m9Za46n6i+bmfdsWwX5f4lPPN4ISl+VJ6pSwc+DD6eh4yFNv2BbuBfmqSqV4t6t7l0CiNeAM/DvYjxBcKqHG6AqOr9VMrJeWTOrW2ZOYFmCD1T1bFNTvR+56tAP3878Y5fRcud0QAhQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=pnOSeT827JqM1WHSr2HBLUMH3Xd9V0DEn2LgQLiflk4=;
- b=TtI7glOzplsZ/P8IzLNNf9lZYdYnB0qW2c28zQlXq1hrzFoXPbvBG+ZAiPMWCSrgoL2cilXPR+CkY8/87z3cijXZyUtKGCMMtf7rNud0LeWpp+gZkGbhmQ/1eJmNYln794C63W8e+0dqi504QHI44byMjHdeEEZ5YBbaGZwPYs1KYLoTsGp9zBkm3t+xkgT0eZmyrexJuWBQKyor++xqUTP8CApPWa/baMtBdmLZMsI61JoFrqdTbXYLISRuZHul93jY12ta1FbIK7Dh/BPyc7tloWtdnExLiVvnRnRwK719jpfaRQsYT1Yq+Y8JghNs1AM934wloSPBQ3xcYCGLzw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
- header.d=amd.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=pnOSeT827JqM1WHSr2HBLUMH3Xd9V0DEn2LgQLiflk4=;
- b=ChHaTJWzZ+TxxrfC9iMO2WNgY60TZrG4LmDyunjLzpNzxCq2HVuEjwdJKOn+6zpHMSHNL2Hknt3xRIv89K4z4pIEi1WgGeQac6Tc3TGO1EMQmJ0JVXx9cp+zdfw0dW595Bv+9O1zLelSOaq7vB1xbppzV+hy3X2HsGm+SmzvXLg=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=amd.com;
-Received: from CHXPR12MB999219.namprd12.prod.outlook.com
- (2603:10b6:610:2fd::8) by DSVPR12MB999123.namprd12.prod.outlook.com
- (2603:10b6:8:388::13) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.428.9; Thu, 17 Sep
- 2026 02:29:23 +0000
-Received: from CHXPR12MB999219.namprd12.prod.outlook.com
- ([fe80::da19:941f:da0c:2408]) by CHXPR12MB999219.namprd12.prod.outlook.com
- ([fe80::da19:941f:da0c:2408%2]) with mapi id 15.21.0406.007; Thu, 17 Sep 2026
- 02:29:23 +0000
-Message-ID: <9c83efe9-9367-472f-bf39-e07252e70c3c@amd.com>
-Date: Thu, 17 Sep 2026 12:28:50 +1000
-User-Agent: Mozilla Thunderbird
-Subject: Re: [RFC PATCH kernel 01/17] pci/dma/tsm: Call disable DMA bus hook
- on cleanup
-To: Borislav Petkov <bp@alien8.de>
-Cc: x86@kernel.org, linux-kernel@vger.kernel.org, kvm@vger.kernel.org,
- linux-crypto@vger.kernel.org, linux-pci@vger.kernel.org,
- Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>,
- Dave Hansen <dave.hansen@linux.intel.com>, "H. Peter Anvin" <hpa@zytor.com>,
- Sean Christopherson <seanjc@google.com>, Paolo Bonzini
- <pbonzini@redhat.com>, Andy Lutomirski <luto@kernel.org>,
- Peter Zijlstra <peterz@infradead.org>, Ashish Kalra <ashish.kalra@amd.com>,
- Tom Lendacky <thomas.lendacky@amd.com>,
- Herbert Xu <herbert@gondor.apana.org.au>,
- "David S. Miller" <davem@davemloft.net>, Bjorn Helgaas
- <bhelgaas@google.com>, Juergen Gross <jgross@suse.com>,
- Stefano Stabellini <sstabellini@kernel.org>,
- Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>,
- Marek Szyprowski <m.szyprowski@samsung.com>,
- Robin Murphy <robin.murphy@arm.com>,
- Andrew Morton <akpm@linux-foundation.org>,
- David Hildenbrand <david@kernel.org>, Lorenzo Stoakes <ljs@kernel.org>,
- "Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>,
- Mike Rapoport <rppt@kernel.org>, Suren Baghdasaryan <surenb@google.com>,
- Michal Hocko <mhocko@suse.com>, Catalin Marinas <catalin.marinas@arm.com>,
- Jini Susan George <jinisusan.george@amd.com>, Kees Cook <kees@kernel.org>,
- Michael Ellerman <mpe@ellerman.id.au>, Nikunj A Dadhania <nikunj@amd.com>,
- Ard Biesheuvel <ardb@kernel.org>, Eric Biggers <ebiggers@kernel.org>,
- Kim Phillips <kim.phillips@amd.com>, Joerg Roedel <jroedel@suse.de>,
- Ethan Nelson-Moore <enelsonmoore@gmail.com>,
- "Tycho Andersen (AMD)" <tycho@kernel.org>,
- Liam Merwick <liam.merwick@oracle.com>,
- Michael Kerrisk <mtk.manpages@gmail.com>,
- Suresh Siddha <suresh.b.siddha@intel.com>, Xiaotian Feng <dfeng@redhat.com>,
- Venkatesh Pallipadi <venkatesh.pallipadi@intel.com>,
- Andi Kleen <ak@linux.intel.com>, Kiryl Shutsemau <kas@kernel.org>,
- Tony Luck <tony.luck@intel.com>, Jason Gunthorpe <jgg@ziepe.ca>,
- Lu Baolu <baolu.lu@linux.intel.com>, Xu Yilun <yilun.xu@linux.intel.com>,
- =?UTF-8?Q?Carlos_L=C3=B3pez?= <clopez@suse.de>,
- Jonathan Cameron <jic23@kernel.org>, Jori Koolstra <jkoolstra@xs4all.nl>,
- =?UTF-8?Q?Thomas_Wei=C3=9Fschuh?= <thomas.weissschuh@linutronix.de>,
- "Aneesh Kumar K.V (Arm)" <aneesh.kumar@kernel.org>,
- Ian Campbell <ian.campbell@citrix.com>,
- Jeremy Fitzhardinge <jeremy.fitzhardinge@citrix.com>,
- Petr Tesarik <ptesarik@suse.com>, David Howells <dhowells@redhat.com>,
- Haavard Skinnemoen <hskinnemoen@atmel.com>,
- Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
- =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
- Christian Marangi <ansuelsmth@gmail.com>, Dave Jiang <dave.jiang@intel.com>,
- Michael Kelley <mhklinux@outlook.com>, Ilias Stamatis <ilstam@amazon.com>,
- Sumanth Korikkar <sumanthk@linux.ibm.com>,
- Simona Vetter <simona.vetter@ffwll.ch>, Toshi Kani <toshi.kani@hp.com>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Vinod Koul <vkoul@kernel.org>, Jiang Liu <jiang.liu@linux.intel.com>,
- Arnd Bergmann <arnd@arndb.de>, Anshuman Khandual
- <anshuman.khandual@arm.com>, Kefeng Wang <wangkefeng.wang@huawei.com>,
- Palmer Dabbelt <palmerdabbelt@google.com>, linux-coco@lists.linux.dev,
- xen-devel@lists.xenproject.org, iommu@lists.linux.dev, linux-mm@kvack.org,
- aik@ozlabs.ru, Santosh Shukla <santosh.shukla@amd.com>,
- "Pratik R . Sampat" <prsampat@amd.com>,
- Scott Soule Cheloha <scott.cheloha@amd.com>,
- Ackerley Tng <ackerleytng@google.com>, Fuad Tabba <tabba@google.com>
-References: <20260916115159.1938195-1-aik@amd.com>
- <20260916115159.1938195-2-aik@amd.com>
- <20260916174929.GCaqrWqZ1fIhi4Rgbn@fat_crate.local>
-From: Alexey Kardashevskiy <aik@amd.com>
-Content-Language: en-US
-In-Reply-To: <20260916174929.GCaqrWqZ1fIhi4Rgbn@fat_crate.local>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: SY6PR01CA0119.ausprd01.prod.outlook.com
- (2603:10c6:10:1b8::13) To CHXPR12MB999219.namprd12.prod.outlook.com
- (2603:10b6:610:2fd::8)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E647A38F65B;
+	Thu, 17 Sep 2026 03:25:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1789615557; cv=none; b=RkqEuECwufv7CR8E2neoQmQqwO8wEvq8Oym5NKADRlRo2FNYMaqsaXxlK+Y12W5N5+XWisWB2sglA/Q+0WCDjLAu3b+40LsVhM5mHBs7YiNKTSRZO/uIt02GjI4JSlNchaRdx9k00WzUaiFyl1IlYBprWm5PtFzlEoU9y4kQCIY=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1789615557; c=relaxed/simple;
+	bh=JEOoVifFVQMutCzbtfWI8jC/mZ+9cwj85H663L5mpD8=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=k1QY5NWz3ZZ9xz3sqmk45s8ve6zFvlAPo9c9C4UkbY2afzjrA3xabNqnAb2zrzy0vuMEgQLCdUzrDxEGiTLGUuA3uel7y95Wp3cOivlS6vVqAvF4RWGLbH9BdSo2OWS1XOdHbBwZY52dGzqZBd2Y+Q8mLbTquDociA8lCTX1ijE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
+X-UUID: 79cf1424b24711f19a56ed5b684f684d-20260917
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.19,REQID:207d48ca-5de2-4f92-816c-75fd6229f8cb,IP:0,U
+	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
+	release,TS:0
+X-CID-META: VersionHash:7db8b62,CLOUDID:d1ef7e50752c1ad0c3c8568be5f83d39,BulkI
+	D:nil,BulkQuantity:0,SF:80|81|82|83|102|865|898,TC:nil,Content:0|15|52|99,
+	EDM:-3,IP:nil,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OS
+	A:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 2,SSN|SDN
+X-CID-BAS: 2,SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: 79cf1424b24711f19a56ed5b684f684d-20260917
+X-User: lilinmao@kylinos.cn
+Received: from [10.0.2.15] [(10.44.16.150)] by mailgw.kylinos.cn
+	(envelope-from <lilinmao@kylinos.cn>)
+	(Generic MTA with TLSv1.3 TLS_AES_128_GCM_SHA256 128/128)
+	with ESMTP id 244453343; Thu, 17 Sep 2026 11:25:48 +0800
+Message-ID: <80bbc457-671f-4374-bc87-6671e4930a7e@kylinos.cn>
+Date: Thu, 17 Sep 2026 11:25:44 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CHXPR12MB999219:EE_|DSVPR12MB999123:EE_
-X-MS-Office365-Filtering-Correlation-Id: 5c5369cd-ffef-47fb-d79a-08df14637cb1
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|366016|23010399003|1800799024|7416014|376014|56012099006|11063799006|10067099003|4143699003|18002099003|22082099003|6133799003;
-X-Microsoft-Antispam-Message-Info:
-	OTWkJ3BzLvXlpYrhzvzJ/m6bDLG6FVqhqVagagcJJmrDwex9mkmlsGSPyD9vZbM1EorDdeY5zKRT2tKL3AwI/77eRPKsj8+0JjxUGKuqVkCtXvgYVHwHyS/uYGS7cOh2d5NtBtDAx1RGUTLnGBmfyHSkGKtRJWFbP2Oz4QdmrLHy/3tmWtTLREvL78kzH8AXrMHNDj6ePCq/fJiOEiezoiSdL3Si90dGeEcVxGLU/z02aAx1L5fJX+gAztzdfHBlvf4TJLbKg6eIttIJjLnZRYIIsgPlOK+mT3piX3Do7D2sGM4ifLcEeg5LS15cwCnkluKzId3YlyGxXllznR6+JejZgHECA/1s6tJxny8I3oXWdRe+bUkGeX7y6zKdgElS7rqTOE4b4kBg/0S6nDdhVvLH+eYGU9+FJM6aRrJKlVCpdS3Ir7cqZ8TjJ9CV76xmgFiNjVxuc5cjPmL7AyTPKC//iSRb/5xKpLQtIL6Qz384357y9I6YF3u7GKlv2K1MORL7kdBwPo2WR0VhuOuDXxiQrGMjiRPcBu9oR0kVhPAo9iKn1Mn5D3dloVVmz2VPCdlyxE0Xqgf6GKJxgVvqCnvUPG2lHFvPj76Po8MxlKqS98nek9hAhC54VcRzdvJMXLv1L7KJtjXjCJuBmpala/hD/nk4Mg8YbJVWeuy0rdY=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CHXPR12MB999219.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(23010399003)(1800799024)(7416014)(376014)(56012099006)(11063799006)(10067099003)(4143699003)(18002099003)(22082099003)(6133799003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?N3phOU4xTkYvemVvS0duR2YzKzVHY3BFVmdnQ3VIbERGSmFQZ3NNdXhKRGx4?=
- =?utf-8?B?b3BDUlRZMUpiUGVTQ1MzbThWRlRZZFcyYVFSMVFLNldzbDh2TDNBTVl0MmNv?=
- =?utf-8?B?amcySUpwTWRuMFFtcDNCVWNHWUw5VzFlU0dPMWdrT3RKNjhIa0tTcXAvL2lJ?=
- =?utf-8?B?TDZnN2JMaFdwblR2aTd3aTVaUEphNWFVUE1yNTZvRlpCT01WcXU3SDljY3Mz?=
- =?utf-8?B?aTYzeWVING80UjR1V29vcGJEQmlXaEc4andDL3p4ajUzMGxIRXZkbUZiQk1T?=
- =?utf-8?B?Q0lDQ29wMlprN1JsVnNJQk8xSDRuOEJKRzhqSllydnlQWDNudTVaQUpkVm5H?=
- =?utf-8?B?RXJRczJQWlcwaGx0MHdJUWN6T3UzSGhhZ0VTUFFBaEJPcWlocEhENEVXK3M1?=
- =?utf-8?B?Zkp2Q1lBdm9LYXh0MkIvOFh2b0JFZWxjUFNkMTE5ZnVUdlpVUTdrbzg0QXdk?=
- =?utf-8?B?ai9pVTBrTkF5azZXaW9DOFV4VDhDeFJBb0xZR2d0bEJsbFcyNVlUbTRaOXZa?=
- =?utf-8?B?Q1owbHV6UHpXZUNselRyeVBMSzZhR1JKendIcUJId09CQUZGdWtSeW5sTVdJ?=
- =?utf-8?B?ZmE4MzArejJ3RThDWUJwYWlzdjRsMHRscDJjVjVMOXpZRjVDRWNxNjlZczd6?=
- =?utf-8?B?VHR0ZTMxcDdtUWlXQUUzSFlLR2dJSTRPeTdSOHhuQ0Q4NHY4VEN3a2laNHVt?=
- =?utf-8?B?TDc4NmhZT1cxWUpBbGVNaytCRkJMckVIaDQySERqSEN4WTZmUzdya0kreGVU?=
- =?utf-8?B?eTBQTWlHRHQ2aFlFNnd6UHpxT3h2M09GRnZtTFE1eDhIVE5ZNWhVdXVkMFpH?=
- =?utf-8?B?a3cvS0UwNURYQUZuSkRiVUZhTTJkTldURWhUTDgyS3oyVU5VcGdWRE9Cc0d1?=
- =?utf-8?B?a2pxbEcxL2xMaFJodFVVakFMYXlzY29QS09aMnVMeFlIdE96WlRtaGt0clo3?=
- =?utf-8?B?dGZvbjY2T3gxMkVoenYxakM0L21kSFczb2RqeU54YTBaWXFKOXI0M3ptdVZX?=
- =?utf-8?B?MkRhSEZsY2lYRktnMUtZSnE3bVNiS0VrcVRucGpxcTRpdkFtY0M5amtkTmZ2?=
- =?utf-8?B?MTNVUDNISS8xekxOVkxadnAvb0pJWGRUdHUrR3NpVDVCSFl0ajZ5MUpHdk1p?=
- =?utf-8?B?R1BhQXFUMGVrRkxkYm51dXJVWFoxZHVwMWlMRGp3L1k3TEpkREdkaTM1K3Bs?=
- =?utf-8?B?aVpHUG51bXBTVFpnY0g4TFM0SStRNWRjK3hpM295ODV2QTJzTVl6Qk5Ba09z?=
- =?utf-8?B?cS9NQlhXcWhOUGV2NlVIdFJ4SGdnOFZNdEl6TU8xL2JSQi9QdytxUjdBclNI?=
- =?utf-8?B?ZUVLazRoL29YT0dtdlN0L3dtUjc2ckorN2ZRTUl6blZ0MTR0TjRPWDkyaTVX?=
- =?utf-8?B?VVhVbkFZQ2NOdXIzUFkwdUhOZ25YYUYyeXhQNE9YWUYzQ1BhK2NIejBoM0FW?=
- =?utf-8?B?N1FHeHBKZjlkc3FPSnJGSUdoUG9tNnIrSGlQZnFqQytleEZtdWpqR2VFNS83?=
- =?utf-8?B?ZHpTeFliSHRhWEFMQTE4YVBxcHFvc243cjNJOVNGYWZPdjZaQk9vOU1UK0lX?=
- =?utf-8?B?QzlLcHJHbmkxMnYxYnI0clc2d2QyY2lGUERUem1xVXNtUVdKeWVZcnRhNXFV?=
- =?utf-8?B?VUFxWXhGZFROaUowbWRFMGQ2NlNzQ2JrWjZqOGhSNEMzQXlGS3VNdk0zck81?=
- =?utf-8?B?L29CNzkzWXJNUmxtQmNONjFsUTdONjFtK0JTbUNEcGMyaXYwS3MxYlJ2MTlr?=
- =?utf-8?B?WmVIN3pZQjZYSUxjdkFyODdQZHgzdzZqYlNWeUtmcGR3VkFuaWIraU4yazVx?=
- =?utf-8?B?STFoNURCalJxQURuekxKdW1qRlUvaGdUQkFva0dtaUZyN2djRUppNTdvTU1H?=
- =?utf-8?B?S1pYbkRXc1dxM1h6M0dycWRDREdGR1ZQWngxcUZwYnQxYXdjTW1qcW1Md2JR?=
- =?utf-8?B?a1Q4K0w2RHE4czVBQm9pNHQ2U3J3TzBDb3N1U3V1TFVheTlwc2ZJZzdLSFVi?=
- =?utf-8?B?dld0UEE3MTBBY3BQdVk0YVNZdXJqVzFlcW9EU2p4Z0cyL0NZc2FDaFM5QnNk?=
- =?utf-8?B?K2xnN1hVU2JmTmpPTU8xL09nd2lFYWRQYVdLSTlmOWozMG4vV2FURVJ3bzBK?=
- =?utf-8?B?Wi8vL1VDMkV5MzFBVnpNZ09hZE8yTjJaMGY5V3RaOWxnZ0U4WXNVNGV0cFdl?=
- =?utf-8?B?cDNTZGJRV0tkNHFzUEJvUTR1d2g0SXYvS09xcnQ0L1pGaDJFZFNzOFBjM2dy?=
- =?utf-8?B?aWtBOTlPQjU2dTBoN3BEVkZKRE0weFpxOC80bGVrbHI4eVR6bkUrTnBPWlJR?=
- =?utf-8?B?ck5aWUh3NnJ0dUoxN0JRYzlka2NXSTlJZzN0RmNHL0JuNWk4Wllvdz09?=
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 5c5369cd-ffef-47fb-d79a-08df14637cb1
-X-MS-Exchange-CrossTenant-AuthSource: CHXPR12MB999219.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Sep 2026 02:29:23.7911
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: T2crqjoZUBnh2uJavoqc94OSC7soEz1LMPV53bIpK5Sn65abFUdpyx8ya+Nl4NVL1fkkL22sad+ivtm+rsm8XA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DSVPR12MB999123
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2] PCI: cadence: Store the core controller in platform
+ drvdata
+To: Aksh Garg <a-garg7@ti.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Lorenzo Pieralisi <lpieralisi@kernel.org>,
+ =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+ Manivannan Sadhasivam <mani@kernel.org>
+Cc: Rob Herring <robh@kernel.org>, Tom Joseph <tjoseph@cadence.com>,
+ Vladimir Oltean <vladimir.oltean@nxp.com>, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+References: <20260915082826.4135665-1-lilinmao@kylinos.cn>
+ <1789614322740341.344.seg@mailgw.kylinos.cn>
+From: Linmao Li <lilinmao@kylinos.cn>
+In-Reply-To: <1789614322740341.344.seg@mailgw.kylinos.cn>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
 
+在 2026/9/16 18:38, Aksh Garg 写道:
+>
+>
+> On 15/09/26 13:58, Linmao Li wrote:
+>> cdns_plat_pcie_probe() stores a struct cdns_plat_pcie pointer with
+>> platform_set_drvdata(). cdns_plat_pcie_shutdown() and the callbacks in
+>> cdns_pcie_pm_ops retrieve the same pointer with dev_get_drvdata() and
+>> use it as a struct cdns_pcie pointer. This makes them read phy_count
+>> and phy beyond the wrapper.
+>>
+>> struct cdns_plat_pcie only contains a pointer to struct cdns_pcie. Drop
+>> the redundant wrapper and store the struct cdns_pcie pointer directly.
+>>
+>> Fixes: bd22885aa188 ("PCI: cadence: Refactor driver to use as a core 
+>> library")
+>> Suggested-by: Aksh Garg <a-garg7@ti.com>
+>> Signed-off-by: Linmao Li <lilinmao@kylinos.cn>
+>> ---
+>
+> Suggested-by tag can be dropped IMO as the suggestion was not the core 
+> insight of the patch (to store the struct cdns_pcie pointer directly).
+>
+> Reviewed-by: Aksh Garg <a-garg7@ti.com>
+>
+> Regards,
+> Aksh Garg
 
-On 17/9/26 03:49, Borislav Petkov wrote:
-> On Wed, Sep 16, 2026 at 09:51:41PM +1000, Alexey Kardashevskiy wrote:
->> +	if (device_tcb_trusted(dev))
-> 
-> Where is that function and the rest of the gunk needed for me to apply before
-> I review those?
-> 
-> The patches on that branch:
-> 
-> https://github.com/AMDESE/linux-kvm/commits/tsm-next
-> 
-> which come before those here are enough?
-
-Correct, the patches between v7.3-rc2 and 01/17 (can drop samples and tools, obviously) are enough. It is basically recent tagged upstream + rebased Dan's https://lore.kernel.org/r/20260705220819.2472765-1-djbw@kernel.org
-
-What device_tcb_trusted() means is still debatable, the earlier proposal was including a module flag saying that the driver is trusted too, I think we are ditching it now.
+Agreed, please drop the Suggested-by tag when applying. Happy to resend 
+a v3 with it removed if that's preferred.
 
 Thanks,
+Linmao
 
--- 
-Alexey
-
+>
+>> Changes in v2:
+>> - Drop the redundant struct cdns_plat_pcie wrapper (Aksh Garg).
+>> ---
+>>   .../controller/cadence/pcie-cadence-plat.c    | 27 ++++++-------------
+>>   1 file changed, 8 insertions(+), 19 deletions(-)
+>>
+>> diff --git a/drivers/pci/controller/cadence/pcie-cadence-plat.c 
+>> b/drivers/pci/controller/cadence/pcie-cadence-plat.c
+>> index 13edc6be21f5..4a24302cc5b2 100644
+>> --- a/drivers/pci/controller/cadence/pcie-cadence-plat.c
+>> +++ b/drivers/pci/controller/cadence/pcie-cadence-plat.c
+>> @@ -14,14 +14,6 @@
+>>     #define CDNS_PLAT_CPU_TO_BUS_ADDR    0x0FFFFFFF
+>>   -/**
+>> - * struct cdns_plat_pcie - private data for this PCIe platform driver
+>> - * @pcie: Cadence PCIe controller
+>> - */
+>> -struct cdns_plat_pcie {
+>> -    struct cdns_pcie        *pcie;
+>> -};
+>> -
+>>   static const struct of_device_id cdns_plat_pcie_of_match[];
+>>     static u64 cdns_plat_cpu_addr_fixup(struct cdns_pcie *pcie, u64 
+>> cpu_addr)
+>> @@ -36,9 +28,9 @@ static const struct cdns_pcie_ops cdns_plat_ops = {
+>>   static int cdns_plat_pcie_probe(struct platform_device *pdev)
+>>   {
+>>       const struct cdns_plat_pcie_of_data *data;
+>> -    struct cdns_plat_pcie *cdns_plat_pcie;
+>>       struct device *dev = &pdev->dev;
+>>       struct pci_host_bridge *bridge;
+>> +    struct cdns_pcie *pcie;
+>>       struct cdns_pcie_ep *ep;
+>>       struct cdns_pcie_rc *rc;
+>>       bool is_rc;
+>> @@ -51,11 +43,6 @@ static int cdns_plat_pcie_probe(struct 
+>> platform_device *pdev)
+>>       is_rc = data->is_rc;
+>>         pr_debug(" Started %s with is_rc: %d\n", __func__, is_rc);
+>> -    cdns_plat_pcie = devm_kzalloc(dev, sizeof(*cdns_plat_pcie), 
+>> GFP_KERNEL);
+>> -    if (!cdns_plat_pcie)
+>> -        return -ENOMEM;
+>> -
+>> -    platform_set_drvdata(pdev, cdns_plat_pcie);
+>>       if (is_rc) {
+>>           if (!IS_ENABLED(CONFIG_PCIE_CADENCE_PLAT_HOST))
+>>               return -ENODEV;
+>> @@ -67,9 +54,9 @@ static int cdns_plat_pcie_probe(struct 
+>> platform_device *pdev)
+>>           rc = pci_host_bridge_priv(bridge);
+>>           rc->pcie.dev = dev;
+>>           rc->pcie.ops = &cdns_plat_ops;
+>> -        cdns_plat_pcie->pcie = &rc->pcie;
+>> +        pcie = &rc->pcie;
+>>   -        ret = cdns_pcie_init_phy(dev, cdns_plat_pcie->pcie);
+>> +        ret = cdns_pcie_init_phy(dev, pcie);
+>>           if (ret) {
+>>               dev_err(dev, "failed to init phy\n");
+>>               return ret;
+>> @@ -94,9 +81,9 @@ static int cdns_plat_pcie_probe(struct 
+>> platform_device *pdev)
+>>             ep->pcie.dev = dev;
+>>           ep->pcie.ops = &cdns_plat_ops;
+>> -        cdns_plat_pcie->pcie = &ep->pcie;
+>> +        pcie = &ep->pcie;
+>>   -        ret = cdns_pcie_init_phy(dev, cdns_plat_pcie->pcie);
+>> +        ret = cdns_pcie_init_phy(dev, pcie);
+>>           if (ret) {
+>>               dev_err(dev, "failed to init phy\n");
+>>               return ret;
+>> @@ -114,13 +101,15 @@ static int cdns_plat_pcie_probe(struct 
+>> platform_device *pdev)
+>>               goto err_init;
+>>       }
+>>   +    platform_set_drvdata(pdev, pcie);
+>> +
+>>       return 0;
+>>      err_init:
+>>    err_get_sync:
+>>       pm_runtime_put_sync(dev);
+>>       pm_runtime_disable(dev);
+>> -    cdns_pcie_disable_phy(cdns_plat_pcie->pcie);
+>> +    cdns_pcie_disable_phy(pcie);
+>>         return ret;
+>>   }
+>>
+>> base-commit: 9a9d18547ddc97a73d5d90cff4d5aef90bd8c15d
