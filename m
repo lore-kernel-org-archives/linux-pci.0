@@ -1,155 +1,195 @@
-Received: from mail-ua1-f97.google.com (mail-ua1-f97.google.com [209.85.222.97])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0b-00190b01.pphosted.com (mx0b-00190b01.pphosted.com [67.231.157.127])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B79350390B
-	for <linux-pci@vger.kernel.org>; Thu, 17 Sep 2026 17:09:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.97
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7AD4254705B
+	for <linux-pci@vger.kernel.org>; Thu, 17 Sep 2026 17:11:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.157.127
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789664984; cv=none; b=VS8PoYHVbhHwOR4NBuOB/OvXq+EItlYZHqTZTtiPZB+wGBMs02BB8wgmlY19WPBWt1yeCFlqildZjKPV6CSPE+62/xymXtqvJMC38SLwvLIu0PQ7i5QneEpId3zJ/4PdC1h6LqT4x4xihL8zgp2XTCUQn+06MjU6uw0QNvXd7gQ=
+	t=1789665102; cv=none; b=BnR64mkGwoXVFq1n+NVI5zO1GIMyjTqK4gWUT7bNwsYOlFgef08vuXqTUsCL8dx5/PcS42kYAZ873z2gOB6Uj70dMSaojUfaNF+DyVzsAJAt7xd+wCovqHkTQk4bQiN3QOXnH8MrIqodos7S86bG2qyGkA++5B3SoS5z9ekcfWA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789664984; c=relaxed/simple;
-	bh=iERYCGZnUZkW2UKFoxm1TNZ+omkMIA/wVgi32lNR6UQ=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=jsxx3NLiAvy/1DxmAgH1BlI8gyYngDe5qWhpcvIDX03bQFlylMtuFsB4nvCAPqyFatsKzLqrd4znvwy28WAlFR5gjRe2mkqyw+qYt83jbLHud/fCsFcbqos/In4GXaK0PACZ2EJd9BaSfJXtecK+ych1mZiGvKUvJ9NnfJaVD1I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=b1tq5QHR; arc=none smtp.client-ip=209.85.222.97
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
+	s=arc-20240116; t=1789665102; c=relaxed/simple;
+	bh=hsrMEONp5y1IExMVkG695X37L1XA4lSrGYQQlB2ePC8=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=cH1otW7Qa2EF5ioJJ3Xki4PkCB6VCcoarVeNHwByG6AQf4ROka7cbbEPEqmE+IrtSFQTPXeWOe/Fr2uyC8b67E9asmEsV9sbOVaXL0gOCJ06F+XY2ddPH838vrXjVKG6ypL18fSkEwIlk1TaOVr2lsvwR51VbDMoCYLO/hoXkWg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=akamai.com; spf=pass smtp.mailfrom=akamai.com; dkim=pass (2048-bit key) header.d=akamai.com header.i=@akamai.com header.b=F2SStVtQ; arc=none smtp.client-ip=67.231.157.127
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=akamai.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=akamai.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="b1tq5QHR"
-Received: by mail-ua1-f97.google.com with SMTP id a1e0cc1a2514c-98076bb236eso244605241.0
-        for <linux-pci@vger.kernel.org>; Thu, 17 Sep 2026 10:09:42 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1789664982; x=1790269782;
-        h=content-transfer-encoding:content-type:in-reply-to:autocrypt:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:dkim-signature:x-gm-gg:x-gm-message-state:from:to
-         :cc:subject:date:message-id:reply-to:content-type;
-        bh=6ZBcYFlUWh2QD/UxUu1L+haLQxP28ejhx5/K8jLq5F0=;
-        b=y7eEJOXpxSBVfR7QH1osy8F52HgsFUVJblhzK4SQeNWmE6Tw95a4rHV28Xe1Pwp58N
-         z2lIqXp1Cj6clXhkLI0sW87GFfiHsrA0pzU2A68bWf0f5CpF/uk0zJ46FOlJSP6Lq//I
-         kTycEB8ZGN1rSIVtn/uj9FGuQjkqmQIjmRsTAfV2chXHPIKELP2PW3QSIlMoEOXeLCBf
-         q+C6v/RcNsXDdb9OHoyQwkga+TX/EoznUbQ2GJQxJkDQAoXa2oCbG5UJWJg4L4H6MKD6
-         5eMv0XRr8JQBKJ2/ytrb8G4J1R2LEeGP+LzMl4iZsxzeYW/jeFKnqJNkdJkxEF4J8m57
-         tZ+g==
-X-Forwarded-Encrypted: i=1; AKwUvByzfrlGWODlUNuwc6fwLtShiabGuDsneqnWynU7WUNUh+m9c0FBk4sES7l0Uio2q5516Ts/zINb+eA=@vger.kernel.org
-X-Gm-Message-State: AFuF++nXx2mLTC1F1bttfUah2wcmge50hUxwx8StLFIL/E4CH7BwMt76
-	ah6LiI/2v0vHNjG0B2yR3yOIuQ6khAh/Hx4S6y6yqXdFKEOLhj6LJud1AGn6ozFJalQpW+cUjiN
-	K83m0t5fcNqfTGZ4edStg+37CyybsKnqUOgCk50I5jAZl19/5W3u8lRXewSI/5KyByLWXpuym3F
-	1DIIOeObmICAjq/YB/tyrq6Nwsg0FYhljrIL9NTgE+UnFESn0fEuchKjf5cceI2mjFFkcyN8z2m
-	SIbd5oKB+asrortPkR2
-X-Gm-Gg: AYBFou2+pG+74vgL+m0zYpTZV2RQRCEaWCWDCiQ6mONWibdK06kAKcxuvhCZ8ittDRR
-	iOW2iAnmIdTEx5PfyJEuf1rXiDa7rK4NXrJmQkPhB/suq4iZO//7Nj8iY6hsvaWdrVJWA0u8LsD
-	71xUklaNL94YRJIYEcPbHm5ZE4CMsz6iaPA/wmZX7xfBZPm+H2CM3D9UG7ldg8/swBZ7RrwKSLL
-	gyyHrSScOIdjXH5dMISVw54PxNfqYMP5rtp44QiJmrn/fxEVdcRebr1jmy36VNKeUAm2MMSu8T8
-	Y6O5xwf/rc0zivsBOgUnOgHFGEYB6vb5xqWWDHnKhfD0TRaQifeopILNNnS4b3sHFC6IDmsO5pn
-	Xo+KfBzJe+9L1iZgQyzfY4/Iw/8AQOowt0qXyFgKnnydd+EH4eMnhMNjfGz/9VZDRaC2i2jTORH
-	s9XYwV+YLbfT/2+XoM0VOmppklp1QLNlqka78WL0sB8bY=
-X-Received: by 2002:a05:6102:149c:b0:7a1:f7d2:e828 with SMTP id ada2fe7eead31-7a204eb4c2dmr1435363137.33.1789664981809;
-        Thu, 17 Sep 2026 10:09:41 -0700 (PDT)
-Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-125.dlp.protect.broadcom.com. [144.49.247.125])
-        by smtp-relay.gmail.com with ESMTPS id a1e0cc1a2514c-9832326cf49sm1114090241.0.2026.09.17.10.09.41
-        for <linux-pci@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 17 Sep 2026 10:09:41 -0700 (PDT)
-X-Relaying-Domain: broadcom.com
-X-CFilter-Loop: Reflected
-Received: by mail-qk1-f197.google.com with SMTP id af79cd13be357-9394ad7f64aso156403585a.3
-        for <linux-pci@vger.kernel.org>; Thu, 17 Sep 2026 10:09:41 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1789664981; x=1790269781; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:autocrypt:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=6ZBcYFlUWh2QD/UxUu1L+haLQxP28ejhx5/K8jLq5F0=;
-        b=b1tq5QHRuV3j//BzmwBtVIWmsqpeLM/4pI1wVMmxhx4cO8v01oxAxS7IR+ol6mNHDr
-         ueQqWdPnbkeSsVhVMLYIfqyCqhrFstpSC4gZ3UndnK5d0GBxp7Vdc+adpdw7JuklCCPz
-         tqbTj4lRdVy0FMDWQ0qK+hYelomDzBWVhGqyY=
-X-Forwarded-Encrypted: i=1; AKwUvByyXTGgd0/OubBY1LB8vZj9pLt/1ScaGDd4c7XX7kF34pP+8ndILKEYincBPM+IuqI5GRQsn7iqFyA=@vger.kernel.org
-X-Received: by 2002:a05:620a:a18d:10b0:93b:b849:d11e with SMTP id af79cd13be357-93bb849d318mr1128742785a.49.1789664981284;
-        Thu, 17 Sep 2026 10:09:41 -0700 (PDT)
-X-Received: by 2002:a05:620a:a18d:10b0:93b:b849:d11e with SMTP id af79cd13be357-93bb849d318mr1128738285a.49.1789664980874;
-        Thu, 17 Sep 2026 10:09:40 -0700 (PDT)
-Received: from [10.67.48.245] ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-91252cc7ce2sm2236776d6.34.2026.09.17.10.09.38
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 17 Sep 2026 10:09:40 -0700 (PDT)
-Message-ID: <34743ec6-9f95-4be3-b941-a1873beea3ee@broadcom.com>
-Date: Thu, 17 Sep 2026 10:09:37 -0700
+	dkim=pass (2048-bit key) header.d=akamai.com header.i=@akamai.com header.b="F2SStVtQ"
+Received: from pps.filterd (m0050102.ppops.net [127.0.0.1])
+	by m0050102.ppops.net-00190b01. (8.18.1.11/8.18.1.11) with ESMTP id 68HFaM4q2733433;
+	Thu, 17 Sep 2026 17:17:03 +0100
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=akamai.com; h=cc
+	:content-transfer-encoding:content-type:date:from:message-id
+	:mime-version:subject:to; s=apr2026.eng; bh=i2DXN4n7YaFaRBP9QD4Y
+	zzSXf5Q5ziBmoWwyQVjJRik=; b=F2SStVtQEWElXMOMI3CVMOwW/MOv4QNzj3pk
+	yElj2bN5NURLZJDRHXmF/lExVcRrJXLfivu6Wje1QwqCrP2luJyQ/v09QmF56VGP
+	B6ZtAmSB/bI55VcOcRIo8DwNxesjkkYzQJV3Z/musmqL8XdoUSyEq9DEfZDU+l6v
+	tTdu4zoiUVXHF/7AvDW+1mzZlRVIOwS+A+RAMc2sLueTZyLhURjl+ipSasdCt0GR
+	TlrTkAQW6XVTaRMhW3hJRuMYLisjxB2ZGFafUOuBqI2HUH+dQomlrK2wqBk7Vyzm
+	NSGPplLOaKnDy4JWcPvsq2PV5E/6Lmx8fH/jH3S1TvX5C/bRsA==
+Received: from prod-mail-ppoint5 (prod-mail-ppoint5.akamai.com [184.51.33.60])
+	by m0050102.ppops.net-00190b01. (PPS) with ESMTPS id 4gr021m45t-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 17 Sep 2026 17:17:02 +0100 (BST)
+Received: from pps.filterd (prod-mail-ppoint5.akamai.com [127.0.0.1])
+	by prod-mail-ppoint5.akamai.com (8.18.1.7/8.18.1.7) with ESMTP id 68HG6Cl8029301;
+	Thu, 17 Sep 2026 09:17:02 -0700
+Received: from email.msg.corp.akamai.com ([172.27.91.41])
+	by prod-mail-ppoint5.akamai.com (PPS) with ESMTPS id 4gn4q7urp0-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 17 Sep 2026 09:17:01 -0700 (PDT)
+Received: from usma1ex-dag5mb2.msg.corp.akamai.com (172.27.91.41) by
+ usma1ex-dag5mb2.msg.corp.akamai.com (172.27.91.41) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.43; Thu, 17 Sep 2026 09:17:01 -0700
+Received: from bos-lpnz1z1y (172.27.118.139) by
+ usma1ex-dag5mb2.msg.corp.akamai.com (172.27.91.41) with Microsoft SMTP Server
+ id 15.2.2562.43 via Frontend Transport; Thu, 17 Sep 2026 09:17:01 -0700
+Received: by bos-lpnz1z1y (Postfix, from userid 56609)
+	id 04138241CAB; Thu, 17 Sep 2026 12:17:00 -0400 (EDT)
+From: jlefkowi <jlefkowi@akamai.com>
+To: <linux-pci@vger.kernel.org>
+CC: <mj@ucw.cz>, <bchaney@akamai.com>, <mpelland@akamai.com>,
+        jlefkowi
+	<jlefkowi@akamai.com>
+Subject: [PATCH 0/3] setpci: variable-length & auto-length read capability
+Date: Thu, 17 Sep 2026 12:16:28 -0400
+Message-ID: <20260917161631.801636-1-jlefkowi@akamai.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 13/13] PCI: brcmstb: Split up complicated function into
- two variants
-To: Jim Quinlan <james.quinlan@broadcom.com>, linux-pci@vger.kernel.org,
- Nicolas Saenz Julienne <nsaenz@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- bcm-kernel-feedback-list@broadcom.com, jim2101024@gmail.com
-Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>,
- =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
- Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
- "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE"
- <linux-rpi-kernel@lists.infradead.org>,
- "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE"
- <linux-arm-kernel@lists.infradead.org>,
- open list <linux-kernel@vger.kernel.org>
-References: <20260911233541.1650895-1-james.quinlan@broadcom.com>
- <20260911233541.1650895-14-james.quinlan@broadcom.com>
-Content-Language: en-US, fr-FR
-From: Florian Fainelli <florian.fainelli@broadcom.com>
-Autocrypt: addr=florian.fainelli@broadcom.com; keydata=
- xsBNBFPAG8ABCAC3EO02urEwipgbUNJ1r6oI2Vr/+uE389lSEShN2PmL3MVnzhViSAtrYxeT
- M0Txqn1tOWoIc4QUl6Ggqf5KP6FoRkCrgMMTnUAINsINYXK+3OLe7HjP10h2jDRX4Ajs4Ghs
- JrZOBru6rH0YrgAhr6O5gG7NE1jhly+EsOa2MpwOiXO4DE/YKZGuVe6Bh87WqmILs9KvnNrQ
- PcycQnYKTVpqE95d4M824M5cuRB6D1GrYovCsjA9uxo22kPdOoQRAu5gBBn3AdtALFyQj9DQ
- KQuc39/i/Kt6XLZ/RsBc6qLs+p+JnEuPJngTSfWvzGjpx0nkwCMi4yBb+xk7Hki4kEslABEB
- AAHNMEZsb3JpYW4gRmFpbmVsbGkgPGZsb3JpYW4uZmFpbmVsbGlAYnJvYWRjb20uY29tPsLB
- IQQQAQgAywUCZWl41AUJI+Jo+hcKAAG/SMv+fS3xUQWa0NryPuoRGjsA3SAUAAAAAAAWAAFr
- ZXktdXNhZ2UtbWFza0BwZ3AuY29tjDAUgAAAAAAgAAdwcmVmZXJyZWQtZW1haWwtZW5jb2Rp
- bmdAcGdwLmNvbXBncG1pbWUICwkIBwMCAQoFF4AAAAAZGGxkYXA6Ly9rZXlzLmJyb2FkY29t
- Lm5ldAUbAwAAAAMWAgEFHgEAAAAEFQgJChYhBNXZKpfnkVze1+R8aIExtcQpvGagAAoJEIEx
- tcQpvGagWPEH/2l0DNr9QkTwJUxOoP9wgHfmVhqc0ZlDsBFv91I3BbhGKI5UATbipKNqG13Z
- TsBrJHcrnCqnTRS+8n9/myOF0ng2A4YT0EJnayzHugXm+hrkO5O9UEPJ8a+0553VqyoFhHqA
- zjxj8fUu1px5cbb4R9G4UAySqyeLLeqnYLCKb4+GklGSBGsLMYvLmIDNYlkhMdnnzsSUAS61
- WJYW6jjnzMwuKJ0ZHv7xZvSHyhIsFRiYiEs44kiYjbUUMcXor/uLEuTIazGrE3MahuGdjpT2
- IOjoMiTsbMc0yfhHp6G/2E769oDXMVxCCbMVpA+LUtVIQEA+8Zr6mX0Yk4nDS7OiBlvOwE0E
- U8AbwQEIAKxr71oqe+0+MYCc7WafWEcpQHFUwvYLcdBoOnmJPxDwDRpvU5LhqSPvk/yJdh9k
- 4xUDQu3rm1qIW2I9Puk5n/Jz/lZsqGw8T13DKyu8eMcvaA/irm9lX9El27DPHy/0qsxmxVmU
- pu9y9S+BmaMb2CM9IuyxMWEl9ruWFS2jAWh/R8CrdnL6+zLk60R7XGzmSJqF09vYNlJ6Bdbs
- MWDXkYWWP5Ub1ZJGNJQ4qT7g8IN0qXxzLQsmz6tbgLMEHYBGx80bBF8AkdThd6SLhreCN7Uh
- IR/5NXGqotAZao2xlDpJLuOMQtoH9WVNuuxQQZHVd8if+yp6yRJ5DAmIUt5CCPcAEQEAAcLB
- gQQYAQIBKwUCU8AbwgUbDAAAAMBdIAQZAQgABgUCU8AbwQAKCRCTYAaomC8PVQ0VCACWk3n+
- obFABEp5Rg6Qvspi9kWXcwCcfZV41OIYWhXMoc57ssjCand5noZi8bKg0bxw4qsg+9cNgZ3P
- N/DFWcNKcAT3Z2/4fTnJqdJS//YcEhlr8uGs+ZWFcqAPbteFCM4dGDRruo69IrHfyyQGx16s
- CcFlrN8vD066RKevFepb/ml7eYEdN5SRALyEdQMKeCSf3mectdoECEqdF/MWpfWIYQ1hEfdm
- C2Kztm+h3Nkt9ZQLqc3wsPJZmbD9T0c9Rphfypgw/SfTf2/CHoYVkKqwUIzI59itl5Lze+R5
- wDByhWHx2Ud2R7SudmT9XK1e0x7W7a5z11Q6vrzuED5nQvkhAAoJEIExtcQpvGagugcIAJd5
- EYe6KM6Y6RvI6TvHp+QgbU5dxvjqSiSvam0Ms3QrLidCtantcGT2Wz/2PlbZqkoJxMQc40rb
- fXa4xQSvJYj0GWpadrDJUvUu3LEsunDCxdWrmbmwGRKqZraV2oG7YEddmDqOe0Xm/NxeSobc
- MIlnaE6V0U8f5zNHB7Y46yJjjYT/Ds1TJo3pvwevDWPvv6rdBeV07D9s43frUS6xYd1uFxHC
- 7dZYWJjZmyUf5evr1W1gCgwLXG0PEi9n3qmz1lelQ8lSocmvxBKtMbX/OKhAfuP/iIwnTsww
- 95A2SaPiQZA51NywV8OFgsN0ITl2PlZ4Tp9hHERDe6nQCsNI/Us=
-In-Reply-To: <20260911233541.1650895-14-james.quinlan@broadcom.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-09-17_03,2026-09-16_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0
+ lowpriorityscore=0 adultscore=0 bulkscore=0 phishscore=0 spamscore=0
+ suspectscore=0 malwarescore=0 classifier=typeunknown authscore=0 authtc=
+ authcc= route=outbound adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2609040000 definitions=main-2609170229
+X-Proofpoint-GUID: pSxumbJ-tXYDC9E0ecV4AFcpGaLForeS
+X-Proofpoint-ORIG-GUID: pSxumbJ-tXYDC9E0ecV4AFcpGaLForeS
+X-Proofpoint-Spam-Info: AW1haW4tMjYwOTE3MDIzMSBTYWx0ZWRfXxih4rrw0RmDV
+ 5JoPuvcvMQTfOjZr/u0ECx26P0t6jEnrQQf/H6xyOfo8fGggh/EnXbLfMjrCrmfH1LfiSp+rlqK
+ bTiHY0IqmQCSGtuk+Zd2E8cCVLF6pNg=
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTE3MDIzMSBTYWx0ZWRfXwUc2AbUtgguT
+ g6tsCGJOP+paj+ORHxe5vyLI6l9nXTcZVcQQmQNR23xRhRllYmwA1ICY9nsQzYVWUGH/NzI1YN3
+ 89uiygCbyeGIg5xPHNzLIXW6FNu39YvJJ0r2YdmyjA7HxMsSuhUQRxtwBaBcJEKGNP+7BgPQ1hq
+ VQWSGjkVtOnDUcjrItM9zjg3Zl7dsfJTWccgf0bWUqBJ8FHZOl2Dl/1WCTlzeGyLZveiwYUlueY
+ u9tL7uUDszp2dkw+EDwZqQyZv8OT52ukEFCPqu7LUAZUGzq8OeP8nNKR1sQu0r/gTL6RrDrmI8X
+ Yc8vlxak6g/vzwbGWZzpY8iApPvOd1cbGc/K75cRyYTzmhxP6YDOSZTI6QcjIJNFEd544jO3YMQ
+ Rxw7mH/fEK5BLBUlHh0pn43bCeLRr3BH227E/Z7ntsqTcMvu4QKtB/AOpEh8u5nblxM3HYmYoVj
+ hvbNu4GBgKbu9JR63OA==
+X-Authority-Analysis: v=2.4 cv=c/g+0h9l c=1 sm=1 tr=0 ts=6aac127e cx=c_pps
+ a=NpDlK6FjLPvvy7XAFEyJFw==:117 a=NpDlK6FjLPvvy7XAFEyJFw==:17
+ a=VdqzKS8jKosA:10 a=VkNPw1HP01LnGYTKEx00:22 a=Ifg-1AOnLHOf1gn6spyb:22
+ a=Pq72nHwyFlvh3xMh7ENp:22 a=uEKwMW1o1GMmNkmWuaEA:9
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-09-17_03,2026-09-16_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0
+ priorityscore=1501 suspectscore=0 clxscore=1011 phishscore=0
+ lowpriorityscore=0 malwarescore=0 bulkscore=0 impostorscore=0 spamscore=0
+ adultscore=0 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2609040000
+ definitions=main-2609170231
 
-On 9/11/26 16:35, Jim Quinlan wrote:
-> The function brcm_pcie_get_inbound_wins() is abstruse.  Most of
-> its code is used exclusively by older chips, where the PCIe HW employed a
-> baroque internal inbound window mapping scheme which was an artifact for
-> when the PCIe would be configured as an endpoint.
-> 
-> Create two variants of this function, one for the newer chips and one for
-> the older chips, and assign them using the config_data structures.
-> 
-> Signed-off-by: Jim Quinlan <james.quinlan@broadcom.com>
+Hi!
 
-Reviewed-by: Florian Fainelli <florian.fainelli@broadcom.com>
--- 
-Florian
+This set of patches adds a new operator with two variants to setpci--
+.V[N] and .V--with the purpose of making it easier to perform reads
+larger than four bytes. .V[N] performs a dynamically sized read of the target
+capability, with respect to the provided number of bytes to read, N.
+.V operates solely on vendor-defined capabilities, performing a
+dynaically sized read just like .V[N], with the added capability of
+automatically resolving the size of the read at runtime. This means the
+user does not have to know the size of the read they would like to
+perform for vendor-defined capabilites. Both changes affect no core
+functionality of setpci, with all existing functionality working the
+same now as it did before the patch.
+
+This set of patches provides the following (in the order listed):
+
+1. Add a new .V[N] operator.
+
+  .V[N] performs a dynamically sized read of the target capability. As input,
+  it takes the length as a hex-value. The operator accepts offsets
+  just like any other operator, but does not adjust the provided length relative
+  to the offset provided; it assumes the user has adjusted the length
+  with respect to the offset so to not read out of that capability's
+  defined space. .V[N] returns the requested read in big-endian as one result,
+  meaning the user does not have to organize a chain of reads manually.
+
+  Ex: setpci -s 03:00.0 ECAP_DSN.V[14]
+
+2. Add a new .V extension of the .V[N] operator.
+
+  .V requires and validates that the target capability is a vendor-defined
+  capability such that its vendor-defined length can be read. .V accepts offsets
+  just like any other operator, adjusting the vendor-defined length with respect to
+  the offset provided. .V returns the requested read in big-endian as one
+  result too, such that the user does not need to know the length of vendor-defined
+  capabilites nor reassmble the result manually.
+
+  This patch does not forbid users from using the .V[N] operator for
+  vendor-defined capabilities; they are welcome to use either and can
+  expect the same, consistent result from both.
+
+  Ex: setpci -s 04:02.0 ECAP_VNDR.V
+
+3. Documentation Updates
+
+  Updates the man pages to include the new operators, including use-case examples.
+
+All capabilities are read specific. If a user tries to use the .V or .V[N] operator
+for writes, an exception will be thrown.
+
+This is being posted here as an addition to the PR opened on the
+pciutils github due to lack of motion on that PR. The patches added are
+already in use for internal purposes.
+
+Background
+----------
+
+The reason for the interest in this patch is purely convenience for
+reads that are larger than four bytes.
+
+Suppose we want to read some capability that is 16 bytes. Previously, we
+would have to perform `setpci -s  bus:device.function CAP.L CAP+4.L
+CAP+8.L CAP+c.L`, gather the results, and combine them ourselves. With
+the patch, this call + the combining logic turns into: `setpci -s
+bus:device.function CAP.V[10]`. This is even more apparent for
+vendor-defined lengths, where users have to go into lspci to find the
+lengths, perform the read, and combine the results to get their answer;
+with this patch, that is condensed into one setpci invocation and no
+length-knowledge.
+
+Caveats
+-------
+
+As mentioned above, writes are not permitted to be used with the .V[N] or .V
+operator. There is no safe way to perform writes this way without the
+risk of tearing, and thus the feature has been disabled entirely,
+throwing an error if attempted.
+
+Summary
+-------
+
+jlefkowi (3):
+  feature: add .V[N] variable-length access specifier such that reads
+    are allowed within a window of 'N' bytes (inputted as hex)
+  feature: add auto length discovery for vendor defined capabilities.
+  doc: make the documentationf or .V[len] and .V more concise
+
+ setpci.c   | 172 +++++++++++++++++++++++++++++++++++++++++++++++------
+ setpci.man |  22 +++++++
+ 2 files changed, 176 insertions(+), 18 deletions(-)
+
+--
+2.43.0
+
