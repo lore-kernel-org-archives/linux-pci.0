@@ -1,65 +1,60 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 809F6448D01
-	for <linux-pci@vger.kernel.org>; Thu, 17 Sep 2026 06:59:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F82546C83E
+	for <linux-pci@vger.kernel.org>; Thu, 17 Sep 2026 07:17:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789628374; cv=none; b=FrJ8Xlvhe+O5n8MDbn3CWcR1KRMuQSAdB760GcH1K341xsnd/82juIYK46h1u3QZJx++xZ1c83v/X2BPaRcLcJI/kGvQ7TqZvUobZKfyBxeNtfGGpYCYP8Jq2nPKko4lTGLBkQViD8hxI5AGcb4ZrGJ6PSFkC1FHUBx+ksEidPs=
+	t=1789629430; cv=none; b=K6dTMfDrVNRUvQROK21lYf4AuV3kfsjKb4WWVbYIx0grJgJAGsHsXmllYKZC2/TuXjDVqYXa2wui5Ratn3bjdmhp34HPijkSeKMvRpjPSLGF7169njlaIlWLBzJ5URXOt1XZ3KId8hhQoYHaR0XG6H1HMXweTfTZ/hrIQQtwQQM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789628374; c=relaxed/simple;
-	bh=hJ5GJ4vLuXnoyUYhLQDMtKomFHUpowUPUgS4aTwNKpY=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=QfnzIt+47LhRgW7diUIaTvBPc3axKI8uA1/L8ZuKwokQQVKkjF9IqUFS+QTqs0JnjVcFnjcCjPFv8CUt56X9PFt71U/ZzqEJR0znfzReopjAAE7h9iyJ/7LUl2ataGgdQETOcHggsa3GeufPipKN/Z4AbxIw0kx6wtIlPCuoYoI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=ZXuxOBdt; arc=none smtp.client-ip=170.10.129.124
+	s=arc-20240116; t=1789629430; c=relaxed/simple;
+	bh=psMZRwkOfr0bnXRHKcURRMVFhIPKVSfM6YNHBR7Q0j8=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=B9ZTpZQ6b7gLK0ZxfdQcgI/GultOAvRic8iJR6Aqr5WupDiu+3FifMeseM8wnj2aRFy19QBV8HkwJHmm8/ag1+6i/YoZwtCqCnBJRSOxTgbPXGz58ci/hJvyJ/bqacuPTdRqX8hdQBYUqQS2iQe8iEZ4Tc8GzkhWxW8hB/RzxWg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=UKKNJcye; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ZXuxOBdt"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="UKKNJcye"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1789628371;
+	s=mimecast20190719; t=1789629427;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=uTBRx/POh6sMNSgm0GJh52YtrZBru3mV1Q9aul2DNLU=;
-	b=ZXuxOBdt+2P3GxoGEBEtsuiZPUpyuJFK5nVuLjp0d33lcA6PSHb86Jh8c1vg4JX5Jd65bp
-	jXSHaKbgRmYxwPzHS0ce4RlbdwJlhob+vr4dVj1IomRkaPkhaJblfXW52vxk7TgK5/MG5o
-	asaUvFl5l09O0SLoYcO2p0/NMp8gCtI=
-Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=VhU95cDMBIXQvMna+tKy46BOvuCr3e2931Pn9vAkduA=;
+	b=UKKNJcyeJoqjQ7vhRo0XcB5zVCk2o36B2NI7+Wvkq8n/UTOKNnksLwAoWHe179x+lPpBEX
+	JshvObcuwJebYvMNaN18uSyY+ORuflUdKH+19oABQa22oVWQpgqUz4bbAsNsi2hzyr8U86
+	OjuKvVehlnSjJar5IH7bm9YtXUjSMbI=
+Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-311-B3nzCZyuN6qmTGsSQWl-GQ-1; Thu,
- 17 Sep 2026 02:59:26 -0400
-X-MC-Unique: B3nzCZyuN6qmTGsSQWl-GQ-1
-X-Mimecast-MFC-AGG-ID: B3nzCZyuN6qmTGsSQWl-GQ_1789628364
-Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-584-AUHHK_xEM-uUnwU6D4tLMA-1; Thu,
+ 17 Sep 2026 03:17:04 -0400
+X-MC-Unique: AUHHK_xEM-uUnwU6D4tLMA-1
+X-Mimecast-MFC-AGG-ID: AUHHK_xEM-uUnwU6D4tLMA_1789629422
+Received: from mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.95])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 1CBC21954B13;
-	Thu, 17 Sep 2026 06:59:24 +0000 (UTC)
+	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 2E17E184B3A8;
+	Thu, 17 Sep 2026 07:17:02 +0000 (UTC)
 Received: from fedora.redhat.corp (headnet05.pony-001.prod.iad2.dc.redhat.com [10.2.32.117])
-	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 9524230001BE;
-	Thu, 17 Sep 2026 06:59:19 +0000 (UTC)
+	by mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 0C799427;
+	Thu, 17 Sep 2026 07:16:58 +0000 (UTC)
 From: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-To: helgaas@kernel.org
-Cc: alex@shazbot.org,
-	ath11k@lists.infradead.org,
-	ath12k@lists.infradead.org,
-	bhelgaas@google.com,
-	jjohnson@kernel.org,
-	jtornosm@redhat.com,
-	linux-kernel@vger.kernel.org,
+To: bhelgaas@google.com,
+	alex@shazbot.org,
+	mani@kernel.org
+Cc: jjohnson@kernel.org,
 	linux-pci@vger.kernel.org,
 	linux-wireless@vger.kernel.org,
-	mani@kernel.org,
-	mhi@lists.linux.dev
-Subject: Re: [PATCH v13] PCI: Add device-specific reset for Qualcomm devices
-Date: Thu, 17 Sep 2026 08:59:18 +0200
-Message-ID: <20260917065918.13357-1-jtornosm@redhat.com>
-In-Reply-To: <20260915223634.GA878346@bhelgaas>
-References: <20260915223634.GA878346@bhelgaas>
+	ath11k@lists.infradead.org,
+	ath12k@lists.infradead.org,
+	mhi@lists.linux.dev,
+	linux-kernel@vger.kernel.org,
+	Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+Subject: [PATCH v14 0/2] PCI: Add device-specific reset for Qualcomm devices
+Date: Thu, 17 Sep 2026 09:16:49 +0200
+Message-ID: <20260917071651.14174-1-jtornosm@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -67,46 +62,55 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
+X-Scanned-By: MIMEDefang 3.6 on 10.30.177.95
 
-Hi Bjorn,
+Some Qualcomm PCIe devices (WCN6855, WCN7850 WLAN; SDX62/SDX65 modems)
+lack working reset methods for VFIO passthrough scenarios. These devices
+have no FLR capability, advertise NoSoftRst+ (blocking PM reset), and have
+broken bus reset (addressed by quirk_no_bus_reset, merged for v7.2).
 
-Thanks for the review.
+VFIO attempts to reset devices on every reassignment:
+- For the listed modems, without a proper reset capability, these devices
+never successfully initialize even on first VM assignment.
+- For the listed WLAN devices, without a working reset method, the attempt
+fails. On clean VM shutdown, the guest driver properly deinitializes the
+device via .shutdown/.remove callbacks, leaving it in a usable state despite
+the failed reset. However, on unclean VM termination (crash, force-off), the
+guest driver callbacks are not triggered, the device remains in an undefined
+state (DMA active, interrupts enabled, etc.), and without a working reset it
+cannot be reused.
 
-> I guess you are saying that some kind of reset *does* work
-> fine in normal, clean VM termination?  If reset works fine
-> for normal VM termination but not for VM crash, do we have
-> any idea why they are different?
-It depends on the device:
+Add device-specific reset methods using BAR-space hardware reset registers
+that exist in these devices:
 
-- For the modems (SDX62/SDX65), without a proper reset
-  capability, these devices never successfully initialize
-  even on first VM assignment.
+  Patch 1: SDX62/SDX65 modem reset via MHI SoC reset
+  Patch 2: WCN6855/WCN7850 WLAN reset via SoC global reset
 
-- For the WLAN devices (WCN6855/WCN7850), the reset fails
-  in both cases, but on clean VM shutdown the guest driver's
-  .shutdown/.remove callbacks properly deinitialize the device
-  (stop DMA, disable interrupts, etc.), so it ends up in a
-  known-good state even without a successful reset. On unclean
-  termination (crash, force-off), the guest driver callbacks
-  never run, the device stays in an undefined state, and
-  without a working reset it cannot be reused.
+These are true hardware reset mechanisms (not power management or firmware
+error recovery), providing proper device reset for VFIO scenarios.
 
-I will try to clarify this better in the commit messages for v14.
+Testing shows stable operation over 100+ VM crash/reset cycles. Device-
+specific reset is position #1 in the reset hierarchy, so these devices
+will use hardware reset as their primary reset method.
 
-> Since these basically copy code from other drivers, is there
-> an opportunity to remove it from those drivers and use this
-> instead?
-Yes, that could be a follow-up after this lands.
+Jose Ignacio Tornos Martinez (2):
+  PCI: Add device-specific reset for Qualcomm SDX62/SDX65 modems
+  PCI: Add device-specific reset for Qualcomm WCN6855/WCN7850 WLAN
 
-> This looks like two patches squashed together.  If there's
-> any other reason to touch this patch, I would split them
-> apart.
-Ok, I will split the WLAN and modem resets into separate
-patches for v14.
+ drivers/pci/quirks.c | 116 +++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 116 insertions(+)
 
-Thanks
+---
+v14: Address Bjorn Helgaas feedback:
+  - Split WLAN and modem resets into two separate patches
+  - Clarify commit message for WLAN devices: VFIO resets on every
+    reassignment, clean shutdown leaves device in usable state via
+    driver callbacks, but unclean termination is where the lack of reset
+    is critical
+  - No code changes from v13, only patch split and commit message
+    clarification (Mani's Reviewed-by retained)
+v13: https://lore.kernel.org/all/20260915223634.GA878346@bhelgaas/
 
-Best regards
-Jose Ignacio
+--
+2.54.0
 
