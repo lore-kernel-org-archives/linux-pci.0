@@ -1,57 +1,39 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from cstnet.cn (smtp25.cstnet.cn [159.226.251.25])
+	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 462FE5013D6
-	for <linux-pci@vger.kernel.org>; Thu, 17 Sep 2026 12:45:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C0F595221C3;
+	Thu, 17 Sep 2026 13:20:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.25
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789649166; cv=none; b=bfScy1s2cz8PqJrytwCiBdMIGibK4+7z2ujAO3gJl57LMbOdJaiCeK1pZbsK056f8TO0lbd1VvdxsEE+XMptlICaEfr8NHBTG+EEhtsCcc7oD4vFOG0JOulXkjSCP7c0MYzPyO0TCVZwH5mbBXWvbIV3GhmpEA/+1bpTpTmbmko=
+	t=1789651232; cv=none; b=iEEn6YRy5ndqmOvxOnEz9ofqH6BXqy9qUNZ8jU0R41KoDR259YcqR/452iwC1uOX+80G5lE3VNaOGuL+JaZ+UDUIhFYIa+9wxSqtoMEWrKorIVogXNx100xalmpxUPFms/b0kCxm/HBCVMLZoSgmNxhDhT8M/w+9XCPXNCIOJPo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789649166; c=relaxed/simple;
-	bh=IcqJ5QjcXa7dC1ErZ97Ku/rkqOnOuufPwsDqcFfskd4=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=joiF1sMIg1D7YcYvERCgk5F5yM1vQ1cdzJbMAr48I3IkUZDvGsy0iiGga5jA8Msmk55+SzayFimQMUBMd4T5fB9/xrTQ+vk8fUkmC5PPEeR5sl/zegm9mgOanLVbGAxLgASIyfbYzApLFysZlTZb2W9gJCGdALn2mJW1YNgwCeU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=VSIp31gH; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="VSIp31gH"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1789649151;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=IcqJ5QjcXa7dC1ErZ97Ku/rkqOnOuufPwsDqcFfskd4=;
-	b=VSIp31gH48kxop3iV3oUIEqIqlQ97nzrO2w52+1f2VIk1atVabDByEJC/FhBJMhikXIAY0
-	LpHys9MeJKaufB31FJ3L2nTouMgyzAUZWnsPlIaJxqzs0YFrvIa4rm99ki5yh5mW/SxRQp
-	yWNEdySMQa8/g6vlRsZHKIqETJ8SDzw=
-Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-352-A4MrZ0goNYaicxW9-LsQaA-1; Thu,
- 17 Sep 2026 08:45:48 -0400
-X-MC-Unique: A4MrZ0goNYaicxW9-LsQaA-1
-X-Mimecast-MFC-AGG-ID: A4MrZ0goNYaicxW9-LsQaA_1789649147
-Received: from mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.95])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 4733B1808981;
-	Thu, 17 Sep 2026 12:45:47 +0000 (UTC)
-Received: from fedora.redhat.corp (headnet03.pony-001.prod.iad2.dc.redhat.com [10.2.32.114])
-	by mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id E46B4214;
-	Thu, 17 Sep 2026 12:45:45 +0000 (UTC)
-From: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-To: sashiko-bot@kernel.org
-Cc: jtornosm@redhat.com,
+	s=arc-20240116; t=1789651232; c=relaxed/simple;
+	bh=wdpwlxaTpsxYLHO+M0yFmrOPTjXA0NQRfQSuIak286M=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=pbnf7RPqtnQ3RDLzbPur0iE+7QUwR/orW/GdTzrR+tdrhSY+E3ZU5KzCGjiUvttwoXubb7TTPHsWoDVehKQXxR0HOM54Fowrqj3nyW2DxluBJOOo/mG8yhiQhsdExOE0fV+hrggfebwAr19gh8ybbFt6CKcMLBEES6WR6gH1/eM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn; spf=pass smtp.mailfrom=iscas.ac.cn; arc=none smtp.client-ip=159.226.251.25
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
+Received: from dfae2b116770.home.arpa (unknown [36.110.52.2])
+	by APP-05 (Coremail) with SMTP id zQCowABXwz0X6atq3lWBCA--.44628S2;
+	Thu, 17 Sep 2026 21:20:23 +0800 (CST)
+From: Wentao Liang <vulab@iscas.ac.cn>
+To: a-verma1@ti.com
+Cc: bhelgaas@google.com,
+	jan.kiszka@siemens.com,
+	kwilczynski@kernel.org,
+	linux-kernel@vger.kernel.org,
 	linux-pci@vger.kernel.org,
-	sashiko-reviews@lists.linux.dev
-Subject: Re: [PATCH v14 1/2] PCI: Add device-specific reset for Qualcomm SDX62/SDX65 modems
-Date: Thu, 17 Sep 2026 14:45:44 +0200
-Message-ID: <20260917124544.9030-1-jtornosm@redhat.com>
-In-Reply-To: <20260917073528.A47E61F000FF@smtp.kernel.org>
-References: <20260917073528.A47E61F000FF@smtp.kernel.org>
+	lpieralisi@kernel.org,
+	mani@kernel.org,
+	robh@kernel.org,
+	s-vadapalli@ti.com,
+	vigneshr@ti.com,
+	Wentao Liang <vulab@iscas.ac.cn>,
+	stable@vger.kernel.org
+Subject: [PATCH] PCI: keystone: Fix host bridge device leak in ks_pcie_quirk()
+Date: Thu, 17 Sep 2026 13:20:22 +0000
+Message-Id: <20260917132022.2153069-1-vulab@iscas.ac.cn>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -59,35 +41,88 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.6 on 10.30.177.95
+X-CM-TRANSID:zQCowABXwz0X6atq3lWBCA--.44628S2
+X-Coremail-Antispam: 1UD129KBjvJXoW7Zr15Aw45Ww1xXr1DuF1fCrg_yoW8ur43pF
+	sIqa4YyFW8Jr45Ww4xZ3WY9FyYyFnayayrC3ykK34I9r15KFyYqF9rGFyFqw4fAFWkJryU
+	Jr1Utw18Jw1kJaUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUPab7Iv0xC_Kw4lb4IE77IF4wAFc2x0x2IEx4CE42xK8VAvwI8I
+	cIk0rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2
+	AK021l84ACjcxK6xIIjxv20xvE14v26r4j6ryUM28EF7xvwVC0I7IYx2IY6xkF7I0E14v2
+	6r4j6F4UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26r
+	xl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj
+	6xIIjxv20xvE14v26r1Y6r17McIj6I8E87Iv67AKxVWxJr0_GcWlOx8S6xCaFVCjc4AY6r
+	1j6r4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq62Iq12xI8VA0II8E6IAqYI8I648v4I1lFIxG
+	xcIEc7CjxVA2Y2ka0xkIwI1lc7CjxVAaw2AFwI0_Jw0_GFyl42xK82IYc2Ij64vIr41l42
+	xK82IY6x8ErcxFaVAv8VW8GFyrJr1UJwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02
+	F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GF
+	ylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7Cj
+	xVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r
+	4UJVWxJr1lIxAIcVC2z280aVCY1x0267AKxVW0oVCq3bIYCTnIWIevJa73UjIFyTuYvjxU
+	DSfODUUUU
+X-CM-SenderInfo: pyxotu46lvutnvoduhdfq/1tbiBgINA2qrq3bB3gAAsJ
 
-> [Severity: High]
-> Does this unsafely enable memory decoding on a hardware-reset device with
-> zeroed BARs?
->
-> If the caller did not explicitly clear PCI_COMMAND_MEMORY before the reset,
-> cmd will have PCI_COMMAND_MEMORY set.
->
-> The hardware reset zeroes the device's PCI configuration space, including all
-> BARs. Restoring cmd with PCI_COMMAND_MEMORY set will immediately enable memory
-> decoding while the BARs are still 0, potentially causing severe PCIe bus
-> conflicts, IOMMU faults, or kernel panics since the device will intercept
-> memory accesses to physical address 0.
->
-> Should we clear PCI_COMMAND_MEMORY before returning (e.g.,
-> cmd & ~PCI_COMMAND_MEMORY), relying on the caller's subsequent
-> pci_restore_state() to safely reprogram the BARs before memory decoding is
-> formally re-enabled?
+ks_pcie_quirk() obtains a reference to the host bridge device with
+pci_get_host_bridge_device() but never releases it.  Every early exit
+from the AM654 PG1.0 workaround leaks the reference: when the bridge
+device or its parent is missing, when the parent has no driver data,
+and when the RTL revision is not AM6_PCI_PG1_RTL_VER.  The quirk runs
+for every downstream PCI device, so the reference count grows without
+bound.
 
-The MHI SoC reset is a device-internal firmware/SoC reset, not a PCI-level
-reset. It does not zero the PCI configuration space or BARs, the PCIe link
-stays alive during this reset and BARs are maintained by the host PCI
-subsystem.
+Add a common out label that drops the reference with
+pci_put_host_bridge_device() before returning.
 
-Additionally, the PCI reset framework calls pci_dev_save_and_disable()
-before and pci_dev_restore() after the reset method, so config space is
-properly managed by the caller.
+Fixes: 86f271f22bbb ("PCI: keystone: Add workaround for Errata #i2037 (AM65x SR 1.0)")
+Cc: stable@vger.kernel.org
+Signed-off-by: Wentao Liang <vulab@iscas.ac.cn>
+---
+ drivers/pci/controller/dwc/pci-keystone.c | 12 ++++++++----
+ 1 file changed, 8 insertions(+), 4 deletions(-)
 
-The reset sequence replicates the existing MHI driver code (mhi_soc_reset(),
-mhi_pci_reset_prepare()) which works in production.
+diff --git a/drivers/pci/controller/dwc/pci-keystone.c b/drivers/pci/controller/dwc/pci-keystone.c
+index 278d2dba1db0..cc6739edd434 100644
+--- a/drivers/pci/controller/dwc/pci-keystone.c
++++ b/drivers/pci/controller/dwc/pci-keystone.c
+@@ -528,7 +528,7 @@ static void ks_pcie_quirk(struct pci_dev *dev)
+ {
+ 	struct pci_bus *bus = dev->bus;
+ 	struct keystone_pcie *ks_pcie;
+-	struct device *bridge_dev;
++	struct device *bridge_dev = NULL;
+ 	struct pci_dev *bridge;
+ 	u32 val;
+ 
+@@ -582,23 +582,27 @@ static void ks_pcie_quirk(struct pci_dev *dev)
+ 	if (pci_match_id(am6_pci_devids, bridge)) {
+ 		bridge_dev = pci_get_host_bridge_device(dev);
+ 		if (!bridge_dev || !bridge_dev->parent)
+-			return;
++			goto out;
+ 
+ 		ks_pcie = dev_get_drvdata(bridge_dev->parent);
+ 		if (!ks_pcie)
+-			return;
++			goto out;
+ 
+ 		val = ks_pcie_app_readl(ks_pcie, PID);
+ 		val &= RTL;
+ 		val >>= RTL_SHIFT;
+ 		if (val != AM6_PCI_PG1_RTL_VER)
+-			return;
++			goto out;
+ 
+ 		if (pcie_get_readrq(dev) > 128) {
+ 			dev_info(&dev->dev, "limiting MRRS to 128 bytes\n");
+ 			pcie_set_readrq(dev, 128);
+ 		}
+ 	}
++
++out:
++	if (bridge_dev)
++		pci_put_host_bridge_device(bridge_dev);
+ }
+ DECLARE_PCI_FIXUP_ENABLE(PCI_ANY_ID, PCI_ANY_ID, ks_pcie_quirk);
+ 
+-- 
+2.34.1
 
