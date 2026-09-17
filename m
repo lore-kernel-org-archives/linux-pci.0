@@ -1,75 +1,65 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from mx0b-00190b01.pphosted.com (mx0b-00190b01.pphosted.com [67.231.157.127])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D96BB5326D0
-	for <linux-pci@vger.kernel.org>; Thu, 17 Sep 2026 16:38:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 70C4F4E3769
+	for <linux-pci@vger.kernel.org>; Thu, 17 Sep 2026 16:39:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.157.127
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789663117; cv=none; b=B0qN4fMFi1jPvOYaUcevwacW72j95X2+MVntd0ZnmKafIrWAxIa6SoVNEF5tTnu4NqFdR6cK6R2LvLf6JE8w0gKKlC7WE+qzUibLpDGMYACMvwATSp4xlhAn9xwe7u7fdc3HiiYz/mvDZuVBkbQWHY0U6ZDQ4VnSXfwMesswE9M=
+	t=1789663160; cv=none; b=jeLRcovGPvY6txZCHh6leueQoKCKIMlMFWiNAqYmaAzMSA9mLw/UlxzlLzGhYPIEP0yiWrOhJ5UpwAcQdANu70EUJAt3Qp6h/ELm8PYXo1kWcyrdY/vRbcoJD0AjPhNVEIwMmEJ+zKtPEcT8iiFs31NjiYJcK8ZO6LrWoftv0mY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789663117; c=relaxed/simple;
-	bh=1XNAjcMfzxS737UbycscQLHar4hJeLnVfG7xL8UK+Sc=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=COwKB/Hl070H3FiZ6d3qbiAtHFwryHoOTpfrNtbpsHYFVM2pms/vtCjb7PI9xDkfKjgdGreoXEQhTLVWxu3cX9NGqOfBt7iZWX2PEK8OsTZLcxd8c+T/TSJFautWniDG1oMupiUKWTGhfH3z+38TWP0xH4eEZmxWPeh5unxmGd8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=bS3yW0eX; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1789663160; c=relaxed/simple;
+	bh=WPm+JeMA5bnr3Y8GwDozRhRLEnd0yTAg4HGkUhgNUzI=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=qX3inKSzZv+OHLK6Bn6UAZ5U6C1mKzXPGKySMZrrM8hLEZ+LYovnSUJa5qWp5+4lXf3Ko+zZOaeLlfJFCrNBjpkNe9V5t4U/9XJuOvfXtDc5g9nBhrWIyUKDWNyTG0hvSKWEJcs7EJ8cxcx/R1hcf8EB4x8ys9cN285kThDwjK8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=akamai.com; spf=pass smtp.mailfrom=akamai.com; dkim=pass (2048-bit key) header.d=akamai.com header.i=@akamai.com header.b=kGB6CNj2; arc=none smtp.client-ip=67.231.157.127
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=akamai.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=akamai.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="bS3yW0eX"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1789663114;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=exa5f/DcwNCR5E0w8unUqAO11f1n98HF5VNU5M/lSuA=;
-	b=bS3yW0eXh9Y8JWhjdtSnoQaB+mOpxH965MI6BMNakKUN8Z4JZBEebYzJtilxBhCEXui7YG
-	V+xG/pMH2Vp4WEHN/mbuYWmqZQEkzjO4HRustDXuo6mwYKWjwMVC4ovhge9TOj+mAZvrTK
-	jJ7824nsD00JqLnoEHfr7F5FNpwZ/ZQ=
-Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-627-kkknJbLZP_Gzu6UXMZrJpQ-1; Thu,
- 17 Sep 2026 12:38:30 -0400
-X-MC-Unique: kkknJbLZP_Gzu6UXMZrJpQ-1
-X-Mimecast-MFC-AGG-ID: kkknJbLZP_Gzu6UXMZrJpQ_1789663108
-Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 4414C18F0F01;
-	Thu, 17 Sep 2026 16:38:28 +0000 (UTC)
-Received: from djeffery-thinkpadp1gen3.rmtusga.csb (headnet03.pony-001.prod.iad2.dc.redhat.com [10.2.32.114])
-	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 0123F1800352;
-	Thu, 17 Sep 2026 16:38:24 +0000 (UTC)
-From: David Jeffery <djeffery@redhat.com>
-To: driver-core@lists.linux.dev,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Danilo Krummrich <dakr@kernel.org>
-Cc: linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	Tarun Sahu <tarunsahu@google.com>,
-	Stuart Hayes <stuart.w.hayes@gmail.com>,
-	Laurence Oberman <loberman@redhat.com>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	kexec@lists.infradead.org,
-	"Ewan Milne" <emilne@redhat.com>,
-	"John Meneghini" <jmeneghi@redhat.com>,
-	"Lombardi, Maurizio" <mlombard@redhat.com>,
-	"Bart Van Assche" <bvanassche@acm.org>,
-	"John Garry" <john.g.garry@oracle.com>,
-	"Jeremy Allison" <jallison@ciq.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	"Pasha Tatashin" <tatashin@google.com>,
-	David Jeffery <djeffery@redhat.com>,
-	Pasha Tatashin <pasha.tatashin@soleen.com>
-Subject: [PATCH 9/9] scsi: Enable async shutdown support
-Date: Thu, 17 Sep 2026 12:37:44 -0400
-Message-ID: <20260917163744.191748-10-djeffery@redhat.com>
-In-Reply-To: <20260917163744.191748-1-djeffery@redhat.com>
-References: <20260917163744.191748-1-djeffery@redhat.com>
+	dkim=pass (2048-bit key) header.d=akamai.com header.i=@akamai.com header.b="kGB6CNj2"
+Received: from pps.filterd (m0122330.ppops.net [127.0.0.1])
+	by mx0b-00190b01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 68HFa3982423365;
+	Thu, 17 Sep 2026 17:17:06 +0100
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=akamai.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=apr2026.eng;
+	 bh=lXpZq4IrFb1XNILkhyM45GFG2R5DSig5pPKJZ61pWAc=; b=kGB6CNj2jP3V
+	FSr+9aZrMCJ9L3KVpvsSzvBrc9hzhhbq3ZDqPTQ+4m1biqaU9biZsX2QhoJg9XP0
+	cueitiGUKnbdhctQpsX8129b/ZFJ1yw6heaMTm/iGnjt4FfDRkQttqnSchUWNCXh
+	tFeITs9ODhukWgmE+i376XXnIrAbawKGBGw5ETUX72QND0Zju+2S8J1SzcWXpNMM
+	uycA4N0A8dXoH2Hgc2Scaw9oX4SEWb2JlN0y0M86cvcW3ZZrSPGX75XNKEi27v+V
+	/syVbbsvIoWddJFdE0lacTJ+PVOU4aeSQBvxi27k/NskXpW1OIdgO6EQegw5/eRu
+	S/WdX8IpvQ==
+Received: from prod-mail-ppoint5 (prod-mail-ppoint5.akamai.com [184.51.33.60])
+	by mx0b-00190b01.pphosted.com (PPS) with ESMTPS id 4gmy5mnyek-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 17 Sep 2026 17:17:06 +0100 (BST)
+Received: from pps.filterd (prod-mail-ppoint5.akamai.com [127.0.0.1])
+	by prod-mail-ppoint5.akamai.com (8.18.1.7/8.18.1.7) with ESMTP id 68HG6QTj029344;
+	Thu, 17 Sep 2026 09:17:05 -0700
+Received: from email.msg.corp.akamai.com ([172.27.91.41])
+	by prod-mail-ppoint5.akamai.com (PPS) with ESMTPS id 4gn4q7urpd-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 17 Sep 2026 09:17:05 -0700 (PDT)
+Received: from usma1ex-dag5mb2.msg.corp.akamai.com (172.27.91.41) by
+ usma1ex-dag5mb2.msg.corp.akamai.com (172.27.91.41) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.43; Thu, 17 Sep 2026 09:17:04 -0700
+Received: from bos-lpnz1z1y (172.27.118.139) by
+ usma1ex-dag5mb2.msg.corp.akamai.com (172.27.91.41) with Microsoft SMTP Server
+ id 15.2.2562.43 via Frontend Transport; Thu, 17 Sep 2026 09:17:04 -0700
+Received: by bos-lpnz1z1y (Postfix, from userid 56609)
+	id 6C86A241CAB; Thu, 17 Sep 2026 12:17:04 -0400 (EDT)
+From: jlefkowi <jlefkowi@akamai.com>
+To: <linux-pci@vger.kernel.org>
+CC: <mj@ucw.cz>, <bchaney@akamai.com>, <mpelland@akamai.com>,
+        jlefkowi
+	<jlefkowi@akamai.com>
+Subject: [PATCH 3/3] doc: make the documentationf or .V[len] and .V more concise
+Date: Thu, 17 Sep 2026 12:16:31 -0400
+Message-ID: <20260917161631.801636-4-jlefkowi@akamai.com>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20260917161631.801636-1-jlefkowi@akamai.com>
+References: <20260917161631.801636-1-jlefkowi@akamai.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -77,70 +67,84 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
+Content-Type: text/plain
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-09-17_03,2026-09-16_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0
+ lowpriorityscore=0 adultscore=0 bulkscore=0 phishscore=0 spamscore=0
+ suspectscore=0 malwarescore=0 classifier=typeunknown authscore=0 authtc=
+ authcc= route=outbound adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2609040000 definitions=main-2609170229
+X-Proofpoint-Spam-Info: AW1haW4tMjYwOTE3MDIzMSBTYWx0ZWRfX4jHGJBzOZ6FB
+ BWWNXqOCIRvGhZ1WwygZT3GvOGZuoq9LL2Y+YyApq88/GsjEIsh+yiZ73g7Lqg5MUU/R0mx2DGs
+ P9enaMR+ok05LlQY/86pnPsL4I2mFLA=
+X-Authority-Analysis: v=2.4 cv=NdtzRGD4 c=1 sm=1 tr=0 ts=6aac1282 cx=c_pps
+ a=NpDlK6FjLPvvy7XAFEyJFw==:117 a=NpDlK6FjLPvvy7XAFEyJFw==:17
+ a=VdqzKS8jKosA:10 a=VkNPw1HP01LnGYTKEx00:22 a=Ifg-1AOnLHOf1gn6spyb:22
+ a=4xFXqd-_BHBjZVyr95gr:22 a=X7Ea-ya5AAAA:8 a=Yr43Cvk7q4EZdo6qg7MA:9
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTE3MDIzMSBTYWx0ZWRfX1w140SZphUTq
+ nnhtgS4cbZB2W2cE8kY1j8uqkMliCkgJcqSPgO2aAFSz9kb45C36O3xU2JlPB3WU0t5iLMsMlDA
+ sD2FouC3Wbnd6ZLfId8F0fjexIhRDvJFelZUZwpy6C7si+luVvXjor5UBc6eS0a1qPjoQpoe4I1
+ BLhkED7vR3LTBO8lW03S5wRq+29+C+tlgcow67Mvwbp7csoUlMdjjicrQV5TXpV9HfDAYwnrgY4
+ BIgSTSNBYCdIvo/uRF0ziZRDxPuB9GQNvhboRj5WcT7jqHXvJnn8tGBwDOywwIspnGS3NrFbJUk
+ cnHRAKH7m/row840/d7jOxoOHBXUSqn08rgI7EwCb7ZAdLsWmETgtIu9z4IdLgFfljVRBorIQx3
+ JSZbQymwnQ8t6OqTsFgCT2tDnnSz5zf3lSsQX3JOlA7owEEqP9+qJf15+pp6wvBy7p/wEElJBhO
+ u5nGvjltFlCaJIHE89w==
+X-Proofpoint-GUID: dMVuYvXzbapq7kWCxXWgnWzsGq_6Qwc6
+X-Proofpoint-ORIG-GUID: dMVuYvXzbapq7kWCxXWgnWzsGq_6Qwc6
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-09-17_03,2026-09-16_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0
+ adultscore=0 suspectscore=0 lowpriorityscore=0 spamscore=0 priorityscore=1501
+ impostorscore=0 phishscore=0 clxscore=1011 malwarescore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2609040000 definitions=main-2609170231
 
-Like scsi's async suspend support, allow scsi devices to be shut down
-asynchronously to reduce system shutdown time.
+Update the documentation to be a higher-level overview of the two
+functionalities, providing detail into how they work, but removing any
+detail that specifically mentions internal functions as they are not
+needed.
 
-Signed-off-by: David Jeffery <djeffery@redhat.com>
-Signed-off-by: Stuart Hayes <stuart.w.hayes@gmail.com>
-Tested-by: Laurence Oberman <loberman@redhat.com>
-Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
-Reviewed-by: Pasha Tatashin <pasha.tatashin@soleen.com>
-Reviewed-by: John Garry <john.g.garry@oracle.com>
+Signed-off-by: Jacob Lefkowitz jlefkowi@akamai.com
 ---
- drivers/scsi/hosts.c      | 2 ++
- drivers/scsi/scsi_sysfs.c | 3 +++
- 2 files changed, 5 insertions(+)
+ setpci.man | 20 ++++++--------------
+ 1 file changed, 6 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-index e72055c1ebbb..75592f41ef39 100644
---- a/drivers/scsi/hosts.c
-+++ b/drivers/scsi/hosts.c
-@@ -272,6 +272,7 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
- 	pm_runtime_set_active(&shost->shost_gendev);
- 	pm_runtime_enable(&shost->shost_gendev);
- 	device_enable_async_suspend(&shost->shost_gendev);
-+	dev_set_async_shutdown(&shost->shost_gendev);
- 
- 	error = device_add(&shost->shost_gendev);
- 	if (error)
-@@ -282,6 +283,7 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
- 	get_device(shost->shost_gendev.parent);
- 
- 	device_enable_async_suspend(&shost->shost_dev);
-+	dev_set_async_shutdown(&shost->shost_dev);
- 
- 	get_device(&shost->shost_gendev);
- 	error = device_add(&shost->shost_dev);
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 9480432f650b..52e1e38dc027 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -1387,6 +1387,7 @@ static int scsi_target_add(struct scsi_target *starget)
- 	pm_runtime_set_active(&starget->dev);
- 	pm_runtime_enable(&starget->dev);
- 	device_enable_async_suspend(&starget->dev);
-+	dev_set_async_shutdown(&starget->dev);
- 
- 	return 0;
- }
-@@ -1413,6 +1414,7 @@ int scsi_sysfs_add_sdev(struct scsi_device *sdev)
- 	transport_configure_device(&starget->dev);
- 
- 	device_enable_async_suspend(&sdev->sdev_gendev);
-+	dev_set_async_shutdown(&sdev->sdev_gendev);
- 	scsi_autopm_get_target(starget);
- 	pm_runtime_set_active(&sdev->sdev_gendev);
- 	if (!sdev->rpm_autosuspend)
-@@ -1432,6 +1434,7 @@ int scsi_sysfs_add_sdev(struct scsi_device *sdev)
- 	}
- 
- 	device_enable_async_suspend(&sdev->sdev_dev);
-+	dev_set_async_shutdown(&sdev->sdev_dev);
- 	error = device_add(&sdev->sdev_dev);
- 	if (error) {
- 		sdev_printk(KERN_INFO, sdev,
+diff --git a/setpci.man b/setpci.man
+index f39b87e..0e7c1f8 100644
+--- a/setpci.man
++++ b/setpci.man
+@@ -158,22 +158,14 @@ specifier \fB.B\fP, \fB.W\fP, or \fB.L\fP. The width can be omitted if you are
+ referring to a register by its name and the width of the register is well known.
+ .IP \(bu
+ To operate on a variable-length window larger than a single access, append \fB.V[len]\fP,
+-where \fBlen\fP is a hexademical byte count set statically within setpci (4). The window is read
+-as a sequence of aligned long accesses, low address first. Each chunk is assembled in
+-little-endian, but the final result is in big-endian. This is the opposite of other operations.
+-If there is a misalignment, that is fixed in the first couple reads: we will do a two byte and
+-a one byte read or one or the other to reach four-byte alignment, and then continue to read four
+-bytes. Because PCI configuration space has no atomic access wider than a long, a
+-\fB.V[len]\fP operation is \fInot\fP atomic: if the underlying field changes between the
+-individual accesses, the value may be read torn.
++where \fBlen\fP is a hexademical byte count set statically within setpci (4). The requested
++number of bytes is printed out in a bite wise fashion with read width and alignment
++being handled internally. Note that this is a non-atomic operation and the result is printed
++in big-endian--opposite of all other operations.
+ .IP \(bu
+ To use a variable-length window larger than a single access specifically for reads on vendor-defined
+-registers / values, you can use .V. In this mode, setpci will, at runtime, dynamically
+-determine the length defined within the vendor header. Note that this only works for
+-vendor-defined registers like ECAP_DVSEC or ECAP_VNDR. Note that the way in which reading is done and
+-the output is produced is the same as the non-automatic variable-length window. That means the
+-result is returned in big-endian, which is the \fIopposite\fP of all other operation sizes.
+-
++registers / values, you can use .V. Setpci will determine the length at runtime, adjust for any
++offsets provided, and then perform a read with the same semantics as .V[len].
+ .IP \(bu
+ Finally, if a capability exists multiple times you can choose which one to target using
+ \fB@number\fP. Indexing starts at 0.
 -- 
-2.55.0
+2.43.0
 
