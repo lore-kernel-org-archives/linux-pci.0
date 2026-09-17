@@ -1,133 +1,902 @@
-Received: from mail-qv2-f43.google.com (mail-qv2-f43.google.com [74.125.230.171])
+Received: from mail-wm2-f11.google.com (mail-wm2-f11.google.com [74.125.225.139])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68BB84A4836
-	for <linux-pci@vger.kernel.org>; Thu, 17 Sep 2026 14:28:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.230.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BDAFA4EBADC
+	for <linux-pci@vger.kernel.org>; Thu, 17 Sep 2026 14:41:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.139
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789655293; cv=none; b=E8DySKytb1bx68+6TNyAh1qEjtkNLg4oaVv0kh6sEHX6aIMu91kLiAIQPUlTZouutZe7nKIdiEGQ8NwsgFJedqaUfwf20GAOx+PzYIx7oyW/JjW/gVN9dhcZ9gRv72gytrGA3HDskgdZFRANLaw3dSK9K84EKqpdhwmxEgLEv04=
+	t=1789656113; cv=none; b=GdNcMcrxyunhSsuIKt3D5anGrq7xJwfL7/fc2noE1KiwlvM3wqDFewuhG+/1xiqQGMNHFc7iwqM0BYPVNncfnsbgMOKsCjKddtmr1dFa5YnauID2XfshXoGqsBJda7G6TgpF48AZWySi+ToZlKxjsuU/g447N8GElBP6ffULI5g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789655293; c=relaxed/simple;
-	bh=zD+yqYOk9BEwYrlkE41XIJFd2WjARDFI5ce4WJxm+Ls=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=XzWOjJcFqFqvLIlmyyXKo+j00pZZ3a9ywWna7CdEN3d0ACqARCaDhfcY2+ZFf7r82fs8YswjC39hfEPKmRZYHNT0bEJGVhln5KQYjIXodgkHxnpqeukwshzYdpUgKKsJbUSFLtEoAOgOtKY00aUZmeAJ5/laDIQVbeT1cHg4KEA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca; spf=pass smtp.mailfrom=ziepe.ca; dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b=jOZBXJLw; arc=none smtp.client-ip=74.125.230.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
+	s=arc-20240116; t=1789656113; c=relaxed/simple;
+	bh=VR+kwkFmvRt7IIsiF048mZ3MVYW3SZjOswQQ6TsOoRc=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=fwZAo4VnL18Mnbzy18xjjL0QvUVoWdrfzHQMrWoqLFVoUghQLTsjpfzOZhgaZEwJLqTk4sF7amxSeVZnfZr+uFx9aggBa68x6W6Qo/SH+/IbPdF25N7gJ4biVsxxgB6GejY4K8bbiaQ+Ulkutvi+L78OQBYqRKJLA1TpeFBf7Mo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ownwRosl; arc=none smtp.client-ip=74.125.225.139
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="jOZBXJLw"
-Received: by mail-qv2-f43.google.com with SMTP id 6a1803df08f44-91058dd77a2so9285526d6.3
-        for <linux-pci@vger.kernel.org>; Thu, 17 Sep 2026 07:28:11 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ownwRosl"
+Received: by mail-wm2-f11.google.com with SMTP id 5b1f17b1804b1-49ccea58fe3so1596625e9.1
+        for <linux-pci@vger.kernel.org>; Thu, 17 Sep 2026 07:41:44 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ziepe.ca; s=google; t=1789655290; x=1790260090; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :content-type:mime-version:references:message-id:subject:cc:to:from
-         :date:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=Jw1k2NAja1Um952Tl85LJupIp0nZbLj8NYpKbR9I6hU=;
-        b=jOZBXJLwf6JP3b19azmsQ5fLkQfodPWKCQ4sDgsm74opbQurokqxNrasGuNyOPVzvE
-         CTVWAdgBhof6iu0XiS8kaZ358Ree3L9tOC68tPaGgk6QmS7dj/CAh2cDH6Ri94YsKWYE
-         zFgjnox0YrTKuN8CziN0SVinO8YFZz6H8x2igaWxvbrgFrudFRNrFyWtefERJIZGn9WM
-         /YRBE5l7nBeTmhMKMbx56N0o1l466lNeHVloV8m2iSh8w9+kxpuV28bJDRjIUAx2mv9y
-         5MOsangOpHqTW06zyEsy1fwdV0ITN+uat3lRUftLj9jAXlHsH37VEcNIWu8qGi0F66Q2
-         koBw==
+        d=gmail.com; s=20251104; t=1789656102; x=1790260902; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=uxdo04KgC3ZopuNd4o1TqXYNrHfISkm+8Ow6DwBarvc=;
+        b=ownwRoslxpBe+VrITDjoJh5NP5OC/PbjEVs6NfnVsETHyRqcS5QpjBC5JqKaEsvpr9
+         heiLv8qUryFbHpUvPZzDBsl04uz99A0Q9YiHHYB3bdIFkwkDxAByNlm68PSLVMSe4MCg
+         cyOTmfd1whQmK6RwMlK9euMXmXdddQiYB+pXL2Ltt6Wl9TlhutIah09rWJc8vzw0lLFz
+         ZjE7IYtEZyr26R6v2mCU4k70aQO6L1ebss5it7KUXAGz8gU+IuX/4otWhYdt9rreAuUH
+         5mPQd4GUaNg5h/xIYHQmudCeJVLhVLNj1tanEfz+xeGWbF4qi4ArNW/4QUe7j2VF/Iqs
+         L19g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1789655290; x=1790260090;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :content-type:mime-version:references:message-id:subject:cc:to:from
-         :date:x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=Jw1k2NAja1Um952Tl85LJupIp0nZbLj8NYpKbR9I6hU=;
-        b=iylMNPqHlunEhti433mmgv8IbGP+WYpPxSHk3c0WnUeiZNGVtCAE5zCes3wQiZJr+/
-         X2SGBTTleABiey1rt39hY7Wvvsz4bDw3Wgk1iATEPV4sRcz9WL+piBh13EfM3wqrA16c
-         ebt/QdL3ztDuXS0zvG1PNs9qaDpDSa5GQ8PtZ1mt7ySNz9d/rnDc6KSoenPrMD4utqKL
-         vwJcuHsSP0kzkTy9Nq1cr3qCox50lGDxM+j1yNcYHmZbNnvtvOVvLj0umZwsoCiMS+gh
-         tu3vo1nUYaKaKfzSyyQoeEttQBAa/Z7wA5LB1BaNv3j0HbY0F1dNCW+dQyX1jDLMTDo+
-         p9vA==
-X-Forwarded-Encrypted: i=1; AKwUvBzHey9fHnMoJoeJZJzno2tf7bpphh9pG3g8DlgmMRL94OX/a0vJsGadQWtKDpmSrzvXbgcDJwGQ0YE=@vger.kernel.org
-X-Gm-Message-State: AFuF++l/fqXASm3BMYyiQYjhvKdEtwipzzmcfNvN5rs6jQizS8imXmFR
-	wLm4nZZMKefBq5t3hojvW3Gc3pXWczxaFZOaSQkt7Jh8ASmFjYKuyWWWs/p2JsaSeiE=
-X-Gm-Gg: AYBFou3u/TfAA09ei7oO/GM0y+iPA5MyjVySVRHZ5fgRGfTg3T0ANjX8Xx9mK+g0U3O
-	4ZOQuMdxu3fKx+Pq4PAffkG6+JkOL2Qi5I9J7Wyxd+Mgxd8aPiCTcsFfiJMBakGquoFgGpusO1U
-	qSWCoVyhWKLQavOwVqr/KMWDPgOETjZjEST2MGltpgwM7SACxSC5gQ8MYm0CTvbwk7Wx8gd6Hy9
-	D+LT9tk7itsCs4EZKlXEXV9uOVmZUOdcYRHYzD7O/Nd/JAoHKDdYzzwpeZ7/uNryRwWqwAN9xZ7
-	/zXJbTOz1abAxxkxKoZJq4JJK5yUCzvZZdqxAdrs/ThubiuQ9HrqwA1c+DTGxPrxF5cqdmkGkSs
-	J0tUaEZUkhHHLDJihO2fkhj9Ex91u+20cHkA+5xijNe/tGu5bTHHcytEaFt6yj0IOo9O0BaMq0F
-	AwOXGnVx+hpuOnjs6HJam3JnEVdLc7DykBsXLb7TrhrXaHpH5iKxS5lS21fEZIwUAw/C8WqGzP8
-	ZGGVKBYGGoXe3G6HUZ4oKvRAJjrrdgPI7cNsB+paN7d4pct+BLjFbtz
-X-Received: by 2002:a05:6214:1316:b0:912:517b:911 with SMTP id 6a1803df08f44-912517b0beamr9926716d6.48.1789655289706;
-        Thu, 17 Sep 2026 07:28:09 -0700 (PDT)
-Received: from ziepe.ca (hlfxns010zw-159-2-239-150.pppoe-dynamic.high-speed.ns.bellaliant.net. [159.2.239.150])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-9123be9ca82sm51192626d6.32.2026.09.17.07.28.09
+        d=1e100.net; s=20260707; t=1789656102; x=1790260902;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=uxdo04KgC3ZopuNd4o1TqXYNrHfISkm+8Ow6DwBarvc=;
+        b=mePTqI/yeinPv6XWZ0yqAAQ6jNmwDw2hAXDNYE2UHARSmOy4Z73jagtYuEllBt3f+N
+         7VTwlXi6xPaf4nr38VXFlKfz1VhlMsUP+WEzv3R5x6q30MQMMd5+ivuj6SKN8dCE7lRk
+         qVczhuy0hdhjoDZF7ZRlsc4vrwxV32n6fUEPO5RXrWmGtnNjw62h9xphzHv+xVgKLpEs
+         PIuRqLqWIJYgdQgCcr9LUOLcr96ogBvRSQpYb/LvJQf2b9UDEVKBVNQlQo/Prj3YaGv3
+         6N5VB+J9gZ4psnUO2pb2bgwStKEplhNV26rnGfAodFrSkf/Ki0zi4HLvQE40zZWrjU6L
+         SwWg==
+X-Forwarded-Encrypted: i=1; AKwUvBzYfORS/yBS6Wr9mpYX4mIxYQHuoGlZPYtnABGSnkt9XH/ytKLr/ecL9ArTXBCXuG65m+s07gWg7GM=@vger.kernel.org
+X-Gm-Message-State: AFuF++kykvxaSO60ZYEMI0v70vrMp8RTPWxKgbjziwphJ37dEuN5IF/3
+	0/q3KiIU4kshSN5lSDbloPRs3/XVBboxROvrCZXfwtGqRwuwgkKC5YRx
+X-Gm-Gg: AYBFou2e7FoIgkL8v1je4EvR58N3W1Sv8x3tTxPvEurtQXOw798VeyJ/dgYEgyQTg6W
+	B+8aGYJOGLneWx7UrDzHkXQMMMSIlgbWhyqJzmoMohuLusunOU7w21zG9ixRn3ceXvu0pqansPT
+	McrCHLH9kRqaFMpEFsJ2vPQXCPnuaJrRi1zGrEss3+UiwbHbvesdM1EtDvclcxN644YGKaAQ2It
+	lYevTP/LW5nk9Su1eeVi98/QmD4tJd1Fv5I2Q3GflgR+vVLB8TQLw7q1KwZBnRgT/QS5wef3Wfu
+	Sp/RVvy3URSGnxsAJuWaiFspdRTZVZxAC945mvJjquJ8krslMDPSN5kJKDas1DU/xjrWlJEW+tY
+	hcNcvx4EQQvKf3ORoiNb3MEhRO0TOoG95/obhndhNhgPpJbGmDC4P7z61F9HBs5OBU015EIy1bP
+	BcDKQnWIDNHZa4iM+3gzWFtQJZCWCxYcw8EPZ7EtpV6/xBTCpbej5E4ApsptfCCt5LcR3ZtUOdu
+	hrBCQ==
+X-Received: by 2002:a05:600c:1546:b0:49e:67bf:7e97 with SMTP id 5b1f17b1804b1-49ead86eb48mr87880525e9.10.1789656101568;
+        Thu, 17 Sep 2026 07:41:41 -0700 (PDT)
+Received: from chicken.. ([2a02:2f02:5101:7300:44c:8311:3d26:e514])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49fbd691d8esm33238755e9.0.2026.09.17.07.41.37
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 17 Sep 2026 07:28:09 -0700 (PDT)
-Received: from jgg by wakko with local (Exim 4.97)
-	(envelope-from <jgg@ziepe.ca>)
-	id 1x7D5s-0000000CrE5-25RS;
-	Thu, 17 Sep 2026 11:28:08 -0300
-Date: Thu, 17 Sep 2026 11:28:08 -0300
-From: Jason Gunthorpe <jgg@ziepe.ca>
-To: Christian =?utf-8?B?S8O2bmln?= <christian.koenig@amd.com>
-Cc: Thomas =?utf-8?Q?Hellstr=C3=B6m?= <thomas.hellstrom@linux.intel.com>,
-	Leon Romanovsky <leon@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Logan Gunthorpe <logang@deltatee.com>,
-	Chaitanya Kulkarni <kch@nvidia.com>,
+        Thu, 17 Sep 2026 07:41:41 -0700 (PDT)
+From: Daniel Matyas <matyasdaniel006@gmail.com>
+To: Shenghao Ding <shenghao-ding@ti.com>,
+	Kevin Lu <kevin-lu@ti.com>,
+	Baojun Xu <baojun.xu@ti.com>,
+	Sen Wang <sen@ti.com>,
+	Peter Huewe <peterhuewe@gmx.de>,
+	Jarkko Sakkinen <jarkko@kernel.org>,
+	Jason Gunthorpe <jgg@ziepe.ca>,
+	Chunfeng Yun <chunfeng.yun@mediatek.com>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Jens Axboe <axboe@kernel.dk>, Alex Williamson <alex@shazbot.org>,
-	Ankit Agrawal <ankita@nvidia.com>, Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	"Joerg Roedel (AMD)" <joro@8bytes.org>,
-	Will Deacon <will@kernel.org>, Robin Murphy <robin.murphy@arm.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Sumit Semwal <sumit.semwal@linaro.org>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org,
-	iommu@lists.linux.dev, Tushar Dave <tdave@nvidia.com>,
-	linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org,
-	linaro-mm-sig@lists.linaro.org, linux-rdma@vger.kernel.org,
-	kvm@vger.kernel.org
-Subject: Re: [PATCH v6 18/18] RDMA/mlx5: Ask P2PDMA whether ATS takes a
- direct peer-to-peer route
-Message-ID: <20260917142808.GH3196566@ziepe.ca>
-References: <20260914-fix-p2p-acs-v4-0-v6-0-5ef07ec9ef06@nvidia.com>
- <20260914-fix-p2p-acs-v4-0-v6-18-5ef07ec9ef06@nvidia.com>
- <321890690ce83d1943b2f678bd9bee9b8c895b66.camel@linux.intel.com>
- <f3708893-4760-4157-83a3-313867a94e78@amd.com>
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+	Wim Van Sebroeck <wim@linux-watchdog.org>,
+	Dharma Balasubiramani <dharma.b@microchip.com>,
+	Jeff LaBundy <jeff@labundy.com>,
+	Simon Glass <sjg@chromium.org>,
+	Linus Walleij <linusw@kernel.org>,
+	Alexandre Torgue <alexandre.torgue@foss.st.com>,
+	Giuseppe Cavallaro <peppe.cavallaro@st.com>,
+	Jose Abreu <joabreu@synopsys.com>,
+	Atish Patra <atishp@rivosinc.com>,
+	Shawn Guo <shawn.guo@linaro.org>,
+	Dmitry Osipenko <digetx@gmail.com>,
+	Ibrahim Tilki <Ibrahim.Tilki@analog.com>,
+	Okan Sahin <Okan.Sahin@analog.com>,
+	devicetree@vger.kernel.org,
+	linux-rtc@vger.kernel.org,
+	Ricard Wanderlof <ricardw@axis.com>,
+	patches@opensource.cirrus.com,
+	Lukas Wunner <lukas@wunner.de>,
+	Eugen Hristev <ehristev@kernel.org>
+Cc: mfd@lists.linux.dev,
+	linux-samsung-soc@vger.kernel.org,
+	linux-mmc@vger.kernel.org,
+	linux-mtd@lists.infradead.org,
+	linux-amlogic@lists.infradead.org,
+	netdev@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-perf-users@vger.kernel.org,
+	linux-phy@lists.infradead.org,
+	linux-tegra@vger.kernel.org,
+	linux-sound@vger.kernel.org,
+	linux-integrity@vger.kernel.org,
+	linux-usb@vger.kernel.org,
+	linux-mediatek@lists.infradead.org,
+	linux-watchdog@vger.kernel.org,
+	Daniel Matyas <matyasdaniel006@gmail.com>
+Subject: [PATCH] dt-bindings: Expand flow lists to block lists
+Date: Thu, 17 Sep 2026 17:41:34 +0300
+Message-ID: <20260917144134.459819-1-matyasdaniel006@gmail.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <f3708893-4760-4157-83a3-313867a94e78@amd.com>
 
-On Thu, Sep 17, 2026 at 04:00:33PM +0200, Christian König wrote:
-> > However, at least for the Intel GPUs, ATS enablement is based on the
-> > PCIe-side enable bit.
-> 
-> Yeah, I can confirm as well that this is something really exotic.
+Running dt_bindings_check returned:
+[error] string value is redundantly quoted with any quotes (quoted-strings)
 
-In most datacenter systems it is only the NIC that initiates the P2P
-transfers, so it should not be surprising that NIC HW has more
-optimizations for this. In real systems ATS carries such a perf cost
-that you do need to be selective about it. I would expect every
-serious NIC to have this capability or it will not be perf
-competitive.
+The files used quotation marks in flow lists because the strings had
+commas and these commas were interpreted as separators. Convert flow
+style lists to block style lists, so that there is no problems with the
+commas.
 
-NIC and GPU are using ATS for completely different reasons.
+Signed-off-by: Daniel Matyas <matyasdaniel006@gmail.com>
+---
+ .../bindings/display/atmel,lcdc-display.yaml  |  9 ++++---
+ .../devicetree/bindings/eeprom/at24.yaml      |  4 +++-
+ .../devicetree/bindings/example-schema.yaml   |  6 +++--
+ .../bindings/hwmon/pmbus/adi,max20830.yaml    |  6 +++--
+ .../bindings/iio/adc/ti,ads112c14.yaml        |  6 +++--
+ .../bindings/iio/frequency/adi,adf41513.yaml  |  3 ++-
+ .../bindings/iio/frequency/adi,adrf6780.yaml  |  6 +++--
+ .../bindings/iio/temperature/adi,ltc2983.yaml |  6 +++--
+ .../bindings/input/azoteq,iqs7222.yaml        | 12 ++++++----
+ .../bindings/input/google,cros-ec-keyb.yaml   |  6 +++--
+ .../devicetree/bindings/input/input.yaml      |  3 ++-
+ .../devicetree/bindings/input/iqs269a.yaml    | 12 ++++++----
+ .../devicetree/bindings/input/iqs626a.yaml    | 15 ++++++++----
+ .../input/touchscreen/azoteq,iqs7211.yaml     | 24 ++++++++++++-------
+ .../interrupt-controller/riscv,aplic.yaml     |  3 ++-
+ .../bindings/mfd/maxim,max8998.yaml           |  6 +++--
+ .../bindings/mfd/samsung,s5m8767.yaml         | 21 +++++++++++-----
+ .../devicetree/bindings/mmc/arm,pl18x.yaml    |  9 ++++---
+ .../bindings/mtd/amlogic,meson-nand.yaml      |  8 +++++--
+ .../devicetree/bindings/net/snps,dwmac.yaml   |  6 +++--
+ .../bindings/pci/brcm,iproc-pcie.yaml         |  3 ++-
+ .../devicetree/bindings/perf/riscv,pmu.yaml   |  3 ++-
+ .../phy/hisilicon,hi3798cv200-combphy.yaml    |  6 +++--
+ .../bindings/phy/nvidia,tegra20-usb-phy.yaml  |  6 +++--
+ .../bindings/regulator/adi,max77857.yaml      |  6 +++--
+ .../bindings/regulator/maxim,max8997.yaml     |  9 ++++---
+ .../regulator/samsung,s2mpg10-regulator.yaml  |  3 ++-
+ .../regulator/samsung,s2mpg11-regulator.yaml  |  3 ++-
+ .../bindings/regulator/ti,tps65132.yaml       |  3 ++-
+ .../devicetree/bindings/riscv/cpus.yaml       |  6 +++--
+ .../bindings/rtc/abracon,abx80x.yaml          |  6 +++--
+ .../soc/tegra/nvidia,tegra20-pmc.yaml         | 10 +++++---
+ .../bindings/sound/ti,tlv320adc3xxx.yaml      |  6 +++--
+ .../devicetree/bindings/sound/wlf,wm8904.yaml | 18 ++++++++++----
+ .../devicetree/bindings/tpm/tpm-common.yaml   |  6 +++--
+ .../bindings/usb/mediatek,mtk-xhci.yaml       |  3 ++-
+ .../bindings/usb/mediatek,mtu3.yaml           | 12 ++++++----
+ .../bindings/watchdog/atmel,at91sam9-wdt.yaml |  3 ++-
+ 38 files changed, 192 insertions(+), 91 deletions(-)
 
-> Additional to that the setup that ACS seems to be disabled for some
-> bridges bit not all also sounds extremely uncommon.
+diff --git a/Documentation/devicetree/bindings/display/atmel,lcdc-display.yaml b/Documentation/devicetree/bindings/display/atmel,lcdc-display.yaml
+index a5cf040ab4ea..51aa13f6a348 100644
+--- a/Documentation/devicetree/bindings/display/atmel,lcdc-display.yaml
++++ b/Documentation/devicetree/bindings/display/atmel,lcdc-display.yaml
+@@ -23,9 +23,12 @@ description:
+ 
+ select:
+   anyOf:
+-    - required: [ 'atmel,dmacon' ]
+-    - required: [ 'atmel,lcdcon2' ]
+-    - required: [ 'atmel,guard-time' ]
++    - required:
++        - atmel,dmacon
++    - required:
++        - atmel,lcdcon2
++    - required:
++        - atmel,guard-time
+ 
+ properties:
+   atmel,dmacon:
+diff --git a/Documentation/devicetree/bindings/eeprom/at24.yaml b/Documentation/devicetree/bindings/eeprom/at24.yaml
+index ef88f46928a4..6d9167cfd12d 100644
+--- a/Documentation/devicetree/bindings/eeprom/at24.yaml
++++ b/Documentation/devicetree/bindings/eeprom/at24.yaml
+@@ -20,7 +20,9 @@ select:
+       contains:
+         anyOf:
+           - pattern: "^atmel,(24(c|cs|mac)[0-9]+|spd)$"
+-          - enum: ["microchip,24aa025e48", "microchip,24aa025e64"]
++          - enum:
++              - microchip,24aa025e48
++              - microchip,24aa025e64
+   required:
+     - compatible
+ 
+diff --git a/Documentation/devicetree/bindings/example-schema.yaml b/Documentation/devicetree/bindings/example-schema.yaml
+index b04f3cc4312c..4ff46f1384b9 100644
+--- a/Documentation/devicetree/bindings/example-schema.yaml
++++ b/Documentation/devicetree/bindings/example-schema.yaml
+@@ -206,10 +206,12 @@ properties:
+ dependencies:
+   # 'vendor,bool-property' is only allowed when 'vendor,string-array-property'
+   # is present
+-  vendor,bool-property: [ 'vendor,string-array-property' ]
++  vendor,bool-property:
++    - vendor,string-array-property
+   # Expressing 2 properties in both orders means all of the set of properties
+   # must be present or none of them.
+-  vendor,string-array-property: [ 'vendor,bool-property' ]
++  vendor,string-array-property:
++    - vendor,bool-property
+ 
+ required:
+   - compatible
+diff --git a/Documentation/devicetree/bindings/hwmon/pmbus/adi,max20830.yaml b/Documentation/devicetree/bindings/hwmon/pmbus/adi,max20830.yaml
+index cc50a4ee44a2..7904dacff789 100644
+--- a/Documentation/devicetree/bindings/hwmon/pmbus/adi,max20830.yaml
++++ b/Documentation/devicetree/bindings/hwmon/pmbus/adi,max20830.yaml
+@@ -67,8 +67,10 @@ required:
+   - vddh-supply
+ 
+ dependencies:
+-  adi,vout-rfb1-ohms: ['adi,vout-rfb2-ohms']
+-  adi,vout-rfb2-ohms: ['adi,vout-rfb1-ohms']
++  adi,vout-rfb1-ohms:
++    - adi,vout-rfb2-ohms
++  adi,vout-rfb2-ohms:
++    - adi,vout-rfb1-ohms
+ 
+ unevaluatedProperties: false
+ 
+diff --git a/Documentation/devicetree/bindings/iio/adc/ti,ads112c14.yaml b/Documentation/devicetree/bindings/iio/adc/ti,ads112c14.yaml
+index facfeee61330..6dd59552a41f 100644
+--- a/Documentation/devicetree/bindings/iio/adc/ti,ads112c14.yaml
++++ b/Documentation/devicetree/bindings/iio/adc/ti,ads112c14.yaml
+@@ -132,8 +132,10 @@ dependencies:
+   refn-supply: [ refp-supply ]
+ 
+ oneOf:
+-  - required: [ refp-supply ]
+-  - required: [ "ti,refp-refn-resistor-ohms" ]
++  - required:
++      - refp-supply
++  - required:
++      - ti,refp-refn-resistor-ohms
+   - properties:
+       refp-supply: false
+       refn-supply: false
+diff --git a/Documentation/devicetree/bindings/iio/frequency/adi,adf41513.yaml b/Documentation/devicetree/bindings/iio/frequency/adi,adf41513.yaml
+index f4fae9210382..c71ebc039af2 100644
+--- a/Documentation/devicetree/bindings/iio/frequency/adi,adf41513.yaml
++++ b/Documentation/devicetree/bindings/iio/frequency/adi,adf41513.yaml
+@@ -166,7 +166,8 @@ properties:
+     type: boolean
+ 
+ dependencies:
+-  adi,charge-pump-resistor-ohms: [ 'adi,charge-pump-current-microamp' ]
++  adi,charge-pump-resistor-ohms:
++    - adi,charge-pump-current-microamp
+ 
+ required:
+   - compatible
+diff --git a/Documentation/devicetree/bindings/iio/frequency/adi,adrf6780.yaml b/Documentation/devicetree/bindings/iio/frequency/adi,adrf6780.yaml
+index f11391ab4b62..2bb3ddd252c9 100644
+--- a/Documentation/devicetree/bindings/iio/frequency/adi,adrf6780.yaml
++++ b/Documentation/devicetree/bindings/iio/frequency/adi,adrf6780.yaml
+@@ -104,8 +104,10 @@ properties:
+     const: 0
+ 
+ dependencies:
+-  adi,lo-x2-en: [ "adi,lo-en" ]
+-  adi,lo-ppf-en: [ "adi,lo-en" ]
++  adi,lo-x2-en:
++    - adi,lo-en
++  adi,lo-ppf-en:
++    - adi,lo-en
+ 
+ required:
+   - compatible
+diff --git a/Documentation/devicetree/bindings/iio/temperature/adi,ltc2983.yaml b/Documentation/devicetree/bindings/iio/temperature/adi,ltc2983.yaml
+index 13e5f29f0588..19fc978deb76 100644
+--- a/Documentation/devicetree/bindings/iio/temperature/adi,ltc2983.yaml
++++ b/Documentation/devicetree/bindings/iio/temperature/adi,ltc2983.yaml
+@@ -284,7 +284,8 @@ patternProperties:
+               type: boolean
+ 
+           dependencies:
+-            adi,current-rotate: [ 'adi,rsense-share' ]
++            adi,current-rotate:
++              - adi,rsense-share
+ 
+       - if:
+           properties:
+@@ -368,7 +369,8 @@ patternProperties:
+       - adi,rsense-handle
+ 
+     dependencies:
+-      adi,current-rotate: [ 'adi,rsense-share' ]
++      adi,current-rotate:
++        - adi,rsense-share
+ 
+     allOf:
+       - if:
+diff --git a/Documentation/devicetree/bindings/input/azoteq,iqs7222.yaml b/Documentation/devicetree/bindings/input/azoteq,iqs7222.yaml
+index 418c168b223b..5043ed4cbd5c 100644
+--- a/Documentation/devicetree/bindings/input/azoteq,iqs7222.yaml
++++ b/Documentation/devicetree/bindings/input/azoteq,iqs7222.yaml
+@@ -396,8 +396,10 @@ patternProperties:
+         description: Specifies the cycle's current reference trim.
+ 
+     dependencies:
+-      azoteq,iref-level: ["azoteq,iref-enable"]
+-      azoteq,iref-trim: ["azoteq,iref-enable"]
++      azoteq,iref-level:
++        - azoteq,iref-enable
++      azoteq,iref-trim:
++        - azoteq,iref-enable
+ 
+     additionalProperties: false
+ 
+@@ -627,8 +629,10 @@ patternProperties:
+         additionalProperties: false
+ 
+     dependencies:
+-      azoteq,ref-weight: ["azoteq,ref-select"]
+-      azoteq,use-prox: ["azoteq,ref-select"]
++      azoteq,ref-weight:
++        - azoteq,ref-select
++      azoteq,use-prox:
++        - azoteq,ref-select
+ 
+     additionalProperties: false
+ 
+diff --git a/Documentation/devicetree/bindings/input/google,cros-ec-keyb.yaml b/Documentation/devicetree/bindings/input/google,cros-ec-keyb.yaml
+index fefaaf46a240..a8e61ad5b52a 100644
+--- a/Documentation/devicetree/bindings/input/google,cros-ec-keyb.yaml
++++ b/Documentation/devicetree/bindings/input/google,cros-ec-keyb.yaml
+@@ -45,8 +45,10 @@ properties:
+       when the keyboard has a custom design for the top row keys.
+ 
+ dependencies:
+-  function-row-physmap: [ 'linux,keymap' ]
+-  google,needs-ghost-filter: [ 'linux,keymap' ]
++  function-row-physmap:
++    - linux,keymap
++  google,needs-ghost-filter:
++    - linux,keymap
+ 
+ required:
+   - compatible
+diff --git a/Documentation/devicetree/bindings/input/input.yaml b/Documentation/devicetree/bindings/input/input.yaml
+index 64d1c46cb2f2..7181af1ac8c2 100644
+--- a/Documentation/devicetree/bindings/input/input.yaml
++++ b/Documentation/devicetree/bindings/input/input.yaml
+@@ -75,6 +75,7 @@ properties:
+     default: 0
+ 
+ dependencies:
+-  linux,input-type: [ "linux,code" ]
++  linux,input-type:
++    - linux,code
+ 
+ additionalProperties: true
+diff --git a/Documentation/devicetree/bindings/input/iqs269a.yaml b/Documentation/devicetree/bindings/input/iqs269a.yaml
+index 2c3f693b8982..e77702feaeca 100644
+--- a/Documentation/devicetree/bindings/input/iqs269a.yaml
++++ b/Documentation/devicetree/bindings/input/iqs269a.yaml
+@@ -272,10 +272,14 @@ properties:
+       in order to be interpreted as a flick or swipe.
+ 
+ dependencies:
+-  azoteq,gesture-swipe: ["linux,keycodes"]
+-  azoteq,timeout-tap-ms: ["linux,keycodes"]
+-  azoteq,timeout-swipe-ms: ["linux,keycodes"]
+-  azoteq,thresh-swipe: ["linux,keycodes"]
++  azoteq,gesture-swipe:
++    - linux,keycodes
++  azoteq,timeout-tap-ms:
++    - linux,keycodes
++  azoteq,timeout-swipe-ms:
++    - linux,keycodes
++  azoteq,thresh-swipe:
++    - linux,keycodes
+ 
+ patternProperties:
+   "^channel@[0-7]$":
+diff --git a/Documentation/devicetree/bindings/input/iqs626a.yaml b/Documentation/devicetree/bindings/input/iqs626a.yaml
+index e424d67b0542..534ee0742fdb 100644
+--- a/Documentation/devicetree/bindings/input/iqs626a.yaml
++++ b/Documentation/devicetree/bindings/input/iqs626a.yaml
+@@ -500,7 +500,8 @@ patternProperties:
+         additionalProperties: false
+ 
+     dependencies:
+-      azoteq,assoc-weight: ["azoteq,assoc-select"]
++      azoteq,assoc-weight:
++        - azoteq,assoc-select
+ 
+     additionalProperties: false
+ 
+@@ -722,10 +723,14 @@ patternProperties:
+         additionalProperties: false
+ 
+     dependencies:
+-      azoteq,gesture-swipe: ["linux,keycodes"]
+-      azoteq,timeout-tap-ms: ["linux,keycodes"]
+-      azoteq,timeout-swipe-ms: ["linux,keycodes"]
+-      azoteq,thresh-swipe: ["linux,keycodes"]
++      azoteq,gesture-swipe:
++        - linux,keycodes
++      azoteq,timeout-tap-ms:
++        - linux,keycodes
++      azoteq,timeout-swipe-ms:
++        - linux,keycodes
++      azoteq,thresh-swipe:
++        - linux,keycodes
+ 
+     additionalProperties: false
+ 
+diff --git a/Documentation/devicetree/bindings/input/touchscreen/azoteq,iqs7211.yaml b/Documentation/devicetree/bindings/input/touchscreen/azoteq,iqs7211.yaml
+index e4dbbafb3779..bb5407649717 100644
+--- a/Documentation/devicetree/bindings/input/touchscreen/azoteq,iqs7211.yaml
++++ b/Documentation/devicetree/bindings/input/touchscreen/azoteq,iqs7211.yaml
+@@ -347,9 +347,12 @@ properties:
+         additionalProperties: false
+ 
+     dependencies:
+-      azoteq,rx-enable: ["azoteq,tx-enable"]
+-      azoteq,tx-enable: ["azoteq,rx-enable"]
+-      azoteq,channel-select: ["azoteq,rx-enable"]
++      azoteq,rx-enable:
++        - azoteq,tx-enable
++      azoteq,tx-enable:
++        - azoteq,rx-enable
++      azoteq,channel-select:
++        - azoteq,rx-enable
+ 
+     additionalProperties: false
+ 
+@@ -592,11 +595,16 @@ properties:
+   touchscreen-swapped-x-y: true
+ 
+ dependencies:
+-  touchscreen-size-x: ["azoteq,num-contacts"]
+-  touchscreen-size-y: ["azoteq,num-contacts"]
+-  touchscreen-inverted-x: ["azoteq,num-contacts"]
+-  touchscreen-inverted-y: ["azoteq,num-contacts"]
+-  touchscreen-swapped-x-y: ["azoteq,num-contacts"]
++  touchscreen-size-x:
++    - azoteq,num-contacts
++  touchscreen-size-y:
++    - azoteq,num-contacts
++  touchscreen-inverted-x:
++    - azoteq,num-contacts
++  touchscreen-inverted-y:
++    - azoteq,num-contacts
++  touchscreen-swapped-x-y:
++    - azoteq,num-contacts
+ 
+ required:
+   - compatible
+diff --git a/Documentation/devicetree/bindings/interrupt-controller/riscv,aplic.yaml b/Documentation/devicetree/bindings/interrupt-controller/riscv,aplic.yaml
+index 0718071444d2..20a52bd25bd8 100644
+--- a/Documentation/devicetree/bindings/interrupt-controller/riscv,aplic.yaml
++++ b/Documentation/devicetree/bindings/interrupt-controller/riscv,aplic.yaml
+@@ -101,7 +101,8 @@ properties:
+       that is mentioned in the "interrupts-extended"
+ 
+ dependencies:
+-  riscv,delegation: [ "riscv,children" ]
++  riscv,delegation:
++    - riscv,children
+ 
+ required:
+   - compatible
+diff --git a/Documentation/devicetree/bindings/mfd/maxim,max8998.yaml b/Documentation/devicetree/bindings/mfd/maxim,max8998.yaml
+index f3c3f64fd012..a4fd1805b13f 100644
+--- a/Documentation/devicetree/bindings/mfd/maxim,max8998.yaml
++++ b/Documentation/devicetree/bindings/mfd/maxim,max8998.yaml
+@@ -130,8 +130,10 @@ properties:
+           - regulator-name
+ 
+ dependencies:
+-  max8998,pmic-buck1-dvs-gpios: [ "max8998,pmic-buck1-dvs-voltage" ]
+-  max8998,pmic-buck2-dvs-gpio: [ "max8998,pmic-buck2-dvs-voltage" ]
++  max8998,pmic-buck1-dvs-gpios:
++    - max8998,pmic-buck1-dvs-voltage
++  max8998,pmic-buck2-dvs-gpio:
++    - max8998,pmic-buck2-dvs-voltage
+ 
+ required:
+   - compatible
+diff --git a/Documentation/devicetree/bindings/mfd/samsung,s5m8767.yaml b/Documentation/devicetree/bindings/mfd/samsung,s5m8767.yaml
+index 249248078c59..df0640423757 100644
+--- a/Documentation/devicetree/bindings/mfd/samsung,s5m8767.yaml
++++ b/Documentation/devicetree/bindings/mfd/samsung,s5m8767.yaml
+@@ -143,12 +143,21 @@ required:
+   - s5m8767,pmic-buck-ds-gpios
+ 
+ dependencies:
+-  s5m8767,pmic-buck2-dvs-voltage: [ 's5m8767,pmic-buck-dvs-gpios' ]
+-  s5m8767,pmic-buck3-dvs-voltage: [ 's5m8767,pmic-buck-dvs-gpios' ]
+-  s5m8767,pmic-buck4-dvs-voltage: [ 's5m8767,pmic-buck-dvs-gpios' ]
+-  s5m8767,pmic-buck2-uses-gpio-dvs: [ 's5m8767,pmic-buck-dvs-gpios', 's5m8767,pmic-buck2-dvs-voltage' ]
+-  s5m8767,pmic-buck3-uses-gpio-dvs: [ 's5m8767,pmic-buck-dvs-gpios', 's5m8767,pmic-buck3-dvs-voltage' ]
+-  s5m8767,pmic-buck4-uses-gpio-dvs: [ 's5m8767,pmic-buck-dvs-gpios', 's5m8767,pmic-buck4-dvs-voltage' ]
++  s5m8767,pmic-buck2-dvs-voltage:
++    - s5m8767,pmic-buck-dvs-gpios
++  s5m8767,pmic-buck3-dvs-voltage:
++    - s5m8767,pmic-buck-dvs-gpios
++  s5m8767,pmic-buck4-dvs-voltage:
++    - s5m8767,pmic-buck-dvs-gpios
++  s5m8767,pmic-buck2-uses-gpio-dvs:
++    - s5m8767,pmic-buck-dvs-gpios
++    - s5m8767,pmic-buck2-dvs-voltage
++  s5m8767,pmic-buck3-uses-gpio-dvs:
++    - s5m8767,pmic-buck-dvs-gpios
++    - s5m8767,pmic-buck3-dvs-voltage
++  s5m8767,pmic-buck4-uses-gpio-dvs:
++    - s5m8767,pmic-buck-dvs-gpios
++    - s5m8767,pmic-buck4-dvs-voltage
+ 
+ additionalProperties: false
+ 
+diff --git a/Documentation/devicetree/bindings/mmc/arm,pl18x.yaml b/Documentation/devicetree/bindings/mmc/arm,pl18x.yaml
+index 8d62be4355a0..fec8ecbb56d5 100644
+--- a/Documentation/devicetree/bindings/mmc/arm,pl18x.yaml
++++ b/Documentation/devicetree/bindings/mmc/arm,pl18x.yaml
+@@ -168,9 +168,12 @@ properties:
+       The GPIO matching the CKIN pin.
+ 
+ dependencies:
+-  st,cmd-gpios: [ "st,use-ckin" ]
+-  st,ck-gpios: [ "st,use-ckin" ]
+-  st,ckin-gpios: [ "st,use-ckin" ]
++  st,cmd-gpios:
++    - st,use-ckin
++  st,ck-gpios:
++    - st,use-ckin
++  st,ckin-gpios:
++    - st,use-ckin
+ 
+ unevaluatedProperties: false
+ 
+diff --git a/Documentation/devicetree/bindings/mtd/amlogic,meson-nand.yaml b/Documentation/devicetree/bindings/mtd/amlogic,meson-nand.yaml
+index fa2aa29be794..00079edc7dd3 100644
+--- a/Documentation/devicetree/bindings/mtd/amlogic,meson-nand.yaml
++++ b/Documentation/devicetree/bindings/mtd/amlogic,meson-nand.yaml
+@@ -85,8 +85,12 @@ patternProperties:
+     dependencies:
+       nand-ecc-strength: [nand-ecc-step-size]
+       nand-ecc-step-size: [nand-ecc-strength]
+-      amlogic,boot-pages: [nand-is-boot-medium, "amlogic,boot-page-step"]
+-      amlogic,boot-page-step: [nand-is-boot-medium, "amlogic,boot-pages"]
++      amlogic,boot-pages:
++        - nand-is-boot-medium
++        - amlogic,boot-page-step
++      amlogic,boot-page-step:
++        - nand-is-boot-medium
++        - amlogic,boot-pages
+ 
+ required:
+   - compatible
+diff --git a/Documentation/devicetree/bindings/net/snps,dwmac.yaml b/Documentation/devicetree/bindings/net/snps,dwmac.yaml
+index 2449311c6d28..8eb84942ce3f 100644
+--- a/Documentation/devicetree/bindings/net/snps,dwmac.yaml
++++ b/Documentation/devicetree/bindings/net/snps,dwmac.yaml
+@@ -605,8 +605,10 @@ required:
+   - phy-mode
+ 
+ dependencies:
+-  snps,reset-active-low: ["snps,reset-gpio"]
+-  snps,reset-delays-us: ["snps,reset-gpio"]
++  snps,reset-active-low:
++    - snps,reset-gpio
++  snps,reset-delays-us:
++    - snps,reset-gpio
+ 
+ allOf:
+   - $ref: ethernet-controller.yaml#
+diff --git a/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.yaml b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.yaml
+index 18e7981241b5..2f1be6420e23 100644
+--- a/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.yaml
++++ b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.yaml
+@@ -82,7 +82,8 @@ properties:
+   msi-parent: true
+ 
+ dependencies:
+-  brcm,pcie-ob-axi-offset: ["brcm,pcie-ob"]
++  brcm,pcie-ob-axi-offset:
++    - brcm,pcie-ob
+   brcm,pcie-msi-inten: [msi-controller]
+ 
+ required:
+diff --git a/Documentation/devicetree/bindings/perf/riscv,pmu.yaml b/Documentation/devicetree/bindings/perf/riscv,pmu.yaml
+index d01c677ad3c7..aa2ccf00d136 100644
+--- a/Documentation/devicetree/bindings/perf/riscv,pmu.yaml
++++ b/Documentation/devicetree/bindings/perf/riscv,pmu.yaml
+@@ -90,7 +90,8 @@ properties:
+             bitmap of all MHPMCOUNTERx that can monitor the range of events
+ 
+ dependencies:
+-  riscv,event-to-mhpmevent: [ "riscv,event-to-mhpmcounters" ]
++  riscv,event-to-mhpmevent:
++    - riscv,event-to-mhpmcounters
+ 
+ required:
+   - compatible
+diff --git a/Documentation/devicetree/bindings/phy/hisilicon,hi3798cv200-combphy.yaml b/Documentation/devicetree/bindings/phy/hisilicon,hi3798cv200-combphy.yaml
+index 81001966f657..2040723f5297 100644
+--- a/Documentation/devicetree/bindings/phy/hisilicon,hi3798cv200-combphy.yaml
++++ b/Documentation/devicetree/bindings/phy/hisilicon,hi3798cv200-combphy.yaml
+@@ -48,8 +48,10 @@ required:
+   - resets
+ 
+ oneOf:
+-  - required: ['hisilicon,fixed-mode']
+-  - required: ['hisilicon,mode-select-bits']
++  - required:
++      - hisilicon,fixed-mode
++  - required:
++      - hisilicon,mode-select-bits
+ 
+ additionalProperties: false
+ 
+diff --git a/Documentation/devicetree/bindings/phy/nvidia,tegra20-usb-phy.yaml b/Documentation/devicetree/bindings/phy/nvidia,tegra20-usb-phy.yaml
+index a37e8322dc50..90eba0e6ecdb 100644
+--- a/Documentation/devicetree/bindings/phy/nvidia,tegra20-usb-phy.yaml
++++ b/Documentation/devicetree/bindings/phy/nvidia,tegra20-usb-phy.yaml
+@@ -251,8 +251,10 @@ allOf:
+         - nvidia,xcvr-lsrslew
+ 
+       anyOf:
+-        - required: ["nvidia,xcvr-setup"]
+-        - required: ["nvidia,xcvr-setup-use-fuses"]
++        - required:
++            - nvidia,xcvr-setup
++        - required:
++            - nvidia,xcvr-setup-use-fuses
+ 
+       if:
+         properties:
+diff --git a/Documentation/devicetree/bindings/regulator/adi,max77857.yaml b/Documentation/devicetree/bindings/regulator/adi,max77857.yaml
+index d1fa74aca721..4191c5f3dcd0 100644
+--- a/Documentation/devicetree/bindings/regulator/adi,max77857.yaml
++++ b/Documentation/devicetree/bindings/regulator/adi,max77857.yaml
+@@ -43,8 +43,10 @@ properties:
+     description: Bottom feedback resistor value in ohms for external feedback.
+ 
+ dependencies:
+-  adi,rtop-ohms: [ 'adi,rbot-ohms' ]
+-  adi,rbot-ohms: [ 'adi,rtop-ohms' ]
++  adi,rtop-ohms:
++    - adi,rbot-ohms
++  adi,rbot-ohms:
++    - adi,rtop-ohms
+ 
+ required:
+   - compatible
+diff --git a/Documentation/devicetree/bindings/regulator/maxim,max8997.yaml b/Documentation/devicetree/bindings/regulator/maxim,max8997.yaml
+index 2b266ea43716..acc493840588 100644
+--- a/Documentation/devicetree/bindings/regulator/maxim,max8997.yaml
++++ b/Documentation/devicetree/bindings/regulator/maxim,max8997.yaml
+@@ -251,9 +251,12 @@ required:
+   - regulators
+ 
+ dependencies:
+-  max8997,pmic-buck1-uses-gpio-dvs: [ 'max8997,pmic-buck125-dvs-gpios' ]
+-  max8997,pmic-buck2-uses-gpio-dvs: [ 'max8997,pmic-buck125-dvs-gpios' ]
+-  max8997,pmic-buck5-uses-gpio-dvs: [ 'max8997,pmic-buck125-dvs-gpios' ]
++  max8997,pmic-buck1-uses-gpio-dvs:
++    - max8997,pmic-buck125-dvs-gpios
++  max8997,pmic-buck2-uses-gpio-dvs:
++    - max8997,pmic-buck125-dvs-gpios
++  max8997,pmic-buck5-uses-gpio-dvs:
++    - max8997,pmic-buck125-dvs-gpios
+ 
+ additionalProperties: false
+ 
+diff --git a/Documentation/devicetree/bindings/regulator/samsung,s2mpg10-regulator.yaml b/Documentation/devicetree/bindings/regulator/samsung,s2mpg10-regulator.yaml
+index 7252f94b3a8f..506b61175ae9 100644
+--- a/Documentation/devicetree/bindings/regulator/samsung,s2mpg10-regulator.yaml
++++ b/Documentation/devicetree/bindings/regulator/samsung,s2mpg10-regulator.yaml
+@@ -139,7 +139,8 @@ $defs:
+           property describes the GPIO line used.
+ 
+     dependentRequired:
+-      enable-gpios: [ "samsung,ext-control" ]
++      enable-gpios:
++        - samsung,ext-control
+ 
+ allOf:
+   # Bucks 8, 9, and LDO 1 can not be controlled externally - above definition
+diff --git a/Documentation/devicetree/bindings/regulator/samsung,s2mpg11-regulator.yaml b/Documentation/devicetree/bindings/regulator/samsung,s2mpg11-regulator.yaml
+index 119386325d1b..3a8a2945efd7 100644
+--- a/Documentation/devicetree/bindings/regulator/samsung,s2mpg11-regulator.yaml
++++ b/Documentation/devicetree/bindings/regulator/samsung,s2mpg11-regulator.yaml
+@@ -116,7 +116,8 @@ $defs:
+           property describes the GPIO line used.
+ 
+     dependentRequired:
+-      enable-gpios: [ "samsung,ext-control" ]
++      enable-gpios:
++        - samsung,ext-control
+ 
+ allOf:
+   # Bucks 4, 6, 7 and 10 can not be controlled externally - above definition
+diff --git a/Documentation/devicetree/bindings/regulator/ti,tps65132.yaml b/Documentation/devicetree/bindings/regulator/ti,tps65132.yaml
+index 873d92738eb0..f120f82398dc 100644
+--- a/Documentation/devicetree/bindings/regulator/ti,tps65132.yaml
++++ b/Documentation/devicetree/bindings/regulator/ti,tps65132.yaml
+@@ -48,7 +48,8 @@ patternProperties:
+         description: Regulator active discharge time in microseconds.
+ 
+     dependencies:
+-      active-discharge-gpios: [ 'ti,active-discharge-time-us' ]
++      active-discharge-gpios:
++        - ti,active-discharge-time-us
+ 
+ required:
+   - compatible
+diff --git a/Documentation/devicetree/bindings/riscv/cpus.yaml b/Documentation/devicetree/bindings/riscv/cpus.yaml
+index 5feeb2203050..26914597d049 100644
+--- a/Documentation/devicetree/bindings/riscv/cpus.yaml
++++ b/Documentation/devicetree/bindings/riscv/cpus.yaml
+@@ -151,8 +151,10 @@ anyOf:
+       - riscv,isa-base
+ 
+ dependencies:
+-  riscv,isa-base: [ "riscv,isa-extensions" ]
+-  riscv,isa-extensions: [ "riscv,isa-base" ]
++  riscv,isa-base:
++    - riscv,isa-extensions
++  riscv,isa-extensions:
++    - riscv,isa-base
+ 
+ required:
+   - interrupt-controller
+diff --git a/Documentation/devicetree/bindings/rtc/abracon,abx80x.yaml b/Documentation/devicetree/bindings/rtc/abracon,abx80x.yaml
+index 355b0598411a..9990de48bdd3 100644
+--- a/Documentation/devicetree/bindings/rtc/abracon,abx80x.yaml
++++ b/Documentation/devicetree/bindings/rtc/abracon,abx80x.yaml
+@@ -53,8 +53,10 @@ properties:
+     enum: [0, 3, 6, 11]
+ 
+ dependentRequired:
+-  abracon,tc-diode: ["abracon,tc-resistor"]
+-  abracon,tc-resistor: ["abracon,tc-diode"]
++  abracon,tc-diode:
++    - abracon,tc-resistor
++  abracon,tc-resistor:
++    - abracon,tc-diode
+ 
+ required:
+   - compatible
+diff --git a/Documentation/devicetree/bindings/soc/tegra/nvidia,tegra20-pmc.yaml b/Documentation/devicetree/bindings/soc/tegra/nvidia,tegra20-pmc.yaml
+index f516960dbbef..819adf7e005e 100644
+--- a/Documentation/devicetree/bindings/soc/tegra/nvidia,tegra20-pmc.yaml
++++ b/Documentation/devicetree/bindings/soc/tegra/nvidia,tegra20-pmc.yaml
+@@ -365,9 +365,13 @@ allOf:
+ additionalProperties: false
+ 
+ dependencies:
+-  nvidia,suspend-mode: ['nvidia,core-pwr-off-time', 'nvidia,cpu-pwr-off-time']
+-  nvidia,core-pwr-off-time: ['nvidia,core-pwr-good-time']
+-  nvidia,cpu-pwr-off-time: ['nvidia,cpu-pwr-good-time']
++  nvidia,suspend-mode:
++    - nvidia,core-pwr-off-time
++    - nvidia,cpu-pwr-off-time
++  nvidia,core-pwr-off-time:
++    - nvidia,core-pwr-good-time
++  nvidia,cpu-pwr-off-time:
++    - nvidia,cpu-pwr-good-time
+ 
+ examples:
+   - |
+diff --git a/Documentation/devicetree/bindings/sound/ti,tlv320adc3xxx.yaml b/Documentation/devicetree/bindings/sound/ti,tlv320adc3xxx.yaml
+index 66b76656229f..4e02f2dc5aa8 100644
+--- a/Documentation/devicetree/bindings/sound/ti,tlv320adc3xxx.yaml
++++ b/Documentation/devicetree/bindings/sound/ti,tlv320adc3xxx.yaml
+@@ -125,8 +125,10 @@ properties:
+       Mic bias voltage output on MICBIAS2 pin
+ 
+ dependencies:
+-  ti,micbias1-gpo: ['ti,micbias1-vg']
+-  ti,micbias2-gpo: ['ti,micbias2-vg']
++  ti,micbias1-gpo:
++    - ti,micbias1-vg
++  ti,micbias2-gpo:
++    - ti,micbias2-vg
+ 
+ required:
+   - compatible
+diff --git a/Documentation/devicetree/bindings/sound/wlf,wm8904.yaml b/Documentation/devicetree/bindings/sound/wlf,wm8904.yaml
+index 3029a868e5e1..eb0cf2002865 100644
+--- a/Documentation/devicetree/bindings/sound/wlf,wm8904.yaml
++++ b/Documentation/devicetree/bindings/sound/wlf,wm8904.yaml
+@@ -107,12 +107,20 @@ properties:
+       maxItems: 24
+ 
+ dependencies:
+-  wlf,drc-cfg-names: [ 'wlf,drc-cfg-regs' ]
+-  wlf,drc-cfg-regs: [ 'wlf,drc-cfg-names' ]
++  wlf,drc-cfg-names:
++    - wlf,drc-cfg-regs
++  wlf,drc-cfg-regs:
++    - wlf,drc-cfg-names
+ 
+-  wlf,retune-mobile-cfg-names: [ 'wlf,retune-mobile-cfg-hz', 'wlf,retune-mobile-cfg-regs' ]
+-  wlf,retune-mobile-cfg-regs: [ 'wlf,retune-mobile-cfg-names', 'wlf,retune-mobile-cfg-hz' ]
+-  wlf,retune-mobile-cfg-hz: [ 'wlf,retune-mobile-cfg-names', 'wlf,retune-mobile-cfg-regs' ]
++  wlf,retune-mobile-cfg-names:
++    - wlf,retune-mobile-cfg-hz
++    - wlf,retune-mobile-cfg-regs
++  wlf,retune-mobile-cfg-regs:
++    - wlf,retune-mobile-cfg-names
++    - wlf,retune-mobile-cfg-hz
++  wlf,retune-mobile-cfg-hz:
++    - wlf,retune-mobile-cfg-names
++    - wlf,retune-mobile-cfg-regs
+ 
+ required:
+   - compatible
+diff --git a/Documentation/devicetree/bindings/tpm/tpm-common.yaml b/Documentation/devicetree/bindings/tpm/tpm-common.yaml
+index 3c1241b2a43f..b8853c39ebbf 100644
+--- a/Documentation/devicetree/bindings/tpm/tpm-common.yaml
++++ b/Documentation/devicetree/bindings/tpm/tpm-common.yaml
+@@ -50,8 +50,10 @@ properties:
+ 
+ # must always have both linux,sml-base and linux,sml-size
+ dependentRequired:
+-  linux,sml-base: ['linux,sml-size']
+-  linux,sml-size: ['linux,sml-base']
++  linux,sml-base:
++    - linux,sml-size
++  linux,sml-size:
++    - linux,sml-base
+ 
+ # must only have either memory-region or linux,sml-base
+ # as well as either resets or reset-gpios
+diff --git a/Documentation/devicetree/bindings/usb/mediatek,mtk-xhci.yaml b/Documentation/devicetree/bindings/usb/mediatek,mtk-xhci.yaml
+index 231e6f35a986..af13035f94dc 100644
+--- a/Documentation/devicetree/bindings/usb/mediatek,mtk-xhci.yaml
++++ b/Documentation/devicetree/bindings/usb/mediatek,mtk-xhci.yaml
+@@ -194,7 +194,8 @@ patternProperties:
+     description: The hard wired USB devices.
+ 
+ dependencies:
+-  wakeup-source: [ 'mediatek,syscon-wakeup' ]
++  wakeup-source:
++    - mediatek,syscon-wakeup
+ 
+ required:
+   - compatible
+diff --git a/Documentation/devicetree/bindings/usb/mediatek,mtu3.yaml b/Documentation/devicetree/bindings/usb/mediatek,mtu3.yaml
+index d148e938d647..27d512ada717 100644
+--- a/Documentation/devicetree/bindings/usb/mediatek,mtu3.yaml
++++ b/Documentation/devicetree/bindings/usb/mediatek,mtu3.yaml
+@@ -227,10 +227,14 @@ patternProperties:
+       example if the host mode is enabled.
+ 
+ dependencies:
+-  connector: [ usb-role-switch ]
+-  port: [ usb-role-switch ]
+-  role-switch-default-mode: [ usb-role-switch ]
+-  wakeup-source: [ 'mediatek,syscon-wakeup' ]
++  connector:
++    - usb-role-switch
++  port:
++    - usb-role-switch
++  role-switch-default-mode:
++    - usb-role-switch
++  wakeup-source:
++    - mediatek,syscon-wakeup
+ 
+ required:
+   - compatible
+diff --git a/Documentation/devicetree/bindings/watchdog/atmel,at91sam9-wdt.yaml b/Documentation/devicetree/bindings/watchdog/atmel,at91sam9-wdt.yaml
+index ad27bc518670..fea4f510aa6c 100644
+--- a/Documentation/devicetree/bindings/watchdog/atmel,at91sam9-wdt.yaml
++++ b/Documentation/devicetree/bindings/watchdog/atmel,at91sam9-wdt.yaml
+@@ -104,7 +104,8 @@ allOf:
+           const: hardware
+ 
+ dependencies:
+-  atmel,reset-type: ['atmel,watchdog-type']
++  atmel,reset-type:
++    - atmel,watchdog-type
+ 
+ unevaluatedProperties: false
+ 
+-- 
+2.43.0
 
-I'm not sure where you saw ACS disabled, you can look rdma-core now
-has a tool to help people get their RDMA NICs working in GPU systems:
-
-https://github.com/linux-rdma/rdma-core/blob/master/kernel-boot/rdma_topo
-
-I would view most of that stuff as completely normal at this point,
-people have been doing versions of this by hand for almost 10 years
-now. Especially the asymmetric translated/untranslated routing.
-
-Jason
