@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62C07214812;
-	Thu, 17 Sep 2026 00:07:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A365B2F8EAA;
+	Thu, 17 Sep 2026 00:18:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789603646; cv=none; b=Vzk4YdHhEH4uEeLf1gZamGuoY5zrkR6aZf8m6NMDGsLHzdVFnjAN5K4UmsoXi5CEWCV5ZFKBHAMH7e25/7SATLeLXtvapV8mkfQt54bKpyYBSqfvb8wq65JSSqbi4ttM8nzV3ZBDx0eWou19qEaK+YBwVH/J2wbVJJSTRYcrH/o=
+	t=1789604330; cv=none; b=Ph8IdSYjcXABLUfllCZTKXOVvNynhPQL70IOaIUo42nT1OlXVQf1m46GTfd3I1A7T/Wa6XZn2BCVcNS1aLG44Y4BMK0oECxILpUQbS6W6QQBLZL0gBJl85LQWoAF+g1Uts9zA/0hLkT8lYcfDwFZ7hXy+pi4+O202ZSsNyBXnzs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789603646; c=relaxed/simple;
-	bh=Q6qTyOSAVqzgx4rJNxm+9/hjkyz2JYfoGFgR2fGVxEQ=;
+	s=arc-20240116; t=1789604330; c=relaxed/simple;
+	bh=qSx7EqvHE7Jdbpsu/dpO5l2jUSZY3ITM0i7c+b3wfXM=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=OUdeoKegCJAwvUmLisdbdqaJOGhxyn/8H/J3nhHeQBUdsuU0XS8bOlsdWM1nQ8aGvw8+RRbQnZsJ1TsqDp5Y/Zdz399GpFJpMhQqZmH0C/jHR62zc3hux0LBiwBwaVVjtBLx0VpJ0vOf0uV8JlpOi/7SYZbGO8x1g7CGU0gkJ2M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UjbTsEtV; arc=none smtp.client-ip=100.103.45.18
+	 Content-Disposition:In-Reply-To; b=MtIuP+I3q6rF9/iacDv/dzV6GSkMkogHIaEejG7mFZQS8WlJC5q2j75DPnXZt+2niEmk9EWo7Iu46H1b6XQGH5KPmpR3/tV8f/E/sCiHl1P8XvXO1pyZpjNuLQsat7aZmvV/MKxXw+APMMx++o8on+DtBY1GoJq1Phrth0iONNs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hTCcc2Op; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UjbTsEtV"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9C5DF1F000FF;
-	Thu, 17 Sep 2026 00:07:24 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hTCcc2Op"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E6E5E1F000FF;
+	Thu, 17 Sep 2026 00:18:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789603644;
-	bh=+yFcjzj37ujFduHmXiBvfG9JBS833j3YXgLJ04CFxHE=;
+	s=k20260515; t=1789604329;
+	bh=/I018ClHfzUNPJt0+qMbQoq+P+RBASppZEIurBOx0D0=;
 	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=UjbTsEtVaPtsiaZUuZNq+T2sPIquKhVFlF6WCE1Nit+LYL5byUhUnUswsWKHVH8wK
-	 7qMsN9mQuJsHdDVnrFzUsqc9srPE2TyNRfy5sfQGHZd2IhIXBj2X/t95jvsRKjbxes
-	 lW4C1s7A5Nc0siyJhxlMktOEclBcFv0GC8ZCkpoYvvrYb+6YZUqa5gzAF92LNEhiWG
-	 fbkCpan3pHHSqNMPeNzv/+c7N/vuVGzf8tIrVMWvAFsKjZw1wSbvxtDjUqQoHSjPIh
-	 af2nNUqh3M0izEpdLd5+JAe9EJ8BchGBTY8vR4TP4CD1d2d1+4+nNv6FNem2o7XMVr
-	 6IuBrI0whhNvw==
-Date: Wed, 16 Sep 2026 19:07:23 -0500
+	b=hTCcc2OpdJ9QTJ/43CxwpgjFBxFkI1cBuFOCVvg+DW5lqQhReL4g6HpYm8MA+Yd+s
+	 cEtp/gYcnSUCGp5wIg8UPM53pGwTfoPcpJRGcQQhWUlDWh2mDLElt8OzdzQzRaToHm
+	 1WyHFD0e2UTg0HfnN6aX3wx5uL8+aUjuxmypfEz9bjjjRFX4J0v7Hv2ZS0P9OD7CJz
+	 i4SQqmEylvwEMl9RubLczb7y5qvyXOJLBmta4HxuXXhlP8A0tpNQL00gzGAIw52HOv
+	 UcyiTOvMxjRzAkCubtbbwYMqr6Ras8/HJf6uPvXYP5hDxatNQMRSFkQQG3nbiv4bgz
+	 AtstkzNaGBXEA==
+Date: Wed, 16 Sep 2026 19:18:47 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
 To: David Matlack <dmatlack@google.com>
 Cc: kexec@lists.infradead.org, linux-doc@vger.kernel.org,
@@ -52,7 +52,7 @@ Cc: kexec@lists.infradead.org, linux-doc@vger.kernel.org,
 	Yi Liu <yi.l.liu@intel.com>
 Subject: Re: [PATCH v8 06/12] PCI: liveupdate: Auto-preserve upstream bridges
  across Live Update
-Message-ID: <20260917000723.GA992337@bhelgaas>
+Message-ID: <20260917001847.GA993118@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -61,88 +61,63 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260728221007.2098560-7-dmatlack@google.com>
+In-Reply-To: <aqQzmvgILmU8F4TR@google.com>
 
-On Tue, Jul 28, 2026 at 10:10:00PM +0000, David Matlack wrote:
-> When a PCI device is preserved across a Live Update, all of its upstream
-> bridges up to the root port must also be preserved. This enables the PCI
-> core and any drivers bound to the bridges to manage bridges correctly
-> across a Live Update.
+On Fri, Sep 11, 2026 at 05:00:10PM +0000, David Matlack wrote:
+> On 2026-09-10 06:51 PM, Bjorn Helgaas wrote:
+> > On Tue, Jul 28, 2026 at 10:10:00PM +0000, David Matlack wrote:
+> > > When a PCI device is preserved across a Live Update, all of its upstream
+> > > bridges up to the root port must also be preserved. This enables the PCI
+> > > core and any drivers bound to the bridges to manage bridges correctly
+> > > across a Live Update.
+> > > 
+> > > Notably, this will be used in subsequent commits to ensure that
+> > > preserved devices can continue performing memory transactions without a
+> > > disruption or change in routing.
+> > > 
+> > > To preserve bridges, the PCI core tracks the number of downstream
+> > > devices preserved under each bridge using a reference count in struct
+> > > pci_dev_ser. This allows a bridge to remain preserved until all its
+> > > downstream preserved devices are unpreserved or finish their
+> > > participation in the Live Update.
+> > 
+> > This seems to hint that we're going to allow bridge reconfiguration in
+> > some cases, e.g., for hot-adds.  The simplest case is "leave config of
+> > all bridges the same", and I thought that was what the previous patch
+> > commit log said.
+> > 
+> > What's the benefit added by this patch?
 > 
-> Notably, this will be used in subsequent commits to ensure that
-> preserved devices can continue performing memory transactions without a
-> disruption or change in routing.
+> It is used in the following patches:
 > 
-> To preserve bridges, the PCI core tracks the number of downstream
-> devices preserved under each bridge using a reference count in struct
-> pci_dev_ser. This allows a bridge to remain preserved until all its
-> downstream preserved devices are unpreserved or finish their
-> participation in the Live Update.
-> ...
+>  PCI: liveupdate: Adopt ACS controls in incoming preserved devices
+>  PCI: liveupdate: Adopt ARI Forwarding Enable on preserved bridges
+>  PCI: liveupdate: Do not disable bus mastering on preserved devices during kexec
+> 
+> to preserve certain configuration on bridges that have downstream
+> endpoints that are being preserved. To support P2PDMA we will also have
+> to preserve bridge memory windows (future series).
+> 
+> If we are ok with applying those policies to all bridges on the system
+> whenever one or more endpoints anywhere on the system are being
+> preserved, then I agree we don't need this patch. But I thought it would
+> be cleaner to track things per-device.
 
-> +static int pci_liveupdate_unpreserve_device(struct pci_flb_outgoing *outgoing,
-> +					    struct pci_dev *dev)
->  {
->  	struct pci_dev_ser *dev_ser = dev->liveupdate.outgoing;
->  
->  	if (!dev_ser) {
->  		pci_warn(dev, "Cannot unpreserve device that is not preserved\n");
-> -		return;
-> +		return -EINVAL;
-> +	}
-> +
-> +	if (!dev_ser->refcount) {
-> +		pci_WARN(dev, 1, "Preserved device has a 0 refcount!\n");
-> +		return -EINVAL;
->  	}
->  
-> +	if (--dev_ser->refcount)
-> +		return 0;
+Yes, I agree tracking it per-device is good.  I was looking for a
+traversal upstream to increment refcounts on bridges, and I guess that
+happens via for_each_pci_dev_in_path() in pci_liveupdate_preserve().
 
-I guess this is a nit: I was looking for a dev_ser->refcount++ in this
-patch to correspond with this decrement.  I *guess* the
-"dev_ser->refcount = 1" in pci_liveupdate_preserve_device() starts
-that, and the "dev->liveupdate.outgoing->refcount++" there is an
-increment of the same refcount?  The connections there don't seem
-quite obvious to me.
+The actual refcount still confuses me a bit (see
+https://lore.kernel.org/all/20260917000723.GA992337@bhelgaas).  Maybe
+it would help if pci_liveupdate_preserve_device() alloc the dev_ser
+*first* (right after all the bail-out checks)?  I wonder if the
+refcount increment could then happen in exactly one place, separated
+from the one-time dev_ser housekeeping?  E.g., something like:
 
-But I guess "dev_ser->refcount = 1" was added by a different patch, so
-probably *not* the same?
+  if (!dev->liveupdate.outgoing) {
+    dev_ser = pci_flb_alloc_dev_ser(outgoing);
+    ...
+    dev->liveupdate.outgoing = dev_ser;
+  }
 
->  	pci_info(dev, "Device will no longer be preserved across next Live Update\n");
->  	outgoing->ser->nr_devices--;
->  	memset(dev_ser, 0, sizeof(*dev_ser));
->  	dev->liveupdate.outgoing = NULL;
-> +	return 0;
-> +}
-
-> @@ -385,13 +418,23 @@ static int pci_liveupdate_preserve_device(struct pci_flb_outgoing *outgoing,
->  	}
->  
->  	if (dev->liveupdate.outgoing) {
-> -		pci_warn(dev, "Device is already preserved\n");
-> -		return -EBUSY;
-> -	}
-> +		if (!dev->liveupdate.outgoing->refcount) {
-> +			pci_WARN(dev, 1, "Preserved device with 0 refcount!\n");
-> +			return -EINVAL;
-> +		}
->  
-> -	if (!pci_is_root_bus(dev->bus)) {
-> -		pci_warn(dev, "Cannot preserve devices behind bridges\n");
-> -		return -EINVAL;
-> +		/*
-> +		 * Endpoint devices should not be preserved more than once.
-> +		 * Bridges are preserved once for every downstream device that
-> +		 * is preserved.
-> +		 */
-> +		if (!dev->subordinate) {
-> +			pci_warn(dev, "Device is already preserved\n");
-> +			return -EBUSY;
-> +		}
-> +
-> +		dev->liveupdate.outgoing->refcount++;
-> +		return 0;
->  	}
->  
->  	dev_ser = pci_flb_alloc_dev_ser(outgoing);
+  dev->liveupdate.outgoing->refcount++;
