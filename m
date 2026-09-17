@@ -1,150 +1,478 @@
-Received: from mail-pl1-f228.google.com (mail-pl1-f228.google.com [209.85.214.228])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0b-00190b01.pphosted.com (mx0b-00190b01.pphosted.com [67.231.157.127])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7681E59B672
-	for <linux-pci@vger.kernel.org>; Thu, 17 Sep 2026 16:06:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.228
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 071C54CDDFE
+	for <linux-pci@vger.kernel.org>; Thu, 17 Sep 2026 16:26:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.157.127
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789661220; cv=none; b=pD9YTOD8yVynEkeG8jWJcrHwmCqnkKh4D1PhKEi79De1elhFk8cppVZyaKuygK7j+rx8OrkgG5lxC846ZFJP+U7v+SFP6KFhWd78YaOTRuBTnD8Qfb7sv4z+k7GSKxle/Esxu1P41dra06YtRLJdp/qHqVwjMC1YnLdpOVVFnsU=
+	t=1789662391; cv=none; b=YB4lw8HJu1wuK8INn8hq8NxbTm/YyDxavWul/rDKQJPRG1Gh4A6Xmc6cUo6M86gzxAP2lo84Jm/ImEp+YmxFSLdp1NR31ar29NGEaELoX/PyTOCv4JToun+rFXIi+FAmafKXXRZ439GJ6KloSshbqIQnuSpbYQIeoUJZS6GkbZY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789661220; c=relaxed/simple;
-	bh=zu99EUyKu04qHSXSnN2pGp746UHvgDIIaYO80aLOXlA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=bW1ERxT2O6+inr4vH8/L2TUEwfOa2X3OrFcN4ikzX+FHiMCErJsnXelLDvEWIkdzwN9UV6NUU9SXD2UIarzFUIkYrouSlZC5in8yYDuEHiHwkjKoBeEGsBIa/Hii0PsKthuc2+RN7JBzSXGk0eJHR0EDz0X38UncUq7/ySANJ7g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=FkHwAoiJ; arc=none smtp.client-ip=209.85.214.228
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
+	s=arc-20240116; t=1789662391; c=relaxed/simple;
+	bh=/XgH+kfKjSbpzJY4yqsQlS1h/feiybtMRwm/CFGgspY=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=Jhcvp5XlX7m2dpX6yM6spDEuU0LETPhwuZEcy7I2RLem0hYOVQdBYYUDUjsHiRVty+ZHRtobaCd2FAg6KgvCP7tD+Gq5vVz5T+SbJ4BCXqaJYi3kN1njKwh0x/IkPrvgtps5tUF95hd+dApEkvUw34AiSXfhATcTrymcYDvFEQQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=akamai.com; spf=pass smtp.mailfrom=akamai.com; dkim=pass (2048-bit key) header.d=akamai.com header.i=@akamai.com header.b=lmR+hMCR; arc=none smtp.client-ip=67.231.157.127
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=akamai.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=akamai.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="FkHwAoiJ"
-Received: by mail-pl1-f228.google.com with SMTP id d9443c01a7336-2dcff8f44f2so5819575ad.1
-        for <linux-pci@vger.kernel.org>; Thu, 17 Sep 2026 09:06:59 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1789661219; x=1790266019;
-        h=content-transfer-encoding:content-type:in-reply-to:autocrypt:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:dkim-signature:x-gm-gg:x-gm-message-state:from:to
-         :cc:subject:date:message-id:reply-to:content-type;
-        bh=5vgy7pM/Q+yzgmJx8Y4gFH5AEXLaNEKRG3IPtSFZXZg=;
-        b=2R6KhwnS9DGwC1cI0bubVYa7a/utnPuy4kCtA6vQZwFSzSr8+i+BTyDDu8Ta0oRXMF
-         CN4ZpZ/YCxWtJkjEYfIaqOYpm0KjlZLkeWIw3Ifh9KtBO7hKiiAX7OtG3TPHZ4yk/L7p
-         yWMcrApWEFGubxl7MFzyr+hSEjjTrUN2H1U/002kEBqU5mqCaYX3YNBaYNOmPLBa3wSR
-         HEYIe8kYjydCbKPRRbrzWu5VBACwb5bh8TTk8naRUNoy8AKWo1eDruJbxWMdtwat1iqZ
-         LNVrUra1CtOhZBcF/YjvQF48Z4DXzSJ+dTmJ/bNkJl0lvEtiKnqrfQJKEymsuW88NplJ
-         DGlg==
-X-Forwarded-Encrypted: i=1; AKwUvBwyt5PQp1bm94B1sU169vIbMab7Jj7SAlrmDT2jYqiDlLzI0iJ87HQXJ2fWf2SUWoaM5EN/CQuLlf0=@vger.kernel.org
-X-Gm-Message-State: AFuF++lpxCfRChZz0Kpr/8JPbLQHzg6H1vSsgFojJJBjNhO5nL1hZCMu
-	qbgszZDraqRvbbG7qMHttSFz0ITMBvGaqhPh35HZNWLAYsmkx1wviWHGu+5Oc+2GQODMkbZMRUK
-	BCwx4kmPGxkIT5AbFJ4m/JEx74jybehMd9gkEFEnHKrzk2qmbFeIDrnyK6E4qbsGEd7DXTYf9uw
-	/o+rRViBxP8kNSO6tlpl2HsBs67y0rg9X+L0orPzQ+kZ1NQset++sQxCoSkmyRDEwoqfWIfP/IX
-	oEQF7JANX3bMEKRFGhg
-X-Gm-Gg: AYBFou00F7HwnUruVMps5zXH/qFtJxj1Rs7QE3zo2BxalvGSN1SN80C81cOk0czoQlG
-	ctdA+u2lf0QqdayavRkb4xtNQ1HkjUFNQRhfBg6It6PTItvwy8QkSoAhPGmalGBNcZ5PwWu00XP
-	2s/0eN4/1crsJjYlte/tXkNV7vcl0Mt96/XuvjMDxGmrKrfvUvzsSb+dOTkHnjfdDzziECUWg13
-	Qwcnc+FTQtJD5AHkrJEHOxPBaXwTHUH/c31LvqZ6fJrtnukZdvHznBJemSIbKde8voSffCYbF0I
-	3yxf9cXdyyaFeE3+iC0tapQP1/+kBpcemWgFVhIuXHOUrd32hb3fb94WtHAmpV6bfc52YV13QJb
-	vm1O42Ewbf9P9yC99ZOoFfm+vAzpg/b9SJ0IzKdxJHkhh9SsXPDsdk7NalF+YK60EqlyhaPT8iB
-	9AU7ndUkfnYfUVcnHQb5RBUbrpskT9XHLHmqRm9xUA
-X-Received: by 2002:a17:903:1ac7:b0:2dd:60d:8b7c with SMTP id d9443c01a7336-2dd8e3f57f8mr170889395ad.13.1789661218820;
-        Thu, 17 Sep 2026 09:06:58 -0700 (PDT)
-Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-98.dlp.protect.broadcom.com. [144.49.247.98])
-        by smtp-relay.gmail.com with ESMTPS id d9443c01a7336-2dd89eb8a58sm2639075ad.26.2026.09.17.09.06.58
-        for <linux-pci@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 17 Sep 2026 09:06:58 -0700 (PDT)
-X-Relaying-Domain: broadcom.com
-X-CFilter-Loop: Reflected
-Received: by mail-pl1-f198.google.com with SMTP id d9443c01a7336-2d6f75c1219so19816635ad.3
-        for <linux-pci@vger.kernel.org>; Thu, 17 Sep 2026 09:06:57 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1789661217; x=1790266017; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:autocrypt:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=5vgy7pM/Q+yzgmJx8Y4gFH5AEXLaNEKRG3IPtSFZXZg=;
-        b=FkHwAoiJ9CLPePd/Llx683SDkGTuDQtqaJ6TMv493sevpdoHO90d0wB0t099vvgyTC
-         NCvZp0MWU4coKOGDn15YxqBcTul3iU6x96hMJSvplanct+iBPrrEdCsJtibgBjrxH/bW
-         RiL+w0F34HfRtmOLbk5oDVFRvdwliT1A+eZe8=
-X-Forwarded-Encrypted: i=1; AKwUvByk2DZWo8v/dY7t73wraapfZh5JcKqe3SrYU1ZEy393UjqQflad8YtxQ2UvLN7FiI5eKuLZ0Np/Po8=@vger.kernel.org
-X-Received: by 2002:a17:902:d2c8:b0:2dd:278c:5eb with SMTP id d9443c01a7336-2dd8e3f5a13mr153455115ad.14.1789661216895;
-        Thu, 17 Sep 2026 09:06:56 -0700 (PDT)
-X-Received: by 2002:a17:902:d2c8:b0:2dd:278c:5eb with SMTP id d9443c01a7336-2dd8e3f5a13mr153454615ad.14.1789661216485;
-        Thu, 17 Sep 2026 09:06:56 -0700 (PDT)
-Received: from [10.67.48.245] ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2dd89d8ed77sm28778555ad.4.2026.09.17.09.06.54
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 17 Sep 2026 09:06:55 -0700 (PDT)
-Message-ID: <d0611a8b-e7a5-4ffb-aa7a-86b14196b6d7@broadcom.com>
-Date: Thu, 17 Sep 2026 09:06:53 -0700
+	dkim=pass (2048-bit key) header.d=akamai.com header.i=@akamai.com header.b="lmR+hMCR"
+Received: from pps.filterd (m0122331.ppops.net [127.0.0.1])
+	by mx0b-00190b01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 68HFaLMM2428978;
+	Thu, 17 Sep 2026 17:17:05 +0100
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=akamai.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=apr2026.eng;
+	 bh=f/P17vLNhgAuXOGXoNhfPybBk9DMrjo/FfMTRcHe0VQ=; b=lmR+hMCRHQOX
+	1MqG7aFoH0rIZ4rL10gshnzM/MyXqOqDckjI4ylFaCJ9VnYxv/+RyqfVEAHhQzx3
+	I6gvzSwKvKl2YE93TJ+wk6ajdITznofjKiU8M/I+DjUw87xDwQ28Fl9NpjMrUA4r
+	HrfEtPed3fWQiVT4jwtELVtYu0pFeuPHD9vktwCJX+ru3o0DqCmrstB6byvC20oG
+	qOvZjMHYe6cJEalHYjldg4OJPV3ZtEI00R2+piw1mCfSO/6Maalnsad/bcL7BVis
+	XU6k4AKLPdjO+0gFUP3xYQYrRd6ZoJNVXcZGyvSsDCUXLqddtm8NMEQDy++7q1j2
+	pK8DZvfX9A==
+Received: from prod-mail-ppoint5 (prod-mail-ppoint5.akamai.com [184.51.33.60])
+	by mx0b-00190b01.pphosted.com (PPS) with ESMTPS id 4gp29qd532-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 17 Sep 2026 17:17:05 +0100 (BST)
+Received: from pps.filterd (prod-mail-ppoint5.akamai.com [127.0.0.1])
+	by prod-mail-ppoint5.akamai.com (8.18.1.7/8.18.1.7) with ESMTP id 68HG6HtX029316;
+	Thu, 17 Sep 2026 09:17:04 -0700
+Received: from email.msg.corp.akamai.com ([172.27.91.41])
+	by prod-mail-ppoint5.akamai.com (PPS) with ESMTPS id 4gn4q7urp8-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 17 Sep 2026 09:17:04 -0700 (PDT)
+Received: from usma1ex-dag5mb2.msg.corp.akamai.com (172.27.91.41) by
+ usma1ex-dag5mb2.msg.corp.akamai.com (172.27.91.41) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.43; Thu, 17 Sep 2026 09:17:03 -0700
+Received: from bos-lpnz1z1y (172.27.118.139) by
+ usma1ex-dag5mb2.msg.corp.akamai.com (172.27.91.41) with Microsoft SMTP Server
+ id 15.2.2562.43 via Frontend Transport; Thu, 17 Sep 2026 09:17:03 -0700
+Received: by bos-lpnz1z1y (Postfix, from userid 56609)
+	id 29C5E241CAB; Thu, 17 Sep 2026 12:17:03 -0400 (EDT)
+From: jlefkowi <jlefkowi@akamai.com>
+To: <linux-pci@vger.kernel.org>
+CC: <mj@ucw.cz>, <bchaney@akamai.com>, <mpelland@akamai.com>,
+        jlefkowi
+	<jlefkowi@akamai.com>
+Subject: [PATCH 2/3] feature: add auto length discovery for vendor defined capabilities.
+Date: Thu, 17 Sep 2026 12:16:30 -0400
+Message-ID: <20260917161631.801636-3-jlefkowi@akamai.com>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20260917161631.801636-1-jlefkowi@akamai.com>
+References: <20260917161631.801636-1-jlefkowi@akamai.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 07/13] PCI: brcmstb: Declare and assign quirk
- 32BIT_PCI_OPS
-To: Jim Quinlan <james.quinlan@broadcom.com>, linux-pci@vger.kernel.org,
- Nicolas Saenz Julienne <nsaenz@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- bcm-kernel-feedback-list@broadcom.com, jim2101024@gmail.com
-Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>,
- =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
- Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
- "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE"
- <linux-rpi-kernel@lists.infradead.org>,
- "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE"
- <linux-arm-kernel@lists.infradead.org>,
- open list <linux-kernel@vger.kernel.org>
-References: <20260911233541.1650895-1-james.quinlan@broadcom.com>
- <20260911233541.1650895-8-james.quinlan@broadcom.com>
-Content-Language: en-US, fr-FR
-From: Florian Fainelli <florian.fainelli@broadcom.com>
-Autocrypt: addr=florian.fainelli@broadcom.com; keydata=
- xsBNBFPAG8ABCAC3EO02urEwipgbUNJ1r6oI2Vr/+uE389lSEShN2PmL3MVnzhViSAtrYxeT
- M0Txqn1tOWoIc4QUl6Ggqf5KP6FoRkCrgMMTnUAINsINYXK+3OLe7HjP10h2jDRX4Ajs4Ghs
- JrZOBru6rH0YrgAhr6O5gG7NE1jhly+EsOa2MpwOiXO4DE/YKZGuVe6Bh87WqmILs9KvnNrQ
- PcycQnYKTVpqE95d4M824M5cuRB6D1GrYovCsjA9uxo22kPdOoQRAu5gBBn3AdtALFyQj9DQ
- KQuc39/i/Kt6XLZ/RsBc6qLs+p+JnEuPJngTSfWvzGjpx0nkwCMi4yBb+xk7Hki4kEslABEB
- AAHNMEZsb3JpYW4gRmFpbmVsbGkgPGZsb3JpYW4uZmFpbmVsbGlAYnJvYWRjb20uY29tPsLB
- IQQQAQgAywUCZWl41AUJI+Jo+hcKAAG/SMv+fS3xUQWa0NryPuoRGjsA3SAUAAAAAAAWAAFr
- ZXktdXNhZ2UtbWFza0BwZ3AuY29tjDAUgAAAAAAgAAdwcmVmZXJyZWQtZW1haWwtZW5jb2Rp
- bmdAcGdwLmNvbXBncG1pbWUICwkIBwMCAQoFF4AAAAAZGGxkYXA6Ly9rZXlzLmJyb2FkY29t
- Lm5ldAUbAwAAAAMWAgEFHgEAAAAEFQgJChYhBNXZKpfnkVze1+R8aIExtcQpvGagAAoJEIEx
- tcQpvGagWPEH/2l0DNr9QkTwJUxOoP9wgHfmVhqc0ZlDsBFv91I3BbhGKI5UATbipKNqG13Z
- TsBrJHcrnCqnTRS+8n9/myOF0ng2A4YT0EJnayzHugXm+hrkO5O9UEPJ8a+0553VqyoFhHqA
- zjxj8fUu1px5cbb4R9G4UAySqyeLLeqnYLCKb4+GklGSBGsLMYvLmIDNYlkhMdnnzsSUAS61
- WJYW6jjnzMwuKJ0ZHv7xZvSHyhIsFRiYiEs44kiYjbUUMcXor/uLEuTIazGrE3MahuGdjpT2
- IOjoMiTsbMc0yfhHp6G/2E769oDXMVxCCbMVpA+LUtVIQEA+8Zr6mX0Yk4nDS7OiBlvOwE0E
- U8AbwQEIAKxr71oqe+0+MYCc7WafWEcpQHFUwvYLcdBoOnmJPxDwDRpvU5LhqSPvk/yJdh9k
- 4xUDQu3rm1qIW2I9Puk5n/Jz/lZsqGw8T13DKyu8eMcvaA/irm9lX9El27DPHy/0qsxmxVmU
- pu9y9S+BmaMb2CM9IuyxMWEl9ruWFS2jAWh/R8CrdnL6+zLk60R7XGzmSJqF09vYNlJ6Bdbs
- MWDXkYWWP5Ub1ZJGNJQ4qT7g8IN0qXxzLQsmz6tbgLMEHYBGx80bBF8AkdThd6SLhreCN7Uh
- IR/5NXGqotAZao2xlDpJLuOMQtoH9WVNuuxQQZHVd8if+yp6yRJ5DAmIUt5CCPcAEQEAAcLB
- gQQYAQIBKwUCU8AbwgUbDAAAAMBdIAQZAQgABgUCU8AbwQAKCRCTYAaomC8PVQ0VCACWk3n+
- obFABEp5Rg6Qvspi9kWXcwCcfZV41OIYWhXMoc57ssjCand5noZi8bKg0bxw4qsg+9cNgZ3P
- N/DFWcNKcAT3Z2/4fTnJqdJS//YcEhlr8uGs+ZWFcqAPbteFCM4dGDRruo69IrHfyyQGx16s
- CcFlrN8vD066RKevFepb/ml7eYEdN5SRALyEdQMKeCSf3mectdoECEqdF/MWpfWIYQ1hEfdm
- C2Kztm+h3Nkt9ZQLqc3wsPJZmbD9T0c9Rphfypgw/SfTf2/CHoYVkKqwUIzI59itl5Lze+R5
- wDByhWHx2Ud2R7SudmT9XK1e0x7W7a5z11Q6vrzuED5nQvkhAAoJEIExtcQpvGagugcIAJd5
- EYe6KM6Y6RvI6TvHp+QgbU5dxvjqSiSvam0Ms3QrLidCtantcGT2Wz/2PlbZqkoJxMQc40rb
- fXa4xQSvJYj0GWpadrDJUvUu3LEsunDCxdWrmbmwGRKqZraV2oG7YEddmDqOe0Xm/NxeSobc
- MIlnaE6V0U8f5zNHB7Y46yJjjYT/Ds1TJo3pvwevDWPvv6rdBeV07D9s43frUS6xYd1uFxHC
- 7dZYWJjZmyUf5evr1W1gCgwLXG0PEi9n3qmz1lelQ8lSocmvxBKtMbX/OKhAfuP/iIwnTsww
- 95A2SaPiQZA51NywV8OFgsN0ITl2PlZ4Tp9hHERDe6nQCsNI/Us=
-In-Reply-To: <20260911233541.1650895-8-james.quinlan@broadcom.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-09-17_03,2026-09-16_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0
+ lowpriorityscore=0 adultscore=0 bulkscore=0 phishscore=0 spamscore=0
+ suspectscore=0 malwarescore=0 classifier=typeunknown authscore=0 authtc=
+ authcc= route=outbound adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2609040000 definitions=main-2609170229
+X-Proofpoint-GUID: oXhqPvm56iAw0UqX2F4YNJwTLVq5a93Q
+X-Proofpoint-Spam-Info: AW1haW4tMjYwOTE3MDIzMSBTYWx0ZWRfX11MOd4hj94dv
+ HJJQ3NP1Wx7h852P8DDv4DVc8V0lOifU07RtYiOH7TzAq0P1WUKHItJxNXZk9/eFDOig/cpZ75X
+ xVTNPJA5mTeaBDj0gnAlDBGj6+hJb68=
+X-Authority-Analysis: v=2.4 cv=Ud/E26SN c=1 sm=1 tr=0 ts=6aac1281 cx=c_pps
+ a=NpDlK6FjLPvvy7XAFEyJFw==:117 a=NpDlK6FjLPvvy7XAFEyJFw==:17
+ a=VdqzKS8jKosA:10 a=VkNPw1HP01LnGYTKEx00:22 a=Ifg-1AOnLHOf1gn6spyb:22
+ a=VcQvXEo1OZcA_IiPcy3B:22 a=X7Ea-ya5AAAA:8 a=hI7Ngbw4rNr3vCxiicwA:9
+ a=P9hY669LYN7OhJm7:21
+X-Proofpoint-ORIG-GUID: oXhqPvm56iAw0UqX2F4YNJwTLVq5a93Q
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTE3MDIzMSBTYWx0ZWRfX6ISeszNgAlje
+ MeOZGf+6DuU4s/iOMObSe03Cv53pWc5q99n2BENwjKpLdZS23lapMEMMcP8f61/nhpIvGtqZBxo
+ ab3vawJx+Chpm1r8KxtqmUG9xjGFWijdCXxJleUpH508OYItEhVN2Nq04JCdv6OzbSgO2VXpswc
+ /yAu59ha2fG+PLhU9LR2oG0FcN63ExvWVxc3l4X6MjTFUj4F5LCu5I9o5Zh7u+SVlKUqFi5NCX4
+ 1fncxlAI4sJ856aJcpQyRAUVBaTR9Jh0jmv8mT8Pjue7hhPtPHbC8m4XAQI5jV5efWJEQ9Gtyaz
+ 5qdWbkZ61ylBG8QTgPc5OTpm5ScI9UFhwNtF6INIfDvS54rrUOlpVkdf+SVBzaHpka01V8+V6T6
+ jNgTO6Pk5r11fKK4N9Iu3TYc4HksdJILE0RYeTZkVa6UJx/i1RJ6iuyI9KiGzMh5sqzE6RhQlSc
+ iqmj2OXzIGnjh0AyvNA==
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-09-17_03,2026-09-16_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0
+ bulkscore=0 spamscore=0 priorityscore=1501 impostorscore=0 adultscore=0
+ suspectscore=0 lowpriorityscore=0 clxscore=1011 phishscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2609040000 definitions=main-2609170231
 
-On 9/11/26 16:35, Jim Quinlan wrote:
-> Declare a new quirk that indicates SoCs where the config-space accesses are
-> restricted to 32bit R/W.
-> 
-> Signed-off-by: Jim Quinlan <james.quinlan@broadcom.com>
+Update the variable length reading functionality to extend to .V syntax.
+Such syntax expects for a variable-length vendor defined capability to be
+provided as the target (such as ECAP_VNDR or ECAP_DVSEC).
 
-Reviewed-by: Florian Fainelli <florian.fainelli@broadcom.com>
+When requested, setpci will dynamically, at runtime, read the header of the
+specified capability, determine the length, store that within the span,
+and manually upate the width accordingly, such that there are no torn reads.
+
+The output of this request is in big-endian, and the reading semantics are
+the same as variable length reads.
+
+Signed-off-by: Jacob Lefkowitz jlefkowi@akamai.com
+---
+ setpci.c   | 169 +++++++++++++++++++++++++++++++++++------------------
+ setpci.man |  25 ++++++--
+ 2 files changed, 133 insertions(+), 61 deletions(-)
+
+diff --git a/setpci.c b/setpci.c
+index 1b3476d..d492d9c 100644
+--- a/setpci.c
++++ b/setpci.c
+@@ -8,16 +8,18 @@
+  *	SPDX-License-Identifier: GPL-2.0-or-later
+  */
+ 
++#include "lib/pci.h"
+ #include <stdio.h>
+ #include <string.h>
+ #include <stdlib.h>
+ #include <stdarg.h>
+ #include <errno.h>
++#include <strings.h>
+ 
+ #define PCIUTILS_SETPCI
+ #include "pciutils.h"
+ 
+-#define MAX_SPLIT_WIDTH 4 /* Has to be 1, 2, or 4 (valid singular pci read or write size) */
++#define MAX_OP_WIDTH 4        /* Has to be 1, 2, or 4 (valid singular pci read size) */
+ 
+ static int force;			/* Don't complain if no devices match */
+ static int verbose;			/* Verbosity level */
+@@ -41,7 +43,8 @@ struct op {
+   unsigned int hdr_type_mask;
+   unsigned int addr;
+   unsigned int width;			/* Byte width of the access */
+-  unsigned int span;            /* Width of variable-sized window in bytes (0 unless .V) */
++  int32_t span;                 /* Width of variable-sized window in bytes (0 unless .V) */
++  unsigned int auto_discov;     /* Dynamically determine the span at runtime? */
+   unsigned int num_values;		/* Number of values to write; 0=read */
+   unsigned int number;                 /* The n-th capability of that id */
+   struct value values[0];
+@@ -111,15 +114,38 @@ trace(const char *fmt, ...)
+   va_end(args);
+ }
+ 
++static u32
++auto_discov_len(struct pci_dev *dev, int addr, int shift)
++{
++  u32 header = pci_read_long(dev, addr);
++  return (header >> shift) & 0xfff;
++}
++
++static u32
++det_ext_cap_defined_length(struct pci_dev *dev, int cap_base, int cap_id, int cap_type)
++{
++  if (cap_type != PCI_CAP_EXTENDED)
++    die("Auto length only supports extended vendor-defined capabilities");
++
++  switch (cap_id)
++    {
++      case PCI_EXT_CAP_ID_DVSEC:
++      case PCI_EXT_CAP_ID_VNDR:
++        return auto_discov_len(dev, cap_base + 4, 20);
++      default:
++        die("Auto length not supported for this capability");
++    }
++}
++
+ static unsigned int
+ pci_read(struct pci_dev *dev, int addr, int w)
+ {
+   switch (w)
+-  {
+-    case 1:  return pci_read_byte(dev, addr);
+-    case 2:  return pci_read_word(dev, addr);
+-    default: return pci_read_long(dev, addr);
+-  }
++    {
++      case 1:  return pci_read_byte(dev, addr);
++      case 2:  return pci_read_word(dev, addr);
++      default: return pci_read_long(dev, addr);
++    }
+ }
+ 
+ static unsigned int
+@@ -137,9 +163,9 @@ static void
+ print_le_bytes(u32 x, int width)
+ {
+   for (int b = 0; b < width; b++)
+-  {
+-    printf("%02x", (x >> (8 * b)) & 0xff);
+-  }
++    {
++      printf("%02x", (x >> (8 * b)) & 0xff);
++    }
+ }
+ 
+ static void
+@@ -150,7 +176,7 @@ exec_op(struct op *op, struct pci_dev *dev)
+   unsigned int i, x, y;
+   int addr = 0;
+   int width = op->width;
+-  int span = op->span;
++  int32_t span;
+   char slot[16];
+ 
+   snprintf(slot, sizeof(slot), "%04x:%02x:%02x.%x", dev->domain, dev->bus, dev->dev, dev->func);
+@@ -177,13 +203,23 @@ exec_op(struct op *op, struct pci_dev *dev)
+   addr += op->addr;
+   trace("@%02x", addr);
+ 
++  if (op->auto_discov && !op->cap_type)
++    die("%s: Auto length requires a capability", slot);
++
++  span = op->auto_discov
++    ? op->span + (int32_t)det_ext_cap_defined_length(dev, addr - op->addr, op->cap_id, op->cap_type)
++    : op->span;
++
++  if (span < 0)
++    die("Span cannot be negative: \"%d\"", span);
++
+   /* We have already checked it when parsing, but addressing relative to capabilities can change the address. */
+   if (addr & (width-1))
+     die("%s: Unaligned access of width %d to register %04x", slot, width, addr);
+   if (addr + width > 0x1000)
+     die("%s: Access of width %d to register %04x out of range", slot, width, addr);
+   if (span && addr + span > 0x1000)
+-    die("%s: Access of range %u to register %04x is out of range", slot, span, addr);
++    die("%s: Access of range %d to register %04x is out of range", slot, span, addr);
+ 
+   if (op->hdr_type_mask)
+     {
+@@ -241,36 +277,25 @@ exec_op(struct op *op, struct pci_dev *dev)
+     {
+       trace(" = ");
+       if (!span)
+-      {
+-        switch (width)
+-	      {
+-	        case 1:
+-	          x = pci_read_byte(dev, addr);
+-	          break;
+-	        case 2:
+-	          x = pci_read_word(dev, addr);
+-	          break;
+-	        default:
+-	          x = pci_read_long(dev, addr);
+-	          break;
++        {
++          x = pci_read(dev, addr, width);
++          printf(formats[width]+1, x);
++          putchar('\n');
+         }
+-      printf(formats[width]+1, x);
+-      putchar('\n');
+-      }
+       else
+-      {
+-        int remaining = span;
+-        while (remaining)
+         {
+-          width = determine_width_alignment(addr, remaining);
+-          x = pci_read(dev, addr, width);
+-          print_le_bytes(x, width);
+-          addr += width;
+-          remaining -= width;
++          int32_t remaining = span;
++          while (remaining)
++            {
++              width = determine_width_alignment(addr, remaining);
++              x = pci_read(dev, addr, width);
++              print_le_bytes(x, width);
++              addr += width;
++              remaining -= width;
++            }
++
++          putchar('\n');
+         }
+-
+-        putchar('\n');
+-      }
+     }
+ }
+ 
+@@ -494,14 +519,15 @@ GENERIC_HELP
+ "Setting commands:\n"
+ "<device>:\t-s [[[<domain>]:][<bus>]:][<slot>][.[<func>]]\n"
+ "\t\t-d [<vendor>]:[<device>]\n"
+-"<reg>:\t\t<base>[+<offset>][.(B|W|L|V[<length>])][@<number>]\n"
++"<reg>:\t\t<base>[+<offset>][.(B|W|L|V[<length>]|V)][@<number>]\n"
+ "<base>:\t\t<address>\n"
+ "\t\t<named-register>\n"
+ "\t\t[E]CAP_<capability-name>\n"
+ "\t\t[E]CAP<capability-number>\n"
+ "<values>:\t<value>[,<value>...]\n"
+ "<value>:\t<hex>\n"
+-"<length>:\thex (number of bytes; multiple of split width)\n"
++"<length>:\t<hex> (number of bytes)\n"
++"V:\tdynamic, runtime discovery of header length\n"
+ "\t\t<hex>:<mask>\n");
+   exit(0);
+ }
+@@ -726,6 +752,7 @@ static void parse_op(char *c, struct group *group)
+   char *span = NULL;
+   int n, j;
+   unsigned int span_val = 0;
++  unsigned int auto_discov = 0;
+   struct op *op;
+ 
+   /* Split the argument */
+@@ -736,15 +763,34 @@ static void parse_op(char *c, struct group *group)
+     *number++ = 0;
+   if (width = strchr(base, '.'))
+     *width++ = 0;
+-  if (width && (span = strchr(width, '[')))
++  if (width)
+     {
+-      char *stop;
+-      *span++ = 0;
+-      if (parse_x32(span, &stop, &span_val) < 0 || !stop || *stop != ']' || stop[1])
+-        parse_err("Invalid span \"%s\"", span);
+-      if (span_val == 0) {
+-        parse_err("Span must be a non-zero value. Span is: \"%d\"", span_val);
+-      }
++      if (span = strchr(width, '['))
++        {
++          char *close;
++          *span++ = 0;
++
++          if (strcasecmp(width, "V"))
++            parse_err("Span is only allowed on the variable length operator \".V\"");
++
++          close = strchr(span, ']');
++          if (!close)
++            parse_err("Invalid span provided : \"%s\"", span);
++
++          if (close[1])
++            parse_err("Invalid characters placed after \"]\". Please use \".V\" or \".V[len]\"");
++
++          *close = 0;
++          if (parse_x32(span, NULL, &span_val) != 1)
++            parse_err("Invalid span provided: \"%s\"", span);
++          if (span_val == 0)
++            parse_err("Span must be a non-zero value. Span is: \"%d\"", span_val);
++        }
++      else if(!strcasecmp(width, "V"))
++        {
++          auto_discov = 1;
++          span = "V";
++        }
+     }
+   if (offset = strchr(base, '+'))
+     *offset++ = 0;
+@@ -762,9 +808,7 @@ static void parse_op(char *c, struct group *group)
+     }
+ 
+   if (span && n)
+-  {
+-    parse_err("Variable length (.V[N]) operations are a read only feature");
+-  }
++    parse_err("Variable length (.V or .V[...]) is a read only feature");
+ 
+   /* Allocate the operation */
+   op = xmalloc(sizeof(struct op) + n*sizeof(struct value));
+@@ -774,7 +818,7 @@ static void parse_op(char *c, struct group *group)
+   op->num_values = n;
+ 
+   /* What is the width suffix? */
+-  if (width && !span)
++  if (width && strcasecmp(width, "V"))
+     {
+       if (width[1])
+ 	parse_err("Invalid width \"%s\"", width);
+@@ -792,11 +836,18 @@ static void parse_op(char *c, struct group *group)
+     }
+   else if (span)
+     {
+-     if (!width || (*width & 0xdf) != 'V' || width[1])
+-      parse_err("Invalid variable-width suffix; expected .V[N]");
++      if (!width || strncasecmp(width, "V", 1) || width[1])
++        parse_err("Invalid variable-width suffix; expected .V[N]");
+ 
+-    op->width = MAX_SPLIT_WIDTH;
+-    op->span = span_val;
++      if (auto_discov)
++        {
++          op->span = 0;
++          op->auto_discov = auto_discov;
++        }
++      else
++        op->span = span_val;
++
++      op->width = MAX_OP_WIDTH;
+     }
+   else
+     op->width = 0;
+@@ -825,10 +876,14 @@ static void parse_op(char *c, struct group *group)
+       if (parse_x32(offset, NULL, &off) <= 0 || off >= 0x1000)
+ 	parse_err("Invalid offset \"%s\"", offset);
+       op->addr += off;
++
++      /* Adjust for the provided offset in preparation for the auto-discovered, raw span */
++      if (auto_discov)
++        op->span -= off;
+     }
+ 
+   /* Check range */
+-  unsigned int range_span = op->span ? op->span : op->width * (n ? n : 1);
++  unsigned int range_span = op->span ? (u32)op->span : op->width * (n ? n : 1);
+   if (op->addr >= 0x1000 || op->addr + range_span > 0x1000)
+     parse_err("Register number %02x out of range", op->addr);
+   if (op->addr & (op->width - 1))
+diff --git a/setpci.man b/setpci.man
+index 40267de..f39b87e 100644
+--- a/setpci.man
++++ b/setpci.man
+@@ -157,15 +157,23 @@ To choose how many bytes (1, 2, or 4) should be transferred, you should append a
+ specifier \fB.B\fP, \fB.W\fP, or \fB.L\fP. The width can be omitted if you are
+ referring to a register by its name and the width of the register is well known.
+ .IP \(bu
+-To transfer a variable-length window larger than a single access, apend \fB.V[len]\fP,
++To operate on a variable-length window larger than a single access, append \fB.V[len]\fP,
+ where \fBlen\fP is a hexademical byte count set statically within setpci (4). The window is read
+-as a sequence of aligned longword accesses, low address first. Each chunk is assembled in
++as a sequence of aligned long accesses, low address first. Each chunk is assembled in
+ little-endian, but the final result is in big-endian. This is the opposite of other operations.
+-If there is a misalignment, that is fixed in the, first couple reads: we will do a two byte and
++If there is a misalignment, that is fixed in the first couple reads: we will do a two byte and
+ a one byte read or one or the other to reach four-byte alignment, and then continue to read four
+-bytes. Because PCI configuraiton space has no atomic access wider than a longword, a
++bytes. Because PCI configuration space has no atomic access wider than a long, a
+ \fB.V[len]\fP operation is \fInot\fP atomic: if the underlying field changes between the
+ individual accesses, the value may be read torn.
++.IP \(bu
++To use a variable-length window larger than a single access specifically for reads on vendor-defined
++registers / values, you can use .V. In this mode, setpci will, at runtime, dynamically
++determine the length defined within the vendor header. Note that this only works for
++vendor-defined registers like ECAP_DVSEC or ECAP_VNDR. Note that the way in which reading is done and
++the output is produced is the same as the non-automatic variable-length window. That means the
++result is returned in big-endian, which is the \fIopposite\fP of all other operation sizes.
++
+ .IP \(bu
+ Finally, if a capability exists multiple times you can choose which one to target using
+ \fB@number\fP. Indexing starts at 0.
+@@ -192,6 +200,15 @@ asks for the first 32-bit word of the extended capability with ID 0x108.
+ .IP ECAP_DSN+4.V[8]
+ reads the 8-byte Device Serial Number as a single little-endian value,
+ equivalent to reading the longwords at \fB+4\fP and \fB+8\fP and combining them.
++reads starting from the offset provided.
++.IP ECAP_DVSEC.V
++resolves the DVSEC capability on the device, reads DVSEC header 1 at base+4,
++extracts the length and reads as many bytes.
++.IP ECAP_VNDR+4.V
++resolves the Vendor specific capbaility on the device, reads the VSEC header,
++extracst the length and reads as many bytes within the span found.
++reads from the provided offset, automatically adjusting the total span to read with respect
++to the adjusted starting position
+ 
+ .SH SEE ALSO
+ .BR lspci (8),
 -- 
-Florian
+2.43.0
+
