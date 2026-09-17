@@ -1,103 +1,123 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from cstnet.cn (smtp25.cstnet.cn [159.226.251.25])
+	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2788F514759
-	for <linux-pci@vger.kernel.org>; Thu, 17 Sep 2026 13:29:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 98F3E4E2F31;
+	Thu, 17 Sep 2026 13:29:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.25
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789651785; cv=none; b=OVV4tbMuJgKXuMZ5z70gdVdDQX3Gq8JYK4q4q+1U3nbhPJPiedpsPxlDeawkoZtLRA+cDmjp5jUnwgLBaj7ibOgimAoNzLVXDxetc8vR0SYNZIKiTwB8t2UnH5xployFLA3MOLoxpXVDWbQEHkcEDWusTu1iRMdTRzA/MKU4LN0=
+	t=1789651802; cv=none; b=bEeQKO+dnBQn5taSYu5n/gdVBtVgyDMz/RD4fwLNBaxLEjrpEfxpB415LS3a05kLxy7bFc1UQ3iRfqLxngsGhtFRm2fEv2MzhQMTNQ4ddWX9FaMuUsf+K6owEZ2pY/v4lTEJVlnkGQR0CpIn1WmfwEvtKpRgaTueNdnVWi/xdms=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789651785; c=relaxed/simple;
-	bh=tb2KrOY59nKuLgbD2hiI3KQevm9dpRF7hkQHb7R2eQc=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=MKPG2I3nC56LPS8kT3L5nMArpf2HuhaC2BVJUB4QN69z1fT9TAkfpqOSrKH8QLlkdo58pksNEffsK7kE4/1d0PIIpirbTNk7W5/SX5i/hvKaKTUtyZreUtw3a06u15M5u1gBsTIRswakMr9RAKzVdRwRdNvn21bzPdmpCpfXTSs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=J/emFj1S; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="J/emFj1S"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2EF5D1F000FF;
-	Thu, 17 Sep 2026 13:29:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789651783;
-	bh=YGGamJjonYfnQm7f5a0ZkLuByW9G4PjG3lqapqY7YA8=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=J/emFj1S4npc1drhOLJuorcgTkdm0l7Qt1Mt0sPSzZA+kZYzEfkOlUGvfgn/GTjxy
-	 6+MWmL1L8z7yiWXHarQvOBEtryiRDhdZTE3o8r/8dT4HdASXlRPneOZz1da7iWLrBC
-	 baCZzW8SoInE7x1jSoBlX3d9WKut3NNUf6XIC0B05vJAmnaUpk7vfDe25tCsizx48C
-	 n+/VskZIpWpTGssdbB0FsbgZQwGIl0IkX5vLIMbUG2j97hFm95jJGtCLfO0fUjUAN7
-	 cn4tD/XZmXiddA4SfJXPPYwHaWlsw9ovFKJRwqMdpiQI+1WHQgF+l1uHvnib2j1a6c
-	 cxLYGmluEfkSQ==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] PCI: xgene: Fix device node reference leak in
- xgene_pcie_probe()
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Wentao Liang" <vulab@iscas.ac.cn>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260917132235.2153154-1-vulab@iscas.ac.cn>
-References: <20260917132235.2153154-1-vulab@iscas.ac.cn>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 17 Sep 2026 13:29:42 +0000
-Message-Id: <20260917132943.2EF5D1F000FF@smtp.kernel.org>
+	s=arc-20240116; t=1789651802; c=relaxed/simple;
+	bh=IHKyhwi9VOur496O1HNCX9aPf++wgIxyKFwtl5/Je8s=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=DhPpLgypFX1yJ62CJ7V6nnoK05PrYkyfIzre3+/DLaNsnMZYb+CiL///0XuqNj+TjoQsVPv5XOp9Jmyza1dqCQ8NrxEpRwhSxn2SItfY158NO0qXlbfrHCh6T9I+b2ZErSuMF4vgE4/VxIVsyOONU6U3t7CW0ZisJNX2LcG44JY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn; spf=pass smtp.mailfrom=iscas.ac.cn; arc=none smtp.client-ip=159.226.251.25
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
+Received: from dfae2b116770.home.arpa (unknown [36.110.52.2])
+	by APP-05 (Coremail) with SMTP id zQCowACXADtI66tqC3qBCA--.3599S2;
+	Thu, 17 Sep 2026 21:29:44 +0800 (CST)
+From: Wentao Liang <vulab@iscas.ac.cn>
+To: bhelgaas@google.com
+Cc: boris.ostrovsky@oracle.com,
+	jgross@suse.com,
+	linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	oleksandr_tyshchenko@epam.com,
+	sstabellini@kernel.org,
+	u.kleine-koenig@pengutronix.de,
+	xen-devel@lists.xenproject.org,
+	Wentao Liang <vulab@iscas.ac.cn>,
+	stable@vger.kernel.org
+Subject: [PATCH] xen/pcifront: Fix PCI device reference leak in pcifront_common_process()
+Date: Thu, 17 Sep 2026 13:29:44 +0000
+Message-Id: <20260917132944.2153421-1-vulab@iscas.ac.cn>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:zQCowACXADtI66tqC3qBCA--.3599S2
+X-Coremail-Antispam: 1UD129KBjvJXoW7WF1Uur1rKw1fAFWxWry5twb_yoW8uw1fp3
+	98AF13Ars0ya40qrZxAF4jga45ZFsrJ3y7C3ySg3s7X34aq3Z5Jw15JF1a9r48G395Zrnx
+	trnxJa1UZF1UXaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUPqb7Iv0xC_Kw4lb4IE77IF4wAFc2x0x2IEx4CE42xK8VAvwI8I
+	cIk0rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2
+	AK021l84ACjcxK6xIIjxv20xvE14v26ryj6F1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v2
+	6F4j6r4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxV
+	W0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv
+	7VC0I7IYx2IY67AKxVWUAVWUtwAv7VC2z280aVAFwI0_Cr1j6rxdMcvjeVCFs4IE7xkEbV
+	WUJVW8JwACjcxG0xvY0x0EwIxGrwACjI8F5VAI37AI020EjII2zVCS5cI20VAGYxC7M4II
+	rI8v6xkF7I0E8cxan2IY04v7MxkF7I0En4kS14v26r1q6r43MxAIw28IcxkI7VAKI48JMx
+	AIw28IcVCjz48v1sIEY20_Gr43Wr1UJr1l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAq
+	x4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r
+	43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF
+	7I0E14v26F4j6r4UJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI
+	0_Gr1j6F4UJwCI42IY6I8E87Iv6xkF7I0E14v26rxl6s0DYxBIdaVFxhVjvjDU0xZFpf9x
+	07bb5rxUUUUU=
+X-CM-SenderInfo: pyxotu46lvutnvoduhdfq/1tbiBgQNA2qrq3bHZgAAsx
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [High] pci: xgene: refcount underflow and build failure due to hallucinat=
-ed of_node_get()
---
+pcifront_common_process() gets a reference to the PCI device with
+pci_get_domain_bus_and_slot() and only drops it on the early error
+path.  Returning directly from the AER handler switch instead of
+recording the result and falling through to the common
+pci_dev_put(pcidev) leaks the reference on every successful call.
 
-commit 3a601f05188e398e03ea9af2fc4238c97e5b4cf2
-Author: Wentao Liang <vulab@iscas.ac.cn>
+Collect the handler result in a variable and drop the reference on the
+single exit path again.
 
-PCI: xgene: Fix device node reference leak in xgene_pcie_probe()
-
-This patch attempts to fix a device node reference leak in the error paths
-of xgene_pcie_probe() by adding an error handling label that drops the node
-reference.
-
+Fixes: 34ab316d7287 ("xen/pcifront: Drop pcifront_common_process() tests of pcidev, pdrv")
 Cc: stable@vger.kernel.org
+Signed-off-by: Wentao Liang <vulab@iscas.ac.cn>
+---
+ drivers/pci/xen-pcifront.c | 15 ++++++++++-----
+ 1 file changed, 10 insertions(+), 5 deletions(-)
 
-> diff --git a/drivers/pci/controller/pci-xgene.c b/drivers/pci/controller/=
-pci-xgene.c
-> index 83c9a2930eeca..6b922120db3fc 100644
-> --- a/drivers/pci/controller/pci-xgene.c
-> +++ b/drivers/pci/controller/pci-xgene.c
-[ ... ]
-> @@ -630,20 +630,28 @@ static int xgene_pcie_probe(struct platform_device =
-*pdev)
-[ ... ]
-> -	return pci_host_probe(bridge);
-> +	ret =3D pci_host_probe(bridge);
-> +	if (ret)
-> +		goto err_put_node;
-> +
-> +	return 0;
-> +
-> +err_put_node:
-> +	of_node_put(port->node);
+diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
+index cffc32d66032..5fdce7c41af5 100644
+--- a/drivers/pci/xen-pcifront.c
++++ b/drivers/pci/xen-pcifront.c
+@@ -579,6 +579,7 @@ static pci_ers_result_t pcifront_common_process(int cmd,
+ 	int bus = pdev->sh_info->aer_op.bus;
+ 	int devfn = pdev->sh_info->aer_op.devfn;
+ 	int domain = pdev->sh_info->aer_op.domain;
++	pci_ers_result_t result = PCI_ERS_RESULT_NONE;
+ 	struct pci_dev *pcidev;
+ 
+ 	dev_dbg(&pdev->xdev->dev,
+@@ -597,21 +598,25 @@ static pci_ers_result_t pcifront_common_process(int cmd,
+ 		pci_dbg(pcidev, "trying to call AER service\n");
+ 		switch (cmd) {
+ 		case XEN_PCI_OP_aer_detected:
+-			return pdrv->err_handler->error_detected(pcidev, state);
++			result = pdrv->err_handler->error_detected(pcidev, state);
++			break;
+ 		case XEN_PCI_OP_aer_mmio:
+-			return pdrv->err_handler->mmio_enabled(pcidev);
++			result = pdrv->err_handler->mmio_enabled(pcidev);
++			break;
+ 		case XEN_PCI_OP_aer_slotreset:
+-			return pdrv->err_handler->slot_reset(pcidev);
++			result = pdrv->err_handler->slot_reset(pcidev);
++			break;
+ 		case XEN_PCI_OP_aer_resume:
+ 			pdrv->err_handler->resume(pcidev);
+-			return PCI_ERS_RESULT_NONE;
++			break;
+ 		default:
+ 			dev_err(&pdev->xdev->dev,
+ 				"bad request in aer recovery operation!\n");
+ 		}
+ 	}
+ 
+-	return PCI_ERS_RESULT_NONE;
++	pci_dev_put(pcidev);
++	return result;
+ }
+ 
+ 
+-- 
+2.34.1
 
-[Severity: High]
-Does this patch introduce a refcount underflow and a build failure?
-
-The commit message states that xgene_pcie_probe() takes a reference with
-of_node_get(), but that function does not appear to be called anywhere with=
-in
-xgene_pcie_probe(). If there is no prior of_node_get() incrementing the cou=
-nt,
-calling of_node_put() on these error paths will drop an unowned reference,
-potentially causing a use-after-free of the device node.
-
-Additionally, does struct xgene_pcie contain a node member? It appears this
-struct does not have a node field, which means accessing port->node will
-cause a build failure.
-
-> +	return ret;
->  }
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260917132235.2153=
-154-1-vulab@iscas.ac.cn?part=3D1
