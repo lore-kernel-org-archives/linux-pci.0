@@ -1,294 +1,211 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from MW6PR02CU001.outbound.protection.outlook.com (mail-westus2azon11012069.outbound.protection.outlook.com [52.101.48.69])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF08F22A4E9;
-	Thu, 17 Sep 2026 00:23:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789604611; cv=none; b=sigyNMKU6K4tjH8TUeIosoAiWvSXmJ7XQSe2V2oFOZgBD+7IGfyJL3/Lwhgo6yLxFTL21yQkRgKM7UI5PrQbm+1VD7Em5+LwtMGerADF3ZM6SSZ8oLT77lNHfXfMXSeibXkyp5HPCPQkQx0CVM6SQnfI+dQQ7Dqqn2BF0DYtMGI=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789604611; c=relaxed/simple;
-	bh=45Qi8DXYwJHObfTQpek2UWQI/FH3xeNUZtUwrfo2/Co=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=TlNi42ZPzFX6N466rFS38qaAkPyaoPJjo6dkAjDVBHTsXdTqt9dnTbzTSVStZWLlrNLRtlA0lBR9MSC5dyCyG5m7YfGiPyQP5QnCkESUwsynmSFh/SQFVGq2vJcUMlqLXnIfAL3b2jbKAnd5InWVENxjP9L9v/NGV1gy8ks+O04=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Uaczt0oD; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2EF50390214;
+	Thu, 17 Sep 2026 02:29:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.48.69
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1789612194; cv=fail; b=VvYot5ou9Abtw/oaVIG/htF8tBUP4+sO7iOE2+jNkrTq5htkZldzqkJmMZU39c4rru/NANeKJADq40Xk9zsIw9rxXq2b51gsXdeQKAlMU25cG5Trinw9p/wbmEn1rd3wWcwgFZuOm2PyXgMxOgtYMoWD8qjfL6OOpt88K//woIw=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1789612194; c=relaxed/simple;
+	bh=Dl9xukujFB2OvoxC2eIRWmQVzpJHGmwH76GWE/nI5gY=;
+	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=RalZiJjGXbceznpiVuyvymoiwKfcR/c1b+YaFxIRt6IyjPbk+6xBKb/j5GXWDEVsvKpThJBEh/la14KnY9AE3j3Wp9tKkSQxSwiRn+J39g/utDX6BiBDZLLG3eD0qILZfTVgRRaJZ3WU+t5h27FZFssAuLx/KGbM0ZddUjZ+al8=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=ChHaTJWz; arc=fail smtp.client-ip=52.101.48.69
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Uaczt0oD"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 63D801F000FF;
-	Thu, 17 Sep 2026 00:23:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789604609;
-	bh=BYq4fZIoFhLtPEIgNGcHeKoYgNlbKrrDbCQCa193GqU=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=Uaczt0oDsYk8FN3ojEgKvdY1DeqU6zoNXXMnQqPOTDXF6YL5rRKYv3Opo0gGEC4tc
-	 ir6Y2Ji9QCmt4oSSQIwBhL1kkVNOlPZFg4QXH70AOPpVZTMjLzyLWxoTVyEolXKFoM
-	 dvB/2CMnvKoj1QsigbEHWuBF9URuMwekTo1t2ZWpF2goI6+SrnjB+E2oxr8zfHcqnW
-	 LuBDyk9pdcpOmU1ah6P4J2DqtTZz08Dke/63uQa7m8a5begeSsMWIQAhwQcg0s66lB
-	 05Kvt1jFEMK08+vkOdoeScR7/E7PaagQWYerR3lQChifp0sTXGzb9eujUnyELudeB/
-	 9G3xVW7/lYrOg==
-Date: Wed, 16 Sep 2026 19:23:28 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: David Matlack <dmatlack@google.com>
-Cc: kexec@lists.infradead.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-mm@kvack.org,
-	linux-pci@vger.kernel.org,
-	Adithya Jayachandran <ajayachandra@nvidia.com>,
-	Alexander Graf <graf@amazon.com>,
-	Alex Williamson <alex@shazbot.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, Chris Li <chrisl@kernel.org>,
-	David Rientjes <rientjes@google.com>,
-	Jacob Pan <jacob.pan@linux.microsoft.com>,
-	Jason Gunthorpe <jgg@nvidia.com>, Jonathan Corbet <corbet@lwn.net>,
-	Josh Hilke <jrhilke@google.com>,
-	Leon Romanovsky <leonro@nvidia.com>, Lukas Wunner <lukas@wunner.de>,
-	Mike Rapoport <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>,
-	Pasha Tatashin <pasha.tatashin@soleen.com>,
-	Pranjal Shrivastava <praan@google.com>,
-	Pratyush Yadav <pratyush@kernel.org>,
-	Saeed Mahameed <saeedm@nvidia.com>,
-	Samiullah Khawaja <skhawaja@google.com>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Vipin Sharma <vipinsh@google.com>, William Tu <witu@nvidia.com>,
-	Yi Liu <yi.l.liu@intel.com>
-Subject: Re: [PATCH v8 08/12] PCI: liveupdate: Adopt ACS controls in incoming
- preserved devices
-Message-ID: <20260917002328.GA994546@bhelgaas>
+	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="ChHaTJWz"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=aU5atneVhycdmMhtLSwfg54zKU3yGrUYjvprNXNstXA6CZ2sIEs9AK1SdM+nPwa/q8huXKd8M97yd/JlaAbJ6lseyYr2G4qrpEdECyIPSTk5E9m2LwcJ5rAfGCJG1R/11dJBFbmQiZBwXtxfgcScinUMMQ5h3q4EVQ+d8O8Vo50z3pk/EGsPDgVUri4pg7Y8jE+/vlkZSa7m9Za46n6i+bmfdsWwX5f4lPPN4ISl+VJ6pSwc+DD6eh4yFNv2BbuBfmqSqV4t6t7l0CiNeAM/DvYjxBcKqHG6AqOr9VMrJeWTOrW2ZOYFmCD1T1bFNTvR+56tAP3878Y5fRcud0QAhQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=pnOSeT827JqM1WHSr2HBLUMH3Xd9V0DEn2LgQLiflk4=;
+ b=TtI7glOzplsZ/P8IzLNNf9lZYdYnB0qW2c28zQlXq1hrzFoXPbvBG+ZAiPMWCSrgoL2cilXPR+CkY8/87z3cijXZyUtKGCMMtf7rNud0LeWpp+gZkGbhmQ/1eJmNYln794C63W8e+0dqi504QHI44byMjHdeEEZ5YBbaGZwPYs1KYLoTsGp9zBkm3t+xkgT0eZmyrexJuWBQKyor++xqUTP8CApPWa/baMtBdmLZMsI61JoFrqdTbXYLISRuZHul93jY12ta1FbIK7Dh/BPyc7tloWtdnExLiVvnRnRwK719jpfaRQsYT1Yq+Y8JghNs1AM934wloSPBQ3xcYCGLzw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
+ header.d=amd.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=pnOSeT827JqM1WHSr2HBLUMH3Xd9V0DEn2LgQLiflk4=;
+ b=ChHaTJWzZ+TxxrfC9iMO2WNgY60TZrG4LmDyunjLzpNzxCq2HVuEjwdJKOn+6zpHMSHNL2Hknt3xRIv89K4z4pIEi1WgGeQac6Tc3TGO1EMQmJ0JVXx9cp+zdfw0dW595Bv+9O1zLelSOaq7vB1xbppzV+hy3X2HsGm+SmzvXLg=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=amd.com;
+Received: from CHXPR12MB999219.namprd12.prod.outlook.com
+ (2603:10b6:610:2fd::8) by DSVPR12MB999123.namprd12.prod.outlook.com
+ (2603:10b6:8:388::13) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.428.9; Thu, 17 Sep
+ 2026 02:29:23 +0000
+Received: from CHXPR12MB999219.namprd12.prod.outlook.com
+ ([fe80::da19:941f:da0c:2408]) by CHXPR12MB999219.namprd12.prod.outlook.com
+ ([fe80::da19:941f:da0c:2408%2]) with mapi id 15.21.0406.007; Thu, 17 Sep 2026
+ 02:29:23 +0000
+Message-ID: <9c83efe9-9367-472f-bf39-e07252e70c3c@amd.com>
+Date: Thu, 17 Sep 2026 12:28:50 +1000
+User-Agent: Mozilla Thunderbird
+Subject: Re: [RFC PATCH kernel 01/17] pci/dma/tsm: Call disable DMA bus hook
+ on cleanup
+To: Borislav Petkov <bp@alien8.de>
+Cc: x86@kernel.org, linux-kernel@vger.kernel.org, kvm@vger.kernel.org,
+ linux-crypto@vger.kernel.org, linux-pci@vger.kernel.org,
+ Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>,
+ Dave Hansen <dave.hansen@linux.intel.com>, "H. Peter Anvin" <hpa@zytor.com>,
+ Sean Christopherson <seanjc@google.com>, Paolo Bonzini
+ <pbonzini@redhat.com>, Andy Lutomirski <luto@kernel.org>,
+ Peter Zijlstra <peterz@infradead.org>, Ashish Kalra <ashish.kalra@amd.com>,
+ Tom Lendacky <thomas.lendacky@amd.com>,
+ Herbert Xu <herbert@gondor.apana.org.au>,
+ "David S. Miller" <davem@davemloft.net>, Bjorn Helgaas
+ <bhelgaas@google.com>, Juergen Gross <jgross@suse.com>,
+ Stefano Stabellini <sstabellini@kernel.org>,
+ Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>,
+ Marek Szyprowski <m.szyprowski@samsung.com>,
+ Robin Murphy <robin.murphy@arm.com>,
+ Andrew Morton <akpm@linux-foundation.org>,
+ David Hildenbrand <david@kernel.org>, Lorenzo Stoakes <ljs@kernel.org>,
+ "Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>,
+ Mike Rapoport <rppt@kernel.org>, Suren Baghdasaryan <surenb@google.com>,
+ Michal Hocko <mhocko@suse.com>, Catalin Marinas <catalin.marinas@arm.com>,
+ Jini Susan George <jinisusan.george@amd.com>, Kees Cook <kees@kernel.org>,
+ Michael Ellerman <mpe@ellerman.id.au>, Nikunj A Dadhania <nikunj@amd.com>,
+ Ard Biesheuvel <ardb@kernel.org>, Eric Biggers <ebiggers@kernel.org>,
+ Kim Phillips <kim.phillips@amd.com>, Joerg Roedel <jroedel@suse.de>,
+ Ethan Nelson-Moore <enelsonmoore@gmail.com>,
+ "Tycho Andersen (AMD)" <tycho@kernel.org>,
+ Liam Merwick <liam.merwick@oracle.com>,
+ Michael Kerrisk <mtk.manpages@gmail.com>,
+ Suresh Siddha <suresh.b.siddha@intel.com>, Xiaotian Feng <dfeng@redhat.com>,
+ Venkatesh Pallipadi <venkatesh.pallipadi@intel.com>,
+ Andi Kleen <ak@linux.intel.com>, Kiryl Shutsemau <kas@kernel.org>,
+ Tony Luck <tony.luck@intel.com>, Jason Gunthorpe <jgg@ziepe.ca>,
+ Lu Baolu <baolu.lu@linux.intel.com>, Xu Yilun <yilun.xu@linux.intel.com>,
+ =?UTF-8?Q?Carlos_L=C3=B3pez?= <clopez@suse.de>,
+ Jonathan Cameron <jic23@kernel.org>, Jori Koolstra <jkoolstra@xs4all.nl>,
+ =?UTF-8?Q?Thomas_Wei=C3=9Fschuh?= <thomas.weissschuh@linutronix.de>,
+ "Aneesh Kumar K.V (Arm)" <aneesh.kumar@kernel.org>,
+ Ian Campbell <ian.campbell@citrix.com>,
+ Jeremy Fitzhardinge <jeremy.fitzhardinge@citrix.com>,
+ Petr Tesarik <ptesarik@suse.com>, David Howells <dhowells@redhat.com>,
+ Haavard Skinnemoen <hskinnemoen@atmel.com>,
+ Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+ =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+ Christian Marangi <ansuelsmth@gmail.com>, Dave Jiang <dave.jiang@intel.com>,
+ Michael Kelley <mhklinux@outlook.com>, Ilias Stamatis <ilstam@amazon.com>,
+ Sumanth Korikkar <sumanthk@linux.ibm.com>,
+ Simona Vetter <simona.vetter@ffwll.ch>, Toshi Kani <toshi.kani@hp.com>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ Vinod Koul <vkoul@kernel.org>, Jiang Liu <jiang.liu@linux.intel.com>,
+ Arnd Bergmann <arnd@arndb.de>, Anshuman Khandual
+ <anshuman.khandual@arm.com>, Kefeng Wang <wangkefeng.wang@huawei.com>,
+ Palmer Dabbelt <palmerdabbelt@google.com>, linux-coco@lists.linux.dev,
+ xen-devel@lists.xenproject.org, iommu@lists.linux.dev, linux-mm@kvack.org,
+ aik@ozlabs.ru, Santosh Shukla <santosh.shukla@amd.com>,
+ "Pratik R . Sampat" <prsampat@amd.com>,
+ Scott Soule Cheloha <scott.cheloha@amd.com>,
+ Ackerley Tng <ackerleytng@google.com>, Fuad Tabba <tabba@google.com>
+References: <20260916115159.1938195-1-aik@amd.com>
+ <20260916115159.1938195-2-aik@amd.com>
+ <20260916174929.GCaqrWqZ1fIhi4Rgbn@fat_crate.local>
+From: Alexey Kardashevskiy <aik@amd.com>
+Content-Language: en-US
+In-Reply-To: <20260916174929.GCaqrWqZ1fIhi4Rgbn@fat_crate.local>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: SY6PR01CA0119.ausprd01.prod.outlook.com
+ (2603:10c6:10:1b8::13) To CHXPR12MB999219.namprd12.prod.outlook.com
+ (2603:10b6:610:2fd::8)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <aqgkxmXlhfqsdfAa@google.com>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: CHXPR12MB999219:EE_|DSVPR12MB999123:EE_
+X-MS-Office365-Filtering-Correlation-Id: 5c5369cd-ffef-47fb-d79a-08df14637cb1
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|366016|23010399003|1800799024|7416014|376014|56012099006|11063799006|10067099003|4143699003|18002099003|22082099003|6133799003;
+X-Microsoft-Antispam-Message-Info:
+	OTWkJ3BzLvXlpYrhzvzJ/m6bDLG6FVqhqVagagcJJmrDwex9mkmlsGSPyD9vZbM1EorDdeY5zKRT2tKL3AwI/77eRPKsj8+0JjxUGKuqVkCtXvgYVHwHyS/uYGS7cOh2d5NtBtDAx1RGUTLnGBmfyHSkGKtRJWFbP2Oz4QdmrLHy/3tmWtTLREvL78kzH8AXrMHNDj6ePCq/fJiOEiezoiSdL3Si90dGeEcVxGLU/z02aAx1L5fJX+gAztzdfHBlvf4TJLbKg6eIttIJjLnZRYIIsgPlOK+mT3piX3Do7D2sGM4ifLcEeg5LS15cwCnkluKzId3YlyGxXllznR6+JejZgHECA/1s6tJxny8I3oXWdRe+bUkGeX7y6zKdgElS7rqTOE4b4kBg/0S6nDdhVvLH+eYGU9+FJM6aRrJKlVCpdS3Ir7cqZ8TjJ9CV76xmgFiNjVxuc5cjPmL7AyTPKC//iSRb/5xKpLQtIL6Qz384357y9I6YF3u7GKlv2K1MORL7kdBwPo2WR0VhuOuDXxiQrGMjiRPcBu9oR0kVhPAo9iKn1Mn5D3dloVVmz2VPCdlyxE0Xqgf6GKJxgVvqCnvUPG2lHFvPj76Po8MxlKqS98nek9hAhC54VcRzdvJMXLv1L7KJtjXjCJuBmpala/hD/nk4Mg8YbJVWeuy0rdY=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CHXPR12MB999219.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(23010399003)(1800799024)(7416014)(376014)(56012099006)(11063799006)(10067099003)(4143699003)(18002099003)(22082099003)(6133799003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?N3phOU4xTkYvemVvS0duR2YzKzVHY3BFVmdnQ3VIbERGSmFQZ3NNdXhKRGx4?=
+ =?utf-8?B?b3BDUlRZMUpiUGVTQ1MzbThWRlRZZFcyYVFSMVFLNldzbDh2TDNBTVl0MmNv?=
+ =?utf-8?B?amcySUpwTWRuMFFtcDNCVWNHWUw5VzFlU0dPMWdrT3RKNjhIa0tTcXAvL2lJ?=
+ =?utf-8?B?TDZnN2JMaFdwblR2aTd3aTVaUEphNWFVUE1yNTZvRlpCT01WcXU3SDljY3Mz?=
+ =?utf-8?B?aTYzeWVING80UjR1V29vcGJEQmlXaEc4andDL3p4ajUzMGxIRXZkbUZiQk1T?=
+ =?utf-8?B?Q0lDQ29wMlprN1JsVnNJQk8xSDRuOEJKRzhqSllydnlQWDNudTVaQUpkVm5H?=
+ =?utf-8?B?RXJRczJQWlcwaGx0MHdJUWN6T3UzSGhhZ0VTUFFBaEJPcWlocEhENEVXK3M1?=
+ =?utf-8?B?Zkp2Q1lBdm9LYXh0MkIvOFh2b0JFZWxjUFNkMTE5ZnVUdlpVUTdrbzg0QXdk?=
+ =?utf-8?B?ai9pVTBrTkF5azZXaW9DOFV4VDhDeFJBb0xZR2d0bEJsbFcyNVlUbTRaOXZa?=
+ =?utf-8?B?Q1owbHV6UHpXZUNselRyeVBMSzZhR1JKendIcUJId09CQUZGdWtSeW5sTVdJ?=
+ =?utf-8?B?ZmE4MzArejJ3RThDWUJwYWlzdjRsMHRscDJjVjVMOXpZRjVDRWNxNjlZczd6?=
+ =?utf-8?B?VHR0ZTMxcDdtUWlXQUUzSFlLR2dJSTRPeTdSOHhuQ0Q4NHY4VEN3a2laNHVt?=
+ =?utf-8?B?TDc4NmhZT1cxWUpBbGVNaytCRkJMckVIaDQySERqSEN4WTZmUzdya0kreGVU?=
+ =?utf-8?B?eTBQTWlHRHQ2aFlFNnd6UHpxT3h2M09GRnZtTFE1eDhIVE5ZNWhVdXVkMFpH?=
+ =?utf-8?B?a3cvS0UwNURYQUZuSkRiVUZhTTJkTldURWhUTDgyS3oyVU5VcGdWRE9Cc0d1?=
+ =?utf-8?B?a2pxbEcxL2xMaFJodFVVakFMYXlzY29QS09aMnVMeFlIdE96WlRtaGt0clo3?=
+ =?utf-8?B?dGZvbjY2T3gxMkVoenYxakM0L21kSFczb2RqeU54YTBaWXFKOXI0M3ptdVZX?=
+ =?utf-8?B?MkRhSEZsY2lYRktnMUtZSnE3bVNiS0VrcVRucGpxcTRpdkFtY0M5amtkTmZ2?=
+ =?utf-8?B?MTNVUDNISS8xekxOVkxadnAvb0pJWGRUdHUrR3NpVDVCSFl0ajZ5MUpHdk1p?=
+ =?utf-8?B?R1BhQXFUMGVrRkxkYm51dXJVWFoxZHVwMWlMRGp3L1k3TEpkREdkaTM1K3Bs?=
+ =?utf-8?B?aVpHUG51bXBTVFpnY0g4TFM0SStRNWRjK3hpM295ODV2QTJzTVl6Qk5Ba09z?=
+ =?utf-8?B?cS9NQlhXcWhOUGV2NlVIdFJ4SGdnOFZNdEl6TU8xL2JSQi9QdytxUjdBclNI?=
+ =?utf-8?B?ZUVLazRoL29YT0dtdlN0L3dtUjc2ckorN2ZRTUl6blZ0MTR0TjRPWDkyaTVX?=
+ =?utf-8?B?VVhVbkFZQ2NOdXIzUFkwdUhOZ25YYUYyeXhQNE9YWUYzQ1BhK2NIejBoM0FW?=
+ =?utf-8?B?N1FHeHBKZjlkc3FPSnJGSUdoUG9tNnIrSGlQZnFqQytleEZtdWpqR2VFNS83?=
+ =?utf-8?B?ZHpTeFliSHRhWEFMQTE4YVBxcHFvc243cjNJOVNGYWZPdjZaQk9vOU1UK0lX?=
+ =?utf-8?B?QzlLcHJHbmkxMnYxYnI0clc2d2QyY2lGUERUem1xVXNtUVdKeWVZcnRhNXFV?=
+ =?utf-8?B?VUFxWXhGZFROaUowbWRFMGQ2NlNzQ2JrWjZqOGhSNEMzQXlGS3VNdk0zck81?=
+ =?utf-8?B?L29CNzkzWXJNUmxtQmNONjFsUTdONjFtK0JTbUNEcGMyaXYwS3MxYlJ2MTlr?=
+ =?utf-8?B?WmVIN3pZQjZYSUxjdkFyODdQZHgzdzZqYlNWeUtmcGR3VkFuaWIraU4yazVx?=
+ =?utf-8?B?STFoNURCalJxQURuekxKdW1qRlUvaGdUQkFva0dtaUZyN2djRUppNTdvTU1H?=
+ =?utf-8?B?S1pYbkRXc1dxM1h6M0dycWRDREdGR1ZQWngxcUZwYnQxYXdjTW1qcW1Md2JR?=
+ =?utf-8?B?a1Q4K0w2RHE4czVBQm9pNHQ2U3J3TzBDb3N1U3V1TFVheTlwc2ZJZzdLSFVi?=
+ =?utf-8?B?dld0UEE3MTBBY3BQdVk0YVNZdXJqVzFlcW9EU2p4Z0cyL0NZc2FDaFM5QnNk?=
+ =?utf-8?B?K2xnN1hVU2JmTmpPTU8xL09nd2lFYWRQYVdLSTlmOWozMG4vV2FURVJ3bzBK?=
+ =?utf-8?B?Wi8vL1VDMkV5MzFBVnpNZ09hZE8yTjJaMGY5V3RaOWxnZ0U4WXNVNGV0cFdl?=
+ =?utf-8?B?cDNTZGJRV0tkNHFzUEJvUTR1d2g0SXYvS09xcnQ0L1pGaDJFZFNzOFBjM2dy?=
+ =?utf-8?B?aWtBOTlPQjU2dTBoN3BEVkZKRE0weFpxOC80bGVrbHI4eVR6bkUrTnBPWlJR?=
+ =?utf-8?B?ck5aWUh3NnJ0dUoxN0JRYzlka2NXSTlJZzN0RmNHL0JuNWk4Wllvdz09?=
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 5c5369cd-ffef-47fb-d79a-08df14637cb1
+X-MS-Exchange-CrossTenant-AuthSource: CHXPR12MB999219.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Sep 2026 02:29:23.7911
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: T2crqjoZUBnh2uJavoqc94OSC7soEz1LMPV53bIpK5Sn65abFUdpyx8ya+Nl4NVL1fkkL22sad+ivtm+rsm8XA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DSVPR12MB999123
 
-On Mon, Sep 14, 2026 at 04:45:58PM +0000, David Matlack wrote:
-> On 2026-09-11 06:31 PM, David Matlack wrote:
-> > On 2026-09-10 06:51 PM, Bjorn Helgaas wrote:
-> > 
-> > > > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> > > > index 77b17b13ee61..22001bdf4c97 100644
-> > > > --- a/drivers/pci/pci.c
-> > > > +++ b/drivers/pci/pci.c
-> > > > @@ -34,6 +34,8 @@
-> > > >  #include <linux/aer.h>
-> > > >  #include <linux/bitfield.h>
-> > > >  #include <linux/suspend.h>
-> > > > +
-> > > > +#include "liveupdate.h"
-> > > >  #include "pci.h"
-> > > >  
-> > > >  DEFINE_MUTEX(pci_slot_mutex);
-> > > > @@ -1008,6 +1010,9 @@ void pci_enable_acs(struct pci_dev *dev)
-> > > >  	bool enable_acs = false;
-> > > >  	int pos;
-> > > >  
-> > > > +	if (!pci_liveupdate_enable_adopted_acs_controls(dev))
-> > > > +		return;
-> > > 
-> > > Ugh.  The asymmetry between pci_save_state(), which does nothing
-> > > ACS-related, and pci_restore_state(), which enables it, is sort of
-> > > sketchy to begin with.
-> > > 
-> > > The command-line parsing in this path feels like kind of a wart (not
-> > > that you're touching it).
-> > > 
-> > > It just seems like this path is already hard to analyze, and
-> > > liveupdate is making it harder.
-> > > 
-> > > If we could save/restore the ACS state around the reset, wouldn't that
-> > > solve this without any liveupdate specials here?
-> > 
-> > Yeah that would simplify the liveupdate support greatly. Let me work on
-> > that for v9.
-> 
-> Here's the patch I have prepped for v9 to save/restore ACS controls
-> around reset:
-> 
-> From 0c69424454de0c569aca67bc69f496db915a9bcf Mon Sep 17 00:00:00 2001
-> From: David Matlack <dmatlack@google.com>
-> Date: Fri, 11 Sep 2026 20:05:04 +0000
-> Subject: [PATCH] PCI: Save and restore the ACS Control register
-> 
-> Save the ACS Control register in pci_save_state() and write it back
-> in pci_restore_state(), instead of recomputing the ACS controls from
-> scratch with pci_enable_acs().
-> 
-> This makes ACS symmetric with the rest of a device's saved state. Today
-> pci_save_state() ignores ACS entirely and pci_restore_state() re-enables
-> the ACS controls from the kernel's current ACS policy. As a result, a
-> device can come out of a reset with different ACS controls than it went
-> in with, e.g. any controls programmed outside of pci_enable_acs() are
-> silently dropped.
-> 
-> pci_enable_acs() runs when a driver binds to a device
-> (pci_dma_configure()), i.e. after pci_bus_add_device() has already saved
-> the device's state. Refresh the saved ACS Control register there as
-> well, otherwise a subsequent reset would revert ACS back to the
-> configuration left behind by firmware.
-> 
-> Devices that rely on device-specific quirks to enable an ACS equivalent
-> keep that configuration outside of the ACS Control register, so keep
-> configuring ACS from scratch for them. Do the same for devices that have
-> no saved ACS state at all.
-> 
-> Assisted-by: Claude:claude-opus-5
-> Signed-off-by: David Matlack <dmatlack@google.com>
 
-I like this a lot, thanks!  It would be good to get Alex W's ack, too.
 
-Reviewed-by: Bjorn Helgaas <bhelgaas@google.com>
-
-> ---
->  drivers/pci/pci.c    | 66 +++++++++++++++++++++++++++++++++++++++++++-
->  drivers/pci/pci.h    |  5 ++++
->  drivers/pci/quirks.c |  7 +++++
->  3 files changed, 77 insertions(+), 1 deletion(-)
+On 17/9/26 03:49, Borislav Petkov wrote:
+> On Wed, Sep 16, 2026 at 09:51:41PM +1000, Alexey Kardashevskiy wrote:
+>> +	if (device_tcb_trusted(dev))
 > 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index b2879a6be5f8..dd25c01736b4 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -1021,6 +1021,55 @@ static void pci_std_enable_acs(struct pci_dev *dev, struct pci_acs *caps)
->  		caps->ctrl |= (dev->acs_capabilities & PCI_ACS_TB);
->  }
->  
-> +/**
-> + * pci_save_acs_state - save the ACS Control register
-> + * @dev: the PCI device
-> + *
-> + * Record the ACS controls currently programmed in hardware so that
-> + * pci_restore_acs_state() can reapply them after a reset.
-> + */
-> +static void pci_save_acs_state(struct pci_dev *dev)
-> +{
-> +	struct pci_cap_saved_state *save_state;
-> +
-> +	if (!dev->acs_cap)
-> +		return;
-> +
-> +	save_state = pci_find_saved_ext_cap(dev, PCI_EXT_CAP_ID_ACS);
-> +	if (!save_state)
-> +		return;
-> +
-> +	pci_read_config_word(dev, dev->acs_cap + PCI_ACS_CTRL,
-> +			     (u16 *)&save_state->cap.data[0]);
-> +}
-> +
-> +/**
-> + * pci_restore_acs_state - restore the ACS Control register
-> + * @dev: the PCI device
-> + */
-> +static void pci_restore_acs_state(struct pci_dev *dev)
-> +{
-> +	struct pci_cap_saved_state *save_state = NULL;
-> +
-> +	if (dev->acs_cap && !pci_need_dev_specific_enable_acs(dev))
-> +		save_state = pci_find_saved_ext_cap(dev, PCI_EXT_CAP_ID_ACS);
-> +
-> +	/*
-> +	 * Devices that rely on device-specific quirks to enable an ACS
-> +	 * equivalent keep that configuration outside of the ACS Control
-> +	 * register, so there is nothing useful to restore for them. Configure
-> +	 * ACS from scratch instead, which also covers devices that have no
-> +	 * saved ACS state at all.
-> +	 */
-> +	if (!save_state) {
-> +		pci_enable_acs(dev);
-> +		return;
-> +	}
-> +
-> +	pci_write_config_word(dev, dev->acs_cap + PCI_ACS_CTRL,
-> +			      *(u16 *)&save_state->cap.data[0]);
-> +}
-> +
->  /**
->   * pci_enable_acs - enable ACS if hardware support it
->   * @dev: the PCI device
-> @@ -1057,6 +1106,15 @@ void pci_enable_acs(struct pci_dev *dev)
->  	__pci_config_acs(dev, &caps, config_acs_param, 0, 0);
->  
->  	pci_write_config_word(dev, pos + PCI_ACS_CTRL, caps.ctrl);
-> +
-> +	/*
-> +	 * pci_enable_acs() runs when a driver binds to the device, i.e. after
-> +	 * pci_bus_add_device() has already saved the device's state. Refresh
-> +	 * the saved ACS Control register so that a subsequent reset restores
-> +	 * the controls programmed here rather than the ones left behind by
-> +	 * firmware.
-> +	 */
-> +	pci_save_acs_state(dev);
->  }
->  
->  /**
-> @@ -1800,6 +1858,7 @@ int pci_save_state(struct pci_dev *dev)
->  	pci_save_aer_state(dev);
->  	pci_save_ptm_state(dev);
->  	pci_save_tph_state(dev);
-> +	pci_save_acs_state(dev);
->  	return pci_save_vc_state(dev);
->  }
->  EXPORT_SYMBOL(pci_save_state);
-> @@ -1877,7 +1936,7 @@ void pci_restore_state(struct pci_dev *dev)
->  	pci_restore_msi_state(dev);
->  
->  	/* Restore ACS and IOV configuration state */
-> -	pci_enable_acs(dev);
-> +	pci_restore_acs_state(dev);
->  	pci_restore_iov_state(dev);
->  
->  	dev->state_saved = false;
-> @@ -3532,6 +3591,11 @@ void pci_allocate_cap_save_buffers(struct pci_dev *dev)
->  	if (error)
->  		pci_err(dev, "unable to allocate suspend buffer for LTR\n");
->  
-> +	error = pci_add_ext_cap_save_buffer(dev, PCI_EXT_CAP_ID_ACS,
-> +					    sizeof(u16));
-> +	if (error)
-> +		pci_err(dev, "unable to allocate suspend buffer for ACS\n");
-> +
->  	pci_allocate_vc_save_buffers(dev);
->  }
->  
-> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> index ba3c3fddddc2..037c1674f164 100644
-> --- a/drivers/pci/pci.h
-> +++ b/drivers/pci/pci.h
-> @@ -1095,6 +1095,7 @@ void pci_acs_init(struct pci_dev *dev);
->  void pci_enable_acs(struct pci_dev *dev);
->  #ifdef CONFIG_PCI_QUIRKS
->  int pci_dev_specific_acs_enabled(struct pci_dev *dev, u16 acs_flags);
-> +bool pci_need_dev_specific_enable_acs(struct pci_dev *dev);
->  int pci_dev_specific_enable_acs(struct pci_dev *dev);
->  int pci_dev_specific_disable_acs_redir(struct pci_dev *dev);
->  void pci_disable_broken_acs_cap(struct pci_dev *pdev);
-> @@ -1105,6 +1106,10 @@ static inline int pci_dev_specific_acs_enabled(struct pci_dev *dev,
->  {
->  	return -ENOTTY;
->  }
-> +static inline bool pci_need_dev_specific_enable_acs(struct pci_dev *dev)
-> +{
-> +	return false;
-> +}
->  static inline int pci_dev_specific_enable_acs(struct pci_dev *dev)
->  {
->  	return -ENOTTY;
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 7aee30734303..e500c202d2ec 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -5476,6 +5476,13 @@ static const struct pci_dev_acs_ops *pci_dev_acs_ops_get(struct pci_dev *dev)
->  	return NULL;
->  }
->  
-> +bool pci_need_dev_specific_enable_acs(struct pci_dev *dev)
-> +{
-> +	const struct pci_dev_acs_ops *p = pci_dev_acs_ops_get(dev);
-> +
-> +	return p && p->enable_acs;
-> +}
-> +
->  int pci_dev_specific_enable_acs(struct pci_dev *dev)
->  {
->  	const struct pci_dev_acs_ops *p = pci_dev_acs_ops_get(dev);
+> Where is that function and the rest of the gunk needed for me to apply before
+> I review those?
+> 
+> The patches on that branch:
+> 
+> https://github.com/AMDESE/linux-kvm/commits/tsm-next
+> 
+> which come before those here are enough?
+
+Correct, the patches between v7.3-rc2 and 01/17 (can drop samples and tools, obviously) are enough. It is basically recent tagged upstream + rebased Dan's https://lore.kernel.org/r/20260705220819.2472765-1-djbw@kernel.org
+
+What device_tcb_trusted() means is still debatable, the earlier proposal was including a module flag saying that the driver is trusted too, I think we are ditching it now.
+
+Thanks,
+
+-- 
+Alexey
+
