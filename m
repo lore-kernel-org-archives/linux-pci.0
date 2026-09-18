@@ -1,107 +1,90 @@
-Received: from mail-pj1-f69.google.com (mail-pj1-f69.google.com [209.85.216.69])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09A6E51C33D
-	for <linux-pci@vger.kernel.org>; Fri, 18 Sep 2026 18:15:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.69
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C42BF522689;
+	Fri, 18 Sep 2026 18:25:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=204.191.154.188
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789755357; cv=none; b=oAGXSkqFl83Ji8de+kc7dQqYwaEv/q5HZGQ5OwhYDgHmsM+1advA2lXqeDrAh3xzidGpUM5pzzIThtHCDhnLDJ2eT1X8x1eOE6PShbKYSN1GK1/JFh32c4xeNlWTfl8YOeCZ59Ii4EQPCDFiS4WEl7muY2EcMBUtD4/fnUKudq4=
+	t=1789755936; cv=none; b=crGadNLp2sbf2ozp3dCyuE/VUO5JjSxyuO/23P4ZUEPyxXZYAybxd9nlw5WQToC1B0H0Hb8UyBvbfP34AjmPiz/G5F8zfgxEi5WePrsTaiLAeQ9po45SDtVceK0nfiLd+4UP0/0BoiBzbRbqwenf0syOhWZWiLIfOtiRsHOrI64=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789755357; c=relaxed/simple;
-	bh=OW/egmM7mt/va5mQ7VY7PztEIbg4lcAaL2bbHrTbTPE=;
-	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=cH2rVpXZwRBqQMgVCZUscjxvTlk5awU1TNb6TEAZqAXlSyr7gilWNFcvQlab/r8t0gISrWPER04kC8/qAFCbTZ0FNhqdl9P9I9VONH+YaNK2tzNrk53rmATxeh2CXWNwi4VJLyIYSx3AparxC5M2Wj8mNbLVLxNNJjbmotuUL78=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--rathodpriyank.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=YdcTGLxk; arc=none smtp.client-ip=209.85.216.69
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--rathodpriyank.bounces.google.com
+	s=arc-20240116; t=1789755936; c=relaxed/simple;
+	bh=UZAysP57nG66NYxw8Fzy9+rXvJVyMOkOsT3sKfsu+RE=;
+	h=Message-ID:Date:MIME-Version:To:Cc:References:From:In-Reply-To:
+	 Content-Type:Subject; b=YcEpIbv/qoUJ/3p4QRzqoZS29BhdUY/mCyby8JQwCv9eQousb+DgeJl0Uux4rW6fZ1EjaBHqKXg72MTtHb96Rm9ckfGDwLww5r9LaJMpVU5jlYckYKd9QvPhbfpNghRwVNou/M/mjjXzdp0ab6fOnr1eI10j94k1ilv26IUQjKU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com; spf=pass smtp.mailfrom=deltatee.com; dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b=b3tlnCmF; arc=none smtp.client-ip=204.191.154.188
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=deltatee.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="YdcTGLxk"
-Received: by mail-pj1-f69.google.com with SMTP id 98e67ed59e1d1-38f97b3f853so1768732a91.3
-        for <linux-pci@vger.kernel.org>; Fri, 18 Sep 2026 11:15:55 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1789755355; x=1790360155; darn=vger.kernel.org;
-        h=content-type:cc:to:from:subject:message-id:references:mime-version
-         :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=OW/egmM7mt/va5mQ7VY7PztEIbg4lcAaL2bbHrTbTPE=;
-        b=YdcTGLxkxlZi8gNpmY5tjK9DZdC5iSaM9lHUXPIzh3mQg0ZQFZ7eJp1IWrhzV5jkav
-         Ib7uGMOdg6zA6aNkLemrtHSCu+IKfPQCkrXa/LAk8a0MBtr7EwvHcQKWKUp0mG30c+NJ
-         TahKQ/tIx0iphsg/JJxqjWzn1G6DQRRmJmHh7RePSOQDFK9Mr8LpRBq8K5qLJaAUIXt2
-         ateDWYELUv7xbccRIac8RR7bcviBC37xneeFr6xIbswqx+9lMUer6nqbOMFVAaWDaiEJ
-         bmPIpbKJh/t2CjH59eVYKRjeC3bzpZ6X4ZR6RVWiT0tdO1Zzs3ONUOk1uHnHy3jH5Gzq
-         oJJg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1789755355; x=1790360155;
-        h=content-type:cc:to:from:subject:message-id:references:mime-version
-         :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=OW/egmM7mt/va5mQ7VY7PztEIbg4lcAaL2bbHrTbTPE=;
-        b=ln/eQHmvgmHf7ZrHifiXaUX7pRsYv2qFmSJoJPv0tnpEDR+pEePhWuL6fqpjCXoamo
-         O78RXvyGFCiJO6H46H4hgvenTBJwXNjo1/Mxrl3eLVmFvRlsd+y6Xv2Peyq8NGr8dnOi
-         JKLikh657md8GUIETcVoTzdZNV8RYYi7j9SeiJAp5LgWKsT3aypPnRJuJfEZdqRFTcWO
-         ma3k62iIKGxx4If2udVUo31OoZnFo+yyu5ptLX8jWbfqeTWzkhAGuAHsP6yCTwlLhaAS
-         dk7MxkRj2Us3y4OY3Pl+DWkI0w1OWBnyhLxN7HB9u3pGtcWkO8FBK4jSw69xf53HtqD8
-         NFYA==
-X-Forwarded-Encrypted: i=1; AKwUvByAFrd4Tu00mFPxNzzWg4F/0RKSA/CNtLI1MVx8SmDFfBdMwdgerwORuKh7fqq8ON9Zr/NBFxm81qg=@vger.kernel.org
-X-Gm-Message-State: AFuF++mRcwQBOxsC169In3mCTqnQQblhrprjxWG49FNTI7OI29DZ7uXd
-	Swdfecuk9DBTHQOh44BL+e7+5M94sQLnijYVDhshzoEN8On7xqQ1IF3fQh1wK+5j6IdQnr3ZmHl
-	P4k9+YvSbX1RZxTmwU6AE9wKEcmyS06fX0Q==
-X-Received: from pjbiw4.prod.google.com ([2002:a17:90b:4204:b0:39d:a2e8:6890])
- (user=rathodpriyank job=prod-delivery.src-stubby-dispatcher) by
- 2002:a17:90a:d40e:b0:39e:6c6a:656f with SMTP id 98e67ed59e1d1-39e6c6a6787mr605040a91.50.1789755355148;
- Fri, 18 Sep 2026 11:15:55 -0700 (PDT)
-Date: Fri, 18 Sep 2026 18:15:54 +0000
-In-Reply-To: <20260918-b4-fix-aer-memleaks-v4-0-f0a2c21ed1d1@google.com>
+	dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b="b3tlnCmF"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
+	MIME-Version:Date:Message-ID:content-disposition;
+	bh=AYAzVP/8f8Otb2PCzWFEmkBr82oGzj3BYT7jfwM6D3U=; b=b3tlnCmFMy+rn6Z8ytScOTSJLh
+	VoMg/px+h/5RcvrIBShYg4emqzl/iSzEpUeGPk6kD3cVzqoONFrL8e9aGiAXmvIZdu+eyf46YbXlX
+	YNVtd+SKyOaKRCk1E8c5HTsOo1YQ7sT6LojpDeSaMwKg7pYA3y0zdoWwMOuRIsIAMXarZcnqFZX63
+	a1TPmVGdteTzf8U02YBpscdW6Ea6cDXWEFP/jPxHBrt4iVxPHJUZ4l//EFec9R1z4wn2XazgxjSKy
+	EYn1VAxl6GBy4K07T2IkhN6tU89vT0Vnqrel3nAnIubRCb63mmCijvdTNGmXTAa2+7F+oFaVidO99
+	ApHlYtXw==;
+Received: from guinness.priv.deltatee.com ([172.16.1.162])
+	by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+	(Exim 4.98.2)
+	(envelope-from <logang@deltatee.com>)
+	id 1x7dH6-0000000CrEc-2a01;
+	Fri, 18 Sep 2026 12:25:29 -0600
+Message-ID: <6e4f0c2f-eae8-4cd5-9c10-9b9a59941d2f@deltatee.com>
+Date: Fri, 18 Sep 2026 12:25:01 -0600
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-References: <20260918-b4-fix-aer-memleaks-v4-0-f0a2c21ed1d1@google.com>
-X-Mailer: git-send-email 2.55.0.1082.g2b9226bbc0-goog
-Message-ID: <20260918181554.132414-1-rathodpriyank@google.com>
-Subject: Re: [PATCH v4 0/2] PCI/AER: Fix ghes_estatus_pool memory leaks in
- error handling
-From: Priyank Rathod <rathodpriyank@google.com>
-To: Mahesh J Salgaonkar <mahesh@linux.ibm.com>, "Oliver O'Halloran" <oohall@gmail.com>, 
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Lukas Wunner <lukas@wunner.de>, 
-	Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>, 
-	Jonathan Cameron <jonathan.cameron@oss.qualcomm.com>, 
-	"=?UTF-8?q?Ilpo=20J=C3=A4rvinen?=" <ilpo.jarvinen@linux.intel.com>, Dave Jiang <dave.jiang@intel.com>, 
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, Priyank Rathod <rathodpriyank@google.com>
-Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+To: Leon Romanovsky <leon@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ Chaitanya Kulkarni <kch@nvidia.com>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jens Axboe
+ <axboe@kernel.dk>, Alex Williamson <alex@shazbot.org>,
+ Ankit Agrawal <ankita@nvidia.com>, Jason Gunthorpe <jgg@ziepe.ca>,
+ Jonathan Corbet <corbet@lwn.net>, Shuah Khan <skhan@linuxfoundation.org>,
+ "Joerg Roedel (AMD)" <joro@8bytes.org>, Will Deacon <will@kernel.org>,
+ Robin Murphy <robin.murphy@arm.com>, Randy Dunlap <rdunlap@infradead.org>,
+ Sumit Semwal <sumit.semwal@linaro.org>,
+ =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-doc@vger.kernel.org, iommu@lists.linux.dev,
+ Tushar Dave <tdave@nvidia.com>, linux-media@vger.kernel.org,
+ dri-devel@lists.freedesktop.org, linaro-mm-sig@lists.linaro.org,
+ linux-rdma@vger.kernel.org, kvm@vger.kernel.org, Matt Evans <matt@ozlabs.org>
+References: <20260914-fix-p2p-acs-v4-0-v6-0-5ef07ec9ef06@nvidia.com>
+ <20260914-fix-p2p-acs-v4-0-v6-1-5ef07ec9ef06@nvidia.com>
+Content-Language: en-CA
+From: Logan Gunthorpe <logang@deltatee.com>
+In-Reply-To: <20260914-fix-p2p-acs-v4-0-v6-1-5ef07ec9ef06@nvidia.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-SA-Exim-Connect-IP: 172.16.1.162
+X-SA-Exim-Rcpt-To: leon@kernel.org, bhelgaas@google.com, kch@nvidia.com, gregkh@linuxfoundation.org, axboe@kernel.dk, alex@shazbot.org, ankita@nvidia.com, jgg@ziepe.ca, corbet@lwn.net, skhan@linuxfoundation.org, joro@8bytes.org, will@kernel.org, robin.murphy@arm.com, rdunlap@infradead.org, sumit.semwal@linaro.org, christian.koenig@amd.com, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, iommu@lists.linux.dev, tdave@nvidia.com, linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org, linaro-mm-sig@lists.linaro.org, linux-rdma@vger.kernel.org, kvm@vger.kernel.org, matt@ozlabs.org
+X-SA-Exim-Mail-From: logang@deltatee.com
+X-Spam-Level: 
+Subject: Re: [PATCH v6 01/18] PCI/P2PDMA: Document pdev->p2pdma lifetime rules
+X-SA-Exim-Version: 4.2.1 (built Sun, 23 Feb 2025 07:57:16 +0000)
+X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 
-[+cc Kuppuswamy, Jonathan, Ilpo, Dave - you have reviewed most of the
- recent aer.c changes, so adding you here]
 
-Hi all,
 
-Adding the reviewers who have been active in drivers/pci/pcie/aer.c, as
-this series has not had review feedback since v1 (3 Aug).
+On 2026-09-14 05:22, Leon Romanovsky wrote:
+> From: Leon Romanovsky <leonro@nvidia.com>
+> 
+> pdev->p2pdma is normally accessed through provider-owned references, but
+> pci_p2pmem_find_many() and the p2pmem sysfs attributes may race with driver
+> unbind.
+> 
+> Document initialization, teardown, and how the release grace period
+> protects both the P2PDMA state and its optional allocation pool.
+> 
+> Cc: Alex Williamson <alex@shazbot.org>
+> Cc: Matt Evans <matt@ozlabs.org>
+> Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
+Reads correct to me.
 
-Short summary: ghes_handle_aer() hands a ghes_estatus_pool allocation to
-aer_recover_queue(), which returns void, so ownership sits with the AER
-code. Two paths drop it without freeing - kfifo overflow in
-aer_recover_queue(), and a dequeued record with no matching pci_dev in
-aer_recover_work_func(). Under a sustained error storm this drains the
-pool, which then breaks GHES hardware error reporting system-wide.
-
-v4 adds the Fixes: e2abc47a5a1a tag and Cc: stable that earlier
-revisions were missing, and is rebased onto v7.3-rc3+ (applies cleanly
-to pci/next as well).
-
-Review feedback very welcome - happy to respin in whatever shape you
-prefer. One open design question I would specifically like an opinion
-on: patch 1 frees the buffer inside aer_recover_queue(), which bakes the
-ghes_estatus_pool ownership assumption into an exported symbol. The
-alternative is to make aer_recover_queue() return int and let
-ghes_handle_aer() free its own allocation. I went with the former
-because aer_recover_work_func() already frees unconditionally to the
-pool, but I am happy to switch if you consider the exported-API
-contract cleaner.
-
-Thanks,
-Priyank
+Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
