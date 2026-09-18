@@ -1,132 +1,120 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED6A019B5A3;
-	Fri, 18 Sep 2026 22:23:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B6801E98EF;
+	Fri, 18 Sep 2026 23:00:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789770189; cv=none; b=ccILrvbLF9jDgkwh16PnWRBsDIaQ92OV3A7haY+bNRfp65neSKJXtv8I9n5XpuGKMd/SrcO1afO+p8VZAAEeEWRVxGv14TSWtPkxbabYpFg0daBkvza+jU0MW6cNMWeZ6VNsNWBUAsVxtLXfvM9731Fq9jhYvxHNB6j6LWtrBN8=
+	t=1789772419; cv=none; b=FwX8aP9qP6TNvkc99SNYrQOehmJFzTAapdi6Gk5lAMppo6Vli4tonJzY/2H5cJkLq3U0rIHkLM7P01XOsnGXwu9TenkgwozAGzuUYUzfMFUuqCpyOxXnVGnK+CE85HbHtLDu3Us605cHUjX8I5fai9Id+O0ZHyUfMVHpYdtWjgM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789770189; c=relaxed/simple;
-	bh=nucvwISXMCDKMHV4jkfXUTO7Xx/vX5jFdJJQOxsGeFM=;
+	s=arc-20240116; t=1789772419; c=relaxed/simple;
+	bh=soRR53JeLr5E9sO4bwIPbK6EtttDoUxkkFFZYgNvOok=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=JYUFIoEM49fQGKHlVrbvOUEXJpc6hV75g+yaNMuxA3Jq4KSwEgBu0u8wJ/FRjGdI+q6rY6dlx82UM1bymyz/yZdSNe/M7IpSDmWQdVX1jZyHeMCKTJvBOL7Rzy/+Ejhmrg6M+/r6gZaEQ/MinjN3OENrhJ2BhYwa1fdnHDYt82s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OPbZz5ah; arc=none smtp.client-ip=100.103.45.18
+	 Content-Disposition:In-Reply-To; b=Jnw9FKeDRW5eHedG7r3JTs4Ld7zArG2UaTcRZaC4qvchRyjX8acCgdBzQaFtpgi73X+O7loDlgqpRP0ilL2O/mWTehVwfRQDptclOR6RLf8osewIiqwn+ZacUgKKeVx6BgsvsSCMpxGwn371woBsrmcPqSjHW0eo+2pqYULoRQQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oLTy+OD6; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OPbZz5ah"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 53B611F000FF;
-	Fri, 18 Sep 2026 22:23:07 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oLTy+OD6"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1276C1F000FF;
+	Fri, 18 Sep 2026 23:00:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789770187;
-	bh=aadCeXW0ciM6vLWCVdfuHHJvH4AslTQpNsGe5hz/Ry8=;
+	s=k20260515; t=1789772417;
+	bh=ODTQrY0Jnry0Dfu3UICCoe8mZrLfiMVB8y8nz6T8EQE=;
 	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=OPbZz5ahJ9sLLgQIf3lt69hzVr8HxIVnxzlqzjY2Hh0MMVxgKiBqp3vEk6IxtayRw
-	 Zxld/ydvwMA06F6xDGgfftaTE2mJZ3IbVG843iflMfUHO4k7bfA5hoEG3OaKxwsMGT
-	 7Dt6plr9ZCHB/xI8GxvHppVsMlVcL5z4iTHMKd09h+KftaHvR15nd+K8sOQg2rxboH
-	 jAli1JZhQwsnL4iKNeWn6SRtnsubRZ9E0Y9SjFC65iaqc7nKrLwgWRFcaraz2EYkKP
-	 +e6X2ZatVAFEI2fn+BeukdDAzce0WX2ewUQMLICcu+xsy534pvf38+Mw6EWijg+6je
-	 5oCjPFj42A/UQ==
-Date: Fri, 18 Sep 2026 17:23:05 -0500
+	b=oLTy+OD6g/37bVTLXaNX0EZiObFu59/4XeOqEG62ekDkw/ztpvQkkogMu189UZa7A
+	 mGAad6qFw8J/sUBL9JZHnmtiLhuTzCDdPozJbGAVl7PiUaz4gWMCu7JiMlVKkTSCaw
+	 +YfAVpn4M2CC19X1EXCEgBJ2RMIa3bPCqaWnXUHfb8r05WrHiq67rxJmMA5R1quXqf
+	 htus6gV7Jv7wOGz27XSMw+2vCB5eEI1b0CDjDKwE5vcn+GBLvq6Y16oHmM/JMM0Hn/
+	 1twk7jc9DlL+zhdgbFzx11yGaXOz6Lws0Pjj3ixaVzWTLEIHLJqmucY6rMEhuWPfGE
+	 mpNZFawkau82Q==
+Date: Fri, 18 Sep 2026 18:00:15 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Josh Perry <josh@6bit.com>
-Cc: Thorsten Leemhuis <regressions@leemhuis.info>, bhelgaas@google.com,
-	Mario Limonciello <mario.limonciello@amd.com>, hkallweit1@gmail.com,
-	nic_swsd@realtek.com, rafael@kernel.org, linux-pci@vger.kernel.org,
-	netdev@vger.kernel.org, regressions@lists.linux.dev
-Subject: Re: [REGRESSION 6.16] r8169 =?utf-8?Q?RTL8?=
- =?utf-8?Q?168h=2F8111h_fails_to_probe_=E2=80=94_=22Unable_to_change_power?=
- =?utf-8?Q?_state_from_D3cold_to_D0=22_=E2=80=94?= bisected to 4d4c10f763d7
-Message-ID: <20260918222305.GA1200870@bhelgaas>
+To: Soeren Moch <smoch@web.de>
+Cc: Richard Zhu <hongxing.zhu@nxp.com>, stable@vger.kernel.org,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>, Frank Li <Frank.Li@nxp.com>,
+	Fabio Estevam <festevam@gmail.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, imx@lists.linux.dev,
+	linux-kernel@vger.kernel.org,
+	Thorsten Leemhuis <regressions@leemhuis.info>
+Subject: Re: [PATCH] PCI: imx6: Keep Root Port MSI capability also for i.MX6Q
+Message-ID: <20260918230015.GA1205610@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <1ad46724-18a6-4cc1-9c40-f34fbf0f0b7c@amd.com>
+In-Reply-To: <20260427115804.134231-1-smoch@web.de>
 
-On Sun, Jun 21, 2026 at 12:24:42PM -0700, Mario Limonciello wrote:
-> On 6/17/26 01:32, Thorsten Leemhuis wrote:
-> > On 6/12/26 03:07, Josh Perry wrote:
-> > > #regzbot introduced: 4d4c10f763d7
-> > > 
-> > > Since v6.16 one of two onboard RTL8168h/8111h NICs on this board fails
-> > > to probe on boot; the device drops to D3cold and the driver can't bring
-> > > it back:
-> > 
-> > FWIW, that commit is 4d4c10f763d780 ("PCI: Explicitly put devices into
-> > D0 when initializing") [v6.16-rc1] from Mario, who is already CCed, but
-> > looks like might be on holiday or something due to inactivity on the
-> > lists in the recent days. So it might take a few days before this moves on.
-> > 
-> > Josh, this is not my area of expertise, but there are two things I guess
-> > might be helpful:
-> > 
-> > * retry with 7.1
-> > * upload "dmesg" and "sudo lspci -vvv" output from working and broken
-> > kernels somewhere (like bugzilla.kernel.org).
+[+cc Thorsten, possible regzbot confusion?]
+
+On Mon, Apr 27, 2026 at 01:58:04PM +0200, Soeren Moch wrote:
+> Also on the NXP i.MX6Q chipset MSIs from the endpoints won't be received by
+> the iMSI-RX MSI controller if the Root Port MSI capability is disabled.
 > 
-> Yes; please retry with mainline.  We already had multiple regressions from
-> that commit fixed, so if you bisected down to this commit then it's
-> plausible that there is already a fix.
+> Even though the Root Port MSIs won't be received by the iMSI-RX controller
+> due to design, this chipset has some weird hardware bug that prevents
+> the endpoint MSIs from reaching when the Root Port MSI capability is
+> disabled.
+> 
+> Hence, always keep the Root Port MSI capability for this chipset.
+> 
+> Note that by keeping Root Port MSI capability, Root Port MSIs such as AER,
+> PME and others won't be received by default. So users need to use
+> workarounds such as passing 'pcie_pme=nomsi' cmdline param.
+> 
+> Fixes: 3a4e8302e72f ("PCI: imx6: Keep Root Port MSI capability with iMSI-RX to work around hardware bug")
+> Cc: <stable@vger.kernel.org> # 7.0.x
+> Signed-off-by: Soeren Moch <smoch@web.de>
 
-Thanks a lot for your bisection and detailed report, Josh.  Can you
-verify whether this is still a problem?
+This thread is still listed as a regression:
+https://linux-regtracking.leemhuis.info/regzbot/regression/lore/20260427115804.134231-1-smoch@web.de/
 
-The only commit that claims to fix 4d4c10f763d7 ("PCI: Explicitly put
-devices into D0 when initializing") is 907a7a2e5bf4 ("PCI/PM: Set up
-runtime PM even for devices without PCI PM"), and you already verified
-that it did not fix the problem (both appeared in v6.16).
+But I *think* it's been resolved by:
 
-c855c9921da7 ("PCI/ASPM: Don't reconfigure ASPM entering low-power
-state"), which appeared in v7.2-rc1, mentions a similar symptom
-("Unable to change power state from D3hot to D0, device inaccessible") 
-so it's possible that it would fix the issue.
+  b4bee12ebecc ("PCI: imx6: Keep i.MX6 Root Port MSI/MSI-X Capabilities with iMSI-RX to work around hardware bug")
 
-> > >    r8169 0000:02:00.0 eth0: RTL8168h/8111h, 00:2b:67:48:40:01, XID 541,
-> > > IRQ 137
-> > >    r8169 0000:04:00.0: Unable to change power state from D3cold to D0,
-> > > device inaccessible
-> > >    r8169 0000:04:00.0: Mem-Wr-Inval unavailable
-> > >    r8169 0000:04:00.0: error -EIO: PCI read failed
-> > >    r8169 0000:04:00.0: probe with driver r8169 failed with error -5
-> > > 
-> > > The board has two identical RTL8168h NICs (both XID 541): 0000:02:00.0
-> > > and 0000:04:00.0. Only 04:00.0 fails — its sibling 02:00.0, on a
-> > > different root port, probes and works normally on the very same kernel
-> > > and boot. The failing NIC then does not appear (no enp4s0), taking the
-> > > machine's WAN offline. This strongly suggests the problem is port/
-> > > topology-specific rather than device- or driver-specific: the upstream
-> > > port behind 04:00.0 is placed in D3cold and the endpoint cannot be
-> > > resumed to D0.
-> > > 
-> > > Hardware: RTL8168h/8111h, XID 541, PCI 04:00.0 (onboard 1GbE).
-> > > Platform: Lenovo ThinkCentre M90n-1 (11AHS0B200), BIOS M2AKT49A
-> > > (2026-03-25, latest available). Firmware is current, so this is not a
-> > > platform-firmware issue.
-> > > 
-> > > Bisection: v6.15 good, v6.16 bad (verified by booting both). I then
-> > > reverted 4d4c10f763d7 ("PCI: Explicitly put devices into D0 when
-> > > initializing") together with its follow-up 907a7a2e5bf4 ("PCI/PM: Set up
-> > > runtime PM even for devices without PCI PM") on top of 6.16.7: the NIC
-> > > probes and links at 1Gbps/Full normally, with no workaround:
-> > > 
-> > >    r8169 0000:04:00.0 eth1: RTL8168h/8111h, 00:2b:67:48:40:02, XID 541,
-> > > IRQ 138
-> > >    r8169 0000:04:00.0 enp4s0: Link is Up - 1Gbps/Full - flow control rx/tx
-> > > 
-> > > Workaround: booting an unmodified v6.16+ kernel with pcie_port_pm=off
-> > > also restores the NIC, which is consistent with the upstream port being
-> > > placed in D3cold and the device failing to resume to D0 after the
-> > > explicit-D0 init change.
-> > > 
-> > > The follow-up 907a7a2e5bf4 does not fix this resume case: v6.18.33 is
-> > > still affected (retested today on current firmware).
-> > > 
-> > > Happy to test patches or provide full dmesg / lspci.
-> > > 
-> > 
+Can you confirm?
+
+Maybe regzbot is confused by the fact that the regression was first
+attributed to 3a4e8302e72f, and then later attributed to
+f5cd8a929c825?
+
+> ---
+> Cc: Manivannan Sadhasivam <mani@kernel.org>
+> Cc: Richard Zhu <hongxing.zhu@nxp.com>
+> Cc: Lucas Stach <l.stach@pengutronix.de>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Frank Li <Frank.Li@nxp.com>
+> Cc: Fabio Estevam <festevam@gmail.com>
+> Cc: linux-pci@vger.kernel.org
+> Cc: linux-arm-kernel@lists.infradead.org
+> Cc: imx@lists.linux.dev
+> Cc: linux-kernel@vger.kernel.org
+> 
+> Tested on a tbs2910 board [1]
+> [1] arch/arm/boot/dts/nxp/imx/imx6q-tbs2910.dts
+> ---
+>  drivers/pci/controller/dwc/pci-imx6.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
+> index 6d6a1688e7eb..3d461bdef967 100644
+> --- a/drivers/pci/controller/dwc/pci-imx6.c
+> +++ b/drivers/pci/controller/dwc/pci-imx6.c
+> @@ -1865,7 +1865,8 @@ static const struct imx_pcie_drvdata drvdata[] = {
+>  		.flags = IMX_PCIE_FLAG_IMX_PHY |
+>  			 IMX_PCIE_FLAG_SPEED_CHANGE_WORKAROUND |
+>  			 IMX_PCIE_FLAG_BROKEN_SUSPEND |
+> -			 IMX_PCIE_FLAG_SUPPORTS_SUSPEND,
+> +			 IMX_PCIE_FLAG_SUPPORTS_SUSPEND |
+> +			 IMX_PCIE_FLAG_KEEP_MSI_CAP,
+>  		.dbi_length = 0x200,
+>  		.gpr = "fsl,imx6q-iomuxc-gpr",
+>  		.ltssm_off = IOMUXC_GPR12,
+> -- 
+> 2.43.0
 > 
