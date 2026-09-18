@@ -1,124 +1,147 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E45ED50390C;
-	Fri, 18 Sep 2026 15:39:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6AC4F3CDBD3;
+	Fri, 18 Sep 2026 15:42:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789745978; cv=none; b=gM6iwUW5TXEqalfwEiHwQQfw4u/UAC8tKiV3/ILJQsJwLU5GcXhVwOa8VLGhtQOTLlw+VPHns/4t9gNo4P5XdRnV4R2TFm9tNnGghekcaZJ+/VBibp8oFPZowcPE1q/r1qDGMvoVzQfxH36H9RMafM2oelMCE9nq4hrGcMoBWrg=
+	t=1789746152; cv=none; b=hrUR+ZbIb1V8J0l2fHavLO4/tHU+ilSqOhkHMD1eb0esnta1RhusnFTb4fLmztULQB9TTKQwBDP7Y5/mN7ZmCIaru97ja+ddcY3Eg6QXudknnM+iFdNpiOdmT6SexoJTsT/hPUmF3Kg4Y3tdr/BrI5rPVCbgX0MOG6V3LlEtu28=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789745978; c=relaxed/simple;
-	bh=VbFQrttl6wWCnLSauDugqZV0z7asYV0FAk+7m//rqyc=;
+	s=arc-20240116; t=1789746152; c=relaxed/simple;
+	bh=Nc1fYKpfYDKJ2iaZhgv9D65V8x76BP9WBeFK94F2Lzg=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=VYZaeWPw6HEuG0Oo/lEaEsHwNW3a9XauyagbTdpVr7I3ZSCAuHwyBqno2io7J4Z3sC6HYOnijCkS2mmy8ICxwlwzIJO7QUVUDilZE1WR8ybgS3Axo1KJnDLXjrgj7UNdS/PpOh33+K1wx63TsyzqrcG4a3QyKvHrwMxVGD1EnYY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ILJ6QFR7; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=GDyMU+wiZqo51WQkEhwuyMG6lUBjXnt52Wp8zJjXg1p0akPz2pf4h6voZUMfnUgR0xI1xLfZ1LvkJw/ZT6CN5QM1E5EDFXqwX9IQrU9X3xJSyQz4Xv2QB2U/it/vfmteRzXvB0VcOstrHWWUypOv7nwi8qJVtdQBttbGxmiXtDQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=n5UI4L0d; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ILJ6QFR7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E51901F000FF;
-	Fri, 18 Sep 2026 15:39:25 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="n5UI4L0d"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E8C2B1F000FF;
+	Fri, 18 Sep 2026 15:42:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789745966;
-	bh=Zd67yz0t4opoZtOCzi4ZtDnSMs+HiY6s7KjTGc+vLFk=;
+	s=k20260515; t=1789746151;
+	bh=Nq1nNGrYp/QtXsu7/dFhrMpB6L0NdJSvHwjmt7m74zw=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=ILJ6QFR79IkwD/s0ca47aQrNFZmKlMqCAX7wsynPY7GAq682IgHccGBRxKtcxpDXX
-	 ngfO4+HxCqbfwRjSGvTH07kNCLjHnbgYHlX4+RBLJykNhRIpt6wi3O4/Aptm+WC14I
-	 GgR/66taCh2fpytJU1KH/WNFrCeUC/fwDy8dP+hzq4GjgRlNJ1P0uNoNjhoQugbaja
-	 tlvKP7Zkxt77MifTtC577/A7SFaDayZWidTJlnK4cIrk2bOj5ykEaWF1PWjm59kUVN
-	 iqJSRd9hXYHjngOFD3z8e0e1/4e0nJbzPMZt/7mFQeHjpYtr5Cjdyh5CF8ORy5XFOq
-	 IME0J6CyIQkEg==
+	b=n5UI4L0dk9WJCffHaEMN+FRzYKmcXQMJQviGeDVhhY0xzsmOWdDiANgKUDi6vQkWh
+	 HEzSmy4RVRVCAYWJ1s7Qs5xaP7Q8G/rojaHFEXOC7Jbn6G4ChwVWVUO1bSr2bZWqRd
+	 8wpT7IPAf0fHJZjEjIB3/M/hUsSWI0G8767/Tepx3mhMkT1nm1cRK0DVslBR6W0vU2
+	 DsvGevz/TDafx85BN1GLEbEiybIavSOy20z8SX8MMNON4mVOgXZIUazD1cDVqlkX7R
+	 RXrahPXqDkV81+3aTIKOefbixBUxeOHSg4hl+a8DF2Scjw8AzGfnMwYevneYtWuTUD
+	 OSDGPWzEueuhQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 3/3] arm64: dts: qcom: qcs6490-rb3gen2: add endpoint
- buses
+Subject: Re: [PATCH v4 2/3] misc: tc9564: introduce base PCI driver
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Alex Elder" <elder@riscstar.com>
-Cc: conor+dt@kernel.org, linux-pci@vger.kernel.org, robh@kernel.org, devicetree@vger.kernel.org
-In-Reply-To: <20260918152659.413268-4-elder@riscstar.com>
+Cc: linux-pci@vger.kernel.org, robh@kernel.org, conor+dt@kernel.org, devicetree@vger.kernel.org
+In-Reply-To: <20260918152659.413268-3-elder@riscstar.com>
 References: <20260918152659.413268-1-elder@riscstar.com>
- <20260918152659.413268-4-elder@riscstar.com>
+ <20260918152659.413268-3-elder@riscstar.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 18 Sep 2026 15:39:25 +0000
-Message-Id: <20260918153925.E51901F000FF@smtp.kernel.org>
+Date: Fri, 18 Sep 2026 15:42:30 +0000
+Message-Id: <20260918154230.E8C2B1F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-- [High] pci: MMIO translation failure due to static dummy ranges bypassing=
- dynamic update
+- [High] pci: of_pci_make_dev_node quirk fails to update ranges of existing=
+ DT node
+- [Medium] kconfig: TC9564_PCI selects PCI_DYNAMIC_OF_NODES without inherit=
+ing OF_IRQ dependency
 --
 
-commit 07e53b54e0b29671e1a08f764661a81fe5484062
+commit d693efad7a099f6326c4b836ade779f0f07366be
 Author: Alex Elder <elder@riscstar.com>
 
-arm64: dts: qcom: qcs6490-rb3gen2: add endpoint buses
+misc: tc9564: introduce base PCI driver
 
-This commit adds devicetree nodes for a PCIe endpoint and its peripheral
-buses on the QCS6490 RB3gen2 platform. It also defines static ranges for
-the endpoint BARs, with the expectation that these will be updated
-dynamically.
+The Toshiba TC9564 is small and highly-specialized SoC that implements
+a PCIe switch as well as an Ethernet AVB/TSN bridge. Create a new PCI
+driver under drivers/misc that binds with the embedded PCI endpoint
+functions within the TC9564 SoC. Use the PCI quirks mechanism to update
+endpoint device nodes dynamically.
 
-> diff --git a/arch/arm64/boot/dts/qcom/qcs6490-rb3gen2.dts b/arch/arm64/bo=
-ot/dts/qcom/qcs6490-rb3gen2.dts
-> index 3bb5fca8e2b13..5b7f5292a8864 100644
-> --- a/arch/arm64/boot/dts/qcom/qcs6490-rb3gen2.dts
-> +++ b/arch/arm64/boot/dts/qcom/qcs6490-rb3gen2.dts
-> @@ -955,11 +955,41 @@ pcie@3,0 {
->  			bus-range =3D <0x5 0xff>;
+> diff --git a/drivers/misc/Kconfig b/drivers/misc/Kconfig
+> index 7364931dad3a1..9c5b1e9d672e8 100644
+> --- a/drivers/misc/Kconfig
+> +++ b/drivers/misc/Kconfig
+
+[ ... ]
+
+> @@ -568,6 +568,21 @@ config MCHP_LAN966X_PCI
+>  	    - lan966x-miim (MDIO_MSCC_MIIM)
+>  	    - lan966x-switch (LAN966X_SWITCH)
 > =20
->  			dev@0,0 {
-> +				compatible =3D "pci1179,0220";
->  				reg =3D <0x50000 0x0 0x0 0x0 0x0>;
-> +				#address-cells =3D <3>;
-> +				#size-cells =3D <2>;
-> +				/* Ranges will be updated dynamically */
-> +				ranges =3D <0x0 0x0 0x0  0x83050000 0x0 0x0  0x0 0x4000>,
+> +config TC9564_PCI
+> +	tristate "Toshiba TC9564 PCI function support"
+> +	depends on OF
+> +	depends on PCI
+> +	select PCI_DYNAMIC_OF_NODES
+
+[Severity: Medium]
+Can this cause a Kconfig unmet direct dependency warning?
+
+PCI_DYNAMIC_OF_NODES explicitly defines 'depends on OF_IRQ' in
+drivers/pci/Kconfig. Selecting it here without inheriting its dependencies
+could cause unmet direct dependency warnings and potential build failures on
+architectures lacking OF_IRQ support.
+
+> +	select PCI_QUIRKS
+> +	default m
+> +	help
+
+[ ... ]
+
+> diff --git a/drivers/misc/tc9564-pci.c b/drivers/misc/tc9564-pci.c
+> index 0000000000000..e4d00dfecfca9 100644
+> --- /dev/null
+> +++ b/drivers/misc/tc9564-pci.c
+
+[ ... ]
+
+> +	/* Scan for pci-ep-bus (simple-bus) nodes and probe their sub-devices */
+> +	ret =3D of_platform_default_populate(np, NULL, dev);
+
+[ ... ]
+
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index de9bbccda21fd..54e310c4153df 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -6391,6 +6391,7 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_XILINX, 0x502=
+0, of_pci_make_dev_node);
+>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_XILINX, 0x5021, of_pci_make_dev_no=
+de);
+>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_REDHAT, 0x0005, of_pci_make_dev_no=
+de);
+>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_EFAR, 0x9660, of_pci_make_dev_node=
+);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_TOSHIBA, 0x0220, of_pci_make_dev_n=
+ode);
 
 [Severity: High]
-Does defining these dummy ranges statically bypass the dynamic update?
+Will this quirk successfully update the ranges property of the existing
+devicetree node?
 
-During PCI enumeration, pci_set_of_node() binds existing nodes like dev@0,0
-to the corresponding pci_dev. Later, when the PCI quirk calls
-of_pci_make_dev_node() to dynamically update the ranges,
-of_pci_make_dev_node() checks if (pci_device_to_OF_node(pdev)) and returns
-immediately without calling of_pci_add_properties().
+Because the tc9564 device has a static device tree node, pci_set_of_node()
+attaches the static node to pdev->dev.of_node before this fixup runs.
 
-As a result, the dummy ranges are left intact, which causes child devices
-on the PCI endpoint bus to use these static ranges instead of the actual
-BAR addresses assigned by the PCI core. Will this lead to invalid memory
-accesses or driver probe failures?
+Inside of_pci_make_dev_node(), the early check for an existing node:
 
-> +					 <0x2 0x0 0x0  0x83050000 0x0 0x4000  0x0 0x80000>,
-> +					 <0x4 0x0 0x0  0x83050000 0x0 0x84000  0x0 0x200000>;
-> +
-> +				pci-ep-bus@4 {
-> +					compatible =3D "simple-bus";
-> +					#address-cells =3D <1>;
-> +					#size-cells =3D <1>;
-> +					/* Map 0x0-0x1fffff to BAR 4 */
-> +					ranges =3D <0x0  0x4 0x0 0x0  0x200000>;
-> +				};
->  			};
-> =20
->  			dev@0,1 {
-> +				compatible =3D "pci1179,0220";
->  				reg =3D <0x50100 0x0 0x0 0x0 0x0>;
-> +				#address-cells =3D <3>;
-> +				#size-cells =3D <2>;
-> +				/* Ranges will be updated dynamically */
-> +				ranges =3D <0x0 0x0 0x0  0x83050100 0x0 0x0  0x0 0x4000>,
+    if (pci_device_to_OF_node(pdev))
+        return;
 
-[Severity: High]
-This appears to have the same issue. Because the dev@0,1 node is already
-present, the dynamic update logic in of_pci_make_dev_node() will bypass it.
+evaluates to true, causing it to return immediately. Consequently,
+of_pci_prop_ranges() is never executed.
 
-Child devices under this node will then attempt to translate MMIO addresses
-using these static dummy ranges instead of the actual BAR addresses assigned
-by the PCI core.
+This means endpoint platform devices populated by of_platform_default_popul=
+ate()
+in tc9564_function_probe() will fail to map their MMIO addresses correctly,
+translating addresses using the placeholder static 'ranges' property rather
+than dynamically assigned PCI BAR addresses.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260918152659.4132=
-68-1-elder@riscstar.com?part=3D3
+68-1-elder@riscstar.com?part=3D2
