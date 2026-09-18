@@ -1,91 +1,82 @@
-Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A3E335E956;
-	Fri, 18 Sep 2026 20:00:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=204.191.154.188
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 705733F12D3;
+	Fri, 18 Sep 2026 20:02:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789761601; cv=none; b=gxmnZerjEWLcNSrBDAEnlRm8aikLN4LoMLtTqXF9+JVLni7x+H0xgNZuGmnHW7uzcvNkAhWon2LGYPA1btg8Z2er+9GzqP7G3Tsjf5fiE+Alv4idm8l+OaJFBIYy7My3d/ep3TT+OqQENKnWQkVZLqcBuWeTaUM8m2qS01WENOY=
+	t=1789761742; cv=none; b=aviWrxt0Z1wETBgaJDmiLCSXTo7jlDL4gjN0+og5lQUL77V9ZnsbJGth/KdYJKydD51KcQQManNExcT7mk9FOHUiD2iTi2yyWDbyYvoDwTo3V12JxkjIG+VzY+7v5CKTQwndvcf4bvqeVTKCVMjyIxnUCGXkvlftSwX5ciJRWhs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789761601; c=relaxed/simple;
-	bh=ujkhGy2FSYAIasmOkN8vs+uHhKJMbQlyvbnsVAWbj1o=;
-	h=Message-ID:Date:MIME-Version:To:Cc:References:From:In-Reply-To:
-	 Content-Type:Subject; b=IKzrhETNZm4Id2TBQ2+vdXFmAhy8b4lD3Ijd2as9QzU+nElmDRICochwDeUUPxTomKA5Vp2OuUJhPn53cRZayk1b8NR0mMZn76nmPJAxC+iElqQ2CFixUjUxQrOLcOoW59UavlLsEKQVRmUule42wpuRs49zkr98pfHdnZKQEgw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com; spf=pass smtp.mailfrom=deltatee.com; dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b=W/ONbTcH; arc=none smtp.client-ip=204.191.154.188
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=deltatee.com
+	s=arc-20240116; t=1789761742; c=relaxed/simple;
+	bh=T5dpYYlP7jfHWjz5/AG/jMVuBFZdP1hWeWvJN95Q254=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=DiTljRbxIQELzMyuqNQaO2xhWg+iu6jKeyR4yuzT2QLj0/BmfG2VvI7cK9YR2OqCL73Eo1rQnNPmwDF9SoHhWSS9aHgdtCHdxyYR+MauZSKVm2VjHXk4AjsZ8O79NvzWHg3nI84OsNy1p+uV6Y92Ud7H/dOc7jFBPnC+X2dMy7E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PLmEd2lM; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b="W/ONbTcH"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
-	MIME-Version:Date:Message-ID:content-disposition;
-	bh=cmiry3JcpazZ6l/PDBYrf3Gg/OWOS79zaTVf2b02IB0=; b=W/ONbTcHvbbIcERFDBy5V9+fz8
-	ClXKlqhfI9/+PEX5UPZD/o9kNZB2xeLc6zsCCTmVEebXhBjHQB1VHAH3gZOcPOirQCS5xTtaH0f5y
-	s0JCpmFhn7hlwfUnwEhUXZMND0d06IpSnuXzm8j86ZILMwQr8gCPbjPiwyNNd/0T4UK7TSQzEcPNC
-	5aqkcHGEO3iirTALpNPzRsqeyqDK7uUa2nahHS2hhtAH2q05KmkruKKkOSr1EwNbW/d6ezacx2EXb
-	kuJwha3ZRhs0SHbPVT9LjGFOUI6TCSn71LmSJBR0L8gAurJAb3h9zxd1NU58TeZwTWpyag9nqPIUW
-	MSa9+CMQ==;
-Received: from guinness.priv.deltatee.com ([172.16.1.162])
-	by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-	(Exim 4.98.2)
-	(envelope-from <logang@deltatee.com>)
-	id 1x7ekV-0000000Cs4I-1zVG;
-	Fri, 18 Sep 2026 13:59:56 -0600
-Message-ID: <1384e37c-d4d4-41d7-8d74-c4e60f52c9d7@deltatee.com>
-Date: Fri, 18 Sep 2026 13:59:54 -0600
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PLmEd2lM"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C4EC41F000FF;
+	Fri, 18 Sep 2026 20:02:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1789761741;
+	bh=MnqXejbfjvShYjb9aS8GZazk3T+YHBYH0vyg1HBvdTA=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=PLmEd2lMXJGsFa0mu20RtohwD/5jaz2c0N+gCCJ1JpUCYbcuvftdSgBMJgKflv/bg
+	 eqw2AvekQ9AJcC92loN7wofjRZh4ZQEC4Ly6TRE+8svOfIDPBWjZ/KYqJxGkIzcDUg
+	 /j7ceScyy/NYJ3AsOjeC5bzwNHfhdK0RFUUixMjaFTfgDr7IOy0URP5i+ZldjRoxOY
+	 feP9tp81yfu0TTbGS7OsgUbe73+5jOc9v3aWMJLLZACENHs90eZKbz/u9FEMNUiTez
+	 +ObfPvZ0AppprX7eRIOWq9NmRQdobJNQQ04wyA9W0vv28zSMbO30gJsj7pNGy8QW4O
+	 PcugvlM8958ug==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v3] PCI: of_property: Omit bus properties without a
+ subordinate bus
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Bjorn Helgaas" <helgaas@kernel.org>
+Cc: devicetree@vger.kernel.org, conor+dt@kernel.org, robh@kernel.org, linux-pci@vger.kernel.org
+In-Reply-To: <20260918195540.GA1187209@bhelgaas>
+References: <20260918195540.GA1187209@bhelgaas>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Fri, 18 Sep 2026 20:02:20 +0000
+Message-Id: <20260918200220.C4EC41F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-To: Leon Romanovsky <leon@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
- Chaitanya Kulkarni <kch@nvidia.com>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jens Axboe
- <axboe@kernel.dk>, Alex Williamson <alex@shazbot.org>,
- Ankit Agrawal <ankita@nvidia.com>, Jason Gunthorpe <jgg@ziepe.ca>,
- Jonathan Corbet <corbet@lwn.net>, Shuah Khan <skhan@linuxfoundation.org>,
- "Joerg Roedel (AMD)" <joro@8bytes.org>, Will Deacon <will@kernel.org>,
- Robin Murphy <robin.murphy@arm.com>, Randy Dunlap <rdunlap@infradead.org>,
- Sumit Semwal <sumit.semwal@linaro.org>,
- =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-doc@vger.kernel.org, iommu@lists.linux.dev,
- Tushar Dave <tdave@nvidia.com>, linux-media@vger.kernel.org,
- dri-devel@lists.freedesktop.org, linaro-mm-sig@lists.linaro.org,
- linux-rdma@vger.kernel.org, kvm@vger.kernel.org
-References: <20260914-fix-p2p-acs-v4-0-v6-0-5ef07ec9ef06@nvidia.com>
- <20260914-fix-p2p-acs-v4-0-v6-4-5ef07ec9ef06@nvidia.com>
-Content-Language: en-CA
-From: Logan Gunthorpe <logang@deltatee.com>
-In-Reply-To: <20260914-fix-p2p-acs-v4-0-v6-4-5ef07ec9ef06@nvidia.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-SA-Exim-Connect-IP: 172.16.1.162
-X-SA-Exim-Rcpt-To: leon@kernel.org, bhelgaas@google.com, kch@nvidia.com, gregkh@linuxfoundation.org, axboe@kernel.dk, alex@shazbot.org, ankita@nvidia.com, jgg@ziepe.ca, corbet@lwn.net, skhan@linuxfoundation.org, joro@8bytes.org, will@kernel.org, robin.murphy@arm.com, rdunlap@infradead.org, sumit.semwal@linaro.org, christian.koenig@amd.com, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, iommu@lists.linux.dev, tdave@nvidia.com, linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org, linaro-mm-sig@lists.linaro.org, linux-rdma@vger.kernel.org, kvm@vger.kernel.org
-X-SA-Exim-Mail-From: logang@deltatee.com
-X-Spam-Level: 
-Subject: Re: [PATCH v6 04/18] PCI: Reject unreadable ACS controls in isolation
- checks
-X-SA-Exim-Version: 4.2.1 (built Sun, 23 Feb 2025 07:57:16 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 
+> Author: Angel J <iamanaws@httpd.dev>
+>=20
+> PCI: of_property: Omit bus properties without a subordinate bus
+>=20
+> A bridge (a device with a Type 1 header) may not have a secondary bus
+> allocated (pdev->subordinate), e.g., if there are no available bus numbers
+> or the bridge secondary/subordinate bus numbers are not writable.
+>=20
+> The dynamic OF helpers of_pci_prop_bus_range() and of_pci_prop_intr_map()
+> dereference pdev->subordinate without checking it.  When
+> CONFIG_PCI_DYNAMIC_OF_NODES is enabled, this can cause a NULL pointer
+> dereference and early boot hang.
+>=20
+> Generate 'bus-range' and 'interrupt-map' properties only when a subordina=
+te
+> bus exists.  Keep the node and its remaining properties for bridges witho=
+ut
+> one.
+>=20
+> The problem was latent since 407d1a51921e ("PCI: Create device tree node
+> for bridge"), but wasn't reachable until 1f340724419e ("PCI: of: Create
+> device tree PCI host bridge node"), which appeared in v6.15.  Before
+> 1f340724419e, of_pci_make_dev_node() returned early because the parent OF
+> node was missing.
+>=20
+> Fixes: 407d1a51921e ("PCI: Create device tree node for bridge")
+> Signed-off-by: Angel J <iamanaws@httpd.dev>
+> [bhelgaas: move pdev->subordinate test to callees, commit log]
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
+Sashiko has reviewed this patch and found no issues. It looks great!
 
-On 2026-09-14 05:22, Leon Romanovsky wrote:
-> From: Leon Romanovsky <leonro@nvidia.com>
-> 
-> pci_acs_flags_enabled() and the Intel SPT PCH quirk use ACS registers
-> without checking config-space read errors. A failed read may leave control
-> state indeterminate yet allow the device to satisfy requested isolation
-> controls.
-> 
-> Return false when either ACS capability or control state cannot be read.
-> An unknown state cannot prove isolation.
-> 
-> Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260918195540.GA11=
+87209@bhelgaas?part=3D1
 
-Looks good to me.
-
-Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
