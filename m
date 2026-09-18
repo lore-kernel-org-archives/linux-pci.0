@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2757F29C327;
-	Fri, 18 Sep 2026 03:32:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A87B3859D4;
+	Fri, 18 Sep 2026 03:32:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789702348; cv=none; b=IKG9Zklt6wImDrqu+QRjkiT/hlyuzS1UFgoM07d+oyVEY4vL0SC3HkwPUUmoWbwSIWAgU8WtNt3gaRWBfo0eB7hDZ0WZd7i4hEvr1LsIyjSpZxqRrOKjy26KT5MJJgOqEUqGsSIH6eKpEoMgaA3Uyd4ZuSJ9tOTgkZduoX+sEGk=
+	t=1789702364; cv=none; b=HgGqKsgLD6BXxR/yWqHmu5nmA76/0hx6gIKTE5HgwXYAUSZ4XN4Fviu7ItJRiNiRwAaG4yfNmVTxG49H3nkM2n1ry3wJLk7LBV+7pEaLiHc1zBzbV5LtOhl0jiX+CwHB6jjhCjpQrzRbiqSgUp3oAmkghGq0peIYlYinNCZwxAQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789702348; c=relaxed/simple;
-	bh=fD/glkWuZoZ0M2SweyBn/bkfWAVaMtK5NJpTSgYqcFs=;
+	s=arc-20240116; t=1789702364; c=relaxed/simple;
+	bh=QXkvYEWif64QiUarS4NBf0jJCdTAi0/F8OOAM9D7jp8=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=np8xZnZGXzA8wLeknInznpV7OTN27G0esAF9X3DJaKcvL1zOrTX+X8/WQhdxmIy8i/5XXDH/rFlQUUeTXq7ieiNOt8eAhqImtcfzUCXL8x8rvnkyHbZHNpoydgBd2s6mOAc+/F0yoQDOT5yfLFg2SNn2BDSL+1e1mQL2hARXWBY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cE//4DX0; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=Ho4dJVCFg8yB2/m4iUbrv7Dqik46mvV8mlROMOKom/rh3xNUDsk1Fhs3o+PGVs1k41bHR3pTCE2B2ZRtkuJKKAeu/JC0znJ6d4KV1/QYE4VRFghPh9kaksyoti/67UbLx2saHRp1KvZvGUEE7yfk9igwoLIQYW8GBYnxfTmEbF0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=X4KepfVB; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cE//4DX0"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8A9211F000FF;
-	Fri, 18 Sep 2026 03:32:26 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="X4KepfVB"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 55BE61F00893;
+	Fri, 18 Sep 2026 03:32:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789702346;
-	bh=w9CwkyB+53MSR67/cxYofrbEfkEN/5DqVXRKwINhyn0=;
+	s=k20260515; t=1789702362;
+	bh=9171z1+EyEClcZZF9Cnmp7lwOoxbC75GOp0RO15OMFU=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=cE//4DX0yctL8fGIKek/TnlIoImC9+BJ41Dce2O3OMBItYL8Jr2NgigfmOZDOnUrz
-	 P0zHcKxfk1ZSGl3CQsJqLTT6TBkH4pIhAztTqoqd0qIzo7QHAvBNGkHXOBFr4/xrWE
-	 F8fRBlRQ1GOroGOnnwBRb24BiwZaeOT+oT6LvtpiissBkPDcaxwGxlXqIfWe8YRqRj
-	 k5BZe0Tejj9ZXqyjeT/ZUrw5MbwXsiW8pmwOQEyV5s3FJdeAe8wApVxt7dBwqEh49Y
-	 bCMngh2KAqnpIb64ENAqCnsVpIHCBLQwODMHHEQF5kx/64rzWIU5hAfZEY5uRLwJtA
-	 53mZIKXZpIF+g==
+	b=X4KepfVBKdrsTiqNXwjF8VVBMV3ta5PYOgsNlNXZkgWutYEuzaiF6ej8Ca53MTMHW
+	 Xzj49eFmLpcvCiY9hz/dRArK5PXmWDw0D5iG1NHCQteWoF5Zqm6A4bTZNkPCFNJOrR
+	 W5mLQQqUSbnfxxRGqm0OBKranEjW+Aik78wPC/RCroAUnO5+sN2f+0O2M808goUkDn
+	 EuQ7jJmM7ZJa9/lU6bNeFy9KoA7Wi8OUVg7RRh7jE8MWqFlbfo8GGYuaxsJM6lJ/sa
+	 gLqkBYwax2HcjiQ2oEYKk2KrWWdFA7sRBb/PuiTN8fImrXmuZ31eoCuse9/yloTU4v
+	 hVy9RC75vN5KA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 09/11] PCI: rcar-gen4: Route Root Port AER to a virtual
- Root Port IRQ
+Subject: Re: [PATCH 04/11] PCI: dwc: Add a host op to run before iMSI-RX
+ status is read
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Koichiro Den" <den@valinux.co.jp>
-Cc: conor+dt@kernel.org, robh@kernel.org, linux-pci@vger.kernel.org, devicetree@vger.kernel.org, wsa+renesas@sang-engineering.com
-In-Reply-To: <20260918032038.2216471-10-den@valinux.co.jp>
+Cc: conor+dt@kernel.org, devicetree@vger.kernel.org, linux-pci@vger.kernel.org, wsa+renesas@sang-engineering.com, robh@kernel.org
+In-Reply-To: <20260918032038.2216471-5-den@valinux.co.jp>
 References: <20260918032038.2216471-1-den@valinux.co.jp>
- <20260918032038.2216471-10-den@valinux.co.jp>
+ <20260918032038.2216471-5-den@valinux.co.jp>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 18 Sep 2026 03:32:26 +0000
-Message-Id: <20260918033226.8A9211F000FF@smtp.kernel.org>
+Date: Fri, 18 Sep 2026 03:32:41 +0000
+Message-Id: <20260918033242.55BE61F00893@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -47,94 +47,54 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [Low] subsystem: mixing goto and scoped_guard in rcar_gen4_pcie_rp_irq_in=
-it()
+- [High] PCI: dwc: NULL pointer dereference in dw_chained_msi_isr()
 --
 
-commit 6f1a91ac675be05b5a2f016c1ae299cc233169a3
+commit 3a93530b14d46331da98ba1bc4fa4fde8fc72e4b
 Author: Koichiro Den <den@valinux.co.jp>
-Subject: PCI: rcar-gen4: Route Root Port AER to a virtual Root Port IRQ
 
-This commit routes the Root Port's AER notifications to a virtual Root Port
-IRQ by falling back to INTx. It creates a single-entry virtual IRQ domain
-for the Root Port and ensures the IRQ mask state is tracked in software for
-recovery.
+PCI: dwc: Add a host op to run before iMSI-RX status is read
 
-> diff --git a/drivers/pci/controller/dwc/pcie-rcar-gen4.c b/drivers/pci/co=
-ntroller/dwc/pcie-rcar-gen4.c
-> index 238755852045e..c24ac82a1ec65 100644
-> --- a/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-> +++ b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-[ ... ]
-> +static int rcar_gen4_pcie_rp_irq_init(struct dw_pcie_rp *pp)
-> +{
-> +	struct dw_pcie *dw =3D to_dw_pcie_from_pp(pp);
-> +	struct rcar_gen4_pcie *rcar =3D to_rcar_gen4_pcie(dw);
-> +	struct device *dev =3D dw->dev;
-> +	int irq, ret;
-> +
-> +	irq =3D platform_get_irq_byname_optional(rcar->pdev, "aer");
-> +	if (irq =3D=3D -ENXIO)
-> +		irq =3D 0;	/* old DT: Root Port AER stays unavailable */
-> +	else if (irq < 0)
-> +		return dev_err_probe(dev, irq, "Failed to get AER IRQ\n");
-> +
-> +	/* Keep the notifications masked until a port service requests the IRQ.=
- */
-> +	scoped_guard(raw_spinlock_irqsave, &rcar->app_lock) {
-> +		rcar->rp_irq_enabled =3D false;
-> +		rcar_gen4_pcie_app_irq_sync_locked(rcar);
-> +	}
-> +	writel(RP_AER_MASK, rcar->base + PCIEINTSTS0CLR);
-> +
-[ ... ]
-> +	if (irq) {
-> +		/* Dispatch the child IRQ in hard IRQ context, including on PREEMPT_RT=
-. */
-> +		ret =3D devm_request_irq(dev, irq,
-> +				       rcar_gen4_pcie_aer_irq_handler,
-> +				       IRQF_NO_THREAD, "rcar-gen4-pcie-aer",
-> +				       rcar);
-> +		if (ret) {
-> +			dev_err_probe(dev, ret, "Failed to request AER IRQ\n");
-> +			goto err_dispose_mapping;
-> +		}
-> +		rcar->aer_irq =3D irq;
-> +	}
-> +
-> +	/*
-> +	 * The Root Port MSI capabilities are hidden (no_rp_msi), so the port
-> +	 * services fall back to INTx; route it to the virtual IRQ.
-> +	 */
-> +	pp->bridge->map_irq =3D rcar_gen4_pcie_map_irq;
-> +
-> +	return 0;
-> +
-> +err_dispose_mapping:
-> +	irq_dispose_mapping(rcar->rp_irq);
-> +	rcar->rp_irq =3D 0;
-> +err_remove_domain:
+This commit adds a pre_msi_irq host callback invoked from the generic chain=
+ed
+handler before the MSI status is read. Returning true skips the MSI handlin=
+g,
+which prevents stalls when DBI accesses are issued right after an unexpected
+link down.
 
-[Severity: Low]
-Does rcar_gen4_pcie_rp_irq_init() mix scoped_guard with goto-based error
-handling labels?
+> diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/=
+pci/controller/dwc/pcie-designware-host.c
+> index f5a38e6fd8d79..ad013dd0a1662 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware-host.c
+> +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
+> @@ -95,7 +95,8 @@ static void dw_chained_msi_isr(struct irq_desc *desc)
+>  	chained_irq_enter(chip, desc);
+> =20
+>  	pp =3D irq_desc_get_handler_data(desc);
+> -	dw_handle_msi_irq(pp);
+> +	if (!pp->ops->pre_msi_irq || !pp->ops->pre_msi_irq(pp))
 
-The subsystem guidelines in include/linux/cleanup.h state that mixing
-goto-based cleanup and scope-based cleanup helpers in the same function
-creates confusing ownership semantics, and is explicitly prohibited.
+[Severity: High]
+Does this introduce a NULL pointer dereference when pp->ops is NULL?
 
-For a given routine, it's expected to either convert all resources to
-scope-based cleanup, or convert none of them.
+Some glue drivers (like qcom_pcie_ecam_host_init) explicitly bypass
+dw_pcie_host_init() and do not provide a pp->ops structure. On these platfo=
+rms,
+pp->ops is left NULL since the structure is zero-initialized via devm_kzall=
+oc().
 
-> +	irq_domain_remove(rcar->rp_irq_domain);
-> +	rcar->rp_irq_domain =3D NULL;
-> +err_free_fwnode:
-> +	irq_domain_free_fwnode(rcar->rp_fwnode);
-> +	rcar->rp_fwnode =3D NULL;
-> +
-> +	return ret;
-> +}
+When the chained MSI interrupt handler fires during normal system operation,
+evaluating pp->ops->pre_msi_irq would unconditionally dereference the NULL
+pointer and crash the kernel.=20
+
+Would it be possible to add a safety check for pp->ops before checking for
+the pre_msi_irq callback?
+
+> +		dw_handle_msi_irq(pp);
+> =20
+>  	chained_irq_exit(chip, desc);
+>  }
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260918032038.2216=
-471-1-den@valinux.co.jp?part=3D9
+471-1-den@valinux.co.jp?part=3D4
