@@ -1,159 +1,200 @@
-Received: from mail-qk2-f42.google.com (mail-qk2-f42.google.com [74.125.230.234])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from fhigh-a6-smtp.messagingengine.com (fhigh-a6-smtp.messagingengine.com [103.168.172.157])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8CC6E442FD1
-	for <linux-pci@vger.kernel.org>; Fri, 18 Sep 2026 17:49:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.230.234
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 91DD6437852;
+	Fri, 18 Sep 2026 17:50:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.157
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789753801; cv=none; b=Ax+gO1ulwrP9jOrfVLwm7l2uYPadd97YC0Gnlv/7HKXZktOwRQ6U1lFNwtYUpkDZA1bDdfRR2s5jRGNVxUvUkHNKlQWuwlS8ArwDFYBEWr975RVry4EzrAvpmy48rXp8XrcArMmHk7JBcbt7wcKiRiCyLqIPaFvWTvcxgXfidVg=
+	t=1789753809; cv=none; b=PfG9g4voxly2SG/vHC6RPbULoI+vGUl3zAV6zROqaYPfsEsYXUsd5ajh41J/WHL4vNVPBvQOyahFX4kRPDKC86IPHSue8DVipb59W5AS7wn09ZoSZhF26+bSLbLKHyCh8qsfaiSJTf5JfLLv8saJ0Jhaf9HhVoXUa/oY5oTKMHo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789753801; c=relaxed/simple;
-	bh=afPlTpVBOVxRusNWGxKuDYVFIlS9SkvZcarrTJS78lU=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=hbg3qFf0w4e+2kxvwToFSHfWSg2DJzjv8gpYHNFuuY49o0fZBmm+x1lNEXMwX3MO2zkm7CndsaYOfIHgREwMYJVrnv/hYUWFiJPV5GVi4lg+JD6UaQ6n6jUDy4c5l1theN7pbwDPvT5jX439HJ/px86k2t+dsBmMdNL/Ykd69LY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=riscstar.com; spf=pass smtp.mailfrom=riscstar.com; dkim=pass (2048-bit key) header.d=riscstar-com.20251104.gappssmtp.com header.i=@riscstar-com.20251104.gappssmtp.com header.b=pVHEJOwK; arc=none smtp.client-ip=74.125.230.234
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=riscstar.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=riscstar.com
+	s=arc-20240116; t=1789753809; c=relaxed/simple;
+	bh=4gZ0FMiI6XZimt5LeuPfNfp8lE8IGxnZSUdnt9aNpbE=;
+	h=MIME-Version:Date:From:To:Cc:Message-Id:In-Reply-To:References:
+	 Subject:Content-Type; b=k4JU3zmYy9/Xn+8PTJ4XWk6o3jCwd9oIb+HYYWx7UKr8hBvAjjJLVbZJ8vagwy/MLHPNiCUEJueD08chcOejXDANAZW94EwgkhB5oUM5HBh60ISbwtFnJy5bmsachNteC5slNbwf2OIItqbUeTzUA8tIGRFTzYaHZU0jEKO6BFE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arndb.de; spf=pass smtp.mailfrom=arndb.de; dkim=pass (2048-bit key) header.d=arndb.de header.i=@arndb.de header.b=dVSQ3wUa; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=Pff9zcjS; arc=none smtp.client-ip=103.168.172.157
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arndb.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=arndb.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=riscstar-com.20251104.gappssmtp.com header.i=@riscstar-com.20251104.gappssmtp.com header.b="pVHEJOwK"
-Received: by mail-qk2-f42.google.com with SMTP id d75a77b69052e-5329fc7e0bcso11717401cf.1
-        for <linux-pci@vger.kernel.org>; Fri, 18 Sep 2026 10:49:57 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=riscstar-com.20251104.gappssmtp.com; s=20251104; t=1789753795; x=1790358595; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=QBXBlps+fzGob8XyzdrqGGeZGJ/AtzGPAtCevAfGf40=;
-        b=pVHEJOwKKdHLMeJuk4L8dL8tZ6DcYhRBL5eQdj3UfUKw4ms5RN1YlVphH0RTWYxbo8
-         0dD9ZMsseW2hM7CXiM9mld2iUGabg7YU8cIfsrr4qUpT8GSld5V15b4+9z7Si4oDz+X6
-         HkDti8jIAE8b6wkPrMuliLmC5JTEdLBJBHdhpBvhp7TieAuzxtMfAM/WOJNfuDYrNmSm
-         TioyH2QXDpMo7UAJLntVwrqL8UVSPj2z2KcgN3RvBtVXB1kjfv6Aurfz08wOOCkj2snB
-         zHU7ekFl8DBJB2+vSOD4clFjWjaRrqCKInFU+Nv29l3co1e5ZP0SXwBl71kfo1BTtyEp
-         DfHg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1789753795; x=1790358595;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=QBXBlps+fzGob8XyzdrqGGeZGJ/AtzGPAtCevAfGf40=;
-        b=MRyADIJdAv8IQuZ504OAJow4wzexfiQqSvv83yBiGi3Vpn1dAU3ZXf3Dof7KFR/gzC
-         tvOUSCWoyTtRWhiFFligMTj3A3M2uBQ9idOP/b4S1q3IudKAuBXpBF4jLLqH4IAglSoG
-         UEMU/QobKCnYc4mmDTevcyv4wYAaFXzHT7YPz/OqyiZ/yF7/ycBaypSTHkIjE+1JeHnn
-         ewtZfhY7UlCqxZmjQA31Gw/mjWRGI53PPWq8BwbVMwYy5bH3OD4Gw15249yVZZHSfetC
-         ZEKzDcptmf3ldlFMWwlZTNtILj5hH0H+KKbweHM/eu7wtE4qm+cv5JKfKsamzNPRR8Gd
-         UeWw==
-X-Forwarded-Encrypted: i=1; AKwUvByIVoPHM2ManJK7ESNxc/Gz5iifOdj7HXPzKqIN6Y32FnI5I9/S15RrQQEmHPeV53Hb9Onz/MnTfBE=@vger.kernel.org
-X-Gm-Message-State: AFuF++mT7lCwZRUaFDj5Rjxs3fuIISNZPs3x9+vjIIXj9VGJ0V28apk1
-	EenSCecZdsyqDcQsTYAxi7AjmuJjm0Is0qE2V1o1Jl7DRwxS/JZymcw/PZ+MBsDmFmM=
-X-Gm-Gg: AYBFou3GtJIUMTn7UfwtJcwqdtKiE8rb8Rm6DqSNqWvHp7faiiQ9eZ8y1plTaYinyYD
-	J7Hud4rxv/5bcUfgPk3sV7VyCnG0MtIfgCF04wJ22mGgLA302dg9M0X8H+EqrDqwzae8dN1W+DN
-	XNDtpi0XkOLHQUnP9nr+HsQsyDqQEJKPUj82VlSYTY9nda0J/FTk4rL7nk1BCmAFno5kGYEqcoK
-	KdKLPRS8ZF9OABr44+QzYL/HlCjTuxvAe29hHm4Zgsp2R8Jxgr6uKpNMX8lJlRn5UoYW7esJcGq
-	EJQvUdW3Q3tXN6aOH8x0HW562eigpoz5d5SrH7bcFRqnz+9l3iWGYe2fPt+FafsEBLiQH2SxT2c
-	+ecxcElYsNjLSn4cMJdngPSzVBfJcrtJSgkK/uPOs8VUk+9J29DTNlw3wKxbV8Ay5pBldIVzyfW
-	zG53FWHW2AG4sA4X3uA8iymKMmW4cWZRVNXgsvCzqwV9bc63jBYp2J6fuSFRPBwdTeS6fKWTM=
-X-Received: by 2002:ac8:5d8f:0:b0:530:ff84:e426 with SMTP id d75a77b69052e-5329e47ff4bmr57576891cf.47.1789753795392;
-        Fri, 18 Sep 2026 10:49:55 -0700 (PDT)
-Received: from [172.22.22.28] ([73.62.185.64])
-        by smtp.gmail.com with ESMTPSA id d75a77b69052e-532ae5ef242sm2551661cf.5.2026.09.18.10.49.53
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 18 Sep 2026 10:49:55 -0700 (PDT)
-Message-ID: <e9bd7954-1cec-4ffb-a5b2-2389469b0c05@riscstar.com>
-Date: Fri, 18 Sep 2026 12:49:53 -0500
+	dkim=pass (2048-bit key) header.d=arndb.de header.i=@arndb.de header.b="dVSQ3wUa";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="Pff9zcjS"
+Received: from ams-compute-02.internal (ams-compute-02.internal [10.64.2.62])
+	by mailfhigh.phl.internal (Postfix) with ESMTP id 3C8D514001C8;
+	Fri, 18 Sep 2026 13:49:59 -0400 (EDT)
+Received: from ams-imap-03 ([10.64.2.23])
+  by ams-compute-02.internal (MEProxy); Fri, 18 Sep 2026 13:50:00 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=arndb.de; h=cc
+	:cc:content-transfer-encoding:content-type:content-type:date
+	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to; s=fm3; t=1789753798;
+	 x=1789840198; bh=rwFEq0r82EwgoDi0U6/f4zaurev8d0PbwLI36YNXpgI=; b=
+	dVSQ3wUaOZVfOrB2Ts9YjCEjikpHLyoAuqYSNtf6rWD88OGCHMYEEDVJdV3N1k27
+	hRHmFDxOGqh23QgIjQ8NfBKwVhIHIS8M28B6Vw96Pff9eWRMfeyapihQxPYmEdNh
+	Oho3G/njKIDpgyyPG7A7l6ox2cxiwD9fGnwz83T3CbWrAZ/4MPvrdGZ1XmLrj6bU
+	QIocQ9ho9EBKSjLuxF3+ybVnt+NvDKop+PKQYGdmRK7EQkzJ+TiANacGJps1hLQF
+	SItq9t4IQXYK8lk/a5PtiF/9VmAyr2x0a7JyiY90tNt9VF9LCa28be+5XRI490sw
+	WrCDHtOyJ8Ge/UM+/bKY3w==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-transfer-encoding
+	:content-type:content-type:date:date:feedback-id:feedback-id
+	:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to:x-me-proxy
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=1789753798; x=
+	1789840198; bh=rwFEq0r82EwgoDi0U6/f4zaurev8d0PbwLI36YNXpgI=; b=P
+	ff9zcjSAQHQMkniMPuUa2LXa7m6L+EUEm24ITTlk1wUAr24gyA3YZcspSrSqUtqC
+	wNoT2H7U69X/t0WyIqF8ZL4VDhuE8T/OMYae2aTdAaJRrBgFk0C4ci3x+FVk9HzY
+	W/mg9eNGeT6hhBEpyBTWfkFacvaCksrTsFBBtU2r2kwdvqZbDrv8z+06qBb0UGYE
+	8jdxE5PXBBcr+R4OuCUAPzINx1EzH2ScqaAantw3Q3aG0AzLNUbz5oYN2p47+7hM
+	AgeUdRPWI577DuoOFyGF5UCFG4qdNBt2gsJD05R5sQLVwwmpiamoZP2pTrVaBsp7
+	wzeGCx9Nl5y3smaLJSDDA==
+X-ME-Sender: <xms:wHmtajQ3fmhWzUiIpeXoeHXYjq_UejlPvRM2LhDa3VXvUubEk3dwXw>
+    <xme:wHmtavkM1bq2-JOlS9pflITG4HF9An3buRNTIY8QPQtNS3uG-ousKeejC2cPeFYSV
+    E_47UvJXF0xBDd_bsd5n9T1u4Vzj3Zhq3eTq4jQMkEb6_pqvWWip2Bi>
+X-ME-Proxy-Cause: dmFkZTE8cn8/lGNqiXeNSp03dS61vDyJvYMTjkv9quP3Aq9fV5/PWgJJz4y7/2enhd6dGY
+    mf7kd+Ea4Nrwp7ddcslF8rlxTCKPswgWJtGGvwBZ3fm+gOtLnZ+ppsmOAlucvuZo/gv0Ul
+    8A7lhIrMeoV3tQhL2YukxQ0t3M2qF/la5OmwceerKQSSm3vgCOpykSuKwl794KqhN31X5t
+    gDwUTY524uU9JIa7EMm+IrT/tCr8Su940pO1qWAGMnCQSxj09u3thLSYuH16Wsdh++e8z3
+    D3EFtR33+x7mzUG3qS8uQGvY/8v/Mt9lGnhgFcRHOY0DLXPzmXQeNkeTxaPHtvaH8inmPe
+    QV7t104gvLwmS6mDJ8Sy9REr2YG2iSfmoCJVucmJJCFGuSc4NYIpEivjVnt0+kRlmN5PBM
+    JaAVTyLhC832Fxr8f1csEqP4mR4UKRb1nAbOcI31XsNgqd9QBs9JGN7B41aCQ8Fh/Fta8n
+    t+mxvzPaZA+TaBJy+qgrLSZuw/V8WSEsh7PqmcV1NkfgmGAf2YYsDmCrHu6abkyc8RhppX
+    V8aC93FGdJg6MOBOOtgEfo0e/bae2IyN84cc7RvixDg5bEs4c+IbWMic+1kx4nU5qiGemg
+    VLUvE/OZtxlemsrqHQvOknMwVwYcaT9jJmNmVZ+9bRnX6vL6kY2F+g9Xctpg
+X-ME-Proxy: <xmx:wnmtah2q1OoYzeQ6wYL6mfd_TqiW23AwHyVTdKwVmFSRDkzG5u_1qg>
+    <xmx:wnmtag0YR6PD2BX8DUpHXqF0nJdFB9IeZs0myKGOBWfBpFuicaH2Vg>
+    <xmx:wnmtagkLfCEG0IN-nxh33OQomNhRMbOzq_PI_7PgbVdfxr1q6x1E7A>
+    <xmx:wnmtahNgIRDZB9HYIwkgzEffHfH95D8N_kY8p8qnW8qHeSdDIxlC3A>
+    <xmx:xnmtatUPZKB_gTGahd9Zx-1X2AK5vqbCOnqYgJRemDG_ysUWThQnI-Ii>
+Feedback-ID: i56a14606:Fastmail
+Received: by mailuser.ams.internal (Postfix, from userid 501)
+	id 3658432A0085; Fri, 18 Sep 2026 13:49:52 -0400 (EDT)
+X-Mailer: MessagingEngine.com Webmail Interface
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 2/3] misc: tc9564: introduce base PCI driver
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org, arnd@arndb.de,
- gregkh@linuxfoundation.org, bhelgaas@google.com, andersson@kernel.org,
- konradybcio@kernel.org, abelvesa@kernel.org, daniel@riscstar.com,
- mohd.anwar@oss.qualcomm.com, lorenzo.bianconi@oss.qualcomm.com,
- devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
- linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
- Andrea della Porta <andrea.porta@suse.com>,
- Herve Codina <herve.codina@bootlin.com>, Lizhi Hou <lizhi.hou@amd.com>
-References: <20260918173003.GA1166280@bhelgaas>
-Content-Language: en-US
-From: Alex Elder <elder@riscstar.com>
-In-Reply-To: <20260918173003.GA1166280@bhelgaas>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+X-ThreadId: A1v-knPnKEnN
+Date: Fri, 18 Sep 2026 19:46:42 +0200
+From: "Arnd Bergmann" <arnd@arndb.de>
+To: "Semih Baskan" <strst.gs@gmail.com>
+Cc: "Bjorn Helgaas" <helgaas@kernel.org>,
+ "Lorenzo Pieralisi" <lpieralisi@kernel.org>,
+ =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+ "Manivannan Sadhasivam" <mani@kernel.org>, "Rob Herring" <robh@kernel.org>,
+ bhelgaas@google.com, "Ray Jui" <rjui@broadcom.com>,
+ "Scott Branden" <sbranden@broadcom.com>,
+ bcm-kernel-feedback-list@broadcom.com,
+ =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <rafal@milecki.pl>,
+ =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+ "Florian Fainelli" <florian.fainelli@broadcom.com>,
+ linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ linux-kernel@vger.kernel.org, "Rosen Penev" <rosenp@gmail.com>,
+ rani.hod@gmail.com
+Message-Id: <95e4b5ed-2f72-4bfe-85d8-9cd7b45a5fa7@app.fastmail.com>
+In-Reply-To: 
+ <CAAsRjR=sHgZMgXuTid+D7Vst=N_GBUZUrduZ4YZax5rbotHNMg@mail.gmail.com>
+References: <20260917183602.GA1036092@bhelgaas>
+ <7c2a8582-280e-471a-b4b0-037b2cda6ad8@app.fastmail.com>
+ <CAAsRjRnV-RTddO6h2XCUz2N5pB0pS8i_-_2XRcD=WOTA7AAFZQ@mail.gmail.com>
+ <dc370463-125e-48d2-af6b-c3b4783f57ea@app.fastmail.com>
+ <CAAsRjR=sHgZMgXuTid+D7Vst=N_GBUZUrduZ4YZax5rbotHNMg@mail.gmail.com>
+Subject: Re: [PATCH] PCI: iproc: Use pci_alloc_host_bridge() on BCMA
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 
-On 9/18/26 12:30 PM, Bjorn Helgaas wrote:
-> [+cc Andrea, Herve, Lizhi for of_pci_make_dev_node() quirks]
-> 
-> On Fri, Sep 18, 2026 at 10:26:57AM -0500, Alex Elder wrote:
->> The Toshiba TC9564 is small and highly-specialized SoC that implements
->> a PCIe switch as well as an Ethernet AVB/TSN bridge.  In addition to
->> these, the SoC implements other functions, including a reset and clock
->> controller, an address translation unit, and a few other devices.  PCIe
->> BARs provide access to registers that manage these IP blocks, and the
->> SoC is modeled using a PCI endpoint bus in devicetree.  This allows the
->> IP blocks to be bound to platform drivers that do MMIO via the PCI BARs.
+On Fri, Sep 18, 2026, at 18:25, Semih Baskan wrote:
+> On Fri, Sep 18, 2026 at 12:32:12PM +0200, Arnd Bergmann wrote:
+>> If the DT window doesn't match, how does the bcma driver find
+>> the device node that corresponds to the EROM entry to populate
+>> the child nodes?
+>
+> By reg. bcma_of_find_child_device() in drivers/bcma/main.c compares the
+> first reg address of each child of the axi node with the core's register
+> base from the EROM. That base is 0x18012000, 0x18013000 and 0x18014000
+> on both revisions; only the outbound window differs. The pcie node's
+> ranges is not looked at. The reg is translated through the axi node's
+> first ranges entry. The PCI core then matches the wifi nodes below that
+> node by devfn.
+
+Ok, makes sense.
+
+>> The driver should probably check earlier if the device is
+>> already bound to the bcma bus, rather than just trying to
+>> request the bus windows. If anything, I would have expected
+>> the conflict on the 18012000 address for the register
+>> base.
 >>
->> Create a new PCI driver under drivers/misc that binds with the embedded
->> PCI endpoint functions within the TC9564 SoC.  Because these functions
->> will use devicetree pci-ep-bus to provide access to other IP blocks
->> within the TC9564 chip, the main purpose of this driver is to do basic
->> PCI initialization, then call of_platform_default_populate() to scan for
->> the any endpoint bus children, and probe all devices defined therein.
->>
->> Because we're using pci-ep-bus, we need to use the PCI quirks mechanism
->> to have of_pci_make_dev_node() be called for each endpoint device in
->> pci_bus_add_device() (via pci_fixup_device(pci_fixup_final, dev)).
->>
->> Co-developed-by: Daniel Thompson <daniel@riscstar.com>
->> Signed-off-by: Daniel Thompson <daniel@riscstar.com>
->> Signed-off-by: Alex Elder <elder@riscstar.com>
-> 
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>	# quirks.c
-> 
-> Not an issue for this patch, but I'm not sure the quirk mechanism is
-> the best mechanism for doing this.  It's not working around a device
-> defect like most quirks do.
+>> I see an ioremap() of bdev->addr in drivers/bcma/scan.c but
+>> don't see a corresponding request_resource() for it, so maybe
+>> an easy fix is to add this to the bcma bus scan and
+>> make sure that always happens before the pci driver probe?
+>
+> In the tree as it is, neither side claims the register base. bcma
+> only ioremaps it in scan.c, and pcie-iproc-platform maps its reg with
+> devm_pci_remap_cfgspace(), which does not request the region either.
+> That is why the window is the first thing the two collide on. On the
+> ordering, bcma_bus_register() calls bcma_bus_scan(), then
+> of_platform_default_populate(), then bcma_register_devices(), so the
+> scan is done before the pcie platform devices are created and the
+> bcma core devices are registered after that.
 
-I pretty much agree with you.  I think I mentioned this before
-(though it might have been in a private conversation) that it
-is an intentional act to call of_pci_make_dev_node() for an
-endpoint (and not just a bridge).  And that's different from
-a hardware quirk.  You only need to do it if there's a pci-ep-bus
-sub-node on the endpoint.  (I'd have to verify this on the other
-users of this approach to be 100% sure though.)
+Ok, so adding the regular resource management to both sides here is
+probably a good idea anyway, though it is not sufficient as long the
+platform driver gets probed first.
 
-> I wonder if pci_bus_add_device() should unconditionally call a wrapper
-> that calls of_pci_make_dev_node() for bridges and any device that
-> appears in an allow-list.  I guess it sort of amounts to the same
-> thing in the end, but it might be a little more explicit and not
-> subject to CONFIG_PCI_QUIRKS.
+>> If a board has nothing connected to one of the host bridges,
+>> why is the pcie host bridge still marked as status="ok"?
+>> Do you need a driver to put it into low-power mode, or
+>> should this just be marked as disabled?
+>
+> The three nodes are in bcm-ns.dtsi without a status property, and no
+> Northstar board file disables one. Which controllers carry a device
+> differs per board: the RT-N18U has one on the first, the R8000 on the
+> first, and on the second through a switch with two radios behind it.
+> bcma takes the cores from the EROM, and bcma_register_devices() skips a
+> core whose node is not available, so a node marked status = "disabled"
+> is skipped there too, and neither driver would take that core. I do not
+> know whether an unused core needs a driver for power.
 
-Yes, I think it would be better to separate this case from PCI
-quirks, which are really intended for anomalous hardware behavior.
+Ok
 
-I'd like to get these things merged, but would be willing to work
-on this sort of thing (and/or on separating this driver type, as
-Arnd suggested elsewhere).
+>> Does the platform driver reprogram the windows to match the DT
+>> description, or does it rely on the boot loader to ensure they
+>> ranges/dma-ranges properties match the register contents?
+>
+> It programs OARR/OMAP from ranges only when the node has
+> "brcm,pcie-ob", and the inbound side only when it has dma-ranges.
+> The bcm-ns.dtsi nodes have neither, so it programs nothing and runs
+> with what is in the registers at boot. The PAXB_BCMA register table
+> has no OARR/OMAP at all, and the bcma driver never asks for an
+> outbound mapping, so it does not program them either. OARR0/OMAP0
+> are in the PAXB table the platform driver uses, at 0xd20 and 0xd40;
+> I have not written them on revision 0x01. Broadcom's 2.6.36 driver
+> writes OMAP/OARR 1:1 from its own table: 0x08000000, 0x40000000 and
+> 0x48000000, with the last two replaced by 0x20000000 and 0x28000000
+> when the core revision reads 0x07.
 
-Thanks a lot Bjorn.
+Ah, interesting. So if the problem with the platform driver
+is that the outbound windows are mismatched between the register
+settings and the ranges property, wouldn't it make sense to always
+set "brcm,pcie-ob" for boards that are known to have more than
+one possible setting in their firmware?
+That way I would hope the platform driver can just work in the cases
+that currently fail.
 
-					-Alex
+>> When using the bcma driver, does that update the ranges properties
+>> in memory to match the EROM contents?
+>
+> No. 552aa843e4c5 drops the windows parsed from ranges out of the
+> bridge's resource list and adds the EROM one; the patch in this
+> thread reads ranges only to compare them with the EROM window. The
+> property in the live tree is not touched, so /proc/device-tree keeps
+> the dtsi values and the mismatch shows up only as the warning.
 
->> +++ b/drivers/pci/quirks.c
->> @@ -6391,6 +6391,7 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_XILINX, 0x5020, of_pci_make_dev_node);
->>   DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_XILINX, 0x5021, of_pci_make_dev_node);
->>   DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_REDHAT, 0x0005, of_pci_make_dev_node);
->>   DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_EFAR, 0x9660, of_pci_make_dev_node);
->> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_TOSHIBA, 0x0220, of_pci_make_dev_node);
->>   
->>   /*
->>    * Devices known to require a longer delay before first config space access
->> -- 
->> 2.53.0
->>
+Ok. I suspect this may cause problems when someone uses an MFD
+device that needs to translate internal registers of child device
+through the ranges. It's probably not a big deal since those devices
+are rare, just something to keep in mind.
 
+    Arnd
