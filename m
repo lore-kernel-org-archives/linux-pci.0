@@ -1,155 +1,207 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from o1.ptr9745.em.honeycomb.io (o1.ptr9745.em.honeycomb.io [149.72.141.136])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68E583B52E1;
-	Fri, 18 Sep 2026 03:33:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C3A00385D91
+	for <linux-pci@vger.kernel.org>; Fri, 18 Sep 2026 03:56:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=149.72.141.136
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789702412; cv=none; b=YkY+bxtOeCk2G1gT43yniaws1l0Jj+ifxMru731RCGnxM+KfcYzs7x4i3Lj/YiBvXbjoZEzyECGhtln6myEQISwlHdj26NPCu3x7fJERvqT2B19DpybShxNa6PbHQdcA8IiKj6GaanWLB8/arSuJkkGRTMl1QJfkL04npKxEBp4=
+	t=1789703797; cv=none; b=JUvMfjWrsb3y2LImxr3y0Y5jPO5bAEuvRetbF3JbkZ+aphGthBeeTRH1LeHrYFjccMapx4WG4g6r4jCoJH2boP1p8XVislPFoh33Er2VfO1+1PBXzOO6Dk4FpJbfReyiKHY+XTfL4IYTvtp2YWG3ibgOiS3igFLS4ZV841rQ+zs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789702412; c=relaxed/simple;
-	bh=9dnVafv+T6FSy/sF/3kuzO8K3HFIMXAv7O45usQ86Go=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=QuFc3pUuNTZfCKyYPhPnoT8qeg3bWgk/c3IphYoF3mYOoKwhE1hV9dAY9PUiobhRlyOrViqRdJJW1IO8xHR1DBL4C1CayRMPE2fRAgFySjtXxsbvbhM7UrfkZgzwWNUCG/47IDdSFRyfjIYNOzj6QduNofbYRoKvskCck9SeocA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SOunwnGR; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789703797; c=relaxed/simple;
+	bh=FKO8LhQW1CX8/c5mIrCI5Vk14ANaYMcYDCy36i5ZkLA=;
+	h=From:Subject:Date:Message-ID:MIME-Version:To:Cc:Content-Type; b=gfJFvGLhCGUxwDuOyYc6KECqRIRB5Q0Qzmv3GHjGpjA4s+cMRHF4uVO4gT7TpsSVJKOjhy7TbpDOa+l55FeA+MxOgz6uNh3eVWnSviXKEG+DmCywVwmViNV0EL8T0sErjEvv3zfuBjBJD0qpm+o0pLoJqVRJ9MzkPmzvEt9bmHs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=honeycomb.io; spf=pass smtp.mailfrom=em.honeycomb.io; dkim=pass (2048-bit key) header.d=honeycomb.io header.i=@honeycomb.io header.b=r5UHZPWC; arc=none smtp.client-ip=149.72.141.136
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=honeycomb.io
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=em.honeycomb.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SOunwnGR"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3C4071F000FF;
-	Fri, 18 Sep 2026 03:33:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789702408;
-	bh=Ix9pBIrbQKLViGxE/KM2OGoksgSqNh/dTsAqkw8jbw8=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=SOunwnGRZDQcwYpThD1IY1h5x921zO3GB6eTkqrokupYuRK1fLks3bdubcsfK1dUY
-	 q7wcn21oWvSuKfGqXImDjgLPs+CE89o67P7EhlZm2fvqRmXFI3PcrEBptQrpvfb2LZ
-	 Ng1ttXcH3sEaS9MwLChCmtxJRCQRw5m+TKlz1E6KryQNnQwFo/+EW/YP+3IXHvhmJO
-	 b6GNgoFL155jvhQqBPmr6sixBEB1lpso0lcPPWBCBgvyGbVvMB/g4N5/X24dMQtCv3
-	 VcE34bsPi/ChuC49E0YtraSPBHD2CZ2YWbpMhxdfvqxlgYU9OqWRVqZmoKsWiYBcvn
-	 sr1AUyVefhWSQ==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 07/11] PCI: rcar-gen4: Recover the Root Port on link
- down
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Koichiro Den" <den@valinux.co.jp>
-Cc: devicetree@vger.kernel.org, linux-pci@vger.kernel.org, robh@kernel.org, conor+dt@kernel.org, wsa+renesas@sang-engineering.com
-In-Reply-To: <20260918032038.2216471-8-den@valinux.co.jp>
-References: <20260918032038.2216471-1-den@valinux.co.jp>
- <20260918032038.2216471-8-den@valinux.co.jp>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Fri, 18 Sep 2026 03:33:27 +0000
-Message-Id: <20260918033328.3C4071F000FF@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=honeycomb.io header.i=@honeycomb.io header.b="r5UHZPWC"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=honeycomb.io;
+	h=from:subject:date:mime-version:to:cc:content-type:
+	content-transfer-encoding:cc:content-type:date:from:subject:to;
+	s=s1; t=1789703793;
+	bh=ByQ3HjxGq3mISarOfpCbkfBfl3mweeLSYVmVj0cAQbw=;
+	b=r5UHZPWC0JWyS61uy4juyR7vcqkgXJMedolCFwx1GIrWUKTaFWKdlj3EjJw/97/2iVpn
+	r9OHmKHhyTK/p6r4pt4L8+76/dLjJpBfO5aDT1ITYhc87eDHWtnuAojcGbrN4JSK70aZqg
+	pPSNpVCz4LYRt+n7th8+e+2zcl7tHbkVoCQ9O2TAmbQFFeESCjyM+DhQ8I3BWUrlWYh4bY
+	CWJW28HV2R9akuMpP6R/geFFTUiSc6K7UwgTYqNXuJkEIUIjxRMwvwXwbzhc23kOTEcuaq
+	JPEuBZIum/TF/trBMkROgQfYG75q87Yot5t4pWSYbNOiuqjejMX1jJEps5RTdxtA==
+Received: by recvd-7d7dd758d8-fn74v with SMTP id recvd-7d7dd758d8-fn74v-1-6AACB671-3C
+	2026-09-18 03:56:33.7941501 +0000 UTC m=+1485602.227445126
+Received: from daisy.dens.ffj.family (unknown)
+	by geopod-ismtpd-19 (SG)
+	with ESMTP
+	id Jvjjs0mySB-kvyIuCIscTA
+	Fri, 18 Sep 2026 03:56:33.721 +0000 (UTC)
+From: Liz Fong-Jones <lizf@honeycomb.io>
+Subject: [PATCH v6] PCI: Fix BAR resize for devices on a root bus
+Date: Fri, 18 Sep 2026 03:56:33 +0000 (UTC)
+Message-ID: <20260918035633.566823-1-lizf@honeycomb.io>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+X-SG-EID: 
+ =?us-ascii?Q?u001=2ECuH7N2XAoeMR1zrzr=2F6NZrhli2vbKPOHff5fJuZuba6ZIE8QPyIf9mn4Y?=
+ =?us-ascii?Q?ezqeFFjUkh=2FeROy4LtnO7KN9jZmeTg5nVuRRDKF?=
+ =?us-ascii?Q?THtSYYaKDWLtyCa2ILtxfj5ijKKKbNpm1Uu=2FWbm?=
+ =?us-ascii?Q?rgic8xPn0fHnVNEpIDrwzROnAWIQTJH8wKVdXpA?=
+ =?us-ascii?Q?PbBvEu6tZ36QzBZdtkHAX9xLXpsjjLu7LAyka0t?=
+ =?us-ascii?Q?1D5nTDpK84BvYW37kpIfUauQqPKkezuCQSaaZiK?= =?us-ascii?Q?u3Bi?=
+To: lizf@honeycomb.io, Bjorn Helgaas <bhelgaas@google.com>,
+	Ilpo =?iso-8859-1?q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	regressions@lists.linux.dev, amd-gfx@lists.freedesktop.org, Jon Nettleton
+	<jon@solid-run.com>, Jon Nettleton <jon.nettleton@gmail.com>, Jacob Martin
+	<jacob.martin@canonical.com>, Thorsten Leemhuis <regressions@leemhuis.info>,
+	stable@vger.kernel.org
+X-Entity-ID: u001.GRlkmHQ+Ka/CKxmoC/CxTw==
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
-- [High] pci: use-after-free traversing bus devices without pci_bus_sem
-- [Low] cleanup: mixing goto-based error handling with guard()
---
+pci_do_resource_release_and_resize() releases the device BARs that
+share a bridge window with the BAR being resized, but when the device
+sits directly on a root bus (pdev->bus->self == NULL) it then skips
+resource assignment entirely and returns success, leaving the BARs it
+just released unassigned (IORESOURCE_UNSET).
 
-commit 945529b2e76a7eb8d868ae35745dd98c440ca944
-Author: Koichiro Den <den@valinux.co.jp>
+Skipping pbus_reassign_bridge_resources() is correct in that case --
+there is no bridge window to adjust -- but the device BARs still have
+to be reassigned. Before the BAR release was consolidated into the PCI
+core, this case worked for amdgpu because the driver released the BARs
+itself and then called pci_assign_unassigned_bus_resources()
+unconditionally after the resize, which assigns unassigned device BARs
+also on a root bus. Commit db92e3fef53e ("drm/amdgpu: Remove driver
+side BAR release before resize") removed that call, so nothing assigns
+the released BARs anymore.
 
-PCI: rcar-gen4: Recover the Root Port on link down
+This breaks amdgpu completely on the SolidRun HoneyComb LX2K (NXP
+LX2160A, arm64, ACPI), where the GPU endpoint is enumerated directly
+on the root bus of its segment (there is no root port device, so
+pdev->bus->self is NULL):
 
-This commit introduces a mechanism to recover the Root Port on R-Car Gen4
-when the link goes down. It uses a pre-MSI callback to handle the reset
-status and schedules recovery work.
+  amdgpu 0004:01:00.0: BAR 0 [mem 0xa400000000-0xa40fffffff 64bit pref]: releasing
+  amdgpu 0004:01:00.0: BAR 2 [mem 0xa410000000-0xa4101fffff 64bit pref]: releasing
+  amdgpu 0004:01:00.0: sw_init of IP block <gmc_v8_0> failed -19
+  amdgpu 0004:01:00.0: amdgpu_device_ip_init failed
+  amdgpu 0004:01:00.0: Fatal error during GPU init
 
-> diff --git a/drivers/pci/controller/dwc/pcie-rcar-gen4.c b/drivers/pci/co=
-ntroller/dwc/pcie-rcar-gen4.c
-> index 5b983ef6dc47d..238755852045e 100644
-> --- a/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-> +++ b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-[ ... ]
-> @@ -435,6 +486,134 @@ static int rcar_gen4_pcie_host_msi_init(struct dw_p=
-cie_rp *pp)
->  	return ret;
->  }
-> =20
-> +/* Returns true if a latched reset-request status was consumed. */
-> +static bool rcar_gen4_pcie_handle_link_down(struct rcar_gen4_pcie *rcar)
-> +{
-[ ... ]
-> +	if (schedule)
-> +		schedule_work(&rcar->link_down_work);
-> +
-> +	return true;
-> +}
-> +
-> +static void rcar_gen4_pcie_link_down_work(struct work_struct *work)
-> +{
-> +	struct rcar_gen4_pcie *rcar =3D
-> +		container_of(work, struct rcar_gen4_pcie, link_down_work);
-> +	struct dw_pcie_rp *pp =3D &rcar->dw.pp;
-> +	struct pci_dev *port;
-> +
-> +	for_each_pci_bridge(port, pp->bridge->bus) {
-> +		if (pci_pcie_type(port) =3D=3D PCI_EXP_TYPE_ROOT_PORT)
-> +			pci_host_handle_link_down(port);
-> +	}
+No error is logged because the resize path reports success; amdgpu
+then finds BAR0 IORESOURCE_UNSET and bails out with -ENODEV.
 
-[Severity: High]
-Can this loop traverse the PCI bus devices list asynchronously without
-holding the mandatory pci_bus_sem or acquiring a reference on port?
+When there is no upstream bridge, call pci_bus_assign_resources() on
+the root bus to place the BARs released above, using the same
+alignment-sorted algorithm as normal enumeration instead of a manual
+per-BAR loop. This also walks the rest of the hierarchy under the
+root bus, as pci_assign_unassigned_bus_resources() used to for amdgpu
+before commit db92e3fef53e ("drm/amdgpu: Remove driver side BAR
+release before resize") removed that call -- the core-side fix that
+commit asked for ("such a problem should be fixed inside
+pci_resize_resource() instead").
 
-Iterating the devices list of the PCI bus without holding the required
-read lock (pci_bus_sem) can lead to list corruption or Use-After-Free.
-Concurrently, a PCI hotplug event or a sysfs device unbind could remove
-the device from the list. Furthermore, the downstream call
-pci_host_handle_link_down(port) uses the port pointer across
-sleep/lock-acquisition points without holding a reference
-(via pci_dev_get()).
+pci_bus_assign_resources() returns void, so failure is detected by
+checking whether the released BARs are still assigned afterward; if
+not, roll back as in the bridged case. This is stricter than the
+bridged path -- it fails on any unplaced resource, not just required
+ones -- since a root bus typically has one shared window, and failing
+loudly seemed better than leaving something silently unassigned.
 
-Could this be protected by holding pci_bus_sem or acquiring a reference
-to the device?
+The root bus path also had a locking bug that any fix here necessarily
+touches: the old "goto out" jumped to up_read(&pci_bus_sem) without a
+matching down_read() (as does the "goto restore" taken when
+pci_dev_res_add_to_list() fails in the release loop). Take pci_bus_sem
+before the BAR release loop so every path through the function holds
+it exactly once.
 
-> +
-> +	if (test_bit(RCAR_PCIE_LINK_DOWN, &rcar->state))
-> +		dev_err(rcar->dw.dev,
-> +			"Root Port reset failed; keeping the controller's interrupts masked u=
-ntil a reset succeeds\n");
-> +}
-[ ... ]
-> @@ -574,7 +762,7 @@ static int rcar_gen4_pcie_reset_root_port(struct pci_=
-host_bridge *bridge,
->  	dev_dbg(dev, "Root Port reset completed\n");
-> =20
->  out:
-> -	rcar_gen4_pcie_resume_irqs(rcar);
-> +	rcar_gen4_pcie_resume_irqs(rcar, !ret);
-> =20
->  	return ret;
->  }
+Use pci_upstream_bridge() rather than testing pdev->bus->self
+directly. The two are usually equivalent, but pci_upstream_bridge()
+is the canonical test -- pci_is_root_bus(), which it's built on,
+warns that bus->self == NULL doesn't necessarily mean a root bus
+(SR-IOV virtual buses from virtfn_add_bus() are the same).
 
-[Severity: Low]
-Does rcar_gen4_pcie_reset_root_port() mix guard() and goto error handling?
+Fixes: 337b1b566db0 ("PCI: Fix restoring BARs on BAR resize rollback path")
+Cc: stable@vger.kernel.org
+Link: https://bugs.launchpad.net/ubuntu/+source/linux-hwe-7.0/+bug/2159596
+Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
+Suggested-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
+Reviewed-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
+Assisted-by: Claude:claude-fable-5 checkpatch
+Assisted-by: Claude:claude-sonnet-5
+Signed-off-by: Liz Fong-Jones <lizf@honeycomb.io>
+---
 
-Looking at rcar_gen4_pcie_reset_root_port(), it defines a guard at the top
-and uses goto for error handling:
+Confirmed against v7.3-rc3: drivers/pci/setup-bus.c is unpatched
+there, pci_do_resource_release_and_resize() still returns without
+reassigning the released BARs when bus->self is NULL.
 
-	guard(mutex)(&rcar->reset_lock);
+Tested on the real root-bus hardware this fixes (SolidRun HoneyComb
+LX2K): both a manual resize via the resource0_resize sysfs attribute
+(shrink to 256M then back to 4G, forcing the release+reassign path
+both directions) and amdgpu's own natural probe-time resize (with the
+amdgpu.rebar=0 workaround removed) succeed cleanly -- VRAM and BAR
+size match, no "Fatal error during GPU init", full IP block init.
 
-	rcar_gen4_pcie_quiesce_irqs(rcar);
+Changes in v6:
+- Repost, confirmed still affects v7.3-rc3
+- Added real-hardware test confirmation (both a manual sysfs-triggered
+  resize and amdgpu's own natural probe-time resize)
+- Picked up Reviewed-by from Ilpo
+- Link to v5: https://patch.msgid.link/20260908-pci-rebar-root-bus-v5-1-a210f405ea81@honeycomb.io
 
-	dw_pcie_stop_link(dw);
+ drivers/pci/setup-bus.c | 23 +++++++++++++++++------
+ 1 file changed, 17 insertions(+), 6 deletions(-)
 
-	ret =3D rcar_gen4_pcie_host_hw_init(pp);
-	if (ret) {
-		dev_err(dev, "Host init failed: %d\n", ret);
-		goto out;
-	}
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index e8c94aa1d3c12..ed16ef7c26fa7 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -2380,6 +2380,7 @@ int pci_do_resource_release_and_resize(struct pci_dev *pdev, int resno, int size
+ 	struct resource *res = pci_resource_n(pdev, resno);
+ 	struct pci_dev_resource *dev_res;
+ 	struct pci_bus *bus = pdev->bus;
++	struct pci_dev *bridge = pci_upstream_bridge(pdev);
+ 	struct resource *b_win, *r;
+ 	LIST_HEAD(saved);
+ 	unsigned int i;
+@@ -2397,6 +2398,8 @@ int pci_do_resource_release_and_resize(struct pci_dev *pdev, int resno, int size
+ 	if (ret)
+ 		return ret;
+ 
++	down_read(&pci_bus_sem);
++
+ 	pci_dev_for_each_resource(pdev, r, i) {
+ 		if (i >= PCI_BRIDGE_RESOURCES)
+ 			break;
+@@ -2415,13 +2418,21 @@ int pci_do_resource_release_and_resize(struct pci_dev *pdev, int resno, int size
+ 
+ 	pci_resize_resource_set_size(pdev, resno, size);
+ 
+-	if (!bus->self)
+-		goto out;
++	if (bridge) {
++		ret = pbus_reassign_bridge_resources(bus, res, &saved);
++		if (ret)
++			goto restore;
++	} else {
++		/* No bridge window to adjust; let the core reassign the bus. */
++		pci_bus_assign_resources(bus);
+ 
+-	down_read(&pci_bus_sem);
+-	ret = pbus_reassign_bridge_resources(bus, res, &saved);
+-	if (ret)
+-		goto restore;
++		list_for_each_entry(dev_res, &saved, list) {
++			if (!resource_assigned(dev_res->res)) {
++				ret = -ENOSPC;
++				goto restore;
++			}
++		}
++	}
+ 
+ out:
+ 	up_read(&pci_bus_sem);
+-- 
+2.53.0
 
-The cleanup subsystem guidelines explicitly state that goto and guard()
-should never be mixed in the same function, as it introduces potentially
-confusing ownership semantics and ordering issues.
-
-Could this be converted to avoid the goto jumps?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260918032038.2216=
-471-1-den@valinux.co.jp?part=3D7
