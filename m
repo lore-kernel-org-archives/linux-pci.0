@@ -1,73 +1,124 @@
-Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F5A24FD299;
-	Fri, 18 Sep 2026 15:37:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=204.191.154.188
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E45ED50390C;
+	Fri, 18 Sep 2026 15:39:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789745855; cv=none; b=O6z7uT5wSBFgo1D8+80Gdng5HSvWr9LCHFXliCWYJx2OMV7IhWSV45u/fChO7epZmXOxylxrXYvG6BnlPkrIrbpe0c//1t7TqvUln3GNLuqnuVCv1dgizdvRCdTVHoKIMC1ywC5NFHiDtPXT35RZzOrSwf5QqRnJVZx2suscyPQ=
+	t=1789745978; cv=none; b=gM6iwUW5TXEqalfwEiHwQQfw4u/UAC8tKiV3/ILJQsJwLU5GcXhVwOa8VLGhtQOTLlw+VPHns/4t9gNo4P5XdRnV4R2TFm9tNnGghekcaZJ+/VBibp8oFPZowcPE1q/r1qDGMvoVzQfxH36H9RMafM2oelMCE9nq4hrGcMoBWrg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789745855; c=relaxed/simple;
-	bh=wEvaTWXDvnJgQGalW3gY+IGZ+93Bir6HwzV0vX03rzQ=;
-	h=Message-ID:Date:MIME-Version:To:Cc:References:From:In-Reply-To:
-	 Content-Type:Subject; b=qPeali55N48bS30vToej2ip9A/p7dSzzyqqGQ3nXyy8aHzDnZigjE6JV8SYoyrrfdPm6Z0iZGbCMt6rQkzBjSQ1s8lx9KX7tiIghdZxPSws7DCW6/Y1AfqvTdbFzYZNhUAzp711jhLw5ezVLsayawNm1LUxETu8nBFd1lbnSAog=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com; spf=pass smtp.mailfrom=deltatee.com; dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b=pP9bWmdV; arc=none smtp.client-ip=204.191.154.188
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=deltatee.com
+	s=arc-20240116; t=1789745978; c=relaxed/simple;
+	bh=VbFQrttl6wWCnLSauDugqZV0z7asYV0FAk+7m//rqyc=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=VYZaeWPw6HEuG0Oo/lEaEsHwNW3a9XauyagbTdpVr7I3ZSCAuHwyBqno2io7J4Z3sC6HYOnijCkS2mmy8ICxwlwzIJO7QUVUDilZE1WR8ybgS3Axo1KJnDLXjrgj7UNdS/PpOh33+K1wx63TsyzqrcG4a3QyKvHrwMxVGD1EnYY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ILJ6QFR7; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b="pP9bWmdV"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
-	MIME-Version:Date:Message-ID:content-disposition;
-	bh=wEvaTWXDvnJgQGalW3gY+IGZ+93Bir6HwzV0vX03rzQ=; b=pP9bWmdVwu6S/Cv5qkol0IOUV7
-	edF/1/n+x+87rzJZEbG7jq6JphNjfmT4qBTYfL+8d7/SW987wNIIfA1pzsgjsxNoJUWFAnicWlb6a
-	hkwIv912wpBGXlARWqiWasUrBnd45bnXkmOo+3d6ejiGmy0y3kGN1O64Bm08JS8w16c9sQfBJ/ML2
-	v3QV+EwEZ1XumxWDOx0CiGobr7RznFD95g2dQv3FxW02aHVWshoUcyqiS/ocIm+pBQJ2Z01EO50ou
-	GDWgoh+nQnwE10eXL4o/QqpTecMF6YZyCfAF7HJkRpmqxqwn04ewTinqpPyAc6rU391nF65SVkBmo
-	RP4k2fDQ==;
-Received: from guinness.priv.deltatee.com ([172.16.1.162])
-	by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-	(Exim 4.98.2)
-	(envelope-from <logang@deltatee.com>)
-	id 1x7aeb-0000000CpQb-00EV;
-	Fri, 18 Sep 2026 09:37:33 -0600
-Message-ID: <94da5a00-c0b9-4cd3-b516-facadbee5097@deltatee.com>
-Date: Fri, 18 Sep 2026 09:37:26 -0600
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ILJ6QFR7"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E51901F000FF;
+	Fri, 18 Sep 2026 15:39:25 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1789745966;
+	bh=Zd67yz0t4opoZtOCzi4ZtDnSMs+HiY6s7KjTGc+vLFk=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=ILJ6QFR79IkwD/s0ca47aQrNFZmKlMqCAX7wsynPY7GAq682IgHccGBRxKtcxpDXX
+	 ngfO4+HxCqbfwRjSGvTH07kNCLjHnbgYHlX4+RBLJykNhRIpt6wi3O4/Aptm+WC14I
+	 GgR/66taCh2fpytJU1KH/WNFrCeUC/fwDy8dP+hzq4GjgRlNJ1P0uNoNjhoQugbaja
+	 tlvKP7Zkxt77MifTtC577/A7SFaDayZWidTJlnK4cIrk2bOj5ykEaWF1PWjm59kUVN
+	 iqJSRd9hXYHjngOFD3z8e0e1/4e0nJbzPMZt/7mFQeHjpYtr5Cjdyh5CF8ORy5XFOq
+	 IME0J6CyIQkEg==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v4 3/3] arm64: dts: qcom: qcs6490-rb3gen2: add endpoint
+ buses
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Alex Elder" <elder@riscstar.com>
+Cc: conor+dt@kernel.org, linux-pci@vger.kernel.org, robh@kernel.org, devicetree@vger.kernel.org
+In-Reply-To: <20260918152659.413268-4-elder@riscstar.com>
+References: <20260918152659.413268-1-elder@riscstar.com>
+ <20260918152659.413268-4-elder@riscstar.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Fri, 18 Sep 2026 15:39:25 +0000
+Message-Id: <20260918153925.E51901F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
- dmaengine@vger.kernel.org, Vinod Koul <vkoul@kernel.org>
-Cc: Frank Li <Frank.li@nxp.com>, Kelvin Cao <kelvin.cao@microchip.com>,
- =?UTF-8?Q?Thomas_Wei=C3=9Fschuh?= <linux@weissschuh.net>,
- Dave Jiang <dave.jiang@intel.com>, George Ge <george.ge@microchip.com>,
- Jaeyoung Chung <jjy600901@snu.ac.kr>
-References: <20260902062153.31048-1-logang@deltatee.com>
-Content-Language: en-CA
-From: Logan Gunthorpe <logang@deltatee.com>
-In-Reply-To: <20260902062153.31048-1-logang@deltatee.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-SA-Exim-Connect-IP: 172.16.1.162
-X-SA-Exim-Rcpt-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, dmaengine@vger.kernel.org, vkoul@kernel.org, Frank.li@nxp.com, kelvin.cao@microchip.com, linux@weissschuh.net, dave.jiang@intel.com, george.ge@microchip.com, jjy600901@snu.ac.kr
-X-SA-Exim-Mail-From: logang@deltatee.com
-X-Spam-Level: 
-Subject: Re: [PATCH v6 00/10] dmaengine: miscellaneous fixes for ioat,
- switchtec_dma and plx_dma
-X-SA-Exim-Version: 4.2.1 (built Sun, 23 Feb 2025 07:57:16 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [High] pci: MMIO translation failure due to static dummy ranges bypassing=
+ dynamic update
+--
 
+commit 07e53b54e0b29671e1a08f764661a81fe5484062
+Author: Alex Elder <elder@riscstar.com>
 
+arm64: dts: qcom: qcs6490-rb3gen2: add endpoint buses
 
-Any update on when this might be merged? I thought it was ready to go
-and I'd really like to see it in this cycle.
+This commit adds devicetree nodes for a PCIe endpoint and its peripheral
+buses on the QCS6490 RB3gen2 platform. It also defines static ranges for
+the endpoint BARs, with the expectation that these will be updated
+dynamically.
 
-Thanks,
+> diff --git a/arch/arm64/boot/dts/qcom/qcs6490-rb3gen2.dts b/arch/arm64/bo=
+ot/dts/qcom/qcs6490-rb3gen2.dts
+> index 3bb5fca8e2b13..5b7f5292a8864 100644
+> --- a/arch/arm64/boot/dts/qcom/qcs6490-rb3gen2.dts
+> +++ b/arch/arm64/boot/dts/qcom/qcs6490-rb3gen2.dts
+> @@ -955,11 +955,41 @@ pcie@3,0 {
+>  			bus-range =3D <0x5 0xff>;
+> =20
+>  			dev@0,0 {
+> +				compatible =3D "pci1179,0220";
+>  				reg =3D <0x50000 0x0 0x0 0x0 0x0>;
+> +				#address-cells =3D <3>;
+> +				#size-cells =3D <2>;
+> +				/* Ranges will be updated dynamically */
+> +				ranges =3D <0x0 0x0 0x0  0x83050000 0x0 0x0  0x0 0x4000>,
 
-Logan
+[Severity: High]
+Does defining these dummy ranges statically bypass the dynamic update?
 
+During PCI enumeration, pci_set_of_node() binds existing nodes like dev@0,0
+to the corresponding pci_dev. Later, when the PCI quirk calls
+of_pci_make_dev_node() to dynamically update the ranges,
+of_pci_make_dev_node() checks if (pci_device_to_OF_node(pdev)) and returns
+immediately without calling of_pci_add_properties().
+
+As a result, the dummy ranges are left intact, which causes child devices
+on the PCI endpoint bus to use these static ranges instead of the actual
+BAR addresses assigned by the PCI core. Will this lead to invalid memory
+accesses or driver probe failures?
+
+> +					 <0x2 0x0 0x0  0x83050000 0x0 0x4000  0x0 0x80000>,
+> +					 <0x4 0x0 0x0  0x83050000 0x0 0x84000  0x0 0x200000>;
+> +
+> +				pci-ep-bus@4 {
+> +					compatible =3D "simple-bus";
+> +					#address-cells =3D <1>;
+> +					#size-cells =3D <1>;
+> +					/* Map 0x0-0x1fffff to BAR 4 */
+> +					ranges =3D <0x0  0x4 0x0 0x0  0x200000>;
+> +				};
+>  			};
+> =20
+>  			dev@0,1 {
+> +				compatible =3D "pci1179,0220";
+>  				reg =3D <0x50100 0x0 0x0 0x0 0x0>;
+> +				#address-cells =3D <3>;
+> +				#size-cells =3D <2>;
+> +				/* Ranges will be updated dynamically */
+> +				ranges =3D <0x0 0x0 0x0  0x83050100 0x0 0x0  0x0 0x4000>,
+
+[Severity: High]
+This appears to have the same issue. Because the dev@0,1 node is already
+present, the dynamic update logic in of_pci_make_dev_node() will bypass it.
+
+Child devices under this node will then attempt to translate MMIO addresses
+using these static dummy ranges instead of the actual BAR addresses assigned
+by the PCI core.
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260918152659.4132=
+68-1-elder@riscstar.com?part=3D3
