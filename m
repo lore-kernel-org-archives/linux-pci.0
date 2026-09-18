@@ -1,76 +1,82 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57CB43A0EB8
-	for <linux-pci@vger.kernel.org>; Fri, 18 Sep 2026 17:33:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C23A33BBA1D;
+	Fri, 18 Sep 2026 17:33:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789752826; cv=none; b=KdFPt/vIN7bvEqnMuBpNbugNYWC8ffyDe0HS6nKHKQ30dnudj6SC/wxMPY+hb+0B+16iJ+061W9+nHoVSJ/X3mDOmj+Uk1N7GTXu1c9pvxgu70nmd7rDU213AuWgoWt7aX+BtoqsE6MlxNr9N11NksYXuI30A2Cbm+AWENF1Tno=
+	t=1789752837; cv=none; b=dh5cXLORav1eyFI9gybxaEhfU9gzyvWz4w+0XXZ8XUpWTNrEKz1SyuKrbquPjtv5g87v9N4oZkS5vJo8bPnBNVynr1iZtn/ZVCA0Vnw7AIHxxV33hallp6BWHP7AGb13SzLPli/nzy5oLROWjqjwQGzMUqZeuAwehDFrXhpKFgo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789752826; c=relaxed/simple;
-	bh=g93bebs9E+ozhRj17ACqE6SMmXyfWlefQY8YYmI5kuo=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=EQELhNj0IVH9biRmuLj0zhlbjYtIwzJnXlxywxwCOTJV0dF9nR/iJe5nBx6HqFPFZl/ZHemtDiFk8s/ahas7OM9j1QUrDTWLQGw5lFJeJaMS5zIL8rwokpOFIj+4t4LsUyt7so9XI1alLwpywrduXmB3scGfhdGeKr6xFGFpidU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=b/c/4PiP; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789752837; c=relaxed/simple;
+	bh=EUR2ay/SbxhbSJ0HqiTFUw47TzdfexHnjBrabD1F80A=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=nFDREa41OpdoMjTyGd+4E1jbyRF1krt1n9+Oswp2ooTwu/U3zKLC7U1VCelu/QzAqQRCD4O5u9S2Wb1WRqrKK/jIgIZl3JoeLRO8KFjXWKHkuBsiaNiBSTOsWNe3L8t/y50u6vEgtZ7t9UuvMvHVGChK7VfQRNO4CZm3fETCqqM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bYNJ4qw6; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="b/c/4PiP"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DA7AA1F00898;
-	Fri, 18 Sep 2026 17:33:40 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bYNJ4qw6"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0F62A1F000FF;
+	Fri, 18 Sep 2026 17:33:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789752821;
-	bh=g93bebs9E+ozhRj17ACqE6SMmXyfWlefQY8YYmI5kuo=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=b/c/4PiPw9qKFg4sb7F/Deag91wZzno4dwxNy2ne8hvnzNffCYgNRL94CN++6UWwe
-	 pvKgshWYLrQJjuLjUo7n6PwI56sJjUHOpShd1dUgmVsxe/IElhif2x0A5jrV/WxSwa
-	 zlaD/0w4ddHsxtLO61oalDetmqNLw/aIjjZ/NxavlUfXLwc+wVl/5opPOIcPVvetE4
-	 NcSxa1PMQ4cZisaRgVOaPraNpsbojimMxrVvzh032+ejubHsmgNZyaeEq4deGdrHL4
-	 +HgP/Mz0hShxDL84F3fp8VRnZzT9AwjDEiT4KTbTuQ9tq53ShKf91H4DyXaq0O0dVW
-	 uhKaICpUIylVA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 2/2] PCI/AER: Fix memory leak in
- aer_recover_work_func() when pci_dev is missing
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Priyank Rathod" <rathodpriyank@google.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260918-b4-fix-aer-memleaks-v4-2-f0a2c21ed1d1@google.com>
-References: <20260918-b4-fix-aer-memleaks-v4-0-f0a2c21ed1d1@google.com>
- <20260918-b4-fix-aer-memleaks-v4-2-f0a2c21ed1d1@google.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Fri, 18 Sep 2026 17:33:40 +0000
-Message-Id: <20260918173340.DA7AA1F00898@smtp.kernel.org>
+	s=k20260515; t=1789752834;
+	bh=jPqCA0PRvRC0+/zfORLzf4AIAvw/MERjhvtEVcQRMNs=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=bYNJ4qw6qHAdpuueqh/HVTAucQAhHjkArtxIZVmLiUVvCjAL1zXrgWsfVvMTiumIM
+	 Ceq+OY4XnA8TCqr6Ing2MCnWyWAq+K/BtfpdjuCiI01oVcBgB2ZftuCLUdB3Fq+ckO
+	 haSd093YIN6Y97cTHGbflZLSWMroARlkerJGQdTXHpqzoFWfzQyHRsTZRQ2rQkxiWG
+	 0CIUr2/EgR41Q4tu/3mI59k6/BR7+ehvCetT8Jk0rCmhG3YUNzOqzVykLCTglBPULZ
+	 eKx4OyanSbT61vhhzeA2Bk2HZGvnEzvl5nlyaN/S/KTgOFrvXNyXJ3k+4XX4854B+W
+	 TlZ56kckXvdhw==
+Date: Fri, 18 Sep 2026 12:33:53 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Feng Tang <feng.tang@linux.alibaba.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Logan Gunthorpe <logang@deltatee.com>,
+	Stephen Bates <sbates@raithlin.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI/P2PDMA: Add Alibaba T-HEAD Yitian 710 to whitelist
+Message-ID: <20260918173353.GA1167671@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260918082412.15967-1-feng.tang@linux.alibaba.com>
 
-> When ACPI APEI/GHES processes PCIe AER error records, it allocates memory
-> for aer_capability_regs (entry.regs) from ghes_estatus_pool and queues
-> the entry into aer_recover_ring.
->=20
-> In aer_recover_work_func(), items are popped from aer_recover_ring via
-> kfifo_get(). If pci_get_domain_bus_and_slot() fails to find a matching
-> pci_dev, the code previously executed 'continue', bypassing the call to
-> ghes_estatus_pool_region_free(). As a result, the memory allocated for
-> entry.regs from ghes_estatus_pool was leaked.
->=20
-> This is reachable whenever the device reported by firmware is not (or is
-> no longer) present in the PCI device tree, e.g. after hot-removal or when
-> firmware reports an error for a device the kernel never enumerated.
->=20
-> Refactor aer_recover_work_func() to ensure ghes_estatus_pool_region_free()
-> is called unconditionally for every dequeued entry, releasing the pool
-> memory even when pci_dev is missing.
->=20
-> Fixes: e2abc47a5a1a ("ACPI: APEI: Fix AER info corruption when error stat=
-us data has multiple sections")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Priyank Rathod <rathodpriyank@google.com>
+On Fri, Sep 18, 2026 at 04:24:12PM +0800, Feng Tang wrote:
+> Alibaba T-HEAD Yitian 710 surports PCI peer-to-peer transactions. Add it
+> to the P2P whitelist.
+> 
+> 2 NVME cards with CMB (Command  Memory Buffer) have run p2pmem-test [1]
+> fine, under same root complex and different root complexes.
+> 
+> [1]. https://github.com/sbates130272/p2pmem-test
+> 
+> Signed-off-by: Feng Tang <feng.tang@linux.alibaba.com>
 
-Sashiko has reviewed this patch and found no issues. It looks great!
+Applied to pci/p2pdma for v7.4, thank you!
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260918-b4-fix-aer=
--memleaks-v4-0-f0a2c21ed1d1@google.com?part=3D2
-
+> ---
+>  drivers/pci/p2pdma.c | 2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
+> index c8c414af7078..beb1fe20c9de 100644
+> --- a/drivers/pci/p2pdma.c
+> +++ b/drivers/pci/p2pdma.c
+> @@ -576,6 +576,8 @@ static const struct pci_p2pdma_whitelist_entry {
+>  	{PCI_VENDOR_ID_ZHAOXIN, 0x1006, REQ_SAME_HOST_BRIDGE},
+>  	{PCI_VENDOR_ID_ZHAOXIN, 0x1007, REQ_SAME_HOST_BRIDGE},
+>  	{PCI_VENDOR_ID_ZHAOXIN, 0x1008, 0},
+> +	/* Alibaba T-HEAD Yitian 710 CPU */
+> +	{PCI_VENDOR_ID_ALIBABA, 0x8000, 0},
+>  	{}
+>  };
+>  
+> 
+> base-commit: 2ce4ced05cd7b16f3d3430eac021d6184752175f
+> -- 
+> 2.43.5
+> 
