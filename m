@@ -1,129 +1,109 @@
-Received: from mail-ed1-f46.google.com (mail-ed1-f46.google.com [209.85.208.46])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 505535208AB
-	for <linux-pci@vger.kernel.org>; Fri, 18 Sep 2026 19:28:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.46
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789759720; cv=pass; b=W+3f5jPf1qF6/J8U8tnJnwcUrwJtxYWlBPb8cMv8diSFWP3OqQi3qQ8UZxWPiD+9IB9QbojAPdKog9lPPIWr+IMINWvoAEWdPWxNc05sqJTouPVp10TSCY6vhBLG9hDFy/+PF2z4qb+x+WaKElhujg2mGVJz5ghtrE1DnSkQTV0=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789759720; c=relaxed/simple;
-	bh=Pr9EeiZTbqiSt+KIaAIIUq+kKBnWHyvE8rHU/apYAjQ=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=gF9BS0AzgKWwOdnzphi4asdlnClyjXjJN/o5xRtcX/1yniyo6PID0/9HfI7yQYcnTI32G7RDzqR7ocLUJ0VLipff3dTc00njf49M4p89FNZGwxBw8dbaay5Ptbs8Y6OgwqFL8oMcYkRRDjp7OJN9H1GSrAXkuYKmZEbw/jd/cAI=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=wglF7trB; arc=pass smtp.client-ip=209.85.208.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E1F422931F8;
+	Fri, 18 Sep 2026 19:40:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=204.191.154.188
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1789760415; cv=none; b=LI46YPoahelWrWmba8QHofrdepQyJjLcxFUKq8rfx3WZBdnPO2iO59sy7IWVdx948M050ocMP1PI0JKTkl1DTIeP0IpiSXFm6BzkGAYgceOMOoBTQNUtIBGQOLVzJXXrMK/IKUb75e7DTlft/I97nVEpHLo917qJWDoUC0WtqHc=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1789760415; c=relaxed/simple;
+	bh=Kk3ar4q45siHy1y0rPnYfhOrE+vVoxmAnZK8w5kMOiw=;
+	h=Message-ID:Date:MIME-Version:To:Cc:References:From:In-Reply-To:
+	 Content-Type:Subject; b=OTFQ6+aomGsXsOr0YIeRK9gExMd6+vr68CB3LyY8kbzuULJy/YDm0jOZIax1tqlhA1Nu/6K7OH3lsAGmBcXnzTPrkXxKbHVxNW4Y0WBMIWIiqvERF8SD4wfaApwdXfaTeEe+LPjSKKM+o0P9DKa9zpCH1dhriPa5A7bT7BohzLI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com; spf=pass smtp.mailfrom=deltatee.com; dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b=p1hFKb1F; arc=none smtp.client-ip=204.191.154.188
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=deltatee.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="wglF7trB"
-Received: by mail-ed1-f46.google.com with SMTP id 4fb4d7f45d1cf-6aa13d8d9d0so1529a12.0
-        for <linux-pci@vger.kernel.org>; Fri, 18 Sep 2026 12:28:37 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1789759715; cv=none;
-        d=google.com; s=arc-20260327;
-        b=jaGHKZZEKPf5d4tW5jLmXKOLEWaUHRNosQje1VwDurHz/ZSUSUquYbspxhPNgRsToK
-         yFvdyR0FSCdrcvV7LJOXs34fNNA+EvR1o93M7Wj0LxrjWvLNbRRXHdl2JXzA2tQF8ill
-         OSDMaeWnO8La1bOC1vaTbOoGJxKNDPjgWbdFxq64b/i6qzxtmXy0uMzzPc+ZaMxymLnU
-         KAnV2vmhRU6VULrJ1rKRQe20fYahF18FLp+pJOyoZZbmPdWdncdbPymuOmAzccLUIbM5
-         frGnJmKey5ZtrNVbi3qq0vm1PEJFjRwIOgHiTiRQ0TyNnQZW0EQxO+YoyUvk7iqVCdC8
-         8dBQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=EbHldw+OkWfGVFKKWtG3hDAcOnTKU4jITXx8lACI1lI=;
-        fh=aq5DJ3DB35ztUGrXWn57jkC1X2GWQ6IO1y4dHlHTk6E=;
-        b=lIBxTiYLXszqUteZdGWOPTeOzLuV3osqzrDTGZXtHpRayGV5WbNRU2EXGlZvii8iKn
-         fCbwpDHHEqhTE3wRGauZx+4d0wcwZMNC4iK/s0fC5d7fFCgWGY27mdG0v1uZECOVnaCY
-         KsbF9a3y2TCPwM/Ldz4Cpup6IAQ6xydvsRfB9t71SbsPXRteZ7WiI6Xfv7Uia9puJP9t
-         6vfWFrI5M3VKtuk2Antl6iOBwmFDZpvxPvJsBpZMGH0NbKOWJZX/qt5MWGWgr/8wSjNf
-         YZqvPeKWhdNDxrvJ69LXcvlFuPYklHhbPyt7yBqETCpIEmaOv9jIFdQ0y5r7kxg/fsop
-         lmng==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1789759715; x=1790364515; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=EbHldw+OkWfGVFKKWtG3hDAcOnTKU4jITXx8lACI1lI=;
-        b=wglF7trBk9fD3R+2h31qOtvE+5N9W26pGyXZas/kZ6tV5n7qDHlHfOkHaOeW/SpYPu
-         VO2X2QmgAISHV+SiR4Kw+X/lDt2ttJ2cQTBEtQRk4E2E9nQ2RnuEBn3tTb9XzpgXVQQy
-         pGvVKbIGLyA+2YkbnqL22fehYg6tkNyITbZAVD7Mi6Ae5xHHidz2zHmkL69qTojWwLTn
-         CRyJ6AoqmzD2y6FUCVvJzMZAmxbf1OSIRu0dctl4YX5hdSX22gL20Fi1sTSVO8oAgIFY
-         Veozg7+zId8NBjZ28FOzLGmS4LoY6nPtVrrQDBRum7aK+805lghjgXp4y8yBlw/6Fh+h
-         xU+w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1789759715; x=1790364515;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=EbHldw+OkWfGVFKKWtG3hDAcOnTKU4jITXx8lACI1lI=;
-        b=j0B9uNO6kABtM7j7W8ymQYD4DraX7P7I7g9wWfWbduemctkoHV70Jm2BNCnu9rk4Ny
-         UPaDP7IH15jgmy6uvBY2EldUEJWuwFInpig1PjeyTV4eUMN9YDE1ft8MqTQ1nCeDif1S
-         EQLtR+96hPn/yvEQpo2iwYbDSZwc15IhD6flbDS3+KnfK+odOaU9f3iumnWnVeKYw4//
-         d3sAk0lxbeB6MvfmTOHyVi5YRn3wEVFvgpiWUOCcAK0reCeMdxJcoWzGZoRSAm9VNK/g
-         TDSaGnxE7EFRKwuLIb8n8RGUkLbKqWcTFHkW6FvW4P/qssfCnv+eDBU+yjZUOCYYTa+i
-         uyFg==
-X-Forwarded-Encrypted: i=1; AKwUvBwoec/KyC2hP15Va2dF0VFCBlM17AVIlpEkD+BuwdzJjuaM2svH0Ty9Twq/V9e++n2eTQLvREse8eI=@vger.kernel.org
-X-Gm-Message-State: AFuF++mNLKsro3EJGJR+5P2wd7HIx6SbJYAR1SdOqMr4DS4PATfT4lC8
-	PHdOJXb+XUgStcEt/kFJir5GiBxpfFa5UOnYZ1Ig3IlTb4g1RHSznN3JXkO+FgwzE1S1hKFfvre
-	NpPB+gzRCG/iinjP8R1MGlipr4S0RfklUjJTikEns
-X-Gm-Gg: AYBFou3hBw1mg9nDSFnuiyKUMuFgQ0ADML8TiDkgjjH4I2aVaBw2wFAUJhcCHeufvWL
-	U1HicRI79LBTYa991FItYcvvoB4rR9DzKBK8bXBEVLxgOjv32dRAatpYUPdLhVARzvr0QS0j7yz
-	2o83GZw1Nvuil9Pp7+EoTf/297YVE112B07VcGmGua7+6Kd+FqqKThkqVfgp5x81IChp4BQ60dt
-	q/E6jUMHS1/mLb5B/Sw33eF5Z8Y4UWFoLVYPnTgmix94hZa1MYmdkW/PtPbvImlhElVRbFssboQ
-	A/1vTFyH1pgwhdPkcYGtpKMP/kJ6rYfEajDaAOf0mJZmlJYSg1Brkx3ZemKr1/pRyei2Wpn5sfa
-	SuCAEfz5itw==
-X-Received: by 2002:a05:6402:223c:b0:6aa:1391:a4af with SMTP id
- 4fb4d7f45d1cf-6aa684aa9afmr9099a12.3.1789759714549; Fri, 18 Sep 2026 12:28:34
- -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b="p1hFKb1F"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
+	MIME-Version:Date:Message-ID:content-disposition;
+	bh=lQAIrUFP3+D+tD4U17DzHrKkOc11Ho5y+ORRcF4NPXs=; b=p1hFKb1F/D9iIDg6hNHtr8GiM2
+	l37aQ39NUCI6IRV6cw9gskBQm2rzWzmoVGB1A1sSt6dz5QZVE29rnly2O4sra+jAVtX5GubBbhzIT
+	estioaTW7b42lemwzxUqTkaexKwqWBQXacYsSjVZzNvKbOFT+MjWkLM0OirZSxU2f7sT+NKmqaUfV
+	o2SyHTECs+cKETwfqStVBNeQngTXT/DtkXdqEV9Mma6d2VcU0eUSuvkbsuX6aqp80gMFjKciNXgwC
+	YI36SyWZbHBozXXE9/fXLmwHKXHr3dGHRBoTkxESWTCrljgEUe7uToA9S6ifHB5P/eblW6xIUFZVM
+	uH56LcFg==;
+Received: from guinness.priv.deltatee.com ([172.16.1.162])
+	by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+	(Exim 4.98.2)
+	(envelope-from <logang@deltatee.com>)
+	id 1x7eRN-0000000CrxC-0gtG;
+	Fri, 18 Sep 2026 13:40:10 -0600
+Message-ID: <19bee27e-17d7-4b67-b796-ca5bb44e8de7@deltatee.com>
+Date: Fri, 18 Sep 2026 13:39:55 -0600
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260917230323.3701743-1-mclapinski@google.com> <aq1KWUXAqQ34ybRP@wunner.de>
-In-Reply-To: <aq1KWUXAqQ34ybRP@wunner.de>
-From: =?UTF-8?B?TWljaGHFgiBDxYJhcGnFhHNraQ==?= <mclapinski@google.com>
-Date: Fri, 18 Sep 2026 12:28:21 -0700
-X-Gm-Features: AcwNN1XywJRMXvA7_I4z7yu2NHUmIFXps2ss-EHz_Q-ojRYqZb8DkY_9R4A6HQE
-Message-ID: <CAAi7L5cjsUrLbcJtBg1DXo7frjdBY0m5x5tUeR8+btU70HP7tA@mail.gmail.com>
-Subject: Re: [PATCH] PCI/DOE: Poll briefly for a response before sleeping
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+To: Leon Romanovsky <leon@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ Chaitanya Kulkarni <kch@nvidia.com>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jens Axboe
+ <axboe@kernel.dk>, Alex Williamson <alex@shazbot.org>,
+ Ankit Agrawal <ankita@nvidia.com>, Jason Gunthorpe <jgg@ziepe.ca>,
+ Jonathan Corbet <corbet@lwn.net>, Shuah Khan <skhan@linuxfoundation.org>,
+ "Joerg Roedel (AMD)" <joro@8bytes.org>, Will Deacon <will@kernel.org>,
+ Robin Murphy <robin.murphy@arm.com>, Randy Dunlap <rdunlap@infradead.org>,
+ Sumit Semwal <sumit.semwal@linaro.org>,
+ =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-doc@vger.kernel.org, iommu@lists.linux.dev,
+ Tushar Dave <tdave@nvidia.com>, linux-media@vger.kernel.org,
+ dri-devel@lists.freedesktop.org, linaro-mm-sig@lists.linaro.org,
+ linux-rdma@vger.kernel.org, kvm@vger.kernel.org
+References: <20260914-fix-p2p-acs-v4-0-v6-0-5ef07ec9ef06@nvidia.com>
+ <20260914-fix-p2p-acs-v4-0-v6-3-5ef07ec9ef06@nvidia.com>
+Content-Language: en-CA
+From: Logan Gunthorpe <logang@deltatee.com>
+In-Reply-To: <20260914-fix-p2p-acs-v4-0-v6-3-5ef07ec9ef06@nvidia.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-SA-Exim-Connect-IP: 172.16.1.162
+X-SA-Exim-Rcpt-To: leon@kernel.org, bhelgaas@google.com, kch@nvidia.com, gregkh@linuxfoundation.org, axboe@kernel.dk, alex@shazbot.org, ankita@nvidia.com, jgg@ziepe.ca, corbet@lwn.net, skhan@linuxfoundation.org, joro@8bytes.org, will@kernel.org, robin.murphy@arm.com, rdunlap@infradead.org, sumit.semwal@linaro.org, christian.koenig@amd.com, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, iommu@lists.linux.dev, tdave@nvidia.com, linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org, linaro-mm-sig@lists.linaro.org, linux-rdma@vger.kernel.org, kvm@vger.kernel.org
+X-SA-Exim-Mail-From: logang@deltatee.com
+X-Spam-Level: 
+Subject: Re: [PATCH v6 03/18] PCI/P2PDMA: Derive routing from directional ACS
+ controls
+X-SA-Exim-Version: 4.2.1 (built Sun, 23 Feb 2025 07:57:16 +0000)
+X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 
-On Fri, Sep 18, 2026 at 7:27=E2=80=AFAM Lukas Wunner <lukas@wunner.de> wrot=
-e:
->
-> On Fri, Sep 18, 2026 at 01:03:23AM +0200, Michal Clapinski wrote:
-> > doe_statemachine_work() waits for a response by sleeping
-> > PCI_DOE_POLL_INTERVAL (PCI_DOE_TIMEOUT / 128) between status reads,
-> > which is 7 ms at HZ=3D1000 and 4 ms at HZ=3D250. Exchanges are served f=
-rom
-> > the device's local mailbox logic and typically complete within tens of
-> > microseconds, so nearly all of that sleep is wasted. Every DOE-capable
-> > endpoint pays it once per supported feature during enumeration.
-> >
-> > Poll with usleep_range(20, 50) for the first ~2 ms before falling back
-> > to the jiffies-based wait. On an Intel Emerald Rapids system, time spen=
-t
-> > in pci_device_add() for a DOE-capable endpoint drops from 41.8 ms to
-> > 14.0 ms.
->
-> Polling is just a poor man's replacement for interrupts.  DOE supports
-> interrupt-driven transfers but we're not taking advantage of it so far.
->
-> Perhaps you could look into adding that?  It would seem more worthwhile
-> than optimizing polling.
 
-Thanks for the quick response.
 
-This code runs during PCI device enumeration, before a driver is bound, so
-the core doesn't really have an interrupt to work with: MSI/MSI-X vectors
-belong to the driver, and enabling them in the core would collide with its
-later pci_alloc_irq_vectors(); INTx isn't routed yet either, since dev->irq
-only becomes valid via acpi_pci_irq_enable() at pci_enable_device() time.
+On 2026-09-14 05:22, Leon Romanovsky wrote:
+> From: Leon Romanovsky <leonro@nvidia.com>
+> 
+> pci_bridge_has_acs_redir() treats Request and Completion Redirect as
+> interchangeable. On asymmetric fabrics, a control for only the reverse TLP
+> direction can unnecessarily force P2PDMA through the host bridge.
+> 
+> Evaluate Request Redirect for client Requests and Completion Redirect for
+> provider read Completions. Continue treating enabled Egress Control
+> conservatively as a Request redirect.
+> 
+> Fixes: 52916982af48 ("PCI/P2PDMA: Support peer-to-peer memory")
+> Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
+
+Core patch seems fine, minus one minor point below:
+
+Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
+
+> @@ -1132,10 +1173,10 @@ EXPORT_SYMBOL_GPL(pci_p2pmem_publish);
+>  /**
+>   * pci_p2pdma_map_type - Determine the mapping type for P2PDMA transfers
+>   * @provider: P2PDMA provider structure
+> - * @dev: Target device for the transfer
+> + * @dev: Client device that initiates the transfer
+>   *
+>   * Determines how peer-to-peer DMA transfers should be mapped between
+> - * the provider and the target device. The mapping type indicates whether
+> + * the provider and the client device. The mapping type indicates whether
+>   * the transfer can be done directly through PCI switches or must go
+>   * through the host bridge.
+>   */
+> 
+
+This hunk does not seem like it belongs in this patch.
