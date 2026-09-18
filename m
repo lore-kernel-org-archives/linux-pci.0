@@ -1,74 +1,75 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D92551A742
-	for <linux-pci@vger.kernel.org>; Fri, 18 Sep 2026 17:30:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C7A93A0EB8
+	for <linux-pci@vger.kernel.org>; Fri, 18 Sep 2026 17:32:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789752649; cv=none; b=eZEHFJQxUZSDdG4rkq5PAvlZPPF4BON6O98VYxpgUvg4M4szKFBmK8aDVtkZ+Wg/CS8vL+Iyb6Or8w/B637EhYsVZCUlCPC1/+bKywBqOVEo2KSQvXJ0j7nntOMfV12tWQBdsbCKQBb++j+R6NQj1VBqYI7nO/LrovOInF4cS08=
+	t=1789752737; cv=none; b=jYKOKY8RhqeStebFCfAGYm+7RHx648+BjeRqmdaFHhrWUk+MQIFspoVP9BiKNlMjYRV0dx5EayQJnKZyef+SU2VIsX68gxL2AUiy7wLPWRaaZhxwXnS0+BxwGdAaqN8SsKo+dqUBdBLB4UIwzNcYz4NSq4B0dE4gsuBXn4GqFhk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789752649; c=relaxed/simple;
-	bh=ztM8NevtOi3nBRaZFp/M8pEz+9DGEZBuEtOXqiLVgj8=;
+	s=arc-20240116; t=1789752737; c=relaxed/simple;
+	bh=rrD441g46AUi3q8rw71xMHv+CR7t2Iki14BL5XlMSmQ=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=ii/J9RXlcr7Me37oz5SVd+3iTZ1IiOimBcwlsz9mxmfhCJs4sQBW3jZ8uHrN7fn/gEfg1pm2Ww+21spWnEt8IYoWA3pQ13yUtDMWt908CC6L3INWNoa+h/SltkyLgMOTvh1viBRBoSskrkMfjUGBAS8PoJQYOFmsI4SRewEJxR4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=L6PP8knG; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=ScmKUwzjR8eVC/QjJ7ww7zj195gN/iE3OBjB7QnNC2ZMhq90dA392zWiT2Bd9KSjy0UIFrwsP1ceiRFPtJuSfTIgE1SDNCLfv3gq3+lFw1r7rmxVtbH0qVobIIoZqtePbuhb8HGhJTyTs3pxBjTGtfzPOz/KhYc1Vy6oM3MqFFM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XnkXfeKc; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="L6PP8knG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B1BE71F000FF;
-	Fri, 18 Sep 2026 17:30:37 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XnkXfeKc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1EDF71F000FF;
+	Fri, 18 Sep 2026 17:32:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789752637;
-	bh=pDjBqs1IHFI+uWt5X/Z1jJnwqDK/dTGkgZkayNlNqfY=;
+	s=k20260515; t=1789752724;
+	bh=rrD441g46AUi3q8rw71xMHv+CR7t2Iki14BL5XlMSmQ=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=L6PP8knGaMG7WBMAGuhZ2J5PQq0yxyunvheRbjbkEeQy8UHCtdAh4BYfG4RkNv/VJ
-	 TqgK0C0n/MycTH89opwPTMNV89jOJAY9l/oGEhYn3s9sqsrhRemnV9DNal2i7IH0EB
-	 4mCqrmOKgd6+f6SwQ7hqKOnNMGj9Bjv90OT8Mf2DhJ5SNV7vOVRe/gwnazZDc7vaO3
-	 PdBmmAvEycf3fELPOcCyekPDn9hv4oCJV7zkvQb15xMrN57OaGeImNmp/bEVsFkpn6
-	 VVqA5ur2HMZU2gJ21xoAK2oDpXB6VcAw0eWvWQcFiLhidz4bySPGpRoKrfJwiRLeXw
-	 psPALQvbTQHHw==
+	b=XnkXfeKc0WnFHOdHFbPUMKKVaC+spklMjNMseCCKnoXGw0/tT+dpX2XbED0jy0rDG
+	 XDw/2R/F3Le2XA2vzTd/Ds3WnqMv2OwVrSo4O7uPK0QVA567jgl9NW4nCLYpuCXR+B
+	 lpshTbw+vbzx5r0svwqWud9ZOiQaPj6Lk4Ah0wcm84FlRsDkwrSOYAfy6cNVG+wvKr
+	 S+GtTkuvbwYwBZmpBFt2vZu2uCigvlM1U7Qj3Fe+xC9Q2gpjFMDV0p+bIf5nPvZZSy
+	 uxw1ua36l7+c8gyBYfpQGGHVit6JFtGXj3ltbZ4A9ZaXxoiqeTMz1DG3XYFkcqDxlT
+	 wi1bOwIHAxlzQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2] PCI/AER: Fix struct pci_dev reference leak in
- aer_process_err_devices()
+Subject: Re: [PATCH v4 1/2] PCI/AER: Fix memory leak in aer_recover_queue()
+ on kfifo buffer overflow
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Priyank Rathod" <rathodpriyank@google.com>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260918-fix-aer-refcount-leak-v2-1-bdd1ff1c35a9@google.com>
-References: <20260918-fix-aer-refcount-leak-v2-1-bdd1ff1c35a9@google.com>
+In-Reply-To: <20260918-b4-fix-aer-memleaks-v4-1-f0a2c21ed1d1@google.com>
+References: <20260918-b4-fix-aer-memleaks-v4-0-f0a2c21ed1d1@google.com>
+ <20260918-b4-fix-aer-memleaks-v4-1-f0a2c21ed1d1@google.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 18 Sep 2026 17:30:37 +0000
-Message-Id: <20260918173037.B1BE71F000FF@smtp.kernel.org>
+Date: Fri, 18 Sep 2026 17:32:03 +0000
+Message-Id: <20260918173204.1EDF71F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-> When an AER error occurs, candidate error-source devices are added to
-> e_info->dev[] by add_error_device(), which takes a reference with
-> pci_dev_get().
+> When ACPI APEI/GHES processes PCIe AER error records, it allocates memory
+> for aer_capability_regs (aer_regs) from ghes_estatus_pool and passes it
+> to aer_recover_queue() to be enqueued into aer_recover_ring.
 >=20
-> A device can be recorded without any error status being present: the
-> Requester ID fast path in is_error_source(),
+> If kfifo_in_spinlocked() fails due to a buffer overflow,
+> aer_recover_queue() logged an error message but returned without freeing
+> aer_regs. Because the entry was rejected and never inserted into the
+> queue, aer_recover_work_func() could never dequeue or free it, leaking
+> the allocated ghes_estatus_pool memory.
 >=20
-> 	if (e_info->id =3D=3D pci_dev_id(dev))
-> 		return true;
+> aer_recover_queue() returns void, so the caller ghes_handle_aer() cannot
+> free the buffer itself: ownership is transferred to the AER code, which
+> until now only released it on the success path.
 >=20
-> matches purely on the ID reported by the Root Port and returns true
-> without reading the device's AER status registers.
+> Free aer_regs via ghes_estatus_pool_region_free() when
+> kfifo_in_spinlocked() fails on buffer overflow.
 >=20
-> In aer_process_err_devices(), handle_error_source() is called only if
-> aer_get_device_error_info() returns non-zero, i.e. only if an unmasked
-> [ ... ]
-> handle_error_source() is static and aer_process_err_devices() is its only
-> caller, so no other path is affected.
->=20
-> Fixes: 60271ab044a5 ("PCI/AER: Take reference on error devices")
+> Fixes: e2abc47a5a1a ("ACPI: APEI: Fix AER info corruption when error stat=
+us data has multiple sections")
+> Cc: stable@vger.kernel.org
 > Signed-off-by: Priyank Rathod <rathodpriyank@google.com>
 
 Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260918-fix-aer-re=
-fcount-leak-v2-1-bdd1ff1c35a9@google.com?part=3D1
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260918-b4-fix-aer=
+-memleaks-v4-0-f0a2c21ed1d1@google.com?part=3D1
 
