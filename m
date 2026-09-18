@@ -1,78 +1,63 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EACC549739C;
-	Fri, 18 Sep 2026 19:16:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EAB03472526;
+	Fri, 18 Sep 2026 19:20:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789758976; cv=none; b=PPv6mrWdJqWJMc0kHzIlhnJIAsN54XTXrzVV/qcZ4P6k54zMU2ZS/xyMeli9DtJ2QpTqpEZA1gnbQsZHCZdARUBUwWaajPYmV9aQiN1lVTfwjYwA0jK4i+b6vK2xNdXU1ZqjGaANyFpFoOMyAIZ2209NFKk2aAZE9fzWvbQdYsw=
+	t=1789759246; cv=none; b=N95Wv04g4wDciEQfMt/PV51yKMepN+YXqhopHXNg5iqt4r1yR8rHwngEqPEN7WkNC1UgIO1uhaTllLPfOUBRj1jbnZpN6InWvsK5zm6X7CRwHYr+z+wHs55zH2fLWQToUzGN+TJgeti20WzVWupuw3LK0In4B4/9jR2jzOADqFo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789758976; c=relaxed/simple;
-	bh=r3M4Ou+K5ururZWI+eRPUASdXzJVa0NcV8LVcX9hylk=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=qq+HcLha1KuTRTqJBsXdQkF3QunOySLpmegsRM2fGUu5BAvoQdsB+kxuZxhlZ7AnrXUphtnW1c9aNuT4J8saAJiPhd8IkjHxRlB8jyxJeVsLG7usDKHUQKmcf4gBCoK7HL96x5g8kHXH/tceztzhf36MmLcBSzrZl2MxQDovO8A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Mklsk72c; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789759246; c=relaxed/simple;
+	bh=dtKVHM/mIstEf63dNyFkF+L1WOA+lqP+lACYczrMLc4=;
+	h=Subject:From:In-Reply-To:References:Message-Id:Date:To:Cc; b=cfSwnWwPB04O6riFZn2O+oeEGICi7Bnnlf33MtZohPJcKcyLeoM6gdWz50VZwANNzfpR2ivwRfY9cZfHsYFbuA9d24UOnwbwECMgpNyHMK11xQSPpYK/FOyh9QYvfMJrBWSsRvHHlZ0cfskAq47q8NGtQ1b59zec0AfvGno6LMY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UCpQPqXN; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Mklsk72c"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id ED41E1F000FF;
-	Fri, 18 Sep 2026 19:16:05 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UCpQPqXN"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C75C41F000FF;
+	Fri, 18 Sep 2026 19:20:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789758966;
-	bh=f6Nzj72Zu8RZnooG6kDU/HmWZJYUx/sbSbmT6+PQ3Hk=;
-	h=Date:From:To:Cc:Subject;
-	b=Mklsk72c8seKxLlIGfJjnrCKvXABm+IPNp1sZNQrU7PjhoxNqHSQsDH1NzWMqoNQh
-	 7rxtqJqmbHE+PGlWYXHaUR19MJ27rP7Pfvc9yLk8Yra/i+PG6mMLEI4p/jrJan01mj
-	 eBQzn2WS5gtcjjLvb+l096uO5l73cuZcEXHC7bLDv2YduTBJ1UWv2Yp39pdtvAmAoz
-	 HFCQ68RSNOtH1oBhywuzdlkVMht08cNp1FCkk90+8GYn9B8rPuB1D4O3hBzfhFfkhP
-	 h7PbmBENdEaENpmJ0HApe4btB3gMYmlKcwNMK0kpZ07pdyfOVubWljJDlldgB06C6K
-	 tBhSeugEwbn4g==
-Date: Fri, 18 Sep 2026 14:16:04 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Richard Zhu <hongxing.zhu@nxp.com>,
-	Leonardo Costa <leoreis.costa@gmail.com>,
-	Franz Schnyder <fra.schnyder@gmail.com>,
-	Lucas Stach <l.stach@pengutronix.de>, Frank Li <Frank.Li@nxp.com>,
-	Sascha Hauer <s.hauer@pengutronix.de>, imx@lists.linux.dev
-Subject: [GIT PULL] PCI fixes for v7.3
-Message-ID: <20260918191604.GA1177751@bhelgaas>
+	s=k20260515; t=1789759243;
+	bh=f2VwI12ge9KwI/wZvGqjS8YHtTg0R2abZxMI+y24lGE=;
+	h=Subject:From:In-Reply-To:References:Date:To:Cc;
+	b=UCpQPqXNiuv7xtnG+i2YbbsL5aGt7REzy4US+akk/wCjsnSkeZSOloeZMhtVarl5Z
+	 sFSLLvertsFa1ryXUL74OnymT8pNAT+2DNKh2Ag118yM5WeEEbpxxVMj0glL5sRiYq
+	 3ypRfffWNVxxv5SPxg6z0KnNPz3JaqKWRE4X+XlJ/73bGgIzO3zboS8qkleISqHVFV
+	 v7engqirm5wrZTZ6V6HN/LdbSjoCY0fkZ/kyVOpn6Vs4nAT7mFndZdD4xHTG9PpBEb
+	 DXH/RKIVHPDQgIHvVAIWRPZmYv638Spp/pMtV87TbYIYY0heVmT8Yp2KZ8MwI6vQr2
+	 qINKXCVJ9tmnQ==
+Received: from [10.30.226.235] (localhost [IPv6:::1])
+	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id 19A4F38111DA;
+	Fri, 18 Sep 2026 19:19:38 +0000 (UTC)
+Subject: Re: [GIT PULL] PCI fixes for v7.3
+From: pr-tracker-bot@kernel.org
+In-Reply-To: <20260918191604.GA1177751@bhelgaas>
+References: <20260918191604.GA1177751@bhelgaas>
+X-PR-Tracked-List-Id: <linux-pci.vger.kernel.org>
+X-PR-Tracked-Message-Id: <20260918191604.GA1177751@bhelgaas>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git tags/pci-v7.3-fixes-1
+X-PR-Tracked-Commit-Id: c9dc7d730319ad64b51570c5387f1fee7b07b510
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: ef31d04b6d8adfc971fc6b9ff76a1d6dc9aeefab
+Message-Id: <178975917660.1108441.12498633725465235143.pr-tracker-bot@kernel.org>
+Date: Fri, 18 Sep 2026 19:19:36 +0000
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Manivannan Sadhasivam <mani@kernel.org>, Richard Zhu <hongxing.zhu@nxp.com>, Leonardo Costa <leoreis.costa@gmail.com>, Franz Schnyder <fra.schnyder@gmail.com>, Lucas Stach <l.stach@pengutronix.de>, Frank Li <Frank.Li@nxp.com>, Sascha Hauer <s.hauer@pengutronix.de>, imx@lists.linux.dev
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
 
-The following changes since commit cee9395acd8043be0644b25c34bfa86623f2b935:
+The pull request you sent on Fri, 18 Sep 2026 14:16:04 -0500:
 
-  Linux 7.3-rc1 (2026-08-30 13:34:40 -0700)
+> git://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git tags/pci-v7.3-fixes-1
 
-are available in the Git repository at:
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/ef31d04b6d8adfc971fc6b9ff76a1d6dc9aeefab
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git tags/pci-v7.3-fixes-1
+Thank you!
 
-for you to fetch changes up to c9dc7d730319ad64b51570c5387f1fee7b07b510:
-
-  PCI: imx6: Move clock enable after core reset assertion (2026-09-17 16:54:34 -0500)
-
-(Sorry if you saw an empty message from me; I fat-fingered something
-when editing the request)
-
-----------------------------------------------------------------
-
-  - Enable clock after core reset is asserted to fix enumeration regression
-    on i.MX6Q Apalis platforms with ASM1061/ASM1062 SATA controllers
-    (Richard Zhu)
-
-----------------------------------------------------------------
-Richard Zhu (1):
-      PCI: imx6: Move clock enable after core reset assertion
-
- drivers/pci/controller/dwc/pci-imx6.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
