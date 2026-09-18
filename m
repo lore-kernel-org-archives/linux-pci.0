@@ -1,74 +1,63 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F2FD38B14B;
-	Fri, 18 Sep 2026 03:25:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D76853D5C2A;
+	Fri, 18 Sep 2026 03:27:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789701905; cv=none; b=AjD+l/hRdhQ5uGhbA73yR91xuLosVllKtr3G4wTwil1Rxo4/90AVnUndJF63AuwtaU08R1G9LYEBOSRBgP8CoypjUM4Sb3VyPVV1hNmQWHLMTSDdPNlyZ/1IkbvS3+B5cpFpwGaKMQK7ViFDCXCLgD9BJCUM5sG7DLfkjVT/ye0=
+	t=1789702032; cv=none; b=m4/k85nujjzmIddM1wT0xiSaVhaxNheY0m1lqZ15/HEry0P9mETrbqVuWaSB9yKUELuHBCU+aCQipP9hP67z6ZSeEakm+M1Oeu1ZD2fr9fqD/p5tEQzzJNNyM8uyIkU3nqsMcBLxTRw5ek6ZA1HiIJnFsqXIZ15y/DRyRw9f6WM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789701905; c=relaxed/simple;
-	bh=Z0iSEa3iLsSgbnOSZGhKWwYvekHxEizGJopNSZPXYqg=;
+	s=arc-20240116; t=1789702032; c=relaxed/simple;
+	bh=IZzVZkmpf6YGNSrZJp/GNzh4MWcArBSwK59OM2gA3cE=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=reGu9yRXvThoEsxQ0irlars3zYZiEK3Ub1u7q9NjkcE0oQuYd5dRAqRnMy6CTxmuw40SRJTe6Kazq6ygGa6aiRiVY1sbtyk9HQOpQq31ORmCRgZkY0+oAm/qh7eDzJ7Eg4LX0LEwLu+Tt1bvyS9jYqBQfiuZKX+UbGXo4u8dG8E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Qqy9EBD/; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=h7X38B91i4P7gA+PB62r8aqVnFjlXwBMpxXaRaU2fPlxz0CWoPudkkofVjvCR3b1KmfhlMKZalXuw4+MzbzlF6C4aq+B55Y/LHuj9cJMIX5YCiVsDw/i94NTIwE+lukWpxAb3kVDJuPt6IZrRblGc9zfQVdQiW107NlRwNpEj5Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LFvkdYAz; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Qqy9EBD/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4782E1F00893;
-	Fri, 18 Sep 2026 03:25:03 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LFvkdYAz"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D23981F000FF;
+	Fri, 18 Sep 2026 03:27:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789701903;
-	bh=Z0iSEa3iLsSgbnOSZGhKWwYvekHxEizGJopNSZPXYqg=;
+	s=k20260515; t=1789702030;
+	bh=IZzVZkmpf6YGNSrZJp/GNzh4MWcArBSwK59OM2gA3cE=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Qqy9EBD/TLusfa260tVFnPusUeKn0UyZ2N9BjpHBCpfc/MHiZroU3hUU5dKt5TEw2
-	 6W0wp1pz+s+L8qAgT1ktncGhj7dOYVnv8UIR1+CVFN6iyYVyg5PWbUcs4ra6MhA5Ed
-	 KQ2hreKgNjlsCXypWNocZhekSLFmzdp5wEEButK5iDhANFqEdbHV0WrWB6pKInZOO0
-	 /KSdK7XF6+cba5GPeWILbbbWi/+KKrcC8q1eED7wUtr5w7MP9oLWEzTV9ewRymyoWV
-	 45385GhKFnnQp+ycrc2MoWiFMjWzTkmwnW0UW8RAmLebETAjjolQVAOQ12pDGo4TC+
-	 NX/YfnlhdhpRQ==
+	b=LFvkdYAzEwqe1WBdjbeXHUdWJB4zjnC1Q+7BF2gPqD/r5HIS8bbBBO5RN+h0oSxTs
+	 aEKp+EPAGUEciaynlp239k8xp7U2vhy8+VWmWq2jT+kS4WB4m4yZfDcsLvkIVDykYl
+	 sI41972G7GuXmhUpExnDZj9pNL9q+KPEOLvYfYCScDAPD2rCfFDDo6zBzradimECgh
+	 RuZgkPP6e2qXGHP1odgYXXC7YpQu5Q1Qpaszb1kwVaaYuto7Z7t3duplAOYb4ldRYK
+	 8+JlQD2UFQ4tHBrlTQx0wMwV0yTq83g7b3L9OxxC3nlOr6B+KmUIBCt/gC2OnP9pyg
+	 VRQ/QVVdo7BLw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 02/11] PCI: rcar-gen4: Drop the APP-based link_up check
+Subject: Re: [PATCH 11/11] arm64: dts: renesas: r8a779f0: Describe the PCIe
+ AER interrupts
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Koichiro Den" <den@valinux.co.jp>
-Cc: robh@kernel.org, devicetree@vger.kernel.org, linux-pci@vger.kernel.org, wsa+renesas@sang-engineering.com, conor+dt@kernel.org
-In-Reply-To: <20260918032038.2216471-3-den@valinux.co.jp>
+Cc: devicetree@vger.kernel.org, linux-pci@vger.kernel.org, wsa+renesas@sang-engineering.com, robh@kernel.org, conor+dt@kernel.org
+In-Reply-To: <20260918032038.2216471-12-den@valinux.co.jp>
 References: <20260918032038.2216471-1-den@valinux.co.jp>
- <20260918032038.2216471-3-den@valinux.co.jp>
+ <20260918032038.2216471-12-den@valinux.co.jp>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 18 Sep 2026 03:25:02 +0000
-Message-Id: <20260918032503.4782E1F00893@smtp.kernel.org>
+Date: Fri, 18 Sep 2026 03:27:09 +0000
+Message-Id: <20260918032709.D23981F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-> rcar_gen4_pcie_link_up() checks link state using SMLH_LINK_UP and
-> RDLH_LINK_UP in PCIEINTSTS0. However, these bits do not reflect the live
-> link state. On an R-Car S4, after taking down the endpoint, a link-down
-> interrupt saw PCIEINTSTS0 =3D 0x20a000c5 with both bits still set. Even
-> after resetting the controller with the LTSSM back in Polling, they read
-> 0xa000c5, still set.
+> The PCIe controllers report Root Port AER notifications through
+> intreq_pci0_lperr (SPI 421) and intreq_pci1_lperr (SPI 428),
+> respectively, separately from the integrated MSI receiver interrupts.
+> Describe these interrupts with the "aer" name so the controller driver
+> can use them for Root Port error reporting.
 >=20
-> As a result, dw_pcie_link_up() keeps reporting the link as up after it
-> has gone down. That defeats the check in dw_pcie_other_conf_map_bus(),
-> which is supposed to stop config accesses to downstream devices while
-> the link is down, so such accesses go out on the dead link and stall the
-> host. It also makes the callback useless for the link-down recovery
-> added later, which has to wait for the link to actually come back after
-> resetting the controller.
+> Append the new interrupts to preserve the existing interrupt indices.
 >=20
-> Drop the callback and let the DesignWare core use its PORT_DEBUG1 check
-> instead, which correctly detects the downed link.
->=20
-> Fixes: 0d0c551011df ("PCI: rcar-gen4: Add R-Car Gen4 PCIe controller supp=
-ort for host mode")
 > Signed-off-by: Koichiro Den <den@valinux.co.jp>
 
 Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260918032038.2216=
-471-1-den@valinux.co.jp?part=3D2
+471-1-den@valinux.co.jp?part=3D11
 
