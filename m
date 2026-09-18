@@ -1,110 +1,156 @@
-Received: from relay.yourmailgateway.de (relay.yourmailgateway.de [188.68.63.162])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.15])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 37A6D4DEC22;
-	Fri, 18 Sep 2026 11:00:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=188.68.63.162
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D5F647F773;
+	Fri, 18 Sep 2026 11:50:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.15
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789729258; cv=none; b=FVQp2vWjw9DkBC6oN+GadxXIRPtUa/hL8wb1wRc9KY+OyK04i+sPx8iQr6rpPPHRbn/HLOeW+mCRrVs3Daq6cgEWTdRjawj04QGg8K2TapYqluaSaaQcNJ9YvlO3IRhm2MhKRUz2rEM8WNHhIm91azj4ElWEBqA9coThBgJjR80=
+	t=1789732235; cv=none; b=Yvdi/BHAVbXVBcSud/zAkAXKsce2lDXRGfH/IBa8UZ5ggoCRkum6JCGleEHmXh/ahxCeShgkhfPhESuIxBnudU5a5/5QZfuVr4o+xf1Jsh2tOsNXvuK4BZ+GO2JTkYVqjhI16fSorx8CYPLEGj3hV9yDptvkr78f83wvJNyXa0o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789729258; c=relaxed/simple;
-	bh=gVUYx2dOVJqTII3X9FjwQ7gUD2UY2GUKlymHS2FDOBA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=VOF4FErjkgxSMDA1YOmXCYH8CK4R9JfASp+2VHAmFb7gEU61vvq3i0zzGf0nu3pVXGuCtvZWofJ+h5GE/ly2AdboM/tePyZuwx+Ef7gCrtdcPJz5gFa4L3vc8jg+UCzrT4v9VpekRvzFvjJdyAX17EeeiuPzKeuKCH4AAh/ibaE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=leemhuis.info; spf=pass smtp.mailfrom=leemhuis.info; dkim=pass (2048-bit key) header.d=leemhuis.info header.i=@leemhuis.info header.b=j2JWkD3s; arc=none smtp.client-ip=188.68.63.162
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=leemhuis.info
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=leemhuis.info
+	s=arc-20240116; t=1789732235; c=relaxed/simple;
+	bh=M3PKuP+ZuLN2R57TyQdFDTeRL/N6gNhBhoZkvXSsgEw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=jUI0MICdK8gWrsp3sdPRMbAJwWwcZJYeflrPHmXH+cU9Kvyerx2uIHIaGPjzXULGGHqn6w2Lz2z7xNRjVqAgXBH92JIWIzEL5UV2iSQp0Y9z8OnJrEj9uNQKtoVraycOzlWru8qLD6EANBuBTmDG/rrxFFzQhcZfaeyJ4kJVr9A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=J+vMRqqy; arc=none smtp.client-ip=192.198.163.15
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=leemhuis.info header.i=@leemhuis.info header.b="j2JWkD3s"
-Received: from mors-relay-8201.netcup.net (localhost [127.0.0.1])
-	by mors-relay-8201.netcup.net (Postfix) with ESMTPS id 4hmV5v6bQKz4BsF;
-	Fri, 18 Sep 2026 13:00:35 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=leemhuis.info;
-	s=key2; t=1789729235;
-	bh=gVUYx2dOVJqTII3X9FjwQ7gUD2UY2GUKlymHS2FDOBA=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=j2JWkD3s8AZ0P+BX/AkjoXJI1VJva8Kk344VAXH/quFhbjMiJO4BAp3dgEfcObQ0w
-	 dkNGzYZxsjxeMSUdzJZpYjCwIA7QSLVNpDaEmmlSyCANQO9VteZRmj9/Afo6zVNoNb
-	 n3zDHkU7StRSgwVbF/aKnnMpTZTtm7dxGJZEt/yqsQuNAp+gXNQKrgH04XVll8jUBd
-	 xrCGNcvpI8VPgQxjtjZJvlRttEaTETB2SaYiY3rfd9t734EHD0P63fk5Vx/OgUiBRL
-	 ArTT91KEAXfnVe8YWg8TmtPmbreiZnCV40rsIJKMhOWkjCJpRJVvHL45nBAccCFawI
-	 Qf1neuZUB2qvw==
-Received: from policy02-mors.netcup.net (unknown [46.38.225.35])
-	by mors-relay-8201.netcup.net (Postfix) with ESMTPS id 4hmV5K628Cz4Cn7;
-	Fri, 18 Sep 2026 13:00:05 +0200 (CEST)
-Received: from mxe9fb.netcup.net (unknown [10.243.12.53])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by policy02-mors.netcup.net (Postfix) with ESMTPS id 4hmV5K1P80z8sch;
-	Fri, 18 Sep 2026 13:00:05 +0200 (CEST)
-Received: from [IPV6:2a02:8108:8984:1d00:a0cf:1912:4be:477f] (unknown [IPv6:2a02:8108:8984:1d00:a0cf:1912:4be:477f])
-	by mxe9fb.netcup.net (Postfix) with ESMTPSA id 685FC5F949;
-	Fri, 18 Sep 2026 13:00:04 +0200 (CEST)
-Authentication-Results: mxe9fb;
-        spf=pass (sender IP is 2a02:8108:8984:1d00:a0cf:1912:4be:477f) smtp.mailfrom=regressions@leemhuis.info smtp.helo=[IPV6:2a02:8108:8984:1d00:a0cf:1912:4be:477f]
-Received-SPF: pass (mxe9fb: connection is authenticated)
-Message-ID: <6846f455-fc77-4cec-974f-6b9d72ae0654@leemhuis.info>
-Date: Fri, 18 Sep 2026 13:00:03 +0200
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="J+vMRqqy"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1789732233; x=1821268233;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=M3PKuP+ZuLN2R57TyQdFDTeRL/N6gNhBhoZkvXSsgEw=;
+  b=J+vMRqqyk3CFnbRZ0XhbQpVI9QuEmA6AxqCeFvi2LvgaFiAPllbJF0bC
+   GUGmXQRCz4gDOGS8kXjJd0dxeo7Ss46xxrDKn27pcqoPiGY+5L9UQYrIM
+   r0i2F2xUmYBcnHqG0JQJRjlSOPNnlr/wHRIFNjRczAPNeYNY8l9YnLIdp
+   3tyWL33oKDAKxZDhJ3zuIiEW+vo1aUPbxrk54GSa7sYhAaNVQr5TlNzJk
+   fTt6F5ptlAo1kSSyWCHjGDAs5w3xJss2zDx/aazLYDnQ/uOrF0nCJZEsB
+   3X+fZJk/qdnCTpVQVqjUn23Q0KbqPGyJg7gmFKHiQTA+tGagA+eXq+SwX
+   Q==;
+X-CSE-ConnectionGUID: NW4mM5JuQ0CJpec0f3QMmg==
+X-CSE-MsgGUID: 83HcDN48R+SlLupyGALehg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11908"; a="90364730"
+X-IronPort-AV: E=Sophos;i="6.27,108,1787036400"; 
+   d="scan'208";a="90364730"
+Received: from fmviesa011.fm.intel.com ([10.60.135.151])
+  by fmvoesa109.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Sep 2026 04:50:32 -0700
+X-CSE-ConnectionGUID: YjCwekh+Rg6Oe3AG//pnvw==
+X-CSE-MsgGUID: E+S0OuYLSQ2n+eTUm+aEnw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,108,1787036400"; 
+   d="scan'208";a="2597426"
+Received: from lkp-server01.sh.intel.com (HELO 462990a40a85) ([10.239.97.150])
+  by fmviesa011.fm.intel.com with ESMTP; 18 Sep 2026 04:50:29 -0700
+Received: from kbuild by 462990a40a85 with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1x7X6o-000000009jx-2ZaJ;
+	Fri, 18 Sep 2026 11:50:26 +0000
+Date: Fri, 18 Sep 2026 19:50:23 +0800
+From: kernel test robot <lkp@intel.com>
+To: Wentao Liang <vulab@iscas.ac.cn>, Liviu.Dudau@arm.com
+Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
+	bhelgaas@google.com, kwilczynski@kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, lpieralisi@kernel.org, mani@kernel.org,
+	robh@kernel.org, tinamdar@apm.com, toan@os.amperecomputing.com,
+	Wentao Liang <vulab@iscas.ac.cn>, stable@vger.kernel.org
+Subject: Re: [PATCH] PCI: xgene: Fix device node reference leak in
+ xgene_pcie_probe()
+Message-ID: <202609181924.6ZUpd4Ww-lkp@intel.com>
+References: <20260917132235.2153154-1-vulab@iscas.ac.cn>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3] PCI: Skip Target Speed quirk on clamped ports with no
- link
-To: "Maciej W. Rozycki" <macro@orcam.me.uk>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Andreas Wild <andiwild@gmail.com>,
- linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
- linux-kernel@vger.kernel.org, M M <restafvalendergelijke@outlook.com>,
- regressions@lists.linux.dev
-References: <20260917233355.GA1115024@bhelgaas>
- <b4ed1637-ac6a-4af5-ab47-e07309af200b@leemhuis.info>
- <alpine.DEB.2.21.2609181131520.57799@angie.orcam.me.uk>
-From: Thorsten Leemhuis <regressions@leemhuis.info>
-Content-Language: de-DE, en-US
-In-Reply-To: <alpine.DEB.2.21.2609181131520.57799@angie.orcam.me.uk>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-PPP-Message-ID: <178972920486.686618.11852165451493012845@mxe9fb.netcup.net>
-X-NC-CID: MZlRa8Hguy5St8D9XDiCRIjyBNIzUNoCfoLkOHnXxDd7DmDRMZo=
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260917132235.2153154-1-vulab@iscas.ac.cn>
 
-On 9/18/26 12:39, Maciej W. Rozycki wrote:
-> On Fri, 18 Sep 2026, Thorsten Leemhuis wrote:
-> 
->>> But IIUC Aoxtj still sees issues with 72780f796468 ("PCI: Always lift
->>> 2.5GT/s restriction in PCIe failed link retraining") even with this
->>> patch
->>> (https://lore.kernel.org/all/331e97c7-e422-420d-9f3e-5d9f734464b3@axtjblog.cc)
->>>
->>> And M M / Mich (BCC'd) also reports an issue that (IIUC) is not fixed by
->>> this patch (https://bugzilla.kernel.org/show_bug.cgi?id=221919#c3)
->>>
->>> So evidently there are still issues but maybe this patch fixes part of
->>> them?
->> Yeah, Maciej ten days expressed that we to look into this. Anyway, I
->> suggest someone that is affected by that problem starts a new thread
->> (please CC all those that are affected by it and the regression list)
->> with summarizing the current state + this patch, as this thread got a
->> bit confusing... (please drop a link to that thread here afterwards)
->
->  It remains on my radar, no worries.  Hectic time here, a lot is going on.  
-> I'll do my best to look into it as soon as possible.  Also I'll be at LPC 
-> in Prague in a couple of weeks' time, so this may be an opportunity to 
-> discuss the issues in person.
-Sorry, I didn't want to prod you; I mainly wrote what I wrote because
-the reports about the two problems got mixed up, so things became
-confusing -- which is why I think a new thread starting with a summary
-might be best for all of us.
+Hi Wentao,
 
-That being said and wrt to the "a lot going on": seems this causes some
-devices to not work for iirc at least two reporters. Would it maybe be
-better to revert the culprit and reapply it later once that is sorted
-out? Or is this not an option or a bad one for some reason? Reminder,
-normally Linus in a situation like this wants regressions ideally 'fixed
-"within a week", preferably before the next rc':
-https://lore.kernel.org/all/CAHk-%3Dwi86AosXs66-yi54%2BmpQjPu0upxB8ZAfG%2BLsMyJmcuMSA@mail.gmail.com/
+kernel test robot noticed the following build errors:
 
-Ciao, Thorsten
+[auto build test ERROR on pci/next]
+[also build test ERROR on pci/for-linus linus/master v7.3-rc3 next-20260916]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
+
+url:    https://github.com/intel-lab-lkp/linux/commits/Wentao-Liang/PCI-xgene-Fix-device-node-reference-leak-in-xgene_pcie_probe/20260917-132235
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git next
+patch link:    https://lore.kernel.org/r/20260917132235.2153154-1-vulab%40iscas.ac.cn
+patch subject: [PATCH] PCI: xgene: Fix device node reference leak in xgene_pcie_probe()
+config: riscv-randconfig-1001-20260918 (https://download.01.org/0day-ci/archive/20260918/202609181924.6ZUpd4Ww-lkp@intel.com/config)
+compiler: clang version 24.0.0git (https://github.com/llvm/llvm-project 7252edd9aa82ef1c570ff6694ef7f4763a8a5d2f)
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260918/202609181924.6ZUpd4Ww-lkp@intel.com/reproduce)
+
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202609181924.6ZUpd4Ww-lkp@intel.com/
+
+All errors (new ones prefixed by >>):
+
+>> drivers/pci/controller/pci-xgene.c:646:20: error: no member named 'node' in 'struct xgene_pcie'
+     646 |         of_node_put(port->node);
+         |                     ~~~~  ^
+   1 error generated.
+
+
+vim +646 drivers/pci/controller/pci-xgene.c
+
+   603	
+   604	static int xgene_pcie_probe(struct platform_device *pdev)
+   605	{
+   606		struct device *dev = &pdev->dev;
+   607		struct xgene_pcie *port;
+   608		struct pci_host_bridge *bridge;
+   609		int ret;
+   610	
+   611		if (!xgene_check_pcie_msi_ready())
+   612			return dev_err_probe(&pdev->dev, -EPROBE_DEFER,
+   613					     "MSI driver not ready\n");
+   614	
+   615		bridge = devm_pci_alloc_host_bridge(dev, sizeof(*port));
+   616		if (!bridge)
+   617			return -ENOMEM;
+   618	
+   619		port = pci_host_bridge_priv(bridge);
+   620	
+   621		port->dev = dev;
+   622		port->version = XGENE_PCIE_IP_VER_1;
+   623	
+   624		ret = xgene_pcie_map_reg(port, pdev);
+   625		if (ret)
+   626			goto err_put_node;
+   627	
+   628		ret = xgene_pcie_init_port(port);
+   629		if (ret)
+   630			goto err_put_node;
+   631	
+   632		ret = xgene_pcie_setup(port);
+   633		if (ret)
+   634			goto err_put_node;
+   635	
+   636		bridge->sysdata = port;
+   637		bridge->ops = &xgene_pcie_ops;
+   638	
+   639		ret = pci_host_probe(bridge);
+   640		if (ret)
+   641			goto err_put_node;
+   642	
+   643		return 0;
+   644	
+   645	err_put_node:
+ > 646		of_node_put(port->node);
+   647		return ret;
+   648	}
+   649	
+
+--
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
