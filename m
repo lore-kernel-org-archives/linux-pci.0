@@ -1,92 +1,74 @@
-Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD65437FF68;
-	Fri, 18 Sep 2026 20:07:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=204.191.154.188
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB8343AE6E6;
+	Fri, 18 Sep 2026 20:09:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789762064; cv=none; b=ui3Cv5NdZaaAboiRtDnJTqWdW7ud8RG820WQOpTFIDdOpoyyQgT5PdZy+mrLKUdOZq+yYeoH9Sfm2q4CH8LXQFI1ZZuCGeL43RyiDd7rqSCNBqZPpmSUfPiud2Ze7zMq+x5UCY2VxA/jT1Ti4/+GAxHhsI6bAHiM9TquBjBzCYo=
+	t=1789762153; cv=none; b=j1/+GYpB1ORwtW8R1llJBpPVX1tkRGXyzG+PElTNpfbcmLqlou0nt8KIrAwEXWjRnA1Z262DhwBsqUACBeY413h1PTbPm3ufe3W524/hDT28LK2evEDY6/wAiTXMUysM/sqzxy4x+EnYGsG1qqbKSj0PBbjIHqr1JE14eyrG9Rk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789762064; c=relaxed/simple;
-	bh=/V7mSylXoMK+jkLlBzPSKoPOqJXtmnyWjv/QXQfBwBI=;
-	h=Message-ID:Date:MIME-Version:To:Cc:References:From:In-Reply-To:
-	 Content-Type:Subject; b=c98lJqy13c6/5n5HPad1iQFI0RCIbgJeJ1RYOqdGWMsInsqwKGSvQQh/Jc0q6DRiJQ+MX8Mc6O1COplne8NvbqRo+x9FWvITKkOOnWNHOTrAplyj01oQ3cL3hzprDAj5++11Kq8kKuMgGgw0wEH845K/Qmq7RKQRWY45N3FGdRo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com; spf=pass smtp.mailfrom=deltatee.com; dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b=KGv8ai85; arc=none smtp.client-ip=204.191.154.188
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=deltatee.com
+	s=arc-20240116; t=1789762153; c=relaxed/simple;
+	bh=0mvUweI6LVBPNQEepHdBFnrekjGsiPZ/QHwECl64qEQ=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=N63cUAmenfhbQNQzewP/CCbaruIfFyrB2Ukq3WcU1xF56bgivtr53DFFiCGQYDb8kVDCgrn470WTwlFbzj7OJ2RVKCUa+mULdU7RTgA6EyigNy/FVNlaE4h9c3T2ZqlFjO5b3ERQaU/6XG31KKSxal+ytjlEi46ETh2T+wB4AoQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=W/Mldq4h; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b="KGv8ai85"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
-	MIME-Version:Date:Message-ID:content-disposition;
-	bh=I9+s5+K/DpZgsWdaC4psIlA8J8Zx5wR4CRtj24i+rVk=; b=KGv8ai85MAx/Sdr7ncFrnU1GEe
-	gRzsCB/CSdZQhb0L8DXgcgP0GNgItLQXPZskeIp+zAruBxb4fMQOuY/Z2IZiKzv0duBXEiGAHJtPK
-	i8DXDp1zoTZA+V/oeDodyWlUBxJYOZykZqf5tPX2YkbytsGTF5Tsb+KpbPkUDdosPuncJ+gPCc7dM
-	ExHflG2VdS1IA0ouX3cwaIVa6XyubxJPs2LytZ/R29QODp1lfRgqI4hEJtsy9nU7Ka8dtsZSp7LoX
-	mNWrDxLzWruEL+UPDnK+PASA66N2LfCqO69Zr+ff55lrC2sg/gd5zDlnBdxMJ+K0ixYHcutK9zyyl
-	ItQHcsEQ==;
-Received: from guinness.priv.deltatee.com ([172.16.1.162])
-	by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-	(Exim 4.98.2)
-	(envelope-from <logang@deltatee.com>)
-	id 1x7ery-0000000CsOc-1rKW;
-	Fri, 18 Sep 2026 14:07:39 -0600
-Message-ID: <8623c5e5-bca8-4398-895b-2a7b1227e93b@deltatee.com>
-Date: Fri, 18 Sep 2026 14:07:36 -0600
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="W/Mldq4h"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DC6EF1F000FF;
+	Fri, 18 Sep 2026 20:09:10 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1789762152;
+	bh=0mvUweI6LVBPNQEepHdBFnrekjGsiPZ/QHwECl64qEQ=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=W/Mldq4h5/cLD2pUa/DgWkA03MpbXuZlIHxIkDytYVQJvjTbENm4nRXEc2+CCx+jo
+	 1s4arjt9Cp3O9MoLeNhbtEUa6eq7dwLCpSC9Yv+T5muc9iJ2B1RgizBY0qnVFKZvdj
+	 +Lll49pXmPatXIM6AFUnuX8vioCs5z57nmEJqmgQqHCuVUapf5rJmFno7H5Zbw1qHU
+	 Uy0dWh7vbhPCydklKF/HpuCSYphNIVTt+rFhs/V/nwugrKKSwOYizAtJxCs1m1jAmn
+	 9ZJ21/mUBza39FWbEI0wegy/PYVXdjOPs6uoudIfnZLf6NU1MV1iLGErpeikW+lDLP
+	 F80I/03u8yrgw==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v9 04/13] PCI: liveupdate: Document driver binding
+ responsibilities
+Reply-To: sashiko-reviews@lists.linux.dev
+To: linux-mm@kvack.org, "David Matlack" <dmatlack@google.com>, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: kexec@lists.infradead.org, "Randy Dunlap" <rdunlap@infradead.org>, "Pasha
+ Tatashin" <pasha.tatashin@soleen.com>, "Saeed Mahameed" <saeedm@nvidia.com>, "Jonathan
+ Corbet" <corbet@lwn.net>, "Pranjal Shrivastava" <praan@google.com>, "Alexander
+ Graf" <graf@amazon.com>, "Shuah Khan" <skhan@linuxfoundation.org>, "Mike
+ Rapoport" <rppt@kernel.org>, "William Tu" <witu@nvidia.com>, "Adithya
+ Jayachandran" <ajayachandra@nvidia.com>, "Jacob Pan" <jacob.pan@linux.microsoft.com>, "Samiullah
+ Khawaja" <skhawaja@google.com>, "Jason Gunthorpe" <jgg@nvidia.com>, "Alex
+ Williamson" <alex@shazbot.org>, "Parav Pandit" <parav@nvidia.com>, "David
+ Rientjes" <rientjes@google.com>, "Vipin Sharma" <vipinsh@google.com>, "Yi
+ Liu" <yi.l.liu@intel.com>, "Chris Li" <chrisl@kernel.org>, "Leon Romanovsky" <leonro@nvidia.com>, "Josh
+ Hilke" <jrhilke@google.com>, "Pratyush Yadav" <pratyush@kernel.org>, linux-pci@vger.kernel.org, "Bjorn
+ Helgaas" <bhelgaas@google.com>, "Lukas Wunner" <lukas@wunner.de>
+In-Reply-To: <20260918200640.887030-5-dmatlack@google.com>
+References: <20260918200640.887030-1-dmatlack@google.com>
+ <20260918200640.887030-5-dmatlack@google.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Fri, 18 Sep 2026 20:09:10 +0000
+Message-Id: <20260918200910.DC6EF1F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-To: Leon Romanovsky <leon@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
- Chaitanya Kulkarni <kch@nvidia.com>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jens Axboe
- <axboe@kernel.dk>, Alex Williamson <alex@shazbot.org>,
- Ankit Agrawal <ankita@nvidia.com>, Jason Gunthorpe <jgg@ziepe.ca>,
- Jonathan Corbet <corbet@lwn.net>, Shuah Khan <skhan@linuxfoundation.org>,
- "Joerg Roedel (AMD)" <joro@8bytes.org>, Will Deacon <will@kernel.org>,
- Robin Murphy <robin.murphy@arm.com>, Randy Dunlap <rdunlap@infradead.org>,
- Sumit Semwal <sumit.semwal@linaro.org>,
- =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-doc@vger.kernel.org, iommu@lists.linux.dev,
- Tushar Dave <tdave@nvidia.com>, linux-media@vger.kernel.org,
- dri-devel@lists.freedesktop.org, linaro-mm-sig@lists.linaro.org,
- linux-rdma@vger.kernel.org, kvm@vger.kernel.org
-References: <20260914-fix-p2p-acs-v4-0-v6-0-5ef07ec9ef06@nvidia.com>
- <20260914-fix-p2p-acs-v4-0-v6-5-5ef07ec9ef06@nvidia.com>
-Content-Language: en-CA
-From: Logan Gunthorpe <logang@deltatee.com>
-In-Reply-To: <20260914-fix-p2p-acs-v4-0-v6-5-5ef07ec9ef06@nvidia.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-SA-Exim-Connect-IP: 172.16.1.162
-X-SA-Exim-Rcpt-To: leon@kernel.org, bhelgaas@google.com, kch@nvidia.com, gregkh@linuxfoundation.org, axboe@kernel.dk, alex@shazbot.org, ankita@nvidia.com, jgg@ziepe.ca, corbet@lwn.net, skhan@linuxfoundation.org, joro@8bytes.org, will@kernel.org, robin.murphy@arm.com, rdunlap@infradead.org, sumit.semwal@linaro.org, christian.koenig@amd.com, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, iommu@lists.linux.dev, tdave@nvidia.com, linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org, linaro-mm-sig@lists.linaro.org, linux-rdma@vger.kernel.org, kvm@vger.kernel.org
-X-SA-Exim-Mail-From: logang@deltatee.com
-X-Spam-Level: 
-Subject: Re: [PATCH v6 05/18] PCI/P2PDMA: Evaluate ACS controls at the path
- divergence
-X-SA-Exim-Version: 4.2.1 (built Sun, 23 Feb 2025 07:57:16 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 
+> Document how driver binding works during a Live Update and what the PCI
+> core expects of drivers and users. Note that this is only a description
+> of the current division of responsibilities. These can change in the
+> future if we decide.
+>=20
+> Reviewed-by: Pasha Tatashin <pasha.tatashin@soleen.com>
+> Reviewed-by: Pranjal Shrivastava <praan@google.com>
+> Reviewed-by: Samiullah Khawaja <skhawaja@google.com>
+> Signed-off-by: David Matlack <dmatlack@google.com>
 
+Sashiko has reviewed this patch and found no issues. It looks great!
 
-On 2026-09-14 05:22, Leon Romanovsky wrote:
-> From: Leon Romanovsky <leonro@nvidia.com>
-> 
-> ACS redirect controls choose between peer and upstream routes only at the
-> path divergence. Applying them below that point rejects valid nested
-> topologies because traffic already has only an upstream route.
-> 
-> Evaluate Request controls on the client-side divergence port and Completion
-> Redirect on the provider-side port and reject an unreadable ACS Control
-> register.
-> 
-> Fixes: 52916982af48 ("PCI/P2PDMA: Support peer-to-peer memory")
-> Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260918200640.8870=
+30-1-dmatlack@google.com?part=3D4
 
-Still looks good to me:
-
-Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
