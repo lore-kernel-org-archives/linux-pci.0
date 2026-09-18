@@ -1,67 +1,140 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63AD9346E55;
-	Fri, 18 Sep 2026 03:30:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2757F29C327;
+	Fri, 18 Sep 2026 03:32:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789702257; cv=none; b=khc3rGuRqNQ6nVv803gKQHn/hrR8lqYE6bsEvmCQ8gH71eMNPbqUrh+iCXLrfzyAysQmhsF7xuugqu1ClgRCvhqRRfu+4nRZN8R//qHFM7evGft2DBum595fRQUecUa1fCYBcV367ZQ+O3Ch6pji5V0VHRJ9tQQScbea4D0R1Z0=
+	t=1789702348; cv=none; b=IKG9Zklt6wImDrqu+QRjkiT/hlyuzS1UFgoM07d+oyVEY4vL0SC3HkwPUUmoWbwSIWAgU8WtNt3gaRWBfo0eB7hDZ0WZd7i4hEvr1LsIyjSpZxqRrOKjy26KT5MJJgOqEUqGsSIH6eKpEoMgaA3Uyd4ZuSJ9tOTgkZduoX+sEGk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789702257; c=relaxed/simple;
-	bh=zC6FSlhelZdXleyAGdBq0YXPorgeYggRQYUgrNreClk=;
+	s=arc-20240116; t=1789702348; c=relaxed/simple;
+	bh=fD/glkWuZoZ0M2SweyBn/bkfWAVaMtK5NJpTSgYqcFs=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=nWbU575C2z5c3tR8fKl8ddkvcwVJ6kWEDuapCdD9wHAcNj3HYeu6DVXu1Lzd7PcVeY6d1T/gXyNi2FTHCmjgwSTNtA21IwlhpffOyXtFH1lf8bR0Se+WCQqFln+8w6C4FMrvo6eOfo+QEWTpQoZHicREHNMiEur9Ic3kVkecoIA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fnbT54J6; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=np8xZnZGXzA8wLeknInznpV7OTN27G0esAF9X3DJaKcvL1zOrTX+X8/WQhdxmIy8i/5XXDH/rFlQUUeTXq7ieiNOt8eAhqImtcfzUCXL8x8rvnkyHbZHNpoydgBd2s6mOAc+/F0yoQDOT5yfLFg2SNn2BDSL+1e1mQL2hARXWBY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cE//4DX0; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fnbT54J6"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A8FD81F000FF;
-	Fri, 18 Sep 2026 03:30:55 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cE//4DX0"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8A9211F000FF;
+	Fri, 18 Sep 2026 03:32:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789702256;
-	bh=zC6FSlhelZdXleyAGdBq0YXPorgeYggRQYUgrNreClk=;
+	s=k20260515; t=1789702346;
+	bh=w9CwkyB+53MSR67/cxYofrbEfkEN/5DqVXRKwINhyn0=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=fnbT54J68mmpAS1OE5Ki1xRo3tO8FvL68T7ZbacgEZOU9xPevkmCW6P0VQ1SAtyp4
-	 6vpziMSvuuUrhRwf1oD0nzpMdmQdpCfaYmkCq+iVONuYaUIYmtR4nvarZ0aYLotvmz
-	 2kzzE8Zpjty9MlOHaQy/xpDkfAvzFKwDE4kcQHyC9WkUbm8a0lFSw+aNQW63LSS+VA
-	 gX6eKgIL+Y04y5sgyX7Fis2iMlkiiK4DU/rt79VUmr0l1DVI5lRmiB8MtSAPlMOPBi
-	 /a5AT4GYj6DPJbFF0YPYJhAstEP2yaLfobBa27Lx8kab/VSSsUrXsDGsg/g5ZhY3aJ
-	 j087EBlvbAy/w==
+	b=cE//4DX0yctL8fGIKek/TnlIoImC9+BJ41Dce2O3OMBItYL8Jr2NgigfmOZDOnUrz
+	 P0zHcKxfk1ZSGl3CQsJqLTT6TBkH4pIhAztTqoqd0qIzo7QHAvBNGkHXOBFr4/xrWE
+	 F8fRBlRQ1GOroGOnnwBRb24BiwZaeOT+oT6LvtpiissBkPDcaxwGxlXqIfWe8YRqRj
+	 k5BZe0Tejj9ZXqyjeT/ZUrw5MbwXsiW8pmwOQEyV5s3FJdeAe8wApVxt7dBwqEh49Y
+	 bCMngh2KAqnpIb64ENAqCnsVpIHCBLQwODMHHEQF5kx/64rzWIU5hAfZEY5uRLwJtA
+	 53mZIKXZpIF+g==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 10/11] PCI: rcar-gen4: Route Root Port PME and bandwidth
- notifications
+Subject: Re: [PATCH 09/11] PCI: rcar-gen4: Route Root Port AER to a virtual
+ Root Port IRQ
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Koichiro Den" <den@valinux.co.jp>
-Cc: conor+dt@kernel.org, devicetree@vger.kernel.org, linux-pci@vger.kernel.org, wsa+renesas@sang-engineering.com, robh@kernel.org
-In-Reply-To: <20260918032038.2216471-11-den@valinux.co.jp>
+Cc: conor+dt@kernel.org, robh@kernel.org, linux-pci@vger.kernel.org, devicetree@vger.kernel.org, wsa+renesas@sang-engineering.com
+In-Reply-To: <20260918032038.2216471-10-den@valinux.co.jp>
 References: <20260918032038.2216471-1-den@valinux.co.jp>
- <20260918032038.2216471-11-den@valinux.co.jp>
+ <20260918032038.2216471-10-den@valinux.co.jp>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 18 Sep 2026 03:30:55 +0000
-Message-Id: <20260918033055.A8FD81F000FF@smtp.kernel.org>
+Date: Fri, 18 Sep 2026 03:32:26 +0000
+Message-Id: <20260918033226.8A9211F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-> The Root Port's PME and link bandwidth notifications are latched in
-> PCIEINTSTS0 and routed to intreq_pcim_sub, the interrupt shared with the
-> integrated MSI receiver and the reset requests. Dispatch them to the
-> virtual Root Port IRQ from both interrupt paths: the DesignWare chained
-> handler through the pre-MSI callback, and the directly requested handler
-> used with an external MSI controller or pci=3Dnomsi.
->=20
-> Enable the sources only while the interrupt is owned and the Root Port
-> IRQ is unmasked, and clear the latches in the ack together with the AER
-> ones. On an R-Car S4 with the GIC ITS as MSI parent, a Link Retrain now
-> reaches the bandwidth controller service, which clears LnkSta.LBMS.
->=20
-> Signed-off-by: Koichiro Den <den@valinux.co.jp>
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [Low] subsystem: mixing goto and scoped_guard in rcar_gen4_pcie_rp_irq_in=
+it()
+--
 
-Sashiko has reviewed this patch and found no issues. It looks great!
+commit 6f1a91ac675be05b5a2f016c1ae299cc233169a3
+Author: Koichiro Den <den@valinux.co.jp>
+Subject: PCI: rcar-gen4: Route Root Port AER to a virtual Root Port IRQ
+
+This commit routes the Root Port's AER notifications to a virtual Root Port
+IRQ by falling back to INTx. It creates a single-entry virtual IRQ domain
+for the Root Port and ensures the IRQ mask state is tracked in software for
+recovery.
+
+> diff --git a/drivers/pci/controller/dwc/pcie-rcar-gen4.c b/drivers/pci/co=
+ntroller/dwc/pcie-rcar-gen4.c
+> index 238755852045e..c24ac82a1ec65 100644
+> --- a/drivers/pci/controller/dwc/pcie-rcar-gen4.c
+> +++ b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
+[ ... ]
+> +static int rcar_gen4_pcie_rp_irq_init(struct dw_pcie_rp *pp)
+> +{
+> +	struct dw_pcie *dw =3D to_dw_pcie_from_pp(pp);
+> +	struct rcar_gen4_pcie *rcar =3D to_rcar_gen4_pcie(dw);
+> +	struct device *dev =3D dw->dev;
+> +	int irq, ret;
+> +
+> +	irq =3D platform_get_irq_byname_optional(rcar->pdev, "aer");
+> +	if (irq =3D=3D -ENXIO)
+> +		irq =3D 0;	/* old DT: Root Port AER stays unavailable */
+> +	else if (irq < 0)
+> +		return dev_err_probe(dev, irq, "Failed to get AER IRQ\n");
+> +
+> +	/* Keep the notifications masked until a port service requests the IRQ.=
+ */
+> +	scoped_guard(raw_spinlock_irqsave, &rcar->app_lock) {
+> +		rcar->rp_irq_enabled =3D false;
+> +		rcar_gen4_pcie_app_irq_sync_locked(rcar);
+> +	}
+> +	writel(RP_AER_MASK, rcar->base + PCIEINTSTS0CLR);
+> +
+[ ... ]
+> +	if (irq) {
+> +		/* Dispatch the child IRQ in hard IRQ context, including on PREEMPT_RT=
+. */
+> +		ret =3D devm_request_irq(dev, irq,
+> +				       rcar_gen4_pcie_aer_irq_handler,
+> +				       IRQF_NO_THREAD, "rcar-gen4-pcie-aer",
+> +				       rcar);
+> +		if (ret) {
+> +			dev_err_probe(dev, ret, "Failed to request AER IRQ\n");
+> +			goto err_dispose_mapping;
+> +		}
+> +		rcar->aer_irq =3D irq;
+> +	}
+> +
+> +	/*
+> +	 * The Root Port MSI capabilities are hidden (no_rp_msi), so the port
+> +	 * services fall back to INTx; route it to the virtual IRQ.
+> +	 */
+> +	pp->bridge->map_irq =3D rcar_gen4_pcie_map_irq;
+> +
+> +	return 0;
+> +
+> +err_dispose_mapping:
+> +	irq_dispose_mapping(rcar->rp_irq);
+> +	rcar->rp_irq =3D 0;
+> +err_remove_domain:
+
+[Severity: Low]
+Does rcar_gen4_pcie_rp_irq_init() mix scoped_guard with goto-based error
+handling labels?
+
+The subsystem guidelines in include/linux/cleanup.h state that mixing
+goto-based cleanup and scope-based cleanup helpers in the same function
+creates confusing ownership semantics, and is explicitly prohibited.
+
+For a given routine, it's expected to either convert all resources to
+scope-based cleanup, or convert none of them.
+
+> +	irq_domain_remove(rcar->rp_irq_domain);
+> +	rcar->rp_irq_domain =3D NULL;
+> +err_free_fwnode:
+> +	irq_domain_free_fwnode(rcar->rp_fwnode);
+> +	rcar->rp_fwnode =3D NULL;
+> +
+> +	return ret;
+> +}
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260918032038.2216=
-471-1-den@valinux.co.jp?part=3D10
-
+471-1-den@valinux.co.jp?part=3D9
