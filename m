@@ -1,337 +1,167 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from relay.yourmailgateway.de (relay.yourmailgateway.de [188.68.63.166])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C2743B7B7F;
-	Sat, 19 Sep 2026 06:54:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0AF203403E8;
+	Sat, 19 Sep 2026 06:57:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=188.68.63.166
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789800883; cv=none; b=H980DtLNyhCy6prBS4DX3Rrpp3LAl6bkGccS6Cap53wFBcwguitxU6hq4NbqKdsVRGuQCnhWzqzQCbq+7/Xdlh8DdNv8Wi0pOIK4vmujXNWEEv6J559ZD+Vjhv3G3GTo639MgPzvYG4l/69tQHa1+/VBsWZUcbEUPItUo31O85c=
+	t=1789801032; cv=none; b=kbHUAtrDcSudQe9cbhiOxjRHDMTqx0MpUuF0T0AYZsHEEltxoht6FLP33X5SlDOcyrNXIpXvt/+KOKewD0ZWMCQpYZXnibHFNk4tPIDIddpaAJsSxTd67MaRZk5KDxjV9lLVl2vZsAKBN7R1os/dDoZXJzxhEQ+rY0nXsKf2PH8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789800883; c=relaxed/simple;
-	bh=3wqIoKnxzRv6NG1iYEc1jel8X2fnx1q1bi/NgWU7sHk=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=Got+tS2fyOkJMiVNhkynmNVSK0qQyyLIIpq/sHso5OL5uNUPoQHc+0MvJId4I1TjlYTuWnJjhPJHbtZEq81xtPytahRH78r5YylWwH7wCdRg8L1cyZ0ofF0ICSYmWX4OLXMz0iQxWeZzw89Zvo1Kq4XzW43DgVu1G85zWmjbf6w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=T+b3+jMI; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1789801032; c=relaxed/simple;
+	bh=45MegNFsAtWYZexybcxxREXKZcERntxf2K3y+Plbqwg=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=lkbRCIsVN07Y1r290wWDHRktzyTOxT/My5ALATt1y30Jpl5gIxzeMwlnkRY6zLxHJ44f9GVPAKgGcxKXaYIG2qA/8ip3YNg84AQoUHHJOLfHtd5yTiUUmvqjLrKykiQpHI7jKZ1Kud7vj6DR4e74xfutp4px78AgIlvBNVsCId4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=leemhuis.info; spf=pass smtp.mailfrom=leemhuis.info; dkim=pass (2048-bit key) header.d=leemhuis.info header.i=@leemhuis.info header.b=U/CB9llW; arc=none smtp.client-ip=188.68.63.166
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=leemhuis.info
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=leemhuis.info
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="T+b3+jMI"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id E5205C4AF12;
-	Sat, 19 Sep 2026 06:54:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1789800883;
-	bh=3wqIoKnxzRv6NG1iYEc1jel8X2fnx1q1bi/NgWU7sHk=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=T+b3+jMI3itMaw1dhoghBrenS0EJPXlGzjSggjX32kNR6tB4BgYe5wZsTcVE+945E
-	 Enfo1lKQ9ADTGggqrK1i2po3QixpaOd8GL6P30QgQZdO5/Me3P3QfP1/4Q+mtJ2ue+
-	 hhgGmh7QeOCTGMP+Ux4P6tkDF91kTGEkhYUEqlBgBfElgM9cqZh0FG29/epBM1T7uy
-	 qh385QSWJsrp9NBDGk4+/mF6aJif4wGTJuXGiZ5P4kEu3+GTUtIz98ejPTMW4FPN24
-	 S/VGcq8/2jR1hQVRR8djuePEA2fn5kimHkW3ej5LZ7bTOdyRmxhXvBfzeLqT8cwwWq
-	 CtgM/Ynmmldug==
-Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BD23DC982E1;
-	Sat, 19 Sep 2026 06:54:42 +0000 (UTC)
-From: Jan Petrous via B4 Relay <devnull+jan.petrous.oss.nxp.com@kernel.org>
-Date: Sat, 19 Sep 2026 08:54:40 +0200
-Subject: [PATCH RFC v3 12/12] arm64: dts: s32g: Add S32G3-RDB3 SerDes
- routing variants
+	dkim=pass (2048-bit key) header.d=leemhuis.info header.i=@leemhuis.info header.b="U/CB9llW"
+Received: from mors-relay-8202.netcup.net (localhost [127.0.0.1])
+	by mors-relay-8202.netcup.net (Postfix) with ESMTPS id 4hn0fT5GN9z4Hxr;
+	Sat, 19 Sep 2026 08:57:05 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=leemhuis.info;
+	s=key2; t=1789801025;
+	bh=45MegNFsAtWYZexybcxxREXKZcERntxf2K3y+Plbqwg=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=U/CB9llWNSX1S9/H1CeQaSFueCxQ7sLv0IYESdRM5+9dlWxE366shfod4dIM71S2x
+	 FWGB/buUtdsU18ZfaUlORZ8Sihx2tJuDp9hNTgbTCvwo8dJoyBDpZIoe36NRFX9hgs
+	 YhoUwtz2AjdhEuo387ng5Qn2YfFIQH5aMMGU9eOsr3sFY/GItlvuBSTBVvqATv6rlC
+	 iV9pZsGYpY6h63uL1svqQAPNA3efL+tQpbduO8G4G8oowwJTQ8Qme7I5EEM24iaAfC
+	 0V1+U/m5JRtRry1IBIFmNK3+iZ1H+eWrETQaLG7UuA4lN4waVfdqMJGA3roSClErkd
+	 VF/kj0rhM5lyw==
+Received: from policy01-mors.netcup.net (unknown [46.38.225.35])
+	by mors-relay-8202.netcup.net (Postfix) with ESMTPS id 4hn0fT4Xccz4HxW;
+	Sat, 19 Sep 2026 08:57:05 +0200 (CEST)
+X-Virus-Scanned: Debian amavisd-new at policy01-mors.netcup.net
+X-Spam-Flag: NO
+X-Spam-Score: -2.898
+X-Spam-Level: 
+Received: from mxe9fb.netcup.net (unknown [10.243.12.53])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by policy01-mors.netcup.net (Postfix) with ESMTPS id 4hn0fR751Sz8tg2;
+	Sat, 19 Sep 2026 08:57:03 +0200 (CEST)
+Received: from [IPV6:2a02:8108:8984:1d00:a0cf:1912:4be:477f] (unknown [IPv6:2a02:8108:8984:1d00:a0cf:1912:4be:477f])
+	by mxe9fb.netcup.net (Postfix) with ESMTPSA id 24A405FA32;
+	Sat, 19 Sep 2026 08:57:03 +0200 (CEST)
+Authentication-Results: mxe9fb;
+        spf=pass (sender IP is 2a02:8108:8984:1d00:a0cf:1912:4be:477f) smtp.mailfrom=regressions@leemhuis.info smtp.helo=[IPV6:2a02:8108:8984:1d00:a0cf:1912:4be:477f]
+Received-SPF: pass (mxe9fb: connection is authenticated)
+Message-ID: <344d9e26-769e-4551-9dba-f48ccbd6793b@leemhuis.info>
+Date: Sat, 19 Sep 2026 08:57:02 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] PCI: imx6: Keep Root Port MSI capability also for i.MX6Q
+To: Bjorn Helgaas <helgaas@kernel.org>, Soeren Moch <smoch@web.de>
+Cc: Richard Zhu <hongxing.zhu@nxp.com>, stable@vger.kernel.org,
+ Manivannan Sadhasivam <mani@kernel.org>, Lucas Stach
+ <l.stach@pengutronix.de>, Bjorn Helgaas <bhelgaas@google.com>,
+ Frank Li <Frank.Li@nxp.com>, Fabio Estevam <festevam@gmail.com>,
+ linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ imx@lists.linux.dev, linux-kernel@vger.kernel.org
+References: <20260918230015.GA1205610@bhelgaas>
+From: Thorsten Leemhuis <regressions@leemhuis.info>
+Content-Language: de-DE, en-US
+In-Reply-To: <20260918230015.GA1205610@bhelgaas>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260919-s32g_serdes-v3-12-9d68868c1e89@oss.nxp.com>
-References: <20260919-s32g_serdes-v3-0-9d68868c1e89@oss.nxp.com>
-In-Reply-To: <20260919-s32g_serdes-v3-0-9d68868c1e89@oss.nxp.com>
-To: Ciprian Marian Costea <ciprianmarian.costea@oss.nxp.com>, 
- NXP S32 Linux Team <s32@nxp.com>, Vinod Koul <vkoul@kernel.org>, 
- Neil Armstrong <neil.armstrong@linaro.org>, 
- Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
- Krzysztof Kozlowski <krzk+dt@kernel.org>, 
- Conor Dooley <conor+dt@kernel.org>, 
- Ghennadi Procopciuc <ghennadi.procopciuc@nxp.com>, 
- Andrew Lunn <andrew+netdev@lunn.ch>, 
- "David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, 
- Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, 
- Geert Uytterhoeven <geert+renesas@glider.be>, 
- Magnus Damm <magnus.damm@gmail.com>, 
- Lorenzo Pieralisi <lpieralisi@kernel.org>, 
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
- Bjorn Helgaas <bhelgaas@google.com>, 
- Bogdan Hamciuc <bogdan.hamciuc@nxp.com>, 
- Ionut Vicovan <ionut.vicovan@nxp.com>, Andrew Lunn <andrew@lunn.ch>, 
- Heiner Kallweit <hkallweit1@gmail.com>, 
- Russell King <linux@armlinux.org.uk>, Clark Wang <xiaoning.wang@nxp.com>, 
- Philipp Zabel <p.zabel@pengutronix.de>, 
- Maxime Chevallier <maxime.chevallier@bootlin.com>, 
- Maxime Coquelin <mcoquelin.stm32@gmail.com>, 
- Alexandre Torgue <alexandre.torgue@foss.st.com>, 
- Chester Lin <chester62515@gmail.com>, Matthias Brugger <mbrugger@suse.com>, 
- Ghennadi Procopciuc <ghennadi.procopciuc@oss.nxp.com>, 
- Frank Li <Frank.Li@nxp.com>, Sascha Hauer <s.hauer@pengutronix.de>, 
- Pengutronix Kernel Team <kernel@pengutronix.de>, 
- Fabio Estevam <festevam@gmail.com>, 
- Richard Cochran <richardcochran@gmail.com>
-Cc: linux-arm-kernel@lists.infradead.org, linux-phy@lists.infradead.org, 
- netdev@vger.kernel.org, devicetree@vger.kernel.org, 
- linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org, 
- imx@lists.linux.dev, linux-pci@vger.kernel.org, 
- linux-stm32@st-md-mailman.stormreply.com, 
- Vincent Guittot <vincent.guittot@linaro.org>, 
- "Jan Petrous (OSS)" <jan.petrous@oss.nxp.com>
-X-Mailer: b4 0.14.1
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1789800879; l=8208;
- i=jan.petrous@oss.nxp.com; s=20240922; h=from:subject:message-id;
- bh=5z4a13gWRMykKe+seCCTumv26V+4peuuuGKtho0kPws=;
- b=uo7Rz77sFsHHFKZLKP/otnbvVqBAA1sIeo+ZnR8YMNnaZwcWyUEXjmlvCvdHtffRIullQ+XMA
- 0SQbpctcZToAc8EoLHdVwO9wAOcLd2M8Z+KmOlBJsVxfOl1saOMGMJg
-X-Developer-Key: i=jan.petrous@oss.nxp.com; a=ed25519;
- pk=Ke3wwK7rb2Me9UQRf6vR8AsfJZfhTyoDaxkUCqmSWYY=
-X-Endpoint-Received: by B4 Relay for jan.petrous@oss.nxp.com/20240922 with
- auth_id=217
-X-Original-From: "Jan Petrous (OSS)" <jan.petrous@oss.nxp.com>
-Reply-To: jan.petrous@oss.nxp.com
+X-PPP-Message-ID: <178980102368.147768.7933732274283946620@mxe9fb.netcup.net>
+X-NC-CID: sWpGcjgseDQL8M6+YmxU2Mdbf5E3igADS7Oh7gQWPZPo/0Cxv9Y=
 
-From: "Jan Petrous (OSS)" <jan.petrous@oss.nxp.com>
+On 9/19/26 01:00, Bjorn Helgaas wrote:
+> [+cc Thorsten, possible regzbot confusion?]
+> 
+> On Mon, Apr 27, 2026 at 01:58:04PM +0200, Soeren Moch wrote:
+>> Also on the NXP i.MX6Q chipset MSIs from the endpoints won't be received by
+>> the iMSI-RX MSI controller if the Root Port MSI capability is disabled.
+>>
+>> Even though the Root Port MSIs won't be received by the iMSI-RX controller
+>> due to design, this chipset has some weird hardware bug that prevents
+>> the endpoint MSIs from reaching when the Root Port MSI capability is
+>> disabled.
+>>
+>> Hence, always keep the Root Port MSI capability for this chipset.
+>>
+>> Note that by keeping Root Port MSI capability, Root Port MSIs such as AER,
+>> PME and others won't be received by default. So users need to use
+>> workarounds such as passing 'pcie_pme=nomsi' cmdline param.
+>>
+>> Fixes: 3a4e8302e72f ("PCI: imx6: Keep Root Port MSI capability with iMSI-RX to work around hardware bug")
+>> Cc: <stable@vger.kernel.org> # 7.0.x
+>> Signed-off-by: Soeren Moch <smoch@web.de>
+> 
+> This thread is still listed as a regression:
+> https://linux-regtracking.leemhuis.info/regzbot/regression/lore/20260427115804.134231-1-smoch@web.de/
 
-The S32G3-VNP-RDB3 board wires GMAC0 to an on-board KSZ9031 RGMII PHY by
-default. Add two device tree variants that reroute GMAC0 over the
-SerDes_0 XPCS lane for SGMII, matching the two SerDes lane layouts:
+My fault, afaics; sorry.
 
-  - Mode 1: PCIe x1 root complex on lane 0 plus 1G SGMII via GMAC0
-    (XPCS0) on lane 1.
-  - Mode 3: dual SGMII, GMAC0 (XPCS0) on lane 0 and PFE_EMAC_2 (XPCS1)
-    on lane 1.
+> But I *think* it's been resolved by:
+> 
+>   b4bee12ebecc ("PCI: imx6: Keep i.MX6 Root Port MSI/MSI-X Capabilities with iMSI-RX to work around hardware bug")> 
+> Can you confirm?
+>
+> Maybe regzbot is confused by the fact that the regression was first
+> attributed to 3a4e8302e72f, and then later attributed to
+> f5cd8a929c825?
 
-The SerDes SUBSYS_MODE is derived from the lane child nodes present, so
-each layout requires its own board device tree. The Mode 1 variant
-enables both PCIe root complexes and extends their root ports by label
-(pcie0_rp, pcie1_rp), matching the RDB3 wiring: PCIe_0 reaches the M.2
-slots when board switch SW17-2 is ON, PCIe_1 the PCIe card slot.
+The main problem is something different: Sometimes one commit causes
+multiple issues that in rare cases might even be reported by the same
+person -- and regzbot needs to keep them and fixes for them apart. Which
+is why it is cautions and will only auto-close a tracked regressions
+when a Link:/Closes: tags points to what regzbot considers the report,
+as Linus demands those anyway. And b4bee12ebeccfc didn't to that. No
+problem, happens all the time, normally I notice these things and tell
+regzbot manually. And I kinda did when I noticed that a fix was in the
+works, but then the subject of the fix changed later -- and I missed that.
 
-The GMAC references its PCS with the standard pcs-handle property. On
-this board the SGMII lane runs back-to-back to the on-board SJA1110
-switch, so there is no PHY on the segment and nothing for phy-handle to
-point at - the link partner is a switch port. The MAC-side link is
-therefore described as a fixed 1G link and phylink uses out-of-band
-negotiation. The SJA1110 itself is not described by these overlays.
+These things happen and in a ideal world regzbot should be little more
+gentle and likely auto-close tracked regressions when a Fixes: tag
+combined with a Reported-by: or Tested-by: matches. That is kinda on the
+todo list, but not near the top (wait for by LPC talk). Anyway, thx for
+mentioning it and let me update regzbot:
 
-Verified on the board:
+#regzbot fix: b4bee12ebecc
 
-  - Mode 3: GMAC0 links at 1G and passes traffic.
-  - Mode 1: GMAC0 SGMII path up, and both PCIe root complexes come up -
-    PCIe_1 enumerates the card-slot NIC and passes traffic at full line
-    rate, PCIe_0 enumerates the M.2 slot with SW17-2 ON.
-
-Signed-off-by: Jan Petrous (OSS) <jan.petrous@oss.nxp.com>
----
- arch/arm64/boot/dts/freescale/Makefile             |   6 ++
- .../dts/freescale/s32g399a-rdb3-serdes-mode1.dtso  | 111 +++++++++++++++++++++
- .../dts/freescale/s32g399a-rdb3-serdes-mode3.dtso  |  60 +++++++++++
- 3 files changed, 177 insertions(+)
-
-diff --git a/arch/arm64/boot/dts/freescale/Makefile b/arch/arm64/boot/dts/freescale/Makefile
-index 95ae85ab4adf..3f68f36ac2be 100644
---- a/arch/arm64/boot/dts/freescale/Makefile
-+++ b/arch/arm64/boot/dts/freescale/Makefile
-@@ -786,5 +786,11 @@ dtb-$(CONFIG_ARCH_MXC) += imx8mm-phygate-tauri-l-rs232-rs485.dtb
- dtb-$(CONFIG_ARCH_S32) += s32g274a-evb.dtb
- dtb-$(CONFIG_ARCH_S32) += s32g274a-rdb2.dtb
- dtb-$(CONFIG_ARCH_S32) += s32g399a-rdb3.dtb
-+dtb-$(CONFIG_ARCH_S32) += s32g399a-rdb3-serdes-mode1.dtb
-+dtb-$(CONFIG_ARCH_S32) += s32g399a-rdb3-serdes-mode3.dtb
-+s32g399a-rdb3-serdes-mode1-dtbs := s32g399a-rdb3.dtb s32g399a-rdb3-serdes-mode1.dtbo
-+s32g399a-rdb3-serdes-mode3-dtbs := s32g399a-rdb3.dtb s32g399a-rdb3-serdes-mode3.dtbo
-+dtb-$(CONFIG_ARCH_S32) += s32g399a-rdb3-serdes-mode1.dtbo
-+dtb-$(CONFIG_ARCH_S32) += s32g399a-rdb3-serdes-mode3.dtbo
- dtb-$(CONFIG_ARCH_S32) += s32n79-rdb.dtb
- dtb-$(CONFIG_ARCH_S32) += s32v234-evb.dtb
-diff --git a/arch/arm64/boot/dts/freescale/s32g399a-rdb3-serdes-mode1.dtso b/arch/arm64/boot/dts/freescale/s32g399a-rdb3-serdes-mode1.dtso
-new file mode 100644
-index 000000000000..43219d9bb6eb
---- /dev/null
-+++ b/arch/arm64/boot/dts/freescale/s32g399a-rdb3-serdes-mode1.dtso
-@@ -0,0 +1,111 @@
-+// SPDX-License-Identifier: (GPL-2.0+ OR BSD-3-Clause)
-+/*
-+ * Copyright 2021-2026 NXP
-+ *
-+ * NXP S32G3 Reference Design Board 3 (S32G-VNP-RDB3),
-+ * SerDes_0 Mode 1: PCIe x1 (lane 0) + 1G SGMII via GMAC0 (XPCS0, lane 1).
-+ *
-+ * Overlay applied on top of s32g399a-rdb3.dtb. It reroutes GMAC0 from the
-+ * on-board RGMII PHY to the SerDes_0 XPCS0 lane and brings up the PCIe
-+ * controllers as root complexes. The lane layout present here selects
-+ * SerDes SUBSYS_MODE 1.
-+ */
-+
-+/dts-v1/;
-+/plugin/;
-+
-+&serdes0 {
-+	#address-cells = <1>;
-+	#size-cells = <0>;
-+	status = "okay";
-+
-+	/* Mode 1 lane layout: PCIe on lane 0, GMAC SGMII (XPCS0) on lane 1. */
-+	serdes0_pcie0: phy@0 {
-+		reg = <0>;
-+		compatible = "nxp,s32g-serdes-pcie-phy";
-+		#phy-cells = <0>;
-+	};
-+
-+	serdes0_xpcs0: phy@1 {
-+		reg = <1>;
-+		compatible = "nxp,s32g-serdes-xpcs";
-+		nxp,xpcs-instance = <0>;
-+	};
-+};
-+
-+&serdes1 {
-+	#address-cells = <1>;
-+	#size-cells = <0>;
-+	status = "okay";
-+
-+	/*
-+	 * SerDes_1 Mode 1 lane layout: PCIe on lane 0, SGMII (PFE_MAC0
-+	 * via XPCS0) on lane 1.
-+	 *
-+	 * Both lanes must be described: the SerDes driver derives the
-+	 * SUBSYS_MODE from the full lane mux, so lane 1 has to be present
-+	 * as XPCS instance 0 (PFE_MAC0) for the mode-1 match to succeed.
-+	 * PFE is not modeled as a MAC consumer in this upstreaming device
-+	 * tree, so the XPCS lane is only brought up by the SerDes driver
-+	 * and left without a pcs-handle user.
-+	 */
-+	serdes1_pcie0: phy@0 {
-+		reg = <0>;
-+		compatible = "nxp,s32g-serdes-pcie-phy";
-+		#phy-cells = <0>;
-+	};
-+
-+	serdes1_xpcs0: phy@1 {
-+		reg = <1>;
-+		compatible = "nxp,s32g-serdes-xpcs";
-+		nxp,xpcs-instance = <0>;
-+	};
-+};
-+
-+/*
-+ * Both PCIe root complexes are wired on the RDB3:
-+ *  - PCIe_0 reaches the M.2 slots (M-key or E-key) when board switch
-+ *    SW17-2 is set to ON. It consumes SerDes_0 lane-0 PCIe phy.
-+ *  - PCIe_1 reaches the PCIe card slot. It consumes SerDes_1 lane-0 PCIe phy.
-+ */
-+&pcie0 {
-+	status = "okay";
-+};
-+
-+&pcie0_rp {
-+	num-lanes = <1>;
-+	phys = <&serdes0_pcie0>;
-+};
-+
-+&pcie1 {
-+	status = "okay";
-+};
-+
-+&pcie1_rp {
-+	num-lanes = <1>;
-+	phys = <&serdes1_pcie0>;
-+};
-+
-+&gmac0 {
-+	/delete-property/ phy-handle;
-+	clocks = <&clks 24>, <&clks 17>, <&clks 16>, <&clks 15>;
-+	clock-names = "stmmaceth", "tx", "rx", "ptp_ref";
-+	phy-mode = "sgmii";
-+	pcs-handle = <&serdes0_xpcs0>;
-+	status = "okay";
-+
-+	/*
-+	 * GMAC0 is wired back-to-back to the on-board SJA1110 switch over
-+	 * this SGMII lane. There is no PHY on the segment, so there is
-+	 * nothing to reference with phy-handle: the link partner is a
-+	 * switch port. Describe it as a fixed 1G link; phylink then uses
-+	 * out-of-band negotiation. The switch itself is not described by
-+	 * this overlay. The PCS also supports in-band negotiation, for
-+	 * boards whose link partner is described.
-+	 */
-+	fixed-link {
-+		speed = <1000>;
-+		full-duplex;
-+		pause;
-+	};
-+};
-diff --git a/arch/arm64/boot/dts/freescale/s32g399a-rdb3-serdes-mode3.dtso b/arch/arm64/boot/dts/freescale/s32g399a-rdb3-serdes-mode3.dtso
-new file mode 100644
-index 000000000000..195c8043c18a
---- /dev/null
-+++ b/arch/arm64/boot/dts/freescale/s32g399a-rdb3-serdes-mode3.dtso
-@@ -0,0 +1,60 @@
-+// SPDX-License-Identifier: (GPL-2.0+ OR BSD-3-Clause)
-+/*
-+ * Copyright 2021-2026 NXP
-+ *
-+ * NXP S32G3 Reference Design Board 3 (S32G-VNP-RDB3),
-+ * SerDes_0 Mode 3: dual SGMII, GMAC0 (XPCS0, lane 0) + PFE_EMAC_2
-+ * (XPCS1, lane 1), both 1G.
-+ *
-+ * Overlay applied on top of s32g399a-rdb3.dtb. It reroutes GMAC0 from the
-+ * on-board RGMII PHY to the SerDes_0 XPCS0 lane. The lane-1 XPCS1
-+ * (PFE_EMAC_2) is described so the mode is derivable and both XPCS
-+ * instances are initialised; it has no upstream MAC consumer in this
-+ * device tree. The lane layout present here selects SerDes SUBSYS_MODE 3.
-+ */
-+
-+/dts-v1/;
-+/plugin/;
-+
-+&serdes0 {
-+	#address-cells = <1>;
-+	#size-cells = <0>;
-+	status = "okay";
-+
-+	/* Mode 3 lane layout: GMAC SGMII (XPCS0) on lane 0, PFE2 (XPCS1) on lane 1. */
-+	serdes0_xpcs0: phy@0 {
-+		reg = <0>;
-+		compatible = "nxp,s32g-serdes-xpcs";
-+		nxp,xpcs-instance = <0>;
-+	};
-+
-+	serdes0_xpcs1: phy@1 {
-+		reg = <1>;
-+		compatible = "nxp,s32g-serdes-xpcs";
-+		nxp,xpcs-instance = <1>;
-+	};
-+};
-+
-+&gmac0 {
-+	/delete-property/ phy-handle;
-+	clocks = <&clks 24>, <&clks 17>, <&clks 16>, <&clks 15>;
-+	clock-names = "stmmaceth", "tx", "rx", "ptp_ref";
-+	phy-mode = "sgmii";
-+	pcs-handle = <&serdes0_xpcs0>;
-+	status = "okay";
-+
-+	/*
-+	 * GMAC0 is wired back-to-back to the on-board SJA1110 switch over
-+	 * this SGMII lane. There is no PHY on the segment, so there is
-+	 * nothing to reference with phy-handle: the link partner is a
-+	 * switch port. Describe it as a fixed 1G link; phylink then uses
-+	 * out-of-band negotiation. The switch itself is not described by
-+	 * this overlay. The PCS also supports in-band negotiation, for
-+	 * boards whose link partner is described.
-+	 */
-+	fixed-link {
-+		speed = <1000>;
-+		full-duplex;
-+		pause;
-+	};
-+};
-
--- 
-2.55.0
-
+Ciao, Thorsten
+>> ---
+>> Cc: Manivannan Sadhasivam <mani@kernel.org>
+>> Cc: Richard Zhu <hongxing.zhu@nxp.com>
+>> Cc: Lucas Stach <l.stach@pengutronix.de>
+>> Cc: Bjorn Helgaas <bhelgaas@google.com>
+>> Cc: Frank Li <Frank.Li@nxp.com>
+>> Cc: Fabio Estevam <festevam@gmail.com>
+>> Cc: linux-pci@vger.kernel.org
+>> Cc: linux-arm-kernel@lists.infradead.org
+>> Cc: imx@lists.linux.dev
+>> Cc: linux-kernel@vger.kernel.org
+>>
+>> Tested on a tbs2910 board [1]
+>> [1] arch/arm/boot/dts/nxp/imx/imx6q-tbs2910.dts
+>> ---
+>>  drivers/pci/controller/dwc/pci-imx6.c | 3 ++-
+>>  1 file changed, 2 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
+>> index 6d6a1688e7eb..3d461bdef967 100644
+>> --- a/drivers/pci/controller/dwc/pci-imx6.c
+>> +++ b/drivers/pci/controller/dwc/pci-imx6.c
+>> @@ -1865,7 +1865,8 @@ static const struct imx_pcie_drvdata drvdata[] = {
+>>  		.flags = IMX_PCIE_FLAG_IMX_PHY |
+>>  			 IMX_PCIE_FLAG_SPEED_CHANGE_WORKAROUND |
+>>  			 IMX_PCIE_FLAG_BROKEN_SUSPEND |
+>> -			 IMX_PCIE_FLAG_SUPPORTS_SUSPEND,
+>> +			 IMX_PCIE_FLAG_SUPPORTS_SUSPEND |
+>> +			 IMX_PCIE_FLAG_KEEP_MSI_CAP,
+>>  		.dbi_length = 0x200,
+>>  		.gpr = "fsl,imx6q-iomuxc-gpr",
+>>  		.ltssm_off = IOMUXC_GPR12,
+>> -- 
+>> 2.43.0
+>>
 
