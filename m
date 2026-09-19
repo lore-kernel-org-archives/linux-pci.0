@@ -1,48 +1,48 @@
 Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 240B7380FF5;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 880C1382394;
 	Sat, 19 Sep 2026 16:27:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789835226; cv=none; b=fSp1wdeUZqfS0EEP0O1PUjV5M3LtVDUglmYVoikewOxfIQCBoCl5vDW8akVhKxWfpLFJYsqF2ajsSvNdSU2r1aBHi7FautYIZPMKcf2gVKgiLB/H5pAD3cwnuI05+NvIQCKUZM6mZJ287o/4U5PRBsaFsUK91454HDEX2ZxLHEk=
+	t=1789835227; cv=none; b=kNAce14Qj0+WO6+33bVJg0zVf8a5OE+z+vf1sbQBlVbj7QyEmW6WH/Bs9+PY/CJob+eaiqCCu23ln5etK8Bw1/X/w4BUHMVDO8nv/9xBqFSyp1t3P5EvR/5aJHxTWcdqcFj+Xu4rL8lbQpYfmAiaFimuUgjpukqhfVvDi598bo4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789835226; c=relaxed/simple;
-	bh=KBEyovsTBQZ4FyHhLxPlufc+TwZjADtubpxUAsCsdGg=;
+	s=arc-20240116; t=1789835227; c=relaxed/simple;
+	bh=Twrfbx7XknL5uR8rjzSc78GsWqmuoofdHKSwhzF9hb0=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=o2fT8TrVTfOmW6zdYUrZD61IqXjy8Bb5X9+1rJR8Zojdo7DWHxsbwABrwxJSkPmwiADh0o1eSAM+fZv5Cf7J/TF5kajOajftz4ek3by21+8dagk2Ry1Su7LMxHroCqRyAst6KUqWG2d9AFg/eH6V8ZZ8IKvva0MNONNLJKYPnvo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=P5P+k+Sv; arc=none smtp.client-ip=192.198.163.12
+	 MIME-Version; b=oI69t8VPzRy7uFeQjeo23rFxz2+Am2VaCqPn3P5URKQLSZL2xvZaOSOD3hrBjzg0ocYz1+aBBLaZwk10TGEOhKar1yi/ORnnhuBILkJQTlZayTg2Mun336mSoBIfsSremdeEd87NEB5WBntd4Va+R5JrV28pRjFwVZCERL+pyx4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=J6KccOnO; arc=none smtp.client-ip=192.198.163.12
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="P5P+k+Sv"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="J6KccOnO"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
   t=1789835225; x=1821371225;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=KBEyovsTBQZ4FyHhLxPlufc+TwZjADtubpxUAsCsdGg=;
-  b=P5P+k+Sv6SF+t9uLKFph5aZztlLFTpwaPjs5xcvIvLkrjRFXW84SARrB
-   moVklbLBChTktLObGobPWb5QEgvU82aE/oT7516KRjDwZm2DPLA05KR/X
-   brbqfrH1nDNIDRRHyt6y+2hnVA4RLoDOsCkh5TIda5CLLtrlvxsLg4KQ6
-   mWXpUnJTFFlvTu1OOdqRONgchsxBcfJW8zhRPwnEpLpMxC9esCLngbKCK
-   nZEFlRgwJri4P0aWW3S79/eKROH5ag6xEGm3SEgfij/dG6G5ybfnqUv20
-   k/GY+UY2s8PH2ssrt3OaBZ/efXNQfbXv1axC/bdArz3IV4CtRoTra321p
-   w==;
-X-CSE-ConnectionGUID: jlP3375HRfyHtYBLi+Lcng==
-X-CSE-MsgGUID: eVdk/Ow+RouXvc7FCSjR8w==
-X-IronPort-AV: E=McAfee;i="6800,10657,11910"; a="94187233"
+  bh=Twrfbx7XknL5uR8rjzSc78GsWqmuoofdHKSwhzF9hb0=;
+  b=J6KccOnORczJbdJHrixB0k2/qRQmDpdBfhgfWdR2dtLroI+n+hKoA6ug
+   jtPVhgWTmfvoWGcOoQ6MNm/YgZP9QSDKDfmAjJY1rFHLTs2fc8aatMe3b
+   efNcs7PuJcx2QMPP8gQPm5APQhbHmv0dUGikf1TXC7nW5ukTyAQab/Jcz
+   ZtGkMF06RZt9zSxMzQeenyjIimKF09OlvQWQDo2mx6F3mr80GvaH2ms+w
+   iXirhA9inOqNYFz1YiTeN44CkA0me6zC/6+doTbCGndLvs4bg5JJz2rPd
+   VPwYiJtkUkdi0AnYp35DCnEIVeed/wp2sOjKHTH27NQvhqX+xT0d+BCi6
+   g==;
+X-CSE-ConnectionGUID: lOZ43QNGRauRh0t7Z9I6HA==
+X-CSE-MsgGUID: Cf7xswgrRGOBj23yUP+K3A==
+X-IronPort-AV: E=McAfee;i="6800,10657,11910"; a="94187238"
 X-IronPort-AV: E=Sophos;i="6.27,111,1787036400"; 
-   d="scan'208";a="94187233"
+   d="scan'208";a="94187238"
 Received: from fmviesa008.fm.intel.com ([10.60.135.148])
   by fmvoesa106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Sep 2026 09:27:02 -0700
-X-CSE-ConnectionGUID: MEE+hRoRSEif6lde+bj8XA==
-X-CSE-MsgGUID: 3d87gAWKTmCWAVQp+K1uQQ==
+X-CSE-ConnectionGUID: Entq9IhkTFCXjrYkW+nNCw==
+X-CSE-MsgGUID: cn9qJY3cQeqnLfy6CshmRQ==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.27,111,1787036400"; 
-   d="scan'208";a="272186118"
+   d="scan'208";a="272186120"
 Received: from skuppusw-desk2.jf.intel.com ([10.165.154.101])
-  by fmviesa008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Sep 2026 09:27:02 -0700
+  by fmviesa008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Sep 2026 09:27:03 -0700
 From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
 Cc: linux-pci@vger.kernel.org,
@@ -51,9 +51,9 @@ Cc: linux-pci@vger.kernel.org,
 	Rafael J Wysocki <rafael@kernel.org>,
 	Guixin Liu <kanie@linux.alibaba.com>,
 	Olof Johansson <olof@lixom.net>
-Subject: [PATCH v13 2/5] PCI: Assume control of portdrv-related features only when portdrv enabled
-Date: Sat, 19 Sep 2026 09:26:52 -0700
-Message-ID: <20260919162655.3499010-3-sathyanarayanan.kuppuswamy@linux.intel.com>
+Subject: [PATCH v13 3/5] PCI/ACPI: Tidy _OSC control bit checking
+Date: Sat, 19 Sep 2026 09:26:53 -0700
+Message-ID: <20260919162655.3499010-4-sathyanarayanan.kuppuswamy@linux.intel.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20260919162655.3499010-1-sathyanarayanan.kuppuswamy@linux.intel.com>
 References: <20260919162655.3499010-1-sathyanarayanan.kuppuswamy@linux.intel.com>
@@ -65,52 +65,90 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Native control of PME, AER, DPC, and PCIe hotplug depends on the portdrv,
-so default to native handling of them only when CONFIG_PCIEPORTBUS is
-enabled.
+Add OSC_OWNER() helper to prettify checking the _OSC control bits to learn
+whether the platform has granted us control of PCI features.  No functional
+change intended.
 
-Native control of LTR and SHPC hotplug does not depend on portdrv, so keep
-defaulting those to native regardless.
-
-[bhelgaas: commit log]
-Link: https://lore.kernel.org/r/fcbe8a624166a1101a755edfef44a185d32ff493.1603766889.git.sathyanarayanan.kuppuswamy@linux.intel.com
+[bhelgaas: split to separate patch, commit log]
 Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
 Changes since v12
 
- * Rebased to v7.3-rc3.  No code change.
- * Commit log reworded.  v12 said we can always take control of LTR and
-   SHPC hotplug unless a platform interface tells us otherwise, which is
-   not true on ACPI systems.
+ * Rebased to v7.3-rc3.  Parenthesized the OSC_OWNER() arguments, as
+   checkpatch --strict asks.
+ * Also convert native_cxl_error, which v12 left open coded.  Its bit comes
+   from the extended control word, so that word gets its own ext_ctrl
+   local.
 
 v12 posting
 https://lore.kernel.org/all/20201126011816.711106-1-helgaas@kernel.org/
 
- drivers/pci/probe.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ drivers/acpi/pci_root.c | 37 ++++++++++++++++++++++---------------
+ 1 file changed, 22 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 27008e2ea5af..5f7eb6bc438b 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -668,12 +668,14 @@ static void pci_init_host_bridge(struct pci_host_bridge *bridge)
- 	 * may implement its own AER handling and use _OSC to prevent the
- 	 * OS from interfering.
- 	 */
-+#ifdef CONFIG_PCIEPORTBUS
- 	bridge->native_aer = 1;
- 	bridge->native_pcie_hotplug = 1;
--	bridge->native_shpc_hotplug = 1;
- 	bridge->native_pme = 1;
--	bridge->native_ltr = 1;
- 	bridge->native_dpc = 1;
-+#endif
-+	bridge->native_ltr = 1;
-+	bridge->native_shpc_hotplug = 1;
- 	bridge->domain_nr = PCI_DOMAIN_NR_NOT_SET;
- 	bridge->native_cxl_error = 1;
- 	bridge->dev.type = &pci_host_bridge_type;
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index 88c65f34e305..756dc2f055f5 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -993,6 +993,12 @@ static void acpi_pci_root_release_info(struct pci_host_bridge *bridge)
+ 	__acpi_pci_root_release_info(bridge->release_data);
+ }
+ 
++#define OSC_OWNER(ctrl, bit, flag)		\
++	do {					\
++		if (!((ctrl) & (bit)))		\
++			flag = 0;		\
++	} while (0)
++
+ struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
+ 				     struct acpi_pci_root_ops *ops,
+ 				     struct acpi_pci_root_info *info,
+@@ -1003,6 +1009,7 @@ struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
+ 	int node = acpi_get_node(device->handle);
+ 	struct pci_bus *bus;
+ 	struct pci_host_bridge *host_bridge;
++	u32 ctrl, ext_ctrl;
+ 
+ 	info->root = root;
+ 	info->bridge = device;
+@@ -1028,21 +1035,21 @@ struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
+ 		goto out_release_info;
+ 
+ 	host_bridge = to_pci_host_bridge(bus->bridge);
+-	if (!(root->osc_control_set & OSC_PCI_EXPRESS_NATIVE_HP_CONTROL))
+-		host_bridge->native_pcie_hotplug = 0;
+-	if (!(root->osc_control_set & OSC_PCI_SHPC_NATIVE_HP_CONTROL))
+-		host_bridge->native_shpc_hotplug = 0;
+-	if (!(root->osc_control_set & OSC_PCI_EXPRESS_AER_CONTROL))
+-		host_bridge->native_aer = 0;
+-	if (!(root->osc_control_set & OSC_PCI_EXPRESS_PME_CONTROL))
+-		host_bridge->native_pme = 0;
+-	if (!(root->osc_control_set & OSC_PCI_EXPRESS_LTR_CONTROL))
+-		host_bridge->native_ltr = 0;
+-	if (!(root->osc_control_set & OSC_PCI_EXPRESS_DPC_CONTROL))
+-		host_bridge->native_dpc = 0;
+-
+-	if (!(root->osc_ext_control_set & OSC_CXL_ERROR_REPORTING_CONTROL))
+-		host_bridge->native_cxl_error = 0;
++
++	ctrl = root->osc_control_set;
++	ext_ctrl = root->osc_ext_control_set;
++
++	OSC_OWNER(ctrl, OSC_PCI_EXPRESS_NATIVE_HP_CONTROL,
++		  host_bridge->native_pcie_hotplug);
++	OSC_OWNER(ctrl, OSC_PCI_SHPC_NATIVE_HP_CONTROL,
++		  host_bridge->native_shpc_hotplug);
++	OSC_OWNER(ctrl, OSC_PCI_EXPRESS_AER_CONTROL, host_bridge->native_aer);
++	OSC_OWNER(ctrl, OSC_PCI_EXPRESS_PME_CONTROL, host_bridge->native_pme);
++	OSC_OWNER(ctrl, OSC_PCI_EXPRESS_LTR_CONTROL, host_bridge->native_ltr);
++	OSC_OWNER(ctrl, OSC_PCI_EXPRESS_DPC_CONTROL, host_bridge->native_dpc);
++
++	OSC_OWNER(ext_ctrl, OSC_CXL_ERROR_REPORTING_CONTROL,
++		  host_bridge->native_cxl_error);
+ 
+ 	acpi_dev_power_up_children_with_adr(device);
+ 
 -- 
 2.43.0
 
