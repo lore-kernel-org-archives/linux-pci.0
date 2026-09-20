@@ -1,81 +1,74 @@
-Received: from mailout3.hostsharing.net (mailout3.hostsharing.net [144.76.133.104])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 806C41A6806;
-	Sun, 20 Sep 2026 06:17:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=144.76.133.104
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0EFEF3603E0;
+	Sun, 20 Sep 2026 06:54:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789885053; cv=none; b=BFen8gbBA40UBH80VLKZJaCBhWa6bJUgaK1QuMiOFasdmbqyR21p5TpKMMhGrv70keWeQ1YaglhaYACLJVDhVctqbvnoUO8TSMc2D19n/78ggxSVwM0b+VYQ06db6S/2Uoq/9i1Wczj8AULi33b/Wqh6lVB6w0ZES+R04KFDCFQ=
+	t=1789887294; cv=none; b=V8TyH54OwJz3foPQNj+GFGH+Qcxzx3E5LygQsDtzWZXUuf9RjvmRIMEOaAMPs8onWHMUAS7OaRWlBabZzGUCTuueB0DNRaXYLjZBbc1uLHmsr2GFEsHjnYx402xQ5t4+VXto9aT0pTMcU6xTcP4W0CZgGWcY01XFrioHUWlyB6w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789885053; c=relaxed/simple;
-	bh=wsDZb9FaCBL6EPTf17FjcijI1ZHiidhK1dy76kOY0WU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=MOdn5el7UiNDUZWEGw707TH0XeuIkcd9otJ6kRrdPSDj3/oAb01Y/O87EPkbq0gGEjHNcOpDXsAmPRD2tdsyvitS4RdfAvzV3uAIuRcg1Asq1/Etypm3lGDf/4wu+8eh61sU8V94B5OF65bRZTpEwg76VKMjkVeZHk0Y8OgeS/4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=144.76.133.104
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
-Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
-	 client-signature ECDSA (secp384r1) client-digest SHA384)
-	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
-	by mailout3.hostsharing.net (Postfix) with ESMTPS id A80E34938;
-	Sun, 20 Sep 2026 08:17:21 +0200 (CEST)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-	id 7697E61ACEA6; Sun, 20 Sep 2026 08:17:21 +0200 (CEST)
-Date: Sun, 20 Sep 2026 08:17:21 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Rafael J Wysocki <rafael@kernel.org>,
-	Guixin Liu <kanie@linux.alibaba.com>,
-	Olof Johansson <olof@lixom.net>
-Subject: Re: [PATCH v13 2/5] PCI: Assume control of portdrv-related features
- only when portdrv enabled
-Message-ID: <aq96cULSmdeBzd3D@wunner.de>
-References: <20260919162655.3499010-1-sathyanarayanan.kuppuswamy@linux.intel.com>
- <20260919162655.3499010-3-sathyanarayanan.kuppuswamy@linux.intel.com>
+	s=arc-20240116; t=1789887294; c=relaxed/simple;
+	bh=6mN/FowLjmR0/UbkgfuwKru9RQN7sEsKwX9on/rTlSQ=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=BQeev0YO6T9okGS3Ug9OWGP4FNhGvHlLx08lFLei2aVqQI4XcYFMgpiw0VKVJZeQUJy32y9BxEH9hs/uCkXKzVgbuuJ7CprV+ApyQOM3mrobitc2WAd/HmUOUkHk/nGb7+38RaPg7ca8HyjvQpMywKzsReBriW/Vx2VnmEKwbGU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ba7ntHvN; arc=none smtp.client-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ba7ntHvN"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 02E191F000FF;
+	Sun, 20 Sep 2026 06:54:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1789887292;
+	bh=KEuH2EAzfUqyNX9a68w9H4vTMXeVGfHbJWfU3V+VveE=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=Ba7ntHvN+gDZfWbdyyP7ukRrMIOv3vx6EaM1bdQ9fOrQjfuu5F0RPXWeXDlJYb7Tj
+	 4wtOfOa3R0jk3LytOSOHvCkQtd5sX2iEEloklggpDknm0SsOy407b0ZIA28Kr5QG0t
+	 3GgZKZCLPDNtTzlikiSktzTybF+OsDx/i/ZJZF0NDxKVZ//keDyKPFCN+yWJKDL5Ej
+	 noBrE1ap5/P6s7tvvI5uX7VHrI7owqXbuyqot6uJu5nbqz/lfMF14NmosLni0vbxi9
+	 9iO6mjLUwvhMxwjSNyBTJHQAFtQRtMCg8GeE45c+GWXzqPj48B6GVO36KJrU95qHun
+	 iaC52C8SX/T0A==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH RFC v3 07/12] net: stmmac: dwmac-s32: Add SGMII support
+Reply-To: sashiko-reviews@lists.linux.dev
+To: =?utf-8?b?SmFuIFBldHJvdXMgKE9TUyk=?= <jan.petrous@oss.nxp.com>
+Cc: robh@kernel.org, conor+dt@kernel.org, vkoul@kernel.org, imx@lists.linux.dev, Frank.Li@kernel.org, olteanv@gmail.com, neil.armstrong@linaro.org, linux-pci@vger.kernel.org, devicetree@vger.kernel.org, linux-phy@lists.infradead.org, wsa+renesas@sang-engineering.com
+In-Reply-To: <20260919-s32g_serdes-v3-7-9d68868c1e89@oss.nxp.com>
+References: <20260919-s32g_serdes-v3-0-9d68868c1e89@oss.nxp.com>
+ <20260919-s32g_serdes-v3-7-9d68868c1e89@oss.nxp.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Sun, 20 Sep 2026 06:54:51 +0000
+Message-Id: <20260920065452.02E191F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260919162655.3499010-3-sathyanarayanan.kuppuswamy@linux.intel.com>
 
-On Sat, Sep 19, 2026 at 09:26:52AM -0700, Kuppuswamy Sathyanarayanan wrote:
-> +++ b/drivers/pci/probe.c
-> @@ -668,12 +668,14 @@ static void pci_init_host_bridge(struct pci_host_bridge *bridge)
->  	 * may implement its own AER handling and use _OSC to prevent the
->  	 * OS from interfering.
->  	 */
-> +#ifdef CONFIG_PCIEPORTBUS
->  	bridge->native_aer = 1;
->  	bridge->native_pcie_hotplug = 1;
-> -	bridge->native_shpc_hotplug = 1;
->  	bridge->native_pme = 1;
-> -	bridge->native_ltr = 1;
->  	bridge->native_dpc = 1;
-> +#endif
-> +	bridge->native_ltr = 1;
-> +	bridge->native_shpc_hotplug = 1;
->  	bridge->domain_nr = PCI_DOMAIN_NR_NOT_SET;
+> From: "Jan Petrous (OSS)" <jan.petrous@oss.nxp.com>
+>=20
+> Wire the NXP S32G SerDes XPCS PCS into the dwmac-s32 glue layer so the
+> MAC can run SGMII over a SerDes lane.
+>=20
+> Changes:
+> - s32_gmac_write_phy_intf_select: replace the hard-coded RGMII selector
+>   with a switch on phy_interface so SGMII (0x01), RGMII, RMII and MII
+>   all programme the SoC control register correctly.
+> - Add s32_gmac_pcs_init: obtain the phylink_pcs handle from the SerDes
+>   subsystem via s32g_serdes_pcs_create(), keyed by the standard
+>   pcs-handle property on the GMAC node pointing at the SerDes XPCS lane
+>   child. Propagates -EPROBE_DEFER if the SerDes driver has not probed
+>   yet. There is no matching exit hook: the device link created by
+>   s32g_serdes_pcs_create() covers the lifetime.
+> [ ... ]
+> Tested on an S32G3-VNP-RDB3 board: GMAC0 links at 1G over SGMII and
+> passes traffic, both in SerDes mode 1 (alongside two active PCIe root
+> complexes) and in mode 3.
+>=20
+> Signed-off-by: Jan Petrous (OSS) <jan.petrous@oss.nxp.com>
 
-How about (e.g.)
+Sashiko has reviewed this patch and found no issues. It looks great!
 
- 	bridge->native_pcie_hotplug = IS_ENABLED(CONFIG_PCIEPORTBUS);
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260919-s32g_serde=
+s-v3-0-9d68868c1e89@oss.nxp.com?part=3D7
 
-instead of using #ifdef?  That's the preferred style according to
-section 21 of Documentation/process/coding-style.rst
-
->  	bridge->native_cxl_error = 1;
-
-Hm, this one depends on CONFIG_PCIEAER I believe.
-(But Terry Bowman is the expert.)
-
-Thanks,
-
-Lukas
