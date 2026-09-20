@@ -1,75 +1,102 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from smtpbgjp3.qq.com (smtpbgjp3.qq.com [54.92.39.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 82B453DAAC0;
-	Sun, 20 Sep 2026 06:55:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E16734B662
+	for <linux-pci@vger.kernel.org>; Sun, 20 Sep 2026 07:28:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=54.92.39.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789887305; cv=none; b=LMCIaXmwuS5dcK8jjJuKELNnquneFTvPel8twSss7aXJLrR0h/pSJO+KeT5ie/USR6VYt5FlmbMZ3X+i8y+pc68T3ANuy6i0s2TYp56Zg/HHTGuZ+L6f+qKrFpTyGgpoarKtly2pbCFoFL76TfMH5X/e5kHi5Qy1Ma2ppwKrdhg=
+	t=1789889311; cv=none; b=B6GT59KV6oiMzZ9WLBc/kwXmQi6JnWhqoTEzvIP59ruXv/GXRHUxgUSiCpZaYz7AcWipJIjaA2hQcCSa0dyw8J0BTRqeDt+/U8iPQunuarXcOlDGA4d0aORWqpD1cuFz33LsTUoxPkW1ax9DAmpfqvsWP+n/6uPsZQeYfXrvCxI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789887305; c=relaxed/simple;
-	bh=XIaaZtBOASwyTKtjXFj2aO5+vKbghZT1VZdAm0vFI9g=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=OEWjy2Bd1qUI4XDKaNirfrGBoYtbAS+FDinj7oWpQSgJU7J2PFcp6NOrJ1OdqFmi7gJvxdhPaKXC/hR//DaeQDGQKrZ5SayRzUrbONiRBENo3jAsmXJ1g5DbHghHiRoglx5CVl9nHvGFzDDEKwbA0LnFuyFfy4U3UtJf8NbUj3k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EAm3aAgO; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EAm3aAgO"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 915DB1F00893;
-	Sun, 20 Sep 2026 06:55:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789887304;
-	bh=jphBmYPzMwPlIjB52qdb9Xjlf3297t06mdooQTvMhRs=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=EAm3aAgOrBXh4oh7rsy8h/PBRLbbFow3HWgDVGZCPYwGPuCwEdDLN3CY2zgrA5TKm
-	 1zJoVELBtx+KDBpIkwvvuPFOwYHAPg0hWTLLsbbJFrU4MhmiIy0LV8CNlI9T0q4A4u
-	 BKcouMU9m6pJzc5JpXvF+NWW5VsNwEYNtTh0KyXhAfroYLQYtM+sJYa4zKsIFYr68f
-	 fmJVI5wKc6GqSAMznPMlCm+ax7B8GmO7Xi2Jn0yq/UR0GtM/oj8EO9h3izsEvKuuyX
-	 IC/87i05/gzwHbTL4+DVhz4N9+McMywdH23cF+AfxprmZY+nBjNk7N1T7OdY+0pIlb
-	 9ND0Y0/I42P/A==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH RFC v3 12/12] arm64: dts: s32g: Add S32G3-RDB3 SerDes
- routing variants
-Reply-To: sashiko-reviews@lists.linux.dev
-To: =?utf-8?b?SmFuIFBldHJvdXMgKE9TUyk=?= <jan.petrous@oss.nxp.com>
-Cc: neil.armstrong@linaro.org, linux-pci@vger.kernel.org, conor+dt@kernel.org, devicetree@vger.kernel.org, Frank.Li@kernel.org, imx@lists.linux.dev, vkoul@kernel.org, wsa+renesas@sang-engineering.com, olteanv@gmail.com, linux-phy@lists.infradead.org, robh@kernel.org
-In-Reply-To: <20260919-s32g_serdes-v3-12-9d68868c1e89@oss.nxp.com>
-References: <20260919-s32g_serdes-v3-0-9d68868c1e89@oss.nxp.com>
- <20260919-s32g_serdes-v3-12-9d68868c1e89@oss.nxp.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Sun, 20 Sep 2026 06:55:03 +0000
-Message-Id: <20260920065503.915DB1F00893@smtp.kernel.org>
+	s=arc-20240116; t=1789889311; c=relaxed/simple;
+	bh=/W1Q3b0Ug/An/xASMJ2pUoki7spcWSdV/fbQZmnCzec=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=A5pbOhb3K+17aMO6UCZj+xnD+W9umo+29ZozofSDod8U/LSA/qR40y5a67D9mwY+Vpr5ngITskurfBNvXdq1dn3SObZI5XyjYyB6T3/BeczzwBrN7W6yTZK8BS7w2TMrY6MHTCoG9g7AN+OZxK/DOKtxYIKVFsAla0T8vZGEfbc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=net-swift.com; spf=pass smtp.mailfrom=net-swift.com; arc=none smtp.client-ip=54.92.39.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=net-swift.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=net-swift.com
+X-QQ-mid: zesmtpgz1t1789889285tcd1a6c28
+X-QQ-Originating-IP: 2LWhSFEewbzTjLyM7ItfCPczIggz4xiD+kO3jgAFf0U=
+Received: from localhost.localdomain ( [125.118.25.28])
+	by bizesmtp.qq.com (ESMTP) with 
+	id ; Sun, 20 Sep 2026 15:28:04 +0800 (CST)
+X-QQ-SSF: 0000000000000000000000000000000
+X-QQ-GoodBg: 0
+X-BIZMAIL-ID: 3101724138690995387
+EX-QQ-RecipientCnt: 6
+From: Mengyuan Lou <mengyuanlou@net-swift.com>
+To: linux-pci@vger.kernel.org
+Cc: jiawenwu@trustnetic.com,
+	duanqiangwen@net-swift.com,
+	linglingzhang@net-swift.com,
+	bhelgaas@google.com,
+	Mengyuan Lou <mengyuanlou@net-swift.com>
+Subject: [PATCH pci] PCI: Extend ACS quirk for Wangxun FF6XXX NICs
+Date: Sun, 20 Sep 2026 15:28:01 +0800
+Message-Id: <20260920072801.61016-1-mengyuanlou@net-swift.com>
+X-Mailer: git-send-email 2.30.1
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-QQ-SENDSIZE: 520
+Feedback-ID: zesmtpgz:net-swift.com:qybglogicsvrgz:qybglogicsvrgz5b-1
+X-QQ-XMAILINFO: MDGUoPnBmw7sPREF4YgrfPkhvr9RpGH7LIMzTBBXinSRvw7dSMzkzk9F
+	9hoIZWma2nCy8fC3rjxPYoix3YtURguBAqelKqeR5hCNX0ruvVHJyuumbRxFq+yXHF6eNrw
+	fEE3pzZhtgHK0OJKhdDVyAIij+5Cv5W1jJhRejATR3tLHsHbm5UeXjIUO/nwGYzgHY6R8y7
+	/OvvvhRVsoK32GOpojmca8pd575+MyI70G69bWE3y6ysOyGE4R880d75BmOhCyybM/a8O/q
+	a7q5LyQ41mjqmL62SMLfirs5nUlzkx7IwK3u2SQvDilgNQgdRXUYgTacIi3xD21mxmw/56K
+	9FTGQ/ocOs0eFD9GE8gQB5tA3E4SGmfv1zavmQwC+F8Go+N/Rf0ijJxRKIAs2ed2QHlTPCH
+	70kEmkasYWCJOGYVagjC/QZSumo06VhE7K5bY2fx/ARa2p7rr8OXp59NEpuvA57wBU22JUD
+	W0moewhmoxeYrz4DKlTpzMNCdDsEbx4/Ekw1NDgCybMoFJtSvq+k3C/ZVFiDglENUfHpYUi
+	o65zQc7vMpBoiNqF+1jLEzLclJCbNAjpvCuol8hrlzgt/SOMMn2I4ZP2iLP3jBUwUY2xcFJ
+	Q/6nFvBoJkd/fFa1JIpFP8nTgWsAQsZ7DhePREv7xC8y2wzZZAX/DRtSS0t2O3wqiyTRzDv
+	qKKVB+Qb7PJ+xa2QelW6TDvTAcZwiNj8cL4eyJRYPIMhlivVi0uu4yqf9hTNy0J4uYXZF8A
+	iYOdMUOXIVpJ5o6ag7Lru99GozrVK8zcegvbYr8y4MPmuWWtDW1+6X0GyZVziQDjocmY5LQ
+	4pMFavtUj/fe0IYgVbFcsd1gYq4xG83QBNHtXtwCUT6X4DrxDKnirh6WS7eO7Az8OpAI0lu
+	x6oI6D+HrNl6A8N2ROvK+PFVar+Mxq5RWtboqyiy7X5HjIKX292tEbhKSBtgP5RP9U6UTKz
+	Mj0EzMOi5de602hYvixbiNr7+NFzoi01o9EvUsnlvSNo7yuJ6c0ucMyMrebZuqzZVC+wUQ8
+	EQ38wzAvuGP/sQWxqMNXOi/mGNzAfP40LcAE8kUFrlSY3fCySnvPC/1xCr0V8BvtDradxYu
+	Hrue/iemP+h
+X-QQ-XMRINFO: NyFYKkN4Ny6FuXrnB5Ye7Aabb3ujjtK+gg==
+X-QQ-RECHKSPAM: 0
 
-> From: "Jan Petrous (OSS)" <jan.petrous@oss.nxp.com>
->=20
-> The S32G3-VNP-RDB3 board wires GMAC0 to an on-board KSZ9031 RGMII PHY by
-> default. Add two device tree variants that reroute GMAC0 over the
-> SerDes_0 XPCS lane for SGMII, matching the two SerDes lane layouts:
->=20
->   - Mode 1: PCIe x1 root complex on lane 0 plus 1G SGMII via GMAC0
->     (XPCS0) on lane 1.
->   - Mode 3: dual SGMII, GMAC0 (XPCS0) on lane 0 and PFE_EMAC_2 (XPCS1)
->     on lane 1.
->=20
-> The SerDes SUBSYS_MODE is derived from the lane child nodes present, so
-> each layout requires its own board device tree. The Mode 1 variant
-> enables both PCIe root complexes and extends their root ports by label
-> (pcie0_rp, pcie1_rp), matching the RDB3 wiring: PCIe_0 reaches the M.2
-> [ ... ]
->   - Mode 1: GMAC0 SGMII path up, and both PCIe root complexes come up -
->     PCIe_1 enumerates the card-slot NIC and passes traffic at full line
->     rate, PCIe_0 enumerates the M.2 slot with SW17-2 ON.
->=20
-> Signed-off-by: Jan Petrous (OSS) <jan.petrous@oss.nxp.com>
+The new Wangxun NICs do not advertise an ACS capability, but the
+hardware isolates functions on multi-function devices by directing
+peer-to-peer traffic upstream, providing behavior equivalent to
+PCI_ACS_RR and PCI_ACS_CR.
 
-Sashiko has reviewed this patch and found no issues. It looks great!
+Add the FF6xxx device IDs to pci_quirk_wangxun_nic_acs() so the
+functions can be placed in independent IOMMU groups.
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260919-s32g_serde=
-s-v3-0-9d68868c1e89@oss.nxp.com?part=3D12
+Signed-off-by: Mengyuan Lou <mengyuanlou@net-swift.com>
+---
+ drivers/pci/quirks.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index de9bbccda21f..a6ec300202d6 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -5062,12 +5062,16 @@ static int pci_quirk_loongson_acs(struct pci_dev *dev, u16 acs_flags)
+  * SFxxx 1G NICs(em).
+  * RP1000/RP2000 10G NICs(sp).
+  * FF5xxx 40G/25G/10G NICs(aml).
++ * FF6xxx 100G/25G/10G NICs(am).
+  */
+ static int  pci_quirk_wangxun_nic_acs(struct pci_dev *dev, u16 acs_flags)
+ {
+ 	switch (dev->device) {
+ 	case 0x0100 ... 0x010F: /* EM */
+ 	case 0x1001: case 0x2001: /* SP */
++	case 0x4010: case 0x4012: case 0x4014: /* AM 10G */
++	case 0x4025: case 0x4125: case 0x4325: case 0x4425: /* AM 25G */
++	case 0x4101: case 0x4103: case 0x4105: case 0x4107: /* AM 100G */
+ 	case 0x5010: case 0x5025: case 0x5040: /* AML */
+ 	case 0x5110: case 0x5125: case 0x5140: /* AML */
+ 		return pci_acs_ctrl_enabled(acs_flags,
+-- 
+2.30.1
+
 
