@@ -1,151 +1,235 @@
-Received: from relay.yourmailgateway.de (relay.yourmailgateway.de [188.68.61.103])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.4])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A155423783;
-	Mon, 21 Sep 2026 10:33:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=188.68.61.103
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 76CF4477288;
+	Mon, 21 Sep 2026 10:40:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.4
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789986824; cv=none; b=uo2DFKIMX+0q0VNxnOaOQxHp1GNX2ZAaeW1F4BA6cDzaRlgBUR6TjLZh6AbkAWb7fRrO+QsQ1Nnv21cl/CyCZ3Wq8q5cwGrKPhzAIJGlIE/TzvBIA3DMFMOY/s08E5ZhQda/GJYlq9y3zNENDsg1pxmGfGzZEtS5WBG0ZiysqPs=
+	t=1789987205; cv=none; b=OBSvxrCVLIxc70Af2vxQy/9x/PJfFSa7kfq72xx7UtTesHChJCUzXynqpBV3pfOGUR937DXuDGYnNq8cLLX+it0Zy5tv4Zt41312DWjnxfwXV806d2s9hqNfymJp9SaIishs8tIIu3LRHDZ+kHsxQ7ewekNNXsQP6NDGPC9Curg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789986824; c=relaxed/simple;
-	bh=LV+2tYCakXqoZe2XmT5/XlVU9oDmqMoQ4He7N+Nuloo=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=K2Q+GfC3mTCX8wwJgqIwcT0Bymb5btYjynoGQXuZU9Nw3Z64591SmiCKoJ1C0R/6Ypqe9S90I6UTg9AKFGjcm/G3kIqIoAAb/5Ki1TWyV1huE2SXeGINnd3rADnt8ECJByS3rap+1rgClWslTPyjPVQS3kNXj1hfG4J4Ittt9Fg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=leemhuis.info; spf=pass smtp.mailfrom=leemhuis.info; dkim=pass (2048-bit key) header.d=leemhuis.info header.i=@leemhuis.info header.b=a/2p1nEr; arc=none smtp.client-ip=188.68.61.103
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=leemhuis.info
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=leemhuis.info
+	s=arc-20240116; t=1789987205; c=relaxed/simple;
+	bh=Ad6fpYFCwCgyEm0jJN8fMhX4f6iQUwkGcN+NiWPLSVk=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
+	 MIME-Version:Content-Type; b=rYAZRhW8uy3Fqf0vPsmmC82dGp4nAo/+OOq7HcOm8N+EeQBYieF/wWjaAEIB0DK3xD4ildfUwG5DR2SbHRsbiCAkuvZQsTIlQcMRNeDxb+YyhaMgR2nddGZINlBBtKl0cQFVHNTVqLiO8Fch6i9KOifzSIQuNDP3dX9rVS/8RSc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=ir2w5z8T; arc=none smtp.client-ip=192.198.163.4
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=leemhuis.info header.i=@leemhuis.info header.b="a/2p1nEr"
-Received: from mors-relay-8403.netcup.net (localhost [127.0.0.1])
-	by mors-relay-8403.netcup.net (Postfix) with ESMTPS id 4hpKMS253Yz8MkP;
-	Mon, 21 Sep 2026 12:33:40 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=leemhuis.info;
-	s=key2; t=1789986820;
-	bh=LV+2tYCakXqoZe2XmT5/XlVU9oDmqMoQ4He7N+Nuloo=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=a/2p1nErlbmFMLJNFNXEeNC0l5pSuu/FT+zb1XLK+YOqfd3p+loP3w9nvhgMLDxPg
-	 NBeL13cy5SQAn1UOpzWotIaEY7/dARW1dHvF67s0r8eE0i2si/GGFNxfaMiYjCizAD
-	 PkqOkEivYa+oI23qLZ8lAoIC0mc8YM9T6CpkUSNm7rWEqSEjdb+LVVOEnN48Uqy7f4
-	 IBPNkoZ8CoZG5lb/1IYSehlKnq0Bun49S/hLz/rAU1USw7TabkJEc/dexQT0O43VQI
-	 ei95ftI/SvGpA3c4rrrPRdSulEB1QbfoNK+UPk3GiKbKHcNXVWds0SzjpFKXymlW5P
-	 1iTbZRWWmzflQ==
-Received: from policy02-mors.netcup.net (unknown [46.38.225.35])
-	by mors-relay-8403.netcup.net (Postfix) with ESMTPS id 4hpKMS1Mxtz8LKg;
-	Mon, 21 Sep 2026 12:33:40 +0200 (CEST)
-Received: from mxe9fb.netcup.net (unknown [10.243.12.53])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by policy02-mors.netcup.net (Postfix) with ESMTPS id 4hpKMR3bqTz8sb7;
-	Mon, 21 Sep 2026 12:33:39 +0200 (CEST)
-Received: from [IPV6:2a02:8108:8984:1d00:a0cf:1912:4be:477f] (unknown [IPv6:2a02:8108:8984:1d00:a0cf:1912:4be:477f])
-	by mxe9fb.netcup.net (Postfix) with ESMTPSA id A7D775FC31;
-	Mon, 21 Sep 2026 12:33:34 +0200 (CEST)
-Authentication-Results: mxe9fb;
-        spf=pass (sender IP is 2a02:8108:8984:1d00:a0cf:1912:4be:477f) smtp.mailfrom=regressions@leemhuis.info smtp.helo=[IPV6:2a02:8108:8984:1d00:a0cf:1912:4be:477f]
-Received-SPF: pass (mxe9fb: connection is authenticated)
-Message-ID: <1b2cceea-8da4-4239-a955-e0c6b475a227@leemhuis.info>
-Date: Mon, 21 Sep 2026 12:33:34 +0200
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="ir2w5z8T"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1789987203; x=1821523203;
+  h=from:to:cc:subject:in-reply-to:references:date:
+   message-id:mime-version;
+  bh=Ad6fpYFCwCgyEm0jJN8fMhX4f6iQUwkGcN+NiWPLSVk=;
+  b=ir2w5z8TgDaPas7SLM6wc8jMMERmefrnYrE5hebZc1ETFnv6Ntlb+85I
+   gbLrSXzGt/TzgQxeSVX3xmY1jQqvjwn5uddHolZAcLoB+j26U0C3/7eKp
+   E3n64edPJlpaRhEGSiBs8PJRbNeQY4yexFcmm63SNyQ53xFX0gv7cDPKZ
+   FhnKE9561sBoAI9DRTSirY7aT3m25Z1XQP69I9hy4+c18L2br4S3V1DQs
+   FRpdPpJlNLqkCOOA9c10zFQxP8nVCX220Ey0HdAzSnRcQmP+qGE7582no
+   oLKDmDyp61RSREnVPGFtAdBsUQQ26MvqJ451QPgmDBql4bWl+y/baTjvi
+   g==;
+X-CSE-ConnectionGUID: WJ0p+OgrRaGD6hY7MKVUWg==
+X-CSE-MsgGUID: qAbrOtEzRbiy4/SStXSD9Q==
+X-IronPort-AV: E=McAfee;i="6800,10657,11911"; a="995193"
+X-IronPort-AV: E=Sophos;i="6.27,114,1787036400"; 
+   d="scan'208";a="995193"
+Received: from fmviesa009.fm.intel.com ([10.60.135.149])
+  by fmvoesa114.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Sep 2026 03:40:02 -0700
+X-CSE-ConnectionGUID: 8+XazXeCTmuTJA6Wr/tqcA==
+X-CSE-MsgGUID: mZc7qbq5SBS9jMbwFfsXTg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,114,1787036400"; 
+   d="scan'208";a="269116455"
+Received: from ettammin-mobl3.ger.corp.intel.com (HELO localhost) ([10.245.244.180])
+  by fmviesa009-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Sep 2026 03:40:00 -0700
+From: Jani Nikula <jani.nikula@linux.intel.com>
+To: Hui Peng <benquike@gmail.com>, bhelgaas@google.com, airlied@redhat.com
+Cc: linux-pci@vger.kernel.org, dri-devel@lists.freedesktop.org,
+ linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI/VGA: fix inverted vga_tryget() return check and
+ clear removed pci_dev
+In-Reply-To: <20260919222629.3798073-1-benquike@gmail.com>
+Organization: Intel Finland Oy - BIC 0357606-4 - c/o Alberga Business Park,
+ 6 krs Bertel Jungin Aukio 5, 02600 Espoo, Finland
+References: <20260919222629.3798073-1-benquike@gmail.com>
+Date: Mon, 21 Sep 2026 13:39:54 +0300
+Message-ID: <21d4bbfe6facdf2f88b09b277bddfe0afff5e5a4@intel.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3] PCI: Skip Target Speed quirk on clamped ports with no
- link
-To: "Maciej W. Rozycki" <macro@orcam.me.uk>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Andreas Wild <andiwild@gmail.com>,
- linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
- linux-kernel@vger.kernel.org, M M <restafvalendergelijke@outlook.com>,
- regressions@lists.linux.dev, blaat windows <blaaaat@hotmail.com>
-References: <20260917233355.GA1115024@bhelgaas>
- <b4ed1637-ac6a-4af5-ab47-e07309af200b@leemhuis.info>
- <alpine.DEB.2.21.2609181131520.57799@angie.orcam.me.uk>
-From: Thorsten Leemhuis <regressions@leemhuis.info>
-Content-Language: de-DE, en-US
-In-Reply-To: <alpine.DEB.2.21.2609181131520.57799@angie.orcam.me.uk>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-PPP-Message-ID: <178998681509.217018.8059272518562419775@mxe9fb.netcup.net>
-X-Rspamd-Server: rspamd-worker-8404
-X-Rspamd-Queue-Id: A7D775FC31
-X-NC-CID: FUpWLpRNalb8yuhbPZz+iPk/MR3311IHVxmP+iUcn5PvMG0xI6U=
+Content-Type: text/plain
 
-On 9/18/26 12:39, Maciej W. Rozycki wrote:
-> On Fri, 18 Sep 2026, Thorsten Leemhuis wrote:
+On Sat, 19 Sep 2026, Hui Peng <benquike@gmail.com> wrote:
+> Fix two issues in drivers/pci/vgaarb.c:
+
+One change per patch, please.
+
 >
->>> But IIUC Aoxtj still sees issues with 72780f796468 ("PCI: Always lift
->>> 2.5GT/s restriction in PCIe failed link retraining") even with this
->>> patch
->>> (https://lore.kernel.org/all/331e97c7-e422-420d-9f3e-5d9f734464b3@axtjblog.cc)
->>>
->>> And M M / Mich (BCC'd) also reports an issue that (IIUC) is not fixed by
->>> this patch (https://bugzilla.kernel.org/show_bug.cgi?id=221919#c3)
->>>
->>> So evidently there are still issues but maybe this patch fixes part of
->>> them?
->>>> Yeah, Maciej ten days expressed that we to look into this. Anyway, I
->> suggest someone that is affected by that problem starts a new thread
->> (please CC all those that are affected by it and the regression list)
->> with summarizing the current state + this patch, as this thread got a
->> bit confusing... (please drop a link to that thread here afterwards)
-> 
->  It remains on my radar, no worries.  [...]
+> 1. In vga_arb_device_init() / vga_arbiter_From_pci_dev(), vga_tryget()
+>    returns 0 on success and a negative errno on failure, so checking if
+>    (!vga_tryget(...)) is inverted and skips unlocking on success.
+> 2. In vga_arbiter_del_pci_device(), clear any open vga_arb_user_init
+>    priv->target references pointing to the removed pci_dev so subsequent
+>    writes or close() on /dev/vga_arbiter do not dereference a freed
+>    pci_dev.
+>
+> Fixes: 1d38fe6ee6a8 ("PCI/VGA: Move vgaarb to drivers/pci")
+> Assisted-by: LLM
+> Signed-off-by: Hui Peng <benquike@gmail.com>
+> ---
+> diff --git a/drivers/pci/vgaarb.c b/drivers/pci/vgaarb.c
+> index 3de05aee7859..4f13e542505a 100644
+> --- a/drivers/pci/vgaarb.c
+> +++ b/drivers/pci/vgaarb.c
+> @@ -818,11 +818,33 @@ static bool vga_arbiter_add_pci_device(struct pci_dev *pdev)
+>  	return false;
+>  }
+>  
+> +#define MAX_USER_CARDS         CONFIG_VGA_ARB_MAX_GPUS
+> +#define PCI_INVALID_CARD       ((struct pci_dev *)-1UL)
+> +
+> +/* Each user has an array of these, tracking which cards have locks */
+> +struct vga_arb_user_card {
+> +	struct pci_dev *pdev;
+> +	unsigned int mem_cnt;
+> +	unsigned int io_cnt;
+> +};
+> +
+> +struct vga_arb_private {
+> +	struct list_head list;
+> +	struct pci_dev *target;
+> +	struct vga_arb_user_card cards[MAX_USER_CARDS];
+> +	spinlock_t lock;
+> +};
+> +
+> +static LIST_HEAD(vga_user_list);
+> +static DEFINE_SPINLOCK(vga_user_lock);
+> +
+>  static bool vga_arbiter_del_pci_device(struct pci_dev *pdev)
+>  {
+>  	struct vga_device *vgadev;
+> +	struct vga_arb_private *priv;
+>  	unsigned long flags;
+>  	bool ret = true;
+> +	int i;
+>  
+>  	spin_lock_irqsave(&vga_lock, flags);
+>  	vgadev = vgadev_find(pdev);
+> @@ -845,6 +867,21 @@ static bool vga_arbiter_del_pci_device(struct pci_dev *pdev)
+>  	wake_up_all(&vga_wait_queue);
+>  bail:
+>  	spin_unlock_irqrestore(&vga_lock, flags);
+> +	if (ret) {
+> +		spin_lock_irqsave(&vga_user_lock, flags);
+> +		list_for_each_entry(priv, &vga_user_list, list) {
+> +			if (priv->target == pdev)
+> +				priv->target = PCI_INVALID_CARD;
+> +			for (i = 0; i < MAX_USER_CARDS; i++) {
+> +				if (priv->cards[i].pdev == pdev) {
+> +					priv->cards[i].pdev = PCI_INVALID_CARD;
+> +					priv->cards[i].io_cnt = 0;
+> +					priv->cards[i].mem_cnt = 0;
+> +				}
+> +			}
+> +		}
+> +		spin_unlock_irqrestore(&vga_user_lock, flags);
+> +	}
+>  	kfree(vgadev);
+>  	return ret;
+>  }
+> @@ -1025,27 +1062,6 @@ EXPORT_SYMBOL(vga_client_register);
+>   * the arbiter.
+>   */
+>  
+> -#define MAX_USER_CARDS         CONFIG_VGA_ARB_MAX_GPUS
+> -#define PCI_INVALID_CARD       ((struct pci_dev *)-1UL)
+> -
+> -/* Each user has an array of these, tracking which cards have locks */
+> -struct vga_arb_user_card {
+> -	struct pci_dev *pdev;
+> -	unsigned int mem_cnt;
+> -	unsigned int io_cnt;
+> -};
+> -
+> -struct vga_arb_private {
+> -	struct list_head list;
+> -	struct pci_dev *target;
+> -	struct vga_arb_user_card cards[MAX_USER_CARDS];
+> -	spinlock_t lock;
+> -};
+> -
+> -static LIST_HEAD(vga_user_list);
+> -static DEFINE_SPINLOCK(vga_user_lock);
+> -
+> -
+>  /*
+>   * Take a string in the format: "PCI:domain:bus:dev.fn" and return the
+>   * respective values. If the string is not in this format, return 0.
+> @@ -1168,7 +1184,7 @@ static ssize_t vga_arb_write(struct file *file, const char __user *buf,
+>  		}
+>  
+>  		pdev = priv->target;
+> -		if (priv->target == NULL) {
+> +		if (priv->target == NULL || priv->target == PCI_INVALID_CARD) {
+>  			ret_val = -ENODEV;
+>  			goto done;
+>  		}
+> @@ -1215,7 +1231,7 @@ static ssize_t vga_arb_write(struct file *file, const char __user *buf,
+>  		}
+>  
+>  		pdev = priv->target;
+> -		if (priv->target == NULL) {
+> +		if (priv->target == NULL || priv->target == PCI_INVALID_CARD) {
+>  			ret_val = -ENODEV;
+>  			goto done;
+>  		}
+> @@ -1266,12 +1282,12 @@ static ssize_t vga_arb_write(struct file *file, const char __user *buf,
+>  		 */
+>  
+>  		pdev = priv->target;
+> -		if (priv->target == NULL) {
+> +		if (priv->target == NULL || priv->target == PCI_INVALID_CARD) {
+>  			ret_val = -ENODEV;
+>  			goto done;
+>  		}
+>  
+> -		if (vga_tryget(pdev, io_state)) {
+> +		if (vga_tryget(pdev, io_state) == 0) {
+>  			/* Update the client's locks lists... */
+>  			for (i = 0; i < MAX_USER_CARDS; i++) {
+>  				if (priv->cards[i].pdev == pdev) {
+> @@ -1335,7 +1351,8 @@ static ssize_t vga_arb_write(struct file *file, const char __user *buf,
+>  		for (i = 0; i < MAX_USER_CARDS; i++) {
+>  			if (priv->cards[i].pdev == pdev)
+>  				break;
+> -			if (priv->cards[i].pdev == NULL) {
+> +			if (priv->cards[i].pdev == NULL ||
+> +			    priv->cards[i].pdev == PCI_INVALID_CARD) {
+>  				priv->cards[i].pdev = pdev;
+>  				priv->cards[i].io_cnt = 0;
+>  				priv->cards[i].mem_cnt = 0;
+> @@ -1366,7 +1383,7 @@ static ssize_t vga_arb_write(struct file *file, const char __user *buf,
+>  			goto done;
+>  		}
+>  		pdev = priv->target;
+> -		if (priv->target == NULL) {
+> +		if (priv->target == NULL || priv->target == PCI_INVALID_CARD) {
+>  			ret_val = -ENODEV;
+>  			goto done;
+>  		}
+> @@ -1429,7 +1446,7 @@ static int vga_arb_release(struct inode *inode, struct file *file)
+>  	list_del(&priv->list);
+>  	for (i = 0; i < MAX_USER_CARDS; i++) {
+>  		uc = &priv->cards[i];
+> -		if (uc->pdev == NULL)
+> +		if (uc->pdev == NULL || uc->pdev == PCI_INVALID_CARD)
+>  			continue;
+>  		vgaarb_dbg(&uc->pdev->dev, "uc->io_cnt == %d, uc->mem_cnt == %d\n",
+>  			uc->io_cnt, uc->mem_cnt);
 
-FWIW, another report from "blaat windows" (now CCed) can be found
-out-of-thread here:
-
-https://lore.kernel.org/all/AS2PR10MB7429335B6C8F4C7FA3F88638B5852@AS2PR10MB7429.EURPRD10.PROD.OUTLOOK.COM/
-
-Quoting that below.
-"""
->>>> Another reproducible case of the active-link failure described in this thread.
->>>> 
->>>> Hardware:
->>>> Intel 4th-gen/9-series platform
->>>> Intel 82571EB quad-port NIC
->>>> Microsemi/PMC/IDT PES12N3A PCIe switch
->>>> Root port 00:1c.4, LnkCap 5GT/s x4
->>>> Working negotiated link: 2.5GT/s x4
->>>> 
->>>> Kernel results:
->>>> 7.2-rc1 fail
->>>> 7.1-rc7 succes
->>>> 
->>>> On failing kernels, the PES12N3A hierarchy does not enumerate and all four downstream 82571EB ports disappear.
->>>> 
->>>> I traced this to pcie_failed_link_retrain() and specifically the new generic clamp-removal code introduced by 72780f7964684939d7d2f69c348876213b184484 ("PCI: Always lift 2.5GT/s restriction in PCIe failed link retraining").
->>>> 
->>>> I tested 7.3.0-rc3+ with only this block commented out:
->>>> 
->>>>     pcie_capability_read_word(dev, PCI_EXP_LNKCTL2, &lnkctl2);
->>>>     if ((lnkctl2 & PCI_EXP_LNKCTL2_TLS) == PCI_EXP_LNKCTL2_TLS_2_5GT) {
->>>>             pci_info(dev, "removing 2.5GT/s downstream link speed restriction\n");
->>>>             ret = pcie_set_target_speed(dev, speed_cap, false);
->>>>             if (ret)
->>>>                     goto err;
->>>>     }
->>>> 
->>>> With that block disabled, 7.3.0-rc3+ boots normally, having all four NIC ports enumerate:
->>>> 
->>>> 07:00.0 82571EB
->>>> 07:00.1 82571EB
->>>> 08:00.0 82571EB
->>>> 08:00.1 82571EB
->>>> 
->>>> The important result is that the initial 2.5GT/s recovery is fine. Leaving the link at 2.5GT/s works. It is the subsequent:
->>>> 
->>>>     pcie_set_target_speed(dev, speed_cap, false);
->>>> 
->>>> which breaks this PES12N3A/82571EB link.
->>>> 
->>>> So this appears to be the same active-link failure mode, but with a PES12N3A switch rather than a direct 82571EB connection.
->>>> 
->>>> This was tested against vanilla 7.3.0-rc3+ with only the above local change.
->>>> 
->>>> I can provide full dmesg/lspci output and test a proposed fix if useful.
-"""
-
-Ciao, Thorsten
+-- 
+Jani Nikula, Intel
