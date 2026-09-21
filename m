@@ -1,109 +1,139 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.16])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj2-f12.google.com (mail-pj2-f12.google.com [74.125.227.140])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF3122F7F0A;
-	Mon, 21 Sep 2026 05:05:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 60B6B357CFC
+	for <linux-pci@vger.kernel.org>; Mon, 21 Sep 2026 05:27:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.227.140
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789967107; cv=none; b=DdzyTQGw/GuxGhV4HdAlILlYZU4O0/o7b4TDj6uopRtIQlcfr7jP5KyvKikeBgkytKeteo0M+sprGdkIZBx8vpHRHSIkqaWGYuZDgAI+Mwaa9jLDG7np/ItI7u9i47wOS9Qd+POoqSLdElgxIw93oVwkLnz655mMjyXZWb01Vfw=
+	t=1789968431; cv=none; b=T5S2WDLCdKOFWiixaGEnNKtMkYoad31RMaWVUB/I7no+zT+fiblRZLDTCy84h34h8UjwVBjkZ+qqXHDmfC+5Dp/5VJNI3LecE0nv8Rp/kpdMCGiGUeBVzOuEDK2pExcmvJzLJFzs57u+jPKbNV9UoBbvF/fAQb0s+/K3MMcsRQw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789967107; c=relaxed/simple;
-	bh=0YcJp1VTnAiIRfV0D+SZkL1YrSbTHsE6VVnIz7y1yWA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=XzqEo9WugoHtX9JTu/5h2Y7De3fp+/fYItePq3e/ral/HxLpk5u9ToTLKOvUQDKnTAz2bAzgIkazNTTPW+riOyOJv3I2zllpRqPyE2LnhU4/Vl7qbNrIWlc145Fg/09Q+8vqvT/p4GYjgljHGdKadzfAppWUkz0Dr+WsuiwYcBM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=dNW9/ENk; arc=none smtp.client-ip=192.198.163.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1789968431; c=relaxed/simple;
+	bh=K4dXuFjdLrygWeliwvNV/H7rdoqVo5eXsrZKXIh50eQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=Be/qnX/bqE505eL92Co/x86ccDLHLSNlIJiFHPyzPJWEIMXcAA4AXddoGN/PZn813H9aZpb941f0wtq4SnvMXXYTr7e13bzdobttJhwslqNQXUpidIFWy80CH5zyrphUyGwN3agZd+vU+71yTDo4Odwi+ZqQZNplbB4a6Tsi+w8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=djF6GEmG; arc=none smtp.client-ip=74.125.227.140
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="dNW9/ENk"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1789967106; x=1821503106;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:content-transfer-encoding:in-reply-to;
-  bh=0YcJp1VTnAiIRfV0D+SZkL1YrSbTHsE6VVnIz7y1yWA=;
-  b=dNW9/ENkQJ1ZiJlGE5w6vzknRgfpdllT7LeV0tWAsFYIW+Q6ObCoawxk
-   bqZmFNFcOvliNDPKPuJ9MHdWekX1ONdEaVZzTFiO06ZhShLxD1J28OEE4
-   4S5CVfIDIJQ7xgOTpQO3a6ZG4qJTHOtVdT0iPDAIsVVIUAJ6bRt1PQLW/
-   EXWI55oCIGWLm8/tdWqKzt0zRZRHD6DrpwWpmjK5ZTz8KnB4Eor3q40VG
-   MB0U5uP0gEGMjHEaElmX9mbcj2znh98hibpqf1taRIrSAiCOe4slfGXMc
-   reJQaCOKKWYsBBPaH39WwWvtXJ4w8uPKJn1cJPK/UHSfR5QlojyL1ARqq
-   w==;
-X-CSE-ConnectionGUID: I0EXkKXmTRmvJzYa6SDvIw==
-X-CSE-MsgGUID: pWD2rXw8R/WgvCqMT/UE4g==
-X-IronPort-AV: E=McAfee;i="6800,10657,11911"; a="78025452"
-X-IronPort-AV: E=Sophos;i="6.27,114,1787036400"; 
-   d="scan'208";a="78025452"
-Received: from fmviesa007.fm.intel.com ([10.60.135.147])
-  by fmvoesa110.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Sep 2026 22:04:59 -0700
-X-CSE-ConnectionGUID: 41YesqgDTiSuvi8H+G7Vbw==
-X-CSE-MsgGUID: J3kSkX22QEOlL1wsdXekSA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.27,114,1787036400"; 
-   d="scan'208";a="271961239"
-Received: from black.igk.intel.com ([10.91.253.5])
-  by fmviesa007.fm.intel.com with ESMTP; 20 Sep 2026 22:04:56 -0700
-Received: by black.igk.intel.com (Postfix, from userid 1001)
-	id 6233B99; Mon, 21 Sep 2026 07:04:50 +0200 (CEST)
-Date: Mon, 21 Sep 2026 07:04:50 +0200
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Freeman Z <SHD-ISAC@outlook.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"westeri@kernel.org" <westeri@kernel.org>,
-	"andreas.noever@gmail.com" <andreas.noever@gmail.com>,
-	"YehezkelShB@gmail.com" <yehezkelshb@gmail.com>,
-	"rafael@kernel.org" <rafael@kernel.org>,
-	"linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
-	Sanath S <Sanath.S@amd.com>,
-	Basavaraj Natikar <Basavaraj.Natikar@amd.com>,
-	Mario Limonciello <mario.limonciello@amd.com>
-Subject: Re: [BUG] PCI/USB4: AMD Phoenix 1022:14ef runtime suspend prevents
- JHL9480 downstream enumeration
-Message-ID: <20260921050450.GM106095@black.igk.intel.com>
-References: <TYCPR01MB1092795BE7AB51121BBAB292496862@TYCPR01MB10927.jpnprd01.prod.outlook.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="djF6GEmG"
+Received: by mail-pj2-f12.google.com with SMTP id d9443c01a7336-2db1ca069c8so25645355ad.3
+        for <linux-pci@vger.kernel.org>; Sun, 20 Sep 2026 22:27:07 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1789968425; x=1790573225; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=Xd8o2pAawE0z2eISzR2WyTi70wnc7/XhLNuD2B4d+0U=;
+        b=djF6GEmGU86IVo3BorEOrk4ox1l4b9E5ym/I0UaxOqeNzMMgIt1PA8F7reLvucP+kp
+         anhUqkgYs93cMXz6JrTDp1w0PamdLwVjZV6K/vTukPeMl3RzbW+ReJq96DjM9O6uU8/P
+         98/JaNPUQlXYuaeLVlHFRR4P/ON4W4q8tiE+XWQemfjaZuDuwXzF4U3pmvD0VBFRFv3N
+         2dDRvvdkoC3Nsak+iXNJ4pKysYc/ld7aUB4uq5uZ+FUiFtPYt+hJFzr+LpqilY54ev8g
+         NBGQVfalMZmEHIQqkRDOC5Jt3p18ksFtcVzgEI4m9u0xufTR2UotN0/t2kjqD1LkcI+1
+         /FLw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1789968425; x=1790573225;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=Xd8o2pAawE0z2eISzR2WyTi70wnc7/XhLNuD2B4d+0U=;
+        b=F4yDDi0WVI7JLHOV/sYBou1eqMFRB9UD7MTeGCSSXLHAP88Ty3JhC7KyyPTF5tpBS0
+         KrpsSbZ92pcFd+0NLjqnJ+XV9LbV4OkaEq4ncwf2Oqg/Jg1jjPMUIz8frTkFfRRP+Iz6
+         gfcFkQeAfQmJNUVO+qLiYoBWvb3eo0FCApNe4gbZDMG6QO6RKeHsQZKjMH+HvNAChHZT
+         JXg9ShxkEG/5bnStOr+D297pE8vU5zaDCT3oqx6R075LUA2qDOa4+MzThb7mfdK5z/FX
+         UB1a90P3Vg9R+EbdVHMh6eG8Zknss8IFeHOCnWckTNL25JygXlT6Gm2LGdMec5ci1c1I
+         +ilQ==
+X-Forwarded-Encrypted: i=1; AKwUvBx8FOhDvJ/HN8JE/RTkBYiFoPca+p3Uucfz7fowTojpjkGJO+SbAsIo3uFfrBjS+4rx7bCIR0gV5fU=@vger.kernel.org
+X-Gm-Message-State: AFuF++k8fKb1BBbXg1Vpd920X/IavbMf0UJO7mYubUYi8FZvdikeooZD
+	VBa3LR43HAyp534UNV+9RIlUqMzYld5yXz3fpzVU1gxwlkVRIUCLto/D
+X-Gm-Gg: AYBFou0waGaEJtG8MURVHI2U0Ne4qo6w5OP9Jt1YGtHLzC+D+oKjEfPFrORjDwRgixS
+	ySFcyFTANfT8DDV8PHhfOhCPkHl+QrW4K9d79hSox6mS1wwvZDMrQdlYZwLxmEdlrBEJ02wqXI9
+	501UJ4ePebm8zwJ+xHPWX4rM/et2ElYc8j794bsVP8+5mmMtIZh//ylNOdRYUmfaEig6zW0wEPo
+	+HrGegMWT35WoyoUMpdHcREC29GhFE6I5K0QlviUkRUHkddpIIBXiqQer5XjuaCDpWcRdOe2K4l
+	hWLOEyxL+9SdKzExnJdrPctpGF+3b6vJwyGuOhOEFprzYc7tmtiGSVRxNka35yIWo7WozQozMGm
+	6tAsFSu+lSXHOrvEuXdq2UmKNIG8BxafOMfe9wbgmdth0NNS+wg7Y0vZKuhjCNO6ScIEd5cLYmL
+	0+gNaA1ZofvtHZBU5gEIi1XTUvdOW/nDSAkIA2iFFOmo4vXhDvr9aoPvPf9MlM73xb75uCyGp3+
+	3coAdGFK6eaw+JUhykJS0DfO6Ss24dentBiHI4iV3BskBZEZHbeDl2zupBRZFZ9+FI1IGSyZdgV
+	cVduEDsXrQ==
+X-Received: by 2002:a17:90b:39ae:b0:39e:6c69:34d2 with SMTP id 98e67ed59e1d1-39e6c693659mr8697371a91.54.1789968424789;
+        Sun, 20 Sep 2026 22:27:04 -0700 (PDT)
+Received: from phui-2.c.googlers.com.com (67.51.127.34.bc.googleusercontent.com. [34.127.51.67])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-39e554e5529sm6677054a91.4.2026.09.20.22.27.04
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 20 Sep 2026 22:27:04 -0700 (PDT)
+From: Hui Peng <benquike@gmail.com>
+To: bhelgaas@google.com,
+	airlied@redhat.com
+Cc: benh@kernel.crashing.org,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org,
+	benquike@gmail.com
+Subject: [PATCH v2 1/2] PCI/VGA: fix inverted vga_tryget() return check in vga_arb_write()
+Date: Mon, 21 Sep 2026 05:27:01 +0000
+Message-ID: <20260921052702.1725696-1-benquike@gmail.com>
+X-Mailer: git-send-email 2.55.0.1082.g2b9226bbc0-goog
+In-Reply-To: <20260919222629.3798073-1-benquike@gmail.com>
+References: <20260919222629.3798073-1-benquike@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <TYCPR01MB1092795BE7AB51121BBAB292496862@TYCPR01MB10927.jpnprd01.prod.outlook.com>
 
-Hi,
+In vga_arb_write(), the "trylock" command handler calls
+vga_tryget(pdev, io_state) and checks:
 
-Adding AMD folks in case this is known issue.
+  if (vga_tryget(pdev, io_state)) {
+      /* Update the client's locks lists... */
 
-On Sat, Sep 19, 2026 at 12:39:37PM +0000, Freeman Z wrote:
-> Hello,
-> 
-> I am seeing a reproducible USB4/PCIe runtime-PM problem on an ASUS ROG
-> Flow X13 GV302XV (Ryzen 9 7940HS / Phoenix) with a Kensington SD5000T5
-> EQ Thunderbolt 5 dock connected to the laptop's USB4 host port.
-> 
-> The failure is reproducible with the official Arch Linux Live ISO using
-> Arch's stock `linux` kernel:
-> 
->     7.2.2-arch1-1
-> 
-> I have not yet tested a self-built kernel.org mainline/vanilla kernel.
-> I can test patches, or collect additional traces if requested.
+However, vga_tryget() returns 0 on success and a negative errno (-EBUSY)
+when the VGA resources are already locked. Because the check tests for a
+non-zero return value, a successful vga_tryget() skips incrementing
+priv->cards[i].io_cnt / mem_cnt and skips reporting success, leaking the
+acquired VGA lock, whereas a failed vga_tryget() (-EBUSY) erroneously
+records the lock in priv->cards[i] so a subsequent "unlock" or file
+release decrements the lock count without holding the lock.
 
-Can you provide full dmesg with "thunderbolt.dyndbg=+p" in the kernel
-command line?
+Check if (vga_tryget(pdev, io_state) == 0) in vga_arb_write().
 
-With the below steps (following your description):
+Tested in QEMU against Linux 7.3.0-rc3 by opening /dev/vga_arbiter and
+writing "trylock io+mem" followed by closing the file descriptor. On the
+unfixed kernel, write("trylock io+mem") acquires the VGA lock
+(locks=io+mem(1:1)) but takes the error branch and returns -EBUSY (-16)
+without recording the lock in priv->cards[], permanently leaking the
+lock on close(); with this patch applied, write("trylock io+mem")
+succeeds (ret = 14) and close() cleanly releases the lock
+(locks=none(0:0)).
 
-0. Drop all non-standard command line options except the above.
-1. Boot the system up, nothing connected.
-2. Once up let the TB and the related PCIe root ports enter D3cold (don't
-   run lspci it will wake them up but you can look at the runtime status that
-   they are all suspended).
-3. Plug in the dock.
+Fixes: deb2d2ecd43d ("PCI/GPU: implement VGA arbitration on Linux")
+Cc: stable@vger.kernel.org
+Assisted-by: LLM
+Signed-off-by: Hui Peng <benquike@gmail.com>
+---
+Changes in v2:
+- Split the vga_tryget() return check fix in vga_arb_write() from the
+  PCI_INVALID_CARD hot-unplug cleanup fix into a 2-patch series, and fix
+  the commit message to reference vga_arb_write(), as noted by Sashiko.
+- Update Fixes: tag from the file-move commit 1d38fe6ee6a8 to
+  deb2d2ecd43d ("PCI/GPU: implement VGA arbitration on Linux").
 
-We should see in the dmesg the PME if it works as expected. If not then it
-may be that there is something wrong with the wakeup path.
+ drivers/pci/vgaarb.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/pci/vgaarb.c b/drivers/pci/vgaarb.c
+index 3de05aee7859..350ab9624eb9 100644
+--- a/drivers/pci/vgaarb.c
++++ b/drivers/pci/vgaarb.c
+@@ -1272,7 +1272,7 @@ static ssize_t vga_arb_write(struct file *file, const char __user *buf,
+ 			goto done;
+ 		}
+ 
+-		if (vga_tryget(pdev, io_state)) {
++		if (vga_tryget(pdev, io_state) == 0) {
+ 			/* Update the client's locks lists... */
+ 			for (i = 0; i < MAX_USER_CARDS; i++) {
+ 				if (priv->cards[i].pdev == pdev) {
+-- 
+2.49.0
