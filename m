@@ -1,262 +1,170 @@
-Received: from mail.ozlabs.org (gandalf.ozlabs.org [150.107.74.76])
+Received: from CH4PR04CU002.outbound.protection.outlook.com (mail-northcentralusazon11013059.outbound.protection.outlook.com [40.107.201.59])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A91F3B47FF;
-	Mon, 21 Sep 2026 13:09:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=150.107.74.76
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789996147; cv=none; b=FHE6hhGDUBkz48W6SvcyWnizKHu2bbWOPVnNiSMZYA9dqNCi0RGtz8sw01JDNjOEySSZ9GYGbaLKVeVqRbsP4HTpERTvPyEj/qzDrHGXP943osvL+zEBOXhUsysllhEp7/HGMA+ugZ7Bl8YS725wh3ncnqmxofe2ytdgk6ELEgA=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789996147; c=relaxed/simple;
-	bh=iLgseTPsPpKsXTFPmfa4IyrpdTtbx0Dq6np9x+weJs4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=S/mxPCWfozpUejfuqI0AtHr5+1+h7xN5xT+yFZV8/8/xg40LVHrxz5zbmPbru3L/S1u138ddtQHBfKGE/PcbmC8mra9EjkdAh4NaKOz9sykMe0fjUDPn8UpUrjBUlwqcouXHVq9YjJg5PToNYgXEb4ayGYJfmcwB+mhEjJRHAi0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ozlabs.org; spf=pass smtp.mailfrom=ozlabs.org; dkim=pass (2048-bit key) header.d=ozlabs.org header.i=@ozlabs.org header.b=hF4AAInx; arc=none smtp.client-ip=150.107.74.76
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ozlabs.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ozlabs.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7440F49CF23;
+	Mon, 21 Sep 2026 13:22:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.201.59
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1789996941; cv=fail; b=aBWElYBUkKxi2D8uaHvrQN5K9CX+cQ//2hNF4AwbLFsL8pwEkKdrtkHPy7f4vCaIenV4+CByHHi0Ew7ZEtXuDACyldfdKJo6es4eKR1J+MA+BdPvLIPIhzgbBAJYeltkdjttQ1hYr4GeWRHTpmjp6/rH9LEYmjlPFsrI+2SJJ8c=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1789996941; c=relaxed/simple;
+	bh=TfpkoRB/npy1EU+v09lXGscw8Z15Lh0P6hFuNuTJFbI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=pEIoiI27l4rBuHUtoiYdAarr8knbrz9nRyhSSXlNB3LymGKS46DDlAQUd4WwBG9yThbxT/s+tV8MRkZyBUJxR8hKe7a8T1wa0Bp2V2co7hDz0aNwU7/sJh8GWcMEQyhbf+xN5mSSVukhHW0ikRIe72nKHTleiofd6V91U24wbBc=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=J+C0MHsf; arc=fail smtp.client-ip=40.107.201.59
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ozlabs.org header.i=@ozlabs.org header.b="hF4AAInx"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ozlabs.org;
-	s=201707; t=1789996120;
-	bh=Q3DyB+NGw+9JvjJpyqPnaRX8BQWBsWV2/fUz4fZ0JzM=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=hF4AAInxfCog6b0R2jfBsu5AcZxeld1cJg2tAh7nQbbp2UPJfvXIol+4u/zxOsuTq
-	 G2Btw97N8TFPPg3p8lcAXVlX4Ws1RT/wTLMHt7ijYNLo5DV97Y1WZVJRZd11TiA6Wv
-	 eP3mQk/yh2FBTrMBhvnynVkS3f0CuTA9LhCg6R2lG5kew8fziK3dja/SLdtNMby7sG
-	 DMq29UpYeDpCD91u/HQK8g9veOrikvI9D39wLqG3kWEjuJTX6bNtNxTvbzSmKAb7rp
-	 aXtPEqNABH51INgehXpfu+EZHlKHE5rOiJ7tUzSblRG0SVeXliGEjBi7vaJqqqRUQt
-	 wXb7KsjGKQhyA==
-Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(Client did not present a certificate)
-	by mail.ozlabs.org (Postfix) with ESMTPSA id 4hpNp60jf6z4w1l;
-	Mon, 21 Sep 2026 23:08:29 +1000 (AEST)
-Message-ID: <23a0ea30-c6dc-4b8c-a0a1-89e9f912bf37@ozlabs.org>
-Date: Mon, 21 Sep 2026 14:08:47 +0100
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="J+C0MHsf"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=bfFh45LQSV/TG8V2mAd8TepcLEfeAiZS2JQp6Gx24uQmLlgp5C4olded5L059t/BRWXxmIZnSdO6YeiAWhieZSoFvJLalqgx9hB7YZkl//nfbt7ZiqP067P73oMvccTfai47envexpmEZ2/eU9ZqHfdRCYQ0ZizpuX42Z1xuXXyeG9H63wMbbIdOq2qLG6ZWeZvusXNA3DuTMNPPmyongl5iBOVGnkqr+g08+CSrcDg2u+/f6AFwMYeMk3AHqzdW+SBkWymabCdaiTSxq+Z9PT8bJdu+OMqlX149TFIZPBnWmUiAChA0lItXtJkKoQpnasNlQ4YgIPVKphuERVyMag==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=ZZ8IAe0dgRPsOfrvFdgsI8QF+bvxn4P2m1c3OjPc/4k=;
+ b=hl/X3gS0Poh7UBzuRhvHXInQEzeNhb8MpJRu1GVZyPdnqM7ytHIA7IjFmYiy7J3uAlN2zCYnzGv5OmRnYx8kC6P9QqcRRqbEiTngnooiJ7xgf8rpkOYS/kbIROKCD79Gmj4J0MGx4CnsxbaVHhEN+HN7pRE7Bpo5EWDmzOKm88RjB0A3AfF/fYX5EF3+/NveBLYCQJnkC3Is04laQsBqW4lx8kFCHeYPKMZGcB10j6xel+ERwURTKZXqLucj/abd/6vGmP2ahcnYiVZrmEJZaqcg2LDwtF1qTF2iJxM0buVhSVtdmzuWm/u58JHmBrZYV/7LRm5X/Y0Qf/odNIqaSA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=ZZ8IAe0dgRPsOfrvFdgsI8QF+bvxn4P2m1c3OjPc/4k=;
+ b=J+C0MHsfO1vhVh/lKqA+GgY0AbktYZcBHQkyQw1gcNE6CLT9APKyPdkwxM8m/6cFk+hW0cC/qooe+a4NprDWySroN9l9puHVvR+Wh7OzE/xWK9Wt57JeXGucvrsCHouXkCjORkf+nTFHIr5kkHvdD0t4fMmvCcK3ULzlHOjsos1UK9/Ak2ol6bjn3m6R3I0GGxjTBABl//LIlydtKRXN4CP352NWmhEAUt/+OkMMIVyMY5WAPqmcm9NJ3jCP8PHNnD9RXSDsl6rNg0uGmWupc9oyZAbxsdUqI8YF2qrorMJhI0XP5FoSQx2WMPAeF5tmh3k3XihlASCttsAEEzmfTw==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from CHBPR12MB731189.namprd12.prod.outlook.com
+ (2603:10b6:610:33d::12) by BL4PR12MB9536.namprd12.prod.outlook.com
+ (2603:10b6:208:590::21) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.428.16; Mon, 21 Sep
+ 2026 13:22:09 +0000
+Received: from CHBPR12MB731189.namprd12.prod.outlook.com
+ ([fe80::b0e5:123d:fe06:e10d]) by CHBPR12MB731189.namprd12.prod.outlook.com
+ ([fe80::b0e5:123d:fe06:e10d%6]) with mapi id 15.21.0428.015; Mon, 21 Sep 2026
+ 13:22:09 +0000
+Date: Mon, 21 Sep 2026 10:22:08 -0300
+From: Jason Gunthorpe <jgg@nvidia.com>
+To: Matt Evans <matt@ozlabs.org>
+Cc: Christian =?utf-8?B?S8O2bmln?= <christian.koenig@amd.com>,
+	Leon Romanovsky <leon@kernel.org>,
+	Alex Williamson <alex@shazbot.org>, Alex Mastro <amastro@fb.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Logan Gunthorpe <logang@deltatee.com>,
+	Kevin Tian <kevin.tian@intel.com>,
+	Pranjal Shrivastava <praan@google.com>,
+	Longfang Liu <liulongfang@huawei.com>,
+	Mahmoud Adam <mngyadam@amazon.de>,
+	David Matlack <dmatlack@google.com>,
+	=?utf-8?B?QmrDtnJuIFTDtnBlbA==?= <bjorn@kernel.org>,
+	Sumit Semwal <sumit.semwal@linaro.org>,
+	Ankit Agrawal <ankita@nvidia.com>,
+	Alistair Popple <apopple@nvidia.com>,
+	Vivek Kasireddy <vivek.kasireddy@intel.com>,
+	linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
+	dri-devel@lists.freedesktop.org, linaro-mm-sig@lists.linaro.org,
+	kvm@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v6 9/9] vfio/pci: Permanently revoke a DMABUF on request
+Message-ID: <20260921132208.GA1507824@nvidia.com>
+References: <20260911214200.33793-10-matt@ozlabs.org>
+ <20260913165244.GW13683@unreal>
+ <20260914113647.GL3968357@nvidia.com>
+ <20260914115456.GY13683@unreal>
+ <f21c409d-5675-4c87-8b16-850bcb9474df@ozlabs.org>
+ <20260915072002.GD13683@unreal>
+ <cebfef6a-88c6-4753-a0a4-87445a72f885@amd.com>
+ <db61e755-73ce-4dd8-94fc-e7287db963d3@ozlabs.org>
+ <0fdfe19e-f8ef-47ff-aa99-66adbc524728@amd.com>
+ <23a0ea30-c6dc-4b8c-a0a1-89e9f912bf37@ozlabs.org>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <23a0ea30-c6dc-4b8c-a0a1-89e9f912bf37@ozlabs.org>
+X-ClientProxiedBy: BL1P223CA0027.NAMP223.PROD.OUTLOOK.COM
+ (2603:10b6:208:2c4::32) To CHBPR12MB731189.namprd12.prod.outlook.com
+ (2603:10b6:610:33d::12)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v6 9/9] vfio/pci: Permanently revoke a DMABUF on request
-Content-Language: en-GB
-To: =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>,
- Leon Romanovsky <leon@kernel.org>
-Cc: Jason Gunthorpe <jgg@nvidia.com>, Alex Williamson <alex@shazbot.org>,
- Alex Mastro <amastro@fb.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Logan Gunthorpe <logang@deltatee.com>, Kevin Tian <kevin.tian@intel.com>,
- Pranjal Shrivastava <praan@google.com>, Longfang Liu
- <liulongfang@huawei.com>, Mahmoud Adam <mngyadam@amazon.de>,
- David Matlack <dmatlack@google.com>, =?UTF-8?B?QmrDtnJuIFTDtnBlbA==?=
- <bjorn@kernel.org>, Sumit Semwal <sumit.semwal@linaro.org>,
- Ankit Agrawal <ankita@nvidia.com>, Alistair Popple <apopple@nvidia.com>,
- Vivek Kasireddy <vivek.kasireddy@intel.com>, linux-kernel@vger.kernel.org,
- linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org,
- linaro-mm-sig@lists.linaro.org, kvm@vger.kernel.org,
- linux-pci@vger.kernel.org
-References: <20260911214200.33793-1-matt@ozlabs.org>
- <20260911214200.33793-10-matt@ozlabs.org> <20260913165244.GW13683@unreal>
- <20260914113647.GL3968357@nvidia.com> <20260914115456.GY13683@unreal>
- <f21c409d-5675-4c87-8b16-850bcb9474df@ozlabs.org>
- <20260915072002.GD13683@unreal>
- <cebfef6a-88c6-4753-a0a4-87445a72f885@amd.com>
- <db61e755-73ce-4dd8-94fc-e7287db963d3@ozlabs.org>
- <0fdfe19e-f8ef-47ff-aa99-66adbc524728@amd.com>
-From: Matt Evans <matt@ozlabs.org>
-In-Reply-To: <0fdfe19e-f8ef-47ff-aa99-66adbc524728@amd.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: CHBPR12MB731189:EE_|BL4PR12MB9536:EE_
+X-MS-Office365-Filtering-Correlation-Id: 1e66d3e3-6cf2-4879-0fb9-08df17e35706
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|366016|23010399003|1800799024|7416014|376014|10067099003|56012099006|11063799006|4143699003|18002099003|22082099003;
+X-Microsoft-Antispam-Message-Info:
+	hgatWZio0IrdPHflRKDpb2YZuNGhQyw1VgsbnNKxnNIC0ZdQ4l9hyKjggEXb+J2icGHlXxxHXXLPJvpU/XG5DkvrxyGjDPYrsQmhhRBeW5zPPCTF+q50hhoEzgsgEHcKB+9bVS9nPsJKEmLeqWfw/WPTYUiLMaABEv99f0YwQIyHMz9ydCA3E2+vPbEYdR0VO4F2jNspFEaMfvNeVLsiS1NTwQYNoxhIO5OtLgv6iJXzmp2gTqjaXV9eO+6ul8lVe+N8YmGNGgF5rUHGx8DcXx+p/FnwQwmmIj/RIlEZCKIEGfxLDZ0ZuIyFiyN6PfKc+ruyNCQLuuBORyW3csHrGl2bor2mE/g6LD4Aa9h+jz0fclBUbljYo/CKUUzZRNJBxvY1cs/ES37SKZHj3kja3xkHyR4onlTKFEvAZ4Hynz6K9/b7op2qD2jB2fJIp1haRy6KYn1SCTPjh3IV0byVBIAnNLZjEQ1o1Zi3Y3ZU08yj6TNswdVj2x1DF6VgqF1faeazPTSAJ0MKUf+jFF6QNTsMtxKuvcTAeIeHhZ3+PF3p+b4n0tb3EEGEuLt4+saXBzGIINQ1v8297AWiwOKriHPN6XZ8Su0vKS7CCVVqzwcFhIbIf0GwuwinCphfAushuXo0USPBgz7dalv7CR11HU9f2Qd8lcEDzUHybZe6f7s=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CHBPR12MB731189.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(23010399003)(1800799024)(7416014)(376014)(10067099003)(56012099006)(11063799006)(4143699003)(18002099003)(22082099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?ptOcSKYHybIeOxFzxm6vawnzp4sNlFbNPIPoFt2+qO1QSiIDy+QetZ9YiX+A?=
+ =?us-ascii?Q?HmYOvEXsmtHE31eUGY966PgB6+Qv6VxT8p7md+LYul0EVvrskM1XchLWAn+v?=
+ =?us-ascii?Q?62XBEMhK5ct/8qaZ9XJSgamhVp/xLpOfIoXW1FpFnPX+/2XJoRuTWhjSKT9T?=
+ =?us-ascii?Q?kNta9z78l0BNn/xo8hQSjH2wNzYGoGSS8oQEqaJ3gnOWSqie8Q/55PE3Ag4l?=
+ =?us-ascii?Q?TJTcNTPvQpeG1odrMzRIhIl03g1fWIDHW+oe8BytqQJ3pa9nebF7yCJ7USua?=
+ =?us-ascii?Q?XiL+XBwXHExtHuMaA5DWef5+T6TDuLh/eKyiar9Ij/Gdaa4Xo6mIQuSPzn5D?=
+ =?us-ascii?Q?AId+ChdRAvp3I6C1CBzVCom+pKKYXeR6qI40TsH1i5+gj/gsgp/4ci/bt56z?=
+ =?us-ascii?Q?teRTsDxvdNVEg0iZw3B8a6qU3bFqqeZFQcp+6ajW493rZCcLKW3L4jLR3Ib0?=
+ =?us-ascii?Q?ygo7ismlFaeJS26GqvFW7bhPtQ2GL5y4WySUcufomxHdwWg/dOIxvii4z1OA?=
+ =?us-ascii?Q?EVaxkyk1GQjFpgo/5s8okYY1ExsIJt2ifUURjp+OT0QgTfMpJNncsPZZ0qJk?=
+ =?us-ascii?Q?L1boil3d8TyGs79ahL/Bz0knZHu1pb6lBdbtrOdrqMLAfHY8LJjGyTCE5h23?=
+ =?us-ascii?Q?0eHpox3AmITBBZ1K/BqDzzavPAJdvbg51EKDOGaDW+Hz7JvTw72exRzpIVf3?=
+ =?us-ascii?Q?GRQjazdo/Jxqq69Jxsx+sC+rHhZenOzmJ0z97w0YPuawuYYUkGG7f0HvGMQ7?=
+ =?us-ascii?Q?1Z/CwDEqmxLDKrUkwWW5HqzhTU+utNuZHGGjw5rOaaGd+ioLTuhVviPf0bu8?=
+ =?us-ascii?Q?gwfvxitAw+F3LxfE4kYX1/3NgBiAbTea3ig8UC/g92/5I+ED8MpmiKciwvdz?=
+ =?us-ascii?Q?5hswa2NNDOZu3/rTtipTHzE49Lf7vLOyP3RwGIIf+PmKj/bcU3ciTgzdBEWc?=
+ =?us-ascii?Q?m5W8FEfkqdfdijU9MslRGorTt2H7UmNWkbM+g7iWjD0tbhwa270vcM4rc+V3?=
+ =?us-ascii?Q?vOVFfLSZlnTmoBxMY+ijnbz0P0IT2kxLCdCcdU9ua3SbZ+AujFWZV8CiXZjw?=
+ =?us-ascii?Q?imFjVuC6kcGnDgXYYrozleYg/eBiOWyuZTze2YG2/stguJ3PsITN4t/9hoRT?=
+ =?us-ascii?Q?vj1FMTMm189KCBpM7aDeWz24cRDIKdPg209SxyadgHUOXesY5v3HnwRjHbBM?=
+ =?us-ascii?Q?Ed2vFcelbqLGQFwLvjfDyZdOlH602U0SX0L8J8f8d/4Ee4TbCpuKQoFFuL9P?=
+ =?us-ascii?Q?O7u241RsY+wcs2nTKvWMB+FvWFlZYHW2UbWRa6lv7Isa2+8kIQ3CyB1oIH14?=
+ =?us-ascii?Q?Bicx1xr2npfSMdYOLUhrwWg/vlh3RgpA9cLGD+O2u1az9nCwsCTL5z+b/WZy?=
+ =?us-ascii?Q?bGNMADHziL/O1F9lgfGakzhvoX0sgWTIvNSonga8yBasYECPCi+Fn4inQ7Gf?=
+ =?us-ascii?Q?rorhKle8Ei6KMFQfwZj0U2NBq+I28mePXTUfze0UgVeUv7DDXRl1yiuOWam+?=
+ =?us-ascii?Q?DKyaLtDk+kce4fsAsCpxWdGwFRz7HM+kkX8bJdys7QWclABTcmSQwsoh6gWJ?=
+ =?us-ascii?Q?apwVwEMGv8tDhk+wTDOg9TGDDK0hzkNJ1uc69WblUyUmIEAQm/9tKNM9IzOF?=
+ =?us-ascii?Q?X4evL/AP6d6RQMkupsrJvxK38pJbpWkjQ4JAK+TUGVJXZOqw8aqM1hxkWz1U?=
+ =?us-ascii?Q?KnlgJ/XLGgBUawFvd67k/Qmp4/wVvM0lptc+OWnC6lUFYQR+?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 1e66d3e3-6cf2-4879-0fb9-08df17e35706
+X-MS-Exchange-CrossTenant-AuthSource: CHBPR12MB731189.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 21 Sep 2026 13:22:09.6033
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: eFTg/pXhDSQ6v9MK+ofYJRfxvMfOvIXDSCaNO3/4T96C2TG54JitTLr1wcWy7G9u
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BL4PR12MB9536
 
-Hi both,
+On Mon, Sep 21, 2026 at 02:08:47PM +0100, Matt Evans wrote:
 
-On 16/09/2026 15:19, Christian König wrote:
-> On 9/15/26 16:22, Matt Evans wrote:
->> Hi Christian,
->>
->> On 15/09/2026 12:13, Christian König wrote:
->>> On 9/15/26 09:20, Leon Romanovsky wrote:
->>>> On Mon, Sep 14, 2026 at 01:13:36PM +0100, Matt Evans wrote:
->>>>> Hi Leon,
->>>>>
->>>>> On 14/09/2026 12:54, Leon Romanovsky wrote:
->>>>>> On Mon, Sep 14, 2026 at 08:36:47AM -0300, Jason Gunthorpe wrote:
->>>>>>> On Sun, Sep 13, 2026 at 07:52:44PM +0300, Leon Romanovsky wrote:
->>>>>>>> On Fri, Sep 11, 2026 at 10:41:57PM +0100, Matt Evans wrote:
->>>>>>>>> Expand the VFIO DMABUF revocation state to three states:
->>>>>>>>> Not revoked, temporarily revoked, and permanently revoked.
->>>>>>>>
->>>>>>>> The thing is that "temporarily revoked" is actually the standard
->>>>>>>> invalidate_mappings/move_notify mechanism of DMABUF, which wasn't good
->>>>>>>> for VFIO.
->>>>>>>
->>>>>>> I think temporarily revokes here means it is revoked from a dmabuf
->>>>>>> perspective
->>>>>>
->>>>>> My guess is that this is more of a "change owner" operation than a
->>>>>> revoke operation.
->>>>>>
->>>>>> The main issue here is that we have to guess the semantics instead of
->>>>>> having a properly named and documented operation.
->>>>>
->>>>> Apologies if the cover letter for the series and patch commit message (which
->>>>> cover this) are unclear about the motivations and semantics.  On the commit
->>>>> message, can you suggest clarifications:
->>>>>
->>>>> "This is useful for lifecycle management, to reclaim VFIO PCI BAR
->>>>> ranges previously delegated to a subordinate client process: by
->>>>> revoking, the driver process can ensure that the loaned resources are
->>>>> made inaccessible when the client is deemed "done".  The original
->>>>> DMABUF is defunct, and BAR resources can then be safely re-exported
->>>>> for use by new clients."
->>>>>
->>>>> Given what I'll explain below, do give suggestions please.  There is more
->>>>> context in the cover letter (the volume of which I didn't think appropriate
->>>>> for the commit message).
->>>>
->>>> 1. Do not mix "driver" and "client" in the same description. For a
->>>> non-native English speaker, "driver" has a very specific meaning in the
->>>> context of the Linux kernel.
->>>
->>> In the context of DMA-buf it has also proven vital to clearly use the terms importer and exporter to describe the different roles a driver can have.
->>>
->>> I can't count how often there was confusion because people (me included) just used "driver" and it wasn't clear which role was meant.
->>
->> :)  I see where the quote can be clearer.  FWIW the "driver process" was
->> referring to a userspace driver (which is a legitimate use of the D-word
->> with VFIO, but still).  I'll clarify that, and will indicate this
->> mechanism is used by userspace to influence the VFIO _exporter_ behaviour.
->>
->>>> 2. Explain the lifecycle in the commit message, and why "revoke", which
->>>> is effectively what the importer does, is not sufficient.
->>>>
->>>> 3. The more you put in the cover letter, the less likely people are to
->>>> read it.
->>>>
->>>> 4. Commit messages should describe the patches themselves, since they
->>>> are what remains visible in the git log, unlike the cover letter.
->>>>
->>>> 5. I would call what you describe as "temporarily revoke" is actually "reclaim".
+> Not quite; the priv->revoked flag tracks temporary periods of
+> inaccessibility.  An example is VFIO resetting a function; the BAR
+> mappings as seen by the CPU and DMABUFs made from the BARs are all made
+> inaccessible before the reset, and made accessible again after the
+> reset.
 
-Leon, please see *** below.
+From the importer perspective this is a permanent revoke.
 
->>>
->>> +1
->>
->> I don't follow here, sorry.  Would you please elaborate?
->>
->> Currently VFIO uses the priv->revoked flag to track whether
->> it-the-exporter had previously done dma_buf_invalidate_mappings() on a
->> buffer and is now causing all .attach requests to fail.  Do you mean
->> that (even without this series) you want to call that concept
->> priv->reclaimed instead?
-> 
-> That sounds like a permanent revoke. 
+The right way to view this flow is VFIO permanently revokes the DMABUF
+FD. Then instead of forcing a new FD to be obtained it replaces the
+existing FD with a working one.
 
-Not quite; the priv->revoked flag tracks temporary periods of
-inaccessibility.  An example is VFIO resetting a function; the BAR
-mappings as seen by the CPU and DMABUFs made from the BARs are all made
-inaccessible before the reset, and made accessible again after the reset.
+From an importer perspective it sees the revoke happen and then that's
+it, the dmabuf never does anything further. The importer has to unmap
+and start from scratch, get a FD and map it.
 
->> Or do you mean that you don't like the words "temporary"/"permanent" and
->> are looking for another name for a temporarily unavailable buffer?  (If
->> so, I find "not revoked", "reclaimed", "revoked" much less clear than
->> not/temp/perm revoked, as such names give no hint as to what to expect.
->> But I may have misunderstood what you're getting at.)
-> 
-> Yeah it's pretty much the naming I would clarify.
-> 
-> The original idea of notifying the importer that it need to re-create the mapping was resource reclaim.
+That VFIO re-used the FD to make a new live export isn't visible to
+the importer at all.
 
-I feel the (existing) VFIO function reset sequenece is a counterexample,
-as the resource isn't being reclaimed/repurposed but users are "held
-off" for a period of time across the reset.  (It's then the same
-resource that a later access can touch.)
+I think that is where this "temporary revoke" language gets confusing.
 
-> But when you have some IOCTL or sysfs or whatever to disable a DMA-buf permanently I would call that revoke.
+Call it "VFIO reuses the FD to create a new live mapping" is clearer
+than calling it "temporarily revoke" which sounds too much like move.
 
-I see where you're coming from now, thanks.
-
-If we were to just call VFIO's "permanently inacessible" state _revoked_
-and "temporarily inaccessible" _reclaimed_, then it doesn't help clarity
-unfortunately.  Those words are ~synonymous and don't convey permanent
-vs momentary.
-
-***
-
-Leon, would you please explain this comment #5?  Were you suggesting
-that (even ignoring this patch!) you want to rename priv->revoked to
-priv->reclaimed?  If so, why?  (For context, this patch's state =
-TEMP_REVOKED is identical to the existing revoked = true.)
-
-In short:  TEMP_${X} vs PERM_${X} most clearly highlights the
-meaning/behaviour of the current + new state, regardless of whether
-X=REVOKED or X=RECLAIMED.  Although I prefer to use the exisitng
-"revoked" I'm not wed to it, but mixing both "reclaimed" & "revoked"
-makes the distinction (and semantics, expectations of what can happen
-next) much less clear.
-
-> I'm still not 100% sure what a temporary revoke should be. If you have some IOCTL/sysfs/whatever to temporary say to importers "You can't use that resource" then that most likely won't fly.
-
-This patch only provides an ioctl action to "make this inacessible
-forever".  There is no direct userspace manipulation to/from the
-temporarily-inacessible state, nor need for that.
-
-The only things that lead to a temporary revoke (as a side effect) are
-the preexisting VFIO reset ioctls etc.
-
-State is an enum, but this isn't a complex FSM, just an extra "sticky"
-state.  And to labour the point, the new temp/perm distinction is only
-about VFIO's internal tracking of why it revoked the buffer using the
-existing mechanisms (meaning, whether it permits un-revoke); it does not
-change the importer.
-
->> From the importer side, there is no change from this patch: they might
->> observe an invalidate_mappings() and find attach() of a given buffer now
->> fails, same as before this patch.  This is only about guaranteeing the
->> impossibility of an importer ever being able to re-attach in future.
-> 
-> That sounds reasonable.
-> 
-> When a resource becomes unavailable you seriously need completely destroy it, re-create it and then import it again into other drivers which want to use it should it ever become available again.
-
-Yep, quite.
-
-Thanks,
-
-
-Matt
-
-PS: I should've rebased (eyeballed master and didn't spot the tiny
-conflict), so no Sashiko review on v6; I want to resolve this for a v7 soon.
-
-> 
-> Regards,
-> Christian.
-> 
->>
->>
->> Thanks,
->>
->>
->> Matt
->>
->>
->> PS:  A hypothetical alternative way of doing what this patch is doing is
->> instead to have:
->>
->>  - existing priv->revoked
->>  - new 	    priv->revoked_flag_is_immutable
->>
->> Then, the ioctl triggers an invalidate_mappings() for a targeted DMABUF,
->> sets revoked = true, and revoked_flag_is_immutable = true.  The new flag
->> prevents a future vfio_pci_dma_buf_move(false) from clearing revoked.
->> For example, a reset doing `move(true); reset; move(false);` can make
->> all DMABUFs available to attach again, except for those marked
->> immutably-revoked.  (That is equivalent to this new "permanent" state.)
->>
->>
-> 
-
+Jason
