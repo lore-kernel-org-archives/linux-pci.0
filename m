@@ -1,170 +1,408 @@
-Received: from CH4PR04CU002.outbound.protection.outlook.com (mail-northcentralusazon11013059.outbound.protection.outlook.com [40.107.201.59])
+Received: from mail.ozlabs.org (gandalf.ozlabs.org [150.107.74.76])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7440F49CF23;
-	Mon, 21 Sep 2026 13:22:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.201.59
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789996941; cv=fail; b=aBWElYBUkKxi2D8uaHvrQN5K9CX+cQ//2hNF4AwbLFsL8pwEkKdrtkHPy7f4vCaIenV4+CByHHi0Ew7ZEtXuDACyldfdKJo6es4eKR1J+MA+BdPvLIPIhzgbBAJYeltkdjttQ1hYr4GeWRHTpmjp6/rH9LEYmjlPFsrI+2SJJ8c=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789996941; c=relaxed/simple;
-	bh=TfpkoRB/npy1EU+v09lXGscw8Z15Lh0P6hFuNuTJFbI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=pEIoiI27l4rBuHUtoiYdAarr8knbrz9nRyhSSXlNB3LymGKS46DDlAQUd4WwBG9yThbxT/s+tV8MRkZyBUJxR8hKe7a8T1wa0Bp2V2co7hDz0aNwU7/sJh8GWcMEQyhbf+xN5mSSVukhHW0ikRIe72nKHTleiofd6V91U24wbBc=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=J+C0MHsf; arc=fail smtp.client-ip=40.107.201.59
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E59849A3CD;
+	Mon, 21 Sep 2026 13:24:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=150.107.74.76
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1789997078; cv=none; b=No/ZTUQqsqMtojrq5sMOrB8GYPj8SXVfhjq68BSkJnqZVP7RCbFoEqfwdqqGKY0LpU1s6ZI+0YmiRPD79+AEgb4ydjHLP7XH49GsrNXBTe6gK6l82YbXWxVPDv8g4UjK9N1AkgrADaXhjM7vMnKqIqAypIAwih6Jd6yUdl/h71g=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1789997078; c=relaxed/simple;
+	bh=/ue91Tk5BtCTbltSeaKEf0vbUjC7fVMzKREU5hRknWo=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=s4LrD5/Vapm/Md3sEuubyG808bUuw/Zm35p9QdnnW0Rzrqna4D/nJYwS54Qd2IyKIG4j+/xSYU0XqxN06QJUvW301ki4b9BZuldoz2bvhBZEZiTrhXuWe6PWq2a7b7lXrEf3ZWY/yz+GzUAa48XsHlMeUrRSBQ+yeESTyO8UGYw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ozlabs.org; spf=pass smtp.mailfrom=ozlabs.org; dkim=pass (2048-bit key) header.d=ozlabs.org header.i=@ozlabs.org header.b=ZqZQgvnl; arc=none smtp.client-ip=150.107.74.76
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ozlabs.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ozlabs.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="J+C0MHsf"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=bfFh45LQSV/TG8V2mAd8TepcLEfeAiZS2JQp6Gx24uQmLlgp5C4olded5L059t/BRWXxmIZnSdO6YeiAWhieZSoFvJLalqgx9hB7YZkl//nfbt7ZiqP067P73oMvccTfai47envexpmEZ2/eU9ZqHfdRCYQ0ZizpuX42Z1xuXXyeG9H63wMbbIdOq2qLG6ZWeZvusXNA3DuTMNPPmyongl5iBOVGnkqr+g08+CSrcDg2u+/f6AFwMYeMk3AHqzdW+SBkWymabCdaiTSxq+Z9PT8bJdu+OMqlX149TFIZPBnWmUiAChA0lItXtJkKoQpnasNlQ4YgIPVKphuERVyMag==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=ZZ8IAe0dgRPsOfrvFdgsI8QF+bvxn4P2m1c3OjPc/4k=;
- b=hl/X3gS0Poh7UBzuRhvHXInQEzeNhb8MpJRu1GVZyPdnqM7ytHIA7IjFmYiy7J3uAlN2zCYnzGv5OmRnYx8kC6P9QqcRRqbEiTngnooiJ7xgf8rpkOYS/kbIROKCD79Gmj4J0MGx4CnsxbaVHhEN+HN7pRE7Bpo5EWDmzOKm88RjB0A3AfF/fYX5EF3+/NveBLYCQJnkC3Is04laQsBqW4lx8kFCHeYPKMZGcB10j6xel+ERwURTKZXqLucj/abd/6vGmP2ahcnYiVZrmEJZaqcg2LDwtF1qTF2iJxM0buVhSVtdmzuWm/u58JHmBrZYV/7LRm5X/Y0Qf/odNIqaSA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ZZ8IAe0dgRPsOfrvFdgsI8QF+bvxn4P2m1c3OjPc/4k=;
- b=J+C0MHsfO1vhVh/lKqA+GgY0AbktYZcBHQkyQw1gcNE6CLT9APKyPdkwxM8m/6cFk+hW0cC/qooe+a4NprDWySroN9l9puHVvR+Wh7OzE/xWK9Wt57JeXGucvrsCHouXkCjORkf+nTFHIr5kkHvdD0t4fMmvCcK3ULzlHOjsos1UK9/Ak2ol6bjn3m6R3I0GGxjTBABl//LIlydtKRXN4CP352NWmhEAUt/+OkMMIVyMY5WAPqmcm9NJ3jCP8PHNnD9RXSDsl6rNg0uGmWupc9oyZAbxsdUqI8YF2qrorMJhI0XP5FoSQx2WMPAeF5tmh3k3XihlASCttsAEEzmfTw==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from CHBPR12MB731189.namprd12.prod.outlook.com
- (2603:10b6:610:33d::12) by BL4PR12MB9536.namprd12.prod.outlook.com
- (2603:10b6:208:590::21) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.428.16; Mon, 21 Sep
- 2026 13:22:09 +0000
-Received: from CHBPR12MB731189.namprd12.prod.outlook.com
- ([fe80::b0e5:123d:fe06:e10d]) by CHBPR12MB731189.namprd12.prod.outlook.com
- ([fe80::b0e5:123d:fe06:e10d%6]) with mapi id 15.21.0428.015; Mon, 21 Sep 2026
- 13:22:09 +0000
-Date: Mon, 21 Sep 2026 10:22:08 -0300
-From: Jason Gunthorpe <jgg@nvidia.com>
-To: Matt Evans <matt@ozlabs.org>
-Cc: Christian =?utf-8?B?S8O2bmln?= <christian.koenig@amd.com>,
-	Leon Romanovsky <leon@kernel.org>,
-	Alex Williamson <alex@shazbot.org>, Alex Mastro <amastro@fb.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Logan Gunthorpe <logang@deltatee.com>,
-	Kevin Tian <kevin.tian@intel.com>,
-	Pranjal Shrivastava <praan@google.com>,
-	Longfang Liu <liulongfang@huawei.com>,
-	Mahmoud Adam <mngyadam@amazon.de>,
-	David Matlack <dmatlack@google.com>,
-	=?utf-8?B?QmrDtnJuIFTDtnBlbA==?= <bjorn@kernel.org>,
-	Sumit Semwal <sumit.semwal@linaro.org>,
-	Ankit Agrawal <ankita@nvidia.com>,
-	Alistair Popple <apopple@nvidia.com>,
-	Vivek Kasireddy <vivek.kasireddy@intel.com>,
-	linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
-	dri-devel@lists.freedesktop.org, linaro-mm-sig@lists.linaro.org,
-	kvm@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v6 9/9] vfio/pci: Permanently revoke a DMABUF on request
-Message-ID: <20260921132208.GA1507824@nvidia.com>
-References: <20260911214200.33793-10-matt@ozlabs.org>
- <20260913165244.GW13683@unreal>
- <20260914113647.GL3968357@nvidia.com>
- <20260914115456.GY13683@unreal>
- <f21c409d-5675-4c87-8b16-850bcb9474df@ozlabs.org>
- <20260915072002.GD13683@unreal>
- <cebfef6a-88c6-4753-a0a4-87445a72f885@amd.com>
- <db61e755-73ce-4dd8-94fc-e7287db963d3@ozlabs.org>
- <0fdfe19e-f8ef-47ff-aa99-66adbc524728@amd.com>
- <23a0ea30-c6dc-4b8c-a0a1-89e9f912bf37@ozlabs.org>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <23a0ea30-c6dc-4b8c-a0a1-89e9f912bf37@ozlabs.org>
-X-ClientProxiedBy: BL1P223CA0027.NAMP223.PROD.OUTLOOK.COM
- (2603:10b6:208:2c4::32) To CHBPR12MB731189.namprd12.prod.outlook.com
- (2603:10b6:610:33d::12)
+	dkim=pass (2048-bit key) header.d=ozlabs.org header.i=@ozlabs.org header.b="ZqZQgvnl"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ozlabs.org;
+	s=201707; t=1789997046;
+	bh=YmbeLyN9lFPvSxPTtdVAFvstiIMvvyGrodaMi6mz/UU=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=ZqZQgvnlOixmyv1wKeMqlAi244ep9oZJSM5TKKfjuRPZRbaSezyO6LyjrFr27Cc9p
+	 T0VrqLY5m/QFV0zB2SxqztJEAYdGcgsCh/fNhrXU9M87aX0LM8xTMaiCL91hy87PqU
+	 NzQYjlEpmw2dKVnHndbe8LGyxN0ht14Sx6luEg6gTCbr9J7enJXpXpWpzJfLjJ8ObJ
+	 L0QS+6ZsIVAhha0tvMVcDAPLNaTWBnlip//miaiO0uqoX7RYLNIYK9DCPIJVgqdbRU
+	 mvZLjHDJ8r4VQY85xCdEszZJdDQdLQyzrftwlQNuTPXTcRmxwQI3Ti1RHMXqSj9k6t
+	 K+iY0qaLXk+WA==
+Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519)
+	(Client did not present a certificate)
+	by mail.ozlabs.org (Postfix) with ESMTPSA id 4hpP7x5LXgz4wGx;
+	Mon, 21 Sep 2026 23:23:56 +1000 (AEST)
+Message-ID: <4f26dd49-0985-4049-a1fe-6a0a493c7a51@ozlabs.org>
+Date: Mon, 21 Sep 2026 14:24:15 +0100
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CHBPR12MB731189:EE_|BL4PR12MB9536:EE_
-X-MS-Office365-Filtering-Correlation-Id: 1e66d3e3-6cf2-4879-0fb9-08df17e35706
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|366016|23010399003|1800799024|7416014|376014|10067099003|56012099006|11063799006|4143699003|18002099003|22082099003;
-X-Microsoft-Antispam-Message-Info:
-	hgatWZio0IrdPHflRKDpb2YZuNGhQyw1VgsbnNKxnNIC0ZdQ4l9hyKjggEXb+J2icGHlXxxHXXLPJvpU/XG5DkvrxyGjDPYrsQmhhRBeW5zPPCTF+q50hhoEzgsgEHcKB+9bVS9nPsJKEmLeqWfw/WPTYUiLMaABEv99f0YwQIyHMz9ydCA3E2+vPbEYdR0VO4F2jNspFEaMfvNeVLsiS1NTwQYNoxhIO5OtLgv6iJXzmp2gTqjaXV9eO+6ul8lVe+N8YmGNGgF5rUHGx8DcXx+p/FnwQwmmIj/RIlEZCKIEGfxLDZ0ZuIyFiyN6PfKc+ruyNCQLuuBORyW3csHrGl2bor2mE/g6LD4Aa9h+jz0fclBUbljYo/CKUUzZRNJBxvY1cs/ES37SKZHj3kja3xkHyR4onlTKFEvAZ4Hynz6K9/b7op2qD2jB2fJIp1haRy6KYn1SCTPjh3IV0byVBIAnNLZjEQ1o1Zi3Y3ZU08yj6TNswdVj2x1DF6VgqF1faeazPTSAJ0MKUf+jFF6QNTsMtxKuvcTAeIeHhZ3+PF3p+b4n0tb3EEGEuLt4+saXBzGIINQ1v8297AWiwOKriHPN6XZ8Su0vKS7CCVVqzwcFhIbIf0GwuwinCphfAushuXo0USPBgz7dalv7CR11HU9f2Qd8lcEDzUHybZe6f7s=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CHBPR12MB731189.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(23010399003)(1800799024)(7416014)(376014)(10067099003)(56012099006)(11063799006)(4143699003)(18002099003)(22082099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?ptOcSKYHybIeOxFzxm6vawnzp4sNlFbNPIPoFt2+qO1QSiIDy+QetZ9YiX+A?=
- =?us-ascii?Q?HmYOvEXsmtHE31eUGY966PgB6+Qv6VxT8p7md+LYul0EVvrskM1XchLWAn+v?=
- =?us-ascii?Q?62XBEMhK5ct/8qaZ9XJSgamhVp/xLpOfIoXW1FpFnPX+/2XJoRuTWhjSKT9T?=
- =?us-ascii?Q?kNta9z78l0BNn/xo8hQSjH2wNzYGoGSS8oQEqaJ3gnOWSqie8Q/55PE3Ag4l?=
- =?us-ascii?Q?TJTcNTPvQpeG1odrMzRIhIl03g1fWIDHW+oe8BytqQJ3pa9nebF7yCJ7USua?=
- =?us-ascii?Q?XiL+XBwXHExtHuMaA5DWef5+T6TDuLh/eKyiar9Ij/Gdaa4Xo6mIQuSPzn5D?=
- =?us-ascii?Q?AId+ChdRAvp3I6C1CBzVCom+pKKYXeR6qI40TsH1i5+gj/gsgp/4ci/bt56z?=
- =?us-ascii?Q?teRTsDxvdNVEg0iZw3B8a6qU3bFqqeZFQcp+6ajW493rZCcLKW3L4jLR3Ib0?=
- =?us-ascii?Q?ygo7ismlFaeJS26GqvFW7bhPtQ2GL5y4WySUcufomxHdwWg/dOIxvii4z1OA?=
- =?us-ascii?Q?EVaxkyk1GQjFpgo/5s8okYY1ExsIJt2ifUURjp+OT0QgTfMpJNncsPZZ0qJk?=
- =?us-ascii?Q?L1boil3d8TyGs79ahL/Bz0knZHu1pb6lBdbtrOdrqMLAfHY8LJjGyTCE5h23?=
- =?us-ascii?Q?0eHpox3AmITBBZ1K/BqDzzavPAJdvbg51EKDOGaDW+Hz7JvTw72exRzpIVf3?=
- =?us-ascii?Q?GRQjazdo/Jxqq69Jxsx+sC+rHhZenOzmJ0z97w0YPuawuYYUkGG7f0HvGMQ7?=
- =?us-ascii?Q?1Z/CwDEqmxLDKrUkwWW5HqzhTU+utNuZHGGjw5rOaaGd+ioLTuhVviPf0bu8?=
- =?us-ascii?Q?gwfvxitAw+F3LxfE4kYX1/3NgBiAbTea3ig8UC/g92/5I+ED8MpmiKciwvdz?=
- =?us-ascii?Q?5hswa2NNDOZu3/rTtipTHzE49Lf7vLOyP3RwGIIf+PmKj/bcU3ciTgzdBEWc?=
- =?us-ascii?Q?m5W8FEfkqdfdijU9MslRGorTt2H7UmNWkbM+g7iWjD0tbhwa270vcM4rc+V3?=
- =?us-ascii?Q?vOVFfLSZlnTmoBxMY+ijnbz0P0IT2kxLCdCcdU9ua3SbZ+AujFWZV8CiXZjw?=
- =?us-ascii?Q?imFjVuC6kcGnDgXYYrozleYg/eBiOWyuZTze2YG2/stguJ3PsITN4t/9hoRT?=
- =?us-ascii?Q?vj1FMTMm189KCBpM7aDeWz24cRDIKdPg209SxyadgHUOXesY5v3HnwRjHbBM?=
- =?us-ascii?Q?Ed2vFcelbqLGQFwLvjfDyZdOlH602U0SX0L8J8f8d/4Ee4TbCpuKQoFFuL9P?=
- =?us-ascii?Q?O7u241RsY+wcs2nTKvWMB+FvWFlZYHW2UbWRa6lv7Isa2+8kIQ3CyB1oIH14?=
- =?us-ascii?Q?Bicx1xr2npfSMdYOLUhrwWg/vlh3RgpA9cLGD+O2u1az9nCwsCTL5z+b/WZy?=
- =?us-ascii?Q?bGNMADHziL/O1F9lgfGakzhvoX0sgWTIvNSonga8yBasYECPCi+Fn4inQ7Gf?=
- =?us-ascii?Q?rorhKle8Ei6KMFQfwZj0U2NBq+I28mePXTUfze0UgVeUv7DDXRl1yiuOWam+?=
- =?us-ascii?Q?DKyaLtDk+kce4fsAsCpxWdGwFRz7HM+kkX8bJdys7QWclABTcmSQwsoh6gWJ?=
- =?us-ascii?Q?apwVwEMGv8tDhk+wTDOg9TGDDK0hzkNJ1uc69WblUyUmIEAQm/9tKNM9IzOF?=
- =?us-ascii?Q?X4evL/AP6d6RQMkupsrJvxK38pJbpWkjQ4JAK+TUGVJXZOqw8aqM1hxkWz1U?=
- =?us-ascii?Q?KnlgJ/XLGgBUawFvd67k/Qmp4/wVvM0lptc+OWnC6lUFYQR+?=
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 1e66d3e3-6cf2-4879-0fb9-08df17e35706
-X-MS-Exchange-CrossTenant-AuthSource: CHBPR12MB731189.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 21 Sep 2026 13:22:09.6033
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: eFTg/pXhDSQ6v9MK+ofYJRfxvMfOvIXDSCaNO3/4T96C2TG54JitTLr1wcWy7G9u
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BL4PR12MB9536
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v6 5/9] vfio/pci: Add a helper to create a DMABUF for a
+ BAR-map VMA
+Content-Language: en-GB
+To: liulongfang <liulongfang@huawei.com>
+Cc: Alex Williamson <alex@shazbot.org>, Leon Romanovsky <leon@kernel.org>,
+ Jason Gunthorpe <jgg@nvidia.com>, Alex Mastro <amastro@fb.com>,
+ =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, Logan Gunthorpe <logang@deltatee.com>,
+ Kevin Tian <kevin.tian@intel.com>, Pranjal Shrivastava <praan@google.com>,
+ Mahmoud Adam <mngyadam@amazon.de>, David Matlack <dmatlack@google.com>,
+ =?UTF-8?B?QmrDtnJuIFTDtnBlbA==?= <bjorn@kernel.org>,
+ Sumit Semwal <sumit.semwal@linaro.org>, Ankit Agrawal <ankita@nvidia.com>,
+ Alistair Popple <apopple@nvidia.com>,
+ Vivek Kasireddy <vivek.kasireddy@intel.com>, linux-kernel@vger.kernel.org,
+ linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org,
+ linaro-mm-sig@lists.linaro.org, kvm@vger.kernel.org,
+ linux-pci@vger.kernel.org
+References: <20260911214200.33793-1-matt@ozlabs.org>
+ <20260911214200.33793-6-matt@ozlabs.org>
+ <1d59a556-c131-4608-e194-d51be3259541@huawei.com>
+From: Matt Evans <matt@ozlabs.org>
+In-Reply-To: <1d59a556-c131-4608-e194-d51be3259541@huawei.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Mon, Sep 21, 2026 at 02:08:47PM +0100, Matt Evans wrote:
+Hi Longfang,
 
-> Not quite; the priv->revoked flag tracks temporary periods of
-> inaccessibility.  An example is VFIO resetting a function; the BAR
-> mappings as seen by the CPU and DMABUFs made from the BARs are all made
-> inaccessible before the reset, and made accessible again after the
-> reset.
+On 15/09/2026 13:16, liulongfang wrote:
+> On 2026/9/12 5:41, Matt Evans wrote:
+>> This helper, vfio_pci_core_mmap_prep_dmabuf(), creates a single-range
+>> DMABUF for the purpose of mapping a PCI BAR.  This is used in a future
+>> commit by VFIO's ordinary mmap() path.
+>>
+>> This function transfers ownership of the VFIO device fd to the
+>> DMABUF, which fput()s when it's released.
+>>
+>> Refactor the existing vfio_pci_core_feature_dma_buf() to split out
+>> export code common to the two paths, VFIO_DEVICE_FEATURE_DMA_BUF and
+>> this new VFIO_BAR mmap().
+>>
+>> By exchanging the VMA file, we lose the original device path in
+>> /proc/<pid>/maps, lsof, etc.  Generate a debug-oriented synthetic
+>> 'filename' for BAR mappings based on the cdev, plus BDF, plus resource
+>> index.  (This does not apply to explicitly-exported DMABUFs which are
+>> named by DMA_BUF_SET_NAME.)
+>>
+>> Signed-off-by: Matt Evans <matt@ozlabs.org>
+>> ---
+>>  drivers/vfio/pci/vfio_pci_dmabuf.c | 211 +++++++++++++++++++++++------
+>>  drivers/vfio/pci/vfio_pci_priv.h   |   5 +
+>>  2 files changed, 171 insertions(+), 45 deletions(-)
+>>
+>> diff --git a/drivers/vfio/pci/vfio_pci_dmabuf.c b/drivers/vfio/pci/vfio_pci_dmabuf.c
+>> index 9f10b10fc436..faa9239e66f8 100644
+>> --- a/drivers/vfio/pci/vfio_pci_dmabuf.c
+>> +++ b/drivers/vfio/pci/vfio_pci_dmabuf.c
+>> @@ -3,6 +3,7 @@
+>>   */
+>>  #include <linux/dma-buf-mapping.h>
+>>  #include <linux/pci-p2pdma.h>
+>> +#include <linux/dma-buf.h>
+>>  #include <linux/dma-resv.h>
+>>  
+>>  #include "vfio_pci_priv.h"
+>> @@ -82,6 +83,8 @@ static void vfio_pci_dma_buf_release(struct dma_buf *dmabuf)
+>>  		up_write(&priv->vdev->dmabuf_lock);
+>>  		vfio_device_put_registration(&priv->vdev->vdev);
+>>  	}
+>> +	if (priv->vfile)
+>> +		fput(priv->vfile);
+>>  	kfree(priv->phys_vec);
+>>  	kfree(priv);
+>>  }
+>> @@ -246,6 +249,167 @@ int vfio_pci_dma_buf_find_pfn(struct vfio_pci_core_device *vdev,
+>>  	return ret;
+>>  }
+>>  
+>> +/*
+>> + * Create a DMABUF corresponding to priv, add it to vdev->dmabufs list
+>> + * for tracking (meaning cleanup or revocation will zap it), and take
+>> + * a vfio_device registration.
+>> + */
+>> +static int vfio_pci_dmabuf_export(struct vfio_pci_core_device *vdev,
+>> +				  struct vfio_pci_dma_buf *priv, u32 flags)
+>> +{
+>> +	DEFINE_DMA_BUF_EXPORT_INFO(exp_info);
+>> +
+>> +	if (!vfio_device_try_get_registration(&vdev->vdev))
+>> +		return -ENODEV;
+>> +
+>> +	exp_info.ops = &vfio_pci_dmabuf_ops;
+>> +	exp_info.size = priv->size;
+>> +	exp_info.flags = flags;
+>> +	exp_info.priv = priv;
+>> +
+>> +	priv->dmabuf = dma_buf_export(&exp_info);
+>> +	if (IS_ERR(priv->dmabuf)) {
+>> +		vfio_device_put_registration(&vdev->vdev);
+>> +		return PTR_ERR(priv->dmabuf);
+>> +	}
+>> +
+>> +	kref_init(&priv->kref);
+>> +	init_completion(&priv->comp);
+>> +
+>> +	/* dma_buf_put() now frees priv */
+>> +	INIT_LIST_HEAD(&priv->dmabufs_elm);
+>> +
+>> +	/*
+>> +	 * dmabuf_lock synchronises access (R) or updates (W) to the
+>> +	 * vdev->dmabufs list and to bars_revoked (see below).  The
+>> +	 * revocation state of DMABUF elements in the list is written
+>> +	 * holding both dmabuf_lock(W) and resv, and tested with
+>> +	 * either.
+>> +	 *
+>> +	 * (memory_lock, if held ->) dmabuf_lock -> resv
+>> +	 *
+>> +	 * NOTE: memory_lock is strictly avoided here, to avoid a
+>> +	 * dependency on memory_lock when mmap_lock is held, when
+>> +	 * mmap() leads to export.  vfio-pci variant drivers are
+>> +	 * permitted to hold memory_lock across actions that might
+>> +	 * fault (such as user access); a deadlock could result when
+>> +	 * that fault path attempts to take mmap_lock (if held by an
+>> +	 * export waiting for memory_lock).
+>> +	 *
+>> +	 * vdev->bars_revoked tracks the BAR revocation status updated
+>> +	 * via vfio_pci_dma_buf_move(), so the initial DMABUF state
+>> +	 * follows the same criteria that later update the DMABUF
+>> +	 * state (BAR zap, etc.).
+>> +	 */
+>> +	lockdep_assert_not_held(&vdev->memory_lock);
+>> +
+>> +	down_write(&vdev->dmabuf_lock);
+>> +	dma_resv_lock(priv->dmabuf->resv, NULL);
+>> +	priv->revoked = vdev->bars_revoked;
+>> +	list_add_tail(&priv->dmabufs_elm, &vdev->dmabufs);
+>> +	dma_resv_unlock(priv->dmabuf->resv);
+>> +	up_write(&vdev->dmabuf_lock);
+>> +
+>> +	return 0;
+>> +}
+>> +
+>> +int vfio_pci_core_mmap_prep_dmabuf(struct vfio_pci_core_device *vdev,
+>> +				   struct vm_area_struct *vma,
+>> +				   u64 phys_start, u64 req_len,
+>> +				   unsigned int res_index)
+>> +{
+>> +	struct vfio_pci_dma_buf *priv;
+>> +	unsigned long vma_pgoff = vma->vm_pgoff & (VFIO_PCI_OFFSET_MASK >> PAGE_SHIFT);
+>> +	char *bufname;
+>> +	int ret;
+>> +
+>> +	priv = kzalloc_obj(*priv);
+>> +	if (!priv)
+>> +		return -ENOMEM;
+>> +
+>> +	priv->phys_vec = kzalloc_obj(*priv->phys_vec);
+>> +	if (!priv->phys_vec) {
+>> +		ret = -ENOMEM;
+>> +		goto err_free_priv;
+>> +	}
+>> +
+>> +	/*
+>> +	 * Maximum size of the friendly debug name is
+>> +	 * vfio1048575:ffff:ff:1f.7/5 = 26.  This fits within
+>> +	 * DMA_BUF_NAME_LEN, so dma_buf_set_name() below won't fail.
+>> +	 */
+>> +	bufname = kasprintf(GFP_KERNEL, "%s:%s/%x",
+>> +			    dev_name(&vdev->vdev.device), pci_name(vdev->pdev),
+>> +			    res_index);
+>> +
+>> +	if (!bufname) {
+>> +		ret = -ENOMEM;
+>> +		goto err_free_phys;
+>> +	}
+>> +
+>> +	/*
+>> +	 * The DMABUF begins from the mmap()'s BAR offset, i.e. the
+>> +	 * start of the VMA corresponds to byte 0 of the DMABUF and
+>> +	 * byte (vma_pgoff << PAGE_SHIFT) of the BAR.
+>> +	 *
+>> +	 * vfio_pci_dma_buf_find_pfn() reverses this offset using
+>> +	 * vma_pgoff_adjust, so that ultimately a fault's offset from
+>> +	 * the start of the _VMA_ has a consistent usage whether the
+>> +	 * VMA originates from an mmap() of the VFIO device here or a
+>> +	 * direct DMABUF mmap().  Note vma_pgoff_adjust also includes
+>> +	 * the encoded VFIO region index, which cancels out the index
+>> +	 * encoded in vm_pgoff.
+>> +	 */
+>> +	priv->vdev = vdev;
+>> +	priv->size = req_len;
+>> +	priv->nr_ranges = 1;
+>> +	priv->vma_pgoff_adjust = vma->vm_pgoff;
+>> +
+>> +	priv->provider = pcim_p2pdma_provider(vdev->pdev, res_index);
+>> +	if (!priv->provider) {
+>> +		ret = -EINVAL;
+>> +		goto err_free_name;
+>> +	}
+>> +
+>> +	priv->phys_vec[0].paddr = phys_start + ((u64)vma_pgoff << PAGE_SHIFT);
+>> +	priv->phys_vec[0].len = priv->size;
+>> +
+>> +	ret = vfio_pci_dmabuf_export(vdev, priv, O_RDWR);
+>> +	if (ret)
+>> +		goto err_free_name;
+>> +
+> 
+> In the current patch, the PCIe device's BAR2 configuration space can be mapped as a DMABUF.
+> However, on an OS with a 64K page size, if a VF device's BAR2 is smaller than 64K,
+> a problem arises where the space is forced to page-align to 64K, it will causing the VM to
+> access memory beyond the actual size of the VF device's BAR2 space.
+> 
+> How does your solution handle these cases where the BAR2 space is smaller than the Host OS's page size?
 
-From the importer perspective this is a permanent revoke.
+Even on a 4K host, there can be BARs < PAGE_SIZE so 64K (or 16K) hosts
+aren't a new case.  These small BARs cannot be mmap()ed and DMABUFs
+cannot be exported from them.  (vfio_pci_core_mmap() errors out when
+!bar_mmap_supported[index].  And, a DMABUF needs to be an aligned
+multiple of PAGE_SIZE, plus vfio_pci_core_fill_phys_vec() won't allow a
+DMABUF to be created off the end of a BAR.)
 
-The right way to view this flow is VFIO permanently revokes the DMABUF
-FD. Then instead of forcing a new FD to be obtained it replaces the
-existing FD with a working one.
+So, although this series allows a DMABUF to be mmap()ed, the preexisting
+checks prevent a sub-page DMABUF from existing and so there is no new
+route to mapping a sub-page BAR.
 
-From an importer perspective it sees the revoke happen and then that's
-it, the dmabuf never does anything further. The importer has to unmap
-and start from scratch, get a FD and map it.
+What's the concern on BAR2 specifically, out of interest?  This logic is
+applied to all resources equally, and tests pci_resource_len(...) so
+there shouldn't be a PF/VF distinction either.
 
-That VFIO re-used the FD to make a new live export isn't visible to
-the importer at all.
 
-I think that is where this "temporary revoke" language gets confusing.
+Matt
 
-Call it "VFIO reuses the FD to create a new live mapping" is clearer
-than calling it "temporarily revoke" which sounds too much like move.
+> 
+> Thanks.
+> Longfang.
+> 
+>> +	if (dma_buf_set_name(priv->dmabuf, bufname)) {
+>> +		/* Shouldn't happen, but don't leak if it does: */
+>> +		dev_dbg_ratelimited(&vdev->pdev->dev,
+>> +				    "Failed to set map name '%s'\n",
+>> +				    bufname);
+>> +		kfree(bufname);
+>> +	}
+>> +
+>> +	/*
+>> +	 * Ownership of the DMABUF file transfers to the VMA so that
+>> +	 * other users can locate the DMABUF via a VA.  Ownership of
+>> +	 * the original VFIO device file being mmap()ed transfers to
+>> +	 * priv, and is put when the DMABUF is released.  This
+>> +	 * intentionally does not use get_file()/vma_set_file()
+>> +	 * because the references are already held, and ownership
+>> +	 * moves.
+>> +	 */
+>> +	priv->vfile = vma->vm_file;
+>> +	vma->vm_file = priv->dmabuf->file;
+>> +	vma->vm_private_data = priv;
+>> +
+>> +	return 0;
+>> +
+>> +err_free_name:
+>> +	kfree(bufname);
+>> +err_free_phys:
+>> +	kfree(priv->phys_vec);
+>> +err_free_priv:
+>> +	kfree(priv);
+>> +	return ret;
+>> +}
+>> +
+>>  /*
+>>   * This is a temporary "private interconnect" between VFIO DMABUF and iommufd.
+>>   * It allows the two co-operating drivers to exchange the physical address of
+>> @@ -364,7 +528,6 @@ int vfio_pci_core_feature_dma_buf(struct vfio_pci_core_device *vdev, u32 flags,
+>>  {
+>>  	struct vfio_device_feature_dma_buf get_dma_buf = {};
+>>  	struct vfio_region_dma_range *dma_ranges;
+>> -	DEFINE_DMA_BUF_EXPORT_INFO(exp_info);
+>>  	struct vfio_pci_dma_buf *priv;
+>>  	size_t length;
+>>  	int ret;
+>> @@ -424,49 +587,9 @@ int vfio_pci_core_feature_dma_buf(struct vfio_pci_core_device *vdev, u32 flags,
+>>  	kfree(dma_ranges);
+>>  	dma_ranges = NULL;
+>>  
+>> -	if (!vfio_device_try_get_registration(&vdev->vdev)) {
+>> -		ret = -ENODEV;
+>> +	ret = vfio_pci_dmabuf_export(vdev, priv, get_dma_buf.open_flags);
+>> +	if (ret)
+>>  		goto err_free_phys;
+>> -	}
+>> -
+>> -	exp_info.ops = &vfio_pci_dmabuf_ops;
+>> -	exp_info.size = priv->size;
+>> -	exp_info.flags = get_dma_buf.open_flags;
+>> -	exp_info.priv = priv;
+>> -
+>> -	priv->dmabuf = dma_buf_export(&exp_info);
+>> -	if (IS_ERR(priv->dmabuf)) {
+>> -		ret = PTR_ERR(priv->dmabuf);
+>> -		goto err_dev_put;
+>> -	}
+>> -
+>> -	kref_init(&priv->kref);
+>> -	init_completion(&priv->comp);
+>> -
+>> -	/* dma_buf_put() now frees priv */
+>> -	INIT_LIST_HEAD(&priv->dmabufs_elm);
+>> -
+>> -	/*
+>> -	 * dmabuf_lock synchronises access (R) or updates (W) to the
+>> -	 * vdev->dmabufs list and to bars_revoked (see below).  The
+>> -	 * revocation state of DMABUF elements in the list is written
+>> -	 * holding both dmabuf_lock(W) and resv, and tested with
+>> -	 * either.
+>> -	 *
+>> -	 * dmabuf_lock -> resv
+>> -	 *
+>> -	 * vdev->bars_revoked tracks the BAR revocation status updated
+>> -	 * via vfio_pci_dma_buf_move(), so the initial DMABUF state
+>> -	 * follows the same criteria that later update the DMABUF
+>> -	 * state (BAR zap, etc.).
+>> -	 */
+>> -	down_write(&vdev->dmabuf_lock);
+>> -	dma_resv_lock(priv->dmabuf->resv, NULL);
+>> -	priv->revoked = vdev->bars_revoked;
+>> -	list_add_tail(&priv->dmabufs_elm, &vdev->dmabufs);
+>> -	dma_resv_unlock(priv->dmabuf->resv);
+>> -	up_write(&vdev->dmabuf_lock);
+>> -
+>>  	/*
+>>  	 * dma_buf_fd() consumes the reference, when the file closes the dmabuf
+>>  	 * will be released.
+>> @@ -477,8 +600,6 @@ int vfio_pci_core_feature_dma_buf(struct vfio_pci_core_device *vdev, u32 flags,
+>>  
+>>  	return ret;
+>>  
+>> -err_dev_put:
+>> -	vfio_device_put_registration(&vdev->vdev);
+>>  err_free_phys:
+>>  	kfree(priv->phys_vec);
+>>  err_free_priv:
+>> diff --git a/drivers/vfio/pci/vfio_pci_priv.h b/drivers/vfio/pci/vfio_pci_priv.h
+>> index 48d9f574a3df..3ec676e12e21 100644
+>> --- a/drivers/vfio/pci/vfio_pci_priv.h
+>> +++ b/drivers/vfio/pci/vfio_pci_priv.h
+>> @@ -30,6 +30,7 @@ struct vfio_pci_dma_buf {
+>>  	size_t size;
+>>  	struct phys_vec *phys_vec;
+>>  	struct p2pdma_provider *provider;
+>> +	struct file *vfile;
+>>  	u32 nr_ranges;
+>>  	struct kref kref;
+>>  	struct completion comp;
+>> @@ -134,6 +135,10 @@ int vfio_pci_dma_buf_find_pfn(struct vfio_pci_core_device *vdev,
+>>  			      unsigned long address,
+>>  			      unsigned int order,
+>>  			      unsigned long *out_pfn);
+>> +int vfio_pci_core_mmap_prep_dmabuf(struct vfio_pci_core_device *vdev,
+>> +				   struct vm_area_struct *vma,
+>> +				   u64 phys_start, u64 req_len,
+>> +				   unsigned int res_index);
+>>  
+>>  #ifdef CONFIG_VFIO_PCI_DMABUF
+>>  int vfio_pci_core_feature_dma_buf(struct vfio_pci_core_device *vdev, u32 flags,
+>>
 
-Jason
