@@ -1,48 +1,46 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1589D44F56D;
-	Mon, 21 Sep 2026 07:58:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A544B44A725;
+	Mon, 21 Sep 2026 08:03:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789977517; cv=none; b=BexfL4RM9aWC36UZaYoC+wkAGfbU74Oswc2U4YBR48qea0g7Fz3lFyY/Spg3mxhSiPc7tsRhwAP+puK7VD3weo8psGihypO6vNPiDrqBefQrp1RTVKNM0NODh4uBuH1dJ4EpiyMBmI2lyadFI2FjQozCYRUq1uCDExk8JDFwgWI=
+	t=1789977836; cv=none; b=LVhf0bWFefP1Mi71fBRr2LdlMznZkFUq5KpCgM3IVJWns1gQpJ+wEdVL4m5+ULaJ6VYXZ/sHm88oubvWTORrisfp1ErkzG1i7bQtU0xd3Ru2nx2EcbLHeLsw21sDG31OcwShK46t3HhkqItwxEtyH6rGe1c4ElkZPv4EI6/3hn4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789977517; c=relaxed/simple;
-	bh=EUfSpRHBF3fPSX0w9+7hQaeikTQIYwpee7jsi20JUL8=;
+	s=arc-20240116; t=1789977836; c=relaxed/simple;
+	bh=EW74lXzDEC4ksALgbe1BO7LXRzfjlQY1fOBlGDazMQw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=EdZWei1kaOu8fkW6My/fmNRuPZ3Irsqi6g4qSeLkDkzuihdZwKsc+PpDgH7d4e+14EpcDI3H4Yo8A1n6qpdpaiuKNNQbu40s3bE9w5lIilmV5cqmpJwGjAbQqx4AbjiS2cAXE+qLYnLVptIW2wK+TT4/zp8RKoayS1+d+/SbD28=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HJQcs/Ti; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=G5TxROVponagOTIU3mU1oIS61Dg37rd5VmQLVutDeKHBKhEdOGJWJFpUPKfSrZ1wy+Ta+jhdz9D8EwRehhzgmRK2ZMCgwbA9A99U8lR6yvIVj0TEc+3JmcJGFTS6H0HLEIXS6uJBcvadh8HCQtSqE6AEm9x6R8HLMFPZfzh8zvI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iyvcyeVt; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HJQcs/Ti"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 149951F000FF;
-	Mon, 21 Sep 2026 07:58:30 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iyvcyeVt"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 828281F000FF;
+	Mon, 21 Sep 2026 08:03:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789977516;
-	bh=oAyAx8t+7fJPyP33W2CjPs2RDHxeq3KJ8H7frGEAPfo=;
+	s=k20260515; t=1789977835;
+	bh=KsQ90edjAsrAFhgm0/rE7PgtI+eNbFXo/5sMFQhaex8=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=HJQcs/Tiqvkf8RqWovy/B2NlzULMBtQX+gPSH8bJ0Hyhs/ryNy6scPa1frf8WDJ59
-	 2Mq+o5MsC9NXcvtYn8mryTl2Azl0q3uMDoTZlZAbfa5ZbqMdYVF9U3eDQcpsom+G/V
-	 dkho3HgKiD1BoXy3vKE9V+C1DTiVuSAVIGAK0LFkARBiMM9rTiYEfMqAgaSxcMnYsq
-	 2g9Q3RQ0rZbb3hDGccvJeuFI+iZfPbFoghG3J9VWRtPjcgLrsFGpTTW0jWT14cdmi5
-	 VH3yiCO0Nt5QKdkVlsHeVnPoeQwFhW/VUj4qoo9MHbwGpO404Yjo5OBi+klPhQkinM
-	 Ro0jpnPfyPzyA==
-Date: Mon, 21 Sep 2026 09:58:27 +0200
+	b=iyvcyeVtgEssGNPqi5AqV9YcLohVP5PW4hfA+04vJnkWBxNwXDtjUJuJzu8N5gZtG
+	 onJzbXPynz2tvKP4yxiUjnAax/oTMIIEYHAYckQc94cCQ/Pj91ZbDnQR86AmYKBwcy
+	 m7jrqwIbDIo6FuCVYmsgJJPpPSiTibcDPAy/Io7lL3PovVQ832ShqgYRG5/4UNc1lK
+	 NWXYRHjSsQZLnZoQBeI7+LncGpxLQx7P4RaOZORt68k6IDd9QSlIgP99CL97QF1+jr
+	 Z2Pbl7GS4U5NdJ9ux9VO8pz0kpGxcA7tPE25y+v0o8Aso4rXjMDGW7FO1dCozHbNya
+	 uhMthxWfECFzQ==
+Date: Mon, 21 Sep 2026 10:03:46 +0200
 From: Manivannan Sadhasivam <mani@kernel.org>
-To: Bartosz Golaszewski <brgl@kernel.org>
-Cc: 
-	Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>, linux-kernel@vger.kernel.org, linux-bluetooth@vger.kernel.org, 
-	linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org, linux-pm@vger.kernel.org, 
-	Rahul Samana <rahul.samana@oss.qualcomm.com>, Wei Deng <wei.deng@oss.qualcomm.com>, 
-	Loic Poulain <loic.poulain@oss.qualcomm.com>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>, 
-	Marcel Holtmann <marcel@holtmann.org>, Luiz Augusto von Dentz <luiz.dentz@gmail.com>, 
-	Amitkumar Karwar <amitkumar.karwar@nxp.com>, Neeraj Kale <neeraj.sanjaykale@nxp.com>, 
-	Philipp Zabel <p.zabel@pengutronix.de>
-Subject: Re: [PATCH 3/5] power: sequencing: pcie-m2: Create auxiliary device
- for the M.2 BT interface
-Message-ID: <p2qiwwig7ap74puja6mgnz37lofljhexiapmpp6y3xmwkhs2dn@v2mxawoivkn4>
-References: <20260915-pci-m2-bt-rework-v1-0-3c7d9cf9c010@oss.qualcomm.com>
- <20260915-pci-m2-bt-rework-v1-3-3c7d9cf9c010@oss.qualcomm.com>
- <CAMRc=MdJgXDUb-Uac0TRB8u1WUpLng51C4yMH6iMEMoK56tQYA@mail.gmail.com>
+To: Encrow Thorne <encrow.thorne@linux.spacemit.com>
+Cc: Bruno Banelli <bbanelli@gmail.com>, linux-pci@vger.kernel.org, 
+	linux-riscv@lists.infradead.org, spacemit@lists.linux.dev, Alex Elder <elder@riscstar.com>, 
+	Yixun Lan <dlan@kernel.org>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	Krzysztof Wilczynski <kwilczynski@kernel.org>, Rob Herring <robh@kernel.org>, 
+	Bjorn Helgaas <bhelgaas@google.com>, Danilo Krummrich <dakr@kernel.org>, 
+	Uwe Kleine-Koenig <u.kleine-koenig@baylibre.com>, Javier Martinez Canillas <javierm@redhat.com>, 
+	linux-kernel@vger.kernel.org, linux-riscv <linux-riscv-bounces@lists.infradead.org>
+Subject: Re: [BUG] PCI: spacemit-k1: port C probe hard-hangs a CPU with one
+ endpoint on Milk-V Jupiter
+Message-ID: <xuafb5qshj6rowe3v6sxyfvtemy4wg2ttqs7lcwu3txu2mpyzm@fr72njh6zgvi>
+References: <20260825052249.66921-1-bbanelli@gmail.com>
+ <DLKRGJBNFVQO.15WZ2SXQLOY0T@linux.spacemit.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -52,39 +50,32 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAMRc=MdJgXDUb-Uac0TRB8u1WUpLng51C4yMH6iMEMoK56tQYA@mail.gmail.com>
+In-Reply-To: <DLKRGJBNFVQO.15WZ2SXQLOY0T@linux.spacemit.com>
 
-On Wed, Sep 16, 2026 at 04:19:16AM -0500, Bartosz Golaszewski wrote:
-> On Tue, 15 Sep 2026 16:24:04 +0200, Manivannan Sadhasivam via B4 Relay
-> <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org> said:
-> > From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-> >
-> > Currently, the driver instantiates the BT interface of the WCN6855 and
-> > WCN7850 combo modules by creating a devicetree node at runtime using an
-> > of_changeset, with the compatible passed through the PCI ID table. But this
-> > method of creating a devicetree node just for matching with the driver is
-> > not recommended.
-> >
-> > So create an auxiliary device for the BT interface instead. The serdev
-> > transport is still allocated here and handed over to the Bluetooth driver
-> > through the auxiliary device, along with the power sequencing target used
-> > to power up the controller. Also extend the provider match so that the
-> > auxiliary device created for this connector is matched as its power
-> > sequencing consumer.
-> >
-> > Since the runtime node creation is now gone, select AUXILIARY_BUS in
-> > place of OF_DYNAMIC.
-> >
-> > Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-> > ---
+On Mon, Sep 21, 2026 at 01:55:42PM +0800, Encrow Thorne wrote:
+
+[...]
+
+> Hi Bruno,
 > 
-> That's some nice stuff, thanks for doing it!
+> The issue was caused by a missing hardware configuration in the K1 PCIe
+> initialization.
 > 
-> It looks like there's no build-time dependency on this, only run-time? Can I
-> take it independently?
+> The PMU PCIE_CONTROL_LOGIC register contains an IGNORE_PERSTN bit (BIT(2)).
+> The hardware manual describes it as follows:
+> 
+> “When set to 1, the PCIe controller and PHY ignore the PERSTN signal from
+> the link partner in both RC and EP modes.”
+> 
+> This bit was not configured during RC initialization. As a result, the
+> controller and PHY could still be affected by the PERSTN input during the
+> early DBI accesses. With the Intel I225-V installed, the first DBI access
+> could remain pending and hang the CPU.
 > 
 
-Yeah sure!
+What does this 'PERSTN' bit controls? PERST# or something else? PERST# is
+controlled only by the Root Complex btw. Also, why does this missing register
+configuration only affecting Intel I225-V endpoint and not others?
 
 - Mani
 
