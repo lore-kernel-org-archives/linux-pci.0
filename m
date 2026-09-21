@@ -1,111 +1,57 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A62B261B71;
-	Mon, 21 Sep 2026 04:46:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3EB0718859B
+	for <linux-pci@vger.kernel.org>; Mon, 21 Sep 2026 04:48:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789966001; cv=none; b=jt8e2xl32NLKfcT2qg8o1l9Yq4t0BXbyEwe2i2FxLTDc/NkB6Wf8A1Tgd6sGprJ6Gef8991TIDuXTpn4WQjyVmWZRR/A7OKIrE70ls2EajcwAEnxejFjJFWNMtdGQA3cq83JlgfZ+gnQ9VYYw4cto0S32l4TE89gP2rs5YYlzjI=
+	t=1789966114; cv=none; b=DjeiG2E9ZyfV1fVvsUToXKvmXxLGAG8S8nypoWcjeSCVW7os7g+6VvAENiKoiFlyNcLPIICm6agkZColMovFRUDIwnPvEQ7lwCCZoqrdryzqR++4qi5J79U3iXeuiGikfqDphIe3DoVuJYYia+cfglnkbs7V1+RmF0X/Ea9tT48=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789966001; c=relaxed/simple;
-	bh=4h8aZVvmhUYfmHex/p0R5hAWn0VpIsHZjowfpWENRWU=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=roOIWgNzLgxPV+3WN7EcRi3ivOTlSh/BxMS5HuR1qAUu3C5QMpPqRJOlMWiFYvBj6o2HKMCiaSZCY0pKXSvauIe9WqrrR2dPcJrR8FOBk+Tu7T5t+um9Qdvd0HNs9CfMpbNS4T6voBgkX+XDaDymBvoUn9EfqL/uIDkmv8XqUFQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=pass smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=NXHBPvHk; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=infradead.org
+	s=arc-20240116; t=1789966114; c=relaxed/simple;
+	bh=BK9IHtOKDBuKwpXKnNIi+pF3pCRj/LVXF7NiFk3tPoU=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=Awi0nW/dJRRdB/KYf7XfKLafo1dM8nWsgvEdntMOziNwrqVTLwkXZH2QVYPEpZNlGBR22fd/8QKA7rUEno9aLlbGM0vn08TtD9VA5RUToK6DjEWObbBaTYey1YLZLo81Rj7rdfc3LVVpIxC2ow4wHxcuoR7HfKpi1NsS9qrS+3w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bgf4e0BB; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="NXHBPvHk"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
-	Content-ID:Content-Description:In-Reply-To:References;
-	bh=tiS06pkA4lgXUJ71hvF/QhKZNFG5gcAV9OJU2nd1rKs=; b=NXHBPvHkGcpnd+oTPryFuiVV5g
-	cUgqyh991rSdGp+8WT40xMuLZ+oosYSUlYc0Jngp9UTAgylbyhusYPJQwL+OLX/7IEbO9p+I27LP7
-	aoVRS0zhsj6IUXfS0xaUndaUi00FWUEJnBPp0jjwf6OH6bbqu+VJjne7KciIgpS5S36wi5iPp9fG7
-	bRIe8SwEVkdbQZiKcb7w8qXof0K1XXvAzroADZD4X9EOc1rImtKTe5oPxceuDol6aym1IwE87uqPT
-	1PRua0//BRf5RYCDD/BNugDI0BqNYNGWw1TNDEtOAMAMrrbqFY5DR5m3ot8CAwQH1C3OzEGiJYoEv
-	q5VsXUQQ==;
-Received: from [50.53.43.113] (helo=bombadil.infradead.org)
-	by bombadil.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1x8VvK-00000000r0d-2HhT;
-	Mon, 21 Sep 2026 04:46:38 +0000
-From: Randy Dunlap <rdunlap@infradead.org>
-To: linux-kernel@vger.kernel.org
-Cc: Randy Dunlap <rdunlap@infradead.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org,
-	Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	linux-doc@vger.kernel.org
-Subject: [PATCH] ABI: sysfs-bus-pci: use literal blocks for commands
-Date: Sun, 20 Sep 2026 21:46:37 -0700
-Message-ID: <20260921044637.91089-1-rdunlap@infradead.org>
-X-Mailer: git-send-email 2.55.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bgf4e0BB"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A68BD1F000FF;
+	Mon, 21 Sep 2026 04:48:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1789966112;
+	bh=BK9IHtOKDBuKwpXKnNIi+pF3pCRj/LVXF7NiFk3tPoU=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=bgf4e0BBA2dTYhOB5sKRErwI9+hNJ1GbWm9ZbUaXYqMsMge6srJbCCZF1W+C+DD5Y
+	 SjNHVqf5WygZImyS5eh+EF1FedqF2W1OuCrGGbCY3OOz2uNqWZ3I4rPOpRv8P5rXFq
+	 jsBQfHuPBQE3l3jBNdfHxx4JiHqJwFHnV4iK5OXGn8Ks/6ZVGouzdNlEMRHv2Qmwm1
+	 zY+iUnxXAiX2ZF2UDOhqLn7arcZXdrSPwmN+UOwS+KOZuLGRK1phb023NvBPS9SaP5
+	 HBFlwuTOD1wBFf9+0XdF44PvfHH+fz45asosfOs790ORyIxWG6uTU5vLkqtVpnfzkt
+	 0F5ZM2WJekfFA==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] ABI: sysfs-bus-pci: use literal blocks for commands
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Randy Dunlap" <rdunlap@infradead.org>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260921044637.91089-1-rdunlap@infradead.org>
+References: <20260921044637.91089-1-rdunlap@infradead.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Mon, 21 Sep 2026 04:48:32 +0000
+Message-Id: <20260921044832.A68BD1F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-Use literal blocks for console I/O to separate it from the
-surrounding text. Otherwise the lines run together, without any
-clear break before or after the commands.
+> Use literal blocks for console I/O to separate it from the
+> surrounding text. Otherwise the lines run together, without any
+> clear break before or after the commands.
+>=20
+> Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
 
-Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
----
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Cc: Jonathan Corbet <corbet@lwn.net>
-Cc: Shuah Khan <skhan@linuxfoundation.org>
-Cc: linux-doc@vger.kernel.org
+Sashiko has reviewed this patch and found no issues. It looks great!
 
- Documentation/ABI/testing/sysfs-bus-pci |   14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260921044637.9108=
+9-1-rdunlap@infradead.org?part=3D1
 
---- linux-next-20260918.orig/Documentation/ABI/testing/sysfs-bus-pci
-+++ linux-next-20260918/Documentation/ABI/testing/sysfs-bus-pci
-@@ -486,19 +486,19 @@ Description:
- 		These files provide an interface to PCIe Resizable BAR support.
- 		A file is created for each BAR resource (N) supported by the
- 		PCIe Resizable BAR extended capability of the device.  Reading
--		each file exposes the bitmap of available resource sizes:
-+		each file exposes the bitmap of available resource sizes::
- 
--		# cat resource1_resize
--		00000000000001c0
-+		  # cat resource1_resize
-+		  00000000000001c0
- 
- 		The bitmap represents supported resource sizes for the BAR,
- 		where bit0 = 1MB, bit1 = 2MB, bit2 = 4MB, etc.  In the above
- 		example the device supports 64MB, 128MB, and 256MB BAR sizes.
- 
- 		When writing the file, the user provides the bit position of
--		the desired resource size, for example:
-+		the desired resource size, for example::
- 
--		# echo 7 > resource1_resize
-+		  # echo 7 > resource1_resize
- 
- 		This indicates to set the size value corresponding to bit 7,
- 		128MB.  The resulting size is 2 ^ (bit# + 20).  This definition
-@@ -600,7 +600,7 @@ Description:
- 
- 		As all DOE devices must support the DOE discovery feature,
- 		if DOE is supported you will at least see the doe_discovery
--		file, with this contents:
-+		file, with this contents::
- 
- 		  # cat doe_features/doe_discovery
- 		  0001:00
-@@ -608,7 +608,7 @@ Description:
- 		If the device supports other features you will see other
- 		files as well. For example if CMA/SPDM and secure CMA/SPDM
- 		are supported the doe_features directory will look like
--		this:
-+		this::
- 
- 		  # ls doe_features
- 		  0001:01        0001:02        doe_discovery
