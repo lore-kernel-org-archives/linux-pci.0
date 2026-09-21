@@ -1,135 +1,126 @@
-Received: from mout-p-202.mailbox.org (mout-p-202.mailbox.org [80.241.56.172])
+Received: from intranet.stegbauer.info (intranet.stegbauer.info [80.153.120.106])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C336E478E20;
-	Mon, 21 Sep 2026 14:46:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 866584AA56F
+	for <linux-pci@vger.kernel.org>; Mon, 21 Sep 2026 14:52:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.153.120.106
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790002024; cv=none; b=rKA5o/7PU1pzjAXZ69jSyVYj2KTBBPKi6XgVnsAwZdgkzWnLKlEZqwtkm2uKQVWKv7c1HPyPZbHj7EALd+JuU8fAE/Be/EnkaYva7X1ntsolK8/9j64YWnmEgqAhn27dspk46ERHuEUY1ca89cqX0N7ZeRYRTT8+GOt08iTzbUI=
+	t=1790002332; cv=none; b=u6cyddsJZ6Ko98uGkeqpERORkcJ2Fp8UeIjMfoAYQpJR97LY4cDeTKkb9eTKVHlmj1TQ/bGgb2FnCptupE55yQBnGdhpvQ5+lWy/EzrBVgbECRWNd2VyXgReYxDfEAXhvUUGcg5it3Az1HUepX7kQoCn7+SoplYog1Po/zJ6wY0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790002024; c=relaxed/simple;
-	bh=XfmWMsNyU4Xs7fZq4urf6ghCDU85y2X+vPQbSZlaygU=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=VuOb/BXAKmjTTnTE8XcXx4MQYJBeKQvGUkNa7Q/OTmGo+Lf0E1en4kgHDT4uJItDTcGFrQfiaicFJOCBc59tUBZ62iJts/DUS+sSImQxrzDhl7YasxCcMoKZzBNkTamKMsBKBAzm9KfIWSDAbeO0sha6OcsEZ04/TgiJSEmp6KI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=E5wnfoAg; arc=none smtp.client-ip=80.241.56.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
+	s=arc-20240116; t=1790002332; c=relaxed/simple;
+	bh=lLkv+jMmZGe/gBXa297FIVQvjgB+rkxSEhGSCTfQps4=;
+	h=Date:From:To:Cc:Message-ID:Subject:MIME-Version:Content-Type; b=UIWQmtogC551Y3tCt4OnPdqYD4Fa3aDu8y+u4/MnOCxehB0rSmNZnRw33uAJUwDMW/iJzHDkqeyToTXr9BgiYjlf6fSOT4f4wbR4Kx5VOiPp03IRxVASVFLE8LXz4M9PjerJKPfy8FCfEKiGO3OcjgLs3X+Nm+n6R9Koe1PFNn0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=stegbauer.info; spf=pass smtp.mailfrom=stegbauer.info; dkim=pass (2048-bit key) header.d=stegbauer.info header.i=@stegbauer.info header.b=hBotiaSB; arc=none smtp.client-ip=80.153.120.106
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=stegbauer.info
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=stegbauer.info
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="E5wnfoAg"
-Received: from smtp102.mailbox.org (smtp102.mailbox.org [IPv6:2001:67c:2050:b231:465::102])
+	dkim=pass (2048-bit key) header.d=stegbauer.info header.i=@stegbauer.info header.b="hBotiaSB"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=stegbauer.info;
+	s=201607; t=1790001905;
+	bh=lLkv+jMmZGe/gBXa297FIVQvjgB+rkxSEhGSCTfQps4=;
+	h=Date:From:To:Cc:Subject:From;
+	b=hBotiaSBi7drfKQI3DTUYstB6jSgdzVQ711Vue5KS/EEokp3sCDqEk4PzhaEk7S+y
+	 VXPuzGQX2WE4HydOl4UvnS3qnJtmInwBBeu6EIS0+vbFNPjvX8OGhbHbXJtLrXXZh5
+	 MP9Dujra+rFmonz3pqaiXXyuiNsvmJagazFJfg4hyLf6K+TAdDQRHggVMOwc1Nf2iF
+	 JKixoBOqNRiLd82u7diFJynAJUbUNb1fmiMlzcvkfnsInvkIxRUXRpreLEmCibt583
+	 VmS0ohCniGrqPlkK4oQW2yrmknoEWr6MoUNMaJ9y1VsWCdp0kzgeVZUvum7UwO7asq
+	 e35sU4djGr2yQ==
+Received: from zimbra-soscomp.soscomp.de (zimbra-soscomp.soscomp.de [192.168.23.3])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384)
 	(No client certificate requested)
-	by mout-p-202.mailbox.org (Postfix) with ESMTPS id 4hpQzY1QSPzMlDv;
-	Mon, 21 Sep 2026 16:46:49 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-	t=1790002009;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=3enihJHYZmOm2PLsVe1+ufKeMP1zdXy551QL6AebGT8=;
-	b=E5wnfoAg79Pyi0OIOhN96jFYpOcGk8E58PDv5uNz01h+axmAQ7zEvhH39xsvft5frqb2hF
-	2QX/3S9IF+2maSXynV8gkycKF+VeUvr0JiK/BAvBkuYl/V7dZPOFCN89IyI78FGMLLdsKQ
-	nEUQ79dKUv3K9jjRD2xvb2z5FAK41RD47azM8Ha6+STsivnKwKAxfYsneNj9OdSlLjy+SK
-	uTXlvZdY4BUbp0LPPgrf31nUtqZGmG95IFWeIv2vz7rxCv6sBtW9uNumfHOqVPD49g3C/l
-	1vJj4ij31SEO1Ux8ZE7oEjMohSOYanwJNhAxlLJgKWQWWA4Ym2VdMCFqXQujQg==
-Message-ID: <a3db8ebd-0a99-4436-821a-f12d353ea6fc@mailbox.org>
-Date: Mon, 21 Sep 2026 16:46:44 +0200
+	by intranet.stegbauer.info (Postfix) with ESMTPS id 2BF179F793;
+	Mon, 21 Sep 2026 16:45:05 +0200 (CEST)
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by zimbra-soscomp.soscomp.de (Postfix) with ESMTP id 09E983468B1;
+	Mon, 21 Sep 2026 16:45:05 +0200 (CEST)
+Received: from zimbra-soscomp.soscomp.de ([127.0.0.1])
+ by localhost (zimbra-soscomp.soscomp.de [127.0.0.1]) (amavis, port 10032)
+ with ESMTP id 09zaqutbCEJo; Mon, 21 Sep 2026 16:45:04 +0200 (CEST)
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by zimbra-soscomp.soscomp.de (Postfix) with ESMTP id 026483468C5;
+	Mon, 21 Sep 2026 16:45:04 +0200 (CEST)
+X-Virus-Scanned: amavis at zimbra-soscomp.soscomp.de
+Received: from zimbra-soscomp.soscomp.de ([127.0.0.1])
+ by localhost (zimbra-soscomp.soscomp.de [127.0.0.1]) (amavis, port 10026)
+ with ESMTP id E8K-a0RdNPFA; Mon, 21 Sep 2026 16:45:03 +0200 (CEST)
+Received: from zimbra-soscomp.soscomp.de (zimbra-soscomp.soscomp.de [192.168.23.3])
+	by zimbra-soscomp.soscomp.de (Postfix) with ESMTP id 9800F3468B1;
+	Mon, 21 Sep 2026 16:45:03 +0200 (CEST)
+Date: Mon, 21 Sep 2026 16:45:03 +0200 (CEST)
+From: Thomas Stegbauer <thomas.stegbauer@stegbauer.info>
+To: Andreas Wild <andiwild@gmail.com>
+Cc: macro@orcam.me.uk, helgaas@kernel.org, linux@leemhuis.info, 
+	linux-pci@vger.kernel.org, regressions@lists.linux.dev
+Message-ID: <752770208.319.1790001903323.JavaMail.zimbra@stegbauer.info>
+Subject: Re: [PATCH v3] PCI: Skip Target Speed quirk on clamped ports with
+ no link
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Subject: Re: [PATCH] PCI: keystone: deinitialize endpoint on remove
-To: Guangshuo Li <lgs201920130244@gmail.com>
-Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>,
- =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
- Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Siddharth Vadapalli
- <s-vadapalli@ti.com>, Frank Li <Frank.Li@nxp.com>,
- Niklas Cassel <cassel@kernel.org>, Yuho Choi <dbgh9129@gmail.com>,
- Kishon Vijay Abraham I <kishon@kernel.org>, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, Koichiro Den <den@valinux.co.jp>,
- stable@vger.kernel.org, Nishanth Menon <nm@ti.com>
-References: <20260916080030.2960608-1-lgs201920130244@gmail.com>
- <736ff398-98fa-43bc-9771-1b0d4c2a591c@mailbox.org>
- <CANUHTR_AAKH13fRAwLY5wzMjhWuzwET=-359ZMNh0VU4tULrKg@mail.gmail.com>
-Content-Language: en-US
-From: Marek Vasut <marek.vasut@mailbox.org>
-In-Reply-To: <CANUHTR_AAKH13fRAwLY5wzMjhWuzwET=-359ZMNh0VU4tULrKg@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
-X-MBO-RS-ID: 5b282cc8359349ccb17
-X-MBO-RS-META: 4ziniwh9xinf443pgfj1sjqcpie9y49p
+X-Mailer: Zimbra 10.1.20_GA_4200001 (ZimbraWebClient - GC153 (Linux)/10.1.20_GA_4200001)
+Thread-Index: u4aSUst814tCowhW4rO/jDxdk3UN8A==
+Thread-Topic: Skip Target Speed quirk on clamped ports with no link
 
-On 9/21/26 4:15 PM, Guangshuo Li wrote:
-> Hi Marek,
-> 
-> Thanks for the review.
-> 
-> On Thu, 17 Sept 2026 at 06:56, Marek Vasut <marek.vasut@mailbox.org> wrote:
->>
->> On 9/16/26 10:00 AM, Guangshuo Li wrote:
->>> ks_pcie_probe() initializes the DesignWare PCIe endpoint with
->>> dw_pcie_ep_init(). The probe failure path calls dw_pcie_ep_deinit()
->>> when endpoint register initialization fails, but the remove path does
->>> not perform the corresponding endpoint teardown after a successful
->>> probe.
->>>
->>> The successful endpoint initialization also calls pci_epc_init_notify().
->>> Without the matching teardown on removal, the EPC initialization state
->>> and resources allocated by the DesignWare endpoint core are left
->>> active after the driver is removed.
->>>
->>> Notify the endpoint framework about deinitialization and call
->>> dw_pcie_ep_deinit() before disabling runtime PM and the PHYs.
->>>
->>> This issue was found by manual code inspection.
->>>
->>> Fixes: 23284ad677a9 ("PCI: keystone: Add support for PCIe EP in AM654x Platforms")
->>> Cc: stable@vger.kernel.org
->>> Signed-off-by: Guangshuo Li <lgs201920130244@gmail.com>
->>> ---
->>>    drivers/pci/controller/dwc/pci-keystone.c | 8 ++++++++
->>>    1 file changed, 8 insertions(+)
->>>
->>> diff --git a/drivers/pci/controller/dwc/pci-keystone.c b/drivers/pci/controller/dwc/pci-keystone.c
->>> index 602516239a57..35787e727c5c 100644
->>> --- a/drivers/pci/controller/dwc/pci-keystone.c
->>> +++ b/drivers/pci/controller/dwc/pci-keystone.c
->>> @@ -1349,9 +1349,17 @@ static void ks_pcie_remove(struct platform_device *pdev)
->>>    {
->>>        struct keystone_pcie *ks_pcie = platform_get_drvdata(pdev);
->>>        struct device_link **link = ks_pcie->link;
->>> +     struct dw_pcie *pci = ks_pcie->pci;
->>> +     const struct ks_pcie_of_data *data;
->>>        int num_lanes = ks_pcie->num_lanes;
->>>        struct device *dev = &pdev->dev;
->>>
->>> +     data = of_device_get_match_data(dev);
->>
->> Could you maybe cache the mode in struct keystone_pcie {} instead ?
->>
->>> +     if (data->mode == DW_PCIE_EP_TYPE) {
->>> +             pci_epc_deinit_notify(pci->ep.epc);
->>> +             dw_pcie_ep_deinit(&pci->ep);
->>
->> Would it make sense to make dw_pcie_ep_deinit() call
->> pci_epc_deinit_notify() , to avoid duplication in controller drivers ?
->>
->>> +     }
->>> +
->>>        pm_runtime_put(dev);
->>>        pm_runtime_disable(dev);
->>>        ks_pcie_disable_phy(ks_pcie);
->>
->> --
->> Best regards,
->> Marek Vasut
-> 
-> Agreed. I'll cache the mode in struct keystone_pcie and move
-> pci_epc_deinit_notify() into dw_pcie_ep_deinit() so controller drivers
-> do not need to duplicate it. I'll send a v2 with those changes.
-Thank you
+In-Reply-To: <20260801201244.4421-1-andiwild@gmail.com>
+References: <20260801201244.4421-1-andiwild@gmail.com>
+
+Hi,
+
+another data point for the regression from 72780f796468 ("PCI: Always
+lift 2.5GT/s restriction in PCIe failed link retraining"), for the case
+with a device present, which v3 does not appear to cover.
+
+Hardware: Raspberry Pi 5 (BCM2712, pcie-brcmstb), ASMedia ASM1182e
+[1b21:1182] Gen2 packet switch on a dual M.2 carrier, one NVMe SSD
+behind each downstream port.
+
+Downstream port 7 (0001:02:07.0) does not train at 5GT/s on this board.
+Without the backport (v6.12.75) the quirk clamps it and the link comes
+up at Gen1, in use for over a year:
+
+  pci 0001:02:07.0: broken device, retraining non-functional downstream link at 2.5GT/s
+  LnkSta:  Speed 2.5GT/s, Width x1, DLActive+
+  LnkCtl2: Target Link Speed: 2.5GT/s
+
+With the backport (v6.18.50, also v6.18.39; Raspberry Pi downstream
+kernels, pcie-brcmstb identical between both 6.18 versions) the device
+is lost:
+
+  [0.518303] pci 0001:02:07.0: broken device, retraining non-functional downstream link at 2.5GT/s
+  [0.538795] pci 0001:02:07.0: removing 2.5GT/s downstream link speed restriction
+  [1.537936] pci 0001:02:07.0: retraining failed
+  LnkSta:  Speed 5GT/s, Width x1, DLActive-, BWMgmt+
+  LnkCtl2: Target Link Speed: 5GT/s
+
+Same hardware, firmware and DT; only the kernel differs. Swapping the
+SSDs moves the failure with the port, not with the drive.
+
+To be fair, the Gen1 link is marginal: AER on the port shows RxErr
+right after clearing, and BadTLP/BadDLLP under load. The replays are
+absorbed, though: 8 GiB O_DIRECT read at 222 MB/s, no data errors.
+
+So: the port is not clamped on entry, hence v3's new early return does
+not trigger; the first block clamps and the link trains at 2.5GT/s; the
+second block then lifts the clamp because LnkCap is 5GT/s; the 5GT/s
+retrain fails as the initial training did, and the error path restores
+the old 5GT/s target, leaving the link down (and adding ~2 s to boot).
+
+Before 72780f796468 the lift was limited to the ASM2824 with the link
+up, which is why this worked. Would it make sense to fall back to the
+2.5GT/s clamp when lifting fails, rather than to the original target
+speed, at least when the clamp had produced a working link?
+
+Happy to test patches (v6.18.y based on the Raspberry Pi tree is
+easiest for me). Downstream report with full logs:
+https://github.com/raspberrypi/linux/issues/7635
+
+Thanks,
+Thomas S.
+
+p.s. hopefully the mail get properly added, as I hade to add the in-reply and reference to the txt-body of the mail.
