@@ -1,159 +1,106 @@
-Received: from mail-pj2-f13.google.com (mail-pj2-f13.google.com [74.125.227.141])
+Received: from mail-ed2-f35.google.com (mail-ed2-f35.google.com [74.125.228.99])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65CDE4E2F28
-	for <linux-pci@vger.kernel.org>; Mon, 21 Sep 2026 17:06:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.227.141
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3AF40475337
+	for <linux-pci@vger.kernel.org>; Mon, 21 Sep 2026 17:07:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.228.99
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790010415; cv=none; b=Sv6FzYJ0vDuPNRHTfFtWO4VPvcLuzDmnaUCj4khTFZxY/5Y7lH469DS8w2oktvSp4wnwMaHxXHjO/zBfqMdp2KSIY5A0BKds0unmzQurRKxuczbrDzkwaA6xZQSME741g7NiTB5n6Ydj8JK4ZKlW1HTeZiNu5B3CbhdrDSfxgw4=
+	t=1790010441; cv=none; b=KRkUMwdGtj7CANvB00GqeJ8KqjVzmwhvNjZe+G0aNZF4wkh04qanXZZkZuEPB0AfsmhFmTyHJewtBNIAHqyx/oS17Vp2pn27jWXXOhOZqdy97Ql2G8xHvle8mE1aAIil/n6NHiEDZki5m3enaA+3M5+FxVw05i1ctM0lmzgvKnY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790010415; c=relaxed/simple;
-	bh=Ol+o+JAXq5dYlZyih6PceXLRCemV4Y38mFGRIh0RFUc=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=U7h3zZUB8IKCGGt3hszqZvMfeblSzC+4zDYoQc5BUa5qDfw2wBH/bV1ecPKYLCobJhNIXW51DFyjon1GNLVIsAliJlAmZ0bJ3lBl4M3lzydnCWg0h2r1jaT4jkDDT4uI1AM18h57ghVCnlD4V+pg8xub7FTNm3sN8XMJkW4pZio=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=arista.com; spf=pass smtp.mailfrom=arista.com; dkim=pass (2048-bit key) header.d=arista.com header.i=@arista.com header.b=YU3K7uay; arc=none smtp.client-ip=74.125.227.141
+	s=arc-20240116; t=1790010441; c=relaxed/simple;
+	bh=JQnBZxB94b7FdJbt6YoVD0ugDd+00IsGczuRtXQr2WU=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=mPP6mwbeP0SqydkXTTMehrKbDhJVIO/XN3DNq7HxarNnpY+SA59GwrFjrA42ll8t41NYlmpoKx/TeW9O2UEUkcKNLyKO+R+NHsDDvx43mcMthBfTu1/YZf/qWPigVG9ZV5JvDDIXECx+uRY1T8rwh/j3Swsg7AH8+aZk9ObK2RI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=arista.com; spf=pass smtp.mailfrom=arista.com; dkim=pass (2048-bit key) header.d=arista.com header.i=@arista.com header.b=OUfKi4xJ; arc=none smtp.client-ip=74.125.228.99
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=arista.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=arista.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=arista.com header.i=@arista.com header.b="YU3K7uay"
-Received: by mail-pj2-f13.google.com with SMTP id d9443c01a7336-2d747f0135fso31225005ad.0
-        for <linux-pci@vger.kernel.org>; Mon, 21 Sep 2026 10:06:53 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=arista.com header.i=@arista.com header.b="OUfKi4xJ"
+Received: by mail-ed2-f35.google.com with SMTP id 4fb4d7f45d1cf-6a67fa7a64eso5091618a12.1
+        for <linux-pci@vger.kernel.org>; Mon, 21 Sep 2026 10:07:20 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=arista.com; s=google; t=1790010413; x=1790615213; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=GwcsKROG+rZVrILjrCxe0rMudS7EciJJq2bzjW9/XlI=;
-        b=YU3K7uayuk5kfs+vI82j1LQyy5y6d9cas2nGw4+ndmzYKeOhr2gdeHKzqpac99qnLt
-         a/J41Q9c4R4gh+T6lgbct06oNuhaiEkjYjU5MY9eJ5DyWMTK0QLsyvhyXYFuGaw3fTc/
-         97E+SiZdY2nduImn6sjjGc5FBJxyJAWlD2eyr3mA5RlCEbLEUMr/bsDMADOkgiABrErF
-         jH2VPhgjbReF/xUMVYXlc5ugUgXch7ceuyouuABO0tO8n7484OS5qQvjPDmdkRsBNZwY
-         W039C/rbh+tKdrDkrCZLfUThY6he4SeBFtFVCzumnWQLOEmfkKbYuls8SUAoMBh4xA2V
-         9iRg==
+        d=arista.com; s=google; t=1790010438; x=1790615238; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=m70w/bX3ilZ4pFPnKbI3naBgfETFNPJqRbN1JfmLM1k=;
+        b=OUfKi4xJQtRJpmP5Yag0nmozxm7vpHt3W+JkrRsc3Cg9Ju55/7nfokeuTJyzs2K2pr
+         u4OdkqEs6ZmFXWzQdlbTxe7cBxMSuEs97rXX3O5niTdM+2HWUeEtgFf/I29lRSMmNZ3c
+         6Tp5GZUIbh8zs0qgZmxF/dunFyOZt5mwte8yDr401fEq/S0q0Gepwl8yVPGoKHhVcUHE
+         j0k3ksU6CteIzWMD0VcsxIqPUERkGJFu+N+qAn5vVxI7IoP8aYnlxnKuiMncBdnM2+bb
+         lal1cD/ua4yfT7oXPT4Edy1j85U7jrFAZxHIaaxqQ4btwvA9lWeSzAq+8iKLZH+6So+e
+         jfkA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790010413; x=1790615213;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=GwcsKROG+rZVrILjrCxe0rMudS7EciJJq2bzjW9/XlI=;
-        b=aa4VxULBdWL2uD8VLkqTHOOHU63SLEpdpfRE/bUcL0JIroem47DHqFOK/AoNofH6pX
-         0XdG9O21Ms1XyoTGXJSY9xfKIMkgj4e0WmcqD7CdnTxi9jw1fGymoo65tflQyCIRq15L
-         5ZjvmkKIbtQE7TkQRoMhFM17WT44btI5jDmOYbEFirgL41wu4t0kFTFJF5wYlBVk9IEP
-         8/sUqvePXUh2RUE82h5KtbP5CMqE0D9XpxV4PJeMRdPTWFlw6M1dA3tfu+2GZbUxduzv
-         vmc+lpPpZUwfeZDytLbslHH2cNBhuDM+JBKBhBqCoVtfMmPNU4FbZ7TyxZyVR0Wb6o9N
-         mgMw==
-X-Gm-Message-State: AFuF++lUEDLq1B2ArZRvcwoymiMtGgXDZjED5gXcdW/Kbaou/DpF240R
-	6ShD5S5DSkRcitGQf7I8xVJBTiaZJEc781h/JykEibIhIk2k4hddriksTJ2Szw2PNg==
-X-Gm-Gg: AYBFou3ZNgEJ7E01toSzAVm07c2y+GfHTAnbD/xFgpcSIDkqCgq61wGjnQ0pk7TOUP6
-	VgcoobWKjP/vscv24kfflx4JyYYB8zySCjiAhVlPEmq5C/GREvpgcEc0c2/OefYfIQ6hI5476Wn
-	9DMzVCOuCg0pHQTSlamSCmksMPebbQHexizWTOQkFYTxUYerjoURh4QMQMSMQxknUyygWs/2lIh
-	TetDStTmlYUvtcKHqqMU5J9ypB/mM6p21ZtkY3zwuLZTHP6NnVtYmtUM9RUzHVQab/vr8uKW8k5
-	PGaa/1gxKx1yvMGb9uM7fqJwoZpuAX/ffAi6kcGv510KoFdZK8FZQ9uEjq49KHaEf6nIfCcF7qh
-	6bKuIs6a4b50U4dhtP1bN31lkvq+85UeXt8cK4g948ZChdHYcHqrkIwU4rH8MJcsFD51Cv08+gi
-	rmSBMcEGoQCZBAb48QHH/maZ3rZJaNyKaOLOFUlhfw/m+ocLzAun8G/OMs8ahDnI0lIBNZL5A/O
-	Pl5C/wlG7OfrxrV9XC9yoTA3lHH9WYBRti0XeUQ6zI=
-X-Received: by 2002:a17:902:d551:b0:2df:3a80:dcba with SMTP id d9443c01a7336-2df3a80dd6emr83493705ad.52.1790010412484;
-        Mon, 21 Sep 2026 10:06:52 -0700 (PDT)
-Received: from yurypm-home-4hjc6.sjc.aristanetworks.com ([74.123.28.18])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2ddc178889dsm37147495ad.18.2026.09.21.10.06.50
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 21 Sep 2026 10:06:51 -0700 (PDT)
-From: Yury Murashka <yurypm@arista.com>
-To: bhelgaas@google.com,
-	lukas@wunner.de,
-	ilpo.jarvinen@linux.intel.com
-Cc: linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Yury Murashka <yurypm@arista.com>,
-	James Sewart <jamessewart@arista.com>
-Subject: [PATCH v3] PCI: Stop waiting for link status after config read failure
-Date: Mon, 21 Sep 2026 17:06:46 +0000
-Message-ID: <20260921170646.1201148-1-yurypm@arista.com>
-X-Mailer: git-send-email 2.51.0
-In-Reply-To: <20260904111318.1063858-1-yurypm@arista.com>
-References: <20260904111318.1063858-1-yurypm@arista.com>
+        d=1e100.net; s=20260707; t=1790010438; x=1790615238;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=m70w/bX3ilZ4pFPnKbI3naBgfETFNPJqRbN1JfmLM1k=;
+        b=XDIj7A4YZl1HKYJyfnUIRst0piHZj4FlFGy98m99OgRi3KsreyWhiwsVaokJv5tMNO
+         Bf1TCPRh11zN5cwTHCPUkvxVgRJijF6qKezOykxtzSVleunCH+6gwdVXG8rHmx7V/h5F
+         RXnDxmd4aNYxUQrg7iuu8134G2sGADdBgfExRm+opG8APoXRQVWN2UGKmFcZ8x4O3kiA
+         K8/1XvV3QF2FFLh3U1pNsR6aZOwCP1vKsZdj16p2ZxmGNd9VSb3K+6a26jmBK8Id0oni
+         0j5LEYEA+eSNRkav3kcMgPh8Tz3Vjngknya/PHpB+P6XRQ+v2D06bAnAHdwJQMaLrawn
+         07TA==
+X-Forwarded-Encrypted: i=1; AKwUvBy0REAECqIDuHcvtVAu6sNiWntUy+UUsY6RpAvWo1AvfU3Dj5vnr98/uSgN7FmCyQwpwo1UyGi2Sbw=@vger.kernel.org
+X-Gm-Message-State: AFuF++lO0ThHnsO5PJi+kQxE3EWTNn8bglfZ5L+ZZuYR+xdz2RPLnpyj
+	O5dYZBdIuUJyYlUoEIhEYKkmu367I5zBmEPIp8YLFnP7SFls7GTWi9THobhuMlwskw==
+X-Gm-Gg: AYBFou00Lt3fD0azKGPLj055MA4DduMre4QVelrS8gvEXTtjoDlJQvL4QGBpM/nXVCC
+	5E01+ilEryYOfbYWvC6DAgy4Ndp7hxECRyuVG3OweUZXnoCbQq7wM6zILnYJ7L+Kle+wdoKESIG
+	4d21PpMjNP3NrmCsDAJQIkNeu330cSYe232ijIzdYrubn3hM9zmTiQlu9uX+S5ItyobVqId4Okx
+	tqlEyDKy6s5ChewVSRirsDB36OAtcB0ZTw9K8GH/AQIIIYgOIniRz0YS3C1+VdjGoNFLJb2ENVr
+	RlGSChuj9MsU2TvtKAEYWBmTFBJFHm1TAIQNK4lY/L1CoYw5u3UzWVC7tUxwbtpwzhAQ332kVmT
+	Y3o2ibg5AmKgKHQCOwnmnMQPzPOzWas9CONciQqKFMWL9cVuEWln4s86szjVEfW/VmI9xHX5Ue8
+	++UMgd8RGP18tLYT6skfhXqh1S5fUx7KK+DPs+mCxFaQIcAnYYXV6vyXjLv2G/PQPeS9dZS7fI/
+	FZL42VSwZusAOtEIRiPLXv3ihjhyM1uramxc6Qr8/Uz/Z0Ynar93pA=
+X-Received: by 2002:a17:907:9723:b0:c26:1648:a061 with SMTP id a640c23a62f3a-c2a15e0febemr1007505366b.28.1790010438384;
+        Mon, 21 Sep 2026 10:07:18 -0700 (PDT)
+Received: from ?IPV6:2a02:8086:c99:c280:94ab:79a9:2843:6b2b? ([2a02:8086:c99:c280:94ab:79a9:2843:6b2b])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-c2a3588485bsm348783466b.46.2026.09.21.10.07.17
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 21 Sep 2026 10:07:17 -0700 (PDT)
+Message-ID: <b8fe94ae-29ea-4de1-9ec4-9a5840edcb50@arista.com>
+Date: Mon, 21 Sep 2026 18:07:17 +0100
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] PCI: Stop waiting for link status after config read
+ failure
+To: =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+ LKML <linux-kernel@vger.kernel.org>, James Sewart <jamessewart@arista.com>
+References: <20260904111318.1063858-1-yurypm@arista.com>
+ <6e10813b-3c79-7f61-2bf8-85a6d09674ed@linux.intel.com>
+Content-Language: en-US
+From: "Yury M." <yurypm@arista.com>
+In-Reply-To: <6e10813b-3c79-7f61-2bf8-85a6d09674ed@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 
-With a nested PCIe topology with multiple layers of hotplug, a link can go
-down near the bottom of the topology shortly before a link above it goes
-down. In that case, pcie_wait_for_link_status() can wait for the full
-timeout while every read of the link status register fails because the
-device has disappeared.
+On 9/4/26 12:59, Ilpo Järvinen wrote:
+> Wouldn't it be better to base such checks on PCI_POSSIBLE_ERROR()?
+>
+> If you keep the check for the case where pcie_capability_read_word()
+> returns error, its return value should be converted with
+> pcibios_err_to_errno(), not just return -ENODEV.
+1. There is no reason to use PCI_POSSIBLE_ERROR in this case, because 
+pcie_capability_read_word() overrides the value returned by 
+pci_read_config_word() and sets it to 0 in case of a read failure. So, 
+if a read fails, pcie_capability_read_word() returns 0 instead of all Fs.
+2. Thanks. I addressed your comment in the v3 patch and used 
+pcibios_err_to_errno().
 
-Return immediately when reading link status fails so event processing can
-continue.
+On 9/4/26 12:59, Ilpo Järvinen wrote:
+> Kerneldoc wants this formatting:
+>
+> Return:
+3. Addressed this comment as well in the v3 patch.
 
-Signed-off-by: Yury Murashka <yurypm@arista.com>
-Co-authored-by: James Sewart <jamessewart@arista.com>
----
- drivers/pci/pci.c | 15 +++++++++++----
- 1 file changed, 10 insertions(+), 5 deletions(-)
+Thanks
 
-Changes in v3:
-- Check the return value of pcie_capability_read_word() and stop retrying
-  when the link status read fails.
-- Do not use pci_dev_is_disconnected() because a read failure does not mean
-  that the device will be marked as disconnected immediately.
-- Update the kernel-doc return descriptions for errors from
-  pcibios_err_to_errno() while retaining the -ETIMEDOUT description.
-
-Changes in v2:
-- Check pci_dev_is_disconnected() before reading link status instead of
-  checking the return value of pcie_capability_read_word().
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index b2879a6be5f8080e949f7abfc4bab39d791735b8..430ff08f4f4b30f12b1190ea9c5408a3a8505a5d 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4565,8 +4565,9 @@ static int pci_pm_reset(struct pci_dev *dev, bool probe)
-  * @use_lt: Use the LT bit if TRUE, or the DLLLA bit if FALSE.
-  * @active: Waiting for active or inactive?
-  *
-- * Return 0 if successful, or -ETIMEDOUT if status has not changed within
-- * PCIE_LINK_RETRAIN_TIMEOUT_MS milliseconds.
-+ * Return: 0 if successful, -ETIMEDOUT if status has not changed within
-+ * PCIE_LINK_RETRAIN_TIMEOUT_MS milliseconds, or negative error code if
-+ * reading of link status failed.
-  */
- static int pcie_wait_for_link_status(struct pci_dev *pdev,
- 				     bool use_lt, bool active)
-@@ -4574,13 +4575,16 @@ static int pcie_wait_for_link_status(struct pci_dev *pdev,
- 	u16 lnksta_mask, lnksta_match;
- 	unsigned long end_jiffies;
- 	u16 lnksta;
-+	int ret;
- 
- 	lnksta_mask = use_lt ? PCI_EXP_LNKSTA_LT : PCI_EXP_LNKSTA_DLLLA;
- 	lnksta_match = active ? lnksta_mask : 0;
- 
- 	end_jiffies = jiffies + msecs_to_jiffies(PCIE_LINK_RETRAIN_TIMEOUT_MS);
- 	do {
--		pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnksta);
-+		ret = pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnksta);
-+		if (ret)
-+			return pcibios_err_to_errno(ret);
- 		if ((lnksta & lnksta_mask) == lnksta_match)
- 			return 0;
- 		msleep(1);
-@@ -4603,8 +4607,9 @@ static int pcie_wait_for_link_status(struct pci_dev *pdev,
-  * according to @use_lt.  It is not verified whether the use of the DLLLA
-  * bit is valid.
-  *
-- * Return 0 if successful, or -ETIMEDOUT if training has not completed
-- * within PCIE_LINK_RETRAIN_TIMEOUT_MS milliseconds.
-+ * Return: 0 if successful, -ETIMEDOUT if training has not completed within
-+ * PCIE_LINK_RETRAIN_TIMEOUT_MS milliseconds, or negative error code if
-+ * reading of link status failed.
-  */
- int pcie_retrain_link(struct pci_dev *pdev, bool use_lt)
- {
-
-base-commit: a500db7819c50db59e55f1b4fa1c3baa5a2616f3
--- 
-2.51.0
