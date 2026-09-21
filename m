@@ -1,55 +1,52 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1A5143E451B
-	for <linux-pci@vger.kernel.org>; Mon, 21 Sep 2026 14:25:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC03F4A340E
+	for <linux-pci@vger.kernel.org>; Mon, 21 Sep 2026 14:25:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790000734; cv=none; b=D6bBx0vzzagyob0HewGATyYwsptBctDF0LHEdDzUB9EJwBFGHuSkduJtGrbqPWaziTdzKepoMcdssimhpweXUlG7c2NMr7SRerTG3on8fGm0pjP1pBB5dyZa+kr0yRmOE0/sasM7phDH2ZIuMAAJlYZEhB+YXbZuE9fK3FyB/Wo=
+	t=1790000749; cv=none; b=FCru6TqH49lVdzt59ZeK5FSJm7sw2qqJ0qPVOYUojKEFd42MX/Ou9vCp2vjIXEMx//v9rrbRXGNoRUVIUlKIes8/r/ipUaMroWYsb6MZnMz8Uk5zlE/A3HPR+ixwbJ3bg1BCPb160qhTkpx9AbFWXhCl/2TR1s9FBf6sEHLxa/I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790000734; c=relaxed/simple;
-	bh=JRnsuKOdCtwTAT88DianCwDfSVNZUOFcbuHy0cerBYA=;
+	s=arc-20240116; t=1790000749; c=relaxed/simple;
+	bh=NdvEQrJGm0g4LCvRHXdJ2+TB5dPFRt8IWJGF5FeKVpI=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=UkZVJNQcMxvGHVEspwwiOMfXakkY6jlt22zE0W0uViKhxLxvAd0c3SGQkQhMdD5dt1YPHGCtUBOaRtzqB86QNDPxQcxiemXNDJPvfw30ocJKSm73vhnirzZrO/KrsJ+xMGNi2t2a9VSPl1QPf7l4F2MMNiy6p3JRTuWY+lUoRcU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TDJi5ke1; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=frTEM3WIU2COYz0lzGVLmHZoqtJr7xkZrfAVqgVELKcsdZ3LP60DwXeUOogUUd1qve1irFlAR993GK3ehTLL/qG23eR9R8BgE+NdLmrEO2rllZNB3+fHEBhck++kLdvMoD48k0Q1RUfQxpX9xCrLi1q1CFWBeskrJenE1ugu6+4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FAmOcvCD; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TDJi5ke1"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8F7AF1F0089A;
-	Mon, 21 Sep 2026 14:25:32 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FAmOcvCD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 30D1C1F000FF;
+	Mon, 21 Sep 2026 14:25:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790000732;
-	bh=JRnsuKOdCtwTAT88DianCwDfSVNZUOFcbuHy0cerBYA=;
+	s=k20260515; t=1790000748;
+	bh=NdvEQrJGm0g4LCvRHXdJ2+TB5dPFRt8IWJGF5FeKVpI=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=TDJi5ke1fRMDMDHULZMIR+IiMVQmDYPQbOIruLQutqLpdOZH/M4mQe8zMhfh/EBFW
-	 UmBufQ1cIQN44uQ4JWcCuCflcnVoGKav6OkxoNroEXX9mF2g1Gh17Dg9i8b2YaShzx
-	 2qSM0gAgyigqACBS2TeI7qViHwkfmviJnxZLDhii3UkgP5l+NbpycrBYYkuMCCLDrF
-	 DrwvsS2ySS63acJ+EsXYMTclZ8X/UWYc/EJdiB639OfCSTfVja69zeVEDt2rdCg9eH
-	 JEKJez7VMU4vxlEMpWyHuF5AnNuILwHwUzTN3RmDEJDTmCu5GaSBFRqkRVsDSBy/uP
-	 CsDmuze3saxjQ==
+	b=FAmOcvCDMZRTIOgCxRh7eRblpJr3p82oyvh5WLtK7GFGE5bhdJBflokkrLplwvROs
+	 04C+CPCaETbLyF0Q2SngNt2N1cbTy0eTAhVO6A8KiT0Q1rfAOYGGZkNW9L2fj2RQlV
+	 qC/5ODvpQHlW12JQeXElW8AkCQBdvchScYUSZqudn31gfj7vx9gp08aUpmKiYq5+Hp
+	 GCvd5K34CEyGdZYRh/dxuQBTeZxu0osfTxNcV/JS/MJZECyOdGlRfHIqcejDfG51QG
+	 HFbSPCORH3ggIBfzPYFmdx46P7z+inldeG1i40cwrdIjHARyj9b7wFimqoousXnxhC
+	 uNqgL7z34+GAQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v8 3/8] PCI: vmd: Add vmd_configure_membar() and
- vmd_configure_membar1_membar2()
+Subject: Re: [PATCH v8 1/8] PCI: vmd: Add vmd_bus_enumeration() helper
+ function
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Szymon Durawa" <szymon.durawa@linux.intel.com>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260921164316.3860312-4-szymon.durawa@linux.intel.com>
+In-Reply-To: <20260921164316.3860312-2-szymon.durawa@linux.intel.com>
 References: <20260921164316.3860312-1-szymon.durawa@linux.intel.com>
- <20260921164316.3860312-4-szymon.durawa@linux.intel.com>
+ <20260921164316.3860312-2-szymon.durawa@linux.intel.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 21 Sep 2026 14:25:32 +0000
-Message-Id: <20260921142532.8F7AF1F0089A@smtp.kernel.org>
+Date: Mon, 21 Sep 2026 14:25:47 +0000
+Message-Id: <20260921142548.30D1C1F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-> Move the MEMBAR1 and MEMBAR2 registry initialization code to new helpers
-> vmd_configure_membar() and vmd_configure_membar1_membar2().
-> The refactor preserves MEMBAR address/offset/flags programming, but
-> resource name construction is now generated in the helper ("VMD MEMBAR%d")
-> instead of using two separate string literals.
+> Move the vmd bus enumeration code to a new helper vmd_bus_enumeration().
+> No functional changes.
 >=20
 > Suggested-by: Nirmal Patel <nirmal.patel@linux.intel.com>
 > Signed-off-by: Szymon Durawa <szymon.durawa@linux.intel.com>
@@ -58,5 +55,5 @@ Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260921164316.3860=
-312-1-szymon.durawa@linux.intel.com?part=3D3
+312-1-szymon.durawa@linux.intel.com?part=3D1
 
