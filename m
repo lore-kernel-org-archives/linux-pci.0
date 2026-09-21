@@ -1,193 +1,136 @@
-Received: from mail-pj2-f12.google.com (mail-pj2-f12.google.com [74.125.227.140])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 81729498904
-	for <linux-pci@vger.kernel.org>; Mon, 21 Sep 2026 14:22:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.227.140
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 791894A1DFB;
+	Mon, 21 Sep 2026 14:22:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790000521; cv=none; b=ehCT/xn0MtVjjRfttQ7I92V3865dlutCKC+ZqJfNhFzNk/+va/Af4SUBk9GH7QZbpTCxbdmJeEmF9vszX5qi09KPDQxWAVGZ3env53TlT6GK8S3qRaOUVqBhXUd/fsyhYyPp/HpMyqkHFIVi5BQbVq8Ay70eIxbAmROs1i3Imrw=
+	t=1790000525; cv=none; b=AGDgeeO/qv2p/cy3QT9o3VfCef70WEn23UoF7od2cfJ2xbmMg2nIwM30Od9uu2EUIz7a2RQXl5pZTbU9BOZcUVk/3I5K8Bx8fhOFi9ICkJetFrTvF9ADov3V/kZbH5apEmTBhc+i0OBKn1TAW1/GA8FdicAzwtw4zE56xpgQ0XI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790000521; c=relaxed/simple;
-	bh=lyIz+1l5b3G3/JlMz/Ffg83kJuwv+dOtA5fodcHyDDI=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=GtjJ/o9jsam/zuJUXggofYYFN+ZPGXFrDC8LnuDlQe7xP0co0iRsC4wGJvjlDRfFvU8PfRuW/SeA53K5frB30NiCM51wXHooL1rATkTaRveTXiESbOSj5bymaQyfrNEuRmTNbbDHAh4+Hfqgt2wijoU40MbbhGJ7Mror/sT/zVs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=NGpj+Uw2; arc=none smtp.client-ip=74.125.227.140
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1790000525; c=relaxed/simple;
+	bh=9URj1PIt2GR8lPz4cANcX+GkaJ00R86KINXRYludecU=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=fc7Z2Wapve4KITYyH3h0Vdi+zpSKUbC0a1N9ioW/GzwlL4h1BuRENz6U+H+2LEx9BPJ0RTk1qETNg5lt+CL5Btj/KgmwwWLXrKq+LIoTvDf/9432491hZ1laIuMbdB7pR3LJZXzD6Es19/ewKxDOr87P74HcSP3ugiiw3hWbCho=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jr8y0P00; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="NGpj+Uw2"
-Received: by mail-pj2-f12.google.com with SMTP id d9443c01a7336-2d747f05ffdso21620115ad.1
-        for <linux-pci@vger.kernel.org>; Mon, 21 Sep 2026 07:22:00 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1790000520; x=1790605320; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=4qptzRTLzEX4ORnvKTYYJwd+9jdXwoH4m16aZtajA1I=;
-        b=NGpj+Uw2uMlKIAfFtyVX3rF35jjGJS+jT/ZC5VD29xJEW5OLs+7894zJeac/GJ8GNs
-         InpD5kSLqJVOaHwZ4iDBePUwO100C2uAhh72nR5RuVuyMf2YxIH54R8tqjyZJnIz+rn0
-         Tgw+qhPFcqS2yiC++khpSay+pcoDubw3F84OtJppeD+fF/vW8GL3EzQR5OkRZObjQQIr
-         77nS8kkOwEOIDXEbJFQsxTlVy4kk8oHGUA9xofxjf9BjvSx+4wE9SJtusI0EzUDsv1wJ
-         TwGYrPGXyy97OMLiK5WBj2nOjKEy6Rave7sOLsW7Q5fNwKXM4N4S0pNd7RbQ5iHCfquz
-         NpMQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790000520; x=1790605320;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=4qptzRTLzEX4ORnvKTYYJwd+9jdXwoH4m16aZtajA1I=;
-        b=iOhvH6pdtPFSzSL6kB5jDIVinVx91KGo81Ia7QrotbvJTwzjIo84X6wnZJcaRz4FYX
-         dCZPm0hU6O4ACDiZoiXiAxqdv2tygGIH0pCJvdXmcRYSTyxbN63eoyK/NQzw68KATGhc
-         r9SG9H5c8Rk3LxWRqgtJ0qXEIbsCRZeDcmlfWAJD9M2IawDUC4m24tTx4OT/jyUPdcV2
-         U56Ob+vuKLJTMU1Z35DrPNrAkLK1LCzyzeCb2WcFZaYhzBJh/uYleJXEJuuymhsqRnbZ
-         pxHXGHYT6iRSbUFvouwqgn3UkHV0/GYVQc+bRm+CP/+nxHVa0iAvRLhcD08iBn6TcOKw
-         Ws1w==
-X-Forwarded-Encrypted: i=1; AKwUvBxyDtmbbblGW69G2R7dBmhlboETpGmzIOrhHR4RnqLdppT/yNCQipyi/Vg/vKyeVI35b12UqQrT0JE=@vger.kernel.org
-X-Gm-Message-State: AFuF++mqxnL52sYy7tgZJkwpF32vi/XaTU/ExtKCSt7F7XKES3i4bImh
-	KbJKNRUR3Jhg/w1smRBNc2SX683ZydtWgqXsNDAIEAIalJbjN/ThNEwV
-X-Gm-Gg: AYBFou0cBei24mi8GAHwz5PAKcMv9C4/yl6HqpCvajnVlfaZsXWSUvkpvPSwKsVD6xT
-	fL8s4sPIISDC80+2+3QR82EfQ9y4AHcwWLkgqulxGAaGYLLjWenf0YSKixKkz4TXwRawsqqWN5l
-	tl+YmXa2YrPDw2X+neCpL6jBdYj8rVfk1+ylm7pgj8g5FuR7pWbnqf9pGbhGZpuFJlc4uf7ntgE
-	aecNIeFqEqB7rP9z1C366RTIUOKPUSkE2VoRn6bo7aE/GJKgK6t7daOWNvCvu7HcsmR7PRqzOu5
-	i6KzZln9LjjfqPXI0KD01Bl1QQa2MDCWpkXeNomxUXrBzo3Ia65jNbOQzet7coWfxrk/aqSuLBR
-	x7JZiW6hdUs2XIxUTVqHozn49kc5zGnkpX9ExJa5Nx4vp4yP6t8n3H9gRBpjxjuWTfC+vyS4Umx
-	H5PAkl5Aip8FT6nYob8lgWZS4tXRlubBtO9KLE8FBOs5+zMdaK9nd30KAufxti7tqq
-X-Received: by 2002:a17:903:13d0:b0:2dd:c100:80bd with SMTP id d9443c01a7336-2ddc10081cdmr113240275ad.56.1790000519755;
-        Mon, 21 Sep 2026 07:21:59 -0700 (PDT)
-Received: from lgs.. ([2001:250:5800:1002::de93])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2ddc179dbd5sm35130485ad.39.2026.09.21.07.21.53
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 21 Sep 2026 07:21:58 -0700 (PDT)
-From: Guangshuo Li <lgs201920130244@gmail.com>
-To: Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Christian Bruel <christian.bruel@foss.st.com>,
-	Maxime Coquelin <mcoquelin.stm32@gmail.com>,
-	Alexandre Torgue <alexandre.torgue@foss.st.com>,
-	Siddharth Vadapalli <s-vadapalli@ti.com>,
-	Frank Li <Frank.Li@nxp.com>,
-	Niklas Cassel <cassel@kernel.org>,
-	Guangshuo Li <lgs201920130244@gmail.com>,
-	Koichiro Den <den@valinux.co.jp>,
-	Yuho Choi <dbgh9129@gmail.com>,
-	Kishon Vijay Abraham I <kishon@kernel.org>,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-stm32@st-md-mailman.stormreply.com,
-	linux-arm-kernel@lists.infradead.org
-Cc: stable@vger.kernel.org
-Subject: [PATCH v2] PCI: keystone: fix endpoint teardown on remove
-Date: Mon, 21 Sep 2026 22:21:47 +0800
-Message-ID: <20260921142147.435953-1-lgs201920130244@gmail.com>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jr8y0P00"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 74DA91F000FF;
+	Mon, 21 Sep 2026 14:21:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1790000523;
+	bh=IPcq77QX0NTqIoaHT7a8zV0H98ql6yqJ9jBJGLMq+nQ=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=jr8y0P00QCHikPGH9mrS+LiVaVeS6Jn/p4s4OdwToAf3f7BcOGAS/VNaueHf5QALA
+	 dbvdnAI/ibIooyC6SiEwhEChTRYu8hWRLaBUCOxWITYrGHTxSa6f1hDzNGtVjQ3y7g
+	 UXal5SLqarkTnZs0JJKI/QoWRqfn+QNdEegE6EKASlF/9Uhs6Cb30g0qF/lOek9rQe
+	 Fj0/8x4/3KVpdqPQqzqiOCMjr8y7+nm2Mhh8CI0ZuMioy/8ogDGHKrOE6Cb/2oAcF3
+	 OOcsYZMNJTFgdKCw5B28DBPwUrEmHs2IdWPT1bm8F7GWhKl53SS11GkqCOyoi0g4Nb
+	 Po7k7JV8UTcvw==
+Message-ID: <ebca2e35-6c4f-45ed-a9de-d9b52651717d@kernel.org>
+Date: Mon, 21 Sep 2026 16:21:55 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 2/5] dt-bindings: PCI: qcom,shikra-pcie: Document the
+ Shikra PCIe Controller
+To: Sushrut Shree Trivedi <sushrut.trivedi@oss.qualcomm.com>
+Cc: Vinod Koul <vkoul@kernel.org>, Neil Armstrong
+ <neil.armstrong@linaro.org>, Rob Herring <robh@kernel.org>,
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley
+ <conor+dt@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ Lorenzo Pieralisi <lpieralisi@kernel.org>,
+ =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+ Manivannan Sadhasivam <mani@kernel.org>,
+ Bjorn Andersson <andersson@kernel.org>,
+ Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>,
+ Bartosz Golaszewski <brgl@kernel.org>, Konrad Dybcio
+ <konradybcio@kernel.org>, linux-arm-msm@vger.kernel.org,
+ linux-phy@lists.infradead.org, devicetree@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+References: <20260831-shikra-upstream-v2-0-406661d75afa@oss.qualcomm.com>
+ <20260831-shikra-upstream-v2-2-406661d75afa@oss.qualcomm.com>
+ <20260901-silent-pearl-shrew-c63a16@quoll>
+ <7b5bec8a-87ed-4363-ac62-3e14f7619f13@oss.qualcomm.com>
+From: Krzysztof Kozlowski <krzk@kernel.org>
+Content-Language: en-US
+Autocrypt: addr=krzk@kernel.org; keydata=
+ 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
+In-Reply-To: <7b5bec8a-87ed-4363-ac62-3e14f7619f13@oss.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-ks_pcie_probe() initializes the DesignWare PCIe endpoint with
-dw_pcie_ep_init() and notifies the endpoint framework after the
-endpoint registers have been initialized. However, the remove path
-does not perform the corresponding endpoint teardown.
+On 21/09/2026 15:47, Sushrut Shree Trivedi wrote:
+> 
+> On 9/1/2026 2:12 PM, Krzysztof Kozlowski wrote:
+>> On Mon, Aug 31, 2026 at 12:56:02PM +0530, Sushrut Shree Trivedi wrote:
+>>> Add a dedicated schema for the PCIe controller found on the Shikra
+>>> platform.
+>>>
+>>> Shikra controller supports upto PCIe Gen3 but the PHY is
+>>> only capable of Gen2, hence the max link speed  is limited
+>>> to Gen2 to avoid link-up failures.
+>>>
+>>> Signed-off-by: Sushrut Shree Trivedi <sushrut.trivedi@oss.qualcomm.com>
+>>> ---
+>>>   .../devicetree/bindings/pci/qcom,shikra-pcie.yaml  | 218 +++++++++++++++++++++
+>>>   1 file changed, 218 insertions(+)
+>>>
+>> What is the difference in the binding against Eliza? IOW, why does this
+>> need a separate file unlike Eliza?
+> Shikra does not have the Config NoC AXI clock unlike sm8550 / eliza. Apart
+> from that, minItems for reg  and interrupts need to be updated. I actually
 
-This leaves the EPC initialization state and resources allocated by
-the DesignWare endpoint core active after the driver is removed.
+Really? Did you even check? I looked at Eliza and it has 6 minItems for
+reg. Your patch defines how many exactly?
 
-Make dw_pcie_ep_deinit() notify the endpoint framework when endpoint
-initialization has completed, so controller drivers do not need to
-duplicate the notification before endpoint teardown. Keep the
-notification conditional since dw_pcie_ep_deinit() is also used on
-error paths before pci_epc_init_notify() has been called.
+I did not check the rest of the arguments because it is not a game "I
+will say whatever and maintainer will need to verify each of my claims".
+I find one false claim and that drops this from Patchwork.
 
-Remove the now redundant explicit notification from the STM32 endpoint
-driver.
-
-Cache the controller mode in struct keystone_pcie and use it during
-removal to deinitialize the endpoint before runtime PM and the PHYs are
-disabled.
-
-Fixes: 23284ad677a9 ("PCI: keystone: Add support for PCIe EP in AM654x Platforms")
-Cc: stable@vger.kernel.org
-Signed-off-by: Guangshuo Li <lgs201920130244@gmail.com>
----
-v2:
-  - Cache the PCIe mode in struct keystone_pcie instead of looking up the
-    match data again during removal.
-  - Move pci_epc_deinit_notify() into dw_pcie_ep_deinit() to avoid
-    duplicating the notification in controller drivers.
-  - Remove the now redundant explicit deinit notification from the STM32
-    endpoint driver.
-
- drivers/pci/controller/dwc/pci-keystone.c       | 6 ++++++
- drivers/pci/controller/dwc/pcie-designware-ep.c | 3 +++
- drivers/pci/controller/dwc/pcie-stm32-ep.c      | 1 -
- 3 files changed, 9 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/pci/controller/dwc/pci-keystone.c b/drivers/pci/controller/dwc/pci-keystone.c
-index 602516239a57..59f7b2e152a2 100644
---- a/drivers/pci/controller/dwc/pci-keystone.c
-+++ b/drivers/pci/controller/dwc/pci-keystone.c
-@@ -121,6 +121,7 @@ struct ks_pcie_of_data {
- 
- struct keystone_pcie {
- 	struct dw_pcie		*pci;
-+	enum dw_pcie_device_mode mode;
- 	/* PCI Device ID */
- 	u32			device_id;
- 	int			intx_host_irqs[PCI_NUM_INTX];
-@@ -1226,6 +1227,7 @@ static int ks_pcie_probe(struct platform_device *pdev)
- 
- 	ks_pcie->np = np;
- 	ks_pcie->pci = pci;
-+	ks_pcie->mode = mode;
- 	ks_pcie->link = link;
- 	ks_pcie->num_lanes = num_lanes;
- 	ks_pcie->phy = phy;
-@@ -1349,9 +1351,13 @@ static void ks_pcie_remove(struct platform_device *pdev)
- {
- 	struct keystone_pcie *ks_pcie = platform_get_drvdata(pdev);
- 	struct device_link **link = ks_pcie->link;
-+	struct dw_pcie *pci = ks_pcie->pci;
- 	int num_lanes = ks_pcie->num_lanes;
- 	struct device *dev = &pdev->dev;
- 
-+	if (ks_pcie->mode == DW_PCIE_EP_TYPE)
-+		dw_pcie_ep_deinit(&pci->ep);
-+
- 	pm_runtime_put(dev);
- 	pm_runtime_disable(dev);
- 	ks_pcie_disable_phy(ks_pcie);
-diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
-index de8ee3db4360..b785e098f759 100644
---- a/drivers/pci/controller/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
-@@ -1188,6 +1188,9 @@ void dw_pcie_ep_deinit(struct dw_pcie_ep *ep)
- {
- 	struct pci_epc *epc = ep->epc;
- 
-+	if (epc->init_complete)
-+		pci_epc_deinit_notify(epc);
-+
- 	dw_pcie_ep_cleanup(ep);
- 
- 	pci_epc_mem_free_addr(epc, ep->msi_mem_phys, ep->msi_mem,
-diff --git a/drivers/pci/controller/dwc/pcie-stm32-ep.c b/drivers/pci/controller/dwc/pcie-stm32-ep.c
-index a7988dff1045..1cb31bd76da5 100644
---- a/drivers/pci/controller/dwc/pcie-stm32-ep.c
-+++ b/drivers/pci/controller/dwc/pcie-stm32-ep.c
-@@ -304,7 +304,6 @@ static void stm32_pcie_remove(struct platform_device *pdev)
- 
- 	dw_pcie_stop_link(pci);
- 
--	pci_epc_deinit_notify(ep->epc);
- 	dw_pcie_ep_deinit(ep);
- 
- 	stm32_pcie_disable_resources(stm32_pcie);
--- 
-2.43.0
-
+Best regards,
+Krzysztof
