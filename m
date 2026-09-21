@@ -1,461 +1,195 @@
-Received: from mo4-p00-ob.smtp.rzone.de (mo4-p00-ob.smtp.rzone.de [85.215.255.25])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D714485CE6;
-	Mon, 21 Sep 2026 12:28:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=85.215.255.25
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789993721; cv=pass; b=rWkEDNAGXU4QPXl84afHFAh2Sa2SWQ+3rh5E9BEg6dhxH/vnT6dyDBTrP6yuovQrSVyUUyvWBDJIkF+lUqdoqiYfMhWDv/8NxoifeaTL9CquE/Ty14A/ICc8MaLfNREbhHelTJy+nx8aEoKi4Z/6DgNif4LJF3QTA3H5w1YjpYk=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789993721; c=relaxed/simple;
-	bh=GCwKqWZ8SJGaJAh+LVpwLs3jsKBR4stQUct2OkzgBbY=;
-	h=From:Content-Type:Mime-Version:Subject:Message-Id:Date:Cc:To; b=CXtwWZ9JIA04glomufqum9T+7Gm4Y5Fz31u+8LF3+GPjkQrJtnx3I5M6GLZtrKxhwDjHh0JBxN1eUtkIw+7PpXh+yzR0hBSQMPY5tomsxZvL1exKLP6eGAYiGvo07ASHbTYLfPiODYHL5n6TSBXcOh+6SvrKaAM5ra7BdfeYwKc=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=donnerluetjen.de; spf=none smtp.mailfrom=donnerluetjen.de; dkim=pass (2048-bit key) header.d=donnerluetjen.de header.i=@donnerluetjen.de header.b=KyqXkw9d; dkim=permerror (0-bit key) header.d=donnerluetjen.de header.i=@donnerluetjen.de header.b=MP6iKqYg; arc=pass smtp.client-ip=85.215.255.25
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=donnerluetjen.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=donnerluetjen.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C6E142F709
+	for <linux-pci@vger.kernel.org>; Mon, 21 Sep 2026 12:32:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1789993932; cv=none; b=YItavnAnf3aJ7RE/lUTPCD4SC7C9zhMXPXPoyTfr5XqnkvV5hwCaG9BY30XFydr/vzEoVqYETKM8z29FsBsC8jd+dtkJ0NCKHPIonxKfHbeTcrcA+R/XomPVElezu4xu0nilOkCw95fBd5l64t6eQqqfcB1FK4NJaoY9HZhvdGY=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1789993932; c=relaxed/simple;
+	bh=ocVsv4oVD4EaEoTXMaXIXLhfptEhJpE5Y9sC0bllC3M=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=e5B5sNIvzstg38nxMYbwPvpuftxyOzgA6CO8AOjLiGfPAr+liiM5d1Rj25x6rlNK3uMfF5ae9L1hUrKYTNXnWNd2uUaD8lbqmi/SkoxYLB7ywO3p4MykcrS7e/IpX7PAgg7+7WlShK27oondMfneMcpTTkq0muRbcWaIA/G4RkI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=AeFHsdWm; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=SuSXMPOn; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=donnerluetjen.de header.i=@donnerluetjen.de header.b="KyqXkw9d";
-	dkim=permerror (0-bit key) header.d=donnerluetjen.de header.i=@donnerluetjen.de header.b="MP6iKqYg"
-ARC-Seal: i=1; a=rsa-sha256; t=1789993707; cv=none;
-    d=strato.com; s=strato-dkim-0002;
-    b=Y+rq4wYeqVEElB/+rBDPcuAVH3/ROlO0+wkixHT9KiAf18HTi68fBsw3HH4fYE7HVY
-    p2wOOnqyxbbH5viBH6VtShxdmfFdbuNw4oRmjAMnDtDnhuTZ2dElEDuKBTB8J/92ErDm
-    +m1HFiuTX1tt7yKrytIiNGTnSGfeUqcAx90HEBjrtv220JTeCfhWPixPVY/+Pj7mcrHv
-    HB9wEetDe1yVO6nEYaUptxH99LZfUhSxVilf9efsbIasznGI0dgKJLB93XSujuLXsV00
-    zDYMhoXGezAIksCmWKlnB79ZvidwTzBKA4DAjGqk5zjItJZ0YxkFJUxsuHAOq/m54p3K
-    36Wg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; t=1789993707;
-    s=strato-dkim-0002; d=strato.com;
-    h=To:Cc:Date:Message-Id:Subject:From:Cc:Date:From:Subject:Sender;
-    bh=uPYvypMqdqu5ySj/BDtWhRNavQC5x3b93Y8UO91/lfk=;
-    b=fvP4VVc5KX+sxhXDkGEDPgqcPVKAx24rI4RKvIsEEW041VHghiWXHgOZwlbjxTMjcA
-    jIBR/G4KBMKl4ggcxw6d1HG84Ytv2UjPQwMIYM1z8TA+R7ccxwPrbVxVjBrlr8fziOT6
-    kuHJLg+1CkZv8I5VQaaCVdKQvVEW8tq8dHaHhWXYEY/IozdtL1PirE7HFi93rxAtFkf7
-    0V/UpbwZcgv4zrBxnSF6UzhoDxD6Rjfd6YayxFXHDNIRfdKy1KD4mSVigMWdEAUN01jW
-    IMLl6G6rNl36s77Fk2eTi9sGSemN9tuYsU8To54gKSMtxZK5B+qTYvkWzKJLp52/1MgK
-    NfrQ==
-ARC-Authentication-Results: i=1; strato.com;
-    arc=none;
-    dkim=none
-X-RZG-CLASS-ID: mo00
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1789993707;
-    s=strato-dkim-0002; d=donnerluetjen.de;
-    h=To:Cc:Date:Message-Id:Subject:From:Cc:Date:From:Subject:Sender;
-    bh=uPYvypMqdqu5ySj/BDtWhRNavQC5x3b93Y8UO91/lfk=;
-    b=KyqXkw9dCSVgd4TWSzro3nIik2X9fnDKJSuvKNn1E/jKHABwesXQB41NDDNEVzoJtr
-    KB38OdEUjAyt72j/ySfvJAhWIvjrEuLwvVOCzCbL0X67eAm/xmlwH4QROXDrCIMmDQ/A
-    hFQT7LavlY087EzsdDbo5EgNVfJDTziWybb/0QaY/pah+WYgHpOAenIlvTmweQa8j1ci
-    6WFPHFAp1nwE7xLylT4y3kW9YQ4YaNzUjfeUX4Bnq2+3rFvFkchbCo7vaPJXXbJzbofc
-    4XOQpX0VARquBRaQv6QDnMlmgMApKymFgdlty3CwboDoTmsAf+UZ6mhix/vJbQkirb8e
-    5yVw==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; t=1789993707;
-    s=strato-dkim-0003; d=donnerluetjen.de;
-    h=To:Cc:Date:Message-Id:Subject:From:Cc:Date:From:Subject:Sender;
-    bh=uPYvypMqdqu5ySj/BDtWhRNavQC5x3b93Y8UO91/lfk=;
-    b=MP6iKqYgUvZIWy5KbtJjaAbLl/F4DZRmV1tn92gjRAQw7f/H65Vg1cjvA7nxy6kfa+
-    AVsPdwbmzyWxaOqrZPDw==
-X-RZG-AUTH: ":KGkSdEGIf/B+T6RgFsN+Ar29fQb+E4Px3RvhcXP0WHkIUo95nzS1OdWHCOUHAjwE10j9ZqMxyIrYVYpwwWg9T4oGeaTsw50op0iKRg=="
-Received: from smtpclient.apple
-    by smtp.strato.de (RZmta 55.6.2 AUTH)
-    with ESMTPSA id 4046de28LCSRFkg
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (curve X9_62_prime256v1 with 256 ECDH bits, eq. 3072 bits RSA))
-	(Client did not present a certificate);
-    Mon, 21 Sep 2026 14:28:27 +0200 (CEST)
-From: Ansgar Asseburg <devaa@donnerluetjen.de>
-Content-Type: text/plain;
-	charset=us-ascii
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="AeFHsdWm";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="SuSXMPOn"
+Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 68LB4s3q1130250
+	for <linux-pci@vger.kernel.org>; Mon, 21 Sep 2026 12:32:10 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-type:date:from:in-reply-to:message-id:mime-version
+	:references:subject:to; s=qcppdkim1; bh=A9EmN7Jpn4onA1CVJxcI4dYK
+	dOmL7N0L1nlQPagxebs=; b=AeFHsdWmqBxM5iWrVNUCjj8QsJvYjk9SNeNDWr1y
+	RHXoZqzJWguURxd03TKuxoHn2PILNCckqPU7UDP3HGH9y5/RgqrhOwY/+zzpxZix
+	ZQ/qpzc9ZefAlvOhNQWKtYEGl5HdjlI/S/UF7IBSkBANNuy0AWf3s0sGDGA94EAH
+	c5AKnJrgV976BQ2Qk7QtIZZmFq7r7hUMnAoI6Cu4nRYpwk6YqMSECDTRZsTgrXO/
+	GgZTMu3bpUYN8S4C3sWiG+Ta+WtA+JxO4chpYGo+2VXbEqkVvmsMjt0OX5qZteNP
+	xTePnoADBg+fkFxkQZ+uFYRo5OnWKZdiD/T9wDUS7vQzaA==
+Received: from mail-pj1-f69.google.com (mail-pj1-f69.google.com [209.85.216.69])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4gu3csga8f-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Mon, 21 Sep 2026 12:32:10 +0000 (GMT)
+Received: by mail-pj1-f69.google.com with SMTP id 98e67ed59e1d1-38dbf293831so6797174a91.3
+        for <linux-pci@vger.kernel.org>; Mon, 21 Sep 2026 05:32:10 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1789993929; x=1790598729; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=A9EmN7Jpn4onA1CVJxcI4dYKdOmL7N0L1nlQPagxebs=;
+        b=SuSXMPOnkMRrFGpq9V9DORSPMc52fh499jIfhAjn6F+skD0XPNLZvHgQzNhR76egDG
+         JLH/ESS7JJoybR112MbS8YBJ3idFPwstNHAdbqUEkyTIgsgysc/xL6aM4NNztE3BD0rY
+         jYNOmAeqkDIxmslBapQuKztlOk1NEXVUMascP5jadglxdrqpykzT6g0s5BoDTbJoJF9b
+         zCe86/rmMm+mpu3hPQVLU0ysFEpKqfpKB1AZE2t0ps80scTEu6n26DX+VsjeHlZ6dSDh
+         9mjvhQOYm+mwa9NYmj4Sw/G5+607NOVGEbG2cSCEvJnyJEhdHjb1NeqB5XNiuEX9u0yE
+         O39g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1789993929; x=1790598729;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=A9EmN7Jpn4onA1CVJxcI4dYKdOmL7N0L1nlQPagxebs=;
+        b=P684H/HIgYEpIJyaoaaNt3m4u3ulSDA368GBd2wuXZohWb+kl/lgPsfBhLQ2xSPRXA
+         8T+0ieI+22vkYaXKQg1825DvQnBljILPTSwfFhJPgXeaMAyJGRH8WJieGnhRzc7gxAt1
+         UPgAlxrz7NpbuR11Xpp7vffqZlItS+0NJJwWTKUtIiLMSU2Z8XKOfECn/fLlbNDIjGDA
+         dEoG8CLqL0aKqj684+uKyZCqvXr4W6XOpiiIixqP7jkF8RDuLR6tLbmRDvKavvOeg7Xp
+         kxQIn0ioxO29uEOxd25c9MZ9SyBozhVf3xW/r8aDehTSFZm3a22Hr+OozTfilyzjosVi
+         AW6A==
+X-Forwarded-Encrypted: i=1; AKwUvBwIzzImQ/hzi9t9mC1LWYm6QH9g5Zu+Jg4zwDHrGP0xcuFQEjdm7mKCGuaoD7tO74gzNKm5zGqBob4=@vger.kernel.org
+X-Gm-Message-State: AFuF++lWJ4UM2T6vsMGVF4N0UdRXJMOBloipiRgQi0+Q0E9OJVOWjYnS
+	HfEweJsQJFrjBqyBstSl2QI4P6CwVN//UO249KyqPSRaPgR9Yae8Y0pRNzj9l5z7vQkO1avig5v
+	nBJZ9/rH7PO8Iy07umiFKCNbuHoe939xJM8zmwV/dkdOpB10q00kDSlzMs8M0QR8=
+X-Gm-Gg: AYBFou0uk8n5W8KdcQ0gIiU3W8p2xZiiihiFuxiqxETRyAZV46jv02BbT/zS6JYI0Y1
+	pv+NvnRalSKLHO2Nt5Htq9wIKk+yI7g93PtcSK98wcH+y55IVAe8dkZSNKGdmsEDMdBPoWTV3lp
+	Fwd1x0Qw5UGX2KQuKkHflzEjEW9DYJ74hEezyFheq5PkUSgJ5mQG/Wp4BPMLcvdZLxOthX3sFjR
+	dvHp3XHeF8l1CGNyLuevmN+BE2GtonSCGiAyyeW/+DwUzk8W7luKx4z5evJL9oOjAEYqJbV4Z5v
+	5G5+K93opQBK4TkK+CjqA4xMW96zy6jIU9AQwVGv8Sm97yweILZlZD7lCx8RU0qjp4uOCGHWZNt
+	7oqkduh/pFSIFcIFvEe/DdMMYQX6dBmGEi1g4IxCO3KKfRw==
+X-Received: by 2002:a17:90b:37cb:b0:39e:6c69:9b9a with SMTP id 98e67ed59e1d1-39e6c69b2eamr10859758a91.63.1789993929574;
+        Mon, 21 Sep 2026 05:32:09 -0700 (PDT)
+X-Received: by 2002:a17:90b:37cb:b0:39e:6c69:9b9a with SMTP id 98e67ed59e1d1-39e6c69b2eamr10859725a91.63.1789993929074;
+        Mon, 21 Sep 2026 05:32:09 -0700 (PDT)
+Received: from hu-qianyu-lv.qualcomm.com (Global_NAT1.qualcomm.com. [129.46.96.20])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-33c342b3c67sm20440546eec.10.2026.09.21.05.32.08
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 21 Sep 2026 05:32:08 -0700 (PDT)
+Date: Mon, 21 Sep 2026 05:32:06 -0700
+From: Qiang Yu <qiang.yu@oss.qualcomm.com>
+To: Birk Skyum <birk.skyum@pm.me>
+Cc: "mani@kernel.org" <mani@kernel.org>,
+        Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>
+Subject: Re: X1E80100 USB4 PCI0 MSI-X routing under EL1/Gunyah
+Message-ID: <arEjxhvfIFGGo9O9@hu-qianyu-lv.qualcomm.com>
+References: <g7V4kc2AO9xogkH0h-XHDvPbjDXcnS11cp1q3hv0X96KPW-zed6V79HUJY5BFA4pBWUE-p2MBYCeDcjWwUGBIU2hXjDpodiWaxB38obe8RE=@pm.me>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3901.100.1.1.11\))
-Subject: nvme: Apple S3X (106b:2003) unresponsive after resume on MacBook10,1,
- fixed by pcie_port_pm=off
-Message-Id: <FB73E91E-BD39-4EB5-9914-9B63D769E490@donnerluetjen.de>
-Date: Mon, 21 Sep 2026 14:28:17 +0200
-Cc: Len Brown <lenb@kernel.org>,
- linux-nvme@lists.infradead.org,
- linux-pci@vger.kernel.org,
- linux-acpi@vger.kernel.org,
- linux-kernel@vger.kernel.org
-To: Keith Busch <kbusch@kernel.org>,
- Jens Axboe <axboe@kernel.dk>,
- Christoph Hellwig <hch@lst.de>,
- Sagi Grimberg <sagi@grimberg.me>,
- Bjorn Helgaas <bhelgaas@google.com>,
- "Rafael J. Wysocki" <rafael@kernel.org>
-X-Mailer: Apple Mail (2.3901.100.1.1.11)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <g7V4kc2AO9xogkH0h-XHDvPbjDXcnS11cp1q3hv0X96KPW-zed6V79HUJY5BFA4pBWUE-p2MBYCeDcjWwUGBIU2hXjDpodiWaxB38obe8RE=@pm.me>
+X-Proofpoint-Spam-Info: AW1haW4tMjYwOTIxMDE4MSBTYWx0ZWRfX37zZxQMxYL+a
+ kwnsL1QtQo6j5rIQHz2QmbSZwoJ5XQaxUzCwFIT3fYjpDEpRwoSa7JiAfjUjHLI4pB2GapyK6Lf
+ +3yFrOLOMnTsYmR6wrsJG9SKNzg1p08=
+X-Proofpoint-GUID: vsSLZuRCPdvopyteQLzwAoKsHduE38jk
+X-Authority-Analysis: v=2.4 cv=QovLTlyd c=1 sm=1 tr=0 ts=6ab123ca cx=c_pps
+ a=vVfyC5vLCtgYJKYeQD43oA==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
+ a=kj9zAlcOel0A:10 a=VdqzKS8jKosA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=yOCtJkima9RkubShWh1s:22
+ a=NEAV23lmAAAA:8 a=c0qIyCC_QqcG9ToN-sIA:9 a=CjuIK1q_8ugA:10
+ a=rl5im9kqc5Lf4LNbBjHf:22
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTIxMDE4MSBTYWx0ZWRfX/zfDvDuSkK/Y
+ 9/z/U61VNBgLKOvKTpYI3a76kkqW0qG7cIQ2QhGsFcP60Pvj9eN5kajNNtmWAQl/u7V9eR40PC2
+ LJwtOeabcK3KJSLPTKwfDiHtvuJqyuali+YmvdEr4i8a62q+q2kh+ET94ECbiMIqbOXjvy0VTgP
+ LYfuOVhsOee6bjLFrjoV8vyxfOL3aUBQSkvD31ro4lO4b8cMiAKxfXEhXMJIH1CB6vOtM01POrN
+ cZvO8fVFf2khGqKpjnI90cWOZlH1GZZy4P+EFZYGUYbVdnUL764EIuzmwCJzFE+7VJQtgme87dz
+ Zc/OoNwlgQKoJbCr4i2uv4WExhYM0xfCEZzv/tFaks5/7C+8+jmlqeb4JFdmiqgkfmpCorCDfT+
+ B7a3LrMo/dRWRy9ZBM6dza/mJ6owVRWogGREHXaOyleg23hqApga5iHRBy18yxiFS3weKa0tDg5
+ Z1IoQR8t4Sril4PpkWQ==
+X-Proofpoint-ORIG-GUID: vsSLZuRCPdvopyteQLzwAoKsHduE38jk
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-09-21_04,2026-09-16_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ adultscore=0 suspectscore=0 bulkscore=0 impostorscore=0 priorityscore=1501
+ spamscore=0 lowpriorityscore=0 phishscore=0 malwarescore=0 clxscore=1015
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2609040000 definitions=main-2609210181
 
+On Sat, Sep 19, 2026 at 08:33:20PM +0000, Birk Skyum wrote:
+> Hi Mani,
+> 
+> I'm working on experimental USB4 support for the Lenovo Yoga Slim 7x
+> (83ED, X1E80100), building on Jim Martin's published Glymur stack. This is
+> an out-of-tree bring-up, not a regression report against mainline.
+> 
+> A directly connected LaCie Rugged SSD4 negotiates USB4, enumerates through
+> a PCIe tunnel and completes a 4096-byte read into RAM. However, NVMe
+> completions are recovered through timeout polling, with zero
+> device-generated interrupts recorded.
+> 
+> MSI-X is enabled and unmasked, and the table matches Linux's programmed
+> messages. Software ITS INT commands reach the NVMe handlers. In a
+> separate test, redirecting one MSI-X vector to owned coherent RAM
+> captured the expected endpoint payload, but that does not prove delivery
+> to the ITS.
+> 
+> The endpoint RID is 0x0100. The captured firmware IORT and our DT agree
+> on DeviceID 0x80100, with MSI address 0x17050040 and event data 0/1. The
+> PCIe SMMU remains firmware-owned.
+> 
+> Source and test results are published here:
+> https://github.com/birkskyum/yoga-slim7x-usb4
+> 
+> Is direct ITS delivery the intended route for USB4 PCI0 under EL1/Gunyah?
+> Is additional controller forwarding or DeviceID setup required?
+> 
+> I also found the QCS8550 change using the internal DWC MSI receiver to
+> avoid a Gunyah limitation:
+> https://github.com/torvalds/linux/commit/33cae252054a694269f9dcd41b354063193c8f59
+> 
+> I realise that involves different hardware and symptoms. If an internal
+> receiver is appropriate for X1 PCI0, where can I find its parent IRQ and
+> required initialization?
+>
 
+Hi Birk,
 
-Hello,
+Please add below dts change in pcie0 dts node and also remove msi-map if you added,
 
-on a MacBook10,1 (12" Retina, 2017) the Apple S3X NVMe controller stops
-responding after every S3 or s2idle resume. About 60 seconds later the
-root filesystem goes read-only. Booting with pcie_port_pm=3Doff fixes =
-it:
-all pm_test levels, a real suspend and a lid close/open then resume
-cleanly. pcie_aspm=3Doff and nvme_core.default_ps_max_latency_us=3D0
-nvme.noacpi=3D1 did not help. This suggests that power management of the
-PCH root port above the SSD (00:1c.0) leaves the device unreachable
-after resume, but I do not know the root cause.
+interrupts = <GIC_SPI 655 IRQ_TYPE_LEVEL_HIGH>,
+             <GIC_SPI 657 IRQ_TYPE_LEVEL_HIGH>,
+             <GIC_SPI 664 IRQ_TYPE_LEVEL_HIGH>,
+             <GIC_SPI 668 IRQ_TYPE_LEVEL_HIGH>,
+             <GIC_SPI 348 IRQ_TYPE_LEVEL_HIGH>,
+             <GIC_SPI 349 IRQ_TYPE_LEVEL_HIGH>,
+             <GIC_SPI 351 IRQ_TYPE_LEVEL_HIGH>,
+             <GIC_SPI 702 IRQ_TYPE_LEVEL_HIGH>,
+             <GIC_SPI 167 IRQ_TYPE_LEVEL_HIGH>;
+interrupt-names = "msi0",
+                  "msi1",
+                  "msi2",
+                  "msi3",
+                  "msi4",
+                  "msi5",
+                  "msi6",
+                  "msi7",
+                  "global";
 
-Environment
------------
-Machine:      Apple MacBook10,1 (Retina 12", 2017), UEFI, GRUB
-CPU/GPU:      Kaby Lake, i915 (device ID 591e)
-SSD:          APPLE SSD AP0512J, firmware 16.14.01
-Controller:   Apple S3X NVMe Controller [106b:2003] rev 12, 0000:01:00.0
-Root port:    Intel Sunrise Point-LP PCH root port 0000:00:1c.0
-Namespaces:   nvme0n1 (p1-p3); nvme0n2 (partition table unreadable)
-Kernel:       7.0.0-31-generic (Ubuntu 26.04 LTS), tainted by an
-              out-of-tree audio DKMS module (snd_hda_codec_cs420x)
-mem_sleep:    s2idle [deep]; both modes fail without the workaround
+#interrupt-cells = <1>;
+interrupt-map-mask = <0 0 0 0x7>;
+interrupt-map = <0 0 0 1 &intc 0 0 GIC_SPI 703 IRQ_TYPE_LEVEL_HIGH>,
+                <0 0 0 2 &intc 0 0 GIC_SPI 708 IRQ_TYPE_LEVEL_HIGH>,
+                <0 0 0 3 &intc 0 0 GIC_SPI 714 IRQ_TYPE_LEVEL_HIGH>,
+                <0 0 0 4 &intc 0 0 GIC_SPI 716 IRQ_TYPE_LEVEL_HIGH>;
 
-The audio module is not involved: the failure persists with the codec
-unloaded and the HDA controller unbound.
-
-Steps to reproduce
-------------------
-Shortest reproducer, no real sleep and no wake source needed:
-
-  1. Boot without the workaround parameter.
-  2. echo platform | sudo tee /sys/power/pm_test
-  3. echo mem | sudo tee /sys/power/state
-  4. The command does not return normally. Wait about 60 seconds.
-
-The same happens with a real "systemctl suspend" (deep) and with
-mem_sleep set to s2idle. pm_test levels freezer and devices pass; the
-failure starts at platform (ACPI prepare, suspend_late, suspend_noirq).
-
-Observed behavior (without the workaround)
-------------------------------------------
-The controller never answers its first admin command after resume. The
-60 s admin timeout expires and the driver gives up. Excerpt from one
-failing run (pm_test=3Dplatform, deep, without pcie_port_pm=3Doff; the
-suspend started at 191.4 s, times are seconds since boot):
-
-  [  191.420305] PM: suspend entry (deep)
-  [  259.218334] nvme nvme0: I/O tag 4 (0004) QID 0 timeout, disable =
-controller
-  [  259.226716] nvme nvme0: Identify Controller failed (-4)
-  [  259.226736] nvme nvme0: Disabling device after reset failure: -5
-
-Ext4 then reports I/O errors, aborts its journal and remounts
-read-only:
-
-  [  259.236424] Buffer I/O error on device nvme0n1p3, logical block =
-23403156
-  [  259.238445] Aborting journal on device nvme0n1p3-8.
-  [  259.238612] EXT4-fs (nvme0n1p3): I/O error while writing superblock
-  [  259.238622] EXT4-fs (nvme0n1p3): Remounting filesystem read-only
-
-The desktop crashes, the lock screen no longer accepts the password and
-sshd is unusable. After a hard reset the filesystem recovers through
-journal replay. The failing runs with the other parameters listed below
-(pcie_aspm=3Doff, the nvme parameters, s2idle) look the same.
-
-With pcie_port_pm=3Doff
----------------------
-  nvme 0000:01:00.0: PM: pci_pm_resume_noirq returned 0 after 82 usecs
-  nvme nvme0: 1/0/0 default/read/poll queues
-  PM: suspend exit
-
-A direct read (dd if=3D/dev/nvme0n1 iflag=3Ddirect) 75 seconds later
-succeeds, and dmesg has no NVMe or I/O errors.
-
-What was tested
----------------
-  pm_test=3Dfreezer, devices                        pass
-  pm_test=3Dplatform, default parameters            SSD dies after =
-resume
-  mem_sleep=3Ds2idle                                same failure
-  audio codec unloaded, HDA controller unbound    same failure
-  nvme_core.default_ps_max_latency_us=3D0
-    nvme.noacpi=3D1                                 same failure
-  pcie_aspm=3Doff                                   same failure
-  pcie_port_pm=3Doff: pm_test platform, processors,
-    core                                          pass, disk alive
-  pcie_port_pm=3Doff: real suspend (deep), lid
-    close/open                                    pass, lock screen
-                                                  and SSH work
-
-pm_trace gave the same result with serial and async device suspend
-and points at a memory device, so I consider it uninformative.
-
-Workaround
-----------
-Kernel parameter pcie_port_pm=3Doff. It disables runtime power =
-management
-of all PCIe root ports, so it probably costs some battery life; I have
-not measured that.
-
-Questions
----------
-- Is the root cause in the PCH root port handling (D3 entry/exit of
-  00:1c.0 around the platform phase), or in the S3X controller's own
-  resume?
-- Can the fix be narrowed to root port 00:1c.0 (for example with a PCI
-  quirk) instead of disabling the feature globally? I have not tried
-  this.
-- Is this a known issue for other MacBooks with Apple S3X SSDs?
-
-What I could not do: I have no patch and no root cause, only the
-workaround above. I did not test other kernels or measure the power
-cost. Limits of my testing: one machine, one kernel (7.0.0-31-generic),
-and real suspends of only a few seconds.
-
-Disclosure: I ran all tests on my own machine, and all logs and
-measurements above are unmodified output from it. I used Claude (an AI
-assistant) to plan the bisection steps, help interpret the logs and
-draft the text of this report. I have reviewed the content and can
-answer questions about it.
-
-I can provide full dmesg and journalctl output of the failing and the
-working runs, and I can test patches or additional kernel parameters
-on this machine.
-
-
-
-$ sudo lspci -vvv -s 01:00.0
-01:00.0 Mass storage controller: Apple Inc. S3X NVMe Controller (rev 12) =
-(prog-if 02)
-	Subsystem: Apple Inc. S3X NVMe Controller
-	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- =
-ParErr- Stepping- SERR- FastB2B- DisINTx+
-	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=3Dfast >TAbort- =
-<TAbort- <MAbort- >SERR- <PERR- INTx-
-	Latency: 0, Cache Line Size: 256 bytes
-	Interrupt: pin A routed to IRQ 32
-	IOMMU group: 10
-	Region 0: Memory at 92700000 (64-bit, non-prefetchable) =
-[size=3D16K]
-	Capabilities: [40] Power Management version 3
-		Flags: PMEClk- DSI- D1- D2- AuxCurrent=3D0mA =
-PME(D0-,D1-,D2-,D3hot-,D3cold-)
-		Status: D0 NoSoftRst+ PME-Enable- DSel=3D0 DScale=3D0 =
-PME-
-	Capabilities: [50] MSI: Enable+ Count=3D2/8 Maskable- 64bit+
-		Address: 00000000fee00418  Data: 0000
-	Capabilities: [70] Express (v2) Endpoint, IntMsgNum 0
-		DevCap:	MaxPayload 512 bytes, PhantFunc 0, Latency L0s =
-<4us, L1 <32us
-			ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset+ =
-SlotPowerLimit 25W TEE-IO-
-		DevCtl:	CorrErr+ NonFatalErr+ FatalErr+ UnsupReq+
-			RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+ =
-FLReset-
-			MaxPayload 256 bytes, MaxReadReq 512 bytes
-		DevSta:	CorrErr+ NonFatalErr- FatalErr- UnsupReq+ =
-AuxPwr+ TransPend-
-		LnkCap:	Port #0, Speed 8GT/s, Width x2, ASPM L0s L1, =
-Exit Latency L0s <1us, L1 <8us
-			ClockPM+ Surprise- LLActRep- BwNot- ASPMOptComp+
-		LnkCtl:	ASPM L1 Enabled; RCB 64 bytes, LnkDisable- =
-CommClk+
-			ExtSynch- ClockPM+ AutWidDis- BWInt- AutBWInt- =
-FltModeDis-
-		LnkSta:	Speed 8GT/s, Width x2
-			TrErr- Train- SlotClk+ DLActive- BWMgmt- =
-ABWMgmt-
-		DevCap2: Completion Timeout: Not Supported, TimeoutDis+ =
-NROPrPrP- LTR+
-			 10BitTagComp- 10BitTagReq- OBFF Not Supported, =
-ExtFmt- EETLPPrefix-
-			 EmergencyPowerReduction Not Supported, =
-EmergencyPowerReductionInit-
-			 FRS- TPHComp- ExtTPHComp-
-			 AtomicOpsCap: 32bit- 64bit- 128bitCAS-
-		DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-
-			 AtomicOpsCtl: ReqEn-
-			 IDOReq- IDOCompl- LTR+ =
-EmergencyPowerReductionReq-
-			 10BitTagReq- OBFF Disabled, EETLPPrefixBlk-
-		LnkCap2: Supported Link Speeds: 2.5-8GT/s, Crosslink- =
-Retimer- 2Retimers- DRS-
-		LnkCtl2: Target Link Speed: 8GT/s, EnterCompliance- =
-SpeedDis-
-			 Transmit Margin: Normal Operating Range, =
-EnterModifiedCompliance- ComplianceSOS-
-			 Compliance Preset/De-emphasis: -6dB =
-de-emphasis, 0dB preshoot
-		LnkSta2: Current De-emphasis Level: -6dB, =
-EqualizationComplete+ EqualizationPhase1+
-			 EqualizationPhase2+ EqualizationPhase3+ =
-LinkEqualizationRequest-
-			 Retimer- 2Retimers- CrosslinkRes: unsupported, =
-FltMode-
-	Capabilities: [100 v2] Advanced Error Reporting
-		UESta:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- =
-UnxCmplt- RxOF- MalfTLP-
-			ECRC- UnsupReq- ACSViol- UncorrIntErr- =
-BlockedTLP- AtomicOpBlocked- TLPBlockedErr-
-			PoisonTLPBlocked- DMWrReqBlocked- IDECheck- =
-MisIDETLP- PCRC_CHECK- TLPXlatBlocked-
-		UEMsk:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- =
-UnxCmplt- RxOF- MalfTLP-
-			ECRC- UnsupReq- ACSViol- UncorrIntErr+ =
-BlockedTLP- AtomicOpBlocked- TLPBlockedErr-
-			PoisonTLPBlocked- DMWrReqBlocked- IDECheck- =
-MisIDETLP- PCRC_CHECK- TLPXlatBlocked-
-		UESvrt:	DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- =
-UnxCmplt- RxOF+ MalfTLP+
-			ECRC- UnsupReq- ACSViol- UncorrIntErr+ =
-BlockedTLP- AtomicOpBlocked- TLPBlockedErr-
-			PoisonTLPBlocked- DMWrReqBlocked- IDECheck- =
-MisIDETLP- PCRC_CHECK- TLPXlatBlocked-
-		CESta:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- =
-AdvNonFatalErr- CorrIntErr- HeaderOF-
-		CEMsk:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- =
-AdvNonFatalErr+ CorrIntErr+ HeaderOF-
-		AERCap:	First Error Pointer: 00, ECRCGenCap- ECRCGenEn- =
-ECRCChkCap- ECRCChkEn-
-			MultHdrRecCap- MultHdrRecEn- TLPPfxPres- =
-HdrLogCap-
-		HeaderLog: 00000000 00000000 00000000 00000000
-	Capabilities: [148 v1] Virtual Channel
-		Caps:	LPEVC=3D0 RefClk=3D100ns PATEntryBits=3D1
-		Arb:	Fixed- WRR32- WRR64- WRR128-
-		Ctrl:	ArbSelect=3DFixed
-		Status:	InProgress-
-		VC0:	Caps:	PATOffset=3D00 MaxTimeSlots=3D1 =
-RejSnoopTrans-
-			Arb:	Fixed- WRR32- WRR64- WRR128- TWRR128- =
-WRR256-
-			Ctrl:	Enable+ ID=3D0 ArbSelect=3DFixed =
-TC/VC=3Dff
-			Status:	NegoPending- InProgress-
-	Capabilities: [168 v1] Secondary PCI Express
-		LnkCtl3: LnkEquIntrruptEn- PerformEqu-
-		LaneErrStat: 0
-	Capabilities: [188 v1] Latency Tolerance Reporting
-		Max snoop latency: 3145728ns
-		Max no snoop latency: 3145728ns
-	Capabilities: [190 v1] L1 PM Substates
-		L1SubCap: PCI-PM_L1.2+ PCI-PM_L1.1+ ASPM_L1.2+ =
-ASPM_L1.1+ L1_PM_Substates+
-			  PortCommonModeRestoreTime=3D25us =
-PortTPowerOnTime=3D10us
-		L1SubCtl1: PCI-PM_L1.2+ PCI-PM_L1.1+ ASPM_L1.2+ =
-ASPM_L1.1+
-			   T_CommonMode=3D0us LTR1.2_Threshold=3D90112ns
-		L1SubCtl2: T_PwrOn=3D44us
-	Kernel driver in use: nvme
-	Kernel modules: nvme
-
-$ sudo lspci -vvv -s 00:1c.0
-00:1c.0 PCI bridge: Intel Corporation Sunrise Point-LP PCI Express Root =
-Port #1 (rev f1) (prog-if 00 [Normal decode])
-	Subsystem: Intel Corporation Device 7270
-	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- =
-ParErr- Stepping- SERR- FastB2B- DisINTx+
-	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=3Dfast >TAbort- =
-<TAbort- <MAbort- >SERR- <PERR- INTx-
-	Latency: 0, Cache Line Size: 256 bytes
-	Interrupt: pin A routed to IRQ 25
-	IOMMU group: 5
-	Bus: primary=3D00, secondary=3D01, subordinate=3D01, =
-sec-latency=3D0
-	I/O behind bridge: f000-0fff [disabled] [16-bit]
-	Memory behind bridge: 92700000-927fffff [size=3D1M] [32-bit]
-	Prefetchable memory behind bridge: =
-00000000fff00000-00000000000fffff [disabled] [64-bit]
-	Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=3Dfast >TAbort- =
-<TAbort- <MAbort- <SERR- <PERR-
-	BridgeCtl: Parity- SERR+ NoISA- VGA- VGA16- MAbort- >Reset- =
-FastB2B-
-		PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
-	Capabilities: [40] Express (v2) Root Port (Slot+), IntMsgNum 0
-		DevCap:	MaxPayload 256 bytes, PhantFunc 0
-			ExtTag- RBE+ TEE-IO-
-		DevCtl:	CorrErr- NonFatalErr- FatalErr- UnsupReq-
-			RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
-			MaxPayload 256 bytes, MaxReadReq 128 bytes
-		DevSta:	CorrErr- NonFatalErr- FatalErr- UnsupReq- =
-AuxPwr+ TransPend-
-		LnkCap:	Port #1, Speed 8GT/s, Width x4, ASPM L1, Exit =
-Latency L1 <16us
-			ClockPM- Surprise- LLActRep+ BwNot+ ASPMOptComp+
-		LnkCtl:	ASPM L1 Enabled; RCB 64 bytes, LnkDisable- =
-CommClk+
-			ExtSynch- ClockPM- AutWidDis- BWInt+ AutBWInt+ =
-FltModeDis-
-		LnkSta:	Speed 8GT/s, Width x2
-			TrErr- Train- SlotClk+ DLActive+ BWMgmt- =
-ABWMgmt-
-		SltCap:	AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug- =
-Surprise-
-			Slot #0, PowerLimit 25W; Interlock- NoCompl+
-		SltCtl:	Enable: AttnBtn- PwrFlt- MRL- PresDet- CmdCplt- =
-HPIrq- LinkChg-
-			Control: AttnInd Unknown, PwrInd Unknown, Power- =
-Interlock-
-		SltSta:	Status: AttnBtn- PowerFlt- MRL- CmdCplt- =
-PresDet+ Interlock-
-			Changed: MRL- PresDet+ LinkState-
-		RootCap: CRSVisible-
-		RootCtl: ErrCorrectable- ErrNon-Fatal- ErrFatal- =
-PMEIntEna- CRSVisible-
-		RootSta: PME ReqID 0000, PMEStatus- PMEPending-
-		DevCap2: Completion Timeout: Range ABC, TimeoutDis+ =
-NROPrPrP- LTR+
-			 10BitTagComp- 10BitTagReq- OBFF Not Supported, =
-ExtFmt- EETLPPrefix-
-			 EmergencyPowerReduction Not Supported, =
-EmergencyPowerReductionInit-
-			 FRS- LN System CLS Not Supported, TPHComp- =
-ExtTPHComp- ARIFwd+
-			 AtomicOpsCap: Routing- 32bit- 64bit- 128bitCAS-
-		DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis- =
-ARIFwd-
-			 AtomicOpsCtl: ReqEn- EgressBlck-
-			 IDOReq- IDOCompl- LTR+ =
-EmergencyPowerReductionReq-
-			 10BitTagReq- OBFF Disabled, EETLPPrefixBlk-
-		LnkCap2: Supported Link Speeds: 2.5-8GT/s, Crosslink- =
-Retimer- 2Retimers- DRS-
-		LnkCtl2: Target Link Speed: 8GT/s, EnterCompliance- =
-SpeedDis-
-			 Transmit Margin: Normal Operating Range, =
-EnterModifiedCompliance- ComplianceSOS-
-			 Compliance Preset/De-emphasis: -6dB =
-de-emphasis, 0dB preshoot
-		LnkSta2: Current De-emphasis Level: -3.5dB, =
-EqualizationComplete+ EqualizationPhase1+
-			 EqualizationPhase2+ EqualizationPhase3+ =
-LinkEqualizationRequest-
-			 Retimer- 2Retimers- CrosslinkRes: unsupported, =
-FltMode-
-	Capabilities: [80] MSI: Enable+ Count=3D1/1 Maskable- 64bit-
-		Address: fee00218  Data: 0000
-	Capabilities: [90] Subsystem: Intel Corporation Device 7270
-	Capabilities: [a0] Power Management version 3
-		Flags: PMEClk- DSI- D1- D2- AuxCurrent=3D0mA =
-PME(D0+,D1-,D2-,D3hot+,D3cold+)
-		Status: D0 NoSoftRst- PME-Enable- DSel=3D0 DScale=3D0 =
-PME-
-	Capabilities: [100 v0] Null
-	Capabilities: [140 v1] Access Control Services
-		ACSCap:	SrcValid+ TransBlk+ ReqRedir+ CmpltRedir+ =
-UpstreamFwd- EgressCtrl- DirectTrans-
-		ACSCtl:	SrcValid- TransBlk- ReqRedir- CmpltRedir- =
-UpstreamFwd- EgressCtrl- DirectTrans-
-	Capabilities: [200 v1] L1 PM Substates
-		L1SubCap: PCI-PM_L1.2+ PCI-PM_L1.1+ ASPM_L1.2+ =
-ASPM_L1.1+ L1_PM_Substates+
-			  PortCommonModeRestoreTime=3D40us =
-PortTPowerOnTime=3D44us
-		L1SubCtl1: PCI-PM_L1.2+ PCI-PM_L1.1+ ASPM_L1.2+ =
-ASPM_L1.1+
-			   T_CommonMode=3D40us LTR1.2_Threshold=3D90112ns
-		L1SubCtl2: T_PwrOn=3D44us
-	Capabilities: [220 v1] Secondary PCI Express
-		LnkCtl3: LnkEquIntrruptEn- PerformEqu-
-		LaneErrStat: 0
-	Kernel driver in use: pcieport
-	Kernel modules: shpchp
-
-Best regards,
-Ansgar=
+- Qiang Yu
