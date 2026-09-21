@@ -1,164 +1,138 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E2BB448F02F
-	for <linux-pci@vger.kernel.org>; Mon, 21 Sep 2026 14:32:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 79B324973AC
+	for <linux-pci@vger.kernel.org>; Mon, 21 Sep 2026 14:34:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790001169; cv=none; b=obKPvSqAVdgzVeM1ICzwEbQOZguf1tSx3VC+lKDnpb9JBVJmmFDqUmPovVo/dRTA9XnL5hwmLhtjTXCNKDRakNUWkabYFsrUwQFOENyEpXT+GelOc+lDUwRKVmabrAwejP0MyRgrbwoemNAVHToDacIUAmIhHQe3KJ1qs55UxpE=
+	t=1790001244; cv=none; b=FHYTyFaBw4t2mNcnAZ25LK9VHPiBU7DNmnbJaqYPrM3Xb8TqpDt2xhRd2r6KS6e5T4W3+W7xt83I/c1x9iEduHrBtE6M5Q1MBxIyVB8029mbPtQ4HvFx++AxGm15jj/hoDkh20EHXACyTXoTRCa6pJbwODG3MT5FX+aqwUz64zE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790001169; c=relaxed/simple;
-	bh=uQfykzHGmKBcNrMsOkwU3YOrxj1JeORiKU1rY4wDjKQ=;
+	s=arc-20240116; t=1790001244; c=relaxed/simple;
+	bh=tetRSr8SNsky91gxjQ+TOKUr7Sf1nWiXbR9eyXu76dk=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=mKDzm0idl6TOds3Fn/6wcloGB5UVJ93pyBvvU33i9lVGbkCKbLCfMHDkk6gBKrT3JBoOUFch90R5rbYcz+B0BV3lPgzZxDQZGvTNt9i/TdrroiTs8oEakS0NpYWLsX0HE4WqK6mPovRqjPtc3HSAEkfsxyVrOfFZGH1cqYRonLc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=K/hiHtWH; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=sT24664ELJthOU32ems+kR1hnkHZkJfEOCoDiGBK73zoQ2kFbqDfTKpp7LvK7uYw5BsXhvv5Mn8r7fQYuoW2+r4dLi9P8H7EavWVRqzQdQwtza7s7b33N8PMKYzZVgc6N9SfZoChs0svXVe3iEY9SGEy6F3IjYXpU7JXaB4yv1k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DFKGtrOk; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="K/hiHtWH"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4AF821F000FF;
-	Mon, 21 Sep 2026 14:32:47 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DFKGtrOk"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 055851F000FF;
+	Mon, 21 Sep 2026 14:34:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790001167;
-	bh=aQeurx4vwDS+f0Q+68msfypevHRU4Y5v3qLzxsxiL8U=;
+	s=k20260515; t=1790001243;
+	bh=9dpDQDLQkw+/NDyfHu/Vs1sdGLF9uus5VESzw0NcCzA=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=K/hiHtWHBptSkn7LiGP5EyvWGocca8qiDrqy24Cgq3aR9YqU29JjVRdKIz7ZsU7fg
-	 c3hiPMPwfslN9KLdgeCSssTtmYTQkjrHo3iDuhy6/PSldMTme4q8yV765y9Tp0k+uU
-	 y7Ubfx7jNzw121HvARJpJp8IEQ05tUyOd91dY1uf0RGXlu5DBmksejFKJuaP9w3Tgu
-	 FjOvyx9Bq5NGajuaXs5BLssbRaNn4tIIby6ortZ4+f6W0YuHi+5bj78AKU3xDReDf6
-	 sx20PAP9ceGDx6P+RAsWhKC4wROG0aEcVWtzRGO12shnTbzVnCstoqgoZ5PS/QHCwH
-	 F+3YmXYUKqMhA==
+	b=DFKGtrOk9Cp8gW/RSjUmKiLUK3YSDD3nsvkSeD4koy5lx2Qq/E1Wf6iJdOVS02su3
+	 zZwZtjgRnSTnoxXGBMFmOSIhFPRNDtx4nA1I/p21qTkSnCiYdSVzlPyIeYdzircSvn
+	 gy9IcDPO9+N+MquIsuKjxSYWCXWYOrXNqieSDSD+zHQqUTQAw80HWDMke31Ne9n2oD
+	 ecqbkwHXb919vFUr4QO2btgLMjNqUgo7E2e3US/4VYE9DQt9cteBHGc1QAtY28lldp
+	 yANxw5WBeOJp0/DJ6e+13g5Tc1rzlSUAIt/mztRTrkUYOAVbA/BwxyQXqtuOl5y9ue
+	 9hMMfq+3KfG9w==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v8 7/8] PCI: vmd: Add support for second rootbus under
- VMD
+Subject: Re: [PATCH v8 8/8] PCI: vmd: Workaround for hardwired BUS1 bus
+ number
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Szymon Durawa" <szymon.durawa@linux.intel.com>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260921164316.3860312-8-szymon.durawa@linux.intel.com>
+In-Reply-To: <20260921164316.3860312-9-szymon.durawa@linux.intel.com>
 References: <20260921164316.3860312-1-szymon.durawa@linux.intel.com>
- <20260921164316.3860312-8-szymon.durawa@linux.intel.com>
+ <20260921164316.3860312-9-szymon.durawa@linux.intel.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 21 Sep 2026 14:32:46 +0000
-Message-Id: <20260921143247.4AF821F000FF@smtp.kernel.org>
+Date: Mon, 21 Sep 2026 14:34:02 +0000
+Message-Id: <20260921143403.055851F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] pci: vmd: root ports skipped during domain reset due to CFGBAR sta=
-rt offset resize
-- [High] pci: vmd: unprotected modification of global resource tree pointer=
-s and structures
+- [High] pci: vmd: fake root bus number 0x80 causes resource conflict and b=
+reaks hotplug
 --
 
-commit 21e75586431de95d78578f413b1e8f1a06a83836
+commit 96fa114ac906af61b74b8a37fc6def3f417dbf5b
 Author: Szymon Durawa <szymon.durawa@linux.intel.com>
-Subject: PCI: vmd: Add support for second rootbus under VMD
 
-This commit introduces support for a second root bus under VMD, which is
-needed starting from Intel Arrow Lake. It enumerates BUS1, divides the
-MMIO space to be shared between both root buses, and resizes the CFGBAR
-accordingly.
+    PCI: vmd: Workaround for hardwired BUS1 bus number
+
+This commit implements a workaround for the VMD BUS1 root bus number being
+fixed to 0x80 in hardware. It overrides the root bus number in vmd_create_b=
+us()
+and attempts to handle the translation during config accesses and ACPI matc=
+hing.
 
 > diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
-> index c6b5e693916cb..51b8c2d9b7f0b 100644
+> index 51b8c2d9b7f0b..91c5b02bf91d1 100644
 > --- a/drivers/pci/controller/vmd.c
 > +++ b/drivers/pci/controller/vmd.c
-
-[ ... ]
-
-> @@ -632,12 +664,24 @@ static void vmd_attach_resources(struct vmd_dev *vm=
-d)
+> @@ -467,10 +467,23 @@ static unsigned int vmd_bus_to_ecam(struct vmd_dev =
+*vmd, unsigned int busnr)
+>  static void __iomem *vmd_cfg_addr(struct vmd_dev *vmd, struct pci_bus *b=
+us,
+>  				  unsigned int devfn, int reg, int len)
 >  {
->  	vmd->dev->resource[VMD_MEMBAR1].child =3D &vmd->resources[VMD_RES_MBAR_=
-1];
->  	vmd->dev->resource[VMD_MEMBAR2].child =3D &vmd->resources[VMD_RES_MBAR_=
-2];
-> +
-> +	if (vmd->bus1_rootbus) {
-> +		vmd->resources[VMD_RES_MBAR_1].sibling =3D
-> +			&vmd->resources[VMD_RES_BUS1_MBAR_1];
-> +		vmd->resources[VMD_RES_MBAR_2].sibling =3D
-> +			&vmd->resources[VMD_RES_BUS1_MBAR_2];
-> +	}
+[ ... ]
+> +	if (vmd->bus1_rootbus && bus->number =3D=3D VMD_PRIMARY_BUS1)
+> +		bus_number =3D vmd->busn_start[VMD_BUS_1];
+> +	else
+> +		bus_number =3D bus->number;
 
 [Severity: High]
-Does manually assigning the .sibling pointers here introduce a data race?
+Does this break configuration space accesses for dynamically assigned downs=
+tream
+bus numbers?
 
-These assignments link the BUS1 resources directly into the global iomem
-resource tree without acquiring the resource_lock.
+During dynamic bus assignment like hotplug or SR-IOV on root ports behind
+VMD BUS1, the PCI core sees 0x80 as the parent bus number and assigns child
+buses starting from 0x81 instead of the physical downstream window (e.g., 0=
+xE1).
 
-On the vmd_create_bus() error path later in vmd_enable_domain(), these
-sibling pointers are cleared and the resource structures are zeroed, also
-without locking:
+When accessing these dynamically assigned buses, this code falls through to=
+ the
+untranslated bus->number (e.g., 0x81). It then subtracts the physical ECAM
+start (e.g., 0xE0) from 0x81, leading to a massive unsigned underflow
+(0xFFFFFFA1).
 
-drivers/pci/controller/vmd.c:vmd_enable_domain() {
-	...
-	vmd->resources[VMD_RES_MBAR_1].sibling =3D NULL;
-	vmd->resources[VMD_RES_MBAR_2].sibling =3D NULL;
-	vmd->resources[VMD_RES_BUS1_CFGBAR] =3D (struct resource){};
-	...
-}
-
-Can concurrent readers (like /proc/iomem iterators traversing the tree)
-encounter corrupted or zeroed structures, leading to a crash or invalid rea=
-ds?
-
->  }
+This out-of-bounds offset will cause vmd_cfg_addr() to return NULL, silently
+breaking all configuration accesses.
 
 [ ... ]
-
-> @@ -936,6 +997,62 @@ static void vmd_configure_cfgbar(struct vmd_dev *vmd)
->  		.end   =3D busn_end,
->  		.flags =3D IORESOURCE_BUS | IORESOURCE_PCI_FIXED,
->  	};
-> +
-> +	if (vmd->bus1_rootbus) {
-
+> @@ -1188,6 +1223,7 @@ static int vmd_create_bus(struct vmd_dev *vmd, enum=
+ vmd_rootbus bus_number,
+>  			  struct pci_sysdata *sd, resource_size_t *offset,
+>  			  bool vmd_in_guest, u8 primary)
+>  {
 [ ... ]
-
-> +		/*
-> +		 * Resize BUS0 CFGBAR range to make space for BUS1
-> +		 * owned devices by adjusting range end with value stored in
-> +		 * VMD_BUSRANGE0 register.
-> +		 */
-> +		vmd->resources[VMD_RES_CFGBAR].start =3D bus0_start;
-> +		vmd->resources[VMD_RES_CFGBAR].end =3D bus0_end;
+> +	/*
+> +	 * Workaround: set VMD_BUS_1's bus number to VMD_PRIMARY_BUS1 so it
+> +	 * matches vmd->bus[VMD_BUS_1]->primary and bypasses bus number
+> +	 * reconfiguration.
+> +	 */
+> +	if (bus_number =3D=3D VMD_BUS_1 && vmd->bus1_rootbus)
+> +		root_busnr =3D VMD_PRIMARY_BUS1;
 
 [Severity: High]
-Will this resize of the CFGBAR start address cause vmd_domain_reset() to
-skip the root buses?
+Does overriding the root bus number to 0x80 here initiate a resource confli=
+ct
+that breaks the dynamic allocator's base range?
 
-When vmd_configure_cfgbar() resizes vmd->resources[VMD_RES_CFGBAR].start to
-the secondary bus start (e.g., 0xE2), vmd_domain_reset() will later read
-this modified start address:
+By overriding the BUS1 root bus number to 0x80 instead of its physical ECAM
+base (e.g., 0xE1), pci_register_host_bridge() requests the bus resource ran=
+ge
+[0x80-0xFF]. This overlaps with BUS0's physical range (e.g., [0xE0-0xF0]).
 
-drivers/pci/controller/vmd.c:vmd_domain_reset() {
-	...
-	for (bus =3D 0; bus < max_buses; bus++) {
-		ecam_bus =3D vmd_bus_to_ecam(vmd, vmd->resources[0].start + bus);
-	...
-}
+pci_bus_insert_busn_res() detects this conflict and fails to attach the bus
+resource of BUS1 to the domain, breaking hotplug and SR-IOV completely on
+VMD BUS1.
 
-Consequently, the ECAM loop skips the primary root buses (0xE0 and 0xE1).
-Does this leave their bridge windows with potentially stale BIOS configurat=
-ions
-that conflict with OS enumeration?
-
+> +	else
+> +		root_busnr =3D vmd->busn_start[bus_number];
 > +
-> +		vmd->resources[VMD_RES_BUS1_CFGBAR] =3D (struct resource){
-> +			.name =3D "VMD CFGBAR BUS1",
-> +			.start =3D bus1_start,
-> +			.end =3D bus1_end,
-> +			.flags =3D IORESOURCE_BUS | IORESOURCE_PCI_FIXED,
-> +		};
-> +	}
-> +
-> +	return 0;
->  }
+> +	vmd_bus =3D pci_create_root_bus(&vmd->dev->dev, root_busnr, &vmd_ops, s=
+d,
+>  				      &resources);
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260921164316.3860=
-312-1-szymon.durawa@linux.intel.com?part=3D7
+312-1-szymon.durawa@linux.intel.com?part=3D8
