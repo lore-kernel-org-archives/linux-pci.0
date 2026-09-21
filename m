@@ -1,91 +1,164 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D0064A485F;
-	Mon, 21 Sep 2026 14:29:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E2BB448F02F
+	for <linux-pci@vger.kernel.org>; Mon, 21 Sep 2026 14:32:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790000943; cv=none; b=ljDXdzBMlwryRn95cAULfH+cIk5f8XpMH28qSPgJHF4FTWzGLyZXwphRN8P1LXQT+lCMeNGbc1SCL0AHV7fmT87a0lhG3FOmPpjSWbHD6QAMXq+STx4EqwFZL00dVmmvixjmwaxOAGgTbupe9zGYf+eej7u4/+ltqaYq19KP5Hc=
+	t=1790001169; cv=none; b=obKPvSqAVdgzVeM1ICzwEbQOZguf1tSx3VC+lKDnpb9JBVJmmFDqUmPovVo/dRTA9XnL5hwmLhtjTXCNKDRakNUWkabYFsrUwQFOENyEpXT+GelOc+lDUwRKVmabrAwejP0MyRgrbwoemNAVHToDacIUAmIhHQe3KJ1qs55UxpE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790000943; c=relaxed/simple;
-	bh=AUQdMZZFEmXWmUdz7tPM8/DfNRsJrPnjjCG+jsY94d4=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=pY7dY9bas+WYLjFU5YELt58jmTC04iNsuCwFH7NZGrFErjfWItiuwJI5G6fT7R4c0yS3urT9/toGwF8oA+lFNBf3oeAdY52K4Tr+GmwWwQRAW87bs3hiGW8XvKuaniEnh8Z/0G5AR939ysAfrpg4Vj/5atbrrsOUl7LNq4FaWt0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=L9iRD0Iz; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790001169; c=relaxed/simple;
+	bh=uQfykzHGmKBcNrMsOkwU3YOrxj1JeORiKU1rY4wDjKQ=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=mKDzm0idl6TOds3Fn/6wcloGB5UVJ93pyBvvU33i9lVGbkCKbLCfMHDkk6gBKrT3JBoOUFch90R5rbYcz+B0BV3lPgzZxDQZGvTNt9i/TdrroiTs8oEakS0NpYWLsX0HE4WqK6mPovRqjPtc3HSAEkfsxyVrOfFZGH1cqYRonLc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=K/hiHtWH; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="L9iRD0Iz"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D28CC1F00893;
-	Mon, 21 Sep 2026 14:29:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="K/hiHtWH"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4AF821F000FF;
+	Mon, 21 Sep 2026 14:32:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790000942;
-	bh=8yzJ/PKyn3nO+ZYEl64j2VwgYC+Vk7U0Xda7c30jz40=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=L9iRD0Iz3HLe3yjrwXJRPXJc4xv04URetHGoEL6DIWUX2sUchjRRvt3KEuXkm9Kl+
-	 P9HnR+H1tRkNj6KdG3Qs87mWH9zZwlCOXHVO17A1ekMnaY/3m1u4zgJB5wRvpte4V0
-	 Fw0gIkDFrmfL7BArVkVHqvAx0ULU4f7F88pDabvGbn++1LbgowExeqfhNs8AXVZ0i/
-	 2PD9HXD1iE/1Ii8qBT8Slg+RabTKhfnQHiwGpLhL+0xRun1O7yZYcopA6EqYTZoV9R
-	 PgutdDNA+Uo5nqe8+xzW6Utsnt6BiguXpvkQD6JKzShBT4GDXopqIPYezPOJbC9YYj
-	 Vo+1XhcJn6oiA==
-Date: Mon, 21 Sep 2026 08:29:00 -0600
-From: Keith Busch <kbusch@kernel.org>
-To: Haowen Bai <calvin.bai@ugreen.com>
-Cc: Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
-	Sagi Grimberg <sagi@grimberg.me>, linux-nvme@lists.infradead.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] nvme-pci: skip FLR after a failed controller reset
-Message-ID: <arE_LD-uSB49gU0j@kbusch-mbp>
-References: <20260921140732.2942207-1-calvin.bai@ugreen.com>
+	s=k20260515; t=1790001167;
+	bh=aQeurx4vwDS+f0Q+68msfypevHRU4Y5v3qLzxsxiL8U=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=K/hiHtWHBptSkn7LiGP5EyvWGocca8qiDrqy24Cgq3aR9YqU29JjVRdKIz7ZsU7fg
+	 c3hiPMPwfslN9KLdgeCSssTtmYTQkjrHo3iDuhy6/PSldMTme4q8yV765y9Tp0k+uU
+	 y7Ubfx7jNzw121HvARJpJp8IEQ05tUyOd91dY1uf0RGXlu5DBmksejFKJuaP9w3Tgu
+	 FjOvyx9Bq5NGajuaXs5BLssbRaNn4tIIby6ortZ4+f6W0YuHi+5bj78AKU3xDReDf6
+	 sx20PAP9ceGDx6P+RAsWhKC4wROG0aEcVWtzRGO12shnTbzVnCstoqgoZ5PS/QHCwH
+	 F+3YmXYUKqMhA==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v8 7/8] PCI: vmd: Add support for second rootbus under
+ VMD
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Szymon Durawa" <szymon.durawa@linux.intel.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260921164316.3860312-8-szymon.durawa@linux.intel.com>
+References: <20260921164316.3860312-1-szymon.durawa@linux.intel.com>
+ <20260921164316.3860312-8-szymon.durawa@linux.intel.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Mon, 21 Sep 2026 14:32:46 +0000
+Message-Id: <20260921143247.4AF821F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260921140732.2942207-1-calvin.bai@ugreen.com>
 
-On Mon, Sep 21, 2026 at 10:07:32PM +0800, Haowen Bai wrote:
-> nvme_disable_ctrl() already waits up to CAP.TO for CSTS.RDY to clear.
-> If that times out, nvme_pci_configure_admin_queue() currently issues a
-> PCIe Function Level Reset and retries.
-> 
-> FLR is performed with PCI config cycles. Those cycles take
-> pci_config_lock, a raw spinlock, and wait for the endpoint to complete
-> the transaction. A wedged NVMe function can stall that completion.
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
+- [High] pci: vmd: root ports skipped during domain reset due to CFGBAR sta=
+rt offset resize
+- [High] pci: vmd: unprotected modification of global resource tree pointer=
+s and structures
+--
 
-Shouldn't PCIe CTO have kicked in to fail the transaction? Do you know
-which transaction is failing? Is the stall specific to FLR or could any
-config access stall in your setup?
+commit 21e75586431de95d78578f413b1e8f1a06a83836
+Author: Szymon Durawa <szymon.durawa@linux.intel.com>
+Subject: PCI: vmd: Add support for second rootbus under VMD
 
-> Other CPUs then spin in pci_conf1_read() -- including ACPI PCI config
-> from an unrelated device -- and the NMI watchdog reports a hard lockup.
-> 
-> This was observed on an x86_64 UGREEN DXP4800 (kernel 6.18.15) with two
-> ZHITAI Ti600 NVMe devices used as bcache. Each disk independently:
+This commit introduces support for a second root bus under VMD, which is
+needed starting from Intel Arrow Lake. It enumerates BUS1, divides the
+MMIO space to be shared between both root buses, and resizes the CFGBAR
+accordingly.
 
-Are you able to fix the device instead? Maybe add your device to the
-"quirk_no_flr" list if you can't fix it. This sounds like a pretty nasty
-bug on that side that forces driver to remove one of its recovery
-options.
- 
->   nvme: I/O timeout, reset controller
->   nvme: Device not ready; aborting reset, CSTS=0x1
->   nvme: Device not ready; aborting reset, CSTS=0x1
->   watchdog: Watchdog detected hard LOCKUP
->   RIP: native_queued_spin_lock_slowpath
->   pci_conf1_read -> acpi_pci_set_power_state -> mmc runtime resume
-> 
-> The two "aborting reset" messages are nvme_wait_ready() timeouts, 128s
-> apart, matching (CAP.TO+1)/2. The lockup is ~11s after the second
-> timeout, i.e. on the post-FLR cleanup path, not in the wait loop.
-> Linux 6.12 has no FLR fallback here; 6.18 and 7.3 still do.
-> 
-> Skip FLR when the controller is already in NVME_CTRL_RESETTING (I/O
-> timeout recovery). Keep the FLR hammer for initial probe, where the
-> device may simply have been left enabled by firmware. Reset work then
-> marks namespaces dead instead of hard-locking the host.
+> diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
+> index c6b5e693916cb..51b8c2d9b7f0b 100644
+> --- a/drivers/pci/controller/vmd.c
+> +++ b/drivers/pci/controller/vmd.c
 
-While I don't see this happen very often, I've seen FLR recover devices
-both on first probe and IO timeout, so skipping for RESETTING will miss
-recovering when it was possible for some conditions.
+[ ... ]
+
+> @@ -632,12 +664,24 @@ static void vmd_attach_resources(struct vmd_dev *vm=
+d)
+>  {
+>  	vmd->dev->resource[VMD_MEMBAR1].child =3D &vmd->resources[VMD_RES_MBAR_=
+1];
+>  	vmd->dev->resource[VMD_MEMBAR2].child =3D &vmd->resources[VMD_RES_MBAR_=
+2];
+> +
+> +	if (vmd->bus1_rootbus) {
+> +		vmd->resources[VMD_RES_MBAR_1].sibling =3D
+> +			&vmd->resources[VMD_RES_BUS1_MBAR_1];
+> +		vmd->resources[VMD_RES_MBAR_2].sibling =3D
+> +			&vmd->resources[VMD_RES_BUS1_MBAR_2];
+> +	}
+
+[Severity: High]
+Does manually assigning the .sibling pointers here introduce a data race?
+
+These assignments link the BUS1 resources directly into the global iomem
+resource tree without acquiring the resource_lock.
+
+On the vmd_create_bus() error path later in vmd_enable_domain(), these
+sibling pointers are cleared and the resource structures are zeroed, also
+without locking:
+
+drivers/pci/controller/vmd.c:vmd_enable_domain() {
+	...
+	vmd->resources[VMD_RES_MBAR_1].sibling =3D NULL;
+	vmd->resources[VMD_RES_MBAR_2].sibling =3D NULL;
+	vmd->resources[VMD_RES_BUS1_CFGBAR] =3D (struct resource){};
+	...
+}
+
+Can concurrent readers (like /proc/iomem iterators traversing the tree)
+encounter corrupted or zeroed structures, leading to a crash or invalid rea=
+ds?
+
+>  }
+
+[ ... ]
+
+> @@ -936,6 +997,62 @@ static void vmd_configure_cfgbar(struct vmd_dev *vmd)
+>  		.end   =3D busn_end,
+>  		.flags =3D IORESOURCE_BUS | IORESOURCE_PCI_FIXED,
+>  	};
+> +
+> +	if (vmd->bus1_rootbus) {
+
+[ ... ]
+
+> +		/*
+> +		 * Resize BUS0 CFGBAR range to make space for BUS1
+> +		 * owned devices by adjusting range end with value stored in
+> +		 * VMD_BUSRANGE0 register.
+> +		 */
+> +		vmd->resources[VMD_RES_CFGBAR].start =3D bus0_start;
+> +		vmd->resources[VMD_RES_CFGBAR].end =3D bus0_end;
+
+[Severity: High]
+Will this resize of the CFGBAR start address cause vmd_domain_reset() to
+skip the root buses?
+
+When vmd_configure_cfgbar() resizes vmd->resources[VMD_RES_CFGBAR].start to
+the secondary bus start (e.g., 0xE2), vmd_domain_reset() will later read
+this modified start address:
+
+drivers/pci/controller/vmd.c:vmd_domain_reset() {
+	...
+	for (bus =3D 0; bus < max_buses; bus++) {
+		ecam_bus =3D vmd_bus_to_ecam(vmd, vmd->resources[0].start + bus);
+	...
+}
+
+Consequently, the ECAM loop skips the primary root buses (0xE0 and 0xE1).
+Does this leave their bridge windows with potentially stale BIOS configurat=
+ions
+that conflict with OS enumeration?
+
+> +
+> +		vmd->resources[VMD_RES_BUS1_CFGBAR] =3D (struct resource){
+> +			.name =3D "VMD CFGBAR BUS1",
+> +			.start =3D bus1_start,
+> +			.end =3D bus1_end,
+> +			.flags =3D IORESOURCE_BUS | IORESOURCE_PCI_FIXED,
+> +		};
+> +	}
+> +
+> +	return 0;
+>  }
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260921164316.3860=
+312-1-szymon.durawa@linux.intel.com?part=3D7
