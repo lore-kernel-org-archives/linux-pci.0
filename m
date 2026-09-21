@@ -1,67 +1,174 @@
-Received: from mailout1.hostsharing.net (mailout1.hostsharing.net [83.223.95.204])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 111FE377A94;
-	Mon, 21 Sep 2026 15:41:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.223.95.204
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 42DC8475342;
+	Mon, 21 Sep 2026 15:46:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790005291; cv=none; b=B8fAgYQxd0JctKxY067mf2nIOQMBQohYnAyOsyeMW+lBmkqLsV9USYy0pa2L3OSsUwPdv0gDu6tmm7wZorB/4C/43VwZcqt5Bg3+PdJHnHBl8QJZFH/1w9qtL6ZI96z3l1GmnuPl8qEV4UQgEt/O+2fDO/xE9EtTuYak6FHei38=
+	t=1790005592; cv=none; b=n3/kYN3/eiG5wUqeawIURwh3h89qrMQ0+6R1aePTiaiCUMdezoMUlHx1yUkwdQ6qGACmgtIqGqnQWTjx9AgDpjg3kc19ROnPVftYpbbvDR1eDjTUaYkjZRRldqptAlRI02ycg8MJh6AB4CiMyY/54UM50ymEPDufc8TTbJSptDs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790005291; c=relaxed/simple;
-	bh=MaCpI/YtHYcsM2wFMlqo1VbHyGefTQC4Z5hzP+0B+eg=;
+	s=arc-20240116; t=1790005592; c=relaxed/simple;
+	bh=YH7dd7nmVDIYpExQlL40HE59/Q1O3Y6Z22Cro4sosHA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=HiAjp8zg3f3iWT2oQK2jvuicRokuKg7nB2pa6chpy1Um0L8GLSH55pKYy2kAzbA3OaErCehYmGLB75XZt+CVuVndZMRPRMKrCAYX2sIdXnCeCVNc02yPplXRxCzAfjJKKf1OqnR6WAlQtfA5R8gND7HITs+jBZZ1Dlq7XkqA5JA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=83.223.95.204
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
-Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
-	 client-signature ECDSA (secp384r1) client-digest SHA384)
-	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
-	by mailout1.hostsharing.net (Postfix) with ESMTPS id 1B6DD4CEE;
-	Mon, 21 Sep 2026 17:41:20 +0200 (CEST)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-	id D316A60E6339; Mon, 21 Sep 2026 17:41:19 +0200 (CEST)
-Date: Mon, 21 Sep 2026 17:41:19 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Runyu Xiao <runyu.xiao@seu.edu.cn>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Jianhao Xu <jianhao.xu@seu.edu.cn>
-Subject: Re: [PATCH] PCI: pciehp: Make poll mode parameter read-only
-Message-ID: <arFQH_PE29XEsMbi@wunner.de>
-References: <20260921142608.270312-1-runyu.xiao@seu.edu.cn>
+	 Content-Type:Content-Disposition:In-Reply-To; b=aC1ZMXUTVypl+u6UNylwBYnNsnzZ32qCs8aOgRmRAIaYBclH/Bp7/WJ7mcPYUxWGlE027uRzt9yGRtXv/UT3aWvsVhoM0YhtOK5XrKdwFMgQDwccbCBtvZbHiWRMXmQIukQkxBm4ST/jctOBbq68tjQIOrxBwC86Ql6ehJuhYoA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Awjc7CQ5; arc=none smtp.client-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Awjc7CQ5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C3DDB1F000FF;
+	Mon, 21 Sep 2026 15:46:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1790005590;
+	bh=wtAWY4UOgMsDtGmwPaOVo/YohvZdMJTG3nDB7UNWK3c=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=Awjc7CQ5UAPLZEFbtu6Dr7+Ugo9fVa98qwiPwJ4+sPPjKHIR+2lq5Py4bYSRcD9vU
+	 BN+msvop/XqRX2hXl9RkOiuyIMuHTn158g29NB6tapfs6Z9XInEPOS3qpNadBCf4mp
+	 S/kxtfKP4ganLGDw9slJQhrEZqe4H/+Y7YOlbhcqDzNG6pcR4slGz3HNEUeT5a6ib2
+	 5k0IMdDenXatIBX8YNx/nTnJcP9SsWftWtI3cDOJyGALoDRoZ6ty8nq7KaAHSdgOkV
+	 MBpGKsoj6GV2zajYYBl32o1mVen6VO3jRoBdjf3QGszzBh/OvbxA3b4f1FvjvqRPOQ
+	 270qpH7qVD0KQ==
+Date: Mon, 21 Sep 2026 17:46:22 +0200
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Marek Vasut <marek.vasut+renesas@mailbox.org>
+Cc: linux-pci@vger.kernel.org, 
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Conor Dooley <conor+dt@kernel.org>, Geert Uytterhoeven <geert+renesas@glider.be>, 
+	Krzysztof Kozlowski <krzk+dt@kernel.org>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	Rob Herring <robh@kernel.org>, Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>, 
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org
+Subject: Re: [PATCH v4 5/6] PCI: dwc: rcar-gen4: Handle PERST via reset
+ subsystem
+Message-ID: <zwdqspl2uno35uffgzsel57ed2umpejgfeqrkwvxiqd2pgfpm6@h6w3qsgc6rny>
+References: <20260905212649.360498-1-marek.vasut+renesas@mailbox.org>
+ <20260905212649.360498-6-marek.vasut+renesas@mailbox.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20260921142608.270312-1-runyu.xiao@seu.edu.cn>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260905212649.360498-6-marek.vasut+renesas@mailbox.org>
 
-On Mon, Sep 21, 2026 at 10:26:08PM +0800, Runyu Xiao wrote:
-> pciehp_request_irq() and pciehp_free_irq() select different resources
-> based on the global pciehp_poll_mode parameter. The parameter is
-> currently writable through sysfs, so changing it while a controller is
-> active can make teardown stop a nonexistent polling thread or call
-> free_irq() for an IRQ that was not requested.
+On Sat, Sep 05, 2026 at 11:26:26PM +0200, Marek Vasut wrote:
+> Handle PERST via both GPIO and reset subsystem. On R-Car Gen4, the
+> PERST signal is operated as a GPIO, on R-Car Gen5 it might only be
+> accessible via SCMI reset via reset subsystem. Support both options.
+> This is a preparatory patch for R-Car Gen5 support.
 > 
-> Keep the parameter available for boot and module configuration, but
-> prevent runtime changes to the registration mode.
-[...]
-> Fixes: 2aeeef119995 ("pciehp: Clean up pcie_init()")
-> Cc: stable@vger.kernel.org
-> Assisted-by: LLM Codex
-> Signed-off-by: Runyu Xiao <runyu.xiao@seu.edu.cn>
+> Signed-off-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
+> ---
+> Cc: "Krzysztof Wilczyński" <kwilczynski@kernel.org>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Conor Dooley <conor+dt@kernel.org>
+> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+> Cc: Krzysztof Kozlowski <krzk+dt@kernel.org>
+> Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>
+> Cc: Manivannan Sadhasivam <mani@kernel.org>
+> Cc: Rob Herring <robh@kernel.org>
+> Cc: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+> Cc: devicetree@vger.kernel.org
+> Cc: linux-kernel@vger.kernel.org
+> Cc: linux-pci@vger.kernel.org
+> Cc: linux-renesas-soc@vger.kernel.org
+> ---
+> V2: - Use dev_err_probe() for perst in rcar_gen4_pcie_get_resources()
+>     - Use of_get_next_available_child() to obtain root port OF node
+>     - Switch to of_reset_control_get_optional_exclusive() to deal with
+>       R-Car Gen4, where the PERST is handled as GPIO instead of reset
+>     - Rename rcar_gen4_pcie_host_perst() to rcar_gen4_pcie_host_perst_assert()
+>       and use bool type for assert and deassert selection
+>     - Add missing reset_control_put() into rcar_gen4_pcie_probe() fail path
+> V3: - Handle controllers without root port DT node
+>     - Swap fail path order
+> V4: Rebase on next-20260904
+> ---
+>  drivers/pci/controller/dwc/pcie-rcar-gen4.c | 44 +++++++++++++++++++--
+>  1 file changed, 40 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/dwc/pcie-rcar-gen4.c b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
+> index c768a9c7b3b76..89472a4becc46 100644
+> --- a/drivers/pci/controller/dwc/pcie-rcar-gen4.c
+> +++ b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
+> @@ -99,6 +99,7 @@ struct rcar_gen4_pcie {
+>  	void __iomem *base;
+>  	void __iomem *phy_base;
+>  	struct platform_device *pdev;
+> +	struct reset_control *perst;
+>  	const struct rcar_gen4_pcie_drvdata *drvdata;
+>  };
+>  #define to_rcar_gen4_pcie(_dw)	container_of(_dw, struct rcar_gen4_pcie, dw)
+> @@ -317,12 +318,27 @@ static void rcar_gen4_pcie_unprepare(struct rcar_gen4_pcie *rcar)
+>  
+>  static int rcar_gen4_pcie_get_resources(struct rcar_gen4_pcie *rcar)
+>  {
+> +	struct device *dev = rcar->dw.dev;
+> +	struct device_node *root_port;
+> +
+>  	rcar->phy_base = devm_platform_ioremap_resource_byname(rcar->pdev, "phy");
+>  	if (IS_ERR(rcar->phy_base))
+>  		return PTR_ERR(rcar->phy_base);
+>  
+> +	root_port = of_get_next_available_child(dev->of_node, NULL);
+> +	if (root_port) {
+> +		rcar->perst = of_reset_control_get_optional_exclusive(root_port, "perst");
+> +		of_node_put(root_port);
+> +		if (IS_ERR(rcar->perst))
+> +			return dev_err_probe(dev, PTR_ERR(rcar->perst), "Failed to get PERST#\n");
+> +	} else {
+> +		rcar->perst = NULL;
 
-Reviewed-by: Lukas Wunner <lukas@wunner.de>
+'rcar->perst' is NULL by default.
 
-The Fixes tag looks odd to me because the module_param has existed
-before the tree was even converted to git, as has the irq usage.
-I'd just drop the Fixes tag and use only the stable designation.
+> +	}
+> +
+>  	/* Renesas-specific registers */
+>  	rcar->base = devm_platform_ioremap_resource_byname(rcar->pdev, "app");
+> +	if (IS_ERR(rcar->base))
+> +		reset_control_put(rcar->perst);
+>  
+>  	return PTR_ERR_OR_ZERO(rcar->base);
+>  }
+> @@ -494,6 +510,22 @@ static int rcar_gen4_pcie_enable_device(struct pci_host_bridge *bridge,
+>  	return 0;
+>  }
+>  
+> +static void rcar_gen4_pcie_host_perst_assert(struct dw_pcie_rp *pp, bool assert)
+> +{
+> +	struct dw_pcie *dw = to_dw_pcie_from_pp(pp);
+> +	struct rcar_gen4_pcie *rcar = to_rcar_gen4_pcie(dw);
+> +
+> +	gpiod_set_value_cansleep(dw->pe_rst, assert);
+> +
+> +	if (!rcar->perst)
+> +		return;
+> +
+> +	if (assert)
+> +		reset_control_assert(rcar->perst);
+> +	else
+> +		reset_control_deassert(rcar->perst);
 
-Thanks,
+So the controller will only have one form of PERST# implemented at a time. Even
+though this code is technically correct, it also gives an impression that both
+form could co-exist.
 
-Lukas
+So I'd recommend using:
+
+        if (dw->pe_rst) {
+                gpiod_set_value_cansleep(dw->pe_rst, assert);
+        } else {
+                if (assert)
+                        reset_control_assert(rcar->perst);
+                else
+                        reset_control_deassert(rcar->perst);
+        }
+
+to makes it clear that only one form of PERST# is supported.
+
+I'll implement both of these changes while applying.
+
+- Mani
+
+-- 
+மணிவண்ணன் சதாசிவம்
