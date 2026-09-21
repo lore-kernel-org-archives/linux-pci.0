@@ -1,211 +1,262 @@
-Received: from mail-yx2-f13.google.com (mail-yx2-f13.google.com [74.125.224.141])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mail.ozlabs.org (gandalf.ozlabs.org [150.107.74.76])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 97C6249B5A0
-	for <linux-pci@vger.kernel.org>; Mon, 21 Sep 2026 13:09:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.224.141
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A91F3B47FF;
+	Mon, 21 Sep 2026 13:09:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=150.107.74.76
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789996144; cv=none; b=H40re5BRL3ieClvWdt7Ydru1QKuE6j8tQzXuYA4sfldu3s74ioXvdHTE8xSz1MKj56vKlJIlosBdH5FZ5oceN1qhX5kQe1qq2sC9poubSxdsci7+bDX96s6larDjP/4zWO6h7giOEezb1MuCD1CmlV4j+vpYmosuxy04GO2zToM=
+	t=1789996147; cv=none; b=FHE6hhGDUBkz48W6SvcyWnizKHu2bbWOPVnNiSMZYA9dqNCi0RGtz8sw01JDNjOEySSZ9GYGbaLKVeVqRbsP4HTpERTvPyEj/qzDrHGXP943osvL+zEBOXhUsysllhEp7/HGMA+ugZ7Bl8YS725wh3ncnqmxofe2ytdgk6ELEgA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789996144; c=relaxed/simple;
-	bh=7iRzAcHHARKyQ+ATaMDpW4DruCrP6jplXNxnuj7OqwM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=WW3twCjgUv3cg+6eMoBGPKMQb5u39H6NKGV8eaJmxF2B7AncR+nC3GbDRV2SeAso3HjfIaL2xOWoIMd1qcZTeSThkEcprKMgAql2SO2iw0e8GZUd8PTZJg/sOuS/X/gIm+SrZBOcxiqTStM7S4l0b02A9kZTiRqAF8t79rGQXdw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca; spf=pass smtp.mailfrom=ziepe.ca; dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b=OVbP23qH; arc=none smtp.client-ip=74.125.224.141
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
+	s=arc-20240116; t=1789996147; c=relaxed/simple;
+	bh=iLgseTPsPpKsXTFPmfa4IyrpdTtbx0Dq6np9x+weJs4=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=S/mxPCWfozpUejfuqI0AtHr5+1+h7xN5xT+yFZV8/8/xg40LVHrxz5zbmPbru3L/S1u138ddtQHBfKGE/PcbmC8mra9EjkdAh4NaKOz9sykMe0fjUDPn8UpUrjBUlwqcouXHVq9YjJg5PToNYgXEb4ayGYJfmcwB+mhEjJRHAi0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ozlabs.org; spf=pass smtp.mailfrom=ozlabs.org; dkim=pass (2048-bit key) header.d=ozlabs.org header.i=@ozlabs.org header.b=hF4AAInx; arc=none smtp.client-ip=150.107.74.76
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ozlabs.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ozlabs.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="OVbP23qH"
-Received: by mail-yx2-f13.google.com with SMTP id 956f58d0204a3-6713d20d375so2486963d50.0
-        for <linux-pci@vger.kernel.org>; Mon, 21 Sep 2026 06:09:01 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ziepe.ca; s=google; t=1789996141; x=1790600941; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :content-type:mime-version:references:message-id:subject:cc:to:from
-         :date:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=/I4CnabOFJ3V+cBV+khghf4ltJkhcHX6gZAKyxfIiuU=;
-        b=OVbP23qHxpA1f0E25xNKG0Utb4qY1pci7lNk1dz9kSCfiFs84khz7O89QkedKxGdF/
-         0BgGqFlTDcjyoq1EhB62Hs1JbrYZYD8S5vHBJOhauPNXuaX1nb3pv3wtsBQTIyaxKlHH
-         W5RPLjfQVDytPLMyAVNbHYDlUMwBER/D7KO1XAs4nvgPFc7AW8QN2S5fU7XQBgbrQklV
-         mea3UtzB/mAP5ERVg1OpKwyibQEtCEHIyAnlL9kblIObxvClWKjATxcupqTIfL8HDbgJ
-         DArpRHVstouE13CeyOaGnHw7CHAQLXfCxKjIZToSseuODn/RSEXWdw31uTLaznBIBhdH
-         ujIQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1789996141; x=1790600941;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :content-type:mime-version:references:message-id:subject:cc:to:from
-         :date:x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=/I4CnabOFJ3V+cBV+khghf4ltJkhcHX6gZAKyxfIiuU=;
-        b=1l2YzuoRc2JTsX3HqH/1pCo6L1meHaKv6VirM4DfOd0CqRV4rQ7hXKwaiaYf4+ZJP4
-         G93+dlsTKRMEIk6iJAUtk/UA3pT4ZTBzrUI7d4AIU2o7ZH+b3s7Ol1q8fkYy0vspkFFG
-         aZ5frP45dA1hLiigd5/WnLaWYkTYUlSb6O7CUfPyfaQlRmB8CW0sIZB/BelyF56GENcM
-         kt2NxGuqJdbkncof5vTKstlmCubmpfaTzucflrtxPGKNC5NvmSAkAkxi3doDeo+TH/nW
-         Qp36d9BpMXfhJMxcqWT+lOCMaNN0uHEPVnY7dFRnsFeCQbtYGXSNNOzlbPdEV21EL7wA
-         v28Q==
-X-Forwarded-Encrypted: i=1; AKwUvBxK8/HIcrM4lc66GYS9ZRSNdGkLDNsx2AeMevy9yn8fEou5xHSNWPYFNwbAtSbhBWaggFsSaGK6HqY=@vger.kernel.org
-X-Gm-Message-State: AFuF++nKq/Sm2wDAPPZdtum9szYo/s80nVExaWoR0rx5okFKyLew7BgZ
-	P6JP5jragbXtiUGcbtVtF6QlsstSkbE1HpjNR1Oks2sM1wkYzMAOH6+ljkjmS6IgyH0=
-X-Gm-Gg: AYBFou2Vkv79jvq2b+Q6JOl9iXXzbUfqHHbkmsZrrMlzA67M521OfKIYctQfO0i7j4H
-	yvhglx6z73Xv2OA60Yn+TLdlzhEKsQU1gswBWp6+yNzbSD4TgJcF0VLwFzkoZkbGMlvCkDVOZK8
-	So31TgoHzp3SLxmLdK1IdMlxqXKygiX60u6Auin8CqtZi1af5BKERTwdJnDNkD5biNAcY2Z2ty+
-	hVf+UKmbim87rNGAqJujKyY+hKWaXL1Lk1j8sjSBtJbUibVHX6H762AuKwX+0WeAfl7U5nIQgEy
-	jcgN3L9+raoi6fUUI6G0iXLklCE3Tat1mlAFMHlOtuDh0yC13G/rv7cwtKkRGf4heIgofO2yUl5
-	3oosr+7wE1v5ZCcPS4Hw2kPSKEYlfsf6Fm0mEK7FML4ZYlFaLPTu4tr9Lt7fW4u3qDdJPzx4Sxa
-	pLcngc25IoGWn4l2CvDErA0ubms7wIUGqmYM1eba9WeyTtGDADfmu99opM5NJXrMPYK9xRqpjoS
-	iNnAT3LqjbEn3/TvWTgz8SKmtHMLeusRb9odxrfG0ZaZU4H1oPeg0AZ
-X-Received: by 2002:a05:690e:11ca:b0:672:a52c:db25 with SMTP id 956f58d0204a3-672a52ce30bmr1843524d50.109.1789996140490;
-        Mon, 21 Sep 2026 06:09:00 -0700 (PDT)
-Received: from ziepe.ca (hlfxns010zw-159-2-239-150.pppoe-dynamic.high-speed.ns.bellaliant.net. [159.2.239.150])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-91260aa1db7sm67720106d6.44.2026.09.21.06.08.59
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 21 Sep 2026 06:08:59 -0700 (PDT)
-Received: from jgg by wakko with local (Exim 4.97)
-	(envelope-from <jgg@ziepe.ca>)
-	id 1x8dlS-00000006Jlj-41LR;
-	Mon, 21 Sep 2026 10:08:58 -0300
-Date: Mon, 21 Sep 2026 10:08:58 -0300
-From: Jason Gunthorpe <jgg@ziepe.ca>
-To: Christian =?utf-8?B?S8O2bmln?= <christian.koenig@amd.com>
-Cc: Thomas =?utf-8?Q?Hellstr=C3=B6m?= <thomas.hellstrom@linux.intel.com>,
-	Christoph Hellwig <hch@lst.de>, Leon Romanovsky <leon@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Logan Gunthorpe <logang@deltatee.com>,
-	Chaitanya Kulkarni <kch@nvidia.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Jens Axboe <axboe@kernel.dk>, Alex Williamson <alex@shazbot.org>,
-	Ankit Agrawal <ankita@nvidia.com>, Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	"Joerg Roedel (AMD)" <joro@8bytes.org>,
-	Will Deacon <will@kernel.org>, Robin Murphy <robin.murphy@arm.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Sumit Semwal <sumit.semwal@linaro.org>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org,
-	iommu@lists.linux.dev, Tushar Dave <tdave@nvidia.com>,
-	linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org,
-	linaro-mm-sig@lists.linaro.org, linux-rdma@vger.kernel.org,
-	kvm@vger.kernel.org
-Subject: Re: [PATCH v6 18/18] RDMA/mlx5: Ask P2PDMA whether ATS takes a
- direct peer-to-peer route
-Message-ID: <20260921130858.GO11599@ziepe.ca>
-References: <20260914-fix-p2p-acs-v4-0-v6-0-5ef07ec9ef06@nvidia.com>
- <20260914-fix-p2p-acs-v4-0-v6-18-5ef07ec9ef06@nvidia.com>
- <321890690ce83d1943b2f678bd9bee9b8c895b66.camel@linux.intel.com>
- <20260918121500.GV13683@unreal>
- <b517070d0b9236b03962fcba649faffcacda23eb.camel@linux.intel.com>
- <20260918170524.GH11599@ziepe.ca>
- <9656f2f9-2e39-4007-b065-3b763b53c6de@amd.com>
+	dkim=pass (2048-bit key) header.d=ozlabs.org header.i=@ozlabs.org header.b="hF4AAInx"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ozlabs.org;
+	s=201707; t=1789996120;
+	bh=Q3DyB+NGw+9JvjJpyqPnaRX8BQWBsWV2/fUz4fZ0JzM=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=hF4AAInxfCog6b0R2jfBsu5AcZxeld1cJg2tAh7nQbbp2UPJfvXIol+4u/zxOsuTq
+	 G2Btw97N8TFPPg3p8lcAXVlX4Ws1RT/wTLMHt7ijYNLo5DV97Y1WZVJRZd11TiA6Wv
+	 eP3mQk/yh2FBTrMBhvnynVkS3f0CuTA9LhCg6R2lG5kew8fziK3dja/SLdtNMby7sG
+	 DMq29UpYeDpCD91u/HQK8g9veOrikvI9D39wLqG3kWEjuJTX6bNtNxTvbzSmKAb7rp
+	 aXtPEqNABH51INgehXpfu+EZHlKHE5rOiJ7tUzSblRG0SVeXliGEjBi7vaJqqqRUQt
+	 wXb7KsjGKQhyA==
+Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(Client did not present a certificate)
+	by mail.ozlabs.org (Postfix) with ESMTPSA id 4hpNp60jf6z4w1l;
+	Mon, 21 Sep 2026 23:08:29 +1000 (AEST)
+Message-ID: <23a0ea30-c6dc-4b8c-a0a1-89e9f912bf37@ozlabs.org>
+Date: Mon, 21 Sep 2026 14:08:47 +0100
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v6 9/9] vfio/pci: Permanently revoke a DMABUF on request
+Content-Language: en-GB
+To: =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>,
+ Leon Romanovsky <leon@kernel.org>
+Cc: Jason Gunthorpe <jgg@nvidia.com>, Alex Williamson <alex@shazbot.org>,
+ Alex Mastro <amastro@fb.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Logan Gunthorpe <logang@deltatee.com>, Kevin Tian <kevin.tian@intel.com>,
+ Pranjal Shrivastava <praan@google.com>, Longfang Liu
+ <liulongfang@huawei.com>, Mahmoud Adam <mngyadam@amazon.de>,
+ David Matlack <dmatlack@google.com>, =?UTF-8?B?QmrDtnJuIFTDtnBlbA==?=
+ <bjorn@kernel.org>, Sumit Semwal <sumit.semwal@linaro.org>,
+ Ankit Agrawal <ankita@nvidia.com>, Alistair Popple <apopple@nvidia.com>,
+ Vivek Kasireddy <vivek.kasireddy@intel.com>, linux-kernel@vger.kernel.org,
+ linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org,
+ linaro-mm-sig@lists.linaro.org, kvm@vger.kernel.org,
+ linux-pci@vger.kernel.org
+References: <20260911214200.33793-1-matt@ozlabs.org>
+ <20260911214200.33793-10-matt@ozlabs.org> <20260913165244.GW13683@unreal>
+ <20260914113647.GL3968357@nvidia.com> <20260914115456.GY13683@unreal>
+ <f21c409d-5675-4c87-8b16-850bcb9474df@ozlabs.org>
+ <20260915072002.GD13683@unreal>
+ <cebfef6a-88c6-4753-a0a4-87445a72f885@amd.com>
+ <db61e755-73ce-4dd8-94fc-e7287db963d3@ozlabs.org>
+ <0fdfe19e-f8ef-47ff-aa99-66adbc524728@amd.com>
+From: Matt Evans <matt@ozlabs.org>
+In-Reply-To: <0fdfe19e-f8ef-47ff-aa99-66adbc524728@amd.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <9656f2f9-2e39-4007-b065-3b763b53c6de@amd.com>
 
-On Mon, Sep 21, 2026 at 08:43:49AM +0200, Christian König wrote:
-> On 9/18/26 19:05, Jason Gunthorpe wrote:
-> > On Fri, Sep 18, 2026 at 03:42:28PM +0200, Thomas Hellström wrote:
-> >>
-> >> 1) Xe attachment check if pci_p2pdma_distance() returns OK for the
-> >> path. Then Xe always sets up dma-addresses using dma_map_resource(). 
-> > 
-> > Open coding pci_p2pdma_distance() in drivers is a hack. Using
-> > dma_map_resource() like this was never "allowed".
-> > 
-> > We've fixed things so these hacks are not needed, the drivers need to
-> > move over to things like dma_buf_phys_vec_to_sgt() and the hmm helpers
-> > to use the DMA API correctly.
+Hi both,
+
+On 16/09/2026 15:19, Christian König wrote:
+> On 9/15/26 16:22, Matt Evans wrote:
+>> Hi Christian,
+>>
+>> On 15/09/2026 12:13, Christian König wrote:
+>>> On 9/15/26 09:20, Leon Romanovsky wrote:
+>>>> On Mon, Sep 14, 2026 at 01:13:36PM +0100, Matt Evans wrote:
+>>>>> Hi Leon,
+>>>>>
+>>>>> On 14/09/2026 12:54, Leon Romanovsky wrote:
+>>>>>> On Mon, Sep 14, 2026 at 08:36:47AM -0300, Jason Gunthorpe wrote:
+>>>>>>> On Sun, Sep 13, 2026 at 07:52:44PM +0300, Leon Romanovsky wrote:
+>>>>>>>> On Fri, Sep 11, 2026 at 10:41:57PM +0100, Matt Evans wrote:
+>>>>>>>>> Expand the VFIO DMABUF revocation state to three states:
+>>>>>>>>> Not revoked, temporarily revoked, and permanently revoked.
+>>>>>>>>
+>>>>>>>> The thing is that "temporarily revoked" is actually the standard
+>>>>>>>> invalidate_mappings/move_notify mechanism of DMABUF, which wasn't good
+>>>>>>>> for VFIO.
+>>>>>>>
+>>>>>>> I think temporarily revokes here means it is revoked from a dmabuf
+>>>>>>> perspective
+>>>>>>
+>>>>>> My guess is that this is more of a "change owner" operation than a
+>>>>>> revoke operation.
+>>>>>>
+>>>>>> The main issue here is that we have to guess the semantics instead of
+>>>>>> having a properly named and documented operation.
+>>>>>
+>>>>> Apologies if the cover letter for the series and patch commit message (which
+>>>>> cover this) are unclear about the motivations and semantics.  On the commit
+>>>>> message, can you suggest clarifications:
+>>>>>
+>>>>> "This is useful for lifecycle management, to reclaim VFIO PCI BAR
+>>>>> ranges previously delegated to a subordinate client process: by
+>>>>> revoking, the driver process can ensure that the loaned resources are
+>>>>> made inaccessible when the client is deemed "done".  The original
+>>>>> DMABUF is defunct, and BAR resources can then be safely re-exported
+>>>>> for use by new clients."
+>>>>>
+>>>>> Given what I'll explain below, do give suggestions please.  There is more
+>>>>> context in the cover letter (the volume of which I didn't think appropriate
+>>>>> for the commit message).
+>>>>
+>>>> 1. Do not mix "driver" and "client" in the same description. For a
+>>>> non-native English speaker, "driver" has a very specific meaning in the
+>>>> context of the Linux kernel.
+>>>
+>>> In the context of DMA-buf it has also proven vital to clearly use the terms importer and exporter to describe the different roles a driver can have.
+>>>
+>>> I can't count how often there was confusion because people (me included) just used "driver" and it wasn't clear which role was meant.
+>>
+>> :)  I see where the quote can be clearer.  FWIW the "driver process" was
+>> referring to a userspace driver (which is a legitimate use of the D-word
+>> with VFIO, but still).  I'll clarify that, and will indicate this
+>> mechanism is used by userspace to influence the VFIO _exporter_ behaviour.
+>>
+>>>> 2. Explain the lifecycle in the commit message, and why "revoke", which
+>>>> is effectively what the importer does, is not sufficient.
+>>>>
+>>>> 3. The more you put in the cover letter, the less likely people are to
+>>>> read it.
+>>>>
+>>>> 4. Commit messages should describe the patches themselves, since they
+>>>> are what remains visible in the git log, unlike the cover letter.
+>>>>
+>>>> 5. I would call what you describe as "temporarily revoke" is actually "reclaim".
+
+Leon, please see *** below.
+
+>>>
+>>> +1
+>>
+>> I don't follow here, sorry.  Would you please elaborate?
+>>
+>> Currently VFIO uses the priv->revoked flag to track whether
+>> it-the-exporter had previously done dma_buf_invalidate_mappings() on a
+>> buffer and is now causing all .attach requests to fail.  Do you mean
+>> that (even without this series) you want to call that concept
+>> priv->reclaimed instead?
 > 
-> That is a completely broken approach as well since it limits the
-> exported resources to addresses the CPU can reach.
+> That sounds like a permanent revoke. 
 
-Yes, of course it does. The DMA API only works on phy_addr_t. If you
-have a struct p2pdma_provider * then you have a phys_addr_t for it.
+Not quite; the priv->revoked flag tracks temporary periods of
+inaccessibility.  An example is VFIO resetting a function; the BAR
+mappings as seen by the CPU and DMABUFs made from the BARs are all made
+inaccessible before the reset, and made accessible again after the reset.
 
-If the exporter knows it is working with a MMIO mapping on a PCI
-device it gets to acquire a p2pdma_provider and use the helper.
-
-None of this is suposed to solve your "resources the CPU cannot reach"
-problem, that has nothing to do with DMA API or P2P. It is not broken
-just because it doesn't solve every problem.
-
-> Christoph Hellwig is right that drivers should never use that stuff
-> directly, not even through that dma_buf_phys_vec_to_sgt() function.
-
-Hellwig's point was that the subsystem needs a mapping helper that
-goes from the subsystem address representation to the HW
-representation and hides these details from the drivers.
-
-Look at what he built in nvme around biovec.
-
-The dma_buf_phys_vec_to_sgt() is the dmabuf version of the same idea,
-the subystem provides the mapping helper. We can try to do better, but
-better is not making the exporters touch the mapping algorithm.
-
-Ultimately I want to see something in lib/ handle this with a
-non-scatterlist datastructure, but there is a huge gulf between where
-dmabuf is now and it being able to work with a non-scatterlist
-datastructure.
-
-Look, it is easy to complain you don't like how it looks, but this
-stuff is hard there are lots of competing concerns, if you have a
-better idea now is a good time to present it. Maybe if you look
-closely you will appreciate how much work has gone into even getting
-things this far.
-
-> >> It seems to me that a pci-device settable flag "ATS always enabled"
-> >> should be enough to fix both issues?
-> > 
-> > It should be be per-mapping to support the NIC workflow that isn't a
-> > global operation.
+>> Or do you mean that you don't like the words "temporary"/"permanent" and
+>> are looking for another name for a temporarily unavailable buffer?  (If
+>> so, I find "not revoked", "reclaimed", "revoked" much less clear than
+>> not/temp/perm revoked, as such names give no hint as to what to expect.
+>> But I may have misunderstood what you're getting at.)
 > 
-> I just realized what you guys are doing and I'm not sure if the
-> Linux PCI subsystem should support such hacks at all.
+> Yeah it's pretty much the naming I would clarify.
+> 
+> The original idea of notifying the importer that it need to re-create the mapping was resource reclaim.
 
-I don't know how to respond to that. It is spec complaint, it is
-shipping in enormous volumes, of course Linux needs to support the HW
-that exists.
+I feel the (existing) VFIO function reset sequenece is a counterexample,
+as the resource isn't being reclaimed/repurposed but users are "held
+off" for a period of time across the reset.  (It's then the same
+resource that a later access can touch.)
 
-> Basically from the point of view of the TA the NIC has ATS enabled
-> all the time, but has a per request option to use translated
-> addresses directly without previously translating and caching them
-> using ATS, correct?
+> But when you have some IOCTL or sysfs or whatever to disable a DMA-buf permanently I would call that revoke.
 
-Yep. Very few devices in the world can use ATS for every single
-operation. Many have this split operating model. Some even only use
-ATS for DMA flows that are faultable.
+I see where you're coming from now, thanks.
 
-Mostly the OS can't tell what the device is doing and doesn't
-care. The P2P routing is the main issue and we have hacked around it
-in our systems till now. Leon is trying to fix it. Thomas needs it
-fixed too for Xe. So what's the issue here?
+If we were to just call VFIO's "permanently inacessible" state _revoked_
+and "temporarily inaccessible" _reclaimed_, then it doesn't help clarity
+unfortunately.  Those words are ~synonymous and don't convey permanent
+vs momentary.
 
-DMABUF needs to learn how to do interconnect specific behaviors. PCI
-is an interconnect, it has lots and lots of crazy rules. An
-importer/exporter that chooses to use PCI for their DMA should have a
-way to exchange PCI specific information.
+***
 
-So should UALink and all the other zoo of options we have now. It
-cannot be completely generic and meet everyones needs.
+Leon, would you please explain this comment #5?  Were you suggesting
+that (even ignoring this patch!) you want to rename priv->revoked to
+priv->reclaimed?  If so, why?  (For context, this patch's state =
+TEMP_REVOKED is identical to the existing revoked = true.)
 
-Can we focus on that instead of arguing if the PCI craziness should
-exist or not?
+In short:  TEMP_${X} vs PERM_${X} most clearly highlights the
+meaning/behaviour of the current + new state, regardless of whether
+X=REVOKED or X=RECLAIMED.  Although I prefer to use the exisitng
+"revoked" I'm not wed to it, but mixing both "reclaimed" & "revoked"
+makes the distinction (and semantics, expectations of what can happen
+next) much less clear.
 
-> If yes than that is extremely questionable behavior, I'm not sure if
-> that is covered by the PCIe spec.
+> I'm still not 100% sure what a temporary revoke should be. If you have some IOCTL/sysfs/whatever to temporary say to importers "You can't use that resource" then that most likely won't fly.
 
-Spec doesn't say anything about when a device has to translated vs
-untranslated. The ATS flags only say translated is allowed to be used.
+This patch only provides an ioctl action to "make this inacessible
+forever".  There is no direct userspace manipulation to/from the
+temporarily-inacessible state, nor need for that.
 
-> ATS is meant to be an optimization which moves the TLB from the root
-> complex (TA) into the devices at the cost of TLB invalidation
-> complexity. But what you do here is abusing that functionality as
-> far as I can see.
+The only things that lead to a temporary revoke (as a side effect) are
+the preexisting VFIO reset ioctls etc.
 
-ATS is for alot more than that, and there is no abuse here.
+State is an enum, but this isn't a complex FSM, just an extra "sticky"
+state.  And to labour the point, the new temp/perm distinction is only
+about VFIO's internal tracking of why it revoked the buffer using the
+existing mechanisms (meaning, whether it permits un-revoke); it does not
+change the importer.
 
-Jason
+>> From the importer side, there is no change from this patch: they might
+>> observe an invalidate_mappings() and find attach() of a given buffer now
+>> fails, same as before this patch.  This is only about guaranteeing the
+>> impossibility of an importer ever being able to re-attach in future.
+> 
+> That sounds reasonable.
+> 
+> When a resource becomes unavailable you seriously need completely destroy it, re-create it and then import it again into other drivers which want to use it should it ever become available again.
+
+Yep, quite.
+
+Thanks,
+
+
+Matt
+
+PS: I should've rebased (eyeballed master and didn't spot the tiny
+conflict), so no Sashiko review on v6; I want to resolve this for a v7 soon.
+
+> 
+> Regards,
+> Christian.
+> 
+>>
+>>
+>> Thanks,
+>>
+>>
+>> Matt
+>>
+>>
+>> PS:  A hypothetical alternative way of doing what this patch is doing is
+>> instead to have:
+>>
+>>  - existing priv->revoked
+>>  - new 	    priv->revoked_flag_is_immutable
+>>
+>> Then, the ioctl triggers an invalidate_mappings() for a targeted DMABUF,
+>> sets revoked = true, and revoked_flag_is_immutable = true.  The new flag
+>> prevents a future vfio_pci_dma_buf_move(false) from clearing revoked.
+>> For example, a reset doing `move(true); reset; move(false);` can make
+>> all DMABUFs available to attach again, except for those marked
+>> immutably-revoked.  (That is equivalent to this new "permanent" state.)
+>>
+>>
+> 
+
