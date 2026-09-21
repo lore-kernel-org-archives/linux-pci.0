@@ -1,316 +1,309 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA85A47F794;
-	Mon, 21 Sep 2026 16:49:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 841523BB9EB;
+	Mon, 21 Sep 2026 16:55:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790009370; cv=none; b=poFwuFDfqvey4mrHQek7utM7Kot8Vx84mEoNY97vyWc1s5dVehyYlArVedUy6nEqGAw0bUpiFfiMvGrPVlUh5hdkJ9zI1Og68TqXL5eEl+eri1w9Y0Vs80dp5N+uVogo9VOCSlS+ldkyrRvX55qDv6plMAYFBaq2vDtxJkkCDgc=
+	t=1790009757; cv=none; b=B2tTadiCm0124XeL95Hk3VWfJAji3/VorP2W7gxa4LlsKrLsSAZbUAdFm4n1qxrqDCyXMtMesV7Lrr9umCXP53K5L8J1oXJ/i/mL4s+TFqgjXYNNWiXMXETpiFlpCkfQzOlQBtcwoMaXKdcfZB93BXlJu6EtNvxtHUoIFvXVTD8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790009370; c=relaxed/simple;
-	bh=DItT6+jUMo41lHHGp2/QkV1TE00un6jPRSKJmOv+sRo=;
+	s=arc-20240116; t=1790009757; c=relaxed/simple;
+	bh=SQPzN1fDOFqNzpN0tds5Q+wgRCbruZuRXYCGQEpQ8dY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=T097svqVzI6smfxuvslx96M1W76llq3M2yzHbLHQicpiPQ6xKBMWYH4Oqk7f1DZfhwMeE0ZsJMMLnkOqzjtHGFiYs5wJicAfGkd9hW+h6H8yyup72MFe3kq0Yudt1KF3ms7uD6z588XEaEjTsAeeyNZbo/pLsShqn53Qio3r5bk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nArLOPjq; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=srJNo1vgveFtIo25UY0s1ufvCA9OETCaBrhX6BVIODA/RR0hmf/+8wT/u5tZDhsY4zNghq4PJ/fQ9sKP4Sp62qNyrcpmhal9kLb5/mFkkE+SwA3f0kbxOodVHoGylzy0kSdcQ1Z0Sq/eBH17nDpJ6MbwbMNx+MBea8K9fWKFygQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=KGgk5hN4; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nArLOPjq"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BA7831F00893;
-	Mon, 21 Sep 2026 16:49:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790009365;
-	bh=+J3/YHVbBQ5+4l3XP0POplmrrM0EDMUaHXcBAgmqJoE=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=nArLOPjqQ86XZDoP/wqJ8Z5P6jVVew0WFkWDL1xuh0asWfiIldnXTpzfNQBLP6lNr
-	 ymRlxkTbEwAhjH8voxxiU0nlc8aZ3H3rKLQn4xW1skfY939SNEphn8XH/yJk3EIbON
-	 W3slieT9/sw0n8MgiE/Iqv7a1FSce1Zz4WEmIMW3E/hwCUkYztSgV8d/yGDGfAugMc
-	 0XhHtRoYJwyBSwK9+507GKlkjvbORBMVJ7DXdgwjvMlHTmL4v90jARHoNbOJItf4lz
-	 CfbSRNpunpgT3qVLjUV2cQd6vzoZZLrzeIPYGrrm3QliNJRVMFZow/WQ9BFIM023Vt
-	 oka1wK95EpwAg==
-Date: Mon, 21 Sep 2026 18:49:17 +0200
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: claudiu beznea <claudiu.beznea@tuxon.dev>
-Cc: Claudiu Beznea <claudiu.beznea+renesas@tuxon.dev>, 
-	lpieralisi@kernel.org, kwilczynski@kernel.org, robh@kernel.org, bhelgaas@google.com, 
-	p.zabel@pengutronix.de, linux-pci@vger.kernel.org, linux-renesas-soc@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, John Madieu <john.madieu.xa@bp.renesas.com>, 
-	Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
-Subject: Re: [PATCH v3 7/7] PCI: rzg3s-host: Re-enumerate the bus on PCIe
- link-state changes
-Message-ID: <n7cafny3y6rr63tx6rkt5umxl3f4rsxpu2ojze7luudzzr4flb@egj7dru2bnhq>
-References: <20260814141312.2947972-1-claudiu.beznea+renesas@tuxon.dev>
- <20260814141312.2947972-8-claudiu.beznea+renesas@tuxon.dev>
- <a7koqtuhya3psx7mmest3io5h775jxscivumouv64kbu23pssv@xkkqondobxui>
- <9c8fe3e4-1dcc-4663-8e3f-684ec4e09daa@tuxon.dev>
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="KGgk5hN4"
+Received: from localhost (unknown [167.220.233.38])
+	by linux.microsoft.com (Postfix) with ESMTPSA id AE87520B7167;
+	Mon, 21 Sep 2026 09:55:05 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com AE87520B7167
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1790009706;
+	bh=3cNk5cj79jHTROllI+XO8920iIA7Bpi8q9KBRItuhh0=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=KGgk5hN4wPDCL8bKyLkcH12FidK+MT5CDgWxXpSOv/3KC6QWukbzwn7I/1mv/pba6
+	 GLCTGu8BjKV+hhWzR+qsK/TUvRxRGg5yUpJAq2hUDFmqs/kemKArsp2hwzxonjSXGw
+	 pvTQl3cLmYlZsUIrkrun5dKhgueLwT5iFyCdmVp0=
+Date: Tue, 22 Sep 2026 00:55:51 +0800
+From: Yu Zhang <zhangyu1@linux.microsoft.com>
+To: jgg@ziepe.ca, joro@8bytes.org, linux-kernel@vger.kernel.org, 
+	linux-hyperv@vger.kernel.org, iommu@lists.linux.dev, linux-pci@vger.kernel.org, 
+	linux-arch@vger.kernel.org, x86@kernel.org
+Cc: wei.liu@kernel.org, kys@microsoft.com, haiyangz@microsoft.com, 
+	decui@microsoft.com, longli@microsoft.com, will@kernel.org, robin.murphy@arm.com, 
+	bhelgaas@google.com, kwilczynski@kernel.org, lpieralisi@kernel.org, mani@kernel.org, 
+	robh@kernel.org, arnd@arndb.de, mhklinux@outlook.com, 
+	jacob.pan@linux.microsoft.com, tgopinath@linux.microsoft.com, 
+	easwar.hariharan@linux.microsoft.com, mrathor@linux.microsoft.com, baolu.lu@linux.intel.com, 
+	suravee.suthikulpanit@amd.com, vasant.hegde@amd.com
+Subject: Re: [PATCH v5 0/5] Hyper-V: Add para-virtualized IOMMU support for
+ Linux guests
+Message-ID: <j3jyw3dlgvlooerixwybkqj3wjc6irqy2np55adqto7vhv4qad@tb5gvf5irvn3>
+References: <20260904075512.174154-1-zhangyu1@linux.microsoft.com>
+ <5naiz3yuo5xo6mjyakckym3mrwzwr67cvvglkaqas7ev4lx6qf@muijinxpf3fa>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <9c8fe3e4-1dcc-4663-8e3f-684ec4e09daa@tuxon.dev>
+In-Reply-To: <5naiz3yuo5xo6mjyakckym3mrwzwr67cvvglkaqas7ev4lx6qf@muijinxpf3fa>
 
-On Fri, Sep 11, 2026 at 03:14:25PM +0300, claudiu beznea wrote:
-> Hi, Mani,
+On Mon, Sep 07, 2026 at 04:48:23PM +0800, Yu Zhang wrote:
+
+Hi Joerg, Jason,
+
+A gentle ping on this series. Could you let me know whether it is ready to be
+picked up, or whether any further changes or acks are needed? Thanks a lot!
+
+B.R.
+Yu
+
 > 
-> On 9/10/26 17:38, Manivannan Sadhasivam wrote:
-> > On Fri, Aug 14, 2026 at 05:13:12PM +0300, Claudiu Beznea wrote:
-> > > From: John Madieu <john.madieu.xa@bp.renesas.com>
-> > > 
-> > > The RZ/G3{E, S}, RZ/V2{H(P), N} PCIe controllers does not expose the
-> > > standard PCIe Slot Capability registers, so the generic pciehp driver
-> > > cannot be used. The only link-state signal the hardware provides is the
-> > > DL_UpDown bit in the PEIS0 event status register, which is raised on every
-> > > Data Link layer up/down transition.
-> > > 
-> > > Enable DL_UpDown in PEIE0 and hook up an interrupt handler so the driver
-> > > can react to link-state changes: a device that trains after boot gets
-> > > enumerated, and a device that disappears on link loss is removed. This
-> > > provides hotplug-like behavior without the PCI hotplug core, which is
-> > > unavailable for the reason above.
-> > > 
-> > > On a DL_UpDown event the handler acks the W1C status bit and schedules a
-> > > worker that inspects PCSTAT1.DL_DOWN_STS:
-> > > 
-> > >    - link up: re-run max link speed negotiation, wait for the link to
-> > >      settle and pci_rescan_bus() the root bus;
-> > >    - link down: reset the root port, walk the bus in reverse and
-> > >      pci_stop_and_remove_bus_device() each child.
-> > > 
-> > > Both paths take pci_lock_rescan_remove() to serialize against the PCI
-> > > core.
-> > > 
-> > > While enumeration succeeds without resetting the root port, performing
-> > > reads and writes to an NVMe endpoint after a link down/link up cycle
-> > > results in failures on some devices. Address this by implementing
-> > > pci_host_bridge::reset_root_port() for the RZ/G3S PCIe driver.
-> > > 
-> > > The implementation of pci_host_bridge::reset_root_port() masks all
-> > > enabled interrupts and synchronizes them before resetting the controller
-> > > to prevent asynchronous events from interfering with the reset operation.
-> > > 
-> > > After the controller is reset, all previously masked interrupts are
-> > > restored.
-> > > 
-> > > Since rzg3s_pcie_host_stop() or rzg3s_pcie_host_start() can fail
-> > > during a root port reset, introduce struct rzg3s_pcie_host::state to
-> > > track the host controller state. The interrupt handlers and register
-> > > access paths consult this state to avoid accessing the controller after a
-> > > failed reset. This was implemented to be able to re-use the
-> > > rzg3s_pcie_host_stop()/rzg3s_pcie_host_start() as is (since they call
-> > > functions which can sleep).
-> > > 
-> > > The introduced states are START, STOP, PROCESS, and PORT_RESET. The initial
-> > > state is STOP. After the controller is initialized, the state is switched
-> > > to START. Any API exposed through struct pci_ops switches the controller
-> > > to the PROCESS state, as do the interrupt handlers.
-> > > 
-> > > rzg3s_pcie_host_reset_root_port() switches the state to PORT_RESET to
-> > > prevent any controller access while the Root Port reset is in progress.
-> > > 
-> > > A controller left in a broken state (STOP) after a failed root port reset
-> > > can recover after a system suspend/resume cycle, since
-> > > rzg3s_pcie_host_start() is invoked again during resume.
-> > > 
-> > > Link events are processed only after the controller has been fully
-> > > initialized.
-> > > 
-> > > While at it, make probe tolerant of an absent device. Previously, if the
-> > > link failed to come up during rzg3s_pcie_host_init(), probe tore the
-> > > controller back down and failed. Distinguish this case with -ENODEV,
-> > > leave the controller and refclk running, and let the link-up path
-> > > enumerate the device once it appears.
-> > > 
+> Hi Jason, Joerg,
+>                                                                                                                                                         
+> Do you have any further comments on this version, particularly
+> any remaining issues that would warrant a respin before the series
+> can be considered for inclusion? Thanks a lot! 
+> 
+> B.R.
+> Yu
+> 
+> > This patch series introduces a para-virtualized IOMMU driver for
+> > Linux guests running on Microsoft Hyper-V. The driver enables two
+> > primary use cases:
+> >   1) In-kernel DMA protection for devices assigned to the guest.
+> >   2) Device assignment to guest user space (e.g., via VFIO).
 > > 
-> > Please split the DL_UpDown addition and reset_root_port() into separate patches.
-> 
-> If splitting, it would mean the DL_UpDown patch will be broken (at least for
-> RZ/G3S SoC). Would that be OK with you?
-> 
-
-It will not be broken, but just that the RP won't be reset through platform
-specific reset hook. So it is OK to have the successive commit add that
-functionality, provided it is mentioned in the commit message.
-
+> > The driver implements the following core functionality:
+> > *   Hypercall-based Enumeration
+> >     Unlike traditional ACPI-based discovery (e.g., DMAR/IVRS),
+> >     this driver enumerates the Hyper-V IOMMU capabilities directly
+> >     via hypercalls. This approach allows the guest to discover
+> >     IOMMU presence and features without requiring specific virtual
+> >     firmware extensions or modifications.
 > > 
-> > > Signed-off-by: John Madieu <john.madieu.xa@bp.renesas.com>
-> > > Co-developed-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
-> > > Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
-> > > ---
-> > > 
-> > > Changes in v3:
-> > > - added RZG3S_PCI_PEIE0_DL_UPDOWN
-> > > - re-worked the support by implemeting
-> > >    struct pci_host_bridge::reset_root_port()
-> > > - introduced the struct rzg3s_pcie_host::state to:
-> > > -- avoid touching the controller while a reset root port is in progress
-> > > -- and avoid touching the controller in case a reset root port failed
-> > > -- and to be able to re-use the already existing code in the reset
-> > >     root port function
-> > > -- and added CLASS() constructs helpers for it to keep the state handling
-> > >     code simpler
-> > > - updated the patch description to reflect the updates
-> > > 
-> > >   drivers/pci/controller/pcie-rzg3s-host.c | 375 +++++++++++++++++++++--
-> > >   1 file changed, 356 insertions(+), 19 deletions(-)
-> > > 
-> > > diff --git a/drivers/pci/controller/pcie-rzg3s-host.c b/drivers/pci/controller/pcie-rzg3s-host.c
-> > > index 4765ac1befba..b3531468ef38 100644
-> > > --- a/drivers/pci/controller/pcie-rzg3s-host.c
-> > > +++ b/drivers/pci/controller/pcie-rzg3s-host.c
-> > > @@ -86,6 +86,7 @@
-> > >   #define RZG3S_PCI_MSGRCVIS_MRI			BIT(24)
-> > >   #define RZG3S_PCI_PEIE0				0x200
-> > > +#define RZG3S_PCI_PEIE0_DL_UPDOWN		BIT(9)
-> > >   #define RZG3S_PCI_PEIS0				0x204
-> > >   #define RZG3S_PCI_PEIS0_RX_DLLP_PM_ENTER	BIT(12)
-> > > @@ -310,6 +311,24 @@ struct rzg3s_pcie_port {
-> > >   	u32 device_id;
-> > >   };
-> > > +/**
-> > > + * enum rzg3s_pcie_host_state - RZ/G3S PCIe Host state
-> > > + * @RZG3S_PCIE_HOST_STATE_STOP: Host is stopped (initial state, reached from
-> > > + *                              PORT_RESET, START)
-> > > + * @RZG3S_PCIE_HOST_STATE_START: Host is started (reached from STOP, PROCESS,
-> > > + *                               PORT_RESET)
-> > > + * @RZG3S_PCIE_HOST_STATE_PROCESS: Host is started and is processing requests
-> > > + *                                 (reached from START)
-> > > + * @RZG3S_PCIE_HOST_STATE_PORT_RESET: Host root port is resetting (reached from
-> > > + *                                    START)
-> > > + */
-> > > +enum rzg3s_pcie_host_state {
-> > > +	RZG3S_PCIE_HOST_STATE_STOP,
-> > > +	RZG3S_PCIE_HOST_STATE_START,
-> > > +	RZG3S_PCIE_HOST_STATE_PORT_RESET,
-> > > +	RZG3S_PCIE_HOST_STATE_PROCESS,
-> > > +};
-> > > +
-> > >   /**
-> > >    * struct rzg3s_pcie_host - RZ/G3S PCIe data structure
-> > >    * @axi: base address for AXI registers
-> > > @@ -323,6 +342,8 @@ struct rzg3s_pcie_port {
-> > >    * @msi: MSI data structure
-> > >    * @port: PCIe Root Port
-> > >    * @hw_lock: lock for access to the HW resources
-> > > + * @state: PCIe controller state
-> > > + * @event_irq: PCIe event interrupt for DL_UpDown detection
-> > >    * @intx_irqs: INTx interrupts
-> > >    * @max_link_speed: maximum supported link speed
-> > >    * @controller_id: PCIe controller identifier, used for System Controller access
-> > > @@ -340,6 +361,8 @@ struct rzg3s_pcie_host {
-> > >   	struct rzg3s_pcie_msi msi;
-> > >   	struct rzg3s_pcie_port port;
-> > >   	raw_spinlock_t hw_lock;
-> > > +	atomic_t state;
-> > > +	int event_irq;
-> > >   	int intx_irqs[PCI_NUM_INTX];
-> > >   	int max_link_speed;
-> > >   	enum rzg3s_pcie_controller_id controller_id;
-> > > @@ -348,6 +371,61 @@ struct rzg3s_pcie_host {
-> > >   #define rzg3s_msi_to_host(_msi)	container_of(_msi, struct rzg3s_pcie_host, msi)
-> > > +/**
-> > > + * struct rzg3s_pcie_host_atomic_state - RZ/G3S PCIe state data structure
-> > > + * @state: Atomic state variable to operate on. Should point to
-> > > + *         struct rzg3s_pcie_host::state.
-> > > + * @expect: Expected host state. The host state is not changed if the
-> > > + *          current host state differs from the expected state.
-> > > + * @saved: Saved host state. When the host state is changed, the previous
-> > > + *         state is saved in this variable. This is necessary to restore
-> > > + *         the previous state after the protected section is executed.
-> > > + *
-> > > + * This structure is necessary for state setting and restoration using
-> > > + * CLASS() constructs.
-> > > + */
-> > > +struct rzg3s_pcie_host_atomic_state {
-> > > +	atomic_t *state;
-> > > +	enum rzg3s_pcie_host_state expect;
-> > > +	enum rzg3s_pcie_host_state saved;
-> > > +};
-> > > +
-> > > +static struct rzg3s_pcie_host_atomic_state
-> > > +rzg3s_pcie_host_atomic_state_save(atomic_t *state, int expect, int newval)
-> > > +{
-> > > +	return (struct rzg3s_pcie_host_atomic_state){
-> > > +		.state = state,
-> > > +		.expect = expect,
-> > > +		.saved = atomic_cmpxchg(state, expect, newval),
-> > > +	};
-> > > +}
-> > > +
-> > > +static void
-> > > +rzg3s_pcie_host_atomic_state_restore(struct rzg3s_pcie_host_atomic_state state)
-> > > +{
-> > > +	if (state.saved == state.expect)
-> > > +		atomic_xchg(state.state, state.expect);
-> > > +}
-> > > +
-> > > +DEFINE_CLASS(rzg3s_pcie_host_state_lock,
-> > > +	     struct rzg3s_pcie_host_atomic_state,
-> > > +	     rzg3s_pcie_host_atomic_state_restore(_T),
-> > > +	     rzg3s_pcie_host_atomic_state_save(state, expect, newval),
-> > > +	     atomic_t *state, int expect, int newval)
-> > > +
-> > > +/* Use it to change the state w/o the need to restore it on function exit. */
-> > > +#define RZG3S_PCIE_HOST_STATE_CHANGE(_state, _from, _to) \
-> > > +	CLASS(rzg3s_pcie_host_state_lock, _lock) \
-> > > +	      (_state, RZG3S_PCIE_HOST_STATE_##_from, \
-> > > +		       RZG3S_PCIE_HOST_STATE_##_to) \
-> > > +
-> > > +/*
-> > > + * Use it to check if the state change failed. _from is the initial state.
-> > > + * Use it in conjunction with RZG3S_PCIE_HOST_STATE_CHANGE().
-> > > + */
-> > > +#define RZG3S_PCIE_HOST_STATE_CHANGE_FAILED(_from) \
-> > > +	(_lock.saved != RZG3S_PCIE_HOST_STATE_##_from)
-> > > +
+> > *   Domain Management
+> >     The driver manages IOMMU domains through a new set of Hyper-V
+> >     hypercall interfaces, handling domain allocation and attachment
+> >     for endpoint devices.
 > > 
-> > I don't really see a need for all these state management. None of the other
-> > controller drivers are doing and the serialization provided by the PCI core
-> > using pci_lock should be enough. If you find any issue or race, please share it
-> > here.
+> > *   Nested Translation Support
+> >     This implementation leverages guest-managed stage-1 I/O page
+> >     tables nested with host stage-2 translations. It is built
+> >     upon the consolidated IOMMU page table framework (IOMMU_PT).
+> >     This design eliminates the need for emulating map operations.
+> >     Both Intel VT-d and AMD IOMMU platforms are supported.
+> > 
+> > *   IOTLB Invalidation
+> >     IOTLB invalidation requests are marshaled and issued to the
+> >     hypervisor through the same hypercall mechanism. Both domain-
+> >     selective and page-selective flushes are supported.
+> > 
+> > Implementation Notes:
+> > *   Platform Support
+> >     The current implementation targets x86 platforms with Intel
+> >     VT-d and AMD IOMMU hardware.
+> > 
+> > *   MSI Region Handling
+> >     The standard x86 MSI interrupt range
+> >     (0xfee00000 - 0xfeefffff) is reserved from normal IOVA mappings.
+> >     Future updates may allow this configuration to be queried via
+> >     hypercalls if new hardware platforms are to be supported.
+> > 
+> > *   Reserved Regions (RMRR)
+> >     There is currently no requirement to support assigned devices with
+> >     ACPI RMRR limitations. Consequently, this patch series does not
+> >     specify or query reserved memory regions.
+> > 
+> > *   Guest Hibernation
+> >     Guest hibernation and resume are not supported by this initial
+> >     implementation. The current pvIOMMU interface does not define how
+> >     Hyper-V device-domain objects and device attachments are restored.
+> > 
+> > Testing:
+> > Validated with the following configurations:
+> > - NVMe devices assigned to the guest on AMD platforms, tested
+> >   with fio.
+> > - Intel DSA devices assigned to the guest, tested with dmatest.
+> > - dma_map_benchmark for DMA mapping performance evaluation.
+> > 
+> > Changelog:
+> > 
+> > v4[1] -> v5:
+> > - Added Michael Kelley's Reviewed-by tags for patch 1/2/3/4.
+> > 
+> > - hv: logical device ID registry:
+> >   - Used four-digit hexadecimal values to print PCI domain numbers.
+> >   - Included the PCI domain number in the unregister failure warning.
+> > 
+> > - iommu/hyperv: para-virtualized IOMMU:
+> >   - Removed the unused per-device endpoint structure, allocation,
+> >     private pointer, and release_device() callback.
+> >   - Clarified the logical device ID lookup failure message.
+> >   - Read the ATS capability from the IOMMU associated with the domain
+> >     instead of the global IOMMU pointer.
+> > 
+> > - iommu/hyperv: page-selective IOTLB flush:
+> >   - Unified normal and full-range descriptor construction around the
+> >     aligned range start.
+> >   - Used max() to express the minimum Hyper-V page granularity.
+> >   - Reported Hyper-V status values in warnings when the flush fails.
+> > 
+> > v3[2] -> v4:
+> > - Added Jacob Pan's Reviewed-by tag for patch 1/4/5.
+> > 
+> > - hyperv: hypercall interfaces:
+> >   - Added the authoritative Hyper-V type names to imported definitions.
+> >   - Added HV_STATUS_DEVICE_ALREADY_IN_DOMAIN and mapped it to -EEXIST.
+> > 
+> > - hv: logical device ID registry:
+> >   - Made the registry independent of CONFIG_HYPERV_PVIOMMU.
+> >   - Renamed the APIs to hv_pci_xxx_dev_id(),
+> >   - Reworked initialization and error cleanup to propagate failures.
+> >   - Return -EEXIST with a warning for duplicate registration.
+> > 
+> > - iommu/x86: architectural MSI reserved region:
+> >   - Replaced the exported range constants with
+> >     iommu_alloc_resv_x86_msi_region().
+> > 
+> > - iommu/hyperv: para-virtualized IOMMU:
+> >   - Accepted HV_STATUS_DEVICE_ALREADY_IN_DOMAIN as a successful attach,
+> >     and removed the blocking-domain-specific duplicate check.
+> >   - Removed the redundant ATS disable from release_device(); ATS is
+> >     disabled when attaching the release domain.
+> > 
+> > - iommu/hyperv: page-selective IOTLB flush:
+> >   - Removed the redundant include of linux/hyperv.h.
+> >   - Documented that the list flush also invalidates non-leaf page-walk
+> >     caches before detached page-table pages are freed.
+> > 
+> > v2[3] -> v3:
+> > - Added a separate patch defining the common x86 architectural MSI
+> >   reserved range and converted the Intel, AMD, and Hyper-V IOMMU
+> >   drivers to use it.
+> > 
+> > - hyperv: hypercall interfaces:
+> >   - Used BIT_ULL() for 64-bit capability flags.
+> >   - Matched the create-device-domain input layout to the 32-byte
+> >     Hyper-V ABI.
+> >   - Corrected the page-selective flush range layout to 6/6/52 bits.
+> > 
+> > - hv: logical device ID registry:
+> >   - Replaced the linear list with an rhashtable for the sparse PCI
+> >     domain number mapping.
+> >   - Used RCU-protected lookup and deferred freeing on removal.
+> >   - Simplified the registration and cleanup paths.
+> > 
+> > - iommu/hyperv: para-virtualized IOMMU:
+> >   - Renamed the guest driver source to hv-iommu-guest.c.
+> >   - Enabled ATS only after a device-domain attachment succeeds, and
+> >     disabled ATS before attaching the blocking domain.
+> >   - Removed the obsolete deferred-flush capability, unused geometry,
+> >     and redundant device-private-data clearing.
+> >   - Made the Hyper-V domain settings explicit at each caller instead
+> >     of deriving them from the Linux domain type.
+> >   - Added transactional create/configure domain handling with rollback.
+> >   - Required only the base page size and masked the domain page-size
+> >     bitmap with the Hyper-V-supported bitmap.
+> >   - Silenced detection for unsupported hosts while retaining errors
+> >     for actual hypercall and capability failures.
+> >   - Clarified Kconfig support for assigned PCI devices and documented
+> >     the lack of guest hibernation/resume support.
+> > 
+> > - iommu/hyperv: page-selective IOTLB flush:
+> >   - Removed the inclusive-end overflow and kept the range calculation
+> >     in byte addresses until the final page conversion.
+> >   - Cleared both the fixed hypercall header and the range entry.
+> >   - Warned on selective-flush failure before falling back to a
+> >     full-domain flush.
+> > 
+> > v1[4] -> v2:
+> > - Dropped the "move to subdirectory" patch; the directory now exists
+> >   upstream.
+> > 
+> > - hv: logical device ID registry:
+> >   - Moved the registry to hv_common.c so it can be shared, and derived
+> >     the prefix via a shared helper instead of caching it in pci-hyperv's
+> >     private struct.
+> >   - Moved the lookup out of the irq-disabled region (PREEMPT_RT).
+> > 
+> > - iommu/hyperv: para-virtualized IOMMU:
+> >   - Removed the unused detach_dev op.
+> >   - Rejected a hypervisor not advertising x86 page sizes instead of
+> >     masking and warning.
+> >   - Statically initialized the identity and blocking domains.
+> >   - Gave the blocking domain its own attach op, which returns the hypercall
+> >     status and WARNs on failure.
+> > 
+> > - iommu/hyperv: page-selective IOTLB flush:
+> >   - Used a single descriptor covering a slightly larger power-of-two
+> >     range, instead of splitting the range into multiple descriptors.
+> >   - Fixed the inclusive-end corner case in the flush range calculation.
+> > 
+> > RFC v1[5] -> v1[4]:
+> > - Scoped platform support to x86 only (Intel VT-d and AMD IOMMU);
+> >   initialization now uses x86_init.iommu.iommu_init
+> > - Added page-selective IOTLB flush support
+> > - Disable device ATS in hv_iommu_release_device()
+> > - Addressed review comments from Michael Kelley:
+> >   - Reversed dependency: pvIOMMU exports registration API for
+> >     pci-hyperv to call, instead of pci-hyperv exporting
+> >     hv_build_logical_dev_id()
+> >   - Dropped separate output page allocation patch; hypercall input
+> >     and output now share the same per-CPU page
+> >   - Cleaned up Kconfig (removed PCI_HYPERV dependency, unnecessary
+> >     selects)
+> >   - Removed dev_list, per-domain spinlock, and syscore_ops
+> >   - Removed forward declarations by reordering functions
+> >   - Fixed typos, cleaned up Kconfig selects, improved pr_info
+> >     messages, etc.
+> > 
+> > [1] v4:
+> > https://lore.kernel.org/linux-hyperv/20260821132654.211730-1-zhangyu1@linux.microsoft.com/
+> > [2] v3:
+> > https://lore.kernel.org/linux-hyperv/20260811155022.108148-1-zhangyu1@linux.microsoft.com/
+> > [3] v2:
+> > https://lore.kernel.org/linux-hyperv/20260702160518.311234-1-zhangyu1@linux.microsoft.com/
+> > [4] v1:
+> > https://lore.kernel.org/linux-hyperv/20260511162408.1180069-1-zhangyu1@linux.microsoft.com/
+> > [5] RFC v1:
+> > https://lore.kernel.org/linux-hyperv/20251209051128.76913-1-zhangyu1@linux.microsoft.com/
+> > 
+> > Wei Liu (1):
+> >   hyperv: Introduce new hypercall interfaces used by Hyper-V guest IOMMU
+> > 
+> > Yu Zhang (4):
+> >   Drivers: hv: Add logical device ID registry for vPCI devices
+> >   iommu/x86: Add architectural MSI reserved region helper
+> >   iommu/hyperv: Add para-virtualized IOMMU support for Hyper-V guest
+> >   iommu/hyperv: Add page-selective IOTLB flush support
+> > 
+> >  arch/x86/hyperv/hv_init.c             |   4 +
+> >  arch/x86/include/asm/iommu.h          |  14 +
+> >  arch/x86/include/asm/mshyperv.h       |   4 +
+> >  drivers/hv/hv_common.c                | 115 +++++
+> >  drivers/iommu/Kconfig                 |   1 +
+> >  drivers/iommu/amd/iommu.c             |   6 +-
+> >  drivers/iommu/hyperv/Kconfig          |  16 +
+> >  drivers/iommu/hyperv/Makefile         |   1 +
+> >  drivers/iommu/hyperv/hv-iommu-guest.c | 679 ++++++++++++++++++++++++++
+> >  drivers/iommu/hyperv/iommu.h          |  44 ++
+> >  drivers/iommu/intel/iommu.c           |   6 +-
+> >  drivers/pci/controller/pci-hyperv.c   |  21 +-
+> >  include/asm-generic/mshyperv.h        |   4 +
+> >  include/hyperv/hvgdk_mini.h           |  10 +
+> >  include/hyperv/hvhdk_mini.h           | 155 ++++++
+> >  include/linux/hyperv.h                |   8 +
+> >  16 files changed, 1073 insertions(+), 15 deletions(-)
+> >  create mode 100644 drivers/iommu/hyperv/Kconfig
+> >  create mode 100644 drivers/iommu/hyperv/hv-iommu-guest.c
+> >  create mode 100644 drivers/iommu/hyperv/iommu.h
+> > 
+> > -- 
+> > 2.52.0
+> > 
 > 
-> The problems I see are the following:
-> 
-> 1/ In theory, the rzg3s_pcie_host_start() in .reset_root_port() can fail. If
->    that happens the controller is left with the clocks and resets disabled.
->    Accessing  it later in this state may lead to sync aborts, and the system
->    being fully blocked. This is how the HW behaves. Re-enabling clocks and
->    resets in this situation may lead to unbalanced  reference counters for them.
-> 
-
-Once reset_root_port() fails, the controller is literally dead and the error is
-propagated to the PCI core. So who is going to access it later?
-
-> 2/ In theory, struct pci_ops::{read, write} ops could be called while the reset
->    is in progress, if I'm not wrong. That can be avoided by using a common spin
->    lock but we can't use it in .reset_root_port() since this calls APIs
->    that could sleep (e.g. clk_prepare_enable()/clk_disable_unprepare())
-> 
-
-AFAICS, 'block_cfg_access' will be set for the entire duration of the
-reset_root_port() invocation and it will prevent config space accessors to race
-with the reset.
-
-> 3/ Since at the moment the .suspend() is called the IRQs are enabled, the link
->    event and the .suspend() can race. This could also be avoided by using
->    a spin lock but, again, there are APIs on .reset_root_port() that can sleep.
-> 
-
-suspend/resume callbacks are only invoked in the no_irq phase.
-
-> 4/ To keep sane the reference counted resources, handled in
->    rzg3s_pcie_host_stop()/rzg3s_pcie_host_start(), the state track would be
->    needed, for .reset_root_port() failure case and racing, since these functions
->    are also called in suspend/resume
-> 
-
-You can solve it using a simple bool flag.
-
-So I still do not see a real need for these complex state management.
-
-- Mani
-
--- 
-மணிவண்ணன் சதாசிவம்
