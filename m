@@ -1,91 +1,109 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7D55340400;
-	Mon, 21 Sep 2026 04:52:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF3122F7F0A;
+	Mon, 21 Sep 2026 05:05:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789966332; cv=none; b=DY285WHHovB5fYimJJdpbcnt/67EnLtXxLG7ELiSdikRXUMwNMpx6iLKoOrAeqiedPPg06vkvu/dTAcVfyJtOPW2B3szCW83Dq7Rk1uTSlv8TDw3AcePm7F0Kgi3yZrPdQy4/Zw4YONN6vcfIgtESAxNsexI5NB/icRYGECzFmk=
+	t=1789967107; cv=none; b=DdzyTQGw/GuxGhV4HdAlILlYZU4O0/o7b4TDj6uopRtIQlcfr7jP5KyvKikeBgkytKeteo0M+sprGdkIZBx8vpHRHSIkqaWGYuZDgAI+Mwaa9jLDG7np/ItI7u9i47wOS9Qd+POoqSLdElgxIw93oVwkLnz655mMjyXZWb01Vfw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789966332; c=relaxed/simple;
-	bh=bTqmrvpUXlA1mQVCiLQ2/VKxw52s1dgUdWL4gFNXhXk=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=P8dRMYV23iUlE+m70lLOhYfTdLyrTo9lQpASy2DeC3VKlwymrr5ki/pSxRCN8TKggXAVMPiiKKUJityOmR6psUfbX32QEKiIlkGE1jUNF4pdYcmftjlvIm8ktDnzdQJBw2H4uQhC4mU443VmbW2vNT6gnyyp91p4oWo1mzmCwTo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=F+COzuW7; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789967107; c=relaxed/simple;
+	bh=0YcJp1VTnAiIRfV0D+SZkL1YrSbTHsE6VVnIz7y1yWA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=XzqEo9WugoHtX9JTu/5h2Y7De3fp+/fYItePq3e/ral/HxLpk5u9ToTLKOvUQDKnTAz2bAzgIkazNTTPW+riOyOJv3I2zllpRqPyE2LnhU4/Vl7qbNrIWlc145Fg/09Q+8vqvT/p4GYjgljHGdKadzfAppWUkz0Dr+WsuiwYcBM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=dNW9/ENk; arc=none smtp.client-ip=192.198.163.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="F+COzuW7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6ADA61F000FF;
-	Mon, 21 Sep 2026 04:52:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789966330;
-	bh=MVet7qYLYYdgVfZXBN8sKyK1xnl2RfzVXflZkC/ZMYA=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=F+COzuW7/pACggwXYD5vef5yxInElwke2g5sdSnQVO+NknSy7RyK3/+CRZCV4VwEy
-	 5d4FduQKxn32lrhko804uUa3dRF0yl5qyVgvIpmytzKkKZAvJ1o3+8S1Y3x4/W7ssM
-	 elFGsxyvtL9sWmliVhOodjUfhQYCiZVnAkW4Nz7CIC3weke8FuSNUbwP4ghLoRnAKq
-	 OSziOK3ezK6tdUKiERfpz+Qk4jzvv6KP7o6XQBKdWYEjqFKgrpD+//db6CPHGu0ujp
-	 jA0VA5TWrk78R53PvghofnOruuNZ7v1wllhePj88XcXMtC1ctonkid2FEICjUmtfh4
-	 uuPfgj/ZwkAKQ==
-Message-ID: <15cebf13-1e28-40e1-9113-19205ee8d604@kernel.org>
-Date: Sun, 20 Sep 2026 23:52:08 -0500
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="dNW9/ENk"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1789967106; x=1821503106;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:content-transfer-encoding:in-reply-to;
+  bh=0YcJp1VTnAiIRfV0D+SZkL1YrSbTHsE6VVnIz7y1yWA=;
+  b=dNW9/ENkQJ1ZiJlGE5w6vzknRgfpdllT7LeV0tWAsFYIW+Q6ObCoawxk
+   bqZmFNFcOvliNDPKPuJ9MHdWekX1ONdEaVZzTFiO06ZhShLxD1J28OEE4
+   4S5CVfIDIJQ7xgOTpQO3a6ZG4qJTHOtVdT0iPDAIsVVIUAJ6bRt1PQLW/
+   EXWI55oCIGWLm8/tdWqKzt0zRZRHD6DrpwWpmjK5ZTz8KnB4Eor3q40VG
+   MB0U5uP0gEGMjHEaElmX9mbcj2znh98hibpqf1taRIrSAiCOe4slfGXMc
+   reJQaCOKKWYsBBPaH39WwWvtXJ4w8uPKJn1cJPK/UHSfR5QlojyL1ARqq
+   w==;
+X-CSE-ConnectionGUID: I0EXkKXmTRmvJzYa6SDvIw==
+X-CSE-MsgGUID: pWD2rXw8R/WgvCqMT/UE4g==
+X-IronPort-AV: E=McAfee;i="6800,10657,11911"; a="78025452"
+X-IronPort-AV: E=Sophos;i="6.27,114,1787036400"; 
+   d="scan'208";a="78025452"
+Received: from fmviesa007.fm.intel.com ([10.60.135.147])
+  by fmvoesa110.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Sep 2026 22:04:59 -0700
+X-CSE-ConnectionGUID: 41YesqgDTiSuvi8H+G7Vbw==
+X-CSE-MsgGUID: J3kSkX22QEOlL1wsdXekSA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,114,1787036400"; 
+   d="scan'208";a="271961239"
+Received: from black.igk.intel.com ([10.91.253.5])
+  by fmviesa007.fm.intel.com with ESMTP; 20 Sep 2026 22:04:56 -0700
+Received: by black.igk.intel.com (Postfix, from userid 1001)
+	id 6233B99; Mon, 21 Sep 2026 07:04:50 +0200 (CEST)
+Date: Mon, 21 Sep 2026 07:04:50 +0200
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Freeman Z <SHD-ISAC@outlook.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"westeri@kernel.org" <westeri@kernel.org>,
+	"andreas.noever@gmail.com" <andreas.noever@gmail.com>,
+	"YehezkelShB@gmail.com" <yehezkelshb@gmail.com>,
+	"rafael@kernel.org" <rafael@kernel.org>,
+	"linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
+	Sanath S <Sanath.S@amd.com>,
+	Basavaraj Natikar <Basavaraj.Natikar@amd.com>,
+	Mario Limonciello <mario.limonciello@amd.com>
+Subject: Re: [BUG] PCI/USB4: AMD Phoenix 1022:14ef runtime suspend prevents
+ JHL9480 downstream enumeration
+Message-ID: <20260921050450.GM106095@black.igk.intel.com>
+References: <TYCPR01MB1092795BE7AB51121BBAB292496862@TYCPR01MB10927.jpnprd01.prod.outlook.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 0/2] Fix for storage corruption w/ AMD IOMMU on 64-bit
- addressing
-To: Mario Limonciello <mario.limonciello@amd.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Damien Le Moal <dlemoal@kernel.org>,
- Niklas Cassel <cassel@kernel.org>
-Cc: Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>,
- Borislav Petkov <bp@alien8.de>, Dave Hansen <dave.hansen@linux.intel.com>,
- "maintainer:X86 ARCHITECTURE (32-BIT AND 64-BIT)" <x86@kernel.org>,
- "H . Peter Anvin" <hpa@zytor.com>,
- "open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>,
- "open list:X86 ARCHITECTURE (32-BIT AND 64-BIT)"
- <linux-kernel@vger.kernel.org>,
- "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)"
- <linux-ide@vger.kernel.org>
-References: <20260908190600.226485-1-mario.limonciello@amd.com>
-Content-Language: en-US
-From: Mario Limonciello <superm1@kernel.org>
-In-Reply-To: <20260908190600.226485-1-mario.limonciello@amd.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <TYCPR01MB1092795BE7AB51121BBAB292496862@TYCPR01MB10927.jpnprd01.prod.outlook.com>
 
-On 9/8/26 2:05 PM, Mario Limonciello wrote:
-> An issue has been reported by a number of people that corruption
-> was occurring on storage for desktop systems.  It's notably reported
-> on SATA, but the same issue also appears on NVME.
-> 
-> At a glance it looks like an IOMMU issue as turning off the IOMMU helps
-> the issue, but it's actually a problem that occurs specifically with any
-> IOVA addressed >58 bits.
-> 
-> This is because the BIOS on these systems is enabling a feature of the
-> root port called 'enhanced atomics' which repurposes those upper 5 bits
-> of address space.  That feature should only be enabled by the BIOS when
-> the partner device supports it, but it's instead needlessly enabled on a
-> number of root ports.
-> 
-> As some of these systems probably won't receive BIOS updates and there is
-> active reports of data corruption root caused to this add a quirk to
-> disable it on affected models, and also remove the quirk that was
-> introduced to work around this issue in drivers/ata.
-> 
-> v2:
->   *  Added resume fixups for the affected AMD PCIe ports
-> 
-> Mario Limonciello (2):
->    x86/PCI: Disable enhanced atomics on some AMD PCIe ports
->    Revert "ata: ahci: force 32-bit DMA for JMicron JMB582/JMB585"
-> 
->   arch/x86/pci/fixup.c | 99 ++++++++++++++++++++++++++++++++++++++++++++
->   drivers/ata/ahci.c   | 18 --------
->   2 files changed, 99 insertions(+), 18 deletions(-)
-> 
+Hi,
 
-Gentle ping on this series.
+Adding AMD folks in case this is known issue.
+
+On Sat, Sep 19, 2026 at 12:39:37PM +0000, Freeman Z wrote:
+> Hello,
+> 
+> I am seeing a reproducible USB4/PCIe runtime-PM problem on an ASUS ROG
+> Flow X13 GV302XV (Ryzen 9 7940HS / Phoenix) with a Kensington SD5000T5
+> EQ Thunderbolt 5 dock connected to the laptop's USB4 host port.
+> 
+> The failure is reproducible with the official Arch Linux Live ISO using
+> Arch's stock `linux` kernel:
+> 
+>     7.2.2-arch1-1
+> 
+> I have not yet tested a self-built kernel.org mainline/vanilla kernel.
+> I can test patches, or collect additional traces if requested.
+
+Can you provide full dmesg with "thunderbolt.dyndbg=+p" in the kernel
+command line?
+
+With the below steps (following your description):
+
+0. Drop all non-standard command line options except the above.
+1. Boot the system up, nothing connected.
+2. Once up let the TB and the related PCIe root ports enter D3cold (don't
+   run lspci it will wake them up but you can look at the runtime status that
+   they are all suspended).
+3. Plug in the dock.
+
+We should see in the dmesg the PME if it works as expected. If not then it
+may be that there is something wrong with the wakeup path.
