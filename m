@@ -1,38 +1,38 @@
 Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F232F501290;
-	Mon, 21 Sep 2026 21:19:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E08851C064;
+	Mon, 21 Sep 2026 22:17:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=204.191.154.188
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790025599; cv=none; b=WyVsvtz+9FBp/ixmQS3KGY876R6hYMTbtNXphNikyyRMdTI+O6vcGt780BCdt+8JcATWorYBMODNd0BpKI9fOJ+YLgcQIEEVsbgprcPWV0IrzHikbmwzvjqQuGiwgzwaxiiBu9DjB6EP6NNZWBjoxtPYkOX/kikNaP4ZXeFPzBE=
+	t=1790029026; cv=none; b=YNh5F4EWKCTzzVePJczWPE6pNd2Qj8tERMLwLmxXdnRmsP2ldMflt0gHNz8fg5ID6KuB85KAcyz5zGkZTDtW90SFM11L6LCkm7LTpA3D4psVxOlaLsj78FmGBWB/PPyX0vLHhu6gjGwBUXQ4lDGbxGkSEewUiw3Kyckg7Pjmpdo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790025599; c=relaxed/simple;
-	bh=pVFVNpryK/50omAZCNkcvjfe5nFPxxjWqY4zKIS+Wco=;
+	s=arc-20240116; t=1790029026; c=relaxed/simple;
+	bh=qZS43diFWuKFB0VBv8plxFaiwRVC4Irdx/++kTMpBxo=;
 	h=Message-ID:Date:MIME-Version:To:Cc:References:From:In-Reply-To:
-	 Content-Type:Subject; b=eQm8JtdEPGsZ/eMSa1ZK4vI3BVhsdakB6+C5CskiDr35W9xD8Oi0ESayWUYXSYBj0fFDOlAjM44WS7TxISJpE0rB6uKU+nna8/m5DPCFxOfZB5XSzzeEbFBU4yQfr+qgedL0iZXrgYmIBRSw61RsQNegVt0Qytnwhsr0QRJ0dlU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com; spf=pass smtp.mailfrom=deltatee.com; dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b=ErRE0zur; arc=none smtp.client-ip=204.191.154.188
+	 Content-Type:Subject; b=FsOv1NSZ43CMWDrgC5ALxh7Hh4qQOVAr4XOx9eweLQGGd6sntfJN8YEISPzvGPSdBf2F66x/o+Mf9e76XGKX3eQ61y8SHPOrEvvGE50lEvhQBDbxcblXfhHf3NTWCmoa6xx7amGASMDGQHsegVASz76xD9Pm+BjhpKXRW3djOr4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com; spf=pass smtp.mailfrom=deltatee.com; dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b=gyPjGwgQ; arc=none smtp.client-ip=204.191.154.188
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=deltatee.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b="ErRE0zur"
+	dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b="gyPjGwgQ"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
 	MIME-Version:Date:Message-ID:content-disposition;
-	bh=g1ST6U2BpQn/s3D8UpgYd2KCtTjj3ldN0h2dyB/bZ1Q=; b=ErRE0zursoMY+UMyjDwlvee3Ni
-	KA0G6w/m3ydbimYpQQUck96YqgySKBEOmHmVTKRDnOSBjXwLk823Iyzn19FH5wIRNyOd8lHCcCOKF
-	P4e0/xf7B99zvFBls/UtyMwxWMPlkopEgNqDz2HBzZ+BN0XiC2bQLmA9ey2luseNU9pagmqqvcRBg
-	X5WL28iC9i3rfIjgzKuHTOMbAZBQXwEdIErvGXDZfX/f15ftDFp1bId1GIvg6+M9qgvuceibqnwk3
-	gV7hSE5AohGjlJ+NEsDquVHADVHT9YX5Kzbjm+P60e79A2ZT0irlax3JIJfDcRd7sn2BOJDrjfqsg
-	6x4VUOpQ==;
+	bh=qZS43diFWuKFB0VBv8plxFaiwRVC4Irdx/++kTMpBxo=; b=gyPjGwgQcjCiyKhPbAXmYXw3xl
+	+buvxHWSp3dQP9gg+OFi4M/6hYfsK9hkbTOt+ZvqPIGXQOdn5PU89otUyejBoLdwzF8gSa3NCjV98
+	lz9UjLBaq3YW2PjpxssUBJNyxcwoWW10iFN/pSwPlVTuHtKzvXVkxbhw5DGsy7/XnnHEQLU/NjxW2
+	LQX/gwFq0FxkNvESlQz0OyVDfnDGP5D0KSVxMysAdcUzk+IEM07qO4sFfRGEIWR6XNjL0vMGIpo0a
+	H+jfAaaHqUub5uXEZz+NZ/KTIo7bmibu/gMd53QCePldE1dSdT1wo37SkjCqDEmdx+nhjJePGNp8X
+	U0f8N5jA==;
 Received: from guinness.priv.deltatee.com ([172.16.1.162])
 	by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
 	(Exim 4.98.2)
 	(envelope-from <logang@deltatee.com>)
-	id 1x8lQX-0000000F5FQ-0Kc5;
-	Mon, 21 Sep 2026 15:19:54 -0600
-Message-ID: <9e868c06-be53-436c-a78d-790ed2b91c3e@deltatee.com>
-Date: Mon, 21 Sep 2026 15:19:40 -0600
+	id 1x8mJo-0000000F5pd-2GHB;
+	Mon, 21 Sep 2026 16:17:01 -0600
+Message-ID: <85bb90f0-5a02-4e35-9ed6-ad7e67c1c0d8@deltatee.com>
+Date: Mon, 21 Sep 2026 16:16:56 -0600
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -56,37 +56,27 @@ Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
  dri-devel@lists.freedesktop.org, linaro-mm-sig@lists.linaro.org,
  linux-rdma@vger.kernel.org, kvm@vger.kernel.org
 References: <20260920-fix-p2p-acs-v4-0-v7-0-ca0828ab697c@nvidia.com>
- <20260920-fix-p2p-acs-v4-0-v7-11-ca0828ab697c@nvidia.com>
+ <20260920-fix-p2p-acs-v4-0-v7-15-ca0828ab697c@nvidia.com>
 Content-Language: en-CA
 From: Logan Gunthorpe <logang@deltatee.com>
-In-Reply-To: <20260920-fix-p2p-acs-v4-0-v7-11-ca0828ab697c@nvidia.com>
+In-Reply-To: <20260920-fix-p2p-acs-v4-0-v7-15-ca0828ab697c@nvidia.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 X-SA-Exim-Connect-IP: 172.16.1.162
 X-SA-Exim-Rcpt-To: leon@kernel.org, bhelgaas@google.com, kch@nvidia.com, gregkh@linuxfoundation.org, axboe@kernel.dk, alex@shazbot.org, ankita@nvidia.com, jgg@ziepe.ca, corbet@lwn.net, skhan@linuxfoundation.org, joro@8bytes.org, will@kernel.org, robin.murphy@arm.com, rdunlap@infradead.org, sumit.semwal@linaro.org, christian.koenig@amd.com, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, iommu@lists.linux.dev, tdave@nvidia.com, linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org, linaro-mm-sig@lists.linaro.org, linux-rdma@vger.kernel.org, kvm@vger.kernel.org
 X-SA-Exim-Mail-From: logang@deltatee.com
 X-Spam-Level: 
-Subject: Re: [PATCH v7 11/19] PCI/P2PDMA: Log detailed ACS routing diagnostics
+Subject: Re: [PATCH v7 15/19] PCI/P2PDMA: Document TLP-class routing
 X-SA-Exim-Version: 4.2.1 (built Sun, 23 Feb 2025 07:57:16 +0000)
 X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 
 
 
 On 2026-09-20 05:41, Leon Romanovsky wrote:
-> From: Leon Romanovsky <leonro@nvidia.com>
-> 
-> When P2PDMA rejects a mapping, existing warnings identify only the final
-> ACS or host-bridge result. They omit topology, live controls, divergence
-> ports, cache state, and intermediate routing decisions.
-> 
-> Emit debug-level messages for verbose calculations and cache lookups.
-> Report both paths, decoded ACS controls, directional decisions, host
-> fallback, and the final mapping. This keeps incidental unsupported probes
-> quiet while allowing the diagnostics to be enabled when needed.
-> 
-> Tested-by: Tushar Dave <tdave@nvidia.com>
-> Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
+> +A path is bus addressable only where both directions route directly, so with
+> +nothing enabled every class is.
 
-Looks good to me:
+I don't understand the sentence.
 
-Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
+
+Logan
