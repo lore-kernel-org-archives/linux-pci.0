@@ -1,145 +1,94 @@
-Received: from mout-p-103.mailbox.org (mout-p-103.mailbox.org [80.241.56.161])
+Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BF6FC446853;
-	Mon, 21 Sep 2026 20:47:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.161
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A5A63CCA02;
+	Mon, 21 Sep 2026 20:51:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=204.191.154.188
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790023661; cv=none; b=K+wlMx9/GYb/rCzKQuyna67prjYBMBplAOCLlWzwv9iARGUrEJAnPQBLMHz6uamj08U/AADkCa5YN1Ui/uMU/r0vbDBUeCFpoy2Vm01SvjLWKIwfJ4aJSD7RbpIBEvRQjvS6XnBVb8kaZdBeheB2kxRWCv2Jhs86VviNAUrwjcA=
+	t=1790023918; cv=none; b=AQEWVITaixkD5Qrl49DbYY0DoKYhptC6KZTKcXTqRhh/+3FyhWud3j3yWW+S0prnFJ9Lw8yWO17shQnE9Y3qt2hD8C8mxzhcy8E6bf3kWydf8/hCG2xUFZI2getW6a1Kw6AVpXRJ+QZyCdDYKWnOgYNBExFJy6tXbahRYJCNfg4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790023661; c=relaxed/simple;
-	bh=mlc5wSH/imewlxINdd/LQID8CnVMUZAkDjDLG4u+LEU=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=k2vSxw9jV/URoh7rFr7jA0vsqw2wTw8LRbLrrUJXS5XEsnfdX3wUGSWpPdT2995yaJfGKDumC1eUXROpAfMkMuuSTyj3Tzan3Z3UCjmtk7l0TgXagTBpuAnuRrqe67hhKsMTJ86fcp/stcRM/h0Hsu1qk65/nyOSiD+3UDJednY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=A0rg89kI; arc=none smtp.client-ip=80.241.56.161
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
+	s=arc-20240116; t=1790023918; c=relaxed/simple;
+	bh=1CDELqiiofivXiZl5QErg8K2kh1qvy2PGzpNAH+s/Ak=;
+	h=Message-ID:Date:MIME-Version:To:Cc:References:From:In-Reply-To:
+	 Content-Type:Subject; b=E7E1i79wnpbhGwrKd1+8uHSqIsK5zBKgki1dbNL6mSl0/krdeEFfHw8fQObwo6U1Ddomqa8gwdq4NeUnHUnOqMizAHIC6L2G+tpB2NhcT1U9mp58KXNeEUzcQSvRZWExmUBu3jvGTHvJeDLXuWnCHXQWCLKWCeaNRgA8xN6RPLk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com; spf=pass smtp.mailfrom=deltatee.com; dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b=X2MF/i4M; arc=none smtp.client-ip=204.191.154.188
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=deltatee.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="A0rg89kI"
-Received: from smtp102.mailbox.org (smtp102.mailbox.org [10.196.197.102])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mout-p-103.mailbox.org (Postfix) with ESMTPS id 4hpZzq4kg5zKmg4;
-	Mon, 21 Sep 2026 22:47:35 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-	t=1790023655;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=f2rabTClWV5kxaYEDs2ubJgcu6AzV7reEk3bkAfZHCk=;
-	b=A0rg89kIDpgVtfuh8XX6OXO5j73hbSYP+1MzhZnfYBnct073RbJCQW+idRnhNUxxnLSja+
-	SY5GSe0ZOFZE+mv+6Zm5UalOEGGqxaEFtBu9LwFVJAZQ1NWxcmYGkXeqXUkmv2N2k+dUVg
-	tbzfF1qyyaKZEdqDWdVspQgEddUhaYpdOsMsP94cxnItRj+zKMOvfRibRsDgonnPPnoKgW
-	GfbNjnRaQGIyoMUTHvmVOH6rK0Gts9e1TuLnNHgHAexCqSo9cVYHLRB7NCZ7x1cZQ5a+xr
-	cYCm15c0gOygEGOcs359dQTExjDkYYHcha23Qu0botF8urvOaVM8jM6jP5AZHw==
-Message-ID: <95685b0e-21dd-4446-8fef-c5664cea4057@mailbox.org>
-Date: Mon, 21 Sep 2026 22:47:30 +0200
+	dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b="X2MF/i4M"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
+	MIME-Version:Date:Message-ID:content-disposition;
+	bh=BpVc1oOlMNPMnv8BG9zWt0tN3zKEilatFXc42t7lFMQ=; b=X2MF/i4M59hS2XH8iC5SkeBMCq
+	UW4T2hxrNk/lFHCJtbIFG03BljH0G1+JThASbEgwqqzeswupAYCkYxdNvSsYljfmHd6nizAKAZEsw
+	uXi7lrUjextbyIn0shF78Kbi4olRNAoeDbF+to0ksD1wdK/xXJoUh3AcHksF9eNxAHaFnqEcbxFEm
+	jLdTfD0ZhDTjjSDnO/KdwrIRcmFtQIz6zsqzlY+ICNdacwJNXqa1hZprAom2PNkTE0LEeuF3eBHOr
+	gMej4EeqHr4Os+wecDS3tXlmZOD+au5N6HrShSzH4Og+s7WH6Q+EUv4TuA/wcc9vF/f2NKac/NgRD
+	3LIhTFrA==;
+Received: from guinness.priv.deltatee.com ([172.16.1.162])
+	by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+	(Exim 4.98.2)
+	(envelope-from <logang@deltatee.com>)
+	id 1x8kzQ-0000000F4ow-3YlI;
+	Mon, 21 Sep 2026 14:51:53 -0600
+Message-ID: <a9aad34b-949d-4e35-96db-7a969aef78ef@deltatee.com>
+Date: Mon, 21 Sep 2026 14:51:50 -0600
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Subject: Re: [PATCH] PCI: rcar-gen4: Fix device_node leak in
- rcar_gen4_pcie_host_msi_addr()
-To: Fuad Tabba <fuad.tabba@linux.dev>, Manivannan Sadhasivam
- <mani@kernel.org>, Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>,
- =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
- Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
- Geert Uytterhoeven <geert+renesas@glider.be>,
- Magnus Damm <magnus.damm@gmail.com>, linux-pci@vger.kernel.org,
- linux-renesas-soc@vger.kernel.org, linux-kernel@vger.kernel.org,
- Will Deacon <will@kernel.org>, Fuad Tabba <tabba@google.com>
-References: <20260918091052.2825315-1-fuad.tabba@linux.dev>
-Content-Language: en-US
-From: Marek Vasut <marek.vasut@mailbox.org>
-In-Reply-To: <20260918091052.2825315-1-fuad.tabba@linux.dev>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+User-Agent: Mozilla Thunderbird
+To: Leon Romanovsky <leon@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ Chaitanya Kulkarni <kch@nvidia.com>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jens Axboe
+ <axboe@kernel.dk>, Alex Williamson <alex@shazbot.org>,
+ Ankit Agrawal <ankita@nvidia.com>, Jason Gunthorpe <jgg@ziepe.ca>,
+ Jonathan Corbet <corbet@lwn.net>, Shuah Khan <skhan@linuxfoundation.org>,
+ "Joerg Roedel (AMD)" <joro@8bytes.org>, Will Deacon <will@kernel.org>,
+ Robin Murphy <robin.murphy@arm.com>, Randy Dunlap <rdunlap@infradead.org>,
+ Sumit Semwal <sumit.semwal@linaro.org>,
+ =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-doc@vger.kernel.org, iommu@lists.linux.dev,
+ Tushar Dave <tdave@nvidia.com>, linux-media@vger.kernel.org,
+ dri-devel@lists.freedesktop.org, linaro-mm-sig@lists.linaro.org,
+ linux-rdma@vger.kernel.org, kvm@vger.kernel.org
+References: <20260920-fix-p2p-acs-v4-0-v7-0-ca0828ab697c@nvidia.com>
+ <20260920-fix-p2p-acs-v4-0-v7-10-ca0828ab697c@nvidia.com>
+Content-Language: en-CA
+From: Logan Gunthorpe <logang@deltatee.com>
+In-Reply-To: <20260920-fix-p2p-acs-v4-0-v7-10-ca0828ab697c@nvidia.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-X-MBO-RS-ID: 4685aef00d3d3a8873d
-X-MBO-RS-META: 686nfa6ji5unow17db6y6fcbyiqg4a67
+X-SA-Exim-Connect-IP: 172.16.1.162
+X-SA-Exim-Rcpt-To: leon@kernel.org, bhelgaas@google.com, kch@nvidia.com, gregkh@linuxfoundation.org, axboe@kernel.dk, alex@shazbot.org, ankita@nvidia.com, jgg@ziepe.ca, corbet@lwn.net, skhan@linuxfoundation.org, joro@8bytes.org, will@kernel.org, robin.murphy@arm.com, rdunlap@infradead.org, sumit.semwal@linaro.org, christian.koenig@amd.com, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, iommu@lists.linux.dev, tdave@nvidia.com, linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org, linaro-mm-sig@lists.linaro.org, linux-rdma@vger.kernel.org, kvm@vger.kernel.org
+X-SA-Exim-Mail-From: logang@deltatee.com
+X-Spam-Level: 
+Subject: Re: [PATCH v7 10/19] PCI/P2PDMA: Route Translated Requests under
+ Direct Translated P2P
+X-SA-Exim-Version: 4.2.1 (built Sun, 23 Feb 2025 07:57:16 +0000)
+X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 
-On 9/18/26 11:10 AM, Fuad Tabba wrote:
-> rcar_gen4_pcie_host_msi_addr() calls of_msi_xlate() with *msi_np NULL,
-> so it receives the MSI controller node with a reference held, and every
-> return past the NULL check leaks that reference, the success path
-> included. Declare msi_node with __free(device_node) so it's put on
-> every return.
+
+
+On 2026-09-20 05:41, Leon Romanovsky wrote:
+> From: Leon Romanovsky <leonro@nvidia.com>
 > 
-> Fixes: 8d6af27c0a73 ("PCI: rcar-gen4: Configure AXIINTC if iMSI-RX is not used")
-> Reported-by: Sashiko <sashiko-bot@kernel.org>
-> Closes: https://lore.kernel.org/linux-pci/20260905213855.8D6671F00A3D@smtp.kernel.org/
-> Signed-off-by: Fuad Tabba <fuad.tabba@linux.dev>
-> ---
->   drivers/pci/controller/dwc/pcie-rcar-gen4.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
+> A Downstream Port with ACS Direct Translated P2P enabled routes a Request
+> whose Address Type is Translated "to the peer Egress Port without
+> redirection, regardless of ACS P2P Request Redirect and ACS P2P Egress
+> Control", per PCIe r7.0 sec 6.12.3. P2PDMA assumes every Request carries an
+> Untranslated address, so it sends an ATS client through the host bridge
+> even where the fabric would route it straight to the peer.
 > 
-> diff --git a/drivers/pci/controller/dwc/pcie-rcar-gen4.c b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-> index fbe465a29068f..d61ce802b4614 100644
-> --- a/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-> +++ b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-> @@ -323,7 +323,7 @@ static struct rcar_gen4_pcie *rcar_gen4_pcie_alloc(struct platform_device *pdev)
->   static int rcar_gen4_pcie_host_msi_addr(struct dw_pcie_rp *pp, u32 *msi_addr)
->   {
->   	struct dw_pcie *dw = to_dw_pcie_from_pp(pp);
-> -	struct device_node *msi_node = NULL;
-> +	struct device_node *msi_node __free(device_node) = NULL;
-I think you have to call of_node_put() on msi_node(), so what about this 
-instead ?
+> Add PCI_P2PDMA_TLP_TRANSLATED and consult Direct Translated P2P for the
+> Requests it describes.
+> 
+> Tested-by: Tushar Dave <tdave@nvidia.com>
+> Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
 
-"
-diff --git a/drivers/pci/controller/dwc/pcie-rcar-gen4.c 
-b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-index 8057c31c0123a..2eb20cff2fcad 100644
---- a/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-+++ b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-@@ -382,20 +382,29 @@ static int rcar_gen4_pcie_host_msi_addr(struct 
-dw_pcie_rp *pp, u32 *msi_addr)
-  		return -ENODEV;
+Looks good to me:
 
-  	/* Check if "msi-parent" or the "msi-map" points to ARM GICv3 ITS. */
--	if (!of_device_is_compatible(msi_node, "arm,gic-v3-its"))
--		return dev_err_probe(dev, -ENODEV, "Compatible MSI controller not 
-found\n");
-+	if (!of_device_is_compatible(msi_node, "arm,gic-v3-its")) {
-+		ret = dev_err_probe(dev, -ENODEV, "Compatible MSI controller not 
-found\n");
-+		goto exit;
-+	}
-
-  	/* Derive GITS_TRANSLATER address from GICv3 */
-  	ret = of_address_to_resource(msi_node, 0, &res);
--	if (ret < 0)
--		return dev_err_probe(dev, ret, "MSI controller resources not 
-obtained\n");
-+	if (ret < 0) {
-+		ret = dev_err_probe(dev, ret, "MSI controller resources not obtained\n");
-+		goto exit;
-+	}
-
-  	addr = res.start + GITS_TRANSLATER;
--	if (addr >= SZ_4G)
--		return dev_err_probe(dev, -EINVAL, "MSI controller address above 
-32bit range\n");
-+	if (addr >= SZ_4G) {
-+		ret = dev_err_probe(dev, -EINVAL, "MSI controller address above 32bit 
-range\n");
-+		goto exit;
-+	}
-
-  	*msi_addr = addr;
--	return 0;
-+
-+exit:
-+	of_node_put(msi_node);
-+	return ret;
-  }
-
-  static int rcar_gen4_pcie_host_msi_init(struct dw_pcie_rp *pp)
-"
-
-Also, I think drivers/pci/controller/pcie-iproc.c 
-iproc_pcie_msi_enable() needs similar fix ?
+Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
