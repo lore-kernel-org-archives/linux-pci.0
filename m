@@ -1,126 +1,150 @@
-Received: from intranet.stegbauer.info (intranet.stegbauer.info [80.153.120.106])
+Received: from smtpbguseast2.qq.com (smtpbguseast2.qq.com [54.204.34.130])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 866584AA56F
-	for <linux-pci@vger.kernel.org>; Mon, 21 Sep 2026 14:52:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.153.120.106
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 99BB24AA01E;
+	Mon, 21 Sep 2026 14:53:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=54.204.34.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790002332; cv=none; b=u6cyddsJZ6Ko98uGkeqpERORkcJ2Fp8UeIjMfoAYQpJR97LY4cDeTKkb9eTKVHlmj1TQ/bGgb2FnCptupE55yQBnGdhpvQ5+lWy/EzrBVgbECRWNd2VyXgReYxDfEAXhvUUGcg5it3Az1HUepX7kQoCn7+SoplYog1Po/zJ6wY0=
+	t=1790002429; cv=none; b=Z6QuOZ5al16Frk8QLsVdqHmM5hzhR92oMK8IDZdm/4glXW+f347/WuUcj6kxzQpsj1v+KZxz3PgSwEfdw2Envp8RSreAz+/VI3NSKWjL5vsFw5oERLNiN7GmEnpcRvIE2c2oTHjrsNWCQb6+vWPVGaSQINSkK4Nz8jcnCMyf/RM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790002332; c=relaxed/simple;
-	bh=lLkv+jMmZGe/gBXa297FIVQvjgB+rkxSEhGSCTfQps4=;
-	h=Date:From:To:Cc:Message-ID:Subject:MIME-Version:Content-Type; b=UIWQmtogC551Y3tCt4OnPdqYD4Fa3aDu8y+u4/MnOCxehB0rSmNZnRw33uAJUwDMW/iJzHDkqeyToTXr9BgiYjlf6fSOT4f4wbR4Kx5VOiPp03IRxVASVFLE8LXz4M9PjerJKPfy8FCfEKiGO3OcjgLs3X+Nm+n6R9Koe1PFNn0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=stegbauer.info; spf=pass smtp.mailfrom=stegbauer.info; dkim=pass (2048-bit key) header.d=stegbauer.info header.i=@stegbauer.info header.b=hBotiaSB; arc=none smtp.client-ip=80.153.120.106
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=stegbauer.info
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=stegbauer.info
+	s=arc-20240116; t=1790002429; c=relaxed/simple;
+	bh=4Bpri0Hocpd0wbzg2zXh/boalmxJpON/kxjJ8Sj/g2w=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=GVPl09EYUS5SNOs7N0fSDagOAi/Rlq6IR+WxCB7K9ZUehHth3OuIqWy39Mwb4NvyVV2BoP80SVy57FHIwIMcBhKU9ZyZCsu6TxQYUHViVEIs6Xax1CsaiVj3S2f/8c7T41/xNtYqyV3cpckBhDnnvhd+cTO/fYW8o6D3cnLEP7I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ugreen.com; spf=pass smtp.mailfrom=ugreen.com; dkim=pass (1024-bit key) header.d=ugreen.com header.i=@ugreen.com header.b=LtExIP4F; arc=none smtp.client-ip=54.204.34.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ugreen.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ugreen.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=stegbauer.info header.i=@stegbauer.info header.b="hBotiaSB"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=stegbauer.info;
-	s=201607; t=1790001905;
-	bh=lLkv+jMmZGe/gBXa297FIVQvjgB+rkxSEhGSCTfQps4=;
-	h=Date:From:To:Cc:Subject:From;
-	b=hBotiaSBi7drfKQI3DTUYstB6jSgdzVQ711Vue5KS/EEokp3sCDqEk4PzhaEk7S+y
-	 VXPuzGQX2WE4HydOl4UvnS3qnJtmInwBBeu6EIS0+vbFNPjvX8OGhbHbXJtLrXXZh5
-	 MP9Dujra+rFmonz3pqaiXXyuiNsvmJagazFJfg4hyLf6K+TAdDQRHggVMOwc1Nf2iF
-	 JKixoBOqNRiLd82u7diFJynAJUbUNb1fmiMlzcvkfnsInvkIxRUXRpreLEmCibt583
-	 VmS0ohCniGrqPlkK4oQW2yrmknoEWr6MoUNMaJ9y1VsWCdp0kzgeVZUvum7UwO7asq
-	 e35sU4djGr2yQ==
-Received: from zimbra-soscomp.soscomp.de (zimbra-soscomp.soscomp.de [192.168.23.3])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384)
-	(No client certificate requested)
-	by intranet.stegbauer.info (Postfix) with ESMTPS id 2BF179F793;
-	Mon, 21 Sep 2026 16:45:05 +0200 (CEST)
-Received: from localhost (localhost.localdomain [127.0.0.1])
-	by zimbra-soscomp.soscomp.de (Postfix) with ESMTP id 09E983468B1;
-	Mon, 21 Sep 2026 16:45:05 +0200 (CEST)
-Received: from zimbra-soscomp.soscomp.de ([127.0.0.1])
- by localhost (zimbra-soscomp.soscomp.de [127.0.0.1]) (amavis, port 10032)
- with ESMTP id 09zaqutbCEJo; Mon, 21 Sep 2026 16:45:04 +0200 (CEST)
-Received: from localhost (localhost.localdomain [127.0.0.1])
-	by zimbra-soscomp.soscomp.de (Postfix) with ESMTP id 026483468C5;
-	Mon, 21 Sep 2026 16:45:04 +0200 (CEST)
-X-Virus-Scanned: amavis at zimbra-soscomp.soscomp.de
-Received: from zimbra-soscomp.soscomp.de ([127.0.0.1])
- by localhost (zimbra-soscomp.soscomp.de [127.0.0.1]) (amavis, port 10026)
- with ESMTP id E8K-a0RdNPFA; Mon, 21 Sep 2026 16:45:03 +0200 (CEST)
-Received: from zimbra-soscomp.soscomp.de (zimbra-soscomp.soscomp.de [192.168.23.3])
-	by zimbra-soscomp.soscomp.de (Postfix) with ESMTP id 9800F3468B1;
-	Mon, 21 Sep 2026 16:45:03 +0200 (CEST)
-Date: Mon, 21 Sep 2026 16:45:03 +0200 (CEST)
-From: Thomas Stegbauer <thomas.stegbauer@stegbauer.info>
-To: Andreas Wild <andiwild@gmail.com>
-Cc: macro@orcam.me.uk, helgaas@kernel.org, linux@leemhuis.info, 
-	linux-pci@vger.kernel.org, regressions@lists.linux.dev
-Message-ID: <752770208.319.1790001903323.JavaMail.zimbra@stegbauer.info>
-Subject: Re: [PATCH v3] PCI: Skip Target Speed quirk on clamped ports with
- no link
+	dkim=pass (1024-bit key) header.d=ugreen.com header.i=@ugreen.com header.b="LtExIP4F"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ugreen.com;
+	s=pkvm2402; t=1790002341;
+	bh=DDAaa1F91a2uXcvELqYpoY0Uex2flJHewqG438s8Nng=;
+	h=From:To:Subject:Date:Message-Id:MIME-Version;
+	b=LtExIP4F+P4zXZYWE5TxuG1kal4zya5PNys4S4wThu42SZC5yEHDGq1h12hDXEwY/
+	 z59qpBImHC3YvZKPqpZ8jR57vYQJVTQK2Cwc/4DOLRD9r4xq3lSEb9xeoA2rOsXGbY
+	 zP7V3q9+bqA1Itj+jhhZSqN+XicOCH0kFH1VT0WU=
+X-QQ-mid: zesmtpgz4t1790002339t77d810b4
+X-QQ-Originating-IP: /1zCkF4r1ByOjBgitBdFmNKv/lSkCl3l6thqO/ytb+Y=
+Received: from localhost.localdomain ( [14.153.230.193])
+	by bizesmtp.qq.com (ESMTP) with 
+	id ; Mon, 21 Sep 2026 22:52:16 +0800 (CST)
+X-QQ-SSF: 0000000000000000000000000000000
+X-QQ-GoodBg: 0
+X-BIZMAIL-ID: 1951430817536170771
+EX-QQ-RecipientCnt: 8
+From: Haowen Bai <calvin.bai@ugreen.com>
+To: Keith Busch <kbusch@kernel.org>
+Cc: linux-nvme@lists.infradead.org,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Jens Axboe <axboe@kernel.dk>,
+	Christoph Hellwig <hch@lst.de>,
+	Sagi Grimberg <sagi@grimberg.me>,
+	Haowen Bai <calvin.bai@ugreen.com>
+Subject: Re: [PATCH] nvme-pci: skip FLR after a failed controller reset
+Date: Mon, 21 Sep 2026 22:52:13 +0800
+Message-Id: <20260921145213.3003488-1-calvin.bai@ugreen.com>
+X-Mailer: git-send-email 2.39.5
+In-Reply-To: <20260921140732.2942207-1-calvin.bai@ugreen.com>
+References: <20260921140732.2942207-1-calvin.bai@ugreen.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-X-Mailer: Zimbra 10.1.20_GA_4200001 (ZimbraWebClient - GC153 (Linux)/10.1.20_GA_4200001)
-Thread-Index: u4aSUst814tCowhW4rO/jDxdk3UN8A==
-Thread-Topic: Skip Target Speed quirk on clamped ports with no link
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-QQ-SENDSIZE: 520
+Feedback-ID: zesmtpgz:ugreen.com:qybglogicsvrgz:qybglogicsvrgz3a-1
+X-QQ-XMAILINFO: Nv1Zs1ssfOILGrJCRGOrwrgGuBp5oJ+5Z2QXhccJ9EyqEqj7+8vsMm31
+	59wwJIA9coIlFiAKUPmSKqIjMRk6dH9GdzkBb89kJmneVzqHUk/EOb6EXsb9Ul8Vv0F7lhz
+	yAh2U+AdGbA3BdwqRyamFipcXfZx0gmGlSnx4vFyTQbd/FhZ43QbUdSbnUTsyFvN860jdav
+	2WXWnMKY2nffrsff6o9iBjp0rQnMYbDCnznNapG+CEfM2+zjpq/PsXs8hb9hwS33urUG+QL
+	HtInINYe/XFM7aPrKY3xo7f50WCGuTuQgBFgUiPYf73ImzdqboZIV3KYXAs/U1Bezj01p8N
+	xmBWsc5rxFSytkxic0XfN9iabWjSSrJHBcbdXku4l/jrB3Y1W5QUKKyk8EpbBIVdXWso4/f
+	8dU+E3HwbL9TrPotF9tUEC2K3+C1bI3NQjlf6rl95gOwi3gnfvTnz+bBswGEuxidD+Uqjp7
+	6DcmH5kHRz6WJQ1Ue1gCPHtdyeR1fjI946IFVK30PzEaG2iJ1uw8e8KJmRimzWDM0eBKD5I
+	wzmSfI0DQ0mrGX4k/NnTNhH+nrcBAIyk7hoi1iiCE3zVk6OxiNThrJMozG8WkDxrUst4FSX
+	KHU/f/EWTCkjJpU3cyV5QfRVQ71sWweg6xqp5BKYIv8kj+sxitCxFUwBf5Ty9AYi6z1hXOO
+	wPGKG4O/C93VkmTumqWw5iK6Wo83N3kCx09i5F2iHDTS0Mwn8FwwMkVC/En/ez3TjaZQIKH
+	cau/wFJGdKQf2HNlMjV3yYfGPsoGE7eGx/hHpWKGqGgcMim9Elz3tsRMYwp0eJe+fK02QvG
+	tsJAX5dIBZCGK3CA7CdtIU8hvhzcOqo1+NMZGFxPo5wI/tdkrZF7tR7xTFkTOAfDNY2MaTB
+	LSBILtuF8XxhoNrLmFbdctAvxIbZSJdmbrLJuglnCGAE8Gk8/tU3tC5xio+7YKIoy0SsT4p
+	IKu+2b7ZWG8/VHBpzRF5SuD/JXwX382ImWErYLusIdGA3zIyPcXWtTd3e2ej8xpUlAvt9q8
+	G+TKUs1z5Xi7E9LqKXYF85bo7wG+jFy52jBmkvy08EI50qbHtKOUgm0wvKNgI=
+X-QQ-XMRINFO: M/715EihBoGS47X28/vv4NpnfpeBLnr4Qg==
+X-QQ-RECHKSPAM: 0
 
-In-Reply-To: <20260801201244.4421-1-andiwild@gmail.com>
-References: <20260801201244.4421-1-andiwild@gmail.com>
+Keith,
 
-Hi,
+Thanks for the review.
 
-another data point for the regression from 72780f796468 ("PCI: Always
-lift 2.5GT/s restriction in PCIe failed link retraining"), for the case
-with a device present, which v3 does not appear to cover.
+The goal on our side is that a dead NVMe function must not hard-lock
+the host. Losing the device (and bcache) is acceptable; an NMI
+lockup of unrelated PCI users is not. I don't want to take FLR away
+from a path that still recovers some devices — I want teardown not to
+pin pci_config_lock across a hung config cycle.
 
-Hardware: Raspberry Pi 5 (BCM2712, pcie-brcmstb), ASMedia ASM1182e
-[1b21:1182] Gen2 packet switch on a dual M.2 carrier, one NVMe SSD
-behind each downstream port.
+> Shouldn't PCIe CTO have kicked in to fail the transaction? Do you
+> know which transaction is failing? Is the stall specific to FLR or
+> could any config access stall in your setup?
 
-Downstream port 7 (0001:02:07.0) does not train at 5GT/s on this board.
-Without the backport (v6.12.75) the quirk clamps it and the link comes
-up at Gen1, in use for over a year:
+I don't know which config cycle is stuck. There is no vmcore / lock
+owner. The NMI captures the waiter (an unrelated eMMC runtime-resume
+spinning in pci_conf1_read -> acpi_pci_set_power_state), not the
+holder.
 
-  pci 0001:02:07.0: broken device, retraining non-functional downstream link at 2.5GT/s
-  LnkSta:  Speed 2.5GT/s, Width x1, DLActive+
-  LnkCtl2: Target Link Speed: 2.5GT/s
+What the pstore timestamps do show:
 
-With the backport (v6.18.50, also v6.18.39; Raspberry Pi downstream
-kernels, pcie-brcmstb identical between both 6.18 versions) the device
-is lost:
+  [t+0]     nvme_wait_ready timeout, CSTS=0x1   (MMIO, first disable)
+  [t+128s]  nvme_wait_ready timeout, CSTS=0x1   (second disable after FLR)
+  [t+139s]  hard lockup on pci_config_lock
 
-  [0.518303] pci 0001:02:07.0: broken device, retraining non-functional downstream link at 2.5GT/s
-  [0.538795] pci 0001:02:07.0: removing 2.5GT/s downstream link speed restriction
-  [1.537936] pci 0001:02:07.0: retraining failed
-  LnkSta:  Speed 5GT/s, Width x1, DLActive-, BWMgmt+
-  LnkCtl2: Target Link Speed: 5GT/s
+So the 128s gap is CAP.TO on the second nvme_disable_ctrl(), which is
+MMIO and does not take pci_config_lock. The lockup is ~11s after that
+returns, i.e. on the post-FLR teardown path (pci_free_irq_vectors /
+pci_disable_device or a config access still in flight), not inside
+nvme_wait_ready().
 
-Same hardware, firmware and DT; only the kernel differs. Swapping the
-SSDs moves the failure with the port, not with the drive.
+I cannot prove the stall is unique to the FLR write vs any later
+config access to that function. Both events went through
+disable-timeout -> FLR -> disable-timeout -> teardown. Linux 6.12 has
+no FLR fallback here; the same class of NVMe drop usually only took
+the cache offline. That is correlation, not a single-cycle trace.
 
-To be fair, the Gen1 link is marginal: AER on the port shows RxErr
-right after clearing, and BadTLP/BadDLLP under load. The replays are
-absorbed, though: 8 GiB O_DIRECT read at 222 MB/s, no data errors.
+There is no AER / UR / completion-timeout message in the log. I do
+not know whether CTO was disabled, longer than the NMI watchdog
+(~10s), or not applicable because the root port never completed. I
+won't claim CTO is broken. Even if CTO should have aborted the
+cycle, it did not save the machine here.
 
-So: the port is not clamped on entry, hence v3's new early return does
-not trigger; the first block clamps and the link trains at 2.5GT/s; the
-second block then lifts the clamp because LnkCap is 5GT/s; the 5GT/s
-retrain fails as the initial training did, and the error path restores
-the old 5GT/s target, leaving the link down (and adding ~2 s to boot).
+> Are you able to fix the device instead? Maybe add your device to the
+> "quirk_no_flr" list if you can't fix it.
 
-Before 72780f796468 the lift was limited to the ASM2824 with the link
-up, which is why this worked. Would it make sense to fall back to the
-2.5GT/s clamp when lifting fails, rather than to the original target
-speed, at least when the clamp had produced a working link?
+The two ZHITAI Ti600 functions (1e49:0081) each reproduced the same
+sequence independently, so I agree this is a nasty device bug. We
+are taking them out of the bcache path on the affected machines.
 
-Happy to test patches (v6.18.y based on the Raspberry Pi tree is
-easiest for me). Downstream report with full logs:
-https://github.com/raspberrypi/linux/issues/7635
+quirk_no_flr would stop nvme from requesting FLR, but it would not
+stop pci_disable_device() from touching config on the way out, which
+is where the lockup lines up. Pinning host protection to one VID:DID
+also misses the next broken device. A bad endpoint should be allowed
+to die; it should not be able to stall pci_config_lock and take the
+rest of the platform with it. I can add a quirk as a device note if
+you want it on record; I don't think it is the host fix.
+
+> I've seen FLR recover devices both on first probe and IO timeout, so
+> skipping for RESETTING will miss recovering when it was possible
+
+Agreed — that makes v1 too broad. I'll drop the RESETTING special
+case rather than take FLR away from a path that still recovers some
+devices.
+
+If a v2 is useful, I think it needs to stop issuing config cycles to
+a function that already failed CC.EN and FLR (so teardown cannot
+hold pci_config_lock across a hung inl), without skipping FLR on the
+reset path. I have not written that patch yet.
 
 Thanks,
-Thomas S.
-
-p.s. hopefully the mail get properly added, as I hade to add the in-reply and reference to the txt-body of the mail.
+Haowen
