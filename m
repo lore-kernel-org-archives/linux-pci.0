@@ -1,45 +1,45 @@
-Received: from CO1PR03CU002.outbound.protection.outlook.com (mail-westus2azon11010029.outbound.protection.outlook.com [52.101.46.29])
+Received: from CY3PR05CU001.outbound.protection.outlook.com (mail-westcentralusazon11013017.outbound.protection.outlook.com [40.93.201.17])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D5DD46D559;
-	Mon, 21 Sep 2026 09:52:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.46.29
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 97B10457E6F;
+	Mon, 21 Sep 2026 09:58:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.201.17
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789984338; cv=fail; b=SRiaBbbCWSfoQNl7TJRgdpSl6JorI7ig5Y4z4ZHbC/mqNRTCNEJANk3Bb8R7TjZYbl0MookOlLLLwLbyU8t064NGYTj81GEkVGAdx8Sg9DUlmHy/sq55F8Ef9XoqmHcirgaUvxkUOLeB3bGv4afbHGdTbacpoviOnU4QANA3EvY=
+	t=1789984712; cv=fail; b=TyyFAi1OJ2iaC+GY1ZoCdam+SnXfY1X0veNTbeHMUzmdUZUUMP9w31bN2sdG14fCx2fS6mRz2r1ygN4yOZe2Um0976A5BB/mDlpVEWdsz/C9AzxvEGLDY4CcXm+vJKh4RrmRLDDKXisCFsROA0LhQ+pQRBKtVxnnhMTBLh3zwGI=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789984338; c=relaxed/simple;
-	bh=ogVYGygaDXLXvSGAVi3tmTp+/fYNxNNHFOk0SyQXlIQ=;
+	s=arc-20240116; t=1789984712; c=relaxed/simple;
+	bh=nzzMT5o1xqDhDv/eCkcbrpaMLy8W6HbMVHiXZ/Oedo4=;
 	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=hZJdOv5DkHxvCRWhdpazsjoS/n5T/+hoLiHuCm6Bt9AF2USuLbute6ci28fMzqAhgFiJnTZKX12N7u+eyf+wTzYp1kIfUnEp/+MY8B2eF4meObZrNwAid0v2NLmyP7wn6lPeqqPkwHAZ0h4T7hpOI3cWeS8gSFFbrj7h2hT4klc=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=oI5XISVQ; arc=fail smtp.client-ip=52.101.46.29
+	 Content-Type:MIME-Version; b=d48DUgtUILBU8kJeoOZHzu1ApYt98YDpImNpXHGZ4obW6LA/kabIZH4m88lpmEhdJmItqlJ+yqlknVVqseBmKOPsSpMMOatkHIHUOHWlLwllFR5bvtoPvRQdxQN38O2kESJ+KrHxetYH6d3s6JgQfRkwzV4hW+6jCG8Krdvax8o=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=rp3XkHnA; arc=fail smtp.client-ip=40.93.201.17
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="oI5XISVQ"
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="rp3XkHnA"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=l+uyqNwprQ7PkL+AP5/1cmQXshD+PrGRGpAsPdKUeruCFSqL21zsEsL2A2SaEdO88JpNltOQRVOjWS7sY+QyzJuO26STSslRfjYwwiYtKdLe6XaQqkdWjnJwTJSIHJ1mGRrBjYhOZp8P6Exp5ivbiF8nud+2bccEgwD3GXRcPebVAFfo1gTJpt0qGTkclLhI/AYnk7CGzr6YwbCvKHhOzS/GjrnYOYUN4kxVgFyfT2sw8aCdeAFg7mRt14Nn1ZqePO3nOzxVBb6D5hAP6JCwWuh3QD6apwLIyWAAuAcfycxb5wCHSLgafV5HS0SsAMmwSUOLpSb+nOegXYt8cJdZzA==
+ b=b8AQXF4MaXAsUdTe9DQ57IZty0O715oTeH+zTJt6S87cAaQ3xK/vWtS7lO4Cleu29VmDyzJ+zXG2tEy93HsRaTzhI2vri/5K6vtWLxwVKvXLybIlaZmePey0/ZvsSPC/5ztkgf9AtbN0PtH4h+t0DjKCwYUQGldV1iKSiV/vVvh7fR8HYzsvEZgsqNJ4sv+PQ9u1cvSbD8vLsNtREcuUR9WJG7EOFazALZGw+6Z2l5xBeZWiWLTu35b+3yUd4lmE0yAPreTkJe4UC+v3LlBm+3L+UVawTlAl6A3DGFiqDgnXaLA78yT63CKxRBsrUsr+Q6b8t6Db1wKvTafuh83DYw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=ZCrLem1ctcpKsq/AknOhYb/GXtQSTA+YS0dV+9XL25Y=;
- b=AJVzLrxE5LVTA5bBzmf6AvDCeHOZiCFIHQwdTp7QB/nEHdtQJvoJK6i/JMDoxe7e1DVOMEpTNgh/Ubv/+IIRZji1Iet1KwoBsPhJ2Vd3MQvL3ri3ZeWV2sEkifkL89B3/yQ2fQar+RmDkQK09B4NZmkuV58dsFcYhw0OW6bXHPxhB2DO20nGYDRTppKPoDhN2PCLGauf9Kvam6khtEGM8WVGROTlg0AN8JeoJjU/AGlwCnd8vJ4/TbbK4aG9c6+IXx+Ouxkvzze722ibEGxegj6D4fSutzdXaYuzhv7brU8QpLKRL5PmLztOP8N0nGa0TJrOXP/fjkGaBR/1eAPvww==
+ bh=Nhb/2cwYTRQ4GVoWc6rLo2wgkCB1hd9lVMfmoZ1HWik=;
+ b=p/hAhVSh57AvRmfkvUtQwe2fXLj5hikRxvKHRpH+407V0M+C9rGZC27hNhO7/J/8Sjrxia7mKE471xbWwHV2bwCnkBzOievbfZ8j5J1n+WBfhcg0+EJT3lgU460O7Fha7yt5993CtgLi05km4p+MgXZHdJJ4ePvypCRmfFEt7gLfUV/DbhZjWt0C8dJjianNPkLimdxPEKXSjWLhc+7JkuEX5q9iEWTiwOn12mAmiN/gEa5cYzUfiz5Ug6gJGuler0oQfGp6rFXnQpLkFouqgqLX/F30Qs49vETVNCzGSoNKPSMJJMKiA2zuAZdxWEhYuVrC+U8Dpq8J/JkACryCPg==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
  dkim=pass header.d=nvidia.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ZCrLem1ctcpKsq/AknOhYb/GXtQSTA+YS0dV+9XL25Y=;
- b=oI5XISVQoaJVf62dVUB2PzIWhVtoieRBQWqqO1hnmCpzWdlnd80IVNyGxIvKf/XbzYzKcxXxLQsqCvq0gcgqvXtiAF+FqlnBhKaIfg71iWwu2nGqKgQ1Fqs9Jx7v0CHodmcac1NRTqsVeiqJB6m5RAXQ4NKXpoeO+DVAcApQimt32tgU6hbFgtjvxNhM0eORFuIpKqS3VD2cAsi5uzNU3NGqGcWA6IH3mXfQudQoq2/G0DJimkOla7oiWsJUevb+pTnQrmv8oMA5gM+Im7U7M8eJzvkaU+ebCHG98wnb1PkVr2TaSTfnPT3TWe5LU3s6SGTErsSE5j7qZuNXUA66lw==
+ bh=Nhb/2cwYTRQ4GVoWc6rLo2wgkCB1hd9lVMfmoZ1HWik=;
+ b=rp3XkHnATHs/+72bsdEKRWuavfAoK2wz1y7eZjhOIRs00Yg1/Y8izf6OvPAQ/6e3/F0PL4MKozAlotIAEv8yU0qIuTqGqVzpGSOwc0VLQPKKgFjBPOrI72oKk9Q852y8eY69oZ0JXKThX1imMqT49C1ONrAWI6mOA8/M40o6CnMwWK5vzttFtCchSiqUxEJURPgfpY3mZO5kLkQ08oH7PQKOz9D4OZIaLBde1izWIELmKK5IgwBcOSnZQGeBbBessPoCyTC1MRmybtjZ7Li2alzV+ppkQ9A1DxZYIBubHmHFbHxKbXqqp3xz1NHcAN8vzYqSIwIWrhASsV+rdpDHXw==
 Received: from IA1PR12MB9030.namprd12.prod.outlook.com (2603:10b6:208:3f2::22)
- by BL4PR12MB9534.namprd12.prod.outlook.com (2603:10b6:208:58f::18) with
+ by IA0PR12MB8974.namprd12.prod.outlook.com (2603:10b6:208:488::21) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.428.16; Mon, 21 Sep
- 2026 09:52:13 +0000
+ 2026 09:58:24 +0000
 Received: from IA1PR12MB9030.namprd12.prod.outlook.com
  ([fe80::2c1d:ed27:b53a:97d2]) by IA1PR12MB9030.namprd12.prod.outlook.com
  ([fe80::2c1d:ed27:b53a:97d2%7]) with mapi id 15.21.0428.015; Mon, 21 Sep 2026
- 09:52:13 +0000
+ 09:58:23 +0000
 From: Manish Honap <mhonap@nvidia.com>
 To: Richard Cheng <icheng@nvidia.com>
 CC: "alex@shazbot.org" <alex@shazbot.org>, "jgg@ziepe.ca" <jgg@ziepe.ca>,
@@ -65,17 +65,17 @@ CC: "alex@shazbot.org" <alex@shazbot.org>, "jgg@ziepe.ca" <jgg@ziepe.ca>,
 	<linux-pci@vger.kernel.org>, "linux-kselftest@vger.kernel.org"
 	<linux-kselftest@vger.kernel.org>, "linux-hardening@vger.kernel.org"
 	<linux-hardening@vger.kernel.org>, Manish Honap <mhonap@nvidia.com>
-Subject: RE: [PATCH v5 21/27] vfio/cxl: Exclude the HDM decoder registers from
- direct BAR access
-Thread-Topic: [PATCH v5 21/27] vfio/cxl: Exclude the HDM decoder registers
- from direct BAR access
-Thread-Index: AQHdRgrHAuorG+bHmkC7koIg0uVN17bSYEEAgAZvnmA=
-Date: Mon, 21 Sep 2026 09:52:13 +0000
+Subject: RE: [PATCH v5 24/27] vfio/cxl: Export the HDM memory region as a
+ dma-buf
+Thread-Topic: [PATCH v5 24/27] vfio/cxl: Export the HDM memory region as a
+ dma-buf
+Thread-Index: AQHdRgrZTjLdWfOzhk+c622+TE9nlbbSZ7IAgAZrDkA=
+Date: Mon, 21 Sep 2026 09:58:23 +0000
 Message-ID:
- <IA1PR12MB90302789C230A974B8922D9FBD842@IA1PR12MB9030.namprd12.prod.outlook.com>
+ <IA1PR12MB9030641A2CDC768DDB53BCFEBD842@IA1PR12MB9030.namprd12.prod.outlook.com>
 References: <20260916183540.3813685-1-mhonap@nvidia.com>
- <20260916183540.3813685-22-mhonap@nvidia.com> <aquVEF7pLCpQxYwa@MWDK4CY14F>
-In-Reply-To: <aquVEF7pLCpQxYwa@MWDK4CY14F>
+ <20260916183540.3813685-25-mhonap@nvidia.com> <aquaxVHh2O8SUCvj@MWDK4CY14F>
+In-Reply-To: <aquaxVHh2O8SUCvj@MWDK4CY14F>
 Accept-Language: en-US
 Content-Language: en-US
 X-MS-Has-Attach:
@@ -83,47 +83,47 @@ X-MS-TNEF-Correlator:
 authentication-results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=nvidia.com;
 x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: IA1PR12MB9030:EE_|BL4PR12MB9534:EE_
-x-ms-office365-filtering-correlation-id: 3ef57673-b392-4614-7617-08df17c6035d
+x-ms-traffictypediagnostic: IA1PR12MB9030:EE_|IA0PR12MB8974:EE_
+x-ms-office365-filtering-correlation-id: 9b98f968-9274-4cda-ccaf-08df17c6dffb
 x-ms-exchange-senderadcheck: 1
 x-ms-exchange-antispam-relay: 0
 x-microsoft-antispam:
- BCL:0;ARA:13230040|366016|1800799024|376014|7416014|23010399003|11063799006|56012099006|4143699003|38070700021|10067099003|22082099003|18002099003;
+ BCL:0;ARA:13230040|366016|23010399003|1800799024|7416014|376014|10067099003|4143699003|38070700021|56012099006|3023799007|11063799006|22082099003|18002099003;
 x-microsoft-antispam-message-info:
- c1JD/bsTMIeB1EeP8er7a+0PsznC2NIJjKTrqUf+1vTz8HdzFsx91TYHaSVbGtv0FcaL0Pf8HmIv46bfa/gRYz1Akz61/b0yqz7IdUVCsSSqy0HxLzjIHaAgSMdhN0daeMdIs4Uqwqd9ac+UTTunDpqepZDYhzdFqYhbEyxwJgsrbaE6zxjuY6VxQRRPGIlWaAm4g5Jn6eziJ0IUeUpdMSNq7iqcv6xj2N7m4Gb0vSp4BuWDh4p+mb5JnRgFJSGpGY08aJszNPKeaV7cAmZNGUwCR/v8zIl4CONooE5ShdYxYxQfd7U+0qyFXas3/9jJuTJMAU8s+SuXgml3L70yaQDvl9CqxvaEy0AbBp1RLUjNdBNqr9Ek50Jz6uRqIsl+OXqNEvEcmTQja25hSWjczJtCI8xCizAI6cCenLzcw6BQtfYigMYywW0AHRPben9CFrqxS3LTBTAMh7LZG/56Gvo7mWog+JKz8Q0orT6exyE5DdhngQHEfLWp0mQEXb22r7iN/7OQ7JHdW4fB5Nl73VVlKZVRUy0o6VDH9J6kYh5ADDpOQdOED9ZA8BrC4UQRJuR3ETOK6cXM2Ci2mu2cq13K/A172Ahma/3lJyR+ES+nr3O+c4qj80ts+N+KTFy0Ja90swTw1NjWxijhPj/OoNV4LcOPb3LDGS8xns0xRjVjtOkSB3YdIU85GTQgEfyXCVJTDsQxIBu271kbKoexlqoCX5lUWQDZiGRPiYYSUqM=
+ 3G4ovS+N/HuLERAhs9rq6tUHcAaek9LBhwjTJ1uBbqLBf88/LwosJRvEH4Isr5TPiGQ49h9I9ETwhR6+KnG7gj+ZmHN9XdtcRBjWtyBL86DSwOXmfKKbCVR/qUC5ywI7/IEljK3E3Lg/zU8bFc6VAQGS7XvW1Hr+r6HHpo2Sh15r8Cc3hLi43EEZ1V8zS0oXQCqco6CBtqUSyaDEknO5LVVKuN/TtNDDQLQf+C9Shiv/bULnKCpUlhZYR+0GjGZTUR9RSquE8miLOBOPCqEDD/fUe/nBLejbKqFDjRL768EERhEiAbxDKjyrYytKjLAfsQ3c4X0OevYAjE7+pwhukknn2erFxWAC6cI598APb0+EFFGqpbqJd0BTrYZ6KMbw3MiShmFD83Tv/hVcsOXAR41Nel2MYi5G1jZo6frIZm67f0hxGuG9aXijXcIHx5YLKg8AlNkB/RiHTBaPOYEHQdX7skrXT/iRoh1lW0uP8qqu23o1G6DfhHHH/TSq/QppiDF7g5H+W8FTU+wANyw0IS4PUj/14H+ul1rjeAzJE7TOENT5E66KNc5AN7n3JwAT+YBwlHP+2ILrcY5z2rm3z+MxuDor0GC6xsTbsd17byfw4QPF4z+aXXOza06cnIiib/Q8jNJAvsHrVtPiwhN6l0w2PuOrxTzT30odiVC/qdOwttytVwKPFj04jHMxNH70IwoaMkdoDk/SS1zEEiyPmzhcJ2fHFYP3gZ/Ha9X3HYo=
 x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:IA1PR12MB9030.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(376014)(7416014)(23010399003)(11063799006)(56012099006)(4143699003)(38070700021)(10067099003)(22082099003)(18002099003);DIR:OUT;SFP:1101;
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:IA1PR12MB9030.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(23010399003)(1800799024)(7416014)(376014)(10067099003)(4143699003)(38070700021)(56012099006)(3023799007)(11063799006)(22082099003)(18002099003);DIR:OUT;SFP:1101;
 x-ms-exchange-antispam-messagedata-chunkcount: 1
 x-ms-exchange-antispam-messagedata-0:
- =?us-ascii?Q?Vq2cX+jtix8238Vvw/T+KYdFyNe7d4gDR/kWGcsil77Qg4FsQAGfXFjPobfX?=
- =?us-ascii?Q?eXSPWa8caxNHLP72IZu1/2ZyFe+peF/5DlAq7joUeVg8SCxzFzQRDXf/SPte?=
- =?us-ascii?Q?tmSfn+io7D3JxGXrPcNColMcTt2NMfOJTAFGdG26bXLL+qHK0iPIIGu7P85z?=
- =?us-ascii?Q?0KRJmSjdcRLHVoDDxFKBO4VQWzh5bKO0ZjQ172SEzv8bwCFQcM6Vl8kYKtLR?=
- =?us-ascii?Q?PJM7dpXttdKDVg/p17Dh0p9PRgyxwpXOk93IG7gvVsKzpmVM3iz5FOOlD2X/?=
- =?us-ascii?Q?JcVYvRpDBMxD1plkTv2kXeh41VMbgpdm60xGvfZwg9Zw4yRodhp7jw69f0j8?=
- =?us-ascii?Q?G4ExeC4qUgGbmL24KXSXHvNbOu9y4KHRt+Z1P4Dmjzv003f7UOK/vua5As80?=
- =?us-ascii?Q?5uCQMjTHIVJIgDuC+F1CVxMuQPItfFzdXvxvmAxQh4WttNjUt7teXz6DTnts?=
- =?us-ascii?Q?UDrF9p6ldZ1oXsARWe8F1qCZlWVKiIrudlD3vCGUrYdxbr5q80QMsbR2Pq7d?=
- =?us-ascii?Q?TQttDBTueKTCLzXGwmN9ivIOqRVpBfRUr1bSFIDYzVTexzCsUC+e68FGwrMv?=
- =?us-ascii?Q?4+irFgJx+R5mZZ50tXhN4TJ5Y2NRFeQqBBsAzYJ8VbyN0mXPZvmDsBOnsGrS?=
- =?us-ascii?Q?50NEkZ6RYuWHZuK2g+EvpuVCEdJJ3ib/Dx63ZUNEPau+rhMse1reNbanC4rH?=
- =?us-ascii?Q?qYLGRxCKKtAJj7ZVJkqj+uxXUaKeRu6dZz2u+4TvvbaQ0iSOzz+hxothxw5E?=
- =?us-ascii?Q?CoFa9aCRiixLe9pAuMxVcoR7yTS+q6gvOwfN1556i0o87/hB1WsHsNVa6Vz9?=
- =?us-ascii?Q?XtNIYzYTHl7FL5IqP6Q3gqVL93jHBndjUiW/foEPG8nIzxaAWdRutsqge5UT?=
- =?us-ascii?Q?1tt1W2QlNyRB/AEMwOYwuo6YrMDR8II4hxpl028/fYdK44I+eswNJUcEe5su?=
- =?us-ascii?Q?ByM7Dk7Etstu0x1YvM57X3KpsdUpk5Fp6D/qQx35vfTBJZqN/JUPpYga6fUu?=
- =?us-ascii?Q?drNPsCUfBBo/sy3+/wwJcABQnlNy8acHFEDIfDvmpsXIDBpqWUG0mJagRVyE?=
- =?us-ascii?Q?Yy3J9LKdSvob4EdZDCw5Zra37gZiFwygSuq+ChxfBovyjbk2sPsVumb/UKFz?=
- =?us-ascii?Q?palNuxbopD33JD/5/1hc/y6wntq1J1/2a+lC+mspmf6Dit5IRomgurISSIhM?=
- =?us-ascii?Q?mjTknpFWSWjF6oRem89p/046arvjk/Gj2D95cYVfjZKh19d2J2OnjdgCOOBo?=
- =?us-ascii?Q?ks360fVNNjgTclC61WZrdYwZddYFZfaM7K8wSkkJeR0ghEyjkOVp236PYvJ3?=
- =?us-ascii?Q?DNv/AJgJEiitrMhNY34UCz/Zh3aAacAGm21+IDvns4TMH1kj1bU5dHd1r9fw?=
- =?us-ascii?Q?LFDjkhzDDao4im+DYUtbT4Vw2Wp9MZ5doLLge3A/+LCOvEaHbUXWQXer1CCV?=
- =?us-ascii?Q?V0BuYBXoEqQAV/E7/NRKcBK3tIbNkGRvxp4nfv+V8KTudpE5PJBlYFKFkZy5?=
- =?us-ascii?Q?K/lyHPCyujxerTMiE1+EkcrpIxVfy5rtM2mhS179q7MWKGjHF6jSlOXfXHZ5?=
- =?us-ascii?Q?+nhPXvtI861OFssFJeYVJ0Ir9jx7KG3VD+915J88082mPq8dF1MQEM0Kr1ew?=
- =?us-ascii?Q?VnKeaxvIPHq497JTR5SvG8WvCiWKusT9CQel01TFSdnJnW8PkUEaLi+8NVIY?=
- =?us-ascii?Q?RyMHP1+QeQMzof7mpMkHdK3Pduf4qyyk8wrWRQAGe1IPydxm?=
+ =?us-ascii?Q?MRWpdG6pj9LRwpUQspc4S+lQHGfU3Kbn5SM1iJFteymfmGNeoYBtTWNflpop?=
+ =?us-ascii?Q?FOI11CVJuaPc5NRz8NuzoN+R6FjaCrigIj5YbN3zYov2N8saysTfGbAkEp9f?=
+ =?us-ascii?Q?sINsXxzQGWL9T8XEgSbBUlr4NvovqEglw2WNYl64IyEIZI4dyJzYhNUkLd4E?=
+ =?us-ascii?Q?ZX4Gdb4U3NNPHZfJv4fPTpxeb5A3Xh58U9c3A8HkD3Hx2ZirZw5/9gldjK+v?=
+ =?us-ascii?Q?KCRZ5QFeCb+06RovaXTA908aWeJxOu+T8tZixAPyugBsOnG0uT4VjjIYwx7m?=
+ =?us-ascii?Q?vPc2/ajxM8s885bQl1Ss7QtNWYGhl1Vn3cTDo/weFc88C/qtFlOdj+8um5dM?=
+ =?us-ascii?Q?R8yWKqVLyrGk1NTIxGDxnK0jC+Dutf7j4zz9MZgqtYV7lvp//jY1Jz1hGC6T?=
+ =?us-ascii?Q?L3mh+4FMVHC4vpmwWx3Wl75OoV/yshCyfk50S+r0rBxGrkymzYjFxzA8+0li?=
+ =?us-ascii?Q?b8sEZ5gBfiYBdbZGJ0tOG/uGW/U5ye5fXr8jM0GDQqyIEQYmhBWoa+j1Hi2C?=
+ =?us-ascii?Q?bF6JeuWTQRkGJyeMEnE6XTLE1cRaV9y/BZeFeDqDqP/ATzJBAUnHVAP4S/nW?=
+ =?us-ascii?Q?fIMaLshaDYm+O/GmArH1+SqCKMhHnViQYyK/RjzwrkszBhhRydUMG8F4gQt/?=
+ =?us-ascii?Q?oVy+8EEP4JjCXAMbQ6r8BOeawZK8qrQuB2Rnifba7oOanrCJzNPEOYDT9i36?=
+ =?us-ascii?Q?o4q6xj8IiWysk0JBUkShT4LrUy8L+5r+CN8SnEhXgpLmdKHuhIHrZ2XVffNa?=
+ =?us-ascii?Q?wmBd/tYoQrE3D/j20kQDMB0Hz0AcrPqyMnYfXwuENe3zKra/ffnicXMXQNeU?=
+ =?us-ascii?Q?iT3kEGQgbO1rFCPwzc0IBTDYga21TxPC7YX/gKpcSyG7Wl4gOl1W5IZMg9Wv?=
+ =?us-ascii?Q?+WEt5UrFieY5BHdbFSTfHNfO8zD+bjbrTj11bHgfgze6+PKktE7uqF1YWU+A?=
+ =?us-ascii?Q?Q28ZVk+x6AicvNQV9KhgxY7RexdI4+RhWYPi7IPQTkJhNKUnsww/h5uJWYAk?=
+ =?us-ascii?Q?/xy15VFqEPJEIVGv5rJEsnivy1O5LKgqhkqTPyxiSmwmVvj3VNTO8vPrs7AW?=
+ =?us-ascii?Q?9QVqaZoWYUA8p6+4cEnxCEAHAdFIY4CQfuEIfOYKFxEtSdDNvkpvCKuDQRPl?=
+ =?us-ascii?Q?CyGrI63YSJ5PdZvudtjGILH9dicFFZ7Q4DsYiml8O02R36CzPNS5sWHN274W?=
+ =?us-ascii?Q?3TWAVH4EBlyodvtadA7TlPzLTJHWDc24C+qIsbTW+xMtkO3ve9XHxww/+5/B?=
+ =?us-ascii?Q?bUJX28mLgUKG7bDD/xV8jo9ZJQK33ZGtEn+dzl4Qy4t5v/tE4nCma2nSut/H?=
+ =?us-ascii?Q?dhodWNWmfZPQIcEn1CdTHsyRVju2aAkl4nItilYompm8/y0uXXC6lWYXhVwA?=
+ =?us-ascii?Q?LYoemAkmFlBJTlZlt9xv8gHBWpHb0WtPTKq2a1kZJs4fPuraHHxngNcg6vEl?=
+ =?us-ascii?Q?Q0yQln4HHshC/poRCrDXX1fp6IBcSCCRuJzRovyjreKm4m9GqQK71+qIGphi?=
+ =?us-ascii?Q?A9jj7xauC1ioTkS2yq64VAU4kOUdxbBvU2AdrL4A3Zjp0Tdycu+N3LhQhvam?=
+ =?us-ascii?Q?jR0F3xhsfkfvAKgKvPGCa1gNz2twHOlJwQjEritVAH4Mip3BrreWevxKjkvD?=
+ =?us-ascii?Q?aL7PGUgAuh10qoECV+lpwdD5y3kh7QzJ6rG0dj8+2niVTCZaVv2XlBcKwOqu?=
+ =?us-ascii?Q?/Tjcc4Ef9RxGKVwqiPxTAzUW7wp6LnTQiC1S64E1fBVnSfQh?=
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
@@ -135,20 +135,20 @@ MIME-Version: 1.0
 X-OriginatorOrg: Nvidia.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
 X-MS-Exchange-CrossTenant-AuthSource: IA1PR12MB9030.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 3ef57673-b392-4614-7617-08df17c6035d
-X-MS-Exchange-CrossTenant-originalarrivaltime: 21 Sep 2026 09:52:13.7085
+X-MS-Exchange-CrossTenant-Network-Message-Id: 9b98f968-9274-4cda-ccaf-08df17c6dffb
+X-MS-Exchange-CrossTenant-originalarrivaltime: 21 Sep 2026 09:58:23.8240
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: 43083d15-7273-40c1-b7db-39efd9ccc17a
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: 910dmZLrQJNLBjkTak1NTjUVZqgffiTF2fQxHGHeNvxFzqnE2NJurVKnvv6iZsk3K9DWZXOsBM5yPXrNiG1vaw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BL4PR12MB9534
+X-MS-Exchange-CrossTenant-userprincipalname: POhPd4FNHqjSw8eylaDyYSOftRjFjqhof+70YPVrOcYeFkUb7n/IV+nUmxLejnVmnAeM/dFvnjxZieoc2tybxg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA0PR12MB8974
 
 
 
 > -----Original Message-----
 > From: Richard Cheng <icheng@nvidia.com>
-> Sent: Thursday, September 17, 2026 12:59 PM
+> Sent: Thursday, September 17, 2026 1:25 PM
 > To: Manish Honap <mhonap@nvidia.com>
 > Cc: alex@shazbot.org; jgg@ziepe.ca; Ankit Agrawal <ankita@nvidia.com>;
 > jic23@kernel.org; dave.jiang@intel.com; alejandro.lucero-palau@amd.com;
@@ -163,100 +163,268 @@ X-MS-Exchange-Transport-CrossTenantHeadersStamped: BL4PR12MB9534
 > doc@vger.kernel.org; linux-kernel@vger.kernel.org; kvm@vger.kernel.org;
 > linux-cxl@vger.kernel.org; linux-pci@vger.kernel.org; linux-
 > kselftest@vger.kernel.org; linux-hardening@vger.kernel.org
-> Subject: Re: [PATCH v5 21/27] vfio/cxl: Exclude the HDM decoder registers
-> from direct BAR access
+> Subject: Re: [PATCH v5 24/27] vfio/cxl: Export the HDM memory region as a
+> dma-buf
 >=20
-> On Thu, Sep 17, 2026 at 12:05:34AM +0800, mhonap@nvidia.com wrote:
+> On Thu, Sep 17, 2026 at 12:05:37AM +0800, mhonap@nvidia.com wrote:
 > > From: Manish Honap <mhonap@nvidia.com>
 > >
-> > The HDM decoder register block lives in the component BAR that
-> > vfio-pci owns. The guest reads the decoder only through the trapped,
-> > read-only decoder region; it must not reach the physical registers
-> > through the BAR directly, and a host read of the range through a
-> > kernel mapping could abort as a fatal host SError.
+> > A Type-2 accelerator issues ATS-translated DMA to addresses inside its
+> > own HDM window, so that coherent host range must be present in the
+> > guest's IOAS (the iommufd IOAS backing the nested SMMU stage-2).
+> > iommufd maps a struct-page-less range only by fd, via
+> > IOMMU_IOAS_MAP_FILE over a dma-buf; a userspace-VA
+> IOMMU_IOAS_MAP of
+> > the HDM mmap is rejected because the VMA is VM_IO | VM_PFNMAP.
+> Without
+> > a dma-buf the range could only be mapped through an out-of-tree PFNMAP
+> work-around.
 > >
-> > Add the block to the generic excluded-range list with
-> > VFIO_PCI_EXCLUDE_MMAP | VFIO_PCI_EXCLUDE_READ |
-> VFIO_PCI_EXCLUDE_WRITE
-> > similar to the MSI-X exclusion.
+> > vfio-pci already exports BAR memory as a P2P dma-buf, but the exporter
+> > is BAR-only: vfio_pci_core_feature_dma_buf() rejects any region index
+> > at or above the ROM index, and vfio_pci_core_get_dmabuf_phys()
+> > resolves the physical range from a PCI BAR. The HDM memory region is a
+> > dynamic device-specific region, not a BAR.
 > >
->=20
-> Hi Manish,
->=20
-> I think we need to block eventfd write and BAR DMA as well ?
->=20
-> Have some comments below.
->=20
->=20
+> > Let a device-specific region reach the device's get_dmabuf_phys(): a
+> > region index at or above VFIO_PCI_NUM_REGIONS skips the BAR-resource
+> > check and is validated by the driver instead, bounded to the regions
+> > that exist. Install a CXL-aware get_dmabuf_phys() in the vfio-cxl
+> > provider that returns cxl->hpa_range for the HDM memory region and
+> > delegates real BARs to the core, keeping the BAR path unchanged and
+> > the core free of CXL knowledge.
+> >
+> > The HDM window is coherent host memory with no p2pdma provider of its
+> > own, so borrow BAR 0's, matching nvgrace-gpu's handling of its non-BAR
+> > device memory. The iommufd importer does not consume the provider; the
+> > scatterlist map path (real peer DMA) is left to a follow-up once
+> > upstream grows a negotiated interconnect for coherent CXL memory.
+> >
 > > Assisted-by: LLM
 > > Signed-off-by: Manish Honap <mhonap@nvidia.com>
 > > ---
-> >  drivers/vfio/pci/cxl/vfio_cxl_core.c | 17 +++++++++++++++++
-> >  1 file changed, 17 insertions(+)
+> >  drivers/vfio/pci/cxl/vfio_cxl_core.c | 60
+> ++++++++++++++++++++++++++++
+> >  drivers/vfio/pci/vfio_pci_dmabuf.c   | 27 +++++++++++--
+> >  2 files changed, 83 insertions(+), 4 deletions(-)
 > >
 > > diff --git a/drivers/vfio/pci/cxl/vfio_cxl_core.c
 > > b/drivers/vfio/pci/cxl/vfio_cxl_core.c
-> > index da04776356e4..37e8a3b54cfb 100644
+> > index 5fe8e35c63c4..55fa1f86850d 100644
 > > --- a/drivers/vfio/pci/cxl/vfio_cxl_core.c
 > > +++ b/drivers/vfio/pci/cxl/vfio_cxl_core.c
-> > @@ -435,8 +435,25 @@ static int vfio_cxl_add_region(struct
-> > vfio_pci_core_device *vdev, u32 subtype,  static int
-> > vfio_cxl_open_device(struct vfio_pci_core_device *vdev)  {
-> >  	struct vfio_cxl_state *cxl =3D vdev->cxl;
-> > +	struct pci_dev *pdev =3D vdev->pdev;
-> >  	int ret;
+> > @@ -11,6 +11,7 @@
+> >  #include <linux/mm.h>
+> >  #include <linux/module.h>
+> >  #include <linux/pci.h>
+> > +#include <linux/pci-p2pdma.h>
+> >  #include <linux/range.h>
+> >  #include <linux/slab.h>
+> >  #include <linux/uaccess.h>
+> > @@ -27,6 +28,7 @@
+> >   * @hdm_regs: mapped HDM decoder registers, read live by the decoder
+> region
+> >   * @hdm_len: length of the HDM decoder register block
+> >   * @hdm_valid: true when host CPU access to the HDM range is safe;
+> > under memory_lock
+> > + * @mem_region_index: vfio region index of the mmap-able HDM memory
+> > + region
+> >   */
+> >  struct vfio_cxl_state {
+> >  	struct cxl_dev_state cxlds;
+> > @@ -36,6 +38,7 @@ struct vfio_cxl_state {
+> >  	void __iomem *hdm_regs;
+> >  	u32 hdm_len;
+> >  	bool hdm_valid;
+> > +	unsigned int mem_region_index;
+> >  };
 > >
+> >  static unsigned long vfio_cxl_mem_pgoff(struct vm_area_struct *vma,
+> > @@ -289,6 +292,50 @@ static void vfio_cxl_release_hpa(void *data)
+> >  	release_mem_region(cxl->hpa_range.start,
+> > range_len(&cxl->hpa_range));  }
+> >
+> > +/*
+> > + * Resolve the physical range that backs a dma-buf export. The core
+> > +exporter
+> > + * only knows BARs; teach it the HDM memory region so a guest IOAS
+> > +can map the
+> > + * coherent window by fd (IOMMU_IOAS_MAP_FILE) instead of the
+> removed
+> > +PFNMAP
+> > + * work-around. Real BARs stay on the byte-identical core path.
+> > + */
+> > +static int vfio_cxl_get_dmabuf_phys(struct vfio_pci_core_device *vdev,
+> > +				    struct p2pdma_provider **provider,
+> > +				    unsigned int region_index,
+> > +				    struct phys_vec *phys_vec,
+> > +				    struct vfio_region_dma_range
+> *dma_ranges,
+> > +				    size_t nr_ranges)
+> > +{
+> > +	struct vfio_cxl_state *cxl =3D vdev->cxl;
+> > +
+> > +	/* Real BARs go through the core P2P exporter unchanged. */
+> > +	if (region_index < VFIO_PCI_NUM_REGIONS)
+> > +		return vfio_pci_core_get_dmabuf_phys(vdev, provider,
+> > +						     region_index, phys_vec,
+> > +						     dma_ranges, nr_ranges);
+> > +
+> > +	/* Of the device regions, only the HDM memory window is exportable.
+> */
+> > +	if (region_index !=3D cxl->mem_region_index)
+> > +		return -EINVAL;
+> > +
 > > +	/*
-> > +	 * Keep the HDM decoder block out of the guest's direct BAR access:
-> the
-> > +	 * guest reaches it only through the trapped decoder region, and a
-> host
-> > +	 * read of the range through a kernel mapping could abort as an SErro=
-r.
-> > +	 * Exclude it from mmap, fill reads with -1 and drop writes. The list=
- is
-> > +	 * cleared on close, so re-add it per open.
+> > +	 * The HDM window is coherent host memory, not BAR MMIO, so it
+> has no
+> > +	 * p2pdma provider of its own. Borrow BAR 0's: the P2P properties
+> match
+> > +	 * and the iommufd importer does not consume the provider. The sgt
+> map
+> > +	 * path (real peer DMA) is not supported for the HDM window.
 > > +	 */
-> > +	ret =3D vfio_pci_core_add_excluded_range(vdev, pdev->hdm->hdm_bar,
-> > +					       pdev->hdm->hdm_offset,
-> > +					       cxl->hdm_len,
-> > +					       VFIO_PCI_EXCLUDE_MMAP |
-> > +					       VFIO_PCI_EXCLUDE_READ |
-> > +					       VFIO_PCI_EXCLUDE_WRITE);
+> > +	*provider =3D pcim_p2pdma_provider(vdev->pdev, 0);
 >=20
-> This adds the HDM reg to the exclusion list, but the eventfd and BAR DMA
-> path doesn't check that.
+> I think of a weird scenario which might make peer DMA work, not sure if t=
+hat's
+> possible.
 >=20
-> Maybe we need to block those 2 path as well ?
+> userspace can give this dma-buf fd to an NIC driver or so to do RDMA ? us=
+e
+> HDM memory as network buffer ?
 >=20
+> If that's the case and direct P2P addressing is selected, it applies BAR =
+0's bus
+> offset to HDM physical address.
+>=20
+> Maybe explicitly reject peer-DMA mapping would be safer ?
 
-Thanks, yes, I Agree on both. The excluded-range list was only consulted on
-the fd read/write and mmap paths, so, I think, the decoder block is still
-reachable two other ways suggested above.
+Yes, I think this will require handling.
 
-For ioeventfd: I will add a guard in vfio_pci_ioeventfd() to reject a
-registration whose [pos, pos + count) overlaps a write-excluded range, righ=
-t
-next to the existing MSI-X guard.
-
-For BAR DMA. I will add a check in vfio_pci_core_feature_dma_buf() to rejec=
-t
-an export whose ranges overlap an excluded range on that BAR.
+For v6, I will tag the HDM export with no_peer2peer and vfio_pci_dma_buf_ma=
+p()
+return -EOPNOTSUPP for it, so a peer-DMA mapping is refused cleanly instead=
+ of being
+handed a wrong address.
 
 Thanks,
 Manish
 
+>=20
 > Best regards,
 > Richard Cheng.
 >=20
 >=20
-> > +	if (ret)
-> > +		return ret;
+> > +	if (!*provider)
+> > +		return -EINVAL;
+> > +
+> > +	return vfio_pci_core_fill_phys_vec(phys_vec, dma_ranges, nr_ranges,
+> > +					  cxl->hpa_range.start,
+> > +					  range_len(&cxl->hpa_range));
+> > +}
+> > +
+> > +static const struct vfio_pci_device_ops vfio_cxl_pci_dev_ops =3D {
+> > +	.get_dmabuf_phys =3D vfio_cxl_get_dmabuf_phys, };
+> > +
+> >  static int vfio_cxl_init_device(struct vfio_pci_core_device *vdev)  {
+> >  	struct pci_dev *pdev =3D vdev->pdev;
+> > @@ -483,6 +530,19 @@ static int vfio_cxl_open_device(struct
+> vfio_pci_core_device *vdev)
+> >  	if (ret)
+> >  		return ret;
+> >
+> > +	/* Record where the HDM memory region landed for the dma-buf
+> export. */
+> > +	cxl->mem_region_index =3D VFIO_PCI_NUM_REGIONS + vdev-
+> >num_regions -
+> > +1;
+> > +
+> > +	/*
+> > +	 * Override the device ops so a dma-buf export of the HDM memory
+> region
+> > +	 * resolves to the coherent host range. This is done at open, not ini=
+t:
+> > +	 * vfio_pci_probe() resets pci_ops after vfio_alloc_device() returns,=
+ so
+> > +	 * an override installed during init would be clobbered. Only a CXL
+> device
+> > +	 * reaches this hook (cxl_ops is set on init success), so a fallback =
+to
+> > +	 * plain vfio-pci keeps the core ops.
+> > +	 */
+> > +	vdev->pci_ops =3D &vfio_cxl_pci_dev_ops;
+> > +
+> >  	ret =3D vfio_cxl_add_region(vdev,
+> VFIO_REGION_SUBTYPE_CXL_COMP_REGS,
+> >  				  &vfio_cxl_comp_regops, cxl->hdm_len,
+> >  				  VFIO_REGION_INFO_FLAG_READ |
+> > diff --git a/drivers/vfio/pci/vfio_pci_dmabuf.c
+> > b/drivers/vfio/pci/vfio_pci_dmabuf.c
+> > index c16f460c01d6..436c616d5b66 100644
+> > --- a/drivers/vfio/pci/vfio_pci_dmabuf.c
+> > +++ b/drivers/vfio/pci/vfio_pci_dmabuf.c
+> > @@ -178,6 +178,15 @@ int vfio_pci_core_get_dmabuf_phys(struct
+> > vfio_pci_core_device *vdev,  {
+> >  	struct pci_dev *pdev =3D vdev->pdev;
+> >
+> > +	/*
+> > +	 * This resolver only handles PCI BARs. A device-specific region inde=
+x
+> > +	 * (>=3D PCI_STD_NUM_BARS) would index pdev->resource[] out of
+> bounds via
+> > +	 * pcim_p2pdma_provider(), so reject it; a driver that exports such a
+> > +	 * region installs its own get_dmabuf_phys.
+> > +	 */
+> > +	if (region_index >=3D PCI_STD_NUM_BARS)
+> > +		return -EINVAL;
+> > +
+> >  	*provider =3D pcim_p2pdma_provider(pdev, region_index);
+> >  	if (!*provider)
+> >  		return -EINVAL;
+> > @@ -227,6 +236,7 @@ int vfio_pci_core_feature_dma_buf(struct
+> vfio_pci_core_device *vdev, u32 flags,
+> >  	DEFINE_DMA_BUF_EXPORT_INFO(exp_info);
+> >  	struct vfio_pci_dma_buf *priv;
+> >  	size_t length;
+> > +	u32 index;
+> >  	int ret;
+> >
+> >  	if (!vdev->pci_ops || !vdev->pci_ops->get_dmabuf_phys) @@ -
+> 243,13
+> > +253,22 @@ int vfio_pci_core_feature_dma_buf(struct
+> vfio_pci_core_device *vdev, u32 flags,
+> >  	if (!get_dma_buf.nr_ranges || get_dma_buf.flags)
+> >  		return -EINVAL;
+> >
+> > +	index =3D get_dma_buf.region_index;
 > > +
 > >  	/*
-> >  	 * vfio_pci_core_disable() frees all dynamic regions on close, so
-> register
-> >  	 * them here per open rather than at bind. A failed first open never
+> > -	 * For PCI the region_index is the BAR number like everything
+> > -	 * else.  Check that PCI resources have been claimed for it.
+> > +	 * A fixed region index is the BAR number; only a BAR can be exported
+> > +	 * and its PCI resource must be claimed. A device-specific region (in=
+dex
+> > +	 * >=3D VFIO_PCI_NUM_REGIONS) has no BAR resource and is validated
+> by the
+> > +	 * device's get_dmabuf_phys instead, but the index must name a
+> region
+> > +	 * that exists.
+> >  	 */
+> > -	if (get_dma_buf.region_index >=3D VFIO_PCI_ROM_REGION_INDEX ||
+> > -	    IS_ERR(vfio_pci_core_get_iomap(vdev,
+> get_dma_buf.region_index)))
+> > +	if (index < VFIO_PCI_NUM_REGIONS) {
+> > +		if (index >=3D VFIO_PCI_ROM_REGION_INDEX ||
+> > +		    IS_ERR(vfio_pci_core_get_iomap(vdev, index)))
+> > +			return -ENODEV;
+> > +	} else if (index - VFIO_PCI_NUM_REGIONS >=3D vdev->num_regions) {
+> >  		return -ENODEV;
+> > +	}
+> >
+> >  	dma_ranges =3D memdup_array_user(&arg->dma_ranges,
+> get_dma_buf.nr_ranges,
+> >  				       sizeof(*dma_ranges));
 > > --
 > > 2.25.1
 > >
