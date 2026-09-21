@@ -1,94 +1,190 @@
-Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
+Received: from mout-p-201.mailbox.org (mout-p-201.mailbox.org [80.241.56.171])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68C5040B0EC;
-	Mon, 21 Sep 2026 20:20:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=204.191.154.188
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2699343B4BD;
+	Mon, 21 Sep 2026 20:25:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790022010; cv=none; b=fAfsvBT+8O/mbj174NsYh4bSaJq77dotdcfmDFKNG5LIJDp5qzXy/19gDaL/oDEI4oRmUxRm+08mFPUjk6UnCZV7fNoVzLG714LWvTEORaDZdwbvv5FCKM8SpuWsZnq0hiAuVkn2nDKKoF0/sTNVYMj7v84Xm1qKmaRlUHAoHgQ=
+	t=1790022310; cv=none; b=sVEMFwZysmqFe0VJOi+M2GCoszAqZShAXd75cc0EjRpH3k5vG5TNwyOG3JgzmHM6MR7zzCBE7JNE+JjywEmXFWb981iXITf/hqGFbGYx/dbyvX95Vh01HYyE0HFcZLHrahA9rRUp6DjEu6vRWz4PMkPzViFWgD4R43LlrXn1aQ0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790022010; c=relaxed/simple;
-	bh=ULL2sCfVDm6zc7ankviblB2XQp/aT+4WTaCaV0sJlaw=;
-	h=Message-ID:Date:MIME-Version:To:Cc:References:From:In-Reply-To:
-	 Content-Type:Subject; b=eDcUrMPElDptb2Al+8iigZIYmR828zM7+g1zRpu1qMbMAeRH3hI1zTEzDs8SxPN7YasJJ0X5NLmalb7TK5qc/a3GdsSF7CDL3OukDuiaSZqQ7lnErH4Zxioc+dYyTZLTk4RL5QKvuyoAODKmyd358L3k1Ggg1+w7pEf6QkiBLE8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com; spf=pass smtp.mailfrom=deltatee.com; dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b=hBugeAc7; arc=none smtp.client-ip=204.191.154.188
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=deltatee.com
+	s=arc-20240116; t=1790022310; c=relaxed/simple;
+	bh=5aTX38hlAzLLBg7PQAMJ3viQM6pgFp+XJaTWYrtw7ig=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=K8Qj1CjIkaEY8Rwc+6oyLJyLqNyTrmb3F0y4axrddBIbPntTDrmRPhYfphxNExnO4n9sDmXHXcdZtcQPn98TrBeWqLIim/yQdo2afiQ79HUunzmjUNt/5XKYUIKZjFMAg4G0ZV237giqAR4FITqhaGQJaBVPbisQippIX+7bp5A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=QuEBpeOu; arc=none smtp.client-ip=80.241.56.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b="hBugeAc7"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
-	MIME-Version:Date:Message-ID:content-disposition;
-	bh=/kI6oW2E5j3Q5O4fdEa3eYERY9JobvSzq1pyfLPXvP8=; b=hBugeAc7MrRyOU4zBBCUqtS5XS
-	6+RXvhBejB2Fpn0eyZquoh0extXUkJ3cSiML7q4kcs+2HZShy/FLhx3xDR8ERnzuxkkOygY4Dyxp/
-	cxBNa2IKbP7A7czer0QQNdwZVLcrB8Qgjf4BUS1DyXjVpeDFvB9EaO6JLg1TRi3xb2RiKmH5JI+uC
-	EQsgw3q1T+FeczuwLQHEDxk6luELJbNOfCyzAOuDwobdL3t7hEyxq6eX141qiHY38qeDbDgUgWpHL
-	GZH9fnTofY1KboZF0j5B6HBoFPFWZMuwg2fmN+7+TaxYsyuurMOSpMH4wlQjZ2oNNOAv6NSrY9w6I
-	cStzuOnA==;
-Received: from guinness.priv.deltatee.com ([172.16.1.162])
-	by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-	(Exim 4.98.2)
-	(envelope-from <logang@deltatee.com>)
-	id 1x8kUe-0000000F4dP-3Hw8;
-	Mon, 21 Sep 2026 14:20:05 -0600
-Message-ID: <dada3ea0-61e7-479b-96c4-241eb3420542@deltatee.com>
-Date: Mon, 21 Sep 2026 14:20:02 -0600
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="QuEBpeOu"
+Received: from smtp1.mailbox.org (smtp1.mailbox.org [10.196.197.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mout-p-201.mailbox.org (Postfix) with ESMTPS id 4hpZTq64Y3zMlQy;
+	Mon, 21 Sep 2026 22:25:03 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
+	t=1790022303;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=dRzP3ENc6tuYZpq9SJzScYYWeAdwA1kasfQ0tDxWbZ0=;
+	b=QuEBpeOuKwpwI2owvAPpi2sDUtIlmAI5oEYI6LHXnTxCxeNfHpEJ0cs3J6ZuX7qcuEk+Df
+	UmMYYF6iECx5iLyqmLQKZqMs/rLRmzsgc/5BYhaxdry9efXniuye8wVkVoJ//7QS87fTax
+	2V8zeCmCLCT8B8g0aStLxftktEpNonaEY+fVE3eZ8MyGJVgCy/P+O/CQe0lqVyjiW5w1lB
+	HxcKbdgBlONGuFCbMzSxULf0FoJPpM6c3tGmz5fXU8p7DPCxztPIV0JfSMx6UxYIu8UWMg
+	+LEnfKMN08OusujSt397i0pRdMdD6pCNwnQd9uMLUyK+sOnC3fPnTGIRyEOIqg==
+Message-ID: <064d546b-faf9-4dfc-bdbe-f4ed787ac44e@mailbox.org>
+Date: Mon, 21 Sep 2026 22:24:59 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-To: Leon Romanovsky <leon@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
- Chaitanya Kulkarni <kch@nvidia.com>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jens Axboe
- <axboe@kernel.dk>, Alex Williamson <alex@shazbot.org>,
- Ankit Agrawal <ankita@nvidia.com>, Jason Gunthorpe <jgg@ziepe.ca>,
- Jonathan Corbet <corbet@lwn.net>, Shuah Khan <skhan@linuxfoundation.org>,
- "Joerg Roedel (AMD)" <joro@8bytes.org>, Will Deacon <will@kernel.org>,
- Robin Murphy <robin.murphy@arm.com>, Randy Dunlap <rdunlap@infradead.org>,
- Sumit Semwal <sumit.semwal@linaro.org>,
- =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-doc@vger.kernel.org, iommu@lists.linux.dev,
- Tushar Dave <tdave@nvidia.com>, linux-media@vger.kernel.org,
- dri-devel@lists.freedesktop.org, linaro-mm-sig@lists.linaro.org,
- linux-rdma@vger.kernel.org, kvm@vger.kernel.org
-References: <20260920-fix-p2p-acs-v4-0-v7-0-ca0828ab697c@nvidia.com>
- <20260920-fix-p2p-acs-v4-0-v7-7-ca0828ab697c@nvidia.com>
-Content-Language: en-CA
-From: Logan Gunthorpe <logang@deltatee.com>
-In-Reply-To: <20260920-fix-p2p-acs-v4-0-v7-7-ca0828ab697c@nvidia.com>
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: [PATCH v4 6/6] PCI: dwc: rcar-gen4: Add support for R-Car X5H
+ PCIe4
+To: Manivannan Sadhasivam <mani@kernel.org>
+Cc: linux-pci@vger.kernel.org, =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?=
+ <kwilczynski@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ Conor Dooley <conor+dt@kernel.org>,
+ Geert Uytterhoeven <geert+renesas@glider.be>,
+ Krzysztof Kozlowski <krzk+dt@kernel.org>,
+ Lorenzo Pieralisi <lpieralisi@kernel.org>, Rob Herring <robh@kernel.org>,
+ Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+ devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-renesas-soc@vger.kernel.org
+References: <20260905212649.360498-1-marek.vasut+renesas@mailbox.org>
+ <20260905212649.360498-7-marek.vasut+renesas@mailbox.org>
+ <ygec5dvolsujxmaxxjqnmusfj6shzszkiprlckbwqkdf6u6hc6@5sm6ayrfzkkm>
+Content-Language: en-US
+From: Marek Vasut <marek.vasut@mailbox.org>
+In-Reply-To: <ygec5dvolsujxmaxxjqnmusfj6shzszkiprlckbwqkdf6u6hc6@5sm6ayrfzkkm>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-SA-Exim-Connect-IP: 172.16.1.162
-X-SA-Exim-Rcpt-To: leon@kernel.org, bhelgaas@google.com, kch@nvidia.com, gregkh@linuxfoundation.org, axboe@kernel.dk, alex@shazbot.org, ankita@nvidia.com, jgg@ziepe.ca, corbet@lwn.net, skhan@linuxfoundation.org, joro@8bytes.org, will@kernel.org, robin.murphy@arm.com, rdunlap@infradead.org, sumit.semwal@linaro.org, christian.koenig@amd.com, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, iommu@lists.linux.dev, tdave@nvidia.com, linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org, linaro-mm-sig@lists.linaro.org, linux-rdma@vger.kernel.org, kvm@vger.kernel.org
-X-SA-Exim-Mail-From: logang@deltatee.com
-X-Spam-Level: 
-Subject: Re: [PATCH v7 07/19] PCI/P2PDMA: Answer routing per TLP class
-X-SA-Exim-Version: 4.2.1 (built Sun, 23 Feb 2025 07:57:16 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
+X-MBO-RS-META: 94x7icccsnrx48j1podtih9k5tnwhtgc
+X-MBO-RS-ID: 56bed019913caf2c494
 
+On 9/21/26 6:03 PM, Manivannan Sadhasivam wrote:
 
+Hello Manivannan,
 
-On 2026-09-20 05:41, Leon Romanovsky wrote:
-> From: Leon Romanovsky <leonro@nvidia.com>
+>> +static int rcar_gen5_pcie_speed_control(struct rcar_gen4_pcie *rcar)
+>> +{
+>> +	struct dw_pcie *dw = &rcar->dw;
+>> +	u32 lnkcap = dw_pcie_readl_dbi(dw, EXPCAP(PCI_EXP_LNKCAP));
+>> +	u32 lnksta = dw_pcie_readw_dbi(dw, EXPCAP(PCI_EXP_LNKSTA));
+>> +	u32 val, retries;
+>> +
+>> +	if ((lnksta & PCI_EXP_LNKSTA_CLS) == (lnkcap & PCI_EXP_LNKCAP_SLS))
+>> +		return 0;
+>> +
+>> +	/* Retrain link */
+>> +	val = dw_pcie_readw_dbi(dw, EXPCAP(PCI_EXP_LNKCTL));
+>> +	val |= PCI_EXP_LNKCTL_RL;
+>> +	dw_pcie_writew_dbi(dw, EXPCAP(PCI_EXP_LNKCTL), val);
+>> +
+>> +	/* Wait for link retrain */
+>> +	for (retries = 0; retries <= 10; retries++) {
 > 
-> calc_map_type_and_dist() returns one mapping type per provider and client,
-> valid only for strictly ordered Requests carrying an Untranslated address.
-> Clients that use Relaxed Ordering or ATS cannot ask what the fabric would
-> do with their traffic.
-> 
-> Add enum pci_p2pdma_tlp_flags to name a class and pci_p2pdma_map_type_tlp()
-> to ask about one. The topology walk and the ACS Control reads do not depend
-> on the class, so decide all of them from the one walk and cache them
-> together, four bits each. Every class still answers alike; the controls
-> that tell them apart come next.
-> 
-> Tested-by: Tushar Dave <tdave@nvidia.com>
-> Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
+> So this loop executes 11 times. Is that intented?
 
-Ok, this makes more sense to me after a fresh review:
+No, I don't think this is correct, or in fact sufficient. The training 
+should poll for at least 100ms.
 
-Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
+>> +		lnksta = dw_pcie_readw_dbi(dw, EXPCAP(PCI_EXP_LNKSTA));
+>> +
+>> +		/* Check retrain flag */
+>> +		if (!(lnksta & PCI_EXP_LNKSTA_LT))
+>> +			break;
+>> +
+>> +		usleep_range(1000, 1100);
+> 
+> What is the expected behavior if the Link retrain is not successfull? If it is
+> safe to continue, shouldn't the users be warned atleast?
+
+They should, I will be replacing this with this simpler option, which 
+returns -ETIMEDOUT in case the training failed:
+
+diff --git a/drivers/pci/controller/dwc/pcie-rcar-gen4.c 
+b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
+index a5feb73864c7f..7f4bda6a492ab 100644
+--- a/drivers/pci/controller/dwc/pcie-rcar-gen4.c
++++ b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
+@@ -183,7 +183,7 @@ static int rcar_gen5_pcie_speed_control(struct 
+rcar_gen4_pcie *rcar)
+         struct dw_pcie *dw = &rcar->dw;
+         u32 lnkcap = dw_pcie_readl_dbi(dw, EXPCAP(PCI_EXP_LNKCAP));
+         u32 lnksta = dw_pcie_readw_dbi(dw, EXPCAP(PCI_EXP_LNKSTA));
+-       u32 val, retries;
++       u32 val;
+
+         if ((lnksta & PCI_EXP_LNKSTA_CLS) == (lnkcap & PCI_EXP_LNKCAP_SLS))
+                 return 0;
+@@ -193,18 +193,10 @@ static int rcar_gen5_pcie_speed_control(struct 
+rcar_gen4_pcie *rcar)
+         val |= PCI_EXP_LNKCTL_RL;
+         dw_pcie_writew_dbi(dw, EXPCAP(PCI_EXP_LNKCTL), val);
+
+-       /* Wait for link retrain */
+-       for (retries = 0; retries <= 10; retries++) {
+-               lnksta = dw_pcie_readw_dbi(dw, EXPCAP(PCI_EXP_LNKSTA));
+-
+-               /* Check retrain flag */
+-               if (!(lnksta & PCI_EXP_LNKSTA_LT))
+-                       break;
+-
+-               usleep_range(1000, 1100);
+-       }
+-
+-       return 0;
++       /* Wait for link retrain, 500ms must be enough for all link 
+rates. */
++       return read_poll_timeout(dw_pcie_readw_dbi, lnksta, !(lnksta & 
+PCI_EXP_LNKSTA_LT),
++                                1000, 5 * PCIE_RESET_CONFIG_WAIT_MS * 
+USEC_PER_MSEC,
++                                false, dw, EXPCAP(PCI_EXP_LNKSTA));
+  }
+
+  /*
+
+>> +	}
+>> +
+>> +	return 0;
+>> +}
+>> +
+>>   /*
+>>    * Enable LTSSM of this controller and manually initiate the speed change.
+>>    * Always return 0.
+>> @@ -285,6 +322,49 @@ static int rcar_gen4_v4h_v4m_pcie_init(struct rcar_gen4_pcie *rcar)
+>>   	return 0;
+>>   }
+>>   
+
+[...]
+
+>> +static int rcar_gen5_pcie_ltssm_control(struct rcar_gen4_pcie *rcar, bool enable)
+>> +{
+>> +	u32 val;
+>> +
+>> +	val = readl(rcar->base + PCIERSTCTRL1);
+>> +	if (enable) {
+>> +		val |= APP_LTSSM_ENABLE;
+>> +		val &= ~APP_HOLD_PHY_RST;
+>> +	} else {
+>> +		val &= ~APP_LTSSM_ENABLE;
+>> +		val |= APP_HOLD_PHY_RST;
+>> +	}
+>> +	writel(val, rcar->base + PCIERSTCTRL1);
+>> +
+>> +	if (enable)
+>> +		phy_power_on(rcar->phy);
+>> +	else
+>> +		phy_power_off(rcar->phy);
+> 
+> It is quite unusual to handle PHY power on/off in the start_link() callback.
+> Should this be moved to init/deinit callbacks?
+
+This really has to be here, else the controller programming order does 
+not follow the sequence in the SoC datasheet.
