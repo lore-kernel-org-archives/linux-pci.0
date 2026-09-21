@@ -1,53 +1,53 @@
-Received: from mout-p-103.mailbox.org (mout-p-103.mailbox.org [80.241.56.161])
+Received: from mout-p-101.mailbox.org (mout-p-101.mailbox.org [80.241.56.151])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 08C62443ABC;
-	Mon, 21 Sep 2026 20:28:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.161
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1DA5F441022;
+	Mon, 21 Sep 2026 20:28:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.151
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790022525; cv=none; b=QOZ6p5S9Kr+4iggVC9ImzNeq8wfrH0K5XJKLTrC3AX2fxK0F9MUCCpPeXO9YPZKW+9xBeOnnn+d6rqnfCSV1loZyeqF6VY3ral/mtI3rsFhj5UympCNA9Vq4XlucV5pB0dzlSDR3tdIAl/TVMEr1vKhhXSI+3v7m4aqx9aLU6So=
+	t=1790022528; cv=none; b=t16SgTAtAcBvnx+6B/D69aDCPcg1fWrHgWU8lFg7Jx1Qklq+PPt1YKWMaJbNgkunEnRdbGGiDfEehgk6wd2BR1Xil+Qvz+YAYgKqd9309JnIFW1foh1m3Pa2BdPUeRVqVl8IvmRmZVp7wGX7nOZTn3QRbQkZ97U5t1hwMLYa++M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790022525; c=relaxed/simple;
-	bh=iriRxRjXxApn6UKPRYPf0CftQ5jFbwm2hBOmDBan1wc=;
+	s=arc-20240116; t=1790022528; c=relaxed/simple;
+	bh=P8L16suz7VBOVx07R7mi5MQcv06prTYWHXcH3VJ8P2U=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=nvFjQFfJ3qso7DRYfvWlikJNsE4aDnsNKiHU64D1/cy2PmD3mW/hrrAPqmdWrEA+rGfstmx+KfhTTn439NMdud69kKJS3vxqaxItlPD72FNq3WAbsjh7bDiil/+tm3D20KRFXsHjLO61/d4IHv/PvWJ5JI2d+MPqN61fzV+3uZc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=RZNsGSIN; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=buSPNDX/; arc=none smtp.client-ip=80.241.56.161
+	 MIME-Version:Content-Type; b=AgeozLY+oBVag4dfr9dbm5Zn5mvrCaHobr5UEXqXNsy2M+EbKt+0WhGS6N1gXGRLG4JMB/oz4yJZPV0qZz+ZoZAzmwciODnlfCLSIIMKFK3fxoZJS09wa/LDP5lz7Kk1kz/OLi6dhsD4Bl7ZQegtA9noe0ROE62AphC7rK4REHc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=NP8k+XDS; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=cielqIQ6; arc=none smtp.client-ip=80.241.56.151
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="RZNsGSIN";
-	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="buSPNDX/"
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="NP8k+XDS";
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="cielqIQ6"
 Received: from smtp102.mailbox.org (smtp102.mailbox.org [10.196.197.102])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mout-p-103.mailbox.org (Postfix) with ESMTPS id 4hpZZ0491MzKn4w;
-	Mon, 21 Sep 2026 22:28:40 +0200 (CEST)
+	by mout-p-101.mailbox.org (Postfix) with ESMTPS id 4hpZZ407P2z8tcC;
+	Mon, 21 Sep 2026 22:28:44 +0200 (CEST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-	t=1790022520;
+	t=1790022524;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=C6fKxRgnNxcw2W0jJNPuWEGwLL+Q4+J+8SS/wCBjkbA=;
-	b=RZNsGSINK0zrASFMeaYqQgUkVWijphmZJcSDNQscrq1ouEYXxrA1KaaEdcz1I4RS4wZ7aF
-	89Bs3NCQ4EApYElQhJ5zOg/eWBpLu6boJXzO22+6WnSxfxl+DHmwY1peSWeglhtBir5nqP
-	WuqdYi5h+/zY29moqJY30SG9n65F52gFuYQddQkS+P+Fvc5gtsEuB27FmVz/ZzmQ5OjGhf
-	6KpseYHO+wOYSG1ZGNAc/RiZZnB2s9PRU4SiKSoxzq4Bt7GB0IM7OIWEj4+BvaMd8gaFMU
-	zGJ6zwY4Jdv5gBrTnN2foDRbZViX+npT/zKU24iXQDfhY8IZl5QYyhjd3Y4CfA==
+	bh=Qy7vZHH1+7XkDNOHgWs6VdP38RbGsa3jTFiOU8vhUxw=;
+	b=NP8k+XDSjr+C6G8wucJAYa2QlIh1mptudDxcS/P55w9MTM4O7agv6MXbaWn+fzDE/j3/f6
+	kmah4lsTgLOVmBM2KMUlEXUlG9jbbrv/XgiovgPDMmqPRH3Ik16dxg2AjeYva3dQ/XlNeX
+	xoRw7jju7hPAW8qWcYuYSUnfl1lgVDuh1driJEHgkK+RmogMqU6X2WVyQ0bnOERe9gKjW2
+	Cg9xRCPRQXWW5IrbAczqMKp3VHpYyJUgpcxuoULJnu3fzUHevgEV7VfxpHUHLXnBqHzMji
+	F+msKS9bDlzGAypgFfVb66HiTOvAEK766CSe/HVCq7VPPbvQo8PpnIAIWOti8g==
 From: Marek Vasut <marek.vasut+renesas@mailbox.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-	t=1790022519;
+	t=1790022522;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=C6fKxRgnNxcw2W0jJNPuWEGwLL+Q4+J+8SS/wCBjkbA=;
-	b=buSPNDX/Zx2c35SV8yL1QBxcKtjlNiwNP5a43EntUuafo1UEULEDGBwqOE6xg/++CfYbTb
-	eC3MHqCX4A63JFNOGn0/Jygv6NbO4E6LRwZCWRSrzTZVjLIPouKj79TtkVGzaFa3wImru0
-	gld9GofKL1FrBrzA6uFI7LdIYU9wUD+edOsNHWuSY9uw/yAlL9+oGLZX6nMq0X3pBvmbCE
-	c3dlfQZ4DWFXeFkauULU3hdQ6ikaAPO/8T1H+anfxeoyUY742aXP1jVu23K1CVcuT1PC7w
-	JTXk04OdIhZnVyOyW9jC/ism/OohmD4/uVgnDwvXBIqVm6j18y8AVNK50uYUDw==
+	bh=Qy7vZHH1+7XkDNOHgWs6VdP38RbGsa3jTFiOU8vhUxw=;
+	b=cielqIQ6FXcX9e9dRkkrPPaKl/J/u95hGT+NokQRj3j5MWy6Vq0ZGMovPiPV36+LzE7SQe
+	yvOItBRQVOqM+39WDTaJbQsPrxIBD67cHcbA+WndN+0aYIAIp2MACN0l2EmhR+ATRd9wHa
+	y/BFSXsYWHDRYuSpbQFqvx/6pE65w8/xpOd2P0PgMM5A4O2xWZF3QEs7gmKhrQIqCswsyV
+	RMVY4r5Vl5cIGfFg0Txj2EQL23vyKbRyLmlUQBqBrdm5INJGhetJC4khFhP9Es+BfAV5HF
+	QpMHrmSAr5/XMp/mQQyYRQOAatt5ahyeTDcEsOtanNVX3ByF1HcXFsXWicQLgA==
 To: linux-pci@vger.kernel.org
 Cc: Marek Vasut <marek.vasut+renesas@mailbox.org>,
 	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
@@ -62,9 +62,9 @@ Cc: Marek Vasut <marek.vasut+renesas@mailbox.org>,
 	devicetree@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	linux-renesas-soc@vger.kernel.org
-Subject: [PATCH v5 2/6] PCI: dwc: rcar-gen4: Rework rcar_gen4_pcie_drvdata .additional_common_init into .init
-Date: Mon, 21 Sep 2026 22:27:44 +0200
-Message-ID: <20260921202823.72620-3-marek.vasut+renesas@mailbox.org>
+Subject: [PATCH v5 3/6] PCI: dwc: rcar-gen4: Add .deinit callback
+Date: Mon, 21 Sep 2026 22:27:45 +0200
+Message-ID: <20260921202823.72620-4-marek.vasut+renesas@mailbox.org>
 In-Reply-To: <20260921202823.72620-1-marek.vasut+renesas@mailbox.org>
 References: <20260921202823.72620-1-marek.vasut+renesas@mailbox.org>
 Precedence: bulk
@@ -75,22 +75,13 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-MBO-RS-ID: 412f7a5c403a8386a79
-X-MBO-RS-META: cb6xnry8oy6unth61b85cm3kfm98jf1x
+X-MBO-RS-ID: 8660a7c8be3e74b2fdd
+X-MBO-RS-META: igkiijsoqt5rroca9haazyzodn1whizz
 
-Rework the current complicated initialization callchain that invokes
-host_init->common_init->additional_common_init() for host and
-ep_init->common_init->additional_common_init() for endpoint into
-simpler host_init->init() and ep_init->init() .
-
-The init callback is now always implmented for all R-Car Gen4 SoCs,
-therefore there is no need to check whether the callback is not NULL.
-For R-Car S4 the .init callback is rcar_gen4_pcie_common_init(),
-for R-Car V4H and V4M the .init callback is implemented using a
-new function rcar_gen4_v4h_v4m_pcie_init() which calls the common
-rcar_gen4_pcie_common_init() followed by R-Car V4H and V4M specific
-hardware initialization. The hardware initialization sequence remains
-unchanged.
+Add .deinit callback in preparation for R-Car Gen5 support. The
+.deinit callback will be used to tear down the PHY on R-Car Gen5.
+Thus far, it does what rcar_gen4_pcie_common_deinit() used to do
+directly.
 
 Signed-off-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
 ---
@@ -108,136 +99,78 @@ Cc: linux-kernel@vger.kernel.org
 Cc: linux-pci@vger.kernel.org
 Cc: linux-renesas-soc@vger.kernel.org
 ---
-V2: Rename additional_common_init to init, reworked from previous patch
-    PCI: dwc: rcar-gen4: Return error code from .additional_common_init
-V3: No change
+V3: New patch
 V4: Rebase on next-20260904
 V5: No change
 ---
- drivers/pci/controller/dwc/pcie-rcar-gen4.c | 56 ++++++++++++---------
- 1 file changed, 32 insertions(+), 24 deletions(-)
+ drivers/pci/controller/dwc/pcie-rcar-gen4.c | 11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/pci/controller/dwc/pcie-rcar-gen4.c b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-index 5a076aa3f4904..a19ebbab2f8c3 100644
+index a19ebbab2f8c3..04871ac11c348 100644
 --- a/drivers/pci/controller/dwc/pcie-rcar-gen4.c
 +++ b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-@@ -87,7 +87,7 @@ MODULE_FIRMWARE(RCAR_GEN4_PCIE_FIRMWARE_NAME);
- 
+@@ -88,6 +88,7 @@ MODULE_FIRMWARE(RCAR_GEN4_PCIE_FIRMWARE_NAME);
  struct rcar_gen4_pcie;
  struct rcar_gen4_pcie_drvdata {
--	void (*additional_common_init)(struct rcar_gen4_pcie *rcar);
-+	int (*init)(struct rcar_gen4_pcie *rcar);
+ 	int (*init)(struct rcar_gen4_pcie *rcar);
++	void (*deinit)(struct rcar_gen4_pcie *rcar);
  	int (*ltssm_control)(struct rcar_gen4_pcie *rcar, bool enable);
  	enum dw_pcie_device_mode mode;
  };
-@@ -241,9 +241,6 @@ static int rcar_gen4_pcie_common_init(struct rcar_gen4_pcie *rcar)
- 	reset_control_status(dw->core_rsts[DW_PCIE_PWR_RST].rstc);
- 	fsleep(1000);
- 
--	if (rcar->drvdata->additional_common_init)
--		rcar->drvdata->additional_common_init(rcar);
--
+@@ -520,7 +521,7 @@ static int rcar_gen4_pcie_host_init(struct dw_pcie_rp *pp)
  	return 0;
  
- err_unprepare:
-@@ -252,6 +249,31 @@ static int rcar_gen4_pcie_common_init(struct rcar_gen4_pcie *rcar)
+ err:
+-	rcar_gen4_pcie_common_deinit(rcar);
++	rcar->drvdata->deinit(rcar);
  	return ret;
  }
  
-+static int rcar_gen4_v4h_v4m_pcie_init(struct rcar_gen4_pcie *rcar)
-+{
-+	struct dw_pcie *dw = &rcar->dw;
-+	u32 val;
-+	int ret;
-+
-+	/* R-Car Gen4 common initialization. */
-+	ret = rcar_gen4_pcie_common_init(rcar);
-+	if (ret)
-+		return ret;
-+
-+	/* R-Car V4H and V4M specific additional initialization. */
-+	val = dw_pcie_readl_dbi(dw, PCIE_PORT_LANE_SKEW);
-+	val &= ~PORT_LANE_SKEW_INSERT_MASK;
-+	if (dw->num_lanes < 4)
-+		val |= BIT(6);
-+	dw_pcie_writel_dbi(dw, PCIE_PORT_LANE_SKEW, val);
-+
-+	val = readl(rcar->base + PCIEPWRMNGCTRL);
-+	val |= APP_CLK_REQ_N | APP_CLK_PM_EN;
-+	writel(val, rcar->base + PCIEPWRMNGCTRL);
-+
-+	return 0;
-+}
-+
- static void rcar_gen4_pcie_common_deinit(struct rcar_gen4_pcie *rcar)
- {
- 	struct dw_pcie *dw = &rcar->dw;
-@@ -474,7 +496,7 @@ static int rcar_gen4_pcie_host_init(struct dw_pcie_rp *pp)
+@@ -530,7 +531,7 @@ static void rcar_gen4_pcie_host_deinit(struct dw_pcie_rp *pp)
+ 	struct rcar_gen4_pcie *rcar = to_rcar_gen4_pcie(dw);
  
  	gpiod_set_value_cansleep(dw->pe_rst, 1);
+-	rcar_gen4_pcie_common_deinit(rcar);
++	rcar->drvdata->deinit(rcar);
+ }
  
--	ret = rcar_gen4_pcie_common_init(rcar);
-+	ret = rcar->drvdata->init(rcar);
- 	if (ret)
- 		return ret;
- 
-@@ -543,7 +565,7 @@ static int rcar_gen4_pcie_ep_pre_init(struct dw_pcie_ep *ep)
+ static const struct dw_pcie_host_ops rcar_gen4_pcie_host_ops = {
+@@ -580,7 +581,7 @@ static void rcar_gen4_pcie_ep_post_deinit(struct dw_pcie_ep *ep)
+ 	struct rcar_gen4_pcie *rcar = to_rcar_gen4_pcie(dw);
  
  	writel(0, rcar->base + PCIEDMAINTSTSEN);
- 
--	ret = rcar_gen4_pcie_common_init(rcar);
-+	ret = rcar->drvdata->init(rcar);
- 	if (ret)
- 		return ret;
- 
-@@ -739,22 +761,6 @@ static int r8a779f0_pcie_ltssm_control(struct rcar_gen4_pcie *rcar, bool enable)
- 	return 0;
+-	rcar_gen4_pcie_common_deinit(rcar);
++	rcar->drvdata->deinit(rcar);
  }
  
--static void rcar_gen4_pcie_additional_common_init(struct rcar_gen4_pcie *rcar)
--{
--	struct dw_pcie *dw = &rcar->dw;
--	u32 val;
--
--	val = dw_pcie_readl_dbi(dw, PCIE_PORT_LANE_SKEW);
--	val &= ~PORT_LANE_SKEW_INSERT_MASK;
--	if (dw->num_lanes < 4)
--		val |= BIT(6);
--	dw_pcie_writel_dbi(dw, PCIE_PORT_LANE_SKEW, val);
--
--	val = readl(rcar->base + PCIEPWRMNGCTRL);
--	val |= APP_CLK_REQ_N | APP_CLK_PM_EN;
--	writel(val, rcar->base + PCIEPWRMNGCTRL);
--}
--
- static void rcar_gen4_pcie_phy_reg_update_bits(struct rcar_gen4_pcie *rcar,
- 					       u32 offset, u32 mask, u32 val)
- {
-@@ -906,23 +912,25 @@ static int rcar_gen4_pcie_ltssm_control(struct rcar_gen4_pcie *rcar, bool enable
- }
+ static int rcar_gen4_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
+@@ -913,24 +914,28 @@ static int rcar_gen4_pcie_ltssm_control(struct rcar_gen4_pcie *rcar, bool enable
  
  static struct rcar_gen4_pcie_drvdata drvdata_r8a779f0_pcie = {
-+	.init = rcar_gen4_pcie_common_init,
+ 	.init = rcar_gen4_pcie_common_init,
++	.deinit = rcar_gen4_pcie_common_deinit,
  	.ltssm_control = r8a779f0_pcie_ltssm_control,
  	.mode = DW_PCIE_RC_TYPE,
  };
  
  static struct rcar_gen4_pcie_drvdata drvdata_r8a779f0_pcie_ep = {
-+	.init = rcar_gen4_pcie_common_init,
+ 	.init = rcar_gen4_pcie_common_init,
++	.deinit = rcar_gen4_pcie_common_deinit,
  	.ltssm_control = r8a779f0_pcie_ltssm_control,
  	.mode = DW_PCIE_EP_TYPE,
  };
  
  static struct rcar_gen4_pcie_drvdata drvdata_rcar_gen4_pcie = {
--	.additional_common_init = rcar_gen4_pcie_additional_common_init,
-+	.init = rcar_gen4_v4h_v4m_pcie_init,
+ 	.init = rcar_gen4_v4h_v4m_pcie_init,
++	.deinit = rcar_gen4_pcie_common_deinit,
  	.ltssm_control = rcar_gen4_pcie_ltssm_control,
  	.mode = DW_PCIE_RC_TYPE,
  };
  
  static struct rcar_gen4_pcie_drvdata drvdata_rcar_gen4_pcie_ep = {
--	.additional_common_init = rcar_gen4_pcie_additional_common_init,
-+	.init = rcar_gen4_v4h_v4m_pcie_init,
+ 	.init = rcar_gen4_v4h_v4m_pcie_init,
++	.deinit = rcar_gen4_pcie_common_deinit,
  	.ltssm_control = rcar_gen4_pcie_ltssm_control,
  	.mode = DW_PCIE_EP_TYPE,
  };
