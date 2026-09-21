@@ -1,156 +1,138 @@
-Received: from mout-p-101.mailbox.org (mout-p-101.mailbox.org [80.241.56.151])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E3FF24D488F;
-	Mon, 21 Sep 2026 16:31:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.151
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE9094B1D0E;
+	Mon, 21 Sep 2026 16:43:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.19
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790008297; cv=none; b=AdMDV69n6tnKTgnaJMmBphqliVLFJD0C0TLnPJ2u5qHn7WXnEJ1RKV91jNaqwj9GloIYFEn7K+rFjCRbEmVmI0BsmO7su9dFpty3dkiiHpVZYzcmX3grWjK0jnxmp+0oaFsFkkkuaxbZn0a1itg9TgN0ZFKIV0coCGkcUQ2tR7I=
+	t=1790009027; cv=none; b=tPSK1Be0qLA2SY4MduQU6crwpncpcjad3ObBd+Z4lQp/fPZl+FAlnGacRoeKzReckAmAMPLapPGPdJcZqYS1T2DAvZUh5B3TL8z/XT9lpCCHwCFkeDg2rJqq0krqaRCk6qKxz1mjnZbkF/6jkNH0GFtzP1hzSULrXUclrGtGnUs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790008297; c=relaxed/simple;
-	bh=topJIHAcFcucgIIom/s6JhB/DOjnjHOXAk1hYRfIgNM=;
+	s=arc-20240116; t=1790009027; c=relaxed/simple;
+	bh=eM1N6XqzmlgwM+AO0lHdun00OVqdgvGXGEqNfHmMGAk=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=fPuQ6Px0LKuVwM4b3uu120bV5Oj3pZ9eMTRHhBEfX0c2lcvAewP3WwXx6PQCE4I7i5RNTqNhfUL8LgAYvhvB8i8/UfLNMDh1Yh0u5RIqLOxceueZEbDhQ7938Mla9TI93XzD75HS+hhZnx7ai9nMuosX5eIYP5+VWrM5zvqX0Zk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=nn7Sd1Q1; arc=none smtp.client-ip=80.241.56.151
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
+	 In-Reply-To:Content-Type; b=GLwLl9QLN+8GoIvZNlGZFhEAGjDuKy0mgiesPhjoEwfE3ooZrY/q1Wtk1e5eCK1bsnOEJYDqgMXpkaCU/F2OoPpJJPBH5C0Tiv5KhR7aqgYiWTOm44x7RiP18O4bvpjjKtFZrjD3/vwdnDvosurv0OQPgNEKZYH8YrEokcnq9xg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=AJQZM8ow; arc=none smtp.client-ip=192.198.163.19
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="nn7Sd1Q1"
-Received: from smtp1.mailbox.org (smtp1.mailbox.org [10.196.197.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mout-p-101.mailbox.org (Postfix) with ESMTPS id 4hpTJG1wCYz8v1k;
-	Mon, 21 Sep 2026 18:31:26 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-	t=1790008286;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=I066lHB93h8dqTHWVqvnXC/UNI96ZDGINkKhm6L02A8=;
-	b=nn7Sd1Q1L+wQTqtmh2O/hC1IRD5Q5cZtGyMTVdGow80KJyxYJwY447TM41iio2tvWtKUF1
-	a4KyDm52fNktjx5kbuBhOshN/s0yjdr+vJYpEGqrmGPlqP/RAiEe+N6TFgZDiQUyyM+Mqc
-	Y9OCKdIIB2uP5HztDOYZkru/Zms61KitY5yzga6Gu2MrzxYv49AtrRlNmRxW/eC4mjuixF
-	WbrrOJhohUoarzBG3E9T9VYv9DUqG8AjJk/3EzvXSq/n04ZtTyI03o3AzsUN03ebvyRRiV
-	TPZWSKpL7MqjHwFBVkuVHLxAreqHeUXgjl5lJaS6LxE/TW2OvoHqcOW1PunADQ==
-Message-ID: <67ab9f01-069e-4010-8f5e-7f65bf30ebd6@mailbox.org>
-Date: Mon, 21 Sep 2026 18:31:22 +0200
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="AJQZM8ow"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1790009025; x=1821545025;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=eM1N6XqzmlgwM+AO0lHdun00OVqdgvGXGEqNfHmMGAk=;
+  b=AJQZM8owqDfGy2fKQjcW2wcwsIXtUwZzxifcAFBj2rdVjSXMjIkF02Ww
+   8K1OtYQ6Dy0MNc3VngURsjtIuO18XKVKCVBhGGQXUWHL5D9lCgvPnNCQ3
+   Ve6q3IELrrJ4BzUBR3GGpD6/H79aIPQ9qKVEXxR8JEvnK4O5/b9X/4fhp
+   usvw3Z4Q8aro45rgaPdIrpQsXszIYnT78mVdrMWV03+DR16Crg16/bRsA
+   vg0LeQaSidyh6DYmJkuurhNztVkWPQrQlxdjOPKcI2z/64wK/GbdPkdR5
+   aWK7cd5rikdUfsTFXmdX67TwxIhMAQVXqy0xd35OjIGddq1Ku0uO6kE4d
+   g==;
+X-CSE-ConnectionGUID: vJgVAQtkS8ucWoNWGLGn4Q==
+X-CSE-MsgGUID: Kz4sWl00Tm2ONPwzERI6Ig==
+X-IronPort-AV: E=McAfee;i="6800,10657,11912"; a="89467285"
+X-IronPort-AV: E=Sophos;i="6.27,115,1787036400"; 
+   d="scan'208";a="89467285"
+Received: from fmviesa001.fm.intel.com ([10.60.135.141])
+  by fmvoesa113.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Sep 2026 09:43:44 -0700
+X-CSE-ConnectionGUID: Ov5NmTY/SoKvcsbUdfn5ZA==
+X-CSE-MsgGUID: QX0iXJS2R9+E9w6/jnlkFQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,115,1787036400"; 
+   d="scan'208";a="300684514"
+Received: from soc-pf446t5c.clients.intel.com (HELO [10.24.80.90]) ([10.24.80.90])
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Sep 2026 09:43:44 -0700
+Message-ID: <24b9db58-e654-408b-85a9-15c5af5e944a@linux.intel.com>
+Date: Mon, 21 Sep 2026 09:43:43 -0700
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Subject: Re: [PATCH v4 5/6] PCI: dwc: rcar-gen4: Handle PERST via reset
- subsystem
-To: Manivannan Sadhasivam <mani@kernel.org>
-Cc: linux-pci@vger.kernel.org, =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?=
- <kwilczynski@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
- Conor Dooley <conor+dt@kernel.org>,
- Geert Uytterhoeven <geert+renesas@glider.be>,
- Krzysztof Kozlowski <krzk+dt@kernel.org>,
- Lorenzo Pieralisi <lpieralisi@kernel.org>, Rob Herring <robh@kernel.org>,
- Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
- devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-renesas-soc@vger.kernel.org
-References: <20260905212649.360498-1-marek.vasut+renesas@mailbox.org>
- <20260905212649.360498-6-marek.vasut+renesas@mailbox.org>
- <zwdqspl2uno35uffgzsel57ed2umpejgfeqrkwvxiqd2pgfpm6@h6w3qsgc6rny>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v13 1/5] PCI/DPC: Ignore devices with no AER Capability
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+ linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+ Rafael J Wysocki <rafael@kernel.org>, Guixin Liu <kanie@linux.alibaba.com>,
+ Olof Johansson <olof@lixom.net>
+References: <20260919162655.3499010-1-sathyanarayanan.kuppuswamy@linux.intel.com>
+ <20260919162655.3499010-2-sathyanarayanan.kuppuswamy@linux.intel.com>
+ <aq95LGUHL-pnmTlr@wunner.de>
 Content-Language: en-US
-From: Marek Vasut <marek.vasut@mailbox.org>
-In-Reply-To: <zwdqspl2uno35uffgzsel57ed2umpejgfeqrkwvxiqd2pgfpm6@h6w3qsgc6rny>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+In-Reply-To: <aq95LGUHL-pnmTlr@wunner.de>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-X-MBO-RS-ID: 7de80fa4f7fd47ba824
-X-MBO-RS-META: 688b6z6z3h4z4uht9ckk6a8mg3k6fi8d
 
-On 9/21/26 5:46 PM, Manivannan Sadhasivam wrote:
+Hi Lukas,
 
-Hello Manivannan,
-
->> +++ b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
->> @@ -99,6 +99,7 @@ struct rcar_gen4_pcie {
->>   	void __iomem *base;
->>   	void __iomem *phy_base;
->>   	struct platform_device *pdev;
->> +	struct reset_control *perst;
->>   	const struct rcar_gen4_pcie_drvdata *drvdata;
->>   };
->>   #define to_rcar_gen4_pcie(_dw)	container_of(_dw, struct rcar_gen4_pcie, dw)
->> @@ -317,12 +318,27 @@ static void rcar_gen4_pcie_unprepare(struct rcar_gen4_pcie *rcar)
->>   
->>   static int rcar_gen4_pcie_get_resources(struct rcar_gen4_pcie *rcar)
->>   {
->> +	struct device *dev = rcar->dw.dev;
->> +	struct device_node *root_port;
+On 9/19/2026 11:11 PM, Lukas Wunner wrote:
+> On Sat, Sep 19, 2026 at 09:26:51AM -0700, Kuppuswamy Sathyanarayanan wrote:
+>> Downstream Ports may support DPC regardless of whether they support AER
+>> (see PCIe r7.0, sec 6.2.11.2).  Previously, if the user booted with
+>> "pcie_ports=dpc-native", it was possible for dpc_probe() to succeed even if
+>> the device had no AER Capability, but dpc_get_aer_uncorrect_severity()
+>> depends on the AER Capability.
+> [...]
+>> +++ b/drivers/pci/pcie/dpc.c
+>> @@ -477,6 +477,9 @@ static int dpc_probe(struct pcie_device *dev)
+>>  	int status;
+>>  	u16 cap;
+>>  
+>> +	if (!pdev->aer_cap)
+>> +		return -ENOTSUPP;
 >> +
->>   	rcar->phy_base = devm_platform_ioremap_resource_byname(rcar->pdev, "phy");
->>   	if (IS_ERR(rcar->phy_base))
->>   		return PTR_ERR(rcar->phy_base);
->>   
->> +	root_port = of_get_next_available_child(dev->of_node, NULL);
->> +	if (root_port) {
->> +		rcar->perst = of_reset_control_get_optional_exclusive(root_port, "perst");
->> +		of_node_put(root_port);
->> +		if (IS_ERR(rcar->perst))
->> +			return dev_err_probe(dev, PTR_ERR(rcar->perst), "Failed to get PERST#\n");
->> +	} else {
->> +		rcar->perst = NULL;
+>>  	if (!pcie_aer_is_native(pdev) && !pcie_ports_dpc_native)
+>>  		return -ENOTSUPP;
 > 
-> 'rcar->perst' is NULL by default.
+> I've got patches which make DPC work (again) on AER-unsupporting ports:
+> 
+>   https://github.com/l1k/linux/commits/aer_baseline_v1/
+> 
+> In particular:
+> 
+>   PCI/DPC: Avoid access to non-existent AER capability
+>   https://github.com/l1k/linux/commit/85f209fd4732
+> 
+>   PCI/DPC: Reinstate support for AER-incapable ports
+>   https://github.com/l1k/linux/commit/2de89b762d79
+> 
+> I'm almost done with that series and hope to submit it this cycle.
+> Your patch [1/5] will cause a conflict with my patches.
+> Would you mind holding off on patch [1/5] for now?
 
-Indeed.
+Sure. At first glance, your series fixes the AER/DPC dependency cleanly.
 
->> +	}
->> +
->>   	/* Renesas-specific registers */
->>   	rcar->base = devm_platform_ioremap_resource_byname(rcar->pdev, "app");
->> +	if (IS_ERR(rcar->base))
->> +		reset_control_put(rcar->perst);
->>   
->>   	return PTR_ERR_OR_ZERO(rcar->base);
->>   }
->> @@ -494,6 +510,22 @@ static int rcar_gen4_pcie_enable_device(struct pci_host_bridge *bridge,
->>   	return 0;
->>   }
->>   
->> +static void rcar_gen4_pcie_host_perst_assert(struct dw_pcie_rp *pp, bool assert)
->> +{
->> +	struct dw_pcie *dw = to_dw_pcie_from_pp(pp);
->> +	struct rcar_gen4_pcie *rcar = to_rcar_gen4_pcie(dw);
->> +
->> +	gpiod_set_value_cansleep(dw->pe_rst, assert);
->> +
->> +	if (!rcar->perst)
->> +		return;
->> +
->> +	if (assert)
->> +		reset_control_assert(rcar->perst);
->> +	else
->> +		reset_control_deassert(rcar->perst);
-> 
-> So the controller will only have one form of PERST# implemented at a time. Even
-> though this code is technically correct, it also gives an impression that both
-> form could co-exist.
-> 
-> So I'd recommend using:
-> 
->          if (dw->pe_rst) {
->                  gpiod_set_value_cansleep(dw->pe_rst, assert);
->          } else {
->                  if (assert)
->                          reset_control_assert(rcar->perst);
->                  else
->                          reset_control_deassert(rcar->perst);
->          }
-> 
-> to makes it clear that only one form of PERST# is supported.
-> 
-> I'll implement both of these changes while applying.
+I think we can drop this patch. Bjorn, let me know if you think otherwise.
 
-Please do. Thank you !
+> 
+> There's another reason:  I know of one product in particular,
+> Intel "Ponte Vecchio" data center GPUs, which support DPC but
+> lack an AER capability.  DPC was tested and made to work on
+> those cards (see 53b54ad074de).
+> 
+> I didn't realize back then but know now that validation engineers
+> specifically used pcie_ports=dpc-native to be able to use DPC on
+> that product.  And I believe this was also communicated to customers
+> as "best known method" for DPC on Ponte Vecchio.  In other words,
+> using pcie_ports=dpc-native to make DPC work on non-AER-capable products
+> has become a feature.  Your patch breaks those use cases.
+> 
+> That's why I chose to make DPC work (again) on non-AER-capable products
+> with the above-linked patches, instead of closing this loophole to
+> force-enable it.
+> 
+
+
+
+> Thanks,
+> 
+> Lukas
 
 -- 
-Best regards,
-Marek Vasut
+Sathyanarayanan Kuppuswamy
+Linux Kernel Developer
+
