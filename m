@@ -1,74 +1,74 @@
 Received: from fout-b2-smtp.messagingengine.com (fout-b2-smtp.messagingengine.com [202.12.124.145])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F7FC390613;
-	Tue, 22 Sep 2026 02:16:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A48839478D;
+	Tue, 22 Sep 2026 02:16:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.145
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790043380; cv=none; b=qfb7Hk0I/yVgcz9QS6t7X0VL+I6T1tkCbbIyZSFcZOaBJygmVvi5ijuuqqISCjwehHJkUyaWn1ZP1JZixoTglIFf0aTnov7mpvkyyeGGSZa1nwVHQwlJOqfvlOOyEVzU5cAWEaXHAQLh4WrtjlaXW4OuCLdjLISjdt8t99pgI9I=
+	t=1790043388; cv=none; b=EP3gxySNjit97lSxHH8wQERGZh4pwiCAC7q+zzqDOoBEul2fPJwUfVTJdBA8p0wszkjH6Frg+o1p6zFxC/1jWEipJGl+qKCwCG5FC0om2JbQSSHZgLDf1nLgeuieGlxLcbtupu0qr9V7JgHLPJ6Ws6wzCgQ821RHn7NfHwqH5QE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790043380; c=relaxed/simple;
-	bh=JChkfec2dEouOOaSiXifHUTvVwtWdzUwNG1WSc+jHPQ=;
+	s=arc-20240116; t=1790043388; c=relaxed/simple;
+	bh=EEJoiCla2xsUDDGT1wtYmVd1EDi1fyaRDjP8a/oievE=;
 	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=YcnTrPCvRw0jnFYVsXoFrSE5BmyS/1AGVBpUxlrghr1wRr4wt05QVY88fH6pUQnSEeykuTLzEdEZujwMQTsDfNhm7/H3DOAYXxarT97NAqG4QeazS3t8hP4YvHCpBrH/SqK8rlxTmYkHdOntGVA7n+56cHm/YTt+8DiipH2E49k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=Bw2UrYYu; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=DQqDEhEM; arc=none smtp.client-ip=202.12.124.145
+	 MIME-Version:Content-Type; b=Euo7XGre14eWTsT4LSenbHoPCW7HJvCzH4723lhbsBsAJ3p6DVUzR3N04wtSrVrLNiaUfUn6sI7z7WdyuQ5t3whO8j4edZVGi0qMB6F9OboIG3WVOoX70uhp6MiNjAteJfodw775rXDsq7OofiT+4nFjxvAb5CbOtOs3MTGK/zY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=F0pPephy; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=d6mYCXRY; arc=none smtp.client-ip=202.12.124.145
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="Bw2UrYYu";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="DQqDEhEM"
-Received: from phl-compute-02.internal (phl-compute-02.internal [10.202.2.42])
-	by mailfout.stl.internal (Postfix) with ESMTP id C31951D00064;
-	Mon, 21 Sep 2026 22:16:16 -0400 (EDT)
+	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="F0pPephy";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="d6mYCXRY"
+Received: from phl-compute-01.internal (phl-compute-01.internal [10.202.2.41])
+	by mailfout.stl.internal (Postfix) with ESMTP id 67D7A1D0006E;
+	Mon, 21 Sep 2026 22:16:25 -0400 (EDT)
 Received: from phl-frontend-03 ([10.202.2.162])
-  by phl-compute-02.internal (MEProxy); Mon, 21 Sep 2026 22:16:17 -0400
+  by phl-compute-01.internal (MEProxy); Mon, 21 Sep 2026 22:16:26 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
 	cc:cc:content-transfer-encoding:content-type:content-type:date
 	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm3; t=1790043376;
-	 x=1790129776; bh=bx+YxGdB1zL2GePgz8fydiK5eK1b9iCXWKONIMFQApY=; b=
-	Bw2UrYYuemgcpPjqRVDbKrevE4p2Ji+DJNcvngYKTjv4FU39g/1xips+4r/dlXHg
-	Xsd84nLWoVweiH6wrWIflMXK2U3FMuwQ0CtyS7FDJd76YNVwgVFp6n1q+FIhaBmi
-	Zlf+L46VWPwP/6OFIZyFNvz3FWHDughyKV4yuH2yd0z9nPipd3Vam0+bHtVCI3k7
-	33jDMSoMtVeCZL7SlQRw4sZ74QtQ8gDe9cnkxshX/zlUwY86ofmB+82wdRQVL9wd
-	g/6d6KY08+kuPQmSi3fU8n5Ha+bEXP63KNCGV4VYKehoX1sA+cUyN3rwQiwiupPw
-	uGgeryTA97R/qPOFZA2Y4w==
+	:references:reply-to:subject:subject:to:to; s=fm3; t=1790043385;
+	 x=1790129785; bh=ar8F8AzgyNlmO16jEqlT9kWnDi3NM31RTuSM9ujQ4Xc=; b=
+	F0pPephym9xzr5FahNyQHnRR4pTV8gLsdo6QsZ1pv25EYYW7bSaIHw8NbZlpYjT9
+	YSFSxFyQ5QEgjgpg8iwuNEps8PNiVIGlpTKumPcZifJe4/5679Onwnuzy3TY0iOm
+	qS6whACt25D9/4HJw3/JJAUp+qzbEzlxrxE+XHzKgiF834D0RHfZXh0JJimIqln1
+	A7UDpyzdQKZftFxVbi7z7Gb9VRsVqXTjh1ya8Z+tO7bgskxpOu8yTUZoR4a0NdwF
+	4GyfxzWsHVh55v+/QrrRJZo8OfRa0xvCikf66kxcz+5ha5nVMKaZ3rrQn3PqB+/m
+	YKxJfdqLFeqVdCupMxCK3w==
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
 	messagingengine.com; h=cc:cc:content-transfer-encoding
 	:content-type:content-type:date:date:feedback-id:feedback-id
 	:from:from:in-reply-to:in-reply-to:message-id:mime-version
 	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=1790043376; x=
-	1790129776; bh=bx+YxGdB1zL2GePgz8fydiK5eK1b9iCXWKONIMFQApY=; b=D
-	QqDEhEMp4abgOo8jhOUh/g/kwyL2AGNOpr15sTuEru7C1Pnh4i24drbhVS5qXQsY
-	rYXJEZJ/2Oez8yPsWSXI2F27yWNVd4vAwBWilbk0rrUpomDsa0+Y6UCPRGT9r8zC
-	G938FbeREVan/bB4yGbUYFf1j7igL7hCmuK9lPQDfXJhCEhLBN8T9t9wZ4BuNtsw
-	rS+i41lJDdT0w//x0fLwhk8th275EgaKRr2DTsIrQbBKgIulewvXjRxtXpk1yFnc
-	Lv2K6ur97PAGDGdEp0doRNlPPhqBujgfb7HHHuP45dPyP+1OM9jjx49Co6DxQVQB
-	6bUyk4WDhdEUKMWUTGH3g==
-X-ME-Sender: <xms:8OSxag4HvxLDRc6B3NRGKcKDK15Y_Ghw3SJoldr49-yio_gBs9lyqQ>
-    <xme:8OSxavhPNI4TM_oDx004dKWM7bMaW7VbWuANkY8uvkmAZyYQpeRz_D8A-pkwfX96t
-    TINvV5ZVf4bvoZJdjyBAsm3RpuSj3ezf9ONlq7LAM4_Pt4egCdAhp0>
-X-ME-Received: <xmr:8OSxam1u9yMoxi_vcOe8DZHs6JAMXg2zRqhQa6r464eNsq4DrMn-REW6COmiyQ>
-X-ME-Proxy-Cause: dmFkZTGXJSHqMq/BnZYJ0YweOb4rS2VUXpPM7d5+lSYGhnppGFsNjl5Bysv+w6+cDnCJ/7
-    /L3Cxi42gIwxQ2NUo+88ApQMAdaEv47yc8fAsLypxGx87oHF4HT7ama3q0ueulG4TPc0DY
-    g9aq/+AIZ/88RBFY6z24OfxBW3WPjyGYAaKrF0WRpWdqsttcvGMxliaYSaCPsYHObnA4na
-    kPveiLHd3CCXxarYrwtQo6T70Ls9xKt0FRJqIrLM1i8XMnEKMgqeJVG7tIy0ld86sgmRqY
-    QTP1Xf0Z/CD0h9dlYVSVFIdwBL83CGpVR9ekjjvy4BxnnVieSYFxqs3RHn4BnowjRSHstg
-    Y7k0oKLaAODy79OVG6nd69+sgXjApzG4DDOWQskBIWmAz1w6W/N/qy6E9pzrerum/FS2/F
-    F2Fi8JrsNZmphKcohiBPe7AESDsoupPFgs1Ak0eE1X/sU/YbTGosiJ7/ovE1Hr9ZVDb5Gx
-    Z9vkQAvSWIJoWaKfqshdioTCYP1NP1Dx/EqVV4OjMPW2yXo8q8f0qw+4Dp89B1McNh1xgv
-    8J0BFyLA2565PFmZLx3+mmZtKcUcmHUyAiCtH/618qLL6VA4SwihLSoq2Vdgp5JlvIKO52
-    SMtDU9EW/XbX/wzArk9Pgj6Pxs0ZVwOW72AIMxvnf/EJMOq6i9VKm9IXn68A
-X-ME-Proxy: <xmx:8OSxatW-M8LahaXwOEuCKnvjrFdN4cQma3RglojhMwzVdGQNwGqLXA>
-    <xmx:8OSxar1Wv9kfuZeMT-3hWldG6mPc8J1NheIMWDkRb5ox8-vGHsNRUA>
-    <xmx:8OSxamg9MV6BtacWpkaOcQb6H10XOTCLFZG4z_AUUIwC0Kb6-A93_w>
-    <xmx:8OSxajLg4C6Pkvlh2o5HqQIXLf9_Qs47rY6IYVxHkhjjKjfhvxCDjQ>
-    <xmx:8OSxahWRuO-Y6OgcEaU3w8HcJqDMF8SYA1yPkM_G8mWp6j3D0sPxcbya>
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=1790043385; x=
+	1790129785; bh=ar8F8AzgyNlmO16jEqlT9kWnDi3NM31RTuSM9ujQ4Xc=; b=d
+	6mYCXRYlIRIQr+qA645H6waUACIeRGaQ1A6lVOgjQATwoqWZD+TSKpwVQS19mDTp
+	DE6acbWJPVK8PA6l/8fNo5C7qMQML5+M5kWc7Q3flN51fyp0b7q745Y1E92Hn0Ew
+	+gSPHBjrPHoDL0ixrMu7aZ30HbBCUk8F/BETZcPO4EPWqqHIOye8coGlsw7mUtuV
+	fODd/6OpS7Hgv2IEHXw+CyJoCUyB5Yyk+Z0cU5fUTzYlRRBZsrgHCiPfUsZIHZWV
+	JVgnRwmv9sCt7BTnoKHAD0a0108ePI1mg8VqM3Q2h80p1xNtX3+zUOX8//ojebre
+	EvYfvP3l+yEnoVfrwZGZA==
+X-ME-Sender: <xms:-eSxapDDvgk3mmzQ_vt486rmdl-9bN4F6PAPkfTtiZsHinAzmu1zqA>
+    <xme:-eSxanvAAXDn_BNaFFRvH2ymAE5sedrIOHk03l60MFPasmC5bDdGLbAHPof1tJfr9
+    hYjrXil7CnkAZzaXANITNmar1RT4jm_QshvALDW6-J4wkykNhMN01Q>
+X-ME-Received: <xmr:-eSxanPb9LLxKax24JAjXPtvmdDD3sHa-puY_zAnlNCNTJngFnWYBSZJiV6LKg>
+X-ME-Proxy-Cause: dmFkZTEVaM7SvCFST2BBezPuJiixrkmE2Un+f6UT9OQLDoMu7BBs/TxdNVZOy7gDxZVSQ5
+    +8GcT5lo4k3t5IPXUYNwiGS1d+hGarVl0PJ4l2J5eAUZwVQ89BRmaacJbmIs1CqcZcH7eg
+    xICpG/aos5YgPWgz/di9OmUkGGcYk8mnwAJCrmSK6J8rHj+AzsFAizcpXVpdL+EPlo7OG8
+    mhpip8AtjHf9SeAwi+YThGrGXoEi51Wd5YCyhtA2zpJhBCB65caCANdtlLG1hAHAbVCaag
+    7jP40PLhRjruOFdBdUQ1ZA2xzdk+Vjot4L9OSsH6IFoXd/WfpIKyH8EaUUQ8CKrvzzLGD5
+    jBUtObmkUa5QJgbPB/zPe4GF9/drxSIearOjix7dGHtI6U/qGZ66J5PvzyUZ3D/tv1BOwc
+    Lx0/6vLELW4zJ3gWxGpWN97fkaEt3WQx+WP2aMcirURiPZgdGHyi6ajLzP6aw8UUpThtin
+    Q6IwqOIaFHZauGNGBjfex01Wljy0mdl8HBNPTMrm1bTqVd7SF8XeHcIvtZzCq1B/vtyyit
+    uPAR705fkpviElZyiBvXw0YxUOc/2CMz91zOKu4d3w3lpvlduHXAY16WIFXl9kUqxDh+sw
+    jsSUJdOuGvl5tXySdd6LZqC7y7QfmXSUxL+Lrd5F/fdHLc3VFEhADOnIk6Xw
+X-ME-Proxy: <xmx:-eSxavW47o07yNaNYGs4EAxyemfUh2Rs9-ccA5l4A2xDxKMSOFDOlA>
+    <xmx:-eSxaiTTjrXaskC7P7QkLW3tIWxrKxrH8RCEJBakk9l9HWP7QWKNNw>
+    <xmx:-eSxavbAfB6c1QNiGP-x7qjCy-3NonUfoi1JOPqNwnh7nX1HuCNbUA>
+    <xmx:-eSxarB434PBeE8Z7T05dYlpMMYWA5DcKPwyt78JzMQDFJxU67ahZg>
+    <xmx:-eSxajB5deTv8Ds579uLKIe2mAkdvOhSv0pt5erw6P5gE1epWEYB4XNl>
 Feedback-ID: i03f14258:Fastmail
 Received: by mail.messagingengine.com (Postfix) with ESMTPA; Mon,
- 21 Sep 2026 22:16:09 -0400 (EDT)
-Date: Mon, 21 Sep 2026 20:13:15 -0600
+ 21 Sep 2026 22:16:18 -0400 (EDT)
+Date: Mon, 21 Sep 2026 20:14:30 -0600
 From: Alex Williamson <alex@shazbot.org>
 To: <mhonap@nvidia.com>
 Cc: <jgg@ziepe.ca>, <ankita@nvidia.com>, <jic23@kernel.org>,
@@ -83,13 +83,13 @@ Cc: <jgg@ziepe.ca>, <ankita@nvidia.com>, <jic23@kernel.org>,
  <linux-kernel@vger.kernel.org>, <kvm@vger.kernel.org>,
  <linux-cxl@vger.kernel.org>, <linux-pci@vger.kernel.org>,
  <linux-kselftest@vger.kernel.org>, <linux-hardening@vger.kernel.org>,
- alex@shazbot.org
-Subject: Re: [PATCH v5 22/27] vfio/cxl: Clear the HDM access gate after a
- hot reset
-Message-ID: <20260921201315.6e237710@shazbot.org>
-In-Reply-To: <20260916183540.3813685-23-mhonap@nvidia.com>
+ alex@shazbot.org, xinmengs@nvidia.com
+Subject: Re: [PATCH v5 13/27] vfio/pci: Bracket PCI resets with the CXL
+ reset hooks
+Message-ID: <20260921201430.451af68f@shazbot.org>
+In-Reply-To: <20260916183540.3813685-14-mhonap@nvidia.com>
 References: <20260916183540.3813685-1-mhonap@nvidia.com>
-	<20260916183540.3813685-23-mhonap@nvidia.com>
+	<20260916183540.3813685-14-mhonap@nvidia.com>
 X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -100,99 +100,79 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 
-On Thu, 17 Sep 2026 00:05:35 +0530
+On Thu, 17 Sep 2026 00:05:26 +0530
 <mhonap@nvidia.com> wrote:
 
 > From: Manish Honap <mhonap@nvidia.com>
 > 
-> The HDM memory fault inserts a PFN only when the decoder is in a
-> known-good state (cxl->hdm_valid), so the host CPU never faults the
-> coherent range into a disabled decoder.
+> A CXL Type-2 device must quiesce its coherent link before any reset and
+> restore its HDM decoder state afterward, or a reset can leave the device
+> mastering the bus over decoders that are no longer valid. This has to
+> happen around every reset the PCI core drives for the device, not only
+> the ones VFIO issues directly.
 > 
-> VFIO_DEVICE_PCI_HOT_RESET drives a plain secondary bus reset rather than
-> the CXL reset sequence, so nothing restores the decoder in the
-> reset_done handler. A secondary bus reset only reaches a CXL endpoint
-> when the upstream port has SBR unmasked (CXL r3.1 sec 8.1.5.2); in that
-> case the reset decommits the decoder, so clear cxl->hdm_valid to keep a
-> later fault from inserting a PFN into a dead decoder.
+> Add reset_prepare and reset_done to the CXL ops and register the matching
+> pci_error_handlers callbacks.
 > 
-> A subsequent VFIO_DEVICE_RESET runs the CXL reset sequence and restores
-> it, and a masked SBR is a no-op that leaves the decoder intact.
+> Assisted-by: LLM
+> Signed-off-by: Manish Honap <mhonap@nvidia.com>
+> ---
+>  drivers/vfio/pci/vfio_pci_core.c | 18 ++++++++++++++++++
+>  include/linux/vfio_pci_core.h    |  2 ++
+>  2 files changed, 20 insertions(+)
 > 
-> vfio_cxl_sbr_unmasked() mirrors the cxl_sbr_masked() check the PCI core
-> uses (drivers/pci/pci.c) for its own CXL bus reset.
+> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
+> index 2f593b2721a1..a91e07181847 100644
+> --- a/drivers/vfio/pci/vfio_pci_core.c
+> +++ b/drivers/vfio/pci/vfio_pci_core.c
+> @@ -2794,8 +2794,26 @@ int vfio_pci_core_sriov_configure(struct vfio_pci_core_device *vdev,
+>  }
+>  EXPORT_SYMBOL_GPL(vfio_pci_core_sriov_configure);
+>  
+> +static void vfio_pci_core_reset_prepare(struct pci_dev *pdev)
+> +{
+> +	struct vfio_pci_core_device *vdev = dev_get_drvdata(&pdev->dev);
+> +
+> +	if (vdev->cxl_ops)
+> +		vdev->cxl_ops->reset_prepare(vdev);
+> +}
+> +
+> +static void vfio_pci_core_reset_done(struct pci_dev *pdev)
+> +{
+> +	struct vfio_pci_core_device *vdev = dev_get_drvdata(&pdev->dev);
+> +
+> +	if (vdev->cxl_ops)
+> +		vdev->cxl_ops->reset_done(vdev);
+> +}
 
-This all sounds very broken.  If a hot reset is masked, it should fail,
-not silently do nothing.  If a hot reset is unmasked, we can't just
-invent that the user needs to follow it with a reset ioctl, and the
-decoder is dead for the remainder of their session otherwise.
-
-So on one hand, we have a reset we can't use because it doesn't do
-anything, and on the other we have a reset that we can't use because in
-doing something it makes the device effectively unrecoverable, without
-some assumption to perform a reset ioctl.
-
-Are bus resets just not supported on CXL devices through vfio-pci?
+Flagging this because it's introducing one more vfio-pci-core use of
+the convention of storing the vfio_pci_core_device in drvdata that's a
+barrier for a Rust-based variant driver.  Likely this needs to be added
+to the per-variant boilerplate or macro so variants provide the
+vfio_pci_core_device pointer rather than expecting it in drvdata.
 Thanks,
 
 Alex
 
- 
-> Assisted-by: LLM
-> Signed-off-by: Manish Honap <mhonap@nvidia.com>
-> ---
->  drivers/vfio/pci/cxl/vfio_cxl_core.c | 38 ++++++++++++++++++++++++++++
->  1 file changed, 38 insertions(+)
-> 
-> diff --git a/drivers/vfio/pci/cxl/vfio_cxl_core.c b/drivers/vfio/pci/cxl/vfio_cxl_core.c
-> index 37e8a3b54cfb..395b4a5b0956 100644
-> --- a/drivers/vfio/pci/cxl/vfio_cxl_core.c
-> +++ b/drivers/vfio/pci/cxl/vfio_cxl_core.c
-> @@ -514,8 +514,46 @@ static void vfio_cxl_reset_prepare(struct vfio_pci_core_device *vdev)
->  {
->  }
+> +
+>  const struct pci_error_handlers vfio_pci_core_err_handlers = {
+>  	.error_detected = vfio_pci_core_aer_err_detected,
+> +	.reset_prepare = vfio_pci_core_reset_prepare,
+> +	.reset_done = vfio_pci_core_reset_done,
+>  };
+>  EXPORT_SYMBOL_GPL(vfio_pci_core_err_handlers);
 >  
-> +/*
-> + * A secondary bus reset only reaches a CXL endpoint when the upstream port
-> + * has SBR unmasked (CXL r3.1 sec 8.1.5.2); otherwise the Bridge Control SBR
-> + * bit is ignored and the decoder is left intact. Mirrors the cxl_sbr_masked()
-> + * check the PCI core uses for its own CXL bus reset.
-> + */
-> +static bool vfio_cxl_sbr_unmasked(struct pci_dev *pdev)
-> +{
-> +	struct pci_dev *bridge = pci_upstream_bridge(pdev);
-> +	u16 dvsec, ctl;
-> +
-> +	if (!bridge)
-> +		return false;
-> +
-> +	dvsec = pci_find_dvsec_capability(bridge, PCI_VENDOR_ID_CXL,
-> +					  PCI_DVSEC_CXL_PORT);
-> +	if (!dvsec)
-> +		return false;
-> +
-> +	if (pci_read_config_word(bridge, dvsec + PCI_DVSEC_CXL_PORT_CTL, &ctl))
-> +		return false;
-> +
-> +	return ctl & PCI_DVSEC_CXL_PORT_CTL_UNMASK_SBR;
-> +}
-> +
->  static void vfio_cxl_reset_done(struct vfio_pci_core_device *vdev)
->  {
-> +	struct vfio_cxl_state *cxl = vdev->cxl;
-> +
-> +	/*
-> +	 * VFIO_DEVICE_PCI_HOT_RESET drives a plain secondary bus reset, not the
-> +	 * CXL-aware cxl_reset_bus_function(), so nothing restores the HDM
-> +	 * decoder here. When the upstream port has SBR unmasked the reset
-> +	 * decommits the decoder; gate host access to the HDM range so a later
-> +	 * fault cannot insert a PFN into a dead decoder. A VFIO_DEVICE_RESET
-> +	 * then runs the CXL reset sequence and restores it. A masked SBR is a
-> +	 * no-op and leaves the decoder intact.
-> +	 */
-> +	if (vfio_cxl_sbr_unmasked(vdev->pdev))
-> +		cxl->hdm_valid = false;
->  }
->  
->  static const struct vfio_cxl_ops vfio_cxl_ops = {
+> diff --git a/include/linux/vfio_pci_core.h b/include/linux/vfio_pci_core.h
+> index 643f32c2141f..6ebf9a26275e 100644
+> --- a/include/linux/vfio_pci_core.h
+> +++ b/include/linux/vfio_pci_core.h
+> @@ -72,6 +72,8 @@ struct vfio_cxl_ops {
+>  	void	(*release)(struct vfio_pci_core_device *vdev);
+>  	int	(*open_device)(struct vfio_pci_core_device *vdev);
+>  	void	(*close_device)(struct vfio_pci_core_device *vdev);
+> +	void	(*reset_prepare)(struct vfio_pci_core_device *vdev);
+> +	void	(*reset_done)(struct vfio_pci_core_device *vdev);
+>  	/* Pinned per bound CXL device so vfio-cxl cannot unload under usage */
+>  	struct module *owner;
+>  };
 
