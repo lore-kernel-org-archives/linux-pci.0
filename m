@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 06C4938F951;
-	Tue, 22 Sep 2026 14:47:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5FFAE5540BD;
+	Tue, 22 Sep 2026 14:47:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790088425; cv=none; b=obDM/3ZBq/85cTfTwCTCJQhZz3crVXAsta56FBg2BQBBAkHXMlPBdH097r8lmpDlbVdUParKQNNfJo2Nbbtze8bg7wu3JdesmOpUsbUrIdzO6v4xmi1w5/kydbBW/fcXFD/fgTK8Nr0zuhq/sN8U5DSHq6oSaxAkYH4g7wq5X+Y=
+	t=1790088428; cv=none; b=faggQqu2ExE5WZfmay0B/KEaiNgSPzgVhWoONnJ9m68j74rSk05raXow9hCONKeQqYDbYagYw40WRWsKeph7ZJZiKqloZLPW9PjvxOwLPyTdxi9la+Gt2VMog1VMZB/695SYnK6TAO9bjcHcCmFt84sotglKpPcC0BUTj+NOf30=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790088425; c=relaxed/simple;
-	bh=y0G68FUnKuhdlz8E/0b/HHB6com4da912sJGuCuDPkI=;
+	s=arc-20240116; t=1790088428; c=relaxed/simple;
+	bh=1Im1ZNFIJrfPREwypW1FsEYCrX+6t9WZt5z+WJz1I+8=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=n1mVUQ9uGu/osQMeFdOhN6+YVn50g9CA79tklBESTPRxS3Lz5LVI0Z4CK0N8q95xrBl86XLTQCPOXl7FmDBRzUsOmffNM+LKDIFhyubGeCjCSuFuou2jq3spWDlwrjAecdKbrIXgAUd94fUPCDfsSz07/3h16ixHVJua7vsd8+0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NmiGelxW; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=jJN25j/pFc0qeFOfjl+bh3r6KGkoquRGIYX0mBDomJ+JKtLcZQ+vnWlD1AXwRFWnL5xn3K8PSub8sjxPW4k9UoaRZoNqHH5gytX7304qBi/gHXDK/TT3V+jfH8fBmyQUDB8QVZ3KQ6nA+r4oVVQ6v9k32bo2XYxQJxVW0CAV3bE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=R+m9bqcK; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NmiGelxW"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3C2951F00893;
-	Tue, 22 Sep 2026 14:46:59 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="R+m9bqcK"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0CD831F00898;
+	Tue, 22 Sep 2026 14:47:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790088423;
-	bh=joSU7EzkrZ0Mny1IL9YvQWzLKBnb8avCW8mYTMW38Vk=;
+	s=k20260515; t=1790088426;
+	bh=DEEddTTRgzBSKA0H/RopE6I+anHr4ayJ/E3G54xl/zg=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=NmiGelxWy5lPiI8OSB7ZySUbaMHIu6ompdUPDNn1kAzT6kajoDfGXkyn6TDUK6ns8
-	 /joNrPl6SbZCMkt1DY62m4TkeBwOZv1Tv9M+D77yz8YEUiNdUv4ePMo0S8p2vnzwNT
-	 CFq10sRbKPI1KqyAMWSyd6JlSuUe+5QBMRG6BzNi5W+Tv7sOmUlWyXwXkv4IUKKAao
-	 U4hJB90Wq/H4ws2QsfqM2FzwKWTtypuRUHicpUYV4ZO0Di13iFuLLTOWyaWdDrQiMJ
-	 UgxWiXo1U6w8sxWH4uWFKNHzc7FKHoxB6Q6JKl1pDpmheUqYBCjxPNUXYmZZKO8wbe
-	 sJ/NIylLGB8Ig==
+	b=R+m9bqcKpAqgKKUqFefEpFRVG/j9FzKeqdrasfDm7OP9hUsf+FJ3EN4Rv2hHc/Gwi
+	 le4ke/FFDy30BBseC8U1n0770KMK/iN05YULeutV4l7WAJOUMQxVQtJ7YF629oYOK1
+	 QTPDnHrwjy8SpfYqZnzxh28aYm7A+Kh6mfNKNBCG5kvPhYVdSJD7Z0j7utI+1C29/n
+	 /UGyHsQNaVizRqtXIhOaXl1I82DofZCSRXQ8f68Aq8SLSc+Z3VCHJr3bnrr44XbnVe
+	 N/7YbgVKwrYnlTBlw2ETDKcL24wmqFCzd8YxZ5cUtzOs3gMnBLkXxQgY38zo8ZINNo
+	 a8js4vQywFW6g==
 From: Claudiu Beznea <claudiu.beznea@kernel.org>
 To: lpieralisi@kernel.org,
 	kwilczynski@kernel.org,
@@ -37,11 +37,10 @@ Cc: claudiu.beznea@tuxon.dev,
 	linux-pci@vger.kernel.org,
 	linux-renesas-soc@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	John Madieu <john.madieu.xa@bp.renesas.com>,
 	Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
-Subject: [PATCH v4 7/8] PCI: rzg3s-host: Re-enumerate the bus on PCIe link-state changes
-Date: Tue, 22 Sep 2026 17:46:27 +0300
-Message-ID: <20260922144629.586997-8-claudiu.beznea@kernel.org>
+Subject: [PATCH v4 8/8] PCI: rzg3s-host: Add bridge::reset_root_port()
+Date: Tue, 22 Sep 2026 17:46:28 +0300
+Message-ID: <20260922144629.586997-9-claudiu.beznea@kernel.org>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20260922144629.586997-1-claudiu.beznea@kernel.org>
 References: <20260922144629.586997-1-claudiu.beznea@kernel.org>
@@ -53,307 +52,192 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-From: John Madieu <john.madieu.xa@bp.renesas.com>
+From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
 
-The RZ/G3{E, S}, RZ/V2{H(P), N} PCIe controllers does not expose the
-standard PCIe Slot Capability registers, so the generic pciehp driver
-cannot be used. The only link-state signal the hardware provides is the
-DL_UpDown bit in the PEIS0 event status register, which is raised on every
-Data Link layer up/down transition.
+Add bridge::reset_root_port(). This allows, on some devices, performing
+reads and writes to an NVMe endpoint after a link down/link up cycle
+without failures.
 
-Enable DL_UpDown in PEIE0 and hook up an interrupt handler so the driver
-can react to link-state changes: a device that trains after boot gets
-enumerated, and a device that disappears on link loss is removed. This
-provides hotplug-like behavior without the PCI hotplug core, which is
-unavailable for the reason above.
+The implementation of struct pci_host_bridge::reset_root_port() masks all
+enabled interrupts and synchronizes them before resetting the controller
+to prevent asynchronous events from interfering with the reset operation.
 
-On a DL_UpDown event the handler acks the W1C status bit and schedules a
-worker that inspects PCSTAT1.DL_DOWN_STS:
+struct rzg3s_pcie_host::started boolean was added to keep track of the
+controller state, since rzg3s_pcie_host_start() and rzg3s_pcie_host_stop()
+are called from multiple paths: .reset_root_port(), .suspend_noirq() and
+.resume_noirq(). The flag prevents double start/stop and breaking
+reference counters for clocks and resets.
 
-  - link up: re-run max link speed negotiation, wait for the link to
-    settle and pci_rescan_bus() the root bus;
-  - link down: walk the bus in reverse and pci_stop_and_remove_bus_device()
-    each child.
-
-Both paths take pci_lock_rescan_remove() to serialize against the PCI
-core.
-
-Link events are processed only after the controller has been fully
-initialized.
-
-While at it, make probe tolerant of an absent device. Previously, if the
-link failed to come up during rzg3s_pcie_host_init(), probe tore the
-controller back down and failed. Distinguish this case with -ENODEV,
-leave the controller and refclk running, and let the link-up path
-enumerate the device once it appears.
-
-Signed-off-by: John Madieu <john.madieu.xa@bp.renesas.com>
-Co-developed-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
 Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
 ---
 
 Changes in v4:
-- dropped .reset_root_port() changes
+- this patch is new and is a split from patch 7 of v3
+- use a boolean to keep track of the controller start state; with this
+  the state management code from patch 7 of v3 was dropped 
 
-Changes in v3:
-- added RZG3S_PCI_PEIE0_DL_UPDOWN
-- re-worked the support by implemeting
-  struct pci_host_bridge::reset_root_port()
-- introduced the struct rzg3s_pcie_host::state to:
--- avoid touching the controller while a reset root port is in progress
--- and avoid touching the controller in case a reset root port failed
--- and to be able to re-use the already existing code in the reset
-   root port function
--- and added CLASS() constructs helpers for it to keep the state handling
-   code simpler
-- updated the patch description to reflect the updates
-
- drivers/pci/controller/pcie-rzg3s-host.c | 155 ++++++++++++++++++++---
- 1 file changed, 139 insertions(+), 16 deletions(-)
+ drivers/pci/controller/pcie-rzg3s-host.c | 77 +++++++++++++++++++++++-
+ 1 file changed, 75 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/pci/controller/pcie-rzg3s-host.c b/drivers/pci/controller/pcie-rzg3s-host.c
-index f4b27a77a89d..1c0353598b59 100644
+index 1c0353598b59..9cba898a9536 100644
 --- a/drivers/pci/controller/pcie-rzg3s-host.c
 +++ b/drivers/pci/controller/pcie-rzg3s-host.c
-@@ -86,6 +86,7 @@
- #define RZG3S_PCI_MSGRCVIS_MRI			BIT(24)
- 
- #define RZG3S_PCI_PEIE0				0x200
-+#define RZG3S_PCI_PEIE0_DL_UPDOWN		BIT(9)
- 
- #define RZG3S_PCI_PEIS0				0x204
- #define RZG3S_PCI_PEIS0_RX_DLLP_PM_ENTER	BIT(12)
-@@ -323,6 +324,7 @@ struct rzg3s_pcie_port {
-  * @msi: MSI data structure
-  * @port: PCIe Root Port
-  * @hw_lock: lock for access to the HW resources
-+ * @event_irq: PCIe event interrupt for DL_UpDown detection
+@@ -328,6 +328,7 @@ struct rzg3s_pcie_port {
   * @intx_irqs: INTx interrupts
   * @max_link_speed: maximum supported link speed
   * @controller_id: PCIe controller identifier, used for System Controller access
-@@ -340,6 +342,7 @@ struct rzg3s_pcie_host {
- 	struct rzg3s_pcie_msi msi;
- 	struct rzg3s_pcie_port port;
- 	raw_spinlock_t hw_lock;
-+	int event_irq;
++ * @started: The PCIe controller state (started or not)
+  * @num_lanes: The number of lanes
+  */
+ struct rzg3s_pcie_host {
+@@ -346,6 +347,7 @@ struct rzg3s_pcie_host {
  	int intx_irqs[PCI_NUM_INTX];
  	int max_link_speed;
  	enum rzg3s_pcie_controller_id controller_id;
-@@ -1095,6 +1098,89 @@ static int rzg3s_pcie_set_max_link_speed(struct rzg3s_pcie_host *host)
- 	return ret;
- }
++	bool started;
+ 	u8 num_lanes;
+ };
  
-+static void rzg3s_pcie_link_event(struct rzg3s_pcie_host *host)
-+{
-+	struct pci_host_bridge *bridge = pci_host_bridge_from_priv(host);
-+	struct pci_bus *bus = bridge->bus;
-+	u32 val;
-+
-+	val = readl_relaxed(host->axi + RZG3S_PCI_PCSTAT1);
-+	if (val & RZG3S_PCI_PCSTAT1_DL_DOWN_STS) {
-+		struct pci_dev *dev, *tmp;
-+
-+		dev_info(host->dev, "PCIe link down, removing devices\n");
-+
-+		pci_lock_rescan_remove();
-+		list_for_each_entry_safe_reverse(dev, tmp, &bus->devices,
-+						 bus_list)
-+			pci_stop_and_remove_bus_device(dev);
-+		pci_unlock_rescan_remove();
-+	} else {
-+		int ret;
-+
-+		dev_info(host->dev, "PCIe link up, rescanning bus\n");
-+
-+		/*
-+		 * Attempt link speed negotiation now that the link is up.
-+		 * Failure is non-fatal: the device works at the negotiated
-+		 * speed.
-+		 */
-+		ret = rzg3s_pcie_set_max_link_speed(host);
-+		if (ret)
-+			dev_info(host->dev, "Failed to set max link speed\n");
-+
-+		pci_host_common_link_train_delay(host->max_link_speed);
-+
-+		pci_lock_rescan_remove();
-+		pci_rescan_bus(bus);
-+		pci_unlock_rescan_remove();
-+	}
-+}
-+
-+static irqreturn_t rzg3s_pcie_event_irq_thread(int irq, void *data)
-+{
-+	struct rzg3s_pcie_host *host = data;
-+	u32 status;
-+
-+	status = readl_relaxed(host->axi + RZG3S_PCI_PEIS0);
-+
-+	if (!(status & RZG3S_PCI_PEIS0_DL_UPDOWN))
-+		return IRQ_NONE;
-+
-+	/* Clear the DL_UpDown status (W1C) */
-+	writel_relaxed(RZG3S_PCI_PEIS0_DL_UPDOWN, host->axi + RZG3S_PCI_PEIS0);
-+
-+	rzg3s_pcie_link_event(host);
-+
-+	return IRQ_HANDLED;
-+}
-+
-+static int rzg3s_pcie_request_event_irq(struct rzg3s_pcie_host *host)
-+{
-+	struct device *dev = host->dev;
-+	struct platform_device *pdev = to_platform_device(dev);
-+	const char *evt_name;
-+	int ret, irq;
-+
-+	evt_name = devm_kasprintf(dev, GFP_KERNEL, "%s-evt", dev_name(dev));
-+	if (!evt_name)
-+		return -ENOMEM;
-+
-+	irq = platform_get_irq_byname(pdev, "pcie_evt");
-+	if (irq < 0)
-+		return irq;
-+
-+	ret = request_threaded_irq(irq, NULL, rzg3s_pcie_event_irq_thread,
-+				   IRQF_ONESHOT, evt_name, host);
-+	if (ret) {
-+		return dev_err_probe(dev, ret,
-+				     "Failed to request pcie_evt IRQ\n");
-+	}
-+	host->event_irq = irq;
-+
-+	return 0;
-+}
-+
- static void rzg3s_pcie_teardown_intx(struct rzg3s_pcie_host *host, int count)
- {
- 	if (host->intx_domain)
-@@ -1106,6 +1192,17 @@ static void rzg3s_pcie_teardown_intx(struct rzg3s_pcie_host *host, int count)
- 	}
- }
+@@ -1110,6 +1112,11 @@ static void rzg3s_pcie_link_event(struct rzg3s_pcie_host *host)
  
-+static void rzg3s_pcie_teardown_irqdomain(struct rzg3s_pcie_host *host)
-+{
-+	if (host->event_irq > 0)
-+		free_irq(host->event_irq, host);
-+
-+	if (IS_ENABLED(CONFIG_PCI_MSI))
-+		rzg3s_pcie_teardown_msi(host);
-+
-+	rzg3s_pcie_teardown_intx(host, PCI_NUM_INTX);
-+}
-+
- static int rzg3s_pcie_init_irqdomain(struct rzg3s_pcie_host *host)
- {
- 	struct device *dev = host->dev;
-@@ -1152,22 +1249,21 @@ static int rzg3s_pcie_init_irqdomain(struct rzg3s_pcie_host *host)
- 			goto teardown_intx;
- 	}
+ 		dev_info(host->dev, "PCIe link down, removing devices\n");
  
-+	ret = rzg3s_pcie_request_event_irq(host);
-+	if (ret)
-+		goto teardown_msi;
-+
- 	return 0;
- 
-+teardown_msi:
-+	if (IS_ENABLED(CONFIG_PCI_MSI))
-+		rzg3s_pcie_teardown_msi(host);
- teardown_intx:
- 	rzg3s_pcie_teardown_intx(host, i);
- 
- 	return ret;
- }
- 
--static void rzg3s_pcie_teardown_irqdomain(struct rzg3s_pcie_host *host)
--{
--	if (IS_ENABLED(CONFIG_PCI_MSI))
--		rzg3s_pcie_teardown_msi(host);
--
--	rzg3s_pcie_teardown_intx(host, PCI_NUM_INTX);
--}
--
- static int rzg3s_pcie_config_init(struct rzg3s_pcie_host *host)
- {
- 	struct pci_host_bridge *bridge = pci_host_bridge_from_priv(host);
-@@ -1679,16 +1775,21 @@ static int rzg3s_pcie_host_init(struct rzg3s_pcie_host *host)
- 				 PCIE_LINK_WAIT_SLEEP_MS * MILLI,
- 				 PCIE_LINK_WAIT_SLEEP_MS * MILLI *
- 				 PCIE_LINK_WAIT_MAX_RETRIES);
--	if (ret)
--		goto config_deinit_post;
-+	if (ret) {
-+		/*
-+		 * Link is down. Leave the controller running so the
-+		 * DL_UpDown handler can enumerate a device that appears
-+		 * later.
-+		 */
-+		dev_info(host->dev, "PCIe link down, waiting for DL_UpDown\n");
-+		ret = -ENODEV;
-+	}
- 
- 	val = readl_relaxed(host->axi + RZG3S_PCI_PCSTAT2);
- 	dev_info(host->dev, "PCIe link status [0x%x]\n", val);
- 
--	return 0;
-+	return ret;
- 
--config_deinit_post:
--	host->data->config_deinit(host);
- config_deinit_and_refclk:
- 	clk_disable_unprepare(host->port.refclk);
- config_deinit:
-@@ -1723,8 +1824,14 @@ rzg3s_pcie_host_setup(struct rzg3s_pcie_host *host,
- 
- 	ret = rzg3s_pcie_host_init(host);
- 	if (ret) {
--		dev_err_probe(dev, ret, "Failed to initialize the HW!\n");
--		goto teardown_irqdomain;
-+		if (ret != -ENODEV) {
-+			dev_err_probe(dev, ret,
-+				      "Failed to initialize the HW!\n");
-+			goto teardown_irqdomain;
++		for_each_pci_bridge(dev, bridge->bus) {
++			if (pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT)
++				pci_host_handle_link_down(dev);
 +		}
 +
-+		/* Link is down: hotplug via DL_UpDown will recover. */
+ 		pci_lock_rescan_remove();
+ 		list_for_each_entry_safe_reverse(dev, tmp, &bus->devices,
+ 						 bus_list)
+@@ -1855,6 +1862,9 @@ static int rzg3s_pcie_host_stop(struct rzg3s_pcie_host *host)
+ 	struct rzg3s_sysc *sysc = host->sysc;
+ 	int ret;
+ 
++	if (!host->started)
 +		return 0;
- 	}
++
+ 	clk_disable_unprepare(port->refclk);
  
- 	ret = rzg3s_pcie_set_max_link_speed(host);
-@@ -2004,6 +2111,14 @@ static int rzg3s_pcie_probe(struct platform_device *pdev)
+ 	/* SoC-specific de-initialization */
+@@ -1876,6 +1886,8 @@ static int rzg3s_pcie_host_stop(struct rzg3s_pcie_host *host)
  	if (ret)
- 		goto host_probe_teardown;
+ 		goto power_resets_restore;
  
-+	/*
-+	 * Unmask the PCIe event IRQ at the end of probe to avoid
-+	 * spurious link-state events during controller setup and bus
-+	 * enumeration. From here on, DL_UpDown events trigger the link
-+	 * IRQ thread to (re)scan the bus.
-+	 */
-+	writel_relaxed(RZG3S_PCI_PEIE0_DL_UPDOWN, host->axi + RZG3S_PCI_PEIE0);
++	host->started = false;
 +
  	return 0;
  
- host_probe_teardown:
-@@ -2039,8 +2154,16 @@ static int rzg3s_pcie_suspend_noirq(struct device *dev)
- static int rzg3s_pcie_resume_noirq(struct device *dev)
- {
- 	struct rzg3s_pcie_host *host = dev_get_drvdata(dev);
-+	int ret;
- 
--	return rzg3s_pcie_host_start(host);
-+	ret = rzg3s_pcie_host_start(host);
-+	if (ret)
-+		return ret;
-+
-+	/* Unmask link up/down IRQ. */
-+	writel_relaxed(RZG3S_PCI_PEIE0_DL_UPDOWN, host->axi + RZG3S_PCI_PEIE0);
-+
-+	return 0;
+ 	/* Restore the previous state if any error happens */
+@@ -1891,12 +1903,15 @@ static int rzg3s_pcie_host_stop(struct rzg3s_pcie_host *host)
+ 	return ret;
  }
  
- static const struct dev_pm_ops rzg3s_pcie_pm_ops = {
+-static int rzg3s_pcie_host_start(struct rzg3s_pcie_host *host)
++static int rzg3s_pcie_host_start(struct rzg3s_pcie_host *host, bool set_started)
+ {
+ 	const struct rzg3s_pcie_soc_data *data = host->data;
+ 	struct rzg3s_sysc *sysc = host->sysc;
+ 	int ret;
+ 
++	if (host->started)
++		return 0;
++
+ 	ret = rzg3s_sysc_config_func(sysc, RZG3S_SYSC_FUNC_ID_MODE, 1);
+ 	if (ret)
+ 		return ret;
+@@ -1929,6 +1944,9 @@ static int rzg3s_pcie_host_start(struct rzg3s_pcie_host *host)
+ 	if (ret)
+ 		goto assert_power_resets;
+ 
++	if (set_started)
++		host->started = true;
++
+ 	return 0;
+ 
+ 	/*
+@@ -1942,6 +1960,58 @@ static int rzg3s_pcie_host_start(struct rzg3s_pcie_host *host)
+ 	return ret;
+ }
+ 
++static int rzg3s_pcie_host_reset_root_port(struct pci_host_bridge *bridge,
++					   struct pci_dev *pdev)
++{
++	struct rzg3s_pcie_host *host = pci_host_bridge_priv(bridge);
++	u32 irqs;
++	int ret;
++
++	/* Mask link up/down interrupts. */
++	writel(0, host->axi + RZG3S_PCI_PEIE0);
++
++	/* Mask INTx and MSI interrupts. */
++	irqs = readl_relaxed(host->axi + RZG3S_PCI_PINTRCVIE);
++	writel(0, host->axi + RZG3S_PCI_PINTRCVIE);
++
++	/*
++	 * Make sure the next operations are not disturbed by any pending
++	 * IRQs.
++	 */
++	synchronize_irq(host->msi.irq);
++	for (unsigned int i = 0; i < PCI_NUM_INTX; i++)
++		synchronize_irq(host->intx_irqs[i]);
++
++	ret = rzg3s_pcie_host_stop(host);
++	if (ret) {
++		dev_err(host->dev, "Failed to stop the host!\n");
++		goto unmask_irqs;
++	}
++
++	ret = rzg3s_pcie_host_start(host, false);
++	if (ret) {
++		dev_err(host->dev, "Failed to start the host!\n");
++
++		/*
++		 * Don't unmask IRQs. We are in a bad state here and we
++		 * can recover only through a suspend/resume cycle. Just
++		 * return and preserve the stop state.
++		 */
++		return ret;
++	}
++
++unmask_irqs:
++	/* Unmask INTx and MSI interrupts. */
++	writel_relaxed(irqs, host->axi + RZG3S_PCI_PINTRCVIE);
++
++	/* Unmask link up/down interrupts. */
++	writel(RZG3S_PCI_PEIE0_DL_UPDOWN, host->axi + RZG3S_PCI_PEIE0);
++
++	host->started = true;
++
++	return ret;
++}
++
+ static int rzg3s_pcie_get_controller_id(struct rzg3s_pcie_host *host)
+ {
+ 	struct device_node *np = host->dev->of_node;
+@@ -2104,9 +2174,12 @@ static int rzg3s_pcie_probe(struct platform_device *pdev)
+ 	if (ret)
+ 		goto power_resets_assert;
+ 
++	host->started = true;
++
+ 	bridge->sysdata = host;
+ 	bridge->ops = &rzg3s_pcie_root_ops;
+ 	bridge->child_ops = &rzg3s_pcie_child_ops;
++	bridge->reset_root_port = rzg3s_pcie_host_reset_root_port;
+ 	ret = pci_host_probe(bridge);
+ 	if (ret)
+ 		goto host_probe_teardown;
+@@ -2156,7 +2229,7 @@ static int rzg3s_pcie_resume_noirq(struct device *dev)
+ 	struct rzg3s_pcie_host *host = dev_get_drvdata(dev);
+ 	int ret;
+ 
+-	ret = rzg3s_pcie_host_start(host);
++	ret = rzg3s_pcie_host_start(host, true);
+ 	if (ret)
+ 		return ret;
+ 
 -- 
 2.43.0
 
