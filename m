@@ -1,142 +1,158 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4332D522697;
-	Tue, 22 Sep 2026 09:02:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 3FEF9243387;
+	Tue, 22 Sep 2026 09:09:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790067777; cv=none; b=jsv0jSXXp7YSxeYA5GTZBqao5BXVzKa3vkr3wR2U7rIwKnlkdMXfVbGhZK4IBZNLK5/ZYFHOSIUgNeOWFZXgdBrto0HnS2TAf5Xnk/EroWhsOdXby59fxVIF8V7wfh1V0Tr5i+atXufDbJzYK1y1Q9eHUzymgW9Aj2c8jy6rznw=
+	t=1790068142; cv=none; b=tXvfKSdIL7/PqPl87b4Ttmqggiwsz8fkzFCoLuTQUgKAsdILeelAIIGTV+M41xIBH/tvp2Bq1I/3Cs6i4CLlvMueZaSKbTEgXkXK/jBg4qPThIF9mSh1pp5HYAR1Kq2mJ7TGl306c515LM+DkQtlbsoDktldKMD6uwUzUPxUHt0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790067777; c=relaxed/simple;
-	bh=6QLL8kOEYVPBDvn/KHSNGhNSQVVLFtJN0wo7aXs5cn8=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=WMF9xZIujLK3D9YC7MwYcAnmEQCszEZq8eN82z3Ywxous4WEx+5puLSEnFyw0l+T2La1JfVxOWaGz+tGAVG42VcvcRtMN/BxcupOkM7ukHskJNoaCaqWWiU0+CSkOFyuxCEoNAM/xrmEEgjC5uqWHkRUupk9C5FCitXuNJMTJuI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Um7rVY0r; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790068142; c=relaxed/simple;
+	bh=i8FGK72GQr9CSnr5prIRCcvnaw4o75COTdHdszIvstg=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=lgupYiREZoaZvozykUhaZM8rBjKQMon2KKPc/3QovWY4RI1d+rP2/wLEZcjBDPGKfPJHD1KUKJJiNegAYgiTcVPCO2PAWgpEqHeDakkZjZcg82puKMgbX3dPrGCcAOFbCz4ZvchcMqk+KlTiBJan+Emh1GaZVtfgOrMAnq5meEc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=Mnv1fmj/; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Um7rVY0r"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 805311F00893;
-	Tue, 22 Sep 2026 09:02:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790067775;
-	bh=C65iB7eiH4BwABEcK8uVSpTqKN/IKsmkTblMzp6fi9k=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Um7rVY0rhXDfDYFke390OceZxaMAqk/0mejHSif6mMtsBMZKDSXFAGK7Gapl88yRs
-	 w76k/0CiZViKQxxIy3sVnk0VCqI0K7JIlWi8bIjmt3agpC0xj1yIuzlkoKaW0Q3fcq
-	 SqXZKIJBo6P56vOGbbTykj33rTZW4+CXQ2HUtwNWtIYM8ufqtox5RNA5jGQA8Hfvpk
-	 ItdvPAzwOa92d5YVJsmKZOW8WuiHeNNqU540or9CmXUqGO1tr2VdJRGrqh1TnoCe6T
-	 OGlbAtaboSn4JOIGOorT1q0KmcmSWEjIstRowXPlajcItDaR2DKuIryw1O/QwvwuJi
-	 J2xzxMrVf/1aw==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v13 14/15] PCI/CXL: Expose CXL Reset as a PCI reset
- method
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Srirangan Madhavan" <smadhavan@nvidia.com>
-Cc: linux-cxl@vger.kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260922083924.2451158-15-smadhavan@nvidia.com>
-References: <20260922083924.2451158-1-smadhavan@nvidia.com>
- <20260922083924.2451158-15-smadhavan@nvidia.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 22 Sep 2026 09:02:55 +0000
-Message-Id: <20260922090255.805311F00893@smtp.kernel.org>
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="Mnv1fmj/"
+Received: from [192.168.1.70] (unknown [4.194.122.170])
+	by linux.microsoft.com (Postfix) with ESMTPSA id 77AD520B7167;
+	Tue, 22 Sep 2026 02:08:03 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 77AD520B7167
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1790068087;
+	bh=rYpc4zPy6gvjTMKP6zLT8ArGLoC2PBhl6R7WqRuj41Y=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=Mnv1fmj/EkmzTtlrhGMBD4vcIRwT5SjJLfuFY2NTeErkYsQn/IoxtQmmhd/bE9Q92
+	 XbJGS7EEfZHYjkUW+rrDpyj5V+3q+SJfe7jocitBN3deO98Lvh8TSuNTSSqjKnvYoK
+	 cujDbTvbcj9JCEQxPc1NVGLGjn8CFXGgaI4Nkbf8=
+Message-ID: <c3345afb-7491-42c9-9e9c-609860aea515@linux.microsoft.com>
+Date: Tue, 22 Sep 2026 14:38:47 +0530
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] PCI: hv: Probe vPCI buses asynchronously
+To: Michael Kelley <mhklinux@outlook.com>,
+ "K. Y. Srinivasan" <kys@microsoft.com>,
+ Haiyang Zhang <haiyangz@microsoft.com>, Wei Liu <wei.liu@kernel.org>,
+ Dexuan Cui <decui@microsoft.com>, Long Li <longli@microsoft.com>,
+ Lorenzo Pieralisi <lpieralisi@kernel.org>,
+ =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+ Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+References: <20260907054742.235389-1-namjain@linux.microsoft.com>
+ <SN6PR02MB4157AB3B9404AF9CC43BF11FD4842@SN6PR02MB4157.namprd02.prod.outlook.com>
+Content-Language: en-US
+From: Naman Jain <namjain@linux.microsoft.com>
+In-Reply-To: <SN6PR02MB4157AB3B9404AF9CC43BF11FD4842@SN6PR02MB4157.namprd02.prod.outlook.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
-- [High] PCI/CXL: unsafe fallback to FLR on cxl_reset safety check failure
-- [High] PCI/CXL: cxl_reset rejected during probe if features disabled
---
 
-commit a3dd9319808c6b4394c9a465a0ccd99ba52161a2
-Author: Srirangan Madhavan <smadhavan@nvidia.com>
 
-PCI/CXL: Expose CXL Reset as a PCI reset method
+On 9/22/2026 2:39 AM, Michael Kelley wrote:
+> From: Naman Jain <namjain@linux.microsoft.com> Sent: Sunday, September 6, 2026 10:48 PM
+>>
+>> On Hyper-V guests each virtual PCI bus is enumerated by its own
+>> hv_pci_probe() call. The probe performs several synchronous host
+>> request/response exchanges while negotiating the protocol, querying bus
+>> relations, entering D0, and reporting allocated resources. These waits
+>> are latency-bound rather than CPU-bound.
+>>
+>> hv_pci registers as an ordinary VMBus driver, so driver_register() walks
+>> matching vPCI buses and probes them sequentially while the driver's
+>> initcall runs. On guests that expose several devices, each through its
+>> own vPCI bus, this serialization adds the host round-trip latencies to
+>> device initialization.
+>>
+>> Each bus is described by its own struct hv_pcibus_device, so
+>> independent buses can be probed concurrently. Request asynchronous
+>> probing via PROBE_PREFER_ASYNCHRONOUS, causing the driver core to
+>> schedule matching buses for asynchronous probe work.
+>>
+>> On an Azure Standard_L32s_v3 guest with five vPCI targets (four NVMe
+>> controllers and one Mellanox VF), Linux 7.2.3 was tested with one warm-up
+>> and three measured boots per variant. The median interval from the first
+>> hv_pci_probe() entry to the last return decreased from 2847.968 ms to
+>> 2786.709 ms, a 61.259 ms (2.15%) improvement.
+> 
+> The elapsed time improvement is rather disappointing given the
+> complexity of the probing sequence and the number of interactions
+> with the Hyper-V host. Do you have any insight into why there isn't a
+> larger reduction? Is something mostly serializing the work even though
+> PROBE_PREFER_ASYNCHRONOUS is specified?
+> 
+> Michael
+> 
 
-This commit registers cxl_reset with the PCI reset-method interface, placing
-it before FLR. It adds capability and state checks to ensure the device
-supports and is configured for CXL cache and memory protocols. It also
-returns -ENOTTY when the device capabilities or required cache
-synchronization do not permit a safe reset.
+I can see these reasons for not seeing great improvements:
+1. Timing of device offers from the host is beyond the control of guest 
+and the Hyper-V host may also be serializing the requests from the host.
+2. Shared locks that needs to be handled separately:
+    * hyperv_mmio_lock during VMBus MMIO allocation.
+    * pci_rescan_remove_lock during PCI resource assignment and device 
+addition.
 
-> diff --git a/drivers/cxl/core/resource.c b/drivers/cxl/core/resource.c
-> --- a/drivers/cxl/core/resource.c
-> +++ b/drivers/cxl/core/resource.c
-> @@ ... @@
->  int cxl_reset_function(struct pci_dev *pdev, bool probe)
->  {
->  	int dvsec, rc;
->  	u16 cap, ctrl;
->=20
-> [ ... ]
->=20
->  	if (!(cap & PCI_DVSEC_CXL_CACHE_CAPABLE) ||
->  	    !(cap & PCI_DVSEC_CXL_MEM_CAPABLE) ||
->  	    !(cap & PCI_DVSEC_CXL_RST_CAPABLE) ||
->  	    !(cap & PCI_DVSEC_CXL_RST_MEM_CLR_CAPABLE))
->  		return -ENOTTY;
 
-[Severity: High]
-Does returning -ENOTTY here cause the PCI core to silently fall back to FLR
-during an actual reset request?=20
+I digged more into it, and it is indeed because of late offers from 
+Hyper-V. I was considering the start of first probe to the last return, 
+for time calculations.
 
-Type 3 devices (memory expanders) lack CXL.cache capabilities, so they would
-fail this check. If they fall back to FLR, it resets the PCIe state but not
-the CXL protocol state. For devices with active CXL memory, this might lead
-to Machine Check Exceptions or memory corruption when the CPU interacts with
-the reset device.=20
+For the 4 PCI devices on my setup whose offers were delivered together, 
+the performance improvement was about 24%. However with the last offer 
+coming late for MLX PCI device, overall improvement in time was lesser 
+in terms of percentage.
 
-Would returning a hard error like -EOPNOTSUPP during execution safely abort
-the unsafe reset?
+Dexuan had removed pci_rescan_remove_lock in his previous upstream 
+attempt, but I ommitted it intentionally this time because from AI 
+review, I saw a potential race condition that we would introduce if we 
+remove it. Secondly, I did not observe any benefits of removing this 
+lock. But I am going to revisit it again.
 
-> =20
->  	rc =3D pci_read_config_word(pdev, dvsec + PCI_DVSEC_CXL_CTRL, &ctrl);
->  	if (rc)
-> -		return pcibios_err_to_errno(rc);
-> +		return probe ? -ENOTTY : pcibios_err_to_errno(rc);
->  	if (PCI_POSSIBLE_ERROR(ctrl))
-> -		return -ENODEV;
-> +		return probe ? -ENOTTY : -ENODEV;
->  	if (!(ctrl & PCI_DVSEC_CXL_CACHE_ENABLE) ||
->  	    !(ctrl & PCI_DVSEC_CXL_MEM_ENABLE))
->  		return -ENOTTY;
+Regards,
+Naman
 
-[Severity: High]
-Does evaluating this dynamic state during probe permanently exclude the
-reset method before the driver can enable the features?
+>>
+>> Co-developed-by: Dexuan Cui <decui@microsoft.com>
+>> Signed-off-by: Dexuan Cui <decui@microsoft.com>
+>> Signed-off-by: Naman Jain <namjain@linux.microsoft.com>
+>> ---
+>>
+>> Previous discussion around this change:
+>> https://lore.kernel.org/all/20230420024037.5921-7-decui@microsoft.com/
+>>
+>> Skipping removal of pci_rescan_remove_lock, due to possible
+>> synchronization problems associated with this lock removal. Also, with
+>> my current setup, I was not able to see much improvements with this
+>> change, so keeping it for later. Asynchronous probing change is not
+>> dependent on this.
+>>
+>> ---
+>>   drivers/pci/controller/pci-hyperv.c | 3 +++
+>>   1 file changed, 3 insertions(+)
+>>
+>> diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
+>> index 89816a2bd7cd3..056d379b3cee4 100644
+>> --- a/drivers/pci/controller/pci-hyperv.c
+>> +++ b/drivers/pci/controller/pci-hyperv.c
+>> @@ -4155,6 +4155,9 @@ static struct hv_driver hv_pci_drv = {
+>>   	.remove		= hv_pci_remove,
+>>   	.suspend	= hv_pci_suspend,
+>>   	.resume		= hv_pci_resume,
+>> +	.driver = {
+>> +		.probe_type = PROBE_PREFER_ASYNCHRONOUS,
+>> +	},
+>>   };
+>>
+>>   static void __exit exit_hv_pci_drv(void)
+>> --
+>> 2.43.0
+>>
+> 
 
-When pci_init_reset_methods() calls cxl_reset_function() with probe =3D=3D =
-true
-during early device discovery, returning -ENOTTY causes the PCI core to omit
-this method entirely from the supported reset methods.
-
-If this check evaluates dynamic state before the early-return for probe, it
-might cause hot-plugged devices to silently fall back to FLR when a reset
-is later requested. Could this check be moved after the if (probe)
-early-return?
-
->=20
-> [ ... ]
->=20
->  	if (probe)
->  		return 0;
->=20
-> [ ... ]
->=20
->  	if (!cpu_cache_has_invalidate_memregion())
->  		return -ENOTTY;
-
-[Severity: High]
-Similar to the capability check above, does returning -ENOTTY here fail to
-safely abort the reset?=20
-
-Since the PCI framework interprets -ENOTTY as "method not applicable, try
-next", this causes a fallback to the unsafe FLR method. Would returning a
-hard error prevent this unsafe fallback?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260922083924.2451=
-158-1-smadhavan@nvidia.com?part=3D14
