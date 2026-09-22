@@ -1,43 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35F5838737A
-	for <linux-pci@vger.kernel.org>; Tue, 22 Sep 2026 14:54:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 414612F260C
+	for <linux-pci@vger.kernel.org>; Tue, 22 Sep 2026 14:56:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790088870; cv=none; b=MnTjc748GBpjMhSGSh9yOCotqbxeFkd3dTHrJBCFOcrcv28TPSRybkIGOTjUEYVMKPTrwcQk7hDBM7XdrXGroVox5Xur0fDYo3i+cIHy0xGMuOCLHFSdRJfZUb4XEurkao/LsjNwrlUftyv/Co8f6cNZ5AOJ4AoYU1UeylDs/G4=
+	t=1790089017; cv=none; b=XAUyoVVl3S/5hMQZEs3njTzV/8EN5vy8sOGxmYZLJcVMGA6dyDz5OoHYnlXsMbrblf2tZFuCZhXbu10nSRLPJbNuolB27v7YqT1ye9ZHM0pIfyJCYoRVRu4U4xzFCa17Ij32BMQ+puNmdEIO0jhaxMtmsX8J0zOyCosih2VnvWY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790088870; c=relaxed/simple;
-	bh=+FV2lw6472JgpNBxD4YH8I5kn+Jwv5JTkV0hTlrpNUI=;
+	s=arc-20240116; t=1790089017; c=relaxed/simple;
+	bh=/8llM4jB6PI9dW8w0Syl6zB/v3MkF2XW7fc23VnS9Hc=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=sSB/xEtPlLodtQF5HvdcywWp3865Ow/7wFuVTk6VvuMyC3j32GK9nEJls7jm+Zjb/7hiYw8ec5akQ53z9QYDgUT3+1EgHdvNAfAoItPzIvt8zpO6qekfp1ciKfkIJxvACQsKmJmUlGMYMdNDjZ1yxRaOBuIrTHA2t8NjIU+msX4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IS4+gET9; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=i/6TwjJOTL57KO4QQEtOdxZ6xTceqlsN6n64Uq2+e5PKopC8GOWomoYEzQaeEGEu6RPJz0nkJtmp4knnAoJInawNj3s388Z9xByL+yyuQtFIOBDp3XJMo6voa9jwCGmQXNxM6dSVw2DheUlTmJSpGzo5bmeSa4unxnb5yFYVR8o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fPlsbJdp; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IS4+gET9"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B43561F000FF;
-	Tue, 22 Sep 2026 14:54:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fPlsbJdp"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A5D181F00893;
+	Tue, 22 Sep 2026 14:56:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790088868;
-	bh=+FV2lw6472JgpNBxD4YH8I5kn+Jwv5JTkV0hTlrpNUI=;
+	s=k20260515; t=1790089015;
+	bh=/8llM4jB6PI9dW8w0Syl6zB/v3MkF2XW7fc23VnS9Hc=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=IS4+gET9o6EP+n68PqZZGhmAxSr1IS0mZ9CSfoHKGAlaQQ+V/JRfjUoPC/FH5W86M
-	 NkMR5RaqvukTcd3QjhWVcEIUGbcK0jc1IP6aZPDczQ1Z5RoqzISxxUIb0RiREf30Xb
-	 wbBSsTfWWIB8KN+yBCyMuxOHeiAfRqrRxQVMMy7JIjUhjmjFp0Cc3xZddnRpVTcjaC
-	 dLHFa3OKnZFISiQMkTjxFivUBGch+B7CwuMjg6aAIHB23kG8OfqgSgd+vV8CxpJ61S
-	 PexHmYBpw2X3mxxfVFJtPXUFxqaz9WxUUzGgJv1PFpNb0AHMN2OcVVtEI87gyNE8d4
-	 fLhjLWT8x7j7g==
+	b=fPlsbJdpU4J+j6H971WBaZEwSHbTRS3AAP5PZQLySq3f4cyGkEbkWXJQqJkTr4Ei9
+	 qidgorHtjqp5G4PuSPB/Z7xIg3VFg7j53rzTjAMWcMfQPdH2OoC6xR/3vqL8vI1Kvh
+	 sgJDlTgAMDQnqH6FWV9VwkqqK1TA9e5mznbEMbhkxt2Vwut91n1CNCWqY/nZ7STMMe
+	 hfT0gJVkMsgzfZIPFTWbR/wW4wbZBBsT0rjBeLZ0flEP4j7DvNpFQVh5h1+6pQdOAS
+	 cmXgMs/lGRctgoiT7s7ICqirr9bH0/x0OvbcXIGLe0/0Fj/Pw99uIL6n8GeRu8C/kS
+	 S66wNoyzfdXJQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 3/8] PCI: rzg3s-host: Drop nop instructions
+Subject: Re: [PATCH v4 4/8] PCI: rzg3s-host: Move host configuration code
+ together
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Claudiu Beznea" <claudiu.beznea@kernel.org>
 Cc: wsa+renesas@sang-engineering.com, linux-pci@vger.kernel.org
-In-Reply-To: <20260922144629.586997-4-claudiu.beznea@kernel.org>
+In-Reply-To: <20260922144629.586997-5-claudiu.beznea@kernel.org>
 References: <20260922144629.586997-1-claudiu.beznea@kernel.org>
- <20260922144629.586997-4-claudiu.beznea@kernel.org>
+ <20260922144629.586997-5-claudiu.beznea@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 22 Sep 2026 14:54:28 +0000
-Message-Id: <20260922145428.B43561F000FF@smtp.kernel.org>
+Date: Tue, 22 Sep 2026 14:56:55 +0000
+Message-Id: <20260922145655.A5D181F00893@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -46,11 +47,9 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
 > From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
 >=20
-> On the RZ/G3S PCIe IP variant (which is similar to those used on the
-> RZ/G3E, RZ/V2H, and RZ/V2N SoCs), access to the PCIe Type 1 registers
-> requires setting the PCI_PERM.CFG_HWINIT_EN bit. Since this bit is not
-> set on the code paths where rzg3s_pcie_set_max_link_speed() is called,
-> the writes to PCI_EXP_LNKCTL2.TLS are nops. Drop them.
+> Move host configuration code together to have it grouped. This prepares f=
+or
+> the addition of hotplug support.
 >=20
 > Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
 
@@ -58,5 +57,5 @@ Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260922144629.5869=
-97-1-claudiu.beznea@kernel.org?part=3D3
+97-1-claudiu.beznea@kernel.org?part=3D4
 
