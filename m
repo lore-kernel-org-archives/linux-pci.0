@@ -1,95 +1,94 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from canpmsgout11.his.huawei.com (canpmsgout11.his.huawei.com [113.46.200.226])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A508A3A5456;
-	Tue, 22 Sep 2026 06:48:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C1F5029DB8F;
+	Tue, 22 Sep 2026 07:04:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.226
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790059695; cv=none; b=mn24PnE7zPx/zGYV0oIKe6tYXiPSqmBfkt2kW0GiRFsXBJZyCjOeivrSTFD6M+Doj70FnOrCQRUok8D5JmOzQxrz2eyBm+G2bu+F8gxf7wWLV2S/q5Q1eKOsuMDPfAIb9VcmfXz1rXWreKU6q1SwFPG33+Ryx9RYtvC4Xu0qkZ0=
+	t=1790060688; cv=none; b=E+qgXzjvgEVmUwiQr0EgsgJSo0zAkkxWnc6dPdpbKbT6F3Ehkg8QYGONRvJW38pZsZ0SVYC3OBZX+OmoMLQLok6Bmv3tFJW6bszbFyVHpwWRCxN/895b2Pyo9iASLuyrUJWQPQOb/7KIZJWa5hPMg9djY6u79IqCk+C2OO6a67w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790059695; c=relaxed/simple;
-	bh=ORpT7vIsYFrQ8GT4CBCh3lwwMTxkULqZ4cZugt291mc=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=FNcD19YSZSKxkqOWGnV0nmcFO/0SPOaSXEms5VUt5VUXfOPyV9/tocQ/F8kqZuJgVQAU9M3hlWs/QZrHp/Y3TO7mZXQBV2SMhEPuT6sjxQMbUTJNwf3EP8+9WA1DyQRlVOoU7pAD6w7yGfWAqv4jjTi11v1YeNWLKga9Vu1Dmrc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YfDA3CJP; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790060688; c=relaxed/simple;
+	bh=Z3E5lc1PTQorPQUPtL6bvdZnJCqg4nY4rvs7dvyKDc4=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=VvMb44BTRgVbQsz3xtPt4kkcUv1XprtU6RMUNNmJsSBNixsDRjluRiV+UNTUHsaaVledchGxz2i1kzUjZdYNfzg9HkPboZmjrN9Xx2YHZDG6YaJejBmUBXfa+HCJ7a5aSQBj0opCyRwtXEYfJoO2wuhgaFr0TnJqm1ONwiEoIXk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=MRTrO9WZ; arc=none smtp.client-ip=113.46.200.226
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YfDA3CJP"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2651D1F000FF;
-	Tue, 22 Sep 2026 06:48:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790059694;
-	bh=DFZ4AH8NrD9uS7BzuKBlUQTFfMHVHBHZfW2TghtrT5c=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=YfDA3CJPtfEsyMVSUuK3BObRIN6DiY+rON8aWNCzRgVdJNy/d0Jcnk1dc29QbjE/p
-	 h3+m70YLeNi9qVBaMa6tDw7rZF2I7dvCO5LeN3OCKLpDN/Yq6aj/WuA/1UGp/1DZu6
-	 9glAiiVfETwyU8Nj8KfgqGK3yJXBlxhYrYiYItSD8z+6mzGOM6b6kN4GFs1HFsL4rJ
-	 TxDNJYUk/EEFkoV7yBWvoxS4Cxf4T3bGu+Y+7uLcN5qpvcnctlDqlec5BOV/RqksNd
-	 QIyUIh5LvtoVajqPwplwd9L8lmJqHYyQKBem93ybw+o4XKLO5qvP0aJvXng6oq4P89
-	 /lzPqYIwkGmuA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] pci/vgaarb: pass a data pointer to be used in the
- decode callback
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Dave Airlie" <airlied@gmail.com>
-Cc: kvm@vger.kernel.org, dri-devel@lists.freedesktop.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260922064111.2468741-1-airlied@gmail.com>
-References: <20260922064111.2468741-1-airlied@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 22 Sep 2026 06:48:13 +0000
-Message-Id: <20260922064814.2651D1F000FF@smtp.kernel.org>
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="MRTrO9WZ"
+dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=ZkAYMpRGGT5mfdQXD5v51hO8w1azifScBUGqLyRa5fY=;
+	b=MRTrO9WZ0vI7NQorRpn5X1PUZtSYeR0LqcP4GqfKXB4Cs+rZABjA+aIBqRxkuhM1aUScmi596
+	CdLY/AqBG8RwqpRxAAy81zY0oNpVxM+dVW1vym1FhkRXwzY70qiNqTIzaLrfOrWOQqJBUmzbiby
+	t8N1YSFgVtvCVNkAIOQjTjA=
+Received: from mail.maildlp.com (unknown [172.19.163.163])
+	by canpmsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4hprR468qnzKm5t;
+	Tue, 22 Sep 2026 14:53:36 +0800 (CST)
+Received: from dggpemr500010.china.huawei.com (unknown [7.185.36.210])
+	by mail.maildlp.com (Postfix) with ESMTPS id DAF364057A;
+	Tue, 22 Sep 2026 15:04:42 +0800 (CST)
+Received: from huawei.com (10.50.85.180) by dggpemr500010.china.huawei.com
+ (7.185.36.210) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.45; Tue, 22 Sep
+ 2026 15:04:42 +0800
+From: Hongtao Zhang <zhanghongtao35@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>
+CC: Alex Williamson <alex.williamson@nvidia.com>,
+	=?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>, Dan
+ Williams <djbw@kernel.org>, Keith Busch <kbusch@kernel.org>,
+	<linux-kernel@vger.kernel.org>, <liuyongqiang13@huawei.com>,
+	<zhangqiuhao@huawei.com>
+Subject: Re: PCI: Prevent device lock leak during bus reset
+Date: Tue, 22 Sep 2026 15:23:19 +0800
+Message-ID: <20260922072319.366662-1-zhanghongtao35@huawei.com>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20260821021626.1874602-1-zhanghongtao35@huawei.com>
+References: <20260821021626.1874602-1-zhanghongtao35@huawei.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: kwepems100002.china.huawei.com (7.221.188.206) To
+ dggpemr500010.china.huawei.com (7.185.36.210)
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [Low] drm/loongson: missed vga_client_register API conversion breaks build
---
+Hi Bjorn,
 
-commit 53a905b209a5cf4aa1aeb17a42069c191d47a151
-Author: Dave Airlie <airlied@redhat.com>
+Gentle ping on this RFC.
 
-pci/vgaarb: pass a data pointer to be used in the decode callback
+Sashiko's review points out that pci_try_reset_bus(), pci_slot_reset()
+and pci_try_reset_slot() have the same problem, since
+__pci_bus_trylock(), __pci_bus_lock() and __pci_bus_unlock() also walk
+bus->devices independently for locking and unlocking. This matches the
+limitation I noted in the commit message.
 
-This commit updates the vga_client_register() API to accept a void *data
-pointer, which is then passed to the decode callback. It also updates
-various DRM drivers and VFIO to pass and use this new private data pointer.
+The review also mentions a possible use-after-free. In those unpatched
+paths, bus->devices is walked without pci_bus_sem and without taking
+device references, so a device removed and freed concurrently could be
+accessed during the walk. With the snapshot approach this is avoided:
+the snapshot is taken under pci_bus_sem, a reference is held on every
+device in it, and both locking and unlocking use only the snapshot. A
+removed device therefore cannot be freed until the reset completes.
 
-[ ... ]
+Before extending this to the other paths, I would like to confirm the
+direction. I see two options:
 
-> diff --git a/include/linux/vgaarb.h b/include/linux/vgaarb.h
-> index 97129a1bbb7df..71a364669eaf8 100644
-> --- a/include/linux/vgaarb.h
-> +++ b/include/linux/vgaarb.h
-> @@ -33,7 +33,8 @@ struct pci_dev *vga_default_device(void);
->  void vga_set_default_device(struct pci_dev *pdev);
->  int vga_remove_vgacon(struct pci_dev *pdev);
->  int vga_client_register(struct pci_dev *pdev,
-> -		unsigned int (*set_decode)(struct pci_dev *pdev, bool state));
-> +		unsigned int (*set_decode)(void *data, bool state),
-> +		void *data);
+1. Extend the snapshot approach to the slot and try-reset paths. The
+   change stays small and local, but a device added after the snapshot
+   may still be reset without its device lock held.
 
-[Severity: Low]
-Does this API change break the build for the loongson DRM driver?
+2. Prevent topology changes for the whole reset. This would also cover
+   devices added after the snapshot, but it needs a lock held across the
+   reset and care to avoid deadlocks with hotplug and AER recovery.
 
-It looks like the conversion of vga_client_register() missed lsdc_pci_probe=
-()
-in drivers/gpu/drm/loongson/lsdc_drv.c:
+I lean towards option 1 as a fix that is easier to backport, with
+option 2 possibly done separately later. Does that sound reasonable, or
+should I go with option 2 directly?
 
-drivers/gpu/drm/loongson/lsdc_drv.c:lsdc_pci_probe() {
-    ...
-	vga_client_register(pdev, lsdc_vga_set_decode);
-    ...
-}
-
-The callback lsdc_vga_set_decode() also still expects a struct pci_dev *
-rather than void *data.
-
-[ ... ]
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260922064111.2468=
-741-1-airlied@gmail.com?part=3D1
+Thanks,
+Hongtao
