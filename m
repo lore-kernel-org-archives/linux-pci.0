@@ -1,185 +1,160 @@
-Received: from mout01.posteo.de (mout01.posteo.de [185.67.36.65])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC6ED568555
-	for <linux-pci@vger.kernel.org>; Tue, 22 Sep 2026 16:29:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.67.36.65
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790094571; cv=none; b=h/OUH+fmhHad2N/uFoepsVU3uS27VLYiXyvZJXioTuN8E/KUzyPI6wUYzV8b1ZTd0HRgmkApEcvGGID62xGXbtMDS1408FA50gIoHhE5PNRaYw7cBWFBuqXBVozcOr/om24xIEZCuz75JPWMuhgErG7ygqwBTEmPxRy9quG4F0s=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790094571; c=relaxed/simple;
-	bh=VB3WnbRvt2J9LKmcdb7uv8dSEpH5QKJ7IXLu9KgM7d8=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=tEbCizAA6vQ4vEwHkW8pwai/q4fIgRsFYTKQUn4csC9u2ePU+cynhxCeaBvwPl4KZ8rqCM1h6fHgcjbciagNzxDIIb+RwzNCXlD42R9TknGlT7Jms9NrF41324/58BS4R3SGKAbAjGw6zYVjNLg3dVfab3RSS52SUet9WCncPHo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de; spf=pass smtp.mailfrom=posteo.de; dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b=cvSvI+SE; arc=none smtp.client-ip=185.67.36.65
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=posteo.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B828F549373
+	for <linux-pci@vger.kernel.org>; Tue, 22 Sep 2026 16:34:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=170.10.133.124
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1790094875; cv=pass; b=DI5iqnIalHbQB3hWA3hyWeNu1ggadVkAjUl02qN2WzPH3vpJapRB0BmK3V7WGU/f2iG3Fu0qcfdtTz84kNBRv/ttTkMyjb0fW7P0saaLi74jGsl8hNgoFjojNBti6zs5ibs8BZN1gZvY9BX4gU/bVfQUaoomsjPK9dvfiKhQCAU=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1790094875; c=relaxed/simple;
+	bh=cKbRWUWUNFCMJjKOH3yHgRtEpoahj/lRVoNkkOfXTsg=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=XntiBYBH9Xa/8KL8kswZzkS5pTuExIvGBvVYUyaCxzOb88kRopBdMaHUyOhBrxevFK+1UhY1qfUTmWWZze0YFRSmH0n34UBPnegGGZ6muY4IOm52ykSkwqn1piKS/2L+W4eBysxGQOHHqFZ1UEX65dAgh6Gyqx9Ur8WolxdJE7c=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=AB0zXoy1; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=JFcMYyPe; arc=pass smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b="cvSvI+SE"
-Received: from submission (posteo.de [185.67.36.169]) 
-	by mout01.posteo.de (Postfix) with ESMTPS id C83E5240027
-	for <linux-pci@vger.kernel.org>; Tue, 22 Sep 2026 18:29:21 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=posteo.de;
-	s=1984.8680eb; t=1790094561;
-	bh=VB3WnbRvt2J9LKmcdb7uv8dSEpH5QKJ7IXLu9KgM7d8=;
-	h=Message-ID:Subject:From:To:Cc:Date:Autocrypt:Content-Type:
-	 MIME-Version:OpenPGP:From;
-	b=cvSvI+SE1xWq0cMXMfLUtoI0wSf1mGoXpE5fgwj9mmB/2kTtcRsktOrS7zgntEygI
-	 ot/bmwlshR+guiXMZep1kfPnMUmXAP9skW+yXgrOFi8fTBgpdZ4mlsmVPSIUwkWhy1
-	 WhLf0RRoC1A39IDvhRYg54RnN5ndQDO3546qdTqyiBADv4YyNIM02iE0rJD22wpfpd
-	 ybWgUWtMupLLvUWuVvzH8cYbAzsOjg1FWNMHJGRarsKSam0yNHTjxWTBMe7A8ovWs1
-	 JFPLzE2plZUe0TPapxmajzoLKyFhvBj40sk31fFbCOjZ/8RfZm1uokZ8z1PszQ6Hep
-	 0wdZovSOmoKKA==
-Received: from customer (localhost [127.0.0.1])
-	by submission (posteo.de) with ESMTPSA id 4hq5CK5Y70z6txf;
-	Tue, 22 Sep 2026 18:29:17 +0200 (CEST)
-Message-ID: <0b51e27e1b2e16ac5bf5776c7c1704ca90857ec5.camel@posteo.de>
-Subject: To Lee, Pavel: Re: [PATCH v25 0/4] rust: leds: add led classdev
- abstractions
-From: Markus Probst <markus.probst@posteo.de>
-To: Lee Jones <lee@kernel.org>, Pavel Machek <pavel@kernel.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Dave Ertman	
- <david.m.ertman@intel.com>, Leon Romanovsky <leon@kernel.org>, Miguel Ojeda
-	 <ojeda@kernel.org>, Alex Gaynor <alex.gaynor@gmail.com>, Gary Guo	
- <gary@garyguo.net>, =?ISO-8859-1?Q?Bj=F6rn?= Roy Baron	
- <bjorn3_gh@protonmail.com>, Benno Lossin <lossin@kernel.org>, Andreas
- Hindborg	 <a.hindborg@kernel.org>, Alice Ryhl <aliceryhl@google.com>,
- Trevor Gross	 <tmgross@umich.edu>, Danilo Krummrich <dakr@kernel.org>,
- "Rafael J. Wysocki"	 <rafael@kernel.org>, Bjorn Helgaas
- <bhelgaas@google.com>, Krzysztof =?UTF-8?Q?Wilczy=C5=84ski?=	
- <kwilczynski@kernel.org>, Boqun Feng <boqun@kernel.org>, Daniel Almeida	
- <daniel.almeida@collabora.com>, Tamir Duberstein <tamird@kernel.org>, 
- Alexandre Courbot <acourbot@nvidia.com>, Onur =?ISO-8859-1?Q?=D6zkan?=
- <work@onurozkan.dev>, Ira Weiny	 <iweiny@kernel.org>,
- rust-for-linux@vger.kernel.org, linux-leds@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Date: Tue, 22 Sep 2026 16:29:20 +0000
-In-Reply-To: <20260913-rust_leds-v25-0-1a10371d78c3@posteo.de>
-References: <20260913-rust_leds-v25-0-1a10371d78c3@posteo.de>
-Autocrypt: addr=markus.probst@posteo.de; prefer-encrypt=mutual;
- keydata=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
- jfGillcaQOqFZ3WwVqyzG1BUfTow==
-Content-Type: multipart/signed; micalg="pgp-sha256";
-	protocol="application/pgp-signature"; boundary="=-hrTAX/W6mLo7sKDNm8zH"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="AB0zXoy1";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="JFcMYyPe"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1790094872;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=cKbRWUWUNFCMJjKOH3yHgRtEpoahj/lRVoNkkOfXTsg=;
+	b=AB0zXoy1Yvcm012ebd22g93OJbpurDQn8u1uHe5d8RzsT3ZMpvCxh+yo0EUJqXz7bfpG5G
+	PKjxa7qRnG1F6zZ1ph085yF6pgjNLW2brVmm5iZ6VKBRiBZG/P9YOQ0hCC7epr0C7KjsEH
+	+G6OYZB0KHfZrCFF7neyM9Bu0OgJUss=
+Received: from mail-vk1-f197.google.com (mail-vk1-f197.google.com
+ [209.85.221.197]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-532-u-YmouGwOPGhpMpnzmXtrw-1; Tue, 22 Sep 2026 12:34:31 -0400
+X-MC-Unique: u-YmouGwOPGhpMpnzmXtrw-1
+X-Mimecast-MFC-AGG-ID: u-YmouGwOPGhpMpnzmXtrw_1790094871
+Received: by mail-vk1-f197.google.com with SMTP id 71dfb90a1353d-5c82ad4977dso22587e0c.2
+        for <linux-pci@vger.kernel.org>; Tue, 22 Sep 2026 09:34:31 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1790094871; cv=none;
+        d=google.com; s=arc-20260327;
+        b=lUMe0NIZaITttoUXYIHvvvEyUUIaHrw0P6bWkdPtj2vQOUA/DoQNTjIWspSSmMqELr
+         Qjq84YTEWakmVbrara4Ih9Si7aqUGbgXUehV4NuPtR+6d6xBTTtd04rxSVwwJMjQEDmm
+         ahZgHq0mcP2MVPfjp4UHUjwtW/nywYbZK4GyuyhQRel1gp/3VAVSUwx5mSSRxxfxqfMQ
+         eOH4mH4RJGo9U9LtBJObnfeEuiLtSJGnXRm+w6pxGti+vblpBYh0lMeNzsZ8n72YRtRG
+         qLI0BqtKJwoUhK3uHZVxu7q+VlyKGBkvVIbSasuUuYEEQJTq7SUR/g+NtcHrnXOk1M23
+         s3kg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=cKbRWUWUNFCMJjKOH3yHgRtEpoahj/lRVoNkkOfXTsg=;
+        fh=32PPT12dF7pZqT39e7yw3hpmvStHpM6kTYcxBqmdOnY=;
+        b=mEq+1AYbS81jRwttcmScDQth20GuDL3eWTbAkikD9F/Ko5h08fj50jYm6nOXERItui
+         6W4A10Kuw7hVkw6xOfx4HJmq+YuIMpUO2NWSEnA2sPJtY134LJ2pUU9eDcQroE+ZCTyF
+         wJYijCY6eZeeKiT0tAKY4NV/t4jDLkth1gdc+phEBbGhkQBwqtkSm4h3DJMDzRdux1+z
+         4n1u32V0cGzjqXEW5A+jBUWTNKTiei9nCSmj9vjj6uceFefhysu0zcjBkxe9k2Ha6okM
+         E+BId+u4WjLpT5CKjhlKwbeY7DndzVyvKLfbwbOVvcDNroo2OeAp0dhPTFI1JpuqFYo8
+         QP0A==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=redhat.com; s=google; t=1790094871; x=1790699671; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=cKbRWUWUNFCMJjKOH3yHgRtEpoahj/lRVoNkkOfXTsg=;
+        b=JFcMYyPeetOC3hyTIz7DST7NcJm/TD2yslUQK+hCqUdwvXUmtVKbN0d+zpIZeZgn8Y
+         jXJI+fN2UNvqdUyxVn82tW+X7LeTaGQk2lMEzdOb/qnOt/P/zs8ekhAR709/DXu2pqbI
+         tmypp0UV46TG+3QOXq02/QrBB0TCpP3ijZ4kuNt+t4Ky2k0V9/AO1KOX2ny4Hh+LpU7w
+         8LVC9qZOG2XvIbt0hv2hPKHhDP3p3gU3eu7iSzsdHwJZmgol+OPguRIknGmsvd6tKN/I
+         Mm1dFUaIxmYowaQ7hFLa0F6kZAVKr1BxRqBUSMFHRbARJJb9sZCozHRdRNvxpJP83tJM
+         5jnw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1790094871; x=1790699671;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=cKbRWUWUNFCMJjKOH3yHgRtEpoahj/lRVoNkkOfXTsg=;
+        b=FYyMnBdIeQwcbqYgueSIxWKkcmHLdOxog1y7gXWC60ub2On0tmy+3tyv2VTt6DI91Y
+         01TTr7p2pdEbrlKeXjaLSuBwwm9exDlJl5o2+Hx7Wt9/ocZSRXpIxCwKkj4fxnMgfHvo
+         f6hEhlXqr/S83dVI7zsUr5O41sc0Dq1BJCzVxsxklCb/NK8Q7+6tY1JfTyprtUg3MKDH
+         ZbOvIimUnogJVucDBsduYSx/lHHFcIR5R3Q5TYNnMgwqQ17l5m8i7HNJSgUD1qWBFgJ5
+         EdW9VZcMQ6l93wXOoWZTOeLSWZt203g6vCcJ0j0yLPNxomgdiKncoYYYjRZNsCQbGeOq
+         EDVw==
+X-Forwarded-Encrypted: i=1; AKwUvBx78k5xfOQ9JLteRBu9czFl5HWHVVTFZB+9Nbu+LbRSTmShDRUwx/zQjx0HRPVFxMT6Zq6usC+iO6c=@vger.kernel.org
+X-Gm-Message-State: AFuF++kcGTljv647/0Fh8E10dkbHbUI/+bQcTC716vFacyOGl+BmuNpf
+	GeU9cccTFijnnYE678bPNKgOe62qGYb1kb5Q16BIuN4fajz0AotjVttbIrVIubJChMNV1rq4l3A
+	Hzb1yx3MUGUzcxTSu5KGL2+edLGvIw/Uh+i6jBcGv3SGtTjJSU+mogP8VnVnv00JATXDfFMsrSh
+	Utm0TszzrkFa8lRFrq4A0PL1gzMvWaF/rGatLE
+X-Gm-Gg: AYBFou1WtLTL+P1+uh70JUlCA2DK6UAqjN5xFAe9vVjQaCZbPIZTqrHp7aCh3uRikk2
+	0B6lFaxZsSO4rwlwNELIDuieCifgQSd3WhJcO8/5DfPv5rH9NShuzE/3ZeTu6y3xAA3/07KpLUp
+	FXEFiR5dp+k/tEpQwtr0tKc/qtoDOzzINeEy2pe2qv0j/wt+t+GslPNTXKG/ha9B4GSlbfsGma+
+	FLhzACc7kSQg38Oww8hAtTPZXu05EMP8i2/58BZ7dUVBu+m5eKRYa1207fcJUUHYnoAADTNmVc=
+X-Received: by 2002:a05:6122:4d01:b0:5c2:b01f:e503 with SMTP id 71dfb90a1353d-5c9f15bb2a3mr57773e0c.7.1790094870700;
+        Tue, 22 Sep 2026 09:34:30 -0700 (PDT)
+X-Received: by 2002:a05:6122:4d01:b0:5c2:b01f:e503 with SMTP id
+ 71dfb90a1353d-5c9f15bb2a3mr57708e0c.7.1790094870278; Tue, 22 Sep 2026
+ 09:34:30 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-OpenPGP: url=https://posteo.de/keys/markus.probst@posteo.de.asc; preference=encrypt
-
-
---=-hrTAX/W6mLo7sKDNm8zH
+References: <20260917163744.191748-1-djeffery@redhat.com>
+In-Reply-To: <20260917163744.191748-1-djeffery@redhat.com>
+From: David Jeffery <djeffery@redhat.com>
+Date: Tue, 22 Sep 2026 12:34:19 -0400
+X-Gm-Features: AclHuK_gOIIAGH-J9mfA_6kGZQPoZd_UXxbRIgUMsQf82GPy6D8kJfhp32jIMog
+Message-ID: <CA+-xHTE65H=WSU4kavq7dC=FkaMVKuEZiNw5-o5DekRpgRkDeA@mail.gmail.com>
+Subject: Re: [PATCH v22 0/9] shut down devices asynchronously
+To: driver-core@lists.linux.dev, 
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>, 
+	Danilo Krummrich <dakr@kernel.org>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, 
+	linux-scsi@vger.kernel.org, Tarun Sahu <tarunsahu@google.com>, 
+	Stuart Hayes <stuart.w.hayes@gmail.com>, Laurence Oberman <loberman@redhat.com>, 
+	Bjorn Helgaas <helgaas@kernel.org>, kexec@lists.infradead.org, 
+	Ewan Milne <emilne@redhat.com>, John Meneghini <jmeneghi@redhat.com>, 
+	"Lombardi, Maurizio" <mlombard@redhat.com>, Bart Van Assche <bvanassche@acm.org>, 
+	John Garry <john.g.garry@oracle.com>, Jeremy Allison <jallison@ciq.com>, 
+	"Martin K . Petersen" <martin.petersen@oracle.com>, Pasha Tatashin <tatashin@google.com>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-@Lee, @Pavel:
+On Thu, Sep 17, 2026 at 12:37=E2=80=AFPM David Jeffery <djeffery@redhat.com=
+> wrote:
+>
+> These patches are rebased against the driver-core tree's driver-core-next
+> branch and should also apply against recent linux-next. Changes for v18 a=
+re
+> contained in patch 3.
+>
+> This patchset allows the kernel to shutdown devices asynchronously and
+> unrelated async devices to be shut down in parallel to each other.
+>
+> Only devices which explicitly enable it are shut down asynchronously. The
+> default is for a device to be shut down from the synchronous shutdown loo=
+p.
+>
+> This can dramatically reduce system shutdown/reboot time on systems that
+> have multiple devices that take many seconds to shut down (like certain
+> NVMe drives). On one system tested, the shutdown time went from 11 minute=
+s
+> without this patch to 55 seconds with the patch. And on another system fr=
+om
+> 80 seconds to 11.
+>
+> And thank you to everyone who has spent some of their valuable time
+> providing reviews, suggestions, criticisms, or tests on the various
+> iterations of this patchset.
+>
+> Changes from V21:
+> - Check a device is alive before accessing its bus pointer
+>
 
-Hi,
+And this has resolved Sashiko's last complaint. Sashiko found no
+issues with the v22 patchset.
 
-This message has already been posted once [1] and no reply has been
-sent. So I added your names to the subject line, so this message will
-hopefully make a difference.
+David Jeffery
 
---- The contents of the original message:
-
-Regarding the leds rust abstraction patch series.
-
-Lee already mentioned he will take Rust patches into his tree if
-"quality Rust-specific Reviewed-by" trailers are present [2].
-Will this also apply for any subsequent patches (e.g. bug fixes)?
-
-Secondly, there hasn't been a comment on me taking the maintainer role
-for the Rust abstraction yet. If thats fine with you, I kindly ask you
-to ACK the patch adding the MAINTAINERS file entry [3].
-
-I was told there have been cases in the past of maintainers leaving the
-kernel directly after code has been merged. To take away any fears that
-might exist, I can assure you I will take care of the Rust code.
-
-If there is a patch with breaking API changes on the C side, simply add
-me to Cc and I will fix the Rust side.
-
-The missing ACK on the patch adding the MAINTAINERS file entry [3] and
-the missing Reviewed-By Rust trailers should be the only blockers of
-this patch series.
-
-Thanks
-- Markus Probst
-
-[1]
-https://lore.kernel.org/rust-for-linux/6c57e08a5f4aa9096711d14d82ece19fb68c=
-893f.camel@posteo.de/
-
-[2]
-https://lore.kernel.org/linux-leds/20251110134058.GC1949330@google.com/
-
-[3]
-https://lore.kernel.org/linux-leds/20260903-rust_leds-v24-4-8d9e4c04db69@po=
-steo.de/
-
---=-hrTAX/W6mLo7sKDNm8zH
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQJPBAABCAA5FiEEgnQYxPSsWOdyMMRzNHYf+OetQ9IFAmqyrNQbFIAAAAAABAAO
-bWFudTIsMi41KzEuMTIsMiwyAAoJEDR2H/jnrUPSJa4P/3iq5hDp/fMSRneXBm4/
-Qt2omZIzS+m3e8Ds4MkTm+g8+38aL/JArAnGSdxrhiGqkzcP2QPr4B5pN+uhlnHU
-guCBb0ifat9OXljaBitpPOUIlgt/YAhLJIedLJtVAh8Roc0Byz2dDMc0E14ZfGNC
-7DKxSycz7qr7Rm6C0c2emM2wqlpS1i2ouYbALkgcCbF6BoqTcMxTP/8QcdksnrpI
-VUuDV6y1rZbPuxzEsacwf2UWWlqp6ZsqEDlbmT8V8QZbv/DVl9n+Uz24iXzU6Ks7
-N6vP5ZLAJniDBBRSj2jeIGIvCg+itBSjWtYarVE/iUxkrLtaRMUTtCUytYNNkTkp
-FMwXSn9XrMdSSprl8EUlddyvWZXJeiry3qCc3QaAEBugpjUAQJYXQRqS2Qfk+TC+
-5jzizYQ7F+KFZzTcHD1JzqoXujJfK4eZTxCmBk4sBgcrTX9iMekuaVqHPSUFIpNu
-cdmm0lbkEG92P4RFXyuD3ZbSIIgVYPDzgWYH1C9hFzf+mP6TtpkHGindygzGvhmg
-FVL73qxVTXoph2uaGEZdGAZbhQAnoZxCm5jjjWAfAgpDZRSLL8RPdnIvmSNICxcR
-N7uG28EeJ2Kn7qt5DGKuzLNcIU/1sOrhcqhADiLBb8qWU1vMCR6AEwRQzc59t1OO
-cZ7EcoHIvs8V7Fe9hCFLYZN+
-=JywU
------END PGP SIGNATURE-----
-
---=-hrTAX/W6mLo7sKDNm8zH--
