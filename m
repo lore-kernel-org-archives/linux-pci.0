@@ -1,237 +1,207 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3832455293F
-	for <linux-pci@vger.kernel.org>; Tue, 22 Sep 2026 15:05:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AD53755292D
+	for <linux-pci@vger.kernel.org>; Tue, 22 Sep 2026 15:05:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790089507; cv=none; b=dORJES0NIWnaiSSV5oTVIP+xL8WbHvkeRTWeSAbYEAeffF8leIMclSZIsHWk32Kv6yHpbBS0zUcRfHXpS0b5N/37PiqZVFyUxAApRi0tfnGAbGR33GkeMwtfoPJmNZro2udMyDclED0ygzIg7tr0Pcwrgjkr4mKzg6NopSQn4oQ=
+	t=1790089528; cv=none; b=aFyGpvuO2Mdz8TKtuWMoZ9LzoPqABMMJWTqk/2aMVnRSdAtHfxYbUB75NRi4h3V/1V/8RPZfuG7fLHEM/gWGquBBq1or7zTRBzbDzoxQfh4dxsvVvBInPTm3wFtY+24ORTEhIvjfTGYaCGox0S7K8it+pKb7lHpBIReNlgbnx94=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790089507; c=relaxed/simple;
-	bh=2ZQp6vwnm7qzLJ6CWCaTSOsklBwg/zjhx0JmVobw3Z0=;
+	s=arc-20240116; t=1790089528; c=relaxed/simple;
+	bh=CQbgXd9izIg1rKz2pm0eDRGXwrKNSoIi/wVxto9Efhc=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=GAN/sf4871VVAyknZ54ATa0qij27VLrqynhYUDixivDSRW1kRs8Dn6naEkrMq4tk765ZWSSneEkos/S/FptanLb/pufZGv0ipjcyL8lTmTjiy7+BbdbdT2QaMS8PlLtd90Z5SvNSXbigQ82JDS2eow187gaSct0Wiz1xZcTzuV8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZI8Fz97Q; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=FCNQjBKxKHnZig/TzaXqmVBAz8vLxZB7BlpJzqhRq6wtHpMPewvy3+7n3TeqnATduQqTEPKVMtD4OaM7Bhxnn0Iks4wMRh+V82YhZHfhaZrmXHGOlZwvf4xQL+/1itp1bSKQRnaSGRPbR5/aZt7kNot/012WGDwjWSIbk2Q5yxg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=P/D9qAno; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZI8Fz97Q"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 686E01F000FF;
-	Tue, 22 Sep 2026 15:05:05 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="P/D9qAno"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2434E1F000FF;
+	Tue, 22 Sep 2026 15:05:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790089505;
-	bh=V/r3bl8QZshYUOkYkxbLFT1TGKhjFhYpNRBv01EI7os=;
+	s=k20260515; t=1790089526;
+	bh=m7/K17GatdvkuhS6ROX1jvB1YWDvwQlBrXbSvy4NTQo=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=ZI8Fz97Q0wA8PUBP/3aSaA9CWkiwl4quq0ao28a3Ev/pwAEoX22sIxr9ZC4k1Iqit
-	 E9aPSHdWcuun3wTp0IZ70aHDXgjvmgjz/pdmLrUsMLMujeW7IrUfGPs3KP0ApOMQXd
-	 pv9UEZ80snU3j8sOhR8nPa0TSEzo6bdtYeUMjuiJKLUHHddaARnX2GaSMguShJl8YY
-	 BwIu4dZKJED+b0gRxYMMuXhu1Z2naMGrYoX2c8h7Zd4nAD3Kr6Tdzc7zB6V+8YBklW
-	 /5DGarqzPP1CSK99s2YL/Z49HIo4Ml7jr8wui7DyeulgVZEtqTQ3s3FlgtmHCoyKGW
-	 nG2GWqcZl7f3g==
+	b=P/D9qAnopOelr5qM1jUw/pZz/0U70OPcwCYg6VLnjTIa1/3MNrU4/666kAvPHpycr
+	 bLKblB0atccf62QEYvNB4fP3oh8LL2mmP7OB1+OTd1Gbc4+cHqPLMs7UEyHsAdu0p+
+	 VNTNG9id4/E+jKsfN4Y0zZlYDWAWKIndGgyW4a01lr/W9o9alG8SIojdSFtvX8MALS
+	 jU6urgQ7PKzJuRRbhaHu9jtrmK0XXG4S6NUkp/1T0zdThfgYgRpxXI+/0P3c4XKjO9
+	 FcJoopew1XVtaeaZK9bJpJs1yNhJKhS+UxxEzgN7cECZ+o8i5NunbCWmrJKyZooGgt
+	 S2yjSRMCJmEJA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 8/8] PCI: rzg3s-host: Add bridge::reset_root_port()
+Subject: Re: [PATCH v4 7/8] PCI: rzg3s-host: Re-enumerate the bus on PCIe
+ link-state changes
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Claudiu Beznea" <claudiu.beznea@kernel.org>
-Cc: linux-pci@vger.kernel.org, wsa+renesas@sang-engineering.com
-In-Reply-To: <20260922144629.586997-9-claudiu.beznea@kernel.org>
+Cc: wsa+renesas@sang-engineering.com, linux-pci@vger.kernel.org
+In-Reply-To: <20260922144629.586997-8-claudiu.beznea@kernel.org>
 References: <20260922144629.586997-1-claudiu.beznea@kernel.org>
- <20260922144629.586997-9-claudiu.beznea@kernel.org>
+ <20260922144629.586997-8-claudiu.beznea@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 22 Sep 2026 15:05:04 +0000
-Message-Id: <20260922150505.686E01F000FF@smtp.kernel.org>
+Date: Tue, 22 Sep 2026 15:05:25 +0000
+Message-Id: <20260922150526.2434E1F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 7 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-- [High] pci: lockless RMW of RZG3S_PCI_PINTRCVIE clobbers IRQ masks
-- [High] pci: lockless traversal of bus->devices causes list corruption
-- [High] pci: missing synchronization of event_irq triggers abort
-- [High] pci: Root Port removal breaks AER recovery logic
-- [High] pci: latched GIC interrupts crash controller during reset
-- [High] pci: data race on host->started imbalances clocks
-- [Medium] pci: synchronize_irq(0) stall when CONFIG_PCI_MSI is disabled
+- [High] pci: rzg3s-host: misses PCIe link state changes during system susp=
+end
+- [Medium] pci: rzg3s-host: TOCTOU race in link event handler causes device=
+ confusion
 --
 
-commit 58da40640a7be86e3db083244a44a0cf4c9eb5f2
-Author: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+commit d39725457acf3fbf2e1dca55279894b4bb68e696
+Author: John Madieu <john.madieu.xa@bp.renesas.com>
+Subject: PCI: rzg3s-host: Re-enumerate the bus on PCIe link-state changes
 
-    PCI: rzg3s-host: Add bridge::reset_root_port()
-   =20
-    Add bridge::reset_root_port(). This allows, on some devices, performing
-    reads and writes to an NVMe endpoint after a link down/link up cycle
-    without failures.
+This commit enables the DL_UpDown interrupt to provide hotplug-like behavior
+by re-enumerating the bus on link-state changes. It processes link up and
+down events to scan or remove devices accordingly, and updates the probe pa=
+th
+to tolerate an absent device.
 
 > diff --git a/drivers/pci/controller/pcie-rzg3s-host.c b/drivers/pci/contr=
 oller/pcie-rzg3s-host.c
-> index 1c0353598b599..9cba898a9536d 100644
+> index f4b27a77a89df..1c0353598b599 100644
 > --- a/drivers/pci/controller/pcie-rzg3s-host.c
 > +++ b/drivers/pci/controller/pcie-rzg3s-host.c
 [ ... ]
-> @@ -1110,6 +1112,11 @@ static void rzg3s_pcie_link_event(struct rzg3s_pci=
-e_host *host)
+> @@ -1095,6 +1098,89 @@ static int rzg3s_pcie_set_max_link_speed(struct rz=
+g3s_pcie_host *host)
+>  	return ret;
+>  }
 > =20
->  		dev_info(host->dev, "PCIe link down, removing devices\n");
-> =20
-> +		for_each_pci_bridge(dev, bridge->bus) {
-> +			if (pci_pcie_type(dev) =3D=3D PCI_EXP_TYPE_ROOT_PORT)
-> +				pci_host_handle_link_down(dev);
-> +		}
-> +
->  		pci_lock_rescan_remove();
-
-[Severity: High]
-Does traversing bridge->bus->devices here without holding pci_bus_sem or
-pci_lock_rescan_remove() risk a use-after-free?
-
-If concurrent hotplug, AER recovery, or sysfs unbind operations modify the
-list, could the traversal follow corrupted pointers?
-
->  		list_for_each_entry_safe_reverse(dev, tmp, &bus->devices,
->  						 bus_list)
->  			pci_stop_and_remove_bus_device(dev);
-
-[Severity: High]
-Does this code remove the Root Port device right after initiating its recov=
-ery?
-
-When a link down event occurs, the loop above iterates over devices on the =
-root
-bus (which are the Root Ports themselves) and invokes
-pci_host_handle_link_down(dev) to schedule DPC/AER recovery.
-
-Immediately afterward, this list_for_each_entry_safe_reverse loop executes
-pci_stop_and_remove_bus_device(dev) on the exact same Root Port device. Cou=
-ld
-this destroy the Root Port and unbind its drivers just as recovery is taking
-place, breaking the recovery logic and future enumeration?
-
-[ ... ]
-> @@ -1855,6 +1862,9 @@ static int rzg3s_pcie_host_stop(struct rzg3s_pcie_h=
-ost *host)
->  	struct rzg3s_sysc *sysc =3D host->sysc;
->  	int ret;
-> =20
-> +	if (!host->started)
-> +		return 0;
-> +
->  	clk_disable_unprepare(port->refclk);
-
-[Severity: High]
-Is host->started adequately protected against concurrent access?
-
-Because host->started is checked and modified in rzg3s_pcie_host_stop() and
-rzg3s_pcie_host_reset_root_port() without any locking, concurrent invocatio=
-ns
-of sysfs reset_root_port or PM transitions could both see host->started =3D=
-=3D true.
-
-Could both threads subsequently disable the reference clocks and assert res=
-ets,
-leading to imbalanced clock use counts and broken hardware state?
-
-[ ... ]
-> +static int rzg3s_pcie_host_reset_root_port(struct pci_host_bridge *bridg=
-e,
-> +					   struct pci_dev *pdev)
+> +static void rzg3s_pcie_link_event(struct rzg3s_pcie_host *host)
 > +{
-> +	struct rzg3s_pcie_host *host =3D pci_host_bridge_priv(bridge);
-> +	u32 irqs;
-> +	int ret;
+> +	struct pci_host_bridge *bridge =3D pci_host_bridge_from_priv(host);
+> +	struct pci_bus *bus =3D bridge->bus;
+> +	u32 val;
 > +
-> +	/* Mask link up/down interrupts. */
-> +	writel(0, host->axi + RZG3S_PCI_PEIE0);
-> +
-> +	/* Mask INTx and MSI interrupts. */
-> +	irqs =3D readl_relaxed(host->axi + RZG3S_PCI_PINTRCVIE);
-> +	writel(0, host->axi + RZG3S_PCI_PINTRCVIE);
-
-[Severity: High]
-Should this mask register be read and written while holding host->hw_lock?
-
-Concurrent calls to rzg3s_pcie_intx_irq_mask() running on another CPU will
-modify this register while holding hw_lock. Could reading and clearing it h=
-ere
-locklessly, and restoring it later, clobber dynamic mask/unmask operations
-that occurred during the reset window?
-
-> +
-> +	/*
-> +	 * Make sure the next operations are not disturbed by any pending
-> +	 * IRQs.
-> +	 */
-> +	synchronize_irq(host->msi.irq);
+> +	val =3D readl_relaxed(host->axi + RZG3S_PCI_PCSTAT1);
+> +	if (val & RZG3S_PCI_PCSTAT1_DL_DOWN_STS) {
 
 [Severity: Medium]
-Will this stall if CONFIG_PCI_MSI is disabled?
+Is there a TOCTOU race here if the link flaps rapidly?
 
-host->msi.irq is populated only if CONFIG_PCI_MSI is enabled; otherwise, it
-remains 0. Synchronizing against IRQ 0 targets a core architectural interru=
-pt
-or an invalid descriptor, which causes invalid synchronization behavior and
-potential stalls.
+The handler reads the live link state to decide whether to remove or rescan
+devices. If the link goes down and comes back up before this threaded handl=
+er
+runs, it will see DL_DOWN_STS =3D=3D 0 and take the else path.
 
-> +	for (unsigned int i =3D 0; i < PCI_NUM_INTX; i++)
-> +		synchronize_irq(host->intx_irqs[i]);
+> +		struct pci_dev *dev, *tmp;
 > +
-> +	ret =3D rzg3s_pcie_host_stop(host);
+> +		dev_info(host->dev, "PCIe link down, removing devices\n");
+> +
+> +		pci_lock_rescan_remove();
+> +		list_for_each_entry_safe_reverse(dev, tmp, &bus->devices,
+> +						 bus_list)
+> +			pci_stop_and_remove_bus_device(dev);
+> +		pci_unlock_rescan_remove();
+> +	} else {
+> +		int ret;
+> +
+> +		dev_info(host->dev, "PCIe link up, rescanning bus\n");
+> +
+> +		/*
+> +		 * Attempt link speed negotiation now that the link is up.
+> +		 * Failure is non-fatal: the device works at the negotiated
+> +		 * speed.
+> +		 */
+> +		ret =3D rzg3s_pcie_set_max_link_speed(host);
+> +		if (ret)
+> +			dev_info(host->dev, "Failed to set max link speed\n");
+> +
+> +		pci_host_common_link_train_delay(host->max_link_speed);
+> +
+> +		pci_lock_rescan_remove();
+> +		pci_rescan_bus(bus);
+
+Because the DOWN event was missed, old devices are never removed from
+bus->devices. Calling pci_rescan_bus() here will skip enumerating them,
+leaving the kernel with a stale pci_dev bound to a potentially reset or
+swapped device.
+
+Could we tear down existing devices before rescanning, or otherwise account
+for missed DOWN events?
+
+> +		pci_unlock_rescan_remove();
+> +	}
+> +}
+[ ... ]
+> @@ -1723,8 +1824,14 @@ rzg3s_pcie_host_setup(struct rzg3s_pcie_host *host,
+> =20
+>  	ret =3D rzg3s_pcie_host_init(host);
+>  	if (ret) {
+> -		dev_err_probe(dev, ret, "Failed to initialize the HW!\n");
+> -		goto teardown_irqdomain;
+> +		if (ret !=3D -ENODEV) {
+> +			dev_err_probe(dev, ret,
+> +				      "Failed to initialize the HW!\n");
+> +			goto teardown_irqdomain;
+> +		}
+> +
+> +		/* Link is down: hotplug via DL_UpDown will recover. */
+> +		return 0;
 
 [Severity: High]
-Are there missing synchronization checks for the event_irq here?
+Does this miss PCIe link state changes that happen during system suspend?
 
-Because host->event_irq is not synchronized, if the link state changes, the
-rzg3s_pcie_event_irq_thread() can execute concurrently and attempt to read =
-PCIe
-configuration or AXI registers. Accessing the controller while clocks are
-disabled by rzg3s_pcie_host_stop() immediately triggers a synchronous exter=
-nal
-abort.
+During system suspend, power is lost and the link state is reset. On
+resume, rzg3s_pcie_resume_noirq() restarts the host, which eventually
+calls rzg3s_pcie_host_setup().=20
 
-[Severity: High]
-Is synchronize_irq() sufficient to prevent latched GIC interrupts from
-crashing the controller during reset?
+If the link fails to come up, -ENODEV is swallowed here, assuming the
+DL_UPDOWN interrupt will recover it. However, the DL_UPDOWN bit won't
+trigger an edge interrupt on resume because the controller was just
+initialized and isn't transitioning.=20
 
-Because MSIs are edge-triggered at the GIC, an interrupt that fires immedia=
-tely
-before the IP-level mask can remain latched in the GIC. synchronize_irq() o=
-nly
-waits for currently executing handlers, so the pending GIC interrupt remains
-queued.
+If a device was unplugged or plugged in during sleep, the PCI core is
+never notified, potentially leading to device timeouts or state
+corruption. Should we manually check the link state and synchronize the
+PCI core after unmasking the interrupt in rzg3s_pcie_resume_noirq()?
 
-When the CPU enables local interrupts, the GIC dispatches the handler, which
-attempts to read host->axi + RZG3S_PCI_PINTRCVIS while the controller clocks
-are disabled by the reset, triggering a synchronous external abort. Should
-disable_irq() be used instead?
+>  	}
+> =20
+>  	ret =3D rzg3s_pcie_set_max_link_speed(host);
 
 [ ... ]
-> +unmask_irqs:
-> +	/* Unmask INTx and MSI interrupts. */
-> +	writel_relaxed(irqs, host->axi + RZG3S_PCI_PINTRCVIE);
 
 [Severity: High]
-Could this lockless restore overwrite concurrent updates made by the IRQ
-subsystem?
+This is a pre-existing issue, but does the read-modify-write on W1C
+interrupt registers drop concurrent interrupts?
 
-As noted above, restoring the previously read mask state locklessly clobbers
-any dynamic mask/unmask operations that occurred during the reset window, w=
-hich
-can cause interrupt storms or lost interrupts.
+In rzg3s_pcie_msi_irq() and rzg3s_pcie_intx_irq_ack(), the driver uses
+rzg3s_pcie_update_bits() to acknowledge specific interrupts:
 
-> +
-> +	/* Unmask link up/down interrupts. */
-> +	writel(RZG3S_PCI_PEIE0_DL_UPDOWN, host->axi + RZG3S_PCI_PEIE0);
-> +
-> +	host->started =3D true;
-> +
-> +	return ret;
-> +}
+	rzg3s_pcie_update_bits(host->axi, RZG3S_PCI_PINTRCVIS,
+			       RZG3S_PCI_PINTRCVIS_MSI,
+			       RZG3S_PCI_PINTRCVIS_MSI);
 
-[Severity: High]
-As mentioned earlier, does writing host->started without locking allow
-concurrent updates to overwrite and desync the expected controller state?
+Registers like RZG3S_PCI_PINTRCVIS are W1C (Write 1 to Clear). Reading
+yields a 1 for every currently pending interrupt, and writing that value
+back writes a 1 to all those bits. Any concurrent interrupts that were
+pending at the time of the read will be silently cleared and lost,
+resulting in device timeouts.
+
+[Severity: Medium]
+This is a pre-existing issue, but is the MSI hardware configured
+unconditionally even if CONFIG_PCI_MSI is disabled?
+
+During device resume, rzg3s_pcie_host_start() passes
+rzg3s_pcie_msi_hw_setup() as the initialization callback:
+
+	ret =3D rzg3s_pcie_host_setup(host, rzg3s_pcie_msi_hw_setup,
+				    rzg3s_pcie_msi_hw_teardown);
+
+If CONFIG_PCI_MSI is disabled, MSI software structures (like
+msi->window_base) are never initialized and remain 0. This pushes
+uninitialized zero values to hardware registers and routes MSI interrupts
+to physical address 0. Any DMA write to address 0 will trigger a
+spurious hardware event.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260922144629.5869=
-97-1-claudiu.beznea@kernel.org?part=3D8
+97-1-claudiu.beznea@kernel.org?part=3D7
