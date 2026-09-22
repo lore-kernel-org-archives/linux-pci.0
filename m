@@ -1,74 +1,74 @@
-Received: from fout-b2-smtp.messagingengine.com (fout-b2-smtp.messagingengine.com [202.12.124.145])
+Received: from fhigh-b1-smtp.messagingengine.com (fhigh-b1-smtp.messagingengine.com [202.12.124.152])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A48839478D;
-	Tue, 22 Sep 2026 02:16:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.145
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF28C345EBE;
+	Tue, 22 Sep 2026 02:16:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.152
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790043388; cv=none; b=EP3gxySNjit97lSxHH8wQERGZh4pwiCAC7q+zzqDOoBEul2fPJwUfVTJdBA8p0wszkjH6Frg+o1p6zFxC/1jWEipJGl+qKCwCG5FC0om2JbQSSHZgLDf1nLgeuieGlxLcbtupu0qr9V7JgHLPJ6Ws6wzCgQ821RHn7NfHwqH5QE=
+	t=1790043397; cv=none; b=eJbrQvpjb73Zp1pXczLCZRQWld057RhJ57fR+ReSfFr69CcQISKZkegwp9CTV/VbVZHVNb7GUV6f1V4yQGWw1NMmTaLfOpspAp254FxEOpRSZfervlgvEjkHUnSvCp7n5ibyd/vf6YiNBTvZC0s2NxN68C3O+gwF5XGxwMD5riE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790043388; c=relaxed/simple;
-	bh=EEJoiCla2xsUDDGT1wtYmVd1EDi1fyaRDjP8a/oievE=;
+	s=arc-20240116; t=1790043397; c=relaxed/simple;
+	bh=v3AhguYeagxBRzF3hLkOm9nkX3GYAmm+3CzgcbfKNLk=;
 	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Euo7XGre14eWTsT4LSenbHoPCW7HJvCzH4723lhbsBsAJ3p6DVUzR3N04wtSrVrLNiaUfUn6sI7z7WdyuQ5t3whO8j4edZVGi0qMB6F9OboIG3WVOoX70uhp6MiNjAteJfodw775rXDsq7OofiT+4nFjxvAb5CbOtOs3MTGK/zY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=F0pPephy; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=d6mYCXRY; arc=none smtp.client-ip=202.12.124.145
+	 MIME-Version:Content-Type; b=QI6VSTpaIpjyXvhCZmRk6WFTlKLg5Km+LxBS7g3PTtkhEQz7bVgu0KJMYPGef4Pz+LpUnDp6QWsrPN+owkAqDwigA3/gpz0ySe373y9YARE2f4KJWmMDmnhhy8sXXXmwCJppnWx5rvgtTnucbQ8foSCh5zFSPRA5O3js1tuNNeA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=IRGFNGby; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=BuHjQ67a; arc=none smtp.client-ip=202.12.124.152
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="F0pPephy";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="d6mYCXRY"
-Received: from phl-compute-01.internal (phl-compute-01.internal [10.202.2.41])
-	by mailfout.stl.internal (Postfix) with ESMTP id 67D7A1D0006E;
-	Mon, 21 Sep 2026 22:16:25 -0400 (EDT)
+	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="IRGFNGby";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="BuHjQ67a"
+Received: from phl-compute-04.internal (phl-compute-04.internal [10.202.2.44])
+	by mailfhigh.stl.internal (Postfix) with ESMTP id 18C387A0040;
+	Mon, 21 Sep 2026 22:16:34 -0400 (EDT)
 Received: from phl-frontend-03 ([10.202.2.162])
-  by phl-compute-01.internal (MEProxy); Mon, 21 Sep 2026 22:16:26 -0400
+  by phl-compute-04.internal (MEProxy); Mon, 21 Sep 2026 22:16:34 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
 	cc:cc:content-transfer-encoding:content-type:content-type:date
 	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm3; t=1790043385;
-	 x=1790129785; bh=ar8F8AzgyNlmO16jEqlT9kWnDi3NM31RTuSM9ujQ4Xc=; b=
-	F0pPephym9xzr5FahNyQHnRR4pTV8gLsdo6QsZ1pv25EYYW7bSaIHw8NbZlpYjT9
-	YSFSxFyQ5QEgjgpg8iwuNEps8PNiVIGlpTKumPcZifJe4/5679Onwnuzy3TY0iOm
-	qS6whACt25D9/4HJw3/JJAUp+qzbEzlxrxE+XHzKgiF834D0RHfZXh0JJimIqln1
-	A7UDpyzdQKZftFxVbi7z7Gb9VRsVqXTjh1ya8Z+tO7bgskxpOu8yTUZoR4a0NdwF
-	4GyfxzWsHVh55v+/QrrRJZo8OfRa0xvCikf66kxcz+5ha5nVMKaZ3rrQn3PqB+/m
-	YKxJfdqLFeqVdCupMxCK3w==
+	:references:reply-to:subject:subject:to:to; s=fm3; t=1790043393;
+	 x=1790129793; bh=A9yCqC8k5h2lF2CDujXhO7CBkjvKJGzoJtss77hMSn0=; b=
+	IRGFNGby79rwM6h4DZ+GyzRgqlyOnmqELwV0gZJvEJYngYobX1Ldo2ba20qNTPCL
+	YayW40wbgleKiPZkzdgndhhSOxz14bq/9SrId+awxjMrlq33KlNYk7J1+3Mtc5NU
+	3AERCU9oFyQhTY7G+S4gavSB4V5scAX0sYYUNuQCv8jYyasJY3utAyk3/b3cZaxg
+	8G9Tn71OGIUeQ6y5pTNA5PEjpHPO+7uE/1oxr/5um5B71mfGAWSOlNPWXRKqCkIq
+	seMlimpQAnxR4/KV//cyi8S5x9H1M3ot6EG4BKPWEUfe0JYv9qmI1A2SM0vf4zUb
+	b68kmJfABi3S19xAi/K46Q==
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
 	messagingengine.com; h=cc:cc:content-transfer-encoding
 	:content-type:content-type:date:date:feedback-id:feedback-id
 	:from:from:in-reply-to:in-reply-to:message-id:mime-version
 	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=1790043385; x=
-	1790129785; bh=ar8F8AzgyNlmO16jEqlT9kWnDi3NM31RTuSM9ujQ4Xc=; b=d
-	6mYCXRYlIRIQr+qA645H6waUACIeRGaQ1A6lVOgjQATwoqWZD+TSKpwVQS19mDTp
-	DE6acbWJPVK8PA6l/8fNo5C7qMQML5+M5kWc7Q3flN51fyp0b7q745Y1E92Hn0Ew
-	+gSPHBjrPHoDL0ixrMu7aZ30HbBCUk8F/BETZcPO4EPWqqHIOye8coGlsw7mUtuV
-	fODd/6OpS7Hgv2IEHXw+CyJoCUyB5Yyk+Z0cU5fUTzYlRRBZsrgHCiPfUsZIHZWV
-	JVgnRwmv9sCt7BTnoKHAD0a0108ePI1mg8VqM3Q2h80p1xNtX3+zUOX8//ojebre
-	EvYfvP3l+yEnoVfrwZGZA==
-X-ME-Sender: <xms:-eSxapDDvgk3mmzQ_vt486rmdl-9bN4F6PAPkfTtiZsHinAzmu1zqA>
-    <xme:-eSxanvAAXDn_BNaFFRvH2ymAE5sedrIOHk03l60MFPasmC5bDdGLbAHPof1tJfr9
-    hYjrXil7CnkAZzaXANITNmar1RT4jm_QshvALDW6-J4wkykNhMN01Q>
-X-ME-Received: <xmr:-eSxanPb9LLxKax24JAjXPtvmdDD3sHa-puY_zAnlNCNTJngFnWYBSZJiV6LKg>
-X-ME-Proxy-Cause: dmFkZTEVaM7SvCFST2BBezPuJiixrkmE2Un+f6UT9OQLDoMu7BBs/TxdNVZOy7gDxZVSQ5
-    +8GcT5lo4k3t5IPXUYNwiGS1d+hGarVl0PJ4l2J5eAUZwVQ89BRmaacJbmIs1CqcZcH7eg
-    xICpG/aos5YgPWgz/di9OmUkGGcYk8mnwAJCrmSK6J8rHj+AzsFAizcpXVpdL+EPlo7OG8
-    mhpip8AtjHf9SeAwi+YThGrGXoEi51Wd5YCyhtA2zpJhBCB65caCANdtlLG1hAHAbVCaag
-    7jP40PLhRjruOFdBdUQ1ZA2xzdk+Vjot4L9OSsH6IFoXd/WfpIKyH8EaUUQ8CKrvzzLGD5
-    jBUtObmkUa5QJgbPB/zPe4GF9/drxSIearOjix7dGHtI6U/qGZ66J5PvzyUZ3D/tv1BOwc
-    Lx0/6vLELW4zJ3gWxGpWN97fkaEt3WQx+WP2aMcirURiPZgdGHyi6ajLzP6aw8UUpThtin
-    Q6IwqOIaFHZauGNGBjfex01Wljy0mdl8HBNPTMrm1bTqVd7SF8XeHcIvtZzCq1B/vtyyit
-    uPAR705fkpviElZyiBvXw0YxUOc/2CMz91zOKu4d3w3lpvlduHXAY16WIFXl9kUqxDh+sw
-    jsSUJdOuGvl5tXySdd6LZqC7y7QfmXSUxL+Lrd5F/fdHLc3VFEhADOnIk6Xw
-X-ME-Proxy: <xmx:-eSxavW47o07yNaNYGs4EAxyemfUh2Rs9-ccA5l4A2xDxKMSOFDOlA>
-    <xmx:-eSxaiTTjrXaskC7P7QkLW3tIWxrKxrH8RCEJBakk9l9HWP7QWKNNw>
-    <xmx:-eSxavbAfB6c1QNiGP-x7qjCy-3NonUfoi1JOPqNwnh7nX1HuCNbUA>
-    <xmx:-eSxarB434PBeE8Z7T05dYlpMMYWA5DcKPwyt78JzMQDFJxU67ahZg>
-    <xmx:-eSxajB5deTv8Ds579uLKIe2mAkdvOhSv0pt5erw6P5gE1epWEYB4XNl>
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=1790043393; x=
+	1790129793; bh=A9yCqC8k5h2lF2CDujXhO7CBkjvKJGzoJtss77hMSn0=; b=B
+	uHjQ67aTUOxp4uAeh0wou7nZKRnw1vbzhoLSYTQdu5xV/BZVzRrZi+Te3RmtNVP8
+	LCjvoIrof6DzSnFVUQozMud/Jhlqib5D4kblmuHmi79wtsNkUl96vyDUH+DZ2q+l
+	KWkg5sX84TTgULfb7WyzQ0UQChdhOUSw5RkWVx8+Fy+MAFKH2uYpO6qdCAxBjiIs
+	bkZ9eeUYqwiGIVe1L8foFgJOalAv7YzI99Y8htLKFkCECRNHzTJQ9KAIA82hIJ2e
+	WN6rredcHg8fgR0fUBaFLdFgKkSxYOcVB6aOceUrpuVOAZIwMvZTAxGlJ7ocfVW4
+	K9E2ljPqwd96EPhD12nUg==
+X-ME-Sender: <xms:AeWxamHK-3bY-y7YN8YD-GEBnYPUL6rLSExY-m4Q_jixR7NbktXeCQ>
+    <xme:AeWxak8MFN76HuMV2QMd6gytxq-Gw3sVE7iQsBnhqgpFpf0qEsl6sBFNMWOok7bm6
+    NoDNKcrvLdwB_0eUW2avO6gghVyfmyd1cWbBGPel77DwcaNCmDn_9M>
+X-ME-Received: <xmr:AeWxanjJpDtQhtj2HQHGpbbThQOZbbSP1bJPV3h5HO25xeLf0wjl6WaSfChdbw>
+X-ME-Proxy-Cause: dmFkZTGXJSHqMq/BnZYJ0YweOb4rS2VUXpPM7d5+lSYGhnppGFsNjl5Bysv+w6+cDnCJ/7
+    /L3Cxi42gIwxQ2NUo+88ApQMAdaEv47yc8fAsLypxGx87oHF4HT7ama3q0ueulG4TPc0DY
+    g9aq/+AIZ/88RBFY6z24OfxBW3WPjyGYAaKrF0WRpWdqsttcvGMxliaYSaCPsYHObnA4na
+    kPveiLHd3CCXxarYrwtQo6T70Ls9xKt0FRJqIrLM1i8XMnEKMgqeJVG7tIy0ld86sgmRqY
+    QTP1Xf0Z/CD0h9dlYVSVFIdwBL83CGpVR9ekjjvy4BxnnVieSYFxqs3RHn4BnowjRSHstH
+    lbIlrTY4pKaLjfYPMi8lHe9J6BGjnfnaAx8PVKK8YYVfP0edxM7OBB5rEBgIf2W60YJdMX
+    a/CA/YLjNT54W2ZcspFg0osOJTvGi4LG0lFyY+yJlyyV9xM1x2hzgxr+jN9YPFqAKuevta
+    V6dkjdGvWo63Y40Lm8KSIj2Rbiu6VFA/VZR9coUHxhsh36yQsFezjme3cVR5dtqJgrQaz4
+    o1JeoPRBdMu2TR263aGg9sjQgoBDxLhN494P4TKOAz5Dr1HEZVwb28rD3EIxqnYVA4ubK1
+    BMKlomltuu3emJpFxVYdT/IAJwQglbJF2qrTVxeJrJfZlX4rAplcEt4c3B3Q
+X-ME-Proxy: <xmx:AeWxaoRk8w7TTTleoMlLmsbis-u9W5LKzfG9O_VbYi1ClzSIq64szQ>
+    <xmx:AeWxakAciDX7vAHwz1_bPpNde46YKbMk8FFndt0tmMgPH7GJpuNp7Q>
+    <xmx:AeWxai8I5YKKjCbOKl5MwImxA9YleVSHpOcD8T97eY8WNgpiXPf5og>
+    <xmx:AeWxau0AEdk823DHw6HMRME7h75X7et--O_BYk0ffD9cXiHiYnrJnQ>
+    <xmx:AeWxarQnxOtf8DawSjoOwb8iNgsKHpUqbMjYkh5LToEYSlvssEMSUrzS>
 Feedback-ID: i03f14258:Fastmail
 Received: by mail.messagingengine.com (Postfix) with ESMTPA; Mon,
- 21 Sep 2026 22:16:18 -0400 (EDT)
-Date: Mon, 21 Sep 2026 20:14:30 -0600
+ 21 Sep 2026 22:16:26 -0400 (EDT)
+Date: Mon, 21 Sep 2026 20:13:06 -0600
 From: Alex Williamson <alex@shazbot.org>
 To: <mhonap@nvidia.com>
 Cc: <jgg@ziepe.ca>, <ankita@nvidia.com>, <jic23@kernel.org>,
@@ -83,13 +83,13 @@ Cc: <jgg@ziepe.ca>, <ankita@nvidia.com>, <jic23@kernel.org>,
  <linux-kernel@vger.kernel.org>, <kvm@vger.kernel.org>,
  <linux-cxl@vger.kernel.org>, <linux-pci@vger.kernel.org>,
  <linux-kselftest@vger.kernel.org>, <linux-hardening@vger.kernel.org>,
- alex@shazbot.org, xinmengs@nvidia.com
-Subject: Re: [PATCH v5 13/27] vfio/pci: Bracket PCI resets with the CXL
- reset hooks
-Message-ID: <20260921201430.451af68f@shazbot.org>
-In-Reply-To: <20260916183540.3813685-14-mhonap@nvidia.com>
+ alex@shazbot.org
+Subject: Re: [PATCH v5 25/27] vfio/cxl: Run the CXL reset at the vfio reset
+ points
+Message-ID: <20260921201306.49247ac5@shazbot.org>
+In-Reply-To: <20260916183540.3813685-26-mhonap@nvidia.com>
 References: <20260916183540.3813685-1-mhonap@nvidia.com>
-	<20260916183540.3813685-14-mhonap@nvidia.com>
+	<20260916183540.3813685-26-mhonap@nvidia.com>
 X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -100,78 +100,394 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 
-On Thu, 17 Sep 2026 00:05:26 +0530
+On Thu, 17 Sep 2026 00:05:38 +0530
 <mhonap@nvidia.com> wrote:
 
 > From: Manish Honap <mhonap@nvidia.com>
 > 
-> A CXL Type-2 device must quiesce its coherent link before any reset and
-> restore its HDM decoder state afterward, or a reset can leave the device
-> mastering the bus over decoders that are no longer valid. This has to
-> happen around every reset the PCI core drives for the device, not only
-> the ones VFIO issues directly.
+> A CXL Type-2 function must not take an FLR: it resets the coherent
+> CXL.mem state and corrupts the HDM decoder. The PCI core already reflects
+> this, ordering cxl_reset ahead of flr in pci_reset_fn_methods[], so a
+> function reset of a CXL device runs the DVSEC reset sequence rather than
+> FLR.
 > 
-> Add reset_prepare and reset_done to the CXL ops and register the matching
-> pci_error_handlers callbacks.
+> Route the vfio function-reset points (VFIO_DEVICE_RESET and the
+> virtualized PCIe/AF FLR writes) through a CXL reset op that runs
+> cxl_reset_dvsec_sequence(). The sequence resets the function, always
+> clearing device memory, and restores the HDM decoder and PCI config
+> state, so it is a complete replacement for pci_try_reset_function() on a
+> CXL device. The op runs under memory_lock and not the PCI device lock, so
+> cxl_reset_dvsec_sequence() can take the device lock itself.
+> 
+> Clear hdm_valid for the duration of the reset so a fault cannot insert a
+> PFN into a decoder that is being torn down, and restore it once the
+> sequence has put the decoder back.
 > 
 > Assisted-by: LLM
 > Signed-off-by: Manish Honap <mhonap@nvidia.com>
 > ---
->  drivers/vfio/pci/vfio_pci_core.c | 18 ++++++++++++++++++
->  include/linux/vfio_pci_core.h    |  2 ++
->  2 files changed, 20 insertions(+)
+>  drivers/vfio/pci/cxl/vfio_cxl_core.c | 41 +++++++++++++++
+>  drivers/vfio/pci/vfio_pci_config.c   | 49 +++++++++++++++---
+>  drivers/vfio/pci/vfio_pci_core.c     | 77 +++++++++++++++++++++++-----
+>  drivers/vfio/pci/vfio_pci_priv.h     |  1 +
+>  include/linux/vfio_pci_core.h        |  4 ++
+>  5 files changed, 152 insertions(+), 20 deletions(-)
 > 
+> diff --git a/drivers/vfio/pci/cxl/vfio_cxl_core.c b/drivers/vfio/pci/cxl/vfio_cxl_core.c
+> index 55fa1f86850d..795362aea344 100644
+> --- a/drivers/vfio/pci/cxl/vfio_cxl_core.c
+> +++ b/drivers/vfio/pci/cxl/vfio_cxl_core.c
+> @@ -632,6 +632,45 @@ static void vfio_cxl_reset_done(struct vfio_pci_core_device *vdev)
+>  		cxl->hdm_valid = false;
+>  }
+>  
+> +/*
+> + * Run the CXL DVSEC reset sequence in place of a PCI function reset. A CXL
+> + * Type-2 function must not take an FLR (it would corrupt CXL.mem), so the vfio
+> + * reset points route here. The sequence resets the function, always clearing
+> + * device memory, and restores the HDM decoder. The caller holds memory_lock,
+> + * and this path does not hold the PCI device lock, so cxl_reset_dvsec_sequence()
+> + * can take it.
+> + */
+> +static int vfio_cxl_reset(struct vfio_pci_core_device *vdev)
+> +{
+> +	struct vfio_cxl_state *cxl = vdev->cxl;
+> +	int ret;
+> +
+> +	lockdep_assert_held_write(&vdev->memory_lock);
+> +
+> +	/* Host CPU access to the HDM range is unsafe until the decoder is back. */
+> +	cxl->hdm_valid = false;
+> +
+> +	ret = cxl_reset_dvsec_sequence(vdev->pdev);
+> +	if (!ret)
+> +		cxl->hdm_valid = true;
+> +
+> +	return ret;
+
+Success oriented flow:
+
+	if (ret)
+		return ret;
+
+	cxl->hdm_valid = true;
+
+	return 0;
+
+But I don't see how the case where hdm_valid remains false is really a
+valid place for the user to land.  We don't really have a "your device
+is now borked, give up" signal to the user.
+
+> +}
+> +
+> +/*
+> + * The HDM dma-buf may be armed only while the decoder is valid. After a failed
+> + * reset hdm_valid is clear, so the generic memory-enable re-arm must skip the
+> + * dma-buf rather than map DMA onto an unrestored decoder.
+> + */
+> +static bool vfio_cxl_hdm_active(struct vfio_pci_core_device *vdev)
+> +{
+> +	struct vfio_cxl_state *cxl = vdev->cxl;
+> +
+> +	lockdep_assert_held_write(&vdev->memory_lock);
+> +
+> +	return cxl->hdm_valid;
+> +}
+> +
+>  static const struct vfio_cxl_ops vfio_cxl_ops = {
+>  	.init		= vfio_cxl_init_device,
+>  	.release	= vfio_cxl_release_device,
+> @@ -639,6 +678,8 @@ static const struct vfio_cxl_ops vfio_cxl_ops = {
+>  	.close_device	= vfio_cxl_close_device,
+>  	.reset_prepare	= vfio_cxl_reset_prepare,
+>  	.reset_done	= vfio_cxl_reset_done,
+> +	.reset		= vfio_cxl_reset,
+> +	.hdm_active	= vfio_cxl_hdm_active,
+>  	.owner		= THIS_MODULE,
+>  };
+
+It's vfio_cxl_ops, so it's unique to CXL, but still leaking HDM to
+vfio-pci-core as something it needs to care about is pretty ugly.
+It should be something generic, but also this should be wrapped in some
+abstraction in vfio-pci-core.
+
+>  
+> diff --git a/drivers/vfio/pci/vfio_pci_config.c b/drivers/vfio/pci/vfio_pci_config.c
+> index 9a020a768055..8a5a737efa31 100644
+> --- a/drivers/vfio/pci/vfio_pci_config.c
+> +++ b/drivers/vfio/pci/vfio_pci_config.c
+> @@ -630,7 +630,14 @@ static int vfio_basic_config_write(struct vfio_pci_core_device *vdev, int pos,
+>  		*virt_cmd &= cpu_to_le16(~mask);
+>  		*virt_cmd |= cpu_to_le16(new_cmd & mask);
+>  
+> -		if (__vfio_pci_memory_enabled(vdev))
+> +		/*
+> +		 * Re-arm the dma-bufs on memory-enable, but keep a CXL device's
+> +		 * HDM dma-buf revoked while the decoder is unrestored (a failed
+> +		 * reset leaves hdm_valid clear); re-arming would map DMA onto a
+> +		 * decoder the fault path still gates. Plain vfio-pci is unchanged.
+> +		 */
+> +		if (__vfio_pci_memory_enabled(vdev) &&
+> +		    (!vdev->cxl_ops || vdev->cxl_ops->hdm_active(vdev)))
+
+HDM space and BAR MMIO space are governed by different things, how can
+we combine them here to say that dmabufs are invalid until both are
+active?  That's not how the hardware works.  Does the HDM need a
+separate address space of dmabufs to toggle independently?
+
+>  			vfio_pci_dma_buf_move(vdev, false);
+>  		up_write(&vdev->memory_lock);
+>  	}
+> @@ -720,7 +727,8 @@ static void vfio_lock_and_set_power_state(struct vfio_pci_core_device *vdev,
+>  	}
+>  
+>  	vfio_pci_set_power_state(vdev, state);
+> -	if (__vfio_pci_memory_enabled(vdev))
+> +	if (__vfio_pci_memory_enabled(vdev) &&
+> +	    (!vdev->cxl_ops || vdev->cxl_ops->hdm_active(vdev)))
+>  		vfio_pci_dma_buf_move(vdev, false);
+>  	up_write(&vdev->memory_lock);
+>  }
+> @@ -910,8 +918,14 @@ static int vfio_exp_config_write(struct vfio_pci_core_device *vdev, int pos,
+>  		if (!ret && (cap & PCI_EXP_DEVCAP_FLR)) {
+>  			vfio_pci_zap_and_down_write_memory_lock(vdev);
+>  			vfio_pci_dma_buf_move(vdev, true);
+> -			pci_try_reset_function(vdev->pdev);
+> -			if (__vfio_pci_memory_enabled(vdev))
+> +			ret = vfio_pci_reset_function(vdev);
+> +			/*
+> +			 * Keep the HDM dma-buf revoked if a CXL reset
+> +			 * failed; re-arming would map DMA onto an
+> +			 * unrestored decoder. Mirrors the reset ioctl.
+> +			 */
+
+We don't have granularity of "the HDM dma-buf".
+
+> +			if (__vfio_pci_memory_enabled(vdev) &&
+> +			    (!vdev->cxl_ops || !ret))
+>  				vfio_pci_dma_buf_move(vdev, false);
+>  			up_write(&vdev->memory_lock);
+>  		}
+> @@ -995,8 +1009,14 @@ static int vfio_af_config_write(struct vfio_pci_core_device *vdev, int pos,
+>  		if (!ret && (cap & PCI_AF_CAP_FLR) && (cap & PCI_AF_CAP_TP)) {
+>  			vfio_pci_zap_and_down_write_memory_lock(vdev);
+>  			vfio_pci_dma_buf_move(vdev, true);
+> -			pci_try_reset_function(vdev->pdev);
+> -			if (__vfio_pci_memory_enabled(vdev))
+> +			ret = vfio_pci_reset_function(vdev);
+> +			/*
+> +			 * Keep the HDM dma-buf revoked if a CXL reset
+> +			 * failed; re-arming would map DMA onto an
+> +			 * unrestored decoder. Mirrors the reset ioctl.
+> +			 */
+
+Same.
+
+> +			if (__vfio_pci_memory_enabled(vdev) &&
+> +			    (!vdev->cxl_ops || !ret))
+>  				vfio_pci_dma_buf_move(vdev, false);
+>  			up_write(&vdev->memory_lock);
+>  		}
+> @@ -1781,9 +1801,22 @@ static int vfio_cxl_dvsec_write(struct vfio_pci_core_device *vdev, int pos,
+>  		status2 |= PCI_DVSEC_CXL_CACHE_INV;
+>  	}
+>  	if (ctrl2 & PCI_DVSEC_CXL_INIT_CXL_RST) {
+> +		int ret = 0;
+> +
+>  		ctrl2 &= ~PCI_DVSEC_CXL_INIT_CXL_RST;
+> -		status2 &= ~PCI_DVSEC_CXL_RST_ERR;
+> -		status2 |= PCI_DVSEC_CXL_RST_DONE;
+> +
+> +		if (vdev->cxl_ops && vdev->cxl_ops->reset) {
+> +			vfio_pci_zap_and_down_write_memory_lock(vdev);
+> +			vfio_pci_dma_buf_move(vdev, true);
+> +			ret = vfio_pci_reset_function(vdev);
+> +			if (__vfio_pci_memory_enabled(vdev) &&
+> +			    (!vdev->cxl_ops || !ret))
+> +				vfio_pci_dma_buf_move(vdev, false);
+> +			up_write(&vdev->memory_lock);
+> +		}
+
+Isn't this branch deterministic?  IIRC, we only install this handler
+when vdev->cxl_ops and that ops always registers a reset function.
+
+> +
+> +		status2 &= ~(PCI_DVSEC_CXL_RST_DONE | PCI_DVSEC_CXL_RST_ERR);
+> +		status2 |= ret ? PCI_DVSEC_CXL_RST_ERR : PCI_DVSEC_CXL_RST_DONE;
+>  	}
+>  
+>  	*pctrl2 = cpu_to_le16(ctrl2);
 > diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
-> index 2f593b2721a1..a91e07181847 100644
+> index f02a5240aa71..8bd4db7afefe 100644
 > --- a/drivers/vfio/pci/vfio_pci_core.c
 > +++ b/drivers/vfio/pci/vfio_pci_core.c
-> @@ -2794,8 +2794,26 @@ int vfio_pci_core_sriov_configure(struct vfio_pci_core_device *vdev,
->  }
->  EXPORT_SYMBOL_GPL(vfio_pci_core_sriov_configure);
+> @@ -643,8 +643,27 @@ int vfio_pci_core_enable(struct vfio_pci_core_device *vdev)
+>  		goto out_power;
 >  
-> +static void vfio_pci_core_reset_prepare(struct pci_dev *pdev)
-> +{
-> +	struct vfio_pci_core_device *vdev = dev_get_drvdata(&pdev->dev);
-> +
-> +	if (vdev->cxl_ops)
-> +		vdev->cxl_ops->reset_prepare(vdev);
-> +}
-> +
-> +static void vfio_pci_core_reset_done(struct pci_dev *pdev)
-> +{
-> +	struct vfio_pci_core_device *vdev = dev_get_drvdata(&pdev->dev);
-> +
-> +	if (vdev->cxl_ops)
-> +		vdev->cxl_ops->reset_done(vdev);
-> +}
+>  	/* If reset fails because of the device lock, fail this path entirely */
+> -	ret = pci_try_reset_function(pdev);
+> -	if (ret == -EAGAIN)
+> +	if (vdev->cxl_ops && vdev->cxl_ops->reset) {
+> +		/*
+> +		 * VM power-on resets a CXL Type-2 device through its DVSEC
+> +		 * sequence. vconfig is not built yet here, so take memory_lock
+> +		 * and call the op directly rather than the wrapper.
+> +		 */
 
-Flagging this because it's introducing one more vfio-pci-core use of
-the convention of storing the vfio_pci_core_device in drvdata that's a
-barrier for a Rust-based variant driver.  Likely this needs to be added
-to the per-variant boilerplate or macro so variants provide the
-vfio_pci_core_device pointer rather than expecting it in drvdata.
-Thanks,
+B does not follow from A: what's vconfig got to do with taking
+memory_lock here?
+
+> +		down_write(&vdev->memory_lock);
+> +		ret = vdev->cxl_ops->reset(vdev);
+> +		up_write(&vdev->memory_lock);
+> +	} else {
+> +		ret = pci_try_reset_function(pdev);
+> +	}
+> +
+> +	/*
+> +	 * -EAGAIN means the reset could not run. For a CXL device any reset
+> +	 * error must also fail the open: a failed DVSEC reset can leave the HDM
+> +	 * decoder cleared or unrestored, and continuing would expose the HDM
+> +	 * region for host access through a decoder in an unknown state.
+> +	 */
+> +	if (ret == -EAGAIN ||
+> +	    (vdev->cxl_ops && vdev->cxl_ops->reset && ret))
+
+This suggests to me that our abstraction is lacking.
+
+>  		goto out_disable_device;
+>  
+>  	vdev->reset_works = !ret;
+> @@ -845,16 +864,30 @@ void vfio_pci_core_disable(struct vfio_pci_core_device *vdev)
+>  	 * overwrite the previously restored configuration information.
+>  	 */
+>  	if (vdev->reset_works) {
+> -		bridge = pci_upstream_bridge(pdev);
+> -		if (bridge && !pci_dev_trylock(bridge))
+> -			goto out_restore_state;
+> -		if (pci_dev_trylock(pdev)) {
+> -			if (!__pci_reset_function_locked(pdev))
+> +		if (vdev->cxl_ops && vdev->cxl_ops->reset) {
+> +			/*
+> +			 * VM power-off resets a CXL Type-2 device through its
+> +			 * DVSEC sequence. The sequence takes its own device lock,
+> +			 * so run it outside the lock below.
+> +			 * vconfig is already freed here, so call the op directly
+> +			 * under memory_lock rather than the wrapper.
+
+Again, the comment doesn't actually justify the behavior.  In the
+previous, vconfig is not setup, so take the lock, here vconfig is
+already freed, so take the lock... meaningless.
+
+Also, are we dropping the try-lock semantics?  How's that justified?
+
+> +			 */
+> +			down_write(&vdev->memory_lock);
+> +			if (!vdev->cxl_ops->reset(vdev))
+>  				vdev->needs_reset = false;
+> -			pci_dev_unlock(pdev);
+> +			up_write(&vdev->memory_lock);
+> +		} else {
+> +			bridge = pci_upstream_bridge(pdev);
+> +			if (bridge && !pci_dev_trylock(bridge))
+> +				goto out_restore_state;
+> +			if (pci_dev_trylock(pdev)) {
+> +				if (!__pci_reset_function_locked(pdev))
+> +					vdev->needs_reset = false;
+> +				pci_dev_unlock(pdev);
+> +			}
+> +			if (bridge)
+> +				pci_dev_unlock(bridge);
+
+Abstraction leaves a lot to be desired here.
+
+>  		}
+> -		if (bridge)
+> -			pci_dev_unlock(bridge);
+>  	}
+>  
+>  out_restore_state:
+> @@ -1592,6 +1625,20 @@ static int vfio_pci_ioctl_set_irqs(struct vfio_pci_core_device *vdev,
+>  	return ret;
+>  }
+>  
+> +/*
+> + * Reset the function. A CXL device runs the CXL DVSEC reset sequence in place
+> + * of a PCI function reset: it replaces FLR (which would corrupt CXL.mem),
+> + * always clears device memory, and restores the HDM decoder. Callers hold
+> + * memory_lock for write.
+> + */
+> +int vfio_pci_reset_function(struct vfio_pci_core_device *vdev)
+> +{
+> +	if (!vdev->cxl_ops || !vdev->cxl_ops->reset)
+> +		return pci_try_reset_function(vdev->pdev);
+> +
+> +	return vdev->cxl_ops->reset(vdev);
+
+This is all inverted logic and I don't understand why we're trying to
+leave the reset op optional, make it mandatory:
+
+	if (vdev->cxl_ops)
+		return vdev->cxl_ops->reset(vdev);
+
+	return pci_try_reset_function(vdev->pdev);
+
+But we're again losing the try semantics on the cxl path(?) and naming
+of the wrapper drops the try semantics as well.
+
+> +}
+> +
+>  static int vfio_pci_ioctl_reset(struct vfio_pci_core_device *vdev,
+>  				void __user *arg)
+>  {
+> @@ -1614,8 +1661,14 @@ static int vfio_pci_ioctl_reset(struct vfio_pci_core_device *vdev,
+>  	vfio_pci_set_power_state(vdev, PCI_D0);
+>  
+>  	vfio_pci_dma_buf_move(vdev, true);
+> -	ret = pci_try_reset_function(vdev->pdev);
+> -	if (__vfio_pci_memory_enabled(vdev))
+> +	ret = vfio_pci_reset_function(vdev);
+> +	/*
+> +	 * Re-arm the dma-bufs on success. A CXL device whose reset failed leaves
+> +	 * the HDM decoder unrestored and hdm_valid clear, so re-arming its HDM
+> +	 * dma-buf would map device DMA onto a decoder the fault path still gates;
+> +	 * keep it revoked until a reset succeeds. Plain vfio-pci is unchanged.
+> +	 */
+> +	if (__vfio_pci_memory_enabled(vdev) && (!vdev->cxl_ops || !ret))
+>  		vfio_pci_dma_buf_move(vdev, false);
+
+I don't think we're doing dmabufs correctly for CXL, I don't see how
+they're the same address space, or TBH, how we can have a reset fail so
+catastrophically.  Thanks,
 
 Alex
 
-> +
->  const struct pci_error_handlers vfio_pci_core_err_handlers = {
->  	.error_detected = vfio_pci_core_aer_err_detected,
-> +	.reset_prepare = vfio_pci_core_reset_prepare,
-> +	.reset_done = vfio_pci_core_reset_done,
->  };
->  EXPORT_SYMBOL_GPL(vfio_pci_core_err_handlers);
+>  	up_write(&vdev->memory_lock);
 >  
+> diff --git a/drivers/vfio/pci/vfio_pci_priv.h b/drivers/vfio/pci/vfio_pci_priv.h
+> index c268c99aea82..e1ef21806a2f 100644
+> --- a/drivers/vfio/pci/vfio_pci_priv.h
+> +++ b/drivers/vfio/pci/vfio_pci_priv.h
+> @@ -78,6 +78,7 @@ int vfio_pci_set_power_state(struct vfio_pci_core_device *vdev,
+>  			     pci_power_t state);
+>  
+>  void vfio_pci_zap_and_down_write_memory_lock(struct vfio_pci_core_device *vdev);
+> +int vfio_pci_reset_function(struct vfio_pci_core_device *vdev);
+>  u16 vfio_pci_memory_lock_and_enable(struct vfio_pci_core_device *vdev);
+>  void vfio_pci_memory_unlock_and_restore(struct vfio_pci_core_device *vdev,
+>  					u16 cmd);
 > diff --git a/include/linux/vfio_pci_core.h b/include/linux/vfio_pci_core.h
-> index 643f32c2141f..6ebf9a26275e 100644
+> index 39a28cc6ae8c..231679dead45 100644
 > --- a/include/linux/vfio_pci_core.h
 > +++ b/include/linux/vfio_pci_core.h
-> @@ -72,6 +72,8 @@ struct vfio_cxl_ops {
->  	void	(*release)(struct vfio_pci_core_device *vdev);
->  	int	(*open_device)(struct vfio_pci_core_device *vdev);
+> @@ -74,6 +74,10 @@ struct vfio_cxl_ops {
 >  	void	(*close_device)(struct vfio_pci_core_device *vdev);
-> +	void	(*reset_prepare)(struct vfio_pci_core_device *vdev);
-> +	void	(*reset_done)(struct vfio_pci_core_device *vdev);
+>  	void	(*reset_prepare)(struct vfio_pci_core_device *vdev);
+>  	void	(*reset_done)(struct vfio_pci_core_device *vdev);
+> +	/* Run the CXL reset (always clears CXL.mem) in place of FLR */
+> +	int	(*reset)(struct vfio_pci_core_device *vdev);
+> +	/* True while the HDM range is valid and its dma-buf may be armed */
+> +	bool	(*hdm_active)(struct vfio_pci_core_device *vdev);
 >  	/* Pinned per bound CXL device so vfio-cxl cannot unload under usage */
 >  	struct module *owner;
 >  };
