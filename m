@@ -1,163 +1,211 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 14ADA3AFCE6
-	for <linux-pci@vger.kernel.org>; Tue, 22 Sep 2026 02:54:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id E87291D9A66;
+	Tue, 22 Sep 2026 03:46:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790045674; cv=none; b=s3uJpz5Iw9jkFaSP1B71fynIMBTSAMVH6zgjwa+kKNCagn3mjSSS+sdi4OUTwX0WFO68vbVc6DWH6gYgJ8uqZKjtv4v7/8BAOiZvlPIAdOhnyo5vfpPkNP9AGb52cC2TMUEF3htBkVtuDUfq2MqcW5DrYeKjqULML/WUGquvJhE=
+	t=1790048805; cv=none; b=EZbb3IKT4ze/nkyFnujQXv5seCEafXq9Kk0UfQo8/I6e6ydRIXGrn+hByVr6zNbTSvFP4bFo1Xp6XI1CloAl414i3ZW9SntHr11C8xdtcq1dIpRXqdzAMMNumvKJ5bkFS74VofLnm+qk/cubFvE5XECEtKR0Mz18io+ZcsqDeXA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790045674; c=relaxed/simple;
-	bh=Agj7zeeoNCFHTNLZ02avAu2lGXJEJZjAPrjZXACPBZ8=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=K9BoW8mIYDFJq38uOZ22gCH2F5ZvEqR55EaASY7knzyh63p9oYRQwDUqYLCAv5+2tEeQOYgb+YX9ivFEdJihOGiB18XrjKPg2rPPGMc2qp/xeZvYdzy3Drjzfoecwmvi6dlAbn3tfOqjc/nrHa8EIOpSvFifA3NJWiANLnn1AKg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HiJzDHRT; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790048805; c=relaxed/simple;
+	bh=qBL4hOnkWrnl9KngneqkBU17EWse148K0i1gIAwANFc=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=MvbA9vZ1+5ML2oHXTyd2OWX1Ub3LnB6xFyiYmQSr2OgziHxTyS/4MS0HnAjfD4HOQhAhJauFKCLInKjA+QtewCyww9UFBVXzrtsIJUSwt9h2/wWytQg6hfoD4+zpq5ZXjrsPaC7H/2SJiBD2ToSlav0/jTLgMQNWUTHK/erP3mM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=ab/1Xmm0; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HiJzDHRT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5BC3C1F0089C;
-	Tue, 22 Sep 2026 02:54:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790045667;
-	bh=5TvFWJT3xT/l7e/vg1z1wZgL+TuqJFGHhR2Wo2t9C94=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=HiJzDHRTkWcThoP9fxfEnYmuQ9fy3F8yFu9fZxJvlPQpRd6MT0DKvsvihWyaR/Mdm
-	 VnnIT6MiOi2H3XdG4yy4TBxK3+DLccXuqwCQ/11VxT2a49N8MutduuIp4j/U258/x2
-	 BKyezppulwawlPLCseCZiesFHGpl3sfz0n0Ldlu60D3yrFMVJ3dD0F+/OY3kucGquY
-	 HzTeNl7ynAWIIYLzaDDaAXFV8K4kPvOxkbas8abHyiEWLFe+SkydUARd3XbF35zCNp
-	 8UXp1HYGp98sWWc1bFD324+6JePNTFuCkO2VDHxCSdtEgiFfjrYsALfdPx2cLgnOSN
-	 MuM44VUYlSkaw==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 2/3] PCI: dw-rockchip: Make the INTx irq setup
- devm-managed
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Shawn Lin" <shawn.lin@rock-chips.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <1790044622-164744-3-git-send-email-shawn.lin@rock-chips.com>
-References: <1790044622-164744-1-git-send-email-shawn.lin@rock-chips.com>
- <1790044622-164744-3-git-send-email-shawn.lin@rock-chips.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 22 Sep 2026 02:54:26 +0000
-Message-Id: <20260922025427.5BC3C1F0089C@smtp.kernel.org>
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="ab/1Xmm0"
+Received: from [192.168.1.70] (unknown [4.194.122.136])
+	by linux.microsoft.com (Postfix) with ESMTPSA id 1E69C20B7168;
+	Mon, 21 Sep 2026 20:45:43 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 1E69C20B7168
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1790048753;
+	bh=ei/RamUX7t5csrMcNl7UepCODFZshy2mQl2ZoF4lX7I=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=ab/1Xmm0uV0FQNIoD4At64yMz5qVSjA0VS2PKZb1ZSmck3ppzdkl9Bv6BBZ0rj2zd
+	 YAuUPtVaTyFqhdWBAEPgYz3vNkKJW3wvFcVk8TD0lqjYqf+/3Ds3z8lf0qSxaP+zkZ
+	 X1iQY1u84bjMKefXVun+WKpr2M7mftn5Q5HGlej0=
+Message-ID: <aaecad83-cb46-44cc-91c4-1675350749f4@linux.microsoft.com>
+Date: Tue, 22 Sep 2026 09:16:28 +0530
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v5 4/4] x86/irq, iommu/amd, x86/hyperv, PCI: Drop
+ redundant irq_retrigger inits
+To: Michael Kelley <mhklinux@outlook.com>, Thomas Gleixner <tglx@kernel.org>,
+ Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
+ Dave Hansen <dave.hansen@linux.intel.com>, "x86@kernel.org"
+ <x86@kernel.org>, "H . Peter Anvin" <hpa@zytor.com>,
+ Wei Liu <wei.liu@kernel.org>, "K . Y . Srinivasan" <kys@microsoft.com>,
+ Haiyang Zhang <haiyangz@microsoft.com>, Dexuan Cui <decui@microsoft.com>
+Cc: Long Li <longli@microsoft.com>, Nam Cao <namcao@linutronix.de>,
+ Joerg Roedel <joro@8bytes.org>,
+ Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
+ Vasant Hegde <vasant.hegde@amd.com>, Will Deacon <will@kernel.org>,
+ Robin Murphy <robin.murphy@arm.com>,
+ Lorenzo Pieralisi <lpieralisi@kernel.org>,
+ =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+ Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Kees Cook <kees@kernel.org>,
+ "Rafael J . Wysocki" <rafael@kernel.org>, Radu Rendec <radu@rendec.net>,
+ Sean Christopherson <seanjc@google.com>, Kai Huang <kai.huang@intel.com>,
+ Dmitry Ilvokhin <d@ilvokhin.com>,
+ Shradha Gupta <shradhagupta@linux.microsoft.com>,
+ Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
+ Thierry Reding <treding@nvidia.com>, Jiri Wiesner <jwiesner@suse.de>,
+ Daniel J Blueman <daniel@quora.org>,
+ "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "iommu@lists.linux.dev" <iommu@lists.linux.dev>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+References: <20260914111836.2119301-1-namjain@linux.microsoft.com>
+ <20260914111836.2119301-5-namjain@linux.microsoft.com>
+ <SN6PR02MB4157B6AAECA10E13072B727BD4842@SN6PR02MB4157.namprd02.prod.outlook.com>
+Content-Language: en-US
+From: Naman Jain <namjain@linux.microsoft.com>
+In-Reply-To: <SN6PR02MB4157B6AAECA10E13072B727BD4842@SN6PR02MB4157.namprd02.prod.outlook.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
-s) to consider:
-- [High] PCI: dw-rockchip: INTx IRQ domain created too late for child devic=
-es
-- [High] PCI: dw-rockchip: missing .hwirq_max causes INTx IRQ mappings to f=
-ail
-- [High] PCI: dw-rockchip: missing synchronize_irq() in chained IRQ release=
- causes UAF
---
 
-commit 94fa1be31fa024fc300334850bba499a495b5954
-Author: Shawn Lin <shawn.lin@rock-chips.com>
 
-PCI: dw-rockchip: Make the INTx irq setup devm-managed
+On 9/22/2026 2:31 AM, Michael Kelley wrote:
+> From: Naman Jain <namjain@linux.microsoft.com> Sent: Monday, September 14, 2026 4:19 AM
+>>
+>> With fixup_irqs(), msi_set_affinity() and the generic resend path
+>> (try_retrigger()) now all falling back to irq_chip_retrigger_hierarchy(),
+> 
+> The "falling back" terminology is not accurate in this version of the
+> patch set.  Perhaps "all now calling irq_chip_retrigger_hierarchy() directly"?
+> 
 
-The irq domain and the chained handler set up by the previous commit
-are resources owned by the device, but nothing releases them if probing
-ever fails after they are set up, and they are not tied to the device
-lifetime in any other way either.
+Thanks for catching this Michael, it was a miss on my part.
 
-> diff --git a/drivers/pci/controller/dwc/pcie-dw-rockchip.c b/drivers/pci/=
-controller/dwc/pcie-dw-rockchip.c
-> index 59d9a1b095df6..561c296c770eb 100644
-> --- a/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-> +++ b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-[ ... ]
-> @@ -187,9 +188,16 @@ static const struct irq_domain_ops intx_domain_ops =
-=3D {
->  	.map =3D rockchip_pcie_intx_map,
->  };
-> =20
-> -static int rockchip_pcie_init_irq_domain(struct rockchip_pcie *rockchip)
-> +static void rockchip_pcie_intx_chained_release(void *data)
-> +{
-> +	struct rockchip_pcie *rockchip =3D data;
-> +
-> +	irq_set_chained_handler_and_data(rockchip->intx_irq, NULL, NULL);
+Regards,
+Naman
 
-[Severity: High]
-Does this release function need a call to synchronize_irq() to prevent a
-use-after-free?
+>> installing it as the irq_retrigger() callback on the outermost domain chips
+>> is no longer required. The hierarchy walk reaches the x86 vector domain's
+>> apic_retrigger_irq() for all of these stacked domain chips.
+>>
+>> Remove the now redundant irq_retrigger() initializations from the outermost
+>> domain interrupt chips, including the Hyper-V root partition PCI/MSI chip.
+>>
+>> No functional change intended.
+>>
+>> Suggested-by: Thomas Gleixner <tglx@kernel.org>
+>> Reviewed-by: Shradha Gupta <shradhagupta@linux.microsoft.com>
+>> Reviewed-by: Thomas Gleixner <tglx@kernel.org>
+>> Signed-off-by: Naman Jain <namjain@linux.microsoft.com>
+>> ---
+>>   arch/x86/hyperv/irqdomain.c         | 1 -
+>>   arch/x86/kernel/apic/io_apic.c      | 2 --
+>>   arch/x86/kernel/apic/msi.c          | 2 --
+>>   arch/x86/kernel/hpet.c              | 1 -
+>>   drivers/iommu/amd/init.c            | 1 -
+>>   drivers/pci/controller/pci-hyperv.c | 1 -
+>>   6 files changed, 8 deletions(-)
+>>
+>> diff --git a/arch/x86/hyperv/irqdomain.c b/arch/x86/hyperv/irqdomain.c
+>> index 6d790636c8b95..b3ad50a874dca 100644
+>> --- a/arch/x86/hyperv/irqdomain.c
+>> +++ b/arch/x86/hyperv/irqdomain.c
+>> @@ -316,7 +316,6 @@ static bool hv_init_dev_msi_info(struct device *dev, struct
+>> irq_domain *domain,
+>>   		return false;
+>>
+>>   	chip->flags |= IRQCHIP_SKIP_SET_WAKE | IRQCHIP_MOVE_DEFERRED;
+>> -	chip->irq_retrigger = irq_chip_retrigger_hierarchy;
+>>
+>>   	info->ops->msi_prepare = pci_msi_prepare;
+>>
+>> diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+>> index 7d7175d012288..18f49a251f23b 100644
+>> --- a/arch/x86/kernel/apic/io_apic.c
+>> +++ b/arch/x86/kernel/apic/io_apic.c
+>> @@ -1857,7 +1857,6 @@ static struct irq_chip ioapic_chip __read_mostly = {
+>>   	.irq_ack		= irq_chip_ack_parent,
+>>   	.irq_eoi		= ioapic_ack_level,
+>>   	.irq_set_affinity	= ioapic_set_affinity,
+>> -	.irq_retrigger		= irq_chip_retrigger_hierarchy,
+>>   	.irq_get_irqchip_state	= ioapic_irq_get_chip_state,
+>>   	.flags			= IRQCHIP_SKIP_SET_WAKE |
+>> IRQCHIP_MOVE_DEFERRED |
+>>   				  IRQCHIP_AFFINITY_PRE_STARTUP,
+>> @@ -1871,7 +1870,6 @@ static struct irq_chip ioapic_ir_chip __read_mostly = {
+>>   	.irq_ack		= irq_chip_ack_parent,
+>>   	.irq_eoi		= ioapic_ir_ack_level,
+>>   	.irq_set_affinity	= ioapic_set_affinity,
+>> -	.irq_retrigger		= irq_chip_retrigger_hierarchy,
+>>   	.irq_get_irqchip_state	= ioapic_irq_get_chip_state,
+>>   	.flags			= IRQCHIP_SKIP_SET_WAKE |
+>>   				  IRQCHIP_AFFINITY_PRE_STARTUP,
+>> diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
+>> index 9160227b9b32a..aad2f15eb2176 100644
+>> --- a/arch/x86/kernel/apic/msi.c
+>> +++ b/arch/x86/kernel/apic/msi.c
+>> @@ -246,7 +246,6 @@ static bool x86_init_dev_msi_info(struct device *dev, struct
+>> irq_domain *domain,
+>>   	info->ops->msi_prepare		= x86_msi_prepare;
+>>
+>>   	info->chip->irq_ack		= irq_chip_ack_parent;
+>> -	info->chip->irq_retrigger	= irq_chip_retrigger_hierarchy;
+>>   	info->chip->flags		|= IRQCHIP_SKIP_SET_WAKE |
+>>   					   IRQCHIP_AFFINITY_PRE_STARTUP;
+>>
+>> @@ -313,7 +312,6 @@ static struct irq_chip dmar_msi_controller = {
+>>   	.irq_mask		= dmar_msi_mask,
+>>   	.irq_ack		= irq_chip_ack_parent,
+>>   	.irq_set_affinity	= msi_domain_set_affinity,
+>> -	.irq_retrigger		= irq_chip_retrigger_hierarchy,
+>>   	.irq_compose_msi_msg	= dmar_msi_compose_msg,
+>>   	.irq_write_msi_msg	= dmar_msi_write_msg,
+>>   	.flags			= IRQCHIP_SKIP_SET_WAKE |
+>> IRQCHIP_MOVE_DEFERRED |
+>> diff --git a/arch/x86/kernel/hpet.c b/arch/x86/kernel/hpet.c
+>> index 8dc7b710e1250..2bb7a6f466af3 100644
+>> --- a/arch/x86/kernel/hpet.c
+>> +++ b/arch/x86/kernel/hpet.c
+>> @@ -509,7 +509,6 @@ static struct irq_chip hpet_msi_controller __ro_after_init = {
+>>   	.irq_mask = hpet_msi_mask,
+>>   	.irq_ack = irq_chip_ack_parent,
+>>   	.irq_set_affinity = msi_domain_set_affinity,
+>> -	.irq_retrigger = irq_chip_retrigger_hierarchy,
+>>   	.irq_write_msi_msg = hpet_msi_write_msg,
+>>   	.flags = IRQCHIP_SKIP_SET_WAKE | IRQCHIP_AFFINITY_PRE_STARTUP,
+>>   };
+>> diff --git a/drivers/iommu/amd/init.c b/drivers/iommu/amd/init.c
+>> index edcc187b8f14f..bc3da5b0578eb 100644
+>> --- a/drivers/iommu/amd/init.c
+>> +++ b/drivers/iommu/amd/init.c
+>> @@ -2477,7 +2477,6 @@ static struct irq_chip intcapxt_controller = {
+>>   	.irq_unmask		= intcapxt_unmask_irq,
+>>   	.irq_mask		= intcapxt_mask_irq,
+>>   	.irq_ack		= irq_chip_ack_parent,
+>> -	.irq_retrigger		= irq_chip_retrigger_hierarchy,
+>>   	.irq_set_affinity       = intcapxt_set_affinity,
+>>   	.irq_set_wake		= intcapxt_set_wake,
+>>   	.flags			= IRQCHIP_MASK_ON_SUSPEND |
+>> IRQCHIP_MOVE_DEFERRED,
+>> diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
+>> index 89816a2bd7cd3..cfc8fa403dad6 100644
+>> --- a/drivers/pci/controller/pci-hyperv.c
+>> +++ b/drivers/pci/controller/pci-hyperv.c
+>> @@ -2119,7 +2119,6 @@ static bool hv_pcie_init_dev_msi_info(struct device *dev,
+>> struct irq_domain *dom
+>>   	info->ops->msi_prepare = hv_msi_prepare;
+>>
+>>   	chip->irq_set_affinity = irq_chip_set_affinity_parent;
+>> -	chip->irq_retrigger = irq_chip_retrigger_hierarchy;
+>>
+>>   	if (IS_ENABLED(CONFIG_X86))
+>>   		chip->flags |= IRQCHIP_MOVE_DEFERRED;
+>> --
+>> 2.43.0
+>>
+> 
 
-Calling irq_set_chained_handler_and_data() with NULL masks the IRQ and remo=
-ves
-the handler, but it does not wait for any currently executing chained handl=
-ers
-on other CPUs to finish.
-
-Since this is a devres cleanup action, the IRQ domain and the rockchip
-structure (which was allocated with devm_kzalloc) will be destroyed and fre=
-ed
-shortly after this returns. If rockchip_pcie_intx_handler() is running
-concurrently during probe failure, it could dereference the freed rockchip
-structure or its destroyed irq_domain.
-
-> +}
-> +
-> +static int rockchip_pcie_init_irq_domain(struct device *dev,
-> +					 struct rockchip_pcie *rockchip)
->  {
-[ ... ]
-> -	rockchip->irq_domain =3D irq_domain_create_linear(of_fwnode_handle(intc=
-), PCI_NUM_INTX,
-> -							&intx_domain_ops, rockchip);
-> +	rockchip->irq_domain =3D devm_irq_domain_instantiate(dev,
-> +			&(struct irq_domain_info){
-> +				.fwnode =3D of_fwnode_handle(intc),
-> +				.size =3D PCI_NUM_INTX,
-> +				.ops =3D &intx_domain_ops,
-> +				.host_data =3D rockchip,
-> +			});
-
-[Severity: High]
-Does this compound literal need to initialize .hwirq_max?
-
-By omitting .hwirq_max, it defaults to 0. The core IRQ subsystem
-(__irq_domain_create) assigns domain->hwirq_max =3D info->hwirq_max.
-
-During interrupt mapping, irq_domain_associate_locked() validates mappings
-with WARN(hwirq >=3D domain->hwirq_max). Because hwirq_max is 0, any valid
-hardware IRQ (e.g., 0 to 3) will trigger this warning and cause the mapping
-to abort with -EINVAL, disabling all INTx interrupts.
-
-[ ... ]
-> @@ -730,18 +743,27 @@ static int rockchip_pcie_configure_rc(struct platfo=
-rm_device *pdev,
->  	 * which is also re-run by .reset_root_port(), so that the INTx irq
->  	 * domain is only created once, at probe time.
->  	 */
-> -	irq =3D of_irq_get_byname(dev->of_node, "legacy");
-> -	if (irq < 0)
-> -		return irq;
-> +	rockchip->intx_irq =3D of_irq_get_byname(dev->of_node, "legacy");
-> +	if (rockchip->intx_irq < 0)
-> +		return rockchip->intx_irq;
-> =20
-> -	ret =3D rockchip_pcie_init_irq_domain(rockchip);
-> +	ret =3D rockchip_pcie_init_irq_domain(dev, rockchip);
-
-[Severity: High]
-Is this IRQ domain instantiated too late for child devices?
-
-Earlier in rockchip_pcie_configure_rc(), dw_pcie_host_init() is called, whi=
-ch
-invokes pci_host_probe() to enumerate the PCIe bus and probe downstream dev=
-ice
-drivers.
-
-Because the legacy INTx domain is not yet instantiated when those child
-devices probe, pci_assign_irq() will fail to find the legacy domain, breaki=
-ng
-INTx interrupt mapping for downstream devices.
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/1790044622-164744-1=
--git-send-email-shawn.lin@rock-chips.com?part=3D2
