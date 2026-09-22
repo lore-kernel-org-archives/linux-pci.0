@@ -1,73 +1,96 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A3D5472F8A;
-	Tue, 22 Sep 2026 14:43:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 53689387363;
+	Tue, 22 Sep 2026 14:46:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790088205; cv=none; b=miQMCMQM2T0wGD9vDPMg596+bb/B7LU1rjYTvWOb2pGTpNK/xqbHe/+kOk43CxAj7X9N+59NI+vL5mWPHoIhb5lLIwEhvN1Br/M3OGZ1v97an3eIQDJ5DAqYzIwnmU24D9usLXtprFB90c8EHDZGEWawa/UeuzxEF7uD9r/FzsM=
+	t=1790088400; cv=none; b=sWSfY98+zmIvzHAVtYA2wUnhlgxZYXYLlLsv8Jb21wEr/X9yXOP/ARgDVO+sr38GGOALAhTCEFX7fEAtpDYwbEaWyIh3CswxpUNbvXtbCgv13ggni14iA4S5+/ABBH42ffvaanMAlBimLXzanvbwnzzufeGTDYPS6Rl0uMtoslE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790088205; c=relaxed/simple;
-	bh=l+lmoKcMvI1rFMxZURnzXZM8gDk5FtLzyBNELfDMcbY=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=lYQo6VDlELBmfgyedAfOG0JUd3choyR523/0Rkj+tkraTZZT8sEclmrqLvNLtN7sGKPgJ0pBsDQMEtfRKU2hkv1LM88zzZMJj6OR9ZZ1l0U+HwbYM9/KMo3Y9eRhflWwUEWWewjGRnHluRPUaZBQAz2XhftRJxDF+fOiR+5yd5Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IBpd3Vyu; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790088400; c=relaxed/simple;
+	bh=4xreLxQ1I340fogvtrKewsFN4s6TZwujc09Jws6cjCQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=LZad5nKBi2ENxkzJt5j14UVfbrOnRnEPxi7Jwk/N6ndvQtM3hpClOYdOA/UWlfjDgqUNrN7iQixh7y/WHXFf8SGY0DzrFufHWY5cxJK1a1yYqhHLsf3cW4vhtr2CKxLFDy+Tm7+H5bBaV/n7tosUtVqMaG+zdfwzUHaR5+5XsBU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=A/VYW5qp; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IBpd3Vyu"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 332861F000FF;
-	Tue, 22 Sep 2026 14:43:18 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="A/VYW5qp"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D53081F00893;
+	Tue, 22 Sep 2026 14:46:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790088203;
-	bh=nDWRatp8yEFjSsKnb+Jbye84/joDadxmyBWTqNTu6Q0=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Date;
-	b=IBpd3VyudQ0IrWLPdIN6hUULkoYmlkYLYzjcw/RgIcgjBBJEAsqGQ/25fzsmUcbE3
-	 LVRmwKh9U1k62X2n7SyGYYXfmx+KbwIcEgU8FNEdnJ4R39u9dzDpQeVaI78uRbgksQ
-	 yyWeM5UlRZlogmMnW8HDeUftM1cNjh6e/wIEBUoLsrZR3mN4TeihpnSrSglOz2BTwh
-	 EW9obT1T8QpHz72B6H/pplE0ikOx29SQHFNd3LMjntWICq27hi1cz/t+gOQQyChNiP
-	 oMYjVGZGYyCnSIU5YAtX1GyiTDLK/oZEZH/bImecggN4rEcZMKpUAp3rqfpT/uiJFN
-	 dTbhKfmcgEXXA==
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: linux-pci@vger.kernel.org, 
- Marek Vasut <marek.vasut+renesas@mailbox.org>
-Cc: =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
- Bjorn Helgaas <bhelgaas@google.com>, 
- Geert Uytterhoeven <geert+renesas@glider.be>, 
- Jonathan Corbet <corbet@lwn.net>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
- Magnus Damm <magnus.damm@gmail.com>, Randy Dunlap <rdunlap@infradead.org>, 
- Rob Herring <robh@kernel.org>, Shuah Khan <skhan@linuxfoundation.org>, 
- Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>, 
- linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, 
- linux-renesas-soc@vger.kernel.org
-In-Reply-To: <20260921203716.73663-1-marek.vasut+renesas@mailbox.org>
-References: <20260921203716.73663-1-marek.vasut+renesas@mailbox.org>
-Subject: Re: [PATCH v2] PCI: rcar-gen4: Drop how to obtain platform
- firmware
-Message-Id: <179008819883.46397.15385681673068316294.b4-ty@b4>
-Date: Tue, 22 Sep 2026 16:43:18 +0200
+	s=k20260515; t=1790088398;
+	bh=pQWvfVhlkb1UP/GbghYQupF2WXF8RruUNCemknW2ZEY=;
+	h=From:To:Cc:Subject:Date;
+	b=A/VYW5qpfE2iV4K7ECNBuF46X9KAP1T6ERDY4JVV3Hn6bmxyC7uGfIA27ccuTSIB3
+	 1CtlOG3f9l7Nmd2VAN7NP3ALhmvTzWtrZEhwiQBX3eX10aVKRur6OBafyASSRT4NbK
+	 ss6cs/yUVhsMu8j/WWmI9gQnJd5IK+6ztL1ZikQOylavh4apquK1mG8tbZ7mMY6rPj
+	 e1GaFX5VPNNbCus80doZ4rh85zbDZb81lKLwCTWzo1s/jznobXTRvlp2WineYp0oQf
+	 57f7GppftxuBnULVtkSp2UWybBdORg5/ITqtRjHaS8o/DxevzCRc8lEJVCehvcWD5L
+	 B9Dy4013Em0qQ==
+From: Claudiu Beznea <claudiu.beznea@kernel.org>
+To: lpieralisi@kernel.org,
+	kwilczynski@kernel.org,
+	mani@kernel.org,
+	robh@kernel.org,
+	bhelgaas@google.com,
+	p.zabel@pengutronix.de
+Cc: claudiu.beznea@tuxon.dev,
+	linux-pci@vger.kernel.org,
+	linux-renesas-soc@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Subject: [PATCH v4 0/8] PCI: rzg3s-host: Add PCIe hotplug support
+Date: Tue, 22 Sep 2026 17:46:20 +0300
+Message-ID: <20260922144629.586997-1-claudiu.beznea@kernel.org>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-X-Mailer: b4 0.15.2
 
+From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
 
-On Mon, 21 Sep 2026 22:36:46 +0200, Marek Vasut wrote:
-> Renesas R-Car V4H (r8a779g0) has PCIe controller, and it requires
-> specific firmware downloading. The firmware is now available via
-> linux-firmware.git repository, drop the documentation about how
-> to obtain the firmware.
+Hi,
 
-Applied, thanks!
+Series adds hotplug support for the rzg3s-host driver. This is a
+continuation of the series John posted initially at [1]. Along with it,
+prerequisites fixes and cleanup patches were added.
 
-[1/1] PCI: rcar-gen4: Drop how to obtain platform firmware
-      commit: 3bc83f7571572034820e04d6ff6b80def85547f7
+Series applies on top of [2].
 
-Best regards,
+Thank you,
+Claudiu
+
+Changes in v4:
+- simplified comments in patch 2/8
+- kept only DL_UpDown changes in patch 7/8
+- added patch 8/8 for the .reset_root_port() support
+
+Changes in v3:
+- added patches 1-6
+- re-worked patch 7 to use struct pci_host_bridge::reset_root_port() API
+
+[1] https://lore.kernel.org/all/20260630141720.3938514-1-john.madieu.xa@bp.renesas.com/
+[2] https://lore.kernel.org/all/20260811200013.185956-1-prabhakar.mahadev-lad.rj@bp.renesas.com/
+
+Claudiu Beznea (7):
+  PCI: rzg3s-host: Follow hardware manual clock/reset initialization
+    order
+  PCI: rzg3s-host: Fix runtime PM handling in the NOIRQ suspend/resume
+    phase
+  PCI: rzg3s-host: Drop nop instructions
+  PCI: rzg3s-host: Move host configuration code together
+  PCI: rzg3s-host: Move suspend/resume code into dedicated functions
+  PCI: rzg3s-host: Move IRQ domain setup code
+  PCI: rzg3s-host: Add bridge::reset_root_port()
+
+John Madieu (1):
+  PCI: rzg3s-host: Re-enumerate the bus on PCIe link-state changes
+
+ drivers/pci/controller/pcie-rzg3s-host.c | 815 ++++++++++++++---------
+ 1 file changed, 508 insertions(+), 307 deletions(-)
+
 -- 
-மணிவண்ணன் சதாசிவம்
-
+2.43.0
 
