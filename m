@@ -1,109 +1,77 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 809643C9454
-	for <linux-pci@vger.kernel.org>; Tue, 22 Sep 2026 15:49:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9EA4B560AB8;
+	Tue, 22 Sep 2026 16:09:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790092169; cv=none; b=Wo9QDL/2AoNs+L9/BaeFyQTvKqZSAMxn/VU0zqfBlxhQTSOnQjBUCBdhTkTJ3rKfD3cXzvEu8fbC9/LC15iJxjOixgQsbFe2Phn3bVYYBT5R/FaE4TeZlaZsMWPJfIQaw1DmDkVurpIDT5wi3mxAh0kJu6EJGlKyWpGp9SRugkY=
+	t=1790093395; cv=none; b=UqRCnO2nQJM0cvQ9QPieFOPWiCeY5+y/dCb+uI89QQJHhJbr8AL083HxLg/NiTEDGC5m9puTfhAqjzO8O2IIQxgT6NQ/ThgP/hNyWVraBW2BjJc7ll2tmPp2k+BuWBKSGOUC8gv5jm7WC4YDyrBlX8iuwSDKwIz0Rn4byR+X2Nw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790092169; c=relaxed/simple;
-	bh=lT+bbTM3sJV9/H1zEBnOzkPlndZz0ktx7MU6tKySAXo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=S7BIhw/GIrRMcTRhqnNFxawbyomfdMV1vc1wJSICod3JbgqV1ty0GP6USt4cLii27kDEtTpBI2/az4maexRR2TJT/h7+pzJBL6Yd1d1imzoYIGVLCL8U8PYQyg1sr1fohEjvUKJjenUX/lSXki9vomBlTBtbktlJ9s3atZ6sWKQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=B7zHhNRA; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790093395; c=relaxed/simple;
+	bh=gmcmjLXZtGV5GjIMchJUOZ83Hywm7qIGg6SsnTJ0MNo=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=Qv2ew2vhFpqhz+VfhWyQBu+x5C2KFDrQrssFzzsWjAb4ODMCK2NVmjqr5jUQpbp+jnyiPK0bRTa3f2vWHCigbOYDFw3hWuVwOZz4rLr2v/dsW8BpPz/KXkzgI41CRkwScImFXIt32raWsawH3bZPeCrykJ2lyv6Oms/A5/WlggE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FxJjTmCN; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="B7zHhNRA"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D54101F000FF;
-	Tue, 22 Sep 2026 15:49:25 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FxJjTmCN"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EAE0E1F000FF;
+	Tue, 22 Sep 2026 16:09:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790092168;
-	bh=X9CHSdRLDDAZJoybKw7ZLa2vsdiTZUlx0toVQ1xmYnY=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=B7zHhNRAV3HeCPnUUXrNU+1VsegBrFT8UwnOdkcubgUJCbmKiYLhb2l4uzdJtHMEf
-	 bNty4/zy8QbdlK1AViMFG0zQ1G+BVwIHNp2EWI5/RnT9qSrwbP54gQFwnUi80xUDd7
-	 tProd7/MLIJgolU3evz6yyj45obt6mwofgOObOsyJELQcEWJ54XyKSVjIiM9gaX4Jw
-	 nq08TmzKksHw81uww2kGgVrIraMXlR2Lm4Z4lfZwRW7gDY3+MI3yUI1rXcqq5SOM8E
-	 lDvbFPd0Pdh5JqwfZBqPpjfTGHGTjurhlSyTEl6wPejjD9ysQoYEMnItmsr4J3VPPy
-	 pwWP5C1KTTZUw==
-Date: Tue, 22 Sep 2026 17:49:20 +0200
+	s=k20260515; t=1790093394;
+	bh=DttfrClc2jxogD0qkYNCDlF69QPH9+8rs4HH/0QpjLk=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Date;
+	b=FxJjTmCND2lWpGe6+UpeqycA/5aY2yeuUL4byA1AaumfIBuWjl55HbJQ8bKj9YRui
+	 JPtvfmHPA8M+/KhbkTzFizTWbh4dnMySwscQ1/181lYGd0hF1KHjOds7FOgQmDckB4
+	 WkndRLySCl+DeG4o+gVGw+ja9idN0unH4upJB17pFb1Uhea4N0xFRKdEd52ZhkaIWc
+	 avWvPl9k1YB6YJaTU58ajvmKw0bypprfNmEzu5iTydbAnKmLFGxwokTCAZBSA4VdWb
+	 B/azxXaZmwvLaAr88b+pW9xCeoMacXFQyd+loS6/Bfn8NOlkGNqQ5oP4pmHz3MCRLA
+	 gtkzc5OjK4UAA==
 From: Manivannan Sadhasivam <mani@kernel.org>
-To: Szymon Durawa <szymon.durawa@linux.intel.com>
-Cc: helgaas@kernel.org, nirmal.patel@linux.intel.com, djbw@kernel.org, 
-	linux-pci@vger.kernel.org, lukas@wunner.de, Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH v8 0/8] VMD add second root bus support
-Message-ID: <hfbfem5jyufk7r7dulo6kny73xkii3lhtafbaxdjds54u2o4qh@voxvd47qtvti>
-References: <20260921164316.3860312-1-szymon.durawa@linux.intel.com>
+To: linux-pci@vger.kernel.org, 
+ Marek Vasut <marek.vasut+renesas@mailbox.org>
+Cc: =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ Bjorn Helgaas <bhelgaas@google.com>, Conor Dooley <conor+dt@kernel.org>, 
+ Geert Uytterhoeven <geert+renesas@glider.be>, 
+ Koichiro Den <den@valinux.co.jp>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+ Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+ Magnus Damm <magnus.damm@gmail.com>, Rob Herring <robh@kernel.org>, 
+ Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>, 
+ devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ linux-renesas-soc@vger.kernel.org
+In-Reply-To: <20260903205153.283553-1-marek.vasut+renesas@mailbox.org>
+References: <20260903205153.283553-1-marek.vasut+renesas@mailbox.org>
+Subject: Re: (subset) [PATCH 1/6] dt-bindings: PCI: rcar-gen4-pci-host:
+ Document Application/Local register reset
+Message-Id: <179009338958.48174.16454140057787464416.b4-ty@b4>
+Date: Tue, 22 Sep 2026 18:09:49 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260921164316.3860312-1-szymon.durawa@linux.intel.com>
+X-Mailer: b4 0.15.2
 
-On Mon, Sep 21, 2026 at 04:43:06PM +0000, Szymon Durawa wrote:
-> This series adds support for a second VMD root bus.
-> 
-> Today the VMD driver can enumerate and manage devices only behind the
-> first VMD root bus. Starting with Intel Arrow Lake, VMD may expose a
-> second root bus (BUS1), and devices behind that bus are not discovered
-> by the current driver.
-> 
-> The hardware model for Intel Arrow Lake VMD is slightly different
-> from earlier VMD generations:
-> 
-> - CFGBAR, MEMBAR1, and MEMBAR2 are shared by both VMD root buses.
-> - BUS1 uses a fixed primary bus number in hardware.
-> - Interrupt handling remains based on the existing VMD MSI/MSI-X and
->   irq_domain model; this series does not introduce a separate interrupt
->   domain for BUS1.
-> 
-> To support that layout, the series first refactors the current code so
-> resource setup, bus creation, and enumeration are split into helpers.
-> It then partitions the shared CFGBAR/MEMBAR apertures between BUS0 and
-> BUS1, creates a second root bus, and adds a VMD-specific workaround for
-> the fixed BUS1 primary bus number so PCI core bridge scanning does not
-> reassign BUS1 and lose subordinate device discovery.
-> 
-> Patch overview:
-> 
-> - Patches 1-4 extract helper functions for bus enumeration, CFGBAR and
->   MEMBAR configuration, and root-bus creation.
-> - Patch 5 replaces hardcoded resource indices and constants with enums
->   and defines.
-> - Patch 6 converts single-bus state into per-root-bus arrays.
-> - Patch 7 adds BUS1 resource partitioning and second-root-bus support.
-> - Patch 8 keeps the BUS1 root bus number aligned with the hardware-fixed
->   primary bus number so PCI core bridge scanning does not reconfigure it
->   and lose BUS1 subordinate enumeration.
-> 
-> Tested on an Arrow Lake platform with NVMe devices present behind both
-> VMD root buses. With the series applied, devices behind BUS0 and BUS1
-> are enumerated and become visible to the kernel. Without patch 8,
-> devices behind BUS1 are not discovered.
-> 
 
-./scripts/get_maintainer.pl drivers/pci/controller/vmd.c
-Nirmal Patel <nirmal.patel@linux.intel.com> (maintainer:PCI DRIVER FOR INTEL VOLUME MANAGEMENT DEVICE (...)
-Jonathan Derrick <jonathan.derrick@linux.dev> (reviewer:PCI DRIVER FOR INTEL VOLUME MANAGEMENT DEVICE (...)
-Lorenzo Pieralisi <lpieralisi@kernel.org> (maintainer:PCI NATIVE HOST BRIDGE AND ENDPOINT DRIVERS)
-"Krzysztof Wilczyński" <kwilczynski@kernel.org> (maintainer:PCI NATIVE HOST BRIDGE AND ENDPOINT DRIVERS)
-Manivannan Sadhasivam <mani@kernel.org> (maintainer:PCI NATIVE HOST BRIDGE AND ENDPOINT DRIVERS)
-Rob Herring <robh@kernel.org> (reviewer:PCI NATIVE HOST BRIDGE AND ENDPOINT DRIVERS)
-Bjorn Helgaas <bhelgaas@google.com> (maintainer:PCI SUBSYSTEM)
-linux-pci@vger.kernel.org (open list:PCI DRIVER FOR INTEL VOLUME MANAGEMENT DEVICE (...)
-linux-kernel@vger.kernel.org (open list)
+On Thu, 03 Sep 2026 22:50:52 +0200, Marek Vasut wrote:
+> The R-Car Gen4 PCIe controller does contain core reset, which puts
+> the controller back into well defined state, but it does also tear
+> down the PCIe link. This is called Application/Local register reset
+> in the documentation. Document this reset.
 
-For some reason, VMD patch submitters are keep forgetting to CC relevant
-maintianers/reviewers.
+Applied, thanks!
 
-Anyhow, I'd need a review from either Nirmal or Jonathan.
+[1/6] dt-bindings: PCI: rcar-gen4-pci-host: Document Application/Local register reset
+      commit: 8df20a9670745364b645b3eee0729cdec8766148
+[2/6] dt-bindings: PCI: rcar-gen4-pci-ep: Document Application/Local register reset
+      commit: 5dad3af6518990506fe486bdf2165f55a86ae86d
+[3/6] PCI: rcar-gen4: Add Application/Local register reset control
+      commit: 66cbc9ab5b39ff0f4303119e34ebfaf00044b6c6
 
-- Mani
-
+Best regards,
 -- 
 மணிவண்ணன் சதாசிவம்
+
+
