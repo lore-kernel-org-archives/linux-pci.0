@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D6A0254A7C5;
-	Tue, 22 Sep 2026 14:46:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 443A1550DC6;
+	Tue, 22 Sep 2026 14:46:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790088414; cv=none; b=mpLihmzrvXMnn3nfGFkFuqRvDZ/FgVZzYdSak5gQJxYdZvYDz0R2qGKmYjTYvqKSy7uYOAU0taVYhKnNJItYeiPv1WTBGC8hECG78zQAtfQdY29Xdxc494zBYAo9QhYll4fgO1M9NPW2vzgrzuJ2kUaE2UUOLH3QeSVa3OwbN48=
+	t=1790088417; cv=none; b=d1q04EqefjNVxbbkT9s3ZMGFFeaAxfTI9S2A8GM77gCTPDC35La+tq2Jgy3A/szySzv34+8cpsbwbpYMElKE4P399+kyGOd4MFOMrxgo8iVu3CwM8rfX78yk622C+j/SeO89OMaIYfHOAYoQjC1kRHjKT6OAI+Rc9KEqnfV+mJ0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790088414; c=relaxed/simple;
-	bh=io0K/CqdBrXCogNTcvf+KXzDl+H2UCqVqvIVohiFSPU=;
+	s=arc-20240116; t=1790088417; c=relaxed/simple;
+	bh=fhQ7m14xEUAZIkilajcn1iH0SvFTIcgTHDR5cYlVXP4=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ggWZGOTvJcmbwhp1+erwKdDh6VdgnQKVWQ/SloEj/7CongdZk5RTuaaHtm6Qi04l+5lWguJBRGrIF5LskVvE2tm3yYK6K7J7B1V5+DFw8X5HyZzQWQRsHLnFlB3d/Fa+aHsm7Chyhbsn7k11GbIHGkazkewL9VTfszY8OPx+LtA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=V4tcwqwj; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=KkQDupNVCDOWmRI0oq+g0N10fQne6AKwbmppfwTYRekqrJDyKGZ+dL3OGkTbKICy3pjXRxorwGNsDA5ArKpEGNNhwgU/rr/uhaF6ZZQVVXBZDQOPt8iHzFFQfo4Lnps6DVWBlzIachnXR+ZOkvKSIDGVD9jbLQDAB6m1x4jclYc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dTvqgl+Z; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="V4tcwqwj"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 301161F000FF;
-	Tue, 22 Sep 2026 14:46:49 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dTvqgl+Z"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3E8F71F00893;
+	Tue, 22 Sep 2026 14:46:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790088412;
-	bh=PNktF+6n/Gs/V1cbxFgmCuRJFNKJvqmwqFpO6sc2PY4=;
+	s=k20260515; t=1790088416;
+	bh=lS2mTdZyVHI8GlU+ga0yqBI6/w5Zg0KCWwB/zVFjIQo=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=V4tcwqwjVwn7iAqEH0LAOJLYaxeyP9MRYtBMmXOKceJwhuvCQ9KERVup4BwwEgzv0
-	 6y5M0+qaH4J/0F2pJZe5vRrH0S+IDQhOXN67D66ef1e0v6O610P2Xt4l3HBoTCIutx
-	 0OHy2dIR9wc09+uBSVOe6itVD4/77uYbjWDSoS2XDnpni579+Uj624AMwFqKgPYogQ
-	 uOAV92aNe2Xl/ERtSDQYPTS7kjX4X2uv5ZYzQfQHRcH4NLu+6E663exVbGsaGptqFs
-	 SoOtplKsnO9DpcbtV2LlrzhQJ/+eL4LNf6NMBYYjKj9WwAcvnVy1EKbsMx8LtNcP86
-	 uOooTAx0FqLGA==
+	b=dTvqgl+ZiRCVgnHulaNjaytbGvw0UhbL4POvIvwXMQnvWyWPrG+GttRaUrvtiM0XX
+	 ojiqeFzDVPxO6deIlc8fyY0PPvwMjSvnGuQeJCwVUoqp4vt8lPFghGTLmEIlLgRWaV
+	 bhodqT28KH4NbxZ84RBX2sIFiDkAnq5I22DCAUeGgk9rmF+FaC2P870cZ7lSQmFaJF
+	 cYexwJCHDH5HT/v8oa/2zp6zQG+ZhBYqyrscv3hrb7sDesonN4nNqfK4Q5E5/Vzsu7
+	 j/FjchsLHYAMkiv/nrAYDYssfMUXKOoN/oD9xPf/9rj59D2e4NGPdyRt/Awsai4Zf1
+	 96/VYPomr83QA==
 From: Claudiu Beznea <claudiu.beznea@kernel.org>
 To: lpieralisi@kernel.org,
 	kwilczynski@kernel.org,
@@ -38,9 +38,9 @@ Cc: claudiu.beznea@tuxon.dev,
 	linux-renesas-soc@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
-Subject: [PATCH v4 4/8] PCI: rzg3s-host: Move host configuration code together
-Date: Tue, 22 Sep 2026 17:46:24 +0300
-Message-ID: <20260922144629.586997-5-claudiu.beznea@kernel.org>
+Subject: [PATCH v4 5/8] PCI: rzg3s-host: Move suspend/resume code into dedicated functions
+Date: Tue, 22 Sep 2026 17:46:25 +0300
+Message-ID: <20260922144629.586997-6-claudiu.beznea@kernel.org>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20260922144629.586997-1-claudiu.beznea@kernel.org>
 References: <20260922144629.586997-1-claudiu.beznea@kernel.org>
@@ -54,8 +54,11 @@ Content-Transfer-Encoding: 8bit
 
 From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
 
-Move host configuration code together to have it grouped. This prepares for
-the addition of hotplug support.
+In preparation for implementing hotplug using
+pci_host_bridge::reset_root_port(), move the suspend/resume code into
+rzg3s_pcie_host_stop() and rzg3s_pcie_host_start(). These functions
+will later be reused by the hotplug implementation through
+pci_host_bridge::reset_root_port().
 
 Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
 ---
@@ -66,257 +69,215 @@ Changes in v4:
 Changes in v3:
 - none, this patch is new
 
- drivers/pci/controller/pcie-rzg3s-host.c | 230 +++++++++++------------
- 1 file changed, 115 insertions(+), 115 deletions(-)
+ drivers/pci/controller/pcie-rzg3s-host.c | 181 ++++++++++++-----------
+ 1 file changed, 96 insertions(+), 85 deletions(-)
 
 diff --git a/drivers/pci/controller/pcie-rzg3s-host.c b/drivers/pci/controller/pcie-rzg3s-host.c
-index 362aa923978f..3ecada238402 100644
+index 3ecada238402..40d5ef3e347e 100644
 --- a/drivers/pci/controller/pcie-rzg3s-host.c
 +++ b/drivers/pci/controller/pcie-rzg3s-host.c
-@@ -1356,121 +1356,6 @@ static int rzg3s_pcie_resets_prepare_and_get(struct rzg3s_pcie_host *host)
- 							      host->cfg_resets);
+@@ -1742,6 +1742,100 @@ rzg3s_pcie_host_setup(struct rzg3s_pcie_host *host,
+ 	return ret;
  }
  
--static int rzg3s_pcie_host_parse_port(struct rzg3s_pcie_host *host)
--{
--	struct device_node *of_port __free(device_node) =
--		of_get_next_child(host->dev->of_node, NULL);
--	struct rzg3s_pcie_port *port = &host->port;
--	int ret;
--
--	ret = of_property_read_u32(of_port, "vendor-id", &port->vendor_id);
--	if (ret)
--		return ret;
--
--	ret = of_property_read_u32(of_port, "device-id", &port->device_id);
--	if (ret)
--		return ret;
--
--	port->refclk = of_clk_get_by_name(of_port, "ref");
--	if (IS_ERR(port->refclk))
--		return PTR_ERR(port->refclk);
--
--	return 0;
--}
--
--static int rzg3s_pcie_host_init_port(struct rzg3s_pcie_host *host)
--{
--	struct rzg3s_pcie_port *port = &host->port;
--	struct device *dev = host->dev;
--	int ret;
--
--	/* Enable access control to the CFGU */
--	writel_relaxed(RZG3S_PCI_PERM_CFG_HWINIT_EN,
--		       host->axi + RZG3S_PCI_PERM);
--
--	/* Update vendor ID and device ID */
--	writew_relaxed(port->vendor_id, host->pcie + PCI_VENDOR_ID);
--	writew_relaxed(port->device_id, host->pcie + PCI_DEVICE_ID);
--
--	/* Disable access control to the CFGU */
--	writel_relaxed(0, host->axi + RZG3S_PCI_PERM);
--
--	ret = clk_prepare_enable(port->refclk);
--	if (ret)
--		return dev_err_probe(dev, ret, "Failed to enable refclk!\n");
--
--	/* Set the PHY, if any */
--	if (host->data->init_phy) {
--		ret = host->data->init_phy(host);
--		if (ret) {
--			dev_err_probe(dev, ret, "Failed to set the PHY!\n");
--			goto refclk_disable;
--		}
--	}
--
--	return 0;
--
--refclk_disable:
--	clk_disable_unprepare(port->refclk);
--	return ret;
--}
--
--static int rzg3s_pcie_host_init(struct rzg3s_pcie_host *host)
--{
--	u32 val;
--	int ret;
--
--	/* SoC-specific pre-configuration */
--	if (host->data->config_pre_init)
--		host->data->config_pre_init(host);
--
--	/* Initialize the PCIe related registers */
--	ret = rzg3s_pcie_config_init(host);
--	if (ret)
--		goto config_deinit;
--
--	ret = rzg3s_pcie_host_init_port(host);
--	if (ret)
--		goto config_deinit;
--
--	/* Enable ASPM L1 transition for SoCs that use it */
--	ret = rzg3s_sysc_config_func(host->sysc,
--				     RZG3S_SYSC_FUNC_ID_L1_ALLOW, 1);
--	if (ret)
--		goto config_deinit_and_refclk;
--
--	/* Initialize the interrupts */
--	rzg3s_pcie_irq_init(host);
--
--	/* SoC-specific post-configuration */
--	ret = host->data->config_post_init(host);
--	if (ret)
--		goto config_deinit_and_refclk;
--
--	/* Wait for link up */
--	ret = readl_poll_timeout(host->axi + RZG3S_PCI_PCSTAT1, val,
--				 !(val & RZG3S_PCI_PCSTAT1_DL_DOWN_STS),
--				 PCIE_LINK_WAIT_SLEEP_MS * MILLI,
--				 PCIE_LINK_WAIT_SLEEP_MS * MILLI *
--				 PCIE_LINK_WAIT_MAX_RETRIES);
--	if (ret)
--		goto config_deinit_post;
--
--	val = readl_relaxed(host->axi + RZG3S_PCI_PCSTAT2);
--	dev_info(host->dev, "PCIe link status [0x%x]\n", val);
--
--	return 0;
--
--config_deinit_post:
--	host->data->config_deinit(host);
--config_deinit_and_refclk:
--	clk_disable_unprepare(host->port.refclk);
--config_deinit:
--	if (host->data->config_pre_init)
--		host->data->config_deinit(host);
--	return ret;
--}
--
- static void rzg3s_pcie_set_inbound_window(struct rzg3s_pcie_host *host,
- 					  u64 cpu_addr, u64 pci_addr, u64 size,
- 					  int id)
-@@ -1698,6 +1583,121 @@ static int rzg3s_soc_pcie_init_phy(struct rzg3s_pcie_host *host)
- 	return 0;
- }
- 
-+static int rzg3s_pcie_host_parse_port(struct rzg3s_pcie_host *host)
++static int rzg3s_pcie_host_stop(struct rzg3s_pcie_host *host)
 +{
-+	struct device_node *of_port __free(device_node) =
-+		of_get_next_child(host->dev->of_node, NULL);
++	const struct rzg3s_pcie_soc_data *data = host->data;
 +	struct rzg3s_pcie_port *port = &host->port;
++	struct rzg3s_sysc *sysc = host->sysc;
 +	int ret;
 +
-+	ret = of_property_read_u32(of_port, "vendor-id", &port->vendor_id);
-+	if (ret)
-+		return ret;
++	clk_disable_unprepare(port->refclk);
 +
-+	ret = of_property_read_u32(of_port, "device-id", &port->device_id);
++	/* SoC-specific de-initialization */
++	ret = data->config_deinit(host);
 +	if (ret)
-+		return ret;
++		goto refclk_restore;
 +
-+	port->refclk = of_clk_get_by_name(of_port, "ref");
-+	if (IS_ERR(port->refclk))
-+		return PTR_ERR(port->refclk);
++	ret = reset_control_bulk_assert(data->num_power_resets,
++					host->power_resets);
++	if (ret)
++		goto config_reinit;
++
++	/*
++	 * Since the power domain's genpd_suspend_noirq() will disable clocks,
++	 * there is no need to manually invoke runtime PM API here.
++	 */
++
++	ret = rzg3s_sysc_config_func(sysc, RZG3S_SYSC_FUNC_ID_RST_RSM_B, 0);
++	if (ret)
++		goto power_resets_restore;
 +
 +	return 0;
++
++	/* Restore the previous state if any error happens */
++power_resets_restore:
++	reset_control_bulk_deassert(data->num_power_resets,
++				    host->power_resets);
++config_reinit:
++	if (data->config_pre_init)
++		data->config_pre_init(host);
++	data->config_post_init(host);
++refclk_restore:
++	clk_prepare_enable(port->refclk);
++	return ret;
 +}
 +
-+static int rzg3s_pcie_host_init_port(struct rzg3s_pcie_host *host)
++static int rzg3s_pcie_host_start(struct rzg3s_pcie_host *host)
 +{
-+	struct rzg3s_pcie_port *port = &host->port;
-+	struct device *dev = host->dev;
++	const struct rzg3s_pcie_soc_data *data = host->data;
++	struct rzg3s_sysc *sysc = host->sysc;
 +	int ret;
 +
-+	/* Enable access control to the CFGU */
-+	writel_relaxed(RZG3S_PCI_PERM_CFG_HWINIT_EN,
-+		       host->axi + RZG3S_PCI_PERM);
-+
-+	/* Update vendor ID and device ID */
-+	writew_relaxed(port->vendor_id, host->pcie + PCI_VENDOR_ID);
-+	writew_relaxed(port->device_id, host->pcie + PCI_DEVICE_ID);
-+
-+	/* Disable access control to the CFGU */
-+	writel_relaxed(0, host->axi + RZG3S_PCI_PERM);
-+
-+	ret = clk_prepare_enable(port->refclk);
++	ret = rzg3s_sysc_config_func(sysc, RZG3S_SYSC_FUNC_ID_MODE, 1);
 +	if (ret)
-+		return dev_err_probe(dev, ret, "Failed to enable refclk!\n");
++		return ret;
 +
-+	/* Set the PHY, if any */
-+	if (host->data->init_phy) {
-+		ret = host->data->init_phy(host);
-+		if (ret) {
-+			dev_err_probe(dev, ret, "Failed to set the PHY!\n");
-+			goto refclk_disable;
-+		}
++	ret = rzg3s_sysc_config_func(sysc, RZG3S_SYSC_FUNC_ID_RST_RSM_B, 1);
++	if (ret)
++		return ret;
++
++	if (host->num_lanes) {
++		ret = rzg3s_sysc_config_func(host->sysc,
++					     RZG3S_SYSC_FUNC_ID_LINK_MASTER,
++					     host->num_lanes == 2  ?
++					     RZG3S_SYSC_LINK_MODE_DUAL_X2 :
++					     RZG3S_SYSC_LINK_MODE_SINGLE_X4);
++		if (ret)
++			goto assert_rst_rsm_b;
 +	}
 +
-+	return 0;
++	/*
++	 * Since the power domain's genpd_resume_noirq() will enable clocks,
++	 * there is no need to manually invoke runtime PM API here.
++	 */
 +
-+refclk_disable:
-+	clk_disable_unprepare(port->refclk);
-+	return ret;
-+}
-+
-+static int rzg3s_pcie_host_init(struct rzg3s_pcie_host *host)
-+{
-+	u32 val;
-+	int ret;
-+
-+	/* SoC-specific pre-configuration */
-+	if (host->data->config_pre_init)
-+		host->data->config_pre_init(host);
-+
-+	/* Initialize the PCIe related registers */
-+	ret = rzg3s_pcie_config_init(host);
++	ret = rzg3s_pcie_power_resets_deassert(host);
 +	if (ret)
-+		goto config_deinit;
++		goto assert_rst_rsm_b;
 +
-+	ret = rzg3s_pcie_host_init_port(host);
++	ret = rzg3s_pcie_host_setup(host, rzg3s_pcie_msi_hw_setup,
++				    rzg3s_pcie_msi_hw_teardown);
 +	if (ret)
-+		goto config_deinit;
-+
-+	/* Enable ASPM L1 transition for SoCs that use it */
-+	ret = rzg3s_sysc_config_func(host->sysc,
-+				     RZG3S_SYSC_FUNC_ID_L1_ALLOW, 1);
-+	if (ret)
-+		goto config_deinit_and_refclk;
-+
-+	/* Initialize the interrupts */
-+	rzg3s_pcie_irq_init(host);
-+
-+	/* SoC-specific post-configuration */
-+	ret = host->data->config_post_init(host);
-+	if (ret)
-+		goto config_deinit_and_refclk;
-+
-+	/* Wait for link up */
-+	ret = readl_poll_timeout(host->axi + RZG3S_PCI_PCSTAT1, val,
-+				 !(val & RZG3S_PCI_PCSTAT1_DL_DOWN_STS),
-+				 PCIE_LINK_WAIT_SLEEP_MS * MILLI,
-+				 PCIE_LINK_WAIT_SLEEP_MS * MILLI *
-+				 PCIE_LINK_WAIT_MAX_RETRIES);
-+	if (ret)
-+		goto config_deinit_post;
-+
-+	val = readl_relaxed(host->axi + RZG3S_PCI_PCSTAT2);
-+	dev_info(host->dev, "PCIe link status [0x%x]\n", val);
++		goto assert_power_resets;
 +
 +	return 0;
 +
-+config_deinit_post:
-+	host->data->config_deinit(host);
-+config_deinit_and_refclk:
-+	clk_disable_unprepare(host->port.refclk);
-+config_deinit:
-+	if (host->data->config_pre_init)
-+		host->data->config_deinit(host);
++	/*
++	 * If any error happens there is no way to recover the IP. Put it in the
++	 * lowest possible power state.
++	 */
++assert_power_resets:
++	reset_control_bulk_assert(data->num_power_resets, host->power_resets);
++assert_rst_rsm_b:
++	rzg3s_sysc_config_func(sysc, RZG3S_SYSC_FUNC_ID_RST_RSM_B, 0);
 +	return ret;
 +}
 +
- static int
- rzg3s_pcie_host_setup(struct rzg3s_pcie_host *host,
- 		      int (*init_irqdomain)(struct rzg3s_pcie_host *host),
+ static int rzg3s_pcie_get_controller_id(struct rzg3s_pcie_host *host)
+ {
+ 	struct device_node *np = host->dev->of_node;
+@@ -1939,98 +2033,15 @@ static int rzg3s_pcie_probe(struct platform_device *pdev)
+ static int rzg3s_pcie_suspend_noirq(struct device *dev)
+ {
+ 	struct rzg3s_pcie_host *host = dev_get_drvdata(dev);
+-	const struct rzg3s_pcie_soc_data *data = host->data;
+-	struct rzg3s_pcie_port *port = &host->port;
+-	struct rzg3s_sysc *sysc = host->sysc;
+-	int ret;
+-
+-	clk_disable_unprepare(port->refclk);
+-
+-	/* SoC-specific de-initialization */
+-	ret = data->config_deinit(host);
+-	if (ret)
+-		goto refclk_restore;
+-
+-	ret = reset_control_bulk_assert(data->num_power_resets,
+-					host->power_resets);
+-	if (ret)
+-		goto config_reinit;
+-
+-	/*
+-	 * Since the power domain's genpd_suspend_noirq() will disable clocks,
+-	 * there is no need to manually invoke runtime PM API here.
+-	 */
+-
+-	ret = rzg3s_sysc_config_func(sysc, RZG3S_SYSC_FUNC_ID_RST_RSM_B, 0);
+-	if (ret)
+-		goto power_resets_restore;
+ 
+-	return 0;
+-
+-	/* Restore the previous state if any error happens */
+-power_resets_restore:
+-	reset_control_bulk_deassert(data->num_power_resets,
+-				    host->power_resets);
+-config_reinit:
+-	if (data->config_pre_init)
+-		data->config_pre_init(host);
+-	data->config_post_init(host);
+-refclk_restore:
+-	clk_prepare_enable(port->refclk);
+-	return ret;
++	return rzg3s_pcie_host_stop(host);
+ }
+ 
+ static int rzg3s_pcie_resume_noirq(struct device *dev)
+ {
+ 	struct rzg3s_pcie_host *host = dev_get_drvdata(dev);
+-	const struct rzg3s_pcie_soc_data *data = host->data;
+-	struct rzg3s_sysc *sysc = host->sysc;
+-	int ret;
+ 
+-	ret = rzg3s_sysc_config_func(sysc, RZG3S_SYSC_FUNC_ID_MODE, 1);
+-	if (ret)
+-		return ret;
+-
+-	ret = rzg3s_sysc_config_func(sysc, RZG3S_SYSC_FUNC_ID_RST_RSM_B, 1);
+-	if (ret)
+-		return ret;
+-
+-	if (host->num_lanes) {
+-		ret = rzg3s_sysc_config_func(host->sysc,
+-					     RZG3S_SYSC_FUNC_ID_LINK_MASTER,
+-					     host->num_lanes == 2  ?
+-					     RZG3S_SYSC_LINK_MODE_DUAL_X2 :
+-					     RZG3S_SYSC_LINK_MODE_SINGLE_X4);
+-		if (ret)
+-			goto assert_rst_rsm_b;
+-	}
+-
+-	/*
+-	 * Since the power domain's genpd_resume_noirq() will enable clocks,
+-	 * there is no need to manually invoke runtime PM API here.
+-	 */
+-
+-	ret = rzg3s_pcie_power_resets_deassert(host);
+-	if (ret)
+-		goto assert_rst_rsm_b;
+-
+-	ret = rzg3s_pcie_host_setup(host, rzg3s_pcie_msi_hw_setup,
+-				    rzg3s_pcie_msi_hw_teardown);
+-	if (ret)
+-		goto assert_power_resets;
+-
+-	return 0;
+-
+-	/*
+-	 * If any error happens there is no way to recover the IP. Put it in the
+-	 * lowest possible power state.
+-	 */
+-assert_power_resets:
+-	reset_control_bulk_assert(data->num_power_resets,
+-				  host->power_resets);
+-assert_rst_rsm_b:
+-	rzg3s_sysc_config_func(sysc, RZG3S_SYSC_FUNC_ID_RST_RSM_B, 0);
+-	return ret;
++	return rzg3s_pcie_host_start(host);
+ }
+ 
+ static const struct dev_pm_ops rzg3s_pcie_pm_ops = {
 -- 
 2.43.0
 
