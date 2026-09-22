@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B16C3518159;
-	Tue, 22 Sep 2026 14:46:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2659C38F93B;
+	Tue, 22 Sep 2026 14:46:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790088408; cv=none; b=aOx/F7Fp0YoHCTe1lgDvHzjBKGCx1SHvN02pfAAqqymsp349ZBFYNh96gzSRyNE5Gyb8RRG4yY88s3szZde0745x5s4rQ/fcJtdd6Qv3i0eT6ELQWL2QDhH8ZrfRCia8uKnjlK9064HyPJMVaYg5aqSXgGxRqg+zhQxgf2q6T+Y=
+	t=1790088411; cv=none; b=k8VGRhzahqsIdZu2lUNMoXyZWCy9nlaisWJOSRrXDP+MtEL437i+wgmbghbDIGMoV9YyjGIKx5m3zEIf/DEnshLdxW6ZTqC8AAjirIv6fbpuDUP46oUWu3g0G71EUWQ9SA9VmiS+xyGGXS3mtSt5lk/B0HGTsaO5JQT4bnOEZ/s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790088408; c=relaxed/simple;
-	bh=E4cSuppnIp2pwOfBP/pUAETACaKGAEzCsLOo2D2Ta4o=;
+	s=arc-20240116; t=1790088411; c=relaxed/simple;
+	bh=wwufuLELSds9wVTxto/dkja2RbQ8fZWFw747b6hTBaI=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=rIjJEc+iB5qNQWVhwJCjZFpfQuBcmBxuVGn3GaHijPXKm+Td8XgGLIhvjSiuFETq6BGh7P0JdxBFtxGCNjVvZq4IErQ9MQ9pK/qVNVZGI8pDbzTkP7uOKDLvoQWp7Ms5Pk6Nc3jvdqn3OnniXUHObDSAwVT+GJVTfrnRvW5UXUE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VrpDDnjv; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=cLorIVwmyY4fMCgaLgb/TKPW+xz3GvtFr/nI4CoSYpI1f33cghWoBXhFVNjZFf9endLG2PoTQdwH55m0BJNrcs1GHoPfnbDfUZI+s8UOli/BbaM5vErSUyJ253m9oYIcGyJ9oytIzaalFrvYdkWj/w/nXcqv92ZIzmWXOKC0aP0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ijqDtvNn; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VrpDDnjv"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 067D31F000FF;
-	Tue, 22 Sep 2026 14:46:42 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ijqDtvNn"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CB13D1F00898;
+	Tue, 22 Sep 2026 14:46:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790088406;
-	bh=fP7jaUZpZpC0yyACVfmaXPb1j6WuKsKDVWes/4ekrk8=;
+	s=k20260515; t=1790088409;
+	bh=4TYtF8vLa45WgaHozUCIJlTCj/3EIrIVec6Tu44b0Uo=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=VrpDDnjvzNuAu9gzfSTcFMvhVLbnl0oppvMJVDI/I5WA+v8OJygBw3M2VUTpl7KYI
-	 3CAm2B60beuoNd9YxRkyjJCrm2VRqNCEOM6G8KMCr4TwxXwHhVSiwTTi/PnyX4AlhK
-	 WCXMdBKLgc8qgsaVBi13t3vvxnB6W2UMF461BsPjWBYMtkA72l2ZONs2fFCfvaBjMQ
-	 H9r4yhHXx2Xz9nhDsxFYkY8S8Rtdm1PAoYjmd4lPgJKnTIX/NFcNHcdx02q7k0TNSZ
-	 PJsdHF/PzdDmbIWm0CVJ5+wsJjJ3jygHuefnZEtsI1Y5ejz4XXcxHve5Ux0Akp5E5e
-	 rUTlxuFshUCjg==
+	b=ijqDtvNn8KedVa8AGAV4J9pvnyYZufE2KXSg8oKE2iYsgB1nVJcnTjD1Jda9/GYzR
+	 9tSMFK9nppZYvG7NjXhEoiHG0lTj9XGprIJA6vqLAUtZOkMruugajYJ3af/GOidp+Z
+	 OxVU6Ja3EBp2mPgEtrCu2la39sse9a6S42oic6wgE58KrWFQt1gsK8pk1jK+eCJ5XR
+	 KAnk0NP0+1574EbaAhzLikmOS2i/EQkAEYzroGKATaT7OecVukpSnz9h3YDfdCindc
+	 8jJGxmnFt7Q76TwBFXOR2xp+V7Q9ES9Y83TdvQmmlRGnRLZTphW3S+UqfBQ3kBrFJ6
+	 1AknoAGFznSOg==
 From: Claudiu Beznea <claudiu.beznea@kernel.org>
 To: lpieralisi@kernel.org,
 	kwilczynski@kernel.org,
@@ -37,11 +37,10 @@ Cc: claudiu.beznea@tuxon.dev,
 	linux-pci@vger.kernel.org,
 	linux-renesas-soc@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>,
-	stable@vger.kernel.org
-Subject: [PATCH v4 2/8] PCI: rzg3s-host: Fix runtime PM handling in the NOIRQ suspend/resume phase
-Date: Tue, 22 Sep 2026 17:46:22 +0300
-Message-ID: <20260922144629.586997-3-claudiu.beznea@kernel.org>
+	Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Subject: [PATCH v4 3/8] PCI: rzg3s-host: Drop nop instructions
+Date: Tue, 22 Sep 2026 17:46:23 +0300
+Message-ID: <20260922144629.586997-4-claudiu.beznea@kernel.org>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20260922144629.586997-1-claudiu.beznea@kernel.org>
 References: <20260922144629.586997-1-claudiu.beznea@kernel.org>
@@ -55,120 +54,40 @@ Content-Transfer-Encoding: 8bit
 
 From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
 
-The runtime PM documentation states the following:
-- During system suspend, pm_runtime_get_noresume() is called for every
-  device right before executing the subsystem-level .prepare() callback
-  (in device_prepare()). In addition, the PM core disables runtime PM for
-  every device right before executing the subsystem-level .suspend_late()
-  callback (in device_suspend_late()).
-- During system resume, pm_runtime_enable() is called for every device
-  right after executing the subsystem-level .resume_early() callback (in
-  device_resume_early()), and pm_runtime_put() is called right after
-  executing the subsystem-level .complete() callback (in
-  device_complete()).
+On the RZ/G3S PCIe IP variant (which is similar to those used on the
+RZ/G3E, RZ/V2H, and RZ/V2N SoCs), access to the PCIe Type 1 registers
+requires setting the PCI_PERM.CFG_HWINIT_EN bit. Since this bit is not
+set on the code paths where rzg3s_pcie_set_max_link_speed() is called,
+the writes to PCI_EXP_LNKCTL2.TLS are nops. Drop them.
 
-The driver's .suspend_noirq() callback is invoked after .suspend_late(),
-while .resume_noirq() is invoked before .resume_early().
-
-If:
-- the device is not part of the wake-up path, and
-- its runtime PM status is not RPM_SUSPENDED,
-the generic power domain .suspend_noirq()/.resume_noirq() callbacks
-(genpd_suspend_noirq()/genpd_resume_noirq()) invoke the driver's
-.suspend_noirq()/.resume_noirq() callbacks and call
-genpd_stop_dev()/genpd_start_dev() before and after them, respectively.
-
-Calling genpd_stop_dev()/genpd_start_dev() allows devices whose power is
-controlled by generic power domains to be powered off and on during
-system suspend and resume, even though their runtime PM usage count does
-not reach zero.
-
-Since the runtime PM usage count is incremented in device_prepare() and
-decremented in device_complete(), runtime PM operations performed from
-the driver's .suspend_noirq()/.resume_noirq() callbacks are no-ops. The
-actual power transitions are handled by the generic power domain
-.suspend_noirq()/.resume_noirq() callbacks.
-
-Moreover, attempting to runtime resume a device while runtime PM is
-disabled may return -EACCES. This may cause system resume to fail when
-resuming after a failed Root Port reset, as described in a subsequent
-patch adding hot-plug support.
-
-Remove the runtime PM calls from the driver's
-.suspend_noirq()/.resume_noirq() callbacks and rely on the generic power
-domain callbacks to power the device off and on.
-
-Fixes: 7ef502fb35b2 ("PCI: Add Renesas RZ/G3S host controller driver")
-Cc: stable@vger.kernel.org
 Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
 ---
 
 Changes in v4:
-- simplified the comments in rzg3s_pcie_suspend_noirq()/rzg3s_pcie_resume_noirq()
+- none
 
 Changes in v3:
 - none, this patch is new
 
- drivers/pci/controller/pcie-rzg3s-host.c | 22 ++++++++++------------
- 1 file changed, 10 insertions(+), 12 deletions(-)
+ drivers/pci/controller/pcie-rzg3s-host.c | 5 -----
+ 1 file changed, 5 deletions(-)
 
 diff --git a/drivers/pci/controller/pcie-rzg3s-host.c b/drivers/pci/controller/pcie-rzg3s-host.c
-index e1105b1f2652..0ef49bb5ab1a 100644
+index 0ef49bb5ab1a..362aa923978f 100644
 --- a/drivers/pci/controller/pcie-rzg3s-host.c
 +++ b/drivers/pci/controller/pcie-rzg3s-host.c
-@@ -1961,19 +1961,18 @@ static int rzg3s_pcie_suspend_noirq(struct device *dev)
- 	if (ret)
- 		goto config_reinit;
+@@ -1144,11 +1144,6 @@ static int rzg3s_pcie_set_max_link_speed(struct rzg3s_pcie_host *host)
+ 	    remote_supported_link_speeds != max_supported_link_speeds)
+ 		return 0;
  
--	ret = pm_runtime_put_sync(dev);
--	if (ret)
--		goto power_resets_restore;
-+	/*
-+	 * Since the power domain's genpd_suspend_noirq() will disable clocks,
-+	 * there is no need to manually invoke runtime PM API here.
-+	 */
- 
- 	ret = rzg3s_sysc_config_func(sysc, RZG3S_SYSC_FUNC_ID_RST_RSM_B, 0);
- 	if (ret)
--		goto rpm_resume;
-+		goto power_resets_restore;
- 
- 	return 0;
- 
- 	/* Restore the previous state if any error happens */
--rpm_resume:
--	pm_runtime_resume_and_get(dev);
- power_resets_restore:
- 	reset_control_bulk_deassert(data->num_power_resets,
- 				    host->power_resets);
-@@ -2011,13 +2010,14 @@ static int rzg3s_pcie_resume_noirq(struct device *dev)
- 			goto assert_rst_rsm_b;
- 	}
- 
--	ret = pm_runtime_resume_and_get(dev);
--	if (ret)
--		goto assert_rst_rsm_b;
-+	/*
-+	 * Since the power domain's genpd_resume_noirq() will enable clocks,
-+	 * there is no need to manually invoke runtime PM API here.
-+	 */
- 
- 	ret = rzg3s_pcie_power_resets_deassert(host);
- 	if (ret)
--		goto rpm_put;
-+		goto assert_rst_rsm_b;
- 
- 	ret = rzg3s_pcie_host_setup(host, rzg3s_pcie_msi_hw_setup,
- 				    rzg3s_pcie_msi_hw_teardown);
-@@ -2033,8 +2033,6 @@ static int rzg3s_pcie_resume_noirq(struct device *dev)
- assert_power_resets:
- 	reset_control_bulk_assert(data->num_power_resets,
- 				  host->power_resets);
--rpm_put:
--	pm_runtime_put_sync(dev);
- assert_rst_rsm_b:
- 	rzg3s_sysc_config_func(sysc, RZG3S_SYSC_FUNC_ID_RST_RSM_B, 0);
- 	return ret;
+-	/* Set target Link speed */
+-	rzg3s_pcie_update_bits(host->pcie, pcie_cap + PCI_EXP_LNKCTL2,
+-			       PCI_EXP_LNKCTL2_TLS,
+-			       FIELD_PREP(PCI_EXP_LNKCTL2_TLS, link_speed));
+-
+ 	/* Request link speed change */
+ 	rzg3s_pcie_update_bits(host->axi, RZG3S_PCI_PCCTRL2,
+ 			       RZG3S_PCI_PCCTRL2_LS_CHG_REQ |
 -- 
 2.43.0
 
