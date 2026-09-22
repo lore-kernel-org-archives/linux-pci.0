@@ -1,47 +1,47 @@
 Received: from SN4PR2101CU001.outbound.protection.outlook.com (mail-southcentralusazon11012033.outbound.protection.outlook.com [40.93.195.33])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 361E952759A;
-	Tue, 22 Sep 2026 08:39:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4BD1F528434;
+	Tue, 22 Sep 2026 08:39:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.195.33
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790066389; cv=fail; b=XoJ1ZU+0XDt9Y9djuz7PzHImR/CRzerpU5i/pZ0Mmk4PTuyqC3kj8UX+gPAJT5SlgojKm8bnawVBUR/GA3Gyjm+aL6l+ifGjcrFalcLStcte8oH95WIw9+mLzgNiyYNEo02t2+8tgvncd3Y3qExX+wkSpcMOAsOWr6Ou68Qi5WY=
+	t=1790066391; cv=fail; b=Zdgbo2AqcsNl+7fxOrMzjcjLIM60UJJLh+25B0OKUAfJhxwNkIMQw/yxLQpKBX4c8fu7Xi6Nt+j51+jzuE/XDAJff+XwV9t5q8C4rYKHDNwULuG1iavNPTq1IJVHHY0x1L692u/0pKKAHTzOdDRc1v1FFthhpFz+fOBIQEwLOyc=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790066389; c=relaxed/simple;
-	bh=EfqTyiOxIBTvsbU+e8yoxkKaKFRyRPf0u0jdsSJDO+I=;
+	s=arc-20240116; t=1790066391; c=relaxed/simple;
+	bh=n4zwa1gGy1O/ufYYRSkojdFQ9IxCQtV9qk7Ijxz1BTk=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=QBg9dRwv8EP9ZaAyJWTlHlqQObsIIdTjMV0vuN2WGtM97haqxiNUqhMdyOzHlp1aA8rjnQhgpqUiaBPS2p8ra/k3jG/3Rt+hePOQkxltOjTHEREaNN/OogEsAHgdS2Kt2Pm3VI5k2pT2uyfEhjZdejGIEuoec0sJ+EGQGxDrwCk=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=uCiflQXx; arc=fail smtp.client-ip=40.93.195.33
+	 Content-Type:MIME-Version; b=oxZYHPhajB3v0hxKwK6iPM8Yk1hirO4CMIJJ8XyEKTilS2I2qpKgbuSYglydO2iBYkeRUvS9jXXR3ayR/mB+rDAVoTH+hrRN6ooQUThJFXpKs36JMZjZerQsn1Fkq4RtXSV5LMfE5nw4u5pZ8s94/cXBcM6LcSU0APp2UkHbd3c=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=tIHDHThx; arc=fail smtp.client-ip=40.93.195.33
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="uCiflQXx"
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="tIHDHThx"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=P4JAIZOrLqVyLywxvT3vrzZqXO61/VkUa8byc0DmSfOmWTB2x6HdbzFd1vhSp9NUo6hEnc8YKJJ5X+YdTxE9d+qrtMru3pdsivRMv4D7zYM3QPg4f4Ym/F5idNMCCF+fcmTtD1u3MttXlRZQ/kluYzgSpNr0KL6+wPVBbK5fUTve5y02IB6fJXF9MjdoeOZIPdq8iOkrHPEE/j5GmXORNa1WPXQAJupRWxtlRgpKWuLufvufKJrkbnBc7hpqCEHANo3MaWjl8Qzn6gExxCvnv/7hym54ZCw+zAxLYyLnay5giCFcD4khYWYCfaFG4sa+bYDnSMcPlOSIJwTPFDFgUQ==
+ b=eE/hd7yTLOLO5/5cOaRFijDqIP7E3wXhlM3QYqhS6Tu2EzLlGaOiMhWtzlfXydxyt7MEu33+q7JYpu0nO713rHIlsuBdaq7KLDsdBKOfaxfgWpZZ736sgxUkk8srvJxcY/8WHdGECnFHtqabLlvL0DjRnuL7FRit9F9IFB9VN0EIf7/XAZkYMkaZfcGJAeChhqlZi9VWRq+VYSOrzcqh9TDy/eTH2CoR/dUDB40KYM5pzGVBN8DHbZJHDaIZ6tx1reh50LFrfleGMexhPc8HagnK1NWJxDlan5X5m2RSG/BW09QwCd7oGpUpIRamAVOqOpB9xBYj0ybe1tQkm9tDog==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=J/J9TksaBUz4wI/2nVLOvaPfZ7lQN/M/hs25ZuX9LlU=;
- b=H0QFxFckgy0AX2HFkYzdHCWPYkRCJGaOeCk/V0JRSxHozdQw3+3rEoO2fYbC8NGBgckO2GAjeReDv77p5k1dsZOyuXuvapZl+OIU4El+Eocbz63TO2hE7L7Wwhea7jZQ1M9+DoWr3QYqBoJYUJUXicSszCYfgJphMCgbgLEkF2+eIBF9uEDJq/j2H1RWwh4yul8LMtv3Cd3P2kNBRRoE6goOLgCNEwCyuPysbFGrEdaToBmwROqX30+fA65isSXspDCdj17shDNo4aVZLPONJOMf8cmQKmQCbcgldRRmEYffqEKmaPCfKbGTyy1ZwD7o6z7UDsDqqQACr7yePs+yLg==
+ bh=0YoZJJZWJE8jAvXksdjvNEf+S0p9b+hM1ojalDspnz0=;
+ b=XT6QjHQNgb+SevE6svSXtjnNwRlvK7i6KwgX8tfabJTB6zz5kq1g110CiSx0d31Ybz1PW4wBd5S7AthaogSLVhFYoy5tOXMtLp8Rh9wZUgoJNc3JRFvaET/vNiQUFtuE/CnJm9N88ppnKZgtTEsiwpowhDS9KH8YTpjGndNMXQWeTcV/3SH1fSpY8TG/AHIG+AG7+j8y2SreuydIKqhvaIWcgeHQu9qF2ENN1LaNGJo5I4+8BVfGjUeGHewTRsa2/hhj4a8KXs0Jpi4q9GrF17EDlqX6TxLGXkzhMeEhg9It9FDq9VTS3yxziM3GW6QHn2wVjibbTb1rrlxtztnfjQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
  dkim=pass header.d=nvidia.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=J/J9TksaBUz4wI/2nVLOvaPfZ7lQN/M/hs25ZuX9LlU=;
- b=uCiflQXxddf4nX/4XRFxfWG/mohZw5QlPkoT2Qk0mRUfYXzSw+Q1hhGclr3Lf/Mo/eetosy+MOJI2iDh3UPyK0I+4ZcuuqolVVrVHeTr6YzgqHq01V7Ol0ULAnKWXzRBb6hnJKjdE7daIjK+mnq88xUfMvwNpPykZglVN66r8zrl6V2TN3aNYiqibGttOL6okV7V1pVqqkQLYQ7wUrysMXaunUFMW8bZVVyOzEMMC7+8w2cQ2jisJGLlXAXsIGRKC4cMx1t+b0hDKSfKseSjrUSOG2kptwB1Jl7ll2TSNatOwZ9gBySGgwdLq5EbfndddX/Cbzy2z7t5kWeyKWRoOg==
+ bh=0YoZJJZWJE8jAvXksdjvNEf+S0p9b+hM1ojalDspnz0=;
+ b=tIHDHThxU1OBjne4LeUz6bOid/CfHEjMfLq5VW+5DBXo/cJo2tHpBS0rkmdgxjiqzyYcPbG6zutDtAH0GxXU/WIEPxQSmCB+pWP9+1CHA7JdA29Svjs1YuPEaXmnTOnUSeG6qhfHajtU1q9idnPuuFMdhXrDcePfaWqA9+bhYkbCJ/rP+U/DvHPXjUxKOwz/WIXaLX68ODzsACcy8ym4ug3b+12xi5YImabfSXGAEUogl3++6tR4ExN+uadYJKjZz8Av4mIE37ZW+IH82U2zOULez5UkCxDwTKOLx2g1yIToMY+2ecl8SnooLzT8ShbDAsW/UoIIhPm9arlkUhXeCQ==
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=nvidia.com;
 Received: from LY0PR12MB727857.namprd12.prod.outlook.com
  (2603:10b6:408:3ba::5) by CHAPR12MB999223.namprd12.prod.outlook.com
  (2603:10b6:610:301::8) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.451.13; Tue, 22 Sep
- 2026 08:39:43 +0000
+ 2026 08:39:45 +0000
 Received: from LY0PR12MB727857.namprd12.prod.outlook.com
  ([fe80::843e:82cd:41ca:f522]) by LY0PR12MB727857.namprd12.prod.outlook.com
  ([fe80::843e:82cd:41ca:f522%5]) with mapi id 15.21.0428.015; Tue, 22 Sep 2026
- 08:39:43 +0000
+ 08:39:45 +0000
 From: Srirangan Madhavan <smadhavan@nvidia.com>
 To: Alison Schofield <alison.schofield@intel.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
@@ -63,16 +63,16 @@ Cc: Alex Williamson <alex.williamson@redhat.com>,
 	Richard Cheng <icheng@nvidia.com>,
 	linux-tegra@vger.kernel.org,
 	Srirangan Madhavan <smadhavan@nvidia.com>
-Subject: [PATCH v13 06/15] cxl: Make HDM reset helpers available to built-in PCI code
-Date: Tue, 22 Sep 2026 08:39:15 +0000
-Message-ID: <20260922083924.2451158-7-smadhavan@nvidia.com>
+Subject: [PATCH v13 07/15] cxl: Share HDM decoder register unpacking
+Date: Tue, 22 Sep 2026 08:39:16 +0000
+Message-ID: <20260922083924.2451158-8-smadhavan@nvidia.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20260922083924.2451158-1-smadhavan@nvidia.com>
 References: <20260922083924.2451158-1-smadhavan@nvidia.com>
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: MW4PR03CA0289.namprd03.prod.outlook.com
- (2603:10b6:303:b5::24) To LY0PR12MB727857.namprd12.prod.outlook.com
+X-ClientProxiedBy: MW3PR06CA0030.namprd06.prod.outlook.com
+ (2603:10b6:303:2a::35) To LY0PR12MB727857.namprd12.prod.outlook.com
  (2603:10b6:408:3ba::5)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -82,153 +82,275 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: LY0PR12MB727857:EE_|CHAPR12MB999223:EE_
-X-MS-Office365-Filtering-Correlation-Id: f2ac2b63-b77b-4def-1684-08df18850c87
+X-MS-Office365-Filtering-Correlation-Id: 343fabec-5615-4e32-3ff2-08df18850dc0
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
 	BCL:0;ARA:13230040|366016|376014|7416014|23010399003|1800799024|921020|6133799003|10067099003|11063799006|56012099006|18002099003|22082099003;
 X-Microsoft-Antispam-Message-Info:
-	OQYq7Sv6aPbkBeQ9HzQP9/By2t+ih7oH3SbVFntn1NXkRMOajQHESbFXqhQ4UH91d5Tb2xc7k2E4qE/YOwGVX89K2avoFJG/Y0q/5LF9oIJFtmMM2RNXzNs7+9J7L6g9C2aIeXeY2Cotbe5T6zVndopN8Ge28pbQ5BfAT4n3If4K/gnnI43wfvtFzbj1Q3HweF4TPUzzQD0XM1e0n9wsJM/pDc9dzefZ3zQmHYaIz1ORs2sj9eedef+CCldXWEX6ueJKCImzb88912s/UbKDEehQL8zPU1LCwjwSqfWOPF30tXu1FmFJFjA00CIGeZkFlFY4l1TX70kX2blpU2hhpDkYsEdkn0k2w42ES5uTV+diyRfs8bZH8ZZirNN+9E2QLEr1xDzxtinDTJX9zaROr2gyO7bzn+PBAxXIY8Pp2+KQJSVGnshq/nj0tuFGtAKGYxZH7YUl84jnq1y0FpnWwPNu8veiAHOoNhWi+igJX8Eujew6T3prWXMHK/Arl1uODHdrEslnq19pxAcjRa0gWuz/FVGvPj1wkQW7ctcVPPQeIcraWCEKBv8kpgu07GkzMBzAoFHGc1GRNUu2o1dIBCz12V5SKs+FQ3qd1mpdJJGhS6KkXI1nnMawipj0626SbUBqfSGPaztK4LbjsrvDHv10xEpSo+rX0hQXKupFv5CDsHljv9bKuG/31OKQlNS/4F22SojCM0gJsow4XdMIqA==
+	QcVohekazl/YhOcVCkbt3RJ69fKpPRHzPmbeY49y93sgqfT3lLORBAvclO1xvlqoVVpgHwUr44SBE1uKW1ZAlFk76qkfezsyLR7EbBlUkLesvPoo4GvLt+oodDAiqYi7m4tqHxbQL7khPjqBnRahXRb/ongdR1rDr0YxUFK5nSIVoyP8emZjB7QPKnzPKFXu3IucOf7HiiTp4X12WzIa6Xhd0T2ObU7j/gdGQDMoDD9vyQY++06yTQqfaAxp0vFRZeqrmW+1Ehe+s+bchYoAXbU+aTBz9xgcy7tyS1Jdb/D9QgDuqE+sO+s1F4i9cnAU2uXz2yElQtyT9tVOHqkzJHBcDSo4XmKOi1KYV0JR9s6jZJONql4icMs8HhIyDZ7gh1+RIN9R7ALNFjXut6MknLyruBazlHk4MgevwRD8hsT15jM/54/gx4MqpvJLUshvkLlX7WruflgyMFdFDRz3A9y+y6CtRwOaxZrXtpzukX8o8/39ESK17oYrTbiL1jz7ot18sKcZLU7QgSCM+v/xec+gPuNl555tLtK/80c1Jaq5GinRDY7/z4OyRqQa8CjFNg886sgPheDYChXdw7QuV9BtPQAuBagH3d3emr1gO+xsQ6CTqZuyWshIB1lKaAVisHcPMYqIxOeF5nCjp89rqDJkRT99AQhPMuelbS4qEVLiU1qsirKfogf7aG8aDSUlL6Y2T4RV2OIYWMW1I+yoZg==
 X-Forefront-Antispam-Report:
 	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LY0PR12MB727857.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(376014)(7416014)(23010399003)(1800799024)(921020)(6133799003)(10067099003)(11063799006)(56012099006)(18002099003)(22082099003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?7r1WBJXw5dDZ1pSK05bm2n/8R4pp/h8111PP9ZLRV6mqVzCs5Md16QbzHO9W?=
- =?us-ascii?Q?pBTIlO0WhAS16hnXsfcZVLwKLwQUN7caOJB5G2XbFfe8iO9GGmjk0XxR1kks?=
- =?us-ascii?Q?6D2bRou7bXurnpwwa3QBqxs7UXLmft72NQKinYnIqp2YUSijTokqpgUD1GxV?=
- =?us-ascii?Q?KC4El1nR6O1y8kbupY+t15mHVoI2UQIJx/vXpcviiL0AV7CDKLJR48F8WW2g?=
- =?us-ascii?Q?maPV+Ft3maKUdl2WunKdTOa+5MkMzFp2bZ1vkVafiDvisw1awmz4PfR3wwWa?=
- =?us-ascii?Q?+DeWhvOheu+OmuHU2HW5DvO1o0YuBrzs+Ms8oHg3IEdDs0mswqK790FbyhA0?=
- =?us-ascii?Q?gsxdzhPgIje+2wCSY6r8g+76d5BunZcqNoCHDsMd1+hrhmluy/Y5U5jpTGs/?=
- =?us-ascii?Q?Kz9akyCFnkVnxzW1N9phcsNw6EbtMxUbUp6yKcr4S1iGKpT8LxPV/SPi5nAi?=
- =?us-ascii?Q?QowKYZwkCoiCulQM2WsPRnt/xXM7GSNdr0O3ssDFaGfNU+E1vnw1upx73O4u?=
- =?us-ascii?Q?FGL/WK24bZwfHr6GD+IeR8qdMEDKBR5Y2VZO4P224zHedBSPEHNaiOGIHSID?=
- =?us-ascii?Q?h1Y+lMXunroRgA6DruxiykG8LEnRniL/nkDkJ1JU3jKwHIKWUNvnr3hnW2Ii?=
- =?us-ascii?Q?0YrwdNxQzHoGUegNg8IIVC4RbnFrg5AMao4X1SVsS6HdN9NNAW9/I5E6+hFR?=
- =?us-ascii?Q?3C2d+DCDPnyOI0T5AZYfqpt3dIOLzt1GDbXYErOQaRLxD6WVwATcB0iet6HI?=
- =?us-ascii?Q?/gSbfVOrltjEhblsT/FZgbRTVJYR34rhWG6YvQo1W+cv3siAuGBlcQ+OGcJY?=
- =?us-ascii?Q?EC+XTfRPXIcQjlfLQGdzbemFxT+1x434dyz3VosxqIrSQsv6x33983uHXjcj?=
- =?us-ascii?Q?QlIPDffkG2q2+UzIdNwwWYbstPnYdxv7Z/7V1483IJ4SrPZWBt2tx7Asa28I?=
- =?us-ascii?Q?wX98zHBIpRnM5R4m6gdyyLvG53QsTTiqFX1toIOYsQU1npsfX+4iHX8OZWFb?=
- =?us-ascii?Q?1+ZaCxrX6LvSMdmXFhOFccb6p2DocdZwAj3bBuzxJYW+gOzWE2Uvc0R/h6f9?=
- =?us-ascii?Q?zttw5XsJmeY1OZ7dfOH7D5pWBIMjJ2X/WhMhdPjWMeALC5i80OZK+ruaEQc5?=
- =?us-ascii?Q?UaHlGp6rQEuElj9Uv7XI8gnVY2sgTyHvTwYlzjXppGfHyFbaBLNTrVzfOceo?=
- =?us-ascii?Q?vxBqyuX8YManZ7Dh6Omf+nmF+iRTPMigtO1GgeP/UrrzDrWKnsn+X7BUtifX?=
- =?us-ascii?Q?XXpnoGPrUn3/gxggqg5JHshtAmgFbaKk1GZxPqvaL9I2RtLzBLMyNOYpewmP?=
- =?us-ascii?Q?fpvDv3xW39hR2gSTmb298/unUS3YzOMuxGB+5Jjy1III/5rxMG1lEQ00TeBN?=
- =?us-ascii?Q?Jk3E21LFNLWhXkoBEjKN1zGfE99fd1J/prxeibuSanfyP4Eovt36fA45rR1d?=
- =?us-ascii?Q?YueUxh91sLEbkJmQwPZcqwEjMN5QBVBlqM5JjORLQ6jHbWsl4gEQlZ8wJOhM?=
- =?us-ascii?Q?lf7wrJWXu3hEHL9DhTLQLRygW0nYG8u0RAP9TMFJ1JdrYTD0Wha1OVoJolcZ?=
- =?us-ascii?Q?WMzXRM/d8jlcaUsANIuSz+SVh1o/PautYYtH82zk7y3JDaWVJxrikOgso3GV?=
- =?us-ascii?Q?7/pC2QqECEcmyla16qouUycFjYsRUQkCxRZlQBWgzys+yo0dDKovAKxdGIlq?=
- =?us-ascii?Q?0SoD4BnwC6ZLl+2pNgy1tYRPkGrONQd/DW0znbtxJML1emrh//p51fO06rBK?=
- =?us-ascii?Q?YElU1fjVyg=3D=3D?=
+	=?us-ascii?Q?1wauoXT6cO/xtz+4sagshG/EJ9NRPiiy/UG1fe9O+zbrinvVE6qHj9EmHcQG?=
+ =?us-ascii?Q?7B1xlnfez1P6KeY1/vDzPIE/I8tDjrI8qs8iy7QeVi2tW33/Dg3YJciJbnhh?=
+ =?us-ascii?Q?rM4tZw+MzfpCJZ1nRSI4EyPcZEobiKDrAkNd0rtcPc7h5zSdvl8zyyvfMuq8?=
+ =?us-ascii?Q?DmobNxpJpi+x8mjEXjJ+rRprbdmqOOOE0zrxR8F1aQG8oO0lM4YMgsjOkAnR?=
+ =?us-ascii?Q?oyWvTEnEmppiJN3oXOUFjHxhqZ+8KuO7k1T9fyGQAnJEJMSiJruOQexdLCDc?=
+ =?us-ascii?Q?LoHMc8xz/VqEajHmroAzZrasAirD3XRGeaJqYNbehqYHeHlfl9XQZ6TcNAPF?=
+ =?us-ascii?Q?QHQ/0q/Frbx5yZfETAEEpoZQk3gOuAWyPXVW7BNgVVaxBBt2uc/Fs3rCJS0J?=
+ =?us-ascii?Q?2+zu3gUP12D6zgq/Jhq/eTXCd5w5cUNFh6Hyouwc+dbw/YlrQyY8ZIld78oC?=
+ =?us-ascii?Q?cZ9fMs2DWjnIwqKgvOh2Gc8ZKq/PCOeEJiKCZg9GLRmshs9s4EuUwwPk7Yms?=
+ =?us-ascii?Q?XMjQinPKW14aQvVy2eGsyBcWE8kuIrWCN1xN0J+zZl/NFEDcWA0WOxlcwjcX?=
+ =?us-ascii?Q?/TUgYCxMCl78OUXqjvPaLnIk1nEqmAEDGE8fo1jTKAHgzxVgstlamRI+caXH?=
+ =?us-ascii?Q?Pj/UPD1jmttSzcT3IwaTMWDXX7Z8+S/CobZmeeSFf7sAgyC+vMlIA5CZnCmy?=
+ =?us-ascii?Q?6E5xTP5mkbiEaSbJ8sljvmOvusvZhfbwCirR/vUDqnWKuVq8vHgrXlpsd4WY?=
+ =?us-ascii?Q?se8y5bGH4xa6AGkqdjeqvWE5zQL7MhH/oEdQnI8CGZa1rrcWabImJTLKbxy5?=
+ =?us-ascii?Q?H7sEQuoXMCnjM1rpGVhGUM7pBHf1zbS5HHb7iGFnZDK/qWPuucD2a5MiK2To?=
+ =?us-ascii?Q?cU47NQkoNdivm48x8q3CpKdtN5NlqeW9W1+yWNTUjvxjdpN90qazi1/9bU7i?=
+ =?us-ascii?Q?u+6nR4QxpTBfxtwtC53WjwtEqKvYGs/A0Ypy+SQZBnGDHF0NfDEkpEe0gJCE?=
+ =?us-ascii?Q?0qvODGxKaFmpGkaMN9cBdNnM/LRpnwSnDVtdzPjDiRqOqrwJ6FUESLgbO+Ib?=
+ =?us-ascii?Q?7tf+FAF+HuJHdhZLj+AL5SlMz0LQM3T+/adOor+0o6zOMQQMCXXKYstbibbQ?=
+ =?us-ascii?Q?Gdd4vYHMZ0MN0cVr3wKQvjmA1BYkf36zxgca8EU47ruGN3AuzqmkWdZVK+xj?=
+ =?us-ascii?Q?3kRttMVelGtn8Y9HeeT/OzUpnyheOSRCsTfc1/0h3Vf3VCWXMkhDlN4YxLX7?=
+ =?us-ascii?Q?rx8DPxgpz86TgjEoE38ByalHOWdpfUeUAbsBCdY0BodEpC4in80fGRKA1VvT?=
+ =?us-ascii?Q?F2NzGr2I12Z96GcPcO/XAKFrEz2qsPJOPPkZ3l6u9WNE5yHlmeV4LUhaMohq?=
+ =?us-ascii?Q?XUlbJK219dOIxlsBlXlKcwh2vswUuLOWWbBtd8K6KhegOOjP+3uqqEVQ8j9t?=
+ =?us-ascii?Q?iAFkRLuC8Yk5gmq5IFkNAbUi2/p9h+T8YDn8IKqY5KzFD0Q3o5OslmFe2z28?=
+ =?us-ascii?Q?UGHM6JW2vfnJ4us3rzSEFosTfKFEqjntXw2PYpmpDH5dSgN6KEPEV0OfA43h?=
+ =?us-ascii?Q?3gr0RZXRQ6XJp00fcN2Ocbun2nfHJW1z8ZlQuixlQfQNtuIZg+BBMx28RIjV?=
+ =?us-ascii?Q?xfTaUhARo8ZcOJ/OrcaUxGl3TIaYEwdVLptbg7Zw3xG+ouUQzjHLrZ39uoCK?=
+ =?us-ascii?Q?Pcv8kL4cxfTgIo89q7nn5i4BOf1X9dvdWPojgEdQFEO2/D6O3pepmtPvrQYN?=
+ =?us-ascii?Q?bKGj0O8mtA=3D=3D?=
 X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: f2ac2b63-b77b-4def-1684-08df18850c87
+X-MS-Exchange-CrossTenant-Network-Message-Id: 343fabec-5615-4e32-3ff2-08df18850dc0
 X-MS-Exchange-CrossTenant-AuthSource: LY0PR12MB727857.namprd12.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 22 Sep 2026 08:39:43.0407
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 22 Sep 2026 08:39:45.0919
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: LY3/dMdFTSKsMoSDXuuj5TY5AYf4ddXXtZrjYFcKF2mlqdedFXfgO/epNw0er7x/hCzMFCkZOjDAiMu7EFk6RQ==
+X-MS-Exchange-CrossTenant-UserPrincipalName: CwVDVzw6xdL6Xuowkd5U2W5TsJJOtNDFEEdekok+osIgJcNM6IvVqEJ9QqBTZGsp+TSqJtYCKZIIYENYCUNfyQ==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: CHAPR12MB999223
 
-PCI can be built in while CXL_BUS is modular, so PCI reset code cannot
-depend on helpers provided by the cxl_core module.
+Factor HDM register parsing into cxl_hdm_unpack_decoder(). Validate local
+values before publishing complete settings, including committed, locked,
+and target-or-skip state.
 
-Build the HDM resource helpers under CONFIG_CXL_RESET and restrict their
-exports to cxl_core.
+Pass endpoint skip state to the DPA reservation helper instead of
+updating live endpoint state, preserving its ownership.
 
 Signed-off-by: Srirangan Madhavan <smadhavan@nvidia.com>
 ---
- drivers/cxl/Kconfig         | 4 ++++
- drivers/cxl/core/Makefile   | 2 +-
- drivers/cxl/core/resource.c | 4 ++++
- tools/testing/cxl/Kbuild    | 1 -
- 4 files changed, 9 insertions(+), 2 deletions(-)
+ drivers/cxl/core/core.h     |  4 ++
+ drivers/cxl/core/hdm.c      | 74 +++++++++++++------------------------
+ drivers/cxl/core/resource.c | 55 +++++++++++++++++++++++++++
+ 3 files changed, 85 insertions(+), 48 deletions(-)
 
-diff --git a/drivers/cxl/Kconfig b/drivers/cxl/Kconfig
-index 80aeb0d556bd..0cd704670735 100644
---- a/drivers/cxl/Kconfig
-+++ b/drivers/cxl/Kconfig
-@@ -6,6 +6,7 @@ menuconfig CXL_BUS
- 	select FW_UPLOAD
- 	select PCI_DOE
- 	select FIRMWARE_TABLE
-+	select CXL_RESET
- 	select NUMA_KEEP_MEMINFO if NUMA_MEMBLKS
- 	select FWCTL if CXL_FEATURES
- 	help
-@@ -244,3 +245,6 @@ config CXL_ATL
- 	depends on ACPI_PRMT && AMD_NB
+diff --git a/drivers/cxl/core/core.h b/drivers/cxl/core/core.h
+index 3444479cbade..7e2723d1f87d 100644
+--- a/drivers/cxl/core/core.h
++++ b/drivers/cxl/core/core.h
+@@ -142,6 +142,10 @@ extern struct cxl_rwsem cxl_rwsem;
+ void cxl_commit_start(void __iomem *hdm, struct cxl_decoder_settings *settings);
+ int cxl_commit_wait(void __iomem *hdm, struct cxl_decoder_settings *settings);
  
- endif
++int cxl_hdm_unpack_decoder(struct cxl_decoder_settings *settings, int id,
++			   u32 ctrl, u64 base, u64 size,
++			   u64 target_or_skip_reg_val);
 +
-+config CXL_RESET
-+	bool
-diff --git a/drivers/cxl/core/Makefile b/drivers/cxl/core/Makefile
-index 57995777af0d..30470799e059 100644
---- a/drivers/cxl/core/Makefile
-+++ b/drivers/cxl/core/Makefile
-@@ -1,12 +1,12 @@
- # SPDX-License-Identifier: GPL-2.0
- obj-$(CONFIG_CXL_BUS) += cxl_core.o
-+obj-$(CONFIG_CXL_RESET) += resource.o
- obj-$(CONFIG_CXL_SUSPEND) += suspend.o
+ int cxl_memdev_init(void);
+ void cxl_memdev_exit(void);
+ void cxl_mbox_init(void);
+diff --git a/drivers/cxl/core/hdm.c b/drivers/cxl/core/hdm.c
+index b3ddc02df65e..98268e8e15b2 100644
+--- a/drivers/cxl/core/hdm.c
++++ b/drivers/cxl/core/hdm.c
+@@ -932,8 +932,8 @@ static int init_hdm_decoder(struct cxl_port *port, struct cxl_decoder *cxld,
+ 			    u64 *dpa_base, struct cxl_endpoint_dvsec_info *info)
+ {
+ 	struct cxl_endpoint_decoder *cxled = NULL;
+-	u64 size, base, skip, dpa_size, lo, hi;
+-	bool committed;
++	struct cxl_decoder_settings settings;
++	u64 size, base, skip, dpa_size, lo, hi, target_or_skip_reg_val;
+ 	u32 remainder;
+ 	int i, rc;
+ 	u32 ctrl;
+@@ -953,35 +953,34 @@ static int init_hdm_decoder(struct cxl_port *port, struct cxl_decoder *cxld,
+ 	lo = readl(hdm + CXL_HDM_DECODER0_SIZE_LOW_OFFSET(which));
+ 	hi = readl(hdm + CXL_HDM_DECODER0_SIZE_HIGH_OFFSET(which));
+ 	size = (hi << 32) + lo;
+-	committed = !!(ctrl & CXL_HDM_DECODER0_CTRL_COMMITTED);
++	lo = readl(hdm + CXL_HDM_DECODER0_TL_LOW(which));
++	hi = readl(hdm + CXL_HDM_DECODER0_TL_HIGH(which));
++	target_or_skip_reg_val = (hi << 32) + lo;
++	rc = cxl_hdm_unpack_decoder(&settings, which, ctrl, base, size,
++				    target_or_skip_reg_val);
++	if (rc) {
++		dev_warn(&port->dev,
++			 "decoder%d.%d: Invalid decoder configuration (ctrl: %#x): %d\n",
++			 port->id, cxld->id, ctrl, rc);
++		return rc;
++	}
++
+ 	cxld->commit = cxl_decoder_commit;
+ 	cxld->reset = cxl_decoder_reset;
+-
+-	if (!committed)
+-		size = 0;
+-	if (base == U64_MAX || size == U64_MAX) {
+-		dev_warn(&port->dev, "decoder%d.%d: Invalid resource range\n",
+-			 port->id, cxld->id);
+-		return -ENXIO;
+-	}
++	cxld->config = settings.config;
++	size = range_len(&cxld->hpa_range);
  
- ccflags-y += -I$(srctree)/drivers/cxl
- CFLAGS_trace.o = -DTRACE_INCLUDE_PATH=. -I$(src)
+ 	if (info)
+ 		cxled = to_cxl_endpoint_decoder(&cxld->dev);
+-	cxld->hpa_range = (struct range) {
+-		.start = base,
+-		.end = base + size - 1,
+-	};
++	if (!cxled && cxld->interleave_ways > 8) {
++		dev_warn(&port->dev,
++			 "decoder%d.%d: Invalid target count: %d\n",
++			 port->id, cxld->id, cxld->interleave_ways);
++		return -ENXIO;
++	}
  
- cxl_core-y := port.o
--cxl_core-y += resource.o
- cxl_core-y += pmem.o
- cxl_core-y += regs.o
- cxl_core-y += memdev.o
+ 	/* decoders are enabled if committed */
+-	if (committed) {
+-		cxld->flags |= CXL_DECODER_F_ENABLE;
+-		if (ctrl & CXL_HDM_DECODER0_CTRL_LOCK)
+-			cxld->flags |= CXL_DECODER_F_LOCK;
+-		if (FIELD_GET(CXL_HDM_DECODER0_CTRL_HOSTONLY, ctrl))
+-			cxld->target_type = CXL_DECODER_HOSTONLYMEM;
+-		else
+-			cxld->target_type = CXL_DECODER_DEVMEM;
+-
++	if (cxld->flags & CXL_DECODER_F_ENABLE) {
+ 		guard(rwsem_write)(&cxl_rwsem.region);
+ 		if (cxld->id != cxl_num_decoders_committed(port)) {
+ 			dev_warn(&port->dev,
+@@ -1015,38 +1014,19 @@ static int init_hdm_decoder(struct cxl_port *port, struct cxl_decoder *cxld,
+ 			writel(ctrl, hdm + CXL_HDM_DECODER0_CTRL_OFFSET(which));
+ 		}
+ 	}
+-	rc = eiw_to_ways(FIELD_GET(CXL_HDM_DECODER0_CTRL_IW_MASK, ctrl),
+-			  &cxld->interleave_ways);
+-	if (rc) {
+-		dev_warn(&port->dev,
+-			 "decoder%d.%d: Invalid interleave ways (ctrl: %#x)\n",
+-			 port->id, cxld->id, ctrl);
+-		return rc;
+-	}
+-	rc = eig_to_granularity(FIELD_GET(CXL_HDM_DECODER0_CTRL_IG_MASK, ctrl),
+-				 &cxld->interleave_granularity);
+-	if (rc) {
+-		dev_warn(&port->dev,
+-			 "decoder%d.%d: Invalid interleave granularity (ctrl: %#x)\n",
+-			 port->id, cxld->id, ctrl);
+-		return rc;
+-	}
+-
+ 	dev_dbg(&port->dev, "decoder%d.%d: range: %#llx-%#llx iw: %d ig: %d\n",
+ 		port->id, cxld->id, cxld->hpa_range.start, cxld->hpa_range.end,
+ 		cxld->interleave_ways, cxld->interleave_granularity);
+ 
+ 	if (!cxled) {
+-		lo = readl(hdm + CXL_HDM_DECODER0_TL_LOW(which));
+-		hi = readl(hdm + CXL_HDM_DECODER0_TL_HIGH(which));
+-		target_list.value = (hi << 32) + lo;
++		target_list.value = settings.target_or_skip_reg_val;
+ 		for (i = 0; i < cxld->interleave_ways; i++)
+ 			cxld->target_map[i] = target_list.target_id[i];
+ 
+ 		return 0;
+ 	}
+ 
+-	if (!committed)
++	if (!(cxld->flags & CXL_DECODER_F_ENABLE))
+ 		return 0;
+ 
+ 	dpa_size = div_u64_rem(size, cxld->interleave_ways, &remainder);
+@@ -1056,9 +1036,7 @@ static int init_hdm_decoder(struct cxl_port *port, struct cxl_decoder *cxld,
+ 			port->id, cxld->id, size, cxld->interleave_ways);
+ 		return -ENXIO;
+ 	}
+-	lo = readl(hdm + CXL_HDM_DECODER0_SKIP_LOW(which));
+-	hi = readl(hdm + CXL_HDM_DECODER0_SKIP_HIGH(which));
+-	skip = (hi << 32) + lo;
++	skip = settings.target_or_skip_reg_val;
+ 	rc = devm_cxl_dpa_reserve(cxled, *dpa_base + skip, dpa_size, skip);
+ 	if (rc) {
+ 		dev_err(&port->dev,
 diff --git a/drivers/cxl/core/resource.c b/drivers/cxl/core/resource.c
-index ea0d855e5549..1b4742622054 100644
+index 1b4742622054..7eea2bc38d94 100644
 --- a/drivers/cxl/core/resource.c
 +++ b/drivers/cxl/core/resource.c
-@@ -3,6 +3,7 @@
- #include <linux/delay.h>
- #include <linux/bug.h>
- #include <linux/errno.h>
-+#include <linux/export.h>
- #include <linux/kernel.h>
- 
- #include "cxl.h"
-@@ -12,6 +13,7 @@ struct cxl_rwsem cxl_rwsem = {
- 	.region = __RWSEM_INITIALIZER(cxl_rwsem.region),
- 	.dpa = __RWSEM_INITIALIZER(cxl_rwsem.dpa),
- };
-+EXPORT_SYMBOL_FOR_MODULES(cxl_rwsem, "cxl_core");
- 
- static void cxld_set_interleave(struct cxl_decoder_config *config, u32 *ctrl)
- {
-@@ -100,8 +102,10 @@ void cxl_commit_start(void __iomem *hdm, struct cxl_decoder_settings *settings)
- 	lockdep_assert_held(&cxl_rwsem.dpa);
- 	setup_hw_decoder(hdm, settings);
- }
-+EXPORT_SYMBOL_FOR_MODULES(cxl_commit_start, "cxl_core");
- 
- int cxl_commit_wait(void __iomem *hdm, struct cxl_decoder_settings *settings)
- {
+@@ -109,3 +109,58 @@ int cxl_commit_wait(void __iomem *hdm, struct cxl_decoder_settings *settings)
  	return cxld_await_commit(hdm, settings->config.id);
  }
-+EXPORT_SYMBOL_FOR_MODULES(cxl_commit_wait, "cxl_core");
-diff --git a/tools/testing/cxl/Kbuild b/tools/testing/cxl/Kbuild
-index 6c09932587ce..2be1df80fcc9 100644
---- a/tools/testing/cxl/Kbuild
-+++ b/tools/testing/cxl/Kbuild
-@@ -60,7 +60,6 @@ cxl_core-y += $(CXL_CORE_SRC)/memdev.o
- cxl_core-y += $(CXL_CORE_SRC)/mbox.o
- cxl_core-y += $(CXL_CORE_SRC)/pci.o
- cxl_core-y += $(CXL_CORE_SRC)/hdm.o
--cxl_core-y += $(CXL_CORE_SRC)/resource.o
- cxl_core-y += $(CXL_CORE_SRC)/pmu.o
- cxl_core-y += $(CXL_CORE_SRC)/cdat.o
- cxl_core-$(CONFIG_TRACING) += $(CXL_CORE_SRC)/trace.o
+ EXPORT_SYMBOL_FOR_MODULES(cxl_commit_wait, "cxl_core");
++
++int cxl_hdm_unpack_decoder(struct cxl_decoder_settings *settings, int id,
++			   u32 ctrl, u64 base, u64 size,
++			   u64 target_or_skip_reg_val)
++{
++	bool committed = FIELD_GET(CXL_HDM_DECODER0_CTRL_COMMITTED, ctrl);
++	enum cxl_decoder_type target_type;
++	int interleave_granularity;
++	int interleave_ways;
++	unsigned long flags = 0;
++	struct range hpa_range;
++	int rc;
++
++	if (!committed)
++		size = 0;
++	if (base == U64_MAX || size == U64_MAX ||
++	    (size && base > U64_MAX - (size - 1)))
++		return -ENXIO;
++
++	hpa_range = (struct range) {
++		.start = base,
++		.end = base + size - 1,
++	};
++	target_type = FIELD_GET(CXL_HDM_DECODER0_CTRL_HOSTONLY, ctrl) ?
++		      CXL_DECODER_HOSTONLYMEM : CXL_DECODER_DEVMEM;
++	if (committed) {
++		flags |= CXL_DECODER_F_ENABLE;
++		if (ctrl & CXL_HDM_DECODER0_CTRL_LOCK)
++			flags |= CXL_DECODER_F_LOCK;
++	}
++
++	rc = eiw_to_ways(FIELD_GET(CXL_HDM_DECODER0_CTRL_IW_MASK, ctrl),
++			 &interleave_ways);
++	if (rc)
++		return rc;
++	rc = eig_to_granularity(FIELD_GET(CXL_HDM_DECODER0_CTRL_IG_MASK, ctrl),
++				&interleave_granularity);
++	if (rc)
++		return rc;
++
++	*settings = (struct cxl_decoder_settings) {
++		.config = {
++			.id = id,
++			.hpa_range = hpa_range,
++			.interleave_ways = interleave_ways,
++			.interleave_granularity = interleave_granularity,
++			.target_type = target_type,
++			.flags = flags,
++		},
++		.target_or_skip_reg_val = target_or_skip_reg_val,
++	};
++
++	return 0;
++}
++EXPORT_SYMBOL_FOR_MODULES(cxl_hdm_unpack_decoder, "cxl_core");
 -- 
 2.43.0
 
