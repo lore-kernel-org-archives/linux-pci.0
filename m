@@ -1,81 +1,109 @@
-Received: from mout-p-101.mailbox.org (mout-p-101.mailbox.org [80.241.56.151])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mta0.migadu.com (out-234.mta0.migadu.com [91.218.175.234])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87F51440A26;
-	Tue, 22 Sep 2026 21:02:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.151
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2321F496D43
+	for <linux-pci@vger.kernel.org>; Tue, 22 Sep 2026 21:08:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.234
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790110965; cv=none; b=T7XTJ7c/DOkJYvJD34Dems7tGwu1raNOAIDFK90IahlgQXeuNP7Cf+wW5O8muqRL1lCodPycTUIkNWn8LR6wQyTqYFOb9xGkk1gfh8RUr4c3Pv7yNRNS+UrUH2nSSz+/MjecEpO/bn5kB6MXNlFt/X3iQyH2llVtzh61Kia76fI=
+	t=1790111346; cv=none; b=VA3GhAil3Is55qe/49w/YgjdVMEbiZ+53oo11vibr+71xhEnYaBL7FVBGsqbRC6C5TKA12w4TFjqd7MAO3ctefWp9lt42wD5YOx+uD4eeWfMZucORIp+yg+9dGJG62Tp8UEXLOBU78AGNshRFfrNKVMEnNq7AxYryfyDJdAYKJo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790110965; c=relaxed/simple;
-	bh=sjit43z4ihkXWP9gtYfOPZ8JXNh8kmk2P0chV9aooFs=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=XulK7eAmASo2+93LQsV3ZEaueACxp6N0TO6h1eOk+rlA5DswZcpXeAKXeaDuS0v6R+J1knp1qmvFJ6UGtdHaOc3byc/unvFc3y9oa7ZE/ayWrNkjV7c6ZxfR26Ti8SiprAk1OYDfbdKRjDavsfOJDAQo+ha1ED5KDAxA2WVXImA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=Nc+rzA4d; arc=none smtp.client-ip=80.241.56.151
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
+	s=arc-20240116; t=1790111346; c=relaxed/simple;
+	bh=mwU7r2R0iXancqDMVbrNZC/D/wd+eK8OiPSqY0f/ZZ8=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=g32CR6i90dK+hdLAbCwdDXb9tNahob/TYQQYnEcibUTiTH4WtyA6E2BQKEV8pHPrlTjbXipBo/vDiOwQclfWNf7hT5X2l67qPvPShxobZfBoRhRVklN0SaGHjoKsqY5ZIExQMMFopf4L3KopyO/JXUsJuMUanPSp+qPnZxEoefw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=gML+ek9Q; arc=none smtp.client-ip=91.218.175.234
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="Nc+rzA4d"
-Received: from smtp1.mailbox.org (smtp1.mailbox.org [10.196.197.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mout-p-101.mailbox.org (Postfix) with ESMTPS id 4hqCGV1l6Hz8v2B;
-	Tue, 22 Sep 2026 23:02:26 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-	t=1790110946;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=2pMXiXOZBih5TRNk2H7zK8DHdtzZ6V/P9wJI4JX8u98=;
-	b=Nc+rzA4dxxOFZwnM07jOR9nfZLAJLiP8KkuvrDGjLxc1EkYJc8+bkA01pbjAqVuSP+uCi3
-	bO+LqiAx6FQ+pqohBBByBg1EbFfacHUD0yptwQqIfkTkr9jmYXWiiJMnzQ338sAnCA5d3a
-	9URKq6Q9TFcuHVQy8bovz/2JQ7Yu6vnbZpePcxB9Bz1m6m/QCrgsJPOt1H6lOFGxWC3OSO
-	GzziKSZ+p2mu75BKW4F1p3p4OwBGJlh4bwrcU+Ov7zcjk4biOQpjEtS2eyQIkewC6dy+2D
-	tNYBLcPrKpL+p1nYfa/20zKzr1ewOLsdkpCwQ1MdKmD+jI5ij2mrKGJf9YQ4fQ==
-Message-ID: <12004210-424f-4511-a2a5-e68cbc49dc71@mailbox.org>
-Date: Tue, 22 Sep 2026 22:59:28 +0200
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="gML+ek9Q"
+X-Envelope-To: linux-pci@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=mwU7r2R0iXancqDMVbrNZC/D/wd+eK8OiPSqY0f/ZZ8=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1790111324; v=1; x=1790716124;
+ b=gML+ek9QH1tqN4jTqppHLRjEkMzm03TC1HkkMBAsxCo+A7RjPSBeBGVvg8AgZeUeNOsA/PH0
+ 5Z7HAXIOt6/CyMGpXRjl1Rq5rTj1Eoju3BPfjYQKelT8oCTPggHkjEMEDSXdkixGQhSscNOuh65
+ UW0ZdEy/YPhfB+H25oPPQrXc=
+X-Envelope-To: linux-pci@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id a0710456afc2675d;
+	Tue, 22 Sep 2026 21:08:44 +0000
+X-Mizu-Trace-ID: a0710456afc2675d
+X-Migadu-Flow: FLOW_OUT
+From: Fuad Tabba <fuad.tabba@linux.dev>
+To: Manivannan Sadhasivam <mani@kernel.org>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Rob Herring <robh@kernel.org>,
+	Ray Jui <rjui@broadcom.com>,
+	Scott Branden <sbranden@broadcom.com>,
+	bcm-kernel-feedback-list@broadcom.com,
+	Marek Vasut <marek.vasut+renesas@mailbox.org>,
+	linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org,
+	Will Deacon <will@kernel.org>,
+	Fuad Tabba <tabba@google.com>
+Subject: [PATCH] PCI: iproc: Use __free(device_node) in iproc_pcie_msi_enable()
+Date: Tue, 22 Sep 2026 22:08:39 +0100
+Message-Id: <20260922210839.3765444-1-fuad.tabba@linux.dev>
+X-Mailer: git-send-email 2.39.5
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Subject: Re: [PATCH 03/11] dt-bindings: PCI: rcar-gen4: Add optional "aer"
- interrupt
-To: Koichiro Den <den@valinux.co.jp>,
- Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
- Lorenzo Pieralisi <lpieralisi@kernel.org>,
- =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
- Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Krzysztof Kozlowski
- <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>,
- Geert Uytterhoeven <geert+renesas@glider.be>,
- Magnus Damm <magnus.damm@gmail.com>, Jingoo Han <jingoohan1@gmail.com>
-Cc: Philipp Zabel <p.zabel@pengutronix.de>, Frank Li <Frank.Li@nxp.com>,
- Niklas Cassel <cassel@kernel.org>, Wilfred Mallawa
- <wilfred.mallawa@wdc.com>, Serge Semin <fancer.lancer@gmail.com>,
- linux-pci@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
- devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20260918032038.2216471-1-den@valinux.co.jp>
- <20260918032038.2216471-4-den@valinux.co.jp>
-Content-Language: en-US
-From: Marek Vasut <marek.vasut@mailbox.org>
-In-Reply-To: <20260918032038.2216471-4-den@valinux.co.jp>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-MBO-RS-META: wj1q7msf7f9ckmqrfhnzzz68otwtzn6f
-X-MBO-RS-ID: d098b65c241eeb447b2
+Content-Transfer-Encoding: 8bit
 
-On 9/18/26 5:20 AM, Koichiro Den wrote:
-> The intreq_pcim_lperr interrupt carries Root Port AER notifications,
-> separately from the integrated MSI receiver interrupt. Describe it with
-> the "aer" name so the controller driver can use it for Root Port error
-> reporting.
-> 
-> Keep the fifth interrupt optional so existing device trees remain
-> valid. Extend the example accordingly.
-> 
-> Signed-off-by: Koichiro Den <den@valinux.co.jp>
-Reviewed-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
+Declare msi_node with __free(device_node) and drop the out_put_node
+label and its goto: the scoped cleanup puts the MSI controller node on
+every return, as the label did.
+
+No functional change intended.
+
+Suggested-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
+Link: https://lore.kernel.org/linux-pci/61488ddc-b346-4ba3-b32a-e972a3bd75a4@mailbox.org/
+Signed-off-by: Fuad Tabba <fuad.tabba@linux.dev>
+---
+ drivers/pci/controller/pcie-iproc.c | 10 +++-------
+ 1 file changed, 3 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/pci/controller/pcie-iproc.c b/drivers/pci/controller/pcie-iproc.c
+index afb3aa38ac6bb..b4f4e6e1d4b41 100644
+--- a/drivers/pci/controller/pcie-iproc.c
++++ b/drivers/pci/controller/pcie-iproc.c
+@@ -1338,7 +1338,7 @@ static int iproc_pcie_msi_steer(struct iproc_pcie *pcie,
+ 
+ static int iproc_pcie_msi_enable(struct iproc_pcie *pcie)
+ {
+-	struct device_node *msi_node = NULL;
++	struct device_node *msi_node __free(device_node) = NULL;
+ 	int ret;
+ 
+ 	/*
+@@ -1357,18 +1357,14 @@ static int iproc_pcie_msi_enable(struct iproc_pcie *pcie)
+ 	if (pcie->need_msi_steer) {
+ 		ret = iproc_pcie_msi_steer(pcie, msi_node);
+ 		if (ret)
+-			goto out_put_node;
++			return ret;
+ 	}
+ 
+ 	/*
+ 	 * If another MSI controller is being used, the call below should fail
+ 	 * but that is okay
+ 	 */
+-	ret = iproc_msi_init(pcie, msi_node);
+-
+-out_put_node:
+-	of_node_put(msi_node);
+-	return ret;
++	return iproc_msi_init(pcie, msi_node);
+ }
+ 
+ static void iproc_pcie_msi_disable(struct iproc_pcie *pcie)
+
+base-commit: fd73f4a6659897191fa0d40695fe370925dd3780
+-- 
+2.39.5
+
