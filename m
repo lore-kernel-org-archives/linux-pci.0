@@ -1,95 +1,142 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 714BF519E06;
-	Tue, 22 Sep 2026 09:01:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4332D522697;
+	Tue, 22 Sep 2026 09:02:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790067704; cv=none; b=fPp7PwvTXZdaUhiPySByXEzPt8evV+kR/rHBzg5sySiIVVKqKcuU4wxdlsAiYKPUI4kD18Slfp+0T9Vv0tUwdL+2PiG8+NAwDeT6Z6vyaBGQdqZ7VkWhnoRZz6FoGwzAbLjoS/s/akVA00cqU5e9nmtJxo3Qac/Ng6vcdFp9byw=
+	t=1790067777; cv=none; b=jsv0jSXXp7YSxeYA5GTZBqao5BXVzKa3vkr3wR2U7rIwKnlkdMXfVbGhZK4IBZNLK5/ZYFHOSIUgNeOWFZXgdBrto0HnS2TAf5Xnk/EroWhsOdXby59fxVIF8V7wfh1V0Tr5i+atXufDbJzYK1y1Q9eHUzymgW9Aj2c8jy6rznw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790067704; c=relaxed/simple;
-	bh=HDk2uqjECrdmm0KEv+wmOTooapEj2nXIR+8q1VWZY0A=;
+	s=arc-20240116; t=1790067777; c=relaxed/simple;
+	bh=6QLL8kOEYVPBDvn/KHSNGhNSQVVLFtJN0wo7aXs5cn8=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=gaDwH4h/BTHI3QEM7WYrJo2lerJUH4WuRi0yEmOsU0qes2QV4gfA1FtO+RbBTZ6AtvsaOB1Op8Kc5j5iWGXw0cg0SP4rjshMqlC91jeLTac0RPbXjosfnio2cgNJIrpYerEVGneN9+KvTggupQK+q6ZSRoM6v2LbVpY+JGKmdYU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Bchjg9L5; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=WMF9xZIujLK3D9YC7MwYcAnmEQCszEZq8eN82z3Ywxous4WEx+5puLSEnFyw0l+T2La1JfVxOWaGz+tGAVG42VcvcRtMN/BxcupOkM7ukHskJNoaCaqWWiU0+CSkOFyuxCEoNAM/xrmEEgjC5uqWHkRUupk9C5FCitXuNJMTJuI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Um7rVY0r; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Bchjg9L5"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D6EAC1F000FF;
-	Tue, 22 Sep 2026 09:01:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Um7rVY0r"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 805311F00893;
+	Tue, 22 Sep 2026 09:02:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790067702;
-	bh=Irw2oSggUlTPWIkKnQ6DUA2P6qsac0G2q5DlHYd+Cy8=;
+	s=k20260515; t=1790067775;
+	bh=C65iB7eiH4BwABEcK8uVSpTqKN/IKsmkTblMzp6fi9k=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Bchjg9L5QxJikWz63JsqPq/twwhKt1p8uN9cZwp5ib6012jxV39oUjW3CX6rSGBpX
-	 KXPYiqSEbUuZ2q8LqcuC14SWWugxPEGIaeLRUIdOEmp85Ehw/XSZjAZeIDWoGpNa8r
-	 1s4HKSEpqF38Ap5sZq3ZScQGgVB8UXbWDZ4LmP/FS+xSTsyVWLOea5woSF26x+NzO8
-	 TTuLFUN/73nUs5aFFFjpIibeTwH2m25F0fArAV93dew83+F9RN81+mcOXMvGxcjKzh
-	 MkG4/th3CTC2ik7Wryab35u7mcH4toJZR6FoTh2oJolMNTudrrsaszJrqyek/Fb3Vu
-	 KO6COBQaIis+Q==
+	b=Um7rVY0rhXDfDYFke390OceZxaMAqk/0mejHSif6mMtsBMZKDSXFAGK7Gapl88yRs
+	 w76k/0CiZViKQxxIy3sVnk0VCqI0K7JIlWi8bIjmt3agpC0xj1yIuzlkoKaW0Q3fcq
+	 SqXZKIJBo6P56vOGbbTykj33rTZW4+CXQ2HUtwNWtIYM8ufqtox5RNA5jGQA8Hfvpk
+	 ItdvPAzwOa92d5YVJsmKZOW8WuiHeNNqU540or9CmXUqGO1tr2VdJRGrqh1TnoCe6T
+	 OGlbAtaboSn4JOIGOorT1q0KmcmSWEjIstRowXPlajcItDaR2DKuIryw1O/QwvwuJi
+	 J2xzxMrVf/1aw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v13 15/15] PCI/CXL: Restore CXL state after CXL bus
- reset
+Subject: Re: [PATCH v13 14/15] PCI/CXL: Expose CXL Reset as a PCI reset
+ method
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Srirangan Madhavan" <smadhavan@nvidia.com>
 Cc: linux-cxl@vger.kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260922083924.2451158-16-smadhavan@nvidia.com>
+In-Reply-To: <20260922083924.2451158-15-smadhavan@nvidia.com>
 References: <20260922083924.2451158-1-smadhavan@nvidia.com>
- <20260922083924.2451158-16-smadhavan@nvidia.com>
+ <20260922083924.2451158-15-smadhavan@nvidia.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 22 Sep 2026 09:01:41 +0000
-Message-Id: <20260922090141.D6EAC1F000FF@smtp.kernel.org>
+Date: Tue, 22 Sep 2026 09:02:55 +0000
+Message-Id: <20260922090255.805311F00893@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-- [High] cxl: HDM state restoration bypassed if SBR is natively unmasked
+- [High] PCI/CXL: unsafe fallback to FLR on cxl_reset safety check failure
+- [High] PCI/CXL: cxl_reset rejected during probe if features disabled
 --
 
-commit 44f7ddf109a23fa1e25d7dc89752e3e7548f5c17
+commit a3dd9319808c6b4394c9a465a0ccd99ba52161a2
 Author: Srirangan Madhavan <smadhavan@nvidia.com>
 
-PCI/CXL: Restore CXL state after CXL bus reset
+PCI/CXL: Expose CXL Reset as a PCI reset method
 
-CXL bus reset can clear HDM decoder programming and CXL Device DVSEC
-control state. Restore the cached state after a successful cxl_bus reset
-while IOMMU exclusion remains active.
+This commit registers cxl_reset with the PCI reset-method interface, placing
+it before FLR. It adds capability and state checks to ensure the device
+supports and is configured for CXL cache and memory protocols. It also
+returns -ENOTTY when the device capabilities or required cache
+synchronization do not permit a safe reset.
 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index dc57a202c91f7..6928c99aa7856 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-[ ... ]
-> @@ -5015,6 +5015,7 @@ static int pci_reset_bus_function(struct pci_dev *d=
-ev, bool probe)
-> =20
->  static int cxl_reset_bus_function(struct pci_dev *dev, bool probe)
+> diff --git a/drivers/cxl/core/resource.c b/drivers/cxl/core/resource.c
+> --- a/drivers/cxl/core/resource.c
+> +++ b/drivers/cxl/core/resource.c
+> @@ ... @@
+>  int cxl_reset_function(struct pci_dev *pdev, bool probe)
 >  {
-> +	struct cxl_hdm_info *snapshot __free(kfree) =3D NULL;
+>  	int dvsec, rc;
+>  	u16 cap, ctrl;
+>=20
+> [ ... ]
+>=20
+>  	if (!(cap & PCI_DVSEC_CXL_CACHE_CAPABLE) ||
+>  	    !(cap & PCI_DVSEC_CXL_MEM_CAPABLE) ||
+>  	    !(cap & PCI_DVSEC_CXL_RST_CAPABLE) ||
+>  	    !(cap & PCI_DVSEC_CXL_RST_MEM_CLR_CAPABLE))
+>  		return -ENOTTY;
 
 [Severity: High]
-Will this new HDM state restoration logic be bypassed entirely if SBR is
-natively unmasked?
+Does returning -ENOTTY here cause the PCI core to silently fall back to FLR
+during an actual reset request?=20
 
-Looking at pci_reset_fn_methods in drivers/pci/pci.c, "bus" is ordered
-before "cxl_bus":
+Type 3 devices (memory expanders) lack CXL.cache capabilities, so they would
+fail this check. If they fall back to FLR, it resets the PCIe state but not
+the CXL protocol state. For devices with active CXL memory, this might lead
+to Machine Check Exceptions or memory corruption when the CPU interacts with
+the reset device.=20
 
-        { pci_reset_bus_function, .name =3D "bus" },
-        { cxl_reset_bus_function, .name =3D "cxl_bus" },
+Would returning a hard error like -EOPNOTSUPP during execution safely abort
+the unsafe reset?
 
-When SBR is natively unmasked, pci_reset_bus_function() will succeed
-during probe and will be placed before cxl_reset_bus_function() in the
-device's reset_methods array. During a reset, __pci_reset_function_locked()
-executes "bus" first. If "bus" succeeds and returns 0, it completely
-bypasses "cxl_bus" and this newly added snapshot/restore logic.
+> =20
+>  	rc =3D pci_read_config_word(pdev, dvsec + PCI_DVSEC_CXL_CTRL, &ctrl);
+>  	if (rc)
+> -		return pcibios_err_to_errno(rc);
+> +		return probe ? -ENOTTY : pcibios_err_to_errno(rc);
+>  	if (PCI_POSSIBLE_ERROR(ctrl))
+> -		return -ENODEV;
+> +		return probe ? -ENOTTY : -ENODEV;
+>  	if (!(ctrl & PCI_DVSEC_CXL_CACHE_ENABLE) ||
+>  	    !(ctrl & PCI_DVSEC_CXL_MEM_ENABLE))
+>  		return -ENOTTY;
 
-Could this cause CXL HDM decoder state to be lost after a reset on these
-devices?
+[Severity: High]
+Does evaluating this dynamic state during probe permanently exclude the
+reset method before the driver can enable the features?
+
+When pci_init_reset_methods() calls cxl_reset_function() with probe =3D=3D =
+true
+during early device discovery, returning -ENOTTY causes the PCI core to omit
+this method entirely from the supported reset methods.
+
+If this check evaluates dynamic state before the early-return for probe, it
+might cause hot-plugged devices to silently fall back to FLR when a reset
+is later requested. Could this check be moved after the if (probe)
+early-return?
+
+>=20
+> [ ... ]
+>=20
+>  	if (probe)
+>  		return 0;
+>=20
+> [ ... ]
+>=20
+>  	if (!cpu_cache_has_invalidate_memregion())
+>  		return -ENOTTY;
+
+[Severity: High]
+Similar to the capability check above, does returning -ENOTTY here fail to
+safely abort the reset?=20
+
+Since the PCI framework interprets -ENOTTY as "method not applicable, try
+next", this causes a fallback to the unsafe FLR method. Would returning a
+hard error prevent this unsafe fallback?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260922083924.2451=
-158-1-smadhavan@nvidia.com?part=3D15
+158-1-smadhavan@nvidia.com?part=3D14
