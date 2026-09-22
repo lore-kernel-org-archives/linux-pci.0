@@ -1,498 +1,296 @@
-Received: from mail-lf1-f48.google.com (mail-lf1-f48.google.com [209.85.167.48])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from CH1PR05CU001.outbound.protection.outlook.com (mail-northcentralusazon11010000.outbound.protection.outlook.com [52.101.193.0])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5370C48A8C6
-	for <linux-pci@vger.kernel.org>; Tue, 22 Sep 2026 19:23:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.167.48
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA46B45D5E7;
+	Tue, 22 Sep 2026 19:54:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.193.0
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790105004; cv=pass; b=s7++K7apoeE4pLmLyELwlUwQaHIHOKnKON7/Cpra8gclanDnCKQ7JhdNTjhk6axpOoB30HOMS+M8BhEQuGQ34Ui6o+Wlr5rzWGgz0YqRbRcyUs9hN3Mjyskm/Qr//V4ET6o/ob9Jw+icT+uSdW6e5gT9aQQsy8rwbuW1YMyuUPs=
+	t=1790106870; cv=fail; b=Y9QdG4FmiRCpImA/pHdqvBOuwUYDmsRH/MZ0zgFhm9O/wXctIFVCQudzn/DmNDA2E/rYy9Lq14pd92fu79TFHGrEsA1RCLFv0y8spKQ0QMKywA4Yf2XrTiiOD1TQWRfo635Q5u2PA7mCSsVOyPtvJqdZMsjBKBN1fTT+qwbBLsI=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790105004; c=relaxed/simple;
-	bh=uIkpINFfCsQjD9jAdwegl+1czawtHcQaNaPZYW4z5aM=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=L/YU8igjZXTGb7uPYeUArbPGT/PXDxX6CM83CY8jdTuKHoMj0d4JE2AbQFZgDjH8Ho9N4LEUgAFd0xi2/Dre5tyt00Cp0BpuYFhj+dt3OvHLpT3U27KQxtmDEVONBTaPHDAsQMsfvDODRFeMue/0F+BfK+TWbZWES4D5g+nCvW4=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=ERgXTzuy; arc=pass smtp.client-ip=209.85.167.48
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	s=arc-20240116; t=1790106870; c=relaxed/simple;
+	bh=DntOTyiehTYLE/ecSj68RfJvncCmRDLPsD8e/ZTDRs8=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=QuUWVKHRUFsuN1PNRjM5prZTdVxwPHvXNbsR5asGv/A1Ei2UgXYXPGCJ0+a/c7zNYaLyuzRihElbQpGb4LbuVYWPhjp2w89W5/Voocv7E9/NKn0dXkuw04QcKPAd9WQzsD+/zBKWI5yNa+NAAWqQ4h0T9TvrwiD2ymiT4PD7XOo=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=TQuftjtg; arc=fail smtp.client-ip=52.101.193.0
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="ERgXTzuy"
-Received: by mail-lf1-f48.google.com with SMTP id 2adb3069b0e04-5b5e5aaf7deso56e87.0
-        for <linux-pci@vger.kernel.org>; Tue, 22 Sep 2026 12:23:17 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1790104995; cv=none;
-        d=google.com; s=arc-20260327;
-        b=SV5eRMeVOBQtoQcZy1IJ19apY/Br63tFYflIxHpo2su2Z/lA4q1bptAe/zi2owLprx
-         Jl3Cb1jjobd6qPgSTC5kkIj7ozeSkDKhXNYFNHWS/+ARB++LMwOHhNnrsodXJcso7PRw
-         Vd1s0L8Ih3rGg5JumpjUy9L03oUkBPuKEk4YnQDi5DNWfZsWV3Q0zpZfH5bkhzW3Fz72
-         y27xgRLmmwibV6ud7kKm20ICT1rItDCc183ZAQArb/MYMNSuGHw8T6sg+NRQSiEn5hpy
-         3wUfhbX+6BdQplXTfg/446XzSWqHTQaGTzp2KR4l2/bXQDQ6jSr/Svj6OGSfj9s8quqT
-         vZZg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=bWXycRkvEhooYynfgtJMUHspQSrP76XAP+DtRk1GwMY=;
-        fh=t0RzGIa4zgTVtgrMzy05M7+56JwO0tolBuG+DVtHkhE=;
-        b=k9joPXDv8dhv47RJkMtHe2oib4YpAk6ntYE1SA24EJgfnR8mOxeAOiN/hpXwXqe4iZ
-         ugD1vNT6kJvPjE006NC2DmYXxDsxJokO4lxbMPC+t4Z5Vyv4oX0WUhfJKJirBnM8gLhc
-         p9+q54ACScEFicZBwX67NYFUW4gomGJIP2OfXqeF5gclt8IFovaztK9kVUco8e4yKVPR
-         B86eJ9ILF0MQH3yAFYQjXiynNKKHKGBDjWvE9+E0Zxwtww2Nxvt1JkvAz/3ttlagSWkc
-         z+0tiEFqxIuhUlD+hrb54o/0K2GIzuNi7/khveC044b2J7g6LV/LaAF9OlGyCOJrYeV/
-         hn+A==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1790104995; x=1790709795; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=bWXycRkvEhooYynfgtJMUHspQSrP76XAP+DtRk1GwMY=;
-        b=ERgXTzuy+Ar4Xv2XRSHZK61Lgq43wdCZcc/LDNFIx1kqsXCuHeTEq7cjgzI/N4/eEG
-         rPDAB5jP3pb+M3K+wAzEaNMGmUnU1lKcrUYwzq2NpbcagYA8J9FE2iuMolAljy46yXLf
-         uEkn2l7Q6EvHEdk0O24jv7P5ds/zE7dAcLazbCLnWqkIRJC/Z9L8JWL0EKwGsmqTbArj
-         ffZr+rHQ0p7cmtgbyzVJgdce4P5PtDw54ooIj0/q3R8DOqhdAl3cSJknEYH4eE5zbg6l
-         N5sRS4KI8w4AIZPZ5nM3VfQXaJ7aF6HyB/1i0XmHkCbjDQMeuDuBAY7uDQkSmsQ0dj35
-         rImw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790104995; x=1790709795;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=bWXycRkvEhooYynfgtJMUHspQSrP76XAP+DtRk1GwMY=;
-        b=oNbowcMaHZuWCxRh1nbq/5oMMOZi4HI5wo02D5udD3owMx+1C3cIkRwGr0UN+pPf9k
-         GVRMDmLiNLw1h8FhvZK+4z741s4oTpTE45b/MjxHcgVBYzSnRhPZ6TXTjGtwc8fYyA2j
-         0GP6h7Iliv42I97hBwSr72DUszkV8xbwKB082drzqrnLGei0HowpWdCFGknnl6dZXlys
-         lvYpaQc5EcTnYTfbkfXTOzGgRhKe5gHsZuiju7kBiI4cugbjnhXVIA5/ZdNsn2AYFdyB
-         1mZEO/qoyhnqeHAxwbm9pduPA/y+dep1JwBuzfgdtrN9V6QbBSv/3STn4rOlVFaff368
-         77CQ==
-X-Forwarded-Encrypted: i=1; AKwUvBybYsxverNVAttOrPULGfp0S2A138GgxmfgPa5LoX6xr3ND8laabGLqQfErWn0OOPlwF9ylUb2gBGM=@vger.kernel.org
-X-Gm-Message-State: AFuF++kHkq6QnyJJ+XGiVV+GuoJG9lL2P7e4NYqXBTKvcqolJXN9EUFq
-	nxsGQ4tVsE1ecmurLCoHtbrThPpUoHx/44yXcp1RRmpIJSt4HvwxwiaglSFBmyN8F8HvmATHK4F
-	y26AaqJgXll3s0h9XCm877MJypvw6QIvtJJWHqro+
-X-Gm-Gg: AYBFou0zuGPCM6D9cKX31TmP0gXK2KEs1rnEZMHbuiu3qesl1YbKVZGuBqx7M86cjvw
-	qjUf0buA/KLyaFXl41gSvt+wFrys3524aXm71lm5iaLaAQGyklMS1CUdogUgfc+mnEKYDWXgsZN
-	TKFRHZ21wjWKemMD1MqQ2WGhjIFCsSnhYLSuCrcg5TZtLZtNM/ZjEhtnRykgxHCVaW8aUx4XZGJ
-	38Z7wbSudZeyCFpAthVemlhC3zPMjYhOkpoLm6lvlMixoildRUWATNE6juo8v9mZAUGlX44asTF
-	Ic4rJuT4WK2fkwM5iRIHDd4PbWOR8mcyi660SFsz4EJ/3efA9TSp0a90xBhBrfJzpxYvCDxMyPF
-	KA0Mt5xFTXJEEgR1ej/C+2za7AVqaPXYZ3pAqvJPB
-X-Received: by 2002:a05:6512:1301:b0:5ae:b726:5f1f with SMTP id
- 2adb3069b0e04-5b8d8848194mr29002e87.8.1790104994064; Tue, 22 Sep 2026
- 12:23:14 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="TQuftjtg"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=Uj0AguIikl3vp5+DlhQgTFdDWszZCVW7npK4/gY4gf2GW7lOdDt6zS63zkc3tK89xo2b8eP32t2FPTL6R5jPzHtfIoEZXC0bZXJ77s9KitUuBgIVGtF0qF/Dvry6uUm0qwF9lhP9GvpQ7nIQdJEuPmGKl3uiG0qwOQNyDt1++URea/gg7hf9EsGBfMYTOFtaHlcNLKAkCkEoMRD7mXWcSxT+Pt2snF0WC51uwcMs/bDH68vZoO8KyHDDfnY07ILeq/MMF3dI8rczO988JV/SyPtB30/8CJGjeNYRGB6010AwV8CGBG0z8z1iZVxREI2LduiCHnX5x7AlNDU/vT5SEg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=xLVnx364MwIiqrNO5GzKIfgM07nDj2xdFyOqvCpheno=;
+ b=wKBjgJvH5Yoq5thkjSPqeLTHWDU4n9m2zfY4vA1eTNaQ6tDS1sl9BgTwiLqn9iWaMPrJMX4fb/3q8eBEUl2X0eqwKFFP2l+GJq/GN7VU3lOZaqTf7h+JF8HzlKXhyDmIDp9nxZySlzKKe7hxziGNterpFwrE3FC2vOeu9OuD0mDFcWG1RDFCHVZJHH4NgFteBRmatpdALzQjO9MPm2sTlLnocha6GYqaHBAk2jBfOhxBVW91WdQJS4+QVSG9uyjpEszcefr2E/29ZYAAGiJXNv3JgolPc4fb3FtbtUMJwlI9iWmaAmvQb6iUT7J+nLQE4xXIK4ksSAvYJT/PoJtsAA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
+ header.d=amd.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=xLVnx364MwIiqrNO5GzKIfgM07nDj2xdFyOqvCpheno=;
+ b=TQuftjtgDHzdE+bqlRbk64ygUy5BSKlW0lXmzkzQgmNG18ynV17DvrYlgrABHFcke9Ir7UQSODpV8HsBBB8bnr+fqBwQj02+nMqtBjWwSlzrmDlPqHXD11KDveU+KwinvzKtE0oa1fAbLy4rzo/Ang3Ho4mrLTc9Jh/HUH/ihG8=
+Received: from BL4PR12MB9533.namprd12.prod.outlook.com (2603:10b6:208:58f::21)
+ by DS4PR12MB9611.namprd12.prod.outlook.com (2603:10b6:8:277::6) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.451.14; Tue, 22 Sep
+ 2026 19:54:17 +0000
+Received: from BL4PR12MB9533.namprd12.prod.outlook.com
+ ([fe80::d6cc:9c7e:12b9:a418]) by BL4PR12MB9533.namprd12.prod.outlook.com
+ ([fe80::d6cc:9c7e:12b9:a418%6]) with mapi id 15.21.0451.014; Tue, 22 Sep 2026
+ 19:54:17 +0000
+From: "Kovacs, Alexander" <Alexander.Kovacs@amd.com>
+To: Freeman Z <SHD-ISAC@outlook.com>, "Limonciello, Mario"
+	<Mario.Limonciello@amd.com>, Mika Westerberg
+	<mika.westerberg@linux.intel.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>, "westeri@kernel.org"
+	<westeri@kernel.org>, "andreas.noever@gmail.com" <andreas.noever@gmail.com>,
+	"YehezkelShB@gmail.com" <yehezkelshb@gmail.com>, "rafael@kernel.org"
+	<rafael@kernel.org>, "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
+	"S, Sanath" <Sanath.S@amd.com>, "Natikar, Basavaraj"
+	<Basavaraj.Natikar@amd.com>, "Martinez, Juan" <Juan.Martinez@amd.com>
+Subject: RE: [BUG] PCI/USB4: AMD Phoenix 1022:14ef runtime suspend prevents
+ JHL9480 downstream enumeration
+Thread-Topic: [BUG] PCI/USB4: AMD Phoenix 1022:14ef runtime suspend prevents
+ JHL9480 downstream enumeration
+Thread-Index: AQHdSd1c593zF2yuc0efXEtk9KFFoLbazowAgAA18BA=
+Date: Tue, 22 Sep 2026 19:54:17 +0000
+Message-ID:
+ <BL4PR12MB9533BF5ABF7035E6DF151C0A9C832@BL4PR12MB9533.namprd12.prod.outlook.com>
+References:
+ <TYCPR01MB1092795BE7AB51121BBAB292496862@TYCPR01MB10927.jpnprd01.prod.outlook.com>
+ <20260921050450.GM106095@black.igk.intel.com>
+ <f8b929da-b4ae-48ae-9667-3eb93aa0a4bd@amd.com>
+ <TYCPR01MB10927E6DC71CDC3B39C26F35196832@TYCPR01MB10927.jpnprd01.prod.outlook.com>
+In-Reply-To:
+ <TYCPR01MB10927E6DC71CDC3B39C26F35196832@TYCPR01MB10927.jpnprd01.prod.outlook.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+msip_labels:
+ MSIP_Label_198e8dea-a4f3-4850-b16a-fd6d2b1302b4_Enabled=True;MSIP_Label_198e8dea-a4f3-4850-b16a-fd6d2b1302b4_SiteId=3dd8961f-e488-4e60-8e11-a82d994e183d;MSIP_Label_198e8dea-a4f3-4850-b16a-fd6d2b1302b4_SetDate=2026-09-22T19:53:58.0000000Z;MSIP_Label_198e8dea-a4f3-4850-b16a-fd6d2b1302b4_Name=AMD
+ General
+ v26;MSIP_Label_198e8dea-a4f3-4850-b16a-fd6d2b1302b4_ContentBits=3;MSIP_Label_198e8dea-a4f3-4850-b16a-fd6d2b1302b4_Method=Standard
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=amd.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: BL4PR12MB9533:EE_|DS4PR12MB9611:EE_
+x-ms-office365-filtering-correlation-id: c822f807-d630-4890-5d6a-08df18e3492b
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam:
+ BCL:0;ARA:13230040|376014|7416014|23010399003|1800799024|366016|38070700021|4143699003|56012099006|5023799004|11063799006|10067099003|18002099003|22082099003|6133799003;
+x-microsoft-antispam-message-info:
+ SeVYP3Hw0FBj+BFQ4bFvZQKrBpinG171+PsAEPY68m2D3PAkYyEZv8zmU83ValzKgD9h/BwdV2zbMY87wsJ5/2jaf1oncLabSt956G8a9oVh3OpPkee2/27ym8rOjtg7k8Kz/C/ZbNjZdNrKfe3O8qSizjvJkxuBTLARXssxRbbP7YeNoDgXBsQ19bjmZ0WjtFgeNFgGE8+KJ2mM/J/4lSEY+bYIQ7VpnHbC83Iy7wiGgWBFv4ikYzHDSqY0NLwUEAzXrHe7hLUsopjMTCFMnPVmvMzcJRyYGrWXZbWMXj4b5MVGS7xD2iQsVOg5rzOAAn5Do2RadA7PiGo66nAQ9jWXG47TOTUIS/U4fdOMGUkPW9MjAtkA48B1594XGIgSnUXRP2HUqv0Aou01g0RpPbNu+oQkS4N1r7/JH0bIANSrj7pM+CS2e8cwnuptkM58+CWPZptiexfGtGo27pIr3iZdjsdmHo+J5+gyApRprOQbEmsngmGDd2mZwfSumsqi/eU1HCNesFsYSQi998wuKpY/zShVoB4Yh1YGUAyvlnYFE+Ja+sz7kpwGBIzZhpmqnhNo/4cUQ28Mlm6rE6hV3GjnHeR5DKAnt7+c12T1TKWtvgR4tsih0ppPY2neGrBjXgjF3tfAkgymTEFHw5xO+m+fSJXEKv5G662K5B2fZL+h16h6QIyM/feLEuq5l+wBpkfnElqGz+KBV4sICETOIAxaGWSd9ifoGQpA4Vmtwgc=
+x-forefront-antispam-report:
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BL4PR12MB9533.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(7416014)(23010399003)(1800799024)(366016)(38070700021)(4143699003)(56012099006)(5023799004)(11063799006)(10067099003)(18002099003)(22082099003)(6133799003);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?iso-8859-1?Q?jOjEv3IxPeiCChwQEre2VvwlXC1xJi7Ah+juJa7/yF2S38EdVZR4AA1CId?=
+ =?iso-8859-1?Q?8nS2sRBZA9XPF4yUhfnEX859yr+u3MmIEX3r+oBr+O/zjT1NTEtYyyc3Q3?=
+ =?iso-8859-1?Q?BcrilNCwM0MlHEaLZICGhDRf9kmS37AIZrHTtarASTANdYpXwCVdvRCTKV?=
+ =?iso-8859-1?Q?R/mSXOHEjDqhqFriPG66fea4lPjBoo9rZlt55jEjgejF4QVp8GCmS3jvli?=
+ =?iso-8859-1?Q?flC6eUAWKmw/qvOSPaKuzbO0Hb1oqbVR4mjXniBt1L799m3u1wAdZPlN1S?=
+ =?iso-8859-1?Q?O5g6RbhdrrG3ySIo0R/77JiL5O/7rYFDpZwPUir4SXv2xrGEvzhe3FRe81?=
+ =?iso-8859-1?Q?1+eVoof0nDF3cSUaplxjMxlGIwBODtVY3rsluekToawgHREfuEkHXebHjj?=
+ =?iso-8859-1?Q?GVWFSEvg+qjmzs28cSjocs8XWORthw9ji3lPR3c7v4eLHdjsNmEctKMivg?=
+ =?iso-8859-1?Q?Se3O9Tbe/TNUmOTblM+OlRBcPTvKkACinQZqSJeA8Zr+HI2aMgIgYmPVb3?=
+ =?iso-8859-1?Q?dyCI7BvQTaVUualr3ZRciLp/i/Jc/PyEY+4TOzq/U5avQ/OiMHq+gJHvef?=
+ =?iso-8859-1?Q?jEsoPbuK+I+Pcv8yLwIco1Y2MzdX/X5zv4LNciOMx5X1uaslNqZBZjohVi?=
+ =?iso-8859-1?Q?4vsuHkjovA3HdZNe51zES8Wl+SMJZORgvFpjt59N++5qdhUAEaZ3Az+fDK?=
+ =?iso-8859-1?Q?mzoG4aZwotrWQUGg4MqpUKzxzaBOkV0xv+VA8o9mNeeZ/Wy1oLrkqvXPV1?=
+ =?iso-8859-1?Q?lcxy6C7yGjcnhUm475aVbVUgzt711IQqeXkx5XitYoWQdc4cvjCHawzRGK?=
+ =?iso-8859-1?Q?NB/E5EuYoAJ9MlUvWvrK1Hef4+wbcaqW6oe1ESW7ez3Fxf/PUTsWMQRrX6?=
+ =?iso-8859-1?Q?LLOQ4WYYK93ALMo7Jfs+YWETrfPssS8ZaT6qS7CBa/zPaFOrC7Gz8QZ3Ah?=
+ =?iso-8859-1?Q?MJTmmCxcpwK1C7hwl9Vzv+eWmDZRV4oB+cLU4BTYb25QgabEUd6iFNHMiH?=
+ =?iso-8859-1?Q?UWLxq0LmpQS9Lq5bbk+UF0lWjdA0yMa81z9u1qzhefmpS6UiyW7Z/SuEkq?=
+ =?iso-8859-1?Q?EORYhoqxHxmS6rM5CL+Lc5/UjvrrIIByuuml0s3lpPnWtDuwLKrQYB1HIv?=
+ =?iso-8859-1?Q?BOhmJWgBqlm2Ylmchn+4CHrveG7gPiqiH8sz68E80368pDfaOH57Agnmog?=
+ =?iso-8859-1?Q?1xYCMbr70E+K4nGAz/vhr8T2PvmDQHC951qAn9RIttZNII3mh7bV7hfLQL?=
+ =?iso-8859-1?Q?5PjB51A7oKUCW+uGim4G7WvzQKzl6eXbl+BXwN785AXH1KB15RCGKgEe0i?=
+ =?iso-8859-1?Q?NTeaJOKOGID7tN53tc5mMVdxLD3FYnmGe3xElA9ltxqjlLclpVB6vybkH/?=
+ =?iso-8859-1?Q?/PSRJ91K90gaAJ+CR9GlcpsGz3fhYEmx0Czp2yDXFDu9urlQRlTsDKcTWb?=
+ =?iso-8859-1?Q?6gS1KTgCeYg2KChWQiVD7CBWqXGXjeIV05MqlK4B836PiyCRtMBAUAV0Eo?=
+ =?iso-8859-1?Q?9JD0I9vNgd7dzyIKF9P3BPxsW+k+LMThP0mSCccmsuM3bD+vwr6pGnTavj?=
+ =?iso-8859-1?Q?IvHDViAOBADyYOEKX5jNIEHFALNfkoocpT6gkU0pa9fjjYy9eNlcrJ6B/9?=
+ =?iso-8859-1?Q?nl82H/v/VVIGtl6pBVHYRHJTsC6p6GlF1RBbtuKONv9htVi8mcUlQl+bqC?=
+ =?iso-8859-1?Q?ACqhdaBqK+o0al9kIZzkVJkbb4Ee0mLlJMOlYI5a5JS17v4S99cKfnhJai?=
+ =?iso-8859-1?Q?KMuNBrHUni+TdZBMp7xzh5QTFxA89A20SPxrYlmeQx+gCQ?=
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260916115159.1938195-1-aik@amd.com> <20260916115159.1938195-18-aik@amd.com>
-In-Reply-To: <20260916115159.1938195-18-aik@amd.com>
-From: Jianxiong Gao <jxgao@google.com>
-Date: Tue, 22 Sep 2026 12:22:45 -0700
-X-Gm-Features: AcwNN1UxkcAsiONLLRx4-Onp4JXfCAvcJEHnQ3RWuM6d-nkITizrfWrwxkArT4o
-Message-ID: <CAMGD6P38zYT8FzkFHoaKNEL0tVErK7G+ZLPMzgazAmVoMcD=yQ@mail.gmail.com>
-Subject: Re: [RFC PATCH kernel 17/17] x86/sev: Flush IOMMU TLB for trusted devices
-To: Alexey Kardashevskiy <aik@amd.com>
-Cc: x86@kernel.org, linux-kernel@vger.kernel.org, kvm@vger.kernel.org, 
-	linux-crypto@vger.kernel.org, linux-pci@vger.kernel.org, 
-	Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>, 
-	Dave Hansen <dave.hansen@linux.intel.com>, "H. Peter Anvin" <hpa@zytor.com>, 
-	Sean Christopherson <seanjc@google.com>, Paolo Bonzini <pbonzini@redhat.com>, 
-	Andy Lutomirski <luto@kernel.org>, Peter Zijlstra <peterz@infradead.org>, 
-	Ashish Kalra <ashish.kalra@amd.com>, Tom Lendacky <thomas.lendacky@amd.com>, 
-	Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Juergen Gross <jgross@suse.com>, 
-	Stefano Stabellini <sstabellini@kernel.org>, 
-	Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>, Marek Szyprowski <m.szyprowski@samsung.com>, 
-	Robin Murphy <robin.murphy@arm.com>, Andrew Morton <akpm@linux-foundation.org>, 
-	David Hildenbrand <david@kernel.org>, Lorenzo Stoakes <ljs@kernel.org>, 
-	"Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>, Mike Rapoport <rppt@kernel.org>, 
-	Suren Baghdasaryan <surenb@google.com>, Michal Hocko <mhocko@suse.com>, 
-	Catalin Marinas <catalin.marinas@arm.com>, Jini Susan George <jinisusan.george@amd.com>, 
-	Kees Cook <kees@kernel.org>, Michael Ellerman <mpe@ellerman.id.au>, Nikunj A Dadhania <nikunj@amd.com>, 
-	Ard Biesheuvel <ardb@kernel.org>, Eric Biggers <ebiggers@kernel.org>, 
-	Kim Phillips <kim.phillips@amd.com>, Joerg Roedel <jroedel@suse.de>, 
-	Ethan Nelson-Moore <enelsonmoore@gmail.com>, "Tycho Andersen (AMD)" <tycho@kernel.org>, 
-	Liam Merwick <liam.merwick@oracle.com>, Michael Kerrisk <mtk.manpages@gmail.com>, 
-	Suresh Siddha <suresh.b.siddha@intel.com>, Xiaotian Feng <dfeng@redhat.com>, 
-	Venkatesh Pallipadi <venkatesh.pallipadi@intel.com>, Andi Kleen <ak@linux.intel.com>, 
-	Kiryl Shutsemau <kas@kernel.org>, Tony Luck <tony.luck@intel.com>, Jason Gunthorpe <jgg@ziepe.ca>, 
-	Lu Baolu <baolu.lu@linux.intel.com>, Xu Yilun <yilun.xu@linux.intel.com>, 
-	=?UTF-8?Q?Carlos_L=C3=B3pez?= <clopez@suse.de>, 
-	Jonathan Cameron <jic23@kernel.org>, Jori Koolstra <jkoolstra@xs4all.nl>, 
-	=?UTF-8?Q?Thomas_Wei=C3=9Fschuh?= <thomas.weissschuh@linutronix.de>, 
-	"Aneesh Kumar K.V (Arm)" <aneesh.kumar@kernel.org>, Ian Campbell <ian.campbell@citrix.com>, 
-	Jeremy Fitzhardinge <jeremy.fitzhardinge@citrix.com>, Petr Tesarik <ptesarik@suse.com>, 
-	David Howells <dhowells@redhat.com>, Haavard Skinnemoen <hskinnemoen@atmel.com>, 
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>, 
-	=?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>, 
-	Christian Marangi <ansuelsmth@gmail.com>, Dave Jiang <dave.jiang@intel.com>, 
-	Michael Kelley <mhklinux@outlook.com>, Ilias Stamatis <ilstam@amazon.com>, 
-	Sumanth Korikkar <sumanthk@linux.ibm.com>, Simona Vetter <simona.vetter@ffwll.ch>, 
-	Toshi Kani <toshi.kani@hp.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
-	Vinod Koul <vkoul@kernel.org>, Jiang Liu <jiang.liu@linux.intel.com>, 
-	Arnd Bergmann <arnd@arndb.de>, Anshuman Khandual <anshuman.khandual@arm.com>, 
-	Kefeng Wang <wangkefeng.wang@huawei.com>, Palmer Dabbelt <palmerdabbelt@google.com>, 
-	linux-coco@lists.linux.dev, xen-devel@lists.xenproject.org, 
-	iommu@lists.linux.dev, linux-mm@kvack.org, aik@ozlabs.ru, 
-	Santosh Shukla <santosh.shukla@amd.com>, "Pratik R . Sampat" <prsampat@amd.com>, 
-	Scott Soule Cheloha <scott.cheloha@amd.com>, Ackerley Tng <ackerleytng@google.com>, 
-	Fuad Tabba <tabba@google.com>, Darwin Guo <darwinguo@google.com>, Shruti <shrutiss@google.com>, 
-	Saurabh Singh <saurabhsinghs@google.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: BL4PR12MB9533.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: c822f807-d630-4890-5d6a-08df18e3492b
+X-MS-Exchange-CrossTenant-originalarrivaltime: 22 Sep 2026 19:54:17.4035
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: CEtHRDJoN7HUO0G1gXbUgVuPC9VXDw82YxmEGPI0/+J5q5oCbE/BZXY58mr9FBRr
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS4PR12MB9611
 
-On Wed, Sep 16, 2026 at 5:07 AM Alexey Kardashevskiy <aik@amd.com> wrote:
-> +static int alloc_iommu_tlb_flush_ghcb_pages(void)
-> +{
-> +       unsigned int cpu;
-> +       struct page *pg;
-> +       void *p;
-> +
-> +       /*
-> +        * Allocate per CPU pages while encrypted DMA is not happening ye=
-t
-> +        * and smashing is cheap.
-> +        */
-> +       for_each_possible_cpu(cpu) {
-> +               if (per_cpu(iommu_tlb_flush_ghcb_page, cpu))
-> +                       continue;
-> +
-> +               pg =3D alloc_pages_node(cpu_to_node(cpu), GFP_KERNEL, 0);
-> +               if (!pg)
-> +                       return -ENOMEM;
-> +
-> +               p =3D page_to_virt(pg);
-> +               /* Trigger psmash in the host os now to avoid psmash race=
- later */
-> +               snp_set_memory_shared((unsigned long)p, 1);
-> +               snp_set_memory_private((unsigned long)p, 1);
-> +               per_cpu(iommu_tlb_flush_ghcb_page, cpu) =3D p;
-> +       }
-> +
-> +       return 0;
-> +}
->
->  int sev_tio_op(u32 guest_rid, unsigned int op, u64 *fw_err, u64 *tdi_id)
->  {
-> @@ -111,6 +142,24 @@ int sev_tio_op(u32 guest_rid, unsigned int op, u64 *=
-fw_err, u64 *tdi_id)
->         struct ghcb *ghcb;
->         int ret;
->
-> +       if (!(sev_hv_features & GHCB_HV_FT_SNP_SEV_TIO))
-> +               return -EPERM;
-> +
-> +       if (op =3D=3D SVM_VMGEXIT_SEV_TIO_OP_RUN || op =3D=3D SVM_VMGEXIT=
-_SEV_TIO_OP_STOP) {
-> +               if (!(sev_hv_features & GHCB_HV_FT_SNP_IOMMU_TLB_FLUSH))
-> +                       return -EPERM;
-> +
-> +               if (op =3D=3D SVM_VMGEXIT_SEV_TIO_OP_RUN) {
-> +                       if (atomic_inc_return(&sev_tio_devices_num) =3D=
-=3D 1) {
-> +                               ret =3D alloc_iommu_tlb_flush_ghcb_pages(=
-);
-> +                               if (ret)
-> +                                       return ret;
-> +                       }
-> +               } else if (atomic_dec_return(&sev_tio_devices_num) =3D=3D=
- 0) {
-> +                       /* Do cleanup or leave it like this? */
-> +               }
-> +       }
+AMD General
 
-Hi Alexey,
++Juan
 
-When testing this series and accepting a locked TDI in the guest
-(echo 1 > /sys/bus/pci/devices/.../tsm/accept), the guest immediately
-terminates with 0x1:0xd (SEV_TERM_SET_LINUX, GHCB_TERM_IOMMUTLB_FLUSH).
+Replied or Forwarded By:
+Alex Kovacs
+845-625-4422
+akovacs@amd.com
 
-In sev_tio_op(), sev_tio_devices_num is incremented from 0 to 1 before
-alloc_iommu_tlb_flush_ghcb_pages() allocates and initializes the per-CPU
-iommu_tlb_flush_ghcb_page buffers:
+-----Original Message-----
+From: Freeman Z <SHD-ISAC@outlook.com>
+Sent: Tuesday, September 22, 2026 11:41 AM
+To: Limonciello, Mario <Mario.Limonciello@amd.com>; Mika Westerberg <mika.w=
+esterberg@linux.intel.com>
+Cc: linux-pci@vger.kernel.org; linux-usb@vger.kernel.org; bhelgaas@google.c=
+om; westeri@kernel.org; andreas.noever@gmail.com; YehezkelShB@gmail.com; ra=
+fael@kernel.org; linux-pm@vger.kernel.org; S, Sanath <Sanath.S@amd.com>; Na=
+tikar, Basavaraj <Basavaraj.Natikar@amd.com>; Kovacs, Alexander <Alexander.=
+Kovacs@amd.com>
+Subject: Re: [BUG] PCI/USB4: AMD Phoenix 1022:14ef runtime suspend prevents=
+ JHL9480 downstream enumeration
 
-1. atomic_inc_return(&sev_tio_devices_num) sets sev_tio_devices_num =3D 1
-   while iommu_tlb_flush_ghcb_page is still NULL on all CPUs.
-2. alloc_iommu_tlb_flush_ghcb_pages() allocates p for cpu =3D 0 and calls
-   snp_set_memory_shared((unsigned long)p, 1) to pre-smash the 2M page
-   before per_cpu(iommu_tlb_flush_ghcb_page, cpu) is assigned (and before
-   other CPUs' pages are allocated, in case this task is running on cpu > 0=
-).
-3. snp_set_memory_shared() -> __set_pages_state() sees
-   atomic_read(&sev_tio_devices_num) !=3D 0 and calls ghcb_flush_iommu_tlb(=
-).
-4. ghcb_flush_iommu_tlb() reads this_cpu_read(iommu_tlb_flush_ghcb_page),
-   gets NULL, and returns -ENOMEM.
-5. __set_pages_state() treats the non-zero return as fatal and calls
-   sev_es_terminate(SEV_TERM_SET_LINUX, GHCB_TERM_IOMMUTLB_FLUSH).
+[You don't often get email from shd-isac@outlook.com. Learn why this is imp=
+ortant at https://aka.ms/LearnAboutSenderIdentification ]
 
-Calling alloc_iommu_tlb_flush_ghcb_pages() before incrementing
-sev_tio_devices_num avoids triggering ghcb_flush_iommu_tlb() while the
-per-CPU pages are still being pre-smashed and initialized:
-
---- a/arch/x86/coco/sev/core.c
-+++ b/arch/x86/coco/sev/core.c
-@@ -150,13 +150,12 @@ int sev_tio_op(...)
-             return -EPERM;
-
-         if (op =3D=3D SVM_VMGEXIT_SEV_TIO_OP_RUN) {
--            if (atomic_inc_return(&sev_tio_devices_num) =3D=3D 1) {
--                ret =3D alloc_iommu_tlb_flush_ghcb_pages();
--                if (ret)
--                    return ret;
--            }
--        } else if (atomic_dec_return(&sev_tio_devices_num) =3D=3D 0) {
--            /* Do cleanup or leave it like this? */
-+            ret =3D alloc_iommu_tlb_flush_ghcb_pages();
-+            if (ret)
-+                return ret;
-+            atomic_inc(&sev_tio_devices_num);
-+        } else {
-+            atomic_dec_if_positive(&sev_tio_devices_num);
-         }
-     }
-
-On Wed, Sep 16, 2026 at 5:07=E2=80=AFAM Alexey Kardashevskiy <aik@amd.com> =
-wrote:
->
-> IOMMU performs RMP checks when SNP is enabled, the results are
-> cached along with the IOMMU translations. When a VM lowers permission
-> of a mapped page (moves to a lower VMPL level or from read+write to
-> read-only or private to shared), the cached RMP check results require
-> invalidation.
->
-> At the moment the only way to invalidate IOMMU cache is the RMPUPDATE
-> instruction which flushes all IOMMU TLBs. It is a host privileged
-> instruction so a VM needs a way to ensure the host has done it.
-> Note that the guest's RMPADJUST/PVALIDATE do not flush IOMMU TLBs.
->
-> The host implements a new "IOMMU TLB Flush" VMGEXIT code which is
-> advertised via bit#11 in the GHCB Hypervisor capabilities.
->
-> Use RMPUPDATE in the following way:
-> - allocate a page per VCPU (to allow lockless flushing);
-> - When invalidation is needed, copy two patterns (A and B) to the page;
-> - invalidate the page so the host can make it shared;
-> - use new GHCB call to request RMPUPDATE on the host;
-> - the host makes the page shared;
-> - the host clears pattern A;
-> - the host makes the page private again;
-> - the host returns to the guest;
-> - check if pattern A has changed and pattern B has not;
-> - if the above failed, panic().
->
-> The patterns are located far enough to not hit the same cache line to
-> work with the cipher text hiding feature.
->
-> The host can choose to not execute the request, WARN_ON if this
-> is the case. Further patches will attempt to handle this in other way.
->
-> Signed-off-by: Alexey Kardashevskiy <aik@amd.com>
-> ---
->  arch/x86/include/asm/sev-common.h |  2 +
->  arch/x86/include/uapi/asm/svm.h   |  3 +
->  arch/x86/coco/sev/core.c          | 92 ++++++++++++++++++++
->  3 files changed, 97 insertions(+)
->
-> diff --git a/arch/x86/include/asm/sev-common.h b/arch/x86/include/asm/sev=
--common.h
-> index ff763c3c5d63..51abf8d061fa 100644
-> --- a/arch/x86/include/asm/sev-common.h
-> +++ b/arch/x86/include/asm/sev-common.h
-> @@ -138,6 +138,7 @@ enum psc_op {
->  #define GHCB_HV_FT_SNP_AP_CREATION     BIT_ULL(1)
->  #define GHCB_HV_FT_SNP_MULTI_VMPL      BIT_ULL(5)
->  #define GHCB_HV_FT_SNP_SEV_TIO         BIT_ULL(7)
-> +#define GHCB_HV_FT_SNP_IOMMU_TLB_FLUSH BIT_ULL(11)
->
->  /*
->   * SNP Page State Change NAE event
-> @@ -210,6 +211,7 @@ struct snp_psc_desc {
->  #define GHCB_TERM_SECURE_TSC           10      /* Secure TSC initializat=
-ion failed */
->  #define GHCB_TERM_SVSM_CA_REMAP_FAIL   11      /* SVSM is present but CA=
- could not be remapped */
->  #define GHCB_TERM_SAVIC_FAIL           12      /* Secure AVIC-specific f=
-ailure */
-> +#define GHCB_TERM_IOMMUTLB_FLUSH       13      /* IOMMUTLB flush failed =
-for SEV-TIO device */
->
->  #define GHCB_RESP_CODE(v)              ((v) & GHCB_MSR_INFO_MASK)
->
-> diff --git a/arch/x86/include/uapi/asm/svm.h b/arch/x86/include/uapi/asm/=
-svm.h
-> index 93597ad492bf..269050942c8e 100644
-> --- a/arch/x86/include/uapi/asm/svm.h
-> +++ b/arch/x86/include/uapi/asm/svm.h
-> @@ -160,6 +160,8 @@
->  #define SVM_VMGEXIT_SEV_TIO_OP_UNBIND  1
->  #define SVM_VMGEXIT_SEV_TIO_OP_RUN     2
->  #define SVM_VMGEXIT_SEV_TIO_OP_STOP    3
-> +#define SVM_VMGEXIT_IOMMU_TLB_FLUSH            0x80000022ull
-> +#define SVM_VMGEXIT_IOMMU_TLB_FLUSH_NO_ACTION  1
->  #define SVM_VMGEXIT_HV_FEATURES                        0x8000fffdull
->  #define SVM_VMGEXIT_TERM_REQUEST               0x8000fffeull
->  #define SVM_VMGEXIT_TERM_REASON(reason_set, reason_code)       \
-> @@ -285,6 +287,7 @@
->         { SVM_VMGEXIT_AP_CREATION,      "vmgexit_ap_creation" }, \
->         { SVM_VMGEXIT_SEV_TIO_GR,       "vmgexit_sev_tio_guest_request" }=
-, \
->         { SVM_VMGEXIT_SEV_TIO_OP,       "vmgexit_sev_tio_op" }, \
-> +       { SVM_VMGEXIT_IOMMU_TLB_FLUSH, "vmgexit_sev_tio_iommu_tlb_flush" =
-}, \
->         { SVM_VMGEXIT_HV_FEATURES,      "vmgexit_hypervisor_feature" }, \
->         { SVM_EXIT_ERR,         "invalid_guest_state" }
->
-> diff --git a/arch/x86/coco/sev/core.c b/arch/x86/coco/sev/core.c
-> index ed0e4546d5e5..aa5a3abb4796 100644
-> --- a/arch/x86/coco/sev/core.c
-> +++ b/arch/x86/coco/sev/core.c
-> @@ -44,6 +44,7 @@
->  #include <asm/cpuid/api.h>
->  #include <asm/cmdline.h>
->  #include <asm/msr.h>
-> +#include <asm/archrandom.h>
->
->  #include "internal.h"
->
-> @@ -103,6 +104,36 @@ static unsigned long snp_tsc_freq_khz __ro_after_ini=
-t;
->
->  DEFINE_PER_CPU(struct sev_es_runtime_data*, runtime_data);
->  DEFINE_PER_CPU(struct sev_es_save_area *, sev_vmsa);
-> +DEFINE_PER_CPU(u8 *, iommu_tlb_flush_ghcb_page);
-> +static atomic_t sev_tio_devices_num;
-> +
-> +static int alloc_iommu_tlb_flush_ghcb_pages(void)
-> +{
-> +       unsigned int cpu;
-> +       struct page *pg;
-> +       void *p;
-> +
-> +       /*
-> +        * Allocate per CPU pages while encrypted DMA is not happening ye=
-t
-> +        * and smashing is cheap.
-> +        */
-> +       for_each_possible_cpu(cpu) {
-> +               if (per_cpu(iommu_tlb_flush_ghcb_page, cpu))
-> +                       continue;
-> +
-> +               pg =3D alloc_pages_node(cpu_to_node(cpu), GFP_KERNEL, 0);
-> +               if (!pg)
-> +                       return -ENOMEM;
-> +
-> +               p =3D page_to_virt(pg);
-> +               /* Trigger psmash in the host os now to avoid psmash race=
- later */
-> +               snp_set_memory_shared((unsigned long)p, 1);
-> +               snp_set_memory_private((unsigned long)p, 1);
-> +               per_cpu(iommu_tlb_flush_ghcb_page, cpu) =3D p;
-> +       }
-> +
-> +       return 0;
-> +}
->
->  int sev_tio_op(u32 guest_rid, unsigned int op, u64 *fw_err, u64 *tdi_id)
->  {
-> @@ -111,6 +142,24 @@ int sev_tio_op(u32 guest_rid, unsigned int op, u64 *=
-fw_err, u64 *tdi_id)
->         struct ghcb *ghcb;
->         int ret;
->
-> +       if (!(sev_hv_features & GHCB_HV_FT_SNP_SEV_TIO))
-> +               return -EPERM;
-> +
-> +       if (op =3D=3D SVM_VMGEXIT_SEV_TIO_OP_RUN || op =3D=3D SVM_VMGEXIT=
-_SEV_TIO_OP_STOP) {
-> +               if (!(sev_hv_features & GHCB_HV_FT_SNP_IOMMU_TLB_FLUSH))
-> +                       return -EPERM;
-> +
-> +               if (op =3D=3D SVM_VMGEXIT_SEV_TIO_OP_RUN) {
-> +                       if (atomic_inc_return(&sev_tio_devices_num) =3D=
-=3D 1) {
-> +                               ret =3D alloc_iommu_tlb_flush_ghcb_pages(=
-);
-> +                               if (ret)
-> +                                       return ret;
-> +                       }
-> +               } else if (atomic_dec_return(&sev_tio_devices_num) =3D=3D=
- 0) {
-> +                       /* Do cleanup or leave it like this? */
-> +               }
-> +       }
-> +
->         /* __sev_get_ghcb() needs IRQs disabled because it uses per-CPU G=
-HCB. */
->         guard(irqsave)();
->
-> @@ -347,6 +396,42 @@ static int vmgexit_psc(struct ghcb *ghcb, struct snp=
-_psc_desc *desc)
->         return ret;
->  }
->
-> +static int ghcb_flush_iommu_tlb(struct ghcb *ghcb)
-> +{
-> +       /* AES encrypts with 16 byte blocks */
-> +       unsigned long s1[BITS_TO_LONGS(128)], s2[BITS_TO_LONGS(128)];
-> +       void *p =3D this_cpu_read(iommu_tlb_flush_ghcb_page), *p2;
-> +       struct es_em_ctxt ctxt;
-> +       int ret;
-> +
-> +       if (!p)
-> +               return -ENOMEM;
-> +
-> +       /* Keep patterns apart far enough to not share the same cache lin=
-e */
-> +       p2 =3D (u8 *) p + 2048;
-> +
-> +       vc_ghcb_invalidate(ghcb);
-> +
-> +       BUILD_BUG_ON(ARRAY_SIZE(s1) !=3D 2);
-> +       if (!rdrand_long(s1) || !rdrand_long(s1 + 1) ||
-> +           !rdrand_long(s2) || !rdrand_long(s2 + 1))
-> +               return -EFAULT;
-> +
-> +       memcpy(p, s1, sizeof(s1));
-> +       memcpy(p2, s2, sizeof(s2));
-> +
-> +       pvalidate((unsigned long) p, RMP_PG_SIZE_4K, false);
-> +       ret =3D sev_es_ghcb_hv_call(ghcb, &ctxt, SVM_VMGEXIT_IOMMU_TLB_FL=
-USH, __pa(p), 0);
-> +       pvalidate((unsigned long) p, RMP_PG_SIZE_4K, true);
-> +
-> +       /* Ensure that the host change is visible */
-> +       smp_mb();
-> +
-> +       if (!memcmp(p, s1, sizeof(s1)) || memcmp(p2, s2, sizeof(s2)))
-> +               return -EFAULT;
-> +
-> +       return 0;
-> +}
->  static unsigned long __set_pages_state(struct snp_psc_desc *data, unsign=
-ed long vaddr,
->                                        unsigned long vaddr_end, int op)
->  {
-> @@ -404,6 +489,13 @@ static unsigned long __set_pages_state(struct snp_ps=
-c_desc *data, unsigned long
->         if (!ghcb || vmgexit_psc(ghcb, data))
->                 sev_es_terminate(SEV_TERM_SET_LINUX, GHCB_TERM_PSC);
->
-> +       if (atomic_read(&sev_tio_devices_num)) {
-> +               int ret =3D ghcb_flush_iommu_tlb(ghcb);
-> +
-> +               if (ret)
-> +                       sev_es_terminate(SEV_TERM_SET_LINUX, GHCB_TERM_IO=
-MMUTLB_FLUSH);
-> +       }
-> +
->         __sev_put_ghcb(&state);
->
->         local_irq_restore(flags);
-> --
-> 2.55.0
->
->
+Caution: This message originated from an External Source. Use proper cautio=
+n when opening attachments, clicking links, or responding.
 
 
---=20
-Jianxiong Gao
+Hi Mika, Mario,
+
+I reproduced the failure following the requested sequence on my installed C=
+achyOS system with kernel 7.2.6-1-cachyos and thunderbolt.dyndbg=3D+p.
+
+For this trace the dock was physically disconnected at boot. I did not run =
+lspci before or during the reproduction.
+
+Before plugging the dock:
+
+    0000:00:04.1
+      power/control        =3D auto
+      power/runtime_status =3D suspended
+      power_state          =3D D3cold
+
+    0000:6b:00.6
+      power/control        =3D auto
+      power/runtime_status =3D suspended
+      power_state          =3D D3cold
+
+After plugging the Kensington SD5000T5 and waiting about 15 seconds:
+
+    0000:00:04.1
+      power/control        =3D auto
+      power/runtime_status =3D suspended
+      power_state          =3D D3cold
+
+    0000:09:00.0
+      missing
+
+    0000:6b:00.6
+      power/control        =3D auto
+      power/runtime_status =3D active
+      power_state          =3D D0
+
+The Thunderbolt dynamic debug log shows the NHI/control channel waking and =
+the USB4 fabric being configured. In particular:
+
+    thunderbolt 0000:6b:00.6: control channel starting...
+    thunderbolt 0000:6b:00.6: 0: resuming switch
+    thunderbolt 0000:6b:00.6: 0:2: is connected, link is up (state: 2)
+    thunderbolt 0-2: Kensington SD5000T5 EQ Thunderbolt 5 Dock
+    thunderbolt 0000:6b:00.6: 0:5 <-> 2:9 (PCI): activating
+    thunderbolt 0000:6b:00.6: PCIe Down path activation complete
+    thunderbolt 0000:6b:00.6: PCIe Up path activation complete
+
+However, I do not see a PME message corresponding to the dock insertion.
+The PME messages in the full dmesg are the early-boot
+"PME: Signaling with IRQ ..." initialization messages.
+
+So in this reproduction, the NHI at 0000:6b:00.6 wakes from D3cold to D0 an=
+d the Thunderbolt driver successfully programs the PCIe tunnel in the
+USB4 fabric, but the AMD 1022:14ef PCIe root port/tunnel at 0000:00:04.1 re=
+mains in D3cold and the downstream 0000:09:00.0 hierarchy never appears.
+
+I attached the full dmesg captured after the dock plug, plus the small befo=
+re/after state files. I redacted only unrelated local network identifiers, =
+the hostname, and filesystem/LUKS UUIDs; the Thunderbolt debug data and dev=
+ice UIDs are otherwise unchanged.
+
+This particular dynamic-debug trace was collected on CachyOS rather than th=
+e Arch stock kernel used for my earlier reproduction.
+
+Thanks,
+Freeman
+
+________________________________________
+From: Mario Limonciello <mario.limonciello@amd.com>
+Sent: Monday, September 21, 2026 23:24
+To: Mika Westerberg <mika.westerberg@linux.intel.com>; Freeman Z <SHD-ISAC@=
+outlook.com>
+Cc: linux-pci@vger.kernel.org <linux-pci@vger.kernel.org>; linux-usb@vger.k=
+ernel.org <linux-usb@vger.kernel.org>; bhelgaas@google.com <bhelgaas@google=
+.com>; westeri@kernel.org <westeri@kernel.org>; andreas.noever@gmail.com <a=
+ndreas.noever@gmail.com>; YehezkelShB@gmail.com <yehezkelshb@gmail.com>; ra=
+fael@kernel.org <rafael@kernel.org>; linux-pm@vger.kernel.org <linux-pm@vge=
+r.kernel.org>; Sanath S <Sanath.S@amd.com>; Basavaraj Natikar <Basavaraj.Na=
+tikar@amd.com>; Kovacs, Alexander <Alexander.Kovacs@amd.com>
+Subject: Re: [BUG] PCI/USB4: AMD Phoenix 1022:14ef runtime suspend prevents=
+ JHL9480 downstream enumeration
+
++Alex K
+
+On 9/21/26 00:04, Mika Westerberg wrote:
+> Hi,
+>
+> Adding AMD folks in case this is known issue.
+>
+> On Sat, Sep 19, 2026 at 12:39:37PM +0000, Freeman Z wrote:
+>> Hello,
+>>
+>> I am seeing a reproducible USB4/PCIe runtime-PM problem on an ASUS
+>> ROG Flow X13 GV302XV (Ryzen 9 7940HS / Phoenix) with a Kensington
+>> SD5000T5 EQ Thunderbolt 5 dock connected to the laptop's USB4 host port.
+>>
+>> The failure is reproducible with the official Arch Linux Live ISO
+>> using Arch's stock `linux` kernel:
+>>
+>>      7.2.2-arch1-1
+>>
+>> I have not yet tested a self-built kernel.org mainline/vanilla kernel.
+>> I can test patches, or collect additional traces if requested.
+>
+> Can you provide full dmesg with "thunderbolt.dyndbg=3D+p" in the kernel
+> command line?
+>
+> With the below steps (following your description):
+>
+> 0. Drop all non-standard command line options except the above.
+> 1. Boot the system up, nothing connected.
+> 2. Once up let the TB and the related PCIe root ports enter D3cold
+>(don't
+>     run lspci it will wake them up but you can look at the runtime
+>status that
+>     they are all suspended).
+> 3. Plug in the dock.
+>
+> We should see in the dmesg the PME if it works as expected. If not
+> then it may be that there is something wrong with the wakeup path.
+
+There was something like this that was reported in the past, but it was a r=
+ace condition of some sort.  It ended up being fixed by a non-obvious optim=
+ization (I forget the specific commit).
+
+But it was definitely older than 7.2, so it sounds like it might have regre=
+ssed again.
