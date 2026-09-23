@@ -1,59 +1,72 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 526D8582BB7;
-	Wed, 23 Sep 2026 20:20:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8EEC645FFB4;
+	Wed, 23 Sep 2026 20:20:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790194845; cv=none; b=SO54K0h5oKMcJCZovJfAlJx+3daT+jPnFpfhd1kXD4zpJanheuuiJuva76LIU+LZwFB6tLeOHbqMtHQEZGGmAO6aR2QVqOirEKqoEADlRXAJp08SHbxhBswl9cd8H5Un2hinioB/b/CNhGBRaD1ee+R+ZGFBJPt1EtCK41VgGzs=
+	t=1790194850; cv=none; b=UIrLmmDjRf5KTSgHv6L1ERFQoYoDXPDXCc7BkXyKLMIIElPsWmrx2lwY7/Y6wiSBT0rScYqjIno+K7sIbapru6YUcFFqnvs0RZ0U1zqxhFdFdCcK55E6HpSkpk+afPI7QCs7BRfzUS0EXuNr05ZmILgijJM8sZ6gl40WBWKWwjQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790194845; c=relaxed/simple;
-	bh=DwAXhax6KoAQhTnH7wCrX+oy4tzHZW6GUxXF0QpYPtE=;
+	s=arc-20240116; t=1790194850; c=relaxed/simple;
+	bh=8+BfGJ3kzOsvub5ukg31gf46z51y9zELKbOmERLnPiQ=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=RfzNlwoQbvsmiBQBBqtaVBNxWmHrxqsVvtDlH+v/4a05VKBrgxYMPoBMgHspsT/aOMENJrj1nlaikQ7CU/zz22MfK/lpJen7gl9IFV/VN5zqPlMfT3siAtsinwocxqEXxrdZzSijER/aYpF6DajDdqRNBkEfYr+gizP3sRWZ51A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Wtf3QU4E; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=dLZ1bHLr923iwLAJBsFsjABiLIX/Hb6CEhN9v+ROj2SqvFe61CETDvBlFdOPpqA9efgQlhfH/fH1T+4K1IMWK51DPdvkHo7o4CIMny7UuAo0W6qXEM5gte3gHVqS0JhYHgl4BN0v7SMPQh/kSVaaFbt8vllzm4Ii1Ucwa0XMIQs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nQPV6iOZ; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Wtf3QU4E"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 117A11F000FF;
-	Wed, 23 Sep 2026 20:20:39 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nQPV6iOZ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C79D41F00898;
+	Wed, 23 Sep 2026 20:20:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790194839;
-	bh=DwAXhax6KoAQhTnH7wCrX+oy4tzHZW6GUxXF0QpYPtE=;
+	s=k20260515; t=1790194845;
+	bh=ocan8SPlp7SuG3loo+E/Zzwcvsu8ANnuBbY6VgPaV/k=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Wtf3QU4EgWVqE1pujjyg4c+/UqbecD0NjYSinY+d8yc5w5y7vufD4fQiDuoLCwz0B
-	 HOeozSU7NcRKXgSP/gXaNP/7zUgS2ymf2gVD9A8X5eDDS4x4DT19rdTXdNkRwg5kAu
-	 7rPsQkIW1dsuxTnu3zo/Z+ubTseGnr3pgahaPyoOzJHLn+YXqckPFu75onDEjyY5B3
-	 GQAUUIE875ff+335l8RWkRtqshXcXJFaDIxtwhcNY1gLGJoNGe2R38o0/6IodUf82O
-	 LsrotPC+gFYh+wLGBxOYtJ2ZFFHDjtb1rZryV9BzEI4j8akAB2biyLOaTGR8QOfR0Z
-	 SZnpEXeKL26fw==
+	b=nQPV6iOZtoEjCdh9AZXAZ9VpF026R7OkVJ5gmxbD4YMwCcGFLSNFUSPqxmieKt+zu
+	 C3teW3j0n8MGD9TLEqn1TiuSjNJ1CFCmq2r3uFnfAYVHJp1UjVOGI1jY2Xqik9+ZJ/
+	 uhVg3rl7sD4ZkskAltPruP+MUeetK3e9AggDpOGiuTf0lb/rGBNZHKL0Er2zVUXgIY
+	 uScrNoLMyg6CIxq3izkoGVPp/hsNJJ8+EryDjX5PK3IgqOeCw+AsZBjN7E4tnmKOlv
+	 1bTprKsK2rfSNJkTGHVdXpjZZmCjwfrVRfsoefvzAKEgdCOvpjdiJtwn/OPMzjHKm+
+	 50CWcHZC4eVaA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v6 12/17] iommu/arm-smmu-v3: Introduce
- arm_smmu_cmdq_batch_issue() wrapper
+Subject: Re: [PATCH v6 11/17] iommu/arm-smmu-v3: Co-clear pending CMDQ_ERR
+ when CMD_SYNC times out
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Nicolin Chen" <nicolinc@nvidia.com>
-Cc: linux-cxl@vger.kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <234616c89cd2703e1d4682a22da46eff410f2607.1790188511.git.nicolinc@nvidia.com>
+Cc: linux-pci@vger.kernel.org, linux-cxl@vger.kernel.org
+In-Reply-To: <16ae24cc2a002802b990afa1a69fe4ceab1e0da2.1790188510.git.nicolinc@nvidia.com>
 References: <cover.1790188510.git.nicolinc@nvidia.com>
- <234616c89cd2703e1d4682a22da46eff410f2607.1790188511.git.nicolinc@nvidia.com>
+ <16ae24cc2a002802b990afa1a69fe4ceab1e0da2.1790188510.git.nicolinc@nvidia.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 23 Sep 2026 20:20:38 +0000
-Message-Id: <20260923202039.117A11F000FF@smtp.kernel.org>
+Date: Wed, 23 Sep 2026 20:20:44 +0000
+Message-Id: <20260923202044.C79D41F00898@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-> Both arm_smmu_cmdq_batch_submit() and arm_smmu_cmdq_batch_add_cmd_p() call
-> arm_smmu_cmdq_issue_cmdlist() to flush batches. A future change will retry
-> the issued commands on -EIO, using the arm_smmu_invs carried in the batch.
-> So, a single hook point is preferred.
+> Once arm_smmu_cmdq_poll_until_sync() returns, arm_smmu_cmdq_issue_cmdlist=
+()
+> tests its CMD_SYNC slot in atc_sync_timeouts to decide whether there was =
+an
+> ATC_INV timeout.
 >=20
-> Introduce an arm_smmu_cmdq_batch_issue() wrapper, so a retry logic will be
-> simply filled into the wrapper.
+> On the other hand, when that poll timed out, the GERROR ISR might have be=
+en
+> delayed past the poll deadline, so the atc_sync_timeouts test could miss =
+an
+> ATC_INV timeout, classifying it as a generic CMD_SYNC timeout and bypassi=
+ng
+> the per-device quarantine.
 >=20
-> No functional changes.
+> Add two cmdq_err_handler impl functions:
+>  - arm_smmu_cmdq_err_handler() reads SMMU GERROR/GERRORN.
+>  - tegra241_vcmdq_handle_cmdq_err() reads VCMDQ GERROR/GERRORN.
+>=20
+> Co-clear any pending CMDQ_ERR in the issuer, when the polling on a CMD_SY=
+NC
+> times out. Each cmdq impl serializes the synchronous drain against its own
+> IRQ handler with cmdq->cmdq_err_lock.
 >=20
 > Assisted-by: LLM
 > Signed-off-by: Nicolin Chen <nicolinc@nvidia.com>
@@ -62,5 +75,5 @@ Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/cover.1790188510.gi=
-t.nicolinc@nvidia.com?part=3D12
+t.nicolinc@nvidia.com?part=3D11
 
