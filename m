@@ -1,202 +1,154 @@
-Received: from mail-06.mail-europe.com (mail-06.mail-europe.com [85.9.210.45])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DCFB53B840B;
-	Wed, 23 Sep 2026 03:59:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=85.9.210.45
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 716E238F25C;
+	Wed, 23 Sep 2026 04:20:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790135977; cv=none; b=ZKv5mNNK7hctVqax3X9XZYZQrAnkU5jJEY7vSbu3WNjN/iOJLfbA5gRN16Kzhp6k/yQdBzY8AFGB7WXCXOL4fpU4iBgUqOm70K0Nhi9Cfr73vKldGgEHao9+T381FUq1QHna5D1emy3wdi60DfLyAjl7Sjlj32btAchYyNY+AI8=
+	t=1790137211; cv=none; b=GpnvasOthjLLUs0uplyDI7Fimhg8yIdtRooCZAEQpI3qUb1+5lsjLIgPY/I9DHh60NUxgzHFC+iDLb68qoaVB7gB2POlpdXVvcjCMv9MNhme0h0f/pvYV2tjkatZebbi8v9b1H3KmlU4HauDPFpX7b8tUiYZVj8s16u3Z7oeCN0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790135977; c=relaxed/simple;
-	bh=YXd2CoAUdAnBNgNQIDgFXd87SkNp2ShWIQJZJksV0ss=;
-	h=Date:To:From:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=fcQsWhmbIgcfOpDWRRV5kxNJMnFZu4d/fY6z/mSZm4vio2heNKJXuyKPiBhFRIdnpF3Etb/AeewJn9GorBjlVRSgsHlqQZy9A3isd3cDNv3M3WMpx2acTXNenWhc7t90ZfuxuDv8Pp5hey2N9jft6q2hqFI1Bg7fq02R2+hzuX4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pm.me; spf=pass smtp.mailfrom=pm.me; dkim=pass (2048-bit key) header.d=pm.me header.i=@pm.me header.b=B1k5Rm01; arc=none smtp.client-ip=85.9.210.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pm.me
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pm.me
+	s=arc-20240116; t=1790137211; c=relaxed/simple;
+	bh=5gZoE00uG48SxAB6q1up1WLM+4HS0b+PT7joXzrK5BY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=WJXQvC251dBAO3AImDGinb5X19gzMLb/v5xn2Mw6kSSsEyUALQRO/xEZ7Aps+pBifWCfjycvI6x/x6oTdEUGWu21HfMUONJM7tDc2uTIjTSiv9HlvVEAzf70nePFBXixddeToqyOKRGk+aWKDc06JaF+dK0riJ9w6cYjP+V0/c4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=gWIcXOjO; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=pm.me header.i=@pm.me header.b="B1k5Rm01"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pm.me;
-	s=protonmail3; t=1790135958; x=1790395158;
-	bh=SL/u2kwcZ0c5sE7eHjcS13950bnEfycQxOnZ5S8EQwo=;
-	h=Date:To:From:Cc:Subject:Message-ID:In-Reply-To:References:
-	 Feedback-ID:From:To:Cc:Date:Subject:Reply-To:Feedback-ID:
-	 Message-ID:BIMI-Selector;
-	b=B1k5Rm01TS/OGX9JpNuG/hrykisSEN2030hrPpES7Oiv2bAP7t4RD0PlastUU0qZh
-	 OE9Y7lp+S8y8ExPOmgoJ5/VEBLJheDTo6q9I+gSYv2tXt48H4d37+DsKK0i+YguTce
-	 5Y8ZNW2jfHsggTrbSowrEdq5EmXi8wmESMK3P5Tf2baW0GJUkNrQC8AyY0zWLVB6q6
-	 oOjAqthn3mKvQhLcSARkwnnRULEst6gC5EwYSJTyQ5/WyRcLGqUOA2oHc15mV/LzYi
-	 SG/q75epKHOKI2P9z0CDoWInca+kRE1+mzNMiTb/6JtoOXWY/Rcvr8c0CGkRLkScb0
-	 +DnQ63RcxZsKw==
-Date: Wed, 23 Sep 2026 03:59:16 +0000
-To: Qiang Yu <qiang.yu@oss.qualcomm.com>, Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
-From: Birk Skyum <birk.skyum@pm.me>
-Cc: "mani@kernel.org" <mani@kernel.org>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>
-Subject: Re: X1E80100 USB4 PCI0 MSI-X routing under EL1/Gunyah
-Message-ID: <7PyP8TPDWSo4VXsNVgDQREx6MqiqQWWL_BsssgI4SBuA9jkR707AGw5AVnm6k1OgH6F2n6Y6QAxah6ZRtKpjZfIKOiOngog3eeLFXIXXf44=@pm.me>
-In-Reply-To: <C8SBDdV0hyOxs4G2FfZBHt4_1PSRVoxaNFSmy_riJk91MhqFMRAt30lpxdyniPMLWnc5Ph93lS0R1nCkVbuV941UrNmWyPNbDER9zIHlrJg=@pm.me>
-References: <g7V4kc2AO9xogkH0h-XHDvPbjDXcnS11cp1q3hv0X96KPW-zed6V79HUJY5BFA4pBWUE-p2MBYCeDcjWwUGBIU2hXjDpodiWaxB38obe8RE=@pm.me> <arEjxhvfIFGGo9O9@hu-qianyu-lv.qualcomm.com> <C8SBDdV0hyOxs4G2FfZBHt4_1PSRVoxaNFSmy_riJk91MhqFMRAt30lpxdyniPMLWnc5Ph93lS0R1nCkVbuV941UrNmWyPNbDER9zIHlrJg=@pm.me>
-Feedback-ID: 21326998:user:proton
-X-Pm-Message-ID: 4194eb41cbbe7e32e0b8860b26e5396ae742a885
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="gWIcXOjO"
+Received: from [100.67.200.185] (unknown [4.194.122.162])
+	by linux.microsoft.com (Postfix) with ESMTPSA id 0AEC520B7167;
+	Tue, 22 Sep 2026 21:19:17 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 0AEC520B7167
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1790137161;
+	bh=Af0CwPE6fgHbBmxoY/Eezao4/Sn7v0Sx3xmR0fEB1MY=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=gWIcXOjOzKZOHawitrLxQfyDot6TBwxCdxfgggbS6qDjz7JO5fVBbUqWuly5mAUPr
+	 8fvlTvdFYKf/UG4rMNQ5bAg4NJJnyD9cUSRumM6pM0Y8Tka+VvcoB8zXkr4kjWA3FH
+	 5Ac+aGfoGQ95OVaMSTpOc6XggLNLwLLGoovCIOk0=
+Message-ID: <fabfdde6-9b9a-4879-9de0-c6ff18045e02@linux.microsoft.com>
+Date: Wed, 23 Sep 2026 09:50:03 +0530
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-
-Hi Qiang and Konrad,
-
-Two questions, if you have the answers at hand.
-
-The first is about power. After we stop the USB4 router (MCU stopped, the e=
-leven USB4_0 MISC resets asserted, PHY off, clocks and interconnect votes r=
-eleased), gcc_usb4_0_gdsc can be switched off, but it never powers on again=
-, and the GDSC driver reports "gcc_usb4_0_gdsc status stuck at 'off'". This=
- happens even after a completely clean stop with no USB4 device ever connec=
-ted. While the GDSC is off, the USB4_0 PCIe pipe mux at GCC offset 0x9f104 =
-reads as selecting the PHY source and ignores writes, while the DP0 and DP1=
- muxes do switch to XO. As long as we never let the GDSC turn off, stopping=
- and restarting the router works every time.
-
-What does gcc_usb4_0_gdsc need in order to power on again? For example a cl=
-ock that has to be running or parked on XO, a reset that has to be released=
- first, or the PHY providing its pipe clock. Or is it meant to stay on whil=
-e the system runs? We would like to power the router down when nothing is c=
-onnected and across suspend, and this is the last missing piece for sleep s=
-upport.
-
-The second is about the other two ports. The Yoga Slim 7x has three USB4 po=
-rts, and so far only the one behind PCI0 works, thanks to your interrupt li=
-st. Could you share the same assignment for PCI1 and PCI2, the eight DWC MS=
-I interrupts plus the global one? I have everything else for those two cont=
-rollers from the ACPI tables, including their INTx lines, but the MSI lines=
- are not listed anywhere, since Windows routes MSI through the ITS.
-
-And one for Konrad as well. Will the USB4 router firmware go into linux-fir=
-mware? The router needs it at startup, so without it no distribution can tu=
-rn USB4 on out of the box.
-
-Thanks,
-Birk
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] PCI: hv: Probe vPCI buses asynchronously
+To: Michael Kelley <mhklinux@outlook.com>,
+ "K. Y. Srinivasan" <kys@microsoft.com>,
+ Haiyang Zhang <haiyangz@microsoft.com>, Wei Liu <wei.liu@kernel.org>,
+ Dexuan Cui <decui@microsoft.com>, Long Li <longli@microsoft.com>,
+ Lorenzo Pieralisi <lpieralisi@kernel.org>,
+ =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+ Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+References: <20260907054742.235389-1-namjain@linux.microsoft.com>
+ <SN6PR02MB4157AB3B9404AF9CC43BF11FD4842@SN6PR02MB4157.namprd02.prod.outlook.com>
+ <c3345afb-7491-42c9-9e9c-609860aea515@linux.microsoft.com>
+ <SN6PR02MB41574C84E56157D1FC2E4F86D4832@SN6PR02MB4157.namprd02.prod.outlook.com>
+Content-Language: en-US
+From: Naman Jain <namjain@linux.microsoft.com>
+In-Reply-To: <SN6PR02MB41574C84E56157D1FC2E4F86D4832@SN6PR02MB4157.namprd02.prod.outlook.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
 
 
-On Wednesday, September 23rd, 2026 at 02:10, Birk Skyum <birk.skyum@pm.me> =
-wrote:
+On 9/22/2026 8:12 PM, Michael Kelley wrote:
+> From: Naman Jain <namjain@linux.microsoft.com> Sent: Tuesday, September 22, 2026 2:09 AM
+>>
+>> On 9/22/2026 2:39 AM, Michael Kelley wrote:
+>>> From: Naman Jain <namjain@linux.microsoft.com> Sent: Sunday, September 6, 2026 10:48 PM
+>>>>
+>>>> On Hyper-V guests each virtual PCI bus is enumerated by its own
+>>>> hv_pci_probe() call. The probe performs several synchronous host
+>>>> request/response exchanges while negotiating the protocol, querying bus
+>>>> relations, entering D0, and reporting allocated resources. These waits
+>>>> are latency-bound rather than CPU-bound.
+>>>>
+>>>> hv_pci registers as an ordinary VMBus driver, so driver_register() walks
+>>>> matching vPCI buses and probes them sequentially while the driver's
+>>>> initcall runs. On guests that expose several devices, each through its
+>>>> own vPCI bus, this serialization adds the host round-trip latencies to
+>>>> device initialization.
+>>>>
+>>>> Each bus is described by its own struct hv_pcibus_device, so
+>>>> independent buses can be probed concurrently. Request asynchronous
+>>>> probing via PROBE_PREFER_ASYNCHRONOUS, causing the driver core to
+>>>> schedule matching buses for asynchronous probe work.
+>>>>
+>>>> On an Azure Standard_L32s_v3 guest with five vPCI targets (four NVMe
+>>>> controllers and one Mellanox VF), Linux 7.2.3 was tested with one warm-up
+>>>> and three measured boots per variant. The median interval from the first
+>>>> hv_pci_probe() entry to the last return decreased from 2847.968 ms to
+>>>> 2786.709 ms, a 61.259 ms (2.15%) improvement.
+>>>
+>>> The elapsed time improvement is rather disappointing given the
+>>> complexity of the probing sequence and the number of interactions
+>>> with the Hyper-V host. Do you have any insight into why there isn't a
+>>> larger reduction? Is something mostly serializing the work even though
+>>> PROBE_PREFER_ASYNCHRONOUS is specified?
+>>>
+>>> Michael
+>>>
+>>
+>> I can see these reasons for not seeing great improvements:
+>> 1. Timing of device offers from the host is beyond the control of guest
+>> and the Hyper-V host may also be serializing the requests from the host.
+> 
+> Ah, right. This is probably the key factor.
+> 
+>> 2. Shared locks that needs to be handled separately:
+>>      * hyperv_mmio_lock during VMBus MMIO allocation.
+> 
+> This probably has minimal impact. While there's a decent amount
+> of code protected by the lock, I don't think there's any interaction
+> with the host (even via traps), so it should run quickly.
+> 
+>>      * pci_rescan_remove_lock during PCI resource assignment and device
+>> addition.
+> 
+> OK. I don’t know about this one.
+> 
+>>
+>>
+>> I digged more into it, and it is indeed because of late offers from
+>> Hyper-V. I was considering the start of first probe to the last return,
+>> for time calculations.
+>>
+>> For the 4 PCI devices on my setup whose offers were delivered together,
+>> the performance improvement was about 24%. However with the last offer
+>> coming late for MLX PCI device, overall improvement in time was lesser
+>> in terms of percentage.
+> 
+> For traditional configs where the VF NIC is paired with a netvsc
+> instance, the host doesn't offer the VF NIC to the guest until the
+> corresponding netvsc instance has been probed and the netvsc
+> driver has told the host it will accept a VF NIC. In these cases, the
+> Mellanox or MANA VF NIC device is always "late" and probably
+> shouldn't be included when determining the speed-up of doing
+> hv_pci probing asynchronously.
+> 
+>>
+>> Dexuan had removed pci_rescan_remove_lock in his previous upstream
+>> attempt, but I ommitted it intentionally this time because from AI
+>> review, I saw a potential race condition that we would introduce if we
+>> remove it. Secondly, I did not observe any benefits of removing this
+>> lock. But I am going to revisit it again.
+> 
+> Thanks for the discussion. Using PROBE_PREFER_ASYNCHRONOUS
+> is still a good thing to use, but the benefit will accrue the most when
+> there are a significant number of NVMe devices and when Hyper-V
+> is quick about offering them. As I described above, it will be harder
+> to get parallelism with the VF NIC.
+> 
+> Michael
 
->=20
-> Hi Qiang and Konrad,
->=20
-> Thank you, that was exactly what was missing. With your interrupts and wi=
-thout msi-map, the NVMe behind the USB4 tunnel now gets real MSI-X at EL1. =
-My LaCie external SSD reads at about 2.6 GB/s and writes at 2.8 GB/s (16 Gi=
-B direct I/O on ext4), and safe removal and reconnect work repeatedly.
->=20
-> Two details were needed on top of the DT. The DBI MSI registers (0x820 to=
- 0x830) had to be programmed after the tunnel BCR reset and the router rese=
-t requests, and MSI on the root port itself had to be opted out.
->=20
-> How would you like this to go upstream? Konrad mentioned that the Qualcom=
-m USB4 router driver will be posted, so I've added him here. I'm happy to s=
-end the pcie0 interrupt setup as a patch, or leave it to that series if you=
-'d rather carry it there.
->=20
-> Konrad, I'd be glad to test the router driver on the Yoga Slim 7x as soon=
- as it's posted and report back with a Tested-by. Two things I've seen may =
-matter for it. Now and then the PMIC firmware misses the cable e-marker at =
-attach (CCSts=3D2, PwrSts=3D1C, no VCONN), so the port stays in USB3 and ne=
-ver enters USB4 until a replug. And the PS8830 on the Yoga works in USB4 mo=
-de, while Jens Glathe's ps883x series from July would set parade,disable-us=
-b4 on the Yoga.
->=20
-> Thanks again,
-> Birk
->=20
->=20
-> On Monday, September 21st, 2026 at 14:32, Qiang Yu <qiang.yu@oss.qualcomm=
-.com> wrote:
->=20
-> > On Sat, Sep 19, 2026 at 08:33:20PM +0000, Birk Skyum wrote:
-> > > Hi Mani,
-> > >
-> > > I'm working on experimental USB4 support for the Lenovo Yoga Slim 7x
-> > > (83ED, X1E80100), building on Jim Martin's published Glymur stack. Th=
-is is
-> > > an out-of-tree bring-up, not a regression report against mainline.
-> > >
-> > > A directly connected LaCie Rugged SSD4 negotiates USB4, enumerates th=
-rough
-> > > a PCIe tunnel and completes a 4096-byte read into RAM. However, NVMe
-> > > completions are recovered through timeout polling, with zero
-> > > device-generated interrupts recorded.
-> > >
-> > > MSI-X is enabled and unmasked, and the table matches Linux's programm=
-ed
-> > > messages. Software ITS INT commands reach the NVMe handlers. In a
-> > > separate test, redirecting one MSI-X vector to owned coherent RAM
-> > > captured the expected endpoint payload, but that does not prove deliv=
-ery
-> > > to the ITS.
-> > >
-> > > The endpoint RID is 0x0100. The captured firmware IORT and our DT agr=
-ee
-> > > on DeviceID 0x80100, with MSI address 0x17050040 and event data 0/1. =
-The
-> > > PCIe SMMU remains firmware-owned.
-> > >
-> > > Source and test results are published here:
-> > > https://github.com/birkskyum/yoga-slim7x-usb4
-> > >
-> > > Is direct ITS delivery the intended route for USB4 PCI0 under EL1/Gun=
-yah?
-> > > Is additional controller forwarding or DeviceID setup required?
-> > >
-> > > I also found the QCS8550 change using the internal DWC MSI receiver t=
-o
-> > > avoid a Gunyah limitation:
-> > > https://github.com/torvalds/linux/commit/33cae252054a694269f9dcd41b35=
-4063193c8f59
-> > >
-> > > I realise that involves different hardware and symptoms. If an intern=
-al
-> > > receiver is appropriate for X1 PCI0, where can I find its parent IRQ =
-and
-> > > required initialization?
-> > >
-> >
-> > Hi Birk,
-> >
-> > Please add below dts change in pcie0 dts node and also remove msi-map i=
-f you added,
-> >
-> > interrupts =3D <GIC_SPI 655 IRQ_TYPE_LEVEL_HIGH>,
-> >              <GIC_SPI 657 IRQ_TYPE_LEVEL_HIGH>,
-> >              <GIC_SPI 664 IRQ_TYPE_LEVEL_HIGH>,
-> >              <GIC_SPI 668 IRQ_TYPE_LEVEL_HIGH>,
-> >              <GIC_SPI 348 IRQ_TYPE_LEVEL_HIGH>,
-> >              <GIC_SPI 349 IRQ_TYPE_LEVEL_HIGH>,
-> >              <GIC_SPI 351 IRQ_TYPE_LEVEL_HIGH>,
-> >              <GIC_SPI 702 IRQ_TYPE_LEVEL_HIGH>,
-> >              <GIC_SPI 167 IRQ_TYPE_LEVEL_HIGH>;
-> > interrupt-names =3D "msi0",
-> >                   "msi1",
-> >                   "msi2",
-> >                   "msi3",
-> >                   "msi4",
-> >                   "msi5",
-> >                   "msi6",
-> >                   "msi7",
-> >                   "global";
-> >
-> > #interrupt-cells =3D <1>;
-> > interrupt-map-mask =3D <0 0 0 0x7>;
-> > interrupt-map =3D <0 0 0 1 &intc 0 0 GIC_SPI 703 IRQ_TYPE_LEVEL_HIGH>,
-> >                 <0 0 0 2 &intc 0 0 GIC_SPI 708 IRQ_TYPE_LEVEL_HIGH>,
-> >                 <0 0 0 3 &intc 0 0 GIC_SPI 714 IRQ_TYPE_LEVEL_HIGH>,
-> >                 <0 0 0 4 &intc 0 0 GIC_SPI 716 IRQ_TYPE_LEVEL_HIGH>;
-> >
-> > - Qiang Yu
-> >
+Thanks Michael, this makes sense now. I'm glad that you asked.
+
+Regards,
+Naman
