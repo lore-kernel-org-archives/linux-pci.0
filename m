@@ -1,158 +1,170 @@
-Received: from mail-244116.protonmail.ch (mail-244116.protonmail.ch [109.224.244.116])
+Received: from BL2PR02CU003.outbound.protection.outlook.com (mail-eastusazon11011013.outbound.protection.outlook.com [52.101.52.13])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D87681F5825
-	for <linux-pci@vger.kernel.org>; Wed, 23 Sep 2026 00:10:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=109.224.244.116
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790122260; cv=none; b=o2TJF5jDPGzE5pIH/Q1/gJxzxtxleWUBer9GsryZEEgtnBMy1M9OSUqA+UveezhxSebVuRBFT3ye+mE15XRMT3RtskOaagfc4Y+J5/lAAZCB6g1UolGR82rrnB+BfsvczIDzpjFche6E2T8gVFVHaxhtSV6Kwbw31FoGBnjT/HQ=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790122260; c=relaxed/simple;
-	bh=achqBSDLTbG7ys9axw9+AqXqOsnM37AE7sOtn/+zDyI=;
-	h=Date:To:From:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=cQy1R0/88VJ7PSylwKC3E22tAGRJKx4cB5vt5VoZ0VelH/TCo63Ym6HTRUAKWSap1KcvuPEZQAGLMxecit+u6TirC73Z0rZuXsSmILoxZVmIIb/8iP9tDhsuOsLv1DfsiQMIXwJlBCl6nNqFAp5njjkuToVxEcHtQGkGUCt0k5U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pm.me; spf=pass smtp.mailfrom=pm.me; dkim=pass (2048-bit key) header.d=pm.me header.i=@pm.me header.b=S+xGxBKl; arc=none smtp.client-ip=109.224.244.116
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pm.me
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pm.me
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D79E82BE03B;
+	Wed, 23 Sep 2026 00:20:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.52.13
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1790122815; cv=fail; b=Zji8zhXJLyXDtY76TwpbElFLp0fzZC/egb+4W0Z40TaT5ObZpLsYOOSChp9jAoOWWUnxBBGjepBg+vXSlBQTpGSaiaoxhPAJy0ercD+n5DKOcD2nzMbugw1piEjkWiCD7gLPPCxREifmgEZ6C2EEWbsvRdI05Wh6r9qBycQVC9s=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1790122815; c=relaxed/simple;
+	bh=5dVaRoCMaj8H0l//DcicP9RM1R1tu/ornqQGKHDdZyE=;
+	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=HFr8UswS73keMJ26LW3J3MENISXnQDosPI5QyMD2cfk3dijk9zxxy9aUyx/7lK+GZc4HJ4ZuxhkDeNYswJcsHhKYaQ1B+1M85Juu1wJRnBoRnY/V8zzATZp9QGSj/kcSSADq/tdS1YGGuWzW5NQSzfzFGbYnThmkolkCQnjDDEs=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=XAMiIuih; arc=fail smtp.client-ip=52.101.52.13
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=pm.me header.i=@pm.me header.b="S+xGxBKl"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pm.me;
-	s=protonmail3; t=1790122255; x=1790381455;
-	bh=8Y9YIRMA/aNqzz8j7tnX4LACjbsTyfhJDnCkbsQY3r0=;
-	h=Date:To:From:Cc:Subject:Message-ID:In-Reply-To:References:
-	 Feedback-ID:From:To:Cc:Date:Subject:Reply-To:Feedback-ID:
-	 Message-ID:BIMI-Selector;
-	b=S+xGxBKlSxOZ+/Tal2aI2zTaF20nMS+pR/2XDu3LidipckeZcL++k4UhbktFpW7Ps
-	 NmjR6biFRb3JzbVYGtIHwbSlACj4WcdGoBDk3iZq2QVl/rDZo1K9adFthzuz7nFcb7
-	 +KWcJ7tzg71edzHEC82hsdyfbsjlCayLvm5d3cnG3JWfWPwkmQkJ2ZLjhlb4UA8dJf
-	 bqVVEJejINaXJ5NX4EGZenBA9u/TmpdBxtKLTt9bnMw4NPDyXoQLHenGaJg+2rRGHm
-	 rK3VX1PGsEJuAeJFP+DMeW1wI8AeedeVfjfmAadMBUYdRzni2zONhMmlOdw2WAviN+
-	 wxdfcEgTjlkOQ==
-Date: Wed, 23 Sep 2026 00:10:51 +0000
-To: Qiang Yu <qiang.yu@oss.qualcomm.com>, Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
-From: Birk Skyum <birk.skyum@pm.me>
-Cc: "mani@kernel.org" <mani@kernel.org>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>
-Subject: Re: X1E80100 USB4 PCI0 MSI-X routing under EL1/Gunyah
-Message-ID: <C8SBDdV0hyOxs4G2FfZBHt4_1PSRVoxaNFSmy_riJk91MhqFMRAt30lpxdyniPMLWnc5Ph93lS0R1nCkVbuV941UrNmWyPNbDER9zIHlrJg=@pm.me>
-In-Reply-To: <arEjxhvfIFGGo9O9@hu-qianyu-lv.qualcomm.com>
-References: <g7V4kc2AO9xogkH0h-XHDvPbjDXcnS11cp1q3hv0X96KPW-zed6V79HUJY5BFA4pBWUE-p2MBYCeDcjWwUGBIU2hXjDpodiWaxB38obe8RE=@pm.me> <arEjxhvfIFGGo9O9@hu-qianyu-lv.qualcomm.com>
-Feedback-ID: 21326998:user:proton
-X-Pm-Message-ID: 7695b5694f43d1f15643b036999988c94dcea520
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="XAMiIuih"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=OGDP5oSxkX6he3xGMbgpCZtjV6Kdn3zhNoNPZYo0Vnc0yJuoB4aMUN+CCuFexKOtI2RnAs1f8sS1DdAMFwQmdzax6/Tfj46itnUMy8M0ZSDzInSZrYEkOi7ls3mtnqDDS924kpTR/2a5wk3JcqG5COCGjxYUjZXavOrlBr1yQ7Yd1faVAChnJeAypwMDwpFwjhJVUeAfDLxvq+fY/jIAK4YjRYy8G5qEKH3NB2SVQbejScMXmEe+z+BlS5LsgCwMWtpyh38PW4k1J1WgQE7hJSc18TaBB2UdrBHAIMgWyWAdWUMh1n2Lao73XjpJUL+whuc95k2xiccajm4bL+Mb+Q==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=sTPb681fvzI6Ccei5zX5QCPvf4O5T8e15sRAN0uWCsY=;
+ b=HKgtdx/LvYa+pRwT6le0E82fpFapyzGna1eVarHfSed30CuRe7dRZvaxizqiY4DDSbA3yBIIeQu2peMDlgAL+Syoxu5yA67Iw7PZQi+uN+4a0Kplfjbj6tHsfvionWyWBx4ph3KL4ZfZH/DEh9Eppnx83LlVlQ6eP3b34ULD4BlSzRZBlwFloLrOeWrrTugOHq7dPjhDC1SuuIsAxUW0VWmUaZi98hDKj7VsZZ2ANpAg3+nGAShJaDnsHUu6qd8JrtaMy5NNpD0XpBdmCcq/2tpNE7tjd2XWjRLSWjrLh29FrG/HIgSxxwIAzi5QCOyeM1dQRWWwtglz9gNNrVmSjQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=sTPb681fvzI6Ccei5zX5QCPvf4O5T8e15sRAN0uWCsY=;
+ b=XAMiIuihjxDKxfk39bv0bSjBEZ9QyqjRgzgIj3hD9kxv17N+1OXQK2LrS8v9F1CuTepHDGGwwnzKk8LfsRZl4GcEhInQ7hBsj1rN/Jau7hgvs9/65TtbHqdujCs1m7Yz+hE9HtNXL20Z49qRpff0kAsfQTKQN3qJ/XBq/92EQ8Oft1exiC+Qc4k0w3q8mpKUZbV84NbexBmFl07MMCCW17DR28bFR7LChq0vvjMGSov7IUrmx5jPLUkhLQ4FVlkkA+3vlPWHkPp8D9MeJzcFSGL1Gctfyy/0sl1iO7Mm3P2MOcvvFnvU5WzIInJFGANp7s5LmFUbm5+iS6hklGp5vg==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from DSVPR12MB827618.namprd12.prod.outlook.com (2603:10b6:8:3e5::24)
+ by LV3PR12MB9185.namprd12.prod.outlook.com (2603:10b6:408:199::13) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.428.15; Wed, 23 Sep
+ 2026 00:20:09 +0000
+Received: from DSVPR12MB827618.namprd12.prod.outlook.com
+ ([fe80::c673:6b00:5b48:b56f]) by DSVPR12MB827618.namprd12.prod.outlook.com
+ ([fe80::c673:6b00:5b48:b56f%5]) with mapi id 15.21.0451.014; Wed, 23 Sep 2026
+ 00:20:09 +0000
+Message-ID: <9ea4b1cd-d801-486b-959a-47e6d1914005@nvidia.com>
+Date: Tue, 22 Sep 2026 17:20:06 -0700
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v12 06/12] cxl: Add CXL Device Reset helper
+To: Jonathan Cameron <jic23@kernel.org>
+Cc: Alison Schofield <alison.schofield@intel.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, Dave Jiang <dave.jiang@intel.com>,
+ Davidlohr Bueso <dave@stgolabs.net>, Ira Weiny <ira.weiny@intel.com>,
+ Vishal Verma <vishal.l.verma@intel.com>, linux-cxl@vger.kernel.org,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ Alex Williamson <alex.williamson@redhat.com>, vsethi@nvidia.com,
+ alwilliamson@nvidia.com,
+ Sai Yashwanth Reddy Kancherla <skancherla@nvidia.com>,
+ Vishal Aslot <vaslot@nvidia.com>, Manish Honap <mhonap@nvidia.com>,
+ Jiandi An <jan@nvidia.com>, Richard Cheng <icheng@nvidia.com>,
+ linux-tegra@vger.kernel.org
+References: <20260910070808.1444264-1-smadhavan@nvidia.com>
+ <20260910070808.1444264-7-smadhavan@nvidia.com>
+ <20260912022617.47860862@jic23-hlaptop>
+Content-Language: en-US
+From: Srirangan Madhavan <smadhavan@nvidia.com>
+In-Reply-To: <20260912022617.47860862@jic23-hlaptop>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: PH8PR07CA0014.namprd07.prod.outlook.com
+ (2603:10b6:510:2cd::25) To DSVPR12MB827618.namprd12.prod.outlook.com
+ (2603:10b6:8:3e5::24)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DSVPR12MB827618:EE_|LV3PR12MB9185:EE_
+X-MS-Office365-Filtering-Correlation-Id: bdc576b7-ec61-47b8-c771-08df19086d4a
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|366016|7416014|1800799024|23010399003|376014|3023799007|5023799004|10067099003|11063799006|4143699003|56012099006|22082099003|18002099003;
+X-Microsoft-Antispam-Message-Info:
+	6KRs2T6tKm6uTgOuagsOM4Quw5mCdgWCd8xOC75Or7jo+kYPrnDukDVqFjIZtBDMg4wqd0fQE5bu1T2ZMwUGCKxgMMfVbOJ1xewaOKderGoKeTwCWo2CLANp9pS7SavUEoBDpJjA7WiNpOJXd7VRPbDczKb8X7tK4Kdt4lCQhoubpo4WSz/fsN9NaoS8gltJVbDSL7GiEJwNqiXIm75Caos23RwRDbQ6hXosucN/Mm3O/xqRnALfr/AaubIOqekOUa330s456I+43T7gBigp0mDuE1YdedQ1/UXLGKXs9Zf6FgCSeD/8xV2ux36PEXvDHsnVkbyXDTcUC4croJU7kDoPGMQ5MY9vk7RMRVZ98jyWDUo/Zh15/AOajglKA22twTE1v3WZDxjiq22PLiVNC6kJPfbdgi+NsI6m4ZQb0b/RtOyzzsUcUz5pQDro7xqm1aMrAgtVD2V2OGNJM/DbFvC3iLEAhn4ST2t3r5yGj6/nKEJ/ub1k41yN58uyg69hejgpmH5WGfEWgZx8f2apgKePJmLRpYTJkoWbziTJenvQeWFAVayietLTX9WsHUoeofGVCSMpDkaIPmipwgrxgBbQdPCXoUTNwJE8ezdlDshLju2myAykGrsg+tntawXDynxQMl0eTuNIWGWPE7S6s25djXeegDEejT8Q0kjRkzI=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DSVPR12MB827618.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(7416014)(1800799024)(23010399003)(376014)(3023799007)(5023799004)(10067099003)(11063799006)(4143699003)(56012099006)(22082099003)(18002099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?OEtSRE9OUUdYaFA1RnR0aUI5WHdiV1F1dGRKNGF2c3FWY2xhRUN1Z09iY1BL?=
+ =?utf-8?B?d1RmNkVTMzV3dmpiVWo1elhGdkhMaGU2RmF0cHZXK08yU3FGbi9VUW52VUlC?=
+ =?utf-8?B?a3owak9ZK3owa2gvNFdoQWY1Q003OVphem0xcXdzSFl2RlRrUHlOTXFOWDYw?=
+ =?utf-8?B?ejVHUG90WTZwaEdTQjVDL2FSV2dwYXlnS3VuRDVXN2hPTUF3TW9Dd1NCYWlI?=
+ =?utf-8?B?c2RFM3JPUVJQL3NzdnZrL09QWVdNeFJiTlhIRzVreDlnVHdBaUUxbTNtc3I4?=
+ =?utf-8?B?MUJ1eEFRdmhJNXVnSGNEYkFFS2x3R25CTjQvcjUxd285SzRDUTMwOXJidTJW?=
+ =?utf-8?B?djEwTFk5NWJTQjdjQlg0ZVRRNlQ1MWlBYmhVU0lDZ3RuK0hBQzBMSi9jYk02?=
+ =?utf-8?B?RVJqclJKdzdqbVlkVFR3RkZteFdHQ1ZKc200bWZQbklhT3FRZ3FwaUR5Y1NV?=
+ =?utf-8?B?QVc3QldncXhDVGFDN2twcDh6OW5YeVJOWjRMN2Z4Uk1jQS9JekhPRjVIQjIz?=
+ =?utf-8?B?QWlRUEo5Yk9mRkFPa2ZMV1h1OXNKQko3TEJzQ3l6N2dzMS8zRFhNbTRDOEE1?=
+ =?utf-8?B?QldRajVpVDF0Zm1pRGd3ZW9QSDRoWFFpUGpPdG4yZEVLMldyREVHa25yU2wz?=
+ =?utf-8?B?QjdnN2tCc3daNHlYWTV3OU5qVWtHNUh0eDhXRDRiNlc1ZERIZXdxSDdTMGFs?=
+ =?utf-8?B?QjNxQTk2TU9haUhZZFdWTERadC8xT092dnRwZGg1MzBwc2NTc0lIbWpPcVNw?=
+ =?utf-8?B?VEZ0Z092cUcwR0JhQVhYYzVlZUo1aUYrbVZhWEdQakgvOHF6YmYzWHhaT2d3?=
+ =?utf-8?B?aEc3VGlpOXNib3loeXd0NlJta1cvVmpPcnBISnJNREhTQU56VzFxZ0dvWlNC?=
+ =?utf-8?B?aEE1TjVZeGgwalVHQnJ1OHJWSU5zRG5mOUZSZXFWRUJxQ3FmcW4xN2hDZU9z?=
+ =?utf-8?B?S0p1UmlMTWpBYnFpbkVSUTdabmdpSURPaXBMY2V3NU5Ra0R5KzRGNXNmVC83?=
+ =?utf-8?B?bVpXU0RvdTZHT1o1YVV5K1BhTnV5MmdaajZ0SlhiWXlVdDlmUU0yTC93Tmpr?=
+ =?utf-8?B?K3l5NFFVaXN6MkE5R1p2SVdJcFFZZXRVem9NbEZCdVp3djZ2b1JDLy9uNCty?=
+ =?utf-8?B?ekFsWklxcktHYlF0WDBkM1p1SUNjb2pOQ0FPZ1hYMDlCbG5ScWpWMnFOdnJZ?=
+ =?utf-8?B?dVlTVWxlV25zOUh1aXlqTkNpamdDc0Z0aTdSMzBVNGlKcGRoR0FCK1IvVmpE?=
+ =?utf-8?B?bXo1NVdROWt4SDJJTHI5SVlTd080MU4yaGVzZHE2VWJFL0pyNDlRakwwaTFB?=
+ =?utf-8?B?am9yL3MreGlPR1I1ZjlMUHFBTnNkVTNxWHk0Y1hPa3VVblFiTnRYb3VwazBI?=
+ =?utf-8?B?YmxObnRJQWtOYkJqc3pIVGFBcGo0NXp0QUVBb2FtZUR0K1VxUm4vN3k3TW4z?=
+ =?utf-8?B?QXVlUEFGSUZXbTFPendCS0tjVk9jdzNWUndud1NMWUtHYjhBWEk5cXBwMGdF?=
+ =?utf-8?B?YTNqK1JrNnNhTmpHVnhMckF4WXBhSnpqZ2JISFI1QlJYYXZqRjlxS09NeG9R?=
+ =?utf-8?B?dWk4c3pRVENtbjc0Y2oyaHM4RXJHSE5JMDhJK0NHQmZSNEdiR2V0Q1VmUHJH?=
+ =?utf-8?B?UDBrRUl3S3BCckNwdjYvZU8wWmh0ZzZ5TDloNGY2QUJwenpVWXFYcC9YY3Ry?=
+ =?utf-8?B?K2svY0d2dGJkVUVhSHNDdWNjR3dwMWt2NFZOV1Nva2p3RG9GWVBoM2tnbmVt?=
+ =?utf-8?B?ZVhQalZ2TjZzbVZOT2llWlVMNTdSMFU2UEFEaTJHNWtqejJvQmdWME1FUVlG?=
+ =?utf-8?B?eGI4WmFldVFINjM1MTlSQUE3QWtqT3dzTDdoQWJmY2NjU3hMbzBWTVluQS8r?=
+ =?utf-8?B?VkhsUkN4VjlFVjJLMjZIVkh4WmlMbkRmZFlETUdCV0ljZnBaSnYvMzdvbUFP?=
+ =?utf-8?B?NmtINUx1RllwOXBQRlVnM1BTU21qdjZ5dWVPVHF4RlBCZmpSSW9CakhseCtX?=
+ =?utf-8?B?SWVlMlhialY3VXEzMWpxcXU2b00zZzBYWDhZQ3RpckdzbEtDQ3pVODJWOWlt?=
+ =?utf-8?B?TE9ka05sM09yVTh1YXVzc3pCQjdVUHMyOTRkQXlTSnhCZk9VN05FVkpmaFR5?=
+ =?utf-8?B?OTFMb3lycUNYU2lNa3BBdlhtTHlLdU5RNUEyUXZQTWVRN2YyRlRqUm9GeHRP?=
+ =?utf-8?B?T0pIdU9TczBzeksybDRlNkRoM2w0c0ZhNHhTeXNCM3NRLzVqblBuOW1Iakt3?=
+ =?utf-8?B?OXhvRnkvOUZreGU4ZEhUUGwzODhyUlhUWEZKa0szOUlTK3B6SHpod2RIVXdG?=
+ =?utf-8?B?S29iTE82NGk3TytiNUpJT3k3SWlTWEVYZFNIZ05oZnJVM3cxR0pBZz09?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: bdc576b7-ec61-47b8-c771-08df19086d4a
+X-MS-Exchange-CrossTenant-AuthSource: DSVPR12MB827618.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 Sep 2026 00:20:09.5156
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: yy8g4S2xMdSIl6PpTeFjZQAyYTCeAlu2xDN816VaVCfYczD95E9NrSMIpl1/ffgVSCxupNFa6P8SOV32J/jrXA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: LV3PR12MB9185
 
+On 9/11/26 6:26 PM, Jonathan Cameron wrote:
+>> +     if (dvsec < 0)
+>> +             return dvsec;
+>> +
+>> +     if (!(cap & PCI_DVSEC_CXL_CACHE_CAPABLE) ||
+>> +         !(cap & PCI_DVSEC_CXL_MEM_CAPABLE))
+> Why do we need them both? Sure that's type 2, but a non
+> class code matching type3 would I think need the same infrastructure
+> you are building here. That would have cxl.mem but not cxl.cache
+> - I think some of the CXL SSD prototypes fit in this category.
 
-Hi Qiang and Konrad,
+I did not yet address this in v13 because I did not want to expand the 
+series beyond its original Type 2 scope without settling the expected 
+eligibility policy first.
 
-Thank you, that was exactly what was missing. With your interrupts and with=
-out msi-map, the NVMe behind the USB4 tunnel now gets real MSI-X at EL1. My=
- LaCie external SSD reads at about 2.6 GB/s and writes at 2.8 GB/s (16 GiB =
-direct I/O on ext4), and safe removal and reconnect work repeatedly.
+The current check requires both CXL.cache and CXL.mem capability and 
+both protocols to be enabled. The reset sequence currently assumes that 
+CXL.cache is active and performs cache disable, optional writeback, and 
+subsequent cache-policy restoration. This might need change.
 
-Two details were needed on top of the DT. The DBI MSI registers (0x820 to 0=
-x830) had to be programmed after the tunnel BCR reset and the router reset =
-requests, and MSI on the root port itself had to be opted out.
+Is the current policies (HDM snapshot, range synchronization, and 
+restoration infrastrcture) adapted by these patches for cxl_reset also 
+apply directly for type 3? If so, I can generalize this. But if Type 3 
+requires additional ownership or lifecycle handling, can we please 
+address that separately?
 
-How would you like this to go upstream? Konrad mentioned that the Qualcomm =
-USB4 router driver will be posted, so I've added him here. I'm happy to sen=
-d the pcie0 interrupt setup as a patch, or leave it to that series if you'd=
- rather carry it there.
-
-Konrad, I'd be glad to test the router driver on the Yoga Slim 7x as soon a=
-s it's posted and report back with a Tested-by. Two things I've seen may ma=
-tter for it. Now and then the PMIC firmware misses the cable e-marker at at=
-tach (CCSts=3D2, PwrSts=3D1C, no VCONN), so the port stays in USB3 and neve=
-r enters USB4 until a replug. And the PS8830 on the Yoga works in USB4 mode=
-, while Jens Glathe's ps883x series from July would set parade,disable-usb4=
- on the Yoga.
-
-Thanks again,
-Birk
-
-
-On Monday, September 21st, 2026 at 14:32, Qiang Yu <qiang.yu@oss.qualcomm.c=
-om> wrote:
-
-> On Sat, Sep 19, 2026 at 08:33:20PM +0000, Birk Skyum wrote:
-> > Hi Mani,
-> >
-> > I'm working on experimental USB4 support for the Lenovo Yoga Slim 7x
-> > (83ED, X1E80100), building on Jim Martin's published Glymur stack. This=
- is
-> > an out-of-tree bring-up, not a regression report against mainline.
-> >
-> > A directly connected LaCie Rugged SSD4 negotiates USB4, enumerates thro=
-ugh
-> > a PCIe tunnel and completes a 4096-byte read into RAM. However, NVMe
-> > completions are recovered through timeout polling, with zero
-> > device-generated interrupts recorded.
-> >
-> > MSI-X is enabled and unmasked, and the table matches Linux's programmed
-> > messages. Software ITS INT commands reach the NVMe handlers. In a
-> > separate test, redirecting one MSI-X vector to owned coherent RAM
-> > captured the expected endpoint payload, but that does not prove deliver=
-y
-> > to the ITS.
-> >
-> > The endpoint RID is 0x0100. The captured firmware IORT and our DT agree
-> > on DeviceID 0x80100, with MSI address 0x17050040 and event data 0/1. Th=
-e
-> > PCIe SMMU remains firmware-owned.
-> >
-> > Source and test results are published here:
-> > https://github.com/birkskyum/yoga-slim7x-usb4
-> >
-> > Is direct ITS delivery the intended route for USB4 PCI0 under EL1/Gunya=
-h?
-> > Is additional controller forwarding or DeviceID setup required?
-> >
-> > I also found the QCS8550 change using the internal DWC MSI receiver to
-> > avoid a Gunyah limitation:
-> > https://github.com/torvalds/linux/commit/33cae252054a694269f9dcd41b3540=
-63193c8f59
-> >
-> > I realise that involves different hardware and symptoms. If an internal
-> > receiver is appropriate for X1 PCI0, where can I find its parent IRQ an=
-d
-> > required initialization?
-> >
->=20
-> Hi Birk,
->=20
-> Please add below dts change in pcie0 dts node and also remove msi-map if =
-you added,
->=20
-> interrupts =3D <GIC_SPI 655 IRQ_TYPE_LEVEL_HIGH>,
->              <GIC_SPI 657 IRQ_TYPE_LEVEL_HIGH>,
->              <GIC_SPI 664 IRQ_TYPE_LEVEL_HIGH>,
->              <GIC_SPI 668 IRQ_TYPE_LEVEL_HIGH>,
->              <GIC_SPI 348 IRQ_TYPE_LEVEL_HIGH>,
->              <GIC_SPI 349 IRQ_TYPE_LEVEL_HIGH>,
->              <GIC_SPI 351 IRQ_TYPE_LEVEL_HIGH>,
->              <GIC_SPI 702 IRQ_TYPE_LEVEL_HIGH>,
->              <GIC_SPI 167 IRQ_TYPE_LEVEL_HIGH>;
-> interrupt-names =3D "msi0",
->                   "msi1",
->                   "msi2",
->                   "msi3",
->                   "msi4",
->                   "msi5",
->                   "msi6",
->                   "msi7",
->                   "global";
->=20
-> #interrupt-cells =3D <1>;
-> interrupt-map-mask =3D <0 0 0 0x7>;
-> interrupt-map =3D <0 0 0 1 &intc 0 0 GIC_SPI 703 IRQ_TYPE_LEVEL_HIGH>,
->                 <0 0 0 2 &intc 0 0 GIC_SPI 708 IRQ_TYPE_LEVEL_HIGH>,
->                 <0 0 0 3 &intc 0 0 GIC_SPI 714 IRQ_TYPE_LEVEL_HIGH>,
->                 <0 0 0 4 &intc 0 0 GIC_SPI 716 IRQ_TYPE_LEVEL_HIGH>;
->=20
-> - Qiang Yu
-> 
+-- 
+Regards,
+Srirangan
