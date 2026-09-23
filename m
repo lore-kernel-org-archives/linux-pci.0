@@ -1,75 +1,66 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DDDE58039A;
-	Wed, 23 Sep 2026 20:20:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 526D8582BB7;
+	Wed, 23 Sep 2026 20:20:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790194817; cv=none; b=lu0nQwa+6hBSWD4+S6dkLvrp6RPeVjVFqXosV8QkBZzgNZOub2O4ZIz0zaA764PKYreRpTAoS9VRlLlR/oLP5ciqT++adxwinY8O3V2MiNDAaxHedQEbDy37GvhLRvtPC70hqiq9eZFgL4YaB8JdBwK+TkOKYcz71rEwzly0rqQ=
+	t=1790194845; cv=none; b=SO54K0h5oKMcJCZovJfAlJx+3daT+jPnFpfhd1kXD4zpJanheuuiJuva76LIU+LZwFB6tLeOHbqMtHQEZGGmAO6aR2QVqOirEKqoEADlRXAJp08SHbxhBswl9cd8H5Un2hinioB/b/CNhGBRaD1ee+R+ZGFBJPt1EtCK41VgGzs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790194817; c=relaxed/simple;
-	bh=oPLDgtXJLOu8Kf9acheHgxe6Z81oVWWkeD3AWJvYslg=;
+	s=arc-20240116; t=1790194845; c=relaxed/simple;
+	bh=DwAXhax6KoAQhTnH7wCrX+oy4tzHZW6GUxXF0QpYPtE=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=JJu2ishyKc5v4/apQ/15USxnBfJkJdn4PhtbIyat4bTcIeB/lcs+/+iXYRLbOxOI2AKwVR6dtCr0hLq5to/XnobwKEXuKMIlXCVhBLJJO4MOQQQTyXAhJ4ME7kFMzHLdmqsCIRVZfrOnhy0tDjASIgJ1RLo1jsQ8s1toPebaz9w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oASc6oFC; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=RfzNlwoQbvsmiBQBBqtaVBNxWmHrxqsVvtDlH+v/4a05VKBrgxYMPoBMgHspsT/aOMENJrj1nlaikQ7CU/zz22MfK/lpJen7gl9IFV/VN5zqPlMfT3siAtsinwocxqEXxrdZzSijER/aYpF6DajDdqRNBkEfYr+gizP3sRWZ51A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Wtf3QU4E; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oASc6oFC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4A9EB1F000FF;
-	Wed, 23 Sep 2026 20:20:13 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Wtf3QU4E"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 117A11F000FF;
+	Wed, 23 Sep 2026 20:20:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790194813;
-	bh=nFfNLRt/uobKlAqq6l3vtsxuVg7Fpddl4PbGzn2V2a4=;
+	s=k20260515; t=1790194839;
+	bh=DwAXhax6KoAQhTnH7wCrX+oy4tzHZW6GUxXF0QpYPtE=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=oASc6oFCvg8rHzfygqIcGoaUXu5GK5pd1vdHmxksXUjT97qhRT3HZPFvEVFk13FqE
-	 Bx6vSwQRlreUSsIPg/VJrysflQpDuHqXI/9hdvSS2XPJHe2IwkY10zvV/zFNzP9RbX
-	 zP2WPve98eBKzu03mXzZ1GT2GIW6+evmP6id+WjD/iM8wURdDgTy9qkdBTmE3xi2xU
-	 DFBFCVrA9l3po0fXb8+6ZmGY0tQq/E/4UtsEIjVQs1zafubfKo6z7UxtG5U1vs9Fwq
-	 Z2zCoN09Sr+21mBmPP9XOFSFzcxFQt+b5FuIDDm5rrFu6/yDwHM4tcH+PpLxaaihZh
-	 Zswia6T3S3lTw==
+	b=Wtf3QU4EgWVqE1pujjyg4c+/UqbecD0NjYSinY+d8yc5w5y7vufD4fQiDuoLCwz0B
+	 HOeozSU7NcRKXgSP/gXaNP/7zUgS2ymf2gVD9A8X5eDDS4x4DT19rdTXdNkRwg5kAu
+	 7rPsQkIW1dsuxTnu3zo/Z+ubTseGnr3pgahaPyoOzJHLn+YXqckPFu75onDEjyY5B3
+	 GQAUUIE875ff+335l8RWkRtqshXcXJFaDIxtwhcNY1gLGJoNGe2R38o0/6IodUf82O
+	 LsrotPC+gFYh+wLGBxOYtJ2ZFFHDjtb1rZryV9BzEI4j8akAB2biyLOaTGR8QOfR0Z
+	 SZnpEXeKL26fw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v6 05/17] iommu: Pass in reset result to
- pci_dev_reset_iommu_done()
+Subject: Re: [PATCH v6 12/17] iommu/arm-smmu-v3: Introduce
+ arm_smmu_cmdq_batch_issue() wrapper
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Nicolin Chen" <nicolinc@nvidia.com>
 Cc: linux-cxl@vger.kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <bf5ccc916593357c640cd7fcdffabfb46fdf4c64.1790188510.git.nicolinc@nvidia.com>
+In-Reply-To: <234616c89cd2703e1d4682a22da46eff410f2607.1790188511.git.nicolinc@nvidia.com>
 References: <cover.1790188510.git.nicolinc@nvidia.com>
- <bf5ccc916593357c640cd7fcdffabfb46fdf4c64.1790188510.git.nicolinc@nvidia.com>
+ <234616c89cd2703e1d4682a22da46eff410f2607.1790188511.git.nicolinc@nvidia.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 23 Sep 2026 20:20:12 +0000
-Message-Id: <20260923202013.4A9EB1F000FF@smtp.kernel.org>
+Date: Wed, 23 Sep 2026 20:20:38 +0000
+Message-Id: <20260923202039.117A11F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-> IOMMU drivers handle ATC cache maintenance. They may encounter ATC-related
-> errors (e.g., ATC invalidation timeout), indicating that the ATC cache may
-> have stale entries that can corrupt the memory. In this case, IOMMU driver
-> has no choice but to block the device's ATS function and wait for a device
-> recovery.
+> Both arm_smmu_cmdq_batch_submit() and arm_smmu_cmdq_batch_add_cmd_p() call
+> arm_smmu_cmdq_issue_cmdlist() to flush batches. A future change will retry
+> the issued commands on -EIO, using the arm_smmu_invs carried in the batch.
+> So, a single hook point is preferred.
 >=20
-> The pci_dev_reset_iommu_done() called at the end of a reset function could
-> serve as a reliable signal to the IOMMU subsystem that the physical device
-> cache is completely clean. However, the function is called unconditionally
-> even if the reset operation had actually failed, which would re-attach the
-> faulty device back to a normal translation domain. And this will leave the
-> system highly exposed, creating vulnerabilities for data corruption:
->     IOMMU blocks RID/ATS
->     pci_reset_function():
->         pci_dev_reset_iommu_prepare(); // Block RID/ATS
-> [ ... ]
-> the old domain in place of group->domain.
+> Introduce an arm_smmu_cmdq_batch_issue() wrapper, so a retry logic will be
+> simply filled into the wrapper.
 >=20
-> Suggested-by: Kevin Tian <kevin.tian@intel.com>
-> Reviewed-by: Lu Baolu <baolu.lu@linux.intel.com>
+> No functional changes.
+>=20
+> Assisted-by: LLM
 > Signed-off-by: Nicolin Chen <nicolinc@nvidia.com>
 
 Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/cover.1790188510.gi=
-t.nicolinc@nvidia.com?part=3D5
+t.nicolinc@nvidia.com?part=3D12
 
