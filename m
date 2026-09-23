@@ -1,140 +1,149 @@
-Received: from mail-yx2-f13.google.com (mail-yx2-f13.google.com [74.125.224.141])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from fout-b2-smtp.messagingengine.com (fout-b2-smtp.messagingengine.com [202.12.124.145])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A871533993
-	for <linux-pci@vger.kernel.org>; Wed, 23 Sep 2026 03:35:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.224.141
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790134529; cv=pass; b=NRZGvaySmQIYM9+XeW+nS3PGr144PEsfkW6sae6QcBdVD8BtpvtEQzLQy72WHlM4RMy1DNS44ciXEzBdGQm9WZCnoeV22Q59gxvzzViJy154ge/FexI72iyFV3BwoXACkSLCFb5ggroJbFcpSzSGAuk6KsVz3gkYQYgawnAVI7I=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790134529; c=relaxed/simple;
-	bh=d2Qu26JxNz4DdK7KNZRSYHH9xu3oRYAJPIgmwuU8THo=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=ZszCMx1Ngvc3a7kxwkCzc0O63JLaEJUIki4keES1JwbMaVqubGQSifHvCRelRDQE2JpiaVc6UjKXnfR081rxp3JcB9dPg3IgZU2+lYT7DXCm7N3skPx/E3jzfa911zYhpgelXtXK+kLJ41Q2ZJIbdQeW8TrmfgMy1RY30oitpL0=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=cCqknjAh; arc=pass smtp.client-ip=74.125.224.141
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0F813B5837;
+	Wed, 23 Sep 2026 03:42:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.145
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1790134946; cv=none; b=mH6h67CC9Es1ABq2pBdc8PtujXn4NJBtNyDx5fX4bBkDjOFmTJ2KvOl0/SbKrDbBesdNRytlH6m4wwYYQp2m2o4n6b1tkr3DjViUTIqJQMWtPpEeJ2jeMm9C0GFqla7EMQiHZMuAfNPLrn3aaYjQIr/85Y5gv3QiywgaTQ8KrPk=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1790134946; c=relaxed/simple;
+	bh=DSWi2C0r8cqwdbL+D/oXhhGYggJoGev4OcBXZnAtWFY=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=eoaiKKs++crCQ8njDn/R7oPFpeVj3V1HrP8EznySIpucjPboWiPefdKroJiJb6lmGJxME+h/1QKqvMxuKiPIHoc9ktV8JIc+Gic8deViQQQakkM89VbJ9XCdzCOXSLIzaYCTEoQBfqskoX5H/H3tzwRMD8BJyfAqdtWdTFWN8KU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=alistair23.me; spf=pass smtp.mailfrom=alistair23.me; dkim=pass (2048-bit key) header.d=alistair23.me header.i=@alistair23.me header.b=PRx++WoT; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=K55jbmV5; arc=none smtp.client-ip=202.12.124.145
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=alistair23.me
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=alistair23.me
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="cCqknjAh"
-Received: by mail-yx2-f13.google.com with SMTP id 00721157ae682-85d43f9b11bso6787217b3.0
-        for <linux-pci@vger.kernel.org>; Tue, 22 Sep 2026 20:35:27 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1790134526; cv=none;
-        d=google.com; s=arc-20260327;
-        b=W3Ri0mGAoVFcEf/PvAeQXOVwmgkGERjAmtUBIVdDgag/6m2wFLdgWZX5Wx5NAuSSlw
-         z6wuGFULvWdcg6apw8NAJ5raQClRy0Goegr+sJEp2ZUZQ9x9IZuysYlrjfj471AepBIB
-         6AS6jU8qx46jnYyfs/7jPG+TnCFboDDhE5sVhiIlGZQZULSUF5B2FcNjLEg0272276Dx
-         sa4maQ++LIo5RQZTyx0qEBwFC0jgHrlIvdTt2ZGLDBpLAaow9iTl1fnQVIaCJz5cfX4n
-         wejwqYOeAdiviT0Je1WvomfjdgZNLE177wSo/ctpaGvVZTIXe0JoIPLFLQlS+PXG2CIt
-         fg2A==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=XYEEoMGteHxFV1awOkLk45oTIa6yiwyLCwRO6PLmYiQ=;
-        fh=t2VbnN5mMU6ttz+1yBftFMhv5EAC3nrslI0Zr0YJi0o=;
-        b=K0D5jNiFJd5V/mG9W0OTHLzSxf30TjLIjL99DJWlSJixxCaQFNlRXkYUtzHzVnAHD4
-         3+1YNuICUU54NmyoZRYBwSLYigIteToJ6dJZRuxQzeJVjg5I2HeL7EEtYrBstWOUuj2s
-         AzDXCBkqC+1kgB0ugMMpfx8HcWKXKJDFwv6RKYh0aCvKaHrvNOUceA4xvbFmnCzDzyxg
-         W4U6jofeqc4l6OnXW9VOMNHnyi0PzmXeLUxV2ioFQoGRxBaBK5OIXkpGjQQzS+1M3d36
-         RHShxBNJCPGxwHLd4ISQQoN8wPvpHcKDTEajmn9FFxKmzm5nnBXI98/XxH9in/vPZWkt
-         dCzg==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1790134526; x=1790739326; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=XYEEoMGteHxFV1awOkLk45oTIa6yiwyLCwRO6PLmYiQ=;
-        b=cCqknjAhHY7uGg8YfgJS23lyStKf/VDDOkxl05oAKXwP/iMFEbV/90ajZUPwRgGX1y
-         O2bm2ivicfv7G3YtzOqCODZvopzKNJ5gRUhq++g9Romu7tlZZQI1fVkqyCJnT1coL9qj
-         8EVcVFfDij2BFa0mwSvoi/o3Jihg5fnqQkOXBNGrwmNtj8mFpXEc9yIsSTeojCBS7rC2
-         plDdLuVPA6jHula1CkoU0CsCrKvBJ2bzwfGZ2IgwEdq1KhdHAoE9kb+KJGJQMEwchAZU
-         fq2llQiQ6UZG3XN+P5Ak/sf8IFaq20uNpqUmaKbhqdk7kOlaZvIQdhJ9KQ1uXLZkluke
-         rF+A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790134526; x=1790739326;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=XYEEoMGteHxFV1awOkLk45oTIa6yiwyLCwRO6PLmYiQ=;
-        b=uwwqHSB/Q8/DDCi8jOjTR+OUfiWpoJG5tT+L8/d+hxWYh1hACvR8hKcG6MS1pFMSA6
-         I5AF7YIJDOu3gD+TAEe7IQiWM1pwJW9VEq7G7HxdQtEe2d9o3GbuF2x8BPB9pd6BLxXJ
-         zKnqVokE4qlJ8sYKg3s8INc4xkIBdFlcfXUgdPIJFM9JCzEN53eIrGNOWgIVX+psKAPH
-         OeNfoK/VT8WjX58peQ4on0P8C1pvUmLd3zMwV1Js/m6v2XX4u1bFANEuXQhPtbiuusYz
-         QeiQ6hUePJEGiKrgUJfFN2J2r6mpE6A0xRjyWHXG0jAUalfcnPP5NrnT4jEuEPSWbn+h
-         FbNA==
-X-Gm-Message-State: AFuF++nydMFZiMy/BXrep3TpAsFCXDfMf8qs6slZxg7lnjTxaH9aJzgE
-	oc1tCeWcfbWnHTnpG7ir7OGvE4WZpb6T0yVIM4el54lqmF4gC2uIpbEctRpXhJv16bcEH19UE3p
-	hZcWR7Esg4OpsV2NI2oyMQ5BPoz83fJk=
-X-Gm-Gg: AYBFou2gcfuhB+ZlcPZvS6SvrXOLQSs0Wuakd4i8O+Lw/nZ/IdyoTYhCJ1E6ZIXkOrS
-	97uEUR2uesV0LgDl0IDQE1JStYy3brdOg8ygd2jN0CRPTTej/w3uwlmBXJgG5pQsN0PI9Aca0e5
-	HFbZ7mkjLs/gvKS5m1etz4JRPBKAONcwUdf+V9IzieZYVjDoPyvENz6mtmq+4cl6MRbW0iV3NPp
-	YYC+7K62isjLxplONfngS9ixzz5UD7m9AatqojN8j+OzQUISX5FZeHk7arJdKMNFDE3gP8ezDym
-	K2RDkZpDB7tkVDMKIqjqfHCl/zcEsMSS2Ym3zMmNlXkF1cWc41aPIoYrNHcqslEOw8ncHUbV7XN
-	F43oB43KY8A9uWTvAL6q9JXxCJ7MqHqb9t+w/dX4p6q8=
-X-Received: by 2002:a05:690c:a694:b0:89a:63da:fa98 with SMTP id
- 00721157ae682-8a45bd920eemr4667137b3.83.1790134526646; Tue, 22 Sep 2026
- 20:35:26 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=alistair23.me header.i=@alistair23.me header.b="PRx++WoT";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="K55jbmV5"
+Received: from phl-compute-09.internal (phl-compute-09.internal [10.202.2.49])
+	by mailfout.stl.internal (Postfix) with ESMTP id DF6491D0004C;
+	Tue, 22 Sep 2026 23:42:21 -0400 (EDT)
+Received: from phl-frontend-04 ([10.202.2.163])
+  by phl-compute-09.internal (MEProxy); Tue, 22 Sep 2026 23:42:22 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=alistair23.me;
+	 h=cc:cc:content-transfer-encoding:content-type:content-type
+	:date:date:from:from:in-reply-to:in-reply-to:message-id
+	:mime-version:references:reply-to:subject:subject:to:to; s=fm1;
+	 t=1790134941; x=1790221341; bh=DSWi2C0r8cqwdbL+D/oXhhGYggJoGev4
+	OcBXZnAtWFY=; b=PRx++WoTUWOsvJJFym88XUCOYrkBFJtThSya95aFTGESCAJJ
+	j6r0oqIzbFiXwgipGYtogG2LWflBSo/MHlZn9/l+mqpIjtNp9DyajOOHCSxwWYHO
+	tAQ+D3envhK8zH61bVoslEAWTgcD6kTcwEHuchWY+EiYD+n2B5t3yyEzROAmRQ9M
+	g3o5lBU5OpAEW9OtA6z6hmgSwzR3Hw9LOX+4zguiRCjg3LD7hSQVcGRqIJdQ+nm4
+	gYlxnAhog79+nFF8JTwcap3mUFM8H0VlBqjY2yKrTCm5rvHts6GcIMOuqVpvuOav
+	PLqdjEFxXdS5UBlE6Z4vDIb1xudsoT6f5qopIw==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-transfer-encoding
+	:content-type:content-type:date:date:feedback-id:feedback-id
+	:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to:x-me-proxy
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=1790134941; x=
+	1790221341; bh=DSWi2C0r8cqwdbL+D/oXhhGYggJoGev4OcBXZnAtWFY=; b=K
+	55jbmV5fObulKuAGe1zelj26AbdJg9xUAT0cYUeLgxPOkmXQgv1RHxPrAvwG6CFc
+	kr4xYE0PzuUTgZYFKLE20rXaey3b+21d3tiiLlxPAjWdsqTRQXV5cnZQ2/rNMFzZ
+	mcrPGnQr/C5mYqelZF8grwaoPeZXBvbThoXVN5kN6wQdyiA7oJdvalBIIlwB239o
+	UBlUlWEdco96RmF6HFh4b87qnoQxyDptlXDsNcfOokjWeJx1+M1sk+rCAptb8+ZH
+	Zlw2+0sPaMcUhdeC6eRzM2RW7BCPDtEDH8eeUgyjQF401sp+6MdgQmkPj38aLQUs
+	GqjlRhgIVbK+GMplJ19Sg==
+X-ME-Sender: <xms:nEqzanPof6OC4VujRL9AgMU7P9EjGQqb7wDRZak7FbFppdb9mAI9LQ>
+    <xme:nEqzaiX_X1ajAzmmVkZI9GKdoIHDB1rLVvvGLsMFAocZCa9GPGYNcU-uIpKTX9Ojp
+    Aog8Xt08Qm9O0NjwCqYaOLlbHdWD1mKNx86rTj5MG1g0DrNvqCsfReQ>
+X-ME-Received: <xmr:nEqzanbu8NACHSTiR_I8INeU1uobgqiLGWUayr6UeVEKtim5yTM9RCowceLl_xwzMI1C8QU3D_lep58t8z5Gp5wUM_A>
+X-ME-Proxy-Cause: dmFkZTFWQgVXt9bM2b6NNxDLU2jUhTZqo1HyJ/ceb/6fR6g5/ke7x/NK8aQ/wybD9G7sDE
+    CmtX3QwVhvD3JUclCR9ETEfWsOI7v+reJwTYob7hpcIpPo/4iZmOqyG1I7KAWWIFLXUgLw
+    v96DhGoz9UpYdkKeXc/hZBGnUfxawMjnjVtQDju3d8IVsfsa3zIyqXHLaCqTj4WNRQWGKq
+    tmmTTBcnw0y3dZS7EgIm2YwfTUf4M4enUg6Kt4bClJIVQc/UjREJZ8GfwzQdia7ZNwkro3
+    hK8iW8KSjamfbpmgjaynFsftX9uh5wvKPOsvXMNAxpHo+uCEXTvkZFkk6tJhDoEdtSwgV2
+    6GBehN5HqwyviruHFjGv/WzLwxQoGkueti404EXE3kf7u8qkOyKvo4OvBLEYolmfapcnxB
+    F4JccMi5Te1BZq7oMKbky2uQ5q7y7YKMULV0qOa2MFX9BJV98wv9AyL4iHxOPtRe730K9L
+    MSrboLxu6gG8yVR+5HsIh88Utz5N2KkVtSu/M1zWI9+Se6WJeYQ6P9skWKqRz1Twj/uNfo
+    iCDPvhJucpF8jjturp2P8zSMFq/LgsbLp5axv209DNCuwpcPaaDjlLg6YyrGhYpuOSvpup
+    Tg7vJWck7+rmhOaNt3U0xJDq95oRSreJUPgUvIDr8xnPNvQkrkuFhhj47LIg
+X-ME-Proxy: <xmx:nEqzans9bTMC1bKBz1twK_VLviUrmLn4zeL3QKe7-nefLy1468292g>
+    <xmx:nEqzaumzUv1rsGahWuIrYxwXaD2Tbpu0aHfxi87oMm4mAC5GarLA0Q>
+    <xmx:nEqzagWYYb2dfQ6GUgKoaSarfD0sCoSfqT8w4S_1T9pZokx7-frwIA>
+    <xmx:nEqzapnV4xGZWN9rlPOX_qimTj87Mmpoko6U6zFu9VW8EjK7bB8Olw>
+    <xmx:nUqzatDDdkgNtuOGYUS9GPknZSh2x6r0hLSKQZZlRCetsrAaQqNsJ_Wz>
+Feedback-ID: ifd214418:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Tue,
+ 22 Sep 2026 23:42:14 -0400 (EDT)
+Message-ID: <0ba203994392fa8183c226d65c4caec5786112bc.camel@alistair23.me>
+Subject: Re: [PATCH v3 10/21] PCI/TSM: Rename pf0 to host
+From: Alistair <alistair@alistair23.me>
+To: Jonathan Cameron <jic23@kernel.org>
+Cc: alistair23@gmail.com, linux-pci@vger.kernel.org, 
+	Jonathan.Cameron@huawei.com, djbw@kernel.org,
+ rust-for-linux@vger.kernel.org, 	lukas@wunner.de,
+ linux-cxl@vger.kernel.org, bhelgaas@google.com, 	akpm@linux-foundation.org,
+ linux-kernel@vger.kernel.org, gary@garyguo.net, 	ojeda@kernel.org,
+ benno.lossin@proton.me, a.hindborg@kernel.org, 	wilfred.mallawa@wdc.com,
+ tmgross@umich.edu, boqun.feng@gmail.com, 	bjorn3_gh@protonmail.com,
+ alex.gaynor@gmail.com, aliceryhl@google.com
+Date: Wed, 23 Sep 2026 13:42:12 +1000
+In-Reply-To: <20260916031143.4fe2ae49@jic23-hlaptop>
+References: <20260901010347.2614656-1-alistair.francis@wdc.com>
+		<20260901010347.2614656-11-alistair.francis@wdc.com>
+		<20260909000158.78ffa790@jic23-huawei>
+		<f9b1c0410e622f7ac1e6feacaa3eae98951bcd79.camel@alistair23.me>
+	 <20260916031143.4fe2ae49@jic23-hlaptop>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.60.2 (by Flathub.org) 
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260809045946.15638-1-kartikey406@gmail.com>
-In-Reply-To: <20260809045946.15638-1-kartikey406@gmail.com>
-From: Deepanshu Kartikey <kartikey406@gmail.com>
-Date: Wed, 23 Sep 2026 09:05:15 +0530
-X-Gm-Features: AcwNN1Vk4FtYBJd1sRBl8b5Y953BCfjbdBpM-mBy7PTV6woNSctxmWWAgsZFKB8
-Message-ID: <CADhLXY7008e4JA35T2wE8TnJnR_r82RCpfSd=aLBmDh5xAQ02A@mail.gmail.com>
-Subject: Re: [PATCH] PCI: sysfs: Reject unaligned resource I/O port accesses
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	syzbot+7134530b25073b4ef373@syzkaller.appspotmail.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 
-On Sun, Aug 9, 2026 at 10:29=E2=80=AFAM Deepanshu Kartikey
-<kartikey406@gmail.com> wrote:
->
-> pci_resource_io() validates that off+count stays within the BAR's
-> range but never checks that the resulting port is aligned to the
-> access size. A pwrite64()/pread64() on a resourceN file with an odd
-> offset and count=3D2 or count=3D4 reaches outw()/outl() with a misaligned
-> address. On arm64 this becomes a store/load to a Device-memory
-> mapping (PCI_IOBASE + port), which architecturally requires natural
-> alignment, causing an alignment fault and kernel oops.
->
-> Reject misaligned accesses before they reach the low-level accessor.
->
-> Reported-by: syzbot+7134530b25073b4ef373@syzkaller.appspotmail.com
-> Closes: https://syzkaller.appspot.com/bug?extid=3D7134530b25073b4ef373
-> Signed-off-by: Deepanshu Kartikey <kartikey406@gmail.com>
-> ---
->  drivers/pci/pci-sysfs.c | 3 +++
->  1 file changed, 3 insertions(+)
->
-> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-> index 5ec0b245a69b..72f0404a34e9 100644
-> --- a/drivers/pci/pci-sysfs.c
-> +++ b/drivers/pci/pci-sysfs.c
-> @@ -1175,6 +1175,9 @@ static ssize_t pci_resource_io(struct file *filp, s=
-truct kobject *kobj,
->         if (port + count - 1 > pci_resource_end(pdev, bar))
->                 return -EINVAL;
->
-> +       if (!IS_ALIGNED(port, count))
-> +               return -EINVAL;
-> +
->         switch (count) {
->         case 1:
->                 if (write)
-> --
-> 2.43.0
->
-Please let me know the status of this patch.
+On Wed, 2026-09-16 at 03:11 +0100, Jonathan Cameron wrote:
+> On Fri, 11 Sep 2026 15:00:59 +1000
+> Alistair <alistair@alistair23.me> wrote:
+>=20
+> > On Wed, 2026-09-09 at 00:01 +0100, Jonathan Cameron wrote:
+> > > On Tue,=C2=A0 1 Sep 2026 11:03:36 +1000
+> > > alistair23@gmail.com=C2=A0wrote:
+> > > =C2=A0=20
+> > > > From: Alistair Francis <alistair.francis@wdc.com>
+> > > >=20
+> > > > Rename pci_tsm_pf0 to pci_tsm_host (and rename variables and
+> > > > function
+> > > > names from pf0 to host) as part of converting pci_tsm_host
+> > > > to be any device that knows how to speak any of CMA, IDE, or
+> > > > TDISP.=C2=A0=20
+> > >=20
+> > > I'm not against the change, but I would like at least one example
+> > > of
+> > > 'what' other type of device you plan to use this for.
+> > >=20
+> > > vf or something else?=C2=A0=20
+> >=20
+> > It's based on the reply here: https://lkml.org/lkml/2026/6/18/1741
+> >=20
+> > I don't know PCIe that well, so honestly I'm not sure.
+>=20
+> Yeah, that's about both VFs and other physical functions.
+> Those can exist on both real EPs and RCiEPs.
+>=20
+> >=20
+> > My use case is a root complex integrated endpoint
+>=20
+> Any more info to share on that? Why isn't it attested etc as
+> part of the host given it's integrated? Or is SPDM a path to
 
-Thanks
+Oh, sorry. It's not integrated in the sense of on the board. It's just
+a PCIe attached NVMe device. You can see the example for testing with
+QEMU in the cover letter.
 
-Deepanshu
+> something other than simple attestation here?=C2=A0 Fine to do it this
+> way, just seems like overkill so I'm curious what the application
+> is.
+
+The next step is to expand this to support other transports, like the
+storage ones.
+
+Alistair
+
+>=20
+> Jonathan
