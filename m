@@ -1,28 +1,28 @@
-Received: from CH1PR05CU001.outbound.protection.outlook.com (mail-northcentralusazon11010037.outbound.protection.outlook.com [52.101.193.37])
+Received: from PH0PR06CU001.outbound.protection.outlook.com (mail-westus3azon11011027.outbound.protection.outlook.com [40.107.208.27])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 99A3344BCBE;
-	Wed, 23 Sep 2026 07:26:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.193.37
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 38B30443AB3;
+	Wed, 23 Sep 2026 07:26:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.208.27
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790148417; cv=fail; b=L/eTMa/rPu0UjIOI1LDfPgJMkVXbr1ShugkY+Noon/f+NQEHjb1/au0ta2g3yGa1ON1Vg2QMywmDJ5Ff59OXTUM7BrjYyHsRXAaJ0lOMyk8gDQ9jZZqKzJwNDpHlLiQtLTwylhS4QHEf//fQNildYcDmBWVD/B8TtmJ33Dj2JqI=
+	t=1790148418; cv=fail; b=FuRenmRohMnUlMrXYI/ajOBPmHF2WA+96Lw1iyo5NwDsTtp8ioWO3vUTi1yRByp/hia6l5VlIvlhTy8lzhEQoucpaC1SGvebtCFIGPlJpgvk7KC9S4x8QQCPgF+dY9UFKTVbKAaL50FqUcnGpIpIhewWNgiE7Owsh1q3AQ8N3dY=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790148417; c=relaxed/simple;
-	bh=s6tJ+ykICwYsGCuACBX1PNcpqkAuUv96Y5IOO1FFcek=;
+	s=arc-20240116; t=1790148418; c=relaxed/simple;
+	bh=Cbm5ECewrEho6DqMFVSQ7FfMAdAlmi+Wf8Z/JBfsgN0=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Y9VMhYXZ/+8sHEWxc7tH3jorlRbLxy8E1MHUPV7QKgtPsyqYWyhKpt0EymrVEPOWSW+oFI/3dgW+jFkl4fTvU2WlhRJMHy20stJ6YJxC6/lKeyVdnkqaeAW4nYR7u8ZvItfdGXUtUwRBj+nMKXjxAhfhfOLNmsHkJJLESlVEzmo=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=axjbNZAD; arc=fail smtp.client-ip=52.101.193.37
+	 MIME-Version:Content-Type; b=FV9VEU/Yx4xeHfCq5dmmj1pDMGDMcHaIgR9TT6zvOx+SbO5Emsk0I6WjImZRYZnwI0Dq8KsIlWH4Y12R9/PCV2/u+nIH9P0XTvyP38VwKVk+rJu1Za8LY34+Qy4eOJ4PcI2S/JTe7e4ihEuBLhN9NT4b/9YLSqm6VyYWPAN7p7k=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=toy3J3f9; arc=fail smtp.client-ip=40.107.208.27
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="axjbNZAD"
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="toy3J3f9"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=bQnHinACbYUUdUObQOD7v2FHeX//vKY/3HBbMUIfkipOSajhsOI+XB9PnmruM2j3g1cWlk9xW1FndBfIEqbB5qNPPj4xwuSme/WdrenY6kesWvp7JBn/bbtGi6p2hGia2/tWe6LaScPejYYOq0iriWf+ZMcVSqzYx3mbIVPXd0R/KswtcJNxOCq+4dOA5zfFIy1AFK3/zZvanB+s5Ur/EP1dFU9gb9I5CpTgz2N8XAWyaZFSB5PX5J9zvIPan7O5X4aGqtK/pHviAlsMwkA60qCon+vzBGhr254dSLSOE+9lOhqJurtvK5MBE+nCz5Jh9ZcK/myu1We4LLM2uQXdMQ==
+ b=OI9zNcncx6qmtSevQRrSESIZyVQWWYhhB+9MerREUvMoXnyvVIwIQfhcoJjnmjrrYqOACh+ntv9aJcltmq22y3V2Q9h+Sea6JRYcgVfq482p6wkZgm9sV7UX7mftLP7sfz6mTKlCN4aS4ZPECYIVlmN0FyHghI2fEMuBGTGRGoRj6eMkv29rtQsmAmK8kyts2aZDBOGc0JUtQC410OXBAXb1jBY8MhswClSDwQ3gk2oU3qawzsYcMWl08fECnPniwmZPfHHB/4MVeZgmvj8dkNXpF2BZqWD6wodn1hmkl2eRr6d7yxioJShloFrBSRVwf3Awmxerc/NpT8n2C2mzsg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=rLVB4li1rpe5XaNcTbstuGduQEQLidaxMiutNA20U40=;
- b=F5gBMl+KvuFGGEHThtY15ATd1IYbz3pg7At7TwFRjxorNd7nxZ4MsKfl+rf+iedYXKkUK8sGwSD2Jpf8AloX8GNR4G/Bc7G4OA4BcWmaaR3yiO6Z3bVpQMEPn+eldN+OtTzbBUmKWoai0ydMGUWb0TQDqFlzKcldqPKgejmWtSQsxvUSpG3uWbEfoi324C38oBH8gN5HIDZ8AL9yMC7uqPFbfs79inxT89y6qGYxjv8n/E34Be6tLExWtswpXspAyq/tR+1rvAt8tjMM0IdjoLK3T2NPjWfm6YBqLP+J2X0TQS3ZljLdmKaQMHj92DQyhwC1X0jIiOf4jWiuBbZbkQ==
+ bh=b1iz7+/G6wNuRGf8jutMPIw3XyV6zeJ8o5w40GynSbo=;
+ b=aF8GkIazessU1+LjaH2EMGTmnubMQ+e1Gurvy34x/NaFBCUIvDR2gP8gmofA5RZVys2lPZuefWQ7BupXghzqAiSbn4VnG8O+HOuei2A7zUaDHq8gB4fXt6lIGosDfT4E8dL6PZPjTPcEki6KWgzeXL3/rL2rGglX4fo5ROZTPvHmqE90vwQWisrZ3sLBu1AAuFcNEf1+MCW1hG0oSQc08eumf1tuWUw4iVX39zqWV1PUCReJqldplk6hkIVcvCK876ZoS2eWOqfpLDg4Uvesw8bwHk75UHwaVGyhjyyd2YThS9ky+74hm0G5wacU7A9sE7IvVHWE7AKYsZDq2+ru2Q==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  216.228.117.160) smtp.rcpttodomain=gmail.com smtp.mailfrom=nvidia.com;
  dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
@@ -30,18 +30,18 @@ ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=rLVB4li1rpe5XaNcTbstuGduQEQLidaxMiutNA20U40=;
- b=axjbNZADkw4klZdemoZJ8hxCOuPn78a7rTZKoWmTRw5bW4cFK4gcfddhUMzscziL+5ah88oKtHZ8Rlk7qk3WpkUm8xs4/nDI2aeIIxOE08q5HmaF/yiXT26MGkXBohrs8w3mkZ2EK0LJugNi+1fHLawHU3VDY0irEeBOX3ex0Scv24mafTEnXZtLjPUac4Q9IBzaqFxgqGwEXkTK9YGxccpslAetgeKjfG7iBGv4ic0RpLcb2v3Uyi+0YAmk7bDUSTtych9u4LmMj01ijtSxWJZ3TucBYxiXu+VA9aIIqGWZ3ZngiV9NFbqxYnCoOKTd+uMbvjWgAGIVk7AKo/56TQ==
-Received: from MW4PR04CA0165.namprd04.prod.outlook.com (2603:10b6:303:85::20)
- by DS7PR12MB6006.namprd12.prod.outlook.com (2603:10b6:8:7d::19) with
+ bh=b1iz7+/G6wNuRGf8jutMPIw3XyV6zeJ8o5w40GynSbo=;
+ b=toy3J3f9PLkDbOw/Vr+gzbCj1wH16Vxaj5wtMFCTO96SHxLpTLPqzukgc2O/co/o8TxpjYXIwG4pdZ0ZnejW7neO2OcXLqr4QgHoLbHdrSQ9U+Z15Y94TVaiTIr6NJLh6Z7nbwWnox6xP/vJmqdvTMszRXZSA/cUoqVY0PzFdHkfRGuLEaG3Y3394EV9sRqoOLxD5t3A+aelZtQrLGpaYM7ssfqBOFtdJBN5Y81U2mT9eJBEf7k/S3aC1Xs7WLbGaWElziW+uiz9TXduRznXm6dcnxouoDwG/MD5oq/LAzfpNQod/iaF71IVpC26kCGOg9ymzzQ4gwa1xeXjU61KcA==
+Received: from SJ0PR05CA0181.namprd05.prod.outlook.com (2603:10b6:a03:330::6)
+ by DS7PR12MB6143.namprd12.prod.outlook.com (2603:10b6:8:99::16) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.451.14; Wed, 23 Sep
- 2026 07:26:48 +0000
-Received: from SJ1PEPF00001CEA.namprd03.prod.outlook.com
- (2603:10b6:303:85:cafe::5e) by MW4PR04CA0165.outlook.office365.com
- (2603:10b6:303:85::20) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.21.451.14 via Frontend Transport; Wed,
- 23 Sep 2026 07:26:47 +0000
+ 2026 07:26:51 +0000
+Received: from SJ1PEPF00001CE6.namprd03.prod.outlook.com
+ (2603:10b6:a03:330:cafe::62) by SJ0PR05CA0181.outlook.office365.com
+ (2603:10b6:a03:330::6) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.21.428.8 via Frontend Transport; Wed, 23
+ Sep 2026 07:26:51 +0000
 X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.117.160)
  smtp.mailfrom=nvidia.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=nvidia.com;
@@ -49,17 +49,17 @@ Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
  216.228.117.160 as permitted sender) receiver=protection.outlook.com;
  client-ip=216.228.117.160; helo=mail.nvidia.com; pr=C
 Received: from mail.nvidia.com (216.228.117.160) by
- SJ1PEPF00001CEA.mail.protection.outlook.com (10.167.242.26) with Microsoft
+ SJ1PEPF00001CE6.mail.protection.outlook.com (10.167.242.22) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.451.8 via Frontend Transport; Wed, 23 Sep 2026 07:26:47 +0000
+ 15.21.451.8 via Frontend Transport; Wed, 23 Sep 2026 07:26:51 +0000
 Received: from rnnvmail201.nvidia.com (10.129.68.8) by mail.nvidia.com
  (10.129.200.66) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.49; Wed, 23 Sep
- 2026 00:26:24 -0700
+ 2026 00:26:28 -0700
 Received: from mmaddireddy-ubuntu.nvidia.com (10.126.230.37) by
  rnnvmail201.nvidia.com (10.129.68.8) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Wed, 23 Sep 2026 00:26:20 -0700
+ 15.2.2562.49; Wed, 23 Sep 2026 00:26:24 -0700
 From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
 To: Jingoo Han <jingoohan1@gmail.com>, Manivannan Sadhasivam
 	<mani@kernel.org>, Lorenzo Pieralisi <lpieralisi@kernel.org>, "Krzysztof
@@ -69,9 +69,9 @@ CC: Rob Herring <robh@kernel.org>, Thierry Reding <thierry.reding@kernel.org>,
 	Jonathan Hunter <jonathanh@nvidia.com>, Vidya Sagar <vidyas@nvidia.com>,
 	Niklas Cassel <cassel@kernel.org>, <linux-kernel@vger.kernel.org>,
 	<linux-tegra@vger.kernel.org>, Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Subject: [PATCH 1/3] PCI: dwc: Add Endpoint reinit helper
-Date: Wed, 23 Sep 2026 12:55:52 +0530
-Message-ID: <20260923072554.1141864-2-mmaddireddy@nvidia.com>
+Subject: [PATCH 2/3] PCI: tegra194: Avoid full Endpoint reinit on PERST#
+Date: Wed, 23 Sep 2026 12:55:53 +0530
+Message-ID: <20260923072554.1141864-3-mmaddireddy@nvidia.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260923072554.1141864-1-mmaddireddy@nvidia.com>
 References: <20260923072554.1141864-1-mmaddireddy@nvidia.com>
@@ -88,285 +88,66 @@ X-ClientProxiedBy: rnnvmail201.nvidia.com (10.129.68.8) To
  rnnvmail201.nvidia.com (10.129.68.8)
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: SJ1PEPF00001CEA:EE_|DS7PR12MB6006:EE_
-X-MS-Office365-Filtering-Correlation-Id: c3c406f0-8fa8-40b9-5593-08df1944071a
+X-MS-TrafficTypeDiagnostic: SJ1PEPF00001CE6:EE_|DS7PR12MB6143:EE_
+X-MS-Office365-Filtering-Correlation-Id: 78e37601-1217-499e-5363-08df1944095b
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|376014|7416014|23010399003|36860700016|1800799024|82310400026|56012099006|11063799006|5023799004|10067099003|18002099003|22082099003|6133799003;
+	BCL:0;ARA:13230040|1800799024|82310400026|23010399003|36860700016|7416014|376014|10067099003|56012099006|6133799003|18002099003|22082099003|11063799006;
 X-Microsoft-Antispam-Message-Info:
-	16fzna3j0DjAI47MX9EpZGqzFBVVrhuwNK0g9S97eR+Kf3bfPjnXSWPwQIJSNeX41zyfzrqoY6EtYe1XsGzjiU7eS6XAnhaXP2N0zgD6mNOGDFAk4Jf/YEMmlBfwo3HDPKfy1o0bpdrVFomzAUQOSKlzIWanhCWtaV2nwVoyqP5YpIXYViGtFndjVB86nBOf2zfHuxLaVbgVyKaNYNb6NfmbZT28Jk7LtQpw3UdG0yOxBjuoHq6ARIKWiR+a++mK9nuAdIq+sxlR7uLGLaD7L/cKz3oG0BkzmAf1wN2uvi1dL+jn8ITkDLPyFjoXwkuPGxbV0kx+GLxaFHiBhk1oV8bMQXucTv3/H8xJ7sQu352u9L3uO9tkNZyLhx3wGZrHpkFery0dDyqQ2y/GCDIbzT6ZX5PaYbV9H55XecoFvH3A8xdphFYuNVI7FSBanQObyD/+bMsPlEigXpgk3+rQb4pjZxGGkTzOmr9Wgq++bxoWIZwCZplmB6ZpsUoqbg3G69DqZbCDKitFpejPk8QHuTISbHLG03fSxQxuv1+Wd0VE9Cx/McVX5VGvfqzIWiTjYC4bRwB6bfjlmQHC97b2NDfRkdUILoYKVJDHEtOY0dUGJcbWAXYQ9FLlH0zdZnH6T+OQWNggNYfyIYqcsEZbDI8S5QsyyLHOTqHfPtnGAPou+t3GjPo46qILPc3SWbUlaCUJflvfwKjzw9wHieRo7Q==
+	lu8SUPgYThZ0BhlbRFG23qhAZXR0Truntf6Jqz74mlHi1rRBQ5fZKNU+49LNGs2EtoitRNfPDYTXxhpiG0syI0iL+E/eXPlLGwZHhrkyClKGmgRpsy1vphEyfapUd7817FhBSd3N4NCbPFugny7MCPzIVyPACOLY9VJaMLFSHT63TuiFnFn+P1iLcVHe0vzg8orgcn7adRVhEU8HJ3WFC1E9yFi0Hh60iJ+JZaU0yyhY1zcVibzUdqZSVcl/FAHytonRbS99Jm971F5VaFHxUHupHbEakJMn6czyDgcilDEhgh787ffX7QvFMzOz9GcmWnJRMf3ZatfPxCJsIB24xeBC6zQ/5p/psGx6CG1b4KjBNEWi1DdchI1btgLJElg3nUlI/ndFDcxOUPpEhySLF5HFpC57GYkujRQiErHymd7yGCMvZ284R/zPGDN9n8chNmXpLLyEN0wdOq3EnGuvmdtNrR25P+rcT5qDBkREOw5hNWUhknSmijMuzlIVeoedbYpMkJBbG9JSgtON/ywx7H/aLZEUgRK+VyAkEQClHikodxEm0Bm9tevTxZHasfoUztIBl+ovrsR4nUEaQx6F6wDX1FjwYcD9p2w/TxTjgYZl9am+f+RNzQ9PObQUZ8gc8R4BmqAJyZ7dw3i5q88RBaqJmBc2B8f9qSMK14z1XPvvblfTd7F2WUm4LffUwBs6rcNVGL7AW0ZHZsuUGNUISw==
 X-Forefront-Antispam-Report:
-	CIP:216.228.117.160;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge1.nvidia.com;CAT:NONE;SFS:(13230040)(376014)(7416014)(23010399003)(36860700016)(1800799024)(82310400026)(56012099006)(11063799006)(5023799004)(10067099003)(18002099003)(22082099003)(6133799003);DIR:OUT;SFP:1101;
+	CIP:216.228.117.160;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge1.nvidia.com;CAT:NONE;SFS:(13230040)(1800799024)(82310400026)(23010399003)(36860700016)(7416014)(376014)(10067099003)(56012099006)(6133799003)(18002099003)(22082099003)(11063799006);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	eICYKiys3xHugKVIsxHkUWehadLlQPpVGtBVByVr3riojK+zNoMvN4HC4GTHkIewOhaQWc7E/lafcpMSmmRtYYf62VYKNG0boTCPZxmv29dP1bhSfKM6fw5cRYRyCsSyC1NB6JUQhI4ygtXPqwlyWTav+Hk5tdoDGsigE/5s7kg540gViv3v+CVAa1NFYi8P7YLro+m/s9xyMbqC4SmNtrHO1rBEwEzdsD+rbbMgmAyVSyQKZ0zvQEYbbgZ0hkXCiiEpfQDXkHsEKWhhJ/hgq84pXtMvio6evyInP8Z6BlKfO/abbndYRGZEY+MwPsJX2VmmIcPTMQNZ1zESG3Rao3KSYeiLljVn9zDomnYHOo805KY6tiP+zsYW9a5noObGfi1DeyWATcOSNQbi/8QG1PPa9Q252ufuSJdOA6mk2IZRS8/Y5klBhXJJ1xFwaPDi
+	2ZIOAmfxrNs3bog3yJb0n1DU3B5NTYdLjnlrsMFJRrgcgtDFy9XArWjrFi27ZBw6ku+1Cl61z1bO/46ueNrPOU2Zl0I10DWKC1rnMakyJ3wG6Nx4tPiz+FBg2CvsPpgo35ZBwbhi1CcfUlcktJTskoM+/SIhq97V9RpWJBdV5jF0tRHv5ZGZglWK0d8490aAWo3xSCIAIP+7yBJ+u3MYWYDIrJPe2+BMse6grhO4uVhQYJ7qjw92osucJaP2DTRdugCsLofkEyHU5iECcml6Isol3GPFKnHB5XmVse53YZMibRYO1CZvqzFSkxw8bD6PyYMKxebOFNaIr41ZM1jPpHoxQj2f1BtWtb03ySmjcpntGLbKuwrskKlu4R1CodvL6Ql5QjhG02AvNf9UGmIbiXmoaP4nwF34/9wlD8spxMmo/K7xD+eTcPSMnCJrSmGi
 X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 Sep 2026 07:26:47.7276
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 Sep 2026 07:26:51.5011
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: c3c406f0-8fa8-40b9-5593-08df1944071a
+X-MS-Exchange-CrossTenant-Network-Message-Id: 78e37601-1217-499e-5363-08df1944095b
 X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.160];Helo=[mail.nvidia.com]
 X-MS-Exchange-CrossTenant-AuthSource:
-	SJ1PEPF00001CEA.namprd03.prod.outlook.com
+	SJ1PEPF00001CE6.namprd03.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS7PR12MB6006
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS7PR12MB6143
 
-Endpoint controllers can receive a fundamental reset while software
-resources such as eDMA, debugfs and function state must live for the
-controller lifetime.
+Tegra194 and Tegra234 Endpoint mode receive PERST# as a fundamental
+reset. Controller registers are lost across that reset, but DWC
+Endpoint resources live for the controller lifetime.
 
-Track whether DWC Endpoint resources are initialized and add helpers
-that perform full initialization once, then reinitialize only reset-lost
-registers on later fundamental reset cycles.
-
-A fundamental reset also clears outbound iATU programming. Clear the
-cached outbound window map, outbound address array and MSI iATU cache
-before reinitializing registers so stale software state cannot hide a
-window that was reset by hardware.
+Use the DWC init-or-reinit helper for Tegra PERST# deassertions so only
+reset-lost registers are restored after the first initialization. Keep
+the EPF deinit notification in the deassert path where refclk and core
+reset are available.
 
 Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
 ---
- .../pci/controller/dwc/pcie-designware-ep.c   | 152 +++++++++++++-----
- drivers/pci/controller/dwc/pcie-designware.h  |  13 ++
- 2 files changed, 124 insertions(+), 41 deletions(-)
+ drivers/pci/controller/dwc/pcie-tegra194.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
-index de8ee3db4360..7ba40220b821 100644
---- a/drivers/pci/controller/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
-@@ -1155,6 +1155,28 @@ int dw_pcie_ep_raise_msix_irq(struct dw_pcie_ep *ep, u8 func_no,
- }
- EXPORT_SYMBOL_GPL(dw_pcie_ep_raise_msix_irq);
+diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
+index 513299541f18..dd3f4c30ba52 100644
+--- a/drivers/pci/controller/dwc/pcie-tegra194.c
++++ b/drivers/pci/controller/dwc/pcie-tegra194.c
+@@ -1914,7 +1914,6 @@ static void pex_ep_event_pex_rst_deassert(struct tegra_pcie_dw *pcie)
  
-+static void dw_pcie_ep_clear_msi_iatu(struct dw_pcie_ep *ep)
-+{
-+	ep->msi_iatu_mapped = false;
-+	ep->msi_iatu_mapped_offset = 0;
-+	ep->msi_msg_addr = 0;
-+	ep->msi_map_size = 0;
-+}
-+
-+static void dw_pcie_ep_clear_outbound_atus(struct dw_pcie_ep *ep)
-+{
-+	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-+
-+	if (ep->ob_window_map)
-+		bitmap_zero(ep->ob_window_map, pci->num_ob_windows);
-+
-+	if (ep->outbound_addr)
-+		memset(ep->outbound_addr, 0,
-+		       pci->num_ob_windows * sizeof(*ep->outbound_addr));
-+
-+	dw_pcie_ep_clear_msi_iatu(ep);
-+}
-+
- /**
-  * dw_pcie_ep_cleanup - Cleanup DWC EP resources after fundamental reset
-  * @ep: DWC EP device
-@@ -1169,11 +1191,12 @@ void dw_pcie_ep_cleanup(struct dw_pcie_ep *ep)
+ 	/* Perform cleanup that requires refclk and core reset deasserted */
+ 	pci_epc_deinit_notify(pcie->pci.ep.epc);
+-	dw_pcie_ep_cleanup(&pcie->pci.ep);
  
- 	if (ep->msi_iatu_mapped) {
- 		dw_pcie_ep_unmap_addr(ep->epc, 0, 0, ep->msi_mem_phys);
--		ep->msi_iatu_mapped = false;
-+		dw_pcie_ep_clear_msi_iatu(ep);
- 	}
+ 	val = dw_pcie_readl_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL);
+ 	val &= ~PORT_LOGIC_SPEED_CHANGE;
+@@ -1958,7 +1957,7 @@ static void pex_ep_event_pex_rst_deassert(struct tegra_pcie_dw *pcie)
+ 	val = (upper_32_bits(ep->msi_mem_phys) & MSIX_ADDR_MATCH_HIGH_OFF_MASK);
+ 	dw_pcie_writel_dbi(pci, MSIX_ADDR_MATCH_HIGH_OFF, val);
  
- 	dwc_pcie_debugfs_deinit(pci);
- 	dw_pcie_edma_remove(pci);
-+	ep->resources_initialized = false;
- }
- EXPORT_SYMBOL_GPL(dw_pcie_ep_cleanup);
- 
-@@ -1307,6 +1330,89 @@ static void dw_pcie_ep_disable_bars(struct dw_pcie_ep *ep)
- 	}
- }
- 
-+static void dw_pcie_ep_init_ptm(struct dw_pcie_ep *ep)
-+{
-+	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-+	u32 ptm_cap_base, reg;
-+
-+	/*
-+	 * PCIe r6.0, section 7.9.15 states that for endpoints that support
-+	 * PTM, this capability structure is required in exactly one
-+	 * function, which controls the PTM behavior of all PTM capable
-+	 * functions. This indicates the PTM capability structure
-+	 * represents controller-level registers rather than per-function
-+	 * registers.
-+	 *
-+	 * Therefore, PTM capability registers are configured using the
-+	 * standard DBI accessors, instead of func_no indexed per-function
-+	 * accessors.
-+	 */
-+	ptm_cap_base = dw_pcie_find_ext_capability(pci, PCI_EXT_CAP_ID_PTM);
-+
-+	/*
-+	 * PTM responder capability can be disabled only after disabling
-+	 * PTM root capability.
-+	 */
-+	if (ptm_cap_base) {
-+		dw_pcie_dbi_ro_wr_en(pci);
-+		reg = dw_pcie_readl_dbi(pci, ptm_cap_base + PCI_PTM_CAP);
-+		reg &= ~PCI_PTM_CAP_ROOT;
-+		dw_pcie_writel_dbi(pci, ptm_cap_base + PCI_PTM_CAP, reg);
-+
-+		reg = dw_pcie_readl_dbi(pci, ptm_cap_base + PCI_PTM_CAP);
-+		reg &= ~(PCI_PTM_CAP_RES | PCI_PTM_GRANULARITY_MASK);
-+		dw_pcie_writel_dbi(pci, ptm_cap_base + PCI_PTM_CAP, reg);
-+		dw_pcie_dbi_ro_wr_dis(pci);
-+	}
-+}
-+
-+/**
-+ * dw_pcie_ep_reinit_registers - Reinitialize DWC EP reset-lost registers
-+ * @ep: DWC EP device
-+ *
-+ * Reinitialize the EP registers lost after a fundamental reset without
-+ * reallocating EP resources that live until dw_pcie_ep_deinit(). The
-+ * caller must only use this after hardware has reset the iATU; this
-+ * helper invalidates software iATU state but does not disable live
-+ * windows.
-+ */
-+int dw_pcie_ep_reinit_registers(struct dw_pcie_ep *ep)
-+{
-+	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-+	int ret;
-+
-+	dw_pcie_ep_clear_outbound_atus(ep);
-+
-+	if (ep->ops->init) {
-+		ret = ep->ops->init(ep);
-+		if (ret)
-+			return ret;
-+	}
-+
-+	dw_pcie_ep_disable_bars(ep);
-+	dw_pcie_ep_init_ptm(ep);
-+	dw_pcie_ep_init_non_sticky_registers(pci);
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(dw_pcie_ep_reinit_registers);
-+
-+/**
-+ * dw_pcie_ep_init_or_reinit_registers - Initialize or reinitialize DWC EP
-+ * @ep: DWC EP device
-+ *
-+ * Initialize DWC EP resources on first use. If resources are already
-+ * initialized, reinitialize only the reset-lost registers.
-+ */
-+int dw_pcie_ep_init_or_reinit_registers(struct dw_pcie_ep *ep)
-+{
-+	if (ep->resources_initialized)
-+		return dw_pcie_ep_reinit_registers(ep);
-+
-+	return dw_pcie_ep_init_registers(ep);
-+}
-+EXPORT_SYMBOL_GPL(dw_pcie_ep_init_or_reinit_registers);
-+
- /**
-  * dw_pcie_ep_init_registers - Initialize DWC EP specific registers
-  * @ep: DWC EP device
-@@ -1321,7 +1427,6 @@ int dw_pcie_ep_init_registers(struct dw_pcie_ep *ep)
- 	struct dw_pcie_ep_func *ep_func;
- 	struct device *dev = pci->dev;
- 	struct pci_epc *epc = ep->epc;
--	u32 ptm_cap_base, reg;
- 	u8 hdr_type;
- 	u8 func_no;
- 	void *addr;
-@@ -1386,47 +1491,12 @@ int dw_pcie_ep_init_registers(struct dw_pcie_ep *ep)
- 		list_add_tail(&ep_func->list, &ep->func_list);
- 	}
- 
--	if (ep->ops->init) {
--		ret = ep->ops->init(ep);
--		if (ret)
--			goto err_remove_edma;
--	}
--
--	dw_pcie_ep_disable_bars(ep);
--
--	/*
--	 * PCIe r6.0, section 7.9.15 states that for endpoints that support
--	 * PTM, this capability structure is required in exactly one
--	 * function, which controls the PTM behavior of all PTM capable
--	 * functions. This indicates the PTM capability structure
--	 * represents controller-level registers rather than per-function
--	 * registers.
--	 *
--	 * Therefore, PTM capability registers are configured using the
--	 * standard DBI accessors, instead of func_no indexed per-function
--	 * accessors.
--	 */
--	ptm_cap_base = dw_pcie_find_ext_capability(pci, PCI_EXT_CAP_ID_PTM);
--
--	/*
--	 * PTM responder capability can be disabled only after disabling
--	 * PTM root capability.
--	 */
--	if (ptm_cap_base) {
--		dw_pcie_dbi_ro_wr_en(pci);
--		reg = dw_pcie_readl_dbi(pci, ptm_cap_base + PCI_PTM_CAP);
--		reg &= ~PCI_PTM_CAP_ROOT;
--		dw_pcie_writel_dbi(pci, ptm_cap_base + PCI_PTM_CAP, reg);
--
--		reg = dw_pcie_readl_dbi(pci, ptm_cap_base + PCI_PTM_CAP);
--		reg &= ~(PCI_PTM_CAP_RES | PCI_PTM_GRANULARITY_MASK);
--		dw_pcie_writel_dbi(pci, ptm_cap_base + PCI_PTM_CAP, reg);
--		dw_pcie_dbi_ro_wr_dis(pci);
--	}
--
--	dw_pcie_ep_init_non_sticky_registers(pci);
-+	ret = dw_pcie_ep_reinit_registers(ep);
-+	if (ret)
-+		goto err_remove_edma;
- 
- 	dwc_pcie_debugfs_init(pci, DW_PCIE_EP_TYPE);
-+	ep->resources_initialized = true;
- 
- 	return 0;
- 
-diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-index 4d55339750f0..ae442de396ff 100644
---- a/drivers/pci/controller/dwc/pcie-designware.h
-+++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -511,6 +511,7 @@ struct dw_pcie_ep {
- 	unsigned long		*ob_window_map;
- 	void __iomem		*msi_mem;
- 	phys_addr_t		msi_mem_phys;
-+	bool			resources_initialized;
- 
- 	/* MSI outbound iATU state */
- 	bool			msi_iatu_mapped;
-@@ -922,6 +923,8 @@ void dw_pcie_ep_linkup(struct dw_pcie_ep *ep);
- void dw_pcie_ep_linkdown(struct dw_pcie_ep *ep);
- int dw_pcie_ep_init(struct dw_pcie_ep *ep);
- int dw_pcie_ep_init_registers(struct dw_pcie_ep *ep);
-+int dw_pcie_ep_reinit_registers(struct dw_pcie_ep *ep);
-+int dw_pcie_ep_init_or_reinit_registers(struct dw_pcie_ep *ep);
- void dw_pcie_ep_deinit(struct dw_pcie_ep *ep);
- void dw_pcie_ep_cleanup(struct dw_pcie_ep *ep);
- int dw_pcie_ep_raise_intx_irq(struct dw_pcie_ep *ep, u8 func_no);
-@@ -953,6 +956,16 @@ static inline int dw_pcie_ep_init_registers(struct dw_pcie_ep *ep)
- 	return 0;
- }
- 
-+static inline int dw_pcie_ep_reinit_registers(struct dw_pcie_ep *ep)
-+{
-+	return 0;
-+}
-+
-+static inline int dw_pcie_ep_init_or_reinit_registers(struct dw_pcie_ep *ep)
-+{
-+	return 0;
-+}
-+
- static inline void dw_pcie_ep_deinit(struct dw_pcie_ep *ep)
- {
- }
+-	ret = dw_pcie_ep_init_registers(ep);
++	ret = dw_pcie_ep_init_or_reinit_registers(ep);
+ 	if (ret) {
+ 		dev_err(dev, "Failed to complete initialization: %d\n", ret);
+ 		goto fail_init_complete;
 -- 
 2.34.1
 
