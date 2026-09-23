@@ -1,128 +1,64 @@
-Received: from mta0.migadu.com (out-44.mta0.migadu.com [91.218.175.44])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E4FA33C18B
-	for <linux-pci@vger.kernel.org>; Wed, 23 Sep 2026 18:09:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 94E384334AA
+	for <linux-pci@vger.kernel.org>; Wed, 23 Sep 2026 18:11:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790186961; cv=none; b=i62C8TUkE081fWQ+sVl9B0X2xdTnzsZLfEbwBCFLFVij/KjV+DTtdNsUHRsHVtmUVO8DqvS8KG+zAOebMN4mP51U24KuCXm6cmsfG9itp7iNbtK4yC9wKLsvOU0EXApYmAPDgjygi2l1ViNTZIiftxPLelO9UlZKXUWn/JRjs7I=
+	t=1790187103; cv=none; b=pJUYSfGWluco7lIrfUHsgooXNCdsTN7EFBwH68iyx5iFOFoNp4wfcRzd85Krb2AAOSx/5fQyHHvNw7h9TvG8CB66rfLoYP5zaAdrnidq3kuhfScLUikDZbwdt5NHUJeFGl/KYusheSr2H0CKwdZn/3sOI9PhH9X4/7Uq6Qh7/CM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790186961; c=relaxed/simple;
-	bh=hp4x+ywzXvafJkCdP8u0POUn9g1o98sJr1Tn/DdIbhA=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=Q81FAHjwlWWgp79D0acANBCe0so10q1KQttM5dPbRMqYJqrWqFEKqJuBO86uzZp8Eb3MyIe8b5B/1PiqHBWQnuNRinUkgHK7d90rsqqAsTscPGmVmWK7R7cbrdmaAv/DxsBepMupzVrYzcpmPLdU1h79sS4VYSriGvYSeRKH0Mc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=J0FXJKAu; arc=none smtp.client-ip=91.218.175.44
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1790187103; c=relaxed/simple;
+	bh=wctSuqX/YOLK9/1occacvJTMGRAtQ80Pr4KdTTBTCZE=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=Os/AaXm46VnMP+x1iZ1tvOSUaJQYNuu3xvb5dqZISXiITZa+PfQfYdNUEit3i2duaSi46bh93gNDkH9wXFtpqvKT8sQaXSVTCQ2qmeEmgXw13CYZFlQU0PBS39ytAQwlqWfMCtVSx0GYrdOz3h5MbvIUTF2AiBga8bKAbdmvWMo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XlL9EKU4; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="J0FXJKAu"
-X-Envelope-To: linux-pci@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=hp4x+ywzXvafJkCdP8u0POUn9g1o98sJr1Tn/DdIbhA=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1790186958; v=1; x=1790791758;
- b=J0FXJKAuHrsWFUPXCGKvyv4LUSoMNaLLs+cn5TRColBs8cnOJUoIyDJpFVvyOR3T72q/grhM
- dU9XsVlBj6jSxP5ga3TF8aZQTvrM2XNW9wnhWQVkx/J4fb4Utk7GbZ9TxaisYIDTmkELiyJjdtb
- 8VRyDnj86HOf3qvDGJblkKsw=
-X-Envelope-To: linux-pci@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 016718dd90252915;
-	Wed, 23 Sep 2026 18:09:18 +0000
-X-Mizu-Trace-ID: 016718dd90252915
-X-Migadu-Flow: FLOW_OUT
-Received: by mail-lf1-f48.google.com with SMTP id 2adb3069b0e04-5b5e5aaf7deso983e87.0
-        for <linux-pci@vger.kernel.org>; Wed, 23 Sep 2026 11:09:14 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AKwUvBzJ6sr84lbGwSBHJamrTKLvjMDg6zHuZWpcuJepcMSf0LCl2io9qdgf3OEK3SQNfdMUzMaHcgKrF9I=@vger.kernel.org
-X-Gm-Message-State: AFuF++le9FazyWoH7H5HDJKA5kBKKEJKbBiHC2hVo0aBxaekw9SXmxIj
-	FlugAZZhHbZELtZQU4D+T2Rkpy4R1ZvDGXQ2dRdZKGkZrC7J4AJJOdcnuTSw/3Vmz45yD8n48ta
-	cMFf9RuBRT9mwyXs5hHsNK2IJ42SoT8XGkjjrRGYz
-X-Received: by 2002:a05:6512:124d:b0:5b8:c230:1241 with SMTP id
- 2adb3069b0e04-5b8dda17fd1mr39666e87.10.1790186953248; Wed, 23 Sep 2026
- 11:09:13 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XlL9EKU4"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 308E31F000FF;
+	Wed, 23 Sep 2026 18:11:38 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1790187098;
+	bh=wctSuqX/YOLK9/1occacvJTMGRAtQ80Pr4KdTTBTCZE=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=XlL9EKU4xC05Q8cHhKIrh1yJqqEOaCmuJYgdxbg3lt/3Z09ZsYds/OFrA5XjcSNbr
+	 b7P6mmwgFS6hmYxBEHsFh6L6terD46q7GsRxKD81xH8AIcgO6RnHktNE6MZp6/jmJq
+	 P2gE/GQgqplm1m9G6YTDAVAfdL6zV9j5mia1m0SGj2CE/0dl+GOc/4ZwWFw6eZFm0y
+	 lvnm5uEtyjsL81PKKOmufSD/NzSgfGn2hdEd+vv6gnO/Z1WamK9Idk5f0XBBhA6t9U
+	 6ens7qMVnM8lZ/XtRO8fIBIUWHjVgTn0bQ0zHLc/v1ijOnL8a4I/4Wp+Ayy38DdA7x
+	 zPePBcU4xoYcw==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v2] PCI: iproc: Use __free(device_node) in
+ iproc_pcie_msi_enable()
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Fuad Tabba" <fuad.tabba@linux.dev>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260923180703.3901185-1-fuad.tabba@linux.dev>
+References: <20260923180703.3901185-1-fuad.tabba@linux.dev>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 23 Sep 2026 18:11:37 +0000
+Message-Id: <20260923181138.308E31F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-References: <20260922210839.3765444-1-fuad.tabba@linux.dev> <20260923093433.00006cab@oss.qualcomm.com>
-In-Reply-To: <20260923093433.00006cab@oss.qualcomm.com>
-From: Fuad Tabba <fuad.tabba@linux.dev>
-Date: Wed, 23 Sep 2026 19:08:36 +0100
-X-Gmail-Original-Message-ID: <CA+EHjTxcXmOk-kvQQtrT1mku=gmn4P4RdZXU2iAQhj+hn7Hjtg@mail.gmail.com>
-X-Gm-Features: AclHuK_L10VanL22RC296bQJntGVijw67vDS6niPFFu4Q6Xzn6rsFFWvoeRnmqs
-Message-ID: <CA+EHjTxcXmOk-kvQQtrT1mku=gmn4P4RdZXU2iAQhj+hn7Hjtg@mail.gmail.com>
-Subject: Re: [PATCH] PCI: iproc: Use __free(device_node) in iproc_pcie_msi_enable()
-To: Jonathan Cameron <jonathan.cameron@oss.qualcomm.com>
-Cc: Manivannan Sadhasivam <mani@kernel.org>, =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Lorenzo Pieralisi <lpieralisi@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Rob Herring <robh@kernel.org>, Ray Jui <rjui@broadcom.com>, 
-	Scott Branden <sbranden@broadcom.com>, bcm-kernel-feedback-list@broadcom.com, 
-	Marek Vasut <marek.vasut+renesas@mailbox.org>, linux-pci@vger.kernel.org, 
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, 
-	Will Deacon <will@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
 
-Hi Jonathan,
+> Declare msi_node with __free(device_node) and drop the out_put_node
+> label and its goto: the scoped cleanup puts the MSI controller node on
+> every return, as the label did.
+>=20
+> No functional change intended.
+>=20
+> Suggested-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
+> Link: https://lore.kernel.org/linux-pci/61488ddc-b346-4ba3-b32a-e972a3bd7=
+5a4@mailbox.org/
+> Reviewed-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
+> Signed-off-by: Fuad Tabba <fuad.tabba@linux.dev>
 
-On Wed, 23 Sept 2026 at 17:34, Jonathan Cameron
-<jonathan.cameron@oss.qualcomm.com> wrote:
-[...]
-> Hi Fuad,
->
-> See the guidance notes in cleanup.h.   Linus has stated a couple
-> of times that he really never wants to see = NULL pattern miles
-> from where it is allocated.  Best you can do here is shift
-> it down to immediately before of_msi_xlate(). It is fine to declare
-> variables with destructors like this inline (i.e. not at top of function).
->
-> Admittedly if the scope shown here had gone a few lines further this
-> would look less bad!
+Sashiko has reviewed this patch and found no issues. It looks great!
 
-Done: https://lore.kernel.org/all/20260923180703.3901185-1-fuad.tabba@linux.dev/
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260923180703.3901=
+185-1-fuad.tabba@linux.dev?part=3D1
 
-Cheers,
-/fuad
-
->
->
-> > ---
-> >  drivers/pci/controller/pcie-iproc.c | 10 +++-------
-> >  1 file changed, 3 insertions(+), 7 deletions(-)
-> >
-> > diff --git a/drivers/pci/controller/pcie-iproc.c b/drivers/pci/controller/pcie-iproc.c
-> > index afb3aa38ac6bb..b4f4e6e1d4b41 100644
-> > --- a/drivers/pci/controller/pcie-iproc.c
-> > +++ b/drivers/pci/controller/pcie-iproc.c
-> > @@ -1338,7 +1338,7 @@ static int iproc_pcie_msi_steer(struct iproc_pcie *pcie,
-> >
-> >  static int iproc_pcie_msi_enable(struct iproc_pcie *pcie)
-> >  {
-> > -     struct device_node *msi_node = NULL;
-> > +     struct device_node *msi_node __free(device_node) = NULL;
-> >       int ret;
-> >
-> >       /*
-> > @@ -1357,18 +1357,14 @@ static int iproc_pcie_msi_enable(struct iproc_pcie *pcie)
-> >       if (pcie->need_msi_steer) {
-> >               ret = iproc_pcie_msi_steer(pcie, msi_node);
-> >               if (ret)
-> > -                     goto out_put_node;
-> > +                     return ret;
-> >       }
-> >
-> >       /*
-> >        * If another MSI controller is being used, the call below should fail
-> >        * but that is okay
-> >        */
-> > -     ret = iproc_msi_init(pcie, msi_node);
-> > -
-> > -out_put_node:
-> > -     of_node_put(msi_node);
-> > -     return ret;
-> > +     return iproc_msi_init(pcie, msi_node);
-> >  }
-> >
-> >  static void iproc_pcie_msi_disable(struct iproc_pcie *pcie)
-> >
-> > base-commit: fd73f4a6659897191fa0d40695fe370925dd3780
->
