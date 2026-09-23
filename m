@@ -1,149 +1,202 @@
-Received: from fout-b2-smtp.messagingengine.com (fout-b2-smtp.messagingengine.com [202.12.124.145])
+Received: from mail-06.mail-europe.com (mail-06.mail-europe.com [85.9.210.45])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0F813B5837;
-	Wed, 23 Sep 2026 03:42:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.145
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DCFB53B840B;
+	Wed, 23 Sep 2026 03:59:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=85.9.210.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790134946; cv=none; b=mH6h67CC9Es1ABq2pBdc8PtujXn4NJBtNyDx5fX4bBkDjOFmTJ2KvOl0/SbKrDbBesdNRytlH6m4wwYYQp2m2o4n6b1tkr3DjViUTIqJQMWtPpEeJ2jeMm9C0GFqla7EMQiHZMuAfNPLrn3aaYjQIr/85Y5gv3QiywgaTQ8KrPk=
+	t=1790135977; cv=none; b=ZKv5mNNK7hctVqax3X9XZYZQrAnkU5jJEY7vSbu3WNjN/iOJLfbA5gRN16Kzhp6k/yQdBzY8AFGB7WXCXOL4fpU4iBgUqOm70K0Nhi9Cfr73vKldGgEHao9+T381FUq1QHna5D1emy3wdi60DfLyAjl7Sjlj32btAchYyNY+AI8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790134946; c=relaxed/simple;
-	bh=DSWi2C0r8cqwdbL+D/oXhhGYggJoGev4OcBXZnAtWFY=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=eoaiKKs++crCQ8njDn/R7oPFpeVj3V1HrP8EznySIpucjPboWiPefdKroJiJb6lmGJxME+h/1QKqvMxuKiPIHoc9ktV8JIc+Gic8deViQQQakkM89VbJ9XCdzCOXSLIzaYCTEoQBfqskoX5H/H3tzwRMD8BJyfAqdtWdTFWN8KU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=alistair23.me; spf=pass smtp.mailfrom=alistair23.me; dkim=pass (2048-bit key) header.d=alistair23.me header.i=@alistair23.me header.b=PRx++WoT; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=K55jbmV5; arc=none smtp.client-ip=202.12.124.145
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=alistair23.me
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=alistair23.me
+	s=arc-20240116; t=1790135977; c=relaxed/simple;
+	bh=YXd2CoAUdAnBNgNQIDgFXd87SkNp2ShWIQJZJksV0ss=;
+	h=Date:To:From:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=fcQsWhmbIgcfOpDWRRV5kxNJMnFZu4d/fY6z/mSZm4vio2heNKJXuyKPiBhFRIdnpF3Etb/AeewJn9GorBjlVRSgsHlqQZy9A3isd3cDNv3M3WMpx2acTXNenWhc7t90ZfuxuDv8Pp5hey2N9jft6q2hqFI1Bg7fq02R2+hzuX4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pm.me; spf=pass smtp.mailfrom=pm.me; dkim=pass (2048-bit key) header.d=pm.me header.i=@pm.me header.b=B1k5Rm01; arc=none smtp.client-ip=85.9.210.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pm.me
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pm.me
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=alistair23.me header.i=@alistair23.me header.b="PRx++WoT";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="K55jbmV5"
-Received: from phl-compute-09.internal (phl-compute-09.internal [10.202.2.49])
-	by mailfout.stl.internal (Postfix) with ESMTP id DF6491D0004C;
-	Tue, 22 Sep 2026 23:42:21 -0400 (EDT)
-Received: from phl-frontend-04 ([10.202.2.163])
-  by phl-compute-09.internal (MEProxy); Tue, 22 Sep 2026 23:42:22 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=alistair23.me;
-	 h=cc:cc:content-transfer-encoding:content-type:content-type
-	:date:date:from:from:in-reply-to:in-reply-to:message-id
-	:mime-version:references:reply-to:subject:subject:to:to; s=fm1;
-	 t=1790134941; x=1790221341; bh=DSWi2C0r8cqwdbL+D/oXhhGYggJoGev4
-	OcBXZnAtWFY=; b=PRx++WoTUWOsvJJFym88XUCOYrkBFJtThSya95aFTGESCAJJ
-	j6r0oqIzbFiXwgipGYtogG2LWflBSo/MHlZn9/l+mqpIjtNp9DyajOOHCSxwWYHO
-	tAQ+D3envhK8zH61bVoslEAWTgcD6kTcwEHuchWY+EiYD+n2B5t3yyEzROAmRQ9M
-	g3o5lBU5OpAEW9OtA6z6hmgSwzR3Hw9LOX+4zguiRCjg3LD7hSQVcGRqIJdQ+nm4
-	gYlxnAhog79+nFF8JTwcap3mUFM8H0VlBqjY2yKrTCm5rvHts6GcIMOuqVpvuOav
-	PLqdjEFxXdS5UBlE6Z4vDIb1xudsoT6f5qopIw==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=1790134941; x=
-	1790221341; bh=DSWi2C0r8cqwdbL+D/oXhhGYggJoGev4OcBXZnAtWFY=; b=K
-	55jbmV5fObulKuAGe1zelj26AbdJg9xUAT0cYUeLgxPOkmXQgv1RHxPrAvwG6CFc
-	kr4xYE0PzuUTgZYFKLE20rXaey3b+21d3tiiLlxPAjWdsqTRQXV5cnZQ2/rNMFzZ
-	mcrPGnQr/C5mYqelZF8grwaoPeZXBvbThoXVN5kN6wQdyiA7oJdvalBIIlwB239o
-	UBlUlWEdco96RmF6HFh4b87qnoQxyDptlXDsNcfOokjWeJx1+M1sk+rCAptb8+ZH
-	Zlw2+0sPaMcUhdeC6eRzM2RW7BCPDtEDH8eeUgyjQF401sp+6MdgQmkPj38aLQUs
-	GqjlRhgIVbK+GMplJ19Sg==
-X-ME-Sender: <xms:nEqzanPof6OC4VujRL9AgMU7P9EjGQqb7wDRZak7FbFppdb9mAI9LQ>
-    <xme:nEqzaiX_X1ajAzmmVkZI9GKdoIHDB1rLVvvGLsMFAocZCa9GPGYNcU-uIpKTX9Ojp
-    Aog8Xt08Qm9O0NjwCqYaOLlbHdWD1mKNx86rTj5MG1g0DrNvqCsfReQ>
-X-ME-Received: <xmr:nEqzanbu8NACHSTiR_I8INeU1uobgqiLGWUayr6UeVEKtim5yTM9RCowceLl_xwzMI1C8QU3D_lep58t8z5Gp5wUM_A>
-X-ME-Proxy-Cause: dmFkZTFWQgVXt9bM2b6NNxDLU2jUhTZqo1HyJ/ceb/6fR6g5/ke7x/NK8aQ/wybD9G7sDE
-    CmtX3QwVhvD3JUclCR9ETEfWsOI7v+reJwTYob7hpcIpPo/4iZmOqyG1I7KAWWIFLXUgLw
-    v96DhGoz9UpYdkKeXc/hZBGnUfxawMjnjVtQDju3d8IVsfsa3zIyqXHLaCqTj4WNRQWGKq
-    tmmTTBcnw0y3dZS7EgIm2YwfTUf4M4enUg6Kt4bClJIVQc/UjREJZ8GfwzQdia7ZNwkro3
-    hK8iW8KSjamfbpmgjaynFsftX9uh5wvKPOsvXMNAxpHo+uCEXTvkZFkk6tJhDoEdtSwgV2
-    6GBehN5HqwyviruHFjGv/WzLwxQoGkueti404EXE3kf7u8qkOyKvo4OvBLEYolmfapcnxB
-    F4JccMi5Te1BZq7oMKbky2uQ5q7y7YKMULV0qOa2MFX9BJV98wv9AyL4iHxOPtRe730K9L
-    MSrboLxu6gG8yVR+5HsIh88Utz5N2KkVtSu/M1zWI9+Se6WJeYQ6P9skWKqRz1Twj/uNfo
-    iCDPvhJucpF8jjturp2P8zSMFq/LgsbLp5axv209DNCuwpcPaaDjlLg6YyrGhYpuOSvpup
-    Tg7vJWck7+rmhOaNt3U0xJDq95oRSreJUPgUvIDr8xnPNvQkrkuFhhj47LIg
-X-ME-Proxy: <xmx:nEqzans9bTMC1bKBz1twK_VLviUrmLn4zeL3QKe7-nefLy1468292g>
-    <xmx:nEqzaumzUv1rsGahWuIrYxwXaD2Tbpu0aHfxi87oMm4mAC5GarLA0Q>
-    <xmx:nEqzagWYYb2dfQ6GUgKoaSarfD0sCoSfqT8w4S_1T9pZokx7-frwIA>
-    <xmx:nEqzapnV4xGZWN9rlPOX_qimTj87Mmpoko6U6zFu9VW8EjK7bB8Olw>
-    <xmx:nUqzatDDdkgNtuOGYUS9GPknZSh2x6r0hLSKQZZlRCetsrAaQqNsJ_Wz>
-Feedback-ID: ifd214418:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Tue,
- 22 Sep 2026 23:42:14 -0400 (EDT)
-Message-ID: <0ba203994392fa8183c226d65c4caec5786112bc.camel@alistair23.me>
-Subject: Re: [PATCH v3 10/21] PCI/TSM: Rename pf0 to host
-From: Alistair <alistair@alistair23.me>
-To: Jonathan Cameron <jic23@kernel.org>
-Cc: alistair23@gmail.com, linux-pci@vger.kernel.org, 
-	Jonathan.Cameron@huawei.com, djbw@kernel.org,
- rust-for-linux@vger.kernel.org, 	lukas@wunner.de,
- linux-cxl@vger.kernel.org, bhelgaas@google.com, 	akpm@linux-foundation.org,
- linux-kernel@vger.kernel.org, gary@garyguo.net, 	ojeda@kernel.org,
- benno.lossin@proton.me, a.hindborg@kernel.org, 	wilfred.mallawa@wdc.com,
- tmgross@umich.edu, boqun.feng@gmail.com, 	bjorn3_gh@protonmail.com,
- alex.gaynor@gmail.com, aliceryhl@google.com
-Date: Wed, 23 Sep 2026 13:42:12 +1000
-In-Reply-To: <20260916031143.4fe2ae49@jic23-hlaptop>
-References: <20260901010347.2614656-1-alistair.francis@wdc.com>
-		<20260901010347.2614656-11-alistair.francis@wdc.com>
-		<20260909000158.78ffa790@jic23-huawei>
-		<f9b1c0410e622f7ac1e6feacaa3eae98951bcd79.camel@alistair23.me>
-	 <20260916031143.4fe2ae49@jic23-hlaptop>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.60.2 (by Flathub.org) 
+	dkim=pass (2048-bit key) header.d=pm.me header.i=@pm.me header.b="B1k5Rm01"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pm.me;
+	s=protonmail3; t=1790135958; x=1790395158;
+	bh=SL/u2kwcZ0c5sE7eHjcS13950bnEfycQxOnZ5S8EQwo=;
+	h=Date:To:From:Cc:Subject:Message-ID:In-Reply-To:References:
+	 Feedback-ID:From:To:Cc:Date:Subject:Reply-To:Feedback-ID:
+	 Message-ID:BIMI-Selector;
+	b=B1k5Rm01TS/OGX9JpNuG/hrykisSEN2030hrPpES7Oiv2bAP7t4RD0PlastUU0qZh
+	 OE9Y7lp+S8y8ExPOmgoJ5/VEBLJheDTo6q9I+gSYv2tXt48H4d37+DsKK0i+YguTce
+	 5Y8ZNW2jfHsggTrbSowrEdq5EmXi8wmESMK3P5Tf2baW0GJUkNrQC8AyY0zWLVB6q6
+	 oOjAqthn3mKvQhLcSARkwnnRULEst6gC5EwYSJTyQ5/WyRcLGqUOA2oHc15mV/LzYi
+	 SG/q75epKHOKI2P9z0CDoWInca+kRE1+mzNMiTb/6JtoOXWY/Rcvr8c0CGkRLkScb0
+	 +DnQ63RcxZsKw==
+Date: Wed, 23 Sep 2026 03:59:16 +0000
+To: Qiang Yu <qiang.yu@oss.qualcomm.com>, Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
+From: Birk Skyum <birk.skyum@pm.me>
+Cc: "mani@kernel.org" <mani@kernel.org>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>
+Subject: Re: X1E80100 USB4 PCI0 MSI-X routing under EL1/Gunyah
+Message-ID: <7PyP8TPDWSo4VXsNVgDQREx6MqiqQWWL_BsssgI4SBuA9jkR707AGw5AVnm6k1OgH6F2n6Y6QAxah6ZRtKpjZfIKOiOngog3eeLFXIXXf44=@pm.me>
+In-Reply-To: <C8SBDdV0hyOxs4G2FfZBHt4_1PSRVoxaNFSmy_riJk91MhqFMRAt30lpxdyniPMLWnc5Ph93lS0R1nCkVbuV941UrNmWyPNbDER9zIHlrJg=@pm.me>
+References: <g7V4kc2AO9xogkH0h-XHDvPbjDXcnS11cp1q3hv0X96KPW-zed6V79HUJY5BFA4pBWUE-p2MBYCeDcjWwUGBIU2hXjDpodiWaxB38obe8RE=@pm.me> <arEjxhvfIFGGo9O9@hu-qianyu-lv.qualcomm.com> <C8SBDdV0hyOxs4G2FfZBHt4_1PSRVoxaNFSmy_riJk91MhqFMRAt30lpxdyniPMLWnc5Ph93lS0R1nCkVbuV941UrNmWyPNbDER9zIHlrJg=@pm.me>
+Feedback-ID: 21326998:user:proton
+X-Pm-Message-ID: 4194eb41cbbe7e32e0b8860b26e5396ae742a885
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-On Wed, 2026-09-16 at 03:11 +0100, Jonathan Cameron wrote:
-> On Fri, 11 Sep 2026 15:00:59 +1000
-> Alistair <alistair@alistair23.me> wrote:
->=20
-> > On Wed, 2026-09-09 at 00:01 +0100, Jonathan Cameron wrote:
-> > > On Tue,=C2=A0 1 Sep 2026 11:03:36 +1000
-> > > alistair23@gmail.com=C2=A0wrote:
-> > > =C2=A0=20
-> > > > From: Alistair Francis <alistair.francis@wdc.com>
-> > > >=20
-> > > > Rename pci_tsm_pf0 to pci_tsm_host (and rename variables and
-> > > > function
-> > > > names from pf0 to host) as part of converting pci_tsm_host
-> > > > to be any device that knows how to speak any of CMA, IDE, or
-> > > > TDISP.=C2=A0=20
-> > >=20
-> > > I'm not against the change, but I would like at least one example
-> > > of
-> > > 'what' other type of device you plan to use this for.
-> > >=20
-> > > vf or something else?=C2=A0=20
-> >=20
-> > It's based on the reply here: https://lkml.org/lkml/2026/6/18/1741
-> >=20
-> > I don't know PCIe that well, so honestly I'm not sure.
->=20
-> Yeah, that's about both VFs and other physical functions.
-> Those can exist on both real EPs and RCiEPs.
->=20
-> >=20
-> > My use case is a root complex integrated endpoint
->=20
-> Any more info to share on that? Why isn't it attested etc as
-> part of the host given it's integrated? Or is SPDM a path to
+Hi Qiang and Konrad,
 
-Oh, sorry. It's not integrated in the sense of on the board. It's just
-a PCIe attached NVMe device. You can see the example for testing with
-QEMU in the cover letter.
+Two questions, if you have the answers at hand.
 
-> something other than simple attestation here?=C2=A0 Fine to do it this
-> way, just seems like overkill so I'm curious what the application
-> is.
+The first is about power. After we stop the USB4 router (MCU stopped, the e=
+leven USB4_0 MISC resets asserted, PHY off, clocks and interconnect votes r=
+eleased), gcc_usb4_0_gdsc can be switched off, but it never powers on again=
+, and the GDSC driver reports "gcc_usb4_0_gdsc status stuck at 'off'". This=
+ happens even after a completely clean stop with no USB4 device ever connec=
+ted. While the GDSC is off, the USB4_0 PCIe pipe mux at GCC offset 0x9f104 =
+reads as selecting the PHY source and ignores writes, while the DP0 and DP1=
+ muxes do switch to XO. As long as we never let the GDSC turn off, stopping=
+ and restarting the router works every time.
 
-The next step is to expand this to support other transports, like the
-storage ones.
+What does gcc_usb4_0_gdsc need in order to power on again? For example a cl=
+ock that has to be running or parked on XO, a reset that has to be released=
+ first, or the PHY providing its pipe clock. Or is it meant to stay on whil=
+e the system runs? We would like to power the router down when nothing is c=
+onnected and across suspend, and this is the last missing piece for sleep s=
+upport.
 
-Alistair
+The second is about the other two ports. The Yoga Slim 7x has three USB4 po=
+rts, and so far only the one behind PCI0 works, thanks to your interrupt li=
+st. Could you share the same assignment for PCI1 and PCI2, the eight DWC MS=
+I interrupts plus the global one? I have everything else for those two cont=
+rollers from the ACPI tables, including their INTx lines, but the MSI lines=
+ are not listed anywhere, since Windows routes MSI through the ITS.
+
+And one for Konrad as well. Will the USB4 router firmware go into linux-fir=
+mware? The router needs it at startup, so without it no distribution can tu=
+rn USB4 on out of the box.
+
+Thanks,
+Birk
+
+
+
+On Wednesday, September 23rd, 2026 at 02:10, Birk Skyum <birk.skyum@pm.me> =
+wrote:
 
 >=20
-> Jonathan
+> Hi Qiang and Konrad,
+>=20
+> Thank you, that was exactly what was missing. With your interrupts and wi=
+thout msi-map, the NVMe behind the USB4 tunnel now gets real MSI-X at EL1. =
+My LaCie external SSD reads at about 2.6 GB/s and writes at 2.8 GB/s (16 Gi=
+B direct I/O on ext4), and safe removal and reconnect work repeatedly.
+>=20
+> Two details were needed on top of the DT. The DBI MSI registers (0x820 to=
+ 0x830) had to be programmed after the tunnel BCR reset and the router rese=
+t requests, and MSI on the root port itself had to be opted out.
+>=20
+> How would you like this to go upstream? Konrad mentioned that the Qualcom=
+m USB4 router driver will be posted, so I've added him here. I'm happy to s=
+end the pcie0 interrupt setup as a patch, or leave it to that series if you=
+'d rather carry it there.
+>=20
+> Konrad, I'd be glad to test the router driver on the Yoga Slim 7x as soon=
+ as it's posted and report back with a Tested-by. Two things I've seen may =
+matter for it. Now and then the PMIC firmware misses the cable e-marker at =
+attach (CCSts=3D2, PwrSts=3D1C, no VCONN), so the port stays in USB3 and ne=
+ver enters USB4 until a replug. And the PS8830 on the Yoga works in USB4 mo=
+de, while Jens Glathe's ps883x series from July would set parade,disable-us=
+b4 on the Yoga.
+>=20
+> Thanks again,
+> Birk
+>=20
+>=20
+> On Monday, September 21st, 2026 at 14:32, Qiang Yu <qiang.yu@oss.qualcomm=
+.com> wrote:
+>=20
+> > On Sat, Sep 19, 2026 at 08:33:20PM +0000, Birk Skyum wrote:
+> > > Hi Mani,
+> > >
+> > > I'm working on experimental USB4 support for the Lenovo Yoga Slim 7x
+> > > (83ED, X1E80100), building on Jim Martin's published Glymur stack. Th=
+is is
+> > > an out-of-tree bring-up, not a regression report against mainline.
+> > >
+> > > A directly connected LaCie Rugged SSD4 negotiates USB4, enumerates th=
+rough
+> > > a PCIe tunnel and completes a 4096-byte read into RAM. However, NVMe
+> > > completions are recovered through timeout polling, with zero
+> > > device-generated interrupts recorded.
+> > >
+> > > MSI-X is enabled and unmasked, and the table matches Linux's programm=
+ed
+> > > messages. Software ITS INT commands reach the NVMe handlers. In a
+> > > separate test, redirecting one MSI-X vector to owned coherent RAM
+> > > captured the expected endpoint payload, but that does not prove deliv=
+ery
+> > > to the ITS.
+> > >
+> > > The endpoint RID is 0x0100. The captured firmware IORT and our DT agr=
+ee
+> > > on DeviceID 0x80100, with MSI address 0x17050040 and event data 0/1. =
+The
+> > > PCIe SMMU remains firmware-owned.
+> > >
+> > > Source and test results are published here:
+> > > https://github.com/birkskyum/yoga-slim7x-usb4
+> > >
+> > > Is direct ITS delivery the intended route for USB4 PCI0 under EL1/Gun=
+yah?
+> > > Is additional controller forwarding or DeviceID setup required?
+> > >
+> > > I also found the QCS8550 change using the internal DWC MSI receiver t=
+o
+> > > avoid a Gunyah limitation:
+> > > https://github.com/torvalds/linux/commit/33cae252054a694269f9dcd41b35=
+4063193c8f59
+> > >
+> > > I realise that involves different hardware and symptoms. If an intern=
+al
+> > > receiver is appropriate for X1 PCI0, where can I find its parent IRQ =
+and
+> > > required initialization?
+> > >
+> >
+> > Hi Birk,
+> >
+> > Please add below dts change in pcie0 dts node and also remove msi-map i=
+f you added,
+> >
+> > interrupts =3D <GIC_SPI 655 IRQ_TYPE_LEVEL_HIGH>,
+> >              <GIC_SPI 657 IRQ_TYPE_LEVEL_HIGH>,
+> >              <GIC_SPI 664 IRQ_TYPE_LEVEL_HIGH>,
+> >              <GIC_SPI 668 IRQ_TYPE_LEVEL_HIGH>,
+> >              <GIC_SPI 348 IRQ_TYPE_LEVEL_HIGH>,
+> >              <GIC_SPI 349 IRQ_TYPE_LEVEL_HIGH>,
+> >              <GIC_SPI 351 IRQ_TYPE_LEVEL_HIGH>,
+> >              <GIC_SPI 702 IRQ_TYPE_LEVEL_HIGH>,
+> >              <GIC_SPI 167 IRQ_TYPE_LEVEL_HIGH>;
+> > interrupt-names =3D "msi0",
+> >                   "msi1",
+> >                   "msi2",
+> >                   "msi3",
+> >                   "msi4",
+> >                   "msi5",
+> >                   "msi6",
+> >                   "msi7",
+> >                   "global";
+> >
+> > #interrupt-cells =3D <1>;
+> > interrupt-map-mask =3D <0 0 0 0x7>;
+> > interrupt-map =3D <0 0 0 1 &intc 0 0 GIC_SPI 703 IRQ_TYPE_LEVEL_HIGH>,
+> >                 <0 0 0 2 &intc 0 0 GIC_SPI 708 IRQ_TYPE_LEVEL_HIGH>,
+> >                 <0 0 0 3 &intc 0 0 GIC_SPI 714 IRQ_TYPE_LEVEL_HIGH>,
+> >                 <0 0 0 4 &intc 0 0 GIC_SPI 716 IRQ_TYPE_LEVEL_HIGH>;
+> >
+> > - Qiang Yu
+> >
