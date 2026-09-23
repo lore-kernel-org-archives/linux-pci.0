@@ -1,116 +1,233 @@
-Received: from mail-43100.protonmail.ch (mail-43100.protonmail.ch [185.70.43.100])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.15])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9C5B2C21DF
-	for <linux-pci@vger.kernel.org>; Wed, 23 Sep 2026 12:50:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.70.43.100
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C3EE45218AF;
+	Wed, 23 Sep 2026 13:18:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.15
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790167812; cv=none; b=BVBaQwcpXwO58HJd9InIHX8da7F05T76fX3CZRLqFgM2NwhJ8DzgnNSrIzj1Mejcx0SVPlItFnVnbNroraMcaeKotfO+0a9Ms3DFgYbihJb2PyW20h0Y+92v0tDTABuXg46SlPjvJTSdtmCrSGfzxvDoR1pidzpPDeC+wE/KzMU=
+	t=1790169517; cv=none; b=Glrx+YI8MUf94RY/Y4J5Km/lQJLllckT2tNe18swTHSu8DTvb5+Nb0+iSMGGOTM3i1vJrNsaeDEwfOLe9fyZ/AErWmexC+GAk4nFPtdkoUvMT9ivK+Cq+VnoPtGGQtzjKAlE3phoxHVzD4C1XsNPSxHP1cPLdsOj4I8rwNtdR2s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790167812; c=relaxed/simple;
-	bh=7JEYAayWA829bJ03hnHy5+AKULTJK87X0OtRaqshSTE=;
-	h=Date:To:From:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=sjH3sCf22HkZaBmr5XrkJ1Tr9yvosb2eR5ZZAiTIywSHWQubSrvF++FVgiTw0PpG7aAk5jjJcRVJwaVulI5X7EG9ObEds9GPvAcok7owvAMYwP7Aavi7iAuvGjIT8GBvoQ+SlZ/piB2+wAbZcUkPin5/rMAjAFMGqxhuP5v5xls=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pm.me; spf=pass smtp.mailfrom=pm.me; dkim=pass (2048-bit key) header.d=pm.me header.i=@pm.me header.b=WM2KnTSn; arc=none smtp.client-ip=185.70.43.100
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pm.me
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pm.me
+	s=arc-20240116; t=1790169517; c=relaxed/simple;
+	bh=0dWCjrgLSm8/r6A8g9qrCMimfAoYRcYaBYZ8vU5IJ1w=;
+	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=Ikd8NGhyj+0Himiaxzu76o403Egu/m3TRGCrCYnYhHJwhTq8UDm+WLoKQ4WMeScXtigCfdWphDmNcz/NuTfq/X5g9sUaSOnzWx6khbKaEBzRQP4cX3Mfn0S1lZ21wJH0SjpXZJ/YK3wwWG+DJYJ8c1d2rpmMNvNmY6bJaM7K9SU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=EnPlg1cG; arc=none smtp.client-ip=192.198.163.15
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=pm.me header.i=@pm.me header.b="WM2KnTSn"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pm.me;
-	s=protonmail3; t=1790167808; x=1790427008;
-	bh=frqa0bOqSCZYcD48+Q0Xau74ISQMvbK9fD24LX5mRZ0=;
-	h=Date:To:From:Cc:Subject:Message-ID:In-Reply-To:References:
-	 Feedback-ID:From:To:Cc:Date:Subject:Reply-To:Feedback-ID:
-	 Message-ID:BIMI-Selector;
-	b=WM2KnTSntvoI8dvvA2RfZQU0GbGY4ICq/O64jl4Yu+0ZDJ4vd7l4/6iZGhwW23usJ
-	 R4xys/WxU9yk27JzjiU9tnT6j/puxd/9UxkCw4MBLy0fXBcNbMHwD4RAc8pVfShMy9
-	 s7C+/IlPw/IXYQRPx1YTbhtKSGml68uLWRD4kH4zzhirMh4n0cG6XuzzTidmaRK7Qf
-	 4eBRtfP6YW7vUPH/P/hXuVYbBJQHmJjxOj8NvMszgvt+qHFlkVVYPv2OTeHnaiA6gc
-	 aWK+r9DmlFjWimnRTEuFIGRS25AfzTfRg9/iY3DhImhGNlC0JNqsmGQskwn6SKPA9X
-	 BuWZ6f4q/LMKw==
-Date: Wed, 23 Sep 2026 12:50:04 +0000
-To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-From: Birk Skyum <birk.skyum@pm.me>
-Cc: Qiang Yu <qiang.yu@oss.qualcomm.com>, Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>, "mani@kernel.org" <mani@kernel.org>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>
-Subject: Re: X1E80100 USB4 PCI0 MSI-X routing under EL1/Gunyah
-Message-ID: <yAHdWansNq46a13rbKUlBxeOcDCBlcJBssFpDYHVBWs24XcjMolLGRNCUe03iTcu1oKbDIcJWcVU5urfj61noQHGRgMpOnqXIMEwR4K2_vY=@pm.me>
-In-Reply-To: <cdfcb65e-9a17-4f93-a1f6-d739727ac709@oss.qualcomm.com>
-References: <g7V4kc2AO9xogkH0h-XHDvPbjDXcnS11cp1q3hv0X96KPW-zed6V79HUJY5BFA4pBWUE-p2MBYCeDcjWwUGBIU2hXjDpodiWaxB38obe8RE=@pm.me> <arEjxhvfIFGGo9O9@hu-qianyu-lv.qualcomm.com> <C8SBDdV0hyOxs4G2FfZBHt4_1PSRVoxaNFSmy_riJk91MhqFMRAt30lpxdyniPMLWnc5Ph93lS0R1nCkVbuV941UrNmWyPNbDER9zIHlrJg=@pm.me> <cdfcb65e-9a17-4f93-a1f6-d739727ac709@oss.qualcomm.com>
-Feedback-ID: 21326998:user:proton
-X-Pm-Message-ID: c3c9d6a4af8be5994e4e537dc20ee20436f2262a
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="EnPlg1cG"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1790169512; x=1821705512;
+  h=from:to:subject:date:message-id:in-reply-to:references:
+   mime-version:content-transfer-encoding;
+  bh=0dWCjrgLSm8/r6A8g9qrCMimfAoYRcYaBYZ8vU5IJ1w=;
+  b=EnPlg1cGpvZ3DhtKskn00H38YlRyNIr9djDUyNOs4uyKuGBnA9EfVO7D
+   8MnVTtdAT2rl0c9SJ2Rnw4U19uzRLsEHs6U6lo4it6lmnLCno4ICDV2BS
+   KXh+nTcTJ7+StKe5BKWfwKkf/5zzeiOOkzItBME1BR++oW0YEectiGX7w
+   93elfz058udliFp0NjYw9HBz+sd+uB3vBH3/+Pwg3EhxglDSTxFecvBfX
+   gCgQpspGguG69w4zPwFIQqFI2rJlszSAW+d49Aq7f77c6afmfOAxELWb3
+   JhAa2bJCm+TXJQ0YlKMybXjfNz06m9YnNXjLwn/IwZHCY3g1YTazK3mfG
+   Q==;
+X-CSE-ConnectionGUID: pGJf+7jHRbK576aOsNu+gA==
+X-CSE-MsgGUID: 9lVAJtxkQpavbq4UwPBibA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11913"; a="90979685"
+X-IronPort-AV: E=Sophos;i="6.27,118,1787036400"; 
+   d="scan'208";a="90979685"
+Received: from fmviesa010.fm.intel.com ([10.60.135.150])
+  by fmvoesa109.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Sep 2026 06:18:29 -0700
+X-CSE-ConnectionGUID: bO/vsl57Q+6+EpjCHIMxjw==
+X-CSE-MsgGUID: hLB89dyqReaPpy4+siDkVw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,118,1787036400"; 
+   d="scan'208";a="272784505"
+Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.244.13])
+  by fmviesa010-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Sep 2026 06:18:24 -0700
+From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+To: Maciej Grochowski <Maciej.Grochowski@sony.com>,
+	Nikolas Joshua Britton <nbritton@exabit.io>,
+	Geramy Loveless <gloveless@jqluv.com>,
+	Eric Auger <eauger@redhat.com>,
+	Alexey Fomenko <alexey.fomenko@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Rob Herring <robh@kernel.org>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+	=?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 2/5] PCI: Fix nesting windows with remainder at the left edge
+Date: Wed, 23 Sep 2026 16:17:52 +0300
+Message-ID: <20260923131757.7792-3-ilpo.jarvinen@linux.intel.com>
+X-Mailer: git-send-email 2.47.3
+In-Reply-To: <20260923131757.7792-1-ilpo.jarvinen@linux.intel.com>
+References: <20260923131757.7792-1-ilpo.jarvinen@linux.intel.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-Hi Krishna,
+If a bridge window has its non-aligning remainder at the left edge of
+the window, assigning a nested bridge window of same size will fail
+because resource side code will only allow starting a candicate range
+from an aligning address. In such case, aligned address is somewhere in
+the middle, not at the left edge of the window. Since the entire
+available space is required for full-sized nested bridge window,
+resource side code rejects the free space.
 
-Thanks, that makes sense. Our test setup brings up the tunnel's PCIe contro=
-ller from the router driver rather than through pcie-qcom, which is why we =
-had to do it by hand. With pcie-qcom in charge it should just work, as long=
- as it runs after the router's resets.
+To solve this problem, PCI side code has to bypass the resource side
+alignment code by giving a smaller alignment and must check the
+aligment requirement itself. This allows resource side code to consider
+the entire available space as candidate to fit the required size.
 
-Konrad, while writing the Yoga Slim 7x device tree against your RFC binding=
- I ran into a few things you might want before posting.
+Wrap pcibios_align_resource() with PCI core function that performs the
+alignment checks and left edge recalculation if needed. As the
+alignment given for the resource side code is artificially small, the
+real alignment has to be passed through alignf_data.
 
-The binding no longer passes dt-validate on current trees. usb-switch.yaml =
-has since been split and port now lives in usb-switch-ports.yaml, so the bi=
-nding needs a reference to that file as well, the way parade,ps8830.yaml do=
-es it.
+Fixes: 9036bd0efcb6 ("PCI: Align head space better")
+Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
+---
 
-The Yoga's DSDT has the interrupts for all three routers. Router 0 matches =
-your example (472 and 579), router 1 is 605 and 607, and router 2 is 429 an=
-d 438. Each port also lists a third interrupt (255, 523 and 534) that isn't=
- in the binding. Any idea what it's for?
+I've not seen a report about this problem (thus no log quotes) but with
+nested thunderbolt topologies it seems well within realms of possibility
+of occurring.
+---
+ drivers/pci/setup-res.c | 64 +++++++++++++++++++++++++++++++++++++----
+ 1 file changed, 59 insertions(+), 5 deletions(-)
 
-The DSDT also carries a per-port RX equalization byte, 0x6f for ports 0 and=
- 1 and 0x6c for port 2, which the Windows driver writes to RX_MODE_RATE3_B4=
- on both lanes. Your patch 4/5 hardcodes 0x6a. Port 0 runs at 2.6 to 2.8 GB=
-/s here with 0x6f, so boards like this one will likely need a way to overri=
-de it.
+diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
+index 376f09630a4a..eacce9e2486b 100644
+--- a/drivers/pci/setup-res.c
++++ b/drivers/pci/setup-res.c
+@@ -13,6 +13,8 @@
+  *	     Resource sorting
+  */
+ 
++#include <linux/align.h>
++#include <linux/bug.h>
+ #include <linux/kernel.h>
+ #include <linux/export.h>
+ #include <linux/pci.h>
+@@ -260,6 +262,12 @@ resource_size_t pci_resource_alignment(const struct pci_dev *dev,
+ 	return resource_alignment(res);
+ }
+ 
++static resource_size_t pci_resreq_remainder(resource_size_t size,
++					    resource_size_t align)
++{
++	return size - ALIGN_DOWN(size, align);
++}
++
+ /*
+  * For mem bridge windows, try to relocate tail remainder space to space
+  * before res->start if there's enough free space there. This enables
+@@ -276,10 +284,17 @@ resource_size_t pci_align_resource(struct pci_dev *dev,
+ 	if (!(res->flags & IORESOURCE_MEM))
+ 		return res->start;
+ 
+-	if (IS_ALIGNED(size, align))
++	remainder = pci_resreq_remainder(size, align);
++	if (!remainder)
++		return res->start;
++
++	/*
++	 * Size constraints forced an early start move in
++	 * pci_check_and_align_resource()?
++	 */
++	if (!IS_ALIGNED(res->start, align))
+ 		return res->start;
+ 
+-	remainder = size - ALIGN_DOWN(size, align);
+ 	/* Don't mess with size that doesn't align with window size granularity */
+ 	if (!IS_ALIGNED(remainder, pci_min_window_alignment(dev->bus, res->flags)))
+ 		return res->start;
+@@ -311,15 +326,54 @@ resource_size_t __weak pcibios_align_resource(void *data,
+ 	return pci_align_resource(dev, res, empty_res, size, align);
+ }
+ 
++struct pci_resreq_data {
++	struct pci_dev *dev;
++	resource_size_t real_align;
++};
++
++static resource_size_t pci_resreq_check(void *data,
++					const struct resource *res,
++					const struct resource *empty_res,
++					resource_size_t size,
++					resource_size_t min_align)
++{
++	struct pci_resreq_data *rr = data;
++	resource_size_t align = rr->real_align;
++	resource_size_t remainder, start;
++	struct resource tmp = *res;
++
++	if (res->flags & IORESOURCE_MEM && !IS_ALIGNED(res->start, align)) {
++		resource_set_range(&tmp, ALIGN(res->start, align), size);
++		if (!__resource_contains_unbound(empty_res, &tmp)) {
++			remainder = pci_resreq_remainder(size, align);
++			resource_set_range(&tmp, tmp.start - remainder, size);
++			if (!__resource_contains_unbound(empty_res, &tmp))
++				return tmp.start;	/* caller skips range */
++		}
++	}
++
++	start = pcibios_align_resource(rr->dev, &tmp, empty_res, size, align);
++	WARN_ON_ONCE(!IS_ALIGNED(start, min_align));
++
++	return start;
++}
++
+ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
+ 		int resno, resource_size_t size, resource_size_t align)
+ {
++	struct pci_resreq_data rr = { .dev = dev, .real_align = align };
+ 	struct resource *res = pci_resource_n(dev, resno);
+ 	resource_size_t min;
+ 	int ret;
+ 
+ 	min = (res->flags & IORESOURCE_IO) ? PCIBIOS_MIN_IO : PCIBIOS_MIN_MEM;
+ 
++	if ((res->flags & IORESOURCE_MEM) && pci_resreq_remainder(size, align)) {
++		align = min;
++		if (pci_resource_is_bridge_win(resno))
++			align = pci_min_window_alignment(bus, res->flags);
++	}
++
+ 	/*
+ 	 * First, try exact prefetching match.  Even if a 64-bit
+ 	 * prefetchable bridge window is below 4GB, we can't put a 32-bit
+@@ -329,7 +383,7 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
+ 	 */
+ 	ret = pci_bus_alloc_resource(bus, res, size, align, min,
+ 				     IORESOURCE_PREFETCH | IORESOURCE_MEM_64,
+-				     pcibios_align_resource, dev);
++				     pci_resreq_check, &rr);
+ 	if (ret == 0)
+ 		return 0;
+ 
+@@ -341,7 +395,7 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
+ 	     (IORESOURCE_PREFETCH | IORESOURCE_MEM_64)) {
+ 		ret = pci_bus_alloc_resource(bus, res, size, align, min,
+ 					     IORESOURCE_PREFETCH,
+-					     pcibios_align_resource, dev);
++					     pci_resreq_check, &rr);
+ 		if (ret == 0)
+ 			return 0;
+ 	}
+@@ -354,7 +408,7 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
+ 	 */
+ 	if (res->flags & (IORESOURCE_PREFETCH | IORESOURCE_MEM_64))
+ 		ret = pci_bus_alloc_resource(bus, res, size, align, min, 0,
+-					     pcibios_align_resource, dev);
++					     pci_resreq_check, &rr);
+ 
+ 	return ret;
+ }
+-- 
+2.47.3
 
-And something from suspend testing. With gcc_usb4_0_gdsc kept always on (ou=
-r workaround for the power-up issue I asked about), powering the router dow=
-n before a deep suspend and back up after resume works fine the first time.=
- But once the router has been restarted in the same boot, the next deep sus=
-pend never comes back. The log stops at "PM: suspend entry (deep)" and psto=
-re is empty, even though clocks, power domains and interconnect votes look =
-the same as after the first power-down. Have you run into anything like tha=
-t?
-
-The device tree covers all three ports, so I can test your driver on every =
-port as soon as there's a branch to try.
-
-Thanks,
-Birk
-
-
-
-On Wednesday, September 23rd, 2026 at 06:51, Krishna Chaitanya Chundru <kri=
-shna.chundru@oss.qualcomm.com> wrote:
-
->=20
->=20
-> On 9/23/2026 5:40 AM, Birk Skyum wrote:
-> > Two details were needed on top of the DT. The DBI MSI registers (0x820 =
-to 0x830) had to be programmed after the tunnel BCR reset and the router re=
-set requests, and MSI on the root port itself had to be opted out.
-> These two should be taken care already in the latest kernel 7.3 [1] & [2]
->=20
-> - Krishna Chaitanya.
-> [1] pcie-qcom.c - drivers/pci/controller/dwc/pcie-qcom.c - Linux source c=
-ode
-> v7.3-rc3 - Bootlin Elixir Cross Referencer
-> <https://elixir.bootlin.com/linux/v7.3-rc3/source/drivers/pci/controller/=
-dwc/pcie-qcom.c#L1809>
-> [2] pcie-designware-host.c - drivers/pci/controller/dwc/pcie-designware-h=
-ost.c
-> - Linux source code v7.3-rc3 - Bootlin Elixir Cross Referencer
-> <https://elixir.bootlin.com/linux/v7.3-rc3/source/drivers/pci/controller/=
-dwc/pcie-designware-host.c#L1181>
->=20
-> 
