@@ -1,97 +1,80 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mout-p-102.mailbox.org (mout-p-102.mailbox.org [80.241.56.152])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1465640DB4C;
-	Wed, 23 Sep 2026 18:46:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F1DB83AD513;
+	Wed, 23 Sep 2026 18:46:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.152
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790189180; cv=none; b=bYhjvdsEOEUFqnbh/qLYXFqLlQBY0nwBoZ1v5OU0456XLrJTdHJVcbOA659ff3JvMfyAJYWiAHmDr7M4NVw8PPxILJDs3d7TUbx5jp9D8EILOzHD87a4vqcGo2DS4XTGXJ6DDteFUOpnvz6yySRskek8RLi8vv4Rp9TpgvA7x5Q=
+	t=1790189182; cv=none; b=MDsuSQmzFl6PkbvjPJ1nlDIXTZwHjzRHEpaphtEMgEDRLE5dcAuGrWFwQaPP/4fu1HT83If/pDma6jSLN7NZLu3KW6iALIFsCKVoxj/k2VrlaXx/2f/k50fIgUh7aX3LcHFFwXlGPRuEEX1NHYQjI9MvBYlswi++shMGBgOVB34=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790189180; c=relaxed/simple;
-	bh=DowexvyP0YfpvTFm7h2/IfJBq3gtaAKsPxlji8S+eu0=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=Tb12WxDESf7fKZaGZQ0EPzrpNxP6zQJ9mKb+/yDBHdhNd5nyRu/RbWMefSpgvvoyVp9V+8pVB9P5OHu82D3WYm1tf0E+eIb//9nPoESaQiVRSADWvw5YOtKIQOR5CNAV3dFOHFj+2oGcChpQwyTBxEzvokRfSGVPXCTodP8Xms8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=K2/o0TPr; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790189182; c=relaxed/simple;
+	bh=rH8yAyqi1c+oMnQBQmUIueQRmppbfeO7vw2UuyvMbLU=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=ReXmNqtIzO2jz4sn+8ax+2nsEIbyOGjA43P6ZQQPf/0m1XU+7ER9OprHAfdlPt5YJMXRWZ4XKD3n6ruP0WO4sOCjQMm26SZUOXcX1/WxQARvCWuJ7KTAGMl6m3EGQU+gv9GjpPO7x5xjzZ0ij1IAevD1GJXxJ+AZ7ytvVT8AdtA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=V62zPp6n; arc=none smtp.client-ip=80.241.56.152
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="K2/o0TPr"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0035A1F000FF;
-	Wed, 23 Sep 2026 18:46:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790189171;
-	bh=TEOLXTXSoVwAXu15O4+IO+TBS5mtYVlDWzz8+W1qRQQ=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=K2/o0TPrLywf41wD67dGRl0zZXx7NNo9HOagwKQ7fu+FwNCBor+B9MS9U1ayBMBc9
-	 my/6HpKLC0a50+VaMGm12JsDiBXDnZZsuSQKeDIRB9lD1eLrjCwFqNEo5sb7I3vqKz
-	 rF6eopwISC/eB5OcS+AwDkuu10nJx2JqmBresZvywGtQGm+Z4NGctLYu+WQvCxrFUP
-	 Hd4/wYsrhYgcoAazH/9sZC8qkSa+iStdFx8Jmu2E3s87RsNfUlUlBXcYG7DFdrVN3c
-	 Bjcj82uXacPQ76j8qcK52joCrJHuYRi+EqPDTUReJrcK2DiYm5DHsZzH5C3dNXPLff
-	 jrAIItdon6ycA==
-Date: Wed, 23 Sep 2026 13:46:09 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Mario Limonciello <mario.limonciello@amd.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>,
-	Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>,
-	Borislav Petkov <bp@alien8.de>,
-	Dave Hansen <dave.hansen@linux.intel.com>,
-	"maintainer:X86 ARCHITECTURE (32-BIT AND 64-BIT)" <x86@kernel.org>,
-	"H . Peter Anvin" <hpa@zytor.com>,
-	"open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>,
-	"open list:X86 ARCHITECTURE (32-BIT AND 64-BIT)" <linux-kernel@vger.kernel.org>,
-	"open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" <linux-ide@vger.kernel.org>
-Subject: Re: [PATCH v2 0/2] Fix for storage corruption w/ AMD IOMMU on 64-bit
- addressing
-Message-ID: <20260923184609.GA1906456@bhelgaas>
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="V62zPp6n"
+Received: from smtp202.mailbox.org (smtp202.mailbox.org [IPv6:2001:67c:2050:b231:465::202])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519MLKEM768 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mout-p-102.mailbox.org (Postfix) with ESMTPS id 4hqmBj1G6VzKqJw;
+	Wed, 23 Sep 2026 20:46:05 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
+	t=1790189165;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=V5knNz61kSkSju4U5VzB8QE+YbN5s70b+UWzok69nnE=;
+	b=V62zPp6nn+wtR6RFFFQqpGTFBA64Ie370TOl0quQ/rUGHFjrJwJpp+JVeOPaEGGpZfqNPr
+	WfBB9Q3vx6yEaMi8sVKAOj7kvFhE+rXahmvhByGhwImANRHnPPugHKQg+TWMKp/9tGF5Ld
+	EHEnM01VtoB5yTH1wb1W5iUEa7/e/BDajWAiWtlL6Gupz24kMxI9fKbXe/5jjC0uKeiFXp
+	NieNTYBIr7Hb80uFCl3mKZIT0seNptWqrl3spDc8BgHB/BMeB3b1AsTNJin+lmXMq2fem/
+	WpoD93Jpxpy74NADj2kOOrvhCp3eNYTPJwkYlgz7LWI6Spqg93l4ZoYkbq4qhg==
+Message-ID: <3a964a4c-56bd-4103-9de8-ca7da48c9b01@mailbox.org>
+Date: Wed, 23 Sep 2026 20:45:59 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <52e6bb87-1a64-405b-a11a-3b9f9bf95410@amd.com>
+Subject: Re: [PATCH v2] PCI: rcar-gen4: Fix device_node leak in
+ rcar_gen4_pcie_host_msi_addr()
+To: Fuad Tabba <fuad.tabba@linux.dev>, Manivannan Sadhasivam
+ <mani@kernel.org>, Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>,
+ =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+ Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ Geert Uytterhoeven <geert+renesas@glider.be>,
+ Magnus Damm <magnus.damm@gmail.com>,
+ Jonathan Cameron <jonathan.cameron@oss.qualcomm.com>,
+ linux-pci@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Will Deacon <will@kernel.org>,
+ Fuad Tabba <tabba@google.com>
+References: <20260923180749.3906547-1-fuad.tabba@linux.dev>
+Content-Language: en-US
+From: Marek Vasut <marek.vasut@mailbox.org>
+In-Reply-To: <20260923180749.3906547-1-fuad.tabba@linux.dev>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-MBO-RS-ID: 9226aae27c1171cb7c0
+X-MBO-RS-META: ua3w8odx1exwhj18jy6qmfrxxs17ejgs
 
-On Wed, Sep 23, 2026 at 01:39:46PM -0500, Mario Limonciello wrote:
-> On 9/23/26 13:36, Bjorn Helgaas wrote:
-> > On Tue, Sep 08, 2026 at 02:05:58PM -0500, Mario Limonciello wrote:
-> > > An issue has been reported by a number of people that corruption
-> > > was occurring on storage for desktop systems.  It's notably reported
-> > > on SATA, but the same issue also appears on NVME.
-> > > 
-> > > At a glance it looks like an IOMMU issue as turning off the IOMMU helps
-> > > the issue, but it's actually a problem that occurs specifically with any
-> > > IOVA addressed >58 bits.
-> > > 
-> > > This is because the BIOS on these systems is enabling a feature of the
-> > > root port called 'enhanced atomics' which repurposes those upper 5 bits
-> > > of address space.  That feature should only be enabled by the BIOS when
-> > > the partner device supports it, but it's instead needlessly enabled on a
-> > > number of root ports.
-> > > 
-> > > As some of these systems probably won't receive BIOS updates and there is
-> > > active reports of data corruption root caused to this add a quirk to
-> > > disable it on affected models, and also remove the quirk that was
-> > > introduced to work around this issue in drivers/ata.
-> > > 
-> > > v2:
-> > >   *  Added resume fixups for the affected AMD PCIe ports
-> > > 
-> > > Mario Limonciello (2):
-> > >    x86/PCI: Disable enhanced atomics on some AMD PCIe ports
-> > >    Revert "ata: ahci: force 32-bit DMA for JMicron JMB582/JMB585"
-> > > 
-> > >   arch/x86/pci/fixup.c | 99 ++++++++++++++++++++++++++++++++++++++++++++
-> > >   drivers/ata/ahci.c   | 18 --------
-> > >   2 files changed, 99 insertions(+), 18 deletions(-)
-> > 
-> > Applied to pci/for-linus for v7.3, thanks!
+On 9/23/26 8:07 PM, Fuad Tabba wrote:
+> rcar_gen4_pcie_host_msi_addr() calls of_msi_xlate() with *msi_np NULL,
+> so it receives the MSI controller node with a reference held, and every
+> return past the NULL check leaks that reference, the success path
+> included. Declare msi_node with __free(device_node) so it's put on
+> every return.
 > 
-> Thanks!  Could you add to the commits:
-> 
-> Cc: stable@vger.kernel.org
-> 
-> We should take this back to any non EoL kernel as well.
-
-Done :)
+> Fixes: 8d6af27c0a73 ("PCI: rcar-gen4: Configure AXIINTC if iMSI-RX is not used")
+> Reported-by: Sashiko <sashiko-bot@kernel.org>
+> Closes: https://lore.kernel.org/linux-pci/20260905213855.8D6671F00A3D@smtp.kernel.org/
+> Tested-by: Marek Vasut <marek.vasut+renesas@mailbox.org> # Retronix R-Car V4H Sparrow Hawk
+> Reviewed-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
+> Signed-off-by: Fuad Tabba <fuad.tabba@linux.dev>
+I liked V1 a bit better, but either way works.
