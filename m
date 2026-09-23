@@ -1,66 +1,58 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BDD3F443AB4
-	for <linux-pci@vger.kernel.org>; Wed, 23 Sep 2026 07:31:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B37D44C678
+	for <linux-pci@vger.kernel.org>; Wed, 23 Sep 2026 07:34:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790148715; cv=none; b=upydLDg3o9NxIAr9ELLi00TTOpCVn5Yv7fjyePPgNjZ6eDGa4sqhjM0hcjlimKiYtyv4M80ZhMaLHzi9Z+sIm7V8ELPfnk4sBnGRzklScDcg8YKGhOBFUn8XTj9NWSYK34Xv4fcWlScLWgDxTB/QbOn/kk9VMID6zR4nhw6NBEQ=
+	t=1790148898; cv=none; b=YGAd4dMnPd+rvdbOAZEsFUwgL7gbhr88l4AZRuVrxNoSWjlZPjFtiup4LUqFsvYHWXZ7o6Csj3BXpM78/LZFQwJn9CLmLaSbPUO1o6oZ/KCxo3IhSPKONDEO5DXu/u0RBaI6N1HofHYbvoMY+CY2rHTyhxNEkkIeA6v3Mak31WM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790148715; c=relaxed/simple;
-	bh=I/OwHpwoxg8zKrMqUjfL0iBlDi6Ob4Njvmx2F2GBaVY=;
+	s=arc-20240116; t=1790148898; c=relaxed/simple;
+	bh=D88RAHnoqba/Cy/cA1fjcFgs8MGMxtRDfXIQ//gOpTM=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=tVj+m0yqiDwU3nRGqvGpzza/WH/gQxFAoPqU3JeAHztFnMWbxwKrJfBMPQ1i0686InY7iWDBQfVnd49Nnk3phB0suZHdqrOddKkTzlpIFu1i+vUwDuzA434m7Vgiw10ysobyHeHvlC8SFZCuCDOPZpOiObSvHJKXq6UQOeM76xs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=a0AZgTBU; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=hvQ4UIVPSRf1VC+rAbXJk6k5xqjOZWNRixFsejnMvQkfPxT8/7emcX/OG1fjwK/XQcZaB9zJTHKy98ErY8O7M66v2xwbWt+WheUyzdlIKrvg1KolbSG6vZjlasn81rIvkc5I1qXiOKEyNrjJKA+rBTyPysq9LYwTA3VTatVBPJE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TmepVe16; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="a0AZgTBU"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 24D801F000FF;
-	Wed, 23 Sep 2026 07:31:54 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TmepVe16"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EE1971F0089C;
+	Wed, 23 Sep 2026 07:34:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790148714;
-	bh=I/OwHpwoxg8zKrMqUjfL0iBlDi6Ob4Njvmx2F2GBaVY=;
+	s=k20260515; t=1790148895;
+	bh=D88RAHnoqba/Cy/cA1fjcFgs8MGMxtRDfXIQ//gOpTM=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=a0AZgTBUVwTZzfooEqlcj8rgwdcVtM75rVFgL2BMgrxQ/QOXOIaXO1pMDOJS72MXv
-	 6PqSx/VtvwvhFHtkqDAfahTSWJSGlIj7iU7wio8+7Jw0ZQuQxDFRYhw/hNmeRqDqtO
-	 LXx7BtexSDwTn7y7xYwe+PM6FWLTri/fMDqt8oCaZIgl+9vCu9MWZgBNQtMhR5bmXi
-	 dzaEK4+1ykSE153Bi2/myA3afyOWE/CSOz4r1ceuQHNaCBreR2NXgSZS7bHS2Jge02
-	 SfMdQxUl2Wg9nfL2pnLTs/NU5U/IrjsIloUcx2K/mhxjCCqqaeeOcnhQaojOJI7AcE
-	 1KHmvFN3sJm7A==
+	b=TmepVe16Eyiv0N0fXr64Asa6NO4Kpb1EsZZGWDU1EVfSEOyMm4x7I+MXc/YlVxhJU
+	 HuqffIlKK/XL/Vi2gaxE7C8bQy0UkQm5XEwfzydKRjvX1dXkgmEOiUdKb4MpN2SFd6
+	 iMbYiy4DmwNwwZfe182Z0XwLB4NyJtNgyFsflomGNUa0iNHXyPVK2FaopiWkSn+UoX
+	 sgrLPGEFSfbAViA2k8FL2VSiBwozbQSRDedsJLMHfLugTkVH3katxJZssT6P7AuCB3
+	 ksc4MAGKKvLcMaj/qbPhDMXNMW+FSH8enXpjrpSjuaR75pfLW4SLcdlweMJD7dZjIB
+	 gOC8xv/uMXP8g==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 2/5] PCI: tegra194: Use FIELD_*() for register fields
+Subject: Re: [PATCH 5/5] PCI: dwc: Consolidate RAS-DES event counter fields
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Manikanta Maddireddy" <mmaddireddy@nvidia.com>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260923071706.1134320-3-mmaddireddy@nvidia.com>
+In-Reply-To: <20260923071706.1134320-6-mmaddireddy@nvidia.com>
 References: <20260923071706.1134320-1-mmaddireddy@nvidia.com>
- <20260923071706.1134320-3-mmaddireddy@nvidia.com>
+ <20260923071706.1134320-6-mmaddireddy@nvidia.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 23 Sep 2026 07:31:53 +0000
-Message-Id: <20260923073154.24D801F000FF@smtp.kernel.org>
+Date: Wed, 23 Sep 2026 07:34:54 +0000
+Message-Id: <20260923073454.EE1971F0089C@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-> Several Tegra194 APPL and DesignWare register fields are programmed
-> with open-coded shifts, which makes the register programming more
-> verbose than necessary.
+> Use the shared DesignWare RAS-DES event counter register offsets and
+> field masks in the common debugfs code instead of carrying duplicate
+> private definitions.
 >=20
-> Use FIELD_PREP(), FIELD_MODIFY() and FIELD_GET() at the Tegra call
-> sites where values are shifted into fields. The LTSSM state constants
-> are converted from pre-shifted register values to unshifted field
-> values for FIELD_GET().
->=20
-> Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
-> Link: https://lore.kernel.org/r/20260515070753.3852840-2-mmaddireddy@nvid=
-ia.com
 > Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
 
 Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260923071706.1134=
-320-1-mmaddireddy@nvidia.com?part=3D2
+320-1-mmaddireddy@nvidia.com?part=3D5
 
