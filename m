@@ -1,128 +1,132 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mail.ozlabs.org (gandalf.ozlabs.org [150.107.74.76])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 070FB568550
-	for <linux-pci@vger.kernel.org>; Wed, 23 Sep 2026 15:25:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D1AAA497B77;
+	Wed, 23 Sep 2026 15:40:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=150.107.74.76
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790177148; cv=none; b=NwcgYL1UbWvK6ZzqcBMDvbxvnC+tUyqx4hwXzVdXbwGWrNxmjbCyhOrudwNdaWpGkbz6fzeX78Ken4pheIsTzce0En6zvTV2gUiIjffm06OCD4z3FlP2sAP9B3FtCkU12vOSuXygHrTxygyGzy67ugq5w/8E3sgBWcQ+cuUbuTo=
+	t=1790178023; cv=none; b=S2ZeFX7SZyAEjmOCYAfC+yo3iySgN1hmMqiSZLzGTouXEd76Z0HChQ6BHndQVBYuMp9oFoQK9FHazyiJL69SFMPxYAfb72IPR+4rkmn9rHVuyuz7I6ri9HvxFi64KNq/ZtFIp8Vhtq2KR8AKWScIAlJD00fP/Xz5hrxhPvaipWA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790177148; c=relaxed/simple;
-	bh=r9Ab5a7Egx3XYpsLnGiCdtZY9Jt4nLTpFaULFI6qCHI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=pdmmgoZhQxrFqOQjuI7AhiLXsJC72FW/Zlb/cKOSYeypNvt5onkFYwTe8t+bJC1GZD1rUWl1sy1GKfVo4UcEKufGXh1TVRFL/G6HDiBj/zyygu1aorGNudpRl3ecw/rM6LGTKHhG6OlfNbIJnNgGn5r1FRt/jqf7ajq4h1ctPHg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jfnB3VF2; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790178023; c=relaxed/simple;
+	bh=+Q1bN+lyJlgwEwcCF9Qz+L2nU4YyCQhZD63+cNDqjPc=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=WFvSSbVBdgtkvJZdondXmTR8mHyCh4Z8P2o+lI10ZsSJhU29WMZw2B/NLk0zzxPMjCKSwChIdATpA719G1lWe20xHXjNALJOBZJPot5iNnx360aUJ8ZnlQHfHEzvLxLcGe/446AVB0lkoV+NVAUbAffrZVrTJPc0yX1y6kOhM1c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ozlabs.org; spf=pass smtp.mailfrom=ozlabs.org; dkim=pass (2048-bit key) header.d=ozlabs.org header.i=@ozlabs.org header.b=iyouXx+j; arc=none smtp.client-ip=150.107.74.76
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ozlabs.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ozlabs.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jfnB3VF2"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2BFEB1F000FF;
-	Wed, 23 Sep 2026 15:25:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790177141;
-	bh=qHMkX2s9Ge8svmrLSvkdu6SgikwO19QmNNhQJas/lcM=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=jfnB3VF2Mun/fQccSLUyRjXMpQYqNRFR9bCzxnBRJTM0GCVE44C3FNuDX9wKN37Ea
-	 IjHrTxYdx13JjKOb2UCZMDetm3QS/dP2bCmRznn7ajMlyv+6TR0njobemwvn6HBHd8
-	 gEUmatf55G6LPyMJGuU3548oI+fbglph9jv9ziGZXsOBvpwRWTXOfAyvbfrnb9Ejf+
-	 EW+YPAIcrrPAB/qVHbXVEb5ADlVyeW5NPAABidsROf5dhrOjtOVc4/or0/svc1nRZL
-	 HznuI/36pKVGs3fAFCl5oTv5rgeljn0TXYETqEUcqaxXT7HnYcflESPVJGmNboRwjr
-	 tcvr77JtUivGw==
-Date: Wed, 23 Sep 2026 17:25:37 +0200
-From: Niklas Cassel <cassel@kernel.org>
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Diederik de Haas <diederik@cknow-tech.com>,
-	linux-rockchip@lists.infradead.org, linux-pci@vger.kernel.org,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH v3 0/3] Small INTx fixes for Rockchip's dwc based PCIe
- controller driver
-Message-ID: <arPvcQIu46N_gTmB@ryzen>
-References: <1790044622-164744-1-git-send-email-shawn.lin@rock-chips.com>
- <DLMKWV1AH8TZ.2R3JK2NPM4KZB@cknow-tech.com>
- <08329b2b-449a-4036-8e82-ad67d0d037ee@rock-chips.com>
+	dkim=pass (2048-bit key) header.d=ozlabs.org header.i=@ozlabs.org header.b="iyouXx+j"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ozlabs.org;
+	s=201707; t=1790177995;
+	bh=Pvf6utvFFy4W0lCvpXIM2zHVFitTH88Hp81cFrCEahk=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=iyouXx+jA+xaknvK7tvNx3mfKFDu+72K2NrM6eeU4LF9DV+5VmxR22njJv9A7ic32
+	 bpNrdkvN6fL6lSIbBbYw3RNdTNIS8ieRpSodoWhuihAzFUk8/aq3S/HUEL8oCGzgv4
+	 niaLMPC+ek5SV3Co7KUa7/WQUjPRnoUaZbiVOT+aR86tS2G597vqecgjH40IEr/Xb6
+	 CDZOmWouOW8shnBSWJX3pR2mD924McGg0K7uN+0dfJd6HcN4qMu6JasI++X8HnhEoc
+	 GAZbz9kWvywsowbJHsC0vIv2y9+zsNzzvY5IKL4wCH4gSfF680v/yoMzXkER24E7a3
+	 hYyHIuiVmYJeg==
+Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(Client did not present a certificate)
+	by mail.ozlabs.org (Postfix) with ESMTPSA id 4hqh3h1tlnz4wB5;
+	Thu, 24 Sep 2026 01:39:43 +1000 (AEST)
+Message-ID: <e33f1d3a-1900-4bf3-9785-3af5447e7e54@ozlabs.org>
+Date: Wed, 23 Sep 2026 16:40:03 +0100
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <08329b2b-449a-4036-8e82-ad67d0d037ee@rock-chips.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v6 9/9] vfio/pci: Permanently revoke a DMABUF on request
+Content-Language: en-GB
+To: Jason Gunthorpe <jgg@nvidia.com>, Alex Mastro <amastro@fb.com>
+Cc: Leon Romanovsky <leon@kernel.org>,
+ =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>,
+ Alex Williamson <alex@shazbot.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ Logan Gunthorpe <logang@deltatee.com>, Kevin Tian <kevin.tian@intel.com>,
+ Pranjal Shrivastava <praan@google.com>, Longfang Liu
+ <liulongfang@huawei.com>, Mahmoud Adam <mngyadam@amazon.de>,
+ David Matlack <dmatlack@google.com>, =?UTF-8?B?QmrDtnJuIFTDtnBlbA==?=
+ <bjorn@kernel.org>, Sumit Semwal <sumit.semwal@linaro.org>,
+ Ankit Agrawal <ankita@nvidia.com>, Alistair Popple <apopple@nvidia.com>,
+ Vivek Kasireddy <vivek.kasireddy@intel.com>, linux-kernel@vger.kernel.org,
+ linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org,
+ linaro-mm-sig@lists.linaro.org, kvm@vger.kernel.org,
+ linux-pci@vger.kernel.org
+References: <0fdfe19e-f8ef-47ff-aa99-66adbc524728@amd.com>
+ <23a0ea30-c6dc-4b8c-a0a1-89e9f912bf37@ozlabs.org>
+ <20260921132208.GA1507824@nvidia.com>
+ <fa5c7fd5-f24a-4ca1-89c3-9ccd9a728fb4@amd.com>
+ <20260921134924.GB1507824@nvidia.com>
+ <2d15cca5-0bbe-461a-baf3-56758e82cfb7@amd.com>
+ <20260922124137.GD1507824@nvidia.com> <20260922124637.GG563127@unreal>
+ <20260922125421.GE1507824@nvidia.com>
+ <arMBqyI4XNfD+q1W@devgpu015.cco6.facebook.com>
+ <20260922225747.GB2545495@nvidia.com>
+From: Matt Evans <matt@ozlabs.org>
+In-Reply-To: <20260922225747.GB2545495@nvidia.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Hello Shawn, Diederik,
+Hi Jason, Alex,
 
-On Wed, Sep 23, 2026 at 05:21:59PM +0800, Shawn Lin wrote:
-> >
-> > I build a kernel with this patch set (7.3~rc4-2) and got several warnings
-> > like this, shortly followed by a stack trace:
->
-> Sashiko already reportted some valid concern around this, and I'll plan
-> to rework this series a bit later. Thanks for reporting this.
+On 22/09/2026 23:57, Jason Gunthorpe wrote:
+> On Tue, Sep 22, 2026 at 03:31:07PM -0700, Alex Mastro wrote:
+> 
+>> So I empathize with Matt's contention that the _existing_ behavior that the
+>> priv->revoked flag represents is actually "temporarily revoked": the importer
+>> can use the same dma-buf again, later, without having to re-import
+>> it!
+> 
+> mlx5 isn't a revoking importer, it is move capable. So the above
+> sequence isn't a revoke, it is a move with an unmapped placement for a
+> while.
+> 
+> This is why "temporarily revoked" is a confusing phrase.
+> 
+> The API is such that move and revoke importers can co-exist like this
+> but they experiance a different version of things..
 
-Just thinking out loud:
+Ahhhhh.  That was very helpful (esp. to contrast with the previous
+iommufd statement about invalidate_mappings being permanent), thank you!
 
-Patch 1/3 in this series fixes a regression, so it should be picked up as
-soon as possible.
+So the worry was that the VFIO DMABUF's temp/perm state could be
+misconstrued as an implication/guarantee about the future availability
+of that DMABUF to importers, OK.  And we want the existing move(false)
+behaviour still, for dynamic importers that treat it as a move.
 
-Patch 2/3 is converting the resources to be device managed.
-However, after patch 1/3 (if the moved code is called _before_
-dw_pcie_host_init()) the only thing left after dw_pcie_host_init() is the
-PCIE_CLIENT_INTR_MASK_MISC write.
+> We probably should not have made it have this move compatible
+> restoration and had things more consistent. User space can't know if
+> the importer is move capable or not so it has to assume revoke and it
+> has to go and unmap things before resetting/etc.
+> >> This series doesn't intend to change the behavior of either. Is the
+confusion
+>> about whether the current behavior is intentional and/or desirable? If the
+>> answer to both is "no", then IMO this series paves the way nicely towards making
+>> PERM_REVOKED the only supported semantic later.
+> 
+> Right, I think the only concern is language.
+In that case, the VFIO-internal tracking could be:
 
-I.e. there is no error return remains that would need a dw_pcie_host_deinit().
+ priv->status = VFIO_PCI_DMABUF_OK;      /* was priv->revoked = false */
+ priv->status = VFIO_PCI_DMABUF_REVOKED; /* was priv->revoked = true */
+ priv->status = VFIO_PCI_DMABUF_DEAD;
 
-So there is no strict need to convert to devm_().
-You can do so, but that should be in a separate series IMO.
+The latter means that an invalidate_mappings was performed (due to a new
+userspace ioctl trigger), and that all future dma_buf_*attach() attempts
+must fail.  I'd add a comment to explain this clearly in the enum.
 
+If that's too macabre, DEFUNCT?  (A word implying guaranteed
+permanence...).  The userspace action causing all this can IMHO be
+called REVOKE still; it's what it does.  (I'll clarify the observable
+effect from the POV of an importer in the UAPI.)
 
-In fact, Diederik's later warnings are a result of Patch 2/3 which replaced
-irq_domain_create_linear() with devm_irq_domain_instantiate():
-
-   error: hwirq 0x0 is too large for :pcie@fe150000:legacy-interrupt-controller
-   WARNING: kernel/irq/irqdomain.c:676 at irq_domain_associate_locked+0x118/0x1a0
-
-
-The fix seems to be to add .hwirq_max = PCI_NUM_INTX, to
-rockchip_pcie_init_irq_domain():
-
-The fix is one line in rockchip_pcie_init_irq_domain() :
-				.size = PCI_NUM_INTX,
-				.hwirq_max = PCI_NUM_INTX,
-
-
-
-Patch 3/3 looks like a theoretical problem that Sashiko found.
-
-Is the underlying problem real? It's plausible, but nobody has reproduced it.
-For it to happen, the controller's legacy IRQ output has to be asserted while
-clocks are gated. Two ways that could happen:
-
-- The output was high when clk_bulk_disable_unprepare() froze the logic.
-- A device was still asserting INTx when an AER- or sysfs-triggered reset
-  stopped the link.
-
-Patch 3/3 is not enough though:
-
-disable_irq() never masks this chained IRQ in hardware, so
-rockchip_pcie_intx_handler() can still run and read the unclocked APB.
-
-This is the kind of case IRQ_DISABLE_UNLAZY exists for, according to the
-comment above irq_disable().
-
-Minimal amend of patch 3/3 as it currently looks:
-
-turn off lazy disable for this line when the chained handler is installed:
-	irq_set_status_flags(rockchip->intx_irq, IRQ_DISABLE_UNLAZY);
-	irq_set_chained_handler_and_data(rockchip->intx_irq,
-					 rockchip_pcie_intx_handler, rockchip);
-
-Such that irq_disable() masks the chained IRQ.
-
-Do we want patch 3/3? Probably.. but this race seems very small...
-probably most imporent to get patch 1 (with the code move _before_
-dw_pcie_host_init()) accepted ASAP, as it currently is causing problems
-for Diederik.
+WDYT?
 
 
-Kind regards,
-Niklas
+Matt
+
