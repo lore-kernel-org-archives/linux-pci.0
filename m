@@ -1,398 +1,380 @@
-Received: from mta0.migadu.com (out-252.mta0.migadu.com [91.218.175.252])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mail-m12776.qiye.163.com (mail-m12776.qiye.163.com [115.236.127.76])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D84947B406
-	for <linux-pci@vger.kernel.org>; Wed, 23 Sep 2026 09:13:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.252
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B7A2747DD63
+	for <linux-pci@vger.kernel.org>; Wed, 23 Sep 2026 09:37:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.236.127.76
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790154814; cv=none; b=jq3ULRVrTIA6WhN9HCoVOWnt3YKLGCpx5iPOF3l2+pYBnYeZJyAn2xDLhaIP2T3ywlza4Vhu1Q0Xpin25UrftqKgFWuFBtlkL+e2alr4CZAv6Qo91/mDnfe+KLzK8h0C9PTKUUOEqsWlP68Zq6W3jyfGzQEbLhN8p9Q5Fr9hIWo=
+	t=1790156252; cv=none; b=umdEpMZf0cZHcs7vUaF+Gl2iCF7Jevdpc40U1buRDX0WL7Bc31CBraaNWiQGTGF6XZRmEcyS6+OfVaAUYIgTlOzedra2BbYYmy9TOQRe+C/L9sPU357ovmZmwJuMRIZ8kyIx1ApFQ+GCTF/cpEdzwW+gEhuQHVqE60vEJJ+uUwU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790154814; c=relaxed/simple;
-	bh=1NNatIo4Do4nnMoESnHG8WZVBZR9AJJnttCtBxyBKPM=;
-	h=Mime-Version:Content-Type:Date:Message-Id:From:To:Cc:Subject:
-	 References:In-Reply-To; b=ax9thFyQhUsFT0y5KpokU36kZH5+6Jqf3sxNzRpYU6lRH9KU/h58u6UqjgxFFDdbA5uPYKrlSUydRqruZgnLNw1rF5V5z670Jqt9N0hfSTrZU4Y6hFylpHdC3aH3pD0XbW4s9Cd7elP8nQ91PWGpWOjq+wKAmRUnQo8cQ0Se/vw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=cknow-tech.com; spf=pass smtp.mailfrom=cknow-tech.com; dkim=pass (2048-bit key) header.d=cknow-tech.com header.i=@cknow-tech.com header.b=B0VyEGzM; arc=none smtp.client-ip=91.218.175.252
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=cknow-tech.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cknow-tech.com
+	s=arc-20240116; t=1790156252; c=relaxed/simple;
+	bh=V9nDl4Kk9CJ5Dge6qdVOfyMFLjg7lMFJpsUn2UjIDmc=;
+	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=q8yd8G8cYIs3hm4skDftKZPmj8k+7D/cdZMBB82ffZs+p9dMDfVyghvxGaGKHIabiDYYrZrYBf34Avu/SDvbqiun8xukH4tuT+aeT4oO0TMmTdLFoi9sEZwkIaT1p16Vm04ASXcLe18JSgVWa2bo0s2zkv6KjpFynYugy22dIwQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=H/ClLQ29; arc=none smtp.client-ip=115.236.127.76
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=cknow-tech.com header.i=@cknow-tech.com header.b="B0VyEGzM"
-X-Envelope-To: linux-pci@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=1NNatIo4Do4nnMoESnHG8WZVBZR9AJJnttCtBxyBKPM=;
- c=simple/simple; d=cknow-tech.com;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1790154808; v=1; x=1790759608;
- b=B0VyEGzM0qNRVV+jr01vJ/ObOrHono2oMbUOkCta8YqwE9RC8AQQ55SbyKDrMN+lBr226Qgu
- M1VRyuTBV+JNVd1N87wzRirhIIi464GUvjJ/S7A3zDyZrpw4ATD/s3bNqHLsj4dhF1KfNARHvaE
- 4OjyaQYqAJZrBYeSB2LSnOnL94xj3wSvFwQwTdrn3U09qLEoH1uPuDQu/tMSQuns7GMFMboWKvG
- tUanB3B8kbVEHFxJbWaYGqA9dW/l/8BpQ55MPQKa5SgXZh59Vdk4g0nYVk5qXGyt59NpaPzYmxL
- 39f3Vc0jRx4FCHUKduyzGSOeYqO+AVXTejLYSYLUrsKsg==
-X-Envelope-To: linux-pci@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id e7b87e8bc8a1e6b9;
-	Wed, 23 Sep 2026 09:13:18 +0000
-X-Mizu-Trace-ID: e7b87e8bc8a1e6b9
-X-Migadu-Flow: FLOW_OUT
+	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="H/ClLQ29"
+Received: from [172.16.12.48] (unknown [61.154.14.86])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 4edcf9ae6;
+	Wed, 23 Sep 2026 17:22:00 +0800 (GMT+08:00)
+Message-ID: <08329b2b-449a-4036-8e82-ad67d0d037ee@rock-chips.com>
+Date: Wed, 23 Sep 2026 17:21:59 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Wed, 23 Sep 2026 11:13:13 +0200
-Message-Id: <DLMKWV1AH8TZ.2R3JK2NPM4KZB@cknow-tech.com>
-From: "Diederik de Haas" <diederik@cknow-tech.com>
-To: "Shawn Lin" <shawn.lin@rock-chips.com>, "Manivannan Sadhasivam"
- <mani@kernel.org>, "Bjorn Helgaas" <bhelgaas@google.com>
-Cc: <linux-rockchip@lists.infradead.org>, <linux-pci@vger.kernel.org>,
- "Niklas Cassel" <cassel@kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Cc: shawn.lin@rock-chips.com, linux-rockchip@lists.infradead.org,
+ linux-pci@vger.kernel.org, Niklas Cassel <cassel@kernel.org>,
+ Manivannan Sadhasivam <mani@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
 Subject: Re: [PATCH v3 0/3] Small INTx fixes for Rockchip's dwc based PCIe
  controller driver
-X-Mailer: aerc 0.22.0-24-g39041fd9f179
+To: Diederik de Haas <diederik@cknow-tech.com>
 References: <1790044622-164744-1-git-send-email-shawn.lin@rock-chips.com>
-In-Reply-To: <1790044622-164744-1-git-send-email-shawn.lin@rock-chips.com>
+ <DLMKWV1AH8TZ.2R3JK2NPM4KZB@cknow-tech.com>
+From: Shawn Lin <shawn.lin@rock-chips.com>
+In-Reply-To: <DLMKWV1AH8TZ.2R3JK2NPM4KZB@cknow-tech.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: base64
+X-HM-Tid: 0aa0cd926dac03a4kunm9bb6235a4903d9
+X-HM-MType: 1
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFITzdXWRgWCB1ZQUpXWS1ZQUlXWQ8JGhUIEh9ZQVkaHR0ZVk5PSkkZSUMYHUoYS1YVFA
+	kWGhdVEwETFhoSFyQUDg9ZV1kYEgtZQVlNSlVKTk9VSk9VQ01ZV1kWGg8SFR0UWUFZT0tIVUpLSU
+	9PT0hVSktLVUpCS0tZBg++
+DKIM-Signature: a=rsa-sha256;
+	b=H/ClLQ299osC5jYu7KKvAfpEDqSV7IFanMq0xNvKVlpQivGnz6w6LnsQFzdvcUsRkFeMoEDDDPR0IyhBZnMytuxo2/eT4Z98s0+DrRCufs+wFaHMrk/LPFbcpOF/oqnvOJnbcSPmbRIxBaTPDVV+Fk0nsIaBwC1GbR/JO/PgfuA=; s=default; c=relaxed/relaxed; d=rock-chips.com; v=1;
+	bh=V9nDl4Kk9CJ5Dge6qdVOfyMFLjg7lMFJpsUn2UjIDmc=;
+	h=date:mime-version:subject:message-id:from;
 
-Hi,
-
-On Tue Sep 22, 2026 at 4:36 AM CEST, Shawn Lin wrote:
->
-> This short series fixes the INTx handling around the newly introduced
-> .reset_root_port() (b376b3ff9cb0), and is split in three patches per
-> Niklas' suggestion:
->
-> Patch 1 stops .reset_root_port() from recreating the INTx irq domain
-> on every root port reset, which leaked the old domain and silently
-> broke INTx delivery afterwards, the downstream devices' virqs were
-> allocated in the previous domain and were never re-mapped. By moving
-> the of_irq_get_byname() lookup, the INTx irq domain creation and the
-> chained handler installation into rockchip_pcie_configure_rc(), right
-> after dw_pcie_host_init(). This leaves .init() with nothing but
-> idempotent register programming, so it can safely be re-run by
-> .reset_root_port() and dw_pcie_resume_noirq().
->
-> Patch 2 makes the irq domain and the chained handler devm-managed, so
-> that they are released with the device instead of leaking, which also
-> addresses the probe failure leak/use-after-free flagged by the Sashiko
-> review.
->
-> Patch 3 keeps the INTx IRQ masked while .reset_root_port() gates the
-> controller clocks, so the chained handler cannot read the unclocked
-> APB bus and raise a synchronous external abort.
-
-I build a kernel with this patch set (7.3~rc4-2) and got several warnings
-like this, shortly followed by a stack trace:
-
-  irq: no irq domain found for legacy-interrupt-controller !
-
-Then I build another kernel (7.3~rc4-3) where I disabled this patch set
-and then I did not get the warnings/stack traces.
-
-I was able to reproduce this on the following devices:
-1) NanoPC-T6 Plus (RK3588)
-2) Rock 5B (RK3588)
-3) NanoPi-R5S (RK3568)
-
-ad 3) Possibly unrelated, but I sometimes get this error:
-
-  gpio-keys gpio-keys: error -ENXIO: Unable to get irq number for GPIO
-
-      But that is *not* dependent on this patch set; I'm not sure if I've
-      seen it with this patch set. Could be because I haven't booted enough
-      with the 7.3~rc4-2 kernel. Or maybe this patch set fixed it?
-      The (only) correlation is that it has to do with IRQs.
-
-I don't know if this patch set caused the warning/stack traces or just
-brought an underlying issue to surface, but hopefully you do.
-
-Warnings/stack trace on NanoPC-T6 Plus (because it's the most extensive):
-
-```
-root@nanopc-t6-plus:~# dmesg --level 4
-[    2.684054] pci 0003:30:00.0: Primary bus is hard wired to 0
-[    2.691234] irq: no irq domain found for legacy-interrupt-controller !
-[    3.043257] irq: no irq domain found for legacy-interrupt-controller !
-[    3.133600] ------------[ cut here ]------------
-[    3.133619] error: hwirq 0x0 is too large for :pcie@fe150000:legacy-inte=
-rrupt-controller
-[    3.133639] WARNING: kernel/irq/irqdomain.c:676 at irq_domain_associate_=
-locked+0x118/0x1a0, CPU#7: kworker/u32:5/60
-[    3.133662] Modules linked in: nvme rk808_regulator nvme_core nvme_keyri=
-ng nvme_auth fusb302 tcpm rockchipdrm fan53555 aux_hpd_bridge dw_hdmi_qp rt=
-c_hym8563 dw_mipi_dsi dw_hdmi analogix_dp drm_dp_aux_bus drm_display_helper=
- rockchip_saradc fixed sdhci_of_dwcmshc cec phy_rockchip_usbdp sdhci_pltfm =
-industrialio_triggered_buffer phy_rockchip_naneng_combphy dw_mmc_rockchip s=
-dhci rc_core typec dw_mmc_pltfm gpio_rockchip phy_rockchip_samsung_hdptx di=
-splay_connector phy_rockchip_snps_pcie3 kfifo_buf nvmem_rockchip_otp drm_cl=
-ient_lib cqhci ohci_platform spi_rockchip_sfc dw_mmc dw_wdt spi_rockchip ro=
-ckchip_dfi pl330 drm_dma_helper ehci_platform drm_kms_helper dwc3 ehci_hcd =
-drm ohci_hcd udc_core adc_keys usbcore i2c_rk3x phy_rockchip_inno_usb2 indu=
-strialio pwm_rockchip ulpi usb_common
-[    3.133815] CPU: 7 UID: 0 PID: 60 Comm: kworker/u32:5 Not tainted 7.3-rc=
-4+unreleased-arm64-cknow #1 PREEMPTLAZY  Debian 7.3~rc4-2
-[    3.133831] Hardware name: FriendlyElec NanoPC-T6 Plus (DT)
-[    3.133838] Workqueue: async async_run_entry_fn
-[    3.133852] pstate: 60400009 (nZCv daif +PAN -UAO -TCO -DIT -SSBS BTYPE=
-=3D--)
-[    3.133862] pc : irq_domain_associate_locked+0x118/0x1a0
-[    3.133872] lr : irq_domain_associate_locked+0x118/0x1a0
-[    3.133881] sp : ffff80008043b9c0
-[    3.133887] x29: ffff80008043b9c0 x28: 0000000000000000 x27: 00000000000=
-00000
-[    3.133900] x26: ffff000100038c00 x25: 00000000fffffef7 x24: ffff0001095=
-393e8
-[    3.133913] x23: 0000000000000000 x22: 0000000000000073 x21: 00000000000=
-00000
-[    3.133925] x20: ffff0001196c9e30 x19: ffff000108e8d500 x18: 00000000000=
-0000a
-[    3.133937] x17: 7075727265746e69 x16: 2d79636167656c3a x15: 07200720072=
-00720
-[    3.133949] x14: 0720072007200720 x13: 0720072007200720 x12: 00000000000=
-6ff90
-[    3.133961] x11: ffffc87b581950d0 x10: ffffc87b5810cf08 x9 : ffffc87b55d=
-b6444
-[    3.133974] x8 : ffffc87b5817d0e8 x7 : ffffffffffffefff x6 : 00000000000=
-00001
-[    3.133985] x5 : ffffc87b5817d078 x4 : 0000000000000000 x3 : 00000000000=
-00000
-[    3.133997] x2 : 0000000000000000 x1 : 0000000000000000 x0 : ffff000100b=
-7a580
-[    3.134010] Call trace:
-[    3.134016]  irq_domain_associate_locked+0x118/0x1a0 (P)
-[    3.134028]  irq_create_mapping_affinity_locked+0x98/0x1b8
-[    3.134039]  irq_create_fwspec_mapping+0x320/0x3e0
-[    3.134049]  irq_create_of_mapping+0x74/0xb0
-[    3.134059]  of_irq_parse_and_map_pci+0xf8/0x1f8
-[    3.134072]  pci_assign_irq+0x9c/0x180
-[    3.134082]  pci_device_probe+0x68/0x170
-[    3.134091]  really_probe+0xc8/0x3f8
-[    3.134102]  __driver_probe_device+0x168/0x1c8
-[    3.134110]  driver_probe_device+0x44/0x128
-[    3.134119]  __driver_attach_async_helper+0x58/0xf8
-[    3.134128]  async_run_entry_fn+0x40/0x1a0
-[    3.134138]  process_one_work+0x1cc/0x550
-[    3.134150]  worker_thread+0x18c/0x2f0
-[    3.134161]  kthread+0x134/0x150
-[    3.134171]  ret_from_fork+0x10/0x20
-[    3.134183] ---[ end trace 0000000000000000 ]---
-[    3.331933] pci 0004:40:00.0: Primary bus is hard wired to 0
-[    3.338953] irq: no irq domain found for legacy-interrupt-controller !
-[    3.492147] ------------[ cut here ]------------
-[    3.492161] error: hwirq 0x0 is too large for :pcie@fe190000:legacy-inte=
-rrupt-controller
-[    3.492182] WARNING: kernel/irq/irqdomain.c:676 at irq_domain_associate_=
-locked+0x118/0x1a0, CPU#6: (udev-worker)/187
-[    3.492205] Modules linked in: r8169(+) realtek phy_package mdio_devres =
-of_mdio fixed_phy fwnode_mdio libphy mdio_bus xhci_plat_hcd xhci_hcd nvme r=
-k808_regulator nvme_core nvme_keyring nvme_auth fusb302 tcpm rockchipdrm fa=
-n53555 aux_hpd_bridge dw_hdmi_qp rtc_hym8563 dw_mipi_dsi dw_hdmi analogix_d=
-p drm_dp_aux_bus drm_display_helper rockchip_saradc fixed sdhci_of_dwcmshc =
-cec phy_rockchip_usbdp sdhci_pltfm industrialio_triggered_buffer phy_rockch=
-ip_naneng_combphy dw_mmc_rockchip sdhci rc_core typec dw_mmc_pltfm gpio_roc=
-kchip phy_rockchip_samsung_hdptx display_connector phy_rockchip_snps_pcie3 =
-kfifo_buf nvmem_rockchip_otp drm_client_lib cqhci ohci_platform spi_rockchi=
-p_sfc dw_mmc dw_wdt spi_rockchip rockchip_dfi pl330 drm_dma_helper ehci_pla=
-tform drm_kms_helper dwc3 ehci_hcd drm ohci_hcd udc_core adc_keys usbcore i=
-2c_rk3x phy_rockchip_inno_usb2 industrialio pwm_rockchip ulpi usb_common
-[    3.492388] CPU: 6 UID: 0 PID: 187 Comm: (udev-worker) Tainted: G       =
- W           7.3-rc4+unreleased-arm64-cknow #1 PREEMPTLAZY  Debian 7.3~rc4-=
-2
-[    3.492404] Tainted: [W]=3DWARN
-[    3.492410] Hardware name: FriendlyElec NanoPC-T6 Plus (DT)
-[    3.492417] pstate: 60400009 (nZCv daif +PAN -UAO -TCO -DIT -SSBS BTYPE=
-=3D--)
-[    3.492427] pc : irq_domain_associate_locked+0x118/0x1a0
-[    3.492437] lr : irq_domain_associate_locked+0x118/0x1a0
-[    3.492446] sp : ffff8000818335e0
-[    3.492451] x29: ffff8000818335e0 x28: ffffc87b5865ccb8 x27: ffffc87ae59=
-d7818
-[    3.492465] x26: 000000000000000c x25: ffff000103534310 x24: ffff00010a5=
-0cde8
-[    3.492477] x23: 0000000000000000 x22: 0000000000000088 x21: 00000000000=
-00000
-[    3.492490] x20: ffff000168464630 x19: ffff000108fb2a00 x18: 00000000000=
-0000a
-[    3.492502] x17: 7075727265746e69 x16: 2d79636167656c3a x15: 07200720072=
-00720
-[    3.492514] x14: 0720072007200720 x13: 0720072007200720 x12: 00000000000=
-6ff90
-[    3.492526] x11: ffffc87b581950d0 x10: ffffc87b5810cf08 x9 : ffffc87b55d=
-b6444
-[    3.492538] x8 : ffffc87b5817d0e8 x7 : ffffffffffffefff x6 : 00000000000=
-00001
-[    3.492550] x5 : ffffc87b5817d078 x4 : 0000000000000000 x3 : 00000000000=
-00000
-[    3.492562] x2 : 0000000000000000 x1 : 0000000000000000 x0 : ffff0001097=
-192c0
-[    3.492574] Call trace:
-[    3.492579]  irq_domain_associate_locked+0x118/0x1a0 (P)
-[    3.492591]  irq_create_mapping_affinity_locked+0x98/0x1b8
-[    3.492602]  irq_create_fwspec_mapping+0x320/0x3e0
-[    3.492613]  irq_create_of_mapping+0x74/0xb0
-[    3.492623]  of_irq_parse_and_map_pci+0xf8/0x1f8
-[    3.492635]  pci_assign_irq+0x9c/0x180
-[    3.492646]  pci_device_probe+0x68/0x170
-[    3.492656]  really_probe+0xc8/0x3f8
-[    3.492666]  __driver_probe_device+0x168/0x1c8
-[    3.492675]  driver_probe_device+0x44/0x128
-[    3.492683]  __driver_attach+0xd0/0x228
-[    3.492692]  bus_for_each_dev+0x84/0xf0
-[    3.492704]  driver_attach+0x2c/0x40
-[    3.492712]  bus_add_driver+0x124/0x280
-[    3.492720]  driver_register+0x70/0x138
-[    3.492729]  __pci_register_driver+0x48/0x60
-[    3.492742]  rtl8169_pci_driver_init+0x30/0xfd0 [r8169]
-[    3.492768]  do_one_initcall+0x5c/0x458
-[    3.492778]  do_init_module+0x5c/0x280
-[    3.492788]  load_module+0x1cc0/0x25b8
-[    3.492796]  init_module_from_file+0xe8/0x158
-[    3.492805]  __arm64_sys_finit_module+0x208/0x360
-[    3.492814]  invoke_syscall.constprop.0+0xac/0x110
-[    3.492829]  el0_svc_common.constprop.0+0x40/0xf0
-[    3.492842]  do_el0_svc+0x24/0x40
-[    3.492854]  el0_svc+0x40/0x260
-[    3.492867]  el0t_64_sync_handler+0xa0/0xe8
-[    3.492879]  el0t_64_sync+0x198/0x1a0
-[    3.492888] ---[ end trace 0000000000000000 ]---
-[    3.554818] pci 0002:20:00.0: Primary bus is hard wired to 0
-[    3.563276] irq: no irq domain found for legacy-interrupt-controller !
-[    3.569263] irq: no irq domain found for legacy-interrupt-controller !
-[    8.679178] panthor fb000000.gpu: [drm] Firmware protected mode entry is=
- not supported, ignoring
-[    8.871598] rockchip-i2s-tdm fddf0000.i2s: using zero-initialized flat c=
-ache, this may cause unexpected behavior
-[    9.004753] ------------[ cut here ]------------
-[    9.004768] error: hwirq 0x0 is too large for :pcie@fe180000:legacy-inte=
-rrupt-controller
-[    9.004779] WARNING: kernel/irq/irqdomain.c:676 at irq_domain_associate_=
-locked+0x118/0x1a0, CPU#5: (udev-worker)/399
-[    9.004791] Modules linked in: mt7925e(+) aes_ce_blk mt7925_common snd_s=
-oc_audio_graph_card(+) ghash_ce gf128mul mt792x_lib pwm_fan mt76_connac_lib=
- btusb leds_gpio snd_soc_simple_card gpio_ir_recv btrtl snd_soc_simple_card=
-_utils mt76 btintel rk805_pwrkey btbcm snd_soc_hdmi_codec ofpart snd_soc_ro=
-ckchip_i2s_tdm snd_soc_es8389 mac80211 btmtk snd_soc_core rockchip_thermal =
-bluetooth rockchip_vdec synopsys_hdmirx spi_nor v4l2_vp9 rockchip_rga snd_c=
-ompress mtd v4l2_dv_timings v4l2_h264 ecdh_generic snd_pcm_dmaengine videob=
-uf2_dma_contig v4l2_mem2mem rockchip_rng videobuf2_dma_sg snd_pcm videobuf2=
-_memops cfg80211 videobuf2_v4l2 videodev snd_timer panthor snd rocket drm_g=
-puvm videobuf2_common rfkill soundcore gpu_sched libarc4 vsi_iommu mc drm_s=
-hmem_helper drm_exec cpufreq_dt evdev pkcs8_key_parser nvme_fabrics efi_pst=
-ore configfs autofs4 ext4 crc16 mbcache jbd2 onboard_usb_dev r8169 realtek =
-phy_package mdio_devres of_mdio fixed_phy fwnode_mdio libphy mdio_bus xhci_=
-plat_hcd xhci_hcd nvme rk808_regulator nvme_core nvme_keyring
-[    9.004872]  nvme_auth fusb302 tcpm rockchipdrm fan53555 aux_hpd_bridge =
-dw_hdmi_qp rtc_hym8563 dw_mipi_dsi dw_hdmi analogix_dp drm_dp_aux_bus drm_d=
-isplay_helper rockchip_saradc fixed sdhci_of_dwcmshc cec phy_rockchip_usbdp=
- sdhci_pltfm industrialio_triggered_buffer phy_rockchip_naneng_combphy dw_m=
-mc_rockchip sdhci rc_core typec dw_mmc_pltfm gpio_rockchip phy_rockchip_sam=
-sung_hdptx display_connector phy_rockchip_snps_pcie3 kfifo_buf nvmem_rockch=
-ip_otp drm_client_lib cqhci ohci_platform spi_rockchip_sfc dw_mmc dw_wdt sp=
-i_rockchip rockchip_dfi pl330 drm_dma_helper ehci_platform drm_kms_helper d=
-wc3 ehci_hcd drm ohci_hcd udc_core adc_keys usbcore i2c_rk3x phy_rockchip_i=
-nno_usb2 industrialio pwm_rockchip ulpi usb_common
-[    9.004964] CPU: 5 UID: 0 PID: 399 Comm: (udev-worker) Tainted: G       =
- W           7.3-rc4+unreleased-arm64-cknow #1 PREEMPTLAZY  Debian 7.3~rc4-=
-2
-[    9.004971] Tainted: [W]=3DWARN
-[    9.004974] Hardware name: FriendlyElec NanoPC-T6 Plus (DT)
-[    9.004977] pstate: 60400009 (nZCv daif +PAN -UAO -TCO -DIT -SSBS BTYPE=
-=3D--)
-[    9.004982] pc : irq_domain_associate_locked+0x118/0x1a0
-[    9.004986] lr : irq_domain_associate_locked+0x118/0x1a0
-[    9.004989] sp : ffff800083c734d0
-[    9.004992] x29: ffff800083c734d0 x28: ffffc87b5865ccb8 x27: ffffc87ae61=
-951d8
-[    9.004998] x26: 000000000000000c x25: ffff0001035340b0 x24: ffff000107e=
-c6ae8
-[    9.005003] x23: 0000000000000000 x22: 00000000000000a3 x21: 00000000000=
-00000
-[    9.005008] x20: ffff0001180b0030 x19: ffff000108e26200 x18: 00000000000=
-0000a
-[    9.005013] x17: 7075727265746e69 x16: 2d79636167656c3a x15: 07200720072=
-00720
-[    9.005018] x14: 0720072007200720 x13: 0720072007200720 x12: 00000000000=
-6ff90
-[    9.005023] x11: ffffc87b581950d0 x10: ffffc87b5810cf08 x9 : ffffc87b55d=
-b6444
-[    9.005028] x8 : ffffc87b5817d0e8 x7 : ffffffffffffefff x6 : 00000000000=
-00001
-[    9.005033] x5 : ffff0005fdeff208 x4 : ffff378aa5f0e000 x3 : ffff0001683=
-85dc0
-[    9.005038] x2 : 0000000000000000 x1 : 0000000000000000 x0 : ffff0001683=
-85dc0
-[    9.005044] Call trace:
-[    9.005046]  irq_domain_associate_locked+0x118/0x1a0 (P)
-[    9.005052]  irq_create_mapping_affinity_locked+0x98/0x1b8
-[    9.005056]  irq_create_fwspec_mapping+0x320/0x3e0
-[    9.005061]  irq_create_of_mapping+0x74/0xb0
-[    9.005065]  of_irq_parse_and_map_pci+0xf8/0x1f8
-[    9.005071]  pci_assign_irq+0x9c/0x180
-[    9.005076]  pci_device_probe+0x68/0x170
-[    9.005080]  really_probe+0xc8/0x3f8
-[    9.005085]  __driver_probe_device+0x168/0x1c8
-[    9.005088]  driver_probe_device+0x44/0x128
-[    9.005092]  __driver_attach+0xd0/0x228
-[    9.005095]  bus_for_each_dev+0x84/0xf0
-[    9.005100]  driver_attach+0x2c/0x40
-[    9.005103]  bus_add_driver+0x124/0x280
-[    9.005106]  driver_register+0x70/0x138
-[    9.005110]  __pci_register_driver+0x48/0x60
-[    9.005116]  mt7925_pci_driver_init+0x30/0xfd0 [mt7925e]
-[    9.005125]  do_one_initcall+0x5c/0x458
-[    9.005129]  do_init_module+0x5c/0x280
-[    9.005134]  load_module+0x1cc0/0x25b8
-[    9.005137]  init_module_from_file+0xe8/0x158
-[    9.005141]  __arm64_sys_finit_module+0x208/0x360
-[    9.005144]  invoke_syscall.constprop.0+0xac/0x110
-[    9.005151]  el0_svc_common.constprop.0+0xc0/0xf0
-[    9.005156]  do_el0_svc+0x24/0x40
-[    9.005161]  el0_svc+0x40/0x260
-[    9.005167]  el0t_64_sync_handler+0xa0/0xe8
-[    9.005171]  el0t_64_sync+0x198/0x1a0
-[    9.005176] ---[ end trace 0000000000000000 ]---
-[   10.568235] Bluetooth: hci0: HCI Enhanced Setup Synchronous Connection c=
-ommand is advertised, but not supported.
-```
-
-The ``mt7925`` one is from my M.2 Wi-Fi+BT card plugged into the system.
-
-rk3588-nanopc-t6-plus-intx-fixes-stacktraces-dmesg.txt:
-https://paste.sr.ht/~diederik/85ee576b76934754139a496488d451ef89f88db0
-
-rk3588-rock5b-intx-fixes-stacktraces-dmesg.txt:
-https://paste.sr.ht/~diederik/c6d46b2e5e0de22316bd31ad63152afed1a2dc70
-
-rk3568-nanopi-r5s-intx-fixes-stacktraces-dmesg.txt:
-https://paste.sr.ht/~diederik/9b83b304646df3823687b75e5e07c683658d1024
-
-Cheers,
-  Diederik
-
-> Changes in v3:
-> - split devm-managed part into a seperate patch
->
-> Changes in v2:
-> - Moved the of_irq_get_byname() lookup, the INTx irq domain creation
->   and the chained handler installation out of the host ops .init()
->   callback into rockchip_pcie_configure_rc(), right after
->   dw_pcie_host_init(), as suggested by Niklas Cassel. This supersedes
->   v1 patch 1/2, as .init() no longer creates the irq domain, and
->   removes the rockchip_pcie_host_hw_init() helper from v1.
-> - Made the INTx irq domain devm-managed with
->   devm_irq_domain_instantiate() and uninstall the chained handler
->   through a devres action, addressing the probe failure leak and
->   use-after-free flagged by the Sashiko review.
-> - keep the INTx IRQ masked while .reset_root_port()
->   gates the controller clocks, responding to the Sashiko review
->   finding about accessing the unclocked APB bus.
->
-> Shawn Lin (3):
->   PCI: dw-rockchip: Move the INTx irq setup to probe
->   PCI: dw-rockchip: Make the INTx irq setup devm-managed
->   PCI: dw-rockchip: Mask the INTx IRQ while the controller clocks are
->     gated
->
->  drivers/pci/controller/dwc/pcie-dw-rockchip.c | 77 ++++++++++++++++++++-=
-------
->  1 file changed, 57 insertions(+), 20 deletions(-)
-
-
+5ZyoIDIwMjYvMDkvMjMg5pif5pyf5LiJIDE3OjEzLCBEaWVkZXJpayBkZSBIYWFzIOWGmemB
+kzoNCj4gSGksDQo+IA0KPiBPbiBUdWUgU2VwIDIyLCAyMDI2IGF0IDQ6MzYgQU0gQ0VTVCwg
+U2hhd24gTGluIHdyb3RlOg0KPj4NCj4+IFRoaXMgc2hvcnQgc2VyaWVzIGZpeGVzIHRoZSBJ
+TlR4IGhhbmRsaW5nIGFyb3VuZCB0aGUgbmV3bHkgaW50cm9kdWNlZA0KPj4gLnJlc2V0X3Jv
+b3RfcG9ydCgpIChiMzc2YjNmZjljYjApLCBhbmQgaXMgc3BsaXQgaW4gdGhyZWUgcGF0Y2hl
+cyBwZXINCj4+IE5pa2xhcycgc3VnZ2VzdGlvbjoNCj4+DQo+PiBQYXRjaCAxIHN0b3BzIC5y
+ZXNldF9yb290X3BvcnQoKSBmcm9tIHJlY3JlYXRpbmcgdGhlIElOVHggaXJxIGRvbWFpbg0K
+Pj4gb24gZXZlcnkgcm9vdCBwb3J0IHJlc2V0LCB3aGljaCBsZWFrZWQgdGhlIG9sZCBkb21h
+aW4gYW5kIHNpbGVudGx5DQo+PiBicm9rZSBJTlR4IGRlbGl2ZXJ5IGFmdGVyd2FyZHMsIHRo
+ZSBkb3duc3RyZWFtIGRldmljZXMnIHZpcnFzIHdlcmUNCj4+IGFsbG9jYXRlZCBpbiB0aGUg
+cHJldmlvdXMgZG9tYWluIGFuZCB3ZXJlIG5ldmVyIHJlLW1hcHBlZC4gQnkgbW92aW5nDQo+
+PiB0aGUgb2ZfaXJxX2dldF9ieW5hbWUoKSBsb29rdXAsIHRoZSBJTlR4IGlycSBkb21haW4g
+Y3JlYXRpb24gYW5kIHRoZQ0KPj4gY2hhaW5lZCBoYW5kbGVyIGluc3RhbGxhdGlvbiBpbnRv
+IHJvY2tjaGlwX3BjaWVfY29uZmlndXJlX3JjKCksIHJpZ2h0DQo+PiBhZnRlciBkd19wY2ll
+X2hvc3RfaW5pdCgpLiBUaGlzIGxlYXZlcyAuaW5pdCgpIHdpdGggbm90aGluZyBidXQNCj4+
+IGlkZW1wb3RlbnQgcmVnaXN0ZXIgcHJvZ3JhbW1pbmcsIHNvIGl0IGNhbiBzYWZlbHkgYmUg
+cmUtcnVuIGJ5DQo+PiAucmVzZXRfcm9vdF9wb3J0KCkgYW5kIGR3X3BjaWVfcmVzdW1lX25v
+aXJxKCkuDQo+Pg0KPj4gUGF0Y2ggMiBtYWtlcyB0aGUgaXJxIGRvbWFpbiBhbmQgdGhlIGNo
+YWluZWQgaGFuZGxlciBkZXZtLW1hbmFnZWQsIHNvDQo+PiB0aGF0IHRoZXkgYXJlIHJlbGVh
+c2VkIHdpdGggdGhlIGRldmljZSBpbnN0ZWFkIG9mIGxlYWtpbmcsIHdoaWNoIGFsc28NCj4+
+IGFkZHJlc3NlcyB0aGUgcHJvYmUgZmFpbHVyZSBsZWFrL3VzZS1hZnRlci1mcmVlIGZsYWdn
+ZWQgYnkgdGhlIFNhc2hpa28NCj4+IHJldmlldy4NCj4+DQo+PiBQYXRjaCAzIGtlZXBzIHRo
+ZSBJTlR4IElSUSBtYXNrZWQgd2hpbGUgLnJlc2V0X3Jvb3RfcG9ydCgpIGdhdGVzIHRoZQ0K
+Pj4gY29udHJvbGxlciBjbG9ja3MsIHNvIHRoZSBjaGFpbmVkIGhhbmRsZXIgY2Fubm90IHJl
+YWQgdGhlIHVuY2xvY2tlZA0KPj4gQVBCIGJ1cyBhbmQgcmFpc2UgYSBzeW5jaHJvbm91cyBl
+eHRlcm5hbCBhYm9ydC4NCj4gDQo+IEkgYnVpbGQgYSBrZXJuZWwgd2l0aCB0aGlzIHBhdGNo
+IHNldCAoNy4zfnJjNC0yKSBhbmQgZ290IHNldmVyYWwgd2FybmluZ3MNCj4gbGlrZSB0aGlz
+LCBzaG9ydGx5IGZvbGxvd2VkIGJ5IGEgc3RhY2sgdHJhY2U6DQoNClNhc2hpa28gYWxyZWFk
+eSByZXBvcnR0ZWQgc29tZSB2YWxpZCBjb25jZXJuIGFyb3VuZCB0aGlzLCBhbmQgSSdsbCBw
+bGFuDQp0byByZXdvcmsgdGhpcyBzZXJpZXMgYSBiaXQgbGF0ZXIuIFRoYW5rcyBmb3IgcmVw
+b3J0aW5nIHRoaXMuDQoNCj4gDQo+ICAgIGlycTogbm8gaXJxIGRvbWFpbiBmb3VuZCBmb3Ig
+bGVnYWN5LWludGVycnVwdC1jb250cm9sbGVyICENCj4gDQo+IFRoZW4gSSBidWlsZCBhbm90
+aGVyIGtlcm5lbCAoNy4zfnJjNC0zKSB3aGVyZSBJIGRpc2FibGVkIHRoaXMgcGF0Y2ggc2V0
+DQo+IGFuZCB0aGVuIEkgZGlkIG5vdCBnZXQgdGhlIHdhcm5pbmdzL3N0YWNrIHRyYWNlcy4N
+Cj4gDQo+IEkgd2FzIGFibGUgdG8gcmVwcm9kdWNlIHRoaXMgb24gdGhlIGZvbGxvd2luZyBk
+ZXZpY2VzOg0KPiAxKSBOYW5vUEMtVDYgUGx1cyAoUkszNTg4KQ0KPiAyKSBSb2NrIDVCIChS
+SzM1ODgpDQo+IDMpIE5hbm9QaS1SNVMgKFJLMzU2OCkNCj4gDQo+IGFkIDMpIFBvc3NpYmx5
+IHVucmVsYXRlZCwgYnV0IEkgc29tZXRpbWVzIGdldCB0aGlzIGVycm9yOg0KPiANCj4gICAg
+Z3Bpby1rZXlzIGdwaW8ta2V5czogZXJyb3IgLUVOWElPOiBVbmFibGUgdG8gZ2V0IGlycSBu
+dW1iZXIgZm9yIEdQSU8NCj4gDQo+ICAgICAgICBCdXQgdGhhdCBpcyAqbm90KiBkZXBlbmRl
+bnQgb24gdGhpcyBwYXRjaCBzZXQ7IEknbSBub3Qgc3VyZSBpZiBJJ3ZlDQo+ICAgICAgICBz
+ZWVuIGl0IHdpdGggdGhpcyBwYXRjaCBzZXQuIENvdWxkIGJlIGJlY2F1c2UgSSBoYXZlbid0
+IGJvb3RlZCBlbm91Z2gNCj4gICAgICAgIHdpdGggdGhlIDcuM35yYzQtMiBrZXJuZWwuIE9y
+IG1heWJlIHRoaXMgcGF0Y2ggc2V0IGZpeGVkIGl0Pw0KPiAgICAgICAgVGhlIChvbmx5KSBj
+b3JyZWxhdGlvbiBpcyB0aGF0IGl0IGhhcyB0byBkbyB3aXRoIElSUXMuDQo+IA0KPiBJIGRv
+bid0IGtub3cgaWYgdGhpcyBwYXRjaCBzZXQgY2F1c2VkIHRoZSB3YXJuaW5nL3N0YWNrIHRy
+YWNlcyBvciBqdXN0DQo+IGJyb3VnaHQgYW4gdW5kZXJseWluZyBpc3N1ZSB0byBzdXJmYWNl
+LCBidXQgaG9wZWZ1bGx5IHlvdSBkby4NCj4gDQo+IFdhcm5pbmdzL3N0YWNrIHRyYWNlIG9u
+IE5hbm9QQy1UNiBQbHVzIChiZWNhdXNlIGl0J3MgdGhlIG1vc3QgZXh0ZW5zaXZlKToNCj4g
+DQo+IGBgYA0KPiByb290QG5hbm9wYy10Ni1wbHVzOn4jIGRtZXNnIC0tbGV2ZWwgNA0KPiBb
+ICAgIDIuNjg0MDU0XSBwY2kgMDAwMzozMDowMC4wOiBQcmltYXJ5IGJ1cyBpcyBoYXJkIHdp
+cmVkIHRvIDANCj4gWyAgICAyLjY5MTIzNF0gaXJxOiBubyBpcnEgZG9tYWluIGZvdW5kIGZv
+ciBsZWdhY3ktaW50ZXJydXB0LWNvbnRyb2xsZXIgIQ0KPiBbICAgIDMuMDQzMjU3XSBpcnE6
+IG5vIGlycSBkb21haW4gZm91bmQgZm9yIGxlZ2FjeS1pbnRlcnJ1cHQtY29udHJvbGxlciAh
+DQo+IFsgICAgMy4xMzM2MDBdIC0tLS0tLS0tLS0tLVsgY3V0IGhlcmUgXS0tLS0tLS0tLS0t
+LQ0KPiBbICAgIDMuMTMzNjE5XSBlcnJvcjogaHdpcnEgMHgwIGlzIHRvbyBsYXJnZSBmb3Ig
+OnBjaWVAZmUxNTAwMDA6bGVnYWN5LWludGVycnVwdC1jb250cm9sbGVyDQo+IFsgICAgMy4x
+MzM2MzldIFdBUk5JTkc6IGtlcm5lbC9pcnEvaXJxZG9tYWluLmM6Njc2IGF0IGlycV9kb21h
+aW5fYXNzb2NpYXRlX2xvY2tlZCsweDExOC8weDFhMCwgQ1BVIzc6IGt3b3JrZXIvdTMyOjUv
+NjANCj4gWyAgICAzLjEzMzY2Ml0gTW9kdWxlcyBsaW5rZWQgaW46IG52bWUgcms4MDhfcmVn
+dWxhdG9yIG52bWVfY29yZSBudm1lX2tleXJpbmcgbnZtZV9hdXRoIGZ1c2IzMDIgdGNwbSBy
+b2NrY2hpcGRybSBmYW41MzU1NSBhdXhfaHBkX2JyaWRnZSBkd19oZG1pX3FwIHJ0Y19oeW04
+NTYzIGR3X21pcGlfZHNpIGR3X2hkbWkgYW5hbG9naXhfZHAgZHJtX2RwX2F1eF9idXMgZHJt
+X2Rpc3BsYXlfaGVscGVyIHJvY2tjaGlwX3NhcmFkYyBmaXhlZCBzZGhjaV9vZl9kd2Ntc2hj
+IGNlYyBwaHlfcm9ja2NoaXBfdXNiZHAgc2RoY2lfcGx0Zm0gaW5kdXN0cmlhbGlvX3RyaWdn
+ZXJlZF9idWZmZXIgcGh5X3JvY2tjaGlwX25hbmVuZ19jb21icGh5IGR3X21tY19yb2NrY2hp
+cCBzZGhjaSByY19jb3JlIHR5cGVjIGR3X21tY19wbHRmbSBncGlvX3JvY2tjaGlwIHBoeV9y
+b2NrY2hpcF9zYW1zdW5nX2hkcHR4IGRpc3BsYXlfY29ubmVjdG9yIHBoeV9yb2NrY2hpcF9z
+bnBzX3BjaWUzIGtmaWZvX2J1ZiBudm1lbV9yb2NrY2hpcF9vdHAgZHJtX2NsaWVudF9saWIg
+Y3FoY2kgb2hjaV9wbGF0Zm9ybSBzcGlfcm9ja2NoaXBfc2ZjIGR3X21tYyBkd193ZHQgc3Bp
+X3JvY2tjaGlwIHJvY2tjaGlwX2RmaSBwbDMzMCBkcm1fZG1hX2hlbHBlciBlaGNpX3BsYXRm
+b3JtIGRybV9rbXNfaGVscGVyIGR3YzMgZWhjaV9oY2QgZHJtIG9oY2lfaGNkIHVkY19jb3Jl
+IGFkY19rZXlzIHVzYmNvcmUgaTJjX3JrM3ggcGh5X3JvY2tjaGlwX2lubm9fdXNiMiBpbmR1
+c3RyaWFsaW8gcHdtX3JvY2tjaGlwIHVscGkgdXNiX2NvbW1vbg0KPiBbICAgIDMuMTMzODE1
+XSBDUFU6IDcgVUlEOiAwIFBJRDogNjAgQ29tbToga3dvcmtlci91MzI6NSBOb3QgdGFpbnRl
+ZCA3LjMtcmM0K3VucmVsZWFzZWQtYXJtNjQtY2tub3cgIzEgUFJFRU1QVExBWlkgIERlYmlh
+biA3LjN+cmM0LTINCj4gWyAgICAzLjEzMzgzMV0gSGFyZHdhcmUgbmFtZTogRnJpZW5kbHlF
+bGVjIE5hbm9QQy1UNiBQbHVzIChEVCkNCj4gWyAgICAzLjEzMzgzOF0gV29ya3F1ZXVlOiBh
+c3luYyBhc3luY19ydW5fZW50cnlfZm4NCj4gWyAgICAzLjEzMzg1Ml0gcHN0YXRlOiA2MDQw
+MDAwOSAoblpDdiBkYWlmICtQQU4gLVVBTyAtVENPIC1ESVQgLVNTQlMgQlRZUEU9LS0pDQo+
+IFsgICAgMy4xMzM4NjJdIHBjIDogaXJxX2RvbWFpbl9hc3NvY2lhdGVfbG9ja2VkKzB4MTE4
+LzB4MWEwDQo+IFsgICAgMy4xMzM4NzJdIGxyIDogaXJxX2RvbWFpbl9hc3NvY2lhdGVfbG9j
+a2VkKzB4MTE4LzB4MWEwDQo+IFsgICAgMy4xMzM4ODFdIHNwIDogZmZmZjgwMDA4MDQzYjlj
+MA0KPiBbICAgIDMuMTMzODg3XSB4Mjk6IGZmZmY4MDAwODA0M2I5YzAgeDI4OiAwMDAwMDAw
+MDAwMDAwMDAwIHgyNzogMDAwMDAwMDAwMDAwMDAwMA0KPiBbICAgIDMuMTMzOTAwXSB4MjY6
+IGZmZmYwMDAxMDAwMzhjMDAgeDI1OiAwMDAwMDAwMGZmZmZmZWY3IHgyNDogZmZmZjAwMDEw
+OTUzOTNlOA0KPiBbICAgIDMuMTMzOTEzXSB4MjM6IDAwMDAwMDAwMDAwMDAwMDAgeDIyOiAw
+MDAwMDAwMDAwMDAwMDczIHgyMTogMDAwMDAwMDAwMDAwMDAwMA0KPiBbICAgIDMuMTMzOTI1
+XSB4MjA6IGZmZmYwMDAxMTk2YzllMzAgeDE5OiBmZmZmMDAwMTA4ZThkNTAwIHgxODogMDAw
+MDAwMDAwMDAwMDAwYQ0KPiBbICAgIDMuMTMzOTM3XSB4MTc6IDcwNzU3MjcyNjU3NDZlNjkg
+eDE2OiAyZDc5NjM2MTY3NjU2YzNhIHgxNTogMDcyMDA3MjAwNzIwMDcyMA0KPiBbICAgIDMu
+MTMzOTQ5XSB4MTQ6IDA3MjAwNzIwMDcyMDA3MjAgeDEzOiAwNzIwMDcyMDA3MjAwNzIwIHgx
+MjogMDAwMDAwMDAwMDA2ZmY5MA0KPiBbICAgIDMuMTMzOTYxXSB4MTE6IGZmZmZjODdiNTgx
+OTUwZDAgeDEwOiBmZmZmYzg3YjU4MTBjZjA4IHg5IDogZmZmZmM4N2I1NWRiNjQ0NA0KPiBb
+ICAgIDMuMTMzOTc0XSB4OCA6IGZmZmZjODdiNTgxN2QwZTggeDcgOiBmZmZmZmZmZmZmZmZl
+ZmZmIHg2IDogMDAwMDAwMDAwMDAwMDAwMQ0KPiBbICAgIDMuMTMzOTg1XSB4NSA6IGZmZmZj
+ODdiNTgxN2QwNzggeDQgOiAwMDAwMDAwMDAwMDAwMDAwIHgzIDogMDAwMDAwMDAwMDAwMDAw
+MA0KPiBbICAgIDMuMTMzOTk3XSB4MiA6IDAwMDAwMDAwMDAwMDAwMDAgeDEgOiAwMDAwMDAw
+MDAwMDAwMDAwIHgwIDogZmZmZjAwMDEwMGI3YTU4MA0KPiBbICAgIDMuMTM0MDEwXSBDYWxs
+IHRyYWNlOg0KPiBbICAgIDMuMTM0MDE2XSAgaXJxX2RvbWFpbl9hc3NvY2lhdGVfbG9ja2Vk
+KzB4MTE4LzB4MWEwIChQKQ0KPiBbICAgIDMuMTM0MDI4XSAgaXJxX2NyZWF0ZV9tYXBwaW5n
+X2FmZmluaXR5X2xvY2tlZCsweDk4LzB4MWI4DQo+IFsgICAgMy4xMzQwMzldICBpcnFfY3Jl
+YXRlX2Z3c3BlY19tYXBwaW5nKzB4MzIwLzB4M2UwDQo+IFsgICAgMy4xMzQwNDldICBpcnFf
+Y3JlYXRlX29mX21hcHBpbmcrMHg3NC8weGIwDQo+IFsgICAgMy4xMzQwNTldICBvZl9pcnFf
+cGFyc2VfYW5kX21hcF9wY2krMHhmOC8weDFmOA0KPiBbICAgIDMuMTM0MDcyXSAgcGNpX2Fz
+c2lnbl9pcnErMHg5Yy8weDE4MA0KPiBbICAgIDMuMTM0MDgyXSAgcGNpX2RldmljZV9wcm9i
+ZSsweDY4LzB4MTcwDQo+IFsgICAgMy4xMzQwOTFdICByZWFsbHlfcHJvYmUrMHhjOC8weDNm
+OA0KPiBbICAgIDMuMTM0MTAyXSAgX19kcml2ZXJfcHJvYmVfZGV2aWNlKzB4MTY4LzB4MWM4
+DQo+IFsgICAgMy4xMzQxMTBdICBkcml2ZXJfcHJvYmVfZGV2aWNlKzB4NDQvMHgxMjgNCj4g
+WyAgICAzLjEzNDExOV0gIF9fZHJpdmVyX2F0dGFjaF9hc3luY19oZWxwZXIrMHg1OC8weGY4
+DQo+IFsgICAgMy4xMzQxMjhdICBhc3luY19ydW5fZW50cnlfZm4rMHg0MC8weDFhMA0KPiBb
+ICAgIDMuMTM0MTM4XSAgcHJvY2Vzc19vbmVfd29yaysweDFjYy8weDU1MA0KPiBbICAgIDMu
+MTM0MTUwXSAgd29ya2VyX3RocmVhZCsweDE4Yy8weDJmMA0KPiBbICAgIDMuMTM0MTYxXSAg
+a3RocmVhZCsweDEzNC8weDE1MA0KPiBbICAgIDMuMTM0MTcxXSAgcmV0X2Zyb21fZm9yaysw
+eDEwLzB4MjANCj4gWyAgICAzLjEzNDE4M10gLS0tWyBlbmQgdHJhY2UgMDAwMDAwMDAwMDAw
+MDAwMCBdLS0tDQo+IFsgICAgMy4zMzE5MzNdIHBjaSAwMDA0OjQwOjAwLjA6IFByaW1hcnkg
+YnVzIGlzIGhhcmQgd2lyZWQgdG8gMA0KPiBbICAgIDMuMzM4OTUzXSBpcnE6IG5vIGlycSBk
+b21haW4gZm91bmQgZm9yIGxlZ2FjeS1pbnRlcnJ1cHQtY29udHJvbGxlciAhDQo+IFsgICAg
+My40OTIxNDddIC0tLS0tLS0tLS0tLVsgY3V0IGhlcmUgXS0tLS0tLS0tLS0tLQ0KPiBbICAg
+IDMuNDkyMTYxXSBlcnJvcjogaHdpcnEgMHgwIGlzIHRvbyBsYXJnZSBmb3IgOnBjaWVAZmUx
+OTAwMDA6bGVnYWN5LWludGVycnVwdC1jb250cm9sbGVyDQo+IFsgICAgMy40OTIxODJdIFdB
+Uk5JTkc6IGtlcm5lbC9pcnEvaXJxZG9tYWluLmM6Njc2IGF0IGlycV9kb21haW5fYXNzb2Np
+YXRlX2xvY2tlZCsweDExOC8weDFhMCwgQ1BVIzY6ICh1ZGV2LXdvcmtlcikvMTg3DQo+IFsg
+ICAgMy40OTIyMDVdIE1vZHVsZXMgbGlua2VkIGluOiByODE2OSgrKSByZWFsdGVrIHBoeV9w
+YWNrYWdlIG1kaW9fZGV2cmVzIG9mX21kaW8gZml4ZWRfcGh5IGZ3bm9kZV9tZGlvIGxpYnBo
+eSBtZGlvX2J1cyB4aGNpX3BsYXRfaGNkIHhoY2lfaGNkIG52bWUgcms4MDhfcmVndWxhdG9y
+IG52bWVfY29yZSBudm1lX2tleXJpbmcgbnZtZV9hdXRoIGZ1c2IzMDIgdGNwbSByb2NrY2hp
+cGRybSBmYW41MzU1NSBhdXhfaHBkX2JyaWRnZSBkd19oZG1pX3FwIHJ0Y19oeW04NTYzIGR3
+X21pcGlfZHNpIGR3X2hkbWkgYW5hbG9naXhfZHAgZHJtX2RwX2F1eF9idXMgZHJtX2Rpc3Bs
+YXlfaGVscGVyIHJvY2tjaGlwX3NhcmFkYyBmaXhlZCBzZGhjaV9vZl9kd2Ntc2hjIGNlYyBw
+aHlfcm9ja2NoaXBfdXNiZHAgc2RoY2lfcGx0Zm0gaW5kdXN0cmlhbGlvX3RyaWdnZXJlZF9i
+dWZmZXIgcGh5X3JvY2tjaGlwX25hbmVuZ19jb21icGh5IGR3X21tY19yb2NrY2hpcCBzZGhj
+aSByY19jb3JlIHR5cGVjIGR3X21tY19wbHRmbSBncGlvX3JvY2tjaGlwIHBoeV9yb2NrY2hp
+cF9zYW1zdW5nX2hkcHR4IGRpc3BsYXlfY29ubmVjdG9yIHBoeV9yb2NrY2hpcF9zbnBzX3Bj
+aWUzIGtmaWZvX2J1ZiBudm1lbV9yb2NrY2hpcF9vdHAgZHJtX2NsaWVudF9saWIgY3FoY2kg
+b2hjaV9wbGF0Zm9ybSBzcGlfcm9ja2NoaXBfc2ZjIGR3X21tYyBkd193ZHQgc3BpX3JvY2tj
+aGlwIHJvY2tjaGlwX2RmaSBwbDMzMCBkcm1fZG1hX2hlbHBlciBlaGNpX3BsYXRmb3JtIGRy
+bV9rbXNfaGVscGVyIGR3YzMgZWhjaV9oY2QgZHJtIG9oY2lfaGNkIHVkY19jb3JlIGFkY19r
+ZXlzIHVzYmNvcmUgaTJjX3JrM3ggcGh5X3JvY2tjaGlwX2lubm9fdXNiMiBpbmR1c3RyaWFs
+aW8gcHdtX3JvY2tjaGlwIHVscGkgdXNiX2NvbW1vbg0KPiBbICAgIDMuNDkyMzg4XSBDUFU6
+IDYgVUlEOiAwIFBJRDogMTg3IENvbW06ICh1ZGV2LXdvcmtlcikgVGFpbnRlZDogRyAgICAg
+ICAgVyAgICAgICAgICAgNy4zLXJjNCt1bnJlbGVhc2VkLWFybTY0LWNrbm93ICMxIFBSRUVN
+UFRMQVpZICBEZWJpYW4gNy4zfnJjNC0yDQo+IFsgICAgMy40OTI0MDRdIFRhaW50ZWQ6IFtX
+XT1XQVJODQo+IFsgICAgMy40OTI0MTBdIEhhcmR3YXJlIG5hbWU6IEZyaWVuZGx5RWxlYyBO
+YW5vUEMtVDYgUGx1cyAoRFQpDQo+IFsgICAgMy40OTI0MTddIHBzdGF0ZTogNjA0MDAwMDkg
+KG5aQ3YgZGFpZiArUEFOIC1VQU8gLVRDTyAtRElUIC1TU0JTIEJUWVBFPS0tKQ0KPiBbICAg
+IDMuNDkyNDI3XSBwYyA6IGlycV9kb21haW5fYXNzb2NpYXRlX2xvY2tlZCsweDExOC8weDFh
+MA0KPiBbICAgIDMuNDkyNDM3XSBsciA6IGlycV9kb21haW5fYXNzb2NpYXRlX2xvY2tlZCsw
+eDExOC8weDFhMA0KPiBbICAgIDMuNDkyNDQ2XSBzcCA6IGZmZmY4MDAwODE4MzM1ZTANCj4g
+WyAgICAzLjQ5MjQ1MV0geDI5OiBmZmZmODAwMDgxODMzNWUwIHgyODogZmZmZmM4N2I1ODY1
+Y2NiOCB4Mjc6IGZmZmZjODdhZTU5ZDc4MTgNCj4gWyAgICAzLjQ5MjQ2NV0geDI2OiAwMDAw
+MDAwMDAwMDAwMDBjIHgyNTogZmZmZjAwMDEwMzUzNDMxMCB4MjQ6IGZmZmYwMDAxMGE1MGNk
+ZTgNCj4gWyAgICAzLjQ5MjQ3N10geDIzOiAwMDAwMDAwMDAwMDAwMDAwIHgyMjogMDAwMDAw
+MDAwMDAwMDA4OCB4MjE6IDAwMDAwMDAwMDAwMDAwMDANCj4gWyAgICAzLjQ5MjQ5MF0geDIw
+OiBmZmZmMDAwMTY4NDY0NjMwIHgxOTogZmZmZjAwMDEwOGZiMmEwMCB4MTg6IDAwMDAwMDAw
+MDAwMDAwMGENCj4gWyAgICAzLjQ5MjUwMl0geDE3OiA3MDc1NzI3MjY1NzQ2ZTY5IHgxNjog
+MmQ3OTYzNjE2NzY1NmMzYSB4MTU6IDA3MjAwNzIwMDcyMDA3MjANCj4gWyAgICAzLjQ5MjUx
+NF0geDE0OiAwNzIwMDcyMDA3MjAwNzIwIHgxMzogMDcyMDA3MjAwNzIwMDcyMCB4MTI6IDAw
+MDAwMDAwMDAwNmZmOTANCj4gWyAgICAzLjQ5MjUyNl0geDExOiBmZmZmYzg3YjU4MTk1MGQw
+IHgxMDogZmZmZmM4N2I1ODEwY2YwOCB4OSA6IGZmZmZjODdiNTVkYjY0NDQNCj4gWyAgICAz
+LjQ5MjUzOF0geDggOiBmZmZmYzg3YjU4MTdkMGU4IHg3IDogZmZmZmZmZmZmZmZmZWZmZiB4
+NiA6IDAwMDAwMDAwMDAwMDAwMDENCj4gWyAgICAzLjQ5MjU1MF0geDUgOiBmZmZmYzg3YjU4
+MTdkMDc4IHg0IDogMDAwMDAwMDAwMDAwMDAwMCB4MyA6IDAwMDAwMDAwMDAwMDAwMDANCj4g
+WyAgICAzLjQ5MjU2Ml0geDIgOiAwMDAwMDAwMDAwMDAwMDAwIHgxIDogMDAwMDAwMDAwMDAw
+MDAwMCB4MCA6IGZmZmYwMDAxMDk3MTkyYzANCj4gWyAgICAzLjQ5MjU3NF0gQ2FsbCB0cmFj
+ZToNCj4gWyAgICAzLjQ5MjU3OV0gIGlycV9kb21haW5fYXNzb2NpYXRlX2xvY2tlZCsweDEx
+OC8weDFhMCAoUCkNCj4gWyAgICAzLjQ5MjU5MV0gIGlycV9jcmVhdGVfbWFwcGluZ19hZmZp
+bml0eV9sb2NrZWQrMHg5OC8weDFiOA0KPiBbICAgIDMuNDkyNjAyXSAgaXJxX2NyZWF0ZV9m
+d3NwZWNfbWFwcGluZysweDMyMC8weDNlMA0KPiBbICAgIDMuNDkyNjEzXSAgaXJxX2NyZWF0
+ZV9vZl9tYXBwaW5nKzB4NzQvMHhiMA0KPiBbICAgIDMuNDkyNjIzXSAgb2ZfaXJxX3BhcnNl
+X2FuZF9tYXBfcGNpKzB4ZjgvMHgxZjgNCj4gWyAgICAzLjQ5MjYzNV0gIHBjaV9hc3NpZ25f
+aXJxKzB4OWMvMHgxODANCj4gWyAgICAzLjQ5MjY0Nl0gIHBjaV9kZXZpY2VfcHJvYmUrMHg2
+OC8weDE3MA0KPiBbICAgIDMuNDkyNjU2XSAgcmVhbGx5X3Byb2JlKzB4YzgvMHgzZjgNCj4g
+WyAgICAzLjQ5MjY2Nl0gIF9fZHJpdmVyX3Byb2JlX2RldmljZSsweDE2OC8weDFjOA0KPiBb
+ICAgIDMuNDkyNjc1XSAgZHJpdmVyX3Byb2JlX2RldmljZSsweDQ0LzB4MTI4DQo+IFsgICAg
+My40OTI2ODNdICBfX2RyaXZlcl9hdHRhY2grMHhkMC8weDIyOA0KPiBbICAgIDMuNDkyNjky
+XSAgYnVzX2Zvcl9lYWNoX2RldisweDg0LzB4ZjANCj4gWyAgICAzLjQ5MjcwNF0gIGRyaXZl
+cl9hdHRhY2grMHgyYy8weDQwDQo+IFsgICAgMy40OTI3MTJdICBidXNfYWRkX2RyaXZlcisw
+eDEyNC8weDI4MA0KPiBbICAgIDMuNDkyNzIwXSAgZHJpdmVyX3JlZ2lzdGVyKzB4NzAvMHgx
+MzgNCj4gWyAgICAzLjQ5MjcyOV0gIF9fcGNpX3JlZ2lzdGVyX2RyaXZlcisweDQ4LzB4NjAN
+Cj4gWyAgICAzLjQ5Mjc0Ml0gIHJ0bDgxNjlfcGNpX2RyaXZlcl9pbml0KzB4MzAvMHhmZDAg
+W3I4MTY5XQ0KPiBbICAgIDMuNDkyNzY4XSAgZG9fb25lX2luaXRjYWxsKzB4NWMvMHg0NTgN
+Cj4gWyAgICAzLjQ5Mjc3OF0gIGRvX2luaXRfbW9kdWxlKzB4NWMvMHgyODANCj4gWyAgICAz
+LjQ5Mjc4OF0gIGxvYWRfbW9kdWxlKzB4MWNjMC8weDI1YjgNCj4gWyAgICAzLjQ5Mjc5Nl0g
+IGluaXRfbW9kdWxlX2Zyb21fZmlsZSsweGU4LzB4MTU4DQo+IFsgICAgMy40OTI4MDVdICBf
+X2FybTY0X3N5c19maW5pdF9tb2R1bGUrMHgyMDgvMHgzNjANCj4gWyAgICAzLjQ5MjgxNF0g
+IGludm9rZV9zeXNjYWxsLmNvbnN0cHJvcC4wKzB4YWMvMHgxMTANCj4gWyAgICAzLjQ5Mjgy
+OV0gIGVsMF9zdmNfY29tbW9uLmNvbnN0cHJvcC4wKzB4NDAvMHhmMA0KPiBbICAgIDMuNDky
+ODQyXSAgZG9fZWwwX3N2YysweDI0LzB4NDANCj4gWyAgICAzLjQ5Mjg1NF0gIGVsMF9zdmMr
+MHg0MC8weDI2MA0KPiBbICAgIDMuNDkyODY3XSAgZWwwdF82NF9zeW5jX2hhbmRsZXIrMHhh
+MC8weGU4DQo+IFsgICAgMy40OTI4NzldICBlbDB0XzY0X3N5bmMrMHgxOTgvMHgxYTANCj4g
+WyAgICAzLjQ5Mjg4OF0gLS0tWyBlbmQgdHJhY2UgMDAwMDAwMDAwMDAwMDAwMCBdLS0tDQo+
+IFsgICAgMy41NTQ4MThdIHBjaSAwMDAyOjIwOjAwLjA6IFByaW1hcnkgYnVzIGlzIGhhcmQg
+d2lyZWQgdG8gMA0KPiBbICAgIDMuNTYzMjc2XSBpcnE6IG5vIGlycSBkb21haW4gZm91bmQg
+Zm9yIGxlZ2FjeS1pbnRlcnJ1cHQtY29udHJvbGxlciAhDQo+IFsgICAgMy41NjkyNjNdIGly
+cTogbm8gaXJxIGRvbWFpbiBmb3VuZCBmb3IgbGVnYWN5LWludGVycnVwdC1jb250cm9sbGVy
+ICENCj4gWyAgICA4LjY3OTE3OF0gcGFudGhvciBmYjAwMDAwMC5ncHU6IFtkcm1dIEZpcm13
+YXJlIHByb3RlY3RlZCBtb2RlIGVudHJ5IGlzIG5vdCBzdXBwb3J0ZWQsIGlnbm9yaW5nDQo+
+IFsgICAgOC44NzE1OThdIHJvY2tjaGlwLWkycy10ZG0gZmRkZjAwMDAuaTJzOiB1c2luZyB6
+ZXJvLWluaXRpYWxpemVkIGZsYXQgY2FjaGUsIHRoaXMgbWF5IGNhdXNlIHVuZXhwZWN0ZWQg
+YmVoYXZpb3INCj4gWyAgICA5LjAwNDc1M10gLS0tLS0tLS0tLS0tWyBjdXQgaGVyZSBdLS0t
+LS0tLS0tLS0tDQo+IFsgICAgOS4wMDQ3NjhdIGVycm9yOiBod2lycSAweDAgaXMgdG9vIGxh
+cmdlIGZvciA6cGNpZUBmZTE4MDAwMDpsZWdhY3ktaW50ZXJydXB0LWNvbnRyb2xsZXINCj4g
+WyAgICA5LjAwNDc3OV0gV0FSTklORzoga2VybmVsL2lycS9pcnFkb21haW4uYzo2NzYgYXQg
+aXJxX2RvbWFpbl9hc3NvY2lhdGVfbG9ja2VkKzB4MTE4LzB4MWEwLCBDUFUjNTogKHVkZXYt
+d29ya2VyKS8zOTkNCj4gWyAgICA5LjAwNDc5MV0gTW9kdWxlcyBsaW5rZWQgaW46IG10Nzky
+NWUoKykgYWVzX2NlX2JsayBtdDc5MjVfY29tbW9uIHNuZF9zb2NfYXVkaW9fZ3JhcGhfY2Fy
+ZCgrKSBnaGFzaF9jZSBnZjEyOG11bCBtdDc5MnhfbGliIHB3bV9mYW4gbXQ3Nl9jb25uYWNf
+bGliIGJ0dXNiIGxlZHNfZ3BpbyBzbmRfc29jX3NpbXBsZV9jYXJkIGdwaW9faXJfcmVjdiBi
+dHJ0bCBzbmRfc29jX3NpbXBsZV9jYXJkX3V0aWxzIG10NzYgYnRpbnRlbCByazgwNV9wd3Jr
+ZXkgYnRiY20gc25kX3NvY19oZG1pX2NvZGVjIG9mcGFydCBzbmRfc29jX3JvY2tjaGlwX2ky
+c190ZG0gc25kX3NvY19lczgzODkgbWFjODAyMTEgYnRtdGsgc25kX3NvY19jb3JlIHJvY2tj
+aGlwX3RoZXJtYWwgYmx1ZXRvb3RoIHJvY2tjaGlwX3ZkZWMgc3lub3BzeXNfaGRtaXJ4IHNw
+aV9ub3IgdjRsMl92cDkgcm9ja2NoaXBfcmdhIHNuZF9jb21wcmVzcyBtdGQgdjRsMl9kdl90
+aW1pbmdzIHY0bDJfaDI2NCBlY2RoX2dlbmVyaWMgc25kX3BjbV9kbWFlbmdpbmUgdmlkZW9i
+dWYyX2RtYV9jb250aWcgdjRsMl9tZW0ybWVtIHJvY2tjaGlwX3JuZyB2aWRlb2J1ZjJfZG1h
+X3NnIHNuZF9wY20gdmlkZW9idWYyX21lbW9wcyBjZmc4MDIxMSB2aWRlb2J1ZjJfdjRsMiB2
+aWRlb2RldiBzbmRfdGltZXIgcGFudGhvciBzbmQgcm9ja2V0IGRybV9ncHV2bSB2aWRlb2J1
+ZjJfY29tbW9uIHJma2lsbCBzb3VuZGNvcmUgZ3B1X3NjaGVkIGxpYmFyYzQgdnNpX2lvbW11
+IG1jIGRybV9zaG1lbV9oZWxwZXIgZHJtX2V4ZWMgY3B1ZnJlcV9kdCBldmRldiBwa2NzOF9r
+ZXlfcGFyc2VyIG52bWVfZmFicmljcyBlZmlfcHN0b3JlIGNvbmZpZ2ZzIGF1dG9mczQgZXh0
+NCBjcmMxNiBtYmNhY2hlIGpiZDIgb25ib2FyZF91c2JfZGV2IHI4MTY5IHJlYWx0ZWsgcGh5
+X3BhY2thZ2UgbWRpb19kZXZyZXMgb2ZfbWRpbyBmaXhlZF9waHkgZndub2RlX21kaW8gbGli
+cGh5IG1kaW9fYnVzIHhoY2lfcGxhdF9oY2QgeGhjaV9oY2QgbnZtZSByazgwOF9yZWd1bGF0
+b3IgbnZtZV9jb3JlIG52bWVfa2V5cmluZw0KPiBbICAgIDkuMDA0ODcyXSAgbnZtZV9hdXRo
+IGZ1c2IzMDIgdGNwbSByb2NrY2hpcGRybSBmYW41MzU1NSBhdXhfaHBkX2JyaWRnZSBkd19o
+ZG1pX3FwIHJ0Y19oeW04NTYzIGR3X21pcGlfZHNpIGR3X2hkbWkgYW5hbG9naXhfZHAgZHJt
+X2RwX2F1eF9idXMgZHJtX2Rpc3BsYXlfaGVscGVyIHJvY2tjaGlwX3NhcmFkYyBmaXhlZCBz
+ZGhjaV9vZl9kd2Ntc2hjIGNlYyBwaHlfcm9ja2NoaXBfdXNiZHAgc2RoY2lfcGx0Zm0gaW5k
+dXN0cmlhbGlvX3RyaWdnZXJlZF9idWZmZXIgcGh5X3JvY2tjaGlwX25hbmVuZ19jb21icGh5
+IGR3X21tY19yb2NrY2hpcCBzZGhjaSByY19jb3JlIHR5cGVjIGR3X21tY19wbHRmbSBncGlv
+X3JvY2tjaGlwIHBoeV9yb2NrY2hpcF9zYW1zdW5nX2hkcHR4IGRpc3BsYXlfY29ubmVjdG9y
+IHBoeV9yb2NrY2hpcF9zbnBzX3BjaWUzIGtmaWZvX2J1ZiBudm1lbV9yb2NrY2hpcF9vdHAg
+ZHJtX2NsaWVudF9saWIgY3FoY2kgb2hjaV9wbGF0Zm9ybSBzcGlfcm9ja2NoaXBfc2ZjIGR3
+X21tYyBkd193ZHQgc3BpX3JvY2tjaGlwIHJvY2tjaGlwX2RmaSBwbDMzMCBkcm1fZG1hX2hl
+bHBlciBlaGNpX3BsYXRmb3JtIGRybV9rbXNfaGVscGVyIGR3YzMgZWhjaV9oY2QgZHJtIG9o
+Y2lfaGNkIHVkY19jb3JlIGFkY19rZXlzIHVzYmNvcmUgaTJjX3JrM3ggcGh5X3JvY2tjaGlw
+X2lubm9fdXNiMiBpbmR1c3RyaWFsaW8gcHdtX3JvY2tjaGlwIHVscGkgdXNiX2NvbW1vbg0K
+PiBbICAgIDkuMDA0OTY0XSBDUFU6IDUgVUlEOiAwIFBJRDogMzk5IENvbW06ICh1ZGV2LXdv
+cmtlcikgVGFpbnRlZDogRyAgICAgICAgVyAgICAgICAgICAgNy4zLXJjNCt1bnJlbGVhc2Vk
+LWFybTY0LWNrbm93ICMxIFBSRUVNUFRMQVpZICBEZWJpYW4gNy4zfnJjNC0yDQo+IFsgICAg
+OS4wMDQ5NzFdIFRhaW50ZWQ6IFtXXT1XQVJODQo+IFsgICAgOS4wMDQ5NzRdIEhhcmR3YXJl
+IG5hbWU6IEZyaWVuZGx5RWxlYyBOYW5vUEMtVDYgUGx1cyAoRFQpDQo+IFsgICAgOS4wMDQ5
+NzddIHBzdGF0ZTogNjA0MDAwMDkgKG5aQ3YgZGFpZiArUEFOIC1VQU8gLVRDTyAtRElUIC1T
+U0JTIEJUWVBFPS0tKQ0KPiBbICAgIDkuMDA0OTgyXSBwYyA6IGlycV9kb21haW5fYXNzb2Np
+YXRlX2xvY2tlZCsweDExOC8weDFhMA0KPiBbICAgIDkuMDA0OTg2XSBsciA6IGlycV9kb21h
+aW5fYXNzb2NpYXRlX2xvY2tlZCsweDExOC8weDFhMA0KPiBbICAgIDkuMDA0OTg5XSBzcCA6
+IGZmZmY4MDAwODNjNzM0ZDANCj4gWyAgICA5LjAwNDk5Ml0geDI5OiBmZmZmODAwMDgzYzcz
+NGQwIHgyODogZmZmZmM4N2I1ODY1Y2NiOCB4Mjc6IGZmZmZjODdhZTYxOTUxZDgNCj4gWyAg
+ICA5LjAwNDk5OF0geDI2OiAwMDAwMDAwMDAwMDAwMDBjIHgyNTogZmZmZjAwMDEwMzUzNDBi
+MCB4MjQ6IGZmZmYwMDAxMDdlYzZhZTgNCj4gWyAgICA5LjAwNTAwM10geDIzOiAwMDAwMDAw
+MDAwMDAwMDAwIHgyMjogMDAwMDAwMDAwMDAwMDBhMyB4MjE6IDAwMDAwMDAwMDAwMDAwMDAN
+Cj4gWyAgICA5LjAwNTAwOF0geDIwOiBmZmZmMDAwMTE4MGIwMDMwIHgxOTogZmZmZjAwMDEw
+OGUyNjIwMCB4MTg6IDAwMDAwMDAwMDAwMDAwMGENCj4gWyAgICA5LjAwNTAxM10geDE3OiA3
+MDc1NzI3MjY1NzQ2ZTY5IHgxNjogMmQ3OTYzNjE2NzY1NmMzYSB4MTU6IDA3MjAwNzIwMDcy
+MDA3MjANCj4gWyAgICA5LjAwNTAxOF0geDE0OiAwNzIwMDcyMDA3MjAwNzIwIHgxMzogMDcy
+MDA3MjAwNzIwMDcyMCB4MTI6IDAwMDAwMDAwMDAwNmZmOTANCj4gWyAgICA5LjAwNTAyM10g
+eDExOiBmZmZmYzg3YjU4MTk1MGQwIHgxMDogZmZmZmM4N2I1ODEwY2YwOCB4OSA6IGZmZmZj
+ODdiNTVkYjY0NDQNCj4gWyAgICA5LjAwNTAyOF0geDggOiBmZmZmYzg3YjU4MTdkMGU4IHg3
+IDogZmZmZmZmZmZmZmZmZWZmZiB4NiA6IDAwMDAwMDAwMDAwMDAwMDENCj4gWyAgICA5LjAw
+NTAzM10geDUgOiBmZmZmMDAwNWZkZWZmMjA4IHg0IDogZmZmZjM3OGFhNWYwZTAwMCB4MyA6
+IGZmZmYwMDAxNjgzODVkYzANCj4gWyAgICA5LjAwNTAzOF0geDIgOiAwMDAwMDAwMDAwMDAw
+MDAwIHgxIDogMDAwMDAwMDAwMDAwMDAwMCB4MCA6IGZmZmYwMDAxNjgzODVkYzANCj4gWyAg
+ICA5LjAwNTA0NF0gQ2FsbCB0cmFjZToNCj4gWyAgICA5LjAwNTA0Nl0gIGlycV9kb21haW5f
+YXNzb2NpYXRlX2xvY2tlZCsweDExOC8weDFhMCAoUCkNCj4gWyAgICA5LjAwNTA1Ml0gIGly
+cV9jcmVhdGVfbWFwcGluZ19hZmZpbml0eV9sb2NrZWQrMHg5OC8weDFiOA0KPiBbICAgIDku
+MDA1MDU2XSAgaXJxX2NyZWF0ZV9md3NwZWNfbWFwcGluZysweDMyMC8weDNlMA0KPiBbICAg
+IDkuMDA1MDYxXSAgaXJxX2NyZWF0ZV9vZl9tYXBwaW5nKzB4NzQvMHhiMA0KPiBbICAgIDku
+MDA1MDY1XSAgb2ZfaXJxX3BhcnNlX2FuZF9tYXBfcGNpKzB4ZjgvMHgxZjgNCj4gWyAgICA5
+LjAwNTA3MV0gIHBjaV9hc3NpZ25faXJxKzB4OWMvMHgxODANCj4gWyAgICA5LjAwNTA3Nl0g
+IHBjaV9kZXZpY2VfcHJvYmUrMHg2OC8weDE3MA0KPiBbICAgIDkuMDA1MDgwXSAgcmVhbGx5
+X3Byb2JlKzB4YzgvMHgzZjgNCj4gWyAgICA5LjAwNTA4NV0gIF9fZHJpdmVyX3Byb2JlX2Rl
+dmljZSsweDE2OC8weDFjOA0KPiBbICAgIDkuMDA1MDg4XSAgZHJpdmVyX3Byb2JlX2Rldmlj
+ZSsweDQ0LzB4MTI4DQo+IFsgICAgOS4wMDUwOTJdICBfX2RyaXZlcl9hdHRhY2grMHhkMC8w
+eDIyOA0KPiBbICAgIDkuMDA1MDk1XSAgYnVzX2Zvcl9lYWNoX2RldisweDg0LzB4ZjANCj4g
+WyAgICA5LjAwNTEwMF0gIGRyaXZlcl9hdHRhY2grMHgyYy8weDQwDQo+IFsgICAgOS4wMDUx
+MDNdICBidXNfYWRkX2RyaXZlcisweDEyNC8weDI4MA0KPiBbICAgIDkuMDA1MTA2XSAgZHJp
+dmVyX3JlZ2lzdGVyKzB4NzAvMHgxMzgNCj4gWyAgICA5LjAwNTExMF0gIF9fcGNpX3JlZ2lz
+dGVyX2RyaXZlcisweDQ4LzB4NjANCj4gWyAgICA5LjAwNTExNl0gIG10NzkyNV9wY2lfZHJp
+dmVyX2luaXQrMHgzMC8weGZkMCBbbXQ3OTI1ZV0NCj4gWyAgICA5LjAwNTEyNV0gIGRvX29u
+ZV9pbml0Y2FsbCsweDVjLzB4NDU4DQo+IFsgICAgOS4wMDUxMjldICBkb19pbml0X21vZHVs
+ZSsweDVjLzB4MjgwDQo+IFsgICAgOS4wMDUxMzRdICBsb2FkX21vZHVsZSsweDFjYzAvMHgy
+NWI4DQo+IFsgICAgOS4wMDUxMzddICBpbml0X21vZHVsZV9mcm9tX2ZpbGUrMHhlOC8weDE1
+OA0KPiBbICAgIDkuMDA1MTQxXSAgX19hcm02NF9zeXNfZmluaXRfbW9kdWxlKzB4MjA4LzB4
+MzYwDQo+IFsgICAgOS4wMDUxNDRdICBpbnZva2Vfc3lzY2FsbC5jb25zdHByb3AuMCsweGFj
+LzB4MTEwDQo+IFsgICAgOS4wMDUxNTFdICBlbDBfc3ZjX2NvbW1vbi5jb25zdHByb3AuMCsw
+eGMwLzB4ZjANCj4gWyAgICA5LjAwNTE1Nl0gIGRvX2VsMF9zdmMrMHgyNC8weDQwDQo+IFsg
+ICAgOS4wMDUxNjFdICBlbDBfc3ZjKzB4NDAvMHgyNjANCj4gWyAgICA5LjAwNTE2N10gIGVs
+MHRfNjRfc3luY19oYW5kbGVyKzB4YTAvMHhlOA0KPiBbICAgIDkuMDA1MTcxXSAgZWwwdF82
+NF9zeW5jKzB4MTk4LzB4MWEwDQo+IFsgICAgOS4wMDUxNzZdIC0tLVsgZW5kIHRyYWNlIDAw
+MDAwMDAwMDAwMDAwMDAgXS0tLQ0KPiBbICAgMTAuNTY4MjM1XSBCbHVldG9vdGg6IGhjaTA6
+IEhDSSBFbmhhbmNlZCBTZXR1cCBTeW5jaHJvbm91cyBDb25uZWN0aW9uIGNvbW1hbmQgaXMg
+YWR2ZXJ0aXNlZCwgYnV0IG5vdCBzdXBwb3J0ZWQuDQo+IGBgYA0KPiANCj4gVGhlIGBgbXQ3
+OTI1YGAgb25lIGlzIGZyb20gbXkgTS4yIFdpLUZpK0JUIGNhcmQgcGx1Z2dlZCBpbnRvIHRo
+ZSBzeXN0ZW0uDQo+IA0KPiByazM1ODgtbmFub3BjLXQ2LXBsdXMtaW50eC1maXhlcy1zdGFj
+a3RyYWNlcy1kbWVzZy50eHQ6DQo+IGh0dHBzOi8vcGFzdGUuc3IuaHQvfmRpZWRlcmlrLzg1
+ZWU1NzZiNzY5MzQ3NTQxMzlhNDk2NDg4ZDQ1MWVmODlmODhkYjANCj4gDQo+IHJrMzU4OC1y
+b2NrNWItaW50eC1maXhlcy1zdGFja3RyYWNlcy1kbWVzZy50eHQ6DQo+IGh0dHBzOi8vcGFz
+dGUuc3IuaHQvfmRpZWRlcmlrL2M2ZDQ2YjJlNWUwZGUyMjMxNmJkMzFhZDYzMTUyYWZlZDFh
+MmRjNzANCj4gDQo+IHJrMzU2OC1uYW5vcGktcjVzLWludHgtZml4ZXMtc3RhY2t0cmFjZXMt
+ZG1lc2cudHh0Og0KPiBodHRwczovL3Bhc3RlLnNyLmh0L35kaWVkZXJpay85YjgzYjMwNDY0
+NmRmMzgyMzY4N2I3NWU1ZTA3YzY4MzY1OGQxMDI0DQo+IA0KPiBDaGVlcnMsDQo+ICAgIERp
+ZWRlcmlrDQo+IA0KPj4gQ2hhbmdlcyBpbiB2MzoNCj4+IC0gc3BsaXQgZGV2bS1tYW5hZ2Vk
+IHBhcnQgaW50byBhIHNlcGVyYXRlIHBhdGNoDQo+Pg0KPj4gQ2hhbmdlcyBpbiB2MjoNCj4+
+IC0gTW92ZWQgdGhlIG9mX2lycV9nZXRfYnluYW1lKCkgbG9va3VwLCB0aGUgSU5UeCBpcnEg
+ZG9tYWluIGNyZWF0aW9uDQo+PiAgICBhbmQgdGhlIGNoYWluZWQgaGFuZGxlciBpbnN0YWxs
+YXRpb24gb3V0IG9mIHRoZSBob3N0IG9wcyAuaW5pdCgpDQo+PiAgICBjYWxsYmFjayBpbnRv
+IHJvY2tjaGlwX3BjaWVfY29uZmlndXJlX3JjKCksIHJpZ2h0IGFmdGVyDQo+PiAgICBkd19w
+Y2llX2hvc3RfaW5pdCgpLCBhcyBzdWdnZXN0ZWQgYnkgTmlrbGFzIENhc3NlbC4gVGhpcyBz
+dXBlcnNlZGVzDQo+PiAgICB2MSBwYXRjaCAxLzIsIGFzIC5pbml0KCkgbm8gbG9uZ2VyIGNy
+ZWF0ZXMgdGhlIGlycSBkb21haW4sIGFuZA0KPj4gICAgcmVtb3ZlcyB0aGUgcm9ja2NoaXBf
+cGNpZV9ob3N0X2h3X2luaXQoKSBoZWxwZXIgZnJvbSB2MS4NCj4+IC0gTWFkZSB0aGUgSU5U
+eCBpcnEgZG9tYWluIGRldm0tbWFuYWdlZCB3aXRoDQo+PiAgICBkZXZtX2lycV9kb21haW5f
+aW5zdGFudGlhdGUoKSBhbmQgdW5pbnN0YWxsIHRoZSBjaGFpbmVkIGhhbmRsZXINCj4+ICAg
+IHRocm91Z2ggYSBkZXZyZXMgYWN0aW9uLCBhZGRyZXNzaW5nIHRoZSBwcm9iZSBmYWlsdXJl
+IGxlYWsgYW5kDQo+PiAgICB1c2UtYWZ0ZXItZnJlZSBmbGFnZ2VkIGJ5IHRoZSBTYXNoaWtv
+IHJldmlldy4NCj4+IC0ga2VlcCB0aGUgSU5UeCBJUlEgbWFza2VkIHdoaWxlIC5yZXNldF9y
+b290X3BvcnQoKQ0KPj4gICAgZ2F0ZXMgdGhlIGNvbnRyb2xsZXIgY2xvY2tzLCByZXNwb25k
+aW5nIHRvIHRoZSBTYXNoaWtvIHJldmlldw0KPj4gICAgZmluZGluZyBhYm91dCBhY2Nlc3Np
+bmcgdGhlIHVuY2xvY2tlZCBBUEIgYnVzLg0KPj4NCj4+IFNoYXduIExpbiAoMyk6DQo+PiAg
+ICBQQ0k6IGR3LXJvY2tjaGlwOiBNb3ZlIHRoZSBJTlR4IGlycSBzZXR1cCB0byBwcm9iZQ0K
+Pj4gICAgUENJOiBkdy1yb2NrY2hpcDogTWFrZSB0aGUgSU5UeCBpcnEgc2V0dXAgZGV2bS1t
+YW5hZ2VkDQo+PiAgICBQQ0k6IGR3LXJvY2tjaGlwOiBNYXNrIHRoZSBJTlR4IElSUSB3aGls
+ZSB0aGUgY29udHJvbGxlciBjbG9ja3MgYXJlDQo+PiAgICAgIGdhdGVkDQo+Pg0KPj4gICBk
+cml2ZXJzL3BjaS9jb250cm9sbGVyL2R3Yy9wY2llLWR3LXJvY2tjaGlwLmMgfCA3NyArKysr
+KysrKysrKysrKysrKysrKy0tLS0tLS0NCj4+ICAgMSBmaWxlIGNoYW5nZWQsIDU3IGluc2Vy
+dGlvbnMoKyksIDIwIGRlbGV0aW9ucygtKQ0KPiANCj4gDQo+IA0KDQo=
