@@ -1,57 +1,59 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B408338D404
-	for <linux-pci@vger.kernel.org>; Thu, 24 Sep 2026 18:40:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 148E448551B
+	for <linux-pci@vger.kernel.org>; Thu, 24 Sep 2026 18:42:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790275215; cv=none; b=LwFimmrr4Lsr+u1KaG1g/bmwXS2shUJmet1bjYEBsPjwqtXpenZ8ho0PK2XxVlb3FxD5SqCtU3laiTdYFJFCbiQaqFULldG8kc3lsf79DMyrTRB4RIfsQnkA2wSm3WxpOQXxuKOyQiq23uW9XMUOfBznrhKbcqLo+0/JBBSyTDE=
+	t=1790275383; cv=none; b=C6b+68BlDnDT5+AeRlG/Y3hUJwS3QSl5igq2eGjYtnohzEV9up8s3bRTmKivoW2y0Q1XTLTwi/Es5R6PDwMUWKsyaLbADMCQfjJs4EWxjor8daYcR4wOu3KGc5eKIuPTx5n3EQoEf+PXWgiuvPpPJujUHIwmj6Pe9AhYPn5idD0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790275215; c=relaxed/simple;
-	bh=qz8LHkAJ7U3dZtc3VbcFQYjQUihuw3anVG7gPnSIiV4=;
+	s=arc-20240116; t=1790275383; c=relaxed/simple;
+	bh=r6NLO0wijt5RKE6g4SmbW/NuuuseVfSLqSSVgzqVgOM=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=GiICSv/MzVE+pFk81oVdk3gc9VZBDsLDJURMObZYROvcZ2Yd9H2H2EzOGn/C+A842H/XhugS5PRpK74/9rC3FH1DynO2gjp06hXiBBuIar+AlMosN0NN3nROYzLbHUtvOPM86srv3DWl/PNiM7y5UGKhASAjWosxR8hRPkg5qjU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mQp8WCIx; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=BmuoOJ9hhbh+MkcX223VNu/p2nVoUp6T7IIpxWTNbGwaf9XlWe23TqJXd8++4tjGBfltTL5BDr7M4ttGhFWRIN/8gVIubgjnbJgbNzO7ODemrWz5MrJlEd1kQ3q7/GM0ZXvQy6GU+Ih3H9WbzV/nhZF0EJv2rsJJpsGdBuf+Syo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gtMVhK6S; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mQp8WCIx"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2E7111F000FF;
-	Thu, 24 Sep 2026 18:40:14 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gtMVhK6S"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D2EA01F000FF;
+	Thu, 24 Sep 2026 18:42:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790275214;
-	bh=qz8LHkAJ7U3dZtc3VbcFQYjQUihuw3anVG7gPnSIiV4=;
+	s=k20260515; t=1790275377;
+	bh=r6NLO0wijt5RKE6g4SmbW/NuuuseVfSLqSSVgzqVgOM=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=mQp8WCIxh/k2z8P12lmH3RRmefRxfFNnXj4WCY08bWZqzTAqqBG1xD2BAyIq30diV
-	 mKAN0Sx93fQPVaecte38x4N+Qh+EB/co5xNiH6VUC2KxcatiMqwpe/Sf6QPStDWXJv
-	 5aK4bOXFK5Q/UdYzjHgbrWImvsrjuZPtTcT/SPpouVmRT5vLeQ2WMKg/RdyEJEfouM
-	 G3WtoR9IQOyoCoOR2FqZsrPwjKtwiwrxViRD1mtU126n5R1nduwlkzXz6ddE/KlIYs
-	 7Hzs7Ps3fDHZyinbvh9LtuAvIAk6LdXEZz9od9HdPQRqGJb0pQOL3hy/Fg8E7kZvuz
-	 d4VpNBteGvwJg==
+	b=gtMVhK6SK6DVNpSf353reAXDtG+6pycXkVqY4FKd/5eIuiP7oH08enDs3RpLFq+XO
+	 POteUI8A4yvn73I4QYN/djMqIrHoZQUvhKY2sarIrVs57wXTZvA9LxLR8u2eFZcbcY
+	 1JfDYUonHg4LP59ZuQF1WWTkp9rDgpF+87E880yVg+z3ipqdHAh4GDRRlIe/fLQQs9
+	 so4z5iK/rmdd3WYym5kUx7+vj9VGEjI0/3CYiDBUYIwZQJ/iJhUWX25TvPpgSddNaP
+	 OhGYmEEEgBcENOOMk0+13DzGH47jgLDnqrDAH5fp0Re1E0qrsghHA3FvTZWvmVVrnx
+	 O/1HgYcn5sbUQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 11/15] PCI/DPC: Save DPC state in the saved capability
- store
+Subject: Re: [PATCH 12/15] PCI/VC: Split the VC Resource Control restore
+ into a helper
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "David Matlack" <dmatlack@google.com>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260924173501.856380-12-dmatlack@google.com>
+In-Reply-To: <20260924173501.856380-13-dmatlack@google.com>
 References: <20260924173501.856380-1-dmatlack@google.com>
- <20260924173501.856380-12-dmatlack@google.com>
+ <20260924173501.856380-13-dmatlack@google.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 24 Sep 2026 18:40:13 +0000
-Message-Id: <20260924184014.2E7111F000FF@smtp.kernel.org>
+Date: Thu, 24 Sep 2026 18:42:56 +0000
+Message-Id: <20260924184256.D2EA01F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-> Save and restore the DPC Control register through the per-device saved
-> capability store instead of a private pci_cap_saved_state buffer.
+> Move the restore of the VC Resource Control register out of
+> pci_vc_do_save_buffer() and into pci_vc_restore_res_ctrl().
 >=20
-> Key the save and restore paths off pdev->dpc_cap rather than
-> pci_is_pcie(). The presence of the save buffer used to stand in for the
-> presence of the capability, which the store cannot do because it is
-> addressed by configuration space offset.
+> Restoring this register is more involved than the rest of the walk: the
+> enable bit has to be preserved across the write, the port arbitration
+> table may have to be reloaded, and the VC may have to be re-enabled
+> afterwards. Inlined in the middle of a loop that is already sizing,
+> saving and restoring three kinds of register, it is hard to see where
+> that sequence begins and ends.
 >=20
 > No functional change intended.
 >=20
@@ -62,5 +64,5 @@ Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260924173501.8563=
-80-1-dmatlack@google.com?part=3D11
+80-1-dmatlack@google.com?part=3D12
 
