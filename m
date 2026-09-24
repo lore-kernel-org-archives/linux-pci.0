@@ -1,63 +1,63 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 463724BFE75
-	for <linux-pci@vger.kernel.org>; Thu, 24 Sep 2026 19:14:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B2A2C402BA1
+	for <linux-pci@vger.kernel.org>; Thu, 24 Sep 2026 19:17:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790277276; cv=none; b=a2h1R2g3Jik9cBcDSNSonNutHYxREilKnbxyFTnRA2KBRwxCjm7+1U2Dw0EW5WWJBrZsRz3yxwOXPEqoYsuAY7lytwcNqWZi3egjZoj3iXRI2NnYFWy6IyJ58T/rAiKSc7SEbE9lG4VSXOXpRJeO8V8PLfyj0XGAQKUZtsXLiSc=
+	t=1790277422; cv=none; b=ppedJyocAhXLsn/fpoIBs/Dbyf/qh6VcqM3rV+2tvEmMZm4yZvArOSN3UxOxOCDtzB+Do+nWfj/fgeG1sdcOehMqwoc/5MCzIYQ4ijuyu1N7FsTNdmpAQA15NN59FPxqMKHxChxBN6pj06w1ScVxoJS/sQ48mIVX0C1wr1oj+hM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790277276; c=relaxed/simple;
-	bh=hp/GSVLG9auPvauEMth8nxZakGUTRx9VbhrOfGyAxP8=;
+	s=arc-20240116; t=1790277422; c=relaxed/simple;
+	bh=Xb1WnNCdhkMaXQ1qEvTUt6yUOI2B1I0Bw1lu4WsVdFQ=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Wc9AyeWdtvRjwzvQlCbqXqjZETJ6tMMpblkGjybsrnvNz6G1y3WLznegsXkih8w7hqD5Tm3PDrTiYDmKfxAncIFxQd4Av7IMJOmdysLx1FXHQZ5fCaqSzmaETk5Dc/1bw2ykS8rh36XtyVZEAeRXCc4uUsqfW9teCP2RzM7kcRc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=n+U7k0PK; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=tYIUbn82VCQKJxSDjrXw3f6jG0kgGJnsQ7uKaOJsPAp6cLWryS3JzaOro8jL47m0rOftYpSkQ8RcPVHMdORDqT1x+v+omFIBgBEEVM69mDCiZZUMl98NI+3ZXwcuOmg6LkQvTSzvuhycIW/+5lvBq4c/IhVuBFHazmjbORwtJew=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=V8M41PiS; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="n+U7k0PK"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A9F9C1F000FF;
-	Thu, 24 Sep 2026 19:14:34 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="V8M41PiS"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 141891F000FF;
+	Thu, 24 Sep 2026 19:17:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790277275;
-	bh=hp/GSVLG9auPvauEMth8nxZakGUTRx9VbhrOfGyAxP8=;
+	s=k20260515; t=1790277421;
+	bh=Xb1WnNCdhkMaXQ1qEvTUt6yUOI2B1I0Bw1lu4WsVdFQ=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=n+U7k0PK3cL/OI/BYg+KSUDt6hiUcJoLSuUQhtvJbAPt3SIOQX5ohxPukcNBLFQel
-	 /XGYW46bjCpg2SynZArOR8/nv0vkj2NH9tT1XYJQJjyp7N4djYnkNNpTzRKdPJu0hD
-	 uE3CL1XNRBLlyhh+JGJQVWqbu3hlN/hraC3tkDMLJPIc4x2sU61viXyN24UiwSOoJH
-	 LNgKfoi1Bt0/hXlVNK8SI9T/bjjNAYuLmm49FhlO4kU1nDqBXaw032ZEL6++y1PRHG
-	 owSgZa4KX0PxF3KHXuNHOYKweKx9xCP3qq7RNzuvGBEh0z/gR5SP0U9r2HJycV3PmN
-	 dsvqjyYc8pl7A==
+	b=V8M41PiS1MDBUzYrNkZ224pSNTG4d5Ql+fHBsbw4EUoM+O3wlE+8IPN+e+6U7yX9K
+	 dOrGB1ECdlnit0ptB/ULCcNmqd8Zr2AxHvbCOcJYemfhOpPZxyxMzAw9wTqcbyKA4l
+	 NXjKe+wWbFixK6vJlpsopkspimNe7b/O54a6IotGkx5SpqmZVZ44crWK4Wb5CDHyd4
+	 lAxN9Coo2E3IJMTRydpoG7Dr5ayStDFU0gPFAqPpjQGma5+I44xvdRJ+wIX5WNEVeW
+	 L/l5bA3Py1MRK/SvdqQIfD0AIBLu11LG6EzTwHht8iKRLpZXG1g+5m8f3gAQjuQVJU
+	 Jgj114GX2j49Q==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 3/8] rust: pci: add is_virtfn(), to check for VFs
+Subject: Re: [PATCH 1/1] PCI/TPH: Validate the firmware Steering Tag
+ response
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "Zhi Wang" <zhiw@nvidia.com>
-Cc: ojeda@kernel.org, gary@garyguo.net, linux-pci@vger.kernel.org
-In-Reply-To: <20260924190556.1620886-4-zhiw@nvidia.com>
-References: <20260924190556.1620886-1-zhiw@nvidia.com>
- <20260924190556.1620886-4-zhiw@nvidia.com>
+To: "Wei Huang" <wei.huang2@amd.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260924190543.3424792-1-wei.huang2@amd.com>
+References: <20260924190543.3424792-1-wei.huang2@amd.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 24 Sep 2026 19:14:34 +0000
-Message-Id: <20260924191434.A9F9C1F000FF@smtp.kernel.org>
+Date: Thu, 24 Sep 2026 19:17:00 +0000
+Message-Id: <20260924191701.141891F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-> From: John Hubbard <jhubbard@nvidia.com>
+> TPH _DSM returns an eight-byte Steering Tag information buffer.
+> Checking only the ACPI object type allows a short firmware response
+> to be read beyond the end of its buffer.
 >=20
-> Add a method to check if a PCI device is a Virtual Function (VF) created
-> through Single Root I/O Virtualization (SR-IOV).
+> For safety, require a non-NULL buffer containing the complete value
+> before copying it. Use memcpy() so that reading the response does not
+> depend on the alignment of the firmware buffer.
 >=20
-> Signed-off-by: John Hubbard <jhubbard@nvidia.com>
-> Reviewed-by: Alistair Popple <apopple@nvidia.com>
-> Reviewed-by: Joel Fernandes <joelagnelf@nvidia.com>
-> Signed-off-by: Peter Colberg <pcolberg@redhat.com>
-> Signed-off-by: Zhi Wang <zhiw@nvidia.com>
+> Fixes: d2e8a34876ce ("PCI/TPH: Add Steering Tag support")
+> Signed-off-by: Wei Huang <wei.huang2@amd.com>
 
 Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260924190556.1620=
-886-1-zhiw@nvidia.com?part=3D3
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260924190543.3424=
+792-1-wei.huang2@amd.com?part=3D1
 
