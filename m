@@ -1,498 +1,110 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.9])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-dy2-f12.google.com (mail-dy2-f12.google.com [74.125.229.12])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4119C3D411A
-	for <linux-pci@vger.kernel.org>; Thu, 24 Sep 2026 23:19:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.9
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F3AB4CDA3B
+	for <linux-pci@vger.kernel.org>; Thu, 24 Sep 2026 23:31:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.229.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790291973; cv=none; b=Q0QrvX5aGtRwF8b8l7vacUwWH+mnCpUvCk4ZrjYAwSHB7D9udqvgOyXyYD6P8QpyAPYwcTHob2GpLmeR96F7j1A4fafmhUHKn7A2iE0OD+X/z8uA2tgyBIS66T4nqQHbh1mnLB+gipwrSArgXnj41BtWtN+wWMAxGPq2XRVUdFs=
+	t=1790292662; cv=none; b=SLuu0PBD4fhnrThQKoem1/yKSltiDTaqbFiIXairlRWlLGp2lBmg5Oi+wXBWBFjH1W6L5zWPU4JJeB6Eaprp1c9Z1kJG8c0bfpYG5Ffv45AoCPvvlOwDzg2S/SafIMi3c/kTY2pAjGxGh/TipJVkX4pkcuvGpLw/aaDNVwXUtUA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790291973; c=relaxed/simple;
-	bh=Bhj7zoRo5/DINdEOo8gZ3L020PPKzDQjvY21C969NeI=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=Y8UBr8vf/tGNwtoE7uEo4PDev96ecs2Z9NyzqKrnKXr1xhxCrXzy5ChU74bsXyLlJCM/PJHYxPTd82J68sC64hmcwmrqcAkLnNkAzqufzuu1XzYCU70JiPjO1Bc+/BIVo6/Y/w6/pelu12YmjGSi1DnAiyi+KMDHasjw+jHHFbk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=QCQZ2McA; arc=none smtp.client-ip=198.175.65.9
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1790292662; c=relaxed/simple;
+	bh=dew4FFqJYn+znPMh3WMUshAIF8jLNx5KHzgyCUnY03w=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=ZsOVhuPHsqhwDGJ7Xn6WFz9+runzE4wUF8f1lfEMn7+wndWI9Bm3BM4r2XXGvLxjYd9lSxjtv83DTG3DxDUrymCGL3AhUWMhKUBR/BRz7rnYzicMgu7fmXp96+jath9Kb48aoj5Elqy7Wmz8S2K1cMRZYr+CDsnkm/LtpWSwBUA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca; spf=pass smtp.mailfrom=ziepe.ca; dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b=fvIfgPkR; arc=none smtp.client-ip=74.125.229.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="QCQZ2McA"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1790291972; x=1821827972;
-  h=date:from:to:cc:subject:message-id;
-  bh=Bhj7zoRo5/DINdEOo8gZ3L020PPKzDQjvY21C969NeI=;
-  b=QCQZ2McASU0fDfpglAs6FAgym6NVxAtDwpcKu8hgTLgiglhvjK+EUZof
-   Uv7XdM1dnMFZaqa2rpnrr0hmzn9HKiUKHiiIBL9qRt7oBnR298eWIaZj+
-   aAjJcL1mwp0l2rEJDHxkItEV+Lcip+//vlsHKeFaaFECW1CLhqpZe9M2m
-   TUvPSADpwPvHt+y7XhQg73CdxW0bqcDQwr2s5OJ4spv9XEdbHnu5RVi9g
-   MHD8aR8b+HMI/6QOUi2mV7e7dbP9FR9YUi4i+2lAgrU9JeEjDVoNxoeUf
-   1rfBajsGVW/byRS3VZ/ZjYR2ooJR+HPCd41/iUfGgTQGHfXTBRrzmoInu
-   w==;
-X-CSE-ConnectionGUID: RE5xJTAoSZmi7jzcopFiIQ==
-X-CSE-MsgGUID: KRNnJJ6kTLeKu7XruuKLbQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11915"; a="112865290"
-X-IronPort-AV: E=Sophos;i="6.27,121,1787036400"; 
-   d="scan'208";a="112865290"
-Received: from orviesa008.jf.intel.com ([10.64.159.148])
-  by orvoesa101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Sep 2026 16:19:28 -0700
-X-CSE-ConnectionGUID: z1cSsG/KQQK8gFajSHc9gA==
-X-CSE-MsgGUID: M2OUsay3Q5qUMOhhnjyB3Q==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.27,121,1787036400"; 
-   d="scan'208";a="273266677"
-Received: from lkp-server01.sh.intel.com (HELO 462990a40a85) ([10.239.97.150])
-  by orviesa008.jf.intel.com with ESMTP; 24 Sep 2026 16:19:27 -0700
-Received: from kbuild by 462990a40a85 with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1x9siq-00000000JlK-00nv;
-	Thu, 24 Sep 2026 23:19:24 +0000
-Date: Fri, 25 Sep 2026 07:18:43 +0800
-From: kernel test robot <lkp@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org
-Subject: [pci:controller:dwc-rcar-gen4] BUILD SUCCESS WITH UNVERIFIED
- WARNING 7fc9907223d6fa1bea13f896af7d0c77b36724e0
-Message-ID: <202609250740.xsN0zhYb-lkp@intel.com>
-User-Agent: s-nail v14.9.25
+	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="fvIfgPkR"
+Received: by mail-dy2-f12.google.com with SMTP id 5a478bee46e88-328664c2da6so160611eec.1
+        for <linux-pci@vger.kernel.org>; Thu, 24 Sep 2026 16:31:01 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ziepe.ca; s=google; t=1790292660; x=1790897460; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=dew4FFqJYn+znPMh3WMUshAIF8jLNx5KHzgyCUnY03w=;
+        b=fvIfgPkRO9TZz3LXFT+SEG5WJaB23RfGbZHN0IYFQeijvZXin6vGZ6uFEXLej9BcNm
+         W8yYhyDPhbi94lGBUsvmzO4F6yFCn7qjyQDUnhBFk0O8mbzRgz7/kytEMyuD8oHovEZ3
+         rf32UZ3mJ88EXbnUVdxKz3ax7lscVCr+URuyXyj8HbQMvOUpfwKxRRbwPit7w6CcjRvH
+         5Ky9u+SYae3ydpD5RkvXZi9k4sbpkszPyny09uDFhA7qcUZC9dS53dtIWnYM1rFn1LSd
+         FAZrBlwHQMa3yUtlzZlmPi/lHSmoCBHfuxwnGNO+/FGW2t6c/Tcd7kyZ++XP8PISTCzo
+         s8rg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1790292660; x=1790897460;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=dew4FFqJYn+znPMh3WMUshAIF8jLNx5KHzgyCUnY03w=;
+        b=eha3C5rQVzV0xv5xrQpd5DKJk/8eGkcyqU42agKvain55RViqTnd5sNCSwWDJQzPXs
+         Hu/Q5SZnsWnX5hylZI0BcmTROdK9ly4HbyMxyiisrIpWm8zpkkBND4higxYsdepT9UQ+
+         xKzwKpoQaaH9h7mQhHHlNcBt66Nor+8rNK8+823P+APgJzrkPaaf72shlZPn3dQh21n4
+         FpK0ewFqblnol0tiD6vH4Y/RiiBzGB3z41vkEPWe73imdD6k7WWznsfFLE0wjhGN8scQ
+         MlU5HrJzua8MBPw4SGcSStIRHlaQQUy4YZfBHQRQFM0ONgfCdLT6icVdcK3Xg86nspo6
+         Uqgg==
+X-Forwarded-Encrypted: i=1; AKwUvBy+5COcT2CxPmkEmgEvAvhIl9kbtcgvdF8rf2zqKyqU6f2LkuLlvEmMigJSUBE2DqRxUvu1CH6FdeA=@vger.kernel.org
+X-Gm-Message-State: AFuF++kv5QT/Wu5a/d5dGaw/RNyU2m7R+WvV1rWM6Jso5y4152OyYKxk
+	gYB4ftc95oQKq+IY8XvH1kfGlUiIUxOSmN94YcsGlDKr8+QSXMF7Pc/mF2BGhVFo0+w=
+X-Gm-Gg: AYBFou3E/sA7nQr3yJgWHsAhxHvHqSIl1DjMTzLLBqnU+d8CRGV9m919lHaN9i1pd98
+	ZV+fitCLkeoP2+ZzCEdxt8CmUiiImbH8X7I6tSuazKNN1uL5k3RhxEjEYIJvZYj9WxYY0Y/DASZ
+	qSr5TdznV1NoyTCpTV33k7VoOAVhaN28vsSBuTQJHPX8zMRAy24hOJYY2C6cVyAHXc7iG4U63kR
+	3SxGLdr0Q9YG0Lj5MSewsie/nCeLI5hsdz3abhQnx9eV69W+8FHg5jwaxT1lunQdu0E24exZqbO
+	oPKm63i3eNDGvTxfJhvQYyXnAdoBMgLhgSJ4CdgXAWoTnnk5ATjpIlRPMNBXSXPK8gjg9ChOmLv
+	RJGaXa+SdxaimCFuOnBdJ6Xm5trXSXb9PqqBCxEq1ZXWgz4TO62CELLh1Kf0PhJ94N1erZpZn7t
+	WrnKJSBYGUEHQG0nOJorbNMEQiVbY6hla4xF+rp1nvz16C
+X-Received: by 2002:a05:7301:2811:b0:33e:53e7:1103 with SMTP id 5a478bee46e88-3400439a971mr3000301eec.13.1790292660260;
+        Thu, 24 Sep 2026 16:31:00 -0700 (PDT)
+Received: from ziepe.ca ([130.41.10.202])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-34144757f31sm2224790eec.14.2026.09.24.16.30.59
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 24 Sep 2026 16:30:59 -0700 (PDT)
+Received: from jgg by wakko with local (Exim 4.97)
+	(envelope-from <jgg@ziepe.ca>)
+	id 1x9su2-00000000gds-1vZq;
+	Thu, 24 Sep 2026 20:30:58 -0300
+Date: Thu, 24 Sep 2026 20:30:58 -0300
+From: Jason Gunthorpe <jgg@ziepe.ca>
+To: Zhiping Zhang <zhipingz@meta.com>
+Cc: fengchengwen <fengchengwen@huawei.com>,
+	Leon Romanovsky <leon@kernel.org>,
+	Michael Guralnik <michaelgur@nvidia.com>,
+	Sumit Semwal <sumit.semwal@linaro.org>,
+	Christian Konig <christian.koenig@amd.com>,
+	Alex Williamson <alex@shazbot.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, kvm@vger.kernel.org,
+	linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org,
+	dri-devel@lists.freedesktop.org
+Subject: Re: [PATCH v13 5/5] RDMA/mlx5: get tph for p2p access when
+ registering dma-buf mr
+Message-ID: <20260924233058.GA163130@ziepe.ca>
+References: <20260731211601.3033906-1-zhipingz@meta.com>
+ <20260731211601.3033906-6-zhipingz@meta.com>
+ <f4ff7ced-63b6-42e6-8e01-9f01d2e59843@huawei.com>
+ <CAH3zFs24esHCGA=wPrkiH8oKQCv7SnOwcBbkMxrOEvOVtwstYg@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAH3zFs24esHCGA=wPrkiH8oKQCv7SnOwcBbkMxrOEvOVtwstYg@mail.gmail.com>
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/dwc-rcar-gen4
-branch HEAD: 7fc9907223d6fa1bea13f896af7d0c77b36724e0  PCI: rcar-gen4: Add Application/Local register reset control
+On Wed, Sep 23, 2026 at 11:24:56PM -0700, Zhiping Zhang wrote:
+> I don't think this belongs in the importer. Every in-tree dma-buf
+> caller of pci_p2pdma_distance() is the exporter, in its .attach,
+> clearing attach->peer2peer -- amdgpu_dma_buf.c, xe_dma_buf.c,
+> habanalabs memory.c. There is no importer-side caller.
 
-Unverified Warning (likely false positive, kindly check if interested):
+Right, and they shouldn't be doing that, but it still has to be
+checked that the st is going directly to the peer device not the host
+bridge. Not using the distance, but by the PCI_P2PDMA_MAP_BUS_ADDR
+indication.
 
-    https://lore.kernel.org/oe-kbuild/202609230547.zdjJoKk2-lkp@intel.com
-    https://lore.kernel.org/oe-kbuild/202609230819.0wgao12k-lkp@intel.com
+I fear you will need some of Leon's series to make that happen.
 
-    Documentation/devicetree/bindings/pci/rcar-gen4-pci-ep.yaml: properties:reset-names: {'minItems': 1, 'maxItems': 2, 'items': [{'const': 'pwr'}, {'const': 'core'}]} should not be valid under {'required': ['maxItems']}
-    Documentation/devicetree/bindings/pci/rcar-gen4-pci-host.yaml: properties:reset-names: {'minItems': 1, 'maxItems': 2, 'items': [{'const': 'pwr'}, {'const': 'core'}]} should not be valid under {'required': ['maxItems']}
+So probably the proposed change to dmabuf ops is far too simple.
 
-Warning ids grouped by kconfigs:
-
-recent_errors
-|-- arc-randconfig-2400-20260923
-|   |-- Documentation-devicetree-bindings-pci-rcar-gen4-pci-ep.yaml:properties:reset-names:minItems:maxItems:items:const:pwr-const:core-should-not-be-valid-under-required:maxItems
-|   `-- Documentation-devicetree-bindings-pci-rcar-gen4-pci-host.yaml:properties:reset-names:minItems:maxItems:items:const:pwr-const:core-should-not-be-valid-under-required:maxItems
-|-- arc-randconfig-2401-20260923
-|   |-- Documentation-devicetree-bindings-pci-rcar-gen4-pci-ep.yaml:properties:reset-names:minItems:maxItems:items:const:pwr-const:core-should-not-be-valid-under-required:maxItems
-|   `-- Documentation-devicetree-bindings-pci-rcar-gen4-pci-host.yaml:properties:reset-names:minItems:maxItems:items:const:pwr-const:core-should-not-be-valid-under-required:maxItems
-|-- arm-randconfig-2400-20260923
-|   |-- Documentation-devicetree-bindings-pci-rcar-gen4-pci-ep.yaml:properties:reset-names:minItems:maxItems:items:const:pwr-const:core-should-not-be-valid-under-required:maxItems
-|   `-- Documentation-devicetree-bindings-pci-rcar-gen4-pci-host.yaml:properties:reset-names:minItems:maxItems:items:const:pwr-const:core-should-not-be-valid-under-required:maxItems
-|-- arm-randconfig-2401-20260923
-|   |-- Documentation-devicetree-bindings-pci-rcar-gen4-pci-ep.yaml:properties:reset-names:minItems:maxItems:items:const:pwr-const:core-should-not-be-valid-under-required:maxItems
-|   `-- Documentation-devicetree-bindings-pci-rcar-gen4-pci-host.yaml:properties:reset-names:minItems:maxItems:items:const:pwr-const:core-should-not-be-valid-under-required:maxItems
-|-- arm-randconfig-2402-20260923
-|   |-- Documentation-devicetree-bindings-pci-rcar-gen4-pci-ep.yaml:properties:reset-names:minItems:maxItems:items:const:pwr-const:core-should-not-be-valid-under-required:maxItems
-|   `-- Documentation-devicetree-bindings-pci-rcar-gen4-pci-host.yaml:properties:reset-names:minItems:maxItems:items:const:pwr-const:core-should-not-be-valid-under-required:maxItems
-|-- arm-randconfig-2403-20260923
-|   |-- Documentation-devicetree-bindings-pci-rcar-gen4-pci-ep.yaml:properties:reset-names:minItems:maxItems:items:const:pwr-const:core-should-not-be-valid-under-required:maxItems
-|   `-- Documentation-devicetree-bindings-pci-rcar-gen4-pci-host.yaml:properties:reset-names:minItems:maxItems:items:const:pwr-const:core-should-not-be-valid-under-required:maxItems
-|-- arm-randconfig-2404-20260923
-|   |-- Documentation-devicetree-bindings-pci-rcar-gen4-pci-ep.yaml:properties:reset-names:minItems:maxItems:items:const:pwr-const:core-should-not-be-valid-under-required:maxItems
-|   `-- Documentation-devicetree-bindings-pci-rcar-gen4-pci-host.yaml:properties:reset-names:minItems:maxItems:items:const:pwr-const:core-should-not-be-valid-under-required:maxItems
-|-- arm64-randconfig-2400-20260923
-|   |-- Documentation-devicetree-bindings-pci-rcar-gen4-pci-ep.yaml:properties:reset-names:minItems:maxItems:items:const:pwr-const:core-should-not-be-valid-under-required:maxItems
-|   `-- Documentation-devicetree-bindings-pci-rcar-gen4-pci-host.yaml:properties:reset-names:minItems:maxItems:items:const:pwr-const:core-should-not-be-valid-under-required:maxItems
-|-- arm64-randconfig-2401-20260923
-|   |-- Documentation-devicetree-bindings-pci-rcar-gen4-pci-ep.yaml:properties:reset-names:minItems:maxItems:items:const:pwr-const:core-should-not-be-valid-under-required:maxItems
-|   `-- Documentation-devicetree-bindings-pci-rcar-gen4-pci-host.yaml:properties:reset-names:minItems:maxItems:items:const:pwr-const:core-should-not-be-valid-under-required:maxItems
-|-- arm64-randconfig-2402-20260923
-|   |-- Documentation-devicetree-bindings-pci-rcar-gen4-pci-ep.yaml:properties:reset-names:minItems:maxItems:items:const:pwr-const:core-should-not-be-valid-under-required:maxItems
-|   `-- Documentation-devicetree-bindings-pci-rcar-gen4-pci-host.yaml:properties:reset-names:minItems:maxItems:items:const:pwr-const:core-should-not-be-valid-under-required:maxItems
-|-- arm64-randconfig-2403-20260923
-|   |-- Documentation-devicetree-bindings-pci-rcar-gen4-pci-ep.yaml:properties:reset-names:minItems:maxItems:items:const:pwr-const:core-should-not-be-valid-under-required:maxItems
-|   `-- Documentation-devicetree-bindings-pci-rcar-gen4-pci-host.yaml:properties:reset-names:minItems:maxItems:items:const:pwr-const:core-should-not-be-valid-under-required:maxItems
-|-- arm64-randconfig-2404-20260923
-|   |-- Documentation-devicetree-bindings-pci-rcar-gen4-pci-ep.yaml:properties:reset-names:minItems:maxItems:items:const:pwr-const:core-should-not-be-valid-under-required:maxItems
-|   `-- Documentation-devicetree-bindings-pci-rcar-gen4-pci-host.yaml:properties:reset-names:minItems:maxItems:items:const:pwr-const:core-should-not-be-valid-under-required:maxItems
-|-- csky-randconfig-2400-20260923
-|   |-- Documentation-devicetree-bindings-pci-rcar-gen4-pci-ep.yaml:properties:reset-names:minItems:maxItems:items:const:pwr-const:core-should-not-be-valid-under-required:maxItems
-|   `-- Documentation-devicetree-bindings-pci-rcar-gen4-pci-host.yaml:properties:reset-names:minItems:maxItems:items:const:pwr-const:core-should-not-be-valid-under-required:maxItems
-|-- csky-randconfig-2401-20260923
-|   |-- Documentation-devicetree-bindings-pci-rcar-gen4-pci-ep.yaml:properties:reset-names:minItems:maxItems:items:const:pwr-const:core-should-not-be-valid-under-required:maxItems
-|   `-- Documentation-devicetree-bindings-pci-rcar-gen4-pci-host.yaml:properties:reset-names:minItems:maxItems:items:const:pwr-const:core-should-not-be-valid-under-required:maxItems
-|-- loongarch-randconfig-2400-20260923
-|   |-- Documentation-devicetree-bindings-pci-rcar-gen4-pci-ep.yaml:properties:reset-names:minItems:maxItems:items:const:pwr-const:core-should-not-be-valid-under-required:maxItems
-|   `-- Documentation-devicetree-bindings-pci-rcar-gen4-pci-host.yaml:properties:reset-names:minItems:maxItems:items:const:pwr-const:core-should-not-be-valid-under-required:maxItems
-|-- loongarch-randconfig-2401-20260923
-|   |-- Documentation-devicetree-bindings-pci-rcar-gen4-pci-ep.yaml:properties:reset-names:minItems:maxItems:items:const:pwr-const:core-should-not-be-valid-under-required:maxItems
-|   `-- Documentation-devicetree-bindings-pci-rcar-gen4-pci-host.yaml:properties:reset-names:minItems:maxItems:items:const:pwr-const:core-should-not-be-valid-under-required:maxItems
-|-- microblaze-randconfig-2400-20260923
-|   |-- Documentation-devicetree-bindings-pci-rcar-gen4-pci-ep.yaml:properties:reset-names:minItems:maxItems:items:const:pwr-const:core-should-not-be-valid-under-required:maxItems
-|   `-- Documentation-devicetree-bindings-pci-rcar-gen4-pci-host.yaml:properties:reset-names:minItems:maxItems:items:const:pwr-const:core-should-not-be-valid-under-required:maxItems
-|-- microblaze-randconfig-2401-20260923
-|   |-- Documentation-devicetree-bindings-pci-rcar-gen4-pci-ep.yaml:properties:reset-names:minItems:maxItems:items:const:pwr-const:core-should-not-be-valid-under-required:maxItems
-|   `-- Documentation-devicetree-bindings-pci-rcar-gen4-pci-host.yaml:properties:reset-names:minItems:maxItems:items:const:pwr-const:core-should-not-be-valid-under-required:maxItems
-|-- mips-randconfig-2400-20260923
-|   |-- Documentation-devicetree-bindings-pci-rcar-gen4-pci-ep.yaml:properties:reset-names:minItems:maxItems:items:const:pwr-const:core-should-not-be-valid-under-required:maxItems
-|   `-- Documentation-devicetree-bindings-pci-rcar-gen4-pci-host.yaml:properties:reset-names:minItems:maxItems:items:const:pwr-const:core-should-not-be-valid-under-required:maxItems
-|-- mips-randconfig-2401-20260923
-|   |-- Documentation-devicetree-bindings-pci-rcar-gen4-pci-ep.yaml:properties:reset-names:minItems:maxItems:items:const:pwr-const:core-should-not-be-valid-under-required:maxItems
-|   `-- Documentation-devicetree-bindings-pci-rcar-gen4-pci-host.yaml:properties:reset-names:minItems:maxItems:items:const:pwr-const:core-should-not-be-valid-under-required:maxItems
-|-- nios2-randconfig-2400-20260923
-|   |-- Documentation-devicetree-bindings-pci-rcar-gen4-pci-ep.yaml:properties:reset-names:minItems:maxItems:items:const:pwr-const:core-should-not-be-valid-under-required:maxItems
-|   `-- Documentation-devicetree-bindings-pci-rcar-gen4-pci-host.yaml:properties:reset-names:minItems:maxItems:items:const:pwr-const:core-should-not-be-valid-under-required:maxItems
-|-- nios2-randconfig-2401-20260923
-|   |-- Documentation-devicetree-bindings-pci-rcar-gen4-pci-ep.yaml:properties:reset-names:minItems:maxItems:items:const:pwr-const:core-should-not-be-valid-under-required:maxItems
-|   `-- Documentation-devicetree-bindings-pci-rcar-gen4-pci-host.yaml:properties:reset-names:minItems:maxItems:items:const:pwr-const:core-should-not-be-valid-under-required:maxItems
-|-- openrisc-randconfig-2400-20260923
-|   |-- Documentation-devicetree-bindings-pci-rcar-gen4-pci-ep.yaml:properties:reset-names:minItems:maxItems:items:const:pwr-const:core-should-not-be-valid-under-required:maxItems
-|   `-- Documentation-devicetree-bindings-pci-rcar-gen4-pci-host.yaml:properties:reset-names:minItems:maxItems:items:const:pwr-const:core-should-not-be-valid-under-required:maxItems
-|-- openrisc-randconfig-2401-20260923
-|   |-- Documentation-devicetree-bindings-pci-rcar-gen4-pci-ep.yaml:properties:reset-names:minItems:maxItems:items:const:pwr-const:core-should-not-be-valid-under-required:maxItems
-|   `-- Documentation-devicetree-bindings-pci-rcar-gen4-pci-host.yaml:properties:reset-names:minItems:maxItems:items:const:pwr-const:core-should-not-be-valid-under-required:maxItems
-|-- powerpc-randconfig-2400-20260923
-|   |-- Documentation-devicetree-bindings-pci-rcar-gen4-pci-ep.yaml:properties:reset-names:minItems:maxItems:items:const:pwr-const:core-should-not-be-valid-under-required:maxItems
-|   `-- Documentation-devicetree-bindings-pci-rcar-gen4-pci-host.yaml:properties:reset-names:minItems:maxItems:items:const:pwr-const:core-should-not-be-valid-under-required:maxItems
-|-- powerpc-randconfig-2401-20260923
-|   |-- Documentation-devicetree-bindings-pci-rcar-gen4-pci-ep.yaml:properties:reset-names:minItems:maxItems:items:const:pwr-const:core-should-not-be-valid-under-required:maxItems
-|   `-- Documentation-devicetree-bindings-pci-rcar-gen4-pci-host.yaml:properties:reset-names:minItems:maxItems:items:const:pwr-const:core-should-not-be-valid-under-required:maxItems
-|-- riscv-randconfig-2400-20260923
-|   |-- Documentation-devicetree-bindings-pci-rcar-gen4-pci-ep.yaml:properties:reset-names:minItems:maxItems:items:const:pwr-const:core-should-not-be-valid-under-required:maxItems
-|   `-- Documentation-devicetree-bindings-pci-rcar-gen4-pci-host.yaml:properties:reset-names:minItems:maxItems:items:const:pwr-const:core-should-not-be-valid-under-required:maxItems
-|-- riscv-randconfig-2401-20260923
-|   |-- Documentation-devicetree-bindings-pci-rcar-gen4-pci-ep.yaml:properties:reset-names:minItems:maxItems:items:const:pwr-const:core-should-not-be-valid-under-required:maxItems
-|   `-- Documentation-devicetree-bindings-pci-rcar-gen4-pci-host.yaml:properties:reset-names:minItems:maxItems:items:const:pwr-const:core-should-not-be-valid-under-required:maxItems
-|-- sh-randconfig-2400-20260923
-|   |-- Documentation-devicetree-bindings-pci-rcar-gen4-pci-ep.yaml:properties:reset-names:minItems:maxItems:items:const:pwr-const:core-should-not-be-valid-under-required:maxItems
-|   `-- Documentation-devicetree-bindings-pci-rcar-gen4-pci-host.yaml:properties:reset-names:minItems:maxItems:items:const:pwr-const:core-should-not-be-valid-under-required:maxItems
-|-- sh-randconfig-2401-20260923
-|   |-- Documentation-devicetree-bindings-pci-rcar-gen4-pci-ep.yaml:properties:reset-names:minItems:maxItems:items:const:pwr-const:core-should-not-be-valid-under-required:maxItems
-|   `-- Documentation-devicetree-bindings-pci-rcar-gen4-pci-host.yaml:properties:reset-names:minItems:maxItems:items:const:pwr-const:core-should-not-be-valid-under-required:maxItems
-|-- xtensa-randconfig-2400-20260923
-|   |-- Documentation-devicetree-bindings-pci-rcar-gen4-pci-ep.yaml:properties:reset-names:minItems:maxItems:items:const:pwr-const:core-should-not-be-valid-under-required:maxItems
-|   `-- Documentation-devicetree-bindings-pci-rcar-gen4-pci-host.yaml:properties:reset-names:minItems:maxItems:items:const:pwr-const:core-should-not-be-valid-under-required:maxItems
-`-- xtensa-randconfig-2401-20260923
-    |-- Documentation-devicetree-bindings-pci-rcar-gen4-pci-ep.yaml:properties:reset-names:minItems:maxItems:items:const:pwr-const:core-should-not-be-valid-under-required:maxItems
-    `-- Documentation-devicetree-bindings-pci-rcar-gen4-pci-host.yaml:properties:reset-names:minItems:maxItems:items:const:pwr-const:core-should-not-be-valid-under-required:maxItems
-
-elapsed time: 3223m
-
-configs tested: 316
-configs skipped: 8
-
-tested configs:
-alpha                              allnoconfig    gcc-16.1.0
-alpha                             allyesconfig    gcc-16.1.0
-alpha                                defconfig    gcc-16.1.0
-alpha                randconfig-r1303-20260925    gcc-14.3.0 sparse
-alpha                randconfig-r1304-20260924    gcc-16.1.0 sparse
-alpha                randconfig-r2102-20260923    gcc-8.5.0  cocci
-alpha                randconfig-r2107-20260923    gcc-10.5.0 cocci
-arc                               allmodconfig    clang-24
-arc                                allnoconfig    gcc-16.1.0
-arc                               allyesconfig    clang-24
-arc                                  defconfig    gcc-16.1.0
-arc                      haps_hs_smp_defconfig    gcc-16.1.0
-arc                   randconfig-1000-20260924    clang-24
-arc                   randconfig-1000-20260925    clang-24
-arc                   randconfig-1001-20260924    clang-24
-arc                   randconfig-1001-20260925    clang-24
-arc                  randconfig-r2101-20260923    gcc-8.5.0  cocci
-arc                  randconfig-r2201-20260923    gcc-8.5.0  smatch
-arc                  randconfig-r2202-20260923    gcc-14.3.0 smatch
-arm                                allnoconfig    gcc-16.1.0
-arm                               allyesconfig    clang-24
-arm                          assabet_defconfig    clang-24
-arm                                  defconfig    gcc-16.1.0
-arm                          nhk8815_defconfig    clang-24
-arm                   randconfig-1000-20260924    clang-24
-arm                   randconfig-1000-20260925    clang-24
-arm                   randconfig-1001-20260924    clang-24
-arm                   randconfig-1001-20260925    clang-24
-arm                   randconfig-1002-20260924    clang-24
-arm                   randconfig-1002-20260925    clang-24
-arm                   randconfig-1003-20260924    clang-24
-arm                   randconfig-1003-20260925    clang-24
-arm                  randconfig-r1305-20260924    gcc-16.1.0 sparse
-arm                  randconfig-r2100-20260923    gcc-8.5.0  cocci
-arm                  randconfig-r2201-20260923    gcc-16.1.0 smatch
-arm                         spear6xx_defconfig    clang-24
-arm                            stm32_defconfig    clang-24
-arm64                             allmodconfig    clang-24
-arm64                              allnoconfig    gcc-16.1.0
-arm64                                defconfig    gcc-16.1.0
-arm64                                defconfig    gcc-16.1.0
-arm64                 randconfig-1000-20260924    gcc-11.5.0
-arm64                 randconfig-1001-20260924    gcc-11.5.0
-arm64                 randconfig-1002-20260924    gcc-11.5.0
-arm64                 randconfig-1003-20260924    gcc-11.5.0
-arm64                randconfig-r1302-20260924    gcc-16.1.0 sparse
-arm64                randconfig-r1307-20260924    gcc-11.5.0 sparse
-arm64                randconfig-r2106-20260923    gcc-15.2.0 cocci
-arm64                randconfig-r2200-20260923    clang-24   smatch
-arm64                randconfig-r2201-20260923    clang-24   smatch
-csky                              allmodconfig    gcc-16.1.0
-csky                               allnoconfig    gcc-16.1.0
-csky                                 defconfig    gcc-16.1.0
-csky                  randconfig-1000-20260924    gcc-11.5.0
-csky                  randconfig-1001-20260924    gcc-11.5.0
-csky                 randconfig-r1300-20260924    gcc-16.1.0 sparse
-csky                 randconfig-r2103-20260923    gcc-8.5.0  cocci
-csky                 randconfig-r2107-20260923    gcc-15.2.0 cocci
-hexagon                           allmodconfig    gcc-16.1.0
-hexagon                            allnoconfig    gcc-16.1.0
-hexagon                              defconfig    gcc-16.1.0
-hexagon               randconfig-1000-20260924    gcc-8.5.0
-hexagon               randconfig-1000-20260925    gcc-9.5.0
-hexagon               randconfig-1001-20260924    gcc-8.5.0
-hexagon               randconfig-1001-20260925    gcc-9.5.0
-hexagon              randconfig-r1301-20260924    gcc-16.1.0 sparse
-i386                              allmodconfig    clang-22
-i386                               allnoconfig    gcc-16.1.0
-i386                              allyesconfig    clang-22
-i386        buildonly-randconfig-1000-20260924    gcc-14
-i386        buildonly-randconfig-1001-20260924    gcc-14
-i386        buildonly-randconfig-1002-20260924    gcc-14
-i386        buildonly-randconfig-1003-20260924    gcc-14
-i386        buildonly-randconfig-1004-20260924    gcc-14
-i386        buildonly-randconfig-1005-20260924    gcc-14
-i386                                 defconfig    gcc-16.1.0
-i386                  randconfig-1000-20260924    gcc-12
-i386                  randconfig-1001-20260924    gcc-12
-i386                  randconfig-1002-20260924    gcc-12
-i386                  randconfig-1003-20260924    gcc-12
-i386                  randconfig-1004-20260924    gcc-12
-i386                  randconfig-1005-20260924    gcc-12
-i386                  randconfig-1006-20260924    gcc-12
-i386                  randconfig-1007-20260924    clang-22
-i386                  randconfig-1008-20260924    clang-22
-i386                  randconfig-1009-20260924    clang-22
-i386                  randconfig-1010-20260924    clang-22
-i386                  randconfig-1011-20260924    clang-22
-i386                  randconfig-1012-20260924    clang-22
-i386                  randconfig-1013-20260924    clang-22
-i386                  randconfig-1300-20260924    clang-22   sparse
-i386                  randconfig-1301-20260924    clang-22   sparse
-i386                  randconfig-1302-20260924    clang-22   sparse
-i386                  randconfig-2100-20260923    clang-22   cocci
-i386                  randconfig-2100-20260923    gcc-14     cocci
-i386                  randconfig-2101-20260923    clang-22   cocci
-i386                  randconfig-2102-20260923    clang-22   cocci
-i386                  randconfig-2103-20260923    clang-22   cocci
-i386                  randconfig-2103-20260923    gcc-14     cocci
-i386                  randconfig-2200-20260923    gcc-12     smatch
-i386                 randconfig-r2100-20260923    gcc-8.5.0  cocci
-loongarch                         allmodconfig    clang-24
-loongarch                          allnoconfig    gcc-16.1.0
-loongarch                            defconfig    clang-24
-loongarch             randconfig-1000-20260924    gcc-8.5.0
-loongarch             randconfig-1000-20260925    gcc-9.5.0
-loongarch             randconfig-1001-20260924    gcc-8.5.0
-loongarch             randconfig-1001-20260925    gcc-9.5.0
-loongarch            randconfig-r2104-20260923    gcc-10.5.0 cocci
-loongarch            randconfig-r2105-20260923    gcc-14     cocci
-m68k                              allmodconfig    gcc-16.1.0
-m68k                               allnoconfig    gcc-16.1.0
-m68k                              allyesconfig    clang-24
-m68k                           amiga_defconfig    gcc-16.1.0
-m68k                                 defconfig    clang-24
-m68k                        m5249evb_defconfig    gcc-16.1.0
-m68k                         m5307c3_defconfig    gcc-16.1.0
-m68k                 randconfig-r2103-20260923    gcc-8.5.0  cocci
-m68k                 randconfig-r2105-20260923    gcc-10.5.0 cocci
-microblaze                         allnoconfig    gcc-16.1.0
-microblaze                        allyesconfig    gcc-16.1.0
-microblaze                           defconfig    clang-24
-microblaze           randconfig-r1304-20260925    gcc-14.3.0 sparse
-microblaze           randconfig-r2200-20260923    gcc-9.5.0  smatch
-mips                              allmodconfig    gcc-16.1.0
-mips                               allnoconfig    gcc-16.1.0
-mips                              allyesconfig    gcc-16.1.0
-mips                        bmips_be_defconfig    gcc-16.1.0
-mips                 randconfig-r1309-20260924    gcc-11.5.0 sparse
-mips                 randconfig-r2101-20260923    gcc-8.5.0  cocci
-mips                 randconfig-r2104-20260923    gcc-15.2.0 cocci
-mips                 randconfig-r2202-20260923    gcc-8.5.0  smatch
-mips                            xway_defconfig    clang-24
-nios2                             allmodconfig    gcc-11.5.0
-nios2                              allnoconfig    clang-24
-nios2                                defconfig    clang-24
-nios2                 randconfig-1000-20260924    gcc-8.5.0
-nios2                 randconfig-1000-20260925    gcc-9.5.0
-nios2                 randconfig-1001-20260924    gcc-8.5.0
-nios2                 randconfig-1001-20260925    gcc-9.5.0
-nios2                randconfig-r1303-20260924    gcc-16.1.0 sparse
-nios2                randconfig-r1306-20260924    gcc-11.5.0 sparse
-nios2                randconfig-r2100-20260923    gcc-15.2.0 cocci
-openrisc                          allmodconfig    gcc-11.5.0
-openrisc                           allnoconfig    clang-24
-openrisc                             defconfig    gcc-16.1.0
-openrisc                   or1klitex_defconfig    clang-24
-openrisc             randconfig-r2106-20260923    gcc-16.1.0 cocci
-parisc                            allmodconfig    gcc-16.1.0
-parisc                             allnoconfig    clang-24
-parisc                            allyesconfig    clang-17
-parisc                               defconfig    gcc-16.1.0
-parisc                randconfig-1000-20260924    gcc-8.5.0
-parisc                randconfig-1001-20260924    gcc-8.5.0
-parisc               randconfig-r1301-20260925    gcc-14.3.0 sparse
-parisc               randconfig-r2103-20260923    gcc-14     cocci
-parisc               randconfig-r2103-20260923    gcc-8.5.0  cocci
-parisc               randconfig-r2104-20260923    gcc-14     cocci
-parisc               randconfig-r2106-20260923    gcc-10.5.0 cocci
-parisc               randconfig-r2202-20260923    gcc-12.5.0 smatch
-parisc64                             defconfig    clang-24
-powerpc                            allnoconfig    clang-24
-powerpc                       mgcoge_defconfig    gcc-16.1.0
-powerpc               randconfig-1000-20260924    gcc-8.5.0
-powerpc               randconfig-1001-20260924    gcc-8.5.0
-powerpc              randconfig-r2100-20260923    gcc-8.5.0  cocci
-powerpc              randconfig-r2102-20260923    gcc-15.2.0 cocci
-powerpc              randconfig-r2102-20260923    gcc-8.5.0  cocci
-powerpc64             randconfig-1000-20260924    gcc-8.5.0
-powerpc64             randconfig-1001-20260924    gcc-8.5.0
-powerpc64            randconfig-r1300-20260925    gcc-14.3.0 sparse
-powerpc64            randconfig-r2105-20260923    gcc-15.2.0 cocci
-riscv                             allmodconfig    clang-24
-riscv                              allnoconfig    clang-24
-riscv                             allyesconfig    clang-24
-riscv                                defconfig    gcc-16.1.0
-riscv                 randconfig-1000-20260924    gcc-15.2.0
-riscv                 randconfig-1000-20260925    clang-24
-riscv                 randconfig-1001-20260924    gcc-15.2.0
-riscv                 randconfig-1001-20260925    clang-24
-riscv                 randconfig-2000-20260923    gcc-9.5.0
-riscv                 randconfig-2001-20260923    gcc-9.5.0
-riscv                randconfig-r2107-20260923    gcc-16.1.0 cocci
-s390                              allmodconfig    clang-17
-s390                               allnoconfig    clang-24
-s390                              allyesconfig    gcc-16.1.0
-s390                                 defconfig    gcc-16.1.0
-s390                  randconfig-1000-20260924    gcc-15.2.0
-s390                  randconfig-1000-20260925    clang-24
-s390                  randconfig-1001-20260924    gcc-15.2.0
-s390                  randconfig-1001-20260925    clang-24
-s390                  randconfig-2000-20260923    gcc-9.5.0
-s390                  randconfig-2001-20260923    gcc-9.5.0
-s390                 randconfig-r1308-20260924    gcc-11.5.0 sparse
-s390                 randconfig-r2200-20260923    gcc-8.5.0  smatch
-sh                                allmodconfig    gcc-16.1.0
-sh                                 allnoconfig    clang-24
-sh                                allyesconfig    clang-17
-sh                                   defconfig    gcc-14
-sh                    randconfig-1000-20260924    gcc-15.2.0
-sh                    randconfig-1000-20260925    clang-24
-sh                    randconfig-1001-20260924    gcc-15.2.0
-sh                    randconfig-1001-20260925    clang-24
-sh                    randconfig-2000-20260923    gcc-9.5.0
-sh                    randconfig-2001-20260923    gcc-9.5.0
-sh                   randconfig-r1305-20260925    gcc-14.3.0 sparse
-sh                   randconfig-r2103-20260923    gcc-15.2.0 cocci
-sh                   randconfig-r2104-20260923    gcc-16.1.0 cocci
-sh                            se7780_defconfig    clang-24
-sparc                              allnoconfig    clang-24
-sparc                                defconfig    gcc-16.1.0
-sparc                 randconfig-1000-20260924    clang-17
-sparc                 randconfig-1000-20260925    gcc-12
-sparc                 randconfig-1001-20260924    clang-17
-sparc                 randconfig-1001-20260925    gcc-12
-sparc                 randconfig-2000-20260923    gcc-14.3.0
-sparc                 randconfig-2001-20260923    gcc-14.3.0
-sparc                randconfig-r2105-20260923    gcc-16.1.0 cocci
-sparc                randconfig-r2200-20260923    gcc-8.5.0  smatch
-sparc                randconfig-r2201-20260923    gcc-11.5.0 smatch
-sparc64                              defconfig    gcc-14
-sparc64               randconfig-1000-20260924    clang-17
-sparc64               randconfig-1000-20260925    gcc-12
-sparc64               randconfig-1001-20260924    clang-17
-sparc64               randconfig-1001-20260925    gcc-12
-sparc64               randconfig-2000-20260923    gcc-14.3.0
-sparc64               randconfig-2001-20260923    gcc-14.3.0
-sparc64              randconfig-r2101-20260923    gcc-15.2.0 cocci
-sparc64              randconfig-r2102-20260923    gcc-8.5.0  cocci
-um                                allmodconfig    clang-17
-um                                 allnoconfig    clang-24
-um                                allyesconfig    gcc-16.1.0
-um                                   defconfig    gcc-14
-um                              i386_defconfig    gcc-14
-um                    randconfig-1000-20260924    clang-17
-um                    randconfig-1000-20260925    gcc-12
-um                    randconfig-1001-20260924    clang-17
-um                    randconfig-1001-20260925    gcc-12
-um                    randconfig-2000-20260923    gcc-14.3.0
-um                    randconfig-2001-20260923    gcc-14.3.0
-um                   randconfig-r1302-20260925    gcc-14.3.0 sparse
-um                            x86_64_defconfig    gcc-14
-x86_64                             allnoconfig    clang-24
-x86_64      buildonly-randconfig-1000-20260924    clang-22
-x86_64      buildonly-randconfig-1000-20260925    clang-22
-x86_64      buildonly-randconfig-1001-20260924    clang-22
-x86_64      buildonly-randconfig-1001-20260925    clang-22
-x86_64      buildonly-randconfig-1002-20260924    clang-22
-x86_64      buildonly-randconfig-1002-20260925    clang-22
-x86_64      buildonly-randconfig-1003-20260924    clang-22
-x86_64      buildonly-randconfig-1003-20260925    clang-22
-x86_64      buildonly-randconfig-1004-20260924    clang-22
-x86_64      buildonly-randconfig-1004-20260925    clang-22
-x86_64      buildonly-randconfig-1005-20260924    clang-22
-x86_64      buildonly-randconfig-1005-20260925    clang-22
-x86_64                               defconfig    gcc-14
-x86_64                                   kexec    clang-22
-x86_64                randconfig-1000-20260924    clang-22
-x86_64                randconfig-1000-20260925    gcc-14
-x86_64                randconfig-1001-20260924    clang-22
-x86_64                randconfig-1001-20260925    gcc-14
-x86_64                randconfig-1002-20260924    clang-22
-x86_64                randconfig-1002-20260925    gcc-14
-x86_64                randconfig-1003-20260924    clang-22
-x86_64                randconfig-1003-20260925    gcc-14
-x86_64                randconfig-1004-20260924    clang-22
-x86_64                randconfig-1004-20260925    gcc-14
-x86_64                randconfig-1005-20260924    clang-22
-x86_64                randconfig-1005-20260925    gcc-14
-x86_64                randconfig-1006-20260924    clang-22
-x86_64                randconfig-1007-20260924    clang-22
-x86_64                randconfig-1008-20260924    clang-22
-x86_64                randconfig-1009-20260924    clang-22
-x86_64                randconfig-1010-20260924    clang-22
-x86_64                randconfig-1011-20260924    clang-22
-x86_64                randconfig-1012-20260924    clang-22
-x86_64                randconfig-1013-20260924    clang-22
-x86_64                randconfig-1014-20260924    clang-22
-x86_64                randconfig-1015-20260924    clang-22
-x86_64                randconfig-1016-20260924    clang-22
-x86_64                randconfig-1017-20260924    clang-22
-x86_64                randconfig-1300-20260924    clang-22   sparse
-x86_64                randconfig-1301-20260924    clang-22   sparse
-x86_64                randconfig-1302-20260924    clang-22   sparse
-x86_64                randconfig-2100-20260923    clang-22   cocci
-x86_64                randconfig-2101-20260923    clang-22   cocci
-x86_64                randconfig-2102-20260923    clang-22   cocci
-x86_64                randconfig-2103-20260923    clang-22   cocci
-x86_64                randconfig-2200-20260923    gcc-14     smatch
-x86_64               randconfig-r2100-20260923    gcc-14     cocci
-x86_64               randconfig-r2101-20260923    gcc-14     cocci
-x86_64               randconfig-r2101-20260923    gcc-8.5.0  cocci
-x86_64               randconfig-r2102-20260923    gcc-14     cocci
-x86_64               randconfig-r2106-20260923    gcc-14     cocci
-x86_64               randconfig-r2107-20260923    gcc-14     cocci
-x86_64               randconfig-r2201-20260923    clang-22   smatch
-x86_64                                rhel-9.4    clang-22
-x86_64                            rhel-9.4-bpf    clang-22
-x86_64                            rhel-9.4-bpf    gcc-14
-x86_64                           rhel-9.4-func    clang-22
-x86_64                     rhel-9.4-kselftests    clang-22
-x86_64                          rhel-9.4-kunit    clang-22
-x86_64                          rhel-9.4-kunit    gcc-14
-x86_64                            rhel-9.4-ltp    clang-22
-x86_64                            rhel-9.4-ltp    gcc-14
-x86_64                           rhel-9.4-rust    clang-22
-x86_64                           rhel-9.4-rust    clang-22
-xtensa                            alldefconfig    gcc-16.1.0
-xtensa                             allnoconfig    clang-24
-xtensa                randconfig-1000-20260924    clang-17
-xtensa                randconfig-1000-20260925    gcc-12
-xtensa                randconfig-1001-20260924    clang-17
-xtensa                randconfig-1001-20260925    gcc-12
-xtensa                randconfig-2000-20260923    gcc-14.3.0
-xtensa                randconfig-2001-20260923    gcc-14.3.0
-xtensa               randconfig-r2202-20260923    gcc-10.5.0 smatch
-
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+Jason
