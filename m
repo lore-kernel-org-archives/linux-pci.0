@@ -1,164 +1,207 @@
-Received: from mail-wm1-f52.google.com (mail-wm1-f52.google.com [209.85.128.52])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from MRWPR03CU001.outbound.protection.outlook.com (mail-francesouthazon11011028.outbound.protection.outlook.com [40.107.130.28])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A16F83FF1C0
-	for <linux-pci@vger.kernel.org>; Thu, 24 Sep 2026 08:21:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.52
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790238066; cv=none; b=btSyX8J2bm8cxBvzRIwnK5vyZyJfzoHGvGGgaM5GLXZDcOZVubzqTtJxBDW+vrOcQZ5ntwOoADTM4DCIsgpIsW2GCpCwkqQGXwuLcmRXnsXyNNaTO9oXqskv1S3wGAECf6c075jSzZL+SnfAQFThE1Lt3cbXdS0KeUCkH7hg1pE=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790238066; c=relaxed/simple;
-	bh=xLKwIgImHArSoDRxKNReWtyWPgR8tM7wwg9leeIrudk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=eMspFohrd/hZqDXPgpe7xjKnAa1rQoZoGdSR3E0/NUEAo6lM5h0c6jd8fXHPHH9fCK6GxBoTLmVmMECwmHZlFSuyTu/VmFKOAL+QcGla2qOVaLFFreYBXyP+R9b2brrQ82G6N2xn/uRflajMywao69PFNdnshYyzy1IaXbfpTJI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=KjOQhQ35; arc=none smtp.client-ip=209.85.128.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F04C2349CD6;
+	Thu, 24 Sep 2026 08:37:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.130.28
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1790239023; cv=fail; b=B1nmOehBs9o7CGo8jZERe7O/rbBWaTnzm74fAu4LpDQvxaOw3SOdn3J2bS+QH42Cs5zcG64wmv9PoRm1FK2yi4VJt/jCfetObDIKAl4LSOrnzWOXbtyXyHBFco2u7Eym5DRtgt4W0N0Mxgy4Uq9nP+BDwqkBLxQLH3jCjAzZ9S8=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1790239023; c=relaxed/simple;
+	bh=NZyu8SNsY93wtWBaQIwuHoZJfsei0FYnev3Jda6qMOo=;
+	h=From:To:Cc:Subject:Date:Message-ID:Content-Type:MIME-Version; b=ca+P0HB3CJ0gw+GVQJG3vWB7xFChS2ZVXewJcpT4+j4HB3EFbPI5s48uITJudGlnNaah7GK26cSdYqiyaqHNPoXQJ+VLnulqVAFeQa84XJmu9aL+GvO6OcdWy718BRGb0KGBO+Luumh0sFsKQrr8aFILKvGdyRnQoU5cepko2hk=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com; spf=pass smtp.mailfrom=oss.nxp.com; dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b=m45AY3lg; arc=fail smtp.client-ip=40.107.130.28
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="KjOQhQ35"
-Received: by mail-wm1-f52.google.com with SMTP id 5b1f17b1804b1-49e6425f96eso32295e9.1
-        for <linux-pci@vger.kernel.org>; Thu, 24 Sep 2026 01:21:04 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1790238063; x=1790842863; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=TBbUmiE2dRkBbSKytOyHEBRYcqAsz7TnE/aajFa/CtM=;
-        b=KjOQhQ352OkWxgPfQc3zytooDLLUAm0PwR+GQQN4Wc4TRHnEZ4u83QRhEe0Xu8jpj1
-         z1tILVY7BIDm8CTFHX5JHQEq8l5cZcFEoZ5wTyVHbK0tPjaZ96BESEV/RlgxQ9slqaLi
-         WK95fe5FqOEDSd4clYWH9Iu5a422idA5w3NK/0wPPSF79rLVcNskZMRwOj+rxs3zxtZH
-         k7wjyArp8IjE/uzz4VqJtkdS7VslJDmTrDzvFbFoHA2eZ2Uk3grG6WpdDcJ9BOErfem9
-         RWvyqNq2Bx87CyOZmjHHxD3pqkgyjJjrAjlMNwcigxFpzNAXzA/PcsOX1cEirDCpL9L3
-         ur5A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790238063; x=1790842863;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=TBbUmiE2dRkBbSKytOyHEBRYcqAsz7TnE/aajFa/CtM=;
-        b=G8alG6PeaTPkbdl6mya7WKCzLoNMF4TuwjPTVCLcBkn4Mpd2DAog1Jls0osPWpZyZK
-         7TQYIiAWnapVVMErxfEt7z5wE42y9nsqRMRQ2oUru8fgmpYVzZt4io0Q9dQJQq2fAStW
-         CNh7n+bR1zN7TmWwXdeLUlSGQZz03mE2f87+CMgjrPUOqeDZqbUOvEqciqumVdkTOrky
-         Dfg3QifPzZyxHWpkZK/UUwOa1rtKmI+9tDaibHXr/1DNFRyCz+322MHU67olyDpdNnvL
-         Zrvjs+GzviMt7cB4syMHwDrmL3AlMgrVU7LY2Sf0wXudfVNJLuWrdwtJ/nVtbY0egshK
-         8dWA==
-X-Forwarded-Encrypted: i=1; AKwUvBwtGO+aLmNzmfh1PVPZ2QVN6Hw9OG7ZweLHAxH7Kpzc42xwHFSopV7XOx97LB0zU9aRE0iQ7Ou8QSw=@vger.kernel.org
-X-Gm-Message-State: AFuF++lTY9qjSUI/NfY8zP6mERb7oZUEhvl9nxh186ZtzkwC2rmO0fuI
-	I6E9vLbgX7h+NpL6DDkm1emIGFyzXmMgAvi+ehfEZo9Okx2OTmUI/nj+TQQW0xsSSA==
-X-Gm-Gg: AYBFou2047eKEuSqi1ohPkNw7sL9BB+aSnuFKptmx4O56Ge4GaZsYy+LWau9wUs8VK5
-	TZaDoNrEUSx1T/YR0rzniZS+aytbKuu2aIMijciQBNlfKC0NGRtwBIr3866gExRpoL8b2AGIhGV
-	LOaqsPMRQbxC6TkwVP/3MWR0mRBGMFlOh9Fub7xsQV1BfVBb1Olb7iAqhZJvTT5qHCJ2Y+Q7qzI
-	TYujGv7Qa/WqZlqK7cJsRE2mVK98tzBOPuKJGHytFzpeztiCPMQ/LZN6KwFll5n3OnRfBhu/p1l
-	SFiECcDbMgVlTWVSZdwKQRksfDSIah117mWI5oUX9ThOmzV3fWCZrgw89jm6n2ghKlsE0zGuWw1
-	EdK1ZWhi+ksBtph+SYkd/wfKDICZvCu8S4TXdPigzbx5nZJuM5bv0xPcC4v81/7HaIPIwmCeO8o
-	sIU/H/OJsIPCIWyqBld8ZJoQWbf2hcQJos3U3V38FUQ7jMjWG8kSfoLO0huxBw1roV466PXl8A5
-	FTDCDkmJdx1BkKyv3hV/5pK9Z6Zqp/G1rQC6h2I
-X-Received: by 2002:a7b:c4cb:0:b0:49f:c839:28be with SMTP id 5b1f17b1804b1-49fe5996dc6mr523225e9.3.1790238062399;
-        Thu, 24 Sep 2026 01:21:02 -0700 (PDT)
-Received: from google.com (250.192.189.35.bc.googleusercontent.com. [35.189.192.250])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4886876c119sm14042034f8f.15.2026.09.24.01.21.01
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 24 Sep 2026 01:21:01 -0700 (PDT)
-Date: Thu, 24 Sep 2026 08:20:58 +0000
-From: Mostafa Saleh <smostafa@google.com>
-To: Nicolin Chen <nicolinc@nvidia.com>
-Cc: Will Deacon <will@kernel.org>, Robin Murphy <robin.murphy@arm.com>,
-	Joerg Roedel <joro@8bytes.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Jason Gunthorpe <jgg@nvidia.com>,
-	"Rafael J . Wysocki" <rafael@kernel.org>,
-	Len Brown <lenb@kernel.org>, Pranjal Shrivastava <praan@google.com>,
-	Lu Baolu <baolu.lu@linux.intel.com>,
-	Kevin Tian <kevin.tian@intel.com>,
-	linux-arm-kernel@lists.infradead.org, iommu@lists.linux.dev,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-cxl@vger.kernel.org,
-	vsethi@nvidia.com, Shuai Xue <xueshuai@linux.alibaba.com>
-Subject: Re: [PATCH v6 06/17] iommu/arm-smmu-v3: Don't rb_erase() a
- never-inserted stream node
-Message-ID: <arTdal7U8eK9Z_7j@google.com>
-References: <cover.1790188510.git.nicolinc@nvidia.com>
- <76c5f9dde30269995ef842a12a3a5e1ebaa3e6df.1790188510.git.nicolinc@nvidia.com>
+	dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b="m45AY3lg"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=P15TEeEXA1hj3kZnjzdEWjCZHG4rzghpEVzTGY3mTVVbK2ONto1f6xtQT1pZhtbwsPQT7SM1NDv+v7MQSx7h0t025SHzbNsZTJUUvLiaS/WivyqPREiPoM33ZI3mSZUMXMTwzkwWKP9Tg6Fr6wSFlspisXwedZPYN+GXe4DM7sOP9BrRmCk0k1iias7C1g65dqMUqAVHLbV2mSQgkkq9BEIk3WyV4Jp5Aw73tsnAesmdva9RGZ0KKMX5hGLvsQF3eZ0mmg3mPtPt8Nw5zlmATh7I72nmncUWxtVeva3slXBnFLgvkUM3P9+yieDmHsjjKMjA7/dgprAHVQHvjkh9UA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=02HH54Jxdo6SkdM8L/jhPn3pO4rb1Ubx2oZIP7unn84=;
+ b=pkccV1BcriNNonGc4B1nAbEWYy3MTI664eBlr1WapgINgdDQLy9xL5ZVS6bgfRwtapKH/gnAVbJDvZfRSTnDi6rfTxkNm8l+ho87qymzLVf5xH1k+IdLi/OAoC2uEOZfQnPnaZC4gP9ujOdk/xrC62GbAzuXYNXryrbjY175lEfO87o7HloXZ3AVMY+J23fREymKgpuCg84WEVkevStK/eAsjKfx/DmJY39V3VsXbyirDzxejd/Ve4O1sdEcC/wCthd29MI3/1CL0nLA9HPghcfe9JJSUEVXVYCulG8kzsp0tT6uSGW3n0RJY7/1mzvwuYVHDHW5MnceyxvHIdCBhw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oss.nxp.com; dmarc=pass action=none header.from=oss.nxp.com;
+ dkim=pass header.d=oss.nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=NXP1.onmicrosoft.com;
+ s=selector1-NXP1-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=02HH54Jxdo6SkdM8L/jhPn3pO4rb1Ubx2oZIP7unn84=;
+ b=m45AY3lgi513c2+qOgFAtKZR+OEGdLyTQkKapt+KymeCW9SoEf3zzQjoO+dH/AwXZ2lvpA0wOVYrihgDVVbWRs1j/1Z7mlRxKEwVpjsrf0z3cI92b/bcIuUqnETp/TPNvNN75bUfeiPQBe7Unk6Z2lVeEpuLnv9SPUEHhAbNQGd+o70CTR1tNyN8BXMpIbBi2kMeCYjIkpkYRenUfTA70ynDdJlLQUjwnmQ0JCIcRuyugUG34aOvxaRLc0D43pJQQ2y4/6n2a7twrQqwTfB+M6XfyHm4GTR2s6dw/Ug19ls0979Dk7Wp2lIm+CNJ8fl5AuIXJUf1zlvBgEY+mDbQ8w==
+Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=oss.nxp.com;
+Received: from AM8PR04MB7874.eurprd04.prod.outlook.com (2603:10a6:20b:24d::9)
+ by DU4PR04MB11339.eurprd04.prod.outlook.com (2603:10a6:10:5ef::10) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.451.18; Thu, 24 Sep
+ 2026 08:36:58 +0000
+Received: from AM8PR04MB7874.eurprd04.prod.outlook.com
+ ([fe80::ac38:1699:6f18:c5d9]) by AM8PR04MB7874.eurprd04.prod.outlook.com
+ ([fe80::ac38:1699:6f18:c5d9%6]) with mapi id 15.21.0451.014; Thu, 24 Sep 2026
+ 08:36:58 +0000
+From: "Peng Fan (OSS)" <peng.fan@oss.nxp.com>
+To: Richard Zhu <hongxing.zhu@nxp.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Frank Li <Frank.Li@nxp.com>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	Pengutronix Kernel Team <kernel@pengutronix.de>,
+	Fabio Estevam <festevam@gmail.com>
+Cc: linux-kernel@vger.kernel.org,
+	Peng Fan <peng.fan@nxp.com>,
+	linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	imx@lists.linux.dev
+Subject: [PATCH] PCI: dwc: imx6: use regmap_assign_bits() for conditional set/clear
+Date: Thu, 24 Sep 2026 16:34:28 +0800
+Message-ID: <20260924083429.461746-1-peng.fan@oss.nxp.com>
+X-Mailer: git-send-email 2.51.0
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: SI1PR02CA0014.apcprd02.prod.outlook.com
+ (2603:1096:4:1f7::9) To AM8PR04MB7874.eurprd04.prod.outlook.com
+ (2603:10a6:20b:24d::9)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <76c5f9dde30269995ef842a12a3a5e1ebaa3e6df.1790188510.git.nicolinc@nvidia.com>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: AM8PR04MB7874:EE_|DU4PR04MB11339:EE_
+X-MS-Office365-Filtering-Correlation-Id: 10ac0b56-9314-431e-8138-08df1a16ff5f
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|7416014|376014|1800799024|366016|23010399003|19092799006|10067099003|56012099006|11063799006|18002099003|921020;
+X-Microsoft-Antispam-Message-Info:
+	oMTBOJXNsjASu3xZMDVmBeaaNagxMk/ffsLOquNKgRlALGoaf/xXWMXiOzPYBHQ7BMXlLpzIEZsMgSLsmS2H5cEQC9mkqDmurqNg5AmMkO3/3IQiq/n/P/IHtCG0frjBhzNx6OCaiPUtH8huDnpI8IXyxFHm24aO0YRItBdgGAheLOffo9STO566qWBheF2MIBBasy3jiPzd6qjn7TQgtZrruXZe5i8sFzoTsSwHxX5xEJG7955MbOoHlW/FtXa6Uid6oji4QhYhe+OK3dG4No4kNBU4wX+xMF/PF9aoCNhIeC1JRG1h+i6CMoXCz91OK6weTp07Btb7xLG70zsRm3KAOUy7SuqtRK6PXN8OlB2Whr7bTB1xv7vikdiPOPu0tqcp/ZO1rRq/6DMoMpUFptx+M9lKAfGeyzevHudI5sWABU5D1bMSPwQfbKlBS3MkihbRAA3AJRWZUaud78M+q+tQ5TnHKMbLhT7p5hKrHWKEKRS6oNyite+UpUhMvCcOryzwL6pD/BDFLx23rN1rQ+BP/ghs+Pufj65OmdmjArX8Aa69a5ReE6AetPAXN0cOCZopbVR0lo/0N2IIZOMwLUqRTimJkbcS2Yb29tRPlxKvj6L32ukcqK564bdc75gZcZ5kCiI1y3qDo1QAY4jXeWN66PVIaKLPsKJ5YoZdxixG/onhu1V9i5+ssTcBmipuOIS55X8AA/nVm1NlflMB1A==
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM8PR04MB7874.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(376014)(1800799024)(366016)(23010399003)(19092799006)(10067099003)(56012099006)(11063799006)(18002099003)(921020);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?F0byQGaIQJAWNmiEd5rkItje7aBVDrV8UunoZkF/t2QEPVHpF6pUyw4f1R29?=
+ =?us-ascii?Q?T7880g7uv7Y7mcZG6dJ0XYaK+SVn7cAuk8IPriN7BJSzDiyNEJKR2alG6MzZ?=
+ =?us-ascii?Q?iEG/2KHbnPLZ4D5M6UlocTEKm1b1dScpVwtELuUGpUHE7NFV8cHlgAtut/8O?=
+ =?us-ascii?Q?fuXEj7QHRdV+FoQnFgcbltw55h4OfOMARP/przJfeJ4ePcq1OPwMCGsGtQSG?=
+ =?us-ascii?Q?ws39z/IQFUvYM5tPEUfLpQXWsLAgNq/ju8LjL0wIeOqbtpbb1WIaz+YcqyKm?=
+ =?us-ascii?Q?mhBtRI1DtgI89c4IZeVNbFQFbcABufzZI/gRgpSQxzGL88veqIQyB6Z1On/y?=
+ =?us-ascii?Q?yXTJb26oeI06it6VcZmlBR03Na80EA5/AIU0IhbDf0WVcGPphkpT5MD23iCq?=
+ =?us-ascii?Q?u03SsGNI7mimu9QFJ4vnT7kejudE0eZHP1JAiTLo6xpn6oXQHNa/Kljift9+?=
+ =?us-ascii?Q?HbKuqV8NFFa8XZUDsl4JZq5UBPS1jZJVdiamqXrqVpK3NK0zNy5p+k9q9Wpr?=
+ =?us-ascii?Q?AXC3WEfRuPnY/AiXe8jVznyIQ2pZdq4dWOL9080aIuzAz4eTn/P8gvpMbdsJ?=
+ =?us-ascii?Q?Dtt4Tgw0pNpkF3WsMKzE6our8Yk4cIVBUblmmVGGW/BmwpPqQZiqZTeIRB4C?=
+ =?us-ascii?Q?T7OHarzgvFjGU4g5pXIISpOneoG5zR5UZVih7i8Io2gr9qQ5ddWLpiPhwkay?=
+ =?us-ascii?Q?F34sQ6UjKnPMSnln/DL/SXX7JnRukSD+Z4DSyqnmHcJTa/Yr7do4EqMPbnsE?=
+ =?us-ascii?Q?mjbnWHWd0/FqdRFDbqCveR1J+JSLkoBFcBrEBJlue5mstsqT5q6tX4UJZIFH?=
+ =?us-ascii?Q?3j5cG/lfexM2i/pvg/FdCBd7/vb41FFs/3JaV5ck2azb6JhBX1K2CmczLnql?=
+ =?us-ascii?Q?Tw5GK9hfQNYQZUnZO0t87Ylc00qbPIaS14cUdgVTTX1jXWkhTY/PzcAcTjDG?=
+ =?us-ascii?Q?TDFHPunU9kAr78Q0JdSOP84qi18+u3Czmg1loQ0JWTqmSuE1AcaoOC+InuVJ?=
+ =?us-ascii?Q?xUkf65YNRyuQaQZ3GiSmFgSB8/0h1Qvr11yHgv50/74BC7V1SAyZ00+VH7gU?=
+ =?us-ascii?Q?IBez5MDewOw8k13oFgueqi7kARKr656SGRzS8ytVFQ9Qu0oEFFEfNzhcst0+?=
+ =?us-ascii?Q?SSpOQ0WhcJfMle0iinPgY9Xj0+F2zyWFwXV4J034pw1dn/vrT5s7hiwgb2x3?=
+ =?us-ascii?Q?TFbex1M5i94Adql7Vzkf6NS1pITB0myMFjOnuuVRJgwUSCiJ6NdmVr5yzyjM?=
+ =?us-ascii?Q?DryWQXToY7rLAzkfJq+xYvfHO2yfXEnKfBBb/Svcei3dL3Vn3HittXxYEuRg?=
+ =?us-ascii?Q?nIoVkVxzGv2kyH49mQKl6UybherYA5M22IyrzHG2D0ZI0LTIvJVprYdJbHUR?=
+ =?us-ascii?Q?kFi5VeKtqbuV5lQsyihNCun54XfaAeeLIUBgw4vaLYu+IoYx2Re7vfDSptQA?=
+ =?us-ascii?Q?btaDAZnisPw5D2arrhoHbS0kF/rbEOlZtxxk5B+zTMzt82/bucV1seK47+ec?=
+ =?us-ascii?Q?5CzzOEnmjT4o2skcBkI9nFRlue33Is4+1YkZUcwiu8BLJk1EZNYGI3QM92pt?=
+ =?us-ascii?Q?+ROM+JeODKlYRpTCWIm11rh140ifgu2+4yyVLE0bSC7A6x1JEFS3+PFDgId/?=
+ =?us-ascii?Q?DyvZ1vSMEUrxiLvdIlW/60jRDqM3sFEFIIHCvXqGNxLVyrglg/CyLMKU6jtW?=
+ =?us-ascii?Q?GtKipvCpPeLlGD+vNtVjPHB79A2EhLpK4+1TgtNogOy8u8H7/NtAk1ktdDos?=
+ =?us-ascii?Q?XJf1zpoIC8wjsX/sbqAkN0m7Q+3FeY/VlyLhudlmUELI+hxWsP07?=
+X-OriginatorOrg: oss.nxp.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 10ac0b56-9314-431e-8138-08df1a16ff5f
+X-MS-Exchange-CrossTenant-AuthSource: AM8PR04MB7874.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 Sep 2026 08:36:58.8486
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: QrfepesmHZGWlwwTcTTpqy6M1lJRyCgZBYGRAeT6pnkVm0w5F+9RSnY1bUzTfvUhh4F5JR8HynAWuVkT+i7786eDxypI26hXdvG+mwZFszuOtTySrb9St8CIIf/pgk5j
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DU4PR04MB11339
 
-On Wed, Sep 23, 2026 at 01:11:25PM -0700, Nicolin Chen wrote:
-> arm_smmu_insert_master() skips inserting a stream whose StreamID duplicates
-> one the same master already owns (bridged PCI devices can present duplicate
-> IDs), leaving that master->streams[i].node zeroed and unlinked from the
-> smmu->streams rb-tree.
-> 
-> Both the insert error-rollback loop and arm_smmu_remove_master() then call
-> rb_erase() on every master->streams[i].node unconditionally. rb_erase() on
-> a zeroed node sees a NULL parent, treats the node as the tree root and sets
-> root->rb_node = NULL, silently emptying the whole SID tree and breaking SID
-> lookups (and DMA) for every other master on the SMMU.
-> 
-> Mark each node with RB_CLEAR_NODE() after sort_nonatomic() reorders the
-> array, since sorting relocates the entries and would leave the earlier
-> self-referential RB_CLEAR_NODE() pointer stale. An un-inserted node then
-> stays RB_EMPTY_NODE() and is skipped in both erase loops; inserted nodes
-> are linked by rb_find_add() and erased as before.
-> 
-> Fixes: b00d24997a11 ("iommu/arm-smmu-v3: Fix iommu_device_probe bug due to duplicated stream ids")
-> Assisted-by: LLM
-> Signed-off-by: Nicolin Chen <nicolinc@nvidia.com>
+From: Peng Fan <peng.fan@nxp.com>
 
-Reviewed-by: Mostafa Saleh <smostafa@google.com>
+Replace multiple if/else blocks using regmap_set_bits()/regmap_clear_bits()
+with the simpler regmap_assign_bits() calls.
 
-Thanks,
-Mostafa
+Signed-off-by: Peng Fan <peng.fan@nxp.com>
+---
+ drivers/pci/controller/dwc/pci-imx6.c | 32 +++++++--------------------
+ 1 file changed, 8 insertions(+), 24 deletions(-)
 
-> ---
->  drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c | 14 ++++++++++++--
->  1 file changed, 12 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
-> index 5732f3ba0122d..082da3dc09e56 100644
-> --- a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
-> +++ b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
-> @@ -4122,6 +4122,13 @@ static int arm_smmu_insert_master(struct arm_smmu_device *smmu,
->  	     sizeof(master->streams[0]), arm_smmu_stream_id_cmp,
->  	     NULL);
->  
-> +	/*
-> +	 * Clear after sorting: RB_CLEAR_NODE() records the node's own address,
-> +	 * which sort_nonatomic() invalidates by relocating the entries.
-> +	 */
-> +	for (i = 0; i < fwspec->num_ids; i++)
-> +		RB_CLEAR_NODE(&master->streams[i].node);
-> +
->  	mutex_lock(&smmu->streams_mutex);
->  	for (i = 0; i < fwspec->num_ids; i++) {
->  		struct arm_smmu_stream *new_stream = &master->streams[i];
-> @@ -4154,7 +4161,9 @@ static int arm_smmu_insert_master(struct arm_smmu_device *smmu,
->  
->  	if (ret) {
->  		for (i--; i >= 0; i--)
-> -			rb_erase(&master->streams[i].node, &smmu->streams);
-> +			if (!RB_EMPTY_NODE(&master->streams[i].node))
-> +				rb_erase(&master->streams[i].node,
-> +					 &smmu->streams);
->  		kfree(master->streams);
->  		kfree(master->build_invs);
->  	}
-> @@ -4174,7 +4183,8 @@ static void arm_smmu_remove_master(struct arm_smmu_master *master)
->  
->  	mutex_lock(&smmu->streams_mutex);
->  	for (i = 0; i < fwspec->num_ids; i++)
-> -		rb_erase(&master->streams[i].node, &smmu->streams);
-> +		if (!RB_EMPTY_NODE(&master->streams[i].node))
-> +			rb_erase(&master->streams[i].node, &smmu->streams);
->  	mutex_unlock(&smmu->streams_mutex);
->  
->  	kfree(master->streams);
-> -- 
-> 2.43.0
-> 
+diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
+index 28fed010b503f..e2e55a88e0132 100644
+--- a/drivers/pci/controller/dwc/pci-imx6.c
++++ b/drivers/pci/controller/dwc/pci-imx6.c
+@@ -747,12 +747,8 @@ static int imx_pcie_attach_pd(struct device *dev)
+ 
+ static int imx6q_pcie_enable_ref_clk(struct imx_pcie *imx_pcie, bool enable)
+ {
+-	if (enable)
+-		regmap_set_bits(imx_pcie->iomuxc_gpr, IOMUXC_GPR1,
+-				IMX6Q_GPR1_PCIE_REF_CLK_EN);
+-	else
+-		regmap_clear_bits(imx_pcie->iomuxc_gpr, IOMUXC_GPR1,
+-				  IMX6Q_GPR1_PCIE_REF_CLK_EN);
++	regmap_assign_bits(imx_pcie->iomuxc_gpr, IOMUXC_GPR1,
++			   IMX6Q_GPR1_PCIE_REF_CLK_EN, enable);
+ 
+ 	return 0;
+ }
+@@ -868,12 +864,8 @@ static void imx_pcie_clk_disable(struct imx_pcie *imx_pcie)
+ 
+ static int imx6sx_pcie_core_reset(struct imx_pcie *imx_pcie, bool assert)
+ {
+-	if (assert)
+-		regmap_set_bits(imx_pcie->iomuxc_gpr, IOMUXC_GPR12,
+-				IMX6SX_GPR12_PCIE_TEST_POWERDOWN);
+-	else
+-		regmap_clear_bits(imx_pcie->iomuxc_gpr, IOMUXC_GPR12,
+-				  IMX6SX_GPR12_PCIE_TEST_POWERDOWN);
++	regmap_assign_bits(imx_pcie->iomuxc_gpr, IOMUXC_GPR12,
++			   IMX6SX_GPR12_PCIE_TEST_POWERDOWN, assert);
+ 
+ 	/* Force PCIe PHY reset */
+ 	regmap_update_bits(imx_pcie->iomuxc_gpr, IOMUXC_GPR5, IMX6SX_GPR5_PCIE_BTNRST_RESET,
+@@ -883,12 +875,8 @@ static int imx6sx_pcie_core_reset(struct imx_pcie *imx_pcie, bool assert)
+ 
+ static int imx6qp_pcie_core_reset(struct imx_pcie *imx_pcie, bool assert)
+ {
+-	if (assert)
+-		regmap_set_bits(imx_pcie->iomuxc_gpr, IOMUXC_GPR1,
+-				IMX6Q_GPR1_PCIE_TEST_PD);
+-	else
+-		regmap_clear_bits(imx_pcie->iomuxc_gpr, IOMUXC_GPR1,
+-				  IMX6Q_GPR1_PCIE_TEST_PD);
++	regmap_assign_bits(imx_pcie->iomuxc_gpr, IOMUXC_GPR1,
++			   IMX6Q_GPR1_PCIE_TEST_PD, assert);
+ 
+ 	regmap_update_bits(imx_pcie->iomuxc_gpr, IOMUXC_GPR1, IMX6Q_GPR1_PCIE_SW_RST,
+ 			   assert ? IMX6Q_GPR1_PCIE_SW_RST : 0);
+@@ -901,12 +889,8 @@ static int imx6qp_pcie_core_reset(struct imx_pcie *imx_pcie, bool assert)
+ 
+ static int imx6q_pcie_core_reset(struct imx_pcie *imx_pcie, bool assert)
+ {
+-	if (assert)
+-		regmap_set_bits(imx_pcie->iomuxc_gpr, IOMUXC_GPR1,
+-				IMX6Q_GPR1_PCIE_TEST_PD);
+-	else
+-		regmap_clear_bits(imx_pcie->iomuxc_gpr, IOMUXC_GPR1,
+-				  IMX6Q_GPR1_PCIE_TEST_PD);
++	regmap_assign_bits(imx_pcie->iomuxc_gpr, IOMUXC_GPR1,
++			   IMX6Q_GPR1_PCIE_TEST_PD, assert);
+ 
+ 	if (!assert)
+ 		usleep_range(200, 500);
+-- 
+2.50.1
+
