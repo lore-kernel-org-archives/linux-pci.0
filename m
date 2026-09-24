@@ -1,72 +1,122 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from smtpout-02.galae.net (smtpout-02.galae.net [185.246.84.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C027D283142;
-	Thu, 24 Sep 2026 15:38:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0D214A5EC3;
+	Thu, 24 Sep 2026 15:56:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.246.84.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790264335; cv=none; b=ePfOomP4ebiWg+j4hSiY1ylXJOGCr515NquM56iOaoKv345sfMX0RTEPhxwDiM5ie1JO7hzfWEaYZ8I+PANfuRll7P7js5ftqVWcx5veA2LnCe/OSmuTCoWenrzeRWT/Nv+VxV6MpED8WHSWMsBoJPeHI0rI3ytCal8XkZqfd+A=
+	t=1790265379; cv=none; b=gCEV61sSE4ZsRjVeK7j0PJqn/+jLqxQ9Ip8W5FnoDTE7XUxmSkrPcWpRzueLiIVbfTMKnDrXK8jhO/4MfEmry7Nh1y2lE8+ErhT8Dlgk9KBac0YZp8vF/Aro6P4Q2njgWizQPsCS1aN3pEEUYoLXsLMtiQbftA4j6a09/wKKSxE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790264335; c=relaxed/simple;
-	bh=mWIxE53dNbsNhT47c3nH58jBRfaByTW7aWRghCyGy1k=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Sqwi4j7OzajNYwmiRM5Db6Gjh1MtUUgKlVhQvdf6NFiiqZxx9XlRlhUX4YyVXYirSttLZYoyc0ScmacVNQbEhmYyK8vRaKHBQCF7SSrt7ig6PSpYxHs1+NVN2mMRgBLKJ/cKJ8tNZRoWgWrCOiZyEvSYDi4FuSlVPzhf5kX2r38=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bTBPhELI; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790265379; c=relaxed/simple;
+	bh=vcOjnbGn1ShWJBNTNFJrGQnXqDa49XfATRpJvsoyBjA=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=T6Ln4sSBqneuyX89UI6M/GYRf3GVqS2HhSmS+J+DGjuBTCvf9Qw3CrvYWb4VaSga9LdR+EhJwk6e++RhmY1/gTpNw+jALI3djrWqzWlc5yWc/veTX1mv9apJDRuXbQCfK2EfZePvMPqY2VbQhHHsJCnWP56cX2Wqe5XwiJtwdqw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=ZNzAyLUf; arc=none smtp.client-ip=185.246.84.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bTBPhELI"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2F7021F000FF;
-	Thu, 24 Sep 2026 15:38:54 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790264334;
-	bh=akutNHbzTxDEF9m34BiAHrNOwltYDiuyMm35he8BXEo=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=bTBPhELIRN3O0FFn8rpkmZEmYBQLN/8ZJX9fWuZ2YU+nsYszze+8Po6E2Jpkx1/U2
-	 csSAmCdllvo6txJLC5zGIYOQEIRXycEUR2jXLQiZCsxHIWtiRgVdUo8BIveljHW2nQ
-	 UbCjydyZNZc1l/gbAwQpobRjn0br/M5EesAtxQ67z9UrKC8jsDW8Wx2ZQne4Y4AGls
-	 INJ91jqLgCH/y0bJchnHu7Ii1zPf9g9rdXPPFTLIz0IMAmVDkydnbNJGdFCibyKJqZ
-	 RR5RoUM9ekOIuy56k9wImJFfBzeSmO59rpxTjSeQikGWDqnHT0bD5Y7TlHBal8T0IU
-	 Chd99eqtvZhOw==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v7 5/9] vfio/pci: Add a helper to create a DMABUF for a
- BAR-map VMA
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Matt Evans" <matt@ozlabs.org>
-Cc: linux-pci@vger.kernel.org, dri-devel@lists.freedesktop.org, media-ci@linuxtv.org, kvm@vger.kernel.org
-In-Reply-To: <20260924152159.49702-6-matt@ozlabs.org>
-References: <20260924152159.49702-1-matt@ozlabs.org>
- <20260924152159.49702-6-matt@ozlabs.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 24 Sep 2026 15:38:53 +0000
-Message-Id: <20260924153854.2F7021F000FF@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="ZNzAyLUf"
+Received: from smtpout-01.galae.net (smtpout-01.galae.net [212.83.139.233])
+	by smtpout-02.galae.net (Postfix) with ESMTPS id 338881A1002;
+	Thu, 24 Sep 2026 15:56:15 +0000 (UTC)
+Received: from mail.galae.net (mail.galae.net [212.83.136.155])
+	by smtpout-01.galae.net (Postfix) with ESMTPS id B999060738;
+	Thu, 24 Sep 2026 15:56:14 +0000 (UTC)
+Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id 46DCB10329450;
+	Thu, 24 Sep 2026 17:56:05 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=dkim;
+	t=1790265373; h=from:subject:date:message-id:to:cc:mime-version:content-type:
+	 content-transfer-encoding:in-reply-to:references;
+	bh=QhjUZkH6Uy6DN6tthN3/8kVaM0dMZm+WmEFrO9JFRZI=;
+	b=ZNzAyLUfSoPkWoZTqf6l3E0tBhL2q8BDOq+Og4GUhIpWMmzx7bs9+YPDni1u7MmNze1HgN
+	z23wVm91nNUDIhUXrthZOsvk/q5fjHwPiDd4h+WtrB2ici++xiE2cY9WfuWsYQlveKRDNy
+	r9gbAoBtXbWyqixkGfIuaZ1KlEOm6HHraAjgat5QaqepzyIfoO83zuJIXrVK5zROB2JGra
+	ABxo7STNk7WMclI8HuY9tAIQgb+ehgqjboimQ2/FSoMdsiCWUYOiTYjPK9FwmgxipFJSWO
+	vepfIs+hT/n0iXGF7x1X6BaeNKRhtmkZjtlMonjEv05l3XXIbqbi1/4HSYGPyQ==
+Date: Thu, 24 Sep 2026 17:56:03 +0200
+From: Herve Codina <herve.codina@bootlin.com>
+To: Alex Elder <elder@riscstar.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, robh@kernel.org, krzk+dt@kernel.org,
+ conor+dt@kernel.org, arnd@arndb.de, gregkh@linuxfoundation.org,
+ bhelgaas@google.com, andersson@kernel.org, konradybcio@kernel.org,
+ abelvesa@kernel.org, daniel@riscstar.com, mohd.anwar@oss.qualcomm.com,
+ lorenzo.bianconi@oss.qualcomm.com, devicetree@vger.kernel.org,
+ linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Andrea della Porta <andrea.porta@suse.com>,
+ Lizhi Hou <lizhi.hou@amd.com>
+Subject: Re: [PATCH v4 2/3] misc: tc9564: introduce base PCI driver
+Message-ID: <20260924175603.2a20e2b1@bootlin.com>
+In-Reply-To: <e9bd7954-1cec-4ffb-a5b2-2389469b0c05@riscstar.com>
+References: <20260918173003.GA1166280@bhelgaas>
+	<e9bd7954-1cec-4ffb-a5b2-2389469b0c05@riscstar.com>
+Organization: Bootlin
+X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-redhat-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-Last-TLS-Session-Version: TLSv1.3
 
-> This helper, vfio_pci_core_mmap_prep_dmabuf(), creates a single-range
-> DMABUF for the purpose of mapping a PCI BAR.  This is used in a future
-> commit by VFIO's ordinary mmap() path.
->=20
-> This function transfers ownership of the VFIO device fd to the
-> DMABUF, which fput()s when it's released.
->=20
-> Refactor the existing vfio_pci_core_feature_dma_buf() to split out
-> export code common to the two paths, VFIO_DEVICE_FEATURE_DMA_BUF and
-> this new VFIO_BAR mmap().
->=20
-> By exchanging the VMA file, we lose the original device path in
-> /proc/<pid>/maps, lsof, etc.  Generate a debug-oriented synthetic
-> 'filename' for BAR mappings based on the BDF, plus resource index.
-> (This does not apply to explicitly-exported DMABUFs which are named by
-> DMA_BUF_SET_NAME.)
->=20
-> Signed-off-by: Matt Evans <matt@ozlabs.org>
+Hi Alex, Bjorn,
 
-Sashiko has reviewed this patch and found no issues. It looks great!
+On Fri, 18 Sep 2026 12:49:53 -0500
+Alex Elder <elder@riscstar.com> wrote:
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260924152159.4970=
-2-1-matt@ozlabs.org?part=3D5
+> On 9/18/26 12:30 PM, Bjorn Helgaas wrote:
+> > [+cc Andrea, Herve, Lizhi for of_pci_make_dev_node() quirks]
+> > 
+> > On Fri, Sep 18, 2026 at 10:26:57AM -0500, Alex Elder wrote:  
+> >> The Toshiba TC9564 is small and highly-specialized SoC that implements
+> >> a PCIe switch as well as an Ethernet AVB/TSN bridge.  In addition to
+> >> these, the SoC implements other functions, including a reset and clock
+> >> controller, an address translation unit, and a few other devices.  PCIe
+> >> BARs provide access to registers that manage these IP blocks, and the
+> >> SoC is modeled using a PCI endpoint bus in devicetree.  This allows the
+> >> IP blocks to be bound to platform drivers that do MMIO via the PCI BARs.
+> >>
+> >> Create a new PCI driver under drivers/misc that binds with the embedded
+> >> PCI endpoint functions within the TC9564 SoC.  Because these functions
+> >> will use devicetree pci-ep-bus to provide access to other IP blocks
+> >> within the TC9564 chip, the main purpose of this driver is to do basic
+> >> PCI initialization, then call of_platform_default_populate() to scan for
+> >> the any endpoint bus children, and probe all devices defined therein.
+> >>
+> >> Because we're using pci-ep-bus, we need to use the PCI quirks mechanism
+> >> to have of_pci_make_dev_node() be called for each endpoint device in
+> >> pci_bus_add_device() (via pci_fixup_device(pci_fixup_final, dev)).
+> >>
+> >> Co-developed-by: Daniel Thompson <daniel@riscstar.com>
+> >> Signed-off-by: Daniel Thompson <daniel@riscstar.com>
+> >> Signed-off-by: Alex Elder <elder@riscstar.com>  
+> > 
+> > Acked-by: Bjorn Helgaas <bhelgaas@google.com>	# quirks.c
+> > 
+> > Not an issue for this patch, but I'm not sure the quirk mechanism is
+> > the best mechanism for doing this.  It's not working around a device
+> > defect like most quirks do.  
+> 
+> I pretty much agree with you.  I think I mentioned this before
+> (though it might have been in a private conversation) that it
+> is an intentional act to call of_pci_make_dev_node() for an
+> endpoint (and not just a bridge).  And that's different from
+> a hardware quirk.  You only need to do it if there's a pci-ep-bus
+> sub-node on the endpoint.  (I'd have to verify this on the other
+> users of this approach to be 100% sure though.)
 
+I agree, a quirk is not the best way to trig the of_pci_make_dev_node()
+call. An allow-list seems better.
+
+Alex, on LAN966x, the pci-ep-bus is not present. The OF node must be
+created (call to of_pci_make_dev_node()) and the lan966x_pci driver
+will apply an overlay on this OF node created at run-time.
+
+The pci-ep-bus is described in the OF overlay [1].
+
+[1] https://elixir.bootlin.com/linux/v7.3-rc3/source/drivers/misc/lan966x_pci.dtso#L50
+
+Best regards,
+Hervé
