@@ -1,150 +1,90 @@
-Received: from mail.ozlabs.org (gandalf.ozlabs.org [150.107.74.76])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC58D1C5499;
-	Thu, 24 Sep 2026 12:43:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=150.107.74.76
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF04247F2DD;
+	Thu, 24 Sep 2026 13:22:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790253823; cv=none; b=Zq6gzP/UkUyMYo2dy/n1/zk/8DTd80neU/qYXUTCMgsbMYK9NymJWyDZKSZP8O4l8YhsUUzJhS31cidD2w6gqkQwdq25+XK+qSo9uHaex64PVG8UHxl+y+xHHzAxlEoL6mNTZsbSSPmJ18oI8LqfFthmXNJXYpSIeC4EE2h/9nY=
+	t=1790256160; cv=none; b=FliT0FjoSwwXJ4WWwhOxYdBd2p6O06LoqGaUxULy9a9HD8iR6YiIFcNqDKjQsD8LvGbChyvOh6pbiiI/HC9quwmafuyoLnbtG/CyWrXPpWFeOXtcKFfwTQpLr+sqbeGoX6g8AH2VWdjr/cu72P9CdvFj2YBHJ2qZ8P22U4QYND4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790253823; c=relaxed/simple;
-	bh=ZCAL2NVRIOdlpTo8zJRXqz7Sm2845Bf0yDs9Z7vBIhs=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ZrvK4EvQJ4WijY6rYdnhJdzLE3aFMYcC1NX9+bjAiwKJUWMSrhE3DVc12ABDMtlelAlKb3cYkNs4DIKz9DgTQeayDuULqR0cPQKW1AJsZFw1Jz/zRLGo1OZuR6rNWTb2225BAjv7trYyqIcojOsu9DbX015MT7whglARmbMSB0w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ozlabs.org; spf=pass smtp.mailfrom=ozlabs.org; dkim=pass (2048-bit key) header.d=ozlabs.org header.i=@ozlabs.org header.b=gL+ZSAEr; arc=none smtp.client-ip=150.107.74.76
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ozlabs.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ozlabs.org
+	s=arc-20240116; t=1790256160; c=relaxed/simple;
+	bh=7LSJuHWbf7zWMenXZbU2vMC6u93w8r3XTA4dO7mr7+I=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=cy7JnDuPf2pEhtTxTztnpecMI2WKduYLCs0JiWzgRl5OdXRHrPrugl2lJthwGZliUMeq1bhJ2SMRrttyccSIrbZ4yvmYQg+PWP/5LsCqY6yYXMKO4mlnq8SVFAYA0i/KR6DLNnrpgUXR8Fm4SXhtDdcc/EVYYbQUTIt0N1ev8js=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FDnHmgUm; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ozlabs.org header.i=@ozlabs.org header.b="gL+ZSAEr"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ozlabs.org;
-	s=201707; t=1790253788;
-	bh=Q8URE2Gr9VfRYT7mJzVdQOsHMfXuzEs/1e7nQxKnhvU=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=gL+ZSAErvMaeAbd3/y+oLrjwpUPSdNv8f5bDjAhfPfLE2C8rRBsEF1oLoKgQBuK/y
-	 uRji1J0DOU899ACSUuccnZDXsXKUiGt4yKNisoJxBMoQyEJQW8c2IIx81NVY2N8vwz
-	 vhkqYbwDkSE/BnUrSzWZsxHnM/aE+idsBDxIfnQO4FUkKt7SKN9CPdXrz6e32rYr7S
-	 CRaopJTU9LyBLcTDl60/YoFFejqUCMh76+mYtrMulnDNMf4ybTKej/532mqQhYqs4j
-	 paPzcPDije+qDjvP4xtXemW1u3oQVP6VA0FexM5vIQ5iGx5ktwrggXFiIo8vV0ZCSb
-	 CmbUCA3B+RRSA==
-Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(Client did not present a certificate)
-	by mail.ozlabs.org (Postfix) with ESMTPSA id 4hrD5G4Cq0z4wCp;
-	Thu, 24 Sep 2026 22:42:57 +1000 (AEST)
-Message-ID: <8f00d827-f7cf-4b54-9609-fe966070c4e0@ozlabs.org>
-Date: Thu, 24 Sep 2026 13:43:18 +0100
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FDnHmgUm"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 58CF41F00893;
+	Thu, 24 Sep 2026 13:22:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1790256149;
+	bh=u1v1eJ1dTnpQo/8U1PoAH4WTm7EYUCskGS2V3g6xaF8=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=FDnHmgUmffigrIAX0NkzkOQjU6RD4poOU2tsQl9zry0+fc4+h+Ul/WmyS4ocuCMuh
+	 HYrZmcnzTDDWyu77b4TFUqib5cDSOuarF+gECTDZnUSgQVciUNumTtDkcqTrHDZOC7
+	 mTqWNBEUvIqR17EBmBrpBuasK/vJIbEu+BN9e46EDwePFAl0O1mt2tIjniafYqu3m/
+	 3ULeisknIZ8G7TFOdOOaIU4nTPAERNOniUdzAVluDn+9ub5Xyk1dIbT9lFE/vvlEXW
+	 t5FbVgsh8ncQLIqRv38DIrxtz+olOmqZ2UA8g5H4SGtlciXUlGqNv7tX+xnywOtJaJ
+	 IMlMIK0tr6shg==
+Date: Thu, 24 Sep 2026 15:22:25 +0200
+From: Krzysztof Kozlowski <krzk@kernel.org>
+To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+Cc: Vinod Koul <vkoul@kernel.org>, 
+	Neil Armstrong <neil.armstrong@linaro.org>, Rob Herring <robh@kernel.org>, 
+	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
+	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Manivannan Sadhasivam <mani@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Bjorn Andersson <andersson@kernel.org>, Maxime Chevallier <maxime.chevallier@bootlin.com>, 
+	Philipp Zabel <p.zabel@pengutronix.de>, shengchao.guo@oss.qualcomm.com, linux-arm-msm@vger.kernel.org, 
+	linux-phy@lists.infradead.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v4 1/6] dt-bindings: phy: qcom: add Nord QMP PCIe PHY
+ binding
+Message-ID: <20260924-lumpy-robust-fulmar-1bfbe0@quoll>
+References: <20260921-nord-v4-0-ed05c6e09240@oss.qualcomm.com>
+ <20260921-nord-v4-1-ed05c6e09240@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v6 5/9] vfio/pci: Add a helper to create a DMABUF for a
- BAR-map VMA
-Content-Language: en-GB
-To: liulongfang <liulongfang@huawei.com>
-Cc: Alex Williamson <alex@shazbot.org>, Leon Romanovsky <leon@kernel.org>,
- Jason Gunthorpe <jgg@nvidia.com>, Alex Mastro <amastro@fb.com>,
- =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Logan Gunthorpe <logang@deltatee.com>,
- Kevin Tian <kevin.tian@intel.com>, Pranjal Shrivastava <praan@google.com>,
- Mahmoud Adam <mngyadam@amazon.de>, David Matlack <dmatlack@google.com>,
- =?UTF-8?B?QmrDtnJuIFTDtnBlbA==?= <bjorn@kernel.org>,
- Sumit Semwal <sumit.semwal@linaro.org>, Ankit Agrawal <ankita@nvidia.com>,
- Alistair Popple <apopple@nvidia.com>,
- Vivek Kasireddy <vivek.kasireddy@intel.com>, linux-kernel@vger.kernel.org,
- linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org,
- linaro-mm-sig@lists.linaro.org, kvm@vger.kernel.org,
- linux-pci@vger.kernel.org
-References: <20260911214200.33793-1-matt@ozlabs.org>
- <20260911214200.33793-6-matt@ozlabs.org>
- <1d59a556-c131-4608-e194-d51be3259541@huawei.com>
- <4f26dd49-0985-4049-a1fe-6a0a493c7a51@ozlabs.org>
- <f8eb95a8-875e-fb31-a2a2-ffa1c531dedb@huawei.com>
-From: Matt Evans <matt@ozlabs.org>
-In-Reply-To: <f8eb95a8-875e-fb31-a2a2-ffa1c531dedb@huawei.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <20260921-nord-v4-1-ed05c6e09240@oss.qualcomm.com>
 
-Hi Longfang,
+On Mon, Sep 21, 2026 at 11:07:09AM +0530, Krishna Chaitanya Chundru wrote:
+> +
+> +  vdda-pll-d-supply: true
+> +
+> +  qcom,link-mode:
+> +    description:
+> +      Reference to the TCSR syscon register containing the PCIe link mode
+> +      selected by firmware. The property consists of the TCSR syscon
+> +      phandle followed by the offset of the TCSR_PCIE_LINK_CONFIG_MODE
+> +      register.
+> +      The register value selects one of these topologies.
+> +        0 (QMP_PCIE_NORD_MODE_X16)         =E2=80=94 all ports combined =
+as one x16 PHY
+> +        1 (QMP_PCIE_NORD_MODE_X8_X8)       =E2=80=94 port A as x8 and po=
+rts B+C+D as x8
+> +        2 (QMP_PCIE_NORD_MODE_X8_X4_X4)    =E2=80=94 port A as x8, port =
+B as x4, and ports C+D as x4
+> +        3 (QMP_PCIE_NORD_MODE_X8_X4_X2_X2) =E2=80=94 port A as x8, port =
+B as x4, and ports C and D as x2
 
-On 22/09/2026 10:16, liulongfang wrote:
-> On 2026/9/21 21:24, Matt Evans wrote:
->> Hi Longfang,
->>
->> On 15/09/2026 13:16, liulongfang wrote:
->>> On 2026/9/12 5:41, Matt Evans wrote:
->>>> [snip]
->>>> +
->>>> +	/*
->>>> +	 * The DMABUF begins from the mmap()'s BAR offset, i.e. the
->>>> +	 * start of the VMA corresponds to byte 0 of the DMABUF and
->>>> +	 * byte (vma_pgoff << PAGE_SHIFT) of the BAR.
->>>> +	 *
->>>> +	 * vfio_pci_dma_buf_find_pfn() reverses this offset using
->>>> +	 * vma_pgoff_adjust, so that ultimately a fault's offset from
->>>> +	 * the start of the _VMA_ has a consistent usage whether the
->>>> +	 * VMA originates from an mmap() of the VFIO device here or a
->>>> +	 * direct DMABUF mmap().  Note vma_pgoff_adjust also includes
->>>> +	 * the encoded VFIO region index, which cancels out the index
->>>> +	 * encoded in vm_pgoff.
->>>> +	 */
->>>> +	priv->vdev = vdev;
->>>> +	priv->size = req_len;
->>>> +	priv->nr_ranges = 1;
->>>> +	priv->vma_pgoff_adjust = vma->vm_pgoff;
->>>> +
->>>> +	priv->provider = pcim_p2pdma_provider(vdev->pdev, res_index);
->>>> +	if (!priv->provider) {
->>>> +		ret = -EINVAL;
->>>> +		goto err_free_name;
->>>> +	}
->>>> +
->>>> +	priv->phys_vec[0].paddr = phys_start + ((u64)vma_pgoff << PAGE_SHIFT);
->>>> +	priv->phys_vec[0].len = priv->size;
->>>> +
->>>> +	ret = vfio_pci_dmabuf_export(vdev, priv, O_RDWR);
->>>> +	if (ret)
->>>> +		goto err_free_name;
->>>> +
->>>
->>> In the current patch, the PCIe device's BAR2 configuration space can be mapped as a DMABUF.
->>> However, on an OS with a 64K page size, if a VF device's BAR2 is smaller than 64K,
->>> a problem arises where the space is forced to page-align to 64K, it will causing the VM to
->>> access memory beyond the actual size of the VF device's BAR2 space.
->>>
->>> How does your solution handle these cases where the BAR2 space is smaller than the Host OS's page size?
->>
->> Even on a 4K host, there can be BARs < PAGE_SIZE so 64K (or 16K) hosts
->> aren't a new case.  These small BARs cannot be mmap()ed and DMABUFs
->> cannot be exported from them.  (vfio_pci_core_mmap() errors out when
->> !bar_mmap_supported[index].  And, a DMABUF needs to be an aligned
->> multiple of PAGE_SIZE, plus vfio_pci_core_fill_phys_vec() won't allow a
->> DMABUF to be created off the end of a BAR.)
->>
->> So, although this series allows a DMABUF to be mmap()ed, the preexisting
->> checks prevent a sub-page DMABUF from existing and so there is no new
->> route to mapping a sub-page BAR.
->>
->> What's the concern on BAR2 specifically, out of interest?  This logic is
->> applied to all resources equally, and tests pci_resource_len(...) so
->> there shouldn't be a PF/VF distinction either.
->>
-> 
-> However, the typical boundary check found in VFIO, such as:
-> 
-> if (req_start + req_len > phys_len)
-> 	return -EINVAL;
-> 
-> seems to be missing here.
+Same question as last time. phy-cells tells which mode you are here.
+This is duplicating it and the register value CANNOT choose the
+topology. If it does, then phy-cells should be 0 as topology is defined
+by hardware already, no?
 
-Isn't it covered by that statement in vfio_pci_core_mmap() just before
-this function is called?  This helper is intended to do as it's told by
-a caller that has validated the range is correct (it doesn't duplicate
-the checks already done by vfio_pci_core_mmap()).
+> +    $ref: /schemas/types.yaml#/definitions/phandle-array
+> +    items:
+> +      - items:
+> +          - description: Phandle of the TCSR syscon
+> +          - description: Offset of TCSR_PCIE_LINK_CONFIG_MODE register
 
-Thanks,
+Best regards,
+Krzysztof
 
-Matt
