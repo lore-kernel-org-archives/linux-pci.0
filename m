@@ -1,77 +1,69 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 43F2D49EC53;
-	Thu, 24 Sep 2026 15:35:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 225A84A498F;
+	Thu, 24 Sep 2026 15:36:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790264150; cv=none; b=D42oz6pUvKfh8Bs9hpKSnrjgpHSayR72Ga77qKnPCrjiq0FTMceLGJrZe+9fVjT9I3lyu8qPGAGHKpT6vTT+wclra5XAB9RbltTcb3wlm8t3Cjz/YcEiy/dB+HcpavWJPOB0oaJ2AljWdnlAdAtMIDlXWz32pcF9sJgOCmuHxNw=
+	t=1790264187; cv=none; b=qFO4ivAizdF4iN1y09DtDZwqTFHXdbK57ZjkWoKMpPteyogz0jlc/atYV8qJAjglbyLUz3yuTcRgevp/zj4b3q5BupmVsuS9Vc4+U/tO4JseSmidseftn8znp0RpCiGNznuCJkiib4yY89xheAUUXI4blbQW3EVjtEfdlcERmgg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790264150; c=relaxed/simple;
-	bh=Xki4eMTFJ+km0V5naaWkwopodxyWWwbEy+WvAfL0Tag=;
+	s=arc-20240116; t=1790264187; c=relaxed/simple;
+	bh=c6nM/heFv7zvvZWo92XqXZtGbNhiiyFJL+UmPMi8zq4=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=qjZoMs6fl1eocxal73QMeIuDPEcjKJuOUvx/sBnT3iDZNgR3o9bguIzv0g9ofHXtZSQXVAEGv6dBwYgn9rgp5Mlgb2IKYeN1bHPdvQbpYwfj7MFaDFr2zrcyHnY78SRbyTuFVxFSQE5KxLwdFqdNgRQHxHHu6O89/QkTUpMm99Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EdJ1XjvB; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=Kg+M61jYV5dAJRJ571RZXVMwnDi/dwmGyN9gWq1suZ6uoo89MxsjCE/mXYvRxwfdHZ2gMaPT8UtBaU3XCiloD3FilB5hdLuugn+5KJS1xYdlezgjF3M6H/qpDAgF6mX6GzIM8RiUKLj4uGkj3o3HYKcfbcfwXe2sp9eT75H68kU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ame1mdR6; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EdJ1XjvB"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AED051F000FF;
-	Thu, 24 Sep 2026 15:35:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ame1mdR6"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 873F51F000FF;
+	Thu, 24 Sep 2026 15:36:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790264148;
-	bh=CmrUxfB7KGIEWUJQIUuG1QLz9EZSp/D68be7eANfnrM=;
+	s=k20260515; t=1790264185;
+	bh=b4NwMMgsnsnmscbFkzQifG2tl4vFRUBJnT/cp6joCs8=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=EdJ1XjvB/PEmKZZ1rZeOb1oqaV2W+/b96M0fJ1FUliA4vFPSWG4ARqKj32EzIPU6z
-	 tjvHVMIvk4z1/CVuflZS15CFTI1SS3wnFPXT7ReY3mCqW/x+/JKHsukVymbvHE0Z8N
-	 gRb4jP8bMUXl9ytLTS5v0lK9NYhkBL+IrbAIMF+Ii2pk94WdZW3pVWhchlL1esyLvm
-	 JEPuOvvHdlM0xKaz4Es3eytQ5MLeNKxgKIF5N/ya1ftStajbZlV52v3nK8zP9ho8+9
-	 hS78p7MHwXUumUizfdrnr4FT5lwxw5HpD8wMp0pEeWyNoteoxXq5m+TnXtK+g73NcX
-	 9ASZsRhGLawuA==
+	b=Ame1mdR64Eoe3pCMx7I1yMPGh7hQmQGtnwhWFImGyTFmSoKP7/pGs3VZO4885C4PS
+	 CyT8aIx3kADQqWHeB+hX0wWVHhPiXBCu1mmMYcpuSYYfRZ+DQzVsWdWU+gPUUZEQOy
+	 TMOGQiaoFQOG7TpDkxVIM01ADqNyVsFUZjYfaqPTGEa7cWqpl5UPD3bA1b+28zJo7r
+	 6/OVA8QBsvNnMtsHKEDOtnrViaOzJfNjJA+z/O9shgTZjLK2QTxlQRUTH2szgZY4rK
+	 JF0n2hzCCNIaf272WhnJr5Qv+lhhwB0/NnuWLf8KbsnrZdfIT1ujjZajuManogswSK
+	 qT1+WwMBQ2x4A==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v7 9/9] vfio/pci: Revoke a DMABUF on request from
- userspace
+Subject: Re: [PATCH v7 8/9] vfio/pci: Support mmap() of a VFIO DMABUF
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Matt Evans" <matt@ozlabs.org>
-Cc: dri-devel@lists.freedesktop.org, media-ci@linuxtv.org, linux-pci@vger.kernel.org, kvm@vger.kernel.org
-In-Reply-To: <20260924152159.49702-10-matt@ozlabs.org>
+Cc: kvm@vger.kernel.org, linux-pci@vger.kernel.org, dri-devel@lists.freedesktop.org, media-ci@linuxtv.org
+In-Reply-To: <20260924152159.49702-9-matt@ozlabs.org>
 References: <20260924152159.49702-1-matt@ozlabs.org>
- <20260924152159.49702-10-matt@ozlabs.org>
+ <20260924152159.49702-9-matt@ozlabs.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 24 Sep 2026 15:35:48 +0000
-Message-Id: <20260924153548.AED051F000FF@smtp.kernel.org>
+Date: Thu, 24 Sep 2026 15:36:25 +0000
+Message-Id: <20260924153625.873F51F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-> Replace the VFIO exporter's priv->revoked flag with a status enum of
-> OK, REVOKED, and DEAD.  OK and REVOKED are equivalent to the existing
-> flag, which tracks whether invalidate_mappings & unmap has occurred
-> and whether attach/map are permitted.
+> A VFIO DMABUF can export a subset of a BAR to userspace by fd; add
+> support for mmap() of this fd.  This provides another route for a
+> process to map BARs, in which the process can only map a specific
+> subset of a BAR represented by the exported DMABUF.
 >=20
-> The DMABUF is marked DEAD in response to a new VFIO feature
-> VFIO_DEVICE_FEATURE_DMA_BUF_REVOKE.  This passes a DMABUF by fd and
-> requests that the DMABUF is immediately revoked.  On success, it's
-> guaranteed that PTEs are zapped, imports have been cleanly unmapped,
-> and that the buffer can never be mapped/attached or mmap()ed anymore.
-> Existing VFIO move semantics could permit a buffer to be mapped again
-> in future (e.g. revoke/unrevoke around a reset), but the DEAD state
-> can never become OK again.
+> mmap() support enables userspace drivers to safely delegate BAR
+> sub-ranges to other processes by sharing a DMABUF fd, without having
+> to share the (omnipotent) VFIO device fd with them.
 >=20
-> This enables a userspace driver process to securely reclaim VFIO PCI
-> BAR resources previously delegated to a subordinate process.  Using
-> the new ioctl, the userspace driver process can ensure that resources
-> are inaccessible when the subordinate is deemed "done".  The
-> originally-exported DMABUF becomes unusable, and BAR resources can
-> then be safely re-exported for use elsewhere.
+> Since the main VFIO BAR mmap() is now DMABUF-aware, the new mmap() reuses
+> the existing vm_ops.
 >=20
-> Refactor the revocation code out of vfio_pci_dma_buf_move() to a
-> function common to move and the new feature request path.  This
-> function calls dma_buf_invalidate_mappings() and
-> dma_resv_wait_timeout() only on the revoke path
-> (vfio_pci_dma_buf_move() originally called them for both revoke and,
-> unnecessarily, for un-revoke).
+> The lifecycle of an exported DMABUF remains decoupled from that of the
+> device fd it came from, i.e. the device fd could be closed with DMABUF
+> VMAs present, meaning a fault on a VMA could happen concurrently with
+> vfio_pci_dma_buf_cleanup().
+>=20
+> To deal with this scenario, the fault handler now temporarily takes a
+> VFIO device registration to ensure the vdev remains valid, and then
+> vdev locks can be taken.
 >=20
 > Signed-off-by: Matt Evans <matt@ozlabs.org>
 
@@ -79,5 +71,5 @@ Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260924152159.4970=
-2-1-matt@ozlabs.org?part=3D9
+2-1-matt@ozlabs.org?part=3D8
 
