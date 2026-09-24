@@ -1,56 +1,56 @@
-Received: from mail-pj1-f70.google.com (mail-pj1-f70.google.com [209.85.216.70])
+Received: from mail-pl1-f197.google.com (mail-pl1-f197.google.com [209.85.214.197])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C78E1538D94
-	for <linux-pci@vger.kernel.org>; Thu, 24 Sep 2026 17:35:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.70
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE9375304CA
+	for <linux-pci@vger.kernel.org>; Thu, 24 Sep 2026 17:35:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.197
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790271319; cv=none; b=IADp38mwwg05mXQCSlwoyaB3dHP7zq0sYJ8hcLrWBC4+PA2msjkt4ET9+V/WYb6aLZUznqJQrdsG5yLxO0FSaeTJwKGfM85OPO5YusY6CKmdivay/Cc6tSQhaFeck14pW7lad5bS1IE0+t1D/b1Y0+hixXpJ7RBZvCke3Ko7Acc=
+	t=1790271320; cv=none; b=UCEip5BBQtjGovZAdu3zkiwdoNKQpuZMKmbZ+lVa7iUVTmzjbWapKf0Y1ZGSqSnvajHr4lUj7Sa/T+eLcHcZx76DPcHWxTEa1XdpuuMjkOnJl7LUfQme6sMVqanQQkqAc3EHUXk6oLhWSb0Vayl628/uIMakasJigL+BPBCy1lk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790271319; c=relaxed/simple;
-	bh=wlzwBRRkT915UBU//Zu2aYj8WOraUMnExfBZIqou6R4=;
+	s=arc-20240116; t=1790271320; c=relaxed/simple;
+	bh=XziPSmJ3eoxn3FwHxFZ7NlkslarIhI2b3MgxlzJYueI=;
 	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=Cd5Q/k2wg3nsOyZ+sw71mj9r4gpUcogpslZhiQ/04w67jyf0QtvPQKol2wBlmsR8Dsqp8RIxasdxGs5xRp9NbsF3K/3WFmA7qJlTLjrIT91j2XCb4AL1WjDSTGnZbDwp6CZfE4KeB7kMHSDXx4iP7L8V8vwMR8Twt+0NUDH/v9A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--dmatlack.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=uyBnhmO/; arc=none smtp.client-ip=209.85.216.70
+	 To:Cc:Content-Type; b=ns70m3YAbvq+s4dGF9Y9GPEhBj9zqU5a6O52VKVYH6Z1nZcAJRZ17+MhokpsqstrVu72JGysgLNq74fHiiXLYWMbATqAaBqY5S/H10pV36MvdC2Pc284xRCVdI41SkEPkmtQiTDbu4937KIwgZYqyJv8mX9cuG63Y+ehzRSNnQI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--dmatlack.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=dUTtH+G+; arc=none smtp.client-ip=209.85.214.197
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--dmatlack.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="uyBnhmO/"
-Received: by mail-pj1-f70.google.com with SMTP id 98e67ed59e1d1-39e18af9f48so84978a91.1
-        for <linux-pci@vger.kernel.org>; Thu, 24 Sep 2026 10:35:17 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="dUTtH+G+"
+Received: by mail-pl1-f197.google.com with SMTP id d9443c01a7336-2cec4226c70so170455ad.1
+        for <linux-pci@vger.kernel.org>; Thu, 24 Sep 2026 10:35:18 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1790271317; x=1790876117; darn=vger.kernel.org;
+        d=google.com; s=20251104; t=1790271318; x=1790876118; darn=vger.kernel.org;
         h=content-type:cc:to:from:subject:message-id:references:mime-version
          :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=K99KP4+ZdUEIy16B2JsKwnOlIfNzTFpXvKThE7YBS/A=;
-        b=uyBnhmO/ITryktwS/7NmQO/1Axp0M0qmVdfDUCdxs1Zpl60uLe3VUco7jxNJxmvb+L
-         VJO1e9Fr+bTRBP5XAABEUMLc2wXIU5/f1bh0yQbjO5nZt9lwulH5UqAFRcPnuTF1qQtX
-         4wllgu71rCmxRQpWl2BNhjKgXrA2Jv74rUr+uhP0IxcoLfkYCK7h9/fcl+wosIFBwBBK
-         qeQcKL3c93VeFqxbtgTKMlcuT3ttPgfduQQvwA5wYiTABgzVO8acruH8lBxbzjkkxlwQ
-         W3AsAjQHdjdJ4xtqMlfz3mg/i3E7C3Oc8d9DlQNm5dtOD1FNTThUA/FplpjEfThz5Kyp
-         LxQw==
+        bh=noYPamfewYEtm9bVDAU/nSTNzs0ZIauOG0d/1Q9kwJg=;
+        b=dUTtH+G+QjMOuM0+1HOMn0QmwO4XC6Yth7pd+FQ5ahfk8Nqi7g2MrGNMfQsQd1rmXS
+         wOVya2Yd06e0OH/38ldtAXNOjv2xQwgMxqln5AQ9oz/75ExwQ00wfuQ34XvKNX9FNPKf
+         PD7wqNlJOle8RA3tt7GobSOhXutgUqIKRq6Dlpq+8/Fqt3iOh8Jlaqecs/DEegwYWdFf
+         6dx+ThPVW8PQdqwv1KSo2fuSaDVNg6rhv0DQywe7iKxAI1ES5bagXF6/7qKYvgyornfT
+         av8o0jOmnpN4FA+0K/vSc2LNIVgxgPkxb547fVvEWle3sJDd5Qz5VqzE22rvzgsjWUHL
+         Hu8w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790271317; x=1790876117;
+        d=1e100.net; s=20260707; t=1790271318; x=1790876118;
         h=content-type:cc:to:from:subject:message-id:references:mime-version
          :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=K99KP4+ZdUEIy16B2JsKwnOlIfNzTFpXvKThE7YBS/A=;
-        b=uatgKOmZwBukWML2YL8XYsW4DXvFdPSO6PqrfteWvVh8vJ+mZExUnddqR/opBt+y+7
-         rVlBuqBtauO5pHE35GgqXQ/Jwq1i9RswWeeH05hItOMZhDyaL3viODVJSwO61LJ3bKBM
-         IPFtEg+l07/iV3E2vVxHMCzLYAPIkpQX7hYXL5q1q1rkNb/q9nB81ET7w9JFvjs4+myw
-         3IpRG26bPnymOPB82mxjwWmZ3z5R23A6vgT3GOnItwDSJTWdFBp26v5tjctq7ZkoC4bt
-         5wse9x4ZwlevXZf2vg0rbcfzOVOMaSnYaFpYQr3CUUrDACQSQpCPU27NmdqRnZEZBrgT
-         yEYA==
-X-Forwarded-Encrypted: i=1; AKwUvBwn/QrZJ7DCFvVuDqzC5ae4FwGjRsThfppv2V9Xu9Ltc9mMYSCAC8TYpHpXPWT2ipo1AKIw1iQJV8g=@vger.kernel.org
-X-Gm-Message-State: AFuF++lmz707nQpEaD1AuYr9JQhBSbMhMBHk/iMHQy82fAvCVCAqWTA1
-	fGdJzyrOJsucVUeFelcxmuCJ7EdvetbOYoZZ8g6O7tVv3Mde8rjBanpBoLoo3uOid95mhS/hzRG
-	BIyC5x5EdR6aqGg==
-X-Received: from pjqo18.prod.google.com ([2002:a17:90a:ac12:b0:3a0:42b3:e871])
+        bh=noYPamfewYEtm9bVDAU/nSTNzs0ZIauOG0d/1Q9kwJg=;
+        b=qQdWuHvI0z1h7zNij5CZ56zfq8K94+kIInNj/S/juSbpo2BWNO6ouoA0KGWYudTrhw
+         wgPSnOfXi+t4QLT9h1m/1MYBTkL3/RBXYTb7D6aPqlu5r8HRgwRHGsJ7Jy8pDfpulx3i
+         zlmh+aLcv2h5xUOA2mSfV0DOZesJ0w4X3CIybxvfIr9zuwn1KXxmMmtPHPRXTPKCEq2w
+         tLCoF9oow0IfQ+U/wg8gjhvWU21ZoNc2CvIb9HP4yEu0fYmgrqFZ0GOaCx0l8CaiDrKn
+         ucdPOpvfDWNK6YIp7htkL97GpRi0I/J6Y8qiOgEVTBA6PBai/6rLVKxF0i96iqXHX4S1
+         hOzg==
+X-Forwarded-Encrypted: i=1; AKwUvBwTlmhwSQjGwcZ2rtt8YEn3y/nb/furnidF/+5pg/Pv0xMqQipcZkqFqut7A13u4FczR2XVZx29EtU=@vger.kernel.org
+X-Gm-Message-State: AFuF++nYdCDK8HY52OlKVM6Tk0Xo/qkbM468LG4w6Be6vAOjiHoPFSCc
+	4zxOL/8uC6jhppfktRbkuSGC2Q5Q2Dodokc34lSlMemOXPJUZfRHWhskauxhbvUPfWDqLHqjZUA
+	numyazA79x3daIA==
+X-Received: from pltt2.prod.google.com ([2002:a17:902:d142:b0:2df:3e71:8c70])
  (user=dmatlack job=prod-delivery.src-stubby-dispatcher) by
- 2002:a17:90b:2ec7:b0:39e:6c68:fd89 with SMTP id 98e67ed59e1d1-3a098b2133cmr2058390a91.30.1790271317025;
+ 2002:a17:903:37c5:b0:2dd:5363:3219 with SMTP id d9443c01a7336-2df7dc2bfe2mr27467525ad.20.1790271317823;
  Thu, 24 Sep 2026 10:35:17 -0700 (PDT)
-Date: Thu, 24 Sep 2026 17:34:57 +0000
+Date: Thu, 24 Sep 2026 17:34:58 +0000
 In-Reply-To: <20260924173501.856380-1-dmatlack@google.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -60,8 +60,8 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
 References: <20260924173501.856380-1-dmatlack@google.com>
 X-Mailer: git-send-email 2.56.0.rc1.315.gc6ed9934b7-goog
-Message-ID: <20260924173501.856380-12-dmatlack@google.com>
-Subject: [PATCH 11/15] PCI/DPC: Save DPC state in the saved capability store
+Message-ID: <20260924173501.856380-13-dmatlack@google.com>
+Subject: [PATCH 12/15] PCI/VC: Split the VC Resource Control restore into a helper
 From: David Matlack <dmatlack@google.com>
 To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, 
 	linuxppc-dev@lists.ozlabs.org
@@ -73,76 +73,93 @@ Cc: Alex Williamson <alex@shazbot.org>, Bjorn Helgaas <bhelgaas@google.com>,
 	David Matlack <dmatlack@google.com>
 Content-Type: text/plain; charset="UTF-8"
 
-Save and restore the DPC Control register through the per-device saved
-capability store instead of a private pci_cap_saved_state buffer.
+Move the restore of the VC Resource Control register out of
+pci_vc_do_save_buffer() and into pci_vc_restore_res_ctrl().
 
-Key the save and restore paths off pdev->dpc_cap rather than
-pci_is_pcie(). The presence of the save buffer used to stand in for the
-presence of the capability, which the store cannot do because it is
-addressed by configuration space offset.
+Restoring this register is more involved than the rest of the walk: the
+enable bit has to be preserved across the write, the port arbitration
+table may have to be reloaded, and the VC may have to be re-enabled
+afterwards. Inlined in the middle of a loop that is already sizing,
+saving and restoring three kinds of register, it is hard to see where
+that sequence begins and ends.
 
 No functional change intended.
 
 Assisted-by: LLM
 Signed-off-by: David Matlack <dmatlack@google.com>
 ---
- drivers/pci/pcie/dpc.c | 28 ++++++----------------------
- 1 file changed, 6 insertions(+), 22 deletions(-)
+ drivers/pci/vc.c | 51 ++++++++++++++++++++++++++++++++----------------
+ 1 file changed, 34 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
-index b7f79266f66d..6f40cf2c712c 100644
---- a/drivers/pci/pcie/dpc.c
-+++ b/drivers/pci/pcie/dpc.c
-@@ -45,34 +45,18 @@ static const char * const rp_pio_error_string[] = {
- 
- void pci_save_dpc_state(struct pci_dev *dev)
- {
--	struct pci_cap_saved_state *save_state;
--	u16 *cap;
--
--	if (!pci_is_pcie(dev))
--		return;
--
--	save_state = pci_find_saved_ext_cap(dev, PCI_EXT_CAP_ID_DPC);
--	if (!save_state)
-+	if (!dev->dpc_cap)
- 		return;
- 
--	cap = (u16 *)&save_state->cap.data[0];
--	pci_read_config_word(dev, dev->dpc_cap + PCI_EXP_DPC_CTL, cap);
-+	pci_save_cap_word(dev, dev->dpc_cap + PCI_EXP_DPC_CTL);
+diff --git a/drivers/pci/vc.c b/drivers/pci/vc.c
+index a4ff7f5f66dd..5b507207d56d 100644
+--- a/drivers/pci/vc.c
++++ b/drivers/pci/vc.c
+@@ -168,6 +168,37 @@ static void pci_vc_enable(struct pci_dev *dev, int pos, int res)
+ 		pci_err(link, "VC%d negotiation stuck pending\n", id);
  }
  
- void pci_restore_dpc_state(struct pci_dev *dev)
- {
--	struct pci_cap_saved_state *save_state;
--	u16 *cap;
--
--	if (!pci_is_pcie(dev))
--		return;
--
--	save_state = pci_find_saved_ext_cap(dev, PCI_EXT_CAP_ID_DPC);
--	if (!save_state)
-+	if (!dev->dpc_cap)
- 		return;
- 
--	cap = (u16 *)&save_state->cap.data[0];
--	pci_write_config_word(dev, dev->dpc_cap + PCI_EXP_DPC_CTL, *cap);
-+	pci_restore_cap_word(dev, dev->dpc_cap + PCI_EXP_DPC_CTL);
- }
- 
- static DECLARE_WAIT_QUEUE_HEAD(dpc_completed_waitqueue);
-@@ -408,8 +392,8 @@ void pci_dpc_init(struct pci_dev *pdev)
- 	if (!pdev->dpc_cap)
- 		return;
- 
--	if (pci_add_ext_cap_save_buffer(pdev, PCI_EXT_CAP_ID_DPC, sizeof(u16)))
--		pci_err(pdev, "unable to allocate suspend buffer for DPC\n");
-+	if (pci_reserve_saved_cap(pdev, pdev->dpc_cap + PCI_EXP_DPC_CTL, sizeof(u16)))
-+		pci_err(pdev, "unable to reserve DPC save state\n");
- 
- 	pci_read_config_word(pdev, pdev->dpc_cap + PCI_EXP_DPC_CAP, &cap);
- 	if (!(cap & PCI_EXP_DPC_CAP_RP_EXT))
++/**
++ * pci_vc_restore_res_ctrl - Restore a VC Resource Control Register
++ * @dev: device
++ * @pos: starting position of VC capability (VC/VC9/MFVC)
++ * @res: VC resource number, ie. VCn (0-7)
++ * @ctrl: saved VC Resource Control Register
++ */
++static void pci_vc_restore_res_ctrl(struct pci_dev *dev, int pos, int res,
++				    u32 ctrl)
++{
++	int ctrl_pos = pos + PCI_VC_RES_CTRL + (res * PCI_CAP_VC_PER_VC_SIZEOF);
++	u32 tmp;
++
++	/*
++	 * For an FLR case, the VC config may remain.  Preserve enable bit,
++	 * restore the rest.
++	 */
++	pci_read_config_dword(dev, ctrl_pos, &tmp);
++	tmp &= PCI_VC_RES_CTRL_ENABLE;
++	tmp |= ctrl & ~PCI_VC_RES_CTRL_ENABLE;
++	pci_write_config_dword(dev, ctrl_pos, tmp);
++
++	/* Load port arbitration table if used */
++	if (ctrl & PCI_VC_RES_CTRL_ARB_SELECT)
++		pci_vc_load_port_arb_table(dev, pos, res);
++
++	/* Re-enable if needed */
++	if ((ctrl ^ tmp) & PCI_VC_RES_CTRL_ENABLE)
++		pci_vc_enable(dev, pos, res);
++}
++
+ /**
+  * pci_vc_do_save_buffer - Size, save, or restore VC state
+  * @dev: device
+@@ -311,23 +342,9 @@ static int pci_vc_do_save_buffer(struct pci_dev *dev, int pos,
+ 			if (save)
+ 				pci_read_config_dword(dev, ctrl_pos,
+ 						      (u32 *)buf);
+-			else {
+-				u32 tmp, ctrl = *(u32 *)buf;
+-				/*
+-				 * For an FLR case, the VC config may remain.
+-				 * Preserve enable bit, restore the rest.
+-				 */
+-				pci_read_config_dword(dev, ctrl_pos, &tmp);
+-				tmp &= PCI_VC_RES_CTRL_ENABLE;
+-				tmp |= ctrl & ~PCI_VC_RES_CTRL_ENABLE;
+-				pci_write_config_dword(dev, ctrl_pos, tmp);
+-				/* Load port arbitration table if used */
+-				if (ctrl & PCI_VC_RES_CTRL_ARB_SELECT)
+-					pci_vc_load_port_arb_table(dev, pos, i);
+-				/* Re-enable if needed */
+-				if ((ctrl ^ tmp) & PCI_VC_RES_CTRL_ENABLE)
+-					pci_vc_enable(dev, pos, i);
+-			}
++			else
++				pci_vc_restore_res_ctrl(dev, pos, i,
++							*(u32 *)buf);
+ 			buf += 4;
+ 		}
+ 		len += 4;
 -- 
 2.56.0.rc1.315.gc6ed9934b7-goog
 
